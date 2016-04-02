@@ -78,6 +78,7 @@
 #include <assert.h>
 				/* Driver data structures */
 #include "radeon.h"
+#include "radeon_glamor.h"
 #include "radeon_reg.h"
 #include "r600_reg.h"
 #include "radeon_probe.h"

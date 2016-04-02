@@ -8,6 +8,15 @@
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
+/* Define to 1 if you have the <dri3.h> header file. */
+#undef HAVE_DRI3_H
+
+/* Have fbGlyphs API */
+#undef HAVE_FBGLYPHS
+
+/* Have glamor_glyphs_init API */
+#undef HAVE_GLAMOR_GLYPHS_INIT
+
 /* Define to 1 if you have the <glamor.h> header file. */
 #undef HAVE_GLAMOR_H
 
@@ -17,11 +26,14 @@
 /* libudev support */
 #undef HAVE_LIBUDEV
 
-/* Define to 1 if you have the <list.h> header file. */
-#undef HAVE_LIST_H
-
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
+
+/* Define to 1 if you have the <misyncshm.h> header file. */
+#undef HAVE_MISYNCSHM_H
+
+/* Define to 1 if you have the <present.h> header file. */
+#undef HAVE_PRESENT_H
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H

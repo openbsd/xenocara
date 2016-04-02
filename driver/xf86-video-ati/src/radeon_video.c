@@ -9,6 +9,7 @@
 #include <math.h>
 
 #include "radeon.h"
+#include "radeon_glamor.h"
 #include "radeon_reg.h"
 #include "radeon_probe.h"
 #include "radeon_video.h"
@@ -73,18 +74,12 @@ Bool radeon_crtc_is_enabled(xf86CrtcPtr crtc)
     return drmmode_crtc->dpms_mode == DPMSModeOn;
 }
 
-uint32_t radeon_get_interpolated_vblanks(xf86CrtcPtr crtc)
-{
-    drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
-    return drmmode_crtc->interpolated_vblanks;
-}
-
 xf86CrtcPtr
 radeon_pick_best_crtc(ScrnInfoPtr pScrn, Bool consider_disabled,
 		      int x1, int x2, int y1, int y2)
 {
     xf86CrtcConfigPtr   xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
-    int			coverage, best_coverage, c;
+    int			coverage, best_coverage, c, cd;
     BoxRec		box, crtc_box, cover_box;
     RROutputPtr         primary_output = NULL;
     xf86CrtcPtr         best_crtc = NULL, primary_crtc = NULL;
@@ -108,38 +103,30 @@ radeon_pick_best_crtc(ScrnInfoPtr pScrn, Bool consider_disabled,
     if (primary_output && primary_output->crtc)
 	primary_crtc = primary_output->crtc->devPrivate;
 
-    /* first consider only enabled CRTCs */
-    for (c = 0; c < xf86_config->num_crtc; c++) {
-	xf86CrtcPtr crtc = xf86_config->crtc[c];
+    /* first consider only enabled CRTCs
+     * then on second pass consider disabled ones
+     */
+    for (cd = 0; cd < (consider_disabled ? 2 : 1); cd++) {
+	for (c = 0; c < xf86_config->num_crtc; c++) {
+	    xf86CrtcPtr crtc = xf86_config->crtc[c];
 
-	if (!radeon_crtc_is_enabled(crtc))
-	    continue;
+	    if (!cd && !radeon_crtc_is_enabled(crtc))
+		continue;
 
-	radeon_crtc_box(crtc, &crtc_box);
-	radeon_box_intersect(&cover_box, &crtc_box, &box);
-	coverage = radeon_box_area(&cover_box);
-	if (coverage > best_coverage ||
-	    (coverage == best_coverage && crtc == primary_crtc)) {
-	    best_crtc = crtc;
-	    best_coverage = coverage;
+	    radeon_crtc_box(crtc, &crtc_box);
+	    radeon_box_intersect(&cover_box, &crtc_box, &box);
+	    coverage = radeon_box_area(&cover_box);
+	    if (coverage > best_coverage ||
+		(coverage == best_coverage &&
+		 crtc == primary_crtc)) {
+		best_crtc = crtc;
+		best_coverage = coverage;
+	    }
 	}
+	if (best_crtc)
+	    break;
     }
-    if (best_crtc || !consider_disabled)
-	return best_crtc;
 
-    /* if we found nothing, repeat the search including disabled CRTCs */
-    for (c = 0; c < xf86_config->num_crtc; c++) {
-	xf86CrtcPtr crtc = xf86_config->crtc[c];
-
-	radeon_crtc_box(crtc, &crtc_box);
-	radeon_box_intersect(&cover_box, &crtc_box, &box);
-	coverage = radeon_box_area(&cover_box);
-	if (coverage > best_coverage ||
-	    (coverage == best_coverage && crtc == primary_crtc)) {
-	    best_crtc = crtc;
-	    best_coverage = coverage;
-	}
-    }
     return best_crtc;
 }
 
@@ -158,7 +145,7 @@ void RADEONInitVideo(ScreenPtr pScreen)
 	    return;
 
     num_adaptors = xf86XVListGenericAdaptors(pScrn, &adaptors);
-    newAdaptors = malloc((num_adaptors + 2) * sizeof(XF86VideoAdaptorPtr *));
+    newAdaptors = malloc((num_adaptors + 2) * sizeof(*newAdaptors));
     if (newAdaptors == NULL)
 	return;
 

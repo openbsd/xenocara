@@ -32,6 +32,7 @@
 #include "libudev.h"
 #endif
 
+#include "radeon_drm_queue.h"
 #include "radeon_probe.h"
 
 #ifndef DRM_CAP_TIMESTAMP_MONOTONIC
@@ -41,7 +42,6 @@
 typedef struct {
   int fd;
   unsigned fb_id;
-  drmModeResPtr mode_res;
   drmModeFBPtr mode_fb;
   int cpp;
   struct radeon_bo_manager *bufmgr;
@@ -51,6 +51,12 @@ typedef struct {
   InputHandlerProc uevent_handler;
 #endif
   drmEventContext event_context;
+  int count_crtcs;
+
+  Bool delete_dp_12_displays;
+
+  Bool dri2_flipping;
+  Bool present_flipping;
 } drmmode_rec, *drmmode_ptr;
 
 typedef struct {
@@ -59,8 +65,9 @@ typedef struct {
   int flip_count;
   void *event_data;
   unsigned int fe_frame;
-  unsigned int fe_tv_sec;
-  unsigned int fe_tv_usec;
+  uint64_t fe_usec;
+  radeon_drm_handler_proc handler;
+  radeon_drm_abort_proc abort;
 } drmmode_flipdata_rec, *drmmode_flipdata_ptr;
 
 typedef struct {
@@ -68,20 +75,33 @@ typedef struct {
   Bool dispatch_me;
 } drmmode_flipevtcarrier_rec, *drmmode_flipevtcarrier_ptr;
 
+struct drmmode_scanout {
+    struct radeon_bo *bo;
+    PixmapPtr pixmap;
+    DamagePtr damage;
+    unsigned fb_id;
+    int width, height;
+};
+
 typedef struct {
     drmmode_ptr drmmode;
     drmModeCrtcPtr mode_crtc;
     int hw_id;
     struct radeon_bo *cursor_bo;
-    struct radeon_bo *rotate_bo;
-    unsigned rotate_fb_id;
+    struct drmmode_scanout rotate;
+    struct drmmode_scanout scanout[2];
+    unsigned scanout_id;
+    Bool scanout_update_pending;
     int dpms_mode;
     CARD64 dpms_last_ust;
     uint32_t dpms_last_seq;
     int dpms_last_fps;
     uint32_t interpolated_vblanks;
     uint16_t lut_r[256], lut_g[256], lut_b[256];
-    int scanout_pixmap_x;
+    int prime_pixmap_x;
+
+    /* Modeset needed for DPMS on */
+    Bool need_modeset;
 } drmmode_crtc_private_rec, *drmmode_crtc_private_ptr;
 
 typedef struct {
@@ -112,18 +132,28 @@ extern void drmmode_fini(ScrnInfoPtr pScrn, drmmode_ptr drmmode);
 extern Bool drmmode_set_bufmgr(ScrnInfoPtr pScrn, drmmode_ptr drmmode, struct radeon_bo_manager *bufmgr);
 extern void drmmode_set_cursor(ScrnInfoPtr scrn, drmmode_ptr drmmode, int id, struct radeon_bo *bo);
 void drmmode_adjust_frame(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int x, int y);
-extern Bool drmmode_set_desired_modes(ScrnInfoPtr pScrn, drmmode_ptr drmmode);
+extern Bool drmmode_set_desired_modes(ScrnInfoPtr pScrn, drmmode_ptr drmmode,
+				      Bool set_hw);
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) >= 10
 extern void drmmode_copy_fb(ScrnInfoPtr pScrn, drmmode_ptr drmmode);
+#endif
 extern Bool drmmode_setup_colormap(ScreenPtr pScreen, ScrnInfoPtr pScrn);
+
+extern void drmmode_scanout_free(ScrnInfoPtr scrn);
 
 extern void drmmode_uevent_init(ScrnInfoPtr scrn, drmmode_ptr drmmode);
 extern void drmmode_uevent_fini(ScrnInfoPtr scrn, drmmode_ptr drmmode);
 
+extern int drmmode_get_crtc_id(xf86CrtcPtr crtc);
 extern int drmmode_get_height_align(ScrnInfoPtr scrn, uint32_t tiling);
 extern int drmmode_get_pitch_align(ScrnInfoPtr scrn, int bpe, uint32_t tiling);
 extern int drmmode_get_base_align(ScrnInfoPtr scrn, int bpe, uint32_t tiling);
 
-Bool radeon_do_pageflip(ScrnInfoPtr scrn, struct radeon_bo *new_front, void *data, int ref_crtc_hw_id);
+Bool radeon_do_pageflip(ScrnInfoPtr scrn, ClientPtr client,
+			uint32_t new_front_handle, uint64_t id, void *data,
+			int ref_crtc_hw_id, radeon_drm_handler_proc handler,
+			radeon_drm_abort_proc abort);
+int drmmode_crtc_get_ust_msc(xf86CrtcPtr crtc, CARD64 *ust, CARD64 *msc);
 int drmmode_get_current_ust(int drm_fd, CARD64 *ust);
 
 #endif

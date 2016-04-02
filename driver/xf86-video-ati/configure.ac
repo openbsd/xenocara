@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-ati],
-        [7.5.0],
+        [7.6.1],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-video-ati])
 
@@ -75,7 +75,7 @@ PKG_CHECK_MODULES(LIBDRM, [libdrm >= 2.4.58])
 PKG_CHECK_MODULES(LIBDRM_RADEON, [libdrm_radeon])
 
 # Obtain compiler/linker options for the driver dependencies
-PKG_CHECK_MODULES(XORG, [xorg-server >= 1.7 xproto fontsproto xf86driproto $REQUIRED_MODULES])
+PKG_CHECK_MODULES(XORG, [xorg-server >= 1.8 xproto fontsproto xf86driproto $REQUIRED_MODULES])
 PKG_CHECK_MODULES(XEXT, [xextproto >= 7.0.99.1],
                   HAVE_XEXTPROTO_71="yes"; AC_DEFINE(HAVE_XEXTPROTO_71, 1, [xextproto 7.1 available]),
                   HAVE_XEXTPROTO_71="no")
@@ -113,6 +113,12 @@ if test "x$GLAMOR" != "xno"; then
 			      [GLAMOR_XSERVER="yes"], [GLAMOR_XSERVER="no"],
 			      [#include "xorg-server.h"
 			       #include "glamor.h"])
+
+		AC_CHECK_DECL(glamor_glyphs_init,
+			      [AC_DEFINE(HAVE_GLAMOR_GLYPHS_INIT, 1,
+					 [Have glamor_glyphs_init API])], [],
+			      [#include "xorg-server.h"
+			       #include "glamor.h"])
 	fi
 
 	if test "x$GLAMOR_XSERVER" != xyes; then
@@ -125,18 +131,37 @@ else
 fi
 AM_CONDITIONAL(GLAMOR, test x$GLAMOR != xno)
 
-AC_CHECK_HEADERS([list.h],
-		 [have_list_h="yes"], [have_list_h="no"],
-		 [#include <X11/Xdefs.h>
-		  #include "xorg-server.h"])
+AC_CHECK_DECL(fbGlyphs,
+	      [AC_DEFINE(HAVE_FBGLYPHS, 1, [Have fbGlyphs API])], [],
+	      [#include <X11/Xmd.h>
+	       #include <X11/Xfuncproto.h>
+	       #include <X11/extensions/renderproto.h>
+	       #include <xorg-server.h>
+	       #include <picture.h>
+	       #include <glyphstr.h>
+	       #include <fbpict.h>])
 
-if test "x$have_list_h" = xyes; then
-    AC_CHECK_DECL(xorg_list_init,
-		  [AC_DEFINE(HAVE_XORG_LIST, 1, [Have xorg_list API])], [],
-		  [#include <X11/Xdefs.h>
-		   #include "xorg-server.h"
-		   #include "list.h"])
-fi
+AC_CHECK_DECL(xorg_list_init,
+	      [AC_DEFINE(HAVE_XORG_LIST, 1, [Have xorg_list API])], [],
+	      [#include <X11/Xdefs.h>
+	      #include "xorg-server.h"
+	      #include "list.h"])
+
+AC_CHECK_HEADERS([misyncshm.h], [], [],
+                 [#include <X11/Xdefs.h>
+	          #include <X11/Xfuncproto.h>
+	          #include <xorg-server.h>
+		  #include <screenint.h>])
+
+AC_CHECK_HEADERS([present.h], [], [],
+		 [#include <X11/Xmd.h>
+		 #include <X11/Xproto.h>
+		 #include <X11/X.h>
+		 #include "xorg-server.h"])
+
+AC_CHECK_HEADERS([dri3.h], [], [],
+		 [#include <X11/Xmd.h>
+		 #include <xorg-server.h>])
 
 CPPFLAGS="$SAVE_CPPFLAGS"
 

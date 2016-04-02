@@ -330,7 +330,6 @@ Bool RADEONEXASetSharedPixmapBacking(PixmapPtr ppix, void *fd_handle)
 	return FALSE;
 
     driver_priv->shared = TRUE;
-    driver_priv->tiling_flags = 0;
     return TRUE;
 }
 #endif

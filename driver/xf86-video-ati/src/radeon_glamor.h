@@ -28,51 +28,50 @@
 #define RADEON_GLAMOR_H
 
 #include "xf86xv.h"
+
+struct radeon_pixmap;
+
 #ifdef USE_GLAMOR
+
+#define GLAMOR_FOR_XORG  1
+#include <glamor.h>
 
 #include "radeon_surface.h"
 
+#ifndef CREATE_PIXMAP_USAGE_SHARED
+#define CREATE_PIXMAP_USAGE_SHARED RADEON_CREATE_PIXMAP_DRI2
+#endif
+
+#define RADEON_CREATE_PIXMAP_SHARED(usage) \
+	(((usage) & ~RADEON_CREATE_PIXMAP_TILING_FLAGS) == RADEON_CREATE_PIXMAP_DRI2 || \
+	 (usage) == CREATE_PIXMAP_USAGE_SHARED)
+
+#ifndef GLAMOR_NO_DRI3
+#define GLAMOR_NO_DRI3 0
+#define glamor_fd_from_pixmap glamor_dri3_fd_from_pixmap
+#define glamor_pixmap_from_fd glamor_egl_dri3_pixmap_from_fd
+#endif
+
+#ifndef GLAMOR_INVERTED_Y_AXIS
+#define GLAMOR_INVERTED_Y_AXIS 0
+#endif
+#ifndef GLAMOR_USE_SCREEN
+#define GLAMOR_USE_SCREEN 0
+#endif
+#ifndef GLAMOR_USE_PICTURE_SCREEN
+#define GLAMOR_USE_PICTURE_SCREEN 0
+#endif
+
 Bool radeon_glamor_pre_init(ScrnInfoPtr scrn);
 Bool radeon_glamor_init(ScreenPtr screen);
+void radeon_glamor_screen_init(ScreenPtr screen);
 Bool radeon_glamor_create_screen_resources(ScreenPtr screen);
 void radeon_glamor_free_screen(int scrnIndex, int flags);
 
-void radeon_glamor_flush(ScrnInfoPtr pScrn);
-
-Bool radeon_glamor_create_textured_pixmap(PixmapPtr pixmap);
+Bool radeon_glamor_create_textured_pixmap(PixmapPtr pixmap, struct radeon_pixmap *priv);
 void radeon_glamor_exchange_buffers(PixmapPtr src, PixmapPtr dst);
 
-Bool radeon_glamor_pixmap_is_offscreen(PixmapPtr pixmap);
-
 XF86VideoAdaptorPtr radeon_glamor_xv_init(ScreenPtr pScreen, int num_adapt);
-
-struct radeon_pixmap {
-	struct radeon_surface surface;
-	struct radeon_bo *bo;
-
-	uint32_t tiling_flags;
-	int stride;
-};
-
-#if HAS_DEVPRIVATEKEYREC
-extern DevPrivateKeyRec glamor_pixmap_index;
-#else
-extern int glamor_pixmap_index;
-#endif
-
-static inline struct radeon_pixmap *radeon_get_pixmap_private(PixmapPtr pixmap)
-{
-#if HAS_DEVPRIVATEKEYREC
-	return dixGetPrivate(&pixmap->devPrivates, &glamor_pixmap_index);
-#else
-	return dixLookupPrivate(&pixmap->devPrivates, &glamor_pixmap_index);
-#endif
-}
-
-static inline void radeon_set_pixmap_private(PixmapPtr pixmap, struct radeon_pixmap *priv)
-{
-	dixSetPrivate(&pixmap->devPrivates, &glamor_pixmap_index, priv);
-}
 
 #else
 
@@ -81,13 +80,9 @@ static inline Bool radeon_glamor_init(ScreenPtr screen) { return FALSE; }
 static inline Bool radeon_glamor_create_screen_resources(ScreenPtr screen) { return FALSE; }
 static inline void radeon_glamor_free_screen(int scrnIndex, int flags) { }
 
-static inline void radeon_glamor_flush(ScrnInfoPtr pScrn) { }
-
-static inline Bool radeon_glamor_create_textured_pixmap(PixmapPtr pixmap) { return TRUE; }
+static inline Bool radeon_glamor_create_textured_pixmap(PixmapPtr pixmap, struct radeon_pixmap *priv) { return TRUE; }
 
 static inline void radeon_glamor_exchange_buffers(PixmapPtr src, PixmapPtr dst) {}
-
-static inline Bool radeon_glamor_pixmap_is_offscreen(PixmapPtr pixmap) { return FALSE; }
 
 static inline struct radeon_pixmap *radeon_get_pixmap_private(PixmapPtr pixmap) { return NULL; }
 

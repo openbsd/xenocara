@@ -81,6 +81,7 @@ host_triplet = @host@
 @GLAMOR_TRUE@am__append_2 = @LIBGLAMOR_CFLAGS@
 @GLAMOR_TRUE@am__append_3 = @LIBGLAMOR_LIBS@
 @GLAMOR_TRUE@am__append_4 = \
+@GLAMOR_TRUE@	 radeon_glamor_wrappers.c \
 @GLAMOR_TRUE@	 radeon_glamor.c
 
 subdir = src
@@ -137,24 +138,26 @@ ati_drv_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(ati_drv_la_LDFLAGS) $(LDFLAGS) -o $@
 @LIBUDEV_TRUE@am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
 radeon_drv_la_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_2) \
-	$(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_2) $(am__DEPENDENCIES_1)
 am__radeon_drv_la_SOURCES_DIST = radeon_accel.c radeon_video.c \
 	radeon_misc.c radeon_probe.c radeon_textured_video.c \
 	radeon_xvmc.c radeon_exa.c r600_exa.c r6xx_accel.c \
 	r600_textured_videofuncs.c r600_shader.c radeon_exa_shared.c \
 	evergreen_exa.c evergreen_accel.c evergreen_shader.c \
 	evergreen_textured_videofuncs.c cayman_accel.c cayman_shader.c \
-	radeon_dri2.c radeon_kms.c drmmode_display.c radeon_vbo.c \
-	radeon_bo_helper.c radeon_glamor.c
+	radeon_dri2.c radeon_dri3.c radeon_drm_queue.c radeon_kms.c \
+	radeon_present.c radeon_sync.c radeon_vbo.c radeon_bo_helper.c \
+	drmmode_display.c radeon_glamor_wrappers.c radeon_glamor.c
 am__objects_1 = radeon_exa.lo r600_exa.lo r6xx_accel.lo \
 	r600_textured_videofuncs.lo r600_shader.lo \
 	radeon_exa_shared.lo evergreen_exa.lo evergreen_accel.lo \
 	evergreen_shader.lo evergreen_textured_videofuncs.lo \
 	cayman_accel.lo cayman_shader.lo
-am__objects_2 = radeon_dri2.lo radeon_kms.lo drmmode_display.lo \
-	radeon_vbo.lo radeon_bo_helper.lo
-@GLAMOR_TRUE@am__objects_3 = radeon_glamor.lo
+am__objects_2 = radeon_dri2.lo radeon_dri3.lo radeon_drm_queue.lo \
+	radeon_kms.lo radeon_present.lo radeon_sync.lo radeon_vbo.lo \
+	radeon_bo_helper.lo drmmode_display.lo
+@GLAMOR_TRUE@am__objects_3 = radeon_glamor_wrappers.lo \
+@GLAMOR_TRUE@	radeon_glamor.lo
 am_radeon_drv_la_OBJECTS = radeon_accel.lo radeon_video.lo \
 	radeon_misc.lo radeon_probe.lo radeon_textured_video.lo \
 	radeon_xvmc.lo $(am__objects_1) $(am__objects_2) \
@@ -363,10 +366,11 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 ati_drv_la_LIBADD = $(PCIACCESS_LIBS)
-radeon_drv_la_LIBADD = $(LIBDRM_RADEON_LIBS) $(PCIACCESS_LIBS) \
-	$(am__append_1) $(am__append_3)
-RADEON_KMS_SRCS = radeon_dri2.c radeon_kms.c drmmode_display.c radeon_vbo.c \
-	radeon_bo_helper.c
+radeon_drv_la_LIBADD = $(LIBDRM_RADEON_LIBS) $(am__append_1) \
+	$(am__append_3)
+RADEON_KMS_SRCS = radeon_dri2.c radeon_dri3.c radeon_drm_queue.c radeon_kms.c \
+	radeon_present.c radeon_sync.c radeon_vbo.c radeon_bo_helper.c \
+	drmmode_display.c
 
 RADEON_EXA_SOURCES = radeon_exa.c r600_exa.c r6xx_accel.c r600_textured_videofuncs.c r600_shader.c radeon_exa_shared.c \
 	evergreen_exa.c evergreen_accel.c evergreen_shader.c evergreen_textured_videofuncs.c cayman_accel.c cayman_shader.c
@@ -406,11 +410,13 @@ EXTRA_DIST = \
 	bicubic_table.h \
 	bicubic_table.py \
 	radeon_bo_helper.h \
+	radeon_drm_queue.h \
 	radeon_exa_render.c \
 	radeon_exa_funcs.c \
 	radeon_exa_shared.h \
 	radeon_glamor.h \
 	radeon.h \
+	radeon_list.h \
 	radeon_probe.h \
 	radeon_reg.h \
 	radeon_version.h \
@@ -558,12 +564,17 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_accel.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_bo_helper.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_dri2.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_dri3.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_drm_queue.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_exa.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_exa_shared.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_glamor.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_glamor_wrappers.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_kms.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_misc.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_present.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_probe.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_sync.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_textured_video.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_vbo.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_video.Plo@am__quote@

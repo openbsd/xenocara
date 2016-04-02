@@ -267,10 +267,22 @@ The default value is
 for R/RV6XX, R/RV7XX, RS780, RS880, EVERGREEN, CAYMAN, ARUBA, Southern Islands, and
 Sea Islands.
 .TP
+.BI "Option \*qDRI\*q \*q" integer \*q
+Define the maximum level of DRI to enable. Valid values are 2 for DRI2 or 3 for DRI3.
+The default is
+.B 2 for DRI2.
+.TP
 .BI "Option \*qEnablePageFlip\*q \*q" boolean \*q
 Enable DRI2 page flipping.  The default is
 .B on.
 Pageflipping is supported on all radeon hardware.
+.TP
+.BI "Option \*qTearFree\*q \*q" boolean \*q
+Enable tearing prevention using the hardware page flipping mechanism. This
+option currently doesn't have any effect for rotated CRTCs. It requires
+allocating two separate scanout buffers for each non-rotated CRTC. Enabling
+this option currently disables Option \*qEnablePageFlip\*q. The default is
+.B off.
 .TP
 .BI "Option \*qAccelMethod\*q \*q" "string" \*q
 Chooses between available acceleration architectures.  Valid values are
@@ -281,6 +293,22 @@ Chooses between available acceleration architectures.  Valid values are
 .B glamor
 as of TAHITI, otherwise
 .B EXA.
+
+.PP
+The following driver
+.B Options
+are supported for
+.B glamor
+:
+.TP
+.BI "Option \*qShadowPrimary\*q \*q" boolean \*q
+This option enables a so-called "shadow primary" buffer for fast CPU access to
+pixel data, and separate scanout buffers for each display controller (CRTC).
+This may improve performance for some 2D workloads, potentially at the expense
+of other (e.g. 3D, video) workloads.
+Note in particular that enabling this option currently disables page flipping.
+The default is
+.B off.
 
 .PP
 The following driver

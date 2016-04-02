@@ -154,7 +154,6 @@ radeon_get_scrninfo(int entity_num, void *pci_dev)
      */
     {
         DevUnion    *pPriv;
-        RADEONEntPtr pRADEONEnt;
 
         xf86SetEntitySharable(entity_num);
 
@@ -166,14 +165,8 @@ radeon_get_scrninfo(int entity_num, void *pci_dev)
 
 	xf86SetEntityInstanceForScreen(pScrn, pEnt->index, xf86GetNumEntityInstances(pEnt->index) - 1);
 
-        if (!pPriv->ptr) {
+        if (!pPriv->ptr)
             pPriv->ptr = xnfcalloc(sizeof(RADEONEntRec), 1);
-            pRADEONEnt = pPriv->ptr;
-            pRADEONEnt->HasSecondary = FALSE;
-        } else {
-            pRADEONEnt = pPriv->ptr;
-            pRADEONEnt->HasSecondary = TRUE;
-        }
     }
 
     free(pEnt);
@@ -271,10 +264,8 @@ radeon_platform_probe(DriverPtr pDriver,
         if (!pPriv->ptr) {
             pPriv->ptr = xnfcalloc(sizeof(RADEONEntRec), 1);
             pRADEONEnt = pPriv->ptr;
-            pRADEONEnt->HasSecondary = FALSE;
         } else {
             pRADEONEnt = pPriv->ptr;
-            pRADEONEnt->HasSecondary = TRUE;
         }
         pRADEONEnt->platform_dev = dev;
     }

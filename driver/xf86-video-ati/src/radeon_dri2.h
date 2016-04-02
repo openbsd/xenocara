@@ -43,47 +43,10 @@ struct radeon_dri2 {
 Bool radeon_dri2_screen_init(ScreenPtr pScreen);
 void radeon_dri2_close_screen(ScreenPtr pScreen);
 
-int drmmode_get_crtc_id(xf86CrtcPtr crtc);
-void radeon_dri2_frame_event_handler(unsigned int frame, unsigned int tv_sec,
-                                     unsigned int tv_usec, void *event_data);
-void radeon_dri2_flip_event_handler(unsigned int frame, unsigned int tv_sec,
-				    unsigned int tv_usec, void *event_data);
-
 #else
 
 static inline Bool radeon_dri2_screen_init(ScreenPtr pScreen) { return FALSE; }
 static inline void radeon_dri2_close_screen(ScreenPtr pScreen) {}
-
-static inline void
-radeon_dri2_dummy_event_handler(unsigned int frame, unsigned int tv_sec,
-				unsigned int tv_usec, void *event_data,
-				const char *name)
-{
-	static Bool warned;
-
-	if (!warned) {
-		ErrorF("%s called but DRI2 disabled at build time\n", name);
-		warned = TRUE;
-	}
-
-	free(event_data);
-}
-
-static inline void
-radeon_dri2_frame_event_handler(unsigned int frame, unsigned int tv_sec,
-				unsigned int tv_usec, void *event_data)
-{
-	radeon_dri2_dummy_event_handler(frame, tv_sec, tv_usec, event_data,
-					__func__);
-}
-
-static inline void
-radeon_dri2_flip_event_handler(unsigned int frame, unsigned int tv_sec,
-			       unsigned int tv_usec, void *event_data)
-{
-	radeon_dri2_dummy_event_handler(frame, tv_sec, tv_usec, event_data,
-					__func__);
-}
 
 #endif
 

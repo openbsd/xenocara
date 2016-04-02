@@ -1,3 +1,1330 @@
+commit 99cb8c3faf1a4ce368b7500f17a2a7868c15e8e8
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Nov 12 13:38:14 2015 +0900
+
+    Set version for 7.6.1 release
+
+commit 4a2114a717ec8d78cacd8fe158e132d62013faac
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Nov 12 13:32:25 2015 +0900
+
+    Remove duplicate free(output_ids) call
+    
+    Fixes double-free regression introduced by commit 875ad48e ("Simplify
+    drmmode_set_mode_major() and avoid leaking memory.").
+
+commit 960a9f37096b53ec9603a99c7b1f3679f915e03f
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Nov 12 13:20:18 2015 +0900
+
+    Post 7.6.0 release version bump
+
+commit 9aae4b71fb402841439e3267fcb7f410d8429c3a
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Nov 12 11:56:48 2015 +0900
+
+    Bump version for 7.6.0 release
+
+commit 98291869ac4a542a0b478920586407ff9d2c8ef0
+Author: Tom St Denis <tom.stdenis@amd.com>
+Date:   Wed Nov 11 16:01:41 2015 +0900
+
+    Clean up radeon_dri2_create_buffer2()
+    
+    Remove the depth_pixmap variable from the function and clear
+    out any dead/odd behaviour that results.
+    
+    Signed-off-by: Tom St Denis <tom.stdenis@amd.com>
+    (ported from amdgpu commit 6000aef4e2f0a121b94023484406fb6f04688f74)
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit c6fc7e309a8a922f94a1f5f3e8bfb9058cff7ad1
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Nov 11 15:59:06 2015 +0900
+
+    Properly handle drmModeAddFB failure in drmmode_crtc_scanout_allocate
+    
+    We were printing an error message, but not propagating the failure. That
+    would probably lead to trouble down the road.
+    
+    (ported from amdgpu commit 21e72fb2418b5cc7fc849a9cf951186e209036b0)
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 4e4f4d53da0539ef9feb8766230a6e9927ae005b
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Nov 11 15:57:21 2015 +0900
+
+    Eliminate redundant data parameter from drmmode_crtc_scanout_create
+    
+    drmmode_crtc_scanout_create just needs to call
+    drmmode_crtc_scanout_allocate when scanout->bo is NULL.
+    
+    This makes it clearer to the reader / compiler that
+    drmmode_crtc_scanout_create doesn't dereference scanout->bo when it's
+    NULL.
+    
+    (ported from amdgpu commit 8da1d0c870e1081d77925807d6e3bbc61a23f54f)
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 421a7e797bdd58d83e81af7a6512cc715a3df514
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Nov 11 15:51:58 2015 +0900
+
+    Don't advertise rotation support without hardware acceleration v2
+    
+    Rotation currently doesn't work without acceleration (doesn't actually
+    rotate with Option "NoAccel", crashes with Option "AccelMethod" "none"
+    or when glamor fails to initialize) and would probably be too slow
+    anyway.
+    
+    v2: Also remove now dead code checking for ShadowFB from
+        drmmode_crtc_scanout_allocate().
+    
+    (ported from amdgpu commit dc40582d5ff94d812cbc08f95cf14b80cd0f410d)
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 875ad48e7b5cdb7beefbf18dddcbee3ed22b5446
+Author: Tom St Denis <tom.stdenis@amd.com>
+Date:   Wed Nov 11 15:51:19 2015 +0900
+
+    Simplify drmmode_set_mode_major() and avoid leaking memory.
+    
+    The function would leak the memory allocated for output_ids.  This
+    patch addresses that as well as simplifies the logic somewhat.
+    
+    Signed-off-by: Tom St Denis <tom.stdenis@amd.com>
+    (ported from amdgpu commit 460560502a1bdf26d06f3c30df46fa9f28ffb9e5)
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 789d7d6a04cca6b36fb088a074027807ccb8dd61
+Author: Tom St Denis <tom.stdenis@amd.com>
+Date:   Wed Nov 11 15:48:51 2015 +0900
+
+    Clean up allocation in RADEONInitVideo()
+    
+    The allocation of the adapters should use the correct sizeof (even if
+    allocating an array of pointers).
+    
+    Signed-off-by: Tom St Denis <tom.stdenis@amd.com>
+    (ported from amdgpu commit db3bb2061b9ac16b0922d9afae99874820356a04)
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit d88fa0dd5d37604de8efb05853738cfaca6a3166
+Author: Tom St Denis <tom.stdenis@amd.com>
+Date:   Wed Nov 11 15:46:50 2015 +0900
+
+    Simplify pick best crtc to fold two loops into one
+    
+    This patch folds the two for loops from radeon_pick_best_crtc() into
+    one to reduce the LOC and make the routine easier to read.
+    
+    Signed-off-by: Tom St Denis <tom.stdenis@amd.com>
+    (ported from amdgpu commit 3055724aef76a624718f26d5f0f9e9d567ffbcfb)
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit dbbcd75b3c80aba77673904d46bca97779fd8a8d
+Author: Tom St Denis <tom.stdenis@amd.com>
+Date:   Wed Nov 11 12:54:54 2015 +0900
+
+    dri2: Avoid calculation with undefined msc value
+    
+    If the get_msc() call fails for any reason we should avoid updating the
+    vblank counter delta with undefined data.
+    
+    Signed-off-by: Tom St Denis <tom.stdenis@amd.com>
+    Signed-off-by: Michel Dänzer <michel.daenzer@amd.com> (minor fixups)
+    (ported from amdgpu commit 8823c3d4c6db70cff7699b31088f2d92db8faaf4)
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 7186a8713ba004de4991f21c1a9fc4abc62aeff4
+Author: Stephen Chandler Paul <cpaul@redhat.com>
+Date:   Fri Oct 23 09:59:36 2015 -0400
+
+    Handle failures in setting a CRTC to a DRM mode properly
+    
+    This fixes a bug where running the card out of PPLL's when hotplugging
+    another monitor would result in all of the displays going blank and
+    failing to work properly until X was restarted or the user switched to
+    another VT.
+    
+    [Michel Dänzer: Pass errno instead of -ret to strerror()]
+    
+    Signed-off-by: Stephen Chandler Paul <cpaul@redhat.com>
+    Reviewed-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit 548e97b3b7d1e94075a54ca2bb4eb683025098a7
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Fri Oct 16 16:26:58 2015 +0900
+
+    Call xf86CrtcRotate from initial drmmode_set_desired_modes call
+    
+    Fixes various problems when rotation is specified in xorg.conf.
+    
+    Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=92475
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit ce9914af8d8d5243977023ec7b09c605f9cca8b4
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Fri Oct 2 18:07:18 2015 +0900
+
+    Only align screen / scanout pixmap height where necessary
+    
+    When using glamor acceleration, the pixmap's header has to have a height
+    that matches exactly what the actual height is minus the GPU memory
+    alignment. Otherwise CRTCs scanning out from the main scanout buffer
+    (e.g. every CRTC that isn't rotated or transformed in some way) won't
+    always work. This results in a bug where rotating one monitor in a
+    multi-monitor setup won't always work properly. Easiest way to reproduce
+    this:
+    
+    - Have two monitors (I've gotten this working with a 1920x1080 and
+      1280x1024, along with two 1920x1080s)
+    - Rotate one of them from 0° to 90°, then rotate the same monitor from
+      90° to 180°. The monitor that hasn't been rotated won't properly
+      update, and will stay on a blank screen
+    
+    This doesn't seem to make any difference when using EXA for
+    acceleration.
+    
+    Compared to Stephen Chandler's patch, this drops the height alignment
+    in most places and only keeps it where it's really necessary.
+    
+    Reported-and-Tested-by: Stephen Chandler Paul <cpaul@redhat.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 0288a4b87b65ba54f37fbeeea3cb32238deee92e
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Aug 19 16:54:14 2015 +0900
+
+    DRI2: Keep MSC monotonic when moving window between CRTCs
+    
+    This mirrors the DRI3 implementation in xserver. Fixes VDPAU video
+    playback hanging when moving the window between CRTCs.
+    
+    Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=66384
+    
+    (Ported from amdgpu commit 63948ea091a9b324327ade7ec4fc5d67ca7e6f6f)
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 1d886b526dc49f32dc6744b7a882894bdac4e846
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Aug 19 18:11:45 2015 +0900
+
+    DRI2: Don't ignore rotated CRTCs in amdgpu_dri2_drawable_crtc
+    
+    Waiting for vblank interrupts works fine with rotated CRTCs. The only
+    case we can't handle with rotation is page flipping, which is handled
+    in can_exchange().
+    
+    This fixes gnome-shell hanging on rotation, probably because
+    amdgpu_dri2_get_msc returned MSC/UST 0 for rotated CRTCs.
+    
+    (Ported from amdgpu commit 7b3212e33cd36fb6f122774df27b56ec4e1a22b8)
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 270da55340766074cabff8af4258e29fe2f0fc81
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Mon Aug 10 15:32:34 2015 -0400
+
+    add new OLAND pci id
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit f123096877f0a0044f3d0315285441f2b5790c29
+Author: Mario Kleiner <mario.kleiner.de@gmail.com>
+Date:   Mon Aug 10 23:34:39 2015 +0200
+
+    Make selection between DRI2 and DRI3 consistent with other drivers. (v2)
+    
+    Add Option "DRI" to allow selection of maximum DRI level.
+    
+    This allows the user to select the maximum level of DRI
+    implementation to use, DRI2 or DRI3. It replaces the old
+    option "DRI3" which had exactly the same purpose, but
+    differs from the method used in both intel ddx and nouveau ddx.
+    Make this consistent before a new stable driver is released.
+    
+    v2: Retain handling of old Option "DRI3" for backwards
+        compatibility, but Option "DRI" will take precedence
+        over "DRI3" if both are provided.
+    
+    Signed-off-by: Mario Kleiner <mario.kleiner.de@gmail.com>
+    Reviewed-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit 3791fceabf2cb037467dc41c15364e9f9ec1e47e
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Aug 6 16:27:01 2015 +0900
+
+    Wait for scanout BO initialization to finish before setting mode
+    
+    This should avoid intermittent artifacts which could sometimes be visible
+    when setting a new scanout pixmap, e.g. on server startup or when
+    changing resolutions.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 4e3dfa69e4630df2e0ec0f5b81d61159757c4664
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Aug 6 16:16:38 2015 +0900
+
+    Only call drmmode_copy_fb (at most) once on server startup
+    
+    It doesn't make sense to copy the screen contents from console when VT
+    switching back to Xorg or when Xorg resets.
+    
+    Fixes intermittent artifacts when VT switching back from console to the
+    gdm login screen.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 09c7cdb923965f9a1ea11d2f449bc02114408938
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Jul 30 15:58:54 2015 +0900
+
+    glamor: Move declaration of struct radeon_pixmap out of #if/#else blocks
+    
+    Reviewed-by: Dave Airlie <airlied@redhat.com>
+
+commit 936582fde0db461c5c3d78ce4f5f4c93a88a489d
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Jul 30 15:56:36 2015 +0900
+
+    Remove unused local variable pRADEONEnt
+    
+    ../../src/radeon_probe.c: In function 'radeon_get_scrninfo':
+    ../../src/radeon_probe.c:157:22: warning: variable 'pRADEONEnt' set but not used [-Wunused-but-set-variable]
+             RADEONEntPtr pRADEONEnt;
+                          ^
+    
+    Reviewed-by: Dave Airlie <airlied@redhat.com>
+
+commit 5510cd6027d2387efdf33575e3bfc424cb11bfd8
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Jul 27 09:22:57 2015 +1000
+
+    radeon: move radeon_pixmap forward declaration into other block
+    
+    There is already a radeon_pixmap forward decl here, the #else
+    block is missing one.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit b32a0a3de84a44b9af4f1ca8be19f10d7fa31b12
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Jul 22 13:35:07 2015 +1000
+
+    radeon: cleanup the entity rec
+    
+    Some of these were set, some of them were
+    always opposites, so clean things up.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit fcb32231a38f9461d12720cbf72f63502197a711
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Tue Jul 21 23:55:20 2015 +0100
+
+    Do not link radeon_drv.so against libpciaccess
+    
+    It's only used/needed by ati_drv.so
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit b6d871bf299c7d0f106c07ee4d8bd3b2337f53cc
+Author: Dave Airlie <airlied@gmail.com>
+Date:   Thu Jul 9 19:25:36 2015 +1000
+
+    radeon: adopt for new X server dirty tracking APIs.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 95f5d09e3667ded027ae648c97eb4737d8bf67c5
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu May 28 11:24:42 2015 +0900
+
+    present: Handle DPMS off in radeon_present_get_ust_msc
+    
+    The DRM_IOCTL_WAIT_VBLANK ioctl may return an error during DPMS off,
+    which would trigger an error message in drmmode_crtc_get_ust_msc.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 211862b777d0be251a4662f5dd24f2d400544c09
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Fri May 1 18:20:01 2015 +0900
+
+    present: Look at all CRTCs to determine if we can flip
+    
+    Inspired by modesetting driver change by Kenneth Graunke.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 802d33e474a82262d9cdf11b03568b0c4929cd0d
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Fri May 1 18:54:16 2015 +0900
+
+    present: Fall back to modeset for unflip operation
+    
+    It's not always possible to use the page flip ioctl for this, e.g.
+    during DPMS off. We were previously just skipping the unflip in that
+    case, which could result in hangs when setting DPMS off while a
+    fullscreen Present app is running, e.g. at the GNOME3 lock screen.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit a8ed62010d5012dfb27773595c446b217f3c00c5
+Author: Piotr Redlewski <predlewski@gmail.com>
+Date:   Mon Jul 6 19:57:07 2015 +0200
+
+    Do not try to enable already enabled CRTCs in DPMS hook
+    
+    Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=91227
+    
+    Signed-off-by: Piotr Redlewski <predlewski@gmail.com>
+    Reviewed-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit fc07c370dac4649511eb7322d05a61605a539f39
+Author: Mario Kleiner <mario.kleiner.de@gmail.com>
+Date:   Sun Jun 28 02:45:58 2015 +0200
+
+    Fix inconsistent default eg_tile_split in evergreen_accel.c
+    
+    eg_tile_split() maps the default: switch-case to tile split
+    flag 6, like for a tile split size of 4096 Bytes. All other
+    instances of tile split mappings or reverse mappings in both
+    the ddx and in Mesa's radeon gallium drivers assign the default:
+    case to tile split flag 4, consistent with a default of 1024
+    Bytes.
+    
+    Make this one outlier consistent with other instances of
+    mappings in the code to avoid surprises.
+    
+    Signed-off-by: Mario Kleiner <mario.kleiner.de@gmail.com>
+
+commit ddaba449e8d6fe9fc0d97085e4045843fd8d7af9
+Author: Piotr Redlewski <predlewski@gmail.com>
+Date:   Wed Jun 24 18:44:39 2015 +0200
+
+    Disable CRTCs when disabling the outputs
+    
+    When turning the outputs off (DPMSModeOff), CRTCs stayed enabled. This led
+    to higher gpu temperatures than with fglrx driver.
+    
+    v2: when entering DPMS also disable active CRTCs
+    v3: use drmmode_set_mode_major() for enabling CRTCs when leaving DPMS
+    
+    Signed-off-by: Piotr Redlewski <predlewski@gmail.com>
+    Reviewed-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit acc11877423ecd81a6e0a7f38466f80e43efee20
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Tue Jun 16 17:34:57 2015 +0900
+
+    Skip disabled CRTCs in radeon_scanout_(do_)update
+    
+    The vblank / page flip ioctls don't work as expected for a disabled CRTC.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit fc9fadaebbc8aead6e030d93a9ccd84561f8f59e
+Author: Mario Kleiner <mario.kleiner.de@gmail.com>
+Date:   Mon Jun 22 00:09:17 2015 +0200
+
+    Don't set TILE_SPLIT flags if surface.tile_split == 0.
+    
+    On pre-Evergreen hw, libdrm's r6_surface_best() helper
+    for the surface managers radeon_surface_best() routine
+    is a no-op and therefore doesn't assign any tile_split
+    settings to created surfaces, so it leaves
+    surface.tile_split on its "undefined" value of 0.
+    
+    Mesa's DRI3/Present backend creates DRI3 Pixmaps via
+    the DRIImage extension and the radeon gallium driver
+    implementation of that extension uses the libdrm
+    surface manager for backing bo creation and treats
+    an undefined surface.tile_split==0, as returned by
+    the surface manager for pre-evergreen, as a signal
+    to not assign any tile_split flags to the DRI3 Pixmaps
+    bo.
+    
+    The ddx also uses libdrm surface manager to create the
+    x-screen pixmap, but so far treated the returned undefined
+    surface.tile_split==0 by mapping it to eg_tile_split()'s
+    default tile_split flags, which are different from Mesa's
+    tiling flags for DRI3 pixmaps. Under DRI3/Present this
+    causes a mismatch of src pixmap and destination root
+    pixmaps tiling flags and thereby prevents page flipping
+    for pixmap presents.
+    
+    Change the ddx code to treat surface.tile_split==0 the
+    same way as the radeon gallium driver to avoid mismatched
+    tiling flags and thereby allow DRI3/Present page-flip to
+    work on pre-Evergreen hw.
+    
+    Tested on RV730 and Evergreen "Juniper".
+    
+    Signed-off-by: Mario Kleiner <mario.kleiner.de@gmail.com>
+
+commit 49f5b0bc301414df049e00d226034e3d6e56421b
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Fri May 1 19:02:36 2015 +0900
+
+    Don't attempt a DRI2/Present page flip while the other one is flipping
+    
+    Fixes corrupted display and hangs when switching between DRI2 and DRI3
+    fullscreen apps, e.g. a compositor using DRI3 and a fullscreen app using
+    DRI2 or vice versa.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit afab7839fc15722dbaa7203d00fe7f6ce5336b9d
+Author: Mario Kleiner <mario.kleiner.de@gmail.com>
+Date:   Wed Jun 10 20:55:08 2015 +0200
+
+    Allow/Fix use of multiple ZaphodHead outputs per x-screen. (v2)
+    
+    Defining multiple ZaphodHead outputs per x-screen in a
+    multiple x-screen's per gpu configuration caused all
+    outputs except one per x-screen to go dark, because
+    there was a fixed mapping x-screen number -> crtc number,
+    limiting the number of crtc's per x-screen to one.
+    
+    On a ZaphodHead's setup, be more clever and assign
+    as many crtc's to a given x-screen as there are
+    ZaphodHeads defined for that screen, assuming
+    there are enough unused crtc's available.
+    
+    Tested on a triple display setup with different combos
+    of one, two or three ZaphodHeads per one, two or three
+    x-screens.
+    
+    This is a port of similar code from xf86-video-nouveau.
+    
+    v2: Implement suggestions by Michel Dänzer: Less verbose
+        debug output, more clear warning message on crtc allocation
+        failure. Move clearing of per gpu assigned_crtc mask to
+        CloseScreen, indeed testing shows no need for the more
+        complex new server generation check from v1.
+    
+    Signed-off-by: Mario Kleiner <mario.kleiner.de@gmail.com>
+    (v1) Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+    Reviewed-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit d7c82731a8bf3d381bc571b94d80d9bb2dd6e40d
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu May 21 16:01:16 2015 +0900
+
+    DRI2: Fix handling of drmmode_crtc_get_ust_msc return code
+    
+    Fixes regression introduced in commit
+    76c2923ac5c7230a8b2f9f8329c308d28b44d9c0 ("DRI2: Split out helper for
+    getting UST and MSC of a specific CRTC").
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit e58fc380ccf2a581d28f041fd74b963626ca5404
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu May 28 10:59:22 2015 +0900
+
+    glamor: Only wait for GPU writes in radeon_glamor_prepare_access_cpu_ro
+    
+    We don't need to wait for GPU reads to finish before reading with the
+    CPU.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 5f82a720374c9c1caebb42bfbeea1f0cf8847d28
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu May 21 15:46:32 2015 +0900
+
+    present: Remove get_drmmode_crtc helper
+    
+    It was getting the drmmode_crtc_private_ptr in a roundabout way.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit d64a13ebe0ecd241ee3260dbffd8f4a01e254183
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed May 20 09:58:38 2015 +0900
+
+    Replace SyncFence typedef with declaration of struct _SyncFence
+    
+    Fixes build failure in some environments:
+    
+      CC     radeon_sync.lo
+    In file included from radeon_sync.c:28:
+    /home/tinderbox/xorg-build/include/xorg/misync.h:31: error: redefinition of typedef 'SyncFence'
+    radeon.h:93: note: previous declaration of 'SyncFence' was here
+    make[2]: *** [radeon_sync.lo] Error 1
+    
+    Reported-Tested-and-Acked-by: David Airlie <airlied@redhat.com>
+
+commit 818c180c8932233b214a35ba0647af82f7bcec3d
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Tue May 12 17:43:57 2015 +0900
+
+    glamor: Deal with glamor_glyphs_init being removed from xserver
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 7c4b78ab10b82c6dba9f72034ff7583859cca63d
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Tue May 12 13:21:24 2015 -0400
+
+    add new bonaire pci id
+    
+    Reviewed-by: Michel Dänzer <michel.daenzer@amd.com>
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 80eede245d1eda27eaba108b0761a24bfd69aff6
+Author: Mario Kleiner <mario.kleiner.de@gmail.com>
+Date:   Sat May 9 07:24:36 2015 +0200
+
+    present: Fix present notify timestamps and counts.
+    
+    Invalid (msc,ust)=(0,0) were returned to the server
+    because a wrong crtc_id was used to specify which
+    crtc should deliver pageflip completion data. Fix
+    it in accordance with the dri2 implementation.
+    
+    Signed-off-by: Mario Kleiner <mario.kleiner.de@gmail.com>
+
+commit e3be8b0a8cf484ff16597413a6172788178e80c8
+Author: Mario Kleiner <mario.kleiner.de@gmail.com>
+Date:   Sat May 9 07:24:35 2015 +0200
+
+    present: Move check for async flips
+    
+    Check for and reject currently unsupported async_flip
+    inside radeon_present_check_flip() instead of inside
+    radeon_present_flip().
+    
+    This way the server can detect early that async flips
+    aren't supported by the ddx and can deal with this
+    correctly by using its non-vsync'ed CopyRegion fallback.
+    
+    Signed-off-by: Mario Kleiner <mario.kleiner.de@gmail.com>
+
+commit 1584dc545c78e0bce8d4b4b9f26b568e2c211453
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Tue Apr 28 17:14:11 2015 +0900
+
+    Skip disabled CRTCs in drmmode_set_desired_modes() even if set_hw == FALSE
+    
+    Not skipping a disabled CRTC results in a crash.
+    
+    Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=90187
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 340baf3804b7d9de8082badfc715a9bee7856e8f
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Mon Apr 27 15:07:06 2015 +0900
+
+    Don't call radeon_get_pixmap_private() when using EXA
+    
+    It only works when using glamor.
+    
+    Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=90169
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 80f3d727f93cb6efedd2b39338d2301035965fe2
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Apr 22 13:33:15 2015 +0900
+
+    On screen resize, clear the new buffer before displaying it
+    
+    Fixes garbage being intermittently visible during a screen resize.
+    
+    Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=27757#c7
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 3999bf88cdb192fe2f30b03bd2ed6f6a3f9f9057
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Apr 2 18:29:38 2015 +0900
+
+    Make drmmode_copy_fb() work with glamor as well
+    
+    Needed for Xorg -background none.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit a4a8cdbcc10c1c5f07485a2af9e9e81e490c3e1d
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Apr 2 17:46:34 2015 +0900
+
+    Update scanout pixmap contents before setting a mode with it
+    
+    This ensures the scanout pixmaps used for Option "TearFree" and Option
+    "ShadowPrimary" have been initialized when their initial mode is set.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 673e1c7637687c74fc9bdeeeffb7ace0d04b734f
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Apr 2 17:54:33 2015 +0900
+
+    Defer initial modeset until the first BlockHandler invocation
+    
+    This ensures that the screen pixmap contents have been initialized when
+    the initial modes are set.
+    
+    Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=27757
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 37874a4eeace5df04b02c8fc28f67b824e3f0f5f
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Tue Apr 21 17:19:15 2015 +0900
+
+    Defer initial drmmode_copy_fb call until root window creation
+    
+    That's late enough for acceleration to be fully initialized, but still
+    early enough to set pScreen->canDoBGNoneRoot.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 39c497f3efca5ca08343b884f44c93215dcdef31
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Apr 2 18:10:42 2015 +0900
+
+    Only copy fbcon BO contents if bgNoneRoot is TRUE
+    
+    Otherwise, the X server will initialize the screen pixmap contents
+    anyway.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 1af044d7eee211fd4b248c236280274a68334da5
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Apr 22 18:43:02 2015 +0900
+
+    DRI2: Clear old->devPrivate.ptr in fixup_glamor
+    
+    It doesn't point to the memory of the newly allocated BO. Fixes crash
+    running piglit with Option "ShadowPrimary" enabled.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 43159ef400c3b18b9f4d3e6fa1c4aef2d60d38fe
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Mon Apr 20 18:44:36 2015 +0900
+
+    Add Option "TearFree" v4
+    
+    Avoids tearing by flipping between two scanout BOs per (non-rotated) CRTC
+    
+    v2:
+    * Fix condition for TearFree log message (Richard Wilbur)
+    * Log warning message about DRI page flipping being enabled because of
+      TearFree (or ShadowPrimary) also when building without glamor support
+    
+    v3:
+    * Only override fb_id/x/y if all scanout pixmaps have been successfully
+      allocated
+    
+    v4:
+    * Make log warning clearer if drmModePageFlip returns an error
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com> (v1)
+
+commit ed401f5b4f07375db17ff05e294907ec95fc946d
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Fri Apr 3 12:11:00 2015 +0900
+
+    glamor: Remove the stride member of struct radeon_pixmap
+    
+    Its value was always the same as that of the PixmapRec devKind member.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit ae92d1765fa370a8d94c2856ad6c45d273ec3c69
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Mar 18 16:23:24 2015 +0900
+
+    glamor: Add Option "ShadowPrimary" v2
+    
+    When this option is enabled, most pixmaps (including the screen pixmap)
+    are allocated in system RAM and mostly accessed by the CPU. Changed areas
+    of the screen pixmap are copied to dedicated per-CRTC scanout pixmaps
+    regularly, triggered by the vblank interrupt.
+    
+    v2:
+    * Set region data pointer to NULL for keeping only the extents
+    * Move pRegion and pBox local variable declarations closer to their uses
+      in drmmode_set_mode_major()
+
+commit eea79472a84672ee4dc7adc4487cec6a4037048a
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Apr 1 15:51:52 2015 +0900
+
+    glamor: Add wrappers for the X server rendering hooks
+    
+    They can choose between using the GPU or CPU for the operation.
+
+commit 051d46382656ffc3e6cac1aab3aee7efdf5b623a
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Mar 19 17:34:27 2015 +0900
+
+    glamor: Add radeon_pixmap parameter to radeon_glamor_create_textured_pixmap
+
+commit 2fa021f77372ca93375a3d13a0c43a9089674899
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Mar 19 17:38:47 2015 +0900
+
+    glamor: Remove unused function radeon_glamor_pixmap_is_offscreen
+
+commit e96349ba6281fd18b8bf9c76629128276b065e6c
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Apr 1 16:04:13 2015 +0900
+
+    Add RADEON_CREATE_PIXMAP_SCANOUT flag
+    
+    It means that the pixmap is used for scanout exclusively.
+
+commit 9be7dd382e86d2b804de81d4e2af7431b2e16843
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Apr 1 12:40:16 2015 +0900
+
+    Split out struct drmmode_scanout for rotation shadow buffer information
+    
+    Will be used for other kinds of dedicated scanout buffers as well.
+
+commit c32b0530302739f6512755bccf281c2300617376
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Mar 19 17:46:48 2015 +0900
+
+    Rename scanout_pixmap_x field to prime_pixmap_x
+    
+    To avoid confusion with upcoming changes.
+
+commit 5921ba4ca705a0d919515626088f3948cc4848c1
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Tue Mar 31 15:14:52 2015 +0900
+
+    present: Don't flip between BOs with different tiling parameters
+    
+    The kernel driver doesn't handle that correctly yet.
+    
+    Fixes or at least avoids issues with OpenGL fullscreen apps with DRI3
+    enabled and using PRIME or with (2D) tiling disabled.
+    
+    Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=89720
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 428e416e7cb04a1e0527da39cfebf70218879a77
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Apr 2 10:34:03 2015 +0900
+
+    Add radeon_get_pixmap_tiling_flags helper
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 98fb4199e63fedd4607cddee64bf602d6398df81
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Tue Mar 31 12:25:18 2015 +0900
+
+    Only enable SYNC extension fences and the Present extension along with DRI3
+    
+    This avoids some trouble with the Gallium nine state tracker, which uses
+    the Present extension even when DRI3 is disabled.
+    
+    Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=89772
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit f8b0f23e9f4af9f9097ee5e72d53b45173163c41
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Fri Mar 27 12:34:55 2015 +0900
+
+    DRI2: Use radeon_get_pixmap_handle
+    
+    Now we can share pixmaps with no struct radeon_bo via DRI2.
+    
+    Fixes VDPAU video playback freezing when using an OpenGL compositor with
+    DRI3 enabled.
+    
+    Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=89755
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+    Tested-by: Nick Sarnie <commendsarnex@gmail.com>
+
+commit ccbda955ebae1d457d35293833f12791e0f9fb0b
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Fri Mar 27 12:16:44 2015 +0900
+
+    Move get_pixmap_handle helper to radeon_bo_helper.c
+    
+    No functional change.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+    Tested-by: Nick Sarnie <commendsarnex@gmail.com>
+
+commit de5ddd09db82141b263338dcf0c28e01f58268ee
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Mar 26 16:33:02 2015 +0900
+
+    Move radeon_drm_handler/abort_proc fields to drmmode_flipdata_rec
+    
+    Their values are the same for all DRM flip ioctl calls within a single
+    radeon_do_pageflip() call.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit e8c0f6319fbf4c3ea11e22ab1a68837031bdec8c
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Mar 26 16:27:35 2015 +0900
+
+    Simplify radeon_do_pageflip() error handling slightly more
+    
+    We don't need the local variable old_fb_id.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 8fc22360d5520469c82092ccb0fcf2af330c573f
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Mar 26 15:58:01 2015 +0900
+
+    Increase robustness against DRM page flip ioctl failures v3
+    
+    Centralize cleanup, only clean up things that have been allocated for
+    the failed ioctl call.
+    
+    Fixes double-free after a flip ioctl failure.
+    
+    Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=89681
+    
+    v2: Only call drmModeRmFB for flipdata->old_fb_id on receipt of last DRM
+        page flip event. Fixes Black screen on making glxgears fullscreen with
+        DRI3 enabled.
+    v3: Avoid double-free of flipdata in the unlikely case that calloc fails
+        for flipcarrier, but only for the second or later CRTC.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com> (v2)
+
+commit b16609b453bb1a181198cf27778f205dc23fb642
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Mar 26 17:15:21 2015 +0900
+
+    glamor: Handle GLAMOR_* flags removed from xserver
+    
+    The behaviour is the same as when the removed flags were passed in.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 391900a670addec39515f924265bfa9f8bfa9ec0
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Mar 18 12:56:07 2015 +0900
+
+    glamor: Avoid generating GEM flink names for BOs shared via DRI3 v2
+    
+    We can't create our own struct radeon_bo representation in this case
+    because destroying that would make the GEM handle inaccessible to glamor
+    as well. So just get the handle directly via dma-buf.
+    
+    v2: Close dma-buf file descriptor, pointed out by Axel Davy.
+    
+    Reviewed-by: Axel Davy <axel.davy@ens.fr>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit dfad91fffb5bd013785223b42d78886df839eacf
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Mar 19 12:37:01 2015 +0900
+
+    Present: Add radeon_present_get_pixmap_handle helper
+    
+    Reviewed-by: Axel Davy <axel.davy@ens.fr>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 7b4fc4a677d252d01c2bf80d162bc35814059eaa
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Mar 19 12:15:52 2015 +0900
+
+    Make radeon_do_pageflip take a BO handle directly
+    
+    Reviewed-by: Axel Davy <axel.davy@ens.fr>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit af6076241c0d322b295a4e898407ae2472bd8eb4
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Tue Mar 24 13:37:01 2015 +0900
+
+    Adapt radeon_sync.c for misyncshm.h vs misync.h as well
+    
+    This should have been part of the previous commit. Without this, SYNC
+    extension fences (and by extension DRI3) were disabled because it checked
+    for HAVE_MISYNC_H, but configure now only defines HAVE_MISYNCSHM_H.
+
+commit aa7825eb29cdf6ac9d7b28ad18186807ff384687
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Mon Mar 23 10:12:17 2015 +0900
+
+    configure.ac: Check for misyncshm.h again
+    
+    We need this header, which was added after the other misync*.h headers,
+    along with DRI3 support.
+
+commit 6291baaed261e36a63dc001307427fe00ba82259
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Mar 19 00:12:06 2015 +0900
+
+    EXA: Return NULL from radeon_get_pixmap_bo if there is no driver private
+    
+    This mirrors what the glamor part of the function does. Fixes a crash
+    running glxgears_pixmap with DRI3 enabled, reported by "marvin24" on IRC.
+
+commit f68d9b5ba0c91a725b5eec9386c61bea8824c299
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Mar 18 18:29:27 2015 +0900
+
+    dri3: Use screen->CreatePixmap instead of fbCreatePixmap directly
+    
+    Fixes crash with EXA reported by "marvin24" on IRC.
+
+commit 4b0997e56dec0053cb2cb793e0f4ae35055ff7e6
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Mar 18 12:30:09 2015 +0900
+
+    glamor: Add glamor_fd_from_pixmap define for standalone glamor tree
+
+commit af1862a37570fa512a525ab47d72b30400d2e2d6
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Mar 18 11:05:40 2015 +0900
+
+    Always include misync.h before other misync headers
+    
+    Older versions of xserver didn't include misync.h from other misync
+    headers as needed.
+
+commit fcd37f65f485291084c174666bd605e215bf1398
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Mar 18 10:39:03 2015 +0900
+
+    DRI3: Use open hook instead of open_client
+    
+    We don't need the client pointer, and this allows it to work with older
+    versions of xserver as well.
+
+commit f940fd741b15f03393037c5bb904cd74f012de9d
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Mar 18 10:06:47 2015 +0900
+
+    Initialize boolean variable before calling xf86GetOptValBool
+    
+    We were just lucky that it contained 0 in most cases.
+
+commit 4a98f60117c387a228d5cbaadb6e298fb4e865df
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Tue Mar 17 16:47:11 2015 +0900
+
+    Add xorg_list_for_each_entry_safe fallback in radeon_list.h
+    
+    Fixes another build failure against older versions of xserver reported
+    by "Pali" on IRC.
+
+commit 694e04720b886060fe3eefdce59741f218c8269f
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Tue Mar 17 16:32:09 2015 +0900
+
+    Simplify includes in radeon_{dri3,present}.c
+    
+    Just include radeon.h first. Fixes build failures against older versions
+    of xserver because compat-api.h wasn't getting picked up. Reported by
+    "Pali" on IRC.
+
+commit 64e1e4dbdd3caee6f5d8f6b6c094b4533fa94953
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Tue Mar 10 16:53:11 2015 +0900
+
+    Add DRI3 support v2
+    
+    Must be enabled with
+    
+    	Option	"DRI3"
+    
+    in xorg.conf.
+    
+    v2: Adapt to v2 of patches 11/12.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 69ae0194778fe4276895839db92383f63f0b5de4
+Author: David Heidelberger <david.heidelberger@ixit.cz>
+Date:   Fri Mar 6 17:57:22 2015 +0900
+
+    Handle tiling in radeon_set_shared_pixmap_backing
+    
+    [ Michel Dänzer: Fixups for glamor ]
+    Signed-off-by: David Heidelberger <david.heidelberger@ixit.cz>
+    Signed-off-by: Axel Davy <axel.davy@ens.fr>
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 3c65fb849e1ba9fb6454bcaa55b696548902f3fc
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Tue Mar 10 16:52:54 2015 +0900
+
+    Add support for the Present extension v2
+    
+    v2: Fix up for struct radeon_drm_queue -> radeon_drm_queue_entry.
+        Swapped order of patches 11 & 12 because the Present extension uses
+        SYNC fences.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 8fc9a241ab59ffbcdc178d6415332c88a54e85fe
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Mar 5 18:18:56 2015 +0900
+
+    Add support for SYNC extension fences v2
+    
+    v2: Swapped order of patches 11 & 12 because the Present extension uses
+        SYNC fences.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 4a35e2f33d9cdfb608423046391311109f96fb6b
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Mar 5 18:34:07 2015 +0900
+
+    Fold radeon_glamor_flush into radeon_cs_flush_indirect
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 4b8adebb80158bcf81ada83bb88517febe931b12
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Mar 5 18:40:23 2015 +0900
+
+    Move #include "radeon_glamor.h" from radeon.h to where it's needed
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 76c2923ac5c7230a8b2f9f8329c308d28b44d9c0
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Mar 4 10:30:19 2015 +0900
+
+    DRI2: Split out helper for getting UST and MSC of a specific CRTC
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 6c3a721cde9317233072b573f9502348dcd21b16
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Tue Mar 10 16:52:18 2015 +0900
+
+    DRI2: Use helper functions for DRM event queue management v3
+    
+    This is mostly in preparation for Present support, but it also simplifies
+    the DRI2 specific code a little.
+    
+    v2: Fix up for struct radeon_drm_queue -> radeon_drm_queue_entry.
+    v3: Removed excess 0s from conversion from microseconds to seconds,
+        thanks to Richard Wilbur <richard.wilbur@gmail.com> for the catch!
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit c3fa22a479e61d1899fa9d327d9c4e2a7f64b0c1
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Mar 11 17:47:59 2015 +0900
+
+    DRI2: Move radeon_dri2_flip_event_handler
+    
+    In preparation for the next change, which will modify it to a static
+    function which needs to be in the new place. No functional change.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 65045112fdc8a9fa36e0e00f46739a6152b775ff
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Mar 11 17:33:54 2015 +0900
+
+    DRI2: Remove superfluous assignments to *_info->frame
+    
+    That field is only used for page flipping.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit ad27f16f308079d06a2b1c788b3cb0947531253a
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Mar 11 17:30:11 2015 +0900
+
+    DRI2: Simplify blit fallback handling for scheduled swaps
+    
+    Also use radeon_dri2_schedule_event when possible.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit b4af8a327ed8420f0ff4ea0f113f4a59406ed4d3
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Mon Mar 2 18:59:54 2015 +0900
+
+    Add DRM event queue helpers v2
+    
+    v2: Rename struct radeon_drm_queue to struct radeon_drm_queue_event,
+    thanks to Richard Wilbur <richard.wilbur@gmail.com> for the suggestion.
+    Also changed the corresponding parameter and local variable names from
+    'q' to 'e'.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 7c3470f4b659206ed23f761948936ede3a2dba3d
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Fri Mar 6 18:51:29 2015 +0900
+
+    Move xorg_list backwards compatibility to new radeon_list.h header
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 7388d0b6c54b9d536fdb161e3aa61b326627b939
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Mar 5 17:35:06 2015 +0900
+
+    Require at least xserver 1.8
+    
+    So we can rely on the list.h header.
+    
+    xserver 1.8 was released in April 2010.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit b8ec9ed4fe86952763b963c86f0af0dcae69aa6c
+Author: Jerome Glisse <jglisse@redhat.com>
+Date:   Thu Feb 19 14:47:41 2015 -0500
+
+    Proper leak fix, previous leak fix was bogus.
+    
+    Signed-off-by: Jérôme Glisse <jglisse@redhat.com>
+
+commit 63dc36dc49f93cb00111b497ab6805194bc9d240
+Author: Jerome Glisse <jglisse@redhat.com>
+Date:   Thu Feb 19 11:43:08 2015 -0500
+
+    Avoid leaking memory on output.
+    
+    Signed-off-by: Jérôme Glisse <jglisse@redhat.com>
+
+commit c80ea1e3e8c5f155cedadbe4588870fb1f410ab4
+Author: Rolf Eike Beer <eb@emlix.com>
+Date:   Tue Jan 13 12:11:26 2015 +0100
+
+    radeon: remove unneeded inclusion of sarea.h
+    
+    None of the structs or defines from that header is used.
+    
+    Signed-off-by: Rolf Eike Beer <eb@emlix.com>
+
+commit 04da199231bb3f11cf17f94574a8df05855a7b82
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Dec 17 14:03:58 2014 -0500
+
+    Remove dead accelDFS flag
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit c9f8f642fd495937400618a4fc25ecae3f8888fc
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Mon Nov 17 12:32:29 2014 +0900
+
+    Prefer drmModeSetCursor2 over drmModeSetCursor
+    
+    The former includes information about the position of the hotspot within
+    the cursor image.
+    
+    Copied from xf86-video-modesetting.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 2f11dcd43966cf2ee26e61960fd72e6644f5e037
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Nov 10 13:49:29 2014 +1000
+
+    radeon: add support for DP 1.2 display hotplug (v2)
+    
+    This allows for dynamic creation of conneectors when the
+    kernel tells us.
+    
+    v2: fix dpms off crash
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit c88424d1f4aaa78b569e5d44f0b4a47de2f422f4
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Nov 10 14:17:54 2014 +1000
+
+    radeon: move output name creation to its own function
+    
+    The secondary indent is deliberate to make the next patch more
+    parseable for mst support.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 32b003cb7657e07d5af6338ad44d768eda87fd33
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Nov 10 14:12:34 2014 +1000
+
+    radeon: stop caching mode resources
+    
+    This is step one towards MST connector hotplug support,
+    it stop caching the mode resources structure, and
+    just passes a pointer to it around.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 7c7b38e0b375b6e8853ad2d1092302ea83f6f570
+Author: David Heidelberger <david.heidelberger@ixit.cz>
+Date:   Sun Oct 12 16:34:21 2014 +0200
+
+    radeon/vdpau: don't report VDPAU for < r300
+    
+    Signed-off-by: David Heidelberger <david.heidelberger@ixit.cz>
+
+commit c74de9fec13fac2c836bb2a07ae6f90e1d61e667
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Aug 6 11:08:00 2014 +0900
+
+    PRIME: Don't advertise offload capabilities when acceleration is disabled
+    
+    Xorg tends to crash if the user tries to actually use the offload
+    capabilities with acceleration disabled.
+    
+    Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=57200
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 636a6382f80412ae4e28abe0cd9f98f84cd52291
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Oct 15 12:02:17 2014 +0900
+
+    Remove duplicate OPTION_PAGE_FLIP entry
+    
+    Reported by 'amanual' on IRC
+
+commit c854b4479ec5122390ede81b655b259efd9b1800
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Oct 2 10:22:22 2014 -0400
+
+    radeon: bump version post release
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
 commit 068a59e010ce6bfcd54f5a18cc08c55c54b8618d
 Author: Alex Deucher <alexander.deucher@amd.com>
 Date:   Wed Oct 1 23:38:52 2014 -0400

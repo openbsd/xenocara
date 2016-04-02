@@ -101,6 +101,5 @@ RADEONCopyMungedData(ScrnInfoPtr pScrn,
 		     unsigned int dstPitch, unsigned int h, unsigned int w);
 
 Bool radeon_crtc_is_enabled(xf86CrtcPtr crtc);
-uint32_t radeon_get_interpolated_vblanks(xf86CrtcPtr crtc);
 
 #endif

@@ -79,9 +79,9 @@ unsigned eg_tile_split(unsigned tile_split)
 	case 128:	tile_split = 1;	break;
 	case 256:	tile_split = 2;	break;
 	case 512:	tile_split = 3;	break;
+	default:
 	case 1024:	tile_split = 4;	break;
 	case 2048:	tile_split = 5;	break;
-	default:
 	case 4096:	tile_split = 6;	break;
 	}
 	return tile_split;

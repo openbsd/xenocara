@@ -51,8 +51,6 @@
 
 #include "exa.h"
 
-#include "radeon_glamor.h"
-
 				/* Exa and Cursor Support */
 #include "xf86Cursor.h"
 
@@ -91,6 +89,8 @@
 
 #include "simple_list.h"
 #include "atipcirename.h"
+
+struct _SyncFence;
 
 #ifndef MAX
 #define MAX(a,b) ((a)>(b)?(a):(b))
@@ -148,7 +148,12 @@ typedef enum {
     OPTION_ACCELMETHOD,
     OPTION_EXA_VSYNC,
     OPTION_ZAPHOD_HEADS,
-    OPTION_SWAPBUFFERS_WAIT
+    OPTION_SWAPBUFFERS_WAIT,
+    OPTION_DELETE_DP12,
+    OPTION_DRI3,
+    OPTION_DRI,
+    OPTION_SHADOW_PRIMARY,
+    OPTION_TEAR_FREE,
 } RADEONOpts;
 
 
@@ -240,6 +245,47 @@ typedef enum {
 
 #define CURSOR_WIDTH_CIK	128
 #define CURSOR_HEIGHT_CIK	128
+
+
+#ifdef USE_GLAMOR
+
+struct radeon_pixmap {
+	struct radeon_surface surface;
+
+	uint_fast32_t gpu_read;
+	uint_fast32_t gpu_write;
+
+	struct radeon_bo *bo;
+
+	uint32_t tiling_flags;
+
+	/* GEM handle for glamor-only pixmaps shared via DRI3 */
+	Bool handle_valid;
+	uint32_t handle;
+};
+
+#if HAS_DEVPRIVATEKEYREC
+extern DevPrivateKeyRec glamor_pixmap_index;
+#else
+extern int glamor_pixmap_index;
+#endif
+
+static inline struct radeon_pixmap *radeon_get_pixmap_private(PixmapPtr pixmap)
+{
+#if HAS_DEVPRIVATEKEYREC
+	return dixGetPrivate(&pixmap->devPrivates, &glamor_pixmap_index);
+#else
+	return dixLookupPrivate(&pixmap->devPrivates, &glamor_pixmap_index);
+#endif
+}
+
+static inline void radeon_set_pixmap_private(PixmapPtr pixmap, struct radeon_pixmap *priv)
+{
+	dixSetPrivate(&pixmap->devPrivates, &glamor_pixmap_index, priv);
+}
+
+#endif /* USE_GLAMOR */
+
 
 struct radeon_exa_pixmap_priv {
     struct radeon_bo *bo;
@@ -412,6 +458,9 @@ typedef struct {
 
     void              (*BlockHandler)(BLOCKHANDLER_ARGS_DECL);
 
+    void              (*CreateFence) (ScreenPtr pScreen, struct _SyncFence *pFence,
+				      Bool initially_triggered);
+
     int               pix24bpp;         /* Depth of pixmap for 24bpp fb      */
     Bool              dac6bits;         /* Use 6 bit DAC?                    */
 
@@ -419,15 +468,19 @@ typedef struct {
 
     Bool              directRenderingEnabled;
     struct radeon_dri2  dri2;
-    Bool              accelDFS;
 
     /* accel */
     Bool              RenderAccel; /* Render */
     Bool              allowColorTiling;
     Bool              allowColorTiling2D;
+    uint_fast32_t     gpu_flushed;
+    uint_fast32_t     gpu_synced;
     struct radeon_accel_state *accel_state;
+    PixmapPtr         fbcon_pixmap;
     Bool              accelOn;
     Bool              use_glamor;
+    Bool              shadow_primary;
+    Bool              tear_free;
     Bool	      exa_pixmaps;
     Bool              exa_force_create;
     XF86ModReqInfo    exaReq;
@@ -442,9 +495,11 @@ typedef struct {
     DisplayModePtr currentMode;
 
     CreateScreenResourcesProcPtr CreateScreenResources;
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) >= 10
+    CreateWindowProcPtr CreateWindow;
+#endif
 
     Bool              IsSecondary;
-    Bool              IsPrimary;
 
     Bool              r600_shadow_fb;
     void *fb_shadow;
@@ -483,6 +538,31 @@ typedef struct {
     /* cursor size */
     int cursor_w;
     int cursor_h;
+
+#ifdef USE_GLAMOR
+    struct {
+	CreateGCProcPtr SavedCreateGC;
+	RegionPtr (*SavedCopyArea)(DrawablePtr, DrawablePtr, GCPtr, int, int,
+				   int, int, int, int);
+	void (*SavedPolyFillRect)(DrawablePtr, GCPtr, int, xRectangle*);
+	CloseScreenProcPtr SavedCloseScreen;
+	GetImageProcPtr SavedGetImage;
+	GetSpansProcPtr SavedGetSpans;
+	CreatePixmapProcPtr SavedCreatePixmap;
+	DestroyPixmapProcPtr SavedDestroyPixmap;
+	CopyWindowProcPtr SavedCopyWindow;
+	ChangeWindowAttributesProcPtr SavedChangeWindowAttributes;
+	BitmapToRegionProcPtr SavedBitmapToRegion;
+#ifdef RENDER
+	CompositeProcPtr SavedComposite;
+	TrianglesProcPtr SavedTriangles;
+	GlyphsProcPtr SavedGlyphs;
+	TrapezoidsProcPtr SavedTrapezoids;
+	AddTrapsProcPtr SavedAddTraps;
+	UnrealizeGlyphProcPtr SavedUnrealizeGlyph;
+#endif
+    } glamor;
+#endif /* USE_GLAMOR */
 } RADEONInfoRec, *RADEONInfoPtr;
 
 /* radeon_accel.c */
@@ -511,6 +591,20 @@ extern Bool EVERGREENDrawInit(ScreenPtr pScreen);
 extern Bool RADEONGetDatatypeBpp(int bpp, uint32_t *type);
 extern Bool RADEONGetPixmapOffsetPitch(PixmapPtr pPix,
 				       uint32_t *pitch_offset);
+
+/* radeon_dri3.c */
+Bool radeon_dri3_screen_init(ScreenPtr screen);
+
+/* radeon_kms.c */
+void radeon_scanout_update_handler(ScrnInfoPtr scrn, uint32_t frame,
+				   uint64_t usec, void *event_data);
+
+/* radeon_present.c */
+Bool radeon_present_screen_init(ScreenPtr screen);
+
+/* radeon_sync.c */
+extern Bool radeon_sync_init(ScreenPtr screen);
+extern void radeon_sync_close(ScreenPtr screen);
 
 /* radeon_video.c */
 extern void RADEONInitVideo(ScreenPtr pScreen);
@@ -630,7 +724,7 @@ static inline struct radeon_bo *radeon_get_pixmap_bo(PixmapPtr pPix)
     {
 	struct radeon_exa_pixmap_priv *driver_priv;
 	driver_priv = exaGetPixmapDriverPrivate(pPix);
-	return driver_priv->bo;
+	return driver_priv ? driver_priv->bo : NULL;
     }
 
     return NULL;
@@ -786,6 +880,7 @@ static __inline__ void RADEON_SYNC(RADEONInfoPtr info, ScrnInfoPtr pScrn)
 }
 
 enum {
+    RADEON_CREATE_PIXMAP_SCANOUT		= 0x02000000,
     RADEON_CREATE_PIXMAP_DRI2			= 0x04000000,
     RADEON_CREATE_PIXMAP_TILING_MICRO_SQUARE	= 0x08000000,
     RADEON_CREATE_PIXMAP_TILING_MACRO		= 0x10000000,
