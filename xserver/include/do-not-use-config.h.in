@@ -492,7 +492,7 @@
 /* Default PCI text file ID path */
 #undef PCI_TXT_IDS_PATH
 
-/* System has PC console */
+/* System has PCVT console */
 #undef PCVT_SUPPORT
 
 /* Support Present extension */

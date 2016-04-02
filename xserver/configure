@@ -22574,9 +22574,6 @@ $as_echo "#define WSCONS_SUPPORT 1" >>confdefs.h
 $as_echo "#define CSRG_BASED 1" >>confdefs.h
 
 
-$as_echo "#define PCVT_SUPPORT 1" >>confdefs.h
-
-
 $as_echo "#define WSCONS_SUPPORT 1" >>confdefs.h
 
 	# Disable use of SIGIO by default; it breaks multi-card
