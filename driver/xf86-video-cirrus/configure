@@ -17926,6 +17926,8 @@ $as_echo "yes" >&6; }
 
 fi
 
+sdkdir=`$PKG_CONFIG --variable=sdkdir xorg-server`
+
 # Checks for libraries.
 SAVE_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="$CPPFLAGS $XORG_CFLAGS"
@@ -17969,7 +17971,10 @@ if test "x$XAA" != xno; then
         CPPFLAGS="$XORG_CFLAGS"
         for ac_header in xaa.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "xaa.h" "ac_cv_header_xaa_h" "$ac_includes_default"
+  ac_fn_c_check_header_compile "$LINENO" "xaa.h" "ac_cv_header_xaa_h" "
+#include <xorg-server.h>
+
+"
 if test "x$ac_cv_header_xaa_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_XAA_H 1
@@ -18012,18 +18017,29 @@ $as_echo_n "checking whether to enable EXA support... " >&6; }
 if test "x$EXA" = xyes; then
         { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
-
-        SAVE_CPPFLAGS="$CPPFLAGS"
-        CPPFLAGS="$CPPFLAGS $XORG_CFLAGS"
-        ac_fn_c_check_header_mongrel "$LINENO" "exa.h" "ac_cv_header_exa_h" "$ac_includes_default"
-if test "x$ac_cv_header_exa_h" = xyes; then :
+	as_ac_File=`$as_echo "ac_cv_file_${sdkdir}/exa.h" | $as_tr_sh`
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for ${sdkdir}/exa.h" >&5
+$as_echo_n "checking for ${sdkdir}/exa.h... " >&6; }
+if eval \${$as_ac_File+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  test "$cross_compiling" = yes &&
+  as_fn_error $? "cannot check for file existence when cross compiling" "$LINENO" 5
+if test -r "${sdkdir}/exa.h"; then
+  eval "$as_ac_File=yes"
+else
+  eval "$as_ac_File=no"
+fi
+fi
+eval ac_res=\$$as_ac_File
+	       { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
+$as_echo "$ac_res" >&6; }
+if eval test \"x\$"$as_ac_File"\" = x"yes"; then :
   have_exa_h="yes"
 else
   have_exa_h="no"
 fi
 
-
-        CPPFLAGS="$SAVE_CPPFLAGS"
 else
         { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
@@ -18037,6 +18053,7 @@ $as_echo_n "checking whether EXA version is at least 2.0.0... " >&6; }
         cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
+#include <xorg-server.h>
 #include "exa.h"
 #if EXA_VERSION_MAJOR < 2
 #error OLD EXA!
