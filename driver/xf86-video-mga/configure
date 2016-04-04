@@ -18397,7 +18397,8 @@ $as_echo "yes" >&6; }
 
     SAVE_CPPFLAGS="$CPPFLAGS"
     CPPFLAGS="$CPPFLAGS $XORG_CFLAGS"
-    ac_fn_c_check_header_mongrel "$LINENO" "exa.h" "ac_cv_header_exa_h" "$ac_includes_default"
+    ac_fn_c_check_header_compile "$LINENO" "exa.h" "ac_cv_header_exa_h" "#include \"xorg-server.h\"
+"
 if test "x$ac_cv_header_exa_h" = xyes; then :
   have_exa_h="yes"
 else
@@ -18419,6 +18420,7 @@ $as_echo_n "checking whether EXA version is at least 2.0.0... " >&6; }
     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
+#include "xorg-server.h"
 #include "exa.h"
 #if EXA_VERSION_MAJOR < 2
 #error OLD EXA!
