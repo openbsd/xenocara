@@ -121,12 +121,7 @@ CPPFLAGS="$CPPFLAGS $XORG_CFLAGS"
 AC_MSG_CHECKING([whether to enable EXA support])
 if test "x$EXA" = xyes; then
         AC_MSG_RESULT(yes)
-
-        SAVE_CPPFLAGS="$CPPFLAGS"
-        CPPFLAGS="$CPPFLAGS $XORG_CFLAGS"
-        AC_CHECK_HEADER(exa.h,
-                       [have_exa_h="yes"], [have_exa_h="no"])
-        CPPFLAGS="$SAVE_CPPFLAGS"
+	AC_CHECK_FILE(${sdkdir}/exa.h, [have_exa_h="yes"], [have_exa_h="no"])
 else
         AC_MSG_RESULT(no)
 fi
@@ -136,6 +131,7 @@ CPPFLAGS="$CPPFLAGS $XORG_CFLAGS"
 if test "x$have_exa_h" = xyes; then
         AC_MSG_CHECKING([whether EXA version is at least 2.0.0])
         AC_PREPROC_IFELSE([AC_LANG_PROGRAM([[
+#include <xorg-server.h>
 #include "exa.h"
 #if EXA_VERSION_MAJOR < 2
 #error OLD EXA!
