@@ -61,8 +61,6 @@ XORG_DRIVER_CHECK_EXT(DPMSExtension, xextproto)
 # Obtain compiler/linker options for the driver dependencies
 PKG_CHECK_MODULES(XORG, [xorg-server >= 1.4 xproto fontsproto $REQUIRED_MODULES])
 
-sdkdir=`$PKG_CONFIG --variable=sdkdir xorg-server`
-
 # Checks for libraries.
 SAVE_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="$CPPFLAGS $XORG_CFLAGS"
@@ -83,9 +81,7 @@ if test "x$XAA" != xno; then
         save_CPPFLAGS=$CPPFLAGS
         CFLAGS=$XORG_CFLAGS
         CPPFLAGS="$XORG_CFLAGS"
-        AC_CHECK_HEADERS([xaa.h], XAA=yes, XAA=no, [
-#include <xorg-server.h>
-])
+        AC_CHECK_HEADERS([xaa.h], XAA=yes, XAA=no)
         CFLAGS=$save_CFLAGS
         CPPFLAGS=$save_CPPFLAGS
 fi
@@ -97,13 +93,17 @@ AC_ARG_ENABLE(exa, AS_HELP_STRING([--disable-exa],
 				  [Disable EXA support [[default=enabled]]]),
               [EXA="$enableval"],
               [EXA=yes])
-SAVE_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="$CPPFLAGS $XORG_CFLAGS"
 # Properly handle EXA.
 AC_MSG_CHECKING([whether to enable EXA support])
 if test "x$EXA" = xyes; then
         AC_MSG_RESULT(yes)
-	AC_CHECK_FILE(${sdkdir}/exa.h, [have_exa_h="yes"], [have_exa_h="no"])
+
+        SAVE_CPPFLAGS="$CPPFLAGS"
+        CPPFLAGS="$CPPFLAGS $XORG_CFLAGS"
+        AC_CHECK_HEADER(exa.h,
+                       [have_exa_h="yes"], [have_exa_h="no"],
+		       [#include "xorg-server.h"])
+        CPPFLAGS="$SAVE_CPPFLAGS"
 else
         AC_MSG_RESULT(no)
 fi
@@ -127,6 +127,8 @@ if test "x$have_exa_h" = xyes; then
                 AC_DEFINE(USE_EXA, 1, [Build support for Exa])
         fi
 fi
+CPPFLAGS="$SAVE_CPPFLAGS"
+
 AM_CONDITIONAL(USE_EXA, test "x$USE_EXA" = xyes)
 
 if test "x$XSERVER_LIBPCIACCESS" = xyes; then
