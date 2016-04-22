@@ -150,6 +150,21 @@ WSConsQueryHardware(InputInfoPtr pInfo)
     return WSConsIsTouchpad(pInfo, NULL);
 }
 
+static void
+WSConsAdjustScrollCoords(SynapticsPrivate *priv, struct SynapticsHwState *hw)
+{
+    int dx, dy, i;
+
+    dx = hw->x - priv->scroll.last_x;
+    dy = hw->y - priv->scroll.last_y;
+    priv->scroll.last_x = hw->x;
+    priv->scroll.last_y = hw->y;
+    for (i = 0; i < SYNAPTICS_MOVE_HISTORY; i++) {
+        priv->move_hist[i].x += dx;
+        priv->move_hist[i].y += dy;
+    }
+}
+
 static Bool
 WSConsReadHwState(InputInfoPtr pInfo,
     struct CommData *comm, struct SynapticsHwState *hwRet)
@@ -158,7 +173,7 @@ WSConsReadHwState(InputInfoPtr pInfo,
     struct wsconscomm_proto_data *proto_data = priv->proto_data;
     struct SynapticsHwState *hw = comm->hwState;
     struct wscons_event *event;
-    Bool v;
+    Bool v, reset = FALSE;
 
     while ((event = WSConsGetEvent(pInfo)) != NULL) {
         switch (event->type) {
@@ -229,15 +244,18 @@ WSConsReadHwState(InputInfoPtr pInfo,
             hw->fingerWidth = event->value;
             break;
         case WSCONS_EVENT_TOUCH_RESET:
-            /*
-             * The contact count or the active MT-slot has changed.
-             * Suppress pointer motion and two-finger scrolling.
-             */
-            priv->count_packet_finger = 0;
-            priv->vert_scroll_twofinger_on = FALSE;
-            priv->horiz_scroll_twofinger_on = FALSE;
+            /* The contact count or the active MT slot has changed. */
+            reset = TRUE;
             break;
         case WSCONS_EVENT_SYNC:
+            if (reset) {
+                /* Ensure that pointer motion stops. */
+                priv->count_packet_finger = 0;
+                if (priv->vert_scroll_twofinger_on
+                    || priv->horiz_scroll_twofinger_on) {
+                    WSConsAdjustScrollCoords(priv, hw);
+                }
+            }
             hw->millis = 1000 * event->time.tv_sec +
                 event->time.tv_nsec / 1000000;
             SynapticsCopyHwState(hwRet, hw);
