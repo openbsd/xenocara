@@ -611,17 +611,27 @@ xf86OpenWScons(void)
     if (xf86Info.ShareVTs)
         FatalError("-sharevt is not supported with wscons\n");
 
+    /* default value if probing the console device fails */
+    snprintf(vtprefix, sizeof(vtprefix), "/dev/ttyC");
+
+    /* probe console device - it my be /dev/ttyD0 on some multi-heads setups */
     mib[0] = CTL_KERN;
     mib[1] = KERN_CONSDEV;
     len = sizeof(dev);
     if (sysctl(mib, 2, &dev, &len, NULL, 0) != -1) {
-        snprintf(vtprefix, sizeof(vtprefix), "/dev/%s", devname(dev, S_IFCHR));
-        /* strip number, assuming 0 */
-        p = strchr(vtprefix, '0');
-        *p = '\0';
-    } else
-        snprintf(vtprefix, sizeof(vtprefix), "/dev/ttyC");
-
+        snprintf(vtname, sizeof(vtname), "/dev/%s", devname(dev, S_IFCHR));
+	if ((fd = open(vtname, O_RDWR)) != -1) {
+	    if (ioctl(fd, WSDISPLAYIO_GTYPE, &i) == 0) {
+                /* console is a wsdisplay(4) device */
+                strlcpy(vtprefix, vtname, sizeof(vtprefix));
+                /* strip number, assuming 0 */
+                p = strchr(vtprefix, '0');
+                *p = '\0';
+	        close(fd);
+		fd = -1;
+	    }
+	}
+    }
     if (VTnum != -1) {
         snprintf(vtname, sizeof(vtname), "%s%01x", vtprefix, VTnum - 1);
         xf86Info.vtno = VTnum;
