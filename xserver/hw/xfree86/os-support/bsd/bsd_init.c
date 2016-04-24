@@ -254,23 +254,23 @@ xf86OpenConsole(void)
         case PCVT:
 #if !(defined(__NetBSD__) && (__NetBSD_Version__ >= 200000000))
             /*
-	     * First activate the #1 VT.  This is a hack to allow a server
-	     * to be started while another one is active.  There should be
-	     * a better way.
-	     */
-	    if (initialVT != 1) {
+             * First activate the #1 VT.  This is a hack to allow a server
+             * to be started while another one is active.  There should be
+             * a better way.
+             */
+            if (initialVT != 1) {
 
-		if (ioctl(xf86Info.consoleFd, VT_ACTIVATE, 1) != 0) {
-		    xf86Msg(X_WARNING,
+                if (ioctl(xf86Info.consoleFd, VT_ACTIVATE, 1) != 0) {
+                    xf86Msg(X_WARNING,
                             "xf86OpenConsole: VT_ACTIVATE failed\n");
-		}
-		sleep(1);
-	    }
+                }
+                sleep(1);
+            }
 #endif
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 acquire_vt:
 #endif
-	    if (!xf86Info.ShareVTs) {
+            if (!xf86Info.ShareVTs) {
                 /*
                  * now get the VT
                  */
@@ -286,7 +286,7 @@ acquire_vt:
                 }
 
                 signal(SIGUSR2, xf86VTRequest);
-                
+
                 vtmode.mode = VT_PROCESS;
                 vtmode.relsig = SIGUSR2;
                 vtmode.acqsig = SIGUSR2;
@@ -303,11 +303,11 @@ acquire_vt:
                 if (ioctl(xf86Info.consoleFd, KDSETMODE, KD_GRAPHICS) < 0) {
                     FatalError("xf86OpenConsole: KDSETMODE KD_GRAPHICS failed");
                 }
-	    }
+            }
             else { /* xf86Info.ShareVTs */
                 close(xf86Info.consoleFd);
-	    }
-  	    break;
+            }
+            break;
 #endif /* SYSCONS_SUPPORT || PCVT_SUPPORT */
 #ifdef WSCONS_SUPPORT
           case WSCONS:
@@ -432,60 +432,60 @@ xf86OpenSyscons(void)
 #if 0
             }
 #endif
-                
-		if (xf86Info.vtno == -1) {
-		    /*
-		     * All VTs are in use.  If initialVT was found, use it.
-		     */
-		    if (initialVT != -1) {
-			xf86Info.vtno = initialVT;
-		    }
+
+                if (xf86Info.vtno == -1) {
+                    /*
+                     * All VTs are in use.  If initialVT was found, use it.
+                     */
+                    if (initialVT != -1) {
+                        xf86Info.vtno = initialVT;
+                    }
                     else {
-			if (syscons_version >= 0x100) {
-			    FatalError("%s: Cannot find a free VT",
-				       "xf86OpenSyscons");
-			}
-			/* Should no longer reach here */
-			FatalError("%s: %s %s\n\t%s %s",
-				   "xf86OpenSyscons",
-				   "syscons versions prior to 1.0 require",
-				   "either the",
-				   "server's stdin be a VT",
-				   "or the use of the vtxx server option");
-		    }
-		}
-		from = X_PROBED;
-	    }
-            
-	    close(fd);
+                        if (syscons_version >= 0x100) {
+                            FatalError("%s: Cannot find a free VT",
+                                       "xf86OpenSyscons");
+                        }
+                        /* Should no longer reach here */
+                        FatalError("%s: %s %s\n\t%s %s",
+                                   "xf86OpenSyscons",
+                                   "syscons versions prior to 1.0 require",
+                                   "either the",
+                                   "server's stdin be a VT",
+                                   "or the use of the vtxx server option");
+                    }
+                }
+                from = X_PROBED;
+            }
+
+            close(fd);
 #ifndef __OpenBSD__
-	    snprintf(vtname, sizeof(vtname), "/dev/ttyv%01x", xf86Info.vtno - 1);
+            snprintf(vtname, sizeof(vtname), "/dev/ttyv%01x", xf86Info.vtno - 1);
 #else
-	    sprintf(vtname, sizeof(vtname), "/dev/ttyC%01x", xf86Info.vtno - 1);
+            sprintf(vtname, sizeof(vtname), "/dev/ttyC%01x", xf86Info.vtno - 1);
 #endif
-	    if ((fd = open(vtname, SYSCONS_CONSOLE_MODE, 0)) < 0) {
-		FatalError("xf86OpenSyscons: Cannot open %s (%s)",
-			   vtname, strerror(errno));
-	    }
-	    if (ioctl(fd, VT_GETMODE, &vtmode) < 0) {
-		FatalError("xf86OpenSyscons: VT_GETMODE failed");
-	    }
-	    xf86Info.consType = SYSCONS;
-	    xf86Msg(X_PROBED, "Using syscons driver with X support");
-	    if (syscons_version >= 0x100) {
-		xf86ErrorF(" (version %ld.%ld)\n", syscons_version >> 8,
-			   syscons_version & 0xFF);
-	    }
+            if ((fd = open(vtname, SYSCONS_CONSOLE_MODE, 0)) < 0) {
+                FatalError("xf86OpenSyscons: Cannot open %s (%s)",
+                           vtname, strerror(errno));
+            }
+            if (ioctl(fd, VT_GETMODE, &vtmode) < 0) {
+                FatalError("xf86OpenSyscons: VT_GETMODE failed");
+            }
+            xf86Info.consType = SYSCONS;
+            xf86Msg(X_PROBED, "Using syscons driver with X support");
+            if (syscons_version >= 0x100) {
+                xf86ErrorF(" (version %ld.%ld)\n", syscons_version >> 8,
+                           syscons_version & 0xFF);
+            }
             else {
-		xf86ErrorF(" (version 0.x)\n");
-	    }
-	    xf86Msg(from, "using VT number %d\n\n", xf86Info.vtno);
-	}
+                xf86ErrorF(" (version 0.x)\n");
+            }
+            xf86Msg(from, "using VT number %d\n\n", xf86Info.vtno);
+        }
         else {
-	    /* VT_GETMODE failed, probably not syscons */
-	    close(fd);
-	    fd = -1;
-	}
+            /* VT_GETMODE failed, probably not syscons */
+            close(fd);
+            fd = -1;
+        }
     }
     return fd;
 }
@@ -511,11 +511,11 @@ xf86OpenPcvt(void)
 #endif
 
     if (VTnum != -1) {
-	    snprintf(vtname, sizeof(vtname), "%s%x", vtprefix, VTnum - 1);
-	    fd  = open(vtname, PCVT_CONSOLE_MODE, 0);
-    } 
+            snprintf(vtname, sizeof(vtname), "%s%x", vtprefix, VTnum - 1);
+            fd  = open(vtname, PCVT_CONSOLE_MODE, 0);
+    }
     else {
-	    fd = open(PCVT_CONSOLE_DEV, PCVT_CONSOLE_MODE, 0);
+            fd = open(PCVT_CONSOLE_DEV, PCVT_CONSOLE_MODE, 0);
     }
 #ifdef WSCONS_PCVT_COMPAT_CONSOLE_DEV
     if (fd < 0) {
@@ -524,55 +524,55 @@ xf86OpenPcvt(void)
     }
 #endif
     if (fd >= 0) {
-	if (ioctl(fd, VGAPCVTID, &pcvt_version) >= 0) {
-	    if(ioctl(fd, VT_GETMODE, &vtmode) < 0) {
-		FatalError("%s: VT_GETMODE failed\n%s%s\n%s",
-			   "xf86OpenPcvt",
-			   "Found pcvt driver but X11 seems to be",
-			   " not supported.", CHECK_DRIVER_MSG);
-	    }
-            
-	    xf86Info.vtno = VTnum;
-            
-	    if (ioctl(fd, VT_GETACTIVE, &initialVT) < 0)
-		initialVT = -1;
+        if (ioctl(fd, VGAPCVTID, &pcvt_version) >= 0) {
+            if(ioctl(fd, VT_GETMODE, &vtmode) < 0) {
+                FatalError("%s: VT_GETMODE failed\n%s%s\n%s",
+                           "xf86OpenPcvt",
+                           "Found pcvt driver but X11 seems to be",
+                           " not supported.", CHECK_DRIVER_MSG);
+            }
 
-	    if (xf86Info.vtno == -1) {
-		if (ioctl(fd, VT_OPENQRY, &xf86Info.vtno) < 0) {
-		    /* No free VTs */
-		    xf86Info.vtno = -1;
-		}
-                
-		if (xf86Info.vtno == -1) {
-		    /*
-		     * All VTs are in use.  If initialVT was found, use it.
-		     */
-		    if (initialVT != -1) {
-			xf86Info.vtno = initialVT;
-		    }
+            xf86Info.vtno = VTnum;
+
+            if (ioctl(fd, VT_GETACTIVE, &initialVT) < 0)
+                initialVT = -1;
+
+            if (xf86Info.vtno == -1) {
+                if (ioctl(fd, VT_OPENQRY, &xf86Info.vtno) < 0) {
+                    /* No free VTs */
+                    xf86Info.vtno = -1;
+                }
+
+                if (xf86Info.vtno == -1) {
+                    /*
+                     * All VTs are in use.  If initialVT was found, use it.
+                     */
+                    if (initialVT != -1) {
+                        xf86Info.vtno = initialVT;
+                    }
                     else {
-			FatalError("%s: Cannot find a free VT",
-				   "xf86OpenPcvt");
-		    }
-		}
-	    }
+                        FatalError("%s: Cannot find a free VT",
+                                   "xf86OpenPcvt");
+                    }
+                }
+            }
 
-	    close(fd);
+            close(fd);
             snprintf(vtname, sizeof(vtname), "%s%01x", vtprefix, xf86Info.vtno - 1);
-	    if ((fd = open(vtname, PCVT_CONSOLE_MODE, 0)) < 0) {
-		ErrorF("xf86OpenPcvt: Cannot open %s (%s)",
+            if ((fd = open(vtname, PCVT_CONSOLE_MODE, 0)) < 0) {
+                ErrorF("xf86OpenPcvt: Cannot open %s (%s)",
                        vtname, strerror(errno));
-		xf86Info.vtno = initialVT;
-	        snprintf(vtname, sizeof(vtname), "%s%01x", vtprefix, xf86Info.vtno - 1);
-		if ((fd = open(vtname, PCVT_CONSOLE_MODE, 0)) < 0) {
+                xf86Info.vtno = initialVT;
+                snprintf(vtname, sizeof(vtname), "%s%01x", vtprefix, xf86Info.vtno - 1);
+                if ((fd = open(vtname, PCVT_CONSOLE_MODE, 0)) < 0) {
                     FatalError("xf86OpenPcvt: Cannot open %s (%s)",
-			   	vtname, strerror(errno));
-		}
-	    }
-	    if (ioctl(fd, VT_GETMODE, &vtmode) < 0) {
-		FatalError("xf86OpenPcvt: VT_GETMODE failed");
-	    }
-	    xf86Info.consType = PCVT;
+                                vtname, strerror(errno));
+                }
+            }
+            if (ioctl(fd, VT_GETMODE, &vtmode) < 0) {
+                FatalError("xf86OpenPcvt: VT_GETMODE failed");
+            }
+            xf86Info.consType = PCVT;
 #ifdef WSCONS_SUPPORT
             xf86Msg(X_PROBED,
                     "Using wscons driver on %s in pcvt compatibility mode "
@@ -789,29 +789,29 @@ xf86UseMsg(void)
 void
 xf86DropPriv(void)
 {
-	struct passwd *pw;
-
-	/* revoke privileges */
-	if (getuid() == 0) {
-		/* Running as root */
-		pw = getpwnam("_x11");
-		if (!pw)
-			return;
-		/* give away lock file to unpriviledged user */
-		if (ChownLock(pw->pw_uid, pw->pw_gid) == -1) {
-			FatalError("Chown Lock");
-		}
-
-		/* Start privileged child */
-		if (priv_init(pw->pw_uid, pw->pw_gid) == -1) {
-			FatalError("priv_init");
-		}
-	}
-        else {
-		/* Normal user */
-		if (priv_init(getuid(), getgid()) == -1) {
-			FatalError("priv_init");
-		}
-	}
+    struct passwd *pw;
+    
+    /* revoke privileges */
+    if (getuid() == 0) {
+        /* Running as root */
+        pw = getpwnam("_x11");
+        if (!pw)
+            return;
+        /* give away lock file to unpriviledged user */
+        if (ChownLock(pw->pw_uid, pw->pw_gid) == -1) {
+            FatalError("Chown Lock");
+        }
+        
+        /* Start privileged child */
+        if (priv_init(pw->pw_uid, pw->pw_gid) == -1) {
+            FatalError("priv_init");
+        }
+    }
+    else {
+        /* Normal user */
+        if (priv_init(getuid(), getgid()) == -1) {
+            FatalError("priv_init");
+        }
+    }
 }
 #endif
