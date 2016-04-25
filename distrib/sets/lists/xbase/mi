@@ -159,7 +159,6 @@
 ./usr/X11R6/bin/xsetroot
 ./usr/X11R6/bin/xsm
 ./usr/X11R6/bin/xstdcmap
-./usr/X11R6/bin/xsystrace
 ./usr/X11R6/bin/xterm
 ./usr/X11R6/bin/xtsscale
 ./usr/X11R6/bin/xvctl
@@ -503,7 +502,6 @@
 ./usr/X11R6/share/X11/app-defaults/Xman
 ./usr/X11R6/share/X11/app-defaults/Xmessage
 ./usr/X11R6/share/X11/app-defaults/Xmessage-color
-./usr/X11R6/share/X11/app-defaults/Xsystrace
 ./usr/X11R6/share/X11/app-defaults/Xvidtune
 ./usr/X11R6/share/xcb
 ./usr/X11R6/share/xcb/xcb.xsd

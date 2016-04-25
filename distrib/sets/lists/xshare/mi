@@ -471,8 +471,6 @@
 ./usr/X11R6/include/X11/pixmaps/clamp.xpm
 ./usr/X11R6/include/X11/pixmaps/colormap.xpm
 ./usr/X11R6/include/X11/pixmaps/datebook.xpm
-./usr/X11R6/include/X11/pixmaps/deny-always.xpm
-./usr/X11R6/include/X11/pixmaps/deny.xpm
 ./usr/X11R6/include/X11/pixmaps/desk.xpm
 ./usr/X11R6/include/X11/pixmaps/dialog_box.xpm
 ./usr/X11R6/include/X11/pixmaps/doomface.xpm
@@ -507,7 +505,6 @@
 ./usr/X11R6/include/X11/pixmaps/jterm.xpm
 ./usr/X11R6/include/X11/pixmaps/jwindow.xpm
 ./usr/X11R6/include/X11/pixmaps/jx.xpm
-./usr/X11R6/include/X11/pixmaps/logo.xpm
 ./usr/X11R6/include/X11/pixmaps/mag_glass.xpm
 ./usr/X11R6/include/X11/pixmaps/mail1.xpm
 ./usr/X11R6/include/X11/pixmaps/mail2.xpm
@@ -559,15 +556,12 @@
 ./usr/X11R6/include/X11/pixmaps/mini.zircon.xpm
 ./usr/X11R6/include/X11/pixmaps/page.xpm
 ./usr/X11R6/include/X11/pixmaps/page2.xpm
-./usr/X11R6/include/X11/pixmaps/permit-always.xpm
-./usr/X11R6/include/X11/pixmaps/permit.xpm
 ./usr/X11R6/include/X11/pixmaps/ps.xpm
 ./usr/X11R6/include/X11/pixmaps/question.xpm
 ./usr/X11R6/include/X11/pixmaps/rbomb.xpm
 ./usr/X11R6/include/X11/pixmaps/rcalc.xpm
 ./usr/X11R6/include/X11/pixmaps/rterm.xpm
 ./usr/X11R6/include/X11/pixmaps/side.fvwm2.xpm
-./usr/X11R6/include/X11/pixmaps/skull.xpm
 ./usr/X11R6/include/X11/pixmaps/term.xpm
 ./usr/X11R6/include/X11/pixmaps/tiff2.xpm
 ./usr/X11R6/include/X11/pixmaps/toolbox.xpm
@@ -912,7 +906,6 @@
 ./usr/X11R6/man/man1/xsetroot.1
 ./usr/X11R6/man/man1/xsm.1
 ./usr/X11R6/man/man1/xstdcmap.1
-./usr/X11R6/man/man1/xsystrace.1
 ./usr/X11R6/man/man1/xterm.1
 ./usr/X11R6/man/man1/xtsscale.1
 ./usr/X11R6/man/man1/xvctl.1
