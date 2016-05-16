@@ -224,3 +224,7 @@ static inline void FreePixmap(PixmapPtr pixmap)
 #endif
 
 #endif
+
+#if HAS_DIRTYTRACKING_ROTATION
+#define PixmapSyncDirtyHelper(d, dd) PixmapSyncDirtyHelper(d)
+#endif
