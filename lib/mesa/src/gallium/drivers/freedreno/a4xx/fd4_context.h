@@ -29,6 +29,8 @@
 #ifndef FD4_CONTEXT_H_
 #define FD4_CONTEXT_H_
 
+#include "util/u_upload_mgr.h"
+
 #include "freedreno_drmif.h"
 
 #include "freedreno_context.h"
@@ -47,6 +49,8 @@ struct fd4_context {
 
 	/* This only needs to be 4 * num_of_pipes bytes (ie. 32 bytes).  We
 	 * could combine it with another allocation.
+	 *
+	 * (upper area used as scratch bo.. see fd4_query)
 	 */
 	struct fd_bo *vsc_size_mem;
 
@@ -69,6 +73,9 @@ struct fd4_context {
 	 *    - solid_vbuf / 12 / R32G32B32_FLOAT
 	 */
 	struct fd_vertex_state blit_vbuf_state;
+
+	struct u_upload_mgr *border_color_uploader;
+	struct pipe_resource *border_color_buf;
 
 	/* if *any* of bits are set in {v,f}saturate_{s,t,r} */
 	bool vsaturate, fsaturate;
@@ -97,6 +104,6 @@ fd4_context(struct fd_context *ctx)
 }
 
 struct pipe_context *
-fd4_context_create(struct pipe_screen *pscreen, void *priv);
+fd4_context_create(struct pipe_screen *pscreen, void *priv, unsigned flags);
 
 #endif /* FD4_CONTEXT_H_ */

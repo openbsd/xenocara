@@ -27,6 +27,7 @@
 #include "sb_bc.h"
 #include "sb_shader.h"
 #include "sb_pass.h"
+#include "eg_sq.h" // V_SQ_CF_INDEX_0/1
 
 namespace r600_sb {
 
@@ -182,6 +183,9 @@ void bc_dump::dump(cf_node& n) {
 
 		if (n.bc.pop_count)
 			s << " POP:" << n.bc.pop_count;
+
+		if (n.bc.count && (n.bc.op_ptr->flags & CF_EMIT))
+			s << " STREAM" << n.bc.count;
 	}
 
 	if (!n.bc.barrier)
@@ -276,6 +280,28 @@ static void print_src(sb_ostream &s, bc_alu &alu, unsigned idx)
 		need_sel = 0;
 		need_chan = 0;
 		switch (sel) {
+		case ALU_SRC_LDS_OQ_A:
+			s << "LDS_OQ_A";
+			need_chan = 1;
+			break;
+		case ALU_SRC_LDS_OQ_B:
+			s << "LDS_OQ_B";
+			need_chan = 1;
+			break;
+		case ALU_SRC_LDS_OQ_A_POP:
+			s << "LDS_OQ_A_POP";
+			need_chan = 1;
+			break;
+		case ALU_SRC_LDS_OQ_B_POP:
+			s << "LDS_OQ_B_POP";
+			need_chan = 1;
+			break;
+		case ALU_SRC_LDS_DIRECT_A:
+			s << "LDS_A["; s.print_zw_hex(src->value.u, 8); s << "]";
+			break;
+		case ALU_SRC_LDS_DIRECT_B:
+			s << "LDS_B["; s.print_zw_hex(src->value.u, 8); s << "]";
+			break;
 		case ALU_SRC_PS:
 			s << "PS";
 			break;
@@ -351,6 +377,18 @@ void bc_dump::dump(alu_node& n) {
 			s << "  " << vec_bs[n.bc.bank_swizzle];
 	}
 
+	if (ctx.is_cayman()) {
+		if (n.bc.op == ALU_OP1_MOVA_INT) {
+			static const char *mova_str[] = { " AR_X", " PC", " CF_IDX0", " CF_IDX1",
+				" Unknown MOVA_INT dest" };
+			s << mova_str[std::min(n.bc.dst_gpr, 4u)];  // CM_V_SQ_MOVA_DST_AR_*
+		}
+	}
+
+	if (n.bc.lds_idx_offset) {
+		s << " IDX_OFFSET:" << n.bc.lds_idx_offset;
+	}
+
 	sblog << s.str() << "\n";
 }
 
@@ -413,23 +451,26 @@ bc_dump::bc_dump(shader& s, bytecode* bc)  :
 void bc_dump::dump(fetch_node& n) {
 	sb_ostringstream s;
 	static const char * fetch_type[] = {"VERTEX", "INSTANCE", ""};
+	unsigned gds = n.bc.op_ptr->flags & FF_GDS;
 
 	s << n.bc.op_ptr->name;
 	fill_to(s, 20);
 
-	s << "R";
-	print_sel(s, n.bc.dst_gpr, n.bc.dst_rel, INDEX_LOOP, 0);
-	s << ".";
-	for (int k = 0; k < 4; ++k)
-		s << chans[n.bc.dst_sel[k]];
-	s << ", ";
+	if (!gds) {
+		s << "R";
+		print_sel(s, n.bc.dst_gpr, n.bc.dst_rel, INDEX_LOOP, 0);
+		s << ".";
+		for (int k = 0; k < 4; ++k)
+			s << chans[n.bc.dst_sel[k]];
+		s << ", ";
+	}
 
 	s << "R";
 	print_sel(s, n.bc.src_gpr, n.bc.src_rel, INDEX_LOOP, 0);
 	s << ".";
 
 	unsigned vtx = n.bc.op_ptr->flags & FF_VTX;
-	unsigned num_src_comp = vtx ? ctx.is_cayman() ? 2 : 1 : 4;
+	unsigned num_src_comp = gds ? 3 : vtx ? ctx.is_cayman() ? 2 : 1 : 4;
 
 	for (unsigned k = 0; k < num_src_comp; ++k)
 		s << chans[n.bc.src_sel[k]];
@@ -438,18 +479,21 @@ void bc_dump::dump(fetch_node& n) {
 		s << " + " << n.bc.offset[0] << "b ";
 	}
 
-	s << ",   RID:" << n.bc.resource_id;
+	if (!gds)
+		s << ",   RID:" << n.bc.resource_id;
 
-	if (vtx) {
+	if (gds) {
+
+	} else if (vtx) {
 		s << "  " << fetch_type[n.bc.fetch_type];
 		if (!ctx.is_cayman() && n.bc.mega_fetch_count)
 			s << " MFC:" << n.bc.mega_fetch_count;
 		if (n.bc.fetch_whole_quad)
 			s << " FWQ";
 		if (ctx.is_egcm() && n.bc.resource_index_mode)
-			s << " RIM:SQ_CF_INDEX_" << n.bc.resource_index_mode;
+			s << " RIM:SQ_CF_INDEX_" << (n.bc.resource_index_mode - V_SQ_CF_INDEX_0);
 		if (ctx.is_egcm() && n.bc.sampler_index_mode)
-			s << " SID:SQ_CF_INDEX_" << n.bc.sampler_index_mode;
+			s << " SID:SQ_CF_INDEX_" << (n.bc.sampler_index_mode - V_SQ_CF_INDEX_0);
 
 		s << " UCF:" << n.bc.use_const_fields
 				<< " FMT(DTA:" << n.bc.data_format
@@ -466,6 +510,10 @@ void bc_dump::dump(fetch_node& n) {
 		for (unsigned k = 0; k < 3; ++k)
 			if (n.bc.offset[k])
 				s << " O" << chans[k] << ":" << n.bc.offset[k];
+		if (ctx.is_egcm() && n.bc.resource_index_mode)
+			s << " RIM:SQ_CF_INDEX_" << (n.bc.resource_index_mode - V_SQ_CF_INDEX_0);
+		if (ctx.is_egcm() && n.bc.sampler_index_mode)
+			s << " SID:SQ_CF_INDEX_" << (n.bc.sampler_index_mode - V_SQ_CF_INDEX_0);
 	}
 
 	sblog << s.str() << "\n";

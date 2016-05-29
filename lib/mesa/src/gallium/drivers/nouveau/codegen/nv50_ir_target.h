@@ -58,6 +58,23 @@ struct RelocInfo
    RelocEntry entry[0];
 };
 
+struct InterpEntry
+{
+   InterpEntry(int ipa, int reg, int loc) : ipa(ipa), reg(reg), loc(loc) {}
+   uint32_t ipa:4; // SC mode used to identify colors
+   uint32_t reg:8; // The reg used for perspective division
+   uint32_t loc:20; // Let's hope we don't have more than 1M-sized shaders
+};
+
+typedef void (*InterpApply)(const InterpEntry*, uint32_t*, bool, bool);
+
+struct InterpInfo
+{
+   uint32_t count;
+   InterpApply apply;
+   InterpEntry entry[0];
+};
+
 class CodeEmitter
 {
 public:
@@ -78,6 +95,9 @@ public:
 
    inline void *getRelocInfo() const { return relocInfo; }
 
+   bool addInterp(int ipa, int reg, InterpApply apply);
+   inline void *getInterpInfo() const { return interpInfo; }
+
    virtual void prepareEmission(Program *);
    virtual void prepareEmission(Function *);
    virtual void prepareEmission(BasicBlock *);
@@ -92,6 +112,7 @@ protected:
    uint32_t codeSizeLimit;
 
    RelocInfo *relocInfo;
+   InterpInfo *interpInfo;
 };
 
 
@@ -170,6 +191,8 @@ public:
 
    virtual bool insnCanLoad(const Instruction *insn, int s,
                             const Instruction *ld) const = 0;
+   virtual bool insnCanLoadOffset(const Instruction *insn, int s,
+                                  int offset) const = 0;
    virtual bool isOpSupported(operation, DataType) const = 0;
    virtual bool isAccessSupported(DataFile, DataType) const = 0;
    virtual bool isModSupported(const Instruction *,

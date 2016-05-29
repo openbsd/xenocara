@@ -1,5 +1,4 @@
-/**************************************************************************
- *
+/*
  * Copyright 2003 VMware, Inc.
  * All Rights Reserved.
  *
@@ -7,7 +6,7 @@
  * copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
  * without limitation the rights to use, copy, modify, merge, publish,
- * distribute, sub license, and/or sell copies of the Software, and to
+ * distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
  *
@@ -17,18 +16,16 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
  * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- **************************************************************************/
+ */
 
 #include <errno.h>
 #include <time.h>
 #include <unistd.h>
-#include "main/glheader.h"
 #include "main/context.h"
 #include "main/framebuffer.h"
 #include "main/renderbuffer.h"
@@ -39,7 +36,7 @@
 #include "swrast/s_renderbuffer.h"
 #include "util/ralloc.h"
 #include "brw_shader.h"
-#include "glsl/nir/nir.h"
+#include "compiler/nir/nir.h"
 
 #include "utils.h"
 #include "xmlpool.h"
@@ -82,6 +79,7 @@ DRI_CONF_BEGIN
       DRI_CONF_FORCE_GLSL_EXTENSIONS_WARN("false")
       DRI_CONF_DISABLE_GLSL_LINE_CONTINUATIONS("false")
       DRI_CONF_DISABLE_BLEND_FUNC_EXTENDED("false")
+      DRI_CONF_DUAL_COLOR_BLEND_BY_LOCATION("false")
       DRI_CONF_ALLOW_GLSL_EXTENSION_DIRECTIVE_MIDSHADER("false")
 
       DRI_CONF_OPT_BEGIN_B(shader_precompile, "true")
@@ -397,7 +395,7 @@ intel_create_image_from_name(__DRIscreen *screen,
        return NULL;
     }
 
-    return image;	
+    return image;
 }
 
 static __DRIimage *
@@ -532,7 +530,6 @@ intel_create_image(__DRIscreen *screen,
    if (image == NULL)
       return NULL;
 
-   
    cpp = _mesa_get_format_bytes(image->format);
    image->bo = drm_intel_bo_alloc_tiled(intelScreen->bufmgr, "image",
                                         width, height, cpp, &tiling,
@@ -1180,12 +1177,15 @@ intel_detect_timestamp(struct intel_screen *screen)
 const int*
 intel_supported_msaa_modes(const struct intel_screen  *screen)
 {
+   static const int gen9_modes[] = {16, 8, 4, 2, 0, -1};
    static const int gen8_modes[] = {8, 4, 2, 0, -1};
    static const int gen7_modes[] = {8, 4, 0, -1};
    static const int gen6_modes[] = {4, 0, -1};
    static const int gen4_modes[] = {0, -1};
 
-   if (screen->devinfo->gen >= 8) {
+   if (screen->devinfo->gen >= 9) {
+      return gen9_modes;
+   } else if (screen->devinfo->gen >= 8) {
       return gen8_modes;
    } else if (screen->devinfo->gen >= 7) {
       return gen7_modes;
@@ -1340,6 +1340,11 @@ set_max_gl_versions(struct intel_screen *screen)
    switch (screen->devinfo->gen) {
    case 9:
    case 8:
+      psp->max_gl_core_version = 33;
+      psp->max_gl_compat_version = 30;
+      psp->max_gl_es1_version = 11;
+      psp->max_gl_es2_version = 31;
+      break;
    case 7:
    case 6:
       psp->max_gl_core_version = 33;
@@ -1359,7 +1364,16 @@ set_max_gl_versions(struct intel_screen *screen)
    }
 }
 
-static int
+/**
+ * Return the revision (generally the revid field of the PCI header) of the
+ * graphics device.
+ *
+ * XXX: This function is useful to keep around even if it is not currently in
+ * use. It is necessary for new platforms and revision specific workarounds or
+ * features. Please don't remove it so that we know it at least continues to
+ * build.
+ */
+static __attribute__((__unused__)) int
 brw_get_revision(int fd)
 {
    struct drm_i915_getparam gp;
@@ -1418,14 +1432,23 @@ __DRIconfig **intelInitScreen2(__DRIscreen *psp)
        return false;
 
    intelScreen->deviceID = drm_intel_bufmgr_gem_get_devid(intelScreen->bufmgr);
-   intelScreen->devinfo = brw_get_device_info(intelScreen->deviceID,
-                                              brw_get_revision(psp->fd));
+   intelScreen->devinfo = brw_get_device_info(intelScreen->deviceID);
    if (!intelScreen->devinfo)
       return false;
 
-   brw_process_intel_debug_variable(intelScreen);
+   brw_process_intel_debug_variable();
 
-   intelScreen->hw_must_use_separate_stencil = intelScreen->devinfo->gen >= 7;
+   if (INTEL_DEBUG & DEBUG_BUFMGR)
+      dri_bufmgr_set_debug(intelScreen->bufmgr, true);
+
+   if ((INTEL_DEBUG & DEBUG_SHADER_TIME) && intelScreen->devinfo->gen < 7) {
+      fprintf(stderr,
+              "shader_time debugging requires gen7 (Ivybridge) or better.\n");
+      INTEL_DEBUG &= ~DEBUG_SHADER_TIME;
+   }
+
+   if (INTEL_DEBUG & DEBUG_AUB)
+      drm_intel_bufmgr_gem_set_aub_dump(intelScreen->bufmgr, true);
 
    intelScreen->hw_has_swizzling = intel_detect_swizzling(intelScreen);
    intelScreen->hw_has_timestamp = intel_detect_timestamp(intelScreen);
@@ -1473,6 +1496,7 @@ __DRIconfig **intelInitScreen2(__DRIscreen *psp)
 
    intelScreen->compiler = brw_compiler_create(intelScreen,
                                                intelScreen->devinfo);
+   intelScreen->program_id = 1;
 
    if (intelScreen->devinfo->has_resource_streamer) {
       int val = -1;

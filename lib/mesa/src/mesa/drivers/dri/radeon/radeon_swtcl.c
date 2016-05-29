@@ -34,7 +34,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "main/glheader.h"
 #include "main/mtypes.h"
-#include "main/colormac.h"
 #include "main/enums.h"
 #include "main/imports.h"
 #include "main/macros.h"
@@ -353,25 +352,22 @@ void r100_swtcl_flush(struct gl_context *ctx, uint32_t current_offset)
 #define HAVE_LINE_STRIPS 1
 #define HAVE_TRIANGLES   1
 #define HAVE_TRI_STRIPS  1
-#define HAVE_TRI_STRIP_1 0
 #define HAVE_TRI_FANS    1
-#define HAVE_QUADS       0
-#define HAVE_QUAD_STRIPS 0
 #define HAVE_POLYGONS    0
 /* \todo: is it possible to make "ELTS" work with t_vertex code ? */
 #define HAVE_ELTS        0
 
 static const GLuint hw_prim[GL_POLYGON+1] = {
-   RADEON_CP_VC_CNTL_PRIM_TYPE_POINT,
-   RADEON_CP_VC_CNTL_PRIM_TYPE_LINE,
-   0,
-   RADEON_CP_VC_CNTL_PRIM_TYPE_LINE_STRIP,
-   RADEON_CP_VC_CNTL_PRIM_TYPE_TRI_LIST,
-   RADEON_CP_VC_CNTL_PRIM_TYPE_TRI_STRIP,
-   RADEON_CP_VC_CNTL_PRIM_TYPE_TRI_FAN,
-   0,
-   0,
-   0
+   [GL_POINTS] = RADEON_CP_VC_CNTL_PRIM_TYPE_POINT,
+   [GL_LINES] = RADEON_CP_VC_CNTL_PRIM_TYPE_LINE,
+   [GL_LINE_LOOP] = 0,
+   [GL_LINE_STRIP] = RADEON_CP_VC_CNTL_PRIM_TYPE_LINE_STRIP,
+   [GL_TRIANGLES] = RADEON_CP_VC_CNTL_PRIM_TYPE_TRI_LIST,
+   [GL_TRIANGLE_STRIP] = RADEON_CP_VC_CNTL_PRIM_TYPE_TRI_STRIP,
+   [GL_TRIANGLE_FAN] = RADEON_CP_VC_CNTL_PRIM_TYPE_TRI_FAN,
+   [GL_QUADS] = 0,
+   [GL_QUAD_STRIP] = 0,
+   [GL_POLYGON] = 0
 };
 
 static inline void
@@ -418,12 +414,12 @@ static GLboolean radeon_run_render( struct gl_context *ctx,
    r100ContextPtr rmesa = R100_CONTEXT(ctx);
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    struct vertex_buffer *VB = &tnl->vb;
-   tnl_render_func *tab = TAG(render_tab_verts);
+   const tnl_render_func *tab = TAG(render_tab_verts);
    GLuint i;
 
-   if (rmesa->radeon.swtcl.RenderIndex != 0 ||   
+   if (rmesa->radeon.swtcl.RenderIndex != 0 ||
        !radeon_dma_validate_render( ctx, VB ))
-      return GL_TRUE;		
+      return GL_TRUE;
 
    radeon_prepare_render(&rmesa->radeon);
    if (rmesa->radeon.NewGLState)
@@ -471,16 +467,16 @@ const struct tnl_pipeline_stage _radeon_render_stage =
 
 
 static const GLuint reduced_hw_prim[GL_POLYGON+1] = {
-   RADEON_CP_VC_CNTL_PRIM_TYPE_POINT,
-   RADEON_CP_VC_CNTL_PRIM_TYPE_LINE,
-   RADEON_CP_VC_CNTL_PRIM_TYPE_LINE,
-   RADEON_CP_VC_CNTL_PRIM_TYPE_LINE,
-   RADEON_CP_VC_CNTL_PRIM_TYPE_TRI_LIST,
-   RADEON_CP_VC_CNTL_PRIM_TYPE_TRI_LIST,
-   RADEON_CP_VC_CNTL_PRIM_TYPE_TRI_LIST,
-   RADEON_CP_VC_CNTL_PRIM_TYPE_TRI_LIST,
-   RADEON_CP_VC_CNTL_PRIM_TYPE_TRI_LIST,
-   RADEON_CP_VC_CNTL_PRIM_TYPE_TRI_LIST
+   [GL_POINTS] = RADEON_CP_VC_CNTL_PRIM_TYPE_POINT,
+   [GL_LINES] = RADEON_CP_VC_CNTL_PRIM_TYPE_LINE,
+   [GL_LINE_LOOP] = RADEON_CP_VC_CNTL_PRIM_TYPE_LINE,
+   [GL_LINE_STRIP] = RADEON_CP_VC_CNTL_PRIM_TYPE_LINE,
+   [GL_TRIANGLES] = RADEON_CP_VC_CNTL_PRIM_TYPE_TRI_LIST,
+   [GL_TRIANGLE_STRIP] = RADEON_CP_VC_CNTL_PRIM_TYPE_TRI_LIST,
+   [GL_TRIANGLE_FAN] = RADEON_CP_VC_CNTL_PRIM_TYPE_TRI_LIST,
+   [GL_QUADS] = RADEON_CP_VC_CNTL_PRIM_TYPE_TRI_LIST,
+   [GL_QUAD_STRIP] = RADEON_CP_VC_CNTL_PRIM_TYPE_TRI_LIST,
+   [GL_POLYGON] = RADEON_CP_VC_CNTL_PRIM_TYPE_TRI_LIST
 };
 
 static void radeonRasterPrimitive( struct gl_context *ctx, GLuint hwprim );

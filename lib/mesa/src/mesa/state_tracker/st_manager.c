@@ -28,6 +28,7 @@
 #include "main/mtypes.h"
 #include "main/extensions.h"
 #include "main/context.h"
+#include "main/debug_output.h"
 #include "main/texobj.h"
 #include "main/teximage.h"
 #include "main/texstate.h"
@@ -39,6 +40,7 @@
 #include "st_texture.h"
 
 #include "st_context.h"
+#include "st_debug.h"
 #include "st_extensions.h"
 #include "st_format.h"
 #include "st_cb_fbo.h"
@@ -634,6 +636,7 @@ st_api_create_context(struct st_api *stapi, struct st_manager *smapi,
    struct pipe_context *pipe;
    struct gl_config mode;
    gl_api api;
+   unsigned ctx_flags = 0;
 
    if (!(stapi->profile_mask & (1 << attribs->profile)))
       return NULL;
@@ -657,7 +660,10 @@ st_api_create_context(struct st_api *stapi, struct st_manager *smapi,
       break;
    }
 
-   pipe = smapi->screen->context_create(smapi->screen, NULL);
+   if (attribs->flags & ST_CONTEXT_FLAG_ROBUST_ACCESS)
+      ctx_flags |= PIPE_CONTEXT_ROBUST_BUFFER_ACCESS;
+
+   pipe = smapi->screen->context_create(smapi->screen, NULL, ctx_flags);
    if (!pipe) {
       *error = ST_CONTEXT_ERROR_NO_MEMORY;
       return NULL;
@@ -671,12 +677,15 @@ st_api_create_context(struct st_api *stapi, struct st_manager *smapi,
       return NULL;
    }
 
-   if (attribs->flags & ST_CONTEXT_FLAG_DEBUG){
+   if (attribs->flags & ST_CONTEXT_FLAG_DEBUG) {
       if (!_mesa_set_debug_state_int(st->ctx, GL_DEBUG_OUTPUT, GL_TRUE)) {
          *error = ST_CONTEXT_ERROR_NO_MEMORY;
          return NULL;
       }
+
       st->ctx->Const.ContextFlags |= GL_CONTEXT_FLAG_DEBUG_BIT;
+
+      st_enable_debug_output(st, TRUE);
    }
 
    if (attribs->flags & ST_CONTEXT_FLAG_FORWARD_COMPATIBLE)

@@ -36,6 +36,7 @@
  *  - Stall at Pixel Scoreboard
  *  - Post-Sync Operation
  *  - Depth Stall
+ *  - DC Flush Enable
  *
  * I chose "Stall at Pixel Scoreboard" since we've used it effectively
  * in the past, but the choice is fairly arbitrary.
@@ -49,7 +50,8 @@ gen8_add_cs_stall_workaround_bits(uint32_t *flags)
                       PIPE_CONTROL_WRITE_DEPTH_COUNT |
                       PIPE_CONTROL_WRITE_TIMESTAMP |
                       PIPE_CONTROL_STALL_AT_SCOREBOARD |
-                      PIPE_CONTROL_DEPTH_STALL;
+                      PIPE_CONTROL_DEPTH_STALL |
+                      PIPE_CONTROL_DATA_CACHE_FLUSH;
 
    /* If we're doing a CS stall, and don't already have one of the
     * workaround bits set, add "Stall at Pixel Scoreboard."
@@ -95,7 +97,8 @@ void
 brw_emit_pipe_control_flush(struct brw_context *brw, uint32_t flags)
 {
    if (brw->gen >= 8) {
-      gen8_add_cs_stall_workaround_bits(&flags);
+      if (brw->gen == 8)
+         gen8_add_cs_stall_workaround_bits(&flags);
 
       BEGIN_BATCH(6);
       OUT_BATCH(_3DSTATE_PIPE_CONTROL | (6 - 2));
@@ -139,7 +142,8 @@ brw_emit_pipe_control_write(struct brw_context *brw, uint32_t flags,
                             uint32_t imm_lower, uint32_t imm_upper)
 {
    if (brw->gen >= 8) {
-      gen8_add_cs_stall_workaround_bits(&flags);
+      if (brw->gen == 8)
+         gen8_add_cs_stall_workaround_bits(&flags);
 
       BEGIN_BATCH(6);
       OUT_BATCH(_3DSTATE_PIPE_CONTROL | (6 - 2));
@@ -192,6 +196,14 @@ void
 brw_emit_depth_stall_flushes(struct brw_context *brw)
 {
    assert(brw->gen >= 6 && brw->gen <= 9);
+
+   /* Starting on BDW, these pipe controls are unnecessary.
+    *
+    *   WM HW will internally manage the draining pipe and flushing of the caches
+    *   when this command is issued. The PIPE_CONTROL restrictions are removed.
+    */
+   if (brw->gen >= 8)
+      return;
 
    brw_emit_pipe_control_flush(brw, PIPE_CONTROL_DEPTH_STALL);
    brw_emit_pipe_control_flush(brw, PIPE_CONTROL_DEPTH_CACHE_FLUSH);
@@ -326,8 +338,6 @@ brw_emit_mi_flush(struct brw_context *brw)
       }
       brw_emit_pipe_control_flush(brw, flags);
    }
-
-   brw_render_cache_set_clear(brw);
 }
 
 int

@@ -9,6 +9,7 @@
 
 #include "util/u_box.h"    
 #include "util/u_debug.h"
+#include "util/u_debug_image.h"
 #include "util/u_draw_quad.h"
 #include "util/u_format.h"
 #include "util/u_inlines.h"
@@ -60,7 +61,7 @@ graw_util_create_window(struct graw_info *info,
       return FALSE;
    }
    
-   info->ctx = info->screen->context_create(info->screen, NULL);
+   info->ctx = info->screen->context_create(info->screen, NULL, 0);
    if (info->ctx == NULL) {
       debug_printf("graw: Failed to create context\n");
       return FALSE;

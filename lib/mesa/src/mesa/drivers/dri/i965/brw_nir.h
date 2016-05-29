@@ -25,7 +25,7 @@
 
 #include "brw_context.h"
 #include "brw_reg.h"
-#include "glsl/nir/nir.h"
+#include "compiler/nir/nir.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -81,9 +81,39 @@ nir_shader *brw_create_nir(struct brw_context *brw,
                            gl_shader_stage stage,
                            bool is_scalar);
 
+nir_shader *brw_preprocess_nir(nir_shader *nir, bool is_scalar);
+nir_shader *brw_nir_lower_io(nir_shader *nir,
+                            const struct brw_device_info *devinfo,
+                            bool is_scalar,
+                            bool use_legacy_snorm_formula,
+                            const uint8_t *vs_attrib_wa_flags);
+nir_shader *brw_postprocess_nir(nir_shader *nir,
+                                const struct brw_device_info *devinfo,
+                                bool is_scalar);
+
+bool brw_nir_apply_attribute_workarounds(nir_shader *nir,
+                                         bool use_legacy_snorm_formula,
+                                         const uint8_t *attrib_wa_flags);
+
+nir_shader *brw_nir_apply_sampler_key(nir_shader *nir,
+                                      const struct brw_device_info *devinfo,
+                                      const struct brw_sampler_prog_key_data *key,
+                                      bool is_scalar);
+
 enum brw_reg_type brw_type_for_nir_type(nir_alu_type type);
 
 enum glsl_base_type brw_glsl_base_type_for_nir_type(nir_alu_type type);
+
+void brw_nir_setup_glsl_uniforms(nir_shader *shader,
+                                 struct gl_shader_program *shader_prog,
+                                 const struct gl_program *prog,
+                                 struct brw_stage_prog_data *stage_prog_data,
+                                 bool is_scalar);
+
+void brw_nir_setup_arb_uniforms(nir_shader *shader, struct gl_program *prog,
+                                struct brw_stage_prog_data *stage_prog_data);
+
+bool brw_nir_opt_peephole_ffma(nir_shader *shader);
 
 #ifdef __cplusplus
 }

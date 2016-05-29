@@ -24,15 +24,12 @@
 #include <assert.h>
 
 #include "intel_batchbuffer.h"
-#include "intel_fbo.h"
 #include "intel_mipmap_tree.h"
 
 #include "brw_context.h"
-#include "brw_defines.h"
 #include "brw_state.h"
 
 #include "brw_blorp.h"
-#include "gen7_blorp.h"
 
 
 /* 3DSTATE_URB_VS
@@ -50,22 +47,38 @@
 static void
 gen7_blorp_emit_urb_config(struct brw_context *brw)
 {
-   unsigned urb_size = (brw->is_haswell && brw->gt == 3) ? 32 : 16;
+   /* URB allocations must be done in 8k chunks. */
+   const unsigned chunk_size_bytes = 8192;
+   const unsigned urb_size =
+      (brw->gen >= 8 || (brw->is_haswell && brw->gt == 3)) ? 32 : 16;
+   const unsigned push_constant_bytes = 1024 * urb_size;
+   const unsigned push_constant_chunks =
+      push_constant_bytes / chunk_size_bytes;
+   const unsigned vs_size = 2;
+   const unsigned vs_start = push_constant_chunks;
+   const unsigned vs_chunks =
+      DIV_ROUND_UP(brw->urb.min_vs_entries * vs_size * 64, chunk_size_bytes);
+
    gen7_emit_push_constant_state(brw,
                                  urb_size / 2 /* vs_size */,
+                                 0 /* hs_size */,
+                                 0 /* ds_size */,
                                  0 /* gs_size */,
                                  urb_size / 2 /* fs_size */);
 
-   /* The minimum valid number of VS entries is 32. See 3DSTATE_URB_VS, Dword
-    * 1.15:0 "VS Number of URB Entries".
-    */
    gen7_emit_urb_state(brw,
-                       32 /* num_vs_entries */,
-                       2 /* vs_size */,
-                       2 /* vs_start */,
+                       brw->urb.min_vs_entries /* num_vs_entries */,
+                       vs_size,
+                       vs_start,
+                       0 /* num_hs_entries */,
+                       1 /* hs_size */,
+                       vs_start + vs_chunks /* hs_start */,
+                       0 /* num_ds_entries */,
+                       1 /* ds_size */,
+                       vs_start + vs_chunks /* ds_start */,
                        0 /* num_gs_entries */,
                        1 /* gs_size */,
-                       2 /* gs_start */);
+                       vs_start + vs_chunks /* gs_start */);
 }
 
 
@@ -158,9 +171,9 @@ gen7_blorp_emit_surface_state(struct brw_context *brw,
              surface->brw_surfaceformat << BRW_SURFACE_FORMAT_SHIFT |
              gen7_surface_tiling_mode(tiling);
 
-   if (surface->mt->align_h == 4)
+   if (surface->mt->valign == 4)
       surf[0] |= GEN7_SURFACE_VALIGN_4;
-   if (surface->mt->align_w == 8)
+   if (surface->mt->halign == 8)
       surf[0] |= GEN7_SURFACE_HALIGN_8;
 
    if (surface->array_layout == ALL_SLICES_AT_EACH_LOD)
@@ -346,7 +359,7 @@ gen7_blorp_emit_gs_disable(struct brw_context *brw)
     * whole fixed function pipeline" means to emit a PIPE_CONTROL with the "CS
     * Stall" bit set.
     */
-   if (!brw->is_haswell && brw->gt == 2 && brw->gs.enabled)
+   if (brw->gen < 8 && !brw->is_haswell && brw->gt == 2 && brw->gs.enabled)
       gen7_emit_cs_stall_flush(brw);
 
    BEGIN_BATCH(7);

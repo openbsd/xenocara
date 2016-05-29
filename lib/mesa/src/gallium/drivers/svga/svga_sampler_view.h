@@ -35,7 +35,9 @@
 struct pipe_context;
 struct pipe_screen;
 struct svga_context;
+struct svga_pipe_sampler_view;
 struct svga_winsys_surface;
+struct svga_surface;
 enum SVGA3dSurfaceFormat;
 
 
@@ -97,5 +99,13 @@ svga_sampler_view_reference(struct svga_sampler_view **ptr, struct svga_sampler_
    *ptr = v;
 }
 
+boolean
+svga_check_sampler_view_resource_collision(struct svga_context *svga,
+                                           struct svga_winsys_surface *res,
+                                           unsigned shader);
+
+enum pipe_error
+svga_validate_pipe_sampler_view(struct svga_context *svga,
+                                struct svga_pipe_sampler_view *sv);
 
 #endif

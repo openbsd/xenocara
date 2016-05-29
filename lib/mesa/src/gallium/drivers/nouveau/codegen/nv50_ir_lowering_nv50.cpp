@@ -44,6 +44,8 @@ static bool
 expandIntegerMUL(BuildUtil *bld, Instruction *mul)
 {
    const bool highResult = mul->subOp == NV50_IR_SUBOP_MUL_HIGH;
+   ImmediateValue src1;
+   bool src1imm = mul->src(1).getImmediate(src1);
 
    DataType fTy; // full type
    switch (mul->sType) {
@@ -72,24 +74,41 @@ expandIntegerMUL(BuildUtil *bld, Instruction *mul)
    for (int j = 0; j < 4; ++j)
       t[j] = bld->getSSA(fullSize);
 
-   s[0] = mul->getSrc(0);
-   s[1] = mul->getSrc(1);
-
-   if (isSignedType(mul->sType)) {
+   if (isSignedType(mul->sType) && highResult) {
       s[0] = bld->getSSA(fullSize);
       s[1] = bld->getSSA(fullSize);
       bld->mkOp1(OP_ABS, mul->sType, s[0], mul->getSrc(0));
       bld->mkOp1(OP_ABS, mul->sType, s[1], mul->getSrc(1));
+      src1.reg.data.s32 = abs(src1.reg.data.s32);
+   } else {
+      s[0] = mul->getSrc(0);
+      s[1] = mul->getSrc(1);
    }
 
    // split sources into halves
    i[0] = bld->mkSplit(a, halfSize, s[0]);
    i[1] = bld->mkSplit(b, halfSize, s[1]);
 
-   i[2] = bld->mkOp2(OP_MUL, fTy, t[0], a[0], b[1]);
-   i[3] = bld->mkOp3(OP_MAD, fTy, t[1], a[1], b[0], t[0]);
+   if (src1imm && (src1.reg.data.u32 & 0xffff0000) == 0) {
+      i[2] = i[3] = bld->mkOp2(OP_MUL, fTy, t[1], a[1],
+                               bld->mkImm(src1.reg.data.u32 & 0xffff));
+   } else {
+      i[2] = bld->mkOp2(OP_MUL, fTy, t[0], a[0],
+                        src1imm ? bld->mkImm(src1.reg.data.u32 >> 16) : b[1]);
+      if (src1imm && (src1.reg.data.u32 & 0x0000ffff) == 0) {
+         i[3] = i[2];
+         t[1] = t[0];
+      } else {
+         i[3] = bld->mkOp3(OP_MAD, fTy, t[1], a[1], b[0], t[0]);
+      }
+   }
    i[7] = bld->mkOp2(OP_SHL, fTy, t[2], t[1], bld->mkImm(halfSize * 8));
-   i[4] = bld->mkOp3(OP_MAD, fTy, t[3], a[0], b[0], t[2]);
+   if (src1imm && (src1.reg.data.u32 & 0x0000ffff) == 0) {
+      i[4] = i[3];
+      t[3] = t[2];
+   } else {
+      i[4] = bld->mkOp3(OP_MAD, fTy, t[3], a[0], b[0], t[2]);
+   }
 
    if (highResult) {
       Value *c[2];
@@ -294,8 +313,7 @@ NV50LegalizePostRA::visit(BasicBlock *bb)
                next = hi;
          }
 
-         if (i->op != OP_MOV && i->op != OP_PFETCH &&
-             i->op != OP_BAR &&
+         if (i->op != OP_PFETCH && i->op != OP_BAR &&
              (!i->defExists(0) || i->def(0).getFile() != FILE_ADDRESS))
             replaceZero(i);
       }
@@ -354,7 +372,8 @@ NV50LegalizeSSA::propagateWriteToOutput(Instruction *st)
       return;
 
    for (int s = 0; di->srcExists(s); ++s)
-      if (di->src(s).getFile() == FILE_IMMEDIATE)
+      if (di->src(s).getFile() == FILE_IMMEDIATE ||
+          di->src(s).getFile() == FILE_MEMORY_LOCAL)
          return;
 
    if (prog->getType() == Program::TYPE_GEOMETRY) {
@@ -618,6 +637,7 @@ private:
    bool handleTXL(TexInstruction *); // hate
    bool handleTXD(TexInstruction *); // these 3
    bool handleTXLQ(TexInstruction *);
+   bool handleTXQ(TexInstruction *);
 
    bool handleCALL(Instruction *);
    bool handlePRECONT(Instruction *);
@@ -911,10 +931,11 @@ NV50LoweringPreSSA::handleTXD(TexInstruction *i)
    Instruction *tex;
    Value *zero = bld.loadImm(bld.getSSA(), 0);
    int l, c;
-   const int dim = i->tex.target.getDim();
+   const int dim = i->tex.target.getDim() + i->tex.target.isCube();
 
    handleTEX(i);
    i->op = OP_TEX; // no need to clone dPdx/dPdy later
+   i->tex.derivAll = true;
 
    for (c = 0; c < dim; ++c)
       crd[c] = bld.getScratch();
@@ -974,6 +995,23 @@ NV50LoweringPreSSA::handleTXLQ(TexInstruction *i)
    }
    return true;
 }
+
+bool
+NV50LoweringPreSSA::handleTXQ(TexInstruction *i)
+{
+   Value *ms, *ms_x, *ms_y;
+   if (i->tex.query == TXQ_DIMS)
+      return true;
+   assert(i->tex.query == TXQ_TYPE);
+   assert(i->tex.mask == 4);
+
+   loadTexMsInfo(i->tex.r * 4 * 2, &ms, &ms_x, &ms_y);
+   bld.mkOp2(OP_SHL, TYPE_U32, i->getDef(0), bld.loadImm(NULL, 1), ms);
+   i->bb->remove(i);
+
+   return true;
+}
+
 
 bool
 NV50LoweringPreSSA::handleSET(Instruction *i)
@@ -1208,7 +1246,7 @@ NV50LoweringPreSSA::handleEXPORT(Instruction *i)
          i->setDef(0, new_LValue(func, FILE_GPR));
          i->getDef(0)->reg.data.id = id;
 
-         prog->maxGPR = MAX2(prog->maxGPR, id);
+         prog->maxGPR = MAX2(prog->maxGPR, id * 2);
       }
    }
    return true;
@@ -1334,6 +1372,8 @@ NV50LoweringPreSSA::visit(Instruction *i)
       return handleTXD(i->asTex());
    case OP_TXLQ:
       return handleTXLQ(i->asTex());
+   case OP_TXQ:
+      return handleTXQ(i->asTex());
    case OP_EX2:
       bld.mkOp1(OP_PREEX2, TYPE_F32, i->getDef(0), i->getSrc(0));
       i->setSrc(0, i->getDef(0));

@@ -30,7 +30,6 @@
   */
 
 
-#include "main/glheader.h"
 #include "main/macros.h"
 #include "main/enums.h"
 #include "program/program.h"
@@ -119,7 +118,7 @@ static void brw_clip_project_vertex( struct brw_clip_compile *c,
    brw_MOV(p, tmp, deref_4f(vert_addr, hpos_offset));
    brw_clip_project_position(c, tmp);
    brw_MOV(p, deref_4f(vert_addr, ndc_offset), tmp);
-	
+
    release_tmp(c, tmp);
 }
 
@@ -224,7 +223,10 @@ void brw_clip_interp_vertex( struct brw_clip_compile *c,
               vec1(t_nopersp),
               brw_imm_f(0));
       brw_IF(p, BRW_EXECUTE_1);
-      brw_MOV(p, t_nopersp, brw_imm_vf4(1, 0, 0, 0));
+      brw_MOV(p, t_nopersp, brw_imm_vf4(brw_float_to_vf(1.0),
+                                        brw_float_to_vf(0.0),
+                                        brw_float_to_vf(0.0),
+                                        brw_float_to_vf(0.0)));
       brw_ENDIF(p);
 
       /* Now compute t_nopersp = t_nopersp.y/t_nopersp.x and broadcast it. */

@@ -1,8 +1,6 @@
 include Makefile.sources
 
 AM_CPPFLAGS = \
-	$(GALLIUM_PIPE_LOADER_DEFINES) \
-	-DPIPE_SEARCH_DIR=\"$(libdir)/gallium-pipe\" \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/src \
 	-I$(top_srcdir)/src/gallium/include \
@@ -43,6 +41,7 @@ libclllvm_la_CXXFLAGS = \
 	$(VISIBILITY_CXXFLAGS) \
 	$(LLVM_CXXFLAGS) \
 	$(DEFINES) \
+	$(LIBELF_CFLAGS) \
 	-DLIBCLC_INCLUDEDIR=\"$(LIBCLC_INCLUDEDIR)/\" \
 	-DLIBCLC_LIBEXECDIR=\"$(LIBCLC_LIBEXECDIR)/\" \
 	-DCLANG_RESOURCE_DIR=\"$(CLANG_RESOURCE_DIR)\"

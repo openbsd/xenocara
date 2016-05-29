@@ -137,8 +137,7 @@ _mesa_meta_glsl_generate_mipmap_cleanup(struct gl_context *ctx,
    _mesa_DeleteVertexArrays(1, &mipmap->VAO);
    mipmap->VAO = 0;
    _mesa_reference_buffer_object(ctx, &mipmap->buf_obj, NULL);
-   _mesa_DeleteSamplers(1, &mipmap->Sampler);
-   mipmap->Sampler = 0;
+   _mesa_reference_sampler_object(ctx, &mipmap->samp_obj, NULL);
 
    if (mipmap->FBO != 0) {
       _mesa_DeleteFramebuffers(1, &mipmap->FBO);
@@ -166,8 +165,7 @@ prepare_mipmap_level(struct gl_context *ctx,
 
 /**
  * Called via ctx->Driver.GenerateMipmap()
- * Note: We don't yet support 3D textures, 1D/2D array textures or texture
- * borders.
+ * Note: We don't yet support 3D textures, or texture borders.
  */
 void
 _mesa_meta_GenerateMipmap(struct gl_context *ctx, GLenum target,
@@ -183,9 +181,15 @@ _mesa_meta_GenerateMipmap(struct gl_context *ctx, GLenum target,
                                       ctx->Extensions.ARB_fragment_shader;
    GLenum faceTarget;
    GLuint dstLevel;
-   GLuint samplerSave;
+   struct gl_sampler_object *samp_obj_save = NULL;
    GLint swizzle[4];
    GLboolean swizzleSaved = GL_FALSE;
+
+   /* GLint so the compiler won't complain about type signedness mismatch in
+    * the calls to _mesa_texture_parameteriv below.
+    */
+   static const GLint always_false = GL_FALSE;
+   static const GLint always_true = GL_TRUE;
 
    if (fallback_required(ctx, target, texObj)) {
       _mesa_generate_mipmap(ctx, target, texObj);
@@ -214,8 +218,8 @@ _mesa_meta_GenerateMipmap(struct gl_context *ctx, GLenum target,
       _mesa_set_enable(ctx, target, GL_TRUE);
    }
 
-   samplerSave = ctx->Texture.Unit[ctx->Texture.CurrentUnit].Sampler ?
-      ctx->Texture.Unit[ctx->Texture.CurrentUnit].Sampler->Name : 0;
+   _mesa_reference_sampler_object(ctx, &samp_obj_save,
+                                  ctx->Texture.Unit[ctx->Texture.CurrentUnit].Sampler);
 
    /* We may have been called from glGenerateTextureMipmap with CurrentUnit
     * still set to 0, so we don't know when we can skip binding the texture.
@@ -224,40 +228,40 @@ _mesa_meta_GenerateMipmap(struct gl_context *ctx, GLenum target,
     */
    _mesa_BindTexture(target, texObj->Name);
 
-   if (!mipmap->Sampler) {
-      _mesa_GenSamplers(1, &mipmap->Sampler);
-      _mesa_BindSampler(ctx->Texture.CurrentUnit, mipmap->Sampler);
-
-      _mesa_SamplerParameteri(mipmap->Sampler,
-                              GL_TEXTURE_MIN_FILTER,
-                              GL_LINEAR_MIPMAP_LINEAR);
-      _mesa_SamplerParameteri(mipmap->Sampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      _mesa_SamplerParameteri(mipmap->Sampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-      _mesa_SamplerParameteri(mipmap->Sampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-      _mesa_SamplerParameteri(mipmap->Sampler, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
-      /* We don't want to encode or decode sRGB values; treat them as linear.
-       * This is not technically correct for GLES3 but we don't get any API
-       * error at the moment.
-       */
-      if (ctx->Extensions.EXT_texture_sRGB_decode) {
-         _mesa_SamplerParameteri(mipmap->Sampler, GL_TEXTURE_SRGB_DECODE_EXT,
-               GL_SKIP_DECODE_EXT);
+   if (mipmap->samp_obj == NULL) {
+      mipmap->samp_obj =  ctx->Driver.NewSamplerObject(ctx, 0xDEADBEEF);
+      if (mipmap->samp_obj == NULL) {
+         /* This is a bit lazy.  Flag out of memory, and then don't bother to
+          * clean up.  Once out of memory is flagged, the only realistic next
+          * move is to destroy the context.  That will trigger all the right
+          * clean up.
+          */
+         _mesa_error(ctx, GL_OUT_OF_MEMORY, "glGenerateMipmap");
+         return;
       }
-   } else {
-      _mesa_BindSampler(ctx->Texture.CurrentUnit, mipmap->Sampler);
+
+      _mesa_set_sampler_filters(ctx, mipmap->samp_obj, GL_LINEAR_MIPMAP_LINEAR,
+                                GL_LINEAR);
+      _mesa_set_sampler_wrap(ctx, mipmap->samp_obj, GL_CLAMP_TO_EDGE,
+                             GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+
+      /* We don't want to encode or decode sRGB values; treat them as linear. */
+      _mesa_set_sampler_srgb_decode(ctx, mipmap->samp_obj, GL_SKIP_DECODE_EXT);
    }
+
+   _mesa_bind_sampler(ctx, ctx->Texture.CurrentUnit, mipmap->samp_obj);
 
    assert(mipmap->FBO != 0);
    _mesa_BindFramebuffer(GL_FRAMEBUFFER_EXT, mipmap->FBO);
 
-   _mesa_TexParameteri(target, GL_GENERATE_MIPMAP, GL_FALSE);
+   _mesa_texture_parameteriv(ctx, texObj, GL_GENERATE_MIPMAP, &always_false, false);
 
    if (texObj->_Swizzle != SWIZZLE_NOOP) {
       static const GLint swizzleNoop[4] = { GL_RED, GL_GREEN, GL_BLUE, GL_ALPHA };
       memcpy(swizzle, texObj->Swizzle, sizeof(swizzle));
       swizzleSaved = GL_TRUE;
-      _mesa_TexParameteriv(target, GL_TEXTURE_SWIZZLE_RGBA, swizzleNoop);
+      _mesa_texture_parameteriv(ctx, texObj, GL_TEXTURE_SWIZZLE_RGBA,
+                                swizzleNoop, false);
    }
 
    /* Silence valgrind warnings about reading uninitialized stack. */
@@ -312,7 +316,8 @@ _mesa_meta_GenerateMipmap(struct gl_context *ctx, GLenum target,
       /* Allocate storage for the destination mipmap image(s) */
 
       /* Set MaxLevel large enough to hold the new level when we allocate it */
-      _mesa_TexParameteri(target, GL_TEXTURE_MAX_LEVEL, dstLevel);
+      _mesa_texture_parameteriv(ctx, texObj, GL_TEXTURE_MAX_LEVEL,
+                                (GLint *) &dstLevel, false);
 
       if (!prepare_mipmap_level(ctx, texObj, dstLevel,
                                 dstWidth, dstHeight, dstDepth,
@@ -326,7 +331,8 @@ _mesa_meta_GenerateMipmap(struct gl_context *ctx, GLenum target,
       dstImage = _mesa_select_tex_image(texObj, faceTarget, dstLevel);
 
       /* limit minification to src level */
-      _mesa_TexParameteri(target, GL_TEXTURE_MAX_LEVEL, srcLevel);
+      _mesa_texture_parameteriv(ctx, texObj, GL_TEXTURE_MAX_LEVEL,
+                                (GLint *) &srcLevel, false);
 
       /* setup viewport */
       _mesa_set_viewport(ctx, 0, 0, 0, dstWidth, dstHeight);
@@ -371,13 +377,17 @@ _mesa_meta_GenerateMipmap(struct gl_context *ctx, GLenum target,
 
    _mesa_lock_texture(ctx, texObj); /* relock */
 
-   _mesa_BindSampler(ctx->Texture.CurrentUnit, samplerSave);
+   _mesa_bind_sampler(ctx, ctx->Texture.CurrentUnit, samp_obj_save);
+   _mesa_reference_sampler_object(ctx, &samp_obj_save, NULL);
 
    _mesa_meta_end(ctx);
 
-   _mesa_TexParameteri(target, GL_TEXTURE_MAX_LEVEL, maxLevelSave);
+   _mesa_texture_parameteriv(ctx, texObj, GL_TEXTURE_MAX_LEVEL, &maxLevelSave,
+                             false);
    if (genMipmapSave)
-      _mesa_TexParameteri(target, GL_GENERATE_MIPMAP, genMipmapSave);
+      _mesa_texture_parameteriv(ctx, texObj, GL_GENERATE_MIPMAP, &always_true,
+                                false);
    if (swizzleSaved)
-      _mesa_TexParameteriv(target, GL_TEXTURE_SWIZZLE_RGBA, swizzle);
+      _mesa_texture_parameteriv(ctx, texObj, GL_TEXTURE_SWIZZLE_RGBA, swizzle,
+                                false);
 }

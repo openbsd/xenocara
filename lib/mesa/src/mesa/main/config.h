@@ -171,7 +171,7 @@
 #define MAX_PROGRAM_LOCAL_PARAMS       4096
 #define MAX_UNIFORMS                   4096
 #define MAX_UNIFORM_BUFFERS            15 /* + 1 default uniform buffer */
-#define MAX_SHADER_STORAGE_BUFFERS     7  /* + 1 default shader storage buffer */
+#define MAX_SHADER_STORAGE_BUFFERS     16
 /* 6 is for vertex, hull, domain, geometry, fragment, and compute shader. */
 #define MAX_COMBINED_UNIFORM_BUFFERS   (MAX_UNIFORM_BUFFERS * 6)
 #define MAX_COMBINED_SHADER_STORAGE_BUFFERS   (MAX_SHADER_STORAGE_BUFFERS * 6)
@@ -246,7 +246,7 @@
 #define MAX_FEEDBACK_BUFFERS 4
 #define MAX_FEEDBACK_ATTRIBS 32
 
-/** For GL_ARB_geometry_shader4 */
+/** For geometry shader */
 /*@{*/
 #define MAX_GEOMETRY_UNIFORM_COMPONENTS              512
 #define MAX_GEOMETRY_OUTPUT_VERTICES                 256
@@ -286,17 +286,6 @@
 #define MAX_PERFQUERY_COUNTER_NAME_LENGTH   256
 #define MAX_PERFQUERY_COUNTER_DESC_LENGTH   1024
 #define PERFQUERY_HAVE_GPA_EXTENDED_COUNTERS 0
-/*@}*/
-
-/** For GL_ARB_compute_shader */
-/*@{*/
-#define MAX_COMPUTE_UNIFORM_BLOCKS          12
-#define MAX_COMPUTE_TEXTURE_IMAGE_UNITS     16
-#define MAX_COMPUTE_ATOMIC_COUNTER_BUFFERS  8
-#define MAX_COMPUTE_ATOMIC_COUNTERS         8
-#define MAX_COMPUTE_SHARED_MEMORY_SIZE      32768
-#define MAX_COMPUTE_UNIFORM_COMPONENTS      512
-#define MAX_COMPUTE_IMAGE_UNIFORMS          8
 /*@}*/
 
 /** For GL_ARB_pipeline_statistics_query */

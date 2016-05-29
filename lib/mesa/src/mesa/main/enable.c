@@ -31,6 +31,7 @@
 #include "glheader.h"
 #include "clip.h"
 #include "context.h"
+#include "debug_output.h"
 #include "enable.h"
 #include "errors.h"
 #include "light.h"
@@ -39,7 +40,6 @@
 #include "enums.h"
 #include "api_arrayelt.h"
 #include "texstate.h"
-#include "drivers/common/meta.h"
 
 
 
@@ -369,10 +369,7 @@ _mesa_set_enable(struct gl_context *ctx, GLenum cap, GLboolean state)
          break;
       case GL_DEBUG_OUTPUT:
       case GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB:
-         if (!_mesa_is_desktop_gl(ctx))
-            goto invalid_enum_error;
-         else
-            _mesa_set_debug_state_int(ctx, cap, state);
+         _mesa_set_debug_state_int(ctx, cap, state);
          break;
       case GL_DITHER:
          if (ctx->Color.DitherFlag == state)
@@ -752,7 +749,7 @@ _mesa_set_enable(struct gl_context *ctx, GLenum cap, GLboolean state)
          return;
 
       /* GL_ARB_texture_cube_map */
-      case GL_TEXTURE_CUBE_MAP_ARB:
+      case GL_TEXTURE_CUBE_MAP:
          if (ctx->API != API_OPENGL_COMPAT && ctx->API != API_OPENGLES)
             goto invalid_enum_error;
          CHECK_EXTENSION(ARB_texture_cube_map, cap);
@@ -1225,10 +1222,7 @@ _mesa_IsEnabled( GLenum cap )
          return ctx->Polygon.CullFlag;
       case GL_DEBUG_OUTPUT:
       case GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB:
-         if (!_mesa_is_desktop_gl(ctx))
-            goto invalid_enum_error;
-         else
-            return (GLboolean) _mesa_get_debug_state_int(ctx, cap);
+         return (GLboolean) _mesa_get_debug_state_int(ctx, cap);
       case GL_DEPTH_TEST:
          return ctx->Depth.Test;
       case GL_DITHER:
@@ -1456,7 +1450,7 @@ _mesa_IsEnabled( GLenum cap )
          return ctx->Array.VAO->VertexAttrib[VERT_ATTRIB_POINT_SIZE].Enabled;
 
       /* GL_ARB_texture_cube_map */
-      case GL_TEXTURE_CUBE_MAP_ARB:
+      case GL_TEXTURE_CUBE_MAP:
          CHECK_EXTENSION(ARB_texture_cube_map);
          return is_texture_enabled(ctx, TEXTURE_CUBE_BIT);
 

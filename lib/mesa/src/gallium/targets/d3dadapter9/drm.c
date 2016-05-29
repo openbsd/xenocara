@@ -20,6 +20,7 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE. */
 
+/* XXX: header order is slightly screwy here */
 #include "loader.h"
 
 #include "adapter9.h"
@@ -29,8 +30,8 @@
 #include "pipe/p_screen.h"
 #include "pipe/p_state.h"
 
-#include "target-helpers/inline_drm_helper.h"
-#include "target-helpers/inline_sw_helper.h"
+#include "target-helpers/drm_helper.h"
+#include "target-helpers/sw_helper.h"
 #include "state_tracker/drm_driver.h"
 
 #include "d3dadapter/d3dadapter9.h"
@@ -52,22 +53,29 @@ DRI_CONF_BEGIN
          DRI_CONF_VBLANK_MODE(DRI_CONF_VBLANK_DEF_INTERVAL_1)
     DRI_CONF_SECTION_END
     DRI_CONF_SECTION_NINE
+        DRI_CONF_NINE_OVERRIDEVENDOR(-1)
         DRI_CONF_NINE_THROTTLE(-2)
         DRI_CONF_NINE_THREADSUBMIT("false")
     DRI_CONF_SECTION_END
 DRI_CONF_END;
 
-/* define fallback value here: NVIDIA GeForce GTX 970 */
-#define FALLBACK_NAME "NV124"
-#define FALLBACK_DEVID 0x13C2
-#define FALLBACK_VENID 0x10de
+struct fallback_card_config {
+    const char *name;
+    unsigned vendor_id;
+    unsigned device_id;
+} fallback_cards[] = {
+        {"NV124", 0x10de, 0x13C2}, /* NVIDIA GeForce GTX 970 */
+        {"HAWAII", 0x1002, 0x67b1}, /* AMD Radeon R9 290 */
+        {"Haswell Mobile", 0x8086, 0x13C2}, /* Intel Haswell Mobile */
+        {"SVGA3D", 0x15ad, 0x0405}, /* VMware SVGA 3D */
+};
 
 /* prototypes */
 void
 d3d_match_vendor_id( D3DADAPTER_IDENTIFIER9* drvid,
-		unsigned fallback_ven,
-		unsigned fallback_dev,
-		const char* fallback_name );
+                     unsigned fallback_ven,
+                     unsigned fallback_dev,
+                     const char* fallback_name );
 
 void d3d_fill_driver_version(D3DADAPTER_IDENTIFIER9* drvid);
 
@@ -91,51 +99,13 @@ drm_destroy( struct d3dadapter9_context *ctx )
     else if (ctx->hal)
         ctx->hal->destroy(ctx->hal);
 
-#if !GALLIUM_STATIC_TARGETS
     if (drm->swdev)
         pipe_loader_release(&drm->swdev, 1);
     if (drm->dev)
         pipe_loader_release(&drm->dev, 1);
-#endif
 
     close(drm->fd);
     FREE(ctx);
-}
-
-/* read a DWORD in the form 0xnnnnnnnn, which is how sysfs pci id stuff is
- * formatted. */
-static inline DWORD
-read_file_dword( const char *name )
-{
-    char buf[32];
-    int fd, r;
-
-    fd = open(name, O_RDONLY);
-    if (fd < 0) {
-        DBG("Unable to get PCI information from `%s'\n", name);
-        return 0;
-    }
-
-    r = read(fd, buf, 32);
-    close(fd);
-
-    return (r > 0) ? (DWORD)strtol(buf, NULL, 0) : 0;
-}
-
-/* sysfs doesn't expose the revision as its own file, so this function grabs a
- * dword at an offset in the raw PCI header. The reason this isn't used for all
- * data is that the kernel will make corrections but not expose them in the raw
- * header bytes. */
-static inline DWORD
-read_config_dword( int fd,
-                   unsigned offset )
-{
-    DWORD r = 0;
-
-    if (lseek(fd, offset, SEEK_SET) != offset) { return 0; }
-    if (read(fd, &r, 4) != 4) { return 0; }
-
-    return r;
 }
 
 static inline void
@@ -155,9 +125,9 @@ get_bus_info( int fd,
         *subsysid = 0;
         *revision = 0;
     } else {
-        DBG("Unable to detect card. Faking %s\n", FALLBACK_NAME);
-        *vendorid = FALLBACK_VENID;
-        *deviceid = FALLBACK_DEVID;
+        DBG("Unable to detect card. Faking %s\n", fallback_cards[0].name);
+        *vendorid = fallback_cards[0].vendor_id;
+        *deviceid = fallback_cards[0].device_id;
         *subsysid = 0;
         *revision = 0;
     }
@@ -165,8 +135,10 @@ get_bus_info( int fd,
 
 static inline void
 read_descriptor( struct d3dadapter9_context *ctx,
-                 int fd )
+                 int fd, int override_vendorid )
 {
+    unsigned i;
+    BOOL found;
     D3DADAPTER_IDENTIFIER9 *drvid = &ctx->identifier;
 
     memset(drvid, 0, sizeof(*drvid));
@@ -177,9 +149,30 @@ read_descriptor( struct d3dadapter9_context *ctx,
     strncpy(drvid->Description, ctx->hal->get_name(ctx->hal),
                  sizeof(drvid->Description));
 
+    if (override_vendorid > 0) {
+        found = FALSE;
+        /* fill in device_id and card name for fake vendor */
+        for (i = 0; i < sizeof(fallback_cards)/sizeof(fallback_cards[0]); i++) {
+            if (fallback_cards[i].vendor_id == override_vendorid) {
+                DBG("Faking card '%s' vendor 0x%04x, device 0x%04x\n",
+                        fallback_cards[i].name,
+                        fallback_cards[i].vendor_id,
+                        fallback_cards[i].device_id);
+                drvid->VendorId = fallback_cards[i].vendor_id;
+                drvid->DeviceId = fallback_cards[i].device_id;
+                strncpy(drvid->Description, fallback_cards[i].name,
+                             sizeof(drvid->Description));
+                found = TRUE;
+                break;
+            }
+        }
+        if (!found) {
+            DBG("Unknown fake vendor 0x%04x! Using detected vendor !\n", override_vendorid);
+        }
+    }
     /* choose fall-back vendor if necessary to allow
      * the following functions to return sane results */
-    d3d_match_vendor_id(drvid, FALLBACK_VENID, FALLBACK_DEVID, FALLBACK_NAME);
+    d3d_match_vendor_id(drvid, fallback_cards[0].vendor_id, fallback_cards[0].device_id, fallback_cards[0].name);
     /* fill in driver name and version info */
     d3d_fill_driver_version(drvid);
     /* override Description field with Windows like names */
@@ -214,27 +207,18 @@ drm_create_adapter( int fd,
     driOptionCache defaultInitOptions;
     driOptionCache userInitOptions;
     int throttling_value_user = -2;
-
-#if !GALLIUM_STATIC_TARGETS
-    const char *paths[] = {
-        getenv("D3D9_DRIVERS_PATH"),
-        getenv("D3D9_DRIVERS_DIR"),
-        PIPE_SEARCH_DIR
-    };
-#endif
+    int override_vendorid = -1;
 
     if (!ctx) { return E_OUTOFMEMORY; }
 
     ctx->base.destroy = drm_destroy;
 
+    /* Although the fd is provided from external source, mesa/nine
+     * takes ownership of it. */
     fd = loader_get_user_preferred_fd(fd, &different_device);
     ctx->fd = fd;
     ctx->base.linear_framebuffer = !!different_device;
 
-#if GALLIUM_STATIC_TARGETS
-    ctx->base.hal = dd_create_screen(fd);
-#else
-    /* use pipe-loader to dlopen appropriate drm driver */
     if (!pipe_loader_drm_probe_fd(&ctx->dev, fd)) {
         ERR("Failed to probe drm fd %d.\n", fd);
         FREE(ctx);
@@ -242,26 +226,15 @@ drm_create_adapter( int fd,
         return D3DERR_DRIVERINTERNALERROR;
     }
 
-    /* use pipe-loader to create a drm screen (hal) */
-    ctx->base.hal = NULL;
-    for (i = 0; !ctx->base.hal && i < Elements(paths); ++i) {
-        if (!paths[i]) { continue; }
-        ctx->base.hal = pipe_loader_create_screen(ctx->dev, paths[i]);
-    }
-#endif
+    ctx->base.hal = pipe_loader_create_screen(ctx->dev);
     if (!ctx->base.hal) {
         ERR("Unable to load requested driver.\n");
         drm_destroy(&ctx->base);
         return D3DERR_DRIVERINTERNALERROR;
     }
 
-#if GALLIUM_STATIC_TARGETS
-    dmabuf_ret = dd_configuration(DRM_CONF_SHARE_FD);
-    throttle_ret = dd_configuration(DRM_CONF_THROTTLE);
-#else
     dmabuf_ret = pipe_loader_configuration(ctx->dev, DRM_CONF_SHARE_FD);
     throttle_ret = pipe_loader_configuration(ctx->dev, DRM_CONF_THROTTLE);
-#endif // GALLIUM_STATIC_TARGETS
     if (!dmabuf_ret || !dmabuf_ret->val.val_bool) {
         ERR("The driver is not capable of dma-buf sharing."
             "Abandon to load nine state tracker\n");
@@ -305,28 +278,24 @@ drm_create_adapter( int fd,
                 "You should not expect any benefit.");
     }
 
+    if (driCheckOption(&userInitOptions, "override_vendorid", DRI_INT)) {
+        override_vendorid = driQueryOptioni(&userInitOptions, "override_vendorid");
+    }
+
     driDestroyOptionCache(&userInitOptions);
     driDestroyOptionInfo(&defaultInitOptions);
 
-#if GALLIUM_STATIC_TARGETS
-    ctx->base.ref = ninesw_create_screen(ctx->base.hal);
-#else
     /* wrap it to create a software screen that can share resources */
-    if (pipe_loader_sw_probe_wrapped(&ctx->swdev, ctx->base.hal)) {
-        ctx->base.ref = NULL;
-        for (i = 0; !ctx->base.ref && i < Elements(paths); ++i) {
-            if (!paths[i]) { continue; }
-            ctx->base.ref = pipe_loader_create_screen(ctx->swdev, paths[i]);
-        }
-    }
-#endif
+    if (pipe_loader_sw_probe_wrapped(&ctx->swdev, ctx->base.hal))
+        ctx->base.ref = pipe_loader_create_screen(ctx->swdev);
+
     if (!ctx->base.ref) {
         ERR("Couldn't wrap drm screen to swrast screen. Software devices "
             "will be unavailable.\n");
     }
 
     /* read out PCI info */
-    read_descriptor(&ctx->base, fd);
+    read_descriptor(&ctx->base, fd, override_vendorid);
 
     /* create and return new ID3DAdapter9 */
     hr = NineAdapter9_new(&ctx->base, (struct NineAdapter9 **)ppAdapter);

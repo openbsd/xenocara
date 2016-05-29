@@ -29,6 +29,7 @@
 #include "pipe/p_shader_tokens.h"
 #include "tgsi_parse.h"
 #include "tgsi_util.h"
+#include "tgsi_exec.h"
 
 union pointer_hack
 {
@@ -53,17 +54,17 @@ tgsi_util_get_src_register_swizzle(
    const struct tgsi_src_register *reg,
    unsigned component )
 {
-   switch( component ) {
-   case 0:
+   switch (component) {
+   case TGSI_CHAN_X:
       return reg->SwizzleX;
-   case 1:
+   case TGSI_CHAN_Y:
       return reg->SwizzleY;
-   case 2:
+   case TGSI_CHAN_Z:
       return reg->SwizzleZ;
-   case 3:
+   case TGSI_CHAN_W:
       return reg->SwizzleW;
    default:
-      assert( 0 );
+      assert(0);
    }
    return 0;
 }
@@ -461,4 +462,22 @@ tgsi_util_get_texture_coord_dim(int tgsi_tex, int *shadow_or_sample)
    }
 
    return dim;
+}
+
+
+boolean
+tgsi_is_shadow_target(unsigned target)
+{
+   switch (target) {
+   case TGSI_TEXTURE_SHADOW1D:
+   case TGSI_TEXTURE_SHADOW2D:
+   case TGSI_TEXTURE_SHADOWRECT:
+   case TGSI_TEXTURE_SHADOW1D_ARRAY:
+   case TGSI_TEXTURE_SHADOW2D_ARRAY:
+   case TGSI_TEXTURE_SHADOWCUBE:
+   case TGSI_TEXTURE_SHADOWCUBE_ARRAY:
+      return TRUE;
+   default:
+      return FALSE;
+   }
 }

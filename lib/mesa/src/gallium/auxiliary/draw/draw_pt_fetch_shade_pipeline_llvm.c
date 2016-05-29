@@ -453,6 +453,7 @@ llvm_pipeline_generic(struct draw_pt_middle_end *middle,
                                draw->vs.vertex_shader->info.writes_viewport_index)) {
          clipped = draw_pt_post_vs_run( fpme->post_vs, vert_info, prim_info );
       }
+      /* "clipped" also includes non-one edgeflag */
       if (clipped) {
          opt |= PT_PIPELINE;
       }
@@ -470,6 +471,16 @@ llvm_pipeline_generic(struct draw_pt_middle_end *middle,
    if (free_prim_info) {
       FREE(prim_info->primitive_lengths);
    }
+}
+
+
+static inline unsigned
+prim_type(unsigned prim, unsigned flags)
+{
+   if (flags & DRAW_LINE_LOOP_AS_STRIP)
+      return PIPE_PRIM_LINE_STRIP;
+   else
+      return prim;
 }
 
 
@@ -494,7 +505,7 @@ llvm_middle_end_run(struct draw_pt_middle_end *middle,
    prim_info.start = 0;
    prim_info.count = draw_count;
    prim_info.elts = draw_elts;
-   prim_info.prim = fpme->input_prim;
+   prim_info.prim = prim_type(fpme->input_prim, prim_flags);
    prim_info.flags = prim_flags;
    prim_info.primitive_count = 1;
    prim_info.primitive_lengths = &draw_count;
@@ -522,7 +533,7 @@ llvm_middle_end_linear_run(struct draw_pt_middle_end *middle,
    prim_info.start = 0;
    prim_info.count = count;
    prim_info.elts = NULL;
-   prim_info.prim = fpme->input_prim;
+   prim_info.prim = prim_type(fpme->input_prim, prim_flags);
    prim_info.flags = prim_flags;
    prim_info.primitive_count = 1;
    prim_info.primitive_lengths = &count;
@@ -552,7 +563,7 @@ llvm_middle_end_linear_run_elts(struct draw_pt_middle_end *middle,
    prim_info.start = 0;
    prim_info.count = draw_count;
    prim_info.elts = draw_elts;
-   prim_info.prim = fpme->input_prim;
+   prim_info.prim = prim_type(fpme->input_prim, prim_flags);
    prim_info.flags = prim_flags;
    prim_info.primitive_count = 1;
    prim_info.primitive_lengths = &draw_count;

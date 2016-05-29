@@ -161,6 +161,7 @@ const char *operationStr[OP_LAST + 1] =
    "subfm",
    "suclamp",
    "sueau",
+   "suq",
    "madsp",
    "texbar",
    "dfdx",
@@ -195,6 +196,11 @@ const char *operationStr[OP_LAST + 1] =
 static const char *atomSubOpStr[] =
 {
    "add", "min", "max", "inc", "dec", "and", "or", "xor", "cas", "exch"
+};
+
+static const char *ldstSubOpStr[] =
+{
+   "", "lock", "unlock"
 };
 
 static const char *DataTypeStr[] =
@@ -275,6 +281,7 @@ static const char *SemanticStr[SV_LAST + 1] =
    "SBASE",
    "VERTEX_STRIDE",
    "INVOCATION_INFO",
+   "THREAD_KILL",
    "?",
    "(INVALID)"
 };
@@ -534,6 +541,11 @@ void Instruction::print() const
       case OP_ATOM:
          if (subOp < Elements(atomSubOpStr))
             PRINT("%s ", atomSubOpStr[subOp]);
+         break;
+      case OP_LOAD:
+      case OP_STORE:
+         if (subOp < Elements(ldstSubOpStr))
+            PRINT("%s ", ldstSubOpStr[subOp]);
          break;
       default:
          if (subOp)

@@ -115,7 +115,13 @@ struct lp_rast_plane {
    int32_t dcdy;
 
    /* one-pixel sized trivial reject offsets for each plane */
-   int64_t eo;
+   uint32_t eo;
+   /*
+    * We rely on this struct being 64bit aligned (ideally it would be 128bit
+    * but that's quite the waste) and therefore on 32bit we need padding
+    * since otherwise (even with the 64bit number in there) it wouldn't be.
+    */
+   uint32_t pad;
 };
 
 /**
@@ -307,18 +313,5 @@ lp_debug_draw_bins_by_cmd_length( struct lp_scene *scene );
 void
 lp_debug_draw_bins_by_coverage( struct lp_scene *scene );
 
-
-#ifdef PIPE_ARCH_SSE
-#include <emmintrin.h>
-#include "util/u_sse.h"
-
-static inline __m128i
-lp_plane_to_m128i(const struct lp_rast_plane *plane)
-{
-   return _mm_setr_epi32((int32_t)plane->c, (int32_t)plane->dcdx,
-                         (int32_t)plane->dcdy, (int32_t)plane->eo);
-}
-
-#endif
 
 #endif

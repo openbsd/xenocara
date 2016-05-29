@@ -22,7 +22,7 @@
 #if defined R600_USE_LLVM || defined HAVE_OPENCL
 
 #define CONSTANT_BUFFER_0_ADDR_SPACE 8
-#define CONSTANT_BUFFER_1_ADDR_SPACE (CONSTANT_BUFFER_0_ADDR_SPACE + R600_UCP_CONST_BUFFER)
+#define CONSTANT_BUFFER_1_ADDR_SPACE (CONSTANT_BUFFER_0_ADDR_SPACE + R600_BUFFER_INFO_CONST_BUFFER)
 #define LLVM_R600_BUFFER_INFO_CONST_BUFFER \
 	(CONSTANT_BUFFER_0_ADDR_SPACE + R600_BUFFER_INFO_CONST_BUFFER)
 
@@ -77,22 +77,11 @@ static void llvm_load_system_value(
 	default: assert(!"unknown system value");
 	}
 
-#if HAVE_LLVM >= 0x0304
 	ctx->system_values[index] = LLVMBuildExtractElement(ctx->gallivm.builder,
 		LLVMGetParam(ctx->main_fn, 0), lp_build_const_int32(&(ctx->gallivm), chan),
 		"");
-#else
-	LLVMValueRef reg = lp_build_const_int32(
-			ctx->soa.bld_base.base.gallivm, chan);
-	ctx->system_values[index] = lp_build_intrinsic(
-			ctx->soa.bld_base.base.gallivm->builder,
-			"llvm.R600.load.input",
-			ctx->soa.bld_base.base.elem_type, &reg, 1,
-			LLVMReadNoneAttribute);
-#endif
 }
 
-#if HAVE_LLVM >= 0x0304
 static LLVMValueRef
 llvm_load_input_vector(
 	struct radeon_llvm_context * ctx, unsigned location, unsigned ijregs,
@@ -131,34 +120,7 @@ llvm_load_input_vector(
 				VecType, Args, ArgCount, LLVMReadNoneAttribute);
 		}
 }
-#else
-static LLVMValueRef
-llvm_load_input_helper(
-	struct radeon_llvm_context * ctx,
-	unsigned idx, int interp, int ij_index)
-{
-	const struct lp_build_context * bb = &ctx->soa.bld_base.base;
-	LLVMValueRef arg[2];
-	int arg_count;
-	const char * intrinsic;
 
-	arg[0] = lp_build_const_int32(bb->gallivm, idx);
-
-	if (interp) {
-		intrinsic = "llvm.R600.interp.input";
-		arg[1] = lp_build_const_int32(bb->gallivm, ij_index);
-		arg_count = 2;
-	} else {
-		intrinsic = "llvm.R600.load.input";
-		arg_count = 1;
-	}
-
-	return lp_build_intrinsic(bb->gallivm->builder, intrinsic,
-		bb->elem_type, &arg[0], arg_count, LLVMReadNoneAttribute);
-}
-#endif
-
-#if HAVE_LLVM >= 0x0304
 static LLVMValueRef
 llvm_face_select_helper(
 	struct radeon_llvm_context * ctx,
@@ -171,21 +133,6 @@ llvm_face_select_helper(
 	return LLVMBuildSelect(bb->gallivm->builder, is_front,
 		front_color, back_color, "");
 }
-#else
-static LLVMValueRef
-llvm_face_select_helper(
-	struct radeon_llvm_context * ctx,
-	unsigned face_loc, LLVMValueRef front_color, LLVMValueRef back_color)
-{
-	const struct lp_build_context * bb = &ctx->soa.bld_base.base;
-	LLVMValueRef face = llvm_load_input_helper(ctx, face_loc, 0, 0);
-	LLVMValueRef is_front = LLVMBuildFCmp(
-		bb->gallivm->builder, LLVMRealUGT, face,
-		lp_build_const_float(bb->gallivm, 0.0f),	"");
-	return LLVMBuildSelect(bb->gallivm->builder, is_front,
-		front_color, back_color, "");
-}
-#endif
 
 static void llvm_load_input(
 	struct radeon_llvm_context * ctx,
@@ -194,18 +141,11 @@ static void llvm_load_input(
 {
 	const struct r600_shader_io * input = &ctx->r600_inputs[input_index];
 	unsigned chan;
-#if HAVE_LLVM < 0x0304
-	unsigned interp = 0;
-	int ij_index;
-#endif
 	int two_side = (ctx->two_side && input->name == TGSI_SEMANTIC_COLOR);
 	LLVMValueRef v;
-#if HAVE_LLVM >= 0x0304
 	boolean require_interp_intrinsic = ctx->chip_class >= EVERGREEN &&
 		ctx->type == TGSI_PROCESSOR_FRAGMENT;
-#endif
 
-#if HAVE_LLVM >= 0x0304
 	if (require_interp_intrinsic && input->spi_sid) {
 		v = llvm_load_input_vector(ctx, input->lds_pos, input->ij_index,
 			(input->interpolate > 0));
@@ -241,49 +181,7 @@ static void llvm_load_input(
 				lp_build_const_float(&(ctx->gallivm), 1.0f),
 				ctx->inputs[soa_index], "");
 	}
-}
-#else
-	if (ctx->chip_class >= EVERGREEN && ctx->type == TGSI_PROCESSOR_FRAGMENT &&
-			input->spi_sid) {
-		interp = 1;
-		ij_index = (input->interpolate > 0) ? input->ij_index : -1;
 	}
-
-	for (chan = 0; chan < 4; chan++) {
-		unsigned soa_index = radeon_llvm_reg_index_soa(input_index, chan);
-		int loc;
-
-		if (interp) {
-			loc = 4 * input->lds_pos + chan;
-		} else {
-			if (input->name == TGSI_SEMANTIC_FACE)
-				loc = 4 * ctx->face_gpr;
-			else
-				loc = 4 * input->gpr + chan;
-		}
-
-		v = llvm_load_input_helper(ctx, loc, interp, ij_index);
-
-		if (two_side) {
-			struct r600_shader_io * back_input =
-					&ctx->r600_inputs[input->back_color_input];
-			int back_loc = interp ? back_input->lds_pos : back_input->gpr;
-			LLVMValueRef v2;
-
-			back_loc = 4 * back_loc + chan;
-			v2 = llvm_load_input_helper(ctx, back_loc, interp, ij_index);
-			v = llvm_face_select_helper(ctx, 4 * ctx->face_gpr, v, v2);
-		} else if (input->name == TGSI_SEMANTIC_POSITION &&
-				ctx->type == TGSI_PROCESSOR_FRAGMENT && chan == 3) {
-			/* RCP for fragcoord.w */
-			v = LLVMBuildFDiv(ctx->gallivm.builder,
-					lp_build_const_float(&(ctx->gallivm), 1.0f),
-					v, "");
-		}
-
-		ctx->inputs[soa_index] = v;
-	}
-#endif
 }
 
 static void llvm_emit_prologue(struct lp_build_tgsi_context * bld_base)
@@ -828,7 +726,7 @@ static void tex_fetch_args(
 		 * That operand should be passed as a float value in the args array
 		 * right after the coord vector. After packing it's not used anymore,
 		 * that's why arg_count is not increased */
-		coords[4] = lp_build_emit_fetch(bld_base, inst, 1, 0);
+		coords[4] = lp_build_emit_fetch(bld_base, inst, 1, TGSI_CHAN_X);
 	}
 
 	if ((inst->Texture.Texture == TGSI_TEXTURE_CUBE ||
@@ -886,20 +784,16 @@ LLVMModuleRef r600_tgsi_llvm(
 {
 	struct tgsi_shader_info shader_info;
 	struct lp_build_tgsi_context * bld_base = &ctx->soa.bld_base;
-	radeon_llvm_context_init(ctx);
-#if HAVE_LLVM >= 0x0304
+	radeon_llvm_context_init(ctx, "r600--");
 	LLVMTypeRef Arguments[32];
 	unsigned ArgumentsCount = 0;
 	for (unsigned i = 0; i < ctx->inputs_count; i++)
 		Arguments[ArgumentsCount++] = LLVMVectorType(bld_base->base.elem_type, 4);
-	radeon_llvm_create_func(ctx, Arguments, ArgumentsCount);
+	radeon_llvm_create_func(ctx, NULL, 0, Arguments, ArgumentsCount);
 	for (unsigned i = 0; i < ctx->inputs_count; i++) {
 		LLVMValueRef P = LLVMGetParam(ctx->main_fn, i);
 		LLVMAddAttribute(P, LLVMInRegAttribute);
 	}
-#else
-	radeon_llvm_create_func(ctx, NULL, 0);
-#endif
 	tgsi_scan_shader(tokens, &shader_info);
 
 	bld_base->info = &shader_info;
@@ -954,6 +848,7 @@ LLVMModuleRef r600_tgsi_llvm(
 
 	lp_build_tgsi_llvm(bld_base, tokens);
 
+	LLVMBuildRetVoid(bld_base->base.gallivm->builder);
 	radeon_llvm_finalize_module(ctx);
 
 	return ctx->gallivm.module;
@@ -993,7 +888,7 @@ void r600_shader_binary_read_config(const struct radeon_shader_binary *binary,
 		case R_02880C_DB_SHADER_CONTROL:
 			*use_kill = G_02880C_KILL_ENABLE(value);
 			break;
-		case CM_R_0288E8_SQ_LDS_ALLOC:
+		case R_0288E8_SQ_LDS_ALLOC:
 			bc->nlds_dw = value;
 			break;
 		}
@@ -1016,26 +911,31 @@ unsigned r600_create_shader(struct r600_bytecode *bc,
 	return 0;
 }
 
+void r600_destroy_shader(struct r600_bytecode *bc)
+{
+	FREE(bc->bytecode);
+}
+
 unsigned r600_llvm_compile(
 	LLVMModuleRef mod,
 	enum radeon_family family,
 	struct r600_bytecode *bc,
 	boolean *use_kill,
-	unsigned dump)
+	unsigned dump,
+	struct pipe_debug_callback *debug)
 {
 	unsigned r;
 	struct radeon_shader_binary binary;
 	const char * gpu_family = r600_get_llvm_processor_name(family);
 
-	memset(&binary, 0, sizeof(struct radeon_shader_binary));
-	r = radeon_llvm_compile(mod, &binary, gpu_family, dump, dump, NULL);
+	radeon_shader_binary_init(&binary);
+	if (dump)
+		LLVMDumpModule(mod);
+	r = radeon_llvm_compile(mod, &binary, gpu_family, NULL, debug);
 
 	r = r600_create_shader(bc, &binary, use_kill);
 
-	FREE(binary.code);
-	FREE(binary.config);
-	FREE(binary.rodata);
-	FREE(binary.global_symbol_offsets);
+	radeon_shader_binary_clean(&binary);
 
 	return r;
 }

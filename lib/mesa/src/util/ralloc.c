@@ -360,10 +360,7 @@ ralloc_strndup(const void *ctx, const char *str, size_t max)
    if (unlikely(str == NULL))
       return NULL;
 
-   n = strlen(str);
-   if (n > max)
-      n = max;
-
+   n = strnlen(str, max);
    ptr = ralloc_array(ctx, char, n + 1);
    memcpy(ptr, str, n);
    ptr[n] = '\0';
@@ -503,6 +500,7 @@ ralloc_vasprintf_rewrite_tail(char **str, size_t *start, const char *fmt,
    if (unlikely(*str == NULL)) {
       // Assuming a NULL context is probably bad, but it's expected behavior.
       *str = ralloc_vasprintf(NULL, fmt, args);
+      *start = strlen(*str);
       return true;
    }
 

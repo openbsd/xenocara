@@ -90,6 +90,8 @@ struct bblock_t {
    struct exec_list parents;
    struct exec_list children;
    int num;
+
+   unsigned cycle_count;
 };
 
 static inline struct backend_instruction *
@@ -285,6 +287,8 @@ struct cfg_t {
    int num_blocks;
 
    bool idom_dirty;
+
+   unsigned cycle_count;
 };
 
 /* Note that this is implemented with a double for loop -- break will
@@ -310,6 +314,9 @@ struct cfg_t {
 #define foreach_block_safe(__block, __cfg)                     \
    foreach_list_typed_safe (bblock_t, __block, link, &(__cfg)->block_list)
 
+#define foreach_block_reverse_safe(__block, __cfg)             \
+   foreach_list_typed_reverse_safe (bblock_t, __block, link, &(__cfg)->block_list)
+
 #define foreach_inst_in_block(__type, __inst, __block)         \
    foreach_in_list(__type, __inst, &(__block)->instructions)
 
@@ -327,12 +334,12 @@ struct cfg_t {
 #define foreach_inst_in_block_reverse_safe(__type, __inst, __block) \
    foreach_in_list_reverse_safe(__type, __inst, &(__block)->instructions)
 
-#define foreach_inst_in_block_starting_from(__type, __scan_inst, __inst, __block) \
+#define foreach_inst_in_block_starting_from(__type, __scan_inst, __inst) \
    for (__type *__scan_inst = (__type *)__inst->next;          \
         !__scan_inst->is_tail_sentinel();                      \
         __scan_inst = (__type *)__scan_inst->next)
 
-#define foreach_inst_in_block_reverse_starting_from(__type, __scan_inst, __inst, __block) \
+#define foreach_inst_in_block_reverse_starting_from(__type, __scan_inst, __inst) \
    for (__type *__scan_inst = (__type *)__inst->prev;          \
         !__scan_inst->is_head_sentinel();                      \
         __scan_inst = (__type *)__scan_inst->prev)

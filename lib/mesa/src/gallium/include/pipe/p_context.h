@@ -32,6 +32,7 @@
 #include "p_format.h"
 #include "p_video_enums.h"
 #include "p_defines.h"
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,8 +45,10 @@ struct pipe_blit_info;
 struct pipe_box;
 struct pipe_clip_state;
 struct pipe_constant_buffer;
+struct pipe_debug_callback;
 struct pipe_depth_stencil_alpha_state;
 struct pipe_draw_info;
+struct pipe_grid_info;
 struct pipe_fence_handle;
 struct pipe_framebuffer_state;
 struct pipe_image_view;
@@ -114,6 +117,25 @@ struct pipe_context {
                                        unsigned query_type,
                                        unsigned index );
 
+   /**
+    * Create a query object that queries all given query types simultaneously.
+    *
+    * This can only be used for those query types for which
+    * get_driver_query_info indicates that it must be used. Only one batch
+    * query object may be active at a time.
+    *
+    * There may be additional constraints on which query types can be used
+    * together, in particular those that are implied by
+    * get_driver_query_group_info.
+    *
+    * \param num_queries the number of query types
+    * \param query_types array of \p num_queries query types
+    * \return a query object, or NULL on error.
+    */
+   struct pipe_query *(*create_batch_query)( struct pipe_context *pipe,
+                                             unsigned num_queries,
+                                             unsigned *query_types );
+
    void (*destroy_query)(struct pipe_context *pipe,
                          struct pipe_query *q);
 
@@ -129,6 +151,28 @@ struct pipe_context {
                                struct pipe_query *q,
                                boolean wait,
                                union pipe_query_result *result);
+
+   /**
+    * Get results of a query, storing into resource. Note that this may not
+    * be used with batch queries.
+    *
+    * \param wait  if true, this query will block until the result is ready
+    * \param result_type  the type of the value being stored:
+    * \param index  for queries that return multiple pieces of data, which
+    *               item of that data to store (e.g. for
+    *               PIPE_QUERY_PIPELINE_STATISTICS).
+    *               When the index is -1, instead of the value of the query
+    *               the driver should instead write a 1/0 to the appropriate
+    *               location with 1 meaning that the query result is available.
+    */
+   void (*get_query_result_resource)(struct pipe_context *pipe,
+                                     struct pipe_query *q,
+                                     boolean wait,
+                                     enum pipe_query_value_type result_type,
+                                     int index,
+                                     struct pipe_resource *resource,
+                                     unsigned offset);
+
    /*@}*/
 
    /**
@@ -238,6 +282,13 @@ struct pipe_context {
                           const float default_inner_level[2]);
 
    /**
+    * Sets the debug callback. If the pointer is null, then no callback is
+    * set, otherwise a copy of the data should be made.
+    */
+   void (*set_debug_callback)(struct pipe_context *,
+                              const struct pipe_debug_callback *);
+
+   /**
     * Bind an array of shader buffers that will be used by a shader.
     * Any buffers that were previously bound to the specified range
     * will be unbound.
@@ -262,14 +313,14 @@ struct pipe_context {
     * \param shader     selects shader stage
     * \param start_slot first image slot to bind.
     * \param count      number of consecutive images to bind.
-    * \param buffers    array of pointers to the images to bind, it
+    * \param buffers    array of the images to bind, it
     *                   should contain at least \a count elements
     *                   unless it's NULL, in which case no images will
     *                   be bound.
     */
    void (*set_shader_images)(struct pipe_context *, unsigned shader,
                              unsigned start_slot, unsigned count,
-                             struct pipe_image_view **images);
+                             struct pipe_image_view *images);
 
    void (*set_vertex_buffers)( struct pipe_context *,
                                unsigned start_slot,
@@ -371,6 +422,16 @@ struct pipe_context {
                                unsigned width, unsigned height);
 
    /**
+    * Clear the texture with the specified texel. Not guaranteed to be a
+    * renderable format. Data provided in the resource's format.
+    */
+   void (*clear_texture)(struct pipe_context *pipe,
+                         struct pipe_resource *res,
+                         unsigned level,
+                         const struct pipe_box *box,
+                         const void *data);
+
+   /**
     * Clear a buffer. Runs a memset over the specified region with the element
     * value passed in through clear_value of size clear_value_size.
     */
@@ -417,16 +478,6 @@ struct pipe_context {
    void (*surface_destroy)(struct pipe_context *ctx,
                            struct pipe_surface *);
 
-   /**
-    * Create an image view into a buffer or texture to be used with load,
-    * store, and atomic instructions by a shader stage.
-    */
-   struct pipe_image_view * (*create_image_view)(struct pipe_context *ctx,
-                                                 struct pipe_resource *texture,
-                                                 const struct pipe_image_view *templat);
-
-   void (*image_view_destroy)(struct pipe_context *ctx,
-                              struct pipe_image_view *view);
 
    /**
     * Map a resource.
@@ -558,23 +609,9 @@ struct pipe_context {
    /**
     * Launch the compute kernel starting from instruction \a pc of the
     * currently bound compute program.
-    *
-    * \a grid_layout and \a block_layout are arrays of size \a
-    * PIPE_COMPUTE_CAP_GRID_DIMENSION that determine the layout of the
-    * grid (in block units) and working block (in thread units) to be
-    * used, respectively.
-    *
-    * \a pc For drivers that use PIPE_SHADER_IR_LLVM as their prefered IR,
-    * this value will be the index of the kernel in the opencl.kernels
-    * metadata list.
-    *
-    * \a input will be used to initialize the INPUT resource, and it
-    * should point to a buffer of at least
-    * pipe_compute_state::req_input_mem bytes.
     */
    void (*launch_grid)(struct pipe_context *context,
-                       const uint *block_layout, const uint *grid_layout,
-                       uint32_t pc, const void *input);
+                       const struct pipe_grid_info *info);
    /*@}*/
 
    /**
@@ -591,6 +628,13 @@ struct pipe_context {
                                float *out_value);
 
    /**
+    * Query a timestamp in nanoseconds.  This is completely equivalent to
+    * pipe_screen::get_timestamp() but takes a context handle for drivers
+    * that require a context.
+    */
+   uint64_t (*get_timestamp)(struct pipe_context *);
+
+   /**
     * Flush the resource cache, so that the resource can be used
     * by an external client. Possible usage:
     * - flushing a resource before presenting it on the screen
@@ -604,11 +648,15 @@ struct pipe_context {
                           struct pipe_resource *resource);
 
    /**
-    * Invalidate the contents of the resource.
+    * Invalidate the contents of the resource. This is used to
     *
-    * This is used to implement EGL's semantic of undefined depth/stencil
+    * (1) implement EGL's semantic of undefined depth/stencil
     * contenst after a swapbuffers.  This allows a tiled renderer (for
     * example) to not store the depth buffer.
+    *
+    * (2) implement GL's InvalidateBufferData. For backwards compatibility,
+    * you must only rely on the usability for this purpose when
+    * PIPE_CAP_INVALIDATE_BUFFER is enabled.
     */
    void (*invalidate_resource)(struct pipe_context *ctx,
                                struct pipe_resource *resource);
@@ -617,6 +665,36 @@ struct pipe_context {
     * Return information about unexpected device resets.
     */
    enum pipe_reset_status (*get_device_reset_status)(struct pipe_context *ctx);
+
+   /**
+    * Dump driver-specific debug information into a stream. This is
+    * used by debugging tools.
+    *
+    * \param ctx        pipe context
+    * \param stream     where the output should be written to
+    * \param flags      a mask of PIPE_DEBUG_* flags
+    */
+   void (*dump_debug_state)(struct pipe_context *ctx, FILE *stream,
+                            unsigned flags);
+
+   /**
+    * Emit string marker in cmdstream
+    */
+   void (*emit_string_marker)(struct pipe_context *ctx,
+                              const char *string,
+                              int len);
+
+   /**
+    * Generate mipmap.
+    * \return TRUE if mipmap generation succeeds, FALSE otherwise
+    */
+   boolean (*generate_mipmap)(struct pipe_context *ctx,
+                              struct pipe_resource *resource,
+                              enum pipe_format format,
+                              unsigned base_level,
+                              unsigned last_level,
+                              unsigned first_layer,
+                              unsigned last_layer);
 };
 
 

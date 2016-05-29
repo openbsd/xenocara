@@ -43,6 +43,7 @@
 #include "lp_query.h"
 #include "lp_rast.h"
 #include "lp_rast_priv.h"
+#include "gallivm/lp_bld_format.h"
 #include "gallivm/lp_bld_debug.h"
 #include "lp_scene.h"
 #include "lp_tex_sample.h"
@@ -664,6 +665,17 @@ rasterize_scene(struct lp_rasterizer_task *task,
 {
    task->scene = scene;
 
+   /* Clear the cache tags. This should not always be necessary but
+      simpler for now. */
+#if LP_USE_TEXTURE_CACHE
+   memset(task->thread_data.cache->cache_tags, 0,
+          sizeof(task->thread_data.cache->cache_tags));
+#if LP_BUILD_FORMAT_CACHE_DEBUG
+   task->thread_data.cache->cache_access_total = 0;
+   task->thread_data.cache->cache_access_miss = 0;
+#endif
+#endif
+
    if (!task->rast->no_rast && !scene->discard) {
       /* loop over scene bins, rasterize each */
       {
@@ -678,6 +690,20 @@ rasterize_scene(struct lp_rasterizer_task *task,
       }
    }
 
+
+#if LP_BUILD_FORMAT_CACHE_DEBUG
+   {
+      uint64_t total, miss;
+      total = task->thread_data.cache->cache_access_total;
+      miss = task->thread_data.cache->cache_access_miss;
+      if (total) {
+         debug_printf("thread %d cache access %llu miss %llu hit rate %f\n",
+                 task->thread_index, (long long unsigned)total,
+                 (long long unsigned)miss,
+                 (float)(total - miss)/(float)total);
+      }
+   }
+#endif
 
    if (scene->fence) {
       lp_fence_signal(scene->fence);
@@ -866,10 +892,15 @@ lp_rast_create( unsigned num_threads )
       goto no_full_scenes;
    }
 
-   for (i = 0; i < Elements(rast->tasks); i++) {
+   for (i = 0; i < MAX2(1, num_threads); i++) {
       struct lp_rasterizer_task *task = &rast->tasks[i];
       task->rast = rast;
       task->thread_index = i;
+      task->thread_data.cache = align_malloc(sizeof(struct lp_build_format_cache),
+                                             16);
+      if (!task->thread_data.cache) {
+         goto no_thread_data_cache;
+      }
    }
 
    rast->num_threads = num_threads;
@@ -879,12 +910,22 @@ lp_rast_create( unsigned num_threads )
    create_rast_threads(rast);
 
    /* for synchronizing rasterization threads */
-   pipe_barrier_init( &rast->barrier, rast->num_threads );
+   if (rast->num_threads > 0) {
+      pipe_barrier_init( &rast->barrier, rast->num_threads );
+   }
 
    memset(lp_dummy_tile, 0, sizeof lp_dummy_tile);
 
    return rast;
 
+no_thread_data_cache:
+   for (i = 0; i < MAX2(1, rast->num_threads); i++) {
+      if (rast->tasks[i].thread_data.cache) {
+         align_free(rast->tasks[i].thread_data.cache);
+      }
+   }
+
+   lp_scene_queue_destroy(rast->full_scenes);
 no_full_scenes:
    FREE(rast);
 no_rast:
@@ -923,9 +964,14 @@ void lp_rast_destroy( struct lp_rasterizer *rast )
       pipe_semaphore_destroy(&rast->tasks[i].work_ready);
       pipe_semaphore_destroy(&rast->tasks[i].work_done);
    }
+   for (i = 0; i < MAX2(1, rast->num_threads); i++) {
+      align_free(rast->tasks[i].thread_data.cache);
+   }
 
    /* for synchronizing rasterization threads */
-   pipe_barrier_destroy( &rast->barrier );
+   if (rast->num_threads > 0) {
+      pipe_barrier_destroy( &rast->barrier );
+   }
 
    lp_scene_queue_destroy(rast->full_scenes);
 

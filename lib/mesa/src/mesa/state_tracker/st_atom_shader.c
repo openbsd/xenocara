@@ -64,14 +64,21 @@ update_fp( struct st_context *st )
    assert(stfp->Base.Base.Target == GL_FRAGMENT_PROGRAM_ARB);
 
    memset(&key, 0, sizeof(key));
-   key.st = st;
+   key.st = st->has_shareable_shaders ? NULL : st;
 
    /* _NEW_FRAG_CLAMP */
    key.clamp_color = st->clamp_frag_color_in_shader &&
                      st->ctx->Color._ClampFragmentColor;
 
-   /* Ignore sample qualifier while computing this flag. */
+   /* Don't set it if the driver can force the interpolation by itself.
+    * If SAMPLE_ID or SAMPLE_POS are used, the interpolation is set
+    * automatically.
+    * Ignore sample qualifier while computing this flag.
+    */
    key.persample_shading =
+      st->force_persample_in_shader &&
+      !(stfp->Base.Base.SystemValuesRead & (SYSTEM_BIT_SAMPLE_ID |
+                                            SYSTEM_BIT_SAMPLE_POS)) &&
       _mesa_get_min_invocations_per_fragment(st->ctx, &stfp->Base, true) > 1;
 
    st->fp_variant = st_get_fp_variant(st, stfp, &key);
@@ -112,7 +119,7 @@ update_vp( struct st_context *st )
    assert(stvp->Base.Base.Target == GL_VERTEX_PROGRAM_ARB);
 
    memset(&key, 0, sizeof key);
-   key.st = st;  /* variants are per-context */
+   key.st = st->has_shareable_shaders ? NULL : st;
 
    /* When this is true, we will add an extra input to the vertex
     * shader translation (for edgeflags), an extra output with
@@ -156,7 +163,6 @@ static void
 update_gp( struct st_context *st )
 {
    struct st_geometry_program *stgp;
-   struct st_gp_variant_key key;
 
    if (!st->ctx->GeometryProgram._Current) {
       cso_set_geometry_shader_handle(st->cso_context, NULL);
@@ -166,10 +172,8 @@ update_gp( struct st_context *st )
    stgp = st_geometry_program(st->ctx->GeometryProgram._Current);
    assert(stgp->Base.Base.Target == GL_GEOMETRY_PROGRAM_NV);
 
-   memset(&key, 0, sizeof(key));
-   key.st = st;
-
-   st->gp_variant = st_get_gp_variant(st, stgp, &key);
+   st->gp_variant = st_get_basic_variant(st, PIPE_SHADER_GEOMETRY,
+                                         &stgp->tgsi, &stgp->variants);
 
    st_reference_geomprog(st, &st->gp, stgp);
 
@@ -192,7 +196,6 @@ static void
 update_tcp( struct st_context *st )
 {
    struct st_tessctrl_program *sttcp;
-   struct st_tcp_variant_key key;
 
    if (!st->ctx->TessCtrlProgram._Current) {
       cso_set_tessctrl_shader_handle(st->cso_context, NULL);
@@ -202,10 +205,8 @@ update_tcp( struct st_context *st )
    sttcp = st_tessctrl_program(st->ctx->TessCtrlProgram._Current);
    assert(sttcp->Base.Base.Target == GL_TESS_CONTROL_PROGRAM_NV);
 
-   memset(&key, 0, sizeof(key));
-   key.st = st;
-
-   st->tcp_variant = st_get_tcp_variant(st, sttcp, &key);
+   st->tcp_variant = st_get_basic_variant(st, PIPE_SHADER_TESS_CTRL,
+                                          &sttcp->tgsi, &sttcp->variants);
 
    st_reference_tesscprog(st, &st->tcp, sttcp);
 
@@ -228,7 +229,6 @@ static void
 update_tep( struct st_context *st )
 {
    struct st_tesseval_program *sttep;
-   struct st_tep_variant_key key;
 
    if (!st->ctx->TessEvalProgram._Current) {
       cso_set_tesseval_shader_handle(st->cso_context, NULL);
@@ -238,10 +238,8 @@ update_tep( struct st_context *st )
    sttep = st_tesseval_program(st->ctx->TessEvalProgram._Current);
    assert(sttep->Base.Base.Target == GL_TESS_EVALUATION_PROGRAM_NV);
 
-   memset(&key, 0, sizeof(key));
-   key.st = st;
-
-   st->tep_variant = st_get_tep_variant(st, sttep, &key);
+   st->tep_variant = st_get_basic_variant(st, PIPE_SHADER_TESS_EVAL,
+                                          &sttep->tgsi, &sttep->variants);
 
    st_reference_tesseprog(st, &st->tep, sttep);
 
@@ -256,4 +254,36 @@ const struct st_tracked_state st_update_tep = {
       ST_NEW_TESSEVAL_PROGRAM           /* st */
    },
    update_tep  				/* update */
+};
+
+
+
+static void
+update_cp( struct st_context *st )
+{
+   struct st_compute_program *stcp;
+
+   if (!st->ctx->ComputeProgram._Current) {
+      cso_set_compute_shader_handle(st->cso_context, NULL);
+      return;
+   }
+
+   stcp = st_compute_program(st->ctx->ComputeProgram._Current);
+   assert(stcp->Base.Base.Target == GL_COMPUTE_PROGRAM_NV);
+
+   st->cp_variant = st_get_cp_variant(st, &stcp->tgsi, &stcp->variants);
+
+   st_reference_compprog(st, &st->cp, stcp);
+
+   cso_set_compute_shader_handle(st->cso_context,
+                                 st->cp_variant->driver_shader);
+}
+
+const struct st_tracked_state st_update_cp = {
+   "st_update_cp",			/* name */
+   {					/* dirty */
+      0,				/* mesa */
+      ST_NEW_COMPUTE_PROGRAM           /* st */
+   },
+   update_cp  				/* update */
 };

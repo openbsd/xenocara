@@ -72,6 +72,7 @@ struct save_state
 
    /* Always saved/restored with meta. */
    gl_api API;
+   uint8_t ExtensionsVersion;
 
    /** MESA_META_CLEAR (and others?) */
    struct gl_query_object *CurrentOcclusionObject;
@@ -145,7 +146,6 @@ struct save_state
 
    /** MESA_META_TEXTURE */
    GLuint ActiveUnit;
-   GLuint ClientActiveUnit;
    /** for unit[0] only */
    struct gl_texture_object *CurrentTexture[NUM_TEXTURE_TARGETS];
    /** mask of TEXTURE_2D_BIT, etc */
@@ -155,7 +155,6 @@ struct save_state
 
    /** MESA_META_VERTEX */
    struct gl_vertex_array_object *VAO;
-   struct gl_buffer_object *ArrayBufferObj;
 
    /** MESA_META_VIEWPORT */
    GLfloat ViewportX, ViewportY, ViewportW, ViewportH;
@@ -187,7 +186,7 @@ struct save_state
    GLboolean RasterDiscard;
    GLboolean TransformFeedbackNeedsResume;
 
-   GLuint DrawBufferName, ReadBufferName, RenderbufferName;
+   GLuint DrawBufferName, ReadBufferName;
 
    /** MESA_META_DRAW_BUFFERS */
    GLenum ColorDrawBuffers[MAX_DRAW_BUFFERS];
@@ -285,9 +284,11 @@ enum blit_msaa_shader {
    BLIT_2X_MSAA_SHADER_2D_MULTISAMPLE_SCALED_RESOLVE,
    BLIT_4X_MSAA_SHADER_2D_MULTISAMPLE_SCALED_RESOLVE,
    BLIT_8X_MSAA_SHADER_2D_MULTISAMPLE_SCALED_RESOLVE,
+   BLIT_16X_MSAA_SHADER_2D_MULTISAMPLE_SCALED_RESOLVE,
    BLIT_2X_MSAA_SHADER_2D_MULTISAMPLE_ARRAY_SCALED_RESOLVE,
    BLIT_4X_MSAA_SHADER_2D_MULTISAMPLE_ARRAY_SCALED_RESOLVE,
    BLIT_8X_MSAA_SHADER_2D_MULTISAMPLE_ARRAY_SCALED_RESOLVE,
+   BLIT_16X_MSAA_SHADER_2D_MULTISAMPLE_ARRAY_SCALED_RESOLVE,
    BLIT_MSAA_SHADER_COUNT,
 };
 
@@ -308,7 +309,9 @@ struct blit_state
 struct fb_tex_blit_state
 {
    GLint baseLevelSave, maxLevelSave;
-   GLuint sampler, samplerSave, stencilSamplingSave;
+   struct gl_sampler_object *samp_obj;
+   struct gl_sampler_object *samp_obj_save;
+   GLuint stencilSamplingSave;
    GLuint tempTex;
 };
 
@@ -321,12 +324,7 @@ struct clear_state
    GLuint VAO;
    struct gl_buffer_object *buf_obj;
    GLuint ShaderProg;
-   GLint ColorLocation;
-   GLint LayerLocation;
-
    GLuint IntegerShaderProg;
-   GLint IntegerColorLocation;
-   GLint IntegerLayerLocation;
 };
 
 
@@ -371,7 +369,7 @@ struct gen_mipmap_state
    GLuint VAO;
    struct gl_buffer_object *buf_obj;
    GLuint FBO;
-   GLuint Sampler;
+   struct gl_sampler_object *samp_obj;
 
    struct blit_shader_table shaders;
 };
@@ -382,7 +380,8 @@ struct gen_mipmap_state
  */
 struct decompress_fbo_state
 {
-   GLuint FBO, RBO;
+   struct gl_renderbuffer *rb;
+   GLuint FBO;
    GLint Width, Height;
 };
 
@@ -394,7 +393,7 @@ struct decompress_state
    GLuint VAO;
    struct decompress_fbo_state byteFBO, floatFBO;
    struct gl_buffer_object *buf_obj;
-   GLuint Sampler;
+   struct gl_sampler_object *samp_obj;
 
    struct blit_shader_table shaders;
 };
@@ -455,7 +454,7 @@ _mesa_meta_in_progress(struct gl_context *ctx)
 }
 
 extern void
-_mesa_meta_fb_tex_blit_begin(const struct gl_context *ctx,
+_mesa_meta_fb_tex_blit_begin(struct gl_context *ctx,
                              struct fb_tex_blit_state *blit);
 
 extern void
@@ -469,9 +468,9 @@ _mesa_meta_bind_rb_as_tex_image(struct gl_context *ctx,
                                 struct gl_texture_object **texObj,
                                 GLenum *target);
 
-GLuint
+struct gl_sampler_object *
 _mesa_meta_setup_sampler(struct gl_context *ctx,
-                         const struct gl_texture_object *texObj,
+                         struct gl_texture_object *texObj,
                          GLenum target, GLenum filter, GLuint srcLevel);
 
 extern GLbitfield
@@ -495,8 +494,10 @@ _mesa_meta_and_swrast_BlitFramebuffer(struct gl_context *ctx,
 bool
 _mesa_meta_CopyImageSubData_uncompressed(struct gl_context *ctx,
                                          struct gl_texture_image *src_tex_image,
+                                         struct gl_renderbuffer *src_renderbuffer,
                                          int src_x, int src_y, int src_z,
                                          struct gl_texture_image *dst_tex_image,
+                                         struct gl_renderbuffer *dst_renderbuffer,
                                          int dst_x, int dst_y, int dst_z,
                                          int src_width, int src_height);
 

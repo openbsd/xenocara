@@ -32,7 +32,7 @@
 #define SI_CONTEXT_REG_OFFSET                0x00028000
 #define SI_CONTEXT_REG_END                   0x00029000
 #define CIK_UCONFIG_REG_OFFSET               0x00030000
-#define CIK_UCONFIG_REG_END                  0x00031000
+#define CIK_UCONFIG_REG_END                  0x00038000
 
 #define EVENT_TYPE_CACHE_FLUSH                  0x6
 #define EVENT_TYPE_PS_PARTIAL_FLUSH            0x10
@@ -69,6 +69,10 @@
 
 #define R600_TEXEL_PITCH_ALIGNMENT_MASK        0x7
 
+/* All registers defined in this packet section don't exist and the only
+ * purpose of these definitions is to define packet encoding that
+ * the IB parser understands, and also to have an accurate documentation.
+ */
 #define PKT3_NOP                               0x10
 #define PKT3_SET_BASE                          0x11
 #define PKT3_CLEAR_STATE                       0x12
@@ -90,35 +94,43 @@
 #define PKT3_DRAW_INDEX_IMMD                   0x2E /* not on CIK */
 #define PKT3_NUM_INSTANCES                     0x2F
 #define PKT3_DRAW_INDEX_MULTI_AUTO             0x30
-#define PKT3_INDIRECT_BUFFER                   0x32
+#define PKT3_INDIRECT_BUFFER_SI                0x32 /* not on CIK */
 #define PKT3_STRMOUT_BUFFER_UPDATE             0x34
 #define PKT3_DRAW_INDEX_OFFSET_2               0x35
 #define PKT3_DRAW_PREAMBLE                     0x36 /* new on CIK, required on GFX7.2 and later */
 #define PKT3_WRITE_DATA                        0x37
-#define     PKT3_WRITE_DATA_DST_SEL(x)             ((x) << 8)
-#define     PKT3_WRITE_DATA_DST_SEL_REG            0
-#define     PKT3_WRITE_DATA_DST_SEL_MEM_SYNC       1
-#define     PKT3_WRITE_DATA_DST_SEL_TC_L2          2
-#define     PKT3_WRITE_DATA_DST_SEL_GDS            3
-#define     PKT3_WRITE_DATA_DST_SEL_RESERVED_4     4
-#define     PKT3_WRITE_DATA_DST_SEL_MEM_ASYNC      5
-#define     PKT3_WR_ONE_ADDR                       (1 << 16)
-#define PKT3_WRITE_DATA_WR_CONFIRM                 (1 << 20)
-#define PKT3_WRITE_DATA_ENGINE_SEL(x)              ((x) << 30)
-#define PKT3_WRITE_DATA_ENGINE_SEL_ME              0
-#define PKT3_WRITE_DATA_ENGINE_SEL_PFP             1
-#define PKT3_WRITE_DATA_ENGINE_SEL_CE              2
+#define   R_370_CONTROL				0x370 /* 0x[packet number][word index] */
+#define     S_370_ENGINE_SEL(x)			(((x) & 0x3) << 30)
+#define       V_370_ME				0
+#define       V_370_PFP				1
+#define       V_370_CE				2
+#define       V_370_DE				3
+#define     S_370_WR_CONFIRM(x)			(((x) & 0x1) << 20)
+#define     S_370_WR_ONE_ADDR(x)		(((x) & 0x1) << 16)
+#define     S_370_DST_SEL(x)			(((x) & 0xf) << 8)
+#define       V_370_MEM_MAPPED_REGISTER		0
+#define       V_370_MEMORY_SYNC			1
+#define       V_370_TC_L2			2
+#define       V_370_GDS				3
+#define       V_370_RESERVED			4
+#define       V_370_MEM_ASYNC			5
+#define   R_371_DST_ADDR_LO			0x371
+#define   R_372_DST_ADDR_HI			0x372
 #define PKT3_DRAW_INDEX_INDIRECT_MULTI         0x38
 #define PKT3_MEM_SEMAPHORE                     0x39
 #define PKT3_MPEG_INDEX                        0x3A /* not on CIK */
 #define PKT3_WAIT_REG_MEM                      0x3C
 #define		WAIT_REG_MEM_EQUAL		3
 #define PKT3_MEM_WRITE                         0x3D /* not on CIK */
+#define PKT3_INDIRECT_BUFFER_CIK               0x3F /* new on CIK */
 #define PKT3_COPY_DATA			       0x40
 #define		COPY_DATA_SRC_SEL(x)		((x) & 0xf)
 #define			COPY_DATA_REG		0
 #define			COPY_DATA_MEM		1
+#define                 COPY_DATA_PERF          4
+#define                 COPY_DATA_IMM           5
 #define		COPY_DATA_DST_SEL(x)		(((x) & 0xf) << 8)
+#define		COPY_DATA_COUNT_SEL		(1 << 16)
 #define		COPY_DATA_WR_CONFIRM		(1 << 20)
 #define PKT3_SURFACE_SYNC                      0x43 /* deprecated on CIK, use ACQUIRE_MEM */
 #define PKT3_ME_INITIALIZE                     0x44 /* not on CIK */
@@ -159,42 +171,53 @@
  * 5. DST_ADDR_HI [15:0]
  * 6. COMMAND [29:22] | BYTE_COUNT [20:0]
  */
-#define PKT3_CP_DMA_CP_SYNC       (1 << 31)
-#define PKT3_CP_DMA_SRC_SEL(x)       ((x) << 29)
-/* 0 - SRC_ADDR
- * 1 - GDS (program SAS to 1 as well)
- * 2 - DATA
- * 3 - SRC_ADDR using TC L2 (DMA_DATA only)
- */
-#define PKT3_CP_DMA_DST_SEL(x)       ((x) << 20)
-/* 0 - DST_ADDR
- * 1 - GDS (program DAS to 1 as well)
- * 3 - DST_ADDR using TC L2 (DMA_DATA only)
- */
-/* COMMAND */
-#define PKT3_CP_DMA_CMD_SRC_SWAP(x) ((x) << 23)
-/* 0 - none
- * 1 - 8 in 16
- * 2 - 8 in 32
- * 3 - 8 in 64
- */
-#define PKT3_CP_DMA_CMD_DST_SWAP(x) ((x) << 24)
-/* 0 - none
- * 1 - 8 in 16
- * 2 - 8 in 32
- * 3 - 8 in 64
- */
-#define PKT3_CP_DMA_CMD_SAS       (1 << 26)
-/* 0 - memory
- * 1 - register
- */
-#define PKT3_CP_DMA_CMD_DAS       (1 << 27)
-/* 0 - memory
- * 1 - register
- */
-#define PKT3_CP_DMA_CMD_SAIC      (1 << 28)
-#define PKT3_CP_DMA_CMD_DAIC      (1 << 29)
-#define PKT3_CP_DMA_CMD_RAW_WAIT  (1 << 30)
+#define   R_410_CP_DMA_WORD0		0x410 /* 0x[packet number][word index] */
+#define     S_410_SRC_ADDR_LO(x)	((x) & 0xffffffff)
+#define   R_411_CP_DMA_WORD1		0x411
+#define     S_411_CP_SYNC(x)		(((x) & 0x1) << 31)
+#define     S_411_SRC_SEL(x)		(((x) & 0x3) << 29)
+#define       V_411_SRC_ADDR		0
+#define       V_411_GDS			1 /* program SAS to 1 as well */
+#define       V_411_DATA		2
+#define       V_411_SRC_ADDR_TC_L2	3 /* new for CIK */
+#define     S_411_ENGINE(x)		(((x) & 0x1) << 27)
+#define       V_411_ME			0
+#define       V_411_PFP			1
+#define     S_411_DSL_SEL(x)		(((x) & 0x3) << 20)
+#define       V_411_DST_ADDR		0
+#define       V_411_GDS			1 /* program DAS to 1 as well */
+#define       V_411_DST_ADDR_TC_L2	3 /* new for CIK */
+#define     S_411_SRC_ADDR_HI(x)	((x) & 0xffff)
+#define   R_412_CP_DMA_WORD2		0x412 /* 0x[packet number][word index] */
+#define     S_412_DST_ADDR_LO(x)	((x) & 0xffffffff)
+#define   R_413_CP_DMA_WORD3		0x413 /* 0x[packet number][word index] */
+#define     S_413_DST_ADDR_HI(x)	((x) & 0xffff)
+#define   R_414_COMMAND			0x414
+#define     S_414_BYTE_COUNT(x)		((x) & 0x1fffff)
+#define     S_414_DISABLE_WR_CONFIRM(x)	(((x) & 0x1) << 21)
+#define     S_414_SRC_SWAP(x)		(((x) & 0x3) << 22)
+#define       V_414_NONE		0
+#define       V_414_8_IN_16		1
+#define       V_414_8_IN_32		2
+#define       V_414_8_IN_64		3
+#define     S_414_DST_SWAP(x)		(((x) & 0x3) << 24)
+#define       V_414_NONE		0
+#define       V_414_8_IN_16		1
+#define       V_414_8_IN_32		2
+#define       V_414_8_IN_64		3
+#define     S_414_SAS(x)		(((x) & 0x1) << 26)
+#define       V_414_MEMORY		0
+#define       V_414_REGISTER		1
+#define     S_414_DAS(x)		(((x) & 0x1) << 27)
+#define       V_414_MEMORY		0
+#define       V_414_REGISTER		1
+#define     S_414_SAIC(x)		(((x) & 0x1) << 28)
+#define       V_414_INCREMENT		0
+#define       V_414_NO_INCREMENT	1
+#define     S_414_DAIC(x)		(((x) & 0x1) << 29)
+#define       V_414_INCREMENT		0
+#define       V_414_NO_INCREMENT	1
+#define     S_414_RAW_WAIT(x)		(((x) & 0x1) << 30)
 
 #define PKT3_DMA_DATA					0x50 /* new for CIK */
 /* 1. header
@@ -205,7 +228,24 @@
  * 5. DST_ADDR_HI [31:0]
  * 6. COMMAND [29:22] | BYTE_COUNT [20:0]
  */
-
+#define   R_500_DMA_DATA_WORD0		0x500 /* 0x[packet number][word index] */
+#define     S_500_CP_SYNC(x)		(((x) & 0x1) << 31)
+#define     S_500_SRC_SEL(x)		(((x) & 0x3) << 29)
+#define       V_500_SRC_ADDR		0
+#define       V_500_GDS			1 /* program SAS to 1 as well */
+#define       V_500_DATA		2
+#define       V_500_SRC_ADDR_TC_L2	3 /* new for CIK */
+#define     S_500_DSL_SEL(x)		(((x) & 0x3) << 20)
+#define       V_500_DST_ADDR		0
+#define       V_500_GDS			1 /* program DAS to 1 as well */
+#define       V_500_DST_ADDR_TC_L2	3 /* new for CIK */
+#define     S_500_ENGINE(x)		((x) & 0x1)
+#define       V_500_ME			0
+#define       V_500_PFP			1
+#define   R_501_SRC_ADDR_LO		0x501
+#define   R_502_SRC_ADDR_HI		0x502
+#define   R_503_DST_ADDR_LO		0x503
+#define   R_504_DST_ADDR_HI		0x504
 
 #define R_000E4C_SRBM_STATUS2                                           0x000E4C
 #define   S_000E4C_SDMA_RQ_PENDING(x)                                 (((x) & 0x1) << 0)
@@ -614,7 +654,6 @@
 #define   S_0085F0_DEST_BASE_1_ENA(x)                                 (((x) & 0x1) << 1)
 #define   G_0085F0_DEST_BASE_1_ENA(x)                                 (((x) >> 1) & 0x1)
 #define   C_0085F0_DEST_BASE_1_ENA                                    0xFFFFFFFD
-#define   S_0085F0_CB0_DEST_BASE_ENA_SHIFT             	              6
 #define   S_0085F0_CB0_DEST_BASE_ENA(x)                               (((x) & 0x1) << 6)
 #define   G_0085F0_CB0_DEST_BASE_ENA(x)                               (((x) >> 6) & 0x1)
 #define   C_0085F0_CB0_DEST_BASE_ENA                                  0xFFFFFFBF
@@ -1822,1223 +1861,6 @@
 #define   S_008C0C_RNG(x)                                             (((x) & 0x7FF) << 10)
 #define   G_008C0C_RNG(x)                                             (((x) >> 10) & 0x7FF)
 #define   C_008C0C_RNG                                                0xFFE003FF
-#if 0
-/* CIK */
-#define R_008DFC_SQ_FLAT_1                                              0x008DFC
-#define   S_008DFC_ADDR(x)                                            (((x) & 0xFF) << 0)
-#define   G_008DFC_ADDR(x)                                            (((x) >> 0) & 0xFF)
-#define   C_008DFC_ADDR                                               0xFFFFFF00
-#define     V_008DFC_SQ_VGPR                                        0x00
-#define   S_008DFC_DATA(x)                                            (((x) & 0xFF) << 8)
-#define   G_008DFC_DATA(x)                                            (((x) >> 8) & 0xFF)
-#define   C_008DFC_DATA                                               0xFFFF00FF
-#define     V_008DFC_SQ_VGPR                                        0x00
-#define   S_008DFC_TFE(x)                                             (((x) & 0x1) << 23)
-#define   G_008DFC_TFE(x)                                             (((x) >> 23) & 0x1)
-#define   C_008DFC_TFE                                                0xFF7FFFFF
-#define   S_008DFC_VDST(x)                                            (((x) & 0xFF) << 24)
-#define   G_008DFC_VDST(x)                                            (((x) >> 24) & 0xFF)
-#define   C_008DFC_VDST                                               0x00FFFFFF
-#define     V_008DFC_SQ_VGPR                                        0x00
-/*     */
-#define R_008DFC_SQ_INST                                                0x008DFC
-#define R_030D20_SQC_CACHES                                             0x030D20
-#define   S_030D20_TARGET_INST(x)                                     (((x) & 0x1) << 0)
-#define   G_030D20_TARGET_INST(x)                                     (((x) >> 0) & 0x1)
-#define   C_030D20_TARGET_INST                                        0xFFFFFFFE
-#define   S_030D20_TARGET_DATA(x)                                     (((x) & 0x1) << 1)
-#define   G_030D20_TARGET_DATA(x)                                     (((x) >> 1) & 0x1)
-#define   C_030D20_TARGET_DATA                                        0xFFFFFFFD
-#define   S_030D20_INVALIDATE(x)                                      (((x) & 0x1) << 2)
-#define   G_030D20_INVALIDATE(x)                                      (((x) >> 2) & 0x1)
-#define   C_030D20_INVALIDATE                                         0xFFFFFFFB
-#define   S_030D20_WRITEBACK(x)                                       (((x) & 0x1) << 3)
-#define   G_030D20_WRITEBACK(x)                                       (((x) >> 3) & 0x1)
-#define   C_030D20_WRITEBACK                                          0xFFFFFFF7
-#define   S_030D20_VOL(x)                                             (((x) & 0x1) << 4)
-#define   G_030D20_VOL(x)                                             (((x) >> 4) & 0x1)
-#define   C_030D20_VOL                                                0xFFFFFFEF
-#define   S_030D20_COMPLETE(x)                                        (((x) & 0x1) << 16)
-#define   G_030D20_COMPLETE(x)                                        (((x) >> 16) & 0x1)
-#define   C_030D20_COMPLETE                                           0xFFFEFFFF
-#define R_030D24_SQC_WRITEBACK                                          0x030D24
-#define   S_030D24_DWB(x)                                             (((x) & 0x1) << 0)
-#define   G_030D24_DWB(x)                                             (((x) >> 0) & 0x1)
-#define   C_030D24_DWB                                                0xFFFFFFFE
-#define   S_030D24_DIRTY(x)                                           (((x) & 0x1) << 1)
-#define   G_030D24_DIRTY(x)                                           (((x) >> 1) & 0x1)
-#define   C_030D24_DIRTY                                              0xFFFFFFFD
-#define R_008DFC_SQ_VOP1                                                0x008DFC
-#define   S_008DFC_SRC0(x)                                            (((x) & 0x1FF) << 0)
-#define   G_008DFC_SRC0(x)                                            (((x) >> 0) & 0x1FF)
-#define   C_008DFC_SRC0                                               0xFFFFFE00
-#define     V_008DFC_SQ_SGPR                                        0x00
-/* CIK */
-#define     V_008DFC_SQ_FLAT_SCRATCH_LO                             0x68
-#define     V_008DFC_SQ_FLAT_SCRATCH_HI                             0x69
-/*     */
-#define     V_008DFC_SQ_VCC_LO                                      0x6A
-#define     V_008DFC_SQ_VCC_HI                                      0x6B
-#define     V_008DFC_SQ_TBA_LO                                      0x6C
-#define     V_008DFC_SQ_TBA_HI                                      0x6D
-#define     V_008DFC_SQ_TMA_LO                                      0x6E
-#define     V_008DFC_SQ_TMA_HI                                      0x6F
-#define     V_008DFC_SQ_TTMP0                                       0x70
-#define     V_008DFC_SQ_TTMP1                                       0x71
-#define     V_008DFC_SQ_TTMP2                                       0x72
-#define     V_008DFC_SQ_TTMP3                                       0x73
-#define     V_008DFC_SQ_TTMP4                                       0x74
-#define     V_008DFC_SQ_TTMP5                                       0x75
-#define     V_008DFC_SQ_TTMP6                                       0x76
-#define     V_008DFC_SQ_TTMP7                                       0x77
-#define     V_008DFC_SQ_TTMP8                                       0x78
-#define     V_008DFC_SQ_TTMP9                                       0x79
-#define     V_008DFC_SQ_TTMP10                                      0x7A
-#define     V_008DFC_SQ_TTMP11                                      0x7B
-#define     V_008DFC_SQ_M0                                          0x7C
-#define     V_008DFC_SQ_EXEC_LO                                     0x7E
-#define     V_008DFC_SQ_EXEC_HI                                     0x7F
-#define     V_008DFC_SQ_SRC_0                                       0x80
-#define     V_008DFC_SQ_SRC_1_INT                                   0x81
-#define     V_008DFC_SQ_SRC_2_INT                                   0x82
-#define     V_008DFC_SQ_SRC_3_INT                                   0x83
-#define     V_008DFC_SQ_SRC_4_INT                                   0x84
-#define     V_008DFC_SQ_SRC_5_INT                                   0x85
-#define     V_008DFC_SQ_SRC_6_INT                                   0x86
-#define     V_008DFC_SQ_SRC_7_INT                                   0x87
-#define     V_008DFC_SQ_SRC_8_INT                                   0x88
-#define     V_008DFC_SQ_SRC_9_INT                                   0x89
-#define     V_008DFC_SQ_SRC_10_INT                                  0x8A
-#define     V_008DFC_SQ_SRC_11_INT                                  0x8B
-#define     V_008DFC_SQ_SRC_12_INT                                  0x8C
-#define     V_008DFC_SQ_SRC_13_INT                                  0x8D
-#define     V_008DFC_SQ_SRC_14_INT                                  0x8E
-#define     V_008DFC_SQ_SRC_15_INT                                  0x8F
-#define     V_008DFC_SQ_SRC_16_INT                                  0x90
-#define     V_008DFC_SQ_SRC_17_INT                                  0x91
-#define     V_008DFC_SQ_SRC_18_INT                                  0x92
-#define     V_008DFC_SQ_SRC_19_INT                                  0x93
-#define     V_008DFC_SQ_SRC_20_INT                                  0x94
-#define     V_008DFC_SQ_SRC_21_INT                                  0x95
-#define     V_008DFC_SQ_SRC_22_INT                                  0x96
-#define     V_008DFC_SQ_SRC_23_INT                                  0x97
-#define     V_008DFC_SQ_SRC_24_INT                                  0x98
-#define     V_008DFC_SQ_SRC_25_INT                                  0x99
-#define     V_008DFC_SQ_SRC_26_INT                                  0x9A
-#define     V_008DFC_SQ_SRC_27_INT                                  0x9B
-#define     V_008DFC_SQ_SRC_28_INT                                  0x9C
-#define     V_008DFC_SQ_SRC_29_INT                                  0x9D
-#define     V_008DFC_SQ_SRC_30_INT                                  0x9E
-#define     V_008DFC_SQ_SRC_31_INT                                  0x9F
-#define     V_008DFC_SQ_SRC_32_INT                                  0xA0
-#define     V_008DFC_SQ_SRC_33_INT                                  0xA1
-#define     V_008DFC_SQ_SRC_34_INT                                  0xA2
-#define     V_008DFC_SQ_SRC_35_INT                                  0xA3
-#define     V_008DFC_SQ_SRC_36_INT                                  0xA4
-#define     V_008DFC_SQ_SRC_37_INT                                  0xA5
-#define     V_008DFC_SQ_SRC_38_INT                                  0xA6
-#define     V_008DFC_SQ_SRC_39_INT                                  0xA7
-#define     V_008DFC_SQ_SRC_40_INT                                  0xA8
-#define     V_008DFC_SQ_SRC_41_INT                                  0xA9
-#define     V_008DFC_SQ_SRC_42_INT                                  0xAA
-#define     V_008DFC_SQ_SRC_43_INT                                  0xAB
-#define     V_008DFC_SQ_SRC_44_INT                                  0xAC
-#define     V_008DFC_SQ_SRC_45_INT                                  0xAD
-#define     V_008DFC_SQ_SRC_46_INT                                  0xAE
-#define     V_008DFC_SQ_SRC_47_INT                                  0xAF
-#define     V_008DFC_SQ_SRC_48_INT                                  0xB0
-#define     V_008DFC_SQ_SRC_49_INT                                  0xB1
-#define     V_008DFC_SQ_SRC_50_INT                                  0xB2
-#define     V_008DFC_SQ_SRC_51_INT                                  0xB3
-#define     V_008DFC_SQ_SRC_52_INT                                  0xB4
-#define     V_008DFC_SQ_SRC_53_INT                                  0xB5
-#define     V_008DFC_SQ_SRC_54_INT                                  0xB6
-#define     V_008DFC_SQ_SRC_55_INT                                  0xB7
-#define     V_008DFC_SQ_SRC_56_INT                                  0xB8
-#define     V_008DFC_SQ_SRC_57_INT                                  0xB9
-#define     V_008DFC_SQ_SRC_58_INT                                  0xBA
-#define     V_008DFC_SQ_SRC_59_INT                                  0xBB
-#define     V_008DFC_SQ_SRC_60_INT                                  0xBC
-#define     V_008DFC_SQ_SRC_61_INT                                  0xBD
-#define     V_008DFC_SQ_SRC_62_INT                                  0xBE
-#define     V_008DFC_SQ_SRC_63_INT                                  0xBF
-#define     V_008DFC_SQ_SRC_64_INT                                  0xC0
-#define     V_008DFC_SQ_SRC_M_1_INT                                 0xC1
-#define     V_008DFC_SQ_SRC_M_2_INT                                 0xC2
-#define     V_008DFC_SQ_SRC_M_3_INT                                 0xC3
-#define     V_008DFC_SQ_SRC_M_4_INT                                 0xC4
-#define     V_008DFC_SQ_SRC_M_5_INT                                 0xC5
-#define     V_008DFC_SQ_SRC_M_6_INT                                 0xC6
-#define     V_008DFC_SQ_SRC_M_7_INT                                 0xC7
-#define     V_008DFC_SQ_SRC_M_8_INT                                 0xC8
-#define     V_008DFC_SQ_SRC_M_9_INT                                 0xC9
-#define     V_008DFC_SQ_SRC_M_10_INT                                0xCA
-#define     V_008DFC_SQ_SRC_M_11_INT                                0xCB
-#define     V_008DFC_SQ_SRC_M_12_INT                                0xCC
-#define     V_008DFC_SQ_SRC_M_13_INT                                0xCD
-#define     V_008DFC_SQ_SRC_M_14_INT                                0xCE
-#define     V_008DFC_SQ_SRC_M_15_INT                                0xCF
-#define     V_008DFC_SQ_SRC_M_16_INT                                0xD0
-#define     V_008DFC_SQ_SRC_0_5                                     0xF0
-#define     V_008DFC_SQ_SRC_M_0_5                                   0xF1
-#define     V_008DFC_SQ_SRC_1                                       0xF2
-#define     V_008DFC_SQ_SRC_M_1                                     0xF3
-#define     V_008DFC_SQ_SRC_2                                       0xF4
-#define     V_008DFC_SQ_SRC_M_2                                     0xF5
-#define     V_008DFC_SQ_SRC_4                                       0xF6
-#define     V_008DFC_SQ_SRC_M_4                                     0xF7
-#define     V_008DFC_SQ_SRC_VCCZ                                    0xFB
-#define     V_008DFC_SQ_SRC_EXECZ                                   0xFC
-#define     V_008DFC_SQ_SRC_SCC                                     0xFD
-#define     V_008DFC_SQ_SRC_LDS_DIRECT                              0xFE
-#define     V_008DFC_SQ_SRC_VGPR                                    0x100
-#define   S_008DFC_OP(x)                                              (((x) & 0xFF) << 9)
-#define   G_008DFC_OP(x)                                              (((x) >> 9) & 0xFF)
-#define   C_008DFC_OP                                                 0xFFFE01FF
-#define     V_008DFC_SQ_V_NOP                                       0x00
-#define     V_008DFC_SQ_V_MOV_B32                                   0x01
-#define     V_008DFC_SQ_V_READFIRSTLANE_B32                         0x02
-#define     V_008DFC_SQ_V_CVT_I32_F64                               0x03
-#define     V_008DFC_SQ_V_CVT_F64_I32                               0x04
-#define     V_008DFC_SQ_V_CVT_F32_I32                               0x05
-#define     V_008DFC_SQ_V_CVT_F32_U32                               0x06
-#define     V_008DFC_SQ_V_CVT_U32_F32                               0x07
-#define     V_008DFC_SQ_V_CVT_I32_F32                               0x08
-#define     V_008DFC_SQ_V_MOV_FED_B32                               0x09
-#define     V_008DFC_SQ_V_CVT_F16_F32                               0x0A
-#define     V_008DFC_SQ_V_CVT_F32_F16                               0x0B
-#define     V_008DFC_SQ_V_CVT_RPI_I32_F32                           0x0C
-#define     V_008DFC_SQ_V_CVT_FLR_I32_F32                           0x0D
-#define     V_008DFC_SQ_V_CVT_OFF_F32_I4                            0x0E
-#define     V_008DFC_SQ_V_CVT_F32_F64                               0x0F
-#define     V_008DFC_SQ_V_CVT_F64_F32                               0x10
-#define     V_008DFC_SQ_V_CVT_F32_UBYTE0                            0x11
-#define     V_008DFC_SQ_V_CVT_F32_UBYTE1                            0x12
-#define     V_008DFC_SQ_V_CVT_F32_UBYTE2                            0x13
-#define     V_008DFC_SQ_V_CVT_F32_UBYTE3                            0x14
-#define     V_008DFC_SQ_V_CVT_U32_F64                               0x15
-#define     V_008DFC_SQ_V_CVT_F64_U32                               0x16
-/* CIK */
-#define     V_008DFC_SQ_V_TRUNC_F64                                 0x17
-#define     V_008DFC_SQ_V_CEIL_F64                                  0x18
-#define     V_008DFC_SQ_V_RNDNE_F64                                 0x19
-#define     V_008DFC_SQ_V_FLOOR_F64                                 0x1A
-/*     */
-#define     V_008DFC_SQ_V_FRACT_F32                                 0x20
-#define     V_008DFC_SQ_V_TRUNC_F32                                 0x21
-#define     V_008DFC_SQ_V_CEIL_F32                                  0x22
-#define     V_008DFC_SQ_V_RNDNE_F32                                 0x23
-#define     V_008DFC_SQ_V_FLOOR_F32                                 0x24
-#define     V_008DFC_SQ_V_EXP_F32                                   0x25
-#define     V_008DFC_SQ_V_LOG_CLAMP_F32                             0x26
-#define     V_008DFC_SQ_V_LOG_F32                                   0x27
-#define     V_008DFC_SQ_V_RCP_CLAMP_F32                             0x28
-#define     V_008DFC_SQ_V_RCP_LEGACY_F32                            0x29
-#define     V_008DFC_SQ_V_RCP_F32                                   0x2A
-#define     V_008DFC_SQ_V_RCP_IFLAG_F32                             0x2B
-#define     V_008DFC_SQ_V_RSQ_CLAMP_F32                             0x2C
-#define     V_008DFC_SQ_V_RSQ_LEGACY_F32                            0x2D
-#define     V_008DFC_SQ_V_RSQ_F32                                   0x2E
-#define     V_008DFC_SQ_V_RCP_F64                                   0x2F
-#define     V_008DFC_SQ_V_RCP_CLAMP_F64                             0x30
-#define     V_008DFC_SQ_V_RSQ_F64                                   0x31
-#define     V_008DFC_SQ_V_RSQ_CLAMP_F64                             0x32
-#define     V_008DFC_SQ_V_SQRT_F32                                  0x33
-#define     V_008DFC_SQ_V_SQRT_F64                                  0x34
-#define     V_008DFC_SQ_V_SIN_F32                                   0x35
-#define     V_008DFC_SQ_V_COS_F32                                   0x36
-#define     V_008DFC_SQ_V_NOT_B32                                   0x37
-#define     V_008DFC_SQ_V_BFREV_B32                                 0x38
-#define     V_008DFC_SQ_V_FFBH_U32                                  0x39
-#define     V_008DFC_SQ_V_FFBL_B32                                  0x3A
-#define     V_008DFC_SQ_V_FFBH_I32                                  0x3B
-#define     V_008DFC_SQ_V_FREXP_EXP_I32_F64                         0x3C
-#define     V_008DFC_SQ_V_FREXP_MANT_F64                            0x3D
-#define     V_008DFC_SQ_V_FRACT_F64                                 0x3E
-#define     V_008DFC_SQ_V_FREXP_EXP_I32_F32                         0x3F
-#define     V_008DFC_SQ_V_FREXP_MANT_F32                            0x40
-#define     V_008DFC_SQ_V_CLREXCP                                   0x41
-#define     V_008DFC_SQ_V_MOVRELD_B32                               0x42
-#define     V_008DFC_SQ_V_MOVRELS_B32                               0x43
-#define     V_008DFC_SQ_V_MOVRELSD_B32                              0x44
-/* CIK */
-#define     V_008DFC_SQ_V_LOG_LEGACY_F32                            0x45
-#define     V_008DFC_SQ_V_EXP_LEGACY_F32                            0x46
-/*     */
-#define   S_008DFC_VDST(x)                                            (((x) & 0xFF) << 17)
-#define   G_008DFC_VDST(x)                                            (((x) >> 17) & 0xFF)
-#define   C_008DFC_VDST                                               0xFE01FFFF
-#define     V_008DFC_SQ_VGPR                                        0x00
-#define   S_008DFC_ENCODING(x)                                        (((x) & 0x7F) << 25)
-#define   G_008DFC_ENCODING(x)                                        (((x) >> 25) & 0x7F)
-#define   C_008DFC_ENCODING                                           0x01FFFFFF
-#define     V_008DFC_SQ_ENC_VOP1_FIELD                              0x3F
-#define R_008DFC_SQ_MIMG_1                                              0x008DFC
-#define   S_008DFC_VADDR(x)                                           (((x) & 0xFF) << 0)
-#define   G_008DFC_VADDR(x)                                           (((x) >> 0) & 0xFF)
-#define   C_008DFC_VADDR                                              0xFFFFFF00
-#define     V_008DFC_SQ_VGPR                                        0x00
-#define   S_008DFC_VDATA(x)                                           (((x) & 0xFF) << 8)
-#define   G_008DFC_VDATA(x)                                           (((x) >> 8) & 0xFF)
-#define   C_008DFC_VDATA                                              0xFFFF00FF
-#define     V_008DFC_SQ_VGPR                                        0x00
-#define   S_008DFC_SRSRC(x)                                           (((x) & 0x1F) << 16)
-#define   G_008DFC_SRSRC(x)                                           (((x) >> 16) & 0x1F)
-#define   C_008DFC_SRSRC                                              0xFFE0FFFF
-#define   S_008DFC_SSAMP(x)                                           (((x) & 0x1F) << 21)
-#define   G_008DFC_SSAMP(x)                                           (((x) >> 21) & 0x1F)
-#define   C_008DFC_SSAMP                                              0xFC1FFFFF
-#define R_008DFC_SQ_VOP3_1                                              0x008DFC
-#define   S_008DFC_SRC0(x)                                            (((x) & 0x1FF) << 0)
-#define   G_008DFC_SRC0(x)                                            (((x) >> 0) & 0x1FF)
-#define   C_008DFC_SRC0                                               0xFFFFFE00
-#define     V_008DFC_SQ_SGPR                                        0x00
-/* CIK */
-#define     V_008DFC_SQ_FLAT_SCRATCH_LO                             0x68
-#define     V_008DFC_SQ_FLAT_SCRATCH_HI                             0x69
-/*     */
-#define     V_008DFC_SQ_VCC_LO                                      0x6A
-#define     V_008DFC_SQ_VCC_HI                                      0x6B
-#define     V_008DFC_SQ_TBA_LO                                      0x6C
-#define     V_008DFC_SQ_TBA_HI                                      0x6D
-#define     V_008DFC_SQ_TMA_LO                                      0x6E
-#define     V_008DFC_SQ_TMA_HI                                      0x6F
-#define     V_008DFC_SQ_TTMP0                                       0x70
-#define     V_008DFC_SQ_TTMP1                                       0x71
-#define     V_008DFC_SQ_TTMP2                                       0x72
-#define     V_008DFC_SQ_TTMP3                                       0x73
-#define     V_008DFC_SQ_TTMP4                                       0x74
-#define     V_008DFC_SQ_TTMP5                                       0x75
-#define     V_008DFC_SQ_TTMP6                                       0x76
-#define     V_008DFC_SQ_TTMP7                                       0x77
-#define     V_008DFC_SQ_TTMP8                                       0x78
-#define     V_008DFC_SQ_TTMP9                                       0x79
-#define     V_008DFC_SQ_TTMP10                                      0x7A
-#define     V_008DFC_SQ_TTMP11                                      0x7B
-#define     V_008DFC_SQ_M0                                          0x7C
-#define     V_008DFC_SQ_EXEC_LO                                     0x7E
-#define     V_008DFC_SQ_EXEC_HI                                     0x7F
-#define     V_008DFC_SQ_SRC_0                                       0x80
-#define     V_008DFC_SQ_SRC_1_INT                                   0x81
-#define     V_008DFC_SQ_SRC_2_INT                                   0x82
-#define     V_008DFC_SQ_SRC_3_INT                                   0x83
-#define     V_008DFC_SQ_SRC_4_INT                                   0x84
-#define     V_008DFC_SQ_SRC_5_INT                                   0x85
-#define     V_008DFC_SQ_SRC_6_INT                                   0x86
-#define     V_008DFC_SQ_SRC_7_INT                                   0x87
-#define     V_008DFC_SQ_SRC_8_INT                                   0x88
-#define     V_008DFC_SQ_SRC_9_INT                                   0x89
-#define     V_008DFC_SQ_SRC_10_INT                                  0x8A
-#define     V_008DFC_SQ_SRC_11_INT                                  0x8B
-#define     V_008DFC_SQ_SRC_12_INT                                  0x8C
-#define     V_008DFC_SQ_SRC_13_INT                                  0x8D
-#define     V_008DFC_SQ_SRC_14_INT                                  0x8E
-#define     V_008DFC_SQ_SRC_15_INT                                  0x8F
-#define     V_008DFC_SQ_SRC_16_INT                                  0x90
-#define     V_008DFC_SQ_SRC_17_INT                                  0x91
-#define     V_008DFC_SQ_SRC_18_INT                                  0x92
-#define     V_008DFC_SQ_SRC_19_INT                                  0x93
-#define     V_008DFC_SQ_SRC_20_INT                                  0x94
-#define     V_008DFC_SQ_SRC_21_INT                                  0x95
-#define     V_008DFC_SQ_SRC_22_INT                                  0x96
-#define     V_008DFC_SQ_SRC_23_INT                                  0x97
-#define     V_008DFC_SQ_SRC_24_INT                                  0x98
-#define     V_008DFC_SQ_SRC_25_INT                                  0x99
-#define     V_008DFC_SQ_SRC_26_INT                                  0x9A
-#define     V_008DFC_SQ_SRC_27_INT                                  0x9B
-#define     V_008DFC_SQ_SRC_28_INT                                  0x9C
-#define     V_008DFC_SQ_SRC_29_INT                                  0x9D
-#define     V_008DFC_SQ_SRC_30_INT                                  0x9E
-#define     V_008DFC_SQ_SRC_31_INT                                  0x9F
-#define     V_008DFC_SQ_SRC_32_INT                                  0xA0
-#define     V_008DFC_SQ_SRC_33_INT                                  0xA1
-#define     V_008DFC_SQ_SRC_34_INT                                  0xA2
-#define     V_008DFC_SQ_SRC_35_INT                                  0xA3
-#define     V_008DFC_SQ_SRC_36_INT                                  0xA4
-#define     V_008DFC_SQ_SRC_37_INT                                  0xA5
-#define     V_008DFC_SQ_SRC_38_INT                                  0xA6
-#define     V_008DFC_SQ_SRC_39_INT                                  0xA7
-#define     V_008DFC_SQ_SRC_40_INT                                  0xA8
-#define     V_008DFC_SQ_SRC_41_INT                                  0xA9
-#define     V_008DFC_SQ_SRC_42_INT                                  0xAA
-#define     V_008DFC_SQ_SRC_43_INT                                  0xAB
-#define     V_008DFC_SQ_SRC_44_INT                                  0xAC
-#define     V_008DFC_SQ_SRC_45_INT                                  0xAD
-#define     V_008DFC_SQ_SRC_46_INT                                  0xAE
-#define     V_008DFC_SQ_SRC_47_INT                                  0xAF
-#define     V_008DFC_SQ_SRC_48_INT                                  0xB0
-#define     V_008DFC_SQ_SRC_49_INT                                  0xB1
-#define     V_008DFC_SQ_SRC_50_INT                                  0xB2
-#define     V_008DFC_SQ_SRC_51_INT                                  0xB3
-#define     V_008DFC_SQ_SRC_52_INT                                  0xB4
-#define     V_008DFC_SQ_SRC_53_INT                                  0xB5
-#define     V_008DFC_SQ_SRC_54_INT                                  0xB6
-#define     V_008DFC_SQ_SRC_55_INT                                  0xB7
-#define     V_008DFC_SQ_SRC_56_INT                                  0xB8
-#define     V_008DFC_SQ_SRC_57_INT                                  0xB9
-#define     V_008DFC_SQ_SRC_58_INT                                  0xBA
-#define     V_008DFC_SQ_SRC_59_INT                                  0xBB
-#define     V_008DFC_SQ_SRC_60_INT                                  0xBC
-#define     V_008DFC_SQ_SRC_61_INT                                  0xBD
-#define     V_008DFC_SQ_SRC_62_INT                                  0xBE
-#define     V_008DFC_SQ_SRC_63_INT                                  0xBF
-#define     V_008DFC_SQ_SRC_64_INT                                  0xC0
-#define     V_008DFC_SQ_SRC_M_1_INT                                 0xC1
-#define     V_008DFC_SQ_SRC_M_2_INT                                 0xC2
-#define     V_008DFC_SQ_SRC_M_3_INT                                 0xC3
-#define     V_008DFC_SQ_SRC_M_4_INT                                 0xC4
-#define     V_008DFC_SQ_SRC_M_5_INT                                 0xC5
-#define     V_008DFC_SQ_SRC_M_6_INT                                 0xC6
-#define     V_008DFC_SQ_SRC_M_7_INT                                 0xC7
-#define     V_008DFC_SQ_SRC_M_8_INT                                 0xC8
-#define     V_008DFC_SQ_SRC_M_9_INT                                 0xC9
-#define     V_008DFC_SQ_SRC_M_10_INT                                0xCA
-#define     V_008DFC_SQ_SRC_M_11_INT                                0xCB
-#define     V_008DFC_SQ_SRC_M_12_INT                                0xCC
-#define     V_008DFC_SQ_SRC_M_13_INT                                0xCD
-#define     V_008DFC_SQ_SRC_M_14_INT                                0xCE
-#define     V_008DFC_SQ_SRC_M_15_INT                                0xCF
-#define     V_008DFC_SQ_SRC_M_16_INT                                0xD0
-#define     V_008DFC_SQ_SRC_0_5                                     0xF0
-#define     V_008DFC_SQ_SRC_M_0_5                                   0xF1
-#define     V_008DFC_SQ_SRC_1                                       0xF2
-#define     V_008DFC_SQ_SRC_M_1                                     0xF3
-#define     V_008DFC_SQ_SRC_2                                       0xF4
-#define     V_008DFC_SQ_SRC_M_2                                     0xF5
-#define     V_008DFC_SQ_SRC_4                                       0xF6
-#define     V_008DFC_SQ_SRC_M_4                                     0xF7
-#define     V_008DFC_SQ_SRC_VCCZ                                    0xFB
-#define     V_008DFC_SQ_SRC_EXECZ                                   0xFC
-#define     V_008DFC_SQ_SRC_SCC                                     0xFD
-#define     V_008DFC_SQ_SRC_LDS_DIRECT                              0xFE
-#define     V_008DFC_SQ_SRC_VGPR                                    0x100
-#define   S_008DFC_SRC1(x)                                            (((x) & 0x1FF) << 9)
-#define   G_008DFC_SRC1(x)                                            (((x) >> 9) & 0x1FF)
-#define   C_008DFC_SRC1                                               0xFFFC01FF
-#define     V_008DFC_SQ_SGPR                                        0x00
-/* CIK */
-#define     V_008DFC_SQ_FLAT_SCRATCH_LO                             0x68
-#define     V_008DFC_SQ_FLAT_SCRATCH_HI                             0x69
-/*     */
-#define     V_008DFC_SQ_VCC_LO                                      0x6A
-#define     V_008DFC_SQ_VCC_HI                                      0x6B
-#define     V_008DFC_SQ_TBA_LO                                      0x6C
-#define     V_008DFC_SQ_TBA_HI                                      0x6D
-#define     V_008DFC_SQ_TMA_LO                                      0x6E
-#define     V_008DFC_SQ_TMA_HI                                      0x6F
-#define     V_008DFC_SQ_TTMP0                                       0x70
-#define     V_008DFC_SQ_TTMP1                                       0x71
-#define     V_008DFC_SQ_TTMP2                                       0x72
-#define     V_008DFC_SQ_TTMP3                                       0x73
-#define     V_008DFC_SQ_TTMP4                                       0x74
-#define     V_008DFC_SQ_TTMP5                                       0x75
-#define     V_008DFC_SQ_TTMP6                                       0x76
-#define     V_008DFC_SQ_TTMP7                                       0x77
-#define     V_008DFC_SQ_TTMP8                                       0x78
-#define     V_008DFC_SQ_TTMP9                                       0x79
-#define     V_008DFC_SQ_TTMP10                                      0x7A
-#define     V_008DFC_SQ_TTMP11                                      0x7B
-#define     V_008DFC_SQ_M0                                          0x7C
-#define     V_008DFC_SQ_EXEC_LO                                     0x7E
-#define     V_008DFC_SQ_EXEC_HI                                     0x7F
-#define     V_008DFC_SQ_SRC_0                                       0x80
-#define     V_008DFC_SQ_SRC_1_INT                                   0x81
-#define     V_008DFC_SQ_SRC_2_INT                                   0x82
-#define     V_008DFC_SQ_SRC_3_INT                                   0x83
-#define     V_008DFC_SQ_SRC_4_INT                                   0x84
-#define     V_008DFC_SQ_SRC_5_INT                                   0x85
-#define     V_008DFC_SQ_SRC_6_INT                                   0x86
-#define     V_008DFC_SQ_SRC_7_INT                                   0x87
-#define     V_008DFC_SQ_SRC_8_INT                                   0x88
-#define     V_008DFC_SQ_SRC_9_INT                                   0x89
-#define     V_008DFC_SQ_SRC_10_INT                                  0x8A
-#define     V_008DFC_SQ_SRC_11_INT                                  0x8B
-#define     V_008DFC_SQ_SRC_12_INT                                  0x8C
-#define     V_008DFC_SQ_SRC_13_INT                                  0x8D
-#define     V_008DFC_SQ_SRC_14_INT                                  0x8E
-#define     V_008DFC_SQ_SRC_15_INT                                  0x8F
-#define     V_008DFC_SQ_SRC_16_INT                                  0x90
-#define     V_008DFC_SQ_SRC_17_INT                                  0x91
-#define     V_008DFC_SQ_SRC_18_INT                                  0x92
-#define     V_008DFC_SQ_SRC_19_INT                                  0x93
-#define     V_008DFC_SQ_SRC_20_INT                                  0x94
-#define     V_008DFC_SQ_SRC_21_INT                                  0x95
-#define     V_008DFC_SQ_SRC_22_INT                                  0x96
-#define     V_008DFC_SQ_SRC_23_INT                                  0x97
-#define     V_008DFC_SQ_SRC_24_INT                                  0x98
-#define     V_008DFC_SQ_SRC_25_INT                                  0x99
-#define     V_008DFC_SQ_SRC_26_INT                                  0x9A
-#define     V_008DFC_SQ_SRC_27_INT                                  0x9B
-#define     V_008DFC_SQ_SRC_28_INT                                  0x9C
-#define     V_008DFC_SQ_SRC_29_INT                                  0x9D
-#define     V_008DFC_SQ_SRC_30_INT                                  0x9E
-#define     V_008DFC_SQ_SRC_31_INT                                  0x9F
-#define     V_008DFC_SQ_SRC_32_INT                                  0xA0
-#define     V_008DFC_SQ_SRC_33_INT                                  0xA1
-#define     V_008DFC_SQ_SRC_34_INT                                  0xA2
-#define     V_008DFC_SQ_SRC_35_INT                                  0xA3
-#define     V_008DFC_SQ_SRC_36_INT                                  0xA4
-#define     V_008DFC_SQ_SRC_37_INT                                  0xA5
-#define     V_008DFC_SQ_SRC_38_INT                                  0xA6
-#define     V_008DFC_SQ_SRC_39_INT                                  0xA7
-#define     V_008DFC_SQ_SRC_40_INT                                  0xA8
-#define     V_008DFC_SQ_SRC_41_INT                                  0xA9
-#define     V_008DFC_SQ_SRC_42_INT                                  0xAA
-#define     V_008DFC_SQ_SRC_43_INT                                  0xAB
-#define     V_008DFC_SQ_SRC_44_INT                                  0xAC
-#define     V_008DFC_SQ_SRC_45_INT                                  0xAD
-#define     V_008DFC_SQ_SRC_46_INT                                  0xAE
-#define     V_008DFC_SQ_SRC_47_INT                                  0xAF
-#define     V_008DFC_SQ_SRC_48_INT                                  0xB0
-#define     V_008DFC_SQ_SRC_49_INT                                  0xB1
-#define     V_008DFC_SQ_SRC_50_INT                                  0xB2
-#define     V_008DFC_SQ_SRC_51_INT                                  0xB3
-#define     V_008DFC_SQ_SRC_52_INT                                  0xB4
-#define     V_008DFC_SQ_SRC_53_INT                                  0xB5
-#define     V_008DFC_SQ_SRC_54_INT                                  0xB6
-#define     V_008DFC_SQ_SRC_55_INT                                  0xB7
-#define     V_008DFC_SQ_SRC_56_INT                                  0xB8
-#define     V_008DFC_SQ_SRC_57_INT                                  0xB9
-#define     V_008DFC_SQ_SRC_58_INT                                  0xBA
-#define     V_008DFC_SQ_SRC_59_INT                                  0xBB
-#define     V_008DFC_SQ_SRC_60_INT                                  0xBC
-#define     V_008DFC_SQ_SRC_61_INT                                  0xBD
-#define     V_008DFC_SQ_SRC_62_INT                                  0xBE
-#define     V_008DFC_SQ_SRC_63_INT                                  0xBF
-#define     V_008DFC_SQ_SRC_64_INT                                  0xC0
-#define     V_008DFC_SQ_SRC_M_1_INT                                 0xC1
-#define     V_008DFC_SQ_SRC_M_2_INT                                 0xC2
-#define     V_008DFC_SQ_SRC_M_3_INT                                 0xC3
-#define     V_008DFC_SQ_SRC_M_4_INT                                 0xC4
-#define     V_008DFC_SQ_SRC_M_5_INT                                 0xC5
-#define     V_008DFC_SQ_SRC_M_6_INT                                 0xC6
-#define     V_008DFC_SQ_SRC_M_7_INT                                 0xC7
-#define     V_008DFC_SQ_SRC_M_8_INT                                 0xC8
-#define     V_008DFC_SQ_SRC_M_9_INT                                 0xC9
-#define     V_008DFC_SQ_SRC_M_10_INT                                0xCA
-#define     V_008DFC_SQ_SRC_M_11_INT                                0xCB
-#define     V_008DFC_SQ_SRC_M_12_INT                                0xCC
-#define     V_008DFC_SQ_SRC_M_13_INT                                0xCD
-#define     V_008DFC_SQ_SRC_M_14_INT                                0xCE
-#define     V_008DFC_SQ_SRC_M_15_INT                                0xCF
-#define     V_008DFC_SQ_SRC_M_16_INT                                0xD0
-#define     V_008DFC_SQ_SRC_0_5                                     0xF0
-#define     V_008DFC_SQ_SRC_M_0_5                                   0xF1
-#define     V_008DFC_SQ_SRC_1                                       0xF2
-#define     V_008DFC_SQ_SRC_M_1                                     0xF3
-#define     V_008DFC_SQ_SRC_2                                       0xF4
-#define     V_008DFC_SQ_SRC_M_2                                     0xF5
-#define     V_008DFC_SQ_SRC_4                                       0xF6
-#define     V_008DFC_SQ_SRC_M_4                                     0xF7
-#define     V_008DFC_SQ_SRC_VCCZ                                    0xFB
-#define     V_008DFC_SQ_SRC_EXECZ                                   0xFC
-#define     V_008DFC_SQ_SRC_SCC                                     0xFD
-#define     V_008DFC_SQ_SRC_LDS_DIRECT                              0xFE
-#define     V_008DFC_SQ_SRC_VGPR                                    0x100
-#define   S_008DFC_SRC2(x)                                            (((x) & 0x1FF) << 18)
-#define   G_008DFC_SRC2(x)                                            (((x) >> 18) & 0x1FF)
-#define   C_008DFC_SRC2                                               0xF803FFFF
-#define     V_008DFC_SQ_SGPR                                        0x00
-/* CIK */
-#define     V_008DFC_SQ_FLAT_SCRATCH_LO                             0x68
-#define     V_008DFC_SQ_FLAT_SCRATCH_HI                             0x69
-/*     */
-#define     V_008DFC_SQ_VCC_LO                                      0x6A
-#define     V_008DFC_SQ_VCC_HI                                      0x6B
-#define     V_008DFC_SQ_TBA_LO                                      0x6C
-#define     V_008DFC_SQ_TBA_HI                                      0x6D
-#define     V_008DFC_SQ_TMA_LO                                      0x6E
-#define     V_008DFC_SQ_TMA_HI                                      0x6F
-#define     V_008DFC_SQ_TTMP0                                       0x70
-#define     V_008DFC_SQ_TTMP1                                       0x71
-#define     V_008DFC_SQ_TTMP2                                       0x72
-#define     V_008DFC_SQ_TTMP3                                       0x73
-#define     V_008DFC_SQ_TTMP4                                       0x74
-#define     V_008DFC_SQ_TTMP5                                       0x75
-#define     V_008DFC_SQ_TTMP6                                       0x76
-#define     V_008DFC_SQ_TTMP7                                       0x77
-#define     V_008DFC_SQ_TTMP8                                       0x78
-#define     V_008DFC_SQ_TTMP9                                       0x79
-#define     V_008DFC_SQ_TTMP10                                      0x7A
-#define     V_008DFC_SQ_TTMP11                                      0x7B
-#define     V_008DFC_SQ_M0                                          0x7C
-#define     V_008DFC_SQ_EXEC_LO                                     0x7E
-#define     V_008DFC_SQ_EXEC_HI                                     0x7F
-#define     V_008DFC_SQ_SRC_0                                       0x80
-#define     V_008DFC_SQ_SRC_1_INT                                   0x81
-#define     V_008DFC_SQ_SRC_2_INT                                   0x82
-#define     V_008DFC_SQ_SRC_3_INT                                   0x83
-#define     V_008DFC_SQ_SRC_4_INT                                   0x84
-#define     V_008DFC_SQ_SRC_5_INT                                   0x85
-#define     V_008DFC_SQ_SRC_6_INT                                   0x86
-#define     V_008DFC_SQ_SRC_7_INT                                   0x87
-#define     V_008DFC_SQ_SRC_8_INT                                   0x88
-#define     V_008DFC_SQ_SRC_9_INT                                   0x89
-#define     V_008DFC_SQ_SRC_10_INT                                  0x8A
-#define     V_008DFC_SQ_SRC_11_INT                                  0x8B
-#define     V_008DFC_SQ_SRC_12_INT                                  0x8C
-#define     V_008DFC_SQ_SRC_13_INT                                  0x8D
-#define     V_008DFC_SQ_SRC_14_INT                                  0x8E
-#define     V_008DFC_SQ_SRC_15_INT                                  0x8F
-#define     V_008DFC_SQ_SRC_16_INT                                  0x90
-#define     V_008DFC_SQ_SRC_17_INT                                  0x91
-#define     V_008DFC_SQ_SRC_18_INT                                  0x92
-#define     V_008DFC_SQ_SRC_19_INT                                  0x93
-#define     V_008DFC_SQ_SRC_20_INT                                  0x94
-#define     V_008DFC_SQ_SRC_21_INT                                  0x95
-#define     V_008DFC_SQ_SRC_22_INT                                  0x96
-#define     V_008DFC_SQ_SRC_23_INT                                  0x97
-#define     V_008DFC_SQ_SRC_24_INT                                  0x98
-#define     V_008DFC_SQ_SRC_25_INT                                  0x99
-#define     V_008DFC_SQ_SRC_26_INT                                  0x9A
-#define     V_008DFC_SQ_SRC_27_INT                                  0x9B
-#define     V_008DFC_SQ_SRC_28_INT                                  0x9C
-#define     V_008DFC_SQ_SRC_29_INT                                  0x9D
-#define     V_008DFC_SQ_SRC_30_INT                                  0x9E
-#define     V_008DFC_SQ_SRC_31_INT                                  0x9F
-#define     V_008DFC_SQ_SRC_32_INT                                  0xA0
-#define     V_008DFC_SQ_SRC_33_INT                                  0xA1
-#define     V_008DFC_SQ_SRC_34_INT                                  0xA2
-#define     V_008DFC_SQ_SRC_35_INT                                  0xA3
-#define     V_008DFC_SQ_SRC_36_INT                                  0xA4
-#define     V_008DFC_SQ_SRC_37_INT                                  0xA5
-#define     V_008DFC_SQ_SRC_38_INT                                  0xA6
-#define     V_008DFC_SQ_SRC_39_INT                                  0xA7
-#define     V_008DFC_SQ_SRC_40_INT                                  0xA8
-#define     V_008DFC_SQ_SRC_41_INT                                  0xA9
-#define     V_008DFC_SQ_SRC_42_INT                                  0xAA
-#define     V_008DFC_SQ_SRC_43_INT                                  0xAB
-#define     V_008DFC_SQ_SRC_44_INT                                  0xAC
-#define     V_008DFC_SQ_SRC_45_INT                                  0xAD
-#define     V_008DFC_SQ_SRC_46_INT                                  0xAE
-#define     V_008DFC_SQ_SRC_47_INT                                  0xAF
-#define     V_008DFC_SQ_SRC_48_INT                                  0xB0
-#define     V_008DFC_SQ_SRC_49_INT                                  0xB1
-#define     V_008DFC_SQ_SRC_50_INT                                  0xB2
-#define     V_008DFC_SQ_SRC_51_INT                                  0xB3
-#define     V_008DFC_SQ_SRC_52_INT                                  0xB4
-#define     V_008DFC_SQ_SRC_53_INT                                  0xB5
-#define     V_008DFC_SQ_SRC_54_INT                                  0xB6
-#define     V_008DFC_SQ_SRC_55_INT                                  0xB7
-#define     V_008DFC_SQ_SRC_56_INT                                  0xB8
-#define     V_008DFC_SQ_SRC_57_INT                                  0xB9
-#define     V_008DFC_SQ_SRC_58_INT                                  0xBA
-#define     V_008DFC_SQ_SRC_59_INT                                  0xBB
-#define     V_008DFC_SQ_SRC_60_INT                                  0xBC
-#define     V_008DFC_SQ_SRC_61_INT                                  0xBD
-#define     V_008DFC_SQ_SRC_62_INT                                  0xBE
-#define     V_008DFC_SQ_SRC_63_INT                                  0xBF
-#define     V_008DFC_SQ_SRC_64_INT                                  0xC0
-#define     V_008DFC_SQ_SRC_M_1_INT                                 0xC1
-#define     V_008DFC_SQ_SRC_M_2_INT                                 0xC2
-#define     V_008DFC_SQ_SRC_M_3_INT                                 0xC3
-#define     V_008DFC_SQ_SRC_M_4_INT                                 0xC4
-#define     V_008DFC_SQ_SRC_M_5_INT                                 0xC5
-#define     V_008DFC_SQ_SRC_M_6_INT                                 0xC6
-#define     V_008DFC_SQ_SRC_M_7_INT                                 0xC7
-#define     V_008DFC_SQ_SRC_M_8_INT                                 0xC8
-#define     V_008DFC_SQ_SRC_M_9_INT                                 0xC9
-#define     V_008DFC_SQ_SRC_M_10_INT                                0xCA
-#define     V_008DFC_SQ_SRC_M_11_INT                                0xCB
-#define     V_008DFC_SQ_SRC_M_12_INT                                0xCC
-#define     V_008DFC_SQ_SRC_M_13_INT                                0xCD
-#define     V_008DFC_SQ_SRC_M_14_INT                                0xCE
-#define     V_008DFC_SQ_SRC_M_15_INT                                0xCF
-#define     V_008DFC_SQ_SRC_M_16_INT                                0xD0
-#define     V_008DFC_SQ_SRC_0_5                                     0xF0
-#define     V_008DFC_SQ_SRC_M_0_5                                   0xF1
-#define     V_008DFC_SQ_SRC_1                                       0xF2
-#define     V_008DFC_SQ_SRC_M_1                                     0xF3
-#define     V_008DFC_SQ_SRC_2                                       0xF4
-#define     V_008DFC_SQ_SRC_M_2                                     0xF5
-#define     V_008DFC_SQ_SRC_4                                       0xF6
-#define     V_008DFC_SQ_SRC_M_4                                     0xF7
-#define     V_008DFC_SQ_SRC_VCCZ                                    0xFB
-#define     V_008DFC_SQ_SRC_EXECZ                                   0xFC
-#define     V_008DFC_SQ_SRC_SCC                                     0xFD
-#define     V_008DFC_SQ_SRC_LDS_DIRECT                              0xFE
-#define     V_008DFC_SQ_SRC_VGPR                                    0x100
-#define   S_008DFC_OMOD(x)                                            (((x) & 0x03) << 27)
-#define   G_008DFC_OMOD(x)                                            (((x) >> 27) & 0x03)
-#define   C_008DFC_OMOD                                               0xE7FFFFFF
-#define     V_008DFC_SQ_OMOD_OFF                                    0x00
-#define     V_008DFC_SQ_OMOD_M2                                     0x01
-#define     V_008DFC_SQ_OMOD_M4                                     0x02
-#define     V_008DFC_SQ_OMOD_D2                                     0x03
-#define   S_008DFC_NEG(x)                                             (((x) & 0x07) << 29)
-#define   G_008DFC_NEG(x)                                             (((x) >> 29) & 0x07)
-#define   C_008DFC_NEG                                                0x1FFFFFFF
-#define R_008DFC_SQ_MUBUF_1                                             0x008DFC
-#define   S_008DFC_VADDR(x)                                           (((x) & 0xFF) << 0)
-#define   G_008DFC_VADDR(x)                                           (((x) >> 0) & 0xFF)
-#define   C_008DFC_VADDR                                              0xFFFFFF00
-#define     V_008DFC_SQ_VGPR                                        0x00
-#define   S_008DFC_VDATA(x)                                           (((x) & 0xFF) << 8)
-#define   G_008DFC_VDATA(x)                                           (((x) >> 8) & 0xFF)
-#define   C_008DFC_VDATA                                              0xFFFF00FF
-#define     V_008DFC_SQ_VGPR                                        0x00
-#define   S_008DFC_SRSRC(x)                                           (((x) & 0x1F) << 16)
-#define   G_008DFC_SRSRC(x)                                           (((x) >> 16) & 0x1F)
-#define   C_008DFC_SRSRC                                              0xFFE0FFFF
-#define   S_008DFC_SLC(x)                                             (((x) & 0x1) << 22)
-#define   G_008DFC_SLC(x)                                             (((x) >> 22) & 0x1)
-#define   C_008DFC_SLC                                                0xFFBFFFFF
-#define   S_008DFC_TFE(x)                                             (((x) & 0x1) << 23)
-#define   G_008DFC_TFE(x)                                             (((x) >> 23) & 0x1)
-#define   C_008DFC_TFE                                                0xFF7FFFFF
-#define   S_008DFC_SOFFSET(x)                                         (((x) & 0xFF) << 24)
-#define   G_008DFC_SOFFSET(x)                                         (((x) >> 24) & 0xFF)
-#define   C_008DFC_SOFFSET                                            0x00FFFFFF
-#define     V_008DFC_SQ_SGPR                                        0x00
-/* CIK */
-#define     V_008DFC_SQ_FLAT_SCRATCH_LO                             0x68
-#define     V_008DFC_SQ_FLAT_SCRATCH_HI                             0x69
-/*     */
-#define     V_008DFC_SQ_VCC_LO                                      0x6A
-#define     V_008DFC_SQ_VCC_HI                                      0x6B
-#define     V_008DFC_SQ_TBA_LO                                      0x6C
-#define     V_008DFC_SQ_TBA_HI                                      0x6D
-#define     V_008DFC_SQ_TMA_LO                                      0x6E
-#define     V_008DFC_SQ_TMA_HI                                      0x6F
-#define     V_008DFC_SQ_TTMP0                                       0x70
-#define     V_008DFC_SQ_TTMP1                                       0x71
-#define     V_008DFC_SQ_TTMP2                                       0x72
-#define     V_008DFC_SQ_TTMP3                                       0x73
-#define     V_008DFC_SQ_TTMP4                                       0x74
-#define     V_008DFC_SQ_TTMP5                                       0x75
-#define     V_008DFC_SQ_TTMP6                                       0x76
-#define     V_008DFC_SQ_TTMP7                                       0x77
-#define     V_008DFC_SQ_TTMP8                                       0x78
-#define     V_008DFC_SQ_TTMP9                                       0x79
-#define     V_008DFC_SQ_TTMP10                                      0x7A
-#define     V_008DFC_SQ_TTMP11                                      0x7B
-#define     V_008DFC_SQ_M0                                          0x7C
-#define     V_008DFC_SQ_EXEC_LO                                     0x7E
-#define     V_008DFC_SQ_EXEC_HI                                     0x7F
-#define     V_008DFC_SQ_SRC_0                                       0x80
-#define     V_008DFC_SQ_SRC_1_INT                                   0x81
-#define     V_008DFC_SQ_SRC_2_INT                                   0x82
-#define     V_008DFC_SQ_SRC_3_INT                                   0x83
-#define     V_008DFC_SQ_SRC_4_INT                                   0x84
-#define     V_008DFC_SQ_SRC_5_INT                                   0x85
-#define     V_008DFC_SQ_SRC_6_INT                                   0x86
-#define     V_008DFC_SQ_SRC_7_INT                                   0x87
-#define     V_008DFC_SQ_SRC_8_INT                                   0x88
-#define     V_008DFC_SQ_SRC_9_INT                                   0x89
-#define     V_008DFC_SQ_SRC_10_INT                                  0x8A
-#define     V_008DFC_SQ_SRC_11_INT                                  0x8B
-#define     V_008DFC_SQ_SRC_12_INT                                  0x8C
-#define     V_008DFC_SQ_SRC_13_INT                                  0x8D
-#define     V_008DFC_SQ_SRC_14_INT                                  0x8E
-#define     V_008DFC_SQ_SRC_15_INT                                  0x8F
-#define     V_008DFC_SQ_SRC_16_INT                                  0x90
-#define     V_008DFC_SQ_SRC_17_INT                                  0x91
-#define     V_008DFC_SQ_SRC_18_INT                                  0x92
-#define     V_008DFC_SQ_SRC_19_INT                                  0x93
-#define     V_008DFC_SQ_SRC_20_INT                                  0x94
-#define     V_008DFC_SQ_SRC_21_INT                                  0x95
-#define     V_008DFC_SQ_SRC_22_INT                                  0x96
-#define     V_008DFC_SQ_SRC_23_INT                                  0x97
-#define     V_008DFC_SQ_SRC_24_INT                                  0x98
-#define     V_008DFC_SQ_SRC_25_INT                                  0x99
-#define     V_008DFC_SQ_SRC_26_INT                                  0x9A
-#define     V_008DFC_SQ_SRC_27_INT                                  0x9B
-#define     V_008DFC_SQ_SRC_28_INT                                  0x9C
-#define     V_008DFC_SQ_SRC_29_INT                                  0x9D
-#define     V_008DFC_SQ_SRC_30_INT                                  0x9E
-#define     V_008DFC_SQ_SRC_31_INT                                  0x9F
-#define     V_008DFC_SQ_SRC_32_INT                                  0xA0
-#define     V_008DFC_SQ_SRC_33_INT                                  0xA1
-#define     V_008DFC_SQ_SRC_34_INT                                  0xA2
-#define     V_008DFC_SQ_SRC_35_INT                                  0xA3
-#define     V_008DFC_SQ_SRC_36_INT                                  0xA4
-#define     V_008DFC_SQ_SRC_37_INT                                  0xA5
-#define     V_008DFC_SQ_SRC_38_INT                                  0xA6
-#define     V_008DFC_SQ_SRC_39_INT                                  0xA7
-#define     V_008DFC_SQ_SRC_40_INT                                  0xA8
-#define     V_008DFC_SQ_SRC_41_INT                                  0xA9
-#define     V_008DFC_SQ_SRC_42_INT                                  0xAA
-#define     V_008DFC_SQ_SRC_43_INT                                  0xAB
-#define     V_008DFC_SQ_SRC_44_INT                                  0xAC
-#define     V_008DFC_SQ_SRC_45_INT                                  0xAD
-#define     V_008DFC_SQ_SRC_46_INT                                  0xAE
-#define     V_008DFC_SQ_SRC_47_INT                                  0xAF
-#define     V_008DFC_SQ_SRC_48_INT                                  0xB0
-#define     V_008DFC_SQ_SRC_49_INT                                  0xB1
-#define     V_008DFC_SQ_SRC_50_INT                                  0xB2
-#define     V_008DFC_SQ_SRC_51_INT                                  0xB3
-#define     V_008DFC_SQ_SRC_52_INT                                  0xB4
-#define     V_008DFC_SQ_SRC_53_INT                                  0xB5
-#define     V_008DFC_SQ_SRC_54_INT                                  0xB6
-#define     V_008DFC_SQ_SRC_55_INT                                  0xB7
-#define     V_008DFC_SQ_SRC_56_INT                                  0xB8
-#define     V_008DFC_SQ_SRC_57_INT                                  0xB9
-#define     V_008DFC_SQ_SRC_58_INT                                  0xBA
-#define     V_008DFC_SQ_SRC_59_INT                                  0xBB
-#define     V_008DFC_SQ_SRC_60_INT                                  0xBC
-#define     V_008DFC_SQ_SRC_61_INT                                  0xBD
-#define     V_008DFC_SQ_SRC_62_INT                                  0xBE
-#define     V_008DFC_SQ_SRC_63_INT                                  0xBF
-#define     V_008DFC_SQ_SRC_64_INT                                  0xC0
-#define     V_008DFC_SQ_SRC_M_1_INT                                 0xC1
-#define     V_008DFC_SQ_SRC_M_2_INT                                 0xC2
-#define     V_008DFC_SQ_SRC_M_3_INT                                 0xC3
-#define     V_008DFC_SQ_SRC_M_4_INT                                 0xC4
-#define     V_008DFC_SQ_SRC_M_5_INT                                 0xC5
-#define     V_008DFC_SQ_SRC_M_6_INT                                 0xC6
-#define     V_008DFC_SQ_SRC_M_7_INT                                 0xC7
-#define     V_008DFC_SQ_SRC_M_8_INT                                 0xC8
-#define     V_008DFC_SQ_SRC_M_9_INT                                 0xC9
-#define     V_008DFC_SQ_SRC_M_10_INT                                0xCA
-#define     V_008DFC_SQ_SRC_M_11_INT                                0xCB
-#define     V_008DFC_SQ_SRC_M_12_INT                                0xCC
-#define     V_008DFC_SQ_SRC_M_13_INT                                0xCD
-#define     V_008DFC_SQ_SRC_M_14_INT                                0xCE
-#define     V_008DFC_SQ_SRC_M_15_INT                                0xCF
-#define     V_008DFC_SQ_SRC_M_16_INT                                0xD0
-#define     V_008DFC_SQ_SRC_0_5                                     0xF0
-#define     V_008DFC_SQ_SRC_M_0_5                                   0xF1
-#define     V_008DFC_SQ_SRC_1                                       0xF2
-#define     V_008DFC_SQ_SRC_M_1                                     0xF3
-#define     V_008DFC_SQ_SRC_2                                       0xF4
-#define     V_008DFC_SQ_SRC_M_2                                     0xF5
-#define     V_008DFC_SQ_SRC_4                                       0xF6
-#define     V_008DFC_SQ_SRC_M_4                                     0xF7
-#define     V_008DFC_SQ_SRC_VCCZ                                    0xFB
-#define     V_008DFC_SQ_SRC_EXECZ                                   0xFC
-#define     V_008DFC_SQ_SRC_SCC                                     0xFD
-#define     V_008DFC_SQ_SRC_LDS_DIRECT                              0xFE
-#define R_008DFC_SQ_DS_0                                                0x008DFC
-#define   S_008DFC_OFFSET0(x)                                         (((x) & 0xFF) << 0)
-#define   G_008DFC_OFFSET0(x)                                         (((x) >> 0) & 0xFF)
-#define   C_008DFC_OFFSET0                                            0xFFFFFF00
-#define   S_008DFC_OFFSET1(x)                                         (((x) & 0xFF) << 8)
-#define   G_008DFC_OFFSET1(x)                                         (((x) >> 8) & 0xFF)
-#define   C_008DFC_OFFSET1                                            0xFFFF00FF
-#define   S_008DFC_GDS(x)                                             (((x) & 0x1) << 17)
-#define   G_008DFC_GDS(x)                                             (((x) >> 17) & 0x1)
-#define   C_008DFC_GDS                                                0xFFFDFFFF
-#define   S_008DFC_OP(x)                                              (((x) & 0xFF) << 18)
-#define   G_008DFC_OP(x)                                              (((x) >> 18) & 0xFF)
-#define   C_008DFC_OP                                                 0xFC03FFFF
-#define     V_008DFC_SQ_DS_ADD_U32                                  0x00
-#define     V_008DFC_SQ_DS_SUB_U32                                  0x01
-#define     V_008DFC_SQ_DS_RSUB_U32                                 0x02
-#define     V_008DFC_SQ_DS_INC_U32                                  0x03
-#define     V_008DFC_SQ_DS_DEC_U32                                  0x04
-#define     V_008DFC_SQ_DS_MIN_I32                                  0x05
-#define     V_008DFC_SQ_DS_MAX_I32                                  0x06
-#define     V_008DFC_SQ_DS_MIN_U32                                  0x07
-#define     V_008DFC_SQ_DS_MAX_U32                                  0x08
-#define     V_008DFC_SQ_DS_AND_B32                                  0x09
-#define     V_008DFC_SQ_DS_OR_B32                                   0x0A
-#define     V_008DFC_SQ_DS_XOR_B32                                  0x0B
-#define     V_008DFC_SQ_DS_MSKOR_B32                                0x0C
-#define     V_008DFC_SQ_DS_WRITE_B32                                0x0D
-#define     V_008DFC_SQ_DS_WRITE2_B32                               0x0E
-#define     V_008DFC_SQ_DS_WRITE2ST64_B32                           0x0F
-#define     V_008DFC_SQ_DS_CMPST_B32                                0x10
-#define     V_008DFC_SQ_DS_CMPST_F32                                0x11
-#define     V_008DFC_SQ_DS_MIN_F32                                  0x12
-#define     V_008DFC_SQ_DS_MAX_F32                                  0x13
-/* CIK */
-#define     V_008DFC_SQ_DS_NOP                                      0x14
-/*     */
-#define     V_008DFC_SQ_DS_GWS_INIT                                 0x19
-#define     V_008DFC_SQ_DS_GWS_SEMA_V                               0x1A
-#define     V_008DFC_SQ_DS_GWS_SEMA_BR                              0x1B
-#define     V_008DFC_SQ_DS_GWS_SEMA_P                               0x1C
-#define     V_008DFC_SQ_DS_GWS_BARRIER                              0x1D
-#define     V_008DFC_SQ_DS_WRITE_B8                                 0x1E
-#define     V_008DFC_SQ_DS_WRITE_B16                                0x1F
-#define     V_008DFC_SQ_DS_ADD_RTN_U32                              0x20
-#define     V_008DFC_SQ_DS_SUB_RTN_U32                              0x21
-#define     V_008DFC_SQ_DS_RSUB_RTN_U32                             0x22
-#define     V_008DFC_SQ_DS_INC_RTN_U32                              0x23
-#define     V_008DFC_SQ_DS_DEC_RTN_U32                              0x24
-#define     V_008DFC_SQ_DS_MIN_RTN_I32                              0x25
-#define     V_008DFC_SQ_DS_MAX_RTN_I32                              0x26
-#define     V_008DFC_SQ_DS_MIN_RTN_U32                              0x27
-#define     V_008DFC_SQ_DS_MAX_RTN_U32                              0x28
-#define     V_008DFC_SQ_DS_AND_RTN_B32                              0x29
-#define     V_008DFC_SQ_DS_OR_RTN_B32                               0x2A
-#define     V_008DFC_SQ_DS_XOR_RTN_B32                              0x2B
-#define     V_008DFC_SQ_DS_MSKOR_RTN_B32                            0x2C
-#define     V_008DFC_SQ_DS_WRXCHG_RTN_B32                           0x2D
-#define     V_008DFC_SQ_DS_WRXCHG2_RTN_B32                          0x2E
-#define     V_008DFC_SQ_DS_WRXCHG2ST64_RTN_B32                      0x2F
-#define     V_008DFC_SQ_DS_CMPST_RTN_B32                            0x30
-#define     V_008DFC_SQ_DS_CMPST_RTN_F32                            0x31
-#define     V_008DFC_SQ_DS_MIN_RTN_F32                              0x32
-#define     V_008DFC_SQ_DS_MAX_RTN_F32                              0x33
-#define     V_008DFC_SQ_DS_SWIZZLE_B32                              0x35
-#define     V_008DFC_SQ_DS_READ_B32                                 0x36
-#define     V_008DFC_SQ_DS_READ2_B32                                0x37
-#define     V_008DFC_SQ_DS_READ2ST64_B32                            0x38
-#define     V_008DFC_SQ_DS_READ_I8                                  0x39
-#define     V_008DFC_SQ_DS_READ_U8                                  0x3A
-#define     V_008DFC_SQ_DS_READ_I16                                 0x3B
-#define     V_008DFC_SQ_DS_READ_U16                                 0x3C
-#define     V_008DFC_SQ_DS_CONSUME                                  0x3D
-#define     V_008DFC_SQ_DS_APPEND                                   0x3E
-#define     V_008DFC_SQ_DS_ORDERED_COUNT                            0x3F
-#define     V_008DFC_SQ_DS_ADD_U64                                  0x40
-#define     V_008DFC_SQ_DS_SUB_U64                                  0x41
-#define     V_008DFC_SQ_DS_RSUB_U64                                 0x42
-#define     V_008DFC_SQ_DS_INC_U64                                  0x43
-#define     V_008DFC_SQ_DS_DEC_U64                                  0x44
-#define     V_008DFC_SQ_DS_MIN_I64                                  0x45
-#define     V_008DFC_SQ_DS_MAX_I64                                  0x46
-#define     V_008DFC_SQ_DS_MIN_U64                                  0x47
-#define     V_008DFC_SQ_DS_MAX_U64                                  0x48
-#define     V_008DFC_SQ_DS_AND_B64                                  0x49
-#define     V_008DFC_SQ_DS_OR_B64                                   0x4A
-#define     V_008DFC_SQ_DS_XOR_B64                                  0x4B
-#define     V_008DFC_SQ_DS_MSKOR_B64                                0x4C
-#define     V_008DFC_SQ_DS_WRITE_B64                                0x4D
-#define     V_008DFC_SQ_DS_WRITE2_B64                               0x4E
-#define     V_008DFC_SQ_DS_WRITE2ST64_B64                           0x4F
-#define     V_008DFC_SQ_DS_CMPST_B64                                0x50
-#define     V_008DFC_SQ_DS_CMPST_F64                                0x51
-#define     V_008DFC_SQ_DS_MIN_F64                                  0x52
-#define     V_008DFC_SQ_DS_MAX_F64                                  0x53
-#define     V_008DFC_SQ_DS_ADD_RTN_U64                              0x60
-#define     V_008DFC_SQ_DS_SUB_RTN_U64                              0x61
-#define     V_008DFC_SQ_DS_RSUB_RTN_U64                             0x62
-#define     V_008DFC_SQ_DS_INC_RTN_U64                              0x63
-#define     V_008DFC_SQ_DS_DEC_RTN_U64                              0x64
-#define     V_008DFC_SQ_DS_MIN_RTN_I64                              0x65
-#define     V_008DFC_SQ_DS_MAX_RTN_I64                              0x66
-#define     V_008DFC_SQ_DS_MIN_RTN_U64                              0x67
-#define     V_008DFC_SQ_DS_MAX_RTN_U64                              0x68
-#define     V_008DFC_SQ_DS_AND_RTN_B64                              0x69
-#define     V_008DFC_SQ_DS_OR_RTN_B64                               0x6A
-#define     V_008DFC_SQ_DS_XOR_RTN_B64                              0x6B
-#define     V_008DFC_SQ_DS_MSKOR_RTN_B64                            0x6C
-#define     V_008DFC_SQ_DS_WRXCHG_RTN_B64                           0x6D
-#define     V_008DFC_SQ_DS_WRXCHG2_RTN_B64                          0x6E
-#define     V_008DFC_SQ_DS_WRXCHG2ST64_RTN_B64                      0x6F
-#define     V_008DFC_SQ_DS_CMPST_RTN_B64                            0x70
-#define     V_008DFC_SQ_DS_CMPST_RTN_F64                            0x71
-#define     V_008DFC_SQ_DS_MIN_RTN_F64                              0x72
-#define     V_008DFC_SQ_DS_MAX_RTN_F64                              0x73
-#define     V_008DFC_SQ_DS_READ_B64                                 0x76
-#define     V_008DFC_SQ_DS_READ2_B64                                0x77
-#define     V_008DFC_SQ_DS_READ2ST64_B64                            0x78
-/* CIK */
-#define     V_008DFC_SQ_DS_CONDXCHG32_RTN_B64                       0x7E
-/*     */
-#define     V_008DFC_SQ_DS_ADD_SRC2_U32                             0x80
-#define     V_008DFC_SQ_DS_SUB_SRC2_U32                             0x81
-#define     V_008DFC_SQ_DS_RSUB_SRC2_U32                            0x82
-#define     V_008DFC_SQ_DS_INC_SRC2_U32                             0x83
-#define     V_008DFC_SQ_DS_DEC_SRC2_U32                             0x84
-#define     V_008DFC_SQ_DS_MIN_SRC2_I32                             0x85
-#define     V_008DFC_SQ_DS_MAX_SRC2_I32                             0x86
-#define     V_008DFC_SQ_DS_MIN_SRC2_U32                             0x87
-#define     V_008DFC_SQ_DS_MAX_SRC2_U32                             0x88
-#define     V_008DFC_SQ_DS_AND_SRC2_B32                             0x89
-#define     V_008DFC_SQ_DS_OR_SRC2_B32                              0x8A
-#define     V_008DFC_SQ_DS_XOR_SRC2_B32                             0x8B
-#define     V_008DFC_SQ_DS_WRITE_SRC2_B32                           0x8D
-#define     V_008DFC_SQ_DS_MIN_SRC2_F32                             0x92
-#define     V_008DFC_SQ_DS_MAX_SRC2_F32                             0x93
-#define     V_008DFC_SQ_DS_ADD_SRC2_U64                             0xC0
-#define     V_008DFC_SQ_DS_SUB_SRC2_U64                             0xC1
-#define     V_008DFC_SQ_DS_RSUB_SRC2_U64                            0xC2
-#define     V_008DFC_SQ_DS_INC_SRC2_U64                             0xC3
-#define     V_008DFC_SQ_DS_DEC_SRC2_U64                             0xC4
-#define     V_008DFC_SQ_DS_MIN_SRC2_I64                             0xC5
-#define     V_008DFC_SQ_DS_MAX_SRC2_I64                             0xC6
-#define     V_008DFC_SQ_DS_MIN_SRC2_U64                             0xC7
-#define     V_008DFC_SQ_DS_MAX_SRC2_U64                             0xC8
-#define     V_008DFC_SQ_DS_AND_SRC2_B64                             0xC9
-#define     V_008DFC_SQ_DS_OR_SRC2_B64                              0xCA
-#define     V_008DFC_SQ_DS_XOR_SRC2_B64                             0xCB
-#define     V_008DFC_SQ_DS_WRITE_SRC2_B64                           0xCD
-#define     V_008DFC_SQ_DS_MIN_SRC2_F64                             0xD2
-#define     V_008DFC_SQ_DS_MAX_SRC2_F64                             0xD3
-/* CIK */
-#define     V_008DFC_SQ_DS_WRITE_B96                                0xDE
-#define     V_008DFC_SQ_DS_WRITE_B128                               0xDF
-#define     V_008DFC_SQ_DS_CONDXCHG32_RTN_B128                      0xFD
-#define     V_008DFC_SQ_DS_READ_B96                                 0xFE
-#define     V_008DFC_SQ_DS_READ_B128                                0xFF
-/*     */
-#define   S_008DFC_ENCODING(x)                                        (((x) & 0x3F) << 26)
-#define   G_008DFC_ENCODING(x)                                        (((x) >> 26) & 0x3F)
-#define   C_008DFC_ENCODING                                           0x03FFFFFF
-#define     V_008DFC_SQ_ENC_DS_FIELD                                0x36
-#define R_008DFC_SQ_SOPC                                                0x008DFC
-#define   S_008DFC_SSRC0(x)                                           (((x) & 0xFF) << 0)
-#define   G_008DFC_SSRC0(x)                                           (((x) >> 0) & 0xFF)
-#define   C_008DFC_SSRC0                                              0xFFFFFF00
-#define     V_008DFC_SQ_SGPR                                        0x00
-/* CIK */
-#define     V_008DFC_SQ_FLAT_SCRATCH_LO                             0x68
-#define     V_008DFC_SQ_FLAT_SCRATCH_HI                             0x69
-/*     */
-#define     V_008DFC_SQ_VCC_LO                                      0x6A
-#define     V_008DFC_SQ_VCC_HI                                      0x6B
-#define     V_008DFC_SQ_TBA_LO                                      0x6C
-#define     V_008DFC_SQ_TBA_HI                                      0x6D
-#define     V_008DFC_SQ_TMA_LO                                      0x6E
-#define     V_008DFC_SQ_TMA_HI                                      0x6F
-#define     V_008DFC_SQ_TTMP0                                       0x70
-#define     V_008DFC_SQ_TTMP1                                       0x71
-#define     V_008DFC_SQ_TTMP2                                       0x72
-#define     V_008DFC_SQ_TTMP3                                       0x73
-#define     V_008DFC_SQ_TTMP4                                       0x74
-#define     V_008DFC_SQ_TTMP5                                       0x75
-#define     V_008DFC_SQ_TTMP6                                       0x76
-#define     V_008DFC_SQ_TTMP7                                       0x77
-#define     V_008DFC_SQ_TTMP8                                       0x78
-#define     V_008DFC_SQ_TTMP9                                       0x79
-#define     V_008DFC_SQ_TTMP10                                      0x7A
-#define     V_008DFC_SQ_TTMP11                                      0x7B
-#define     V_008DFC_SQ_M0                                          0x7C
-#define     V_008DFC_SQ_EXEC_LO                                     0x7E
-#define     V_008DFC_SQ_EXEC_HI                                     0x7F
-#define     V_008DFC_SQ_SRC_0                                       0x80
-#define     V_008DFC_SQ_SRC_1_INT                                   0x81
-#define     V_008DFC_SQ_SRC_2_INT                                   0x82
-#define     V_008DFC_SQ_SRC_3_INT                                   0x83
-#define     V_008DFC_SQ_SRC_4_INT                                   0x84
-#define     V_008DFC_SQ_SRC_5_INT                                   0x85
-#define     V_008DFC_SQ_SRC_6_INT                                   0x86
-#define     V_008DFC_SQ_SRC_7_INT                                   0x87
-#define     V_008DFC_SQ_SRC_8_INT                                   0x88
-#define     V_008DFC_SQ_SRC_9_INT                                   0x89
-#define     V_008DFC_SQ_SRC_10_INT                                  0x8A
-#define     V_008DFC_SQ_SRC_11_INT                                  0x8B
-#define     V_008DFC_SQ_SRC_12_INT                                  0x8C
-#define     V_008DFC_SQ_SRC_13_INT                                  0x8D
-#define     V_008DFC_SQ_SRC_14_INT                                  0x8E
-#define     V_008DFC_SQ_SRC_15_INT                                  0x8F
-#define     V_008DFC_SQ_SRC_16_INT                                  0x90
-#define     V_008DFC_SQ_SRC_17_INT                                  0x91
-#define     V_008DFC_SQ_SRC_18_INT                                  0x92
-#define     V_008DFC_SQ_SRC_19_INT                                  0x93
-#define     V_008DFC_SQ_SRC_20_INT                                  0x94
-#define     V_008DFC_SQ_SRC_21_INT                                  0x95
-#define     V_008DFC_SQ_SRC_22_INT                                  0x96
-#define     V_008DFC_SQ_SRC_23_INT                                  0x97
-#define     V_008DFC_SQ_SRC_24_INT                                  0x98
-#define     V_008DFC_SQ_SRC_25_INT                                  0x99
-#define     V_008DFC_SQ_SRC_26_INT                                  0x9A
-#define     V_008DFC_SQ_SRC_27_INT                                  0x9B
-#define     V_008DFC_SQ_SRC_28_INT                                  0x9C
-#define     V_008DFC_SQ_SRC_29_INT                                  0x9D
-#define     V_008DFC_SQ_SRC_30_INT                                  0x9E
-#define     V_008DFC_SQ_SRC_31_INT                                  0x9F
-#define     V_008DFC_SQ_SRC_32_INT                                  0xA0
-#define     V_008DFC_SQ_SRC_33_INT                                  0xA1
-#define     V_008DFC_SQ_SRC_34_INT                                  0xA2
-#define     V_008DFC_SQ_SRC_35_INT                                  0xA3
-#define     V_008DFC_SQ_SRC_36_INT                                  0xA4
-#define     V_008DFC_SQ_SRC_37_INT                                  0xA5
-#define     V_008DFC_SQ_SRC_38_INT                                  0xA6
-#define     V_008DFC_SQ_SRC_39_INT                                  0xA7
-#define     V_008DFC_SQ_SRC_40_INT                                  0xA8
-#define     V_008DFC_SQ_SRC_41_INT                                  0xA9
-#define     V_008DFC_SQ_SRC_42_INT                                  0xAA
-#define     V_008DFC_SQ_SRC_43_INT                                  0xAB
-#define     V_008DFC_SQ_SRC_44_INT                                  0xAC
-#define     V_008DFC_SQ_SRC_45_INT                                  0xAD
-#define     V_008DFC_SQ_SRC_46_INT                                  0xAE
-#define     V_008DFC_SQ_SRC_47_INT                                  0xAF
-#define     V_008DFC_SQ_SRC_48_INT                                  0xB0
-#define     V_008DFC_SQ_SRC_49_INT                                  0xB1
-#define     V_008DFC_SQ_SRC_50_INT                                  0xB2
-#define     V_008DFC_SQ_SRC_51_INT                                  0xB3
-#define     V_008DFC_SQ_SRC_52_INT                                  0xB4
-#define     V_008DFC_SQ_SRC_53_INT                                  0xB5
-#define     V_008DFC_SQ_SRC_54_INT                                  0xB6
-#define     V_008DFC_SQ_SRC_55_INT                                  0xB7
-#define     V_008DFC_SQ_SRC_56_INT                                  0xB8
-#define     V_008DFC_SQ_SRC_57_INT                                  0xB9
-#define     V_008DFC_SQ_SRC_58_INT                                  0xBA
-#define     V_008DFC_SQ_SRC_59_INT                                  0xBB
-#define     V_008DFC_SQ_SRC_60_INT                                  0xBC
-#define     V_008DFC_SQ_SRC_61_INT                                  0xBD
-#define     V_008DFC_SQ_SRC_62_INT                                  0xBE
-#define     V_008DFC_SQ_SRC_63_INT                                  0xBF
-#define     V_008DFC_SQ_SRC_64_INT                                  0xC0
-#define     V_008DFC_SQ_SRC_M_1_INT                                 0xC1
-#define     V_008DFC_SQ_SRC_M_2_INT                                 0xC2
-#define     V_008DFC_SQ_SRC_M_3_INT                                 0xC3
-#define     V_008DFC_SQ_SRC_M_4_INT                                 0xC4
-#define     V_008DFC_SQ_SRC_M_5_INT                                 0xC5
-#define     V_008DFC_SQ_SRC_M_6_INT                                 0xC6
-#define     V_008DFC_SQ_SRC_M_7_INT                                 0xC7
-#define     V_008DFC_SQ_SRC_M_8_INT                                 0xC8
-#define     V_008DFC_SQ_SRC_M_9_INT                                 0xC9
-#define     V_008DFC_SQ_SRC_M_10_INT                                0xCA
-#define     V_008DFC_SQ_SRC_M_11_INT                                0xCB
-#define     V_008DFC_SQ_SRC_M_12_INT                                0xCC
-#define     V_008DFC_SQ_SRC_M_13_INT                                0xCD
-#define     V_008DFC_SQ_SRC_M_14_INT                                0xCE
-#define     V_008DFC_SQ_SRC_M_15_INT                                0xCF
-#define     V_008DFC_SQ_SRC_M_16_INT                                0xD0
-#define     V_008DFC_SQ_SRC_0_5                                     0xF0
-#define     V_008DFC_SQ_SRC_M_0_5                                   0xF1
-#define     V_008DFC_SQ_SRC_1                                       0xF2
-#define     V_008DFC_SQ_SRC_M_1                                     0xF3
-#define     V_008DFC_SQ_SRC_2                                       0xF4
-#define     V_008DFC_SQ_SRC_M_2                                     0xF5
-#define     V_008DFC_SQ_SRC_4                                       0xF6
-#define     V_008DFC_SQ_SRC_M_4                                     0xF7
-#define     V_008DFC_SQ_SRC_VCCZ                                    0xFB
-#define     V_008DFC_SQ_SRC_EXECZ                                   0xFC
-#define     V_008DFC_SQ_SRC_SCC                                     0xFD
-#define     V_008DFC_SQ_SRC_LDS_DIRECT                              0xFE
-#define   S_008DFC_SSRC1(x)                                           (((x) & 0xFF) << 8)
-#define   G_008DFC_SSRC1(x)                                           (((x) >> 8) & 0xFF)
-#define   C_008DFC_SSRC1                                              0xFFFF00FF
-#define     V_008DFC_SQ_SGPR                                        0x00
-/* CIK */
-#define     V_008DFC_SQ_FLAT_SCRATCH_LO                             0x68
-#define     V_008DFC_SQ_FLAT_SCRATCH_HI                             0x69
-/*     */
-#define     V_008DFC_SQ_VCC_LO                                      0x6A
-#define     V_008DFC_SQ_VCC_HI                                      0x6B
-#define     V_008DFC_SQ_TBA_LO                                      0x6C
-#define     V_008DFC_SQ_TBA_HI                                      0x6D
-#define     V_008DFC_SQ_TMA_LO                                      0x6E
-#define     V_008DFC_SQ_TMA_HI                                      0x6F
-#define     V_008DFC_SQ_TTMP0                                       0x70
-#define     V_008DFC_SQ_TTMP1                                       0x71
-#define     V_008DFC_SQ_TTMP2                                       0x72
-#define     V_008DFC_SQ_TTMP3                                       0x73
-#define     V_008DFC_SQ_TTMP4                                       0x74
-#define     V_008DFC_SQ_TTMP5                                       0x75
-#define     V_008DFC_SQ_TTMP6                                       0x76
-#define     V_008DFC_SQ_TTMP7                                       0x77
-#define     V_008DFC_SQ_TTMP8                                       0x78
-#define     V_008DFC_SQ_TTMP9                                       0x79
-#define     V_008DFC_SQ_TTMP10                                      0x7A
-#define     V_008DFC_SQ_TTMP11                                      0x7B
-#define     V_008DFC_SQ_M0                                          0x7C
-#define     V_008DFC_SQ_EXEC_LO                                     0x7E
-#define     V_008DFC_SQ_EXEC_HI                                     0x7F
-#define     V_008DFC_SQ_SRC_0                                       0x80
-#define     V_008DFC_SQ_SRC_1_INT                                   0x81
-#define     V_008DFC_SQ_SRC_2_INT                                   0x82
-#define     V_008DFC_SQ_SRC_3_INT                                   0x83
-#define     V_008DFC_SQ_SRC_4_INT                                   0x84
-#define     V_008DFC_SQ_SRC_5_INT                                   0x85
-#define     V_008DFC_SQ_SRC_6_INT                                   0x86
-#define     V_008DFC_SQ_SRC_7_INT                                   0x87
-#define     V_008DFC_SQ_SRC_8_INT                                   0x88
-#define     V_008DFC_SQ_SRC_9_INT                                   0x89
-#define     V_008DFC_SQ_SRC_10_INT                                  0x8A
-#define     V_008DFC_SQ_SRC_11_INT                                  0x8B
-#define     V_008DFC_SQ_SRC_12_INT                                  0x8C
-#define     V_008DFC_SQ_SRC_13_INT                                  0x8D
-#define     V_008DFC_SQ_SRC_14_INT                                  0x8E
-#define     V_008DFC_SQ_SRC_15_INT                                  0x8F
-#define     V_008DFC_SQ_SRC_16_INT                                  0x90
-#define     V_008DFC_SQ_SRC_17_INT                                  0x91
-#define     V_008DFC_SQ_SRC_18_INT                                  0x92
-#define     V_008DFC_SQ_SRC_19_INT                                  0x93
-#define     V_008DFC_SQ_SRC_20_INT                                  0x94
-#define     V_008DFC_SQ_SRC_21_INT                                  0x95
-#define     V_008DFC_SQ_SRC_22_INT                                  0x96
-#define     V_008DFC_SQ_SRC_23_INT                                  0x97
-#define     V_008DFC_SQ_SRC_24_INT                                  0x98
-#define     V_008DFC_SQ_SRC_25_INT                                  0x99
-#define     V_008DFC_SQ_SRC_26_INT                                  0x9A
-#define     V_008DFC_SQ_SRC_27_INT                                  0x9B
-#define     V_008DFC_SQ_SRC_28_INT                                  0x9C
-#define     V_008DFC_SQ_SRC_29_INT                                  0x9D
-#define     V_008DFC_SQ_SRC_30_INT                                  0x9E
-#define     V_008DFC_SQ_SRC_31_INT                                  0x9F
-#define     V_008DFC_SQ_SRC_32_INT                                  0xA0
-#define     V_008DFC_SQ_SRC_33_INT                                  0xA1
-#define     V_008DFC_SQ_SRC_34_INT                                  0xA2
-#define     V_008DFC_SQ_SRC_35_INT                                  0xA3
-#define     V_008DFC_SQ_SRC_36_INT                                  0xA4
-#define     V_008DFC_SQ_SRC_37_INT                                  0xA5
-#define     V_008DFC_SQ_SRC_38_INT                                  0xA6
-#define     V_008DFC_SQ_SRC_39_INT                                  0xA7
-#define     V_008DFC_SQ_SRC_40_INT                                  0xA8
-#define     V_008DFC_SQ_SRC_41_INT                                  0xA9
-#define     V_008DFC_SQ_SRC_42_INT                                  0xAA
-#define     V_008DFC_SQ_SRC_43_INT                                  0xAB
-#define     V_008DFC_SQ_SRC_44_INT                                  0xAC
-#define     V_008DFC_SQ_SRC_45_INT                                  0xAD
-#define     V_008DFC_SQ_SRC_46_INT                                  0xAE
-#define     V_008DFC_SQ_SRC_47_INT                                  0xAF
-#define     V_008DFC_SQ_SRC_48_INT                                  0xB0
-#define     V_008DFC_SQ_SRC_49_INT                                  0xB1
-#define     V_008DFC_SQ_SRC_50_INT                                  0xB2
-#define     V_008DFC_SQ_SRC_51_INT                                  0xB3
-#define     V_008DFC_SQ_SRC_52_INT                                  0xB4
-#define     V_008DFC_SQ_SRC_53_INT                                  0xB5
-#define     V_008DFC_SQ_SRC_54_INT                                  0xB6
-#define     V_008DFC_SQ_SRC_55_INT                                  0xB7
-#define     V_008DFC_SQ_SRC_56_INT                                  0xB8
-#define     V_008DFC_SQ_SRC_57_INT                                  0xB9
-#define     V_008DFC_SQ_SRC_58_INT                                  0xBA
-#define     V_008DFC_SQ_SRC_59_INT                                  0xBB
-#define     V_008DFC_SQ_SRC_60_INT                                  0xBC
-#define     V_008DFC_SQ_SRC_61_INT                                  0xBD
-#define     V_008DFC_SQ_SRC_62_INT                                  0xBE
-#define     V_008DFC_SQ_SRC_63_INT                                  0xBF
-#define     V_008DFC_SQ_SRC_64_INT                                  0xC0
-#define     V_008DFC_SQ_SRC_M_1_INT                                 0xC1
-#define     V_008DFC_SQ_SRC_M_2_INT                                 0xC2
-#define     V_008DFC_SQ_SRC_M_3_INT                                 0xC3
-#define     V_008DFC_SQ_SRC_M_4_INT                                 0xC4
-#define     V_008DFC_SQ_SRC_M_5_INT                                 0xC5
-#define     V_008DFC_SQ_SRC_M_6_INT                                 0xC6
-#define     V_008DFC_SQ_SRC_M_7_INT                                 0xC7
-#define     V_008DFC_SQ_SRC_M_8_INT                                 0xC8
-#define     V_008DFC_SQ_SRC_M_9_INT                                 0xC9
-#define     V_008DFC_SQ_SRC_M_10_INT                                0xCA
-#define     V_008DFC_SQ_SRC_M_11_INT                                0xCB
-#define     V_008DFC_SQ_SRC_M_12_INT                                0xCC
-#define     V_008DFC_SQ_SRC_M_13_INT                                0xCD
-#define     V_008DFC_SQ_SRC_M_14_INT                                0xCE
-#define     V_008DFC_SQ_SRC_M_15_INT                                0xCF
-#define     V_008DFC_SQ_SRC_M_16_INT                                0xD0
-#define     V_008DFC_SQ_SRC_0_5                                     0xF0
-#define     V_008DFC_SQ_SRC_M_0_5                                   0xF1
-#define     V_008DFC_SQ_SRC_1                                       0xF2
-#define     V_008DFC_SQ_SRC_M_1                                     0xF3
-#define     V_008DFC_SQ_SRC_2                                       0xF4
-#define     V_008DFC_SQ_SRC_M_2                                     0xF5
-#define     V_008DFC_SQ_SRC_4                                       0xF6
-#define     V_008DFC_SQ_SRC_M_4                                     0xF7
-#define     V_008DFC_SQ_SRC_VCCZ                                    0xFB
-#define     V_008DFC_SQ_SRC_EXECZ                                   0xFC
-#define     V_008DFC_SQ_SRC_SCC                                     0xFD
-#define     V_008DFC_SQ_SRC_LDS_DIRECT                              0xFE
-#define   S_008DFC_OP(x)                                              (((x) & 0x7F) << 16)
-#define   G_008DFC_OP(x)                                              (((x) >> 16) & 0x7F)
-#define   C_008DFC_OP                                                 0xFF80FFFF
-#define     V_008DFC_SQ_S_CMP_EQ_I32                                0x00
-#define     V_008DFC_SQ_S_CMP_LG_I32                                0x01
-#define     V_008DFC_SQ_S_CMP_GT_I32                                0x02
-#define     V_008DFC_SQ_S_CMP_GE_I32                                0x03
-#define     V_008DFC_SQ_S_CMP_LT_I32                                0x04
-#define     V_008DFC_SQ_S_CMP_LE_I32                                0x05
-#define     V_008DFC_SQ_S_CMP_EQ_U32                                0x06
-#define     V_008DFC_SQ_S_CMP_LG_U32                                0x07
-#define     V_008DFC_SQ_S_CMP_GT_U32                                0x08
-#define     V_008DFC_SQ_S_CMP_GE_U32                                0x09
-#define     V_008DFC_SQ_S_CMP_LT_U32                                0x0A
-#define     V_008DFC_SQ_S_CMP_LE_U32                                0x0B
-#define     V_008DFC_SQ_S_BITCMP0_B32                               0x0C
-#define     V_008DFC_SQ_S_BITCMP1_B32                               0x0D
-#define     V_008DFC_SQ_S_BITCMP0_B64                               0x0E
-#define     V_008DFC_SQ_S_BITCMP1_B64                               0x0F
-#define     V_008DFC_SQ_S_SETVSKIP                                  0x10
-#define   S_008DFC_ENCODING(x)                                        (((x) & 0x1FF) << 23)
-#define   G_008DFC_ENCODING(x)                                        (((x) >> 23) & 0x1FF)
-#define   C_008DFC_ENCODING                                           0x007FFFFF
-#define     V_008DFC_SQ_ENC_SOPC_FIELD                              0x17E
-#endif
 #define R_008DFC_SQ_EXP_0                                               0x008DFC
 #define   S_008DFC_EN(x)                                              (((x) & 0x0F) << 0)
 #define   G_008DFC_EN(x)                                              (((x) >> 0) & 0x0F)
@@ -3064,1942 +1886,6 @@
 #define   G_008DFC_ENCODING(x)                                        (((x) >> 26) & 0x3F)
 #define   C_008DFC_ENCODING                                           0x03FFFFFF
 #define     V_008DFC_SQ_ENC_EXP_FIELD                               0x3E
-#if 0
-#define R_008DFC_SQ_MIMG_0                                              0x008DFC
-#define   S_008DFC_DMASK(x)                                           (((x) & 0x0F) << 8)
-#define   G_008DFC_DMASK(x)                                           (((x) >> 8) & 0x0F)
-#define   C_008DFC_DMASK                                              0xFFFFF0FF
-#define   S_008DFC_UNORM(x)                                           (((x) & 0x1) << 12)
-#define   G_008DFC_UNORM(x)                                           (((x) >> 12) & 0x1)
-#define   C_008DFC_UNORM                                              0xFFFFEFFF
-#define   S_008DFC_GLC(x)                                             (((x) & 0x1) << 13)
-#define   G_008DFC_GLC(x)                                             (((x) >> 13) & 0x1)
-#define   C_008DFC_GLC                                                0xFFFFDFFF
-#define   S_008DFC_DA(x)                                              (((x) & 0x1) << 14)
-#define   G_008DFC_DA(x)                                              (((x) >> 14) & 0x1)
-#define   C_008DFC_DA                                                 0xFFFFBFFF
-#define   S_008DFC_R128(x)                                            (((x) & 0x1) << 15)
-#define   G_008DFC_R128(x)                                            (((x) >> 15) & 0x1)
-#define   C_008DFC_R128                                               0xFFFF7FFF
-#define   S_008DFC_TFE(x)                                             (((x) & 0x1) << 16)
-#define   G_008DFC_TFE(x)                                             (((x) >> 16) & 0x1)
-#define   C_008DFC_TFE                                                0xFFFEFFFF
-#define   S_008DFC_LWE(x)                                             (((x) & 0x1) << 17)
-#define   G_008DFC_LWE(x)                                             (((x) >> 17) & 0x1)
-#define   C_008DFC_LWE                                                0xFFFDFFFF
-#define   S_008DFC_OP(x)                                              (((x) & 0x7F) << 18)
-#define   G_008DFC_OP(x)                                              (((x) >> 18) & 0x7F)
-#define   C_008DFC_OP                                                 0xFE03FFFF
-#define     V_008DFC_SQ_IMAGE_LOAD                                  0x00
-#define     V_008DFC_SQ_IMAGE_LOAD_MIP                              0x01
-#define     V_008DFC_SQ_IMAGE_LOAD_PCK                              0x02
-#define     V_008DFC_SQ_IMAGE_LOAD_PCK_SGN                          0x03
-#define     V_008DFC_SQ_IMAGE_LOAD_MIP_PCK                          0x04
-#define     V_008DFC_SQ_IMAGE_LOAD_MIP_PCK_SGN                      0x05
-#define     V_008DFC_SQ_IMAGE_STORE                                 0x08
-#define     V_008DFC_SQ_IMAGE_STORE_MIP                             0x09
-#define     V_008DFC_SQ_IMAGE_STORE_PCK                             0x0A
-#define     V_008DFC_SQ_IMAGE_STORE_MIP_PCK                         0x0B
-#define     V_008DFC_SQ_IMAGE_GET_RESINFO                           0x0E
-#define     V_008DFC_SQ_IMAGE_ATOMIC_SWAP                           0x0F
-#define     V_008DFC_SQ_IMAGE_ATOMIC_CMPSWAP                        0x10
-#define     V_008DFC_SQ_IMAGE_ATOMIC_ADD                            0x11
-#define     V_008DFC_SQ_IMAGE_ATOMIC_SUB                            0x12
-#define     V_008DFC_SQ_IMAGE_ATOMIC_RSUB                           0x13 /* not on CIK */
-#define     V_008DFC_SQ_IMAGE_ATOMIC_SMIN                           0x14
-#define     V_008DFC_SQ_IMAGE_ATOMIC_UMIN                           0x15
-#define     V_008DFC_SQ_IMAGE_ATOMIC_SMAX                           0x16
-#define     V_008DFC_SQ_IMAGE_ATOMIC_UMAX                           0x17
-#define     V_008DFC_SQ_IMAGE_ATOMIC_AND                            0x18
-#define     V_008DFC_SQ_IMAGE_ATOMIC_OR                             0x19
-#define     V_008DFC_SQ_IMAGE_ATOMIC_XOR                            0x1A
-#define     V_008DFC_SQ_IMAGE_ATOMIC_INC                            0x1B
-#define     V_008DFC_SQ_IMAGE_ATOMIC_DEC                            0x1C
-#define     V_008DFC_SQ_IMAGE_ATOMIC_FCMPSWAP                       0x1D
-#define     V_008DFC_SQ_IMAGE_ATOMIC_FMIN                           0x1E
-#define     V_008DFC_SQ_IMAGE_ATOMIC_FMAX                           0x1F
-#define     V_008DFC_SQ_IMAGE_SAMPLE                                0x20
-#define     V_008DFC_SQ_IMAGE_SAMPLE_CL                             0x21
-#define     V_008DFC_SQ_IMAGE_SAMPLE_D                              0x22
-#define     V_008DFC_SQ_IMAGE_SAMPLE_D_CL                           0x23
-#define     V_008DFC_SQ_IMAGE_SAMPLE_L                              0x24
-#define     V_008DFC_SQ_IMAGE_SAMPLE_B                              0x25
-#define     V_008DFC_SQ_IMAGE_SAMPLE_B_CL                           0x26
-#define     V_008DFC_SQ_IMAGE_SAMPLE_LZ                             0x27
-#define     V_008DFC_SQ_IMAGE_SAMPLE_C                              0x28
-#define     V_008DFC_SQ_IMAGE_SAMPLE_C_CL                           0x29
-#define     V_008DFC_SQ_IMAGE_SAMPLE_C_D                            0x2A
-#define     V_008DFC_SQ_IMAGE_SAMPLE_C_D_CL                         0x2B
-#define     V_008DFC_SQ_IMAGE_SAMPLE_C_L                            0x2C
-#define     V_008DFC_SQ_IMAGE_SAMPLE_C_B                            0x2D
-#define     V_008DFC_SQ_IMAGE_SAMPLE_C_B_CL                         0x2E
-#define     V_008DFC_SQ_IMAGE_SAMPLE_C_LZ                           0x2F
-#define     V_008DFC_SQ_IMAGE_SAMPLE_O                              0x30
-#define     V_008DFC_SQ_IMAGE_SAMPLE_CL_O                           0x31
-#define     V_008DFC_SQ_IMAGE_SAMPLE_D_O                            0x32
-#define     V_008DFC_SQ_IMAGE_SAMPLE_D_CL_O                         0x33
-#define     V_008DFC_SQ_IMAGE_SAMPLE_L_O                            0x34
-#define     V_008DFC_SQ_IMAGE_SAMPLE_B_O                            0x35
-#define     V_008DFC_SQ_IMAGE_SAMPLE_B_CL_O                         0x36
-#define     V_008DFC_SQ_IMAGE_SAMPLE_LZ_O                           0x37
-#define     V_008DFC_SQ_IMAGE_SAMPLE_C_O                            0x38
-#define     V_008DFC_SQ_IMAGE_SAMPLE_C_CL_O                         0x39
-#define     V_008DFC_SQ_IMAGE_SAMPLE_C_D_O                          0x3A
-#define     V_008DFC_SQ_IMAGE_SAMPLE_C_D_CL_O                       0x3B
-#define     V_008DFC_SQ_IMAGE_SAMPLE_C_L_O                          0x3C
-#define     V_008DFC_SQ_IMAGE_SAMPLE_C_B_O                          0x3D
-#define     V_008DFC_SQ_IMAGE_SAMPLE_C_B_CL_O                       0x3E
-#define     V_008DFC_SQ_IMAGE_SAMPLE_C_LZ_O                         0x3F
-#define     V_008DFC_SQ_IMAGE_GATHER4                               0x40
-#define     V_008DFC_SQ_IMAGE_GATHER4_CL                            0x41
-#define     V_008DFC_SQ_IMAGE_GATHER4_L                             0x44
-#define     V_008DFC_SQ_IMAGE_GATHER4_B                             0x45
-#define     V_008DFC_SQ_IMAGE_GATHER4_B_CL                          0x46
-#define     V_008DFC_SQ_IMAGE_GATHER4_LZ                            0x47
-#define     V_008DFC_SQ_IMAGE_GATHER4_C                             0x48
-#define     V_008DFC_SQ_IMAGE_GATHER4_C_CL                          0x49
-#define     V_008DFC_SQ_IMAGE_GATHER4_C_L                           0x4C
-#define     V_008DFC_SQ_IMAGE_GATHER4_C_B                           0x4D
-#define     V_008DFC_SQ_IMAGE_GATHER4_C_B_CL                        0x4E
-#define     V_008DFC_SQ_IMAGE_GATHER4_C_LZ                          0x4F
-#define     V_008DFC_SQ_IMAGE_GATHER4_O                             0x50
-#define     V_008DFC_SQ_IMAGE_GATHER4_CL_O                          0x51
-#define     V_008DFC_SQ_IMAGE_GATHER4_L_O                           0x54
-#define     V_008DFC_SQ_IMAGE_GATHER4_B_O                           0x55
-#define     V_008DFC_SQ_IMAGE_GATHER4_B_CL_O                        0x56
-#define     V_008DFC_SQ_IMAGE_GATHER4_LZ_O                          0x57
-#define     V_008DFC_SQ_IMAGE_GATHER4_C_O                           0x58
-#define     V_008DFC_SQ_IMAGE_GATHER4_C_CL_O                        0x59
-#define     V_008DFC_SQ_IMAGE_GATHER4_C_L_O                         0x5C
-#define     V_008DFC_SQ_IMAGE_GATHER4_C_B_O                         0x5D
-#define     V_008DFC_SQ_IMAGE_GATHER4_C_B_CL_O                      0x5E
-#define     V_008DFC_SQ_IMAGE_GATHER4_C_LZ_O                        0x5F
-#define     V_008DFC_SQ_IMAGE_GET_LOD                               0x60
-#define     V_008DFC_SQ_IMAGE_SAMPLE_CD                             0x68
-#define     V_008DFC_SQ_IMAGE_SAMPLE_CD_CL                          0x69
-#define     V_008DFC_SQ_IMAGE_SAMPLE_C_CD                           0x6A
-#define     V_008DFC_SQ_IMAGE_SAMPLE_C_CD_CL                        0x6B
-#define     V_008DFC_SQ_IMAGE_SAMPLE_CD_O                           0x6C
-#define     V_008DFC_SQ_IMAGE_SAMPLE_CD_CL_O                        0x6D
-#define     V_008DFC_SQ_IMAGE_SAMPLE_C_CD_O                         0x6E
-#define     V_008DFC_SQ_IMAGE_SAMPLE_C_CD_CL_O                      0x6F
-#define   S_008DFC_SLC(x)                                             (((x) & 0x1) << 25)
-#define   G_008DFC_SLC(x)                                             (((x) >> 25) & 0x1)
-#define   C_008DFC_SLC                                                0xFDFFFFFF
-#define   S_008DFC_ENCODING(x)                                        (((x) & 0x3F) << 26)
-#define   G_008DFC_ENCODING(x)                                        (((x) >> 26) & 0x3F)
-#define   C_008DFC_ENCODING                                           0x03FFFFFF
-#define     V_008DFC_SQ_ENC_MIMG_FIELD                              0x3C
-#define R_008DFC_SQ_SOPP                                                0x008DFC
-#define   S_008DFC_SIMM16(x)                                          (((x) & 0xFFFF) << 0)
-#define   G_008DFC_SIMM16(x)                                          (((x) >> 0) & 0xFFFF)
-#define   C_008DFC_SIMM16                                             0xFFFF0000
-#define   S_008DFC_OP(x)                                              (((x) & 0x7F) << 16)
-#define   G_008DFC_OP(x)                                              (((x) >> 16) & 0x7F)
-#define   C_008DFC_OP                                                 0xFF80FFFF
-#define     V_008DFC_SQ_S_NOP                                       0x00
-#define     V_008DFC_SQ_S_ENDPGM                                    0x01
-#define     V_008DFC_SQ_S_BRANCH                                    0x02
-#define     V_008DFC_SQ_S_CBRANCH_SCC0                              0x04
-#define     V_008DFC_SQ_S_CBRANCH_SCC1                              0x05
-#define     V_008DFC_SQ_S_CBRANCH_VCCZ                              0x06
-#define     V_008DFC_SQ_S_CBRANCH_VCCNZ                             0x07
-#define     V_008DFC_SQ_S_CBRANCH_EXECZ                             0x08
-#define     V_008DFC_SQ_S_CBRANCH_EXECNZ                            0x09
-#define     V_008DFC_SQ_S_BARRIER                                   0x0A
-/* CIK */
-#define     V_008DFC_SQ_S_SETKILL                                   0x0B
-/*     */
-#define     V_008DFC_SQ_S_WAITCNT                                   0x0C
-#define     V_008DFC_SQ_S_SETHALT                                   0x0D
-#define     V_008DFC_SQ_S_SLEEP                                     0x0E
-#define     V_008DFC_SQ_S_SETPRIO                                   0x0F
-#define     V_008DFC_SQ_S_SENDMSG                                   0x10
-#define     V_008DFC_SQ_S_SENDMSGHALT                               0x11
-#define     V_008DFC_SQ_S_TRAP                                      0x12
-#define     V_008DFC_SQ_S_ICACHE_INV                                0x13
-#define     V_008DFC_SQ_S_INCPERFLEVEL                              0x14
-#define     V_008DFC_SQ_S_DECPERFLEVEL                              0x15
-#define     V_008DFC_SQ_S_TTRACEDATA                                0x16
-/* CIK */
-#define     V_008DFC_SQ_S_CBRANCH_CDBGSYS                           0x17
-#define     V_008DFC_SQ_S_CBRANCH_CDBGUSER                          0x18
-#define     V_008DFC_SQ_S_CBRANCH_CDBGSYS_OR_USER                   0x19
-#define     V_008DFC_SQ_S_CBRANCH_CDBGSYS_AND_USER                  0x1A
-/*     */
-#define   S_008DFC_ENCODING(x)                                        (((x) & 0x1FF) << 23)
-#define   G_008DFC_ENCODING(x)                                        (((x) >> 23) & 0x1FF)
-#define   C_008DFC_ENCODING                                           0x007FFFFF
-#define     V_008DFC_SQ_ENC_SOPP_FIELD                              0x17F
-#define R_008DFC_SQ_VINTRP                                              0x008DFC
-#define   S_008DFC_VSRC(x)                                            (((x) & 0xFF) << 0)
-#define   G_008DFC_VSRC(x)                                            (((x) >> 0) & 0xFF)
-#define   C_008DFC_VSRC                                               0xFFFFFF00
-#define     V_008DFC_SQ_VGPR                                        0x00
-#define   S_008DFC_ATTRCHAN(x)                                        (((x) & 0x03) << 8)
-#define   G_008DFC_ATTRCHAN(x)                                        (((x) >> 8) & 0x03)
-#define   C_008DFC_ATTRCHAN                                           0xFFFFFCFF
-#define     V_008DFC_SQ_CHAN_X                                      0x00
-#define     V_008DFC_SQ_CHAN_Y                                      0x01
-#define     V_008DFC_SQ_CHAN_Z                                      0x02
-#define     V_008DFC_SQ_CHAN_W                                      0x03
-#define   S_008DFC_ATTR(x)                                            (((x) & 0x3F) << 10)
-#define   G_008DFC_ATTR(x)                                            (((x) >> 10) & 0x3F)
-#define   C_008DFC_ATTR                                               0xFFFF03FF
-#define     V_008DFC_SQ_ATTR                                        0x00
-#define   S_008DFC_OP(x)                                              (((x) & 0x03) << 16)
-#define   G_008DFC_OP(x)                                              (((x) >> 16) & 0x03)
-#define   C_008DFC_OP                                                 0xFFFCFFFF
-#define     V_008DFC_SQ_V_INTERP_P1_F32                             0x00
-#define     V_008DFC_SQ_V_INTERP_P2_F32                             0x01
-#define     V_008DFC_SQ_V_INTERP_MOV_F32                            0x02
-#define   S_008DFC_VDST(x)                                            (((x) & 0xFF) << 18)
-#define   G_008DFC_VDST(x)                                            (((x) >> 18) & 0xFF)
-#define   C_008DFC_VDST                                               0xFC03FFFF
-#define     V_008DFC_SQ_VGPR                                        0x00
-#define   S_008DFC_ENCODING(x)                                        (((x) & 0x3F) << 26)
-#define   G_008DFC_ENCODING(x)                                        (((x) >> 26) & 0x3F)
-#define   C_008DFC_ENCODING                                           0x03FFFFFF
-#define     V_008DFC_SQ_ENC_VINTRP_FIELD                            0x32
-#define R_008DFC_SQ_MTBUF_0                                             0x008DFC
-#define   S_008DFC_OFFSET(x)                                          (((x) & 0xFFF) << 0)
-#define   G_008DFC_OFFSET(x)                                          (((x) >> 0) & 0xFFF)
-#define   C_008DFC_OFFSET                                             0xFFFFF000
-#define   S_008DFC_OFFEN(x)                                           (((x) & 0x1) << 12)
-#define   G_008DFC_OFFEN(x)                                           (((x) >> 12) & 0x1)
-#define   C_008DFC_OFFEN                                              0xFFFFEFFF
-#define   S_008DFC_IDXEN(x)                                           (((x) & 0x1) << 13)
-#define   G_008DFC_IDXEN(x)                                           (((x) >> 13) & 0x1)
-#define   C_008DFC_IDXEN                                              0xFFFFDFFF
-#define   S_008DFC_GLC(x)                                             (((x) & 0x1) << 14)
-#define   G_008DFC_GLC(x)                                             (((x) >> 14) & 0x1)
-#define   C_008DFC_GLC                                                0xFFFFBFFF
-#define   S_008DFC_ADDR64(x)                                          (((x) & 0x1) << 15)
-#define   G_008DFC_ADDR64(x)                                          (((x) >> 15) & 0x1)
-#define   C_008DFC_ADDR64                                             0xFFFF7FFF
-#define   S_008DFC_OP(x)                                              (((x) & 0x07) << 16)
-#define   G_008DFC_OP(x)                                              (((x) >> 16) & 0x07)
-#define   C_008DFC_OP                                                 0xFFF8FFFF
-#define     V_008DFC_SQ_TBUFFER_LOAD_FORMAT_X                       0x00
-#define     V_008DFC_SQ_TBUFFER_LOAD_FORMAT_XY                      0x01
-#define     V_008DFC_SQ_TBUFFER_LOAD_FORMAT_XYZ                     0x02
-#define     V_008DFC_SQ_TBUFFER_LOAD_FORMAT_XYZW                    0x03
-#define     V_008DFC_SQ_TBUFFER_STORE_FORMAT_X                      0x04
-#define     V_008DFC_SQ_TBUFFER_STORE_FORMAT_XY                     0x05
-#define     V_008DFC_SQ_TBUFFER_STORE_FORMAT_XYZ                    0x06
-#define     V_008DFC_SQ_TBUFFER_STORE_FORMAT_XYZW                   0x07
-#define   S_008DFC_DFMT(x)                                            (((x) & 0x0F) << 19)
-#define   G_008DFC_DFMT(x)                                            (((x) >> 19) & 0x0F)
-#define   C_008DFC_DFMT                                               0xFF87FFFF
-#define   S_008DFC_NFMT(x)                                            (((x) & 0x07) << 23)
-#define   G_008DFC_NFMT(x)                                            (((x) >> 23) & 0x07)
-#define   C_008DFC_NFMT                                               0xFC7FFFFF
-#define   S_008DFC_ENCODING(x)                                        (((x) & 0x3F) << 26)
-#define   G_008DFC_ENCODING(x)                                        (((x) >> 26) & 0x3F)
-#define   C_008DFC_ENCODING                                           0x03FFFFFF
-#define     V_008DFC_SQ_ENC_MTBUF_FIELD                             0x3A
-#define R_008DFC_SQ_SMRD                                                0x008DFC
-#define   S_008DFC_OFFSET(x)                                          (((x) & 0xFF) << 0)
-#define   G_008DFC_OFFSET(x)                                          (((x) >> 0) & 0xFF)
-#define   C_008DFC_OFFSET                                             0xFFFFFF00
-#define     V_008DFC_SQ_SGPR                                        0x00
-/* CIK */
-#define     V_008DFC_SQ_FLAT_SCRATCH_LO                             0x68
-#define     V_008DFC_SQ_FLAT_SCRATCH_HI                             0x69
-/*     */
-#define     V_008DFC_SQ_VCC_LO                                      0x6A
-#define     V_008DFC_SQ_VCC_HI                                      0x6B
-#define     V_008DFC_SQ_TBA_LO                                      0x6C
-#define     V_008DFC_SQ_TBA_HI                                      0x6D
-#define     V_008DFC_SQ_TMA_LO                                      0x6E
-#define     V_008DFC_SQ_TMA_HI                                      0x6F
-#define     V_008DFC_SQ_TTMP0                                       0x70
-#define     V_008DFC_SQ_TTMP1                                       0x71
-#define     V_008DFC_SQ_TTMP2                                       0x72
-#define     V_008DFC_SQ_TTMP3                                       0x73
-#define     V_008DFC_SQ_TTMP4                                       0x74
-#define     V_008DFC_SQ_TTMP5                                       0x75
-#define     V_008DFC_SQ_TTMP6                                       0x76
-#define     V_008DFC_SQ_TTMP7                                       0x77
-#define     V_008DFC_SQ_TTMP8                                       0x78
-#define     V_008DFC_SQ_TTMP9                                       0x79
-#define     V_008DFC_SQ_TTMP10                                      0x7A
-#define     V_008DFC_SQ_TTMP11                                      0x7B
-/* CIK */
-#define     V_008DFC_SQ_SRC_LITERAL                                 0xFF
-/*     */
-#define   S_008DFC_IMM(x)                                             (((x) & 0x1) << 8)
-#define   G_008DFC_IMM(x)                                             (((x) >> 8) & 0x1)
-#define   C_008DFC_IMM                                                0xFFFFFEFF
-#define   S_008DFC_SBASE(x)                                           (((x) & 0x3F) << 9)
-#define   G_008DFC_SBASE(x)                                           (((x) >> 9) & 0x3F)
-#define   C_008DFC_SBASE                                              0xFFFF81FF
-#define   S_008DFC_SDST(x)                                            (((x) & 0x7F) << 15)
-#define   G_008DFC_SDST(x)                                            (((x) >> 15) & 0x7F)
-#define   C_008DFC_SDST                                               0xFFC07FFF
-#define     V_008DFC_SQ_SGPR                                        0x00
-/* CIK */
-#define     V_008DFC_SQ_FLAT_SCRATCH_LO                             0x68
-#define     V_008DFC_SQ_FLAT_SCRATCH_HI                             0x69
-/*     */
-#define     V_008DFC_SQ_VCC_LO                                      0x6A
-#define     V_008DFC_SQ_VCC_HI                                      0x6B
-#define     V_008DFC_SQ_TBA_LO                                      0x6C
-#define     V_008DFC_SQ_TBA_HI                                      0x6D
-#define     V_008DFC_SQ_TMA_LO                                      0x6E
-#define     V_008DFC_SQ_TMA_HI                                      0x6F
-#define     V_008DFC_SQ_TTMP0                                       0x70
-#define     V_008DFC_SQ_TTMP1                                       0x71
-#define     V_008DFC_SQ_TTMP2                                       0x72
-#define     V_008DFC_SQ_TTMP3                                       0x73
-#define     V_008DFC_SQ_TTMP4                                       0x74
-#define     V_008DFC_SQ_TTMP5                                       0x75
-#define     V_008DFC_SQ_TTMP6                                       0x76
-#define     V_008DFC_SQ_TTMP7                                       0x77
-#define     V_008DFC_SQ_TTMP8                                       0x78
-#define     V_008DFC_SQ_TTMP9                                       0x79
-#define     V_008DFC_SQ_TTMP10                                      0x7A
-#define     V_008DFC_SQ_TTMP11                                      0x7B
-#define     V_008DFC_SQ_M0                                          0x7C
-#define     V_008DFC_SQ_EXEC_LO                                     0x7E
-#define     V_008DFC_SQ_EXEC_HI                                     0x7F
-#define   S_008DFC_OP(x)                                              (((x) & 0x1F) << 22)
-#define   G_008DFC_OP(x)                                              (((x) >> 22) & 0x1F)
-#define   C_008DFC_OP                                                 0xF83FFFFF
-#define     V_008DFC_SQ_S_LOAD_DWORD                                0x00
-#define     V_008DFC_SQ_S_LOAD_DWORDX2                              0x01
-#define     V_008DFC_SQ_S_LOAD_DWORDX4                              0x02
-#define     V_008DFC_SQ_S_LOAD_DWORDX8                              0x03
-#define     V_008DFC_SQ_S_LOAD_DWORDX16                             0x04
-#define     V_008DFC_SQ_S_BUFFER_LOAD_DWORD                         0x08
-#define     V_008DFC_SQ_S_BUFFER_LOAD_DWORDX2                       0x09
-#define     V_008DFC_SQ_S_BUFFER_LOAD_DWORDX4                       0x0A
-#define     V_008DFC_SQ_S_BUFFER_LOAD_DWORDX8                       0x0B
-#define     V_008DFC_SQ_S_BUFFER_LOAD_DWORDX16                      0x0C
-/* CIK */
-#define     V_008DFC_SQ_S_DCACHE_INV_VOL                            0x1D
-/*     */
-#define     V_008DFC_SQ_S_MEMTIME                                   0x1E
-#define     V_008DFC_SQ_S_DCACHE_INV                                0x1F
-#define   S_008DFC_ENCODING(x)                                        (((x) & 0x1F) << 27)
-#define   G_008DFC_ENCODING(x)                                        (((x) >> 27) & 0x1F)
-#define   C_008DFC_ENCODING                                           0x07FFFFFF
-#define     V_008DFC_SQ_ENC_SMRD_FIELD                              0x18
-/* CIK */
-#define R_008DFC_SQ_FLAT_0                                              0x008DFC
-#define   S_008DFC_GLC(x)                                             (((x) & 0x1) << 16)
-#define   G_008DFC_GLC(x)                                             (((x) >> 16) & 0x1)
-#define   C_008DFC_GLC                                                0xFFFEFFFF
-#define   S_008DFC_SLC(x)                                             (((x) & 0x1) << 17)
-#define   G_008DFC_SLC(x)                                             (((x) >> 17) & 0x1)
-#define   C_008DFC_SLC                                                0xFFFDFFFF
-#define   S_008DFC_OP(x)                                              (((x) & 0x7F) << 18)
-#define   G_008DFC_OP(x)                                              (((x) >> 18) & 0x7F)
-#define   C_008DFC_OP                                                 0xFE03FFFF
-#define     V_008DFC_SQ_FLAT_LOAD_UBYTE                             0x08
-#define     V_008DFC_SQ_FLAT_LOAD_SBYTE                             0x09
-#define     V_008DFC_SQ_FLAT_LOAD_USHORT                            0x0A
-#define     V_008DFC_SQ_FLAT_LOAD_SSHORT                            0x0B
-#define     V_008DFC_SQ_FLAT_LOAD_DWORD                             0x0C
-#define     V_008DFC_SQ_FLAT_LOAD_DWORDX2                           0x0D
-#define     V_008DFC_SQ_FLAT_LOAD_DWORDX4                           0x0E
-#define     V_008DFC_SQ_FLAT_LOAD_DWORDX3                           0x0F
-#define     V_008DFC_SQ_FLAT_STORE_BYTE                             0x18
-#define     V_008DFC_SQ_FLAT_STORE_SHORT                            0x1A
-#define     V_008DFC_SQ_FLAT_STORE_DWORD                            0x1C
-#define     V_008DFC_SQ_FLAT_STORE_DWORDX2                          0x1D
-#define     V_008DFC_SQ_FLAT_STORE_DWORDX4                          0x1E
-#define     V_008DFC_SQ_FLAT_STORE_DWORDX3                          0x1F
-#define     V_008DFC_SQ_FLAT_ATOMIC_SWAP                            0x30
-#define     V_008DFC_SQ_FLAT_ATOMIC_CMPSWAP                         0x31
-#define     V_008DFC_SQ_FLAT_ATOMIC_ADD                             0x32
-#define     V_008DFC_SQ_FLAT_ATOMIC_SUB                             0x33
-#define     V_008DFC_SQ_FLAT_ATOMIC_SMIN                            0x35
-#define     V_008DFC_SQ_FLAT_ATOMIC_UMIN                            0x36
-#define     V_008DFC_SQ_FLAT_ATOMIC_SMAX                            0x37
-#define     V_008DFC_SQ_FLAT_ATOMIC_UMAX                            0x38
-#define     V_008DFC_SQ_FLAT_ATOMIC_AND                             0x39
-#define     V_008DFC_SQ_FLAT_ATOMIC_OR                              0x3A
-#define     V_008DFC_SQ_FLAT_ATOMIC_XOR                             0x3B
-#define     V_008DFC_SQ_FLAT_ATOMIC_INC                             0x3C
-#define     V_008DFC_SQ_FLAT_ATOMIC_DEC                             0x3D
-#define     V_008DFC_SQ_FLAT_ATOMIC_FCMPSWAP                        0x3E
-#define     V_008DFC_SQ_FLAT_ATOMIC_FMIN                            0x3F
-#define     V_008DFC_SQ_FLAT_ATOMIC_FMAX                            0x40
-#define     V_008DFC_SQ_FLAT_ATOMIC_SWAP_X2                         0x50
-#define     V_008DFC_SQ_FLAT_ATOMIC_CMPSWAP_X2                      0x51
-#define     V_008DFC_SQ_FLAT_ATOMIC_ADD_X2                          0x52
-#define     V_008DFC_SQ_FLAT_ATOMIC_SUB_X2                          0x53
-#define     V_008DFC_SQ_FLAT_ATOMIC_SMIN_X2                         0x55
-#define     V_008DFC_SQ_FLAT_ATOMIC_UMIN_X2                         0x56
-#define     V_008DFC_SQ_FLAT_ATOMIC_SMAX_X2                         0x57
-#define     V_008DFC_SQ_FLAT_ATOMIC_UMAX_X2                         0x58
-#define     V_008DFC_SQ_FLAT_ATOMIC_AND_X2                          0x59
-#define     V_008DFC_SQ_FLAT_ATOMIC_OR_X2                           0x5A
-#define     V_008DFC_SQ_FLAT_ATOMIC_XOR_X2                          0x5B
-#define     V_008DFC_SQ_FLAT_ATOMIC_INC_X2                          0x5C
-#define     V_008DFC_SQ_FLAT_ATOMIC_DEC_X2                          0x5D
-#define     V_008DFC_SQ_FLAT_ATOMIC_FCMPSWAP_X2                     0x5E
-#define     V_008DFC_SQ_FLAT_ATOMIC_FMIN_X2                         0x5F
-#define     V_008DFC_SQ_FLAT_ATOMIC_FMAX_X2                         0x60
-#define   S_008DFC_ENCODING(x)                                        (((x) & 0x3F) << 26)
-#define   G_008DFC_ENCODING(x)                                        (((x) >> 26) & 0x3F)
-#define   C_008DFC_ENCODING                                           0x03FFFFFF
-#define     V_008DFC_SQ_ENC_FLAT_FIELD                              0x37
-/*     */
-#define R_008DFC_SQ_EXP_1                                               0x008DFC
-#define   S_008DFC_VSRC0(x)                                           (((x) & 0xFF) << 0)
-#define   G_008DFC_VSRC0(x)                                           (((x) >> 0) & 0xFF)
-#define   C_008DFC_VSRC0                                              0xFFFFFF00
-#define     V_008DFC_SQ_VGPR                                        0x00
-#define   S_008DFC_VSRC1(x)                                           (((x) & 0xFF) << 8)
-#define   G_008DFC_VSRC1(x)                                           (((x) >> 8) & 0xFF)
-#define   C_008DFC_VSRC1                                              0xFFFF00FF
-#define     V_008DFC_SQ_VGPR                                        0x00
-#define   S_008DFC_VSRC2(x)                                           (((x) & 0xFF) << 16)
-#define   G_008DFC_VSRC2(x)                                           (((x) >> 16) & 0xFF)
-#define   C_008DFC_VSRC2                                              0xFF00FFFF
-#define     V_008DFC_SQ_VGPR                                        0x00
-#define   S_008DFC_VSRC3(x)                                           (((x) & 0xFF) << 24)
-#define   G_008DFC_VSRC3(x)                                           (((x) >> 24) & 0xFF)
-#define   C_008DFC_VSRC3                                              0x00FFFFFF
-#define     V_008DFC_SQ_VGPR                                        0x00
-#define R_008DFC_SQ_DS_1                                                0x008DFC
-#define   S_008DFC_ADDR(x)                                            (((x) & 0xFF) << 0)
-#define   G_008DFC_ADDR(x)                                            (((x) >> 0) & 0xFF)
-#define   C_008DFC_ADDR                                               0xFFFFFF00
-#define     V_008DFC_SQ_VGPR                                        0x00
-#define   S_008DFC_DATA0(x)                                           (((x) & 0xFF) << 8)
-#define   G_008DFC_DATA0(x)                                           (((x) >> 8) & 0xFF)
-#define   C_008DFC_DATA0                                              0xFFFF00FF
-#define     V_008DFC_SQ_VGPR                                        0x00
-#define   S_008DFC_DATA1(x)                                           (((x) & 0xFF) << 16)
-#define   G_008DFC_DATA1(x)                                           (((x) >> 16) & 0xFF)
-#define   C_008DFC_DATA1                                              0xFF00FFFF
-#define     V_008DFC_SQ_VGPR                                        0x00
-#define   S_008DFC_VDST(x)                                            (((x) & 0xFF) << 24)
-#define   G_008DFC_VDST(x)                                            (((x) >> 24) & 0xFF)
-#define   C_008DFC_VDST                                               0x00FFFFFF
-#define     V_008DFC_SQ_VGPR                                        0x00
-#define R_008DFC_SQ_VOPC                                                0x008DFC
-#define   S_008DFC_SRC0(x)                                            (((x) & 0x1FF) << 0)
-#define   G_008DFC_SRC0(x)                                            (((x) >> 0) & 0x1FF)
-#define   C_008DFC_SRC0                                               0xFFFFFE00
-#define     V_008DFC_SQ_SGPR                                        0x00
-#define     V_008DFC_SQ_VCC_LO                                      0x6A
-#define     V_008DFC_SQ_VCC_HI                                      0x6B
-#define     V_008DFC_SQ_TBA_LO                                      0x6C
-#define     V_008DFC_SQ_TBA_HI                                      0x6D
-#define     V_008DFC_SQ_TMA_LO                                      0x6E
-#define     V_008DFC_SQ_TMA_HI                                      0x6F
-#define     V_008DFC_SQ_TTMP0                                       0x70
-#define     V_008DFC_SQ_TTMP1                                       0x71
-#define     V_008DFC_SQ_TTMP2                                       0x72
-#define     V_008DFC_SQ_TTMP3                                       0x73
-#define     V_008DFC_SQ_TTMP4                                       0x74
-#define     V_008DFC_SQ_TTMP5                                       0x75
-#define     V_008DFC_SQ_TTMP6                                       0x76
-#define     V_008DFC_SQ_TTMP7                                       0x77
-#define     V_008DFC_SQ_TTMP8                                       0x78
-#define     V_008DFC_SQ_TTMP9                                       0x79
-#define     V_008DFC_SQ_TTMP10                                      0x7A
-#define     V_008DFC_SQ_TTMP11                                      0x7B
-#define     V_008DFC_SQ_M0                                          0x7C
-#define     V_008DFC_SQ_EXEC_LO                                     0x7E
-#define     V_008DFC_SQ_EXEC_HI                                     0x7F
-#define     V_008DFC_SQ_SRC_0                                       0x80
-#define     V_008DFC_SQ_SRC_1_INT                                   0x81
-#define     V_008DFC_SQ_SRC_2_INT                                   0x82
-#define     V_008DFC_SQ_SRC_3_INT                                   0x83
-#define     V_008DFC_SQ_SRC_4_INT                                   0x84
-#define     V_008DFC_SQ_SRC_5_INT                                   0x85
-#define     V_008DFC_SQ_SRC_6_INT                                   0x86
-#define     V_008DFC_SQ_SRC_7_INT                                   0x87
-#define     V_008DFC_SQ_SRC_8_INT                                   0x88
-#define     V_008DFC_SQ_SRC_9_INT                                   0x89
-#define     V_008DFC_SQ_SRC_10_INT                                  0x8A
-#define     V_008DFC_SQ_SRC_11_INT                                  0x8B
-#define     V_008DFC_SQ_SRC_12_INT                                  0x8C
-#define     V_008DFC_SQ_SRC_13_INT                                  0x8D
-#define     V_008DFC_SQ_SRC_14_INT                                  0x8E
-#define     V_008DFC_SQ_SRC_15_INT                                  0x8F
-#define     V_008DFC_SQ_SRC_16_INT                                  0x90
-#define     V_008DFC_SQ_SRC_17_INT                                  0x91
-#define     V_008DFC_SQ_SRC_18_INT                                  0x92
-#define     V_008DFC_SQ_SRC_19_INT                                  0x93
-#define     V_008DFC_SQ_SRC_20_INT                                  0x94
-#define     V_008DFC_SQ_SRC_21_INT                                  0x95
-#define     V_008DFC_SQ_SRC_22_INT                                  0x96
-#define     V_008DFC_SQ_SRC_23_INT                                  0x97
-#define     V_008DFC_SQ_SRC_24_INT                                  0x98
-#define     V_008DFC_SQ_SRC_25_INT                                  0x99
-#define     V_008DFC_SQ_SRC_26_INT                                  0x9A
-#define     V_008DFC_SQ_SRC_27_INT                                  0x9B
-#define     V_008DFC_SQ_SRC_28_INT                                  0x9C
-#define     V_008DFC_SQ_SRC_29_INT                                  0x9D
-#define     V_008DFC_SQ_SRC_30_INT                                  0x9E
-#define     V_008DFC_SQ_SRC_31_INT                                  0x9F
-#define     V_008DFC_SQ_SRC_32_INT                                  0xA0
-#define     V_008DFC_SQ_SRC_33_INT                                  0xA1
-#define     V_008DFC_SQ_SRC_34_INT                                  0xA2
-#define     V_008DFC_SQ_SRC_35_INT                                  0xA3
-#define     V_008DFC_SQ_SRC_36_INT                                  0xA4
-#define     V_008DFC_SQ_SRC_37_INT                                  0xA5
-#define     V_008DFC_SQ_SRC_38_INT                                  0xA6
-#define     V_008DFC_SQ_SRC_39_INT                                  0xA7
-#define     V_008DFC_SQ_SRC_40_INT                                  0xA8
-#define     V_008DFC_SQ_SRC_41_INT                                  0xA9
-#define     V_008DFC_SQ_SRC_42_INT                                  0xAA
-#define     V_008DFC_SQ_SRC_43_INT                                  0xAB
-#define     V_008DFC_SQ_SRC_44_INT                                  0xAC
-#define     V_008DFC_SQ_SRC_45_INT                                  0xAD
-#define     V_008DFC_SQ_SRC_46_INT                                  0xAE
-#define     V_008DFC_SQ_SRC_47_INT                                  0xAF
-#define     V_008DFC_SQ_SRC_48_INT                                  0xB0
-#define     V_008DFC_SQ_SRC_49_INT                                  0xB1
-#define     V_008DFC_SQ_SRC_50_INT                                  0xB2
-#define     V_008DFC_SQ_SRC_51_INT                                  0xB3
-#define     V_008DFC_SQ_SRC_52_INT                                  0xB4
-#define     V_008DFC_SQ_SRC_53_INT                                  0xB5
-#define     V_008DFC_SQ_SRC_54_INT                                  0xB6
-#define     V_008DFC_SQ_SRC_55_INT                                  0xB7
-#define     V_008DFC_SQ_SRC_56_INT                                  0xB8
-#define     V_008DFC_SQ_SRC_57_INT                                  0xB9
-#define     V_008DFC_SQ_SRC_58_INT                                  0xBA
-#define     V_008DFC_SQ_SRC_59_INT                                  0xBB
-#define     V_008DFC_SQ_SRC_60_INT                                  0xBC
-#define     V_008DFC_SQ_SRC_61_INT                                  0xBD
-#define     V_008DFC_SQ_SRC_62_INT                                  0xBE
-#define     V_008DFC_SQ_SRC_63_INT                                  0xBF
-#define     V_008DFC_SQ_SRC_64_INT                                  0xC0
-#define     V_008DFC_SQ_SRC_M_1_INT                                 0xC1
-#define     V_008DFC_SQ_SRC_M_2_INT                                 0xC2
-#define     V_008DFC_SQ_SRC_M_3_INT                                 0xC3
-#define     V_008DFC_SQ_SRC_M_4_INT                                 0xC4
-#define     V_008DFC_SQ_SRC_M_5_INT                                 0xC5
-#define     V_008DFC_SQ_SRC_M_6_INT                                 0xC6
-#define     V_008DFC_SQ_SRC_M_7_INT                                 0xC7
-#define     V_008DFC_SQ_SRC_M_8_INT                                 0xC8
-#define     V_008DFC_SQ_SRC_M_9_INT                                 0xC9
-#define     V_008DFC_SQ_SRC_M_10_INT                                0xCA
-#define     V_008DFC_SQ_SRC_M_11_INT                                0xCB
-#define     V_008DFC_SQ_SRC_M_12_INT                                0xCC
-#define     V_008DFC_SQ_SRC_M_13_INT                                0xCD
-#define     V_008DFC_SQ_SRC_M_14_INT                                0xCE
-#define     V_008DFC_SQ_SRC_M_15_INT                                0xCF
-#define     V_008DFC_SQ_SRC_M_16_INT                                0xD0
-#define     V_008DFC_SQ_SRC_0_5                                     0xF0
-#define     V_008DFC_SQ_SRC_M_0_5                                   0xF1
-#define     V_008DFC_SQ_SRC_1                                       0xF2
-#define     V_008DFC_SQ_SRC_M_1                                     0xF3
-#define     V_008DFC_SQ_SRC_2                                       0xF4
-#define     V_008DFC_SQ_SRC_M_2                                     0xF5
-#define     V_008DFC_SQ_SRC_4                                       0xF6
-#define     V_008DFC_SQ_SRC_M_4                                     0xF7
-#define     V_008DFC_SQ_SRC_VCCZ                                    0xFB
-#define     V_008DFC_SQ_SRC_EXECZ                                   0xFC
-#define     V_008DFC_SQ_SRC_SCC                                     0xFD
-#define     V_008DFC_SQ_SRC_LDS_DIRECT                              0xFE
-#define     V_008DFC_SQ_SRC_VGPR                                    0x100
-#define   S_008DFC_VSRC1(x)                                           (((x) & 0xFF) << 9)
-#define   G_008DFC_VSRC1(x)                                           (((x) >> 9) & 0xFF)
-#define   C_008DFC_VSRC1                                              0xFFFE01FF
-#define     V_008DFC_SQ_VGPR                                        0x00
-#define   S_008DFC_OP(x)                                              (((x) & 0xFF) << 17)
-#define   G_008DFC_OP(x)                                              (((x) >> 17) & 0xFF)
-#define   C_008DFC_OP                                                 0xFE01FFFF
-#define     V_008DFC_SQ_V_CMP_F_F32                                 0x00
-#define     V_008DFC_SQ_V_CMP_LT_F32                                0x01
-#define     V_008DFC_SQ_V_CMP_EQ_F32                                0x02
-#define     V_008DFC_SQ_V_CMP_LE_F32                                0x03
-#define     V_008DFC_SQ_V_CMP_GT_F32                                0x04
-#define     V_008DFC_SQ_V_CMP_LG_F32                                0x05
-#define     V_008DFC_SQ_V_CMP_GE_F32                                0x06
-#define     V_008DFC_SQ_V_CMP_O_F32                                 0x07
-#define     V_008DFC_SQ_V_CMP_U_F32                                 0x08
-#define     V_008DFC_SQ_V_CMP_NGE_F32                               0x09
-#define     V_008DFC_SQ_V_CMP_NLG_F32                               0x0A
-#define     V_008DFC_SQ_V_CMP_NGT_F32                               0x0B
-#define     V_008DFC_SQ_V_CMP_NLE_F32                               0x0C
-#define     V_008DFC_SQ_V_CMP_NEQ_F32                               0x0D
-#define     V_008DFC_SQ_V_CMP_NLT_F32                               0x0E
-#define     V_008DFC_SQ_V_CMP_TRU_F32                               0x0F
-#define     V_008DFC_SQ_V_CMPX_F_F32                                0x10
-#define     V_008DFC_SQ_V_CMPX_LT_F32                               0x11
-#define     V_008DFC_SQ_V_CMPX_EQ_F32                               0x12
-#define     V_008DFC_SQ_V_CMPX_LE_F32                               0x13
-#define     V_008DFC_SQ_V_CMPX_GT_F32                               0x14
-#define     V_008DFC_SQ_V_CMPX_LG_F32                               0x15
-#define     V_008DFC_SQ_V_CMPX_GE_F32                               0x16
-#define     V_008DFC_SQ_V_CMPX_O_F32                                0x17
-#define     V_008DFC_SQ_V_CMPX_U_F32                                0x18
-#define     V_008DFC_SQ_V_CMPX_NGE_F32                              0x19
-#define     V_008DFC_SQ_V_CMPX_NLG_F32                              0x1A
-#define     V_008DFC_SQ_V_CMPX_NGT_F32                              0x1B
-#define     V_008DFC_SQ_V_CMPX_NLE_F32                              0x1C
-#define     V_008DFC_SQ_V_CMPX_NEQ_F32                              0x1D
-#define     V_008DFC_SQ_V_CMPX_NLT_F32                              0x1E
-#define     V_008DFC_SQ_V_CMPX_TRU_F32                              0x1F
-#define     V_008DFC_SQ_V_CMP_F_F64                                 0x20
-#define     V_008DFC_SQ_V_CMP_LT_F64                                0x21
-#define     V_008DFC_SQ_V_CMP_EQ_F64                                0x22
-#define     V_008DFC_SQ_V_CMP_LE_F64                                0x23
-#define     V_008DFC_SQ_V_CMP_GT_F64                                0x24
-#define     V_008DFC_SQ_V_CMP_LG_F64                                0x25
-#define     V_008DFC_SQ_V_CMP_GE_F64                                0x26
-#define     V_008DFC_SQ_V_CMP_O_F64                                 0x27
-#define     V_008DFC_SQ_V_CMP_U_F64                                 0x28
-#define     V_008DFC_SQ_V_CMP_NGE_F64                               0x29
-#define     V_008DFC_SQ_V_CMP_NLG_F64                               0x2A
-#define     V_008DFC_SQ_V_CMP_NGT_F64                               0x2B
-#define     V_008DFC_SQ_V_CMP_NLE_F64                               0x2C
-#define     V_008DFC_SQ_V_CMP_NEQ_F64                               0x2D
-#define     V_008DFC_SQ_V_CMP_NLT_F64                               0x2E
-#define     V_008DFC_SQ_V_CMP_TRU_F64                               0x2F
-#define     V_008DFC_SQ_V_CMPX_F_F64                                0x30
-#define     V_008DFC_SQ_V_CMPX_LT_F64                               0x31
-#define     V_008DFC_SQ_V_CMPX_EQ_F64                               0x32
-#define     V_008DFC_SQ_V_CMPX_LE_F64                               0x33
-#define     V_008DFC_SQ_V_CMPX_GT_F64                               0x34
-#define     V_008DFC_SQ_V_CMPX_LG_F64                               0x35
-#define     V_008DFC_SQ_V_CMPX_GE_F64                               0x36
-#define     V_008DFC_SQ_V_CMPX_O_F64                                0x37
-#define     V_008DFC_SQ_V_CMPX_U_F64                                0x38
-#define     V_008DFC_SQ_V_CMPX_NGE_F64                              0x39
-#define     V_008DFC_SQ_V_CMPX_NLG_F64                              0x3A
-#define     V_008DFC_SQ_V_CMPX_NGT_F64                              0x3B
-#define     V_008DFC_SQ_V_CMPX_NLE_F64                              0x3C
-#define     V_008DFC_SQ_V_CMPX_NEQ_F64                              0x3D
-#define     V_008DFC_SQ_V_CMPX_NLT_F64                              0x3E
-#define     V_008DFC_SQ_V_CMPX_TRU_F64                              0x3F
-#define     V_008DFC_SQ_V_CMPS_F_F32                                0x40
-#define     V_008DFC_SQ_V_CMPS_LT_F32                               0x41
-#define     V_008DFC_SQ_V_CMPS_EQ_F32                               0x42
-#define     V_008DFC_SQ_V_CMPS_LE_F32                               0x43
-#define     V_008DFC_SQ_V_CMPS_GT_F32                               0x44
-#define     V_008DFC_SQ_V_CMPS_LG_F32                               0x45
-#define     V_008DFC_SQ_V_CMPS_GE_F32                               0x46
-#define     V_008DFC_SQ_V_CMPS_O_F32                                0x47
-#define     V_008DFC_SQ_V_CMPS_U_F32                                0x48
-#define     V_008DFC_SQ_V_CMPS_NGE_F32                              0x49
-#define     V_008DFC_SQ_V_CMPS_NLG_F32                              0x4A
-#define     V_008DFC_SQ_V_CMPS_NGT_F32                              0x4B
-#define     V_008DFC_SQ_V_CMPS_NLE_F32                              0x4C
-#define     V_008DFC_SQ_V_CMPS_NEQ_F32                              0x4D
-#define     V_008DFC_SQ_V_CMPS_NLT_F32                              0x4E
-#define     V_008DFC_SQ_V_CMPS_TRU_F32                              0x4F
-#define     V_008DFC_SQ_V_CMPSX_F_F32                               0x50
-#define     V_008DFC_SQ_V_CMPSX_LT_F32                              0x51
-#define     V_008DFC_SQ_V_CMPSX_EQ_F32                              0x52
-#define     V_008DFC_SQ_V_CMPSX_LE_F32                              0x53
-#define     V_008DFC_SQ_V_CMPSX_GT_F32                              0x54
-#define     V_008DFC_SQ_V_CMPSX_LG_F32                              0x55
-#define     V_008DFC_SQ_V_CMPSX_GE_F32                              0x56
-#define     V_008DFC_SQ_V_CMPSX_O_F32                               0x57
-#define     V_008DFC_SQ_V_CMPSX_U_F32                               0x58
-#define     V_008DFC_SQ_V_CMPSX_NGE_F32                             0x59
-#define     V_008DFC_SQ_V_CMPSX_NLG_F32                             0x5A
-#define     V_008DFC_SQ_V_CMPSX_NGT_F32                             0x5B
-#define     V_008DFC_SQ_V_CMPSX_NLE_F32                             0x5C
-#define     V_008DFC_SQ_V_CMPSX_NEQ_F32                             0x5D
-#define     V_008DFC_SQ_V_CMPSX_NLT_F32                             0x5E
-#define     V_008DFC_SQ_V_CMPSX_TRU_F32                             0x5F
-#define     V_008DFC_SQ_V_CMPS_F_F64                                0x60
-#define     V_008DFC_SQ_V_CMPS_LT_F64                               0x61
-#define     V_008DFC_SQ_V_CMPS_EQ_F64                               0x62
-#define     V_008DFC_SQ_V_CMPS_LE_F64                               0x63
-#define     V_008DFC_SQ_V_CMPS_GT_F64                               0x64
-#define     V_008DFC_SQ_V_CMPS_LG_F64                               0x65
-#define     V_008DFC_SQ_V_CMPS_GE_F64                               0x66
-#define     V_008DFC_SQ_V_CMPS_O_F64                                0x67
-#define     V_008DFC_SQ_V_CMPS_U_F64                                0x68
-#define     V_008DFC_SQ_V_CMPS_NGE_F64                              0x69
-#define     V_008DFC_SQ_V_CMPS_NLG_F64                              0x6A
-#define     V_008DFC_SQ_V_CMPS_NGT_F64                              0x6B
-#define     V_008DFC_SQ_V_CMPS_NLE_F64                              0x6C
-#define     V_008DFC_SQ_V_CMPS_NEQ_F64                              0x6D
-#define     V_008DFC_SQ_V_CMPS_NLT_F64                              0x6E
-#define     V_008DFC_SQ_V_CMPS_TRU_F64                              0x6F
-#define     V_008DFC_SQ_V_CMPSX_F_F64                               0x70
-#define     V_008DFC_SQ_V_CMPSX_LT_F64                              0x71
-#define     V_008DFC_SQ_V_CMPSX_EQ_F64                              0x72
-#define     V_008DFC_SQ_V_CMPSX_LE_F64                              0x73
-#define     V_008DFC_SQ_V_CMPSX_GT_F64                              0x74
-#define     V_008DFC_SQ_V_CMPSX_LG_F64                              0x75
-#define     V_008DFC_SQ_V_CMPSX_GE_F64                              0x76
-#define     V_008DFC_SQ_V_CMPSX_O_F64                               0x77
-#define     V_008DFC_SQ_V_CMPSX_U_F64                               0x78
-#define     V_008DFC_SQ_V_CMPSX_NGE_F64                             0x79
-#define     V_008DFC_SQ_V_CMPSX_NLG_F64                             0x7A
-#define     V_008DFC_SQ_V_CMPSX_NGT_F64                             0x7B
-#define     V_008DFC_SQ_V_CMPSX_NLE_F64                             0x7C
-#define     V_008DFC_SQ_V_CMPSX_NEQ_F64                             0x7D
-#define     V_008DFC_SQ_V_CMPSX_NLT_F64                             0x7E
-#define     V_008DFC_SQ_V_CMPSX_TRU_F64                             0x7F
-#define     V_008DFC_SQ_V_CMP_F_I32                                 0x80
-#define     V_008DFC_SQ_V_CMP_LT_I32                                0x81
-#define     V_008DFC_SQ_V_CMP_EQ_I32                                0x82
-#define     V_008DFC_SQ_V_CMP_LE_I32                                0x83
-#define     V_008DFC_SQ_V_CMP_GT_I32                                0x84
-#define     V_008DFC_SQ_V_CMP_NE_I32                                0x85
-#define     V_008DFC_SQ_V_CMP_GE_I32                                0x86
-#define     V_008DFC_SQ_V_CMP_T_I32                                 0x87
-#define     V_008DFC_SQ_V_CMP_CLASS_F32                             0x88
-#define     V_008DFC_SQ_V_CMPX_F_I32                                0x90
-#define     V_008DFC_SQ_V_CMPX_LT_I32                               0x91
-#define     V_008DFC_SQ_V_CMPX_EQ_I32                               0x92
-#define     V_008DFC_SQ_V_CMPX_LE_I32                               0x93
-#define     V_008DFC_SQ_V_CMPX_GT_I32                               0x94
-#define     V_008DFC_SQ_V_CMPX_NE_I32                               0x95
-#define     V_008DFC_SQ_V_CMPX_GE_I32                               0x96
-#define     V_008DFC_SQ_V_CMPX_T_I32                                0x97
-#define     V_008DFC_SQ_V_CMPX_CLASS_F32                            0x98
-#define     V_008DFC_SQ_V_CMP_F_I64                                 0xA0
-#define     V_008DFC_SQ_V_CMP_LT_I64                                0xA1
-#define     V_008DFC_SQ_V_CMP_EQ_I64                                0xA2
-#define     V_008DFC_SQ_V_CMP_LE_I64                                0xA3
-#define     V_008DFC_SQ_V_CMP_GT_I64                                0xA4
-#define     V_008DFC_SQ_V_CMP_NE_I64                                0xA5
-#define     V_008DFC_SQ_V_CMP_GE_I64                                0xA6
-#define     V_008DFC_SQ_V_CMP_T_I64                                 0xA7
-#define     V_008DFC_SQ_V_CMP_CLASS_F64                             0xA8
-#define     V_008DFC_SQ_V_CMPX_F_I64                                0xB0
-#define     V_008DFC_SQ_V_CMPX_LT_I64                               0xB1
-#define     V_008DFC_SQ_V_CMPX_EQ_I64                               0xB2
-#define     V_008DFC_SQ_V_CMPX_LE_I64                               0xB3
-#define     V_008DFC_SQ_V_CMPX_GT_I64                               0xB4
-#define     V_008DFC_SQ_V_CMPX_NE_I64                               0xB5
-#define     V_008DFC_SQ_V_CMPX_GE_I64                               0xB6
-#define     V_008DFC_SQ_V_CMPX_T_I64                                0xB7
-#define     V_008DFC_SQ_V_CMPX_CLASS_F64                            0xB8
-#define     V_008DFC_SQ_V_CMP_F_U32                                 0xC0
-#define     V_008DFC_SQ_V_CMP_LT_U32                                0xC1
-#define     V_008DFC_SQ_V_CMP_EQ_U32                                0xC2
-#define     V_008DFC_SQ_V_CMP_LE_U32                                0xC3
-#define     V_008DFC_SQ_V_CMP_GT_U32                                0xC4
-#define     V_008DFC_SQ_V_CMP_NE_U32                                0xC5
-#define     V_008DFC_SQ_V_CMP_GE_U32                                0xC6
-#define     V_008DFC_SQ_V_CMP_T_U32                                 0xC7
-#define     V_008DFC_SQ_V_CMPX_F_U32                                0xD0
-#define     V_008DFC_SQ_V_CMPX_LT_U32                               0xD1
-#define     V_008DFC_SQ_V_CMPX_EQ_U32                               0xD2
-#define     V_008DFC_SQ_V_CMPX_LE_U32                               0xD3
-#define     V_008DFC_SQ_V_CMPX_GT_U32                               0xD4
-#define     V_008DFC_SQ_V_CMPX_NE_U32                               0xD5
-#define     V_008DFC_SQ_V_CMPX_GE_U32                               0xD6
-#define     V_008DFC_SQ_V_CMPX_T_U32                                0xD7
-#define     V_008DFC_SQ_V_CMP_F_U64                                 0xE0
-#define     V_008DFC_SQ_V_CMP_LT_U64                                0xE1
-#define     V_008DFC_SQ_V_CMP_EQ_U64                                0xE2
-#define     V_008DFC_SQ_V_CMP_LE_U64                                0xE3
-#define     V_008DFC_SQ_V_CMP_GT_U64                                0xE4
-#define     V_008DFC_SQ_V_CMP_NE_U64                                0xE5
-#define     V_008DFC_SQ_V_CMP_GE_U64                                0xE6
-#define     V_008DFC_SQ_V_CMP_T_U64                                 0xE7
-#define     V_008DFC_SQ_V_CMPX_F_U64                                0xF0
-#define     V_008DFC_SQ_V_CMPX_LT_U64                               0xF1
-#define     V_008DFC_SQ_V_CMPX_EQ_U64                               0xF2
-#define     V_008DFC_SQ_V_CMPX_LE_U64                               0xF3
-#define     V_008DFC_SQ_V_CMPX_GT_U64                               0xF4
-#define     V_008DFC_SQ_V_CMPX_NE_U64                               0xF5
-#define     V_008DFC_SQ_V_CMPX_GE_U64                               0xF6
-#define     V_008DFC_SQ_V_CMPX_T_U64                                0xF7
-#define   S_008DFC_ENCODING(x)                                        (((x) & 0x7F) << 25)
-#define   G_008DFC_ENCODING(x)                                        (((x) >> 25) & 0x7F)
-#define   C_008DFC_ENCODING                                           0x01FFFFFF
-#define     V_008DFC_SQ_ENC_VOPC_FIELD                              0x3E
-#define R_008DFC_SQ_SOP1                                                0x008DFC
-#define   S_008DFC_SSRC0(x)                                           (((x) & 0xFF) << 0)
-#define   G_008DFC_SSRC0(x)                                           (((x) >> 0) & 0xFF)
-#define   C_008DFC_SSRC0                                              0xFFFFFF00
-#define     V_008DFC_SQ_SGPR                                        0x00
-/* CIK */
-#define     V_008DFC_SQ_FLAT_SCRATCH_LO                             0x68
-#define     V_008DFC_SQ_FLAT_SCRATCH_HI                             0x69
-/*     */
-#define     V_008DFC_SQ_VCC_LO                                      0x6A
-#define     V_008DFC_SQ_VCC_HI                                      0x6B
-#define     V_008DFC_SQ_TBA_LO                                      0x6C
-#define     V_008DFC_SQ_TBA_HI                                      0x6D
-#define     V_008DFC_SQ_TMA_LO                                      0x6E
-#define     V_008DFC_SQ_TMA_HI                                      0x6F
-#define     V_008DFC_SQ_TTMP0                                       0x70
-#define     V_008DFC_SQ_TTMP1                                       0x71
-#define     V_008DFC_SQ_TTMP2                                       0x72
-#define     V_008DFC_SQ_TTMP3                                       0x73
-#define     V_008DFC_SQ_TTMP4                                       0x74
-#define     V_008DFC_SQ_TTMP5                                       0x75
-#define     V_008DFC_SQ_TTMP6                                       0x76
-#define     V_008DFC_SQ_TTMP7                                       0x77
-#define     V_008DFC_SQ_TTMP8                                       0x78
-#define     V_008DFC_SQ_TTMP9                                       0x79
-#define     V_008DFC_SQ_TTMP10                                      0x7A
-#define     V_008DFC_SQ_TTMP11                                      0x7B
-#define     V_008DFC_SQ_M0                                          0x7C
-#define     V_008DFC_SQ_EXEC_LO                                     0x7E
-#define     V_008DFC_SQ_EXEC_HI                                     0x7F
-#define     V_008DFC_SQ_SRC_0                                       0x80
-#define     V_008DFC_SQ_SRC_1_INT                                   0x81
-#define     V_008DFC_SQ_SRC_2_INT                                   0x82
-#define     V_008DFC_SQ_SRC_3_INT                                   0x83
-#define     V_008DFC_SQ_SRC_4_INT                                   0x84
-#define     V_008DFC_SQ_SRC_5_INT                                   0x85
-#define     V_008DFC_SQ_SRC_6_INT                                   0x86
-#define     V_008DFC_SQ_SRC_7_INT                                   0x87
-#define     V_008DFC_SQ_SRC_8_INT                                   0x88
-#define     V_008DFC_SQ_SRC_9_INT                                   0x89
-#define     V_008DFC_SQ_SRC_10_INT                                  0x8A
-#define     V_008DFC_SQ_SRC_11_INT                                  0x8B
-#define     V_008DFC_SQ_SRC_12_INT                                  0x8C
-#define     V_008DFC_SQ_SRC_13_INT                                  0x8D
-#define     V_008DFC_SQ_SRC_14_INT                                  0x8E
-#define     V_008DFC_SQ_SRC_15_INT                                  0x8F
-#define     V_008DFC_SQ_SRC_16_INT                                  0x90
-#define     V_008DFC_SQ_SRC_17_INT                                  0x91
-#define     V_008DFC_SQ_SRC_18_INT                                  0x92
-#define     V_008DFC_SQ_SRC_19_INT                                  0x93
-#define     V_008DFC_SQ_SRC_20_INT                                  0x94
-#define     V_008DFC_SQ_SRC_21_INT                                  0x95
-#define     V_008DFC_SQ_SRC_22_INT                                  0x96
-#define     V_008DFC_SQ_SRC_23_INT                                  0x97
-#define     V_008DFC_SQ_SRC_24_INT                                  0x98
-#define     V_008DFC_SQ_SRC_25_INT                                  0x99
-#define     V_008DFC_SQ_SRC_26_INT                                  0x9A
-#define     V_008DFC_SQ_SRC_27_INT                                  0x9B
-#define     V_008DFC_SQ_SRC_28_INT                                  0x9C
-#define     V_008DFC_SQ_SRC_29_INT                                  0x9D
-#define     V_008DFC_SQ_SRC_30_INT                                  0x9E
-#define     V_008DFC_SQ_SRC_31_INT                                  0x9F
-#define     V_008DFC_SQ_SRC_32_INT                                  0xA0
-#define     V_008DFC_SQ_SRC_33_INT                                  0xA1
-#define     V_008DFC_SQ_SRC_34_INT                                  0xA2
-#define     V_008DFC_SQ_SRC_35_INT                                  0xA3
-#define     V_008DFC_SQ_SRC_36_INT                                  0xA4
-#define     V_008DFC_SQ_SRC_37_INT                                  0xA5
-#define     V_008DFC_SQ_SRC_38_INT                                  0xA6
-#define     V_008DFC_SQ_SRC_39_INT                                  0xA7
-#define     V_008DFC_SQ_SRC_40_INT                                  0xA8
-#define     V_008DFC_SQ_SRC_41_INT                                  0xA9
-#define     V_008DFC_SQ_SRC_42_INT                                  0xAA
-#define     V_008DFC_SQ_SRC_43_INT                                  0xAB
-#define     V_008DFC_SQ_SRC_44_INT                                  0xAC
-#define     V_008DFC_SQ_SRC_45_INT                                  0xAD
-#define     V_008DFC_SQ_SRC_46_INT                                  0xAE
-#define     V_008DFC_SQ_SRC_47_INT                                  0xAF
-#define     V_008DFC_SQ_SRC_48_INT                                  0xB0
-#define     V_008DFC_SQ_SRC_49_INT                                  0xB1
-#define     V_008DFC_SQ_SRC_50_INT                                  0xB2
-#define     V_008DFC_SQ_SRC_51_INT                                  0xB3
-#define     V_008DFC_SQ_SRC_52_INT                                  0xB4
-#define     V_008DFC_SQ_SRC_53_INT                                  0xB5
-#define     V_008DFC_SQ_SRC_54_INT                                  0xB6
-#define     V_008DFC_SQ_SRC_55_INT                                  0xB7
-#define     V_008DFC_SQ_SRC_56_INT                                  0xB8
-#define     V_008DFC_SQ_SRC_57_INT                                  0xB9
-#define     V_008DFC_SQ_SRC_58_INT                                  0xBA
-#define     V_008DFC_SQ_SRC_59_INT                                  0xBB
-#define     V_008DFC_SQ_SRC_60_INT                                  0xBC
-#define     V_008DFC_SQ_SRC_61_INT                                  0xBD
-#define     V_008DFC_SQ_SRC_62_INT                                  0xBE
-#define     V_008DFC_SQ_SRC_63_INT                                  0xBF
-#define     V_008DFC_SQ_SRC_64_INT                                  0xC0
-#define     V_008DFC_SQ_SRC_M_1_INT                                 0xC1
-#define     V_008DFC_SQ_SRC_M_2_INT                                 0xC2
-#define     V_008DFC_SQ_SRC_M_3_INT                                 0xC3
-#define     V_008DFC_SQ_SRC_M_4_INT                                 0xC4
-#define     V_008DFC_SQ_SRC_M_5_INT                                 0xC5
-#define     V_008DFC_SQ_SRC_M_6_INT                                 0xC6
-#define     V_008DFC_SQ_SRC_M_7_INT                                 0xC7
-#define     V_008DFC_SQ_SRC_M_8_INT                                 0xC8
-#define     V_008DFC_SQ_SRC_M_9_INT                                 0xC9
-#define     V_008DFC_SQ_SRC_M_10_INT                                0xCA
-#define     V_008DFC_SQ_SRC_M_11_INT                                0xCB
-#define     V_008DFC_SQ_SRC_M_12_INT                                0xCC
-#define     V_008DFC_SQ_SRC_M_13_INT                                0xCD
-#define     V_008DFC_SQ_SRC_M_14_INT                                0xCE
-#define     V_008DFC_SQ_SRC_M_15_INT                                0xCF
-#define     V_008DFC_SQ_SRC_M_16_INT                                0xD0
-#define     V_008DFC_SQ_SRC_0_5                                     0xF0
-#define     V_008DFC_SQ_SRC_M_0_5                                   0xF1
-#define     V_008DFC_SQ_SRC_1                                       0xF2
-#define     V_008DFC_SQ_SRC_M_1                                     0xF3
-#define     V_008DFC_SQ_SRC_2                                       0xF4
-#define     V_008DFC_SQ_SRC_M_2                                     0xF5
-#define     V_008DFC_SQ_SRC_4                                       0xF6
-#define     V_008DFC_SQ_SRC_M_4                                     0xF7
-#define     V_008DFC_SQ_SRC_VCCZ                                    0xFB
-#define     V_008DFC_SQ_SRC_EXECZ                                   0xFC
-#define     V_008DFC_SQ_SRC_SCC                                     0xFD
-#define     V_008DFC_SQ_SRC_LDS_DIRECT                              0xFE
-#define   S_008DFC_OP(x)                                              (((x) & 0xFF) << 8)
-#define   G_008DFC_OP(x)                                              (((x) >> 8) & 0xFF)
-#define   C_008DFC_OP                                                 0xFFFF00FF
-#define     V_008DFC_SQ_S_MOV_B32                                   0x03
-#define     V_008DFC_SQ_S_MOV_B64                                   0x04
-#define     V_008DFC_SQ_S_CMOV_B32                                  0x05
-#define     V_008DFC_SQ_S_CMOV_B64                                  0x06
-#define     V_008DFC_SQ_S_NOT_B32                                   0x07
-#define     V_008DFC_SQ_S_NOT_B64                                   0x08
-#define     V_008DFC_SQ_S_WQM_B32                                   0x09
-#define     V_008DFC_SQ_S_WQM_B64                                   0x0A
-#define     V_008DFC_SQ_S_BREV_B32                                  0x0B
-#define     V_008DFC_SQ_S_BREV_B64                                  0x0C
-#define     V_008DFC_SQ_S_BCNT0_I32_B32                             0x0D
-#define     V_008DFC_SQ_S_BCNT0_I32_B64                             0x0E
-#define     V_008DFC_SQ_S_BCNT1_I32_B32                             0x0F
-#define     V_008DFC_SQ_S_BCNT1_I32_B64                             0x10
-#define     V_008DFC_SQ_S_FF0_I32_B32                               0x11
-#define     V_008DFC_SQ_S_FF0_I32_B64                               0x12
-#define     V_008DFC_SQ_S_FF1_I32_B32                               0x13
-#define     V_008DFC_SQ_S_FF1_I32_B64                               0x14
-#define     V_008DFC_SQ_S_FLBIT_I32_B32                             0x15
-#define     V_008DFC_SQ_S_FLBIT_I32_B64                             0x16
-#define     V_008DFC_SQ_S_FLBIT_I32                                 0x17
-#define     V_008DFC_SQ_S_FLBIT_I32_I64                             0x18
-#define     V_008DFC_SQ_S_SEXT_I32_I8                               0x19
-#define     V_008DFC_SQ_S_SEXT_I32_I16                              0x1A
-#define     V_008DFC_SQ_S_BITSET0_B32                               0x1B
-#define     V_008DFC_SQ_S_BITSET0_B64                               0x1C
-#define     V_008DFC_SQ_S_BITSET1_B32                               0x1D
-#define     V_008DFC_SQ_S_BITSET1_B64                               0x1E
-#define     V_008DFC_SQ_S_GETPC_B64                                 0x1F
-#define     V_008DFC_SQ_S_SETPC_B64                                 0x20
-#define     V_008DFC_SQ_S_SWAPPC_B64                                0x21
-#define     V_008DFC_SQ_S_RFE_B64                                   0x22
-#define     V_008DFC_SQ_S_AND_SAVEEXEC_B64                          0x24
-#define     V_008DFC_SQ_S_OR_SAVEEXEC_B64                           0x25
-#define     V_008DFC_SQ_S_XOR_SAVEEXEC_B64                          0x26
-#define     V_008DFC_SQ_S_ANDN2_SAVEEXEC_B64                        0x27
-#define     V_008DFC_SQ_S_ORN2_SAVEEXEC_B64                         0x28
-#define     V_008DFC_SQ_S_NAND_SAVEEXEC_B64                         0x29
-#define     V_008DFC_SQ_S_NOR_SAVEEXEC_B64                          0x2A
-#define     V_008DFC_SQ_S_XNOR_SAVEEXEC_B64                         0x2B
-#define     V_008DFC_SQ_S_QUADMASK_B32                              0x2C
-#define     V_008DFC_SQ_S_QUADMASK_B64                              0x2D
-#define     V_008DFC_SQ_S_MOVRELS_B32                               0x2E
-#define     V_008DFC_SQ_S_MOVRELS_B64                               0x2F
-#define     V_008DFC_SQ_S_MOVRELD_B32                               0x30
-#define     V_008DFC_SQ_S_MOVRELD_B64                               0x31
-#define     V_008DFC_SQ_S_CBRANCH_JOIN                              0x32
-#define     V_008DFC_SQ_S_MOV_REGRD_B32                             0x33
-#define     V_008DFC_SQ_S_ABS_I32                                   0x34
-#define     V_008DFC_SQ_S_MOV_FED_B32                               0x35
-#define   S_008DFC_SDST(x)                                            (((x) & 0x7F) << 16)
-#define   G_008DFC_SDST(x)                                            (((x) >> 16) & 0x7F)
-#define   C_008DFC_SDST                                               0xFF80FFFF
-#define     V_008DFC_SQ_SGPR                                        0x00
-/* CIK */
-#define     V_008DFC_SQ_FLAT_SCRATCH_LO                             0x68
-#define     V_008DFC_SQ_FLAT_SCRATCH_HI                             0x69
-/*     */
-#define     V_008DFC_SQ_VCC_LO                                      0x6A
-#define     V_008DFC_SQ_VCC_HI                                      0x6B
-#define     V_008DFC_SQ_TBA_LO                                      0x6C
-#define     V_008DFC_SQ_TBA_HI                                      0x6D
-#define     V_008DFC_SQ_TMA_LO                                      0x6E
-#define     V_008DFC_SQ_TMA_HI                                      0x6F
-#define     V_008DFC_SQ_TTMP0                                       0x70
-#define     V_008DFC_SQ_TTMP1                                       0x71
-#define     V_008DFC_SQ_TTMP2                                       0x72
-#define     V_008DFC_SQ_TTMP3                                       0x73
-#define     V_008DFC_SQ_TTMP4                                       0x74
-#define     V_008DFC_SQ_TTMP5                                       0x75
-#define     V_008DFC_SQ_TTMP6                                       0x76
-#define     V_008DFC_SQ_TTMP7                                       0x77
-#define     V_008DFC_SQ_TTMP8                                       0x78
-#define     V_008DFC_SQ_TTMP9                                       0x79
-#define     V_008DFC_SQ_TTMP10                                      0x7A
-#define     V_008DFC_SQ_TTMP11                                      0x7B
-#define     V_008DFC_SQ_M0                                          0x7C
-#define     V_008DFC_SQ_EXEC_LO                                     0x7E
-#define     V_008DFC_SQ_EXEC_HI                                     0x7F
-#define   S_008DFC_ENCODING(x)                                        (((x) & 0x1FF) << 23)
-#define   G_008DFC_ENCODING(x)                                        (((x) >> 23) & 0x1FF)
-#define   C_008DFC_ENCODING                                           0x007FFFFF
-#define     V_008DFC_SQ_ENC_SOP1_FIELD                              0x17D
-#define R_008DFC_SQ_MTBUF_1                                             0x008DFC
-#define   S_008DFC_VADDR(x)                                           (((x) & 0xFF) << 0)
-#define   G_008DFC_VADDR(x)                                           (((x) >> 0) & 0xFF)
-#define   C_008DFC_VADDR                                              0xFFFFFF00
-#define     V_008DFC_SQ_VGPR                                        0x00
-#define   S_008DFC_VDATA(x)                                           (((x) & 0xFF) << 8)
-#define   G_008DFC_VDATA(x)                                           (((x) >> 8) & 0xFF)
-#define   C_008DFC_VDATA                                              0xFFFF00FF
-#define     V_008DFC_SQ_VGPR                                        0x00
-#define   S_008DFC_SRSRC(x)                                           (((x) & 0x1F) << 16)
-#define   G_008DFC_SRSRC(x)                                           (((x) >> 16) & 0x1F)
-#define   C_008DFC_SRSRC                                              0xFFE0FFFF
-#define   S_008DFC_SLC(x)                                             (((x) & 0x1) << 22)
-#define   G_008DFC_SLC(x)                                             (((x) >> 22) & 0x1)
-#define   C_008DFC_SLC                                                0xFFBFFFFF
-#define   S_008DFC_TFE(x)                                             (((x) & 0x1) << 23)
-#define   G_008DFC_TFE(x)                                             (((x) >> 23) & 0x1)
-#define   C_008DFC_TFE                                                0xFF7FFFFF
-#define   S_008DFC_SOFFSET(x)                                         (((x) & 0xFF) << 24)
-#define   G_008DFC_SOFFSET(x)                                         (((x) >> 24) & 0xFF)
-#define   C_008DFC_SOFFSET                                            0x00FFFFFF
-#define     V_008DFC_SQ_SGPR                                        0x00
-/* CIK */
-#define     V_008DFC_SQ_FLAT_SCRATCH_LO                             0x68
-#define     V_008DFC_SQ_FLAT_SCRATCH_HI                             0x69
-/*     */
-#define     V_008DFC_SQ_VCC_LO                                      0x6A
-#define     V_008DFC_SQ_VCC_HI                                      0x6B
-#define     V_008DFC_SQ_TBA_LO                                      0x6C
-#define     V_008DFC_SQ_TBA_HI                                      0x6D
-#define     V_008DFC_SQ_TMA_LO                                      0x6E
-#define     V_008DFC_SQ_TMA_HI                                      0x6F
-#define     V_008DFC_SQ_TTMP0                                       0x70
-#define     V_008DFC_SQ_TTMP1                                       0x71
-#define     V_008DFC_SQ_TTMP2                                       0x72
-#define     V_008DFC_SQ_TTMP3                                       0x73
-#define     V_008DFC_SQ_TTMP4                                       0x74
-#define     V_008DFC_SQ_TTMP5                                       0x75
-#define     V_008DFC_SQ_TTMP6                                       0x76
-#define     V_008DFC_SQ_TTMP7                                       0x77
-#define     V_008DFC_SQ_TTMP8                                       0x78
-#define     V_008DFC_SQ_TTMP9                                       0x79
-#define     V_008DFC_SQ_TTMP10                                      0x7A
-#define     V_008DFC_SQ_TTMP11                                      0x7B
-#define     V_008DFC_SQ_M0                                          0x7C
-#define     V_008DFC_SQ_EXEC_LO                                     0x7E
-#define     V_008DFC_SQ_EXEC_HI                                     0x7F
-#define     V_008DFC_SQ_SRC_0                                       0x80
-#define     V_008DFC_SQ_SRC_1_INT                                   0x81
-#define     V_008DFC_SQ_SRC_2_INT                                   0x82
-#define     V_008DFC_SQ_SRC_3_INT                                   0x83
-#define     V_008DFC_SQ_SRC_4_INT                                   0x84
-#define     V_008DFC_SQ_SRC_5_INT                                   0x85
-#define     V_008DFC_SQ_SRC_6_INT                                   0x86
-#define     V_008DFC_SQ_SRC_7_INT                                   0x87
-#define     V_008DFC_SQ_SRC_8_INT                                   0x88
-#define     V_008DFC_SQ_SRC_9_INT                                   0x89
-#define     V_008DFC_SQ_SRC_10_INT                                  0x8A
-#define     V_008DFC_SQ_SRC_11_INT                                  0x8B
-#define     V_008DFC_SQ_SRC_12_INT                                  0x8C
-#define     V_008DFC_SQ_SRC_13_INT                                  0x8D
-#define     V_008DFC_SQ_SRC_14_INT                                  0x8E
-#define     V_008DFC_SQ_SRC_15_INT                                  0x8F
-#define     V_008DFC_SQ_SRC_16_INT                                  0x90
-#define     V_008DFC_SQ_SRC_17_INT                                  0x91
-#define     V_008DFC_SQ_SRC_18_INT                                  0x92
-#define     V_008DFC_SQ_SRC_19_INT                                  0x93
-#define     V_008DFC_SQ_SRC_20_INT                                  0x94
-#define     V_008DFC_SQ_SRC_21_INT                                  0x95
-#define     V_008DFC_SQ_SRC_22_INT                                  0x96
-#define     V_008DFC_SQ_SRC_23_INT                                  0x97
-#define     V_008DFC_SQ_SRC_24_INT                                  0x98
-#define     V_008DFC_SQ_SRC_25_INT                                  0x99
-#define     V_008DFC_SQ_SRC_26_INT                                  0x9A
-#define     V_008DFC_SQ_SRC_27_INT                                  0x9B
-#define     V_008DFC_SQ_SRC_28_INT                                  0x9C
-#define     V_008DFC_SQ_SRC_29_INT                                  0x9D
-#define     V_008DFC_SQ_SRC_30_INT                                  0x9E
-#define     V_008DFC_SQ_SRC_31_INT                                  0x9F
-#define     V_008DFC_SQ_SRC_32_INT                                  0xA0
-#define     V_008DFC_SQ_SRC_33_INT                                  0xA1
-#define     V_008DFC_SQ_SRC_34_INT                                  0xA2
-#define     V_008DFC_SQ_SRC_35_INT                                  0xA3
-#define     V_008DFC_SQ_SRC_36_INT                                  0xA4
-#define     V_008DFC_SQ_SRC_37_INT                                  0xA5
-#define     V_008DFC_SQ_SRC_38_INT                                  0xA6
-#define     V_008DFC_SQ_SRC_39_INT                                  0xA7
-#define     V_008DFC_SQ_SRC_40_INT                                  0xA8
-#define     V_008DFC_SQ_SRC_41_INT                                  0xA9
-#define     V_008DFC_SQ_SRC_42_INT                                  0xAA
-#define     V_008DFC_SQ_SRC_43_INT                                  0xAB
-#define     V_008DFC_SQ_SRC_44_INT                                  0xAC
-#define     V_008DFC_SQ_SRC_45_INT                                  0xAD
-#define     V_008DFC_SQ_SRC_46_INT                                  0xAE
-#define     V_008DFC_SQ_SRC_47_INT                                  0xAF
-#define     V_008DFC_SQ_SRC_48_INT                                  0xB0
-#define     V_008DFC_SQ_SRC_49_INT                                  0xB1
-#define     V_008DFC_SQ_SRC_50_INT                                  0xB2
-#define     V_008DFC_SQ_SRC_51_INT                                  0xB3
-#define     V_008DFC_SQ_SRC_52_INT                                  0xB4
-#define     V_008DFC_SQ_SRC_53_INT                                  0xB5
-#define     V_008DFC_SQ_SRC_54_INT                                  0xB6
-#define     V_008DFC_SQ_SRC_55_INT                                  0xB7
-#define     V_008DFC_SQ_SRC_56_INT                                  0xB8
-#define     V_008DFC_SQ_SRC_57_INT                                  0xB9
-#define     V_008DFC_SQ_SRC_58_INT                                  0xBA
-#define     V_008DFC_SQ_SRC_59_INT                                  0xBB
-#define     V_008DFC_SQ_SRC_60_INT                                  0xBC
-#define     V_008DFC_SQ_SRC_61_INT                                  0xBD
-#define     V_008DFC_SQ_SRC_62_INT                                  0xBE
-#define     V_008DFC_SQ_SRC_63_INT                                  0xBF
-#define     V_008DFC_SQ_SRC_64_INT                                  0xC0
-#define     V_008DFC_SQ_SRC_M_1_INT                                 0xC1
-#define     V_008DFC_SQ_SRC_M_2_INT                                 0xC2
-#define     V_008DFC_SQ_SRC_M_3_INT                                 0xC3
-#define     V_008DFC_SQ_SRC_M_4_INT                                 0xC4
-#define     V_008DFC_SQ_SRC_M_5_INT                                 0xC5
-#define     V_008DFC_SQ_SRC_M_6_INT                                 0xC6
-#define     V_008DFC_SQ_SRC_M_7_INT                                 0xC7
-#define     V_008DFC_SQ_SRC_M_8_INT                                 0xC8
-#define     V_008DFC_SQ_SRC_M_9_INT                                 0xC9
-#define     V_008DFC_SQ_SRC_M_10_INT                                0xCA
-#define     V_008DFC_SQ_SRC_M_11_INT                                0xCB
-#define     V_008DFC_SQ_SRC_M_12_INT                                0xCC
-#define     V_008DFC_SQ_SRC_M_13_INT                                0xCD
-#define     V_008DFC_SQ_SRC_M_14_INT                                0xCE
-#define     V_008DFC_SQ_SRC_M_15_INT                                0xCF
-#define     V_008DFC_SQ_SRC_M_16_INT                                0xD0
-#define     V_008DFC_SQ_SRC_0_5                                     0xF0
-#define     V_008DFC_SQ_SRC_M_0_5                                   0xF1
-#define     V_008DFC_SQ_SRC_1                                       0xF2
-#define     V_008DFC_SQ_SRC_M_1                                     0xF3
-#define     V_008DFC_SQ_SRC_2                                       0xF4
-#define     V_008DFC_SQ_SRC_M_2                                     0xF5
-#define     V_008DFC_SQ_SRC_4                                       0xF6
-#define     V_008DFC_SQ_SRC_M_4                                     0xF7
-#define     V_008DFC_SQ_SRC_VCCZ                                    0xFB
-#define     V_008DFC_SQ_SRC_EXECZ                                   0xFC
-#define     V_008DFC_SQ_SRC_SCC                                     0xFD
-#define     V_008DFC_SQ_SRC_LDS_DIRECT                              0xFE
-#define R_008DFC_SQ_SOP2                                                0x008DFC
-#define   S_008DFC_SSRC0(x)                                           (((x) & 0xFF) << 0)
-#define   G_008DFC_SSRC0(x)                                           (((x) >> 0) & 0xFF)
-#define   C_008DFC_SSRC0                                              0xFFFFFF00
-#define     V_008DFC_SQ_SGPR                                        0x00
-/* CIK */
-#define     V_008DFC_SQ_FLAT_SCRATCH_LO                             0x68
-#define     V_008DFC_SQ_FLAT_SCRATCH_HI                             0x69
-/*     */
-#define     V_008DFC_SQ_VCC_LO                                      0x6A
-#define     V_008DFC_SQ_VCC_HI                                      0x6B
-#define     V_008DFC_SQ_TBA_LO                                      0x6C
-#define     V_008DFC_SQ_TBA_HI                                      0x6D
-#define     V_008DFC_SQ_TMA_LO                                      0x6E
-#define     V_008DFC_SQ_TMA_HI                                      0x6F
-#define     V_008DFC_SQ_TTMP0                                       0x70
-#define     V_008DFC_SQ_TTMP1                                       0x71
-#define     V_008DFC_SQ_TTMP2                                       0x72
-#define     V_008DFC_SQ_TTMP3                                       0x73
-#define     V_008DFC_SQ_TTMP4                                       0x74
-#define     V_008DFC_SQ_TTMP5                                       0x75
-#define     V_008DFC_SQ_TTMP6                                       0x76
-#define     V_008DFC_SQ_TTMP7                                       0x77
-#define     V_008DFC_SQ_TTMP8                                       0x78
-#define     V_008DFC_SQ_TTMP9                                       0x79
-#define     V_008DFC_SQ_TTMP10                                      0x7A
-#define     V_008DFC_SQ_TTMP11                                      0x7B
-#define     V_008DFC_SQ_M0                                          0x7C
-#define     V_008DFC_SQ_EXEC_LO                                     0x7E
-#define     V_008DFC_SQ_EXEC_HI                                     0x7F
-#define     V_008DFC_SQ_SRC_0                                       0x80
-#define     V_008DFC_SQ_SRC_1_INT                                   0x81
-#define     V_008DFC_SQ_SRC_2_INT                                   0x82
-#define     V_008DFC_SQ_SRC_3_INT                                   0x83
-#define     V_008DFC_SQ_SRC_4_INT                                   0x84
-#define     V_008DFC_SQ_SRC_5_INT                                   0x85
-#define     V_008DFC_SQ_SRC_6_INT                                   0x86
-#define     V_008DFC_SQ_SRC_7_INT                                   0x87
-#define     V_008DFC_SQ_SRC_8_INT                                   0x88
-#define     V_008DFC_SQ_SRC_9_INT                                   0x89
-#define     V_008DFC_SQ_SRC_10_INT                                  0x8A
-#define     V_008DFC_SQ_SRC_11_INT                                  0x8B
-#define     V_008DFC_SQ_SRC_12_INT                                  0x8C
-#define     V_008DFC_SQ_SRC_13_INT                                  0x8D
-#define     V_008DFC_SQ_SRC_14_INT                                  0x8E
-#define     V_008DFC_SQ_SRC_15_INT                                  0x8F
-#define     V_008DFC_SQ_SRC_16_INT                                  0x90
-#define     V_008DFC_SQ_SRC_17_INT                                  0x91
-#define     V_008DFC_SQ_SRC_18_INT                                  0x92
-#define     V_008DFC_SQ_SRC_19_INT                                  0x93
-#define     V_008DFC_SQ_SRC_20_INT                                  0x94
-#define     V_008DFC_SQ_SRC_21_INT                                  0x95
-#define     V_008DFC_SQ_SRC_22_INT                                  0x96
-#define     V_008DFC_SQ_SRC_23_INT                                  0x97
-#define     V_008DFC_SQ_SRC_24_INT                                  0x98
-#define     V_008DFC_SQ_SRC_25_INT                                  0x99
-#define     V_008DFC_SQ_SRC_26_INT                                  0x9A
-#define     V_008DFC_SQ_SRC_27_INT                                  0x9B
-#define     V_008DFC_SQ_SRC_28_INT                                  0x9C
-#define     V_008DFC_SQ_SRC_29_INT                                  0x9D
-#define     V_008DFC_SQ_SRC_30_INT                                  0x9E
-#define     V_008DFC_SQ_SRC_31_INT                                  0x9F
-#define     V_008DFC_SQ_SRC_32_INT                                  0xA0
-#define     V_008DFC_SQ_SRC_33_INT                                  0xA1
-#define     V_008DFC_SQ_SRC_34_INT                                  0xA2
-#define     V_008DFC_SQ_SRC_35_INT                                  0xA3
-#define     V_008DFC_SQ_SRC_36_INT                                  0xA4
-#define     V_008DFC_SQ_SRC_37_INT                                  0xA5
-#define     V_008DFC_SQ_SRC_38_INT                                  0xA6
-#define     V_008DFC_SQ_SRC_39_INT                                  0xA7
-#define     V_008DFC_SQ_SRC_40_INT                                  0xA8
-#define     V_008DFC_SQ_SRC_41_INT                                  0xA9
-#define     V_008DFC_SQ_SRC_42_INT                                  0xAA
-#define     V_008DFC_SQ_SRC_43_INT                                  0xAB
-#define     V_008DFC_SQ_SRC_44_INT                                  0xAC
-#define     V_008DFC_SQ_SRC_45_INT                                  0xAD
-#define     V_008DFC_SQ_SRC_46_INT                                  0xAE
-#define     V_008DFC_SQ_SRC_47_INT                                  0xAF
-#define     V_008DFC_SQ_SRC_48_INT                                  0xB0
-#define     V_008DFC_SQ_SRC_49_INT                                  0xB1
-#define     V_008DFC_SQ_SRC_50_INT                                  0xB2
-#define     V_008DFC_SQ_SRC_51_INT                                  0xB3
-#define     V_008DFC_SQ_SRC_52_INT                                  0xB4
-#define     V_008DFC_SQ_SRC_53_INT                                  0xB5
-#define     V_008DFC_SQ_SRC_54_INT                                  0xB6
-#define     V_008DFC_SQ_SRC_55_INT                                  0xB7
-#define     V_008DFC_SQ_SRC_56_INT                                  0xB8
-#define     V_008DFC_SQ_SRC_57_INT                                  0xB9
-#define     V_008DFC_SQ_SRC_58_INT                                  0xBA
-#define     V_008DFC_SQ_SRC_59_INT                                  0xBB
-#define     V_008DFC_SQ_SRC_60_INT                                  0xBC
-#define     V_008DFC_SQ_SRC_61_INT                                  0xBD
-#define     V_008DFC_SQ_SRC_62_INT                                  0xBE
-#define     V_008DFC_SQ_SRC_63_INT                                  0xBF
-#define     V_008DFC_SQ_SRC_64_INT                                  0xC0
-#define     V_008DFC_SQ_SRC_M_1_INT                                 0xC1
-#define     V_008DFC_SQ_SRC_M_2_INT                                 0xC2
-#define     V_008DFC_SQ_SRC_M_3_INT                                 0xC3
-#define     V_008DFC_SQ_SRC_M_4_INT                                 0xC4
-#define     V_008DFC_SQ_SRC_M_5_INT                                 0xC5
-#define     V_008DFC_SQ_SRC_M_6_INT                                 0xC6
-#define     V_008DFC_SQ_SRC_M_7_INT                                 0xC7
-#define     V_008DFC_SQ_SRC_M_8_INT                                 0xC8
-#define     V_008DFC_SQ_SRC_M_9_INT                                 0xC9
-#define     V_008DFC_SQ_SRC_M_10_INT                                0xCA
-#define     V_008DFC_SQ_SRC_M_11_INT                                0xCB
-#define     V_008DFC_SQ_SRC_M_12_INT                                0xCC
-#define     V_008DFC_SQ_SRC_M_13_INT                                0xCD
-#define     V_008DFC_SQ_SRC_M_14_INT                                0xCE
-#define     V_008DFC_SQ_SRC_M_15_INT                                0xCF
-#define     V_008DFC_SQ_SRC_M_16_INT                                0xD0
-#define     V_008DFC_SQ_SRC_0_5                                     0xF0
-#define     V_008DFC_SQ_SRC_M_0_5                                   0xF1
-#define     V_008DFC_SQ_SRC_1                                       0xF2
-#define     V_008DFC_SQ_SRC_M_1                                     0xF3
-#define     V_008DFC_SQ_SRC_2                                       0xF4
-#define     V_008DFC_SQ_SRC_M_2                                     0xF5
-#define     V_008DFC_SQ_SRC_4                                       0xF6
-#define     V_008DFC_SQ_SRC_M_4                                     0xF7
-#define     V_008DFC_SQ_SRC_VCCZ                                    0xFB
-#define     V_008DFC_SQ_SRC_EXECZ                                   0xFC
-#define     V_008DFC_SQ_SRC_SCC                                     0xFD
-#define     V_008DFC_SQ_SRC_LDS_DIRECT                              0xFE
-#define   S_008DFC_SSRC1(x)                                           (((x) & 0xFF) << 8)
-#define   G_008DFC_SSRC1(x)                                           (((x) >> 8) & 0xFF)
-#define   C_008DFC_SSRC1                                              0xFFFF00FF
-#define     V_008DFC_SQ_SGPR                                        0x00
-/* CIK */
-#define     V_008DFC_SQ_FLAT_SCRATCH_LO                             0x68
-#define     V_008DFC_SQ_FLAT_SCRATCH_HI                             0x69
-/*     */
-#define     V_008DFC_SQ_VCC_LO                                      0x6A
-#define     V_008DFC_SQ_VCC_HI                                      0x6B
-#define     V_008DFC_SQ_TBA_LO                                      0x6C
-#define     V_008DFC_SQ_TBA_HI                                      0x6D
-#define     V_008DFC_SQ_TMA_LO                                      0x6E
-#define     V_008DFC_SQ_TMA_HI                                      0x6F
-#define     V_008DFC_SQ_TTMP0                                       0x70
-#define     V_008DFC_SQ_TTMP1                                       0x71
-#define     V_008DFC_SQ_TTMP2                                       0x72
-#define     V_008DFC_SQ_TTMP3                                       0x73
-#define     V_008DFC_SQ_TTMP4                                       0x74
-#define     V_008DFC_SQ_TTMP5                                       0x75
-#define     V_008DFC_SQ_TTMP6                                       0x76
-#define     V_008DFC_SQ_TTMP7                                       0x77
-#define     V_008DFC_SQ_TTMP8                                       0x78
-#define     V_008DFC_SQ_TTMP9                                       0x79
-#define     V_008DFC_SQ_TTMP10                                      0x7A
-#define     V_008DFC_SQ_TTMP11                                      0x7B
-#define     V_008DFC_SQ_M0                                          0x7C
-#define     V_008DFC_SQ_EXEC_LO                                     0x7E
-#define     V_008DFC_SQ_EXEC_HI                                     0x7F
-#define     V_008DFC_SQ_SRC_0                                       0x80
-#define     V_008DFC_SQ_SRC_1_INT                                   0x81
-#define     V_008DFC_SQ_SRC_2_INT                                   0x82
-#define     V_008DFC_SQ_SRC_3_INT                                   0x83
-#define     V_008DFC_SQ_SRC_4_INT                                   0x84
-#define     V_008DFC_SQ_SRC_5_INT                                   0x85
-#define     V_008DFC_SQ_SRC_6_INT                                   0x86
-#define     V_008DFC_SQ_SRC_7_INT                                   0x87
-#define     V_008DFC_SQ_SRC_8_INT                                   0x88
-#define     V_008DFC_SQ_SRC_9_INT                                   0x89
-#define     V_008DFC_SQ_SRC_10_INT                                  0x8A
-#define     V_008DFC_SQ_SRC_11_INT                                  0x8B
-#define     V_008DFC_SQ_SRC_12_INT                                  0x8C
-#define     V_008DFC_SQ_SRC_13_INT                                  0x8D
-#define     V_008DFC_SQ_SRC_14_INT                                  0x8E
-#define     V_008DFC_SQ_SRC_15_INT                                  0x8F
-#define     V_008DFC_SQ_SRC_16_INT                                  0x90
-#define     V_008DFC_SQ_SRC_17_INT                                  0x91
-#define     V_008DFC_SQ_SRC_18_INT                                  0x92
-#define     V_008DFC_SQ_SRC_19_INT                                  0x93
-#define     V_008DFC_SQ_SRC_20_INT                                  0x94
-#define     V_008DFC_SQ_SRC_21_INT                                  0x95
-#define     V_008DFC_SQ_SRC_22_INT                                  0x96
-#define     V_008DFC_SQ_SRC_23_INT                                  0x97
-#define     V_008DFC_SQ_SRC_24_INT                                  0x98
-#define     V_008DFC_SQ_SRC_25_INT                                  0x99
-#define     V_008DFC_SQ_SRC_26_INT                                  0x9A
-#define     V_008DFC_SQ_SRC_27_INT                                  0x9B
-#define     V_008DFC_SQ_SRC_28_INT                                  0x9C
-#define     V_008DFC_SQ_SRC_29_INT                                  0x9D
-#define     V_008DFC_SQ_SRC_30_INT                                  0x9E
-#define     V_008DFC_SQ_SRC_31_INT                                  0x9F
-#define     V_008DFC_SQ_SRC_32_INT                                  0xA0
-#define     V_008DFC_SQ_SRC_33_INT                                  0xA1
-#define     V_008DFC_SQ_SRC_34_INT                                  0xA2
-#define     V_008DFC_SQ_SRC_35_INT                                  0xA3
-#define     V_008DFC_SQ_SRC_36_INT                                  0xA4
-#define     V_008DFC_SQ_SRC_37_INT                                  0xA5
-#define     V_008DFC_SQ_SRC_38_INT                                  0xA6
-#define     V_008DFC_SQ_SRC_39_INT                                  0xA7
-#define     V_008DFC_SQ_SRC_40_INT                                  0xA8
-#define     V_008DFC_SQ_SRC_41_INT                                  0xA9
-#define     V_008DFC_SQ_SRC_42_INT                                  0xAA
-#define     V_008DFC_SQ_SRC_43_INT                                  0xAB
-#define     V_008DFC_SQ_SRC_44_INT                                  0xAC
-#define     V_008DFC_SQ_SRC_45_INT                                  0xAD
-#define     V_008DFC_SQ_SRC_46_INT                                  0xAE
-#define     V_008DFC_SQ_SRC_47_INT                                  0xAF
-#define     V_008DFC_SQ_SRC_48_INT                                  0xB0
-#define     V_008DFC_SQ_SRC_49_INT                                  0xB1
-#define     V_008DFC_SQ_SRC_50_INT                                  0xB2
-#define     V_008DFC_SQ_SRC_51_INT                                  0xB3
-#define     V_008DFC_SQ_SRC_52_INT                                  0xB4
-#define     V_008DFC_SQ_SRC_53_INT                                  0xB5
-#define     V_008DFC_SQ_SRC_54_INT                                  0xB6
-#define     V_008DFC_SQ_SRC_55_INT                                  0xB7
-#define     V_008DFC_SQ_SRC_56_INT                                  0xB8
-#define     V_008DFC_SQ_SRC_57_INT                                  0xB9
-#define     V_008DFC_SQ_SRC_58_INT                                  0xBA
-#define     V_008DFC_SQ_SRC_59_INT                                  0xBB
-#define     V_008DFC_SQ_SRC_60_INT                                  0xBC
-#define     V_008DFC_SQ_SRC_61_INT                                  0xBD
-#define     V_008DFC_SQ_SRC_62_INT                                  0xBE
-#define     V_008DFC_SQ_SRC_63_INT                                  0xBF
-#define     V_008DFC_SQ_SRC_64_INT                                  0xC0
-#define     V_008DFC_SQ_SRC_M_1_INT                                 0xC1
-#define     V_008DFC_SQ_SRC_M_2_INT                                 0xC2
-#define     V_008DFC_SQ_SRC_M_3_INT                                 0xC3
-#define     V_008DFC_SQ_SRC_M_4_INT                                 0xC4
-#define     V_008DFC_SQ_SRC_M_5_INT                                 0xC5
-#define     V_008DFC_SQ_SRC_M_6_INT                                 0xC6
-#define     V_008DFC_SQ_SRC_M_7_INT                                 0xC7
-#define     V_008DFC_SQ_SRC_M_8_INT                                 0xC8
-#define     V_008DFC_SQ_SRC_M_9_INT                                 0xC9
-#define     V_008DFC_SQ_SRC_M_10_INT                                0xCA
-#define     V_008DFC_SQ_SRC_M_11_INT                                0xCB
-#define     V_008DFC_SQ_SRC_M_12_INT                                0xCC
-#define     V_008DFC_SQ_SRC_M_13_INT                                0xCD
-#define     V_008DFC_SQ_SRC_M_14_INT                                0xCE
-#define     V_008DFC_SQ_SRC_M_15_INT                                0xCF
-#define     V_008DFC_SQ_SRC_M_16_INT                                0xD0
-#define     V_008DFC_SQ_SRC_0_5                                     0xF0
-#define     V_008DFC_SQ_SRC_M_0_5                                   0xF1
-#define     V_008DFC_SQ_SRC_1                                       0xF2
-#define     V_008DFC_SQ_SRC_M_1                                     0xF3
-#define     V_008DFC_SQ_SRC_2                                       0xF4
-#define     V_008DFC_SQ_SRC_M_2                                     0xF5
-#define     V_008DFC_SQ_SRC_4                                       0xF6
-#define     V_008DFC_SQ_SRC_M_4                                     0xF7
-#define     V_008DFC_SQ_SRC_VCCZ                                    0xFB
-#define     V_008DFC_SQ_SRC_EXECZ                                   0xFC
-#define     V_008DFC_SQ_SRC_SCC                                     0xFD
-#define     V_008DFC_SQ_SRC_LDS_DIRECT                              0xFE
-#define   S_008DFC_SDST(x)                                            (((x) & 0x7F) << 16)
-#define   G_008DFC_SDST(x)                                            (((x) >> 16) & 0x7F)
-#define   C_008DFC_SDST                                               0xFF80FFFF
-#define     V_008DFC_SQ_SGPR                                        0x00
-/* CIK */
-#define     V_008DFC_SQ_FLAT_SCRATCH_LO                             0x68
-#define     V_008DFC_SQ_FLAT_SCRATCH_HI                             0x69
-/*     */
-#define     V_008DFC_SQ_VCC_LO                                      0x6A
-#define     V_008DFC_SQ_VCC_HI                                      0x6B
-#define     V_008DFC_SQ_TBA_LO                                      0x6C
-#define     V_008DFC_SQ_TBA_HI                                      0x6D
-#define     V_008DFC_SQ_TMA_LO                                      0x6E
-#define     V_008DFC_SQ_TMA_HI                                      0x6F
-#define     V_008DFC_SQ_TTMP0                                       0x70
-#define     V_008DFC_SQ_TTMP1                                       0x71
-#define     V_008DFC_SQ_TTMP2                                       0x72
-#define     V_008DFC_SQ_TTMP3                                       0x73
-#define     V_008DFC_SQ_TTMP4                                       0x74
-#define     V_008DFC_SQ_TTMP5                                       0x75
-#define     V_008DFC_SQ_TTMP6                                       0x76
-#define     V_008DFC_SQ_TTMP7                                       0x77
-#define     V_008DFC_SQ_TTMP8                                       0x78
-#define     V_008DFC_SQ_TTMP9                                       0x79
-#define     V_008DFC_SQ_TTMP10                                      0x7A
-#define     V_008DFC_SQ_TTMP11                                      0x7B
-#define     V_008DFC_SQ_M0                                          0x7C
-#define     V_008DFC_SQ_EXEC_LO                                     0x7E
-#define     V_008DFC_SQ_EXEC_HI                                     0x7F
-#define   S_008DFC_OP(x)                                              (((x) & 0x7F) << 23)
-#define   G_008DFC_OP(x)                                              (((x) >> 23) & 0x7F)
-#define   C_008DFC_OP                                                 0xC07FFFFF
-#define     V_008DFC_SQ_S_ADD_U32                                   0x00
-#define     V_008DFC_SQ_S_SUB_U32                                   0x01
-#define     V_008DFC_SQ_S_ADD_I32                                   0x02
-#define     V_008DFC_SQ_S_SUB_I32                                   0x03
-#define     V_008DFC_SQ_S_ADDC_U32                                  0x04
-#define     V_008DFC_SQ_S_SUBB_U32                                  0x05
-#define     V_008DFC_SQ_S_MIN_I32                                   0x06
-#define     V_008DFC_SQ_S_MIN_U32                                   0x07
-#define     V_008DFC_SQ_S_MAX_I32                                   0x08
-#define     V_008DFC_SQ_S_MAX_U32                                   0x09
-#define     V_008DFC_SQ_S_CSELECT_B32                               0x0A
-#define     V_008DFC_SQ_S_CSELECT_B64                               0x0B
-#define     V_008DFC_SQ_S_AND_B32                                   0x0E
-#define     V_008DFC_SQ_S_AND_B64                                   0x0F
-#define     V_008DFC_SQ_S_OR_B32                                    0x10
-#define     V_008DFC_SQ_S_OR_B64                                    0x11
-#define     V_008DFC_SQ_S_XOR_B32                                   0x12
-#define     V_008DFC_SQ_S_XOR_B64                                   0x13
-#define     V_008DFC_SQ_S_ANDN2_B32                                 0x14
-#define     V_008DFC_SQ_S_ANDN2_B64                                 0x15
-#define     V_008DFC_SQ_S_ORN2_B32                                  0x16
-#define     V_008DFC_SQ_S_ORN2_B64                                  0x17
-#define     V_008DFC_SQ_S_NAND_B32                                  0x18
-#define     V_008DFC_SQ_S_NAND_B64                                  0x19
-#define     V_008DFC_SQ_S_NOR_B32                                   0x1A
-#define     V_008DFC_SQ_S_NOR_B64                                   0x1B
-#define     V_008DFC_SQ_S_XNOR_B32                                  0x1C
-#define     V_008DFC_SQ_S_XNOR_B64                                  0x1D
-#define     V_008DFC_SQ_S_LSHL_B32                                  0x1E
-#define     V_008DFC_SQ_S_LSHL_B64                                  0x1F
-#define     V_008DFC_SQ_S_LSHR_B32                                  0x20
-#define     V_008DFC_SQ_S_LSHR_B64                                  0x21
-#define     V_008DFC_SQ_S_ASHR_I32                                  0x22
-#define     V_008DFC_SQ_S_ASHR_I64                                  0x23
-#define     V_008DFC_SQ_S_BFM_B32                                   0x24
-#define     V_008DFC_SQ_S_BFM_B64                                   0x25
-#define     V_008DFC_SQ_S_MUL_I32                                   0x26
-#define     V_008DFC_SQ_S_BFE_U32                                   0x27
-#define     V_008DFC_SQ_S_BFE_I32                                   0x28
-#define     V_008DFC_SQ_S_BFE_U64                                   0x29
-#define     V_008DFC_SQ_S_BFE_I64                                   0x2A
-#define     V_008DFC_SQ_S_CBRANCH_G_FORK                            0x2B
-#define     V_008DFC_SQ_S_ABSDIFF_I32                               0x2C
-#define   S_008DFC_ENCODING(x)                                        (((x) & 0x03) << 30)
-#define   G_008DFC_ENCODING(x)                                        (((x) >> 30) & 0x03)
-#define   C_008DFC_ENCODING                                           0x3FFFFFFF
-#define     V_008DFC_SQ_ENC_SOP2_FIELD                              0x02
-#define R_008DFC_SQ_SOPK                                                0x008DFC
-#define   S_008DFC_SIMM16(x)                                          (((x) & 0xFFFF) << 0)
-#define   G_008DFC_SIMM16(x)                                          (((x) >> 0) & 0xFFFF)
-#define   C_008DFC_SIMM16                                             0xFFFF0000
-#define   S_008DFC_SDST(x)                                            (((x) & 0x7F) << 16)
-#define   G_008DFC_SDST(x)                                            (((x) >> 16) & 0x7F)
-#define   C_008DFC_SDST                                               0xFF80FFFF
-#define     V_008DFC_SQ_SGPR                                        0x00
-/* CIK */
-#define     V_008DFC_SQ_FLAT_SCRATCH_LO                             0x68
-#define     V_008DFC_SQ_FLAT_SCRATCH_HI                             0x69
-/*     */
-#define     V_008DFC_SQ_VCC_LO                                      0x6A
-#define     V_008DFC_SQ_VCC_HI                                      0x6B
-#define     V_008DFC_SQ_TBA_LO                                      0x6C
-#define     V_008DFC_SQ_TBA_HI                                      0x6D
-#define     V_008DFC_SQ_TMA_LO                                      0x6E
-#define     V_008DFC_SQ_TMA_HI                                      0x6F
-#define     V_008DFC_SQ_TTMP0                                       0x70
-#define     V_008DFC_SQ_TTMP1                                       0x71
-#define     V_008DFC_SQ_TTMP2                                       0x72
-#define     V_008DFC_SQ_TTMP3                                       0x73
-#define     V_008DFC_SQ_TTMP4                                       0x74
-#define     V_008DFC_SQ_TTMP5                                       0x75
-#define     V_008DFC_SQ_TTMP6                                       0x76
-#define     V_008DFC_SQ_TTMP7                                       0x77
-#define     V_008DFC_SQ_TTMP8                                       0x78
-#define     V_008DFC_SQ_TTMP9                                       0x79
-#define     V_008DFC_SQ_TTMP10                                      0x7A
-#define     V_008DFC_SQ_TTMP11                                      0x7B
-#define     V_008DFC_SQ_M0                                          0x7C
-#define     V_008DFC_SQ_EXEC_LO                                     0x7E
-#define     V_008DFC_SQ_EXEC_HI                                     0x7F
-#define   S_008DFC_OP(x)                                              (((x) & 0x1F) << 23)
-#define   G_008DFC_OP(x)                                              (((x) >> 23) & 0x1F)
-#define   C_008DFC_OP                                                 0xF07FFFFF
-#define     V_008DFC_SQ_S_MOVK_I32                                  0x00
-#define     V_008DFC_SQ_S_CMOVK_I32                                 0x02
-#define     V_008DFC_SQ_S_CMPK_EQ_I32                               0x03
-#define     V_008DFC_SQ_S_CMPK_LG_I32                               0x04
-#define     V_008DFC_SQ_S_CMPK_GT_I32                               0x05
-#define     V_008DFC_SQ_S_CMPK_GE_I32                               0x06
-#define     V_008DFC_SQ_S_CMPK_LT_I32                               0x07
-#define     V_008DFC_SQ_S_CMPK_LE_I32                               0x08
-#define     V_008DFC_SQ_S_CMPK_EQ_U32                               0x09
-#define     V_008DFC_SQ_S_CMPK_LG_U32                               0x0A
-#define     V_008DFC_SQ_S_CMPK_GT_U32                               0x0B
-#define     V_008DFC_SQ_S_CMPK_GE_U32                               0x0C
-#define     V_008DFC_SQ_S_CMPK_LT_U32                               0x0D
-#define     V_008DFC_SQ_S_CMPK_LE_U32                               0x0E
-#define     V_008DFC_SQ_S_ADDK_I32                                  0x0F
-#define     V_008DFC_SQ_S_MULK_I32                                  0x10
-#define     V_008DFC_SQ_S_CBRANCH_I_FORK                            0x11
-#define     V_008DFC_SQ_S_GETREG_B32                                0x12
-#define     V_008DFC_SQ_S_SETREG_B32                                0x13
-#define     V_008DFC_SQ_S_GETREG_REGRD_B32                          0x14
-#define     V_008DFC_SQ_S_SETREG_IMM32_B32                          0x15
-#define   S_008DFC_ENCODING(x)                                        (((x) & 0x0F) << 28)
-#define   G_008DFC_ENCODING(x)                                        (((x) >> 28) & 0x0F)
-#define   C_008DFC_ENCODING                                           0x0FFFFFFF
-#define     V_008DFC_SQ_ENC_SOPK_FIELD                              0x0B
-#define R_008DFC_SQ_VOP3_0                                              0x008DFC
-#define   S_008DFC_VDST(x)                                            (((x) & 0xFF) << 0)
-#define   G_008DFC_VDST(x)                                            (((x) >> 0) & 0xFF)
-#define   C_008DFC_VDST                                               0xFFFFFF00
-#define     V_008DFC_SQ_VGPR                                        0x00
-#define   S_008DFC_ABS(x)                                             (((x) & 0x07) << 8)
-#define   G_008DFC_ABS(x)                                             (((x) >> 8) & 0x07)
-#define   C_008DFC_ABS                                                0xFFFFF8FF
-#define   S_008DFC_CLAMP(x)                                           (((x) & 0x1) << 11)
-#define   G_008DFC_CLAMP(x)                                           (((x) >> 11) & 0x1)
-#define   C_008DFC_CLAMP                                              0xFFFFF7FF
-#define   S_008DFC_OP(x)                                              (((x) & 0x1FF) << 17)
-#define   G_008DFC_OP(x)                                              (((x) >> 17) & 0x1FF)
-#define   C_008DFC_OP                                                 0xFC01FFFF
-#define     V_008DFC_SQ_V_OPC_OFFSET                                0x00
-#define     V_008DFC_SQ_V_OP2_OFFSET                                0x100
-#define     V_008DFC_SQ_V_MAD_LEGACY_F32                            0x140
-#define     V_008DFC_SQ_V_MAD_F32                                   0x141
-#define     V_008DFC_SQ_V_MAD_I32_I24                               0x142
-#define     V_008DFC_SQ_V_MAD_U32_U24                               0x143
-#define     V_008DFC_SQ_V_CUBEID_F32                                0x144
-#define     V_008DFC_SQ_V_CUBESC_F32                                0x145
-#define     V_008DFC_SQ_V_CUBETC_F32                                0x146
-#define     V_008DFC_SQ_V_CUBEMA_F32                                0x147
-#define     V_008DFC_SQ_V_BFE_U32                                   0x148
-#define     V_008DFC_SQ_V_BFE_I32                                   0x149
-#define     V_008DFC_SQ_V_BFI_B32                                   0x14A
-#define     V_008DFC_SQ_V_FMA_F32                                   0x14B
-#define     V_008DFC_SQ_V_FMA_F64                                   0x14C
-#define     V_008DFC_SQ_V_LERP_U8                                   0x14D
-#define     V_008DFC_SQ_V_ALIGNBIT_B32                              0x14E
-#define     V_008DFC_SQ_V_ALIGNBYTE_B32                             0x14F
-#define     V_008DFC_SQ_V_MULLIT_F32                                0x150
-#define     V_008DFC_SQ_V_MIN3_F32                                  0x151
-#define     V_008DFC_SQ_V_MIN3_I32                                  0x152
-#define     V_008DFC_SQ_V_MIN3_U32                                  0x153
-#define     V_008DFC_SQ_V_MAX3_F32                                  0x154
-#define     V_008DFC_SQ_V_MAX3_I32                                  0x155
-#define     V_008DFC_SQ_V_MAX3_U32                                  0x156
-#define     V_008DFC_SQ_V_MED3_F32                                  0x157
-#define     V_008DFC_SQ_V_MED3_I32                                  0x158
-#define     V_008DFC_SQ_V_MED3_U32                                  0x159
-#define     V_008DFC_SQ_V_SAD_U8                                    0x15A
-#define     V_008DFC_SQ_V_SAD_HI_U8                                 0x15B
-#define     V_008DFC_SQ_V_SAD_U16                                   0x15C
-#define     V_008DFC_SQ_V_SAD_U32                                   0x15D
-#define     V_008DFC_SQ_V_CVT_PK_U8_F32                             0x15E
-#define     V_008DFC_SQ_V_DIV_FIXUP_F32                             0x15F
-#define     V_008DFC_SQ_V_DIV_FIXUP_F64                             0x160
-#define     V_008DFC_SQ_V_LSHL_B64                                  0x161
-#define     V_008DFC_SQ_V_LSHR_B64                                  0x162
-#define     V_008DFC_SQ_V_ASHR_I64                                  0x163
-#define     V_008DFC_SQ_V_ADD_F64                                   0x164
-#define     V_008DFC_SQ_V_MUL_F64                                   0x165
-#define     V_008DFC_SQ_V_MIN_F64                                   0x166
-#define     V_008DFC_SQ_V_MAX_F64                                   0x167
-#define     V_008DFC_SQ_V_LDEXP_F64                                 0x168
-#define     V_008DFC_SQ_V_MUL_LO_U32                                0x169
-#define     V_008DFC_SQ_V_MUL_HI_U32                                0x16A
-#define     V_008DFC_SQ_V_MUL_LO_I32                                0x16B
-#define     V_008DFC_SQ_V_MUL_HI_I32                                0x16C
-#define     V_008DFC_SQ_V_DIV_SCALE_F32                             0x16D
-#define     V_008DFC_SQ_V_DIV_SCALE_F64                             0x16E
-#define     V_008DFC_SQ_V_DIV_FMAS_F32                              0x16F
-#define     V_008DFC_SQ_V_DIV_FMAS_F64                              0x170
-#define     V_008DFC_SQ_V_MSAD_U8                                   0x171
-#define     V_008DFC_SQ_V_QSAD_U8                                   0x172
-#define     V_008DFC_SQ_V_MQSAD_U8                                  0x173
-#define     V_008DFC_SQ_V_TRIG_PREOP_F64                            0x174
-/* CIK */
-#define     V_008DFC_SQ_V_MQSAD_U32_U8                              0x175
-#define     V_008DFC_SQ_V_MAD_U64_U32                               0x176
-#define     V_008DFC_SQ_V_MAD_I64_I32                               0x177
-/*     */
-#define     V_008DFC_SQ_V_OP1_OFFSET                                0x180
-#define   S_008DFC_ENCODING(x)                                        (((x) & 0x3F) << 26)
-#define   G_008DFC_ENCODING(x)                                        (((x) >> 26) & 0x3F)
-#define   C_008DFC_ENCODING                                           0x03FFFFFF
-#define     V_008DFC_SQ_ENC_VOP3_FIELD                              0x34
-#define R_008DFC_SQ_VOP2                                                0x008DFC
-#define   S_008DFC_SRC0(x)                                            (((x) & 0x1FF) << 0)
-#define   G_008DFC_SRC0(x)                                            (((x) >> 0) & 0x1FF)
-#define   C_008DFC_SRC0                                               0xFFFFFE00
-#define     V_008DFC_SQ_SGPR                                        0x00
-/* CIK */
-#define     V_008DFC_SQ_FLAT_SCRATCH_LO                             0x68
-#define     V_008DFC_SQ_FLAT_SCRATCH_HI                             0x69
-/*     */
-#define     V_008DFC_SQ_VCC_LO                                      0x6A
-#define     V_008DFC_SQ_VCC_HI                                      0x6B
-#define     V_008DFC_SQ_TBA_LO                                      0x6C
-#define     V_008DFC_SQ_TBA_HI                                      0x6D
-#define     V_008DFC_SQ_TMA_LO                                      0x6E
-#define     V_008DFC_SQ_TMA_HI                                      0x6F
-#define     V_008DFC_SQ_TTMP0                                       0x70
-#define     V_008DFC_SQ_TTMP1                                       0x71
-#define     V_008DFC_SQ_TTMP2                                       0x72
-#define     V_008DFC_SQ_TTMP3                                       0x73
-#define     V_008DFC_SQ_TTMP4                                       0x74
-#define     V_008DFC_SQ_TTMP5                                       0x75
-#define     V_008DFC_SQ_TTMP6                                       0x76
-#define     V_008DFC_SQ_TTMP7                                       0x77
-#define     V_008DFC_SQ_TTMP8                                       0x78
-#define     V_008DFC_SQ_TTMP9                                       0x79
-#define     V_008DFC_SQ_TTMP10                                      0x7A
-#define     V_008DFC_SQ_TTMP11                                      0x7B
-#define     V_008DFC_SQ_M0                                          0x7C
-#define     V_008DFC_SQ_EXEC_LO                                     0x7E
-#define     V_008DFC_SQ_EXEC_HI                                     0x7F
-#define     V_008DFC_SQ_SRC_0                                       0x80
-#define     V_008DFC_SQ_SRC_1_INT                                   0x81
-#define     V_008DFC_SQ_SRC_2_INT                                   0x82
-#define     V_008DFC_SQ_SRC_3_INT                                   0x83
-#define     V_008DFC_SQ_SRC_4_INT                                   0x84
-#define     V_008DFC_SQ_SRC_5_INT                                   0x85
-#define     V_008DFC_SQ_SRC_6_INT                                   0x86
-#define     V_008DFC_SQ_SRC_7_INT                                   0x87
-#define     V_008DFC_SQ_SRC_8_INT                                   0x88
-#define     V_008DFC_SQ_SRC_9_INT                                   0x89
-#define     V_008DFC_SQ_SRC_10_INT                                  0x8A
-#define     V_008DFC_SQ_SRC_11_INT                                  0x8B
-#define     V_008DFC_SQ_SRC_12_INT                                  0x8C
-#define     V_008DFC_SQ_SRC_13_INT                                  0x8D
-#define     V_008DFC_SQ_SRC_14_INT                                  0x8E
-#define     V_008DFC_SQ_SRC_15_INT                                  0x8F
-#define     V_008DFC_SQ_SRC_16_INT                                  0x90
-#define     V_008DFC_SQ_SRC_17_INT                                  0x91
-#define     V_008DFC_SQ_SRC_18_INT                                  0x92
-#define     V_008DFC_SQ_SRC_19_INT                                  0x93
-#define     V_008DFC_SQ_SRC_20_INT                                  0x94
-#define     V_008DFC_SQ_SRC_21_INT                                  0x95
-#define     V_008DFC_SQ_SRC_22_INT                                  0x96
-#define     V_008DFC_SQ_SRC_23_INT                                  0x97
-#define     V_008DFC_SQ_SRC_24_INT                                  0x98
-#define     V_008DFC_SQ_SRC_25_INT                                  0x99
-#define     V_008DFC_SQ_SRC_26_INT                                  0x9A
-#define     V_008DFC_SQ_SRC_27_INT                                  0x9B
-#define     V_008DFC_SQ_SRC_28_INT                                  0x9C
-#define     V_008DFC_SQ_SRC_29_INT                                  0x9D
-#define     V_008DFC_SQ_SRC_30_INT                                  0x9E
-#define     V_008DFC_SQ_SRC_31_INT                                  0x9F
-#define     V_008DFC_SQ_SRC_32_INT                                  0xA0
-#define     V_008DFC_SQ_SRC_33_INT                                  0xA1
-#define     V_008DFC_SQ_SRC_34_INT                                  0xA2
-#define     V_008DFC_SQ_SRC_35_INT                                  0xA3
-#define     V_008DFC_SQ_SRC_36_INT                                  0xA4
-#define     V_008DFC_SQ_SRC_37_INT                                  0xA5
-#define     V_008DFC_SQ_SRC_38_INT                                  0xA6
-#define     V_008DFC_SQ_SRC_39_INT                                  0xA7
-#define     V_008DFC_SQ_SRC_40_INT                                  0xA8
-#define     V_008DFC_SQ_SRC_41_INT                                  0xA9
-#define     V_008DFC_SQ_SRC_42_INT                                  0xAA
-#define     V_008DFC_SQ_SRC_43_INT                                  0xAB
-#define     V_008DFC_SQ_SRC_44_INT                                  0xAC
-#define     V_008DFC_SQ_SRC_45_INT                                  0xAD
-#define     V_008DFC_SQ_SRC_46_INT                                  0xAE
-#define     V_008DFC_SQ_SRC_47_INT                                  0xAF
-#define     V_008DFC_SQ_SRC_48_INT                                  0xB0
-#define     V_008DFC_SQ_SRC_49_INT                                  0xB1
-#define     V_008DFC_SQ_SRC_50_INT                                  0xB2
-#define     V_008DFC_SQ_SRC_51_INT                                  0xB3
-#define     V_008DFC_SQ_SRC_52_INT                                  0xB4
-#define     V_008DFC_SQ_SRC_53_INT                                  0xB5
-#define     V_008DFC_SQ_SRC_54_INT                                  0xB6
-#define     V_008DFC_SQ_SRC_55_INT                                  0xB7
-#define     V_008DFC_SQ_SRC_56_INT                                  0xB8
-#define     V_008DFC_SQ_SRC_57_INT                                  0xB9
-#define     V_008DFC_SQ_SRC_58_INT                                  0xBA
-#define     V_008DFC_SQ_SRC_59_INT                                  0xBB
-#define     V_008DFC_SQ_SRC_60_INT                                  0xBC
-#define     V_008DFC_SQ_SRC_61_INT                                  0xBD
-#define     V_008DFC_SQ_SRC_62_INT                                  0xBE
-#define     V_008DFC_SQ_SRC_63_INT                                  0xBF
-#define     V_008DFC_SQ_SRC_64_INT                                  0xC0
-#define     V_008DFC_SQ_SRC_M_1_INT                                 0xC1
-#define     V_008DFC_SQ_SRC_M_2_INT                                 0xC2
-#define     V_008DFC_SQ_SRC_M_3_INT                                 0xC3
-#define     V_008DFC_SQ_SRC_M_4_INT                                 0xC4
-#define     V_008DFC_SQ_SRC_M_5_INT                                 0xC5
-#define     V_008DFC_SQ_SRC_M_6_INT                                 0xC6
-#define     V_008DFC_SQ_SRC_M_7_INT                                 0xC7
-#define     V_008DFC_SQ_SRC_M_8_INT                                 0xC8
-#define     V_008DFC_SQ_SRC_M_9_INT                                 0xC9
-#define     V_008DFC_SQ_SRC_M_10_INT                                0xCA
-#define     V_008DFC_SQ_SRC_M_11_INT                                0xCB
-#define     V_008DFC_SQ_SRC_M_12_INT                                0xCC
-#define     V_008DFC_SQ_SRC_M_13_INT                                0xCD
-#define     V_008DFC_SQ_SRC_M_14_INT                                0xCE
-#define     V_008DFC_SQ_SRC_M_15_INT                                0xCF
-#define     V_008DFC_SQ_SRC_M_16_INT                                0xD0
-#define     V_008DFC_SQ_SRC_0_5                                     0xF0
-#define     V_008DFC_SQ_SRC_M_0_5                                   0xF1
-#define     V_008DFC_SQ_SRC_1                                       0xF2
-#define     V_008DFC_SQ_SRC_M_1                                     0xF3
-#define     V_008DFC_SQ_SRC_2                                       0xF4
-#define     V_008DFC_SQ_SRC_M_2                                     0xF5
-#define     V_008DFC_SQ_SRC_4                                       0xF6
-#define     V_008DFC_SQ_SRC_M_4                                     0xF7
-#define     V_008DFC_SQ_SRC_VCCZ                                    0xFB
-#define     V_008DFC_SQ_SRC_EXECZ                                   0xFC
-#define     V_008DFC_SQ_SRC_SCC                                     0xFD
-#define     V_008DFC_SQ_SRC_LDS_DIRECT                              0xFE
-#define     V_008DFC_SQ_SRC_VGPR                                    0x100
-#define   S_008DFC_VSRC1(x)                                           (((x) & 0xFF) << 9)
-#define   G_008DFC_VSRC1(x)                                           (((x) >> 9) & 0xFF)
-#define   C_008DFC_VSRC1                                              0xFFFE01FF
-#define     V_008DFC_SQ_VGPR                                        0x00
-#define   S_008DFC_VDST(x)                                            (((x) & 0xFF) << 17)
-#define   G_008DFC_VDST(x)                                            (((x) >> 17) & 0xFF)
-#define   C_008DFC_VDST                                               0xFE01FFFF
-#define     V_008DFC_SQ_VGPR                                        0x00
-#define   S_008DFC_OP(x)                                              (((x) & 0x3F) << 25)
-#define   G_008DFC_OP(x)                                              (((x) >> 25) & 0x3F)
-#define   C_008DFC_OP                                                 0x81FFFFFF
-#define     V_008DFC_SQ_V_CNDMASK_B32                               0x00
-#define     V_008DFC_SQ_V_READLANE_B32                              0x01
-#define     V_008DFC_SQ_V_WRITELANE_B32                             0x02
-#define     V_008DFC_SQ_V_ADD_F32                                   0x03
-#define     V_008DFC_SQ_V_SUB_F32                                   0x04
-#define     V_008DFC_SQ_V_SUBREV_F32                                0x05
-#define     V_008DFC_SQ_V_MAC_LEGACY_F32                            0x06
-#define     V_008DFC_SQ_V_MUL_LEGACY_F32                            0x07
-#define     V_008DFC_SQ_V_MUL_F32                                   0x08
-#define     V_008DFC_SQ_V_MUL_I32_I24                               0x09
-#define     V_008DFC_SQ_V_MUL_HI_I32_I24                            0x0A
-#define     V_008DFC_SQ_V_MUL_U32_U24                               0x0B
-#define     V_008DFC_SQ_V_MUL_HI_U32_U24                            0x0C
-#define     V_008DFC_SQ_V_MIN_LEGACY_F32                            0x0D
-#define     V_008DFC_SQ_V_MAX_LEGACY_F32                            0x0E
-#define     V_008DFC_SQ_V_MIN_F32                                   0x0F
-#define     V_008DFC_SQ_V_MAX_F32                                   0x10
-#define     V_008DFC_SQ_V_MIN_I32                                   0x11
-#define     V_008DFC_SQ_V_MAX_I32                                   0x12
-#define     V_008DFC_SQ_V_MIN_U32                                   0x13
-#define     V_008DFC_SQ_V_MAX_U32                                   0x14
-#define     V_008DFC_SQ_V_LSHR_B32                                  0x15
-#define     V_008DFC_SQ_V_LSHRREV_B32                               0x16
-#define     V_008DFC_SQ_V_ASHR_I32                                  0x17
-#define     V_008DFC_SQ_V_ASHRREV_I32                               0x18
-#define     V_008DFC_SQ_V_LSHL_B32                                  0x19
-#define     V_008DFC_SQ_V_LSHLREV_B32                               0x1A
-#define     V_008DFC_SQ_V_AND_B32                                   0x1B
-#define     V_008DFC_SQ_V_OR_B32                                    0x1C
-#define     V_008DFC_SQ_V_XOR_B32                                   0x1D
-#define     V_008DFC_SQ_V_BFM_B32                                   0x1E
-#define     V_008DFC_SQ_V_MAC_F32                                   0x1F
-#define     V_008DFC_SQ_V_MADMK_F32                                 0x20
-#define     V_008DFC_SQ_V_MADAK_F32                                 0x21
-#define     V_008DFC_SQ_V_BCNT_U32_B32                              0x22
-#define     V_008DFC_SQ_V_MBCNT_LO_U32_B32                          0x23
-#define     V_008DFC_SQ_V_MBCNT_HI_U32_B32                          0x24
-#define     V_008DFC_SQ_V_ADD_I32                                   0x25
-#define     V_008DFC_SQ_V_SUB_I32                                   0x26
-#define     V_008DFC_SQ_V_SUBREV_I32                                0x27
-#define     V_008DFC_SQ_V_ADDC_U32                                  0x28
-#define     V_008DFC_SQ_V_SUBB_U32                                  0x29
-#define     V_008DFC_SQ_V_SUBBREV_U32                               0x2A
-#define     V_008DFC_SQ_V_LDEXP_F32                                 0x2B
-#define     V_008DFC_SQ_V_CVT_PKACCUM_U8_F32                        0x2C
-#define     V_008DFC_SQ_V_CVT_PKNORM_I16_F32                        0x2D
-#define     V_008DFC_SQ_V_CVT_PKNORM_U16_F32                        0x2E
-#define     V_008DFC_SQ_V_CVT_PKRTZ_F16_F32                         0x2F
-#define     V_008DFC_SQ_V_CVT_PK_U16_U32                            0x30
-#define     V_008DFC_SQ_V_CVT_PK_I16_I32                            0x31
-#define   S_008DFC_ENCODING(x)                                        (((x) & 0x1) << 31)
-#define   G_008DFC_ENCODING(x)                                        (((x) >> 31) & 0x1)
-#define   C_008DFC_ENCODING                                           0x7FFFFFFF
-#define R_008DFC_SQ_VOP3_0_SDST_ENC                                     0x008DFC
-#define   S_008DFC_VDST(x)                                            (((x) & 0xFF) << 0)
-#define   G_008DFC_VDST(x)                                            (((x) >> 0) & 0xFF)
-#define   C_008DFC_VDST                                               0xFFFFFF00
-#define     V_008DFC_SQ_VGPR                                        0x00
-#define   S_008DFC_SDST(x)                                            (((x) & 0x7F) << 8)
-#define   G_008DFC_SDST(x)                                            (((x) >> 8) & 0x7F)
-#define   C_008DFC_SDST                                               0xFFFF80FF
-#define     V_008DFC_SQ_SGPR                                        0x00
-/* CIK */
-#define     V_008DFC_SQ_FLAT_SCRATCH_LO                             0x68
-#define     V_008DFC_SQ_FLAT_SCRATCH_HI                             0x69
-/*     */
-#define     V_008DFC_SQ_VCC_LO                                      0x6A
-#define     V_008DFC_SQ_VCC_HI                                      0x6B
-#define     V_008DFC_SQ_TBA_LO                                      0x6C
-#define     V_008DFC_SQ_TBA_HI                                      0x6D
-#define     V_008DFC_SQ_TMA_LO                                      0x6E
-#define     V_008DFC_SQ_TMA_HI                                      0x6F
-#define     V_008DFC_SQ_TTMP0                                       0x70
-#define     V_008DFC_SQ_TTMP1                                       0x71
-#define     V_008DFC_SQ_TTMP2                                       0x72
-#define     V_008DFC_SQ_TTMP3                                       0x73
-#define     V_008DFC_SQ_TTMP4                                       0x74
-#define     V_008DFC_SQ_TTMP5                                       0x75
-#define     V_008DFC_SQ_TTMP6                                       0x76
-#define     V_008DFC_SQ_TTMP7                                       0x77
-#define     V_008DFC_SQ_TTMP8                                       0x78
-#define     V_008DFC_SQ_TTMP9                                       0x79
-#define     V_008DFC_SQ_TTMP10                                      0x7A
-#define     V_008DFC_SQ_TTMP11                                      0x7B
-#define   S_008DFC_OP(x)                                              (((x) & 0x1FF) << 17)
-#define   G_008DFC_OP(x)                                              (((x) >> 17) & 0x1FF)
-#define   C_008DFC_OP                                                 0xFC01FFFF
-#define     V_008DFC_SQ_V_OPC_OFFSET                                0x00
-#define     V_008DFC_SQ_V_OP2_OFFSET                                0x100
-#define     V_008DFC_SQ_V_MAD_LEGACY_F32                            0x140
-#define     V_008DFC_SQ_V_MAD_F32                                   0x141
-#define     V_008DFC_SQ_V_MAD_I32_I24                               0x142
-#define     V_008DFC_SQ_V_MAD_U32_U24                               0x143
-#define     V_008DFC_SQ_V_CUBEID_F32                                0x144
-#define     V_008DFC_SQ_V_CUBESC_F32                                0x145
-#define     V_008DFC_SQ_V_CUBETC_F32                                0x146
-#define     V_008DFC_SQ_V_CUBEMA_F32                                0x147
-#define     V_008DFC_SQ_V_BFE_U32                                   0x148
-#define     V_008DFC_SQ_V_BFE_I32                                   0x149
-#define     V_008DFC_SQ_V_BFI_B32                                   0x14A
-#define     V_008DFC_SQ_V_FMA_F32                                   0x14B
-#define     V_008DFC_SQ_V_FMA_F64                                   0x14C
-#define     V_008DFC_SQ_V_LERP_U8                                   0x14D
-#define     V_008DFC_SQ_V_ALIGNBIT_B32                              0x14E
-#define     V_008DFC_SQ_V_ALIGNBYTE_B32                             0x14F
-#define     V_008DFC_SQ_V_MULLIT_F32                                0x150
-#define     V_008DFC_SQ_V_MIN3_F32                                  0x151
-#define     V_008DFC_SQ_V_MIN3_I32                                  0x152
-#define     V_008DFC_SQ_V_MIN3_U32                                  0x153
-#define     V_008DFC_SQ_V_MAX3_F32                                  0x154
-#define     V_008DFC_SQ_V_MAX3_I32                                  0x155
-#define     V_008DFC_SQ_V_MAX3_U32                                  0x156
-#define     V_008DFC_SQ_V_MED3_F32                                  0x157
-#define     V_008DFC_SQ_V_MED3_I32                                  0x158
-#define     V_008DFC_SQ_V_MED3_U32                                  0x159
-#define     V_008DFC_SQ_V_SAD_U8                                    0x15A
-#define     V_008DFC_SQ_V_SAD_HI_U8                                 0x15B
-#define     V_008DFC_SQ_V_SAD_U16                                   0x15C
-#define     V_008DFC_SQ_V_SAD_U32                                   0x15D
-#define     V_008DFC_SQ_V_CVT_PK_U8_F32                             0x15E
-#define     V_008DFC_SQ_V_DIV_FIXUP_F32                             0x15F
-#define     V_008DFC_SQ_V_DIV_FIXUP_F64                             0x160
-#define     V_008DFC_SQ_V_LSHL_B64                                  0x161
-#define     V_008DFC_SQ_V_LSHR_B64                                  0x162
-#define     V_008DFC_SQ_V_ASHR_I64                                  0x163
-#define     V_008DFC_SQ_V_ADD_F64                                   0x164
-#define     V_008DFC_SQ_V_MUL_F64                                   0x165
-#define     V_008DFC_SQ_V_MIN_F64                                   0x166
-#define     V_008DFC_SQ_V_MAX_F64                                   0x167
-#define     V_008DFC_SQ_V_LDEXP_F64                                 0x168
-#define     V_008DFC_SQ_V_MUL_LO_U32                                0x169
-#define     V_008DFC_SQ_V_MUL_HI_U32                                0x16A
-#define     V_008DFC_SQ_V_MUL_LO_I32                                0x16B
-#define     V_008DFC_SQ_V_MUL_HI_I32                                0x16C
-#define     V_008DFC_SQ_V_DIV_SCALE_F32                             0x16D
-#define     V_008DFC_SQ_V_DIV_SCALE_F64                             0x16E
-#define     V_008DFC_SQ_V_DIV_FMAS_F32                              0x16F
-#define     V_008DFC_SQ_V_DIV_FMAS_F64                              0x170
-#define     V_008DFC_SQ_V_MSAD_U8                                   0x171
-#define     V_008DFC_SQ_V_QSAD_U8                                   0x172
-#define     V_008DFC_SQ_V_MQSAD_U8                                  0x173
-#define     V_008DFC_SQ_V_TRIG_PREOP_F64                            0x174
-/* CIK */
-#define     V_008DFC_SQ_V_MQSAD_U32_U8                              0x175
-#define     V_008DFC_SQ_V_MAD_U64_U32                               0x176
-#define     V_008DFC_SQ_V_MAD_I64_I32                               0x177
-/*     */
-#define     V_008DFC_SQ_V_OP1_OFFSET                                0x180
-#define   S_008DFC_ENCODING(x)                                        (((x) & 0x3F) << 26)
-#define   G_008DFC_ENCODING(x)                                        (((x) >> 26) & 0x3F)
-#define   C_008DFC_ENCODING                                           0x03FFFFFF
-#define     V_008DFC_SQ_ENC_VOP3_FIELD                              0x34
-#define R_008DFC_SQ_MUBUF_0                                             0x008DFC
-#define   S_008DFC_OFFSET(x)                                          (((x) & 0xFFF) << 0)
-#define   G_008DFC_OFFSET(x)                                          (((x) >> 0) & 0xFFF)
-#define   C_008DFC_OFFSET                                             0xFFFFF000
-#define   S_008DFC_OFFEN(x)                                           (((x) & 0x1) << 12)
-#define   G_008DFC_OFFEN(x)                                           (((x) >> 12) & 0x1)
-#define   C_008DFC_OFFEN                                              0xFFFFEFFF
-#define   S_008DFC_IDXEN(x)                                           (((x) & 0x1) << 13)
-#define   G_008DFC_IDXEN(x)                                           (((x) >> 13) & 0x1)
-#define   C_008DFC_IDXEN                                              0xFFFFDFFF
-#define   S_008DFC_GLC(x)                                             (((x) & 0x1) << 14)
-#define   G_008DFC_GLC(x)                                             (((x) >> 14) & 0x1)
-#define   C_008DFC_GLC                                                0xFFFFBFFF
-#define   S_008DFC_ADDR64(x)                                          (((x) & 0x1) << 15)
-#define   G_008DFC_ADDR64(x)                                          (((x) >> 15) & 0x1)
-#define   C_008DFC_ADDR64                                             0xFFFF7FFF
-#define   S_008DFC_LDS(x)                                             (((x) & 0x1) << 16)
-#define   G_008DFC_LDS(x)                                             (((x) >> 16) & 0x1)
-#define   C_008DFC_LDS                                                0xFFFEFFFF
-#define   S_008DFC_OP(x)                                              (((x) & 0x7F) << 18)
-#define   G_008DFC_OP(x)                                              (((x) >> 18) & 0x7F)
-#define   C_008DFC_OP                                                 0xFE03FFFF
-#define     V_008DFC_SQ_BUFFER_LOAD_FORMAT_X                        0x00
-#define     V_008DFC_SQ_BUFFER_LOAD_FORMAT_XY                       0x01
-#define     V_008DFC_SQ_BUFFER_LOAD_FORMAT_XYZ                      0x02
-#define     V_008DFC_SQ_BUFFER_LOAD_FORMAT_XYZW                     0x03
-#define     V_008DFC_SQ_BUFFER_STORE_FORMAT_X                       0x04
-#define     V_008DFC_SQ_BUFFER_STORE_FORMAT_XY                      0x05
-#define     V_008DFC_SQ_BUFFER_STORE_FORMAT_XYZ                     0x06
-#define     V_008DFC_SQ_BUFFER_STORE_FORMAT_XYZW                    0x07
-#define     V_008DFC_SQ_BUFFER_LOAD_UBYTE                           0x08
-#define     V_008DFC_SQ_BUFFER_LOAD_SBYTE                           0x09
-#define     V_008DFC_SQ_BUFFER_LOAD_USHORT                          0x0A
-#define     V_008DFC_SQ_BUFFER_LOAD_SSHORT                          0x0B
-#define     V_008DFC_SQ_BUFFER_LOAD_DWORD                           0x0C
-#define     V_008DFC_SQ_BUFFER_LOAD_DWORDX2                         0x0D
-#define     V_008DFC_SQ_BUFFER_LOAD_DWORDX4                         0x0E
-/* CIK */
-#define     V_008DFC_SQ_BUFFER_LOAD_DWORDX3                         0x0F
-/*     */
-#define     V_008DFC_SQ_BUFFER_STORE_BYTE                           0x18
-#define     V_008DFC_SQ_BUFFER_STORE_SHORT                          0x1A
-#define     V_008DFC_SQ_BUFFER_STORE_DWORD                          0x1C
-#define     V_008DFC_SQ_BUFFER_STORE_DWORDX2                        0x1D
-#define     V_008DFC_SQ_BUFFER_STORE_DWORDX4                        0x1E
-/* CIK */
-#define     V_008DFC_SQ_BUFFER_STORE_DWORDX3                        0x1F
-/*     */
-#define     V_008DFC_SQ_BUFFER_ATOMIC_SWAP                          0x30
-#define     V_008DFC_SQ_BUFFER_ATOMIC_CMPSWAP                       0x31
-#define     V_008DFC_SQ_BUFFER_ATOMIC_ADD                           0x32
-#define     V_008DFC_SQ_BUFFER_ATOMIC_SUB                           0x33
-#define     V_008DFC_SQ_BUFFER_ATOMIC_RSUB                          0x34 /* not on CIK */
-#define     V_008DFC_SQ_BUFFER_ATOMIC_SMIN                          0x35
-#define     V_008DFC_SQ_BUFFER_ATOMIC_UMIN                          0x36
-#define     V_008DFC_SQ_BUFFER_ATOMIC_SMAX                          0x37
-#define     V_008DFC_SQ_BUFFER_ATOMIC_UMAX                          0x38
-#define     V_008DFC_SQ_BUFFER_ATOMIC_AND                           0x39
-#define     V_008DFC_SQ_BUFFER_ATOMIC_OR                            0x3A
-#define     V_008DFC_SQ_BUFFER_ATOMIC_XOR                           0x3B
-#define     V_008DFC_SQ_BUFFER_ATOMIC_INC                           0x3C
-#define     V_008DFC_SQ_BUFFER_ATOMIC_DEC                           0x3D
-#define     V_008DFC_SQ_BUFFER_ATOMIC_FCMPSWAP                      0x3E
-#define     V_008DFC_SQ_BUFFER_ATOMIC_FMIN                          0x3F
-#define     V_008DFC_SQ_BUFFER_ATOMIC_FMAX                          0x40
-#define     V_008DFC_SQ_BUFFER_ATOMIC_SWAP_X2                       0x50
-#define     V_008DFC_SQ_BUFFER_ATOMIC_CMPSWAP_X2                    0x51
-#define     V_008DFC_SQ_BUFFER_ATOMIC_ADD_X2                        0x52
-#define     V_008DFC_SQ_BUFFER_ATOMIC_SUB_X2                        0x53
-#define     V_008DFC_SQ_BUFFER_ATOMIC_RSUB_X2                       0x54 /* not on CIK */
-#define     V_008DFC_SQ_BUFFER_ATOMIC_SMIN_X2                       0x55
-#define     V_008DFC_SQ_BUFFER_ATOMIC_UMIN_X2                       0x56
-#define     V_008DFC_SQ_BUFFER_ATOMIC_SMAX_X2                       0x57
-#define     V_008DFC_SQ_BUFFER_ATOMIC_UMAX_X2                       0x58
-#define     V_008DFC_SQ_BUFFER_ATOMIC_AND_X2                        0x59
-#define     V_008DFC_SQ_BUFFER_ATOMIC_OR_X2                         0x5A
-#define     V_008DFC_SQ_BUFFER_ATOMIC_XOR_X2                        0x5B
-#define     V_008DFC_SQ_BUFFER_ATOMIC_INC_X2                        0x5C
-#define     V_008DFC_SQ_BUFFER_ATOMIC_DEC_X2                        0x5D
-#define     V_008DFC_SQ_BUFFER_ATOMIC_FCMPSWAP_X2                   0x5E
-#define     V_008DFC_SQ_BUFFER_ATOMIC_FMIN_X2                       0x5F
-#define     V_008DFC_SQ_BUFFER_ATOMIC_FMAX_X2                       0x60
-#define     V_008DFC_SQ_BUFFER_WBINVL1_SC                           0x70
-/* CIK */
-#define     V_008DFC_SQ_BUFFER_WBINVL1_VOL                          0x70
-/*     */
-#define     V_008DFC_SQ_BUFFER_WBINVL1                              0x71
-#define   S_008DFC_ENCODING(x)                                        (((x) & 0x3F) << 26)
-#define   G_008DFC_ENCODING(x)                                        (((x) >> 26) & 0x3F)
-#define   C_008DFC_ENCODING                                           0x03FFFFFF
-#define     V_008DFC_SQ_ENC_MUBUF_FIELD                             0x38
-#endif
 #define R_030E00_TA_CS_BC_BASE_ADDR                                     0x030E00
 #define R_030E04_TA_CS_BC_BASE_ADDR_HI                                  0x030E04
 #define   S_030E04_ADDRESS(x)                                         (((x) & 0xFF) << 0)
@@ -5176,12 +2062,12 @@
 #define     V_008F14_IMG_DATA_FORMAT_8_24                           0x14
 #define     V_008F14_IMG_DATA_FORMAT_24_8                           0x15
 #define     V_008F14_IMG_DATA_FORMAT_X24_8_32                       0x16
-#define     V_008F14_IMG_DATA_FORMAT_RESERVED_23                    0x17
-#define     V_008F14_IMG_DATA_FORMAT_RESERVED_24                    0x18
-#define     V_008F14_IMG_DATA_FORMAT_RESERVED_25                    0x19
-#define     V_008F14_IMG_DATA_FORMAT_RESERVED_26                    0x1A
-#define     V_008F14_IMG_DATA_FORMAT_RESERVED_27                    0x1B
-#define     V_008F14_IMG_DATA_FORMAT_RESERVED_28                    0x1C
+#define     V_008F14_IMG_DATA_FORMAT_8_AS_8_8_8_8                   0x17 /* stoney+ */
+#define     V_008F14_IMG_DATA_FORMAT_ETC2_RGB                       0x18 /* stoney+ */
+#define     V_008F14_IMG_DATA_FORMAT_ETC2_RGBA                      0x19 /* stoney+ */
+#define     V_008F14_IMG_DATA_FORMAT_ETC2_R                         0x1A /* stoney+ */
+#define     V_008F14_IMG_DATA_FORMAT_ETC2_RG                        0x1B /* stoney+ */
+#define     V_008F14_IMG_DATA_FORMAT_ETC2_RGBA1                     0x1C /* stoney+ */
 #define     V_008F14_IMG_DATA_FORMAT_RESERVED_29                    0x1D
 #define     V_008F14_IMG_DATA_FORMAT_RESERVED_30                    0x1E
 #define     V_008F14_IMG_DATA_FORMAT_RESERVED_31                    0x1F
@@ -5195,8 +2081,8 @@
 #define     V_008F14_IMG_DATA_FORMAT_BC5                            0x27
 #define     V_008F14_IMG_DATA_FORMAT_BC6                            0x28
 #define     V_008F14_IMG_DATA_FORMAT_BC7                            0x29
-#define     V_008F14_IMG_DATA_FORMAT_RESERVED_42                    0x2A
-#define     V_008F14_IMG_DATA_FORMAT_RESERVED_43                    0x2B
+#define     V_008F14_IMG_DATA_FORMAT_16_AS_16_16_16_16              0x2A /* stoney+ */
+#define     V_008F14_IMG_DATA_FORMAT_16_AS_32_32_32_32              0x2B /* stoney+ */
 #define     V_008F14_IMG_DATA_FORMAT_FMASK8_S2_F1                   0x2C
 #define     V_008F14_IMG_DATA_FORMAT_FMASK8_S4_F1                   0x2D
 #define     V_008F14_IMG_DATA_FORMAT_FMASK8_S8_F1                   0x2E
@@ -5214,8 +2100,8 @@
 #define     V_008F14_IMG_DATA_FORMAT_6_5_5                          0x3A
 #define     V_008F14_IMG_DATA_FORMAT_1                              0x3B
 #define     V_008F14_IMG_DATA_FORMAT_1_REVERSED                     0x3C
-#define     V_008F14_IMG_DATA_FORMAT_32_AS_8                        0x3D
-#define     V_008F14_IMG_DATA_FORMAT_32_AS_8_8                      0x3E
+#define     V_008F14_IMG_DATA_FORMAT_32_AS_8                        0x3D /* not on stoney */
+#define     V_008F14_IMG_DATA_FORMAT_32_AS_8_8                      0x3E /* not on stoney */
 #define     V_008F14_IMG_DATA_FORMAT_32_AS_32_32_32_32              0x3F
 #define   S_008F14_NUM_FORMAT(x)                                      (((x) & 0x0F) << 26)
 #define   G_008F14_NUM_FORMAT(x)                                      (((x) >> 26) & 0x0F)
@@ -5711,13 +2597,6 @@
 #define   G_00936C_EN_B(x)                                            (((x) >> 31) & 0x1)
 #define   C_00936C_EN_B                                               0x7FFFFFFF
 #define R_00950C_TA_CS_BC_BASE_ADDR                                     0x00950C
-/* CIK */
-#define R_030E00_TA_CS_BC_BASE_ADDR                                     0x030E00
-#define R_030E04_TA_CS_BC_BASE_ADDR_HI                                  0x030E04
-#define   S_030E04_ADDRESS(x)                                         (((x) & 0xFF) << 0)
-#define   G_030E04_ADDRESS(x)                                         (((x) >> 0) & 0xFF)
-#define   C_030E04_ADDRESS                                            0xFFFFFF00
-/*     */
 #define R_009858_DB_SUBTILE_CONTROL                                     0x009858
 #define   S_009858_MSAA1_X(x)                                         (((x) & 0x03) << 0)
 #define   G_009858_MSAA1_X(x)                                         (((x) >> 0) & 0x03)
@@ -5966,6 +2845,9 @@
 #define   S_00B028_FLOAT_MODE(x)                                      (((x) & 0xFF) << 12)
 #define   G_00B028_FLOAT_MODE(x)                                      (((x) >> 12) & 0xFF)
 #define   C_00B028_FLOAT_MODE                                         0xFFF00FFF
+#define     V_00B028_FP_32_DENORMS					0x30
+#define     V_00B028_FP_64_DENORMS					0xc0
+#define     V_00B028_FP_ALL_DENORMS					0xf0
 #define   S_00B028_PRIV(x)                                            (((x) & 0x1) << 20)
 #define   G_00B028_PRIV(x)                                            (((x) >> 20) & 0x1)
 #define   C_00B028_PRIV                                               0xFFEFFFFF
@@ -6851,6 +3733,1019 @@
 #define R_00B938_COMPUTE_USER_DATA_14                                   0x00B938
 #define R_00B93C_COMPUTE_USER_DATA_15                                   0x00B93C
 #define R_00B9FC_COMPUTE_NOWHERE                                        0x00B9FC
+#define R_034000_CPG_PERFCOUNTER1_LO                                    0x034000
+#define R_034004_CPG_PERFCOUNTER1_HI                                    0x034004
+#define R_034008_CPG_PERFCOUNTER0_LO                                    0x034008
+#define R_03400C_CPG_PERFCOUNTER0_HI                                    0x03400C
+#define R_034010_CPC_PERFCOUNTER1_LO                                    0x034010
+#define R_034014_CPC_PERFCOUNTER1_HI                                    0x034014
+#define R_034018_CPC_PERFCOUNTER0_LO                                    0x034018
+#define R_03401C_CPC_PERFCOUNTER0_HI                                    0x03401C
+#define R_034020_CPF_PERFCOUNTER1_LO                                    0x034020
+#define R_034024_CPF_PERFCOUNTER1_HI                                    0x034024
+#define R_034028_CPF_PERFCOUNTER0_LO                                    0x034028
+#define R_03402C_CPF_PERFCOUNTER0_HI                                    0x03402C
+#define R_034100_GRBM_PERFCOUNTER0_LO                                   0x034100
+#define R_034104_GRBM_PERFCOUNTER0_HI                                   0x034104
+#define R_03410C_GRBM_PERFCOUNTER1_LO                                   0x03410C
+#define R_034110_GRBM_PERFCOUNTER1_HI                                   0x034110
+#define R_034114_GRBM_SE0_PERFCOUNTER_LO                                0x034114
+#define R_034118_GRBM_SE0_PERFCOUNTER_HI                                0x034118
+#define R_03411C_GRBM_SE1_PERFCOUNTER_LO                                0x03411C
+#define R_034120_GRBM_SE1_PERFCOUNTER_HI                                0x034120
+#define R_034124_GRBM_SE2_PERFCOUNTER_LO                                0x034124
+#define R_034128_GRBM_SE2_PERFCOUNTER_HI                                0x034128
+#define R_03412C_GRBM_SE3_PERFCOUNTER_LO                                0x03412C
+#define R_034130_GRBM_SE3_PERFCOUNTER_HI                                0x034130
+#define R_034200_WD_PERFCOUNTER0_LO                                     0x034200
+#define R_034204_WD_PERFCOUNTER0_HI                                     0x034204
+#define R_034208_WD_PERFCOUNTER1_LO                                     0x034208
+#define R_03420C_WD_PERFCOUNTER1_HI                                     0x03420C
+#define R_034210_WD_PERFCOUNTER2_LO                                     0x034210
+#define R_034214_WD_PERFCOUNTER2_HI                                     0x034214
+#define R_034218_WD_PERFCOUNTER3_LO                                     0x034218
+#define R_03421C_WD_PERFCOUNTER3_HI                                     0x03421C
+#define R_034220_IA_PERFCOUNTER0_LO                                     0x034220
+#define R_034224_IA_PERFCOUNTER0_HI                                     0x034224
+#define R_034228_IA_PERFCOUNTER1_LO                                     0x034228
+#define R_03422C_IA_PERFCOUNTER1_HI                                     0x03422C
+#define R_034230_IA_PERFCOUNTER2_LO                                     0x034230
+#define R_034234_IA_PERFCOUNTER2_HI                                     0x034234
+#define R_034238_IA_PERFCOUNTER3_LO                                     0x034238
+#define R_03423C_IA_PERFCOUNTER3_HI                                     0x03423C
+#define R_034240_VGT_PERFCOUNTER0_LO                                    0x034240
+#define R_034244_VGT_PERFCOUNTER0_HI                                    0x034244
+#define R_034248_VGT_PERFCOUNTER1_LO                                    0x034248
+#define R_03424C_VGT_PERFCOUNTER1_HI                                    0x03424C
+#define R_034250_VGT_PERFCOUNTER2_LO                                    0x034250
+#define R_034254_VGT_PERFCOUNTER2_HI                                    0x034254
+#define R_034258_VGT_PERFCOUNTER3_LO                                    0x034258
+#define R_03425C_VGT_PERFCOUNTER3_HI                                    0x03425C
+#define R_034400_PA_SU_PERFCOUNTER0_LO                                  0x034400
+#define R_034404_PA_SU_PERFCOUNTER0_HI                                  0x034404
+#define   S_034404_PERFCOUNTER_HI(x)                                  (((x) & 0xFFFF) << 0)
+#define   G_034404_PERFCOUNTER_HI(x)                                  (((x) >> 0) & 0xFFFF)
+#define   C_034404_PERFCOUNTER_HI                                     0xFFFF0000
+#define R_034408_PA_SU_PERFCOUNTER1_LO                                  0x034408
+#define R_03440C_PA_SU_PERFCOUNTER1_HI                                  0x03440C
+#define R_034410_PA_SU_PERFCOUNTER2_LO                                  0x034410
+#define R_034414_PA_SU_PERFCOUNTER2_HI                                  0x034414
+#define R_034418_PA_SU_PERFCOUNTER3_LO                                  0x034418
+#define R_03441C_PA_SU_PERFCOUNTER3_HI                                  0x03441C
+#define R_034500_PA_SC_PERFCOUNTER0_LO                                  0x034500
+#define R_034504_PA_SC_PERFCOUNTER0_HI                                  0x034504
+#define R_034508_PA_SC_PERFCOUNTER1_LO                                  0x034508
+#define R_03450C_PA_SC_PERFCOUNTER1_HI                                  0x03450C
+#define R_034510_PA_SC_PERFCOUNTER2_LO                                  0x034510
+#define R_034514_PA_SC_PERFCOUNTER2_HI                                  0x034514
+#define R_034518_PA_SC_PERFCOUNTER3_LO                                  0x034518
+#define R_03451C_PA_SC_PERFCOUNTER3_HI                                  0x03451C
+#define R_034520_PA_SC_PERFCOUNTER4_LO                                  0x034520
+#define R_034524_PA_SC_PERFCOUNTER4_HI                                  0x034524
+#define R_034528_PA_SC_PERFCOUNTER5_LO                                  0x034528
+#define R_03452C_PA_SC_PERFCOUNTER5_HI                                  0x03452C
+#define R_034530_PA_SC_PERFCOUNTER6_LO                                  0x034530
+#define R_034534_PA_SC_PERFCOUNTER6_HI                                  0x034534
+#define R_034538_PA_SC_PERFCOUNTER7_LO                                  0x034538
+#define R_03453C_PA_SC_PERFCOUNTER7_HI                                  0x03453C
+#define R_034600_SPI_PERFCOUNTER0_HI                                    0x034600
+#define R_034604_SPI_PERFCOUNTER0_LO                                    0x034604
+#define R_034608_SPI_PERFCOUNTER1_HI                                    0x034608
+#define R_03460C_SPI_PERFCOUNTER1_LO                                    0x03460C
+#define R_034610_SPI_PERFCOUNTER2_HI                                    0x034610
+#define R_034614_SPI_PERFCOUNTER2_LO                                    0x034614
+#define R_034618_SPI_PERFCOUNTER3_HI                                    0x034618
+#define R_03461C_SPI_PERFCOUNTER3_LO                                    0x03461C
+#define R_034620_SPI_PERFCOUNTER4_HI                                    0x034620
+#define R_034624_SPI_PERFCOUNTER4_LO                                    0x034624
+#define R_034628_SPI_PERFCOUNTER5_HI                                    0x034628
+#define R_03462C_SPI_PERFCOUNTER5_LO                                    0x03462C
+#define R_034700_SQ_PERFCOUNTER0_LO                                     0x034700
+#define R_034704_SQ_PERFCOUNTER0_HI                                     0x034704
+#define R_034708_SQ_PERFCOUNTER1_LO                                     0x034708
+#define R_03470C_SQ_PERFCOUNTER1_HI                                     0x03470C
+#define R_034710_SQ_PERFCOUNTER2_LO                                     0x034710
+#define R_034714_SQ_PERFCOUNTER2_HI                                     0x034714
+#define R_034718_SQ_PERFCOUNTER3_LO                                     0x034718
+#define R_03471C_SQ_PERFCOUNTER3_HI                                     0x03471C
+#define R_034720_SQ_PERFCOUNTER4_LO                                     0x034720
+#define R_034724_SQ_PERFCOUNTER4_HI                                     0x034724
+#define R_034728_SQ_PERFCOUNTER5_LO                                     0x034728
+#define R_03472C_SQ_PERFCOUNTER5_HI                                     0x03472C
+#define R_034730_SQ_PERFCOUNTER6_LO                                     0x034730
+#define R_034734_SQ_PERFCOUNTER6_HI                                     0x034734
+#define R_034738_SQ_PERFCOUNTER7_LO                                     0x034738
+#define R_03473C_SQ_PERFCOUNTER7_HI                                     0x03473C
+#define R_034740_SQ_PERFCOUNTER8_LO                                     0x034740
+#define R_034744_SQ_PERFCOUNTER8_HI                                     0x034744
+#define R_034748_SQ_PERFCOUNTER9_LO                                     0x034748
+#define R_03474C_SQ_PERFCOUNTER9_HI                                     0x03474C
+#define R_034750_SQ_PERFCOUNTER10_LO                                    0x034750
+#define R_034754_SQ_PERFCOUNTER10_HI                                    0x034754
+#define R_034758_SQ_PERFCOUNTER11_LO                                    0x034758
+#define R_03475C_SQ_PERFCOUNTER11_HI                                    0x03475C
+#define R_034760_SQ_PERFCOUNTER12_LO                                    0x034760
+#define R_034764_SQ_PERFCOUNTER12_HI                                    0x034764
+#define R_034768_SQ_PERFCOUNTER13_LO                                    0x034768
+#define R_03476C_SQ_PERFCOUNTER13_HI                                    0x03476C
+#define R_034770_SQ_PERFCOUNTER14_LO                                    0x034770
+#define R_034774_SQ_PERFCOUNTER14_HI                                    0x034774
+#define R_034778_SQ_PERFCOUNTER15_LO                                    0x034778
+#define R_03477C_SQ_PERFCOUNTER15_HI                                    0x03477C
+#define R_034900_SX_PERFCOUNTER0_LO                                     0x034900
+#define R_034904_SX_PERFCOUNTER0_HI                                     0x034904
+#define R_034908_SX_PERFCOUNTER1_LO                                     0x034908
+#define R_03490C_SX_PERFCOUNTER1_HI                                     0x03490C
+#define R_034910_SX_PERFCOUNTER2_LO                                     0x034910
+#define R_034914_SX_PERFCOUNTER2_HI                                     0x034914
+#define R_034918_SX_PERFCOUNTER3_LO                                     0x034918
+#define R_03491C_SX_PERFCOUNTER3_HI                                     0x03491C
+#define R_034A00_GDS_PERFCOUNTER0_LO                                    0x034A00
+#define R_034A04_GDS_PERFCOUNTER0_HI                                    0x034A04
+#define R_034A08_GDS_PERFCOUNTER1_LO                                    0x034A08
+#define R_034A0C_GDS_PERFCOUNTER1_HI                                    0x034A0C
+#define R_034A10_GDS_PERFCOUNTER2_LO                                    0x034A10
+#define R_034A14_GDS_PERFCOUNTER2_HI                                    0x034A14
+#define R_034A18_GDS_PERFCOUNTER3_LO                                    0x034A18
+#define R_034A1C_GDS_PERFCOUNTER3_HI                                    0x034A1C
+#define R_034B00_TA_PERFCOUNTER0_LO                                     0x034B00
+#define R_034B04_TA_PERFCOUNTER0_HI                                     0x034B04
+#define R_034B08_TA_PERFCOUNTER1_LO                                     0x034B08
+#define R_034B0C_TA_PERFCOUNTER1_HI                                     0x034B0C
+#define R_034C00_TD_PERFCOUNTER0_LO                                     0x034C00
+#define R_034C04_TD_PERFCOUNTER0_HI                                     0x034C04
+#define R_034C08_TD_PERFCOUNTER1_LO                                     0x034C08
+#define R_034C0C_TD_PERFCOUNTER1_HI                                     0x034C0C
+#define R_034D00_TCP_PERFCOUNTER0_LO                                    0x034D00
+#define R_034D04_TCP_PERFCOUNTER0_HI                                    0x034D04
+#define R_034D08_TCP_PERFCOUNTER1_LO                                    0x034D08
+#define R_034D0C_TCP_PERFCOUNTER1_HI                                    0x034D0C
+#define R_034D10_TCP_PERFCOUNTER2_LO                                    0x034D10
+#define R_034D14_TCP_PERFCOUNTER2_HI                                    0x034D14
+#define R_034D18_TCP_PERFCOUNTER3_LO                                    0x034D18
+#define R_034D1C_TCP_PERFCOUNTER3_HI                                    0x034D1C
+#define R_034E00_TCC_PERFCOUNTER0_LO                                    0x034E00
+#define R_034E04_TCC_PERFCOUNTER0_HI                                    0x034E04
+#define R_034E08_TCC_PERFCOUNTER1_LO                                    0x034E08
+#define R_034E0C_TCC_PERFCOUNTER1_HI                                    0x034E0C
+#define R_034E10_TCC_PERFCOUNTER2_LO                                    0x034E10
+#define R_034E14_TCC_PERFCOUNTER2_HI                                    0x034E14
+#define R_034E18_TCC_PERFCOUNTER3_LO                                    0x034E18
+#define R_034E1C_TCC_PERFCOUNTER3_HI                                    0x034E1C
+#define R_034E40_TCA_PERFCOUNTER0_LO                                    0x034E40
+#define R_034E44_TCA_PERFCOUNTER0_HI                                    0x034E44
+#define R_034E48_TCA_PERFCOUNTER1_LO                                    0x034E48
+#define R_034E4C_TCA_PERFCOUNTER1_HI                                    0x034E4C
+#define R_034E50_TCA_PERFCOUNTER2_LO                                    0x034E50
+#define R_034E54_TCA_PERFCOUNTER2_HI                                    0x034E54
+#define R_034E58_TCA_PERFCOUNTER3_LO                                    0x034E58
+#define R_034E5C_TCA_PERFCOUNTER3_HI                                    0x034E5C
+#define R_035018_CB_PERFCOUNTER0_LO                                     0x035018
+#define R_03501C_CB_PERFCOUNTER0_HI                                     0x03501C
+#define R_035020_CB_PERFCOUNTER1_LO                                     0x035020
+#define R_035024_CB_PERFCOUNTER1_HI                                     0x035024
+#define R_035028_CB_PERFCOUNTER2_LO                                     0x035028
+#define R_03502C_CB_PERFCOUNTER2_HI                                     0x03502C
+#define R_035030_CB_PERFCOUNTER3_LO                                     0x035030
+#define R_035034_CB_PERFCOUNTER3_HI                                     0x035034
+#define R_035100_DB_PERFCOUNTER0_LO                                     0x035100
+#define R_035104_DB_PERFCOUNTER0_HI                                     0x035104
+#define R_035108_DB_PERFCOUNTER1_LO                                     0x035108
+#define R_03510C_DB_PERFCOUNTER1_HI                                     0x03510C
+#define R_035110_DB_PERFCOUNTER2_LO                                     0x035110
+#define R_035114_DB_PERFCOUNTER2_HI                                     0x035114
+#define R_035118_DB_PERFCOUNTER3_LO                                     0x035118
+#define R_03511C_DB_PERFCOUNTER3_HI                                     0x03511C
+#define R_035200_RLC_PERFCOUNTER0_LO                                    0x035200
+#define R_035204_RLC_PERFCOUNTER0_HI                                    0x035204
+#define R_035208_RLC_PERFCOUNTER1_LO                                    0x035208
+#define R_03520C_RLC_PERFCOUNTER1_HI                                    0x03520C
+#define R_036000_CPG_PERFCOUNTER1_SELECT                                0x036000
+#define R_036004_CPG_PERFCOUNTER0_SELECT1                               0x036004
+#define   S_036004_PERF_SEL2(x)                                       (((x) & 0x3F) << 0)
+#define   G_036004_PERF_SEL2(x)                                       (((x) >> 0) & 0x3F)
+#define   C_036004_PERF_SEL2                                          0xFFFFFFC0
+#define   S_036004_PERF_SEL3(x)                                       (((x) & 0x3F) << 10)
+#define   G_036004_PERF_SEL3(x)                                       (((x) >> 10) & 0x3F)
+#define   C_036004_PERF_SEL3                                          0xFFFF03FF
+#define R_036008_CPG_PERFCOUNTER0_SELECT                                0x036008
+#define   S_036008_PERF_SEL(x)                                        (((x) & 0x3F) << 0)
+#define   G_036008_PERF_SEL(x)                                        (((x) >> 0) & 0x3F)
+#define   C_036008_PERF_SEL                                           0xFFFFFFC0
+#define   S_036008_PERF_SEL1(x)                                       (((x) & 0x3F) << 10)
+#define   G_036008_PERF_SEL1(x)                                       (((x) >> 10) & 0x3F)
+#define   C_036008_PERF_SEL1                                          0xFFFF03FF
+#define   S_036008_CNTR_MODE(x)                                       (((x) & 0x0F) << 20)
+#define   G_036008_CNTR_MODE(x)                                       (((x) >> 20) & 0x0F)
+#define   C_036008_CNTR_MODE                                          0xFF0FFFFF
+#define R_03600C_CPC_PERFCOUNTER1_SELECT                                0x03600C
+#define R_036010_CPC_PERFCOUNTER0_SELECT1                               0x036010
+#define   S_036010_PERF_SEL2(x)                                       (((x) & 0x3F) << 0)
+#define   G_036010_PERF_SEL2(x)                                       (((x) >> 0) & 0x3F)
+#define   C_036010_PERF_SEL2                                          0xFFFFFFC0
+#define   S_036010_PERF_SEL3(x)                                       (((x) & 0x3F) << 10)
+#define   G_036010_PERF_SEL3(x)                                       (((x) >> 10) & 0x3F)
+#define   C_036010_PERF_SEL3                                          0xFFFF03FF
+#define R_036014_CPF_PERFCOUNTER1_SELECT                                0x036014
+#define R_036018_CPF_PERFCOUNTER0_SELECT1                               0x036018
+#define   S_036018_PERF_SEL2(x)                                       (((x) & 0x3F) << 0)
+#define   G_036018_PERF_SEL2(x)                                       (((x) >> 0) & 0x3F)
+#define   C_036018_PERF_SEL2                                          0xFFFFFFC0
+#define   S_036018_PERF_SEL3(x)                                       (((x) & 0x3F) << 10)
+#define   G_036018_PERF_SEL3(x)                                       (((x) >> 10) & 0x3F)
+#define   C_036018_PERF_SEL3                                          0xFFFF03FF
+#define R_03601C_CPF_PERFCOUNTER0_SELECT                                0x03601C
+#define   S_03601C_PERF_SEL(x)                                        (((x) & 0x3F) << 0)
+#define   G_03601C_PERF_SEL(x)                                        (((x) >> 0) & 0x3F)
+#define   C_03601C_PERF_SEL                                           0xFFFFFFC0
+#define   S_03601C_PERF_SEL1(x)                                       (((x) & 0x3F) << 10)
+#define   G_03601C_PERF_SEL1(x)                                       (((x) >> 10) & 0x3F)
+#define   C_03601C_PERF_SEL1                                          0xFFFF03FF
+#define   S_03601C_CNTR_MODE(x)                                       (((x) & 0x0F) << 20)
+#define   G_03601C_CNTR_MODE(x)                                       (((x) >> 20) & 0x0F)
+#define   C_03601C_CNTR_MODE                                          0xFF0FFFFF
+#define R_036020_CP_PERFMON_CNTL                                        0x036020
+#define   S_036020_PERFMON_STATE(x)                                   (((x) & 0x0F) << 0)
+#define   G_036020_PERFMON_STATE(x)                                   (((x) >> 0) & 0x0F)
+#define   C_036020_PERFMON_STATE                                      0xFFFFFFF0
+#define     V_036020_DISABLE_AND_RESET                              0x00
+#define     V_036020_START_COUNTING                                 0x01
+#define     V_036020_STOP_COUNTING                                  0x02
+#define   S_036020_SPM_PERFMON_STATE(x)                               (((x) & 0x0F) << 4)
+#define   G_036020_SPM_PERFMON_STATE(x)                               (((x) >> 4) & 0x0F)
+#define   C_036020_SPM_PERFMON_STATE                                  0xFFFFFF0F
+#define   S_036020_PERFMON_ENABLE_MODE(x)                             (((x) & 0x03) << 8)
+#define   G_036020_PERFMON_ENABLE_MODE(x)                             (((x) >> 8) & 0x03)
+#define   C_036020_PERFMON_ENABLE_MODE                                0xFFFFFCFF
+#define   S_036020_PERFMON_SAMPLE_ENABLE(x)                           (((x) & 0x1) << 10)
+#define   G_036020_PERFMON_SAMPLE_ENABLE(x)                           (((x) >> 10) & 0x1)
+#define   C_036020_PERFMON_SAMPLE_ENABLE                              0xFFFFFBFF
+#define R_036024_CPC_PERFCOUNTER0_SELECT                                0x036024
+#define   S_036024_PERF_SEL(x)                                        (((x) & 0x3F) << 0)
+#define   G_036024_PERF_SEL(x)                                        (((x) >> 0) & 0x3F)
+#define   C_036024_PERF_SEL                                           0xFFFFFFC0
+#define   S_036024_PERF_SEL1(x)                                       (((x) & 0x3F) << 10)
+#define   G_036024_PERF_SEL1(x)                                       (((x) >> 10) & 0x3F)
+#define   C_036024_PERF_SEL1                                          0xFFFF03FF
+#define   S_036024_CNTR_MODE(x)                                       (((x) & 0x0F) << 20)
+#define   G_036024_CNTR_MODE(x)                                       (((x) >> 20) & 0x0F)
+#define   C_036024_CNTR_MODE                                          0xFF0FFFFF
+#define R_036100_GRBM_PERFCOUNTER0_SELECT                               0x036100
+#define   S_036100_PERF_SEL(x)                                        (((x) & 0x3F) << 0)
+#define   G_036100_PERF_SEL(x)                                        (((x) >> 0) & 0x3F)
+#define   C_036100_PERF_SEL                                           0xFFFFFFC0
+#define   S_036100_DB_CLEAN_USER_DEFINED_MASK(x)                      (((x) & 0x1) << 10)
+#define   G_036100_DB_CLEAN_USER_DEFINED_MASK(x)                      (((x) >> 10) & 0x1)
+#define   C_036100_DB_CLEAN_USER_DEFINED_MASK                         0xFFFFFBFF
+#define   S_036100_CB_CLEAN_USER_DEFINED_MASK(x)                      (((x) & 0x1) << 11)
+#define   G_036100_CB_CLEAN_USER_DEFINED_MASK(x)                      (((x) >> 11) & 0x1)
+#define   C_036100_CB_CLEAN_USER_DEFINED_MASK                         0xFFFFF7FF
+#define   S_036100_VGT_BUSY_USER_DEFINED_MASK(x)                      (((x) & 0x1) << 12)
+#define   G_036100_VGT_BUSY_USER_DEFINED_MASK(x)                      (((x) >> 12) & 0x1)
+#define   C_036100_VGT_BUSY_USER_DEFINED_MASK                         0xFFFFEFFF
+#define   S_036100_TA_BUSY_USER_DEFINED_MASK(x)                       (((x) & 0x1) << 13)
+#define   G_036100_TA_BUSY_USER_DEFINED_MASK(x)                       (((x) >> 13) & 0x1)
+#define   C_036100_TA_BUSY_USER_DEFINED_MASK                          0xFFFFDFFF
+#define   S_036100_SX_BUSY_USER_DEFINED_MASK(x)                       (((x) & 0x1) << 14)
+#define   G_036100_SX_BUSY_USER_DEFINED_MASK(x)                       (((x) >> 14) & 0x1)
+#define   C_036100_SX_BUSY_USER_DEFINED_MASK                          0xFFFFBFFF
+#define   S_036100_SPI_BUSY_USER_DEFINED_MASK(x)                      (((x) & 0x1) << 16)
+#define   G_036100_SPI_BUSY_USER_DEFINED_MASK(x)                      (((x) >> 16) & 0x1)
+#define   C_036100_SPI_BUSY_USER_DEFINED_MASK                         0xFFFEFFFF
+#define   S_036100_SC_BUSY_USER_DEFINED_MASK(x)                       (((x) & 0x1) << 17)
+#define   G_036100_SC_BUSY_USER_DEFINED_MASK(x)                       (((x) >> 17) & 0x1)
+#define   C_036100_SC_BUSY_USER_DEFINED_MASK                          0xFFFDFFFF
+#define   S_036100_PA_BUSY_USER_DEFINED_MASK(x)                       (((x) & 0x1) << 18)
+#define   G_036100_PA_BUSY_USER_DEFINED_MASK(x)                       (((x) >> 18) & 0x1)
+#define   C_036100_PA_BUSY_USER_DEFINED_MASK                          0xFFFBFFFF
+#define   S_036100_GRBM_BUSY_USER_DEFINED_MASK(x)                     (((x) & 0x1) << 19)
+#define   G_036100_GRBM_BUSY_USER_DEFINED_MASK(x)                     (((x) >> 19) & 0x1)
+#define   C_036100_GRBM_BUSY_USER_DEFINED_MASK                        0xFFF7FFFF
+#define   S_036100_DB_BUSY_USER_DEFINED_MASK(x)                       (((x) & 0x1) << 20)
+#define   G_036100_DB_BUSY_USER_DEFINED_MASK(x)                       (((x) >> 20) & 0x1)
+#define   C_036100_DB_BUSY_USER_DEFINED_MASK                          0xFFEFFFFF
+#define   S_036100_CB_BUSY_USER_DEFINED_MASK(x)                       (((x) & 0x1) << 21)
+#define   G_036100_CB_BUSY_USER_DEFINED_MASK(x)                       (((x) >> 21) & 0x1)
+#define   C_036100_CB_BUSY_USER_DEFINED_MASK                          0xFFDFFFFF
+#define   S_036100_CP_BUSY_USER_DEFINED_MASK(x)                       (((x) & 0x1) << 22)
+#define   G_036100_CP_BUSY_USER_DEFINED_MASK(x)                       (((x) >> 22) & 0x1)
+#define   C_036100_CP_BUSY_USER_DEFINED_MASK                          0xFFBFFFFF
+#define   S_036100_IA_BUSY_USER_DEFINED_MASK(x)                       (((x) & 0x1) << 23)
+#define   G_036100_IA_BUSY_USER_DEFINED_MASK(x)                       (((x) >> 23) & 0x1)
+#define   C_036100_IA_BUSY_USER_DEFINED_MASK                          0xFF7FFFFF
+#define   S_036100_GDS_BUSY_USER_DEFINED_MASK(x)                      (((x) & 0x1) << 24)
+#define   G_036100_GDS_BUSY_USER_DEFINED_MASK(x)                      (((x) >> 24) & 0x1)
+#define   C_036100_GDS_BUSY_USER_DEFINED_MASK                         0xFEFFFFFF
+#define   S_036100_BCI_BUSY_USER_DEFINED_MASK(x)                      (((x) & 0x1) << 25)
+#define   G_036100_BCI_BUSY_USER_DEFINED_MASK(x)                      (((x) >> 25) & 0x1)
+#define   C_036100_BCI_BUSY_USER_DEFINED_MASK                         0xFDFFFFFF
+#define   S_036100_RLC_BUSY_USER_DEFINED_MASK(x)                      (((x) & 0x1) << 26)
+#define   G_036100_RLC_BUSY_USER_DEFINED_MASK(x)                      (((x) >> 26) & 0x1)
+#define   C_036100_RLC_BUSY_USER_DEFINED_MASK                         0xFBFFFFFF
+#define   S_036100_TC_BUSY_USER_DEFINED_MASK(x)                       (((x) & 0x1) << 27)
+#define   G_036100_TC_BUSY_USER_DEFINED_MASK(x)                       (((x) >> 27) & 0x1)
+#define   C_036100_TC_BUSY_USER_DEFINED_MASK                          0xF7FFFFFF
+#define   S_036100_WD_BUSY_USER_DEFINED_MASK(x)                       (((x) & 0x1) << 28)
+#define   G_036100_WD_BUSY_USER_DEFINED_MASK(x)                       (((x) >> 28) & 0x1)
+#define   C_036100_WD_BUSY_USER_DEFINED_MASK                          0xEFFFFFFF
+#define R_036104_GRBM_PERFCOUNTER1_SELECT                               0x036104
+#define R_036108_GRBM_SE0_PERFCOUNTER_SELECT                            0x036108
+#define   S_036108_PERF_SEL(x)                                        (((x) & 0x3F) << 0)
+#define   G_036108_PERF_SEL(x)                                        (((x) >> 0) & 0x3F)
+#define   C_036108_PERF_SEL                                           0xFFFFFFC0
+#define   S_036108_DB_CLEAN_USER_DEFINED_MASK(x)                      (((x) & 0x1) << 10)
+#define   G_036108_DB_CLEAN_USER_DEFINED_MASK(x)                      (((x) >> 10) & 0x1)
+#define   C_036108_DB_CLEAN_USER_DEFINED_MASK                         0xFFFFFBFF
+#define   S_036108_CB_CLEAN_USER_DEFINED_MASK(x)                      (((x) & 0x1) << 11)
+#define   G_036108_CB_CLEAN_USER_DEFINED_MASK(x)                      (((x) >> 11) & 0x1)
+#define   C_036108_CB_CLEAN_USER_DEFINED_MASK                         0xFFFFF7FF
+#define   S_036108_TA_BUSY_USER_DEFINED_MASK(x)                       (((x) & 0x1) << 12)
+#define   G_036108_TA_BUSY_USER_DEFINED_MASK(x)                       (((x) >> 12) & 0x1)
+#define   C_036108_TA_BUSY_USER_DEFINED_MASK                          0xFFFFEFFF
+#define   S_036108_SX_BUSY_USER_DEFINED_MASK(x)                       (((x) & 0x1) << 13)
+#define   G_036108_SX_BUSY_USER_DEFINED_MASK(x)                       (((x) >> 13) & 0x1)
+#define   C_036108_SX_BUSY_USER_DEFINED_MASK                          0xFFFFDFFF
+#define   S_036108_SPI_BUSY_USER_DEFINED_MASK(x)                      (((x) & 0x1) << 15)
+#define   G_036108_SPI_BUSY_USER_DEFINED_MASK(x)                      (((x) >> 15) & 0x1)
+#define   C_036108_SPI_BUSY_USER_DEFINED_MASK                         0xFFFF7FFF
+#define   S_036108_SC_BUSY_USER_DEFINED_MASK(x)                       (((x) & 0x1) << 16)
+#define   G_036108_SC_BUSY_USER_DEFINED_MASK(x)                       (((x) >> 16) & 0x1)
+#define   C_036108_SC_BUSY_USER_DEFINED_MASK                          0xFFFEFFFF
+#define   S_036108_DB_BUSY_USER_DEFINED_MASK(x)                       (((x) & 0x1) << 17)
+#define   G_036108_DB_BUSY_USER_DEFINED_MASK(x)                       (((x) >> 17) & 0x1)
+#define   C_036108_DB_BUSY_USER_DEFINED_MASK                          0xFFFDFFFF
+#define   S_036108_CB_BUSY_USER_DEFINED_MASK(x)                       (((x) & 0x1) << 18)
+#define   G_036108_CB_BUSY_USER_DEFINED_MASK(x)                       (((x) >> 18) & 0x1)
+#define   C_036108_CB_BUSY_USER_DEFINED_MASK                          0xFFFBFFFF
+#define   S_036108_VGT_BUSY_USER_DEFINED_MASK(x)                      (((x) & 0x1) << 19)
+#define   G_036108_VGT_BUSY_USER_DEFINED_MASK(x)                      (((x) >> 19) & 0x1)
+#define   C_036108_VGT_BUSY_USER_DEFINED_MASK                         0xFFF7FFFF
+#define   S_036108_PA_BUSY_USER_DEFINED_MASK(x)                       (((x) & 0x1) << 20)
+#define   G_036108_PA_BUSY_USER_DEFINED_MASK(x)                       (((x) >> 20) & 0x1)
+#define   C_036108_PA_BUSY_USER_DEFINED_MASK                          0xFFEFFFFF
+#define   S_036108_BCI_BUSY_USER_DEFINED_MASK(x)                      (((x) & 0x1) << 21)
+#define   G_036108_BCI_BUSY_USER_DEFINED_MASK(x)                      (((x) >> 21) & 0x1)
+#define   C_036108_BCI_BUSY_USER_DEFINED_MASK                         0xFFDFFFFF
+#define R_03610C_GRBM_SE1_PERFCOUNTER_SELECT                            0x03610C
+#define   S_03610C_PERF_SEL(x)                                        (((x) & 0x3F) << 0)
+#define   G_03610C_PERF_SEL(x)                                        (((x) >> 0) & 0x3F)
+#define   C_03610C_PERF_SEL                                           0xFFFFFFC0
+#define   S_03610C_DB_CLEAN_USER_DEFINED_MASK(x)                      (((x) & 0x1) << 10)
+#define   G_03610C_DB_CLEAN_USER_DEFINED_MASK(x)                      (((x) >> 10) & 0x1)
+#define   C_03610C_DB_CLEAN_USER_DEFINED_MASK                         0xFFFFFBFF
+#define   S_03610C_CB_CLEAN_USER_DEFINED_MASK(x)                      (((x) & 0x1) << 11)
+#define   G_03610C_CB_CLEAN_USER_DEFINED_MASK(x)                      (((x) >> 11) & 0x1)
+#define   C_03610C_CB_CLEAN_USER_DEFINED_MASK                         0xFFFFF7FF
+#define   S_03610C_TA_BUSY_USER_DEFINED_MASK(x)                       (((x) & 0x1) << 12)
+#define   G_03610C_TA_BUSY_USER_DEFINED_MASK(x)                       (((x) >> 12) & 0x1)
+#define   C_03610C_TA_BUSY_USER_DEFINED_MASK                          0xFFFFEFFF
+#define   S_03610C_SX_BUSY_USER_DEFINED_MASK(x)                       (((x) & 0x1) << 13)
+#define   G_03610C_SX_BUSY_USER_DEFINED_MASK(x)                       (((x) >> 13) & 0x1)
+#define   C_03610C_SX_BUSY_USER_DEFINED_MASK                          0xFFFFDFFF
+#define   S_03610C_SPI_BUSY_USER_DEFINED_MASK(x)                      (((x) & 0x1) << 15)
+#define   G_03610C_SPI_BUSY_USER_DEFINED_MASK(x)                      (((x) >> 15) & 0x1)
+#define   C_03610C_SPI_BUSY_USER_DEFINED_MASK                         0xFFFF7FFF
+#define   S_03610C_SC_BUSY_USER_DEFINED_MASK(x)                       (((x) & 0x1) << 16)
+#define   G_03610C_SC_BUSY_USER_DEFINED_MASK(x)                       (((x) >> 16) & 0x1)
+#define   C_03610C_SC_BUSY_USER_DEFINED_MASK                          0xFFFEFFFF
+#define   S_03610C_DB_BUSY_USER_DEFINED_MASK(x)                       (((x) & 0x1) << 17)
+#define   G_03610C_DB_BUSY_USER_DEFINED_MASK(x)                       (((x) >> 17) & 0x1)
+#define   C_03610C_DB_BUSY_USER_DEFINED_MASK                          0xFFFDFFFF
+#define   S_03610C_CB_BUSY_USER_DEFINED_MASK(x)                       (((x) & 0x1) << 18)
+#define   G_03610C_CB_BUSY_USER_DEFINED_MASK(x)                       (((x) >> 18) & 0x1)
+#define   C_03610C_CB_BUSY_USER_DEFINED_MASK                          0xFFFBFFFF
+#define   S_03610C_VGT_BUSY_USER_DEFINED_MASK(x)                      (((x) & 0x1) << 19)
+#define   G_03610C_VGT_BUSY_USER_DEFINED_MASK(x)                      (((x) >> 19) & 0x1)
+#define   C_03610C_VGT_BUSY_USER_DEFINED_MASK                         0xFFF7FFFF
+#define   S_03610C_PA_BUSY_USER_DEFINED_MASK(x)                       (((x) & 0x1) << 20)
+#define   G_03610C_PA_BUSY_USER_DEFINED_MASK(x)                       (((x) >> 20) & 0x1)
+#define   C_03610C_PA_BUSY_USER_DEFINED_MASK                          0xFFEFFFFF
+#define   S_03610C_BCI_BUSY_USER_DEFINED_MASK(x)                      (((x) & 0x1) << 21)
+#define   G_03610C_BCI_BUSY_USER_DEFINED_MASK(x)                      (((x) >> 21) & 0x1)
+#define   C_03610C_BCI_BUSY_USER_DEFINED_MASK                         0xFFDFFFFF
+#define R_036110_GRBM_SE2_PERFCOUNTER_SELECT                            0x036110
+#define   S_036110_PERF_SEL(x)                                        (((x) & 0x3F) << 0)
+#define   G_036110_PERF_SEL(x)                                        (((x) >> 0) & 0x3F)
+#define   C_036110_PERF_SEL                                           0xFFFFFFC0
+#define   S_036110_DB_CLEAN_USER_DEFINED_MASK(x)                      (((x) & 0x1) << 10)
+#define   G_036110_DB_CLEAN_USER_DEFINED_MASK(x)                      (((x) >> 10) & 0x1)
+#define   C_036110_DB_CLEAN_USER_DEFINED_MASK                         0xFFFFFBFF
+#define   S_036110_CB_CLEAN_USER_DEFINED_MASK(x)                      (((x) & 0x1) << 11)
+#define   G_036110_CB_CLEAN_USER_DEFINED_MASK(x)                      (((x) >> 11) & 0x1)
+#define   C_036110_CB_CLEAN_USER_DEFINED_MASK                         0xFFFFF7FF
+#define   S_036110_TA_BUSY_USER_DEFINED_MASK(x)                       (((x) & 0x1) << 12)
+#define   G_036110_TA_BUSY_USER_DEFINED_MASK(x)                       (((x) >> 12) & 0x1)
+#define   C_036110_TA_BUSY_USER_DEFINED_MASK                          0xFFFFEFFF
+#define   S_036110_SX_BUSY_USER_DEFINED_MASK(x)                       (((x) & 0x1) << 13)
+#define   G_036110_SX_BUSY_USER_DEFINED_MASK(x)                       (((x) >> 13) & 0x1)
+#define   C_036110_SX_BUSY_USER_DEFINED_MASK                          0xFFFFDFFF
+#define   S_036110_SPI_BUSY_USER_DEFINED_MASK(x)                      (((x) & 0x1) << 15)
+#define   G_036110_SPI_BUSY_USER_DEFINED_MASK(x)                      (((x) >> 15) & 0x1)
+#define   C_036110_SPI_BUSY_USER_DEFINED_MASK                         0xFFFF7FFF
+#define   S_036110_SC_BUSY_USER_DEFINED_MASK(x)                       (((x) & 0x1) << 16)
+#define   G_036110_SC_BUSY_USER_DEFINED_MASK(x)                       (((x) >> 16) & 0x1)
+#define   C_036110_SC_BUSY_USER_DEFINED_MASK                          0xFFFEFFFF
+#define   S_036110_DB_BUSY_USER_DEFINED_MASK(x)                       (((x) & 0x1) << 17)
+#define   G_036110_DB_BUSY_USER_DEFINED_MASK(x)                       (((x) >> 17) & 0x1)
+#define   C_036110_DB_BUSY_USER_DEFINED_MASK                          0xFFFDFFFF
+#define   S_036110_CB_BUSY_USER_DEFINED_MASK(x)                       (((x) & 0x1) << 18)
+#define   G_036110_CB_BUSY_USER_DEFINED_MASK(x)                       (((x) >> 18) & 0x1)
+#define   C_036110_CB_BUSY_USER_DEFINED_MASK                          0xFFFBFFFF
+#define   S_036110_VGT_BUSY_USER_DEFINED_MASK(x)                      (((x) & 0x1) << 19)
+#define   G_036110_VGT_BUSY_USER_DEFINED_MASK(x)                      (((x) >> 19) & 0x1)
+#define   C_036110_VGT_BUSY_USER_DEFINED_MASK                         0xFFF7FFFF
+#define   S_036110_PA_BUSY_USER_DEFINED_MASK(x)                       (((x) & 0x1) << 20)
+#define   G_036110_PA_BUSY_USER_DEFINED_MASK(x)                       (((x) >> 20) & 0x1)
+#define   C_036110_PA_BUSY_USER_DEFINED_MASK                          0xFFEFFFFF
+#define   S_036110_BCI_BUSY_USER_DEFINED_MASK(x)                      (((x) & 0x1) << 21)
+#define   G_036110_BCI_BUSY_USER_DEFINED_MASK(x)                      (((x) >> 21) & 0x1)
+#define   C_036110_BCI_BUSY_USER_DEFINED_MASK                         0xFFDFFFFF
+#define R_036114_GRBM_SE3_PERFCOUNTER_SELECT                            0x036114
+#define   S_036114_PERF_SEL(x)                                        (((x) & 0x3F) << 0)
+#define   G_036114_PERF_SEL(x)                                        (((x) >> 0) & 0x3F)
+#define   C_036114_PERF_SEL                                           0xFFFFFFC0
+#define   S_036114_DB_CLEAN_USER_DEFINED_MASK(x)                      (((x) & 0x1) << 10)
+#define   G_036114_DB_CLEAN_USER_DEFINED_MASK(x)                      (((x) >> 10) & 0x1)
+#define   C_036114_DB_CLEAN_USER_DEFINED_MASK                         0xFFFFFBFF
+#define   S_036114_CB_CLEAN_USER_DEFINED_MASK(x)                      (((x) & 0x1) << 11)
+#define   G_036114_CB_CLEAN_USER_DEFINED_MASK(x)                      (((x) >> 11) & 0x1)
+#define   C_036114_CB_CLEAN_USER_DEFINED_MASK                         0xFFFFF7FF
+#define   S_036114_TA_BUSY_USER_DEFINED_MASK(x)                       (((x) & 0x1) << 12)
+#define   G_036114_TA_BUSY_USER_DEFINED_MASK(x)                       (((x) >> 12) & 0x1)
+#define   C_036114_TA_BUSY_USER_DEFINED_MASK                          0xFFFFEFFF
+#define   S_036114_SX_BUSY_USER_DEFINED_MASK(x)                       (((x) & 0x1) << 13)
+#define   G_036114_SX_BUSY_USER_DEFINED_MASK(x)                       (((x) >> 13) & 0x1)
+#define   C_036114_SX_BUSY_USER_DEFINED_MASK                          0xFFFFDFFF
+#define   S_036114_SPI_BUSY_USER_DEFINED_MASK(x)                      (((x) & 0x1) << 15)
+#define   G_036114_SPI_BUSY_USER_DEFINED_MASK(x)                      (((x) >> 15) & 0x1)
+#define   C_036114_SPI_BUSY_USER_DEFINED_MASK                         0xFFFF7FFF
+#define   S_036114_SC_BUSY_USER_DEFINED_MASK(x)                       (((x) & 0x1) << 16)
+#define   G_036114_SC_BUSY_USER_DEFINED_MASK(x)                       (((x) >> 16) & 0x1)
+#define   C_036114_SC_BUSY_USER_DEFINED_MASK                          0xFFFEFFFF
+#define   S_036114_DB_BUSY_USER_DEFINED_MASK(x)                       (((x) & 0x1) << 17)
+#define   G_036114_DB_BUSY_USER_DEFINED_MASK(x)                       (((x) >> 17) & 0x1)
+#define   C_036114_DB_BUSY_USER_DEFINED_MASK                          0xFFFDFFFF
+#define   S_036114_CB_BUSY_USER_DEFINED_MASK(x)                       (((x) & 0x1) << 18)
+#define   G_036114_CB_BUSY_USER_DEFINED_MASK(x)                       (((x) >> 18) & 0x1)
+#define   C_036114_CB_BUSY_USER_DEFINED_MASK                          0xFFFBFFFF
+#define   S_036114_VGT_BUSY_USER_DEFINED_MASK(x)                      (((x) & 0x1) << 19)
+#define   G_036114_VGT_BUSY_USER_DEFINED_MASK(x)                      (((x) >> 19) & 0x1)
+#define   C_036114_VGT_BUSY_USER_DEFINED_MASK                         0xFFF7FFFF
+#define   S_036114_PA_BUSY_USER_DEFINED_MASK(x)                       (((x) & 0x1) << 20)
+#define   G_036114_PA_BUSY_USER_DEFINED_MASK(x)                       (((x) >> 20) & 0x1)
+#define   C_036114_PA_BUSY_USER_DEFINED_MASK                          0xFFEFFFFF
+#define   S_036114_BCI_BUSY_USER_DEFINED_MASK(x)                      (((x) & 0x1) << 21)
+#define   G_036114_BCI_BUSY_USER_DEFINED_MASK(x)                      (((x) >> 21) & 0x1)
+#define   C_036114_BCI_BUSY_USER_DEFINED_MASK                         0xFFDFFFFF
+#define R_036200_WD_PERFCOUNTER0_SELECT                                 0x036200
+#define   S_036200_PERF_SEL(x)                                        (((x) & 0xFF) << 0)
+#define   G_036200_PERF_SEL(x)                                        (((x) >> 0) & 0xFF)
+#define   C_036200_PERF_SEL                                           0xFFFFFF00
+#define   S_036200_PERF_MODE(x)                                       (((x) & 0x0F) << 28)
+#define   G_036200_PERF_MODE(x)                                       (((x) >> 28) & 0x0F)
+#define   C_036200_PERF_MODE                                          0x0FFFFFFF
+#define R_036204_WD_PERFCOUNTER1_SELECT                                 0x036204
+#define R_036208_WD_PERFCOUNTER2_SELECT                                 0x036208
+#define R_03620C_WD_PERFCOUNTER3_SELECT                                 0x03620C
+#define R_036210_IA_PERFCOUNTER0_SELECT                                 0x036210
+#define   S_036210_PERF_SEL(x)                                        (((x) & 0x3FF) << 0)
+#define   G_036210_PERF_SEL(x)                                        (((x) >> 0) & 0x3FF)
+#define   C_036210_PERF_SEL                                           0xFFFFFC00
+#define   S_036210_PERF_SEL1(x)                                       (((x) & 0x3FF) << 10)
+#define   G_036210_PERF_SEL1(x)                                       (((x) >> 10) & 0x3FF)
+#define   C_036210_PERF_SEL1                                          0xFFF003FF
+#define   S_036210_CNTR_MODE(x)                                       (((x) & 0x0F) << 20)
+#define   G_036210_CNTR_MODE(x)                                       (((x) >> 20) & 0x0F)
+#define   C_036210_CNTR_MODE                                          0xFF0FFFFF
+#define   S_036210_PERF_MODE1(x)                                      (((x) & 0x0F) << 24)
+#define   G_036210_PERF_MODE1(x)                                      (((x) >> 24) & 0x0F)
+#define   C_036210_PERF_MODE1                                         0xF0FFFFFF
+#define   S_036210_PERF_MODE(x)                                       (((x) & 0x0F) << 28)
+#define   G_036210_PERF_MODE(x)                                       (((x) >> 28) & 0x0F)
+#define   C_036210_PERF_MODE                                          0x0FFFFFFF
+#define R_036214_IA_PERFCOUNTER1_SELECT                                 0x036214
+#define R_036218_IA_PERFCOUNTER2_SELECT                                 0x036218
+#define R_03621C_IA_PERFCOUNTER3_SELECT                                 0x03621C
+#define R_036220_IA_PERFCOUNTER0_SELECT1                                0x036220
+#define   S_036220_PERF_SEL2(x)                                       (((x) & 0x3FF) << 0)
+#define   G_036220_PERF_SEL2(x)                                       (((x) >> 0) & 0x3FF)
+#define   C_036220_PERF_SEL2                                          0xFFFFFC00
+#define   S_036220_PERF_SEL3(x)                                       (((x) & 0x3FF) << 10)
+#define   G_036220_PERF_SEL3(x)                                       (((x) >> 10) & 0x3FF)
+#define   C_036220_PERF_SEL3                                          0xFFF003FF
+#define   S_036220_PERF_MODE3(x)                                      (((x) & 0x0F) << 24)
+#define   G_036220_PERF_MODE3(x)                                      (((x) >> 24) & 0x0F)
+#define   C_036220_PERF_MODE3                                         0xF0FFFFFF
+#define   S_036220_PERF_MODE2(x)                                      (((x) & 0x0F) << 28)
+#define   G_036220_PERF_MODE2(x)                                      (((x) >> 28) & 0x0F)
+#define   C_036220_PERF_MODE2                                         0x0FFFFFFF
+#define R_036230_VGT_PERFCOUNTER0_SELECT                                0x036230
+#define   S_036230_PERF_SEL(x)                                        (((x) & 0x3FF) << 0)
+#define   G_036230_PERF_SEL(x)                                        (((x) >> 0) & 0x3FF)
+#define   C_036230_PERF_SEL                                           0xFFFFFC00
+#define   S_036230_PERF_SEL1(x)                                       (((x) & 0x3FF) << 10)
+#define   G_036230_PERF_SEL1(x)                                       (((x) >> 10) & 0x3FF)
+#define   C_036230_PERF_SEL1                                          0xFFF003FF
+#define   S_036230_CNTR_MODE(x)                                       (((x) & 0x0F) << 20)
+#define   G_036230_CNTR_MODE(x)                                       (((x) >> 20) & 0x0F)
+#define   C_036230_CNTR_MODE                                          0xFF0FFFFF
+#define   S_036230_PERF_MODE1(x)                                      (((x) & 0x0F) << 24)
+#define   G_036230_PERF_MODE1(x)                                      (((x) >> 24) & 0x0F)
+#define   C_036230_PERF_MODE1                                         0xF0FFFFFF
+#define   S_036230_PERF_MODE(x)                                       (((x) & 0x0F) << 28)
+#define   G_036230_PERF_MODE(x)                                       (((x) >> 28) & 0x0F)
+#define   C_036230_PERF_MODE                                          0x0FFFFFFF
+#define R_036234_VGT_PERFCOUNTER1_SELECT                                0x036234
+#define R_036238_VGT_PERFCOUNTER2_SELECT                                0x036238
+#define R_03623C_VGT_PERFCOUNTER3_SELECT                                0x03623C
+#define R_036240_VGT_PERFCOUNTER0_SELECT1                               0x036240
+#define   S_036240_PERF_SEL2(x)                                       (((x) & 0x3FF) << 0)
+#define   G_036240_PERF_SEL2(x)                                       (((x) >> 0) & 0x3FF)
+#define   C_036240_PERF_SEL2                                          0xFFFFFC00
+#define   S_036240_PERF_SEL3(x)                                       (((x) & 0x3FF) << 10)
+#define   G_036240_PERF_SEL3(x)                                       (((x) >> 10) & 0x3FF)
+#define   C_036240_PERF_SEL3                                          0xFFF003FF
+#define   S_036240_PERF_MODE3(x)                                      (((x) & 0x0F) << 24)
+#define   G_036240_PERF_MODE3(x)                                      (((x) >> 24) & 0x0F)
+#define   C_036240_PERF_MODE3                                         0xF0FFFFFF
+#define   S_036240_PERF_MODE2(x)                                      (((x) & 0x0F) << 28)
+#define   G_036240_PERF_MODE2(x)                                      (((x) >> 28) & 0x0F)
+#define   C_036240_PERF_MODE2                                         0x0FFFFFFF
+#define R_036244_VGT_PERFCOUNTER1_SELECT1                               0x036244
+#define R_036250_VGT_PERFCOUNTER_SEID_MASK                              0x036250
+#define   S_036250_PERF_SEID_IGNORE_MASK(x)                           (((x) & 0xFF) << 0)
+#define   G_036250_PERF_SEID_IGNORE_MASK(x)                           (((x) >> 0) & 0xFF)
+#define   C_036250_PERF_SEID_IGNORE_MASK                              0xFFFFFF00
+#define R_036400_PA_SU_PERFCOUNTER0_SELECT                              0x036400
+#define   S_036400_PERF_SEL(x)                                        (((x) & 0x3FF) << 0)
+#define   G_036400_PERF_SEL(x)                                        (((x) >> 0) & 0x3FF)
+#define   C_036400_PERF_SEL                                           0xFFFFFC00
+#define   S_036400_PERF_SEL1(x)                                       (((x) & 0x3FF) << 10)
+#define   G_036400_PERF_SEL1(x)                                       (((x) >> 10) & 0x3FF)
+#define   C_036400_PERF_SEL1                                          0xFFF003FF
+#define   S_036400_CNTR_MODE(x)                                       (((x) & 0x0F) << 20)
+#define   G_036400_CNTR_MODE(x)                                       (((x) >> 20) & 0x0F)
+#define   C_036400_CNTR_MODE                                          0xFF0FFFFF
+#define R_036404_PA_SU_PERFCOUNTER0_SELECT1                             0x036404
+#define   S_036404_PERF_SEL2(x)                                       (((x) & 0x3FF) << 0)
+#define   G_036404_PERF_SEL2(x)                                       (((x) >> 0) & 0x3FF)
+#define   C_036404_PERF_SEL2                                          0xFFFFFC00
+#define   S_036404_PERF_SEL3(x)                                       (((x) & 0x3FF) << 10)
+#define   G_036404_PERF_SEL3(x)                                       (((x) >> 10) & 0x3FF)
+#define   C_036404_PERF_SEL3                                          0xFFF003FF
+#define R_036408_PA_SU_PERFCOUNTER1_SELECT                              0x036408
+#define R_03640C_PA_SU_PERFCOUNTER1_SELECT1                             0x03640C
+#define R_036410_PA_SU_PERFCOUNTER2_SELECT                              0x036410
+#define R_036414_PA_SU_PERFCOUNTER3_SELECT                              0x036414
+#define R_036500_PA_SC_PERFCOUNTER0_SELECT                              0x036500
+#define   S_036500_PERF_SEL(x)                                        (((x) & 0x3FF) << 0)
+#define   G_036500_PERF_SEL(x)                                        (((x) >> 0) & 0x3FF)
+#define   C_036500_PERF_SEL                                           0xFFFFFC00
+#define   S_036500_PERF_SEL1(x)                                       (((x) & 0x3FF) << 10)
+#define   G_036500_PERF_SEL1(x)                                       (((x) >> 10) & 0x3FF)
+#define   C_036500_PERF_SEL1                                          0xFFF003FF
+#define   S_036500_CNTR_MODE(x)                                       (((x) & 0x0F) << 20)
+#define   G_036500_CNTR_MODE(x)                                       (((x) >> 20) & 0x0F)
+#define   C_036500_CNTR_MODE                                          0xFF0FFFFF
+#define R_036504_PA_SC_PERFCOUNTER0_SELECT1                             0x036504
+#define   S_036504_PERF_SEL2(x)                                       (((x) & 0x3FF) << 0)
+#define   G_036504_PERF_SEL2(x)                                       (((x) >> 0) & 0x3FF)
+#define   C_036504_PERF_SEL2                                          0xFFFFFC00
+#define   S_036504_PERF_SEL3(x)                                       (((x) & 0x3FF) << 10)
+#define   G_036504_PERF_SEL3(x)                                       (((x) >> 10) & 0x3FF)
+#define   C_036504_PERF_SEL3                                          0xFFF003FF
+#define R_036508_PA_SC_PERFCOUNTER1_SELECT                              0x036508
+#define R_03650C_PA_SC_PERFCOUNTER2_SELECT                              0x03650C
+#define R_036510_PA_SC_PERFCOUNTER3_SELECT                              0x036510
+#define R_036514_PA_SC_PERFCOUNTER4_SELECT                              0x036514
+#define R_036518_PA_SC_PERFCOUNTER5_SELECT                              0x036518
+#define R_03651C_PA_SC_PERFCOUNTER6_SELECT                              0x03651C
+#define R_036520_PA_SC_PERFCOUNTER7_SELECT                              0x036520
+#define R_036600_SPI_PERFCOUNTER0_SELECT                                0x036600
+#define   S_036600_PERF_SEL(x)                                        (((x) & 0x3FF) << 0)
+#define   G_036600_PERF_SEL(x)                                        (((x) >> 0) & 0x3FF)
+#define   C_036600_PERF_SEL                                           0xFFFFFC00
+#define   S_036600_PERF_SEL1(x)                                       (((x) & 0x3FF) << 10)
+#define   G_036600_PERF_SEL1(x)                                       (((x) >> 10) & 0x3FF)
+#define   C_036600_PERF_SEL1                                          0xFFF003FF
+#define   S_036600_CNTR_MODE(x)                                       (((x) & 0x0F) << 20)
+#define   G_036600_CNTR_MODE(x)                                       (((x) >> 20) & 0x0F)
+#define   C_036600_CNTR_MODE                                          0xFF0FFFFF
+#define R_036604_SPI_PERFCOUNTER1_SELECT                                0x036604
+#define R_036608_SPI_PERFCOUNTER2_SELECT                                0x036608
+#define R_03660C_SPI_PERFCOUNTER3_SELECT                                0x03660C
+#define R_036610_SPI_PERFCOUNTER0_SELECT1                               0x036610
+#define   S_036610_PERF_SEL2(x)                                       (((x) & 0x3FF) << 0)
+#define   G_036610_PERF_SEL2(x)                                       (((x) >> 0) & 0x3FF)
+#define   C_036610_PERF_SEL2                                          0xFFFFFC00
+#define   S_036610_PERF_SEL3(x)                                       (((x) & 0x3FF) << 10)
+#define   G_036610_PERF_SEL3(x)                                       (((x) >> 10) & 0x3FF)
+#define   C_036610_PERF_SEL3                                          0xFFF003FF
+#define R_036614_SPI_PERFCOUNTER1_SELECT1                               0x036614
+#define R_036618_SPI_PERFCOUNTER2_SELECT1                               0x036618
+#define R_03661C_SPI_PERFCOUNTER3_SELECT1                               0x03661C
+#define R_036620_SPI_PERFCOUNTER4_SELECT                                0x036620
+#define R_036624_SPI_PERFCOUNTER5_SELECT                                0x036624
+#define R_036628_SPI_PERFCOUNTER_BINS                                   0x036628
+#define   S_036628_BIN0_MIN(x)                                        (((x) & 0x0F) << 0)
+#define   G_036628_BIN0_MIN(x)                                        (((x) >> 0) & 0x0F)
+#define   C_036628_BIN0_MIN                                           0xFFFFFFF0
+#define   S_036628_BIN0_MAX(x)                                        (((x) & 0x0F) << 4)
+#define   G_036628_BIN0_MAX(x)                                        (((x) >> 4) & 0x0F)
+#define   C_036628_BIN0_MAX                                           0xFFFFFF0F
+#define   S_036628_BIN1_MIN(x)                                        (((x) & 0x0F) << 8)
+#define   G_036628_BIN1_MIN(x)                                        (((x) >> 8) & 0x0F)
+#define   C_036628_BIN1_MIN                                           0xFFFFF0FF
+#define   S_036628_BIN1_MAX(x)                                        (((x) & 0x0F) << 12)
+#define   G_036628_BIN1_MAX(x)                                        (((x) >> 12) & 0x0F)
+#define   C_036628_BIN1_MAX                                           0xFFFF0FFF
+#define   S_036628_BIN2_MIN(x)                                        (((x) & 0x0F) << 16)
+#define   G_036628_BIN2_MIN(x)                                        (((x) >> 16) & 0x0F)
+#define   C_036628_BIN2_MIN                                           0xFFF0FFFF
+#define   S_036628_BIN2_MAX(x)                                        (((x) & 0x0F) << 20)
+#define   G_036628_BIN2_MAX(x)                                        (((x) >> 20) & 0x0F)
+#define   C_036628_BIN2_MAX                                           0xFF0FFFFF
+#define   S_036628_BIN3_MIN(x)                                        (((x) & 0x0F) << 24)
+#define   G_036628_BIN3_MIN(x)                                        (((x) >> 24) & 0x0F)
+#define   C_036628_BIN3_MIN                                           0xF0FFFFFF
+#define   S_036628_BIN3_MAX(x)                                        (((x) & 0x0F) << 28)
+#define   G_036628_BIN3_MAX(x)                                        (((x) >> 28) & 0x0F)
+#define   C_036628_BIN3_MAX                                           0x0FFFFFFF
+#define R_036700_SQ_PERFCOUNTER0_SELECT                                 0x036700
+#define   S_036700_PERF_SEL(x)                                        (((x) & 0x1FF) << 0)
+#define   G_036700_PERF_SEL(x)                                        (((x) >> 0) & 0x1FF)
+#define   C_036700_PERF_SEL                                           0xFFFFFE00
+#define   S_036700_SQC_BANK_MASK(x)                                   (((x) & 0x0F) << 12)
+#define   G_036700_SQC_BANK_MASK(x)                                   (((x) >> 12) & 0x0F)
+#define   C_036700_SQC_BANK_MASK                                      0xFFFF0FFF
+#define   S_036700_SQC_CLIENT_MASK(x)                                 (((x) & 0x0F) << 16)
+#define   G_036700_SQC_CLIENT_MASK(x)                                 (((x) >> 16) & 0x0F)
+#define   C_036700_SQC_CLIENT_MASK                                    0xFFF0FFFF
+#define   S_036700_SPM_MODE(x)                                        (((x) & 0x0F) << 20)
+#define   G_036700_SPM_MODE(x)                                        (((x) >> 20) & 0x0F)
+#define   C_036700_SPM_MODE                                           0xFF0FFFFF
+#define   S_036700_SIMD_MASK(x)                                       (((x) & 0x0F) << 24)
+#define   G_036700_SIMD_MASK(x)                                       (((x) >> 24) & 0x0F)
+#define   C_036700_SIMD_MASK                                          0xF0FFFFFF
+#define   S_036700_PERF_MODE(x)                                       (((x) & 0x0F) << 28)
+#define   G_036700_PERF_MODE(x)                                       (((x) >> 28) & 0x0F)
+#define   C_036700_PERF_MODE                                          0x0FFFFFFF
+#define R_036704_SQ_PERFCOUNTER1_SELECT                                 0x036704
+#define R_036708_SQ_PERFCOUNTER2_SELECT                                 0x036708
+#define R_03670C_SQ_PERFCOUNTER3_SELECT                                 0x03670C
+#define R_036710_SQ_PERFCOUNTER4_SELECT                                 0x036710
+#define R_036714_SQ_PERFCOUNTER5_SELECT                                 0x036714
+#define R_036718_SQ_PERFCOUNTER6_SELECT                                 0x036718
+#define R_03671C_SQ_PERFCOUNTER7_SELECT                                 0x03671C
+#define R_036720_SQ_PERFCOUNTER8_SELECT                                 0x036720
+#define R_036724_SQ_PERFCOUNTER9_SELECT                                 0x036724
+#define R_036728_SQ_PERFCOUNTER10_SELECT                                0x036728
+#define R_03672C_SQ_PERFCOUNTER11_SELECT                                0x03672C
+#define R_036730_SQ_PERFCOUNTER12_SELECT                                0x036730
+#define R_036734_SQ_PERFCOUNTER13_SELECT                                0x036734
+#define R_036738_SQ_PERFCOUNTER14_SELECT                                0x036738
+#define R_03673C_SQ_PERFCOUNTER15_SELECT                                0x03673C
+#define R_036780_SQ_PERFCOUNTER_CTRL                                    0x036780
+#define   S_036780_PS_EN(x)                                           (((x) & 0x1) << 0)
+#define   G_036780_PS_EN(x)                                           (((x) >> 0) & 0x1)
+#define   C_036780_PS_EN                                              0xFFFFFFFE
+#define   S_036780_VS_EN(x)                                           (((x) & 0x1) << 1)
+#define   G_036780_VS_EN(x)                                           (((x) >> 1) & 0x1)
+#define   C_036780_VS_EN                                              0xFFFFFFFD
+#define   S_036780_GS_EN(x)                                           (((x) & 0x1) << 2)
+#define   G_036780_GS_EN(x)                                           (((x) >> 2) & 0x1)
+#define   C_036780_GS_EN                                              0xFFFFFFFB
+#define   S_036780_ES_EN(x)                                           (((x) & 0x1) << 3)
+#define   G_036780_ES_EN(x)                                           (((x) >> 3) & 0x1)
+#define   C_036780_ES_EN                                              0xFFFFFFF7
+#define   S_036780_HS_EN(x)                                           (((x) & 0x1) << 4)
+#define   G_036780_HS_EN(x)                                           (((x) >> 4) & 0x1)
+#define   C_036780_HS_EN                                              0xFFFFFFEF
+#define   S_036780_LS_EN(x)                                           (((x) & 0x1) << 5)
+#define   G_036780_LS_EN(x)                                           (((x) >> 5) & 0x1)
+#define   C_036780_LS_EN                                              0xFFFFFFDF
+#define   S_036780_CS_EN(x)                                           (((x) & 0x1) << 6)
+#define   G_036780_CS_EN(x)                                           (((x) >> 6) & 0x1)
+#define   C_036780_CS_EN                                              0xFFFFFFBF
+#define   S_036780_CNTR_RATE(x)                                       (((x) & 0x1F) << 8)
+#define   G_036780_CNTR_RATE(x)                                       (((x) >> 8) & 0x1F)
+#define   C_036780_CNTR_RATE                                          0xFFFFE0FF
+#define   S_036780_DISABLE_FLUSH(x)                                   (((x) & 0x1) << 13)
+#define   G_036780_DISABLE_FLUSH(x)                                   (((x) >> 13) & 0x1)
+#define   C_036780_DISABLE_FLUSH                                      0xFFFFDFFF
+#define R_036784_SQ_PERFCOUNTER_MASK                                    0x036784
+#define   S_036784_SH0_MASK(x)                                        (((x) & 0xFFFF) << 0)
+#define   G_036784_SH0_MASK(x)                                        (((x) >> 0) & 0xFFFF)
+#define   C_036784_SH0_MASK                                           0xFFFF0000
+#define   S_036784_SH1_MASK(x)                                        (((x) & 0xFFFF) << 16)
+#define   G_036784_SH1_MASK(x)                                        (((x) >> 16) & 0xFFFF)
+#define   C_036784_SH1_MASK                                           0x0000FFFF
+#define R_036788_SQ_PERFCOUNTER_CTRL2                                   0x036788
+#define   S_036788_FORCE_EN(x)                                        (((x) & 0x1) << 0)
+#define   G_036788_FORCE_EN(x)                                        (((x) >> 0) & 0x1)
+#define   C_036788_FORCE_EN                                           0xFFFFFFFE
+#define R_036900_SX_PERFCOUNTER0_SELECT                                 0x036900
+#define   S_036900_PERFCOUNTER_SELECT(x)                              (((x) & 0x3FF) << 0)
+#define   G_036900_PERFCOUNTER_SELECT(x)                              (((x) >> 0) & 0x3FF)
+#define   C_036900_PERFCOUNTER_SELECT                                 0xFFFFFC00
+#define   S_036900_PERFCOUNTER_SELECT1(x)                             (((x) & 0x3FF) << 10)
+#define   G_036900_PERFCOUNTER_SELECT1(x)                             (((x) >> 10) & 0x3FF)
+#define   C_036900_PERFCOUNTER_SELECT1                                0xFFF003FF
+#define   S_036900_CNTR_MODE(x)                                       (((x) & 0x0F) << 20)
+#define   G_036900_CNTR_MODE(x)                                       (((x) >> 20) & 0x0F)
+#define   C_036900_CNTR_MODE                                          0xFF0FFFFF
+#define R_036904_SX_PERFCOUNTER1_SELECT                                 0x036904
+#define R_036908_SX_PERFCOUNTER2_SELECT                                 0x036908
+#define R_03690C_SX_PERFCOUNTER3_SELECT                                 0x03690C
+#define R_036910_SX_PERFCOUNTER0_SELECT1                                0x036910
+#define   S_036910_PERFCOUNTER_SELECT2(x)                             (((x) & 0x3FF) << 0)
+#define   G_036910_PERFCOUNTER_SELECT2(x)                             (((x) >> 0) & 0x3FF)
+#define   C_036910_PERFCOUNTER_SELECT2                                0xFFFFFC00
+#define   S_036910_PERFCOUNTER_SELECT3(x)                             (((x) & 0x3FF) << 10)
+#define   G_036910_PERFCOUNTER_SELECT3(x)                             (((x) >> 10) & 0x3FF)
+#define   C_036910_PERFCOUNTER_SELECT3                                0xFFF003FF
+#define R_036914_SX_PERFCOUNTER1_SELECT1                                0x036914
+#define R_036A00_GDS_PERFCOUNTER0_SELECT                                0x036A00
+#define   S_036A00_PERFCOUNTER_SELECT(x)                              (((x) & 0x3FF) << 0)
+#define   G_036A00_PERFCOUNTER_SELECT(x)                              (((x) >> 0) & 0x3FF)
+#define   C_036A00_PERFCOUNTER_SELECT                                 0xFFFFFC00
+#define   S_036A00_PERFCOUNTER_SELECT1(x)                             (((x) & 0x3FF) << 10)
+#define   G_036A00_PERFCOUNTER_SELECT1(x)                             (((x) >> 10) & 0x3FF)
+#define   C_036A00_PERFCOUNTER_SELECT1                                0xFFF003FF
+#define   S_036A00_CNTR_MODE(x)                                       (((x) & 0x0F) << 20)
+#define   G_036A00_CNTR_MODE(x)                                       (((x) >> 20) & 0x0F)
+#define   C_036A00_CNTR_MODE                                          0xFF0FFFFF
+#define R_036A04_GDS_PERFCOUNTER1_SELECT                                0x036A04
+#define R_036A08_GDS_PERFCOUNTER2_SELECT                                0x036A08
+#define R_036A0C_GDS_PERFCOUNTER3_SELECT                                0x036A0C
+#define R_036A10_GDS_PERFCOUNTER0_SELECT1                               0x036A10
+#define   S_036A10_PERFCOUNTER_SELECT2(x)                             (((x) & 0x3FF) << 0)
+#define   G_036A10_PERFCOUNTER_SELECT2(x)                             (((x) >> 0) & 0x3FF)
+#define   C_036A10_PERFCOUNTER_SELECT2                                0xFFFFFC00
+#define   S_036A10_PERFCOUNTER_SELECT3(x)                             (((x) & 0x3FF) << 10)
+#define   G_036A10_PERFCOUNTER_SELECT3(x)                             (((x) >> 10) & 0x3FF)
+#define   C_036A10_PERFCOUNTER_SELECT3                                0xFFF003FF
+#define R_036B00_TA_PERFCOUNTER0_SELECT                                 0x036B00
+#define   S_036B00_PERF_SEL(x)                                        (((x) & 0xFF) << 0)
+#define   G_036B00_PERF_SEL(x)                                        (((x) >> 0) & 0xFF)
+#define   C_036B00_PERF_SEL                                           0xFFFFFF00
+#define   S_036B00_PERF_SEL1(x)                                       (((x) & 0xFF) << 10)
+#define   G_036B00_PERF_SEL1(x)                                       (((x) >> 10) & 0xFF)
+#define   C_036B00_PERF_SEL1                                          0xFFFC03FF
+#define   S_036B00_CNTR_MODE(x)                                       (((x) & 0x0F) << 20)
+#define   G_036B00_CNTR_MODE(x)                                       (((x) >> 20) & 0x0F)
+#define   C_036B00_CNTR_MODE                                          0xFF0FFFFF
+#define   S_036B00_PERF_MODE1(x)                                      (((x) & 0x0F) << 24)
+#define   G_036B00_PERF_MODE1(x)                                      (((x) >> 24) & 0x0F)
+#define   C_036B00_PERF_MODE1                                         0xF0FFFFFF
+#define   S_036B00_PERF_MODE(x)                                       (((x) & 0x0F) << 28)
+#define   G_036B00_PERF_MODE(x)                                       (((x) >> 28) & 0x0F)
+#define   C_036B00_PERF_MODE                                          0x0FFFFFFF
+#define R_036B04_TA_PERFCOUNTER0_SELECT1                                0x036B04
+#define   S_036B04_PERF_SEL2(x)                                       (((x) & 0xFF) << 0)
+#define   G_036B04_PERF_SEL2(x)                                       (((x) >> 0) & 0xFF)
+#define   C_036B04_PERF_SEL2                                          0xFFFFFF00
+#define   S_036B04_PERF_SEL3(x)                                       (((x) & 0xFF) << 10)
+#define   G_036B04_PERF_SEL3(x)                                       (((x) >> 10) & 0xFF)
+#define   C_036B04_PERF_SEL3                                          0xFFFC03FF
+#define   S_036B04_PERF_MODE3(x)                                      (((x) & 0x0F) << 24)
+#define   G_036B04_PERF_MODE3(x)                                      (((x) >> 24) & 0x0F)
+#define   C_036B04_PERF_MODE3                                         0xF0FFFFFF
+#define   S_036B04_PERF_MODE2(x)                                      (((x) & 0x0F) << 28)
+#define   G_036B04_PERF_MODE2(x)                                      (((x) >> 28) & 0x0F)
+#define   C_036B04_PERF_MODE2                                         0x0FFFFFFF
+#define R_036B08_TA_PERFCOUNTER1_SELECT                                 0x036B08
+#define R_036C00_TD_PERFCOUNTER0_SELECT                                 0x036C00
+#define   S_036C00_PERF_SEL(x)                                        (((x) & 0xFF) << 0)
+#define   G_036C00_PERF_SEL(x)                                        (((x) >> 0) & 0xFF)
+#define   C_036C00_PERF_SEL                                           0xFFFFFF00
+#define   S_036C00_PERF_SEL1(x)                                       (((x) & 0xFF) << 10)
+#define   G_036C00_PERF_SEL1(x)                                       (((x) >> 10) & 0xFF)
+#define   C_036C00_PERF_SEL1                                          0xFFFC03FF
+#define   S_036C00_CNTR_MODE(x)                                       (((x) & 0x0F) << 20)
+#define   G_036C00_CNTR_MODE(x)                                       (((x) >> 20) & 0x0F)
+#define   C_036C00_CNTR_MODE                                          0xFF0FFFFF
+#define   S_036C00_PERF_MODE1(x)                                      (((x) & 0x0F) << 24)
+#define   G_036C00_PERF_MODE1(x)                                      (((x) >> 24) & 0x0F)
+#define   C_036C00_PERF_MODE1                                         0xF0FFFFFF
+#define   S_036C00_PERF_MODE(x)                                       (((x) & 0x0F) << 28)
+#define   G_036C00_PERF_MODE(x)                                       (((x) >> 28) & 0x0F)
+#define   C_036C00_PERF_MODE                                          0x0FFFFFFF
+#define R_036C04_TD_PERFCOUNTER0_SELECT1                                0x036C04
+#define   S_036C04_PERF_SEL2(x)                                       (((x) & 0xFF) << 0)
+#define   G_036C04_PERF_SEL2(x)                                       (((x) >> 0) & 0xFF)
+#define   C_036C04_PERF_SEL2                                          0xFFFFFF00
+#define   S_036C04_PERF_SEL3(x)                                       (((x) & 0xFF) << 10)
+#define   G_036C04_PERF_SEL3(x)                                       (((x) >> 10) & 0xFF)
+#define   C_036C04_PERF_SEL3                                          0xFFFC03FF
+#define   S_036C04_PERF_MODE3(x)                                      (((x) & 0x0F) << 24)
+#define   G_036C04_PERF_MODE3(x)                                      (((x) >> 24) & 0x0F)
+#define   C_036C04_PERF_MODE3                                         0xF0FFFFFF
+#define   S_036C04_PERF_MODE2(x)                                      (((x) & 0x0F) << 28)
+#define   G_036C04_PERF_MODE2(x)                                      (((x) >> 28) & 0x0F)
+#define   C_036C04_PERF_MODE2                                         0x0FFFFFFF
+#define R_036C08_TD_PERFCOUNTER1_SELECT                                 0x036C08
+#define R_036D00_TCP_PERFCOUNTER0_SELECT                                0x036D00
+#define   S_036D00_PERF_SEL(x)                                        (((x) & 0x3FF) << 0)
+#define   G_036D00_PERF_SEL(x)                                        (((x) >> 0) & 0x3FF)
+#define   C_036D00_PERF_SEL                                           0xFFFFFC00
+#define   S_036D00_PERF_SEL1(x)                                       (((x) & 0x3FF) << 10)
+#define   G_036D00_PERF_SEL1(x)                                       (((x) >> 10) & 0x3FF)
+#define   C_036D00_PERF_SEL1                                          0xFFF003FF
+#define   S_036D00_CNTR_MODE(x)                                       (((x) & 0x0F) << 20)
+#define   G_036D00_CNTR_MODE(x)                                       (((x) >> 20) & 0x0F)
+#define   C_036D00_CNTR_MODE                                          0xFF0FFFFF
+#define   S_036D00_PERF_MODE1(x)                                      (((x) & 0x0F) << 24)
+#define   G_036D00_PERF_MODE1(x)                                      (((x) >> 24) & 0x0F)
+#define   C_036D00_PERF_MODE1                                         0xF0FFFFFF
+#define   S_036D00_PERF_MODE(x)                                       (((x) & 0x0F) << 28)
+#define   G_036D00_PERF_MODE(x)                                       (((x) >> 28) & 0x0F)
+#define   C_036D00_PERF_MODE                                          0x0FFFFFFF
+#define R_036D04_TCP_PERFCOUNTER0_SELECT1                               0x036D04
+#define   S_036D04_PERF_SEL2(x)                                       (((x) & 0x3FF) << 0)
+#define   G_036D04_PERF_SEL2(x)                                       (((x) >> 0) & 0x3FF)
+#define   C_036D04_PERF_SEL2                                          0xFFFFFC00
+#define   S_036D04_PERF_SEL3(x)                                       (((x) & 0x3FF) << 10)
+#define   G_036D04_PERF_SEL3(x)                                       (((x) >> 10) & 0x3FF)
+#define   C_036D04_PERF_SEL3                                          0xFFF003FF
+#define   S_036D04_PERF_MODE3(x)                                      (((x) & 0x0F) << 24)
+#define   G_036D04_PERF_MODE3(x)                                      (((x) >> 24) & 0x0F)
+#define   C_036D04_PERF_MODE3                                         0xF0FFFFFF
+#define   S_036D04_PERF_MODE2(x)                                      (((x) & 0x0F) << 28)
+#define   G_036D04_PERF_MODE2(x)                                      (((x) >> 28) & 0x0F)
+#define   C_036D04_PERF_MODE2                                         0x0FFFFFFF
+#define R_036D08_TCP_PERFCOUNTER1_SELECT                                0x036D08
+#define R_036D0C_TCP_PERFCOUNTER1_SELECT1                               0x036D0C
+#define R_036D10_TCP_PERFCOUNTER2_SELECT                                0x036D10
+#define R_036D14_TCP_PERFCOUNTER3_SELECT                                0x036D14
+#define R_036E00_TCC_PERFCOUNTER0_SELECT                                0x036E00
+#define   S_036E00_PERF_SEL(x)                                        (((x) & 0x3FF) << 0)
+#define   G_036E00_PERF_SEL(x)                                        (((x) >> 0) & 0x3FF)
+#define   C_036E00_PERF_SEL                                           0xFFFFFC00
+#define   S_036E00_PERF_SEL1(x)                                       (((x) & 0x3FF) << 10)
+#define   G_036E00_PERF_SEL1(x)                                       (((x) >> 10) & 0x3FF)
+#define   C_036E00_PERF_SEL1                                          0xFFF003FF
+#define   S_036E00_CNTR_MODE(x)                                       (((x) & 0x0F) << 20)
+#define   G_036E00_CNTR_MODE(x)                                       (((x) >> 20) & 0x0F)
+#define   C_036E00_CNTR_MODE                                          0xFF0FFFFF
+#define   S_036E00_PERF_MODE1(x)                                      (((x) & 0x0F) << 24)
+#define   G_036E00_PERF_MODE1(x)                                      (((x) >> 24) & 0x0F)
+#define   C_036E00_PERF_MODE1                                         0xF0FFFFFF
+#define   S_036E00_PERF_MODE(x)                                       (((x) & 0x0F) << 28)
+#define   G_036E00_PERF_MODE(x)                                       (((x) >> 28) & 0x0F)
+#define   C_036E00_PERF_MODE                                          0x0FFFFFFF
+#define R_036E04_TCC_PERFCOUNTER0_SELECT1                               0x036E04
+#define   S_036E04_PERF_SEL2(x)                                       (((x) & 0x3FF) << 0)
+#define   G_036E04_PERF_SEL2(x)                                       (((x) >> 0) & 0x3FF)
+#define   C_036E04_PERF_SEL2                                          0xFFFFFC00
+#define   S_036E04_PERF_SEL3(x)                                       (((x) & 0x3FF) << 10)
+#define   G_036E04_PERF_SEL3(x)                                       (((x) >> 10) & 0x3FF)
+#define   C_036E04_PERF_SEL3                                          0xFFF003FF
+#define   S_036E04_PERF_MODE2(x)                                      (((x) & 0x0F) << 24)
+#define   G_036E04_PERF_MODE2(x)                                      (((x) >> 24) & 0x0F)
+#define   C_036E04_PERF_MODE2                                         0xF0FFFFFF
+#define   S_036E04_PERF_MODE3(x)                                      (((x) & 0x0F) << 28)
+#define   G_036E04_PERF_MODE3(x)                                      (((x) >> 28) & 0x0F)
+#define   C_036E04_PERF_MODE3                                         0x0FFFFFFF
+#define R_036E08_TCC_PERFCOUNTER1_SELECT                                0x036E08
+#define R_036E0C_TCC_PERFCOUNTER1_SELECT1                               0x036E0C
+#define R_036E10_TCC_PERFCOUNTER2_SELECT                                0x036E10
+#define R_036E14_TCC_PERFCOUNTER3_SELECT                                0x036E14
+#define R_036E40_TCA_PERFCOUNTER0_SELECT                                0x036E40
+#define   S_036E40_PERF_SEL(x)                                        (((x) & 0x3FF) << 0)
+#define   G_036E40_PERF_SEL(x)                                        (((x) >> 0) & 0x3FF)
+#define   C_036E40_PERF_SEL                                           0xFFFFFC00
+#define   S_036E40_PERF_SEL1(x)                                       (((x) & 0x3FF) << 10)
+#define   G_036E40_PERF_SEL1(x)                                       (((x) >> 10) & 0x3FF)
+#define   C_036E40_PERF_SEL1                                          0xFFF003FF
+#define   S_036E40_CNTR_MODE(x)                                       (((x) & 0x0F) << 20)
+#define   G_036E40_CNTR_MODE(x)                                       (((x) >> 20) & 0x0F)
+#define   C_036E40_CNTR_MODE                                          0xFF0FFFFF
+#define   S_036E40_PERF_MODE1(x)                                      (((x) & 0x0F) << 24)
+#define   G_036E40_PERF_MODE1(x)                                      (((x) >> 24) & 0x0F)
+#define   C_036E40_PERF_MODE1                                         0xF0FFFFFF
+#define   S_036E40_PERF_MODE(x)                                       (((x) & 0x0F) << 28)
+#define   G_036E40_PERF_MODE(x)                                       (((x) >> 28) & 0x0F)
+#define   C_036E40_PERF_MODE                                          0x0FFFFFFF
+#define R_036E44_TCA_PERFCOUNTER0_SELECT1                               0x036E44
+#define   S_036E44_PERF_SEL2(x)                                       (((x) & 0x3FF) << 0)
+#define   G_036E44_PERF_SEL2(x)                                       (((x) >> 0) & 0x3FF)
+#define   C_036E44_PERF_SEL2                                          0xFFFFFC00
+#define   S_036E44_PERF_SEL3(x)                                       (((x) & 0x3FF) << 10)
+#define   G_036E44_PERF_SEL3(x)                                       (((x) >> 10) & 0x3FF)
+#define   C_036E44_PERF_SEL3                                          0xFFF003FF
+#define   S_036E44_PERF_MODE2(x)                                      (((x) & 0x0F) << 24)
+#define   G_036E44_PERF_MODE2(x)                                      (((x) >> 24) & 0x0F)
+#define   C_036E44_PERF_MODE2                                         0xF0FFFFFF
+#define   S_036E44_PERF_MODE3(x)                                      (((x) & 0x0F) << 28)
+#define   G_036E44_PERF_MODE3(x)                                      (((x) >> 28) & 0x0F)
+#define   C_036E44_PERF_MODE3                                         0x0FFFFFFF
+#define R_036E48_TCA_PERFCOUNTER1_SELECT                                0x036E48
+#define R_036E4C_TCA_PERFCOUNTER1_SELECT1                               0x036E4C
+#define R_036E50_TCA_PERFCOUNTER2_SELECT                                0x036E50
+#define R_036E54_TCA_PERFCOUNTER3_SELECT                                0x036E54
+#define R_037000_CB_PERFCOUNTER_FILTER                                  0x037000
+#define   S_037000_OP_FILTER_ENABLE(x)                                (((x) & 0x1) << 0)
+#define   G_037000_OP_FILTER_ENABLE(x)                                (((x) >> 0) & 0x1)
+#define   C_037000_OP_FILTER_ENABLE                                   0xFFFFFFFE
+#define   S_037000_OP_FILTER_SEL(x)                                   (((x) & 0x07) << 1)
+#define   G_037000_OP_FILTER_SEL(x)                                   (((x) >> 1) & 0x07)
+#define   C_037000_OP_FILTER_SEL                                      0xFFFFFFF1
+#define   S_037000_FORMAT_FILTER_ENABLE(x)                            (((x) & 0x1) << 4)
+#define   G_037000_FORMAT_FILTER_ENABLE(x)                            (((x) >> 4) & 0x1)
+#define   C_037000_FORMAT_FILTER_ENABLE                               0xFFFFFFEF
+#define   S_037000_FORMAT_FILTER_SEL(x)                               (((x) & 0x1F) << 5)
+#define   G_037000_FORMAT_FILTER_SEL(x)                               (((x) >> 5) & 0x1F)
+#define   C_037000_FORMAT_FILTER_SEL                                  0xFFFFFC1F
+#define   S_037000_CLEAR_FILTER_ENABLE(x)                             (((x) & 0x1) << 10)
+#define   G_037000_CLEAR_FILTER_ENABLE(x)                             (((x) >> 10) & 0x1)
+#define   C_037000_CLEAR_FILTER_ENABLE                                0xFFFFFBFF
+#define   S_037000_CLEAR_FILTER_SEL(x)                                (((x) & 0x1) << 11)
+#define   G_037000_CLEAR_FILTER_SEL(x)                                (((x) >> 11) & 0x1)
+#define   C_037000_CLEAR_FILTER_SEL                                   0xFFFFF7FF
+#define   S_037000_MRT_FILTER_ENABLE(x)                               (((x) & 0x1) << 12)
+#define   G_037000_MRT_FILTER_ENABLE(x)                               (((x) >> 12) & 0x1)
+#define   C_037000_MRT_FILTER_ENABLE                                  0xFFFFEFFF
+#define   S_037000_MRT_FILTER_SEL(x)                                  (((x) & 0x07) << 13)
+#define   G_037000_MRT_FILTER_SEL(x)                                  (((x) >> 13) & 0x07)
+#define   C_037000_MRT_FILTER_SEL                                     0xFFFF1FFF
+#define   S_037000_NUM_SAMPLES_FILTER_ENABLE(x)                       (((x) & 0x1) << 17)
+#define   G_037000_NUM_SAMPLES_FILTER_ENABLE(x)                       (((x) >> 17) & 0x1)
+#define   C_037000_NUM_SAMPLES_FILTER_ENABLE                          0xFFFDFFFF
+#define   S_037000_NUM_SAMPLES_FILTER_SEL(x)                          (((x) & 0x07) << 18)
+#define   G_037000_NUM_SAMPLES_FILTER_SEL(x)                          (((x) >> 18) & 0x07)
+#define   C_037000_NUM_SAMPLES_FILTER_SEL                             0xFFE3FFFF
+#define   S_037000_NUM_FRAGMENTS_FILTER_ENABLE(x)                     (((x) & 0x1) << 21)
+#define   G_037000_NUM_FRAGMENTS_FILTER_ENABLE(x)                     (((x) >> 21) & 0x1)
+#define   C_037000_NUM_FRAGMENTS_FILTER_ENABLE                        0xFFDFFFFF
+#define   S_037000_NUM_FRAGMENTS_FILTER_SEL(x)                        (((x) & 0x03) << 22)
+#define   G_037000_NUM_FRAGMENTS_FILTER_SEL(x)                        (((x) >> 22) & 0x03)
+#define   C_037000_NUM_FRAGMENTS_FILTER_SEL                           0xFF3FFFFF
+#define R_037004_CB_PERFCOUNTER0_SELECT                                 0x037004
+#define   S_037004_PERF_SEL(x)                                        (((x) & 0x1FF) << 0)
+#define   G_037004_PERF_SEL(x)                                        (((x) >> 0) & 0x1FF)
+#define   C_037004_PERF_SEL                                           0xFFFFFE00
+#define   S_037004_PERF_SEL1(x)                                       (((x) & 0x1FF) << 10)
+#define   G_037004_PERF_SEL1(x)                                       (((x) >> 10) & 0x1FF)
+#define   C_037004_PERF_SEL1                                          0xFFF803FF
+#define   S_037004_CNTR_MODE(x)                                       (((x) & 0x0F) << 20)
+#define   G_037004_CNTR_MODE(x)                                       (((x) >> 20) & 0x0F)
+#define   C_037004_CNTR_MODE                                          0xFF0FFFFF
+#define   S_037004_PERF_MODE1(x)                                      (((x) & 0x0F) << 24)
+#define   G_037004_PERF_MODE1(x)                                      (((x) >> 24) & 0x0F)
+#define   C_037004_PERF_MODE1                                         0xF0FFFFFF
+#define   S_037004_PERF_MODE(x)                                       (((x) & 0x0F) << 28)
+#define   G_037004_PERF_MODE(x)                                       (((x) >> 28) & 0x0F)
+#define   C_037004_PERF_MODE                                          0x0FFFFFFF
+#define R_037008_CB_PERFCOUNTER0_SELECT1                                0x037008
+#define   S_037008_PERF_SEL2(x)                                       (((x) & 0x1FF) << 0)
+#define   G_037008_PERF_SEL2(x)                                       (((x) >> 0) & 0x1FF)
+#define   C_037008_PERF_SEL2                                          0xFFFFFE00
+#define   S_037008_PERF_SEL3(x)                                       (((x) & 0x1FF) << 10)
+#define   G_037008_PERF_SEL3(x)                                       (((x) >> 10) & 0x1FF)
+#define   C_037008_PERF_SEL3                                          0xFFF803FF
+#define   S_037008_PERF_MODE3(x)                                      (((x) & 0x0F) << 24)
+#define   G_037008_PERF_MODE3(x)                                      (((x) >> 24) & 0x0F)
+#define   C_037008_PERF_MODE3                                         0xF0FFFFFF
+#define   S_037008_PERF_MODE2(x)                                      (((x) & 0x0F) << 28)
+#define   G_037008_PERF_MODE2(x)                                      (((x) >> 28) & 0x0F)
+#define   C_037008_PERF_MODE2                                         0x0FFFFFFF
+#define R_03700C_CB_PERFCOUNTER1_SELECT                                 0x03700C
+#define R_037010_CB_PERFCOUNTER2_SELECT                                 0x037010
+#define R_037014_CB_PERFCOUNTER3_SELECT                                 0x037014
+#define R_037100_DB_PERFCOUNTER0_SELECT                                 0x037100
+#define   S_037100_PERF_SEL(x)                                        (((x) & 0x3FF) << 0)
+#define   G_037100_PERF_SEL(x)                                        (((x) >> 0) & 0x3FF)
+#define   C_037100_PERF_SEL                                           0xFFFFFC00
+#define   S_037100_PERF_SEL1(x)                                       (((x) & 0x3FF) << 10)
+#define   G_037100_PERF_SEL1(x)                                       (((x) >> 10) & 0x3FF)
+#define   C_037100_PERF_SEL1                                          0xFFF003FF
+#define   S_037100_CNTR_MODE(x)                                       (((x) & 0x0F) << 20)
+#define   G_037100_CNTR_MODE(x)                                       (((x) >> 20) & 0x0F)
+#define   C_037100_CNTR_MODE                                          0xFF0FFFFF
+#define   S_037100_PERF_MODE1(x)                                      (((x) & 0x0F) << 24)
+#define   G_037100_PERF_MODE1(x)                                      (((x) >> 24) & 0x0F)
+#define   C_037100_PERF_MODE1                                         0xF0FFFFFF
+#define   S_037100_PERF_MODE(x)                                       (((x) & 0x0F) << 28)
+#define   G_037100_PERF_MODE(x)                                       (((x) >> 28) & 0x0F)
+#define   C_037100_PERF_MODE                                          0x0FFFFFFF
+#define R_037104_DB_PERFCOUNTER0_SELECT1                                0x037104
+#define   S_037104_PERF_SEL2(x)                                       (((x) & 0x3FF) << 0)
+#define   G_037104_PERF_SEL2(x)                                       (((x) >> 0) & 0x3FF)
+#define   C_037104_PERF_SEL2                                          0xFFFFFC00
+#define   S_037104_PERF_SEL3(x)                                       (((x) & 0x3FF) << 10)
+#define   G_037104_PERF_SEL3(x)                                       (((x) >> 10) & 0x3FF)
+#define   C_037104_PERF_SEL3                                          0xFFF003FF
+#define   S_037104_PERF_MODE3(x)                                      (((x) & 0x0F) << 24)
+#define   G_037104_PERF_MODE3(x)                                      (((x) >> 24) & 0x0F)
+#define   C_037104_PERF_MODE3                                         0xF0FFFFFF
+#define   S_037104_PERF_MODE2(x)                                      (((x) & 0x0F) << 28)
+#define   G_037104_PERF_MODE2(x)                                      (((x) >> 28) & 0x0F)
+#define   C_037104_PERF_MODE2                                         0x0FFFFFFF
+#define R_037108_DB_PERFCOUNTER1_SELECT                                 0x037108
+#define R_03710C_DB_PERFCOUNTER1_SELECT1                                0x03710C
+#define R_037110_DB_PERFCOUNTER2_SELECT                                 0x037110
+#define R_037118_DB_PERFCOUNTER3_SELECT                                 0x037118
 #define R_028000_DB_RENDER_CONTROL                                      0x028000
 #define   S_028000_DEPTH_CLEAR_ENABLE(x)                              (((x) & 0x1) << 0)
 #define   G_028000_DEPTH_CLEAR_ENABLE(x)                              (((x) >> 0) & 0x1)
@@ -8879,6 +6774,9 @@
 #define   G_028804_ENABLE_POSTZ_OVERRASTERIZATION(x)                  (((x) >> 27) & 0x1)
 #define   C_028804_ENABLE_POSTZ_OVERRASTERIZATION                     0xF7FFFFFF
 #define R_028808_CB_COLOR_CONTROL                                       0x028808
+#define   S_028808_DISABLE_DUAL_QUAD(x)                               (((x) & 0x1) << 0)
+#define   G_028808_DISABLE_DUAL_QUAD(x)                               (((x) >> 0) & 0x1)
+#define   C_028808_DISABLE_DUAL_QUAD                                  0xFFFFFFFE
 #define   S_028808_DEGAMMA_ENABLE(x)                                  (((x) & 0x1) << 3)
 #define   G_028808_DEGAMMA_ENABLE(x)                                  (((x) >> 3) & 0x1)
 #define   C_028808_DEGAMMA_ENABLE                                     0xFFFFFFF7

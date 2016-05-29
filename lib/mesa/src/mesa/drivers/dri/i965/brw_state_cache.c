@@ -51,6 +51,7 @@
 #include "brw_wm.h"
 #include "brw_gs.h"
 #include "brw_cs.h"
+#include "brw_program.h"
 
 #define FILE_DEBUG_FLAG DEBUG_STATE
 
@@ -350,15 +351,6 @@ brw_init_caches(struct brw_context *brw)
 				  4096, 64);
    if (brw->has_llc)
       drm_intel_gem_bo_map_unsynchronized(cache->bo);
-
-   cache->aux_compare[BRW_CACHE_VS_PROG] = brw_vs_prog_data_compare;
-   cache->aux_compare[BRW_CACHE_GS_PROG] = brw_gs_prog_data_compare;
-   cache->aux_compare[BRW_CACHE_FS_PROG] = brw_wm_prog_data_compare;
-   cache->aux_compare[BRW_CACHE_CS_PROG] = brw_cs_prog_data_compare;
-   cache->aux_free[BRW_CACHE_VS_PROG] = brw_stage_prog_data_free;
-   cache->aux_free[BRW_CACHE_GS_PROG] = brw_stage_prog_data_free;
-   cache->aux_free[BRW_CACHE_FS_PROG] = brw_stage_prog_data_free;
-   cache->aux_free[BRW_CACHE_CS_PROG] = brw_stage_prog_data_free;
 }
 
 static void
@@ -372,9 +364,12 @@ brw_clear_cache(struct brw_context *brw, struct brw_cache *cache)
    for (i = 0; i < cache->size; i++) {
       for (c = cache->items[i]; c; c = next) {
 	 next = c->next;
-         if (cache->aux_free[c->cache_id]) {
+         if (c->cache_id == BRW_CACHE_VS_PROG ||
+             c->cache_id == BRW_CACHE_GS_PROG ||
+             c->cache_id == BRW_CACHE_FS_PROG ||
+             c->cache_id == BRW_CACHE_CS_PROG) {
             const void *item_aux = c->key + c->key_size;
-            cache->aux_free[c->cache_id](item_aux);
+            brw_stage_prog_data_free(item_aux);
          }
 	 free((void *)c->key);
 	 free(c);
@@ -392,8 +387,27 @@ brw_clear_cache(struct brw_context *brw, struct brw_cache *cache)
    /* We need to make sure that the programs get regenerated, since
     * any offsets leftover in brw_context will no longer be valid.
     */
-   brw->NewGLState |= ~0;
-   brw->ctx.NewDriverState |= ~0ull;
+   brw->NewGLState = ~0;
+   brw->ctx.NewDriverState = ~0ull;
+   brw->state.pipelines[BRW_RENDER_PIPELINE].mesa = ~0;
+   brw->state.pipelines[BRW_RENDER_PIPELINE].brw = ~0ull;
+   brw->state.pipelines[BRW_COMPUTE_PIPELINE].mesa = ~0;
+   brw->state.pipelines[BRW_COMPUTE_PIPELINE].brw = ~0ull;
+
+   /* Also, NULL out any stale program pointers. */
+   brw->vs.prog_data = NULL;
+   brw->vs.base.prog_data = NULL;
+   brw->tcs.prog_data = NULL;
+   brw->tcs.base.prog_data = NULL;
+   brw->tes.prog_data = NULL;
+   brw->tes.base.prog_data = NULL;
+   brw->gs.prog_data = NULL;
+   brw->gs.base.prog_data = NULL;
+   brw->wm.prog_data = NULL;
+   brw->wm.base.prog_data = NULL;
+   brw->cs.prog_data = NULL;
+   brw->cs.base.prog_data = NULL;
+
    intel_batchbuffer_flush(brw);
 }
 

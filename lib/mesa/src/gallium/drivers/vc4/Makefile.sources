@@ -21,6 +21,7 @@ C_SOURCES := \
 	vc4_job.c \
 	vc4_nir_lower_blend.c \
 	vc4_nir_lower_io.c \
+	vc4_nir_lower_txf_ms.c \
 	vc4_opt_algebraic.c \
 	vc4_opt_constant_folding.c \
 	vc4_opt_copy_propagation.c \
@@ -31,6 +32,7 @@ C_SOURCES := \
 	vc4_program.c \
 	vc4_qir.c \
 	vc4_qir_lower_uniforms.c \
+	vc4_qir_schedule.c \
 	vc4_qir.h \
 	vc4_qpu.c \
 	vc4_qpu_defines.h \

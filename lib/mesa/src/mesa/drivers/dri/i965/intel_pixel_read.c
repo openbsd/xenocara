@@ -1,5 +1,4 @@
-/**************************************************************************
- *
+/*
  * Copyright 2003 VMware, Inc.
  * All Rights Reserved.
  *
@@ -7,7 +6,7 @@
  * copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
  * without limitation the rights to use, copy, modify, merge, publish,
- * distribute, sub license, and/or sell copies of the Software, and to
+ * distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
  *
@@ -17,15 +16,13 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
  * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- **************************************************************************/
+ */
 
-#include "main/glheader.h"
 #include "main/enums.h"
 #include "main/mtypes.h"
 #include "main/macros.h"
@@ -137,10 +134,11 @@ intel_readpixels_tiled_memcpy(struct gl_context * ctx,
       return false;
 
    /* We can't handle copying from RGBX or BGRX because the tiled_memcpy
-    * function doesn't set the last channel to 1.
+    * function doesn't set the last channel to 1. Note this checks BaseFormat
+    * rather than TexFormat in case the RGBX format is being simulated with an
+    * RGBA format.
     */
-   if (rb->Format == MESA_FORMAT_B8G8R8X8_UNORM ||
-       rb->Format == MESA_FORMAT_R8G8B8X8_UNORM)
+   if (rb->_BaseFormat == GL_RGB)
       return false;
 
    if (!intel_get_memcpy(rb->Format, format, type, &mem_copy, &cpp,
@@ -157,7 +155,7 @@ intel_readpixels_tiled_memcpy(struct gl_context * ctx,
    /* Since we are going to read raw data to the miptree, we need to resolve
     * any pending fast color clears before we start.
     */
-   intel_miptree_resolve_color(brw, irb->mt);
+   intel_miptree_resolve_color(brw, irb->mt, 0);
 
    bo = irb->mt->bo;
 

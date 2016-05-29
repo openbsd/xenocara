@@ -46,6 +46,7 @@ struct draw_stage;
 struct gen_mipmap_state;
 struct st_context;
 struct st_fragment_program;
+struct st_perf_monitor_group;
 struct u_upload_mgr;
 
 
@@ -61,11 +62,15 @@ struct u_upload_mgr;
 #define ST_NEW_TESSCTRL_PROGRAM        (1 << 9)
 #define ST_NEW_TESSEVAL_PROGRAM        (1 << 10)
 #define ST_NEW_SAMPLER_VIEWS           (1 << 11)
+#define ST_NEW_ATOMIC_BUFFER           (1 << 12)
+#define ST_NEW_STORAGE_BUFFER          (1 << 13)
+#define ST_NEW_COMPUTE_PROGRAM         (1 << 14)
+#define ST_NEW_IMAGE_UNITS             (1 << 15)
 
 
 struct st_state_flags {
-   GLuint mesa;
-   uint64_t st;
+   GLbitfield mesa;  /**< Mask of _NEW_x flags */
+   uint64_t st;      /**< Mask of ST_NEW_x flags */
 };
 
 struct st_tracked_state {
@@ -74,6 +79,23 @@ struct st_tracked_state {
    void (*update)( struct st_context *st );
 };
 
+
+/**
+ * Enumeration of state tracker pipelines.
+ */
+enum st_pipeline {
+   ST_PIPELINE_RENDER,
+   ST_PIPELINE_COMPUTE,
+};
+
+
+/** For drawing quads for glClear, glDraw/CopyPixels, glBitmap, etc. */
+struct st_util_vertex
+{
+   float x, y, z;
+   float r, g, b, a;
+   float s, t;
+};
 
 
 struct st_context
@@ -98,6 +120,17 @@ struct st_context
    boolean has_etc1;
    boolean has_etc2;
    boolean prefer_blit_based_texture_transfer;
+   boolean force_persample_in_shader;
+   boolean has_shareable_shaders;
+   boolean has_half_float_packing;
+   boolean has_multi_draw_indirect;
+
+   /**
+    * If a shader can be created when we get its source.
+    * This means it has only 1 variant, not counting glBitmap and
+    * glDrawPixels.
+    */
+   boolean shader_has_one_variant[MESA_SHADER_STAGES];
 
    boolean needs_texcoord_semantic;
    boolean apply_texture_swizzle_to_border_color;
@@ -139,6 +172,7 @@ struct st_context
    char renderer[100];
 
    struct st_state_flags dirty;
+   struct st_state_flags dirty_cp;
 
    GLboolean vertdata_edgeflags;
    GLboolean edgeflag_culls_prims;
@@ -151,31 +185,27 @@ struct st_context
    struct st_geometry_program *gp;  /**< Currently bound geometry program */
    struct st_tessctrl_program *tcp; /**< Currently bound tess control program */
    struct st_tesseval_program *tep; /**< Currently bound tess eval program */
+   struct st_compute_program *cp;   /**< Currently bound compute program */
 
    struct st_vp_variant *vp_variant;
    struct st_fp_variant *fp_variant;
-   struct st_gp_variant *gp_variant;
-   struct st_tcp_variant *tcp_variant;
-   struct st_tep_variant *tep_variant;
+   struct st_basic_variant *gp_variant;
+   struct st_basic_variant *tcp_variant;
+   struct st_basic_variant *tep_variant;
+   struct st_basic_variant *cp_variant;
 
    struct gl_texture_object *default_texture;
 
    struct {
-      struct gl_program_cache *cache;
-      struct st_fragment_program *program;  /**< cur pixel transfer prog */
-      GLuint xfer_prog_sn;  /**< pixel xfer program serial no. */
-      GLuint user_prog_sn;  /**< user fragment program serial no. */
-      struct st_fragment_program *combined_prog;
-      GLuint combined_prog_sn;
       struct pipe_resource *pixelmap_texture;
       struct pipe_sampler_view *pixelmap_sampler_view;
-      boolean pixelmap_enabled;  /**< use the pixelmap texture? */
    } pixel_xfer;
 
    /** for glBitmap */
    struct {
       struct pipe_rasterizer_state rasterizer;
-      struct pipe_sampler_state samplers[2];
+      struct pipe_sampler_state sampler;
+      struct pipe_sampler_state atlas_sampler;
       enum pipe_format tex_format;
       void *vs;
       struct bitmap_cache *cache;
@@ -183,9 +213,17 @@ struct st_context
 
    /** for glDraw/CopyPixels */
    struct {
-      struct gl_fragment_program *shaders[4];
+      void *zs_shaders[4];
       void *vert_shaders[2];   /**< ureg shaders */
    } drawpix;
+
+   struct {
+      GLsizei width, height;
+      GLenum format, type;
+      const void *user_pointer;  /**< Last user 'pixels' pointer */
+      void *image;               /**< Copy of the glDrawPixels image data */
+      struct pipe_resource *texture;
+   } drawpix_cache;
 
    /** for glClear */
    struct {
@@ -197,8 +235,21 @@ struct st_context
       void *gs_layered;
    } clear;
 
-   /** used for anything using util_draw_vertex_buffer */
-   struct pipe_vertex_element velems_util_draw[3];
+   /* For gl(Compressed)Tex(Sub)Image */
+   struct {
+      struct pipe_rasterizer_state raster;
+      struct pipe_blend_state blend;
+      void *vs;
+      void *gs;
+      void *fs;
+      bool enabled;
+      bool rgba_only;
+      bool upload_layers;
+      bool use_gs;
+   } pbo_upload;
+
+   /** for drawing with st_util_vertex */
+   struct pipe_vertex_element util_velems[3];
 
    void *passthrough_fs;  /**< simple pass-through frag shader */
 
@@ -215,6 +266,8 @@ struct st_context
    int32_t read_stamp;
 
    struct st_config_options options;
+
+   struct st_perf_monitor_group *perfmon;
 };
 
 
@@ -246,7 +299,7 @@ struct st_framebuffer
 extern void st_init_driver_functions(struct pipe_screen *screen,
                                      struct dd_function_table *functions);
 
-void st_invalidate_state(struct gl_context * ctx, GLuint new_state);
+void st_invalidate_state(struct gl_context * ctx, GLbitfield new_state);
 
 
 

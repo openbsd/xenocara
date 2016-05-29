@@ -44,7 +44,9 @@
 #include "utils.h"
 #include "xmlpool.h"
 #include "main/mtypes.h"
+#include "main/framebuffer.h"
 #include "main/version.h"
+#include "main/debug_output.h"
 #include "main/errors.h"
 #include "main/macros.h"
 
@@ -374,11 +376,32 @@ driCreateContextAttribs(__DRIscreen *screen, int api,
      *     EGL_CONTEXT_FLAGS_KHR, then a <debug context> will be created.
      *     [...] This bit is supported for OpenGL and OpenGL ES contexts.
      *
-     * None of the other flags have any meaning in an ES context, so this seems safe.
+     * No other EGL_CONTEXT_OPENGL_*_BIT is legal for an ES context.
+     *
+     * However, Mesa's EGL layer translates the context attribute
+     * EGL_CONTEXT_OPENGL_ROBUST_ACCESS into the context flag
+     * __DRI_CTX_FLAG_ROBUST_BUFFER_ACCESS.  That attribute is legal for ES
+     * (with EGL 1.5 or EGL_EXT_create_context_robustness) and GL (only with
+     * EGL 1.5).
+     *
+     * From the EGL_EXT_create_context_robustness spec:
+     *
+     *     This extension is written against the OpenGL ES 2.0 Specification
+     *     but can apply to OpenGL ES 1.1 and up.
+     *
+     * From the EGL 1.5 (2014.08.27) spec, p55:
+     *
+     *     If the EGL_CONTEXT_OPENGL_ROBUST_ACCESS attribute is set to
+     *     EGL_TRUE, a context supporting robust buffer access will be created.
+     *     OpenGL contexts must support the GL_ARB_robustness extension, or
+     *     equivalent core API functional- ity. OpenGL ES contexts must support
+     *     the GL_EXT_robustness extension, or equivalent core API
+     *     functionality.
      */
     if (mesa_api != API_OPENGL_COMPAT
         && mesa_api != API_OPENGL_CORE
-        && (flags & ~__DRI_CTX_FLAG_DEBUG)) {
+        && (flags & ~(__DRI_CTX_FLAG_DEBUG |
+	              __DRI_CTX_FLAG_ROBUST_BUFFER_ACCESS))) {
 	*error = __DRI_CTX_ERROR_BAD_FLAG;
 	return NULL;
     }
@@ -793,7 +816,7 @@ driUpdateFramebufferSize(struct gl_context *ctx, const __DRIdrawable *dPriv)
 {
    struct gl_framebuffer *fb = (struct gl_framebuffer *) dPriv->driverPrivate;
    if (fb && (dPriv->w != fb->Width || dPriv->h != fb->Height)) {
-      ctx->Driver.ResizeBuffers(ctx, fb, dPriv->w, dPriv->h);
+      _mesa_resize_framebuffer(ctx, fb, dPriv->w, dPriv->h);
       /* if the driver needs the hw lock for ResizeBuffers, the drawable
          might have changed again by now */
       assert(fb->Width == dPriv->w);

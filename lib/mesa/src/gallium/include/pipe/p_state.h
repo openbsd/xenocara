@@ -103,6 +103,7 @@ struct pipe_rasterizer_state
    unsigned point_tri_clip:1; /** large points clipped as tris or points */
    unsigned point_size_per_vertex:1; /**< size computed in vertex shader */
    unsigned multisample:1;         /* XXX maybe more ms state in future */
+   unsigned force_persample_interp:1;
    unsigned line_smooth:1;
    unsigned line_stipple_enable:1;
    unsigned line_last_pixel:1;
@@ -392,14 +393,12 @@ struct pipe_sampler_view
 
 
 /**
- * A view into a writable buffer or texture that can be bound to a shader
+ * A description of a writable buffer or texture that can be bound to a shader
  * stage.
  */
 struct pipe_image_view
 {
-   struct pipe_reference reference;
    struct pipe_resource *resource; /**< resource into which this is a view  */
-   struct pipe_context *context; /**< context this view belongs to */
    enum pipe_format format;      /**< typed PIPE_FORMAT_x */
 
    union {
@@ -586,6 +585,8 @@ struct pipe_draw_info
    unsigned start_instance; /**< first instance id */
    unsigned instance_count; /**< number of instances */
 
+   unsigned drawid; /**< id of this draw in a multidraw */
+
    unsigned vertices_per_patch; /**< the number of vertices per patch */
 
    /**
@@ -617,7 +618,7 @@ struct pipe_draw_info
     */
    struct pipe_stream_output_target *count_from_stream_output;
 
-   /* Indirect parameters resource: If not NULL, most values are taken
+   /* Indirect draw parameters resource: If not NULL, most values are taken
     * from this buffer instead, which is laid out as follows:
     *
     * if indexed is TRUE:
@@ -638,6 +639,15 @@ struct pipe_draw_info
     */
    struct pipe_resource *indirect;
    unsigned indirect_offset; /**< must be 4 byte aligned */
+   unsigned indirect_stride; /**< must be 4 byte aligned */
+   unsigned indirect_count; /**< number of indirect draws */
+
+   /* Indirect draw count resource: If not NULL, contains a 32-bit value which
+    * is to be used as the real indirect_count. In that case indirect_count
+    * becomes the maximum possible value.
+    */
+   struct pipe_resource *indirect_params;
+   unsigned indirect_params_offset; /**< must be 4 byte aligned */
 };
 
 
@@ -666,6 +676,45 @@ struct pipe_blit_info
    boolean alpha_blend; /* dst.rgb = src.rgb * src.a + dst.rgb * (1 - src.a) */
 };
 
+/**
+ * Information to describe a launch_grid call.
+ */
+struct pipe_grid_info
+{
+   /**
+    * For drivers that use PIPE_SHADER_IR_LLVM as their prefered IR, this value
+    * will be the index of the kernel in the opencl.kernels metadata list.
+    */
+   uint32_t pc;
+
+   /**
+    * Will be used to initialize the INPUT resource, and it should point to a
+    * buffer of at least pipe_compute_state::req_input_mem bytes.
+    */
+   void *input;
+
+   /**
+    * Determine the layout of the working block (in thread units) to be used.
+    */
+   uint block[3];
+
+   /**
+    * Determine the layout of the grid (in block units) to be used.
+    */
+   uint grid[3];
+
+   /* Indirect compute parameters resource: If not NULL, block sizes are taken
+    * from this buffer instead, which is laid out as follows:
+    *
+    *  struct {
+    *     uint32_t num_blocks_x;
+    *     uint32_t num_blocks_y;
+    *     uint32_t num_blocks_z;
+    *  };
+    */
+   struct pipe_resource *indirect;
+   unsigned indirect_offset; /**< must be 4 byte aligned */
+};
 
 /**
  * Structure used as a header for serialized LLVM programs.
@@ -681,6 +730,44 @@ struct pipe_compute_state
    unsigned req_local_mem; /**< Required size of the LOCAL resource. */
    unsigned req_private_mem; /**< Required size of the PRIVATE resource. */
    unsigned req_input_mem; /**< Required size of the INPUT resource. */
+};
+
+/**
+ * Structure that contains a callback for debug messages from the driver back
+ * to the state tracker.
+ */
+struct pipe_debug_callback
+{
+   /**
+    * Callback for the driver to report debug/performance/etc information back
+    * to the state tracker.
+    *
+    * \param data       user-supplied data pointer
+    * \param id         message type identifier, if pointed value is 0, then a
+    *                   new id is assigned
+    * \param type       PIPE_DEBUG_TYPE_*
+    * \param format     printf-style format string
+    * \param args       args for format string
+    */
+   void (*debug_message)(void *data,
+                         unsigned *id,
+                         enum pipe_debug_type type,
+                         const char *fmt,
+                         va_list args);
+   void *data;
+};
+
+/**
+ * Information about memory usage. All sizes are in kilobytes.
+ */
+struct pipe_memory_info
+{
+   unsigned total_device_memory; /**< size of device memory, e.g. VRAM */
+   unsigned avail_device_memory; /**< free device memory at the moment */
+   unsigned total_staging_memory; /**< size of staging memory, e.g. GART */
+   unsigned avail_staging_memory; /**< free staging memory at the moment */
+   unsigned device_memory_evicted; /**< size of memory evicted (monotonic counter) */
+   unsigned nr_device_memory_evictions; /**< # of evictions (monotonic counter) */
 };
 
 #ifdef __cplusplus

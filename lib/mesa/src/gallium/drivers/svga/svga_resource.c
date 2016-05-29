@@ -69,18 +69,21 @@ svga_can_create_resource(struct pipe_screen *screen,
    struct svga_winsys_screen *sws = svgascreen->sws;
    SVGA3dSurfaceFormat format;
    SVGA3dSize base_level_size;
-   uint32 numFaces;
    uint32 numMipLevels;
+   uint32 arraySize;
 
    if (res->target == PIPE_BUFFER) {
       format = SVGA3D_BUFFER;
       base_level_size.width = res->width0;
       base_level_size.height = 1;
       base_level_size.depth = 1;
-      numFaces = 1;
       numMipLevels = 1;
+      arraySize = 1;
 
    } else {
+      if (res->target == PIPE_TEXTURE_CUBE)
+         assert(res->array_size == 6);
+
       format = svga_translate_format(svgascreen, res->format, res->bind);
       if (format == SVGA3D_FORMAT_INVALID)
          return FALSE;
@@ -88,12 +91,12 @@ svga_can_create_resource(struct pipe_screen *screen,
       base_level_size.width = res->width0;
       base_level_size.height = res->height0;
       base_level_size.depth = res->depth0;
-      numFaces = (res->target == PIPE_TEXTURE_CUBE) ? 6 : 1;
       numMipLevels = res->last_level + 1;
+      arraySize = res->array_size;
    }
 
    return sws->surface_can_create(sws, format, base_level_size, 
-                                  numFaces, numMipLevels);
+                                  arraySize, numMipLevels);
 }
 
 
@@ -104,6 +107,12 @@ svga_init_resource_functions(struct svga_context *svga)
    svga->pipe.transfer_flush_region = u_transfer_flush_region_vtbl;
    svga->pipe.transfer_unmap = u_transfer_unmap_vtbl;
    svga->pipe.transfer_inline_write = u_transfer_inline_write_vtbl;
+
+   if (svga_have_vgpu10(svga)) {
+      svga->pipe.generate_mipmap = svga_texture_generate_mipmap;
+   } else {
+      svga->pipe.generate_mipmap = NULL;
+   }
 }
 
 void

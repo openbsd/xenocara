@@ -54,8 +54,10 @@ static const char *tgsi_file_names[] =
    "IMM",
    "PRED",
    "SV",
-   "RES",
-   "SVIEW"
+   "IMAGE",
+   "SVIEW",
+   "BUFFER",
+   "MEMORY",
 };
 
 const char *tgsi_semantic_names[TGSI_SEMANTIC_COUNT] =
@@ -95,6 +97,9 @@ const char *tgsi_semantic_names[TGSI_SEMANTIC_COUNT] =
    "TESSOUTER",
    "TESSINNER",
    "VERTICESIN",
+   "HELPER_INVOCATION",
+   "BASEINSTANCE",
+   "DRAWID",
 };
 
 const char *tgsi_texture_names[TGSI_TEXTURE_COUNT] =
@@ -137,6 +142,8 @@ const char *tgsi_property_names[TGSI_PROPERTY_COUNT] =
    "TES_SPACING",
    "TES_VERTEX_ORDER_CW",
    "TES_POINT_MODE",
+   "NUM_CLIPDIST_ENABLED",
+   "NUM_CULLDIST_ENABLED",
 };
 
 const char *tgsi_return_type_names[TGSI_RETURN_TYPE_COUNT] =
@@ -200,6 +207,13 @@ const char *tgsi_immediate_type_names[4] =
    "UINT32",
    "INT32",
    "FLT64"
+};
+
+const char *tgsi_memory_names[3] =
+{
+   "COHERENT",
+   "RESTRICT",
+   "VOLATILE",
 };
 
 

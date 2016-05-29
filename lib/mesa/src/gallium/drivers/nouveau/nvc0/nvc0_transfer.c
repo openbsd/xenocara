@@ -3,8 +3,6 @@
 
 #include "nvc0/nvc0_context.h"
 
-#include "nv50/nv50_defs.xml.h"
-
 struct nvc0_transfer {
    struct pipe_transfer base;
    struct nv50_m2mf_rect rect[2];
@@ -340,8 +338,8 @@ nvc0_mt_sync(struct nvc0_context *nvc0, struct nv50_miptree *mt, unsigned usage)
       return !nouveau_bo_wait(mt->base.bo, access, nvc0->base.client);
    }
    if (usage & PIPE_TRANSFER_WRITE)
-      return !mt->base.fence || nouveau_fence_wait(mt->base.fence);
-   return !mt->base.fence_wr || nouveau_fence_wait(mt->base.fence_wr);
+      return !mt->base.fence || nouveau_fence_wait(mt->base.fence, &nvc0->base.debug);
+   return !mt->base.fence_wr || nouveau_fence_wait(mt->base.fence_wr, &nvc0->base.debug);
 }
 
 void *

@@ -1197,7 +1197,7 @@ get_soa_array_offsets(struct lp_build_context *uint_bld,
 
    if (need_perelement_offset) {
       LLVMValueRef pixel_offsets;
-      int i;
+      unsigned i;
      /* build pixel offset vector: {0, 1, 2, 3, ...} */
       pixel_offsets = uint_bld->undef;
       for (i = 0; i < uint_bld->type.length; i++) {
@@ -1548,13 +1548,21 @@ emit_fetch_gs_input(
                                     swizzle_index);
 
    assert(res);
-
-   if (stype == TGSI_TYPE_UNSIGNED) {
+   if (stype == TGSI_TYPE_DOUBLE) {
+      LLVMValueRef swizzle_index = lp_build_const_int32(gallivm, swizzle + 1);
+      LLVMValueRef res2;
+      res2 = bld->gs_iface->fetch_input(bld->gs_iface, bld_base,
+                                        reg->Dimension.Indirect,
+                                        vertex_index,
+                                        reg->Register.Indirect,
+                                        attrib_index,
+                                        swizzle_index);
+      assert(res2);
+      res = emit_fetch_double(bld_base, stype, res, res2);
+   } else if (stype == TGSI_TYPE_UNSIGNED) {
       res = LLVMBuildBitCast(builder, res, bld_base->uint_bld.vec_type, "");
    } else if (stype == TGSI_TYPE_SIGNED) {
       res = LLVMBuildBitCast(builder, res, bld_base->int_bld.vec_type, "");
-   } else if (stype == TGSI_TYPE_DOUBLE) {
-      res = LLVMBuildBitCast(builder, res, bld_base->dbl_bld.vec_type, "");
    }
 
    return res;
@@ -1701,15 +1709,15 @@ emit_fetch_deriv(
    LLVMValueRef *ddx,
    LLVMValueRef *ddy)
 {
-   if(res)
+   if (res)
       *res = src;
 
    /* TODO: use interpolation coeffs for inputs */
 
-   if(ddx)
+   if (ddx)
       *ddx = lp_build_ddx(&bld->bld_base.base, src);
 
-   if(ddy)
+   if (ddy)
       *ddy = lp_build_ddy(&bld->bld_base.base, src);
 }
 
@@ -1801,7 +1809,7 @@ emit_store_double_chan(struct lp_build_tgsi_context *bld_base,
    struct gallivm_state *gallivm = bld_base->base.gallivm;
    LLVMBuilderRef builder = gallivm->builder;
    struct lp_build_context *float_bld = &bld_base->base;
-   int i;
+   unsigned i;
    LLVMValueRef temp, temp2;
    LLVMValueRef shuffles[8];
    LLVMValueRef shuffles2[8];
@@ -2321,6 +2329,7 @@ emit_tex( struct lp_build_tgsi_soa_context *bld,
    params.texture_index = unit;
    params.sampler_index = unit;
    params.context_ptr = bld->context_ptr;
+   params.thread_data_ptr = bld->thread_data_ptr;
    params.coords = coords;
    params.offsets = offsets;
    params.lod = lod;
@@ -2488,6 +2497,7 @@ emit_sample(struct lp_build_tgsi_soa_context *bld,
    params.texture_index = texture_unit;
    params.sampler_index = sampler_unit;
    params.context_ptr = bld->context_ptr;
+   params.thread_data_ptr = bld->thread_data_ptr;
    params.coords = coords;
    params.offsets = offsets;
    params.lod = lod;
@@ -2582,7 +2592,10 @@ emit_fetch_texels( struct lp_build_tgsi_soa_context *bld,
       explicit_lod = lp_build_emit_fetch(&bld->bld_base, inst, 0, 3);
       lod_property = lp_build_lod_property(&bld->bld_base, inst, 0);
    }
-   /* XXX: for real msaa support, the w component would be the sample index. */
+   /*
+    * XXX: for real msaa support, the w component (or src2.x for sample_i_ms)
+    * would be the sample index.
+    */
 
    for (i = 0; i < dims; i++) {
       coords[i] = lp_build_emit_fetch(&bld->bld_base, inst, 0, i);
@@ -2606,8 +2619,14 @@ emit_fetch_texels( struct lp_build_tgsi_soa_context *bld,
    params.type = bld->bld_base.base.type;
    params.sample_key = sample_key;
    params.texture_index = unit;
-   params.sampler_index = unit;
+   /*
+    * sampler not actually used, set to 0 so it won't exceed PIPE_MAX_SAMPLERS
+    * and trigger some assertions with d3d10 where the sampler view number
+    * can exceed this.
+    */
+   params.sampler_index = 0;
    params.context_ptr = bld->context_ptr;
+   params.thread_data_ptr = bld->thread_data_ptr;
    params.coords = coords;
    params.offsets = offsets;
    params.derivs = NULL;
@@ -2697,7 +2716,7 @@ static boolean
 near_end_of_shader(struct lp_build_tgsi_soa_context *bld,
                    int pc)
 {
-   int i;
+   unsigned i;
 
    for (i = 0; i < 5; i++) {
       unsigned opcode;
@@ -2726,6 +2745,7 @@ near_end_of_shader(struct lp_build_tgsi_soa_context *bld,
          opcode == TGSI_OPCODE_SAMPLE_C_LZ ||
          opcode == TGSI_OPCODE_SAMPLE_D ||
          opcode == TGSI_OPCODE_SAMPLE_I ||
+         opcode == TGSI_OPCODE_SAMPLE_I_MS ||
          opcode == TGSI_OPCODE_SAMPLE_L ||
          opcode == TGSI_OPCODE_SVIEWINFO ||
          opcode == TGSI_OPCODE_CAL ||
@@ -3858,6 +3878,7 @@ lp_build_tgsi_soa(struct gallivm_state *gallivm,
                   const LLVMValueRef (*inputs)[TGSI_NUM_CHANNELS],
                   LLVMValueRef (*outputs)[TGSI_NUM_CHANNELS],
                   LLVMValueRef context_ptr,
+                  LLVMValueRef thread_data_ptr,
                   struct lp_build_sampler_soa *sampler,
                   const struct tgsi_shader_info *info,
                   const struct lp_build_tgsi_gs_iface *gs_iface)
@@ -3893,6 +3914,7 @@ lp_build_tgsi_soa(struct gallivm_state *gallivm,
    bld.bld_base.info = info;
    bld.indirect_files = info->indirect_files;
    bld.context_ptr = context_ptr;
+   bld.thread_data_ptr = thread_data_ptr;
 
    /*
     * If the number of temporaries is rather large then we just
@@ -3971,6 +3993,7 @@ lp_build_tgsi_soa(struct gallivm_state *gallivm,
    bld.bld_base.op_actions[TGSI_OPCODE_SAMPLE_C_LZ].emit = sample_c_lz_emit;
    bld.bld_base.op_actions[TGSI_OPCODE_SAMPLE_D].emit = sample_d_emit;
    bld.bld_base.op_actions[TGSI_OPCODE_SAMPLE_I].emit = sample_i_emit;
+   bld.bld_base.op_actions[TGSI_OPCODE_SAMPLE_I_MS].emit = sample_i_emit;
    bld.bld_base.op_actions[TGSI_OPCODE_SAMPLE_L].emit = sample_l_emit;
    bld.bld_base.op_actions[TGSI_OPCODE_SVIEWINFO].emit = sviewinfo_emit;
 

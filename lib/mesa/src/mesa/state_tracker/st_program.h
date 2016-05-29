@@ -59,8 +59,6 @@ struct st_fp_variant_key
    GLuint drawpixels:1;           /**< glDrawPixels variant */
    GLuint scaleAndBias:1;         /**< glDrawPixels w/ scale and/or bias? */
    GLuint pixelMaps:1;            /**< glDrawPixels w/ pixel lookup map? */
-   GLuint drawpixels_z:1;         /**< glDrawPixels(GL_DEPTH) */
-   GLuint drawpixels_stencil:1;   /**< glDrawPixels(GL_STENCIL) */
 
    /** for ARB_color_buffer_float */
    GLuint clamp_color:1;
@@ -78,14 +76,15 @@ struct st_fp_variant
    /** Parameters which generated this version of fragment program */
    struct st_fp_variant_key key;
 
-   struct pipe_shader_state tgsi;
-
    /** Driver's compiled shader */
    void *driver_shader;
 
    /** For glBitmap variants */
-   struct gl_program_parameter_list *parameters;
    uint bitmap_sampler;
+
+   /** For glDrawPixels variants */
+   unsigned drawpix_sampler;
+   unsigned pixelmap_sampler;
 
    /** next in linked list */
    struct st_fp_variant *next;
@@ -98,6 +97,7 @@ struct st_fp_variant
 struct st_fragment_program
 {
    struct gl_fragment_program Base;
+   struct pipe_shader_state tgsi;
    struct glsl_to_tgsi_visitor* glsl_to_tgsi;
 
    struct st_fp_variant *variants;
@@ -153,20 +153,16 @@ struct st_vp_variant
 struct st_vertex_program
 {
    struct gl_vertex_program Base;  /**< The Mesa vertex program */
+   struct pipe_shader_state tgsi;
    struct glsl_to_tgsi_visitor* glsl_to_tgsi;
 
    /** maps a Mesa VERT_ATTRIB_x to a packed TGSI input index */
-   GLuint input_to_index[VERT_ATTRIB_MAX];
    /** maps a TGSI input index back to a Mesa VERT_ATTRIB_x */
    GLuint index_to_input[PIPE_MAX_SHADER_INPUTS];
    GLuint num_inputs;
 
    /** Maps VARYING_SLOT_x to slot */
    GLuint result_to_output[VARYING_SLOT_MAX];
-   GLuint output_slot_to_attr[VARYING_SLOT_MAX];
-   ubyte output_semantic_name[VARYING_SLOT_MAX];
-   ubyte output_semantic_index[VARYING_SLOT_MAX];
-   GLuint num_outputs;
 
    /** List of translated variants of this vertex program.
     */
@@ -175,25 +171,24 @@ struct st_vertex_program
 
 
 
-/** Geometry program variant key */
-struct st_gp_variant_key
+/** Key shared by all shaders except VP, FP */
+struct st_basic_variant_key
 {
    struct st_context *st;          /**< variants are per-context */
-   /* no other fields yet */
 };
 
 
 /**
  * Geometry program variant.
  */
-struct st_gp_variant
+struct st_basic_variant
 {
    /* Parameters which generated this variant. */
-   struct st_gp_variant_key key;
+   struct st_basic_variant_key key;
 
    void *driver_shader;
 
-   struct st_gp_variant *next;
+   struct st_basic_variant *next;
 };
 
 
@@ -203,32 +198,10 @@ struct st_gp_variant
 struct st_geometry_program
 {
    struct gl_geometry_program Base;  /**< The Mesa geometry program */
+   struct pipe_shader_state tgsi;
    struct glsl_to_tgsi_visitor* glsl_to_tgsi;
 
-   struct st_gp_variant *variants;
-};
-
-
-
-/** Tessellation control program variant key */
-struct st_tcp_variant_key
-{
-   struct st_context *st;          /**< variants are per-context */
-   /* no other fields yet */
-};
-
-
-/**
- * Tessellation control program variant.
- */
-struct st_tcp_variant
-{
-   /* Parameters which generated this variant. */
-   struct st_tcp_variant_key key;
-
-   void *driver_shader;
-
-   struct st_tcp_variant *next;
+   struct st_basic_variant *variants;
 };
 
 
@@ -238,32 +211,10 @@ struct st_tcp_variant
 struct st_tessctrl_program
 {
    struct gl_tess_ctrl_program Base;  /**< The Mesa tess ctrl program */
+   struct pipe_shader_state tgsi;
    struct glsl_to_tgsi_visitor* glsl_to_tgsi;
 
-   struct st_tcp_variant *variants;
-};
-
-
-
-/** Tessellation evaluation program variant key */
-struct st_tep_variant_key
-{
-   struct st_context *st;          /**< variants are per-context */
-   /* no other fields yet */
-};
-
-
-/**
- * Tessellation evaluation program variant.
- */
-struct st_tep_variant
-{
-   /* Parameters which generated this variant. */
-   struct st_tep_variant_key key;
-
-   void *driver_shader;
-
-   struct st_tep_variant *next;
+   struct st_basic_variant *variants;
 };
 
 
@@ -273,11 +224,24 @@ struct st_tep_variant
 struct st_tesseval_program
 {
    struct gl_tess_eval_program Base;  /**< The Mesa tess eval program */
+   struct pipe_shader_state tgsi;
    struct glsl_to_tgsi_visitor* glsl_to_tgsi;
 
-   struct st_tep_variant *variants;
+   struct st_basic_variant *variants;
 };
 
+
+/**
+ * Derived from Mesa gl_compute_program:
+ */
+struct st_compute_program
+{
+   struct gl_compute_program Base;  /**< The Mesa compute program */
+   struct pipe_compute_state tgsi;
+   struct glsl_to_tgsi_visitor* glsl_to_tgsi;
+
+   struct st_basic_variant *variants;
+};
 
 
 static inline struct st_fragment_program *
@@ -309,6 +273,12 @@ static inline struct st_tesseval_program *
 st_tesseval_program( struct gl_tess_eval_program *tep )
 {
    return (struct st_tesseval_program *)tep;
+}
+
+static inline struct st_compute_program *
+st_compute_program( struct gl_compute_program *cp )
+{
+   return (struct st_compute_program *)cp;
 }
 
 static inline void
@@ -361,6 +331,16 @@ st_reference_tesseprog(struct st_context *st,
                            (struct gl_program *) prog);
 }
 
+static inline void
+st_reference_compprog(struct st_context *st,
+                      struct st_compute_program **ptr,
+                      struct st_compute_program *prog)
+{
+   _mesa_reference_program(st->ctx,
+                           (struct gl_program **) ptr,
+                           (struct gl_program *) prog);
+}
+
 /**
  * This defines mapping from Mesa VARYING_SLOTs to TGSI GENERIC slots.
  */
@@ -398,31 +378,16 @@ st_get_fp_variant(struct st_context *st,
                   struct st_fragment_program *stfp,
                   const struct st_fp_variant_key *key);
 
+extern struct st_basic_variant *
+st_get_cp_variant(struct st_context *st,
+                  struct pipe_compute_state *tgsi,
+                  struct st_basic_variant **variants);
 
-extern struct st_gp_variant *
-st_get_gp_variant(struct st_context *st,
-                  struct st_geometry_program *stgp,
-                  const struct st_gp_variant_key *key);
-
-extern struct st_tcp_variant *
-st_get_tcp_variant(struct st_context *st,
-                   struct st_tessctrl_program *stgp,
-                   const struct st_tcp_variant_key *key);
-
-extern struct st_tep_variant *
-st_get_tep_variant(struct st_context *st,
-                   struct st_tesseval_program *stgp,
-                   const struct st_tep_variant_key *key);
-
-
-extern void
-st_prepare_vertex_program(struct gl_context *ctx,
-                          struct st_vertex_program *stvp);
-
-extern GLboolean
-st_prepare_fragment_program(struct gl_context *ctx,
-                            struct st_fragment_program *stfp);
-
+extern struct st_basic_variant *
+st_get_basic_variant(struct st_context *st,
+                     unsigned pipe_shader,
+                     struct pipe_shader_state *tgsi,
+                     struct st_basic_variant **variants);
 
 extern void
 st_release_vp_variants( struct st_context *st,
@@ -433,20 +398,40 @@ st_release_fp_variants( struct st_context *st,
                         struct st_fragment_program *stfp );
 
 extern void
-st_release_gp_variants(struct st_context *st,
-                       struct st_geometry_program *stgp);
+st_release_cp_variants(struct st_context *st,
+                        struct st_compute_program *stcp);
 
 extern void
-st_release_tcp_variants(struct st_context *st,
-                        struct st_tessctrl_program *stgp);
-
-extern void
-st_release_tep_variants(struct st_context *st,
-                        struct st_tesseval_program *stgp);
+st_release_basic_variants(struct st_context *st, GLenum target,
+                          struct st_basic_variant **variants,
+                          struct pipe_shader_state *tgsi);
 
 extern void
 st_destroy_program_variants(struct st_context *st);
 
+extern bool
+st_translate_vertex_program(struct st_context *st,
+                            struct st_vertex_program *stvp);
+
+extern bool
+st_translate_fragment_program(struct st_context *st,
+                              struct st_fragment_program *stfp);
+
+extern bool
+st_translate_geometry_program(struct st_context *st,
+                              struct st_geometry_program *stgp);
+
+extern bool
+st_translate_tessctrl_program(struct st_context *st,
+                              struct st_tessctrl_program *sttcp);
+
+extern bool
+st_translate_tesseval_program(struct st_context *st,
+                              struct st_tesseval_program *sttep);
+
+extern bool
+st_translate_compute_program(struct st_context *st,
+                             struct st_compute_program *stcp);
 
 extern void
 st_print_current_vertex_program(void);

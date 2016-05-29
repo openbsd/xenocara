@@ -188,9 +188,9 @@ value* shader::create_temp_value() {
 	return get_value(VLK_TEMP, id, 0);
 }
 
-value* shader::get_kcache_value(unsigned bank, unsigned index, unsigned chan) {
+value* shader::get_kcache_value(unsigned bank, unsigned index, unsigned chan, alu_kcache_index_mode index_mode) {
 	return get_ro_value(kcache_values, VLK_KCACHE,
-			sel_chan((bank << 12) | index, chan));
+			sel_chan(bank, index, chan, index_mode));
 }
 
 void shader::add_input(unsigned gpr, bool preloaded, unsigned comp_mask) {
@@ -215,7 +215,7 @@ void shader::init() {
 void shader::init_call_fs(cf_node* cf) {
 	unsigned gpr = 0;
 
-	assert(target == TARGET_VS || target == TARGET_ES);
+	assert(target == TARGET_LS || target == TARGET_VS || target == TARGET_ES);
 
 	for(inputs_vec::const_iterator I = inputs.begin(),
 			E = inputs.end(); I != E; ++I, ++gpr) {
@@ -436,6 +436,8 @@ const char* shader::get_shader_target_name() {
 		case TARGET_ES: return "ES";
 		case TARGET_PS: return "PS";
 		case TARGET_GS: return "GS";
+		case TARGET_HS: return "HS";
+		case TARGET_LS: return "LS";
 		case TARGET_COMPUTE: return "COMPUTE";
 		case TARGET_FETCH: return "FETCH";
 		default:

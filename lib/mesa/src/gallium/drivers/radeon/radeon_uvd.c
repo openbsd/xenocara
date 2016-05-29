@@ -57,6 +57,7 @@
 
 #define FB_BUFFER_OFFSET 0x1000
 #define FB_BUFFER_SIZE 2048
+#define FB_BUFFER_SIZE_TONGA (2048 * 64)
 #define IT_SCALING_TABLE_SIZE 992
 
 /* UVD decoder representation */
@@ -78,6 +79,7 @@ struct ruvd_decoder {
 	struct rvid_buffer		msg_fb_it_buffers[NUM_BUFFERS];
 	struct ruvd_msg			*msg;
 	uint32_t			*fb;
+	unsigned			fb_size;
 	uint8_t				*it;
 
 	struct rvid_buffer		bs_buffers[NUM_BUFFERS];
@@ -105,16 +107,16 @@ static void set_reg(struct ruvd_decoder *dec, unsigned reg, uint32_t val)
 
 /* send a command to the VCPU through the GPCOM registers */
 static void send_cmd(struct ruvd_decoder *dec, unsigned cmd,
-		     struct radeon_winsys_cs_handle* cs_buf, uint32_t off,
+		     struct pb_buffer* buf, uint32_t off,
 		     enum radeon_bo_usage usage, enum radeon_bo_domain domain)
 {
 	int reloc_idx;
 
-	reloc_idx = dec->ws->cs_add_reloc(dec->cs, cs_buf, usage, domain,
-					  RADEON_PRIO_MIN);
+	reloc_idx = dec->ws->cs_add_buffer(dec->cs, buf, usage, domain,
+					  RADEON_PRIO_UVD);
 	if (!dec->use_legacy) {
 		uint64_t addr;
-		addr = dec->ws->buffer_get_virtual_address(cs_buf);
+		addr = dec->ws->buffer_get_virtual_address(buf);
 		addr = addr + off;
 		set_reg(dec, RUVD_GPCOM_VCPU_DATA0, addr);
 		set_reg(dec, RUVD_GPCOM_VCPU_DATA1, addr >> 32);
@@ -142,13 +144,13 @@ static void map_msg_fb_it_buf(struct ruvd_decoder *dec)
 	buf = &dec->msg_fb_it_buffers[dec->cur_buffer];
 
 	/* and map it for CPU access */
-	ptr = dec->ws->buffer_map(buf->res->cs_buf, dec->cs, PIPE_TRANSFER_WRITE);
+	ptr = dec->ws->buffer_map(buf->res->buf, dec->cs, PIPE_TRANSFER_WRITE);
 
 	/* calc buffer offsets */
 	dec->msg = (struct ruvd_msg *)ptr;
 	dec->fb = (uint32_t *)(ptr + FB_BUFFER_OFFSET);
 	if (have_it(dec))
-		dec->it = (uint8_t *)(ptr + FB_BUFFER_OFFSET + FB_BUFFER_SIZE);
+		dec->it = (uint8_t *)(ptr + FB_BUFFER_OFFSET + dec->fb_size);
 }
 
 /* unmap and send a message command to the VCPU */
@@ -164,13 +166,13 @@ static void send_msg_buf(struct ruvd_decoder *dec)
 	buf = &dec->msg_fb_it_buffers[dec->cur_buffer];
 
 	/* unmap the buffer */
-	dec->ws->buffer_unmap(buf->res->cs_buf);
+	dec->ws->buffer_unmap(buf->res->buf);
 	dec->msg = NULL;
 	dec->fb = NULL;
 	dec->it = NULL;
 
 	/* and send it to the hardware */
-	send_cmd(dec, RUVD_CMD_MSG_BUFFER, buf->res->cs_buf, 0,
+	send_cmd(dec, RUVD_CMD_MSG_BUFFER, buf->res->buf, 0,
 		 RADEON_USAGE_READ, RADEON_DOMAIN_GTT);
 }
 
@@ -402,6 +404,9 @@ static struct ruvd_h264 get_h264_msg(struct ruvd_decoder *dec, struct pipe_h264_
 	result.log2_max_pic_order_cnt_lsb_minus4 = pic->pps->sps->log2_max_pic_order_cnt_lsb_minus4;
 
 	switch (dec->base.chroma_format) {
+	case PIPE_VIDEO_CHROMA_FORMAT_NONE:
+		/* TODO: assert? */
+		break;
 	case PIPE_VIDEO_CHROMA_FORMAT_400:
 		result.chroma_format = 0;
 		break;
@@ -478,6 +483,8 @@ static struct ruvd_h265 get_h265_msg(struct ruvd_decoder *dec, struct pipe_video
 	result.sps_info_flags |= pic->pps->sps->separate_colour_plane_flag << 8;
 	if (((struct r600_common_screen*)dec->screen)->family == CHIP_CARRIZO)
 		result.sps_info_flags |= 1 << 9;
+	if (pic->UseRefPicList == true)
+		result.sps_info_flags |= 1 << 10;
 
 	result.chroma_format = pic->pps->sps->chroma_format_idc;
 	result.bit_depth_luma_minus8 = pic->pps->sps->bit_depth_luma_minus8;
@@ -585,6 +592,11 @@ static struct ruvd_h265 get_h265_msg(struct ruvd_decoder *dec, struct pipe_video
 	memcpy(dec->it + 96, pic->pps->sps->ScalingList8x8, 6 * 64);
 	memcpy(dec->it + 480, pic->pps->sps->ScalingList16x16, 6 * 64);
 	memcpy(dec->it + 864, pic->pps->sps->ScalingList32x32, 2 * 64);
+
+	for (i = 0 ; i < 2 ; i++) {
+		for (int j = 0 ; j < 15 ; j++)
+			result.direct_reflist[i][j] = pic->RefPicList[i][j];
+	}
 
 	/* TODO
 	result.highestTid;
@@ -845,7 +857,7 @@ static void ruvd_begin_frame(struct pipe_video_codec *decoder,
 
 	dec->bs_size = 0;
 	dec->bs_ptr = dec->ws->buffer_map(
-		dec->bs_buffers[dec->cur_buffer].res->cs_buf,
+		dec->bs_buffers[dec->cur_buffer].res->buf,
 		dec->cs, PIPE_TRANSFER_WRITE);
 }
 
@@ -885,13 +897,13 @@ static void ruvd_decode_bitstream(struct pipe_video_codec *decoder,
 		unsigned new_size = dec->bs_size + sizes[i];
 
 		if (new_size > buf->res->buf->size) {
-			dec->ws->buffer_unmap(buf->res->cs_buf);
+			dec->ws->buffer_unmap(buf->res->buf);
 			if (!rvid_resize_buffer(dec->screen, dec->cs, buf, new_size)) {
 				RVID_ERR("Can't resize bitstream buffer!");
 				return;
 			}
 
-			dec->bs_ptr = dec->ws->buffer_map(buf->res->cs_buf, dec->cs,
+			dec->bs_ptr = dec->ws->buffer_map(buf->res->buf, dec->cs,
 							  PIPE_TRANSFER_WRITE);
 			if (!dec->bs_ptr)
 				return;
@@ -913,7 +925,7 @@ static void ruvd_end_frame(struct pipe_video_codec *decoder,
 			   struct pipe_picture_desc *picture)
 {
 	struct ruvd_decoder *dec = (struct ruvd_decoder*)decoder;
-	struct radeon_winsys_cs_handle *dt;
+	struct pb_buffer *dt;
 	struct rvid_buffer *msg_fb_it_buf, *bs_buf;
 	unsigned bs_size;
 
@@ -927,7 +939,7 @@ static void ruvd_end_frame(struct pipe_video_codec *decoder,
 
 	bs_size = align(dec->bs_size, 128);
 	memset(dec->bs_ptr, 0, bs_size - dec->bs_size);
-	dec->ws->buffer_unmap(bs_buf->res->cs_buf);
+	dec->ws->buffer_unmap(bs_buf->res->buf);
 
 	map_msg_fb_it_buf(dec);
 	dec->msg->size = sizeof(*dec->msg);
@@ -948,7 +960,7 @@ static void ruvd_end_frame(struct pipe_video_codec *decoder,
 
 	dec->msg->body.decode.dpb_size = dec->dpb.res->buf->size;
 	dec->msg->body.decode.bsd_size = bs_size;
-	dec->msg->body.decode.db_pitch = dec->base.width;
+	dec->msg->body.decode.db_pitch = align(dec->base.width, 16);
 
 	dt = dec->set_dtb(dec->msg, (struct vl_video_buffer *)target);
 	if (((struct r600_common_screen*)dec->screen)->family >= CHIP_STONEY)
@@ -984,25 +996,25 @@ static void ruvd_end_frame(struct pipe_video_codec *decoder,
 	dec->msg->body.decode.extension_support = 0x1;
 
 	/* set at least the feedback buffer size */
-	dec->fb[0] = FB_BUFFER_SIZE;
+	dec->fb[0] = dec->fb_size;
 
 	send_msg_buf(dec);
 
-	send_cmd(dec, RUVD_CMD_DPB_BUFFER, dec->dpb.res->cs_buf, 0,
+	send_cmd(dec, RUVD_CMD_DPB_BUFFER, dec->dpb.res->buf, 0,
 		 RADEON_USAGE_READWRITE, RADEON_DOMAIN_VRAM);
 	if (u_reduce_video_profile(picture->profile) == PIPE_VIDEO_FORMAT_HEVC) {
-		send_cmd(dec, RUVD_CMD_CONTEXT_BUFFER, dec->ctx.res->cs_buf, 0,
+		send_cmd(dec, RUVD_CMD_CONTEXT_BUFFER, dec->ctx.res->buf, 0,
 			RADEON_USAGE_READWRITE, RADEON_DOMAIN_VRAM);
 	}
-	send_cmd(dec, RUVD_CMD_BITSTREAM_BUFFER, bs_buf->res->cs_buf,
+	send_cmd(dec, RUVD_CMD_BITSTREAM_BUFFER, bs_buf->res->buf,
 		 0, RADEON_USAGE_READ, RADEON_DOMAIN_GTT);
 	send_cmd(dec, RUVD_CMD_DECODING_TARGET_BUFFER, dt, 0,
 		 RADEON_USAGE_WRITE, RADEON_DOMAIN_VRAM);
-	send_cmd(dec, RUVD_CMD_FEEDBACK_BUFFER, msg_fb_it_buf->res->cs_buf,
+	send_cmd(dec, RUVD_CMD_FEEDBACK_BUFFER, msg_fb_it_buf->res->buf,
 		 FB_BUFFER_OFFSET, RADEON_USAGE_WRITE, RADEON_DOMAIN_GTT);
 	if (have_it(dec))
-		send_cmd(dec, RUVD_CMD_ITSCALING_TABLE_BUFFER, msg_fb_it_buf->res->cs_buf,
-			 FB_BUFFER_OFFSET + FB_BUFFER_SIZE, RADEON_USAGE_READ, RADEON_DOMAIN_GTT);
+		send_cmd(dec, RUVD_CMD_ITSCALING_TABLE_BUFFER, msg_fb_it_buf->res->buf,
+			 FB_BUFFER_OFFSET + dec->fb_size, RADEON_USAGE_READ, RADEON_DOMAIN_GTT);
 	set_reg(dec, RUVD_ENGINE_CNTL, 1);
 
 	flush(dec);
@@ -1082,9 +1094,11 @@ struct pipe_video_codec *ruvd_create_decoder(struct pipe_context *context,
 		goto error;
 	}
 
+	dec->fb_size = (info.family == CHIP_TONGA) ? FB_BUFFER_SIZE_TONGA :
+			FB_BUFFER_SIZE;
 	bs_buf_size = width * height * 512 / (16 * 16);
 	for (i = 0; i < NUM_BUFFERS; ++i) {
-		unsigned msg_fb_it_size = FB_BUFFER_OFFSET + FB_BUFFER_SIZE;
+		unsigned msg_fb_it_size = FB_BUFFER_OFFSET + dec->fb_size;
 		STATIC_ASSERT(sizeof(struct ruvd_msg) <= FB_BUFFER_OFFSET);
 		if (have_it(dec))
 			msg_fb_it_size += IT_SCALING_TABLE_SIZE;

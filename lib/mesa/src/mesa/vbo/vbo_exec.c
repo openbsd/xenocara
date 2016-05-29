@@ -50,8 +50,6 @@ void vbo_exec_init( struct gl_context *ctx )
 
    ctx->Driver.NeedFlush = 0;
    ctx->Driver.CurrentExecPrimitive = PRIM_OUTSIDE_BEGIN_END;
-   ctx->Driver.BeginVertices = vbo_exec_BeginVertices;
-   ctx->Driver.FlushVertices = vbo_exec_FlushVertices;
 
    vbo_exec_invalidate_state( ctx, ~0 );
 }
@@ -75,7 +73,7 @@ void vbo_exec_destroy( struct gl_context *ctx )
  * invoked according to the state flags.  That will have to wait for a
  * mesa rework:
  */ 
-void vbo_exec_invalidate_state( struct gl_context *ctx, GLuint new_state )
+void vbo_exec_invalidate_state( struct gl_context *ctx, GLbitfield new_state )
 {
    struct vbo_context *vbo = vbo_context(ctx);
    struct vbo_exec_context *exec = &vbo->exec;

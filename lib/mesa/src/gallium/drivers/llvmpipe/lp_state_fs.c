@@ -421,7 +421,7 @@ generate_fs_loop(struct gallivm_state *gallivm,
    lp_build_tgsi_soa(gallivm, tokens, type, &mask,
                      consts_ptr, num_consts_ptr, &system_values,
                      interp->inputs,
-                     outputs, context_ptr,
+                     outputs, context_ptr, thread_data_ptr,
                      sampler, &shader->info.base, NULL);
 
    /* Alpha test */
@@ -1601,7 +1601,7 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
    LLVMValueRef fs_src[4][TGSI_NUM_CHANNELS];
    LLVMValueRef fs_src1[4][TGSI_NUM_CHANNELS];
    LLVMValueRef src_alpha[4 * 4];
-   LLVMValueRef src1_alpha[4 * 4];
+   LLVMValueRef src1_alpha[4 * 4] = { NULL };
    LLVMValueRef src_mask[4 * 4];
    LLVMValueRef src[4 * 4];
    LLVMValueRef src1[4 * 4];
@@ -2303,8 +2303,8 @@ generate_fragment(struct llvmpipe_context *lp,
    lp_build_name(dady_ptr, "dady");
    lp_build_name(color_ptr_ptr, "color_ptr_ptr");
    lp_build_name(depth_ptr, "depth");
-   lp_build_name(thread_data_ptr, "thread_data");
    lp_build_name(mask_input, "mask_input");
+   lp_build_name(thread_data_ptr, "thread_data");
    lp_build_name(stride_ptr, "stride_ptr");
    lp_build_name(depth_stride, "depth_stride");
 
@@ -2563,7 +2563,7 @@ generate_variant(struct llvmpipe_context *lp,
    char module_name[64];
 
    variant = CALLOC_STRUCT(lp_fragment_shader_variant);
-   if(!variant)
+   if (!variant)
       return NULL;
 
    util_snprintf(module_name, sizeof(module_name), "fs%u_variant%u",
@@ -2695,34 +2695,35 @@ llvmpipe_create_fs_state(struct pipe_context *pipe,
 
       switch (shader->info.base.input_interpolate[i]) {
       case TGSI_INTERPOLATE_CONSTANT:
-	 shader->inputs[i].interp = LP_INTERP_CONSTANT;
-	 break;
+         shader->inputs[i].interp = LP_INTERP_CONSTANT;
+         break;
       case TGSI_INTERPOLATE_LINEAR:
-	 shader->inputs[i].interp = LP_INTERP_LINEAR;
-	 break;
+         shader->inputs[i].interp = LP_INTERP_LINEAR;
+         break;
       case TGSI_INTERPOLATE_PERSPECTIVE:
-	 shader->inputs[i].interp = LP_INTERP_PERSPECTIVE;
-	 break;
+         shader->inputs[i].interp = LP_INTERP_PERSPECTIVE;
+         break;
       case TGSI_INTERPOLATE_COLOR:
-	 shader->inputs[i].interp = LP_INTERP_COLOR;
-	 break;
+         shader->inputs[i].interp = LP_INTERP_COLOR;
+         break;
       default:
-	 assert(0);
-	 break;
+         assert(0);
+         break;
       }
 
       switch (shader->info.base.input_semantic_name[i]) {
       case TGSI_SEMANTIC_FACE:
-	 shader->inputs[i].interp = LP_INTERP_FACING;
-	 break;
+         shader->inputs[i].interp = LP_INTERP_FACING;
+         break;
       case TGSI_SEMANTIC_POSITION:
-	 /* Position was already emitted above
-	  */
-	 shader->inputs[i].interp = LP_INTERP_POSITION;
-	 shader->inputs[i].src_index = 0;
-	 continue;
+         /* Position was already emitted above
+          */
+         shader->inputs[i].interp = LP_INTERP_POSITION;
+         shader->inputs[i].src_index = 0;
+         continue;
       }
 
+      /* XXX this is a completely pointless index map... */
       shader->inputs[i].src_index = i+1;
    }
 

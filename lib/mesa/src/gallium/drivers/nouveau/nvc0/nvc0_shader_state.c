@@ -26,6 +26,7 @@
 #include "util/u_inlines.h"
 
 #include "nvc0/nvc0_context.h"
+#include "nvc0/nvc0_query_hw.h"
 
 static inline void
 nvc0_program_update_context_state(struct nvc0_context *nvc0,
@@ -71,7 +72,7 @@ nvc0_program_validate(struct nvc0_context *nvc0, struct nvc0_program *prog)
 
    if (!prog->translated) {
       prog->translated = nvc0_program_translate(
-         prog, nvc0->screen->base.device->chipset);
+         prog, nvc0->screen->base.device->chipset, &nvc0->base.debug);
       if (!prog->translated)
          return false;
    }
@@ -106,8 +107,54 @@ nvc0_fragprog_validate(struct nvc0_context *nvc0)
 {
    struct nouveau_pushbuf *push = nvc0->base.pushbuf;
    struct nvc0_program *fp = nvc0->fragprog;
+   struct pipe_rasterizer_state *rast = &nvc0->rast->pipe;
 
-   fp->fp.sample_interp = nvc0->min_samples > 1;
+   if (fp->fp.force_persample_interp != rast->force_persample_interp) {
+      /* Force the program to be reuploaded, which will trigger interp fixups
+       * to get applied
+       */
+      if (fp->mem)
+         nouveau_heap_free(&fp->mem);
+
+      fp->fp.force_persample_interp = rast->force_persample_interp;
+   }
+
+   /* Shade model works well enough when both colors follow it. However if one
+    * (or both) is explicitly set, then we have to go the patching route.
+    */
+   bool has_explicit_color = fp->fp.colors &&
+      (((fp->fp.colors & 1) && !fp->fp.color_interp[0]) ||
+       ((fp->fp.colors & 2) && !fp->fp.color_interp[1]));
+   bool hwflatshade = false;
+   if (has_explicit_color && fp->fp.flatshade != rast->flatshade) {
+      /* Force re-upload */
+      if (fp->mem)
+         nouveau_heap_free(&fp->mem);
+
+      fp->fp.flatshade = rast->flatshade;
+
+      /* Always smooth-shade in this mode, the shader will decide on its own
+       * when to flat-shade.
+       */
+   } else if (!has_explicit_color) {
+      hwflatshade = rast->flatshade;
+
+      /* No need to binary-patch the shader each time, make sure that it's set
+       * up for the default behaviour.
+       */
+      fp->fp.flatshade = 0;
+   }
+
+   if (hwflatshade != nvc0->state.flatshade) {
+      nvc0->state.flatshade = hwflatshade;
+      BEGIN_NVC0(push, NVC0_3D(SHADE_MODEL), 1);
+      PUSH_DATA (push, hwflatshade ? NVC0_3D_SHADE_MODEL_FLAT :
+                                     NVC0_3D_SHADE_MODEL_SMOOTH);
+   }
+
+   if (fp->mem && !(nvc0->dirty & NVC0_NEW_FRAGPROG)) {
+      return;
+   }
 
    if (!nvc0_program_validate(nvc0, fp))
          return;
@@ -189,11 +236,8 @@ nvc0_gmtyprog_validate(struct nvc0_context *nvc0)
    struct nouveau_pushbuf *push = nvc0->base.pushbuf;
    struct nvc0_program *gp = nvc0->gmtyprog;
 
-   if (gp)
-      nvc0_program_validate(nvc0, gp);
-
    /* we allow GPs with no code for specifying stream output state only */
-   if (gp && gp->code_size) {
+   if (gp && nvc0_program_validate(nvc0, gp) && gp->code_size) {
       const bool gp_selects_layer = !!(gp->hdr[13] & (1 << 9));
 
       BEGIN_NVC0(push, NVC0_3D(MACRO_GP_SELECT), 1);
@@ -250,7 +294,6 @@ nvc0_tfb_validate(struct nvc0_context *nvc0)
 
    if (!(nvc0->dirty & NVC0_NEW_TFB_TARGETS))
       return;
-   nouveau_bufctx_reset(nvc0->bufctx_3d, NVC0_BIND_TFB);
 
    for (b = 0; b < nvc0->num_tfbbufs; ++b) {
       struct nvc0_so_target *targ = nvc0_so_target(nvc0->tfbbuf[b]);
@@ -272,7 +315,7 @@ nvc0_tfb_validate(struct nvc0_context *nvc0)
          continue;
 
       if (!targ->clean)
-         nvc0_query_fifo_wait(push, targ->pq);
+         nvc0_hw_query_fifo_wait(nvc0, nvc0_query(targ->pq));
       nouveau_pushbuf_space(push, 0, 0, 1);
       BEGIN_NVC0(push, NVC0_3D(TFB_BUFFER_ENABLE(b)), 5);
       PUSH_DATA (push, 1);
@@ -280,7 +323,7 @@ nvc0_tfb_validate(struct nvc0_context *nvc0)
       PUSH_DATA (push, buf->address + targ->pipe.buffer_offset);
       PUSH_DATA (push, targ->pipe.buffer_size);
       if (!targ->clean) {
-         nvc0_query_pushbuf_submit(push, targ->pq, 0x4);
+         nvc0_hw_query_pushbuf_submit(push, nvc0_query(targ->pq), 0x4);
       } else {
          PUSH_DATA(push, 0); /* TFB_BUFFER_OFFSET */
          targ->clean = false;

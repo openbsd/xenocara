@@ -25,6 +25,7 @@
 #include "util/u_prim.h"
 #include "util/u_format.h"
 #include "util/u_pack_color.h"
+#include "util/u_upload_mgr.h"
 #include "indices/u_primconvert.h"
 
 #include "vc4_context.h"
@@ -67,21 +68,17 @@ vc4_start_draw(struct vc4_context *vc4)
 
         vc4_get_draw_cl_space(vc4);
 
-        uint32_t width = vc4->framebuffer.width;
-        uint32_t height = vc4->framebuffer.height;
-        uint32_t tilew = align(width, 64) / 64;
-        uint32_t tileh = align(height, 64) / 64;
         struct vc4_cl_out *bcl = cl_start(&vc4->bcl);
-
         //   Tile state data is 48 bytes per tile, I think it can be thrown away
         //   as soon as binning is finished.
         cl_u8(&bcl, VC4_PACKET_TILE_BINNING_MODE_CONFIG);
         cl_u32(&bcl, 0); /* tile alloc addr, filled by kernel */
         cl_u32(&bcl, 0); /* tile alloc size, filled by kernel */
         cl_u32(&bcl, 0); /* tile state addr, filled by kernel */
-        cl_u8(&bcl, tilew);
-        cl_u8(&bcl, tileh);
-        cl_u8(&bcl, 0); /* flags, filled by kernel. */
+        cl_u8(&bcl, vc4->draw_tiles_x);
+        cl_u8(&bcl, vc4->draw_tiles_y);
+        /* Other flags are filled by kernel. */
+        cl_u8(&bcl, vc4->msaa ? VC4_BIN_CONFIG_MS_MODE_4X : 0);
 
         /* START_TILE_BINNING resets the statechange counters in the hardware,
          * which are what is used when a primitive is binned to a tile to
@@ -100,9 +97,9 @@ vc4_start_draw(struct vc4_context *vc4)
                      VC4_PRIMITIVE_LIST_FORMAT_TYPE_TRIANGLES));
 
         vc4->needs_flush = true;
-        vc4->draw_call_queued = true;
-        vc4->draw_width = width;
-        vc4->draw_height = height;
+        vc4->draw_calls_queued++;
+        vc4->draw_width = vc4->framebuffer.width;
+        vc4->draw_height = vc4->framebuffer.height;
 
         cl_end(&vc4->bcl, bcl);
 }
@@ -226,6 +223,38 @@ vc4_emit_gl_shader_state(struct vc4_context *vc4, const struct pipe_draw_info *i
         vc4->max_index = max_index;
 }
 
+/**
+ * HW-2116 workaround: Flush the batch before triggering the hardware state
+ * counter wraparound behavior.
+ *
+ * State updates are tracked by a global counter which increments at the first
+ * state update after a draw or a START_BINNING.  Tiles can then have their
+ * state updated at draw time with a set of cheap checks for whether the
+ * state's copy of the global counter matches the global counter the last time
+ * that state was written to the tile.
+ *
+ * The state counters are relatively small and wrap around quickly, so you
+ * could get false negatives for needing to update a particular state in the
+ * tile.  To avoid this, the hardware attempts to write all of the state in
+ * the tile at wraparound time.  This apparently is broken, so we just flush
+ * everything before that behavior is triggered.  A batch flush is sufficient
+ * to get our current contents drawn and reset the counters to 0.
+ *
+ * Note that we can't just use VC4_PACKET_FLUSH_ALL, because that caps the
+ * tiles with VC4_PACKET_RETURN_FROM_LIST.
+ */
+static void
+vc4_hw_2116_workaround(struct pipe_context *pctx)
+{
+        struct vc4_context *vc4 = vc4_context(pctx);
+
+        if (vc4->draw_calls_queued == 0x1ef0) {
+                perf_debug("Flushing batch due to HW-2116 workaround "
+                           "(too many draw calls per scene\n");
+                vc4_flush(pctx);
+        }
+}
+
 static void
 vc4_draw_vbo(struct pipe_context *pctx, const struct pipe_draw_info *info)
 {
@@ -243,6 +272,8 @@ vc4_draw_vbo(struct pipe_context *pctx, const struct pipe_draw_info *info)
         /* Before setting up the draw, do any fixup blits necessary. */
         vc4_update_shadow_textures(pctx, &vc4->verttex);
         vc4_update_shadow_textures(pctx, &vc4->fragtex);
+
+        vc4_hw_2116_workaround(pctx);
 
         vc4_get_draw_cl_space(vc4);
 
@@ -285,7 +316,15 @@ vc4_draw_vbo(struct pipe_context *pctx, const struct pipe_draw_info *info)
                                                            info->count, &offset);
                         index_size = 2;
                 } else {
-                        prsc = vc4->indexbuf.buffer;
+                        if (vc4->indexbuf.user_buffer) {
+                                prsc = NULL;
+                                u_upload_data(vc4->uploader, 0,
+                                              info->count * index_size, 4,
+                                              vc4->indexbuf.user_buffer,
+                                              &offset, &prsc);
+                        } else {
+                                prsc = vc4->indexbuf.buffer;
+                        }
                 }
                 struct vc4_resource *rsc = vc4_resource(prsc);
 
@@ -300,7 +339,7 @@ vc4_draw_vbo(struct pipe_context *pctx, const struct pipe_draw_info *info)
                 cl_reloc(vc4, &vc4->bcl, &bcl, rsc->bo, offset);
                 cl_u32(&bcl, vc4->max_index);
 
-                if (vc4->indexbuf.index_size == 4)
+                if (vc4->indexbuf.index_size == 4 || vc4->indexbuf.user_buffer)
                         pipe_resource_reference(&prsc, NULL);
         } else {
                 cl_u8(&bcl, VC4_PACKET_GL_ARRAY_PRIMITIVE);
@@ -343,8 +382,8 @@ vc4_clear(struct pipe_context *pctx, unsigned buffers,
         /* We can't flag new buffers for clearing once we've queued draws.  We
          * could avoid this by using the 3d engine to clear.
          */
-        if (vc4->draw_call_queued) {
-                perf_debug("Flushing rendering to process new clear.");
+        if (vc4->draw_calls_queued) {
+                perf_debug("Flushing rendering to process new clear.\n");
                 vc4_flush(pctx);
         }
 

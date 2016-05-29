@@ -220,13 +220,13 @@ static void update_raster_state( struct st_context *st )
    raster->line_smooth = ctx->Line.SmoothFlag;
    if (ctx->Line.SmoothFlag) {
       raster->line_width = CLAMP(ctx->Line.Width,
-                                ctx->Const.MinLineWidthAA,
-                                ctx->Const.MaxLineWidthAA);
+                                 ctx->Const.MinLineWidthAA,
+                                 ctx->Const.MaxLineWidthAA);
    }
    else {
       raster->line_width = CLAMP(ctx->Line.Width,
-                                ctx->Const.MinLineWidth,
-                                ctx->Const.MaxLineWidth);
+                                 ctx->Const.MinLineWidth,
+                                 ctx->Const.MaxLineWidth);
    }
 
    raster->line_stipple_enable = ctx->Line.StippleFlag;
@@ -236,6 +236,14 @@ static void update_raster_state( struct st_context *st )
 
    /* _NEW_MULTISAMPLE */
    raster->multisample = ctx->Multisample._Enabled;
+
+   /* _NEW_MULTISAMPLE | _NEW_BUFFERS */
+   raster->force_persample_interp =
+         !st->force_persample_in_shader &&
+         ctx->Multisample._Enabled &&
+         ctx->Multisample.SampleShading &&
+         ctx->Multisample.MinSampleShadingValue *
+         ctx->DrawBuffer->Visual.samples > 1;
 
    /* _NEW_SCISSOR */
    raster->scissor = ctx->Scissor.EnableFlags;

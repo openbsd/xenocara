@@ -69,12 +69,10 @@ private:
    };
    bool insertTextureBarriers(Function *);
    inline bool insnDominatedBy(const Instruction *, const Instruction *) const;
-   void findFirstUses(const Instruction *tex, const Instruction *def,
-                      std::list<TexUse>&,
-                      unordered_set<const Instruction *>&);
-   void findOverwritingDefs(const Instruction *tex, Instruction *insn,
-                            const BasicBlock *term,
-                            std::list<TexUse>&);
+   void findFirstUses(Instruction *texi, std::list<TexUse> &uses);
+   void findFirstUsesBB(int minGPR, int maxGPR, Instruction *start,
+                        const Instruction *texi, std::list<TexUse> &uses,
+                        unordered_set<const BasicBlock *> &visited);
    void addTexUse(std::list<TexUse>&, Instruction *, const Instruction *);
    const Instruction *recurseDef(const Instruction *);
 
@@ -103,9 +101,11 @@ protected:
    bool handleTXQ(TexInstruction *);
    virtual bool handleManualTXD(TexInstruction *);
    bool handleTXLQ(TexInstruction *);
+   bool handleSUQ(Instruction *);
    bool handleATOM(Instruction *);
    bool handleCasExch(Instruction *, bool needCctl);
    void handleSurfaceOpNVE4(TexInstruction *);
+   void handleSharedATOM(Instruction *);
 
    void checkPredicate(Instruction *);
 
@@ -118,6 +118,8 @@ private:
    void readTessCoord(LValue *dst, int c);
 
    Value *loadResInfo32(Value *ptr, uint32_t off);
+   Value *loadResInfo64(Value *ptr, uint32_t off);
+   Value *loadResLength32(Value *ptr, uint32_t off);
    Value *loadMsInfo32(Value *ptr, uint32_t off);
    Value *loadTexHandle(Value *ptr, unsigned int slot);
 

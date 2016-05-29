@@ -116,6 +116,17 @@ qpu_tlbc()
         return r;
 }
 
+static inline struct qpu_reg
+qpu_tlbc_ms()
+{
+        struct qpu_reg r = {
+                QPU_MUX_A,
+                QPU_W_TLB_COLOR_MS,
+        };
+
+        return r;
+}
+
 static inline struct qpu_reg qpu_r0(void) { return qpu_rn(0); }
 static inline struct qpu_reg qpu_r1(void) { return qpu_rn(1); }
 static inline struct qpu_reg qpu_r2(void) { return qpu_rn(2); }
@@ -211,6 +222,9 @@ vc4_qpu_disasm_pack_mul(FILE *out, uint32_t pack);
 
 void
 vc4_qpu_disasm_pack_a(FILE *out, uint32_t pack);
+
+void
+vc4_qpu_disasm_unpack(FILE *out, uint32_t pack);
 
 void
 vc4_qpu_validate(uint64_t *insts, uint32_t num_inst);

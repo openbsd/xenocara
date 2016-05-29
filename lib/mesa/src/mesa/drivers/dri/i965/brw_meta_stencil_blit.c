@@ -57,6 +57,7 @@
 #include "main/blend.h"
 #include "main/varray.h"
 #include "main/shaderapi.h"
+#include "main/renderbuffer.h"
 #include "util/ralloc.h"
 
 #include "drivers/common/meta.h"
@@ -163,6 +164,13 @@ static const char *fs_tmpl =
    "      txl_coords.x = ((X & int(0xfff8)) >> 2) | (X & int(0x1));\n"
    "      txl_coords.y = ((Y & int(0xfffc)) >> 1) | (Y & int(0x1));\n"
    "      sample_index = (X & 0x4) | (Y & 0x2) | ((X & 0x2) >> 1);\n"
+   "      break;\n"
+   "   case 16:\n"
+   "      txl_coords.x = ((X & int(0xfff8)) >> 2) | (X & int(0x1));\n"
+   "      txl_coords.y = ((Y & int(0xfff8)) >> 2) | (Y & int(0x1));\n"
+   "      sample_index = (((Y & 0x4) << 1) | (X & 0x4) | (Y & 0x2) |\n"
+   "                      ((X & 0x2) >> 1));\n"
+   "      break;\n"
    "   }\n"
    "}\n"
    "\n"
@@ -202,7 +210,7 @@ setup_bounding_rect(GLuint prog, const struct blit_dims *dims)
 
 /**
  * Setup uniforms telling the destination width, height and the offset. These
- * are needed to unnoormalize the input coordinates and to correctly translate
+ * are needed to unnormalize the input coordinates and to correctly translate
  * between destination and source that may have differing offsets.
  */
 static void
@@ -288,7 +296,7 @@ setup_program(struct brw_context *brw, bool msaa_tex)
       _mesa_UseProgram(*prog_id);
       return *prog_id;
    }
-  
+
    fs_source = ralloc_asprintf(NULL, fs_tmpl, sampler->sampler,
                                sampler->fetch);
    _mesa_meta_compile_and_link_program(ctx, vs_source, fs_source,
@@ -300,7 +308,7 @@ setup_program(struct brw_context *brw, bool msaa_tex)
 }
 
 /**
- * Samples in stencil buffer are interleaved, and unfortunately the data port 
+ * Samples in stencil buffer are interleaved, and unfortunately the data port
  * does not support it as render target. Therefore the surface is set up as
  * single sampled and the program handles the interleaving.
  * In case of single sampled stencil, the render buffer is adjusted with
@@ -314,11 +322,16 @@ adjust_msaa(struct blit_dims *dims, int num_samples)
       dims->dst_x0 *= 2;
       dims->dst_x1 *= 2;
    } else if (num_samples) {
-      const int x_num_samples = num_samples / 2;
-      dims->dst_x0 = ROUND_DOWN_TO(dims->dst_x0 * x_num_samples, num_samples);
-      dims->dst_y0 = ROUND_DOWN_TO(dims->dst_y0 * 2, 4);
-      dims->dst_x1 = ALIGN(dims->dst_x1 * x_num_samples, num_samples);
-      dims->dst_y1 = ALIGN(dims->dst_y1 * 2, 4);
+      const int y_num_samples = num_samples >= 16 ? 4 : 2;
+      const int x_num_samples = num_samples / y_num_samples;
+      dims->dst_x0 = ROUND_DOWN_TO(dims->dst_x0 * x_num_samples,
+                                   x_num_samples * 2);
+      dims->dst_y0 = ROUND_DOWN_TO(dims->dst_y0 * y_num_samples,
+                                   y_num_samples * 2);
+      dims->dst_x1 = ALIGN(dims->dst_x1 * x_num_samples,
+                           x_num_samples * 2);
+      dims->dst_y1 = ALIGN(dims->dst_y1 * y_num_samples,
+                           y_num_samples * 2);
    }
 }
 
@@ -397,8 +410,8 @@ set_read_rb_tex_image(struct gl_context *ctx, struct fb_tex_blit_state *blit,
    blit->baseLevelSave = tex_obj->BaseLevel;
    blit->maxLevelSave = tex_obj->MaxLevel;
    blit->stencilSamplingSave = tex_obj->StencilSampling;
-   blit->sampler = _mesa_meta_setup_sampler(ctx, tex_obj, *target,
-                                            GL_NEAREST, level);
+   blit->samp_obj = _mesa_meta_setup_sampler(ctx, tex_obj, *target,
+                                             GL_NEAREST, level);
    return true;
 }
 
@@ -411,7 +424,8 @@ brw_meta_stencil_blit(struct brw_context *brw,
    struct gl_context *ctx = &brw->ctx;
    struct blit_dims dims = *orig_dims;
    struct fb_tex_blit_state blit;
-   GLuint prog, fbo, rbo;
+   GLuint prog, fbo;
+   struct gl_renderbuffer *rb;
    GLenum target;
 
    _mesa_meta_fb_tex_blit_begin(ctx, &blit);
@@ -424,13 +438,13 @@ brw_meta_stencil_blit(struct brw_context *brw,
 
    _mesa_GenFramebuffers(1, &fbo);
    /* Force the surface to be configured for level zero. */
-   rbo = brw_get_rb_for_slice(brw, dst_mt, 0, dst_layer, true);
+   rb = brw_get_rb_for_slice(brw, dst_mt, 0, dst_layer, true);
    adjust_msaa(&dims, dst_mt->num_samples);
    adjust_tiling(&dims, dst_mt->num_samples);
 
    _mesa_BindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
-   _mesa_FramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                                 GL_RENDERBUFFER, rbo);
+   _mesa_framebuffer_renderbuffer(ctx, ctx->DrawBuffer, GL_COLOR_ATTACHMENT0,
+                                  rb);
    _mesa_DrawBuffer(GL_COLOR_ATTACHMENT0);
    ctx->DrawBuffer->_Status = GL_FRAMEBUFFER_COMPLETE;
 
@@ -462,7 +476,7 @@ error:
    _mesa_meta_fb_tex_blit_end(ctx, target, &blit);
    _mesa_meta_end(ctx);
 
-   _mesa_DeleteRenderbuffers(1, &rbo);
+   _mesa_reference_renderbuffer(&rb, NULL);
    _mesa_DeleteFramebuffers(1, &fbo);
 }
 
@@ -520,7 +534,8 @@ brw_meta_stencil_updownsample(struct brw_context *brw,
       .dst_x0 = 0, .dst_y0 = 0,
       .dst_x1 = dst->logical_width0, .dst_y1 = dst->logical_height0,
       .mirror_x = 0, .mirror_y = 0 };
-   GLuint fbo, rbo;
+   GLuint fbo;
+   struct gl_renderbuffer *rb;
 
    if (dst->stencil_mt)
       dst = dst->stencil_mt;
@@ -529,15 +544,15 @@ brw_meta_stencil_updownsample(struct brw_context *brw,
    _mesa_meta_begin(ctx, MESA_META_ALL);
 
    _mesa_GenFramebuffers(1, &fbo);
-   rbo = brw_get_rb_for_slice(brw, src, 0, 0, false);
+   rb = brw_get_rb_for_slice(brw, src, 0, 0, false);
 
    _mesa_BindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
-   _mesa_FramebufferRenderbuffer(GL_READ_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
-                                 GL_RENDERBUFFER, rbo);
+   _mesa_framebuffer_renderbuffer(ctx, ctx->ReadBuffer, GL_STENCIL_ATTACHMENT,
+                                  rb);
 
    brw_meta_stencil_blit(brw, dst, 0, 0, &dims);
    brw_emit_mi_flush(brw);
 
-   _mesa_DeleteRenderbuffers(1, &rbo);
+   _mesa_reference_renderbuffer(&rb, NULL);
    _mesa_DeleteFramebuffers(1, &fbo);
 }

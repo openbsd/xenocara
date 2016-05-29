@@ -381,7 +381,9 @@ _eglCreateExtensionsString(_EGLDisplay *dpy)
    char *exts = dpy->ExtensionsString;
 
    /* Please keep these sorted alphabetically. */
+   _EGL_CHECK_EXTENSION(ANDROID_framebuffer_target);
    _EGL_CHECK_EXTENSION(ANDROID_image_native_buffer);
+   _EGL_CHECK_EXTENSION(ANDROID_recordable);
 
    _EGL_CHECK_EXTENSION(CHROMIUM_sync_control);
 
@@ -1555,8 +1557,14 @@ eglGetSyncAttrib(EGLDisplay dpy, EGLSync sync, EGLint attribute, EGLAttrib *valu
 static EGLBoolean EGLAPIENTRY
 eglGetSyncAttribKHR(EGLDisplay dpy, EGLSync sync, EGLint attribute, EGLint *value)
 {
-   EGLAttrib attrib = *value;
-   EGLBoolean result = eglGetSyncAttrib(dpy, sync, attribute, &attrib);
+   EGLAttrib attrib;
+   EGLBoolean result;
+
+   if (!value)
+      RETURN_EGL_ERROR(NULL, EGL_BAD_PARAMETER, EGL_FALSE);
+
+   attrib = *value;
+   result = eglGetSyncAttrib(dpy, sync, attribute, &attrib);
 
    /* The EGL_KHR_fence_sync spec says this about eglGetSyncAttribKHR:
     *

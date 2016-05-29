@@ -1,5 +1,4 @@
-/**************************************************************************
- *
+/*
  * Copyright 2003 VMware, Inc.
  * All Rights Reserved.
  *
@@ -7,7 +6,7 @@
  * copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
  * without limitation the rights to use, copy, modify, merge, publish,
- * distribute, sub license, and/or sell copies of the Software, and to
+ * distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
  *
@@ -17,17 +16,15 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
  * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- **************************************************************************/
+ */
 
 #include <sys/errno.h>
 
-#include "main/glheader.h"
 #include "main/context.h"
 #include "main/condrender.h"
 #include "main/samplerobj.h"
@@ -35,6 +32,7 @@
 #include "main/enums.h"
 #include "main/macros.h"
 #include "main/transformfeedback.h"
+#include "main/framebuffer.h"
 #include "tnl/tnl.h"
 #include "vbo/vbo_context.h"
 #include "swrast/swrast.h"
@@ -57,34 +55,34 @@
 #define FILE_DEBUG_FLAG DEBUG_PRIMS
 
 static const GLuint prim_to_hw_prim[GL_TRIANGLE_STRIP_ADJACENCY+1] = {
-   _3DPRIM_POINTLIST,
-   _3DPRIM_LINELIST,
-   _3DPRIM_LINELOOP,
-   _3DPRIM_LINESTRIP,
-   _3DPRIM_TRILIST,
-   _3DPRIM_TRISTRIP,
-   _3DPRIM_TRIFAN,
-   _3DPRIM_QUADLIST,
-   _3DPRIM_QUADSTRIP,
-   _3DPRIM_POLYGON,
-   _3DPRIM_LINELIST_ADJ,
-   _3DPRIM_LINESTRIP_ADJ,
-   _3DPRIM_TRILIST_ADJ,
-   _3DPRIM_TRISTRIP_ADJ,
+   [GL_POINTS] =_3DPRIM_POINTLIST,
+   [GL_LINES] = _3DPRIM_LINELIST,
+   [GL_LINE_LOOP] = _3DPRIM_LINELOOP,
+   [GL_LINE_STRIP] = _3DPRIM_LINESTRIP,
+   [GL_TRIANGLES] = _3DPRIM_TRILIST,
+   [GL_TRIANGLE_STRIP] = _3DPRIM_TRISTRIP,
+   [GL_TRIANGLE_FAN] = _3DPRIM_TRIFAN,
+   [GL_QUADS] = _3DPRIM_QUADLIST,
+   [GL_QUAD_STRIP] = _3DPRIM_QUADSTRIP,
+   [GL_POLYGON] = _3DPRIM_POLYGON,
+   [GL_LINES_ADJACENCY] = _3DPRIM_LINELIST_ADJ,
+   [GL_LINE_STRIP_ADJACENCY] = _3DPRIM_LINESTRIP_ADJ,
+   [GL_TRIANGLES_ADJACENCY] = _3DPRIM_TRILIST_ADJ,
+   [GL_TRIANGLE_STRIP_ADJACENCY] = _3DPRIM_TRISTRIP_ADJ,
 };
 
 
 static const GLenum reduced_prim[GL_POLYGON+1] = {
-   GL_POINTS,
-   GL_LINES,
-   GL_LINES,
-   GL_LINES,
-   GL_TRIANGLES,
-   GL_TRIANGLES,
-   GL_TRIANGLES,
-   GL_TRIANGLES,
-   GL_TRIANGLES,
-   GL_TRIANGLES
+   [GL_POINTS] = GL_POINTS,
+   [GL_LINES] = GL_LINES,
+   [GL_LINE_LOOP] = GL_LINES,
+   [GL_LINE_STRIP] = GL_LINES,
+   [GL_TRIANGLES] = GL_TRIANGLES,
+   [GL_TRIANGLE_STRIP] = GL_TRIANGLES,
+   [GL_TRIANGLE_FAN] = GL_TRIANGLES,
+   [GL_QUADS] = GL_TRIANGLES,
+   [GL_QUAD_STRIP] = GL_TRIANGLES,
+   [GL_POLYGON] = GL_TRIANGLES
 };
 
 uint32_t
@@ -141,12 +139,22 @@ brw_set_prim(struct brw_context *brw, const struct _mesa_prim *prim)
 static void
 gen6_set_prim(struct brw_context *brw, const struct _mesa_prim *prim)
 {
+   const struct gl_context *ctx = &brw->ctx;
+   uint32_t hw_prim;
+
    DBG("PRIM: %s\n", _mesa_enum_to_string(prim->mode));
 
-   const uint32_t hw_prim = get_hw_prim_for_gl_prim(prim->mode);
+   if (prim->mode == GL_PATCHES) {
+      hw_prim = _3DPRIM_PATCHLIST(ctx->TessCtrlProgram.patch_vertices);
+   } else {
+      hw_prim = get_hw_prim_for_gl_prim(prim->mode);
+   }
+
    if (hw_prim != brw->primitive) {
       brw->primitive = hw_prim;
       brw->ctx.NewDriverState |= BRW_NEW_PRIMITIVE;
+      if (prim->mode == GL_PATCHES)
+         brw->ctx.NewDriverState |= BRW_NEW_PATCH_PRIMITIVE;
    }
 }
 
@@ -366,7 +374,7 @@ brw_postdraw_set_buffers_need_resolve(struct brw_context *brw)
    struct intel_renderbuffer *stencil_irb = intel_get_renderbuffer(fb, BUFFER_STENCIL);
    struct gl_renderbuffer_attachment *depth_att = &fb->Attachment[BUFFER_DEPTH];
 
-   if (brw_is_front_buffer_drawing(fb))
+   if (_mesa_is_front_buffer_drawing(fb))
       front_irb = intel_get_renderbuffer(fb, BUFFER_FRONT_LEFT);
 
    if (front_irb)
@@ -412,17 +420,6 @@ brw_try_draw_prims(struct gl_context *ctx,
    if (ctx->NewState)
       _mesa_update_state(ctx);
 
-   /* Find the highest sampler unit used by each shader program.  A bit-count
-    * won't work since ARB programs use the texture unit number as the sampler
-    * index.
-    */
-   brw->wm.base.sampler_count =
-      _mesa_fls(ctx->FragmentProgram._Current->Base.SamplersUsed);
-   brw->gs.base.sampler_count = ctx->GeometryProgram._Current ?
-      _mesa_fls(ctx->GeometryProgram._Current->Base.SamplersUsed) : 0;
-   brw->vs.base.sampler_count =
-      _mesa_fls(ctx->VertexProgram._Current->Base.SamplersUsed);
-
    /* We have to validate the textures *before* checking for fallbacks;
     * otherwise, the software fallback won't be able to rely on the
     * texture state, the firstLevel and lastLevel fields won't be
@@ -431,6 +428,21 @@ brw_try_draw_prims(struct gl_context *ctx,
     * texture level other than level 0.
     */
    brw_validate_textures(brw);
+
+   /* Find the highest sampler unit used by each shader program.  A bit-count
+    * won't work since ARB programs use the texture unit number as the sampler
+    * index.
+    */
+   brw->wm.base.sampler_count =
+      _mesa_fls(ctx->FragmentProgram._Current->Base.SamplersUsed);
+   brw->gs.base.sampler_count = ctx->GeometryProgram._Current ?
+      _mesa_fls(ctx->GeometryProgram._Current->Base.SamplersUsed) : 0;
+   brw->tes.base.sampler_count = ctx->TessEvalProgram._Current ?
+      _mesa_fls(ctx->TessEvalProgram._Current->Base.SamplersUsed) : 0;
+   brw->tcs.base.sampler_count = ctx->TessCtrlProgram._Current ?
+      _mesa_fls(ctx->TessCtrlProgram._Current->Base.SamplersUsed) : 0;
+   brw->vs.base.sampler_count =
+      _mesa_fls(ctx->VertexProgram._Current->Base.SamplersUsed);
 
    intel_prepare_render(brw);
 
@@ -479,9 +491,29 @@ brw_try_draw_prims(struct gl_context *ctx,
          }
       }
 
-      brw->draw.gl_basevertex =
+      /* Determine if we need to flag BRW_NEW_VERTICES for updating the
+       * gl_BaseVertexARB or gl_BaseInstanceARB values. For indirect draw, we
+       * always flag if the shader uses one of the values. For direct draws,
+       * we only flag if the values change.
+       */
+      const int new_basevertex =
          prims[i].indexed ? prims[i].basevertex : prims[i].start;
+      const int new_baseinstance = prims[i].base_instance;
+      if (i > 0) {
+         const bool uses_draw_parameters =
+            brw->vs.prog_data->uses_basevertex ||
+            brw->vs.prog_data->uses_baseinstance;
 
+         if ((uses_draw_parameters && prims[i].is_indirect) ||
+             (brw->vs.prog_data->uses_basevertex &&
+              brw->draw.params.gl_basevertex != new_basevertex) ||
+             (brw->vs.prog_data->uses_baseinstance &&
+              brw->draw.params.gl_baseinstance != new_baseinstance))
+            brw->ctx.NewDriverState |= BRW_NEW_VERTICES;
+      }
+
+      brw->draw.params.gl_basevertex = new_basevertex;
+      brw->draw.params.gl_baseinstance = new_baseinstance;
       drm_intel_bo_unreference(brw->draw.draw_params_bo);
 
       if (prims[i].is_indirect) {
@@ -498,6 +530,18 @@ brw_try_draw_prims(struct gl_context *ctx,
          brw->draw.draw_params_bo = NULL;
          brw->draw.draw_params_offset = 0;
       }
+
+      /* gl_DrawID always needs its own vertex buffer since it's not part of
+       * the indirect parameter buffer. If the program uses gl_DrawID we need
+       * to flag BRW_NEW_VERTICES. For the first iteration, we don't have
+       * valid brw->vs.prog_data, but we always flag BRW_NEW_VERTICES before
+       * the loop.
+       */
+      brw->draw.gl_drawid = prims[i].draw_id;
+      drm_intel_bo_unreference(brw->draw.draw_id_bo);
+      brw->draw.draw_id_bo = NULL;
+      if (i > 0 && brw->vs.prog_data->uses_drawid)
+         brw->ctx.NewDriverState |= BRW_NEW_VERTICES;
 
       if (brw->gen < 6)
 	 brw_set_prim(brw, &prims[i]);

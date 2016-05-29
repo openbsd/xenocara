@@ -50,7 +50,7 @@ static void cik_sdma_do_copy_buffer(struct si_context *ctx,
 				    uint64_t src_offset,
 				    uint64_t size)
 {
-	struct radeon_winsys_cs *cs = ctx->b.rings.dma.cs;
+	struct radeon_winsys_cs *cs = ctx->b.dma.cs;
 	unsigned i, ncopy, csize;
 	struct r600_resource *rdst = (struct r600_resource*)dst;
 	struct r600_resource *rsrc = (struct r600_resource*)src;
@@ -61,10 +61,10 @@ static void cik_sdma_do_copy_buffer(struct si_context *ctx,
 	ncopy = (size + CIK_SDMA_COPY_MAX_SIZE - 1) / CIK_SDMA_COPY_MAX_SIZE;
 	r600_need_dma_space(&ctx->b, ncopy * 7);
 
-	r600_context_bo_reloc(&ctx->b, &ctx->b.rings.dma, rsrc, RADEON_USAGE_READ,
-			      RADEON_PRIO_MIN);
-	r600_context_bo_reloc(&ctx->b, &ctx->b.rings.dma, rdst, RADEON_USAGE_WRITE,
-			      RADEON_PRIO_MIN);
+	radeon_add_to_buffer_list(&ctx->b, &ctx->b.dma, rsrc, RADEON_USAGE_READ,
+			      RADEON_PRIO_SDMA_BUFFER);
+	radeon_add_to_buffer_list(&ctx->b, &ctx->b.dma, rdst, RADEON_USAGE_WRITE,
+			      RADEON_PRIO_SDMA_BUFFER);
 
 	for (i = 0; i < ncopy; i++) {
 		csize = size < CIK_SDMA_COPY_MAX_SIZE ? size : CIK_SDMA_COPY_MAX_SIZE;
@@ -112,7 +112,7 @@ static void cik_sdma_copy_tile(struct si_context *ctx,
 			       unsigned pitch,
 			       unsigned bpe)
 {
-	struct radeon_winsys_cs *cs = ctx->b.rings.dma.cs;
+	struct radeon_winsys_cs *cs = ctx->b.dma.cs;
 	struct si_screen *sscreen = ctx->screen;
 	struct r600_texture *rsrc = (struct r600_texture*)src;
 	struct r600_texture *rdst = (struct r600_texture*)dst;
@@ -171,10 +171,10 @@ static void cik_sdma_copy_tile(struct si_context *ctx,
 	ncopy = (copy_height + cheight - 1) / cheight;
 	r600_need_dma_space(&ctx->b, ncopy * 12);
 
-	r600_context_bo_reloc(&ctx->b, &ctx->b.rings.dma, &rsrc->resource,
-			      RADEON_USAGE_READ, RADEON_PRIO_MIN);
-	r600_context_bo_reloc(&ctx->b, &ctx->b.rings.dma, &rdst->resource,
-			      RADEON_USAGE_WRITE, RADEON_PRIO_MIN);
+	radeon_add_to_buffer_list(&ctx->b, &ctx->b.dma, &rsrc->resource,
+			      RADEON_USAGE_READ, RADEON_PRIO_SDMA_TEXTURE);
+	radeon_add_to_buffer_list(&ctx->b, &ctx->b.dma, &rdst->resource,
+			      RADEON_USAGE_WRITE, RADEON_PRIO_SDMA_TEXTURE);
 
 	copy_height = size * 4 / pitch;
 	for (i = 0; i < ncopy; i++) {
@@ -196,7 +196,7 @@ static void cik_sdma_copy_tile(struct si_context *ctx,
 			(tile_split << 11) | (mt << 8) | (array_mode << 3) |
 			lbpe;
 		cs->buf[cs->cdw++] = y << 16; /* | x */
-		cs->buf[cs->cdw++] = 0; /* z */;
+		cs->buf[cs->cdw++] = 0; /* z */
 		cs->buf[cs->cdw++] = addr & 0xfffffffc;
 		cs->buf[cs->cdw++] = addr >> 32;
 		cs->buf[cs->cdw++] = (pitch / bpe) - 1;
@@ -224,7 +224,7 @@ void cik_sdma_copy(struct pipe_context *ctx,
 	unsigned copy_height, y_align;
 	unsigned dst_x = dstx, dst_y = dsty, dst_z = dstz;
 
-	if (sctx->b.rings.dma.cs == NULL) {
+	if (sctx->b.dma.cs == NULL) {
 		goto fallback;
 	}
 
@@ -242,7 +242,8 @@ void cik_sdma_copy(struct pipe_context *ctx,
 
 	if (src->format != dst->format ||
 	    rdst->surface.nsamples > 1 || rsrc->surface.nsamples > 1 ||
-	    rdst->dirty_level_mask & (1 << dst_level)) {
+	    (rdst->dirty_level_mask | rdst->stencil_dirty_level_mask) & (1 << dst_level) ||
+	    rdst->dcc_buffer || rsrc->dcc_buffer) {
 		goto fallback;
 	}
 
@@ -307,7 +308,7 @@ void cik_sdma_copy(struct pipe_context *ctx,
 			}
 
 			mtilew = (8 * rsrc->surface.bankw *
-				  sctx->screen->b.tiling_info.num_channels) *
+				  sctx->screen->b.info.num_tile_pipes) *
 				rsrc->surface.mtilea;
 			assert(!(mtilew & (mtilew - 1)));
 			mtileh = (8 * rsrc->surface.bankh * num_banks) /

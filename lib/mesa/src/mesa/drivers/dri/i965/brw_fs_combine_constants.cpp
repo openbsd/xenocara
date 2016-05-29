@@ -35,10 +35,11 @@
  */
 
 #include "brw_fs.h"
-#include "brw_fs_live_variables.h"
 #include "brw_cfg.h"
 
 using namespace brw;
+
+static const bool debug = false;
 
 /* Returns whether an instruction could co-issue if its immediate source were
  * replaced with a GRF source.
@@ -121,7 +122,7 @@ struct imm {
     * constant value.
     */
    uint8_t subreg_offset;
-   uint16_t reg;
+   uint16_t nr;
 
    /** The number of coissuable instructions using this immediate. */
    uint16_t uses_by_coissue;
@@ -219,7 +220,7 @@ fs_visitor::opt_combine_constants()
              inst->src[i].type != BRW_REGISTER_TYPE_F)
             continue;
 
-         float val = fabsf(inst->src[i].fixed_hw_reg.dw1.f);
+         float val = fabsf(inst->src[i].f);
          struct imm *imm = find_imm(&table, val);
 
          if (imm) {
@@ -266,9 +267,8 @@ fs_visitor::opt_combine_constants()
    if (cfg->num_blocks != 1)
       qsort(table.imm, table.len, sizeof(struct imm), compare);
 
-
    /* Insert MOVs to load the constant values into GRFs. */
-   fs_reg reg(GRF, alloc.allocate(dispatch_width / 8));
+   fs_reg reg(VGRF, alloc.allocate(1));
    reg.stride = 0;
    for (int i = 0; i < table.len; i++) {
       struct imm *imm = &table.imm[i];
@@ -279,13 +279,13 @@ fs_visitor::opt_combine_constants()
                       imm->block->last_non_control_flow_inst()->next);
       const fs_builder ibld = bld.at(imm->block, n).exec_all().group(1, 0);
 
-      ibld.MOV(reg, fs_reg(imm->val));
-      imm->reg = reg.reg;
+      ibld.MOV(reg, brw_imm_f(imm->val));
+      imm->nr = reg.nr;
       imm->subreg_offset = reg.subreg_offset;
 
       reg.subreg_offset += sizeof(float);
-      if ((unsigned)reg.subreg_offset == dispatch_width * sizeof(float)) {
-         reg.reg = alloc.allocate(dispatch_width / 8);
+      if ((unsigned)reg.subreg_offset == 8 * sizeof(float)) {
+         reg.nr = alloc.allocate(1);
          reg.subreg_offset = 0;
       }
    }
@@ -295,13 +295,31 @@ fs_visitor::opt_combine_constants()
    for (int i = 0; i < table.len; i++) {
       foreach_list_typed(reg_link, link, link, table.imm[i].uses) {
          fs_reg *reg = link->reg;
-         reg->file = GRF;
-         reg->reg = table.imm[i].reg;
+         reg->file = VGRF;
+         reg->nr = table.imm[i].nr;
          reg->subreg_offset = table.imm[i].subreg_offset;
          reg->stride = 0;
-         reg->negate = signbit(reg->fixed_hw_reg.dw1.f) !=
-                               signbit(table.imm[i].val);
-         assert(fabsf(reg->fixed_hw_reg.dw1.f) == table.imm[i].val);
+         reg->negate = signbit(reg->f) != signbit(table.imm[i].val);
+         assert((isnan(reg->f) && isnan(table.imm[i].val)) ||
+                fabsf(reg->f) == table.imm[i].val);
+      }
+   }
+
+   if (debug) {
+      for (int i = 0; i < table.len; i++) {
+         struct imm *imm = &table.imm[i];
+
+         printf("%.3fF - block %3d, reg %3d sub %2d, Uses: (%2d, %2d), "
+                "IP: %4d to %4d, length %4d\n",
+                imm->val,
+                imm->block->num,
+                imm->nr,
+                imm->subreg_offset,
+                imm->must_promote,
+                imm->uses_by_coissue,
+                imm->first_use_ip,
+                imm->last_use_ip,
+                imm->last_use_ip - imm->first_use_ip);
       }
    }
 

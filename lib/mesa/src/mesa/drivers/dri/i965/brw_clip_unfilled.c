@@ -29,7 +29,6 @@
   *   Keith Whitwell <keithw@vmware.com>
   */
 
-#include "main/glheader.h"
 #include "main/macros.h"
 #include "main/enums.h"
 #include "program/program.h"
@@ -188,6 +187,12 @@ static void copy_bfc( struct brw_clip_compile *c )
   GLfloat bc	= dir.y * iz;
   offset = ctx->Polygon.OffsetUnits * DEPTH_SCALE;
   offset += MAX2( abs(ac), abs(bc) ) * ctx->Polygon.OffsetFactor;
+  if (ctx->Polygon.OffsetClamp && isfinite(ctx->Polygon.OffsetClamp)) {
+    if (ctx->Polygon.OffsetClamp < 0)
+      offset = MAX2( offset, ctx->Polygon.OffsetClamp );
+    else
+      offset = MIN2( offset, ctx->Polygon.OffsetClamp );
+  }
   offset *= MRD;
 */
 static void compute_offset( struct brw_clip_compile *c )
@@ -211,6 +216,14 @@ static void compute_offset( struct brw_clip_compile *c )
 
    brw_MUL(p, vec1(off), vec1(off), brw_imm_f(c->key.offset_factor));
    brw_ADD(p, vec1(off), vec1(off), brw_imm_f(c->key.offset_units));
+   if (c->key.offset_clamp && isfinite(c->key.offset_clamp)) {
+      brw_CMP(p,
+              vec1(brw_null_reg()),
+              c->key.offset_clamp < 0 ? BRW_CONDITIONAL_GE : BRW_CONDITIONAL_L,
+              vec1(off),
+              brw_imm_f(c->key.offset_clamp));
+      brw_SEL(p, vec1(off), vec1(off), brw_imm_f(c->key.offset_clamp));
+   }
 }
 
 
@@ -288,9 +301,9 @@ static void emit_lines(struct brw_clip_compile *c,
       {
 	 brw_MOV(p, get_addr_reg(v0), deref_1uw(v0ptr, 0));
 	 brw_ADD(p, get_addr_reg(v0ptr), get_addr_reg(v0ptr), brw_imm_uw(2));
-	
+
 	 apply_one_offset(c, v0);
-	
+
 	 brw_ADD(p, c->reg.loopcount, c->reg.loopcount, brw_imm_d(-1));
          brw_inst_set_cond_modifier(p->devinfo, brw_last_inst, BRW_CONDITIONAL_G);
       }
@@ -520,6 +533,3 @@ void brw_emit_unfilled_clip( struct brw_clip_compile *c )
    emit_unfilled_primitives(c);
    brw_clip_kill_thread(c);
 }
-
-
-

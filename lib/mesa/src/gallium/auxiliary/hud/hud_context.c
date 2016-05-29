@@ -33,6 +33,7 @@
  * Set GALLIUM_HUD=help for more info.
  */
 
+#include <signal.h>
 #include <stdio.h>
 
 #include "hud/hud_context.h"
@@ -51,12 +52,15 @@
 #include "tgsi/tgsi_text.h"
 #include "tgsi/tgsi_dump.h"
 
+/* Control the visibility of all HUD contexts */
+static boolean huds_visible = TRUE;
 
 struct hud_context {
    struct pipe_context *pipe;
    struct cso_context *cso;
    struct u_upload_mgr *uploader;
 
+   struct hud_batch_query_context *batch_query;
    struct list_head pane_list;
 
    /* states */
@@ -95,6 +99,13 @@ struct hud_context {
    } text, bg, whitelines;
 };
 
+#ifdef PIPE_OS_UNIX
+static void
+signal_visible_handler(int sig, siginfo_t *siginfo, void *context)
+{
+   huds_visible = !huds_visible;
+}
+#endif
 
 static void
 hud_draw_colored_prims(struct hud_context *hud, unsigned prim,
@@ -420,7 +431,7 @@ hud_alloc_vertices(struct hud_context *hud, struct vertex_queue *v,
    v->max_num_vertices = num_vertices;
    v->vbuf.stride = stride;
    u_upload_alloc(hud->uploader, 0, v->vbuf.stride * v->max_num_vertices,
-                  &v->vbuf.buffer_offset, &v->vbuf.buffer,
+                  16, &v->vbuf.buffer_offset, &v->vbuf.buffer,
                   (void**)&v->vertices);
 }
 
@@ -441,30 +452,33 @@ hud_draw(struct hud_context *hud, struct pipe_resource *tex)
    struct hud_pane *pane;
    struct hud_graph *gr;
 
+   if (!huds_visible)
+      return;
+
    hud->fb_width = tex->width0;
    hud->fb_height = tex->height0;
    hud->constants.two_div_fb_width = 2.0f / hud->fb_width;
    hud->constants.two_div_fb_height = 2.0f / hud->fb_height;
 
-   cso_save_framebuffer(cso);
-   cso_save_sample_mask(cso);
-   cso_save_min_samples(cso);
-   cso_save_blend(cso);
-   cso_save_depth_stencil_alpha(cso);
-   cso_save_fragment_shader(cso);
-   cso_save_fragment_sampler_views(cso);
-   cso_save_fragment_samplers(cso);
-   cso_save_rasterizer(cso);
-   cso_save_viewport(cso);
-   cso_save_stream_outputs(cso);
-   cso_save_geometry_shader(cso);
-   cso_save_tessctrl_shader(cso);
-   cso_save_tesseval_shader(cso);
-   cso_save_vertex_shader(cso);
-   cso_save_vertex_elements(cso);
-   cso_save_aux_vertex_buffer_slot(cso);
+   cso_save_state(cso, (CSO_BIT_FRAMEBUFFER |
+                        CSO_BIT_SAMPLE_MASK |
+                        CSO_BIT_MIN_SAMPLES |
+                        CSO_BIT_BLEND |
+                        CSO_BIT_DEPTH_STENCIL_ALPHA |
+                        CSO_BIT_FRAGMENT_SHADER |
+                        CSO_BIT_FRAGMENT_SAMPLER_VIEWS |
+                        CSO_BIT_FRAGMENT_SAMPLERS |
+                        CSO_BIT_RASTERIZER |
+                        CSO_BIT_VIEWPORT |
+                        CSO_BIT_STREAM_OUTPUTS |
+                        CSO_BIT_GEOMETRY_SHADER |
+                        CSO_BIT_TESSCTRL_SHADER |
+                        CSO_BIT_TESSEVAL_SHADER |
+                        CSO_BIT_VERTEX_SHADER |
+                        CSO_BIT_VERTEX_ELEMENTS |
+                        CSO_BIT_AUX_VERTEX_BUFFER_SLOT |
+                        CSO_BIT_RENDER_CONDITION));
    cso_save_constant_buffer_slot0(cso, PIPE_SHADER_VERTEX);
-   cso_save_render_condition(cso);
 
    /* set states */
    memset(&surf_templ, 0, sizeof(surf_templ));
@@ -510,6 +524,8 @@ hud_draw(struct hud_context *hud, struct pipe_resource *tex)
    hud_alloc_vertices(hud, &hud->text, 4 * 512, 4 * sizeof(float));
 
    /* prepare all graphs */
+   hud_batch_query_update(hud->batch_query);
+
    LIST_FOR_EACH_ENTRY(pane, &hud->pane_list, head) {
       LIST_FOR_EACH_ENTRY(gr, &pane->graph_list, head) {
          gr->query_new_value(gr);
@@ -575,26 +591,8 @@ hud_draw(struct hud_context *hud, struct pipe_resource *tex)
          hud_pane_draw_colored_objects(hud, pane);
    }
 
-   /* restore states */
-   cso_restore_framebuffer(cso);
-   cso_restore_sample_mask(cso);
-   cso_restore_min_samples(cso);
-   cso_restore_blend(cso);
-   cso_restore_depth_stencil_alpha(cso);
-   cso_restore_fragment_shader(cso);
-   cso_restore_fragment_sampler_views(cso);
-   cso_restore_fragment_samplers(cso);
-   cso_restore_rasterizer(cso);
-   cso_restore_viewport(cso);
-   cso_restore_stream_outputs(cso);
-   cso_restore_tessctrl_shader(cso);
-   cso_restore_tesseval_shader(cso);
-   cso_restore_geometry_shader(cso);
-   cso_restore_vertex_shader(cso);
-   cso_restore_vertex_elements(cso);
-   cso_restore_aux_vertex_buffer_slot(cso);
+   cso_restore_state(cso);
    cso_restore_constant_buffer_slot0(cso, PIPE_SHADER_VERTEX);
-   cso_restore_render_condition(cso);
 
    pipe_surface_reference(&surf, NULL);
 }
@@ -903,17 +901,21 @@ hud_parse_env_var(struct hud_context *hud, const char *env)
       }
       else if (strcmp(name, "samples-passed") == 0 &&
                has_occlusion_query(hud->pipe->screen)) {
-         hud_pipe_query_install(pane, hud->pipe, "samples-passed",
+         hud_pipe_query_install(&hud->batch_query, pane, hud->pipe,
+                                "samples-passed",
                                 PIPE_QUERY_OCCLUSION_COUNTER, 0, 0,
                                 PIPE_DRIVER_QUERY_TYPE_UINT64,
-                                PIPE_DRIVER_QUERY_RESULT_TYPE_AVERAGE);
+                                PIPE_DRIVER_QUERY_RESULT_TYPE_AVERAGE,
+                                0);
       }
       else if (strcmp(name, "primitives-generated") == 0 &&
                has_streamout(hud->pipe->screen)) {
-         hud_pipe_query_install(pane, hud->pipe, "primitives-generated",
+         hud_pipe_query_install(&hud->batch_query, pane, hud->pipe,
+                                "primitives-generated",
                                 PIPE_QUERY_PRIMITIVES_GENERATED, 0, 0,
                                 PIPE_DRIVER_QUERY_TYPE_UINT64,
-                                PIPE_DRIVER_QUERY_RESULT_TYPE_AVERAGE);
+                                PIPE_DRIVER_QUERY_RESULT_TYPE_AVERAGE,
+                                0);
       }
       else {
          boolean processed = FALSE;
@@ -938,17 +940,19 @@ hud_parse_env_var(struct hud_context *hud, const char *env)
                if (strcmp(name, pipeline_statistics_names[i]) == 0)
                   break;
             if (i < Elements(pipeline_statistics_names)) {
-               hud_pipe_query_install(pane, hud->pipe, name,
+               hud_pipe_query_install(&hud->batch_query, pane, hud->pipe, name,
                                       PIPE_QUERY_PIPELINE_STATISTICS, i,
                                       0, PIPE_DRIVER_QUERY_TYPE_UINT64,
-                                      PIPE_DRIVER_QUERY_RESULT_TYPE_AVERAGE);
+                                      PIPE_DRIVER_QUERY_RESULT_TYPE_AVERAGE,
+                                      0);
                processed = TRUE;
             }
          }
 
          /* driver queries */
          if (!processed) {
-            if (!hud_driver_query_install(pane, hud->pipe, name)){
+            if (!hud_driver_query_install(&hud->batch_query, pane, hud->pipe,
+                                          name)) {
                fprintf(stderr, "gallium_hud: unknown driver query '%s'\n", name);
             }
          }
@@ -987,6 +991,9 @@ hud_parse_env_var(struct hud_context *hud, const char *env)
 
       case ',':
          env++;
+         if (!pane)
+            break;
+
          y += height + hud->font.glyph_height * (pane->num_graphs + 2);
          height = 100;
 
@@ -1102,12 +1109,20 @@ print_help(struct pipe_screen *screen)
    }
 
    if (screen->get_driver_query_info){
+      boolean skipping = false;
       struct pipe_driver_query_info info;
       num_queries = screen->get_driver_query_info(screen, 0, NULL);
 
       for (i = 0; i < num_queries; i++){
          screen->get_driver_query_info(screen, i, &info);
-         printf("    %s\n", info.name);
+         if (info.flags & PIPE_DRIVER_QUERY_FLAG_DONT_LIST) {
+            if (!skipping)
+               puts("    ...");
+            skipping = true;
+         } else {
+            printf("    %s\n", info.name);
+            skipping = false;
+         }
       }
    }
 
@@ -1122,6 +1137,12 @@ hud_create(struct pipe_context *pipe, struct cso_context *cso)
    struct pipe_sampler_view view_templ;
    unsigned i;
    const char *env = debug_get_option("GALLIUM_HUD", NULL);
+   unsigned signo = debug_get_num_option("GALLIUM_HUD_TOGGLE_SIGNAL", 0);
+#ifdef PIPE_OS_UNIX
+   static boolean sig_handled = FALSE;
+   struct sigaction action = {};
+#endif
+   huds_visible = debug_get_bool_option("GALLIUM_HUD_VISIBLE", TRUE);
 
    if (!env || !*env)
       return NULL;
@@ -1137,8 +1158,8 @@ hud_create(struct pipe_context *pipe, struct cso_context *cso)
 
    hud->pipe = pipe;
    hud->cso = cso;
-   hud->uploader = u_upload_create(pipe, 256 * 1024, 16,
-                                   PIPE_BIND_VERTEX_BUFFER);
+   hud->uploader = u_upload_create(pipe, 256 * 1024,
+                                   PIPE_BIND_VERTEX_BUFFER, PIPE_USAGE_STREAM);
 
    /* font */
    if (!util_font_create(pipe, UTIL_FONT_FIXED_8X13, &hud->font)) {
@@ -1264,6 +1285,22 @@ hud_create(struct pipe_context *pipe, struct cso_context *cso)
 
    LIST_INITHEAD(&hud->pane_list);
 
+   /* setup sig handler once for all hud contexts */
+#ifdef PIPE_OS_UNIX
+   if (!sig_handled && signo != 0) {
+      action.sa_sigaction = &signal_visible_handler;
+      action.sa_flags = SA_SIGINFO;
+
+      if (signo >= NSIG)
+         fprintf(stderr, "gallium_hud: invalid signal %u\n", signo);
+      else if (sigaction(signo, &action, NULL) < 0)
+         fprintf(stderr, "gallium_hud: unable to set handler for signal %u\n", signo);
+      fflush(stderr);
+
+      sig_handled = TRUE;
+   }
+#endif
+
    hud_parse_env_var(hud, env);
    return hud;
 }
@@ -1284,6 +1321,7 @@ hud_destroy(struct hud_context *hud)
       FREE(pane);
    }
 
+   hud_batch_query_cleanup(&hud->batch_query);
    pipe->delete_fs_state(pipe, hud->fs_color);
    pipe->delete_fs_state(pipe, hud->fs_text);
    pipe->delete_vs_state(pipe, hud->vs);

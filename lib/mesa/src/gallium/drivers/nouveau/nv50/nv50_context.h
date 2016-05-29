@@ -16,6 +16,7 @@
 #include "nv50/nv50_program.h"
 #include "nv50/nv50_resource.h"
 #include "nv50/nv50_transfer.h"
+#include "nv50/nv50_query.h"
 
 #include "nouveau_context.h"
 #include "nouveau_debug.h"
@@ -48,6 +49,10 @@
 #define NV50_NEW_MIN_SAMPLES  (1 << 22)
 #define NV50_NEW_CONTEXT      (1 << 31)
 
+#define NV50_NEW_CP_PROGRAM   (1 << 0)
+#define NV50_NEW_CP_GLOBALS   (1 << 1)
+
+/* 3d bufctx (during draw_vbo, blit_3d) */
 #define NV50_BIND_FB          0
 #define NV50_BIND_VERTEX      1
 #define NV50_BIND_VERTEX_TMP  2
@@ -57,7 +62,15 @@
 #define NV50_BIND_SO         53
 #define NV50_BIND_SCREEN     54
 #define NV50_BIND_TLS        55
-#define NV50_BIND_COUNT      56
+#define NV50_BIND_3D_COUNT   56
+
+/* compute bufctx (during launch_grid) */
+#define NV50_BIND_CP_GLOBAL   0
+#define NV50_BIND_CP_SCREEN   1
+#define NV50_BIND_CP_QUERY    2
+#define NV50_BIND_CP_COUNT    3
+
+/* bufctx for other operations */
 #define NV50_BIND_2D          0
 #define NV50_BIND_M2MF        0
 #define NV50_BIND_FENCE       1
@@ -100,8 +113,10 @@ struct nv50_context {
 
    struct nouveau_bufctx *bufctx_3d;
    struct nouveau_bufctx *bufctx;
+   struct nouveau_bufctx *bufctx_cp;
 
    uint32_t dirty;
+   uint32_t dirty_cp; /* dirty flags for compute state */
    bool cb_dirty;
 
    struct nv50_graph_state state;
@@ -114,13 +129,16 @@ struct nv50_context {
    struct nv50_program *vertprog;
    struct nv50_program *gmtyprog;
    struct nv50_program *fragprog;
+   struct nv50_program *compprog;
 
    struct nv50_constbuf constbuf[3][NV50_MAX_PIPE_CONSTBUFS];
    uint16_t constbuf_dirty[3];
    uint16_t constbuf_valid[3];
+   uint16_t constbuf_coherent[3];
 
    struct pipe_vertex_buffer vtxbuf[PIPE_MAX_ATTRIBS];
    unsigned num_vtxbufs;
+   uint32_t vtxbufs_coherent;
    struct pipe_index_buffer idxbuf;
    uint32_t vbo_fifo; /* bitmask of vertex elements to be pushed to FIFO */
    uint32_t vbo_user; /* bitmask of vertex buffers pointing to user memory */
@@ -132,8 +150,10 @@ struct nv50_context {
 
    struct pipe_sampler_view *textures[3][PIPE_MAX_SAMPLERS];
    unsigned num_textures[3];
+   uint32_t textures_coherent[3];
    struct nv50_tsc_entry *samplers[3][PIPE_MAX_SAMPLERS];
    unsigned num_samplers[3];
+   bool seamless_cube_map;
 
    uint8_t num_so_targets;
    uint8_t so_targets_dirty;
@@ -162,6 +182,8 @@ struct nv50_context {
    uint32_t cond_condmode; /* the calculated condition */
 
    struct nv50_blitctx *blit;
+
+   struct util_dynarray global_residents;
 };
 
 static inline struct nv50_context *
@@ -186,7 +208,7 @@ nv50_context_shader_stage(unsigned pipe)
 }
 
 /* nv50_context.c */
-struct pipe_context *nv50_create(struct pipe_screen *, void *);
+struct pipe_context *nv50_create(struct pipe_screen *, void *, unsigned flags);
 
 void nv50_bufctx_fence(struct nouveau_bufctx *, bool on_flush);
 
@@ -194,17 +216,6 @@ void nv50_default_kick_notify(struct nouveau_pushbuf *);
 
 /* nv50_draw.c */
 extern struct draw_stage *nv50_draw_render_stage(struct nv50_context *);
-
-/* nv50_query.c */
-void nv50_init_query_functions(struct nv50_context *);
-void nv50_query_pushbuf_submit(struct nouveau_pushbuf *, uint16_t method,
-                               struct pipe_query *, unsigned result_offset);
-void nv84_query_fifo_wait(struct nouveau_pushbuf *, struct pipe_query *);
-void nva0_so_target_save_offset(struct pipe_context *,
-                                struct pipe_stream_output_target *,
-                                unsigned index, bool seralize);
-
-#define NVA0_QUERY_STREAM_OUTPUT_BUFFER_OFFSET (PIPE_QUERY_TYPES + 0)
 
 /* nv50_shader_state.c */
 void nv50_vertprog_validate(struct nv50_context *);
@@ -220,9 +231,7 @@ void nv50_stream_output_validate(struct nv50_context *);
 extern void nv50_init_state_functions(struct nv50_context *);
 
 /* nv50_state_validate.c */
-/* @words: check for space before emitting relocs */
-extern bool nv50_state_validate(struct nv50_context *, uint32_t state_mask,
-                                unsigned space_words);
+bool nv50_state_validate(struct nv50_context *, uint32_t state_mask);
 
 /* nv50_surface.c */
 extern void nv50_clear(struct pipe_context *, unsigned buffers,
@@ -311,5 +320,9 @@ nv98_create_decoder(struct pipe_context *context,
 struct pipe_video_buffer *
 nv98_video_buffer_create(struct pipe_context *pipe,
                          const struct pipe_video_buffer *template);
+
+/* nv50_compute.c */
+void
+nv50_launch_grid(struct pipe_context *, const struct pipe_grid_info *);
 
 #endif

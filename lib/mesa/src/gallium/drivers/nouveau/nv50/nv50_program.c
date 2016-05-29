@@ -66,7 +66,6 @@ nv50_vertprog_assign_slots(struct nv50_ir_prog_info *info)
       case TGSI_SEMANTIC_VERTEXID:
          prog->vp.attrs[2] |= NV50_3D_VP_GP_BUILTIN_ATTR_EN_VERTEX_ID;
          prog->vp.attrs[2] |= NV50_3D_VP_GP_BUILTIN_ATTR_EN_VERTEX_ID_DRAW_ARRAYS_ADD_START;
-         prog->vp.vertexid = 1;
          continue;
       default:
          break;
@@ -149,7 +148,6 @@ nv50_fragprog_assign_slots(struct nv50_ir_prog_info *info)
    for (m = 0, i = 0; i < info->numInputs; ++i) {
       switch (info->in[i].sn) {
       case TGSI_SEMANTIC_POSITION:
-      case TGSI_SEMANTIC_FACE:
          continue;
       default:
          m += info->in[i].flat ? 0 : 1;
@@ -167,9 +165,6 @@ nv50_fragprog_assign_slots(struct nv50_ir_prog_info *info)
          for (c = 0; c < 4; ++c)
             if (info->in[i].mask & (1 << c))
                info->in[i].slot[c] = nintp++;
-      } else
-      if (info->in[i].sn == TGSI_SEMANTIC_FACE) {
-         info->in[i].slot[0] = 255;
       } else {
          unsigned j = info->in[i].flat ? m++ : n++;
 
@@ -259,6 +254,8 @@ nv50_program_assign_varying_slots(struct nv50_ir_prog_info *info)
       return nv50_vertprog_assign_slots(info);
    case PIPE_SHADER_FRAGMENT:
       return nv50_fragprog_assign_slots(info);
+   case PIPE_SHADER_COMPUTE:
+      return 0;
    default:
       return -1;
    }
@@ -318,7 +315,8 @@ nv50_program_create_strmout_state(const struct nv50_ir_prog_info *info,
 }
 
 bool
-nv50_program_translate(struct nv50_program *prog, uint16_t chipset)
+nv50_program_translate(struct nv50_program *prog, uint16_t chipset,
+                       struct pipe_debug_callback *debug)
 {
    struct nv50_ir_prog_info *info;
    int ret;
@@ -333,10 +331,9 @@ nv50_program_translate(struct nv50_program *prog, uint16_t chipset)
    info->bin.sourceRep = NV50_PROGRAM_IR_TGSI;
    info->bin.source = (void *)prog->pipe.tokens;
 
-   info->io.ucpCBSlot = 15;
+   info->io.auxCBSlot = 15;
    info->io.ucpBase = NV50_CB_AUX_UCP_OFFSET;
    info->io.genUserClip = prog->vp.clpd_nr;
-   info->io.sampleInterp = prog->fp.sample_interp;
 
    info->io.resInfoCBSlot = 15;
    info->io.suInfoBase = NV50_CB_AUX_TEX_MS_OFFSET;
@@ -355,6 +352,9 @@ nv50_program_translate(struct nv50_program *prog, uint16_t chipset)
    prog->gp.has_layer = 0;
    prog->gp.has_viewport = 0;
 
+   if (prog->type == PIPE_SHADER_COMPUTE)
+      info->prop.cp.inputOffset = 0x10;
+
    info->driverPriv = prog;
 
 #ifdef DEBUG
@@ -369,13 +369,15 @@ nv50_program_translate(struct nv50_program *prog, uint16_t chipset)
       NOUVEAU_ERR("shader translation failed: %i\n", ret);
       goto out;
    }
-   FREE(info->bin.syms);
 
    prog->code = info->bin.code;
    prog->code_size = info->bin.codeSize;
    prog->fixups = info->bin.relocData;
+   prog->interps = info->bin.interpData;
    prog->max_gpr = MAX2(4, (info->bin.maxGPR >> 1) + 1);
    prog->tls_space = info->bin.tlsSpace;
+
+   prog->vp.need_vertex_id = info->io.vertexId < PIPE_MAX_SHADER_INPUTS;
 
    if (prog->type == PIPE_SHADER_FRAGMENT) {
       if (info->prop.fp.writesDepth) {
@@ -402,9 +404,21 @@ nv50_program_translate(struct nv50_program *prog, uint16_t chipset)
       prog->gp.vert_count = info->prop.gp.maxVertices;
    }
 
+   if (prog->type == PIPE_SHADER_COMPUTE) {
+      prog->cp.syms = info->bin.syms;
+      prog->cp.num_syms = info->bin.numSyms;
+   } else {
+      FREE(info->bin.syms);
+   }
+
    if (prog->pipe.stream_output.num_outputs)
       prog->so = nv50_program_create_strmout_state(info,
                                                    &prog->pipe.stream_output);
+
+   pipe_debug_message(debug, SHADER_INFO,
+                      "type: %d, local: %d, gpr: %d, inst: %d, bytes: %d",
+                      prog->type, info->bin.tlsSpace, prog->max_gpr,
+                      info->bin.instructions, info->bin.codeSize);
 
 out:
    FREE(info);
@@ -417,11 +431,13 @@ nv50_program_upload_code(struct nv50_context *nv50, struct nv50_program *prog)
    struct nouveau_heap *heap;
    int ret;
    uint32_t size = align(prog->code_size, 0x40);
+   uint8_t prog_type;
 
    switch (prog->type) {
    case PIPE_SHADER_VERTEX:   heap = nv50->screen->vp_code_heap; break;
-   case PIPE_SHADER_GEOMETRY: heap = nv50->screen->fp_code_heap; break;
-   case PIPE_SHADER_FRAGMENT: heap = nv50->screen->gp_code_heap; break;
+   case PIPE_SHADER_GEOMETRY: heap = nv50->screen->gp_code_heap; break;
+   case PIPE_SHADER_FRAGMENT: heap = nv50->screen->fp_code_heap; break;
+   case PIPE_SHADER_COMPUTE:  heap = nv50->screen->fp_code_heap; break;
    default:
       assert(!"invalid program type");
       return false;
@@ -444,7 +460,14 @@ nv50_program_upload_code(struct nv50_context *nv50, struct nv50_program *prog)
          return false;
       }
    }
-   prog->code_base = prog->mem->start;
+
+   if (prog->type == PIPE_SHADER_COMPUTE) {
+      /* CP code must be uploaded in FP code segment. */
+      prog_type = 1;
+   } else {
+      prog->code_base = prog->mem->start;
+      prog_type = prog->type;
+   }
 
    ret = nv50_tls_realloc(nv50->screen, prog->tls_space);
    if (ret < 0) {
@@ -456,9 +479,13 @@ nv50_program_upload_code(struct nv50_context *nv50, struct nv50_program *prog)
 
    if (prog->fixups)
       nv50_ir_relocate_code(prog->fixups, prog->code, prog->code_base, 0, 0);
+   if (prog->interps)
+      nv50_ir_change_interp(prog->interps, prog->code,
+                            prog->fp.force_persample_interp,
+                            false /* flatshade */);
 
    nv50_sifc_linear_u8(&nv50->base, nv50->screen->code,
-                       (prog->type << NV50_CODE_BO_SIZE_LOG2) + prog->code_base,
+                       (prog_type << NV50_CODE_BO_SIZE_LOG2) + prog->code_base,
                        NOUVEAU_BO_VRAM, prog->code_size, prog->code);
 
    BEGIN_NV04(nv50->base.pushbuf, NV50_3D(CODE_CB_FLUSH), 1);
@@ -479,8 +506,11 @@ nv50_program_destroy(struct nv50_context *nv50, struct nv50_program *p)
    FREE(p->code);
 
    FREE(p->fixups);
-
+   FREE(p->interps);
    FREE(p->so);
+
+   if (type == PIPE_SHADER_COMPUTE)
+      FREE(p->cp.syms);
 
    memset(p, 0, sizeof(*p));
 

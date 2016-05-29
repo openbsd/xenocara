@@ -6,6 +6,7 @@
 
 #include "pipe/p_defines.h"
 
+#include <drm.h>
 #include <nouveau.h>
 
 #ifndef NV04_PFIFO_MAX_PACKET_LEN
@@ -65,27 +66,27 @@ PUSH_KICK(struct nouveau_pushbuf *push)
 static inline uint32_t
 nouveau_screen_transfer_flags(unsigned pipe)
 {
-	uint32_t flags = 0;
+   uint32_t flags = 0;
 
-	if (!(pipe & PIPE_TRANSFER_UNSYNCHRONIZED)) {
-		if (pipe & PIPE_TRANSFER_READ)
-			flags |= NOUVEAU_BO_RD;
-		if (pipe & PIPE_TRANSFER_WRITE)
-			flags |= NOUVEAU_BO_WR;
-		if (pipe & PIPE_TRANSFER_DONTBLOCK)
-			flags |= NOUVEAU_BO_NOBLOCK;
-	}
+   if (!(pipe & PIPE_TRANSFER_UNSYNCHRONIZED)) {
+      if (pipe & PIPE_TRANSFER_READ)
+         flags |= NOUVEAU_BO_RD;
+      if (pipe & PIPE_TRANSFER_WRITE)
+         flags |= NOUVEAU_BO_WR;
+      if (pipe & PIPE_TRANSFER_DONTBLOCK)
+         flags |= NOUVEAU_BO_NOBLOCK;
+   }
 
-	return flags;
+   return flags;
 }
 
-extern struct pipe_screen *
+extern struct nouveau_screen *
 nv30_screen_create(struct nouveau_device *);
 
-extern struct pipe_screen *
+extern struct nouveau_screen *
 nv50_screen_create(struct nouveau_device *);
 
-extern struct pipe_screen *
+extern struct nouveau_screen *
 nvc0_screen_create(struct nouveau_device *);
 
 #endif

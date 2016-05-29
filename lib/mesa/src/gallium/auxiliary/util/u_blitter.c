@@ -70,7 +70,7 @@ struct blitter_context_priv
    /* Constant state objects. */
    /* Vertex shaders. */
    void *vs; /**< Vertex shader which passes {pos, generic} to the output.*/
-   void *vs_pos_only; /**< Vertex shader which passes pos to the output.*/
+   void *vs_pos_only[4]; /**< Vertex shader which passes pos to the output.*/
    void *vs_layered; /**< Vertex shader which sets LAYER = INSTANCEID. */
 
    /* Fragment shaders. */
@@ -320,32 +320,35 @@ struct blitter_context *util_blitter_create(struct pipe_context *pipe)
    for (i = 0; i < 4; i++)
       ctx->vertices[i][0][3] = 1; /*v.w*/
 
-   ctx->upload = u_upload_create(pipe, 65536, 4, PIPE_BIND_VERTEX_BUFFER);
+   ctx->upload = u_upload_create(pipe, 65536, PIPE_BIND_VERTEX_BUFFER,
+                                 PIPE_USAGE_STREAM);
 
    return &ctx->base;
 }
 
-static void bind_vs_pos_only(struct blitter_context_priv *ctx)
+static void bind_vs_pos_only(struct blitter_context_priv *ctx,
+                             unsigned num_so_channels)
 {
    struct pipe_context *pipe = ctx->base.pipe;
+   int index = num_so_channels ? num_so_channels - 1 : 0;
 
-   if (!ctx->vs_pos_only) {
+   if (!ctx->vs_pos_only[index]) {
       struct pipe_stream_output_info so;
       const uint semantic_names[] = { TGSI_SEMANTIC_POSITION };
       const uint semantic_indices[] = { 0 };
 
       memset(&so, 0, sizeof(so));
       so.num_outputs = 1;
-      so.output[0].num_components = 1;
-      so.stride[0] = 1;
+      so.output[0].num_components = num_so_channels;
+      so.stride[0] = num_so_channels;
 
-      ctx->vs_pos_only =
+      ctx->vs_pos_only[index] =
          util_make_vertex_passthrough_shader_with_so(pipe, 1, semantic_names,
                                                      semantic_indices, FALSE,
                                                      &so);
    }
 
-   pipe->bind_vs_state(pipe, ctx->vs_pos_only);
+   pipe->bind_vs_state(pipe, ctx->vs_pos_only[index]);
 }
 
 static void bind_vs_passthrough(struct blitter_context_priv *ctx)
@@ -441,8 +444,9 @@ void util_blitter_destroy(struct blitter_context *blitter)
       pipe->delete_rasterizer_state(pipe, ctx->rs_discard_state);
    if (ctx->vs)
       pipe->delete_vs_state(pipe, ctx->vs);
-   if (ctx->vs_pos_only)
-      pipe->delete_vs_state(pipe, ctx->vs_pos_only);
+   for (i = 0; i < 4; i++)
+      if (ctx->vs_pos_only[i])
+         pipe->delete_vs_state(pipe, ctx->vs_pos_only[i]);
    if (ctx->vs_layered)
       pipe->delete_vs_state(pipe, ctx->vs_layered);
    pipe->delete_vertex_elements_state(pipe, ctx->velem_state);
@@ -1188,7 +1192,7 @@ static void blitter_draw(struct blitter_context_priv *ctx,
 
    vb.stride = 8 * sizeof(float);
 
-   u_upload_data(ctx->upload, 0, sizeof(ctx->vertices), ctx->vertices,
+   u_upload_data(ctx->upload, 0, sizeof(ctx->vertices), 4, ctx->vertices,
                  &vb.buffer_offset, &vb.buffer);
    if (!vb.buffer)
       return;
@@ -1517,7 +1521,7 @@ void util_blitter_blit_generic(struct blitter_context *blitter,
 {
    struct blitter_context_priv *ctx = (struct blitter_context_priv*)blitter;
    struct pipe_context *pipe = ctx->base.pipe;
-   struct pipe_framebuffer_state fb_state;
+   struct pipe_framebuffer_state fb_state = {0};
    enum pipe_texture_target src_target = src->texture->target;
    unsigned src_samples = src->texture->nr_samples;
    unsigned dst_samples = dst->texture->nr_samples;
@@ -1822,6 +1826,7 @@ void util_blitter_clear_render_target(struct blitter_context *blitter,
    struct blitter_context_priv *ctx = (struct blitter_context_priv*)blitter;
    struct pipe_context *pipe = ctx->base.pipe;
    struct pipe_framebuffer_state fb_state;
+   unsigned num_layers;
 
    assert(dstsurf->texture);
    if (!dstsurf->texture)
@@ -1849,10 +1854,19 @@ void util_blitter_clear_render_target(struct blitter_context *blitter,
    pipe->set_framebuffer_state(pipe, &fb_state);
    pipe->set_sample_mask(pipe, ~0);
 
-   blitter_set_common_draw_rect_state(ctx, FALSE, FALSE);
    blitter_set_dst_dimensions(ctx, dstsurf->width, dstsurf->height);
-   blitter->draw_rectangle(blitter, dstx, dsty, dstx+width, dsty+height, 0,
-                           UTIL_BLITTER_ATTRIB_COLOR, color);
+
+   num_layers = dstsurf->u.tex.last_layer - dstsurf->u.tex.first_layer + 1;
+   if (num_layers > 1 && ctx->has_layered) {
+      blitter_set_common_draw_rect_state(ctx, FALSE, TRUE);
+      blitter_set_clear_color(ctx, color);
+      blitter_draw(ctx, dstx, dsty, dstx+width, dsty+height, 0, num_layers);
+   }
+   else {
+      blitter_set_common_draw_rect_state(ctx, FALSE, FALSE);
+      blitter->draw_rectangle(blitter, dstx, dsty, dstx+width, dsty+height, 0,
+                              UTIL_BLITTER_ATTRIB_COLOR, color);
+   }
 
    blitter_restore_vertex_states(ctx);
    blitter_restore_fragment_states(ctx);
@@ -1874,6 +1888,7 @@ void util_blitter_clear_depth_stencil(struct blitter_context *blitter,
    struct pipe_context *pipe = ctx->base.pipe;
    struct pipe_framebuffer_state fb_state;
    struct pipe_stencil_ref sr = { { 0 } };
+   unsigned num_layers;
 
    assert(dstsurf->texture);
    if (!dstsurf->texture)
@@ -1917,11 +1932,19 @@ void util_blitter_clear_depth_stencil(struct blitter_context *blitter,
    pipe->set_framebuffer_state(pipe, &fb_state);
    pipe->set_sample_mask(pipe, ~0);
 
-   blitter_set_common_draw_rect_state(ctx, FALSE, FALSE);
    blitter_set_dst_dimensions(ctx, dstsurf->width, dstsurf->height);
-   blitter->draw_rectangle(blitter, dstx, dsty, dstx+width, dsty+height,
-                           (float) depth,
-                           UTIL_BLITTER_ATTRIB_NONE, NULL);
+
+   num_layers = dstsurf->u.tex.last_layer - dstsurf->u.tex.first_layer + 1;
+   if (num_layers > 1 && ctx->has_layered) {
+      blitter_set_common_draw_rect_state(ctx, FALSE, TRUE);
+      blitter_draw(ctx, dstx, dsty, dstx+width, dsty+height, (float) depth, num_layers);
+   }
+   else {
+      blitter_set_common_draw_rect_state(ctx, FALSE, FALSE);
+      blitter->draw_rectangle(blitter, dstx, dsty, dstx+width, dsty+height,
+                              (float) depth,
+                              UTIL_BLITTER_ATTRIB_NONE, NULL);
+   }
 
    blitter_restore_vertex_states(ctx);
    blitter_restore_fragment_states(ctx);
@@ -2036,7 +2059,7 @@ void util_blitter_copy_buffer(struct blitter_context *blitter,
 
    pipe->set_vertex_buffers(pipe, ctx->base.vb_slot, 1, &vb);
    pipe->bind_vertex_elements_state(pipe, ctx->velem_state_readbuf[0]);
-   bind_vs_pos_only(ctx);
+   bind_vs_pos_only(ctx, 1);
    if (ctx->has_geometry_shader)
       pipe->bind_gs_state(pipe, NULL);
    if (ctx->has_tessellation) {
@@ -2065,7 +2088,7 @@ void util_blitter_clear_buffer(struct blitter_context *blitter,
    struct blitter_context_priv *ctx = (struct blitter_context_priv*)blitter;
    struct pipe_context *pipe = ctx->base.pipe;
    struct pipe_vertex_buffer vb = {0};
-   struct pipe_stream_output_target *so_target;
+   struct pipe_stream_output_target *so_target = NULL;
    unsigned offsets[PIPE_MAX_SO_BUFFERS] = {0};
 
    assert(num_channels >= 1);
@@ -2089,7 +2112,7 @@ void util_blitter_clear_buffer(struct blitter_context *blitter,
       return;
    }
 
-   u_upload_data(ctx->upload, 0, num_channels*4, clear_value,
+   u_upload_data(ctx->upload, 0, num_channels*4, 4, clear_value,
                  &vb.buffer_offset, &vb.buffer);
    if (!vb.buffer)
       goto out;
@@ -2103,7 +2126,7 @@ void util_blitter_clear_buffer(struct blitter_context *blitter,
    pipe->set_vertex_buffers(pipe, ctx->base.vb_slot, 1, &vb);
    pipe->bind_vertex_elements_state(pipe,
                                     ctx->velem_state_readbuf[num_channels-1]);
-   bind_vs_pos_only(ctx);
+   bind_vs_pos_only(ctx, num_channels);
    if (ctx->has_geometry_shader)
       pipe->bind_gs_state(pipe, NULL);
    if (ctx->has_tessellation) {

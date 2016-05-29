@@ -24,15 +24,12 @@
 #include <assert.h>
 
 #include "intel_batchbuffer.h"
-#include "intel_fbo.h"
 #include "intel_mipmap_tree.h"
 
 #include "brw_context.h"
-#include "brw_defines.h"
 #include "brw_state.h"
 
 #include "brw_blorp.h"
-#include "gen6_blorp.h"
 
 /**
  * \name Constants for BLORP VBO
@@ -413,7 +410,7 @@ gen6_blorp_emit_surface_state(struct brw_context *brw,
    assert(tile_y % 2 == 0);
    surf[5] = ((tile_x / 4) << BRW_SURFACE_X_OFFSET_SHIFT |
               (tile_y / 2) << BRW_SURFACE_Y_OFFSET_SHIFT |
-              (surface->mt->align_h == 4 ?
+              (surface->mt->valign == 4 ?
                BRW_SURFACE_VERTICAL_ALIGN_ENABLE : 0));
 
    /* Emit relocation to surface contents */
@@ -486,7 +483,6 @@ gen6_blorp_emit_sampler_state(struct brw_context *brw,
                           0, /* min LOD */
                           max_lod,
                           0, /* LOD bias */
-                          0, /* base miplevel */
                           0, /* shadow function */
                           non_normalized_coords,
                           0); /* border color offset - unused */

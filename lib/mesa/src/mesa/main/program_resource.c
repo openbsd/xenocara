@@ -30,7 +30,7 @@
 #include "main/shaderobj.h"
 #include "main/context.h"
 #include "program_resource.h"
-#include "ir_uniform.h"
+#include "compiler/glsl/ir_uniform.h"
 static bool
 supported_interface_enum(struct gl_context *ctx, GLenum iface)
 {
@@ -41,6 +41,8 @@ supported_interface_enum(struct gl_context *ctx, GLenum iface)
    case GL_PROGRAM_OUTPUT:
    case GL_TRANSFORM_FEEDBACK_VARYING:
    case GL_ATOMIC_COUNTER_BUFFER:
+   case GL_BUFFER_VARIABLE:
+   case GL_SHADER_STORAGE_BLOCK:
       return true;
    case GL_VERTEX_SUBROUTINE:
    case GL_FRAGMENT_SUBROUTINE:
@@ -58,8 +60,6 @@ supported_interface_enum(struct gl_context *ctx, GLenum iface)
    case GL_TESS_CONTROL_SUBROUTINE_UNIFORM:
    case GL_TESS_EVALUATION_SUBROUTINE_UNIFORM:
       return _mesa_has_tessellation(ctx) && _mesa_has_shader_subroutine(ctx);
-   case GL_BUFFER_VARIABLE:
-   case GL_SHADER_STORAGE_BLOCK:
    default:
       return false;
    }
@@ -70,6 +70,13 @@ _mesa_GetProgramInterfaceiv(GLuint program, GLenum programInterface,
                             GLenum pname, GLint *params)
 {
    GET_CURRENT_CONTEXT(ctx);
+
+   if (MESA_VERBOSE & VERBOSE_API) {
+      _mesa_debug(ctx, "glGetProgramInterfaceiv(%u, %s, %s, %p)\n",
+                  program, _mesa_enum_to_string(programInterface),
+                  _mesa_enum_to_string(pname), params);
+   }
+
    unsigned i;
    struct gl_shader_program *shProg =
       _mesa_lookup_shader_program_err(ctx, program,
@@ -125,6 +132,26 @@ _mesa_GetProgramInterfaceiv(GLuint program, GLenum programInterface,
                   (struct gl_uniform_block *)
                   shProg->ProgramResourceList[i].Data;
                *params = MAX2(*params, block->NumUniforms);
+            }
+         }
+         break;
+      case GL_SHADER_STORAGE_BLOCK:
+         for (i = 0, *params = 0; i < shProg->NumProgramResourceList; i++) {
+            if (shProg->ProgramResourceList[i].Type == programInterface) {
+               struct gl_uniform_block *block =
+                  (struct gl_uniform_block *)
+                  shProg->ProgramResourceList[i].Data;
+               GLint block_params = 0;
+               for (unsigned j = 0; j < block->NumUniforms; j++) {
+                  const char *iname = block->Uniforms[j].IndexName;
+                  struct gl_program_resource *uni =
+                     _mesa_program_resource_find_name(shProg, GL_BUFFER_VARIABLE,
+                                                      iname, NULL);
+                  if (!uni)
+                     continue;
+                  block_params++;
+               }
+               *params = MAX2(*params, block_params);
             }
          }
          break;
@@ -206,6 +233,12 @@ _mesa_GetProgramResourceIndex(GLuint program, GLenum programInterface,
                               const GLchar *name)
 {
    GET_CURRENT_CONTEXT(ctx);
+
+   if (MESA_VERBOSE & VERBOSE_API) {
+      _mesa_debug(ctx, "glGetProgramResourceIndex(%u, %s, %s)\n",
+                  program, _mesa_enum_to_string(programInterface), name);
+   }
+
    unsigned array_index = 0;
    struct gl_program_resource *res;
    struct gl_shader_program *shProg =
@@ -245,8 +278,10 @@ _mesa_GetProgramResourceIndex(GLuint program, GLenum programInterface,
    case GL_PROGRAM_INPUT:
    case GL_PROGRAM_OUTPUT:
    case GL_UNIFORM:
+   case GL_BUFFER_VARIABLE:
    case GL_TRANSFORM_FEEDBACK_VARYING:
    case GL_UNIFORM_BLOCK:
+   case GL_SHADER_STORAGE_BLOCK:
       res = _mesa_program_resource_find_name(shProg, programInterface, name,
                                              &array_index);
       if (!res || array_index > 0)
@@ -268,6 +303,13 @@ _mesa_GetProgramResourceName(GLuint program, GLenum programInterface,
                              GLchar *name)
 {
    GET_CURRENT_CONTEXT(ctx);
+
+   if (MESA_VERBOSE & VERBOSE_API) {
+      _mesa_debug(ctx, "glGetProgramResourceName(%u, %s, %u, %d, %p, %p)\n",
+                  program, _mesa_enum_to_string(programInterface), index,
+                  bufSize, length, name);
+   }
+
    struct gl_shader_program *shProg =
       _mesa_lookup_shader_program_err(ctx, program,
                                       "glGetProgramResourceName");
@@ -293,6 +335,13 @@ _mesa_GetProgramResourceiv(GLuint program, GLenum programInterface,
                            GLsizei *length, GLint *params)
 {
    GET_CURRENT_CONTEXT(ctx);
+
+   if (MESA_VERBOSE & VERBOSE_API) {
+      _mesa_debug(ctx, "glGetProgramResourceiv(%u, %s, %u, %d, %p, %d, %p, %p)\n",
+                  program, _mesa_enum_to_string(programInterface), index,
+                  propCount, props, bufSize, length, params);
+   }
+
    struct gl_shader_program *shProg =
       _mesa_lookup_shader_program_err(ctx, program, "glGetProgramResourceiv");
 
@@ -307,10 +356,6 @@ _mesa_GetProgramResourceiv(GLuint program, GLenum programInterface,
                   "glGetProgramResourceiv(propCount <= 0)");
       return;
    }
-
-   /* No need to write any properties, user requested none. */
-   if (bufSize == 0)
-      return;
 
    _mesa_get_program_resourceiv(shProg, programInterface, index,
                                 propCount, props, bufSize, length, params);
@@ -339,6 +384,12 @@ _mesa_GetProgramResourceLocation(GLuint program, GLenum programInterface,
                                  const GLchar *name)
 {
    GET_CURRENT_CONTEXT(ctx);
+
+   if (MESA_VERBOSE & VERBOSE_API) {
+      _mesa_debug(ctx, "glGetProgramResourceLocation(%u, %s, %s)\n",
+                  program, _mesa_enum_to_string(programInterface), name);
+   }
+
    struct gl_shader_program *shProg =
       lookup_linked_program(program, "glGetProgramResourceLocation");
 
@@ -389,6 +440,12 @@ _mesa_GetProgramResourceLocationIndex(GLuint program, GLenum programInterface,
                                       const GLchar *name)
 {
    GET_CURRENT_CONTEXT(ctx);
+
+   if (MESA_VERBOSE & VERBOSE_API) {
+      _mesa_debug(ctx, "glGetProgramResourceLocationIndex(%u, %s, %s)\n",
+                  program, _mesa_enum_to_string(programInterface), name);
+   }
+
    struct gl_shader_program *shProg =
       lookup_linked_program(program, "glGetProgramResourceLocationIndex");
 

@@ -40,6 +40,8 @@
 #include "freedreno_gmem.h"
 #include "freedreno_util.h"
 
+#define BORDER_COLOR_UPLOAD_SIZE (2 * PIPE_MAX_SAMPLERS * BORDERCOLOR_SIZE)
+
 struct fd_vertex_stateobj;
 
 struct fd_texture_stateobj {
@@ -161,6 +163,9 @@ struct fd_context {
 	 * the same sample snapshot)
 	 */
 	struct fd_hw_sample *sample_cache[MAX_HW_SAMPLE_PROVIDERS];
+
+	/* which sample providers were active in the current batch: */
+	uint32_t active_providers;
 
 	/* tracking for current stage, to know when to start/stop
 	 * any active queries:
@@ -335,6 +340,7 @@ struct fd_context {
 		FD_DIRTY_SCISSOR     = (1 << 17),
 		FD_DIRTY_STREAMOUT   = (1 << 18),
 		FD_DIRTY_UCP         = (1 << 19),
+		FD_DIRTY_BLEND_DUAL  = (1 << 20),
 	} dirty;
 
 	struct pipe_blend_state *blend;
@@ -358,6 +364,10 @@ struct fd_context {
 	struct fd_streamout_stateobj streamout;
 	struct pipe_clip_state ucp;
 
+	struct pipe_query *cond_query;
+	bool cond_cond; /* inverted rendering condition */
+	uint cond_mode;
+
 	/* GMEM/tile handling fxns: */
 	void (*emit_tile_init)(struct fd_context *ctx);
 	void (*emit_tile_prep)(struct fd_context *ctx, struct fd_tile *tile);
@@ -379,6 +389,10 @@ struct fd_context {
 			const uint32_t *dwords, struct pipe_resource *prsc);
 	void (*emit_const_bo)(struct fd_ringbuffer *ring, enum shader_t type, boolean write,
 			uint32_t regid, uint32_t num, struct fd_bo **bos, uint32_t *offsets);
+
+	/* indirect-branch emit: */
+	void (*emit_ib)(struct fd_ringbuffer *ring, struct fd_ringmarker *start,
+			struct fd_ringmarker *end);
 };
 
 static inline struct fd_context *

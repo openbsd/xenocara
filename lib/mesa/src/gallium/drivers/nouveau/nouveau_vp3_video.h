@@ -114,25 +114,30 @@ struct nouveau_vp3_decoder {
    unsigned fence_seq, fw_sizes, last_frame_num, tmp_stride, ref_stride;
 
    unsigned bsp_idx, vp_idx, ppp_idx;
+
+   /* End of the bsp bo where new data should be appended between one begin/end
+    * frame.
+    */
+   char *bsp_ptr;
 };
 
 struct comm {
-	uint32_t bsp_cur_index; // 000
-	uint32_t byte_ofs; // 004
-	uint32_t status[0x10]; // 008
-	uint32_t pos[0x10]; // 048
-	uint8_t pad[0x100 - 0x88]; // 0a0 bool comm_encrypted
+   uint32_t bsp_cur_index; // 000
+   uint32_t byte_ofs; // 004
+   uint32_t status[0x10]; // 008
+   uint32_t pos[0x10]; // 048
+   uint8_t pad[0x100 - 0x88]; // 0a0 bool comm_encrypted
 
-	uint32_t pvp_cur_index; // 100
-	uint32_t acked_byte_ofs; // 104
-	uint32_t status_vp[0x10]; // 108
-	uint16_t mb_y[0x10]; //148
-	uint32_t pvp_stage; // 168 0xeeXX
-	uint16_t parse_endpos_index; // 16c
-	uint16_t irq_index; // 16e
-	uint8_t  irq_470[0x10]; // 170
-	uint32_t irq_pos[0x10]; // 180
-	uint32_t parse_endpos[0x10]; // 1c0
+   uint32_t pvp_cur_index; // 100
+   uint32_t acked_byte_ofs; // 104
+   uint32_t status_vp[0x10]; // 108
+   uint16_t mb_y[0x10]; //148
+   uint32_t pvp_stage; // 168 0xeeXX
+   uint16_t parse_endpos_index; // 16c
+   uint16_t irq_index; // 16e
+   uint8_t  irq_470[0x10]; // 170
+   uint32_t irq_pos[0x10]; // 180
+   uint32_t parse_endpos[0x10]; // 1c0
 };
 
 static inline uint32_t nouveau_vp3_video_align(uint32_t h)
@@ -208,11 +213,15 @@ nouveau_vp3_load_firmware(struct nouveau_vp3_decoder *dec,
                           enum pipe_video_profile profile,
                           unsigned chipset);
 
+void
+nouveau_vp3_bsp_begin(struct nouveau_vp3_decoder *dec);
+
+void
+nouveau_vp3_bsp_next(struct nouveau_vp3_decoder *dec, unsigned num_buffers,
+                     const void *const *data, const unsigned *num_bytes);
+
 uint32_t
-nouveau_vp3_bsp(struct nouveau_vp3_decoder *dec,  union pipe_desc desc,
-                struct nouveau_vp3_video_buffer *target,
-                unsigned comm_seq, unsigned num_buffers,
-                const void *const *data, const unsigned *num_bytes);
+nouveau_vp3_bsp_end(struct nouveau_vp3_decoder *dec, union pipe_desc desc);
 
 void
 nouveau_vp3_vp_caps(struct nouveau_vp3_decoder *dec, union pipe_desc desc,

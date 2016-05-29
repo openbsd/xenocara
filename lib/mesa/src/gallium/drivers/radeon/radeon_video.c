@@ -89,11 +89,11 @@ bool rvid_resize_buffer(struct pipe_screen *screen, struct radeon_winsys_cs *cs,
 	if (!rvid_create_buffer(screen, new_buf, new_size, new_buf->usage))
 		goto error;
 
-	src = ws->buffer_map(old_buf.res->cs_buf, cs, PIPE_TRANSFER_READ);
+	src = ws->buffer_map(old_buf.res->buf, cs, PIPE_TRANSFER_READ);
 	if (!src)
 		goto error;
 
-	dst = ws->buffer_map(new_buf->res->cs_buf, cs, PIPE_TRANSFER_WRITE);
+	dst = ws->buffer_map(new_buf->res->buf, cs, PIPE_TRANSFER_WRITE);
 	if (!dst)
 		goto error;
 
@@ -103,14 +103,14 @@ bool rvid_resize_buffer(struct pipe_screen *screen, struct radeon_winsys_cs *cs,
 		dst += bytes;
 		memset(dst, 0, new_size);
 	}
-	ws->buffer_unmap(new_buf->res->cs_buf);
-	ws->buffer_unmap(old_buf.res->cs_buf);
+	ws->buffer_unmap(new_buf->res->buf);
+	ws->buffer_unmap(old_buf.res->buf);
 	rvid_destroy_buffer(&old_buf);
 	return true;
 
 error:
 	if (src)
-		ws->buffer_unmap(old_buf.res->cs_buf);
+		ws->buffer_unmap(old_buf.res->buf);
 	rvid_destroy_buffer(new_buf);
 	*new_buf = old_buf;
 	return false;
@@ -237,6 +237,7 @@ int rvid_get_video_param(struct pipe_screen *screen,
 	case PIPE_VIDEO_CAP_SUPPORTED:
 		switch (codec) {
 		case PIPE_VIDEO_FORMAT_MPEG12:
+			return profile != PIPE_VIDEO_PROFILE_MPEG1;
 		case PIPE_VIDEO_FORMAT_MPEG4:
 		case PIPE_VIDEO_FORMAT_MPEG4_AVC:
 			if (rscreen->family < CHIP_PALM)
@@ -257,7 +258,7 @@ int rvid_get_video_param(struct pipe_screen *screen,
 	case PIPE_VIDEO_CAP_MAX_WIDTH:
 		return (rscreen->family < CHIP_TONGA) ? 2048 : 4096;
 	case PIPE_VIDEO_CAP_MAX_HEIGHT:
-		return (rscreen->family < CHIP_TONGA) ? 1152 : 2304;
+		return (rscreen->family < CHIP_TONGA) ? 1152 : 4096;
 	case PIPE_VIDEO_CAP_PREFERED_FORMAT:
 		return PIPE_FORMAT_NV12;
 	case PIPE_VIDEO_CAP_PREFERS_INTERLACED:

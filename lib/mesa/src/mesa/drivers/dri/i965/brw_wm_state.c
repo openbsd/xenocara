@@ -31,6 +31,7 @@
 
 
 
+#include "intel_batchbuffer.h"
 #include "intel_fbo.h"
 #include "brw_context.h"
 #include "brw_state.h"
@@ -174,8 +175,7 @@ brw_upload_wm_unit(struct brw_context *brw)
    }
 
    /* BRW_NEW_FRAGMENT_PROGRAM */
-   wm->wm5.program_uses_depth = (fp->Base.InputsRead &
-				 (1 << VARYING_SLOT_POS)) != 0;
+   wm->wm5.program_uses_depth = prog_data->uses_src_depth;
    wm->wm5.program_computes_depth = (fp->Base.OutputsWritten &
 				     BITFIELD64_BIT(FRAG_RESULT_DEPTH)) != 0;
    /* _NEW_BUFFERS
@@ -251,6 +251,16 @@ brw_upload_wm_unit(struct brw_context *brw)
    }
 
    brw->ctx.NewDriverState |= BRW_NEW_GEN4_UNIT_STATE;
+
+   /* _NEW_POLGYON */
+   if (brw->wm.offset_clamp != ctx->Polygon.OffsetClamp) {
+      BEGIN_BATCH(2);
+      OUT_BATCH(_3DSTATE_GLOBAL_DEPTH_OFFSET_CLAMP << 16 | (2 - 2));
+      OUT_BATCH_F(ctx->Polygon.OffsetClamp);
+      ADVANCE_BATCH();
+
+      brw->wm.offset_clamp = ctx->Polygon.OffsetClamp;
+   }
 }
 
 const struct brw_tracked_state brw_wm_unit = {

@@ -42,11 +42,14 @@ struct nvc0_program {
       uint8_t num_ucps; /* also set to max if ClipDistance is used */
       uint8_t edgeflag; /* attribute index of edgeflag input */
       bool need_vertex_id;
+      bool need_draw_parameters;
    } vp;
    struct {
       uint8_t early_z;
-      uint8_t in_pos[PIPE_MAX_SHADER_INPUTS];
-      uint8_t sample_interp;
+      uint8_t colors;
+      uint8_t color_interp[2];
+      bool force_persample_interp;
+      bool flatshade;
    } fp;
    struct {
       uint32_t tess_mode; /* ~0 if defined by the other stage */
@@ -61,6 +64,7 @@ struct nvc0_program {
    uint8_t num_barriers;
 
    void *relocs;
+   void *interps;
 
    struct nvc0_transform_feedback_state *tfb;
 

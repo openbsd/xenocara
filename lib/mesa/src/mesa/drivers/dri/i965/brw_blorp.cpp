@@ -26,10 +26,7 @@
 #include "intel_fbo.h"
 
 #include "brw_blorp.h"
-#include "brw_defines.h"
 #include "brw_state.h"
-#include "gen6_blorp.h"
-#include "gen7_blorp.h"
 
 #define FILE_DEBUG_FLAG DEBUG_BLORP
 
@@ -144,7 +141,9 @@ brw_blorp_surface_info::compute_tile_offsets(uint32_t *tile_x,
 {
    uint32_t mask_x, mask_y;
 
-   intel_miptree_get_tile_masks(mt, &mask_x, &mask_y, map_stencil_as_y_tiled);
+   intel_get_tile_masks(mt->tiling, mt->tr_mode, mt->cpp,
+                        map_stencil_as_y_tiled,
+                        &mask_x, &mask_y);
 
    *tile_x = x_offset & mask_x;
    *tile_y = y_offset & mask_y;
@@ -320,8 +319,14 @@ brw_hiz_op_params::brw_hiz_op_params(struct intel_mipmap_tree *mt,
     * not 8. But commit 1f112cc increased the alignment from 4 to 8, which
     * prevents the clobbering.
     */
-   depth.width = ALIGN(depth.width, 8);
-   depth.height = ALIGN(depth.height, 4);
+   dst.num_samples = mt->num_samples;
+   if (dst.num_samples > 1) {
+      depth.width = ALIGN(mt->logical_width0, 8);
+      depth.height = ALIGN(mt->logical_height0, 4);
+   } else {
+      depth.width = ALIGN(depth.width, 8);
+      depth.height = ALIGN(depth.height, 4);
+   }
 
    x1 = depth.width;
    y1 = depth.height;

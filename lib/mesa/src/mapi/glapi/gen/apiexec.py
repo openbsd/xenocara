@@ -70,9 +70,8 @@ functions = {
     # extension with core profile.
     "TexBuffer": exec_info(core=31),
 
-    # OpenGL 3.2 / GL_ARB_geometry_shader4.  Mesa does not support
-    # GL_ARB_geometry_shader4, so OpenGL 3.2 is required.
-    "FramebufferTexture": exec_info(core=32),
+    # OpenGL 3.2 / GL_OES_geometry_shader.
+    "FramebufferTexture": exec_info(core=32, es2=31),
 
     # OpenGL 4.0 / GL_ARB_shader_subroutines. Mesa only exposes this
     # extension with core profile.
@@ -151,8 +150,8 @@ functions = {
 
     # OpenGL 4.3 / GL_ARB_framebuffer_no_attachments.  Mesa can expose the
     # extension with OpenGL 3.0.
-    "FramebufferParameteri": exec_info(compatibility=30, core=31),
-    "GetFramebufferParameteri": exec_info(compatibility=30, core=31),
+    "FramebufferParameteri": exec_info(compatibility=30, core=31, es2=31),
+    "GetFramebufferParameteri": exec_info(compatibility=30, core=31, es2=31),
 
     # OpenGL 4.5 / GL_ARB_direct_state_access.   Mesa can expose the extension
     # with core profile.

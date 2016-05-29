@@ -89,6 +89,7 @@
 #include "context.h"
 #include "cpuinfo.h"
 #include "debug.h"
+#include "debug_output.h"
 #include "depth.h"
 #include "dlist.h"
 #include "eval.h"
@@ -142,7 +143,7 @@
 #include "sparc/sparc.h"
 #endif
 
-#include "glsl_parser_extras.h"
+#include "compiler/glsl/glsl_parser_extras.h"
 #include <stdbool.h>
 
 
@@ -402,10 +403,6 @@ one_time_init( struct gl_context *ctx )
 		     PACKAGE_VERSION, __DATE__, __TIME__);
       }
 #endif
-
-#ifdef DEBUG
-      _mesa_test_formats();
-#endif
    }
 
    /* per-API one-time init */
@@ -658,6 +655,9 @@ _mesa_init_constants(struct gl_constants *consts, gl_api api)
    /* GL_EXT_provoking_vertex */
    consts->QuadsFollowProvokingVertexConvention = GL_TRUE;
 
+   /** GL_ARB_viewport_array */
+   consts->LayerAndVPIndexProvokingVertex = GL_UNDEFINED_VERTEX;
+
    /* GL_EXT_transform_feedback */
    consts->MaxTransformFeedbackBuffers = MAX_FEEDBACK_BUFFERS;
    consts->MaxTransformFeedbackSeparateComponents = 4 * MAX_FEEDBACK_ATTRIBS;
@@ -815,8 +815,8 @@ init_attrib_groups(struct gl_context *ctx)
    _mesa_init_current( ctx );
    _mesa_init_depth( ctx );
    _mesa_init_debug( ctx );
+   _mesa_init_debug_output( ctx );
    _mesa_init_display_list( ctx );
-   _mesa_init_errors( ctx );
    _mesa_init_eval( ctx );
    _mesa_init_fbobjects( ctx );
    _mesa_init_feedback( ctx );
@@ -1931,31 +1931,6 @@ _mesa_check_blend_func_error(struct gl_context *ctx)
    return GL_TRUE;
 }
 
-static bool
-shader_linked_or_absent(struct gl_context *ctx,
-                        const struct gl_shader_program *shProg,
-                        bool *shader_present, const char *where)
-{
-   if (shProg) {
-      *shader_present = true;
-
-      if (!shProg->LinkStatus) {
-         _mesa_error(ctx, GL_INVALID_OPERATION, "%s(shader not linked)", where);
-         return false;
-      }
-#if 0 /* not normally enabled */
-      {
-         char errMsg[100];
-         if (!_mesa_validate_shader_program(ctx, shProg, errMsg)) {
-            _mesa_warning(ctx, "Shader program %u is invalid: %s",
-                          shProg->Name, errMsg);
-         }
-      }
-#endif
-   }
-
-   return true;
-}
 
 /**
  * Prior to drawing anything with glBegin, glDrawArrays, etc. this function
@@ -1968,54 +1943,22 @@ shader_linked_or_absent(struct gl_context *ctx,
 GLboolean
 _mesa_valid_to_render(struct gl_context *ctx, const char *where)
 {
-   unsigned i;
-
    /* This depends on having up to date derived state (shaders) */
    if (ctx->NewState)
       _mesa_update_state(ctx);
 
-   if (ctx->API == API_OPENGL_CORE || ctx->API == API_OPENGLES2) {
-      bool from_glsl_shader[MESA_SHADER_COMPUTE] = { false };
-
-      for (i = 0; i < MESA_SHADER_COMPUTE; i++) {
-         if (!shader_linked_or_absent(ctx, ctx->_Shader->CurrentProgram[i],
-                                      &from_glsl_shader[i], where))
-            return GL_FALSE;
-      }
-
-      /* In OpenGL Core Profile and OpenGL ES 2.0 / 3.0, there are no assembly
-       * shaders.  Don't check state related to those.
-       */
-   } else {
-      bool has_vertex_shader = false;
-      bool has_fragment_shader = false;
-
-      /* In OpenGL Compatibility Profile, there is only vertex shader and
-       * fragment shader.  We take this path also for API_OPENGLES because
-       * optimizing that path would make the other (more common) paths
-       * slightly slower.
-       */
-      if (!shader_linked_or_absent(ctx,
-                                   ctx->_Shader->CurrentProgram[MESA_SHADER_VERTEX],
-                                   &has_vertex_shader, where))
-         return GL_FALSE;
-
-      if (!shader_linked_or_absent(ctx,
-                                   ctx->_Shader->CurrentProgram[MESA_SHADER_FRAGMENT],
-                                   &has_fragment_shader, where))
-         return GL_FALSE;
-
+   if (ctx->API == API_OPENGL_COMPAT) {
       /* Any shader stages that are not supplied by the GLSL shader and have
        * assembly shaders enabled must now be validated.
        */
-      if (!has_vertex_shader
+      if (!ctx->_Shader->CurrentProgram[MESA_SHADER_VERTEX]
           && ctx->VertexProgram.Enabled && !ctx->VertexProgram._Enabled) {
          _mesa_error(ctx, GL_INVALID_OPERATION,
                      "%s(vertex program not valid)", where);
          return GL_FALSE;
       }
 
-      if (!has_fragment_shader) {
+      if (!ctx->_Shader->CurrentProgram[MESA_SHADER_FRAGMENT]) {
          if (ctx->FragmentProgram.Enabled && !ctx->FragmentProgram._Enabled) {
             _mesa_error(ctx, GL_INVALID_OPERATION,
                         "%s(fragment program not valid)", where);
@@ -2035,9 +1978,10 @@ _mesa_valid_to_render(struct gl_context *ctx, const char *where)
 
    /* A pipeline object is bound */
    if (ctx->_Shader->Name && !ctx->_Shader->Validated) {
-      /* Error message will be printed inside _mesa_validate_program_pipeline.
-       */
-      if (!_mesa_validate_program_pipeline(ctx, ctx->_Shader, GL_TRUE)) {
+      if (!_mesa_validate_program_pipeline(ctx, ctx->_Shader)) {
+         _mesa_error(ctx, GL_INVALID_OPERATION,
+                     "glValidateProgramPipeline failed to validate the "
+                     "pipeline");
          return GL_FALSE;
       }
    }

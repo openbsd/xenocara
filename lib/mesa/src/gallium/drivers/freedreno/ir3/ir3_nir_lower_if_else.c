@@ -28,7 +28,8 @@
  */
 
 #include "ir3_nir.h"
-#include "glsl/nir/nir_builder.h"
+#include "compiler/nir/nir_builder.h"
+#include "compiler/nir/nir_control_flow.h"
 
 /* Based on nir_opt_peephole_select, and hacked up to more aggressively
  * flatten anything that can be flattened
@@ -171,7 +172,7 @@ flatten_block(nir_builder *bld, nir_block *if_block, nir_block *prev_block,
 					(intr->intrinsic == nir_intrinsic_discard_if)) {
 				nir_ssa_def *discard_cond;
 
-				nir_builder_insert_after_instr(bld,
+				bld->cursor = nir_after_instr(
 						nir_block_last_instr(prev_block));
 
 				if (invert) {
@@ -293,8 +294,7 @@ lower_if_else_block(nir_block *block, void *void_state)
 		sel->dest.write_mask = (1 << phi->dest.ssa.num_components) - 1;
 
 		nir_ssa_def_rewrite_uses(&phi->dest.ssa,
-				nir_src_for_ssa(&sel->dest.dest.ssa),
-				state->mem_ctx);
+				nir_src_for_ssa(&sel->dest.dest.ssa));
 
 		nir_instr_insert_before(&phi->instr, &sel->instr);
 		nir_instr_remove(&phi->instr);
@@ -328,9 +328,9 @@ ir3_nir_lower_if_else(nir_shader *shader)
 {
 	bool progress = false;
 
-	nir_foreach_overload(shader, overload) {
-		if (overload->impl)
-			progress |= lower_if_else_impl(overload->impl);
+	nir_foreach_function(shader, function) {
+		if (function->impl)
+			progress |= lower_if_else_impl(function->impl);
 	}
 
 	return progress;

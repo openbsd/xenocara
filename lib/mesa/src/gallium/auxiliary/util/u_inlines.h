@@ -174,17 +174,6 @@ pipe_sampler_view_release(struct pipe_context *ctx,
 }
 
 static inline void
-pipe_image_view_reference(struct pipe_image_view **ptr, struct pipe_image_view *view)
-{
-   struct pipe_image_view *old_view = *ptr;
-
-   if (pipe_reference_described(&(*ptr)->reference, &view->reference,
-                                (debug_reference_descriptor)debug_describe_image_view))
-      old_view->context->image_view_destroy(old_view->context, old_view);
-   *ptr = view;
-}
-
-static inline void
 pipe_so_target_reference(struct pipe_stream_output_target **ptr,
                          struct pipe_stream_output_target *target)
 {
@@ -289,7 +278,7 @@ pipe_buffer_map_range(struct pipe_context *pipe,
    u_box_1d(offset, length, &box);
 
    map = pipe->transfer_map(pipe, buffer, 0, access, &box, transfer);
-   if (map == NULL) {
+   if (!map) {
       return NULL;
    }
 
@@ -648,6 +637,28 @@ util_max_layer(const struct pipe_resource *r, unsigned level)
       return r->array_size - 1;
    default:
       return 0;
+   }
+}
+
+static inline unsigned
+util_pipe_shader_from_tgsi_processor(unsigned processor)
+{
+   switch (processor) {
+   case TGSI_PROCESSOR_VERTEX:
+      return PIPE_SHADER_VERTEX;
+   case TGSI_PROCESSOR_TESS_CTRL:
+      return PIPE_SHADER_TESS_CTRL;
+   case TGSI_PROCESSOR_TESS_EVAL:
+      return PIPE_SHADER_TESS_EVAL;
+   case TGSI_PROCESSOR_GEOMETRY:
+      return PIPE_SHADER_GEOMETRY;
+   case TGSI_PROCESSOR_FRAGMENT:
+      return PIPE_SHADER_FRAGMENT;
+   case TGSI_PROCESSOR_COMPUTE:
+      return PIPE_SHADER_COMPUTE;
+   default:
+      assert(0);
+      return PIPE_SHADER_VERTEX;
    }
 }
 

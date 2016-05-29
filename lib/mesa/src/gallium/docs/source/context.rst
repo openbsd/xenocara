@@ -84,6 +84,9 @@ objects. They all follow simple, one-method binding calls, e.g.
     levels. This corresponds to GL's ``PATCH_DEFAULT_OUTER_LEVEL``.
   * ``default_inner_level`` is the default value for the inner tessellation
     levels. This corresponds to GL's ``PATCH_DEFAULT_INNER_LEVEL``.
+* ``set_debug_callback`` sets the callback to be used for reporting
+  various debug messages, eventually reported via KHR_debug and
+  similar mechanisms.
 
 
 Sampler Views
@@ -224,6 +227,10 @@ is is also possible to only clear one or the other part). While it is only
 possible to clear one surface at a time (which can include several layers),
 this surface need not be bound to the framebuffer.
 
+``clear_texture`` clears a non-PIPE_BUFFER resource's specified level
+and bounding box with a clear value provided in that resource's native
+format.
+
 ``clear_buffer`` clears a PIPE_BUFFER resource with the specified clear value
 (which may be multiple bytes in length). Logically this is a memset with a
 multi-byte element value starting at offset bytes from resource start, going
@@ -317,6 +324,11 @@ will block until the results of the query are ready (and TRUE will be
 returned).  Otherwise, if the ``wait`` parameter is FALSE, the call
 will not block and the return value will be TRUE if the query has
 completed or FALSE otherwise.
+
+``get_query_result_resource`` is used to store the result of a query into
+a resource without synchronizing with the CPU. This write will optionally
+wait for the query to complete, and will optionally write whether the value
+is available instead of the value itself.
 
 The interface currently includes the following types of queries:
 
@@ -641,3 +653,14 @@ In addition, normal texture sampling is allowed from the compute
 program: ``bind_sampler_states`` may be used to set up texture
 samplers for the compute stage and ``set_sampler_views`` may
 be used to bind a number of sampler views to it.
+
+Mipmap generation
+^^^^^^^^^^^^^^^^^
+
+If PIPE_CAP_GENERATE_MIPMAP is true, ``generate_mipmap`` can be used
+to generate mipmaps for the specified texture resource.
+It replaces texel image levels base_level+1 through
+last_level for layers range from first_layer through last_layer.
+It returns TRUE if mipmap generation succeeds, otherwise it
+returns FALSE. Mipmap generation may fail when it is not supported
+for particular texture types or formats.

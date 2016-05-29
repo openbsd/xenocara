@@ -195,7 +195,6 @@ struct i915_rasterizer_state {
 
    unsigned light_twoside : 1;
    unsigned st;
-   enum interp_mode color_interp;
 
    unsigned LIS4;
    unsigned LIS7;
@@ -401,7 +400,7 @@ void i915_init_string_functions( struct i915_context *i915 );
  * i915_context.c
  */
 struct pipe_context *i915_create_context(struct pipe_screen *screen,
-					 void *priv);
+					 void *priv, unsigned flags);
 
 
 /***********************************************************************

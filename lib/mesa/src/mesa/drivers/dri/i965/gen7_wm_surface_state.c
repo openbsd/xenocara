@@ -26,6 +26,7 @@
 #include "main/texformat.h"
 #include "main/teximage.h"
 #include "program/prog_parameter.h"
+#include "program/prog_instruction.h"
 
 #include "intel_mipmap_tree.h"
 #include "intel_batchbuffer.h"
@@ -78,7 +79,7 @@ gen7_surface_msaa_bits(unsigned num_samples, enum intel_msaa_layout layout)
 {
    uint32_t ss4 = 0;
 
-   assert(num_samples <= 8);
+   assert(num_samples <= 16);
 
    /* The SURFACE_MULTISAMPLECOUNT_X enums are simply log2(num_samples) << 3. */
    ss4 |= (ffs(MAX2(num_samples, 1)) - 1) << 3;
@@ -288,9 +289,9 @@ gen7_emit_texture_surface_state(struct brw_context *brw,
    if (target == GL_TEXTURE_CUBE_MAP || target == GL_TEXTURE_CUBE_MAP_ARRAY)
       surf[0] |= BRW_SURFACE_CUBEFACE_ENABLES;
 
-   if (mt->align_h == 4)
+   if (mt->valign == 4)
       surf[0] |= GEN7_SURFACE_VALIGN_4;
-   if (mt->align_w == 8)
+   if (mt->halign == 8)
       surf[0] |= GEN7_SURFACE_HALIGN_8;
 
    if (_mesa_is_array_texture(target) || target == GL_TEXTURE_CUBE_MAP)
@@ -499,7 +500,7 @@ gen7_update_renderbuffer_surface(struct brw_context *brw,
       /* fallthrough */
    default:
       surftype = translate_tex_target(gl_target);
-      is_array = _mesa_tex_target_is_array(gl_target);
+      is_array = _mesa_is_array_texture(gl_target);
       break;
    }
 
@@ -509,9 +510,9 @@ gen7_update_renderbuffer_surface(struct brw_context *brw,
                  GEN7_SURFACE_ARYSPC_LOD0 : GEN7_SURFACE_ARYSPC_FULL) |
              gen7_surface_tiling_mode(mt->tiling);
 
-   if (irb->mt->align_h == 4)
+   if (irb->mt->valign == 4)
       surf[0] |= GEN7_SURFACE_VALIGN_4;
-   if (irb->mt->align_w == 8)
+   if (irb->mt->halign == 8)
       surf[0] |= GEN7_SURFACE_HALIGN_8;
 
    if (is_array) {

@@ -330,7 +330,8 @@ _mesa_ClientActiveTexture(GLenum texture)
       return;
 
    if (texUnit >= ctx->Const.MaxTextureCoordUnits) {
-      _mesa_error(ctx, GL_INVALID_ENUM, "glClientActiveTexture(texture)");
+      _mesa_error(ctx, GL_INVALID_ENUM, "glClientActiveTexture(texture=%s)",
+                  _mesa_enum_to_string(texture));
       return;
    }
 
@@ -785,7 +786,7 @@ alloc_proxy_textures( struct gl_context *ctx )
       GL_TEXTURE_2D_ARRAY_EXT,
       GL_TEXTURE_1D_ARRAY_EXT,
       GL_TEXTURE_EXTERNAL_OES,
-      GL_TEXTURE_CUBE_MAP_ARB,
+      GL_TEXTURE_CUBE_MAP,
       GL_TEXTURE_3D,
       GL_TEXTURE_RECTANGLE_NV,
       GL_TEXTURE_2D,

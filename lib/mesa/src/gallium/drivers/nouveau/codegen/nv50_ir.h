@@ -132,6 +132,7 @@ enum operation
    OP_SUBFM,   // surface bitfield manipulation
    OP_SUCLAMP, // clamp surface coordinates
    OP_SUEAU,   // surface effective address
+   OP_SUQ,     // surface query
    OP_MADSP,   // special integer multiply-add
    OP_TEXBAR, // texture dependency barrier
    OP_DFDX,
@@ -231,6 +232,8 @@ enum operation
 #define NV50_IR_SUBOP_SHFL_UP   1
 #define NV50_IR_SUBOP_SHFL_DOWN 2
 #define NV50_IR_SUBOP_SHFL_BFLY 3
+#define NV50_IR_SUBOP_LOAD_LOCKED    1
+#define NV50_IR_SUBOP_STORE_UNLOCKED 2
 #define NV50_IR_SUBOP_MADSP_SD     0xffff
 // Yes, we could represent those with DataType.
 // Or put the type into operation and have a couple 1000 values in that enum.
@@ -389,6 +392,10 @@ enum SVSemantic
    SV_SBASE,
    SV_VERTEX_STRIDE,
    SV_INVOCATION_INFO,
+   SV_THREAD_KILL,
+   SV_BASEVERTEX,
+   SV_BASEINSTANCE,
+   SV_DRAWID,
    SV_UNDEFINED,
    SV_LAST
 };
@@ -824,8 +831,8 @@ private:
 
 enum TexQuery
 {
-   TXQ_DIMS,
-   TXQ_TYPE,
+   TXQ_DIMS, /* x, y, z, levels */
+   TXQ_TYPE, /* ?, ?, samples, ? */
    TXQ_SAMPLE_POSITION,
    TXQ_FILTER,
    TXQ_LOD,

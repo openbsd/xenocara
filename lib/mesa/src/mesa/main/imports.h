@@ -83,9 +83,6 @@ typedef union { GLfloat f; GLint i; GLuint u; } fi_type;
 
 
 #if defined(_MSC_VER)
-#if _MSC_VER < 1800  /* Not req'd on VS2013 and above */
-#define strtoll(p, e, b) _strtoi64(p, e, b)
-#endif /* _MSC_VER < 1800 */
 #define strcasecmp(s1, s2) _stricmp(s1, s2)
 #endif
 /*@}*/
@@ -151,6 +148,13 @@ static inline int IROUND(float f)
    return (int) ((f >= 0.0F) ? (f + 0.5F) : (f - 0.5F));
 }
 
+/**
+ * Convert double to int by rounding to nearest integer, away from zero.
+ */
+static inline int IROUNDD(double d)
+{
+   return (int) ((d >= 0.0) ? (d + 0.5) : (d - 0.5));
+}
 
 /**
  * Convert float to int64 by rounding to nearest integer.
@@ -396,13 +400,6 @@ _mesa_flsll(uint64_t n)
 #endif
 }
 
-
-extern GLhalfARB
-_mesa_float_to_half(float f);
-
-extern float
-_mesa_half_to_float(GLhalfARB h);
-
 static inline bool
 _mesa_half_is_negative(GLhalfARB h)
 {
@@ -423,6 +420,9 @@ _mesa_vsnprintf(char *str, size_t size, const char *fmt, va_list arg);
 #define snprintf _snprintf
 #endif
 
+#if defined(_WIN32) && !defined(strtok_r)
+#define strtok_r strtok_s
+#endif
 
 #ifdef __cplusplus
 }

@@ -44,6 +44,7 @@
 
 #include "main/macros.h"
 #include "main/samplerobj.h"
+#include "util/half_float.h"
 
 /**
  * Emit a 3DSTATE_SAMPLER_STATE_POINTERS_{VS,HS,GS,DS,PS} packet.
@@ -54,6 +55,8 @@ gen7_emit_sampler_state_pointers_xs(struct brw_context *brw,
 {
    static const uint16_t packet_headers[] = {
       [MESA_SHADER_VERTEX] = _3DSTATE_SAMPLER_STATE_POINTERS_VS,
+      [MESA_SHADER_TESS_CTRL] = _3DSTATE_SAMPLER_STATE_POINTERS_HS,
+      [MESA_SHADER_TESS_EVAL] = _3DSTATE_SAMPLER_STATE_POINTERS_DS,
       [MESA_SHADER_GEOMETRY] = _3DSTATE_SAMPLER_STATE_POINTERS_GS,
       [MESA_SHADER_FRAGMENT] = _3DSTATE_SAMPLER_STATE_POINTERS_PS,
    };
@@ -88,13 +91,11 @@ brw_emit_sampler_state(struct brw_context *brw,
                        unsigned min_lod,
                        unsigned max_lod,
                        int lod_bias,
-                       unsigned base_level,
                        unsigned shadow_function,
                        bool non_normalized_coordinates,
                        uint32_t border_color_offset)
 {
    ss[0] = BRW_SAMPLER_LOD_PRECLAMP_ENABLE |
-           SET_FIELD(base_level, BRW_SAMPLER_BASE_MIPLEVEL) |
            SET_FIELD(mip_filter, BRW_SAMPLER_MIP_FILTER) |
            SET_FIELD(mag_filter, BRW_SAMPLER_MAG_FILTER) |
            SET_FIELD(min_filter, BRW_SAMPLER_MIN_FILTER);
@@ -491,7 +492,6 @@ brw_update_sampler_state(struct brw_context *brw,
    const unsigned max_lod = U_FIXED(CLAMP(sampler->MaxLod, 0, 13), lod_bits);
    const int lod_bias =
       S_FIXED(CLAMP(tex_unit_lod_bias + sampler->LodBias, -16, 15), lod_bits);
-   const unsigned base_level = U_FIXED(0, 1);
 
    /* Upload the border color if necessary.  If not, just point it at
     * offset 0 (the start of the batch) - the color should be ignored,
@@ -515,7 +515,7 @@ brw_update_sampler_state(struct brw_context *brw,
                           max_anisotropy,
                           address_rounding,
                           wrap_s, wrap_t, wrap_r,
-                          min_lod, max_lod, lod_bias, base_level,
+                          min_lod, max_lod, lod_bias,
                           shadow_function,
                           non_normalized_coords,
                           border_color_offset);
@@ -582,7 +582,7 @@ brw_upload_sampler_state_table(struct brw_context *brw,
       batch_offset_for_sampler_state += size_in_bytes;
    }
 
-   if (brw->gen >= 7) {
+   if (brw->gen >= 7 && stage_state->stage != MESA_SHADER_COMPUTE) {
       /* Emit a 3DSTATE_SAMPLER_STATE_POINTERS_XS packet. */
       gen7_emit_sampler_state_pointers_xs(brw, stage_state);
    } else {
@@ -648,4 +648,68 @@ const struct brw_tracked_state brw_gs_samplers = {
              BRW_NEW_GEOMETRY_PROGRAM,
    },
    .emit = brw_upload_gs_samplers,
+};
+
+
+static void
+brw_upload_tcs_samplers(struct brw_context *brw)
+{
+   /* BRW_NEW_TESS_PROGRAMS */
+   struct gl_program *tcs = (struct gl_program *) brw->tess_ctrl_program;
+   if (!tcs)
+      return;
+
+   brw_upload_sampler_state_table(brw, tcs, &brw->tcs.base);
+}
+
+
+const struct brw_tracked_state brw_tcs_samplers = {
+   .dirty = {
+      .mesa = _NEW_TEXTURE,
+      .brw = BRW_NEW_BATCH |
+             BRW_NEW_TESS_PROGRAMS,
+   },
+   .emit = brw_upload_tcs_samplers,
+};
+
+
+static void
+brw_upload_tes_samplers(struct brw_context *brw)
+{
+   /* BRW_NEW_TESS_PROGRAMS */
+   struct gl_program *tes = (struct gl_program *) brw->tess_eval_program;
+   if (!tes)
+      return;
+
+   brw_upload_sampler_state_table(brw, tes, &brw->tes.base);
+}
+
+
+const struct brw_tracked_state brw_tes_samplers = {
+   .dirty = {
+      .mesa = _NEW_TEXTURE,
+      .brw = BRW_NEW_BATCH |
+             BRW_NEW_TESS_PROGRAMS,
+   },
+   .emit = brw_upload_tes_samplers,
+};
+
+static void
+brw_upload_cs_samplers(struct brw_context *brw)
+{
+   /* BRW_NEW_COMPUTE_PROGRAM */
+   struct gl_program *cs = (struct gl_program *) brw->compute_program;
+   if (!cs)
+      return;
+
+   brw_upload_sampler_state_table(brw, cs, &brw->cs.base);
+}
+
+const struct brw_tracked_state brw_cs_samplers = {
+   .dirty = {
+      .mesa = _NEW_TEXTURE,
+      .brw = BRW_NEW_BATCH |
+             BRW_NEW_COMPUTE_PROGRAM,
+   },
+   .emit = brw_upload_cs_samplers,
 };

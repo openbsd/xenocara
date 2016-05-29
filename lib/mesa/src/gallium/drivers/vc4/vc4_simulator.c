@@ -32,6 +32,11 @@
 #include "vc4_simulator_validate.h"
 #include "simpenrose/simpenrose.h"
 
+/* A marker placed just after each BO, then checked after rendering to make
+ * sure it's still there.
+ */
+#define BO_SENTINEL		0xfedcba98
+
 #define OVERFLOW_SIZE (32 * 1024 * 1024)
 
 static struct drm_gem_cma_object *
@@ -49,9 +54,11 @@ vc4_wrap_bo_with_cma(struct drm_device *dev, struct vc4_bo *bo)
         obj->vaddr = screen->simulator_mem_base + dev->simulator_mem_next;
         obj->paddr = simpenrose_hw_addr(obj->vaddr);
 
-        dev->simulator_mem_next += size;
+        dev->simulator_mem_next += size + sizeof(uint32_t);
         dev->simulator_mem_next = align(dev->simulator_mem_next, 4096);
         assert(dev->simulator_mem_next <= screen->simulator_mem_size);
+
+        *(uint32_t *)(obj->vaddr + bo->size) = BO_SENTINEL;
 
         return obj;
 }
@@ -106,16 +113,109 @@ vc4_simulator_unpin_bos(struct vc4_exec_info *exec)
 {
         for (int i = 0; i < exec->bo_count; i++) {
                 struct drm_gem_cma_object *obj = exec->bo[i];
-                struct vc4_bo *bo = to_vc4_bo(&obj->base)->bo;
+                struct drm_vc4_bo *drm_bo = to_vc4_bo(&obj->base);
+                struct vc4_bo *bo = drm_bo->bo;
 
+                assert(*(uint32_t *)(obj->vaddr + bo->size) == BO_SENTINEL);
                 memcpy(bo->map, obj->vaddr, bo->size);
 
+                if (drm_bo->validated_shader) {
+                        free(drm_bo->validated_shader->texture_samples);
+                        free(drm_bo->validated_shader);
+                }
                 free(obj);
         }
 
         free(exec->bo);
 
         return 0;
+}
+
+static void
+vc4_dump_to_file(struct vc4_exec_info *exec)
+{
+        static int dumpno = 0;
+        struct drm_vc4_get_hang_state *state;
+        struct drm_vc4_get_hang_state_bo *bo_state;
+        unsigned int dump_version = 0;
+
+        if (!(vc4_debug & VC4_DEBUG_DUMP))
+                return;
+
+        state = calloc(1, sizeof(*state));
+
+        int unref_count = 0;
+        list_for_each_entry_safe(struct drm_vc4_bo, bo, &exec->unref_list,
+                                 unref_head) {
+                unref_count++;
+        }
+
+        /* Add one more for the overflow area that isn't wrapped in a BO. */
+        state->bo_count = exec->bo_count + unref_count + 1;
+        bo_state = calloc(state->bo_count, sizeof(*bo_state));
+
+        char *filename = NULL;
+        asprintf(&filename, "vc4-dri-%d.dump", dumpno++);
+        FILE *f = fopen(filename, "w+");
+        if (!f) {
+                fprintf(stderr, "Couldn't open %s: %s", filename,
+                        strerror(errno));
+                return;
+        }
+
+        fwrite(&dump_version, sizeof(dump_version), 1, f);
+
+        state->ct0ca = exec->ct0ca;
+        state->ct0ea = exec->ct0ea;
+        state->ct1ca = exec->ct1ca;
+        state->ct1ea = exec->ct1ea;
+        state->start_bin = exec->ct0ca;
+        state->start_render = exec->ct1ca;
+        fwrite(state, sizeof(*state), 1, f);
+
+        int i;
+        for (i = 0; i < exec->bo_count; i++) {
+                struct drm_gem_cma_object *cma_bo = exec->bo[i];
+                bo_state[i].handle = i; /* Not used by the parser. */
+                bo_state[i].paddr = cma_bo->paddr;
+                bo_state[i].size = cma_bo->base.size;
+        }
+
+        list_for_each_entry_safe(struct drm_vc4_bo, bo, &exec->unref_list,
+                                 unref_head) {
+                struct drm_gem_cma_object *cma_bo = &bo->base;
+                bo_state[i].handle = 0;
+                bo_state[i].paddr = cma_bo->paddr;
+                bo_state[i].size = cma_bo->base.size;
+                i++;
+        }
+
+        /* Add the static overflow memory area. */
+        bo_state[i].handle = exec->bo_count;
+        bo_state[i].paddr = 0;
+        bo_state[i].size = OVERFLOW_SIZE;
+        i++;
+
+        fwrite(bo_state, sizeof(*bo_state), state->bo_count, f);
+
+        for (int i = 0; i < exec->bo_count; i++) {
+                struct drm_gem_cma_object *cma_bo = exec->bo[i];
+                fwrite(cma_bo->vaddr, cma_bo->base.size, 1, f);
+        }
+
+        list_for_each_entry_safe(struct drm_vc4_bo, bo, &exec->unref_list,
+                                 unref_head) {
+                struct drm_gem_cma_object *cma_bo = &bo->base;
+                fwrite(cma_bo->vaddr, cma_bo->base.size, 1, f);
+        }
+
+        void *overflow = calloc(1, OVERFLOW_SIZE);
+        fwrite(overflow, 1, OVERFLOW_SIZE, f);
+        free(overflow);
+
+        free(state);
+        free(bo_state);
+        fclose(f);
 }
 
 int
@@ -164,6 +264,14 @@ vc4_simulator_flush(struct vc4_context *vc4, struct drm_vc4_submit_cl *args)
         if (ret)
                 return ret;
 
+        if (vc4_debug & VC4_DEBUG_CL) {
+                fprintf(stderr, "RCL:\n");
+                vc4_dump_cl(screen->simulator_mem_base + exec.ct1ca,
+                            exec.ct1ea - exec.ct1ca, true);
+        }
+
+        vc4_dump_to_file(&exec);
+
         if (exec.ct0ca != exec.ct0ea) {
                 int bfc = simpenrose_do_binning(exec.ct0ca, exec.ct0ea);
                 if (bfc != 1) {
@@ -192,6 +300,8 @@ vc4_simulator_flush(struct vc4_context *vc4, struct drm_vc4_submit_cl *args)
         list_for_each_entry_safe(struct drm_vc4_bo, bo, &exec.unref_list,
                                  unref_head) {
 		list_del(&bo->unref_head);
+                assert(*(uint32_t *)(bo->base.vaddr + bo->bo->size) ==
+                       BO_SENTINEL);
                 vc4_bo_unreference(&bo->bo);
                 free(bo);
         }

@@ -51,7 +51,9 @@ vc4_set_blend_color(struct pipe_context *pctx,
                     const struct pipe_blend_color *blend_color)
 {
         struct vc4_context *vc4 = vc4_context(pctx);
-        vc4->blend_color = *blend_color;
+        vc4->blend_color.f = *blend_color;
+        for (int i = 0; i < 4; i++)
+                vc4->blend_color.ub[i] = float_to_ubyte(blend_color->color[i]);
         vc4->dirty |= VC4_DIRTY_BLEND_COLOR;
 }
 
@@ -77,7 +79,7 @@ static void
 vc4_set_sample_mask(struct pipe_context *pctx, unsigned sample_mask)
 {
         struct vc4_context *vc4 = vc4_context(pctx);
-        vc4->sample_mask = (uint16_t)sample_mask;
+        vc4->sample_mask = sample_mask & ((1 << VC4_MAX_SAMPLES) - 1);
         vc4->dirty |= VC4_DIRTY_SAMPLE_MASK;
 }
 
@@ -118,6 +120,9 @@ vc4_create_rasterizer_state(struct pipe_context *pctx,
                 so->offset_units = float_to_187_half(cso->offset_units);
                 so->offset_factor = float_to_187_half(cso->offset_scale);
         }
+
+        if (cso->multisample)
+                so->config_bits[0] |= VC4_CONFIG_BITS_RASTERIZER_OVERSAMPLE_4X;
 
         return so;
 }
@@ -303,10 +308,10 @@ vc4_set_index_buffer(struct pipe_context *pctx,
         struct vc4_context *vc4 = vc4_context(pctx);
 
         if (ib) {
-                assert(!ib->user_buffer);
                 pipe_resource_reference(&vc4->indexbuf.buffer, ib->buffer);
                 vc4->indexbuf.index_size = ib->index_size;
                 vc4->indexbuf.offset = ib->offset;
+                vc4->indexbuf.user_buffer = ib->user_buffer;
         } else {
                 pipe_resource_reference(&vc4->indexbuf.buffer, NULL);
         }
@@ -418,6 +423,23 @@ vc4_set_framebuffer_state(struct pipe_context *pctx,
         cso->width = framebuffer->width;
         cso->height = framebuffer->height;
 
+        /* If we're binding to uninitialized buffers, no need to load their
+         * contents before drawing..
+         */
+        if (cso->cbufs[0]) {
+                struct vc4_resource *rsc =
+                        vc4_resource(cso->cbufs[0]->texture);
+                if (!rsc->writes)
+                        vc4->cleared |= PIPE_CLEAR_COLOR0;
+        }
+
+        if (cso->zsbuf) {
+                struct vc4_resource *rsc =
+                        vc4_resource(cso->zsbuf->texture);
+                if (!rsc->writes)
+                        vc4->cleared |= PIPE_CLEAR_DEPTH | PIPE_CLEAR_STENCIL;
+        }
+
         /* Nonzero texture mipmap levels are laid out as if they were in
          * power-of-two-sized spaces.  The renderbuffer config infers its
          * stride from the width parameter, so we need to configure our
@@ -437,6 +459,22 @@ vc4_set_framebuffer_state(struct pipe_context *pctx,
                         (rsc->slices[cso->zsbuf->u.tex.level].stride /
                          rsc->cpp);
         }
+
+        vc4->msaa = false;
+        if (cso->cbufs[0])
+                vc4->msaa = cso->cbufs[0]->texture->nr_samples > 1;
+        else if (cso->zsbuf)
+                vc4->msaa = cso->zsbuf->texture->nr_samples > 1;
+
+        if (vc4->msaa) {
+                vc4->tile_width = 32;
+                vc4->tile_height = 32;
+        } else {
+                vc4->tile_width = 64;
+                vc4->tile_height = 64;
+        }
+        vc4->draw_tiles_x = DIV_ROUND_UP(cso->width, vc4->tile_width);
+        vc4->draw_tiles_y = DIV_ROUND_UP(cso->height, vc4->tile_height);
 
         vc4->dirty |= VC4_DIRTY_FRAMEBUFFER;
 }

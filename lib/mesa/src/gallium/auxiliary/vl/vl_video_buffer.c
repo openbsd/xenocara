@@ -62,6 +62,18 @@ const enum pipe_format const_resource_formats_VUYA[3] = {
    PIPE_FORMAT_NONE
 };
 
+const enum pipe_format const_resource_formats_YUVX[3] = {
+   PIPE_FORMAT_R8G8B8X8_UNORM,
+   PIPE_FORMAT_NONE,
+   PIPE_FORMAT_NONE
+};
+
+const enum pipe_format const_resource_formats_VUYX[3] = {
+   PIPE_FORMAT_B8G8R8X8_UNORM,
+   PIPE_FORMAT_NONE,
+   PIPE_FORMAT_NONE
+};
+
 const enum pipe_format const_resource_formats_YUYV[3] = {
    PIPE_FORMAT_R8G8_R8B8_UNORM,
    PIPE_FORMAT_NONE,
@@ -101,6 +113,12 @@ vl_video_buffer_formats(struct pipe_screen *screen, enum pipe_format format)
 
    case PIPE_FORMAT_B8G8R8A8_UNORM:
       return const_resource_formats_VUYA;
+
+   case PIPE_FORMAT_R8G8B8X8_UNORM:
+      return const_resource_formats_YUVX;
+
+   case PIPE_FORMAT_B8G8R8X8_UNORM:
+      return const_resource_formats_VUYX;
 
    case PIPE_FORMAT_YUYV:
       return const_resource_formats_YUYV;
@@ -235,14 +253,8 @@ vl_video_buffer_template(struct pipe_resource *templ,
    templ->bind = PIPE_BIND_SAMPLER_VIEW | PIPE_BIND_RENDER_TARGET;
    templ->usage = usage;
 
-   if (plane > 0) {
-      if (tmpl->chroma_format == PIPE_VIDEO_CHROMA_FORMAT_420) {
-         templ->width0 /= 2;
-         templ->height0 /= 2;
-      } else if (tmpl->chroma_format == PIPE_VIDEO_CHROMA_FORMAT_422) {
-         templ->width0 /= 2;
-      }
-   }
+   vl_video_buffer_adjust_size(&templ->width0, &templ->height0, plane,
+                               tmpl->chroma_format, false);
 }
 
 static void

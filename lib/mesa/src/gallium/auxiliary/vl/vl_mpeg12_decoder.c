@@ -542,7 +542,7 @@ vl_mpeg12_get_decode_buffer(struct vl_mpeg12_decoder *dec, struct pipe_video_buf
       return buffer;
 
    buffer = CALLOC_STRUCT(vl_mpeg12_buffer);
-   if (buffer == NULL)
+   if (!buffer)
       return NULL;
 
    if (!vl_vb_init(&buffer->vertex_stream, dec->context,
@@ -792,7 +792,7 @@ vl_mpeg12_end_frame(struct pipe_video_codec *decoder,
       for (j = 0; j < VL_MAX_REF_FRAMES; ++j) {
          if (!ref_frames[j] || !ref_frames[j][i]) continue;
 
-         vb[2] = vl_vb_get_mv(&buf->vertex_stream, j);;
+         vb[2] = vl_vb_get_mv(&buf->vertex_stream, j);
          dec->context->set_vertex_buffers(dec->context, 0, 3, vb);
 
          vl_mc_render_ref(i ? &dec->mc_c : &dec->mc_y, &buf->mc[i], ref_frames[j][i]);
@@ -1120,7 +1120,7 @@ vl_create_mpeg12_decoder(struct pipe_context *context,
 
    dec->base = *templat;
    dec->base.context = context;
-   dec->context = context->screen->context_create(context->screen, NULL);
+   dec->context = context->screen->context_create(context->screen, NULL, 0);
 
    dec->base.destroy = vl_mpeg12_destroy;
    dec->base.begin_frame = vl_mpeg12_begin_frame;

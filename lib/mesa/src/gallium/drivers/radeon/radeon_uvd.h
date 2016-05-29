@@ -233,6 +233,15 @@ struct ruvd_h265 {
 
 	uint8_t		highestTid;
 	uint8_t		isNonRef;
+
+	uint8_t 	p010_mode;
+	uint8_t 	msb_mode;
+	uint8_t 	luma_10to8;
+	uint8_t 	chroma_10to8;
+	uint8_t 	sclr_luma10to8;
+	uint8_t 	sclr_chroma10to8;
+
+	uint8_t 	direct_reflist[2][15];
 };
 
 struct ruvd_vc1 {
@@ -412,7 +421,7 @@ struct ruvd_msg {
 };
 
 /* driver dependent callback */
-typedef struct radeon_winsys_cs_handle* (*ruvd_set_dtb)
+typedef struct pb_buffer* (*ruvd_set_dtb)
 (struct ruvd_msg* msg, struct vl_video_buffer *vb);
 
 /* create an UVD decode */

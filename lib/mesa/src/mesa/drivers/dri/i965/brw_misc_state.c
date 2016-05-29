@@ -174,13 +174,17 @@ brw_get_depthstencil_tile_masks(struct intel_mipmap_tree *depth_mt,
    uint32_t tile_mask_x = 0, tile_mask_y = 0;
 
    if (depth_mt) {
-      intel_miptree_get_tile_masks(depth_mt, &tile_mask_x, &tile_mask_y, false);
+      intel_get_tile_masks(depth_mt->tiling, depth_mt->tr_mode,
+                           depth_mt->cpp, false,
+                           &tile_mask_x, &tile_mask_y);
 
       if (intel_miptree_level_has_hiz(depth_mt, depth_level)) {
          uint32_t hiz_tile_mask_x, hiz_tile_mask_y;
-         intel_miptree_get_tile_masks(depth_mt->hiz_buf->mt,
-                                      &hiz_tile_mask_x, &hiz_tile_mask_y,
-                                      false);
+         intel_get_tile_masks(depth_mt->hiz_buf->mt->tiling,
+                              depth_mt->hiz_buf->mt->tr_mode,
+                              depth_mt->hiz_buf->mt->cpp,
+                              false, &hiz_tile_mask_x,
+                              &hiz_tile_mask_y);
 
          /* Each HiZ row represents 2 rows of pixels */
          hiz_tile_mask_y = hiz_tile_mask_y << 1 | 1;
@@ -200,9 +204,11 @@ brw_get_depthstencil_tile_masks(struct intel_mipmap_tree *depth_mt,
          tile_mask_y |= 63;
       } else {
          uint32_t stencil_tile_mask_x, stencil_tile_mask_y;
-         intel_miptree_get_tile_masks(stencil_mt,
-                                      &stencil_tile_mask_x,
-                                      &stencil_tile_mask_y, false);
+         intel_get_tile_masks(stencil_mt->tiling,
+                              stencil_mt->tr_mode,
+                              stencil_mt->cpp,
+                              false, &stencil_tile_mask_x,
+                              &stencil_tile_mask_y);
 
          tile_mask_x |= stencil_tile_mask_x;
          tile_mask_y |= stencil_tile_mask_y;
@@ -862,12 +868,146 @@ brw_emit_select_pipeline(struct brw_context *brw, enum brw_pipeline pipeline)
    const uint32_t _3DSTATE_PIPELINE_SELECT =
       is_965 ? CMD_PIPELINE_SELECT_965 : CMD_PIPELINE_SELECT_GM45;
 
+   if (brw->use_resource_streamer && pipeline != BRW_RENDER_PIPELINE) {
+      /* From "BXML » GT » MI » vol1a GPU Overview » [Instruction]
+       * PIPELINE_SELECT [DevBWR+]":
+       *
+       *   Project: HSW, BDW, CHV, SKL, BXT
+       *
+       *   Hardware Binding Tables are only supported for 3D
+       *   workloads. Resource streamer must be enabled only for 3D
+       *   workloads. Resource streamer must be disabled for Media and GPGPU
+       *   workloads.
+       */
+      BEGIN_BATCH(1);
+      OUT_BATCH(MI_RS_CONTROL | 0);
+      ADVANCE_BATCH();
+
+      gen7_disable_hw_binding_tables(brw);
+
+      /* XXX - Disable gather constant pool too when we start using it. */
+   }
+
+   if (brw->gen >= 8 && brw->gen < 10) {
+      /* From the Broadwell PRM, Volume 2a: Instructions, PIPELINE_SELECT:
+       *
+       *   Software must clear the COLOR_CALC_STATE Valid field in
+       *   3DSTATE_CC_STATE_POINTERS command prior to send a PIPELINE_SELECT
+       *   with Pipeline Select set to GPGPU.
+       *
+       * The internal hardware docs recommend the same workaround for Gen9
+       * hardware too.
+       */
+      if (pipeline == BRW_COMPUTE_PIPELINE) {
+         BEGIN_BATCH(2);
+         OUT_BATCH(_3DSTATE_CC_STATE_POINTERS << 16 | (2 - 2));
+         OUT_BATCH(0);
+         ADVANCE_BATCH();
+
+         brw->ctx.NewDriverState |= BRW_NEW_CC_STATE;
+      }
+
+   } else if (brw->gen >= 6) {
+      /* From "BXML » GT » MI » vol1a GPU Overview » [Instruction]
+       * PIPELINE_SELECT [DevBWR+]":
+       *
+       *   Project: DEVSNB+
+       *
+       *   Software must ensure all the write caches are flushed through a
+       *   stalling PIPE_CONTROL command followed by another PIPE_CONTROL
+       *   command to invalidate read only caches prior to programming
+       *   MI_PIPELINE_SELECT command to change the Pipeline Select Mode.
+       */
+      const unsigned dc_flush =
+         brw->gen >= 7 ? PIPE_CONTROL_DATA_CACHE_FLUSH : 0;
+
+      if (brw->gen == 6) {
+         /* Hardware workaround: SNB B-Spec says:
+          *
+          *   Before a PIPE_CONTROL with Write Cache Flush Enable = 1, a
+          *   PIPE_CONTROL with any non-zero post-sync-op is required.
+          */
+         brw_emit_post_sync_nonzero_flush(brw);
+      }
+
+      brw_emit_pipe_control_flush(brw,
+                                  PIPE_CONTROL_RENDER_TARGET_FLUSH |
+                                  PIPE_CONTROL_DEPTH_CACHE_FLUSH |
+                                  dc_flush |
+                                  PIPE_CONTROL_NO_WRITE |
+                                  PIPE_CONTROL_CS_STALL);
+
+      brw_emit_pipe_control_flush(brw,
+                                  PIPE_CONTROL_TEXTURE_CACHE_INVALIDATE |
+                                  PIPE_CONTROL_CONST_CACHE_INVALIDATE |
+                                  PIPE_CONTROL_STATE_CACHE_INVALIDATE |
+                                  PIPE_CONTROL_INSTRUCTION_INVALIDATE |
+                                  PIPE_CONTROL_NO_WRITE);
+
+   } else {
+      /* From "BXML » GT » MI » vol1a GPU Overview » [Instruction]
+       * PIPELINE_SELECT [DevBWR+]":
+       *
+       *   Project: PRE-DEVSNB
+       *
+       *   Software must ensure the current pipeline is flushed via an
+       *   MI_FLUSH or PIPE_CONTROL prior to the execution of PIPELINE_SELECT.
+       */
+      BEGIN_BATCH(1);
+      OUT_BATCH(MI_FLUSH);
+      ADVANCE_BATCH();
+   }
+
    /* Select the pipeline */
    BEGIN_BATCH(1);
    OUT_BATCH(_3DSTATE_PIPELINE_SELECT << 16 |
              (brw->gen >= 9 ? (3 << 8) : 0) |
              (pipeline == BRW_COMPUTE_PIPELINE ? 2 : 0));
    ADVANCE_BATCH();
+
+   if (brw->gen == 7 && !brw->is_haswell &&
+       pipeline == BRW_RENDER_PIPELINE) {
+      /* From "BXML » GT » MI » vol1a GPU Overview » [Instruction]
+       * PIPELINE_SELECT [DevBWR+]":
+       *
+       *   Project: DEVIVB, DEVHSW:GT3:A0
+       *
+       *   Software must send a pipe_control with a CS stall and a post sync
+       *   operation and then a dummy DRAW after every MI_SET_CONTEXT and
+       *   after any PIPELINE_SELECT that is enabling 3D mode.
+       */
+      gen7_emit_cs_stall_flush(brw);
+
+      BEGIN_BATCH(7);
+      OUT_BATCH(CMD_3D_PRIM << 16 | (7 - 2));
+      OUT_BATCH(_3DPRIM_POINTLIST);
+      OUT_BATCH(0);
+      OUT_BATCH(0);
+      OUT_BATCH(0);
+      OUT_BATCH(0);
+      OUT_BATCH(0);
+      ADVANCE_BATCH();
+   }
+
+   if (brw->use_resource_streamer && pipeline == BRW_RENDER_PIPELINE) {
+      /* From "BXML » GT » MI » vol1a GPU Overview » [Instruction]
+       * PIPELINE_SELECT [DevBWR+]":
+       *
+       *   Project: HSW, BDW, CHV, SKL, BXT
+       *
+       *   Hardware Binding Tables are only supported for 3D
+       *   workloads. Resource streamer must be enabled only for 3D
+       *   workloads. Resource streamer must be disabled for Media and GPGPU
+       *   workloads.
+       */
+      BEGIN_BATCH(1);
+      OUT_BATCH(MI_RS_CONTROL | 1);
+      ADVANCE_BATCH();
+
+      gen7_enable_hw_binding_tables(brw);
+
+      /* XXX - Re-enable gather constant pool here. */
+   }
 }
 
 /**
@@ -880,14 +1020,6 @@ brw_upload_invariant_state(struct brw_context *brw)
 
    brw_emit_select_pipeline(brw, BRW_RENDER_PIPELINE);
    brw->last_pipeline = BRW_RENDER_PIPELINE;
-
-   if (brw->gen < 6) {
-      /* Disable depth offset clamping. */
-      BEGIN_BATCH(2);
-      OUT_BATCH(_3DSTATE_GLOBAL_DEPTH_OFFSET_CLAMP << 16 | (2 - 2));
-      OUT_BATCH_F(0.0);
-      ADVANCE_BATCH();
-   }
 
    if (brw->gen >= 8) {
       BEGIN_BATCH(3);

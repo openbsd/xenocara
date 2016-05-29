@@ -28,15 +28,14 @@
 
 #include "main/core.h"
 #include "main/context.h"
-#include "ir.h"
-#include "ir_uniform.h"
-#include "program/hash_table.h"
-#include "../glsl/program.h"
-#include "../glsl/ir_uniform.h"
-#include "../glsl/glsl_parser_extras.h"
 #include "main/shaderapi.h"
 #include "main/shaderobj.h"
-#include "uniforms.h"
+#include "main/uniforms.h"
+#include "compiler/glsl/ir.h"
+#include "compiler/glsl/ir_uniform.h"
+#include "compiler/glsl/glsl_parser_extras.h"
+#include "compiler/glsl/program.h"
+#include "program/hash_table.h"
 
 
 extern "C" void GLAPIENTRY
@@ -438,7 +437,7 @@ _mesa_get_uniform(struct gl_context *ctx, GLuint program, GLint location,
 		  dst[didx].i = src[sidx].i ? 1 : 0;
 		  break;
 	       case GLSL_TYPE_DOUBLE:
-		  dst[didx].i = *(double *)&src[sidx].f;
+		  dst[didx].i = IROUNDD(*(double *)&src[sidx].f);
 		  break;
 	       default:
 		  assert(!"Should not get here.");
@@ -759,6 +758,10 @@ _mesa_uniform(struct gl_context *ctx, struct gl_shader_program *shProg,
             return;
          }
       }
+      /* We need to reset the validate flag on changes to samplers in case
+       * two different sampler types are set to the same texture unit.
+       */
+      ctx->_Shader->Validated = GL_FALSE;
    }
 
    if (uni->type->is_image()) {
@@ -826,11 +829,11 @@ _mesa_uniform(struct gl_context *ctx, struct gl_shader_program *shProg,
 
 	 /* If the shader stage doesn't use the sampler uniform, skip this.
 	  */
-	 if (sh == NULL || !uni->sampler[i].active)
+	 if (sh == NULL || !uni->opaque[i].active)
 	    continue;
 
          for (int j = 0; j < count; j++) {
-            sh->SamplerUnits[uni->sampler[i].index + offset + j] =
+            sh->SamplerUnits[uni->opaque[i].index + offset + j] =
                ((unsigned *) values)[j];
          }
 
@@ -872,11 +875,11 @@ _mesa_uniform(struct gl_context *ctx, struct gl_shader_program *shProg,
     */
    if (uni->type->is_image()) {
       for (int i = 0; i < MESA_SHADER_STAGES; i++) {
-	 if (uni->image[i].active) {
+	 if (uni->opaque[i].active) {
             struct gl_shader *sh = shProg->_LinkedShaders[i];
 
             for (int j = 0; j < count; j++)
-               sh->ImageUnits[uni->image[i].index + offset + j] =
+               sh->ImageUnits[uni->opaque[i].index + offset + j] =
                   ((GLint *) values)[j];
          }
       }

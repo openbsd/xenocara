@@ -37,6 +37,7 @@
 #include "util/bitset.h"
 #include "brw_fs.h"
 #include "brw_cfg.h"
+#include "brw_eu.h"
 
 namespace { /* avoid conflict with opt_copy_propagation_elements */
 struct acp_entry : public exec_node {
@@ -86,7 +87,7 @@ public:
    void setup_initial_values();
    void run();
 
-   void dump_block_data() const;
+   void dump_block_data() const UNUSED;
 
    void *mem_ctx;
    cfg_t *cfg;
@@ -154,7 +155,7 @@ fs_copy_prop_dataflow::setup_initial_values()
    /* Initialize the COPY and KILL sets. */
    foreach_block (block, cfg) {
       foreach_inst_in_block(fs_inst, inst, block) {
-         if (inst->dst.file != GRF)
+         if (inst->dst.file != VGRF)
             continue;
 
          /* Mark ACP entries which are killed by this instruction. */
@@ -276,33 +277,75 @@ is_logic_op(enum opcode opcode)
 }
 
 static bool
-can_change_source_types(fs_inst *inst)
+can_take_stride(fs_inst *inst, unsigned arg, unsigned stride,
+                const brw_device_info *devinfo)
 {
-   return !inst->src[0].abs && !inst->src[0].negate &&
-          inst->dst.type == inst->src[0].type &&
-          (inst->opcode == BRW_OPCODE_MOV ||
-           (inst->opcode == BRW_OPCODE_SEL &&
-            inst->predicate != BRW_PREDICATE_NONE &&
-            !inst->src[1].abs && !inst->src[1].negate));
+   if (stride > 4)
+      return false;
+
+   /* 3-source instructions can only be Align16, which restricts what strides
+    * they can take. They can only take a stride of 1 (the usual case), or 0
+    * with a special "repctrl" bit. But the repctrl bit doesn't work for
+    * 64-bit datatypes, so if the source type is 64-bit then only a stride of
+    * 1 is allowed. From the Broadwell PRM, Volume 7 "3D Media GPGPU", page
+    * 944:
+    *
+    *    This is applicable to 32b datatypes and 16b datatype. 64b datatypes
+    *    cannot use the replicate control.
+    */
+   if (inst->is_3src()) {
+      if (type_sz(inst->src[arg].type) > 4)
+         return stride == 1;
+      else
+         return stride == 1 || stride == 0;
+   }
+
+   /* From the Broadwell PRM, Volume 2a "Command Reference - Instructions",
+    * page 391 ("Extended Math Function"):
+    *
+    *     The following restrictions apply for align1 mode: Scalar source is
+    *     supported. Source and destination horizontal stride must be the
+    *     same.
+    *
+    * From the Haswell PRM Volume 2b "Command Reference - Instructions", page
+    * 134 ("Extended Math Function"):
+    *
+    *    Scalar source is supported. Source and destination horizontal stride
+    *    must be 1.
+    *
+    * and similar language exists for IVB and SNB. Pre-SNB, math instructions
+    * are sends, so the sources are moved to MRF's and there are no
+    * restrictions.
+    */
+   if (inst->is_math()) {
+      if (devinfo->gen == 6 || devinfo->gen == 7) {
+         assert(inst->dst.stride == 1);
+         return stride == 1 || stride == 0;
+      } else if (devinfo->gen >= 8) {
+         return stride == inst->dst.stride || stride == 0;
+      }
+   }
+
+   return true;
 }
 
 bool
 fs_visitor::try_copy_propagate(fs_inst *inst, int arg, acp_entry *entry)
 {
-   if (inst->src[arg].file != GRF)
+   if (inst->src[arg].file != VGRF)
       return false;
 
    if (entry->src.file == IMM)
       return false;
-   assert(entry->src.file == GRF || entry->src.file == UNIFORM ||
+   assert(entry->src.file == VGRF || entry->src.file == UNIFORM ||
           entry->src.file == ATTR);
 
    if (entry->opcode == SHADER_OPCODE_LOAD_PAYLOAD &&
        inst->opcode == SHADER_OPCODE_LOAD_PAYLOAD)
       return false;
 
-   assert(entry->dst.file == GRF);
-   if (inst->src[arg].reg != entry->dst.reg)
+   assert(entry->dst.file == VGRF);
+   if (inst->src[arg].nr != entry->dst.nr)
       return false;
 
    /* Bail if inst is reading a range that isn't contained in the range
@@ -337,7 +380,8 @@ fs_visitor::try_copy_propagate(fs_inst *inst, int arg, acp_entry *entry)
    /* Bail if the result of composing both strides would exceed the
     * hardware limit.
     */
-   if (entry->src.stride * inst->src[arg].stride > 4)
+   if (!can_take_stride(inst, arg, entry->src.stride * inst->src[arg].stride,
+                        devinfo))
       return false;
 
    /* Bail if the instruction type is larger than the execution type of the
@@ -368,7 +412,7 @@ fs_visitor::try_copy_propagate(fs_inst *inst, int arg, acp_entry *entry)
 
    if (has_source_modifiers &&
        entry->dst.type != inst->src[arg].type &&
-       !can_change_source_types(inst))
+       !inst->can_change_types())
       return false;
 
    if (devinfo->gen >= 8 && (entry->src.negate || entry->src.abs) &&
@@ -380,8 +424,8 @@ fs_visitor::try_copy_propagate(fs_inst *inst, int arg, acp_entry *entry)
       switch(inst->opcode) {
       case BRW_OPCODE_SEL:
          if (inst->src[1].file != IMM ||
-             inst->src[1].fixed_hw_reg.dw1.f < 0.0 ||
-             inst->src[1].fixed_hw_reg.dw1.f > 1.0) {
+             inst->src[1].f < 0.0 ||
+             inst->src[1].f > 1.0) {
             return false;
          }
          break;
@@ -391,19 +435,20 @@ fs_visitor::try_copy_propagate(fs_inst *inst, int arg, acp_entry *entry)
    }
 
    inst->src[arg].file = entry->src.file;
-   inst->src[arg].reg = entry->src.reg;
+   inst->src[arg].nr = entry->src.nr;
    inst->src[arg].stride *= entry->src.stride;
    inst->saturate = inst->saturate || entry->saturate;
 
    switch (entry->src.file) {
    case UNIFORM:
    case BAD_FILE:
-   case HW_REG:
+   case ARF:
+   case FIXED_GRF:
       inst->src[arg].reg_offset = entry->src.reg_offset;
       inst->src[arg].subreg_offset = entry->src.subreg_offset;
       break;
    case ATTR:
-   case GRF:
+   case VGRF:
       {
          /* In this case, we'll just leave the width alone.  The source
           * register could have different widths depending on how it is
@@ -427,9 +472,10 @@ fs_visitor::try_copy_propagate(fs_inst *inst, int arg, acp_entry *entry)
          inst->src[arg].subreg_offset = offset % 32;
       }
       break;
-   default:
-      unreachable("Invalid register file");
-      break;
+
+   case MRF:
+   case IMM:
+      unreachable("not reached");
    }
 
    if (has_source_modifiers) {
@@ -438,7 +484,7 @@ fs_visitor::try_copy_propagate(fs_inst *inst, int arg, acp_entry *entry)
           * type.  If we got here, then we can just change the source and
           * destination types of the instruction and keep going.
           */
-         assert(can_change_source_types(inst));
+         assert(inst->can_change_types());
          for (int i = 0; i < inst->sources; i++) {
             inst->src[i].type = entry->dst.type;
          }
@@ -466,11 +512,11 @@ fs_visitor::try_constant_propagate(fs_inst *inst, acp_entry *entry)
       return false;
 
    for (int i = inst->sources - 1; i >= 0; i--) {
-      if (inst->src[i].file != GRF)
+      if (inst->src[i].file != VGRF)
          continue;
 
-      assert(entry->dst.file == GRF);
-      if (inst->src[i].reg != entry->dst.reg)
+      assert(entry->dst.file == VGRF);
+      if (inst->src[i].nr != entry->dst.nr)
          continue;
 
       /* Bail if inst is reading a range that isn't contained in the range
@@ -487,14 +533,14 @@ fs_visitor::try_constant_propagate(fs_inst *inst, acp_entry *entry)
 
       if (inst->src[i].abs) {
          if ((devinfo->gen >= 8 && is_logic_op(inst->opcode)) ||
-             !brw_abs_immediate(val.type, &val.fixed_hw_reg)) {
+             !brw_abs_immediate(val.type, &val.as_brw_reg())) {
             continue;
          }
       }
 
       if (inst->src[i].negate) {
          if ((devinfo->gen >= 8 && is_logic_op(inst->opcode)) ||
-             !brw_negate_immediate(val.type, &val.fixed_hw_reg)) {
+             !brw_negate_immediate(val.type, &val.as_brw_reg())) {
             continue;
          }
       }
@@ -615,10 +661,25 @@ fs_visitor::try_constant_propagate(fs_inst *inst, acp_entry *entry)
           * anyway.
           */
          assert(i == 0);
-         if (inst->src[0].fixed_hw_reg.dw1.f != 0.0f) {
+         if (inst->src[0].f != 0.0f) {
             inst->opcode = BRW_OPCODE_MOV;
             inst->src[0] = val;
-            inst->src[0].fixed_hw_reg.dw1.f = 1.0f / inst->src[0].fixed_hw_reg.dw1.f;
+            inst->src[0].f = 1.0f / inst->src[0].f;
+            progress = true;
+         }
+         break;
+
+      case SHADER_OPCODE_UNTYPED_ATOMIC:
+      case SHADER_OPCODE_UNTYPED_SURFACE_READ:
+      case SHADER_OPCODE_UNTYPED_SURFACE_WRITE:
+      case SHADER_OPCODE_TYPED_ATOMIC:
+      case SHADER_OPCODE_TYPED_SURFACE_READ:
+      case SHADER_OPCODE_TYPED_SURFACE_WRITE:
+         /* We only propagate into the surface argument of the
+          * instruction. Everything else goes through LOAD_PAYLOAD.
+          */
+         if (i == 1) {
+            inst->src[i] = val;
             progress = true;
          }
          break;
@@ -647,9 +708,9 @@ static bool
 can_propagate_from(fs_inst *inst)
 {
    return (inst->opcode == BRW_OPCODE_MOV &&
-           inst->dst.file == GRF &&
-           ((inst->src[0].file == GRF &&
-             (inst->src[0].reg != inst->dst.reg ||
+           inst->dst.file == VGRF &&
+           ((inst->src[0].file == VGRF &&
+             (inst->src[0].nr != inst->dst.nr ||
               inst->src[0].reg_offset != inst->dst.reg_offset)) ||
             inst->src[0].file == ATTR ||
             inst->src[0].file == UNIFORM ||
@@ -670,10 +731,10 @@ fs_visitor::opt_copy_propagate_local(void *copy_prop_ctx, bblock_t *block,
    foreach_inst_in_block(fs_inst, inst, block) {
       /* Try propagating into this instruction. */
       for (int i = 0; i < inst->sources; i++) {
-         if (inst->src[i].file != GRF)
+         if (inst->src[i].file != VGRF)
             continue;
 
-         foreach_in_list(acp_entry, entry, &acp[inst->src[i].reg % ACP_HASH_SIZE]) {
+         foreach_in_list(acp_entry, entry, &acp[inst->src[i].nr % ACP_HASH_SIZE]) {
             if (try_constant_propagate(inst, entry))
                progress = true;
 
@@ -683,8 +744,8 @@ fs_visitor::opt_copy_propagate_local(void *copy_prop_ctx, bblock_t *block,
       }
 
       /* kill the destination from the ACP */
-      if (inst->dst.file == GRF) {
-	 foreach_in_list_safe(acp_entry, entry, &acp[inst->dst.reg % ACP_HASH_SIZE]) {
+      if (inst->dst.file == VGRF) {
+         foreach_in_list_safe(acp_entry, entry, &acp[inst->dst.nr % ACP_HASH_SIZE]) {
 	    if (inst->overwrites_reg(entry->dst)) {
 	       entry->remove();
 	    }
@@ -711,14 +772,14 @@ fs_visitor::opt_copy_propagate_local(void *copy_prop_ctx, bblock_t *block,
          entry->regs_written = inst->regs_written;
          entry->opcode = inst->opcode;
          entry->saturate = inst->saturate;
-	 acp[entry->dst.reg % ACP_HASH_SIZE].push_tail(entry);
+         acp[entry->dst.nr % ACP_HASH_SIZE].push_tail(entry);
       } else if (inst->opcode == SHADER_OPCODE_LOAD_PAYLOAD &&
-                 inst->dst.file == GRF) {
+                 inst->dst.file == VGRF) {
          int offset = 0;
          for (int i = 0; i < inst->sources; i++) {
             int effective_width = i < inst->header_size ? 8 : inst->exec_size;
             int regs_written = effective_width / 8;
-            if (inst->src[i].file == GRF) {
+            if (inst->src[i].file == VGRF) {
                acp_entry *entry = ralloc(copy_prop_ctx, acp_entry);
                entry->dst = inst->dst;
                entry->dst.reg_offset = offset;
@@ -726,7 +787,7 @@ fs_visitor::opt_copy_propagate_local(void *copy_prop_ctx, bblock_t *block,
                entry->regs_written = regs_written;
                entry->opcode = inst->opcode;
                if (!entry->dst.equals(inst->src[i])) {
-                  acp[entry->dst.reg % ACP_HASH_SIZE].push_tail(entry);
+                  acp[entry->dst.nr % ACP_HASH_SIZE].push_tail(entry);
                } else {
                   ralloc_free(entry);
                }
@@ -769,7 +830,7 @@ fs_visitor::opt_copy_propagate()
       for (int i = 0; i < dataflow.num_acp; i++) {
          if (BITSET_TEST(dataflow.bd[block->num].livein, i)) {
             struct acp_entry *entry = dataflow.acp[i];
-            in_acp[entry->dst.reg % ACP_HASH_SIZE].push_tail(entry);
+            in_acp[entry->dst.nr % ACP_HASH_SIZE].push_tail(entry);
          }
       }
 

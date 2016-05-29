@@ -23,90 +23,90 @@
 #include "nouveau_vp3_video.h"
 
 struct strparm_bsp {
-	uint32_t w0[4]; // bits 0-23 length, bits 24-31 addr_hi
-	uint32_t w1[4]; // bit 8-24 addr_lo
-	uint32_t unk20; // should be idx * 0x8000000, bitstream offset
-	uint32_t do_crypto_crap; // set to 0
+   uint32_t w0[4]; // bits 0-23 length, bits 24-31 addr_hi
+   uint32_t w1[4]; // bit 8-24 addr_lo
+   uint32_t unk20; // should be idx * 0x8000000, bitstream offset
+   uint32_t do_crypto_crap; // set to 0
 };
 
 struct mpeg12_picparm_bsp {
-	uint16_t width;
-	uint16_t height;
-	uint8_t picture_structure;
-	uint8_t picture_coding_type;
-	uint8_t intra_dc_precision;
-	uint8_t frame_pred_frame_dct;
-	uint8_t concealment_motion_vectors;
-	uint8_t intra_vlc_format;
-	uint16_t pad;
-	uint8_t f_code[2][2];
+   uint16_t width;
+   uint16_t height;
+   uint8_t picture_structure;
+   uint8_t picture_coding_type;
+   uint8_t intra_dc_precision;
+   uint8_t frame_pred_frame_dct;
+   uint8_t concealment_motion_vectors;
+   uint8_t intra_vlc_format;
+   uint16_t pad;
+   uint8_t f_code[2][2];
 };
 
 struct mpeg4_picparm_bsp {
-	uint16_t width;
-	uint16_t height;
-	uint8_t vop_time_increment_size;
-	uint8_t interlaced;
-	uint8_t resync_marker_disable;
+   uint16_t width;
+   uint16_t height;
+   uint8_t vop_time_increment_size;
+   uint8_t interlaced;
+   uint8_t resync_marker_disable;
 };
 
 struct vc1_picparm_bsp {
-	uint16_t width;
-	uint16_t height;
-	uint8_t profile; // 04 0 simple, 1 main, 2 advanced
-	uint8_t postprocflag; // 05
-	uint8_t pulldown; // 06
-	uint8_t interlaced; // 07
-	uint8_t tfcntrflag; // 08
-	uint8_t finterpflag; // 09
-	uint8_t psf; // 0a
-	uint8_t pad; // 0b
-	uint8_t multires; // 0c
-	uint8_t syncmarker; // 0d
-	uint8_t rangered; // 0e
-	uint8_t maxbframes; // 0f
-	uint8_t dquant; // 10
-	uint8_t panscan_flag; // 11
-	uint8_t refdist_flag; // 12
-	uint8_t quantizer; // 13
-	uint8_t extended_mv; // 14
-	uint8_t extended_dmv; // 15
-	uint8_t overlap; // 16
-	uint8_t vstransform; // 17
+   uint16_t width;
+   uint16_t height;
+   uint8_t profile; // 04 0 simple, 1 main, 2 advanced
+   uint8_t postprocflag; // 05
+   uint8_t pulldown; // 06
+   uint8_t interlaced; // 07
+   uint8_t tfcntrflag; // 08
+   uint8_t finterpflag; // 09
+   uint8_t psf; // 0a
+   uint8_t pad; // 0b
+   uint8_t multires; // 0c
+   uint8_t syncmarker; // 0d
+   uint8_t rangered; // 0e
+   uint8_t maxbframes; // 0f
+   uint8_t dquant; // 10
+   uint8_t panscan_flag; // 11
+   uint8_t refdist_flag; // 12
+   uint8_t quantizer; // 13
+   uint8_t extended_mv; // 14
+   uint8_t extended_dmv; // 15
+   uint8_t overlap; // 16
+   uint8_t vstransform; // 17
 };
 
 struct h264_picparm_bsp {
-	// 00
-	uint32_t unk00;
-	// 04
-	uint32_t log2_max_frame_num_minus4; // 04 checked
-	uint32_t pic_order_cnt_type; // 08 checked
-	uint32_t log2_max_pic_order_cnt_lsb_minus4; // 0c checked
-	uint32_t delta_pic_order_always_zero_flag; // 10, or unknown
+   // 00
+   uint32_t unk00;
+   // 04
+   uint32_t log2_max_frame_num_minus4; // 04 checked
+   uint32_t pic_order_cnt_type; // 08 checked
+   uint32_t log2_max_pic_order_cnt_lsb_minus4; // 0c checked
+   uint32_t delta_pic_order_always_zero_flag; // 10, or unknown
 
-	uint32_t frame_mbs_only_flag; // 14, always 1?
-	uint32_t direct_8x8_inference_flag; // 18, always 1?
-	uint32_t width_mb; // 1c checked
-	uint32_t height_mb; // 20 checked
-	// 24
-	//struct picparm2
-		uint32_t entropy_coding_mode_flag; // 00, checked
-		uint32_t pic_order_present_flag; // 04 checked
-		uint32_t unk; // 08 seems to be 0?
-		uint32_t pad1; // 0c seems to be 0?
-		uint32_t pad2; // 10 always 0 ?
-		uint32_t num_ref_idx_l0_active_minus1; // 14 always 0?
-		uint32_t num_ref_idx_l1_active_minus1; // 18 always 0?
-		uint32_t weighted_pred_flag; // 1c checked
-		uint32_t weighted_bipred_idc; // 20 checked
-		uint32_t pic_init_qp_minus26; // 24 checked
-		uint32_t deblocking_filter_control_present_flag; // 28 always 1?
-		uint32_t redundant_pic_cnt_present_flag; // 2c always 0?
-		uint32_t transform_8x8_mode_flag; // 30 checked
-		uint32_t mb_adaptive_frame_field_flag; // 34 checked-ish
-		uint8_t field_pic_flag; // 38 checked
-		uint8_t bottom_field_flag; // 39 checked
-		uint8_t real_pad[0x1b]; // XX why?
+   uint32_t frame_mbs_only_flag; // 14, always 1?
+   uint32_t direct_8x8_inference_flag; // 18, always 1?
+   uint32_t width_mb; // 1c checked
+   uint32_t height_mb; // 20 checked
+   // 24
+   //struct picparm2
+   uint32_t entropy_coding_mode_flag; // 00, checked
+   uint32_t pic_order_present_flag; // 04 checked
+   uint32_t unk; // 08 seems to be 0?
+   uint32_t pad1; // 0c seems to be 0?
+   uint32_t pad2; // 10 always 0 ?
+   uint32_t num_ref_idx_l0_active_minus1; // 14 always 0?
+   uint32_t num_ref_idx_l1_active_minus1; // 18 always 0?
+   uint32_t weighted_pred_flag; // 1c checked
+   uint32_t weighted_bipred_idc; // 20 checked
+   uint32_t pic_init_qp_minus26; // 24 checked
+   uint32_t deblocking_filter_control_present_flag; // 28 always 1?
+   uint32_t redundant_pic_cnt_present_flag; // 2c always 0?
+   uint32_t transform_8x8_mode_flag; // 30 checked
+   uint32_t mb_adaptive_frame_field_flag; // 34 checked-ish
+   uint8_t field_pic_flag; // 38 checked
+   uint8_t bottom_field_flag; // 39 checked
+   uint8_t real_pad[0x1b]; // XX why?
 };
 
 static uint32_t
@@ -230,20 +230,60 @@ nouveau_vp3_fill_picparm_h264_bsp(struct nouveau_vp3_decoder *dec,
    return caps | 3;
 }
 
-uint32_t
-nouveau_vp3_bsp(struct nouveau_vp3_decoder *dec,  union pipe_desc desc,
-                struct nouveau_vp3_video_buffer *target,
-                unsigned comm_seq, unsigned num_buffers,
-                const void *const *data, const unsigned *num_bytes)
+static inline struct strparm_bsp *strparm_bsp(struct nouveau_vp3_decoder *dec)
 {
-   enum pipe_video_format codec = u_reduce_video_profile(dec->base.profile);
+   unsigned comm_seq = dec->fence_seq;
    struct nouveau_bo *bsp_bo = dec->bsp_bo[comm_seq % NOUVEAU_VP3_VIDEO_QDEPTH];
-   char *bsp;
-   uint32_t endmarker, caps;
-   struct strparm_bsp *str_bsp;
+   return (struct strparm_bsp *)(bsp_bo->map + 0x100);
+}
+
+void
+nouveau_vp3_bsp_begin(struct nouveau_vp3_decoder *dec)
+{
+   struct strparm_bsp *str_bsp = strparm_bsp(dec);
+
+   dec->bsp_ptr = (void *)str_bsp;
+   memset(str_bsp, 0, 0x80);
+   dec->bsp_ptr += 0x100;
+   /* Reserved for picparm_vp */
+   dec->bsp_ptr += 0x300;
+   /* Reserved for comm */
+#if !NOUVEAU_VP3_DEBUG_FENCE
+   memset(dec->bsp_ptr, 0, 0x200);
+#endif
+   dec->bsp_ptr += 0x200;
+}
+
+void
+nouveau_vp3_bsp_next(struct nouveau_vp3_decoder *dec, unsigned num_buffers,
+                     const void *const *data, const unsigned *num_bytes)
+{
+#ifndef NDEBUG
+   unsigned comm_seq = dec->fence_seq;
+   struct nouveau_bo *bsp_bo = dec->bsp_bo[comm_seq % NOUVEAU_VP3_VIDEO_QDEPTH];
+#endif
+   struct strparm_bsp *str_bsp = strparm_bsp(dec);
    int i;
 
-   bsp = bsp_bo->map;
+   for (i = 0; i < num_buffers; ++i) {
+#ifndef NDEBUG
+      assert(bsp_bo->size >= str_bsp->w0[0] + num_bytes[i]);
+#endif
+      memcpy(dec->bsp_ptr, data[i], num_bytes[i]);
+      dec->bsp_ptr += num_bytes[i];
+      str_bsp->w0[0] += num_bytes[i];
+   }
+}
+
+uint32_t
+nouveau_vp3_bsp_end(struct nouveau_vp3_decoder *dec, union pipe_desc desc)
+{
+   enum pipe_video_format codec = u_reduce_video_profile(dec->base.profile);
+   unsigned comm_seq = dec->fence_seq;
+   struct nouveau_bo *bsp_bo = dec->bsp_bo[comm_seq % NOUVEAU_VP3_VIDEO_QDEPTH];
+   uint32_t endmarker, caps;
+   struct strparm_bsp *str_bsp = strparm_bsp(dec);
+   char *bsp = bsp_bo->map;
    /*
     * 0x000..0x100: picparm_bsp
     * 0x200..0x500: picparm_vp
@@ -277,34 +317,21 @@ nouveau_vp3_bsp(struct nouveau_vp3_decoder *dec,  union pipe_desc desc,
    caps |= 1 << 17; // enable watchdog
    caps |= 0 << 18; // do not report error to VP, so it can continue decoding what we have
    caps |= 0 << 19; // if enabled, use crypto crap?
-   bsp += 0x100;
 
-   str_bsp = (struct strparm_bsp *)bsp;
-   memset(str_bsp, 0, 0x80);
-   str_bsp->w0[0] = 16;
+   str_bsp = strparm_bsp(dec);
    str_bsp->w1[0] = 0x1;
-   bsp += 0x100;
-   /* Reserved for picparm_vp */
-   bsp += 0x300;
-   /* Reserved for comm */
-#if !NOUVEAU_VP3_DEBUG_FENCE
-   memset(bsp, 0, 0x200);
-#endif
-   bsp += 0x200;
-   for (i = 0; i < num_buffers; ++i) {
-      memcpy(bsp, data[i], num_bytes[i]);
-      bsp += num_bytes[i];
-      str_bsp->w0[0] += num_bytes[i];
-   }
 
    /* Append end sequence */
-   *(uint32_t *)bsp = endmarker;
-   bsp += 4;
-   *(uint32_t *)bsp = 0x00000000;
-   bsp += 4;
-   *(uint32_t *)bsp = endmarker;
-   bsp += 4;
-   *(uint32_t *)bsp = 0x00000000;
+   *(uint32_t *)dec->bsp_ptr = endmarker;
+   dec->bsp_ptr += 4;
+   *(uint32_t *)dec->bsp_ptr = 0x00000000;
+   dec->bsp_ptr += 4;
+   *(uint32_t *)dec->bsp_ptr = endmarker;
+   dec->bsp_ptr += 4;
+   *(uint32_t *)dec->bsp_ptr = 0x00000000;
+   str_bsp->w0[0] += 16;
+
+   dec->bsp_ptr = NULL;
 
    return caps;
 }

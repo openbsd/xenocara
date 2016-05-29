@@ -64,6 +64,7 @@ is_constant_value(struct vc4_compile *c, struct qreg reg,
                   uint32_t val)
 {
         if (reg.file == QFILE_UNIF &&
+            !reg.pack &&
             c->uniform_contents[reg.index] == QUNIFORM_CONSTANT &&
             c->uniform_data[reg.index] == val) {
                 return true;
@@ -93,7 +94,12 @@ static void
 replace_with_mov(struct vc4_compile *c, struct qinst *inst, struct qreg arg)
 {
         dump_from(c, inst);
-        inst->op = QOP_MOV;
+        if (qir_is_mul(inst))
+                inst->op = QOP_MMOV;
+        else if (qir_is_float_input(inst))
+                inst->op = QOP_FMOV;
+        else
+                inst->op = QOP_MOV;
         inst->src[0] = arg;
         inst->src[1] = c->undef;
         dump_to(c, inst);
@@ -139,47 +145,29 @@ qir_opt_algebraic(struct vc4_compile *c)
 
         list_for_each_entry(struct qinst, inst, &c->instructions, link) {
                 switch (inst->op) {
-                case QOP_SEL_X_Y_ZS:
-                case QOP_SEL_X_Y_ZC:
-                case QOP_SEL_X_Y_NS:
-                case QOP_SEL_X_Y_NC:
-                case QOP_SEL_X_Y_CS:
-                case QOP_SEL_X_Y_CC:
-                        if (is_zero(c, inst->src[1])) {
-                                /* Replace references to a 0 uniform value
-                                 * with the SEL_X_0 equivalent.
-                                 */
-                                dump_from(c, inst);
-                                inst->op -= (QOP_SEL_X_Y_ZS - QOP_SEL_X_0_ZS);
-                                inst->src[1] = c->undef;
+                case QOP_FMIN:
+                        if (is_1f(c, inst->src[1]) &&
+                            inst->src[0].pack >= QPU_UNPACK_8D_REP &&
+                            inst->src[0].pack <= QPU_UNPACK_8D) {
+                                replace_with_mov(c, inst, inst->src[0]);
                                 progress = true;
-                                dump_to(c, inst);
-                                break;
                         }
+                        break;
 
-                        if (is_zero(c, inst->src[0])) {
-                                /* Replace references to a 0 uniform value
-                                 * with the SEL_X_0 equivalent, flipping the
-                                 * condition being evaluated since the operand
-                                 * order is flipped.
-                                 */
-                                dump_from(c, inst);
-                                inst->op -= QOP_SEL_X_Y_ZS;
-                                inst->op ^= 1;
-                                inst->op += QOP_SEL_X_0_ZS;
-                                inst->src[0] = inst->src[1];
-                                inst->src[1] = c->undef;
+                case QOP_FMAX:
+                        if (is_zero(c, inst->src[1]) &&
+                            inst->src[0].pack >= QPU_UNPACK_8D_REP &&
+                            inst->src[0].pack <= QPU_UNPACK_8D) {
+                                replace_with_mov(c, inst, inst->src[0]);
                                 progress = true;
-                                dump_to(c, inst);
-                                break;
                         }
-
                         break;
 
                 case QOP_FSUB:
                 case QOP_SUB:
                         if (is_zero(c, inst->src[1])) {
                                 replace_with_mov(c, inst, inst->src[0]);
+                                progress = true;
                         }
                         break;
 

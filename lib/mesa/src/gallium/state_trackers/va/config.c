@@ -28,9 +28,13 @@
 
 #include "pipe/p_screen.h"
 
+#include "util/u_video.h"
+
 #include "vl/vl_winsys.h"
 
 #include "va_private.h"
+
+DEBUG_GET_ONCE_BOOL_OPTION(mpeg4, "VAAPI_MPEG4_ENABLED", false)
 
 VAStatus
 vlVaQueryConfigProfiles(VADriverContextP ctx, VAProfile *profile_list, int *num_profiles)
@@ -45,12 +49,19 @@ vlVaQueryConfigProfiles(VADriverContextP ctx, VAProfile *profile_list, int *num_
    *num_profiles = 0;
 
    pscreen = VL_VA_PSCREEN(ctx);
-   for (p = PIPE_VIDEO_PROFILE_MPEG2_SIMPLE; p <= PIPE_VIDEO_PROFILE_MPEG4_AVC_HIGH; ++p)
+   for (p = PIPE_VIDEO_PROFILE_MPEG2_SIMPLE; p <= PIPE_VIDEO_PROFILE_HEVC_MAIN_444; ++p) {
+      if (u_reduce_video_profile(p) == PIPE_VIDEO_FORMAT_MPEG4 && !debug_get_option_mpeg4())
+         continue;
+
       if (pscreen->get_video_param(pscreen, p, PIPE_VIDEO_ENTRYPOINT_BITSTREAM, PIPE_VIDEO_CAP_SUPPORTED)) {
          vap = PipeToProfile(p);
          if (vap != VAProfileNone)
             profile_list[(*num_profiles)++] = vap;
       }
+   }
+
+   /* Support postprocessing through vl_compositor */
+   profile_list[(*num_profiles)++] = VAProfileNone;
 
    return VA_STATUS_SUCCESS;
 }
@@ -66,6 +77,11 @@ vlVaQueryConfigEntrypoints(VADriverContextP ctx, VAProfile profile,
       return VA_STATUS_ERROR_INVALID_CONTEXT;
 
    *num_entrypoints = 0;
+
+   if (profile == VAProfileNone) {
+      entrypoint_list[(*num_entrypoints)++] = VAEntrypointVideoProc;
+      return VA_STATUS_SUCCESS;
+   }
 
    p = ProfileToPipe(profile);
    if (p == PIPE_VIDEO_PROFILE_UNKNOWN)
@@ -96,7 +112,7 @@ vlVaGetConfigAttributes(VADriverContextP ctx, VAProfile profile, VAEntrypoint en
          value = VA_RT_FORMAT_YUV420;
          break;
       case VAConfigAttribRateControl:
-	 value = VA_RC_NONE;
+         value = VA_RC_NONE;
          break;
       default:
          value = VA_ATTRIB_NOT_SUPPORTED;
@@ -117,6 +133,11 @@ vlVaCreateConfig(VADriverContextP ctx, VAProfile profile, VAEntrypoint entrypoin
 
    if (!ctx)
       return VA_STATUS_ERROR_INVALID_CONTEXT;
+
+   if (profile == VAProfileNone && entrypoint == VAEntrypointVideoProc) {
+      *config_id = PIPE_VIDEO_PROFILE_UNKNOWN;
+      return VA_STATUS_SUCCESS;
+   }
 
    p = ProfileToPipe(profile);
    if (p == PIPE_VIDEO_PROFILE_UNKNOWN)
@@ -151,6 +172,13 @@ vlVaQueryConfigAttributes(VADriverContextP ctx, VAConfigID config_id, VAProfile 
       return VA_STATUS_ERROR_INVALID_CONTEXT;
 
    *profile = PipeToProfile(config_id);
+
+   if (config_id == PIPE_VIDEO_PROFILE_UNKNOWN) {
+      *entrypoint = VAEntrypointVideoProc;
+      *num_attribs = 0;
+      return VA_STATUS_SUCCESS;
+   }
+
    *entrypoint = VAEntrypointVLD;
 
    *num_attribs = 1;

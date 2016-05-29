@@ -782,6 +782,14 @@
 #define   S_028D0C_COPY_CENTROID(x)                    (((x) & 0x1) << 7)
 #define   S_028D0C_COPY_SAMPLE(x)                      (((x) & 0x1) << 8)
 #define   S_028D0C_R700_PERFECT_ZPASS_COUNTS(x)        (((x) & 0x1) << 15)
+#define   S_028D0C_CONSERVATIVE_Z_EXPORT(x)            (((x) & 0x03) << 13)
+#define   G_028D0C_CONSERVATIVE_Z_EXPORT(x)            (((x) >> 13) & 0x03)
+#define   C_028D0C_CONSERVATIVE_Z_EXPORT               0xFFFF9FFF
+#define     V_028D0C_EXPORT_ANY_Z                      0
+#define     V_028D0C_EXPORT_LESS_THAN_Z                1
+#define     V_028D0C_EXPORT_GREATER_THAN_Z             2
+#define     V_028D0C_EXPORT_RESERVED                   3
+
 #define R_028D10_DB_RENDER_OVERRIDE                  0x028D10
 #define   V_028D10_FORCE_OFF                         0
 #define   V_028D10_FORCE_ENABLE                      1
@@ -1360,7 +1368,7 @@
 #define     V_008958_DI_PT_TRISTRIP                    0x00000006
 #define     V_008958_DI_PT_UNUSED_0                    0x00000007
 #define     V_008958_DI_PT_UNUSED_1                    0x00000008
-#define     V_008958_DI_PT_UNUSED_2                    0x00000009
+#define     V_008958_DI_PT_PATCH                       0x00000009
 #define     V_008958_DI_PT_LINELIST_ADJ                0x0000000A
 #define     V_008958_DI_PT_LINESTRIP_ADJ               0x0000000B
 #define     V_008958_DI_PT_TRILIST_ADJ                 0x0000000C
@@ -3429,7 +3437,6 @@
 #define   S_0085F0_SO3_DEST_BASE_ENA(x)                (((x) & 0x1) << 5)
 #define   G_0085F0_SO3_DEST_BASE_ENA(x)                (((x) >> 5) & 0x1)
 #define   C_0085F0_SO3_DEST_BASE_ENA                   0xFFFFFFDF
-#define   S_0085F0_CB0_DEST_BASE_ENA_SHIFT             6
 #define   S_0085F0_CB0_DEST_BASE_ENA(x)                (((x) & 0x1) << 6)
 #define   G_0085F0_CB0_DEST_BASE_ENA(x)                (((x) >> 6) & 0x1)
 #define   C_0085F0_CB0_DEST_BASE_ENA                   0xFFFFFFBF
@@ -3785,4 +3792,15 @@
 #define DMA_PACKET_CONSTANT_FILL	0xd /* 7xx only */
 #define DMA_PACKET_NOP			0xf
 
+
+/* Resource IDs:
+ *   PS: 0   .. +160
+ *   VS: 160 .. +160
+ *   FS: 320 .. +16
+ *   GS: 336 .. +160
+ */
+#define R600_FETCH_CONSTANTS_OFFSET_PS 0
+#define R600_FETCH_CONSTANTS_OFFSET_VS 160
+#define R600_FETCH_CONSTANTS_OFFSET_FS 320
+#define R600_FETCH_CONSTANTS_OFFSET_GS 336
 #endif

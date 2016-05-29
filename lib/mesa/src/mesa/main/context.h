@@ -50,7 +50,9 @@
 
 
 #include "imports.h"
+#include "extensions.h"
 #include "mtypes.h"
+#include "vbo/vbo.h"
 
 
 #ifdef __cplusplus
@@ -227,7 +229,7 @@ do {								\
    if (MESA_VERBOSE & VERBOSE_STATE)				\
       _mesa_debug(ctx, "FLUSH_VERTICES in %s\n", MESA_FUNCTION);\
    if (ctx->Driver.NeedFlush & FLUSH_STORED_VERTICES)		\
-      ctx->Driver.FlushVertices(ctx, FLUSH_STORED_VERTICES);	\
+      vbo_exec_FlushVertices(ctx, FLUSH_STORED_VERTICES);	\
    ctx->NewState |= newstate;					\
 } while (0)
 
@@ -246,7 +248,7 @@ do {								\
    if (MESA_VERBOSE & VERBOSE_STATE)				\
       _mesa_debug(ctx, "FLUSH_CURRENT in %s\n", MESA_FUNCTION);	\
    if (ctx->Driver.NeedFlush & FLUSH_UPDATE_CURRENT)		\
-      ctx->Driver.FlushVertices(ctx, FLUSH_UPDATE_CURRENT);	\
+      vbo_exec_FlushVertices(ctx, FLUSH_UPDATE_CURRENT);	\
    ctx->NewState |= newstate;					\
 } while (0)
 
@@ -328,8 +330,8 @@ _mesa_is_gles31(const struct gl_context *ctx)
 static inline bool
 _mesa_has_geometry_shaders(const struct gl_context *ctx)
 {
-   return _mesa_is_desktop_gl(ctx) &&
-      (ctx->Version >= 32 || ctx->Extensions.ARB_geometry_shader4);
+   return _mesa_has_OES_geometry_shader(ctx) ||
+          (_mesa_is_desktop_gl(ctx) && ctx->Version >= 32);
 }
 
 

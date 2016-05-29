@@ -103,7 +103,6 @@ struct vc4_uncompiled_shader {
         /** How many variants of this program were compiled, for shader-db. */
         uint32_t compiled_variant_count;
         struct pipe_shader_state base;
-        const struct tgsi_token *twoside_tokens;
 };
 
 struct vc4_ubo_range {
@@ -158,18 +157,17 @@ struct vc4_compiled_shader {
          * It doesn't include those that aren't part of the VPM, like
          * point/line coordinates.
          */
-        struct vc4_varying_semantic *input_semantics;
+        struct vc4_varying_slot *input_slots;
 };
 
 struct vc4_program_stateobj {
         struct vc4_uncompiled_shader *bind_vs, *bind_fs;
         struct vc4_compiled_shader *cs, *vs, *fs;
         uint8_t num_exports;
-        /* Indexed by semantic name or TGSI_SEMANTIC_COUNT + semantic index
-         * for TGSI_SEMANTIC_GENERIC.  Special vs exports (position and point-
-         * size) are not included in this
+        /* Indexed by slot.  Special vs exports (position and pointsize) are
+         * not included in this
          */
-        uint8_t export_linkage[63];
+        uint8_t export_linkage[VARYING_SLOT_VAR0 + 8];
 };
 
 struct vc4_constbuf_stateobj {
@@ -208,6 +206,8 @@ struct vc4_context {
         struct pipe_surface *color_write;
         struct pipe_surface *zs_read;
         struct pipe_surface *zs_write;
+        struct pipe_surface *msaa_color_write;
+        struct pipe_surface *msaa_zs_write;
         /** @} */
         /** @{
          * Bounding box of the scissor across all queued drawing.
@@ -226,6 +226,15 @@ struct vc4_context {
         uint32_t draw_width;
         uint32_t draw_height;
         /** @} */
+        /** @{ Tile information, depending on MSAA and float color buffer. */
+        uint32_t draw_tiles_x; /** @< Number of tiles wide for framebuffer. */
+        uint32_t draw_tiles_y; /** @< Number of tiles high for framebuffer. */
+
+        uint32_t tile_width; /** @< Width of a tile. */
+        uint32_t tile_height; /** @< Height of a tile. */
+        /** Whether the current rendering is in a 4X MSAA tile buffer. */
+        bool msaa;
+	/** @} */
 
         struct util_slab_mempool transfer_pool;
         struct blitter_context *blitter;
@@ -252,10 +261,10 @@ struct vc4_context {
         bool needs_flush;
 
         /**
-         * Set when needs_flush, and the queued rendering is not just composed
-         * of full-buffer clears.
+         * Number of draw calls (not counting full buffer clears) queued in
+         * the current job.
          */
-        bool draw_call_queued;
+        uint32_t draw_calls_queued;
 
         /** Maximum index buffer valid for the current shader_rec. */
         uint32_t max_index;
@@ -293,7 +302,10 @@ struct vc4_context {
 
         struct vc4_vertex_stateobj *vtx;
 
-        struct pipe_blend_color blend_color;
+        struct {
+                struct pipe_blend_color f;
+                uint8_t ub[4];
+        } blend_color;
         struct pipe_stencil_ref stencil_ref;
         unsigned sample_mask;
         struct pipe_framebuffer_state framebuffer;
@@ -365,7 +377,7 @@ vc4_sampler_state(struct pipe_sampler_state *psampler)
 }
 
 struct pipe_context *vc4_context_create(struct pipe_screen *pscreen,
-                                        void *priv);
+                                        void *priv, unsigned flags);
 void vc4_draw_init(struct pipe_context *pctx);
 void vc4_state_init(struct pipe_context *pctx);
 void vc4_program_init(struct pipe_context *pctx);

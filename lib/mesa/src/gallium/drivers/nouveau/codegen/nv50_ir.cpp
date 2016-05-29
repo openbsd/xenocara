@@ -393,6 +393,9 @@ ImmediateValue::isInteger(const int i) const
    case TYPE_S32:
    case TYPE_U32:
       return reg.data.s32 == i; // as if ...
+   case TYPE_S64:
+   case TYPE_U64:
+      return reg.data.s64 == i; // as if ...
    case TYPE_F32:
       return reg.data.f32 == static_cast<float>(i);
    case TYPE_F64:
@@ -1128,7 +1131,6 @@ nv50_ir_init_prog_info(struct nv50_ir_prog_info *info)
       info->prop.gp.instanceCount = 1;
       info->prop.gp.maxVertices = 1;
    }
-   info->io.clipDistance = 0xff;
    info->io.pointSize = 0xff;
    info->io.instanceId = 0xff;
    info->io.vertexId = 0xff;

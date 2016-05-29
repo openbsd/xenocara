@@ -257,6 +257,32 @@ lp_build_concat_n(struct gallivm_state *gallivm,
 
 
 /**
+ * Un-interleave vector.
+ * This will return a vector consisting of every second element
+ * (depending on lo_hi, beginning at 0 or 1).
+ * The returned vector size (elems and width) will only be half
+ * that of the source vector.
+ */
+LLVMValueRef
+lp_build_uninterleave1(struct gallivm_state *gallivm,
+                       unsigned num_elems,
+                       LLVMValueRef a,
+                       unsigned lo_hi)
+{
+   LLVMValueRef shuffle, elems[LP_MAX_VECTOR_LENGTH];
+   unsigned i;
+   assert(num_elems <= LP_MAX_VECTOR_LENGTH);
+
+   for (i = 0; i < num_elems / 2; ++i)
+      elems[i] = lp_build_const_int32(gallivm, 2*i + lo_hi);
+
+   shuffle = LLVMConstVector(elems, num_elems / 2);
+
+   return LLVMBuildShuffleVector(gallivm->builder, a, a, shuffle, "");
+}
+
+
+/**
  * Interleave vector elements.
  *
  * Matches the PUNPCKLxx and PUNPCKHxx SSE instructions

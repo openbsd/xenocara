@@ -295,6 +295,9 @@ TargetNVC0::getSVAddress(DataFile shaderFile, const Symbol *sym) const
    case SV_SAMPLE_INDEX:   return 0;
    case SV_SAMPLE_POS:     return 0;
    case SV_SAMPLE_MASK:    return 0;
+   case SV_BASEVERTEX:     return 0;
+   case SV_BASEINSTANCE:   return 0;
+   case SV_DRAWID:         return 0;
    default:
       return 0xffffffff;
    }
@@ -338,17 +341,30 @@ TargetNVC0::insnCanLoad(const Instruction *i, int s,
    if (sf == FILE_IMMEDIATE) {
       Storage &reg = ld->getSrc(0)->asImm()->reg;
 
-      if (typeSizeof(i->sType) > 4)
-         return false;
-      if (opInfo[i->op].immdBits != 0xffffffff) {
-         if (i->sType == TYPE_F32) {
+      if (opInfo[i->op].immdBits != 0xffffffff || typeSizeof(i->sType) > 4) {
+         switch (i->sType) {
+         case TYPE_F64:
+            if (reg.data.u64 & 0x00000fffffffffffULL)
+               return false;
+            break;
+         case TYPE_F32:
             if (reg.data.u32 & 0xfff)
                return false;
-         } else
-         if (i->sType == TYPE_S32 || i->sType == TYPE_U32) {
+            break;
+         case TYPE_S32:
+         case TYPE_U32:
             // with u32, 0xfffff counts as 0xffffffff as well
             if (reg.data.s32 > 0x7ffff || reg.data.s32 < -0x80000)
                return false;
+            break;
+         case TYPE_U8:
+         case TYPE_S8:
+         case TYPE_U16:
+         case TYPE_S16:
+         case TYPE_F16:
+            break;
+         default:
+            return false;
          }
       } else
       if (i->op == OP_MAD || i->op == OP_FMA) {
@@ -368,6 +384,16 @@ TargetNVC0::insnCanLoad(const Instruction *i, int s,
 }
 
 bool
+TargetNVC0::insnCanLoadOffset(const Instruction *insn, int s, int offset) const
+{
+   const ValueRef& ref = insn->src(s);
+   if (ref.getFile() == FILE_MEMORY_CONST &&
+       (insn->op != OP_LOAD || insn->subOp != NV50_IR_SUBOP_LDC_IS))
+      return offset >= -0x8000 && offset < 0x8000;
+   return true;
+}
+
+bool
 TargetNVC0::isAccessSupported(DataFile file, DataType ty) const
 {
    if (ty == TYPE_NONE)
@@ -382,8 +408,6 @@ TargetNVC0::isAccessSupported(DataFile file, DataType ty) const
 bool
 TargetNVC0::isOpSupported(operation op, DataType ty) const
 {
-   if ((op == OP_MAD || op == OP_FMA) && (ty != TYPE_F32))
-      return false;
    if (op == OP_SAD && ty != TYPE_S32 && ty != TYPE_U32)
       return false;
    if (op == OP_POW || op == OP_SQRT || op == OP_DIV || op == OP_MOD)

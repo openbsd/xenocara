@@ -35,10 +35,8 @@
 
 #include <stdbool.h>
 
-#include "program/prog_instruction.h"
 #include "brw_context.h"
 #include "brw_eu.h"
-#include "brw_program.h"
 
 /* A big lookup table is used to figure out which and how many
  * additional regs will inserted before the main payload in the WM
@@ -61,22 +59,6 @@
 extern "C" {
 #endif
 
-/**
- * Compile a fragment shader.
- *
- * Returns the final assembly and the program's size.
- */
-const unsigned *brw_wm_fs_emit(struct brw_context *brw,
-                               void *mem_ctx,
-                               const struct brw_wm_prog_key *key,
-                               struct brw_wm_prog_data *prog_data,
-                               struct gl_fragment_program *fp,
-                               struct gl_shader_program *prog,
-                               unsigned *final_assembly_size);
-
-GLboolean brw_link_shader(struct gl_context *ctx, struct gl_shader_program *prog);
-struct gl_shader *brw_new_shader(struct gl_context *ctx, GLuint name, GLuint type);
-
 bool brw_color_buffer_write_enabled(struct brw_context *brw);
 bool brw_codegen_wm_prog(struct brw_context *brw,
                          struct gl_shader_program *prog,
@@ -85,7 +67,6 @@ bool brw_codegen_wm_prog(struct brw_context *brw,
 void brw_wm_debug_recompile(struct brw_context *brw,
                             struct gl_shader_program *prog,
                             const struct brw_wm_prog_key *key);
-bool brw_wm_prog_data_compare(const void *a, const void *b);
 
 void
 brw_upload_wm_prog(struct brw_context *brw);

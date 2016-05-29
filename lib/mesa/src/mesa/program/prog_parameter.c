@@ -89,6 +89,37 @@ _mesa_free_parameter_list(struct gl_program_parameter_list *paramList)
 
 
 /**
+ * Make sure there are enough unused parameter slots. Reallocate the list
+ * if needed.
+ *
+ * \param paramList        where to reserve parameter slots
+ * \param reserve_slots    number of slots to reserve
+ */
+void
+_mesa_reserve_parameter_storage(struct gl_program_parameter_list *paramList,
+                                unsigned reserve_slots)
+{
+   const GLuint oldNum = paramList->NumParameters;
+
+   if (oldNum + reserve_slots > paramList->Size) {
+      /* Need to grow the parameter list array (alloc some extra) */
+      paramList->Size = paramList->Size + 4 * reserve_slots;
+
+      /* realloc arrays */
+      paramList->Parameters =
+         realloc(paramList->Parameters,
+                 paramList->Size * sizeof(struct gl_program_parameter));
+
+      paramList->ParameterValues = (gl_constant_value (*)[4])
+         _mesa_align_realloc(paramList->ParameterValues,         /* old buf */
+                             oldNum * 4 * sizeof(gl_constant_value),/* old sz */
+                             paramList->Size*4*sizeof(gl_constant_value),/*new*/
+                             16);
+   }
+}
+
+
+/**
  * Add a new parameter to a parameter list.
  * Note that parameter values are usually 4-element GLfloat vectors.
  * When size > 4 we'll allocate a sequential block of parameters to
@@ -115,21 +146,7 @@ _mesa_add_parameter(struct gl_program_parameter_list *paramList,
 
    assert(size > 0);
 
-   if (oldNum + sz4 > paramList->Size) {
-      /* Need to grow the parameter list array (alloc some extra) */
-      paramList->Size = paramList->Size + 4 * sz4;
-
-      /* realloc arrays */
-      paramList->Parameters =
-         realloc(paramList->Parameters,
-                 paramList->Size * sizeof(struct gl_program_parameter));
-
-      paramList->ParameterValues = (gl_constant_value (*)[4])
-         _mesa_align_realloc(paramList->ParameterValues,         /* old buf */
-                             oldNum * 4 * sizeof(gl_constant_value),/* old sz */
-                             paramList->Size*4*sizeof(gl_constant_value),/*new*/
-                             16);
-   }
+   _mesa_reserve_parameter_storage(paramList, sz4);
 
    if (!paramList->Parameters ||
        !paramList->ParameterValues) {
@@ -436,74 +453,4 @@ _mesa_lookup_parameter_constant(const struct gl_program_parameter_list *list,
 
    *posOut = -1;
    return GL_FALSE;
-}
-
-
-struct gl_program_parameter_list *
-_mesa_clone_parameter_list(const struct gl_program_parameter_list *list)
-{
-   struct gl_program_parameter_list *clone;
-   GLuint i;
-
-   clone = _mesa_new_parameter_list();
-   if (!clone)
-      return NULL;
-
-   /** Not too efficient, but correct */
-   for (i = 0; i < list->NumParameters; i++) {
-      struct gl_program_parameter *p = list->Parameters + i;
-      struct gl_program_parameter *pCopy;
-      GLuint size = MIN2(p->Size, 4);
-      GLint j = _mesa_add_parameter(clone, p->Type, p->Name, size, p->DataType,
-                                    list->ParameterValues[i], NULL);
-      assert(j >= 0);
-      pCopy = clone->Parameters + j;
-      /* copy state indexes */
-      if (p->Type == PROGRAM_STATE_VAR) {
-         GLint k;
-         for (k = 0; k < STATE_LENGTH; k++) {
-            pCopy->StateIndexes[k] = p->StateIndexes[k];
-         }
-      }
-      else {
-         clone->Parameters[j].Size = p->Size;
-      }
-      
-   }
-
-   clone->StateFlags = list->StateFlags;
-
-   return clone;
-}
-
-
-/**
- * Return a new parameter list which is listA + listB.
- */
-struct gl_program_parameter_list *
-_mesa_combine_parameter_lists(const struct gl_program_parameter_list *listA,
-                              const struct gl_program_parameter_list *listB)
-{
-   struct gl_program_parameter_list *list;
-
-   if (listA) {
-      list = _mesa_clone_parameter_list(listA);
-      if (list && listB) {
-         GLuint i;
-         for (i = 0; i < listB->NumParameters; i++) {
-            struct gl_program_parameter *param = listB->Parameters + i;
-            _mesa_add_parameter(list, param->Type, param->Name, param->Size,
-                                param->DataType,
-                                listB->ParameterValues[i],
-                                param->StateIndexes);
-         }
-      }
-   }
-   else if (listB) {
-      list = _mesa_clone_parameter_list(listB);
-   }
-   else {
-      list = NULL;
-   }
-   return list;
 }

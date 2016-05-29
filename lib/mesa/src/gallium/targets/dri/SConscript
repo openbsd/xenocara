@@ -30,7 +30,6 @@ env.PkgUseModules('DRM')
 env.Append(CPPDEFINES = [
     'GALLIUM_VMWGFX',
     'GALLIUM_SOFTPIPE',
-    'DRI_TARGET',
 ])
 
 env.Prepend(LIBS = [
@@ -39,8 +38,10 @@ env.Prepend(LIBS = [
     svga,
     ws_dri,
     softpipe,
+    pipe_loader,
     libloader,
     mesautil,
+    compiler,
     mesa,
     glsl,
     gallium,

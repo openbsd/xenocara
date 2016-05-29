@@ -80,7 +80,7 @@ util_make_vertex_passthrough_shader_with_so(struct pipe_context *pipe,
    uint i;
 
    ureg = ureg_create( TGSI_PROCESSOR_VERTEX );
-   if (ureg == NULL)
+   if (!ureg)
       return NULL;
 
    if (window_space)
@@ -228,7 +228,7 @@ util_make_fragment_tex_shader_writemask(struct pipe_context *pipe,
           interp_mode == TGSI_INTERPOLATE_PERSPECTIVE);
 
    ureg = ureg_create( TGSI_PROCESSOR_FRAGMENT );
-   if (ureg == NULL)
+   if (!ureg)
       return NULL;
    
    sampler = ureg_DECL_sampler( ureg, 0 );
@@ -298,7 +298,7 @@ util_make_fragment_tex_shader_writedepth(struct pipe_context *pipe,
    struct ureg_src imm;
 
    ureg = ureg_create( TGSI_PROCESSOR_FRAGMENT );
-   if (ureg == NULL)
+   if (!ureg)
       return NULL;
 
    sampler = ureg_DECL_sampler( ureg, 0 );
@@ -350,7 +350,7 @@ util_make_fragment_tex_shader_writedepthstencil(struct pipe_context *pipe,
    struct ureg_src imm;
 
    ureg = ureg_create( TGSI_PROCESSOR_FRAGMENT );
-   if (ureg == NULL)
+   if (!ureg)
       return NULL;
 
    depth_sampler = ureg_DECL_sampler( ureg, 0 );
@@ -414,7 +414,7 @@ util_make_fragment_tex_shader_writestencil(struct pipe_context *pipe,
    struct ureg_src imm;
 
    ureg = ureg_create( TGSI_PROCESSOR_FRAGMENT );
-   if (ureg == NULL)
+   if (!ureg)
       return NULL;
 
    stencil_sampler = ureg_DECL_sampler( ureg, 0 );
@@ -494,7 +494,7 @@ void *
 util_make_empty_fragment_shader(struct pipe_context *pipe)
 {
    struct ureg_program *ureg = ureg_create(TGSI_PROCESSOR_FRAGMENT);
-   if (ureg == NULL)
+   if (!ureg)
       return NULL;
 
    ureg_END(ureg);
@@ -518,7 +518,7 @@ util_make_fragment_cloneinput_shader(struct pipe_context *pipe, int num_cbufs,
    assert(num_cbufs <= PIPE_MAX_COLOR_BUFS);
 
    ureg = ureg_create( TGSI_PROCESSOR_FRAGMENT );
-   if (ureg == NULL)
+   if (!ureg)
       return NULL;
 
    src = ureg_DECL_fs_input( ureg, input_semantic, 0,
@@ -831,3 +831,54 @@ util_make_fs_msaa_resolve_bilinear(struct pipe_context *pipe,
 
    return ureg_create_shader_and_destroy(ureg, pipe);
 }
+
+void *
+util_make_geometry_passthrough_shader(struct pipe_context *pipe,
+                                      uint num_attribs,
+                                      const ubyte *semantic_names,
+                                      const ubyte *semantic_indexes)
+{
+   static const unsigned zero[4] = {0, 0, 0, 0};
+
+   struct ureg_program *ureg;
+   struct ureg_dst dst[PIPE_MAX_SHADER_OUTPUTS];
+   struct ureg_src src[PIPE_MAX_SHADER_INPUTS];
+   struct ureg_src imm;
+
+   unsigned i;
+
+   ureg = ureg_create(TGSI_PROCESSOR_GEOMETRY);
+   if (!ureg)
+      return NULL;
+
+   ureg_property(ureg, TGSI_PROPERTY_GS_INPUT_PRIM, PIPE_PRIM_POINTS);
+   ureg_property(ureg, TGSI_PROPERTY_GS_OUTPUT_PRIM, PIPE_PRIM_POINTS);
+   ureg_property(ureg, TGSI_PROPERTY_GS_MAX_OUTPUT_VERTICES, 1);
+   ureg_property(ureg, TGSI_PROPERTY_GS_INVOCATIONS, 1);
+   imm = ureg_DECL_immediate_uint(ureg, zero, 4);
+
+   /**
+    * Loop over all the attribs and declare the corresponding
+    * declarations in the geometry shader
+    */
+   for (i = 0; i < num_attribs; i++) {
+      src[i] = ureg_DECL_input(ureg, semantic_names[i],
+                               semantic_indexes[i], 0, 1);
+      src[i] = ureg_src_dimension(src[i], 0);
+      dst[i] = ureg_DECL_output(ureg, semantic_names[i], semantic_indexes[i]);
+   }
+
+   /* MOV dst[i] src[i] */
+   for (i = 0; i < num_attribs; i++) {
+      ureg_MOV(ureg, dst[i], src[i]);
+   }
+
+   /* EMIT IMM[0] */
+   ureg_insn(ureg, TGSI_OPCODE_EMIT, NULL, 0, &imm, 1);
+
+   /* END */
+   ureg_END(ureg);
+
+   return ureg_create_shader_and_destroy(ureg, pipe);
+}
+

@@ -120,7 +120,7 @@ private:
 
    void emitSET(const CmpInstruction *);
    void emitSLCT(const CmpInstruction *);
-   void emitSELP(const Instruction *);
+   void emitSELP(const CmpInstruction *);
 
    void emitTEXBAR(const Instruction *);
    void emitTEX(const TexInstruction *);
@@ -323,6 +323,14 @@ CodeEmitterNVC0::setImmediate(const Instruction *i, const int s)
    assert(imm);
    u32 = imm->reg.data.u32;
 
+   if ((code[0] & 0xf) == 0x1) {
+      // double immediate
+      uint64_t u64 = imm->reg.data.u64;
+      assert(!(u64 & 0x00000fffffffffffULL));
+      assert(!(code[1] & 0xc000));
+      code[0] |= ((u64 >> 44) & 0x3f) << 26;
+      code[1] |= 0xc000 | (u64 >> 50);
+   } else
    if ((code[0] & 0xf) == 0x2) {
       // LIMM
       code[0] |= (u32 & 0x3f) << 26;
@@ -390,6 +398,11 @@ CodeEmitterNVC0::emitForm_A(const Instruction *i, uint64_t opc)
          srcId(i->src(s), s ? ((s == 2) ? 49 : s1) : 20);
          break;
       default:
+         if (i->op == OP_SELP) {
+            // OP_SELP is used to implement shared+atomics on Fermi.
+            assert(s == 2 && i->src(s).getFile() == FILE_PREDICATE);
+            srcId(i->src(s), 49);
+         }
          // ignore here, can be predicate or flags, but must not be address
          break;
       }
@@ -800,8 +813,8 @@ CodeEmitterNVC0::emitLogicOp(const Instruction *i, uint8_t subOp)
       // (a OP b) OP c
       if (i->predSrc != 2 && i->srcExists(2)) {
          code[1] |= subOp << 21;
-         srcId(i->src(2), 17);
-         if (i->src(2).mod == Modifier(NV50_IR_MOD_NOT)) code[0] |= 1 << 20;
+         srcId(i->src(2), 49);
+         if (i->src(2).mod == Modifier(NV50_IR_MOD_NOT)) code[1] |= 1 << 20;
       } else {
          code[1] |= 0x000e0000;
       }
@@ -1022,7 +1035,10 @@ CodeEmitterNVC0::emitCVT(Instruction *i)
 
       // for 8/16 source types, the byte/word is in subOp. word 1 is
       // represented as 2.
-      code[1] |= i->subOp << 0x17;
+      if (!isFloatType(i->sType))
+         code[1] |= i->subOp << 0x17;
+      else
+         code[1] |= i->subOp << 0x18;
 
       if (sat)
          code[0] |= 0x20;
@@ -1159,11 +1175,11 @@ CodeEmitterNVC0::emitSLCT(const CmpInstruction *i)
       code[0] |= 1 << 5;
 }
 
-void CodeEmitterNVC0::emitSELP(const Instruction *i)
+void CodeEmitterNVC0::emitSELP(const CmpInstruction *i)
 {
    emitForm_A(i, HEX64(20000000, 00000004));
 
-   if (i->cc == CC_NOT_P || i->src(2).mod & Modifier(NV50_IR_MOD_NOT))
+   if (i->setCond == CC_NOT_P || i->src(2).mod & Modifier(NV50_IR_MOD_NOT))
       code[1] |= 1 << 20;
 }
 
@@ -1323,7 +1339,7 @@ CodeEmitterNVC0::emitQUADOP(const Instruction *i, uint8_t qOp, uint8_t laneMask)
 
    defId(i->def(0), 14);
    srcId(i->src(0), 20);
-   srcId(i->srcExists(1) ? i->src(1) : i->src(0), 26);
+   srcId((i->srcExists(1) && i->predSrc != 1) ? i->src(1) : i->src(0), 26);
 
    if (i->op == OP_QUADOP && progType != Program::TYPE_FRAGMENT)
       code[0] |= 1 << 9; // dall
@@ -1618,6 +1634,29 @@ CodeEmitterNVC0::emitInterpMode(const Instruction *i)
    }
 }
 
+static void
+interpApply(const InterpEntry *entry, uint32_t *code,
+      bool force_persample_interp, bool flatshade)
+{
+   int ipa = entry->ipa;
+   int reg = entry->reg;
+   int loc = entry->loc;
+
+   if (flatshade &&
+       (ipa & NV50_IR_INTERP_MODE_MASK) == NV50_IR_INTERP_SC) {
+      ipa = NV50_IR_INTERP_FLAT;
+      reg = 0x3f;
+   } else if (force_persample_interp &&
+              (ipa & NV50_IR_INTERP_SAMPLE_MASK) == NV50_IR_INTERP_DEFAULT &&
+              (ipa & NV50_IR_INTERP_MODE_MASK) != NV50_IR_INTERP_FLAT) {
+      ipa |= NV50_IR_INTERP_CENTROID;
+   }
+   code[loc + 0] &= ~(0xf << 6);
+   code[loc + 0] |= ipa << 6;
+   code[loc + 0] &= ~(0x3f << 26);
+   code[loc + 0] |= reg << 26;
+}
+
 void
 CodeEmitterNVC0::emitINTERP(const Instruction *i)
 {
@@ -1630,10 +1669,13 @@ CodeEmitterNVC0::emitINTERP(const Instruction *i)
       if (i->saturate)
          code[0] |= 1 << 5;
 
-      if (i->op == OP_PINTERP)
+      if (i->op == OP_PINTERP) {
          srcId(i->src(1), 26);
-      else
+         addInterp(i->ipa, SDATA(i->src(1)).id, interpApply);
+      } else {
          code[0] |= 0x3f << 26;
+         addInterp(i->ipa, 0x3f, interpApply);
+      }
 
       srcId(i->src(0).getIndirect(0), 20);
    } else {
@@ -1736,7 +1778,13 @@ CodeEmitterNVC0::emitSTORE(const Instruction *i)
    switch (i->src(0).getFile()) {
    case FILE_MEMORY_GLOBAL: opc = 0x90000000; break;
    case FILE_MEMORY_LOCAL:  opc = 0xc8000000; break;
-   case FILE_MEMORY_SHARED: opc = 0xc9000000; break;
+   case FILE_MEMORY_SHARED:
+      opc = 0xc8000000;
+      if (i->subOp == NV50_IR_SUBOP_STORE_UNLOCKED)
+         opc |= (1 << 26);
+      else
+         opc |= (1 << 24);
+      break;
    default:
       assert(!"invalid memory file");
       opc = 0;
@@ -1767,7 +1815,13 @@ CodeEmitterNVC0::emitLOAD(const Instruction *i)
    switch (i->src(0).getFile()) {
    case FILE_MEMORY_GLOBAL: opc = 0x80000000; break;
    case FILE_MEMORY_LOCAL:  opc = 0xc0000000; break;
-   case FILE_MEMORY_SHARED: opc = 0xc1000000; break;
+   case FILE_MEMORY_SHARED:
+      opc = 0xc0000000;
+      if (i->subOp == NV50_IR_SUBOP_LOAD_LOCKED)
+         opc |= (1 << 26);
+      else
+         opc |= (1 << 24);
+      break;
    case FILE_MEMORY_CONST:
       if (!i->src(0).isIndirect(0) && typeSizeof(i->dType) == 4) {
          emitMOV(i); // not sure if this is any better
@@ -1782,6 +1836,13 @@ CodeEmitterNVC0::emitLOAD(const Instruction *i)
       break;
    }
    code[1] = opc;
+
+   if (i->src(0).getFile() == FILE_MEMORY_SHARED) {
+      if (i->subOp == NV50_IR_SUBOP_LOAD_LOCKED) {
+         assert(i->defExists(1));
+         defId(i->def(1), 32 + 18);
+      }
+   }
 
    defId(i->def(0), 14);
 
@@ -1805,6 +1866,7 @@ CodeEmitterNVC0::getSRegEncoding(const ValueRef& ref)
    case SV_VERTEX_COUNT:  return 0x10;
    case SV_INVOCATION_ID: return 0x11;
    case SV_YDIR:          return 0x12;
+   case SV_THREAD_KILL:   return 0x13;
    case SV_TID:           return 0x21 + SDATA(ref).sv.index;
    case SV_CTAID:         return 0x25 + SDATA(ref).sv.index;
    case SV_NTID:          return 0x29 + SDATA(ref).sv.index;
@@ -1983,8 +2045,10 @@ CodeEmitterNVC0::emitATOM(const Instruction *i)
       code[0] |= 63 << 20;
    }
 
-   if (i->subOp == NV50_IR_SUBOP_ATOM_CAS)
-      srcId(i->src(2), 32 + 17);
+   if (i->subOp == NV50_IR_SUBOP_ATOM_CAS) {
+      assert(i->src(1).getSize() == 2 * typeSizeof(i->sType));
+      code[1] |= (SDATA(i->src(1)).id + 1) << 17;
+   }
 }
 
 void
@@ -2381,7 +2445,7 @@ CodeEmitterNVC0::emitInstruction(Instruction *insn)
       emitSET(insn->asCmp());
       break;
    case OP_SELP:
-      emitSELP(insn);
+      emitSELP(insn->asCmp());
       break;
    case OP_SLCT:
       emitSLCT(insn->asCmp());
@@ -2395,9 +2459,15 @@ CodeEmitterNVC0::emitInstruction(Instruction *insn)
    case OP_CEIL:
    case OP_FLOOR:
    case OP_TRUNC:
-   case OP_CVT:
    case OP_SAT:
       emitCVT(insn);
+      break;
+   case OP_CVT:
+      if (insn->def(0).getFile() == FILE_PREDICATE ||
+          insn->src(0).getFile() == FILE_PREDICATE)
+         emitMOV(insn);
+      else
+         emitCVT(insn);
       break;
    case OP_RSQ:
       emitSFnOp(insn, 5 + 2 * insn->subOp);
@@ -2531,7 +2601,7 @@ CodeEmitterNVC0::emitInstruction(Instruction *insn)
       ERROR("operation should have been lowered\n");
       return false;
    default:
-      ERROR("unknow op\n");
+      ERROR("unknown op: %u\n", insn->op);
       return false;
    }
 

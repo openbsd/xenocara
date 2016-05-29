@@ -798,4 +798,189 @@
     </function>
 </category>
 
+<!-- 174. GL_OES_texture_storage_multisample_2d_array -->
+<category name="GL_OES_texture_storage_multisample_2d_array" number="174">
+    <enum name="TEXTURE_2D_MULTISAMPLE_ARRAY_OES"              value="0x9102"/>
+    <enum name="TEXTURE_BINDING_2D_MULTISAMPLE_ARRAY_OES"      value="0x9105"/>
+    <enum name="SAMPLER_2D_MULTISAMPLE_ARRAY_OES"              value="0x910B"/>
+    <enum name="INT_SAMPLER_2D_MULTISAMPLE_ARRAY_OES"          value="0x910C"/>
+    <enum name="UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE_ARRAY_OES" value="0x910D"/>
+
+    <function name="TexStorage3DMultisampleOES" alias="TexStorage3DMultisample" es2="3.1">
+        <param name="target" type="GLenum"/>
+        <param name="samples" type="GLsizei"/>
+        <param name="internalformat" type="GLenum"/>
+        <param name="width" type="GLsizei"/>
+        <param name="height" type="GLsizei"/>
+        <param name="depth" type="GLsizei"/>
+        <param name="fixedsamplelocations" type="GLboolean"/>
+    </function>
+</category>
+
+<category name="GL_EXT_draw_elements_base_vertex" number="204">
+
+    <function name="DrawElementsBaseVertexEXT" alias="DrawElementsBaseVertex"
+              es2="2.0" exec="dynamic">
+        <param name="mode" type="GLenum"/>
+        <param name="count" type="GLsizei"/>
+        <param name="type" type="GLenum"/>
+        <param name="indices" type="const GLvoid *"/>
+        <param name="basevertex" type="GLint"/>
+    </function>
+
+    <function name="DrawRangeElementsBaseVertexEXT" alias="DrawRangeElementsBaseVertex"
+              es2="3.0" exec="dynamic">
+        <param name="mode" type="GLenum"/>
+        <param name="start" type="GLuint"/>
+        <param name="end" type="GLuint"/>
+        <param name="count" type="GLsizei"/>
+        <param name="type" type="GLenum"/>
+        <param name="indices" type="const GLvoid *"/>
+        <param name="basevertex" type="GLint"/>
+    </function>
+
+    <function name="MultiDrawElementsBaseVertexEXT" alias="MultiDrawElementsBaseVertex"
+              es2="2.0" exec="dynamic">
+        <param name="mode" type="GLenum"/>
+        <param name="count" type="const GLsizei *"/>
+        <param name="type" type="GLenum"/>
+        <param name="indices" type="const GLvoid * const *"/>
+        <param name="primcount" type="GLsizei"/>
+        <param name="basevertex" type="const GLint *"/>
+    </function>
+
+    <function name="DrawElementsInstancedBaseVertexEXT" alias="DrawElementsInstancedBaseVertex"
+              es2="3.0" exec="dynamic">
+        <param name="mode" type="GLenum"/>
+        <param name="count" type="GLsizei"/>
+        <param name="type" type="GLenum"/>
+        <param name="indices" type="const GLvoid *"/>
+        <param name="primcount" type="GLsizei"/>
+        <param name="basevertex" type="GLint"/>
+    </function>
+
+</category>
+
+<category name="GL_OES_draw_elements_base_vertex" number="219">
+
+    <function name="DrawElementsBaseVertexOES" alias="DrawElementsBaseVertex"
+              es2="2.0" exec="dynamic">
+        <param name="mode" type="GLenum"/>
+        <param name="count" type="GLsizei"/>
+        <param name="type" type="GLenum"/>
+        <param name="indices" type="const GLvoid *"/>
+        <param name="basevertex" type="GLint"/>
+    </function>
+
+    <function name="DrawRangeElementsBaseVertexOES" alias="DrawRangeElementsBaseVertex"
+              es2="3.0" exec="dynamic">
+        <param name="mode" type="GLenum"/>
+        <param name="start" type="GLuint"/>
+        <param name="end" type="GLuint"/>
+        <param name="count" type="GLsizei"/>
+        <param name="type" type="GLenum"/>
+        <param name="indices" type="const GLvoid *"/>
+        <param name="basevertex" type="GLint"/>
+    </function>
+
+    <function name="MultiDrawElementsBaseVertexOES" alias="MultiDrawElementsBaseVertex"
+              es2="2.0" exec="dynamic">
+        <param name="mode" type="GLenum"/>
+        <param name="count" type="const GLsizei *"/>
+        <param name="type" type="GLenum"/>
+        <param name="indices" type="const GLvoid * const *"/>
+        <param name="primcount" type="GLsizei"/>
+        <param name="basevertex" type="const GLint *"/>
+    </function>
+
+    <function name="DrawElementsInstancedBaseVertexOES" alias="DrawElementsInstancedBaseVertex"
+              es2="3.0" exec="dynamic">
+        <param name="mode" type="GLenum"/>
+        <param name="count" type="GLsizei"/>
+        <param name="type" type="GLenum"/>
+        <param name="indices" type="const GLvoid *"/>
+        <param name="primcount" type="GLsizei"/>
+        <param name="basevertex" type="GLint"/>
+    </function>
+
+</category>
+
+<category name="GL_EXT_buffer_storage" number="239">
+    <function name="BufferStorageEXT" alias="BufferStorage" es2="3.1">
+        <param name="target" type="GLenum"/>
+        <param name="size" type="GLsizeiptr"/>
+        <param name="data" type="const GLvoid *"/>
+        <param name="flags" type="GLbitfield"/>
+    </function>
+</category>
+
+<category name="GL_EXT_blend_func_extended" number="247">
+
+    <function name="BindFragDataLocationIndexedEXT" alias="BindFragDataLocationIndexed"
+            es2="3.0">
+        <param name="program" type="GLuint"/>
+        <param name="colorNumber" type="GLuint"/>
+        <param name="index" type="GLuint"/>
+        <param name="name" type="const GLchar *"/>
+    </function>
+
+    <function name="GetFragDataIndexEXT" alias="GetFragDataIndex"
+            es2="3.0">
+        <param name="program" type="GLuint"/>
+        <param name="name" type="const GLchar *"/>
+        <return type="GLint"/>
+    </function>
+
+    <function name="GetProgramResourceLocationIndexEXT" alias="GetProgramResourceLocationIndex"
+           es2="3.1">
+        <param name="program" type="GLuint"/>
+        <param name="programInterface" type="GLenum"/>
+        <param name="name" type="const GLchar *"/>
+        <return type="GLint"/>
+    </function>
+
+</category>
+
+<!-- 175. GL_OES_geometry_shader -->
+<category name="GL_OES_geometry_shader" number="210">
+    <enum name="GEOMETRY_SHADER_OES"                             value="0x8DD9"/>
+    <enum name="GEOMETRY_SHADER_BIT_OES"                         value="0x00000004"/>
+    <enum name="GEOMETRY_LINKED_VERTICES_OUT_OES"                value="0x8916"/>
+    <enum name="GEOMETRY_LINKED_INPUT_TYPE_OES"                  value="0x8917"/>
+    <enum name="GEOMETRY_LINKED_OUTPUT_TYPE_OES"                 value="0x8918"/>
+    <enum name="GEOMETRY_SHADER_INVOCATIONS_OES"                 value="0x887F"/>
+    <enum name="LAYER_PROVOKING_VERTEX_OES"                      value="0x825E"/>
+    <enum name="MAX_GEOMETRY_UNIFORM_BLOCKS_OES"                 value="0x8A2C"/>
+    <enum name="MAX_COMBINED_GEOMETRY_UNIFORM_COMPONENTS_OES"    value="0x8A32"/>
+    <enum name="MAX_GEOMETRY_INPUT_COMPONENTS_OES"               value="0x9123"/>
+    <enum name="MAX_GEOMETRY_OUTPUT_COMPONENTS_OES"              value="0x9124"/>
+    <enum name="MAX_GEOMETRY_OUTPUT_VERTICES_OES"                value="0x8DE0"/>
+    <enum name="MAX_GEOMETRY_TOTAL_OUTPUT_COMPONENTS_OES"        value="0x8DE1"/>
+    <enum name="MAX_GEOMETRY_SHADER_INVOCATIONS_OES"             value="0x8E5A"/>
+    <enum name="MAX_GEOMETRY_TEXTURE_IMAGE_UNITS_OES"            value="0x8C29"/>
+    <enum name="MAX_GEOMETRY_ATOMIC_COUNTER_BUFFERS_OES"         value="0x92CF"/>
+    <enum name="MAX_GEOMETRY_ATOMIC_COUNTERS_OES"                value="0x92D5"/>
+    <enum name="MAX_GEOMETRY_IMAGE_UNIFORMS_OES"                 value="0x90CD"/>
+    <enum name="MAX_GEOMETRY_SHADER_STORAGE_BLOCKS_OES"          value="0x90D7"/>
+    <enum name="FIRST_VERTEX_CONVENTION_OES"                     value="0x8E4D"/>
+    <enum name="LAST_VERTEX_CONVENTION_OES"                      value="0x8E4E"/>
+    <enum name="UNDEFINED_VERTEX_OES"                            value="0x8260"/>
+    <enum name="PRIMITIVES_GENERATED_OES"                        value="0x8C87"/>
+    <enum name="LINES_ADJACENCY_OES"                             value="0xA"/>
+    <enum name="LINE_STRIP_ADJACENCY_OES"                        value="0xB"/>
+    <enum name="TRIANGLES_ADJACENCY_OES"                         value="0xC"/>
+    <enum name="TRIANGLE_STRIP_ADJACENCY_OES"                    value="0xD"/>
+    <enum name="FRAMEBUFFER_DEFAULT_LAYERS_OES"                  value="0x9312"/>
+    <enum name="MAX_FRAMEBUFFER_LAYERS_OES"                      value="0x9317"/>
+    <enum name="FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS_OES"        value="0x8DA8"/>
+    <enum name="FRAMEBUFFER_ATTACHMENT_LAYERED_OES"              value="0x8DA7"/>
+    <enum name="REFERENCED_BY_GEOMETRY_SHADER_OES"               value="0x9309"/>
+
+    <function name="FramebufferTextureOES" alias="FramebufferTexture" es2="3.1">
+        <param name="target" type="GLenum"/>
+        <param name="attachment" type="GLenum"/>
+        <param name="texture" type="GLuint"/>
+        <param name="level" type="GLint"/>
+    </function>
+  </category>
 </OpenGLAPI>

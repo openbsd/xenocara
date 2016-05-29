@@ -194,7 +194,7 @@ lp_build_min_simple(struct lp_build_context *bld,
       }
    }
 
-   if(intrinsic) {
+   if (intrinsic) {
       /* We need to handle nan's for floating point numbers. If one of the
        * inputs is nan the other should be returned (required by both D3D10+
        * and OpenCL).
@@ -376,7 +376,7 @@ lp_build_max_simple(struct lp_build_context *bld,
      }
    }
 
-   if(intrinsic) {
+   if (intrinsic) {
       if (util_cpu_caps.has_sse && type.floating &&
           nan_behavior != GALLIVM_NAN_BEHAVIOR_UNDEFINED &&
           nan_behavior != GALLIVM_NAN_RETURN_OTHER_SECOND_NONNAN &&
@@ -518,7 +518,7 @@ lp_build_add(struct lp_build_context *bld,
          }
       }
    
-      if(intrinsic)
+      if (intrinsic)
          return lp_build_intrinsic_binary(builder, intrinsic, lp_build_vec_type(bld->gallivm, bld->type), a, b);
    }
 
@@ -810,7 +810,7 @@ lp_build_sub(struct lp_build_context *bld,
          }
       }
    
-      if(intrinsic)
+      if (intrinsic)
          return lp_build_intrinsic_binary(builder, intrinsic, lp_build_vec_type(bld->gallivm, bld->type), a, b);
    }
 
@@ -2130,8 +2130,8 @@ lp_build_fract(struct lp_build_context *bld,
 
 
 /**
- * Prevent returning a fractional part of 1.0 for very small negative values of
- * 'a' by clamping against 0.99999(9).
+ * Prevent returning 1.0 for very small negative values of 'a' by clamping
+ * against 0.99999(9). (Will also return that value for NaNs.)
  */
 static inline LLVMValueRef
 clamp_fract(struct lp_build_context *bld, LLVMValueRef fract)
@@ -2141,13 +2141,14 @@ clamp_fract(struct lp_build_context *bld, LLVMValueRef fract)
    /* this is the largest number smaller than 1.0 representable as float */
    max = lp_build_const_vec(bld->gallivm, bld->type,
                             1.0 - 1.0/(1LL << (lp_mantissa(bld->type) + 1)));
-   return lp_build_min(bld, fract, max);
+   return lp_build_min_ext(bld, fract, max,
+                           GALLIVM_NAN_RETURN_OTHER_SECOND_NONNAN);
 }
 
 
 /**
  * Same as lp_build_fract, but guarantees that the result is always smaller
- * than one.
+ * than one. Will also return the smaller-than-one value for infs, NaNs.
  */
 LLVMValueRef
 lp_build_fract_safe(struct lp_build_context *bld,
@@ -3287,7 +3288,7 @@ lp_build_log2_approx(struct lp_build_context *bld,
       logexp = LLVMBuildSIToFP(builder, logexp, vec_type, "");
    }
 
-   if(p_log2) {
+   if (p_log2) {
       /* mant = 1 + (float) mantissa(x) */
       mant = LLVMBuildAnd(builder, i, mantmask, "");
       mant = LLVMBuildOr(builder, mant, one, "");
@@ -3335,15 +3336,15 @@ lp_build_log2_approx(struct lp_build_context *bld,
       }
    }
 
-   if(p_exp) {
+   if (p_exp) {
       exp = LLVMBuildBitCast(builder, exp, vec_type, "");
       *p_exp = exp;
    }
 
-   if(p_floor_log2)
+   if (p_floor_log2)
       *p_floor_log2 = logexp;
 
-   if(p_log2)
+   if (p_log2)
       *p_log2 = res;
 }
 

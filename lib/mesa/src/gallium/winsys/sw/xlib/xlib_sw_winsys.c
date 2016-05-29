@@ -268,7 +268,7 @@ xlib_displaytarget_destroy(struct sw_winsys *ws,
             xlib_dt->tempImage->data = NULL;
       }
       else {
-         FREE(xlib_dt->data);
+         align_free(xlib_dt->data);
          if (xlib_dt->tempImage && xlib_dt->tempImage->data == xlib_dt->data) {
             xlib_dt->tempImage->data = NULL;
          }
@@ -391,6 +391,7 @@ xlib_displaytarget_create(struct sw_winsys *winsys,
                           enum pipe_format format,
                           unsigned width, unsigned height,
                           unsigned alignment,
+                          const void *front_private,
                           unsigned *stride)
 {
    struct xlib_displaytarget *xlib_dt;
