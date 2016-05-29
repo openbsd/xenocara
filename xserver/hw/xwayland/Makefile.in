@@ -51,10 +51,16 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = Xwayland$(EXEEXT)
-@GLAMOR_EGL_TRUE@am__append_1 = xwayland-glamor.c
-@GLAMOR_EGL_TRUE@am__append_2 = $(GLAMOR_LIBS) $(GBM_LIBS) -lEGL -lGL
+@GLAMOR_EGL_TRUE@am__append_1 = \
+@GLAMOR_EGL_TRUE@	xwayland-glamor.c
+
+@GLAMOR_EGL_TRUE@@XV_TRUE@am__append_2 = \
+@GLAMOR_EGL_TRUE@@XV_TRUE@	xwayland-glamor-xv.c
+
+@GLAMOR_EGL_TRUE@am__append_3 = $(GLAMOR_LIBS) $(GBM_LIBS) -lEGL -lGL
 @GLAMOR_EGL_FALSE@Xwayland_DEPENDENCIES = $(glamor_lib) \
 @GLAMOR_EGL_FALSE@	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+@GLAMOR_EGL_FALSE@	$(top_builddir)/Xext/libXvidmode.la \
 @GLAMOR_EGL_FALSE@	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_2)
 subdir = hw/xwayland
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
@@ -63,8 +69,7 @@ ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_dir.m4 \
 	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
 	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
-	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/m4/xorg-tls.m4 \
-	$(top_srcdir)/configure.ac
+	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -82,18 +87,21 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am__Xwayland_SOURCES_DIST = xwayland.c xwayland-input.c \
 	xwayland-cursor.c xwayland-shm.c xwayland-output.c \
-	xwayland-cvt.c xwayland.h $(top_srcdir)/Xext/dpmsstubs.c \
-	$(top_srcdir)/Xi/stubs.c $(top_srcdir)/mi/miinitext.c \
-	xwayland-glamor.c
+	xwayland-cvt.c xwayland-vidmode.c xwayland.h \
+	$(top_srcdir)/Xext/dpmsstubs.c $(top_srcdir)/Xi/stubs.c \
+	$(top_srcdir)/mi/miinitext.c xwayland-glamor.c \
+	xwayland-glamor-xv.c
 @GLAMOR_EGL_TRUE@am__objects_1 = Xwayland-xwayland-glamor.$(OBJEXT)
+@GLAMOR_EGL_TRUE@@XV_TRUE@am__objects_2 = Xwayland-xwayland-glamor-xv.$(OBJEXT)
 am_Xwayland_OBJECTS = Xwayland-xwayland.$(OBJEXT) \
 	Xwayland-xwayland-input.$(OBJEXT) \
 	Xwayland-xwayland-cursor.$(OBJEXT) \
 	Xwayland-xwayland-shm.$(OBJEXT) \
 	Xwayland-xwayland-output.$(OBJEXT) \
-	Xwayland-xwayland-cvt.$(OBJEXT) Xwayland-dpmsstubs.$(OBJEXT) \
-	Xwayland-stubs.$(OBJEXT) Xwayland-miinitext.$(OBJEXT) \
-	$(am__objects_1)
+	Xwayland-xwayland-cvt.$(OBJEXT) \
+	Xwayland-xwayland-vidmode.$(OBJEXT) \
+	Xwayland-dpmsstubs.$(OBJEXT) Xwayland-stubs.$(OBJEXT) \
+	Xwayland-miinitext.$(OBJEXT) $(am__objects_1) $(am__objects_2)
 @GLAMOR_EGL_TRUE@nodist_Xwayland_OBJECTS =  \
 @GLAMOR_EGL_TRUE@	Xwayland-drm-protocol.$(OBJEXT)
 Xwayland_OBJECTS = $(am_Xwayland_OBJECTS) $(nodist_Xwayland_OBJECTS)
@@ -242,7 +250,6 @@ GLAMOR_LIBS = @GLAMOR_LIBS@
 GLX_ARCH_DEFINES = @GLX_ARCH_DEFINES@
 GLX_DEFINES = @GLX_DEFINES@
 GLX_SYS_LIBS = @GLX_SYS_LIBS@
-GLX_TLS = @GLX_TLS@
 GL_CFLAGS = @GL_CFLAGS@
 GL_LIBS = @GL_LIBS@
 GREP = @GREP@
@@ -372,8 +379,6 @@ XEPHYR_INCS = @XEPHYR_INCS@
 XEPHYR_LIBS = @XEPHYR_LIBS@
 XF86CONFIGDIR = @XF86CONFIGDIR@
 XF86CONFIGFILE = @XF86CONFIGFILE@
-XF86VIDMODE_CFLAGS = @XF86VIDMODE_CFLAGS@
-XF86VIDMODE_LIBS = @XF86VIDMODE_LIBS@
 XKB_BASE_DIRECTORY = @XKB_BASE_DIRECTORY@
 XKB_BIN_DIRECTORY = @XKB_BIN_DIRECTORY@
 XKB_COMPILED_DIR = @XKB_COMPILED_DIR@
@@ -507,11 +512,13 @@ Xwayland_CFLAGS = \
 	$(GBM_CFLAGS)
 
 Xwayland_SOURCES = xwayland.c xwayland-input.c xwayland-cursor.c \
-	xwayland-shm.c xwayland-output.c xwayland-cvt.c xwayland.h \
-	$(top_srcdir)/Xext/dpmsstubs.c $(top_srcdir)/Xi/stubs.c \
-	$(top_srcdir)/mi/miinitext.c $(am__append_1)
+	xwayland-shm.c xwayland-output.c xwayland-cvt.c \
+	xwayland-vidmode.c xwayland.h $(top_srcdir)/Xext/dpmsstubs.c \
+	$(top_srcdir)/Xi/stubs.c $(top_srcdir)/mi/miinitext.c \
+	$(am__append_1) $(am__append_2)
 Xwayland_LDADD = $(glamor_lib) $(XWAYLAND_LIBS) $(XWAYLAND_SYS_LIBS) \
-	$(XSERVER_SYS_LIBS) $(am__append_2)
+	$(top_builddir)/Xext/libXvidmode.la $(XSERVER_SYS_LIBS) \
+	$(am__append_3)
 Xwayland_LDFLAGS = $(LD_EXPORT_SYMBOLS_FLAG)
 @GLAMOR_EGL_TRUE@nodist_Xwayland_SOURCES = \
 @GLAMOR_EGL_TRUE@	drm-client-protocol.h			\
@@ -617,10 +624,12 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xwayland-stubs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xwayland-xwayland-cursor.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xwayland-xwayland-cvt.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xwayland-xwayland-glamor-xv.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xwayland-xwayland-glamor.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xwayland-xwayland-input.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xwayland-xwayland-output.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xwayland-xwayland-shm.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xwayland-xwayland-vidmode.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xwayland-xwayland.Po@am__quote@
 
 .c.o:
@@ -728,6 +737,20 @@ Xwayland-xwayland-cvt.obj: xwayland-cvt.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -c -o Xwayland-xwayland-cvt.obj `if test -f 'xwayland-cvt.c'; then $(CYGPATH_W) 'xwayland-cvt.c'; else $(CYGPATH_W) '$(srcdir)/xwayland-cvt.c'; fi`
 
+Xwayland-xwayland-vidmode.o: xwayland-vidmode.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -MT Xwayland-xwayland-vidmode.o -MD -MP -MF $(DEPDIR)/Xwayland-xwayland-vidmode.Tpo -c -o Xwayland-xwayland-vidmode.o `test -f 'xwayland-vidmode.c' || echo '$(srcdir)/'`xwayland-vidmode.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/Xwayland-xwayland-vidmode.Tpo $(DEPDIR)/Xwayland-xwayland-vidmode.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xwayland-vidmode.c' object='Xwayland-xwayland-vidmode.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -c -o Xwayland-xwayland-vidmode.o `test -f 'xwayland-vidmode.c' || echo '$(srcdir)/'`xwayland-vidmode.c
+
+Xwayland-xwayland-vidmode.obj: xwayland-vidmode.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -MT Xwayland-xwayland-vidmode.obj -MD -MP -MF $(DEPDIR)/Xwayland-xwayland-vidmode.Tpo -c -o Xwayland-xwayland-vidmode.obj `if test -f 'xwayland-vidmode.c'; then $(CYGPATH_W) 'xwayland-vidmode.c'; else $(CYGPATH_W) '$(srcdir)/xwayland-vidmode.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/Xwayland-xwayland-vidmode.Tpo $(DEPDIR)/Xwayland-xwayland-vidmode.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xwayland-vidmode.c' object='Xwayland-xwayland-vidmode.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -c -o Xwayland-xwayland-vidmode.obj `if test -f 'xwayland-vidmode.c'; then $(CYGPATH_W) 'xwayland-vidmode.c'; else $(CYGPATH_W) '$(srcdir)/xwayland-vidmode.c'; fi`
+
 Xwayland-dpmsstubs.o: $(top_srcdir)/Xext/dpmsstubs.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -MT Xwayland-dpmsstubs.o -MD -MP -MF $(DEPDIR)/Xwayland-dpmsstubs.Tpo -c -o Xwayland-dpmsstubs.o `test -f '$(top_srcdir)/Xext/dpmsstubs.c' || echo '$(srcdir)/'`$(top_srcdir)/Xext/dpmsstubs.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/Xwayland-dpmsstubs.Tpo $(DEPDIR)/Xwayland-dpmsstubs.Po
@@ -783,6 +806,20 @@ Xwayland-xwayland-glamor.obj: xwayland-glamor.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xwayland-glamor.c' object='Xwayland-xwayland-glamor.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -c -o Xwayland-xwayland-glamor.obj `if test -f 'xwayland-glamor.c'; then $(CYGPATH_W) 'xwayland-glamor.c'; else $(CYGPATH_W) '$(srcdir)/xwayland-glamor.c'; fi`
+
+Xwayland-xwayland-glamor-xv.o: xwayland-glamor-xv.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -MT Xwayland-xwayland-glamor-xv.o -MD -MP -MF $(DEPDIR)/Xwayland-xwayland-glamor-xv.Tpo -c -o Xwayland-xwayland-glamor-xv.o `test -f 'xwayland-glamor-xv.c' || echo '$(srcdir)/'`xwayland-glamor-xv.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/Xwayland-xwayland-glamor-xv.Tpo $(DEPDIR)/Xwayland-xwayland-glamor-xv.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xwayland-glamor-xv.c' object='Xwayland-xwayland-glamor-xv.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -c -o Xwayland-xwayland-glamor-xv.o `test -f 'xwayland-glamor-xv.c' || echo '$(srcdir)/'`xwayland-glamor-xv.c
+
+Xwayland-xwayland-glamor-xv.obj: xwayland-glamor-xv.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -MT Xwayland-xwayland-glamor-xv.obj -MD -MP -MF $(DEPDIR)/Xwayland-xwayland-glamor-xv.Tpo -c -o Xwayland-xwayland-glamor-xv.obj `if test -f 'xwayland-glamor-xv.c'; then $(CYGPATH_W) 'xwayland-glamor-xv.c'; else $(CYGPATH_W) '$(srcdir)/xwayland-glamor-xv.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/Xwayland-xwayland-glamor-xv.Tpo $(DEPDIR)/Xwayland-xwayland-glamor-xv.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xwayland-glamor-xv.c' object='Xwayland-xwayland-glamor-xv.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -c -o Xwayland-xwayland-glamor-xv.obj `if test -f 'xwayland-glamor-xv.c'; then $(CYGPATH_W) 'xwayland-glamor-xv.c'; else $(CYGPATH_W) '$(srcdir)/xwayland-glamor-xv.c'; fi`
 
 Xwayland-drm-protocol.o: drm-protocol.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -MT Xwayland-drm-protocol.o -MD -MP -MF $(DEPDIR)/Xwayland-drm-protocol.Tpo -c -o Xwayland-drm-protocol.o `test -f 'drm-protocol.c' || echo '$(srcdir)/'`drm-protocol.c

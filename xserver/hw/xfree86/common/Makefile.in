@@ -61,8 +61,7 @@ ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_dir.m4 \
 	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
 	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
-	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/m4/xorg-tls.m4 \
-	$(top_srcdir)/configure.ac
+	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -83,26 +82,25 @@ am__libcommon_la_SOURCES_DIST = xf86Configure.c xf86Bus.c xf86Config.c \
 	xf86AutoConfig.c xf86Option.c xf86Init.c xf86VidMode.c \
 	xf86fbman.c xf86cmap.c xf86Helper.c xf86PM.c xf86Xinput.c \
 	xisb.c xf86Mode.c xorgHelper.c xf86Extensions.h \
-	xf86Extensions.c xf86vmode.c xf86xv.c xf86xvmc.c xf86fbBus.c \
-	xf86noBus.c xf86pciBus.c xf86VGAarbiter.c xf86VGAarbiter.h \
+	xf86Extensions.c xf86xv.c xf86xvmc.c xf86fbBus.c xf86noBus.c \
+	xf86pciBus.c xf86VGAarbiter.c xf86VGAarbiter.h \
 	xf86VGAarbiterPriv.h xf86sbusBus.c xf86platformBus.c \
 	xf86RandR.c
 @DGA_TRUE@am__objects_1 = xf86DGA.lo
-@XF86VIDMODE_TRUE@am__objects_2 = xf86vmode.lo
-@XV_TRUE@am__objects_3 = xf86xv.lo xf86xvmc.lo
-@XORG_BUS_PCI_TRUE@am__objects_4 = xf86pciBus.lo xf86VGAarbiter.lo
-@XORG_BUS_SPARC_TRUE@am__objects_5 = xf86sbusBus.lo
-@XORG_BUS_PLATFORM_TRUE@am__objects_6 = xf86platformBus.lo
-am__objects_7 = xf86fbBus.lo xf86noBus.lo $(am__objects_4) \
-	$(am__objects_5) $(am__objects_6)
-am__objects_8 = xf86RandR.lo
+@XV_TRUE@am__objects_2 = xf86xv.lo xf86xvmc.lo
+@XORG_BUS_PCI_TRUE@am__objects_3 = xf86pciBus.lo xf86VGAarbiter.lo
+@XORG_BUS_SPARC_TRUE@am__objects_4 = xf86sbusBus.lo
+@XORG_BUS_PLATFORM_TRUE@am__objects_5 = xf86platformBus.lo
+am__objects_6 = xf86fbBus.lo xf86noBus.lo $(am__objects_3) \
+	$(am__objects_4) $(am__objects_5)
+am__objects_7 = xf86RandR.lo
 am_libcommon_la_OBJECTS = xf86Configure.lo xf86Bus.lo xf86Config.lo \
 	xf86Cursor.lo $(am__objects_1) xf86DPMS.lo xf86Events.lo \
 	xf86Globals.lo xf86AutoConfig.lo xf86Option.lo xf86Init.lo \
 	xf86VidMode.lo xf86fbman.lo xf86cmap.lo xf86Helper.lo \
 	xf86PM.lo xf86Xinput.lo xisb.lo xf86Mode.lo xorgHelper.lo \
-	xf86Extensions.lo $(am__objects_2) $(am__objects_3) \
-	$(am__objects_7) $(am__objects_8)
+	xf86Extensions.lo $(am__objects_2) $(am__objects_6) \
+	$(am__objects_7)
 nodist_libcommon_la_OBJECTS = xf86DefModeSet.lo
 libcommon_la_OBJECTS = $(am_libcommon_la_OBJECTS) \
 	$(nodist_libcommon_la_OBJECTS)
@@ -154,9 +152,8 @@ am__can_run_installinfo = \
 am__sdk_HEADERS_DIST = compiler.h fourcc.h xf86.h xf86Module.h \
 	xf86Opt.h xf86PciInfo.h xf86Priv.h xf86Privstr.h xf86cmap.h \
 	xf86fbman.h xf86str.h xf86Xinput.h xisb.h xf86xv.h xf86xvmc.h \
-	xf86xvpriv.h vidmodeproc.h dgaproc.h xorgVersion.h \
-	xf86sbusBus.h xf86VGAarbiter.h xf86Optionstr.h \
-	xf86platformBus.h xaarop.h
+	xf86xvpriv.h dgaproc.h xorgVersion.h xf86sbusBus.h \
+	xf86VGAarbiter.h xf86Optionstr.h xf86platformBus.h xaarop.h
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
@@ -280,7 +277,6 @@ GLAMOR_LIBS = @GLAMOR_LIBS@
 GLX_ARCH_DEFINES = @GLX_ARCH_DEFINES@
 GLX_DEFINES = @GLX_DEFINES@
 GLX_SYS_LIBS = @GLX_SYS_LIBS@
-GLX_TLS = @GLX_TLS@
 GL_CFLAGS = @GL_CFLAGS@
 GL_LIBS = @GL_LIBS@
 GREP = @GREP@
@@ -410,8 +406,6 @@ XEPHYR_INCS = @XEPHYR_INCS@
 XEPHYR_LIBS = @XEPHYR_LIBS@
 XF86CONFIGDIR = @XF86CONFIGDIR@
 XF86CONFIGFILE = @XF86CONFIGFILE@
-XF86VIDMODE_CFLAGS = @XF86VIDMODE_CFLAGS@
-XF86VIDMODE_LIBS = @XF86VIDMODE_LIBS@
 XKB_BASE_DIRECTORY = @XKB_BASE_DIRECTORY@
 XKB_BIN_DIRECTORY = @XKB_BIN_DIRECTORY@
 XKB_COMPILED_DIR = @XKB_COMPILED_DIR@
@@ -542,8 +536,6 @@ noinst_LTLIBRARIES = libcommon.la
 @XORG_BUS_SPARC_TRUE@SBUS_SOURCES = xf86sbusBus.c
 @XV_TRUE@XVSOURCES = xf86xv.c xf86xvmc.c
 @XV_TRUE@XVSDKINCS = xf86xv.h xf86xvmc.h xf86xvpriv.h
-@XF86VIDMODE_TRUE@XF86VMODESOURCES = xf86vmode.c
-@XF86VIDMODE_TRUE@XF86VMODE_SDK = vidmodeproc.h
 @DGA_TRUE@DGASOURCES = xf86DGA.c
 @DGA_TRUE@DGA_SDK = dgaproc.h
 @XORG_BUS_PLATFORM_TRUE@PLATSOURCES = xf86platformBus.c
@@ -582,7 +574,6 @@ CLEANFILES = $(BUILT_SOURCES)
 EXTRA_DIST = \
 	compiler.h \
 	fourcc.h \
-	vidmodeproc.h \
 	xf86.h \
 	xf86Bus.h \
 	xf86Config.h \
@@ -694,7 +685,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86pciBus.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86platformBus.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86sbusBus.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86vmode.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86xv.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86xvmc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xisb.Plo@am__quote@

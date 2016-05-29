@@ -16,7 +16,7 @@ TESTS=$(noinst_PROGRAMS)
 TESTS_ENVIRONMENT = $(XORG_MALLOC_DEBUG_ENV)
 
 AM_CFLAGS = $(DIX_CFLAGS) @XORG_CFLAGS@
-AM_CPPFLAGS = $(XORG_INCS) -I$(top_srcdir)/miext/cw
+AM_CPPFLAGS = $(XORG_INCS)
 if XORG
 AM_CPPFLAGS += -I$(top_srcdir)/hw/xfree86/parser \
 	-I$(top_srcdir)/hw/xfree86/ddc \
@@ -49,13 +49,14 @@ libxservertest_la_LIBADD += \
             $(top_builddir)/hw/xfree86/loader/libloader.la \
             $(top_builddir)/hw/xfree86/os-support/libxorgos.la \
             $(top_builddir)/hw/xfree86/common/libcommon.la \
-            $(top_builddir)/hw/xfree86/parser/libxf86config_internal.la \
+            $(top_builddir)/hw/xfree86/parser/libxf86config.la \
             $(top_builddir)/hw/xfree86/dixmods/libdixmods.la \
             $(top_builddir)/hw/xfree86/modes/libxf86modes.la \
             $(top_builddir)/hw/xfree86/ramdac/libramdac.la \
             $(top_builddir)/hw/xfree86/ddc/libddc.la \
             $(top_builddir)/hw/xfree86/i2c/libi2c.la \
             $(top_builddir)/hw/xfree86/dixmods/libxorgxkb.la \
+            $(top_builddir)/Xext/libXvidmode.la \
             @XORG_LIBS@
 
 BUILT_SOURCES = sdksyms.c
@@ -91,6 +92,7 @@ libxservertest_la_LIBADD += \
             $(top_builddir)/render/librender.la \
             $(top_builddir)/Xext/libXext.la \
             $(top_builddir)/Xext/libXextdpmsstubs.la \
+            $(top_builddir)/Xext/libXvidmode.la \
             $(top_builddir)/Xi/libXi.la \
             $(top_builddir)/Xi/libXistubs.la \
             $(top_builddir)/xfixes/libxfixes.la \

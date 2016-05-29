@@ -223,7 +223,7 @@ ProcXResQueryClients(ClientPtr client)
 
     REQUEST_SIZE_MATCH(xXResQueryClientsReq);
 
-    current_clients = malloc(currentMaxClients * sizeof(int));
+    current_clients = xallocarray(currentMaxClients, sizeof(int));
 
     num_clients = 0;
     for (i = 0; i < currentMaxClients; i++) {
@@ -410,21 +410,21 @@ ResFindGCPixmaps(void *value, XID id, void *cdata)
         *bytes += ResGetApproxPixmapBytes(pGC->tile.pixmap);
 }
 
+#ifdef RENDER
 static void
 ResFindPicturePixmaps(void *value, XID id, void *cdata)
 {
-#ifdef RENDER
     ResFindResourcePixmaps(value, id, PictureType, cdata);
-#endif
 }
+#endif
 
+#ifdef COMPOSITE
 static void
 ResFindCompositeClientWindowPixmaps (void *value, XID id, void *cdata)
 {
-#ifdef COMPOSITE
     ResFindResourcePixmaps(value, id, CompositeClientWindowType, cdata);
-#endif
 }
+#endif
 
 static int
 ProcXResQueryClientPixmapBytes(ClientPtr client)

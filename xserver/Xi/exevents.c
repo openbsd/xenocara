@@ -471,9 +471,9 @@ DeepCopyKeyboardClasses(DeviceIntPtr from, DeviceIntPtr to)
 
             oldTrace = to->focus->trace;
             memcpy(to->focus, from->focus, sizeof(FocusClassRec));
-            to->focus->trace = realloc(oldTrace,
-                                       to->focus->traceSize *
-                                       sizeof(WindowPtr));
+            to->focus->trace = reallocarray(oldTrace,
+                                            to->focus->traceSize,
+                                            sizeof(WindowPtr));
             if (!to->focus->trace && to->focus->traceSize)
                 FatalError("[Xi] no memory for trace.\n");
             memcpy(to->focus->trace, from->focus->trace,
@@ -1590,7 +1590,7 @@ ProcessTouchEvent(InternalEvent *ev, DeviceIntPtr dev)
     if (!ti) {
         DebugF("[Xi] %s: Failed to get event %d for touchpoint %d\n",
                dev->name, type, touchid);
-        return;
+        goto out;
     }
 
     /* if emulate_pointer is set, emulate the motion event right
@@ -1624,6 +1624,7 @@ ProcessTouchEvent(InternalEvent *ev, DeviceIntPtr dev)
     if (ev->any.type == ET_TouchEnd)
         TouchEndTouch(dev, ti);
 
+ out:
     if (emulate_pointer)
         UpdateDeviceState(dev, &ev->device_event);
 }

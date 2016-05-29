@@ -258,9 +258,7 @@ xf86_crtc_convert_cursor_to_argb(xf86CrtcPtr crtc, unsigned char *src)
     CARD32 bits;
     const Rotation rotation = xf86_crtc_cursor_rotation(crtc);
 
-#ifdef ARGB_CURSOR
     crtc->cursor_argb = FALSE;
-#endif
 
     for (y = 0; y < cursor_info->MaxHeight; y++)
         for (x = 0; x < cursor_info->MaxWidth; x++) {
@@ -458,9 +456,7 @@ xf86_crtc_load_cursor_image(xf86CrtcPtr crtc, CARD8 *src)
     CARD8 *cursor_image;
     const Rotation rotation = xf86_crtc_cursor_rotation(crtc);
 
-#ifdef ARGB_CURSOR
     crtc->cursor_argb = FALSE;
-#endif
 
     if (rotation == RR_Rotate_0)
         cursor_image = src;
@@ -519,6 +515,7 @@ xf86_use_hw_cursor(ScreenPtr screen, CursorPtr cursor)
     ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
     xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(scrn);
     xf86CursorInfoPtr cursor_info = xf86_config->cursor_info;
+    int c;
 
     cursor = RefCursor(cursor);
     if (xf86_config->cursor)
@@ -528,6 +525,16 @@ xf86_use_hw_cursor(ScreenPtr screen, CursorPtr cursor)
     if (cursor->bits->width > cursor_info->MaxWidth ||
         cursor->bits->height > cursor_info->MaxHeight)
         return FALSE;
+
+    for (c = 0; c < xf86_config->num_crtc; c++) {
+        xf86CrtcPtr crtc = xf86_config->crtc[c];
+
+        if (!crtc->enabled)
+            continue;
+
+        if (crtc->transformPresent)
+            return FALSE;
+    }
 
     return TRUE;
 }
@@ -539,17 +546,11 @@ xf86_use_hw_cursor_argb(ScreenPtr screen, CursorPtr cursor)
     xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(scrn);
     xf86CursorInfoPtr cursor_info = xf86_config->cursor_info;
 
-    cursor = RefCursor(cursor);
-    if (xf86_config->cursor)
-        FreeCursor(xf86_config->cursor, None);
-    xf86_config->cursor = cursor;
+    if (!xf86_use_hw_cursor(screen, cursor))
+        return FALSE;
 
     /* Make sure ARGB support is available */
     if ((cursor_info->Flags & HARDWARE_CURSOR_ARGB) == 0)
-        return FALSE;
-
-    if (cursor->bits->width > cursor_info->MaxWidth ||
-        cursor->bits->height > cursor_info->MaxHeight)
         return FALSE;
 
     return TRUE;
@@ -632,12 +633,10 @@ xf86_cursors_init(ScreenPtr screen, int max_width, int max_height, int flags)
     cursor_info->HideCursor = xf86_hide_cursors;
     cursor_info->ShowCursor = xf86_show_cursors;
     cursor_info->UseHWCursor = xf86_use_hw_cursor;
-#ifdef ARGB_CURSOR
     if (flags & HARDWARE_CURSOR_ARGB) {
         cursor_info->UseHWCursorARGB = xf86_use_hw_cursor_argb;
         cursor_info->LoadCursorARGBCheck = xf86_load_cursor_argb;
     }
-#endif
 
     xf86_config->cursor = NULL;
     xf86_hide_cursors(scrn);
@@ -691,11 +690,9 @@ xf86_reload_cursors(ScreenPtr screen)
         void *src =
             dixLookupScreenPrivate(&cursor->devPrivates, CursorScreenKey,
                                    screen);
-#ifdef ARGB_CURSOR
         if (cursor->bits->argb && xf86DriverHasLoadCursorARGB(cursor_info))
             xf86DriverLoadCursorARGB(cursor_info, cursor);
         else if (src)
-#endif
             xf86DriverLoadCursorImage(cursor_info, src);
 
         x += scrn->frameX0 + cursor_screen_priv->HotX;

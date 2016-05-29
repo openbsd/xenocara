@@ -76,6 +76,33 @@ static xf86ConfigSymTabRec DisplayTab[] = {
     {-1, ""},
 };
 
+static void
+xf86freeModeList(XF86ModePtr ptr)
+{
+    XF86ModePtr prev;
+
+    while (ptr) {
+        TestFree(ptr->mode_name);
+        prev = ptr;
+        ptr = ptr->list.next;
+        free(prev);
+    }
+}
+
+static void
+xf86freeDisplayList(XF86ConfDisplayPtr ptr)
+{
+    XF86ConfDisplayPtr prev;
+
+    while (ptr) {
+        xf86freeModeList(ptr->disp_mode_lst);
+        xf86optionListFree(ptr->disp_option_lst);
+        prev = ptr;
+        ptr = ptr->list.next;
+        free(prev);
+    }
+}
+
 #define CLEANUP xf86freeDisplayList
 
 static XF86ConfDisplayPtr
@@ -211,6 +238,7 @@ static xf86ConfigSymTabRec ScreenTab[] = {
     {DEFAULTFBBPP, "defaultfbbpp"},
     {VIRTUAL, "virtual"},
     {OPTION, "option"},
+    {GDEVICE, "gpudevice"},
     {-1, ""},
 };
 
@@ -269,6 +297,13 @@ xf86parseScreenSection(void)
             if (xf86getSubToken(&(ptr->scrn_comment)) != STRING)
                 Error(QUOTE_MSG, "Device");
             ptr->scrn_device_str = xf86_lex_val.str;
+            break;
+        case GDEVICE:
+            if (xf86getSubToken(&(ptr->scrn_comment)) != STRING)
+                Error(QUOTE_MSG, "GPUDevice");
+            if (ptr->num_gpu_devices == CONF_MAXGPUDEVICES)
+                Error(GPU_DEVICE_TOO_MANY, CONF_MAXGPUDEVICES);
+            ptr->scrn_gpu_device_str[ptr->num_gpu_devices++] = xf86_lex_val.str;
             break;
         case MONITOR:
             if (xf86getSubToken(&(ptr->scrn_comment)) != STRING)
@@ -342,7 +377,7 @@ xf86printScreenSection(FILE * cf, XF86ConfScreenPtr ptr)
     XF86ConfAdaptorLinkPtr aptr;
     XF86ConfDisplayPtr dptr;
     XF86ModePtr mptr;
-
+    int i;
     while (ptr) {
         fprintf(cf, "Section \"Screen\"\n");
         if (ptr->scrn_comment)
@@ -353,6 +388,9 @@ xf86printScreenSection(FILE * cf, XF86ConfScreenPtr ptr)
             fprintf(cf, "\tDriver     \"%s\"\n", ptr->scrn_obso_driver);
         if (ptr->scrn_device_str)
             fprintf(cf, "\tDevice     \"%s\"\n", ptr->scrn_device_str);
+        for (i = 0; i < ptr->num_gpu_devices; i++)
+            if (ptr->scrn_gpu_device_str[i])
+                fprintf(cf, "\tGPUDevice     \"%s\"\n", ptr->scrn_gpu_device_str[i]);
         if (ptr->scrn_monitor_str)
             fprintf(cf, "\tMonitor    \"%s\"\n", ptr->scrn_monitor_str);
         if (ptr->scrn_defaultdepth)
@@ -422,26 +460,7 @@ xf86printScreenSection(FILE * cf, XF86ConfScreenPtr ptr)
 
 }
 
-void
-xf86freeScreenList(XF86ConfScreenPtr ptr)
-{
-    XF86ConfScreenPtr prev;
-
-    while (ptr) {
-        TestFree(ptr->scrn_identifier);
-        TestFree(ptr->scrn_monitor_str);
-        TestFree(ptr->scrn_device_str);
-        TestFree(ptr->scrn_comment);
-        xf86optionListFree(ptr->scrn_option_lst);
-        xf86freeAdaptorLinkList(ptr->scrn_adaptor_lst);
-        xf86freeDisplayList(ptr->scrn_display_lst);
-        prev = ptr;
-        ptr = ptr->list.next;
-        free(prev);
-    }
-}
-
-void
+static void
 xf86freeAdaptorLinkList(XF86ConfAdaptorLinkPtr ptr)
 {
     XF86ConfAdaptorLinkPtr prev;
@@ -455,26 +474,20 @@ xf86freeAdaptorLinkList(XF86ConfAdaptorLinkPtr ptr)
 }
 
 void
-xf86freeDisplayList(XF86ConfDisplayPtr ptr)
+xf86freeScreenList(XF86ConfScreenPtr ptr)
 {
-    XF86ConfDisplayPtr prev;
-
+    XF86ConfScreenPtr prev;
+    int i;
     while (ptr) {
-        xf86freeModeList(ptr->disp_mode_lst);
-        xf86optionListFree(ptr->disp_option_lst);
-        prev = ptr;
-        ptr = ptr->list.next;
-        free(prev);
-    }
-}
-
-void
-xf86freeModeList(XF86ModePtr ptr)
-{
-    XF86ModePtr prev;
-
-    while (ptr) {
-        TestFree(ptr->mode_name);
+        TestFree(ptr->scrn_identifier);
+        TestFree(ptr->scrn_monitor_str);
+        TestFree(ptr->scrn_device_str);
+        for (i = 0; i < ptr->num_gpu_devices; i++)
+            TestFree(ptr->scrn_gpu_device_str[i]);
+        TestFree(ptr->scrn_comment);
+        xf86optionListFree(ptr->scrn_option_lst);
+        xf86freeAdaptorLinkList(ptr->scrn_adaptor_lst);
+        xf86freeDisplayList(ptr->scrn_display_lst);
         prev = ptr;
         ptr = ptr->list.next;
         free(prev);
@@ -487,6 +500,7 @@ xf86validateScreen(XF86ConfigPtr p)
     XF86ConfScreenPtr screen = p->conf_screen_lst;
     XF86ConfMonitorPtr monitor;
     XF86ConfAdaptorLinkPtr adaptor;
+    int i;
 
     while (screen) {
         if (screen->scrn_obso_driver && !screen->scrn_identifier)
@@ -505,6 +519,10 @@ xf86validateScreen(XF86ConfigPtr p)
         screen->scrn_device =
             xf86findDevice(screen->scrn_device_str, p->conf_device_lst);
 
+        for (i = 0; i < screen->num_gpu_devices; i++) {
+            screen->scrn_gpu_devices[i] =
+                xf86findDevice(screen->scrn_gpu_device_str[i], p->conf_device_lst);
+        }
         adaptor = screen->scrn_adaptor_lst;
         while (adaptor) {
             adaptor->al_adaptor =

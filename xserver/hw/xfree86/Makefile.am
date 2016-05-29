@@ -49,7 +49,7 @@ bin_PROGRAMS = Xorg
 nodist_Xorg_SOURCES = sdksyms.c
 
 AM_CFLAGS = $(DIX_CFLAGS) @XORG_CFLAGS@
-AM_CPPFLAGS = $(XORG_INCS) -I$(srcdir)/parser -I$(top_srcdir)/miext/cw \
+AM_CPPFLAGS = $(XORG_INCS) -I$(srcdir)/parser \
 	-I$(srcdir)/ddc -I$(srcdir)/i2c -I$(srcdir)/modes -I$(srcdir)/ramdac \
 	-I$(srcdir)/dri -I$(srcdir)/dri2 -I$(top_srcdir)/dri3
 
@@ -59,7 +59,7 @@ LOCAL_LIBS = \
             loader/libloader.la \
             common/libcommon.la \
             os-support/libxorgos.la \
-            parser/libxf86config_internal.la \
+            parser/libxf86config.la \
             dixmods/libdixmods.la \
             modes/libxf86modes.la \
             ramdac/libramdac.la \
@@ -72,7 +72,9 @@ LOCAL_LIBS = \
 	    $(DRI3_LIB) \
 	    $(top_builddir)/miext/sync/libsync.la \
             $(top_builddir)/mi/libmi.la \
-            $(top_builddir)/os/libos.la
+            $(top_builddir)/os/libos.la \
+	    $(top_builddir)/Xext/libXvidmode.la
+
 Xorg_LDADD = \
             $(LOCAL_LIBS) \
             $(XORG_SYS_LIBS) \

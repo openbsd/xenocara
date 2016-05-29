@@ -99,6 +99,16 @@ int ephyrResNameFromCmd = 0;
 char *ephyrTitle = NULL;
 Bool ephyr_glamor = FALSE;
 
+Bool
+hostx_has_extension(xcb_extension_t *extension)
+{
+    const xcb_query_extension_reply_t *rep;
+
+    rep = xcb_get_extension_data(HostX.conn, extension);
+
+    return rep && rep->present;
+}
+
 static void
  hostx_set_fullscreen_hint(void);
 
@@ -129,8 +139,8 @@ hostx_add_screen(KdScreenInfo *screen, unsigned long win_id, int screen_num, Boo
     int index = HostX.n_screens;
 
     HostX.n_screens += 1;
-    HostX.screens = realloc(HostX.screens,
-                            HostX.n_screens * sizeof(HostX.screens[0]));
+    HostX.screens = reallocarray(HostX.screens,
+                                 HostX.n_screens, sizeof(HostX.screens[0]));
     HostX.screens[index] = screen;
 
     scrpriv->screen = screen;
@@ -240,7 +250,7 @@ hostx_get_output_geometry(const char *output,
     xcb_randr_get_crtc_info_reply_t *crtc_info_r;
 
     /* First of all, check for extension */
-    if (!xcb_get_extension_data(HostX.conn, &xcb_randr_id)->present)
+    if (!hostx_has_extension(&xcb_randr_id))
     {
         fprintf(stderr, "\nHost X server does not support RANDR extension (or it's disabled).\n");
         exit(1);
@@ -422,7 +432,6 @@ hostx_init(void)
     char *tmpstr;
     char *class_hint;
     size_t class_len;
-    const xcb_query_extension_reply_t *shm_rep;
     xcb_screen_t *xscreen;
     xcb_rectangle_t rect = { 0, 0, 1, 1 };
 
@@ -632,8 +641,7 @@ hostx_init(void)
     }
 
     /* Try to get share memory ximages for a little bit more speed */
-    shm_rep = xcb_get_extension_data(HostX.conn, &xcb_shm_id);
-    if (!shm_rep || !shm_rep->present || getenv("XEPHYR_NO_SHM")) {
+    if (!hostx_has_extension(&xcb_shm_id) || getenv("XEPHYR_NO_SHM")) {
         fprintf(stderr, "\nXephyr unable to use SHM XImages\n");
         HostX.have_shm = FALSE;
     }
@@ -872,7 +880,7 @@ hostx_screen_init(KdScreenInfo *screen,
             scrpriv->ximg->byte_order = IMAGE_BYTE_ORDER;
 
         scrpriv->ximg->data =
-            malloc(scrpriv->ximg->stride * buffer_height);
+            xallocarray(scrpriv->ximg->stride, buffer_height);
     }
 
     {
@@ -938,7 +946,7 @@ hostx_screen_init(KdScreenInfo *screen,
         *bits_per_pixel = scrpriv->server_depth;
 
         EPHYR_DBG("server bpp %i", bytes_per_pixel);
-        scrpriv->fb_data = malloc (stride * buffer_height);
+        scrpriv->fb_data = xallocarray (stride, buffer_height);
         return scrpriv->fb_data;
     }
 }
@@ -1158,9 +1166,9 @@ hostx_get_visuals_info(EphyrHostVisualInfo ** a_visuals, int *a_num_entries)
         for (; depths.rem; xcb_depth_next(&depths)) {
             xcb_visualtype_t *visuals = xcb_depth_visuals(depths.data);
             EphyrHostVisualInfo *tmp_visuals =
-                realloc(host_visuals,
-                        (nb_items + depths.data->visuals_len)
-                        * sizeof(EphyrHostVisualInfo));
+                reallocarray(host_visuals,
+                             nb_items + depths.data->visuals_len,
+                             sizeof(EphyrHostVisualInfo));
             if (!tmp_visuals) {
                 goto out;
             }
@@ -1417,9 +1425,7 @@ ephyr_glamor_init(ScreenPtr screen)
     ephyr_glamor_set_window_size(scrpriv->glamor,
                                  scrpriv->win_width, scrpriv->win_height);
 
-    if (!glamor_init(screen,
-                     GLAMOR_USE_SCREEN |
-                     GLAMOR_USE_PICTURE_SCREEN)) {
+    if (!glamor_init(screen, 0)) {
         FatalError("Failed to initialize glamor\n");
         return FALSE;
     }

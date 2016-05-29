@@ -95,6 +95,8 @@ Equipment Corporation.
 #include "cursorstr.h"
 #include "selection.h"
 #include <X11/fonts/font.h>
+#include <X11/fonts/fontstruct.h>
+#include <X11/fonts/fontutil.h>
 #include "opaque.h"
 #include "servermd.h"
 #include "hotplug.h"
@@ -163,7 +165,7 @@ dix_main(int argc, char *argv[], char *envp[])
         OsInit();
         if (serverGeneration == 1) {
             CreateWellKnownSockets();
-            for (i = 1; i < MAXCLIENTS; i++)
+            for (i = 1; i < LimitClients; i++)
                 clients[i] = NullClient;
             serverClient = calloc(sizeof(ClientRec), 1);
             if (!serverClient)

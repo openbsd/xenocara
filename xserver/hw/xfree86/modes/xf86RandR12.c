@@ -1054,7 +1054,7 @@ xf86RandR12CrtcNotify(RRCrtcPtr randr_crtc)
     DisplayModePtr mode = &crtc->mode;
     Bool ret;
 
-    randr_outputs = malloc(config->num_output * sizeof(RROutputPtr));
+    randr_outputs = xallocarray(config->num_output, sizeof(RROutputPtr));
     if (!randr_outputs)
         return FALSE;
     x = crtc->x;
@@ -1146,7 +1146,7 @@ xf86RandR12CrtcSet(ScreenPtr pScreen,
     if (!crtc->scrn->vtSema)
         return FALSE;
 
-    save_crtcs = malloc(config->num_output * sizeof(xf86CrtcPtr));
+    save_crtcs = xallocarray(config->num_output, sizeof(xf86CrtcPtr));
     if ((randr_mode != NULL) != crtc->enabled)
         changed = TRUE;
     else if (randr_mode && !xf86RandRModeMatches(randr_mode, &crtc->mode))
@@ -1251,9 +1251,8 @@ xf86RandR12CrtcSetGamma(ScreenPtr pScreen, RRCrtcPtr randr_crtc)
     if (randr_crtc->gammaSize != crtc->gamma_size) {
         CARD16 *tmp_ptr;
 
-        tmp_ptr =
-            realloc(crtc->gamma_red,
-                    3 * randr_crtc->gammaSize * sizeof(CARD16));
+        tmp_ptr = reallocarray(crtc->gamma_red,
+                               randr_crtc->gammaSize, 3 * sizeof(CARD16));
         if (!tmp_ptr)
             return FALSE;
         crtc->gamma_red = tmp_ptr;
@@ -1294,9 +1293,8 @@ xf86RandR12CrtcGetGamma(ScreenPtr pScreen, RRCrtcPtr randr_crtc)
     if (randr_crtc->gammaSize != crtc->gamma_size) {
         CARD16 *tmp_ptr;
 
-        tmp_ptr =
-            realloc(randr_crtc->gammaRed,
-                    3 * crtc->gamma_size * sizeof(CARD16));
+        tmp_ptr = reallocarray(randr_crtc->gammaRed,
+                               crtc->gamma_size, 3 * sizeof(CARD16));
         if (!tmp_ptr)
             return FALSE;
         randr_crtc->gammaRed = tmp_ptr;
@@ -1390,7 +1388,7 @@ xf86RROutputSetModes(RROutputPtr randr_output, DisplayModePtr modes)
         nmode++;
 
     if (nmode) {
-        rrmodes = malloc(nmode * sizeof(RRModePtr));
+        rrmodes = xallocarray(nmode, sizeof(RRModePtr));
 
         if (!rrmodes)
             return FALSE;
@@ -1445,8 +1443,8 @@ xf86RandR12SetInfo12(ScreenPtr pScreen)
     int o, c, l;
     int nclone;
 
-    clones = malloc(config->num_output * sizeof(RROutputPtr));
-    crtcs = malloc(config->num_crtc * sizeof(RRCrtcPtr));
+    clones = xallocarray(config->num_output, sizeof(RROutputPtr));
+    crtcs = xallocarray(config->num_crtc, sizeof(RRCrtcPtr));
     for (o = 0; o < config->num_output; o++) {
         xf86OutputPtr output = config->output[o];
 
@@ -1560,6 +1558,70 @@ xf86RandR12CreateObjects12(ScreenPtr pScreen)
     return TRUE;
 }
 
+static void
+xf86RandR12CreateMonitors(ScreenPtr pScreen)
+{
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
+    xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(pScrn);
+    int o, ot;
+    int ht, vt;
+    int ret;
+    char buf[25];
+
+    for (o = 0; o < config->num_output; o++) {
+        xf86OutputPtr output = config->output[o];
+        struct xf86CrtcTileInfo *tile_info = &output->tile_info, *this_tile;
+        RRMonitorPtr monitor;
+        int output_num, num_outputs;
+        if (!tile_info->group_id)
+            continue;
+
+        if (tile_info->tile_h_loc ||
+            tile_info->tile_v_loc)
+            continue;
+
+        num_outputs = tile_info->num_h_tile * tile_info->num_v_tile;
+
+        monitor = RRMonitorAlloc(num_outputs);
+        if (!monitor)
+            return;
+        monitor->pScreen = pScreen;
+        snprintf(buf, 25, "Auto-Monitor-%d", tile_info->group_id);
+        monitor->name = MakeAtom(buf, strlen(buf), TRUE);
+        monitor->primary = 0;
+        monitor->automatic = TRUE;
+        memset(&monitor->geometry.box, 0, sizeof(monitor->geometry.box));
+
+        output_num = 0;
+        for (ht = 0; ht < tile_info->num_h_tile; ht++) {
+            for (vt = 0; vt < tile_info->num_v_tile; vt++) {
+
+                for (ot = 0; ot < config->num_output; ot++) {
+                    this_tile = &config->output[ot]->tile_info;
+
+                    if (this_tile->group_id != tile_info->group_id)
+                        continue;
+
+                    if (this_tile->tile_h_loc != ht ||
+                        this_tile->tile_v_loc != vt)
+                        continue;
+
+                    monitor->outputs[output_num] = config->output[ot]->randr_output->id;
+                    output_num++;
+
+                }
+
+            }
+        }
+
+        ret = RRMonitorAdd(serverClient, pScreen, monitor);
+        if (ret) {
+            RRMonitorFree(monitor);
+            return;
+        }
+    }
+}
+
 static Bool
 xf86RandR12CreateScreenResources12(ScreenPtr pScreen)
 {
@@ -1575,6 +1637,8 @@ xf86RandR12CreateScreenResources12(ScreenPtr pScreen)
 
     RRScreenSetSizeRange(pScreen, config->minWidth, config->minHeight,
                          config->maxWidth, config->maxHeight);
+
+    xf86RandR12CreateMonitors(pScreen);
     return TRUE;
 }
 
@@ -1785,13 +1849,13 @@ xf86RandR14ProviderSetOutputSource(ScreenPtr pScreen,
     if (provider->output_source == source_provider)
         return TRUE;
 
-    SetRootClip(source_provider->pScreen, FALSE);
+    SetRootClip(source_provider->pScreen, ROOT_CLIP_NONE);
 
     DetachUnboundGPU(pScreen);
     AttachOutputGPU(source_provider->pScreen, pScreen);
 
     provider->output_source = source_provider;
-    SetRootClip(source_provider->pScreen, TRUE);
+    SetRootClip(source_provider->pScreen, ROOT_CLIP_FULL);
     return TRUE;
 }
 

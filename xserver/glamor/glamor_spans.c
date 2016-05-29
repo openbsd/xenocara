@@ -55,7 +55,7 @@ glamor_fill_spans_gl(DrawablePtr drawable,
     GLshort *v;
     char *vbo_offset;
     int c;
-    int box_x, box_y;
+    int box_index;
 
     pixmap_priv = glamor_get_pixmap_private(pixmap);
     if (!GLAMOR_PIXMAP_PRIV_HAS_FBO(pixmap_priv))
@@ -68,7 +68,7 @@ glamor_fill_spans_gl(DrawablePtr drawable,
                                        &glamor_facet_fillspans_130);
 
         if (!prog)
-            goto bail_ctx;
+            goto bail;
 
         /* Set up the vertex buffers for the points */
 
@@ -93,7 +93,7 @@ glamor_fill_spans_gl(DrawablePtr drawable,
                                        &glamor_facet_fillspans_120);
 
         if (!prog)
-            goto bail_ctx;
+            goto bail;
 
         /* Set up the vertex buffers for the points */
 
@@ -119,11 +119,12 @@ glamor_fill_spans_gl(DrawablePtr drawable,
 
     glEnable(GL_SCISSOR_TEST);
 
-    glamor_pixmap_loop(pixmap_priv, box_x, box_y) {
+    glamor_pixmap_loop(pixmap_priv, box_index) {
         int nbox = RegionNumRects(gc->pCompositeClip);
         BoxPtr box = RegionRects(gc->pCompositeClip);
 
-        glamor_set_destination_drawable(drawable, box_x, box_y, FALSE, FALSE, prog->matrix_uniform, &off_x, &off_y);
+        glamor_set_destination_drawable(drawable, box_index, FALSE, FALSE,
+                                        prog->matrix_uniform, &off_x, &off_y);
 
         while (nbox--) {
             glScissor(box->x1 + off_x,
@@ -134,27 +135,17 @@ glamor_fill_spans_gl(DrawablePtr drawable,
             if (glamor_priv->glsl_version >= 130)
                 glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, n);
             else {
-                if (glamor_priv->gl_flavor == GLAMOR_GL_DESKTOP) {
-                    glDrawArrays(GL_QUADS, 0, 4 * n);
-                } else {
-                    int i;
-                    for (i = 0; i < n; i++) {
-                        glDrawArrays(GL_TRIANGLE_FAN, i * 4, 4);
-                    }
-                }
+                glamor_glDrawArrays_GL_QUADS(glamor_priv, nbox);
             }
         }
     }
 
     glDisable(GL_SCISSOR_TEST);
-    glDisable(GL_COLOR_LOGIC_OP);
     if (glamor_priv->glsl_version >= 130)
         glVertexAttribDivisor(GLAMOR_VERTEX_POS, 0);
     glDisableVertexAttribArray(GLAMOR_VERTEX_POS);
 
     return TRUE;
-bail_ctx:
-    glDisable(GL_COLOR_LOGIC_OP);
 bail:
     return FALSE;
 }
@@ -182,21 +173,6 @@ glamor_fill_spans(DrawablePtr drawable,
     glamor_fill_spans_bail(drawable, gc, n, points, widths, sorted);
 }
 
-Bool
-glamor_fill_spans_nf(DrawablePtr drawable,
-                     GCPtr gc,
-                     int n, DDXPointPtr points, int *widths, int sorted)
-{
-    if (glamor_fill_spans_gl(drawable, gc, n, points, widths, sorted))
-        return TRUE;
-
-    if (glamor_ddx_fallback_check_pixmap(drawable) && glamor_ddx_fallback_check_gc(gc))
-        return FALSE;
-
-    glamor_fill_spans_bail(drawable, gc, n, points, widths, sorted);
-    return TRUE;
-}
-
 static Bool
 glamor_get_spans_gl(DrawablePtr drawable, int wmax,
                     DDXPointPtr points, int *widths, int count, char *dst)
@@ -205,7 +181,7 @@ glamor_get_spans_gl(DrawablePtr drawable, int wmax,
     glamor_screen_private *glamor_priv = glamor_get_screen_private(screen);
     PixmapPtr pixmap = glamor_get_drawable_pixmap(drawable);
     glamor_pixmap_private *pixmap_priv;
-    int box_x, box_y;
+    int box_index;
     int n;
     char *d;
     GLenum type;
@@ -222,9 +198,9 @@ glamor_get_spans_gl(DrawablePtr drawable, int wmax,
 
     glamor_make_current(glamor_priv);
 
-    glamor_pixmap_loop(pixmap_priv, box_x, box_y) {
-        BoxPtr                  box = glamor_pixmap_box_at(pixmap_priv, box_x, box_y);
-        glamor_pixmap_fbo       *fbo = glamor_pixmap_fbo_at(pixmap_priv, box_x, box_y);
+    glamor_pixmap_loop(pixmap_priv, box_index) {
+        BoxPtr                  box = glamor_pixmap_box_at(pixmap_priv, box_index);
+        glamor_pixmap_fbo       *fbo = glamor_pixmap_fbo_at(pixmap_priv, box_index);
 
         glBindFramebuffer(GL_FRAMEBUFFER, fbo->fb);
         glPixelStorei(GL_PACK_ALIGNMENT, 4);
@@ -282,20 +258,6 @@ glamor_get_spans(DrawablePtr drawable, int wmax,
     glamor_get_spans_bail(drawable, wmax, points, widths, count, dst);
 }
 
-Bool
-glamor_get_spans_nf(DrawablePtr drawable, int wmax,
-                    DDXPointPtr points, int *widths, int count, char *dst)
-{
-    if (glamor_get_spans_gl(drawable, wmax, points, widths, count, dst))
-        return TRUE;
-
-    if (glamor_ddx_fallback_check_pixmap(drawable))
-        return FALSE;
-
-    glamor_get_spans_bail(drawable, wmax, points, widths, count, dst);
-    return TRUE;
-}
-
 static Bool
 glamor_set_spans_gl(DrawablePtr drawable, GCPtr gc, char *src,
                     DDXPointPtr points, int *widths, int numPoints, int sorted)
@@ -304,7 +266,7 @@ glamor_set_spans_gl(DrawablePtr drawable, GCPtr gc, char *src,
     glamor_screen_private *glamor_priv = glamor_get_screen_private(screen);
     PixmapPtr pixmap = glamor_get_drawable_pixmap(drawable);
     glamor_pixmap_private *pixmap_priv;
-    int box_x, box_y;
+    int box_index;
     int n;
     char *s;
     GLenum type;
@@ -318,7 +280,7 @@ glamor_set_spans_gl(DrawablePtr drawable, GCPtr gc, char *src,
     if (gc->alu != GXcopy)
         goto bail;
 
-    if (!glamor_pm_is_solid(&pixmap->drawable, gc->planemask))
+    if (!glamor_pm_is_solid(gc->depth, gc->planemask))
         goto bail;
 
     glamor_get_drawable_deltas(drawable, pixmap, &off_x, &off_y);
@@ -328,9 +290,9 @@ glamor_set_spans_gl(DrawablePtr drawable, GCPtr gc, char *src,
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 
-    glamor_pixmap_loop(pixmap_priv, box_x, box_y) {
-        BoxPtr                  box = glamor_pixmap_box_at(pixmap_priv, box_x, box_y);
-        glamor_pixmap_fbo       *fbo = glamor_pixmap_fbo_at(pixmap_priv, box_x, box_y);
+    glamor_pixmap_loop(pixmap_priv, box_index) {
+        BoxPtr              box = glamor_pixmap_box_at(pixmap_priv, box_index);
+        glamor_pixmap_fbo  *fbo = glamor_pixmap_fbo_at(pixmap_priv, box_index);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, fbo->tex);
@@ -414,18 +376,4 @@ glamor_set_spans(DrawablePtr drawable, GCPtr gc, char *src,
     if (glamor_set_spans_gl(drawable, gc, src, points, widths, numPoints, sorted))
         return;
     glamor_set_spans_bail(drawable, gc, src, points, widths, numPoints, sorted);
-}
-
-Bool
-glamor_set_spans_nf(DrawablePtr drawable, GCPtr gc, char *src,
-                    DDXPointPtr points, int *widths, int numPoints, int sorted)
-{
-    if (glamor_set_spans_gl(drawable, gc, src, points, widths, numPoints, sorted))
-        return TRUE;
-
-    if (glamor_ddx_fallback_check_pixmap(drawable) && glamor_ddx_fallback_check_gc(gc))
-        return FALSE;
-
-    glamor_set_spans_bail(drawable, gc, src, points, widths, numPoints, sorted);
-    return TRUE;
 }

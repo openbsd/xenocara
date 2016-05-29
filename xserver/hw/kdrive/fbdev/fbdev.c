@@ -28,8 +28,6 @@
 
 #include <errno.h>
 
-extern int KdTsPhyScreen;
-
 const char *fbdevDevicePath = NULL;
 
 static Bool
@@ -677,7 +675,7 @@ fbdevCreateColormap(ColormapPtr pmap)
     case FB_VISUAL_STATIC_PSEUDOCOLOR:
         pVisual = pmap->pVisual;
         nent = pVisual->ColormapEntries;
-        pdefs = malloc(nent * sizeof(xColorItem));
+        pdefs = xallocarray(nent, sizeof(xColorItem));
         if (!pdefs)
             return FALSE;
         for (i = 0; i < nent; i++)
@@ -698,10 +696,6 @@ fbdevCreateColormap(ColormapPtr pmap)
 Bool
 fbdevInitScreen(ScreenPtr pScreen)
 {
-#ifdef TOUCHSCREEN
-    KdTsPhyScreen = pScreen->myNum;
-#endif
-
     pScreen->CreateColormap = fbdevCreateColormap;
     return TRUE;
 }

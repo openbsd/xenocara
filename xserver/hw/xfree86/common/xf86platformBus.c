@@ -59,9 +59,9 @@ struct xf86_platform_device *xf86_platform_devices;
 int
 xf86_add_platform_device(struct OdevAttributes *attribs, Bool unowned)
 {
-    xf86_platform_devices = xnfrealloc(xf86_platform_devices,
-                                   (sizeof(struct xf86_platform_device)
-                                    * (xf86_num_platform_devices + 1)));
+    xf86_platform_devices = xnfreallocarray(xf86_platform_devices,
+                                            xf86_num_platform_devices + 1,
+                                            sizeof(struct xf86_platform_device));
 
     xf86_platform_devices[xf86_num_platform_devices].attribs = attribs;
     xf86_platform_devices[xf86_num_platform_devices].pdev = NULL;
@@ -476,6 +476,9 @@ xf86platformAddDevice(int index)
     DriverPtr drvp = NULL;
     screenLayoutPtr layout;
     static const char *hotplug_driver_name = "modesetting";
+
+    if (!xf86Info.autoAddGPU)
+        return -1;
 
     /* force load the driver for now */
     xf86LoadOneModule(hotplug_driver_name, NULL);

@@ -53,6 +53,7 @@ SOFTWARE.
 #include	<X11/Xproto.h>
 #include	"misc.h"
 #include	<X11/fonts/fontstruct.h>
+#include	<X11/fonts/fontutil.h>
 #include	"dixfontstr.h"
 #include	"gcstruct.h"
 #include	"windowstr.h"
@@ -131,7 +132,7 @@ miPolyGlyphBlt(DrawablePtr pDrawable, GC * pGC, int x, int y, unsigned int nglyp
              gcvals);
 
     nbyLine = BitmapBytePad(width);
-    pbits = malloc(height * nbyLine);
+    pbits = xallocarray(height, nbyLine);
     if (!pbits) {
         (*pDrawable->pScreen->DestroyPixmap) (pPixmap);
         FreeScratchGC(pGCtmp);

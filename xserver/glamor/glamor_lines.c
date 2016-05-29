@@ -44,7 +44,7 @@ glamor_poly_lines_solid_gl(DrawablePtr drawable, GCPtr gc,
     int off_x, off_y;
     DDXPointPtr v;
     char *vbo_offset;
-    int box_x, box_y;
+    int box_index;
     int add_last;
 
     pixmap_priv = glamor_get_pixmap_private(pixmap);
@@ -65,7 +65,7 @@ glamor_poly_lines_solid_gl(DrawablePtr drawable, GCPtr gc,
                                    &glamor_facet_poly_lines);
 
     if (!prog)
-        goto bail_ctx;
+        goto bail;
 
     /* Set up the vertex buffers for the points */
 
@@ -99,11 +99,11 @@ glamor_poly_lines_solid_gl(DrawablePtr drawable, GCPtr gc,
 
     glEnable(GL_SCISSOR_TEST);
 
-    glamor_pixmap_loop(pixmap_priv, box_x, box_y) {
+    glamor_pixmap_loop(pixmap_priv, box_index) {
         int nbox = RegionNumRects(gc->pCompositeClip);
         BoxPtr box = RegionRects(gc->pCompositeClip);
 
-        glamor_set_destination_drawable(drawable, box_x, box_y, TRUE, TRUE,
+        glamor_set_destination_drawable(drawable, box_index, TRUE, TRUE,
                                         prog->matrix_uniform, &off_x, &off_y);
 
         while (nbox--) {
@@ -117,12 +117,9 @@ glamor_poly_lines_solid_gl(DrawablePtr drawable, GCPtr gc,
     }
 
     glDisable(GL_SCISSOR_TEST);
-    glDisable(GL_COLOR_LOGIC_OP);
     glDisableVertexAttribArray(GLAMOR_VERTEX_POS);
 
     return TRUE;
-bail_ctx:
-    glDisable(GL_COLOR_LOGIC_OP);
 bail:
     return FALSE;
 }
@@ -167,21 +164,3 @@ glamor_poly_lines(DrawablePtr drawable, GCPtr gc,
         return;
     glamor_poly_lines_bail(drawable, gc, mode, n, points);
 }
-
-Bool
-glamor_poly_lines_nf(DrawablePtr drawable, GCPtr gc,
-                     int mode, int n, DDXPointPtr points)
-{
-    if (glamor_poly_lines_gl(drawable, gc, mode, n, points))
-        return TRUE;
-
-    if (glamor_ddx_fallback_check_pixmap(drawable) &&
-        glamor_ddx_fallback_check_gc(gc))
-    {
-        return FALSE;
-    }
-
-    glamor_poly_lines_bail(drawable, gc, mode, n, points);
-    return TRUE;
-}
-

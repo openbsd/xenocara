@@ -46,8 +46,6 @@ typedef struct {
 typedef struct {
     int fd;
     unsigned fb_id;
-    unsigned old_fb_id;
-    drmModeResPtr mode_res;
     drmModeFBPtr mode_fb;
     int cpp;
     ScrnInfoPtr scrn;
@@ -62,8 +60,13 @@ typedef struct {
     drmmode_bo front_bo;
     Bool sw_cursor;
 
+    /* Broken-out options. */
+    OptionInfoPtr Options;
+
     Bool glamor;
     Bool shadow_enable;
+    /** Is Option "PageFlip" enabled? */
+    Bool pageflip;
     void *shadow_fb;
 
     /**
@@ -80,6 +83,10 @@ typedef struct {
     uint32_t triple_buffer_name;
 
     DevPrivateKeyRec pixmapPrivateKeyRec;
+
+    Bool reverse_prime_offload_mode;
+
+    Bool is_secondary;
 } drmmode_rec, *drmmode_ptr;
 
 typedef struct {
@@ -94,7 +101,7 @@ typedef struct {
 
     drmmode_bo rotate_bo;
     unsigned rotate_fb_id;
-
+    unsigned prime_pixmap_x;
     /**
      * @{ MSC (vblank count) handling for the PRESENT extension.
      *
@@ -106,6 +113,8 @@ typedef struct {
     uint32_t msc_prev;
     uint64_t msc_high;
     /** @} */
+
+    Bool need_modeset;
 } drmmode_crtc_private_rec, *drmmode_crtc_private_ptr;
 
 typedef struct {
@@ -121,6 +130,7 @@ typedef struct {
     drmModeConnectorPtr mode_output;
     drmModeEncoderPtr *mode_encoders;
     drmModePropertyBlobPtr edid_blob;
+    drmModePropertyBlobPtr tile_blob;
     int dpms_enum_id;
     int num_props;
     drmmode_prop_ptr props;
@@ -139,6 +149,9 @@ extern DevPrivateKeyRec msPixmapPrivateKeyRec;
 
 #define msGetPixmapPriv(drmmode, p) ((msPixmapPrivPtr)dixGetPrivateAddr(&(p)->devPrivates, &(drmmode)->pixmapPrivateKeyRec))
 
+Bool drmmode_bo_for_pixmap(drmmode_ptr drmmode, drmmode_bo *bo, PixmapPtr pixmap);
+int drmmode_bo_destroy(drmmode_ptr drmmode, drmmode_bo *bo);
+uint32_t drmmode_bo_get_pitch(drmmode_bo *bo);
 uint32_t drmmode_bo_get_handle(drmmode_bo *bo);
 Bool drmmode_glamor_handle_new_screen_pixmap(drmmode_ptr drmmode);
 void *drmmode_map_slave_bo(drmmode_ptr drmmode, msPixmapPrivPtr ppriv);

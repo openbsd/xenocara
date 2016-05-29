@@ -772,8 +772,8 @@ winMultiWindowWMProc(void *pArg)
         }
 
 #if CYGMULTIWINDOW_DEBUG
-        ErrorF("winMultiWindowWMProc - %d ms MSG: %d ID: %d\n",
-               GetTickCount(), (int) pNode->msg.msg, (int) pNode->msg.dwID);
+        ErrorF("winMultiWindowWMProc - MSG: %d ID: %d\n",
+               (int) pNode->msg.msg, (int) pNode->msg.dwID);
 #endif
 
         /* Branch on the message type */
@@ -1738,7 +1738,7 @@ winApplyHints(Display * pDisplay, Window iWindow, HWND hWnd, HWND * zstyle)
         if (mwm_hint && nitems == PropMwmHintsElements &&
             (mwm_hint->flags & MwmHintsDecorations)) {
             if (!mwm_hint->decorations)
-                hint |= HINT_NOFRAME;
+                hint |= (HINT_NOFRAME | HINT_NOSYSMENU | HINT_NOMINIMIZE | HINT_NOMAXIMIZE);
             else if (!(mwm_hint->decorations & MwmDecorAll)) {
                 if (mwm_hint->decorations & MwmDecorBorder)
                     hint |= HINT_BORDER;
@@ -1772,7 +1772,7 @@ winApplyHints(Display * pDisplay, Window iWindow, HWND hWnd, HWND * zstyle)
                            (unsigned char **) &pAtom) == Success) {
         if (pAtom && nitems == 1) {
             if (*pAtom == dockWindow) {
-                hint = (hint & ~HINT_NOFRAME) | HINT_SIZEBOX;   /* Xming puts a sizebox on dock windows */
+                hint = (hint & ~HINT_NOFRAME) | HINT_SKIPTASKBAR | HINT_SIZEBOX;
                 *zstyle = HWND_TOPMOST;
             }
         }
@@ -1785,8 +1785,7 @@ winApplyHints(Display * pDisplay, Window iWindow, HWND hWnd, HWND * zstyle)
         long supplied;
 
         if (normal_hint &&
-            (XGetWMNormalHints(pDisplay, iWindow, normal_hint, &supplied) ==
-             Success)) {
+            XGetWMNormalHints(pDisplay, iWindow, normal_hint, &supplied)) {
             if (normal_hint->flags & PMaxSize) {
                 /* Not maximizable if a maximum size is specified */
                 hint |= HINT_NOMAXIMIZE;

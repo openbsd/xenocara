@@ -161,9 +161,9 @@ int *ConnectionTranslation = NULL;
  */
 
 #undef MAXSOCKS
-#define MAXSOCKS 500
+#define MAXSOCKS 512
 #undef MAXSELECT
-#define MAXSELECT 500
+#define MAXSELECT 512
 
 struct _ct_node {
     struct _ct_node *next;
@@ -299,7 +299,7 @@ InitConnectionLimits(void)
     if (lastfdesc > MAXCLIENTS) {
         lastfdesc = MAXCLIENTS;
         if (debug_conns)
-            ErrorF("REACHED MAXIMUM CLIENTS LIMIT %d\n", MAXCLIENTS);
+            ErrorF("REACHED MAXIMUM CLIENTS LIMIT %d\n", LimitClients);
     }
     MaxClients = lastfdesc;
 
@@ -309,7 +309,7 @@ InitConnectionLimits(void)
 
 #if !defined(WIN32)
     if (!ConnectionTranslation)
-        ConnectionTranslation = (int *) xnfalloc(sizeof(int) * (lastfdesc + 1));
+        ConnectionTranslation = xnfallocarray(lastfdesc + 1, sizeof(int));
 #else
     InitConnectionTranslation();
 #endif
@@ -434,9 +434,12 @@ CreateWellKnownSockets(void)
             FatalError("Failed to find a socket to listen on");
         snprintf(dynamic_display, sizeof(dynamic_display), "%d", i);
         display = dynamic_display;
+        LogSetDisplay();
     }
 
-    ListenTransFds = malloc(ListenTransCount * sizeof (int));
+    ListenTransFds = xallocarray(ListenTransCount, sizeof (int));
+    if (ListenTransFds == NULL)
+        FatalError ("Failed to create listening socket array");
 
     for (i = 0; i < ListenTransCount; i++) {
         int fd = _XSERVTransGetConnectionNumber(ListenTransConns[i]);
@@ -1298,11 +1301,10 @@ ListenOnOpenFD(int fd, int noxauth)
 
     /* Allocate space to store it */
     ListenTransFds =
-        (int *) realloc(ListenTransFds, (ListenTransCount + 1) * sizeof(int));
+        xnfreallocarray(ListenTransFds, ListenTransCount + 1, sizeof(int));
     ListenTransConns =
-        (XtransConnInfo *) realloc(ListenTransConns,
-                                   (ListenTransCount +
-                                    1) * sizeof(XtransConnInfo));
+        xnfreallocarray(ListenTransConns, ListenTransCount + 1,
+                        sizeof(XtransConnInfo));
 
     /* Store it */
     ListenTransConns[ListenTransCount] = ciptr;

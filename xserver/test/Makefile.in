@@ -69,13 +69,14 @@ host_triplet = @host@
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            $(top_builddir)/hw/xfree86/loader/libloader.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            $(top_builddir)/hw/xfree86/os-support/libxorgos.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            $(top_builddir)/hw/xfree86/common/libcommon.la \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            $(top_builddir)/hw/xfree86/parser/libxf86config_internal.la \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            $(top_builddir)/hw/xfree86/parser/libxf86config.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            $(top_builddir)/hw/xfree86/dixmods/libdixmods.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            $(top_builddir)/hw/xfree86/modes/libxf86modes.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            $(top_builddir)/hw/xfree86/ramdac/libramdac.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            $(top_builddir)/hw/xfree86/ddc/libddc.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            $(top_builddir)/hw/xfree86/i2c/libi2c.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            $(top_builddir)/hw/xfree86/dixmods/libxorgxkb.la \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            $(top_builddir)/Xext/libXvidmode.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            @XORG_LIBS@
 
 @DRI_TRUE@@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__append_7 = $(top_builddir)/hw/xfree86/dri/libdri.la
@@ -91,6 +92,7 @@ host_triplet = @host@
 @ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            $(top_builddir)/render/librender.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            $(top_builddir)/Xext/libXext.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            $(top_builddir)/Xext/libXextdpmsstubs.la \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            $(top_builddir)/Xext/libXvidmode.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            $(top_builddir)/Xi/libXi.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            $(top_builddir)/Xi/libXistubs.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            $(top_builddir)/xfixes/libxfixes.la \
@@ -126,8 +128,7 @@ ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_dir.m4 \
 	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
 	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
-	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/m4/xorg-tls.m4 \
-	$(top_srcdir)/configure.ac
+	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -145,13 +146,14 @@ am__DEPENDENCIES_1 =
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__DEPENDENCIES_2 = $(top_builddir)/hw/xfree86/loader/libloader.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	$(top_builddir)/hw/xfree86/os-support/libxorgos.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	$(top_builddir)/hw/xfree86/common/libcommon.la \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	$(top_builddir)/hw/xfree86/parser/libxf86config_internal.la \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	$(top_builddir)/hw/xfree86/parser/libxf86config.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	$(top_builddir)/hw/xfree86/dixmods/libdixmods.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	$(top_builddir)/hw/xfree86/modes/libxf86modes.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	$(top_builddir)/hw/xfree86/ramdac/libramdac.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	$(top_builddir)/hw/xfree86/ddc/libddc.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	$(top_builddir)/hw/xfree86/i2c/libi2c.la \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	$(top_builddir)/hw/xfree86/dixmods/libxorgxkb.la
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	$(top_builddir)/hw/xfree86/dixmods/libxorgxkb.la \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	$(top_builddir)/Xext/libXvidmode.la
 @ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@nodist_libxservertest_la_OBJECTS =  \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@	ddxstubs.lo miinitext.lo
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@nodist_libxservertest_la_OBJECTS =  \
@@ -399,7 +401,6 @@ GLAMOR_LIBS = @GLAMOR_LIBS@
 GLX_ARCH_DEFINES = @GLX_ARCH_DEFINES@
 GLX_DEFINES = @GLX_DEFINES@
 GLX_SYS_LIBS = @GLX_SYS_LIBS@
-GLX_TLS = @GLX_TLS@
 GL_CFLAGS = @GL_CFLAGS@
 GL_LIBS = @GL_LIBS@
 GREP = @GREP@
@@ -529,8 +530,6 @@ XEPHYR_INCS = @XEPHYR_INCS@
 XEPHYR_LIBS = @XEPHYR_LIBS@
 XF86CONFIGDIR = @XF86CONFIGDIR@
 XF86CONFIGFILE = @XF86CONFIGFILE@
-XF86VIDMODE_CFLAGS = @XF86VIDMODE_CFLAGS@
-XF86VIDMODE_LIBS = @XF86VIDMODE_LIBS@
 XKB_BASE_DIRECTORY = @XKB_BASE_DIRECTORY@
 XKB_BIN_DIRECTORY = @XKB_BIN_DIRECTORY@
 XKB_COMPILED_DIR = @XKB_COMPILED_DIR@
@@ -659,9 +658,7 @@ top_srcdir = @top_srcdir@
 @ENABLE_UNIT_TESTS_TRUE@TESTS = $(noinst_PROGRAMS)
 @ENABLE_UNIT_TESTS_TRUE@TESTS_ENVIRONMENT = $(XORG_MALLOC_DEBUG_ENV)
 @ENABLE_UNIT_TESTS_TRUE@AM_CFLAGS = $(DIX_CFLAGS) @XORG_CFLAGS@
-@ENABLE_UNIT_TESTS_TRUE@AM_CPPFLAGS = $(XORG_INCS) \
-@ENABLE_UNIT_TESTS_TRUE@	-I$(top_srcdir)/miext/cw \
-@ENABLE_UNIT_TESTS_TRUE@	$(am__append_4)
+@ENABLE_UNIT_TESTS_TRUE@AM_CPPFLAGS = $(XORG_INCS) $(am__append_4)
 @ENABLE_UNIT_TESTS_TRUE@TEST_LDADD = libxservertest.la \
 @ENABLE_UNIT_TESTS_TRUE@	$(XORG_SYS_LIBS) $(XSERVER_SYS_LIBS) \
 @ENABLE_UNIT_TESTS_TRUE@	$(GLX_SYS_LIBS) $(am__append_5) \

@@ -33,6 +33,7 @@ sdk_HEADERS =		\
 	misc.h		\
 	miscstruct.h	\
 	opaque.h	\
+	nonsdk_extinit.h	\
 	optionstr.h	\
 	os.h		\
 	pixmap.h	\
@@ -51,9 +52,8 @@ sdk_HEADERS =		\
 	selection.h	\
 	servermd.h	\
 	site.h		\
-	swaprep.h	\
-	swapreq.h	\
 	validate.h	\
+	displaymode.h    \
 	window.h	\
 	windowstr.h	\
 	xkbfile.h	\
@@ -73,5 +73,8 @@ EXTRA_DIST = 	\
 	dixfontstubs.h eventconvert.h eventstr.h inpututils.h \
 	probes.h \
 	protocol-versions.h \
+	swaprep.h \
+	swapreq.h \
 	systemd-logind.h \
+        vidmodestr.h \
 	xsha1.h

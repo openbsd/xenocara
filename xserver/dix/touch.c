@@ -101,7 +101,7 @@ TouchResizeQueue(ClientPtr client, void *closure)
          * don't need to do it often */
         size = dev->last.num_touches + dev->last.num_touches / 2 + 1;
 
-        tmp = realloc(dev->last.touches, size * sizeof(*dev->last.touches));
+        tmp = reallocarray(dev->last.touches, size, sizeof(*dev->last.touches));
         if (tmp) {
             int j;
 
@@ -350,7 +350,7 @@ TouchBeginTouch(DeviceIntPtr dev, int sourceid, uint32_t touchid,
 
     /* If we get here, then we've run out of touches: enlarge dev->touch and
      * try again. */
-    tmp = realloc(t->touches, (t->num_touches + 1) * sizeof(*ti));
+    tmp = reallocarray(t->touches, t->num_touches + 1, sizeof(*ti));
     if (tmp) {
         t->touches = tmp;
         t->num_touches++;
@@ -464,7 +464,7 @@ TouchEventHistoryPush(TouchPointInfoPtr ti, const DeviceEvent *ev)
     /* FIXME: proper overflow fixes */
     if (ti->history_elements > ti->history_size - 1) {
         ti->history_elements = ti->history_size - 1;
-        DebugF("source device %d: history size %d overflowing for touch %u\n",
+        DebugF("source device %d: history size %zu overflowing for touch %u\n",
                ti->sourceid, ti->history_size, ti->client_id);
     }
 }
@@ -547,8 +547,8 @@ TouchBuildDependentSpriteTrace(DeviceIntPtr dev, SpritePtr sprite)
         return FALSE;
 
     if (srcsprite->spriteTraceGood > sprite->spriteTraceSize) {
-        trace = realloc(sprite->spriteTrace,
-                        srcsprite->spriteTraceSize * sizeof(*trace));
+        trace = reallocarray(sprite->spriteTrace,
+                             srcsprite->spriteTraceSize, sizeof(*trace));
         if (!trace) {
             sprite->spriteTraceGood = 0;
             return FALSE;

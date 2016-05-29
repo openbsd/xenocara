@@ -14,11 +14,6 @@ XVSOURCES = xf86xv.c xf86xvmc.c
 XVSDKINCS = xf86xv.h xf86xvmc.h xf86xvpriv.h
 endif
 
-if XF86VIDMODE
-XF86VMODESOURCES = xf86vmode.c
-XF86VMODE_SDK = vidmodeproc.h
-endif
-
 if DGA
 DGASOURCES = xf86DGA.c
 DGA_SDK = dgaproc.h
@@ -72,7 +67,6 @@ CLEANFILES = $(BUILT_SOURCES)
 EXTRA_DIST = \
 	compiler.h \
 	fourcc.h \
-	vidmodeproc.h \
 	xf86.h \
 	xf86Bus.h \
 	xf86Config.h \

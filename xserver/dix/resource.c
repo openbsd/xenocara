@@ -510,7 +510,7 @@ CreateNewResourceType(DeleteType deleteFunc, const char *name)
 
     if (next & lastResourceClass)
         return 0;
-    types = realloc(resourceTypes, (next + 1) * sizeof(*resourceTypes));
+    types = reallocarray(resourceTypes, next + 1, sizeof(*resourceTypes));
     if (!types)
         return 0;
 
@@ -599,6 +599,29 @@ CreateNewResourceClass(void)
 }
 
 static ClientResourceRec clientTable[MAXCLIENTS];
+
+static unsigned int
+ilog2(int val)
+{
+    int bits;
+
+    if (val <= 0)
+	return 0;
+    for (bits = 0; val != 0; bits++)
+	val >>= 1;
+    return bits - 1;
+}
+
+/*****************
+ * ResourceClientBits
+ *    Returns the client bit offset in the client + resources ID field
+ *****************/
+
+unsigned int
+ResourceClientBits(void)
+{
+    return (ilog2(LimitClients));
+}
 
 /*****************
  * InitClientResources
@@ -834,10 +857,10 @@ RebuildTable(int client)
      */
 
     j = 2 * clientTable[client].buckets;
-    tails = malloc(j * sizeof(ResourcePtr *));
+    tails =  xallocarray(j, sizeof(ResourcePtr *));
     if (!tails)
         return;
-    resources = malloc(j * sizeof(ResourcePtr));
+    resources =  xallocarray(j, sizeof(ResourcePtr));
     if (!resources) {
         free(tails);
         return;
@@ -883,7 +906,7 @@ FreeResource(XID id, RESTYPE skipDeleteFuncType)
     int *eltptr;
     int elements;
 
-    if (((cid = CLIENT_ID(id)) < MAXCLIENTS) && clientTable[cid].buckets) {
+    if (((cid = CLIENT_ID(id)) < LimitClients) && clientTable[cid].buckets) {
         head = &clientTable[cid].resources[HashResourceID(id, clientTable[cid].hashsize)];
         eltptr = &clientTable[cid].elements;
 
@@ -917,7 +940,7 @@ FreeResourceByType(XID id, RESTYPE type, Bool skipFree)
     ResourcePtr res;
     ResourcePtr *prev, *head;
 
-    if (((cid = CLIENT_ID(id)) < MAXCLIENTS) && clientTable[cid].buckets) {
+    if (((cid = CLIENT_ID(id)) < LimitClients) && clientTable[cid].buckets) {
         head = &clientTable[cid].resources[HashResourceID(id, clientTable[cid].hashsize)];
 
         prev = head;
@@ -952,7 +975,7 @@ ChangeResourceValue(XID id, RESTYPE rtype, void *value)
     int cid;
     ResourcePtr res;
 
-    if (((cid = CLIENT_ID(id)) < MAXCLIENTS) && clientTable[cid].buckets) {
+    if (((cid = CLIENT_ID(id)) < LimitClients) && clientTable[cid].buckets) {
         res = clientTable[cid].resources[HashResourceID(id, clientTable[cid].hashsize)];
 
         for (; res; res = res->next)
@@ -1190,7 +1213,7 @@ dixLookupResourceByType(void **result, XID id, RESTYPE rtype,
     if ((rtype & TypeMask) > lastResourceType)
         return BadImplementation;
 
-    if ((cid < MAXCLIENTS) && clientTable[cid].buckets) {
+    if ((cid < LimitClients) && clientTable[cid].buckets) {
         res = clientTable[cid].resources[HashResourceID(id, clientTable[cid].hashsize)];
 
         for (; res; res = res->next)
@@ -1223,7 +1246,7 @@ dixLookupResourceByClass(void **result, XID id, RESTYPE rclass,
 
     *result = NULL;
 
-    if ((cid < MAXCLIENTS) && clientTable[cid].buckets) {
+    if ((cid < LimitClients) && clientTable[cid].buckets) {
         res = clientTable[cid].resources[HashResourceID(id, clientTable[cid].hashsize)];
 
         for (; res; res = res->next)

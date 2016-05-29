@@ -43,13 +43,25 @@
 
 #include "drmmode_display.h"
 #define DRV_ERROR(msg)	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, msg);
+#define MS_LOGLEVEL_DEBUG 4
 
-typedef struct {
-    int lastInstance;
-    int refCount;
-    ScrnInfoPtr pScrn_1;
-    ScrnInfoPtr pScrn_2;
-} EntRec, *EntPtr;
+typedef enum {
+    OPTION_SW_CURSOR,
+    OPTION_DEVICE_PATH,
+    OPTION_SHADOW_FB,
+    OPTION_ACCEL_METHOD,
+    OPTION_PAGEFLIP,
+    OPTION_ZAPHOD_HEADS,
+} modesettingOpts;
+
+typedef struct
+{
+    int fd;
+    int fd_ref;
+    unsigned long fd_wakeup_registered; /* server generation for which fd has been registered for wakeup handling */
+    int fd_wakeup_ref;
+    unsigned int assigned_crtcs;
+} modesettingEntRec, *modesettingEntPtr;
 
 typedef void (*ms_drm_handler_proc)(uint64_t frame,
                                     uint64_t usec,
@@ -74,8 +86,6 @@ struct ms_drm_queue {
 typedef struct _modesettingRec {
     int fd;
 
-    EntPtr entityPrivate;
-
     int Chipset;
     EntityInfoPtr pEnt;
 #if XSERVER_LIBPCIACCESS
@@ -88,9 +98,6 @@ typedef struct _modesettingRec {
     Bool noAccel;
     CloseScreenProcPtr CloseScreen;
 
-    /* Broken-out options. */
-    OptionInfoPtr Options;
-
     unsigned int SaveGeneration;
 
     CreateScreenResourcesProcPtr createScreenResources;
@@ -101,6 +108,12 @@ typedef struct _modesettingRec {
 
     drmEventContext event_context;
 
+    /**
+     * Page flipping stuff.
+     *  @{
+     */
+    /** @} */
+
     DamagePtr damage;
     Bool dirty_enabled;
 
@@ -108,6 +121,7 @@ typedef struct _modesettingRec {
 } modesettingRec, *modesettingPtr;
 
 #define modesettingPTR(p) ((modesettingPtr)((p)->driverPrivate))
+modesettingEntPtr ms_ent_priv(ScrnInfoPtr scrn);
 
 uint32_t ms_drm_queue_alloc(xf86CrtcPtr crtc,
                             void *data,
@@ -117,6 +131,9 @@ uint32_t ms_drm_queue_alloc(xf86CrtcPtr crtc,
 void ms_drm_abort(ScrnInfoPtr scrn,
                   Bool (*match)(void *data, void *match_data),
                   void *match_data);
+void ms_drm_abort_seq(ScrnInfoPtr scrn, uint32_t seq);
+
+Bool ms_crtc_on(xf86CrtcPtr crtc);
 
 xf86CrtcPtr ms_dri2_crtc_covering_drawable(DrawablePtr pDraw);
 xf86CrtcPtr ms_covering_crtc(ScrnInfoPtr scrn, BoxPtr box,

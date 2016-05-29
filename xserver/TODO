@@ -65,4 +65,16 @@ not clear why vfb/nest duplicate micmap so much
 pixmap/window:
 aaaaaaaaaa
 
+---
 
+FakeClientID(0):
+weird lifetimes:
+    screensaver window
+    applewm/winwm event resource
+visuals should use separate allocator (fbconfigs too?)
+GetNewFontClientID?
+hmm: xwin GenerateAuthorization, auth .Add
+
+FakeClientID(client->index):
+    dri2 add_frame_event hurrr
+    DRI2CreateDrawable2

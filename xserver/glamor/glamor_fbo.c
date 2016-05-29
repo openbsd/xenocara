@@ -70,9 +70,26 @@ cache_hbucket(int size)
     return order;
 }
 
+static int
+cache_format(GLenum format)
+{
+    switch (format) {
+    case GL_ALPHA:
+    case GL_LUMINANCE:
+    case GL_RED:
+        return 2;
+    case GL_RGB:
+        return 1;
+    case GL_RGBA:
+        return 0;
+    default:
+        return -1;
+    }
+}
+
 static glamor_pixmap_fbo *
 glamor_pixmap_fbo_cache_get(glamor_screen_private *glamor_priv,
-                            int w, int h, GLenum format, int flag)
+                            int w, int h, GLenum format)
 {
     struct xorg_list *cache;
     glamor_pixmap_fbo *fbo_entry, *ret_fbo = NULL;
@@ -87,33 +104,18 @@ glamor_pixmap_fbo_cache_get(glamor_screen_private *glamor_priv,
     cache = &glamor_priv->fbo_cache[n_format]
         [cache_wbucket(w)]
         [cache_hbucket(h)];
-    if (!(flag & GLAMOR_CACHE_EXACT_SIZE)) {
-        xorg_list_for_each_entry(fbo_entry, cache, list) {
-            if (fbo_entry->width >= w && fbo_entry->height >= h) {
 
-                DEBUGF("Request w %d h %d format %x \n", w, h, format);
-                DEBUGF("got cache entry %p w %d h %d fbo %d tex %d format %x\n",
-                       fbo_entry, fbo_entry->width, fbo_entry->height,
-                       fbo_entry->fb, fbo_entry->tex);
-                xorg_list_del(&fbo_entry->list);
-                ret_fbo = fbo_entry;
-                break;
-            }
-        }
-    }
-    else {
-        xorg_list_for_each_entry(fbo_entry, cache, list) {
-            if (fbo_entry->width == w && fbo_entry->height == h) {
+    xorg_list_for_each_entry(fbo_entry, cache, list) {
+        if (fbo_entry->width == w && fbo_entry->height == h) {
 
-                DEBUGF("Request w %d h %d format %x \n", w, h, format);
-                DEBUGF("got cache entry %p w %d h %d fbo %d tex %d format %x\n",
-                       fbo_entry, fbo_entry->width, fbo_entry->height,
-                       fbo_entry->fb, fbo_entry->tex, fbo_entry->format);
-                assert(format == fbo_entry->format);
-                xorg_list_del(&fbo_entry->list);
-                ret_fbo = fbo_entry;
-                break;
-            }
+            DEBUGF("Request w %d h %d format %x \n", w, h, format);
+            DEBUGF("got cache entry %p w %d h %d fbo %d tex %d format %x\n",
+                   fbo_entry, fbo_entry->width, fbo_entry->height,
+                   fbo_entry->fb, fbo_entry->tex, fbo_entry->format);
+            assert(format == fbo_entry->format);
+            xorg_list_del(&fbo_entry->list);
+            ret_fbo = fbo_entry;
+            break;
         }
     }
 
@@ -127,22 +129,22 @@ glamor_pixmap_fbo_cache_get(glamor_screen_private *glamor_priv,
 }
 
 static void
-glamor_purge_fbo(glamor_pixmap_fbo *fbo)
+glamor_purge_fbo(glamor_screen_private *glamor_priv,
+                 glamor_pixmap_fbo *fbo)
 {
-    glamor_make_current(fbo->glamor_priv);
+    glamor_make_current(glamor_priv);
 
     if (fbo->fb)
         glDeleteFramebuffers(1, &fbo->fb);
     if (fbo->tex)
         glDeleteTextures(1, &fbo->tex);
-    if (fbo->pbo)
-        glDeleteBuffers(1, &fbo->pbo);
 
     free(fbo);
 }
 
 static void
-glamor_pixmap_fbo_cache_put(glamor_pixmap_fbo *fbo)
+glamor_pixmap_fbo_cache_put(glamor_screen_private *glamor_priv,
+                            glamor_pixmap_fbo *fbo)
 {
     struct xorg_list *cache;
     int n_format;
@@ -154,32 +156,33 @@ glamor_pixmap_fbo_cache_put(glamor_pixmap_fbo *fbo)
     n_format = cache_format(fbo->format);
 
     if (fbo->fb == 0 || fbo->external || n_format == -1
-        || fbo->glamor_priv->fbo_cache_watermark >= FBO_CACHE_THRESHOLD) {
-        fbo->glamor_priv->tick += GLAMOR_CACHE_EXPIRE_MAX;
-        glamor_fbo_expire(fbo->glamor_priv);
-        glamor_purge_fbo(fbo);
+        || glamor_priv->fbo_cache_watermark >= FBO_CACHE_THRESHOLD) {
+        glamor_priv->tick += GLAMOR_CACHE_EXPIRE_MAX;
+        glamor_fbo_expire(glamor_priv);
+        glamor_purge_fbo(glamor_priv, fbo);
         return;
     }
 
-    cache = &fbo->glamor_priv->fbo_cache[n_format]
+    cache = &glamor_priv->fbo_cache[n_format]
         [cache_wbucket(fbo->width)]
         [cache_hbucket(fbo->height)];
     DEBUGF
         ("Put cache entry %p to cache %p w %d h %d format %x fbo %d tex %d \n",
          fbo, cache, fbo->width, fbo->height, fbo->format, fbo->fb, fbo->tex);
 
-    fbo->glamor_priv->fbo_cache_watermark += fbo->width * fbo->height;
+    glamor_priv->fbo_cache_watermark += fbo->width * fbo->height;
     xorg_list_add(&fbo->list, cache);
-    fbo->expire = fbo->glamor_priv->tick + GLAMOR_CACHE_EXPIRE_MAX;
+    fbo->expire = glamor_priv->tick + GLAMOR_CACHE_EXPIRE_MAX;
 #endif
 }
 
 static int
-glamor_pixmap_ensure_fb(glamor_pixmap_fbo *fbo)
+glamor_pixmap_ensure_fb(glamor_screen_private *glamor_priv,
+                        glamor_pixmap_fbo *fbo)
 {
     int status, err = 0;
 
-    glamor_make_current(fbo->glamor_priv);
+    glamor_make_current(glamor_priv);
 
     if (fbo->fb == 0)
         glGenFramebuffers(1, &fbo->fb);
@@ -239,22 +242,17 @@ glamor_create_fbo_from_tex(glamor_screen_private *glamor_priv,
     fbo->height = h;
     fbo->external = FALSE;
     fbo->format = format;
-    fbo->glamor_priv = glamor_priv;
 
-    if (flag == GLAMOR_CREATE_PIXMAP_MAP) {
-        glamor_make_current(glamor_priv);
-        glGenBuffers(1, &fbo->pbo);
-        goto done;
-    }
+    if (flag == CREATE_PIXMAP_USAGE_SHARED)
+        fbo->external = TRUE;
 
     if (flag != GLAMOR_CREATE_FBO_NO_FBO) {
-        if (glamor_pixmap_ensure_fb(fbo) != 0) {
-            glamor_purge_fbo(fbo);
+        if (glamor_pixmap_ensure_fb(glamor_priv, fbo) != 0) {
+            glamor_purge_fbo(glamor_priv, fbo);
             fbo = NULL;
         }
     }
 
- done:
     return fbo;
 }
 
@@ -280,7 +278,7 @@ glamor_fbo_expire(glamor_screen_private *glamor_priv)
                     xorg_list_del(&fbo_entry->list);
                     DEBUGF("cache %p fbo %p expired %d current %d \n", cache,
                            fbo_entry, fbo_entry->expire, glamor_priv->tick);
-                    glamor_purge_fbo(fbo_entry);
+                    glamor_purge_fbo(glamor_priv, fbo_entry);
                 }
             }
 
@@ -317,16 +315,17 @@ glamor_fini_pixmap_fbo(ScreenPtr screen)
                 xorg_list_for_each_entry_safe_reverse(fbo_entry, tmp, cache,
                                                       list) {
                     xorg_list_del(&fbo_entry->list);
-                    glamor_purge_fbo(fbo_entry);
+                    glamor_purge_fbo(glamor_priv, fbo_entry);
                 }
             }
 }
 
 void
-glamor_destroy_fbo(glamor_pixmap_fbo *fbo)
+glamor_destroy_fbo(glamor_screen_private *glamor_priv,
+                   glamor_pixmap_fbo *fbo)
 {
     xorg_list_del(&fbo->list);
-    glamor_pixmap_fbo_cache_put(fbo);
+    glamor_pixmap_fbo_cache_put(glamor_priv, fbo);
 
 }
 
@@ -334,25 +333,34 @@ static int
 _glamor_create_tex(glamor_screen_private *glamor_priv,
                    int w, int h, GLenum format)
 {
-    unsigned int tex = 0;
+    unsigned int tex;
 
-    /* With dri3, we want to allocate ARGB8888 pixmaps only.
-     * Depending on the implementation, GL_RGBA might not
-     * give us ARGB8888. We ask glamor_egl to use get
-     * an ARGB8888 based texture for us. */
-    if (format == GL_RGBA) {
-        tex = glamor_egl_create_argb8888_based_texture(glamor_priv->screen,
-                                                       w, h);
+    glamor_make_current(glamor_priv);
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    if (format == glamor_priv->one_channel_format && format == GL_RED) {
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_R, GL_ZERO);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_A, GL_RED);
     }
-    if (!tex) {
-        glamor_make_current(glamor_priv);
-        glGenTextures(1, &tex);
-        glBindTexture(GL_TEXTURE_2D, tex);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexImage2D(GL_TEXTURE_2D, 0, format, w, h, 0,
-                     format, GL_UNSIGNED_BYTE, NULL);
+    glamor_priv->suppress_gl_out_of_memory_logging = true;
+    glTexImage2D(GL_TEXTURE_2D, 0, format, w, h, 0,
+                 format, GL_UNSIGNED_BYTE, NULL);
+    glamor_priv->suppress_gl_out_of_memory_logging = false;
+
+    if (glGetError() == GL_OUT_OF_MEMORY) {
+        if (!glamor_priv->logged_any_fbo_allocation_failure) {
+            LogMessageVerb(X_WARNING, 0, "glamor: Failed to allocate %dx%d "
+                           "FBO due to GL_OUT_OF_MEMORY.\n", w, h);
+            LogMessageVerb(X_WARNING, 0,
+                           "glamor: Expect reduced performance.\n");
+            glamor_priv->logged_any_fbo_allocation_failure = true;
+        }
+        glDeleteTextures(1, &tex);
+        return 0;
     }
+
     return tex;
 }
 
@@ -362,45 +370,40 @@ glamor_create_fbo(glamor_screen_private *glamor_priv,
 {
     glamor_pixmap_fbo *fbo;
     GLint tex = 0;
-    int cache_flag;
 
-    if (flag == GLAMOR_CREATE_FBO_NO_FBO)
+    if (flag == GLAMOR_CREATE_FBO_NO_FBO || flag == CREATE_PIXMAP_USAGE_SHARED)
         goto new_fbo;
 
-    if (flag == GLAMOR_CREATE_PIXMAP_MAP)
-        goto no_tex;
-
-    /* Tiling from textures requires exact pixmap sizes. As we don't
-     * know which pixmaps will be used as tiles, just allocate
-     * everything at the requested size
-     */
-    cache_flag = GLAMOR_CACHE_EXACT_SIZE;
-
-    fbo = glamor_pixmap_fbo_cache_get(glamor_priv, w, h, format, cache_flag);
+    fbo = glamor_pixmap_fbo_cache_get(glamor_priv, w, h, format);
     if (fbo)
         return fbo;
  new_fbo:
     tex = _glamor_create_tex(glamor_priv, w, h, format);
- no_tex:
+    if (!tex)
+        return NULL;
     fbo = glamor_create_fbo_from_tex(glamor_priv, w, h, format, tex, flag);
 
     return fbo;
 }
 
-static glamor_pixmap_fbo *
-_glamor_create_fbo_array(glamor_screen_private *glamor_priv,
+/**
+ * Create storage for the w * h region, using FBOs of the GL's maximum
+ * supported size.
+ */
+glamor_pixmap_fbo *
+glamor_create_fbo_array(glamor_screen_private *glamor_priv,
                          int w, int h, GLenum format, int flag,
                          int block_w, int block_h,
-                         glamor_pixmap_private *pixmap_priv, int has_fbo)
+                         glamor_pixmap_private *priv)
 {
     int block_wcnt;
     int block_hcnt;
     glamor_pixmap_fbo **fbo_array;
     BoxPtr box_array;
     int i, j;
-    glamor_pixmap_private_large_t *priv;
 
-    priv = &pixmap_priv->large;
+    priv->block_w = block_w;
+    priv->block_h = block_h;
 
     block_wcnt = (w + block_w - 1) / block_w;
     block_hcnt = (h + block_h - 1) / block_h;
@@ -431,13 +434,10 @@ _glamor_create_fbo_array(glamor_screen_private *glamor_priv,
             fbo_w =
                 box_array[i * block_wcnt + j].x2 - box_array[i * block_wcnt +
                                                              j].x1;
-            if (!has_fbo)
-                fbo_array[i * block_wcnt + j] = glamor_create_fbo(glamor_priv,
-                                                                  fbo_w, fbo_h,
-                                                                  format,
-                                                                  GLAMOR_CREATE_PIXMAP_FIXUP);
-            else
-                fbo_array[i * block_wcnt + j] = priv->base.fbo;
+            fbo_array[i * block_wcnt + j] = glamor_create_fbo(glamor_priv,
+                                                              fbo_w, fbo_h,
+                                                              format,
+                                                              GLAMOR_CREATE_PIXMAP_FIXUP);
             if (fbo_array[i * block_wcnt + j] == NULL)
                 goto cleanup;
         }
@@ -452,25 +452,11 @@ _glamor_create_fbo_array(glamor_screen_private *glamor_priv,
 
  cleanup:
     for (i = 0; i < block_wcnt * block_hcnt; i++)
-        if ((fbo_array)[i])
-            glamor_destroy_fbo((fbo_array)[i]);
+        if (fbo_array[i])
+            glamor_destroy_fbo(glamor_priv, fbo_array[i]);
     free(box_array);
     free(fbo_array);
     return NULL;
-}
-
-/* Create a fbo array to cover the w*h region, by using block_w*block_h
- * block.*/
-glamor_pixmap_fbo *
-glamor_create_fbo_array(glamor_screen_private *glamor_priv,
-                        int w, int h, GLenum format, int flag,
-                        int block_w, int block_h,
-                        glamor_pixmap_private *pixmap_priv)
-{
-    pixmap_priv->large.block_w = block_w;
-    pixmap_priv->large.block_h = block_h;
-    return _glamor_create_fbo_array(glamor_priv, w, h, format, flag,
-                                    block_w, block_h, pixmap_priv, 0);
 }
 
 glamor_pixmap_fbo *
@@ -481,11 +467,11 @@ glamor_pixmap_detach_fbo(glamor_pixmap_private *pixmap_priv)
     if (pixmap_priv == NULL)
         return NULL;
 
-    fbo = pixmap_priv->base.fbo;
+    fbo = pixmap_priv->fbo;
     if (fbo == NULL)
         return NULL;
 
-    pixmap_priv->base.fbo = NULL;
+    pixmap_priv->fbo = NULL;
     return fbo;
 }
 
@@ -497,47 +483,40 @@ glamor_pixmap_attach_fbo(PixmapPtr pixmap, glamor_pixmap_fbo *fbo)
 
     pixmap_priv = glamor_get_pixmap_private(pixmap);
 
-    if (pixmap_priv->base.fbo)
+    if (pixmap_priv->fbo)
         return;
 
-    pixmap_priv->base.fbo = fbo;
+    pixmap_priv->fbo = fbo;
 
     switch (pixmap_priv->type) {
-    case GLAMOR_TEXTURE_LARGE:
     case GLAMOR_TEXTURE_ONLY:
     case GLAMOR_TEXTURE_DRM:
-        pixmap_priv->base.gl_fbo = GLAMOR_FBO_NORMAL;
-        if (fbo->tex != 0)
-            pixmap_priv->base.gl_tex = 1;
-        else {
-            /* XXX For the Xephyr only, may be broken now. */
-            pixmap_priv->base.gl_tex = 0;
-        }
-    case GLAMOR_MEMORY_MAP:
+        pixmap_priv->gl_fbo = GLAMOR_FBO_NORMAL;
         pixmap->devPrivate.ptr = NULL;
-        break;
     default:
         break;
     }
 }
 
 void
-glamor_pixmap_destroy_fbo(glamor_pixmap_private *priv)
+glamor_pixmap_destroy_fbo(PixmapPtr pixmap)
 {
+    ScreenPtr screen = pixmap->drawable.pScreen;
+    glamor_screen_private *glamor_priv = glamor_get_screen_private(screen);
+    glamor_pixmap_private *priv = glamor_get_pixmap_private(pixmap);
     glamor_pixmap_fbo *fbo;
 
-    if (priv->type == GLAMOR_TEXTURE_LARGE) {
+    if (glamor_pixmap_priv_is_large(priv)) {
         int i;
-        glamor_pixmap_private_large_t *large = &priv->large;
 
-        for (i = 0; i < large->block_wcnt * large->block_hcnt; i++)
-            glamor_destroy_fbo(large->fbo_array[i]);
-        free(large->fbo_array);
+        for (i = 0; i < priv->block_wcnt * priv->block_hcnt; i++)
+            glamor_destroy_fbo(glamor_priv, priv->fbo_array[i]);
+        free(priv->fbo_array);
     }
     else {
         fbo = glamor_pixmap_detach_fbo(priv);
         if (fbo)
-            glamor_destroy_fbo(fbo);
+            glamor_destroy_fbo(glamor_priv, fbo);
     }
 }
 
@@ -550,7 +529,7 @@ glamor_pixmap_ensure_fbo(PixmapPtr pixmap, GLenum format, int flag)
 
     glamor_priv = glamor_get_screen_private(pixmap->drawable.pScreen);
     pixmap_priv = glamor_get_pixmap_private(pixmap);
-    if (pixmap_priv->base.fbo == NULL) {
+    if (pixmap_priv->fbo == NULL) {
 
         fbo = glamor_create_fbo(glamor_priv, pixmap->drawable.width,
                                 pixmap->drawable.height, format, flag);
@@ -561,13 +540,13 @@ glamor_pixmap_ensure_fbo(PixmapPtr pixmap, GLenum format, int flag)
     }
     else {
         /* We do have a fbo, but it may lack of fb or tex. */
-        if (!pixmap_priv->base.fbo->tex)
-            pixmap_priv->base.fbo->tex =
+        if (!pixmap_priv->fbo->tex)
+            pixmap_priv->fbo->tex =
                 _glamor_create_tex(glamor_priv, pixmap->drawable.width,
                                    pixmap->drawable.height, format);
 
-        if (flag != GLAMOR_CREATE_FBO_NO_FBO && pixmap_priv->base.fbo->fb == 0)
-            if (glamor_pixmap_ensure_fb(pixmap_priv->base.fbo) != 0)
+        if (flag != GLAMOR_CREATE_FBO_NO_FBO && pixmap_priv->fbo->fb == 0)
+            if (glamor_pixmap_ensure_fb(glamor_priv, pixmap_priv->fbo) != 0)
                 return FALSE;
     }
 
@@ -582,7 +561,7 @@ glamor_pixmap_exchange_fbos(PixmapPtr front, PixmapPtr back)
 
     front_priv = glamor_get_pixmap_private(front);
     back_priv = glamor_get_pixmap_private(back);
-    temp_fbo = front_priv->base.fbo;
-    front_priv->base.fbo = back_priv->base.fbo;
-    back_priv->base.fbo = temp_fbo;
+    temp_fbo = front_priv->fbo;
+    front_priv->fbo = back_priv->fbo;
+    back_priv->fbo = temp_fbo;
 }

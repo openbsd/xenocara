@@ -180,7 +180,7 @@ ProcessInputEvents(void)
 void
 xf86ProcessActionEvent(ActionEvent action, void *arg)
 {
-    DebugF("ProcessActionEvent(%d,%x)\n", (int) action, arg);
+    DebugF("ProcessActionEvent(%d,%p)\n", (int) action, arg);
     switch (action) {
     case ACTION_TERMINATE:
         if (!xf86Info.dontZap) {
@@ -403,7 +403,7 @@ xf86ReleaseKeys(DeviceIntPtr pDev)
          i < keyc->xkbInfo->desc->max_key_code; i++) {
         if (key_is_down(pDev, i, KEY_POSTED)) {
             OsBlockSIGIO();
-            QueueKeyboardEvents(pDev, KeyRelease, i, NULL);
+            QueueKeyboardEvents(pDev, KeyRelease, i);
             OsReleaseSIGIO();
         }
     }

@@ -43,6 +43,7 @@
 #include "darwinEvents.h"
 #include "pseudoramiX.h"
 #include "extension.h"
+#include "nonsdk_extinit.h"
 #include "glx_extinit.h"
 #define _APPLEWM_SERVER_
 #include "applewmExt.h"
@@ -299,8 +300,8 @@ QuartzUpdateScreens(void)
 
     quartzProcs->UpdateScreen(pScreen);
 
-    /* miPaintWindow needs to be called after RootlessUpdateScreenPixmap (from xprUpdateScreen) */
-    miPaintWindow(pRoot, &pRoot->borderClip, PW_BACKGROUND);
+    /* PaintWindow needs to be called after RootlessUpdateScreenPixmap (from xprUpdateScreen) */
+    pScreen->PaintWindow(pRoot, &pRoot->borderClip, PW_BACKGROUND);
 
     /* Tell RandR about the new size, so new connections get the correct info */
     RRScreenSizeNotify(pScreen);
@@ -484,7 +485,7 @@ QuartzHide(void)
  *  Enable or disable rendering to the X screen.
  */
 void
-QuartzSetRootClip(BOOL enable)
+QuartzSetRootClip(int mode)
 {
     int i;
 
@@ -493,7 +494,7 @@ QuartzSetRootClip(BOOL enable)
 
     for (i = 0; i < screenInfo.numScreens; i++) {
         if (screenInfo.screens[i]) {
-            SetRootClip(screenInfo.screens[i], enable);
+            SetRootClip(screenInfo.screens[i], mode);
         }
     }
 }

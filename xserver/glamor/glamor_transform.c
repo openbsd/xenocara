@@ -35,18 +35,19 @@
 
 void
 glamor_set_destination_drawable(DrawablePtr     drawable,
-                                int             box_x,
-                                int             box_y,
+                                int             box_index,
                                 Bool            do_drawable_translate,
                                 Bool            center_offset,
                                 GLint           matrix_uniform_location,
                                 int             *p_off_x,
                                 int             *p_off_y)
 {
+    ScreenPtr screen = drawable->pScreen;
+    glamor_screen_private *glamor_priv = glamor_get_screen_private(screen);
     PixmapPtr pixmap = glamor_get_drawable_pixmap(drawable);
     glamor_pixmap_private *pixmap_priv = glamor_get_pixmap_private(pixmap);
     int off_x, off_y;
-    BoxPtr box = glamor_pixmap_box_at(pixmap_priv, box_x, box_y);
+    BoxPtr box = glamor_pixmap_box_at(pixmap_priv, box_index);
     int w = box->x2 - box->x1;
     int h = box->y2 - box->y1;
     float scale_x = 2.0f / (float) w;
@@ -75,8 +76,6 @@ glamor_set_destination_drawable(DrawablePtr     drawable,
      *  gl_x = (render_x + drawable->x + off_x) * 2 / width - 1
      *
      *  gl_x = (render_x) * 2 / width + (drawable->x + off_x) * 2 / width - 1
-     *
-     * I'll think about yInverted later, when I have some way to test
      */
 
     if (do_drawable_translate) {
@@ -95,7 +94,7 @@ glamor_set_destination_drawable(DrawablePtr     drawable,
                 scale_x, (off_x + center_adjust) * scale_x - 1.0f,
                 scale_y, (off_y + center_adjust) * scale_y - 1.0f);
 
-    glamor_set_destination_pixmap_fbo(glamor_pixmap_fbo_at(pixmap_priv, box_x, box_y),
+    glamor_set_destination_pixmap_fbo(glamor_priv, glamor_pixmap_fbo_at(pixmap_priv, box_index),
                                       0, 0, w, h);
 }
 
@@ -105,15 +104,21 @@ glamor_set_destination_drawable(DrawablePtr     drawable,
  */
 
 void
-glamor_set_color(PixmapPtr      pixmap,
-                 CARD32         pixel,
-                 GLint          uniform)
+glamor_set_color_depth(ScreenPtr      pScreen,
+                       int            depth,
+                       CARD32         pixel,
+                       GLint          uniform)
 {
+    glamor_screen_private *glamor_priv = glamor_get_screen_private(pScreen);
     float       color[4];
 
     glamor_get_rgba_from_pixel(pixel,
                                &color[0], &color[1], &color[2], &color[3],
-                               format_for_pixmap(pixmap));
+                               format_for_depth(depth));
+
+    if ((depth == 1 || depth == 8) &&
+        glamor_priv->one_channel_format == GL_RED)
+      color[0] = color[3];
 
     glUniform4fv(uniform, 1, color);
 }
@@ -127,7 +132,7 @@ glamor_set_solid(PixmapPtr      pixmap,
     CARD32      pixel;
     int         alu = use_alu ? gc->alu : GXcopy;
 
-    if (!glamor_set_planemask(pixmap, gc->planemask))
+    if (!glamor_set_planemask(gc->depth, gc->planemask))
         return FALSE;
 
     pixel = gc->fgPixel;
@@ -153,12 +158,7 @@ glamor_set_solid(PixmapPtr      pixmap,
 }
 
 Bool
-glamor_set_texture(PixmapPtr    pixmap,
-                   PixmapPtr    texture,
-                   int          off_x,
-                   int          off_y,
-                   GLint        offset_uniform,
-                   GLint        size_uniform)
+glamor_set_texture_pixmap(PixmapPtr texture)
 {
     glamor_pixmap_private *texture_priv;
 
@@ -167,14 +167,31 @@ glamor_set_texture(PixmapPtr    pixmap,
     if (!GLAMOR_PIXMAP_PRIV_HAS_FBO(texture_priv))
         return FALSE;
 
-    if (texture_priv->type == GLAMOR_TEXTURE_LARGE)
+    if (glamor_pixmap_priv_is_large(texture_priv))
         return FALSE;
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture_priv->base.fbo->tex);
+    glBindTexture(GL_TEXTURE_2D, texture_priv->fbo->tex);
+
+    /* we're not setting the sampler uniform here as we always use
+     * GL_TEXTURE0, and the default value for uniforms is zero. So,
+     * save a bit of CPU time by taking advantage of that.
+     */
+    return TRUE;
+}
+
+Bool
+glamor_set_texture(PixmapPtr    texture,
+                   int          off_x,
+                   int          off_y,
+                   GLint        offset_uniform,
+                   GLint        size_inv_uniform)
+{
+    if (!glamor_set_texture_pixmap(texture))
+        return FALSE;
 
     glUniform2f(offset_uniform, off_x, off_y);
-    glUniform2f(size_uniform, texture->drawable.width, texture->drawable.height);
+    glUniform2f(size_inv_uniform, 1.0f/texture->drawable.width, 1.0f/texture->drawable.height);
     return TRUE;
 }
 
@@ -182,20 +199,19 @@ Bool
 glamor_set_tiled(PixmapPtr      pixmap,
                  GCPtr          gc,
                  GLint          offset_uniform,
-                 GLint          size_uniform)
+                 GLint          size_inv_uniform)
 {
     if (!glamor_set_alu(pixmap->drawable.pScreen, gc->alu))
         return FALSE;
 
-    if (!glamor_set_planemask(pixmap, gc->planemask))
+    if (!glamor_set_planemask(gc->depth, gc->planemask))
         return FALSE;
 
-    return glamor_set_texture(pixmap,
-                              gc->tile.pixmap,
+    return glamor_set_texture(gc->tile.pixmap,
                               -gc->patOrg.x,
                               -gc->patOrg.y,
                               offset_uniform,
-                              size_uniform);
+                              size_inv_uniform);
 }
 
 static PixmapPtr
@@ -272,8 +288,7 @@ glamor_set_stippled(PixmapPtr      pixmap,
     if (!glamor_set_solid(pixmap, gc, TRUE, fg_uniform))
         return FALSE;
 
-    return glamor_set_texture(pixmap,
-                              stipple,
+    return glamor_set_texture(stipple,
                               -gc->patOrg.x,
                               -gc->patOrg.y,
                               offset_uniform,

@@ -56,7 +56,7 @@ glamor_prep_pixmap_box(PixmapPtr pixmap, glamor_access_t access, BoxPtr box)
          * we'll assume that it's directly mapped
          * by a lower level driver
          */
-        if (!priv->base.prepared)
+        if (!priv->prepared)
             return TRUE;
 
         /* In X, multiple Drawables can be stored in the same Pixmap (such as
@@ -67,38 +67,38 @@ glamor_prep_pixmap_box(PixmapPtr pixmap, glamor_access_t access, BoxPtr box)
          * As a result, when doing a series of mappings for a fallback, we may
          * need to add more boxes to the set of data we've downloaded, as we go.
          */
-        RegionSubtract(&region, &region, &priv->base.prepare_region);
+        RegionSubtract(&region, &region, &priv->prepare_region);
         if (!RegionNotEmpty(&region))
             return TRUE;
 
         if (access == GLAMOR_ACCESS_RW)
             FatalError("attempt to remap buffer as writable");
 
-        if (priv->base.pbo) {
-            glBindBuffer(GL_PIXEL_PACK_BUFFER, priv->base.pbo);
+        if (priv->pbo) {
+            glBindBuffer(GL_PIXEL_PACK_BUFFER, priv->pbo);
             glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
             pixmap->devPrivate.ptr = NULL;
         }
     } else {
-        RegionInit(&priv->base.prepare_region, box, 1);
+        RegionInit(&priv->prepare_region, box, 1);
 
         if (glamor_priv->has_rw_pbo) {
-            if (priv->base.pbo == 0)
-                glGenBuffers(1, &priv->base.pbo);
+            if (priv->pbo == 0)
+                glGenBuffers(1, &priv->pbo);
 
             gl_usage = GL_STREAM_READ;
 
-            glBindBuffer(GL_PIXEL_PACK_BUFFER, priv->base.pbo);
+            glBindBuffer(GL_PIXEL_PACK_BUFFER, priv->pbo);
             glBufferData(GL_PIXEL_PACK_BUFFER,
                          pixmap->devKind * pixmap->drawable.height, NULL,
                          gl_usage);
         } else {
-            pixmap->devPrivate.ptr = malloc(pixmap->devKind *
-                                            pixmap->drawable.height);
+            pixmap->devPrivate.ptr = xallocarray(pixmap->devKind,
+                                                 pixmap->drawable.height);
             if (!pixmap->devPrivate.ptr)
                 return FALSE;
         }
-        priv->base.map_access = access;
+        priv->map_access = access;
     }
 
     glamor_download_boxes(pixmap, RegionRects(&region), RegionNumRects(&region),
@@ -107,7 +107,7 @@ glamor_prep_pixmap_box(PixmapPtr pixmap, glamor_access_t access, BoxPtr box)
     RegionUninit(&region);
 
     if (glamor_priv->has_rw_pbo) {
-        if (priv->base.map_access == GLAMOR_ACCESS_RW)
+        if (priv->map_access == GLAMOR_ACCESS_RW)
             gl_access = GL_READ_WRITE;
         else
             gl_access = GL_READ_ONLY;
@@ -116,7 +116,7 @@ glamor_prep_pixmap_box(PixmapPtr pixmap, glamor_access_t access, BoxPtr box)
         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
     }
 
-    priv->base.prepared = TRUE;
+    priv->prepared = TRUE;
     return TRUE;
 }
 
@@ -135,34 +135,34 @@ glamor_fini_pixmap(PixmapPtr pixmap)
     if (!GLAMOR_PIXMAP_PRIV_HAS_FBO(priv))
         return;
 
-    if (!priv->base.prepared)
+    if (!priv->prepared)
         return;
 
     if (glamor_priv->has_rw_pbo) {
-        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, priv->base.pbo);
+        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, priv->pbo);
         glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
         pixmap->devPrivate.ptr = NULL;
     }
 
-    if (priv->base.map_access == GLAMOR_ACCESS_RW) {
+    if (priv->map_access == GLAMOR_ACCESS_RW) {
         glamor_upload_boxes(pixmap,
-                            RegionRects(&priv->base.prepare_region),
-                            RegionNumRects(&priv->base.prepare_region),
+                            RegionRects(&priv->prepare_region),
+                            RegionNumRects(&priv->prepare_region),
                             0, 0, 0, 0, pixmap->devPrivate.ptr, pixmap->devKind);
     }
 
-    RegionUninit(&priv->base.prepare_region);
+    RegionUninit(&priv->prepare_region);
 
     if (glamor_priv->has_rw_pbo) {
         glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-        glDeleteBuffers(1, &priv->base.pbo);
-        priv->base.pbo = 0;
+        glDeleteBuffers(1, &priv->pbo);
+        priv->pbo = 0;
     } else {
         free(pixmap->devPrivate.ptr);
         pixmap->devPrivate.ptr = NULL;
     }
 
-    priv->base.prepared = FALSE;
+    priv->prepared = FALSE;
 }
 
 Bool
@@ -222,8 +222,22 @@ glamor_prepare_access_picture_box(PicturePtr picture, glamor_access_t access,
 {
     if (!picture || !picture->pDrawable)
         return TRUE;
-    return glamor_prepare_access_box(picture->pDrawable, access,
-                                    x, y, w, h);
+
+    /* If a transform is set, we don't know what the bounds is on the
+     * source, so just prepare the whole pixmap.  XXX: We could
+     * potentially work out where in the source would be sampled based
+     * on the transform, and we don't need do do this for destination
+     * pixmaps at all.
+     */
+    if (picture->transform) {
+        return glamor_prepare_access_box(picture->pDrawable, access,
+                                         0, 0,
+                                         picture->pDrawable->width,
+                                         picture->pDrawable->height);
+    } else {
+        return glamor_prepare_access_box(picture->pDrawable, access,
+                                         x, y, w, h);
+    }
 }
 
 void

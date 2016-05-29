@@ -61,8 +61,7 @@ ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_dir.m4 \
 	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
 	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
-	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/m4/xorg-tls.m4 \
-	$(top_srcdir)/configure.ac
+	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -124,12 +123,12 @@ am__sdk_HEADERS_DIST = XIstubs.h Xprintf.h callback.h client.h \
 	dixfontstr.h dixgrabs.h dixstruct.h events.h exevents.h \
 	extension.h extinit.h extnsionst.h gc.h gcstruct.h globals.h \
 	glx_extinit.h input.h inputstr.h list.h misc.h miscstruct.h \
-	opaque.h optionstr.h os.h pixmap.h pixmapstr.h privates.h \
-	property.h propertyst.h ptrveloc.h region.h regionstr.h \
-	registry.h resource.h rgb.h screenint.h scrnintstr.h \
-	selection.h servermd.h site.h swaprep.h swapreq.h validate.h \
-	window.h windowstr.h xkbfile.h xkbsrv.h xkbstr.h xkbrules.h \
-	xserver-properties.h
+	opaque.h nonsdk_extinit.h optionstr.h os.h pixmap.h \
+	pixmapstr.h privates.h property.h propertyst.h ptrveloc.h \
+	region.h regionstr.h registry.h resource.h rgb.h screenint.h \
+	scrnintstr.h selection.h servermd.h site.h validate.h \
+	displaymode.h window.h windowstr.h xkbfile.h xkbsrv.h xkbstr.h \
+	xkbrules.h xserver-properties.h
 HEADERS = $(nodist_sdk_HEADERS) $(sdk_HEADERS)
 ETAGS = etags
 CTAGS = ctags
@@ -225,7 +224,6 @@ GLAMOR_LIBS = @GLAMOR_LIBS@
 GLX_ARCH_DEFINES = @GLX_ARCH_DEFINES@
 GLX_DEFINES = @GLX_DEFINES@
 GLX_SYS_LIBS = @GLX_SYS_LIBS@
-GLX_TLS = @GLX_TLS@
 GL_CFLAGS = @GL_CFLAGS@
 GL_LIBS = @GL_LIBS@
 GREP = @GREP@
@@ -355,8 +353,6 @@ XEPHYR_INCS = @XEPHYR_INCS@
 XEPHYR_LIBS = @XEPHYR_LIBS@
 XF86CONFIGDIR = @XF86CONFIGDIR@
 XF86CONFIGFILE = @XF86CONFIGFILE@
-XF86VIDMODE_CFLAGS = @XF86VIDMODE_CFLAGS@
-XF86VIDMODE_LIBS = @XF86VIDMODE_LIBS@
 XKB_BASE_DIRECTORY = @XKB_BASE_DIRECTORY@
 XKB_BIN_DIRECTORY = @XKB_BIN_DIRECTORY@
 XKB_COMPILED_DIR = @XKB_COMPILED_DIR@
@@ -514,6 +510,7 @@ top_srcdir = @top_srcdir@
 @XORG_TRUE@	misc.h		\
 @XORG_TRUE@	miscstruct.h	\
 @XORG_TRUE@	opaque.h	\
+@XORG_TRUE@	nonsdk_extinit.h	\
 @XORG_TRUE@	optionstr.h	\
 @XORG_TRUE@	os.h		\
 @XORG_TRUE@	pixmap.h	\
@@ -532,9 +529,8 @@ top_srcdir = @top_srcdir@
 @XORG_TRUE@	selection.h	\
 @XORG_TRUE@	servermd.h	\
 @XORG_TRUE@	site.h		\
-@XORG_TRUE@	swaprep.h	\
-@XORG_TRUE@	swapreq.h	\
 @XORG_TRUE@	validate.h	\
+@XORG_TRUE@	displaymode.h    \
 @XORG_TRUE@	window.h	\
 @XORG_TRUE@	windowstr.h	\
 @XORG_TRUE@	xkbfile.h	\
@@ -551,7 +547,10 @@ EXTRA_DIST = \
 	dixfontstubs.h eventconvert.h eventstr.h inpututils.h \
 	probes.h \
 	protocol-versions.h \
+	swaprep.h \
+	swapreq.h \
 	systemd-logind.h \
+        vidmodestr.h \
 	xsha1.h
 
 all: do-not-use-config.h xorg-server.h dix-config.h xorg-config.h xkb-config.h xwin-config.h kdrive-config.h version-config.h

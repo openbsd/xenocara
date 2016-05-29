@@ -162,14 +162,13 @@ winWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
          * their own mode when they become active.
          */
         if (s_pScreenInfo->fFullScreen
-            && (s_pScreenInfo->dwEngine == WIN_SERVER_SHADOW_DD
-                || s_pScreenInfo->dwEngine == WIN_SERVER_SHADOW_DDNL)) {
+            || (s_pScreenInfo->dwEngine == WIN_SERVER_SHADOW_DDNL)) {
             break;
         }
 
         ErrorF("winWindowProc - WM_DISPLAYCHANGE - new width: %d "
                "new height: %d new bpp: %d\n",
-               LOWORD(lParam), HIWORD(lParam), wParam);
+               LOWORD(lParam), HIWORD(lParam), (int)wParam);
 
         /* 0 bpp has no defined meaning, ignore this message */
         if (wParam == 0)
@@ -186,8 +185,7 @@ winWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
          */
         if (s_pScreenInfo->dwBPP !=
             GetDeviceCaps(s_pScreenPriv->hdcScreen, BITSPIXEL)) {
-            if ((s_pScreenInfo->dwEngine == WIN_SERVER_SHADOW_DD ||
-                 s_pScreenInfo->dwEngine == WIN_SERVER_SHADOW_DDNL)) {
+            if (s_pScreenInfo->dwEngine == WIN_SERVER_SHADOW_DDNL) {
                 /* Cannot display the visual until the depth is restored */
                 ErrorF("winWindowProc - Disruptive change in depth\n");
 

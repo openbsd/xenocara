@@ -306,11 +306,9 @@ CopyCursorToImage(CursorPtr pCursor, CARD32 *image)
     int height = pCursor->bits->height;
     int npixels = width * height;
 
-#ifdef ARGB_CURSOR
     if (pCursor->bits->argb)
         memcpy(image, pCursor->bits->argb, npixels * sizeof(CARD32));
     else
-#endif
     {
         unsigned char *srcLine = pCursor->bits->source;
         unsigned char *mskLine = pCursor->bits->mask;
@@ -776,10 +774,8 @@ createCursorHideCount(ClientPtr pClient, ScreenPtr pScreen)
      * Create a resource for this element so it can be deleted
      * when the client goes away.
      */
-    if (!AddResource(pChc->resource, CursorHideCountType, (void *) pChc)) {
-        free(pChc);
+    if (!AddResource(pChc->resource, CursorHideCountType, (void *) pChc))
         return BadAlloc;
-    }
 
     return Success;
 }

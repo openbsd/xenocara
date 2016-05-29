@@ -108,6 +108,9 @@ SOFTWARE.
 #include "misc.h"
 #include "extension.h"
 #include "extinit.h"
+#ifdef INXQUARTZ
+#include "nonsdk_extinit.h"
+#endif
 #include "micmap.h"
 #include "globals.h"
 
@@ -349,8 +352,8 @@ NewExtensionModuleList(int size)
         numExtensionModules = 0;
 
     n = numExtensionModules + size;
-    ExtensionModuleList = realloc(ExtensionModuleList,
-                                  n * sizeof(ExtensionModule));
+    ExtensionModuleList = reallocarray(ExtensionModuleList, n,
+                                       sizeof(ExtensionModule));
     if (ExtensionModuleList == NULL) {
         ExtensionModuleList = save;
         return NULL;

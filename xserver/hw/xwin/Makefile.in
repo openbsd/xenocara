@@ -60,8 +60,7 @@ ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_dir.m4 \
 	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
 	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
-	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/m4/xorg-tls.m4 \
-	$(top_srcdir)/configure.ac
+	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -82,8 +81,8 @@ am__XWin_SOURCES_DIST = InitInput.c InitOutput.c winallpriv.c \
 	wincursor.c windialogs.c winengine.c winerror.c winglobals.c \
 	winkeybd.c winkeyhook.c winmisc.c winmonitors.c winmouse.c \
 	winmsg.c winmsgwindow.c winmultiwindowclass.c \
-	winmultiwindowicons.c winprefs.c winprefsyacc.y winprefslex.l \
-	winprocarg.c winscrinit.c winshaddd.c winshadddnl.c \
+	winmultiwindowicons.c winos.c winprefs.c winprefsyacc.y \
+	winprefslex.l winprocarg.c winscrinit.c winshadddnl.c \
 	winshadgdi.c wintaskbar.c wintrayicon.c winvalargs.c \
 	winwakeup.c winwindow.c winwndproc.c ddraw.h winconfig.h win.h \
 	winglobals.h winkeybd.h winkeynames.h winlayouts.h \
@@ -118,9 +117,9 @@ am__objects_6 = InitInput.$(OBJEXT) InitOutput.$(OBJEXT) \
 	winkeyhook.$(OBJEXT) winmisc.$(OBJEXT) winmonitors.$(OBJEXT) \
 	winmouse.$(OBJEXT) winmsg.$(OBJEXT) winmsgwindow.$(OBJEXT) \
 	winmultiwindowclass.$(OBJEXT) winmultiwindowicons.$(OBJEXT) \
-	winprefs.$(OBJEXT) winprefsyacc.$(OBJEXT) \
+	winos.$(OBJEXT) winprefs.$(OBJEXT) winprefsyacc.$(OBJEXT) \
 	winprefslex.$(OBJEXT) winprocarg.$(OBJEXT) \
-	winscrinit.$(OBJEXT) winshaddd.$(OBJEXT) winshadddnl.$(OBJEXT) \
+	winscrinit.$(OBJEXT) winshadddnl.$(OBJEXT) \
 	winshadgdi.$(OBJEXT) wintaskbar.$(OBJEXT) \
 	wintrayicon.$(OBJEXT) winvalargs.$(OBJEXT) winwakeup.$(OBJEXT) \
 	winwindow.$(OBJEXT) winwndproc.$(OBJEXT) windisplay.$(OBJEXT) \
@@ -365,7 +364,6 @@ GLAMOR_LIBS = @GLAMOR_LIBS@
 GLX_ARCH_DEFINES = @GLX_ARCH_DEFINES@
 GLX_DEFINES = @GLX_DEFINES@
 GLX_SYS_LIBS = @GLX_SYS_LIBS@
-GLX_TLS = @GLX_TLS@
 GL_CFLAGS = @GL_CFLAGS@
 GL_LIBS = @GL_LIBS@
 GREP = @GREP@
@@ -495,8 +493,6 @@ XEPHYR_INCS = @XEPHYR_INCS@
 XEPHYR_LIBS = @XEPHYR_LIBS@
 XF86CONFIGDIR = @XF86CONFIGDIR@
 XF86CONFIGFILE = @XF86CONFIGFILE@
-XF86VIDMODE_CFLAGS = @XF86VIDMODE_CFLAGS@
-XF86VIDMODE_LIBS = @XF86VIDMODE_LIBS@
 XKB_BASE_DIRECTORY = @XKB_BASE_DIRECTORY@
 XKB_BIN_DIRECTORY = @XKB_BIN_DIRECTORY@
 XKB_COMPILED_DIR = @XKB_COMPILED_DIR@
@@ -680,12 +676,12 @@ SRCS = InitInput.c \
 	winmsgwindow.c \
 	winmultiwindowclass.c \
 	winmultiwindowicons.c \
+	winos.c \
 	winprefs.c \
 	winprefsyacc.y \
 	winprefslex.l \
 	winprocarg.c \
 	winscrinit.c \
-	winshaddd.c \
 	winshadddnl.c \
 	winshadgdi.c \
 	wintaskbar.c \
@@ -884,13 +880,13 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winmultiwindowwindow.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winmultiwindowwm.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winmultiwindowwndproc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winos.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winprefs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winprefslex.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winprefsyacc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winprocarg.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winrandr.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winscrinit.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winshaddd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winshadddnl.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winshadgdi.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wintaskbar.Po@am__quote@

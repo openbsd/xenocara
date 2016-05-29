@@ -50,11 +50,6 @@
 static struct xorg_list ms_drm_queue;
 static uint32_t ms_drm_seq;
 
-struct ms_pageflip {
-    ScreenPtr screen;
-    Bool crtc_for_msc_ust;
-};
-
 static void ms_box_intersect(BoxPtr dest, BoxPtr a, BoxPtr b)
 {
     dest->x1 = a->x1 > b->x1 ? a->x1 : b->x1;
@@ -88,7 +83,7 @@ static int ms_box_area(BoxPtr box)
     return (int)(box->x2 - box->x1) * (int)(box->y2 - box->y1);
 }
 
-static Bool
+Bool
 ms_crtc_on(xf86CrtcPtr crtc)
 {
     drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
@@ -323,6 +318,22 @@ ms_drm_abort_scrn(ScrnInfoPtr scrn)
     }
 }
 
+/**
+ * Abort by drm queue sequence number.
+ */
+void
+ms_drm_abort_seq(ScrnInfoPtr scrn, uint32_t seq)
+{
+    struct ms_drm_queue *q, *tmp;
+
+    xorg_list_for_each_entry_safe(q, tmp, &ms_drm_queue, list) {
+        if (q->seq == seq) {
+            ms_drm_abort_one(q);
+            break;
+        }
+    }
+}
+
 /*
  * Externally usable abort function that uses a callback to match a single
  * queued entry to abort
@@ -370,7 +381,7 @@ ms_vblank_screen_init(ScreenPtr screen)
 {
     ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
     modesettingPtr ms = modesettingPTR(scrn);
-
+    modesettingEntPtr ms_ent = ms_ent_priv(scrn);
     xorg_list_init(&ms_drm_queue);
 
     ms->event_context.version = DRM_EVENT_CONTEXT_VERSION;
@@ -381,9 +392,14 @@ ms_vblank_screen_init(ScreenPtr screen)
      * feedback on every server generation, so perform the
      * registration within ScreenInit and not PreInit.
      */
-    AddGeneralSocket(ms->fd);
-    RegisterBlockAndWakeupHandlers((BlockHandlerProcPtr)NoopDDA,
-                                   ms_drm_wakeup_handler, screen);
+    if (ms_ent->fd_wakeup_registered != serverGeneration) {
+        AddGeneralSocket(ms->fd);
+        RegisterBlockAndWakeupHandlers((BlockHandlerProcPtr)NoopDDA,
+                                       ms_drm_wakeup_handler, screen);
+        ms_ent->fd_wakeup_registered = serverGeneration;
+        ms_ent->fd_wakeup_ref = 1;
+    } else
+        ms_ent->fd_wakeup_ref++;
 
     return TRUE;
 }
@@ -393,10 +409,14 @@ ms_vblank_close_screen(ScreenPtr screen)
 {
     ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
     modesettingPtr ms = modesettingPTR(scrn);
+    modesettingEntPtr ms_ent = ms_ent_priv(scrn);
 
     ms_drm_abort_scrn(scrn);
 
-    RemoveBlockAndWakeupHandlers((BlockHandlerProcPtr)NoopDDA,
-                                 ms_drm_wakeup_handler, screen);
-    RemoveGeneralSocket(ms->fd);
+    if (ms_ent->fd_wakeup_registered == serverGeneration &&
+        !--ms_ent->fd_wakeup_ref) {
+        RemoveBlockAndWakeupHandlers((BlockHandlerProcPtr)NoopDDA,
+                                     ms_drm_wakeup_handler, screen);
+        RemoveGeneralSocket(ms->fd);
+    }
 }

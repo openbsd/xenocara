@@ -233,9 +233,10 @@ xwl_glamor_create_screen_resources(ScreenPtr screen)
     if (!ret)
         return ret;
 
-    if (xwl_screen->rootless)
+    if (xwl_screen->rootless) {
         screen->devPrivate =
             fbCreatePixmap(screen, 0, 0, screen->rootDepth, 0);
+    }
     else {
         screen->devPrivate =
             xwl_glamor_create_pixmap(screen, screen->width, screen->height,
@@ -244,6 +245,8 @@ xwl_glamor_create_screen_resources(ScreenPtr screen)
         if (screen->devPrivate)
             glamor_set_screen_pixmap(screen->devPrivate, NULL);
     }
+
+    SetRootClip(screen, xwl_screen->root_clip_mode);
 
     return screen->devPrivate != NULL;
 }
@@ -268,6 +271,15 @@ xwl_drm_init_egl(struct xwl_screen *xwl_screen)
 {
     EGLint major, minor;
     const char *version;
+    static const EGLint config_attribs_core[] = {
+        EGL_CONTEXT_OPENGL_PROFILE_MASK_KHR,
+        EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT_KHR,
+        EGL_CONTEXT_MAJOR_VERSION_KHR,
+        GLAMOR_GL_CORE_VER_MAJOR,
+        EGL_CONTEXT_MINOR_VERSION_KHR,
+        GLAMOR_GL_CORE_VER_MINOR,
+        EGL_NONE
+    };
 
     if (xwl_screen->egl_display)
         return;
@@ -296,7 +308,11 @@ xwl_drm_init_egl(struct xwl_screen *xwl_screen)
     ErrorF("glamor: EGL version %s:\n", version);
 
     xwl_screen->egl_context = eglCreateContext(xwl_screen->egl_display,
-                                               NULL, EGL_NO_CONTEXT, NULL);
+                                               NULL, EGL_NO_CONTEXT, config_attribs_core);
+    if (!xwl_screen->egl_context)
+        xwl_screen->egl_context = eglCreateContext(xwl_screen->egl_display,
+                                                   NULL, EGL_NO_CONTEXT, NULL);
+
     if (xwl_screen->egl_context == EGL_NO_CONTEXT) {
         ErrorF("Failed to create EGL context\n");
         return;
@@ -410,12 +426,6 @@ glamor_egl_dri3_fd_name_from_tex(ScreenPtr screen,
                                  PixmapPtr pixmap,
                                  unsigned int tex,
                                  Bool want_name, CARD16 *stride, CARD32 *size)
-{
-    return 0;
-}
-
-unsigned int
-glamor_egl_create_argb8888_based_texture(ScreenPtr screen, int w, int h)
 {
     return 0;
 }
@@ -549,11 +559,7 @@ xwl_glamor_init(struct xwl_screen *xwl_screen)
         return FALSE;
     }
 
-    if (!glamor_init(xwl_screen->screen,
-                     GLAMOR_INVERTED_Y_AXIS |
-                     GLAMOR_USE_EGL_SCREEN |
-                     GLAMOR_USE_SCREEN |
-                     GLAMOR_USE_PICTURE_SCREEN)) {
+    if (!glamor_init(xwl_screen->screen, GLAMOR_USE_EGL_SCREEN)) {
         ErrorF("Failed to initialize glamor\n");
         return FALSE;
     }
@@ -567,6 +573,11 @@ xwl_glamor_init(struct xwl_screen *xwl_screen)
     screen->CreateScreenResources = xwl_glamor_create_screen_resources;
     screen->CreatePixmap = xwl_glamor_create_pixmap;
     screen->DestroyPixmap = xwl_glamor_destroy_pixmap;
+
+#ifdef XV
+    if (!xwl_glamor_xv_init(screen))
+        ErrorF("Failed to initialize glamor Xv extension\n");
+#endif
 
     return TRUE;
 }

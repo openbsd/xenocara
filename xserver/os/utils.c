@@ -81,6 +81,7 @@ __stdcall unsigned long GetTickCount(void);
 #include <X11/Xtrans/Xtrans.h>
 #include "input.h"
 #include "dixfont.h"
+#include <X11/fonts/fontutil.h>
 #include "osdep.h"
 #include "extension.h"
 #ifdef X_POSIX_C_SOURCE
@@ -568,6 +569,7 @@ UseMsg(void)
 #ifdef LOCK_SERVER
     ErrorF("-nolock                disable the locking mechanism\n");
 #endif
+    ErrorF("-maxclients n          set maximum number of clients (power of two)\n");
     ErrorF("-nolisten string       don't listen on protocol\n");
     ErrorF("-listen string         listen on protocol\n");
     ErrorF("-noreset               don't reset after last client exists\n");
@@ -876,6 +878,19 @@ ProcessCommandLine(int argc, char *argv[])
                 nolock = TRUE;
         }
 #endif
+	else if ( strcmp( argv[i], "-maxclients") == 0)
+	{
+	    if (++i < argc) {
+		LimitClients = atoi(argv[i]);
+		if (LimitClients != 64 &&
+		    LimitClients != 128 &&
+		    LimitClients != 256 &&
+		    LimitClients != 512) {
+		    FatalError("maxclients must be one of 64, 128, 256 or 512\n");
+		}
+	    } else
+		UseMsg();
+	}
         else if (strcmp(argv[i], "-nolisten") == 0) {
             if (++i < argc) {
                 if (_XSERVTransNoListen(argv[i]))
@@ -1149,10 +1164,20 @@ XNFalloc(unsigned long amount)
     return ptr;
 }
 
+/* The original XNFcalloc was used with the xnfcalloc macro which multiplied
+ * the arguments at the call site without allowing calloc to check for overflow.
+ * XNFcallocarray was added to fix that without breaking ABI.
+ */
 void *
 XNFcalloc(unsigned long amount)
 {
-    void *ret = calloc(1, amount);
+    return XNFcallocarray(1, amount);
+}
+
+void *
+XNFcallocarray(size_t nmemb, size_t size)
+{
+    void *ret = calloc(nmemb, size);
 
     if (!ret)
         FatalError("XNFcalloc: Out of memory");
@@ -1166,6 +1191,16 @@ XNFrealloc(void *ptr, unsigned long amount)
 
     if (!ret)
         FatalError("XNFrealloc: Out of memory");
+    return ret;
+}
+
+void *
+XNFreallocarray(void *ptr, size_t nmemb, size_t size)
+{
+    void *ret = reallocarray(ptr, nmemb, size);
+
+    if (!ret)
+        FatalError("XNFreallocarray: Out of memory");
     return ret;
 }
 
@@ -1689,7 +1724,7 @@ Fclose(void *iop)
 #include <X11/Xwindows.h>
 
 const char *
-Win32TempDir()
+Win32TempDir(void)
 {
     static char buffer[PATH_MAX];
 
@@ -2030,7 +2065,7 @@ xstrtokenize(const char *str, const char *separators)
     if (!tmp)
         goto error;
     for (tok = strtok(tmp, separators); tok; tok = strtok(NULL, separators)) {
-        nlist = realloc(list, (num + 2) * sizeof(*list));
+        nlist = reallocarray(list, num + 2, sizeof(*list));
         if (!nlist)
             goto error;
         list = nlist;

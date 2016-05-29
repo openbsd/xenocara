@@ -65,17 +65,17 @@ SOFTWARE.
 
 #ifndef OPEN_MAX
 #ifdef SVR4
-#define OPEN_MAX 256
+#define OPEN_MAX 512
 #else
 #include <sys/param.h>
 #ifndef OPEN_MAX
 #if defined(NOFILE) && !defined(NOFILES_MAX)
 #define OPEN_MAX NOFILE
 #else
-#if !defined(WIN32)
+#if !defined(WIN32) || defined(__CYGWIN__)
 #define OPEN_MAX NOFILES_MAX
 #else
-#define OPEN_MAX 256
+#define OPEN_MAX 512
 #endif
 #endif
 #endif
@@ -89,10 +89,10 @@ SOFTWARE.
  * like sysconf(_SC_OPEN_MAX) is not supported.
  */
 
-#if OPEN_MAX <= 256
+#if OPEN_MAX <= 512
 #define MAXSOCKS (OPEN_MAX - 1)
 #else
-#define MAXSOCKS 256
+#define MAXSOCKS 512
 #endif
 
 /* MAXSELECT is the number of fds that select() can handle */
@@ -171,7 +171,7 @@ extern fd_set ClientsWriteBlocked;
 extern fd_set OutputPending;
 extern fd_set IgnoredClientsWithInput;
 
-#ifndef WIN32
+#if !defined(WIN32) || defined(__CYGWIN__)
 extern int *ConnectionTranslation;
 #else
 extern int GetConnectionTranslation(int conn);
@@ -185,7 +185,7 @@ extern Bool AnyClientsWriteBlocked;
 extern WorkQueuePtr workQueue;
 
 /* in WaitFor.c */
-#ifdef WIN32
+#if defined(WIN32) && !defined(__CYGWIN__)
 typedef long int fd_mask;
 #endif
 #define ffs mffs

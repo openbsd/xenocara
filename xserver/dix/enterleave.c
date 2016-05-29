@@ -212,7 +212,7 @@ SetFocusOut(DeviceIntPtr dev)
  * @return The window that is the first ancestor of both 'a' and 'b', or the
  *         NullWindow if they do not have a common ancestor.
  */
-WindowPtr
+static WindowPtr
 CommonAncestor(WindowPtr a, WindowPtr b)
 {
     for (b = b->parent; b; b = b->parent)
@@ -714,7 +714,7 @@ DeliverStateNotifyEvent(DeviceIntPtr dev, WindowPtr win)
         }
     }
 
-    sev = ev = (deviceStateNotify *) malloc(evcount * sizeof(xEvent));
+    sev = ev = xallocarray(evcount, sizeof(xEvent));
     FixDeviceStateNotify(dev, ev, NULL, NULL, NULL, first);
 
     if (b != NULL) {

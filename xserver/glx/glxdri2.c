@@ -864,11 +864,13 @@ initializeExtensions(__GLXDRIscreen * screen)
         __glXEnableExtension(screen->glx_enable_bits,
                              "GLX_ARB_create_context_profile");
         __glXEnableExtension(screen->glx_enable_bits,
+                             "GLX_EXT_create_context_es_profile");
+        __glXEnableExtension(screen->glx_enable_bits,
                              "GLX_EXT_create_context_es2_profile");
         LogMessage(X_INFO, "AIGLX: enabled GLX_ARB_create_context\n");
         LogMessage(X_INFO, "AIGLX: enabled GLX_ARB_create_context_profile\n");
         LogMessage(X_INFO,
-                   "AIGLX: enabled GLX_EXT_create_context_es2_profile\n");
+                   "AIGLX: enabled GLX_EXT_create_context_es{,2}_profile\n");
     }
 
     if (DRI2HasSwapControl(pScreen)) {
@@ -891,6 +893,12 @@ initializeExtensions(__GLXDRIscreen * screen)
     {
         __glXEnableExtension(screen->glx_enable_bits, "GLX_ARB_fbconfig_float");
         LogMessage(X_INFO, "AIGLX: enabled GLX_ARB_fbconfig_float\n");
+    }
+
+    /* enable EXT_fbconfig_packed_float (even if there are no packed float fbconfigs) */
+    {
+        __glXEnableExtension(screen->glx_enable_bits, "GLX_EXT_fbconfig_packed_float");
+        LogMessage(X_INFO, "AIGLX: enabled GLX_EXT_fbconfig_packed_float\n");
     }
 
     for (i = 0; extensions[i]; i++) {

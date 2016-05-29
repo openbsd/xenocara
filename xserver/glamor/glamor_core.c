@@ -42,10 +42,9 @@ glamor_get_drawable_location(const DrawablePtr drawable)
     glamor_pixmap_private *pixmap_priv = glamor_get_pixmap_private(pixmap);
     glamor_screen_private *glamor_priv =
         glamor_get_screen_private(drawable->pScreen);
-    if (pixmap_priv == NULL ||
-        pixmap_priv->base.gl_fbo == GLAMOR_FBO_UNATTACHED)
+    if (pixmap_priv->gl_fbo == GLAMOR_FBO_UNATTACHED)
         return 'm';
-    if (pixmap_priv->base.fbo->fb == glamor_priv->screen_fbo)
+    if (pixmap_priv->fbo->fb == glamor_priv->screen_fbo)
         return 's';
     else
         return 'f';
@@ -88,6 +87,17 @@ glamor_link_glsl_prog(ScreenPtr screen, GLint prog, const char *format, ...)
     GLint ok;
     glamor_screen_private *glamor_priv = glamor_get_screen_private(screen);
 
+    if (glamor_priv->has_khr_debug) {
+        char *label;
+        va_list va;
+
+        va_start(va, format);
+        XNFvasprintf(&label, format, va);
+        glObjectLabel(GL_PROGRAM, prog, -1, label);
+        free(label);
+        va_end(va);
+    }
+
     glLinkProgram(prog);
     glGetProgramiv(prog, GL_LINK_STATUS, &ok);
     if (!ok) {
@@ -100,17 +110,6 @@ glamor_link_glsl_prog(ScreenPtr screen, GLint prog, const char *format, ...)
         glGetProgramInfoLog(prog, size, NULL, info);
         ErrorF("Failed to link: %s\n", info);
         FatalError("GLSL link failure\n");
-    }
-
-    if (glamor_priv->has_khr_debug) {
-        char *label;
-        va_list va;
-
-        va_start(va, format);
-        XNFvasprintf(&label, format, va);
-        glObjectLabel(GL_PROGRAM, prog, -1, label);
-        free(label);
-        va_end(va);
     }
 }
 
@@ -173,46 +172,48 @@ glamor_init_finish_access_shaders(ScreenPtr screen)
     const char *fs_source =
         "void main()\n"
         "{\n"
+        "   vec4 color = texture2D(sampler, source_texture);\n"
         "   if (revert == REVERT_NONE) \n"
         "    { \n"
         "     if ((swap_rb != SWAP_NONE_DOWNLOADING) && (swap_rb != SWAP_NONE_UPLOADING))   \n"
-        "	  	gl_FragColor = texture2D(sampler, source_texture).bgra;\n"
+        "		gl_FragColor = color.bgra;\n"
         "     else \n"
-        "	  	gl_FragColor = texture2D(sampler, source_texture).rgba;\n"
+        "		gl_FragColor = color.rgba;\n"
         "    } \n"
         "   else \n"
         "    { \n"
         "     if (swap_rb == SWAP_DOWNLOADING)   \n"
-        "	  	gl_FragColor = texture2D(sampler, source_texture).argb;\n"
+        "		gl_FragColor = color.argb;\n"
         "     else if (swap_rb == SWAP_NONE_DOWNLOADING)\n"
-        "	  	gl_FragColor = texture2D(sampler, source_texture).abgr;\n"
+        "		gl_FragColor = color.abgr;\n"
         "     else if (swap_rb == SWAP_UPLOADING)\n"
-        "	  	gl_FragColor = texture2D(sampler, source_texture).gbar;\n"
+        "		gl_FragColor = color.gbar;\n"
         "     else if (swap_rb == SWAP_NONE_UPLOADING)\n"
-        "	  	gl_FragColor = texture2D(sampler, source_texture).abgr;\n"
+        "		gl_FragColor = color.abgr;\n"
         "    } \n"
         "}\n";
 
     const char *set_alpha_source =
         "void main()\n"
         "{\n"
+        "   vec4 color = texture2D(sampler, source_texture);\n"
         "   if (revert == REVERT_NONE) \n"
         "    { \n"
         "     if ((swap_rb != SWAP_NONE_DOWNLOADING) && (swap_rb != SWAP_NONE_UPLOADING))   \n"
-        "	  	gl_FragColor = vec4(texture2D(sampler, source_texture).bgr, 1);\n"
+        "		gl_FragColor = vec4(color.bgr, 1);\n"
         "     else \n"
-        "	  	gl_FragColor = vec4(texture2D(sampler, source_texture).rgb, 1);\n"
+        "		gl_FragColor = vec4(color.rgb, 1);\n"
         "    } \n"
         "   else \n"
         "    { \n"
         "     if (swap_rb == SWAP_DOWNLOADING)   \n"
-        "	  	gl_FragColor = vec4(1, texture2D(sampler, source_texture).rgb);\n"
+        "		gl_FragColor = vec4(1, color.rgb);\n"
         "     else if (swap_rb == SWAP_NONE_DOWNLOADING)\n"
-        "	  	gl_FragColor = vec4(1, texture2D(sampler, source_texture).bgr);\n"
+        "		gl_FragColor = vec4(1, color.bgr);\n"
         "     else if (swap_rb == SWAP_UPLOADING)\n"
-        "	  	gl_FragColor = vec4(texture2D(sampler, source_texture).gba, 1);\n"
+        "		gl_FragColor = vec4(color.gba, 1);\n"
         "     else if (swap_rb == SWAP_NONE_UPLOADING)\n"
-        "	  	gl_FragColor = vec4(texture2D(sampler, source_texture).abg, 1);\n"
+        "		gl_FragColor = vec4(color.abg, 1);\n"
         "    } \n"
         "}\n";
     GLint fs_prog, vs_prog, avs_prog, set_alpha_prog;
@@ -281,18 +282,7 @@ glamor_init_finish_access_shaders(ScreenPtr screen)
     glUniform1i(glamor_priv->finish_access_swap_rb[1], 0);
 }
 
-void
-glamor_fini_finish_access_shaders(ScreenPtr screen)
-{
-    glamor_screen_private *glamor_priv;
-
-    glamor_priv = glamor_get_screen_private(screen);
-    glamor_make_current(glamor_priv);
-    glDeleteProgram(glamor_priv->finish_access_prog[0]);
-    glDeleteProgram(glamor_priv->finish_access_prog[1]);
-}
-
-GCOps glamor_gc_ops = {
+static GCOps glamor_gc_ops = {
     .FillSpans = glamor_fill_spans,
     .SetSpans = glamor_set_spans,
     .PutImage = glamor_put_image,

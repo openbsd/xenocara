@@ -64,10 +64,10 @@ typedef XID RROutput;
 typedef XID RRCrtc;
 typedef XID RRProvider;
 
-extern _X_EXPORT int RREventBase, RRErrorBase;
+extern int RREventBase, RRErrorBase;
 
-extern _X_EXPORT int (*ProcRandrVector[RRNumberRequests]) (ClientPtr);
-extern _X_EXPORT int (*SProcRandrVector[RRNumberRequests]) (ClientPtr);
+extern int (*ProcRandrVector[RRNumberRequests]) (ClientPtr);
+extern int (*SProcRandrVector[RRNumberRequests]) (ClientPtr);
 
 /*
  * Modeline for a monitor. Name follows directly after this struct
@@ -80,6 +80,7 @@ typedef struct _rrProperty RRPropertyRec, *RRPropertyPtr;
 typedef struct _rrCrtc RRCrtcRec, *RRCrtcPtr;
 typedef struct _rrOutput RROutputRec, *RROutputPtr;
 typedef struct _rrProvider RRProviderRec, *RRProviderPtr;
+typedef struct _rrMonitor RRMonitorRec, *RRMonitorPtr;
 
 struct _rrMode {
     int refcnt;
@@ -167,6 +168,22 @@ struct _rrProvider {
     Bool changed;
     struct _rrProvider *offload_sink;
     struct _rrProvider *output_source;
+};
+
+typedef struct _rrMonitorGeometry {
+    BoxRec box;
+    CARD32 mmWidth;
+    CARD32 mmHeight;
+} RRMonitorGeometryRec, *RRMonitorGeometryPtr;
+
+struct _rrMonitor {
+    Atom name;
+    ScreenPtr pScreen;
+    int numOutputs;
+    RROutput *outputs;
+    Bool primary;
+    Bool automatic;
+    RRMonitorGeometryRec geometry;
 };
 
 #if RANDR_12_INTERFACE
@@ -338,6 +355,9 @@ typedef struct _rrScrPriv {
 
     RRProviderDestroyProcPtr rrProviderDestroy;
 
+    int numMonitors;
+    RRMonitorPtr *monitors;
+
 } rrScrPrivRec, *rrScrPrivPtr;
 
 extern _X_EXPORT DevPrivateKeyRec rrPrivKeyRec;
@@ -377,8 +397,8 @@ typedef struct _RRClient {
 /*  RRTimesRec	times[0]; */
 } RRClientRec, *RRClientPtr;
 
-extern _X_EXPORT RESTYPE RRClientType, RREventType;     /* resource types for event masks */
-extern _X_EXPORT DevPrivateKeyRec RRClientPrivateKeyRec;
+extern RESTYPE RRClientType, RREventType;     /* resource types for event masks */
+extern DevPrivateKeyRec RRClientPrivateKeyRec;
 
 #define RRClientPrivateKey (&RRClientPrivateKeyRec)
 extern _X_EXPORT RESTYPE RRCrtcType, RRModeType, RROutputType, RRProviderType;
@@ -980,6 +1000,39 @@ extern _X_EXPORT int
 extern _X_EXPORT void
  RRXineramaExtensionInit(void);
 #endif
+
+void
+RRMonitorInit(ScreenPtr screen);
+
+Bool
+RRMonitorMakeList(ScreenPtr screen, Bool get_active, RRMonitorPtr *monitors_ret, int *nmon_ret);
+
+int
+RRMonitorCountList(ScreenPtr screen);
+
+void
+RRMonitorFreeList(RRMonitorPtr monitors, int nmon);
+
+void
+RRMonitorClose(ScreenPtr screen);
+
+RRMonitorPtr
+RRMonitorAlloc(int noutput);
+
+int
+RRMonitorAdd(ClientPtr client, ScreenPtr screen, RRMonitorPtr monitor);
+
+void
+RRMonitorFree(RRMonitorPtr monitor);
+
+int
+ProcRRGetMonitors(ClientPtr client);
+
+int
+ProcRRSetMonitor(ClientPtr client);
+
+int
+ProcRRDeleteMonitor(ClientPtr client);
 
 #endif                          /* _RANDRSTR_H_ */
 

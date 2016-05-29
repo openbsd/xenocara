@@ -39,7 +39,7 @@
 
 #include "pseudoramiX.h"
 #include "extnsionst.h"
-#include "extinit.h"
+#include "nonsdk_extinit.h"
 #include "dixstruct.h"
 #include "window.h"
 #include <X11/extensions/panoramiXproto.h>
@@ -49,6 +49,7 @@
 #define DEBUG_LOG PseudoramiXDebug
 
 Bool noPseudoramiXExtension = FALSE;
+extern Bool noRRXineramaExtension;
 
 extern int
 ProcPanoramiXQueryVersion(ClientPtr client);
@@ -139,9 +140,9 @@ PseudoramiXAddScreen(int x, int y, int w, int h)
 
     if (pseudoramiXNumScreens == pseudoramiXScreensAllocated) {
         pseudoramiXScreensAllocated += pseudoramiXScreensAllocated + 1;
-        pseudoramiXScreens = realloc(pseudoramiXScreens,
-                                     pseudoramiXScreensAllocated *
-                                     sizeof(PseudoramiXScreenRec));
+        pseudoramiXScreens = reallocarray(pseudoramiXScreens,
+                                          pseudoramiXScreensAllocated,
+                                          sizeof(PseudoramiXScreenRec));
     }
 
     DEBUG_LOG("x: %d, y: %d, w: %d, h: %d\n", x, y, w, h);
@@ -189,6 +190,9 @@ PseudoramiXExtensionInit(void)
             success = TRUE;
         }
     }
+
+    /* Do not allow RRXinerama to initialize if we did */
+    noRRXineramaExtension = success;
 
     if (!success) {
         ErrorF("%s Extension (PseudoramiX) failed to initialize\n",

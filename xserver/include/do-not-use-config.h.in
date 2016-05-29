@@ -117,6 +117,9 @@
 /* Build glamor with GBM-based EGL support */
 #undef GLAMOR_HAS_GBM
 
+/* Have GBM_BO_USE_LINEAR */
+#undef GLAMOR_HAS_GBM_LINEAR
+
 /* Build GLX extension */
 #undef GLXEXT
 
@@ -256,6 +259,12 @@
 
 /* Define to 1 if you have the <ndir.h> header file, and it defines `DIR'. */
 #undef HAVE_NDIR_H
+
+/* Define to 1 if you have the `posix_fallocate' function. */
+#undef HAVE_POSIX_FALLOCATE
+
+/* Define to 1 if you have the `reallocarray' function. */
+#undef HAVE_REALLOCARRAY
 
 /* Define to 1 if you have the <rpcsvc/dbm.h> header file. */
 #undef HAVE_RPCSVC_DBM_H
@@ -444,8 +453,8 @@
 /* Need XFree86 typedefs */
 #undef NEED_XF86_TYPES
 
-/* Define to 1 if modules should avoid the libcwrapper */
-#undef NO_LIBCWRAPPER
+/* Define to 1 if no local socket credentials interface exists */
+#undef NO_LOCAL_CLIENT_CRED
 
 /* Operating System Name */
 #undef OSNAME
@@ -557,10 +566,6 @@
 
 /* Support TCP socket connections */
 #undef TCPCONN
-
-/* The compiler supported TLS storage class, prefering initial-exec if
-   tls_model is supported */
-#undef TLS
 
 /* Have tslib support */
 #undef TSLIB

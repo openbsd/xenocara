@@ -156,7 +156,7 @@ SetDefaultFont(const char *defaultfontname)
  * init_fpe() and free_fpe(), there shouldn't be any problem in using
  * freed data.
  */
-void
+static void
 QueueFontWakeup(FontPathElementPtr fpe)
 {
     int i;
@@ -168,9 +168,8 @@ QueueFontWakeup(FontPathElementPtr fpe)
         }
     }
     if (num_slept_fpes == size_slept_fpes) {
-        new = (FontPathElementPtr *)
-            realloc(slept_fpes,
-                    sizeof(FontPathElementPtr) * (size_slept_fpes + 4));
+        new = reallocarray(slept_fpes, size_slept_fpes + 4,
+                           sizeof(FontPathElementPtr));
         if (!new)
             return;
         slept_fpes = new;
@@ -180,7 +179,7 @@ QueueFontWakeup(FontPathElementPtr fpe)
     num_slept_fpes++;
 }
 
-void
+static void
 RemoveFontWakeup(FontPathElementPtr fpe)
 {
     int i, j;
@@ -196,7 +195,7 @@ RemoveFontWakeup(FontPathElementPtr fpe)
     }
 }
 
-void
+static void
 FontWakeup(void *data, int count, void *LastSelectMask)
 {
     int i;
@@ -421,7 +420,7 @@ OpenFont(ClientPtr client, XID fid, Mask flags, unsigned lenfname,
      * copy the current FPE list, so that if it gets changed by another client
      * while we're blocking, the request still appears atomic
      */
-    c->fpe_list = malloc(sizeof(FontPathElementPtr) * num_fpes);
+    c->fpe_list = xallocarray(num_fpes, sizeof(FontPathElementPtr));
     if (!c->fpe_list) {
         free((void *) c->fontname);
         free(c);
@@ -811,7 +810,7 @@ ListFonts(ClientPtr client, unsigned char *pattern, unsigned length,
 
     if (!(c = malloc(sizeof *c)))
         return BadAlloc;
-    c->fpe_list = malloc(sizeof(FontPathElementPtr) * num_fpes);
+    c->fpe_list = xallocarray(num_fpes, sizeof(FontPathElementPtr));
     if (!c->fpe_list) {
         free(c);
         return BadAlloc;
@@ -840,7 +839,7 @@ ListFonts(ClientPtr client, unsigned char *pattern, unsigned length,
     return Success;
 }
 
-int
+static int
 doListFontsWithInfo(ClientPtr client, LFWIclosurePtr c)
 {
     FontPathElementPtr fpe;
@@ -1057,7 +1056,7 @@ StartListFontsWithInfo(ClientPtr client, int length, unsigned char *pattern,
 
     if (!(c = malloc(sizeof *c)))
         goto badAlloc;
-    c->fpe_list = malloc(sizeof(FontPathElementPtr) * num_fpes);
+    c->fpe_list = xallocarray(num_fpes, sizeof(FontPathElementPtr));
     if (!c->fpe_list) {
         free(c);
         goto badAlloc;
@@ -1091,7 +1090,7 @@ static ChangeGCVal clearGC[] = { {.ptr = NullPixmap} };
 
 #define clearGCmask (GCClipMask)
 
-int
+static int
 doPolyText(ClientPtr client, PTclosurePtr c)
 {
     FontPtr pFont = c->pGC->font, oldpFont;
@@ -1372,7 +1371,7 @@ PolyText(ClientPtr client, DrawablePtr pDraw, GC * pGC, unsigned char *pElt,
 #undef TextEltHeader
 #undef FontShiftSize
 
-int
+static int
 doImageText(ClientPtr client, ITclosurePtr c)
 {
     int err = Success, lgerr;   /* err is in X error, not font error, space */
@@ -1423,7 +1422,7 @@ doImageText(ClientPtr client, ITclosurePtr c)
             *new_closure = *c;
             c = new_closure;
 
-            data = malloc(c->nChars * itemSize);
+            data = xallocarray(c->nChars, itemSize);
             if (!data) {
                 free(c);
                 c = old_closure;
@@ -1576,7 +1575,7 @@ SetFontPathElements(int npaths, unsigned char *paths, int *bad, Bool persist)
     unsigned char *cp = paths;
     FontPathElementPtr fpe = NULL, *fplist;
 
-    fplist = malloc(sizeof(FontPathElementPtr) * npaths);
+    fplist = xallocarray(npaths, sizeof(FontPathElementPtr));
     if (!fplist) {
         *bad = 0;
         return BadAlloc;
@@ -1873,8 +1872,7 @@ RegisterFPEFunctions(NameCheckFunc name_func,
     FPEFunctions *new;
 
     /* grow the list */
-    new = (FPEFunctions *) realloc(fpe_functions,
-                                   (num_fpe_types + 1) * sizeof(FPEFunctions));
+    new = reallocarray(fpe_functions, num_fpe_types + 1, sizeof(FPEFunctions));
     if (!new)
         return -1;
     fpe_functions = new;
