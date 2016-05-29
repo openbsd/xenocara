@@ -1,9 +1,9 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.5 2016/02/20 10:49:47 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.6 2016/05/29 10:40:19 jsg Exp $
 
 .include <bsd.own.mk>
 
-SHARED_LIBS=	EGL 1.0 gbm 0.0 glapi 0.1 GL 16.0 GLESv1_CM 1.0 GLESv2 1.0 \
-		OSMesa 9.0
+SHARED_LIBS=	EGL 1.0 gbm 0.0 glapi 0.2 GL 17.0 GLESv1_CM 1.0 GLESv2 1.1 \
+		OSMesa 10.0
 
 DRI_DRIVERS=		swrast
 GALLIUM_DRIVERS=	swrast

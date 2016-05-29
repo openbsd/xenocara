@@ -1,28 +1,36 @@
-if HAVE_LOADER_GALLIUM
-SUBDIRS := pipe-loader
-endif
-
 include Makefile.sources
 include $(top_srcdir)/src/gallium/Automake.inc
 
-noinst_LTLIBRARIES = libgallium.la
+noinst_LTLIBRARIES = libgallium_nir.la
 
 AM_CFLAGS = \
 	-I$(top_srcdir)/src/loader \
-	-I$(top_builddir)/src/glsl/nir \
 	-I$(top_srcdir)/src/gallium/auxiliary/util \
 	$(GALLIUM_CFLAGS) \
 	$(VISIBILITY_CFLAGS) \
-	$(MSVC2008_COMPAT_CXXFLAGS)
+	$(MSVC2013_COMPAT_CFLAGS)
 
 AM_CXXFLAGS = \
 	$(VISIBILITY_CXXFLAGS) \
-	$(MSVC2008_COMPAT_CXXFLAGS)
+	$(MSVC2013_COMPAT_CXXFLAGS)
+
+libgallium_nir_la_SOURCES = \
+	$(NIR_SOURCES)
+
+libgallium_nir_la_CFLAGS = \
+	-I$(top_builddir)/src/compiler/nir \
+	$(GALLIUM_CFLAGS) \
+	$(VISIBILITY_CFLAGS) \
+	$(MSVC2013_COMPAT_CFLAGS)
+
+noinst_LTLIBRARIES += libgallium.la
 
 libgallium_la_SOURCES = \
 	$(C_SOURCES) \
-	$(NIR_SOURCES) \
 	$(GENERATED_SOURCES)
+
+libgallium_la_LIBADD = \
+	libgallium_nir.la
 
 if HAVE_MESA_LLVM
 
@@ -69,15 +77,7 @@ COMMON_VL_CFLAGS = \
 	$(AM_CFLAGS) \
 	$(VL_CFLAGS) \
 	$(DRI2PROTO_CFLAGS) \
-	$(LIBDRM_CFLAGS) \
-	$(GALLIUM_PIPE_LOADER_DEFINES) \
-	-DPIPE_SEARCH_DIR=\"$(libdir)/gallium-pipe\"
-
-if HAVE_GALLIUM_STATIC_TARGETS
-COMMON_VL_CFLAGS += \
-	-DGALLIUM_STATIC_TARGETS=1
-
-endif # HAVE_GALLIUM_STATIC_TARGETS
+	$(LIBDRM_CFLAGS)
 
 noinst_LTLIBRARIES += libgalliumvl.la
 

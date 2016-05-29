@@ -78,6 +78,10 @@ DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 @HAVE_DRISW_TRUE@am__append_1 = \
 @HAVE_DRISW_TRUE@	$(top_builddir)/src/gallium/winsys/sw/dri/libswdri.la
 
+@HAVE_DRISW_KMS_TRUE@am__append_2 = \
+@HAVE_DRISW_KMS_TRUE@	$(top_builddir)/src/gallium/winsys/sw/kms-dri/libswkmsdri.la \
+@HAVE_DRISW_KMS_TRUE@	$(LIBDRM_LIBS)
+
 subdir = src/gallium/drivers/vc4
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_gnu_make.m4 \
@@ -103,11 +107,12 @@ am__objects_1 = kernel/vc4_gem.lo kernel/vc4_render_cl.lo \
 	vc4_blit.lo vc4_bufmgr.lo vc4_cl.lo vc4_cl_dump.lo \
 	vc4_context.lo vc4_draw.lo vc4_emit.lo vc4_fence.lo \
 	vc4_formats.lo vc4_job.lo vc4_nir_lower_blend.lo \
-	vc4_nir_lower_io.lo vc4_opt_algebraic.lo \
-	vc4_opt_constant_folding.lo vc4_opt_copy_propagation.lo \
-	vc4_opt_cse.lo vc4_opt_dead_code.lo \
-	vc4_opt_small_immediates.lo vc4_opt_vpm_writes.lo \
-	vc4_program.lo vc4_qir.lo vc4_qir_lower_uniforms.lo vc4_qpu.lo \
+	vc4_nir_lower_io.lo vc4_nir_lower_txf_ms.lo \
+	vc4_opt_algebraic.lo vc4_opt_constant_folding.lo \
+	vc4_opt_copy_propagation.lo vc4_opt_cse.lo \
+	vc4_opt_dead_code.lo vc4_opt_small_immediates.lo \
+	vc4_opt_vpm_writes.lo vc4_program.lo vc4_qir.lo \
+	vc4_qir_lower_uniforms.lo vc4_qir_schedule.lo vc4_qpu.lo \
 	vc4_qpu_disasm.lo vc4_qpu_emit.lo vc4_qpu_schedule.lo \
 	vc4_qpu_validate.lo vc4_query.lo vc4_register_allocate.lo \
 	vc4_reorder_uniforms.lo vc4_resource.lo vc4_screen.lo \
@@ -264,6 +269,8 @@ LIBELF_CFLAGS = @LIBELF_CFLAGS@
 LIBELF_LIBS = @LIBELF_LIBS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
+LIBSHA1_CFLAGS = @LIBSHA1_CFLAGS@
+LIBSHA1_LIBS = @LIBSHA1_LIBS@
 LIBTOOL = @LIBTOOL@
 LIBUDEV_CFLAGS = @LIBUDEV_CFLAGS@
 LIBUDEV_LIBS = @LIBUDEV_LIBS@
@@ -286,8 +293,6 @@ MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
 MESA_LLVM = @MESA_LLVM@
 MKDIR_P = @MKDIR_P@
-MSVC2008_COMPAT_CFLAGS = @MSVC2008_COMPAT_CFLAGS@
-MSVC2008_COMPAT_CXXFLAGS = @MSVC2008_COMPAT_CXXFLAGS@
 MSVC2013_COMPAT_CFLAGS = @MSVC2013_COMPAT_CFLAGS@
 MSVC2013_COMPAT_CXXFLAGS = @MSVC2013_COMPAT_CXXFLAGS@
 NINE_MAJOR = @NINE_MAJOR@
@@ -307,6 +312,8 @@ OMX_LIBS = @OMX_LIBS@
 OMX_LIB_INSTALL_DIR = @OMX_LIB_INSTALL_DIR@
 OPENCL_LIBNAME = @OPENCL_LIBNAME@
 OPENCL_VERSION = @OPENCL_VERSION@
+OPENSSL_CFLAGS = @OPENSSL_CFLAGS@
+OPENSSL_LIBS = @OPENSSL_LIBS@
 OSMESA_LIB = @OSMESA_LIB@
 OSMESA_LIB_DEPS = @OSMESA_LIB_DEPS@
 OSMESA_PC_LIB_PRIV = @OSMESA_PC_LIB_PRIV@
@@ -331,6 +338,7 @@ PRESENTPROTO_LIBS = @PRESENTPROTO_LIBS@
 PTHREAD_CC = @PTHREAD_CC@
 PTHREAD_CFLAGS = @PTHREAD_CFLAGS@
 PTHREAD_LIBS = @PTHREAD_LIBS@
+PWR8_CFLAGS = @PWR8_CFLAGS@
 PYTHON2 = @PYTHON2@
 RADEON_CFLAGS = @RADEON_CFLAGS@
 RADEON_LIBS = @RADEON_LIBS@
@@ -340,7 +348,11 @@ SED = @SED@
 SELINUX_CFLAGS = @SELINUX_CFLAGS@
 SELINUX_LIBS = @SELINUX_LIBS@
 SET_MAKE = @SET_MAKE@
+SHA1_CFLAGS = @SHA1_CFLAGS@
+SHA1_LIBS = @SHA1_LIBS@
 SHELL = @SHELL@
+SIMPENROSE_CFLAGS = @SIMPENROSE_CFLAGS@
+SIMPENROSE_LIBS = @SIMPENROSE_LIBS@
 SSE41_CFLAGS = @SSE41_CFLAGS@
 STRIP = @STRIP@
 VA_CFLAGS = @VA_CFLAGS@
@@ -371,6 +383,8 @@ XA_TINY = @XA_TINY@
 XA_VERSION = @XA_VERSION@
 XCB_DRI2_CFLAGS = @XCB_DRI2_CFLAGS@
 XCB_DRI2_LIBS = @XCB_DRI2_LIBS@
+XCB_DRI3_CFLAGS = @XCB_DRI3_CFLAGS@
+XCB_DRI3_LIBS = @XCB_DRI3_LIBS@
 XF86VIDMODE_CFLAGS = @XF86VIDMODE_CFLAGS@
 XF86VIDMODE_LIBS = @XF86VIDMODE_LIBS@
 XLIBGL_CFLAGS = @XLIBGL_CFLAGS@
@@ -465,6 +479,7 @@ C_SOURCES := \
 	vc4_job.c \
 	vc4_nir_lower_blend.c \
 	vc4_nir_lower_io.c \
+	vc4_nir_lower_txf_ms.c \
 	vc4_opt_algebraic.c \
 	vc4_opt_constant_folding.c \
 	vc4_opt_copy_propagation.c \
@@ -475,6 +490,7 @@ C_SOURCES := \
 	vc4_program.c \
 	vc4_qir.c \
 	vc4_qir_lower_uniforms.c \
+	vc4_qir_schedule.c \
 	vc4_qir.h \
 	vc4_qpu.c \
 	vc4_qpu_defines.h \
@@ -562,11 +578,10 @@ GALLIUM_WINSYS_CFLAGS = \
 GALLIUM_PIPE_LOADER_WINSYS_LIBS =  \
 	$(top_builddir)/src/gallium/winsys/sw/null/libws_null.la \
 	$(top_builddir)/src/gallium/winsys/sw/wrapper/libwsw.la \
-	$(am__append_1)
-@USE_VC4_SIMULATOR_TRUE@SIM_CFLAGS = -DUSE_VC4_SIMULATOR=1
+	$(am__append_1) $(am__append_2)
 @USE_VC4_SIMULATOR_TRUE@SIM_LDFLAGS = -lsimpenrose
 AM_CFLAGS = \
-	-I$(top_builddir)/src/glsl/nir \
+	-I$(top_builddir)/src/compiler/nir \
 	$(LIBDRM_CFLAGS) \
 	$(GALLIUM_DRIVER_CFLAGS) \
 	$(SIM_CFLAGS) \
@@ -659,6 +674,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vc4_job.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vc4_nir_lower_blend.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vc4_nir_lower_io.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vc4_nir_lower_txf_ms.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vc4_opt_algebraic.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vc4_opt_constant_folding.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vc4_opt_copy_propagation.Plo@am__quote@
@@ -669,6 +685,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vc4_program.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vc4_qir.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vc4_qir_lower_uniforms.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vc4_qir_schedule.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vc4_qpu.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vc4_qpu_disasm.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vc4_qpu_emit.Plo@am__quote@

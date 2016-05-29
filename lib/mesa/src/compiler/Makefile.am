@@ -210,6 +210,7 @@ MKDIR_GEN = $(AM_V_at)$(MKDIR_P) $(@D)
 YACC_GEN = $(AM_V_YACC)$(YACC) $(YFLAGS)
 LEX_GEN = $(AM_V_LEX)$(LEX) $(LFLAGS)
 
+if REGEN_SOURCES
 glsl/glsl_parser.cpp glsl/glsl_parser.h: glsl/glsl_parser.yy
 	$(MKDIR_GEN)
 	$(YACC_GEN) -o $@ -p "_mesa_glsl_" --defines=$(builddir)/glsl/glsl_parser.h $(srcdir)/glsl/glsl_parser.yy
@@ -225,6 +226,7 @@ glsl/glcpp/glcpp-parse.c glsl/glcpp/glcpp-parse.h: glsl/glcpp/glcpp-parse.y
 glsl/glcpp/glcpp-lex.c: glsl/glcpp/glcpp-lex.l
 	$(MKDIR_GEN)
 	$(LEX_GEN) -o $@ $(srcdir)/glsl/glcpp/glcpp-lex.l
+endif
 
 # Only the parsers (specifically the header files generated at the same time)
 # need to be in BUILT_SOURCES. Though if we list the parser headers YACC is
@@ -266,6 +268,7 @@ nir_libnir_la_SOURCES =					\
 	$(NIR_FILES)					\
 	$(NIR_GENERATED_FILES)
 
+if REGEN_SOURCES
 PYTHON_GEN = $(AM_V_GEN)$(PYTHON2) $(PYTHON_FLAGS)
 
 nir/nir_builder_opcodes.h: nir/nir_opcodes.py nir/nir_builder_opcodes_h.py
@@ -287,7 +290,7 @@ nir/nir_opcodes.c: nir/nir_opcodes.py nir/nir_opcodes_c.py
 nir/nir_opt_algebraic.c: nir/nir_opt_algebraic.py nir/nir_algebraic.py
 	$(MKDIR_GEN)
 	$(PYTHON_GEN) $(srcdir)/nir/nir_opt_algebraic.py > $@ || ($(RM) $@; false)
-
+endif
 
 check_PROGRAMS += nir/tests/control_flow_tests
 

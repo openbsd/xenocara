@@ -84,19 +84,24 @@ DIST_COMMON = $(egl_HEADERS) $(khr_HEADERS) $(srcdir)/Makefile.am \
 @HAVE_EGL_PLATFORM_X11_TRUE@	$(XCB_DRI2_CFLAGS)
 @HAVE_EGL_PLATFORM_X11_TRUE@am__append_2 = $(XCB_DRI2_LIBS)
 @HAVE_EGL_PLATFORM_X11_TRUE@am__append_3 = drivers/dri2/platform_x11.c
-@HAVE_EGL_PLATFORM_WAYLAND_TRUE@am__append_4 =  \
+@HAVE_DRI3_TRUE@@HAVE_EGL_PLATFORM_X11_TRUE@am__append_4 = \
+@HAVE_DRI3_TRUE@@HAVE_EGL_PLATFORM_X11_TRUE@	drivers/dri2/platform_x11_dri3.c \
+@HAVE_DRI3_TRUE@@HAVE_EGL_PLATFORM_X11_TRUE@	drivers/dri2/platform_x11_dri3.h
+
+@HAVE_DRI3_TRUE@@HAVE_EGL_PLATFORM_X11_TRUE@am__append_5 = $(top_builddir)/src/loader/libloader_dri3_helper.la
+@HAVE_EGL_PLATFORM_WAYLAND_TRUE@am__append_6 =  \
 @HAVE_EGL_PLATFORM_WAYLAND_TRUE@	-DHAVE_WAYLAND_PLATFORM \
 @HAVE_EGL_PLATFORM_WAYLAND_TRUE@	$(WAYLAND_CFLAGS)
-@HAVE_EGL_PLATFORM_WAYLAND_TRUE@am__append_5 = $(WAYLAND_LIBS) \
+@HAVE_EGL_PLATFORM_WAYLAND_TRUE@am__append_7 = $(WAYLAND_LIBS) \
 @HAVE_EGL_PLATFORM_WAYLAND_TRUE@	$(LIBDRM_LIBS) \
 @HAVE_EGL_PLATFORM_WAYLAND_TRUE@	$(top_builddir)/src/egl/wayland/wayland-drm/libwayland-drm.la
-@HAVE_EGL_PLATFORM_WAYLAND_TRUE@am__append_6 = drivers/dri2/platform_wayland.c
-@HAVE_EGL_PLATFORM_DRM_TRUE@am__append_7 = -DHAVE_DRM_PLATFORM
-@HAVE_EGL_PLATFORM_DRM_TRUE@am__append_8 = $(top_builddir)/src/gbm/libgbm.la
-@HAVE_EGL_PLATFORM_DRM_TRUE@am__append_9 = drivers/dri2/platform_drm.c
-@HAVE_EGL_PLATFORM_SURFACELESS_TRUE@am__append_10 = -DHAVE_SURFACELESS_PLATFORM
-@HAVE_EGL_PLATFORM_SURFACELESS_TRUE@am__append_11 = drivers/dri2/platform_surfaceless.c
-@HAVE_EGL_DRIVER_DRI2_TRUE@am__append_12 = \
+@HAVE_EGL_PLATFORM_WAYLAND_TRUE@am__append_8 = drivers/dri2/platform_wayland.c
+@HAVE_EGL_PLATFORM_DRM_TRUE@am__append_9 = -DHAVE_DRM_PLATFORM
+@HAVE_EGL_PLATFORM_DRM_TRUE@am__append_10 = $(top_builddir)/src/gbm/libgbm.la
+@HAVE_EGL_PLATFORM_DRM_TRUE@am__append_11 = drivers/dri2/platform_drm.c
+@HAVE_EGL_PLATFORM_SURFACELESS_TRUE@am__append_12 = -DHAVE_SURFACELESS_PLATFORM
+@HAVE_EGL_PLATFORM_SURFACELESS_TRUE@am__append_13 = drivers/dri2/platform_surfaceless.c
+@HAVE_EGL_DRIVER_DRI2_TRUE@am__append_14 = \
 @HAVE_EGL_DRIVER_DRI2_TRUE@	-I$(top_srcdir)/src/loader \
 @HAVE_EGL_DRIVER_DRI2_TRUE@	-I$(top_srcdir)/src/egl/drivers/dri2 \
 @HAVE_EGL_DRIVER_DRI2_TRUE@	-I$(top_srcdir)/src/gbm/backends/dri \
@@ -106,11 +111,12 @@ DIST_COMMON = $(egl_HEADERS) $(khr_HEADERS) $(srcdir)/Makefile.am \
 @HAVE_EGL_DRIVER_DRI2_TRUE@	-DDEFAULT_DRIVER_DIR=\"$(DRI_DRIVER_SEARCH_DIR)\" \
 @HAVE_EGL_DRIVER_DRI2_TRUE@	-D_EGL_BUILT_IN_DRIVER_DRI2
 
-@HAVE_EGL_DRIVER_DRI2_TRUE@am__append_13 = \
+@HAVE_EGL_DRIVER_DRI2_TRUE@am__append_15 = \
 @HAVE_EGL_DRIVER_DRI2_TRUE@	$(dri2_backend_core_FILES) \
-@HAVE_EGL_DRIVER_DRI2_TRUE@	$(dri2_backend_FILES)
+@HAVE_EGL_DRIVER_DRI2_TRUE@	$(dri2_backend_FILES) \
+@HAVE_EGL_DRIVER_DRI2_TRUE@	$(dri3_backend_FILES)
 
-@HAVE_EGL_DRIVER_DRI2_TRUE@am__append_14 = $(top_builddir)/src/loader/libloader.la \
+@HAVE_EGL_DRIVER_DRI2_TRUE@am__append_16 = $(top_builddir)/src/loader/libloader.la \
 @HAVE_EGL_DRIVER_DRI2_TRUE@	$(DLOPEN_LIBS) $(LIBDRM_LIBS)
 subdir = src/egl
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -170,7 +176,8 @@ am__DEPENDENCIES_1 =
 @HAVE_EGL_DRIVER_DRI2_TRUE@	$(am__DEPENDENCIES_1) \
 @HAVE_EGL_DRIVER_DRI2_TRUE@	$(am__DEPENDENCIES_1)
 libEGL_la_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_2) \
-	$(am__DEPENDENCIES_3) $(am__append_8) $(am__DEPENDENCIES_4)
+	$(am__append_5) $(am__DEPENDENCIES_3) $(am__append_10) \
+	$(am__DEPENDENCIES_4)
 am__libEGL_la_SOURCES_DIST = main/eglapi.c main/eglapi.h \
 	main/eglarray.c main/eglarray.h main/eglcompiler.h \
 	main/eglconfig.c main/eglconfig.h main/eglcontext.c \
@@ -184,7 +191,9 @@ am__libEGL_la_SOURCES_DIST = main/eglapi.c main/eglapi.h \
 	drivers/dri2/egl_dri2.h drivers/dri2/egl_dri2_fallbacks.h \
 	drivers/dri2/platform_x11.c drivers/dri2/platform_wayland.c \
 	drivers/dri2/platform_drm.c \
-	drivers/dri2/platform_surfaceless.c
+	drivers/dri2/platform_surfaceless.c \
+	drivers/dri2/platform_x11_dri3.c \
+	drivers/dri2/platform_x11_dri3.h
 am__dirstamp = $(am__leading_dot)dirstamp
 am__objects_1 = main/eglapi.lo main/eglarray.lo main/eglconfig.lo \
 	main/eglcontext.lo main/eglcurrent.lo main/egldisplay.lo \
@@ -200,9 +209,11 @@ am__objects_2 = drivers/dri2/egl_dri2.lo
 @HAVE_EGL_PLATFORM_SURFACELESS_TRUE@am__objects_6 = drivers/dri2/platform_surfaceless.lo
 am__objects_7 = $(am__objects_3) $(am__objects_4) $(am__objects_5) \
 	$(am__objects_6)
-@HAVE_EGL_DRIVER_DRI2_TRUE@am__objects_8 = $(am__objects_2) \
-@HAVE_EGL_DRIVER_DRI2_TRUE@	$(am__objects_7)
-am_libEGL_la_OBJECTS = $(am__objects_1) $(am__objects_8)
+@HAVE_DRI3_TRUE@@HAVE_EGL_PLATFORM_X11_TRUE@am__objects_8 = drivers/dri2/platform_x11_dri3.lo
+am__objects_9 = $(am__objects_8)
+@HAVE_EGL_DRIVER_DRI2_TRUE@am__objects_10 = $(am__objects_2) \
+@HAVE_EGL_DRIVER_DRI2_TRUE@	$(am__objects_7) $(am__objects_9)
+am_libEGL_la_OBJECTS = $(am__objects_1) $(am__objects_10)
 libEGL_la_OBJECTS = $(am_libEGL_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -256,6 +267,10 @@ DATA = $(pkgconfig_DATA)
 HEADERS = $(egl_HEADERS) $(khr_HEADERS)
 ETAGS = etags
 CTAGS = ctags
+am__tty_colors_dummy = \
+  mgn= red= grn= lgn= blu= brg= std=; \
+  am__color_tests=no
+am__tty_colors = $(am__tty_colors_dummy)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 AMDGPU_CFLAGS = @AMDGPU_CFLAGS@
@@ -356,6 +371,8 @@ LIBELF_CFLAGS = @LIBELF_CFLAGS@
 LIBELF_LIBS = @LIBELF_LIBS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
+LIBSHA1_CFLAGS = @LIBSHA1_CFLAGS@
+LIBSHA1_LIBS = @LIBSHA1_LIBS@
 LIBTOOL = @LIBTOOL@
 LIBUDEV_CFLAGS = @LIBUDEV_CFLAGS@
 LIBUDEV_LIBS = @LIBUDEV_LIBS@
@@ -378,8 +395,6 @@ MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
 MESA_LLVM = @MESA_LLVM@
 MKDIR_P = @MKDIR_P@
-MSVC2008_COMPAT_CFLAGS = @MSVC2008_COMPAT_CFLAGS@
-MSVC2008_COMPAT_CXXFLAGS = @MSVC2008_COMPAT_CXXFLAGS@
 MSVC2013_COMPAT_CFLAGS = @MSVC2013_COMPAT_CFLAGS@
 MSVC2013_COMPAT_CXXFLAGS = @MSVC2013_COMPAT_CXXFLAGS@
 NINE_MAJOR = @NINE_MAJOR@
@@ -399,6 +414,8 @@ OMX_LIBS = @OMX_LIBS@
 OMX_LIB_INSTALL_DIR = @OMX_LIB_INSTALL_DIR@
 OPENCL_LIBNAME = @OPENCL_LIBNAME@
 OPENCL_VERSION = @OPENCL_VERSION@
+OPENSSL_CFLAGS = @OPENSSL_CFLAGS@
+OPENSSL_LIBS = @OPENSSL_LIBS@
 OSMESA_LIB = @OSMESA_LIB@
 OSMESA_LIB_DEPS = @OSMESA_LIB_DEPS@
 OSMESA_PC_LIB_PRIV = @OSMESA_PC_LIB_PRIV@
@@ -423,6 +440,7 @@ PRESENTPROTO_LIBS = @PRESENTPROTO_LIBS@
 PTHREAD_CC = @PTHREAD_CC@
 PTHREAD_CFLAGS = @PTHREAD_CFLAGS@
 PTHREAD_LIBS = @PTHREAD_LIBS@
+PWR8_CFLAGS = @PWR8_CFLAGS@
 PYTHON2 = @PYTHON2@
 RADEON_CFLAGS = @RADEON_CFLAGS@
 RADEON_LIBS = @RADEON_LIBS@
@@ -432,7 +450,11 @@ SED = @SED@
 SELINUX_CFLAGS = @SELINUX_CFLAGS@
 SELINUX_LIBS = @SELINUX_LIBS@
 SET_MAKE = @SET_MAKE@
+SHA1_CFLAGS = @SHA1_CFLAGS@
+SHA1_LIBS = @SHA1_LIBS@
 SHELL = @SHELL@
+SIMPENROSE_CFLAGS = @SIMPENROSE_CFLAGS@
+SIMPENROSE_LIBS = @SIMPENROSE_LIBS@
 SSE41_CFLAGS = @SSE41_CFLAGS@
 STRIP = @STRIP@
 VA_CFLAGS = @VA_CFLAGS@
@@ -463,6 +485,8 @@ XA_TINY = @XA_TINY@
 XA_VERSION = @XA_VERSION@
 XCB_DRI2_CFLAGS = @XCB_DRI2_CFLAGS@
 XCB_DRI2_LIBS = @XCB_DRI2_LIBS@
+XCB_DRI3_CFLAGS = @XCB_DRI3_CFLAGS@
+XCB_DRI3_LIBS = @XCB_DRI3_LIBS@
 XF86VIDMODE_CFLAGS = @XF86VIDMODE_CFLAGS@
 XF86VIDMODE_LIBS = @XF86VIDMODE_LIBS@
 XLIBGL_CFLAGS = @XLIBGL_CFLAGS@
@@ -573,12 +597,12 @@ AM_CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/src/egl/main \
 	-I$(top_srcdir)/src/gbm/main -I$(top_srcdir)/src $(DEFINES) \
 	$(VISIBILITY_CFLAGS) $(LIBDRM_CFLAGS) $(EGL_CFLAGS) \
 	-D_EGL_NATIVE_PLATFORM=$(EGL_NATIVE_PLATFORM) $(am__append_1) \
-	$(am__append_4) $(am__append_7) $(am__append_10) \
-	$(am__append_12)
+	$(am__append_6) $(am__append_9) $(am__append_12) \
+	$(am__append_14)
 lib_LTLIBRARIES = libEGL.la
-libEGL_la_SOURCES = $(LIBEGL_C_FILES) $(am__append_13)
+libEGL_la_SOURCES = $(LIBEGL_C_FILES) $(am__append_15)
 libEGL_la_LIBADD = $(EGL_LIB_DEPS) $(am__append_2) $(am__append_5) \
-	$(am__append_8) $(am__append_14)
+	$(am__append_7) $(am__append_10) $(am__append_16)
 libEGL_la_LDFLAGS = \
 	-no-undefined \
 	-version-number 1:0 \
@@ -586,8 +610,9 @@ libEGL_la_LDFLAGS = \
 	$(GC_SECTIONS) \
 	$(LD_NO_UNDEFINED)
 
-dri2_backend_FILES = $(am__append_3) $(am__append_6) $(am__append_9) \
-	$(am__append_11)
+dri2_backend_FILES = $(am__append_3) $(am__append_8) $(am__append_11) \
+	$(am__append_13)
+dri3_backend_FILES = $(am__append_4)
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = main/egl.pc
 khrdir = $(includedir)/KHR
@@ -600,7 +625,9 @@ egl_HEADERS = \
 	$(top_srcdir)/include/EGL/eglmesaext.h \
 	$(top_srcdir)/include/EGL/eglplatform.h
 
+TESTS = egl-symbols-check
 EXTRA_DIST = \
+	egl-symbols-check \
 	SConscript \
 	drivers/haiku \
 	docs \
@@ -717,6 +744,8 @@ drivers/dri2/platform_drm.lo: drivers/dri2/$(am__dirstamp) \
 	drivers/dri2/$(DEPDIR)/$(am__dirstamp)
 drivers/dri2/platform_surfaceless.lo: drivers/dri2/$(am__dirstamp) \
 	drivers/dri2/$(DEPDIR)/$(am__dirstamp)
+drivers/dri2/platform_x11_dri3.lo: drivers/dri2/$(am__dirstamp) \
+	drivers/dri2/$(DEPDIR)/$(am__dirstamp)
 libEGL.la: $(libEGL_la_OBJECTS) $(libEGL_la_DEPENDENCIES) $(EXTRA_libEGL_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(libEGL_la_LINK) -rpath $(libdir) $(libEGL_la_OBJECTS) $(libEGL_la_LIBADD) $(LIBS)
 
@@ -735,6 +764,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@drivers/dri2/$(DEPDIR)/platform_surfaceless.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@drivers/dri2/$(DEPDIR)/platform_wayland.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@drivers/dri2/$(DEPDIR)/platform_x11.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@drivers/dri2/$(DEPDIR)/platform_x11_dri3.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@main/$(DEPDIR)/eglapi.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@main/$(DEPDIR)/eglarray.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@main/$(DEPDIR)/eglconfig.Plo@am__quote@
@@ -910,6 +940,99 @@ cscopelist:  $(HEADERS) $(SOURCES) $(LISP)
 distclean-tags:
 	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
 
+check-TESTS: $(TESTS)
+	@failed=0; all=0; xfail=0; xpass=0; skip=0; \
+	srcdir=$(srcdir); export srcdir; \
+	list=' $(TESTS) '; \
+	$(am__tty_colors); \
+	if test -n "$$list"; then \
+	  for tst in $$list; do \
+	    if test -f ./$$tst; then dir=./; \
+	    elif test -f $$tst; then dir=; \
+	    else dir="$(srcdir)/"; fi; \
+	    if $(TESTS_ENVIRONMENT) $${dir}$$tst $(AM_TESTS_FD_REDIRECT); then \
+	      all=`expr $$all + 1`; \
+	      case " $(XFAIL_TESTS) " in \
+	      *[\ \	]$$tst[\ \	]*) \
+		xpass=`expr $$xpass + 1`; \
+		failed=`expr $$failed + 1`; \
+		col=$$red; res=XPASS; \
+	      ;; \
+	      *) \
+		col=$$grn; res=PASS; \
+	      ;; \
+	      esac; \
+	    elif test $$? -ne 77; then \
+	      all=`expr $$all + 1`; \
+	      case " $(XFAIL_TESTS) " in \
+	      *[\ \	]$$tst[\ \	]*) \
+		xfail=`expr $$xfail + 1`; \
+		col=$$lgn; res=XFAIL; \
+	      ;; \
+	      *) \
+		failed=`expr $$failed + 1`; \
+		col=$$red; res=FAIL; \
+	      ;; \
+	      esac; \
+	    else \
+	      skip=`expr $$skip + 1`; \
+	      col=$$blu; res=SKIP; \
+	  fi; \
+	    echo "$${col}$$res$${std}: $$tst"; \
+	  done; \
+	  if test "$$all" -eq 1; then \
+	    tests="test"; \
+	    All=""; \
+	else \
+	    tests="tests"; \
+	    All="All "; \
+	fi; \
+	  if test "$$failed" -eq 0; then \
+	    if test "$$xfail" -eq 0; then \
+	      banner="$$All$$all $$tests passed"; \
+	    else \
+	      if test "$$xfail" -eq 1; then failures=failure; else failures=failures; fi; \
+	      banner="$$All$$all $$tests behaved as expected ($$xfail expected $$failures)"; \
+	    fi; \
+	    else \
+	    if test "$$xpass" -eq 0; then \
+	      banner="$$failed of $$all $$tests failed"; \
+	    else \
+	      if test "$$xpass" -eq 1; then passes=pass; else passes=passes; fi; \
+	      banner="$$failed of $$all $$tests did not behave as expected ($$xpass unexpected $$passes)"; \
+	    fi; \
+	  fi; \
+	  dashes="$$banner"; \
+	  skipped=""; \
+	  if test "$$skip" -ne 0; then \
+	    if test "$$skip" -eq 1; then \
+	      skipped="($$skip test was not run)"; \
+	 else								\
+	      skipped="($$skip tests were not run)"; \
+	fi;								\
+	    test `echo "$$skipped" | wc -c` -le `echo "$$banner" | wc -c` || \
+	      dashes="$$skipped"; \
+	  fi;								\
+	  report=""; \
+	  if test "$$failed" -ne 0 && test -n "$(PACKAGE_BUGREPORT)"; then \
+	    report="Please report to $(PACKAGE_BUGREPORT)"; \
+	    test `echo "$$report" | wc -c` -le `echo "$$banner" | wc -c` || \
+	      dashes="$$report"; \
+	fi;								\
+	  dashes=`echo "$$dashes" | sed s/./=/g`; \
+	  if test "$$failed" -eq 0; then \
+	    col="$$grn"; \
+	  else \
+	    col="$$red"; \
+	  fi; \
+	  echo "$${col}$$dashes$${std}"; \
+	  echo "$${col}$$banner$${std}"; \
+	  test -z "$$skipped" || echo "$${col}$$skipped$${std}"; \
+	  test -z "$$report" || echo "$${col}$$report$${std}"; \
+	  echo "$${col}$$dashes$${std}"; \
+	  test "$$failed" -eq 0; \
+	else :; fi
+
 distdir: $(DISTFILES)
 	@srcdirstrip=`echo "$(srcdir)" | sed 's/[].[^$$\\*]/\\\\&/g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's/[].[^$$\\*]/\\\\&/g'`; \
@@ -941,6 +1064,7 @@ distdir: $(DISTFILES)
 	  fi; \
 	done
 check-am: all-am
+	$(MAKE) $(AM_MAKEFLAGS) check-TESTS
 check: check-am
 @BUILD_SHARED_FALSE@all-local:
 @HAVE_COMPAT_SYMLINKS_FALSE@all-local:
@@ -1058,24 +1182,24 @@ ps-am:
 uninstall-am: uninstall-eglHEADERS uninstall-khrHEADERS \
 	uninstall-libLTLIBRARIES uninstall-pkgconfigDATA
 
-.MAKE: install-am install-strip
+.MAKE: check-am install-am install-strip
 
-.PHONY: CTAGS GTAGS all all-am all-local check check-am clean \
-	clean-generic clean-libLTLIBRARIES clean-libtool clean-local \
-	cscopelist ctags distclean distclean-compile distclean-generic \
-	distclean-libtool distclean-tags distdir dvi dvi-am html \
-	html-am info info-am install install-am install-data \
-	install-data-am install-dvi install-dvi-am install-eglHEADERS \
-	install-exec install-exec-am install-html install-html-am \
-	install-info install-info-am install-khrHEADERS \
-	install-libLTLIBRARIES install-man install-pdf install-pdf-am \
-	install-pkgconfigDATA install-ps install-ps-am install-strip \
-	installcheck installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-eglHEADERS \
-	uninstall-khrHEADERS uninstall-libLTLIBRARIES \
-	uninstall-pkgconfigDATA
+.PHONY: CTAGS GTAGS all all-am all-local check check-TESTS check-am \
+	clean clean-generic clean-libLTLIBRARIES clean-libtool \
+	clean-local cscopelist ctags distclean distclean-compile \
+	distclean-generic distclean-libtool distclean-tags distdir dvi \
+	dvi-am html html-am info info-am install install-am \
+	install-data install-data-am install-dvi install-dvi-am \
+	install-eglHEADERS install-exec install-exec-am install-html \
+	install-html-am install-info install-info-am \
+	install-khrHEADERS install-libLTLIBRARIES install-man \
+	install-pdf install-pdf-am install-pkgconfigDATA install-ps \
+	install-ps-am install-strip installcheck installcheck-am \
+	installdirs maintainer-clean maintainer-clean-generic \
+	mostlyclean mostlyclean-compile mostlyclean-generic \
+	mostlyclean-libtool pdf pdf-am ps ps-am tags uninstall \
+	uninstall-am uninstall-eglHEADERS uninstall-khrHEADERS \
+	uninstall-libLTLIBRARIES uninstall-pkgconfigDATA
 
 
 @BUILD_SHARED_TRUE@@HAVE_COMPAT_SYMLINKS_TRUE@all-local : .install-mesa-links

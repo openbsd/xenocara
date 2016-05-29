@@ -70,7 +70,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-TESTS = collision$(EXEEXT) delete_and_lookup$(EXEEXT) \
+TESTS = clear$(EXEEXT) collision$(EXEEXT) delete_and_lookup$(EXEEXT) \
 	delete_management$(EXEEXT) destroy_callback$(EXEEXT) \
 	insert_and_lookup$(EXEEXT) insert_many$(EXEEXT) \
 	null_destroy$(EXEEXT) random_entry$(EXEEXT) \
@@ -95,21 +95,27 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-am__EXEEXT_1 = collision$(EXEEXT) delete_and_lookup$(EXEEXT) \
-	delete_management$(EXEEXT) destroy_callback$(EXEEXT) \
-	insert_and_lookup$(EXEEXT) insert_many$(EXEEXT) \
-	null_destroy$(EXEEXT) random_entry$(EXEEXT) \
-	remove_null$(EXEEXT) replacement$(EXEEXT)
-collision_SOURCES = collision.c
-collision_OBJECTS = collision.$(OBJEXT)
-collision_LDADD = $(LDADD)
+am__EXEEXT_1 = clear$(EXEEXT) collision$(EXEEXT) \
+	delete_and_lookup$(EXEEXT) delete_management$(EXEEXT) \
+	destroy_callback$(EXEEXT) insert_and_lookup$(EXEEXT) \
+	insert_many$(EXEEXT) null_destroy$(EXEEXT) \
+	random_entry$(EXEEXT) remove_null$(EXEEXT) \
+	replacement$(EXEEXT)
+clear_SOURCES = clear.c
+clear_OBJECTS = clear.$(OBJEXT)
+clear_LDADD = $(LDADD)
 am__DEPENDENCIES_1 =
-collision_DEPENDENCIES = $(top_builddir)/src/util/libmesautil.la \
+clear_DEPENDENCIES = $(top_builddir)/src/util/libmesautil.la \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+collision_SOURCES = collision.c
+collision_OBJECTS = collision.$(OBJEXT)
+collision_LDADD = $(LDADD)
+collision_DEPENDENCIES = $(top_builddir)/src/util/libmesautil.la \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 delete_and_lookup_SOURCES = delete_and_lookup.c
 delete_and_lookup_OBJECTS = delete_and_lookup.$(OBJEXT)
 delete_and_lookup_LDADD = $(LDADD)
@@ -193,12 +199,13 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = collision.c delete_and_lookup.c delete_management.c \
+SOURCES = clear.c collision.c delete_and_lookup.c delete_management.c \
 	destroy_callback.c insert_and_lookup.c insert_many.c \
 	null_destroy.c random_entry.c remove_null.c replacement.c
-DIST_SOURCES = collision.c delete_and_lookup.c delete_management.c \
-	destroy_callback.c insert_and_lookup.c insert_many.c \
-	null_destroy.c random_entry.c remove_null.c replacement.c
+DIST_SOURCES = clear.c collision.c delete_and_lookup.c \
+	delete_management.c destroy_callback.c insert_and_lookup.c \
+	insert_many.c null_destroy.c random_entry.c remove_null.c \
+	replacement.c
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -310,6 +317,8 @@ LIBELF_CFLAGS = @LIBELF_CFLAGS@
 LIBELF_LIBS = @LIBELF_LIBS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
+LIBSHA1_CFLAGS = @LIBSHA1_CFLAGS@
+LIBSHA1_LIBS = @LIBSHA1_LIBS@
 LIBTOOL = @LIBTOOL@
 LIBUDEV_CFLAGS = @LIBUDEV_CFLAGS@
 LIBUDEV_LIBS = @LIBUDEV_LIBS@
@@ -332,8 +341,6 @@ MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
 MESA_LLVM = @MESA_LLVM@
 MKDIR_P = @MKDIR_P@
-MSVC2008_COMPAT_CFLAGS = @MSVC2008_COMPAT_CFLAGS@
-MSVC2008_COMPAT_CXXFLAGS = @MSVC2008_COMPAT_CXXFLAGS@
 MSVC2013_COMPAT_CFLAGS = @MSVC2013_COMPAT_CFLAGS@
 MSVC2013_COMPAT_CXXFLAGS = @MSVC2013_COMPAT_CXXFLAGS@
 NINE_MAJOR = @NINE_MAJOR@
@@ -353,6 +360,8 @@ OMX_LIBS = @OMX_LIBS@
 OMX_LIB_INSTALL_DIR = @OMX_LIB_INSTALL_DIR@
 OPENCL_LIBNAME = @OPENCL_LIBNAME@
 OPENCL_VERSION = @OPENCL_VERSION@
+OPENSSL_CFLAGS = @OPENSSL_CFLAGS@
+OPENSSL_LIBS = @OPENSSL_LIBS@
 OSMESA_LIB = @OSMESA_LIB@
 OSMESA_LIB_DEPS = @OSMESA_LIB_DEPS@
 OSMESA_PC_LIB_PRIV = @OSMESA_PC_LIB_PRIV@
@@ -377,6 +386,7 @@ PRESENTPROTO_LIBS = @PRESENTPROTO_LIBS@
 PTHREAD_CC = @PTHREAD_CC@
 PTHREAD_CFLAGS = @PTHREAD_CFLAGS@
 PTHREAD_LIBS = @PTHREAD_LIBS@
+PWR8_CFLAGS = @PWR8_CFLAGS@
 PYTHON2 = @PYTHON2@
 RADEON_CFLAGS = @RADEON_CFLAGS@
 RADEON_LIBS = @RADEON_LIBS@
@@ -386,7 +396,11 @@ SED = @SED@
 SELINUX_CFLAGS = @SELINUX_CFLAGS@
 SELINUX_LIBS = @SELINUX_LIBS@
 SET_MAKE = @SET_MAKE@
+SHA1_CFLAGS = @SHA1_CFLAGS@
+SHA1_LIBS = @SHA1_LIBS@
 SHELL = @SHELL@
+SIMPENROSE_CFLAGS = @SIMPENROSE_CFLAGS@
+SIMPENROSE_LIBS = @SIMPENROSE_LIBS@
 SSE41_CFLAGS = @SSE41_CFLAGS@
 STRIP = @STRIP@
 VA_CFLAGS = @VA_CFLAGS@
@@ -417,6 +431,8 @@ XA_TINY = @XA_TINY@
 XA_VERSION = @XA_VERSION@
 XCB_DRI2_CFLAGS = @XCB_DRI2_CFLAGS@
 XCB_DRI2_LIBS = @XCB_DRI2_LIBS@
+XCB_DRI3_CFLAGS = @XCB_DRI3_CFLAGS@
+XCB_DRI3_LIBS = @XCB_DRI3_LIBS@
 XF86VIDMODE_CFLAGS = @XF86VIDMODE_CFLAGS@
 XF86VIDMODE_LIBS = @XF86VIDMODE_LIBS@
 XLIBGL_CFLAGS = @XLIBGL_CFLAGS@
@@ -541,6 +557,9 @@ clean-checkPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
+clear$(EXEEXT): $(clear_OBJECTS) $(clear_DEPENDENCIES) $(EXTRA_clear_DEPENDENCIES) 
+	@rm -f clear$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(clear_OBJECTS) $(clear_LDADD) $(LIBS)
 collision$(EXEEXT): $(collision_OBJECTS) $(collision_DEPENDENCIES) $(EXTRA_collision_DEPENDENCIES) 
 	@rm -f collision$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(collision_OBJECTS) $(collision_LDADD) $(LIBS)
@@ -578,6 +597,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/clear.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/collision.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/delete_and_lookup.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/delete_management.Po@am__quote@

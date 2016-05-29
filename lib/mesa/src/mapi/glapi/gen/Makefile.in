@@ -50,9 +50,13 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-@HAVE_X86_64_ASM_TRUE@@HAVE_X86_ASM_TRUE@am__append_1 = $(MESA_GLAPI_DIR)/glapi_x86-64.S
-@HAVE_X86_64_ASM_FALSE@@HAVE_X86_ASM_TRUE@am__append_2 = $(MESA_GLAPI_DIR)/glapi_x86.S
-@HAVE_SPARC_ASM_TRUE@am__append_3 = $(MESA_GLAPI_DIR)/glapi_sparc.S
+@HAVE_APPLEDRI_TRUE@am__append_1 = $(MESA_GLAPI_DIR)/glapi_gentable.c
+@HAVE_X86_64_ASM_TRUE@@HAVE_X86_ASM_TRUE@am__append_2 = $(MESA_GLAPI_DIR)/glapi_x86-64.S
+@HAVE_X86_64_ASM_FALSE@@HAVE_X86_ASM_TRUE@am__append_3 = $(MESA_GLAPI_DIR)/glapi_x86.S
+@HAVE_SPARC_ASM_TRUE@am__append_4 = $(MESA_GLAPI_DIR)/glapi_sparc.S
+@HAVE_APPLEDRI_TRUE@am__append_5 = \
+@HAVE_APPLEDRI_TRUE@	$(XORG_GLAPI_DIR)/glapi_gentable.c
+
 subdir = src/mapi/glapi/gen
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -190,6 +194,8 @@ LIBELF_CFLAGS = @LIBELF_CFLAGS@
 LIBELF_LIBS = @LIBELF_LIBS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
+LIBSHA1_CFLAGS = @LIBSHA1_CFLAGS@
+LIBSHA1_LIBS = @LIBSHA1_LIBS@
 LIBTOOL = @LIBTOOL@
 LIBUDEV_CFLAGS = @LIBUDEV_CFLAGS@
 LIBUDEV_LIBS = @LIBUDEV_LIBS@
@@ -212,8 +218,6 @@ MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
 MESA_LLVM = @MESA_LLVM@
 MKDIR_P = @MKDIR_P@
-MSVC2008_COMPAT_CFLAGS = @MSVC2008_COMPAT_CFLAGS@
-MSVC2008_COMPAT_CXXFLAGS = @MSVC2008_COMPAT_CXXFLAGS@
 MSVC2013_COMPAT_CFLAGS = @MSVC2013_COMPAT_CFLAGS@
 MSVC2013_COMPAT_CXXFLAGS = @MSVC2013_COMPAT_CXXFLAGS@
 NINE_MAJOR = @NINE_MAJOR@
@@ -233,6 +237,8 @@ OMX_LIBS = @OMX_LIBS@
 OMX_LIB_INSTALL_DIR = @OMX_LIB_INSTALL_DIR@
 OPENCL_LIBNAME = @OPENCL_LIBNAME@
 OPENCL_VERSION = @OPENCL_VERSION@
+OPENSSL_CFLAGS = @OPENSSL_CFLAGS@
+OPENSSL_LIBS = @OPENSSL_LIBS@
 OSMESA_LIB = @OSMESA_LIB@
 OSMESA_LIB_DEPS = @OSMESA_LIB_DEPS@
 OSMESA_PC_LIB_PRIV = @OSMESA_PC_LIB_PRIV@
@@ -257,6 +263,7 @@ PRESENTPROTO_LIBS = @PRESENTPROTO_LIBS@
 PTHREAD_CC = @PTHREAD_CC@
 PTHREAD_CFLAGS = @PTHREAD_CFLAGS@
 PTHREAD_LIBS = @PTHREAD_LIBS@
+PWR8_CFLAGS = @PWR8_CFLAGS@
 PYTHON2 = @PYTHON2@
 RADEON_CFLAGS = @RADEON_CFLAGS@
 RADEON_LIBS = @RADEON_LIBS@
@@ -266,7 +273,11 @@ SED = @SED@
 SELINUX_CFLAGS = @SELINUX_CFLAGS@
 SELINUX_LIBS = @SELINUX_LIBS@
 SET_MAKE = @SET_MAKE@
+SHA1_CFLAGS = @SHA1_CFLAGS@
+SHA1_LIBS = @SHA1_LIBS@
 SHELL = @SHELL@
+SIMPENROSE_CFLAGS = @SIMPENROSE_CFLAGS@
+SIMPENROSE_LIBS = @SIMPENROSE_LIBS@
 SSE41_CFLAGS = @SSE41_CFLAGS@
 STRIP = @STRIP@
 VA_CFLAGS = @VA_CFLAGS@
@@ -297,6 +308,8 @@ XA_TINY = @XA_TINY@
 XA_VERSION = @XA_VERSION@
 XCB_DRI2_CFLAGS = @XCB_DRI2_CFLAGS@
 XCB_DRI2_LIBS = @XCB_DRI2_LIBS@
+XCB_DRI3_CFLAGS = @XCB_DRI3_CFLAGS@
+XCB_DRI3_LIBS = @XCB_DRI3_LIBS@
 XF86VIDMODE_CFLAGS = @XF86VIDMODE_CFLAGS@
 XF86VIDMODE_LIBS = @XF86VIDMODE_LIBS@
 XLIBGL_CFLAGS = @XLIBGL_CFLAGS@
@@ -392,15 +405,11 @@ MESA_DIR = $(top_builddir)/src/mesa
 MESA_GLAPI_DIR = $(top_builddir)/src/mapi/glapi
 MESA_MAPI_DIR = $(top_srcdir)/src/mapi
 MESA_GLX_DIR = $(top_builddir)/src/glx
-MESA_GLAPI_OUTPUTS = \
-	$(MESA_GLAPI_DIR)/glapi_mapi_tmp.h \
-	$(MESA_GLAPI_DIR)/glprocs.h \
-	$(MESA_GLAPI_DIR)/glapitemp.h \
-	$(MESA_GLAPI_DIR)/glapitable.h \
-	$(MESA_GLAPI_DIR)/glapi_gentable.c
-
-MESA_GLAPI_ASM_OUTPUTS = $(am__append_1) $(am__append_2) \
-	$(am__append_3)
+MESA_GLAPI_OUTPUTS = $(MESA_GLAPI_DIR)/glapi_mapi_tmp.h \
+	$(MESA_GLAPI_DIR)/glprocs.h $(MESA_GLAPI_DIR)/glapitemp.h \
+	$(MESA_GLAPI_DIR)/glapitable.h $(am__append_1)
+MESA_GLAPI_ASM_OUTPUTS = $(am__append_2) $(am__append_3) \
+	$(am__append_4)
 BUILT_SOURCES = \
 	$(MESA_GLAPI_OUTPUTS) \
 	$(MESA_GLAPI_ASM_OUTPUTS) \
@@ -416,6 +425,7 @@ BUILT_SOURCES = \
 
 EXTRA_DIST = \
 	$(BUILT_SOURCES) \
+	$(MESA_GLAPI_DIR)/glapi_gentable.c \
 	$(MESA_GLAPI_DIR)/glapi_x86.S \
 	$(MESA_GLAPI_DIR)/glapi_x86-64.S \
 	$(MESA_GLAPI_DIR)/glapi_sparc.S \
@@ -443,12 +453,9 @@ EXTRA_DIST = \
 ######################################################################
 XORG_GLX_DIR = $(XORG_BASE)/glx
 XORG_GLAPI_DIR = $(XORG_BASE)/glx
-XORG_GLAPI_OUTPUTS = \
-	$(XORG_GLAPI_DIR)/glprocs.h \
-	$(XORG_GLAPI_DIR)/glapitable.h \
-	$(XORG_GLAPI_DIR)/dispatch.h \
-	$(XORG_GLAPI_DIR)/glapi_gentable.c
-
+XORG_GLAPI_OUTPUTS = $(XORG_GLAPI_DIR)/glprocs.h \
+	$(XORG_GLAPI_DIR)/glapitable.h $(XORG_GLAPI_DIR)/dispatch.h \
+	$(am__append_5)
 XORG_OUTPUTS = \
 	$(XORG_GLAPI_OUTPUTS) \
 	$(XORG_GLX_DIR)/indirect_dispatch.c \
@@ -491,11 +498,11 @@ API_XML = \
 	ARB_ES3_compatibility.xml \
 	ARB_framebuffer_no_attachments.xml \
 	ARB_framebuffer_object.xml \
-	ARB_geometry_shader4.xml \
 	ARB_get_program_binary.xml \
 	ARB_get_texture_sub_image.xml \
 	ARB_gpu_shader_fp64.xml \
 	ARB_gpu_shader5.xml \
+	ARB_indirect_parameters.xml \
 	ARB_instanced_arrays.xml \
 	ARB_internalformat_query.xml \
 	ARB_invalidate_subdata.xml \
@@ -511,6 +518,7 @@ API_XML = \
 	ARB_shader_atomic_counters.xml \
 	ARB_shader_image_load_store.xml \
 	ARB_shader_subroutine.xml \
+	ARB_shader_storage_buffer_object.xml \
 	ARB_sync.xml \
 	ARB_tessellation_shader.xml \
 	ARB_texture_barrier.xml \
@@ -545,9 +553,11 @@ API_XML = \
 	EXT_texture_array.xml \
 	EXT_texture_integer.xml \
 	EXT_transform_feedback.xml \
+	GREMEDY_string_marker.xml \
 	INTEL_performance_query.xml \
 	KHR_debug.xml \
 	KHR_context_flush_control.xml \
+	KHR_texture_compression_astc.xml \
 	NV_conditional_render.xml \
 	NV_primitive_restart.xml \
 	NV_texture_barrier.xml \
@@ -822,8 +832,8 @@ $(XORG_GLAPI_DIR)/%.h: $(MESA_GLAPI_DIR)/%.h
 
 ######################################################################
 
-@REGEN_SOURCES_TRUE@$(MESA_DIR)/main/enums.c: gl_enums.py $(COMMON)
-@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) $(srcdir)/gl_enums.py -f $(srcdir)/gl_and_es_API.xml > $@
+@REGEN_SOURCES_TRUE@$(MESA_DIR)/main/enums.c: gl_enums.py $(srcdir)/../registry/gl.xml
+@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) $(srcdir)/gl_enums.py -f $(srcdir)/../registry/gl.xml > $@
 
 @REGEN_SOURCES_TRUE@$(MESA_DIR)/main/api_exec.c: gl_genexec.py apiexec.py $(COMMON)
 @REGEN_SOURCES_TRUE@	$(PYTHON_GEN) $(srcdir)/gl_genexec.py -f $(srcdir)/gl_and_es_API.xml > $@

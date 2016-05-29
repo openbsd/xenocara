@@ -45,6 +45,10 @@
 #include "egl_dri2_fallbacks.h"
 #include "loader.h"
 
+#ifdef HAVE_DRI3
+#include "platform_x11_dri3.h"
+#endif
+
 static EGLBoolean
 dri2_x11_swap_interval(_EGLDriver *drv, _EGLDisplay *disp, _EGLSurface *surf,
                        EGLint interval);
@@ -206,6 +210,7 @@ dri2_x11_create_surface(_EGLDriver *drv, _EGLDisplay *disp, EGLint type,
    xcb_generic_error_t *error;
    xcb_drawable_t drawable;
    xcb_screen_t *screen;
+   const __DRIconfig *config;
 
    STATIC_ASSERT(sizeof(uintptr_t) == sizeof(native_surface));
    drawable = (uintptr_t) native_surface;
@@ -245,19 +250,18 @@ dri2_x11_create_surface(_EGLDriver *drv, _EGLDisplay *disp, EGLint type,
       dri2_surf->drawable = drawable;
    }
 
-   if (dri2_dpy->dri2) {
-      const __DRIconfig *config =
-         dri2_get_dri_config(dri2_conf, type, dri2_surf->base.GLColorspace);
+   config = dri2_get_dri_config(dri2_conf, type,
+                                dri2_surf->base.GLColorspace);
 
+   if (dri2_dpy->dri2) {
       dri2_surf->dri_drawable =
 	 (*dri2_dpy->dri2->createNewDrawable)(dri2_dpy->dri_screen, config,
 					      dri2_surf);
    } else {
       assert(dri2_dpy->swrast);
       dri2_surf->dri_drawable = 
-	 (*dri2_dpy->swrast->createNewDrawable) (dri2_dpy->dri_screen,
-						 dri2_conf->dri_double_config,
-						 dri2_surf);
+         (*dri2_dpy->swrast->createNewDrawable)(dri2_dpy->dri_screen, config,
+                                                dri2_surf);
    }
 
    if (dri2_surf->dri_drawable == NULL) {
@@ -468,6 +472,8 @@ dri2_x11_get_buffers(__DRIdrawable * driDrawable,
 					    dri2_surf->drawable,
 					    count, count, attachments);
    reply = xcb_dri2_get_buffers_reply (dri2_dpy->conn, cookie, NULL);
+   if (reply == NULL)
+      return NULL;
    buffers = xcb_dri2_get_buffers_buffers (reply);
    if (buffers == NULL)
       return NULL;
@@ -537,7 +543,7 @@ dri2_x11_flush_front_buffer(__DRIdrawable * driDrawable, void *loaderPrivate)
 }
 
 static int
-dri2_x11_authenticate(struct dri2_egl_display *dri2_dpy, uint32_t id)
+dri2_x11_do_authenticate(struct dri2_egl_display *dri2_dpy, uint32_t id)
 {
    xcb_dri2_authenticate_reply_t *authenticate;
    xcb_dri2_authenticate_cookie_t authenticate_cookie;
@@ -562,7 +568,7 @@ dri2_x11_authenticate(struct dri2_egl_display *dri2_dpy, uint32_t id)
       ret = -1;
 
    free(authenticate);
-   
+
    return ret;
 }
 
@@ -576,8 +582,8 @@ dri2_x11_local_authenticate(struct dri2_egl_display *dri2_dpy)
       _eglLog(_EGL_WARNING, "DRI2: failed to get drm magic");
       return EGL_FALSE;
    }
-   
-   if (dri2_x11_authenticate(dri2_dpy, magic) < 0) {
+
+   if (dri2_x11_do_authenticate(dri2_dpy, magic) < 0) {
       _eglLog(_EGL_WARNING, "DRI2: failed to authenticate");
       return EGL_FALSE;
    }
@@ -706,9 +712,17 @@ dri2_x11_connect(struct dri2_egl_display *dri2_dpy)
    return EGL_TRUE;
 }
 
+static int
+dri2_x11_authenticate(_EGLDisplay *disp, uint32_t id)
+{
+   struct dri2_egl_display *dri2_dpy = dri2_egl_display(disp);
+
+   return dri2_x11_do_authenticate(dri2_dpy, id);
+}
+
 static EGLBoolean
 dri2_x11_add_configs_for_visuals(struct dri2_egl_display *dri2_dpy,
-                                 _EGLDisplay *disp)
+                                 _EGLDisplay *disp, bool supports_preserved)
 {
    xcb_screen_iterator_t s;
    xcb_depth_iterator_t d;
@@ -729,8 +743,10 @@ dri2_x11_add_configs_for_visuals(struct dri2_egl_display *dri2_dpy,
    surface_type =
       EGL_WINDOW_BIT |
       EGL_PIXMAP_BIT |
-      EGL_PBUFFER_BIT |
-      EGL_SWAP_BEHAVIOR_PRESERVED_BIT;
+      EGL_PBUFFER_BIT;
+
+   if (supports_preserved)
+      surface_type |= EGL_SWAP_BEHAVIOR_PRESERVED_BIT;
 
    while (d.rem > 0) {
       EGLBoolean class_added[6] = { 0, };
@@ -869,7 +885,12 @@ dri2_x11_swap_buffers(_EGLDriver *drv, _EGLDisplay *disp, _EGLSurface *draw)
    struct dri2_egl_surface *dri2_surf = dri2_egl_surface(draw);
 
    if (dri2_dpy->dri2) {
-      return dri2_x11_swap_buffers_msc(drv, disp, draw, 0, 0, 0) != -1;
+      if (dri2_x11_swap_buffers_msc(drv, disp, draw, 0, 0, 0) != -1) {
+          return EGL_TRUE;
+      }
+      /* Swap failed with a window drawable. */
+      _eglError(EGL_BAD_NATIVE_WINDOW, __FUNCTION__);
+      return EGL_FALSE;
    } else {
       assert(dri2_dpy->swrast);
 
@@ -998,6 +1019,9 @@ dri2_create_image_khr_pixmap(_EGLDisplay *disp, _EGLContext *ctx,
    geometry_cookie = xcb_get_geometry (dri2_dpy->conn, drawable);
    buffers_reply = xcb_dri2_get_buffers_reply (dri2_dpy->conn,
 					       buffers_cookie, NULL);
+   if (buffers_reply == NULL)
+     return NULL;
+
    buffers = xcb_dri2_get_buffers_buffers (buffers_reply);
    if (buffers == NULL) {
       return NULL;
@@ -1117,6 +1141,7 @@ static struct dri2_egl_display_vtbl dri2_x11_swrast_display_vtbl = {
    .query_buffer_age = dri2_fallback_query_buffer_age,
    .create_wayland_buffer_from_image = dri2_fallback_create_wayland_buffer_from_image,
    .get_sync_values = dri2_fallback_get_sync_values,
+   .get_dri_drawable = dri2_surface_get_dri_drawable,
 };
 
 static struct dri2_egl_display_vtbl dri2_x11_display_vtbl = {
@@ -1135,6 +1160,7 @@ static struct dri2_egl_display_vtbl dri2_x11_display_vtbl = {
    .query_buffer_age = dri2_fallback_query_buffer_age,
    .create_wayland_buffer_from_image = dri2_fallback_create_wayland_buffer_from_image,
    .get_sync_values = dri2_x11_get_sync_values,
+   .get_dri_drawable = dri2_surface_get_dri_drawable,
 };
 
 static EGLBoolean
@@ -1166,6 +1192,7 @@ dri2_initialize_x11_swrast(_EGLDriver *drv, _EGLDisplay *disp)
     * Every hardware driver_name is set using strdup. Doing the same in
     * here will allow is to simply free the memory at dri2_terminate().
     */
+   dri2_dpy->fd = -1;
    dri2_dpy->driver_name = strdup("swrast");
    if (!dri2_load_driver_swrast(disp))
       goto cleanup_conn;
@@ -1183,7 +1210,7 @@ dri2_initialize_x11_swrast(_EGLDriver *drv, _EGLDisplay *disp)
    if (!dri2_create_screen(disp))
       goto cleanup_driver;
 
-   if (!dri2_x11_add_configs_for_visuals(dri2_dpy, disp))
+   if (!dri2_x11_add_configs_for_visuals(dri2_dpy, disp, true))
       goto cleanup_configs;
 
    /* Fill vtbl last to prevent accidentally calling virtual function during
@@ -1254,6 +1281,100 @@ dri2_x11_setup_swap_interval(struct dri2_egl_display *dri2_dpy)
    }
 }
 
+#ifdef HAVE_DRI3
+static EGLBoolean
+dri2_initialize_x11_dri3(_EGLDriver *drv, _EGLDisplay *disp)
+{
+   struct dri2_egl_display *dri2_dpy;
+
+   dri2_dpy = calloc(1, sizeof *dri2_dpy);
+   if (!dri2_dpy)
+      return _eglError(EGL_BAD_ALLOC, "eglInitialize");
+
+   disp->DriverData = (void *) dri2_dpy;
+   if (disp->PlatformDisplay == NULL) {
+      dri2_dpy->conn = xcb_connect(0, &dri2_dpy->screen);
+      dri2_dpy->own_device = true;
+   } else {
+      Display *dpy = disp->PlatformDisplay;
+
+      dri2_dpy->conn = XGetXCBConnection(dpy);
+      dri2_dpy->screen = DefaultScreen(dpy);
+   }
+
+   if (xcb_connection_has_error(dri2_dpy->conn)) {
+      _eglLog(_EGL_WARNING, "DRI3: xcb_connect failed");
+      goto cleanup_dpy;
+   }
+
+   if (dri2_dpy->conn) {
+      if (!dri3_x11_connect(dri2_dpy))
+         goto cleanup_conn;
+   }
+
+   if (!dri2_load_driver_dri3(disp))
+      goto cleanup_conn;
+
+   dri2_dpy->extensions[0] = &dri3_image_loader_extension.base;
+   dri2_dpy->extensions[1] = &use_invalidate.base;
+   dri2_dpy->extensions[2] = &image_lookup_extension.base;
+   dri2_dpy->extensions[3] = NULL;
+
+   dri2_dpy->swap_available = true;
+   dri2_dpy->invalidate_available = true;
+
+   if (!dri2_create_screen(disp))
+      goto cleanup_fd;
+
+   dri2_x11_setup_swap_interval(dri2_dpy);
+
+   if (!dri2_dpy->is_different_gpu)
+      disp->Extensions.KHR_image_pixmap = EGL_TRUE;
+   disp->Extensions.NOK_texture_from_pixmap = EGL_TRUE;
+   disp->Extensions.CHROMIUM_sync_control = EGL_TRUE;
+   disp->Extensions.EXT_buffer_age = EGL_TRUE;
+
+#ifdef HAVE_WAYLAND_PLATFORM
+   disp->Extensions.WL_bind_wayland_display = EGL_TRUE;
+#endif
+
+   if (dri2_dpy->conn) {
+      if (!dri2_x11_add_configs_for_visuals(dri2_dpy, disp, false))
+         goto cleanup_configs;
+   }
+
+   dri2_dpy->loader_dri3_ext.core = dri2_dpy->core;
+   dri2_dpy->loader_dri3_ext.image_driver = dri2_dpy->image_driver;
+   dri2_dpy->loader_dri3_ext.flush = dri2_dpy->flush;
+   dri2_dpy->loader_dri3_ext.tex_buffer = dri2_dpy->tex_buffer;
+   dri2_dpy->loader_dri3_ext.image = dri2_dpy->image;
+   dri2_dpy->loader_dri3_ext.config = dri2_dpy->config;
+
+   /* Fill vtbl last to prevent accidentally calling virtual function during
+    * initialization.
+    */
+   dri2_dpy->vtbl = &dri3_x11_display_vtbl;
+
+   _eglLog(_EGL_INFO, "Using DRI3");
+
+   return EGL_TRUE;
+
+ cleanup_configs:
+   _eglCleanupDisplay(disp);
+   dri2_dpy->core->destroyScreen(dri2_dpy->dri_screen);
+   dlclose(dri2_dpy->driver);
+ cleanup_fd:
+   close(dri2_dpy->fd);
+ cleanup_conn:
+   if (disp->PlatformDisplay == NULL)
+      xcb_disconnect(dri2_dpy->conn);
+ cleanup_dpy:
+   free(dri2_dpy);
+
+   return EGL_FALSE;
+}
+#endif
+
 static EGLBoolean
 dri2_initialize_x11_dri2(_EGLDriver *drv, _EGLDisplay *disp)
 {
@@ -1322,13 +1443,15 @@ dri2_initialize_x11_dri2(_EGLDriver *drv, _EGLDisplay *disp)
    disp->Extensions.WL_bind_wayland_display = EGL_TRUE;
 #endif
 
-   if (!dri2_x11_add_configs_for_visuals(dri2_dpy, disp))
+   if (!dri2_x11_add_configs_for_visuals(dri2_dpy, disp, true))
       goto cleanup_configs;
 
    /* Fill vtbl last to prevent accidentally calling virtual function during
     * initialization.
     */
    dri2_dpy->vtbl = &dri2_x11_display_vtbl;
+
+   _eglLog(_EGL_INFO, "Using DRI2");
 
    return EGL_TRUE;
 
@@ -1356,9 +1479,16 @@ dri2_initialize_x11(_EGLDriver *drv, _EGLDisplay *disp)
    int x11_dri2_accel = (getenv("LIBGL_ALWAYS_SOFTWARE") == NULL);
 
    if (x11_dri2_accel) {
-      if (!dri2_initialize_x11_dri2(drv, disp)) {
-         initialized = dri2_initialize_x11_swrast(drv, disp);
+#ifdef HAVE_DRI3
+      if (getenv("LIBGL_DRI3_DISABLE") != NULL ||
+          !dri2_initialize_x11_dri3(drv, disp)) {
+#endif
+         if (!dri2_initialize_x11_dri2(drv, disp)) {
+            initialized = dri2_initialize_x11_swrast(drv, disp);
+         }
+#ifdef HAVE_DRI3
       }
+#endif
    } else {
       initialized = dri2_initialize_x11_swrast(drv, disp);
    }

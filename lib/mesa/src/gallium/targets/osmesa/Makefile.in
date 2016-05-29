@@ -83,12 +83,16 @@ DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 @HAVE_DRISW_TRUE@am__append_1 = \
 @HAVE_DRISW_TRUE@	$(top_builddir)/src/gallium/winsys/sw/dri/libswdri.la
 
-@HAVE_LD_VERSION_SCRIPT_TRUE@am__append_2 = \
+@HAVE_DRISW_KMS_TRUE@am__append_2 = \
+@HAVE_DRISW_KMS_TRUE@	$(top_builddir)/src/gallium/winsys/sw/kms-dri/libswkmsdri.la \
+@HAVE_DRISW_KMS_TRUE@	$(LIBDRM_LIBS)
+
+@HAVE_LD_VERSION_SCRIPT_TRUE@am__append_3 = \
 @HAVE_LD_VERSION_SCRIPT_TRUE@	-Wl,--version-script=$(top_srcdir)/src/gallium/targets/osmesa/osmesa.sym
 
-@HAVE_MESA_LLVM_TRUE@am__append_3 = -DGALLIUM_LLVMPIPE
-@HAVE_MESA_LLVM_TRUE@am__append_4 = $(LLVM_LDFLAGS)
-@HAVE_MESA_LLVM_TRUE@am__append_5 = $(top_builddir)/src/gallium/drivers/llvmpipe/libllvmpipe.la $(LLVM_LIBS)
+@HAVE_MESA_LLVM_TRUE@am__append_4 = -DGALLIUM_LLVMPIPE
+@HAVE_MESA_LLVM_TRUE@am__append_5 = $(LLVM_LDFLAGS)
+@HAVE_MESA_LLVM_TRUE@am__append_6 = $(top_builddir)/src/gallium/drivers/llvmpipe/libllvmpipe.la $(LLVM_LIBS)
 subdir = src/gallium/targets/osmesa
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_gnu_make.m4 \
@@ -321,6 +325,8 @@ LIBELF_CFLAGS = @LIBELF_CFLAGS@
 LIBELF_LIBS = @LIBELF_LIBS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
+LIBSHA1_CFLAGS = @LIBSHA1_CFLAGS@
+LIBSHA1_LIBS = @LIBSHA1_LIBS@
 LIBTOOL = @LIBTOOL@
 LIBUDEV_CFLAGS = @LIBUDEV_CFLAGS@
 LIBUDEV_LIBS = @LIBUDEV_LIBS@
@@ -343,8 +349,6 @@ MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
 MESA_LLVM = @MESA_LLVM@
 MKDIR_P = @MKDIR_P@
-MSVC2008_COMPAT_CFLAGS = @MSVC2008_COMPAT_CFLAGS@
-MSVC2008_COMPAT_CXXFLAGS = @MSVC2008_COMPAT_CXXFLAGS@
 MSVC2013_COMPAT_CFLAGS = @MSVC2013_COMPAT_CFLAGS@
 MSVC2013_COMPAT_CXXFLAGS = @MSVC2013_COMPAT_CXXFLAGS@
 NINE_MAJOR = @NINE_MAJOR@
@@ -364,6 +368,8 @@ OMX_LIBS = @OMX_LIBS@
 OMX_LIB_INSTALL_DIR = @OMX_LIB_INSTALL_DIR@
 OPENCL_LIBNAME = @OPENCL_LIBNAME@
 OPENCL_VERSION = @OPENCL_VERSION@
+OPENSSL_CFLAGS = @OPENSSL_CFLAGS@
+OPENSSL_LIBS = @OPENSSL_LIBS@
 OSMESA_LIB = @OSMESA_LIB@
 OSMESA_LIB_DEPS = @OSMESA_LIB_DEPS@
 OSMESA_PC_LIB_PRIV = @OSMESA_PC_LIB_PRIV@
@@ -388,6 +394,7 @@ PRESENTPROTO_LIBS = @PRESENTPROTO_LIBS@
 PTHREAD_CC = @PTHREAD_CC@
 PTHREAD_CFLAGS = @PTHREAD_CFLAGS@
 PTHREAD_LIBS = @PTHREAD_LIBS@
+PWR8_CFLAGS = @PWR8_CFLAGS@
 PYTHON2 = @PYTHON2@
 RADEON_CFLAGS = @RADEON_CFLAGS@
 RADEON_LIBS = @RADEON_LIBS@
@@ -397,7 +404,11 @@ SED = @SED@
 SELINUX_CFLAGS = @SELINUX_CFLAGS@
 SELINUX_LIBS = @SELINUX_LIBS@
 SET_MAKE = @SET_MAKE@
+SHA1_CFLAGS = @SHA1_CFLAGS@
+SHA1_LIBS = @SHA1_LIBS@
 SHELL = @SHELL@
+SIMPENROSE_CFLAGS = @SIMPENROSE_CFLAGS@
+SIMPENROSE_LIBS = @SIMPENROSE_LIBS@
 SSE41_CFLAGS = @SSE41_CFLAGS@
 STRIP = @STRIP@
 VA_CFLAGS = @VA_CFLAGS@
@@ -428,6 +439,8 @@ XA_TINY = @XA_TINY@
 XA_VERSION = @XA_VERSION@
 XCB_DRI2_CFLAGS = @XCB_DRI2_CFLAGS@
 XCB_DRI2_LIBS = @XCB_DRI2_LIBS@
+XCB_DRI3_CFLAGS = @XCB_DRI3_CFLAGS@
+XCB_DRI3_LIBS = @XCB_DRI3_LIBS@
 XF86VIDMODE_CFLAGS = @XF86VIDMODE_CFLAGS@
 XF86VIDMODE_LIBS = @XF86VIDMODE_LIBS@
 XLIBGL_CFLAGS = @XLIBGL_CFLAGS@
@@ -563,7 +576,7 @@ GALLIUM_WINSYS_CFLAGS = \
 GALLIUM_PIPE_LOADER_WINSYS_LIBS =  \
 	$(top_builddir)/src/gallium/winsys/sw/null/libws_null.la \
 	$(top_builddir)/src/gallium/winsys/sw/wrapper/libwsw.la \
-	$(am__append_1)
+	$(am__append_1) $(am__append_2)
 AM_CFLAGS = \
 	$(GALLIUM_CFLAGS) \
 	$(VISIBILITY_CFLAGS)
@@ -573,13 +586,13 @@ AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/src/mapi \
 	-I$(top_srcdir)/src/gallium/drivers \
 	-I$(top_srcdir)/src/gallium/winsys \
 	-I$(top_srcdir)/src/gallium/auxiliary -DGALLIUM_SOFTPIPE \
-	-DGALLIUM_TRACE $(am__append_3)
+	-DGALLIUM_TRACE $(am__append_4)
 lib_LTLIBRARIES = lib@OSMESA_LIB@.la
 nodist_EXTRA_lib@OSMESA_LIB@_la_SOURCES = dummy.cpp
 lib@OSMESA_LIB@_la_SOURCES = target.c
 lib@OSMESA_LIB@_la_LDFLAGS = -no-undefined -version-number \
 	@OSMESA_VERSION@ $(GC_SECTIONS) $(LD_NO_UNDEFINED) \
-	$(am__append_2) $(am__append_4)
+	$(am__append_3) $(am__append_5)
 @HAVE_SHARED_GLAPI_TRUE@SHARED_GLAPI_LIB = $(top_builddir)/src/mapi/shared-glapi/libglapi.la
 lib@OSMESA_LIB@_la_LIBADD =  \
 	$(top_builddir)/src/mesa/libmesagallium.la \
@@ -589,7 +602,7 @@ lib@OSMESA_LIB@_la_LIBADD =  \
 	$(top_builddir)/src/gallium/drivers/softpipe/libsoftpipe.la \
 	$(top_builddir)/src/gallium/state_trackers/osmesa/libosmesa.la \
 	$(top_builddir)/src/mapi/glapi/libglapi.la $(SHARED_GLAPI_LIB) \
-	$(OSMESA_LIB_DEPS) $(CLOCK_LIB) $(am__append_5)
+	$(OSMESA_LIB_DEPS) $(CLOCK_LIB) $(am__append_6)
 EXTRA_lib@OSMESA_LIB@_la_DEPENDENCIES = osmesa.sym
 EXTRA_DIST = \
 	osmesa.sym \
@@ -892,9 +905,10 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+@BUILD_SHARED_FALSE@clean-local:
 clean: clean-am
 
-clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
+clean-am: clean-generic clean-libLTLIBRARIES clean-libtool clean-local \
 	mostlyclean-am
 
 distclean: distclean-am
@@ -966,8 +980,8 @@ uninstall-am: uninstall-libLTLIBRARIES uninstall-pkgconfigDATA
 .MAKE: install-am install-strip
 
 .PHONY: CTAGS GTAGS all all-am all-local check check-am clean \
-	clean-generic clean-libLTLIBRARIES clean-libtool cscopelist \
-	ctags distclean distclean-compile distclean-generic \
+	clean-generic clean-libLTLIBRARIES clean-libtool clean-local \
+	cscopelist ctags distclean distclean-compile distclean-generic \
 	distclean-libtool distclean-tags distdir dvi dvi-am html \
 	html-am info info-am install install-am install-data \
 	install-data-am install-dvi install-dvi-am install-exec \
@@ -981,9 +995,9 @@ uninstall-am: uninstall-libLTLIBRARIES uninstall-pkgconfigDATA
 	uninstall-libLTLIBRARIES uninstall-pkgconfigDATA
 
 
-@BUILD_SHARED_TRUE@@HAVE_COMPAT_SYMLINKS_TRUE@all-local : .libs/install-gallium-links
+@BUILD_SHARED_TRUE@@HAVE_COMPAT_SYMLINKS_TRUE@all-local : .install-gallium-links
 
-@BUILD_SHARED_TRUE@@HAVE_COMPAT_SYMLINKS_TRUE@.libs/install-gallium-links : $(dri_LTLIBRARIES) $(egl_LTLIBRARIES) $(lib_LTLIBRARIES)
+@BUILD_SHARED_TRUE@@HAVE_COMPAT_SYMLINKS_TRUE@.install-gallium-links : $(dri_LTLIBRARIES) $(egl_LTLIBRARIES) $(lib_LTLIBRARIES)
 @BUILD_SHARED_TRUE@@HAVE_COMPAT_SYMLINKS_TRUE@	$(AM_V_GEN)$(MKDIR_P) $(top_builddir)/$(LIB_DIR);	\
 @BUILD_SHARED_TRUE@@HAVE_COMPAT_SYMLINKS_TRUE@	link_dir=$(top_builddir)/$(LIB_DIR)/gallium;		\
 @BUILD_SHARED_TRUE@@HAVE_COMPAT_SYMLINKS_TRUE@	if test x$(egl_LTLIBRARIES) != x; then			\
@@ -1000,6 +1014,16 @@ uninstall-am: uninstall-libLTLIBRARIES uninstall-pkgconfigDATA
 @BUILD_SHARED_TRUE@@HAVE_COMPAT_SYMLINKS_TRUE@			ln -f $$f $$link_dir;			\
 @BUILD_SHARED_TRUE@@HAVE_COMPAT_SYMLINKS_TRUE@		fi;						\
 @BUILD_SHARED_TRUE@@HAVE_COMPAT_SYMLINKS_TRUE@	done && touch $@
+
+@BUILD_SHARED_TRUE@clean-local:
+@BUILD_SHARED_TRUE@	for f in $(notdir $(dri_LTLIBRARIES:%.la=.libs/%.$(LIB_EXT)*)) \
+@BUILD_SHARED_TRUE@		 $(notdir $(egl_LTLIBRARIES:%.la=.libs/%.$(LIB_EXT)*)) \
+@BUILD_SHARED_TRUE@		 $(notdir $(lib_LTLIBRARIES:%.la=.libs/%.$(LIB_EXT)*)); do \
+@BUILD_SHARED_TRUE@		echo $$f; \
+@BUILD_SHARED_TRUE@		$(RM) $(top_builddir)/$(LIB_DIR)/gallium/$$f;   \
+@BUILD_SHARED_TRUE@	done;
+@BUILD_SHARED_TRUE@	rmdir $(top_builddir)/$(LIB_DIR)/gallium || true
+@BUILD_SHARED_TRUE@	$(RM) .install-gallium-links
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
