@@ -89,6 +89,7 @@
 ./usr/X11R6/include/xorg/damagestr.h
 ./usr/X11R6/include/xorg/dbestruct.h
 ./usr/X11R6/include/xorg/dgaproc.h
+./usr/X11R6/include/xorg/displaymode.h
 ./usr/X11R6/include/xorg/dix.h
 ./usr/X11R6/include/xorg/dixaccess.h
 ./usr/X11R6/include/xorg/dixevents.h
@@ -148,6 +149,7 @@
 ./usr/X11R6/include/xorg/miwideline.h
 ./usr/X11R6/include/xorg/mizerarc.h
 ./usr/X11R6/include/xorg/msp3430.h
+./usr/X11R6/include/xorg/nonsdk_extinit.h
 ./usr/X11R6/include/xorg/opaque.h
 ./usr/X11R6/include/xorg/optionstr.h
 ./usr/X11R6/include/xorg/os.h
@@ -179,8 +181,6 @@
 ./usr/X11R6/include/xorg/shadowfb.h
 ./usr/X11R6/include/xorg/shmint.h
 ./usr/X11R6/include/xorg/site.h
-./usr/X11R6/include/xorg/swaprep.h
-./usr/X11R6/include/xorg/swapreq.h
 ./usr/X11R6/include/xorg/syncsdk.h
 ./usr/X11R6/include/xorg/tda8425.h
 ./usr/X11R6/include/xorg/tda9850.h
@@ -190,7 +190,6 @@
 ./usr/X11R6/include/xorg/vbe.h
 ./usr/X11R6/include/xorg/vbeModes.h
 ./usr/X11R6/include/xorg/vgaHW.h
-./usr/X11R6/include/xorg/vidmodeproc.h
 ./usr/X11R6/include/xorg/wfbrename.h
 ./usr/X11R6/include/xorg/window.h
 ./usr/X11R6/include/xorg/windowstr.h
@@ -229,7 +228,6 @@
 ./usr/X11R6/include/xorg/xf86xv.h
 ./usr/X11R6/include/xorg/xf86xvmc.h
 ./usr/X11R6/include/xorg/xf86xvpriv.h
-./usr/X11R6/include/xorg/xfixes.h
 ./usr/X11R6/include/xorg/xisb.h
 ./usr/X11R6/include/xorg/xkbfile.h
 ./usr/X11R6/include/xorg/xkbrules.h
