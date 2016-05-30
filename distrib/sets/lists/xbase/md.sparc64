@@ -192,7 +192,6 @@
 ./usr/X11R6/include/xorg/shadowfb.h
 ./usr/X11R6/include/xorg/shmint.h
 ./usr/X11R6/include/xorg/site.h
-./usr/X11R6/include/xorg/swapreq.h
 ./usr/X11R6/include/xorg/syncsdk.h
 ./usr/X11R6/include/xorg/validate.h
 ./usr/X11R6/include/xorg/vbe.h
