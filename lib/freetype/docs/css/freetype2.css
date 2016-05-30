@@ -220,8 +220,16 @@ h3 {
   margin-top: 4ex; }
 h4 {
   margin-top: 3ex; }
-h5 { }
-h6 { }
+h5 {
+  margin-top: 3ex;
+  margin-bottom: 2ex;
+  font-size: 100%; }
+h6 {
+  margin-top: 2ex;
+  margin-bottom: 1ex;
+  font-size: 100%;
+  font-weight: normal;
+  font-style: italic; }
 
 h1.title {
  text-align: center; }
@@ -321,6 +329,8 @@ p.warning {
   color: red; }
 p.large {
   font-size: larger; }
+p.footnote {
+  font-size: smaller; }
 p.note {
   font-style: italic; }
 

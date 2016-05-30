@@ -24,13 +24,13 @@
         href="../css/freetype2_-90.css">
 
   <script type="text/javascript"
-          src="../javascript/jquery-1.11.0.min.js">
+          src="../../../js/jquery-1.11.0.min.js">
   </script>
   <script type="text/javascript"
-          src="../javascript/jquery.ba-resize.min.js">
+          src="../../../js/jquery.ba-resize.min.js">
   </script>
   <script type="text/javascript"
-          src="../javascript/freetype2.js">
+          src="../../../js/freetype2.js">
   </script>
 
   <title>FreeType Tutorial / I</title>
@@ -566,11 +566,11 @@ error = FT_Render_Glyph( face-&gt;glyph,   <span class="comment">/* glyph slot  
           <p>The parameter <tt>render_mode</tt> is a set of bit flags
             to specify how to render the glyph image.
             <tt>FT_RENDER_MODE_NORMAL</tt>, the default, renders an
-            anti-aliased bitmap with 256 gray levels (also called
-            a <em>pixmap</em>), as this is the default.  You can
-            alternatively use <tt>FT_RENDER_MODE_MONO</tt> if you want
-            to generate a 1-bit monochrome bitmap.  More values are
-            available for
+            anti-aliased coverage bitmap with 256 gray levels (also
+            called a <em>pixmap</em>), as this is the default.  You
+            can alternatively use <tt>FT_RENDER_MODE_MONO</tt> if you
+            want to generate a 1-bit monochrome bitmap.  More values
+            are available for
             the <a href="../reference/ft2-base_interface.html#FT_Render_Mode"><tt>FT_Render_Mode</tt></a>
             enumeration value.</p>
 
@@ -578,7 +578,9 @@ error = FT_Render_Glyph( face-&gt;glyph,   <span class="comment">/* glyph slot  
             directly through <tt>glyph-&gt;bitmap</tt> (a simple
             descriptor for bitmaps or pixmaps), and position it
             through <tt>glyph-&gt;bitmap_left</tt> and
-            <tt>glyph-&gt;bitmap_top</tt>.</p>
+            <tt>glyph-&gt;bitmap_top</tt>.  For optimal rendering on a
+            screen the bitmap should be used as an alpha channel in
+            linear blending with gamma correction.</p>
 
           <p>Note that <tt>bitmap_left</tt> is the horizontal distance
             from the current pen position to the leftmost border of
@@ -799,7 +801,9 @@ for ( n = 0; n &lt; num_chars; n++ )
               takes a pointer to
               an <a href="../reference/ft2-basic_types.html#FT_Bitmap"><tt>FT_Bitmap</tt></a>
               descriptor and the position of its top-left corner as
-              arguments.</li>
+              arguments.  For ideal rendering on a screen this
+              function should perform linear blending with gamma
+              correction, using the bitmap as an alpha channel.</li>
 
             <li>The value of <tt>slot-&gt;bitmap_top</tt> is positive
               for an <em>upwards</em> vertical distance.  Assuming
@@ -971,7 +975,7 @@ for ( n = 0; n &lt; num_chars; n++ )
         <!-- ************************************************** -->
 
         <div class="updated">
-          <p>Last update: 10-Dec-2014</p>
+          <p>Last update: 8-Dec-2015</p>
         </div>
       </div>
     </div>
