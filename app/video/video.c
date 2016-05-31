@@ -1,4 +1,4 @@
-/*	$OpenBSD: video.c,v 1.13 2016/05/31 06:47:12 mglocker Exp $	*/
+/*	$OpenBSD: video.c,v 1.14 2016/05/31 08:45:14 tb Exp $	*/
 /*
  * Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
  *
@@ -1535,6 +1535,9 @@ stream(struct video *vid)
 	uint8_t *src;
 	long frames_played = -1, frames_grabbed = 0, fus = 50000;
 	int sequence = 20, ret, err, todo, done;
+
+	/* Guard against uninitialized variable in case no frame is grabbed. */
+	gettimeofday(&tp_start, NULL);
 
 	if (vid->fps && !vid->nofps) {
 		fus = 1000000 / vid->fps;
