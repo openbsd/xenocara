@@ -1,4 +1,4 @@
-/*	$OpenBSD: video.c,v 1.12 2014/10/23 07:36:06 brad Exp $	*/
+/*	$OpenBSD: video.c,v 1.13 2016/05/31 06:47:12 mglocker Exp $	*/
 /*
  * Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
  *
@@ -20,6 +20,7 @@
 #include <sys/videoio.h>
 #include <sys/time.h>
 #include <sys/limits.h>
+#include <sys/mman.h>
 
 #include <err.h>
 #include <errno.h>
@@ -145,6 +146,9 @@ struct encodings {
 struct video {
 	struct xdsp 	 xdsp;
 	struct dev	 dev;
+#define MMAP_NUM_BUFS	4
+	uint8_t		 mmap_on;
+	void		*mmap_buffer[MMAP_NUM_BUFS];
 	uint8_t		*frame_buffer;
 	size_t		 frame_bufsz;
 	uint8_t		*conv_buffer;
@@ -189,8 +193,11 @@ void dev_reset_ctrls(struct video *);
 int parse_size(struct video *);
 int choose_size(struct video *);
 int choose_enc(struct video *);
+int mmap_init(struct video *);
+int mmap_stop(struct video *);
 int setup(struct video *);
 void cleanup(struct video *, int);
+int ioctl_input(struct video *);
 int poll_input(struct video *);
 int grab_frame(struct video *);
 int stream(struct video *);
@@ -206,7 +213,7 @@ extern char *__progname;
 void
 usage(void)
 {
-	fprintf(stderr, "usage: %s [-Rv] "
+	fprintf(stderr, "usage: %s [-gRv] "
 	    "[-a adaptor] [-e encoding] [-f file] [-i input] [-O output]\n"
 	    "       %*s [-o output] [-r rate] [-s size]\n", __progname,
 	    (int)strlen(__progname), "");
@@ -668,8 +675,12 @@ dev_check_caps(struct video *vid)
 		warnx("%s is not a capture device", d->path);
 		return 0;
 	}
-	if (!(cap.capabilities & V4L2_CAP_READWRITE)) {
+	if (!(cap.capabilities & V4L2_CAP_READWRITE) && !vid->mmap_on) {
 		warnx("%s does not support read(2)", d->path);
+		return 0;
+	}
+	if (!(cap.capabilities & V4L2_CAP_STREAMING) && vid->mmap_on) {
+		warnx("%s does not support mmap(2)", d->path);
 		return 0;
 	}
 	d->buf_type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -972,6 +983,9 @@ dev_dump_info(struct video *vid)
 	struct dev *d = &vid->dev;
 	int i, j;
 
+	if (!vid->mmap_on)
+		fprintf(stderr, "Using read instead of mmap to grab frames\n");
+
 	fprintf(stderr, "video device %s:\n", d->path);
 
 	fprintf(stderr, "  encodings: ");
@@ -1231,6 +1245,85 @@ choose_enc(struct video *vid)
 }
 
 int
+mmap_init(struct video *vid)
+{
+	struct v4l2_requestbuffers rb;
+	struct v4l2_buffer buf;
+	int i, r, type;
+
+	/* request buffers */
+	rb.count = MMAP_NUM_BUFS;
+	r = ioctl(vid->dev.fd, VIDIOC_REQBUFS, &rb);
+	if (r == -1) {
+		warn("ioctl VIDIOC_REQBUFS");
+		return 0;
+	}
+
+	/* mmap the buffers */
+	for (i = 0; i < MMAP_NUM_BUFS; i++) {
+		buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+		buf.memory = V4L2_MEMORY_MMAP;
+		buf.index = i;
+		r = ioctl(vid->dev.fd, VIDIOC_QUERYBUF, &buf);
+		if (r == -1) {
+			warn("ioctl VIDIOC_QUERYBUF");
+			return 0;
+		}
+		vid->mmap_buffer[i] = mmap(0, buf.length, PROT_READ,
+		    MAP_SHARED, vid->dev.fd, buf.m.offset);
+		if (vid->mmap_buffer[i] == NULL) {
+			warn("mmap");
+			return 0;
+		}
+	}
+
+	/* initial buffer queueing */
+	for (i = 0; i < MMAP_NUM_BUFS; i++) {
+		buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+		buf.memory = V4L2_MEMORY_MMAP;
+		buf.index = i;
+		r = ioctl(vid->dev.fd, VIDIOC_QBUF, &buf);
+		if (r == -1) {
+			warn("ioctl VIDIOC_QBUF");
+			return 0;
+		}
+	}
+
+	/* start video stream */
+	r = ioctl(vid->dev.fd, VIDIOC_STREAMON, &type);
+	if (r == -1) {
+		warn("ioctl VIDIOC_STREAMON");
+		return 0;
+	}
+
+	return 1;
+}
+
+int
+mmap_stop(struct video *vid)
+{
+	int i, r, type;
+
+	/* stop video stream */
+	r = ioctl(vid->dev.fd, VIDIOC_STREAMOFF, &type);
+	if (r == -1) {
+		warn("ioctl STREAMOFF");
+		return 0;
+	}
+
+	/* unmap the buffers */
+	for (i = 0; i < MMAP_NUM_BUFS; i++) {
+		r = munmap(vid->mmap_buffer[i], vid->bpf);
+		if (r == -1) {
+			warn("munmap");
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
+int
 setup(struct video *vid)
 {
 	if (vid->mode & M_IN_FILE) {
@@ -1314,6 +1407,43 @@ setup(struct video *vid)
 
 	if (vid->sz_str && !strcmp(vid->sz_str, "full"))
 		resize_window(vid, 1);
+
+	if (vid->mmap_on) {
+		if (!mmap_init(vid))
+			return 0;
+	}
+
+	return 1;
+}
+
+int
+ioctl_input(struct video *vid)
+{
+	struct v4l2_buffer buf;
+	int r;
+
+	/* dequeue buffer */
+	buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+	buf.memory = V4L2_MEMORY_MMAP;
+	r = ioctl(vid->dev.fd, VIDIOC_DQBUF, &buf);
+	if (r == -1) {
+		warn("ioctl VIDIOC_DQBUF");
+		return 0;
+	}
+
+	/* copy frame buffer */
+	if (buf.length > vid->bpf)
+		return 0;
+	memcpy(vid->frame_buffer, vid->mmap_buffer[buf.index], buf.length);
+
+	/* requeue buffer */
+	buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+	buf.memory = V4L2_MEMORY_MMAP;
+	r = ioctl(vid->dev.fd, VIDIOC_QBUF, &buf);
+	if (r == -1) {
+		warn("ioctl VIDIOC_QBUF");
+		return 0;
+	}
 
 	return 1;
 }
@@ -1431,11 +1561,16 @@ stream(struct video *vid)
 
 	while (!shutdown) {
 		err = 0;
-		ret = poll_input(vid);
+		if (vid->mmap_on) {
+			if (!(ret = ioctl_input(vid)))
+				return 0;
+		} else
+			ret = poll_input(vid);
 		if (ret == 1) {
 			if ((vid->mode & M_IN_DEV) ||
 			    frames_grabbed - 1 == frames_played) {
-				ret = grab_frame(vid);
+				if (!vid->mmap_on)
+					ret = grab_frame(vid);
 				if (ret == 1) {
 					frames_grabbed++;
 					if (vid->nofps)
@@ -1559,6 +1694,8 @@ stream(struct video *vid)
 __dead void
 cleanup(struct video *vid, int excode)
 {
+	int type;
+
 	if (vid->xdsp.xv_image != NULL)
 		XFree(vid->xdsp.xv_image);
 
@@ -1574,8 +1711,11 @@ cleanup(struct video *vid, int excode)
 	if (vid->xdsp.dpy != NULL)
 		XCloseDisplay(vid->xdsp.dpy);
 
-	if (vid->dev.fd >= 0)
+	if (vid->dev.fd >= 0) {
+		if (vid->mmap_on)
+			mmap_stop(vid);
 		close(vid->dev.fd);
+	}
 
 	if (vid->iofile_fd >= 0)
 		close(vid->iofile_fd);
@@ -1608,9 +1748,10 @@ main(int argc, char *argv[])
 	vid.dev.fd = vid.iofile_fd = -1;
 	vid.mode = M_IN_DEV | M_OUT_XV;
 	vid.enc = -1;
+	vid.mmap_on = 1; /* mmap method is default */
 	wout = 1;
 
-	while ((ch = getopt(argc, argv, "vRa:e:f:i:O:o:r:s:")) != -1) {
+	while ((ch = getopt(argc, argv, "gvRa:e:f:i:O:o:r:s:")) != -1) {
 		switch (ch) {
 		case 'a':
 			x->cur_adap = strtonum(optarg, 0, 4, &errstr);
@@ -1628,6 +1769,9 @@ main(int argc, char *argv[])
 			break;
 		case 'f':
 			snprintf(d->path, sizeof(d->path), optarg);
+			break;
+		case 'g':
+			vid.mmap_on = 0;
 			break;
 		case 'i':
 			if (vid.mode & (M_IN_FILE | M_OUT_FILE)) {

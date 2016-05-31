@@ -1,4 +1,4 @@
-.\"	$OpenBSD: video.1,v 1.11 2014/11/30 01:40:26 schwarze Exp $
+.\"	$OpenBSD: video.1,v 1.12 2016/05/31 06:47:12 mglocker Exp $
 .\"
 .\" Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
 .\"
@@ -15,7 +15,7 @@
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
 .\"
-.Dd $Mdocdate: November 30 2014 $
+.Dd $Mdocdate: May 31 2016 $
 .Dt VIDEO 1
 .Os
 .Sh NAME
@@ -25,7 +25,7 @@
 .Sh SYNOPSIS
 .Nm
 .Bk -words
-.Op Fl \&Rv
+.Op Fl \&gRv
 .Op Fl a Ar adaptor
 .Op Fl e Ar encoding
 .Op Fl f Ar file
@@ -101,6 +101,11 @@ will be used by default.
 device from which frames will be read.
 The default is
 .Pa /dev/video .
+.It Fl g
+Use
+.Xr read 2
+to grab frames instead of
+.Xr mmap 2 .
 .It Fl i Ar input
 File from which frames will be read.
 If
