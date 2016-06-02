@@ -1188,7 +1188,9 @@ static Bool I830CloseScreen(CLOSE_SCREEN_ARGS_DECL)
 		intel->dri3 = DRI_NONE;
 	}
 
+#if HAVE_DRI3
 	intel_sync_close(screen);
+#endif
 
 	xf86GARTCloseScreen(scrn->scrnIndex);
 
