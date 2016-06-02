@@ -1,4 +1,4 @@
-/*	$OpenBSD: video.c,v 1.15 2016/06/02 07:47:25 mglocker Exp $	*/
+/*	$OpenBSD: video.c,v 1.16 2016/06/02 08:53:32 tb Exp $	*/
 /*
  * Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
  *
@@ -1271,7 +1271,7 @@ mmap_init(struct video *vid)
 		}
 		vid->mmap_buffer[i] = mmap(0, buf.length, PROT_READ,
 		    MAP_SHARED, vid->dev.fd, buf.m.offset);
-		if (vid->mmap_buffer[i] == NULL) {
+		if (vid->mmap_buffer[i] == MAP_FAILED) {
 			warn("mmap");
 			return 0;
 		}
@@ -1313,7 +1313,8 @@ mmap_stop(struct video *vid)
 
 	/* unmap the buffers */
 	for (i = 0; i < MMAP_NUM_BUFS; i++) {
-		if (vid->mmap_buffer[i] != NULL) {
+		if (vid->mmap_buffer[i] != NULL &&
+		    vid->mmap_buffer[i] != MAP_FAILED) {
 			r = munmap(vid->mmap_buffer[i], vid->bpf);
 			if (r == -1) {
 				warn("munmap");
