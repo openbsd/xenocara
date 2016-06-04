@@ -1,4 +1,4 @@
-/*	$OpenBSD: video.c,v 1.16 2016/06/02 08:53:32 tb Exp $	*/
+/*	$OpenBSD: video.c,v 1.17 2016/06/04 07:44:32 mglocker Exp $	*/
 /*
  * Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
  *
@@ -169,6 +169,7 @@ struct video {
 #define M_OUT_XV	0x2
 #define M_IN_FILE	0x4
 #define M_OUT_FILE	0x8
+#define M_QUERY		0x10
 	int		 mode;
 	int		 verbose;
 };
@@ -186,6 +187,7 @@ int dev_get_sizes(struct video *);
 int dev_get_rates(struct video *);
 int dev_get_ctrls(struct video *);
 void dev_dump_info(struct video *);
+void dev_dump_query(struct video *);
 int dev_init(struct video *);
 void dev_set_ctrl(struct video *, int, int);
 void dev_reset_ctrls(struct video *);
@@ -213,7 +215,7 @@ extern char *__progname;
 void
 usage(void)
 {
-	fprintf(stderr, "usage: %s [-gRv] "
+	fprintf(stderr, "usage: %s [-gqRv] "
 	    "[-a adaptor] [-e encoding] [-f file] [-i input] [-O output]\n"
 	    "       %*s [-o output] [-r rate] [-s size]\n", __progname,
 	    (int)strlen(__progname), "");
@@ -1024,6 +1026,24 @@ dev_dump_info(struct video *vid)
 	fprintf(stderr, "\n");
 }
 
+void
+dev_dump_query(struct video *vid)
+{
+	if (!dev_check_caps(vid))
+		return;
+	if (!dev_get_encs(vid))
+		return;
+	if (!choose_enc(vid))
+		return;
+	if (!dev_get_sizes(vid))
+		return;
+	if (!dev_get_rates(vid))
+		return;
+	if (!dev_get_ctrls(vid))
+		return;
+	dev_dump_info(vid);
+}
+
 int
 dev_init(struct video *vid)
 {
@@ -1757,7 +1777,7 @@ main(int argc, char *argv[])
 	vid.mmap_on = 1; /* mmap method is default */
 	wout = 1;
 
-	while ((ch = getopt(argc, argv, "gvRa:e:f:i:O:o:r:s:")) != -1) {
+	while ((ch = getopt(argc, argv, "gqRva:e:f:i:O:o:r:s:")) != -1) {
 		switch (ch) {
 		case 'a':
 			x->cur_adap = strtonum(optarg, 0, 4, &errstr);
@@ -1802,6 +1822,10 @@ main(int argc, char *argv[])
 				    optarg);
 			}
 			break;
+		case 'q':
+			vid.mode |= M_QUERY;
+			vid.mode &= ~M_OUT_XV;
+			break;
 		case 'R':
 			vid.nofps = 1;
 			break;
@@ -1831,6 +1855,11 @@ main(int argc, char *argv[])
 	}
 	argc -= optind;
 	argv += optind;
+
+	if (vid.mode & M_QUERY) {
+		dev_dump_query(&vid);
+		cleanup(&vid, 0);
+	}
 
 	if (vid.fps == 0)
 		vid.nofps = 1;

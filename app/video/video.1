@@ -1,4 +1,4 @@
-.\"	$OpenBSD: video.1,v 1.12 2016/05/31 06:47:12 mglocker Exp $
+.\"	$OpenBSD: video.1,v 1.13 2016/06/04 07:44:32 mglocker Exp $
 .\"
 .\" Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
 .\"
@@ -15,7 +15,7 @@
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
 .\"
-.Dd $Mdocdate: May 31 2016 $
+.Dd $Mdocdate: June 4 2016 $
 .Dt VIDEO 1
 .Os
 .Sh NAME
@@ -25,7 +25,7 @@
 .Sh SYNOPSIS
 .Nm
 .Bk -words
-.Op Fl \&gRv
+.Op Fl \&gqRv
 .Op Fl a Ar adaptor
 .Op Fl e Ar encoding
 .Op Fl f Ar file
@@ -133,6 +133,9 @@ If
 is
 .Ql - ,
 frames will be written to standard output.
+.It Fl q
+Query for encodings, frame sizes/rates, and controls.
+Display them and quit.
 .It Fl R
 Disable frame rate adjustment.
 .It Fl r Ar rate
