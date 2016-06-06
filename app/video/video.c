@@ -1,4 +1,4 @@
-/*	$OpenBSD: video.c,v 1.18 2016/06/06 11:55:38 mglocker Exp $	*/
+/*	$OpenBSD: video.c,v 1.19 2016/06/06 19:31:22 mglocker Exp $	*/
 /*
  * Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
  *
@@ -1455,9 +1455,9 @@ ioctl_input(struct video *vid)
 	}
 
 	/* copy frame buffer */
-	if (buf.length > vid->bpf)
+	if (buf.bytesused > vid->bpf)
 		return 0;
-	memcpy(vid->frame_buffer, vid->mmap_buffer[buf.index], buf.length);
+	memcpy(vid->frame_buffer, vid->mmap_buffer[buf.index], buf.bytesused);
 
 	/* requeue buffer */
 	buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
