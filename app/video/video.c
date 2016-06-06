@@ -1,4 +1,4 @@
-/*	$OpenBSD: video.c,v 1.17 2016/06/04 07:44:32 mglocker Exp $	*/
+/*	$OpenBSD: video.c,v 1.18 2016/06/06 11:55:38 mglocker Exp $	*/
 /*
  * Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
  *
@@ -700,12 +700,12 @@ dev_get_encs(struct video *vid)
 	fmtdesc.index = 0;
 	fmtdesc.type = d->buf_type;
 	while (ioctl(d->fd, VIDIOC_ENUM_FMT, &fmtdesc) >= 0) {
-		if (!strcmp(fmtdesc.description, "YUYV")) {
+		if (fmtdesc.pixelformat == V4L2_PIX_FMT_YUYV) {
 			i = find_enc("yuy2");
 			if (i < ENC_LAST)
 				encs[i].dev_id = fmtdesc.pixelformat;
 		}
-		if (!strcmp(fmtdesc.description, "UYVY")) {
+		if (fmtdesc.pixelformat == V4L2_PIX_FMT_UYVY) {
 			i = find_enc("uyvy");
 			if (i < ENC_LAST)
 				encs[i].dev_id = fmtdesc.pixelformat;
