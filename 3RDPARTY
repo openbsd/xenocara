@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.262 2016/05/29 12:02:11 dcoppa Exp $
+# $OpenBSD: 3RDPARTY,v 1.263 2016/06/06 06:12:24 matthieu Exp $
 #
 Package: 	Freetype
 Version:	2.6.3
@@ -23,6 +23,12 @@ Version:	2.4.67
 Current Vers:	2.4.68
 Maintainer:	Eric Anholt
 Archive Site:	http://dri.freedesktop.org/
+
+Package:	libepoxy
+Version:	1.3.1
+Current Vers:	1.3.1
+Maintainer:	Eric Anholt
+Archive Site:	https://github.com/anholt/libepoxy/releases
 
 Package:	fontconfig
 Version:	2.11.1
