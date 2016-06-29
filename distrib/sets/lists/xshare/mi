@@ -3367,6 +3367,7 @@
 ./usr/X11R6/share/X11/xkb/symbols/bd
 ./usr/X11R6/share/X11/xkb/symbols/be
 ./usr/X11R6/share/X11/xkb/symbols/bg
+./usr/X11R6/share/X11/xkb/symbols/bn
 ./usr/X11R6/share/X11/xkb/symbols/br
 ./usr/X11R6/share/X11/xkb/symbols/brai
 ./usr/X11R6/share/X11/xkb/symbols/bt
@@ -3388,6 +3389,7 @@
 ./usr/X11R6/share/X11/xkb/symbols/digital_vndr/us
 ./usr/X11R6/share/X11/xkb/symbols/digital_vndr/vt
 ./usr/X11R6/share/X11/xkb/symbols/dk
+./usr/X11R6/share/X11/xkb/symbols/dz
 ./usr/X11R6/share/X11/xkb/symbols/ee
 ./usr/X11R6/share/X11/xkb/symbols/empty
 ./usr/X11R6/share/X11/xkb/symbols/epo
@@ -3411,6 +3413,7 @@
 ./usr/X11R6/share/X11/xkb/symbols/hp_vndr/us
 ./usr/X11R6/share/X11/xkb/symbols/hr
 ./usr/X11R6/share/X11/xkb/symbols/hu
+./usr/X11R6/share/X11/xkb/symbols/id
 ./usr/X11R6/share/X11/xkb/symbols/ie
 ./usr/X11R6/share/X11/xkb/symbols/il
 ./usr/X11R6/share/X11/xkb/symbols/in
@@ -3464,6 +3467,7 @@
 ./usr/X11R6/share/X11/xkb/symbols/mn
 ./usr/X11R6/share/X11/xkb/symbols/mt
 ./usr/X11R6/share/X11/xkb/symbols/mv
+./usr/X11R6/share/X11/xkb/symbols/my
 ./usr/X11R6/share/X11/xkb/symbols/nbsp
 ./usr/X11R6/share/X11/xkb/symbols/nec_vndr
 ./usr/X11R6/share/X11/xkb/symbols/nec_vndr/jp
