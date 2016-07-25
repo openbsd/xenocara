@@ -36,7 +36,20 @@
 
 
 
-#if defined(__linux__) || defined(__OpenBSD__) || defined(_NetBSD__) || defined(__sun) || defined(__HAIKU__)
+#if defined(__OpenBSD__)
+
+void *
+_mesa_exec_malloc(GLuint size)
+{
+   return NULL;
+}
+
+void
+_mesa_exec_free(void *addr)
+{
+}
+
+#elif defined(__linux__) || defined(_NetBSD__) || defined(__sun) || defined(__HAIKU__)
 
 /*
  * Allocate a large block of memory which can hold code then dole it out

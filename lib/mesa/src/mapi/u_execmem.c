@@ -45,8 +45,15 @@ static unsigned int head = 0;
 
 static unsigned char *exec_mem = (unsigned char *)0;
 
+#if defined(__OpenBSD__)
 
-#if defined(__linux__) || defined(__OpenBSD__) || defined(_NetBSD__) || defined(__sun) || defined(__HAIKU__)
+static int
+init_map(void)
+{
+  return 0;
+}
+
+#elif defined(__linux__) || defined(_NetBSD__) || defined(__sun) || defined(__HAIKU__)
 
 #include <unistd.h>
 #include <sys/mman.h>
