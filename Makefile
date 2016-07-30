@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.70 2016/04/01 03:15:15 jsg Exp $
+# $OpenBSD: Makefile,v 1.71 2016/07/30 12:18:35 matthieu Exp $
 .include <bsd.own.mk>
 .include <bsd.xconf.mk>
 
@@ -9,12 +9,6 @@ XCONFIG=${XSRCDIR}/etc/X11.${MACHINE}/xorg.conf
 RM?=rm
 
 XSERVER= xserver
-
-.if defined(XENOCARA_BUILD_GL)
-.if ${XENOCARA_BUILD_GL:L} == "yes"
-XSERVER+= kdrive
-.endif
-.endif
 
 SUBDIR= proto font/util data/bitmaps lib app data \
 	${XSERVER} driver util doc

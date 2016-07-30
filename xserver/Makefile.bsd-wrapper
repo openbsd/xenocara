@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.62 2016/05/12 07:19:50 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.63 2016/07/30 12:18:35 matthieu Exp $
 
 .include <bsd.xconf.mk>
 
@@ -16,6 +16,7 @@ NO_XORG_OPTION=${NO_XORG_${MACHINE}}
 GLX_OPTION=	--disable-glx
 .else
 GLX_OPTION=	--enable-glamor
+KDRIVE_OPTION=	--enable-kdrive
 .endif
 
 .if ${XENOCARA_BUILD_DRI:L} == "yes"
@@ -33,6 +34,7 @@ CONFIGURE_ARGS=	--localstatedir=/var --sysconfdir=/etc/X11 \
 		--with-default-xkb-rules=${XKB_RULES} \
 		--with-module-dir=${LIBDIR}/modules ${GLX_OPTION} \
 		--enable-install-setuid --enable-privsep \
+		${KDRIVE_OPTION} \
 		--enable-xcsecurity \
 		--without-fop --without-xmlto --without-xsltproc \
 		--disable-dmx ${NO_XORG_OPTION} \
