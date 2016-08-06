@@ -672,9 +672,9 @@ Data types
             device hierarchy. See Section "The Master/Slave device hierarchy"
             for more information.
 
-    EVENTMASK
-            An EVENTMASK is a binary mask defined as (1 << event type).
-            A SETofEVENTMASK is a binary OR of zero or more EVENTMASK.
+    EVTYPEMASK
+            An EVTYPEMASK is a binary mask defined as (1 << event type).
+            A SETofEVTYPEMASK is a binary OR of zero or more EVTYPEMASK.
 
     FP1616
             Fixed point decimal in 16.16 format as one INT16 and one CARD16.
@@ -971,7 +971,7 @@ XISelectEvents
 
     EVENTMASK { deviceid:          DEVICE,
                 mask_len:          CARD16,
-                mask:              SETofEVENTMASK
+                mask:              SETofEVTYPEMASK }
 
     window
         The window to select the events on.
@@ -1392,7 +1392,7 @@ XIGrabDevice
             time:            TIMESTAMP or CurrentTime
             cursor:          Cursor
             mask_len:        CARD16
-            masks:           SETofEVENTMASK
+            masks:           SETofEVTYPEMASK
             ▶
             status:          Success, AlreadyGrabbed, Frozen, InvalidTime, NotViewable
     └───
@@ -1630,6 +1630,7 @@ XIPassiveGrabDevice
             deviceid:        DEVICE
             detail:          CARD32
             grab_type:       GRABTYPE
+            time:            TIMESTAMP
             grab_window:     Window
             cursor:          Cursor
             owner_events:    Bool
@@ -1637,7 +1638,7 @@ XIPassiveGrabDevice
             paired_device_mode: { Synchronous, Asynchronous }
             num_modifiers:   INT16
             mask_len:        CARD16
-            masks:           SETofEVENTMASK
+            masks:           SETofEVTYPEMASK
             modifiers:       LISTofSETofMODIFIERMASK
             ▶
             num_modifiers_return:    INT16
@@ -1695,6 +1696,8 @@ on the specified input device.
             Number of elements in modifiers_return
         modifiers_return
             XKB modifier state that could not be grabbed.
+        time
+            This field is unused.
 
 If owner-events is False, input events generated from this device are
 reported with respect to grab-window, and are only reported if

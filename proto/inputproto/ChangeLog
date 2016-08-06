@@ -1,3 +1,56 @@
+commit 6946d497e3fe496818fa70de6702934bf70e44ec
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Apr 4 12:28:42 2016 +1000
+
+    inputproto 2.3.2
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 1dbdc297d915e4979a7823d6a569d9c7fed14617
+Author: Andreas Boll <andreas.boll.dev@gmail.com>
+Date:   Fri Dec 11 10:49:33 2015 +0100
+
+    specs: Set TZ=UTC before calling asciidoc
+    
+    Set TZ=UTC before calling asciidoc to make the embedded dates invariant
+    to timezones in order to make the package build reproducibly.
+    
+    Fixes bug:
+    https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=795981
+    
+    v2: Set TZ=UTC after $(AM_V_GEN) (fixes non-verbose build)
+    
+    Suggested-by: Eduard Sanou <dhole@openmailbox.org>
+    Signed-off-by: Andreas Boll <andreas.boll.dev@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 7c7c2c18864d166391e49758d83e9cc601bbfb17
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 27 14:22:58 2014 +1000
+
+    specs: rename EVENTMASK to EVTYPEMASK
+    
+    EVENTMASK was used twice in the spec, once as the actual bitmask for events,
+    once as the set of deviceid, mask length and mask.
+    
+    The libXi public API uses XIEventMask for the latter data triplet, so leave
+    EVENTMASK, and rename the pure bitmask to EVTYPEMASK.
+    
+    Reported-by: Gabriel Laskar <gabriel@lse.epita.fr>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+
+commit 81378a1e7139af9d476d90df8737c0c1a58670f3
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Aug 25 11:04:38 2014 +1000
+
+    specs: note the (unused) time field in XIPassiveGrabDevice
+    
+    We don't actually use it either in libXi or in the server, it's a copy/paste
+    error that never got noticed and removed.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit 343ff0938f592876b9d82c966f166bf45a78c3c8
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri May 30 11:25:39 2014 +1000
