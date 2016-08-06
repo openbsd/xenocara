@@ -1,3 +1,28 @@
+commit b2406ed9031991b7ddc5b76b308623afc8a590c5
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Wed May 25 18:53:28 2016 -0700
+
+    libXfixes 5.0.2
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 1702cdfe45c9bdd7dacfc8f27a49f89fcd1d02c3
+Author: Michael Joost <mehl@michael-joost.de>
+Date:   Mon Nov 18 16:11:26 2013 +0100
+
+    Remove fallback for _XEatDataWords, require libX11 1.6 for it
+    
+    _XEatDataWords was orignally introduced with the May 2013 security
+    patches, and in order to ease the process of delivering those,
+    fallback versions of _XEatDataWords were included in the X extension
+    library patches so they could be applied to older versions that didn't
+    have libX11 1.6 yet.   Now that we're past that hurdle, we can drop
+    the fallbacks and just require libX11 1.6 for building new versions
+    of the extension libraries.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 0cb446962381f750e05d97bfb974ca1e32481d5d
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue May 28 21:11:10 2013 -0700

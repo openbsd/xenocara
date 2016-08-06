@@ -32,7 +32,7 @@ AC_PREREQ([2.60])
 # that 'revision' number appears in Xfixes.h and has to be manually
 # synchronized.
 #
-AC_INIT(libXfixes, [5.0.1],
+AC_INIT(libXfixes, [5.0.2],
 	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXfixes])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -55,13 +55,7 @@ FIXESEXT_VERSION=[`echo $VERSION | sed 's/^\([0-9][0-9]*\.[0-9][0-9]*\).*$/\1/'`
 AC_SUBST(FIXESEXT_VERSION)
 
 # Obtain compiler/linker options for depedencies
-PKG_CHECK_MODULES(FIXESEXT, xproto [fixesproto >= $FIXESEXT_VERSION] xextproto x11)
-
-# Check for _XEatDataWords function that may be patched into older Xlib releases
-SAVE_LIBS="$LIBS"
-LIBS="$FIXESEXT_LIBS"
-AC_CHECK_FUNCS([_XEatDataWords])
-LIBS="$SAVE_LIBS"
+PKG_CHECK_MODULES(FIXESEXT, xproto [fixesproto >= $FIXESEXT_VERSION] xextproto [x11 >= 1.6])
 
 
 AC_CONFIG_FILES([Makefile
