@@ -50,7 +50,7 @@ XIQueryDevice(Display *dpy, int deviceid, int *ndevices_return)
 
     LockDisplay(dpy);
     if (_XiCheckExtInit(dpy, XInput_2_0, extinfo) == -1)
-	goto error;
+        goto error_unlocked;
 
     GetReq(XIQueryDevice, req);
     req->reqType  = extinfo->codes->major_opcode;
@@ -105,6 +105,7 @@ XIQueryDevice(Display *dpy, int deviceid, int *ndevices_return)
 
 error:
     UnlockDisplay(dpy);
+error_unlocked:
     SyncHandle();
     *ndevices_return = -1;
     return NULL;

@@ -49,14 +49,14 @@ XIChangeHierarchy(Display* dpy,
     xXIChangeHierarchyReq *req;
     XExtDisplayInfo *info = XInput_find_display(dpy);
     char *data = NULL, *dptr;
-    int dlen = 0, i;
+    int dlen = 0, i, ret = Success;
 
     LockDisplay(dpy);
     if (_XiCheckExtInit(dpy, XInput_2_0, info) == -1)
 	return (NoSuchExtension);
 
     if (num_changes <= 0)
-        return Success;
+        goto out;
 
     GetReq(XIChangeHierarchy, req);
     req->reqType = info->codes->major_opcode;
@@ -91,8 +91,10 @@ XIChangeHierarchy(Display* dpy,
 
     req->length += dlen / 4; /* dlen is 4-byte aligned */
     data = Xmalloc(dlen);
-    if (!data)
-        return BadAlloc;
+    if (!data) {
+        ret = BadAlloc;
+        goto out;
+    }
 
     dptr = data;
     for (i = 0, any = changes; i < num_changes; i++, any++)
@@ -109,7 +111,7 @@ XIChangeHierarchy(Display* dpy,
                     c->name_len = strlen(C->name);
                     c->length = (sizeof(xXIAddMasterInfo) + c->name_len + 3)/4;
                     strncpy((char*)&c[1], C->name, c->name_len);
-                    dptr += c->length;
+                    dptr += 4 * c->length;
                 }
                 break;
             case XIRemoveMaster:
@@ -155,8 +157,10 @@ XIChangeHierarchy(Display* dpy,
     }
 
     Data(dpy, data, dlen);
+
+out:
     Xfree(data);
     UnlockDisplay(dpy);
     SyncHandle();
-    return Success;
+    return ret;
 }

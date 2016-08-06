@@ -380,7 +380,7 @@ _XiCheckExtInit(
 	    return (-1);
 	}
 	((XInputData *) info->data)->vers =
-	    _XiGetExtensionVersion(dpy, "XInputExtension", info);
+	    _XiGetExtensionVersionRequest(dpy, "XInputExtension", info->codes->major_opcode);
     }
 
     if (_XiCheckVersion(info, version_index) < 0) {
@@ -1521,7 +1521,7 @@ wireToDeviceEvent(xXIDeviceEvent *in, XGenericEventCookie* cookie)
     out = next_block(&ptr_lib, sizeof(XIDeviceEvent));
     out->display = cookie->display;
     out->type = in->type;
-    out->serial = in->sequenceNumber;
+    out->serial = cookie->serial;
     out->extension = in->extension;
     out->evtype = in->evtype;
     out->send_event = ((in->type & 0x80) != 0);
@@ -1794,7 +1794,7 @@ wireToDeviceChangedEvent(xXIDeviceChangedEvent *in, XGenericEventCookie *cookie)
     cookie->data = out = malloc(sizeof(XIDeviceChangedEvent) + len);
 
     out->type = in->type;
-    out->serial = in->sequenceNumber;
+    out->serial = cookie->serial;
     out->display = cookie->display;
     out->extension = in->extension;
     out->evtype = in->evtype;
@@ -1827,7 +1827,7 @@ wireToHierarchyChangedEvent(xXIHierarchyEvent *in, XGenericEventCookie *cookie)
     out->info           = (XIHierarchyInfo*)&out[1];
     out->display        = cookie->display;
     out->type           = in->type;
-    out->serial         = in->sequenceNumber;
+    out->serial         = cookie->serial;
     out->extension      = in->extension;
     out->evtype         = in->evtype;
     out->send_event = ((in->type & 0x80) != 0);
@@ -1868,7 +1868,7 @@ wireToRawEvent(XExtDisplayInfo *info, xXIRawEvent *in, XGenericEventCookie *cook
 
     out = next_block(&ptr, sizeof(XIRawEvent));
     out->type           = in->type;
-    out->serial         = in->sequenceNumber;
+    out->serial         = cookie->serial;
     out->display        = cookie->display;
     out->extension      = in->extension;
     out->evtype         = in->evtype;
@@ -1919,7 +1919,7 @@ wireToEnterLeave(xXIEnterEvent *in, XGenericEventCookie *cookie)
     out->buttons.mask = (unsigned char*)&out[1];
 
     out->type           = in->type;
-    out->serial         = in->sequenceNumber;
+    out->serial         = cookie->serial;
     out->display        = cookie->display;
     out->extension      = in->extension;
     out->evtype         = in->evtype;
@@ -1962,7 +1962,7 @@ wireToPropertyEvent(xXIPropertyEvent *in, XGenericEventCookie *cookie)
     cookie->data = out;
 
     out->type           = in->type;
-    out->serial         = in->sequenceNumber;
+    out->serial         = cookie->serial;
     out->extension      = in->extension;
     out->evtype         = in->evtype;
     out->send_event = ((in->type & 0x80) != 0);
@@ -1983,7 +1983,7 @@ wireToTouchOwnershipEvent(xXITouchOwnershipEvent *in,
     cookie->data = out;
 
     out->type           = in->type;
-    out->serial         = in->sequenceNumber;
+    out->serial         = cookie->serial;
     out->display        = cookie->display;
     out->extension      = in->extension;
     out->evtype         = in->evtype;
@@ -2011,7 +2011,7 @@ wireToBarrierEvent(xXIBarrierEvent *in, XGenericEventCookie *cookie)
 
     out->display    = cookie->display;
     out->type       = in->type;
-    out->serial     = in->sequenceNumber;
+    out->serial     = cookie->serial;
     out->extension  = in->extension;
     out->evtype     = in->evtype;
     out->send_event = ((in->type & 0x80) != 0);

@@ -41,10 +41,8 @@ XIQueryVersion(Display *dpy, int *major_inout, int *minor_inout)
 
     XExtDisplayInfo *info = XInput_find_display(dpy);
 
-    LockDisplay(dpy);
     rc = _xiQueryVersion(dpy, major_inout, minor_inout, info);
 
-    UnlockDisplay(dpy);
     SyncHandle();
     return rc;
 }
@@ -54,6 +52,8 @@ _xiQueryVersion(Display * dpy, int *major, int *minor, XExtDisplayInfo *info)
 {
     xXIQueryVersionReq *req;
     xXIQueryVersionReply rep;
+
+    LockDisplay(dpy);
 
     /* This could mean either a malloc problem, or supported
         version < XInput_2_0 */
@@ -82,9 +82,13 @@ _xiQueryVersion(Display * dpy, int *major, int *minor, XExtDisplayInfo *info)
     req->minor_version = *minor;
 
     if (!_XReply(dpy, (xReply*)&rep, 0, xTrue)) {
+        UnlockDisplay(dpy);
 	return BadImplementation;
     }
+
     *major = rep.major_version;
     *minor = rep.minor_version;
+
+    UnlockDisplay(dpy);
     return Success;
 }

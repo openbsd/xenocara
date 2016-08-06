@@ -40,7 +40,7 @@ static Status
 _XIAllowEvents(Display *dpy, int deviceid, int event_mode, Time time,
                     unsigned int touchid, Window grab_window)
 {
-    Bool have_XI22 = True;
+    Bool have_XI22 = False;
     xXIAllowEventsReq *req;
     xXI2_2AllowEventsReq *req_XI22;
 
@@ -50,7 +50,7 @@ _XIAllowEvents(Display *dpy, int deviceid, int event_mode, Time time,
     if (_XiCheckExtInit(dpy, XInput_2_0, extinfo) == -1)
 	return (NoSuchExtension);
 
-    if (_XiCheckExtInit(dpy, XInput_2_2, extinfo) == 0)
+    if (_XiCheckVersion(extinfo, XInput_2_2) >= 0)
         have_XI22 = True;
 
     if (have_XI22)

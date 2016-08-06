@@ -1,3 +1,163 @@
+commit 2286282f965064176b3b1492646c6e2e0f4ab7dd
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Dec 22 11:20:01 2015 +1000
+
+    libXi 1.7.6
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 13f25bfb55f4a0bc1f614cbf9b0b13a50ecad8a0
+Author: Javier Pello <javier.pello@urjc.es>
+Date:   Wed Oct 7 12:41:01 2015 +0200
+
+    Fix const compiler warnings
+    
+    When invoking Data, Data16 and Data32 from XChangeDeviceProperty,
+    we must cast the data pointer to the right type, but we do not need
+    to cast constness away. This change allows to enable -Wcast-qual on
+    the build and have it complete without warnings.
+    
+    Signed-off-by: Javier Pello <javier.pello@urjc.es>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 380861589690bcbe8b04b7a2c23b5dd5d10c4bf8
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 19 11:46:41 2015 +1000
+
+    Don't use raw serial numbers in XIEvents
+    
+    cookie->serial is an Xlib contoction, provided by _XSetLastRequestRead(). This
+    serial may be different to the raw serial number from the wire protocol.
+    This causes issues when the raw serial is used to e.g. compare the event to
+    other non-XI events.
+    
+    Use the cookie's serial number instead.
+    
+    https://bugzilla.gnome.org/show_bug.cgi?id=756649
+    
+    See also https://bugs.freedesktop.org/show_bug.cgi?id=64687
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit f180dff710dc54d00e0e26b84de053151f8f207e
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Sep 10 01:16:19 2015 +1000
+
+    libXi 1.7.5
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 05c86e53c0bae30e58b32b94e191c8720990918a
+Author: Cosimo Cecchi <cosimoc@gnome.org>
+Date:   Tue Feb 24 07:49:34 2015 +1000
+
+    Fix version check in _XIAllowEvents
+    
+    Commit 5810d0797160a97012664ffe719a59e1b288a525 changed _XIAllowEvents() to
+    use _XiCheckVersion() instead of _XiCheckExtInit() to avoid a double display
+    unlock, but it failed to correctly check for the version, since we should set
+    have_XI22 to True for every version greater or equal to 2.2.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c648441036cf5ffc5225cd484e2c906d374f0a4b
+Author: Michal Srb <msrb@suse.com>
+Date:   Mon Nov 3 12:43:40 2014 +0200
+
+    XIGrabDevice: Unlock display in error path.
+    
+    Signed-off-by: Michal Srb <msrb@suse.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 29c77457ad86966ae2204b865fb8b437269063c4
+Author: Michal Srb <msrb@suse.com>
+Date:   Sat Nov 1 20:00:57 2014 +0200
+
+    Refactor XGetExtensionVersion.
+    
+    _XiGetExtensionVersion was called from XGetExtensionVersion and from
+    _XiCheckExtInit. When called from _XiCheckExtInit, nothing accounted for the
+    fact that it can return ((XExtensionVersion *) NoSuchExtension) in case of
+    error. Also it recursively calls _XiCheckExtInit potentionally causing multiple
+    unlocks if _XiCheckExtInit fails.
+    -> Remove it and call directly _XiGetExtensionVersionRequest and only call
+    _XiCheckExtInit only from XGetExtensionVersion.
+    
+    Signed-off-by: Michal Srb <msrb@suse.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 5810d0797160a97012664ffe719a59e1b288a525
+Author: Michal Srb <msrb@suse.com>
+Date:   Sat Nov 1 20:00:56 2014 +0200
+
+    Fix logic in _XIAllowEvents and prevent double unlock.
+    
+    Replacing the second _XiCheckExtInit with _XiCheckVersion prevents possible
+    double unlock as _XiCheckExtInit actually unlocks the display when it returns
+    -1.
+    
+    Signed-off-by: Michal Srb <msrb@suse.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit f699770e7c92da1dbf16892fde83438f0b79c979
+Author: Michal Srb <msrb@suse.com>
+Date:   Sat Nov 1 20:00:54 2014 +0200
+
+    XIGetClientPointer: Return False on error.
+    
+    Not NoSuchExtension which is 1 = True!
+    
+    Signed-off-by: Michal Srb <msrb@suse.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit dc1f8c6ec1ba8135afa185c8e8360c1ed90bf96c
+Author: Michal Srb <msrb@suse.com>
+Date:   Sat Nov 1 20:00:53 2014 +0200
+
+    Do not return NoSuchExtension casted to pointer as an error.
+    
+    Several functions were returning NoSuchExtension casted to a pointer in case of
+    an error. Often in parallel with returning NULL in case of another error. It is
+    undocumented and certainly wrong.
+    
+    Signed-off-by: Michal Srb <msrb@suse.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 83261c52a17543437882e2863b7f06a92c9039f8
+Author: Michal Srb <msrb@suse.com>
+Date:   Sat Nov 1 20:00:52 2014 +0200
+
+    XIChangeHierarchy: Add missing unlock.
+    
+    When num_changes <= 0 or Xmalloc fails, the display has to be unlocked.
+    
+    Signed-off-by: Michal Srb <msrb@suse.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 22ae8d4f26e92b17e1ce8239a38481933d6f1ca7
+Author: Michal Srb <msrb@suse.com>
+Date:   Sat Nov 1 20:00:51 2014 +0200
+
+    Fix double unlock when _XiCheckExtInit return -1.
+    
+    _XiCheckExtInit unlocks the display if it fails and returns -1. Most callers
+    account for it properly, but few didn't.
+    
+    Signed-off-by: Michal Srb <msrb@suse.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 71a42145b678be623e30bd5bf55833a04f14376f
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Mon Oct 27 19:00:36 2014 +0100
+
+    Advance the request buffer by the right amount in XIChangeHierarchy
+    
+    c->length is in 4-byte units, dptr is a char *, so we need to advance
+    dptr by 4 * length to get the position of the next HierarchyChangeInfo.
+    
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
 commit 8c255b30f3a4ed8bf67e6bb76df47cbd480735f8
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri Jul 18 16:45:51 2014 +1000

@@ -60,7 +60,7 @@ XISelectEvents(Display* dpy, Window win, XIEventMask* masks, int num_masks)
     LockDisplay(dpy);
     if (_XiCheckExtInit(dpy, XInput_2_0, info) == -1) {
         r = NoSuchExtension;
-        goto out;
+        goto out_unlocked;
     }
 
     for (i = 0; i < num_masks; i++) {
@@ -114,6 +114,7 @@ XISelectEvents(Display* dpy, Window win, XIEventMask* masks, int num_masks)
     free(buff);
 out:
     UnlockDisplay(dpy);
+out_unlocked:
     SyncHandle();
     return r;
 
@@ -134,7 +135,7 @@ XIGetSelectedEvents(Display* dpy, Window win, int *num_masks_return)
     *num_masks_return = -1;
     LockDisplay(dpy);
     if (_XiCheckExtInit(dpy, XInput_2_0, info) == -1)
-        goto out;
+        goto out_unlocked;
 
     GetReq(XIGetSelectedEvents, req);
 
@@ -203,6 +204,8 @@ out:
     Xfree(mask_in);
 
     UnlockDisplay(dpy);
+
+out_unlocked:
     SyncHandle();
 
     return mask_out;

@@ -68,12 +68,16 @@ XGetExtensionVersion(register Display * dpy, _Xconst char *name)
     XExtDisplayInfo *info = XInput_find_display(dpy);
 
     LockDisplay(dpy);
-    ext = _XiGetExtensionVersion(dpy, name, info);
-    if (ext != (XExtensionVersion *) NoSuchExtension) {
-	UnlockDisplay(dpy);
-	SyncHandle();
-    }
-    return (ext);
+
+    if (_XiCheckExtInit(dpy, Dont_Check, info) == -1)
+        return NULL;
+
+    ext = _XiGetExtensionVersionRequest(dpy, name, info->codes->major_opcode);
+
+    UnlockDisplay(dpy);
+    SyncHandle();
+
+    return ext;
 }
 
 _X_HIDDEN XExtensionVersion*
@@ -91,7 +95,7 @@ _XiGetExtensionVersionRequest(Display *dpy, _Xconst char *name, int xi_opcode)
     _XSend(dpy, name, (long)req->nbytes);
 
     if (!_XReply(dpy, (xReply *) & rep, 0, xTrue)) {
-	return (XExtensionVersion *) NULL;
+	return NULL;
     }
 
     ext = (XExtensionVersion *) Xmalloc(sizeof(XExtensionVersion));
@@ -104,14 +108,4 @@ _XiGetExtensionVersionRequest(Display *dpy, _Xconst char *name, int xi_opcode)
     }
 
     return ext;
-}
-
-_X_HIDDEN XExtensionVersion *
-_XiGetExtensionVersion(register Display * dpy, _Xconst char *name,
-                       XExtDisplayInfo *info)
-{
-    if (_XiCheckExtInit(dpy, Dont_Check, info) == -1)
-	return ((XExtensionVersion *) NoSuchExtension);
-
-    return _XiGetExtensionVersionRequest(dpy, name, info->codes->major_opcode);
 }

@@ -78,7 +78,7 @@ XGetDeviceKeyMapping(register Display * dpy, XDevice * dev,
 
     LockDisplay(dpy);
     if (_XiCheckExtInit(dpy, XInput_Initial_Release, info) == -1)
-	return ((KeySym *) NoSuchExtension);
+        return NULL;
 
     GetReq(GetDeviceKeyMapping, req);
     req->reqType = info->codes->major_opcode;

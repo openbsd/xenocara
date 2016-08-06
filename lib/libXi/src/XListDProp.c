@@ -51,7 +51,7 @@ XListDeviceProperties(Display* dpy, XDevice* dev, int *nprops_return)
     LockDisplay(dpy);
     *nprops_return = 0;
     if (_XiCheckExtInit(dpy, XInput_Initial_Release, info) == -1)
-	goto cleanup;
+        return NULL;
 
     GetReq(ListDeviceProperties, req);
     req->reqType = info->codes->major_opcode;

@@ -53,14 +53,20 @@ XIGrabDevice(Display* dpy, int deviceid, Window grab_window, Time time,
 
     if (mask->mask_len > INT_MAX - 3 ||
         (mask->mask_len + 3)/4 >= 0xffff)
-        return BadValue;
+    {
+        reply.status = BadValue;
+        goto out;
+    }
 
     /* mask->mask_len is in bytes, but we need 4-byte units on the wire,
      * and they need to be padded with 0 */
     len = (mask->mask_len + 3)/4;
     buff = calloc(4, len);
     if (!buff)
-        return BadAlloc;
+    {
+        reply.status =  BadAlloc;
+        goto out;
+    }
 
     GetReq(XIGrabDevice, req);
     req->reqType  = extinfo->codes->major_opcode;
@@ -83,6 +89,7 @@ XIGrabDevice(Display* dpy, int deviceid, Window grab_window, Time time,
     if (_XReply(dpy, (xReply *)&reply, 0, xTrue) == 0)
 	reply.status = GrabSuccess;
 
+out:
     UnlockDisplay(dpy);
     SyncHandle();
 

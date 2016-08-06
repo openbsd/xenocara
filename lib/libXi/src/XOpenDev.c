@@ -73,7 +73,7 @@ XOpenDevice(
 
     LockDisplay(dpy);
     if (_XiCheckExtInit(dpy, XInput_Initial_Release, info) == -1)
-	return ((XDevice *) NoSuchExtension);
+        return NULL;
 
     GetReq(OpenDevice, req);
     req->reqType = info->codes->major_opcode;

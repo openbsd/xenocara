@@ -78,7 +78,7 @@ XQueryDeviceState(
 
     LockDisplay(dpy);
     if (_XiCheckExtInit(dpy, XInput_Initial_Release, info) == -1)
-	return ((XDeviceState *) NoSuchExtension);
+        return NULL;
 
     GetReq(QueryDeviceState, req);
     req->reqType = info->codes->major_opcode;

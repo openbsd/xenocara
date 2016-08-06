@@ -73,7 +73,7 @@ XGetDeviceModifierMapping(
 
     LockDisplay(dpy);
     if (_XiCheckExtInit(dpy, XInput_Initial_Release, info) == -1)
-	return ((XModifierKeymap *) NoSuchExtension);
+        return NULL;
 
     GetReq(GetDeviceModifierMapping, req);
     req->reqType = info->codes->major_opcode;

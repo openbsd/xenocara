@@ -49,7 +49,7 @@ XIGetClientPointer(Display* dpy, Window win, int *deviceid)
 
     LockDisplay(dpy);
     if (_XiCheckExtInit(dpy, Dont_Check, info) == -1)
-	return (NoSuchExtension);
+        return False;
 
     GetReq(XIGetClientPointer, req);
     req->reqType = info->codes->major_opcode;

@@ -51,7 +51,7 @@ XIListProperties(Display* dpy, int deviceid, int *num_props_return)
     LockDisplay(dpy);
     *num_props_return = 0;
     if (_XiCheckExtInit(dpy, XInput_2_0, info) == -1)
-	goto cleanup;
+        goto cleanup_unlocked;
 
     GetReq(XIListProperties, req);
     req->reqType = info->codes->major_opcode;
@@ -76,6 +76,7 @@ XIListProperties(Display* dpy, int deviceid, int *num_props_return)
 
 cleanup:
     UnlockDisplay(dpy);
+cleanup_unlocked:
     SyncHandle();
     return props;
 }
