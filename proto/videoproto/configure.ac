@@ -3,7 +3,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([VideoProto], [2.3.2],
+AC_INIT([VideoProto], [2.3.3],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg])
 AC_CONFIG_SRCDIR([Makefile.am])
 
@@ -16,5 +16,6 @@ m4_ifndef([XORG_MACROS_VERSION],
 XORG_MACROS_VERSION(1.3)
 XORG_DEFAULT_OPTIONS
 
-AC_OUTPUT([Makefile
+AC_CONFIG_FILES([Makefile
            videoproto.pc])
+AC_OUTPUT
