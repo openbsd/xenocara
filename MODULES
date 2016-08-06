@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.350 2016/08/03 20:33:55 matthieu Exp $
+# $OpenBSD: MODULES,v 1.351 2016/08/06 11:16:08 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -52,8 +52,8 @@ app/xgamma		1.0.6	7.7+
 app/xgc			1.0.5
 app/xhost		1.0.7	7.7+
 app/xinit		1.3.4
-app/xinput		1.6.2	7.7+	needs-update
-app/xkbcomp		1.3.1	7.7+	needs-update
+app/xinput		1.6.2	7.7+
+app/xkbcomp		1.3.1	7.7+
 app/xkbevd		1.1.4	7.7+
 app/xkbprint		1.0.4
 app/xkbutils		1.0.4	7.7+
@@ -184,11 +184,11 @@ lib/libXcursor			1.1.14	7.7+
 lib/libXdamage			1.1.4	7.7+
 lib/libXdmcp			1.1.2	7.7+
 lib/libXext			1.3.3	7.7+
-lib/libXfixes			5.0.2	7.7+	needs-update
+lib/libXfixes			5.0.2	7.7+
 lib/libXfont			1.5.1	7.7+
 lib/libXfontcache		1.0.5
 lib/libXft			2.3.2	7.7+
-lib/libXi			1.7.6	7.7+	needs-update
+lib/libXi			1.7.6	7.7+
 lib/libXinerama			1.1.3	7.7+
 lib/libXmu			1.1.2	7.7+
 lib/libXpm			3.5.11	7.7+
@@ -230,7 +230,7 @@ proto/fixesproto		5.0	7.7
 proto/fontcacheproto		0.1.3
 proto/fontsproto		2.1.3	7.7
 proto/glproto			1.4.17	7.7+
-proto/inputproto		2.3.2	7.7+	needs-update
+proto/inputproto		2.3.2	7.7+
 proto/kbproto			1.0.7	7.7+
 proto/pmproto			1.0.3
 proto/presentproto		1.0	7.7+
@@ -239,8 +239,8 @@ proto/recordproto		1.14.2	7.7
 proto/renderproto		0.11.1	7.7
 proto/resourceproto		1.2.0	7.7
 proto/scrnsaverproto		1.2.2	7.7
-proto/videoproto		2.3.3	7.7+	needs-update
-proto/x11proto			7.0.29	7.7+	needs-update
+proto/videoproto		2.3.3	7.7+
+proto/x11proto			7.0.29	7.7+
 proto/xcb-proto			1.12	7.7+	needs-update
 proto/xcmiscproto		1.2.2	7.7
 proto/xextproto			7.3.0	7.7+
