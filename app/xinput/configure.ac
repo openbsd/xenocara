@@ -22,14 +22,13 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xinput], [1.6.1],
+AC_INIT([xinput], [1.6.2],
 	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xinput])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
 
 # Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
@@ -54,6 +53,7 @@ PKG_CHECK_MODULES(XI21, [xi >= 1.4.99.1] [inputproto >= 2.0.99.1],
 PKG_CHECK_MODULES(XI22, [xi >= 1.5.99.1] [inputproto >= 2.1.99.1],
                   AC_DEFINE(HAVE_XI22, 1, [XI2.2 available]));
 
-AC_OUTPUT([Makefile
+AC_CONFIG_FILES([Makefile
            src/Makefile
            man/Makefile])
+AC_OUTPUT

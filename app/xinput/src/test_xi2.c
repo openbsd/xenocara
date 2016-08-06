@@ -60,6 +60,15 @@ static void print_deviceevent(XIDeviceEvent* event)
             printf("    flags: %s\n", (event->flags & XIPointerEmulated) ?  "emulated" : "");
             break;
 #endif
+#if HAVE_XI22
+        case XI_TouchBegin:
+        case XI_TouchUpdate:
+        case XI_TouchEnd:
+            printf("    flags:%s%s\n",
+                   (event->flags & XITouchPendingEnd) ?  " pending_end" : "",
+                   (event->flags & XITouchEmulatingPointer) ?  " emulating" : "");
+            break;
+#endif
     }
 
     printf("    root: %.2f/%.2f\n", event->root_x, event->root_y);
@@ -149,7 +158,6 @@ static void print_rawevent(XIRawEvent *event)
 
     printf("    device: %d (%d)\n", event->deviceid, event->sourceid);
     printf("    detail: %d\n", event->detail);
-    printf("    valuators:\n");
 #if HAVE_XI21
     switch(event->evtype) {
         case XI_RawButtonPress:
@@ -160,6 +168,7 @@ static void print_rawevent(XIRawEvent *event)
     }
 #endif
 
+    printf("    valuators:\n");
     val = event->valuators.values;
     raw_val = event->raw_values;
     for (i = 0; i < event->valuators.mask_len * 8; i++)

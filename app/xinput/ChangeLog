@@ -1,3 +1,73 @@
+commit 2865729adc2f004b61ba853d98a4c2758fd0b601
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Oct 20 07:35:40 2015 +1000
+
+    xinput 1.6.2
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit bc9026e00037845d58bc25c70dda46f192907dd4
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Aug 18 17:15:18 2015 +1000
+
+    Print touch event flags in test-xi2
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 90463ec26d4c89bdf63aab4ddac9f8295b6589cc
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Apr 30 07:47:28 2015 +1000
+
+    property: return EXIT_FAILURE if at least one device fails (#90226)
+    
+    list-props allows for multiple devices to be queried simultaneously, so we
+    don't break out of the loop but rather change the exit code if at least one of
+    the devices doesn't exist.
+    
+    X.Org Bug 90226 <http://bugs.freedesktop.org/show_bug.cgi?id=90226>
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 4ed64e29a0c4c728f3eff64725c0ed386d172ae4
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Nov 6 11:44:55 2014 +1000
+
+    Fix valuator printf output in test-xi2
+    
+    Avoid mixing event flags into the valuator output
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 904a32d908219d6fea833576f7c31727bd3aea2f
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Nov 25 14:51:50 2013 +1000
+
+    Fix crash for enable/disable without a device argument
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 68e488725a95508378d8a24a9da609a7e80e2ef7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Oct 25 21:51:37 2013 -0400
+
+    config: replace deprecated use of AC_OUTPUT with AC_CONFIG_FILES
+    
+    Fix Automake warning: AC_OUTPUT should be used without arguments.
+    www.gnu.org/software/autoconf/manual/autoconf.html#Configuration-Files
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 1f812f44a3a22e27de00a447c34657e590231a76
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Sep 16 09:08:29 2013 +1000
+
+    Drop AM_MAINTAINER_MODE
+    
+    See http://blogs.gnome.org/desrt/2011/09/08/am_maintainer_mode-is-not-cool/
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit 82f1902fef60569680f3a27bf6d0c8da5bafc8a6
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Mon Sep 16 09:02:05 2013 +1000
