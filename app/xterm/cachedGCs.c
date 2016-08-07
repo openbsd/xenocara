@@ -1,7 +1,7 @@
-/* $XTermId: cachedGCs.c,v 1.63 2014/12/18 21:56:08 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.64 2016/05/16 09:26:15 tom Exp $ */
 
 /*
- * Copyright 2007-2011,2014 by Thomas E. Dickey
+ * Copyright 2007-2014,2016 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -527,12 +527,12 @@ setCgsFont(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, XTermFonts * font)
 void
 clrCgsFonts(XtermWidget xw, VTwin *cgsWin, XTermFonts * font)
 {
-    CgsCache *me;
-    int j, k;
-
     if (HaveFont(font)) {
+	int j;
 	for_each_gc(j) {
+	    CgsCache *me;
 	    if ((me = myCache(xw, cgsWin, (CgsEnum) j)) != 0) {
+		int k;
 		for (k = 0; k < DEPTH; ++k) {
 		    if (SameFont(LIST(k).font, font)) {
 			TRACE2(("clrCgsFonts %s gc %p(%d) %s\n",
@@ -565,13 +565,13 @@ getCgsGC(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId)
 {
     CgsCache *me;
     GC result = 0;
-    int j, k;
-    unsigned used = 0;
 
     if ((me = myCache(xw, cgsWin, cgsId)) != 0) {
 	TRACE2(("getCgsGC(%s, %s)\n",
 		traceVTwin(xw, cgsWin), traceCgsEnum(cgsId)));
 	if (me->mask != 0) {
+	    int j;
+	    unsigned used = 0;
 
 	    /* fill in the unchanged fields */
 	    if (!(me->mask & GC_CSet))
@@ -622,6 +622,7 @@ getCgsGC(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId)
 	    }
 
 	    if (result == 0) {
+		int k;
 		/* if none were empty, pick the least-used slot, to modify */
 		for (j = 0, k = -1; j < DEPTH; ++j) {
 		    if (used >= LIST(j).used) {
@@ -769,12 +770,12 @@ copyCgs(XtermWidget xw, VTwin *cgsWin, CgsEnum dstCgsId, CgsEnum srcCgsId)
 void
 redoCgs(XtermWidget xw, Pixel fg, Pixel bg, CgsEnum cgsId)
 {
-    int n;
     VTwin *cgsWin = WhichVWin(TScreenOf(xw));
     CgsCache *me = myCache(xw, cgsWin, cgsId);
 
     if (me != 0) {
 	CgsCacheData *save_data = me->data;
+	int n;
 
 	for (n = 0; n < DEPTH; ++n) {
 	    if (LIST(n).gc != 0 && HaveFont(LIST(n).font)) {
@@ -806,12 +807,13 @@ void
 swapCgs(XtermWidget xw, VTwin *cgsWin, CgsEnum dstCgsId, CgsEnum srcCgsId)
 {
     if (dstCgsId != srcCgsId) {
-	CgsCache *dst;
 	CgsCache *src;
-	CgsCache tmp;
 
 	if ((src = myCache(xw, cgsWin, srcCgsId)) != 0) {
+	    CgsCache *dst;
+
 	    if ((dst = myCache(xw, cgsWin, dstCgsId)) != 0) {
+		CgsCache tmp;
 		int srcIndex = dataIndex(src);
 		int dstIndex = dataIndex(dst);
 
@@ -831,9 +833,10 @@ GC
 freeCgs(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId)
 {
     CgsCache *me;
-    int j;
 
     if ((me = myCache(xw, cgsWin, cgsId)) != 0) {
+	int j;
+
 	for (j = 0; j < DEPTH; ++j) {
 	    if (LIST(j).gc != 0) {
 		TRACE(("freeCgs(%s, %s) gc %p(%d)\n",

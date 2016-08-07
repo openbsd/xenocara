@@ -1,7 +1,7 @@
-/* $XTermId: input.c,v 1.354 2015/04/10 10:50:21 tom Exp $ */
+/* $XTermId: input.c,v 1.355 2016/05/17 12:12:51 tom Exp $ */
 
 /*
- * Copyright 1999-2014,2015 by Thomas E. Dickey
+ * Copyright 1999-2015,2016 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -418,7 +418,7 @@ xtermStateToParam(XtermWidget xw, unsigned state)
     }
     if ((state & xw->work.meta_mods) != 0) {
 	modify_parm += MOD_META;
-	UIntClr(state, xw->work.meta_mods);
+	/* UIntClr(state, xw->work.meta_mods); */
     }
     if (modify_parm == MOD_NONE)
 	modify_parm = 0;
@@ -809,8 +809,12 @@ static Boolean
 lookupKeyData(KEY_DATA * kd, XtermWidget xw, XKeyEvent *event)
 {
     TScreen *screen = TScreenOf(xw);
-    TKeyboard *keyboard = &(xw->keyboard);
     Boolean result = True;
+#if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
+#if OPT_MOD_FKEYS
+    TKeyboard *keyboard = &(xw->keyboard);
+#endif
+#endif
 
     TRACE(("%s %#x\n", visibleEventType(event->type), event->keycode));
 
@@ -1224,7 +1228,6 @@ Input(XtermWidget xw,
 	unparseseq(xw, &reply);
 	key = True;
     } else if (kd.nbytes > 0) {
-	int prefix = 0;
 
 #if OPT_TEK4014
 	if (TEK4014_GIN(tekWidget)) {
@@ -1268,6 +1271,8 @@ Input(XtermWidget xw,
 	} else
 #endif /* OPT_MOD_FKEYS */
 	{
+	    int prefix = 0;
+
 #if OPT_NUM_LOCK
 	    /*
 	     * Send ESC if we have a META modifier and metaSendsEcape is true.
@@ -1357,7 +1362,7 @@ Input(XtermWidget xw,
 		} else if (kd.strbuf[0] == '?'
 			   && (evt_state & ControlMask) != 0) {
 		    kd.strbuf[0] = ANSI_DEL;
-		    UIntClr(evt_state, ControlMask);
+		    /* UIntClr(evt_state, ControlMask); */
 		}
 	    }
 	    if (prefix != 0)
@@ -1722,7 +1727,6 @@ static Boolean
 keyCanInsert(const char *parse)
 {
     Boolean result = False;
-    int ch;
     Boolean escape = False;
     Boolean quoted = False;
 
@@ -1736,7 +1740,7 @@ keyCanInsert(const char *parse)
     Cardinal n;
 
     while (*parse != '\0' && *parse != '\n') {
-	ch = CharOf(*parse++);
+	int ch = CharOf(*parse++);
 	if (escape) {
 	    escape = False;
 	} else if (ch == '\\') {
@@ -1801,13 +1805,12 @@ stripTranslations(const char *s, Bool onlyInsert)
 
 	if (dst != 0) {
 	    int state = 0;
-	    int ch = 0;
 	    int prv = 0;
 	    char *d = dst;
 
 	    TRACE(("stripping:\n%s\n", s));
 	    while (*s != '\0') {
-		ch = *s++;
+		int ch = *s++;
 		if (ch == '\n') {
 		    if (d != dst)
 			*d++ = (char) ch;
@@ -1870,10 +1873,10 @@ TranslationsUseKeyword(Widget w, char **cache, const char *keyword, Bool onlyIns
 	if (*cache != 0) {
 	    char *p = *cache;
 	    int state = 0;
-	    int now = ' ', prv;
+	    int now = ' ';
 
 	    while (*p != 0) {
-		prv = now;
+		int prv = now;
 		now = *p++;
 		if (now == ':'
 		    || now == '!') {
@@ -1960,9 +1963,7 @@ VTInitModifiers(XtermWidget xw)
 {
     Display *dpy = XtDisplay(xw);
     XModifierKeymap *keymap = XGetModifierMapping(dpy);
-    int i, j, k, l;
     KeySym keysym;
-    unsigned long mask;
     int min_keycode, max_keycode, keysyms_per_keycode = 0;
 
     if (keymap != 0) {
@@ -1979,6 +1980,8 @@ VTInitModifiers(XtermWidget xw)
 				     &keysyms_per_keycode);
 
 	if (theMap != 0) {
+	    int i, j, k, l;
+	    unsigned long mask;
 
 #if OPT_EXTRA_PASTE
 	    /*

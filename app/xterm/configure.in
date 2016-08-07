@@ -1,9 +1,9 @@
-dnl $XTermId: configure.in,v 1.336 2015/08/10 23:45:36 tom Exp $
+dnl $XTermId: configure.in,v 1.340 2016/05/28 16:51:40 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
 dnl
-dnl Copyright 1997-2014,2015 by Thomas E. Dickey
+dnl Copyright 1997-2015,2016 by Thomas E. Dickey
 dnl 
 dnl                         All Rights Reserved
 dnl 
@@ -58,7 +58,7 @@ AC_PROG_AWK
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_ARG_PROGRAM
-AC_CHECK_PROGS(LINT, tdlint lint alint)
+CF_PROG_LINT
 
 ###	checks for compiler characteristics
 CF_XOPEN_SOURCE
@@ -257,6 +257,7 @@ AC_CHECK_HEADERS( \
 	)
 
 CF_WITH_XPM
+CF_WITH_XINERAMA
 CF_X_ATHENA
 CF_TYPE_FD_MASK
 CF_TERMIO_C_ISPEED
@@ -933,6 +934,18 @@ if test "$enable_dec_locator" = yes ; then
 	AC_DEFINE(OPT_DEC_LOCATOR,1,[Define to 1 to enable DECterm Locator support])
 fi
 
+AC_MSG_CHECKING(if you want XHTML and SVG screen dump support)
+CF_ARG_ENABLE(screen-dumps,
+	[  --enable-screen-dumps   enable XHTML and SVG screen dumps],
+	[enable_screen_dumps=yes],
+	[enable_screen_dumps=no])
+AC_MSG_RESULT($enable_screen_dumps)
+if test "$enable_screen_dumps" = yes ; then
+	AC_DEFINE(OPT_SCREEN_DUMPS,1,[Define to 1 to enable XHTML and SVG screen dump support])
+	EXTRASRCS="$EXTRASRCS html.c svg.c"
+	EXTRAOBJS="$EXTRAOBJS html.o svg.o"
+fi
+
 AC_MSG_CHECKING(if you want ReGIS graphics support)
 CF_ARG_ENABLE(regis-graphics,
 	[  --enable-regis-graphics enable ReGIS graphics support],
@@ -985,8 +998,6 @@ CF_ARG_DISABLE(ziconbeep,
 AC_MSG_RESULT($enable_ziconbeep)
 test "$enable_ziconbeep" = no && AC_DEFINE(OPT_ZICONBEEP,0,[Define to 0 to disable -ziconbeep option])
 
-###############################################################################
-CF_XINERAMA
 ###############################################################################
 CF_HELP_MESSAGE(Testing/development Options:)
 

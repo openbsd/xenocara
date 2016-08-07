@@ -26,6 +26,8 @@
 *mainMenu*logging*Label:  Log to File
 *mainMenu*print*Label:  Print Window
 *mainMenu*redraw*Label:  Redraw Window
+*mainMenu*dump-html*Label:  XHTML Screen Dump
+*mainMenu*dump-svg*Label:  SVG Screen Dump
 *mainMenu*8-bit control*Label: 8-Bit Controls
 *mainMenu*backarrow key*Label: Backarrow Key
 *mainMenu*num-lock*Label: Alt/NumLock Modifiers

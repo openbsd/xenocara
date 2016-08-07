@@ -1,7 +1,7 @@
-/* $XTermId: trace.c,v 1.159 2015/03/02 02:00:48 tom Exp $ */
+/* $XTermId: trace.c,v 1.165 2016/05/31 00:48:42 tom Exp $ */
 
 /*
- * Copyright 1997-2014,2015 by Thomas E. Dickey
+ * Copyright 1997-2015,2016 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -55,6 +55,7 @@
 #include <X11/Xmu/Atoms.h>
 
 #ifdef HAVE_X11_TRANSLATEI_H
+#include <X11/ConvertI.h>
 #include <X11/TranslateI.h>
 #else
 #ifdef __cplusplus
@@ -278,7 +279,7 @@ visibleScsCode(int chrset)
     return result;
 }
 
-char *
+const char *
 visibleChars(const Char *buf, unsigned len)
 {
     static char *result;
@@ -286,14 +287,13 @@ visibleChars(const Char *buf, unsigned len)
 
     if (buf != 0) {
 	unsigned limit = ((len + 1) * 8) + 1;
-	char *dst;
 
 	if (limit > used) {
 	    used = limit;
 	    result = XtRealloc(result, used);
 	}
 	if (result != 0) {
-	    dst = result;
+	    char *dst = result;
 	    *dst = '\0';
 	    while (len--) {
 		unsigned value = *buf++;
@@ -309,7 +309,7 @@ visibleChars(const Char *buf, unsigned len)
     return NonNull(result);
 }
 
-char *
+const char *
 visibleIChars(const IChar *buf, unsigned len)
 {
     static char *result;
@@ -317,14 +317,13 @@ visibleIChars(const IChar *buf, unsigned len)
 
     if (buf != 0) {
 	unsigned limit = ((len + 1) * 8) + 1;
-	char *dst;
 
 	if (limit > used) {
 	    used = limit;
 	    result = XtRealloc(result, used);
 	}
 	if (result != 0) {
-	    dst = result;
+	    char *dst = result;
 	    *dst = '\0';
 	    while (len--) {
 		unsigned value = *buf++;
@@ -345,30 +344,12 @@ visibleIChars(const IChar *buf, unsigned len)
     return NonNull(result);
 }
 
-char *
+const char *
 visibleUChar(unsigned chr)
 {
     IChar buf[1];
     buf[0] = chr;
     return visibleIChars(buf, 1);
-}
-
-#define CASETYPE(name) case name: result = #name; break
-
-const char *
-visibleKeyboardType(xtermKeyboardType type)
-{
-    const char *result = "?";
-    switch (type) {
-	CASETYPE(keyboardIsLegacy);	/* bogus vt220 codes for F1-F4, etc. */
-	CASETYPE(keyboardIsDefault);
-	CASETYPE(keyboardIsHP);
-	CASETYPE(keyboardIsSCO);
-	CASETYPE(keyboardIsSun);
-	CASETYPE(keyboardIsTermcap);
-	CASETYPE(keyboardIsVT220);
-    }
-    return result;
 }
 
 const char *
@@ -563,14 +544,18 @@ void
 TraceScreen(XtermWidget xw, int whichBuf)
 {
     TScreen *screen = TScreenOf(xw);
-    int row, col;
 
     if (screen->editBuf_index[whichBuf]) {
+	int row;
+
 	TRACE(("TraceScreen %d:\n", whichBuf));
 	for (row = 0; row <= screen->max_row; ++row) {
 	    LineData *ld = getLineData(screen, row);
+
 	    TRACE((" %3d:", row));
 	    if (ld != 0) {
+		int col;
+
 		for (col = 0; col < ld->lineSize; ++col) {
 		    int ch = (int) ld->charData[col];
 		    if (ch < ' ')
@@ -666,12 +651,12 @@ TraceSizeHints(XSizeHints * hints)
     TRACE(("size hints:\n"));
     if (hints->flags & (USPosition | PPosition))
 	TRACE(("   position   %d,%d%s%s\n", hints->y, hints->x,
-	       hints->flags & USPosition ? " user" : "",
-	       hints->flags & PPosition ? " prog" : ""));
+	       (hints->flags & USPosition) ? " user" : "",
+	       (hints->flags & PPosition) ? " prog" : ""));
     if (hints->flags & (USSize | PSize))
 	TRACE(("   size       %d,%d%s%s\n", hints->height, hints->width,
-	       hints->flags & USSize ? " user" : "",
-	       hints->flags & PSize ? " prog" : ""));
+	       (hints->flags & USSize) ? " user" : "",
+	       (hints->flags & PSize) ? " prog" : ""));
     if (hints->flags & PMinSize)
 	TRACE(("   min        %d,%d\n", hints->min_height, hints->min_width));
     if (hints->flags & PMaxSize)

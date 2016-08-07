@@ -1,7 +1,7 @@
-/* $XTermId: xtermcap.c,v 1.48 2014/05/03 12:43:20 tom Exp $ */
+/* $XTermId: xtermcap.c,v 1.49 2016/05/22 18:31:20 tom Exp $ */
 
 /*
- * Copyright 2007-2011,2014 by Thomas E. Dickey
+ * Copyright 2007-2014,2016 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -223,17 +223,19 @@ loadTermcapStrings(TScreen *screen)
     Boolean result = True;
 
     if (screen->tcap_fkeys == 0) {
-	char name[80];
 	Cardinal want = XtNumber(table);
 	Cardinal have;
-	char *fkey;
 #ifdef USE_TERMCAP
 	char *area = screen->tcap_area;
 #endif
 
 	TRACE(("loadTermcapStrings\n"));
 	if ((screen->tcap_fkeys = TypeCallocN(char *, want)) != 0) {
+
 	    for (have = 0; have < want; ++have) {
+		char name[80];
+		char *fkey;
+
 #ifndef USE_TERMCAP
 		fkey = tigetstr(strcpy(name, table[have].ti));
 #else
@@ -265,13 +267,16 @@ keyIsDistinct(XtermWidget xw, int which)
 	if (table[which].param == SHIFT) {
 	    TScreen *screen = TScreenOf(xw);
 	    Cardinal k;
-	    char *fkey;
 
 	    if (loadTermcapStrings(screen)
 		&& screen->tcap_fkeys[which] != NO_STRING) {
+
 		for (k = 0; k < XtNumber(table); k++) {
+
 		    if (table[k].code == table[which].code
 			&& table[k].param == 0) {
+			char *fkey;
+
 			if ((fkey = screen->tcap_fkeys[k]) != NO_STRING
 			    && !strcmp(fkey, screen->tcap_fkeys[which])) {
 			    TRACE(("shifted/unshifted keys do not differ\n"));
@@ -351,7 +356,6 @@ int
 xtermcapKeycode(XtermWidget xw, const char **params, unsigned *state, Bool *fkey)
 {
     const TCAPINFO *data;
-    int which;
     int code = -1;
     char *name;
     const char *p;
@@ -366,6 +370,8 @@ xtermcapKeycode(XtermWidget xw, const char **params, unsigned *state, Bool *fkey
     *fkey = False;
 
     if (!IsEmpty(name) && (*p == 0 || *p == ';')) {
+	int which;
+
 	if ((which = lookupTcapByName(name)) >= 0) {
 	    if (keyIsDistinct(xw, which)) {
 		data = table + which;
@@ -454,10 +460,11 @@ xtermcapString(XtermWidget xw, int keycode, unsigned mask)
 
     if ((which = firstTcapByCode(keycode, param)) >= 0) {
 	TScreen *screen = TScreenOf(xw);
-	char *fkey;
 
 	if (loadTermcapStrings(screen)) {
 	    do {
+		char *fkey;
+
 		if ((fkey = screen->tcap_fkeys[which]) != NO_STRING) {
 		    StringInput(xw, (Char *) fkey, strlen(fkey));
 		    result = 1;
@@ -623,10 +630,9 @@ free_termcap(XtermWidget xw)
     if (screen->tcap_fkeys != 0) {
 	Cardinal want = XtNumber(table);
 	Cardinal have;
-	char *fkey;
 
 	for (have = 0; have < want; ++have) {
-	    fkey = screen->tcap_fkeys[have];
+	    char *fkey = screen->tcap_fkeys[have];
 	    if (fkey != 0 && fkey != NO_STRING) {
 		free(fkey);
 	    }

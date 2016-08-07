@@ -1,7 +1,7 @@
-/* $XTermId: doublechr.c,v 1.85 2014/05/08 01:08:39 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.86 2016/05/17 08:33:58 tom Exp $ */
 
 /*
- * Copyright 1997-2013,2014 by Thomas E. Dickey
+ * Copyright 1997-2014,2016 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -145,11 +145,12 @@ xterm_ResetDouble(XtermWidget xw)
 #if OPT_DEC_CHRSET
     TScreen *screen = TScreenOf(xw);
     Boolean changed = False;
-    LineData *ld;
     unsigned code;
     int row;
 
     for (row = 0; row < screen->max_row; ++row) {
+	LineData *ld;
+
 	if ((ld = getLineData(screen, ROW2INX(screen, row))) != 0) {
 	    code = GetLineDblCS(ld);
 	    if (code != CSET_SWL) {
@@ -261,14 +262,14 @@ xterm_DoubleGC(XtermWidget xw,
 {
     TScreen *screen = TScreenOf(xw);
     VTwin *cgsWin = WhichVWin(screen);
-    int n;
     char *name;
-    XTermFonts *data = 0;
     GC result = 0;
 
     if ((name = xtermSpecialFont(screen, attr_flags, draw_flags, chrset)) != 0) {
 	CgsEnum cgsId = WhichCgsId(attr_flags);
 	Boolean found = False;
+	XTermFonts *data = 0;
+	int n;
 
 	if ((n = xterm_Double_index(xw, chrset, attr_flags)) >= 0) {
 	    data = &(screen->double_fonts[n]);
@@ -287,7 +288,7 @@ xterm_DoubleGC(XtermWidget xw,
 	    XTermFonts temp;
 
 	    TRACE(("xterm_DoubleGC %s %d: %s\n",
-		   attr_flags & BOLD ? "BOLD" : "NORM", n, name));
+		   (attr_flags & BOLD) ? "BOLD" : "NORM", n, name));
 
 	    memset(&temp, 0, sizeof(temp));
 	    temp.fn = name;

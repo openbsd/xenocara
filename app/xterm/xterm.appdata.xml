@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Copyright 2014 Thomas Dickey <dickey@invisible-island.net> -->
+<!-- Copyright 2014,2016 Thomas Dickey <dickey@invisible-island.net> -->
 <application>
  <id type="desktop">xterm.desktop</id>
  <metadata_license>CC-BY-3.0</metadata_license>
@@ -20,6 +20,14 @@
  <screenshots>
   <screenshot type="default" width="813" height="539">http://invisible-island.net/xterm/images/merged-xterm-menus.png</screenshot>
  </screenshots>
+ <keywords>
+  <keyword>3D</keyword>
+  <keyword>shell</keyword>
+  <keyword>prompt</keyword>
+  <keyword>command</keyword>
+  <keyword>commandline</keyword>
+  <keyword>cmd</keyword>
+ </keywords>
  <url type="homepage">http://invisible-island.net/xterm/</url>
  <updatecontact>dickey@invisible-island.net</updatecontact>
 </application>

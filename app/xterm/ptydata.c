@@ -1,7 +1,7 @@
-/* $XTermId: ptydata.c,v 1.104 2014/05/26 14:46:18 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.105 2016/05/22 16:34:03 tom Exp $ */
 
 /*
- * Copyright 1999-2013,2014 by Thomas E. Dickey
+ * Copyright 1999-2014,2016 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -355,11 +355,10 @@ fakePtyData(PtyData *result, Char *next, Char *last)
 void
 trimPtyData(XtermWidget xw GCC_UNUSED, PtyData *data)
 {
-    int i;
-
     FlushLog(xw);
 
     if (data->next != data->buffer) {
+	int i;
 	int n = (int) (data->last - data->next);
 
 	TRACE(("shifting buffer down by %d\n", n));

@@ -20,8 +20,8 @@
 
                              Thomas Dickey
                       XFree86 Project (1996-2006)
-                    invisible-island.net (2006-2015)
-               updated for XTerm Patch #321 (2015/12/30)
+                    invisible-island.net (2006-2016)
+               updated for XTerm Patch #323 (2016/02/21)
 
 
 
@@ -513,6 +513,8 @@ CSI Pm i  Media Copy (MC).
             Ps = 0  -> Print screen (default).
             Ps = 4  -> Turn off printer controller mode.
             Ps = 5  -> Turn on printer controller mode.
+            Ps = 1  0  -> HTML screen dump.
+            Ps = 1  1  -> SVG screen dump.
 CSI ? Pm i
           Media Copy (MC, DEC-specific).
             Ps = 1  -> Print line containing cursor.
@@ -682,10 +684,10 @@ CSI Pm m  Character Attributes (SGR).
           These ISO-8613-3 controls are supported:
             Pm = 3 8 ; 2 ; Pr; Pg; Pb -> Set foreground color to the
           closest match in xterm's palette for the given RGB Pr/Pg/Pb.
-            Pm = 3 8 ; 5 ; Ps -> Set foreground color to the second Ps.
+            Pm = 3 8 ; 5 ; Ps -> Set foreground color to Ps.
             Pm = 4 8 ; 2 ; Pr; Pg; Pb -> Set background color to the
           closest match in xterm's palette for the given RGB Pr/Pg/Pb.
-            Pm = 4 8 ; 5 ; Ps -> Set background color to the second Ps.
+            Pm = 4 8 ; 5 ; Ps -> Set background color to Ps.
 
 CSI > Ps; Ps m
           Set or reset resource-values used by xterm to decide whether

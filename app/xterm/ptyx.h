@@ -1,7 +1,7 @@
-/* $XTermId: ptyx.h,v 1.825 2015/12/30 02:07:03 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.829 2016/05/29 20:32:48 tom Exp $ */
 
 /*
- * Copyright 1999-2014,2015 by Thomas E. Dickey
+ * Copyright 1999-2015,2016 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -324,6 +324,8 @@ typedef Char *UString;
 #define IsEmpty(s) ((s) == 0 || *(s) == '\0')
 #define IsSpace(c) ((c) == ' ' || (c) == '\t' || (c) == '\r' || (c) == '\n')
 
+#define CASETYPE(name) case name: result = #name; break
+
 #define CharOf(n) ((Char)(n))
 
 typedef struct {
@@ -530,6 +532,10 @@ typedef struct {
 
 #ifndef OPT_SIXEL_GRAPHICS
 #define OPT_SIXEL_GRAPHICS 0 /* true if xterm supports VT240-style sixel graphics */
+#endif
+
+#ifndef OPT_SCREEN_DUMPS
+#define OPT_SCREEN_DUMPS 0 /* true if xterm supports screen dumps */
 #endif
 
 #ifndef OPT_REGIS_GRAPHICS
@@ -2537,6 +2543,8 @@ typedef enum {			/* legal values for screen.eight_bit_meta */
     , ebLast
 } ebMetaModeTypes;
 
+#define NAME_OLD_KT " legacy"
+
 #if OPT_HP_FUNC_KEYS
 #define NAME_HP_KT " hp"
 #else
@@ -2575,9 +2583,7 @@ typedef enum {			/* legal values for screen.eight_bit_meta */
 #define TRACE_RC(code,func) func
 #endif
 
-#if OPT_TRACE
 extern	const char * visibleKeyboardType(xtermKeyboardType);
-#endif
 
 typedef struct
 {

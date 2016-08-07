@@ -1,7 +1,7 @@
-/* $XTermId: data.h,v 1.124 2014/03/02 12:01:26 tom Exp $ */
+/* $XTermId: data.h,v 1.127 2016/06/01 09:13:59 tom Exp $ */
 
 /*
- * Copyright 2002-2013,2014 by Thomas E. Dickey
+ * Copyright 2002-2014,2016 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -109,6 +109,7 @@ extern int ice_fd;
 extern XtermWidget term;
 
 extern SIG_ATOMIC_T need_cleanup;
+extern SIG_ATOMIC_T caught_intr;
 
 #if defined(HAVE_XKB_BELL_EXT)
 #include <X11/XKBlib.h>		/* has the prototype */
@@ -174,6 +175,8 @@ typedef struct XTERM_RESOURCE {
     String printFileNow;
     String printFileOnXError;
 #endif
+
+    Boolean oldKeyboard;	/* placeholder for decode_keyboard_type */
 #if OPT_SUNPC_KBD
     Boolean sunKeyboard;
 #endif
@@ -231,6 +234,7 @@ typedef struct XTERM_RESOURCE {
 #endif
 } XTERM_RESOURCE;
 
+Boolean guard_keyboard_type;
 extern XTERM_RESOURCE resource;
 
 #ifdef USE_IGNORE_RC

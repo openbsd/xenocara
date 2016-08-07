@@ -1,4 +1,4 @@
-/* $XTermId: keysym2ucs.c,v 1.15 2007/06/13 00:16:56 tom Exp $
+/* $XTermId: keysym2ucs.c,v 1.16 2016/05/22 20:22:53 tom Exp $
  * This module converts keysym values into the corresponding ISO 10646
  * (UCS, Unicode) values.
  *
@@ -556,6 +556,7 @@ static struct codepair {
   { 0x0ad2, 0x201c }, /*         leftdoublequotemark “ LEFT DOUBLE QUOTATION MARK */
   { 0x0ad3, 0x201d }, /*        rightdoublequotemark ” RIGHT DOUBLE QUOTATION MARK */
   { 0x0ad4, 0x211e }, /*                prescription ℞ PRESCRIPTION TAKE */
+  { 0x0ad5, 0x2030 }, /*                    permille ‰ PER MILLE SIGN */
   { 0x0ad6, 0x2032 }, /*                     minutes ′ PRIME */
   { 0x0ad7, 0x2033 }, /*                     seconds ″ DOUBLE PRIME */
   { 0x0ad9, 0x271d }, /*                  latincross ✝ LATIN CROSS */
@@ -842,7 +843,6 @@ long keysym2ucs(KeySym keysym)
 {
     int min = 0;
     int max = sizeof(keysymtab) / sizeof(struct codepair) - 1;
-    int mid;
 
     /* first check for Latin-1 characters (1:1 mapping) */
     if ((keysym >= 0x0020 && keysym <= 0x007e) ||
@@ -855,7 +855,7 @@ long keysym2ucs(KeySym keysym)
 
     /* binary search in table */
     while (max >= min) {
-	mid = (min + max) / 2;
+	int mid = (min + max) / 2;
 	if (keysymtab[mid].keysym < keysym)
 	    min = mid + 1;
 	else if (keysymtab[mid].keysym > keysym)

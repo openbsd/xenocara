@@ -1,7 +1,7 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.619 2015/12/31 12:41:07 tom Exp $
+.\" $XTermId: xterm.man,v 1.637 2016/06/05 20:51:19 tom Exp $
 .\"
-.\" Copyright 1996-2014,2015 by Thomas E. Dickey
+.\" Copyright 1996-2015,2016 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -393,14 +393,19 @@ This is equivalent to setting the \fIvt100\fP resource
 \fBactiveIcon\fP to \*(``true\*(''.
 .TP 8
 .B \-aw
-This option indicates that auto-wraparound should be allowed.
-This
+This option indicates that auto-wraparound should be allowed,
+and is equivalent to setting the \fIvt100\fP resource
+\fBautoWrap\fP to \*(``false\*(''.
+.IP
+Auto-wraparound
 allows the cursor to automatically wrap to the beginning of the next
 line when it is at the rightmost position of a line and text is
 output.
 .TP 8
 .B +aw
-This option indicates that auto-wraparound should not be allowed.
+This option indicates that auto-wraparound should not be allowed,
+and is equivalent to setting the \fIvt100\fP resource
+\fBautoWrap\fP to \*(``false\*(''.
 .TP 8
 .BI \-b " number"
 This option specifies the size of the inner border (the distance between
@@ -634,12 +639,12 @@ See also the discussion of the \fBximFont\fP resource.
 (see \fB\-selbg\fP).
 .TP 8
 .BI \-hf
-This option indicates that HP Function Key escape codes should be generated
+This option indicates that HP function key escape codes should be generated
 for function keys.
 It sets the \fBhpFunctionKeys\fP resource to \*(``true\*(''.
 .TP 8
 .BI +hf
-This option indicates that HP Function Key escape codes should not be generated
+This option indicates that HP function key escape codes should not be generated
 for function keys.
 It sets the \fBhpFunctionKeys\fP resource to \*(``false\*(''.
 .TP 8
@@ -733,6 +738,7 @@ This option sets the \fBkeyboardType\fP resource.
 Possible values include:
 \*(``unknown\*('',
 \*(``default\*('',
+\*(``legacy\*('',
 \*(``hp\*('',
 \*(``sco\*('',
 \*(``sun\*('',
@@ -746,8 +752,9 @@ The value \*(``default\*('',
 suppresses the associated resources
 .BR hpFunctionKeys ,
 .BR scoFunctionKeys ,
-.BR sunFunctionKeys,
-.BR tcapFunctionKeys
+.BR sunFunctionKeys ,
+.BR tcapFunctionKeys ,
+.BR oldXtermFKeys
 and
 .BR sunKeyboard ,
 using the Sun/PC keyboard layout.
@@ -978,7 +985,7 @@ If not specified, reverse video is used.
 See the discussion of the \fBhighlightTextColor\fP resource.
 .TP 8
 .B \-sf
-This option indicates that Sun Function Key escape codes should be generated
+This option indicates that Sun function key escape codes should be generated
 for function keys.
 .TP 8
 .B +sf
@@ -1474,10 +1481,12 @@ Resizing the display will lose data, however, since this involves interaction
 with the shell which is no longer running.
 .TP 8
 .B "hpFunctionKeys (\fPclass\fB HpFunctionKeys)"
-Specifies whether or not HP Function Key escape codes should be generated for
-function keys instead of standard escape sequences.
+Specifies whether or not HP function key escape codes should be generated for
+function keys.
+The default is
+\*(``false\*('', i.e., this feature is disabled.
 .IP
-See also the \fBkeyboardType\fP resource.
+The \fBkeyboardType\fP resource is the preferred mechanism for selecting this mode.
 .TP 8
 .B "iconGeometry (\fPclass\fB IconGeometry)"
 Specifies the preferred size and position of the application when iconified.
@@ -1548,16 +1557,22 @@ Enables one (or none) of the various keyboard-type resources:
 \fBhpFunctionKeys\fP,
 \fBscoFunctionKeys\fP,
 \fBsunFunctionKeys\fP,
-\fBtcapFunctionKeys\fP and
+\fBtcapFunctionKeys\fP,
+\fBoldXtermFKeys\fP and
 \fBsunKeyboard\fP.
+.IP
 The resource's value should be one of the corresponding strings
 \*(``hp\*('',
 \*(``sco\*('',
 \*(``sun\*('',
-\*(``tcap\*('' or
-\*(``vt220\*(''.
+\*(``tcap\*('',
+\*(``legacy\*('' or
+\*(``vt220\*('', respectively.
+.IP
 The individual resources are provided for legacy support;
 this resource is simpler to use.
+\fI\*N\fP will use only one keyboard-type,
+but if multiple resources are set, it warns and uses the last one it checks.
 .IP
 The default is
 \*(``unknown\*('', i.e., none of the associated resources are set
@@ -1686,10 +1701,12 @@ by the next row.
 See \fBuseClipping\fP for a related resource.
 .TP 8
 .B "scoFunctionKeys (\fPclass\fB ScoFunctionKeys)"
-Specifies whether or not SCO Function Key escape codes should be generated for
-function keys instead of standard escape sequences.
+Specifies whether or not SCO function key escape codes should be generated for
+function keys.
+The default is
+\*(``false\*('', i.e., this feature is disabled.
 .IP
-See also the \fBkeyboardType\fP resource.
+The \fBkeyboardType\fP resource is the preferred mechanism for selecting this mode.
 .TP 8
 .B "sessionMgt (\fPclass\fB SessionMgt)"
 If the value of this resource is \*(``true\*('',
@@ -1698,13 +1715,19 @@ for \fBXtNdieCallback\fR and \fBXtNsaveCallback\fR.
 The default is \*(``true\*(''.
 .TP 8
 .B "sunFunctionKeys (\fPclass\fB SunFunctionKeys)"
-Specifies whether or not Sun Function Key escape codes should be generated for
-function keys instead of standard escape sequences.
+Specifies whether or not Sun function key escape codes should be generated for
+function keys.
+The default is
+\*(``false\*('', i.e., this feature is disabled.
 .IP
-See also the \fBkeyboardType\fP resource.
+The \fBkeyboardType\fP resource is the preferred mechanism for selecting this mode.
 .TP 8
 .B "sunKeyboard (\fPclass\fB SunKeyboard)"
-Specifies whether or not Sun/PC keyboard layout should be assumed rather
+\fI\*N\fP translates certain key symbols based on its assumptions about
+your keyboard.
+This resource
+specifies whether or not Sun/PC keyboard layout (i.e., the PC keyboard's
+numeric keypad together with 12 function keys) should be assumed rather
 than DEC VT220.
 This causes the keypad \*(``+\*('' to be mapped to \*(``,\*(''.
 and
@@ -1726,12 +1749,14 @@ See also the \fBkeyboardType\fP resource.
 .TP 8
 .B "tcapFunctionKeys (\fPclass\fB TcapFunctionKeys)"
 Specifies whether or not function key escape codes read from the
-termcap/terminfo entry should be generated for
-function keys instead of standard escape sequences.
+termcap/terminfo entry corresponding to the \fBTERM\fP environment variable
+should be generated for
+function keys instead of those configured
+using \fBsunKeyboard\fP and \fBkeyboardType\fP.
 The default is
 \*(``false\*('', i.e., this feature is disabled.
 .IP
-See also the \fBkeyboardType\fP resource.
+The \fBkeyboardType\fP resource is the preferred mechanism for selecting this mode.
 .TP 8
 .B "termName (\fPclass\fB TermName)"
 Specifies the terminal type name to be set in the TERM environment variable.
@@ -2487,7 +2512,7 @@ The default is \*(``false\*(''.
 .B "combiningChars (\fPclass\fB CombiningChars)"
 Specifies the number of wide-characters which can be stored in a cell
 to overstrike (combine) with the base character of the cell.
-This can be set to values in the range 0 to 4.
+This can be set to values in the range 0 to 5.
 The default is \*(``2\*(''.
 .TP 8
 .B "ctrlFKeys (\fPclass\fB CtrlFKeys)"
@@ -3391,7 +3416,7 @@ The default is \*(``2\*('':
 disables the feature.
 .TP 5
 0
-uses the old/obsolete behavior.
+uses the old/obsolete behavior, i.e., the modifier is the first parameter.
 .TP 5
 1
 prefixes modified sequences with CSI.
@@ -3417,7 +3442,7 @@ permits the user to use shift- and control-modifiers
 to construct function-key strings using the normal encoding scheme.
 .TP 5
 0
-uses the old/obsolete behavior.
+uses the old/obsolete behavior, i.e., the modifier is the first parameter.
 .TP 5
 1
 prefixes modified sequences with CSI.
@@ -3522,11 +3547,18 @@ modifier associated with the left and right Alt keys.
 The default is \*(``true\*(''.
 .TP 8
 .B "oldXtermFKeys (\fPclass\fB OldXtermFKeys)"
-If \*(``true\*('', \fI\*n\fR will use old-style control sequences for function keys F1 to F4,
+If \*(``true\*('', \fI\*n\fR will use old-style (X11R5) escape sequences
+for function keys F1 to F4,
 for compatibility with X Consortium \fI\*n\fR.
-Otherwise, it uses the VT100-style
-codes for PF1 to PF4.
+Otherwise, it uses the VT100 codes for PF1 to PF4.
 The default is \*(``false\*(''.
+.IP
+Setting this resource has the same effect as setting the \fBkeyboardType\fP
+to \fBlegacy\fP.
+The \fBkeyboardType\fP resource is the preferred mechanism for selecting this mode.
+.IP
+The old-style escape sequences resemble VT220 keys,
+but appear to have been invented for \fI\*n\fP in X11R4. 
 .TP 8
 .B "on2Clicks (\fPclass\fB On2Clicks)"
 .TP
@@ -3694,7 +3726,7 @@ The default is \*(``0\*(''.
 .TP 8
 .B "printOptsImmediate (\fPPrintOptsImmediate)"
 Specify the range of text which is printed to a file when
-the \fBprint-immediately\fP action is invoked.
+the \fBprint-immediate\fP action is invoked.
 .RS
 .bP
 If zero (0), then this selects the current (visible screen) plus the
@@ -4362,6 +4394,12 @@ This entry invokes the \fBprint()\fP action.
 .B "print-redir (\fPclass\fB SmeBSB)"
 This entry invokes the \fBprint-redir()\fP action.
 .TP 8
+.B "dump-html (\fPclass\fB SmeBSB)"
+This entry invokes the \fBdump-html()\fP action.
+.TP 8
+.B "dump-svg (\fPclass\fB SmeBSB)"
+This entry invokes the \fBdump-svg()\fP action.
+.TP 8
 .B "8-bit-control (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-8-bit-control(toggle)\fP action.
 .TP 8
@@ -4920,6 +4958,112 @@ You can use this to turn the printer on as if an application had sent
 the appropriate control sequence.
 It is also useful for switching the printer
 off if an application turns it on without resetting the print control mode.
+.TP
+XHTML Screen Dump (dump-html)
+Available only when compiled with screen dump support.
+Invokes the \fBdump-html\fP action.
+This creates an XHTML file matching the contents of the current screen,
+including the border, internal border, colors and most attributes: bold, italic,
+underline, faint, strikeout, reverse; blink is rendered as white-on-red;
+double underline is rendered the same as underline since
+there is no portable equivalent
+in CSS 2.2.
+.IP
+The font is whatever your browser uses for preformatted (<pre>)
+elements. The XHTML file references a cascading style sheet (CSS)
+named \*(``\fBxterm.css\fP\*('' that you can create to select a font or
+override properties.
+.RS
+.LP
+The following CSS selectors are used with
+the expected default behavior in the XHTML file:
+.sp
+\fI.ul\fP for underline,
+.br
+\fI.bd\fP for bold,
+.br
+\fI.it\fP for italic,
+.br
+\fI.st\fP for strikeout,
+.br
+\fI.lu\fP for strikeout combined with underline.
+.LP
+In addition you may use
+.sp
+\fI.ev\fP to affect even numbered lines and
+.br
+\fI.od\fP to affect odd numbered lines.
+.RE
+.IP
+Attributes faint, reverse and blink are implemented as \fIstyle\fP attributes
+setting color properties. All colors are specified as RGB percentages
+in order to support displays with 10 bits per RGB.
+.IP
+The name of the file will be
+.NS
+\fBxterm.\fIyyyy\fB\.\fIMM\fB\.\fIdd\fB.\fIhh\fB.\fImm\fB.\fIss\fR\.xhtml
+.NE
+.IP
+where
+.IR yyyy ,
+.IR MM ,
+.IR dd ,
+.IR hh ,
+.I mm
+and
+.I ss
+are the year, month, day, hour, minute and second when the screen dump was performed
+(the file is created in the directory
+.I \*n
+is started in, or the home directory for a login
+.IR \*n ).
+.IP
+The \fBdump-html\fP action can also be triggered using the Media Copy
+control sequence CSI 1 0 i, for example from a shell script with
+.NS
+printf '\\033[10i'
+.NE
+.sp
+Only the UTF-8 encoding is supported.
+.TP
+SVG Screen Dump (dump-svg)
+Available only when compiled with screen dump support.
+Invokes the \fBdump-svg\fP action.
+This creates a Scalable Vector Graphics (SVG) file matching
+the contents of the current screen, including the border,
+internal border, colors and most attributes: bold, italic,
+underline, double underline, faint, strikeout, reverse;
+blink is rendered as white-on-red.
+The font is whatever your renderer uses for the \fImonospace\fP font-family.
+All colors are specified as RGB percentages
+in order to support displays with 10 bits per RGB.
+.IP
+The name of the file will be
+.NS
+\fBxterm.\fIyyyy\fB\.\fIMM\fB\.\fIdd\fB.\fIhh\fB.\fImm\fB.\fIss\fR\.svg
+.NE
+.IP
+where
+.IR yyyy ,
+.IR MM ,
+.IR dd ,
+.IR hh ,
+.I mm
+and
+.I ss
+are the year, month, day, hour, minute and second when the screen dump was performed
+(the file is created in the directory
+.I \*n
+is started in, or the home directory for a login
+.IR \*n ).
+.IP
+The \fBdump-svg\fP action can also be triggered using the Media Copy
+control sequence CSI 1 1 i, for example from a shell script with
+.NS
+printf '\\033[11i'
+.NE
+.sp
+Only the UTF-8 encoding is supported.
 .RE
 .TP
 Modes for setting keyboard style:
@@ -7142,6 +7286,7 @@ Jim Gettys (MIT-Athena), Bob Scheifler (MIT X Consortium), Doug Mink (SAO),
 Steve Pitschke (Stellar), Ron Newman (MIT-Athena), Jim Fulton (MIT X
 Consortium), Dave Serisky (HP), Jonathan Kamens (MIT-Athena),
 Jason Bacon,
+Jens Schweikhardt,
 Ross Combs,
 Stephen P. Wall,
 David Wexelblat, and

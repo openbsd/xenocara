@@ -1,7 +1,7 @@
-/* $XTermId: menu.c,v 1.332 2015/12/30 09:40:28 tom Exp $ */
+/* $XTermId: menu.c,v 1.338 2016/05/30 20:58:39 tom Exp $ */
 
 /*
- * Copyright 1999-2014,2015 by Thomas E. Dickey
+ * Copyright 1999-2015,2016 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -154,6 +154,10 @@ static void do_bellIsUrgent    PROTO_XT_CALLBACK_ARGS;
 static void do_clearsavedlines PROTO_XT_CALLBACK_ARGS;
 static void do_continue        PROTO_XT_CALLBACK_ARGS;
 static void do_delete_del      PROTO_XT_CALLBACK_ARGS;
+#if OPT_SCREEN_DUMPS
+static void do_dump_html       PROTO_XT_CALLBACK_ARGS;
+static void do_dump_svg        PROTO_XT_CALLBACK_ARGS;
+#endif
 static void do_hardreset       PROTO_XT_CALLBACK_ARGS;
 static void do_interrupt       PROTO_XT_CALLBACK_ARGS;
 static void do_jumpscroll      PROTO_XT_CALLBACK_ARGS;
@@ -314,6 +318,10 @@ MenuEntry mainMenuEntries[] = {
 #endif
     { "print",		do_print,	NULL },
     { "print-redir",	do_print_redir,	NULL },
+#if OPT_SCREEN_DUMPS
+    { "dump-html",	do_dump_html,	NULL },
+    { "dump-svg",	do_dump_svg,	NULL },
+#endif
     { "line2",		NULL,		NULL },
     { "8-bit control",	do_8bit_control,NULL },
     { "backarrow key",	do_backarrow,	NULL },
@@ -776,8 +784,8 @@ domenu(Widget w,
 	    update_meta_esc();
 	    update_delete_del();
 	    update_keyboard_type();
-#ifdef PRINT_ON_EXIT
-	    screen->write_error = !IsEmpty(resource.printOnXError);
+#ifdef OPT_PRINT_ON_EXIT
+	    screen->write_error = !IsEmpty(resource.printFileOnXError);
 	    SetItemSensitivity(mainMenuEntries[mainMenu_write_now].widget, False);
 	    SetItemSensitivity(mainMenuEntries[mainMenu_write_error].widget, screen->write_error);
 #endif
@@ -1158,6 +1166,24 @@ do_print_redir(Widget gw GCC_UNUSED,
 			   ? 0
 			   : 2));
 }
+
+#if OPT_SCREEN_DUMPS
+static void
+do_dump_html(Widget gw GCC_UNUSED,
+	     XtPointer closure GCC_UNUSED,
+	     XtPointer data GCC_UNUSED)
+{
+    xtermDumpHtml(term);
+}
+
+static void
+do_dump_svg(Widget gw GCC_UNUSED,
+	    XtPointer closure GCC_UNUSED,
+	    XtPointer data GCC_UNUSED)
+{
+    xtermDumpSvg(term);
+}
+#endif
 
 static void
 do_redraw(Widget gw GCC_UNUSED,
@@ -2769,6 +2795,26 @@ HandleUTF8Title(Widget w,
 {
     handle_vt_toggle(do_font_utf8_title, TScreenOf(term)->utf8_title,
 		     params, *param_count, w);
+}
+#endif
+
+#if OPT_SCREEN_DUMPS
+void
+HandleDumpHtml(Widget w GCC_UNUSED,
+	       XEvent *event GCC_UNUSED,
+	       String *params GCC_UNUSED,
+	       Cardinal *param_count GCC_UNUSED)
+{
+    xtermDumpHtml(term);
+}
+
+void
+HandleDumpSvg(Widget w GCC_UNUSED,
+	      XEvent *event GCC_UNUSED,
+	      String *params GCC_UNUSED,
+	      Cardinal *param_count GCC_UNUSED)
+{
+    xtermDumpSvg(term);
 }
 #endif
 

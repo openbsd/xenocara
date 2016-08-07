@@ -1,7 +1,7 @@
-/* $XTermId: graphics_sixel.c,v 1.11 2014/12/12 09:47:29 Ross.Combs Exp $ */
+/* $XTermId: graphics_sixel.c,v 1.18 2016/06/05 20:04:01 tom Exp $ */
 
 /*
- * Copyright 2014 by Ross Combs
+ * Copyright 2014,2016 by Ross Combs
  *
  *                         All Rights Reserved
  *
@@ -210,6 +210,83 @@ update_sixel_aspect(SixelContext const *context, Graphic *graphic)
 	   graphic->pixh));
 }
 
+static int
+finished_parsing(XtermWidget xw, Graphic *graphic)
+{
+    TScreen *screen = TScreenOf(xw);
+
+    /* Update the screen scrolling and do a refresh.
+     * The refresh may not cover the whole graphic.
+     */
+    if (screen->scroll_amt)
+	FlushScroll(xw);
+
+    if (xw->keyboard.flags & MODE_DECSDM) {
+	int new_row, new_col;
+
+	if (screen->sixel_scrolls_right) {
+	    new_row = (graphic->charrow
+		       + (((graphic->actual_height * graphic->pixh)
+			   + FontHeight(screen) - 1)
+			  / FontHeight(screen))
+		       - 1);
+	    new_col = (graphic->charcol
+		       + (((graphic->actual_width * graphic->pixw)
+			   + FontWidth(screen) - 1)
+			  / FontWidth(screen)));
+	} else {
+	    /* FIXME: At least of the VT382 the vertical position appears to be
+	     * truncated (rounded toward zero after converting to character row.
+	     * This code rounds up, which seems more useful, but it would be
+	     * better to be compatible.  Verify this is true on a VT3[34]0 as
+	     * well.
+	     */
+	    new_row = (graphic->charrow
+		       + (((graphic->actual_height * graphic->pixh)
+			   + FontHeight(screen) - 1)
+			  / FontHeight(screen)));
+	    new_col = 0;
+	}
+
+	TRACE(("setting text position after %dx%d graphic starting on row=%d col=%d: cursor new_row=%d new_col=%d\n",
+	       graphic->actual_width * graphic->pixw,
+	       graphic->actual_height * graphic->pixh,
+	       graphic->charrow,
+	       graphic->charcol,
+	       new_row, new_col));
+
+	if (new_col > screen->rgt_marg) {
+	    new_col = screen->lft_marg;
+	    new_row++;
+	    TRACE(("column past left margin, overriding to row=%d col=%d\n",
+		   new_row, new_col));
+	}
+
+	while (new_row > screen->bot_marg) {
+	    xtermScroll(xw, 1);
+	    new_row--;
+	    TRACE(("bottom row was past screen.  new start row=%d, cursor row=%d\n",
+		   graphic->charrow, new_row));
+	}
+
+	if (new_row < 0) {
+	    /* FIXME: this was triggering, now it isn't */
+	    TRACE(("new row is going to be negative (%d); skipping position update!",
+		   new_row));
+	} else {
+	    set_cur_row(screen, new_row);
+	    set_cur_col(screen, new_col <= screen->rgt_marg ? new_col : screen->rgt_marg);
+	}
+    }
+
+    graphic->dirty = 1;
+    refresh_modified_displayed_graphics(xw);
+
+    TRACE(("DONE parsed sixel data\n"));
+    dump_graphic(graphic);
+    return 0;
+}
+
 /*
  * Interpret sixel graphics sequences.
  *
@@ -218,13 +295,12 @@ update_sixel_aspect(SixelContext const *context, Graphic *graphic)
  *  ftp://ftp.cs.utk.edu/pub/shuford/terminal/sixel_graphics_news.txt
  *  ftp://ftp.cs.utk.edu/pub/shuford/terminal/all_about_sixels.txt
  */
-void
+int
 parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 {
     TScreen *screen = TScreenOf(xw);
     Graphic *graphic;
     SixelContext context;
-    Char ch;
 
     switch (screen->terminal_id) {
     case 240:
@@ -285,7 +361,7 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 	case 7:
 	    if (Pan == 0 || Pad == 0) {
 		TRACE(("DATA_ERROR: invalid raster ratio %d/%d\n", Pan, Pad));
-		return;
+		return -1;
 	    }
 	    context.aspect_vertical = Pan;
 	    context.aspect_horizontal = Pad;
@@ -293,12 +369,12 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 	    if (Ph <= 0 || Pv <= 0) {
 		TRACE(("DATA_ERROR: raster image dimensions are invalid %dx%d\n",
 		       Ph, Pv));
-		return;
+		return -1;
 	    }
 	    if (Ph > graphic->max_width || Pv > graphic->max_height) {
 		TRACE(("DATA_ERROR: raster image dimensions are too large %dx%d\n",
 		       Ph, Pv));
-		return;
+		return -1;
 	    }
 	    context.declared_width = Ph;
 	    context.declared_height = Pv;
@@ -339,14 +415,14 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 		break;
 	    default:
 		TRACE(("DATA_ERROR: unknown sixel macro mode parameter\n"));
-		return;
+		return -1;
 	    }
 	    break;
 	case 0:
 	    break;
 	default:
 	    TRACE(("DATA_ERROR: unexpected parameter count (found %d)\n", params->a_nparam));
-	    return;
+	    return -1;
 	}
 
 	if (Pbgmode == 1) {
@@ -364,7 +440,7 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
     update_sixel_aspect(&context, graphic);
 
     for (;;) {
-	ch = CharOf(*string);
+	Char ch = CharOf(*string);
 	if (ch == '\0')
 	    break;
 
@@ -438,11 +514,11 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 	    }
 	    if (ch == '\0') {
 		TRACE(("DATA_ERROR: sixel data string terminated in the middle of a repeat operator\n"));
-		return;
+		return finished_parsing(xw, graphic);
 	    }
 	    if (string == start) {
 		TRACE(("DATA_ERROR: sixel data string contains a repeat operator with empty count\n"));
-		return;
+		return finished_parsing(xw, graphic);
 	    }
 	    Pcount = atoi(start);
 	    sixel = ch - 0x3f;
@@ -485,7 +561,7 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 		    if (Pc1 > 360 || Pc2 > 100 || Pc3 > 100) {
 			TRACE(("DATA_ERROR: sixel set color operator uses out-of-range HLS color coordinates %d,%d,%d\n",
 			       Pc1, Pc2, Pc3));
-			return;
+			return finished_parsing(xw, graphic);
 		    }
 		    hls2rgb(Pc1, Pc2, Pc3, &r, &g, &b);
 		    break;
@@ -493,7 +569,7 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 		    if (Pc1 > 100 || Pc2 > 100 || Pc3 > 100) {
 			TRACE(("DATA_ERROR: sixel set color operator uses out-of-range RGB color coordinates %d,%d,%d\n",
 			       Pc1, Pc2, Pc3));
-			return;
+			return finished_parsing(xw, graphic);
 		    }
 		    r = (short) Pc1;
 		    g = (short) Pc2;
@@ -501,7 +577,7 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 		    break;
 		default:	/* unknown */
 		    TRACE(("DATA_ERROR: sixel set color operator uses unknown color space %d\n", Pspace));
-		    return;
+		    return finished_parsing(xw, graphic);
 		}
 		update_color_register(graphic,
 				      (RegisterNum) Pregister,
@@ -512,7 +588,7 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 		context.current_register = (RegisterNum) Pregister;
 	    } else {
 		TRACE(("DATA_ERROR: sixel switch color operator with unexpected parameter count (nparams=%d)\n", color_params.a_nparam));
-		return;
+		return finished_parsing(xw, graphic);
 	    }
 	    continue;
 	} else if (ch == '"') /* DECGRA */  {
@@ -521,14 +597,14 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 	    parse_prefixedtype_params(&raster_params, &string);
 	    if (raster_params.a_nparam < 2) {
 		TRACE(("DATA_ERROR: sixel raster attribute operator with incomplete parameters (found %d, expected 2 or 4)\n", raster_params.a_nparam));
-		return;
+		return finished_parsing(xw, graphic);
 	    } {
 		int Pan = raster_params.a_param[0];
 		int Pad = raster_params.a_param[1];
 		TRACE(("sixel raster attribute with h:w=%d:%d\n", Pan, Pad));
 		if (Pan == 0 || Pad == 0) {
 		    TRACE(("DATA_ERROR: invalid raster ratio %d/%d\n", Pan, Pad));
-		    return;
+		    return finished_parsing(xw, graphic);
 		}
 		context.aspect_vertical = Pan;
 		context.aspect_horizontal = Pad;
@@ -543,12 +619,12 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 		if (Ph <= 0 || Pv <= 0) {
 		    TRACE(("DATA_ERROR: raster image dimensions are invalid %dx%d\n",
 			   Ph, Pv));
-		    return;
+		    return finished_parsing(xw, graphic);
 		}
 		if (Ph > graphic->max_width || Pv > graphic->max_height) {
 		    TRACE(("DATA_ERROR: raster image dimensions are too large %dx%d\n",
 			   Ph, Pv));
-		    return;
+		    return finished_parsing(xw, graphic);
 		}
 		context.declared_width = Ph;
 		context.declared_height = Pv;
@@ -564,79 +640,12 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 	} else if (ch == ' ' || ch == '\r' || ch == '\n') {
 	    /* EMPTY */ ;
 	} else {
-	    TRACE(("DATA_ERROR: unknown sixel command %04x (%c)\n",
+	    TRACE(("DATA_ERROR: skipping unknown sixel command %04x (%c)\n",
 		   (int) ch, ch));
 	}
 
 	string++;
     }
 
-    /* Update the screen scrolling and do a refresh.
-     * The refresh may not cover the whole graphic.
-     */
-    if (screen->scroll_amt)
-	FlushScroll(xw);
-
-    if (xw->keyboard.flags & MODE_DECSDM) {
-	int new_row, new_col;
-
-	if (screen->sixel_scrolls_right) {
-	    new_row = (graphic->charrow
-		       + (((graphic->actual_height * graphic->pixh)
-			   + FontHeight(screen) - 1)
-			  / FontHeight(screen))
-		       - 1);
-	    new_col = (graphic->charcol
-		       + (((graphic->actual_width * graphic->pixw)
-			   + FontWidth(screen) - 1)
-			  / FontWidth(screen)));
-	} else {
-	    /* FIXME: At least of the VT382 the vertical position appears to be
-	     * truncated (rounded toward zero after converting to character row.
-	     * This code rounds up, which seems more useful, but it would be
-	     * better to be compatible.  Verify this is true on a VT3[34]0 as
-	     * well.
-	     */
-	    new_row = (graphic->charrow
-		       + (((graphic->actual_height * graphic->pixh)
-			   + FontHeight(screen) - 1)
-			  / FontHeight(screen)));
-	    new_col = 0;
-	}
-
-	TRACE(("setting text position after %dx%d graphic starting on row=%d col=%d: cursor new_row=%d new_col=%d\n",
-	       graphic->actual_width * graphic->pixw,
-	       graphic->actual_height * graphic->pixh,
-	       graphic->charrow,
-	       graphic->charcol,
-	       new_row, new_col));
-
-	if (new_col > screen->rgt_marg) {
-	    new_col = screen->lft_marg;
-	    new_row++;
-	    TRACE(("column past left margin, overriding to row=%d col=%d\n",
-		   new_row, new_col));
-	}
-
-	while (new_row > screen->bot_marg) {
-	    xtermScroll(xw, 1);
-	    new_row--;
-	    TRACE(("bottom row was past screen.  new start row=%d, cursor row=%d\n",
-		   graphic->charrow, new_row));
-	}
-
-	if (new_row < 0) {
-	    TRACE(("new row is going to be negative (%d)!", new_row));	/* FIXME: this was triggering, now it isn't */
-	    goto finis;
-	}
-	set_cur_row(screen, new_row);
-	set_cur_col(screen, new_col <= screen->rgt_marg ? new_col : screen->rgt_marg);
-    }
-
-  finis:
-    graphic->dirty = 1;
-    refresh_modified_displayed_graphics(xw);
-
-    TRACE(("DONE successfully parsed sixel data\n"));
-    dump_graphic(graphic);
+    return finished_parsing(xw, graphic);
 }

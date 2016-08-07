@@ -1,4 +1,4 @@
-/* $XTermId: wcwidth.c,v 1.24 2013/02/03 18:54:31 tom Exp $ */
+/* $XTermId: wcwidth.c,v 1.25 2016/05/22 17:15:29 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/wcwidth.c,v 1.9 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -72,11 +72,13 @@ struct interval {
 
 /* auxiliary function for binary search in interval table */
 static int bisearch(unsigned long ucs, const struct interval *table, int max) {
-  int min = 0;
-  int mid;
 
   if (ucs >= table[0].first && ucs <= table[max].last) {
+    int min = 0;
+
     while (max >= min) {
+      int mid;
+
       mid = (min + max) / 2;
       if (ucs > table[mid].last)
         min = mid + 1;
@@ -243,13 +245,16 @@ int mk_wcwidth(wchar_t ucs)
 
 int mk_wcswidth(const wchar_t *pwcs, size_t n)
 {
-  int w, width = 0;
+  int width = 0;
 
-  for (;*pwcs && n-- > 0; pwcs++)
+  for (;*pwcs && n-- > 0; pwcs++) {
+    int w;
+
     if ((w = mk_wcwidth(*pwcs)) < 0)
       return -1;
     else
       width += w;
+  }
 
   return width;
 }
@@ -353,13 +358,16 @@ int mk_wcwidth_cjk(wchar_t ucs)
 
 int mk_wcswidth_cjk(const wchar_t *pwcs, size_t n)
 {
-  int w, width = 0;
+  int width = 0;
 
-  for (;*pwcs && n-- > 0; pwcs++)
+  for (;*pwcs && n-- > 0; pwcs++) {
+    int w;
+
     if ((w = mk_wcwidth_cjk(*pwcs)) < 0)
       return -1;
     else
       width += w;
+  }
 
   return width;
 }

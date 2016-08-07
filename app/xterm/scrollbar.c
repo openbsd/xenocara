@@ -1,7 +1,7 @@
-/* $XTermId: scrollbar.c,v 1.199 2014/07/12 22:55:11 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.200 2016/05/22 16:43:12 tom Exp $ */
 
 /*
- * Copyright 2000-2013,2014 by Thomas E. Dickey
+ * Copyright 2000-2014,2016 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -362,8 +362,6 @@ void
 WindowScroll(XtermWidget xw, int top, Bool always GCC_UNUSED)
 {
     TScreen *screen = TScreenOf(xw);
-    int i, lines;
-    int scrolltop, scrollheight, refreshtop;
 
 #if OPT_SCROLL_LOCK
     if (screen->allowScrollLock && (screen->scroll_lock && !always)) {
@@ -374,6 +372,8 @@ WindowScroll(XtermWidget xw, int top, Bool always GCC_UNUSED)
     } else
 #endif
     {
+	int i;
+
 	if (top < -screen->savedlines) {
 	    top = -screen->savedlines;
 	} else if (top > 0) {
@@ -381,6 +381,8 @@ WindowScroll(XtermWidget xw, int top, Bool always GCC_UNUSED)
 	}
 
 	if ((i = screen->topline - top) != 0) {
+	    int lines;
+	    int scrolltop, scrollheight, refreshtop;
 
 	    if (screen->cursor_state)
 		HideCursor();
@@ -786,17 +788,16 @@ have_xkb(Display *dpy)
 	    {
 		XkbDescPtr xkb;
 		unsigned int mask;
-		int n;
-		char *modStr;
 
 		xkb = XkbGetKeyboard(dpy, XkbAllComponentsMask, XkbUseCoreKbd);
 		if (xkb != NULL) {
+		    int n;
 
 		    TRACE(("XkbGetKeyboard ok\n"));
 		    for (n = 0; n < XkbNumVirtualMods; ++n) {
 			if (xkb->names->vmods[n] != 0) {
-			    modStr = XGetAtomName(xkb->dpy,
-						  xkb->names->vmods[n]);
+			    char *modStr = XGetAtomName(xkb->dpy,
+							xkb->names->vmods[n]);
 			    if (modStr != 0) {
 				XkbVirtualModsToReal(xkb,
 						     (unsigned) (1 << n),

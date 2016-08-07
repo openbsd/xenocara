@@ -1,8 +1,8 @@
-/* $XTermId: graphics_sixel.h,v 1.1 2014/04/11 19:36:41 Ross.Combs Exp $ */
+/* $XTermId: graphics_sixel.h,v 1.4 2016/05/29 16:35:11 tom Exp $ */
 
 /*
- * Copyright 2014 by Ross Combs
- * Copyright 2014 by Thomas E. Dickey
+ * Copyright 2014,2016 by Ross Combs
+ * Copyright 2014,2016 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -38,7 +38,7 @@
 #include <ptyx.h>
 
 #if OPT_SIXEL_GRAPHICS
-extern void parse_sixel(XtermWidget xw, ANSI *params, char const *string);
+extern int parse_sixel(XtermWidget /* xw */, ANSI */* params */, char const */* string */);
 #else
 #define parse_sixel(xw, params, string) /* nothing */
 #endif

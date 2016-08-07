@@ -1,4 +1,4 @@
-XCOMM $XTermId: Imakefile,v 1.111 2014/07/22 22:29:17 tom Exp $
+XCOMM $XTermId: Imakefile,v 1.112 2016/01/28 01:56:53 Jens.Schweikhardt Exp $
 XCOMM
 XCOMM                         Attention xterm porters
 XCOMM
@@ -165,6 +165,9 @@ TERMCAPDEFINES=-DUSE_TERMINFO -DHAVE_TIGETSTR
 #if !HasPutenv
       PUTENVDEF = -DNOPUTENV
 #endif
+#ifdef DumpsXTerm
+       DUMPSDEF = -DOPT_SCREEN_DUMPS=1
+#endif
 #ifdef RegisXTerm
        SIXELDEF = -DOPT_REGIS_GRAPHICS=1
 #endif
@@ -180,11 +183,15 @@ TERMCAPDEFINES=-DUSE_TERMINFO -DHAVE_TIGETSTR
    MISC_DEFINES = /* -DALLOWLOGGING -DALLOWLOGFILEEXEC */
     XKB_DEFINES = XkbClientDefines
    PATH_DEFINES = -DPROJECTROOT=$(PROJECTROOT)
-        DEFINES = $(XKB_DEFINES) $(TERMCAPDEFINES) $(FEATURE_DEFINES) $(SCROLLBAR_RIGHT) $(UTF8_OPTION) $(XRFDEF) $(PATH_DEFINES) $(PUTENVDEF) $(IMAKEDEFINES) $(SIXELDEF) $(TRACEDEF)
+        DEFINES = $(XKB_DEFINES) $(TERMCAPDEFINES) $(FEATURE_DEFINES) $(SCROLLBAR_RIGHT) $(UTF8_OPTION) $(XRFDEF) $(PATH_DEFINES) $(PUTENVDEF) $(IMAKEDEFINES) $(SIXELDEF) $(TRACEDEF) $(DUMPSDEF)
        INCLUDES = -I. $(XRFINCLUDES)
 
         MAINSRC = main.c
         MAINOBJ = main.o
+#ifdef DumpsXTerm
+       DUMPSSRC = html.c svg.c
+       DUMPSOBJ = html.o svg.o
+#endif
 #ifdef RegisXTerm
        SIXELSRC = graphics_regis.c
        SIXELOBJ = graphics_regis.o
@@ -202,13 +209,13 @@ TERMCAPDEFINES=-DUSE_TERMINFO -DHAVE_TIGETSTR
 		  linedata.c menu.c misc.c print.c ptydata.c scrollback.c \
 		  screen.c scrollbar.c tabs.c util.c version.c xstrings.c \
 		  xtermcap.c TekPrsTbl.c Tekproc.c VTPrsTbl.c \
-		  $(MAINSRC) $(EXTRASRC) $(UTF8SRC) $(SIXELSRC) $(TRACESRC)
+		  $(MAINSRC) $(EXTRASRC) $(UTF8SRC) $(SIXELSRC) $(TRACESRC) $(DUMPSSRC)
           OBJS1 = button.o cachedGCs.o charproc.o charsets.o cursor.o \
 		  data.o doublechr.o fontutils.o input.o \
 		  linedata.o menu.o misc.o print.o ptydata.o scrollback.o \
 		  screen.o scrollbar.o tabs.o util.o version.o xstrings.o \
 		  xtermcap.o TekPrsTbl.o Tekproc.o VTPrsTbl.o \
-		  $(MAINOBJ) $(EXTRAOBJ) $(UTF8OBJ) $(SIXELOBJ) $(TRACEOBJ)
+		  $(MAINOBJ) $(EXTRAOBJ) $(UTF8OBJ) $(SIXELOBJ) $(TRACEOBJ) $(DUMPSOBJ)
           SRCS2 = resize.c version.c xstrings.c
           OBJS2 = resize.o version.o xstrings.o
            SRCS = $(SRCS1) $(SRCS2)

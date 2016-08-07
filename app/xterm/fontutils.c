@@ -1,7 +1,7 @@
-/* $XTermId: fontutils.c,v 1.451 2015/08/18 00:55:19 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.453 2016/06/03 08:56:53 tom Exp $ */
 
 /*
- * Copyright 1998-2014,2015 by Thomas E. Dickey
+ * Copyright 1998-2015,2016 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -268,8 +268,6 @@ get_font_name_props(Display *dpy, XFontStruct *fs, char **result)
     static FontNameProperties props;
     static char *last_name;
 
-    XFontProp *fp;
-    int i;
     Atom fontatom = XInternAtom(dpy, "FONT", False);
     char *name = 0;
     char *str;
@@ -278,6 +276,9 @@ get_font_name_props(Display *dpy, XFontStruct *fs, char **result)
      * first get the full font name
      */
     if (fontatom != 0) {
+	XFontProp *fp;
+	int i;
+
 	for (i = 0, fp = fs->properties; i < fs->n_properties; i++, fp++) {
 	    if (fp->name == fontatom) {
 		name = XGetAtomName(dpy, fp->card32);
@@ -871,9 +872,10 @@ static void
 xtermCloseFont2(XtermWidget xw, XTermFonts * fnts, int which)
 {
     XFontStruct *thisFont = fnts[which].fs;
-    int k;
 
     if (thisFont != 0) {
+	int k;
+
 	xtermCloseFont(xw, &fnts[which]);
 	for (k = 0; k < fMAX; ++k) {
 	    if (k != which) {
@@ -944,7 +946,6 @@ reportOneVTFont(const char *tag,
 	XFontStruct *fs = fnt->fs;
 	unsigned first_char = 0;
 	unsigned last_char = 0;
-	unsigned ch;
 
 	if (fs->max_byte1 == 0) {
 	    first_char = fs->min_char_or_byte2;
@@ -968,6 +969,7 @@ reportOneVTFont(const char *tag,
 	    printf("\t\tpresent-chars: ?\n");
 	} else {
 	    unsigned missing = 0;
+	    unsigned ch;
 	    for (ch = first_char; ch <= last_char; ++ch) {
 		if (xtermMissingChar(ch, fnt)) {
 		    ++missing;
@@ -1520,13 +1522,14 @@ void
 xtermLoadItalics(XtermWidget xw)
 {
     TScreen *screen = TScreenOf(xw);
-    FontNameProperties *fp;
-    char *name;
-    int n;
 
     if (!screen->ifnts_ok) {
+	int n;
+
 	screen->ifnts_ok = True;
 	for (n = 0; n < fMAX; ++n) {
+	    FontNameProperties *fp;
+
 	    /*
 	     * FIXME - need to handle font-leaks
 	     */
@@ -1535,6 +1538,8 @@ xtermLoadItalics(XtermWidget xw)
 		(fp = get_font_name_props(screen->display,
 					  screen->fnts[n].fs,
 					  0)) != 0) {
+		char *name;
+
 		if ((name = italic_font_name(fp, fp->average_width)) != 0) {
 		    TRACE(("xtermLoadItalics #%d %s\n", n, name));
 		    (void) xtermOpenFont(xw,
@@ -1639,7 +1644,6 @@ static Boolean
 sameSubResources(SubResourceRec * a, SubResourceRec * b)
 {
     Boolean result = True;
-    int n;
 
     if (!SAME_MEMBER(default_font.f_n)
 	|| !SAME_MEMBER(default_font.f_b)
@@ -1651,6 +1655,8 @@ sameSubResources(SubResourceRec * a, SubResourceRec * b)
 	TRACE(("sameSubResources: default_font differs\n"));
 	result = False;
     } else {
+	int n;
+
 	for (n = 0; n < NMENUFONTS; ++n) {
 	    if (!SAME_MEMBER(menu_font_names[n][fNorm])) {
 		TRACE(("sameSubResources: menu_font_names[%d] differs\n", n));
@@ -1862,22 +1868,21 @@ HandleLoadVTFonts(Widget w,
 		  String *params GCC_UNUSED,
 		  Cardinal *param_count GCC_UNUSED)
 {
-    static char empty[] = "";	/* appease strict compilers */
-
     XtermWidget xw;
 
     if ((xw = getXtermWidget(w)) != 0) {
+	static char empty[] = "";	/* appease strict compilers */
+
 	TScreen *screen = TScreenOf(xw);
 	char name_buf[80];
-	char class_buf[80];
 	String name = (String) ((*param_count > 0) ? params[0] : empty);
 	char *myName = MyStackAlloc(strlen(name) + 1, name_buf);
 
 	TRACE(("HandleLoadVTFonts(%d)\n", *param_count));
 	if (myName != 0) {
+	    char class_buf[80];
 	    String convert = (String) ((*param_count > 1) ? params[1] : myName);
 	    char *myClass = MyStackAlloc(strlen(convert) + 1, class_buf);
-	    int n;
 
 	    strcpy(myName, name);
 	    if (myClass != 0) {
@@ -1886,6 +1891,7 @@ HandleLoadVTFonts(Widget w,
 		    myClass[0] = x_toupper(myClass[0]);
 
 		if (xtermLoadVTFonts(xw, myName, myClass)) {
+		    int n;
 		    /*
 		     * When switching fonts, try to preserve the font-menu
 		     * selection, since it is less surprising to do that (if
@@ -2107,12 +2113,11 @@ xtermOpenXft(XtermWidget xw, const char *name, XftPattern *pat, const char *tag)
 {
     TScreen *screen = TScreenOf(xw);
     Display *dpy = screen->display;
-    XftPattern *match;
     XftResult status;
     XftFont *result = 0;
 
     if (pat != 0) {
-	match = XftFontMatch(dpy, DefaultScreen(dpy), pat, &status);
+	XftPattern *match = XftFontMatch(dpy, DefaultScreen(dpy), pat, &status);
 	if (match != 0) {
 	    result = XftFontOpenPattern(dpy, match);
 	    if (result != 0) {
@@ -2262,11 +2267,12 @@ void
 setFaceName(XtermWidget xw, const char *value)
 {
     TScreen *screen = TScreenOf(xw);
-    int n;
     Boolean changed = (Boolean) ((xw->misc.face_name == 0)
 				 || strcmp(xw->misc.face_name, value));
 
     if (changed) {
+	int n;
+
 	xw->misc.face_name = x_strdup(value);
 	for (n = 0; n < NMENUFONTS; ++n) {
 	    xw->misc.face_size[n] = -1.0;
@@ -2595,7 +2601,8 @@ xtermMissingChar(unsigned ch, XTermFonts * font)
 #endif
 
     if (pc == 0 || CI_NONEXISTCHAR(pc)) {
-	TRACE(("xtermMissingChar %#04x (!exists)\n", ch));
+	TRACE(("xtermMissingChar %#04x (!exists), %d cells\n",
+	       ch, my_wcwidth(ch)));
 	result = True;
     }
     if (ch < KNOWN_MISSING) {
@@ -3237,11 +3244,11 @@ static Boolean
 useFaceSizes(XtermWidget xw)
 {
     Boolean result = False;
-    int n;
 
     TRACE(("useFaceSizes {{\n"));
     if (UsingRenderFont(xw)) {
 	Boolean nonzero = True;
+	int n;
 
 	for (n = 0; n < NMENU_RENDERFONTS; ++n) {
 	    if (xw->misc.face_size[n] <= 0.0) {
@@ -3289,7 +3296,7 @@ int
 lookupRelativeFontSize(XtermWidget xw, int old, int relative)
 {
     TScreen *screen = TScreenOf(xw);
-    int n, m = -1;
+    int m = -1;
 
     TRACE(("lookupRelativeFontSize(old=%d, relative=%d)\n", old, relative));
     if (!IsIcon(screen)) {
@@ -3297,6 +3304,7 @@ lookupRelativeFontSize(XtermWidget xw, int old, int relative)
 	if (useFaceSizes(xw)) {
 	    TRACE(("...using FaceSize\n"));
 	    if (relative != 0) {
+		int n;
 		for (n = 0; n < NMENU_RENDERFONTS; ++n) {
 		    fillInFaceSize(xw, n);
 		    if (xw->misc.face_size[n] > 0 &&
@@ -3323,6 +3331,7 @@ lookupRelativeFontSize(XtermWidget xw, int old, int relative)
 	    TRACE(("...using bitmap areas\n"));
 	    lookupFontSizes(xw);
 	    if (relative != 0) {
+		int n;
 		for (n = 0; n < NMENUFONTS; ++n) {
 		    if (screen->menu_font_sizes[n] > 0 &&
 			screen->menu_font_sizes[n] !=

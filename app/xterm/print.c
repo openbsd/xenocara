@@ -1,7 +1,7 @@
-/* $XTermId: print.c,v 1.152 2014/06/13 00:36:51 tom Exp $ */
+/* $XTermId: print.c,v 1.155 2016/05/22 16:31:59 tom Exp $ */
 
 /*
- * Copyright 1997-2013,2014 by Thomas E. Dickey
+ * Copyright 1997-2014,2016 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -129,17 +129,12 @@ printLine(XtermWidget xw, int row, unsigned chr, PrinterFlags *p)
     TScreen *screen = TScreenOf(xw);
     int inx = ROW2INX(screen, row);
     LineData *ld;
-    IAttr attr = 0;
-    unsigned ch;
     int last = MaxCols(screen);
-    int col;
 #if OPT_ISO_COLORS && OPT_PRINT_COLORS
 #define ColorOf(ld,col) (ld->color[col])
 #endif
     unsigned fg = NO_COLOR, last_fg = NO_COLOR;
     unsigned bg = NO_COLOR, last_bg = NO_COLOR;
-    int cs = CSET_IN;
-    int last_cs = CSET_IN;
 
     ld = getLineData(screen, inx);
     if (ld == 0)
@@ -155,13 +150,19 @@ printLine(XtermWidget xw, int row, unsigned chr, PrinterFlags *p)
 	else
 	    break;
     }
+
     if (last) {
+	int col;
+	int cs = CSET_IN;
+	int last_cs = CSET_IN;
+
 	if (p->print_attributes) {
 	    send_CharSet(xw, ld);
 	    send_SGR(xw, 0, NO_COLOR, NO_COLOR);
 	}
 	for (col = 0; col < last; col++) {
-	    ch = ld->charData[col];
+	    IAttr attr = 0;
+	    unsigned ch = ld->charData[col];
 #if OPT_PRINT_COLORS
 	    if (screen->colorMode) {
 		if (p->print_attributes > 1) {
@@ -302,10 +303,12 @@ xtermPrintEverything(XtermWidget xw, PrinterFlags *p)
     TScreen *screen = TScreenOf(xw);
     Boolean was_open = SPS.isOpen;
     int save_which = screen->whichBuf;
-    int done_which = 0;
 
     DEBUG_MSG("xtermPrintEverything\n");
+
     if (p->print_everything) {
+	int done_which = 0;
+
 	if (p->print_everything & 8) {
 	    printLines(xw, -screen->savedlines, -(screen->topline + 1), p);
 	}
@@ -436,9 +439,7 @@ charToPrinter(XtermWidget xw, unsigned chr)
 	    SPS.fp = fopen(VMS_TEMP_PRINT_FILE, "w");
 #else
 	    {
-		FILE *input;
 		int my_pipe[2];
-		int c;
 		pid_t my_pid;
 
 		if (pipe(my_pipe))
@@ -466,10 +467,14 @@ charToPrinter(XtermWidget xw, unsigned chr)
 
 		    SPS.fp = popen(SPS.printer_command, "w");
 		    if (SPS.fp != 0) {
+			FILE *input;
 			DEBUG_MSG("charToPrinter: opened pipe to printer\n");
 			input = fdopen(my_pipe[0], "r");
 			clearerr(input);
+
 			for (;;) {
+			    int c;
+
 			    if (ferror(input)) {
 				DEBUG_MSG("charToPrinter: break on ferror\n");
 				break;
@@ -484,6 +489,7 @@ charToPrinter(XtermWidget xw, unsigned chr)
 			    if (isForm(c))
 				fflush(SPS.fp);
 			}
+
 			DEBUG_MSG("charToPrinter: calling pclose\n");
 			pclose(SPS.fp);
 		    }
@@ -571,6 +577,14 @@ xtermMediaControl(XtermWidget xw, int param, int private_seq)
 	case 5:
 	    setPrinterControlMode(xw, 2);
 	    break;
+#if OPT_SCREEN_DUMPS
+	case 10:
+	    xtermDumpHtml(xw);
+	    break;
+	case 11:
+	    xtermDumpSvg(xw);
+	    break;
+#endif
 	}
     }
 }

@@ -1,7 +1,7 @@
-/* $XTermId: cursor.c,v 1.69 2013/08/08 08:16:40 tom Exp $ */
+/* $XTermId: cursor.c,v 1.70 2016/05/15 18:35:39 tom Exp $ */
 
 /*
- * Copyright 2002-2012,2013 by Thomas E. Dickey
+ * Copyright 2002-2013,2016 by Thomas E. Dickey
  * 
  *                         All Rights Reserved
  * 
@@ -65,7 +65,7 @@
  * The origin is considered to be 0, 0 for this procedure.
  */
 void
-CursorSet(TScreen * screen, int row, int col, unsigned flags)
+CursorSet(TScreen *screen, int row, int col, unsigned flags)
 {
     int use_row = row;
     int use_col = col;
@@ -96,7 +96,7 @@ CursorSet(TScreen * screen, int row, int col, unsigned flags)
 	   screen->rgt_marg,
 	   screen->cur_row,
 	   screen->cur_col,
-	   (flags & ORIGIN ? "origin" : "normal")));
+	   ((flags & ORIGIN) ? "origin" : "normal")));
 }
 
 /*
@@ -107,11 +107,11 @@ CursorBack(XtermWidget xw, int n)
 {
 #define WRAP_MASK (REVERSEWRAP | WRAPAROUND)
     TScreen *screen = TScreenOf(xw);
-    int offset, in_row, length, rev;
+    int rev;
     int left = ScrnLeftMargin(xw);
     int before = screen->cur_col;
 
-    if ((rev = (xw->flags & WRAP_MASK) == WRAP_MASK) != 0
+    if ((rev = ((xw->flags & WRAP_MASK) == WRAP_MASK)) != 0
 	&& screen->do_wrap) {
 	n--;
     }
@@ -122,10 +122,10 @@ CursorBack(XtermWidget xw, int n)
 
     if ((screen->cur_col -= n) < left) {
 	if (rev) {
-	    in_row = ScrnRightMargin(xw) - left + 1;
-	    offset = (in_row * screen->cur_row) + screen->cur_col - left;
+	    int in_row = ScrnRightMargin(xw) - left + 1;
+	    int offset = (in_row * screen->cur_row) + screen->cur_col - left;
 	    if (offset < 0) {
-		length = in_row * MaxRows(screen);
+		int length = in_row * MaxRows(screen);
 		offset += ((-offset) / length + 1) * length;
 	    }
 	    set_cur_row(screen, (offset / in_row));
@@ -171,7 +171,7 @@ CursorForward(XtermWidget xw, int n)
  * Won't pass bottom margin or bottom of screen.
  */
 void
-CursorDown(TScreen * screen, int n)
+CursorDown(TScreen *screen, int n)
 {
     int max;
     int next = screen->cur_row + n;
@@ -192,7 +192,7 @@ CursorDown(TScreen * screen, int n)
  * Won't pass top margin or top of screen.
  */
 void
-CursorUp(TScreen * screen, int n)
+CursorUp(TScreen *screen, int n)
 {
     int min;
     int next = screen->cur_row - n;
@@ -217,7 +217,6 @@ void
 xtermIndex(XtermWidget xw, int amount)
 {
     TScreen *screen = TScreenOf(xw);
-    int j;
 
     /*
      * indexing when below scrolling region is cursor down.
@@ -229,6 +228,7 @@ xtermIndex(XtermWidget xw, int amount)
 	    && !ScrnIsColInMargins(screen, screen->cur_col))) {
 	CursorDown(screen, amount);
     } else {
+	int j;
 	CursorDown(screen, j = screen->bot_marg - screen->cur_row);
 	xtermScroll(xw, amount - j);
     }
@@ -366,8 +366,8 @@ CursorRestore(XtermWidget xw)
 
 #if OPT_ISO_COLORS
     xw->sgr_foreground = sc->sgr_foreground;
-    SGR_Foreground(xw, xw->flags & FG_COLOR ? sc->cur_foreground : -1);
-    SGR_Background(xw, xw->flags & BG_COLOR ? sc->cur_background : -1);
+    SGR_Foreground(xw, (xw->flags & FG_COLOR) ? sc->cur_foreground : -1);
+    SGR_Background(xw, (xw->flags & BG_COLOR) ? sc->cur_background : -1);
 #endif
     update_autowrap();
 }
@@ -430,7 +430,7 @@ CursorRow(XtermWidget xw)
 
 #if OPT_TRACE
 int
-set_cur_row(TScreen * screen, int value)
+set_cur_row(TScreen *screen, int value)
 {
     TRACE(("set_cur_row %d vs %d\n", value, screen ? screen->max_row : -1));
 
@@ -442,7 +442,7 @@ set_cur_row(TScreen * screen, int value)
 }
 
 int
-set_cur_col(TScreen * screen, int value)
+set_cur_col(TScreen *screen, int value)
 {
     TRACE(("set_cur_col %d vs %d\n", value, screen ? screen->max_col : -1));
 

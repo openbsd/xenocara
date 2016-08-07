@@ -1,10 +1,10 @@
-# $XTermId: terminfo,v 1.162 2014/05/11 15:16:38 tom Exp $
+# $XTermId: terminfo,v 1.164 2016/05/30 21:13:46 tom Exp $
 #
 # Updates/notes/new entries (e.g., xterm-8bit, xterm-16color, xterm-256color)
 # - Thomas E. Dickey
 #
 #------------------------------------------------------------------------------
-# Copyright 1996-2012,2014 by Thomas E. Dickey
+# Copyright 1996-2014,2016 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -982,7 +982,7 @@ xterm-basic|modern xterm terminal emulator - common,
 	u8=\E[?1;2c,
 	u9=\E[c,
 	vpa=\E[%i%p1%dd,
-	E3=\E[3;J,
+	E3=\E[3J,
 	use=xterm+kbs,
 #
 # The xterm-new description has all of the features, but is not completely
@@ -1435,6 +1435,8 @@ xterm+256color|xterm 256-color feature,
 	colors#256,
 	pairs#32767,
 	initc=\E]4;%p1%d;rgb\:%p2%{255}%*%{1000}%/%2.2X/%p3%{255}%*%{1000}%/%2.2X/%p4%{255}%*%{1000}%/%2.2X\E\\,
+	oc=\E]104\007,
+	rs1=\Ec\E]104\007,
 	setab=\E[%?%p1%{8}%<%t4%p1%d%e%p1%{16}%<%t10%p1%{8}%-%d%e48;5;%p1%d%;m,
 	setaf=\E[%?%p1%{8}%<%t3%p1%d%e%p1%{16}%<%t9%p1%{8}%-%d%e38;5;%p1%d%;m,
 	setb@,
@@ -1978,3 +1980,4 @@ xterm|X11 terminal emulator,
 # should send.
 xterm+kbs|fragment for backspace key,
 	kbs=^H,
+#	kbs=^?,

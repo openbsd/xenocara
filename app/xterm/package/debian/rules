@@ -72,6 +72,7 @@ configure-stamp:
 		--enable-paste64 \
 		--enable-regis-graphics \
 		--enable-sco-fkeys \
+		--enable-screen-dumps \
 		--enable-sixel-graphics \
 		--enable-tcap-fkeys \
 		--enable-tcap-query \

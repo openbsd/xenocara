@@ -1,9 +1,9 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.326 2015/12/30 10:02:15 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.330 2016/02/22 00:44:10 tom Exp $
 .\"
 .\"
-.\" Copyright 1996-2014,2015 by Thomas E. Dickey
+.\" Copyright 1996-2015,2016 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #321
-.ds RF 2015/12/30
+.ds LF Patch #323
+.ds RF 2016/02/21
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -337,7 +337,7 @@ X Consortium (1994)
 Thomas Dickey
 .AI
 XFree86 Project (1996-2006)
-invisible-island.net (2006-2015)
+invisible-island.net (2006-2016)
 updated for \*(XT \*(LF (\*(RF)
 .AU
 .
@@ -1025,6 +1025,8 @@ Media Copy (MC).
   \*(Ps = \*0 \(-> Print screen (default).
   \*(Ps = \*4 \(-> Turn off printer controller mode.
   \*(Ps = \*5 \(-> Turn on printer controller mode.
+  \*(Ps = \*1 \*0 \(-> HTML screen dump.
+  \*(Ps = \*1 \*1 \(-> SVG screen dump.
 .
 .IP \\*(Cs\\*?\\*(Pm\\*s\\*i
 Media Copy (MC, DEC-specific).
@@ -1196,9 +1198,9 @@ ISO-8613-3 can be interpreted in more than one way;
 .sP
 These ISO-8613-3 controls are supported:
   \*(Pm = \*3\*8\*;\*2\*;\*(Pr\*;\*(Pg\*;\*(Pb \(-> Set foreground color to the closest match in \fIxterm\fP's palette for the given RGB \*(Pr/\*(Pg/\*(Pb.
-  \*(Pm = \*3\*8\*;\*5\*;\*(Ps \(-> Set foreground color to the second \*(Ps.
+  \*(Pm = \*3\*8\*;\*5\*;\*(Ps \(-> Set foreground color to \*(Ps.
   \*(Pm = \*4\*8\*;\*2\*;\*(Pr\*;\*(Pg\*;\*(Pb \(-> Set background color to the closest match in \fIxterm\fP's palette for the given RGB \*(Pr/\*(Pg/\*(Pb.
-  \*(Pm = \*4\*8\*;\*5\*;\*(Ps \(-> Set background color to the second \*(Ps.
+  \*(Pm = \*4\*8\*;\*5\*;\*(Ps \(-> Set background color to \*(Ps.
 .sp
 .
 .IP \\*(Cs\\*>\\*(Ps\\*;\\*(Ps\\*s\\*m

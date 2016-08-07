@@ -1,7 +1,7 @@
-/* $XTermId: menu.h,v 1.136 2015/12/30 09:53:02 tom Exp $ */
+/* $XTermId: menu.h,v 1.138 2016/01/28 02:15:29 tom Exp $ */
 
 /*
- * Copyright 1999-2014,2015 by Thomas E. Dickey
+ * Copyright 1999-2015,2016 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -96,6 +96,8 @@ extern void HandleCreateMenu       PROTO_XT_ACTIONS_ARGS;
 extern void HandleCursesEmul       PROTO_XT_ACTIONS_ARGS;
 extern void HandleCursorBlink      PROTO_XT_ACTIONS_ARGS;
 extern void HandleDeleteIsDEL      PROTO_XT_ACTIONS_ARGS;
+extern void HandleDumpHtml         PROTO_XT_ACTIONS_ARGS;
+extern void HandleDumpSvg          PROTO_XT_ACTIONS_ARGS;
 extern void HandleFontBoxChars     PROTO_XT_ACTIONS_ARGS;
 extern void HandleFontDoublesize   PROTO_XT_ACTIONS_ARGS;
 extern void HandleFontLoading      PROTO_XT_ACTIONS_ARGS;
@@ -182,6 +184,10 @@ typedef enum {
 #endif
     mainMenu_print,
     mainMenu_print_redir,
+#if OPT_SCREEN_DUMPS
+    mainMenu_dump_html,
+    mainMenu_dump_svg,
+#endif
     mainMenu_line2,
     mainMenu_8bit_ctrl,
     mainMenu_backarrow,

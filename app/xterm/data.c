@@ -1,7 +1,7 @@
-/* $XTermId: data.c,v 1.93 2013/11/22 21:48:08 tom Exp $ */
+/* $XTermId: data.c,v 1.96 2016/06/01 09:14:11 tom Exp $ */
 
 /*
- * Copyright 2002-2011,2013 by Thomas E. Dickey
+ * Copyright 2002-2013,2016 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -78,6 +78,7 @@ Cardinal number_ourTopLevelShellArgs = 2;
 
 Atom wm_delete_window;		/* for ICCCM delete window */
 
+Boolean guard_keyboard_type = False;
 XTERM_RESOURCE resource;
 
 PtyData *VTbuffer;
@@ -93,6 +94,7 @@ XtermWidget term;		/* master data structure for client */
 
 int hold_screen;
 SIG_ATOMIC_T need_cleanup = False;
+SIG_ATOMIC_T caught_intr = False;
 
 int am_slave = -1;		/* set to file-descriptor if we're a slave process */
 int max_plus1;

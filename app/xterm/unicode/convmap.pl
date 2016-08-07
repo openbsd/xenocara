@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# $XTermId: convmap.pl,v 1.13 2007/06/11 23:30:44 tom Exp $
+# $XTermId: convmap.pl,v 1.14 2016/05/22 19:57:09 tom Exp $
 #
 # Generate keysym2ucs.c file
 #
@@ -56,13 +56,13 @@ sub utf8 ($) {
     }
 }
 
-my $unicodedata = "UnicodeData-Latest.txt";
+my $unicodedata = "UnicodeData.txt";
 
 # read list of all Unicode names
 if (!open(UDATA, $unicodedata) && !open(UDATA, "$unicodedata")) {
     die ("Can't open Unicode database '$unicodedata':\n$!\n\n" .
          "Please make sure that you have downloaded the file\n" .
-         "ftp://ftp.unicode.org/Public/UNIDATA/UnicodeData-Latest.txt\n");
+         "ftp://ftp.unicode.org/Public/UNIDATA/UnicodeData.txt\n");
 }
 while (<UDATA>) {
     if (/^([0-9,A-F]{4,6});([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*)$/) {
@@ -176,7 +176,6 @@ long keysym2ucs(KeySym keysym)
 {
     int min = 0;
     int max = sizeof(keysymtab) / sizeof(struct codepair) - 1;
-    int mid;
 
     /* first check for Latin-1 characters (1:1 mapping) */
     if ((keysym >= 0x0020 && keysym <= 0x007e) ||
@@ -189,7 +188,7 @@ long keysym2ucs(KeySym keysym)
 
     /* binary search in table */
     while (max >= min) {
-	mid = (min + max) / 2;
+	int mid = (min + max) / 2;
 	if (keysymtab[mid].keysym < keysym)
 	    min = mid + 1;
 	else if (keysymtab[mid].keysym > keysym)

@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1638 2016/01/02 14:26:50 tom Exp $
+  $XTermId: xterm.log.html,v 1.1669 2016/06/05 22:28:12 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -72,6 +72,12 @@
   CHANGELOG</a>).</p>
 
   <ul>
+    <li><a href="#xterm_325">Patch #325 - 2016/06/05</a></li>
+
+    <li><a href="#xterm_324">Patch #324 - 2016/03/10</a></li>
+
+    <li><a href="#xterm_323">Patch #323 - 2016/03/07</a></li>
+
     <li><a href="#xterm_322">Patch #322 - 2016/01/02</a></li>
 
     <li><a href="#xterm_321">Patch #321 - 2015/12/31</a></li>
@@ -927,6 +933,125 @@
     <li><a href="#xterm_02">Patch #2 - 1996/1/7</a></li>
 
     <li><a href="#xterm_01">Patch #1 - 1996/1/6</a></li>
+  </ul>
+
+  <h1><a name="xterm_325" id="xterm_325">Patch #325 -
+  2016/06/05</a></h1>
+
+  <ul>
+    <li>improve manual page discussion of function keys (discussion
+    with Ross Combs).</li>
+
+    <li>further improve fix for Debian #545220 in <a href=
+    "#xterm_248">patch #248</a>, to avoid conflict with combining
+    characters (Debian #738794).</li>
+
+    <li>improve <code>-hold</code> option to avoid 100% CPU usage
+    with NetBSD after closing the shell, which makes subsequent
+    checks for X input events fail (prompted by patch by Pierre
+    Pronchery).</li>
+
+    <li>review <code>#ifdef</code> statements, listed those which
+    do not have a configure option in
+    <code>xtermcfg.hin</code>.</li>
+
+    <li>fixed one case where the menu sensistivity for
+    <em>Print-All Immediately</em> and <em>Print-All on Error</em>
+    was not properly ifdef'd.</li>
+
+    <li>modify terminfo entries for 16-, 88- and 256-color to reset
+    palette with <code>rs1</code> capability.</li>
+
+    <li>accept <code>legacy</code> value of <code>-kt</code> as
+    synonym for the <code>oldXtermFKeys</code> resource, and extend
+    the full-reset logic to use the keyboard type set via
+    <code>-kt</code>.</li>
+
+    <li>modify <code>ioctl</code> calls for <code>I_PUSH</code> to
+    first check if the module has been added, using
+    <code>I_FIND</code>. This is needed for newer Solaris libraries
+    with c11 support (adapted from patch by Alan Coopersmith).</li>
+
+    <li>add check in <code>getXtermCombining</code> to ensure that
+    combining characters were allocated (report by Tor
+    Andersson).</li>
+
+    <li>add configure option <code>--without-xinerama</code> to
+    allow suppressing the extension (Gentoo #580936).</li>
+
+    <li>update keysym2ucs.c based on Unicode 9.0</li>
+
+    <li>fixed most <code>cppcheck --enable=all</code> warnings,
+    including for style (prompted by report by David Binderman).
+    There was one bug-fix:
+
+      <ul>
+        <li>RGB least-squares computation in
+        <code>allocateClosestRGB</code> used only one ordinate</li>
+      </ul>
+    </li>
+
+    <li>add <code>cppcheck</code> to lint-like programs in
+    configure script and makefile.</li>
+
+    <li>updates for SIXEL and ReGIS (Ross Combs):
+
+      <ul>
+        <li>Fixes some const correctness issues and points out an
+        array lifetime issue</li>
+
+        <li>Sixel drawing should still happen after an error if
+        some commands have been processed</li>
+
+        <li>Tiny steps toward reporting ReGIS input</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h1><a name="xterm_324" id="xterm_324">Patch #324 -
+  2016/03/10</a></h1>
+
+  <ul>
+    <li>updated configure macro <code>CF_LD_RPATH_OPT</code> from
+    ncurses changes.</li>
+
+    <li>provide alternate fix for Juha Nurmela's report by turning
+    on POSIX signals if <code>_POSIX_C_SOURCE</code> is at least
+    one. This is done to improve the behavior if a direct child
+    process receives a <code>STOP</code> signal.</li>
+
+    <li>revert change to <code>CF_POSIX_C_SOURCE</code> from
+    <a href="#xterm-323">patch #323</a> (reports by Ashish Shukla,
+    Christian Weisgerber).</li>
+  </ul>
+
+  <h1><a name="xterm_323" id="xterm_323">Patch #323 -
+  2016/03/07</a></h1>
+
+  <ul>
+    <li>updated appdata and desktop files to add keywords (report
+    by Richard Hughes).</li>
+
+    <li>modify configure macro <code>CF_POSIX_C_SOURCE</code> to
+    accommodate some systems, e.g., FreeBSD, which have separated
+    their implementation specific preprocessor symbols from the
+    POSIX ones, requiring both to be defined (report by Juha
+    Nurmela).</li>
+
+    <li>change the directory to the current working dir of the
+    child process in exec-formatted and exec-selectable actions
+    (patch by Alexander Pohoyda).</li>
+
+    <li>correct typo in xterm.man (patch by Larry Hynes).</li>
+
+    <li>correct typo in ctlseqs.ms (report by Shriramana
+    Sharma).</li>
+
+    <li>add feature to support XHTML and SVG screen dumps (patch by
+    Jens Schweikhardt).</li>
+
+    <li>correct response to DECRQSS when terminal id is less than
+    400 (patch by Iwamoto Kouichi).</li>
   </ul>
 
   <h1><a name="xterm_322" id="xterm_322">Patch #322 -
@@ -4483,7 +4608,7 @@
     <li>modify <code>tcap-query</code> feature to not return data
     for shifted cursor-keys when the keyboard type is set to vt220,
     since returning the same string for shifted/unshifted keys may
-    confuse some applications (GenToo #212546).</li>
+    confuse some applications (Gentoo #212546).</li>
   </ul>
 
   <h1><a name="xterm_237" id="xterm_237">Patch #237 -
@@ -4500,7 +4625,7 @@
     <li>remove an optimization of <code>ConfigureNotify</code>
     events from <a href="#xterm_236">patch #236</a> which seems to
     interfere with passing <code>SIGWINCH</code> to applications
-    (GenToo #233836).</li>
+    (Gentoo #233836).</li>
 
     <li>modify handling of <code>altSendsEscape</code> to reset the
     <code>eightBitInput</code> mode, like
@@ -5291,7 +5416,7 @@
 
     <li>amend cell-width computation for FreeType from <a href=
     "#xterm_217">patch #217</a>, which did not work for VT100
-    line-drawing characters (Debian #399638, GenToo #147111).</li>
+    line-drawing characters (Debian #399638, Gentoo #147111).</li>
 
     <li>amend a change from <a href="#xterm_216">patch #216</a>,
     which made alt-modifier on a cursor-key send a modifier
@@ -5610,7 +5735,7 @@
     by Jason Vas Dias).</li>
 
     <li>improve checks for setuid/setgid operation to accommodate
-    limited resource management in some kernels (GenToo
+    limited resource management in some kernels (Gentoo
     #193238).</li>
 
     <li>update config.guess, config.sub</li>
@@ -5871,7 +5996,7 @@
     with a symbolic link pointing to the most recent.</li>
 
     <li>make <code>-iconic</code> option work with toolbar
-    configuration (GenToo #113604).</li>
+    configuration (Gentoo #113604).</li>
 
     <li>suppress <code>lastlog</code> feature for 64-bit Solaris
     configuration since that platform provides only a 32-bit
@@ -5953,7 +6078,7 @@
 
     <li>add <code>--enable-narrowproto</code> configure option to
     accommodate X.org "modular" build (report by Stephan Hermann,
-    GenToo #17220).</li>
+    Gentoo #17220).</li>
 
     <li>fix typo in xterm.man description of <code>+wf</code>
     (patch by Tobias Stoeckmann).</li>
@@ -5974,12 +6099,12 @@
     <li>use <code>openpty()</code> for Darwin port (patch by
     Emanuele Giaquinta).</li>
 
-    <li>fix GenToo #90697 a different way, postponing the logic in
+    <li>fix Gentoo #90697 a different way, postponing the logic in
     <code>SetupToolbar</code> until the toolbar is actually needed,
     i.e., the <code>+tb</code> option is handled as expected.</li>
 
     <li>revert fix made in <a href="#xterm_203">patch #203</a> for
-    GenToo #90697. That introduced a problem with the control mouse
+    Gentoo #90697. That introduced a problem with the control mouse
     click-popups, while most of the performance problems can be
     resolved by restricting the menu fonts (report by Emanuele
     Giaquinta).</li>
@@ -6134,7 +6259,7 @@
       </ul>
     </li>
 
-    <li>workaround for GenToo Bugzilla #100728.</li>
+    <li>workaround for Gentoo Bugzilla #100728.</li>
 
     <li>add menubar's border width to layout computation. Normally
     this is zero, but patterns such as
@@ -6205,14 +6330,14 @@
 
     <li>improve initialization of toolbar so that individual
     pulldown menus are initialized on demand, as they are in the
-    scenario where they are invoked as popup menus (GenToo Bugzilla
+    scenario where they are invoked as popup menus (Gentoo Bugzilla
     #90697).</li>
 
     <li>fix logic in <code>find_utmp</code>, which did not reset
     result in <code>getutid()</code>, causing an infinite loop in
     some conditions (report by Emil Mikulic).</li>
 
-    <li>set the <code>_NET_WM_PID</code> property (GenToo Bugzilla
+    <li>set the <code>_NET_WM_PID</code> property (Gentoo Bugzilla
     #91008).</li>
 
     <li>modify ifdef's in ptyx.h and xterm_io.h to build with
@@ -6737,7 +6862,7 @@
     Scheler).</li>
 
     <li>modify configure script options for Athena widgets to work
-    as expected for "--without-Xaw3d", etc., (GenToo Bugzilla
+    as expected for "--without-Xaw3d", etc., (Gentoo Bugzilla
     #53455).</li>
 
     <li>add case to uxterm to accommodate locales ending with
@@ -6797,7 +6922,7 @@
 
     <li>work around change in quoting of PROJECTROOT symbol when
     using configure script, from changes made in <a href=
-    "#xterm_187">patch #187</a> for CF_IMAKE_CFLAGS (GenToo
+    "#xterm_187">patch #187</a> for CF_IMAKE_CFLAGS (Gentoo
     Bugzilla #50982).</li>
   </ul>
 

@@ -1,11 +1,11 @@
-# $XTermId: termcap,v 1.80 2012/06/10 14:30:37 tom Exp $
+# $XTermId: termcap,v 1.82 2016/05/30 21:41:18 tom Exp $
 #
 # These are termcap entries that correspond to xterm's terminfo file.
 # The file is formatted using ncurses' "tic -CNx", but is not mechanically
 # derived from the terminfo.
 #
 #------------------------------------------------------------------------------
-# Copyright 1996-2011,2012 by Thomas E. Dickey
+# Copyright 1996-2012,2016 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -50,7 +50,7 @@
 #	the resolved length of each entry in a comment at the end - T.Dickey
 #
 xf|xterm-new|modern xterm:\
-	:*6=\EOF:@7=\EOF:F1=\E[23~:F2=\E[24~:K2=\EOE:Km=\E[M:\
+	:XT::*6=\EOF:@7=\EOF:F1=\E[23~:F2=\E[24~:K2=\EOE:Km=\E[M:\
 	:k1=\EOP:k2=\EOQ:k3=\EOR:k4=\EOS:k5=\E[15~:k6=\E[17~:\
 	:k7=\E[18~:k8=\E[19~:k9=\E[20~:k;=\E[21~:kB=\E[Z:kH=\EOF:\
 	:kI=\E[2~:kN=\E[6~:kP=\E[5~:kd=\EOB:kh=\EOH:kl=\EOD:\
@@ -64,10 +64,10 @@ xb|xterm-basic|modern xterm common:\
 	:DO=\E[%dB:LE=\E[%dD:RI=\E[%dC:UP=\E[%dA:ae=\E(B:al=\E[L:\
 	:as=\E(0:bl=^G:cd=\E[J:ce=\E[K:cl=\E[H\E[2J:\
 	:cm=\E[%i%d;%dH:cs=\E[%i%d;%dr:ct=\E[3g:dc=\E[P:dl=\E[M:\
-	:ei=\E[4l:ho=\E[H:im=\E[4h:is=\E[!p\E[?3;4l\E[4l\E>:\
+	:ei=\E[4l:ho=\E[H:im=\E[4h:is=\E[!p\E[?3;4l\E[4l\E>\E]104^G:\
 	:kD=\E[3~:ke=\E[?1l\E>:ks=\E[?1h\E=:le=^H:md=\E[1m:\
 	:me=\E[m:ml=\El:mr=\E[7m:mu=\Em:nd=\E[C:op=\E[39;49m:\
-	:rc=\E8:rs=\E[!p\E[?3;4l\E[4l\E>:sc=\E7:se=\E[27m:sf=^J:\
+	:rc=\E8:rs=\E[!p\E[?3;4l\E[4l\E>\E]104^G:sc=\E7:se=\E[27m:sf=^J:\
 	:so=\E[7m:sr=\EM:st=\EH:te=\E[?1049l:ti=\E[?1049h:\
 	:ue=\E[24m:up=\E[A:us=\E[4m:ve=\E[?12l\E[?25h:vi=\E[?25l:\
 	:vs=\E[?12;25h:tc=xterm+kbs:
@@ -82,7 +82,7 @@ xb|xterm-basic|modern xterm common:\
 #	+ uses DEC-style control sequences for the application keypad.
 #
 vt|xterm-vt220|xterm emulating vt220:\
-	:*6=\E[4~:@7=\E[4~:K2=\EOu:Km=\E[M:kB=\E[Z:kH=\E[4~:\
+	:XT::*6=\E[4~:@7=\E[4~:K2=\EOu:Km=\E[M:kB=\E[Z:kH=\E[4~:\
 	:kh=\E[1~:tc=xterm-basic:
 
 v1|xterm-24|xterms|vs100|24x80 xterm:\
@@ -136,7 +136,7 @@ xx|xterm-xmc|xterm alias:\
 # An 8-bit description is doable with termcap, but there are probably no
 # termcap (or BSD curses) applications that are able to use it.
 x8|xterm-8bit|xterm terminal emulator 8-bit controls (X Window System):\
-	:am:km:mi:ms:xn:\
+	:am:km:mi:ms:xn:XT:\
 	:co#80:it#8:li#24:\
 	:AL=\233%dL:DC=\233%dP:DL=\233%dM:DO=\233%dB:IC=\233%d@:\
 	:K2=\217y:Km=\233M:LE=\233%dD:RI=\233%dC:UP=\233%dA:\

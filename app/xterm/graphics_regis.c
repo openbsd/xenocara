@@ -1,7 +1,7 @@
-/* $XTermId: graphics_regis.c,v 1.76 2015/07/13 22:52:29 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.80 2016/05/29 16:20:42 tom Exp $ */
 
 /*
- * Copyright 2014,2015 by Ross Combs
+ * Copyright 2014-2015,2016 by Ross Combs
  *
  *                         All Rights Reserved
  *
@@ -295,7 +295,7 @@ static unsigned get_shade_character_pixel(unsigned char const *pixels,
 					  unsigned smaxf, unsigned scale,
 					  int slant_dx, int px, int py);
 static void get_bitmap_of_character(RegisGraphicsContext const *context,
-				    char ch, unsigned maxw, unsigned maxh,
+				    int ch, unsigned maxw, unsigned maxh,
 				    unsigned char *pixels,
 				    unsigned *w, unsigned *h,
 				    unsigned max_pixels);
@@ -546,7 +546,6 @@ static void
 draw_filled_polygon(RegisGraphicsContext *context)
 {
     unsigned p;
-    int new_x, new_y;
     int old_x, old_y;
     int inside;
     unsigned char pixels[MAX_GLYPH_PIXELS];
@@ -571,8 +570,8 @@ draw_filled_polygon(RegisGraphicsContext *context)
     old_y = DUMMY_STACK_Y;
     inside = 0;
     for (p = 0U; p < context->fill_point_count; p++) {
-	new_x = context->fill_points[p].x;
-	new_y = context->fill_points[p].y;
+	int new_x = context->fill_points[p].x;
+	int new_y = context->fill_points[p].y;
 #if 0
 	printf("got %d,%d (%d,%d) inside=%d\n", new_x, new_y, old_x, old_y, inside);
 #endif
@@ -729,7 +728,6 @@ draw_patterned_arc(RegisGraphicsContext *context,
     int points_start, points_stop;
     int points;
     unsigned iterations;
-    int quad;
     long rx, ry;
     long dx, dy;
     int x, y;
@@ -787,7 +785,7 @@ draw_patterned_arc(RegisGraphicsContext *context,
     /* FIXME: The four pixels at the cardinal directions are double-drawn. */
     points = 0;
     for (iterations = 0U; iterations < 8U; iterations++) {
-	quad = iterations & 0x3;
+	int q2 = iterations & 0x3;
 
 	rx = -ra;
 	ry = 0;
@@ -798,10 +796,10 @@ draw_patterned_arc(RegisGraphicsContext *context,
 	do {
 #ifdef DEBUG_ARC_POINTS
 	    double rad = atan2(
-				  (double) (quadmap[quad].dyx * rx +
-					    quadmap[quad].dyy * ry),
-				  (double) (quadmap[quad].dxx * rx +
-					    quadmap[quad].dxy * ry));
+				  (double) (quadmap[q2].dyx * rx +
+					    quadmap[q2].dyy * ry),
+				  (double) (quadmap[q2].dxx * rx +
+					    quadmap[q2].dxy * ry));
 	    double deg = (360.0 * rad / (2.0 * M_PI));
 	    if (deg < 0.0)
 		deg += 360.0;
@@ -809,11 +807,11 @@ draw_patterned_arc(RegisGraphicsContext *context,
 
 	    if (points >= points_start && points <= points_stop) {
 		x = (int) (cx +
-			   quadmap[quad].dxx * rx +
-			   quadmap[quad].dxy * ry);
+			   quadmap[q2].dxx * rx +
+			   quadmap[q2].dxy * ry);
 		y = (int) (cy +
-			   quadmap[quad].dyx * rx +
-			   quadmap[quad].dyy * ry);
+			   quadmap[q2].dyx * rx +
+			   quadmap[q2].dyy * ry);
 #ifdef DEBUG_ARC_POINTS
 		TRACE(("drawing point %u at %d,%d (%.5g deg)\n",
 		       points, x, y, deg));
@@ -825,8 +823,8 @@ draw_patterned_arc(RegisGraphicsContext *context,
 		    *ey_final = y;
 	    } else {
 #ifdef DEBUG_ARC_POINTS
-		x = (int) (cx + quadmap[quad].dxx * rx + quadmap[quad].dxy * ry);
-		y = (int) (cy + quadmap[quad].dyx * rx + quadmap[quad].dyy * ry);
+		x = (int) (cx + quadmap[q2].dxx * rx + quadmap[q2].dxy * ry);
+		y = (int) (cy + quadmap[q2].dyx * rx + quadmap[q2].dyy * ry);
 		TRACE(("skipping point %u at %d,%d which is outside of range (%.5g deg)\n",
 		       points, x, y, deg));
 #endif
@@ -874,9 +872,10 @@ plotLine(int x0, int y0, int x1, int y1)
 {
     int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
     int dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
-    int err = dx + dy, e2;	/* error value e_xy */
+    int err = dx + dy;		/* error value e_xy */
 
     for (;;) {			/* loop */
+	int e2;
 	setPixel(x0, y0);
 	e2 = 2 * err;
 	if (e2 >= dy) {		/* e_xy+e_x > 0 */
@@ -1140,7 +1139,8 @@ plotCubicBezier(int x0, int y0, int x1, int y1,
     long ya = yc - 4 * (y1 - y2);
     long yb = y0 - y1 - y2 + y3;
     long yd = yb + 4 * (y1 + y2);
-    double fx0 = x0, fx1, fx2, fx3, fy0 = y0, fy1, fy2, fy3;
+    double fx0 = x0;
+    double fy0 = y0;
     double t1 = (double) (xb * xb - xa * xc), t2, t[5];
 
 #ifdef DEBUG_BEZIER
@@ -1183,6 +1183,9 @@ plotCubicBezier(int x0, int y0, int x1, int y1,
     t1 = -1.0;
     t[n] = 1.0;			/* begin / end point */
     for (i = 0; i <= n; i++) {	/* plot each segment separately */
+	double fx1, fx2, fx3;
+	double fy1, fy2, fy3;
+
 	t2 = t[i];		/* sub-divide at t[i-1], t[i] */
 	fx1 = (t1 * (t1 * (double) xb - (double) (2 * xc)) -
 	       t2 * (t1 * (t1 * (double) xa - (double) (2 * xb)) + (double)
@@ -1924,7 +1927,7 @@ find_best_xft_font_size(Display *display, Screen *screen, char const *fontname,
 
 static int
 get_xft_bitmap_of_character(RegisGraphicsContext const *context,
-			    char const *fontname, char ch,
+			    char const *fontname, int ch,
 			    unsigned maxw, unsigned maxh, unsigned char *pixels,
 			    unsigned max_pixels, unsigned *w, unsigned *h)
 {
@@ -2022,7 +2025,7 @@ find_best_alphabet_index(RegisGraphicsContext const *context,
 
 static int
 get_user_bitmap_of_character(RegisGraphicsContext const *context,
-			     char ch,
+			     int ch,
 			     unsigned alphabet_index,
 			     unsigned char *pixels)
 {
@@ -2094,7 +2097,7 @@ get_user_bitmap_of_character(RegisGraphicsContext const *context,
  *
  */
 static void
-get_bitmap_of_character(RegisGraphicsContext const *context, char ch,
+get_bitmap_of_character(RegisGraphicsContext const *context, int ch,
 			unsigned maxw, unsigned maxh, unsigned char *pixels,
 			unsigned *w, unsigned *h, unsigned max_pixels)
 {
@@ -2198,7 +2201,7 @@ get_shade_character_pixel(unsigned char const *pixels, unsigned w, unsigned h,
 }
 
 static void
-draw_character(RegisGraphicsContext *context, char ch,
+draw_character(RegisGraphicsContext *context, int ch,
 	       int slant_dx, int rot_shear_x,
 	       int rot_shear_y, int x_sign_x, int x_sign_y,
 	       int y_sign_x, int y_sign_y)
@@ -2653,12 +2656,11 @@ static int
 skip_regis_whitespace(RegisDataFragment *input)
 {
     int skipped = 0;
-    char ch;
 
     assert(input);
 
     for (; input->pos < input->len; input->pos++) {
-	ch = input->start[input->pos];
+	char ch = input->start[input->pos];
 	if (ch != ',' && !IsSpace(ch)) {
 	    break;
 	}
@@ -2820,7 +2822,6 @@ extract_regis_string(RegisDataFragment *input, char *out, unsigned maxlen)
 {
     char first_ch;
     char ch;
-    char prev_ch;
     unsigned outlen = 0U;
 
     assert(input);
@@ -2837,7 +2838,7 @@ extract_regis_string(RegisDataFragment *input, char *out, unsigned maxlen)
 
     ch = '\0';
     for (; input->pos < input->len; input->pos++) {
-	prev_ch = ch;
+	char prev_ch = ch;
 	ch = input->start[input->pos];
 	/* ';' (resync) is not recognized in strings */
 	if (prev_ch == first_ch) {
@@ -2882,7 +2883,7 @@ extract_regis_parenthesized_data(RegisDataFragment *input,
 				 RegisDataFragment *output)
 {
     char ch;
-    char first_ch, prev_ch;
+    char first_ch;
     int nesting;
 
     assert(input);
@@ -2905,7 +2906,7 @@ extract_regis_parenthesized_data(RegisDataFragment *input,
 
     ch = '\0';
     for (; input->pos < input->len; input->pos++, output->len++) {
-	prev_ch = ch;
+	char prev_ch = ch;
 	ch = input->start[input->pos];
 	if (ch == '\'' || ch == '"') {
 	    if (first_ch == '\0') {
@@ -3094,7 +3095,7 @@ load_regis_colorspec(RegisGraphicsContext const *context,
 {
     RegisDataFragment colorspec;
     short r = -1, g = -1, b = -1;
-    short h = -1, l = -1, s = -1;
+    short l = -1;
     int simple;
 
     copy_fragment(&colorspec, input);
@@ -3179,6 +3180,8 @@ load_regis_colorspec(RegisGraphicsContext const *context,
 	RegisDataFragment num;
 	int max, val;
 	char comp;
+	short h = -1;
+	short s = -1;
 
 	while (colorspec.pos < colorspec.len) {
 	    if (skip_regis_whitespace(&colorspec))
@@ -3875,12 +3878,11 @@ load_regis_write_control(RegisParseState *state,
 			peek_fragment(&item) == '1') {
 			unsigned pattern = 0U;
 			unsigned bitcount;
-			char ch;
 
 			TRACE(("converting pattern bits \"%s\"\n",
 			       fragment_to_tempstr(&item)));
 			for (bitcount = 0;; bitcount++) {
-			    ch = pop_fragment(&item);
+			    char ch = pop_fragment(&item);
 			    if (ch == '\0')
 				break;
 			    switch (ch) {
@@ -4485,12 +4487,12 @@ parse_regis_command(RegisParseState *state)
 
 	 * R
 	 * (E)  # parse error
-	 * (I<val>)  # set input mode (0 == oneshot, 1 == multiple) (always returns CR)
+	 * (I<val>)  # set input mode (0 == one-shot, 1 == multiple) (always returns CR)
 	 * (L)  # character set
 	 * (M(<name>)  # macrograph contents
 	 * (M(=)  # macrograph storage
 	 * (P)  # output cursor position
-	 * (P(I))  # input cursor position (when in oneshot or multiple mode)
+	 * (P(I))  # input cursor position (when in one-shot or multiple mode)
 	 */
 	TRACE(("found ReGIS command \"%c\" (report status)\n", ch));
 	state->command = 'r';
@@ -5286,10 +5288,16 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		context->multi_input_mode = mode;
 		if (context->multi_input_mode) {
 		    TRACE(("ERROR: multi-mode input not implemented FIXME\n"));
-		    /* enable input cursor, send location on mouse clicks */
+		    /* FIXME: enable input cursor, send location on mouse clicks or non-arrowkey keypresses */
 		} else {
-		    /* disable input cursor, don't track mouse clicks */
+		    /* FIXME: if in multi-mode, disable input cursor, stop tracking mouse clicks and keypresses */
+		    /* FIXME: enable input cursor and disable drawing until location report request command is received */
+		    /* FIXME: upon mouse click or keypress respond with location report */
 		}
+		/* FIXME: implement input cursor */
+		/* FIXME: implement mouse tracking */
+		/* FIXME: implement arrow key movement */
+		/* FIXME: implement button/key collection */
 
 		unparseputs(context->display_graphic->xw, "\r");
 		unparse_end(context->display_graphic->xw);
@@ -5372,7 +5380,10 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    unparse_end(context->display_graphic->xw);
 		} else {
 		    TRACE(("got report macrograph name '%c'\n", name));
-		    /* FIXME: implement when macrographs are supported (and allow it to be disabled for security reasons) */
+		    /*
+		     * FIXME: Implement when macrographs are supported (and
+		     * allow it to be disabled for security reasons).
+		     */
 		    /* FIXME: also send CSI here? */
 		    unparseputs(context->display_graphic->xw, "@;\r");
 		    unparse_end(context->display_graphic->xw);
@@ -5434,14 +5445,46 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    unparseputs(context->display_graphic->xw, reply);
 		    unparse_end(context->display_graphic->xw);
 		} else {
+		    char reply[64];
+		    int x, y;
+
 		    if (context->multi_input_mode) {
+			/* FIXME: track input coordinates */
+			x = y = 0;	/* placeholders */
+
 			/* send CSI240~[x,y]\r with current input cursor location */
-			TRACE(("ERROR: multi-mode input report not implemented FIXME\n"));
+
+			/* FIXME: verify no leading char or button sequence */
+			/* FIXME: should we ever send an eight-bit CSI? */
+			/* FIXME: verify in absolute, not user, coordinates */
+			TRACE(("sending multi-mode input report at %d,%d\n",
+			       x, y));
+			sprintf(reply, "\033[[%d,%d]\r", x, y);
+			unparseputs(context->display_graphic->xw, reply);
+			unparse_end(context->display_graphic->xw);
 			break;
 		    } else {
-			/* display input cursor, grab mouse and keyboard, use arrow keys and shifted arrow keys to move cursor, and report on first keypress or mouse click */
-			/* send <button sequence>[x,y]\r with input cursor location */
-			TRACE(("ERROR: one shot input report not implemented FIXME\n"));
+			char ch;
+
+			/* FIXME: wait for first non-arrow keypress or mouse click, and don't update graphics while waiting */
+			ch = ' ';	/* placeholder */
+			x = y = 0;	/* placeholders */
+
+			/* send <key or button>[x,y]\r to report input cursor location */
+
+			/* null button: CSI240~ */
+			/* left button: CSI241~ */
+			/* middle button: CSI243~ */
+			/* right button: CSI245~ */
+			/* extra button: CSI247~ */
+			/* FIXME: support DECLBD to change button assignments */
+			/* FIXME: verify no leading char or button sequence */
+			/* FIXME: should we ever send an eight-bit CSI? */
+			TRACE(("sending one-shot input report with %c at %d,%d\n",
+			       ch, x, y));
+			sprintf(reply, "\033[%c[%d,%d]\r", ch, x, y);
+			unparseputs(context->display_graphic->xw, reply);
+			unparse_end(context->display_graphic->xw);
 			break;
 		    }
 		}
@@ -5516,8 +5559,9 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    int width, height;
 
 		    /*
-		     * FIXME: should we attempt to resize existing contents because we are actually
-		     * changing the output size but terminals just changed coordinates?
+		     * FIXME: Should we attempt to resize existing contents?
+		     * We are actually changing the output size, but terminals
+		     * just changed coordinates.
 		     */
 #if 1
 		    int scale;
@@ -5574,6 +5618,10 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	    TRACE(("found cursor control \"%s\" FIXME\n",
 		   fragment_to_tempstr(&optionarg)));
 	    /* FIXME: handle */
+	    /* C0 == output cursor off, C1 == output cursor on */
+	    /* C(H0) == output cursor diamond (default), C(H1) == output cursor diamond, C(H2) == output cursor crosshair */
+	    /* C(I) == input cursor crosshair (default), C(I0) == input cursor crosshair, C(I1) == input cursor diamond, C(I2) == input cursor crosshair, C(I3) == input cursor rubber band line, C(I4) == input cursor rubber band rectangle */
+	    /* C(I[X,Y]"FB")) == set input cursor to F in foreground B in background with hotspot at X,Y (using current text settings, trimmed to 16x24 max) */
 	    if (!fragment_len(&optionarg)) {
 		TRACE(("DATA_ERROR: ignoring malformed ReGIS screen cursor control option value \"%s\"\n",
 		       fragment_to_tempstr(&optionarg)));
@@ -6674,11 +6722,10 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 	    {
 		char const *const pixelvector = fragment_to_tempstr(&item);
 		unsigned offset;
-		int orig_x, orig_y;
 
 		for (offset = 0U; pixelvector[offset] != '\0';) {
-		    orig_x = context->graphics_output_cursor_x;
-		    orig_y = context->graphics_output_cursor_y;
+		    int orig_x = context->graphics_output_cursor_x;
+		    int orig_y = context->graphics_output_cursor_y;
 		    if (!load_regis_coord_pixelvector_step(context, pixelvector,
 							   &offset,
 							   orig_x, orig_y,
@@ -6727,11 +6774,10 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 
     /* hex values */
     if (state->command == 'l') {
-	char ch;
 	unsigned digit;
 
 	for (digit = 0U; digit < (state->load_w + 3U) >> 2U; digit++) {
-	    ch = peek_fragment(input);
+	    char ch = peek_fragment(input);
 
 	    if (!IS_HEX_DIGIT(ch)) {
 		if (ch != ',' && ch != ';' &&
@@ -7055,7 +7101,7 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
 		need_refresh = 1;
 	    } else if (iterations > MIN_ITERATIONS_BEFORE_REFRESH) {
 		X_GETTIMEOFDAY(&curr_tv);
-		if (curr_tv.tv_sec > prev_tv.tv_sec + 1U) {
+		if ((Time) curr_tv.tv_sec > (Time) prev_tv.tv_sec + 1UL) {
 		    need_refresh = 1;
 		} else {
 #define DiffTime(TV) (TV.tv_sec * 1000L + TV.tv_usec / 1000L)

@@ -1,8 +1,8 @@
-/* $XTermId: graphics_regis.h,v 1.1 2014/04/11 19:36:41 Ross.Combs Exp $ */
+/* $XTermId: graphics_regis.h,v 1.2 2016/05/29 16:34:47 tom Exp $ */
 
 /*
- * Copyright 2014 by Ross Combs
- * Copyright 2014 by Thomas E. Dickey
+ * Copyright 2014,2016 by Ross Combs
+ * Copyright 2014,2016 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -38,7 +38,7 @@
 #include <ptyx.h>
 
 #if OPT_REGIS_GRAPHICS
-extern void parse_regis(XtermWidget xw, ANSI *params, char const *string);
+extern void parse_regis(XtermWidget /* xw */, ANSI */* params */, char const */* string */);
 #else
 #define parse_regis(xw, params, string) /* nothing */
 #endif

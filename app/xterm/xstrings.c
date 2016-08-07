@@ -1,7 +1,7 @@
-/* $XTermId: xstrings.c,v 1.62 2015/08/27 23:30:42 Martin.Tournoij Exp $ */
+/* $XTermId: xstrings.c,v 1.63 2016/05/22 18:28:27 tom Exp $ */
 
 /*
- * Copyright 2000-2014,2015 by Thomas E. Dickey
+ * Copyright 2000-2015,2016 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -321,14 +321,17 @@ x_splitargs(const char *command)
     if (command != 0) {
 	const char *first = skip_blanks(command);
 	char *blob = x_strdup(first);
-	size_t count;
-	size_t n;
-	int state;
-	int pass;
 
 	if (blob != 0) {
+	    int pass;
+
 	    for (pass = 0; pass < 2; ++pass) {
+		int state;
+		size_t count;
+		size_t n;
+
 		for (n = count = 0, state = 0; first[n] != '\0'; ++n) {
+
 		    switch (state) {
 		    case 0:
 			if (!IsSpace(CharOf(first[n]))) {
@@ -446,14 +449,12 @@ char *
 x_strtrim(const char *source)
 {
     char *result;
-    char *s;
-    char *d;
 
     if (source != 0 && *source != '\0') {
 	char *t = x_strdup(source);
 	if (t != 0) {
-	    s = t;
-	    d = s;
+	    char *s = t;
+	    char *d = s;
 	    while (IsSpace(CharOf(*s)))
 		++s;
 	    while ((*d++ = *s++) != '\0') {
@@ -480,12 +481,11 @@ char *
 x_strrtrim(const char *source)
 {
     char *result;
-    char *s;
 
     if (source != 0 && *source != '\0') {
 	char *t = x_strdup(source);
 	if (t != 0) {
-	    s = t;
+	    char *s = t;
 	    if (*t != '\0') {
 		s = t + strlen(t);
 		while (s != t && IsSpace(CharOf(s[-1]))) {

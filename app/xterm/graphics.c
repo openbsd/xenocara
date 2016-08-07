@@ -1,7 +1,7 @@
-/* $XTermId: graphics.c,v 1.68 2015/07/13 08:58:48 Ross.Combs Exp $ */
+/* $XTermId: graphics.c,v 1.69 2016/05/17 10:04:40 tom Exp $ */
 
 /*
- * Copyright 2013-2014,2015 by Ross Combs
+ * Copyright 2013-2015,2016 by Ross Combs
  *
  *                         All Rights Reserved
  *
@@ -371,8 +371,6 @@ copy_overlapping_area(Graphic *graphic, int src_ul_x, int src_ul_y,
     int sx, ex, dx;
     int sy, ey, dy;
     int xx, yy;
-    int dst_x, dst_y;
-    int src_x, src_y;
     RegisterNum color;
 
     if (dst_ul_x <= src_ul_x) {
@@ -396,14 +394,14 @@ copy_overlapping_area(Graphic *graphic, int src_ul_x, int src_ul_y,
     }
 
     for (yy = sy; yy != ey + dy; yy += dy) {
-	dst_y = dst_ul_y + yy;
-	src_y = src_ul_y + yy;
+	int dst_y = dst_ul_y + yy;
+	int src_y = src_ul_y + yy;
 	if (dst_y < 0 || dst_y >= (int) graphic->actual_height)
 	    continue;
 
 	for (xx = sx; xx != ex + dx; xx += dx) {
-	    dst_x = dst_ul_x + xx;
-	    src_x = src_ul_x + xx;
+	    int dst_x = dst_ul_x + xx;
+	    int src_x = src_ul_x + xx;
 	    if (dst_x < 0 || dst_x >= (int) graphic->actual_width)
 		continue;
 
@@ -440,7 +438,6 @@ set_color_register(ColorRegister *color_registers,
 static void
 set_shared_color_register(unsigned color, int r, int g, int b)
 {
-    Graphic *graphic;
     unsigned ii;
 
     assert(color < MAX_COLOR_REGISTERS);
@@ -448,6 +445,8 @@ set_shared_color_register(unsigned color, int r, int g, int b)
     set_color_register(getSharedRegisters(), color, r, g, b);
 
     FOR_EACH_SLOT(ii) {
+	Graphic *graphic;
+
 	if (!(graphic = getActiveSlot(ii)))
 	    continue;
 	if (graphic->private_colors)
@@ -486,7 +485,6 @@ RegisterNum
 find_color_register(ColorRegister const *color_registers, int r, int g, int b)
 {
     unsigned i;
-    unsigned d;
     unsigned closest_index;
     unsigned closest_distance;
 
@@ -499,9 +497,9 @@ find_color_register(ColorRegister const *color_registers, int r, int g, int b)
     closest_index = MAX_COLOR_REGISTERS;
     closest_distance = 0U;
     for (i = 0U; i < MAX_COLOR_REGISTERS; i++) {
-	d = (unsigned) (SQUARE(2 * (color_registers[i].r - r)) +
-			SQUARE(3 * (color_registers[i].g - g)) +
-			SQUARE(1 * (color_registers[i].b - b)));
+	unsigned d = (unsigned) (SQUARE(2 * (color_registers[i].r - r)) +
+				 SQUARE(3 * (color_registers[i].g - g)) +
+				 SQUARE(1 * (color_registers[i].b - b)));
 	if (closest_index == MAX_COLOR_REGISTERS || d < closest_distance) {
 	    closest_index = i;
 	    closest_distance = d;
@@ -1441,7 +1439,7 @@ refresh_graphics(XtermWidget xw,
 		    /* clip to alt buffer */
 		    clip_area(&draw_x, &draw_y, &draw_w, &draw_h,
 			      altarea_x, altarea_y, altarea_w, altarea_h);
-		} else if (graphic->bufferid == 0) {
+		} else {
 		    /* clip to scrollback area */
 		    clip_area(&draw_x, &draw_y, &draw_w, &draw_h,
 			      scrollarea_x, scrollarea_y,
@@ -1696,13 +1694,14 @@ void
 scroll_displayed_graphics(XtermWidget xw, int rows)
 {
     TScreen const *screen = TScreenOf(xw);
-    Graphic *graphic;
     unsigned ii;
 
     TRACE(("graphics scroll: moving all up %d rows\n", rows));
     /* FIXME: VT125 ReGIS graphics are fixed at the upper left of the display; need to verify */
 
     FOR_EACH_SLOT(ii) {
+	Graphic *graphic;
+
 	if (!(graphic = getActiveSlot(ii)))
 	    continue;
 	if (graphic->bufferid != screen->whichBuf)

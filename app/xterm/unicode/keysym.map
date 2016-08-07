@@ -1,4 +1,4 @@
-# $XTermId: keysym.map,v 1.8 2007/06/13 00:52:16 tom Exp $
+# $XTermId: keysym.map,v 1.9 2016/05/22 20:05:27 tom Exp $
 #
 # This list can be used to convert X11 Keysyms to Unicode 2.1 character.
 # The list is not checked for correctness by Unicode officials.  Use it
@@ -726,6 +726,7 @@
 0x0ad2     U201c  # leftdoublequotemark
 0x0ad3     U201d  # rightdoublequotemark
 0x0ad4     U211e  # prescription
+0x0ad5     U2030  # per mille
 0x0ad6     U2032  # minutes
 0x0ad7     U2033  # seconds
 0x0ad9     U271d  # latincross
