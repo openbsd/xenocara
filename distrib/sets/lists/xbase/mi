@@ -320,7 +320,7 @@
 ./usr/X11R6/lib/libdmx.so.2.0
 ./usr/X11R6/lib/libfontconfig.a
 ./usr/X11R6/lib/libfontconfig.la
-./usr/X11R6/lib/libfontconfig.so.10.0
+./usr/X11R6/lib/libfontconfig.so.11.0
 ./usr/X11R6/lib/libfontenc.a
 ./usr/X11R6/lib/libfontenc.la
 ./usr/X11R6/lib/libfontenc.so.4.0
