@@ -1,19 +1,17 @@
 // example3.cpp
 
-// This file demonstrates how to use FreeType's stand-alone renderer,
-// both in B/W and 5-levels gray mode.
+// This file demonstrates how to use FreeType's stand-alone B/W renderer.
 //
 // Copy the files ftraster.c, ftimage.h, and ftmisc.h into the same
 // directory as this file, then say
 //
-//   g++ -D_STANDALONE_ \
-//       -DFT_RASTER_OPTION_ANTI_ALIASING \
+//   g++ -D STANDALONE_ \
 //       -o example3 example3.cpp
 //
 // You need FreeType version 2.3.10 or newer.
 //
 // Written Sep. 2009 by Werner Lemberg,
-// based on code contributed by Erik Möller.
+// based on code contributed by Erik MÃ¶ller.
 //
 // Public domain.
 
@@ -39,30 +37,30 @@ static Vec2 k_shape[] =
 };
 
 void*
-MY_Alloc_Func(FT_Memory memory,
+MY_Alloc_Func(FT_Memory /* memory */,
               long size)
 {
-  return malloc(size);
+  return malloc((size_t)size);
 }
 
 void
-MY_Free_Func(FT_Memory memory,
+MY_Free_Func(FT_Memory /* memory */,
              void *block)
 {
   free(block);
 }
 
 void*
-MY_Realloc_Func(FT_Memory memory,
-                long cur_size,
+MY_Realloc_Func(FT_Memory /* memory */,
+                long /* cur_size */,
                 long new_size,
                 void* block)
 {
-  return realloc(block, new_size);
+  return realloc(block, (size_t)new_size);
 }
 
 
-FT_Memory mem;
+static FT_Memory mem;
 
 
 // Render a shape and dump it out as out-mono.pbm (b/w) and
@@ -103,8 +101,6 @@ main()
 
   // 1 bit per pixel.
   const int pitch_mono = (width + 7) >> 3;
-  // 8 bits per pixel; must be a multiple of four.
-  const int pitch_gray = (width + 3) & -4;
 
 
   FT_Bitmap bmp;
@@ -139,35 +135,6 @@ main()
   std::ofstream out_mono("out-mono.pbm", std::ios::binary);
   out_mono << "P4 " << width << " " << rows << "\n";
   out_mono.write((const char *)bmp.buffer, rows * pitch_mono);
-
-  delete[] bmp.buffer;
-
-
-  // Set up a pixmap.
-  bmp.buffer = new unsigned char[rows * pitch_gray];
-  memset(bmp.buffer, 0, rows * pitch_gray);
-  bmp.width = width;
-  bmp.rows = rows;
-  bmp.pitch = pitch_gray;
-  bmp.pixel_mode = FT_PIXEL_MODE_GRAY;
-  bmp.num_grays = 16;
-
-  // Set up the necessary raster parameters.
-  memset(&params, 0, sizeof (params));
-  params.source = &outline;
-  params.target = &bmp;
-  params.flags = FT_RASTER_FLAG_AA;
-
-  // Initialize the rasterer and get it to render into the pixmap.
-  ft_standard_raster.raster_new(mem, &raster);
-  ft_standard_raster.raster_reset(raster, renderPool, kRenderPoolSize);
-  ft_standard_raster.raster_render(raster, &params);
-
-  // Dump out the raw image data (in PBM format).
-  std::ofstream out_gray("out-gray.pgm", std::ios::binary);
-  out_gray << "P5 " << width << " " << rows << " 255\n";
-  out_gray.write((const char *)bmp.buffer, rows * pitch_gray);
-
 
   // Cleanup.
   delete[] renderPool;
