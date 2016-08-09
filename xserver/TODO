@@ -78,3 +78,15 @@ hmm: xwin GenerateAuthorization, auth .Add
 FakeClientID(client->index):
     dri2 add_frame_event hurrr
     DRI2CreateDrawable2
+
+---
+
+dmx wraps render, fuck.
+
+Create/Free GlyphSet: Annoying because GlyphSets are display-wide, so there's
+no obvious place to add a wrap chain. Likewise Add/FreeGlyphs, although there
+the problem is that glyphs embed their own per-screen list! Fuck sake.
+
+RenderCompositeGlyphs is correspondingly weird.
+
+Not entirely sure why SetPictureTransform/Filter are wrapped.

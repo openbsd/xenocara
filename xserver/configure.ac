@@ -26,9 +26,9 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ(2.60)
-AC_INIT([xorg-server], 1.18.3, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xorg-server)
-RELEASE_DATE="2016-04-04"
-RELEASE_NAME="Halloumi"
+AC_INIT([xorg-server], 1.18.4, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xorg-server)
+RELEASE_DATE="2016-07-19"
+RELEASE_NAME="Skordalia"
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
@@ -581,17 +581,27 @@ AC_ARG_WITH(apple-application-name,AS_HELP_STRING([--with-apple-application-name
 				[ APPLE_APPLICATION_NAME="${withval}" ],
 				[ APPLE_APPLICATION_NAME="X11" ])
 AC_SUBST([APPLE_APPLICATION_NAME])
-AC_ARG_WITH(launchd-id-prefix,  AS_HELP_STRING([--with-launchd-id-prefix=PATH], [Deprecated: Use --with-bundle-id-prefix.]),
-                                [ BUNDLE_ID_PREFIX="${withval}" ],
-                                [ BUNDLE_ID_PREFIX="org.x" ])
-AC_ARG_WITH(bundle-id-prefix,  AS_HELP_STRING([--with-bundle-id-prefix=PATH], [Prefix to use for bundle identifiers (default: org.x)]),
+AC_ARG_WITH(bundle-id-prefix,  AS_HELP_STRING([--with-bundle-id-prefix=RDNS_PREFIX], [Prefix to use for bundle identifiers (default: org.x)]),
                                [ BUNDLE_ID_PREFIX="${withval}" ])
 AC_SUBST([BUNDLE_ID_PREFIX])
 AC_DEFINE_UNQUOTED(BUNDLE_ID_PREFIX, "$BUNDLE_ID_PREFIX", [Prefix to use for bundle identifiers])
+m4_define(DEFAULT_BUNDLE_VERSION, m4_esyscmd([echo ]AC_PACKAGE_VERSION[ | cut -f1-3 -d. | tr -d '\n']))
+AC_ARG_WITH(bundle-version,    AS_HELP_STRING([--with-bundle-version=VERSION], [Version to use for X11.app's CFBundleVersion (default: ]DEFAULT_BUNDLE_VERSION[)]),
+                               [ BUNDLE_VERSION="${withval}" ],
+                               [ BUNDLE_VERSION="DEFAULT_BUNDLE_VERSION" ])
+AC_SUBST([BUNDLE_VERSION])
+AC_ARG_WITH(bundle-version-string, AS_HELP_STRING([--with-bundle-version-string=VERSION], [Version to use for X11.app's CFBundleShortVersionString (default: ]AC_PACKAGE_VERSION[)]),
+                               [ BUNDLE_VERSION_STRING="${withval}" ],
+                               [ BUNDLE_VERSION_STRING="${PACKAGE_VERSION}" ])
+AC_SUBST([BUNDLE_VERSION_STRING])
 AC_ARG_ENABLE(sparkle,AS_HELP_STRING([--enable-sparkle], [Enable updating of X11.app using the Sparkle Framework (default: disabled)]),
 				[ XQUARTZ_SPARKLE="${enableval}" ],
 				[ XQUARTZ_SPARKLE="no" ])
 AC_SUBST([XQUARTZ_SPARKLE])
+AC_ARG_WITH(sparkle-feed-url,  AS_HELP_STRING([--with-sparkle-feed-url=URL], [URL for the Sparkle feed (default: https://www.xquartz.org/releases/sparkle/release.xml)]),
+                               [ XQUARTZ_SPARKLE_FEED_URL="${withval}" ],
+                               [ XQUARTZ_SPARKLE_FEED_URL="https://www.xquartz.org/releases/sparkle/release.xml" ])
+AC_SUBST([XQUARTZ_SPARKLE_FEED_URL])
 AC_ARG_ENABLE(visibility,     AS_HELP_STRING([--enable-visibility], [Enable symbol visibility (default: auto)]),
 				[SYMBOL_VISIBILITY=$enableval],
 				[SYMBOL_VISIBILITY=auto])
@@ -916,7 +926,7 @@ if test "x$CONFIG_UDEV" = xyes; then
 	fi
 	SAVE_LIBS=$LIBS
 	SAVE_CFLAGS=$CFLAGS
-	CFLAGS=$UDEV_CFLAGS
+	CFLAGS="$CFLAGS $UDEV_CFLAGS"
 	LIBS=$UDEV_LIBS
 	AC_CHECK_FUNCS([udev_monitor_filter_add_match_tag])
 	AC_CHECK_FUNCS([udev_enumerate_add_match_tag])
@@ -1329,7 +1339,7 @@ fi
 
 if test "x$DRI2" = xyes; then
 	save_CFLAGS=$CFLAGS
-	CFLAGS="$GL_CFLAGS $LIBDRM_CFLAGS"
+	CFLAGS="$CFLAGS $GL_CFLAGS $LIBDRM_CFLAGS"
 	AC_COMPILE_IFELSE([AC_LANG_SOURCE([[#include <GL/gl.h>
 #include <GL/internal/dri_interface.h>
 #ifndef __DRI_DRI2

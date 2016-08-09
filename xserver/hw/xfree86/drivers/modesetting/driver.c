@@ -60,6 +60,7 @@
 #endif
 
 #include "driver.h"
+#include "sh3224.h"
 
 #ifdef X_PRIVSEP
 extern int priv_open_device(const char *);
@@ -507,6 +508,15 @@ dispatch_dirty_region(ScrnInfoPtr scrn,
 
         /* TODO query connector property to see if this is needed */
         ret = drmModeDirtyFB(ms->fd, fb_id, clip, num_cliprects);
+
+        /* if we're swamping it with work, try one at a time */
+        if (ret == -EINVAL) {
+            for (i = 0; i < num_cliprects; i++) {
+                if ((ret = drmModeDirtyFB(ms->fd, fb_id, &clip[i], 1)) < 0)
+                    break;
+            }
+        }
+
         free(clip);
         DamageEmpty(damage);
     }
@@ -630,7 +640,6 @@ FreeRec(ScrnInfoPtr pScrn)
     ms = modesettingPTR(pScrn);
     if (!ms)
         return;
-    pScrn->driverPrivate = NULL;
 
     if (ms->fd > 0) {
         modesettingEntPtr ms_ent;
@@ -651,6 +660,7 @@ FreeRec(ScrnInfoPtr pScrn)
             ms_ent->fd = 0;
         }
     }
+    pScrn->driverPrivate = NULL;
     free(ms->drmmode.Options);
     free(ms);
 
@@ -668,6 +678,11 @@ try_enable_glamor(ScrnInfoPtr pScrn)
     ms->drmmode.glamor = FALSE;
 
 #ifdef GLAMOR
+    if (ms->drmmode.force_24_32) {
+        xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Cannot use glamor with 24bpp packed fb\n");
+        return;
+    }
+
     if (!do_glamor) {
         xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "glamor disabled\n");
         return;
@@ -815,23 +830,17 @@ PreInit(ScrnInfoPtr pScrn, int flags)
         return FALSE;
     ms->drmmode.fd = ms->fd;
 
-    pScrn->capabilities = 0;
-#ifdef DRM_CAP_PRIME
-    ret = drmGetCap(ms->fd, DRM_CAP_PRIME, &value);
-    if (ret == 0) {
-        if (value & DRM_PRIME_CAP_IMPORT)
-            pScrn->capabilities |= RR_Capability_SinkOutput;
-#if GLAMOR_HAS_GBM_LINEAR
-        if (value & DRM_PRIME_CAP_EXPORT)
-            pScrn->capabilities |= RR_Capability_SourceOutput;
-#endif
-    }
-#endif
     drmmode_get_default_bpp(pScrn, &ms->drmmode, &defaultdepth, &defaultbpp);
-    if (defaultdepth == 24 && defaultbpp == 24)
-        bppflags = SupportConvert32to24 | Support24bppFb;
-    else
-        bppflags = PreferConvert24to32 | SupportConvert24to32 | Support32bppFb;
+    if (defaultdepth == 24 && defaultbpp == 24) {
+        ms->drmmode.force_24_32 = TRUE;
+        ms->drmmode.kbpp = 24;
+        xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                   "Using 24bpp hw front buffer with 32bpp shadow\n");
+        defaultbpp = 32;
+    } else {
+        ms->drmmode.kbpp = defaultbpp;
+    }
+    bppflags = PreferConvert24to32 | SupportConvert24to32 | Support32bppFb;
 
     if (!xf86SetDepthBpp
         (pScrn, defaultdepth, defaultdepth, defaultbpp, bppflags))
@@ -885,22 +894,44 @@ PreInit(ScrnInfoPtr pScrn, int flags)
     } else {
         Bool prefer_shadow = TRUE;
 
-        ret = drmGetCap(ms->fd, DRM_CAP_DUMB_PREFER_SHADOW, &value);
-        if (!ret) {
-            prefer_shadow = !!value;
-        }
+        if (ms->drmmode.force_24_32) {
+            prefer_shadow = TRUE;
+            ms->drmmode.shadow_enable = TRUE;
+        } else {
+            ret = drmGetCap(ms->fd, DRM_CAP_DUMB_PREFER_SHADOW, &value);
+            if (!ret) {
+                prefer_shadow = !!value;
+            }
 
-        ms->drmmode.shadow_enable = xf86ReturnOptValBool(ms->drmmode.Options,
-                                                         OPTION_SHADOW_FB,
-                                                         prefer_shadow);
+            ms->drmmode.shadow_enable =
+                xf86ReturnOptValBool(ms->drmmode.Options, OPTION_SHADOW_FB,
+                                     prefer_shadow);
+        }
 
         xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                    "ShadowFB: preferred %s, enabled %s\n",
                    prefer_shadow ? "YES" : "NO",
+                   ms->drmmode.force_24_32 ? "FORCE" :
                    ms->drmmode.shadow_enable ? "YES" : "NO");
 
         ms->drmmode.pageflip = FALSE;
     }
+
+    pScrn->capabilities = 0;
+#ifdef DRM_CAP_PRIME
+    ret = drmGetCap(ms->fd, DRM_CAP_PRIME, &value);
+    if (ret == 0) {
+        if (value & DRM_PRIME_CAP_IMPORT) {
+            pScrn->capabilities |= RR_Capability_SinkOutput;
+            if (ms->drmmode.glamor)
+                pScrn->capabilities |= RR_Capability_SinkOffload;
+        }
+#if GLAMOR_HAS_GBM_LINEAR
+        if (value & DRM_PRIME_CAP_EXPORT && ms->drmmode.glamor)
+            pScrn->capabilities |= RR_Capability_SourceOutput | RR_Capability_SourceOffload;
+#endif
+    }
+#endif
 
     if (drmmode_pre_init(pScrn, &ms->drmmode, pScrn->bitsPerPixel / 8) == FALSE) {
         xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "KMS setup failed\n");
@@ -952,7 +983,7 @@ msShadowWindow(ScreenPtr screen, CARD32 row, CARD32 offset, int mode,
     modesettingPtr ms = modesettingPTR(pScrn);
     int stride;
 
-    stride = (pScrn->displayWidth * pScrn->bitsPerPixel) / 8;
+    stride = (pScrn->displayWidth * ms->drmmode.kbpp) / 8;
     *size = stride;
 
     return ((uint8_t *) ms->drmmode.front_bo.dumb->ptr + row * stride + offset);
@@ -973,6 +1004,7 @@ CreateScreenResources(ScreenPtr pScreen)
     Bool ret;
     void *pixels = NULL;
     int err;
+    Bool use_ms_shadow = ms->drmmode.force_24_32 && pScrn->bitsPerPixel == 32;
 
     pScreen->CreateScreenResources = ms->createScreenResources;
     ret = pScreen->CreateScreenResources(pScreen);
@@ -1004,7 +1036,8 @@ CreateScreenResources(ScreenPtr pScreen)
         FatalError("Couldn't adjust screen pixmap\n");
 
     if (ms->drmmode.shadow_enable) {
-        if (!shadowAdd(pScreen, rootPixmap, msUpdatePacked,
+        if (!shadowAdd(pScreen, rootPixmap,
+                       use_ms_shadow ? ms_shadowUpdate32to24 : msUpdatePacked,
                        msShadowWindow, 0, 0))
             return FALSE;
     }
