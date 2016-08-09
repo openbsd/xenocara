@@ -560,6 +560,7 @@ values added to the list have binding <parameter>weak</parameter> instead of <pa
 	    <refname>FcPatternAddBool</refname>
 	    <refname>FcPatternAddFTFace</refname>
 	    <refname>FcPatternAddLangSet</refname>
+	    <refname>FcPatternAddRange</refname>
 	    <refpurpose>Add a typed value to a pattern</refpurpose>
 	</refnamediv>
 	<refsynopsisdiv>
@@ -615,6 +616,12 @@ values added to the list have binding <parameter>weak</parameter> instead of <pa
 		<paramdef>const char *<parameter>object</parameter></paramdef>
 		<paramdef>const FcLangSet *<parameter>l</parameter></paramdef>
 	</funcprototype>
+	<funcprototype>
+	    <funcdef>FcBool <function>FcPatternAddRange</function></funcdef>
+		<paramdef>FcPattern *<parameter>p</parameter></paramdef>
+		<paramdef>const char *<parameter>object</parameter></paramdef>
+		<paramdef>const FcRange *<parameter>r</parameter></paramdef>
+	</funcprototype>
 	</funcsynopsis>
 	</refsynopsisdiv>
 	<refsect1><title>Description</title>
@@ -623,6 +630,8 @@ These are all convenience functions that insert objects of the specified
 type into the pattern.  Use these in preference to FcPatternAdd as they
 will provide compile-time typechecking.  These all append values to
 any existing list of values.
+
+<function>FcPatternAddRange</function> are available since 2.11.91.
 	    </para>
 	</refsect1>
     </refentry>
@@ -720,6 +729,7 @@ within the pattern directly.  Applications must not free this value.
 	    <refname>FcPatternGetBool</refname>
 	    <refname>FcPatternGetFTFace</refname>
 	    <refname>FcPatternGetLangSet</refname>
+	    <refname>FcPatternGetRange</refname>
 	    <refpurpose>Return a typed value from a pattern</refpurpose>
 	</refnamediv>
 	<refsynopsisdiv>
@@ -774,12 +784,21 @@ within the pattern directly.  Applications must not free this value.
 		<paramdef>FcPattern *<parameter>p</parameter></paramdef>
 		<paramdef>const char *<parameter>object</parameter></paramdef>
 		<paramdef>int <parameter>n</parameter></paramdef>
+		<paramdef>FT_Face *<parameter>f</parameter></paramdef>
 	</funcprototype>
 	<funcprototype>
 	    <funcdef>FcResult <function>FcPatternGetLangSet</function></funcdef>
 		<paramdef>FcPattern *<parameter>p</parameter></paramdef>
 		<paramdef>const char *<parameter>object</parameter></paramdef>
-		<paramdef>FT_Face *<parameter>f</parameter></paramdef>
+		<paramdef>int <parameter>n</parameter></paramdef>
+		<paramdef>FcLangSet **<parameter>l</parameter></paramdef>
+	</funcprototype>
+	<funcprototype>
+	    <funcdef>FcResult <function>FcPatternGetRange</function></funcdef>
+		<paramdef>FcPattern *<parameter>p</parameter></paramdef>
+		<paramdef>const char *<parameter>object</parameter></paramdef>
+		<paramdef>int <parameter>n</parameter></paramdef>
+		<paramdef>FcRange **<parameter>r</parameter></paramdef>
 	</funcprototype>
 	</funcsynopsis>
 	</refsynopsisdiv>
@@ -790,6 +809,8 @@ returned data is of the expected type. They return FcResultTypeMismatch if
 this is not the case.  Note that these (like FcPatternGet) do not make a
 copy of any data structure referenced by the return value.  Use these
 in preference to FcPatternGet to provide compile-time typechecking.
+
+<function>FcPatternGetRange</function> are available since 2.11.91.
 	    </para>
 	</refsect1>
     </refentry>

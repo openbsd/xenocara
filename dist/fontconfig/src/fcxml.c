@@ -54,7 +54,11 @@
 
 #ifdef _WIN32
 #include <mbstring.h>
+extern FcChar8 fontconfig_instprefix[];
 #endif
+
+static FcChar8  *__fc_userdir = NULL;
+static FcChar8  *__fc_userconf = NULL;
 
 static void
 FcExprDestroy (FcExpr *e);
@@ -78,6 +82,7 @@ FcRuleDestroy (FcRule *rule)
     case FcRuleEdit:
 	FcEditDestroy (rule->u.edit);
 	break;
+    case FcRuleUnknown:
     default:
 	break;
     }
@@ -164,6 +169,18 @@ FcExprCreateMatrix (FcConfig *config, const FcExprMatrix *matrix)
     {
 	e->op = FcOpMatrix;
 	e->u.mexpr = FcExprMatrixCopyShallow (matrix);
+    }
+    return e;
+}
+
+static FcExpr *
+FcExprCreateRange (FcConfig *config, FcRange *range)
+{
+    FcExpr *e = FcConfigAllocExpr (config);
+    if (e)
+    {
+	e->op = FcOpRange;
+	e->u.rval = FcRangeCopy (range);
     }
     return e;
 }
@@ -258,6 +275,7 @@ FcExprDestroy (FcExpr *e)
 	FcExprMatrixFree (e->u.mexpr);
 	break;
     case FcOpRange:
+	FcRangeDestroy (e->u.rval);
 	break;
     case FcOpCharSet:
 	FcCharSetDestroy (e->u.cval);
@@ -503,7 +521,7 @@ typedef struct _FcVStack {
 	int		integer;
 	double		_double;
 	FcExprMatrix	*matrix;
-	FcRange		range;
+	FcRange		*range;
 	FcBool		bool_;
 	FcCharSet	*charset;
 	FcLangSet	*langset;
@@ -593,6 +611,9 @@ FcTypeName (FcType type)
 	return "FT_Face";
     case FcTypeLangSet:
 	return "langset";
+    case FcTypeRange:
+	return "range";
+    case FcTypeUnknown:
     default:
 	return "unknown";
     }
@@ -608,7 +629,9 @@ FcTypecheckValue (FcConfigParse *parse, FcType value, FcType type)
     if (value != type)
     {
 	if ((value == FcTypeLangSet && type == FcTypeString) ||
-	    (value == FcTypeString && type == FcTypeLangSet))
+	    (value == FcTypeString && type == FcTypeLangSet) ||
+	    (value == FcTypeInteger && type == FcTypeRange) ||
+	    (value == FcTypeDouble && type == FcTypeRange))
 	    return;
 	if (type ==  FcTypeUnknown)
 	    return;
@@ -650,6 +673,9 @@ FcTypecheckExpr (FcConfigParse *parse, FcExpr *expr, FcType type)
 	break;
     case FcOpLangSet:
 	FcTypecheckValue (parse, FcTypeLangSet, type);
+	break;
+    case FcOpRange:
+	FcTypecheckValue (parse, FcTypeRange, type);
 	break;
     case FcOpNil:
 	break;
@@ -785,6 +811,7 @@ FcRuleCreate (FcRuleType type,
     case FcRuleEdit:
 	r->u.edit = (FcEdit *) p;
 	break;
+    case FcRuleUnknown:
     default:
 	free (r);
 	r = NULL;
@@ -865,11 +892,10 @@ FcVStackPushMatrix (FcConfigParse *parse, FcExprMatrix *matrix)
 static FcBool
 FcVStackPushRange (FcConfigParse *parse, FcRange *range)
 {
-    FcVStack	*vstack = FcVStackCreateAndPush (parse);
+    FcVStack 	*vstack = FcVStackCreateAndPush (parse);
     if (!vstack)
 	return FcFalse;
-    vstack->u.range.begin = range->begin;
-    vstack->u.range.end = range->end;
+    vstack->u.range = range;
     vstack->tag = FcVStackRange;
     return FcTrue;
 }
@@ -1017,8 +1043,10 @@ FcVStackPopAndDestroy (FcConfigParse *parse)
     case FcVStackMatrix:
 	FcExprMatrixFreeShallow (vstack->u.matrix);
 	break;
-    case FcVStackRange:
     case FcVStackBool:
+	break;
+    case FcVStackRange:
+	FcRangeDestroy (vstack->u.range);
 	break;
     case FcVStackCharSet:
 	FcCharSetDestroy (vstack->u.charset);
@@ -1232,7 +1260,11 @@ static void
 FcParseBlank (FcConfigParse *parse)
 {
     int		n = FcVStackElements (parse);
-    FcChar32	i;
+#if 0
+    FcChar32	i, begin, end;
+#endif
+
+    FcConfigMessage (parse, FcSevereWarning, "blank doesn't take any effect anymore. please remove it from your fonts.conf");
     while (n-- > 0)
     {
 	FcVStack    *v = FcVStackFetch (parse, n);
@@ -1244,18 +1276,24 @@ FcParseBlank (FcConfigParse *parse)
 	}
 	switch ((int) v->tag) {
 	case FcVStackInteger:
+#if 0
 	    if (!FcBlanksAdd (parse->config->blanks, v->u.integer))
 		goto bail;
 	    break;
+#endif
 	case FcVStackRange:
-	    if (v->u.range.begin <= v->u.range.end)
+#if 0
+	    begin = (FcChar32) v->u.range->begin;
+	    end = (FcChar32) v->u.range->end;
+	    if (begin <= end)
 	    {
-	      for (i = v->u.range.begin; i <= v->u.range.end; i++)
+	      for (i = begin; i <= end; i++)
 	      {
 		  if (!FcBlanksAdd (parse->config->blanks, i))
 		      goto bail;
 	      }
 	    }
+#endif
 	    break;
 	default:
 	    FcConfigMessage (parse, FcSevereError, "invalid element in blank");
@@ -1314,7 +1352,11 @@ FcParseInt (FcConfigParse *parse)
 static double
 FcStrtod (char *s, char **end)
 {
+#ifndef __BIONIC__
     struct lconv    *locale_data;
+#endif
+    const char	    *decimal_point;
+    int		    dlen;
     char	    *dot;
     double	    v;
 
@@ -1322,14 +1364,21 @@ FcStrtod (char *s, char **end)
      * Have to swap the decimal point to match the current locale
      * if that locale doesn't use 0x2e
      */
+#ifndef __BIONIC__
+    locale_data = localeconv ();
+    decimal_point = locale_data->decimal_point;
+    dlen = strlen (decimal_point);
+#else
+    decimal_point = ".";
+    dlen = 1;
+#endif
+
     if ((dot = strchr (s, 0x2e)) &&
-	(locale_data = localeconv ()) &&
-	(locale_data->decimal_point[0] != 0x2e ||
-	 locale_data->decimal_point[1] != 0))
+	(decimal_point[0] != 0x2e ||
+	 decimal_point[1] != 0))
     {
 	char	buf[128];
 	int	slen = strlen (s);
-	int	dlen = strlen (locale_data->decimal_point);
 	
 	if (slen + dlen > (int) sizeof (buf))
 	{
@@ -1343,7 +1392,7 @@ FcStrtod (char *s, char **end)
 	    /* mantissa */
 	    strncpy (buf, s, dot - s);
 	    /* decimal point */
-	    strcpy (buf + (dot - s), locale_data->decimal_point);
+	    strcpy (buf + (dot - s), decimal_point);
 	    /* rest of number */
 	    strcpy (buf + (dot - s) + dlen, dot + 1);
 	    buf_end = 0;
@@ -1463,9 +1512,11 @@ static void
 FcParseRange (FcConfigParse *parse)
 {
     FcVStack	*vstack;
-    FcRange	r = {0, 0};
-    FcChar32	n;
+    FcRange	*r;
+    FcChar32	n[2] = {0, 0};
     int		count = 1;
+    double	d[2] = {0.0L, 0.0L};
+    FcBool	dflag = FcFalse;
 
     while ((vstack = FcVStackPeek (parse)))
     {
@@ -1476,31 +1527,52 @@ FcParseRange (FcConfigParse *parse)
 	}
 	switch ((int) vstack->tag) {
 	case FcVStackInteger:
-	    n = vstack->u.integer;
+	    if (dflag)
+		d[count] = (double)vstack->u.integer;
+	    else
+		n[count] = vstack->u.integer;
+	    break;
+	case FcVStackDouble:
+	    if (count == 0 && !dflag)
+		d[1] = (double)n[1];
+	    d[count] = vstack->u._double;
+	    dflag = FcTrue;
 	    break;
 	default:
 	    FcConfigMessage (parse, FcSevereError, "invalid element in range");
-	    n = 0;
+	    if (dflag)
+		d[count] = 0.0L;
+	    else
+		n[count] = 0;
 	    break;
 	}
-	if (count == 1)
-	    r.end = n;
-	else
-	    r.begin = n;
 	count--;
 	FcVStackPopAndDestroy (parse);
     }
-    if (count < 0)
+    if (count >= 0)
     {
-	if (r.begin > r.end)
+	FcConfigMessage (parse, FcSevereError, "invalid range");
+	return;
+    }
+    if (dflag)
+    {
+	if (d[0] > d[1])
 	{
 	    FcConfigMessage (parse, FcSevereError, "invalid range");
 	    return;
 	}
-	FcVStackPushRange (parse, &r);
+	r = FcRangeCreateDouble (d[0], d[1]);
     }
     else
-	FcConfigMessage (parse, FcSevereError, "invalid range");
+    {
+	if (n[0] > n[1])
+	{
+	    FcConfigMessage (parse, FcSevereError, "invalid range");
+	    return;
+	}
+	r = FcRangeCreateInteger (n[0], n[1]);
+    }
+    FcVStackPushRange (parse, r);
 }
 
 static FcBool
@@ -1536,7 +1608,7 @@ FcParseCharSet (FcConfigParse *parse)
 {
     FcVStack	*vstack;
     FcCharSet	*charset = FcCharSetCreate ();
-    FcChar32	i;
+    FcChar32	i, begin, end;
     int n = 0;
 
     while ((vstack = FcVStackPeek (parse)))
@@ -1551,9 +1623,12 @@ FcParseCharSet (FcConfigParse *parse)
 		n++;
 	    break;
 	case FcVStackRange:
-	    if (vstack->u.range.begin <= vstack->u.range.end)
+	    begin = (FcChar32) vstack->u.range->begin;
+	    end = (FcChar32) vstack->u.range->end;
+
+	    if (begin <= end)
 	    {
-	      for (i = vstack->u.range.begin; i <= vstack->u.range.end; i++)
+	      for (i = begin; i <= end; i++)
 	      {
 		  if (!FcCharSetAddChar (charset, i))
 		  {
@@ -1888,6 +1963,7 @@ FcPopExpr (FcConfigParse *parse)
 	expr = FcExprCreateMatrix (parse->config, vstack->u.matrix);
 	break;
     case FcVStackRange:
+	expr = FcExprCreateRange (parse->config, vstack->u.range);
 	break;
     case FcVStackBool:
 	expr = FcExprCreateBool (parse->config, vstack->u.bool_);
@@ -1996,7 +2072,14 @@ FcParseDir (FcConfigParse *parse)
 
     attr = FcConfigGetAttribute (parse, "prefix");
     if (attr && FcStrCmp (attr, (const FcChar8 *)"xdg") == 0)
+    {
 	prefix = FcConfigXdgDataHome ();
+	/* home directory might be disabled.
+	 * simply ignore this element.
+	 */
+	if (!prefix)
+	    goto bail;
+    }
     data = FcStrBufDoneStatic (&parse->pstack->str);
     if (!data)
     {
@@ -2087,11 +2170,18 @@ static void
 FcParseCacheDir (FcConfigParse *parse)
 {
     const FcChar8 *attr;
-    FcChar8 *prefix = NULL, *p, *data;
+    FcChar8 *prefix = NULL, *p, *data = NULL;
 
     attr = FcConfigGetAttribute (parse, "prefix");
     if (attr && FcStrCmp (attr, (const FcChar8 *)"xdg") == 0)
+    {
 	prefix = FcConfigXdgCacheHome ();
+	/* home directory might be disabled.
+	 * simply ignore this element.
+	 */
+	if (!prefix)
+	    goto bail;
+    }
     data = FcStrBufDone (&parse->pstack->str);
     if (!data)
     {
@@ -2118,7 +2208,25 @@ FcParseCacheDir (FcConfigParse *parse)
 	data = prefix;
     }
 #ifdef _WIN32
-    if (strcmp ((const char *) data, "WINDOWSTEMPDIR_FONTCONFIG_CACHE") == 0)
+    else if (data[0] == '/' && fontconfig_instprefix[0] != '\0')
+    {
+	size_t plen = strlen ((const char *)fontconfig_instprefix);
+	size_t dlen = strlen ((const char *)data);
+
+	prefix = malloc (plen + 1 + dlen + 1);
+	if (!prefix)
+	{
+	    FcConfigMessage (parse, FcSevereError, "out of memory");
+	    goto bail;
+	}
+	strcpy ((char *) prefix, (char *) fontconfig_instprefix);
+	prefix[plen] = FC_DIR_SEPARATOR;
+	memcpy (&prefix[plen + 1], data, dlen);
+	prefix[plen + 1 + dlen] = 0;
+	FcStrFree (data);
+	data = prefix;
+    }
+    else if (strcmp ((const char *) data, "WINDOWSTEMPDIR_FONTCONFIG_CACHE") == 0)
     {
 	int rc;
 	FcStrFree (data);
@@ -2174,16 +2282,35 @@ FcParseCacheDir (FcConfigParse *parse)
 	FcStrFree (data);
 }
 
+void
+FcConfigPathFini (void)
+{
+    FcChar8 *s;
+
+retry_dir:
+    s = fc_atomic_ptr_get (&__fc_userdir);
+    if (!fc_atomic_ptr_cmpexch (&__fc_userdir, s, NULL))
+	goto retry_dir;
+    free (s);
+
+retry_conf:
+    s = fc_atomic_ptr_get (&__fc_userconf);
+    if (!fc_atomic_ptr_cmpexch (&__fc_userconf, s, NULL))
+	goto retry_conf;
+    free (s);
+}
+
 static void
 FcParseInclude (FcConfigParse *parse)
 {
     FcChar8	    *s;
     const FcChar8   *attr;
     FcBool	    ignore_missing = FcFalse;
+#ifndef _WIN32
     FcBool	    deprecated = FcFalse;
+#endif
     FcChar8	    *prefix = NULL, *p;
-    static FcChar8  *userdir = NULL;
-    static FcChar8  *userconf = NULL;
+    FcChar8	    *userdir = NULL, *userconf = NULL;
 
     s = FcStrBufDoneStatic (&parse->pstack->str);
     if (!s)
@@ -2195,15 +2322,25 @@ FcParseInclude (FcConfigParse *parse)
     if (attr && FcConfigLexBool (parse, (FcChar8 *) attr) == FcTrue)
 	ignore_missing = FcTrue;
     attr = FcConfigGetAttribute (parse, "deprecated");
+#ifndef _WIN32
     if (attr && FcConfigLexBool (parse, (FcChar8 *) attr) == FcTrue)
         deprecated = FcTrue;
+#endif
     attr = FcConfigGetAttribute (parse, "prefix");
     if (attr && FcStrCmp (attr, (const FcChar8 *)"xdg") == 0)
+    {
 	prefix = FcConfigXdgConfigHome ();
+	/* home directory might be disabled.
+	 * simply ignore this element.
+	 */
+	if (!prefix)
+	    goto bail;
+    }
     if (prefix)
     {
 	size_t plen = strlen ((const char *)prefix);
 	size_t dlen = strlen ((const char *)s);
+	FcChar8 *u;
 
 	p = realloc (prefix, plen + 1 + dlen + 1);
 	if (!p)
@@ -2219,14 +2356,32 @@ FcParseInclude (FcConfigParse *parse)
 	if (FcFileIsDir (s))
 	{
 	userdir:
+	    userdir = fc_atomic_ptr_get (&__fc_userdir);
 	    if (!userdir)
-		userdir = FcStrdup (s);
+	    {
+		u = FcStrdup (s);
+		if (!fc_atomic_ptr_cmpexch (&__fc_userdir, userdir, u))
+		{
+		    free (u);
+		    goto userdir;
+		}
+		userdir = u;
+	    }
 	}
 	else if (FcFileIsFile (s))
 	{
 	userconf:
+	    userconf = fc_atomic_ptr_get (&__fc_userconf);
 	    if (!userconf)
-		userconf = FcStrdup (s);
+	    {
+		u = FcStrdup (s);
+		if (!fc_atomic_ptr_cmpexch (&__fc_userconf, userconf, u))
+		{
+		    free (u);
+		    goto userconf;
+		}
+		userconf = u;
+	    }
 	}
 	else
 	{
@@ -2250,6 +2405,7 @@ FcParseInclude (FcConfigParse *parse)
         filename = FcConfigFilename(s);
 	if (deprecated == FcTrue &&
 	    filename != NULL &&
+	    userdir != NULL &&
 	    !FcFileIsLink (filename))
 	{
 	    if (FcFileIsDir (filename))
@@ -2653,6 +2809,11 @@ FcPopValue (FcConfigParse *parse)
 	if (value.u.l)
 	    value.type = FcTypeLangSet;
 	break;
+    case FcVStackRange:
+	value.u.r = FcRangeCopy (vstack->u.range);
+	if (value.u.r)
+	    value.type = FcTypeRange;
+	break;
     default:
 	FcConfigMessage (parse, FcSevereWarning, "unknown pattern element %d",
 			 vstack->tag);
@@ -3008,7 +3169,7 @@ FcConfigParseAndLoadDir (FcConfig	*config,
     strcat ((char *) file, "/");
     base = file + strlen ((char *) file);
 
-    files = FcStrSetCreate ();
+    files = FcStrSetCreateEx (FCSS_GROW_BY_64);
     if (!files)
     {
 	ret = FcFalse;
@@ -3069,11 +3230,12 @@ FcConfigParseAndLoad (FcConfig	    *config,
 {
 
     XML_Parser	    p;
-    FcChar8	    *filename;
+    FcChar8	    *filename, *f;
     int		    fd;
     int		    len;
     FcConfigParse   parse;
     FcBool	    error = FcTrue;
+    const FcChar8   *sysroot = FcConfigGetSysRoot (config);
 
 #ifdef ENABLE_LIBXML2
     xmlSAXHandler   sax;
@@ -3098,9 +3260,14 @@ FcConfigParseAndLoad (FcConfig	    *config,
     }
 #endif
 
-    filename = FcConfigFilename (name);
-    if (!filename)
+    f = FcConfigFilename (name);
+    if (!f)
 	goto bail0;
+    if (sysroot)
+	filename = FcStrBuildFilename (sysroot, f, NULL);
+    else
+	filename = FcStrdup (f);
+    FcStrFree (f);
 
     if (FcStrSetMember (config->configFiles, filename))
     {

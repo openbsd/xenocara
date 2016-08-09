@@ -4,9 +4,9 @@
 fc-scan \- scan font files or directories
 .SH SYNOPSIS
 .sp
-\fBfc-scan\fR [ \fB-Vh\fR ] 
+\fBfc-scan\fR [ \fB-Vbh\fR ] 
 
- [ \fB [ -f \fIformat\fB ]  [ --format \fIformat\fB ] \fR ]  [ \fB--version\fR ]  [ \fB--help\fR ]  \fB\fIfile\fB\fR\fI...\fR
+ [ \fB [ -b ]  [ --ignore-blanks ] \fR ]  [ \fB [ -f \fIformat\fB ]  [ --format \fIformat\fB ] \fR ]  [ \fB--version\fR ]  [ \fB--help\fR ]  \fB\fIfile\fB\fR\fI...\fR
 .SH "DESCRIPTION"
 .PP
 \fBfc-scan\fR scans
@@ -17,6 +17,9 @@ and prints out font pattern for each face found.
 This program follows the usual GNU command line syntax,
 with long options starting with two dashes (`-'). A summary of
 options is included below.
+.TP
+\fB-b\fR
+Ignore blanks to compute languages
 .TP
 \fB-f\fR
 Format output according to the format specifier

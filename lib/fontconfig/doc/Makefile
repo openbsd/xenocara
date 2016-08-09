@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.4 2014/05/18 10:33:05 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.5 2016/08/09 18:57:45 matthieu Exp $
 
 FONTCONFIG =	${.CURDIR}/../../../dist/fontconfig
 
@@ -160,6 +160,11 @@ MAN = FcAtomicCreate.3 \
 	FcPatternPrint.3 \
 	FcPatternReference.3 \
 	FcPatternRemove.3 \
+	FcRangeCopy.3 \
+	FcRangeCreateDouble.3 \
+	FcRangeCreateInteger.3 \
+	FcRangeDestroy.3 \
+	FcRangeGetDouble.3 \
 	FcStrBasename.3 \
 	FcStrCmp.3 \
 	FcStrCmpIgnoreCase.3 \
@@ -192,6 +197,8 @@ MAN = FcAtomicCreate.3 \
 	FcValueEqual.3 \
 	FcValuePrint.3 \
 	FcValueSave.3 \
+	FcWeightFromOpenType.3 \
+	FcWeightToOpenType.3 \
 	fonts-conf.5
 
 PDF_FILES = fontconfig-devel.pdf fontconfig-user.pdf

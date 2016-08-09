@@ -75,15 +75,15 @@ NAME="FCPATTERNGET-TYPE"
 ><DIV
 CLASS="REFNAMEDIV"
 ><A
-NAME="AEN594"
+NAME="AEN605"
 ></A
 ><H2
 >Name</H2
->FcPatternGetInteger, FcPatternGetDouble, FcPatternGetString, FcPatternGetMatrix, FcPatternGetCharSet, FcPatternGetBool, FcPatternGetFTFace, FcPatternGetLangSet&nbsp;--&nbsp;Return a typed value from a pattern</DIV
+>FcPatternGetInteger, FcPatternGetDouble, FcPatternGetString, FcPatternGetMatrix, FcPatternGetCharSet, FcPatternGetBool, FcPatternGetFTFace, FcPatternGetLangSet, FcPatternGetRange&nbsp;--&nbsp;Return a typed value from a pattern</DIV
 ><DIV
 CLASS="REFSYNOPSISDIV"
 ><A
-NAME="AEN604"
+NAME="AEN616"
 ></A
 ><H2
 >Synopsis</H2
@@ -92,7 +92,7 @@ CLASS="FUNCSYNOPSIS"
 ><P
 ></P
 ><A
-NAME="AEN605"
+NAME="AEN617"
 ></A
 ><TABLE
 BORDER="0"
@@ -310,6 +310,11 @@ CLASS="PARAMETER"
 ><I
 >n</I
 ></TT
+>, FT_Face *<TT
+CLASS="PARAMETER"
+><I
+>f</I
+></TT
 >);</CODE
 ></P
 ><P
@@ -330,10 +335,45 @@ CLASS="PARAMETER"
 ><I
 >object</I
 ></TT
->, FT_Face *<TT
+>, int <TT
 CLASS="PARAMETER"
 ><I
->f</I
+>n</I
+></TT
+>, FcLangSet **<TT
+CLASS="PARAMETER"
+><I
+>l</I
+></TT
+>);</CODE
+></P
+><P
+><CODE
+><CODE
+CLASS="FUNCDEF"
+>FcResult <TT
+CLASS="FUNCTION"
+>FcPatternGetRange</TT
+></CODE
+>(FcPattern *<TT
+CLASS="PARAMETER"
+><I
+>p</I
+></TT
+>, const char *<TT
+CLASS="PARAMETER"
+><I
+>object</I
+></TT
+>, int <TT
+CLASS="PARAMETER"
+><I
+>n</I
+></TT
+>, FcRange **<TT
+CLASS="PARAMETER"
+><I
+>r</I
 ></TT
 >);</CODE
 ></P
@@ -344,7 +384,7 @@ CLASS="PARAMETER"
 ><DIV
 CLASS="REFSECT1"
 ><A
-NAME="AEN691"
+NAME="AEN718"
 ></A
 ><H2
 >Description</H2
@@ -354,6 +394,11 @@ returned data is of the expected type. They return FcResultTypeMismatch if
 this is not the case.  Note that these (like FcPatternGet) do not make a
 copy of any data structure referenced by the return value.  Use these
 in preference to FcPatternGet to provide compile-time typechecking.
+
+<TT
+CLASS="FUNCTION"
+>FcPatternGetRange</TT
+> are available since 2.11.91.
 	    </P
 ></DIV
 ><DIV

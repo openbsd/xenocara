@@ -160,7 +160,8 @@ CLASS="PROGRAMLISTING"
   rasterizer      String  Which rasterizer is in use (deprecated)
   outline         Bool    Whether the glyphs are outlines
   scalable        Bool    Whether glyphs can be scaled
-  scale           Double  Scale factor for point-&#62;pixel conversions
+  color           Bool    Whether any glyphs have color
+  scale           Double  Scale factor for point-&#62;pixel conversions (deprecated)
   dpi             Double  Target dots per inch
   rgba            Int     unknown, rgb, bgr, vrgb, vbgr,
                           none - subpixel geometry
@@ -171,9 +172,15 @@ CLASS="PROGRAMLISTING"
                           font supports
   fontversion     Int     Version number of the font
   capability      String  List of layout capabilities in the font
+  fontformat      String  String name of the font format
   embolden        Bool    Rasterizer should synthetically embolden the font
+  embeddedbitmap  Bool    Use the embedded bitmap instead of the outline
+  decorative      Bool    Whether the style is a decorative variant
   fontfeatures    String  List of the feature tags in OpenType to be enabled
+  namelang        String  Language name to be used for the default value of
+                          familylang, stylelang, and fullnamelang
   prgname         String  String  Name of the running program
+  postscriptname  String  Font family name in PostScript
     </PRE
 ></TD
 ></TR
@@ -348,7 +355,7 @@ CLASS="PROGRAMLISTING"
   MEMORY         512    Monitor fontconfig memory usage
   CONFIG        1024    Monitor which config files are loaded
   LANGSET       2048    Dump char sets used to construct lang values
-  OBJTYPES      4096    Display message when value typechecks fail
+  MATCH2        4096    Display font-matching transformation in patterns
   </PRE
 ></TD
 ></TR
@@ -495,13 +502,13 @@ CLASS="LITERAL"
 >&#60;architecture&#62;</TT
 >.cache-<TT
 CLASS="LITERAL"
->&#60;version</TT
+>&#60;version&#62;</TT
 >'',
 where <TT
 CLASS="LITERAL"
 >&#60;version&#62;</TT
-> is the font configureation file
-version number (currently 3).
+> is the font configuration file
+version number (currently 5).
   </P
 ></DIV
 ><DIV
@@ -950,6 +957,8 @@ CLASS="PROGRAMLISTING"
   extralight      weight          40
   ultralight      weight          40
   light           weight          50
+  demilight       weight          55
+  semilight       weight          55
   book            weight          75
   regular         weight          80
   normal          weight          80
@@ -1506,6 +1515,16 @@ HREF="#DEBUG"
 ><P
 ><I
 CLASS="EMPHASIS"
+>FC_DBG_MATCH_FILTER</I
+>
+is used to filter out the patterns. this takes a comma-separated list of object names and effects only when FC_DEBUG has MATCH2. see <A
+HREF="#DEBUG"
+>Debugging Applications</A
+> section for more details.
+  </P
+><P
+><I
+CLASS="EMPHASIS"
 >FONTCONFIG_USE_MMAP</I
 >
 is used to control the use of mmap(2) for the cache files if available. this take a boolean value. fontconfig will checks if the cache files are stored on the filesystem that is safe to use mmap(2). explicitly setting this environment variable will causes skipping this check and enforce to use or not use mmap(2) anyway.
@@ -1514,7 +1533,7 @@ is used to control the use of mmap(2) for the cache files if available. this tak
 ><DIV
 CLASS="REFSECT1"
 ><A
-NAME="AEN273"
+NAME="AEN276"
 ></A
 ><H2
 >See Also</H2
@@ -1525,12 +1544,12 @@ NAME="AEN273"
 ><DIV
 CLASS="REFSECT1"
 ><A
-NAME="AEN276"
+NAME="AEN279"
 ></A
 ><H2
 >Version</H2
 ><P
->Fontconfig version 2.11.1
+>Fontconfig version 2.12.1
 
 	    </P
 ></DIV

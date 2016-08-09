@@ -61,3 +61,5 @@ int id;
 "prgname",FC_PRGNAME_OBJECT
 "hash",FC_HASH_OBJECT
 "postscriptname",FC_POSTSCRIPT_NAME_OBJECT
+"color",FC_COLOR_OBJECT
+"symbol",FC_SYMBOL_OBJECT

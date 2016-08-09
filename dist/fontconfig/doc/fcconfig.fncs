@@ -59,7 +59,8 @@ cause a new configuration to be created for use as current configuration.
 @PURPOSE@	Set configuration as default
 @DESC@
 Sets the current default configuration to <parameter>config</parameter>.  Implicitly calls
-FcConfigBuildFonts if necessary, returning FcFalse if that call fails.
+FcConfigBuildFonts if necessary, and FcConfigReference() to inrease the reference count
+in <parameter>config</parameter> since 2.12.0, returning FcFalse if that call fails.
 @@
 
 @RET@           FcConfig *
@@ -218,8 +219,9 @@ If <parameter>config</parameter> is NULL, the current configuration is used.
 @PURPOSE@	Add font file to font database
 @DESC@
 Adds an application-specific font to the configuration. Returns FcFalse
-if the fonts cannot be added (due to allocation failure). Otherwise returns FcTrue.
-If <parameter>config</parameter> is NULL, the current configuration is used.
+if the fonts cannot be added (due to allocation failure or no fonts found).
+Otherwise returns FcTrue. If <parameter>config</parameter> is NULL,
+the current configuration is used.
 @@
 
 @RET@           FcBool
@@ -230,8 +232,9 @@ If <parameter>config</parameter> is NULL, the current configuration is used.
 @DESC@
 Scans the specified directory for fonts, adding each one found to the
 application-specific set of fonts. Returns FcFalse
-if the fonts cannot be added (due to allocation failure). Otherwise returns FcTrue.
-If <parameter>config</parameter> is NULL, the current configuration is used.
+if the fonts cannot be added (due to allocation failure).
+Otherwise returns FcTrue. If <parameter>config</parameter> is NULL,
+the current configuration is used.
 @@
 
 @RET@           void

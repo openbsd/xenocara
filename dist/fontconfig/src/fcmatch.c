@@ -189,6 +189,49 @@ FcCompareSize (FcValue *value1, FcValue *value2)
 }
 
 static double
+FcCompareSizeRange (FcValue *v1, FcValue *v2)
+{
+    FcValue value1 = FcValueCanonicalize (v1);
+    FcValue value2 = FcValueCanonicalize (v2);
+    FcRange *r1 = NULL, *r2 = NULL;
+    double ret = -1.0;
+
+    switch ((int) value1.type) {
+    case FcTypeDouble:
+	r1 = FcRangeCreateDouble (value1.u.d, value1.u.d);
+	break;
+    case FcTypeRange:
+	r1 = FcRangeCopy (value1.u.r);
+	break;
+    default:
+	goto bail;
+    }
+    switch ((int) value2.type) {
+    case FcTypeDouble:
+	r2 = FcRangeCreateDouble (value2.u.d, value2.u.d);
+	break;
+    case FcTypeRange:
+	r2 = FcRangeCopy (value2.u.r);
+	break;
+    default:
+	goto bail;
+    }
+
+    if (FcRangeIsInRange (r1, r2))
+	ret = 0.0;
+    else
+	ret = FC_MIN (fabs (r1->end - r2->begin), fabs (r1->begin - r2->end));
+
+bail:
+    if (r1)
+	FcRangeDestroy (r1);
+    if (r2)
+	FcRangeDestroy (r2);
+
+    return ret;
+}
+
+static double
 FcCompareFilename (FcValue *v1, FcValue *v2)
 {
     const FcChar8 *s1 = FcValueString (v1), *s2 = FcValueString (v2);
@@ -202,16 +245,8 @@ FcCompareFilename (FcValue *v1, FcValue *v2)
 	return 3.0;
 }
 
-static double
-FcCompareHash (FcValue *v1, FcValue *v2)
-{
-    const FcChar8 *s1 = FcValueString (v1), *s2 = FcValueString (v2);
 
-    /* Do not match an empty string */
-    if (!s1 || !s2 || !s1[0] || !s2[0])
-	return 1.0;
-    return FcCompareString (v1, v2);
-}
+/* Define priorities to -1 for objects that don't have a compare function. */
 
 #define PRI_NULL(n)				\
     PRI_ ## n ## _STRONG = -1,			\
@@ -226,7 +261,7 @@ FcCompareHash (FcValue *v1, FcValue *v2)
 #define PRI_FcCompareCharSet(n)		PRI1(n)
 #define PRI_FcCompareLang(n)		PRI1(n)
 #define PRI_FcComparePostScript(n)	PRI1(n)
-#define PRI_FcCompareHash(n)		PRI1(n)
+#define PRI_FcCompareSizeRange(n)	PRI1(n)
 
 #define FC_OBJECT(NAME, Type, Cmp)	PRI_##Cmp(NAME)
 
@@ -236,6 +271,9 @@ typedef enum _FcMatcherPriorityDummy {
 
 #undef FC_OBJECT
 
+
+/* Canonical match priority order. */
+
 #undef PRI1
 #define PRI1(n)					\
     PRI_ ## n,					\
@@ -243,10 +281,10 @@ typedef enum _FcMatcherPriorityDummy {
     PRI_ ## n ## _WEAK = PRI_ ## n
 
 typedef enum _FcMatcherPriority {
-    PRI1(HASH),
     PRI1(FILE),
     PRI1(FONTFORMAT),
     PRI1(SCALABLE),
+    PRI1(COLOR),
     PRI1(FOUNDRY),
     PRI1(CHARSET),
     PRI_FAMILY_STRONG,
@@ -254,7 +292,9 @@ typedef enum _FcMatcherPriority {
     PRI1(LANG),
     PRI_FAMILY_WEAK,
     PRI_POSTSCRIPT_NAME_WEAK,
+    PRI1(SYMBOL),
     PRI1(SPACING),
+    PRI1(SIZE),
     PRI1(PIXEL_SIZE),
     PRI1(STYLE),
     PRI1(SLANT),
@@ -337,7 +377,7 @@ FcCompareValueList (FcObject	     object,
     best = 1e99;
     bestStrong = 1e99;
     bestWeak = 1e99;
-    j = 1;
+    j = 0;
     for (v1 = v1orig; v1; v1 = FcValueListNext(v1))
     {
 	for (v2 = v2orig, k = 0; v2; v2 = FcValueListNext(v2), k++)
@@ -445,7 +485,7 @@ FcFontRenderPrepare (FcConfig	    *config,
 {
     FcPattern	    *new;
     int		    i;
-    FcPatternElt    *fe, *pe, *fel, *pel;
+    FcPatternElt    *fe, *pe;
     FcValue	    v;
     FcResult	    result;
 
@@ -470,36 +510,25 @@ FcFontRenderPrepare (FcConfig	    *config,
 	    fe->object == FC_STYLE_OBJECT ||
 	    fe->object == FC_FULLNAME_OBJECT)
 	{
+	    FcPatternElt    *fel, *pel;
+
 	    FC_ASSERT_STATIC ((FC_FAMILY_OBJECT + 1) == FC_FAMILYLANG_OBJECT);
 	    FC_ASSERT_STATIC ((FC_STYLE_OBJECT + 1) == FC_STYLELANG_OBJECT);
 	    FC_ASSERT_STATIC ((FC_FULLNAME_OBJECT + 1) == FC_FULLNAMELANG_OBJECT);
 
 	    fel = FcPatternObjectFindElt (font, fe->object + 1);
 	    pel = FcPatternObjectFindElt (pat, fe->object + 1);
-	}
-	else
-	{
-	    fel = NULL;
-	    pel = NULL;
-	}
-	pe = FcPatternObjectFindElt (pat, fe->object);
-	if (pe)
-	{
-	    const FcMatcher *match = FcObjectToMatcher (pe->object, FcFalse);
 
-	    if (!FcCompareValueList (pe->object, match,
-				     FcPatternEltValues(pe),
-				     FcPatternEltValues(fe), &v, NULL, NULL, &result))
-	    {
-		FcPatternDestroy (new);
-		return NULL;
-	    }
 	    if (fel && pel)
 	    {
+		/* The font has name languages, and pattern asks for specific language(s).
+		 * Match on language and and prefer that result.
+		 * Note:  Currently the code only give priority to first matching language.
+		 */
 		int n = 1, j;
 		FcValueListPtr l1, l2, ln = NULL, ll = NULL;
+		const FcMatcher *match = FcObjectToMatcher (pel->object, FcTrue);
 
-		match = FcObjectToMatcher (pel->object, FcTrue);
 		if (!FcCompareValueList (pel->object, match,
 					 FcPatternEltValues (pel),
 					 FcPatternEltValues (fel), NULL, NULL, &n, &result))
@@ -542,9 +571,10 @@ FcFontRenderPrepare (FcConfig	    *config,
 	    }
 	    else if (fel)
 	    {
+		/* Pattern doesn't ask for specific language.  Copy all for name and
+		 * lang. */
 		FcValueListPtr l1, l2;
 
-	    copy_lang:
 		l1 = FcValueListDuplicate (FcPatternEltValues (fe));
 		l2 = FcValueListDuplicate (FcPatternEltValues (fel));
 		FcPatternObjectListAdd (new, fe->object, l1, FcFalse);
@@ -552,12 +582,23 @@ FcFontRenderPrepare (FcConfig	    *config,
 
 		continue;
 	    }
+	}
+
+	pe = FcPatternObjectFindElt (pat, fe->object);
+	if (pe)
+	{
+	    const FcMatcher *match = FcObjectToMatcher (pe->object, FcFalse);
+	    if (!FcCompareValueList (pe->object, match,
+				     FcPatternEltValues(pe),
+				     FcPatternEltValues(fe), &v, NULL, NULL, &result))
+	    {
+		FcPatternDestroy (new);
+		return NULL;
+	    }
 	    FcPatternObjectAdd (new, fe->object, v, FcFalse);
 	}
 	else
 	{
-	    if (fel)
-		goto copy_lang;
 	    FcPatternObjectListAdd (new, fe->object,
 				    FcValueListDuplicate (FcPatternEltValues (fe)),
 				    FcTrue);
@@ -647,6 +688,47 @@ FcFontSetMatchInternal (FcFontSet   **sets,
 	    printf (" %g", bestscore[i]);
 	printf ("\n");
 	FcPatternPrint (best);
+    }
+    if (FcDebug () & FC_DBG_MATCH2)
+    {
+	char *env = getenv ("FC_DBG_MATCH_FILTER");
+	FcObjectSet *os = NULL;
+
+	if (env)
+	{
+	    char *ss, *s;
+	    char *p;
+	    FcBool f = FcTrue;
+
+	    ss = s = strdup (env);
+	    os = FcObjectSetCreate ();
+	    while (f)
+	    {
+		size_t len;
+		char *x;
+
+		if (!(p = strchr (s, ',')))
+		{
+		    f = FcFalse;
+		    len = strlen (s) + 1;
+		}
+		else
+		{
+		    len = (p - s) + 1;
+		}
+		x = malloc (sizeof (char) * len);
+		strncpy (x, s, len - 1);
+		x[len - 1] = 0;
+		if (FcObjectFromName (x) > 0)
+		    FcObjectSetAdd (os, x);
+		s = p + 1;
+		free (x);
+	    }
+	    free (ss);
+	}
+	FcPatternPrint2 (p, best, os);
+	if (os)
+	    FcObjectSetDestroy (os);
     }
     /* assuming that 'result' is initialized with FcResultNoMatch
      * outside this function */

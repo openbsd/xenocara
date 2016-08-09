@@ -179,7 +179,9 @@ CLASS="PROGRAMLISTING"
     outline        FC_OUTLINE             Bool    Whether the glyphs are outlines
     scalable       FC_SCALABLE            Bool    Whether glyphs can be scaled
     scale          FC_SCALE               Double  Scale factor for point-&#62;pixel
-                                                  conversions
+                                                  conversions (deprecated)
+    symbol         FC_SYMBOL              Bool    Whether font uses MS symbol-font encoding
+    color          FC_COLOR               Bool    Whether any glyphs have color
     dpi            FC_DPI                 Double  Target dots per inch
     rgba           FC_RGBA                Int     unknown, rgb, bgr, vrgb,
                                                   vbgr, none - subpixel geometry
@@ -193,8 +195,13 @@ CLASS="PROGRAMLISTING"
     fontversion    FC_FONTVERSION         Int     Version number of the font
     capability     FC_CAPABILITY          String  List of layout capabilities in
                                                   the font
+    fontformat     FC_FONTFORMAT          String  String name of the font format
     embolden       FC_EMBOLDEN            Bool    Rasterizer should
                                                   synthetically embolden the font
+    embeddedbitmap FC_EMBEDDED_BITMAP     Bool    Use the embedded bitmap instead
+                                                  of the outline
+    decorative     FC_DECORATIVE          Bool    Whether the style is a decorative
+                                                  variant
     fontfeatures   FC_FONT_FEATURES       String  List of extra feature tags in
                                                   OpenType to be enabled
     namelang       FC_NAMELANG            String  Language name to be used for the
@@ -202,7 +209,7 @@ CLASS="PROGRAMLISTING"
                                                   stylelang and fullnamelang
     prgname        FC_PRGNAME             String  Name of the running program
     hash           FC_HASH                String  SHA256 hash value of the font data
-                                                  with "sha256:" prefix.
+                                                  with "sha256:" prefix (deprecated)
     postscriptname FC_POSTSCRIPT_NAME     String  Font name in PostScript
     </PRE
 ></TD

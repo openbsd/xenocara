@@ -6,6 +6,9 @@
 /* The normal alignment of `double', in bytes. */
 #undef ALIGNOF_DOUBLE
 
+/* The normal alignment of `void *', in bytes. */
+#undef ALIGNOF_VOID_P
+
 /* Use libxml2 instead of Expat */
 #undef ENABLE_LIBXML2
 
@@ -115,7 +118,7 @@
 /* Define to 1 if you have the <ndir.h> header file, and it defines `DIR'. */
 #undef HAVE_NDIR_H
 
-/* Define to 1 if you have the 'posix_fadivse' function. */
+/* Define to 1 if you have the 'posix_fadvise' function. */
 #undef HAVE_POSIX_FADVISE
 
 /* Have POSIX threads */
@@ -138,28 +141,6 @@
 
 /* Define to 1 if you have the `readlink' function. */
 #undef HAVE_READLINK
-
-/* Define to 1 if you have the `regcomp' function. */
-#undef HAVE_REGCOMP
-
-/* Define to 1 if you have the `regerror' function. */
-#undef HAVE_REGERROR
-
-/* Define to 1 if you have the `regexec' function. */
-#undef HAVE_REGEXEC
-
-/* Define to 1 if you have the <regex.h> header file. */
-#undef HAVE_REGEX_H
-
-/* Define to 1 if you have the `regfree' function. */
-#undef HAVE_REGFREE
-
-/* Define to 1 if you have the 'scandir' function. */
-#undef HAVE_SCANDIR
-
-/* Define to 1 if you have the 'scandir' function with int (* compar)(const
-   void *, const void *) */
-#undef HAVE_SCANDIR_VOID_P
 
 /* Define to 1 if you have the <sched.h> header file. */
 #undef HAVE_SCHED_H
@@ -197,6 +178,9 @@
 /* Define to 1 if `f_fstypename' is a member of `struct statvfs'. */
 #undef HAVE_STRUCT_STATVFS_F_FSTYPENAME
 
+/* Define to 1 if `st_mtim' is a member of `struct stat'. */
+#undef HAVE_STRUCT_STAT_ST_MTIM
+
 /* Define to 1 if you have the <sys/dir.h> header file, and it defines `DIR'.
    */
 #undef HAVE_SYS_DIR_H
@@ -226,6 +210,12 @@
 /* Define to 1 if you have the <sys/vfs.h> header file. */
 #undef HAVE_SYS_VFS_H
 
+/* Define to 1 if `usLowerOpticalPointSize' is a member of `TT_OS2'. */
+#undef HAVE_TT_OS2_USLOWEROPTICALPOINTSIZE
+
+/* Define to 1 if `usUpperOpticalPointSize' is a member of `TT_OS2'. */
+#undef HAVE_TT_OS2_USUPPEROPTICALPOINTSIZE
+
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
@@ -244,8 +234,7 @@
 /* Define to 1 if you have the `_mktemp_s' function. */
 #undef HAVE__MKTEMP_S
 
-/* Define to the sub-directory in which libtool stores uninstalled libraries.
-   */
+/* Define to the sub-directory where libtool stores uninstalled libraries. */
 #undef LT_OBJDIR
 
 /* Name of package */
@@ -296,9 +285,6 @@
 
 /* Use iconv. */
 #undef USE_ICONV
-
-/* Use regex */
-#undef USE_REGEX
 
 /* Enable extensions on AIX 3, Interix.  */
 #ifndef _ALL_SOURCE

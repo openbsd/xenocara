@@ -10,7 +10,7 @@ REL="HOME"
 HREF="t1.html"><LINK
 REL="UP"
 TITLE="FcConfig"
-HREF="x102.html#AEN2562"><LINK
+HREF="x102.html#AEN2718"><LINK
 REL="PREVIOUS"
 TITLE="FcConfigDestroy"
 HREF="fcconfigdestroy.html"><LINK
@@ -75,7 +75,7 @@ NAME="FCCONFIGSETCURRENT"
 ><DIV
 CLASS="REFNAMEDIV"
 ><A
-NAME="AEN2629"
+NAME="AEN2785"
 ></A
 ><H2
 >Name</H2
@@ -83,7 +83,7 @@ NAME="AEN2629"
 ><DIV
 CLASS="REFSYNOPSISDIV"
 ><A
-NAME="AEN2632"
+NAME="AEN2788"
 ></A
 ><H2
 >Synopsis</H2
@@ -92,7 +92,7 @@ CLASS="FUNCSYNOPSIS"
 ><P
 ></P
 ><A
-NAME="AEN2633"
+NAME="AEN2789"
 ></A
 ><TABLE
 BORDER="0"
@@ -129,7 +129,7 @@ CLASS="PARAMETER"
 ><DIV
 CLASS="REFSECT1"
 ><A
-NAME="AEN2640"
+NAME="AEN2796"
 ></A
 ><H2
 >Description</H2
@@ -140,7 +140,13 @@ CLASS="PARAMETER"
 >config</I
 ></TT
 >.  Implicitly calls
-FcConfigBuildFonts if necessary, returning FcFalse if that call fails.
+FcConfigBuildFonts if necessary, and FcConfigReference() to inrease the reference count
+in <TT
+CLASS="PARAMETER"
+><I
+>config</I
+></TT
+> since 2.12.0, returning FcFalse if that call fails.
 	    </P
 ></DIV
 ><DIV
@@ -193,7 +199,7 @@ WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
 ><A
-HREF="x102.html#AEN2562"
+HREF="x102.html#AEN2718"
 ACCESSKEY="U"
 >Up</A
 ></TD

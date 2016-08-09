@@ -79,11 +79,11 @@ NAME="AEN473"
 ></A
 ><H2
 >Name</H2
->FcPatternAddInteger, FcPatternAddDouble, FcPatternAddString, FcPatternAddMatrix, FcPatternAddCharSet, FcPatternAddBool, FcPatternAddFTFace, FcPatternAddLangSet&nbsp;--&nbsp;Add a typed value to a pattern</DIV
+>FcPatternAddInteger, FcPatternAddDouble, FcPatternAddString, FcPatternAddMatrix, FcPatternAddCharSet, FcPatternAddBool, FcPatternAddFTFace, FcPatternAddLangSet, FcPatternAddRange&nbsp;--&nbsp;Add a typed value to a pattern</DIV
 ><DIV
 CLASS="REFSYNOPSISDIV"
 ><A
-NAME="AEN483"
+NAME="AEN484"
 ></A
 ><H2
 >Synopsis</H2
@@ -92,7 +92,7 @@ CLASS="FUNCSYNOPSIS"
 ><P
 ></P
 ><A
-NAME="AEN484"
+NAME="AEN485"
 ></A
 ><TABLE
 BORDER="0"
@@ -308,13 +308,38 @@ CLASS="PARAMETER"
 >);</CODE
 ></P
 ><P
+><CODE
+><CODE
+CLASS="FUNCDEF"
+>FcBool <TT
+CLASS="FUNCTION"
+>FcPatternAddRange</TT
+></CODE
+>(FcPattern *<TT
+CLASS="PARAMETER"
+><I
+>p</I
+></TT
+>, const char *<TT
+CLASS="PARAMETER"
+><I
+>object</I
+></TT
+>, const FcRange *<TT
+CLASS="PARAMETER"
+><I
+>r</I
+></TT
+>);</CODE
+></P
+><P
 ></P
 ></DIV
 ></DIV
 ><DIV
 CLASS="REFSECT1"
 ><A
-NAME="AEN558"
+NAME="AEN568"
 ></A
 ><H2
 >Description</H2
@@ -323,6 +348,11 @@ NAME="AEN558"
 type into the pattern.  Use these in preference to FcPatternAdd as they
 will provide compile-time typechecking.  These all append values to
 any existing list of values.
+
+<TT
+CLASS="FUNCTION"
+>FcPatternAddRange</TT
+> are available since 2.11.91.
 	    </P
 ></DIV
 ><DIV

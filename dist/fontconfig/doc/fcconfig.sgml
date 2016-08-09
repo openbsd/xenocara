@@ -203,7 +203,8 @@ cause a new configuration to be created for use as current configuration.
 	<refsect1><title>Description</title>
 	    <para>
 Sets the current default configuration to <parameter>config</parameter>.  Implicitly calls
-FcConfigBuildFonts if necessary, returning FcFalse if that call fails.
+FcConfigBuildFonts if necessary, and FcConfigReference() to inrease the reference count
+in <parameter>config</parameter> since 2.12.0, returning FcFalse if that call fails.
 	    </para>
 	</refsect1>
     </refentry>
@@ -992,8 +993,9 @@ If <parameter>config</parameter> is NULL, the current configuration is used.
 	<refsect1><title>Description</title>
 	    <para>
 Adds an application-specific font to the configuration. Returns FcFalse
-if the fonts cannot be added (due to allocation failure). Otherwise returns FcTrue.
-If <parameter>config</parameter> is NULL, the current configuration is used.
+if the fonts cannot be added (due to allocation failure or no fonts found).
+Otherwise returns FcTrue. If <parameter>config</parameter> is NULL,
+the current configuration is used.
 	    </para>
 	</refsect1>
     </refentry>
@@ -1046,8 +1048,9 @@ If <parameter>config</parameter> is NULL, the current configuration is used.
 	    <para>
 Scans the specified directory for fonts, adding each one found to the
 application-specific set of fonts. Returns FcFalse
-if the fonts cannot be added (due to allocation failure). Otherwise returns FcTrue.
-If <parameter>config</parameter> is NULL, the current configuration is used.
+if the fonts cannot be added (due to allocation failure).
+Otherwise returns FcTrue. If <parameter>config</parameter> is NULL,
+the current configuration is used.
 	    </para>
 	</refsect1>
     </refentry>

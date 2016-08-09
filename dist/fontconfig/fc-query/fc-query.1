@@ -6,7 +6,7 @@ fc-query \- query font files
 .sp
 \fBfc-query\fR [ \fB-Vh\fR ] 
 
- [ \fB [ -i \fIindex\fB ]  [ --index \fIindex\fB ] \fR ]  [ \fB [ -f \fIformat\fB ]  [ --format \fIformat\fB ] \fR ]  [ \fB--version\fR ]  [ \fB--help\fR ]  \fB\fIfont-file\fB\fR\fI...\fR
+ [ \fB [ -b ]  [ --ignore-blanks ] \fR ]  [ \fB [ -i \fIindex\fB ]  [ --index \fIindex\fB ] \fR ]  [ \fB [ -f \fIformat\fB ]  [ --format \fIformat\fB ] \fR ]  [ \fB--version\fR ]  [ \fB--help\fR ]  \fB\fIfont-file\fB\fR\fI...\fR
 .SH "DESCRIPTION"
 .PP
 \fBfc-query\fR queries
@@ -19,6 +19,9 @@ queried, otherwise all faces are queried.
 This program follows the usual GNU command line syntax,
 with long options starting with two dashes (`-'). A summary of
 options is included below.
+.TP
+\fB-b\fR
+Ignore blanks to compute languages
 .TP
 \fB-i\fR
 Only query face indexed \fIindex\fR of

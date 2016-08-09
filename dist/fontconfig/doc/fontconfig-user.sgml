@@ -119,7 +119,8 @@ convenience for the applications' rendering mechanism.
   rasterizer      String  Which rasterizer is in use (deprecated)
   outline         Bool    Whether the glyphs are outlines
   scalable        Bool    Whether glyphs can be scaled
-  scale           Double  Scale factor for point->pixel conversions
+  color           Bool    Whether any glyphs have color
+  scale           Double  Scale factor for point->pixel conversions (deprecated)
   dpi             Double  Target dots per inch
   rgba            Int     unknown, rgb, bgr, vrgb, vbgr,
                           none - subpixel geometry
@@ -130,9 +131,15 @@ convenience for the applications' rendering mechanism.
                           font supports
   fontversion     Int     Version number of the font
   capability      String  List of layout capabilities in the font
+  fontformat      String  String name of the font format
   embolden        Bool    Rasterizer should synthetically embolden the font
+  embeddedbitmap  Bool    Use the embedded bitmap instead of the outline
+  decorative      Bool    Whether the style is a decorative variant
   fontfeatures    String  List of the feature tags in OpenType to be enabled
+  namelang        String  Language name to be used for the default value of
+                          familylang, stylelang, and fullnamelang
   prgname         String  String  Name of the running program
+  postscriptname  String  Font family name in PostScript
     </programlisting>
   </refsect2>
   <refsect2>
@@ -251,7 +258,7 @@ debugging messages.
   MEMORY         512    Monitor fontconfig memory usage
   CONFIG        1024    Monitor which config files are loaded
   LANGSET       2048    Dump char sets used to construct lang values
-  OBJTYPES      4096    Display message when value typechecks fail
+  MATCH2        4096    Display font-matching transformation in patterns
   </programlisting>
   <para>
 Add the value of the desired debug levels together and assign that (in
@@ -314,9 +321,9 @@ the configuration file, the directory that can be accessed first in the list
 will be used to store the cache files.  If it starts with '~', it refers to
 a directory in the users home directory.  If 'prefix' is set to "xdg", the value in the XDG_CACHE_HOME environment variable will be added as the path prefix. please see XDG Base Directory Specification for more details.
 The default directory is ``$XDG_CACHE_HOME/fontconfig'' and it contains the cache files
-named ``<literal>&lt;hash value&gt;</literal>-<literal>&lt;architecture&gt;</literal>.cache-<literal>&lt;version</literal>'',
-where <literal>&lt;version&gt;</literal> is the font configureation file
-version number (currently 3).
+named ``<literal>&lt;hash value&gt;</literal>-<literal>&lt;architecture&gt;</literal>.cache-<literal>&lt;version&gt;</literal>'',
+where <literal>&lt;version&gt;</literal> is the font configuration file
+version number (currently 5).
   </para></refsect2>
   <refsect2><title><literal>&lt;include ignore_missing="no" prefix="default"&gt;</literal></title><para>
 This element contains the name of an additional configuration file or
@@ -473,6 +480,8 @@ symbolic names for common font values:
   extralight      weight          40
   ultralight      weight          40
   light           weight          50
+  demilight       weight          55
+  semilight       weight          55
   book            weight          75
   regular         weight          80
   normal          weight          80
@@ -776,6 +785,10 @@ is used to override the default configuration directory.
   <para>
 <emphasis>FC_DEBUG</emphasis>
 is used to output the detailed debugging messages. see <link linkend="debug">Debugging Applications</link> section for more details.
+  </para>
+  <para>
+<emphasis>FC_DBG_MATCH_FILTER</emphasis>
+is used to filter out the patterns. this takes a comma-separated list of object names and effects only when FC_DEBUG has MATCH2. see <link linkend="debug">Debugging Applications</link> section for more details.
   </para>
   <para>
 <emphasis>FONTCONFIG_USE_MMAP</emphasis>

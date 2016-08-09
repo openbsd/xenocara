@@ -7,6 +7,12 @@
 /* The normal alignment of `double', in bytes. */
 #define ALIGNOF_DOUBLE 8
 
+#if defined(__LP64__)
+#define ALIGNOF_VOID_P 8
+#else
+#define ALIGNOF_VOID_P 4
+#endif
+
 /* Use libxml2 instead of Expat */
 /* #undef ENABLE_LIBXML2 */
 
@@ -108,7 +114,7 @@
 #define HAVE_MKDTEMP 1
 
 /* Define to 1 if you have the `mkostemp' function. */
-/* #undef HAVE_MKOSTEMP */
+#define HAVE_MKOSTEMP 1
 
 /* Define to 1 if you have the `mkstemp' function. */
 #define HAVE_MKSTEMP 1
@@ -143,28 +149,6 @@
 /* Define to 1 if you have the `readlink' function. */
 #define HAVE_READLINK 1
 
-/* Define to 1 if you have the `regcomp' function. */
-#define HAVE_REGCOMP 1
-
-/* Define to 1 if you have the `regerror' function. */
-#define HAVE_REGERROR 1
-
-/* Define to 1 if you have the `regexec' function. */
-#define HAVE_REGEXEC 1
-
-/* Define to 1 if you have the <regex.h> header file. */
-#define HAVE_REGEX_H 1
-
-/* Define to 1 if you have the `regfree' function. */
-#define HAVE_REGFREE 1
-
-/* Define to 1 if you have the 'scandir' function. */
-#define HAVE_SCANDIR 1
-
-/* Define to 1 if you have the 'scandir' function with int (* compar)(const
-   void *, const void *) */
-/* #undef HAVE_SCANDIR_VOID_P */
-
 /* Define to 1 if you have the <sched.h> header file. */
 /* #undef HAVE_SCHED_H */
 
@@ -190,10 +174,10 @@
 #define HAVE_STRUCT_DIRENT_D_TYPE 1
 
 /* Define to 1 if `f_flags' is a member of `struct statfs'. */
-/* #undef HAVE_STRUCT_STATFS_F_FLAGS */
+#define HAVE_STRUCT_STATFS_F_FLAGS 1
 
 /* Define to 1 if `f_fstypename' is a member of `struct statfs'. */
-/* #undef HAVE_STRUCT_STATFS_F_FSTYPENAME */
+#define HAVE_STRUCT_STATFS_F_FSTYPENAME 1
 
 /* Define to 1 if `f_basetype' is a member of `struct statvfs'. */
 /* #undef HAVE_STRUCT_STATVFS_F_BASETYPE */
@@ -201,12 +185,15 @@
 /* Define to 1 if `f_fstypename' is a member of `struct statvfs'. */
 /* #undef HAVE_STRUCT_STATVFS_F_FSTYPENAME */
 
+/* Define to 1 if `st_mtim' is a member of `struct stat'. */
+#define HAVE_STRUCT_STAT_ST_MTIM 1
+
 /* Define to 1 if you have the <sys/dir.h> header file, and it defines `DIR'.
    */
 /* #undef HAVE_SYS_DIR_H */
 
 /* Define to 1 if you have the <sys/mount.h> header file. */
-/* #undef HAVE_SYS_MOUNT_H */
+#define HAVE_SYS_MOUNT_H 1
 
 /* Define to 1 if you have the <sys/ndir.h> header file, and it defines `DIR'.
    */
@@ -230,6 +217,12 @@
 /* Define to 1 if you have the <sys/vfs.h> header file. */
 /* #undef HAVE_SYS_VFS_H */
 
+/* Define to 1 if `usLowerOpticalPointSize' is a member of `TT_OS2'. */
+#define HAVE_TT_OS2_USLOWEROPTICALPOINTSIZE 1
+
+/* Define to 1 if `usUpperOpticalPointSize' is a member of `TT_OS2'. */
+#define HAVE_TT_OS2_USUPPEROPTICALPOINTSIZE 1
+
 /* Define to 1 if you have the <unistd.h> header file. */
 #define HAVE_UNISTD_H 1
 
@@ -248,30 +241,29 @@
 /* Define to 1 if you have the `_mktemp_s' function. */
 /* #undef HAVE__MKTEMP_S */
 
-/* Define to the sub-directory in which libtool stores uninstalled libraries.
-   */
+/* Define to the sub-directory where libtool stores uninstalled libraries. */
 #define LT_OBJDIR ".libs/"
 
 /* Name of package */
 #define PACKAGE "fontconfig"
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT ""
+#define PACKAGE_BUGREPORT "https://bugs.freedesktop.org/enter_bug.cgi?product=fontconfig"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME ""
+#define PACKAGE_NAME "fontconfig"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING ""
+#define PACKAGE_STRING "fontconfig 2.12.1"
 
 /* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME ""
+#define PACKAGE_TARNAME "fontconfig"
 
 /* Define to the home page for this package. */
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION ""
+#define PACKAGE_VERSION "2.12.1"
 
 /* Define to necessary symbol if this constant uses a non-standard name on
    your system. */
@@ -305,9 +297,6 @@
 /* Use iconv. */
 #define USE_ICONV 0
 
-/* Use regex */
-#define USE_REGEX /**/
-
 /* Enable extensions on AIX 3, Interix.  */
 #ifndef _ALL_SOURCE
 # define _ALL_SOURCE 1
@@ -331,7 +320,7 @@
 
 
 /* Version number of package */
-#define VERSION "2.10.91"
+#define VERSION "2.12.1"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

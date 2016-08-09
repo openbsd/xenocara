@@ -257,3 +257,7 @@ FcMakeDirectory (const FcChar8 *dir)
     FcStrFree (parent);
     return ret;
 }
+
+#define __fccompat__
+#include "fcaliastail.h"
+#undef __fccompat__

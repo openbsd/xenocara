@@ -139,7 +139,6 @@ libfontconfig_la_SOURCES = \
 	fcformat.c \
 	fcfreetype.c \
 	fcfs.c \
-	fchash.c \
 	fcinit.c \
 	fclang.c \
 	fclist.c \
@@ -151,9 +150,11 @@ libfontconfig_la_SOURCES = \
 	fcobjs.h \
 	fcobjshash.h \
 	fcpat.c \
+	fcrange.c \
 	fcserialize.c \
 	fcstat.c \
 	fcstr.c \
+	fcweight.c \
 	fcwindows.h \
 	fcxml.c \
 	ftglue.h \

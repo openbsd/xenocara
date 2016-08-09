@@ -270,9 +270,11 @@ FcListValueHash (FcValue    *value)
     case FcTypeCharSet:
 	return FcCharSetCount (v.u.c);
     case FcTypeFTFace:
-	return (long) v.u.f;
+	return (intptr_t) v.u.f;
     case FcTypeLangSet:
 	return FcLangSetHash (v.u.l);
+    case FcTypeRange:
+	return FcRangeHash (v.u.r);
     }
     return 0;
 }

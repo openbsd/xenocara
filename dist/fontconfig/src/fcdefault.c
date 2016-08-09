@@ -38,6 +38,7 @@ static const struct {
     { FC_GLOBAL_ADVANCE_OBJECT,    FcTrue	},  /* !FC_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH */
     { FC_EMBEDDED_BITMAP_OBJECT,   FcTrue 	},  /* !FC_LOAD_NO_BITMAP */
     { FC_DECORATIVE_OBJECT,	   FcFalse	},
+    { FC_SYMBOL_OBJECT,		   FcFalse	},
 };
 
 #define NUM_FC_BOOL_DEFAULTS	(int) (sizeof FcBoolDefaults / sizeof FcBoolDefaults[0])
@@ -94,7 +95,6 @@ retry:
     {
 	FcStrSet *langs = FcGetDefaultLangs ();
 	lang = FcStrdup (langs->strs[0]);
-	FcStrSetDestroy (langs);
 
 	if (!fc_atomic_ptr_cmpexch (&default_lang, NULL, lang)) {
 	    free (lang);
@@ -219,6 +219,7 @@ FcDefaultSubstitute (FcPattern *pattern)
 {
     FcValue v, namelang, v2;
     int	    i;
+    double	dpi, size, scale, pixelsize;
 
     if (FcPatternObjectGet (pattern, FC_WEIGHT_OBJECT, 0, &v) == FcResultNoMatch )
 	FcPatternObjectAddInteger (pattern, FC_WEIGHT_OBJECT, FC_WEIGHT_NORMAL);
@@ -233,32 +234,30 @@ FcDefaultSubstitute (FcPattern *pattern)
 	if (FcPatternObjectGet (pattern, FcBoolDefaults[i].field, 0, &v) == FcResultNoMatch)
 	    FcPatternObjectAddBool (pattern, FcBoolDefaults[i].field, FcBoolDefaults[i].value);
 
-    if (FcPatternObjectGet (pattern, FC_PIXEL_SIZE_OBJECT, 0, &v) == FcResultNoMatch)
-    {
-	double	dpi, size, scale;
+    if (FcPatternObjectGetDouble (pattern, FC_SIZE_OBJECT, 0, &size) != FcResultMatch)
+	size = 12.0L;
+    if (FcPatternObjectGetDouble (pattern, FC_SCALE_OBJECT, 0, &scale) != FcResultMatch)
+	scale = 1.0;
+    if (FcPatternObjectGetDouble (pattern, FC_DPI_OBJECT, 0, &dpi) != FcResultMatch)
+	dpi = 75.0;
 
-	if (FcPatternObjectGetDouble (pattern, FC_SIZE_OBJECT, 0, &size) != FcResultMatch)
-	{
-	    size = 12.0;
-	    (void) FcPatternObjectDel (pattern, FC_SIZE_OBJECT);
-	    FcPatternObjectAddDouble (pattern, FC_SIZE_OBJECT, size);
-	}
-	if (FcPatternObjectGetDouble (pattern, FC_SCALE_OBJECT, 0, &scale) != FcResultMatch)
-	{
-	    scale = 1.0;
-	    (void) FcPatternObjectDel (pattern, FC_SCALE_OBJECT);
-	    FcPatternObjectAddDouble (pattern, FC_SCALE_OBJECT, scale);
-	}
-	size *= scale;
-	if (FcPatternObjectGetDouble (pattern, FC_DPI_OBJECT, 0, &dpi) != FcResultMatch)
-	{
-	    dpi = 75.0;
-	    (void) FcPatternObjectDel (pattern, FC_DPI_OBJECT);
-	    FcPatternObjectAddDouble (pattern, FC_DPI_OBJECT, dpi);
-	}
-	size *= dpi / 72.0;
-	FcPatternObjectAddDouble (pattern, FC_PIXEL_SIZE_OBJECT, size);
+    if (FcPatternObjectGet (pattern, FC_PIXEL_SIZE_OBJECT, 0, &v) != FcResultMatch)
+    {
+	(void) FcPatternObjectDel (pattern, FC_SCALE_OBJECT);
+	FcPatternObjectAddDouble (pattern, FC_SCALE_OBJECT, scale);
+	pixelsize = size * scale;
+	(void) FcPatternObjectDel (pattern, FC_DPI_OBJECT);
+	FcPatternObjectAddDouble (pattern, FC_DPI_OBJECT, dpi);
+	pixelsize *= dpi / 72.0;
+	FcPatternObjectAddDouble (pattern, FC_PIXEL_SIZE_OBJECT, pixelsize);
     }
+    else
+    {
+	size = v.u.d;
+	size = size / dpi * 72.0 / scale;
+    }
+    (void) FcPatternObjectDel (pattern, FC_SIZE_OBJECT);
+    FcPatternObjectAddDouble (pattern, FC_SIZE_OBJECT, size);
 
     if (FcPatternObjectGet (pattern, FC_FONTVERSION_OBJECT, 0, &v) == FcResultNoMatch)
     {
