@@ -1131,6 +1131,11 @@
 ./usr/X11R6/man/man3/FcPatternPrint.3
 ./usr/X11R6/man/man3/FcPatternReference.3
 ./usr/X11R6/man/man3/FcPatternRemove.3
+./usr/X11R6/man/man3/FcRangeCopy.3
+./usr/X11R6/man/man3/FcRangeCreateDouble.3
+./usr/X11R6/man/man3/FcRangeCreateInteger.3
+./usr/X11R6/man/man3/FcRangeDestroy.3
+./usr/X11R6/man/man3/FcRangeGetDouble.3
 ./usr/X11R6/man/man3/FcStrBasename.3
 ./usr/X11R6/man/man3/FcStrCmp.3
 ./usr/X11R6/man/man3/FcStrCmpIgnoreCase.3
@@ -1163,6 +1168,8 @@
 ./usr/X11R6/man/man3/FcValueEqual.3
 ./usr/X11R6/man/man3/FcValuePrint.3
 ./usr/X11R6/man/man3/FcValueSave.3
+./usr/X11R6/man/man3/FcWeightFromOpenType.3
+./usr/X11R6/man/man3/FcWeightToOpenType.3
 ./usr/X11R6/man/man3/FontCacheChangeCacheSettings.3
 ./usr/X11R6/man/man3/FontCacheGetCacheSettings.3
 ./usr/X11R6/man/man3/FontCacheGetCacheStatistics.3
