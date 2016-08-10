@@ -1,9 +1,0 @@
-Post-installation instructions for X.Org on OpenBSD/armish
-----------------------------------------------------------
-
-There is no X server for armish.  Only userland X.
-
-problem_blurb
-
-$OpenBSD: README.armish,v 1.1.1.1 2006/11/27 11:25:45 matthieu Exp $
-
