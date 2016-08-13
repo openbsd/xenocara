@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.202 2015/11/17 15:19:19 okan Exp $
+ * $OpenBSD: conf.c,v 1.203 2016/08/13 09:58:37 matthieu Exp $
  */
 
 #include <sys/types.h>
@@ -138,7 +138,7 @@ conf_screen(struct screen_ctx *sc)
 	if (sc->xftfont == NULL) {
 		sc->xftfont = XftFontOpenName(X_Dpy, sc->which, Conf.font);
 		if (sc->xftfont == NULL)
-			errx(1, "XftFontOpenName");
+			errx(1, "XftFontOpenName %s", Conf.font);
 	}
 
 	for (i = 0; i < nitems(color_binds); i++) {
