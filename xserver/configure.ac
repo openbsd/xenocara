@@ -346,10 +346,6 @@ case $host_cpu in
 		*freebsd*)	DEFAULT_INT10=stub ;;
 	esac
 	;;
-  m68k)
-	HP300_VIDEO=yes
-	BSD_ARCH_SOURCES="hp300_video.c ioperm_noop.c"
-	;;
   m88k)
 	LUNA88K_VIDEO=yes
 	BSD_ARCH_SOURCES="luna88k_video.c ioperm_noop.c"
@@ -395,7 +391,6 @@ AC_SUBST(GLX_ARCH_DEFINES)
 dnl BSD *_video.c selection
 AM_CONDITIONAL(ALPHA_VIDEO, [test "x$ALPHA_VIDEO" = xyes])
 AM_CONDITIONAL(ARM_VIDEO, [test "x$ARM_VIDEO" = xyes])
-AM_CONDITIONAL(HP300_VIDEO, [test "x$HP300_VIDEO" = xyes])
 AM_CONDITIONAL(HPPA_VIDEO, [test "x$HPPA_VIDEO" = xyes])
 AM_CONDITIONAL(I386_VIDEO, [test "x$I386_VIDEO" = xyes])
 AM_CONDITIONAL(LUNA88K_VIDEO, [test "x$LUNA88K_VIDEO" = xyes])
@@ -1798,7 +1793,7 @@ LD_EXPORT_SYMBOLS_FLAG="-export-dynamic"
 case $host_os in
        openbsd*)
        case $host_cpu in
-       		m68k|m88k|vax)
+       		m88k)
 		LD_EXPORT_SYMBOLS_FLAGS=""
 		;;
 		*)

@@ -1075,8 +1075,6 @@ I386_VIDEO_FALSE
 I386_VIDEO_TRUE
 HPPA_VIDEO_FALSE
 HPPA_VIDEO_TRUE
-HP300_VIDEO_FALSE
-HP300_VIDEO_TRUE
 ARM_VIDEO_FALSE
 ARM_VIDEO_TRUE
 ALPHA_VIDEO_FALSE
@@ -22449,10 +22447,6 @@ $as_echo "#define USE_ALPHA_PIO 1" >>confdefs.h
 		*freebsd*)	DEFAULT_INT10=stub ;;
 	esac
 	;;
-  m68k)
-	HP300_VIDEO=yes
-	BSD_ARCH_SOURCES="hp300_video.c ioperm_noop.c"
-	;;
   m88k)
 	LUNA88K_VIDEO=yes
 	BSD_ARCH_SOURCES="luna88k_video.c ioperm_noop.c"
@@ -22517,14 +22511,6 @@ fi
 else
   ARM_VIDEO_TRUE='#'
   ARM_VIDEO_FALSE=
-fi
-
- if test "x$HP300_VIDEO" = xyes; then
-  HP300_VIDEO_TRUE=
-  HP300_VIDEO_FALSE='#'
-else
-  HP300_VIDEO_TRUE='#'
-  HP300_VIDEO_FALSE=
 fi
 
  if test "x$HPPA_VIDEO" = xyes; then
@@ -27638,7 +27624,7 @@ LD_EXPORT_SYMBOLS_FLAG="-export-dynamic"
 case $host_os in
        openbsd*)
        case $host_cpu in
-       		m68k|m88k|vax)
+       		m88k)
 		LD_EXPORT_SYMBOLS_FLAGS=""
 		;;
 		*)
@@ -31714,10 +31700,6 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${ARM_VIDEO_TRUE}" && test -z "${ARM_VIDEO_FALSE}"; then
   as_fn_error $? "conditional \"ARM_VIDEO\" was never defined.
-Usually this means the macro was only invoked conditionally." "$LINENO" 5
-fi
-if test -z "${HP300_VIDEO_TRUE}" && test -z "${HP300_VIDEO_FALSE}"; then
-  as_fn_error $? "conditional \"HP300_VIDEO\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${HPPA_VIDEO_TRUE}" && test -z "${HPPA_VIDEO_FALSE}"; then
