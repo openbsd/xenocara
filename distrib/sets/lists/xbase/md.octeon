@@ -128,6 +128,9 @@
 ./usr/X11R6/lib/pkgconfig/glu.pc
 ./usr/X11R6/lib/pkgconfig/glw.pc
 ./usr/X11R6/lib/pkgconfig/libdrm.pc
+./usr/X11R6/lib/pkgconfig/libdrm_amdgpu.pc
+./usr/X11R6/lib/pkgconfig/libdrm_nouveau.pc
+./usr/X11R6/lib/pkgconfig/libdrm_radeon.pc
 ./usr/X11R6/lib/pkgconfig/osmesa.pc
 ./usr/X11R6/lib/pkgconfig/xf86driproto.pc
 ./usr/X11R6/man/man1/bdftruncate.1
