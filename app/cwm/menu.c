@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: menu.c,v 1.90 2016/04/28 16:28:38 okan Exp $
+ * $OpenBSD: menu.c,v 1.91 2016/08/28 15:23:24 okan Exp $
  */
 
 #include <sys/types.h>
@@ -523,6 +523,7 @@ menu_keycode(XKeyEvent *ev, enum ctltype *ctl, char *chr)
 	case XK_BackSpace:
 		*ctl = CTL_ERASEONE;
 		break;
+	case XK_KP_Enter:
 	case XK_Return:
 		*ctl = CTL_RETURN;
 		break;
