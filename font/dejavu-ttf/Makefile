@@ -1,6 +1,7 @@
-# $OpenBSD: Makefile,v 1.1 2010/01/16 08:58:54 matthieu Exp $
+# $OpenBSD: Makefile,v 1.2 2016/08/29 17:27:25 matthieu Exp $
 
 FONT_FILES= \
+	DejaVuMathTeXGyre.ttf \
 	DejaVuSans-Bold.ttf \
 	DejaVuSans-BoldOblique.ttf \
 	DejaVuSans-ExtraLight.ttf \

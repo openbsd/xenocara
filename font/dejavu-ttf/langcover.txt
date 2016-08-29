@@ -1,5 +1,5 @@
 This is the language coverage file for DejaVu fonts
-($Id: langcover.txt,v 1.5 2015/05/24 10:04:16 matthieu Exp $)
+($Id: langcover.txt,v 1.6 2016/08/29 17:27:25 matthieu Exp $)
 
                                                 Sans               Serif              Sans Mono          
 aa     Afar                                     100% (62/62)       100% (62/62)       100% (62/62)      
