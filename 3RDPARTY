@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.270 2016/08/09 18:58:31 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.271 2016/08/29 17:28:54 matthieu Exp $
 #
 Package: 	Freetype
 Version:	2.6.5
@@ -37,8 +37,8 @@ Maintainer:	Akira TAGOH
 Archive Site:	http://www.fontconfig.org/
 
 Package:	DejaVu Fonts
-Version:	2.35
-Current Vers:	2.35
+Version:	2.37
+Current Vers:	2.37
 Maintainer:	Freedesktop.org
 Archive Site:	http://dejavu-fonts.org/
 
