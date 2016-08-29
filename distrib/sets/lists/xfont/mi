@@ -3820,6 +3820,7 @@
 ./usr/X11R6/lib/X11/fonts/OTF/fonts.dir
 ./usr/X11R6/lib/X11/fonts/OTF/fonts.scale
 ./usr/X11R6/lib/X11/fonts/TTF
+./usr/X11R6/lib/X11/fonts/TTF/DejaVuMathTeXGyre.ttf
 ./usr/X11R6/lib/X11/fonts/TTF/DejaVuSans-Bold.ttf
 ./usr/X11R6/lib/X11/fonts/TTF/DejaVuSans-BoldOblique.ttf
 ./usr/X11R6/lib/X11/fonts/TTF/DejaVuSans-ExtraLight.ttf
