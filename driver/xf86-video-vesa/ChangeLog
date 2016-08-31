@@ -1,3 +1,43 @@
+commit b49c293e67cd88424ff40a2ca4e58b28528691d7
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jun 16 11:56:32 2015 -0400
+
+    vesa 2.3.4
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 190fdaaa1d6d317be3ef78855df805b3b3e5a239
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jun 16 11:57:59 2015 -0400
+
+    Don't include deprecated xf86PciInfo.h
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit e667a9a2e5b61b2edd8643c7eed1d64d3948bc42
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Jun 11 09:56:59 2015 -0400
+
+    configure: Drop PanelID test
+    
+    vbe grew PanelID support in xserver 1.4; since we now require 1.6 we can
+    remove the test.  Which is good, because it appears to have been broken
+    by the scrnIndex->pScrn conversion, as vbe.h doesn't include xf86str.h
+    so ScrnInfoPtr was never defined and the test failed.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit e36a0a8bcfd2bfa0b3878068f16361b3fd34b5d4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jan 30 15:42:52 2014 -0800
+
+    Raise required version of xorg-server to >= 1.6
+    
+    Needed for Xorg to define/export xf86GTFMode(), introduced in
+    xorg-server release 1.6.0 / commit ca5625b911e65fdfd4.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 3e5d56d94720db7a9b97809f15e2432014d94553
 Author: Julien Cristau <jcristau@debian.org>
 Date:   Mon Sep 9 21:14:03 2013 +0200

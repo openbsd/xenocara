@@ -43,9 +43,6 @@
 
 #include "compiler.h"
 
-/* Drivers for PCI hardware need this */
-#include "xf86PciInfo.h"
-
 #include "vgaHW.h"
 
 /* Drivers that need to access the PCI config space directly need this */

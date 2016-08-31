@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-vesa],
-        [2.3.3],
+        [2.3.4],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-video-vesa])
 AC_CONFIG_SRCDIR([Makefile.am])
@@ -57,7 +57,7 @@ XORG_DRIVER_CHECK_EXT(RENDER, renderproto)
 XORG_DRIVER_CHECK_EXT(DPMSExtension, xextproto)
 
 # Obtain compiler/linker options for the driver dependencies
-PKG_CHECK_MODULES(XORG, xorg-server >= 1.0.99.901 xproto fontsproto $REQUIRED_MODULES)
+PKG_CHECK_MODULES(XORG, xorg-server >= 1.6 xproto fontsproto $REQUIRED_MODULES)
 PKG_CHECK_MODULES(XEXT, [xextproto >= 7.0.99.1],
                   HAVE_XEXTPROTO_71="yes", HAVE_XEXTPROTO_71="no")
 
@@ -71,14 +71,6 @@ AC_CHECK_DECL(xf86ConfigIsaEntity,
 	      [AC_DEFINE(HAVE_ISA, 1, [Have ISA support])],
 	      [],
 	      [#include "xf86.h"])
-CFLAGS="$save_CFLAGS"
-
-save_CFLAGS="$CFLAGS"
-CFLAGS="$XORG_CFLAGS"
-AC_CHECK_DECL(VBEReadPanelID,
-	      [AC_DEFINE(HAVE_PANELID, 1, [Have VBE PanelID call])],
-	      [],
-	      [#include "vbe.h"])
 CFLAGS="$save_CFLAGS"
 
 save_CFLAGS="$CFLAGS"
