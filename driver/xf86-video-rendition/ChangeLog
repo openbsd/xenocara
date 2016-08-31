@@ -1,3 +1,38 @@
+commit 367efbf6ecd1bae7e59ba92a29700a2f93c9ebd9
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Nov 11 12:03:52 2015 -0500
+
+    rendition 4.2.6
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit df5646745bf563bb36a0db1796c318fe64bf8efe
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Sep 30 10:24:18 2014 -0400
+
+    Remove dependency on xf86PciInfo.h
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 30a4b73644ee22904824d4847e44ca69369fad02
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Sep 30 10:21:58 2014 -0400
+
+    Fix build against xserver 1.17
+    
+    Also port from pci_device_map_region to pci_device_map_range.  Somewhat
+    alarming that the previous code was using map_region but unmap_range...
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 3a3ee1c45e54a808947cc26ca11f0a5299571053
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Sep 25 08:54:50 2012 -0400
+
+    Remove mibstore.h
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
 commit 07026400300a985ea19346a6745685bb8dfea56f
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Tue Jul 17 16:05:09 2012 +1000

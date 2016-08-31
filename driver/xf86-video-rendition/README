@@ -1,6 +1,6 @@
   Information for Rendition (Micron) Verite Users
   The XFree86 Project Inc.
-  9 June 2000, last update by Dejan Ilic  <dejan.ilic@home.se>
+  9 June 2000, last update by Dejan Ilic "dejan.ilic@home.se"
   ____________________________________________________________
 
   Table of Contents
@@ -11,7 +11,7 @@
   3. Important notices
   4. Features
   5. xorg.conf Option
-  6. News in the X11R6.8 release
+  6. News in the X11R7.5 release
   7. News in the XFree86 4.1 release
   8. Major changes in this release
   9. Bugfixes
@@ -21,7 +21,7 @@
 
   ______________________________________________________________________
 
-  [1m1.  Supported hardware[0m
+  1.  Supported hardware
 
   All cards based on the V1000 or the V2x00 should be supported. The
   server was tested on a miroCRYSTAL VRX (V1000), Intergraph Intense-100
@@ -29,7 +29,7 @@
   (V2200), Innovision Warrior3D (V2200) and Genoa V-Raptor (v2200).
 
 
-  [1m2.  Limitations[0m
+  2.  Limitations
 
   V1000 cards can only work as primary display card due to hardware
   limitations.
@@ -42,7 +42,7 @@
 
 
 
-  [1m3.  Important notices[0m
+  3.  Important notices
 
   Some V1000-based video cards are known to lock up the computer if you
   have write-combine activated. Disabling it removes the problem. Look
@@ -64,57 +64,57 @@
   driver with the most basic features. Support for multi-head support
   and acceleration are next on the list of features to be included.
 
-  [1m4.  Features[0m
+  4.  Features
 
 
-  +o  Hardware acceleration
+  o  Hardware acceleration
 
-  +o  Hardware cursor
+  o  Hardware cursor
 
-  +o  Supported color depths
+  o  Supported color depths
 
-     +o  8 bits per pixel (256 pseudo colour)
+     o  8 bits per pixel (256 pseudo colour)
 
-     +o  15 bits per pixel (actually 16-bits with RGB-weight 555, 32768
+     o  15 bits per pixel (actually 16-bits with RGB-weight 555, 32768
         colors)
 
-     +o  16 bits per pixel (high colour, RGB-weight 565, 65536 colors)
+     o  16 bits per pixel (high colour, RGB-weight 565, 65536 colors)
 
-     +o  32 bits per pixel (true colour, sparse 24bit, 16M colors)
-
-
-  [1m5.  xorg.conf Option[0m
+     o  32 bits per pixel (true colour, sparse 24bit, 16M colors)
 
 
-     [1mOption[0m
+  5.  xorg.conf Option
+
+
+     Option
         Disables use of the hardware cursor.
 
-     [1mOption[0m
+     Option
         Run the memory at a higher clock. Useful on some cards with
         display glitches at higher resolutions. But adds the risk to
         damage the hardware. Use with caution.
 
-     [1mDacSpeed[0m
+     DacSpeed
         Set custom ramdac limit. We have currently no way of knowing if
         the v2x00 chip is a v2100 (170MHz) or v2200 (203MHz and 230MHz)
         so we assume the lowest. Use this option to manually override
         the value.
 
-     [1mOption[0m
+     Option
         If writecombine is disabled in BIOS, and you add this option in
         configuration file, then the driver will try to request
         writecombined access to the framebuffer. This can drastically
         increase the performance on unaccelerated server. Requires that
         "MTRR"-support is compiled into the OS-kernel.
 
-     [1mOption[0m
+     Option
         Disable probing of DDC-information from your monitor. This
         information is not used yet and is only there for informational
         purposes. This might have changed before final XFree86 4.0
         release. Safe to disable if you experience problems during
         startup of X-server.
 
-     [1mOption[0m
+     Option
         If this option is enabled, the driver will cause the CPU to do
         each drawing operation first into a shadow frame buffer in
         system virtual memory and then copy the result into video
@@ -126,7 +126,7 @@
         for PCI or AGP adapters, and, so, this option is enabled by
         default unless acceleration is enabled.
 
-     [1mOption[0m
+     Option
         The option expect a value "CW" for clockwise or "CCW" for
         counterclockwise rotation of the screen. This is useful when you
         need more height then width on the screen. Desktop publishing is
@@ -137,54 +137,54 @@
         default.
 
 
-  [1m6.  News in the X11R6.8 release[0m
+  6.  News in the X11R7.5 release
 
   This driver was originally part of the XFree86 4.4 rc2 release.
 
 
-  [1m7.  News in the XFree86 4.1 release[0m
+  7.  News in the XFree86 4.1 release
 
 
-  +o  DirectColor support
+  o  DirectColor support
 
-  +o  SilkenMouse support
-
-
-  [1m8.  Major changes in this release[0m
+  o  SilkenMouse support
 
 
-  +o  Gamma works now for >8bpp
+  8.  Major changes in this release
 
 
-  [1m9.  Bugfixes[0m
+  o  Gamma works now for >8bpp
 
 
-  +o  Only some code cleanup done. No real bugfixes.
+  9.  Bugfixes
 
 
-  [1m10.  Known problems in current driver[0m
+  o  Only some code cleanup done. No real bugfixes.
 
 
-  +o  The acceleration code hangs the computer during X-server startup.
+  10.  Known problems in current driver
 
-  +o  DDC-probing does not work correctly yet. No DDC information is
+
+  o  The acceleration code hangs the computer during X-server startup.
+
+  o  DDC-probing does not work correctly yet. No DDC information is
      found.
 
-  +o  Switching from display to VC and back to display can lock up V2x00
+  o  Switching from display to VC and back to display can lock up V2x00
      cards.
 
-  +o  When scrolling the virtual display on a V1000 card parts of the
+  o  When scrolling the virtual display on a V1000 card parts of the
      screen will become distorted. Problem disappears when you continue
      moving around. V2x00 does not exhibit this problem. Probably a bug
      in the driver rather than a limitation of the chip.
 
-  +o  Depth 15 & 16 has problems with colors when DirectColor is used.
+  o  Depth 15 & 16 has problems with colors when DirectColor is used.
 
 
-  [1m11.  Work in progress (not finished in time for release)[0m
+  11.  Work in progress (not finished in time for release)
 
 
-  +o  Acceleration is disabled for the moment. If you want to play with
+  o  Acceleration is disabled for the moment. If you want to play with
      it enable the "USE_ACCEL" define in rendition.c file! Beware as it
      has several bugs left to clear out before if is stable for general
      use.
