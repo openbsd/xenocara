@@ -1,3 +1,58 @@
+commit c54ddcf7220e2feee0297071f49ec999f19fcffb
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Sat Sep 26 09:30:48 2015 -0700
+
+    xf86-video-chips 1.2.6
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 9187d76bd4f8d500fc3403b6d4a7bef55508bf2b
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Fri Oct 17 09:49:26 2014 -0400
+
+    Update for xserver 1.17
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit bb03c06322f875e905dec956e06a99b9674e57aa
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed May 21 09:38:35 2014 -0400
+
+    ddc: Use own thunk function instead of vgaHWddc1SetSpeedWeak
+    
+    I plan to remove the Weak functions from future servers.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 2dd89243cc0796e911d04a48bae6f87c9b4a6097
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 24 22:37:38 2013 -0700
+
+    Require ANSI C89 pre-processor, drop pre-C89 token pasting support
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 151a1ec855a9ada44907cb6bef06a71e9080504b
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Sep 25 08:54:34 2012 -0400
+
+    Remove mibstore.h
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit bde65934fe8b40a5fdc8a469d0355caca59e81b5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 21 09:27:10 2012 -0700
+
+    Add iopl.h to source lists in util/Makefile.am so it gets packaged
+    
+    Was missed when it was created in commit c421f2477c9999, since
+    "make distcheck" passes due to configure determining it can't
+    build the utils without the header and moving on.
+    
+    Reported-by: Andreas Radke <a.radke@arcor.de>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit bce7917e2ed8f6f4edcea0ff5c06b82eb1e85527
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Tue Jul 17 16:05:09 2012 +1000
