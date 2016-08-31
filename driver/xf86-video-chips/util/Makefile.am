@@ -3,7 +3,7 @@ if BUILD_UTILS
 noinst_PROGRAMS = dRegs mRegs modClock memClock
 endif
 
-dRegs_SOURCES = dRegs.c AsmMacros.h
-mRegs_SOURCES = mRegs.c AsmMacros.h
-modClock_SOURCES = modClock.c AsmMacros.h
+dRegs_SOURCES = dRegs.c AsmMacros.h iopl.h
+mRegs_SOURCES = mRegs.c AsmMacros.h iopl.h
+modClock_SOURCES = modClock.c AsmMacros.h iopl.h
 memClock_SOURCES = modClock.c AsmMacros.h

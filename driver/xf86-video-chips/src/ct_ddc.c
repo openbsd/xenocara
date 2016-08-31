@@ -33,6 +33,12 @@ chips_ddc1Read(ScrnInfoPtr pScrn)
     return (tmp & ddc_mask);
 }
 
+static void
+chips_ddc1SetSpeed(ScrnInfoPtr pScrn, xf86ddcSpeed speed)
+{
+    vgaHWddc1SetSpeed(pScrn, speed);
+}
+
 void
 chips_ddc1(ScrnInfoPtr pScrn)
 {
@@ -93,7 +99,7 @@ chips_ddc1(ScrnInfoPtr pScrn)
 	xf86DrvMsg(pScrn->scrnIndex, X_PROBED, "DDC1 found\n");	
     else return;
 
-    xf86PrintEDID(xf86DoEDID_DDC1(XF86_SCRN_ARG(pScrn), vgaHWddc1SetSpeedWeak(),
+    xf86PrintEDID(xf86DoEDID_DDC1(XF86_SCRN_ARG(pScrn), chips_ddc1SetSpeed,
 				  chips_ddc1Read));
 
     /* restore */

@@ -3488,8 +3488,8 @@ chipsPreInit655xx(ScrnInfoPtr pScrn, int flags)
 
     if (cPtr->ClockType & TYPE_PROGRAMMABLE) {
 	pScrn->numClocks = NoClocks;
-	SaveClk->Clock = ((cPtr->PanelType & ChipsLCDProbed) ? 
-			 LCD_TEXT_CLK_FREQ : CRT_TEXT_CLK_FREQ);
+        SaveClk->Clock = ((cPtr->PanelType & ChipsLCDProbed) ? 
+			  LCD_TEXT_CLK_FREQ : CRT_TEXT_CLK_FREQ);
 	xf86DrvMsg(pScrn->scrnIndex, X_PROBED, "Using programmable clocks\n");
     } else {  /* TYPE_PROGRAMMABLE */
 	SaveClk->Clock = chipsGetHWClock(pScrn);

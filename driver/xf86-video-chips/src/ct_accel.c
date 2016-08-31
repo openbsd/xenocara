@@ -52,11 +52,7 @@
 /* Our driver specific include file */
 #include "ct_driver.h"
 
-#if !defined(UNIXCPP) || defined(ANSICPP)
 #define CATNAME(prefix,subname) prefix##subname
-#else
-#define CATNAME(prefix,subname) prefix/**/subname
-#endif
 
 #ifdef CHIPS_MMIO
 #ifdef CHIPS_HIQV
