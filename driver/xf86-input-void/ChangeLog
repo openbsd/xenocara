@@ -1,3 +1,74 @@
+commit aad39023f01be4133943ba8bc86246804dc7b1af
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Apr 20 11:42:01 2015 +1000
+
+    xf86-input-void 1.4.1
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c2f4dc50cd71cfbc4c4b5828654d30c09e83cf57
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:39:32 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3c6e2c3cfa438468514d1dff1e0736800200a168
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:38:41 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9f92fd775fe1df0bf698fe7a6f94835373dc6850
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 28 18:49:02 2013 -0400
+
+    config: replace deprecated use of AC_OUTPUT with AC_CONFIG_FILES
+    
+    Fix Automake warning: AC_OUTPUT should be used without arguments.
+    www.gnu.org/software/autoconf/manual/autoconf.html#Configuration-Files
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 1ff7a4ae9c19ffd0713f92a108af284690862d36
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 20 12:33:08 2013 -0700
+
+    Fix an integer truncation warning from clang
+    
+    void.c:114:21: warning: implicit conversion loses integer precision:
+      'int' to 'unsigned char' [-Wconversion]
+                map[i + 1] = i + 1;
+                           ~ ~~^~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e0f0ab22a53899a137a00ada696b42f1cabcdf1c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu May 24 21:37:02 2012 -0700
+
+    Link with $(XORG_LIBS) to support no-undefined linking
+    
+    Will be empty on most platforms, set to the -z parent=Xorg flag on
+    Solaris if building with the support for enforcing no undefined symbols.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dfb19f91313eb99fdd7f31ff66844a02fd4b73ff
+Author: Terry Lambert <tlambert@chromium.org>
+Date:   Fri Jul 15 17:23:25 2011 -0700
+
+    Return proper default for unknown values in pInfo->device_control.
+    
+    Signed-off-by: Terry Lambert <tlambert@chromium.org>
+    Reviewed-by: Stephane Marchesin <marcheu@chromium.org>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit e2eabdd0bd6bc33d65ba61aeb30f2c59ec90f516
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed May 4 20:31:02 2011 -0700
