@@ -1,3 +1,113 @@
+commit 13b56dc68af8cc41f4fd44115302a3ebbe6662a1
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Sat Aug 29 16:35:43 2015 -0700
+
+    xf86-video-sis: bump to version 0.10.8.
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit e834b2cdaedccff5e13cef86af23e46992c2530a
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Mon Aug 3 13:22:24 2015 -0400
+
+    Remove upload / download EXA hooks
+    
+    Support based on something other than libc memcpy was never added, so
+    these functions did not improve upon software fallback at all.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+
+commit 0f50f8c3db2b9f1c9d4ecab8ad278e9db6418a92
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Nov 12 09:27:33 2014 +1000
+
+    sis: force build, who uses this crazy code anyways
+
+commit d2597696ba81862d80ec17b978d8370c58572e27
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Nov 12 08:04:21 2014 +1000
+
+    sis: more build fixes against master X server.
+
+commit d0550de19cacab3e591641ba358a72fbc798b231
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Sep 22 12:45:02 2014 +1000
+
+    sis: fix build against latest xserver
+
+commit 49796d6a3274adc0250ee07faa6bc63e41c98740
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Nov 22 08:21:18 2013 +1000
+
+    Fix format-security warnings
+    
+    sis_driver.c: In function 'SISErrorLog':
+    sis_driver.c:432:5: error: format not a string literal and no format arguments [-Werror=format-security]
+         xf86DrvMsg(pScrn->scrnIndex, X_ERROR, str);
+         ^
+    sis_driver.c:439:5: error: format not a string literal and no format arguments [-Werror=format-security]
+         xf86DrvMsg(pScrn->scrnIndex, X_ERROR, str);
+         ^
+    sis_driver.c: In function 'SiSUpdateXineramaScreenInfo':
+    sis_driver.c:1917:4: error: format not a string literal and no format arguments [-Werror=format-security]
+        xf86DrvMsg(pScrn1->scrnIndex, X_INFO, rectxine);
+        ^
+    sis_driver.c:1924:8: error: format not a string literal and no format arguments [-Werror=format-security]
+            xf86DrvMsg(pScrn1->scrnIndex, X_INFO, rectxine);
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0a4336efaafac4c34d4287b5df586bbb418f7f76
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 26 14:27:17 2013 -0700
+
+    Fix HDisplay/VDisplay typos
+    
+    Found by gcc -Wlogicalops:
+    
+    sis_driver.c: In function 'SiS_CheckModeCRT2':
+    sis_driver.c:13754:5: warning: logical 'and' of mutually exclusive tests is always false [-Wlogical-op]
+    sis_driver.c:13755:6: warning: logical 'and' of mutually exclusive tests is always false [-Wlogical-op]
+    sis_driver.c:13756:6: warning: logical 'and' of mutually exclusive tests is always false [-Wlogical-op]
+    sis_driver.c:13758:5: warning: logical 'and' of mutually exclusive tests is always false [-Wlogical-op]
+    sis_driver.c:13759:6: warning: logical 'and' of mutually exclusive tests is always false [-Wlogical-op]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7d4402786b758de3e6ce2641e15a39d612d5c518
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Oct 15 19:11:30 2012 -0400
+
+    Stop including xf86Priv.h
+    
+    As the name might suggest, it's server-private.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 926d4f655c8491b68a338f50c810f6729686ec9f
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Sep 25 08:54:51 2012 -0400
+
+    Remove mibstore.h
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 339fb3bc032b9f35b07b90480ae82a0fd352e078
+Author: Jan Lindemann <jan@jannet.de>
+Date:   Thu Aug 30 20:09:10 2012 +0200
+
+    Replace xf86UnMapVidMem with pci_device_unmap_range
+    
+    Mixing pci_device_map_range with xf86UnMapVidMem doesn't work too well.
+    
+    X.Org bug#18028 <https://bugs.freedesktop.org/show_bug.cgi?id=18028>
+    
+    Bug found by Bryan Henderson <bryanh@giraffe-data.com>
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
 commit 8c5127a6815935635b84835055bf4c2501c0bf6e
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Tue Jul 17 16:05:09 2012 +1000

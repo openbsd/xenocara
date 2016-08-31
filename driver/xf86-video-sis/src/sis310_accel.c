@@ -129,9 +129,7 @@ static CARD32 SiSDstTextureFormats32[3] = { PICT_x8r8g8b8, PICT_a8r8g8b8, 0 };
 
 #ifdef SIS_USE_EXA		/* EXA */
 void SiSScratchSave(ScreenPtr pScreen, ExaOffscreenArea *area);
-Bool SiSUploadToScreen(PixmapPtr pDst, int x, int y, int w, int h, char *src, int src_pitch);
 Bool SiSUploadToScratch(PixmapPtr pSrc, PixmapPtr pDst);
-Bool SiSDownloadFromScreen(PixmapPtr pSrc, int x, int y, int w, int h, char *dst, int dst_pitch);
 #endif /* EXA */
 
 #ifdef INCL_YUV_BLIT_ADAPTOR
@@ -1870,33 +1868,6 @@ SiSDoneComposite(PixmapPtr pDst)
 #endif
 
 Bool
-SiSUploadToScreen(PixmapPtr pDst, int x, int y, int w, int h, char *src, int src_pitch)
-{
-	ScrnInfoPtr pScrn = xf86ScreenToScrn(pDst->drawable.pScreen);
-	SISPtr pSiS = SISPTR(pScrn);
-	unsigned char *dst = ((unsigned char *) pSiS->FbBase) + exaGetPixmapOffset(pDst);
-	int dst_pitch = exaGetPixmapPitch(pDst);
-
-	(pSiS->SyncAccel)(pScrn);
-	
-	if (dst == NULL)
-	    return FALSE;
-
-	if(pDst->drawable.bitsPerPixel < 8)
-	   return FALSE;
-
-	dst += (x * pDst->drawable.bitsPerPixel / 8) + (y * dst_pitch);
-	while(h--) {
-	   SiSMemCopyToVideoRam(pSiS, dst, (unsigned char *)src,
-				(w * pDst->drawable.bitsPerPixel / 8));
-	   src += src_pitch;
-	   dst += dst_pitch;
-	}
-
-	return TRUE;
-}
-
-Bool
 SiSUploadToScratch(PixmapPtr pSrc, PixmapPtr pDst)
 {
 	ScrnInfoPtr pScrn = xf86ScreenToScrn(pSrc->drawable.pScreen);
@@ -1944,30 +1915,6 @@ SiSUploadToScratch(PixmapPtr pSrc, PixmapPtr pDst)
 
 	while(h--) {
 	   SiSMemCopyToVideoRam(pSiS, dst, src, size);
-	   src += src_pitch;
-	   dst += dst_pitch;
-	}
-
-	return TRUE;
-}
-
-Bool
-SiSDownloadFromScreen(PixmapPtr pSrc, int x, int y, int w, int h, char *dst, int dst_pitch)
-{
-	ScrnInfoPtr pScrn = xf86ScreenToScrn(pSrc->drawable.pScreen);
-	SISPtr pSiS = SISPTR(pScrn);
-	unsigned char *src = ((unsigned char *) pSiS->FbBase) + exaGetPixmapOffset(pSrc);
-	int src_pitch = exaGetPixmapPitch(pSrc);
-	int size = src_pitch < dst_pitch ? src_pitch : dst_pitch;
-
-	(pSiS->SyncAccel)(pScrn);
-
-	if(pSrc->drawable.bitsPerPixel < 8)
-	   return FALSE;
-
-	src += (x * pSrc->drawable.bitsPerPixel / 8) + (y * src_pitch);
-	while(h--) {
-	   SiSMemCopyFromVideoRam(pSiS, (unsigned char *)dst, src, (w * pSrc->drawable.bitsPerPixel / 8));
 	   src += src_pitch;
 	   dst += dst_pitch;
 	}
@@ -2305,10 +2252,6 @@ SiS315AccelInit(ScreenPtr pScreen)
 		 pSiS->EXADriverPtr->DoneComposite = SiSDoneComposite;
 	      }
 #endif
-
-	      /* Upload, download to/from Screen */
-	      pSiS->EXADriverPtr->UploadToScreen = SiSUploadToScreen;
-	      pSiS->EXADriverPtr->DownloadFromScreen = SiSDownloadFromScreen;
 
 	   }
 #endif

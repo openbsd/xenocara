@@ -75,7 +75,6 @@
 
 #include "compiler.h"
 #include "xf86Pci.h"
-#include "xf86Priv.h"
 #include "xf86_OSproc.h"
 #if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
 #include "xf86Resources.h"

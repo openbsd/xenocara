@@ -93,6 +93,10 @@
 #include "dri.h"
 #endif
 
+#ifndef DEFAULT_DPI
+#define DEFAULT_DPI 96
+#endif
+
 /*
  * LookupWindow was removed with video abi 11.
  */
@@ -425,14 +429,14 @@ SISErrorLog(ScrnInfoPtr pScrn, const char *format, ...)
     static const char *str = "**************************************************\n";
 
     va_start(ap, format);
-    xf86DrvMsg(pScrn->scrnIndex, X_ERROR, str);
+    xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "%s", str);
     xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 	"                      ERROR:\n");
     xf86VDrvMsgVerb(pScrn->scrnIndex, X_ERROR, 1, format, ap);
     va_end(ap);
     xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 	"                  END OF MESSAGE\n");
-    xf86DrvMsg(pScrn->scrnIndex, X_ERROR, str);
+    xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "%s", str);
 }
 
 static void
@@ -1910,14 +1914,14 @@ SiSUpdateXineramaScreenInfo(ScrnInfoPtr pScrn1)
        if(infochanged && !usenonrect) {
 	  xf86DrvMsg(pScrn1->scrnIndex, X_INFO,
 			"Virtual screen size does not match maximum display modes...\n");
-	  xf86DrvMsg(pScrn1->scrnIndex, X_INFO, rectxine);
+	  xf86DrvMsg(pScrn1->scrnIndex, X_INFO, "%s", rectxine);
 
        }
     } else if(infochanged && usenonrect) {
        usenonrect = FALSE;
        xf86DrvMsg(pScrn1->scrnIndex, X_INFO,
 		"Only clone modes available for this virtual screen size...\n");
-       xf86DrvMsg(pScrn1->scrnIndex, X_INFO, rectxine);
+       xf86DrvMsg(pScrn1->scrnIndex, X_INFO, "%s", rectxine);
     }
 
     if(pSiS->maxCRT1_X1) {		/* Means we have at least one non-clone mode */
@@ -3280,6 +3284,7 @@ SISPreInit(ScrnInfoPtr pScrn, int flags)
 			  PCI_DEV_DEV(pSiS->PciInfo),
 			  PCI_DEV_FUNC(pSiS->PciInfo));
 #endif
+
 #ifdef SIS_NEED_MAP_IOP
     /********************************************/
     /*     THIS IS BROKEN AND WON'T WORK        */
@@ -7145,8 +7150,8 @@ SISMapMem(ScrnInfoPtr pScrn)
      * (For Alpha, we need to map SPARSE memory, since we need
      * byte/short access.)
      */
-#if defined(__alpha__)
 #ifndef XSERVER_LIBPCIACCESS
+#if defined(__alpha__)
     mmioFlags |= VIDMEM_SPARSE;
 #endif
 #endif
@@ -7350,7 +7355,11 @@ SISUnmapMem(ScrnInfoPtr pScrn)
         if(pSiSEnt->MapCountIOBase) {
 	    pSiSEnt->MapCountIOBase--;
 	    if((pSiSEnt->MapCountIOBase == 0) || (pSiSEnt->forceUnmapIOBase)) {
+#ifndef XSERVER_LIBPCIACCESS
 		xf86UnMapVidMem(pScrn->scrnIndex, (pointer)pSiSEnt->IOBase, (pSiS->mmioSize * 1024));
+#else
+	        pci_device_unmap_range(pSiS->PciInfo, pSiSEnt->IOBase, (pSiS->mmioSize * 1024));
+#endif
 		pSiSEnt->IOBase = NULL;
 		pSiSEnt->MapCountIOBase = 0;
 		pSiSEnt->forceUnmapIOBase = FALSE;
@@ -7361,7 +7370,11 @@ SISUnmapMem(ScrnInfoPtr pScrn)
 	if(pSiSEnt->MapCountIOBaseDense) {
 	    pSiSEnt->MapCountIOBaseDense--;
 	    if((pSiSEnt->MapCountIOBaseDense == 0) || (pSiSEnt->forceUnmapIOBaseDense)) {
+#ifndef XSERVER_LIBPCIACCESS
 		xf86UnMapVidMem(pScrn->scrnIndex, (pointer)pSiSEnt->IOBaseDense, (pSiS->mmioSize * 1024));
+#else
+		pci_device_unmap_range(pSiS->PciInfo, (pointer)pSiSEnt->IOBaseDense, (pSiS->mmioSize * 1024));
+#endif
 		pSiSEnt->IOBaseDense = NULL;
 		pSiSEnt->MapCountIOBaseDense = 0;
 		pSiSEnt->forceUnmapIOBaseDense = FALSE;
@@ -7372,7 +7385,11 @@ SISUnmapMem(ScrnInfoPtr pScrn)
 	if(pSiSEnt->MapCountFbBase) {
 	    pSiSEnt->MapCountFbBase--;
 	    if((pSiSEnt->MapCountFbBase == 0) || (pSiSEnt->forceUnmapFbBase)) {
+#ifndef XSERVER_LIBPCIACCESS
 		xf86UnMapVidMem(pScrn->scrnIndex, (pointer)pSiSEnt->RealFbBase, pSiS->FbMapSize);
+#else
+		pci_device_unmap_range(pSiS->PciInfo, (pointer)pSiSEnt->RealFbBase, pSiS->FbMapSize);
+#endif
 		pSiSEnt->FbBase = pSiSEnt->RealFbBase = NULL;
 		pSiSEnt->MapCountFbBase = 0;
 		pSiSEnt->forceUnmapFbBase = FALSE;
@@ -7382,13 +7399,25 @@ SISUnmapMem(ScrnInfoPtr pScrn)
 	}
     } else {
 #endif
+#ifndef XSERVER_LIBPCIACCESS
 	xf86UnMapVidMem(pScrn->scrnIndex, (pointer)pSiS->IOBase, (pSiS->mmioSize * 1024));
+#else
+	pci_device_unmap_range(pSiS->PciInfo, (pointer)pSiS->IOBase, (pSiS->mmioSize * 1024));
+#endif
 	pSiS->IOBase = NULL;
 #ifdef __alpha__
+#ifndef XSERVER_LIBPCIACCESS
 	xf86UnMapVidMem(pScrn->scrnIndex, (pointer)pSiS->IOBaseDense, (pSiS->mmioSize * 1024));
+#else
+	pci_device_unmap_range(pSiS->PciInfo, (pointer)pSiS->IOBaseDense, (pSiS->mmioSize * 1024));
+#endif
 	pSiS->IOBaseDense = NULL;
 #endif
+#ifndef XSERVER_LIBPCIACCESS
 	xf86UnMapVidMem(pScrn->scrnIndex, (pointer)pSiS->RealFbBase, pSiS->FbMapSize);
+#else
+	pci_device_unmap_range(pSiS->PciInfo, (pointer)pSiS->RealFbBase, pSiS->FbMapSize);
+#endif
 	pSiS->FbBase = pSiS->RealFbBase = NULL;
 #ifdef SISDUALHEAD
     }
@@ -9356,6 +9385,7 @@ SISMergedPointerMoved(SCRN_ARG_TYPE arg, int x, int y)
 	}
      }
      if(doit) {
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 20 /* screw it */
 	sigstate = xf86BlockSIGIO();
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 15
         {
@@ -9377,6 +9407,7 @@ SISMergedPointerMoved(SCRN_ARG_TYPE arg, int x, int y)
 	miPointerAbsoluteCursor(x, y, currentTime.milliseconds);
 #endif
 	xf86UnblockSIGIO(sigstate);
+#endif
 	return;
      }
   }
@@ -13734,12 +13765,12 @@ SiS_CheckModeCRT2(ScrnInfoPtr pScrn, DisplayModePtr mode, unsigned int VBFlags, 
       if( ((mode->HDisplay <= pSiS->LCDwidth) &&
            (mode->VDisplay <= pSiS->LCDheight)) ||
 	  ((pSiS->SiS_Pr->SiS_CustomT == CUT_PANEL848) &&
-	   (((mode->HDisplay == 1360) && (mode->HDisplay == 768)) ||
-	    ((mode->HDisplay == 1024) && (mode->HDisplay == 768)) ||
-	    ((mode->HDisplay ==  800) && (mode->HDisplay == 600)))) ||
+	   (((mode->HDisplay == 1360) && (mode->VDisplay == 768)) ||
+	    ((mode->HDisplay == 1024) && (mode->VDisplay == 768)) ||
+	    ((mode->HDisplay ==  800) && (mode->VDisplay == 600)))) ||
 	  ((pSiS->SiS_Pr->SiS_CustomT == CUT_PANEL856) &&
-	   (((mode->HDisplay == 1024) && (mode->HDisplay == 768)) ||
-	    ((mode->HDisplay ==  800) && (mode->HDisplay == 600)))) ) {
+	   (((mode->HDisplay == 1024) && (mode->VDisplay == 768)) ||
+	    ((mode->HDisplay ==  800) && (mode->VDisplay == 600)))) ) {
 
 	 ModeIndex = SiS_GetModeID_LCD(pSiS->VGAEngine, VBFlags, mode->HDisplay, mode->VDisplay, i,
 				pSiS->FSTN, pSiS->SiS_Pr->SiS_CustomT, pSiS->LCDwidth, pSiS->LCDheight,
