@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.215 2016/09/01 18:34:04 okan Exp $
+ * $OpenBSD: client.c,v 1.216 2016/09/01 18:38:52 okan Exp $
  */
 
 #include <sys/types.h>
@@ -297,7 +297,8 @@ client_toggle_fullscreen(struct client_ctx *cc)
 		return;
 
 	if (cc->flags & CLIENT_FULLSCREEN) {
-		cc->bwidth = Conf.bwidth;
+		if (!(cc->flags & CLIENT_IGNORE))
+			cc->bwidth = Conf.bwidth;
 		cc->geom = cc->fullgeom;
 		cc->flags &= ~(CLIENT_FULLSCREEN | CLIENT_FREEZE);
 		goto resize;
