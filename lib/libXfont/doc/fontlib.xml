@@ -111,8 +111,9 @@
       </listitem>
       <listitem>
 	<para>
+	  <olink targetdoc='xfs-design' targetptr='xfs-design'>
 	  <citetitle pubwork="article">Font Server Implementation
-	    Overview</citetitle> which discusses the design of the font
+	    Overview</citetitle></olink> which discusses the design of the font
 	  server.
 	</para>
       </listitem>
@@ -126,7 +127,9 @@
       </listitem>
       <listitem>
 	<para>
+	  <olink targetdoc='fsproto' targetptr='fsproto'>
 	  <citetitle pubwork="article">The X Font Service Protocol</citetitle>
+	  </olink>
 	  for a description of the constraints placed  on the design by
 	  including support for this font service mechanism.
 	</para>

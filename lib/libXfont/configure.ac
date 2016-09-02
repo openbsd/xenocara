@@ -21,7 +21,7 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libXfont], [1.5.1],
+AC_INIT([libXfont], [1.5.2],
 	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXfont])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h include/X11/fonts/fontconf.h])
@@ -213,9 +213,6 @@ case $host_os in
     linux*)
         OS_CFLAGS="-D_XOPEN_SOURCE"
         ;;
-    darwin*)
-        OS_CFLAGS="-Wl,-flat_namespace"
-	;;
     *)
         OS_CFLAGS=
         ;;

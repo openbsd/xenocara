@@ -10,7 +10,7 @@
 #endif
 
 /* this probably works for Mach-O too, but probably not for PE */
-#if (defined(__APPLE__) || defined(__ELF__)) && defined(__GNUC__) && (__GNUC__ >= 3)
+#if defined(__ELF__) && defined(__GNUC__) && (__GNUC__ >= 3)
 #define weak __attribute__((weak))
 #else
 #define weak
@@ -38,42 +38,33 @@ extern int _font_init_stubs(void);
       (*__##sym)(f, _args); \
     va_end(_args)
 
-int (*__client_auth_generation)(ClientPtr);
-Bool (*__ClientSignal)(ClientPtr);
-void (*__DeleteFontClientID)(Font);
-void (*__VErrorF)(const char *, va_list);
-FontPtr (*__find_old_font)(FSID);
-FontResolutionPtr (*__GetClientResolutions)(int *);
-int (*__GetDefaultPointSize)(void);
-Font (*__GetNewFontClientID)(void);
-unsigned long (*__GetTimeInMillis)(void);
-int (*__init_fs_handlers)(FontPathElementPtr, BlockHandlerProcPtr);
-int (*__RegisterFPEFunctions)(NameCheckFunc, InitFpeFunc, FreeFpeFunc,
-     ResetFpeFunc, OpenFontFunc, CloseFontFunc, ListFontsFunc,
-     StartLfwiFunc, NextLfwiFunc, WakeupFpeFunc, ClientDiedFunc,
-     LoadGlyphsFunc, StartLaFunc, NextLaFunc, SetPathFunc);
-void (*__remove_fs_handlers)(FontPathElementPtr, BlockHandlerProcPtr, Bool);
-void **__ptr_serverClient;
-int (*__set_font_authorizations)(char **, int *, ClientPtr);
-int (*__StoreFontClientFont)(FontPtr, Font);
-Atom (*__MakeAtom)(const char *, unsigned, int);
-int (*__ValidAtom)(Atom);
-char *(*__NameForAtom)(Atom);
-unsigned long *__ptr_serverGeneration;
-void (*__register_fpe_functions)(void);
+extern int (*__client_auth_generation)(ClientPtr);
+extern Bool (*__ClientSignal)(ClientPtr);
+extern void (*__DeleteFontClientID)(Font);
+extern void (*__VErrorF)(const char *, va_list);
+extern FontPtr (*__find_old_font)(FSID);
+extern FontResolutionPtr (*__GetClientResolutions)(int *);
+extern int (*__GetDefaultPointSize)(void);
+extern Font (*__GetNewFontClientID)(void);
+extern unsigned long (*__GetTimeInMillis)(void);
+extern int (*__init_fs_handlers)(FontPathElementPtr, BlockHandlerProcPtr);
+extern int (*__RegisterFPEFunctions)(NameCheckFunc, InitFpeFunc, FreeFpeFunc,
+            ResetFpeFunc, OpenFontFunc, CloseFontFunc, ListFontsFunc,
+            StartLfwiFunc, NextLfwiFunc, WakeupFpeFunc, ClientDiedFunc,
+            LoadGlyphsFunc, StartLaFunc, NextLaFunc, SetPathFunc);
+extern void (*__remove_fs_handlers)(FontPathElementPtr, BlockHandlerProcPtr, Bool);
+extern void **__ptr_serverClient;
+extern int (*__set_font_authorizations)(char **, int *, ClientPtr);
+extern int (*__StoreFontClientFont)(FontPtr, Font);
+extern Atom (*__MakeAtom)(const char *, unsigned, int);
+extern int (*__ValidAtom)(Atom);
+extern char *(*__NameForAtom)(Atom);
+extern unsigned long *__ptr_serverGeneration;
+extern void (*__register_fpe_functions)(void);
 #else /* NO_WEAK_SYMBOLS && PIC */
 #define OVERRIDE_DATA(sym)
 #define OVERRIDE_SYMBOL(sym,...)
 #define OVERRIDE_VA_SYMBOL(sym,f)
-#endif
-
-/* This is really just a hack for now... __APPLE__ really should be using
- * the weak symbols route above, but it's causing an as-yet unresolved issue,
- * so we're instead building with flat_namespace.
- */
-#ifdef __APPLE__
-#undef weak
-#define weak
 #endif
 
 extern FontPtr find_old_font ( FSID id );

@@ -1,3 +1,164 @@
+commit 8cce9834b2e74dccad94ca0adf79ae5585e37d48
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Aug 31 16:19:11 2016 -0400
+
+    libXfont 1.5.2
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 42d85d1293b2753f3f200de0e960bacef0c973c7
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Mon May 30 00:46:21 2016 -0700
+
+    fserve: Fix a buffer read overrun in _fs_client_access
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=83224
+    
+    Found by clang's Address Sanitizer
+    
+    	crac.num_auths = set_font_authorizations(&authorizations, &authlen,
+    						 client);
+    	/* Work around bug in xfs versions up through modular release 1.0.8
+    	   which rejects CreateAC packets with num_auths = 0 & authlen < 4 */
+    	if (crac.num_auths == 0) {
+    	    authorizations = padding;
+    	    authlen = 4;
+    	} else {
+    	    authlen = (authlen + 3) & ~0x3;
+    	}
+    	crac.length = (sizeof (fsCreateACReq) + authlen) >> 2;
+    	crac.acid = cur->acid;
+    	_fs_add_req_log(conn, FS_CreateAC);
+    	_fs_write(conn, (char *) &crac, sizeof (fsCreateACReq));
+    	_fs_write(conn, authorizations, authlen);
+    
+    In the case in the report, set_font_authorizations setup authorizations as a
+    34 byte buffer (and authlen set to 34 as one would expect). The following
+    block changed authlen to 36 to make it 4byte aligned and the final _fs_write()
+    caused us to read 36 bytes from this 34 byte buffer.
+    
+    This changes the incorrect size increase to instead use _fs_write_pad which
+    takes care of the padding for us.
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+    (cherry picked from commit 6972ea08ee5b2ef1cfbdc2fcaf14f06bbd391561)
+
+commit 2b09a7af9f19db886567e524f978ad393593f7c0
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Sun May 29 23:37:13 2016 -0700
+
+    fserve: Silence a -Wformat warning
+    
+    src/fc/fserve.c:653:32: warning: format specifies type 'int' but the argument has type 'CARD32' (aka 'unsigned long') [-Wformat]
+                   " from font server\n", rep->length);
+                                          ^~~~~~~~~~~
+    1 warning generated.
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+    (cherry picked from commit e6009adbc89ec3e1f924bcb57b333c1c02f5e66d)
+
+commit 3eddbca2690381bbbaf14adadb2679eea702095f
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Sun May 29 23:34:35 2016 -0700
+
+    bitmap: Bail out on invalid input to FontFileMakeDir instead of calling calloc for 0 bytes
+    
+    Found by clang static analysis:
+        Call to 'calloc' has an allocation size of 0 bytes
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+    (cherry picked from commit ac559fad20bbae45332c758abb6a790c3fd341a2)
+
+commit dfa572ea522a3019e91f2de7854b252c629342f2
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Sun May 29 23:29:50 2016 -0700
+
+    FreeType: Correct an allocation size
+    
+    Found by clang static analysis:
+        Result of 'calloc' is converted to a pointer of type 'int', which is
+        incompatible with sizeof operand type 'int *'
+    
+    This is likely benign because the old size was larger on any platform where
+    sizeof(int) <= sizeof(void *), which is everywhere.
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+    (cherry picked from commit d0fff111992fed9d9bfbf0c19e136bda9ba1db55)
+
+commit bee4a764ccef46101dca03c70d4ad1793a5a5d78
+Author: Keith Packard <keithp@keithp.com>
+Date:   Mon Dec 7 15:46:13 2015 -0800
+
+    Fix warnings
+    
+    Mostly signed vs unsigned comparisons
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    
+    Squashed commit of three cherry-picks from master:
+    (cherry picked from commit eb67d10ae82b364a4324e96ce53baaa4e5e75f97)
+    (cherry picked from commit eefc0b0b908eb8533e704d7156ce983ad7891cc5)
+    (cherry picked from commit d967caa988eaabd9e84c82879e2f21bd33b952a7)
+
+commit d6877a7c1c35985f6a75b6cd4e814595e781adc4
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Wed Oct 21 21:03:00 2015 -0700
+
+    Use NO_WEAK_SYMBOLS instead of -flat_namespace
+    
+    Lesser of two evil hacks, I suppose...
+    
+    This reverts commit 0386fa77367a305deea3cc27f8a3865cc3c467c0.
+
+commit 2788c6984bc54bfba61b2dbdb5353978199d8a37
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Wed Oct 21 21:27:26 2015 -0700
+
+    stubs: Add missing externs for declarations in the NO_WEAK_SYMBOLS && PIC stubs resolution
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit d66f107d6e714a54515f39d94caf46aef9be7416
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Wed Feb 25 21:45:50 2015 +0100
+
+    Fix is*() usage.
+    
+    The argument must be an unsigned char or -1; in these cases
+    we know it's not -1 so cast it to unsigned char.
+    Fixes
+    warning: array subscript is of type 'char' [-Wchar-subscripts]
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+
+commit 1a73d6828dfa03924f2d68644fb5b99afd9c78e2
+Author: Benjamin Tissoires <benjamin.tissoires@gmail.com>
+Date:   Mon Jul 13 14:43:06 2015 -0400
+
+    bdfReadCharacters: Allow negative DWIDTH values
+    
+    The fix for CVE-2015-1804 prevent DWIDTH to be negative.
+    However, the spec states that "DWIDTH [...] is a vector indicating the
+    position of the next glyph’s origin relative to the origin of this glyph."
+    
+    So negative values are correct.
+    
+    Found by trying to compile XTS.
+    
+    Signed-off-by: Benjamin Tissoires <benjamin.tissoires@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 159bfa4ec094e7d342c9b59c31bfea7dccbac58a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 7 17:24:48 2015 -0800
+
+    doc: add a couple olinks to fsproto & xfs-design docs
+    
+    Don't seem to have ability to link to BDF or Xserver internals docs yet
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit da4246c98bc51297daeec47c15181e179df94013
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Mar 17 08:12:19 2015 -0700
