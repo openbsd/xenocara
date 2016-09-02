@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.6 2014/03/15 17:24:19 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.7 2016/09/02 10:09:44 matthieu Exp $
 
 PKGCONFIG=	xcb-proto.pc
 
@@ -55,6 +55,7 @@ realinstall:
 
 XCBGEN_SRCS= \
 	__init__.py \
+	align.py \
 	error.py \
 	expr.py \
 	matcher.py \

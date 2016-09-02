@@ -1,10 +1,10 @@
-#	$OpenBSD: Makefile,v 1.6 2015/01/26 21:32:11 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.7 2016/09/02 10:09:44 matthieu Exp $
 
 DATADIR=	${X11BASE}/share
 PYTHON=		python${PYTHON_VERSION}
 PYTHONDIR=	${X11BASE}/lib/python${PYTHON_VERSION}/site-packages
 
-MANOPTIONS=	-c 'libxcb 1.11' -l 'X Version 11' -s 3
+MANOPTIONS=	-c 'libxcb 1.12' -l 'X Version 11' -s 3
 
 SRCS= \
 	bigreq.c \
@@ -42,10 +42,10 @@ HDRS= ${SRCS:.c=.h}
 
 all: ${SRCS} ${HDRS}
 
-test:
-	@echo ${SRCS}
-
 clean:
+
+force-clean:
+	rm -f ${SRCS} ${HDRS}
 
 .SUFFIXES: .xml .c .h
 

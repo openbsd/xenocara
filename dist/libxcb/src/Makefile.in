@@ -117,6 +117,7 @@ host_triplet = @host@
 @BUILD_XV_TRUE@am__append_25 = libxcb-xv.la
 @BUILD_XVMC_TRUE@am__append_26 = libxcb-xvmc.la
 @XCB_HAVE_WIN32_TRUE@am__append_27 = xcb_windefs.h
+@XCB_SERVERSIDE_SUPPORT_TRUE@am__append_28 = --server-side
 subdir = src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
@@ -538,6 +539,7 @@ LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
+LT_SYS_LIBRARY_PATH = @LT_SYS_LIBRARY_PATH@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
 MAN_SUBSTS = @MAN_SUBSTS@
@@ -764,6 +766,7 @@ libmandir = $(LIB_MAN_DIR)
 libman_DATA = $(BUILT_MAN_PAGES)
 BUILT_SOURCES = $(EXTSOURCES) $(BUILT_MAN_PAGES)
 CLEANFILES = $(EXTSOURCES) $(EXTHEADERS) $(BUILT_MAN_PAGES)
+C_CLIENT_PY_EXTRA_ARGS = $(am__append_28)
 all: $(BUILT_SOURCES) config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -1286,6 +1289,7 @@ uninstall-am: uninstall-libLTLIBRARIES uninstall-libmanDATA \
 $(EXTSOURCES): c_client.py $(XCBPROTO_XCBINCLUDEDIR)/$(@:.c=.xml)
 	$(AM_V_GEN)$(PYTHON) $(srcdir)/c_client.py	-c "$(PACKAGE_STRING)" -l "$(XORG_MAN_PAGE)" \
 		-s "$(LIB_MAN_SUFFIX)" -p $(XCBPROTO_XCBPYTHONDIR) \
+		$(C_CLIENT_PY_EXTRA_ARGS) \
 		$(XCBPROTO_XCBINCLUDEDIR)/$(@:.c=.xml)
 
 $(BUILT_MAN_PAGES): $(EXTSOURCES)

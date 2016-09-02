@@ -24,6 +24,9 @@
 /* launchd support available */
 #undef HAVE_LAUNCHD
 
+/* Define to 1 if you have the `ws2_32' library (-lws2_32). */
+#undef HAVE_LIBWS2_32
+
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
@@ -60,8 +63,7 @@
 /* Define if not provided by <limits.h> */
 #undef IOV_MAX
 
-/* Define to the sub-directory in which libtool stores uninstalled libraries.
-   */
+/* Define to the sub-directory where libtool stores uninstalled libraries. */
 #undef LT_OBJDIR
 
 /* Name of package */

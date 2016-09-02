@@ -27,7 +27,7 @@ extern xcb_extension_t xcb_xevie_id;
  * @brief xcb_xevie_query_version_cookie_t
  **/
 typedef struct xcb_xevie_query_version_cookie_t {
-    unsigned int sequence; /**<  */
+    unsigned int sequence;
 } xcb_xevie_query_version_cookie_t;
 
 /** Opcode for xcb_xevie_query_version. */
@@ -37,31 +37,31 @@ typedef struct xcb_xevie_query_version_cookie_t {
  * @brief xcb_xevie_query_version_request_t
  **/
 typedef struct xcb_xevie_query_version_request_t {
-    uint8_t  major_opcode; /**<  */
-    uint8_t  minor_opcode; /**<  */
-    uint16_t length; /**<  */
-    uint16_t client_major_version; /**<  */
-    uint16_t client_minor_version; /**<  */
+    uint8_t  major_opcode;
+    uint8_t  minor_opcode;
+    uint16_t length;
+    uint16_t client_major_version;
+    uint16_t client_minor_version;
 } xcb_xevie_query_version_request_t;
 
 /**
  * @brief xcb_xevie_query_version_reply_t
  **/
 typedef struct xcb_xevie_query_version_reply_t {
-    uint8_t  response_type; /**<  */
-    uint8_t  pad0; /**<  */
-    uint16_t sequence; /**<  */
-    uint32_t length; /**<  */
-    uint16_t server_major_version; /**<  */
-    uint16_t server_minor_version; /**<  */
-    uint8_t  pad1[20]; /**<  */
+    uint8_t  response_type;
+    uint8_t  pad0;
+    uint16_t sequence;
+    uint32_t length;
+    uint16_t server_major_version;
+    uint16_t server_minor_version;
+    uint8_t  pad1[20];
 } xcb_xevie_query_version_reply_t;
 
 /**
  * @brief xcb_xevie_start_cookie_t
  **/
 typedef struct xcb_xevie_start_cookie_t {
-    unsigned int sequence; /**<  */
+    unsigned int sequence;
 } xcb_xevie_start_cookie_t;
 
 /** Opcode for xcb_xevie_start. */
@@ -71,28 +71,28 @@ typedef struct xcb_xevie_start_cookie_t {
  * @brief xcb_xevie_start_request_t
  **/
 typedef struct xcb_xevie_start_request_t {
-    uint8_t  major_opcode; /**<  */
-    uint8_t  minor_opcode; /**<  */
-    uint16_t length; /**<  */
-    uint32_t screen; /**<  */
+    uint8_t  major_opcode;
+    uint8_t  minor_opcode;
+    uint16_t length;
+    uint32_t screen;
 } xcb_xevie_start_request_t;
 
 /**
  * @brief xcb_xevie_start_reply_t
  **/
 typedef struct xcb_xevie_start_reply_t {
-    uint8_t  response_type; /**<  */
-    uint8_t  pad0; /**<  */
-    uint16_t sequence; /**<  */
-    uint32_t length; /**<  */
-    uint8_t  pad1[24]; /**<  */
+    uint8_t  response_type;
+    uint8_t  pad0;
+    uint16_t sequence;
+    uint32_t length;
+    uint8_t  pad1[24];
 } xcb_xevie_start_reply_t;
 
 /**
  * @brief xcb_xevie_end_cookie_t
  **/
 typedef struct xcb_xevie_end_cookie_t {
-    unsigned int sequence; /**<  */
+    unsigned int sequence;
 } xcb_xevie_end_cookie_t;
 
 /** Opcode for xcb_xevie_end. */
@@ -102,21 +102,21 @@ typedef struct xcb_xevie_end_cookie_t {
  * @brief xcb_xevie_end_request_t
  **/
 typedef struct xcb_xevie_end_request_t {
-    uint8_t  major_opcode; /**<  */
-    uint8_t  minor_opcode; /**<  */
-    uint16_t length; /**<  */
-    uint32_t cmap; /**<  */
+    uint8_t  major_opcode;
+    uint8_t  minor_opcode;
+    uint16_t length;
+    uint32_t cmap;
 } xcb_xevie_end_request_t;
 
 /**
  * @brief xcb_xevie_end_reply_t
  **/
 typedef struct xcb_xevie_end_reply_t {
-    uint8_t  response_type; /**<  */
-    uint8_t  pad0; /**<  */
-    uint16_t sequence; /**<  */
-    uint32_t length; /**<  */
-    uint8_t  pad1[24]; /**<  */
+    uint8_t  response_type;
+    uint8_t  pad0;
+    uint16_t sequence;
+    uint32_t length;
+    uint8_t  pad1[24];
 } xcb_xevie_end_reply_t;
 
 typedef enum xcb_xevie_datatype_t {
@@ -128,23 +128,23 @@ typedef enum xcb_xevie_datatype_t {
  * @brief xcb_xevie_event_t
  **/
 typedef struct xcb_xevie_event_t {
-    uint8_t pad0[32]; /**<  */
+    uint8_t pad0[32];
 } xcb_xevie_event_t;
 
 /**
  * @brief xcb_xevie_event_iterator_t
  **/
 typedef struct xcb_xevie_event_iterator_t {
-    xcb_xevie_event_t *data; /**<  */
-    int                rem; /**<  */
-    int                index; /**<  */
+    xcb_xevie_event_t *data;
+    int                rem;
+    int                index;
 } xcb_xevie_event_iterator_t;
 
 /**
  * @brief xcb_xevie_send_cookie_t
  **/
 typedef struct xcb_xevie_send_cookie_t {
-    unsigned int sequence; /**<  */
+    unsigned int sequence;
 } xcb_xevie_send_cookie_t;
 
 /** Opcode for xcb_xevie_send. */
@@ -154,30 +154,30 @@ typedef struct xcb_xevie_send_cookie_t {
  * @brief xcb_xevie_send_request_t
  **/
 typedef struct xcb_xevie_send_request_t {
-    uint8_t           major_opcode; /**<  */
-    uint8_t           minor_opcode; /**<  */
-    uint16_t          length; /**<  */
-    xcb_xevie_event_t event; /**<  */
-    uint32_t          data_type; /**<  */
-    uint8_t           pad0[64]; /**<  */
+    uint8_t           major_opcode;
+    uint8_t           minor_opcode;
+    uint16_t          length;
+    xcb_xevie_event_t event;
+    uint32_t          data_type;
+    uint8_t           pad0[64];
 } xcb_xevie_send_request_t;
 
 /**
  * @brief xcb_xevie_send_reply_t
  **/
 typedef struct xcb_xevie_send_reply_t {
-    uint8_t  response_type; /**<  */
-    uint8_t  pad0; /**<  */
-    uint16_t sequence; /**<  */
-    uint32_t length; /**<  */
-    uint8_t  pad1[24]; /**<  */
+    uint8_t  response_type;
+    uint8_t  pad0;
+    uint16_t sequence;
+    uint32_t length;
+    uint8_t  pad1[24];
 } xcb_xevie_send_reply_t;
 
 /**
  * @brief xcb_xevie_select_input_cookie_t
  **/
 typedef struct xcb_xevie_select_input_cookie_t {
-    unsigned int sequence; /**<  */
+    unsigned int sequence;
 } xcb_xevie_select_input_cookie_t;
 
 /** Opcode for xcb_xevie_select_input. */
@@ -187,21 +187,21 @@ typedef struct xcb_xevie_select_input_cookie_t {
  * @brief xcb_xevie_select_input_request_t
  **/
 typedef struct xcb_xevie_select_input_request_t {
-    uint8_t  major_opcode; /**<  */
-    uint8_t  minor_opcode; /**<  */
-    uint16_t length; /**<  */
-    uint32_t event_mask; /**<  */
+    uint8_t  major_opcode;
+    uint8_t  minor_opcode;
+    uint16_t length;
+    uint32_t event_mask;
 } xcb_xevie_select_input_request_t;
 
 /**
  * @brief xcb_xevie_select_input_reply_t
  **/
 typedef struct xcb_xevie_select_input_reply_t {
-    uint8_t  response_type; /**<  */
-    uint8_t  pad0; /**<  */
-    uint16_t sequence; /**<  */
-    uint32_t length; /**<  */
-    uint8_t  pad1[24]; /**<  */
+    uint8_t  response_type;
+    uint8_t  pad0;
+    uint16_t sequence;
+    uint32_t length;
+    uint8_t  pad1[24];
 } xcb_xevie_select_input_reply_t;
 
 /**
@@ -213,9 +213,9 @@ typedef struct xcb_xevie_select_input_reply_t {
  *
  */
 xcb_xevie_query_version_cookie_t
-xcb_xevie_query_version (xcb_connection_t *c  /**< */,
-                         uint16_t          client_major_version  /**< */,
-                         uint16_t          client_minor_version  /**< */);
+xcb_xevie_query_version (xcb_connection_t *c,
+                         uint16_t          client_major_version,
+                         uint16_t          client_minor_version);
 
 /**
  *
@@ -229,9 +229,9 @@ xcb_xevie_query_version (xcb_connection_t *c  /**< */,
  * placed in the event queue.
  */
 xcb_xevie_query_version_cookie_t
-xcb_xevie_query_version_unchecked (xcb_connection_t *c  /**< */,
-                                   uint16_t          client_major_version  /**< */,
-                                   uint16_t          client_minor_version  /**< */);
+xcb_xevie_query_version_unchecked (xcb_connection_t *c,
+                                   uint16_t          client_major_version,
+                                   uint16_t          client_minor_version);
 
 /**
  * Return the reply
@@ -248,9 +248,9 @@ xcb_xevie_query_version_unchecked (xcb_connection_t *c  /**< */,
  * The returned value must be freed by the caller using free().
  */
 xcb_xevie_query_version_reply_t *
-xcb_xevie_query_version_reply (xcb_connection_t                  *c  /**< */,
+xcb_xevie_query_version_reply (xcb_connection_t                  *c,
                                xcb_xevie_query_version_cookie_t   cookie  /**< */,
-                               xcb_generic_error_t              **e  /**< */);
+                               xcb_generic_error_t              **e);
 
 /**
  *
@@ -261,8 +261,8 @@ xcb_xevie_query_version_reply (xcb_connection_t                  *c  /**< */,
  *
  */
 xcb_xevie_start_cookie_t
-xcb_xevie_start (xcb_connection_t *c  /**< */,
-                 uint32_t          screen  /**< */);
+xcb_xevie_start (xcb_connection_t *c,
+                 uint32_t          screen);
 
 /**
  *
@@ -276,8 +276,8 @@ xcb_xevie_start (xcb_connection_t *c  /**< */,
  * placed in the event queue.
  */
 xcb_xevie_start_cookie_t
-xcb_xevie_start_unchecked (xcb_connection_t *c  /**< */,
-                           uint32_t          screen  /**< */);
+xcb_xevie_start_unchecked (xcb_connection_t *c,
+                           uint32_t          screen);
 
 /**
  * Return the reply
@@ -294,9 +294,9 @@ xcb_xevie_start_unchecked (xcb_connection_t *c  /**< */,
  * The returned value must be freed by the caller using free().
  */
 xcb_xevie_start_reply_t *
-xcb_xevie_start_reply (xcb_connection_t          *c  /**< */,
+xcb_xevie_start_reply (xcb_connection_t          *c,
                        xcb_xevie_start_cookie_t   cookie  /**< */,
-                       xcb_generic_error_t      **e  /**< */);
+                       xcb_generic_error_t      **e);
 
 /**
  *
@@ -307,8 +307,8 @@ xcb_xevie_start_reply (xcb_connection_t          *c  /**< */,
  *
  */
 xcb_xevie_end_cookie_t
-xcb_xevie_end (xcb_connection_t *c  /**< */,
-               uint32_t          cmap  /**< */);
+xcb_xevie_end (xcb_connection_t *c,
+               uint32_t          cmap);
 
 /**
  *
@@ -322,8 +322,8 @@ xcb_xevie_end (xcb_connection_t *c  /**< */,
  * placed in the event queue.
  */
 xcb_xevie_end_cookie_t
-xcb_xevie_end_unchecked (xcb_connection_t *c  /**< */,
-                         uint32_t          cmap  /**< */);
+xcb_xevie_end_unchecked (xcb_connection_t *c,
+                         uint32_t          cmap);
 
 /**
  * Return the reply
@@ -340,9 +340,9 @@ xcb_xevie_end_unchecked (xcb_connection_t *c  /**< */,
  * The returned value must be freed by the caller using free().
  */
 xcb_xevie_end_reply_t *
-xcb_xevie_end_reply (xcb_connection_t        *c  /**< */,
+xcb_xevie_end_reply (xcb_connection_t        *c,
                      xcb_xevie_end_cookie_t   cookie  /**< */,
-                     xcb_generic_error_t    **e  /**< */);
+                     xcb_generic_error_t    **e);
 
 /**
  * Get the next element of the iterator
@@ -353,7 +353,7 @@ xcb_xevie_end_reply (xcb_connection_t        *c  /**< */,
  * element. The member index is increased by sizeof(xcb_xevie_event_t)
  */
 void
-xcb_xevie_event_next (xcb_xevie_event_iterator_t *i  /**< */);
+xcb_xevie_event_next (xcb_xevie_event_iterator_t *i);
 
 /**
  * Return the iterator pointing to the last element
@@ -365,7 +365,7 @@ xcb_xevie_event_next (xcb_xevie_event_iterator_t *i  /**< */);
  * last element.
  */
 xcb_generic_iterator_t
-xcb_xevie_event_end (xcb_xevie_event_iterator_t i  /**< */);
+xcb_xevie_event_end (xcb_xevie_event_iterator_t i);
 
 /**
  *
@@ -376,9 +376,9 @@ xcb_xevie_event_end (xcb_xevie_event_iterator_t i  /**< */);
  *
  */
 xcb_xevie_send_cookie_t
-xcb_xevie_send (xcb_connection_t  *c  /**< */,
-                xcb_xevie_event_t  event  /**< */,
-                uint32_t           data_type  /**< */);
+xcb_xevie_send (xcb_connection_t  *c,
+                xcb_xevie_event_t  event,
+                uint32_t           data_type);
 
 /**
  *
@@ -392,9 +392,9 @@ xcb_xevie_send (xcb_connection_t  *c  /**< */,
  * placed in the event queue.
  */
 xcb_xevie_send_cookie_t
-xcb_xevie_send_unchecked (xcb_connection_t  *c  /**< */,
-                          xcb_xevie_event_t  event  /**< */,
-                          uint32_t           data_type  /**< */);
+xcb_xevie_send_unchecked (xcb_connection_t  *c,
+                          xcb_xevie_event_t  event,
+                          uint32_t           data_type);
 
 /**
  * Return the reply
@@ -411,9 +411,9 @@ xcb_xevie_send_unchecked (xcb_connection_t  *c  /**< */,
  * The returned value must be freed by the caller using free().
  */
 xcb_xevie_send_reply_t *
-xcb_xevie_send_reply (xcb_connection_t         *c  /**< */,
+xcb_xevie_send_reply (xcb_connection_t         *c,
                       xcb_xevie_send_cookie_t   cookie  /**< */,
-                      xcb_generic_error_t     **e  /**< */);
+                      xcb_generic_error_t     **e);
 
 /**
  *
@@ -424,8 +424,8 @@ xcb_xevie_send_reply (xcb_connection_t         *c  /**< */,
  *
  */
 xcb_xevie_select_input_cookie_t
-xcb_xevie_select_input (xcb_connection_t *c  /**< */,
-                        uint32_t          event_mask  /**< */);
+xcb_xevie_select_input (xcb_connection_t *c,
+                        uint32_t          event_mask);
 
 /**
  *
@@ -439,8 +439,8 @@ xcb_xevie_select_input (xcb_connection_t *c  /**< */,
  * placed in the event queue.
  */
 xcb_xevie_select_input_cookie_t
-xcb_xevie_select_input_unchecked (xcb_connection_t *c  /**< */,
-                                  uint32_t          event_mask  /**< */);
+xcb_xevie_select_input_unchecked (xcb_connection_t *c,
+                                  uint32_t          event_mask);
 
 /**
  * Return the reply
@@ -457,9 +457,9 @@ xcb_xevie_select_input_unchecked (xcb_connection_t *c  /**< */,
  * The returned value must be freed by the caller using free().
  */
 xcb_xevie_select_input_reply_t *
-xcb_xevie_select_input_reply (xcb_connection_t                 *c  /**< */,
+xcb_xevie_select_input_reply (xcb_connection_t                 *c,
                               xcb_xevie_select_input_cookie_t   cookie  /**< */,
-                              xcb_generic_error_t             **e  /**< */);
+                              xcb_generic_error_t             **e);
 
 
 #ifdef __cplusplus
