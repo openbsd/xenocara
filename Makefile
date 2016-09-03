@@ -1,11 +1,10 @@
-# $OpenBSD: Makefile,v 1.71 2016/07/30 12:18:35 matthieu Exp $
+# $OpenBSD: Makefile,v 1.72 2016/09/03 13:57:18 matthieu Exp $
 .include <bsd.own.mk>
 .include <bsd.xconf.mk>
 
 LOCALAPPD=/usr/local/lib/X11/app-defaults
 LOCALAPPX=/usr/local/lib/X11
 REALAPPD=/etc/X11/app-defaults
-XCONFIG=${XSRCDIR}/etc/X11.${MACHINE}/xorg.conf
 RM?=rm
 
 XSERVER= xserver
@@ -101,14 +100,6 @@ release-clean:
 
 release-install:
 	@exec ${MAKE} bootstrap-root
-.if ${MACHINE} == zaurus
-	@if [ -f $(DESTDIR)/etc/X11/xorg.conf ]; then \
-	 echo "Not overwriting existing" $(DESTDIR)/etc/X11/xorg.conf; \
-	else set -x; \
-	 ${INSTALL} ${INSTALL_COPY} -o root -g wheel -m 644 \
-		${XCONFIG} ${DESTDIR}/etc/X11 ; \
-	fi
-.endif
 	@exec ${MAKE} install
 
 dist-rel:

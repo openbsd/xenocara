@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.67 2016/08/10 18:58:25 matthieu Exp $
+# $OpenBSD: Makefile,v 1.68 2016/09/03 13:57:18 matthieu Exp $
 
 INPUT_DRV_DEFAULT= \
 	xf86-input-keyboard \
@@ -33,8 +33,6 @@ INPUT_DRV_octeon=
 INPUT_DRV_sgi= ${INPUT_DRV_DEFAULT}
 
 INPUT_DRV_sparc64= ${INPUT_DRV_COMMON}
-
-INPUT_DRV_zaurus= ${INPUT_DRV_DEFAULT}
 
 .if defined(INPUT_DRV_${MACHINE})
 INPUT_DRV= ${INPUT_DRV_${MACHINE}}
