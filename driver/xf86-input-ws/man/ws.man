@@ -1,4 +1,4 @@
-.\"	$OpenBSD: ws.man,v 1.13 2012/06/12 17:12:50 shadchin Exp $
+.\"	$OpenBSD: ws.man,v 1.14 2016/09/03 14:01:16 guenther Exp $
 .\"
 .\" Copyright (c) 2005,2009,2011 Matthieu Herrb
 .\"
@@ -46,7 +46,7 @@ is an XFree86/X.Org input driver for pointer devices (mouse, tablet,
 touchscreen,...) driven by the wscons console driver on
 OpenBSD.
 .SH "SUPPORTED HARDWARE"
-This driver supports zts(4), the touchscreen of Zaurus machines,
+This driver supports
 uts(4), USB touchscreens and ums(4), generic USB mouse devices.
 .SH "CONFIGURATION DETAILS"
 Please refer to __xconfigfile__(__filemansuffix__) for general configuration
@@ -142,7 +142,7 @@ This option is mandatory.
 .BI "Option \*qMaxY\*q \*q" integer \*q
 These options represent the coordinate space returned by the device.
 They default to the screen dimensions, since the calibration is handled in
-the kernel by the zts(4) driver and the ztsscale(8) utility.
+the kernel by the uts(4) driver and the xtsscale(8) utility.
 .TP 4
 .BI "Option \*qRaw\*q \*q" boolean \*q
 This option selects the raw (uncalibrated) mode for tablet devices.
@@ -237,4 +237,4 @@ tablets and touchscreens).
 
 .SH "SEE ALSO"
 __xservername__(1), xinput(1), __xconfigfile__(__filemansuffix__),
-ums(4), uts(4), zts(4), sysctl(8), xtsscale(8), ztsscale(8).
+ums(4), uts(4), sysctl(8), xtsscale(8).
