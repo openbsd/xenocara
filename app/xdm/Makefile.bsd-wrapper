@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.22 2015/03/15 19:09:22 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.23 2016/09/04 19:13:17 matthieu Exp $
 .include <bsd.own.mk>
 
 XDMCONFIGDIR=/etc/X11/xdm
@@ -6,9 +6,6 @@ PIXMAPDIR=$(XDMCONFIGDIR)/pixmaps
 
 .if ${MACHINE} == i386 || ${MACHINE} == amd64 || ${MACHINE} == macppc
 DEFAULT_VT= --with-default-vt=vt05
-.endif
-.if ${MACHINE_ARCH} == arm
-DEFAULT_VT=  --with-default-vt=vt02
 .endif
 
 CONFIGURE_ARGS= --enable-privsep \
