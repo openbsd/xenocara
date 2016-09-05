@@ -743,7 +743,7 @@ Bool intel_sync_init(ScreenPtr screen);
 void intel_sync_close(ScreenPtr screen);
 #else
 static inline Bool intel_sync_init(ScreenPtr screen) { return 0; }
-void intel_sync_close(ScreenPtr screen);
+static inline void intel_sync_close(ScreenPtr screen) { }
 #endif
 
 /*
