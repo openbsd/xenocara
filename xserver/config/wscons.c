@@ -25,10 +25,10 @@
 #include <dix-config.h>
 #endif
 
+#include <sys/ioctl.h>
+#include <sys/select.h>
 #include <dev/wscons/wsconsio.h>
 #include <dev/wscons/wsksymdef.h>
-
-#include <sys/ioctl.h>
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
