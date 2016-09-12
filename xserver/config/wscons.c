@@ -51,7 +51,7 @@
 
 struct nameint {
     int val;
-    char *name;
+    const char *name;
 } kbdenc[] = {
     KB_OVRENC,
     KB_ENCTAB,
@@ -121,7 +121,8 @@ wscons_add_keyboard(void)
     input_options = input_option_new(input_options, "name", WSCONS_KBD_DEVICE);
     input_options = input_option_new(input_options, "driver", "kbd");
 
-    config_info = Xprintf("wscons:%s", WSCONS_KBD_DEVICE);
+    if (asprintf(&config_info, "wscons:%s", WSCONS_KBD_DEVICE) < 0)
+        goto unwind;
     if (!config_info)
         goto unwind;
     if (KB_ENCODING(wsenc) == KB_USER) {
@@ -185,7 +186,8 @@ wscons_add_pointer(const char *path, const char *driver, int flags)
     char *config_info = NULL;
     int rc;
 
-    config_info = Xprintf("wscons:%s", path);
+    if (asprintf(&config_info, "wscons:%s", path) < 0)
+        return;
     if (!config_info)
         return;
 
@@ -213,21 +215,21 @@ wscons_add_pointer(const char *path, const char *driver, int flags)
 static void
 wscons_add_pointers(void)
 {
-    char devname[256];
+    char devnam[256];
     int fd, i, wsmouse_type;
 
     /* Check pointing devices */
     for (i = 0; i < 4; i++) {
-        snprintf(devname, sizeof(devname), "%s%d", WSCONS_MOUSE_PREFIX, i);
-        LogMessageVerb(X_INFO, 10, "wsmouse: checking %s\n", devname);
-        fd = priv_open_device(devname);
+        snprintf(devnam, sizeof(devnam), "%s%d", WSCONS_MOUSE_PREFIX, i);
+        LogMessageVerb(X_INFO, 10, "wsmouse: checking %s\n", devnam);
+        fd = priv_open_device(devnam);
         if (fd == -1) {
-            LogMessageVerb(X_WARNING, 10, "%s: %s\n", devname, strerror(errno));
+            LogMessageVerb(X_WARNING, 10, "%s: %s\n", devnam, strerror(errno));
             continue;
         }
         if (ioctl(fd, WSMOUSEIO_GTYPE, &wsmouse_type) != 0) {
             LogMessageVerb(X_WARNING, 10,
-                           "%s: WSMOUSEIO_GTYPE failed\n", devname);
+                           "%s: WSMOUSEIO_GTYPE failed\n", devnam);
             close(fd);
             continue;
         }
@@ -237,11 +239,11 @@ wscons_add_pointers(void)
           case WSMOUSE_TYPE_ALPS:
           case WSMOUSE_TYPE_ELANTECH:
           case WSMOUSE_TYPE_SYNAP_SBTN:
-            wscons_add_pointer(devname, "synaptics",
+            wscons_add_pointer(devnam, "synaptics",
                                ATTR_TOUCHPAD);
             break;
           case WSMOUSE_TYPE_TPANEL:
-            wscons_add_pointer(devname, "ws", ATTR_TOUCHSCREEN);
+            wscons_add_pointer(devnam, "ws", ATTR_TOUCHSCREEN);
             break;
           default:
             break;
