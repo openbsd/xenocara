@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.217 2016/09/02 15:08:44 okan Exp $
+ * $OpenBSD: client.c,v 1.218 2016/09/12 13:48:41 okan Exp $
  */
 
 #include <sys/types.h>
@@ -67,12 +67,18 @@ client_init(Window win, struct screen_ctx *sc)
 		mapped = wattr.map_state != IsUnmapped;
 	}
 
-	cc = xcalloc(1, sizeof(*cc));
+	cc = xmalloc(sizeof(*cc));
 
 	XGrabServer(X_Dpy);
 
 	cc->sc = sc;
 	cc->win = win;
+	cc->gc = NULL;
+	cc->flags = 0;
+	cc->stackingorder = 0;
+	memset(&cc->hint, 0, sizeof(cc->hint));
+	cc->ptr.x = -1;
+	cc->ptr.y = -1;
 
 	TAILQ_INIT(&cc->nameq);
 	client_setname(cc);
@@ -84,10 +90,6 @@ client_init(Window win, struct screen_ctx *sc)
 	client_wm_protocols(cc);
 	client_getsizehints(cc);
 	client_mwm_hints(cc);
-
-	/* Saved pointer position */
-	cc->ptr.x = -1;
-	cc->ptr.y = -1;
 
 	cc->geom.x = wattr.x;
 	cc->geom.y = wattr.y;
