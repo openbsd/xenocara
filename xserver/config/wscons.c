@@ -26,7 +26,7 @@
 #endif
 
 #include <sys/ioctl.h>
-#include <sys/select.h>
+#include <sys/time.h>
 #include <dev/wscons/wsconsio.h>
 #include <dev/wscons/wsksymdef.h>
 #include <errno.h>
