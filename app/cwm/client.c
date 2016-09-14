@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.220 2016/09/14 19:45:33 okan Exp $
+ * $OpenBSD: client.c,v 1.221 2016/09/14 21:00:24 okan Exp $
  */
 
 #include <sys/types.h>
@@ -78,6 +78,7 @@ client_init(Window win, struct screen_ctx *sc)
 	cc->flags = 0;
 	cc->stackingorder = 0;
 	memset(&cc->hint, 0, sizeof(cc->hint));
+	memset(&cc->ch, 0, sizeof(cc->ch));
 	cc->ptr.x = -1;
 	cc->ptr.y = -1;
 
