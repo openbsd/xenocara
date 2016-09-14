@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xevents.c,v 1.120 2015/11/10 20:05:33 okan Exp $
+ * $OpenBSD: xevents.c,v 1.121 2016/09/14 19:45:33 okan Exp $
  */
 
 /*
@@ -250,10 +250,13 @@ xev_handle_buttonpress(XEvent *ee)
 static void
 xev_handle_buttonrelease(XEvent *ee)
 {
-	struct client_ctx *cc;
+	XButtonEvent		*e = &ee->xbutton;
+	struct client_ctx	*cc;
 
-	if ((cc = client_current()) != NULL)
-		group_toggle_membership_leave(cc);
+	if ((cc = client_find(e->window)) != NULL) {
+		if (cc->flags & CLIENT_ACTIVE)
+			group_toggle_membership_leave(cc);
+	}
 }
 
 static void

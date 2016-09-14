@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.219 2016/09/13 17:42:58 okan Exp $
+ * $OpenBSD: client.c,v 1.220 2016/09/14 19:45:33 okan Exp $
  */
 
 #include <sys/types.h>
@@ -176,11 +176,11 @@ client_delete(struct client_ctx *cc)
 	xu_ewmh_net_client_list(sc);
 	xu_ewmh_net_client_list_stacking(sc);
 
+	if (cc->flags & CLIENT_ACTIVE)
+		client_none(sc);
+
 	if (cc->gc != NULL)
 		TAILQ_REMOVE(&cc->gc->clientq, cc, group_entry);
-
-	if (cc == client_current())
-		client_none(sc);
 
 	while ((wn = TAILQ_FIRST(&cc->nameq)) != NULL) {
 		TAILQ_REMOVE(&cc->nameq, wn, entry);
@@ -510,12 +510,12 @@ client_hide(struct client_ctx *cc)
 {
 	XUnmapWindow(X_Dpy, cc->win);
 
+	if (cc->flags & CLIENT_ACTIVE)
+		client_none(cc->sc);
+
 	cc->flags &= ~CLIENT_ACTIVE;
 	cc->flags |= CLIENT_HIDDEN;
 	client_set_wm_state(cc, IconicState);
-
-	if (cc == client_current())
-		client_none(cc->sc);
 }
 
 void

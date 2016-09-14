@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: search.c,v 1.51 2015/08/27 18:53:15 okan Exp $
+ * $OpenBSD: search.c,v 1.52 2016/09/14 19:45:33 okan Exp $
  */
 
 #include <sys/types.h>
@@ -94,7 +94,7 @@ search_match_client(struct menu_q *menuq, struct menu_q *resultq, char *search)
 		 * window.  Furthermore, this is denoted by a "!" when
 		 * printing the window name in the search menu.
 		 */
-		if (cc == client_current() && tier < nitems(tierp) - 1)
+		if ((cc->flags & CLIENT_ACTIVE) && (tier < nitems(tierp) - 1))
 			tier++;
 
 		/* Clients that are hidden get ranked one up. */
@@ -147,7 +147,7 @@ search_print_client(struct menu *mi, int list)
 	struct client_ctx	*cc = (struct client_ctx *)mi->ctx;
 	char			 flag = ' ';
 
-	if (cc == client_current())
+	if (cc->flags & CLIENT_ACTIVE)
 		flag = '!';
 	else if (cc->flags & CLIENT_HIDDEN)
 		flag = '&';
