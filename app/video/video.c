@@ -1,4 +1,4 @@
-/*	$OpenBSD: video.c,v 1.19 2016/06/06 19:31:22 mglocker Exp $	*/
+/*	$OpenBSD: video.c,v 1.20 2016/09/16 20:29:03 jca Exp $	*/
 /*
  * Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
  *
@@ -1805,6 +1805,7 @@ main(int argc, char *argv[])
 				err++;
 			} else {
 				vid.mode = (vid.mode & ~M_IN_DEV) | M_IN_FILE;
+				vid.mmap_on = 0; /* mmap mode does not work for files */
 				snprintf(vid.iofile, sizeof(vid.iofile),
 				    optarg);
 			}
