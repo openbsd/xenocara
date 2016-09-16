@@ -1,3 +1,2 @@
 ./usr/X11R6/lib/modules/dri/kms_swrast_dri.so
 ./usr/X11R6/lib/modules/dri/swrast_dri.so
-./usr/X11R6/share/X11/xorg.conf.d
