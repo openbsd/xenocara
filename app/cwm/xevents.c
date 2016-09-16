@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xevents.c,v 1.121 2016/09/14 19:45:33 okan Exp $
+ * $OpenBSD: xevents.c,v 1.122 2016/09/16 14:32:02 okan Exp $
  */
 
 /*
@@ -81,7 +81,7 @@ xev_handle_maprequest(XEvent *ee)
 		client_ptrsave(old_cc);
 
 	if ((cc = client_find(e->window)) == NULL)
-		cc = client_init(e->window, NULL);
+		cc = client_init(e->window, NULL, 0);
 
 	if ((cc != NULL) && (!(cc->flags & CLIENT_IGNORE)))
 		client_ptrwarp(cc);

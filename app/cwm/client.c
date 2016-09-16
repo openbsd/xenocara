@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.221 2016/09/14 21:00:24 okan Exp $
+ * $OpenBSD: client.c,v 1.222 2016/09/16 14:32:02 okan Exp $
  */
 
 #include <sys/types.h>
@@ -43,13 +43,13 @@ static int			 client_inbound(struct client_ctx *, int, int);
 struct client_ctx	*curcc = NULL;
 
 struct client_ctx *
-client_init(Window win, struct screen_ctx *sc)
+client_init(Window win, struct screen_ctx *sc, int active)
 {
 	struct client_ctx	*cc;
 	XWindowAttributes	 wattr;
 	int			 mapped;
 	Window			 rwin, cwin;
-	int			 x, y, wx, wy, activate = 0;
+	int			 x, y, wx, wy;
 	unsigned int		 mask;
 
 	if (win == None)
@@ -105,9 +105,9 @@ client_init(Window win, struct screen_ctx *sc)
 		if ((cc->wmh) && (cc->wmh->flags & StateHint))
 			client_set_wm_state(cc, cc->wmh->initial_state);
 	} else {
-		if ((XQueryPointer(X_Dpy, cc->win, &rwin, &cwin,
+		if ((active == 0) && (XQueryPointer(X_Dpy, cc->win, &rwin, &cwin,
 		    &x, &y, &wx, &wy, &mask)) && (cwin != None))
-			activate = 1;
+			active = 1;
 	}
 
 	XSelectInput(X_Dpy, cc->win, ColormapChangeMask | EnterWindowMask |
@@ -145,7 +145,7 @@ out:
 	XSync(X_Dpy, False);
 	XUngrabServer(X_Dpy);
 
-	if (activate)
+	if (active)
 		client_setactive(cc);
 
 	return(cc);

@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xutil.c,v 1.103 2015/08/27 18:53:15 okan Exp $
+ * $OpenBSD: xutil.c,v 1.104 2016/09/16 14:32:02 okan Exp $
  */
 
 #include <sys/types.h>
@@ -254,6 +254,22 @@ xu_ewmh_net_active_window(struct screen_ctx *sc, Window w)
 {
 	XChangeProperty(X_Dpy, sc->rootwin, ewmh[_NET_ACTIVE_WINDOW],
 	    XA_WINDOW, 32, PropModeReplace, (unsigned char *)&w, 1);
+}
+
+Window
+xu_ewmh_get_net_active_window(struct screen_ctx *sc)
+{
+	long		*p;
+	Window		 win;
+
+	if ((xu_getprop(sc->rootwin, ewmh[_NET_ACTIVE_WINDOW],
+	    XA_WINDOW, 32, (unsigned char **)&p)) <= 0)
+		return(None);
+
+	win = (Window)*p;
+	XFree(p);
+
+	return(win);
 }
 
 void

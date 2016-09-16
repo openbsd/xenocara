@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: screen.c,v 1.79 2015/11/11 14:22:01 okan Exp $
+ * $OpenBSD: screen.c,v 1.80 2016/09/16 14:32:02 okan Exp $
  */
 
 #include <sys/types.h>
@@ -35,7 +35,7 @@ void
 screen_init(int which)
 {
 	struct screen_ctx	*sc;
-	Window			*wins, w0, w1;
+	Window			*wins, w0, w1, active = None;
 	XSetWindowAttributes	 rootattr;
 	unsigned int		 nwins, i;
 
@@ -65,6 +65,7 @@ screen_init(int which)
 	xu_ewmh_net_wm_number_of_desktops(sc);
 	xu_ewmh_net_showing_desktop(sc);
 	xu_ewmh_net_virtual_roots(sc);
+	active = xu_ewmh_get_net_active_window(sc);
 
 	rootattr.cursor = Conf.cursor[CF_NORMAL];
 	rootattr.event_mask = SubstructureRedirectMask |
@@ -77,7 +78,7 @@ screen_init(int which)
 	/* Deal with existing clients. */
 	if (XQueryTree(X_Dpy, sc->rootwin, &w0, &w1, &wins, &nwins)) {
 		for (i = 0; i < nwins; i++)
-			(void)client_init(wins[i], sc);
+			(void)client_init(wins[i], sc, (active == wins[i]));
 
 		XFree(wins);
 	}
