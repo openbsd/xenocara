@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.223 2016/09/20 18:21:32 okan Exp $
+ * $OpenBSD: client.c,v 1.224 2016/09/20 19:11:19 okan Exp $
  */
 
 #include <sys/types.h>
@@ -37,7 +37,6 @@ static void			 client_mtf(struct client_ctx *);
 static void			 client_placecalc(struct client_ctx *);
 static void			 client_wm_protocols(struct client_ctx *);
 static void			 client_mwm_hints(struct client_ctx *);
-static int			 client_inbound(struct client_ctx *, int, int);
 
 struct client_ctx *
 client_init(Window win, struct screen_ctx *sc, int active)
@@ -917,7 +916,7 @@ client_transient(struct client_ctx *cc)
 	}
 }
 
-static int
+int
 client_inbound(struct client_ctx *cc, int x, int y)
 {
 	return(x < cc->geom.w && x >= 0 &&
