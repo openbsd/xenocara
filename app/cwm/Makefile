@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.21 2015/06/26 15:21:58 okan Exp $
+# $OpenBSD: Makefile,v 1.22 2016/09/20 18:21:32 okan Exp $
 
 .include <bsd.xconf.mk>
 
@@ -10,7 +10,7 @@ SRCS=		calmwm.c screen.c xmalloc.c client.c menu.c \
 
 CPPFLAGS+=	-I${X11BASE}/include -I${X11BASE}/include/freetype2 -I${.CURDIR}
 
-CFLAGS+=	-Wall
+CFLAGS+=	-Wall -g
 
 LDADD+=		-L${X11BASE}/lib -lXft -lXrender -lX11 -lxcb -lXau -lXdmcp \
 		-lfontconfig -lexpat -lfreetype -lz -lXrandr -lXext
