@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.205 2016/09/12 13:47:00 okan Exp $
+ * $OpenBSD: conf.c,v 1.206 2016/09/22 14:36:03 okan Exp $
  */
 
 #include <sys/types.h>
@@ -485,9 +485,12 @@ static const struct {
 	{ "window_resize", mousefunc_client_resize, CWM_CONTEXT_CLIENT, {0} },
 	{ "window_grouptoggle", kbfunc_client_grouptoggle, CWM_CONTEXT_CLIENT,
 	   {.i = CWM_MOUSE} },
-	{ "menu_group", mousefunc_menu_group, CWM_CONTEXT_SCREEN, {0} },
-	{ "menu_unhide", mousefunc_menu_client, CWM_CONTEXT_SCREEN, {0} },
-	{ "menu_cmd", mousefunc_menu_cmd, CWM_CONTEXT_SCREEN, {0} },
+	{ "menu_group", kbfunc_menu_group, CWM_CONTEXT_SCREEN,
+	    {.i = CWM_MOUSE} },
+	{ "menu_unhide", kbfunc_menu_client, CWM_CONTEXT_SCREEN,
+	    {.i = CWM_MOUSE} },
+	{ "menu_cmd", kbfunc_menu_cmd, CWM_CONTEXT_SCREEN,
+	    {.i = CWM_MOUSE} },
 };
 
 static const struct {
