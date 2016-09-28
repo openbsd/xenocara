@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xutil.c,v 1.104 2016/09/16 14:32:02 okan Exp $
+ * $OpenBSD: xutil.c,v 1.105 2016/09/28 17:06:33 okan Exp $
  */
 
 #include <sys/types.h>
@@ -530,22 +530,4 @@ xu_xorcolor(XftColor a, XftColor b, XftColor *r)
 	r->color.green = a.color.green ^ b.color.green;
 	r->color.blue = a.color.blue ^ b.color.blue;
 	r->color.alpha = 0xffff;
-}
-
-int
-xu_xft_width(XftFont *xftfont, const char *text, int len)
-{
-	XGlyphInfo	 extents;
-
-	XftTextExtentsUtf8(X_Dpy, xftfont, (const FcChar8*)text,
-	    len, &extents);
-
-	return(extents.xOff);
-}
-
-void
-xu_xft_draw(struct screen_ctx *sc, const char *text, int color, int x, int y)
-{
-	XftDrawStringUtf8(sc->xftdraw, &sc->xftcolor[color], sc->xftfont,
-	    x, y, (const FcChar8*)text, strlen(text));
 }
