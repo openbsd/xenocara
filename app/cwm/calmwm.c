@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.c,v 1.96 2015/11/12 17:56:54 okan Exp $
+ * $OpenBSD: calmwm.c,v 1.97 2016/09/29 00:21:55 okan Exp $
  */
 
 #include <sys/types.h>
@@ -161,10 +161,10 @@ x_teardown(void)
 			XftColorFree(X_Dpy, DefaultVisual(X_Dpy, sc->which),
 			    DefaultColormap(X_Dpy, sc->which),
 			    &sc->xftcolor[i]);
-		XftDrawDestroy(sc->xftdraw);
+		XftDrawDestroy(sc->menu.xftdraw);
 		XftFontClose(X_Dpy, sc->xftfont);
-		XUnmapWindow(X_Dpy, sc->menuwin);
-		XDestroyWindow(X_Dpy, sc->menuwin);
+		XUnmapWindow(X_Dpy, sc->menu.win);
+		XDestroyWindow(X_Dpy, sc->menu.win);
 		XUngrabKey(X_Dpy, AnyKey, AnyModifier, sc->rootwin);
 	}
 	XUngrabPointer(X_Dpy, CurrentTime);

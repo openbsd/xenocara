@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.206 2016/09/22 14:36:03 okan Exp $
+ * $OpenBSD: conf.c,v 1.207 2016/09/29 00:21:55 okan Exp $
  */
 
 #include <sys/types.h>
@@ -162,13 +162,13 @@ conf_screen(struct screen_ctx *sc)
 		}
 	}
 
-	sc->menuwin = XCreateSimpleWindow(X_Dpy, sc->rootwin, 0, 0, 1, 1,
+	sc->menu.win = XCreateSimpleWindow(X_Dpy, sc->rootwin, 0, 0, 1, 1,
 	    Conf.bwidth,
 	    sc->xftcolor[CWM_COLOR_MENU_FG].pixel,
 	    sc->xftcolor[CWM_COLOR_MENU_BG].pixel);
 
-	sc->xftdraw = XftDrawCreate(X_Dpy, sc->menuwin, visual, colormap);
-	if (sc->xftdraw == NULL)
+	sc->menu.xftdraw = XftDrawCreate(X_Dpy, sc->menu.win, visual, colormap);
+	if (sc->menu.xftdraw == NULL)
 		errx(1, "XftDrawCreate");
 
 	conf_grab_kbd(sc->rootwin);
