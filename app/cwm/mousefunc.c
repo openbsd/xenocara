@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: mousefunc.c,v 1.108 2016/09/29 00:21:55 okan Exp $
+ * $OpenBSD: mousefunc.c,v 1.109 2016/09/30 15:05:02 okan Exp $
  */
 
 #include <sys/types.h>
@@ -76,7 +76,7 @@ mousefunc_client_resize(struct client_ctx *cc, union arg *arg)
 	xu_ptr_setpos(cc->win, cc->geom.w, cc->geom.h);
 
 	for (;;) {
-		XMaskEvent(X_Dpy, MOUSEMASK, &ev);
+		XWindowEvent(X_Dpy, cc->win, MOUSEMASK, &ev);
 
 		switch (ev.type) {
 		case MotionNotify:
@@ -129,7 +129,7 @@ mousefunc_client_move(struct client_ctx *cc, union arg *arg)
 	xu_ptr_getpos(cc->win, &px, &py);
 
 	for (;;) {
-		XMaskEvent(X_Dpy, MOUSEMASK, &ev);
+		XWindowEvent(X_Dpy, cc->win, MOUSEMASK, &ev);
 
 		switch (ev.type) {
 		case MotionNotify:
