@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.224 2016/09/20 19:11:19 okan Exp $
+ * $OpenBSD: client.c,v 1.225 2016/09/30 20:55:54 okan Exp $
  */
 
 #include <sys/types.h>
@@ -75,8 +75,6 @@ client_init(Window win, struct screen_ctx *sc, int active)
 	cc->stackingorder = 0;
 	memset(&cc->hint, 0, sizeof(cc->hint));
 	memset(&cc->ch, 0, sizeof(cc->ch));
-	cc->ptr.x = -1;
-	cc->ptr.y = -1;
 
 	TAILQ_INIT(&cc->nameq);
 	client_setname(cc);
@@ -93,6 +91,9 @@ client_init(Window win, struct screen_ctx *sc, int active)
 	cc->geom.y = wattr.y;
 	cc->geom.w = wattr.width;
 	cc->geom.h = wattr.height;
+	cc->ptr.x = cc->geom.w / 2;
+	cc->ptr.y = cc->geom.h / 2;
+
 	cc->colormap = wattr.colormap;
 
 	if (wattr.map_state != IsViewable) {
@@ -468,18 +469,12 @@ client_config(struct client_ctx *cc)
 void
 client_ptrwarp(struct client_ctx *cc)
 {
-	int	 x = cc->ptr.x, y = cc->ptr.y;
-
-	if (x == -1 || y == -1) {
-		x = cc->geom.w / 2;
-		y = cc->geom.h / 2;
-	}
-
 	if (cc->flags & CLIENT_HIDDEN)
 		client_unhide(cc);
 	else
 		client_raise(cc);
-	xu_ptr_setpos(cc->win, x, y);
+
+	xu_ptr_setpos(cc->win, cc->ptr.x, cc->ptr.y);
 }
 
 void
@@ -492,8 +487,8 @@ client_ptrsave(struct client_ctx *cc)
 		cc->ptr.x = x;
 		cc->ptr.y = y;
 	} else {
-		cc->ptr.x = -1;
-		cc->ptr.y = -1;
+		cc->ptr.x = cc->geom.w / 2;
+		cc->ptr.y = cc->geom.h / 2;
 	}
 }
 
