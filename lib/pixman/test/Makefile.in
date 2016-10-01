@@ -74,26 +74,37 @@ AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
-am__EXEEXT_1 = prng-test$(EXEEXT) a1-trap-test$(EXEEXT) \
-	pdf-op-test$(EXEEXT) region-test$(EXEEXT) \
-	region-translate-test$(EXEEXT) combiner-test$(EXEEXT) \
-	pixel-test$(EXEEXT) fetch-test$(EXEEXT) rotate-test$(EXEEXT) \
-	oob-test$(EXEEXT) infinite-loop$(EXEEXT) trap-crasher$(EXEEXT) \
-	alpha-loop$(EXEEXT) thread-test$(EXEEXT) \
-	scaling-crash-test$(EXEEXT) scaling-helpers-test$(EXEEXT) \
-	gradient-crash-test$(EXEEXT) region-contains-test$(EXEEXT) \
-	alphamap$(EXEEXT) matrix-test$(EXEEXT) stress-test$(EXEEXT) \
-	composite-traps-test$(EXEEXT) blitters-test$(EXEEXT) \
-	glyph-test$(EXEEXT) scaling-test$(EXEEXT) affine-test$(EXEEXT) \
-	composite$(EXEEXT)
+am__EXEEXT_1 = oob-test$(EXEEXT) infinite-loop$(EXEEXT) \
+	trap-crasher$(EXEEXT) fence-image-self-test$(EXEEXT) \
+	region-translate-test$(EXEEXT) fetch-test$(EXEEXT) \
+	a1-trap-test$(EXEEXT) prng-test$(EXEEXT) \
+	radial-invalid$(EXEEXT) pdf-op-test$(EXEEXT) \
+	region-test$(EXEEXT) combiner-test$(EXEEXT) \
+	scaling-crash-test$(EXEEXT) alpha-loop$(EXEEXT) \
+	scaling-helpers-test$(EXEEXT) thread-test$(EXEEXT) \
+	rotate-test$(EXEEXT) alphamap$(EXEEXT) \
+	gradient-crash-test$(EXEEXT) pixel-test$(EXEEXT) \
+	matrix-test$(EXEEXT) composite-traps-test$(EXEEXT) \
+	region-contains-test$(EXEEXT) glyph-test$(EXEEXT) \
+	solid-test$(EXEEXT) stress-test$(EXEEXT) cover-test$(EXEEXT) \
+	blitters-test$(EXEEXT) affine-test$(EXEEXT) \
+	scaling-test$(EXEEXT) composite$(EXEEXT) \
+	tolerance-test$(EXEEXT)
 am__EXEEXT_2 = lowlevel-blt-bench$(EXEEXT) radial-perf-test$(EXEEXT) \
-	check-formats$(EXEEXT) scaling-bench$(EXEEXT)
+	check-formats$(EXEEXT) scaling-bench$(EXEEXT) \
+	affine-bench$(EXEEXT)
 PROGRAMS = $(noinst_PROGRAMS)
 a1_trap_test_SOURCES = a1-trap-test.c
 a1_trap_test_OBJECTS = a1-trap-test.$(OBJEXT)
 a1_trap_test_LDADD = $(LDADD)
 am__DEPENDENCIES_1 =
 a1_trap_test_DEPENDENCIES = libutils.la \
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
+affine_bench_SOURCES = affine-bench.c
+affine_bench_OBJECTS = affine-bench.$(OBJEXT)
+affine_bench_LDADD = $(LDADD)
+affine_bench_DEPENDENCIES = libutils.la \
 	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1)
 affine_test_SOURCES = affine-test.c
@@ -142,6 +153,18 @@ composite_traps_test_SOURCES = composite-traps-test.c
 composite_traps_test_OBJECTS = composite-traps-test.$(OBJEXT)
 composite_traps_test_LDADD = $(LDADD)
 composite_traps_test_DEPENDENCIES = libutils.la \
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
+cover_test_SOURCES = cover-test.c
+cover_test_OBJECTS = cover-test.$(OBJEXT)
+cover_test_LDADD = $(LDADD)
+cover_test_DEPENDENCIES = libutils.la \
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
+fence_image_self_test_SOURCES = fence-image-self-test.c
+fence_image_self_test_OBJECTS = fence-image-self-test.$(OBJEXT)
+fence_image_self_test_LDADD = $(LDADD)
+fence_image_self_test_DEPENDENCIES = libutils.la \
 	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1)
 fetch_test_SOURCES = fetch-test.c
@@ -204,6 +227,12 @@ prng_test_LDADD = $(LDADD)
 prng_test_DEPENDENCIES = libutils.la \
 	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1)
+radial_invalid_SOURCES = radial-invalid.c
+radial_invalid_OBJECTS = radial-invalid.$(OBJEXT)
+radial_invalid_LDADD = $(LDADD)
+radial_invalid_DEPENDENCIES = libutils.la \
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 radial_perf_test_SOURCES = radial-perf-test.c
 radial_perf_test_OBJECTS = radial-perf-test.$(OBJEXT)
 radial_perf_test_LDADD = $(LDADD)
@@ -258,6 +287,12 @@ scaling_test_LDADD = $(LDADD)
 scaling_test_DEPENDENCIES = libutils.la \
 	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1)
+solid_test_SOURCES = solid-test.c
+solid_test_OBJECTS = solid-test.$(OBJEXT)
+solid_test_LDADD = $(LDADD)
+solid_test_DEPENDENCIES = libutils.la \
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 stress_test_SOURCES = stress-test.c
 stress_test_OBJECTS = stress-test.$(OBJEXT)
 stress_test_LDADD = $(LDADD)
@@ -268,6 +303,12 @@ thread_test_SOURCES = thread-test.c
 thread_test_OBJECTS = thread-test.$(OBJEXT)
 thread_test_LDADD = $(LDADD)
 thread_test_DEPENDENCIES = libutils.la \
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
+tolerance_test_SOURCES = tolerance-test.c
+tolerance_test_OBJECTS = tolerance-test.$(OBJEXT)
+tolerance_test_LDADD = $(LDADD)
+tolerance_test_DEPENDENCIES = libutils.la \
 	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1)
 trap_crasher_SOURCES = trap-crasher.c
@@ -310,26 +351,30 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(libutils_la_SOURCES) a1-trap-test.c affine-test.c \
-	alpha-loop.c alphamap.c blitters-test.c check-formats.c \
-	combiner-test.c composite.c composite-traps-test.c \
+SOURCES = $(libutils_la_SOURCES) a1-trap-test.c affine-bench.c \
+	affine-test.c alpha-loop.c alphamap.c blitters-test.c \
+	check-formats.c combiner-test.c composite.c \
+	composite-traps-test.c cover-test.c fence-image-self-test.c \
 	fetch-test.c glyph-test.c gradient-crash-test.c \
 	infinite-loop.c lowlevel-blt-bench.c matrix-test.c oob-test.c \
-	pdf-op-test.c pixel-test.c prng-test.c radial-perf-test.c \
-	region-contains-test.c region-test.c region-translate-test.c \
-	rotate-test.c scaling-bench.c scaling-crash-test.c \
-	scaling-helpers-test.c scaling-test.c stress-test.c \
-	thread-test.c trap-crasher.c
-DIST_SOURCES = $(libutils_la_SOURCES) a1-trap-test.c affine-test.c \
-	alpha-loop.c alphamap.c blitters-test.c check-formats.c \
-	combiner-test.c composite.c composite-traps-test.c \
+	pdf-op-test.c pixel-test.c prng-test.c radial-invalid.c \
+	radial-perf-test.c region-contains-test.c region-test.c \
+	region-translate-test.c rotate-test.c scaling-bench.c \
+	scaling-crash-test.c scaling-helpers-test.c scaling-test.c \
+	solid-test.c stress-test.c thread-test.c tolerance-test.c \
+	trap-crasher.c
+DIST_SOURCES = $(libutils_la_SOURCES) a1-trap-test.c affine-bench.c \
+	affine-test.c alpha-loop.c alphamap.c blitters-test.c \
+	check-formats.c combiner-test.c composite.c \
+	composite-traps-test.c cover-test.c fence-image-self-test.c \
 	fetch-test.c glyph-test.c gradient-crash-test.c \
 	infinite-loop.c lowlevel-blt-bench.c matrix-test.c oob-test.c \
-	pdf-op-test.c pixel-test.c prng-test.c radial-perf-test.c \
-	region-contains-test.c region-test.c region-translate-test.c \
-	rotate-test.c scaling-bench.c scaling-crash-test.c \
-	scaling-helpers-test.c scaling-test.c stress-test.c \
-	thread-test.c trap-crasher.c
+	pdf-op-test.c pixel-test.c prng-test.c radial-invalid.c \
+	radial-perf-test.c region-contains-test.c region-test.c \
+	region-translate-test.c rotate-test.c scaling-bench.c \
+	scaling-crash-test.c scaling-helpers-test.c scaling-test.c \
+	solid-test.c stress-test.c thread-test.c tolerance-test.c \
+	trap-crasher.c
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -491,33 +536,38 @@ top_srcdir = @top_srcdir@
 
 # Tests (sorted by expected completion time)
 TESTPROGRAMS = \
-	prng-test		\
-	a1-trap-test		\
-	pdf-op-test		\
-	region-test		\
-	region-translate-test	\
-	combiner-test		\
-	pixel-test		\
-	fetch-test		\
-	rotate-test		\
-	oob-test		\
-	infinite-loop		\
-	trap-crasher		\
-	alpha-loop		\
-	thread-test		\
-	scaling-crash-test	\
-	scaling-helpers-test	\
-	gradient-crash-test	\
-	region-contains-test	\
-	alphamap		\
-	matrix-test		\
-	stress-test		\
-	composite-traps-test	\
-	blitters-test		\
-	glyph-test		\
-	scaling-test		\
-	affine-test		\
-	composite		\
+	oob-test		      \
+	infinite-loop		      \
+	trap-crasher		      \
+	fence-image-self-test	      \
+	region-translate-test	      \
+	fetch-test		      \
+	a1-trap-test		      \
+	prng-test		      \
+	radial-invalid		      \
+	pdf-op-test		      \
+	region-test		      \
+	combiner-test		      \
+	scaling-crash-test	      \
+	alpha-loop		      \
+	scaling-helpers-test	      \
+	thread-test		      \
+	rotate-test		      \
+	alphamap		      \
+	gradient-crash-test	      \
+	pixel-test		      \
+	matrix-test		      \
+	composite-traps-test	      \
+	region-contains-test	      \
+	glyph-test		      \
+	solid-test		      \
+	stress-test		      \
+	cover-test		      \
+	blitters-test		      \
+	affine-test		      \
+	scaling-test		      \
+	composite		      \
+	tolerance-test		      \
 	$(NULL)
 
 
@@ -527,6 +577,7 @@ OTHERPROGRAMS = \
 	radial-perf-test	\
         check-formats           \
 	scaling-bench		\
+	affine-bench            \
 	$(NULL)
 
 
@@ -607,6 +658,9 @@ clean-noinstPROGRAMS:
 a1-trap-test$(EXEEXT): $(a1_trap_test_OBJECTS) $(a1_trap_test_DEPENDENCIES) $(EXTRA_a1_trap_test_DEPENDENCIES) 
 	@rm -f a1-trap-test$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(a1_trap_test_OBJECTS) $(a1_trap_test_LDADD) $(LIBS)
+affine-bench$(EXEEXT): $(affine_bench_OBJECTS) $(affine_bench_DEPENDENCIES) $(EXTRA_affine_bench_DEPENDENCIES) 
+	@rm -f affine-bench$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(affine_bench_OBJECTS) $(affine_bench_LDADD) $(LIBS)
 affine-test$(EXEEXT): $(affine_test_OBJECTS) $(affine_test_DEPENDENCIES) $(EXTRA_affine_test_DEPENDENCIES) 
 	@rm -f affine-test$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(affine_test_OBJECTS) $(affine_test_LDADD) $(LIBS)
@@ -631,6 +685,12 @@ composite$(EXEEXT): $(composite_OBJECTS) $(composite_DEPENDENCIES) $(EXTRA_compo
 composite-traps-test$(EXEEXT): $(composite_traps_test_OBJECTS) $(composite_traps_test_DEPENDENCIES) $(EXTRA_composite_traps_test_DEPENDENCIES) 
 	@rm -f composite-traps-test$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(composite_traps_test_OBJECTS) $(composite_traps_test_LDADD) $(LIBS)
+cover-test$(EXEEXT): $(cover_test_OBJECTS) $(cover_test_DEPENDENCIES) $(EXTRA_cover_test_DEPENDENCIES) 
+	@rm -f cover-test$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(cover_test_OBJECTS) $(cover_test_LDADD) $(LIBS)
+fence-image-self-test$(EXEEXT): $(fence_image_self_test_OBJECTS) $(fence_image_self_test_DEPENDENCIES) $(EXTRA_fence_image_self_test_DEPENDENCIES) 
+	@rm -f fence-image-self-test$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(fence_image_self_test_OBJECTS) $(fence_image_self_test_LDADD) $(LIBS)
 fetch-test$(EXEEXT): $(fetch_test_OBJECTS) $(fetch_test_DEPENDENCIES) $(EXTRA_fetch_test_DEPENDENCIES) 
 	@rm -f fetch-test$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(fetch_test_OBJECTS) $(fetch_test_LDADD) $(LIBS)
@@ -661,6 +721,9 @@ pixel-test$(EXEEXT): $(pixel_test_OBJECTS) $(pixel_test_DEPENDENCIES) $(EXTRA_pi
 prng-test$(EXEEXT): $(prng_test_OBJECTS) $(prng_test_DEPENDENCIES) $(EXTRA_prng_test_DEPENDENCIES) 
 	@rm -f prng-test$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(prng_test_OBJECTS) $(prng_test_LDADD) $(LIBS)
+radial-invalid$(EXEEXT): $(radial_invalid_OBJECTS) $(radial_invalid_DEPENDENCIES) $(EXTRA_radial_invalid_DEPENDENCIES) 
+	@rm -f radial-invalid$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(radial_invalid_OBJECTS) $(radial_invalid_LDADD) $(LIBS)
 radial-perf-test$(EXEEXT): $(radial_perf_test_OBJECTS) $(radial_perf_test_DEPENDENCIES) $(EXTRA_radial_perf_test_DEPENDENCIES) 
 	@rm -f radial-perf-test$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(radial_perf_test_OBJECTS) $(radial_perf_test_LDADD) $(LIBS)
@@ -688,12 +751,18 @@ scaling-helpers-test$(EXEEXT): $(scaling_helpers_test_OBJECTS) $(scaling_helpers
 scaling-test$(EXEEXT): $(scaling_test_OBJECTS) $(scaling_test_DEPENDENCIES) $(EXTRA_scaling_test_DEPENDENCIES) 
 	@rm -f scaling-test$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(scaling_test_OBJECTS) $(scaling_test_LDADD) $(LIBS)
+solid-test$(EXEEXT): $(solid_test_OBJECTS) $(solid_test_DEPENDENCIES) $(EXTRA_solid_test_DEPENDENCIES) 
+	@rm -f solid-test$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(solid_test_OBJECTS) $(solid_test_LDADD) $(LIBS)
 stress-test$(EXEEXT): $(stress_test_OBJECTS) $(stress_test_DEPENDENCIES) $(EXTRA_stress_test_DEPENDENCIES) 
 	@rm -f stress-test$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(stress_test_OBJECTS) $(stress_test_LDADD) $(LIBS)
 thread-test$(EXEEXT): $(thread_test_OBJECTS) $(thread_test_DEPENDENCIES) $(EXTRA_thread_test_DEPENDENCIES) 
 	@rm -f thread-test$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(thread_test_OBJECTS) $(thread_test_LDADD) $(LIBS)
+tolerance-test$(EXEEXT): $(tolerance_test_OBJECTS) $(tolerance_test_DEPENDENCIES) $(EXTRA_tolerance_test_DEPENDENCIES) 
+	@rm -f tolerance-test$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(tolerance_test_OBJECTS) $(tolerance_test_LDADD) $(LIBS)
 trap-crasher$(EXEEXT): $(trap_crasher_OBJECTS) $(trap_crasher_DEPENDENCIES) $(EXTRA_trap_crasher_DEPENDENCIES) 
 	@rm -f trap-crasher$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(trap_crasher_OBJECTS) $(trap_crasher_LDADD) $(LIBS)
@@ -705,6 +774,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/a1-trap-test.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/affine-bench.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/affine-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/alpha-loop.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/alphamap.Po@am__quote@
@@ -713,6 +783,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/combiner-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/composite-traps-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/composite.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cover-test.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fence-image-self-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fetch-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glyph-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gradient-crash-test.Po@am__quote@
@@ -723,6 +795,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdf-op-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixel-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/prng-test.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radial-invalid.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radial-perf-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/region-contains-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/region-test.Po@am__quote@
@@ -732,8 +805,10 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/scaling-crash-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/scaling-helpers-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/scaling-test.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/solid-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stress-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/thread-test.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tolerance-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/trap-crasher.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/utils-prng.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/utils.Plo@am__quote@

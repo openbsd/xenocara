@@ -86,6 +86,17 @@ is_little_endian (void)
 void
 image_endian_swap (pixman_image_t *img);
 
+#if defined (HAVE_MPROTECT) && defined (HAVE_GETPAGESIZE) && \
+    defined (HAVE_SYS_MMAN_H) && defined (HAVE_MMAP)
+/* fence_malloc and friends have working fence implementation.
+ * Without this, fence_malloc still allocs but does not catch
+ * out-of-bounds accesses.
+ */
+#define FENCE_MALLOC_ACTIVE 1
+#else
+#define FENCE_MALLOC_ACTIVE 0
+#endif
+
 /* Allocate memory that is bounded by protected pages,
  * so that out-of-bounds access will cause segfaults
  */
@@ -94,6 +105,16 @@ fence_malloc (int64_t len);
 
 void
 fence_free (void *data);
+
+pixman_image_t *
+fence_image_create_bits (pixman_format_code_t format,
+                         int min_width,
+                         int height,
+                         pixman_bool_t stride_fence);
+
+/* Return the page size if FENCE_MALLOC_ACTIVE, or zero otherwise */
+unsigned long
+fence_get_page_size ();
 
 /* Generate n_bytes random bytes in fence_malloced memory */
 uint8_t *
@@ -120,6 +141,7 @@ fail_after (int seconds, const char *msg);
 
 /* If possible, enable traps for floating point exceptions */
 void enable_divbyzero_exceptions(void);
+void enable_invalid_exceptions(void);
 
 /* Converts a8r8g8b8 pixels to pixels that
  *  - are not premultiplied,
@@ -185,6 +207,18 @@ convert_linear_to_srgb (double component);
 
 void
 initialize_palette (pixman_indexed_t *palette, uint32_t depth, int is_rgb);
+
+pixman_format_code_t
+format_from_string (const char *s);
+
+void
+list_formats (void);
+
+void
+list_operators (void);
+
+pixman_op_t
+operator_from_string (const char *s);
 
 const char *
 operator_name (pixman_op_t op);

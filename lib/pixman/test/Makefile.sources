@@ -1,32 +1,37 @@
 # Tests (sorted by expected completion time)
-TESTPROGRAMS =			\
-	prng-test		\
-	a1-trap-test		\
-	pdf-op-test		\
-	region-test		\
-	region-translate-test	\
-	combiner-test		\
-	pixel-test		\
-	fetch-test		\
-	rotate-test		\
-	oob-test		\
-	infinite-loop		\
-	trap-crasher		\
-	alpha-loop		\
-	thread-test		\
-	scaling-crash-test	\
-	scaling-helpers-test	\
-	gradient-crash-test	\
-	region-contains-test	\
-	alphamap		\
-	matrix-test		\
-	stress-test		\
-	composite-traps-test	\
-	blitters-test		\
-	glyph-test		\
-	scaling-test		\
-	affine-test		\
-	composite		\
+TESTPROGRAMS =			      \
+	oob-test		      \
+	infinite-loop		      \
+	trap-crasher		      \
+	fence-image-self-test	      \
+	region-translate-test	      \
+	fetch-test		      \
+	a1-trap-test		      \
+	prng-test		      \
+	radial-invalid		      \
+	pdf-op-test		      \
+	region-test		      \
+	combiner-test		      \
+	scaling-crash-test	      \
+	alpha-loop		      \
+	scaling-helpers-test	      \
+	thread-test		      \
+	rotate-test		      \
+	alphamap		      \
+	gradient-crash-test	      \
+	pixel-test		      \
+	matrix-test		      \
+	composite-traps-test	      \
+	region-contains-test	      \
+	glyph-test		      \
+	solid-test		      \
+	stress-test		      \
+	cover-test		      \
+	blitters-test		      \
+	affine-test		      \
+	scaling-test		      \
+	composite		      \
+	tolerance-test		      \
 	$(NULL)
 
 # Other programs
@@ -35,6 +40,7 @@ OTHERPROGRAMS =                 \
 	radial-perf-test	\
         check-formats           \
 	scaling-bench		\
+	affine-bench            \
 	$(NULL)
 
 # Utility functions

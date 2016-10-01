@@ -55,7 +55,7 @@ uint32_t *dst;
 uint32_t *src;
 uint32_t *mask;
 
-double bandwidth = 0;
+double bandwidth = 0.0;
 
 double
 bench_memcpy ()
@@ -90,6 +90,7 @@ bench_memcpy ()
 
 static pixman_bool_t use_scaling = FALSE;
 static pixman_filter_t filter = PIXMAN_FILTER_NEAREST;
+static pixman_bool_t use_csv_output = FALSE;
 
 /* nearly 1x scale factor */
 static pixman_transform_t m =
@@ -165,7 +166,7 @@ call_func (pixman_composite_func_t func,
     func (0, &info);
 }
 
-void
+double
 noinline
 bench_L  (pixman_op_t              op,
           pixman_image_t *         src_img,
@@ -204,9 +205,11 @@ bench_L  (pixman_op_t              op,
 	call_func (func, op, src_img, mask_img, dst_img, x, 0, x, 0, 63 - x, 0, width, lines_count);
     }
     qx = q;
+
+    return (double)n * lines_count * width;
 }
 
-void
+double
 noinline
 bench_M (pixman_op_t              op,
          pixman_image_t *         src_img,
@@ -224,6 +227,8 @@ bench_M (pixman_op_t              op,
 	    x = 0;
 	call_func (func, op, src_img, mask_img, dst_img, x, 0, x, 0, 1, 0, WIDTH - 64, HEIGHT);
     }
+
+    return (double)n * (WIDTH - 64) * HEIGHT;
 }
 
 double
@@ -366,15 +371,24 @@ bench_RT (pixman_op_t              op,
     return pix_cnt;
 }
 
+static double
+Mpx_per_sec (double pix_cnt, double t1, double t2, double t3)
+{
+    double overhead = t2 - t1;
+    double testtime = t3 - t2;
+
+    return pix_cnt / (testtime - overhead) / 1e6;
+}
+
 void
-bench_composite (char * testname,
-                 int    src_fmt,
-                 int    src_flags,
-                 int    op,
-                 int    mask_fmt,
-                 int    mask_flags,
-                 int    dst_fmt,
-                 double npix)
+bench_composite (const char *testname,
+                 int         src_fmt,
+                 int         src_flags,
+                 int         op,
+                 int         mask_fmt,
+                 int         mask_flags,
+                 int         dst_fmt,
+                 double      npix)
 {
     pixman_image_t *                src_img;
     pixman_image_t *                dst_img;
@@ -461,9 +475,9 @@ bench_composite (char * testname,
                                          dst,
                                          XWIDTH * 4);
 
-
-    printf ("%24s %c", testname, func != pixman_image_composite_wrapper ?
-            '-' : '=');
+    if (!use_csv_output)
+        printf ("%24s %c", testname, func != pixman_image_composite_wrapper ?
+                '-' : '=');
 
     memcpy (dst, src, BUFSIZE);
     memcpy (src, dst, BUFSIZE);
@@ -476,13 +490,15 @@ bench_composite (char * testname,
     n = 1 + npix / (l1test_width * 8);
     t1 = gettime ();
 #if EXCLUDE_OVERHEAD
-    bench_L (op, src_img, mask_img, dst_img, n, pixman_image_composite_empty, l1test_width, 1);
+    pix_cnt = bench_L (op, src_img, mask_img, dst_img, n, pixman_image_composite_empty, l1test_width, 1);
 #endif
     t2 = gettime ();
-    bench_L (op, src_img, mask_img, dst_img, n, func, l1test_width, 1);
+    pix_cnt = bench_L (op, src_img, mask_img, dst_img, n, func, l1test_width, 1);
     t3 = gettime ();
-    printf ("  L1:%7.2f", (double)n * l1test_width * 1 /
-            ((t3 - t2) - (t2 - t1)) / 1000000.);
+    if (use_csv_output)
+        printf ("%g,", Mpx_per_sec (pix_cnt, t1, t2, t3));
+    else
+        printf ("  L1:%7.2f", Mpx_per_sec (pix_cnt, t1, t2, t3));
     fflush (stdout);
 
     memcpy (dst, src, BUFSIZE);
@@ -495,13 +511,15 @@ bench_composite (char * testname,
     n = 1 + npix / (l1test_width * nlines);
     t1 = gettime ();
 #if EXCLUDE_OVERHEAD
-    bench_L (op, src_img, mask_img, dst_img, n, pixman_image_composite_empty, l1test_width, nlines);
+    pix_cnt = bench_L (op, src_img, mask_img, dst_img, n, pixman_image_composite_empty, l1test_width, nlines);
 #endif
     t2 = gettime ();
-    bench_L (op, src_img, mask_img, dst_img, n, func, l1test_width, nlines);
+    pix_cnt = bench_L (op, src_img, mask_img, dst_img, n, func, l1test_width, nlines);
     t3 = gettime ();
-    printf ("  L2:%7.2f", (double)n * l1test_width * nlines /
-            ((t3 - t2) - (t2 - t1)) / 1000000.);
+    if (use_csv_output)
+        printf ("%g,", Mpx_per_sec (pix_cnt, t1, t2, t3));
+    else
+        printf ("  L2:%7.2f", Mpx_per_sec (pix_cnt, t1, t2, t3));
     fflush (stdout);
 
     memcpy (dst, src, BUFSIZE);
@@ -510,14 +528,16 @@ bench_composite (char * testname,
     n = 1 + npix / (WIDTH * HEIGHT);
     t1 = gettime ();
 #if EXCLUDE_OVERHEAD
-    bench_M (op, src_img, mask_img, dst_img, n, pixman_image_composite_empty);
+    pix_cnt = bench_M (op, src_img, mask_img, dst_img, n, pixman_image_composite_empty);
 #endif
     t2 = gettime ();
-    bench_M (op, src_img, mask_img, dst_img, n, func);
+    pix_cnt = bench_M (op, src_img, mask_img, dst_img, n, func);
     t3 = gettime ();
-    printf ("  M:%6.2f (%6.2f%%)",
-        ((double)n * (WIDTH - 64) * HEIGHT / ((t3 - t2) - (t2 - t1))) / 1000000.,
-        ((double)n * (WIDTH - 64) * HEIGHT / ((t3 - t2) - (t2 - t1)) * bytes_per_pix) * (100.0 / bandwidth) );
+    if (use_csv_output)
+        printf ("%g,", Mpx_per_sec (pix_cnt, t1, t2, t3));
+    else
+        printf ("  M:%6.2f (%6.2f%%)", Mpx_per_sec (pix_cnt, t1, t2, t3),
+                (pix_cnt / ((t3 - t2) - (t2 - t1)) * bytes_per_pix) * (100.0 / bandwidth) );
     fflush (stdout);
 
     memcpy (dst, src, BUFSIZE);
@@ -531,7 +551,10 @@ bench_composite (char * testname,
     t2 = gettime ();
     pix_cnt = bench_HT (op, src_img, mask_img, dst_img, n, func);
     t3 = gettime ();
-    printf ("  HT:%6.2f", (double)pix_cnt / ((t3 - t2) - (t2 - t1)) / 1000000.);
+    if (use_csv_output)
+        printf ("%g,", Mpx_per_sec (pix_cnt, t1, t2, t3));
+    else
+        printf ("  HT:%6.2f", Mpx_per_sec (pix_cnt, t1, t2, t3));
     fflush (stdout);
 
     memcpy (dst, src, BUFSIZE);
@@ -545,7 +568,10 @@ bench_composite (char * testname,
     t2 = gettime ();
     pix_cnt = bench_VT (op, src_img, mask_img, dst_img, n, func);
     t3 = gettime ();
-    printf ("  VT:%6.2f", (double)pix_cnt / ((t3 - t2) - (t2 - t1)) / 1000000.);
+    if (use_csv_output)
+        printf ("%g,", Mpx_per_sec (pix_cnt, t1, t2, t3));
+    else
+        printf ("  VT:%6.2f", Mpx_per_sec (pix_cnt, t1, t2, t3));
     fflush (stdout);
 
     memcpy (dst, src, BUFSIZE);
@@ -559,7 +585,10 @@ bench_composite (char * testname,
     t2 = gettime ();
     pix_cnt = bench_R (op, src_img, mask_img, dst_img, n, func, WIDTH, HEIGHT);
     t3 = gettime ();
-    printf ("  R:%6.2f", (double)pix_cnt / ((t3 - t2) - (t2 - t1)) / 1000000.);
+    if (use_csv_output)
+        printf ("%g,", Mpx_per_sec (pix_cnt, t1, t2, t3));
+    else
+        printf ("  R:%6.2f", Mpx_per_sec (pix_cnt, t1, t2, t3));
     fflush (stdout);
 
     memcpy (dst, src, BUFSIZE);
@@ -573,7 +602,10 @@ bench_composite (char * testname,
     t2 = gettime ();
     pix_cnt = bench_RT (op, src_img, mask_img, dst_img, n, func, WIDTH, HEIGHT);
     t3 = gettime ();
-    printf ("  RT:%6.2f (%4.0fKops/s)\n", (double)pix_cnt / ((t3 - t2) - (t2 - t1)) / 1000000., (double) n / ((t3 - t2) * 1000));
+    if (use_csv_output)
+        printf ("%g\n", Mpx_per_sec (pix_cnt, t1, t2, t3));
+    else
+        printf ("  RT:%6.2f (%4.0fKops/s)\n", Mpx_per_sec (pix_cnt, t1, t2, t3), (double) n / ((t3 - t2) * 1000));
 
     if (mask_img) {
 	pixman_image_unref (mask_img);
@@ -587,17 +619,20 @@ bench_composite (char * testname,
 
 #define PIXMAN_OP_OUT_REV (PIXMAN_OP_OUT_REVERSE)
 
-struct
+struct test_entry
 {
-    char *testname;
-    int   src_fmt;
-    int   src_flags;
-    int   op;
-    int   mask_fmt;
-    int   mask_flags;
-    int   dst_fmt;
-}
-tests_tbl[] =
+    const char *testname;
+    int         src_fmt;
+    int         src_flags;
+    int         op;
+    int         mask_fmt;
+    int         mask_flags;
+    int         dst_fmt;
+};
+
+typedef struct test_entry test_entry_t;
+
+static const test_entry_t tests_tbl[] =
 {
     { "add_8_8_8",             PIXMAN_a8,          0, PIXMAN_OP_ADD,     PIXMAN_a8,       0, PIXMAN_a8 },
     { "add_n_8_8",             PIXMAN_a8r8g8b8,    1, PIXMAN_OP_ADD,     PIXMAN_a8,       0, PIXMAN_a8 },
@@ -713,51 +748,292 @@ tests_tbl[] =
     { "outrev_n_8888_1555_ca", PIXMAN_a8r8g8b8,    1, PIXMAN_OP_OUT_REV, PIXMAN_a8r8g8b8, 2, PIXMAN_a1r5g5b5 },
     { "outrev_n_8888_x888_ca", PIXMAN_a8r8g8b8,    1, PIXMAN_OP_OUT_REV, PIXMAN_a8r8g8b8, 2, PIXMAN_x8r8g8b8 },
     { "outrev_n_8888_8888_ca", PIXMAN_a8r8g8b8,    1, PIXMAN_OP_OUT_REV, PIXMAN_a8r8g8b8, 2, PIXMAN_a8r8g8b8 },
-    { "over_reverse_n_8888",   PIXMAN_a8r8g8b8,    0, PIXMAN_OP_OVER_REVERSE, PIXMAN_null, 0, PIXMAN_a8r8g8b8 },
+    { "over_reverse_n_8888",   PIXMAN_a8r8g8b8,    1, PIXMAN_OP_OVER_REVERSE, PIXMAN_null, 0, PIXMAN_a8r8g8b8 },
+    { "in_reverse_8888_8888",  PIXMAN_a8r8g8b8,    0, PIXMAN_OP_IN_REVERSE, PIXMAN_null,  0, PIXMAN_a8r8g8b8 },
     { "pixbuf",                PIXMAN_x8b8g8r8,    0, PIXMAN_OP_SRC,     PIXMAN_a8b8g8r8, 0, PIXMAN_a8r8g8b8 },
     { "rpixbuf",               PIXMAN_x8b8g8r8,    0, PIXMAN_OP_SRC,     PIXMAN_a8b8g8r8, 0, PIXMAN_a8b8g8r8 },
 };
 
-int
-main (int argc, char *argv[])
+static const test_entry_t special_patterns[] =
 {
-    double x;
+    { "add_n_2x10",            PIXMAN_a2r10g10b10, 1, PIXMAN_OP_ADD,     PIXMAN_null,     0, PIXMAN_x2r10g10b10 },
+    { "add_n_2a10",            PIXMAN_a2r10g10b10, 1, PIXMAN_OP_ADD,     PIXMAN_null,     0, PIXMAN_a2r10g10b10 },
+    { "src_n_2x10",            PIXMAN_a2r10g10b10, 1, PIXMAN_OP_SRC,     PIXMAN_null,     0, PIXMAN_x2r10g10b10 },
+    { "src_n_2a10",            PIXMAN_a2r10g10b10, 1, PIXMAN_OP_SRC,     PIXMAN_null,     0, PIXMAN_a2r10g10b10 },
+    { "src_0888_8888_rev",     PIXMAN_b8g8r8,      0, PIXMAN_OP_SRC,     PIXMAN_null,     0, PIXMAN_x8r8g8b8 },
+    { "src_0888_0565_rev",     PIXMAN_b8g8r8,      0, PIXMAN_OP_SRC,     PIXMAN_null,     0, PIXMAN_r5g6b5 },
+    { "src_n_8",               PIXMAN_a8,          1, PIXMAN_OP_SRC,     PIXMAN_null,     0, PIXMAN_a8 },
+    { "pixbuf",                PIXMAN_x8b8g8r8,    0, PIXMAN_OP_SRC,     PIXMAN_a8b8g8r8, 0, PIXMAN_a8r8g8b8 },
+    { "rpixbuf",               PIXMAN_x8b8g8r8,    0, PIXMAN_OP_SRC,     PIXMAN_a8b8g8r8, 0, PIXMAN_a8b8g8r8 },
+};
+
+/* Returns the sub-string's end pointer in string. */
+static const char *
+copy_sub_string (char       *buf,
+                 const char *string,
+                 const char *scan_from,
+                 const char *end)
+{
+    const char *delim;
+    size_t n;
+
+    delim = strchr (scan_from, '_');
+    if (!delim)
+        delim = end;
+
+    n = delim - string;
+    strncpy(buf, string, n);
+    buf[n] = '\0';
+
+    return delim;
+}
+
+static pixman_op_t
+parse_longest_operator (char *buf, const char **strp, const char *end)
+{
+    const char *p = *strp;
+    const char *sub_end;
+    const char *best_end = p;
+    pixman_op_t best_op = PIXMAN_OP_NONE;
+    pixman_op_t op;
+
+    while (p < end)
+    {
+        sub_end = copy_sub_string (buf, *strp, p, end);
+        op = operator_from_string (buf);
+        p = sub_end + 1;
+
+        if (op != PIXMAN_OP_NONE)
+        {
+            best_end = p;
+            best_op = op;
+        }
+    }
+
+    *strp = best_end;
+    return best_op;
+}
+
+static pixman_format_code_t
+parse_format (char *buf, const char **p, const char *end)
+{
+    pixman_format_code_t format;
+    const char *delim;
+
+    if (*p >= end)
+        return PIXMAN_null;
+
+    delim = copy_sub_string (buf, *p, *p, end);
+    format = format_from_string (buf);
+
+    if (format != PIXMAN_null)
+        *p = delim + 1;
+
+    return format;
+}
+
+static int
+parse_test_pattern (test_entry_t *test, const char *pattern)
+{
+    const char *p = pattern;
+    const char *end = pattern + strlen (pattern);
+    char buf[1024];
+    pixman_format_code_t format[3];
     int i;
-    const char *pattern = NULL;
-    for (i = 1; i < argc; i++)
+
+    if (strlen (pattern) > sizeof (buf) - 1)
+        return -1;
+
+    /* Special cases that the parser cannot produce. */
+    for (i = 0; i < ARRAY_LENGTH (special_patterns); i++)
     {
-	if (argv[i][0] == '-')
-	{
-	    if (strchr (argv[i] + 1, 'b'))
-	    {
-		use_scaling = TRUE;
-		filter = PIXMAN_FILTER_BILINEAR;
-	    }
-	    else if (strchr (argv[i] + 1, 'n'))
-	    {
-		use_scaling = TRUE;
-		filter = PIXMAN_FILTER_NEAREST;
-	    }
-	}
-	else
-	{
-	    pattern = argv[i];
-	}
+        if (strcmp (pattern, special_patterns[i].testname) == 0)
+        {
+            *test = special_patterns[i];
+            return 0;
+        }
     }
 
-    if (!pattern)
+    test->testname = pattern;
+
+    /* Extract operator, may contain delimiters,
+     * so take the longest string that matches.
+     */
+    test->op = parse_longest_operator (buf, &p, end);
+    if (test->op == PIXMAN_OP_NONE)
+        return -1;
+
+    /* extract up to three pixel formats */
+    format[0] = parse_format (buf, &p, end);
+    format[1] = parse_format (buf, &p, end);
+    format[2] = parse_format (buf, &p, end);
+
+    if (format[0] == PIXMAN_null || format[1] == PIXMAN_null)
+        return -1;
+
+    /* recognize CA flag */
+    test->mask_flags = 0;
+    if (p < end)
     {
-	printf ("Usage: lowlevel-blt-bench [-b] [-n] pattern\n");
-	printf ("  -n : benchmark nearest scaling\n");
-	printf ("  -b : benchmark bilinear scaling\n");
-	return 1;
+        if (strcmp (p, "ca") == 0)
+            test->mask_flags |= CA_FLAG;
+        else
+            return -1; /* trailing garbage */
     }
 
-    src = aligned_malloc (4096, BUFSIZE * 3);
-    memset (src, 0xCC, BUFSIZE * 3);
-    dst = src + (BUFSIZE / 4);
-    mask = dst + (BUFSIZE / 4);
+    test->src_fmt = format[0];
+    if (format[2] == PIXMAN_null)
+    {
+        test->mask_fmt = PIXMAN_null;
+        test->dst_fmt = format[1];
+    }
+    else
+    {
+        test->mask_fmt = format[1];
+        test->dst_fmt = format[2];
+    }
 
+    test->src_flags = 0;
+    if (test->src_fmt == PIXMAN_solid)
+    {
+        test->src_fmt = PIXMAN_a8r8g8b8;
+        test->src_flags |= SOLID_FLAG;
+    }
+
+    if (test->mask_fmt == PIXMAN_solid)
+    {
+        if (test->mask_flags & CA_FLAG)
+            test->mask_fmt = PIXMAN_a8r8g8b8;
+        else
+            test->mask_fmt = PIXMAN_a8;
+
+        test->mask_flags |= SOLID_FLAG;
+    }
+
+    return 0;
+}
+
+static int
+check_int (int got, int expected, const char *name, const char *field)
+{
+    if (got == expected)
+        return 0;
+
+    printf ("%s: %s failure: expected %d, got %d.\n",
+            name, field, expected, got);
+
+    return 1;
+}
+
+static int
+check_format (int got, int expected, const char *name, const char *field)
+{
+    if (got == expected)
+        return 0;
+
+    printf ("%s: %s failure: expected %s (%#x), got %s (%#x).\n",
+            name, field,
+            format_name (expected), expected,
+            format_name (got), got);
+
+    return 1;
+}
+
+static void
+parser_self_test (void)
+{
+    const test_entry_t *ent;
+    test_entry_t test;
+    int fails = 0;
+    int i;
+
+    for (i = 0; i < ARRAY_LENGTH (tests_tbl); i++)
+    {
+        ent = &tests_tbl[i];
+
+        if (parse_test_pattern (&test, ent->testname) < 0)
+        {
+            printf ("parsing failed for '%s'\n", ent->testname);
+            fails++;
+            continue;
+        }
+
+        fails += check_format (test.src_fmt, ent->src_fmt,
+                               ent->testname, "src_fmt");
+        fails += check_format (test.mask_fmt, ent->mask_fmt,
+                               ent->testname, "mask_fmt");
+        fails += check_format (test.dst_fmt, ent->dst_fmt,
+                               ent->testname, "dst_fmt");
+        fails += check_int    (test.src_flags, ent->src_flags,
+                               ent->testname, "src_flags");
+        fails += check_int    (test.mask_flags, ent->mask_flags,
+                               ent->testname, "mask_flags");
+        fails += check_int    (test.op, ent->op, ent->testname, "op");
+    }
+
+    if (fails)
+    {
+        printf ("Parser self-test failed.\n");
+        exit (EXIT_FAILURE);
+    }
+
+    if (!use_csv_output)
+        printf ("Parser self-test complete.\n");
+}
+
+static void
+print_test_details (const test_entry_t *test)
+{
+    printf ("%s: %s, src %s%s, mask %s%s%s, dst %s\n",
+            test->testname,
+            operator_name (test->op),
+            format_name (test->src_fmt),
+            test->src_flags & SOLID_FLAG ? " solid" : "",
+            format_name (test->mask_fmt),
+            test->mask_flags & SOLID_FLAG ? " solid" : "",
+            test->mask_flags & CA_FLAG ? " CA" : "",
+            format_name (test->dst_fmt));
+}
+
+static void
+run_one_test (const char *pattern, double bandwidth_, pixman_bool_t prdetails)
+{
+    test_entry_t test;
+
+    if (parse_test_pattern (&test, pattern) < 0)
+    {
+        printf ("Error: Could not parse the test pattern '%s'.\n", pattern);
+        return;
+    }
+
+    if (prdetails)
+    {
+        print_test_details (&test);
+        printf ("---\n");
+    }
+
+    bench_composite (pattern,
+                     test.src_fmt,
+                     test.src_flags,
+                     test.op,
+                     test.mask_fmt,
+                     test.mask_flags,
+                     test.dst_fmt,
+                     bandwidth_ / 8);
+}
+
+static void
+run_default_tests (double bandwidth_)
+{
+    int i;
+
+    for (i = 0; i < ARRAY_LENGTH (tests_tbl); i++)
+        run_one_test (tests_tbl[i].testname, bandwidth_, FALSE);
+}
+
+static void
+print_explanation (void)
+{
     printf ("Benchmark for a set of most commonly used functions\n");
     printf ("---\n");
     printf ("All results are presented in millions of pixels per second\n");
@@ -785,9 +1061,14 @@ main (int argc, char *argv[])
     printf ("RT  - as R, but %dx%d average sized rectangles are copied\n",
             TINYWIDTH, TINYWIDTH);
     printf ("---\n");
-    bandwidth = x = bench_memcpy ();
+}
+
+static void
+print_speed_scaling (double bw)
+{
     printf ("reference memcpy speed = %.1fMB/s (%.1fMP/s for 32bpp fills)\n",
-            x / 1000000., x / 4000000);
+            bw / 1000000., bw / 4000000);
+
     if (use_scaling)
     {
 	printf ("---\n");
@@ -798,22 +1079,84 @@ main (int argc, char *argv[])
 	else
 	    printf ("UNKNOWN scaling\n");
     }
-    printf ("---\n");
 
-    for (i = 0; i < ARRAY_LENGTH (tests_tbl); i++)
+    printf ("---\n");
+}
+
+static void
+usage (const char *progname)
+{
+    printf ("Usage: %s [-b] [-n] [-c] [-m M] pattern\n", progname);
+    printf ("  -n : benchmark nearest scaling\n");
+    printf ("  -b : benchmark bilinear scaling\n");
+    printf ("  -c : print output as CSV data\n");
+    printf ("  -m M : set reference memcpy speed to M MB/s instead of measuring it\n");
+}
+
+int
+main (int argc, char *argv[])
+{
+    int i;
+    const char *pattern = NULL;
+
+    for (i = 1; i < argc; i++)
     {
-	if (strcmp (pattern, "all") == 0 || strcmp (tests_tbl[i].testname, pattern) == 0)
+	if (argv[i][0] == '-')
 	{
-	    bench_composite (tests_tbl[i].testname,
-			     tests_tbl[i].src_fmt,
-			     tests_tbl[i].src_flags,
-			     tests_tbl[i].op,
-			     tests_tbl[i].mask_fmt,
-			     tests_tbl[i].mask_flags,
-			     tests_tbl[i].dst_fmt,
-			     bandwidth/8);
+	    if (strchr (argv[i] + 1, 'b'))
+	    {
+		use_scaling = TRUE;
+		filter = PIXMAN_FILTER_BILINEAR;
+	    }
+	    else if (strchr (argv[i] + 1, 'n'))
+	    {
+		use_scaling = TRUE;
+		filter = PIXMAN_FILTER_NEAREST;
+	    }
+
+	    if (strchr (argv[i] + 1, 'c'))
+		use_csv_output = TRUE;
+
+	    if (strcmp (argv[i], "-m") == 0 && i + 1 < argc)
+		bandwidth = atof (argv[++i]) * 1e6;
+	}
+	else
+	{
+	    if (pattern)
+	    {
+		pattern = NULL;
+		printf ("Error: extra arguments given.\n");
+		break;
+	    }
+	    pattern = argv[i];
 	}
     }
+
+    if (!pattern)
+    {
+	usage (argv[0]);
+	return 1;
+    }
+
+    parser_self_test ();
+
+    src = aligned_malloc (4096, BUFSIZE * 3);
+    memset (src, 0xCC, BUFSIZE * 3);
+    dst = src + (BUFSIZE / 4);
+    mask = dst + (BUFSIZE / 4);
+
+    if (!use_csv_output)
+        print_explanation ();
+
+    if (bandwidth < 1.0)
+        bandwidth = bench_memcpy ();
+    if (!use_csv_output)
+        print_speed_scaling (bandwidth);
+
+    if (strcmp (pattern, "all") == 0)
+        run_default_tests (bandwidth);
+    else
+        run_one_test (pattern, bandwidth, !use_csv_output);
 
     free (src);
     return 0;

@@ -4,6 +4,9 @@
 #include <math.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <float.h>
+#include <ctype.h>
+#include <limits.h>
 
 #ifdef HAVE_GETTIMEOFDAY
 #include <sys/time.h>
@@ -26,6 +29,8 @@
 #ifdef HAVE_LIBPNG
 #include <png.h>
 #endif
+
+#define ROUND_UP(x, mult) (((x) + (mult) - 1) / (mult) * (mult))
 
 /* Random number generator state
  */
@@ -375,7 +380,16 @@ typedef struct
     int n_bytes;
 } info_t;
 
-#if defined(HAVE_MPROTECT) && defined(HAVE_GETPAGESIZE) && defined(HAVE_SYS_MMAN_H) && defined(HAVE_MMAP)
+#if FENCE_MALLOC_ACTIVE
+
+unsigned long
+fence_get_page_size ()
+{
+    /* You can fake a page size here, if you want to test e.g. 64 kB
+     * pages on a 4 kB page system. Just put a multiplier below.
+     */
+    return getpagesize ();
+}
 
 /* This is apparently necessary on at least OS X */
 #ifndef MAP_ANONYMOUS
@@ -385,7 +399,7 @@ typedef struct
 void *
 fence_malloc (int64_t len)
 {
-    unsigned long page_size = getpagesize();
+    unsigned long page_size = fence_get_page_size ();
     unsigned long page_mask = page_size - 1;
     uint32_t n_payload_bytes = (len + page_mask) & ~page_mask;
     uint32_t n_bytes =
@@ -434,7 +448,7 @@ fence_malloc (int64_t len)
 void
 fence_free (void *data)
 {
-    uint32_t page_size = getpagesize();
+    uint32_t page_size = fence_get_page_size ();
     uint8_t *payload = data;
     uint8_t *leading_protected = payload - N_LEADING_PROTECTED * page_size;
     uint8_t *initial_page = leading_protected - page_size;
@@ -443,7 +457,98 @@ fence_free (void *data)
     munmap (info->addr, info->n_bytes);
 }
 
-#else
+static void
+fence_image_destroy (pixman_image_t *image, void *data)
+{
+    fence_free (data);
+}
+
+/* Create an image with fence pages.
+ *
+ * Creates an image, where the data area is allocated with fence_malloc ().
+ * Each row has an additional page in the stride.
+ *
+ * min_width is only a minimum width for the image. The width is aligned up
+ * for the row size to be divisible by both page size and pixel size.
+ *
+ * If stride_fence is true, the additional page on each row will be
+ * armed to cause SIGSEGV or SIGBUS on all accesses. This should catch
+ * all accesses outside the valid row pixels.
+ */
+pixman_image_t *
+fence_image_create_bits (pixman_format_code_t format,
+                         int min_width,
+                         int height,
+                         pixman_bool_t stride_fence)
+{
+    unsigned page_size = fence_get_page_size ();
+    unsigned page_mask = page_size - 1;
+    unsigned bitspp = PIXMAN_FORMAT_BPP (format);
+    unsigned bits_boundary;
+    unsigned row_bits;
+    int width;       /* pixels */
+    unsigned stride; /* bytes */
+    void *pixels;
+    pixman_image_t *image;
+    int i;
+
+    /* must be power of two */
+    assert (page_size && (page_size & page_mask) == 0);
+
+    if (bitspp < 1 || min_width < 1 || height < 1)
+        abort ();
+
+    /* least common multiple between page size * 8 and bitspp */
+    bits_boundary = bitspp;
+    while (! (bits_boundary & 1))
+        bits_boundary >>= 1;
+    bits_boundary *= page_size * 8;
+
+    /* round up to bits_boundary */
+    row_bits = ROUND_UP ( (unsigned)min_width * bitspp, bits_boundary);
+    width = row_bits / bitspp;
+
+    stride = row_bits / 8;
+    if (stride_fence)
+        stride += page_size; /* add fence page */
+
+    if (UINT_MAX / stride < (unsigned)height)
+        abort ();
+
+    pixels = fence_malloc (stride * (unsigned)height);
+    if (!pixels)
+        return NULL;
+
+    if (stride_fence)
+    {
+        uint8_t *guard = (uint8_t *)pixels + stride - page_size;
+
+        /* arm row end fence pages */
+        for (i = 0; i < height; i++)
+        {
+            if (mprotect (guard + i * stride, page_size, PROT_NONE) == -1)
+                goto out_fail;
+        }
+    }
+
+    assert (width >= min_width);
+
+    image = pixman_image_create_bits_no_clear (format, width, height,
+                                               pixels, stride);
+    if (!image)
+        goto out_fail;
+
+    pixman_image_set_destroy_function (image, fence_image_destroy, pixels);
+
+    return image;
+
+out_fail:
+    fence_free (pixels);
+
+    return NULL;
+}
+
+#else /* FENCE_MALLOC_ACTIVE */
 
 void *
 fence_malloc (int64_t len)
@@ -457,7 +562,25 @@ fence_free (void *data)
     free (data);
 }
 
-#endif
+pixman_image_t *
+fence_image_create_bits (pixman_format_code_t format,
+                         int min_width,
+                         int height,
+                         pixman_bool_t stride_fence)
+{
+    return pixman_image_create_bits (format, min_width, height, NULL, 0);
+    /* Implicitly allocated storage does not need a destroy function
+     * to get freed on refcount hitting zero.
+     */
+}
+
+unsigned long
+fence_get_page_size ()
+{
+    return 0;
+}
+
+#endif /* FENCE_MALLOC_ACTIVE */
 
 uint8_t *
 make_random_bytes (int n_bytes)
@@ -843,7 +966,19 @@ enable_divbyzero_exceptions (void)
 {
 #ifdef HAVE_FENV_H
 #ifdef HAVE_FEENABLEEXCEPT
+#ifdef HAVE_FEDIVBYZERO
     feenableexcept (FE_DIVBYZERO);
+#endif
+#endif
+#endif
+}
+
+void
+enable_invalid_exceptions (void)
+{
+#ifdef HAVE_FENV_H
+#ifdef HAVE_FEENABLEEXCEPT
+    feenableexcept (FE_INVALID);
 #endif
 #endif
 }
@@ -937,71 +1072,332 @@ initialize_palette (pixman_indexed_t *palette, uint32_t depth, int is_rgb)
     }
 }
 
+struct operator_entry {
+    pixman_op_t		 op;
+    const char		*name;
+    pixman_bool_t	 is_alias;
+};
+
+typedef struct operator_entry operator_entry_t;
+
+static const operator_entry_t op_list[] =
+{
+#define ENTRY(op)							\
+    { PIXMAN_OP_##op, "PIXMAN_OP_" #op, FALSE }
+#define ALIAS(op, nam)							\
+    { PIXMAN_OP_##op, nam, TRUE }
+
+    /* operator_name () will return the first hit in this table,
+     * so keep the list properly ordered between entries and aliases.
+     * Aliases are not listed by list_operators ().
+     */
+
+    ENTRY (CLEAR),
+    ENTRY (SRC),
+    ENTRY (DST),
+    ENTRY (OVER),
+    ENTRY (OVER_REVERSE),
+    ALIAS (OVER_REVERSE,		"overrev"),
+    ENTRY (IN),
+    ENTRY (IN_REVERSE),
+    ALIAS (IN_REVERSE,			"inrev"),
+    ENTRY (OUT),
+    ENTRY (OUT_REVERSE),
+    ALIAS (OUT_REVERSE,			"outrev"),
+    ENTRY (ATOP),
+    ENTRY (ATOP_REVERSE),
+    ALIAS (ATOP_REVERSE,		"atoprev"),
+    ENTRY (XOR),
+    ENTRY (ADD),
+    ENTRY (SATURATE),
+
+    ENTRY (DISJOINT_CLEAR),
+    ENTRY (DISJOINT_SRC),
+    ENTRY (DISJOINT_DST),
+    ENTRY (DISJOINT_OVER),
+    ENTRY (DISJOINT_OVER_REVERSE),
+    ENTRY (DISJOINT_IN),
+    ENTRY (DISJOINT_IN_REVERSE),
+    ENTRY (DISJOINT_OUT),
+    ENTRY (DISJOINT_OUT_REVERSE),
+    ENTRY (DISJOINT_ATOP),
+    ENTRY (DISJOINT_ATOP_REVERSE),
+    ENTRY (DISJOINT_XOR),
+
+    ENTRY (CONJOINT_CLEAR),
+    ENTRY (CONJOINT_SRC),
+    ENTRY (CONJOINT_DST),
+    ENTRY (CONJOINT_OVER),
+    ENTRY (CONJOINT_OVER_REVERSE),
+    ENTRY (CONJOINT_IN),
+    ENTRY (CONJOINT_IN_REVERSE),
+    ENTRY (CONJOINT_OUT),
+    ENTRY (CONJOINT_OUT_REVERSE),
+    ENTRY (CONJOINT_ATOP),
+    ENTRY (CONJOINT_ATOP_REVERSE),
+    ENTRY (CONJOINT_XOR),
+
+    ENTRY (MULTIPLY),
+    ENTRY (SCREEN),
+    ENTRY (OVERLAY),
+    ENTRY (DARKEN),
+    ENTRY (LIGHTEN),
+    ENTRY (COLOR_DODGE),
+    ENTRY (COLOR_BURN),
+    ENTRY (HARD_LIGHT),
+    ENTRY (SOFT_LIGHT),
+    ENTRY (DIFFERENCE),
+    ENTRY (EXCLUSION),
+    ENTRY (HSL_HUE),
+    ENTRY (HSL_SATURATION),
+    ENTRY (HSL_COLOR),
+    ENTRY (HSL_LUMINOSITY),
+
+    ALIAS (NONE, "<invalid operator 'none'>")
+
+#undef ENTRY
+#undef ALIAS
+};
+
+struct format_entry
+{
+    pixman_format_code_t format;
+    const char		*name;
+    pixman_bool_t	 is_alias;
+};
+
+typedef struct format_entry format_entry_t;
+
+static const format_entry_t format_list[] =
+{
+#define ENTRY(f)							\
+    { PIXMAN_##f, #f, FALSE }
+#define ALIAS(f, nam)							\
+    { PIXMAN_##f, nam, TRUE }
+
+    /* format_name () will return the first hit in this table,
+     * so keep the list properly ordered between entries and aliases.
+     * Aliases are not listed by list_formats ().
+     */
+
+/* 32bpp formats */
+    ENTRY (a8r8g8b8),
+    ALIAS (a8r8g8b8,		"8888"),
+    ENTRY (x8r8g8b8),
+    ALIAS (x8r8g8b8,		"x888"),
+    ENTRY (a8b8g8r8),
+    ENTRY (x8b8g8r8),
+    ENTRY (b8g8r8a8),
+    ENTRY (b8g8r8x8),
+    ENTRY (r8g8b8a8),
+    ENTRY (r8g8b8x8),
+    ENTRY (x14r6g6b6),
+    ENTRY (x2r10g10b10),
+    ALIAS (x2r10g10b10,		"2x10"),
+    ENTRY (a2r10g10b10),
+    ALIAS (a2r10g10b10,		"2a10"),
+    ENTRY (x2b10g10r10),
+    ENTRY (a2b10g10r10),
+
+/* sRGB formats */
+    ENTRY (a8r8g8b8_sRGB),
+
+/* 24bpp formats */
+    ENTRY (r8g8b8),
+    ALIAS (r8g8b8,		"0888"),
+    ENTRY (b8g8r8),
+
+/* 16 bpp formats */
+    ENTRY (r5g6b5),
+    ALIAS (r5g6b5,		"0565"),
+    ENTRY (b5g6r5),
+
+    ENTRY (a1r5g5b5),
+    ALIAS (a1r5g5b5,		"1555"),
+    ENTRY (x1r5g5b5),
+    ENTRY (a1b5g5r5),
+    ENTRY (x1b5g5r5),
+    ENTRY (a4r4g4b4),
+    ALIAS (a4r4g4b4,		"4444"),
+    ENTRY (x4r4g4b4),
+    ENTRY (a4b4g4r4),
+    ENTRY (x4b4g4r4),
+
+/* 8bpp formats */
+    ENTRY (a8),
+    ALIAS (a8,			"8"),
+    ENTRY (r3g3b2),
+    ENTRY (b2g3r3),
+    ENTRY (a2r2g2b2),
+    ALIAS (a2r2g2b2,		"2222"),
+    ENTRY (a2b2g2r2),
+
+    ALIAS (c8,			"x4c4 / c8"),
+    /* ENTRY (c8), */
+    ALIAS (g8,			"x4g4 / g8"),
+    /* ENTRY (g8), */
+
+    ENTRY (x4a4),
+
+    /* These format codes are identical to c8 and g8, respectively. */
+    /* ENTRY (x4c4), */
+    /* ENTRY (x4g4), */
+
+/* 4 bpp formats */
+    ENTRY (a4),
+    ENTRY (r1g2b1),
+    ENTRY (b1g2r1),
+    ENTRY (a1r1g1b1),
+    ENTRY (a1b1g1r1),
+
+    ALIAS (c4,			"c4"),
+    /* ENTRY (c4), */
+    ALIAS (g4,			"g4"),
+    /* ENTRY (g4), */
+
+/* 1bpp formats */
+    ENTRY (a1),
+
+    ALIAS (g1,			"g1"),
+    /* ENTRY (g1), */
+
+/* YUV formats */
+    ALIAS (yuy2,		"yuy2"),
+    /* ENTRY (yuy2), */
+    ALIAS (yv12,		"yv12"),
+    /* ENTRY (yv12), */
+
+/* Fake formats, not in pixman_format_code_t enum */
+    ALIAS (null,		"null"),
+    ALIAS (solid,		"solid"),
+    ALIAS (solid,		"n"),
+    ALIAS (pixbuf,		"pixbuf"),
+    ALIAS (rpixbuf,		"rpixbuf"),
+    ALIAS (unknown,		"unknown"),
+
+#undef ENTRY
+#undef ALIAS
+};
+
+pixman_format_code_t
+format_from_string (const char *s)
+{
+    int i;
+
+    for (i = 0; i < ARRAY_LENGTH (format_list); ++i)
+    {
+        const format_entry_t *ent = &format_list[i];
+
+        if (strcasecmp (ent->name, s) == 0)
+            return ent->format;
+    }
+
+    return PIXMAN_null;
+}
+
+static void
+emit (const char *s, int *n_chars)
+{
+    *n_chars += printf ("%s,", s);
+    if (*n_chars > 60)
+    {
+        printf ("\n    ");
+        *n_chars = 0;
+    }
+    else
+    {
+        printf (" ");
+        (*n_chars)++;
+    }
+}
+
+void
+list_formats (void)
+{
+    int n_chars;
+    int i;
+
+    printf ("Formats:\n    ");
+
+    n_chars = 0;
+    for (i = 0; i < ARRAY_LENGTH (format_list); ++i)
+    {
+        const format_entry_t *ent = &format_list[i];
+
+        if (ent->is_alias)
+            continue;
+
+        emit (ent->name, &n_chars);
+    }
+
+    printf ("\n\n");
+}
+
+void
+list_operators (void)
+{
+    char short_name [128] = { 0 };
+    int i, n_chars;
+
+    printf ("Operators:\n    ");
+
+    n_chars = 0;
+    for (i = 0; i < ARRAY_LENGTH (op_list); ++i)
+    {
+        const operator_entry_t *ent = &op_list[i];
+        int j;
+
+        if (ent->is_alias)
+            continue;
+
+        snprintf (short_name, sizeof (short_name) - 1, "%s",
+                  ent->name + strlen ("PIXMAN_OP_"));
+
+        for (j = 0; short_name[j] != '\0'; ++j)
+            short_name[j] = tolower (short_name[j]);
+
+        emit (short_name, &n_chars);
+    }
+
+    printf ("\n\n");
+}
+
+pixman_op_t
+operator_from_string (const char *s)
+{
+    int i;
+
+    for (i = 0; i < ARRAY_LENGTH (op_list); ++i)
+    {
+        const operator_entry_t *ent = &op_list[i];
+
+        if (ent->is_alias)
+        {
+            if (strcasecmp (ent->name, s) == 0)
+                return ent->op;
+        }
+        else
+        {
+            if (strcasecmp (ent->name + strlen ("PIXMAN_OP_"), s) == 0)
+                return ent->op;
+        }
+    }
+
+    return PIXMAN_OP_NONE;
+}
+
 const char *
 operator_name (pixman_op_t op)
 {
-    switch (op)
+    int i;
+
+    for (i = 0; i < ARRAY_LENGTH (op_list); ++i)
     {
-    case PIXMAN_OP_CLEAR: return "PIXMAN_OP_CLEAR";
-    case PIXMAN_OP_SRC: return "PIXMAN_OP_SRC";
-    case PIXMAN_OP_DST: return "PIXMAN_OP_DST";
-    case PIXMAN_OP_OVER: return "PIXMAN_OP_OVER";
-    case PIXMAN_OP_OVER_REVERSE: return "PIXMAN_OP_OVER_REVERSE";
-    case PIXMAN_OP_IN: return "PIXMAN_OP_IN";
-    case PIXMAN_OP_IN_REVERSE: return "PIXMAN_OP_IN_REVERSE";
-    case PIXMAN_OP_OUT: return "PIXMAN_OP_OUT";
-    case PIXMAN_OP_OUT_REVERSE: return "PIXMAN_OP_OUT_REVERSE";
-    case PIXMAN_OP_ATOP: return "PIXMAN_OP_ATOP";
-    case PIXMAN_OP_ATOP_REVERSE: return "PIXMAN_OP_ATOP_REVERSE";
-    case PIXMAN_OP_XOR: return "PIXMAN_OP_XOR";
-    case PIXMAN_OP_ADD: return "PIXMAN_OP_ADD";
-    case PIXMAN_OP_SATURATE: return "PIXMAN_OP_SATURATE";
+        const operator_entry_t *ent = &op_list[i];
 
-    case PIXMAN_OP_DISJOINT_CLEAR: return "PIXMAN_OP_DISJOINT_CLEAR";
-    case PIXMAN_OP_DISJOINT_SRC: return "PIXMAN_OP_DISJOINT_SRC";
-    case PIXMAN_OP_DISJOINT_DST: return "PIXMAN_OP_DISJOINT_DST";
-    case PIXMAN_OP_DISJOINT_OVER: return "PIXMAN_OP_DISJOINT_OVER";
-    case PIXMAN_OP_DISJOINT_OVER_REVERSE: return "PIXMAN_OP_DISJOINT_OVER_REVERSE";
-    case PIXMAN_OP_DISJOINT_IN: return "PIXMAN_OP_DISJOINT_IN";
-    case PIXMAN_OP_DISJOINT_IN_REVERSE: return "PIXMAN_OP_DISJOINT_IN_REVERSE";
-    case PIXMAN_OP_DISJOINT_OUT: return "PIXMAN_OP_DISJOINT_OUT";
-    case PIXMAN_OP_DISJOINT_OUT_REVERSE: return "PIXMAN_OP_DISJOINT_OUT_REVERSE";
-    case PIXMAN_OP_DISJOINT_ATOP: return "PIXMAN_OP_DISJOINT_ATOP";
-    case PIXMAN_OP_DISJOINT_ATOP_REVERSE: return "PIXMAN_OP_DISJOINT_ATOP_REVERSE";
-    case PIXMAN_OP_DISJOINT_XOR: return "PIXMAN_OP_DISJOINT_XOR";
-
-    case PIXMAN_OP_CONJOINT_CLEAR: return "PIXMAN_OP_CONJOINT_CLEAR";
-    case PIXMAN_OP_CONJOINT_SRC: return "PIXMAN_OP_CONJOINT_SRC";
-    case PIXMAN_OP_CONJOINT_DST: return "PIXMAN_OP_CONJOINT_DST";
-    case PIXMAN_OP_CONJOINT_OVER: return "PIXMAN_OP_CONJOINT_OVER";
-    case PIXMAN_OP_CONJOINT_OVER_REVERSE: return "PIXMAN_OP_CONJOINT_OVER_REVERSE";
-    case PIXMAN_OP_CONJOINT_IN: return "PIXMAN_OP_CONJOINT_IN";
-    case PIXMAN_OP_CONJOINT_IN_REVERSE: return "PIXMAN_OP_CONJOINT_IN_REVERSE";
-    case PIXMAN_OP_CONJOINT_OUT: return "PIXMAN_OP_CONJOINT_OUT";
-    case PIXMAN_OP_CONJOINT_OUT_REVERSE: return "PIXMAN_OP_CONJOINT_OUT_REVERSE";
-    case PIXMAN_OP_CONJOINT_ATOP: return "PIXMAN_OP_CONJOINT_ATOP";
-    case PIXMAN_OP_CONJOINT_ATOP_REVERSE: return "PIXMAN_OP_CONJOINT_ATOP_REVERSE";
-    case PIXMAN_OP_CONJOINT_XOR: return "PIXMAN_OP_CONJOINT_XOR";
-
-    case PIXMAN_OP_MULTIPLY: return "PIXMAN_OP_MULTIPLY";
-    case PIXMAN_OP_SCREEN: return "PIXMAN_OP_SCREEN";
-    case PIXMAN_OP_OVERLAY: return "PIXMAN_OP_OVERLAY";
-    case PIXMAN_OP_DARKEN: return "PIXMAN_OP_DARKEN";
-    case PIXMAN_OP_LIGHTEN: return "PIXMAN_OP_LIGHTEN";
-    case PIXMAN_OP_COLOR_DODGE: return "PIXMAN_OP_COLOR_DODGE";
-    case PIXMAN_OP_COLOR_BURN: return "PIXMAN_OP_COLOR_BURN";
-    case PIXMAN_OP_HARD_LIGHT: return "PIXMAN_OP_HARD_LIGHT";
-    case PIXMAN_OP_SOFT_LIGHT: return "PIXMAN_OP_SOFT_LIGHT";
-    case PIXMAN_OP_DIFFERENCE: return "PIXMAN_OP_DIFFERENCE";
-    case PIXMAN_OP_EXCLUSION: return "PIXMAN_OP_EXCLUSION";
-    case PIXMAN_OP_HSL_HUE: return "PIXMAN_OP_HSL_HUE";
-    case PIXMAN_OP_HSL_SATURATION: return "PIXMAN_OP_HSL_SATURATION";
-    case PIXMAN_OP_HSL_COLOR: return "PIXMAN_OP_HSL_COLOR";
-    case PIXMAN_OP_HSL_LUMINOSITY: return "PIXMAN_OP_HSL_LUMINOSITY";
-
-    case PIXMAN_OP_NONE:
-	return "<invalid operator 'none'>";
-    };
+        if (ent->op == op)
+            return ent->name;
+    }
 
     return "<unknown operator>";
 }
@@ -1009,95 +1405,164 @@ operator_name (pixman_op_t op)
 const char *
 format_name (pixman_format_code_t format)
 {
-    switch (format)
+    int i;
+
+    for (i = 0; i < ARRAY_LENGTH (format_list); ++i)
     {
-/* 32bpp formats */
-    case PIXMAN_a8r8g8b8: return "a8r8g8b8";
-    case PIXMAN_x8r8g8b8: return "x8r8g8b8";
-    case PIXMAN_a8b8g8r8: return "a8b8g8r8";
-    case PIXMAN_x8b8g8r8: return "x8b8g8r8";
-    case PIXMAN_b8g8r8a8: return "b8g8r8a8";
-    case PIXMAN_b8g8r8x8: return "b8g8r8x8";
-    case PIXMAN_r8g8b8a8: return "r8g8b8a8";
-    case PIXMAN_r8g8b8x8: return "r8g8b8x8";
-    case PIXMAN_x14r6g6b6: return "x14r6g6b6";
-    case PIXMAN_x2r10g10b10: return "x2r10g10b10";
-    case PIXMAN_a2r10g10b10: return "a2r10g10b10";
-    case PIXMAN_x2b10g10r10: return "x2b10g10r10";
-    case PIXMAN_a2b10g10r10: return "a2b10g10r10";
+        const format_entry_t *ent = &format_list[i];
 
-/* sRGB formats */
-    case PIXMAN_a8r8g8b8_sRGB: return "a8r8g8b8_sRGB";
-
-/* 24bpp formats */
-    case PIXMAN_r8g8b8: return "r8g8b8";
-    case PIXMAN_b8g8r8: return "b8g8r8";
-
-/* 16bpp formats */
-    case PIXMAN_r5g6b5: return "r5g6b5";
-    case PIXMAN_b5g6r5: return "b5g6r5";
-
-    case PIXMAN_a1r5g5b5: return "a1r5g5b5";
-    case PIXMAN_x1r5g5b5: return "x1r5g5b5";
-    case PIXMAN_a1b5g5r5: return "a1b5g5r5";
-    case PIXMAN_x1b5g5r5: return "x1b5g5r5";
-    case PIXMAN_a4r4g4b4: return "a4r4g4b4";
-    case PIXMAN_x4r4g4b4: return "x4r4g4b4";
-    case PIXMAN_a4b4g4r4: return "a4b4g4r4";
-    case PIXMAN_x4b4g4r4: return "x4b4g4r4";
-
-/* 8bpp formats */
-    case PIXMAN_a8: return "a8";
-    case PIXMAN_r3g3b2: return "r3g3b2";
-    case PIXMAN_b2g3r3: return "b2g3r3";
-    case PIXMAN_a2r2g2b2: return "a2r2g2b2";
-    case PIXMAN_a2b2g2r2: return "a2b2g2r2";
-
-#if 0
-    case PIXMAN_x4c4: return "x4c4";
-    case PIXMAN_g8: return "g8";
-#endif
-    case PIXMAN_c8: return "x4c4 / c8";
-    case PIXMAN_x4g4: return "x4g4 / g8";
-
-    case PIXMAN_x4a4: return "x4a4";
-
-/* 4bpp formats */
-    case PIXMAN_a4: return "a4";
-    case PIXMAN_r1g2b1: return "r1g2b1";
-    case PIXMAN_b1g2r1: return "b1g2r1";
-    case PIXMAN_a1r1g1b1: return "a1r1g1b1";
-    case PIXMAN_a1b1g1r1: return "a1b1g1r1";
-
-    case PIXMAN_c4: return "c4";
-    case PIXMAN_g4: return "g4";
-
-/* 1bpp formats */
-    case PIXMAN_a1: return "a1";
-
-    case PIXMAN_g1: return "g1";
-
-/* YUV formats */
-    case PIXMAN_yuy2: return "yuy2";
-    case PIXMAN_yv12: return "yv12";
-    };
-
-    /* Fake formats.
-     *
-     * This is separate switch to prevent GCC from complaining
-     * that the values are not in the pixman_format_code_t enum.
-     */
-    switch ((uint32_t)format)
-    {
-    case PIXMAN_null: return "null"; 
-    case PIXMAN_solid: return "solid"; 
-    case PIXMAN_pixbuf: return "pixbuf"; 
-    case PIXMAN_rpixbuf: return "rpixbuf"; 
-    case PIXMAN_unknown: return "unknown"; 
-    };
+        if (ent->format == format)
+            return ent->name;
+    }
 
     return "<unknown format>";
 };
+
+#define IS_ZERO(f)     (-DBL_MIN < (f) && (f) < DBL_MIN)
+
+typedef double (* blend_func_t) (double as, double s, double ad, double d);
+
+static force_inline double
+blend_multiply (double sa, double s, double da, double d)
+{
+    return d * s;
+}
+
+static force_inline double
+blend_screen (double sa, double s, double da, double d)
+{
+    return d * sa + s * da - s * d;
+}
+
+static force_inline double
+blend_overlay (double sa, double s, double da, double d)
+{
+    if (2 * d < da)
+        return 2 * s * d;
+    else
+        return sa * da - 2 * (da - d) * (sa - s);
+}
+
+static force_inline double
+blend_darken (double sa, double s, double da, double d)
+{
+    s = s * da;
+    d = d * sa;
+
+    if (s > d)
+        return d;
+    else
+        return s;
+}
+
+static force_inline double
+blend_lighten (double sa, double s, double da, double d)
+{
+    s = s * da;
+    d = d * sa;
+
+    if (s > d)
+        return s;
+    else
+        return d;
+}
+
+static force_inline double
+blend_color_dodge (double sa, double s, double da, double d)
+{
+    if (IS_ZERO (d))
+        return 0.0f;
+    else if (d * sa >= sa * da - s * da)
+        return sa * da;
+    else if (IS_ZERO (sa - s))
+        return sa * da;
+    else
+        return sa * sa * d / (sa - s);
+}
+
+static force_inline double
+blend_color_burn (double sa, double s, double da, double d)
+{
+    if (d >= da)
+        return sa * da;
+    else if (sa * (da - d) >= s * da)
+        return 0.0f;
+    else if (IS_ZERO (s))
+        return 0.0f;
+    else
+        return sa * (da - sa * (da - d) / s);
+}
+
+static force_inline double
+blend_hard_light (double sa, double s, double da, double d)
+{
+    if (2 * s < sa)
+        return 2 * s * d;
+    else
+        return sa * da - 2 * (da - d) * (sa - s);
+}
+
+static force_inline double
+blend_soft_light (double sa, double s, double da, double d)
+{
+    if (2 * s <= sa)
+    {
+        if (IS_ZERO (da))
+            return d * sa;
+        else
+            return d * sa - d * (da - d) * (sa - 2 * s) / da;
+    }
+    else
+    {
+        if (IS_ZERO (da))
+        {
+	    return d * sa;
+        }
+        else
+        {
+            if (4 * d <= da)
+                return d * sa + (2 * s - sa) * d * ((16 * d / da - 12) * d / da + 3);
+            else
+                return d * sa + (sqrt (d * da) - d) * (2 * s - sa);
+        }
+    }
+}
+
+static force_inline double
+blend_difference (double sa, double s, double da, double d)
+{
+    double dsa = d * sa;
+    double sda = s * da;
+
+    if (sda < dsa)
+        return dsa - sda;
+    else
+        return sda - dsa;
+}
+
+static force_inline double
+blend_exclusion (double sa, double s, double da, double d)
+{
+    return s * da + d * sa - 2 * d * s;
+}
+
+static double
+clamp (double d)
+{
+    if (d > 1.0)
+	return 1.0;
+    else if (d < 0.0)
+	return 0.0;
+    else
+	return d;
+}
+
+static double
+blend_channel (double as, double s, double ad, double d,
+                   blend_func_t blend)
+{
+    return clamp ((1 - ad) * s + (1 - as) * d + blend (as, s, ad, d));
+}
 
 static double
 calc_op (pixman_op_t op, double src, double dst, double srca, double dsta)
@@ -1336,6 +1801,21 @@ do_composite (pixman_op_t op,
 {
     color_t srcval, srcalpha;
 
+    static const blend_func_t blend_funcs[] =
+    {
+        blend_multiply,
+        blend_screen,
+        blend_overlay,
+        blend_darken,
+        blend_lighten,
+        blend_color_dodge,
+        blend_color_burn,
+        blend_hard_light,
+        blend_soft_light,
+        blend_difference,
+        blend_exclusion,
+    };
+
     if (mask == NULL)
     {
 	srcval = *src;
@@ -1370,10 +1850,22 @@ do_composite (pixman_op_t op,
 	srcalpha.a = src->a * mask->a;
     }
 
-    result->r = calc_op (op, srcval.r, dst->r, srcalpha.r, dst->a);
-    result->g = calc_op (op, srcval.g, dst->g, srcalpha.g, dst->a);
-    result->b = calc_op (op, srcval.b, dst->b, srcalpha.b, dst->a);
-    result->a = calc_op (op, srcval.a, dst->a, srcalpha.a, dst->a);
+    if (op >= PIXMAN_OP_MULTIPLY)
+    {
+        blend_func_t func = blend_funcs[op - PIXMAN_OP_MULTIPLY];
+
+	result->a = srcalpha.a + dst->a - srcalpha.a * dst->a;
+	result->r = blend_channel (srcalpha.r, srcval.r, dst->a, dst->r, func);
+	result->g = blend_channel (srcalpha.g, srcval.g, dst->a, dst->g, func);
+	result->b = blend_channel (srcalpha.b, srcval.b, dst->a, dst->b, func);
+    }
+    else
+    {
+        result->r = calc_op (op, srcval.r, dst->r, srcalpha.r, dst->a);
+        result->g = calc_op (op, srcval.g, dst->g, srcalpha.g, dst->a);
+        result->b = calc_op (op, srcval.b, dst->b, srcalpha.b, dst->a);
+        result->a = calc_op (op, srcval.a, dst->a, srcalpha.a, dst->a);
+    }
 }
 
 static double
@@ -1580,7 +2072,7 @@ get_limits (const pixel_checker_t *checker, double limit,
 
 /* The acceptable deviation in units of [0.0, 1.0]
  */
-#define DEVIATION (0.0064)
+#define DEVIATION (0.0128)
 
 void
 pixel_checker_get_max (const pixel_checker_t *checker, color_t *color,

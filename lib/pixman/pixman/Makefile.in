@@ -160,7 +160,8 @@ libpixman_1_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 libpixman_arm_neon_la_LIBADD =
 am__libpixman_arm_neon_la_SOURCES_DIST = pixman-arm-neon.c \
 	pixman-arm-common.h pixman-arm-neon-asm.S \
-	pixman-arm-neon-asm-bilinear.S pixman-arm-neon-asm.h
+	pixman-arm-neon-asm-bilinear.S pixman-arm-asm.h \
+	pixman-arm-neon-asm.h
 @USE_ARM_NEON_TRUE@am_libpixman_arm_neon_la_OBJECTS =  \
 @USE_ARM_NEON_TRUE@	pixman-arm-neon.lo pixman-arm-neon-asm.lo \
 @USE_ARM_NEON_TRUE@	pixman-arm-neon-asm-bilinear.lo
@@ -169,7 +170,8 @@ libpixman_arm_neon_la_OBJECTS = $(am_libpixman_arm_neon_la_OBJECTS)
 libpixman_arm_simd_la_LIBADD =
 am__libpixman_arm_simd_la_SOURCES_DIST = pixman-arm-simd.c \
 	pixman-arm-common.h pixman-arm-simd-asm.S \
-	pixman-arm-simd-asm-scaled.S pixman-arm-simd-asm.h
+	pixman-arm-simd-asm-scaled.S pixman-arm-asm.h \
+	pixman-arm-simd-asm.h
 @USE_ARM_SIMD_TRUE@am_libpixman_arm_simd_la_OBJECTS =  \
 @USE_ARM_SIMD_TRUE@	pixman-arm-simd.lo pixman-arm-simd-asm.lo \
 @USE_ARM_SIMD_TRUE@	pixman-arm-simd-asm-scaled.lo
@@ -547,6 +549,7 @@ EXTRA_DIST = \
 @USE_ARM_SIMD_TRUE@	pixman-arm-common.h	\
 @USE_ARM_SIMD_TRUE@	pixman-arm-simd-asm.S   \
 @USE_ARM_SIMD_TRUE@	pixman-arm-simd-asm-scaled.S \
+@USE_ARM_SIMD_TRUE@	pixman-arm-asm.h	\
 @USE_ARM_SIMD_TRUE@	pixman-arm-simd-asm.h
 
 @USE_ARM_SIMD_TRUE@ASM_CFLAGS_arm_simd = 
@@ -555,6 +558,7 @@ EXTRA_DIST = \
 @USE_ARM_NEON_TRUE@        pixman-arm-common.h	\
 @USE_ARM_NEON_TRUE@        pixman-arm-neon-asm.S	\
 @USE_ARM_NEON_TRUE@		pixman-arm-neon-asm-bilinear.S \
+@USE_ARM_NEON_TRUE@        pixman-arm-asm.h	\
 @USE_ARM_NEON_TRUE@        pixman-arm-neon-asm.h
 
 @USE_ARM_NEON_TRUE@ASM_CFLAGS_arm_neon = 
