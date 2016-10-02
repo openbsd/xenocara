@@ -44,7 +44,7 @@ EXTRA_DIST = $(BDF_FILES) autogen.sh
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 
 install-data-hook:
-	@rm -f $(DESTDIR)$(fontdir)/font.dir
+	@rm -f $(DESTDIR)$(fontdir)/fonts.dir
 	$(MKFONTDIR) $(DESTDIR)$(fontdir)
 	@RUN_FCCACHE@
 

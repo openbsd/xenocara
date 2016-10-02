@@ -257,7 +257,7 @@ MAINTAINERCLEANFILES = ChangeLog INSTALL
 all-local: $(BUILT_BDF_FILES) $(font_DATA)
 
 install-data-hook:
-	@rm -f $(DESTDIR)$(fontdir)/font.dir
+	@rm -f $(DESTDIR)$(fontdir)/fonts.dir
 	$(MKFONTDIR) $(DESTDIR)$(fontdir)
 	@RUN_FCCACHE@
 

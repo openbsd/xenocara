@@ -35,11 +35,11 @@ MAINTAINERCLEANFILES = ChangeLog INSTALL
 install-data-hook:
 	@rm -f $(DESTDIR)$(ttffontdir)/fonts.scale
 	$(MKFONTSCALE) $(DESTDIR)$(ttffontdir)
-	@rm -f $(DESTDIR)$(ttffontdir)/font.dir
+	@rm -f $(DESTDIR)$(ttffontdir)/fonts.dir
 	$(MKFONTDIR) $(DESTDIR)$(ttffontdir)
 	@rm -f $(DESTDIR)$(otffontdir)/fonts.scale
 	$(MKFONTSCALE) $(DESTDIR)$(otffontdir)
-	@rm -f $(DESTDIR)$(otffontdir)/font.dir
+	@rm -f $(DESTDIR)$(otffontdir)/fonts.dir
 	$(MKFONTDIR) $(DESTDIR)$(otffontdir)
 	@RUN_FCCACHE@
 

@@ -47,7 +47,7 @@ MAINTAINERCLEANFILES = ChangeLog INSTALL
 install-data-hook:
 	@rm -f $(DESTDIR)$(fontdir)/fonts.scale
 	$(MKFONTSCALE) $(DESTDIR)$(fontdir)
-	@rm -f $(DESTDIR)$(fontdir)/font.dir
+	@rm -f $(DESTDIR)$(fontdir)/fonts.dir
 	$(MKFONTDIR) $(DESTDIR)$(fontdir)
 	mkdir -p $(DESTDIR)$(actualconfigdir)
 	@rm -f $(DESTDIR)$(actualconfigdir)/$(dist_availconfig_DATA)
