@@ -705,8 +705,6 @@ XAW7_LIBS
 XAW7_CFLAGS
 XAW6_LIBS
 XAW6_CFLAGS
-SHARED_LIBS_FALSE
-SHARED_LIBS_TRUE
 PLATFORM_DARWIN_FALSE
 PLATFORM_DARWIN_TRUE
 PLATFORM_WIN32_FALSE
@@ -18523,16 +18521,6 @@ else
 fi
 
 
-# some platforms don't even have shared libs
- if test -f /usr/libexec/ld.so; then
-  SHARED_LIBS_TRUE=
-  SHARED_LIBS_FALSE='#'
-else
-  SHARED_LIBS_TRUE='#'
-  SHARED_LIBS_FALSE=
-fi
-
-
 # Whether to build Xaw6
 
 # Check whether --enable-xaw6 was given.
@@ -19012,10 +19000,6 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${PLATFORM_DARWIN_TRUE}" && test -z "${PLATFORM_DARWIN_FALSE}"; then
   as_fn_error $? "conditional \"PLATFORM_DARWIN\" was never defined.
-Usually this means the macro was only invoked conditionally." "$LINENO" 5
-fi
-if test -z "${SHARED_LIBS_TRUE}" && test -z "${SHARED_LIBS_FALSE}"; then
-  as_fn_error $? "conditional \"SHARED_LIBS\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${BUILD_XAW6_TRUE}" && test -z "${BUILD_XAW6_FALSE}"; then
