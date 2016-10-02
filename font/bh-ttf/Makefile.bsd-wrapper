@@ -1,5 +1,8 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.2 2010/11/11 10:57:47 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.3 2016/10/02 20:51:20 matthieu Exp $
 
 CONFIGURE_ARGS += --with-fc-confdir=/etc/fonts
+
+afterinstall:
+	chown -h ${BINOWN}:${BINGRP} ${DESTDIR}/etc/fonts/conf.d/42-luxi-mono.conf
 
 .include <bsd.xorg.mk>
