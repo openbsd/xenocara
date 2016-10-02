@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.72 2016/09/03 13:57:18 matthieu Exp $
+# $OpenBSD: Makefile,v 1.73 2016/10/02 09:25:23 tb Exp $
 .include <bsd.own.mk>
 .include <bsd.xconf.mk>
 
@@ -48,10 +48,12 @@ beforeinstall beforebuild:
 afterinstall afterbuild:
 	exec ${MAKE} fix-appd
 	/usr/sbin/makewhatis -Qv ${DESTDIR}/usr/X11R6/man
+	chown root:wheel ${DESTDIR}/usr/X11R6/man/mandoc.db
 	touch ${DESTDIR}/var/sysmerge/xetcsum
 	cd ${DESTDIR}/ && \
 		sort ${.CURDIR}/distrib/sets/lists/xetc/{mi,md.${MACHINE}} | \
 		xargs sha256 -h ${DESTDIR}/var/sysmerge/xetcsum || true
+	chown root:wheel ${DESTDIR}/var/sysmerge/xetcsum
 	cd distrib/sets && exec ${MAKE}
 
 install-mk:
@@ -66,6 +68,7 @@ fix-appd:
 	    fi; \
 	    mkdir -p ${DESTDIR}${LOCALAPPX}; \
 	    ln -s ${REALAPPD} ${DESTDIR}${LOCALAPPD}; \
+	    chown -h root:wheel ${DESTDIR}${LOCALAPPD}; \
 	fi
 
 font-cache:
