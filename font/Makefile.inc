@@ -1,5 +1,5 @@
-# $OpenBSD: Makefile.inc,v 1.1 2007/06/01 01:05:25 matthieu Exp $
+# $OpenBSD: Makefile.inc,v 1.2 2016/10/02 20:55:09 matthieu Exp $
 
 realinstall:
-	exec ${MAKE} install FCCACHE=:
+	exec ${MAKE} install FCCACHE=: MKFONTDIR=: MKFONTSCALE=:
 
