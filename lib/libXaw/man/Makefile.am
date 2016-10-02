@@ -38,3 +38,4 @@ MAN_SUBSTS += -e 's|__docdir__|$(docdir)|g'
 
 .man.$(LIB_MAN_SUFFIX):
 	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
+
