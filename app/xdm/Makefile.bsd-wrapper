@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.23 2016/09/04 19:13:17 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.24 2016/10/02 09:12:46 tb Exp $
 .include <bsd.own.mk>
 
 XDMCONFIGDIR=/etc/X11/xdm
@@ -22,7 +22,9 @@ CONFIGURE_ARGS= --enable-privsep \
 realinstall:
 	exec ${MAKE} ${_lt_libs} install-strip \
 		INSTALL_DATA=: \
-		INSTALL_SCRIPT=:
+		INSTALL_SCRIPT=: \
+		INSTALL_STRIP_PROGRAM="/usr/bin/install $(INSTALL_STRIP) \
+			$(INSTALL_COPY) -o $(BINOWN) -g $(BINGRP)"
 
 XDMCONFIGFILES= \
 	xdm-config Xresources Xservers Xaccess
@@ -48,7 +50,8 @@ afterinstall:
 	  if ! test -f $(DESTDIR)$(XDMCONFIGDIR)/$$f ; then \
 	    if test -f $$f; then d=; else d="$(.CURDIR)/config/"; fi; \
 	    echo "$(INSTALL) $$f $(DESTDIR)$(XDMCONFIGDIR)"; \
-	    $(INSTALL) $$d$$f $(DESTDIR)$(XDMCONFIGDIR) ;\
+	    $(INSTALL) -o $(BINOWN) -g $(BINGRP) $$d$$f \
+	        $(DESTDIR)$(XDMCONFIGDIR) ;\
 	  else \
 	    echo "not overwriting $(DESTDIR)$(XDMCONFIGDIR)/$$f" ;\
 	  fi \
