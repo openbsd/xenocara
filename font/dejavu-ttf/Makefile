@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.2 2016/08/29 17:27:25 matthieu Exp $
+# $OpenBSD: Makefile,v 1.3 2016/10/02 09:23:26 tb Exp $
 
 FONT_FILES= \
 	DejaVuMathTeXGyre.ttf \
@@ -54,12 +54,15 @@ install:
 			${DESTDIR}${fontconfigdir}/conf.avail ; \
 		( cd ${DESTDIR}${fontconfigdir}/conf.d ;  \
 		  rm -f $$f ; \
-		  ln -s ../conf.avail/$$f ) ; \
+		  ln -s ../conf.avail/$$f ; \
+		  chown -h ${BINOWN}:${BINGRP} $$f ) ; \
 	done
 	@rm -f ${DESTDIR}${fontdir}/fonts.scale
 	mkfontscale ${DESTDIR}${fontdir}
+	chown root:wheel ${DESTDIR}${fontdir}/fonts.scale
 	@rm -f ${DESTDIR}${fontdir}/fonts.dir
 	mkfontdir ${DESTDIR}${fontdir}
+	chown root:wheel ${DESTDIR}${fontdir}/fonts.dir
 
 .include <bsd.xorg.mk>
 
