@@ -66,9 +66,6 @@ AC_SUBST(LIBEXT)
 AM_CONDITIONAL(PLATFORM_WIN32, test "x$platform_win32" = "xyes")
 AM_CONDITIONAL(PLATFORM_DARWIN, test "x$platform_darwin" = "xyes")
 
-# some platforms don't even have shared libs
-AM_CONDITIONAL(SHARED_LIBS, [test -f /usr/libexec/ld.so])
-
 # Whether to build Xaw6
 
 AC_ARG_ENABLE(xaw6, AS_HELP_STRING([--disable-xaw6],

@@ -80,7 +80,6 @@ libXaw6_la_SOURCES = \
 libXaw6_la_LDFLAGS = -version-info 6:1:0 -no-undefined
 libXaw6_la_LIBADD = $(XAW6_LIBS)
 
-if SHARED_LIBS
 if !PLATFORM_WIN32
 install-exec-hook::
 if PLATFORM_DARWIN
@@ -99,7 +98,6 @@ else
 endif
 endif
 
-endif
 endif
 
 if BUILD_XAW7
@@ -121,7 +119,6 @@ libXaw7_la_SOURCES = \
 libXaw7_la_LDFLAGS = -version-info 7:0:0 -no-undefined
 libXaw7_la_LIBADD = $(XAW7_LIBS)
 
-if SHARED_LIBS
 if !PLATFORM_WIN32
 install-exec-hook::
 if PLATFORM_DARWIN
@@ -140,7 +137,6 @@ endif
 #endif
 endif
 
-endif
 endif
 
 EXTRA_DIST = sharedlib.c
