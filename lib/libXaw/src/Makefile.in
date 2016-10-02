@@ -452,13 +452,6 @@ COMMON_CPPFLAGS = \
 
 @BUILD_XAW7_TRUE@libXaw7_la_LDFLAGS = -version-info 7:0:0 -no-undefined
 @BUILD_XAW7_TRUE@libXaw7_la_LIBADD = $(XAW7_LIBS)
-
-#uninstall-local::
-#if PLATFORM_DARWIN
-#	$(AM_V_at)rm -f $(DESTDIR)$(libdir)/libXaw.7.@LIBEXT@
-#else
-#	$(AM_V_at)rm -f $(DESTDIR)$(libdir)/libXaw.@LIBEXT@.15.0
-#endif
 EXTRA_DIST = sharedlib.c
 all: all-am
 
@@ -1396,7 +1389,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-@BUILD_XAW6_FALSE@uninstall-local:
+@BUILD_XAW6_FALSE@@BUILD_XAW7_FALSE@uninstall-local:
 @PLATFORM_WIN32_TRUE@uninstall-local:
 @BUILD_XAW6_FALSE@@BUILD_XAW7_FALSE@install-exec-hook:
 @PLATFORM_WIN32_TRUE@install-exec-hook:
@@ -1502,9 +1495,13 @@ uninstall-am: uninstall-libLTLIBRARIES uninstall-local
 
 @BUILD_XAW7_TRUE@@PLATFORM_WIN32_FALSE@install-exec-hook::
 @BUILD_XAW7_TRUE@@PLATFORM_DARWIN_TRUE@@PLATFORM_WIN32_FALSE@	$(AM_V_at)rm -f $(DESTDIR)$(libdir)/libXaw.7.@LIBEXT@
-@BUILD_XAW7_TRUE@@PLATFORM_DARWIN_TRUE@@PLATFORM_WIN32_FALSE@	$(AM_V_GEN)(cd $(DESTDIR)$(libdir) && ln -s libXaw7.7.@LIBEXT@ libXaw.7.@LIBEXT@)
-@BUILD_XAW7_TRUE@@PLATFORM_DARWIN_FALSE@@PLATFORM_WIN32_FALSE@	$(AM_V_at)rm -f $(DESTDIR)$(libdir)/libXaw.@LIBEXT@.15.0
-@BUILD_XAW7_TRUE@@PLATFORM_DARWIN_FALSE@@PLATFORM_WIN32_FALSE@	$(AM_V_GEN)(cd $(DESTDIR)$(libdir) && ln -s libXaw7.@LIBEXT@.15.0 libXaw.@LIBEXT@.15.0)
+@BUILD_XAW7_TRUE@@PLATFORM_DARWIN_TRUE@@PLATFORM_WIN32_FALSE@	$(AM_V_GEN)(cd $(DESTDIR)$(libdir) && $(LN_S) libXaw7.7.@LIBEXT@ libXaw.7.@LIBEXT@)
+@BUILD_XAW7_TRUE@@PLATFORM_DARWIN_FALSE@@PLATFORM_WIN32_FALSE@	$(AM_V_at)rm -f $(DESTDIR)$(libdir)/libXaw.@LIBEXT@.7
+@BUILD_XAW7_TRUE@@PLATFORM_DARWIN_FALSE@@PLATFORM_WIN32_FALSE@	$(AM_V_GEN)(cd $(DESTDIR)$(libdir) && $(LN_S) libXaw7.@LIBEXT@.7 libXaw.@LIBEXT@.7)
+
+@BUILD_XAW7_TRUE@@PLATFORM_WIN32_FALSE@uninstall-local::
+@BUILD_XAW7_TRUE@@PLATFORM_DARWIN_TRUE@@PLATFORM_WIN32_FALSE@	$(AM_V_at)rm -f $(DESTDIR)$(libdir)/libXaw.7.@LIBEXT@
+@BUILD_XAW7_TRUE@@PLATFORM_DARWIN_FALSE@@PLATFORM_WIN32_FALSE@	$(AM_V_at)rm -f $(DESTDIR)$(libdir)/libXaw.@LIBEXT@.7
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
