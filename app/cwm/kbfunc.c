@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.127 2016/09/22 14:36:03 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.128 2016/10/03 13:41:30 okan Exp $
  */
 
 #include <sys/types.h>
@@ -187,6 +187,8 @@ kbfunc_menu_client(struct client_ctx *cc, union arg *arg)
 		cc = (struct client_ctx *)mi->ctx;
 		if (cc->flags & CLIENT_HIDDEN)
 			client_unhide(cc);
+		else
+			client_raise(cc);
 		if (old_cc)
 			client_ptrsave(old_cc);
 		client_ptrwarp(cc);
