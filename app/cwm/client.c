@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.226 2016/10/03 13:41:30 okan Exp $
+ * $OpenBSD: client.c,v 1.227 2016/10/03 14:42:34 okan Exp $
  */
 
 #include <sys/types.h>
@@ -133,7 +133,7 @@ client_init(Window win, struct screen_ctx *sc, int active)
 			goto out;
 		if (group_autogroup(cc))
 			goto out;
-		if (Conf.flags & CONF_STICKY_GROUPS)
+		if (Conf.stickygroups)
 			group_assign(sc->group_active, cc);
 		else
 			group_assign(NULL, cc);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.64 2015/05/17 04:39:50 kspillner Exp $ */
+/*	$OpenBSD: parse.y,v 1.65 2016/10/03 14:42:34 okan Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -112,10 +112,7 @@ main		: FONTNAME STRING		{
 			conf->font = $2;
 		}
 		| STICKY yesno {
-			if ($2 == 0)
-				conf->flags &= ~CONF_STICKY_GROUPS;
-			else
-				conf->flags |= CONF_STICKY_GROUPS;
+			conf->stickygroups = $2;
 		}
 		| BORDERWIDTH NUMBER {
 			if ($2 < 0 || $2 > UINT_MAX) {
