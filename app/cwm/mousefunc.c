@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: mousefunc.c,v 1.111 2016/09/30 18:28:06 okan Exp $
+ * $OpenBSD: mousefunc.c,v 1.112 2016/10/03 13:52:18 okan Exp $
  */
 
 #include <sys/types.h>
@@ -45,12 +45,12 @@ mousefunc_client_resize(struct client_ctx *cc, union arg *arg)
 	client_raise(cc);
 	client_ptrsave(cc);
 
+	xu_ptr_setpos(cc->win, cc->geom.w, cc->geom.h);
+
 	if (XGrabPointer(X_Dpy, cc->win, False, MOUSEMASK,
 	    GrabModeAsync, GrabModeAsync, None, Conf.cursor[CF_RESIZE],
 	    CurrentTime) != GrabSuccess)
 		return;
-
-	xu_ptr_setpos(cc->win, cc->geom.w, cc->geom.h);
 
 	for (;;) {
 		XWindowEvent(X_Dpy, cc->win, MOUSEMASK, &ev);
@@ -101,12 +101,22 @@ mousefunc_client_move(struct client_ctx *cc, union arg *arg)
 	if (cc->flags & CLIENT_FREEZE)
 		return;
 
+	xu_ptr_getpos(cc->win, &px, &py);
+	if (px < 0) 
+		px = 0;
+	else if (px > cc->geom.w)
+		px = cc->geom.w;
+	if (py < 0)
+		py = 0;
+	else if (py > cc->geom.h)
+		py = cc->geom.h;
+
+	xu_ptr_setpos(cc->win, px, py);
+
 	if (XGrabPointer(X_Dpy, cc->win, False, MOUSEMASK,
 	    GrabModeAsync, GrabModeAsync, None, Conf.cursor[CF_MOVE],
 	    CurrentTime) != GrabSuccess)
 		return;
-
-	xu_ptr_getpos(cc->win, &px, &py);
 
 	for (;;) {
 		XWindowEvent(X_Dpy, cc->win, MOUSEMASK, &ev);
