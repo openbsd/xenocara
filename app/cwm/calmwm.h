@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.320 2016/10/03 14:42:34 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.321 2016/10/03 18:43:49 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -96,11 +96,10 @@ union press {
 };
 
 enum cursor_font {
-	CF_DEFAULT,
-	CF_MOVE,
 	CF_NORMAL,
-	CF_QUESTION,
+	CF_MOVE,
 	CF_RESIZE,
+	CF_QUESTION,
 	CF_NITEMS
 };
 enum color {
