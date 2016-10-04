@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.322 2016/10/04 15:18:20 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.323 2016/10/04 15:52:32 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -187,8 +187,6 @@ struct client_ctx {
 	int			 flags;
 	int			 stackingorder;
 	struct winname_q	 nameq;
-#define CLIENT_MAXNAMEQLEN		5
-	int			 nameqlen;
 	char			*name;
 	char			*label;
 	char			*matchname;
@@ -284,6 +282,7 @@ struct conf {
 	struct cmd_q		 cmdq;
 	int			 ngroups;
 	int			 stickygroups;
+	int			 nameqlen;
 	int			 bwidth;
 	int			 mamount;
 	int			 snapdist;
