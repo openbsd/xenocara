@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.64 2016/10/02 17:21:29 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.65 2016/10/04 19:48:48 deraadt Exp $
 
 .include <bsd.xconf.mk>
 
@@ -42,6 +42,6 @@ CONFIGURE_ARGS=	--localstatedir=/var --sysconfdir=/etc/X11 \
 		${DRI_OPTION}
 
 afterinstall:
-	chown -h ${BINOWN}:${BINGRP} ${DESTDIR}${BINDIR}/X
+	-chown -h ${BINOWN}:${BINGRP} ${DESTDIR}${BINDIR}/X
 
 .include <bsd.xorg.mk>
