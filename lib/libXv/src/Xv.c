@@ -158,6 +158,7 @@ XvQueryAdaptors(
     size_t size;
     unsigned int ii, jj;
     char *name;
+    char *end;
     XvAdaptorInfo *pas = NULL, *pa;
     XvFormat *pfs, *pf;
     char *buffer = NULL;
@@ -197,17 +198,13 @@ XvQueryAdaptors(
     /* GET INPUT ADAPTORS */
 
     if (rep.num_adaptors == 0) {
-        /* If there's no adaptors, there's nothing more to do. */
+        /* If there are no adaptors, there's nothing more to do. */
         status = Success;
         goto out;
     }
 
-    if (size < (rep.num_adaptors * sz_xvAdaptorInfo)) {
-        /* If there's not enough data for the number of adaptors,
-           then we have a problem. */
-        status = XvBadReply;
-        goto out;
-    }
+    u.buffer = buffer;
+    end = buffer + size;
 
     size = rep.num_adaptors * sizeof(XvAdaptorInfo);
     if ((pas = Xmalloc(size)) == NULL) {
@@ -225,9 +222,12 @@ XvQueryAdaptors(
         pa++;
     }
 
-    u.buffer = buffer;
     pa = pas;
     for (ii = 0; ii < rep.num_adaptors; ii++) {
+        if (u.buffer + sz_xvAdaptorInfo > end) {
+            status = XvBadReply;
+            goto out;
+        }
         pa->type = u.pa->type;
         pa->base_id = u.pa->base_id;
         pa->num_ports = u.pa->num_ports;
@@ -239,6 +239,10 @@ XvQueryAdaptors(
         size = u.pa->name_size;
         u.buffer += pad_to_int32(sz_xvAdaptorInfo);
 
+        if (u.buffer + size > end) {
+            status = XvBadReply;
+            goto out;
+        }
         if ((name = Xmalloc(size + 1)) == NULL) {
             status = XvBadAlloc;
             goto out;
@@ -259,6 +263,11 @@ XvQueryAdaptors(
 
         pf = pfs;
         for (jj = 0; jj < pa->num_formats; jj++) {
+            if (u.buffer + sz_xvFormat > end) {
+                Xfree(pfs);
+                status = XvBadReply;
+                goto out;
+            }
             pf->depth = u.pf->depth;
             pf->visual_id = u.pf->visual;
             pf++;
@@ -327,6 +336,7 @@ XvQueryEncodings(
     size_t size;
     unsigned int jj;
     char *name;
+    char *end;
     XvEncodingInfo *pes = NULL, *pe;
     char *buffer = NULL;
     union {
@@ -364,17 +374,13 @@ XvQueryEncodings(
     /* GET ENCODINGS */
 
     if (rep.num_encodings == 0) {
-        /* If there's no encodings, there's nothing more to do. */
+        /* If there are no encodings, there's nothing more to do. */
         status = Success;
         goto out;
     }
 
-    if (size < (rep.num_encodings * sz_xvEncodingInfo)) {
-        /* If there's not enough data for the number of adaptors,
-           then we have a problem. */
-        status = XvBadReply;
-        goto out;
-    }
+    u.buffer = buffer;
+    end = buffer + size;
 
     size = rep.num_encodings * sizeof(XvEncodingInfo);
     if ((pes = Xmalloc(size)) == NULL) {
@@ -391,10 +397,12 @@ XvQueryEncodings(
         pe++;
     }
 
-    u.buffer = buffer;
-
     pe = pes;
     for (jj = 0; jj < rep.num_encodings; jj++) {
+        if (u.buffer + sz_xvEncodingInfo > end) {
+            status = XvBadReply;
+            goto out;
+        }
         pe->encoding_id = u.pe->encoding;
         pe->width = u.pe->width;
         pe->height = u.pe->height;
@@ -405,6 +413,10 @@ XvQueryEncodings(
         size = u.pe->name_size;
         u.buffer += pad_to_int32(sz_xvEncodingInfo);
 
+        if (u.buffer + size > end) {
+            status = XvBadReply;
+            goto out;
+        }
         if ((name = Xmalloc(size + 1)) == NULL) {
             status = XvBadAlloc;
             goto out;
