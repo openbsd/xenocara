@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.323 2016/10/04 15:52:32 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.324 2016/10/04 20:15:55 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -455,6 +455,7 @@ struct geom		 screen_area(struct screen_ctx *, int, int, int);
 void			 screen_init(int);
 void			 screen_update_geometry(struct screen_ctx *);
 void			 screen_updatestackingorder(struct screen_ctx *);
+void			 screen_assert_clients_within(struct screen_ctx *);
 
 void			 kbfunc_client_cycle(struct client_ctx *, union arg *);
 void			 kbfunc_client_delete(struct client_ctx *, union arg *);
