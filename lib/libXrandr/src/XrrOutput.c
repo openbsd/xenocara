@@ -25,6 +25,7 @@
 #include <config.h>
 #endif
 
+#include <limits.h>
 #include <stdio.h>
 #include <X11/Xlib.h>
 /* we need to be able to manipulate the Display structure on events */
@@ -60,6 +61,16 @@ XRRGetOutputInfo (Display *dpy, XRRScreenResources *resources, RROutput output)
 	return NULL;
     }
 
+    if (rep.length > INT_MAX >> 2 || rep.length < (OutputInfoExtra >> 2))
+    {
+        if (rep.length > (OutputInfoExtra >> 2))
+	    _XEatDataWords (dpy, rep.length - (OutputInfoExtra >> 2));
+	else
+	    _XEatDataWords (dpy, rep.length);
+	UnlockDisplay (dpy);
+	SyncHandle ();
+	return NULL;
+    }
     nbytes = ((long) (rep.length) << 2) - OutputInfoExtra;
 
     nbytesRead = (long) (rep.nCrtcs * 4 +

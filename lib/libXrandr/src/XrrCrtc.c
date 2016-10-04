@@ -24,6 +24,7 @@
 #include <config.h>
 #endif
 
+#include <limits.h>
 #include <stdio.h>
 #include <X11/Xlib.h>
 /* we need to be able to manipulate the Display structure on events */
@@ -57,22 +58,33 @@ XRRGetCrtcInfo (Display *dpy, XRRScreenResources *resources, RRCrtc crtc)
 	return NULL;
     }
 
-    nbytes = (long) rep.length << 2;
+    if (rep.length < INT_MAX >> 2)
+    {
+	nbytes = (long) rep.length << 2;
 
-    nbytesRead = (long) (rep.nOutput * 4 +
-			 rep.nPossibleOutput * 4);
+	nbytesRead = (long) (rep.nOutput * 4 +
+			     rep.nPossibleOutput * 4);
 
-    /*
-     * first we must compute how much space to allocate for
-     * randr library's use; we'll allocate the structures in a single
-     * allocation, on cleanlyness grounds.
-     */
+	/*
+	 * first we must compute how much space to allocate for
+	 * randr library's use; we'll allocate the structures in a single
+	 * allocation, on cleanlyness grounds.
+	 */
 
-    rbytes = (sizeof (XRRCrtcInfo) +
-	      rep.nOutput * sizeof (RROutput) +
-	      rep.nPossibleOutput * sizeof (RROutput));
+	rbytes = (sizeof (XRRCrtcInfo) +
+		  rep.nOutput * sizeof (RROutput) +
+		  rep.nPossibleOutput * sizeof (RROutput));
 
-    xci = (XRRCrtcInfo *) Xmalloc(rbytes);
+	xci = (XRRCrtcInfo *) Xmalloc(rbytes);
+    }
+    else
+    {
+	nbytes = 0;
+	nbytesRead = 0;
+	rbytes = 0;
+	xci = NULL;
+    }
+
     if (xci == NULL) {
 	_XEatDataWords (dpy, rep.length);
 	UnlockDisplay (dpy);
@@ -194,12 +206,21 @@ XRRGetCrtcGamma (Display *dpy, RRCrtc crtc)
     if (!_XReply (dpy, (xReply *) &rep, 0, xFalse))
 	goto out;
 
-    nbytes = (long) rep.length << 2;
+    if (rep.length < INT_MAX >> 2)
+    {
+	nbytes = (long) rep.length << 2;
 
-    /* three channels of CARD16 data */
-    nbytesRead = (rep.size * 2 * 3);
+	/* three channels of CARD16 data */
+	nbytesRead = (rep.size * 2 * 3);
 
-    crtc_gamma = XRRAllocGamma (rep.size);
+	crtc_gamma = XRRAllocGamma (rep.size);
+    }
+    else
+    {
+	nbytes = 0;
+	nbytesRead = 0;
+	crtc_gamma = NULL;
+    }
 
     if (!crtc_gamma)
     {
@@ -357,7 +378,7 @@ XRRGetCrtcTransform (Display	*dpy,
     xRRGetCrtcTransformReq	*req;
     int				major_version, minor_version;
     XRRCrtcTransformAttributes	*attr;
-    char			*extra = NULL, *e;
+    char			*extra = NULL, *end = NULL, *e;
     int				p;
 
     *attributes = NULL;
@@ -395,9 +416,17 @@ XRRGetCrtcTransform (Display	*dpy,
 	else
 	{
 	    int extraBytes = rep.length * 4 - CrtcTransformExtra;
-	    extra = Xmalloc (extraBytes);
+	    if (rep.length < INT_MAX / 4 &&
+		rep.length * 4 >= CrtcTransformExtra) {
+		extra = Xmalloc (extraBytes);
+		end = extra + extraBytes;
+	    } else
+		extra = NULL;
 	    if (!extra) {
-		_XEatDataWords (dpy, rep.length - (CrtcTransformExtra >> 2));
+		if (rep.length > (CrtcTransformExtra >> 2))
+		    _XEatDataWords (dpy, rep.length - (CrtcTransformExtra >> 2));
+		else
+		    _XEatDataWords (dpy, rep.length);
 		UnlockDisplay (dpy);
 		SyncHandle ();
 		return False;
@@ -429,22 +458,38 @@ XRRGetCrtcTransform (Display	*dpy,
 
     e = extra;
 
+    if (e + rep.pendingNbytesFilter > end) {
+	XFree (extra);
+	return False;
+    }
     memcpy (attr->pendingFilter, e, rep.pendingNbytesFilter);
     attr->pendingFilter[rep.pendingNbytesFilter] = '\0';
     e += (rep.pendingNbytesFilter + 3) & ~3;
     for (p = 0; p < rep.pendingNparamsFilter; p++) {
 	INT32	f;
+	if (e + 4 > end) {
+	    XFree (extra);
+	    return False;
+	}
 	memcpy (&f, e, 4);
 	e += 4;
 	attr->pendingParams[p] = (XFixed) f;
     }
     attr->pendingNparams = rep.pendingNparamsFilter;
 
+    if (e + rep.currentNbytesFilter > end) {
+	XFree (extra);
+	return False;
+    }
     memcpy (attr->currentFilter, e, rep.currentNbytesFilter);
     attr->currentFilter[rep.currentNbytesFilter] = '\0';
     e += (rep.currentNbytesFilter + 3) & ~3;
     for (p = 0; p < rep.currentNparamsFilter; p++) {
 	INT32	f;
+	if (e + 4 > end) {
+	    XFree (extra);
+	    return False;
+	}
 	memcpy (&f, e, 4);
 	e += 4;
 	attr->currentParams[p] = (XFixed) f;

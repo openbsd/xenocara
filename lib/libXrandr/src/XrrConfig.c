@@ -29,6 +29,7 @@
 #include <config.h>
 #endif
 
+#include <limits.h>
 #include <stdio.h>
 #include <X11/Xlib.h>
 /* we need to be able to manipulate the Display structure on events */
@@ -272,23 +273,30 @@ static XRRScreenConfiguration *_XRRGetScreenInfo (Display *dpy,
 	rep.rate = 0;
 	rep.nrateEnts = 0;
     }
+    if (rep.length < INT_MAX >> 2) {
+	nbytes = (long) rep.length << 2;
 
-    nbytes = (long) rep.length << 2;
+	nbytesRead = (long) (rep.nSizes * SIZEOF (xScreenSizes) +
+			    ((rep.nrateEnts + 1)& ~1) * 2 /* SIZEOF(CARD16) */);
 
-    nbytesRead = (long) (rep.nSizes * SIZEOF (xScreenSizes) +
-			 ((rep.nrateEnts + 1)& ~1) * 2 /* SIZEOF (CARD16) */);
+	/*
+	 * first we must compute how much space to allocate for
+	 * randr library's use; we'll allocate the structures in a single
+	 * allocation, on cleanlyness grounds.
+	 */
 
-    /*
-     * first we must compute how much space to allocate for
-     * randr library's use; we'll allocate the structures in a single
-     * allocation, on cleanlyness grounds.
-     */
+	rbytes = sizeof (XRRScreenConfiguration) +
+	  (rep.nSizes * sizeof (XRRScreenSize) +
+	   rep.nrateEnts * sizeof (int));
 
-    rbytes = sizeof (XRRScreenConfiguration) +
-      (rep.nSizes * sizeof (XRRScreenSize) +
-       rep.nrateEnts * sizeof (int));
+	scp = (struct _XRRScreenConfiguration *) Xmalloc(rbytes);
+    } else {
+	nbytes = 0;
+	nbytesRead = 0;
+	rbytes = 0;
+	scp = NULL;
+    }
 
-    scp = (struct _XRRScreenConfiguration *) Xmalloc(rbytes);
     if (scp == NULL) {
 	_XEatData (dpy, (unsigned long) nbytes);
 	return NULL;

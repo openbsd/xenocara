@@ -25,6 +25,7 @@
 #include <config.h>
 #endif
 
+#include <limits.h>
 #include <stdio.h>
 #include <X11/Xlib.h>
 /* we need to be able to manipulate the Display structure on events */
@@ -59,12 +60,20 @@ XRRGetProviderResources(Display *dpy, Window window)
       return NULL;
     }
 
-    nbytes = (long) rep.length << 2;
+    if (rep.length < INT_MAX >> 2) {
+	nbytes = (long) rep.length << 2;
 
-    nbytesRead = (long) (rep.nProviders * 4);
+	nbytesRead = (long) (rep.nProviders * 4);
 
-    rbytes = (sizeof(XRRProviderResources) + rep.nProviders * sizeof(RRProvider));
-    xrpr = (XRRProviderResources *) Xmalloc(rbytes);
+	rbytes = (sizeof(XRRProviderResources) + rep.nProviders *
+		  sizeof(RRProvider));
+	xrpr = (XRRProviderResources *) Xmalloc(rbytes);
+    } else {
+	nbytes = 0;
+	nbytesRead = 0;
+	rbytes = 0;
+	xrpr = NULL;
+    }
 
     if (xrpr == NULL) {
        _XEatDataWords (dpy, rep.length);
@@ -116,6 +125,17 @@ XRRGetProviderInfo(Display *dpy, XRRScreenResources *resources, RRProvider provi
 
     if (!_XReply (dpy, (xReply *) &rep, ProviderInfoExtra >> 2, xFalse))
     {
+	UnlockDisplay (dpy);
+	SyncHandle ();
+	return NULL;
+    }
+
+    if (rep.length > INT_MAX >> 2 || rep.length < ProviderInfoExtra >> 2)
+    {
+	if (rep.length < ProviderInfoExtra >> 2)
+	    _XEatDataWords (dpy, rep.length);
+	else
+	    _XEatDataWords (dpy, rep.length - (ProviderInfoExtra >> 2));
 	UnlockDisplay (dpy);
 	SyncHandle ();
 	return NULL;

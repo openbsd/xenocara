@@ -24,6 +24,7 @@
 #include <config.h>
 #endif
 
+#include <limits.h>
 #include <stdio.h>
 #include <X11/Xlib.h>
 /* we need to be able to manipulate the Display structure on events */
@@ -105,27 +106,36 @@ doGetScreenResources (Display *dpy, Window window, int poll)
 	xrri->has_rates = _XRRHasRates (xrri->minor_version, xrri->major_version);
     }
 
-    nbytes = (long) rep.length << 2;
+    if (rep.length < INT_MAX >> 2) {
+	nbytes = (long) rep.length << 2;
 
-    nbytesRead = (long) (rep.nCrtcs * 4 +
-			 rep.nOutputs * 4 +
-			 rep.nModes * SIZEOF (xRRModeInfo) +
-			 ((rep.nbytesNames + 3) & ~3));
+	nbytesRead = (long) (rep.nCrtcs * 4 +
+			     rep.nOutputs * 4 +
+			     rep.nModes * SIZEOF (xRRModeInfo) +
+			     ((rep.nbytesNames + 3) & ~3));
 
-    /*
-     * first we must compute how much space to allocate for
-     * randr library's use; we'll allocate the structures in a single
-     * allocation, on cleanlyness grounds.
-     */
+	/*
+	 * first we must compute how much space to allocate for
+	 * randr library's use; we'll allocate the structures in a single
+	 * allocation, on cleanlyness grounds.
+	 */
 
-    rbytes = (sizeof (XRRScreenResources) +
-	      rep.nCrtcs * sizeof (RRCrtc) +
-	      rep.nOutputs * sizeof (RROutput) +
-	      rep.nModes * sizeof (XRRModeInfo) +
-	      rep.nbytesNames + rep.nModes);	/* '\0' terminate names */
+	rbytes = (sizeof (XRRScreenResources) +
+		  rep.nCrtcs * sizeof (RRCrtc) +
+		  rep.nOutputs * sizeof (RROutput) +
+		  rep.nModes * sizeof (XRRModeInfo) +
+		  rep.nbytesNames + rep.nModes);    /* '\0' terminate names */
 
-    xrsr = (XRRScreenResources *) Xmalloc(rbytes);
-    wire_names = (char *) Xmalloc (rep.nbytesNames);
+	xrsr = (XRRScreenResources *) Xmalloc(rbytes);
+	wire_names = (char *) Xmalloc (rep.nbytesNames);
+    } else {
+	nbytes = 0;
+	nbytesRead = 0;
+	rbytes = 0;
+	xrsr = NULL;
+	wire_names = NULL;
+    }
+
     if (xrsr == NULL || wire_names == NULL) {
 	if (xrsr) Xfree (xrsr);
 	if (wire_names) Xfree (wire_names);
@@ -174,6 +184,14 @@ doGetScreenResources (Display *dpy, Window window, int poll)
     wire_name = wire_names;
     for (i = 0; i < rep.nModes; i++)  {
 	xrsr->modes[i].name = names;
+	if (xrsr->modes[i].nameLength > rep.nbytesNames) {
+	    Xfree (xrsr);
+	    Xfree (wire_names);
+	    UnlockDisplay (dpy);
+	    SyncHandle ();
+	    return NULL;
+	}
+	rep.nbytesNames -= xrsr->modes[i].nameLength;
 	memcpy (names, wire_name, xrsr->modes[i].nameLength);
 	names[xrsr->modes[i].nameLength] = '\0';
 	names += xrsr->modes[i].nameLength + 1;
