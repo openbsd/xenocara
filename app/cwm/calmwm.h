@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.321 2016/10/03 18:43:49 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.322 2016/10/04 15:18:20 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -235,7 +235,6 @@ struct screen_ctx {
 	struct gap		 gap;
 	struct client_ctx_q	 clientq;
 	struct region_ctx_q	 regionq;
-#define CALMWM_NGROUPS		 10
 	struct group_ctx_q	 groupq;
 	struct group_ctx	*group_active;
 	struct {
@@ -283,6 +282,7 @@ struct conf {
 	struct autogroupwin_q	 autogroupq;
 	struct ignore_q		 ignoreq;
 	struct cmd_q		 cmdq;
+	int			 ngroups;
 	int			 stickygroups;
 	int			 bwidth;
 	int			 mamount;
