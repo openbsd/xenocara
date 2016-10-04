@@ -576,9 +576,9 @@ Status XvMCGetDRInfo(Display *dpy, XvPortID port,
 	if (*name && *busID && tmpBuf) {
 	    _XRead(dpy, tmpBuf, realSize);
 	    strncpy(*name,tmpBuf,rep.nameLen);
-	    (*name)[rep.nameLen - 1] = '\0';
+	    (*name)[rep.nameLen == 0 ? 0 : rep.nameLen - 1] = '\0';
 	    strncpy(*busID,tmpBuf+rep.nameLen,rep.busIDLen);
-	    (*busID)[rep.busIDLen - 1] = '\0';
+	    (*busID)[rep.busIDLen == 0 ? 0 : rep.busIDLen - 1] = '\0';
 	    XFree(tmpBuf);
 	} else {
 	    XFree(*name);
