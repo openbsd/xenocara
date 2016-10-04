@@ -23,6 +23,7 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
+#include <limits.h>
 #include "Xfixesint.h"
 
 XserverRegion
@@ -333,9 +334,17 @@ XFixesFetchRegionAndBounds (Display	    *dpy,
     bounds->y = rep.y;
     bounds->width = rep.width;
     bounds->height = rep.height;
-    nbytes = (long) rep.length << 2;
-    nrects = rep.length >> 1;
-    rects = Xmalloc (nrects * sizeof (XRectangle));
+
+    if (rep.length < (INT_MAX >> 2)) {
+	nbytes = (long) rep.length << 2;
+	nrects = rep.length >> 1;
+	rects = Xmalloc (nrects * sizeof (XRectangle));
+    } else {
+	nbytes = 0;
+	nrects = 0;
+	rects = NULL;
+    }
+
     if (!rects)
     {
 	_XEatDataWords(dpy, rep.length);
