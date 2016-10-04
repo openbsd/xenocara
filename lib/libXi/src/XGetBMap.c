@@ -92,7 +92,8 @@ XGetDeviceButtonMapping(
 
     status = _XReply(dpy, (xReply *) & rep, 0, xFalse);
     if (status == 1) {
-	if (rep.length <= (sizeof(mapping) >> 2)) {
+	if (rep.length <= (sizeof(mapping) >> 2) &&
+	    rep.nElts <= (rep.length << 2)) {
 	    unsigned long nbytes = rep.length << 2;
 	    _XRead(dpy, (char *)mapping, nbytes);
 

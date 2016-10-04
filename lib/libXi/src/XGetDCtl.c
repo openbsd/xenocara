@@ -93,7 +93,8 @@ XGetDeviceControl(
     if (rep.length > 0) {
 	unsigned long nbytes;
 	size_t size = 0;
-	if (rep.length < (INT_MAX >> 2)) {
+	if (rep.length < (INT_MAX >> 2) &&
+	    (rep.length << 2) >= sizeof(xDeviceState)) {
 	    nbytes = (unsigned long) rep.length << 2;
 	    d = Xmalloc(nbytes);
 	}
@@ -117,7 +118,8 @@ XGetDeviceControl(
 	    size_t val_size;
 
 	    r = (xDeviceResolutionState *) d;
-	    if (r->num_valuators >= (INT_MAX / (3 * sizeof(int))))
+	    if (sizeof(xDeviceResolutionState) > nbytes ||
+		r->num_valuators >= (INT_MAX / (3 * sizeof(int))))
 		goto out;
 	    val_size = 3 * sizeof(int) * r->num_valuators;
 	    if ((sizeof(xDeviceResolutionState) + val_size) > nbytes)

@@ -73,7 +73,7 @@ XQueryDeviceState(
     xQueryDeviceStateReply rep;
     XDeviceState *state = NULL;
     XInputClass *any, *Any;
-    char *data = NULL;
+    char *data = NULL, *end = NULL;
     XExtDisplayInfo *info = XInput_find_display(dpy);
 
     LockDisplay(dpy);
@@ -92,6 +92,7 @@ XQueryDeviceState(
 	if (rep.length < (INT_MAX >> 2)) {
 	    rlen = (unsigned long) rep.length << 2;
 	    data = Xmalloc(rlen);
+	    end = data + rlen;
 	}
 	if (!data) {
 	    _XEatDataWords(dpy, rep.length);
@@ -100,7 +101,8 @@ XQueryDeviceState(
 	_XRead(dpy, data, rlen);
 
 	for (i = 0, any = (XInputClass *) data; i < (int)rep.num_classes; i++) {
-	    if (any->length > rlen)
+	    if ((char *)any + sizeof(XInputClass) > end ||
+		any->length == 0 || any->length > rlen)
 		goto out;
 	    rlen -= any->length;
 
@@ -114,6 +116,8 @@ XQueryDeviceState(
 	    case ValuatorClass:
 	    {
 		xValuatorState *v = (xValuatorState *) any;
+		if ((char *)any + sizeof(xValuatorState) > end)
+		    goto out;
 		size += (sizeof(XValuatorState) +
 			 (v->num_valuators * sizeof(int)));
 	    }

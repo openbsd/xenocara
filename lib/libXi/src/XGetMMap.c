@@ -53,6 +53,7 @@ SOFTWARE.
 #include <config.h>
 #endif
 
+#include <limits.h>
 #include <X11/extensions/XI.h>
 #include <X11/extensions/XIproto.h>
 #include <X11/Xlibint.h>
@@ -85,8 +86,14 @@ XGetDeviceModifierMapping(
 	SyncHandle();
 	return (XModifierKeymap *) NULL;
     }
-    nbytes = (unsigned long)rep.length << 2;
-    res = (XModifierKeymap *) Xmalloc(sizeof(XModifierKeymap));
+    if (rep.length < (INT_MAX >> 2) &&
+	rep.numKeyPerModifier == rep.length >> 1) {
+	nbytes = (unsigned long)rep.length << 2;
+	res = (XModifierKeymap *) Xmalloc(sizeof(XModifierKeymap));
+    } else {
+	nbytes = 0;
+	res = NULL;
+    }
     if (res) {
 	res->modifiermap = (KeyCode *) Xmalloc(nbytes);
 	if (res->modifiermap)

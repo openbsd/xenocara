@@ -53,6 +53,7 @@ SOFTWARE.
 #include <config.h>
 #endif
 
+#include <limits.h>
 #include <X11/extensions/XI.h>
 #include <X11/extensions/XIproto.h>
 #include <X11/Xlibint.h>
@@ -86,9 +87,15 @@ XOpenDevice(
 	return (XDevice *) NULL;
     }
 
-    rlen = rep.length << 2;
-    dev = (XDevice *) Xmalloc(sizeof(XDevice) + rep.num_classes *
-			      sizeof(XInputClassInfo));
+    if (rep.length < INT_MAX >> 2 &&
+	(rep.length << 2) >= rep.num_classes * sizeof(xInputClassInfo)) {
+	rlen = rep.length << 2;
+	dev = (XDevice *) Xmalloc(sizeof(XDevice) + rep.num_classes *
+				  sizeof(XInputClassInfo));
+    } else {
+	rlen = 0;
+	dev = NULL;
+    }
     if (dev) {
 	int dlen;	/* data length */
 

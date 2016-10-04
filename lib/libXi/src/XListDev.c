@@ -74,7 +74,7 @@ static int pad_to_xid(int base_size)
 }
 
 static size_t
-SizeClassInfo(xAnyClassPtr *any, int num_classes)
+SizeClassInfo(xAnyClassPtr *any, size_t len, int num_classes)
 {
     int size = 0;
     int j;
@@ -90,6 +90,8 @@ SizeClassInfo(xAnyClassPtr *any, int num_classes)
                 {
                     xValuatorInfoPtr v;
 
+                    if (len < sizeof(v))
+                        return 0;
                     v = (xValuatorInfoPtr) *any;
                     size += pad_to_xid(sizeof(XValuatorInfo) +
                         (v->num_axes * sizeof(XAxisInfo)));
@@ -98,6 +100,8 @@ SizeClassInfo(xAnyClassPtr *any, int num_classes)
             default:
                 break;
         }
+        if ((*any)->length > len)
+            return 0;
         *any = (xAnyClassPtr) ((char *)(*any) + (*any)->length);
     }
 
@@ -170,7 +174,7 @@ XListInputDevices(
     register Display	*dpy,
     int			*ndevices)
 {
-    size_t size;
+    size_t s, size;
     xListInputDevicesReq *req;
     xListInputDevicesReply rep;
     xDeviceInfo *list, *slist = NULL;
@@ -178,6 +182,7 @@ XListInputDevices(
     XDeviceInfo *clist = NULL;
     xAnyClassPtr any, sav_any;
     XAnyClassPtr Any;
+    char *end = NULL;
     unsigned char *nptr, *Nptr;
     int i;
     unsigned long rlen;
@@ -213,16 +218,20 @@ XListInputDevices(
 
 	any = (xAnyClassPtr) ((char *)list + (*ndevices * sizeof(xDeviceInfo)));
 	sav_any = any;
+	end = (char *)list + rlen;
 	for (i = 0; i < *ndevices; i++, list++) {
-            size += SizeClassInfo(&any, (int)list->num_classes);
+            s = SizeClassInfo(&any, end - (char *)any, (int)list->num_classes);
+            if (!s)
+                goto out;
+            size += s;
 	}
 
-	Nptr = ((unsigned char *)list) + rlen + 1;
+	Nptr = ((unsigned char *)list) + rlen;
 	for (i = 0, nptr = (unsigned char *)any; i < *ndevices; i++) {
+	    if (nptr >= Nptr)
+		goto out;
 	    size += *nptr + 1;
 	    nptr += (*nptr + 1);
-	    if (nptr > Nptr)
-		goto out;
 	}
 
 	clist = (XDeviceInfoPtr) Xmalloc(size);

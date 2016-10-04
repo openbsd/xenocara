@@ -54,6 +54,7 @@ SOFTWARE.
 #include <config.h>
 #endif
 
+#include <limits.h>
 #include <X11/extensions/XI.h>
 #include <X11/extensions/XIproto.h>
 #include <X11/Xlibint.h>
@@ -93,9 +94,16 @@ XGetDeviceKeyMapping(register Display * dpy, XDevice * dev,
 	return (KeySym *) NULL;
     }
     if (rep.length > 0) {
-	*syms_per_code = rep.keySymsPerKeyCode;
-	nbytes = (long)rep.length << 2;
-	mapping = (KeySym *) Xmalloc((unsigned)nbytes);
+	if (rep.length < INT_MAX >> 2 &&
+	    rep.length == rep.keySymsPerKeyCode * keycount) {
+	    *syms_per_code = rep.keySymsPerKeyCode;
+	    nbytes = (long)rep.length << 2;
+	    mapping = (KeySym *) Xmalloc((unsigned)nbytes);
+	} else {
+	    *syms_per_code = 0;
+	    nbytes = 0;
+	    mapping = NULL;
+	}
 	if (mapping)
 	    _XRead(dpy, (char *)mapping, nbytes);
 	else
