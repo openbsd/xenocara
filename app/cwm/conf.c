@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.212 2016/10/04 15:52:32 okan Exp $
+ * $OpenBSD: conf.c,v 1.213 2016/10/05 13:10:59 okan Exp $
  */
 
 #include <sys/types.h>
@@ -283,6 +283,7 @@ conf_init(struct conf *c)
 	    homedir, ".ssh/known_hosts");
 
 	c->font = xstrdup("sans-serif:pixelsize=14:bold");
+	c->wmname = xstrdup("CWM");
 }
 
 void
@@ -327,6 +328,7 @@ conf_clear(struct conf *c)
 		free(c->color[i]);
 
 	free(c->font);
+	free(c->wmname);
 }
 
 void
