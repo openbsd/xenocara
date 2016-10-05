@@ -1,4 +1,4 @@
-.\"	$OpenBSD: cwmrc.5,v 1.62 2016/09/12 13:47:00 okan Exp $
+.\"	$OpenBSD: cwmrc.5,v 1.63 2016/10/05 14:01:23 okan Exp $
 .\"
 .\" Copyright (c) 2004,2005 Marius Aamodt Eriksen <marius@monkey.org>
 .\"
@@ -14,7 +14,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: September 12 2016 $
+.Dd $Mdocdate: October 5 2016 $
 .Dt CWMRC 5
 .Os
 .Sh NAME
@@ -266,13 +266,13 @@ Launch
 .Dq ssh
 menu.
 .It group[n]
-Select group n, where n is 1-9.
+Toggle visibility of group n, where n is 1-9.
 .It grouponly[n]
 Like
 .Ar group[n]
 but also hides the other groups.
 .It nogroup
-Select all groups.
+Toggle visibility of all groups.
 .It grouptoggle
 Toggle group membership of current window.
 .It movetogroup[n]
