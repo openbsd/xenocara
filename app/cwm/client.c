@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.228 2016/10/04 15:52:32 okan Exp $
+ * $OpenBSD: client.c,v 1.229 2016/10/06 14:30:05 okan Exp $
  */
 
 #include <sys/types.h>
@@ -683,6 +683,10 @@ client_cycle(struct screen_ctx *sc, int flags)
 	sc->cycling = 1;
 	client_ptrsave(oldcc);
 	client_raise(newcc);
+	if (!client_inbound(newcc, newcc->ptr.x, newcc->ptr.y)) {
+		newcc->ptr.x = newcc->geom.w / 2;
+		newcc->ptr.y = newcc->geom.h / 2;
+	}
 	client_ptrwarp(newcc);
 }
 
