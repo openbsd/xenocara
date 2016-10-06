@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: mousefunc.c,v 1.112 2016/10/03 13:52:18 okan Exp $
+ * $OpenBSD: mousefunc.c,v 1.113 2016/10/06 14:41:19 okan Exp $
  */
 
 #include <sys/types.h>
@@ -33,7 +33,7 @@
 #include "calmwm.h"
 
 void
-mousefunc_client_resize(struct client_ctx *cc, union arg *arg)
+mousefunc_client_resize(struct client_ctx *cc, union arg *arg, int xev)
 {
 	XEvent			 ev;
 	Time			 ltime = 0;
@@ -88,7 +88,7 @@ mousefunc_client_resize(struct client_ctx *cc, union arg *arg)
 }
 
 void
-mousefunc_client_move(struct client_ctx *cc, union arg *arg)
+mousefunc_client_move(struct client_ctx *cc, union arg *arg, int xev)
 {
 	XEvent			 ev;
 	Time			 ltime = 0;
