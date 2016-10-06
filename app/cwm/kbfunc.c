@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.130 2016/10/06 14:41:19 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.131 2016/10/06 14:53:53 okan Exp $
  */
 
 #include <sys/types.h>
@@ -456,7 +456,7 @@ out:
 }
 
 void
-kbfunc_client_label(struct client_ctx *cc, union arg *arg, int xev)
+kbfunc_menu_client_label(struct client_ctx *cc, union arg *arg, int xev)
 {
 	struct menu	*mi;
 	struct menu_q	 menuq;
@@ -505,7 +505,7 @@ kbfunc_group_alltoggle(struct client_ctx *cc, union arg *arg, int xev)
 }
 
 void
-kbfunc_client_grouptoggle(struct client_ctx *cc, union arg *arg, int xev)
+kbfunc_client_toggle_group(struct client_ctx *cc, union arg *arg, int xev)
 {
 	if (xev == CWM_KEY) {
 		/* For X apps that steal events. */
