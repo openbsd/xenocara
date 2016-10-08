@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.16 2016/10/08 19:09:34 matthieu Exp $
+# $OpenBSD: Makefile,v 1.17 2016/10/08 19:29:18 matthieu Exp $
 
 DEBUG?=
 
@@ -34,6 +34,8 @@ includes:
 	done
 
 beforeinstall: includes
+
+NOPROFILE=
 
 PKGCONFIG=	glw.pc
 PACKAGE_VERSION=$(MESA_MAJOR).$(MESA_MINOR).$(MESA_TINY)
