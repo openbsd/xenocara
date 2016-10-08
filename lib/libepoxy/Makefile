@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.4 2016/09/01 10:37:40 jsg Exp $
+# $OpenBSD: Makefile,v 1.5 2016/10/08 19:09:34 matthieu Exp $
 .include <bsd.xconf.mk>
 
 EPOXY=	${.CURDIR}/../../dist/libepoxy
@@ -52,25 +52,15 @@ includes: _SUBDIRUSE
 
 NOPROFILE=
 
+PKGCONFIG=		epoxy.pc
+PACKAGE_VERSION=	$(EPOXY_MAJOR).$(EPOXY_MINOR).$(EPOXY_TINY)
+EXTRA_PKGCONFIG_SUBST=	'-e s,@DLOPEN_LIBS@,,'
+
 obj: _xenocara_obj
 
 .include <bsd.lib.mk>
 .include <bsd.xorg.mk>
 
-epoxy.pc: ${EPOXY}/epoxy.pc.in Makefile
-	sed -e 's,@prefix@,$(X11BASE),' \
-	    -e 's,@exec_prefix@,$(X11BASE),' \
-	    -e 's,@libdir@,${LIBDIR},' \
-	    -e 's,@includedir@,${INCSDIR},' \
-	    -e 's,@DLOPEN_LIBS@,,' \
-	    -e 's,@PACKAGE_VERSION@,$(EPOXY_MAJOR).$(EPOXY_MINOR),' \
-	< ${EPOXY}/epoxy.pc.in > epoxy.pc
-
-afterinstall: epoxy.pc
-	$(INSTALL) -c -m 644 -o root -g wheel epoxy.pc \
-		${DESTDIR}${LIBDIR}/pkgconfig
-
-CLEANFILES+= epoxy.pc
-
+.PATH: ${EPOXY}
 .PATH: ${EPOXY}/src
 .PATH: ${.CURDIR}/generated/src
