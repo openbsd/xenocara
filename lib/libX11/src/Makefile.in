@@ -1387,10 +1387,8 @@ ks_tables.h: $(KEYSYMDEFS) $(top_builddir)/src/util/makekeys$(EXEEXT)
 	$(top_builddir)/src/util/makekeys $(KEYSYMDEFS) > ks_tables_h
 	mv ks_tables_h $@
 
-$(top_builddir)/src/util/makekeys$(EXEEXT): force
+$(top_builddir)/src/util/makekeys$(EXEEXT): $(top_builddir)/src/util/makekeys.c
 	cd util && $(MAKE)
-
-force:
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
