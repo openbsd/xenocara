@@ -1,10 +1,10 @@
-#	$OpenBSD: Makefile,v 1.2 2014/05/18 10:33:05 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.3 2016/10/08 14:09:10 matthieu Exp $
 
 FONTCONFIG =	${.CURDIR}/../../../dist/fontconfig
 
 PKGCONFIG = fontconfig.pc
 
-PACKAGE_VERSION = 2.11.1
+PACKAGE_VERSION = 2.12.1
 PACKAGE = fontconfig
 VERSION = $(PACKAGE_VERSION)
 
