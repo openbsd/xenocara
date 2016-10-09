@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile.inc,v 1.6 2012/10/06 15:41:12 shadchin Exp $
+#	$OpenBSD: Makefile.inc,v 1.7 2016/10/09 09:54:56 matthieu Exp $
 
 XKC_TOP?=	../../..
 XKB_DIR=	${.CURDIR}/${XKC_TOP}/dist/xkeyboard-config
@@ -21,6 +21,10 @@ install:	install-files _SUBDIRUSE
 
 .if !target(intall-files)
 install-files:
+.endif
+
+.if !target(clean)
+clean:
 .endif
 
 .PATH: ${XKB_DIR}/${XKB_SUBDIR}
