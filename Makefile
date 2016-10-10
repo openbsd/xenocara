@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.73 2016/10/02 09:25:23 tb Exp $
+# $OpenBSD: Makefile,v 1.74 2016/10/10 13:34:43 matthieu Exp $
 .include <bsd.own.mk>
 .include <bsd.xconf.mk>
 
@@ -43,7 +43,6 @@ bootstrap-root:
 
 beforeinstall beforebuild:
 	cd util/macros && exec ${MAKE} -f Makefile.bsd-wrapper install
-	exec ${MAKE} includes
 
 afterinstall afterbuild:
 	exec ${MAKE} fix-appd

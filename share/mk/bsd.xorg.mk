@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.53 2016/03/28 11:59:06 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.54 2016/10/10 13:34:43 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006,2012 Matthieu Herrb
 #
@@ -127,10 +127,6 @@ realinstall: install-headers-subdirs
 
 .if !target(.MAIN)
 .MAIN: all
-.endif
-
-.if !target(includes)
-includes: _SUBDIRUSE
 .endif
 
 .if defined(SHARED_LIBS)

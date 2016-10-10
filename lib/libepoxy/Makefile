@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.5 2016/10/08 19:09:34 matthieu Exp $
+# $OpenBSD: Makefile,v 1.6 2016/10/10 13:34:43 matthieu Exp $
 .include <bsd.xconf.mk>
 
 EPOXY=	${.CURDIR}/../../dist/libepoxy
@@ -49,6 +49,8 @@ includes: _SUBDIRUSE
 		echo "\tinstalling $$i"; \
 		eval "$$j"; \
 	done
+
+beforeinstall: includes 
 
 NOPROFILE=
 
