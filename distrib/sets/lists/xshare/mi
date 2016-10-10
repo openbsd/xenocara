@@ -3369,6 +3369,7 @@
 ./usr/X11R6/share/X11/xkb/symbols/apl
 ./usr/X11R6/share/X11/xkb/symbols/ara
 ./usr/X11R6/share/X11/xkb/symbols/at
+./usr/X11R6/share/X11/xkb/symbols/au
 ./usr/X11R6/share/X11/xkb/symbols/az
 ./usr/X11R6/share/X11/xkb/symbols/ba
 ./usr/X11R6/share/X11/xkb/symbols/bd
@@ -3487,6 +3488,7 @@
 ./usr/X11R6/share/X11/xkb/symbols/nokia_vndr/su-8w
 ./usr/X11R6/share/X11/xkb/symbols/np
 ./usr/X11R6/share/X11/xkb/symbols/olpc
+./usr/X11R6/share/X11/xkb/symbols/parens
 ./usr/X11R6/share/X11/xkb/symbols/pc
 ./usr/X11R6/share/X11/xkb/symbols/ph
 ./usr/X11R6/share/X11/xkb/symbols/pk
