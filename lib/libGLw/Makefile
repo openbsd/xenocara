@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.17 2016/10/08 19:29:18 matthieu Exp $
+# $OpenBSD: Makefile,v 1.18 2016/10/10 13:27:14 matthieu Exp $
 
 DEBUG?=
 
@@ -9,7 +9,7 @@ MESA_MINOR=	11
 MESA_TINY=	2
 
 CPPFLAGS += -I${X11BASE}/include \
-	-I${.CURDIR}
+	-I${.CURDIR} -I${.CURDIR}/GL
 
 SRCS= \
 	GLwDrawA.c \
@@ -26,7 +26,7 @@ INCS= \
 obj: _xenocara_obj
 
 includes:
-	cd ${.CURDIR}; for i in ${INCS}; do \
+	cd ${.CURDIR}/GL; for i in ${INCS}; do \
 	    j="cmp -s $$i ${DESTDIR}${INCSDIR}/GL/$$i || \
 		${INSTALL_DATA} $$i ${DESTDIR}${INCSDIR}/GL"; \
 		echo "\tinstalling $$i"; \
