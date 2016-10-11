@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-# $Id: Makefile.in,v 1.9 2013/03/09 14:59:44 matthieu Exp $
+# $Id: Makefile.in,v 1.10 2016/10/11 22:14:31 matthieu Exp $
 # 
 #  Copyright 2005  Red Hat, Inc.
 # 
@@ -77,9 +77,9 @@ bin_PROGRAMS = beforelight$(EXEEXT)
 subdir = .
 DIST_COMMON = README $(am__configure_deps) $(dist_appdefault_DATA) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(srcdir)/config.h.in $(top_srcdir)/configure AUTHORS COPYING \
-	ChangeLog INSTALL NEWS config.guess config.sub depcomp \
-	install-sh missing
+	$(srcdir)/config.h.in $(top_srcdir)/configure COPYING \
+	ChangeLog INSTALL config.guess config.sub depcomp install-sh \
+	missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -281,6 +281,8 @@ PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
+PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
+PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@

@@ -51,7 +51,7 @@ am__make_dryrun = \
           case $$am__flg in \
             *=*|--*) ;; \
             *n*) am__dry=yes; break;; \
-    esac; \
+          esac; \
         done;; \
     esac; \
     test $$am__dry = yes; \
@@ -489,6 +489,7 @@ LLVM_LIBS = @LLVM_LIBS@
 LLVM_VERSION = @LLVM_VERSION@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
+MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
 MESA_LLVM = @MESA_LLVM@
@@ -1096,7 +1097,7 @@ all: $(BUILT_SOURCES)
 
 .SUFFIXES:
 .SUFFIXES: .c .cpp .lo .o .obj
-$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(srcdir)/Makefile.sources $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(srcdir)/Makefile.sources $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -1122,9 +1123,9 @@ $(srcdir)/Makefile.sources:
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 
-$(top_srcdir)/configure:  $(am__configure_deps)
+$(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-$(ACLOCAL_M4):  $(am__aclocal_m4_deps)
+$(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
 
@@ -2288,16 +2289,16 @@ check-TESTS: $(TESTS)
 	    else \
 	      skip=`expr $$skip + 1`; \
 	      col=$$blu; res=SKIP; \
-	  fi; \
+	    fi; \
 	    echo "$${col}$$res$${std}: $$tst"; \
 	  done; \
 	  if test "$$all" -eq 1; then \
 	    tests="test"; \
 	    All=""; \
-	else \
+	  else \
 	    tests="tests"; \
 	    All="All "; \
-	fi; \
+	  fi; \
 	  if test "$$failed" -eq 0; then \
 	    if test "$$xfail" -eq 0; then \
 	      banner="$$All$$all $$tests passed"; \
@@ -2305,7 +2306,7 @@ check-TESTS: $(TESTS)
 	      if test "$$xfail" -eq 1; then failures=failure; else failures=failures; fi; \
 	      banner="$$All$$all $$tests behaved as expected ($$xfail expected $$failures)"; \
 	    fi; \
-	    else \
+	  else \
 	    if test "$$xpass" -eq 0; then \
 	      banner="$$failed of $$all $$tests failed"; \
 	    else \
@@ -2318,18 +2319,18 @@ check-TESTS: $(TESTS)
 	  if test "$$skip" -ne 0; then \
 	    if test "$$skip" -eq 1; then \
 	      skipped="($$skip test was not run)"; \
-	 else								\
+	    else \
 	      skipped="($$skip tests were not run)"; \
-	fi;								\
+	    fi; \
 	    test `echo "$$skipped" | wc -c` -le `echo "$$banner" | wc -c` || \
 	      dashes="$$skipped"; \
-	  fi;								\
+	  fi; \
 	  report=""; \
 	  if test "$$failed" -ne 0 && test -n "$(PACKAGE_BUGREPORT)"; then \
 	    report="Please report to $(PACKAGE_BUGREPORT)"; \
 	    test `echo "$$report" | wc -c` -le `echo "$$banner" | wc -c` || \
 	      dashes="$$report"; \
-	fi;								\
+	  fi; \
 	  dashes=`echo "$$dashes" | sed s/./=/g`; \
 	  if test "$$failed" -eq 0; then \
 	    col="$$grn"; \

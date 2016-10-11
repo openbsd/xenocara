@@ -9386,6 +9386,44 @@ fi
 rmdir .tst 2>/dev/null
 AC_SUBST([am__leading_dot])])
 
+# Add --enable-maintainer-mode option to configure.         -*- Autoconf -*-
+# From Jim Meyering
+
+# Copyright (C) 1996-2012 Free Software Foundation, Inc.
+#
+# This file is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
+
+# AM_MAINTAINER_MODE([DEFAULT-MODE])
+# ----------------------------------
+# Control maintainer-specific portions of Makefiles.
+# Default is to disable them, unless 'enable' is passed literally.
+# For symmetry, 'disable' may be passed as well.  Anyway, the user
+# can override the default with the --enable/--disable switch.
+AC_DEFUN([AM_MAINTAINER_MODE],
+[m4_case(m4_default([$1], [disable]),
+       [enable], [m4_define([am_maintainer_other], [disable])],
+       [disable], [m4_define([am_maintainer_other], [enable])],
+       [m4_define([am_maintainer_other], [enable])
+        m4_warn([syntax], [unexpected argument to AM@&t@_MAINTAINER_MODE: $1])])
+AC_MSG_CHECKING([whether to enable maintainer-specific portions of Makefiles])
+  dnl maintainer-mode's default is 'disable' unless 'enable' is passed
+  AC_ARG_ENABLE([maintainer-mode],
+    [AS_HELP_STRING([--]am_maintainer_other[-maintainer-mode],
+      am_maintainer_other[ make rules and dependencies not useful
+      (and sometimes confusing) to the casual installer])],
+    [USE_MAINTAINER_MODE=$enableval],
+    [USE_MAINTAINER_MODE=]m4_if(am_maintainer_other, [enable], [no], [yes]))
+  AC_MSG_RESULT([$USE_MAINTAINER_MODE])
+  AM_CONDITIONAL([MAINTAINER_MODE], [test $USE_MAINTAINER_MODE = yes])
+  MAINT=$MAINTAINER_MODE_TRUE
+  AC_SUBST([MAINT])dnl
+]
+)
+
+AU_DEFUN([jm_MAINTAINER_MODE], [AM_MAINTAINER_MODE])
+
 # Check to see how 'make' treats includes.	            -*- Autoconf -*-
 
 # Copyright (C) 2001-2012 Free Software Foundation, Inc.
@@ -9791,7 +9829,7 @@ AC_SUBST([am__untar])
 
 dnl fontutil.m4.  Generated from fontutil.m4.in by configure.
 dnl
-dnl This file comes from X.Org's font-util 1.3.0
+dnl This file comes from X.Org's font-util 1.3.1
 dnl
 dnl Copyright (c) 2009, Oracle and/or its affiliates. All rights reserved.
 dnl
@@ -9856,7 +9894,7 @@ dnl from the copyright holders.
 # See the "minimum version" comment for each macro you use to see what
 # version you require.
 m4_defun([XORG_FONT_MACROS_VERSION],[
-m4_define([vers_have], [1.3.0])
+m4_define([vers_have], [1.3.1])
 m4_define([maj_have], m4_substr(vers_have, 0, m4_index(vers_have, [.])))
 m4_define([maj_needed], m4_substr([$1], 0, m4_index([$1], [.])))
 m4_if(m4_cmp(maj_have, maj_needed), 0,,
@@ -10073,10 +10111,11 @@ AC_DEFUN([XORG_FONT_CHECK_COMPRESSION],[
 # by ucs2any, and export it as MAPFILES_PATH to the Makefiles
 
 AC_DEFUN([XORG_FONT_UCS2ANY],[
+	AC_REQUIRE([PKG_PROG_PKG_CONFIG])
 	XORG_FONT_REQUIRED_PROG(UCS2ANY, ucs2any)
 	PKG_CHECK_MODULES(MAPS, [fontutil])
 	AC_MSG_CHECKING([for ucs2any encoding data files])
-	MAPFILES_PATH=`pkg-config --variable=mapdir fontutil`
+	MAPFILES_PATH=`$PKG_CONFIG --variable=mapdir fontutil`
 	AC_SUBST(MAPFILES_PATH)
 	AC_MSG_RESULT([${MAPFILES_PATH}])
 ])
@@ -10227,6 +10266,7 @@ m4_if(m4_version_compare(vers_have, [$1]), -1,
 m4_undefine([vers_have])
 m4_undefine([maj_have])
 m4_undefine([maj_needed])
+AM_MAINTAINER_MODE
 ]) # XORG_MACROS_VERSION
 
 # XORG_PROG_RAWCPP()

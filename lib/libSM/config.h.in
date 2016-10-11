@@ -82,9 +82,6 @@
 /* Patch version of this package */
 #undef PACKAGE_VERSION_PATCHLEVEL
 
-/* Define as the return type of signal handlers (`int' or `void'). */
-#undef RETSIGTYPE
-
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
@@ -96,3 +93,6 @@
 
 /* Version number of package */
 #undef VERSION
+
+/* Defined if needed to expose struct msghdr.msg_control */
+#undef _XOPEN_SOURCE
