@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.54 2016/10/10 13:34:43 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.55 2016/10/11 22:36:53 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006,2012 Matthieu Herrb
 #
@@ -141,31 +141,10 @@ all:	config.status
 	@exec ${MAKE} ${_lt_libs}
 .endif
 
-
-REORDER_DEPENDENCIES += ${X11BASE}/share/mk/automake.dep
-ECHO_REORDER ?= :
-
 .if !target(config.status)
 config.status:
 .if defined(XENOCARA_RERUN_AUTOCONF) && ${XENOCARA_RERUN_AUTOCONF:L} == "yes"
 	cd ${_SRCDIR}; ${AUTOTOOLS_ENV} exec autoreconf -v --install --force
-.else
-.if !defined(NO_REORDER)
-	@sed -e '/^#/d' ${REORDER_DEPENDENCIES} | \
-	  tsort -r|while read f; do \
-	    cd ${_SRCDIR}; \
-		case $$f in \
-		/*) \
-			find . -name $${f#/} -print| while read i; \
-				do ${ECHO_REORDER} "Touching $$i"; touch $$i; done \
-			;; \
-		*) \
-			if test -e $$f ; then \
-				${ECHO_REORDER} "Touching $$f"; touch $$f; \
-			fi \
-			;; \
-		esac; done
-.endif
 .endif
 	${CONFIGURE_ENV} PATH=$(XENOCARA_PATH) \
 		exec sh ${_SRCDIR}/configure --prefix=${X11BASE} \
