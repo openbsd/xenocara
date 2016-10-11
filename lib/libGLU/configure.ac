@@ -28,6 +28,8 @@ AC_CANONICAL_HOST
 
 AM_INIT_AUTOMAKE([dist-bzip2 foreign subdir-objects])
 
+AM_MAINTAINER_MODE
+
 LT_PREREQ([2.2])
 LT_INIT
 

@@ -29,6 +29,8 @@ AC_INIT([util-macros],
 AC_CONFIG_SRCDIR([Makefile.am])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 
+AM_MAINTAINER_MODE
+
 # Checks for programs.
 AC_PROG_INSTALL
 

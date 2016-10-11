@@ -46,6 +46,8 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_SYSTEM
 AM_INIT_AUTOMAKE([foreign tar-ustar dist-xz subdir-objects])
 
+AM_MAINTAINER_MODE
+
 dnl We only support native Windows builds (MinGW/MSVC) through SCons.
 case "$host_os" in
 mingw*)

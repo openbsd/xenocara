@@ -61,6 +61,8 @@ m4_define([pixman_version],[pixman_major.pixman_minor.pixman_micro])
 AC_INIT(pixman, pixman_version, [pixman@lists.freedesktop.org], pixman)
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 
+AM_MAINTAINER_MODE
+
 # Suppress verbose compile lines
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
