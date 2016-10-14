@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.74 2016/10/10 13:34:43 matthieu Exp $
+# $OpenBSD: Makefile,v 1.75 2016/10/14 10:14:00 natano Exp $
 .include <bsd.own.mk>
 .include <bsd.xconf.mk>
 
@@ -24,18 +24,27 @@ build:
 	@exit 2
 .else
 build: 
-	exec ${SUDO} ${MAKE} bootstrap-root
-	cd util/macros && exec ${MAKE} -f Makefile.bsd-wrapper
-	exec ${SUDO} ${MAKE} beforebuild
+	@if [[ `id -u` -ne 0 ]]; then \
+		echo $@ must be called by root >&2; \
+		false; \
+	fi
+	exec ${MAKE} bootstrap-root
+	cd util/macros && \
+	    exec su ${BUILDUSER} -c 'exec ${MAKE} -f Makefile.bsd-wrapper'
+	exec ${MAKE} beforebuild
 	exec ${MAKE} realbuild
-	exec ${SUDO} ${MAKE} afterbuild
+	exec ${MAKE} afterbuild
 .endif
 
 realbuild: _SUBDIRUSE
 	# that's all folks
 
 bootstrap:
-	exec ${SUDO} ${MAKE} bootstrap-root
+	@if [[ `id -u` -ne 0 ]]; then \
+		echo $@ must be called by root >&2; \
+		false; \
+	fi
+	exec ${MAKE} bootstrap-root
 
 bootstrap-root:
 	exec ${MAKE} distrib-dirs

@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.55 2016/10/11 22:36:53 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.56 2016/10/14 10:14:00 natano Exp $ -*- makefile  -*-
 #
 # Copyright © 2006,2012 Matthieu Herrb
 #
@@ -186,10 +186,11 @@ build:
 	@exit 2
 .else
 build:
-	cd ${.CURDIR} && exec ${MAKE} ${MAKE_FLAGS} ${_wrapper} cleandir
-	cd ${.CURDIR} && exec ${MAKE} ${MAKE_FLAGS} ${_wrapper} depend
-	cd ${.CURDIR} && exec ${MAKE} ${MAKE_FLAGS} ${_wrapper} all
-	cd ${.CURDIR} && exec ${SUDO} ${MAKE} ${MAKE_FLAGS} ${_wrapper} install
+	cd ${.CURDIR} && \
+	    su ${BUILDUSER} -c 'exec ${MAKE} ${MAKE_FLAGS} ${_wrapper} cleandir' && \
+	    su ${BUILDUSER} -c 'exec ${MAKE} ${MAKE_FLAGS} ${_wrapper} depend' && \
+	    su ${BUILDUSER} -c 'exec ${MAKE} ${MAKE_FLAGS} ${_wrapper} all' && \
+	    exec ${MAKE} ${MAKE_FLAGS} ${_wrapper} install
 .endif
 .endif
 
@@ -225,6 +226,16 @@ _SUBDIRUSE:
 
 _xenocara_obj! _SUBDIRUSE
 	@cd $(.CURDIR); \
+	if [[ `id -u` -eq 0 && ${BUILDUSER} != root ]]; then \
+		SETOWNER="chown -h ${BUILDUSER}"; \
+		_mkdirs() { \
+			su ${BUILDUSER} -c "mkdir -p $$1"; \
+		}; \
+		MKDIRS=_mkdirs; \
+	else \
+		MKDIRS="mkdir -p"; \
+		SETOWNER=:; \
+	fi; \
 	here=`/bin/pwd`; xsrcdir=`cd $(XSRCDIR); /bin/pwd`; \
 	subdir=$${here#$${xsrcdir}/}; \
 	if test $$here != $$subdir ; then \
@@ -234,9 +245,10 @@ _xenocara_obj! _SUBDIRUSE
 		X`readlink ${__objdir}` != X$$dest; then \
 		    if  test -e ${__objdir}; then rm -rf ${__objdir}; fi; \
 		    ln -sf $$dest ${__objdir}; \
+		    $$SETOWNER ${__objdir}; \
 	    fi; \
 	    if test -d ${XOBJDIR}; then \
-		    test -d $$dest || mkdir -p $$dest; \
+		    test -d $$dest || $$MKDIRS $$dest; \
 	    else \
 		    if test -e ${XOBJDIR}; then \
 			    echo "${XOBJDIR} is not a directory"; \
@@ -248,7 +260,7 @@ _xenocara_obj! _SUBDIRUSE
 	    dest=$$here/${__objdir}; \
 	    if test ! -d ${__objdir}; then \
 		echo "making $$dest"; \
-		mkdir $$dest; \
+		$$MKDIRS $$dest; \
 	    fi ; \
 	fi
 . endif
@@ -261,3 +273,4 @@ obj:	_xenocara_obj
 .PHONY: _xenocara_obj
 
 .include <bsd.subdir.mk>
+.include <bsd.own.mk>
