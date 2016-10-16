@@ -21,8 +21,10 @@
  *
  */
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -44,8 +46,8 @@ print_device_info(drmDevicePtr device, int i)
     if (device->bustype == DRM_BUS_PCI) {
         printf("\t\tpci\n");
         printf("\t\t\tdomain\t%04x\n",device->businfo.pci->domain);
-        printf("\t\t\tbu\t%02x\n", device->businfo.pci->bus);
-        printf("\t\t\tde\t%02x\n", device->businfo.pci->dev);
+        printf("\t\t\tbus\t%02x\n", device->businfo.pci->bus);
+        printf("\t\t\tdev\t%02x\n", device->businfo.pci->dev);
         printf("\t\t\tfunc\t%1u\n", device->businfo.pci->func);
 
         printf("\tdeviceinfo\n");
@@ -93,12 +95,15 @@ main(void)
 
         for (int j = 0; j < DRM_NODE_MAX; j++) {
             if (devices[i]->available_nodes & 1 << j) {
+                printf("Opening device %d node %s\n", i, devices[i]->nodes[j]);
                 fd = open(devices[i]->nodes[j], O_RDONLY | O_CLOEXEC, 0);
-                if (fd < 0)
+                if (fd < 0) {
+                    printf("Failed - %s (%d)\n", strerror(errno), errno);
                     continue;
+                }
 
                 if (drmGetDevice(fd, &device) == 0) {
-                    print_device_info(device, -1);
+                    print_device_info(device, i);
                     drmFreeDevice(&device);
                 }
                 close(fd);

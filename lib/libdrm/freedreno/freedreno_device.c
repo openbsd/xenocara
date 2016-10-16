@@ -42,44 +42,6 @@ static pthread_mutex_t table_lock = PTHREAD_MUTEX_INITIALIZER;
 struct fd_device * kgsl_device_new(int fd);
 struct fd_device * msm_device_new(int fd);
 
-static void
-add_bucket(struct fd_device *dev, int size)
-{
-	unsigned int i = dev->num_buckets;
-
-	assert(i < ARRAY_SIZE(dev->cache_bucket));
-
-	list_inithead(&dev->cache_bucket[i].list);
-	dev->cache_bucket[i].size = size;
-	dev->num_buckets++;
-}
-
-static void
-init_cache_buckets(struct fd_device *dev)
-{
-	unsigned long size, cache_max_size = 64 * 1024 * 1024;
-
-	/* OK, so power of two buckets was too wasteful of memory.
-	 * Give 3 other sizes between each power of two, to hopefully
-	 * cover things accurately enough.  (The alternative is
-	 * probably to just go for exact matching of sizes, and assume
-	 * that for things like composited window resize the tiled
-	 * width/height alignment and rounding of sizes to pages will
-	 * get us useful cache hit rates anyway)
-	 */
-	add_bucket(dev, 4096);
-	add_bucket(dev, 4096 * 2);
-	add_bucket(dev, 4096 * 3);
-
-	/* Initialize the linked lists for BO reuse cache. */
-	for (size = 4 * 4096; size <= cache_max_size; size *= 2) {
-		add_bucket(dev, size);
-		add_bucket(dev, size + size * 1 / 4);
-		add_bucket(dev, size + size * 2 / 4);
-		add_bucket(dev, size + size * 3 / 4);
-	}
-}
-
 struct fd_device * fd_device_new(int fd)
 {
 	struct fd_device *dev;
@@ -94,7 +56,15 @@ struct fd_device * fd_device_new(int fd)
 
 	if (!strcmp(version->name, "msm")) {
 		DEBUG_MSG("msm DRM device");
+		if (version->version_major != 1) {
+			ERROR_MSG("unsupported version: %u.%u.%u", version->version_major,
+				version->version_minor, version->version_patchlevel);
+			dev = NULL;
+			goto out;
+		}
+
 		dev = msm_device_new(fd);
+		dev->version = version->version_minor;
 #ifdef HAVE_FREEDRENO_KGSL
 	} else if (!strcmp(version->name, "kgsl")) {
 		DEBUG_MSG("kgsl DRM device");
@@ -104,6 +74,8 @@ struct fd_device * fd_device_new(int fd)
 		ERROR_MSG("unknown device: %s", version->name);
 		dev = NULL;
 	}
+
+out:
 	drmFreeVersion(version);
 
 	if (!dev)
@@ -113,7 +85,7 @@ struct fd_device * fd_device_new(int fd)
 	dev->fd = fd;
 	dev->handle_table = drmHashCreate();
 	dev->name_table = drmHashCreate();
-	init_cache_buckets(dev);
+	fd_bo_cache_init(&dev->bo_cache, FALSE);
 
 	return dev;
 }
@@ -123,9 +95,12 @@ struct fd_device * fd_device_new(int fd)
  */
 struct fd_device * fd_device_new_dup(int fd)
 {
-	struct fd_device *dev = fd_device_new(dup(fd));
+	int dup_fd = dup(fd);
+	struct fd_device *dev = fd_device_new(dup_fd);
 	if (dev)
 		dev->closefd = 1;
+	else
+		close(dup_fd);
 	return dev;
 }
 
@@ -137,7 +112,7 @@ struct fd_device * fd_device_ref(struct fd_device *dev)
 
 static void fd_device_del_impl(struct fd_device *dev)
 {
-	fd_cleanup_bo_cache(dev, 0);
+	fd_bo_cache_cleanup(&dev->bo_cache, 0);
 	drmHashDestroy(dev->handle_table);
 	drmHashDestroy(dev->name_table);
 	if (dev->closefd)
@@ -164,4 +139,9 @@ void fd_device_del(struct fd_device *dev)
 int fd_device_fd(struct fd_device *dev)
 {
 	return dev->fd;
+}
+
+enum fd_version fd_device_version(struct fd_device *dev)
+{
+	return dev->version;
 }

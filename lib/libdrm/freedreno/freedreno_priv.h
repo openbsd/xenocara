@@ -54,6 +54,13 @@
 #include "freedreno_ringbuffer.h"
 #include "drm.h"
 
+#ifndef TRUE
+#  define TRUE 1
+#endif
+#ifndef FALSE
+#  define FALSE 0
+#endif
+
 struct fd_device_funcs {
 	int (*bo_new_handle)(struct fd_device *dev, uint32_t size,
 			uint32_t flags, uint32_t *handle);
@@ -68,8 +75,15 @@ struct fd_bo_bucket {
 	struct list_head list;
 };
 
+struct fd_bo_cache {
+	struct fd_bo_bucket cache_bucket[14 * 4];
+	int num_buckets;
+	time_t time;
+};
+
 struct fd_device {
 	int fd;
+	enum fd_version version;
 	atomic_t refcnt;
 
 	/* tables to keep track of bo's, to avoid "evil-twin" fd_bo objects:
@@ -85,14 +99,16 @@ struct fd_device {
 
 	const struct fd_device_funcs *funcs;
 
-	struct fd_bo_bucket cache_bucket[14 * 4];
-	int num_buckets;
-	time_t time;
+	struct fd_bo_cache bo_cache;
 
 	int closefd;        /* call close(fd) upon destruction */
 };
 
-drm_private void fd_cleanup_bo_cache(struct fd_device *dev, time_t time);
+drm_private void fd_bo_cache_init(struct fd_bo_cache *cache, int coarse);
+drm_private void fd_bo_cache_cleanup(struct fd_bo_cache *cache, time_t time);
+drm_private struct fd_bo * fd_bo_cache_alloc(struct fd_bo_cache *cache,
+		uint32_t *size, uint32_t flags);
+drm_private int fd_bo_cache_free(struct fd_bo_cache *cache, struct fd_bo *bo);
 
 /* for where @table_lock is already held: */
 drm_private void fd_device_del_locked(struct fd_device *dev);
@@ -118,11 +134,14 @@ struct fd_ringmarker {
 struct fd_ringbuffer_funcs {
 	void * (*hostptr)(struct fd_ringbuffer *ring);
 	int (*flush)(struct fd_ringbuffer *ring, uint32_t *last_start);
+	void (*grow)(struct fd_ringbuffer *ring, uint32_t size);
 	void (*reset)(struct fd_ringbuffer *ring);
 	void (*emit_reloc)(struct fd_ringbuffer *ring,
 			const struct fd_reloc *reloc);
-	void (*emit_reloc_ring)(struct fd_ringbuffer *ring,
-			struct fd_ringmarker *target, struct fd_ringmarker *end);
+	uint32_t (*emit_reloc_ring)(struct fd_ringbuffer *ring,
+			struct fd_ringbuffer *target, uint32_t cmd_idx,
+			uint32_t submit_offset, uint32_t size);
+	uint32_t (*cmd_count)(struct fd_ringbuffer *ring);
 	void (*destroy)(struct fd_ringbuffer *ring);
 };
 
@@ -130,6 +149,7 @@ struct fd_bo_funcs {
 	int (*offset)(struct fd_bo *bo, uint64_t *offset);
 	int (*cpu_prep)(struct fd_bo *bo, struct fd_pipe *pipe, uint32_t op);
 	void (*cpu_fini)(struct fd_bo *bo);
+	int (*madvise)(struct fd_bo *bo, int willneed);
 	void (*destroy)(struct fd_bo *bo);
 };
 
@@ -167,5 +187,11 @@ struct fd_bo {
 
 #define U642VOID(x) ((void *)(unsigned long)(x))
 #define VOID2U64(x) ((uint64_t)(unsigned long)(x))
+
+static inline uint32_t
+offset_bytes(void *end, void *start)
+{
+	return ((char *)end) - ((char *)start);
+}
 
 #endif /* FREEDRENO_PRIV_H_ */

@@ -32,6 +32,15 @@
 #include <xf86drm.h>
 #include <stdint.h>
 
+#if defined(__GNUC__)
+#  define drm_deprecated __attribute__((__deprecated__))
+#else
+#  define drm_deprecated
+#endif
+
+/* an empty marker for things that will be deprecated in the future: */
+#define will_be_deprecated
+
 struct fd_bo;
 struct fd_pipe;
 struct fd_device;
@@ -51,6 +60,7 @@ enum fd_param_id {
 	FD_GPU_ID,
 	FD_CHIP_ID,
 	FD_MAX_FREQ,
+	FD_TIMESTAMP,
 };
 
 /* bo flags: */
@@ -79,6 +89,11 @@ struct fd_device * fd_device_ref(struct fd_device *dev);
 void fd_device_del(struct fd_device *dev);
 int fd_device_fd(struct fd_device *dev);
 
+enum fd_version {
+	FD_VERSION_MADVISE = 1,            /* kernel supports madvise */
+	FD_VERSION_UNLIMITED_CMDS = 1,     /* submits w/ >4 cmd buffers (growable ringbuffer) */
+};
+enum fd_version fd_device_version(struct fd_device *dev);
 
 /* pipe functions:
  */
