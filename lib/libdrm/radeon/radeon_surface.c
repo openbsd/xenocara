@@ -42,6 +42,14 @@
 #include "radeon_drm.h"
 #include "radeon_surface.h"
 
+#define CIK_TILE_MODE_COLOR_2D			14
+#define CIK_TILE_MODE_COLOR_2D_SCANOUT		10
+#define CIK_TILE_MODE_DEPTH_STENCIL_2D_TILESPLIT_64       0
+#define CIK_TILE_MODE_DEPTH_STENCIL_2D_TILESPLIT_128      1
+#define CIK_TILE_MODE_DEPTH_STENCIL_2D_TILESPLIT_256      2
+#define CIK_TILE_MODE_DEPTH_STENCIL_2D_TILESPLIT_512      3
+#define CIK_TILE_MODE_DEPTH_STENCIL_2D_TILESPLIT_ROW_SIZE 4
+
 #define ALIGN(value, alignment) (((value) + alignment - 1) & ~(alignment - 1))
 #define MAX2(A, B)              ((A) > (B) ? (A) : (B))
 #define MIN2(A, B)              ((A) < (B) ? (A) : (B))
@@ -957,8 +965,10 @@ static int eg_surface_best(struct radeon_surface_manager *surf_man,
             }
             surf->stencil_tile_split = 64;
         } else {
-            /* tile split must be >= 256 for colorbuffer surfaces */
-            surf->tile_split = MAX2(surf->nsamples * surf->bpe * 64, 256);
+            /* tile split must be >= 256 for colorbuffer surfaces,
+             * SAMPLE_SPLIT = tile_split / (bpe * 64), the optimal value is 2
+             */
+            surf->tile_split = MAX2(2 * surf->bpe * 64, 256);
             if (surf->tile_split > 4096)
                 surf->tile_split = 4096;
         }

@@ -290,7 +290,6 @@ modetest_LDADD = \
 	$(CAIRO_LIBS) \
 	-lpthread
 
-EXTRA_DIST = Android.mk
 all: all-am
 
 .SUFFIXES:

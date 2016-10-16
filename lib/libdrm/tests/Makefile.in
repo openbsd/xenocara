@@ -54,15 +54,16 @@ host_triplet = @host@
 @HAVE_AMDGPU_TRUE@@HAVE_CUNIT_TRUE@am__append_3 = amdgpu
 @HAVE_EXYNOS_TRUE@am__append_4 = exynos
 @HAVE_TEGRA_TRUE@am__append_5 = tegra
+@HAVE_ETNAVIV_TRUE@am__append_6 = etnaviv
 check_PROGRAMS = dristat$(EXEEXT) drmdevice$(EXEEXT) drmstat$(EXEEXT) \
 	$(am__EXEEXT_2)
-@HAVE_NOUVEAU_TRUE@am__append_6 = nouveau
+@HAVE_NOUVEAU_TRUE@am__append_7 = nouveau
 TESTS = drmsl$(EXEEXT) hash$(EXEEXT) random$(EXEEXT) $(am__EXEEXT_1)
-@HAVE_LIBUDEV_TRUE@am__append_7 = \
+@HAVE_LIBUDEV_TRUE@am__append_8 = \
 @HAVE_LIBUDEV_TRUE@	libdrmtest.la \
 @HAVE_LIBUDEV_TRUE@	$(LIBUDEV_LIBS)
 
-@HAVE_LIBUDEV_TRUE@am__append_8 = \
+@HAVE_LIBUDEV_TRUE@am__append_9 = \
 @HAVE_LIBUDEV_TRUE@	openclose				\
 @HAVE_LIBUDEV_TRUE@	getversion				\
 @HAVE_LIBUDEV_TRUE@	getclient				\
@@ -226,7 +227,7 @@ am__tty_colors_dummy = \
   am__color_tests=no
 am__tty_colors = $(am__tty_colors_dummy)
 DIST_SUBDIRS = util kms modeprint proptest modetest vbltest kmstest \
-	radeon amdgpu exynos tegra nouveau
+	radeon amdgpu exynos tegra etnaviv nouveau
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 am__relativize = \
   dir0=`pwd`; \
@@ -406,13 +407,13 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = util kms modeprint proptest modetest vbltest $(am__append_1) \
 	$(am__append_2) $(am__append_3) $(am__append_4) \
-	$(am__append_5) $(am__append_6)
+	$(am__append_5) $(am__append_6) $(am__append_7)
 AM_CFLAGS = \
 	$(WARN_CFLAGS)\
 	-I $(top_srcdir)/include/drm \
 	-I $(top_srcdir)
 
-LDADD = $(top_builddir)/libdrm.la $(am__append_7)
+LDADD = $(top_builddir)/libdrm.la $(am__append_8)
 dristat_LDADD = -lm
 @HAVE_LIBUDEV_TRUE@check_LTLIBRARIES = libdrmtest.la
 @HAVE_LIBUDEV_TRUE@libdrmtest_la_SOURCES = \

@@ -168,6 +168,7 @@
 #define PCI_CHIP_SKYLAKE_DT_GT1		0x1902
 #define PCI_CHIP_SKYLAKE_ULT_GT1	0x1906
 #define PCI_CHIP_SKYLAKE_SRV_GT1	0x190A /* Reserved */
+#define PCI_CHIP_SKYLAKE_H_GT1		0x190B
 #define PCI_CHIP_SKYLAKE_ULX_GT1	0x190E /* Reserved */
 #define PCI_CHIP_SKYLAKE_DT_GT2		0x1912
 #define PCI_CHIP_SKYLAKE_FUSED0_GT2	0x1913 /* Reserved */
@@ -179,9 +180,12 @@
 #define PCI_CHIP_SKYLAKE_WKS_GT2 	0x191D
 #define PCI_CHIP_SKYLAKE_ULX_GT2	0x191E
 #define PCI_CHIP_SKYLAKE_MOBILE_GT2	0x1921 /* Reserved */
-#define PCI_CHIP_SKYLAKE_GT3		0x1926
-#define PCI_CHIP_SKYLAKE_HALO_GT3	0x192B /* Reserved */
+#define PCI_CHIP_SKYLAKE_ULT_GT3_0	0x1923
+#define PCI_CHIP_SKYLAKE_ULT_GT3_1	0x1926
+#define PCI_CHIP_SKYLAKE_ULT_GT3_2	0x1927
 #define PCI_CHIP_SKYLAKE_SRV_GT4	0x192A
+#define PCI_CHIP_SKYLAKE_HALO_GT3	0x192B /* Reserved */
+#define PCI_CHIP_SKYLAKE_SRV_GT3	0x192D
 #define PCI_CHIP_SKYLAKE_DT_GT4		0x1932
 #define PCI_CHIP_SKYLAKE_SRV_GT4X	0x193A
 #define PCI_CHIP_SKYLAKE_H_GT4		0x193B
@@ -190,7 +194,9 @@
 #define PCI_CHIP_KABYLAKE_ULT_GT2	0x5916
 #define PCI_CHIP_KABYLAKE_ULT_GT1_5	0x5913
 #define PCI_CHIP_KABYLAKE_ULT_GT1	0x5906
-#define PCI_CHIP_KABYLAKE_ULT_GT3	0x5926
+#define PCI_CHIP_KABYLAKE_ULT_GT3_0	0x5923
+#define PCI_CHIP_KABYLAKE_ULT_GT3_1	0x5926
+#define PCI_CHIP_KABYLAKE_ULT_GT3_2	0x5927
 #define PCI_CHIP_KABYLAKE_ULT_GT2F	0x5921
 #define PCI_CHIP_KABYLAKE_ULX_GT1_5	0x5915
 #define PCI_CHIP_KABYLAKE_ULX_GT1	0x590E
@@ -198,21 +204,19 @@
 #define PCI_CHIP_KABYLAKE_DT_GT2	0x5912
 #define PCI_CHIP_KABYLAKE_DT_GT1_5	0x5917
 #define PCI_CHIP_KABYLAKE_DT_GT1	0x5902
-#define PCI_CHIP_KABYLAKE_DT_GT4	0x5932
 #define PCI_CHIP_KABYLAKE_HALO_GT2	0x591B
 #define PCI_CHIP_KABYLAKE_HALO_GT4	0x593B
-#define PCI_CHIP_KABYLAKE_HALO_GT3	0x592B
-#define PCI_CHIP_KABYLAKE_HALO_GT1	0x590B
+#define PCI_CHIP_KABYLAKE_HALO_GT1_0	0x5908
+#define PCI_CHIP_KABYLAKE_HALO_GT1_1	0x590B
 #define PCI_CHIP_KABYLAKE_SRV_GT2	0x591A
-#define PCI_CHIP_KABYLAKE_SRV_GT3	0x592A
 #define PCI_CHIP_KABYLAKE_SRV_GT1	0x590A
-#define PCI_CHIP_KABYLAKE_SRV_GT4	0x593A
 #define PCI_CHIP_KABYLAKE_WKS_GT2	0x591D
-#define PCI_CHIP_KABYLAKE_WKS_GT4	0x593D
 
 #define PCI_CHIP_BROXTON_0		0x0A84
 #define PCI_CHIP_BROXTON_1		0x1A84
 #define PCI_CHIP_BROXTON_2		0x5A84
+#define PCI_CHIP_BROXTON_3		0x1A85
+#define PCI_CHIP_BROXTON_4		0x5A85
 
 #define IS_MOBILE(devid)	((devid) == PCI_CHIP_I855_GM || \
 				 (devid) == PCI_CHIP_I915_GM || \
@@ -373,10 +377,11 @@
 #define IS_GEN8(devid)		(IS_BROADWELL(devid) || \
 				 IS_CHERRYVIEW(devid))
 
-#define IS_SKL_GT1(devid)	((devid) == PCI_CHIP_SKYLAKE_ULT_GT1	|| \
-				 (devid) == PCI_CHIP_SKYLAKE_ULX_GT1	|| \
-				 (devid) == PCI_CHIP_SKYLAKE_DT_GT1	|| \
-				 (devid) == PCI_CHIP_SKYLAKE_SRV_GT1)
+#define IS_SKL_GT1(devid)	((devid) == PCI_CHIP_SKYLAKE_DT_GT1	|| \
+				 (devid) == PCI_CHIP_SKYLAKE_ULT_GT1	|| \
+				 (devid) == PCI_CHIP_SKYLAKE_SRV_GT1	|| \
+				 (devid) == PCI_CHIP_SKYLAKE_H_GT1	|| \
+				 (devid) == PCI_CHIP_SKYLAKE_ULX_GT1)
 
 #define IS_SKL_GT2(devid)	((devid) == PCI_CHIP_SKYLAKE_DT_GT2	|| \
 				 (devid) == PCI_CHIP_SKYLAKE_FUSED0_GT2	|| \
@@ -389,8 +394,11 @@
 				 (devid) == PCI_CHIP_SKYLAKE_ULX_GT2	|| \
 				 (devid) == PCI_CHIP_SKYLAKE_MOBILE_GT2)
 
-#define IS_SKL_GT3(devid)	((devid) == PCI_CHIP_SKYLAKE_GT3	|| \
-				 (devid) == PCI_CHIP_SKYLAKE_HALO_GT3)
+#define IS_SKL_GT3(devid)	((devid) == PCI_CHIP_SKYLAKE_ULT_GT3_0	|| \
+				 (devid) == PCI_CHIP_SKYLAKE_ULT_GT3_1	|| \
+				 (devid) == PCI_CHIP_SKYLAKE_ULT_GT3_2	|| \
+				 (devid) == PCI_CHIP_SKYLAKE_HALO_GT3	|| \
+				 (devid) == PCI_CHIP_SKYLAKE_SRV_GT3)
 
 #define IS_SKL_GT4(devid)	((devid) == PCI_CHIP_SKYLAKE_SRV_GT4	|| \
 				 (devid) == PCI_CHIP_SKYLAKE_DT_GT4	|| \
@@ -404,7 +412,8 @@
 				 (devid) == PCI_CHIP_KABYLAKE_ULT_GT1	|| \
 				 (devid) == PCI_CHIP_KABYLAKE_ULX_GT1	|| \
 				 (devid) == PCI_CHIP_KABYLAKE_DT_GT1	|| \
-				 (devid) == PCI_CHIP_KABYLAKE_HALO_GT1	|| \
+				 (devid) == PCI_CHIP_KABYLAKE_HALO_GT1_0 || \
+				 (devid) == PCI_CHIP_KABYLAKE_HALO_GT1_1 || \
 				 (devid) == PCI_CHIP_KABYLAKE_SRV_GT1)
 
 #define IS_KBL_GT2(devid)	((devid) == PCI_CHIP_KABYLAKE_ULT_GT2	|| \
@@ -415,14 +424,11 @@
 				 (devid) == PCI_CHIP_KABYLAKE_SRV_GT2	|| \
 				 (devid) == PCI_CHIP_KABYLAKE_WKS_GT2)
 
-#define IS_KBL_GT3(devid)	((devid) == PCI_CHIP_KABYLAKE_ULT_GT3	|| \
-				 (devid) == PCI_CHIP_KABYLAKE_HALO_GT3	|| \
-				 (devid) == PCI_CHIP_KABYLAKE_SRV_GT3)
+#define IS_KBL_GT3(devid)	((devid) == PCI_CHIP_KABYLAKE_ULT_GT3_0	|| \
+				 (devid) == PCI_CHIP_KABYLAKE_ULT_GT3_1	|| \
+				 (devid) == PCI_CHIP_KABYLAKE_ULT_GT3_2)
 
-#define IS_KBL_GT4(devid)	((devid) == PCI_CHIP_KABYLAKE_DT_GT4	|| \
-				 (devid) == PCI_CHIP_KABYLAKE_HALO_GT4	|| \
-				 (devid) == PCI_CHIP_KABYLAKE_SRV_GT4	|| \
-				 (devid) == PCI_CHIP_KABYLAKE_WKS_GT4)
+#define IS_KBL_GT4(devid)	((devid) == PCI_CHIP_KABYLAKE_HALO_GT4)
 
 #define IS_KABYLAKE(devid)	(IS_KBL_GT1(devid) || \
 				 IS_KBL_GT2(devid) || \
@@ -436,7 +442,9 @@
 
 #define IS_BROXTON(devid)	((devid) == PCI_CHIP_BROXTON_0	|| \
 				 (devid) == PCI_CHIP_BROXTON_1	|| \
-				 (devid) == PCI_CHIP_BROXTON_2)
+				 (devid) == PCI_CHIP_BROXTON_2	|| \
+				 (devid) == PCI_CHIP_BROXTON_3	|| \
+				 (devid) == PCI_CHIP_BROXTON_4)
 
 #define IS_GEN9(devid)		(IS_SKYLAKE(devid) || \
 				 IS_BROXTON(devid) || \

@@ -52,7 +52,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-DIST_COMMON = README $(libdrm_freedrenocommoninclude_HEADERS) \
+DIST_COMMON = $(libdrm_freedrenocommoninclude_HEADERS) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/Makefile.sources $(srcdir)/libdrm_freedreno.pc.in \
 	$(top_srcdir)/build-aux/depcomp
@@ -103,15 +103,16 @@ LTLIBRARIES = $(libdrm_freedreno_la_LTLIBRARIES)
 libdrm_freedreno_la_DEPENDENCIES = ../libdrm.la
 am__libdrm_freedreno_la_SOURCES_DIST = freedreno_device.c \
 	freedreno_pipe.c freedreno_priv.h freedreno_ringbuffer.c \
-	freedreno_bo.c msm/msm_bo.c msm/msm_device.c msm/msm_drm.h \
-	msm/msm_pipe.c msm/msm_priv.h msm/msm_ringbuffer.c \
-	kgsl/kgsl_bo.c kgsl/kgsl_device.c kgsl/kgsl_drm.h \
-	kgsl/kgsl_pipe.c kgsl/kgsl_priv.h kgsl/kgsl_ringbuffer.c \
-	kgsl/msm_kgsl.h
+	freedreno_bo.c freedreno_bo_cache.c msm/msm_bo.c \
+	msm/msm_device.c msm/msm_drm.h msm/msm_pipe.c msm/msm_priv.h \
+	msm/msm_ringbuffer.c kgsl/kgsl_bo.c kgsl/kgsl_device.c \
+	kgsl/kgsl_drm.h kgsl/kgsl_pipe.c kgsl/kgsl_priv.h \
+	kgsl/kgsl_ringbuffer.c kgsl/msm_kgsl.h
 am__dirstamp = $(am__leading_dot)dirstamp
 am__objects_1 = freedreno_device.lo freedreno_pipe.lo \
-	freedreno_ringbuffer.lo freedreno_bo.lo msm/msm_bo.lo \
-	msm/msm_device.lo msm/msm_pipe.lo msm/msm_ringbuffer.lo
+	freedreno_ringbuffer.lo freedreno_bo.lo freedreno_bo_cache.lo \
+	msm/msm_bo.lo msm/msm_device.lo msm/msm_pipe.lo \
+	msm/msm_ringbuffer.lo
 am__objects_2 = kgsl/kgsl_bo.lo kgsl/kgsl_device.lo kgsl/kgsl_pipe.lo \
 	kgsl/kgsl_ringbuffer.lo
 @HAVE_FREEDRENO_KGSL_TRUE@am__objects_3 = $(am__objects_2)
@@ -333,6 +334,7 @@ LIBDRM_FREEDRENO_FILES := \
 	freedreno_priv.h \
 	freedreno_ringbuffer.c \
 	freedreno_bo.c \
+	freedreno_bo_cache.c \
 	msm/msm_bo.c \
 	msm/msm_device.c \
 	msm/msm_drm.h \
@@ -373,7 +375,7 @@ libdrm_freedrenocommonincludedir = ${includedir}/freedreno
 libdrm_freedrenocommoninclude_HEADERS = $(LIBDRM_FREEDRENO_H_FILES)
 pkgconfig_DATA = libdrm_freedreno.pc
 TESTS = freedreno-symbol-check
-EXTRA_DIST = Android.mk $(TESTS)
+EXTRA_DIST = $(TESTS)
 all: all-am
 
 .SUFFIXES:
@@ -482,6 +484,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/freedreno_bo.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/freedreno_bo_cache.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/freedreno_device.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/freedreno_pipe.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/freedreno_ringbuffer.Plo@am__quote@

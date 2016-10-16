@@ -20,7 +20,7 @@
 
 AC_PREREQ([2.63])
 AC_INIT([libdrm],
-        [2.4.67],
+        [2.4.71],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=DRI],
         [libdrm])
 
@@ -53,7 +53,8 @@ AC_USE_SYSTEM_EXTENSIONS
 AC_SYS_LARGEFILE
 AC_FUNC_ALLOCA
 
-AC_CHECK_HEADERS([sys/mkdev.h sys/sysctl.h sys/select.h])
+AC_HEADER_MAJOR
+AC_CHECK_HEADERS([sys/sysctl.h sys/select.h])
 
 # Initialize libtool
 LT_PREREQ([2.2])
@@ -130,6 +131,11 @@ AC_ARG_ENABLE(vc4,
 	      AS_HELP_STRING([--disable-vc4],
 	      [Enable support for vc4's API (default: auto, enabled on arm)]),
 	      [VC4=$enableval], [VC4=auto])
+
+AC_ARG_ENABLE(etnaviv-experimental-api,
+	      AS_HELP_STRING([--enable-etnaviv-experimental-api],
+	      [Enable support for etnaviv's experimental API (default: disabled)]),
+	      [ETNAVIV=$enableval], [ETNAVIV=no])
 
 AC_ARG_ENABLE(install-test-programs,
 		  AS_HELP_STRING([--enable-install-test-programs],
@@ -273,6 +279,9 @@ if test "x$drm_cv_atomic_primitives" = "xnone"; then
 
 	LIBDRM_ATOMICS_NOT_FOUND_MSG($TEGRA, tegra, NVIDIA Tegra, tegra-experimental-api)
 	TEGRA=no
+
+	LIBDRM_ATOMICS_NOT_FOUND_MSG($ETNAVIV, etnaviv, Vivante, etnaviv-experimental-api)
+	ETNAVIV=no
 else
 	if test "x$INTEL" = xauto; then
 		case $host_cpu in
@@ -412,6 +421,11 @@ if test "x$VC4" = xyes; then
 	AC_DEFINE(HAVE_VC4, 1, [Have VC4 support])
 fi
 
+AM_CONDITIONAL(HAVE_ETNAVIV, [test "x$ETNAVIV" = xyes])
+if test "x$ETNAVIV" = xyes; then
+	AC_DEFINE(HAVE_ETNAVIV, 1, [Have etnaviv support])
+fi
+
 AM_CONDITIONAL(HAVE_INSTALL_TESTS, [test "x$INSTALL_TESTS" = xyes])
 if test "x$INSTALL_TESTS" = xyes; then
 	AC_DEFINE(HAVE_INSTALL_TESTS, 1, [Install test programs])
@@ -523,6 +537,8 @@ AC_CONFIG_FILES([
 	tegra/libdrm_tegra.pc
 	vc4/Makefile
 	vc4/libdrm_vc4.pc
+	etnaviv/Makefile
+	etnaviv/libdrm_etnaviv.pc
 	tests/Makefile
 	tests/modeprint/Makefile
 	tests/modetest/Makefile
@@ -535,6 +551,7 @@ AC_CONFIG_FILES([
 	tests/exynos/Makefile
 	tests/tegra/Makefile
 	tests/nouveau/Makefile
+	tests/etnaviv/Makefile
 	tests/util/Makefile
 	man/Makefile
 	libdrm.pc])
@@ -554,4 +571,5 @@ echo "  EXYNOS API     $EXYNOS"
 echo "  Freedreno API  $FREEDRENO (kgsl: $FREEDRENO_KGSL)"
 echo "  Tegra API      $TEGRA"
 echo "  VC4 API        $VC4"
+echo "  Etnaviv API    $ETNAVIV"
 echo ""
