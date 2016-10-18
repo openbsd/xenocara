@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: screen.c,v 1.82 2016/10/04 20:15:55 okan Exp $
+ * $OpenBSD: screen.c,v 1.83 2016/10/18 17:03:30 okan Exp $
  */
 
 #include <sys/types.h>
@@ -84,7 +84,7 @@ screen_init(int which)
 	}
 	screen_updatestackingorder(sc);
 
-	if (HasRandr)
+	if (Conf.xrandr)
 		XRRSelectInput(X_Dpy, sc->rootwin, RRScreenChangeNotifyMask);
 
 	TAILQ_INSERT_TAIL(&Screenq, sc, entry);
@@ -140,7 +140,7 @@ region_find(struct screen_ctx *sc, int x, int y)
 }
 
 struct geom
-screen_area(struct screen_ctx *sc, int x, int y, int flags)
+screen_area(struct screen_ctx *sc, int x, int y, enum apply_gap apply_gap)
 {
 	struct region_ctx	*rc;
 	struct geom		 area = sc->work;
@@ -152,7 +152,7 @@ screen_area(struct screen_ctx *sc, int x, int y, int flags)
 			break;
 		}
 	}
-	if (flags & CWM_GAP)
+	if (apply_gap)
 		area = screen_apply_gap(sc, area);
 	return(area);
 }
@@ -173,7 +173,7 @@ screen_update_geometry(struct screen_ctx *sc)
 		free(rc);
 	}
 
-	if (HasRandr) {
+	if (Conf.xrandr) {
 		XRRScreenResources *sr;
 		XRRCrtcInfo *ci;
 		int i;
