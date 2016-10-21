@@ -1,4 +1,4 @@
-/*	$OpenBSD: video.c,v 1.20 2016/09/16 20:29:03 jca Exp $	*/
+/*	$OpenBSD: video.c,v 1.21 2016/10/21 09:48:48 czarkoff Exp $	*/
 /*
  * Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
  *
@@ -160,6 +160,7 @@ struct video {
 	int		 conv_type;
 	int		 enc;
 	int		 full_screen;
+	int		 net_wm;
 	int		 width;
 	int		 height;
 	int		 bpf;
@@ -178,6 +179,7 @@ int xv_get_info(struct video *);
 int xv_sel_adap(struct video *);
 void xv_dump_info(struct video *);
 int xv_init(struct video *);
+void net_wm_supported(struct video *);
 void resize_window(struct video *, int);
 void display_event(struct video *);
 
@@ -500,34 +502,84 @@ xv_init(struct video *vid)
 }
 
 void
+net_wm_supported(struct video *vid)
+{
+	struct xdsp *x = &vid->xdsp;
+	Atom query, fullscreen;
+	Atom type;
+	Atom *data;
+	long off;
+	int fmt, len = 12;
+	unsigned long nitems, remain;
+	int i;
+
+	query = XInternAtom(x->dpy, "_NET_SUPPORTED", True);
+	fullscreen = XInternAtom(x->dpy, "_NET_WM_STATE_FULLSCREEN", True);
+
+	for (off = 0; XGetWindowProperty(x->dpy, x->rwin, query, off,
+			  len, False, XA_ATOM, &type, &fmt, &nitems, &remain,
+			  (unsigned char **)&data) == Success; off += len) {
+		if (type == XA_ATOM && fmt == 32) {
+			for (i = 0; i < nitems; i++) {
+				if (data[i] == fullscreen) {
+					vid->net_wm = 1;
+					XFree(data);
+					return;
+				}
+			}
+		}
+		XFree(data);
+	}
+
+	return;
+}
+
+void
 resize_window(struct video *vid, int fullscreen)
 {
 	struct xdsp *x = &vid->xdsp;
 	XWindowAttributes winatt;
 	Window junk;
-	int new_width;
-	int new_height;
 	int new_x;
 	int new_y;
+	XEvent ev;
+	Atom property, value;
 
 	if (fullscreen == 1) {
 		if (vid->full_screen == 1) {
-			new_width = x->saved_w;
-			new_height = x->saved_h;
+			x->width = x->saved_w;
+			x->height = x->saved_h;
 			new_x = x->saved_x;
 			new_y = x->saved_y;
-			vid->full_screen = 0;
 		} else {
-			new_width = x->max_width;
-			new_height = x->max_height;
+			x->width = x->max_width;
+			x->height = x->max_height;
 			new_x = 0;
 			new_y = 0;
-			vid->full_screen = 1;
 		}
-		x->width = new_width;
-		x->height = new_height;
-		XMoveResizeWindow(x->dpy, x->window, new_x, new_y,
-		    new_width, new_height);
+
+		vid->full_screen = !vid->full_screen;
+
+		if (vid->net_wm) {
+			property = XInternAtom(x->dpy, "_NET_WM_STATE", False);
+			value = XInternAtom(x->dpy, "_NET_WM_STATE_FULLSCREEN",
+			    False);
+
+			memset(&ev, 0, sizeof(ev));
+			ev.type = ClientMessage;
+			ev.xclient.window = x->window;
+			ev.xclient.message_type = property;
+			ev.xclient.format = 32;
+			ev.xclient.data.l[0] = vid->full_screen;
+			ev.xclient.data.l[1] = value;
+
+			XSendEvent(x->dpy, x->rwin, False,
+			    SubstructureNotifyMask | SubstructureRedirectMask,
+			    &ev);
+		} else {
+			XMoveResizeWindow(x->dpy, x->window, x->width,
+			    x->height, new_x, new_y);
+		}
 	} else if (!vid->full_screen) {
 		XGetWindowAttributes(x->dpy, x->window, &winatt);
 		XTranslateCoordinates(x->dpy, x->window, x->rwin,
@@ -536,8 +588,8 @@ resize_window(struct video *vid, int fullscreen)
 		x->saved_h = x->height = winatt.height;
 		x->saved_x = new_x;
 		x->saved_y = new_y;
-		XResizeWindow(x->dpy, x->window, x->width, x->height);
 	}
+
 	XSync(x->dpy, False);
 	XSync(x->dpy, True);
 }
@@ -1435,6 +1487,9 @@ setup(struct video *vid)
 		if (!mmap_init(vid))
 			return 0;
 	}
+
+	if (vid->mode & M_OUT_XV)
+		net_wm_supported(vid);
 
 	return 1;
 }
