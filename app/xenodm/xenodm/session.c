@@ -128,13 +128,11 @@ AbortClient (pid_t pid)
  */
 
 /*ARGSUSED*/
-static int
+static __dead int
 IOErrorHandler (Display *dpy)
 {
     LogError ("fatal IO error %d (%s)\n", errno, _SysErrorMsg(errno));
     exit(RESERVER_DISPLAY);
-    /*NOTREACHED*/
-    return 0;
 }
 
 static int
@@ -143,10 +141,9 @@ ErrorHandler(Display *dpy, XErrorEvent *event)
     LogError ("X error\n");
     if (XmuPrintDefaultErrorMessage (dpy, event, stderr) == 0) return 0;
     exit(UNMANAGE_DISPLAY);
-    /*NOTREACHED*/
 }
 
-void
+__dead void
 ManageSession (struct display *d)
 {
     pid_t	pid = 0;
