@@ -139,7 +139,6 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 
 	if ((authok & AUTH_ALLOW) == 0) {
 		Debug("password verify failed\n");
-		bzero(greet->password, passwd_len);
 		auth_close(as);
 		login_close(lc);
 		return 0;
@@ -147,7 +146,6 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 	/* Run the approval script */
 	if (!auth_approval(as, lc, greet->name, "auth-xdm")) {
 		Debug("login not approved\n");
-		bzero(greet->password, passwd_len);
 		auth_close(as);
 		login_close(lc);
 		return 0;
@@ -162,7 +160,6 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 	/* Only accept root logins if allowRootLogin resource is set */
 	if (p->pw_uid == 0 && !greet->allow_root_login) {
 		Debug("root logins not allowed\n");
-		bzero(greet->password, passwd_len);
 		return 0;
 	}
 
@@ -175,7 +172,6 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 			/* did not found the shell in /etc/shells
 			   -> failure */
 			Debug("shell not in /etc/shells\n");
-			bzero(greet->password, passwd_len);
 			endusershell();
 			return 0;
 		}
