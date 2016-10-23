@@ -1,0 +1,42 @@
+The default installation settings of xenodm match those used for most platforms 
+in the previous xdm releases from X.Org: 
+
+Scripts & modules:	$(libdir)/X11/xenodm (aka $(prefix)/lib/X11/xenodm)
+Configuration files:	$(libdir)/X11/xenodm
+Pixmap files:		$(libdir)/X11/xenodm/pixmaps
+Log files:		/var/log
+Process id/lock files:	/var/run
+xauth cookie files:	/var/lib/xenodm
+
+These may be overridden with the following options to configure:
+Loadable modules:	--with-xenodmlibdir
+Scripts:		--with-xenodmscriptdir (or --with-xenodmlibdir)
+Configuration files:	--with-xenodmconfigdir (or --with-xenodmlibdir)
+Pixmap files:		--with-xenodmpixmapdir (or --with-xenodmlibdir)
+Log files:		--with-logdir
+Process id/lock files:	--with-piddir
+xauth cookie files:	--with-authdir
+
+For instance, some packagers/sites may prefer:
+	--with-xenodmconfigdir=/etc/X11/xenodm
+	--with-xenodmlibdir=$(prefix)/lib/xenodm
+	--with-xenodmscriptdir=/etc/X11/xenodm
+
+	----------------------------------------------------------------
+
+All questions regarding this software should be directed at the
+OpenBSD mailing lists:
+
+        https://www.openbsd.org/mail.html
+
+Please submit bug reports to the bugs@openbsd.org list:
+
+        https://www.openbsd.org/report.html
+
+The master development code repository can be found at:
+
+        git://xenocara.org/git/xenocara/app/xenodm
+
+	http://cgit.xenocara.org/app/xenodm/
+
+$OpenBSD: README,v 1.1 2016/10/23 08:30:37 matthieu Exp $

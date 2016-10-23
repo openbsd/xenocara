@@ -1,0 +1,56 @@
+# $OpenBSD: Makefile.bsd-wrapper,v 1.1 2016/10/23 08:30:37 matthieu Exp $
+.include <bsd.own.mk>
+
+XENODMCONFIGDIR=/etc/X11/xenodm
+PIXMAPDIR=$(XENODMCONFIGDIR)/pixmaps
+
+.if ${MACHINE} == i386 || ${MACHINE} == amd64 || ${MACHINE} == macppc
+DEFAULT_VT= --with-default-vt=vt05
+.endif
+
+CONFIGURE_ARGS= \
+	$(DEFAULT_VT) \
+	--with-authdir=$(XENODMCONFIGDIR) \
+	--with-xenodmlibdir=$(XENODMCONFIGDIR) \
+	--with-pixmapdir=$(PIXMAPDIR) \
+	--with-bw-pixmap=OpenBSD_1bpp.xpm \
+	--with-color-pixmap=OpenBSD_15bpp.xpm
+
+# avoid clobbering installed config files
+realinstall:
+	exec ${MAKE} ${_lt_libs} install-strip \
+		INSTALL_DATA=: \
+		INSTALL_SCRIPT=:
+
+XENODMCONFIGFILES= \
+	xenodm-config Xresources Xservers
+XENODMCONFIGSCRIPTS= \
+	Xsession GiveConsole TakeConsole Xsetup_0 Xstartup Xreset
+
+afterinstall:
+	$(INSTALL_DATA) ${.CURDIR}/config/OpenBSD_1bpp.xpm $(DESTDIR)$(PIXMAPDIR)
+	$(INSTALL_DATA) ${.CURDIR}/config/OpenBSD_4bpp.xpm $(DESTDIR)$(PIXMAPDIR)
+	$(INSTALL_DATA) ${.CURDIR}/config/OpenBSD_8bpp.xpm $(DESTDIR)$(PIXMAPDIR)
+	$(INSTALL_DATA) ${.CURDIR}/config/OpenBSD_15bpp.xpm $(DESTDIR)$(PIXMAPDIR)
+	cd man ; $(INSTALL_DATA) xenodm.1 $(DESTDIR)$(MANDIR)1/
+	@cd config ; for f in $(XENODMCONFIGFILES); do \
+	  if ! test -f $(DESTDIR)$(XENODMCONFIGDIR)/$$f ; then \
+	    if test -f $$f; then d=; else d="$(.CURDIR)/config/"; fi; \
+	    echo "$(INSTALL_DATA) $$d$$f $(DESTDIR)$(XENODMCONFIGDIR)"; \
+	    $(INSTALL_DATA) $$d$$f $(DESTDIR)$(XENODMCONFIGDIR) ;\
+	  else \
+	    echo "not overwriting $(DESTDIR)$(XENODMCONFIGDIR)/$$f" ;\
+	  fi \
+	done
+	@cd config ; for f in $(XENODMCONFIGSCRIPTS); do \
+	  if ! test -f $(DESTDIR)$(XENODMCONFIGDIR)/$$f ; then \
+	    if test -f $$f; then d=; else d="$(.CURDIR)/config/"; fi; \
+	    echo "$(INSTALL) $$f $(DESTDIR)$(XENODMCONFIGDIR)"; \
+	    $(INSTALL) $$d$$f $(DESTDIR)$(XENODMCONFIGDIR) ;\
+	  else \
+	    echo "not overwriting $(DESTDIR)$(XENODMCONFIGDIR)/$$f" ;\
+	  fi \
+	done
+
+
+.include <bsd.xorg.mk>

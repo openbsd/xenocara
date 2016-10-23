@@ -1,0 +1,10 @@
+
+Xenodm Sample Configuration
+
+This directory contains a collection of files which describe a sample
+configuration of xenodm.  Choose between the sample Xservers.* files; copy the
+appropriate one to "$(XENODMDIR)/Xservers" along with the other
+files in this directory.
+
+Only a few of the many configuration parameters which xenodm can be tuned with
+are set in this sample, read the xenodm manual page for a complete description.
