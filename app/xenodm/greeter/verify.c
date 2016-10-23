@@ -94,8 +94,6 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 	    style ? style : "default");
 
 	p = getpwnam (greet->name);
-	endpwent();
-
 	if (!p || strlen (greet->name) == 0) {
 		Debug("getpwnam() failed.\n");
 		explicit_bzero(greet->password, strlen(greet->password));
