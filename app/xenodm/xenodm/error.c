@@ -98,15 +98,11 @@ LogPanic (const char * fmt, ...)
 }
 
 void
-LogOutOfMem (const char * fmt, ...)
+LogOutOfMem (const char *function)
 {
-    fprintf (stderr, "xdm: out of memory in routine ");
-    {
-	va_list args;
-	va_start(args, fmt);
-	vfprintf (stderr, fmt, args);
-	va_end(args);
-    }
+    fputs("xdm: out of memory in routine ", stderr);
+    fputs(function, stderr);
+    fputc('\n', stderr);
     fflush (stderr);
 }
 

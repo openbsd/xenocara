@@ -39,7 +39,7 @@ extern void InitErrorLog (void);
 extern void LogAppend    (const char * fmt, ...) _X_ATTRIBUTE_PRINTF(1,2);
 extern void LogError     (const char * fmt, ...) _X_ATTRIBUTE_PRINTF(1,2);
 extern void LogInfo      (const char * fmt, ...) _X_ATTRIBUTE_PRINTF(1,2);
-extern void LogOutOfMem	 (const char * fmt, ...) _X_ATTRIBUTE_PRINTF(1,2);
+extern void LogOutOfMem	 (const char * function);
 extern __dead void LogPanic (const char * fmt, ...) _X_ATTRIBUTE_PRINTF(1,2);
 
 
