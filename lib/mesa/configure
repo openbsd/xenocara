@@ -19727,15 +19727,6 @@ rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
 LDFLAGS=$save_LDFLAGS
 
-case "$host_os" in
-openbsd*)
-    case "$host_cpu" in
-    powerpc*)
-        GC_SECTIONS="" ;;
-    esac
-    ;;
-esac
-
 
 
 case "$host_os" in
