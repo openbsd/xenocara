@@ -187,8 +187,6 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 	}
 
 	Debug ("verify succeeded\n");
-	/* The password is passed to StartClient() for use by user-based
-	   authorization schemes.  It is zeroed there. */
 	verify->uid = p->pw_uid;
 	verify->gid = p->pw_gid;
 	home = p->pw_dir;
