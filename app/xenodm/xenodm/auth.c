@@ -873,7 +873,7 @@ SetUserAuthorization (struct display *d, struct verify_info *verify)
 	    }
 	}
 	/* now write other authorizations */
-	/* XXX This is a no-op on redm */
+	/* XXX This is a no-op on xenodm */
 	for (i = 0; i < d->authNum; i++)
 	{
 	    if (i != magicCookie)

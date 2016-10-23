@@ -83,7 +83,7 @@ typedef enum displayStatus { running, notRunning, zombie, phoenix } DisplayStatu
 
 /*
  * local     - server runs on local host
- * foreign   - server runs on remote host -- unsupported in redm
+ * foreign   - server runs on remote host -- unsupported in xenodm
  * permanent - session restarted when it exits
  * transient - session not restarted when it exits
  * fromFile  - started via entry in servers file
@@ -103,7 +103,7 @@ typedef struct displayType {
 # define Transient	0
 
 # define FromFile	1
-# define FromXDMCP	0 	/* unsupported in redm */
+# define FromXDMCP	0 	/* unsupported in xenodm */
 
 extern DisplayType parseDisplayType (char *string, int *usedDefault);
 
