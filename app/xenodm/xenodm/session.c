@@ -438,7 +438,6 @@ runAndWait (char **args, char **environ)
 void
 execute (char **argv, char **environ)
 {
-    int err;
     /* give /dev/null as stdin */
     (void) close (0);
     open ("/dev/null", O_RDONLY);
@@ -446,74 +445,7 @@ execute (char **argv, char **environ)
     dup2 (2,1);
     Debug ("attempting to execve() %s\n", argv[0]);
     execve (argv[0], argv, environ);
-    err = errno;
     Debug ("execve() of %s failed: %s\n", argv[0], _SysErrorMsg (errno));
-    /*
-     * In case this is a shell script which hasn't been
-     * made executable (or this is a SYSV box), do
-     * a reasonable thing
-     */
-    if (err != ENOENT) {
-	char	program[1024], *e, *p, *optarg;
-	FILE	*f;
-	char	**newargv, **av;
-	int	argc;
-
-	/*
-	 * emulate BSD kernel behaviour -- read
-	 * the first line; check if it starts
-	 * with "#!", in which case it uses
-	 * the rest of the line as the name of
-	 * program to run.  Else use "/bin/sh".
-	 */
-	f = fopen (argv[0], "r");
-	if (!f)
-	    return;
-	if (fgets (program, sizeof (program) - 1, f) == NULL) {
-	    fclose (f);
-	    return;
-	}
-	fclose (f);
-	e = program + strlen (program) - 1;
-	if (*e == '\n')
-	    *e = '\0';
-	if (!strncmp (program, "#!", 2)) {
-	    p = program + 2;
-	    while (*p && isspace (*p))
-		++p;
-	    optarg = p;
-	    while (*optarg && !isspace (*optarg))
-		++optarg;
-	    if (*optarg) {
-		*optarg = '\0';
-		do
-		    ++optarg;
-		while (*optarg && isspace (*optarg));
-	    } else
-		optarg = NULL;
-	} else {
-	    p = "/bin/sh";
-	    optarg = NULL;
-	}
-	Debug ("Shell script execution: %s (optarg %s)\n",
-		p, optarg ? optarg : "(null)");
-	for (av = argv, argc = 0; *av; av++, argc++)
-	    /* SUPPRESS 530 */
-	    ;
-	newargv = malloc ((argc + (optarg ? 3 : 2)) * sizeof (char *));
-	if (!newargv)
-	    return;
-	av = newargv;
-	*av++ = p;
-	if (optarg)
-	    *av++ = optarg;
-	/* SUPPRESS 560 */
-	while ((*av++ = *argv++))
-	    /* SUPPRESS 530 */
-	    ;
-	Debug ("Attempting to execve() %s\n", newargv[0]);
-	execve (newargv[0], newargv, environ);
-    }
 }
 
 char **
