@@ -98,30 +98,30 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 
 	if (!p || strlen (greet->name) == 0) {
 		Debug("getpwnam() failed.\n");
-		bzero(greet->password, strlen(greet->password));
+		explicit_bzero(greet->password, strlen(greet->password));
 		return 0;
 	}
 
 	if ((lc = login_getclass(p->pw_class)) == NULL) {
 		Debug("login_getclass() failed.\n");
-		bzero(greet->password, strlen(greet->password));
+		explicit_bzero(greet->password, strlen(greet->password));
 		return 0;
 	}
 	if ((style = login_getstyle(lc, style, "xdm")) == NULL) {
 		Debug("login_getstyle() failed.\n");
-		bzero(greet->password, strlen(greet->password));
+		explicit_bzero(greet->password, strlen(greet->password));
 		return 0;
 	}
 	if ((as = auth_open()) == NULL) {
 		Debug("auth_open() failed.\n");
 		login_close(lc);
-		bzero(greet->password, strlen(greet->password));
+		explicit_bzero(greet->password, strlen(greet->password));
 		return 0;
 	}
 	if (auth_setoption(as, "login", "yes") == -1) {
 		Debug("auth_setoption() failed.\n");
 		login_close(lc);
-		bzero(greet->password, strlen(greet->password));
+		explicit_bzero(greet->password, strlen(greet->password));
 		return 0;
 	}
 	passwd_len = strlen(greet->password);
@@ -130,7 +130,7 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 	auth_setdata(as, "", 1);
 	auth_setdata(as, greet->password, passwd_len + 1);
 	/* wipe password now, otherwise it'll be copied fork() in auth_call */
-	bzero(greet->password, passwd_len);
+	explicit_bzero(greet->password, passwd_len);
 	/* Build path of the auth script and call it */
 	snprintf(path, sizeof(path), _PATH_AUTHPROG "%s", style);
 	auth_call(as, path, style, "-s", "response", greet->name,
