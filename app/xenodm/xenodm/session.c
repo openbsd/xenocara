@@ -62,8 +62,7 @@ static Bool StartClient(
     struct verify_info	*verify,
     struct display	*d,
     pid_t		*pidp,
-    char		*name,
-    char		*passwd);
+    char		*name);
 
 static pid_t			clientPid;
 static struct greet_info	greet;
@@ -173,7 +172,7 @@ ManageSession (struct display *d)
 	 * Start the clients, changing uid/groups
 	 *	   setting up environment and running the session
 	 */
-	if (StartClient (&verify, d, &clientPid, greet.name, greet.password)) {
+	if (StartClient (&verify, d, &clientPid, greet.name)) {
 	  Debug ("Client Started\n");
 	  /* Wait for session to end, */
 	  pid = waitpid(clientPid, NULL, 0);
@@ -301,8 +300,7 @@ StartClient (
     struct verify_info	*verify,
     struct display	*d,
     pid_t		*pidp,
-    char		*name,
-    char		*passwd)
+    char		*name)
 {
     char	**f, *home;
     char	*failsafeArgv[2];
@@ -355,9 +353,6 @@ StartClient (
 	else
 		Debug("No WINDOWPATH found\n");
 
-	if (passwd != NULL)
-	    bzero(passwd, strlen(passwd));
-
 	SetUserAuthorization (d, verify);
 	home = getEnv (verify->userEnviron, "HOME");
 	if (home)
@@ -379,15 +374,11 @@ StartClient (
 	execute (failsafeArgv, verify->userEnviron);
 	exit (1);
     case -1:
-	if (passwd != NULL)
-	    bzero(passwd, strlen(passwd));
 	Debug ("StartSession, fork failed\n");
 	LogError ("can't start session on \"%s\", fork failed: %s\n",
 		  d->name, _SysErrorMsg (errno));
 	return 0;
     default:
-	if (passwd != NULL)
-	    bzero(passwd, strlen(passwd));
 	Debug ("StartSession, fork succeeded %d\n", pid);
 	*pidp = pid;
 	return 1;
