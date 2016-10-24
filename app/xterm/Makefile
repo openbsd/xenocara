@@ -1,10 +1,10 @@
-# $OpenBSD: Makefile,v 1.29 2016/10/24 19:31:35 matthieu Exp $
+# $OpenBSD: Makefile,v 1.30 2016/10/24 19:55:37 matthieu Exp $
 .include <bsd.xconf.mk>
 
 SUBDIR=	icons resize
 
 PROG=	xterm
-MAN=	xterm.1 uxterm.1 koi8rxterm.1
+MAN=	xterm.1
 
 BINGRP=		utmp
 BINMODE=	2755
@@ -79,22 +79,12 @@ PATCH_YMD != sed -n '/XTERM_DATE/s,[^0-9/.-]*,,gp' ${.CURDIR}/version.h
 CLEANFILES+=	${MAN} builtin_icons.h
 
 afterinstall:
-	${INSTALL} ${INSTALL_COPY} -m 555 -o ${BINOWN} -g bin \
-		${.CURDIR}/uxterm ${DESTDIR}${BINDIR}
-	${INSTALL} ${INSTALL_COPY} -m 555 -o ${BINOWN} -g bin \
-		${.CURDIR}/koi8rxterm ${DESTDIR}${BINDIR}
 	${INSTALL} ${INSTALL_COPY} -m ${SHAREMODE} \
 		-o ${SHAREOWN} -g ${SHAREGRP} ${.CURDIR}/XTerm.ad \
 		${DESTDIR}${X11BASE}/share/X11/app-defaults/XTerm
 	${INSTALL} ${INSTALL_COPY} -m ${SHAREMODE} \
 		-o ${SHAREOWN} -g ${SHAREGRP} ${.CURDIR}/XTerm-col.ad \
 		${DESTDIR}${X11BASE}/share/X11/app-defaults/XTerm-color
-	${INSTALL} ${INSTALL_COPY} -m ${SHAREMODE} \
-		-o ${SHAREOWN} -g ${SHAREGRP} ${.CURDIR}/UXTerm.ad \
-		${DESTDIR}${X11BASE}/share/X11/app-defaults/UXTerm
-	${INSTALL} ${INSTALL_COPY} -m ${SHAREMODE} \
-		-o ${SHAREOWN} -g ${SHAREGRP} ${.CURDIR}/KOI8RXTerm.ad \
-		${DESTDIR}${X11BASE}/share/X11/app-defaults/KOI8RXTerm
 
 obj: _xenocara_obj
 

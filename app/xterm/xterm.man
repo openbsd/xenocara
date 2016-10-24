@@ -7316,3 +7316,5 @@ Moreover, on OpenBSD the
 entry for xterm defines the 
 .I kb 
 capability as \fB^?\fP
+.PP
+The u\*n and koi8r\*n shell scripts are not provided by OpenBSD.
