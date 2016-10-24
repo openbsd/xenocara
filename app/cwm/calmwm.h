@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.329 2016/10/18 17:03:30 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.330 2016/10/24 17:16:23 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -165,7 +165,6 @@ struct client_ctx {
 	struct name_q		 nameq;
 	char			*name;
 	char			*label;
-	char			*matchname;
 	XClassHint		ch;
 	XWMHints		*wmh;
 };
