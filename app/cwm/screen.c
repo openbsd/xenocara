@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: screen.c,v 1.83 2016/10/18 17:03:30 okan Exp $
+ * $OpenBSD: screen.c,v 1.84 2016/10/24 17:39:38 okan Exp $
  */
 
 #include <sys/types.h>
@@ -101,7 +101,7 @@ screen_find(Window win)
 		if (sc->rootwin == win)
 			return(sc);
 	}
-	warnx("screen_find failure win 0x%lu\n", win);
+	warnx("%s: failure win 0x%lu\n", __func__, win);
 	return(NULL);
 }
 

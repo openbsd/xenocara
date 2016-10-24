@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: search.c,v 1.55 2016/10/24 17:16:23 okan Exp $
+ * $OpenBSD: search.c,v 1.56 2016/10/24 17:39:38 okan Exp $
  */
 
 #include <sys/types.h>
@@ -85,7 +85,7 @@ search_match_client(struct menu_q *menuq, struct menu_q *resultq, char *search)
 			tier--;
 
 		if (tier >= nitems(tierp))
-			errx(1, "search_match_client: invalid tier");
+			errx(1, "%s: invalid tier", __func__);
 
 		/*
 		 * If you have a tierp, insert after it, and make it
