@@ -83,7 +83,6 @@
 ./usr/X11R6/bin/fvwm
 ./usr/X11R6/bin/iceauth
 ./usr/X11R6/bin/ico
-./usr/X11R6/bin/koi8rxterm
 ./usr/X11R6/bin/listres
 ./usr/X11R6/bin/luit
 ./usr/X11R6/bin/makedepend
@@ -99,7 +98,6 @@
 ./usr/X11R6/bin/ssh-askpass
 ./usr/X11R6/bin/sxpm
 ./usr/X11R6/bin/twm
-./usr/X11R6/bin/uxterm
 ./usr/X11R6/bin/video
 ./usr/X11R6/bin/viewres
 ./usr/X11R6/bin/x11perf
@@ -473,9 +471,7 @@
 ./usr/X11R6/share/X11/app-defaults/Clock-color
 ./usr/X11R6/share/X11/app-defaults/Editres
 ./usr/X11R6/share/X11/app-defaults/Editres-color
-./usr/X11R6/share/X11/app-defaults/KOI8RXTerm
 ./usr/X11R6/share/X11/app-defaults/SshAskpass
-./usr/X11R6/share/X11/app-defaults/UXTerm
 ./usr/X11R6/share/X11/app-defaults/Viewres
 ./usr/X11R6/share/X11/app-defaults/Viewres-color
 ./usr/X11R6/share/X11/app-defaults/XCalc

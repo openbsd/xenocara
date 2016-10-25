@@ -829,7 +829,6 @@
 ./usr/X11R6/man/man1/gccmakedep.1
 ./usr/X11R6/man/man1/iceauth.1
 ./usr/X11R6/man/man1/ico.1
-./usr/X11R6/man/man1/koi8rxterm.1
 ./usr/X11R6/man/man1/listres.1
 ./usr/X11R6/man/man1/luit.1
 ./usr/X11R6/man/man1/makedepend.1
@@ -846,7 +845,6 @@
 ./usr/X11R6/man/man1/startx.1
 ./usr/X11R6/man/man1/sxpm.1
 ./usr/X11R6/man/man1/twm.1
-./usr/X11R6/man/man1/uxterm.1
 ./usr/X11R6/man/man1/video.1
 ./usr/X11R6/man/man1/viewres.1
 ./usr/X11R6/man/man1/x11perf.1
