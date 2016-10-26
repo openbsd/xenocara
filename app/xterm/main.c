@@ -2634,12 +2634,12 @@ main(int argc, char *argv[]ENVP_ARG)
         if (data &&
             (strstr(data, "exec-formatted") || strstr(data, "exec-selectable"))) {
 
-            if (pledge("stdio rpath wpath cpath id proc exec tty", NULL) == -1) {
+            if (pledge("stdio rpath wpath id proc exec tty", NULL) == -1) {
                 xtermWarning("pledge\n");
                 exit(1);
             }
         } else {
-            if (pledge("stdio rpath wpath cpath id proc tty", NULL) == -1) {
+            if (pledge("stdio rpath wpath id proc tty", NULL) == -1) {
                xtermWarning("pledge\n");
                exit(1);
            }
