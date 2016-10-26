@@ -616,7 +616,7 @@ StartDisplay (struct display *d)
 	if (!WaitForServer (d))
 	    exit (OPENFAILED_DISPLAY);
 	SetWindowPath(d);
-	if (pledge("stdio rpath cpath wpath fattr proc dns inet unix exec prot_exec getpw id", NULL) != 0)
+	if (pledge("stdio rpath cpath wpath fattr flock proc dns inet unix exec prot_exec getpw id", NULL) != 0)
 	    exit(OPENFAILED_DISPLAY);
 	ManageSession (d);
 	exit (REMANAGE_DISPLAY);
