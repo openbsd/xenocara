@@ -1,0 +1,8 @@
+# $OpenBSD: Makefile.bsd-wrapper,v 1.1 2016/11/02 18:29:23 matthieu Exp $
+.include <bsd.xconf.mk>
+
+SHARED_LIBS=	Xfont2 0.0
+
+CONFIGURE_ARGS+= --with-xmlto=no --disable-devel-docs
+
+.include <bsd.xorg.mk>
