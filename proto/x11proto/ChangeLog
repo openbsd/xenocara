@@ -1,3 +1,64 @@
+commit f3b7b856777500113cee524dbd295fcbbce11fab
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri Sep 23 09:49:36 2016 +0300
+
+    xproto 7.0.31
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit d59bd3ade1a8430282c3395d5f5b22ebaa339976
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri Sep 23 02:35:36 2016 +0300
+
+    Fix typo __has_extenstion -> __has_extension
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    Reviewed-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit bd3832a988c34304b54ba3bbab5befb3dbcae90d
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Thu Sep 22 14:31:11 2016 -0700
+
+    xproto 7.0.30
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit ad959de4f4fd821cf95522994395ad668eb6756f
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Mon Sep 19 13:17:39 2016 -0700
+
+    Xfuncproto: Add support for _X_NOTSAN macro
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+    Reviewed-by: Keith Packard <keithp@keithp.com>
+
+commit 9a9382de9036fc0f3b5555ee4d340c7dd234c424
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Mon Sep 19 13:14:34 2016 -0700
+
+    Xfuncproto: Add support for _X_DEPRECATED_MSG() macro
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+    Reviewed-by: Keith Packard <keithp@keithp.com>
+
+commit 34a95f725c200b9aedc8c634851474d9bcce712e
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Mon Sep 19 13:12:35 2016 -0700
+
+    Xfuncproto.h: Define __has_extension() if it isn't already
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+    Reviewed-by: Keith Packard <keithp@keithp.com>
+
+commit 4855c9229f00927a343f563db58e261db8a187fa
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Mon Sep 19 13:10:34 2016 -0700
+
+    Xfuncproto.h: Define __has_feature() if it isn't already
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+    Reviewed-by: Keith Packard <keithp@keithp.com>
+
 commit 3e975a39b002070d245d21838f837aaf6e5c41d0
 Author: Julien Cristau <jcristau@debian.org>
 Date:   Fri May 13 10:28:12 2016 +0200
@@ -1008,7 +1069,7 @@ Date:   Sat Mar 27 16:38:27 2010 -0400
 
     config: remove execute permission on configuration file
     
-    Introduced in commit 	c879dab58f82f4789f27933c22706c84015f8684
+    Introduced in commit    c879dab58f82f4789f27933c22706c84015f8684
     "avoid checking for fds_bits on mingw"
     
     Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
