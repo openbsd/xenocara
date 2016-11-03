@@ -1,3 +1,44 @@
+commit 54ac1eb5d14636002b018607227c6d52cca0b754
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Tue Oct 4 21:23:23 2016 +0200
+
+    libXrandr 1.5.1
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit a0df3e1c7728205e5c7650b2e6dce684139254a6
+Author: Tobias Stoeckmann <tobias@stoeckmann.org>
+Date:   Sun Sep 25 22:21:40 2016 +0200
+
+    Avoid out of boundary accesses on illegal responses
+    
+    The responses of the connected X server have to be properly checked
+    to avoid out of boundary accesses that could otherwise be triggered
+    by a malicious server.
+    
+    Signed-off-by: Tobias Stoeckmann <tobias@stoeckmann.org>
+    Reviewed-by: Matthieu Herrb <matthieu@herrb.eu>
+
+commit 8ac94020b018105240ea45a87df2603d1eb5808b
+Author: walter harms <wharms@bfs.de>
+Date:   Thu Jul 28 19:32:46 2016 +0200
+
+    fix: redundant null check on calling free()
+    
+    janitorial patch: remove some unneeded if() before free()
+    
+    Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+
+commit 4ed36e386b21c1a65d614d5bf2b2c82d1e74ae2e
+Author: walter harms <wharms@bfs.de>
+Date:   Thu Jul 28 19:31:10 2016 +0200
+
+    fix: doGetScreenResources() info: redundant null check on calling free()
+    
+    janitorial patch: remove some unneeded if() before free()
+    
+    Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+
 commit 4437436906cbba5121115e552d564262e8b4c784
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Dec 16 01:55:30 2014 -0800

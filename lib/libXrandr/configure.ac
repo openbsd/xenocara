@@ -1,5 +1,3 @@
-dnl 
-dnl  $Id: configure.ac,v 1.9 2016/03/06 13:37:21 matthieu Exp $
 #
 #  Copyright © 2003 Keith Packard, Noah Levitt
 #
@@ -31,7 +29,7 @@ AC_PREREQ([2.60])
 # digit in the version number to track changes which don't affect the
 # protocol, so Xrandr version l.n.m corresponds to protocol version l.n
 #
-AC_INIT([libXrandr], [1.5.0],
+AC_INIT([libXrandr], [1.5.1],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXrandr])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -56,12 +54,6 @@ AC_SUBST(RANDR_VERSION)
 
 # Obtain compiler/linker options for depedencies
 PKG_CHECK_MODULES(RANDR, [x11 >= 1.6] randrproto >= $RANDR_VERSION xext xextproto xrender renderproto)
-
-# Check for _XEatDataWords function that may be patched into older Xlib release
-SAVE_LIBS="$LIBS"
-LIBS="$RANDR_LIBS"
-AC_CHECK_FUNCS([_XEatDataWords])
-LIBS="$SAVE_LIBS"
 
 AC_CONFIG_FILES([Makefile
 		src/Makefile
