@@ -1,3 +1,24 @@
+commit 44a462835cbe263451a463af17f0fbedc1c957b2
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Tue Oct 4 22:09:12 2016 +0200
+
+    libXvMC 1.0.10
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 2cd95e7da8367cccdcdd5c9b160012d1dec5cbdb
+Author: Tobias Stoeckmann <tobias@stoeckmann.org>
+Date:   Sun Sep 25 22:34:27 2016 +0200
+
+    Avoid buffer underflow on empty strings.
+    
+    If an empty string is received from an x-server, do not underrun the
+    buffer by accessing "rep.nameLen - 1" unconditionally, which could end
+    up being -1.
+    
+    Signed-off-by: Tobias Stoeckmann <tobias@stoeckmann.org>
+    Reviewed-by: Matthieu Herrb <matthieu@herrb.eu>
+
 commit ab0d28935987d48e9359023e82f9d56aa7e4bc95
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Mar 14 10:10:05 2015 -0700
