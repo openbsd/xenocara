@@ -220,5 +220,13 @@ DESCRIPTION
    Floating. If the device is a master device, attached specifies
    the device ID of the master device this device is paired with.
 
-   To free the XDeviceInfo array created by XListInputDevices, use
-   XFreeDeviceList.
+RETURN VALUE
+------------
+
+   XListInputDevices returns a pointer to an array of XDeviceInfo
+   structs and sets ndevices_return to the number of elements in
+   that array. To free the XDeviceInfo array created by
+   XListInputDevices, use XFreeDeviceList.
+
+   On error, XListInputDevices returns NULL and ndevices_return is
+   left unmodified.

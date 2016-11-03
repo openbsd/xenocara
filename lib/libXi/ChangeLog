@@ -1,3 +1,70 @@
+commit 1bdeb431c3cc9eec7e12fdd29a83237f2f228865
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Oct 25 12:43:44 2016 +1000
+
+    libXi 1.7.8
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 43904c9c5a0f5750a03a9bd8c96ccda182eb5a9a
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Oct 13 13:33:11 2016 +1000
+
+    XListInputDevices: don't touch ndevices in case of error
+    
+    We used to always set *ndevices to the number of devices returned by the
+    server. This magically worked because we pretty much never returned an error
+    except on faulty server or library implementations. With 19a9cd60 we now have
+    more chances of getting an error, so the polite thing is to just leave *ndevices
+    alone when we error out.
+    
+    Document it as such in the man page, just in case someone accidentally reads
+    it.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    CC: Niels Ole Salscheider <niels_ole@salscheider-online.de>
+    Reviewed-by: Emil Velikov <emil.l.velikov@gmail.com>
+
+commit b843fe1c0a6b4dbaae9f364042c6a247249305ef
+Author: Niels Ole Salscheider <niels_ole@salscheider-online.de>
+Date:   Fri Oct 7 21:46:44 2016 +0200
+
+    SizeClassInfo can return 0 even without an error
+    
+    Catch the error case separately. Commit 19a9cd607d added length checking to
+    SizeClassInfo but re-used the return value of 0 for an error. A device without
+    classes (as is initialized by xf86-input-libinput for tablets) can
+    legitimately return 0 and erroneously triggers an error.
+    Fix this by using a separate value for the error.
+    
+    Reproducible by calling XListInputDevices() with a tablet attached.
+    
+    This fixes a regression introduced in commit 19a9cd607d.
+    
+    Signed-off-by: Niels Ole Salscheider <niels_ole@salscheider-online.de>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.l.velikov@gmail.com>
+
+commit 8e0476653dd134cee84f4e893f656b2f93c4e3b0
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Tue Oct 4 21:14:01 2016 +0200
+
+    libXi 1.7.7
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 19a9cd607de73947fcfb104682f203ffe4e1f4e5
+Author: Tobias Stoeckmann <tobias@stoeckmann.org>
+Date:   Sun Sep 25 22:31:34 2016 +0200
+
+    Properly validate server responses.
+    
+    By validating length fields from server responses, out of boundary
+    accesses and endless loops can be mitigated.
+    
+    Signed-off-by: Tobias Stoeckmann <tobias@stoeckmann.org>
+    Reviewed-by: Matthieu Herrb <matthieu@herrb.eu>
+
 commit 2286282f965064176b3b1492646c6e2e0f4ab7dd
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Tue Dec 22 11:20:01 2015 +1000
@@ -971,7 +1038,7 @@ Date:   Wed Dec 21 15:40:37 2011 +1000
     Merge branch 'multitouch'
     
     Conflicts:
-    	configure.ac
+            configure.ac
 
 commit 82a631263ef4e6f46c1f33748089db8bf603b095
 Author: Peter Hutterer <peter.hutterer@who-t.net>
@@ -1176,7 +1243,7 @@ Date:   Sat Sep 17 06:41:30 2011 +1000
     Merge branch 'smooth-scrolling'
     
     Conflicts:
-    	src/XExtInt.c
+            src/XExtInt.c
 
 commit 3ed1b463205295a5ebba7d570a4cb8dfade51a38
 Author: Peter Hutterer <peter.hutterer@who-t.net>
@@ -2992,7 +3059,7 @@ Date:   Thu Jun 4 15:49:07 2009 +1000
     Merge branch 'master' into xi2
     
     Conflicts:
-    	man/XI.xml
+            man/XI.xml
 
 commit 8ea9ebcedcb99480a5774c7755329a2ca8fda07b
 Author: Benjamin Close <Benjamin.Close@clearchain.com>
@@ -3830,16 +3897,16 @@ Date:   Fri Feb 29 18:14:00 2008 -0300
     
     src/XExtInt.c:xinput_extension_hooks field event_to_wire of type
       XExtensionHooks that has the prototype     Status (*event_to_wire)(
-    	      Display*			/* display */,
-                  XEvent*			/* re */,
-                  xEvent*			/* event */
+                  Display*                  /* display */,
+                  XEvent*                   /* re */,
+                  xEvent*                   /* event */
       );
       does not match Status
       _XiEventToWire(
-        register Display	 *dpy,		/* pointer to display structure */
-        register XEvent	 *re,		/* pointer to client event */
-        register xEvent	**event,	/* wire protocol event */
-        register int	 *count);
+        register Display     *dpy,          /* pointer to display structure */
+        register XEvent      *re,           /* pointer to client event */
+        register xEvent     **event,        /* wire protocol event */
+        register int         *count);
     
     Signed-off-by: Peter Hutterer <peter@cs.unisa.edu.au>
 
@@ -3858,9 +3925,9 @@ Date:   Mon Apr 28 14:35:11 2008 +0930
     
     Conflicts:
     
-    	.gitignore
-    	man/XGrabDeviceKey.man
-    	man/XListInputDevices.man
+            .gitignore
+            man/XGrabDeviceKey.man
+            man/XListInputDevices.man
 
 commit 7d0977bc02ce4f29c0ed335fcdcce4ed7c328259
 Author: Peter Hutterer <peter@cs.unisa.edu.au>

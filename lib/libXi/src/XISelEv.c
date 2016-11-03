@@ -163,8 +163,14 @@ XIGetSelectedEvents(Display* dpy, Window win, int *num_masks_return)
 
     _XRead(dpy, (char*)mask_in, rbytes);
 
-    /* Memory layout of the XIEventMask for a 3 mask reply:
-     * [struct a][struct b][struct c][masks a][masks b][masks c]
+    /*
+     * This function takes interleaved xXIEventMask structs & masks off
+     * the wire, such as this 3 mask reply:
+     *   [struct a][masks a][struct b][masks b][struct c][masks c]
+     * And generates a memory buffer to be returned to callers in which
+     * they are not interleaved, so that callers can treat the returned
+     * pointer as a simple array of XIEventMask structs, such as:
+     *   [struct a][struct b][struct c][masks a][masks b][masks c]
      */
     len = reply.num_masks * sizeof(XIEventMask);
 

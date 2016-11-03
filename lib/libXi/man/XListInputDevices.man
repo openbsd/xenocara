@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: xlistinputdevices
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 03/09/2013
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 10/13/2016
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "XLISTINPUTDEVICES" "libmansuffix" "03/09/2013" "\ \&" "\ \&"
+.TH "XLISTINPUTDEVICES" "libmansuffix" "10/13/2016" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -553,13 +553,27 @@ the device ID of the master device this device is paired with\&.
 .if n \{\
 .RE
 .\}
+.SH "RETURN VALUE"
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-To free the XDeviceInfo array created by XListInputDevices, use
-XFreeDeviceList\&.
+XListInputDevices returns a pointer to an array of XDeviceInfo
+structs and sets ndevices_return to the number of elements in
+that array\&. To free the XDeviceInfo array created by
+XListInputDevices, use XFreeDeviceList\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+On error, XListInputDevices returns NULL and ndevices_return is
+left unmodified\&.
 .fi
 .if n \{\
 .RE
