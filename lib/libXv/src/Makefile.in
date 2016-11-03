@@ -659,7 +659,7 @@ uninstall-am: uninstall-libLTLIBRARIES uninstall-lintlibDATA
 @LINT_TRUE@lint:
 @LINT_TRUE@	$(LINT) $(ALL_LINT_FLAGS) $(libXv_la_SOURCES) $(XV_LIBS)
 
-@MAKE_LINT_LIB_TRUE@$(LINTLIB): $(libXau_la_SOURCES)
+@MAKE_LINT_LIB_TRUE@$(LINTLIB): $(libXv_la_SOURCES)
 @MAKE_LINT_LIB_TRUE@	$(LINT) -y -oXv -x $(ALL_LINT_FLAGS) $(libXv_la_SOURCES)
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

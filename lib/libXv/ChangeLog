@@ -1,3 +1,45 @@
+commit ef2a282876acc2316d338f8b66344ad5a2947057
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Tue Oct 4 21:29:55 2016 +0200
+
+    libXv 1.0.11
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit d9da580b46a28ab497de2e94fdc7b9ff953dab17
+Author: Tobias Stoeckmann <tobias@stoeckmann.org>
+Date:   Sun Sep 25 21:30:03 2016 +0200
+
+    Protocol handling issues in libXv - CVE-2016-5407
+    
+    The Xv query functions for adaptors and encodings suffer from out of
+    boundary accesses if a hostile X server sends a maliciously crafted
+    response.
+    
+    A previous fix already checks the received length against fixed values
+    but ignores additional length specifications which are stored inside
+    the received data.
+    
+    These lengths are accessed in a for-loop. The easiest way to guarantee
+    a correct processing is by validating all lengths against the
+    remaining size left before accessing referenced memory.
+    
+    This makes the previously applied check obsolete, therefore I removed
+    it.
+    
+    Signed-off-by: Tobias Stoeckmann <tobias@stoeckmann.org>
+    Reviewed-by: Matthieu Herrb <matthieu@herrb.eu>
+
+commit cf8cc328f1e370a548b71581bada7e1ee073c756
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 26 14:07:26 2014 -0700
+
+    Fix typo in dependencies for lint library
+    
+    Breaks out of tree lintlib builds by causing VPATH lookup to fail.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 736d7ac5a94c7aa6761d50ab58339a3d9a116c51
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Sep 7 22:19:48 2013 -0700

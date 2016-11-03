@@ -23,7 +23,7 @@ lintlibdir = $(libdir)
 
 lintlib_DATA = $(LINTLIB)
 
-$(LINTLIB): $(libXau_la_SOURCES)
+$(LINTLIB): $(libXv_la_SOURCES)
 	$(LINT) -y -oXv -x $(ALL_LINT_FLAGS) $(libXv_la_SOURCES)
 
 CLEANFILES = $(LINTLIB)
