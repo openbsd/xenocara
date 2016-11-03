@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.165 2016/05/31 00:48:42 tom Exp $ */
+/* $XTermId: trace.c,v 1.166 2016/10/05 09:16:01 tom Exp $ */
 
 /*
  * Copyright 1997-2015,2016 by Thomas E. Dickey
@@ -441,6 +441,46 @@ visibleSelectionTarget(Display *d, Atom a)
 	result = "XA_TARGETS()";
     }
 
+    return result;
+}
+
+const char *
+visibleTekparse(int code)
+{
+    static const struct {
+	int code;
+	const char *name;
+    } table[] = {
+#include "Tekparse.cin"
+    };
+    const char *result = "?";
+    Cardinal n;
+    for (n = 0; n < XtNumber(table); ++n) {
+	if (table[n].code == code) {
+	    result = table[n].name;
+	    break;
+	}
+    }
+    return result;
+}
+
+const char *
+visibleVTparse(int code)
+{
+    static const struct {
+	int code;
+	const char *name;
+    } table[] = {
+#include "VTparse.cin"
+    };
+    const char *result = "?";
+    Cardinal n;
+    for (n = 0; n < XtNumber(table); ++n) {
+	if (table[n].code == code) {
+	    result = table[n].name;
+	    break;
+	}
+    }
     return result;
 }
 

@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.829 2016/05/29 20:32:48 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.830 2016/10/07 00:38:57 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -323,6 +323,13 @@ typedef Char *UString;
 
 #define IsEmpty(s) ((s) == 0 || *(s) == '\0')
 #define IsSpace(c) ((c) == ' ' || (c) == '\t' || (c) == '\r' || (c) == '\n')
+
+/*
+ * Check strtol result, using "FullS2L" when no more data is expected, and
+ * "PartS2L" when more data may follow in the string.
+ */
+#define FullS2L(s,d) (PartS2L(s,d) && (*(d) == '\0'))
+#define PartS2L(s,d) (isdigit(CharOf(*(s))) && (d) != (s) && (d) != 0)
 
 #define CASETYPE(name) case name: result = #name; break
 

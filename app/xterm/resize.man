@@ -1,6 +1,6 @@
-.\" $XTermId: resize.man,v 1.30 2013/01/06 16:13:44 tom Exp $
+.\" $XTermId: resize.man,v 1.32 2016/09/24 11:14:15 tom Exp $
 .\"
-.\" Copyright 1998-2012,2013 by Thomas E. Dickey
+.\" Copyright 1998-2013,2016 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -202,7 +202,7 @@ sets these variables on systems using terminfo.
 Many applications (including the curses library) 
 use those variables when set to override their screensize.
 .SH "SEE ALSO"
-use_env(3)
+use_env(3x)
 .br
 csh(1), stty(1), tset(1)
 .br

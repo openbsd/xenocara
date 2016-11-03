@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1669 2016/06/05 22:28:12 tom Exp $
+  $XTermId: xterm.log.html,v 1.1693 2016/10/08 00:44:44 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -72,6 +72,10 @@
   CHANGELOG</a>).</p>
 
   <ul>
+    <li><a href="#xterm_327">Patch #327 - 2016/10/07</a></li>
+
+    <li><a href="#xterm_326">Patch #326 - 2016/09/25</a></li>
+
     <li><a href="#xterm_325">Patch #325 - 2016/06/05</a></li>
 
     <li><a href="#xterm_324">Patch #324 - 2016/03/10</a></li>
@@ -933,6 +937,80 @@
     <li><a href="#xterm_02">Patch #2 - 1996/1/7</a></li>
 
     <li><a href="#xterm_01">Patch #1 - 1996/1/6</a></li>
+  </ul>
+
+  <h1><a name="xterm_327" id="xterm_327">Patch #327 -
+  2016/10/07</a></h1>
+
+  <ul>
+    <li>add a check in the function which handles end-of-line
+    wrapping to ensure that C1 controls are allocated one column
+    when <code>allowC1Printable</code> is set (Debian
+    #738794).</li>
+
+    <li>use consistent error-checking after <code>strtol</code>
+    calls, fixes a case where a query with OSC 6 did not ensure
+    there was a valid color number (report by Alex Smith).</li>
+
+    <li>add <code>-baudrate</code> option, for testing
+    ncurses.</li>
+
+    <li>always generate the <code>CASE_<em>xxx</em></code> symbols
+    in <code>VTparse.h</code> and <code>Tekparse.h</code>, as part
+    of a change to improve debug-logging. This makes the build
+    always depend upon <code>awk</code>.</li>
+
+    <li>modify <code>allowC1Printable</code> to disallow codes
+    160-254 as being equivalent to codes 32-126 when parsing escape
+    sequences (Debian #839220).</li>
+
+    <li>amend fix from <a href="#xterm_326">patch #326</a> for
+    TrueType fonts to exclude the hidden character used for
+    double-width cells (report by Grady Martin).</li>
+
+    <li>fix a typo in <code>ctlseqs.ms</code></li>
+  </ul>
+
+  <h1><a name="xterm_326" id="xterm_326">Patch #326 -
+  2016/09/25</a></h1>
+
+  <ul>
+    <li>updated appdata file (report by Richard Hughes).</li>
+
+    <li>improve discussion of the different terminal emulations
+    provided by xterm in the manual page.</li>
+
+    <li>add examples of setting the icon title with/without the
+    window title in the manual (Debian #833984).</li>
+
+    <li>correct a limit-check when using a numeric value for
+    extended Booleans e.g., <code>*fullscreen:3</code> rather than
+    a name such as <code>*fullscreen:never</code>.</li>
+
+    <li>add action <code>allow-bold-fonts</code></li>
+
+    <li>improved formatting fixes for manual page, using script to
+    find mismatches in spelling of resources, actions and menu
+    entries.</li>
+
+    <li>improve documentation of logging resources.</li>
+
+    <li>fix a special case of flickering cursor by adding
+    <code>GraphicsExpose</code> to the list of event types that
+    should not trigger making the mouse cursor visible (patch by
+    Joe Peterson).</li>
+
+    <li>correct initialization of line-drawing in VT52-mode,
+    overlooked in changes for <a href="#xterm_297">patch #297</a>
+    (report/patch by Ben Wiley Sittler).</li>
+
+    <li>minor clarification of form-feed versus line-feed in
+    <code>ctlseqs.ms</code> (suggested by David Kemper).</li>
+
+    <li>amend fix for Debian #738794 to restore a check for missing
+    characters which are <em>not</em> combining characters. Also
+    fill in a corresponding special case for TrueType fonts (Debian
+    #827905).</li>
   </ul>
 
   <h1><a name="xterm_325" id="xterm_325">Patch #325 -

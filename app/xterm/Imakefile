@@ -1,4 +1,4 @@
-XCOMM $XTermId: Imakefile,v 1.112 2016/01/28 01:56:53 Jens.Schweikhardt Exp $
+XCOMM $XTermId: Imakefile,v 1.113 2016/10/06 00:56:32 tom Exp $
 XCOMM
 XCOMM                         Attention xterm porters
 XCOMM
@@ -244,11 +244,21 @@ TERMCAPDEFINES=-DUSE_TERMINFO -DHAVE_TIGETSTR
 
 AllTarget($(PROGRAMS))
 
+VTPARSE_H = VTparse.h VTparse.hin
+TEKPARSE_H = Tekparse.h Tekparse.hin
+
+.SUFFIXES : .def .hin
+.def.hin :
+	awk '/^CASE_/{printf "#define %s %d\n", $$1, n++}' < $< >$@
+
 SpecialCObjectRule(main,$(_NOOP_),$(MAIN_DEFINES))
 SpecialCObjectRule(menu,$(_NOOP_),$(MISC_DEFINES))
-SpecialCObjectRule(misc,$(_NOOP_),$(MISC_DEFINES))
-SpecialCObjectRule(charproc,$(_NOOP_),$(MISC_DEFINES))
+SpecialCObjectRule(misc,$(VTPARSE_H),$(MISC_DEFINES))
+SpecialCObjectRule(VTPrsTbl,$(VTPARSE_H),$(MISC_DEFINES))
+SpecialCObjectRule(charproc,$(VTPARSE_H),$(MISC_DEFINES))
 SpecialCObjectRule(data,$(_NOOP_),$(MISC_DEFINES))
+SpecialCObjectRule(TekPrsTbl,$(TEKPARSE_H),$(MISC_DEFINES))
+SpecialCObjectRule(TekProc,$(TEKPARSE_H),$(MISC_DEFINES))
 
 #if InstallXtermSetUID
 SetUIDProgramTarget(xterm,$(OBJS1),$(DEPLIBS1),$(XRFLIBS) XkbClientLibs XawClientLibs,$(TERMCAPLIB) $(PTYLIB))
@@ -319,4 +329,8 @@ InstallAppDefaults(UXTerm)
 InstallAppDefaultsLong(XTerm-col,XTerm-color)
 InstallManPage(xterm,$(MANDIR))
 InstallManPage(resize,$(MANDIR))
+
+cleandir::
+	$(RM) *parse.hin
+
 DependTarget()

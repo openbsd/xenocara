@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.688 2016/06/03 08:58:37 tom Exp $ */
+/* $XTermId: util.c,v 1.693 2016/10/07 00:41:38 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -3309,6 +3309,10 @@ fixupItalics(XtermWidget xw,
 }
 #endif
 
+#define SetMissing() \
+	TRACE(("%s@%d: missing %d\n", __FILE__, __LINE__, missing)); \
+	missing = 1
+
 /*
  * Draws text with the specified combination of bold/underline.  The return
  * value is the updated x position.
@@ -3538,7 +3542,7 @@ drawXtermText(XtermWidget xw,
 		     */
 		    if (screen->force_box_chars
 			|| xtermXftMissing(xw, currFont, dec2ucs(ch))) {
-			missing = 1;
+			SetMissing();
 		    } else {
 			ch = dec2ucs(ch);
 			replace = True;
@@ -3555,7 +3559,7 @@ drawXtermText(XtermWidget xw,
 			    if (screen->force_box_chars
 				|| xtermXftMissing(xw, currFont, ch)) {
 				ch = part;
-				missing = True;
+				SetMissing();
 			    }
 			} else if (xtermXftMissing(xw, currFont, ch)) {
 			    XftFont *test = pickXftFont(needed, font0, wfont0);
@@ -3567,6 +3571,8 @@ drawXtermText(XtermWidget xw,
 				filler = needed - 1;
 				ch = part;
 				replace = True;
+			    } else if (ch != HIDDEN_CHAR) {
+				SetMissing();
 			    }
 			}
 		    });
@@ -3582,7 +3588,7 @@ drawXtermText(XtermWidget xw,
 		     * box-characters.
 		     */
 		    if (xtermXftMissing(xw, currFont, ch)) {
-			missing = 1;
+			SetMissing();
 		    }
 		}
 #endif
@@ -3756,10 +3762,11 @@ drawXtermText(XtermWidget xw,
 	&& (!screen->fnt_boxes
 	    || (FontIsIncomplete(curFont) && !screen->assume_all_chars)
 	    || screen->force_box_chars)) {
-	/* Fill in missing box-characters.
-	   Find regions without missing characters, and draw
-	   them calling ourselves recursively.  Draw missing
-	   characters via xtermDrawBoxChar(). */
+	/*
+	 * Fill in missing box-characters.  Find regions without missing
+	 * characters, and draw them calling ourselves recursively.  Draw
+	 * missing characters via xtermDrawBoxChar().
+	 */
 	int last, first = 0;
 	Bool drewBoxes = False;
 
@@ -3827,6 +3834,8 @@ drawXtermText(XtermWidget xw,
 #if OPT_WIDE_CHARS
 		if (ch_width <= 0 && ch < 32)
 		    ch_width = 1;	/* special case for line-drawing */
+		else if (ch_width < 0)
+		    ch_width = 1;	/* special case for combining char */
 		if (!ucs_workaround(xw, ch,
 				    attr_flags,
 				    draw_flags,
@@ -4838,8 +4847,8 @@ extendedBoolean(const char *value, const FlagList * table, Cardinal limit)
 	       || (x_strcasecmp(value, "no") == 0)
 	       || (x_strcasecmp(value, "off") == 0)) {
 	result = False;
-    } else if ((check = strtol(value, &next, 0)) >= 0 && *next == '\0') {
-	if (check >= (long) limit)
+    } else if ((check = strtol(value, &next, 0)) >= 0 && FullS2L(value, next)) {
+	if (check >= (long) (limit + 2))	/* 2 is past False=0, True=1 */
 	    check = True;
 	result = (int) check;
     } else {
@@ -4942,7 +4951,7 @@ parse_xinerama_screen(Display *display, const char *str, struct Xinerama_geometr
 	str++;
     } else {
 	long s = strtol(str, &end, 0);
-	if (end > str && (int) s >= 0) {
+	if (FullS2L(str, end) && ((int) s >= 0)) {
 	    screen = (int) s;
 	    str = end;
 	}

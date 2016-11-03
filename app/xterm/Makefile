@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.30 2016/10/24 19:55:37 matthieu Exp $
+# $OpenBSD: Makefile,v 1.31 2016/11/03 14:25:06 matthieu Exp $
 .include <bsd.xconf.mk>
 
 SUBDIR=	icons resize
@@ -49,7 +49,12 @@ builtin_icons.h :
 	@echo "#endif" >>$@
 	@echo "made $@"
 
-beforedepend: builtin_icons.h
+.SUFFIXES: .hin .def
+
+.def.hin:
+	awk '/^CASE_/{printf "#define %s %d\n", $$1, n++}' < $< >$@
+
+beforedepend: builtin_icons.h VTparse.hin
 
 .SUFFIXES: .man .1
 
@@ -76,7 +81,7 @@ PATCH_YMD != sed -n '/XTERM_DATE/s,[^0-9/.-]*,,gp' ${.CURDIR}/version.h
 	    -e s%/etc/wtmp%/var/run/wtmp%g \
 	     < $< > $@
 
-CLEANFILES+=	${MAN} builtin_icons.h
+CLEANFILES+=	${MAN} builtin_icons.h VTparse.hin
 
 afterinstall:
 	${INSTALL} ${INSTALL_COPY} -m ${SHAREMODE} \

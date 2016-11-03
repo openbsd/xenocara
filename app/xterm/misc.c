@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.741 2016/06/01 09:21:56 tom Exp $ */
+/* $XTermId: misc.c,v 1.743 2016/10/07 00:41:14 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -657,6 +657,7 @@ xevents(void)
 		case ButtonRelease:
 		    /* also these... */
 		case Expose:
+		case GraphicsExpose:
 		case NoExpose:
 		case PropertyNotify:
 		case ClientMessage:
@@ -2765,7 +2766,7 @@ ResetAnsiColorRequest(XtermWidget xw, char *buf, int start)
 	    char *next;
 
 	    color = (int) (strtol) (buf, &next, 10);
-	    if ((next == buf) || (color < 0))
+	    if (!PartS2L(buf, next) || (color < 0))
 		break;		/* no number at all */
 	    if (next != 0) {
 		if (strchr(";", *next) == 0)
@@ -3665,7 +3666,7 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 		++buf;
 	    } else {
 		which = strtol(buf, &next, 10);
-		if (next == 0)
+		if (!PartS2L(buf, next) || (which < 0))
 		    break;
 		buf = next;
 		if (*buf == ';')
@@ -3675,7 +3676,7 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 		++buf;
 	    } else {
 		value = strtol(buf, &next, 10);
-		if (next == 0)
+		if (!PartS2L(buf, next) || (which < 0))
 		    break;
 		buf = next;
 		if (*buf == ';')

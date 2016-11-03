@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.781 2016/06/01 09:13:46 tom Exp $ */
+/* $XTermId: main.c,v 1.784 2016/10/07 00:40:34 tom Exp $ */
 
 /*
  * Copyright 2002-2015,2016 by Thomas E. Dickey
@@ -445,7 +445,8 @@ extern char *ptsname(int);
 
 #ifndef VMS
 static void reapchild(int /* n */ );
-static int spawnXTerm(XtermWidget /* xw */ );
+static int spawnXTerm(XtermWidget	/* xw */
+		      ,unsigned /* line_speed */ );
 static void remove_termcap_entry(char *, const char *);
 #ifdef USE_PTY_SEARCH
 static int pty_search(int * /* pty */ );
@@ -1115,6 +1116,7 @@ static XrmOptionDescRec optionDescList[] = {
 /* options that we process ourselves */
 {"-help",	NULL,		XrmoptionSkipNArgs,	(XPointer) NULL},
 {"-version",	NULL,		XrmoptionSkipNArgs,	(XPointer) NULL},
+{"-baudrate",	NULL,		XrmoptionSkipArg,	(XPointer) NULL},
 {"-class",	NULL,		XrmoptionSkipArg,	(XPointer) NULL},
 {"-e",		NULL,		XrmoptionSkipLine,	(XPointer) NULL},
 {"-into",	NULL,		XrmoptionSkipArg,	(XPointer) NULL},
@@ -1159,6 +1161,7 @@ static OptionHelp xtermOptions[] = {
 #endif
 { "-iconic",               "start iconic" },
 { "-name string",          "client instance, icon, and title strings" },
+{ "-baudrate rate",        "set line-speed (default 38400)" },
 { "-class string",         "class string (XTerm)" },
 { "-title string",         "title string" },
 { "-xrm resourcestring",   "additional resource specifications" },
@@ -1357,9 +1360,10 @@ decode_keyvalue(char **ptr, int termcap)
 	}
 	++string;
     } else if (termcap && (*string == '\\')) {
+	char *s = (string + 1);
 	char *d;
-	int temp = (int) strtol(string + 1, &d, 8);
-	if (temp > 0 && d != string) {
+	int temp = (int) strtol(s, &d, 8);
+	if (PartS2L(s, d) && temp > 0) {
 	    value = temp;
 	    string = d;
 	}
@@ -1971,6 +1975,124 @@ complex_command(char **args)
 }
 #endif
 
+static unsigned
+lookup_baudrate(const char *value)
+{
+    struct speed {
+	unsigned given_speed;	/* values for 'ospeed' */
+	unsigned actual_speed;	/* the actual speed */
+    };
+
+#define DATA(number) { B##number, number }
+
+    static struct speed const speeds[] =
+    {
+	DATA(0),
+	DATA(50),
+	DATA(75),
+	DATA(110),
+	DATA(134),
+	DATA(150),
+	DATA(200),
+	DATA(300),
+	DATA(600),
+	DATA(1200),
+	DATA(1800),
+	DATA(2400),
+	DATA(4800),
+	DATA(9600),
+#ifdef B19200
+	DATA(19200),
+#elif defined(EXTA)
+	{EXTA, 19200},
+#endif
+#ifdef B28800
+	DATA(28800),
+#endif
+#ifdef B38400
+	DATA(38400),
+#elif defined(EXTB)
+	{EXTB, 38400},
+#endif
+#ifdef B57600
+	DATA(57600),
+#endif
+#ifdef B76800
+	DATA(76800),
+#endif
+#ifdef B115200
+	DATA(115200),
+#endif
+#ifdef B153600
+	DATA(153600),
+#endif
+#ifdef B230400
+	DATA(230400),
+#endif
+#ifdef B307200
+	DATA(307200),
+#endif
+#ifdef B460800
+	DATA(460800),
+#endif
+#ifdef B500000
+	DATA(500000),
+#endif
+#ifdef B576000
+	DATA(576000),
+#endif
+#ifdef B921600
+	DATA(921600),
+#endif
+#ifdef B1000000
+	DATA(1000000),
+#endif
+#ifdef B1152000
+	DATA(1152000),
+#endif
+#ifdef B1500000
+	DATA(1500000),
+#endif
+#ifdef B2000000
+	DATA(2000000),
+#endif
+#ifdef B2500000
+	DATA(2500000),
+#endif
+#ifdef B3000000
+	DATA(3000000),
+#endif
+#ifdef B3500000
+	DATA(3500000),
+#endif
+#ifdef B4000000
+	DATA(4000000),
+#endif
+    };
+#undef DATA
+    unsigned result = 0;
+    long check;
+    char *next;
+    if (x_toupper(*value) == 'B')
+	value++;
+    if (isdigit(CharOf(*value))) {
+	check = strtol(value, &next, 10);
+	if (FullS2L(value, next) && (check > 0)) {
+	    Cardinal n;
+	    for (n = 0; n < XtNumber(speeds); ++n) {
+		if (speeds[n].actual_speed == (unsigned) check) {
+		    result = speeds[n].given_speed;
+		    break;
+		}
+	    }
+	}
+    }
+    if (result == 0) {
+	fprintf(stderr, "unsupported value for baudrate: %s\n", value);
+    }
+    return result;
+}
+
 int
 main(int argc, char *argv[]ENVP_ARG)
 {
@@ -1989,6 +2111,7 @@ main(int argc, char *argv[]ENVP_ARG)
     TScreen *screen;
     int mode;
     char *my_class = x_strdup(DEFCLASS);
+    unsigned line_speed = VAL_LINE_SPEED;
     Window winToEmbedInto = None;
 
     ProgramName = argv[0];
@@ -2070,6 +2193,11 @@ main(int argc, char *argv[]ENVP_ARG)
 	    } else if (!strcmp(option_ptr->option, "-help")) {
 		Help();
 		quit = True;
+	    } else if (!strcmp(option_ptr->option, "-baudrate")) {
+		if ((line_speed = lookup_baudrate(option_value)) == 0) {
+		    Help();
+		    quit = True;
+		}
 	    } else if (!strcmp(option_ptr->option, "-class")) {
 		free(my_class);
 		if ((my_class = x_strdup(option_value)) == 0) {
@@ -2079,6 +2207,10 @@ main(int argc, char *argv[]ENVP_ARG)
 	    } else if (!strcmp(option_ptr->option, "-into")) {
 		char *endPtr;
 		winToEmbedInto = (Window) strtol(option_value, &endPtr, 0);
+		if (!FullS2L(option_value, endPtr)) {
+		    Help();
+		    quit = True;
+		}
 	    }
 	}
 	if (quit)
@@ -2126,7 +2258,7 @@ main(int argc, char *argv[]ENVP_ARG)
 	}
     }
 #if defined(macII) || defined(ATT) || defined(CRAY)	/* { */
-    d_tio.c_cflag = VAL_LINE_SPEED | CS8 | CREAD | PARENB | HUPCL;
+    d_tio.c_cflag = line_speed | CS8 | CREAD | PARENB | HUPCL;
     d_tio.c_lflag = ISIG | ICANON | ECHO | ECHOE | ECHOK;
 #ifdef ECHOKE
     d_tio.c_lflag |= ECHOKE | IEXTEN;
@@ -2153,12 +2285,12 @@ main(int argc, char *argv[]ENVP_ARG)
 #ifdef BAUD_0			/* { */
     d_tio.c_cflag = CS8 | CREAD | PARENB | HUPCL;
 #else /* }{ !BAUD_0 */
-    d_tio.c_cflag = VAL_LINE_SPEED | CS8 | CREAD | PARENB | HUPCL;
+    d_tio.c_cflag = line_speed | CS8 | CREAD | PARENB | HUPCL;
 #endif /* } !BAUD_0 */
 #else /* USE_POSIX_TERMIOS */
     d_tio.c_cflag = CS8 | CREAD | PARENB | HUPCL;
-    cfsetispeed(&d_tio, VAL_LINE_SPEED);
-    cfsetospeed(&d_tio, VAL_LINE_SPEED);
+    cfsetispeed(&d_tio, line_speed);
+    cfsetospeed(&d_tio, line_speed);
 #endif
     d_tio.c_lflag = ISIG | ICANON | ECHO | ECHOE | ECHOK;
 #ifdef ECHOKE
@@ -2349,6 +2481,11 @@ main(int argc, char *argv[]ENVP_ARG)
 	    debug = True;
 	    continue;
 #endif /* DEBUG */
+	case 'b':
+	    if (strcmp(argv[0], "-baudrate"))
+		Syntax(*argv);
+	    argc--, argv++;
+	    continue;
 	case 'c':
 	    if (strcmp(argv[0], "-class"))
 		Syntax(*argv);
@@ -2506,7 +2643,7 @@ main(int argc, char *argv[]ENVP_ARG)
 	}
     });
 
-    spawnXTerm(term);
+    spawnXTerm(term, line_speed);
 
 #ifndef VMS
     /* Child process is out there, let's catch its termination */
@@ -3323,7 +3460,7 @@ resetShell(char *oldPath)
  *  If slave, the pty named in passedPty is already open for use
  */
 static int
-spawnXTerm(XtermWidget xw)
+spawnXTerm(XtermWidget xw, unsigned line_speed)
 {
     TScreen *screen = TScreenOf(xw);
     Cardinal nn;
@@ -4028,13 +4165,13 @@ spawnXTerm(XtermWidget xw)
 #ifdef BAUD_0
 		/* baud rate is 0 (don't care) */
 #elif defined(HAVE_TERMIO_C_ISPEED)
-		tio.c_ispeed = tio.c_ospeed = VAL_LINE_SPEED;
+		tio.c_ispeed = tio.c_ospeed = line_speed;
 #else /* !BAUD_0 */
-		tio.c_cflag |= VAL_LINE_SPEED;
+		tio.c_cflag |= line_speed;
 #endif /* !BAUD_0 */
 #else /* USE_POSIX_TERMIOS */
-		cfsetispeed(&tio, VAL_LINE_SPEED);
-		cfsetospeed(&tio, VAL_LINE_SPEED);
+		cfsetispeed(&tio, line_speed);
+		cfsetospeed(&tio, line_speed);
 #ifdef __MVS__
 		/* turn off bits that can't be set from the slave side */
 		tio.c_cflag &= ~(PACKET | PKT3270 | PTU3270 | PKTXTND);
@@ -4115,8 +4252,8 @@ spawnXTerm(XtermWidget xw)
 		sg.sg_flags &= ~(ALLDELAY | XTABS | CBREAK | RAW);
 		sg.sg_flags |= ECHO | CRMOD;
 		/* make sure speed is set on pty so that editors work right */
-		sg.sg_ispeed = VAL_LINE_SPEED;
-		sg.sg_ospeed = VAL_LINE_SPEED;
+		sg.sg_ispeed = line_speed;
+		sg.sg_ospeed = line_speed;
 		/* reset t_brkc to default value */
 		tc.t_brkc = -1;
 #ifdef LPASS8

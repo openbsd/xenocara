@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2016)
-               updated for XTerm Patch #323 (2016/02/21)
+               updated for XTerm Patch #326 (2016/10/02)
 
 
 
@@ -158,8 +158,9 @@ BS        Backspace (Ctrl-H).
 CR        Carriage Return (Ctrl-M).
 ENQ       Return Terminal Status (Ctrl-E).  Default response is an empty
           string, but may be overridden by a resource answerbackString.
-FF        Form Feed or New Page (NP).  Ctrl-L is treated the same as LF.
-LF        Line Feed or New Line (NL).  (LF is Ctrl-J).
+FF        Form Feed or New Page (NP).  (FF  is Ctrl-L).  FF  is treated
+          the same as LF .
+LF        Line Feed or New Line (NL).  (LF  is Ctrl-J).
 SI        Shift In (Ctrl-O) -> Switch to Standard Character Set.  This
           invokes the G0 character set (the default).
 SO        Shift Out (Ctrl-N) -> Switch to Alternate Character Set.  This
@@ -240,7 +241,7 @@ ESC |     Invoke the G3 Character Set as GR (LS3R).
 ESC }     Invoke the G2 Character Set as GR (LS2R).
 ESC ~     Invoke the G1 Character Set as GR (LS1R).
 
-Application Program-Control functions
+Application Program-Command functions
 APC Pt ST None.  xterm implements no APC  functions; Pt is ignored.  Pt
           need not be printable characters.
 
@@ -1036,7 +1037,7 @@ CSI Pm ' }
 CSI Pm ' ~
           Delete Ps Column(s) (default = 1) (DECDC), VT420 and up.
 
-Operating System Controls
+Operating System Commands
 OSC Ps ; Pt ST
 OSC Ps ; Pt BEL
           Set Text Parameters.  For colors and font, if Pt is a "?", the

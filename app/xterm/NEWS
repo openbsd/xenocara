@@ -1,0 +1,22 @@
+The NEWS file was generated from xterm.log.html, which serves as the changelog
+for xterm.
+--------------------------------------------------------------------------------
+                            Patch #327 - 2016/10/07
+
+     * add  a  check in the function which handles end-of-line wrapping to
+       ensure   that   C1   controls   are   allocated   one  column  when
+       allowC1Printable is set (Debian #738794).
+     * use  consistent  error-checking  after  strtol  calls, fixes a case
+       where  a  query  with  OSC 6 did not ensure there was a valid color
+       number (report by Alex Smith).
+     * add -baudrate option, for testing ncurses.
+     * always  generate  the CASE_xxx symbols in VTparse.h and Tekparse.h,
+       as  part of a change to improve debug-logging. This makes the build
+       always depend upon awk.
+     * modify   allowC1Printable   to  disallow  codes  160-254  as  being
+       equivalent  to  codes  32-126 when parsing escape sequences (Debian
+       #839220).
+     * amend  fix from patch #326 for TrueType fonts to exclude the hidden
+       character used for double-width cells (report by Grady Martin).
+     * fix a typo in ctlseqs.ms
+
