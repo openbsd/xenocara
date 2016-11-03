@@ -1,3 +1,27 @@
+commit 84df9cb81cc31bbed27ba241a23ae04f61da57db
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Tue Oct 4 21:11:55 2016 +0200
+
+    libXfixes 5.0.3
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 61c1039ee23a2d1de712843bed3480654d7ef42e
+Author: Tobias Stoeckmann <tobias@stoeckmann.org>
+Date:   Sun Sep 25 22:38:44 2016 +0200
+
+    Integer overflow on illegal server response
+    
+    The 32 bit field "rep.length" is not checked for validity, which allows
+    an integer overflow on 32 bit systems.
+    
+    A malicious server could send INT_MAX as length, which gets multiplied
+    by the size of XRectangle. In that case the client won't read the whole
+    data from server, getting out of sync.
+    
+    Signed-off-by: Tobias Stoeckmann <tobias@stoeckmann.org>
+    Reviewed-by: Matthieu Herrb <matthieu@herrb.eu>
+
 commit b2406ed9031991b7ddc5b76b308623afc8a590c5
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Wed May 25 18:53:28 2016 -0700
