@@ -1,3 +1,569 @@
+commit 8f349feac24aacc958bd816afcc52380764e3d92
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Tue Oct 4 21:01:39 2016 +0200
+
+    libX11 1.6.4
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 8ea762f94f4c942d898fdeb590a1630c83235c17
+Author: Tobias Stoeckmann <tobias@stoeckmann.org>
+Date:   Sun Sep 25 21:25:25 2016 +0200
+
+    Validation of server responses in XGetImage()
+    
+    Check if enough bytes were received for specified image type and
+    geometry. Otherwise GetPixel and other functions could trigger an
+    out of boundary read later on.
+    
+    Signed-off-by: Tobias Stoeckmann <tobias@stoeckmann.org>
+    Reviewed-by: Matthieu Herrb <matthieu@herrb.eu>
+
+commit 8c29f1607a31dac0911e45a0dd3d74173822b3c9
+Author: Tobias Stoeckmann <tobias@stoeckmann.org>
+Date:   Sun Sep 25 21:22:57 2016 +0200
+
+    The validation of server responses avoids out of boundary accesses.
+    
+    v2: FontNames.c  return a NULL list whenever a single
+    length field from the server is incohent.
+    
+    Signed-off-by: Tobias Stoeckmann <tobias@stoeckmann.org>
+    Reviewed-by: Matthieu Herrb <matthieu@herrb.eu>
+
+commit 78851f6a03130e3c720b60c3cbf96f8eb216d741
+Author: walter harms <wharms@bfs.de>
+Date:   Mon Aug 15 19:18:14 2016 +0200
+
+    XFree will accept NULL as argument
+    
+    since Xfree is a define for free():
+      Xlibint.h:#define Xfree(ptr) free((ptr))
+    
+    Xfree will accept NULL and do nothing.
+    
+    Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+
+commit 83adf3d1e3d0d6602244381334f75c216da4ab6e
+Author: Matthew D. Fuller <fullermd@over-yonder.net>
+Date:   Sat Jun 4 11:24:01 2016 -0500
+
+    Fixup param specification for XChangeProperty()
+    
+    Signed-off-by: Matthew D. Fuller <fullermd@over-yonder.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 3129c757f9da8586ab8b8654a56c8f687cc9ef5c
+Author: Mats Blakstad <mats.gbproject@gmail.com>
+Date:   Sun Feb 28 13:22:03 2016 -0500
+
+     New compose keys for local languages in Togo
+    
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit e1011b9e2f6c82255959cf3cc1d8cda402ded0a9
+Author: Daniel Albers <daniel@lbe.rs>
+Date:   Wed Mar 9 14:35:48 2016 +0100
+
+    Add Compose sequence for U+1F4A9.
+    
+    Signed-off-by: Daniel Albers <daniel@lbe.rs>
+
+commit 6d7bb040c928485f2557c2c914b95cffb2354179
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 6 14:18:32 2016 -0800
+
+    xcms: use size_t for pointer offsets passed to strncmp
+    
+    instead of converting to int and back
+    
+    Fixes clang warnings of the form:
+    HVC.c:190:43: warning: implicit conversion changes signedness: 'int' to
+          'unsigned long' [-Wsign-conversion]
+              if (strncmp(spec, _XcmsTekHVC_prefix, n) != 0) {
+                  ~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a9266804eed38a83897ab5f0f9f8a8ab82a98882
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 6 13:32:44 2016 -0800
+
+    xcms: use unsigned indexes when looping through unsigned values
+    
+    Clears many gcc warnings of the form:
+    
+    uvY.c: In function ‘XcmsCIEuvYToCIEXYZ’:
+    uvY.c:263:19: warning: comparison between signed and unsigned integer
+      expressions [-Wsign-compare]
+         for (i = 0; i < nColors; i++, pColor++) {
+                       ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0ee0d383b4488b7b90d8bd50b75c371e0dc0d397
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 6 13:01:25 2016 -0800
+
+    xcms: use size_t for strlen/sizeof values instead of converting to int & back
+    
+    Fixes gcc warnings of the form:
+    
+    IdOfPr.c: In function ‘XcmsFormatOfPrefix’:
+    IdOfPr.c:69:32: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+         if ((len = strlen(prefix)) >= sizeof(string_buf)) {
+                                    ^
+    IdOfPr.c:83:11: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+       if (len >= sizeof(string_buf)) Xfree(string_lowered);
+               ^
+    IdOfPr.c:97:11: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+       if (len >= sizeof(string_buf)) Xfree(string_lowered);
+               ^
+    IdOfPr.c:104:13: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+         if (len >= sizeof(string_buf)) Xfree(string_lowered);
+                 ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4de6ed3e7b1833c52c9d58ab74d59d57ca2a9f0d
+Author: Dominik Muth <nxdomainuser-muth@yahoo.com>
+Date:   Thu Mar 26 07:52:58 2015 +0100
+
+    Xlib.h: Fix macros imitating C functions.
+    
+    The basic rule "put parantheses around macro parameters" should be
+    observed where possible. Otherwise code like
+    
+        ConnectionNumber(foo = bar);
+    
+    fails to compile. (It obviously passes if ConnectionNumber is a C
+    function.) There are several other macros amended for the same reason.
+    
+    This bug appeared while building http://ioccc.org/1993/cmills.c, so
+    historically it was not present.
+    
+    Signed-off-by: Dominik Muth <muth@nxdomain.no-ip.biz>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3706b0f2b14cc97578a6bee620266edca2722ebf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 15 18:03:25 2013 -0800
+
+    Don't need to link libX11-xcb against libX11
+    
+    libX11-xcb only accesses data structures defined in X11 headers,
+    it doesn't call any functions or reference any global variables
+    in libX11 itself.  (Seems to have been left from previous XCL
+    implementation.)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit eddf1bbd18872b286a9f939140f0cd9ba4e93804
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 22 11:44:25 2016 -0800
+
+    Stop checking for preferred order of local transports
+    
+    Removes --with-local-transport-order=... flag to configure.
+    
+    Code which used this ordered list was removed in commit 15e5eaf6289
+    which outsourced X11 connection handling & authentication to libxcb.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu@herrb.eu>
+
+commit 1a66c1e964ff8d11382313404f48b5a3d5ed8be8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 22 09:39:28 2016 -0800
+
+    Stop checking XTRANS_SECURE_RPC_FLAGS since we no longer use them
+    
+    Removes --enable-secure-rpc & --disable-secure-rpc flags to configure
+    
+    Code that used SECURE_RPC definitions was removed in commit 15e5eaf6289
+    which outsourced X11 connection handling & authentication to libxcb.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu@herrb.eu>
+
+commit 7eb724dc24505f1591ef32620fa63f079b540646
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Thu Jan 21 11:54:19 2016 +0100
+
+    XKB: fix XkbGetKeyboardByName with Xming server
+    
+    XkbGetKeyboardByName relies on flags to read the data from the server.
+    
+    If the X server sends us the wrong flags or if a subreply is smaller
+    than it should be, XkbGetKeyboardByName will not read all the available
+    data and leave data in the buffer, which will cause the next _XReply()
+    to fail with:
+    
+    [xcb] Extra reply data still left in queue
+    [xcb] This is most likely caused by a broken X extension library
+    [xcb] Aborting, sorry about that.
+    xcb_io.c:576: _XReply: Assertion `!xcb_xlib_extra_reply_data_left' failed.
+    Aborted
+    
+    Check if there is some extra data left at the end of
+    XkbGetKeyboardByName() and discard that data if any is found.
+    
+    Many thanks to Peter Hutterer <peter.hutterer@who-t.net> for finding the
+    root cause of the issue and Adam Jackson <ajax@redhat.com> for helping
+    with the analysis!
+    
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+    Reviewed-by: Daniel Stone <daniels@collabora.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 43ba0a68d3d17b496ec1f48d44921122ddd7d7d9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 19 18:03:41 2015 -0800
+
+    lcPubWrap: replace malloc(strlen) + strcpy with strdup
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit 6fc95cb12b70c5a67cb4fc5e5749f9f1ec741e2a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 19 10:21:04 2015 -0800
+
+    XlcDL.c: reduce code duplication
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit f7ecc0856be58608881d2086954cb71857ad64e1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 19 10:19:25 2015 -0800
+
+    XlcDL.c: replace strcpy+strcat sequences with snprintf
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit 522989b34398bd6a6ea144c4af0ba69d6dc4faea
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 19 10:05:42 2015 -0800
+
+    XDefaultOMIF: Remove comments referring to ancient Sun bug ids
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit b738a104ae80e4270dd1d215ad0c6a80016982c2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 19 10:00:22 2015 -0800
+
+    XDefaultOMIF: additional code simplification
+    
+    Don't need to test for a case that we already returned for, don't need
+    to store a count that will only ever be 1 if we didn't return, don't
+    need to increment pointers to allow storing more than one item when we
+    can only ever possibly do one.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit 31011cf100419269eae7409581c784638be503cf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 19 09:46:31 2015 -0800
+
+    XDefaultOMIF: replace strlen+Xmalloc+strcpy with strdup
+    
+    Code seems to have been originally written to handle appending multiple
+    strings, but only ever operates on a single string.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit c27c46d5e22bbf60fb5608eaabe584b7fdeb0b09
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 19 09:20:55 2015 -0800
+
+    Use strdup instead of Xmalloc+strcpy in _XDefaultOpenIM
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit 4359dfabc04af082872d2bc2d5b52e26d6d93290
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 4 22:20:53 2015 -0800
+
+    Delete #if 0 hunks of code
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a2f9dfac286f37e54eb47d4736cc3f0150224a84
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Dec 3 23:38:07 2015 -0800
+
+    Bug 93183: _XDefaultOpenIM memory leaks in out-of-memory error paths
+    
+    Rework code to store allocations directly into XIM struct instead of
+    temporary local variables, so we can use _XCloseIM to unwind instead
+    of duplicating it, and consistently jump to error handler on failure,
+    instead of sometimes leaking and sometimes freeing.
+    
+    Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=93183
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 07a97b3944467dce085a1efd24706cc851d2caf2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Dec 3 23:19:48 2015 -0800
+
+    Bug 93184: read_EncodingInfo invalid free
+    
+    Free the correct bits of memory if we run out and need to unwind
+    
+    Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=93184
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 11118e9eb3705fcbe42b6a68d4a8aa86ab0211f1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 28 13:18:11 2015 -0800
+
+    Remove unused definition of XCONN_CHECK_FREQ
+    
+    The only use of XCONN_CHECK_FREQ was removed in commit 15e5eaf62897b3179
+    when we dropped the old Xlib connection handling in favor of xcb's.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Mark Kettenis <kettenis@openbsd.org>
+
+commit 5f0da8311a61498edf073cc877f5b467bfd5f863
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Dec 3 18:24:44 2015 -0500
+
+    Fix another missing update in cf4d5989383a
+    
+    Reported in:
+    
+       https://bugs.freedesktop.org/show_bug.cgi?id=81875#c7
+    
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit 33840a5465a2e5fecab520bfbdd2d1bd0a456f51
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Dec 3 18:15:40 2015 -0500
+
+    Fix missing update in cf4d5989383a
+    
+    Reported in:
+    
+       https://bugs.freedesktop.org/show_bug.cgi?id=81875#c7
+    
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit dbcb847a08c44d99e4e1de2ba777d63238fb0e03
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Sep 27 18:38:32 2015 -0700
+
+    Get rid of some extraneous ; at the end of C source lines
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Thomas Klausner <wiz@NetBSD.org>
+
+commit 121a1bad334459f66f78bfca6df53dc841cf97f8
+Author: Gunnar Hjalmarsson <gunnarhj@ubuntu.com>
+Date:   Wed Sep 23 11:44:55 2015 -0400
+
+    Add compose file for pt_PT similar to pt_BR
+    
+    This is a forward of the Ubuntu bug https://launchpad.net/bugs/518056
+    
+    One of the conclusions from the discussion on that bug report, which
+    basically is about typing the ccedilla character easily on a non-
+    Portuguese keyboard, is that X11 should include a compose file for
+    pt_PT.UTF-8 similar to the file for pt_BR.UTF-8.
+    
+    FDO bug: https://bugs.freedesktop.org/show_bug.cgi?id=90300
+    
+    Signed-off-by: Gunnar Hjalmarsson <gunnarhj@ubuntu.com>
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit 3f41d8a7f82eb5ffbd5c5d36472cf7043186b904
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri May 1 13:50:15 2015 +0200
+
+    Mark _XNextRequest as hidden
+    
+    It's only used inside XNextRequest(), so doesn't need to be exported.
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a72d2d06c002b644b7040a0a9936c8525e092ba8
+Author: Christian Linhart <chris@demorecorder.com>
+Date:   Mon Sep 7 17:17:32 2015 +0200
+
+    fix for Xlib 32-bit request number issues
+    
+    Make use of the new 64-bit sequence number API in XCB 1.11.1 to avoid
+    the 32-bit sequence number wrap in libX11.
+    
+    Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=71338
+    Signed-off-by: Christian Linhart <chris@demorecorder.com>
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit 58af066a764305c506efea7065ef7679369a1a98
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Sun Jul 19 10:23:21 2015 +0200
+
+    Ignore test-driver (used by newer autoconf).
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 80b9a346b9ba200fa4652560282e80d249519287
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Sun Jul 19 10:22:45 2015 +0200
+
+    Do not return() after exit().
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c827edcd1c4a7f920aa25208083b5b58d60d2b44
+Author: Ross Burton <ross.burton@intel.com>
+Date:   Mon May 18 14:49:01 2015 +0100
+
+    Add missing NULL checks to ICWrap
+    
+    ICWrap.c dereferences the xim parameter passed in from client code without a
+    NULL check.  I have seen mplayer trigger this resulting in a segfault.  In this
+    case mplayer had called XOpenIM and NULL was returned which was later passed
+    into XCreateIC.
+    
+    Patch originally by Drew Moseley <drew_moseley@mentor.com>.
+    
+    Signed-off-by: Ross Burton <ross.burton@intel.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 26e0d2de294f8adf1ce65f1dbff0b59af41a00b9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jun 4 20:51:17 2015 -0700
+
+    Replace Xmalloc+memset pairs with Xcalloc calls
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f0286b2770ece10aef5e2e8c004260217f12fd25
+Author: Bhavi Dhingra <b.dhingra@samsung.com>
+Date:   Thu Jun 4 19:07:12 2015 -0700
+
+    omGeneric.c: Correct the parameter usage of sizeof
+    
+    Incorrect parameter usage with sizeof. Earlier passed argument FontData
+    will be 4 bytes always as its a pointer hence the change is needed and
+    FontDataRec should be used for memset.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 47da70d75f9e48e800719c0db752f9ccd2d77aea
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue May 19 12:30:22 2015 +1000
+
+    Fix three "use of uninitialized variable" coverity warnings
+    
+    False positive, if rlen/nbytes are unset we quit early before using it. Still,
+    initialize it so we don't have to deal with these warnings again.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 19a30f17f30e9ae9641a7c0634fc52134208b060
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon May 18 07:56:22 2015 +1000
+
+    Fix an indentation issue
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 013ccece124b990217ad3bcf2c41688e8fda1df8
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon May 18 07:55:17 2015 +1000
+
+    Fix potential memory leak
+    
+    If we hit the depth limit, filename leaks. Move the depth check up before we
+    allocate filename.
+    Introduced in 226622349a4b1e16064649d4444a34fb4be4f464.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d3415d1f052530760b4617db45affcb984cfe35c
+Author: Mike FABIAN <mfabian@redhat.com>
+Date:   Mon Apr 20 17:59:30 2015 +0200
+
+    Fix spelling mistake introduced by 748d47e69f5c12d8557d56a8a8ec166588da7b93
+    
+    Sorry, my patch to fix the spelling mistakes in the ks_IN and sd_IN
+    locales fixed it only partly, I introduced a new spelling mistake
+    in the sd_IN locales. This patch fixes this.
+    
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit 748d47e69f5c12d8557d56a8a8ec166588da7b93
+Author: Mike FABIAN <mfabian@redhat.com>
+Date:   Wed Feb 19 11:46:45 2014 +0100
+
+    fix spelling mistakes in ks_IN and sd_IN devanagari locales
+    
+    The codeset must be *before* the modifier.
+    
+    See also: http://pubs.opengroup.org/onlinepubs/7908799/xbd/envvar.html
+    
+    opengroup> The syntax for these environment variables is thus defined as:
+    opengroup>
+    opengroup> [language[_territory][.codeset][@modifier]]
+    
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit c64fe5553aa4738f9d1d74a795f5651fbb7b1b09
+Author: Mike FABIAN <mfabian@redhat.com>
+Date:   Wed Feb 19 11:50:55 2014 +0100
+
+    add be_BY.UTF-8@latin and sr_RS.UTF-8@latin to locale.dir
+    
+    See also: https://bugzilla.redhat.com/show_bug.cgi?id=1066910
+    
+    If these are not in locale.dir,
+    
+        $ LANG=sr_RS.UTF-8@latin xterm
+    
+    and
+    
+        $ LANG=sr_RS@latin xterm
+    
+    give the warning:
+    
+        Warning: locale not supported by Xlib, locale set to C
+    
+    and some programs (like xmms) fail to find translations for Serbian
+    in Latin because of this.
+    
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit c85be01b006126c4407eebd1eb6e01a17312b7b4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 22 16:46:45 2015 -0700
+
+    Move Compose \ o / to be with other emoji compose sequences
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 5a499ca7b064bf7e6a4fcc169f22862dce0c60c5
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Mon Mar 9 15:28:29 2015 -0700

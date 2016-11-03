@@ -102,7 +102,7 @@ am__uninstall_files_from_dir = { \
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(lintlibdir)" \
 	"$(DESTDIR)$(x11datadir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libX11_xcb_la_DEPENDENCIES = libX11.la
+libX11_xcb_la_LIBADD =
 am_libX11_xcb_la_OBJECTS = x11_xcb.lo
 libX11_xcb_la_OBJECTS = $(am_libX11_xcb_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -599,7 +599,6 @@ EXTRA_DIST = \
 
 libX11_xcb_la_SOURCES = x11_xcb.c Xxcbint.h
 libX11_xcb_la_LDFLAGS = -version-number 1:0:0 -no-undefined
-libX11_xcb_la_LIBADD = libX11.la
 
 #
 # Figure out which sub-libraries to link into Xlib

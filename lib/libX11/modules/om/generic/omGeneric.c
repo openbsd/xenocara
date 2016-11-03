@@ -65,32 +65,6 @@
 #define	CHARSET_ENCODING_FIELD	14
 #define XLFD_MAX_LEN		255
 
-#if 0
-extern int _XmbDefaultTextEscapement(), _XwcDefaultTextEscapement(),
-	   _Xutf8DefaultTextEscapement();
-extern int _XmbDefaultTextExtents(), _XwcDefaultTextExtents(),
-	   _Xutf8DefaultTextExtents();
-extern Status _XmbDefaultTextPerCharExtents(), _XwcDefaultTextPerCharExtents(),
-	      _Xutf8DefaultTextPerCharExtents();
-extern int _XmbDefaultDrawString(), _XwcDefaultDrawString(),
-	   _Xutf8DefaultDrawString();
-extern void _XmbDefaultDrawImageString(), _XwcDefaultDrawImageString(),
-	    _Xutf8DefaultDrawImageString();
-
-extern int _XmbGenericTextEscapement(), _XwcGenericTextEscapement(),
-	   _Xutf8GenericTextEscapement();
-extern int _XmbGenericTextExtents(), _XwcGenericTextExtents(),
-	   _Xutf8GenericTextExtents();
-extern Status _XmbGenericTextPerCharExtents(), _XwcGenericTextPerCharExtents(),
-	      _Xutf8GenericTextPerCharExtents();
-extern int _XmbGenericDrawString(), _XwcGenericDrawString(),
-	   _Xutf8GenericDrawString();
-extern void _XmbGenericDrawImageString(), _XwcGenericDrawImageString(),
-	    _Xutf8GenericDrawImageString();
-
-extern void _XlcDbg_printValue (const char *str, char **value, int num);
-#endif
-
 /* For VW/UDC start */
 
 static FontData
@@ -101,11 +75,10 @@ init_fontdata(
     FontData	fd;
     int		i;
 
-    fd = Xmalloc(sizeof(FontDataRec) * font_data_count);
+    fd = Xcalloc(font_data_count, sizeof(FontDataRec));
     if(fd == (FontData) NULL)
 	return False;
 
-    memset(fd, 0x00, sizeof(FontData) * font_data_count);
     for(i = 0 ; i < font_data_count ; i++)
 	fd[i] = font_data[i];
 
@@ -126,11 +99,10 @@ init_vrotate(
     if(type == VROTATE_NONE)
 	return (VRotate)NULL;
 
-    vrotate = Xmalloc(sizeof(VRotateRec) * font_data_count);
+    vrotate = Xcalloc(font_data_count, sizeof(VRotateRec));
     if(vrotate == (VRotate) NULL)
 	return False;
 
-    memset(vrotate, 0x00, sizeof(VRotateRec) * font_data_count);
     for(i = 0 ; i < font_data_count ; i++) {
 	vrotate[i].charset_name = font_data[i].name;
 	vrotate[i].side = font_data[i].side;
@@ -155,10 +127,9 @@ init_fontset(
     count = XOM_GENERIC(oc->core.om)->data_num;
     data = XOM_GENERIC(oc->core.om)->data;
 
-    font_set = Xmalloc(sizeof(FontSetRec) * count);
+    font_set = Xcalloc(count, sizeof(FontSetRec));
     if (font_set == NULL)
 	return False;
-    memset((char *) font_set, 0x00, sizeof(FontSetRec) * count);
 
     gen = XOC_GENERIC(oc);
     gen->font_set_num = count;
@@ -638,34 +609,6 @@ is_match_charset(
     return False;
 }
 
-#if 0
-static char *
-get_font_name_from_list(
-    XOC oc,
-    char *pattern,
-    FontData    font_data)
-{
-    char **list, *name = (char *)NULL, *fname;
-    int count = 0, i;
-
-    list = XListFonts(oc->core.om->core.display, pattern, MAXFONTS, &count);
-    if (list == NULL)
-	return NULL;
-
-    for (i = 0; i < count; i++) {
-        fname = list[i];
-        if(is_match_charset(font_data, fname) == True) {
-            name = strdup(fname);
-            break;
-        }
-    }
-
-    XFreeFontNames(list);
-
-    return name;
-}
-#endif
-
 static int
 parse_all_name(
     XOC		oc,
@@ -1094,11 +1037,10 @@ parse_vw(
 	    Xfree(vrotate);
 
 	    if(sub_num > 0) {
-		vrotate = font_set->vrotate = Xmalloc
-						(sizeof(VRotateRec) * sub_num);
+		vrotate = font_set->vrotate = Xcalloc(sub_num,
+                                                      sizeof(VRotateRec));
 		if(font_set->vrotate == (VRotate)NULL)
 		    return (-1);
-		memset(font_set->vrotate, 0x00, sizeof(VRotateRec) * sub_num);
 
 		for(i = 0 ; i < sub_num ; i++) {
 		    vrotate[i].charset_name = font_set->substitute[i].name;
@@ -1881,13 +1823,13 @@ read_EncodingInfo(
 {
     FontData font_data,ret;
     char *buf, *bufptr,*scp;
-    int len;
+    int len, i;
     font_data = Xcalloc(count, sizeof(FontDataRec));
     if (font_data == NULL)
         return NULL;
 
     ret = font_data;
-    for ( ; count-- > 0; font_data++) {
+    for (i = 0; i < count; i++, font_data++) {
 /*
         strcpy(buf, *value++);
 */
@@ -1899,7 +1841,8 @@ read_EncodingInfo(
             len = strlen(buf);
         font_data->name = Xmalloc(len + 1);
         if (font_data->name == NULL) {
-            Xfree(font_data);
+            free_fontdataOM(ret, i + 1);
+            Xfree(ret);
             return NULL;
 	}
         strncpy(font_data->name, buf,len);

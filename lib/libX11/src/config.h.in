@@ -15,12 +15,6 @@
 /* Has shm*() functions */
 #undef HAS_SHM
 
-/* Define to 1 if you have the `authdes_create' function. */
-#undef HAVE_AUTHDES_CREATE
-
-/* Define to 1 if you have the `authdes_seccreate' function. */
-#undef HAVE_AUTHDES_SECCREATE
-
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
@@ -93,9 +87,6 @@
 /* Support os-specific local connections */
 #undef LOCALCONN
 
-/* preference sorted list of transport types to try for local connections */
-#undef LOCAL_TRANSPORT_LIST
-
 /* Define to the sub-directory in which libtool stores uninstalled libraries.
    */
 #undef LT_OBJDIR
@@ -132,9 +123,6 @@
 
 /* Patch version of this package */
 #undef PACKAGE_VERSION_PATCHLEVEL
-
-/* Support Secure RPC ("SUN-DES-1") authentication for X11 clients */
-#undef SECURE_RPC
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
