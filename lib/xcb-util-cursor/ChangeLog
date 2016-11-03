@@ -1,3 +1,19 @@
+commit 95b9a8fd876fdbbc854cdf3d90317be3846c7417
+Author: Michael Stapelberg <michael@stapelberg.de>
+Date:   Thu May 12 09:53:03 2016 +0200
+
+    set version to 0.1.3
+
+commit 085606514a37726b2527d646cd022e06b1fb0d79
+Author: Uli Schlachter <uli.schlachter@informatik.uni-oldenburg.de>
+Date:   Tue May 10 12:01:47 2016 +0200
+
+    Add a --with-cursorpath option to configure
+    
+    This works (hopefully) the same way as the same option does for libXcursor.
+    
+    Signed-off-by: Uli Schlachter <uli.schlachter@informatik.uni-oldenburg.de>
+
 commit 8eb844d39a06f42019dede515c70e7a0b155357d
 Author: Michael Stapelberg <michael@stapelberg.de>
 Date:   Wed Mar 25 23:06:23 2015 +0100

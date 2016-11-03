@@ -48,7 +48,7 @@ static const char *cursor_path(struct xcb_cursor_context_t *c) {
     if (c->path == NULL) {
         c->path = getenv("XCURSOR_PATH");
         if (c->path == NULL)
-            c->path = "~/.icons:/usr/share/icons:/usr/share/pixmaps:/usr/X11R6/lib/X11/icons";
+            c->path = XCURSORPATH;
     }
     return c->path;
 }
