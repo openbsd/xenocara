@@ -334,23 +334,6 @@ by a fatal error.  When reached, the display is disabled.
 The default values are
 \fBopenDelay\fP: 15, \fBopenRepeat\fP: 5, \fBopenTimeout\fP: 120,
 \fBstartAttempts\fP: 4 and \fBreservAttempts\fP: 2.
-.IP "\fBDisplayManager.\fP\fIDISPLAY\fP\fB.pingInterval\fP"
-.IP "\fBDisplayManager.\fP\fIDISPLAY\fP\fB.pingTimeout\fP"
-To discover when remote displays disappear,
-.I xenodm
-occasionally pings them, using an X connection and \fIXSync\fP
-calls.  \fBpingInterval\fP specifies the time (in minutes) between each
-ping attempt, \fBpingTimeout\fP specifies the maximum amount of time (in
-minutes) to wait for the terminal to respond to the request.  If the
-terminal does not respond, the session is declared dead and terminated.  By
-default, both are set to 5 minutes.  If you frequently use X terminals which
-can become isolated from the managing host, you may wish to increase this
-value.  The only worry is that sessions will continue to exist after the
-terminal has been accidentally disabled.
-.I xenodm
-will not ping local displays.  Although it would seem harmless, it is
-unpleasant when the workstation session is terminated as a result of the
-server hanging for NFS service and not responding to the ping.
 .IP "\fBDisplayManager.\fP\fIDISPLAY\fP\fB.terminateServer\fP"
 This boolean resource specifies whether the X server should be terminated
 when a session terminates (instead of resetting it).  This option can be
@@ -504,12 +487,11 @@ be:
   :0 Digital-QV local BINDIR/X :0
 
 .fi
-The display types are:
+The only recognized display types is:
 .ta 1i
 .nf
 
-local		local display: \fIxenodm\fP must run the server
-foreign		remote display: \fIxenodm\fP opens an X connection to a running server
+local		local display: \fIxenodm\fP will run the server
 
 .fi
 .PP
@@ -983,16 +965,6 @@ duties.  SIGTERM is expected to terminate the server.
 If these signals do not perform the expected actions,
 the resources \fBDisplayManager.\fP\fIDISPLAY\fP\fB.resetSignal\fP and
 \fBDisplayManager.\fP\fIDISPLAY\fP\fB.termSignal\fP can specify alternate signals.
-.PP
-To control remote terminals not using XDMCP,
-.I xenodm
-searches the window hierarchy on the display and uses the protocol request
-KillClient in an attempt to clean up the terminal for the next session.  This
-may not actually kill all of the clients, as only those which have created
-windows will be noticed.  XDMCP provides a more sure mechanism; when
-.I xenodm
-closes its initial connection, the session is over and the terminal is
-required to close all other connections.
 .SH "CONTROLLING XENODM"
 .PP
 .I Xenodm
@@ -1048,24 +1020,6 @@ line:
 
 .fi
 .PP
-Or, you might have a file server and a collection of X terminals.  The
-configuration for this is identical to the sample above,
-except the \fIXservers\fP file would look like
-.nf
-.ta .5i
-
-	extol:0 VISUAL-19 foreign
-	exalt:0 NCD-19 foreign
-	explode:0 NCR-TOWERVIEW3000 foreign
-
-.fi
-.PP
-This directs
-.I xenodm
-to manage sessions on all three of these terminals.  See the section
-\fBControlling Xenodm\fP for a description of using signals to enable
-and disable these terminals in a manner reminiscent of
-.IR init (__adminmansuffix__).
 .SH LIMITATIONS
 One thing that
 .I xenodm
