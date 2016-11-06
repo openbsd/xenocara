@@ -49,7 +49,6 @@ from The Open Group.
 # include <X11/Xauth.h>
 # include <X11/Intrinsic.h>
 
-# include <setjmp.h>
 # include <limits.h>
 # include <time.h>
 # define Time_t time_t
@@ -319,11 +318,6 @@ extern void WaitForChild (void);
 # define LEAVE_FOR_DISPLAY  1
 
 # include <stdlib.h>
-
-#  define Setjmp(e)   sigsetjmp(e,1)
-#  define Longjmp(e,v)	siglongjmp(e,v)
-#  define Jmp_buf		sigjmp_buf
-
 
 typedef void (*SIGFUNC)(int);
 
