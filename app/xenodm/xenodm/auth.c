@@ -871,23 +871,6 @@ SetUserAuthorization (struct display *d, struct verify_info *verify)
 		break;
 	    }
 	}
-	/* now write other authorizations */
-	/* XXX This is a no-op on xenodm */
-	for (i = 0; i < d->authNum; i++)
-	{
-	    if (i != magicCookie)
-	    {
-		data_len = auths[i]->data_length;
-		/* client will just use default Kerberos cache, so don't
-		 * even write cache info into the authority file.
-		 */
-		if (auths[i]->name_length == 14 &&
-		    !strncmp (auths[i]->name, "MIT-KERBEROS-5", 14))
-		    auths[i]->data_length = 0;
-		writeLocalAuth (new, auths[i], d->name);
-		auths[i]->data_length = data_len;
-	    }
-	}
 	if (old) {
 	    if (fstat (fileno (old), &statb) != -1)
 		chmod (new_name, (int) (statb.st_mode & 0777));
