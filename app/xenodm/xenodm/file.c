@@ -130,12 +130,9 @@ freeSomeArgs (char **args, int n)
 
 
 static int
-parseDisplayType (char *string)
+isLocal (char *string)
 {
-	if (strcmp(string, "local") == 0)
-		return 0;
-	else
-		return 1;
+	return (strcmp(string, "local") == 0);
 }
 
 void
@@ -144,7 +141,6 @@ ParseDisplay (char *source)
     char		**args, **argv, **a;
     char		*name, *class, *type;
     struct display	*d;
-    int			usedDefault;
     Boolean		local;
 
     args = splitIntoWords (source);
@@ -163,7 +159,7 @@ ParseDisplay (char *source)
 	freeFileArgs (args);
 	return;
     }
-    usedDefault = parseDisplayType(args[1]);
+    local = isLocal (args[1]);
     class = NULL;
     type = args[1];
     argv = args + 2;
@@ -173,17 +169,14 @@ ParseDisplay (char *source)
      * argument does, use the second argument as the
      * display class string
      */
-    if (usedDefault && args[2])
+    if (!local && args[2])
     {
-	usedDefault = parseDisplayType (args[2]);
-	if (!usedDefault)
-	{
-	    class = args[1];
-	    type = args[2];
-	    argv = args + 3;
-	}
+	local = isLocal (args[2]);
+	class = args[1];
+	type = args[2];
+	argv = args + 3;
     }
-    if (!local) 
+    if (!local)
     {
 	LogError ("Unacceptable display type %s for display %s\n",
 		  type, name);
