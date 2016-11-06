@@ -570,14 +570,6 @@ StartDisplay (struct display *d)
         Debug ("SetLocalAuthorization %s, auth %s\n",
                d->name, d->authNames[0]);
         SetLocalAuthorization (d);
-        /*
-         * reset the server after writing the authorization information
-         * to make it read the file (for compatibility with old
-         * servers which read auth file only on reset instead of
-         * at first connection)
-         */
-        if (d->serverPid != -1 && d->resetForAuth && d->resetSignal)
-            kill (d->serverPid, d->resetSignal);
     }
     if (d->serverPid == -1 && !StartServer (d))
     {
