@@ -218,6 +218,8 @@ autoLoginEnv(struct display *d, struct verify_info *verify,
 		return 0;
 
 	greet->name = strdup(d->autoLogin);
+	if (greet->name == NULL)
+		return 0;
 	verify->uid = p->pw_uid;
 	verify->gid = p->pw_gid;
 	home = p->pw_dir;
