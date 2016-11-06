@@ -212,23 +212,9 @@ extern char	*keyFile;
 extern char	**exportList;
 
 extern struct display	*FindDisplayByName (char *name),
-			*FindDisplayBySessionID (CARD32 sessionID),
-			*FindDisplayByAddress (XdmcpNetaddr addr, int addrlen, CARD16 displayNumber),
 			*FindDisplayByPid (pid_t pid),
 			*FindDisplayByServerPid (pid_t serverPid),
 			*NewDisplay (char *name, char *class);
-
-extern struct protoDisplay	*FindProtoDisplay (
-					XdmcpNetaddr address,
-					int          addrlen,
-					CARD16       displayNumber);
-extern struct protoDisplay	*NewProtoDisplay (
-					XdmcpNetaddr address,
-					int	     addrlen,
-					CARD16	     displayNumber,
-					CARD16	     connectionType,
-					ARRAY8Ptr    connectionAddress,
-					CARD32	     sessionID);
 
 /* in Login.c */
 extern void DrawFail (Widget ctx);
@@ -237,9 +223,6 @@ extern void DrawFail (Widget ctx);
 extern void CloseOnFork (void);
 extern void RegisterCloseOnFork (int fd);
 extern void StartDisplay (struct display *d);
-# ifndef HAVE_SETPROCTITLE
-extern void SetTitle (char *name, ...);
-# endif
 
 /* in dpylist.c */
 extern int AnyDisplaysLeft (void);
@@ -255,10 +238,6 @@ extern char *NetaddrPort(XdmcpNetaddr netaddrp, int *lenp);
 extern int ConvertAddr (XdmcpNetaddr saddr, int *len, char **addr);
 extern int NetaddrFamily (XdmcpNetaddr netaddrp);
 extern int addressEqual (XdmcpNetaddr a1, int len1, XdmcpNetaddr a2, int len2);
-
-
-/* in protodpy.c */
-extern void DisposeProtoDisplay(struct protoDisplay *pdpy);
 
 /* in reset.c */
 extern void pseudoReset (Display *dpy);
