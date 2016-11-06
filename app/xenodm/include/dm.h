@@ -52,17 +52,12 @@ from The Open Group.
 # include <limits.h>
 # include <time.h>
 # define Time_t time_t
+# include <stdlib.h>
 
-#  include <X11/Xdmcp.h>
 
+# include <X11/Xdmcp.h>
 
-# ifdef _POSIX_SOURCE
-#  include <sys/wait.h>
-# else
-#  define _POSIX_SOURCE
-#  include <sys/wait.h>
-#  undef _POSIX_SOURCE
-# endif
+# include <sys/wait.h>
 # define waitCode(w)	(WIFEXITED(w) ? WEXITSTATUS(w) : 0)
 # define waitSig(w)	(WIFSIGNALED(w) ? WTERMSIG(w) : 0)
 # define waitCore(w)    0	/* not in POSIX.  so what? */
@@ -149,21 +144,6 @@ struct display {
 #  define PROTO_TIMEOUT	(30 * 60)   /* 30 minutes should be long enough */
 #  define XDM_BROKEN_INTERVAL (120)   /* server crashing more than once within */
                                     /* two minutes is assumed to be broken!  */
-struct protoDisplay {
-	struct protoDisplay	*next;
-	XdmcpNetaddr		address;   /* UDP address */
-	int			addrlen;    /* UDP address length */
-	unsigned long		date;	    /* creation date */
-	CARD16			displayNumber;
-	CARD16			connectionType;
-	ARRAY8			connectionAddress;
-	CARD32			sessionID;
-	Xauth			*fileAuthorization;
-	Xauth			*xdmcpAuthorization;
-	ARRAY8			authenticationName;
-	ARRAY8			authenticationData;
-	XdmAuthKeyRec		key;
-};
 
 struct greet_info {
 	char		*name;		/* user name */
@@ -193,13 +173,7 @@ struct verify_info {
 # define RESERVER_DISPLAY	3	/* force server termination */
 # define OPENFAILED_DISPLAY	4	/* XOpenDisplay failed, retry */
 
-# ifndef TRUE
-#  define TRUE	1
-#  define FALSE	0
-# endif
-
 extern char	*config;
-
 extern char	*servers;
 extern int	request_port;
 extern int	debugLevel;
@@ -293,9 +267,7 @@ extern void WaitForChild (void);
  * CloseOnFork flags
  */
 
-#define CLOSE_ALWAYS	    0
-#define LEAVE_FOR_DISPLAY  1
-
-#include <stdlib.h>
+# define CLOSE_ALWAYS	    0
+# define LEAVE_FOR_DISPLAY  1
 
 #endif /* _DM_H_ */

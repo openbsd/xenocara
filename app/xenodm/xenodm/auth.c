@@ -61,16 +61,12 @@ struct AuthProtocol {
     const char	    *name;
     void	    (*InitAuth)(unsigned short len, char *name);
     Xauth	    *(*GetAuth)(unsigned short len, char *name);
-    void	    (*GetXdmcpAuth)(
-			struct protoDisplay	*pdpy,
-			unsigned short	authorizationNameLen,
-			char		*authorizationName);
     int		    inited;
 };
 
 static struct AuthProtocol AuthProtocols[] = {
 { (unsigned short) 18,	"MIT-MAGIC-COOKIE-1",
-    MitInitAuth, MitGetAuth, NULL
+    MitInitAuth, MitGetAuth,
 },
 };
 
