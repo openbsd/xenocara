@@ -233,7 +233,7 @@ WaitForServer (struct display *d)
 void
 ResetServer (struct display *d)
 {
-    if (d->dpy && d->displayType.origin != FromXDMCP)
+    if (d->dpy)
 	pseudoReset (d->dpy);
 }
 

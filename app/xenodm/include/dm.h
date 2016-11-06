@@ -54,7 +54,6 @@ from The Open Group.
 # include <time.h>
 # define Time_t time_t
 
-
 #  include <X11/Xdmcp.h>
 
 
@@ -80,33 +79,6 @@ typedef int		waitType;
 
 typedef enum displayStatus { running, notRunning, zombie, phoenix } DisplayStatus;
 
-
-/*
- * local     - server runs on local host
- * foreign   - server runs on remote host -- unsupported in xenodm
- * permanent - session restarted when it exits
- * transient - session not restarted when it exits
- * fromFile  - started via entry in servers file
- * fromXDMCP - started with XDMCP
- */
-
-typedef struct displayType {
-	unsigned int	location:1;
-	unsigned int	lifetime:1;
-	unsigned int	origin:1;
-} DisplayType;
-
-# define Local		1
-# define Foreign	0
-
-# define Permanent	1
-# define Transient	0
-
-# define FromFile	1
-# define FromXDMCP	0 	/* unsupported in xenodm */
-
-extern DisplayType parseDisplayType (char *string, int *usedDefault);
-
 typedef enum fileState { NewEntry, OldEntry, MissingEntry } FileState;
 
 struct display {
@@ -114,7 +86,6 @@ struct display {
 	/* Xservers file / XDMCP information */
 	char		*name;		/* DISPLAY name */
 	char		*class;		/* display class (may be NULL) */
-	DisplayType	displayType;	/* method to handle with */
 	char		**argv;		/* program name and arguments */
 
 	/* display state */
@@ -274,7 +245,7 @@ extern void ForEachDisplay (void (*f)(struct display *));
 extern void RemoveDisplay (struct display *old);
 
 /* in file.c */
-extern void ParseDisplay (char *source, DisplayType *acceptableTypes, int numAcceptable);
+extern void ParseDisplay (char *source);
 
 /* in netaddr.c */
 extern char *NetaddrAddress(XdmcpNetaddr netaddrp, int *lenp);

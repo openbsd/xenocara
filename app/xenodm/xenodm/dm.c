@@ -156,11 +156,6 @@ ScanServers (void)
     int		len;
     FILE	*serversFile;
     struct stat	statb;
-    static DisplayType	acceptableTypes[] =
-	    { { Local, Permanent, FromFile },
-	    };
-
-#define NumTypes    (sizeof (acceptableTypes) / sizeof (acceptableTypes[0]))
 
     if (servers[0] == '/')
     {
@@ -180,13 +175,13 @@ ScanServers (void)
 	    len = strlen (lineBuf);
 	    if (lineBuf[len-1] == '\n')
 		lineBuf[len-1] = '\0';
-	    ParseDisplay (lineBuf, acceptableTypes, NumTypes);
+	    ParseDisplay (lineBuf);
 	}
 	fclose (serversFile);
     }
     else
     {
-	ParseDisplay (servers, acceptableTypes, NumTypes);
+	ParseDisplay (servers);
     }
 }
 
@@ -331,8 +326,7 @@ WaitForChild (void)
 		d->startTries = 0;
 		d->reservTries = 0;
 		Debug ("Display exited with OBEYSESS_DISPLAY\n");
-		if (d->displayType.lifetime != Permanent ||
-		    d->status == zombie)
+		if (d->status == zombie)
 		    StopDisplay (d);
 		else
 		    RestartDisplay (d, FALSE);
@@ -345,8 +339,7 @@ WaitForChild (void)
 		 * no display connection was ever made, tell the
 		 * terminal that the open attempt failed
 		 */
-		if (d->displayType.origin == FromXDMCP ||
-		    d->status == zombie ||
+		if (d->status == zombie ||
 		    ++d->startTries >= d->startAttempts)
 		{
 		    LogError ("Display %s is being disabled\n", d->name);
@@ -360,7 +353,7 @@ WaitForChild (void)
 	    case RESERVER_DISPLAY:
 		d->startTries = 0;
 		Debug ("Display exited with RESERVER_DISPLAY\n");
-		if (d->displayType.origin == FromXDMCP || d->status == zombie)
+		if (d->status == zombie)
 		    StopDisplay(d);
 		else {
 		  Time_t now;
@@ -404,8 +397,7 @@ WaitForChild (void)
 	    case waitCompose (SIGTERM,0,0):
 		Debug ("Display exited on SIGTERM, try %d of %d\n",
 			d->startTries, d->startAttempts);
-		if (d->displayType.origin == FromXDMCP ||
-		    d->status == zombie ||
+		if (d->status == zombie ||
 		    ++d->startTries >= d->startAttempts)
 		{
 		    /*
@@ -428,7 +420,7 @@ WaitForChild (void)
 		 * XDMCP will restart the session if the display
 		 * requests it
 		 */
-		if (d->displayType.origin == FromXDMCP || d->status == zombie)
+		if (d->status == zombie)
 		    StopDisplay(d);
 		else
 		    RestartDisplay (d, FALSE);
@@ -480,19 +472,16 @@ WaitForChild (void)
 static void
 CheckDisplayStatus (struct display *d)
 {
-    if (d->displayType.origin == FromFile)
-    {
-	switch (d->state) {
-	case MissingEntry:
-	    StopDisplay (d);
-	    break;
-	case NewEntry:
-	    d->state = OldEntry;
-	case OldEntry:
-	    if (d->status == notRunning)
-		StartDisplay (d);
-	    break;
-	}
+    switch (d->state) {
+      case MissingEntry:
+        StopDisplay (d);
+        break;
+      case NewEntry:
+        d->state = OldEntry;
+      case OldEntry:
+        if (d->status == notRunning)
+            StartDisplay (d);
+        break;
     }
 }
 
@@ -576,28 +565,25 @@ StartDisplay (struct display *d)
     Debug ("StartDisplay %s\n", d->name);
     LogInfo ("Starting X server on %s\n", d->name);
     LoadServerResources (d);
-    if (d->displayType.location == Local)
+    if (d->authorize)
     {
-	if (d->authorize)
-	{
-	    Debug ("SetLocalAuthorization %s, auth %s\n",
-		    d->name, d->authNames[0]);
-	    SetLocalAuthorization (d);
-	    /*
-	     * reset the server after writing the authorization information
-	     * to make it read the file (for compatibility with old
-	     * servers which read auth file only on reset instead of
-	     * at first connection)
-	     */
-	    if (d->serverPid != -1 && d->resetForAuth && d->resetSignal)
-		kill (d->serverPid, d->resetSignal);
-	}
-	if (d->serverPid == -1 && !StartServer (d))
-	{
-	    LogError ("Server for display %s can't be started, session disabled\n", d->name);
-	    RemoveDisplay (d);
-	    return;
-	}
+        Debug ("SetLocalAuthorization %s, auth %s\n",
+               d->name, d->authNames[0]);
+        SetLocalAuthorization (d);
+        /*
+         * reset the server after writing the authorization information
+         * to make it read the file (for compatibility with old
+         * servers which read auth file only on reset instead of
+         * at first connection)
+         */
+        if (d->serverPid != -1 && d->resetForAuth && d->resetSignal)
+            kill (d->serverPid, d->resetSignal);
+    }
+    if (d->serverPid == -1 && !StartServer (d))
+    {
+        LogError ("Server for display %s can't be started, session disabled\n", d->name);
+        RemoveDisplay (d);
+        return;
     }
     if (!nofork_session)
 	pid = fork ();

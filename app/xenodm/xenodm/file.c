@@ -38,13 +38,6 @@ from The Open Group.
 
 #include	<ctype.h>
 
-static int
-DisplayTypeMatch (DisplayType d1, DisplayType d2)
-{
-	return d1.location == d2.location &&
-	       d1.lifetime == d2.lifetime &&
-	       d1.origin == d2.origin;
-}
 
 static void
 freeFileArgs (char **args)
@@ -135,14 +128,24 @@ freeSomeArgs (char **args, int n)
     free (args);
 }
 
+
+static int
+parseDisplayType (char *string)
+{
+	if (strcmp(string, "local") == 0)
+		return 0;
+	else
+		return 1;
+}
+
 void
-ParseDisplay (char *source, DisplayType *acceptableTypes, int numAcceptable)
+ParseDisplay (char *source)
 {
     char		**args, **argv, **a;
     char		*name, *class, *type;
     struct display	*d;
     int			usedDefault;
-    DisplayType		displayType;
+    Boolean		local;
 
     args = splitIntoWords (source);
     if (!args)
@@ -160,7 +163,7 @@ ParseDisplay (char *source, DisplayType *acceptableTypes, int numAcceptable)
 	freeFileArgs (args);
 	return;
     }
-    displayType = parseDisplayType (args[1], &usedDefault);
+    usedDefault = parseDisplayType(args[1]);
     class = NULL;
     type = args[1];
     argv = args + 2;
@@ -172,7 +175,7 @@ ParseDisplay (char *source, DisplayType *acceptableTypes, int numAcceptable)
      */
     if (usedDefault && args[2])
     {
-	displayType = parseDisplayType (args[2], &usedDefault);
+	usedDefault = parseDisplayType (args[2]);
 	if (!usedDefault)
 	{
 	    class = args[1];
@@ -180,14 +183,7 @@ ParseDisplay (char *source, DisplayType *acceptableTypes, int numAcceptable)
 	    argv = args + 3;
 	}
     }
-    while (numAcceptable)
-    {
-	if (DisplayTypeMatch (*acceptableTypes, displayType))
-	    break;
-	--numAcceptable;
-	++acceptableTypes;
-    }
-    if (!numAcceptable)
+    if (!local) 
     {
 	LogError ("Unacceptable display type %s for display %s\n",
 		  type, name);
@@ -216,33 +212,9 @@ ParseDisplay (char *source, DisplayType *acceptableTypes, int numAcceptable)
 	Debug ("Found new display:  %s %s %s",
 		d->name, d->class ? d->class : "", type);
     }
-    d->displayType = displayType;
     d->argv = copyArgs (argv);
     for (a = d->argv; a && *a; a++)
 	Debug (" %s", *a);
     Debug ("\n");
     freeSomeArgs (args, argv - args);
-}
-
-static struct displayMatch {
-	const char	*name;
-	DisplayType	type;
-} displayTypes[] = {
-	{ "local",		{ Local, Permanent, FromFile } },
-	{ NULL,			{ Local, Permanent, FromFile } },
-};
-
-DisplayType
-parseDisplayType (char *string, int *usedDefault)
-{
-	struct displayMatch	*d;
-
-	for (d = displayTypes; d->name; d++)
-		if (!strcmp (d->name, string))
-		{
-			*usedDefault = 0;
-			return d->type;
-		}
-	*usedDefault = 1;
-	return d->type;
 }

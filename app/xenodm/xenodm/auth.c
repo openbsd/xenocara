@@ -867,8 +867,7 @@ SetUserAuthorization (struct display *d, struct verify_info *verify)
 		!strncmp (auths[i]->name, "MIT-MAGIC-COOKIE-1", 18))
 	    {
 		magicCookie = i;
-		if (d->displayType.location == Local)
-		    writeLocalAuth (new, auths[i], d->name);
+		writeLocalAuth (new, auths[i], d->name);
 		break;
 	    }
 	}
@@ -885,8 +884,7 @@ SetUserAuthorization (struct display *d, struct verify_info *verify)
 		if (auths[i]->name_length == 14 &&
 		    !strncmp (auths[i]->name, "MIT-KERBEROS-5", 14))
 		    auths[i]->data_length = 0;
-		if (d->displayType.location == Local)
-		    writeLocalAuth (new, auths[i], d->name);
+		writeLocalAuth (new, auths[i], d->name);
 		auths[i]->data_length = data_len;
 	    }
 	}
@@ -966,10 +964,7 @@ RemoveUserAuthorization (struct display *d, struct verify_info *verify)
 	initAddrs ();
 	doWrite = 0;
 	for (i = 0; i < d->authNum; i++)
-	{
-	    if (d->displayType.location == Local)
-		writeLocalAuth (new, auths[i], d->name);
-	}
+	    writeLocalAuth (new, auths[i], d->name);
 	doWrite = 1;
 	if (old) {
 	    if (fstat (fileno (old), &statb) != -1)
