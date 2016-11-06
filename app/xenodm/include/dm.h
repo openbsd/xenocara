@@ -141,6 +141,9 @@ struct display {
 
 	Display		*dpy;		/* Display */
 	char		*windowPath;	/* path to server "window" */
+
+	/* autologin */
+	char		*autoLogin;	/* user to auto-login */
 };
 
 
@@ -302,6 +305,7 @@ extern void printEnv (char **e);
 
 /* in verify.c */
 extern int Verify (struct display *d, struct greet_info *greet, struct verify_info *verify);
+extern int autoLoginEnv(struct display *d, struct verify_info *verify, struct greet_info *greet);
 
 /* in dm.c */
 extern void StopDisplay (struct display *d);

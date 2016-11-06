@@ -155,12 +155,13 @@ ManageSession (struct display *d)
     (void)XSetErrorHandler(ErrorHandler);
     setproctitle("%s", d->name);
 
-    /*
-     * Load system default Resources
-     */
-    LoadXloginResources (d);
 
-    greet_stat = GreetUser(d, &dpy, &verify, &greet);
+    if (d->autoLogin == NULL || d->autoLogin[0] == '\0') {
+        /* Load system default Resources */
+        LoadXloginResources (d);
+        greet_stat = GreetUser(d, &dpy, &verify, &greet);
+    } else
+        greet_stat = AutoLogin(d, &verify, &greet);
 
     if (greet_stat == Greet_Success) {
 	clientPid = 0;

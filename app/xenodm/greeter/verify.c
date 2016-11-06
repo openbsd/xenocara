@@ -203,3 +203,41 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 	Debug ("end of environments\n");
 	return 1;
 }
+
+_X_INTERNAL
+int
+autoLoginEnv(struct display *d, struct verify_info *verify,
+    struct greet_info *greet)
+{
+	struct passwd	*p;
+	char *shell, *home, **argv;
+
+	Debug("Autologin %s\n", d->autoLogin);
+	p = getpwnam (d->autoLogin);
+	endpwent();
+	if (p == NULL)
+		return 0;
+
+	greet->name = strdup(d->autoLogin);
+	verify->uid = p->pw_uid;
+	verify->gid = p->pw_gid;
+	home = p->pw_dir;
+	shell = p->pw_shell;
+	argv = NULL;
+	if (d->session)
+		argv = parseArgs (argv, d->session);
+	if (greet->string)
+		argv = parseArgs (argv, greet->string);
+	if (!argv)
+		argv = parseArgs (argv, "xsession");
+	verify->argv = argv;
+	verify->userEnviron = userEnv (d, p->pw_uid == 0,
+	    greet->name, home, shell);
+	Debug ("user environment:\n");
+	printEnv (verify->userEnviron);
+	verify->systemEnviron = systemEnv (d, greet->name, home);
+	Debug ("system environment:\n");
+	printEnv (verify->systemEnviron);
+	Debug ("end of environments\n");
+	return 1;
+}

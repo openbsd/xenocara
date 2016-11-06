@@ -106,7 +106,8 @@ to assist in setting up the screen the user sees along with the
 \fIxlogin\fP widget.
 .PP
 The \fIxlogin\fP widget, which \fIxenodm\fP presents,
-offers the familiar login and password prompts.
+offers the familiar login and password prompts, unless
+\fIautoLogin\fP is set.
 .PP
 After the user logs in, \fIxenodm\fP runs the \fIXstartup\fP script as
 root.
@@ -260,6 +261,9 @@ A list of additional environment variables, separated by white space,
 to pass on to the \fIXsetup\fP,
 \fIXstartup\fP, \fIXsession\fP, and \fIXreset\fP programs.
 .\"
+.IP "\fBDisplayManager.\fP\fIDISPLAY\fP\fB.autoLogin\fP"
+This resource specifes the name of an user that will be logged in
+automatically, without displaying the xlogin widget.
 .IP "\fBDisplayManager.\fP\fIDISPLAY\fP\fB.resources\fP"
 This resource specifies the name of the file to be loaded by \fIxrdb\fP
 as the resource database onto the root window of screen 0 of the display.

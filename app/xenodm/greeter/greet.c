@@ -356,3 +356,28 @@ greet_user_rtn GreetUser(
     }
     return Greet_Success;
 }
+
+_X_EXPORT
+greet_user_rtn AutoLogin(
+    struct display          *d,
+    struct verify_info      *verify,
+    struct greet_info       *greet)
+{
+    int i;
+
+    if (!autoLoginEnv(d, verify, greet)) {
+        LogError("Autologin %s failed\n", d->autoLogin);
+        SessionExit(d, UNMANAGE_DISPLAY, TRUE);
+    }
+    
+    /*
+     * Run system-wide initialization file
+     */
+    if (source (verify->systemEnviron, d->startup) != 0)
+    {
+	Debug ("Startup program %s exited with non-zero status\n",
+		d->startup);
+	SessionExit (d, OBEYSESS_DISPLAY, FALSE);
+    }
+    return Greet_Success;
+}

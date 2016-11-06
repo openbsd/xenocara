@@ -176,6 +176,8 @@ struct displayResource serverResources[] = {
 				DEF_AUTH_NAME },
 { "authFile",	"AuthFile",	DM_STRING,	boffset(clientAuthFile),
 				"" },
+{ "autoLogin",	"AutoLogin",	DM_STRING,	boffset(autoLogin),
+				"" },
 };
 
 #define NUM_SERVER_RESOURCES	(sizeof serverResources/\
