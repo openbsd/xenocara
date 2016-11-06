@@ -488,7 +488,7 @@ line to start the server.  A typical entry for local display number 0 would
 be:
 .nf
 
-  :0 Digital-QV local BINDIR/X :0
+  :0 local BINDIR/X :0
 
 .fi
 The only recognized display types is:
@@ -502,8 +502,8 @@ local		local display: \fIxenodm\fP will run the server
 The display name must be something that can be passed in the \fB\-display\fP
 option to an X program.  This string is used to generate the display-specific
 resource names, so be careful to match the
-names (e.g., use ``:0 Sun-CG3 local BINDIR/X :0'' instead of
-``localhost:0 Sun-CG3 local BINDIR/X :0''
+names (e.g., use ``:0 local BINDIR/X :0'' instead of
+``localhost:0 local BINDIR/X :0''
 if your other resources are specified as
 ``DisplayManager._0.session'').  The display class portion is also used in the
 display-specific resources, as the class of the resource.  This is
@@ -1020,7 +1020,7 @@ line:
 .nf
 .ta .5i
 
-	xenodm \-server \(lq:0 SUN-3/60CG4 local BINDIR/X :0\(rq
+	xenodm \-server \(lq:0 local BINDIR/X :0\(rq
 
 .fi
 .PP
