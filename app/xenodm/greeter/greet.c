@@ -125,8 +125,8 @@ GreetDone (
 	break;
     }
     if (done) {
-	bzero (data->name, NAME_LEN);
-	bzero (data->passwd, PASSWORD_LEN);
+	explicit_bzero (data->name, NAME_LEN);
+	explicit_bzero (data->passwd, PASSWORD_LEN);
     }
 }
 
@@ -338,8 +338,8 @@ greet_user_rtn GreetUser(
 	else
 	{
 	    FailedLogin (d, greet->name);
-	    bzero (greet->name, strlen(greet->name));
-	    bzero (greet->password, strlen(greet->password));
+	    explicit_bzero (greet->name, strlen(greet->name));
+	    explicit_bzero (greet->password, strlen(greet->password));
 	}
     }
     DeleteXloginResources (d, dpy);
