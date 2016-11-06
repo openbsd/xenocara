@@ -314,12 +314,9 @@ extern void WaitForChild (void);
  * CloseOnFork flags
  */
 
-# define CLOSE_ALWAYS	    0
-# define LEAVE_FOR_DISPLAY  1
+#define CLOSE_ALWAYS	    0
+#define LEAVE_FOR_DISPLAY  1
 
-# include <stdlib.h>
-
-typedef void (*SIGFUNC)(int);
-
+#include <stdlib.h>
 
 #endif /* _DM_H_ */
