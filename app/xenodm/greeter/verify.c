@@ -214,7 +214,6 @@ autoLoginEnv(struct display *d, struct verify_info *verify,
 
 	Debug("Autologin %s\n", d->autoLogin);
 	p = getpwnam (d->autoLogin);
-	endpwent();
 	if (p == NULL)
 		return 0;
 

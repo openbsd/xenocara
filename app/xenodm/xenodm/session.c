@@ -339,7 +339,6 @@ StartClient (
 			  name, _SysErrorMsg (errno));
 		return (0);
 	    }
-	    endpwent();
 	} else {
 	    LogError ("getpwnam for \"%s\" failed: %s\n",
 		      name, _SysErrorMsg (errno));
