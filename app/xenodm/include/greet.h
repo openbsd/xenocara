@@ -62,7 +62,7 @@ typedef enum {
  * option such as SECURE_RPC or K5AUTH.
  */
 
-extern greet_user_rtn GreetUser(struct display *, Display **,
+extern greet_user_rtn GreetUser(struct display *,
     struct verify_info *, struct greet_info *);
 
 extern greet_user_rtn AutoLogin(struct display *,
