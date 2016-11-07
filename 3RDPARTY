@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.278 2016/11/05 11:33:17 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.279 2016/11/07 19:32:28 jasper Exp $
 #
 Package: 	Freetype
 Version:	2.7.0
@@ -64,3 +64,9 @@ Package:	fvwm
 Version:	2.2.5
 Comment:	Locally forked, newer upstream versions have incompatible
 		licensing.
+
+Packge:		xcb-util-xrm
+Version:	1.0
+Current Vers:	1.0
+Maintainer:	Ingo Buerk
+Archive Site:	https://github.com/Airblader/xcb-util-xrm
