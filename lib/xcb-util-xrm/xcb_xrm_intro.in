@@ -1,0 +1,13 @@
+/** 
+@file
+@brief X resource manager utility functions for XCB
+ 
+These functions allow access to the X resource manager.
+*/
+
+/**
+
+@author Ingo Bürk <ingo.buerk@airblader.de>
+@date 2016
+
+*/
