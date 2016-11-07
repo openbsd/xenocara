@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.30 2016/04/01 03:15:15 jsg Exp $
+# $OpenBSD: Makefile,v 1.31 2016/11/07 19:31:57 jasper Exp $
 
 .include <bsd.xconf.mk>
 
@@ -33,7 +33,8 @@ XCB_LIBS= \
 	xcb-util-renderutil \
 	xcb-util-cursor \
 	xcb-util-keysyms \
-	xcb-util-wm 
+	xcb-util-wm \
+	xcb-util-xrm
 
 SUBDIR= libpthread-stubs \
 	freetype fontconfig libxtrans libXau libXdmcp ${XCB_LIBS}\
