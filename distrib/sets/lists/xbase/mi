@@ -395,6 +395,9 @@
 ./usr/X11R6/lib/libxcb-xkb.so.0.1
 ./usr/X11R6/lib/libxcb-xprint.a
 ./usr/X11R6/lib/libxcb-xprint.so.3.0
+./usr/X11R6/lib/libxcb-xrm.a
+./usr/X11R6/lib/libxcb-xrm.la
+./usr/X11R6/lib/libxcb-xrm.so.0.0
 ./usr/X11R6/lib/libxcb-xtest.a
 ./usr/X11R6/lib/libxcb-xtest.so.1.0
 ./usr/X11R6/lib/libxcb-xv.a
@@ -447,6 +450,7 @@
 ./usr/X11R6/lib/pkgconfig/xcb-xinerama.pc
 ./usr/X11R6/lib/pkgconfig/xcb-xkb.pc
 ./usr/X11R6/lib/pkgconfig/xcb-xprint.pc
+./usr/X11R6/lib/pkgconfig/xcb-xrm.pc
 ./usr/X11R6/lib/pkgconfig/xcb-xtest.pc
 ./usr/X11R6/lib/pkgconfig/xcb-xv.pc
 ./usr/X11R6/lib/pkgconfig/xcb-xvmc.pc

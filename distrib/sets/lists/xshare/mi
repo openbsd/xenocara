@@ -678,6 +678,7 @@
 ./usr/X11R6/include/xcb/xcb_pixel.h
 ./usr/X11R6/include/xcb/xcb_renderutil.h
 ./usr/X11R6/include/xcb/xcb_util.h
+./usr/X11R6/include/xcb/xcb_xrm.h
 ./usr/X11R6/include/xcb/xcbext.h
 ./usr/X11R6/include/xcb/xevie.h
 ./usr/X11R6/include/xcb/xf86dri.h
