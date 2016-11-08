@@ -1,4 +1,4 @@
-/*	$OpenBSD: video.c,v 1.21 2016/10/21 09:48:48 czarkoff Exp $	*/
+/*	$OpenBSD: video.c,v 1.22 2016/11/08 13:22:55 czarkoff Exp $	*/
 /*
  * Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
  *
@@ -508,17 +508,22 @@ net_wm_supported(struct video *vid)
 	Atom query, fullscreen;
 	Atom type;
 	Atom *data;
-	long off;
-	int fmt, len = 12;
+	long off = 0, len = 12;
+	int fmt;
 	unsigned long nitems, remain;
 	int i;
 
 	query = XInternAtom(x->dpy, "_NET_SUPPORTED", True);
 	fullscreen = XInternAtom(x->dpy, "_NET_WM_STATE_FULLSCREEN", True);
+	if (query == None || fullscreen == None)
+		return;
 
-	for (off = 0; XGetWindowProperty(x->dpy, x->rwin, query, off,
-			  len, False, XA_ATOM, &type, &fmt, &nitems, &remain,
-			  (unsigned char **)&data) == Success; off += len) {
+	do {
+		if (XGetWindowProperty(x->dpy, x->rwin, query, off, len,
+		    False, XA_ATOM, &type, &fmt, &nitems, &remain,
+		    (unsigned char **)&data) != Success)
+			return;
+
 		if (type == XA_ATOM && fmt == 32) {
 			for (i = 0; i < nitems; i++) {
 				if (data[i] == fullscreen) {
@@ -529,7 +534,9 @@ net_wm_supported(struct video *vid)
 			}
 		}
 		XFree(data);
-	}
+
+		off += len;
+	} while (remain > 0);
 
 	return;
 }
