@@ -124,12 +124,6 @@ AC_ARG_WITH(default-vt,
 	[DEFAULTVT="$withval"], [[DEFAULTVT=""]])
 AC_SUBST(DEFAULTVT)
 
-AC_ARG_WITH(config-type,
-	AS_HELP_STRING([--with-config-type={ws|fs}],
-	 [default config file type to use - workstation (ws) or fileserver (fs) (default=ws)]),
-	[SERVERSTYPE="$withval"], [SERVERSTYPE="ws"])
-AC_SUBST(SERVERSTYPE)
-
 # Ideally we'd just pull out UTMP_FILE & WTMP_FILE from <utmp.h>
 # but that's not easy to do in autoconf
 AC_ARG_WITH(utmp_file,
