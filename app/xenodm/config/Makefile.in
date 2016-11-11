@@ -221,7 +221,6 @@ RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
 SED = sed
-SERVERSTYPE = @SERVERSTYPE@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 SHELL_CMD = @SHELL_CMD@
@@ -346,9 +345,9 @@ pixmapdir = $(XENODM_PIXMAPDIR)
 dist_pixmap_DATA = OpenBSD_15bpp.xpm OpenBSD_1bpp.xpm \
 		OpenBSD_4bpp.xpm OpenBSD_8bpp.xpm
 
-BUILT_SOURCES = Xservers.ws xenodm-config Xreset Xresources Xsession Xstartup
+BUILT_SOURCES = Xservers xenodm-config Xreset Xresources Xsession Xstartup
 CLEANFILES = $(BUILT_SOURCES) Xservers
-EXTRA_DIST = Xservers.ws.cpp Xservers.fs \
+EXTRA_DIST = Xservers.cpp \
 	xenodm-config.cpp Xreset.cpp Xresources.cpp Xsession.cpp Xstartup.cpp
 
 
@@ -696,11 +695,8 @@ uninstall-am: uninstall-dist_pixmapDATA \
 .cpp:
 	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $< | $(CPP_SED_MAGIC) > $@
 
-Xservers: Xservers.$(SERVERSTYPE)
-	ln -s Xservers.$(SERVERSTYPE) Xservers
-
-Xservers.ws: $(srcdir)/Xservers.ws.cpp
-	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $(srcdir)/Xservers.ws.cpp | $(CPP_SED_MAGIC) > $@
+Xservers: $(srcdir)/Xservers.cpp
+	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $(srcdir)/Xservers.cpp | $(CPP_SED_MAGIC) > $@
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

@@ -671,7 +671,6 @@ XENODM_CFLAGS
 SHELL_CMD
 WTMP_FILE
 UTMP_FILE
-SERVERSTYPE
 DEFAULTVT
 XENODMLOGDIR
 XENODMSCRIPTDIR
@@ -850,7 +849,6 @@ with_xenodmconfigdir
 with_xenodmscriptdir
 with_logdir
 with_default_vt
-with_config_type
 with_utmp_file
 with_wtmp_file
 with_color_pixmap
@@ -1561,9 +1559,6 @@ Optional Packages:
                           (default=/var/log)
   --with-default-vt=<vtname>
                           specify default vt to start xenodm on (default=none)
-  --with-config-type={ws|fs}
-                          default config file type to use - workstation (ws)
-                          or fileserver (fs) (default=ws)
   --with-utmp-file=<pathname>
                           specify file to pass to sessreg -u for current
                           logins
@@ -18993,16 +18988,6 @@ if test "${with_default_vt+set}" = set; then :
   withval=$with_default_vt; DEFAULTVT="$withval"
 else
   DEFAULTVT=""
-fi
-
-
-
-
-# Check whether --with-config-type was given.
-if test "${with_config_type+set}" = set; then :
-  withval=$with_config_type; SERVERSTYPE="$withval"
-else
-  SERVERSTYPE="ws"
 fi
 
 
