@@ -1,6 +1,6 @@
 XCOMM!SHELL_CMD
 XCOMM
-XCOMM $OpenBSD: Xsession.cpp,v 1.1 2016/10/23 08:30:37 matthieu Exp $
+XCOMM $OpenBSD: Xsession.cpp,v 1.2 2016/11/11 15:58:35 matthieu Exp $
 
 XCOMM redirect errors to a file in user's home directory if we can
 
@@ -9,34 +9,15 @@ if ( umask 077 && cp /dev/null "$errfile" 2> /dev/null )
 then
 	exec > "$errfile" 2>&1
 else
-#ifdef MKTEMP_COMMAND
-	mktemp=MKTEMP_COMMAND
 	for errfile in "${TMPDIR-/tmp}/xses-$USER" "/tmp/xses-$USER"
 	do
-		if ef="$( umask 077 && $mktemp "$errfile.XXXXXX" 2> /dev/null)"
+		if ef="$( umask 077 && mktemp "$errfile.XXXXXX" 2> /dev/null)"
 		then
 			exec > "$ef" 2>&1
 			mv "$ef" "$errfile" 2> /dev/null
 			break
 		fi
 	done
-#else
-XCOMM Since this system doesn't have a mktemp command to allow secure
-XCOMM creation of files in shared directories, no fallback error log
-XCOMM is being used.   See https://bugs.freedesktop.org/show_bug.cgi?id=5898
-XCOMM
-XCOMM 	for errfile in "${TMPDIR-/tmp}/xses-$USER" "/tmp/xses-$USER"
-XCOMM	do
-XCOMM		if ( umask 077 && cp /dev/null "$errfile" 2> /dev/null )
-XCOMM		then
-XCOMM			exec > "$errfile" 2>&1
-XCOMM			break
-XCOMM		fi
-XCOMM	done
-
-	exec > /dev/null 2>&1
-
-#endif
 fi
 
 XCOMM if we have private ssh key(s), start ssh-agent and add the key(s)
@@ -87,24 +68,6 @@ else
 	if [ -f "$resources" ]; then
 		BINDIR/xrdb -load "$resources"
 	fi
-#if defined(__SCO__) || defined(__UNIXWARE__)
-        [ -r /etc/default/xdesktops ] && {
-                . /etc/default/xdesktops
-        }
-
-        [ -r /etc/default/xenodm ] && {
-                . /etc/default/xenodm
-        }
-
-        XCOMM Allow the user to over-ride the system default desktop
-        [ -r $HOME/.xenodmdesktop ] && {
-                . $HOME/.xenodmdesktop
-        }
-
-        [ -n "$XDESKTOP" ] && {
-                exec `eval $XDESKTOP`
-        }
-#endif
 	BINDIR/xterm &
 	BINDIR/fvwm
 fi

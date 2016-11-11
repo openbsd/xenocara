@@ -45,12 +45,6 @@ XORG_DEFAULT_OPTIONS
 XORG_PROG_RAWCPP
 XORG_WITH_LINT
 
-# Checks for programs.
-# Check for mktemp to prevent security issue noted in Xorg bug #5898
-# See https://bugs.freedesktop.org/show_bug.cgi?id=5898 for details.
-AC_PATH_PROG(MKTEMP_COMMAND, mktemp)
-AM_CONDITIONAL(HAVE_MKTEMP_COMMAND, test x$MKTEMP_COMMAND != x)
-
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_SIGNAL
 
