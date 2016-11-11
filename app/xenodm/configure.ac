@@ -62,30 +62,6 @@ GREETER_CFLAGS="$GREETER_CFLAGS"
 # Find needed libraries for TCP sockets (pre-pended in $LIBS)
 XTRANS_CONNECTION_FLAGS
 
-# FIXME: Find better test for which OS'es use su -m  - for now, just try to
-# mirror the Imakefile setting of:
-# if  defined(OpenBSDArchitecture) || defined(NetBSDArchitecture) || defined(FreeBSDArchitecture) || defined(DarwinArchitecture)
-
-
-case $host_os in
-    linux*|gnu*|*-gnu)
-	SU="su"
-        ;;
-    darwin*)
-	SU="su -m"
-        ;;
-    *bsd*|dragonfly*)
-	SU="su -m"
-        ;;
-    solaris*|sysv4*)
-	SU="su"
-	;;
-    *)
-	SU="su"
-        ;;
-esac
-AC_SUBST(SU)
-
 # Figure out where everything goes in the filesystem
 
 AC_ARG_WITH(xenodmlibdir,
