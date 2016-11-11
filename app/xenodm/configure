@@ -636,6 +636,7 @@ ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
 LIBOBJS
+MKTEMP_COMMAND
 appdefaultdir
 APPDEFS_LIBS
 APPDEFS_CFLAGS
@@ -677,9 +678,6 @@ XENODMSCRIPTDIR
 XENODMCONFIGDIR
 XENODMLIBDIR
 SU
-HAVE_MKTEMP_COMMAND_FALSE
-HAVE_MKTEMP_COMMAND_TRUE
-MKTEMP_COMMAND
 LINT_FALSE
 LINT_TRUE
 LINT_FLAGS
@@ -18173,58 +18171,6 @@ fi
 
 
 
-# Checks for programs.
-# Check for mktemp to prevent security issue noted in Xorg bug #5898
-# See https://bugs.freedesktop.org/show_bug.cgi?id=5898 for details.
-# Extract the first word of "mktemp", so it can be a program name with args.
-set dummy mktemp; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_path_MKTEMP_COMMAND+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  case $MKTEMP_COMMAND in
-  [\\/]* | ?:[\\/]*)
-  ac_cv_path_MKTEMP_COMMAND="$MKTEMP_COMMAND" # Let the user override the test with a path.
-  ;;
-  *)
-  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_path_MKTEMP_COMMAND="$as_dir/$ac_word$ac_exec_ext"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-  ;;
-esac
-fi
-MKTEMP_COMMAND=$ac_cv_path_MKTEMP_COMMAND
-if test -n "$MKTEMP_COMMAND"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $MKTEMP_COMMAND" >&5
-$as_echo "$MKTEMP_COMMAND" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
-
-
- if test x$MKTEMP_COMMAND != x; then
-  HAVE_MKTEMP_COMMAND_TRUE=
-  HAVE_MKTEMP_COMMAND_FALSE='#'
-else
-  HAVE_MKTEMP_COMMAND_TRUE='#'
-  HAVE_MKTEMP_COMMAND_FALSE=
-fi
-
-
 # Checks for typedefs, structures, and compiler characteristics.
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking return type of signal handlers" >&5
 $as_echo_n "checking return type of signal handlers... " >&6; }
@@ -20433,10 +20379,6 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${LINT_TRUE}" && test -z "${LINT_FALSE}"; then
   as_fn_error $? "conditional \"LINT\" was never defined.
-Usually this means the macro was only invoked conditionally." "$LINENO" 5
-fi
-if test -z "${HAVE_MKTEMP_COMMAND_TRUE}" && test -z "${HAVE_MKTEMP_COMMAND_FALSE}"; then
-  as_fn_error $? "conditional \"HAVE_MKTEMP_COMMAND\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 
