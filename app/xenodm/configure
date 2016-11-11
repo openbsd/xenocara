@@ -677,7 +677,6 @@ XENODMLOGDIR
 XENODMSCRIPTDIR
 XENODMCONFIGDIR
 XENODMLIBDIR
-SU
 LINT_FALSE
 LINT_TRUE
 LINT_FLAGS
@@ -18860,30 +18859,6 @@ $as_echo "#define LOCALCONN 1" >>confdefs.h
 
  fi
 
-
-
-# FIXME: Find better test for which OS'es use su -m  - for now, just try to
-# mirror the Imakefile setting of:
-# if  defined(OpenBSDArchitecture) || defined(NetBSDArchitecture) || defined(FreeBSDArchitecture) || defined(DarwinArchitecture)
-
-
-case $host_os in
-    linux*|gnu*|*-gnu)
-	SU="su"
-        ;;
-    darwin*)
-	SU="su -m"
-        ;;
-    *bsd*|dragonfly*)
-	SU="su -m"
-        ;;
-    solaris*|sysv4*)
-	SU="su"
-	;;
-    *)
-	SU="su"
-        ;;
-esac
 
 
 # Figure out where everything goes in the filesystem
