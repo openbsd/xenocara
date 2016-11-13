@@ -35,26 +35,9 @@
 #ifdef USE_GLAMOR
 
 #include "radeon.h"
+#include "radeon_bo_helper.h"
 #include "radeon_glamor.h"
 
-
-/**
- * get_drawable_pixmap() returns the backing pixmap for a given drawable.
- *
- * @param pDrawable the drawable being requested.
- *
- * This function returns the backing pixmap for a drawable, whether it is a
- * redirected window, unredirected window, or already a pixmap.
- */
-static PixmapPtr
-get_drawable_pixmap(DrawablePtr pDrawable)
-{
-	if (pDrawable->type == DRAWABLE_WINDOW)
-		return pDrawable->pScreen->
-		    GetWindowPixmap((WindowPtr) pDrawable);
-	else
-		return (PixmapPtr) pDrawable;
-}
 
 /* Are there any outstanding GPU operations for this pixmap? */
 static Bool
@@ -917,8 +900,6 @@ radeon_glamor_close_screen(CLOSE_SCREEN_ARGS_DECL)
 	pScreen->CloseScreen = info->glamor.SavedCloseScreen;
 	pScreen->GetImage = info->glamor.SavedGetImage;
 	pScreen->GetSpans = info->glamor.SavedGetSpans;
-	pScreen->CreatePixmap = info->glamor.SavedCreatePixmap;
-	pScreen->DestroyPixmap = info->glamor.SavedDestroyPixmap;
 	pScreen->CopyWindow = info->glamor.SavedCopyWindow;
 	pScreen->ChangeWindowAttributes =
 	    info->glamor.SavedChangeWindowAttributes;
@@ -961,9 +942,6 @@ radeon_glamor_screen_init(ScreenPtr screen)
 
 	info->glamor.SavedGetSpans = screen->GetSpans;
 	screen->GetSpans = radeon_glamor_get_spans;
-
-	info->glamor.SavedCreatePixmap = screen->CreatePixmap;
-	info->glamor.SavedDestroyPixmap = screen->DestroyPixmap;
 
 	info->glamor.SavedCopyWindow = screen->CopyWindow;
 	screen->CopyWindow = radeon_glamor_copy_window;

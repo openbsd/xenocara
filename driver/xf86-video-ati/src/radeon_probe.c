@@ -127,11 +127,8 @@ radeon_get_scrninfo(int entity_num, void *pci_dev)
     if (!pScrn)
         return FALSE;
 
-    if (pci_dev) {
-      if (!radeon_kernel_mode_enabled(pScrn, pci_dev)) {
+    if (!radeon_kernel_mode_enabled(pScrn, pci_dev))
 	return FALSE;
-      }
-    }
 
     pScrn->driverVersion = RADEON_VERSION_CURRENT;
     pScrn->driverName    = RADEON_DRIVER_NAME;

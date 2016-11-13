@@ -50,7 +50,7 @@
 
 struct radeon_present_vblank_event {
     uint64_t event_id;
-    xf86CrtcPtr crtc;
+    Bool unflip;
 };
 
 static uint32_t crtc_select(int crtc_id)
@@ -77,8 +77,7 @@ radeon_present_get_crtc(WindowPtr window)
 				 window->drawable.y,
 				 window->drawable.y + window->drawable.height);
 
-    /* Make sure the CRTC is valid and this is the real front buffer */
-    if (crtc != NULL && !crtc->rotatedData)
+    if (crtc)
 	randr_crtc = crtc->randr_crtc;
 
     return randr_crtc;
@@ -124,7 +123,7 @@ radeon_present_flush_drm_events(ScreenPtr screen)
  * Called when the queued vblank event has occurred
  */
 static void
-radeon_present_vblank_handler(ScrnInfoPtr scrn, unsigned int msc,
+radeon_present_vblank_handler(xf86CrtcPtr crtc, unsigned int msc,
 			      uint64_t usec, void *data)
 {
     struct radeon_present_vblank_event *event = data;
@@ -137,7 +136,7 @@ radeon_present_vblank_handler(ScrnInfoPtr scrn, unsigned int msc,
  * Called when the queued vblank is aborted
  */
 static void
-radeon_present_vblank_abort(ScrnInfoPtr scrn, void *data)
+radeon_present_vblank_abort(xf86CrtcPtr crtc, void *data)
 {
     struct radeon_present_vblank_event *event = data;
 
@@ -157,7 +156,7 @@ radeon_present_queue_vblank(RRCrtcPtr crtc, uint64_t event_id, uint64_t msc)
     RADEONInfoPtr info = RADEONPTR(scrn);
     int crtc_id = drmmode_get_crtc_id(xf86_crtc);
     struct radeon_present_vblank_event *event;
-    struct radeon_drm_queue_entry *queue;
+    uintptr_t drm_queue_seq;
     drmVBlank vbl;
     int ret;
 
@@ -165,24 +164,25 @@ radeon_present_queue_vblank(RRCrtcPtr crtc, uint64_t event_id, uint64_t msc)
     if (!event)
 	return BadAlloc;
     event->event_id = event_id;
-    queue = radeon_drm_queue_alloc(scrn, RADEON_DRM_QUEUE_CLIENT_DEFAULT,
-				   event_id, event,
-				   radeon_present_vblank_handler,
-				   radeon_present_vblank_abort);
-    if (!queue) {
+    drm_queue_seq = radeon_drm_queue_alloc(xf86_crtc,
+					   RADEON_DRM_QUEUE_CLIENT_DEFAULT,
+					   event_id, event,
+					   radeon_present_vblank_handler,
+					   radeon_present_vblank_abort);
+    if (!drm_queue_seq) {
 	free(event);
 	return BadAlloc;
     }
 
     vbl.request.type = DRM_VBLANK_ABSOLUTE | DRM_VBLANK_EVENT | crtc_select(crtc_id);
     vbl.request.sequence = msc;
-    vbl.request.signal = (unsigned long)queue;
+    vbl.request.signal = drm_queue_seq;
     for (;;) {
 	ret = drmWaitVBlank(info->dri2.drm_fd, &vbl);
 	if (!ret)
 	    break;
 	if (errno != EBUSY || !radeon_present_flush_drm_events(screen)) {
-	    radeon_drm_abort_entry(queue);
+	    radeon_drm_abort_entry(drm_queue_seq);
 	    return BadAlloc;
 	}
     }
@@ -245,6 +245,9 @@ radeon_present_check_flip(RRCrtcPtr crtc, WindowPtr window, PixmapPtr pixmap,
     if (!info->allowPageFlip)
 	return FALSE;
 
+    if (info->hwcursor_disabled)
+	return FALSE;
+
     if (!sync_flip)
 	return FALSE;
 
@@ -268,7 +271,7 @@ radeon_present_check_flip(RRCrtcPtr crtc, WindowPtr window, PixmapPtr pixmap,
 	if (!drmmode_crtc || drmmode_crtc->rotate.bo != NULL)
 	    return FALSE;
 
-	if (drmmode_crtc->dpms_mode == DPMSModeOn)
+	if (drmmode_crtc->pending_dpms_mode == DPMSModeOn)
 	    num_crtcs_on++;
     }
 
@@ -280,12 +283,12 @@ radeon_present_check_flip(RRCrtcPtr crtc, WindowPtr window, PixmapPtr pixmap,
  * extension code telling it when that happened
  */
 static void
-radeon_present_flip_event(ScrnInfoPtr scrn, uint32_t msc, uint64_t ust, void *pageflip_data)
+radeon_present_flip_event(xf86CrtcPtr crtc, uint32_t msc, uint64_t ust, void *pageflip_data)
 {
-    RADEONInfoPtr info = RADEONPTR(scrn);
+    RADEONInfoPtr info = RADEONPTR(crtc->scrn);
     struct radeon_present_vblank_event *event = pageflip_data;
 
-    if (!event->crtc)
+    if (event->unflip)
 	info->drmmode.present_flipping = FALSE;
 
     present_event_notify(event->event_id, ust, msc);
@@ -296,7 +299,7 @@ radeon_present_flip_event(ScrnInfoPtr scrn, uint32_t msc, uint64_t ust, void *pa
  * The flip has been aborted, free the structure
  */
 static void
-radeon_present_flip_abort(ScrnInfoPtr scrn, void *pageflip_data)
+radeon_present_flip_abort(xf86CrtcPtr crtc, void *pageflip_data)
 {
     struct radeon_present_vblank_event *event = pageflip_data;
 
@@ -331,7 +334,6 @@ radeon_present_flip(RRCrtcPtr crtc, uint64_t event_id, uint64_t target_msc,
 	return FALSE;
 
     event->event_id = event_id;
-    event->crtc = xf86_crtc;
 
     ret = radeon_do_pageflip(scrn, RADEON_DRM_QUEUE_CLIENT_DEFAULT, handle,
 			     event_id, event, crtc_id,
@@ -375,6 +377,7 @@ radeon_present_unflip(ScreenPtr screen, uint64_t event_id)
     }
 
     event->event_id = event_id;
+    event->unflip = TRUE;
 
     if (radeon_do_pageflip(scrn, RADEON_DRM_QUEUE_CLIENT_DEFAULT, handle,
 			   event_id, event, -1, radeon_present_flip_event,
@@ -382,6 +385,12 @@ radeon_present_unflip(ScreenPtr screen, uint64_t event_id)
 	return;
 
 modeset:
+    /* info->drmmode.fb_id still points to the FB for the last flipped BO.
+     * Clear it, drmmode_set_mode_major will re-create it
+     */
+    drmModeRmFB(info->drmmode.fd, info->drmmode.fb_id);
+    info->drmmode.fb_id = 0;
+
     for (i = 0; i < config->num_crtc; i++) {
 	xf86CrtcPtr crtc = config->crtc[i];
 	drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
@@ -389,7 +398,7 @@ modeset:
 	if (!crtc->enabled)
 	    continue;
 
-	if (drmmode_crtc->dpms_mode == DPMSModeOn)
+	if (drmmode_crtc->pending_dpms_mode == DPMSModeOn)
 	    crtc->funcs->set_mode_major(crtc, &crtc->mode, crtc->rotation,
 					crtc->x, crtc->y);
 	else

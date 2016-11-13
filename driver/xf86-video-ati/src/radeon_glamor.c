@@ -34,11 +34,7 @@
 #include "radeon_bo_helper.h"
 #include "radeon_glamor.h"
 
-#if HAS_DEVPRIVATEKEYREC
 DevPrivateKeyRec glamor_pixmap_index;
-#else
-int glamor_pixmap_index;
-#endif
 
 void
 radeon_glamor_exchange_buffers(PixmapPtr src,
@@ -159,6 +155,41 @@ radeon_glamor_create_textured_pixmap(PixmapPtr pixmap, struct radeon_pixmap *pri
 						 pixmap->devKind);
 }
 
+static Bool radeon_glamor_destroy_pixmap(PixmapPtr pixmap)
+{
+#ifndef HAVE_GLAMOR_EGL_DESTROY_TEXTURED_PIXMAP
+	ScreenPtr screen = pixmap->drawable.pScreen;
+	RADEONInfoPtr info = RADEONPTR(xf86ScreenToScrn(screen));
+	Bool ret;
+#endif
+
+	if (pixmap->refcnt == 1) {
+		if (pixmap->devPrivate.ptr) {
+			struct radeon_bo *bo = radeon_get_pixmap_bo(pixmap);
+
+			if (bo)
+				radeon_bo_unmap(bo);
+		}
+
+#ifdef HAVE_GLAMOR_EGL_DESTROY_TEXTURED_PIXMAP
+		glamor_egl_destroy_textured_pixmap(pixmap);
+#endif
+		radeon_set_pixmap_bo(pixmap, NULL);
+	}
+
+#ifdef HAVE_GLAMOR_EGL_DESTROY_TEXTURED_PIXMAP
+	fbDestroyPixmap(pixmap);
+	return TRUE;
+#else
+	screen->DestroyPixmap = info->glamor.SavedDestroyPixmap;
+	ret = screen->DestroyPixmap(pixmap);
+	info->glamor.SavedDestroyPixmap = screen->DestroyPixmap;
+	screen->DestroyPixmap = radeon_glamor_destroy_pixmap;
+
+	return ret;
+#endif
+}
+
 static PixmapPtr
 radeon_glamor_create_pixmap(ScreenPtr screen, int w, int h, int depth,
 			unsigned usage)
@@ -227,7 +258,9 @@ fallback_glamor:
 	 */
 		xf86DrvMsg(scrn->scrnIndex, X_WARNING,
 			   "Failed to create textured DRI2/PRIME pixmap.");
-		return pixmap;
+
+		radeon_glamor_destroy_pixmap(pixmap);
+		return NullPixmap;
 	}
 	/* Create textured pixmap failed means glamor failed to
 	 * create a texture from current BO for some reasons. We turn
@@ -250,21 +283,52 @@ fallback_pixmap:
 		return fbCreatePixmap(screen, w, h, depth, usage);
 }
 
-static Bool radeon_glamor_destroy_pixmap(PixmapPtr pixmap)
+PixmapPtr
+radeon_glamor_set_pixmap_bo(DrawablePtr drawable, PixmapPtr pixmap)
 {
-	if (pixmap->refcnt == 1) {
-		if (pixmap->devPrivate.ptr) {
-			struct radeon_bo *bo = radeon_get_pixmap_bo(pixmap);
+	PixmapPtr old = get_drawable_pixmap(drawable);
+	ScreenPtr screen = drawable->pScreen;
+	struct radeon_pixmap *priv = radeon_get_pixmap_private(pixmap);
+	GCPtr gc;
 
-			if (bo)
-				radeon_bo_unmap(bo);
-		}
+	/* With a glamor pixmap, 2D pixmaps are created in texture
+	 * and without a static BO attached to it. To support DRI,
+	 * we need to create a new textured-drm pixmap and
+	 * need to copy the original content to this new textured-drm
+	 * pixmap, and then convert the old pixmap to a coherent
+	 * textured-drm pixmap which has a valid BO attached to it
+	 * and also has a valid texture, thus both glamor and DRI2
+	 * can access it.
+	 *
+	 */
 
-		glamor_egl_destroy_textured_pixmap(pixmap);
-		radeon_set_pixmap_bo(pixmap, NULL);
+	/* Copy the current contents of the pixmap to the bo. */
+	gc = GetScratchGC(drawable->depth, screen);
+	if (gc) {
+		ValidateGC(&pixmap->drawable, gc);
+		gc->ops->CopyArea(&old->drawable, &pixmap->drawable,
+				  gc,
+				  0, 0,
+				  old->drawable.width,
+				  old->drawable.height, 0, 0);
+		FreeScratchGC(gc);
 	}
-	fbDestroyPixmap(pixmap);
-	return TRUE;
+
+	radeon_set_pixmap_private(pixmap, NULL);
+
+	/* And redirect the pixmap to the new bo (for 3D). */
+	glamor_egl_exchange_buffers(old, pixmap);
+	radeon_set_pixmap_private(old, priv);
+
+	screen->ModifyPixmapHeader(old,
+				   old->drawable.width,
+				   old->drawable.height,
+				   0, 0, pixmap->devKind, NULL);
+	old->devPrivate.ptr = NULL;
+
+	screen->DestroyPixmap(pixmap);
+
+	return old;
 }
 
 #ifdef RADEON_PIXMAP_SHARING
@@ -273,12 +337,37 @@ static Bool
 radeon_glamor_share_pixmap_backing(PixmapPtr pixmap, ScreenPtr slave,
 				   void **handle_p)
 {
-	struct radeon_pixmap *priv = radeon_get_pixmap_private(pixmap);
+	ScreenPtr screen = pixmap->drawable.pScreen;
+	CARD16 stride;
+	CARD32 size;
+	int fd;
 
-	if (!priv)
+	if ((radeon_get_pixmap_tiling_flags(pixmap) &
+	     RADEON_TILING_MASK) != RADEON_TILING_LINEAR) {
+		PixmapPtr linear;
+
+		/* We don't want to re-allocate the screen pixmap as
+		 * linear, to avoid trouble with page flipping
+		 */
+		if (screen->GetScreenPixmap(screen) == pixmap)
+			return FALSE;
+
+		linear = screen->CreatePixmap(screen, pixmap->drawable.width,
+					      pixmap->drawable.height,
+					      pixmap->drawable.depth,
+					      CREATE_PIXMAP_USAGE_SHARED);
+		if (!linear)
+			return FALSE;
+
+		radeon_glamor_set_pixmap_bo(&pixmap->drawable, linear);
+	}
+
+	fd = glamor_fd_from_pixmap(screen, pixmap, &stride, &size);
+	if (fd < 0)
 		return FALSE;
 
-	return radeon_share_pixmap_backing(priv->bo, handle_p);
+	*handle_p = (void *)(long)fd;
+	return TRUE;
 }
 
 static Bool
@@ -350,11 +439,7 @@ radeon_glamor_init(ScreenPtr screen)
 		return FALSE;
 	}
 
-#if HAS_DIXREGISTERPRIVATEKEY
 	if (!dixRegisterPrivateKey(&glamor_pixmap_index, PRIVATE_PIXMAP, 0))
-#else
-	if (!dixRequestPrivate(&glamor_pixmap_index, 0))
-#endif
 		return FALSE;
 
 	if (info->shadow_primary)
@@ -368,16 +453,36 @@ radeon_glamor_init(ScreenPtr screen)
 		ps->UnrealizeGlyph = SavedUnrealizeGlyph;
 #endif
 
+	info->glamor.SavedCreatePixmap = screen->CreatePixmap;
 	screen->CreatePixmap = radeon_glamor_create_pixmap;
+	info->glamor.SavedDestroyPixmap = screen->DestroyPixmap;
 	screen->DestroyPixmap = radeon_glamor_destroy_pixmap;
 #ifdef RADEON_PIXMAP_SHARING
+	info->glamor.SavedSharePixmapBacking = screen->SharePixmapBacking;
 	screen->SharePixmapBacking = radeon_glamor_share_pixmap_backing;
+	info->glamor.SavedSetSharedPixmapBacking = screen->SetSharedPixmapBacking;
 	screen->SetSharedPixmapBacking = radeon_glamor_set_shared_pixmap_backing;
 #endif
 
 	xf86DrvMsg(scrn->scrnIndex, X_INFO,
 		   "Use GLAMOR acceleration.\n");
 	return TRUE;
+}
+
+void
+radeon_glamor_fini(ScreenPtr screen)
+{
+	RADEONInfoPtr info = RADEONPTR(xf86ScreenToScrn(screen));
+
+	if (!info->use_glamor)
+		return;
+
+	screen->CreatePixmap = info->glamor.SavedCreatePixmap;
+	screen->DestroyPixmap = info->glamor.SavedDestroyPixmap;
+#ifdef RADEON_PIXMAP_SHARING
+	screen->SharePixmapBacking = info->glamor.SavedSharePixmapBacking;
+	screen->SetSharedPixmapBacking = info->glamor.SavedSetSharedPixmapBacking;
+#endif
 }
 
 XF86VideoAdaptorPtr radeon_glamor_xv_init(ScreenPtr pScreen, int num_adapt)

@@ -38,6 +38,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <libgen.h>
 
 
 static int
@@ -85,6 +86,38 @@ radeon_dri3_open(ScreenPtr screen, RRProviderPtr provider, int *out)
 	*out = fd;
 	return Success;
 }
+
+#if DRI3_SCREEN_INFO_VERSION >= 1 && XORG_VERSION_CURRENT <= XORG_VERSION_NUMERIC(1,18,99,1,0)
+
+static int
+radeon_dri3_open_client(ClientPtr client, ScreenPtr screen,
+			RRProviderPtr provider, int *out)
+{
+	const char *cmdname = GetClientCmdName(client);
+	Bool is_ssh = FALSE;
+
+	/* If the executable name is "ssh", assume that this client connection
+	 * is forwarded from another host via SSH
+	 */
+	if (cmdname) {
+		char *cmd = strdup(cmdname);
+
+		/* Cut off any colon and whatever comes after it, see
+		 * https://lists.freedesktop.org/archives/xorg-devel/2015-December/048164.html
+		 */
+		cmd = strtok(cmd, ":");
+
+		is_ssh = strcmp(basename(cmd), "ssh") == 0;
+		free(cmd);
+	}
+
+	if (!is_ssh)
+		return radeon_dri3_open(screen, provider, out);
+
+	return BadAccess;
+}
+
+#endif /* DRI3_SCREEN_INFO_VERSION >= 1 && XORG_VERSION_CURRENT <= XORG_VERSION_NUMERIC(1,18,99,1,0) */
 
 static PixmapPtr radeon_dri3_pixmap_from_fd(ScreenPtr screen,
 					    int fd,
@@ -179,9 +212,13 @@ static int radeon_dri3_fd_from_pixmap(ScreenPtr screen,
 }
 
 static dri3_screen_info_rec radeon_dri3_screen_info = {
+#if DRI3_SCREEN_INFO_VERSION >= 1 && XORG_VERSION_CURRENT <= XORG_VERSION_NUMERIC(1,18,99,1,0)
+	.version = 1,
+	.open_client = radeon_dri3_open_client,
+#else
 	.version = 0,
-
 	.open = radeon_dri3_open,
+#endif
 	.pixmap_from_fd = radeon_dri3_pixmap_from_fd,
 	.fd_from_pixmap = radeon_dri3_fd_from_pixmap
 };

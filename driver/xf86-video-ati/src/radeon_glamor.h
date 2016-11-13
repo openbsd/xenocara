@@ -64,12 +64,14 @@ struct radeon_pixmap;
 
 Bool radeon_glamor_pre_init(ScrnInfoPtr scrn);
 Bool radeon_glamor_init(ScreenPtr screen);
+void radeon_glamor_fini(ScreenPtr screen);
 void radeon_glamor_screen_init(ScreenPtr screen);
 Bool radeon_glamor_create_screen_resources(ScreenPtr screen);
 void radeon_glamor_free_screen(int scrnIndex, int flags);
 
 Bool radeon_glamor_create_textured_pixmap(PixmapPtr pixmap, struct radeon_pixmap *priv);
 void radeon_glamor_exchange_buffers(PixmapPtr src, PixmapPtr dst);
+PixmapPtr radeon_glamor_set_pixmap_bo(DrawablePtr drawable, PixmapPtr pixmap);
 
 XF86VideoAdaptorPtr radeon_glamor_xv_init(ScreenPtr pScreen, int num_adapt);
 
@@ -77,12 +79,14 @@ XF86VideoAdaptorPtr radeon_glamor_xv_init(ScreenPtr pScreen, int num_adapt);
 
 static inline Bool radeon_glamor_pre_init(ScrnInfoPtr scrn) { return FALSE; }
 static inline Bool radeon_glamor_init(ScreenPtr screen) { return FALSE; }
+static inline void radeon_glamor_fini(ScreenPtr screen) { }
 static inline Bool radeon_glamor_create_screen_resources(ScreenPtr screen) { return FALSE; }
 static inline void radeon_glamor_free_screen(int scrnIndex, int flags) { }
 
 static inline Bool radeon_glamor_create_textured_pixmap(PixmapPtr pixmap, struct radeon_pixmap *priv) { return TRUE; }
 
 static inline void radeon_glamor_exchange_buffers(PixmapPtr src, PixmapPtr dst) {}
+static inline PixmapPtr radeon_glamor_set_pixmap_bo(DrawablePtr drawable, PixmapPtr pixmap) { return pixmap; }
 
 static inline struct radeon_pixmap *radeon_get_pixmap_private(PixmapPtr pixmap) { return NULL; }
 

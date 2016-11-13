@@ -279,9 +279,10 @@ Pageflipping is supported on all radeon hardware.
 .TP
 .BI "Option \*qTearFree\*q \*q" boolean \*q
 Enable tearing prevention using the hardware page flipping mechanism. This
-option currently doesn't have any effect for rotated CRTCs. It requires
-allocating two separate scanout buffers for each non-rotated CRTC. Enabling
-this option currently disables Option \*qEnablePageFlip\*q. The default is
+option currently doesn't have any effect for CRTCs using transforms other than
+rotation or reflection. It requires allocating two separate scanout buffers for
+each supported CRTC. Enabling this option currently disables Option
+\*qEnablePageFlip\*q. The default is
 .B off.
 .TP
 .BI "Option \*qAccelMethod\*q \*q" "string" \*q

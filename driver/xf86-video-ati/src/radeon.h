@@ -66,6 +66,10 @@
 #include "xf86drm.h"
 #include "radeon_drm.h"
 
+#ifndef RADEON_GEM_NO_CPU_ACCESS
+#define RADEON_GEM_NO_CPU_ACCESS	(1 << 4)
+#endif
+
 #ifdef DAMAGE
 #include "damage.h"
 #include "globals.h"
@@ -156,6 +160,10 @@ typedef enum {
     OPTION_TEAR_FREE,
 } RADEONOpts;
 
+
+#if XF86_CRTC_VERSION >= 5
+#define RADEON_PIXMAP_SHARING 1
+#endif
 
 #define RADEON_VSYNC_TIMEOUT	20000 /* Maximum wait for VSYNC (in usecs) */
 
@@ -264,19 +272,11 @@ struct radeon_pixmap {
 	uint32_t handle;
 };
 
-#if HAS_DEVPRIVATEKEYREC
 extern DevPrivateKeyRec glamor_pixmap_index;
-#else
-extern int glamor_pixmap_index;
-#endif
 
 static inline struct radeon_pixmap *radeon_get_pixmap_private(PixmapPtr pixmap)
 {
-#if HAS_DEVPRIVATEKEYREC
 	return dixGetPrivate(&pixmap->devPrivates, &glamor_pixmap_index);
-#else
-	return dixLookupPrivate(&pixmap->devPrivates, &glamor_pixmap_index);
-#endif
 }
 
 static inline void radeon_set_pixmap_private(PixmapPtr pixmap, struct radeon_pixmap *priv)
@@ -539,6 +539,11 @@ typedef struct {
     int cursor_w;
     int cursor_h;
 
+    /* If bit n of this field is set, xf86_config->crtc[n] currently can't
+     * use the HW cursor
+     */
+    unsigned hwcursor_disabled;
+
 #ifdef USE_GLAMOR
     struct {
 	CreateGCProcPtr SavedCreateGC;
@@ -560,6 +565,10 @@ typedef struct {
 	TrapezoidsProcPtr SavedTrapezoids;
 	AddTrapsProcPtr SavedAddTraps;
 	UnrealizeGlyphProcPtr SavedUnrealizeGlyph;
+#endif
+#ifdef RADEON_PIXMAP_SHARING
+	SharePixmapBackingProcPtr SavedSharePixmapBacking;
+	SetSharedPixmapBackingProcPtr SavedSetSharedPixmapBacking;
 #endif
     } glamor;
 #endif /* USE_GLAMOR */
@@ -596,7 +605,7 @@ extern Bool RADEONGetPixmapOffsetPitch(PixmapPtr pPix,
 Bool radeon_dri3_screen_init(ScreenPtr screen);
 
 /* radeon_kms.c */
-void radeon_scanout_update_handler(ScrnInfoPtr scrn, uint32_t frame,
+void radeon_scanout_update_handler(xf86CrtcPtr crtc, uint32_t frame,
 				   uint64_t usec, void *event_data);
 
 /* radeon_present.c */
@@ -622,10 +631,6 @@ void radeon_kms_update_vram_limit(ScrnInfoPtr pScrn, uint32_t new_fb_size);
 extern RADEONEntPtr RADEONEntPriv(ScrnInfoPtr pScrn);
 
 drmVBlankSeqType radeon_populate_vbl_request_type(xf86CrtcPtr crtc);
-
-#if XF86_CRTC_VERSION >= 5
-#define RADEON_PIXMAP_SHARING 1
-#endif
 
 static inline struct radeon_surface *radeon_get_pixmap_surface(PixmapPtr pPix)
 {

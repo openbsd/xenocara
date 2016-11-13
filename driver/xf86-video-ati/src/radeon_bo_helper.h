@@ -41,4 +41,20 @@ extern Bool
 radeon_set_shared_pixmap_backing(PixmapPtr ppix, void *fd_handle,
 				 struct radeon_surface *surface);
 
+/**
+ * get_drawable_pixmap() returns the backing pixmap for a given drawable.
+ *
+ * @param drawable the drawable being requested.
+ *
+ * This function returns the backing pixmap for a drawable, whether it is a
+ * redirected window, unredirected window, or already a pixmap.
+ */
+static inline PixmapPtr get_drawable_pixmap(DrawablePtr drawable)
+{
+    if (drawable->type == DRAWABLE_PIXMAP)
+	return (PixmapPtr)drawable;
+    else
+	return drawable->pScreen->GetWindowPixmap((WindowPtr)drawable);
+}
+
 #endif /* RADEON_BO_HELPER_H */

@@ -60,20 +60,15 @@ typedef struct {
 } drmmode_rec, *drmmode_ptr;
 
 typedef struct {
-  drmmode_ptr drmmode;
   unsigned old_fb_id;
   int flip_count;
   void *event_data;
   unsigned int fe_frame;
   uint64_t fe_usec;
+  xf86CrtcPtr fe_crtc;
   radeon_drm_handler_proc handler;
   radeon_drm_abort_proc abort;
 } drmmode_flipdata_rec, *drmmode_flipdata_ptr;
-
-typedef struct {
-  drmmode_flipdata_ptr flipdata;
-  Bool dispatch_me;
-} drmmode_flipevtcarrier_rec, *drmmode_flipevtcarrier_ptr;
 
 struct drmmode_scanout {
     struct radeon_bo *bo;
@@ -93,6 +88,8 @@ typedef struct {
     unsigned scanout_id;
     Bool scanout_update_pending;
     int dpms_mode;
+    /* For when a flip is pending when DPMS off requested */
+    int pending_dpms_mode;
     CARD64 dpms_last_ust;
     uint32_t dpms_last_seq;
     int dpms_last_fps;
@@ -100,8 +97,12 @@ typedef struct {
     uint16_t lut_r[256], lut_g[256], lut_b[256];
     int prime_pixmap_x;
 
-    /* Modeset needed for DPMS on */
+    /* Modeset needed (for DPMS on or after a page flip crossing with a
+     * modeset)
+     */
     Bool need_modeset;
+    /* A flip is pending for this CRTC */
+    Bool flip_pending;
 } drmmode_crtc_private_rec, *drmmode_crtc_private_ptr;
 
 typedef struct {
@@ -148,6 +149,7 @@ extern int drmmode_get_crtc_id(xf86CrtcPtr crtc);
 extern int drmmode_get_height_align(ScrnInfoPtr scrn, uint32_t tiling);
 extern int drmmode_get_pitch_align(ScrnInfoPtr scrn, int bpe, uint32_t tiling);
 extern int drmmode_get_base_align(ScrnInfoPtr scrn, int bpe, uint32_t tiling);
+extern void drmmode_clear_pending_flip(xf86CrtcPtr crtc);
 
 Bool radeon_do_pageflip(ScrnInfoPtr scrn, ClientPtr client,
 			uint32_t new_front_handle, uint64_t id, void *data,

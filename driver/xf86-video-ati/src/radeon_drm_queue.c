@@ -40,15 +40,17 @@
 struct radeon_drm_queue_entry {
     struct xorg_list list;
     uint64_t id;
+    uintptr_t seq;
     void *data;
     ClientPtr client;
-    ScrnInfoPtr scrn;
+    xf86CrtcPtr crtc;
     radeon_drm_handler_proc handler;
     radeon_drm_abort_proc abort;
 };
 
 static int radeon_drm_queue_refcnt;
 static struct xorg_list radeon_drm_queue;
+static uintptr_t radeon_drm_queue_seq;
 
 
 /*
@@ -58,14 +60,18 @@ void
 radeon_drm_queue_handler(int fd, unsigned int frame, unsigned int sec,
 			 unsigned int usec, void *user_ptr)
 {
-	struct radeon_drm_queue_entry *user_data = user_ptr;
+	uintptr_t seq = (uintptr_t)user_ptr;
 	struct radeon_drm_queue_entry *e, *tmp;
 
 	xorg_list_for_each_entry_safe(e, tmp, &radeon_drm_queue, list) {
-		if (e == user_data) {
+		if (e->seq == seq) {
 			xorg_list_del(&e->list);
-			e->handler(e->scrn, frame,
-				   (uint64_t)sec * 1000000 + usec, e->data);
+			if (e->handler)
+				e->handler(e->crtc, frame,
+					   (uint64_t)sec * 1000000 + usec,
+					   e->data);
+			else
+				e->abort(e->crtc, e->data);
 			free(e);
 			break;
 		}
@@ -76,8 +82,8 @@ radeon_drm_queue_handler(int fd, unsigned int frame, unsigned int sec,
  * Enqueue a potential drm response; when the associated response
  * appears, we've got data to pass to the handler from here
  */
-struct radeon_drm_queue_entry *
-radeon_drm_queue_alloc(ScrnInfoPtr scrn, ClientPtr client,
+uintptr_t
+radeon_drm_queue_alloc(xf86CrtcPtr crtc, ClientPtr client,
 		       uint64_t id, void *data,
 		       radeon_drm_handler_proc handler,
 		       radeon_drm_abort_proc abort)
@@ -88,8 +94,11 @@ radeon_drm_queue_alloc(ScrnInfoPtr scrn, ClientPtr client,
     if (!e)
 	return NULL;
 
+    if (!radeon_drm_queue_seq)
+	radeon_drm_queue_seq = 1;
+    e->seq = radeon_drm_queue_seq++;
     e->client = client;
-    e->scrn = scrn;
+    e->crtc = crtc;
     e->id = id;
     e->data = data;
     e->handler = handler;
@@ -97,7 +106,7 @@ radeon_drm_queue_alloc(ScrnInfoPtr scrn, ClientPtr client,
 
     xorg_list_add(&e->list, &radeon_drm_queue);
 
-    return e;
+    return e->seq;
 }
 
 /*
@@ -109,21 +118,25 @@ static void
 radeon_drm_abort_one(struct radeon_drm_queue_entry *e)
 {
     xorg_list_del(&e->list);
-    e->abort(e->scrn, e->data);
+    e->abort(e->crtc, e->data);
     free(e);
 }
 
 /*
  * Abort drm queue entries for a client
+ *
+ * NOTE: This keeps the entries in the list until the DRM event arrives,
+ * but then it calls the abort functions instead of the handler
+ * functions.
  */
 void
 radeon_drm_abort_client(ClientPtr client)
 {
-    struct radeon_drm_queue_entry *e, *tmp;
+    struct radeon_drm_queue_entry *e;
 
-    xorg_list_for_each_entry_safe(e, tmp, &radeon_drm_queue, list) {
+    xorg_list_for_each_entry(e, &radeon_drm_queue, list) {
 	if (e->client == client)
-	    radeon_drm_abort_one(e);
+	    e->handler = NULL;
     }
 }
 
@@ -131,9 +144,16 @@ radeon_drm_abort_client(ClientPtr client)
  * Abort specific drm queue entry
  */
 void
-radeon_drm_abort_entry(struct radeon_drm_queue_entry *entry)
+radeon_drm_abort_entry(uintptr_t seq)
 {
-    radeon_drm_abort_one(entry);
+    struct radeon_drm_queue_entry *e, *tmp;
+
+    xorg_list_for_each_entry_safe(e, tmp, &radeon_drm_queue, list) {
+	if (e->seq == seq) {
+	    radeon_drm_abort_one(e);
+	    break;
+	}
+    }
 }
 
 /*
@@ -173,7 +193,7 @@ radeon_drm_queue_close(ScrnInfoPtr scrn)
     struct radeon_drm_queue_entry *e, *tmp;
 
     xorg_list_for_each_entry_safe(e, tmp, &radeon_drm_queue, list) {
-	if (e->scrn == scrn)
+	if (e->crtc->scrn == scrn)
 	    radeon_drm_abort_one(e);
     }
 

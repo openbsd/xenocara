@@ -71,7 +71,7 @@ radeon_box_area(BoxPtr box)
 Bool radeon_crtc_is_enabled(xf86CrtcPtr crtc)
 {
     drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
-    return drmmode_crtc->dpms_mode == DPMSModeOn;
+    return drmmode_crtc->pending_dpms_mode == DPMSModeOn;
 }
 
 xf86CrtcPtr
@@ -94,9 +94,7 @@ radeon_pick_best_crtc(ScrnInfoPtr pScrn, Bool consider_disabled,
     best_coverage = 0;
 
     /* Prefer the CRTC of the primary output */
-#ifdef HAS_DIXREGISTERPRIVATEKEY
     if (dixPrivateKeyRegistered(rrPrivKey))
-#endif
     {
 	primary_output = RRFirstOutput(pScrn->pScreen);
     }

@@ -14,6 +14,9 @@
 /* Have fbGlyphs API */
 #undef HAVE_FBGLYPHS
 
+/* Have glamor_egl_destroy_textured_pixmap API */
+#undef HAVE_GLAMOR_EGL_DESTROY_TEXTURED_PIXMAP
+
 /* Have glamor_glyphs_init API */
 #undef HAVE_GLAMOR_GLYPHS_INIT
 
@@ -58,6 +61,9 @@
 
 /* xextproto 7.1 available */
 #undef HAVE_XEXTPROTO_71
+
+/* Have xf86CursorResetCursor API */
+#undef HAVE_XF86_CURSOR_RESET_CURSOR
 
 /* Have xorg_list API */
 #undef HAVE_XORG_LIST

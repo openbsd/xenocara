@@ -74,7 +74,7 @@ radeon_alloc_pixmap_bo(ScrnInfoPtr pScrn, int width, int height, int depth,
     int pitch, base_align;
     uint32_t size, heighta;
     int cpp = bitsPerPixel / 8;
-    uint32_t tiling = 0;
+    uint32_t tiling = 0, flags = 0;
     struct radeon_surface surface;
     struct radeon_bo *bo;
     int domain = RADEON_GEM_DOMAIN_VRAM;
@@ -181,8 +181,11 @@ radeon_alloc_pixmap_bo(ScrnInfoPtr pScrn, int width, int height, int depth,
 		}
 	}
 
+    if (tiling)
+	flags |= RADEON_GEM_NO_CPU_ACCESS;
+
     bo = radeon_bo_open(info->bufmgr, 0, size, base_align,
-			domain, 0);
+			domain, flags);
 
     if (bo && tiling && radeon_bo_set_tiling(bo, tiling, pitch) == 0)
 	*new_tiling = tiling;

@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-ati],
-        [7.6.1],
+        [7.7.1],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-video-ati])
 
@@ -75,7 +75,7 @@ PKG_CHECK_MODULES(LIBDRM, [libdrm >= 2.4.58])
 PKG_CHECK_MODULES(LIBDRM_RADEON, [libdrm_radeon])
 
 # Obtain compiler/linker options for the driver dependencies
-PKG_CHECK_MODULES(XORG, [xorg-server >= 1.8 xproto fontsproto xf86driproto $REQUIRED_MODULES])
+PKG_CHECK_MODULES(XORG, [xorg-server >= 1.9 xproto fontsproto xf86driproto $REQUIRED_MODULES])
 PKG_CHECK_MODULES(XEXT, [xextproto >= 7.0.99.1],
                   HAVE_XEXTPROTO_71="yes"; AC_DEFINE(HAVE_XEXTPROTO_71, 1, [xextproto 7.1 available]),
                   HAVE_XEXTPROTO_71="no")
@@ -119,6 +119,12 @@ if test "x$GLAMOR" != "xno"; then
 					 [Have glamor_glyphs_init API])], [],
 			      [#include "xorg-server.h"
 			       #include "glamor.h"])
+
+		AC_CHECK_DECL(glamor_egl_destroy_textured_pixmap,
+			      [AC_DEFINE(HAVE_GLAMOR_EGL_DESTROY_TEXTURED_PIXMAP, 1,
+					 [Have glamor_egl_destroy_textured_pixmap API])], [],
+			      [#include "xorg-server.h"
+			       #include "glamor.h"])
 	fi
 
 	if test "x$GLAMOR_XSERVER" != xyes; then
@@ -140,6 +146,12 @@ AC_CHECK_DECL(fbGlyphs,
 	       #include <picture.h>
 	       #include <glyphstr.h>
 	       #include <fbpict.h>])
+
+AC_CHECK_DECL(xf86CursorResetCursor,
+	      [AC_DEFINE(HAVE_XF86_CURSOR_RESET_CURSOR, 1,
+	      [Have xf86CursorResetCursor API])], [],
+	      [#include <xorg-server.h>
+	       #include <xf86Cursor.h>])
 
 AC_CHECK_DECL(xorg_list_init,
 	      [AC_DEFINE(HAVE_XORG_LIST, 1, [Have xorg_list API])], [],
