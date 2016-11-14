@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.65 2016/10/03 14:42:34 okan Exp $ */
+/*	$OpenBSD: parse.y,v 1.66 2016/11/14 21:25:59 okan Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -170,7 +170,7 @@ main		: FONTNAME STRING		{
 			free($2);
 		}
 		| BIND STRING string		{
-			if (!conf_bind_kbd(conf, $2, $3)) {
+			if (!conf_bind_key(conf, $2, $3)) {
 				yyerror("invalid bind: %s %s", $2, $3);
 				free($2);
 				free($3);
