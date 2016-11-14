@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.219 2016/10/24 20:44:08 okan Exp $
+ * $OpenBSD: conf.c,v 1.220 2016/11/14 13:52:33 okan Exp $
  */
 
 #include <sys/types.h>
@@ -230,14 +230,6 @@ static const struct {
 	{ "CMS-j",	"bigresizedown" },
 	{ "CMS-k",	"bigresizeup" },
 	{ "CMS-l",	"bigresizeright" },
-	{ "C-Left",	"ptrmoveleft" },
-	{ "C-Down",	"ptrmovedown" },
-	{ "C-Up",	"ptrmoveup" },
-	{ "C-Right",	"ptrmoveright" },
-	{ "CS-Left",	"bigptrmoveleft" },
-	{ "CS-Down",	"bigptrmovedown" },
-	{ "CS-Up",	"bigptrmoveup" },
-	{ "CS-Right",	"bigptrmoveright" },
 },
 mouse_binds[] = {
 	{ "1",		"menu_unhide" },
