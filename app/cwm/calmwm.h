@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.331 2016/11/14 21:25:59 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.332 2016/11/15 00:07:03 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -463,7 +463,9 @@ void			 screen_assert_clients_within(struct screen_ctx *);
 void			 kbfunc_cwm_status(void *, union arg *, enum xev);
 void			 kbfunc_ptrmove(void *, union arg *, enum xev);
 void			 kbfunc_client_move(void *, union arg *, enum xev);
+void			 kbfunc_client_move_key(void *, union arg *, enum xev);
 void			 kbfunc_client_resize(void *, union arg *, enum xev);
+void			 kbfunc_client_resize_key(void *, union arg *, enum xev);
 void			 kbfunc_client_delete(void *, union arg *, enum xev);
 void			 kbfunc_client_lower(void *, union arg *, enum xev);
 void			 kbfunc_client_raise(void *, union arg *, enum xev);
