@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.9 2016/10/02 09:19:28 tb Exp $
+#	$OpenBSD: Makefile,v 1.10 2016/11/19 08:45:51 tb Exp $
 
 FONTCONFIG =	${.CURDIR}/../../../dist/fontconfig
 CONFIGDIR =	/etc/fonts/conf.d
@@ -75,7 +75,7 @@ install:
 	      chown -h ${BINOWN}:${BINGRP} $$i;			\
 	    rm -f $$i;						\
 	    ln -s ${CONFAVAILREL}/$$i .;			\
-	    chown -h ${BINOWN}:${BINGRP} $$i .;			\
+	    chown -h ${BINOWN}:${BINGRP} $$i;			\
 	  done)
 
 NOOBJ=
