@@ -2897,7 +2897,7 @@ static int drmParsePciBusInfo(int maj, int min, drmPciBusInfoPtr info)
 {
 #ifdef __linux__
     char path[PATH_MAX + 1];
-    char data[128 + 1];
+    char data[512 + 1];
     char *str;
     int domain, bus, dev, func;
     int fd, ret;
@@ -2908,7 +2908,7 @@ static int drmParsePciBusInfo(int maj, int min, drmPciBusInfoPtr info)
         return -errno;
 
     ret = read(fd, data, sizeof(data));
-    data[128] = '\0';
+    data[sizeof(data)-1] = '\0';
     close(fd);
     if (ret < 0)
         return -errno;
@@ -3182,7 +3182,6 @@ int drmGetDevice(int fd, drmDevicePtr *device)
 
             break;
         default:
-            fprintf(stderr, "The subsystem type is not supported yet\n");
             continue;
         }
 
@@ -3214,6 +3213,8 @@ int drmGetDevice(int fd, drmDevicePtr *device)
 
     closedir(sysdir);
     free(local_devices);
+    if (*device == NULL)
+	return -ENODEV;
     return 0;
 
 free_devices:
@@ -3290,7 +3291,6 @@ int drmGetDevices(drmDevicePtr devices[], int max_devices)
 
             break;
         default:
-            fprintf(stderr, "The subsystem type is not supported yet\n");
             continue;
         }
 

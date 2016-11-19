@@ -338,6 +338,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 LIBDRM_AMDGPU_FILES := \
+	amdgpu_asic_id.h \
 	amdgpu_bo.c \
 	amdgpu_cs.c \
 	amdgpu_device.c \

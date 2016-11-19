@@ -422,6 +422,7 @@ LIBDRM_FILES := \
 	util_math.h
 
 LIBDRM_H_FILES := \
+	libsync.h \
 	xf86drm.h \
 	xf86drmMode.h
 
@@ -512,6 +513,7 @@ libdrmincludedir = ${includedir}
 libdrminclude_HEADERS = $(LIBDRM_H_FILES)
 klibdrmincludedir = ${includedir}/libdrm
 klibdrminclude_HEADERS = $(LIBDRM_INCLUDE_H_FILES) $(am__append_1)
+EXTRA_DIST = include/drm/README
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
