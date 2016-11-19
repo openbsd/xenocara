@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.56 2016/10/14 10:14:00 natano Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.57 2016/11/19 14:22:05 tb Exp $ -*- makefile  -*-
 #
 # Copyright © 2006,2012 Matthieu Herrb
 #
@@ -226,18 +226,23 @@ _SUBDIRUSE:
 
 _xenocara_obj! _SUBDIRUSE
 	@cd $(.CURDIR); \
-	if [[ `id -u` -eq 0 && ${BUILDUSER} != root ]]; then \
-		SETOWNER="chown -h ${BUILDUSER}"; \
-		_mkdirs() { \
-			su ${BUILDUSER} -c "mkdir -p $$1"; \
-		}; \
-		MKDIRS=_mkdirs; \
-	else \
-		MKDIRS="mkdir -p"; \
-		SETOWNER=:; \
-	fi; \
+	umask ${WOBJUMASK}; \
 	here=`/bin/pwd`; xsrcdir=`cd $(XSRCDIR); /bin/pwd`; \
 	subdir=$${here#$${xsrcdir}/}; \
+	if [[ `id -u` -eq 0 && ${BUILDUSER} != root ]]; then \
+		SETOWNER="chown -h ${BUILDUSER}:${WOBJGROUP}"; \
+		if [[ $$here != $$subdir ]]; then \
+			_mkdirs() { \
+				su ${BUILDUSER} -c "mkdir -p $$1"; \
+			}; \
+			MKDIRS=_mkdirs; \
+		fi; \
+	elif [[ $$here == $$subdir ]]; then \
+		SETOWNER="chown :${WOBJGROUP}"; \
+	else \
+		SETOWNER=:; \
+	fi; \
+	[[ -z $$MKDIRS ]] && MKDIRS="mkdir -p"; \
 	if test $$here != $$subdir ; then \
 	    dest=${XOBJDIR}/$$subdir; \
 	    echo "$$here/${__objdir} -> $$dest"; \
@@ -261,6 +266,7 @@ _xenocara_obj! _SUBDIRUSE
 	    if test ! -d ${__objdir}; then \
 		echo "making $$dest"; \
 		$$MKDIRS $$dest; \
+		$$SETOWNER $$dest; \
 	    fi ; \
 	fi
 . endif

@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.76 2016/11/19 08:56:27 tb Exp $
+# $OpenBSD: Makefile,v 1.77 2016/11/19 14:22:05 tb Exp $
 .include <bsd.own.mk>
 .include <bsd.xconf.mk>
 
@@ -23,7 +23,10 @@ build:
 	@echo "Cannot run ${MAKE} build with DESTDIR set"
 	@exit 2
 .else
-build: 
+build:
+	umask ${WOBJUMASK}; exec ${MAKE} do-build
+
+do-build: 
 	@if [[ `id -u` -ne 0 ]]; then \
 		echo $@ must be called by root >&2; \
 		false; \
