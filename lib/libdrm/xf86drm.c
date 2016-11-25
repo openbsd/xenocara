@@ -3204,6 +3204,46 @@ static void drmFoldDuplicatedDevices(drmDevicePtr local_devices[], int count)
  */
 int drmGetDevice(int fd, drmDevicePtr *device)
 {
+#ifdef __OpenBSD__
+    drmDevicePtr d;
+    struct stat sbuf;
+    char node[PATH_MAX + 1];
+    char d_name[PATH_MAX + 1];
+    int maj, min, n;
+    int ret;
+    int max_count = 1;
+
+    if (fd == -1 || device == NULL)
+        return -EINVAL;
+
+    if (fstat(fd, &sbuf))
+        return -errno;
+
+    maj = major(sbuf.st_rdev);
+    min = minor(sbuf.st_rdev);
+
+    if (maj != DRM_MAJOR || !S_ISCHR(sbuf.st_mode))
+        return -EINVAL;
+
+    n = snprintf(d_name, PATH_MAX, "drm%d", min);
+    if (n == -1 || n >= PATH_MAX)
+      return -errno;
+
+    n = snprintf(node, PATH_MAX, DRM_DEV_NAME, DRM_DIR_NAME, min);
+    if (n == -1 || n >= PATH_MAX)
+      return -errno;
+    if (stat(node, &sbuf))
+        return -EINVAL;
+
+    ret = drmProcessPciDevice(&d, d_name, node, DRM_NODE_PRIMARY,
+			      maj, min, true);
+    if (ret)
+        return ret;
+
+    *device = d;
+
+    return 0;
+#else
     drmDevicePtr *local_devices;
     drmDevicePtr d;
     DIR *sysdir;
@@ -3311,6 +3351,7 @@ free_devices:
 free_locals:
     free(local_devices);
     return ret;
+#endif
 }
 
 /**
