@@ -103,7 +103,23 @@
 #endif
 
 #ifdef __OpenBSD__
+
 #define X_PRIVSEP
+
+struct drm_pciinfo {
+	uint16_t	domain;
+	uint8_t		bus;
+	uint8_t		dev;
+	uint8_t		func;
+	uint16_t	vendor_id;
+	uint16_t	device_id;
+	uint16_t	subvendor_id;
+	uint16_t	subdevice_id;
+	uint8_t		revision_id;
+};
+
+#define DRM_IOCTL_GET_PCIINFO	DRM_IOR(0x15, struct drm_pciinfo)
+
 #endif
 
 #define DRM_MSG_VERBOSITY 3
@@ -3022,6 +3038,37 @@ static int drmParsePciDeviceInfo(const char *d_name,
     device->revision_id = config[8];
     device->subvendor_id = config[44] | (config[45] << 8);
     device->subdevice_id = config[46] | (config[47] << 8);
+
+    return 0;
+#elif defined(__OpenBSD__)
+    struct drm_pciinfo pinfo;
+    char buf[PATH_MAX + 1];
+    int fd, n;
+
+    n = snprintf(buf, sizeof(buf), "%s/%s", DRM_DIR_NAME, d_name);
+    if (n == -1 || n >= sizeof(buf))
+        return -errno;
+
+#ifndef X_PRIVSEP
+    fd = open(buf, O_RDWR, 0);
+#else
+    fd = priv_open_device(buf);
+#endif
+
+    if (fd < 0)
+        return -errno;
+
+    if (drmIoctl(fd, DRM_IOCTL_GET_PCIINFO, &pinfo)) {
+        close(fd);
+        return -errno;
+    }
+    close(fd);
+
+    device->vendor_id = pinfo.vendor_id;
+    device->device_id = pinfo.device_id;
+    device->revision_id = pinfo.revision_id;
+    device->subvendor_id = pinfo.subvendor_id;
+    device->subdevice_id = pinfo.subdevice_id;
 
     return 0;
 #else
