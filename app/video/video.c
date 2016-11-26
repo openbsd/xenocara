@@ -1,4 +1,4 @@
-/*	$OpenBSD: video.c,v 1.22 2016/11/08 13:22:55 czarkoff Exp $	*/
+/*	$OpenBSD: video.c,v 1.23 2016/11/26 11:49:15 czarkoff Exp $	*/
 /*
  * Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
  *
@@ -72,6 +72,11 @@ struct xdsp {
 	int		 saved_y;
 	int		 saved_w;
 	int		 saved_h;
+	int		 resized;
+	int		 box_x;
+	int		 box_y;
+	int		 box_w;
+	int		 box_h;
 	int		 max_width;
 	int		 max_height;
 	int		 screen_id;
@@ -163,6 +168,7 @@ struct video {
 	int		 net_wm;
 	int		 width;
 	int		 height;
+	double		 aspect;
 	int		 bpf;
 	int		 fps;
 	int		 nofps;
@@ -595,6 +601,20 @@ resize_window(struct video *vid, int fullscreen)
 		x->saved_h = x->height = winatt.height;
 		x->saved_x = new_x;
 		x->saved_y = new_y;
+	}
+
+	x->resized = 1;
+
+	if ((double)x->width > (double)x->height * vid->aspect) {
+		x->box_h = x->height;
+		x->box_y = 0;
+		x->box_w = (int)(x->height * vid->aspect);
+		x->box_x = (x->width - x->box_w) / 2;
+	} else {
+		x->box_w = x->width;
+		x->box_x = 0;
+		x->box_h = (int)(x->width / vid->aspect);
+		x->box_y = (x->height - x->box_h) / 2;
 	}
 
 	XSync(x->dpy, False);
@@ -1259,6 +1279,7 @@ choose_size(struct video *vid)
 			vid->fps = d->rates[i][cur];
 		}
 	}
+	vid->aspect = (double)vid->width / (double)vid->height;
 
 	return 1;
 }
@@ -1722,9 +1743,13 @@ stream(struct video *vid)
 		}
 		if (vid->mode & M_OUT_XV) {
 			x->xv_image->data = src;
+			if (x->resized) {
+				x->resized = 0;
+				XClearWindow(x->dpy, x->window);
+			}
 			ret = XvPutImage(x->dpy, x->port, x->window, x->gc,
 			    x->xv_image, 0, 0, vid->width, vid->height,
-			    0, 0, x->width, x->height);
+			    x->box_x, x->box_y, x->box_w, x->box_h);
 			if (ret != Success) {
 				warn("XvPutImage");
 				return 0;
