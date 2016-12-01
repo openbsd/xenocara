@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.66 2016/11/14 21:25:59 okan Exp $ */
+/*	$OpenBSD: parse.y,v 1.67 2016/12/01 17:17:27 okan Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -68,8 +68,9 @@ typedef struct {
 
 %}
 
-%token	FONTNAME STICKY GAP MOUSEBIND
-%token	AUTOGROUP BIND COMMAND IGNORE
+%token	BINDKEY UNBINDKEY BINDMOUSE UNBINDMOUSE
+%token	FONTNAME STICKY GAP
+%token	AUTOGROUP COMMAND IGNORE
 %token	YES NO BORDERWIDTH MOVEAMOUNT
 %token	COLOR SNAPDIST
 %token	ACTIVEBORDER INACTIVEBORDER URGENCYBORDER
@@ -169,16 +170,6 @@ main		: FONTNAME STRING		{
 			conf_ignore(conf, $2);
 			free($2);
 		}
-		| BIND STRING string		{
-			if (!conf_bind_key(conf, $2, $3)) {
-				yyerror("invalid bind: %s %s", $2, $3);
-				free($2);
-				free($3);
-				YYERROR;
-			}
-			free($2);
-			free($3);
-		}
 		| GAP NUMBER NUMBER NUMBER NUMBER {
 			if ($2 < 0 || $2 > INT_MAX ||
 			    $3 < 0 || $3 > INT_MAX ||
@@ -192,15 +183,41 @@ main		: FONTNAME STRING		{
 			conf->gap.left = $4;
 			conf->gap.right = $5;
 		}
-		| MOUSEBIND STRING string	{
-			if (!conf_bind_mouse(conf, $2, $3)) {
-				yyerror("invalid mousebind: %s %s", $2, $3);
+		| BINDKEY STRING string {
+			if (!conf_bind_key(conf, $2, $3)) {
+				yyerror("invalid bind-key: %s %s", $2, $3);
 				free($2);
 				free($3);
 				YYERROR;
 			}
 			free($2);
 			free($3);
+		}
+		| UNBINDKEY STRING {
+			if (!conf_bind_key(conf, $2, NULL)) {
+				yyerror("invalid unbind-key: %s", $2);
+				free($2);
+				YYERROR;
+			}
+			free($2);
+		}
+		| BINDMOUSE STRING string {
+			if (!conf_bind_mouse(conf, $2, $3)) {
+				yyerror("invalid bind-mouse: %s %s", $2, $3);
+				free($2);
+				free($3);
+				YYERROR;
+			}
+			free($2);
+			free($3);
+		}
+		| UNBINDMOUSE STRING {
+			if (!conf_bind_mouse(conf, $2, NULL)) {
+				yyerror("invalid unbind-mouse: %s", $2);
+				free($2);
+				YYERROR;
+			}
+			free($2);
 		}
 		;
 
@@ -278,7 +295,8 @@ lookup(char *s)
 	static const struct keywords keywords[] = {
 		{ "activeborder",	ACTIVEBORDER},
 		{ "autogroup",		AUTOGROUP},
-		{ "bind",		BIND},
+		{ "bind-key",		BINDKEY},
+		{ "bind-mouse",		BINDMOUSE},
 		{ "borderwidth",	BORDERWIDTH},
 		{ "color",		COLOR},
 		{ "command",		COMMAND},
@@ -290,12 +308,13 @@ lookup(char *s)
 		{ "inactiveborder",	INACTIVEBORDER},
 		{ "menubg",		MENUBG},
 		{ "menufg",		MENUFG},
-		{ "mousebind",		MOUSEBIND},
 		{ "moveamount",		MOVEAMOUNT},
 		{ "no",			NO},
 		{ "selfont", 		FONTSELCOLOR},
 		{ "snapdist",		SNAPDIST},
 		{ "sticky",		STICKY},
+		{ "unbind-key",		UNBINDKEY},
+		{ "unbind-mouse",	UNBINDMOUSE},
 		{ "ungroupborder",	UNGROUPBORDER},
 		{ "urgencyborder",	URGENCYBORDER},
 		{ "yes",		YES}
