@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.139 2016/12/01 18:44:09 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.140 2016/12/01 20:28:19 okan Exp $
  */
 
 #include <sys/types.h>
@@ -451,7 +451,7 @@ kbfunc_menu_exec(void *ctx, union arg *arg, enum xev xev)
 
 	if ((mi = menu_filter(sc, &menuq, label, NULL,
 	    (CWM_MENU_DUMMY | CWM_MENU_FILE),
-	    search_match_exec_path, NULL)) != NULL) {
+	    search_match_exec, NULL)) != NULL) {
 		if (mi->text[0] == '\0')
 			goto out;
 		switch (cmd) {
