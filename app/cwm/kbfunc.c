@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.137 2016/11/15 18:43:09 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.138 2016/12/01 18:17:52 okan Exp $
  */
 
 #include <sys/types.h>
@@ -298,12 +298,13 @@ kbfunc_menu_client(void *ctx, union arg *arg, enum xev xev)
 	struct menu		*mi;
 	struct menu_q		 menuq;
 	int			 m = (xev == CWM_XEV_BTN);
+	int			 all = (arg->i & CWM_MENU_WINDOW_ALL);
 
 	old_cc = client_current();
 
 	TAILQ_INIT(&menuq);
 	TAILQ_FOREACH(cc, &sc->clientq, entry) {
-		if (m) {
+		if (!all) {
 			if (cc->flags & CLIENT_HIDDEN)
 				menuq_add(&menuq, cc, NULL);
 		} else
