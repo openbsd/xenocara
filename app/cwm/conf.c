@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.226 2016/12/01 18:17:52 okan Exp $
+ * $OpenBSD: conf.c,v 1.227 2016/12/02 16:50:19 okan Exp $
  */
 
 #include <sys/types.h>
@@ -59,7 +59,7 @@ static const char *color_binds[] = {
 static const struct {
 	const char	*tag;
 	void		 (*handler)(void *, union arg *, enum xev);
-	int		 context;
+	enum context	 context;
 	union arg	 argument;
 } name_to_func[] = {
 	{ "window-menu-label", kbfunc_menu_client_label, CWM_CONTEXT_CC, {0} },
