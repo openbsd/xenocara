@@ -2716,18 +2716,12 @@ void drmCloseOnce(int fd)
 
 int drmSetMaster(int fd)
 {
-#ifndef __OpenBSD__
         return drmIoctl(fd, DRM_IOCTL_SET_MASTER, NULL);
-#endif
-	return 0;
 }
 
 int drmDropMaster(int fd)
 {
-#ifndef __OpenBSD__
         return drmIoctl(fd, DRM_IOCTL_DROP_MASTER, NULL);
-#endif
-	return 0;
 }
 
 char *drmGetDeviceNameFromFd(int fd)
