@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.228 2016/12/02 17:02:17 okan Exp $
+ * $OpenBSD: conf.c,v 1.229 2016/12/06 15:03:13 okan Exp $
  */
 
 #include <sys/types.h>
@@ -63,7 +63,6 @@ static const struct {
 	{ "window-menu-label", kbfunc_menu_client_label, CWM_CONTEXT_CC, {0} },
 	{ "window-lower", kbfunc_client_lower, CWM_CONTEXT_CC, {0} },
 	{ "window-raise", kbfunc_client_raise, CWM_CONTEXT_CC, {0} },
-	{ "window-search", kbfunc_menu_client, CWM_CONTEXT_SC, {0} },
 	{ "window-hide", kbfunc_client_hide, CWM_CONTEXT_CC, {0} },
 	{ "window-delete", kbfunc_client_delete, CWM_CONTEXT_CC, {0} },
 	{ "window-htile", kbfunc_client_htile, CWM_CONTEXT_CC, {0} },
