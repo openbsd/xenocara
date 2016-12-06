@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.140 2016/12/01 20:28:19 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.141 2016/12/06 21:09:22 okan Exp $
  */
 
 #include <sys/types.h>
@@ -520,7 +520,7 @@ kbfunc_menu_ssh(void *ctx, union arg *arg, enum xev xev)
 		if (p - buf + 1 > sizeof(hostbuf))
 			continue;
 		(void)strlcpy(hostbuf, buf, p - buf + 1);
-		menuq_add(&menuq, NULL, hostbuf);
+		menuq_add(&menuq, NULL, "%s", hostbuf);
 	}
 	free(lbuf);
 	(void)fclose(fp);
