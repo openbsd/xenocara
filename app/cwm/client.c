@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.231 2016/12/06 21:00:13 okan Exp $
+ * $OpenBSD: client.c,v 1.232 2016/12/06 21:59:33 okan Exp $
  */
 
 #include <sys/types.h>
@@ -1086,4 +1086,3 @@ client_set_wm_state(struct client_ctx *cc, long state)
 	XChangeProperty(X_Dpy, cc->win, cwmh[WM_STATE], cwmh[WM_STATE], 32,
 	    PropModeReplace, (unsigned char *)data, 2);
 }
-
