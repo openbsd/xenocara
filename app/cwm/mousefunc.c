@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: mousefunc.c,v 1.114 2016/10/18 17:03:30 okan Exp $
+ * $OpenBSD: mousefunc.c,v 1.115 2016/12/06 21:03:58 okan Exp $
  */
 
 #include <sys/types.h>
@@ -52,6 +52,8 @@ mousefunc_client_resize(void *ctx, union arg *arg, enum xev xev)
 	    GrabModeAsync, GrabModeAsync, None, Conf.cursor[CF_RESIZE],
 	    CurrentTime) != GrabSuccess)
 		return;
+
+	menu_windraw(sc, cc->win, "%4d x %-4d", cc->dim.w, cc->dim.h);
 
 	for (;;) {
 		XWindowEvent(X_Dpy, cc->win, MOUSEMASK, &ev);
@@ -119,6 +121,8 @@ mousefunc_client_move(void *ctx, union arg *arg, enum xev xev)
 	    GrabModeAsync, GrabModeAsync, None, Conf.cursor[CF_MOVE],
 	    CurrentTime) != GrabSuccess)
 		return;
+
+	menu_windraw(sc, cc->win, "%4d, %-4d", cc->geom.x, cc->geom.y);
 
 	for (;;) {
 		XWindowEvent(X_Dpy, cc->win, MOUSEMASK, &ev);
