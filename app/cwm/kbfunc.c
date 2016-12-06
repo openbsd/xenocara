@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.141 2016/12/06 21:09:22 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.142 2016/12/06 21:54:10 okan Exp $
  */
 
 #include <sys/types.h>
@@ -451,7 +451,7 @@ kbfunc_menu_exec(void *ctx, union arg *arg, enum xev xev)
 
 	if ((mi = menu_filter(sc, &menuq, label, NULL,
 	    (CWM_MENU_DUMMY | CWM_MENU_FILE),
-	    search_match_exec, NULL)) != NULL) {
+	    search_match_exec, search_print_text)) != NULL) {
 		if (mi->text[0] == '\0')
 			goto out;
 		switch (cmd) {
@@ -526,7 +526,7 @@ kbfunc_menu_ssh(void *ctx, union arg *arg, enum xev xev)
 	(void)fclose(fp);
 menu:
 	if ((mi = menu_filter(sc, &menuq, "ssh", NULL, (CWM_MENU_DUMMY),
-	    search_match_text, NULL)) != NULL) {
+	    search_match_text, search_print_text)) != NULL) {
 		if (mi->text[0] == '\0')
 			goto out;
 		l = snprintf(path, sizeof(path), "%s -T '[ssh] %s' -e ssh %s",
@@ -552,7 +552,7 @@ kbfunc_menu_client_label(void *ctx, union arg *arg, enum xev xev)
 
 	/* dummy is set, so this will always return */
 	mi = menu_filter(cc->sc, &menuq, "label", cc->label, (CWM_MENU_DUMMY),
-	    search_match_text, NULL);
+	    search_match_text, search_print_text);
 
 	if (!mi->abort) {
 		free(cc->label);
