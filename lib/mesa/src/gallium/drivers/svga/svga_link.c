@@ -25,6 +25,7 @@
 
 #include "svga_context.h"
 #include "svga_link.h"
+#include "svga_debug.h"
 
 #include "tgsi/tgsi_strings.h"
 
@@ -45,7 +46,7 @@ svga_link_shaders(const struct tgsi_shader_info *outshader_info,
 {
    unsigned i, free_slot;
 
-   for (i = 0; i < Elements(linkage->input_map); i++) {
+   for (i = 0; i < ARRAY_SIZE(linkage->input_map); i++) {
       linkage->input_map[i] = INVALID_INDEX;
    }
 
@@ -55,7 +56,7 @@ svga_link_shaders(const struct tgsi_shader_info *outshader_info,
     * We'll modify the input shader's inputs to match the output shader.
     */
    assert(inshader_info->num_inputs <=
-          Elements(inshader_info->input_semantic_name));
+          ARRAY_SIZE(inshader_info->input_semantic_name));
 
    /* free register index that can be used for built-in varyings */
    free_slot = outshader_info->num_outputs + 1;
@@ -76,7 +77,7 @@ svga_link_shaders(const struct tgsi_shader_info *outshader_info,
       else {
          /* search output shader outputs for same item */
          for (j = 0; j < outshader_info->num_outputs; j++) {
-            assert(j < Elements(outshader_info->output_semantic_name));
+            assert(j < ARRAY_SIZE(outshader_info->output_semantic_name));
             if (outshader_info->output_semantic_name[j] == sem_name &&
                 outshader_info->output_semantic_index[j] == sem_index) {
                linkage->input_map[i] = j;
@@ -97,13 +98,15 @@ svga_link_shaders(const struct tgsi_shader_info *outshader_info,
    }
 
    /* Debug */
-   if (0) {
+   if (SVGA_DEBUG & DEBUG_TGSI) {
       unsigned reg = 0;
+      debug_printf("### linkage info:\n");
+
       for (i = 0; i < linkage->num_inputs; i++) {
 
          assert(linkage->input_map[i] != INVALID_INDEX);
 
-         debug_printf("input shader input[%d] slot %u  %s %u %s\n",
+         debug_printf("   input[%d] slot %u  %s %u %s\n",
                       i,
                       linkage->input_map[i],
                       tgsi_semantic_names[inshader_info->input_semantic_name[i]],

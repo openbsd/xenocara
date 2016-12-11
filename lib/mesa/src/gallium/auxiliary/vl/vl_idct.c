@@ -148,7 +148,7 @@ create_mismatch_vert_shader(struct vl_idct *idct)
    struct ureg_dst t_tex;
    struct ureg_dst o_vpos, o_addr[2];
 
-   shader = ureg_create(TGSI_PROCESSOR_VERTEX);
+   shader = ureg_create(PIPE_SHADER_VERTEX);
    if (!shader)
       return NULL;
 
@@ -200,7 +200,7 @@ create_mismatch_frag_shader(struct vl_idct *idct)
 
    unsigned i;
 
-   shader = ureg_create(TGSI_PROCESSOR_FRAGMENT);
+   shader = ureg_create(PIPE_SHADER_FRAGMENT);
    if (!shader)
       return NULL;
 
@@ -264,7 +264,7 @@ create_stage1_vert_shader(struct vl_idct *idct)
    struct ureg_dst t_tex, t_start;
    struct ureg_dst o_vpos, o_l_addr[2], o_r_addr[2];
 
-   shader = ureg_create(TGSI_PROCESSOR_VERTEX);
+   shader = ureg_create(PIPE_SHADER_VERTEX);
    if (!shader)
       return NULL;
 
@@ -321,15 +321,13 @@ static void *
 create_stage1_frag_shader(struct vl_idct *idct)
 {
    struct ureg_program *shader;
-
    struct ureg_src l_addr[2], r_addr[2];
-
    struct ureg_dst l[4][2], r[2];
    struct ureg_dst *fragment;
+   unsigned i;
+   int j;
 
-   int i, j;
-
-   shader = ureg_create(TGSI_PROCESSOR_FRAGMENT);
+   shader = ureg_create(PIPE_SHADER_FRAGMENT);
    if (!shader)
       return NULL;
 

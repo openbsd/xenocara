@@ -320,7 +320,32 @@ svga_screen_cache_flush(struct svga_screen *svgascreen,
 
    pipe_mutex_lock(cache->mutex);
 
-   /* Loop over entries in the validated list */
+   /* Loop over entries in the invalidated list */
+   curr = cache->invalidated.next;
+   next = curr->next;
+   while (curr != &cache->invalidated) {
+      entry = LIST_ENTRY(struct svga_host_surface_cache_entry, curr, head);
+
+      assert(entry->handle);
+
+      if (sws->surface_is_flushed(sws, entry->handle)) {
+         /* remove entry from the invalidated list */
+         LIST_DEL(&entry->head);
+
+         sws->fence_reference(sws, &entry->fence, fence);
+
+         /* Add entry to the unused list */
+         LIST_ADD(&entry->head, &cache->unused);
+
+         /* Add entry to the hash table bucket */
+         bucket = svga_screen_cache_bucket(&entry->key);
+         LIST_ADD(&entry->bucket_head, &cache->bucket[bucket]);
+      }
+
+      curr = next;
+      next = curr->next;
+   }
+
    curr = cache->validated.next;
    next = curr->next;
    while (curr != &cache->validated) {
@@ -329,17 +354,14 @@ svga_screen_cache_flush(struct svga_screen *svgascreen,
       assert(entry->handle);
 
       if (sws->surface_is_flushed(sws, entry->handle)) {
-         /* remove entry from LRU list */
+         /* remove entry from the validated list */
          LIST_DEL(&entry->head);
 
-         svgascreen->sws->fence_reference(svgascreen->sws, &entry->fence, fence);
+         /* it is now safe to invalidate the surface content. */
+         sws->surface_invalidate(sws, entry->handle);
 
-         /* Add entry to the unused list */
-         LIST_ADD(&entry->head, &cache->unused);
-
-         /* Add entry to the hash table bucket */
-         bucket = svga_screen_cache_bucket(&entry->key);
-         LIST_ADD(&entry->bucket_head, &cache->bucket[bucket]);
+         /* add the entry to the invalidated list */
+         LIST_ADD(&entry->head, &cache->invalidated);
       }
 
       curr = next;
@@ -371,8 +393,7 @@ svga_screen_cache_cleanup(struct svga_screen *svgascreen)
       }
 
       if (cache->entries[i].fence)
-         svgascreen->sws->fence_reference(svgascreen->sws,
-                                          &cache->entries[i].fence, NULL);
+         sws->fence_reference(sws, &cache->entries[i].fence, NULL);
    }
 
    pipe_mutex_destroy(cache->mutex);
@@ -396,6 +417,8 @@ svga_screen_cache_init(struct svga_screen *svgascreen)
 
    LIST_INITHEAD(&cache->validated);
 
+   LIST_INITHEAD(&cache->invalidated);
+
    LIST_INITHEAD(&cache->empty);
    for (i = 0; i < SVGA_HOST_SURFACE_CACHE_SIZE; ++i)
       LIST_ADDTAIL(&cache->entries[i].head, &cache->empty);
@@ -413,7 +436,7 @@ svga_screen_cache_init(struct svga_screen *svgascreen)
  */
 struct svga_winsys_surface *
 svga_screen_surface_create(struct svga_screen *svgascreen,
-                           unsigned bind_flags, unsigned usage,
+                           unsigned bind_flags, enum pipe_resource_usage usage,
                            struct svga_host_surface_cache_key *key)
 {
    struct svga_winsys_screen *sws = svgascreen->sws;
@@ -563,8 +586,14 @@ svga_screen_cache_dump(const struct svga_screen *svgascreen)
          struct svga_host_surface_cache_entry *entry =
             LIST_ENTRY(struct svga_host_surface_cache_entry,
                        curr, bucket_head);
-         if (entry->key.format != 37) {
-            debug_printf("  %u x %u x %u format %u\n",
+         if (entry->key.format == SVGA3D_BUFFER) {
+            debug_printf("  %p: buffer %u bytes\n",
+                         entry->handle,
+                         entry->key.size.width);
+         }
+         else {
+            debug_printf("  %p: %u x %u x %u format %u\n",
+                         entry->handle,
                          entry->key.size.width,
                          entry->key.size.height,
                          entry->key.size.depth,

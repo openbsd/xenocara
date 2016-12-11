@@ -192,9 +192,13 @@ LoadPropagation::checkSwapSrc01(Instruction *insn)
 {
    const Target *targ = prog->getTarget();
    if (!targ->getOpInfo(insn).commutative)
-      if (insn->op != OP_SET && insn->op != OP_SLCT)
+      if (insn->op != OP_SET && insn->op != OP_SLCT && insn->op != OP_SUB)
          return;
    if (insn->src(1).getFile() != FILE_GPR)
+      return;
+   // This is the special OP_SET used for alphatesting, we can't reverse its
+   // arguments as that will confuse the fixup code.
+   if (insn->op == OP_SET && insn->subOp)
       return;
 
    Instruction *i0 = insn->getSrc(0)->getInsn();
@@ -228,6 +232,11 @@ LoadPropagation::checkSwapSrc01(Instruction *insn)
    else
    if (insn->op == OP_SLCT)
       insn->asCmp()->setCond = inverseCondCode(insn->asCmp()->setCond);
+   else
+   if (insn->op == OP_SUB) {
+      insn->src(0).mod = insn->src(0).mod ^ Modifier(NV50_IR_MOD_NEG);
+      insn->src(1).mod = insn->src(1).mod ^ Modifier(NV50_IR_MOD_NEG);
+   }
 }
 
 bool
@@ -567,6 +576,16 @@ ConstantFolding::expr(Instruction *i,
          return;
       }
       break;
+   case OP_SUB:
+      switch (i->dType) {
+      case TYPE_F32: res.data.f32 = a->data.f32 - b->data.f32; break;
+      case TYPE_F64: res.data.f64 = a->data.f64 - b->data.f64; break;
+      case TYPE_S32:
+      case TYPE_U32: res.data.u32 = a->data.u32 - b->data.u32; break;
+      default:
+         return;
+      }
+      break;
    case OP_POW:
       switch (i->dType) {
       case TYPE_F32: res.data.f32 = pow(a->data.f32, b->data.f32); break;
@@ -759,6 +778,9 @@ ConstantFolding::expr(Instruction *i,
       }
       break;
    }
+   case OP_SHLADD:
+      res.data.u32 = (a->data.u32 << b->data.u32) + c->data.u32;
+      break;
    default:
       return;
    }
@@ -888,6 +910,14 @@ ConstantFolding::opnd3(Instruction *i, ImmediateValue &imm2)
          return;
       }
       break;
+   case OP_SHLADD:
+      if (imm2.isInteger(0)) {
+         i->op = OP_SHL;
+         i->setSrc(2, NULL);
+         foldCount++;
+         return;
+      }
+      break;
    default:
       return;
    }
@@ -896,11 +926,30 @@ ConstantFolding::opnd3(Instruction *i, ImmediateValue &imm2)
 void
 ConstantFolding::opnd(Instruction *i, ImmediateValue &imm0, int s)
 {
+   const Target *target = prog->getTarget();
    const int t = !s;
    const operation op = i->op;
    Instruction *newi = i;
 
    switch (i->op) {
+   case OP_SPLIT: {
+      bld.setPosition(i, false);
+
+      uint8_t size = i->getDef(0)->reg.size;
+      uint32_t mask = (1ULL << size) - 1;
+      assert(size <= 32);
+
+      uint64_t val = imm0.reg.data.u64;
+      for (int8_t d = 0; i->defExists(d); ++d) {
+         Value *def = i->getDef(d);
+         assert(def->reg.size == size);
+
+         newi = bld.mkMov(def, bld.mkImm((uint32_t)(val & mask)), TYPE_U32);
+         val >>= size;
+      }
+      delete_Instruction(prog, i);
+      break;
+   }
    case OP_MUL:
       if (i->dType == TYPE_F32)
          tryCollapseChainedMULs(i, s, imm0);
@@ -997,15 +1046,24 @@ ConstantFolding::opnd(Instruction *i, ImmediateValue &imm0, int s)
          i->src(1).mod = i->src(2).mod;
          i->setSrc(2, NULL);
          i->op = OP_ADD;
+      } else
+      if (s == 1 && !imm0.isNegative() && imm0.isPow2() &&
+          target->isOpSupported(OP_SHLADD, i->dType)) {
+         i->op = OP_SHLADD;
+         imm0.applyLog2();
+         i->setSrc(1, new_ImmediateValue(prog, imm0.reg.data.u32));
       }
       break;
    case OP_ADD:
+   case OP_SUB:
       if (i->usesFlags())
          break;
       if (imm0.isInteger(0)) {
          if (s == 0) {
             i->setSrc(0, i->getSrc(1));
             i->src(0).mod = i->src(1).mod;
+            if (i->op == OP_SUB)
+               i->src(0).mod = i->src(0).mod ^ Modifier(NV50_IR_MOD_NEG);
          }
          i->setSrc(1, NULL);
          i->op = i->src(0).mod.getOp();
@@ -1635,11 +1693,10 @@ AlgebraicOpt::tryADDToMADOrSAD(Instruction *add, operation toOp)
    if (src->getUniqueInsn() && src->getUniqueInsn()->bb != add->bb)
       return false;
 
-   if (src->getInsn()->saturate)
+   if (src->getInsn()->saturate || src->getInsn()->postFactor ||
+       src->getInsn()->dnz)
       return false;
 
-   if (src->getInsn()->postFactor)
-      return false;
    if (toOp == OP_SAD) {
       ImmediateValue imm;
       if (!src->getInsn()->src(2).getImmediate(imm))
@@ -2093,6 +2150,90 @@ AlgebraicOpt::visit(BasicBlock *bb)
 
 // =============================================================================
 
+// ADD(SHL(a, b), c) -> SHLADD(a, b, c)
+class LateAlgebraicOpt : public Pass
+{
+private:
+   virtual bool visit(Instruction *);
+
+   void handleADD(Instruction *);
+   bool tryADDToSHLADD(Instruction *);
+};
+
+void
+LateAlgebraicOpt::handleADD(Instruction *add)
+{
+   Value *src0 = add->getSrc(0);
+   Value *src1 = add->getSrc(1);
+
+   if (src0->reg.file != FILE_GPR || src1->reg.file != FILE_GPR)
+      return;
+
+   if (prog->getTarget()->isOpSupported(OP_SHLADD, add->dType))
+      tryADDToSHLADD(add);
+}
+
+// ADD(SHL(a, b), c) -> SHLADD(a, b, c)
+bool
+LateAlgebraicOpt::tryADDToSHLADD(Instruction *add)
+{
+   Value *src0 = add->getSrc(0);
+   Value *src1 = add->getSrc(1);
+   ImmediateValue imm;
+   Instruction *shl;
+   Value *src;
+   int s;
+
+   if (add->saturate || add->usesFlags() || typeSizeof(add->dType) == 8
+       || isFloatType(add->dType))
+      return false;
+
+   if (src0->getUniqueInsn() && src0->getUniqueInsn()->op == OP_SHL)
+      s = 0;
+   else
+   if (src1->getUniqueInsn() && src1->getUniqueInsn()->op == OP_SHL)
+      s = 1;
+   else
+      return false;
+
+   src = add->getSrc(s);
+   shl = src->getUniqueInsn();
+
+   if (shl->bb != add->bb || shl->usesFlags() || shl->subOp || shl->src(0).mod)
+      return false;
+
+   if (!shl->src(1).getImmediate(imm))
+      return false;
+
+   add->op = OP_SHLADD;
+   add->setSrc(2, add->src(!s));
+   // SHL can't have any modifiers, but the ADD source may have had
+   // one. Preserve it.
+   add->setSrc(0, shl->getSrc(0));
+   if (s == 1)
+      add->src(0).mod = add->src(1).mod;
+   add->setSrc(1, new_ImmediateValue(shl->bb->getProgram(), imm.reg.data.u32));
+   add->src(1).mod = Modifier(0);
+
+   return true;
+}
+
+bool
+LateAlgebraicOpt::visit(Instruction *i)
+{
+   switch (i->op) {
+   case OP_ADD:
+      handleADD(i);
+      break;
+   default:
+      break;
+   }
+
+   return true;
+}
+
+// =============================================================================
+
 static inline void
 updateLdStOffset(Instruction *ldst, int32_t offset, Function *fn)
 {
@@ -2204,6 +2345,9 @@ MemoryOpt::combineLd(Record *rec, Instruction *ld)
    if (((size == 0x8) && (MIN2(offLd, offRc) & 0x7)) ||
        ((size == 0xc) && (MIN2(offLd, offRc) & 0xf)))
       return false;
+   // for compute indirect loads are not guaranteed to be aligned
+   if (prog->getType() == Program::TYPE_COMPUTE && rec->rel[0])
+      return false;
 
    assert(sizeRc + sizeLd <= 16 && offRc != offLd);
 
@@ -2256,7 +2400,11 @@ MemoryOpt::combineSt(Record *rec, Instruction *st)
    if (!prog->getTarget()->
        isAccessSupported(st->getSrc(0)->reg.file, typeOfSize(size)))
       return false;
+   // no unaligned stores
    if (size == 8 && MIN2(offRc, offSt) & 0x7)
+      return false;
+   // for compute indirect stores are not guaranteed to be aligned
+   if (prog->getType() == Program::TYPE_COMPUTE && rec->rel[0])
       return false;
 
    st->takeExtraSources(0, extra); // save predicate and indirect address
@@ -2466,7 +2614,7 @@ MemoryOpt::replaceStFromSt(Instruction *restrict st, Record *rec)
       // get non-replaced sources after values covered by st
       for (; offR < endR; offR += ri->getSrc(s)->reg.size, ++s)
          vals[k++] = ri->getSrc(s);
-      assert((unsigned int)k <= Elements(vals));
+      assert((unsigned int)k <= ARRAY_SIZE(vals));
       for (s = 0; s < k; ++s)
          st->setSrc(s + 1, vals[s]);
       st->setSrc(0, ri->getSrc(0));
@@ -3259,14 +3407,20 @@ DeadCodeElim::visit(BasicBlock *bb)
          ++deadCount;
          delete_Instruction(prog, i);
       } else
-      if (i->defExists(1) && (i->op == OP_VFETCH || i->op == OP_LOAD)) {
+      if (i->defExists(1) &&
+          i->subOp == 0 &&
+          (i->op == OP_VFETCH || i->op == OP_LOAD)) {
          checkSplitLoad(i);
       } else
       if (i->defExists(0) && !i->getDef(0)->refCount()) {
          if (i->op == OP_ATOM ||
              i->op == OP_SUREDP ||
-             i->op == OP_SUREDB)
+             i->op == OP_SUREDB) {
             i->setDef(0, NULL);
+         } else if (i->op == OP_LOAD && i->subOp == NV50_IR_SUBOP_LOAD_LOCKED) {
+            i->setDef(0, i->getDef(1));
+            i->setDef(1, NULL);
+         }
       }
    }
    return true;
@@ -3384,6 +3538,7 @@ Program::optimizeSSA(int level)
    RUN_PASS(2, AlgebraicOpt, run);
    RUN_PASS(2, ModifierFolding, run); // before load propagation -> less checks
    RUN_PASS(1, ConstantFolding, foldAll);
+   RUN_PASS(2, LateAlgebraicOpt, run);
    RUN_PASS(1, LoadPropagation, run);
    RUN_PASS(1, IndirectPropagation, run);
    RUN_PASS(2, MemoryOpt, run);

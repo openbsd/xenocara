@@ -155,12 +155,14 @@ tgsi_parse_token(
          break;
 
       case TGSI_IMM_UINT32:
+      case TGSI_IMM_UINT64:
          for (i = 0; i < imm_count; i++) {
             next_token(ctx, &imm->u[i].Uint);
          }
          break;
 
       case TGSI_IMM_INT32:
+      case TGSI_IMM_INT64:
          for (i = 0; i < imm_count; i++) {
             next_token(ctx, &imm->u[i].Int);
          }
@@ -313,7 +315,7 @@ tgsi_dump_tokens(const struct tgsi_token *tokens)
    int nr = tgsi_num_tokens(tokens);
    int i;
    
-   assert(sizeof(*tokens) == sizeof(unsigned));
+   STATIC_ASSERT(sizeof(*tokens) == sizeof(unsigned));
 
    debug_printf("const unsigned tokens[%d] = {\n", nr);
    for (i = 0; i < nr; i++)

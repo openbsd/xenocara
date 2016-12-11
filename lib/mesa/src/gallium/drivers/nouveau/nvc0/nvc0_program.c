@@ -80,6 +80,7 @@ nvc0_shader_output_address(unsigned sn, unsigned si)
    case TGSI_SEMANTIC_CLIPDIST:      return 0x2c0 + si * 0x10;
    case TGSI_SEMANTIC_CLIPVERTEX:    return 0x270;
    case TGSI_SEMANTIC_TEXCOORD:      return 0x300 + si * 0x10;
+   /* case TGSI_SEMANTIC_VIEWPORT_MASK: return 0x3a0; */
    case TGSI_SEMANTIC_EDGEFLAG:      return ~0;
    default:
       assert(!"invalid TGSI output semantic");
@@ -251,8 +252,9 @@ nvc0_vtgp_gen_header(struct nvc0_program *vp, struct nv50_ir_prog_info *info)
       }
    }
 
-   vp->vp.clip_enable =
-      (1 << (info->io.clipDistances + info->io.cullDistances)) - 1;
+   vp->vp.clip_enable = (1 << info->io.clipDistances) - 1;
+   vp->vp.cull_enable =
+      ((1 << info->io.cullDistances) - 1) << info->io.clipDistances;
    for (i = 0; i < info->io.cullDistances; ++i)
       vp->vp.clip_mode |= 1 << ((info->io.clipDistances + i) * 4);
 
@@ -293,11 +295,21 @@ nvc0_tp_get_tess_mode(struct nvc0_program *tp, struct nv50_ir_prog_info *info)
       return;
    }
 
-   if (info->prop.tp.winding > 0)
-      tp->tp.tess_mode |= NVC0_3D_TESS_MODE_CW;
+   /* It seems like lines want the "CW" bit to indicate they're connected, and
+    * spit out errors in dmesg when the "CONNECTED" bit is set.
+    */
+   if (info->prop.tp.outputPrim != PIPE_PRIM_POINTS) {
+      if (info->prop.tp.domain == PIPE_PRIM_LINES)
+         tp->tp.tess_mode |= NVC0_3D_TESS_MODE_CW;
+      else
+         tp->tp.tess_mode |= NVC0_3D_TESS_MODE_CONNECTED;
+   }
 
-   if (info->prop.tp.outputPrim != PIPE_PRIM_POINTS)
-      tp->tp.tess_mode |= NVC0_3D_TESS_MODE_CONNECTED;
+   /* Winding only matters for triangles/quads, not lines. */
+   if (info->prop.tp.domain != PIPE_PRIM_LINES &&
+       info->prop.tp.outputPrim != PIPE_PRIM_POINTS &&
+       info->prop.tp.winding > 0)
+      tp->tp.tess_mode |= NVC0_3D_TESS_MODE_CW;
 
    switch (info->prop.tp.partitioning) {
    case PIPE_TESS_SPACING_EQUAL:
@@ -333,6 +345,15 @@ nvc0_tcp_gen_header(struct nvc0_program *tcp, struct nv50_ir_prog_info *info)
    tcp->hdr[4] = 0xff000; /* initial min/max parallel output read address */
 
    nvc0_vtgp_gen_header(tcp, info);
+
+   if (info->target >= NVISA_GM107_CHIPSET) {
+      /* On GM107+, the number of output patch components has moved in the TCP
+       * header, but it seems like blob still also uses the old position.
+       * Also, the high 8-bits are located inbetween the min/max parallel
+       * field and has to be set after updating the outputs. */
+      tcp->hdr[3] = (opcs & 0x0f) << 28;
+      tcp->hdr[4] |= (opcs & 0xf0) << 16;
+   }
 
    nvc0_tp_get_tess_mode(tcp, info);
 
@@ -381,7 +402,7 @@ nvc0_gp_gen_header(struct nvc0_program *gp, struct nv50_ir_prog_info *info)
       break;
    }
 
-   gp->hdr[4] = MIN2(info->prop.gp.maxVertices, 1024);
+   gp->hdr[4] = CLAMP(info->prop.gp.maxVertices, 1, 1024);
 
    return nvc0_vtgp_gen_header(gp, info);
 }
@@ -456,7 +477,15 @@ nvc0_fp_gen_header(struct nvc0_program *fp, struct nv50_ir_prog_info *info)
          fp->hdr[18] |= 0xf << info->out[i].slot[0];
    }
 
+   /* There are no "regular" attachments, but the shader still needs to be
+    * executed. It seems like it wants to think that it has some color
+    * outputs in order to actually run.
+    */
+   if (info->prop.fp.numColourResults == 0 && !info->prop.fp.writesDepth)
+      fp->hdr[18] |= 0xf;
+
    fp->fp.early_z = info->prop.fp.earlyFragTests;
+   fp->fp.sample_mask_in = info->prop.fp.usesSampleMaskIn;
 
    return 0;
 }
@@ -480,11 +509,14 @@ nvc0_program_create_tfb_state(const struct nv50_ir_prog_info *info,
    for (i = 0; i < pso->num_outputs; ++i) {
       unsigned s = pso->output[i].start_component;
       unsigned p = pso->output[i].dst_offset;
+      const unsigned r = pso->output[i].register_index;
       b = pso->output[i].output_buffer;
 
+      if (r >= info->numOutputs)
+         continue;
+
       for (c = 0; c < pso->output[i].num_components; ++c)
-         tfb->varying_index[b][p++] =
-            info->out[pso->output[i].register_index].slot[s + c];
+         tfb->varying_index[b][p++] = info->out[r].slot[s + c];
 
       tfb->varying_count[b] = MAX2(tfb->varying_count[b], p);
       tfb->stream[b] = pso->output[i].stream;
@@ -533,43 +565,38 @@ nvc0_program_translate(struct nvc0_program *prog, uint16_t chipset,
    info->bin.sourceRep = NV50_PROGRAM_IR_TGSI;
    info->bin.source = (void *)prog->pipe.tokens;
 
-   info->io.genUserClip = prog->vp.num_ucps;
-   info->io.auxCBSlot = 15;
-   info->io.ucpBase = 256;
-   info->io.drawInfoBase = 256 + 128;
-
-   if (prog->type == PIPE_SHADER_COMPUTE) {
-      if (chipset >= NVISA_GK104_CHIPSET) {
-         info->io.resInfoCBSlot = 0;
-         info->io.texBindBase = NVE4_CP_INPUT_TEX(0);
-         info->io.suInfoBase = NVE4_CP_INPUT_SUF(0);
-         info->prop.cp.gridInfoBase = NVE4_CP_INPUT_GRID_INFO(0);
-      } else {
-         info->io.resInfoCBSlot = 15;
-         info->io.suInfoBase = 512;
-      }
-      info->io.msInfoCBSlot = 0;
-      info->io.msInfoBase = NVE4_CP_INPUT_MS_OFFSETS;
-   } else {
-      if (chipset >= NVISA_GK104_CHIPSET) {
-         info->io.texBindBase = 0x20;
-         info->io.suInfoBase = 0; /* TODO */
-      }
-      info->io.resInfoCBSlot = 15;
-      info->io.sampleInfoBase = 256 + 128;
-      info->io.suInfoBase = 512;
-      info->io.msInfoCBSlot = 15;
-      info->io.msInfoBase = 0; /* TODO */
-   }
-
-   info->assignSlots = nvc0_program_assign_varying_slots;
-
 #ifdef DEBUG
+   info->target = debug_get_num_option("NV50_PROG_CHIPSET", chipset);
    info->optLevel = debug_get_num_option("NV50_PROG_OPTIMIZE", 3);
    info->dbgFlags = debug_get_num_option("NV50_PROG_DEBUG", 0);
 #else
    info->optLevel = 3;
 #endif
+
+   info->io.genUserClip = prog->vp.num_ucps;
+   info->io.auxCBSlot = 15;
+   info->io.msInfoCBSlot = 15;
+   info->io.ucpBase = NVC0_CB_AUX_UCP_INFO;
+   info->io.drawInfoBase = NVC0_CB_AUX_DRAW_INFO;
+   info->io.msInfoBase = NVC0_CB_AUX_MS_INFO;
+   info->io.bufInfoBase = NVC0_CB_AUX_BUF_INFO(0);
+   info->io.suInfoBase = NVC0_CB_AUX_SU_INFO(0);
+   if (info->target >= NVISA_GK104_CHIPSET) {
+      info->io.texBindBase = NVC0_CB_AUX_TEX_INFO(0);
+   }
+
+   if (prog->type == PIPE_SHADER_COMPUTE) {
+      if (info->target >= NVISA_GK104_CHIPSET) {
+         info->io.auxCBSlot = 7;
+         info->io.msInfoCBSlot = 7;
+         info->io.uboInfoBase = NVC0_CB_AUX_UBO_INFO(0);
+      }
+      info->prop.cp.gridInfoBase = NVC0_CB_AUX_GRID_INFO(0);
+   } else {
+      info->io.sampleInfoBase = NVC0_CB_AUX_SAMPLE_INFO;
+   }
+
+   info->assignSlots = nvc0_program_assign_varying_slots;
 
    ret = nv50_ir_generate_code(info);
    if (ret) {
@@ -581,10 +608,8 @@ nvc0_program_translate(struct nvc0_program *prog, uint16_t chipset,
 
    prog->code = info->bin.code;
    prog->code_size = info->bin.codeSize;
-   prog->immd_data = info->immd.buf;
-   prog->immd_size = info->immd.bufSize;
    prog->relocs = info->bin.relocData;
-   prog->interps = info->bin.interpData;
+   prog->fixups = info->bin.fixupData;
    prog->num_gprs = MAX2(4, (info->bin.maxGPR + 1));
    prog->num_barriers = info->numBarriers;
 
@@ -654,28 +679,24 @@ nvc0_program_translate(struct nvc0_program *prog, uint16_t chipset,
                       prog->type, info->bin.tlsSpace, prog->num_gprs,
                       info->bin.instructions, info->bin.codeSize);
 
+#ifdef DEBUG
+   if (debug_get_option("NV50_PROG_CHIPSET", NULL) && info->dbgFlags)
+      nvc0_program_dump(prog);
+#endif
+
 out:
    FREE(info);
    return !ret;
 }
 
-bool
-nvc0_program_upload_code(struct nvc0_context *nvc0, struct nvc0_program *prog)
+static inline int
+nvc0_program_alloc_code(struct nvc0_context *nvc0, struct nvc0_program *prog)
 {
    struct nvc0_screen *screen = nvc0->screen;
    const bool is_cp = prog->type == PIPE_SHADER_COMPUTE;
    int ret;
    uint32_t size = prog->code_size + (is_cp ? 0 : NVC0_SHADER_HEADER_SIZE);
-   uint32_t lib_pos = screen->lib_code->start;
-   uint32_t code_pos;
 
-   /* c[] bindings need to be aligned to 0x100, but we could use relocations
-    * to save space. */
-   if (prog->immd_size) {
-      prog->immd_base = size;
-      size = align(size, 0x40);
-      size += prog->immd_size + 0xc0; /* add 0xc0 for align 0x40 -> 0x100 */
-   }
    /* On Fermi, SP_START_ID must be aligned to 0x40.
     * On Kepler, the first instruction must be aligned to 0x80 because
     * latency information is expected only at certain positions.
@@ -685,27 +706,9 @@ nvc0_program_upload_code(struct nvc0_context *nvc0, struct nvc0_program *prog)
    size = align(size, 0x40);
 
    ret = nouveau_heap_alloc(screen->text_heap, size, prog, &prog->mem);
-   if (ret) {
-      struct nouveau_heap *heap = screen->text_heap;
-      /* Note that the code library, which is allocated before anything else,
-       * does not have a priv pointer. We can stop once we hit it.
-       */
-      while (heap->next && heap->next->priv) {
-         struct nvc0_program *evict = heap->next->priv;
-         nouveau_heap_free(&evict->mem);
-      }
-      debug_printf("WARNING: out of code space, evicting all shaders.\n");
-      ret = nouveau_heap_alloc(heap, size, prog, &prog->mem);
-      if (ret) {
-         NOUVEAU_ERR("shader too large (0x%x) to fit in code space ?\n", size);
-         return false;
-      }
-      IMMED_NVC0(nvc0->base.pushbuf, NVC0_3D(SERIALIZE), 0);
-   }
+   if (ret)
+      return ret;
    prog->code_base = prog->mem->start;
-   prog->immd_base = align(prog->mem->start + prog->immd_base, 0x100);
-   assert((prog->immd_size == 0) || (prog->immd_base + prog->immd_size <=
-                                     prog->mem->start + prog->mem->size));
 
    if (!is_cp) {
       if (screen->base.class_3d >= NVE4_3D_CLASS) {
@@ -719,22 +722,32 @@ nvc0_program_upload_code(struct nvc0_context *nvc0, struct nvc0_program *prog)
             break;
          }
       }
-      code_pos = prog->code_base + NVC0_SHADER_HEADER_SIZE;
    } else {
       if (screen->base.class_3d >= NVE4_3D_CLASS) {
          if (prog->mem->start & 0x40)
             prog->code_base += 0x40;
          assert((prog->code_base & 0x7f) == 0x00);
       }
-      code_pos = prog->code_base;
    }
 
+   return 0;
+}
+
+static inline void
+nvc0_program_upload_code(struct nvc0_context *nvc0, struct nvc0_program *prog)
+{
+   struct nvc0_screen *screen = nvc0->screen;
+   const bool is_cp = prog->type == PIPE_SHADER_COMPUTE;
+   uint32_t code_pos = prog->code_base + (is_cp ? 0 : NVC0_SHADER_HEADER_SIZE);
+
    if (prog->relocs)
-      nv50_ir_relocate_code(prog->relocs, prog->code, code_pos, lib_pos, 0);
-   if (prog->interps) {
-      nv50_ir_change_interp(prog->interps, prog->code,
-                            prog->fp.force_persample_interp,
-                            prog->fp.flatshade);
+      nv50_ir_relocate_code(prog->relocs, prog->code, code_pos,
+                            screen->lib_code->start, 0);
+   if (prog->fixups) {
+      nv50_ir_apply_fixups(prog->fixups, prog->code,
+                           prog->fp.force_persample_interp,
+                           prog->fp.flatshade,
+                           0 /* alphatest */);
       for (int i = 0; i < 2; i++) {
          unsigned mask = prog->fp.color_interp[i] >> 4;
          unsigned interp = prog->fp.color_interp[i] & 3;
@@ -749,20 +762,101 @@ nvc0_program_upload_code(struct nvc0_context *nvc0, struct nvc0_program *prog)
       }
    }
 
+   if (!is_cp)
+      nvc0->base.push_data(&nvc0->base, screen->text, prog->code_base,
+                           NV_VRAM_DOMAIN(&screen->base),
+                           NVC0_SHADER_HEADER_SIZE, prog->hdr);
+
+   nvc0->base.push_data(&nvc0->base, screen->text, code_pos,
+                        NV_VRAM_DOMAIN(&screen->base), prog->code_size,
+                        prog->code);
+}
+
+bool
+nvc0_program_upload(struct nvc0_context *nvc0, struct nvc0_program *prog)
+{
+   struct nvc0_screen *screen = nvc0->screen;
+   const bool is_cp = prog->type == PIPE_SHADER_COMPUTE;
+   int ret;
+   uint32_t size = prog->code_size + (is_cp ? 0 : NVC0_SHADER_HEADER_SIZE);
+
+   ret = nvc0_program_alloc_code(nvc0, prog);
+   if (ret) {
+      struct nouveau_heap *heap = screen->text_heap;
+      struct nvc0_program *progs[] = { /* Sorted accordingly to SP_START_ID */
+         nvc0->compprog, nvc0->vertprog, nvc0->tctlprog,
+         nvc0->tevlprog, nvc0->gmtyprog, nvc0->fragprog
+      };
+
+      /* Note that the code library, which is allocated before anything else,
+       * does not have a priv pointer. We can stop once we hit it.
+       */
+      while (heap->next && heap->next->priv) {
+         struct nvc0_program *evict = heap->next->priv;
+         nouveau_heap_free(&evict->mem);
+      }
+      debug_printf("WARNING: out of code space, evicting all shaders.\n");
+
+      /* Make sure to synchronize before deleting the code segment. */
+      IMMED_NVC0(nvc0->base.pushbuf, NVC0_3D(SERIALIZE), 0);
+
+      if ((screen->text->size << 1) <= (1 << 23)) {
+         ret = nvc0_screen_resize_text_area(screen, screen->text->size << 1);
+         if (ret) {
+            NOUVEAU_ERR("Error allocating TEXT area: %d\n", ret);
+            return false;
+         }
+         nouveau_bufctx_reset(nvc0->bufctx_3d, NVC0_BIND_3D_TEXT);
+         BCTX_REFN_bo(nvc0->bufctx_3d, 3D_TEXT,
+                      NV_VRAM_DOMAIN(&screen->base) | NOUVEAU_BO_RD,
+                      screen->text);
+         if (screen->compute) {
+            nouveau_bufctx_reset(nvc0->bufctx_cp, NVC0_BIND_CP_TEXT);
+            BCTX_REFN_bo(nvc0->bufctx_cp, CP_TEXT,
+                         NV_VRAM_DOMAIN(&screen->base) | NOUVEAU_BO_RD,
+                         screen->text);
+         }
+
+         /* Re-upload the builtin function into the new code segment. */
+         nvc0_program_library_upload(nvc0);
+      }
+
+      ret = nvc0_program_alloc_code(nvc0, prog);
+      if (ret) {
+         NOUVEAU_ERR("shader too large (0x%x) to fit in code space ?\n", size);
+         return false;
+      }
+
+      /* All currently bound shaders have to be reuploaded. */
+      for (int i = 0; i < ARRAY_SIZE(progs); i++) {
+         if (!progs[i] || progs[i] == prog)
+            continue;
+
+         ret = nvc0_program_alloc_code(nvc0, progs[i]);
+         if (ret) {
+            NOUVEAU_ERR("failed to re-upload a shader after code eviction.\n");
+            return false;
+         }
+         nvc0_program_upload_code(nvc0, progs[i]);
+
+         if (progs[i]->type == PIPE_SHADER_COMPUTE) {
+            /* Caches have to be invalidated but the CP_START_ID will be
+             * updated in the launch_grid functions. */
+            BEGIN_NVC0(nvc0->base.pushbuf, NVC0_CP(FLUSH), 1);
+            PUSH_DATA (nvc0->base.pushbuf, NVC0_COMPUTE_FLUSH_CODE);
+         } else {
+            BEGIN_NVC0(nvc0->base.pushbuf, NVC0_3D(SP_START_ID(i)), 1);
+            PUSH_DATA (nvc0->base.pushbuf, progs[i]->code_base);
+         }
+      }
+   }
+
+   nvc0_program_upload_code(nvc0, prog);
+
 #ifdef DEBUG
    if (debug_get_bool_option("NV50_PROG_DEBUG", false))
       nvc0_program_dump(prog);
 #endif
-
-   if (!is_cp)
-      nvc0->base.push_data(&nvc0->base, screen->text, prog->code_base,
-                           NV_VRAM_DOMAIN(&screen->base), NVC0_SHADER_HEADER_SIZE, prog->hdr);
-   nvc0->base.push_data(&nvc0->base, screen->text, code_pos,
-                        NV_VRAM_DOMAIN(&screen->base), prog->code_size, prog->code);
-   if (prog->immd_size)
-      nvc0->base.push_data(&nvc0->base,
-                           screen->text, prog->immd_base, NV_VRAM_DOMAIN(&screen->base),
-                           prog->immd_size, prog->immd_data);
 
    BEGIN_NVC0(nvc0->base.pushbuf, NVC0_3D(MEM_BARRIER), 1);
    PUSH_DATA (nvc0->base.pushbuf, 0x1011);
@@ -806,9 +900,8 @@ nvc0_program_destroy(struct nvc0_context *nvc0, struct nvc0_program *prog)
    if (prog->mem)
       nouveau_heap_free(&prog->mem);
    FREE(prog->code); /* may be 0 for hardcoded shaders */
-   FREE(prog->immd_data);
    FREE(prog->relocs);
-   FREE(prog->interps);
+   FREE(prog->fixups);
    if (prog->type == PIPE_SHADER_COMPUTE && prog->cp.syms)
       FREE(prog->cp.syms);
    if (prog->tfb) {
@@ -843,7 +936,7 @@ nvc0_program_init_tcp_empty(struct nvc0_context *nvc0)
 {
    struct ureg_program *ureg;
 
-   ureg = ureg_create(TGSI_PROCESSOR_TESS_CTRL);
+   ureg = ureg_create(PIPE_SHADER_TESS_CTRL);
    if (!ureg)
       return;
 

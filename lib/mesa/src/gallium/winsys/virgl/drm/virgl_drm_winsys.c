@@ -380,6 +380,12 @@ virgl_drm_winsys_resource_create_handle(struct virgl_winsys *qws,
    struct virgl_hw_res *res;
    uint32_t handle = whandle->handle;
 
+   if (whandle->offset != 0) {
+      fprintf(stderr, "attempt to import unsupported winsys offset %u\n",
+              whandle->offset);
+      return NULL;
+   }
+
    pipe_mutex_lock(qdws->bo_handles_mutex);
 
    if (whandle->type == DRM_API_HANDLE_TYPE_SHARED) {
@@ -483,6 +489,9 @@ static boolean virgl_drm_winsys_resource_get_handle(struct virgl_winsys *qws,
    } else if (whandle->type == DRM_API_HANDLE_TYPE_FD) {
       if (drmPrimeHandleToFD(qdws->fd, res->bo_handle, DRM_CLOEXEC, (int*)&whandle->handle))
             return FALSE;
+      pipe_mutex_lock(qdws->bo_handles_mutex);
+      util_hash_table_set(qdws->bo_handles, (void *)(uintptr_t)res->bo_handle, res);
+      pipe_mutex_unlock(qdws->bo_handles_mutex);
    }
    whandle->stride = stride;
    return TRUE;
@@ -728,7 +737,7 @@ static bool virgl_fence_wait(struct virgl_winsys *vws,
    struct virgl_hw_res *res = virgl_hw_res(fence);
 
    if (timeout == 0)
-      return virgl_drm_resource_is_busy(vdws, res);
+      return !virgl_drm_resource_is_busy(vdws, res);
 
    if (timeout != PIPE_TIMEOUT_INFINITE) {
       int64_t start_time = os_time_get();
@@ -858,7 +867,7 @@ virgl_drm_screen_create(int fd)
       virgl_screen(pscreen)->refcnt++;
    } else {
       struct virgl_winsys *vws;
-      int dup_fd = dup(fd);
+      int dup_fd = fcntl(fd, F_DUPFD_CLOEXEC, 3);
 
       vws = virgl_drm_winsys_create(dup_fd);
 

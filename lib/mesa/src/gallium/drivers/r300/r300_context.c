@@ -100,7 +100,7 @@ static void r300_destroy_context(struct pipe_context* context)
     rc_destroy_regalloc_state(&r300->fs_regalloc_state);
 
     /* XXX: No way to tell if this was initialized or not? */
-    util_slab_destroy(&r300->pool_transfers);
+    slab_destroy_child(&r300->pool_transfers);
 
     /* Free the structs allocated in r300_setup_atoms() */
     if (r300->aa_state.state) {
@@ -156,7 +156,6 @@ static boolean r300_setup_atoms(struct r300_context* r300)
     boolean is_rv350 = r300->screen->caps.is_rv350;
     boolean is_r500 = r300->screen->caps.is_r500;
     boolean has_tcl = r300->screen->caps.has_tcl;
-    boolean drm_2_6_0 = r300->screen->info.drm_minor >= 6;
 
     /* Create the actual atom list.
      *
@@ -175,11 +174,11 @@ static boolean r300_setup_atoms(struct r300_context* r300)
     R300_INIT_ATOM(gpu_flush, 9);
     R300_INIT_ATOM(aa_state, 4);
     R300_INIT_ATOM(fb_state, 0);
-    R300_INIT_ATOM(hyperz_state, is_r500 || (is_rv350 && drm_2_6_0) ? 10 : 8);
+    R300_INIT_ATOM(hyperz_state, is_r500 || is_rv350 ? 10 : 8);
     /* ZB (unpipelined), SC. */
     R300_INIT_ATOM(ztop_state, 2);
     /* ZB, FG. */
-    R300_INIT_ATOM(dsa_state, is_r500 ? (drm_2_6_0 ? 10 : 8) : 6);
+    R300_INIT_ATOM(dsa_state, is_r500 ? 10 : 6);
     /* RB3D. */
     R300_INIT_ATOM(blend_state, 8);
     R300_INIT_ATOM(blend_color_state, is_r500 ? 3 : 2);
@@ -191,7 +190,7 @@ static boolean r300_setup_atoms(struct r300_context* r300)
     /* VAP. */
     R300_INIT_ATOM(viewport_state, 9);
     R300_INIT_ATOM(pvs_flush, 2);
-    R300_INIT_ATOM(vap_invariant_state, is_r500 ? 11 : 9);
+    R300_INIT_ATOM(vap_invariant_state, is_r500 || !has_tcl ? 11 : 9);
     R300_INIT_ATOM(vertex_stream_state, 0);
     R300_INIT_ATOM(vs_state, 0);
     R300_INIT_ATOM(vs_constants, 0);
@@ -315,6 +314,14 @@ static void r300_init_states(struct pipe_context *pipe)
 
         if (r300->screen->caps.is_r500) {
             OUT_CB_REG(R500_VAP_TEX_TO_COLOR_CNTL, 0);
+        } else if (!r300->screen->caps.has_tcl) {
+            /* RSxxx:
+             * Static VAP setup since r300_emit_vs_state() is never called.
+             */
+            OUT_CB_REG(R300_VAP_CNTL, R300_PVS_NUM_SLOTS(10) |
+                                      R300_PVS_NUM_CNTLRS(5) |
+                                      R300_PVS_NUM_FPUS(2) |
+                                      R300_PVS_VF_MAX_VTX_NUM(5));
         }
         END_CB;
     }
@@ -353,9 +360,7 @@ static void r300_init_states(struct pipe_context *pipe)
         OUT_CB_REG(R300_ZB_DEPTHCLEARVALUE, 0);
         OUT_CB_REG(R300_SC_HYPERZ, R300_SC_HYPERZ_ADJ_2);
 
-        if (r300->screen->caps.is_r500 ||
-            (r300->screen->caps.is_rv350 &&
-             r300->screen->info.drm_minor >= 6)) {
+        if (r300->screen->caps.is_r500 || r300->screen->caps.is_rv350) {
             OUT_CB_REG(R300_GB_Z_PEQ_CONFIG, 0);
         }
         END_CB;
@@ -380,15 +385,13 @@ struct pipe_context* r300_create_context(struct pipe_screen* screen,
 
     r300->context.destroy = r300_destroy_context;
 
-    util_slab_create(&r300->pool_transfers,
-                     sizeof(struct pipe_transfer), 64,
-                     UTIL_SLAB_SINGLETHREADED);
+    slab_create_child(&r300->pool_transfers, &r300screen->pool_transfers);
 
     r300->ctx = rws->ctx_create(rws);
     if (!r300->ctx)
         goto fail;
 
-    r300->cs = rws->cs_create(r300->ctx, RING_GFX, r300_flush_callback, r300, NULL);
+    r300->cs = rws->cs_create(r300->ctx, RING_GFX, r300_flush_callback, r300);
     if (r300->cs == NULL)
         goto fail;
 

@@ -63,7 +63,7 @@ struct gl_memory_info;
  * want to provoke the driver to throw away the old storage, we will
  * respect the contents of already referenced data.
  */
-#define MESA_MAP_NOWAIT_BIT       0x0040
+#define MESA_MAP_NOWAIT_BIT       0x4000
 
 
 /**
@@ -184,22 +184,24 @@ struct dd_function_table {
                                       GLenum srcFormat, GLenum srcType );
 
    /**
-    * Determine sample counts support for a particular target and format
+    * Queries different driver parameters for a particular target and format.
+    * Since ARB_internalformat_query2 introduced several new query parameters
+    * over ARB_internalformat_query, having one driver hook for each parameter
+    * is no longer feasible. So this is the generic entry-point for calls
+    * to glGetInternalFormativ and glGetInternalFormati64v, after Mesa has
+    * checked errors and default values.
     *
     * \param ctx            GL context
     * \param target         GL target enum
     * \param internalFormat GL format enum
-    * \param samples        Buffer to hold the returned sample counts.
-    *                       Drivers \b must \b not return more than 16 counts.
-    *
-    * \returns
-    * The number of sample counts actually written to \c samples.  If
-    * \c internaFormat is not renderable, zero is returned.
+    * \param pname          GL enum that specifies the info to query.
+    * \param params         Buffer to hold the result of the query.
     */
-   size_t (*QuerySamplesForFormat)(struct gl_context *ctx,
-                                   GLenum target,
-                                   GLenum internalFormat,
-                                   int samples[16]);
+   void (*QueryInternalFormat)(struct gl_context *ctx,
+                               GLenum target,
+                               GLenum internalFormat,
+                               GLenum pname,
+                               GLint *params);
 
    /**
     * Called by glTexImage[123]D() and glCopyTexImage[12]D()
@@ -306,9 +308,10 @@ struct dd_function_table {
     * \return GL_TRUE if the image is OK, GL_FALSE if too large
     */
    GLboolean (*TestProxyTexImage)(struct gl_context *ctx, GLenum target,
-                                  GLint level, mesa_format format,
+                                  GLuint numLevels, GLint level,
+                                  mesa_format format, GLuint numSamples,
                                   GLint width, GLint height,
-                                  GLint depth, GLint border);
+                                  GLint depth);
    /*@}*/
 
    
@@ -475,6 +478,11 @@ struct dd_function_table {
    /** Delete a program */
    void (*DeleteProgram)(struct gl_context *ctx, struct gl_program *prog);   
    /**
+    * Allocate a program to associate with the new ATI fragment shader (optional)
+    */
+   struct gl_program * (*NewATIfs)(struct gl_context *ctx,
+                                   struct ati_fragment_shader *curProg);
+   /**
     * Notify driver that a program string (and GPU code) has been specified
     * or modified.  Return GL_TRUE or GL_FALSE to indicate if the program is
     * supported by the driver.
@@ -602,10 +610,9 @@ struct dd_function_table {
    /** Set texture environment parameters */
    void (*TexEnv)(struct gl_context *ctx, GLenum target, GLenum pname,
                   const GLfloat *param);
-   /** Set texture parameters */
+   /** Set texture parameter (callee gets param value from the texObj) */
    void (*TexParameter)(struct gl_context *ctx,
-                        struct gl_texture_object *texObj,
-                        GLenum pname, const GLfloat *params);
+                        struct gl_texture_object *texObj, GLenum pname);
    /** Set the viewport */
    void (*Viewport)(struct gl_context *ctx);
    /*@}*/
@@ -776,9 +783,7 @@ struct dd_function_table {
     * \name GLSL-related functions (ARB extensions and OpenGL 2.x)
     */
    /*@{*/
-   struct gl_shader *(*NewShader)(struct gl_context *ctx,
-                                  GLuint name, GLenum type);
-   void (*UseProgram)(struct gl_context *ctx, struct gl_shader_program *shProg);
+   struct gl_linked_shader *(*NewShader)(gl_shader_stage stage);
    /*@}*/
 
    /**
@@ -952,11 +957,32 @@ struct dd_function_table {
    /** @} */
 
    /**
+    * GL_MESA_shader_framebuffer_fetch_non_coherent rendering barrier.
+    *
+    * On return from this function any framebuffer contents written by
+    * previous draw commands are guaranteed to be visible from subsequent
+    * fragment shader invocations using the
+    * MESA_shader_framebuffer_fetch_non_coherent interface.
+    */
+   /** @{ */
+   void (*BlendBarrier)(struct gl_context *ctx);
+   /** @} */
+
+   /**
     * \name GL_ARB_compute_shader interface
     */
    /*@{*/
    void (*DispatchCompute)(struct gl_context *ctx, const GLuint *num_groups);
    void (*DispatchComputeIndirect)(struct gl_context *ctx, GLintptr indirect);
+   /*@}*/
+
+   /**
+    * \name GL_ARB_compute_variable_group_size interface
+    */
+   /*@{*/
+   void (*DispatchComputeGroupSize)(struct gl_context *ctx,
+                                    const GLuint *num_groups,
+                                    const GLuint *group_size);
    /*@}*/
 
    /**

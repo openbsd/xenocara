@@ -28,6 +28,7 @@
 #include "main/state.h"
 #include "st_atom.h"
 #include "st_context.h"
+#include "st_cb_bitmap.h"
 #include "st_cb_bufferobjects.h"
 #include "st_cb_compute.h"
 
@@ -35,6 +36,7 @@
 
 static void st_dispatch_compute_common(struct gl_context *ctx,
                                        const GLuint *num_groups,
+                                       const GLuint *group_size,
                                        struct pipe_resource *indirect,
                                        GLintptr indirect_offset)
 {
@@ -44,14 +46,18 @@ static void st_dispatch_compute_common(struct gl_context *ctx,
    struct pipe_context *pipe = st->pipe;
    struct pipe_grid_info info = { 0 };
 
+   st_flush_bitmap_cache(st);
+   st_invalidate_readpix_cache(st);
+
    if (ctx->NewState)
       _mesa_update_state(ctx);
 
-   if (st->dirty_cp.st || ctx->NewDriverState)
+   if ((st->dirty | ctx->NewDriverState) & ST_PIPELINE_COMPUTE_STATE_MASK ||
+       st->compute_shader_may_be_dirty)
       st_validate_state(st, ST_PIPELINE_COMPUTE);
 
    for (unsigned i = 0; i < 3; i++) {
-      info.block[i] = prog->Comp.LocalSize[i];
+      info.block[i] = group_size ? group_size[i] : prog->Comp.LocalSize[i];
       info.grid[i]  = num_groups ? num_groups[i] : 0;
    }
 
@@ -66,7 +72,7 @@ static void st_dispatch_compute_common(struct gl_context *ctx,
 static void st_dispatch_compute(struct gl_context *ctx,
                                 const GLuint *num_groups)
 {
-   st_dispatch_compute_common(ctx, num_groups, NULL, 0);
+   st_dispatch_compute_common(ctx, num_groups, NULL, NULL, 0);
 }
 
 static void st_dispatch_compute_indirect(struct gl_context *ctx,
@@ -75,11 +81,19 @@ static void st_dispatch_compute_indirect(struct gl_context *ctx,
    struct gl_buffer_object *indirect_buffer = ctx->DispatchIndirectBuffer;
    struct pipe_resource *indirect = st_buffer_object(indirect_buffer)->buffer;
 
-   st_dispatch_compute_common(ctx, NULL, indirect, indirect_offset);
+   st_dispatch_compute_common(ctx, NULL, NULL, indirect, indirect_offset);
+}
+
+static void st_dispatch_compute_group_size(struct gl_context *ctx,
+                                           const GLuint *num_groups,
+                                           const GLuint *group_size)
+{
+   st_dispatch_compute_common(ctx, num_groups, group_size, NULL, 0);
 }
 
 void st_init_compute_functions(struct dd_function_table *functions)
 {
    functions->DispatchCompute = st_dispatch_compute;
    functions->DispatchComputeIndirect = st_dispatch_compute_indirect;
+   functions->DispatchComputeGroupSize = st_dispatch_compute_group_size;
 }

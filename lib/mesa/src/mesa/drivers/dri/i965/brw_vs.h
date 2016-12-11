@@ -51,6 +51,10 @@
 extern "C" {
 #endif
 
+GLbitfield64
+brw_vs_outputs_written(struct brw_context *brw, struct brw_vs_prog_key *key,
+                       GLbitfield64 outputs_written);
+
 void brw_vs_debug_recompile(struct brw_context *brw,
                             struct gl_shader_program *prog,
                             const struct brw_vs_prog_key *key);
@@ -62,6 +66,10 @@ bool
 brw_codegen_vs_prog(struct brw_context *brw,
                     struct gl_shader_program *prog,
                     struct brw_vertex_program *vp,
+                    struct brw_vs_prog_key *key);
+
+void
+brw_vs_populate_key(struct brw_context *brw,
                     struct brw_vs_prog_key *key);
 
 #ifdef __cplusplus
@@ -84,8 +92,7 @@ public:
                    bool use_legacy_snorm_formula);
 
 protected:
-   virtual dst_reg *make_reg_for_system_value(int location,
-                                              const glsl_type *type);
+   virtual dst_reg *make_reg_for_system_value(int location);
    virtual void setup_payload();
    virtual void emit_prolog();
    virtual void emit_thread_end();

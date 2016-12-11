@@ -42,8 +42,6 @@
 
 #define DBG_CHANNEL DBG_SURFACE
 
-#define is_ATI1_ATI2(format) (format == PIPE_FORMAT_RGTC1_UNORM || format == PIPE_FORMAT_RGTC2_UNORM)
-
 HRESULT
 NineSurface9_ctor( struct NineSurface9 *This,
                    struct NineUnknownParams *pParams,
@@ -59,28 +57,47 @@ NineSurface9_ctor( struct NineSurface9 *This,
     union pipe_color_union rgba = {0};
     struct pipe_surface *surf;
     struct pipe_context *pipe = pParams->device->pipe;
+    bool allocate = !pContainer && pDesc->Format != D3DFMT_NULL;
+    D3DMULTISAMPLE_TYPE multisample_type;
 
     DBG("This=%p pDevice=%p pResource=%p Level=%u Layer=%u pDesc=%p\n",
         This, pParams->device, pResource, Level, Layer, pDesc);
 
     /* Mark this as a special surface held by another internal resource. */
     pParams->container = pContainer;
+    /* Make sure there's a Desc */
+    assert(pDesc);
 
+    /* D3DUSAGE_DYNAMIC isn't allowed on managed buffers */
     user_assert(!(pDesc->Usage & D3DUSAGE_DYNAMIC) ||
                 (pDesc->Pool != D3DPOOL_MANAGED), D3DERR_INVALIDCALL);
 
-    assert(pResource || (user_buffer && pDesc->Pool != D3DPOOL_DEFAULT) ||
-           (!pContainer && pDesc->Pool != D3DPOOL_DEFAULT) ||
+    assert(allocate || pResource || user_buffer ||
            pDesc->Format == D3DFMT_NULL);
-
+    assert(!allocate || (!pResource && !user_buffer));
     assert(!pResource || !user_buffer);
     assert(!user_buffer || pDesc->Pool != D3DPOOL_DEFAULT);
-    /* The only way we can have !pContainer is being created
-     * from create_zs_or_rt_surface with params 0 0 0 */
-    assert(pContainer || (Level == 0 && Layer == 0 && TextureType == 0));
+    assert(!pResource || pDesc->Pool == D3DPOOL_DEFAULT);
+    /* Allocation only from create_zs_or_rt_surface with params 0 0 0 */
+    assert(!allocate || (Level == 0 && Layer == 0 && TextureType == 0));
 
     This->data = (uint8_t *)user_buffer;
 
+    multisample_type = pDesc->MultiSampleType;
+
+    /* Map MultiSampleQuality to MultiSampleType */
+    hr = d3dmultisample_type_check(pParams->device->screen,
+                                   pDesc->Format,
+                                   &multisample_type,
+                                   pDesc->MultiSampleQuality,
+                                   NULL);
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    /* TODO: this is (except width and height) duplicate from
+     * container info (in the pContainer case). Some refactoring is
+     * needed to avoid duplication */
     This->base.info.screen = pParams->device->screen;
     This->base.info.target = PIPE_TEXTURE_2D;
     This->base.info.width0 = pDesc->Width;
@@ -88,9 +105,18 @@ NineSurface9_ctor( struct NineSurface9 *This,
     This->base.info.depth0 = 1;
     This->base.info.last_level = 0;
     This->base.info.array_size = 1;
-    This->base.info.nr_samples = pDesc->MultiSampleType;
+    This->base.info.nr_samples = multisample_type;
     This->base.info.usage = PIPE_USAGE_DEFAULT;
-    This->base.info.bind = PIPE_BIND_SAMPLER_VIEW;
+    This->base.info.bind = PIPE_BIND_SAMPLER_VIEW; /* StretchRect */
+
+    if (pDesc->Usage & D3DUSAGE_RENDERTARGET) {
+        This->base.info.bind |= PIPE_BIND_RENDER_TARGET;
+    } else if (pDesc->Usage & D3DUSAGE_DEPTHSTENCIL) {
+        This->base.info.bind = d3d9_get_pipe_depth_format_bindings(pDesc->Format);
+        if (TextureType)
+            This->base.info.bind |= PIPE_BIND_SAMPLER_VIEW;
+    }
+
     This->base.info.flags = 0;
     This->base.info.format = d3d9_to_pipe_format_checked(This->base.info.screen,
                                                          pDesc->Format,
@@ -100,13 +126,39 @@ NineSurface9_ctor( struct NineSurface9 *This,
                                                          FALSE,
                                                          pDesc->Pool == D3DPOOL_SCRATCH);
 
-    if (pDesc->Usage & D3DUSAGE_RENDERTARGET)
-        This->base.info.bind |= PIPE_BIND_RENDER_TARGET;
-    if (pDesc->Usage & D3DUSAGE_DEPTHSTENCIL)
-        This->base.info.bind |= PIPE_BIND_DEPTH_STENCIL;
+    if (This->base.info.format == PIPE_FORMAT_NONE && pDesc->Format != D3DFMT_NULL)
+        return D3DERR_INVALIDCALL;
 
-    /* Ram buffer with no parent. Has to allocate the resource itself */
-    if (!pResource && !pContainer) {
+    if (allocate && compressed_format(pDesc->Format)) {
+        const unsigned w = util_format_get_blockwidth(This->base.info.format);
+        const unsigned h = util_format_get_blockheight(This->base.info.format);
+
+        /* Note: In the !allocate case, the test could fail (lower levels of a texture) */
+        user_assert(!(pDesc->Width % w) && !(pDesc->Height % h), D3DERR_INVALIDCALL);
+    }
+
+    /* Get true format */
+    This->format_conversion = d3d9_to_pipe_format_checked(This->base.info.screen,
+                                                         pDesc->Format,
+                                                         This->base.info.target,
+                                                         This->base.info.nr_samples,
+                                                         This->base.info.bind,
+                                                         FALSE,
+                                                         TRUE);
+    if (This->base.info.format != This->format_conversion) {
+        This->data_conversion = align_malloc(
+            nine_format_get_level_alloc_size(This->format_conversion,
+                                             pDesc->Width,
+                                             pDesc->Height,
+                                             0), 32);
+        if (!This->data_conversion)
+            return E_OUTOFMEMORY;
+        This->stride_conversion = nine_format_get_stride(This->format_conversion,
+                                                         pDesc->Width);
+    }
+
+    if ((allocate && pDesc->Pool != D3DPOOL_DEFAULT) || pDesc->Format == D3DFMT_NULL) {
+        /* Ram buffer with no parent. Has to allocate the resource itself */
         assert(!user_buffer);
         This->data = align_malloc(
             nine_format_get_level_alloc_size(This->base.info.format,
@@ -117,13 +169,10 @@ NineSurface9_ctor( struct NineSurface9 *This,
             return E_OUTOFMEMORY;
     }
 
-    assert(pDesc->Pool != D3DPOOL_SYSTEMMEM || !pResource);
+    hr = NineResource9_ctor(&This->base, pParams, pResource,
+                            allocate && (pDesc->Pool == D3DPOOL_DEFAULT),
+                            D3DRTYPE_SURFACE, pDesc->Pool, pDesc->Usage);
 
-    if (pResource && (pDesc->Usage & D3DUSAGE_DYNAMIC))
-        pResource->flags |= NINE_RESOURCE_FLAG_LOCKABLE;
-
-    hr = NineResource9_ctor(&This->base, pParams, pResource, FALSE, D3DRTYPE_SURFACE,
-                            pDesc->Pool, pDesc->Usage);
     if (FAILED(hr))
         return hr;
 
@@ -138,13 +187,13 @@ NineSurface9_ctor( struct NineSurface9 *This,
 
     This->stride = nine_format_get_stride(This->base.info.format, pDesc->Width);
 
-    if (pResource && NineSurface9_IsOffscreenPlain(This))
-        pResource->flags |= NINE_RESOURCE_FLAG_LOCKABLE;
+    if (This->base.resource && (pDesc->Usage & D3DUSAGE_DYNAMIC))
+        This->base.resource->flags |= NINE_RESOURCE_FLAG_LOCKABLE;
 
     /* TODO: investigate what else exactly needs to be cleared */
     if (This->base.resource && (pDesc->Usage & D3DUSAGE_RENDERTARGET)) {
         surf = NineSurface9_GetSurface(This, 0);
-        pipe->clear_render_target(pipe, surf, &rgba, 0, 0, pDesc->Width, pDesc->Height);
+        pipe->clear_render_target(pipe, surf, &rgba, 0, 0, pDesc->Width, pDesc->Height, false);
     }
 
     NineSurface9_Dump(This);
@@ -155,6 +204,8 @@ NineSurface9_ctor( struct NineSurface9 *This,
 void
 NineSurface9_dtor( struct NineSurface9 *This )
 {
+    DBG("This=%p\n", This);
+
     if (This->transfer)
         NineSurface9_UnlockRect(This);
 
@@ -164,6 +215,8 @@ NineSurface9_dtor( struct NineSurface9 *This )
     /* Release system memory when we have to manage it (no parent) */
     if (!This->base.base.container && This->data)
         align_free(This->data);
+    if (This->data_conversion)
+        align_free(This->data_conversion);
     NineResource9_dtor(&This->base);
 }
 
@@ -231,8 +284,21 @@ NineSurface9_GetContainer( struct NineSurface9 *This,
                            void **ppContainer )
 {
     HRESULT hr;
-    if (!NineUnknown(This)->container)
-        return E_NOINTERFACE;
+    char guid_str[64];
+
+    DBG("This=%p riid=%p id=%s ppContainer=%p\n",
+        This, riid, riid ? GUID_sprintf(guid_str, riid) : "", ppContainer);
+
+    if (!ppContainer) return E_POINTER;
+
+    /* Return device for OffscreenPlainSurface, DepthStencilSurface and RenderTarget */
+    if (!NineUnknown(This)->container) {
+        *ppContainer = NineUnknown(This)->device;
+        NineUnknown_AddRef(NineUnknown(*ppContainer));
+
+        return D3D_OK;
+    }
+
     hr = NineUnknown_QueryInterface(NineUnknown(This)->container, riid, ppContainer);
     if (FAILED(hr))
         DBG("QueryInterface FAILED!\n");
@@ -381,10 +447,16 @@ NineSurface9_LockRect( struct NineSurface9 *This,
     } else {
         u_box_origin_2d(This->desc.Width, This->desc.Height, &box);
     }
+    box.z = This->layer;
 
     user_warn(This->desc.Format == D3DFMT_NULL);
 
-    if (This->data) {
+    if (This->data_conversion) {
+        /* For now we only have uncompressed formats here */
+        pLockedRect->Pitch = This->stride_conversion;
+        pLockedRect->pBits = This->data_conversion + box.y * This->stride_conversion +
+            util_format_get_stride(This->format_conversion, box.x);
+    } else if (This->data) {
         DBG("returning system memory\n");
         /* ATI1 and ATI2 need special handling, because of d3d9 bug.
          * We must advertise to the application as if it is uncompressed
@@ -434,6 +506,37 @@ NineSurface9_UnlockRect( struct NineSurface9 *This )
         This->transfer = NULL;
     }
     --This->lock_count;
+
+    if (This->data_conversion) {
+        struct pipe_transfer *transfer;
+        uint8_t *dst = This->data;
+        struct pipe_box box;
+
+        u_box_origin_2d(This->desc.Width, This->desc.Height, &box);
+
+        if (!dst) {
+            dst = This->pipe->transfer_map(This->pipe,
+                                           This->base.resource,
+                                           This->level,
+                                           PIPE_TRANSFER_WRITE |
+                                           PIPE_TRANSFER_DISCARD_WHOLE_RESOURCE,
+                                           &box, &transfer);
+            if (!dst)
+                return D3D_OK;
+        }
+
+        (void) util_format_translate(This->base.info.format,
+                                     dst, This->data ? This->stride : transfer->stride,
+                                     0, 0,
+                                     This->format_conversion,
+                                     This->data_conversion,
+                                     This->stride_conversion,
+                                     0, 0,
+                                     This->desc.Width, This->desc.Height);
+
+        if (!This->data)
+            pipe_transfer_unmap(This->pipe, transfer);
+    }
     return D3D_OK;
 }
 
@@ -456,9 +559,9 @@ IDirect3DSurface9Vtbl NineSurface9_vtable = {
     (void *)NineUnknown_AddRef,
     (void *)NineUnknown_Release,
     (void *)NineUnknown_GetDevice, /* actually part of Resource9 iface */
-    (void *)NineResource9_SetPrivateData,
-    (void *)NineResource9_GetPrivateData,
-    (void *)NineResource9_FreePrivateData,
+    (void *)NineUnknown_SetPrivateData,
+    (void *)NineUnknown_GetPrivateData,
+    (void *)NineUnknown_FreePrivateData,
     (void *)NineResource9_SetPriority,
     (void *)NineResource9_GetPriority,
     (void *)NineResource9_PreLoad,
@@ -480,9 +583,10 @@ NineSurface9_CopyMemToDefault( struct NineSurface9 *This,
                                const RECT *pSourceRect )
 {
     struct pipe_context *pipe = This->pipe;
+    struct pipe_transfer *transfer = NULL;
     struct pipe_resource *r_dst = This->base.resource;
     struct pipe_box dst_box;
-    const uint8_t *p_src;
+    uint8_t *map = NULL;
     int src_x, src_y, dst_x, dst_y, copy_width, copy_height;
 
     assert(This->base.pool == D3DPOOL_DEFAULT &&
@@ -511,11 +615,35 @@ NineSurface9_CopyMemToDefault( struct NineSurface9 *This,
     u_box_2d_zslice(dst_x, dst_y, This->layer,
                     copy_width, copy_height, &dst_box);
 
-    p_src = NineSurface9_GetSystemMemPointer(From, src_x, src_y);
+    map = pipe->transfer_map(pipe,
+                             r_dst,
+                             This->level,
+                             PIPE_TRANSFER_WRITE | PIPE_TRANSFER_DISCARD_RANGE,
+                             &dst_box, &transfer);
+    if (!map)
+        return;
 
-    pipe->transfer_inline_write(pipe, r_dst, This->level,
-                                0, /* WRITE|DISCARD are implicit */
-                                &dst_box, p_src, From->stride, 0);
+    /* Note: if formats are the sames, it will revert
+     * to normal memcpy */
+    (void) util_format_translate(r_dst->format,
+                                 map, transfer->stride,
+                                 0, 0,
+                                 From->base.info.format,
+                                 From->data, From->stride,
+                                 src_x, src_y,
+                                 copy_width, copy_height);
+
+    pipe_transfer_unmap(pipe, transfer);
+
+    if (This->data_conversion)
+        (void) util_format_translate(This->format_conversion,
+                                     This->data_conversion,
+                                     This->stride_conversion,
+                                     dst_x, dst_y,
+                                     From->base.info.format,
+                                     From->data, From->stride,
+                                     src_x, src_y,
+                                     copy_width, copy_height);
 
     NineSurface9_MarkContainerDirty(This);
 }
@@ -588,8 +716,8 @@ NineSurface9_UploadSelf( struct NineSurface9 *This,
 
     ptr = NineSurface9_GetSystemMemPointer(This, box.x, box.y);
 
-    pipe->transfer_inline_write(pipe, res, This->level, 0,
-                                &box, ptr, This->stride, 0);
+    pipe->texture_subdata(pipe, res, This->level, 0,
+                          &box, ptr, This->stride, 0);
 
     return D3D_OK;
 }
@@ -607,7 +735,7 @@ NineSurface9_SetResourceResize( struct NineSurface9 *This,
 
     This->desc.Width = This->base.info.width0 = resource->width0;
     This->desc.Height = This->base.info.height0 = resource->height0;
-    This->desc.MultiSampleType = This->base.info.nr_samples = resource->nr_samples;
+    This->base.info.nr_samples = resource->nr_samples;
 
     This->stride = nine_format_get_stride(This->base.info.format,
                                           This->desc.Width);

@@ -49,6 +49,7 @@
 #include "intel_screen.h"
 #include "intel_tex.h"
 #include "brw_context.h"
+#include "brw_defines.h"
 
 #define FILE_DEBUG_FLAG DEBUG_FBO
 
@@ -281,7 +282,7 @@ intel_alloc_private_renderbuffer_storage(struct gl_context * ctx, struct gl_rend
                                          GLuint width, GLuint height)
 {
    struct brw_context *brw = brw_context(ctx);
-   struct intel_screen *screen = brw->intelScreen;
+   struct intel_screen *screen = brw->screen;
    struct intel_renderbuffer *irb = intel_renderbuffer(rb);
 
    assert(rb->Format != MESA_FORMAT_NONE);
@@ -289,7 +290,7 @@ intel_alloc_private_renderbuffer_storage(struct gl_context * ctx, struct gl_rend
    rb->NumSamples = intel_quantize_num_samples(screen, rb->NumSamples);
    rb->Width = width;
    rb->Height = height;
-   rb->_BaseFormat = _mesa_base_fbo_format(ctx, internalFormat);
+   rb->_BaseFormat = _mesa_get_format_base_format(rb->Format);
 
    intel_miptree_release(&irb->mt);
 
@@ -331,12 +332,11 @@ intel_image_target_renderbuffer_storage(struct gl_context *ctx,
 {
    struct brw_context *brw = brw_context(ctx);
    struct intel_renderbuffer *irb;
-   __DRIscreen *screen;
+   __DRIscreen *dri_screen = brw->screen->driScrnPriv;
    __DRIimage *image;
 
-   screen = brw->intelScreen->driScrnPriv;
-   image = screen->dri2.image->lookupEGLImage(screen, image_handle,
-					      screen->loaderPrivate);
+   image = dri_screen->dri2.image->lookupEGLImage(dri_screen, image_handle,
+                                                  dri_screen->loaderPrivate);
    if (image == NULL)
       return;
 
@@ -373,6 +373,19 @@ intel_image_target_renderbuffer_storage(struct gl_context *ctx,
                                          MIPTREE_LAYOUT_DISABLE_AUX);
    if (!irb->mt)
       return;
+
+   /* Adjust the miptree's upper-left coordinate.
+    *
+    * FIXME: Adjusting the miptree's layout outside of
+    * intel_miptree_create_layout() is fragile. Plumb the adjustment through
+    * intel_miptree_create_layout() and brw_tex_layout().
+    */
+   irb->mt->level[0].level_x = image->tile_x;
+   irb->mt->level[0].level_y = image->tile_y;
+   irb->mt->level[0].slice[0].x_offset = image->tile_x;
+   irb->mt->level[0].slice[0].y_offset = image->tile_y;
+   irb->mt->total_width += image->tile_x;
+   irb->mt->total_height += image->tile_y;
 
    rb->InternalFormat = image->internal_format;
    rb->Width = image->width;
@@ -538,7 +551,7 @@ intel_renderbuffer_update_wrapper(struct brw_context *brw,
 
    if (!layered) {
       irb->layer_count = 1;
-   } else if (image->TexObject->NumLayers > 0) {
+   } else if (mt->target != GL_TEXTURE_3D && image->TexObject->NumLayers > 0) {
       irb->layer_count = image->TexObject->NumLayers;
    } else {
       irb->layer_count = mt->level[level].depth / layer_multiplier;
@@ -828,6 +841,14 @@ intel_blit_framebuffer_with_blitter(struct gl_context *ctx,
             return mask;
          }
 
+         if (ctx->Color.sRGBEnabled &&
+             _mesa_get_format_color_encoding(src_irb->mt->format) !=
+             _mesa_get_format_color_encoding(dst_irb->mt->format)) {
+            perf_debug("glBlitFramebuffer() with sRGB conversion cannot be "
+                       "handled by BLT path.\n");
+            return mask;
+         }
+
          if (!intel_miptree_blit(brw,
                                  src_irb->mt,
                                  src_irb->mt_level, src_irb->mt_layer,
@@ -880,12 +901,7 @@ intel_blit_framebuffer(struct gl_context *ctx,
       return;
 
    if (brw->gen >= 8 && (mask & GL_STENCIL_BUFFER_BIT)) {
-      brw_meta_fbo_stencil_blit(brw_context(ctx), readFb, drawFb,
-                                srcX0, srcY0, srcX1, srcY1,
-                                dstX0, dstY0, dstX1, dstY1);
-      mask &= ~GL_STENCIL_BUFFER_BIT;
-      if (mask == 0x0)
-         return;
+      assert(!"Invalid blit");
    }
 
    /* Try using the BLT engine. */
@@ -1066,14 +1082,6 @@ brw_render_cache_set_check_flush(struct brw_context *brw, drm_intel_bo *bo)
       return;
 
    if (brw->gen >= 6) {
-      if (brw->gen == 6) {
-         /* [Dev-SNB{W/A}]: Before a PIPE_CONTROL with Write Cache
-          * Flush Enable = 1, a PIPE_CONTROL with any non-zero
-          * post-sync-op is required.
-          */
-         brw_emit_post_sync_nonzero_flush(brw);
-      }
-
       brw_emit_pipe_control_flush(brw,
                                   PIPE_CONTROL_DEPTH_CACHE_FLUSH |
                                   PIPE_CONTROL_RENDER_TARGET_FLUSH |

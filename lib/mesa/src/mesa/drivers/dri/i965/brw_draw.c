@@ -38,6 +38,7 @@
 #include "swrast/swrast.h"
 #include "swrast_setup/swrast_setup.h"
 #include "drivers/common/meta.h"
+#include "util/bitscan.h"
 
 #include "brw_blorp.h"
 #include "brw_draw.h"
@@ -54,23 +55,6 @@
 
 #define FILE_DEBUG_FLAG DEBUG_PRIMS
 
-static const GLuint prim_to_hw_prim[GL_TRIANGLE_STRIP_ADJACENCY+1] = {
-   [GL_POINTS] =_3DPRIM_POINTLIST,
-   [GL_LINES] = _3DPRIM_LINELIST,
-   [GL_LINE_LOOP] = _3DPRIM_LINELOOP,
-   [GL_LINE_STRIP] = _3DPRIM_LINESTRIP,
-   [GL_TRIANGLES] = _3DPRIM_TRILIST,
-   [GL_TRIANGLE_STRIP] = _3DPRIM_TRISTRIP,
-   [GL_TRIANGLE_FAN] = _3DPRIM_TRIFAN,
-   [GL_QUADS] = _3DPRIM_QUADLIST,
-   [GL_QUAD_STRIP] = _3DPRIM_QUADSTRIP,
-   [GL_POLYGON] = _3DPRIM_POLYGON,
-   [GL_LINES_ADJACENCY] = _3DPRIM_LINELIST_ADJ,
-   [GL_LINE_STRIP_ADJACENCY] = _3DPRIM_LINESTRIP_ADJ,
-   [GL_TRIANGLES_ADJACENCY] = _3DPRIM_TRILIST_ADJ,
-   [GL_TRIANGLE_STRIP_ADJACENCY] = _3DPRIM_TRISTRIP_ADJ,
-};
-
 
 static const GLenum reduced_prim[GL_POLYGON+1] = {
    [GL_POINTS] = GL_POINTS,
@@ -84,18 +68,6 @@ static const GLenum reduced_prim[GL_POLYGON+1] = {
    [GL_QUAD_STRIP] = GL_TRIANGLES,
    [GL_POLYGON] = GL_TRIANGLES
 };
-
-uint32_t
-get_hw_prim_for_gl_prim(int mode)
-{
-   if (mode >= BRW_PRIM_OFFSET)
-      return mode - BRW_PRIM_OFFSET;
-   else {
-      assert(mode < ARRAY_SIZE(prim_to_hw_prim));
-      return prim_to_hw_prim[mode];
-   }
-}
-
 
 /* When the primitive changes, set a state bit and re-validate.  Not
  * the nicest and would rather deal with this by having all the
@@ -130,8 +102,8 @@ brw_set_prim(struct brw_context *brw, const struct _mesa_prim *prim)
       brw->ctx.NewDriverState |= BRW_NEW_PRIMITIVE;
 
       if (reduced_prim[prim->mode] != brw->reduced_primitive) {
-	 brw->reduced_primitive = reduced_prim[prim->mode];
-	 brw->ctx.NewDriverState |= BRW_NEW_REDUCED_PRIMITIVE;
+         brw->reduced_primitive = reduced_prim[prim->mode];
+         brw->ctx.NewDriverState |= BRW_NEW_REDUCED_PRIMITIVE;
       }
    }
 }
@@ -182,7 +154,9 @@ trim(GLenum prim, GLuint length)
 static void
 brw_emit_prim(struct brw_context *brw,
               const struct _mesa_prim *prim,
-              uint32_t hw_prim)
+              uint32_t hw_prim,
+              struct brw_transform_feedback_object *xfb_obj,
+              unsigned stream)
 {
    int verts_per_instance;
    int vertex_access_type;
@@ -214,7 +188,7 @@ brw_emit_prim(struct brw_context *brw,
       verts_per_instance = prim->count;
 
    /* If nothing to emit, just return. */
-   if (verts_per_instance == 0 && !prim->is_indirect)
+   if (verts_per_instance == 0 && !prim->is_indirect && !xfb_obj)
       return;
 
    /* If we're set to always flush, do it before and after the primitive emit.
@@ -226,7 +200,25 @@ brw_emit_prim(struct brw_context *brw,
       brw_emit_mi_flush(brw);
 
    /* If indirect, emit a bunch of loads from the indirect BO. */
-   if (prim->is_indirect) {
+   if (xfb_obj) {
+      indirect_flag = GEN7_3DPRIM_INDIRECT_PARAMETER_ENABLE;
+
+      brw_load_register_mem(brw, GEN7_3DPRIM_VERTEX_COUNT,
+                            xfb_obj->prim_count_bo,
+                            I915_GEM_DOMAIN_VERTEX, 0,
+                            stream * sizeof(uint32_t));
+      BEGIN_BATCH(9);
+      OUT_BATCH(MI_LOAD_REGISTER_IMM | (9 - 2));
+      OUT_BATCH(GEN7_3DPRIM_INSTANCE_COUNT);
+      OUT_BATCH(prim->num_instances);
+      OUT_BATCH(GEN7_3DPRIM_START_VERTEX);
+      OUT_BATCH(0);
+      OUT_BATCH(GEN7_3DPRIM_BASE_VERTEX);
+      OUT_BATCH(0);
+      OUT_BATCH(GEN7_3DPRIM_START_INSTANCE);
+      OUT_BATCH(0);
+      ADVANCE_BATCH();
+   } else if (prim->is_indirect) {
       struct gl_buffer_object *indirect_buffer = brw->ctx.DrawIndirectBuffer;
       drm_intel_bo *bo = intel_bufferobj_buffer(brw,
             intel_buffer_object(indirect_buffer),
@@ -310,15 +302,14 @@ brw_merge_inputs(struct brw_context *brw,
    }
 
    if (brw->gen < 8 && !brw->is_haswell) {
-      struct gl_program *vp = &ctx->VertexProgram._Current->Base;
+      uint64_t mask = ctx->VertexProgram._Current->Base.nir->info.inputs_read;
       /* Prior to Haswell, the hardware can't natively support GL_FIXED or
        * 2_10_10_10_REV vertex formats.  Set appropriate workaround flags.
        */
-      for (i = 0; i < VERT_ATTRIB_MAX; i++) {
-         if (!(vp->InputsRead & BITFIELD64_BIT(i)))
-            continue;
-
+      while (mask) {
          uint8_t wa_flags = 0;
+
+         i = u_bit_scan64(&mask);
 
          switch (brw->vb.inputs[i].glarray->Type) {
 
@@ -395,8 +386,32 @@ brw_postdraw_set_buffers_need_resolve(struct brw_context *brw)
       struct intel_renderbuffer *irb =
          intel_renderbuffer(fb->_ColorDrawBuffers[i]);
 
-      if (irb)
+      if (irb) {
          brw_render_cache_set_add_bo(brw, irb->mt->bo);
+
+         if (intel_miptree_is_lossless_compressed(brw, irb->mt)) {
+            irb->mt->fast_clear_state = INTEL_FAST_CLEAR_STATE_UNRESOLVED;
+         }
+      }
+   }
+}
+
+static void
+brw_predraw_set_aux_buffers(struct brw_context *brw)
+{
+   if (brw->gen < 9)
+      return;
+
+   struct gl_context *ctx = &brw->ctx;
+   struct gl_framebuffer *fb = ctx->DrawBuffer;
+
+   for (unsigned i = 0; i < fb->_NumColorDrawBuffers; i++) {
+      struct intel_renderbuffer *irb =
+         intel_renderbuffer(fb->_ColorDrawBuffers[i]);
+
+      if (!irb) {
+         continue;
+      }
    }
 }
 
@@ -409,8 +424,11 @@ brw_try_draw_prims(struct gl_context *ctx,
                    const struct _mesa_prim *prims,
                    GLuint nr_prims,
                    const struct _mesa_index_buffer *ib,
+                   bool index_bounds_valid,
                    GLuint min_index,
                    GLuint max_index,
+                   struct brw_transform_feedback_object *xfb_obj,
+                   unsigned stream,
                    struct gl_buffer_object *indirect)
 {
    struct brw_context *brw = brw_context(ctx);
@@ -434,17 +452,18 @@ brw_try_draw_prims(struct gl_context *ctx,
     * index.
     */
    brw->wm.base.sampler_count =
-      _mesa_fls(ctx->FragmentProgram._Current->Base.SamplersUsed);
+      util_last_bit(ctx->FragmentProgram._Current->Base.SamplersUsed);
    brw->gs.base.sampler_count = ctx->GeometryProgram._Current ?
-      _mesa_fls(ctx->GeometryProgram._Current->Base.SamplersUsed) : 0;
+      util_last_bit(ctx->GeometryProgram._Current->Base.SamplersUsed) : 0;
    brw->tes.base.sampler_count = ctx->TessEvalProgram._Current ?
-      _mesa_fls(ctx->TessEvalProgram._Current->Base.SamplersUsed) : 0;
+      util_last_bit(ctx->TessEvalProgram._Current->Base.SamplersUsed) : 0;
    brw->tcs.base.sampler_count = ctx->TessCtrlProgram._Current ?
-      _mesa_fls(ctx->TessCtrlProgram._Current->Base.SamplersUsed) : 0;
+      util_last_bit(ctx->TessCtrlProgram._Current->Base.SamplersUsed) : 0;
    brw->vs.base.sampler_count =
-      _mesa_fls(ctx->VertexProgram._Current->Base.SamplersUsed);
+      util_last_bit(ctx->VertexProgram._Current->Base.SamplersUsed);
 
    intel_prepare_render(brw);
+   brw_predraw_set_aux_buffers(brw);
 
    /* This workaround has to happen outside of brw_upload_render_state()
     * because it may flush the batchbuffer for a blit, affecting the state
@@ -459,6 +478,7 @@ brw_try_draw_prims(struct gl_context *ctx,
    brw->ib.ib = ib;
    brw->ctx.NewDriverState |= BRW_NEW_INDICES;
 
+   brw->vb.index_bounds_valid = index_bounds_valid;
    brw->vb.min_index = min_index;
    brw->vb.max_index = max_index;
    brw->ctx.NewDriverState |= BRW_NEW_VERTICES;
@@ -482,9 +502,11 @@ brw_try_draw_prims(struct gl_context *ctx,
       intel_batchbuffer_save_state(brw);
 
       if (brw->num_instances != prims[i].num_instances ||
-          brw->basevertex != prims[i].basevertex) {
+          brw->basevertex != prims[i].basevertex ||
+          brw->baseinstance != prims[i].base_instance) {
          brw->num_instances = prims[i].num_instances;
          brw->basevertex = prims[i].basevertex;
+         brw->baseinstance = prims[i].base_instance;
          if (i > 0) { /* For i == 0 we just did this before the loop */
             brw->ctx.NewDriverState |= BRW_NEW_VERTICES;
             brw_merge_inputs(brw, arrays);
@@ -499,15 +521,17 @@ brw_try_draw_prims(struct gl_context *ctx,
       const int new_basevertex =
          prims[i].indexed ? prims[i].basevertex : prims[i].start;
       const int new_baseinstance = prims[i].base_instance;
+      const struct brw_vs_prog_data *vs_prog_data =
+         brw_vs_prog_data(brw->vs.base.prog_data);
       if (i > 0) {
          const bool uses_draw_parameters =
-            brw->vs.prog_data->uses_basevertex ||
-            brw->vs.prog_data->uses_baseinstance;
+            vs_prog_data->uses_basevertex ||
+            vs_prog_data->uses_baseinstance;
 
          if ((uses_draw_parameters && prims[i].is_indirect) ||
-             (brw->vs.prog_data->uses_basevertex &&
+             (vs_prog_data->uses_basevertex &&
               brw->draw.params.gl_basevertex != new_basevertex) ||
-             (brw->vs.prog_data->uses_baseinstance &&
+             (vs_prog_data->uses_baseinstance &&
               brw->draw.params.gl_baseinstance != new_baseinstance))
             brw->ctx.NewDriverState |= BRW_NEW_VERTICES;
       }
@@ -534,19 +558,19 @@ brw_try_draw_prims(struct gl_context *ctx,
       /* gl_DrawID always needs its own vertex buffer since it's not part of
        * the indirect parameter buffer. If the program uses gl_DrawID we need
        * to flag BRW_NEW_VERTICES. For the first iteration, we don't have
-       * valid brw->vs.prog_data, but we always flag BRW_NEW_VERTICES before
+       * valid vs_prog_data, but we always flag BRW_NEW_VERTICES before
        * the loop.
        */
       brw->draw.gl_drawid = prims[i].draw_id;
       drm_intel_bo_unreference(brw->draw.draw_id_bo);
       brw->draw.draw_id_bo = NULL;
-      if (i > 0 && brw->vs.prog_data->uses_drawid)
+      if (i > 0 && vs_prog_data->uses_drawid)
          brw->ctx.NewDriverState |= BRW_NEW_VERTICES;
 
       if (brw->gen < 6)
-	 brw_set_prim(brw, &prims[i]);
+         brw_set_prim(brw, &prims[i]);
       else
-	 gen6_set_prim(brw, &prims[i]);
+         gen6_set_prim(brw, &prims[i]);
 
 retry:
 
@@ -556,26 +580,26 @@ retry:
        * brw->ctx.NewDriverState.
        */
       if (brw->ctx.NewDriverState) {
-	 brw->no_batch_wrap = true;
-	 brw_upload_render_state(brw);
+         brw->no_batch_wrap = true;
+         brw_upload_render_state(brw);
       }
 
-      brw_emit_prim(brw, &prims[i], brw->primitive);
+      brw_emit_prim(brw, &prims[i], brw->primitive, xfb_obj, stream);
 
       brw->no_batch_wrap = false;
 
       if (dri_bufmgr_check_aperture_space(&brw->batch.bo, 1)) {
-	 if (!fail_next) {
-	    intel_batchbuffer_reset_to_saved(brw);
-	    intel_batchbuffer_flush(brw);
-	    fail_next = true;
-	    goto retry;
-	 } else {
+         if (!fail_next) {
+            intel_batchbuffer_reset_to_saved(brw);
+            intel_batchbuffer_flush(brw);
+            fail_next = true;
+            goto retry;
+         } else {
             int ret = intel_batchbuffer_flush(brw);
             WARN_ONCE(ret == -ENOSPC,
                       "i965: Single primitive emit exceeded "
                       "available aperture space\n");
-	 }
+         }
       }
 
       /* Now that we know we haven't run out of aperture space, we can safely
@@ -602,14 +626,14 @@ brw_draw_prims(struct gl_context *ctx,
                GLboolean index_bounds_valid,
                GLuint min_index,
                GLuint max_index,
-               struct gl_transform_feedback_object *unused_tfb_object,
+               struct gl_transform_feedback_object *gl_xfb_obj,
                unsigned stream,
                struct gl_buffer_object *indirect)
 {
    struct brw_context *brw = brw_context(ctx);
    const struct gl_client_array **arrays = ctx->Array._DrawArrays;
-
-   assert(unused_tfb_object == NULL);
+   struct brw_transform_feedback_object *xfb_obj =
+      (struct brw_transform_feedback_object *) gl_xfb_obj;
 
    if (!brw_check_conditional_render(brw))
       return;
@@ -641,14 +665,15 @@ brw_draw_prims(struct gl_context *ctx,
       perf_debug("Scanning index buffer to compute index buffer bounds.  "
                  "Use glDrawRangeElements() to avoid this.\n");
       vbo_get_minmax_indices(ctx, prims, ib, &min_index, &max_index, nr_prims);
+      index_bounds_valid = true;
    }
 
    /* Try drawing with the hardware, but don't do anything else if we can't
     * manage it.  swrast doesn't support our featureset, so we can't fall back
     * to it.
     */
-   brw_try_draw_prims(ctx, arrays, prims, nr_prims, ib, min_index, max_index,
-                      indirect);
+   brw_try_draw_prims(ctx, arrays, prims, nr_prims, ib, index_bounds_valid,
+                      min_index, max_index, xfb_obj, stream, indirect);
 }
 
 void

@@ -297,8 +297,8 @@ void BitSet::fill(uint32_t val)
    unsigned int i;
    for (i = 0; i < (size + 31) / 32; ++i)
       data[i] = val;
-   if (val)
-      data[i] &= ~(0xffffffff << (size % 32)); // BE ?
+   if (val && i)
+      data[i - 1] &= (1 << (size % 32)) - 1;
 }
 
 void BitSet::setOr(BitSet *pA, BitSet *pB)
@@ -365,6 +365,12 @@ int BitSet::findFreeRange(unsigned int count) const
          }
       }
    }
+
+   // If we couldn't find a position, we can have a left-over -1 in pos. Make
+   // sure to abort in such a case.
+   if (pos < 0)
+      return -1;
+
    pos += i * 32;
 
    return ((pos + count) <= size) ? pos : -1;

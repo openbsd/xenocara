@@ -341,6 +341,12 @@ ir_expression::ir_expression(int op, ir_rvalue *op0)
       this->type = glsl_type::int_type;
       break;
 
+   case ir_unop_vote_any:
+   case ir_unop_vote_all:
+   case ir_unop_vote_eq:
+      this->type = glsl_type::bool_type;
+      break;
+
    default:
       assert(!"not reached: missing automatic type setup for ir_expression");
       this->type = op0->type;
@@ -492,130 +498,7 @@ ir_expression::get_num_operands(ir_expression_operation op)
    return 0;
 }
 
-static const char *const operator_strs[] = {
-   "~",
-   "!",
-   "neg",
-   "abs",
-   "sign",
-   "rcp",
-   "rsq",
-   "sqrt",
-   "exp",
-   "log",
-   "exp2",
-   "log2",
-   "f2i",
-   "f2u",
-   "i2f",
-   "f2b",
-   "b2f",
-   "i2b",
-   "b2i",
-   "u2f",
-   "i2u",
-   "u2i",
-   "d2f",
-   "f2d",
-   "d2i",
-   "i2d",
-   "d2u",
-   "u2d",
-   "d2b",
-   "bitcast_i2f",
-   "bitcast_f2i",
-   "bitcast_u2f",
-   "bitcast_f2u",
-   "trunc",
-   "ceil",
-   "floor",
-   "fract",
-   "round_even",
-   "sin",
-   "cos",
-   "dFdx",
-   "dFdxCoarse",
-   "dFdxFine",
-   "dFdy",
-   "dFdyCoarse",
-   "dFdyFine",
-   "packSnorm2x16",
-   "packSnorm4x8",
-   "packUnorm2x16",
-   "packUnorm4x8",
-   "packHalf2x16",
-   "unpackSnorm2x16",
-   "unpackSnorm4x8",
-   "unpackUnorm2x16",
-   "unpackUnorm4x8",
-   "unpackHalf2x16",
-   "bitfield_reverse",
-   "bit_count",
-   "find_msb",
-   "find_lsb",
-   "sat",
-   "packDouble2x32",
-   "unpackDouble2x32",
-   "frexp_sig",
-   "frexp_exp",
-   "noise",
-   "subroutine_to_int",
-   "interpolate_at_centroid",
-   "get_buffer_size",
-   "ssbo_unsized_array_length",
-   "+",
-   "-",
-   "*",
-   "imul_high",
-   "/",
-   "carry",
-   "borrow",
-   "%",
-   "<",
-   ">",
-   "<=",
-   ">=",
-   "==",
-   "!=",
-   "all_equal",
-   "any_nequal",
-   "<<",
-   ">>",
-   "&",
-   "^",
-   "|",
-   "&&",
-   "^^",
-   "||",
-   "dot",
-   "min",
-   "max",
-   "pow",
-   "ubo_load",
-   "ldexp",
-   "vector_extract",
-   "interpolate_at_offset",
-   "interpolate_at_sample",
-   "fma",
-   "lrp",
-   "csel",
-   "bitfield_extract",
-   "vector_insert",
-   "bitfield_insert",
-   "vector",
-};
-
-const char *ir_expression::operator_string(ir_expression_operation op)
-{
-   assert((unsigned int) op < ARRAY_SIZE(operator_strs));
-   assert(ARRAY_SIZE(operator_strs) == (ir_quadop_vector + 1));
-   return operator_strs[op];
-}
-
-const char *ir_expression::operator_string()
-{
-   return operator_string(this->operation);
-}
+#include "ir_expression_operation_strings.h"
 
 const char*
 depth_layout_string(ir_depth_layout layout)
@@ -636,9 +519,8 @@ depth_layout_string(ir_depth_layout layout)
 ir_expression_operation
 ir_expression::get_operator(const char *str)
 {
-   const int operator_count = sizeof(operator_strs) / sizeof(operator_strs[0]);
-   for (int op = 0; op < operator_count; op++) {
-      if (strcmp(str, operator_strs[op]) == 0)
+   for (int op = 0; op <= int(ir_last_opcode); op++) {
+      if (strcmp(str, ir_expression_operation_strings[op]) == 0)
 	 return (ir_expression_operation) op;
    }
    return (ir_expression_operation) -1;
@@ -663,12 +545,15 @@ ir_expression::variable_referenced() const
 ir_constant::ir_constant()
    : ir_rvalue(ir_type_constant)
 {
+   this->array_elements = NULL;
 }
 
 ir_constant::ir_constant(const struct glsl_type *type,
 			 const ir_constant_data *data)
    : ir_rvalue(ir_type_constant)
 {
+   this->array_elements = NULL;
+
    assert((type->base_type >= GLSL_TYPE_UINT)
 	  && (type->base_type <= GLSL_TYPE_BOOL));
 
@@ -744,6 +629,7 @@ ir_constant::ir_constant(bool b, unsigned vector_elements)
 ir_constant::ir_constant(const ir_constant *c, unsigned i)
    : ir_rvalue(ir_type_constant)
 {
+   this->array_elements = NULL;
    this->type = c->type->get_base_type();
 
    switch (this->type->base_type) {
@@ -759,6 +645,7 @@ ir_constant::ir_constant(const ir_constant *c, unsigned i)
 ir_constant::ir_constant(const struct glsl_type *type, exec_list *value_list)
    : ir_rvalue(ir_type_constant)
 {
+   this->array_elements = NULL;
    this->type = type;
 
    assert(type->is_scalar() || type->is_vector() || type->is_matrix()
@@ -793,7 +680,7 @@ ir_constant::ir_constant(const struct glsl_type *type, exec_list *value_list)
       this->value.u[i] = 0;
    }
 
-   ir_constant *value = (ir_constant *) (value_list->head);
+   ir_constant *value = (ir_constant *) (value_list->get_head_raw());
 
    /* Constructors with exactly one scalar argument are special for vectors
     * and matrices.  For vectors, the scalar value is replicated to fill all
@@ -869,7 +756,8 @@ ir_constant::ir_constant(const struct glsl_type *type, exec_list *value_list)
    /* Use each component from each entry in the value_list to initialize one
     * component of the constant being constructed.
     */
-   for (unsigned i = 0; i < type->components(); /* empty */) {
+   unsigned i = 0;
+   for (;;) {
       assert(value->as_constant() != NULL);
       assert(!value->is_tail_sentinel());
 
@@ -901,6 +789,8 @@ ir_constant::ir_constant(const struct glsl_type *type, exec_list *value_list)
 	    break;
       }
 
+      if (i >= type->components())
+	 break; /* avoid downcasting a list sentinel */
       value = (ir_constant *) value->next;
    }
 }
@@ -1056,7 +946,7 @@ ir_constant::get_record_field(const char *name)
    if (this->components.is_empty())
       return NULL;
 
-   exec_node *node = this->components.head;
+   exec_node *node = this->components.get_head_raw();
    for (int i = 0; i < idx; i++) {
       node = node->next;
 
@@ -1180,8 +1070,8 @@ ir_constant::has_value(const ir_constant *c) const
    }
 
    if (this->type->base_type == GLSL_TYPE_STRUCT) {
-      const exec_node *a_node = this->components.head;
-      const exec_node *b_node = c->components.head;
+      const exec_node *a_node = this->components.get_head_raw();
+      const exec_node *b_node = c->components.get_head_raw();
 
       while (!a_node->is_tail_sentinel()) {
 	 assert(!b_node->is_tail_sentinel());
@@ -1659,8 +1549,8 @@ ir_variable::ir_variable(const struct glsl_type *type, const char *name,
    this->data.invariant = false;
    this->data.how_declared = ir_var_declared_normally;
    this->data.mode = mode;
-   this->data.interpolation = INTERP_QUALIFIER_NONE;
-   this->data.max_array_access = 0;
+   this->data.interpolation = INTERP_MODE_NONE;
+   this->data.max_array_access = -1;
    this->data.offset = 0;
    this->data.precision = GLSL_PRECISION_NONE;
    this->data.image_read_only = false;
@@ -1669,6 +1559,7 @@ ir_variable::ir_variable(const struct glsl_type *type, const char *name,
    this->data.image_volatile = false;
    this->data.image_restrict = false;
    this->data.from_ssbo_unsized_array = false;
+   this->data.fb_fetch_output = false;
 
    if (type != NULL) {
       if (type->base_type == GLSL_TYPE_SAMPLER)
@@ -1686,10 +1577,10 @@ const char *
 interpolation_string(unsigned interpolation)
 {
    switch (interpolation) {
-   case INTERP_QUALIFIER_NONE:          return "no";
-   case INTERP_QUALIFIER_SMOOTH:        return "smooth";
-   case INTERP_QUALIFIER_FLAT:          return "flat";
-   case INTERP_QUALIFIER_NOPERSPECTIVE: return "noperspective";
+   case INTERP_MODE_NONE:          return "no";
+   case INTERP_MODE_SMOOTH:        return "smooth";
+   case INTERP_MODE_FLAT:          return "flat";
+   case INTERP_MODE_NOPERSPECTIVE: return "noperspective";
    }
 
    assert(!"Should not get here.");
@@ -1726,8 +1617,8 @@ ir_variable::get_extension_warning() const
 ir_function_signature::ir_function_signature(const glsl_type *return_type,
                                              builtin_available_predicate b)
    : ir_instruction(ir_type_function_signature),
-     return_type(return_type), is_defined(false), is_intrinsic(false),
-     builtin_avail(b), _function(NULL)
+     return_type(return_type), is_defined(false),
+     intrinsic_id(ir_intrinsic_invalid), builtin_avail(b), _function(NULL)
 {
    this->origin = NULL;
 }

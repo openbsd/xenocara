@@ -48,31 +48,51 @@
  * This is a bit different than legal_teximage_target() when it comes
  * to cube maps.
  */
-static GLboolean
-legal_texobj_target(struct gl_context *ctx, GLuint dims, GLenum target)
+static bool
+legal_texobj_target(const struct gl_context *ctx, GLuint dims, GLenum target)
 {
-   if (_mesa_is_gles3(ctx)
-       && target != GL_TEXTURE_2D
-       && target != GL_TEXTURE_CUBE_MAP
-       && target != GL_TEXTURE_3D
-       && target != GL_TEXTURE_2D_ARRAY)
-      return GL_FALSE;
+   if (dims < 1 || dims > 3) {
+      _mesa_problem(ctx, "invalid dims=%u in legal_texobj_target()", dims);
+      return false;
+   }
+
+   switch (dims) {
+   case 2:
+      switch (target) {
+      case GL_TEXTURE_2D:
+         return true;
+      case GL_TEXTURE_CUBE_MAP:
+         return ctx->Extensions.ARB_texture_cube_map;
+      }
+      break;
+   case 3:
+      switch (target) {
+      case GL_TEXTURE_3D:
+         return true;
+      case GL_TEXTURE_2D_ARRAY:
+         return ctx->Extensions.EXT_texture_array;
+      case GL_TEXTURE_CUBE_MAP_ARRAY:
+         return _mesa_has_texture_cube_map_array(ctx);
+      }
+      break;
+   }
+
+   if (!_mesa_is_desktop_gl(ctx))
+      return false;
 
    switch (dims) {
    case 1:
       switch (target) {
       case GL_TEXTURE_1D:
       case GL_PROXY_TEXTURE_1D:
-         return GL_TRUE;
+         return true;
       default:
-         return GL_FALSE;
+         return false;
       }
    case 2:
       switch (target) {
-      case GL_TEXTURE_2D:
       case GL_PROXY_TEXTURE_2D:
-         return GL_TRUE;
-      case GL_TEXTURE_CUBE_MAP:
+         return true;
       case GL_PROXY_TEXTURE_CUBE_MAP:
          return ctx->Extensions.ARB_texture_cube_map;
       case GL_TEXTURE_RECTANGLE:
@@ -82,25 +102,21 @@ legal_texobj_target(struct gl_context *ctx, GLuint dims, GLenum target)
       case GL_PROXY_TEXTURE_1D_ARRAY:
          return ctx->Extensions.EXT_texture_array;
       default:
-         return GL_FALSE;
+         return false;
       }
    case 3:
       switch (target) {
-      case GL_TEXTURE_3D:
       case GL_PROXY_TEXTURE_3D:
-         return GL_TRUE;
-      case GL_TEXTURE_2D_ARRAY:
+         return true;
       case GL_PROXY_TEXTURE_2D_ARRAY:
          return ctx->Extensions.EXT_texture_array;
-      case GL_TEXTURE_CUBE_MAP_ARRAY:
       case GL_PROXY_TEXTURE_CUBE_MAP_ARRAY:
          return ctx->Extensions.ARB_texture_cube_map_array;
       default:
-         return GL_FALSE;
+         return false;
       }
    default:
-      _mesa_problem(ctx, "invalid dims=%u in legal_texobj_target()", dims);
-      return GL_FALSE;
+      unreachable("impossible dimensions");
    }
 }
 
@@ -179,9 +195,7 @@ clear_texture_fields(struct gl_context *ctx,
             return;
 	 }
 
-         _mesa_init_teximage_fields(ctx, texImage,
-                                    0, 0, 0, 0, /* w, h, d, border */
-                                    GL_NONE, MESA_FORMAT_NONE);
+         _mesa_clear_texture_image(ctx, texImage);
       }
    }
 }
@@ -358,11 +372,11 @@ tex_storage_error_check(struct gl_context *ctx,
    }
 
    /* additional checks for depth textures */
-   if (!_mesa_legal_texture_base_format_for_target(ctx, target, internalformat,
-                                                   dims, dsa ?
-                                                   "glTextureStorage" :
-                                                   "glTexStorage"))
+   if (!_mesa_legal_texture_base_format_for_target(ctx, target, internalformat)) {
+      _mesa_error(ctx, GL_INVALID_OPERATION, "glTex%sStorage%uD(bad target for texture)",
+                  suffix, dims);
       return GL_TRUE;
+   }
 
    return GL_FALSE;
 }
@@ -398,8 +412,8 @@ _mesa_texture_storage(struct gl_context *ctx, GLuint dims,
    dimensionsOK = _mesa_legal_texture_dimensions(ctx, target, 0,
                                                   width, height, depth, 0);
 
-   sizeOK = ctx->Driver.TestProxyTexImage(ctx, target, 0, texFormat,
-                                          width, height, depth, 0);
+   sizeOK = ctx->Driver.TestProxyTexImage(ctx, target, levels, 0, texFormat,
+                                          1, width, height, depth);
 
    if (_mesa_is_proxy_texture(target)) {
       if (dimensionsOK && sizeOK) {

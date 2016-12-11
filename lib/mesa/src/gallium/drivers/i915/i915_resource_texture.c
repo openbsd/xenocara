@@ -133,7 +133,7 @@ static void
 i915_texture_set_level_info(struct i915_texture *tex,
                             unsigned level, unsigned nr_images)
 {
-   assert(level < Elements(tex->nr_images));
+   assert(level < ARRAY_SIZE(tex->nr_images));
    assert(nr_images);
    assert(!tex->image_offset[level]);
 
@@ -705,7 +705,7 @@ i915_texture_destroy(struct pipe_screen *screen,
    if (tex->buffer)
       iws->buffer_destroy(iws, tex->buffer);
 
-   for (i = 0; i < Elements(tex->image_offset); i++)
+   for (i = 0; i < ARRAY_SIZE(tex->image_offset); i++)
       FREE(tex->image_offset[i]);
 
    FREE(tex);
@@ -721,7 +721,7 @@ i915_texture_transfer_map(struct pipe_context *pipe,
 {
    struct i915_context *i915 = i915_context(pipe);
    struct i915_texture *tex = i915_texture(resource);
-   struct i915_transfer *transfer = util_slab_alloc(&i915->texture_transfer_pool);
+   struct i915_transfer *transfer = slab_alloc_st(&i915->texture_transfer_pool);
    boolean use_staging_texture = FALSE;
    struct i915_winsys *iws = i915_screen(pipe->screen)->iws;
    enum pipe_format format = resource->format;
@@ -814,11 +814,11 @@ i915_texture_transfer_unmap(struct pipe_context *pipe,
       pipe_resource_reference(&itransfer->staging_texture, NULL);
    }
 
-   util_slab_free(&i915->texture_transfer_pool, itransfer);
+   slab_free_st(&i915->texture_transfer_pool, itransfer);
 }
 
 #if 0
-static void i915_transfer_inline_write( struct pipe_context *pipe,
+static void i915_texture_subdata(struct pipe_context *pipe,
                                  struct pipe_resource *resource,
                                  unsigned level,
                                  unsigned usage,
@@ -913,7 +913,6 @@ struct u_resource_vtbl i915_texture_vtbl =
    i915_texture_transfer_map,	      /* transfer_map */
    u_default_transfer_flush_region,   /* transfer_flush_region */
    i915_texture_transfer_unmap,	      /* transfer_unmap */
-   u_default_transfer_inline_write    /* transfer_inline_write */
 };
 
 

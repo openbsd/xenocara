@@ -70,6 +70,7 @@ nouveau_screen_fence_ref(struct pipe_screen *pscreen,
 
 static boolean
 nouveau_screen_fence_finish(struct pipe_screen *screen,
+                            struct pipe_context *ctx,
                             struct pipe_fence_handle *pfence,
                             uint64_t timeout)
 {
@@ -88,6 +89,12 @@ nouveau_screen_bo_from_handle(struct pipe_screen *pscreen,
    struct nouveau_device *dev = nouveau_screen(pscreen)->device;
    struct nouveau_bo *bo = 0;
    int ret;
+
+   if (whandle->offset != 0) {
+      debug_printf("%s: attempt to import unsupported winsys offset %d\n",
+                   __FUNCTION__, whandle->offset);
+      return NULL;
+   }
 
    if (whandle->type != DRM_API_HANDLE_TYPE_SHARED &&
        whandle->type != DRM_API_HANDLE_TYPE_FD) {

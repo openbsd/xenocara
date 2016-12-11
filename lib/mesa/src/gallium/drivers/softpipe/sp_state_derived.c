@@ -176,14 +176,14 @@ softpipe_compute_vertex_info(struct softpipe_context *softpipe)
             /*
              * Note that we'd actually want to skip position (as we won't use
              * the attribute in the fs) but can't. The reason is that we don't
-             * actually have a input/output map for setup (even though it looks
+             * actually have an input/output map for setup (even though it looks
              * like we do...). Could adjust for this though even without a map.
              */
          } else {
             /*
              * Note that we'd actually want to skip position (as we won't use
              * the attribute in the fs) but can't. The reason is that we don't
-             * actually have a input/output map for setup (even though it looks
+             * actually have an input/output map for setup (even though it looks
              * like we do...). Could adjust for this though even without a map.
              */
             draw_emit_vertex_attr(vinfo, EMIT_4F, vs_index);
@@ -292,6 +292,12 @@ set_shader_sampler(struct softpipe_context *softpipe,
    }
 }
 
+void
+softpipe_update_compute_samplers(struct softpipe_context *softpipe)
+{
+   set_shader_sampler(softpipe, PIPE_SHADER_COMPUTE, softpipe->cs->max_sampler);
+}
+
 static void
 update_tgsi_samplers( struct softpipe_context *softpipe )
 {
@@ -307,7 +313,7 @@ update_tgsi_samplers( struct softpipe_context *softpipe )
    }
 
    /* XXX is this really necessary here??? */
-   for (sh = 0; sh < Elements(softpipe->tex_cache); sh++) {
+   for (sh = 0; sh < ARRAY_SIZE(softpipe->tex_cache); sh++) {
       for (i = 0; i < PIPE_MAX_SAMPLERS; i++) {
          struct softpipe_tex_tile_cache *tc = softpipe->tex_cache[sh][i];
          if (tc && tc->texture) {
@@ -343,7 +349,9 @@ update_fragment_shader(struct softpipe_context *softpipe, unsigned prim)
       softpipe->fs_variant->prepare(softpipe->fs_variant, 
                                     softpipe->fs_machine,
                                     (struct tgsi_sampler *) softpipe->
-                                    tgsi.sampler[PIPE_SHADER_FRAGMENT]);
+                                    tgsi.sampler[PIPE_SHADER_FRAGMENT],
+                                    (struct tgsi_image *)softpipe->tgsi.image[PIPE_SHADER_FRAGMENT],
+                                    (struct tgsi_buffer *)softpipe->tgsi.buffer[PIPE_SHADER_FRAGMENT]);
    }
    else {
       softpipe->fs_variant = NULL;

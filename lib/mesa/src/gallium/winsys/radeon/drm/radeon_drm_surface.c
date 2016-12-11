@@ -31,6 +31,41 @@
 
 #include <radeon_surface.h>
 
+static unsigned cik_get_macro_tile_index(struct radeon_surf *surf)
+{
+	unsigned index, tileb;
+
+	tileb = 8 * 8 * surf->bpe;
+	tileb = MIN2(surf->tile_split, tileb);
+
+	for (index = 0; tileb > 64; index++)
+		tileb >>= 1;
+
+	assert(index < 16);
+	return index;
+}
+
+#define   G_009910_MICRO_TILE_MODE(x)          (((x) >> 0) & 0x03)
+#define   G_009910_MICRO_TILE_MODE_NEW(x)      (((x) >> 22) & 0x07)
+
+static void set_micro_tile_mode(struct radeon_surf *surf,
+                                struct radeon_info *info)
+{
+    uint32_t tile_mode;
+
+    if (info->chip_class < SI) {
+        surf->micro_tile_mode = 0;
+        return;
+    }
+
+    tile_mode = info->si_tile_mode_array[surf->tiling_index[0]];
+
+    if (info->chip_class >= CIK)
+        surf->micro_tile_mode = G_009910_MICRO_TILE_MODE_NEW(tile_mode);
+    else
+        surf->micro_tile_mode = G_009910_MICRO_TILE_MODE(tile_mode);
+}
+
 static void surf_level_winsys_to_drm(struct radeon_surface_level *level_drm,
                                      const struct radeon_surf_level *level_ws)
 {
@@ -88,7 +123,6 @@ static void surf_winsys_to_drm(struct radeon_surface *surf_drm,
     surf_drm->mtilea = surf_ws->mtilea;
     surf_drm->tile_split = surf_ws->tile_split;
     surf_drm->stencil_tile_split = surf_ws->stencil_tile_split;
-    surf_drm->stencil_offset = surf_ws->stencil_offset;
 
     for (i = 0; i < RADEON_SURF_MAX_LEVEL; i++) {
         surf_level_winsys_to_drm(&surf_drm->level[i], &surf_ws->level[i]);
@@ -100,7 +134,8 @@ static void surf_winsys_to_drm(struct radeon_surface *surf_drm,
     }
 }
 
-static void surf_drm_to_winsys(struct radeon_surf *surf_ws,
+static void surf_drm_to_winsys(struct radeon_drm_winsys *ws,
+                               struct radeon_surf *surf_ws,
                                const struct radeon_surface *surf_drm)
 {
     int i;
@@ -127,7 +162,8 @@ static void surf_drm_to_winsys(struct radeon_surf *surf_ws,
     surf_ws->mtilea = surf_drm->mtilea;
     surf_ws->tile_split = surf_drm->tile_split;
     surf_ws->stencil_tile_split = surf_drm->stencil_tile_split;
-    surf_ws->stencil_offset = surf_drm->stencil_offset;
+
+    surf_ws->macro_tile_index = cik_get_macro_tile_index(surf_ws);
 
     for (i = 0; i < RADEON_SURF_MAX_LEVEL; i++) {
         surf_level_drm_to_winsys(&surf_ws->level[i], &surf_drm->level[i]);
@@ -137,6 +173,8 @@ static void surf_drm_to_winsys(struct radeon_surf *surf_ws,
         surf_ws->tiling_index[i] = surf_drm->tiling_index[i];
         surf_ws->stencil_tiling_index[i] = surf_drm->stencil_tiling_index[i];
     }
+
+    set_micro_tile_mode(surf_ws, &ws->info);
 }
 
 static int radeon_winsys_surface_init(struct radeon_winsys *rws,
@@ -152,7 +190,7 @@ static int radeon_winsys_surface_init(struct radeon_winsys *rws,
     if (r)
         return r;
 
-    surf_drm_to_winsys(surf_ws, &surf_drm);
+    surf_drm_to_winsys(ws, surf_ws, &surf_drm);
     return 0;
 }
 
@@ -169,7 +207,7 @@ static int radeon_winsys_surface_best(struct radeon_winsys *rws,
     if (r)
         return r;
 
-    surf_drm_to_winsys(surf_ws, &surf_drm);
+    surf_drm_to_winsys(ws, surf_ws, &surf_drm);
     return 0;
 }
 

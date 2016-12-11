@@ -289,8 +289,7 @@ lp_build_linear_to_srgb(struct gallivm_state *gallivm,
       c_const = lp_build_const_vec(gallivm, src_type, -0.0620f * 255.0f);
 
       tmp = lp_build_mul(&f32_bld, a_const, x0375);
-      tmp2 = lp_build_mul(&f32_bld, b_const, x05);
-      tmp2 = lp_build_add(&f32_bld, tmp2, c_const);
+      tmp2 = lp_build_mad(&f32_bld, b_const, x05, c_const);
       pow_final = lp_build_add(&f32_bld, tmp, tmp2);
    }
 
@@ -353,7 +352,7 @@ lp_build_float_to_srgb_packed(struct gallivm_state *gallivm,
 
    dst = lp_build_zero(gallivm, int32_type);
    for (chan = 0; chan < dst_fmt->nr_channels; chan++) {
-      if (dst_fmt->swizzle[chan] <= UTIL_FORMAT_SWIZZLE_W) {
+      if (dst_fmt->swizzle[chan] <= PIPE_SWIZZLE_W) {
          unsigned ls;
          LLVMValueRef shifted, shift_val;
          ls = dst_fmt->channel[dst_fmt->swizzle[chan]].shift;

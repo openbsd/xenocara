@@ -482,16 +482,16 @@ nv84_create_decoder(struct pipe_context *context,
       mip.base.domain = NOUVEAU_BO_VRAM;
       mip.base.bo = dec->mbring;
       mip.base.address = dec->mbring->offset;
-      context->clear_render_target(context, &surf.base, &color, 0, 0, 64, 4760);
+      context->clear_render_target(context, &surf.base, &color, 0, 0, 64, 4760, false);
       surf.offset = dec->vpring->size / 2 - 0x1000;
       surf.width = 1024;
       surf.height = 1;
       mip.level[0].pitch = surf.width * 4;
       mip.base.bo = dec->vpring;
       mip.base.address = dec->vpring->offset;
-      context->clear_render_target(context, &surf.base, &color, 0, 0, 1024, 1);
+      context->clear_render_target(context, &surf.base, &color, 0, 0, 1024, 1, false);
       surf.offset = dec->vpring->size - 0x1000;
-      context->clear_render_target(context, &surf.base, &color, 0, 0, 1024, 1);
+      context->clear_render_target(context, &surf.base, &color, 0, 0, 1024, 1, false);
 
       PUSH_SPACE(screen->pushbuf, 5);
       PUSH_REFN(screen->pushbuf, dec->fence, NOUVEAU_BO_VRAM | NOUVEAU_BO_RDWR);
@@ -705,8 +705,8 @@ nv84_video_buffer_create(struct pipe_context *pipe,
 
       for (j = 0; j < nr_components; ++j, ++component) {
          sv_templ.swizzle_r = sv_templ.swizzle_g = sv_templ.swizzle_b =
-            PIPE_SWIZZLE_RED + j;
-         sv_templ.swizzle_a = PIPE_SWIZZLE_ONE;
+            PIPE_SWIZZLE_X + j;
+         sv_templ.swizzle_a = PIPE_SWIZZLE_1;
 
          buffer->sampler_view_components[component] =
             pipe->create_sampler_view(pipe, res, &sv_templ);

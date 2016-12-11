@@ -126,6 +126,8 @@ public:
 
    exec_node link;
 
+   virtual void set_is_lhs(bool);
+
 protected:
    /**
     * The only constructor is protected so that only derived class objects can
@@ -196,6 +198,15 @@ enum ast_operators {
 
    ast_sequence,
    ast_aggregate
+
+   /**
+    * Number of possible operators for an ast_expression
+    *
+    * This is done as a define instead of as an additional value in the enum so
+    * that the compiler won't generate spurious messages like "warning:
+    * enumeration value ‘ast_num_operators’ not handled in switch"
+    */
+   #define AST_NUM_OPERATORS (ast_aggregate + 1)
 };
 
 /**
@@ -214,6 +225,7 @@ public:
       subexpressions[2] = NULL;
       primary_expression.identifier = identifier;
       this->non_lvalue_description = NULL;
+      this->is_lhs = false;
    }
 
    static const char *operator_string(enum ast_operators op);
@@ -263,6 +275,11 @@ public:
     * This pointer may be \c NULL.
     */
    const char *non_lvalue_description;
+
+   void set_is_lhs(bool new_value);
+
+private:
+   bool is_lhs;
 };
 
 class ast_expression_bin : public ast_expression {
@@ -338,8 +355,8 @@ public:
 
    bool is_single_dimension() const
    {
-      return this->array_dimensions.tail_pred->prev != NULL &&
-             this->array_dimensions.tail_pred->prev->is_head_sentinel();
+      return this->array_dimensions.get_tail_raw()->prev != NULL &&
+             this->array_dimensions.get_tail_raw()->prev->is_head_sentinel();
    }
 
    virtual void print(void) const;
@@ -360,7 +377,8 @@ public:
 
    bool process_qualifier_constant(struct _mesa_glsl_parse_state *state,
                                    const char *qual_indentifier,
-                                   unsigned *value, bool can_be_zero);
+                                   unsigned *value, bool can_be_zero,
+                                   bool must_match = false);
 
    void merge_qualifier(ast_layout_expression *l_expr)
    {
@@ -406,15 +424,6 @@ public:
    virtual void hir_no_rvalue(exec_list *instructions,
                               struct _mesa_glsl_parse_state *state);
 };
-
-/**
- * Number of possible operators for an ast_expression
- *
- * This is done as a define instead of as an additional value in the enum so
- * that the compiler won't generate spurious messages like "warning:
- * enumeration value ‘ast_num_operators’ not handled in switch"
- */
-#define AST_NUM_OPERATORS (ast_sequence + 1)
 
 
 class ast_compound_statement : public ast_node {
@@ -479,6 +488,12 @@ struct ast_type_qualifier {
 	 unsigned pixel_center_integer:1;
 	 /*@}*/
 
+         /**
+          * Flag set if GL_ARB_enhanced_layouts "align" layout qualifier is
+          * used.
+          */
+         unsigned explicit_align:1;
+
 	 /**
 	  * Flag set if GL_ARB_explicit_attrib_location "location" layout
 	  * qualifier is used.
@@ -489,6 +504,12 @@ struct ast_type_qualifier {
 	  * qualifier is used.
 	  */
 	 unsigned explicit_index:1;
+
+	 /**
+	  * Flag set if GL_ARB_enhanced_layouts "component" layout
+	  * qualifier is used.
+	  */
+	 unsigned explicit_component:1;
 
          /**
           * Flag set if GL_ARB_shading_language_420pack "binding" layout
@@ -532,6 +553,11 @@ struct ast_type_qualifier {
           */
          unsigned local_size:3;
 
+	 /** \name Layout qualifiers for ARB_compute_variable_group_size. */
+	 /** \{ */
+	 unsigned local_size_variable:1;
+	 /** \} */
+
 	 /** \name Layout and memory qualifiers for ARB_shader_image_load_store. */
 	 /** \{ */
 	 unsigned early_fragment_tests:1;
@@ -550,6 +576,15 @@ struct ast_type_qualifier {
          unsigned explicit_stream:1; /**< stream value assigned explicitly by shader code */
          /** \} */
 
+         /** \name Layout qualifiers for GL_ARB_enhanced_layouts */
+         /** \{ */
+         unsigned explicit_xfb_offset:1; /**< xfb_offset value assigned explicitly by shader code */
+         unsigned xfb_buffer:1; /**< Has xfb_buffer value assigned  */
+         unsigned explicit_xfb_buffer:1; /**< xfb_buffer value assigned explicitly by shader code */
+         unsigned xfb_stride:1; /**< Is xfb_stride value yet to be merged with global values  */
+         unsigned explicit_xfb_stride:1; /**< xfb_stride value assigned explicitly by shader code */
+         /** \} */
+
 	 /** \name Layout qualifiers for GL_ARB_tessellation_shader */
 	 /** \{ */
 	 /* tess eval input layout */
@@ -566,6 +601,11 @@ struct ast_type_qualifier {
          unsigned subroutine:1;  /**< Is this marked 'subroutine' */
          unsigned subroutine_def:1; /**< Is this marked 'subroutine' with a list of types */
 	 /** \} */
+
+         /** \name Qualifiers for GL_KHR_blend_equation_advanced */
+         /** \{ */
+         unsigned blend_support:1; /**< Are there any blend_support_ qualifiers */
+         /** \} */
       }
       /** \brief Set of flags, accessed by name. */
       q;
@@ -576,6 +616,11 @@ struct ast_type_qualifier {
 
    /** Precision of the type (highp/medium/lowp). */
    unsigned precision:2;
+
+   /**
+    * Alignment specified via GL_ARB_enhanced_layouts "align" layout qualifier
+    */
+   ast_expression *align;
 
    /** Geometry shader invocations for GL_ARB_gpu_shader5. */
    ast_layout_expression *invocations;
@@ -595,11 +640,28 @@ struct ast_type_qualifier {
     */
    ast_expression *index;
 
+   /**
+    * Component specified via GL_ARB_enhaced_layouts
+    *
+    * \note
+    * This field is only valid if \c explicit_component is set.
+    */
+   ast_expression *component;
+
    /** Maximum output vertices in GLSL 1.50 geometry shaders. */
    ast_layout_expression *max_vertices;
 
    /** Stream in GLSL 1.50 geometry shaders. */
    ast_expression *stream;
+
+   /** xfb_buffer specified via the GL_ARB_enhanced_layouts keyword. */
+   ast_expression *xfb_buffer;
+
+   /** xfb_stride specified via the GL_ARB_enhanced_layouts keyword. */
+   ast_expression *xfb_stride;
+
+   /** global xfb_stride values for each buffer */
+   ast_layout_expression *out_xfb_stride[MAX_FEEDBACK_BUFFERS];
 
    /**
     * Input or output primitive type in GLSL 1.50 geometry shaders
@@ -616,8 +678,9 @@ struct ast_type_qualifier {
    ast_expression *binding;
 
    /**
-    * Offset specified via GL_ARB_shader_atomic_counter's "offset"
-    * keyword.
+    * Offset specified via GL_ARB_shader_atomic_counter's or
+    * GL_ARB_enhanced_layouts "offset" keyword, or by GL_ARB_enhanced_layouts
+    * "xfb_offset" keyword.
     *
     * \note
     * This field is only valid if \c explicit_offset is set.
@@ -699,6 +762,11 @@ struct ast_type_qualifier {
                            _mesa_glsl_parse_state *state,
                            const ast_type_qualifier &q,
                            ast_node* &node, bool create_node);
+
+   bool validate_flags(YYLTYPE *loc,
+                       _mesa_glsl_parse_state *state,
+                       const ast_type_qualifier &allowed_flags,
+                       const char *message, const char *name);
 
    ast_subroutine_list *subroutine_list;
 };
@@ -1061,10 +1129,9 @@ public:
 
 class ast_interface_block : public ast_node {
 public:
-   ast_interface_block(ast_type_qualifier layout,
-                       const char *instance_name,
+   ast_interface_block(const char *instance_name,
                        ast_array_specifier *array_specifier)
-   : layout(layout), block_name(NULL), instance_name(instance_name),
+   : block_name(NULL), instance_name(instance_name),
      array_specifier(array_specifier)
    {
    }
@@ -1189,4 +1256,10 @@ extern void _mesa_ast_process_interface_block(YYLTYPE *locp,
                                               ast_interface_block *const block,
                                               const struct ast_type_qualifier &q);
 
+extern bool
+process_qualifier_constant(struct _mesa_glsl_parse_state *state,
+                           YYLTYPE *loc,
+                           const char *qual_indentifier,
+                           ast_expression *const_expression,
+                           unsigned *value);
 #endif /* AST_H */

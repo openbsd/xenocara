@@ -36,35 +36,6 @@
 
 using namespace brw;
 
-static bool
-can_do_writemask(const struct brw_device_info *devinfo,
-                 const vec4_instruction *inst)
-{
-   switch (inst->opcode) {
-   case SHADER_OPCODE_GEN4_SCRATCH_READ:
-   case VS_OPCODE_PULL_CONSTANT_LOAD:
-   case VS_OPCODE_PULL_CONSTANT_LOAD_GEN7:
-   case VS_OPCODE_SET_SIMD4X2_HEADER_GEN9:
-   case TCS_OPCODE_SET_INPUT_URB_OFFSETS:
-   case TCS_OPCODE_SET_OUTPUT_URB_OFFSETS:
-   case TES_OPCODE_CREATE_INPUT_READ_HEADER:
-   case TES_OPCODE_ADD_INDIRECT_URB_OFFSET:
-   case VEC4_OPCODE_URB_READ:
-      return false;
-   default:
-      /* The MATH instruction on Gen6 only executes in align1 mode, which does
-       * not support writemasking.
-       */
-      if (devinfo->gen == 6 && inst->is_math())
-         return false;
-
-      if (inst->is_tex())
-         return false;
-
-      return true;
-   }
-}
-
 bool
 vec4_visitor::dead_code_eliminate()
 {
@@ -88,7 +59,7 @@ vec4_visitor::dead_code_eliminate()
             bool result_live[4] = { false };
 
             if (inst->dst.file == VGRF) {
-               for (unsigned i = 0; i < inst->regs_written; i++) {
+               for (unsigned i = 0; i < regs_written(inst); i++) {
                   for (int c = 0; c < 4; c++)
                      result_live[c] |= BITSET_TEST(
                         live, var_from_reg(alloc, offset(inst->dst, i), c));
@@ -101,7 +72,7 @@ vec4_visitor::dead_code_eliminate()
             /* If the instruction can't do writemasking, then it's all or
              * nothing.
              */
-            if (!can_do_writemask(devinfo, inst)) {
+            if (!inst->can_do_writemask(devinfo)) {
                bool result = result_live[0] | result_live[1] |
                              result_live[2] | result_live[3];
                result_live[0] = result;
@@ -139,7 +110,7 @@ vec4_visitor::dead_code_eliminate()
          }
 
          if (inst->dst.file == VGRF && !inst->predicate) {
-            for (unsigned i = 0; i < inst->regs_written; i++) {
+            for (unsigned i = 0; i < regs_written(inst); i++) {
                for (int c = 0; c < 4; c++) {
                   if (inst->dst.writemask & (1 << c)) {
                      BITSET_CLEAR(live, var_from_reg(alloc,
@@ -161,7 +132,7 @@ vec4_visitor::dead_code_eliminate()
 
          for (int i = 0; i < 3; i++) {
             if (inst->src[i].file == VGRF) {
-               for (unsigned j = 0; j < inst->regs_read(i); j++) {
+               for (unsigned j = 0; j < regs_read(inst, i); j++) {
                   for (int c = 0; c < 4; c++) {
                      BITSET_SET(live, var_from_reg(alloc,
                                                    offset(inst->src[i], j), c));

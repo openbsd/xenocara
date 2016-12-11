@@ -26,6 +26,11 @@ struct winsys_handle
     */
    unsigned type;
    /**
+    * Input for texture_get_handle, allows to export the offset
+    * of a specific layer of an array texture.
+    */
+   unsigned layer;
+   /**
     * Input to texture_from_handle.
     * Output for texture_get_handle.
     */
@@ -35,6 +40,11 @@ struct winsys_handle
     * Output for texture_get_handle.
     */
    unsigned stride;
+   /**
+    * Input to texture_from_handle.
+    * Output for texture_get_handle.
+    */
+   unsigned offset;
 };
 
 
@@ -76,12 +86,7 @@ struct drm_conf_ret {
 struct drm_driver_descriptor
 {
    /**
-    * Identifying sufix/prefix of the binary, used by egl.
-    */
-   const char *name;
-
-   /**
-    * Kernel driver name, as accepted by drmOpenByName.
+    * Identifying prefix/suffix of the binary, used by the pipe-loader.
     */
    const char *driver_name;
 
@@ -93,7 +98,6 @@ struct drm_driver_descriptor
     */
    struct pipe_screen* (*create_screen)(int drm_fd);
 
-
    /**
     * Return a configuration value.
     *
@@ -104,14 +108,13 @@ struct drm_driver_descriptor
    const struct drm_conf_ret *(*configuration) (enum drm_conf conf);
 };
 
-extern struct drm_driver_descriptor driver_descriptor;
+extern const struct drm_driver_descriptor driver_descriptor;
 
 /**
  * Instantiate a drm_driver_descriptor struct.
  */
-#define DRM_DRIVER_DESCRIPTOR(name_str, driver_name_str, func, conf) \
-struct drm_driver_descriptor driver_descriptor = {             \
-   .name = name_str,                                           \
+#define DRM_DRIVER_DESCRIPTOR(driver_name_str, func, conf) \
+const struct drm_driver_descriptor driver_descriptor = {       \
    .driver_name = driver_name_str,                             \
    .create_screen = func,                                      \
    .configuration = (conf),				       \

@@ -38,7 +38,8 @@ upload_wm_state(struct brw_context *brw)
 {
    struct gl_context *ctx = &brw->ctx;
    /* BRW_NEW_FS_PROG_DATA */
-   const struct brw_wm_prog_data *prog_data = brw->wm.prog_data;
+   const struct brw_wm_prog_data *prog_data =
+      brw_wm_prog_data(brw->wm.base.prog_data);
    bool writes_depth = prog_data->computed_depth_mode != BRW_PSCDEPTH_OFF;
    uint32_t dw1, dw2;
 
@@ -78,10 +79,8 @@ upload_wm_state(struct brw_context *brw)
    }
 
    /* _NEW_BUFFERS | _NEW_COLOR */
-   const bool active_fs_has_side_effects =
-      _mesa_active_fragment_shader_has_side_effects(&brw->ctx);
    if (brw_color_buffer_write_enabled(brw) || writes_depth ||
-       active_fs_has_side_effects || dw1 & GEN7_WM_KILL_ENABLE) {
+       prog_data->has_side_effects || dw1 & GEN7_WM_KILL_ENABLE) {
       dw1 |= GEN7_WM_DISPATCH_ENABLE;
    }
    if (multisampled_fbo) {
@@ -91,7 +90,7 @@ upload_wm_state(struct brw_context *brw)
       else
          dw1 |= GEN7_WM_MSRAST_OFF_PIXEL;
 
-      if (_mesa_get_min_invocations_per_fragment(ctx, brw->fragment_program, false) > 1)
+      if (prog_data->persample_dispatch)
          dw2 |= GEN7_WM_MSDISPMODE_PERSAMPLE;
       else
          dw2 |= GEN7_WM_MSDISPMODE_PERPIXEL;
@@ -107,7 +106,7 @@ upload_wm_state(struct brw_context *brw)
    /* BRW_NEW_FS_PROG_DATA */
    if (prog_data->early_fragment_tests)
       dw1 |= GEN7_WM_EARLY_DS_CONTROL_PREPS;
-   else if (active_fs_has_side_effects)
+   else if (prog_data->has_side_effects)
       dw1 |= GEN7_WM_EARLY_DS_CONTROL_PSEXEC;
 
    /* The "UAV access enable" bits are unnecessary on HSW because they only
@@ -120,7 +119,7 @@ upload_wm_state(struct brw_context *brw)
     */
    if (brw->is_haswell &&
        !(brw_color_buffer_write_enabled(brw) || writes_depth) &&
-       active_fs_has_side_effects)
+       prog_data->has_side_effects)
       dw2 |= HSW_WM_UAV_ONLY;
 
    BEGIN_BATCH(3);
@@ -138,6 +137,7 @@ const struct brw_tracked_state gen7_wm_state = {
                _NEW_MULTISAMPLE |
                _NEW_POLYGON,
       .brw   = BRW_NEW_BATCH |
+               BRW_NEW_BLORP |
                BRW_NEW_FS_PROG_DATA,
    },
    .emit = upload_wm_state,
@@ -145,13 +145,12 @@ const struct brw_tracked_state gen7_wm_state = {
 
 static void
 gen7_upload_ps_state(struct brw_context *brw,
-                     const struct gl_fragment_program *fp,
                      const struct brw_stage_state *stage_state,
                      const struct brw_wm_prog_data *prog_data,
                      bool enable_dual_src_blend, unsigned sample_mask,
                      unsigned fast_clear_op)
 {
-   struct gl_context *ctx = &brw->ctx;
+   const struct gen_device_info *devinfo = &brw->screen->devinfo;
    uint32_t dw2, dw4, dw5, ksp0, ksp2;
    const int max_threads_shift = brw->is_haswell ?
       HSW_PS_MAX_THREADS_SHIFT : IVB_PS_MAX_THREADS_SHIFT;
@@ -174,7 +173,7 @@ gen7_upload_ps_state(struct brw_context *brw,
    if (brw->is_haswell)
       dw4 |= SET_FIELD(sample_mask, HSW_PS_SAMPLE_MASK);
 
-   dw4 |= (brw->max_wm_threads - 1) << max_threads_shift;
+   dw4 |= (devinfo->max_wm_threads - 1) << max_threads_shift;
 
    if (prog_data->base.nr_params > 0)
       dw4 |= GEN7_PS_PUSH_CONSTANT_ENABLE;
@@ -215,39 +214,21 @@ gen7_upload_ps_state(struct brw_context *brw,
    if (prog_data->num_varying_inputs != 0)
       dw4 |= GEN7_PS_ATTRIBUTE_ENABLE;
 
-   /* In case of non 1x per sample shading, only one of SIMD8 and SIMD16
-    * should be enabled. We do 'SIMD16 only' dispatch if a SIMD16 shader
-    * is successfully compiled. In majority of the cases that bring us
-    * better performance than 'SIMD8 only' dispatch.
-    */
-   int min_inv_per_frag =
-      _mesa_get_min_invocations_per_fragment(ctx, fp, false);
-   assert(min_inv_per_frag >= 1);
-
-   if (prog_data->prog_offset_16 || prog_data->no_8) {
-      dw4 |= GEN7_PS_16_DISPATCH_ENABLE;
-      if (!prog_data->no_8 && min_inv_per_frag == 1) {
-         dw4 |= GEN7_PS_8_DISPATCH_ENABLE;
-         dw5 |= (prog_data->base.dispatch_grf_start_reg <<
-                 GEN7_PS_DISPATCH_START_GRF_SHIFT_0);
-         dw5 |= (prog_data->dispatch_grf_start_reg_16 <<
-                 GEN7_PS_DISPATCH_START_GRF_SHIFT_2);
-         ksp0 = stage_state->prog_offset;
-         ksp2 = stage_state->prog_offset + prog_data->prog_offset_16;
-      } else {
-         dw5 |= (prog_data->dispatch_grf_start_reg_16 <<
-                 GEN7_PS_DISPATCH_START_GRF_SHIFT_0);
-         ksp0 = stage_state->prog_offset + prog_data->prog_offset_16;
-      }
-   }
-   else {
-      dw4 |= GEN7_PS_8_DISPATCH_ENABLE;
-      dw5 |= (prog_data->base.dispatch_grf_start_reg <<
-              GEN7_PS_DISPATCH_START_GRF_SHIFT_0);
-      ksp0 = stage_state->prog_offset;
-   }
-
    dw4 |= fast_clear_op;
+
+   if (prog_data->dispatch_16)
+      dw4 |= GEN7_PS_16_DISPATCH_ENABLE;
+
+   if (prog_data->dispatch_8)
+      dw4 |= GEN7_PS_8_DISPATCH_ENABLE;
+
+   dw5 |= prog_data->base.dispatch_grf_start_reg <<
+          GEN7_PS_DISPATCH_START_GRF_SHIFT_0;
+   dw5 |= prog_data->dispatch_grf_start_reg_2 <<
+          GEN7_PS_DISPATCH_START_GRF_SHIFT_2;
+
+   ksp0 = stage_state->prog_offset;
+   ksp2 = stage_state->prog_offset + prog_data->prog_offset_2;
 
    BEGIN_BATCH(8);
    OUT_BATCH(_3DSTATE_PS << 16 | (8 - 2));
@@ -256,7 +237,7 @@ gen7_upload_ps_state(struct brw_context *brw,
    if (prog_data->base.total_scratch) {
       OUT_RELOC(brw->wm.base.scratch_bo,
 		I915_GEM_DOMAIN_RENDER, I915_GEM_DOMAIN_RENDER,
-		ffs(prog_data->base.total_scratch) - 11);
+		ffs(stage_state->per_thread_scratch) - 11);
    } else {
       OUT_BATCH(0);
    }
@@ -271,7 +252,8 @@ static void
 upload_ps_state(struct brw_context *brw)
 {
    /* BRW_NEW_FS_PROG_DATA */
-   const struct brw_wm_prog_data *prog_data = brw->wm.prog_data;
+   const struct brw_wm_prog_data *prog_data =
+      brw_wm_prog_data(brw->wm.base.prog_data);
    const struct gl_context *ctx = &brw->ctx;
    /* BRW_NEW_FS_PROG_DATA | _NEW_COLOR */
    const bool enable_dual_src_blend = prog_data->dual_src_blend &&
@@ -281,7 +263,7 @@ upload_ps_state(struct brw_context *brw)
    const unsigned sample_mask =
       brw->is_haswell ? gen6_determine_sample_mask(brw) : 0;
 
-   gen7_upload_ps_state(brw, brw->fragment_program, &brw->wm.base, prog_data,
+   gen7_upload_ps_state(brw, &brw->wm.base, prog_data,
                         enable_dual_src_blend, sample_mask,
                         brw->wm.fast_clear_op);
 }
@@ -292,7 +274,7 @@ const struct brw_tracked_state gen7_ps_state = {
                _NEW_COLOR |
                _NEW_MULTISAMPLE,
       .brw   = BRW_NEW_BATCH |
-               BRW_NEW_FRAGMENT_PROGRAM |
+               BRW_NEW_BLORP |
                BRW_NEW_FS_PROG_DATA,
    },
    .emit = upload_ps_state,

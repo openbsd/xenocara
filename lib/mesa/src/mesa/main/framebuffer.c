@@ -851,13 +851,15 @@ _mesa_get_color_read_format(struct gl_context *ctx)
       return GL_NONE;
    }
    else {
-      const GLenum format = ctx->ReadBuffer->_ColorReadBuffer->Format;
+      const mesa_format format = ctx->ReadBuffer->_ColorReadBuffer->Format;
       const GLenum data_type = _mesa_get_format_datatype(format);
 
       if (format == MESA_FORMAT_B8G8R8A8_UNORM)
          return GL_BGRA;
       else if (format == MESA_FORMAT_B5G6R5_UNORM)
-         return GL_BGR;
+         return GL_RGB;
+      else if (format == MESA_FORMAT_R_UNORM8)
+         return GL_RED;
 
       switch (data_type) {
       case GL_UNSIGNED_INT:
@@ -890,7 +892,7 @@ _mesa_get_color_read_type(struct gl_context *ctx)
       const GLenum data_type = _mesa_get_format_datatype(format);
 
       if (format == MESA_FORMAT_B5G6R5_UNORM)
-         return GL_UNSIGNED_SHORT_5_6_5_REV;
+         return GL_UNSIGNED_SHORT_5_6_5;
 
       switch (data_type) {
       case GL_SIGNED_NORMALIZED:
@@ -982,4 +984,23 @@ _mesa_is_front_buffer_drawing(const struct gl_framebuffer *fb)
 
    return (fb->_NumColorDrawBuffers >= 1 &&
            fb->_ColorDrawBufferIndexes[0] == BUFFER_FRONT_LEFT);
+}
+
+static inline GLuint
+_mesa_geometric_nonvalidated_samples(const struct gl_framebuffer *buffer)
+{
+   return buffer->_HasAttachments ?
+      buffer->Visual.samples :
+      buffer->DefaultGeometry.NumSamples;
+}
+
+bool _mesa_is_multisample_enabled(const struct gl_context *ctx)
+{
+   /* The sample count may not be validated by the driver, but when it is set,
+    * we know that is in a valid range and no driver should ever validate a
+    * multisampled framebuffer to non-multisampled and vice-versa.
+    */
+   return ctx->Multisample.Enabled &&
+          ctx->DrawBuffer &&
+          _mesa_geometric_nonvalidated_samples(ctx->DrawBuffer) > 1;
 }

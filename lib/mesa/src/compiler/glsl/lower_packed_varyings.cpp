@@ -168,9 +168,11 @@ public:
                                  ir_variable_mode mode,
                                  unsigned gs_input_vertices,
                                  exec_list *out_instructions,
-                                 exec_list *out_variables);
+                                 exec_list *out_variables,
+                                 bool disable_varying_packing,
+                                 bool xfb_enabled);
 
-   void run(struct gl_shader *shader);
+   void run(struct gl_linked_shader *shader);
 
 private:
    void bitwise_assign_pack(ir_rvalue *lhs, ir_rvalue *rhs);
@@ -231,6 +233,9 @@ private:
     * Exec list into which the visitor should insert any new variables.
     */
    exec_list *out_variables;
+
+   bool disable_varying_packing;
+   bool xfb_enabled;
 };
 
 } /* anonymous namespace */
@@ -238,7 +243,8 @@ private:
 lower_packed_varyings_visitor::lower_packed_varyings_visitor(
       void *mem_ctx, unsigned locations_used, ir_variable_mode mode,
       unsigned gs_input_vertices, exec_list *out_instructions,
-      exec_list *out_variables)
+      exec_list *out_variables, bool disable_varying_packing,
+      bool xfb_enabled)
    : mem_ctx(mem_ctx),
      locations_used(locations_used),
      packed_varyings((ir_variable **)
@@ -247,12 +253,14 @@ lower_packed_varyings_visitor::lower_packed_varyings_visitor(
      mode(mode),
      gs_input_vertices(gs_input_vertices),
      out_instructions(out_instructions),
-     out_variables(out_variables)
+     out_variables(out_variables),
+     disable_varying_packing(disable_varying_packing),
+     xfb_enabled(xfb_enabled)
 {
 }
 
 void
-lower_packed_varyings_visitor::run(struct gl_shader *shader)
+lower_packed_varyings_visitor::run(struct gl_linked_shader *shader)
 {
    foreach_in_list(ir_instruction, node, shader->ir) {
       ir_variable *var = node->as_variable();
@@ -265,11 +273,11 @@ lower_packed_varyings_visitor::run(struct gl_shader *shader)
          continue;
 
       /* This lowering pass is only capable of packing floats and ints
-       * together when their interpolation mode is "flat".  Therefore, to be
-       * safe, caller should ensure that integral varyings always use flat
-       * interpolation, even when this is not required by GLSL.
+       * together when their interpolation mode is "flat".  Treat integers as
+       * being flat when the interpolation mode is none.
        */
-      assert(var->data.interpolation == INTERP_QUALIFIER_FLAT ||
+      assert(var->data.interpolation == INTERP_MODE_FLAT ||
+             var->data.interpolation == INTERP_MODE_NONE ||
              !var->type->contains_integer());
 
       /* Clone the variable for program resource list before
@@ -424,7 +432,7 @@ lower_packed_varyings_visitor::lower_rvalue(ir_rvalue *rvalue,
                                             bool gs_input_toplevel,
                                             unsigned vertex_index)
 {
-   unsigned dmul = rvalue->type->is_double() ? 2 : 1;
+   unsigned dmul = rvalue->type->is_64bit() ? 2 : 1;
    /* When gs_input_toplevel is set, we should be looking at a geometry shader
     * input array.
     */
@@ -472,7 +480,7 @@ lower_packed_varyings_visitor::lower_rvalue(ir_rvalue *rvalue,
       char right_swizzle_name[4] = { 0, 0, 0, 0 };
 
       left_components = 4 - fine_location % 4;
-      if (rvalue->type->is_double()) {
+      if (rvalue->type->is_64bit()) {
          /* We might actually end up with 0 left components! */
          left_components /= 2;
       }
@@ -599,7 +607,7 @@ lower_packed_varyings_visitor::get_packed_varying_deref(
    if (this->packed_varyings[slot] == NULL) {
       char *packed_name = ralloc_asprintf(this->mem_ctx, "packed:%s", name);
       const glsl_type *packed_type;
-      if (unpacked_var->data.interpolation == INTERP_QUALIFIER_FLAT)
+      if (unpacked_var->is_interpolation_flat())
          packed_type = glsl_type::ivec4_type;
       else
          packed_type = glsl_type::vec4_type;
@@ -619,7 +627,8 @@ lower_packed_varyings_visitor::get_packed_varying_deref(
       packed_var->data.centroid = unpacked_var->data.centroid;
       packed_var->data.sample = unpacked_var->data.sample;
       packed_var->data.patch = unpacked_var->data.patch;
-      packed_var->data.interpolation = unpacked_var->data.interpolation;
+      packed_var->data.interpolation = packed_type == glsl_type::ivec4_type
+         ? unsigned(INTERP_MODE_FLAT) : unpacked_var->data.interpolation;
       packed_var->data.location = location;
       packed_var->data.precision = unpacked_var->data.precision;
       packed_var->data.always_active_io = unpacked_var->data.always_active_io;
@@ -656,8 +665,19 @@ lower_packed_varyings_visitor::needs_lowering(ir_variable *var)
    if (var->data.explicit_location)
       return false;
 
-   const glsl_type *type = var->type->without_array();
-   if (type->vector_elements == 4 && !type->is_double())
+   /* Override disable_varying_packing if the var is only used by transform
+    * feedback. Also override it if transform feedback is enabled and the
+    * variable is an array, struct or matrix as the elements of these types
+    * will always has the same interpolation and therefore asre safe to pack.
+    */
+   const glsl_type *type = var->type;
+   if (disable_varying_packing && !var->data.is_xfb_only &&
+       !((type->is_array() || type->is_record() || type->is_matrix()) &&
+         xfb_enabled))
+      return false;
+
+   type = type->without_array();
+   if (type->vector_elements == 4 && !type->is_64bit())
       return false;
    return true;
 }
@@ -705,11 +725,51 @@ lower_packed_varyings_gs_splicer::visit_leave(ir_emit_vertex *ev)
    return visit_continue;
 }
 
+/**
+ * Visitor that splices varying packing code before every return.
+ */
+class lower_packed_varyings_return_splicer : public ir_hierarchical_visitor
+{
+public:
+   explicit lower_packed_varyings_return_splicer(void *mem_ctx,
+                                                 const exec_list *instructions);
+
+   virtual ir_visitor_status visit_leave(ir_return *ret);
+
+private:
+   /**
+    * Memory context used to allocate new instructions for the shader.
+    */
+   void * const mem_ctx;
+
+   /**
+    * Instructions that should be spliced into place before each return.
+    */
+   const exec_list *instructions;
+};
+
+
+lower_packed_varyings_return_splicer::lower_packed_varyings_return_splicer(
+      void *mem_ctx, const exec_list *instructions)
+   : mem_ctx(mem_ctx), instructions(instructions)
+{
+}
+
+
+ir_visitor_status
+lower_packed_varyings_return_splicer::visit_leave(ir_return *ret)
+{
+   foreach_in_list(ir_instruction, ir, this->instructions) {
+      ret->insert_before(ir->clone(this->mem_ctx, NULL));
+   }
+   return visit_continue;
+}
 
 void
 lower_packed_varyings(void *mem_ctx, unsigned locations_used,
                       ir_variable_mode mode, unsigned gs_input_vertices,
-                      gl_shader *shader)
+                      gl_linked_shader *shader, bool disable_varying_packing,
+                      bool xfb_enabled)
 {
    exec_list *instructions = shader->ir;
    ir_function *main_func = shader->symbols->get_function("main");
@@ -720,7 +780,9 @@ lower_packed_varyings(void *mem_ctx, unsigned locations_used,
    lower_packed_varyings_visitor visitor(mem_ctx, locations_used, mode,
                                          gs_input_vertices,
                                          &new_instructions,
-                                         &new_variables);
+                                         &new_variables,
+                                         disable_varying_packing,
+                                         xfb_enabled);
    visitor.run(shader);
    if (mode == ir_var_shader_out) {
       if (shader->Stage == MESA_SHADER_GEOMETRY) {
@@ -730,20 +792,31 @@ lower_packed_varyings(void *mem_ctx, unsigned locations_used,
          lower_packed_varyings_gs_splicer splicer(mem_ctx, &new_instructions);
 
          /* Add all the variables in first. */
-         main_func_sig->body.head->insert_before(&new_variables);
+         main_func_sig->body.get_head_raw()->insert_before(&new_variables);
 
          /* Now update all the EmitVertex instances */
          splicer.run(instructions);
       } else {
-         /* For other shader types, outputs need to be lowered at the end of
-          * main()
+         /* For other shader types, outputs need to be lowered before each
+          * return statement and at the end of main()
           */
-         main_func_sig->body.append_list(&new_variables);
-         main_func_sig->body.append_list(&new_instructions);
+
+         lower_packed_varyings_return_splicer splicer(mem_ctx, &new_instructions);
+
+         main_func_sig->body.get_head_raw()->insert_before(&new_variables);
+
+         splicer.run(instructions);
+
+         /* Lower outputs at the end of main() if the last instruction is not
+          * a return statement
+          */
+         if (((ir_instruction*)instructions->get_tail())->ir_type != ir_type_return) {
+            main_func_sig->body.append_list(&new_instructions);
+         }
       }
    } else {
       /* Shader inputs need to be lowered at the beginning of main() */
-      main_func_sig->body.head->insert_before(&new_instructions);
-      main_func_sig->body.head->insert_before(&new_variables);
+      main_func_sig->body.get_head_raw()->insert_before(&new_instructions);
+      main_func_sig->body.get_head_raw()->insert_before(&new_variables);
    }
 }

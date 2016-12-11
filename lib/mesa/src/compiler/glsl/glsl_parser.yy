@@ -170,7 +170,6 @@ static bool match_layout_qualifier(const char *s1, const char *s2,
 %token <identifier> IDENTIFIER TYPE_IDENTIFIER NEW_IDENTIFIER
 %type <identifier> any_identifier
 %type <interface_block> instance_name_opt
-%type <interface_block> buffer_instance_name_opt
 %token <real> FLOATCONSTANT
 %token <dreal> DOUBLECONSTANT
 %token <n> INTCONSTANT UINTCONSTANT BOOLCONSTANT
@@ -220,7 +219,6 @@ static bool match_layout_qualifier(const char *s1, const char *s2,
 %type <type_qualifier> subroutine_qualifier
 %type <subroutine_list> subroutine_type_list
 %type <type_qualifier> interface_qualifier
-%type <type_qualifier> buffer_interface_qualifier
 %type <type_specifier> type_specifier
 %type <type_specifier> type_specifier_nonarray
 %type <array_specifier> array_specifier
@@ -894,6 +892,7 @@ parameter_declarator:
       $$->type->set_location(@1);
       $$->type->specifier = $1;
       $$->identifier = $2;
+      state->symbols->add_variable(new(state) ir_variable(NULL, $2, ir_var_auto));
    }
    | type_specifier any_identifier array_specifier
    {
@@ -905,6 +904,7 @@ parameter_declarator:
       $$->type->specifier = $1;
       $$->identifier = $2;
       $$->array_specifier = $3;
+      state->symbols->add_variable(new(state) ir_variable(NULL, $2, ir_var_auto));
    }
    ;
 
@@ -1062,6 +1062,7 @@ single_declaration:
       $$ = new(ctx) ast_declarator_list($1);
       $$->set_location_range(@1, @2);
       $$->declarations.push_tail(&decl->link);
+      state->symbols->add_variable(new(state) ir_variable(NULL, $2, ir_var_auto));
    }
    | fully_specified_type any_identifier array_specifier
    {
@@ -1072,6 +1073,7 @@ single_declaration:
       $$ = new(ctx) ast_declarator_list($1);
       $$->set_location_range(@1, @3);
       $$->declarations.push_tail(&decl->link);
+      state->symbols->add_variable(new(state) ir_variable(NULL, $2, ir_var_auto));
    }
    | fully_specified_type any_identifier array_specifier '=' initializer
    {
@@ -1082,6 +1084,7 @@ single_declaration:
       $$ = new(ctx) ast_declarator_list($1);
       $$->set_location_range(@1, @3);
       $$->declarations.push_tail(&decl->link);
+      state->symbols->add_variable(new(state) ir_variable(NULL, $2, ir_var_auto));
    }
    | fully_specified_type any_identifier '=' initializer
    {
@@ -1092,6 +1095,7 @@ single_declaration:
       $$ = new(ctx) ast_declarator_list($1);
       $$->set_location_range(@1, @2);
       $$->declarations.push_tail(&decl->link);
+      state->symbols->add_variable(new(state) ir_variable(NULL, $2, ir_var_auto));
    }
    | INVARIANT variable_identifier
    {
@@ -1270,7 +1274,8 @@ layout_qualifier_id:
             }
          }
 
-         if ($$.flags.i && !state->has_geometry_shader()) {
+         if ($$.flags.i && !state->has_geometry_shader() &&
+             !state->has_tessellation_shader()) {
             _mesa_glsl_error(& @1, state, "#version 150 layout "
                              "qualifier `%s' used", $1);
          }
@@ -1368,7 +1373,7 @@ layout_qualifier_id:
 
       /* Layout qualifiers for tessellation evaluation shaders. */
       if (!$$.flags.i) {
-         struct {
+         static const struct {
             const char *s;
             GLenum e;
          } map[] = {
@@ -1384,16 +1389,14 @@ layout_qualifier_id:
             }
          }
 
-         if ($$.flags.i &&
-             !state->ARB_tessellation_shader_enable &&
-             !state->is_version(400, 0)) {
+         if ($$.flags.i && !state->has_tessellation_shader()) {
             _mesa_glsl_error(& @1, state,
                              "primitive mode qualifier `%s' requires "
                              "GLSL 4.00 or ARB_tessellation_shader", $1);
          }
       }
       if (!$$.flags.i) {
-         struct {
+         static const struct {
             const char *s;
             GLenum e;
          } map[] = {
@@ -1409,9 +1412,7 @@ layout_qualifier_id:
             }
          }
 
-         if ($$.flags.i &&
-             !state->ARB_tessellation_shader_enable &&
-             !state->is_version(400, 0)) {
+         if ($$.flags.i && !state->has_tessellation_shader()) {
             _mesa_glsl_error(& @1, state,
                              "vertex spacing qualifier `%s' requires "
                              "GLSL 4.00 or ARB_tessellation_shader", $1);
@@ -1426,9 +1427,7 @@ layout_qualifier_id:
             $$.ordering = GL_CCW;
          }
 
-         if ($$.flags.i &&
-             !state->ARB_tessellation_shader_enable &&
-             !state->is_version(400, 0)) {
+         if ($$.flags.i && !state->has_tessellation_shader()) {
             _mesa_glsl_error(& @1, state,
                              "ordering qualifier `%s' requires "
                              "GLSL 4.00 or ARB_tessellation_shader", $1);
@@ -1440,12 +1439,68 @@ layout_qualifier_id:
             $$.point_mode = true;
          }
 
-         if ($$.flags.i &&
-             !state->ARB_tessellation_shader_enable &&
-             !state->is_version(400, 0)) {
+         if ($$.flags.i && !state->has_tessellation_shader()) {
             _mesa_glsl_error(& @1, state,
                              "qualifier `point_mode' requires "
                              "GLSL 4.00 or ARB_tessellation_shader");
+         }
+      }
+
+      if (!$$.flags.i) {
+         static const struct {
+            const char *s;
+            uint32_t mask;
+         } map[] = {
+                 { "blend_support_multiply",       BLEND_MULTIPLY },
+                 { "blend_support_screen",         BLEND_SCREEN },
+                 { "blend_support_overlay",        BLEND_OVERLAY },
+                 { "blend_support_darken",         BLEND_DARKEN },
+                 { "blend_support_lighten",        BLEND_LIGHTEN },
+                 { "blend_support_colordodge",     BLEND_COLORDODGE },
+                 { "blend_support_colorburn",      BLEND_COLORBURN },
+                 { "blend_support_hardlight",      BLEND_HARDLIGHT },
+                 { "blend_support_softlight",      BLEND_SOFTLIGHT },
+                 { "blend_support_difference",     BLEND_DIFFERENCE },
+                 { "blend_support_exclusion",      BLEND_EXCLUSION },
+                 { "blend_support_hsl_hue",        BLEND_HSL_HUE },
+                 { "blend_support_hsl_saturation", BLEND_HSL_SATURATION },
+                 { "blend_support_hsl_color",      BLEND_HSL_COLOR },
+                 { "blend_support_hsl_luminosity", BLEND_HSL_LUMINOSITY },
+                 { "blend_support_all_equations",  BLEND_ALL },
+         };
+         for (unsigned i = 0; i < ARRAY_SIZE(map); i++) {
+            if (match_layout_qualifier($1, map[i].s, state) == 0) {
+               $$.flags.q.blend_support = 1;
+               state->fs_blend_support |= map[i].mask;
+               break;
+            }
+         }
+
+         if ($$.flags.i &&
+             !state->KHR_blend_equation_advanced_enable &&
+             !state->is_version(0, 320)) {
+            _mesa_glsl_error(& @1, state,
+                             "advanced blending layout qualifiers require "
+                             "ESSL 3.20 or KHR_blend_equation_advanced");
+         }
+
+         if ($$.flags.i && state->stage != MESA_SHADER_FRAGMENT) {
+            _mesa_glsl_error(& @1, state,
+                             "advanced blending layout qualifiers only "
+                             "valid in fragment shaders");
+         }
+      }
+
+      /* Layout qualifiers for ARB_compute_variable_group_size. */
+      if (!$$.flags.i) {
+         if (match_layout_qualifier($1, "local_size_variable", state) == 0) {
+            $$.flags.q.local_size_variable = 1;
+         }
+
+         if ($$.flags.i && !state->ARB_compute_variable_group_size_enable) {
+            _mesa_glsl_error(& @1, state,
+                             "qualifier `local_size_variable` requires "
+                             "ARB_compute_variable_group_size");
          }
       }
 
@@ -1468,6 +1523,17 @@ layout_qualifier_id:
                           "GLSL 4.40 or ARB_enhanced_layouts");
       }
 
+      if (match_layout_qualifier("align", $1, state) == 0) {
+         if (!state->has_enhanced_layouts()) {
+            _mesa_glsl_error(& @1, state,
+                             "align qualifier requires "
+                             "GLSL 4.40 or ARB_enhanced_layouts");
+         } else {
+            $$.flags.q.explicit_align = 1;
+            $$.align = $3;
+         }
+      }
+
       if (match_layout_qualifier("location", $1, state) == 0) {
          $$.flags.q.explicit_location = 1;
 
@@ -1478,6 +1544,17 @@ layout_qualifier_id:
                                "identifier `%s' used", $1);
          }
          $$.location = $3;
+      }
+
+      if (match_layout_qualifier("component", $1, state) == 0) {
+         if (!state->has_enhanced_layouts()) {
+            _mesa_glsl_error(& @1, state,
+                             "component qualifier requires "
+                             "GLSL 4.40 or ARB_enhanced_layouts");
+         } else {
+            $$.flags.q.explicit_component = 1;
+            $$.component = $3;
+         }
       }
 
       if (match_layout_qualifier("index", $1, state) == 0) {
@@ -1498,7 +1575,8 @@ layout_qualifier_id:
          $$.binding = $3;
       }
 
-      if (state->has_atomic_counters() &&
+      if ((state->has_atomic_counters() ||
+           state->has_enhanced_layouts()) &&
           match_layout_qualifier("offset", $1, state) == 0) {
          $$.flags.q.explicit_offset = 1;
          $$.offset = $3;
@@ -1520,6 +1598,25 @@ layout_qualifier_id:
             $$.flags.q.stream = 1;
             $$.flags.q.explicit_stream = 1;
             $$.stream = $3;
+         }
+      }
+
+      if (state->has_enhanced_layouts()) {
+         if (match_layout_qualifier("xfb_buffer", $1, state) == 0) {
+            $$.flags.q.xfb_buffer = 1;
+            $$.flags.q.explicit_xfb_buffer = 1;
+            $$.xfb_buffer = $3;
+         }
+
+         if (match_layout_qualifier("xfb_offset", $1, state) == 0) {
+            $$.flags.q.explicit_xfb_offset = 1;
+            $$.offset = $3;
+         }
+
+         if (match_layout_qualifier("xfb_stride", $1, state) == 0) {
+            $$.flags.q.xfb_stride = 1;
+            $$.flags.q.explicit_xfb_stride = 1;
+            $$.xfb_stride = $3;
          }
       }
 
@@ -1548,8 +1645,10 @@ layout_qualifier_id:
       if (match_layout_qualifier("invocations", $1, state) == 0) {
          $$.flags.q.invocations = 1;
          $$.invocations = new(ctx) ast_layout_expression(@1, $3);
-         if (!state->is_version(400, 0) &&
-             !state->ARB_gpu_shader5_enable) {
+         if (!state->is_version(400, 320) &&
+             !state->ARB_gpu_shader5_enable &&
+             !state->OES_geometry_shader_enable &&
+             !state->EXT_geometry_shader_enable) {
             _mesa_glsl_error(& @3, state,
                              "GL_ARB_gpu_shader5 invocations "
                              "qualifier specified", $3);
@@ -1560,8 +1659,7 @@ layout_qualifier_id:
       if (match_layout_qualifier("vertices", $1, state) == 0) {
          $$.flags.q.vertices = 1;
          $$.vertices = new(ctx) ast_layout_expression(@1, $3);
-         if (!state->ARB_tessellation_shader_enable &&
-             !state->is_version(400, 0)) {
+         if (!state->has_tessellation_shader()) {
             _mesa_glsl_error(& @1, state,
                              "vertices qualifier requires GLSL 4.00 or "
                              "ARB_tessellation_shader");
@@ -1736,8 +1834,10 @@ type_qualifier:
        * variables. As only outputs can be declared as invariant, an invariant
        * output from one shader stage will still match an input of a subsequent
        * stage without the input being declared as invariant."
+       *
+       * On the desktop side, this text first appears in GLSL 4.30.
        */
-      if (state->es_shader && state->language_version >= 300 && $$.flags.q.in)
+      if (state->is_version(430, 300) && $$.flags.q.in)
          _mesa_glsl_error(&@1, state, "invariant qualifiers cannot be used with shader inputs");
    }
    | interpolation_qualifier type_qualifier
@@ -1897,6 +1997,24 @@ storage_qualifier:
           $$.flags.q.explicit_stream = 0;
           $$.stream = state->out_qualifier->stream;
       }
+
+      if (state->has_enhanced_layouts()) {
+          $$.flags.q.xfb_buffer = 1;
+          $$.flags.q.explicit_xfb_buffer = 0;
+          $$.xfb_buffer = state->out_qualifier->xfb_buffer;
+      }
+   }
+   | INOUT_TOK
+   {
+      memset(& $$, 0, sizeof($$));
+      $$.flags.q.in = 1;
+      $$.flags.q.out = 1;
+
+      if (!state->has_framebuffer_fetch() ||
+          !state->is_version(130, 300) ||
+          state->stage != MESA_SHADER_FRAGMENT)
+         _mesa_glsl_error(&@1, state, "A single interface variable cannot be "
+                          "declared as both input and output");
    }
    | UNIFORM
    {
@@ -2618,17 +2736,11 @@ basic_interface_block:
    {
       ast_interface_block *const block = $6;
 
-      block->block_name = $2;
-      block->declarations.push_degenerate_list_at_head(& $4->link);
-
-      _mesa_ast_process_interface_block(& @1, state, block, $1);
-
-      $$ = block;
-   }
-   | buffer_interface_qualifier NEW_IDENTIFIER '{' member_list '}' buffer_instance_name_opt ';'
-   {
-      ast_interface_block *const block = $6;
-
+      if ($1.flags.q.uniform) {
+         block->layout = *state->default_uniform_qualifier;
+      } else if ($1.flags.q.buffer) {
+         block->layout = *state->default_shader_storage_qualifier;
+      }
       block->block_name = $2;
       block->declarations.push_degenerate_list_at_head(& $4->link);
 
@@ -2654,52 +2766,37 @@ interface_qualifier:
       memset(& $$, 0, sizeof($$));
       $$.flags.q.uniform = 1;
    }
-   ;
-
-buffer_interface_qualifier:
-   BUFFER
+   | BUFFER
    {
       memset(& $$, 0, sizeof($$));
       $$.flags.q.buffer = 1;
+   }
+   | auxiliary_storage_qualifier interface_qualifier
+   {
+      if (!$1.flags.q.patch) {
+         _mesa_glsl_error(&@1, state, "invalid interface qualifier");
+      }
+      if ($2.has_auxiliary_storage()) {
+         _mesa_glsl_error(&@1, state, "duplicate patch qualifier");
+      }
+      $$ = $2;
+      $$.flags.q.patch = 1;
    }
    ;
 
 instance_name_opt:
    /* empty */
    {
-      $$ = new(state) ast_interface_block(*state->default_uniform_qualifier,
-                                          NULL, NULL);
+      $$ = new(state) ast_interface_block(NULL, NULL);
    }
    | NEW_IDENTIFIER
    {
-      $$ = new(state) ast_interface_block(*state->default_uniform_qualifier,
-                                          $1, NULL);
+      $$ = new(state) ast_interface_block($1, NULL);
       $$->set_location(@1);
    }
    | NEW_IDENTIFIER array_specifier
    {
-      $$ = new(state) ast_interface_block(*state->default_uniform_qualifier,
-                                          $1, $2);
-      $$->set_location_range(@1, @2);
-   }
-   ;
-
-buffer_instance_name_opt:
-   /* empty */
-   {
-      $$ = new(state) ast_interface_block(*state->default_shader_storage_qualifier,
-                                          NULL, NULL);
-   }
-   | NEW_IDENTIFIER
-   {
-      $$ = new(state) ast_interface_block(*state->default_shader_storage_qualifier,
-                                          $1, NULL);
-      $$->set_location(@1);
-   }
-   | NEW_IDENTIFIER array_specifier
-   {
-      $$ = new(state) ast_interface_block(*state->default_shader_storage_qualifier,
-                                          $1, $2);
+      $$ = new(state) ast_interface_block($1, $2);
       $$->set_location_range(@1, @2);
    }
    ;
@@ -2812,6 +2909,7 @@ layout_in_defaults:
                 merge_in_qualifier(& @1, state, $1, $$, false)) {
             YYERROR;
          }
+         $$ = $2;
       }
    }
    | layout_qualifier IN_TOK ';'
@@ -2836,6 +2934,7 @@ layout_out_defaults:
                 merge_out_qualifier(& @1, state, $1, $$, false)) {
             YYERROR;
          }
+         $$ = $2;
       }
    }
    | layout_qualifier OUT_TOK ';'

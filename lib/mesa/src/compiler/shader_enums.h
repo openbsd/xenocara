@@ -31,7 +31,7 @@ extern "C" {
 #endif
 
 /**
- * Shader stages. Note that these will become 5 with tessellation.
+ * Shader stages.
  *
  * The order must match how shaders are ordered in the pipeline.
  * The GLSL linker assumes that if i<j, then the j-th shader is
@@ -205,6 +205,8 @@ typedef enum
    VARYING_SLOT_CLIP_VERTEX, /* Does not appear in FS */
    VARYING_SLOT_CLIP_DIST0,
    VARYING_SLOT_CLIP_DIST1,
+   VARYING_SLOT_CULL_DIST0,
+   VARYING_SLOT_CULL_DIST1,
    VARYING_SLOT_PRIMITIVE_ID, /* Does not appear in VS */
    VARYING_SLOT_LAYER, /* Appears as VS or GS output */
    VARYING_SLOT_VIEWPORT, /* Appears as VS or GS output */
@@ -212,6 +214,8 @@ typedef enum
    VARYING_SLOT_PNTC, /* FS only */
    VARYING_SLOT_TESS_LEVEL_OUTER, /* Only appears as TCS output. */
    VARYING_SLOT_TESS_LEVEL_INNER, /* Only appears as TCS output. */
+   VARYING_SLOT_BOUNDING_BOX0, /* Only appears as TCS output. */
+   VARYING_SLOT_BOUNDING_BOX1, /* Only appears as TCS output. */
    VARYING_SLOT_VAR0, /* First generic varying slot */
    /* the remaining are simply for the benefit of gl_varying_slot_name()
     * and not to be construed as an upper bound:
@@ -253,6 +257,7 @@ typedef enum
 #define VARYING_SLOT_MAX	(VARYING_SLOT_VAR0 + MAX_VARYING)
 #define VARYING_SLOT_PATCH0	(VARYING_SLOT_MAX)
 #define VARYING_SLOT_TESS_MAX	(VARYING_SLOT_PATCH0 + MAX_VARYING)
+#define MAX_VARYINGS_INCL_PATCH (VARYING_SLOT_TESS_MAX - VARYING_SLOT_VAR0)
 
 const char *gl_varying_slot_name(gl_varying_slot slot);
 
@@ -282,6 +287,8 @@ const char *gl_varying_slot_name(gl_varying_slot slot);
 #define VARYING_BIT_CLIP_VERTEX BITFIELD64_BIT(VARYING_SLOT_CLIP_VERTEX)
 #define VARYING_BIT_CLIP_DIST0 BITFIELD64_BIT(VARYING_SLOT_CLIP_DIST0)
 #define VARYING_BIT_CLIP_DIST1 BITFIELD64_BIT(VARYING_SLOT_CLIP_DIST1)
+#define VARYING_BIT_CULL_DIST0 BITFIELD64_BIT(VARYING_SLOT_CULL_DIST0)
+#define VARYING_BIT_CULL_DIST1 BITFIELD64_BIT(VARYING_SLOT_CULL_DIST1)
 #define VARYING_BIT_PRIMITIVE_ID BITFIELD64_BIT(VARYING_SLOT_PRIMITIVE_ID)
 #define VARYING_BIT_LAYER BITFIELD64_BIT(VARYING_SLOT_LAYER)
 #define VARYING_BIT_VIEWPORT BITFIELD64_BIT(VARYING_SLOT_VIEWPORT)
@@ -289,6 +296,8 @@ const char *gl_varying_slot_name(gl_varying_slot slot);
 #define VARYING_BIT_PNTC BITFIELD64_BIT(VARYING_SLOT_PNTC)
 #define VARYING_BIT_TESS_LEVEL_OUTER BITFIELD64_BIT(VARYING_SLOT_TESS_LEVEL_OUTER)
 #define VARYING_BIT_TESS_LEVEL_INNER BITFIELD64_BIT(VARYING_SLOT_TESS_LEVEL_INNER)
+#define VARYING_BIT_BOUNDING_BOX0 BITFIELD64_BIT(VARYING_SLOT_BOUNDING_BOX0)
+#define VARYING_BIT_BOUNDING_BOX1 BITFIELD64_BIT(VARYING_SLOT_BOUNDING_BOX1)
 #define VARYING_BIT_VAR(V) BITFIELD64_BIT(VARYING_SLOT_VAR0 + (V))
 /*@}*/
 
@@ -379,6 +388,13 @@ typedef enum
    SYSTEM_VALUE_INSTANCE_ID,
 
    /**
+    * Vulkan InstanceIndex.
+    *
+    * InstanceIndex = gl_InstanceID + gl_BaseInstance
+    */
+   SYSTEM_VALUE_INSTANCE_INDEX,
+
+   /**
     * DirectX-style vertex ID.
     *
     * Unlike \c SYSTEM_VALUE_VERTEX_ID, this system value does \b not include
@@ -452,8 +468,11 @@ typedef enum
     */
    /*@{*/
    SYSTEM_VALUE_LOCAL_INVOCATION_ID,
+   SYSTEM_VALUE_LOCAL_INVOCATION_INDEX,
+   SYSTEM_VALUE_GLOBAL_INVOCATION_ID,
    SYSTEM_VALUE_WORK_GROUP_ID,
    SYSTEM_VALUE_NUM_WORK_GROUPS,
+   SYSTEM_VALUE_LOCAL_GROUP_SIZE,
    /*@}*/
 
    /**
@@ -471,19 +490,19 @@ const char *gl_system_value_name(gl_system_value sysval);
  * The possible interpolation qualifiers that can be applied to a fragment
  * shader input in GLSL.
  *
- * Note: INTERP_QUALIFIER_NONE must be 0 so that memsetting the
+ * Note: INTERP_MODE_NONE must be 0 so that memsetting the
  * gl_fragment_program data structure to 0 causes the default behavior.
  */
-enum glsl_interp_qualifier
+enum glsl_interp_mode
 {
-   INTERP_QUALIFIER_NONE = 0,
-   INTERP_QUALIFIER_SMOOTH,
-   INTERP_QUALIFIER_FLAT,
-   INTERP_QUALIFIER_NOPERSPECTIVE,
-   INTERP_QUALIFIER_COUNT /**< Number of interpolation qualifiers */
+   INTERP_MODE_NONE = 0,
+   INTERP_MODE_SMOOTH,
+   INTERP_MODE_FLAT,
+   INTERP_MODE_NOPERSPECTIVE,
+   INTERP_MODE_COUNT /**< Number of interpolation qualifiers */
 };
 
-const char *glsl_interp_qualifier_name(enum glsl_interp_qualifier qual);
+const char *glsl_interp_mode_name(enum glsl_interp_mode qual);
 
 /**
  * Fragment program results
@@ -543,6 +562,32 @@ enum gl_buffer_access_qualifier
    ACCESS_COHERENT = 1,
    ACCESS_RESTRICT = 2,
    ACCESS_VOLATILE = 4,
+};
+
+/**
+ * \brief Blend support qualifiers
+ */
+enum gl_advanced_blend_mode
+{
+   BLEND_NONE           = 0x0000,
+
+   BLEND_MULTIPLY       = 0x0001,
+   BLEND_SCREEN         = 0x0002,
+   BLEND_OVERLAY        = 0x0004,
+   BLEND_DARKEN         = 0x0008,
+   BLEND_LIGHTEN        = 0x0010,
+   BLEND_COLORDODGE     = 0x0020,
+   BLEND_COLORBURN      = 0x0040,
+   BLEND_HARDLIGHT      = 0x0080,
+   BLEND_SOFTLIGHT      = 0x0100,
+   BLEND_DIFFERENCE     = 0x0200,
+   BLEND_EXCLUSION      = 0x0400,
+   BLEND_HSL_HUE        = 0x0800,
+   BLEND_HSL_SATURATION = 0x1000,
+   BLEND_HSL_COLOR      = 0x2000,
+   BLEND_HSL_LUMINOSITY = 0x4000,
+
+   BLEND_ALL            = 0x7fff,
 };
 
 #ifdef __cplusplus

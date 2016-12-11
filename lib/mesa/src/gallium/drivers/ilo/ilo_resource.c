@@ -204,7 +204,7 @@ resource_get_image_info(const struct pipe_resource *templ,
     * images when the image size is greater than one-fourth of the mappable
     * aperture.
     */
-   if (templ->bind & (PIPE_BIND_TRANSFER_WRITE | PIPE_BIND_TRANSFER_READ))
+   if (templ->usage == PIPE_USAGE_STAGING)
       info->prefer_linear_threshold = dev->aperture_mappable / 4;
 
    info->bind_surface_sampler = (templ->bind & PIPE_BIND_SAMPLER_VIEW);
@@ -473,7 +473,7 @@ tex_init_image(struct ilo_texture *tex,
    struct ilo_screen *is = ilo_screen(tex->base.screen);
    const struct pipe_resource *templ = &tex->base;
    struct ilo_image *img = &tex->image;
-   struct intel_bo *imported_bo = NULL;;
+   struct intel_bo *imported_bo = NULL;
    struct ilo_image_info info;
 
    tex->image_format = resource_get_image_format(templ,
@@ -714,7 +714,8 @@ ilo_resource_create(struct pipe_screen *screen,
 static struct pipe_resource *
 ilo_resource_from_handle(struct pipe_screen *screen,
                          const struct pipe_resource *templ,
-                         struct winsys_handle *handle)
+                         struct winsys_handle *handle,
+                         unsigned usage)
 {
    if (templ->target == PIPE_BUFFER)
       return NULL;
@@ -724,8 +725,10 @@ ilo_resource_from_handle(struct pipe_screen *screen,
 
 static boolean
 ilo_resource_get_handle(struct pipe_screen *screen,
+                        struct pipe_context *ctx,
                         struct pipe_resource *res,
-                        struct winsys_handle *handle)
+                        struct winsys_handle *handle,
+                        unsigned usage)
 {
    if (res->target == PIPE_BUFFER)
       return false;

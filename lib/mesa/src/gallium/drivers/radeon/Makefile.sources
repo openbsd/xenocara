@@ -2,7 +2,6 @@ C_SOURCES := \
 	cayman_msaa.c \
 	r600_buffer_common.c \
 	r600_cs.h \
-	r600d_common.h \
 	r600_gpu_load.c \
 	r600_perfcounter.c \
 	r600_pipe_common.c \
@@ -10,7 +9,9 @@ C_SOURCES := \
 	r600_query.c \
 	r600_query.h \
 	r600_streamout.c \
+	r600_test_dma.c \
 	r600_texture.c \
+	r600_viewport.c \
 	radeon_uvd.c \
 	radeon_uvd.h \
 	radeon_vce_40_2_2.c \
@@ -24,10 +25,4 @@ C_SOURCES := \
 
 LLVM_C_FILES := \
 	radeon_elf_util.c \
-	radeon_elf_util.h \
-	radeon_llvm_emit.c \
-	radeon_llvm_emit.h \
-	radeon_llvm.h \
-	radeon_llvm_util.c \
-	radeon_llvm_util.h \
-	radeon_setup_tgsi_llvm.c
+	radeon_elf_util.h

@@ -5,7 +5,6 @@
 
 #include "brw_context.h"
 #include "intel_bufmgr.h"
-#include "intel_reg.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -21,13 +20,13 @@ extern "C" {
  *   - Gen4-5 record ending occlusion query values (4 * 4 = 16 bytes)
  *   - Disabling OA counters on Gen6+ (3 DWords = 12 bytes)
  *   - Ending MI_REPORT_PERF_COUNT on Gen5+, plus associated PIPE_CONTROLs:
- *     - Two sets of PIPE_CONTROLs, which become 3 PIPE_CONTROLs each on SNB,
- *       which are 5 DWords each ==> 2 * 3 * 5 * 4 = 120 bytes
+ *     - Two sets of PIPE_CONTROLs, which become 4 PIPE_CONTROLs each on SNB,
+ *       which are 5 DWords each ==> 2 * 4 * 5 * 4 = 160 bytes
  *     - 3 DWords for MI_REPORT_PERF_COUNT itself on Gen6+.  ==> 12 bytes.
  *       On Ironlake, it's 6 DWords, but we have some slack due to the lack of
  *       Sandybridge PIPE_CONTROL madness.
- *   - CC_STATE workaround on HSW (12 * 4 = 48 bytes)
- *     - 5 dwords for initial mi_flush
+ *   - CC_STATE workaround on HSW (17 * 4 = 68 bytes)
+ *     - 10 dwords for initial mi_flush
  *     - 2 dwords for CC state setup
  *     - 5 dwords for the required pipe control at the end
  *   - Restoring L3 configuration: (24 dwords = 96 bytes)
@@ -35,7 +34,7 @@ extern "C" {
  *     - 7 dwords for L3 configuration set-up.
  *     - 5 dwords for L3 atomic set-up (on HSW).
  */
-#define BATCH_RESERVED 248
+#define BATCH_RESERVED 308
 
 struct intel_batchbuffer;
 
@@ -44,6 +43,8 @@ void intel_batchbuffer_init(struct brw_context *brw);
 void intel_batchbuffer_free(struct brw_context *brw);
 void intel_batchbuffer_save_state(struct brw_context *brw);
 void intel_batchbuffer_reset_to_saved(struct brw_context *brw);
+void intel_batchbuffer_require_space(struct brw_context *brw, GLuint sz,
+                                     enum brw_gpu_ring ring);
 
 int _intel_batchbuffer_flush(struct brw_context *brw,
 			     const char *file, int line);
@@ -114,32 +115,6 @@ static inline void
 intel_batchbuffer_emit_float(struct brw_context *brw, float f)
 {
    intel_batchbuffer_emit_dword(brw, float_as_int(f));
-}
-
-static inline void
-intel_batchbuffer_require_space(struct brw_context *brw, GLuint sz,
-                                enum brw_gpu_ring ring)
-{
-   /* If we're switching rings, implicitly flush the batch. */
-   if (unlikely(ring != brw->batch.ring) && brw->batch.ring != UNKNOWN_RING &&
-       brw->gen >= 6) {
-      intel_batchbuffer_flush(brw);
-   }
-
-#ifdef DEBUG
-   assert(sz < BATCH_SZ - BATCH_RESERVED);
-#endif
-   if (intel_batchbuffer_space(brw) < sz)
-      intel_batchbuffer_flush(brw);
-
-   enum brw_gpu_ring prev_ring = brw->batch.ring;
-   /* The intel_batchbuffer_flush() calls above might have changed
-    * brw->batch.ring to UNKNOWN_RING, so we need to set it here at the end.
-    */
-   brw->batch.ring = ring;
-
-   if (unlikely(prev_ring == UNKNOWN_RING && ring == RENDER_RING))
-      intel_batchbuffer_emit_render_ring_prelude(brw);
 }
 
 static inline void

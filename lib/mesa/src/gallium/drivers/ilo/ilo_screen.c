@@ -179,6 +179,7 @@ ilo_get_video_param(struct pipe_screen *screen,
 
 static int
 ilo_get_compute_param(struct pipe_screen *screen,
+                      enum pipe_shader_ir ir_type,
                       enum pipe_compute_cap param,
                       void *ret)
 {
@@ -198,6 +199,7 @@ ilo_get_compute_param(struct pipe_screen *screen,
       uint32_t max_compute_units;
       uint32_t images_supported;
       uint32_t subgroup_size;
+      uint32_t address_bits;
    } val;
    const void *ptr;
    int size;
@@ -210,7 +212,7 @@ ilo_get_compute_param(struct pipe_screen *screen,
       size = strlen(val.ir_target) + 1;
       break;
    case PIPE_COMPUTE_CAP_GRID_DIMENSION:
-      val.grid_dimension = Elements(val.max_grid_size);
+      val.grid_dimension = ARRAY_SIZE(val.max_grid_size);
 
       ptr = &val.grid_dimension;
       size = sizeof(val.grid_dimension);
@@ -265,6 +267,11 @@ ilo_get_compute_param(struct pipe_screen *screen,
       ptr = &val.max_input_size;
       size = sizeof(val.max_input_size);
       break;
+   case PIPE_COMPUTE_CAP_ADDRESS_BITS:
+      val.address_bits = 32;
+      ptr = &val.address_bits;
+      size = sizeof(val.address_bits);
+      break;
    case PIPE_COMPUTE_CAP_MAX_MEM_ALLOC_SIZE:
       val.max_mem_alloc_size = 1u << 31;
 
@@ -296,6 +303,8 @@ ilo_get_compute_param(struct pipe_screen *screen,
       ptr = &val.subgroup_size;
       size = sizeof(val.subgroup_size);
       break;
+   case PIPE_COMPUTE_CAP_MAX_VARIABLE_THREADS_PER_BLOCK:
+      /* fallthrough */
    default:
       ptr = NULL;
       size = 0;
@@ -449,6 +458,7 @@ ilo_get_param(struct pipe_screen *screen, enum pipe_cap param)
    case PIPE_CAP_ENDIANNESS:
       return PIPE_ENDIAN_LITTLE;
    case PIPE_CAP_MIXED_FRAMEBUFFER_SIZES:
+   case PIPE_CAP_MIXED_COLOR_DEPTH_BITS:
       return true;
    case PIPE_CAP_TGSI_VS_LAYER_VIEWPORT:
    case PIPE_CAP_MAX_GEOMETRY_OUTPUT_VERTICES:
@@ -493,6 +503,19 @@ ilo_get_param(struct pipe_screen *screen, enum pipe_cap param)
    case PIPE_CAP_SURFACE_REINTERPRET_BLOCKS:
    case PIPE_CAP_QUERY_BUFFER_OBJECT:
    case PIPE_CAP_QUERY_MEMORY_INFO:
+   case PIPE_CAP_PCI_GROUP:
+   case PIPE_CAP_PCI_BUS:
+   case PIPE_CAP_PCI_DEVICE:
+   case PIPE_CAP_PCI_FUNCTION:
+   case PIPE_CAP_FRAMEBUFFER_NO_ATTACHMENT:
+   case PIPE_CAP_ROBUST_BUFFER_ACCESS_BEHAVIOR:
+   case PIPE_CAP_CULL_DISTANCE:
+   case PIPE_CAP_PRIMITIVE_RESTART_FOR_PATCHES:
+   case PIPE_CAP_TGSI_VOTE:
+   case PIPE_CAP_MAX_WINDOW_RECTANGLES:
+   case PIPE_CAP_POLYGON_OFFSET_UNITS_UNSCALED:
+   case PIPE_CAP_VIEWPORT_SUBPIXEL_BITS:
+   case PIPE_CAP_TGSI_ARRAY_COMPONENTS:
       return 0;
 
    case PIPE_CAP_VENDOR_ID:
@@ -683,6 +706,7 @@ ilo_screen_fence_reference(struct pipe_screen *screen,
 
 static boolean
 ilo_screen_fence_finish(struct pipe_screen *screen,
+                        struct pipe_context *ctx,
                         struct pipe_fence_handle *fence,
                         uint64_t timeout)
 {

@@ -71,7 +71,7 @@ vlVdpBitmapSurfaceCreate(VdpDevice device,
 
    memset(&res_tmpl, 0, sizeof(res_tmpl));
    res_tmpl.target = PIPE_TEXTURE_2D;
-   res_tmpl.format = FormatRGBAToPipe(rgba_format);
+   res_tmpl.format = VdpFormatRGBAToPipe(rgba_format);
    res_tmpl.width0 = width;
    res_tmpl.height0 = height;
    res_tmpl.depth0 = 1;
@@ -201,9 +201,9 @@ vlVdpBitmapSurfacePutBitsNative(VdpBitmapSurface surface,
    vlVdpResolveDelayedRendering(vlsurface->device, NULL, NULL);
 
    dst_box = RectToPipeBox(destination_rect, vlsurface->sampler_view->texture);
-   pipe->transfer_inline_write(pipe, vlsurface->sampler_view->texture, 0,
-                               PIPE_TRANSFER_WRITE, &dst_box, *source_data,
-                               *source_pitches, 0);
+   pipe->texture_subdata(pipe, vlsurface->sampler_view->texture, 0,
+                         PIPE_TRANSFER_WRITE, &dst_box, *source_data,
+                         *source_pitches, 0);
 
    pipe_mutex_unlock(vlsurface->device->mutex);
 

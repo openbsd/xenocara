@@ -224,7 +224,7 @@ vlVdpOutputSurfaceQueryCapabilities(VdpDevice device, VdpRGBAFormat surface_rgba
    if (!pscreen)
       return VDP_STATUS_RESOURCES;
 
-   format = FormatRGBAToPipe(surface_rgba_format);
+   format = VdpFormatRGBAToPipe(surface_rgba_format);
    if (format == PIPE_FORMAT_NONE || format == PIPE_FORMAT_A8_UNORM)
       return VDP_STATUS_INVALID_RGBA_FORMAT;
 
@@ -276,7 +276,7 @@ vlVdpOutputSurfaceQueryGetPutBitsNativeCapabilities(VdpDevice device, VdpRGBAFor
    if (!pscreen)
       return VDP_STATUS_ERROR;
 
-   format = FormatRGBAToPipe(surface_rgba_format);
+   format = VdpFormatRGBAToPipe(surface_rgba_format);
    if (format == PIPE_FORMAT_NONE || format == PIPE_FORMAT_A8_UNORM)
       return VDP_STATUS_INVALID_RGBA_FORMAT;
 
@@ -317,7 +317,7 @@ vlVdpOutputSurfaceQueryPutBitsIndexedCapabilities(VdpDevice device,
    if (!pscreen)
       return VDP_STATUS_ERROR;
 
-   rgba_format = FormatRGBAToPipe(surface_rgba_format);
+   rgba_format = VdpFormatRGBAToPipe(surface_rgba_format);
    if (rgba_format == PIPE_FORMAT_NONE || rgba_format == PIPE_FORMAT_A8_UNORM)
       return VDP_STATUS_INVALID_RGBA_FORMAT;
 
@@ -376,7 +376,7 @@ vlVdpOutputSurfaceQueryPutBitsYCbCrCapabilities(VdpDevice device, VdpRGBAFormat 
    if (!pscreen)
       return VDP_STATUS_ERROR;
 
-   rgba_format = FormatRGBAToPipe(surface_rgba_format);
+   rgba_format = VdpFormatRGBAToPipe(surface_rgba_format);
    if (rgba_format == PIPE_FORMAT_NONE || rgba_format == PIPE_FORMAT_A8_UNORM)
       return VDP_STATUS_INVALID_RGBA_FORMAT;
 
@@ -424,7 +424,7 @@ vlVdpBitmapSurfaceQueryCapabilities(VdpDevice device, VdpRGBAFormat surface_rgba
    if (!pscreen)
       return VDP_STATUS_RESOURCES;
 
-   format = FormatRGBAToPipe(surface_rgba_format);
+   format = VdpFormatRGBAToPipe(surface_rgba_format);
    if (format == PIPE_FORMAT_NONE)
       return VDP_STATUS_INVALID_RGBA_FORMAT;
 
@@ -470,6 +470,8 @@ vlVdpVideoMixerQueryFeatureSupport(VdpDevice device, VdpVideoMixerFeature featur
    case VDP_VIDEO_MIXER_FEATURE_SHARPNESS:
    case VDP_VIDEO_MIXER_FEATURE_NOISE_REDUCTION:
    case VDP_VIDEO_MIXER_FEATURE_DEINTERLACE_TEMPORAL:
+   case VDP_VIDEO_MIXER_FEATURE_LUMA_KEY:
+   case VDP_VIDEO_MIXER_FEATURE_HIGH_QUALITY_SCALING_L1:
       *is_supported = VDP_TRUE;
       break;
    default:
@@ -588,12 +590,12 @@ vlVdpVideoMixerQueryAttributeValueRange(VdpDevice device, VdpVideoMixerAttribute
    case VDP_VIDEO_MIXER_ATTRIBUTE_NOISE_REDUCTION_LEVEL:
    case VDP_VIDEO_MIXER_ATTRIBUTE_LUMA_KEY_MIN_LUMA:
    case VDP_VIDEO_MIXER_ATTRIBUTE_LUMA_KEY_MAX_LUMA:
-      *(float*)min_value = 0.f;
-      *(float*)max_value = 1.f;
+      *(float*)min_value = 0.0f;
+      *(float*)max_value = 1.0f;
       break;
    case VDP_VIDEO_MIXER_ATTRIBUTE_SHARPNESS_LEVEL:
-      *(float*)min_value = -1.f;
-      *(float*)max_value = 1.f;
+      *(float*)min_value = -1.0f;
+      *(float*)max_value = 1.0f;
       break;
    case VDP_VIDEO_MIXER_ATTRIBUTE_SKIP_CHROMA_DEINTERLACE:
       *(uint8_t*)min_value = 0;

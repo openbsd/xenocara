@@ -127,30 +127,25 @@ setup_index_buffer(struct st_context *st,
 
 
 /**
- * Prior to drawing, check that any uniforms referenced by the
- * current shader have been set.  If a uniform has not been set,
- * issue a warning.
+ * Set the restart index.
  */
 static void
-check_uniforms(struct gl_context *ctx)
+setup_primitive_restart(struct gl_context *ctx,
+                        const struct _mesa_index_buffer *ib,
+                        struct pipe_draw_info *info)
 {
-   struct gl_shader_program **shProg = ctx->_Shader->CurrentProgram;
-   unsigned j;
+   if (ctx->Array._PrimitiveRestart) {
+      info->restart_index = _mesa_primitive_restart_index(ctx, ib->type);
 
-   for (j = 0; j < 3; j++) {
-      unsigned i;
-
-      if (shProg[j] == NULL || !shProg[j]->LinkStatus)
-	 continue;
-
-      for (i = 0; i < shProg[j]->NumUniformStorage; i++) {
-         const struct gl_uniform_storage *u = &shProg[j]->UniformStorage[i];
-         if (!u->initialized) {
-            _mesa_warning(ctx,
-                          "Using shader with uninitialized uniform: %s",
-                          u->name);
-         }
-      }
+      /* Enable primitive restart only when the restart index can have an
+       * effect. This is required for correctness in radeonsi VI support.
+       * Other hardware may also benefit from taking a faster, non-restart path
+       * when possible.
+       */
+      if ((ib->type == GL_UNSIGNED_INT) ||
+          (ib->type == GL_UNSIGNED_SHORT && info->restart_index <= 0xffff) ||
+          (ib->type == GL_UNSIGNED_BYTE && info->restart_index <= 0xff))
+         info->primitive_restart = true;
    }
 }
 
@@ -199,18 +194,12 @@ st_draw_vbo(struct gl_context *ctx,
    assert(ctx->NewState == 0x0);
 
    st_flush_bitmap_cache(st);
+   st_invalidate_readpix_cache(st);
 
    /* Validate state. */
-   if (st->dirty.st || ctx->NewDriverState) {
+   if ((st->dirty | ctx->NewDriverState) & ST_PIPELINE_RENDER_STATE_MASK ||
+       st->gfx_shaders_may_be_dirty) {
       st_validate_state(st, ST_PIPELINE_RENDER);
-
-#if 0
-      if (MESA_VERBOSE & VERBOSE_GLSL) {
-         check_uniforms(ctx);
-      }
-#else
-      (void) check_uniforms;
-#endif
    }
 
    if (st->vertex_array_out_of_memory) {
@@ -240,8 +229,7 @@ st_draw_vbo(struct gl_context *ctx,
       /* The VBO module handles restart for the non-indexed GLDrawArrays
        * so we only set these fields for indexed drawing:
        */
-      info.primitive_restart = ctx->Array._PrimitiveRestart;
-      info.restart_index = _mesa_primitive_restart_index(ctx, ib->type);
+      setup_primitive_restart(ctx, ib, &info);
    }
    else {
       /* Transform feedback drawing is always non-indexed. */
@@ -314,7 +302,8 @@ st_indirect_draw_vbo(struct gl_context *ctx,
    assert(stride);
 
    /* Validate state. */
-   if (st->dirty.st || ctx->NewDriverState) {
+   if ((st->dirty | ctx->NewDriverState) & ST_PIPELINE_RENDER_STATE_MASK ||
+       st->gfx_shaders_may_be_dirty) {
       st_validate_state(st, ST_PIPELINE_RENDER);
    }
 
@@ -333,16 +322,15 @@ st_indirect_draw_vbo(struct gl_context *ctx,
       }
 
       info.indexed = TRUE;
+
+      /* Primitive restart is not handled by the VBO module in this case. */
+      setup_primitive_restart(ctx, ib, &info);
    }
 
    info.mode = translate_prim(ctx, mode);
    info.vertices_per_patch = ctx->TessCtrlProgram.patch_vertices;
    info.indirect = st_buffer_object(indirect_data)->buffer;
    info.indirect_offset = indirect_offset;
-
-   /* Primitive restart is not handled by the VBO module in this case. */
-   info.primitive_restart = ctx->Array._PrimitiveRestart;
-   info.restart_index = ctx->Array.RestartIndex;
 
    if (ST_DEBUG & DEBUG_DRAW) {
       debug_printf("st/draw indirect: mode %s drawcount %d indexed %d\n",
@@ -380,16 +368,6 @@ st_init_draw(struct st_context *st)
 
    vbo_set_draw_func(ctx, st_draw_vbo);
    vbo_set_indirect_draw_func(ctx, st_indirect_draw_vbo);
-
-   st->draw = draw_create(st->pipe); /* for selection/feedback */
-
-   /* Disable draw options that might convert points/lines to tris, etc.
-    * as that would foul-up feedback/selection mode.
-    */
-   draw_wide_line_threshold(st->draw, 1000.0f);
-   draw_wide_point_threshold(st->draw, 1000.0f);
-   draw_enable_line_stipple(st->draw, FALSE);
-   draw_enable_point_sprites(st->draw, FALSE);
 }
 
 
@@ -399,6 +377,31 @@ st_destroy_draw(struct st_context *st)
    draw_destroy(st->draw);
 }
 
+/**
+ * Getter for the draw_context, so that initialization of it can happen only
+ * when needed (the TGSI exec machines take up quite a bit of memory).
+ */
+struct draw_context *
+st_get_draw_context(struct st_context *st)
+{
+   if (!st->draw) {
+      st->draw = draw_create(st->pipe);
+      if (!st->draw) {
+         _mesa_error(st->ctx, GL_OUT_OF_MEMORY, "feedback fallback allocation");
+         return NULL;
+      }
+   }
+
+   /* Disable draw options that might convert points/lines to tris, etc.
+    * as that would foul-up feedback/selection mode.
+    */
+   draw_wide_line_threshold(st->draw, 1000.0f);
+   draw_wide_point_threshold(st->draw, 1000.0f);
+   draw_enable_line_stipple(st->draw, FALSE);
+   draw_enable_point_sprites(st->draw, FALSE);
+
+   return st->draw;
+}
 
 /**
  * Draw a quad with given position, texcoords and color.

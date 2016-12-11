@@ -114,6 +114,8 @@ ureg_create_shader( struct ureg_program *,
                     struct pipe_context *pipe,
 		    const struct pipe_stream_output_info *so );
 
+void
+ureg_set_next_shader_processor(struct ureg_program *ureg, unsigned processor);
 
 /* Alternately, return the built token stream and hand ownership of
  * that memory to the caller:
@@ -171,6 +173,18 @@ ureg_property(struct ureg_program *ureg, unsigned name, unsigned value);
  */
 
 struct ureg_src
+ureg_DECL_fs_input_cyl_centroid_layout(struct ureg_program *,
+                       unsigned semantic_name,
+                       unsigned semantic_index,
+                       unsigned interp_mode,
+                       unsigned cylindrical_wrap,
+                       unsigned interp_location,
+                       unsigned index,
+                       unsigned usage_mask,
+                       unsigned array_id,
+                       unsigned array_size);
+
+struct ureg_src
 ureg_DECL_fs_input_cyl_centroid(struct ureg_program *,
                        unsigned semantic_name,
                        unsigned semantic_index,
@@ -213,6 +227,15 @@ ureg_DECL_vs_input( struct ureg_program *,
                     unsigned index );
 
 struct ureg_src
+ureg_DECL_input_layout(struct ureg_program *,
+                unsigned semantic_name,
+                unsigned semantic_index,
+                unsigned index,
+                unsigned usage_mask,
+                unsigned array_id,
+                unsigned array_size);
+
+struct ureg_src
 ureg_DECL_input(struct ureg_program *,
                 unsigned semantic_name,
                 unsigned semantic_index,
@@ -223,6 +246,15 @@ struct ureg_src
 ureg_DECL_system_value(struct ureg_program *,
                        unsigned semantic_name,
                        unsigned semantic_index);
+
+struct ureg_dst
+ureg_DECL_output_layout(struct ureg_program *,
+                        unsigned semantic_name,
+                        unsigned semantic_index,
+                        unsigned index,
+                        unsigned usage_mask,
+                        unsigned array_id,
+                        unsigned array_size);
 
 struct ureg_dst
 ureg_DECL_output_masked(struct ureg_program *,
@@ -268,6 +300,16 @@ struct ureg_src
 ureg_DECL_immediate_int( struct ureg_program *,
                          const int *v,
                          unsigned nr );
+
+struct ureg_src
+ureg_DECL_immediate_uint64( struct ureg_program *,
+                            const uint64_t *v,
+                            unsigned nr );
+
+struct ureg_src
+ureg_DECL_immediate_int64( struct ureg_program *,
+                           const int64_t *v,
+                           unsigned nr );
 
 void
 ureg_DECL_constant2D(struct ureg_program *ureg,
@@ -338,7 +380,7 @@ struct ureg_src
 ureg_DECL_buffer(struct ureg_program *ureg, unsigned nr, bool atomic);
 
 struct ureg_src
-ureg_DECL_shared_memory(struct ureg_program *ureg);
+ureg_DECL_memory(struct ureg_program *ureg, unsigned memory_type);
 
 static inline struct ureg_src
 ureg_imm4f( struct ureg_program *ureg,
@@ -541,7 +583,9 @@ ureg_memory_insn(struct ureg_program *ureg,
                  unsigned nr_dst,
                  const struct ureg_src *src,
                  unsigned nr_src,
-                 unsigned qualifier);
+                 unsigned qualifier,
+                 unsigned texture,
+                 unsigned format);
 
 /***********************************************************************
  * Internal instruction helpers, don't call these directly:
@@ -582,7 +626,9 @@ ureg_emit_texture_offset(struct ureg_program *ureg,
 void
 ureg_emit_memory(struct ureg_program *ureg,
                  unsigned insn_token,
-                 unsigned qualifier);
+                 unsigned qualifier,
+                 unsigned texture,
+                 unsigned format);
 
 void 
 ureg_emit_dst( struct ureg_program *ureg,

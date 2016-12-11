@@ -304,8 +304,8 @@ typedef enum
    OPCODE_SAMPLE_COVERAGE,
    /* GL_ARB_window_pos */
    OPCODE_WINDOW_POS_ARB,
-   /* GL_NV_fragment_program */
-   OPCODE_BIND_PROGRAM_NV,
+   /* GL_ARB_vertex_program */
+   OPCODE_BIND_PROGRAM_ARB,
    OPCODE_PROGRAM_LOCAL_PARAMETER_ARB,
    /* GL_EXT_stencil_two_side */
    OPCODE_ACTIVE_STENCIL_FACE_EXT,
@@ -484,6 +484,9 @@ typedef enum
 
    /* EXT_polygon_offset_clamp */
    OPCODE_POLYGON_OFFSET_CLAMP,
+
+   /* EXT_window_rectangles */
+   OPCODE_WINDOW_RECTANGLES,
 
    /* The following three are meta instructions */
    OPCODE_ERROR,                /* raise compiled-in error */
@@ -1090,7 +1093,10 @@ _mesa_delete_list(struct gl_context *ctx, struct gl_display_list *dlist)
             free(get_pointer(&n[3]));
             n += InstSize[n[0].opcode];
             break;
-
+         case OPCODE_WINDOW_RECTANGLES:
+            free(get_pointer(&n[3]));
+            n += InstSize[n[0].opcode];
+            break;
          case OPCODE_CONTINUE:
             n = (Node *) get_pointer(&n[1]);
             free(block);
@@ -4957,15 +4963,15 @@ save_SampleCoverageARB(GLclampf value, GLboolean invert)
 
 
 /*
- * GL_NV_fragment_program
+ * GL_ARB_vertex_program
  */
 static void GLAPIENTRY
-save_BindProgramNV(GLenum target, GLuint id)
+save_BindProgramARB(GLenum target, GLuint id)
 {
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_BIND_PROGRAM_NV, 2);
+   n = alloc_instruction(ctx, OPCODE_BIND_PROGRAM_ARB, 2);
    if (n) {
       n[1].e = target;
       n[2].ui = id;
@@ -6020,7 +6026,7 @@ save_MultiTexCoord4fv(GLenum target, const GLfloat * v)
 
 
 /**
- * Record a GL_INVALID_VALUE error when a invalid vertex attribute
+ * Record a GL_INVALID_VALUE error when an invalid vertex attribute
  * index is found.
  */
 static void
@@ -7922,6 +7928,27 @@ save_UniformBlockBinding(GLuint prog, GLuint index, GLuint binding)
    }
 }
 
+/** GL_EXT_window_rectangles */
+static void GLAPIENTRY
+save_WindowRectanglesEXT(GLenum mode, GLsizei count, const GLint *box)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_WINDOW_RECTANGLES, 2 + POINTER_DWORDS);
+   if (n) {
+      GLint *box_copy = NULL;
+
+      if (count > 0)
+         box_copy = memdup(box, sizeof(GLint) * 4 * count);
+      n[1].e = mode;
+      n[2].si = count;
+      save_pointer(&n[3], box_copy);
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_WindowRectanglesEXT(ctx->Exec, (mode, count, box));
+   }
+}
 
 /**
  * Save an error-generating command into display list.
@@ -8607,7 +8634,7 @@ execute_list(struct gl_context *ctx, GLuint list)
          case OPCODE_WINDOW_POS_ARB:   /* GL_ARB_window_pos */
             CALL_WindowPos3f(ctx->Exec, (n[1].f, n[2].f, n[3].f));
             break;
-         case OPCODE_BIND_PROGRAM_NV:  /* GL_ARB_vertex_program */
+         case OPCODE_BIND_PROGRAM_ARB:  /* GL_ARB_vertex_program */
             CALL_BindProgramARB(ctx->Exec, (n[1].e, n[2].ui));
             break;
          case OPCODE_PROGRAM_LOCAL_PARAMETER_ARB:
@@ -9122,6 +9149,12 @@ execute_list(struct gl_context *ctx, GLuint list)
             CALL_UniformBlockBinding(ctx->Exec, (n[1].ui, n[2].ui, n[3].ui));
             break;
 
+         /* GL_EXT_window_rectangles */
+         case OPCODE_WINDOW_RECTANGLES:
+            CALL_WindowRectanglesEXT(
+                  ctx->Exec, (n[1].e, n[2].si, get_pointer(&n[3])));
+            break;
+
          case OPCODE_CONTINUE:
             n = (Node *) get_pointer(&n[1]);
             break;
@@ -9228,15 +9261,15 @@ _mesa_GenLists(GLsizei range)
    /*
     * Make this an atomic operation
     */
-   mtx_lock(&ctx->Shared->Mutex);
+   _mesa_HashLockMutex(ctx->Shared->DisplayList);
 
    base = _mesa_HashFindFreeKeyBlock(ctx->Shared->DisplayList, range);
    if (base) {
       /* reserve the list IDs by with empty/dummy lists */
       GLint i;
       for (i = 0; i < range; i++) {
-         _mesa_HashInsert(ctx->Shared->DisplayList, base + i,
-                          make_list(base + i, 1));
+         _mesa_HashInsertLocked(ctx->Shared->DisplayList, base + i,
+                                make_list(base + i, 1));
       }
    }
 
@@ -9258,7 +9291,7 @@ _mesa_GenLists(GLsizei range)
       }
    }
 
-   mtx_unlock(&ctx->Shared->Mutex);
+   _mesa_HashUnlockMutex(ctx->Shared->DisplayList);
 
    return base;
 }
@@ -9787,13 +9820,6 @@ _mesa_initialize_save_table(const struct gl_context *ctx)
    SET_WindowPos4sMESA(table, save_WindowPos4sMESA);
    SET_WindowPos4svMESA(table, save_WindowPos4svMESA);
 
-   /* 233. GL_NV_vertex_program */
-   /* The following commands DO NOT go into display lists:
-    * AreProgramsResidentNV, IsProgramNV, GenProgramsNV, DeleteProgramsNV,
-    * VertexAttribPointerNV, GetProgram*, GetVertexAttrib*
-    */
-   SET_BindProgramARB(table, save_BindProgramNV);
-
    /* 245. GL_ATI_fragment_shader */
    SET_BindFragmentShaderATI(table, save_BindFragmentShaderATI);
    SET_SetFragmentShaderConstantATI(table, save_SetFragmentShaderConstantATI);
@@ -9838,7 +9864,7 @@ _mesa_initialize_save_table(const struct gl_context *ctx)
    /* ARB 27. GL_ARB_fragment_program */
    /* glVertexAttrib* functions alias the NV ones, handled elsewhere */
    SET_ProgramStringARB(table, save_ProgramStringARB);
-   SET_BindProgramARB(table, save_BindProgramNV);
+   SET_BindProgramARB(table, save_BindProgramARB);
    SET_ProgramEnvParameter4dARB(table, save_ProgramEnvParameter4dARB);
    SET_ProgramEnvParameter4dvARB(table, save_ProgramEnvParameter4dvARB);
    SET_ProgramEnvParameter4fARB(table, save_ProgramEnvParameter4fARB);
@@ -10025,6 +10051,9 @@ _mesa_initialize_save_table(const struct gl_context *ctx)
 
    /* GL_EXT_polygon_offset_clamp */
    SET_PolygonOffsetClampEXT(table, save_PolygonOffsetClampEXT);
+
+   /* GL_EXT_window_rectangles */
+   SET_WindowRectanglesEXT(table, save_WindowRectanglesEXT);
 }
 
 
@@ -10057,12 +10086,13 @@ print_list(struct gl_context *ctx, GLuint list, const char *fname)
 
    if (!islist(ctx, list)) {
       fprintf(f, "%u is not a display list ID\n", list);
-      return;
+      goto out;
    }
 
    dlist = _mesa_lookup_list(ctx, list);
-   if (!dlist)
-      return;
+   if (!dlist) {
+      goto out;
+   }
 
    n = dlist->Head;
 
@@ -10333,7 +10363,7 @@ print_list(struct gl_context *ctx, GLuint list, const char *fname)
                printf
                   ("ERROR IN DISPLAY LIST: opcode = %d, address = %p\n",
                    opcode, (void *) n);
-               return;
+               goto out;
             }
             else {
                fprintf(f, "command %d, %u operands\n", opcode,
@@ -10347,6 +10377,7 @@ print_list(struct gl_context *ctx, GLuint list, const char *fname)
       }
    }
 
+ out:
    fflush(f);
    if (fname)
       fclose(f);

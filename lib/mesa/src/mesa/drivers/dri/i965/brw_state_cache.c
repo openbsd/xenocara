@@ -199,6 +199,7 @@ brw_cache_new_bo(struct brw_cache *cache, uint32_t new_size)
     * that depend on it (state base address on gen5+, or unit state before).
     */
    brw->ctx.NewDriverState |= BRW_NEW_PROGRAM_CACHE;
+   brw->batch.state_base_address_emitted = false;
 }
 
 /**
@@ -365,6 +366,8 @@ brw_clear_cache(struct brw_context *brw, struct brw_cache *cache)
       for (c = cache->items[i]; c; c = next) {
 	 next = c->next;
          if (c->cache_id == BRW_CACHE_VS_PROG ||
+             c->cache_id == BRW_CACHE_TCS_PROG ||
+             c->cache_id == BRW_CACHE_TES_PROG ||
              c->cache_id == BRW_CACHE_GS_PROG ||
              c->cache_id == BRW_CACHE_FS_PROG ||
              c->cache_id == BRW_CACHE_CS_PROG) {
@@ -395,17 +398,11 @@ brw_clear_cache(struct brw_context *brw, struct brw_cache *cache)
    brw->state.pipelines[BRW_COMPUTE_PIPELINE].brw = ~0ull;
 
    /* Also, NULL out any stale program pointers. */
-   brw->vs.prog_data = NULL;
    brw->vs.base.prog_data = NULL;
-   brw->tcs.prog_data = NULL;
    brw->tcs.base.prog_data = NULL;
-   brw->tes.prog_data = NULL;
    brw->tes.base.prog_data = NULL;
-   brw->gs.prog_data = NULL;
    brw->gs.base.prog_data = NULL;
-   brw->wm.prog_data = NULL;
    brw->wm.base.prog_data = NULL;
-   brw->cs.prog_data = NULL;
    brw->cs.base.prog_data = NULL;
 
    intel_batchbuffer_flush(brw);

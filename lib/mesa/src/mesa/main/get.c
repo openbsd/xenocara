@@ -111,6 +111,7 @@ enum value_type {
    TYPE_FLOAT_2,
    TYPE_FLOAT_3,
    TYPE_FLOAT_4,
+   TYPE_FLOAT_8,
    TYPE_FLOATN,
    TYPE_FLOATN_2,
    TYPE_FLOATN_3,
@@ -141,6 +142,7 @@ enum value_extra {
    EXTRA_API_ES2,
    EXTRA_API_ES3,
    EXTRA_API_ES31,
+   EXTRA_API_ES32,
    EXTRA_NEW_BUFFERS, 
    EXTRA_NEW_FRAG_CLAMP,
    EXTRA_VALID_DRAW_BUFFER,
@@ -218,6 +220,7 @@ union value {
 #define CONTEXT_FLOAT2(field) CONTEXT_FIELD(field, TYPE_FLOAT_2)
 #define CONTEXT_FLOAT3(field) CONTEXT_FIELD(field, TYPE_FLOAT_3)
 #define CONTEXT_FLOAT4(field) CONTEXT_FIELD(field, TYPE_FLOAT_4)
+#define CONTEXT_FLOAT8(field) CONTEXT_FIELD(field, TYPE_FLOAT_8)
 #define CONTEXT_MATRIX(field) CONTEXT_FIELD(field, TYPE_MATRIX)
 #define CONTEXT_MATRIX_T(field) CONTEXT_FIELD(field, TYPE_MATRIX_T)
 
@@ -384,6 +387,13 @@ static const int extra_ARB_shader_storage_buffer_object_and_geometry_shader[] = 
    EXTRA_END
 };
 
+static const int extra_ARB_shader_image_load_store_shader_storage_buffer_object_es31[] = {
+   EXT(ARB_shader_image_load_store),
+   EXT(ARB_shader_storage_buffer_object),
+   EXTRA_API_ES31,
+   EXTRA_END
+};
+
 static const int extra_ARB_framebuffer_no_attachments_and_geometry_shader[] = {
    EXTRA_EXT_FB_NO_ATTACH_GS,
    EXTRA_END
@@ -395,9 +405,34 @@ static const int extra_ARB_viewport_array_or_oes_geometry_shader[] = {
    EXTRA_END
 };
 
+static const int extra_ARB_viewport_array_or_oes_viewport_array[] = {
+   EXT(ARB_viewport_array),
+   EXT(OES_viewport_array),
+   EXTRA_END
+};
+
 static const int extra_ARB_gpu_shader5_or_oes_geometry_shader[] = {
    EXT(ARB_gpu_shader5),
    EXTRA_EXT_ES_GS,
+   EXTRA_END
+};
+
+static const int extra_ARB_gpu_shader5_or_OES_sample_variables[] = {
+   EXT(ARB_gpu_shader5),
+   EXT(OES_sample_variables),
+   EXTRA_END
+};
+
+static const int extra_ES32[] = {
+   EXT(ARB_ES3_2_compatibility),
+   EXTRA_API_ES32,
+   EXTRA_END
+};
+
+static const int extra_KHR_robustness_or_GL[] = {
+   EXT(KHR_robustness),
+   EXTRA_API_GL,
+   EXTRA_API_GL_CORE,
    EXTRA_END
 };
 
@@ -430,7 +465,7 @@ EXTRA_EXT(OES_EGL_image_external);
 EXTRA_EXT(ARB_blend_func_extended);
 EXTRA_EXT(ARB_uniform_buffer_object);
 EXTRA_EXT(ARB_timer_query);
-EXTRA_EXT(ARB_texture_cube_map_array);
+EXTRA_EXT2(ARB_texture_cube_map_array, OES_texture_cube_map_array);
 EXTRA_EXT(ARB_texture_buffer_range);
 EXTRA_EXT(ARB_texture_multisample);
 EXTRA_EXT(ARB_texture_gather);
@@ -438,8 +473,6 @@ EXTRA_EXT(ARB_shader_atomic_counters);
 EXTRA_EXT(ARB_draw_indirect);
 EXTRA_EXT(ARB_shader_image_load_store);
 EXTRA_EXT(ARB_viewport_array);
-EXTRA_EXT(ARB_compute_shader);
-EXTRA_EXT(ARB_gpu_shader5);
 EXTRA_EXT(ARB_query_buffer_object);
 EXTRA_EXT2(ARB_transform_feedback3, ARB_gpu_shader5);
 EXTRA_EXT(INTEL_performance_query);
@@ -453,6 +486,11 @@ EXTRA_EXT(ARB_shader_storage_buffer_object);
 EXTRA_EXT(ARB_indirect_parameters);
 EXTRA_EXT(ATI_meminfo);
 EXTRA_EXT(NVX_gpu_memory_info);
+EXTRA_EXT(ARB_cull_distance);
+EXTRA_EXT(EXT_window_rectangles);
+EXTRA_EXT(KHR_blend_equation_advanced_coherent);
+EXTRA_EXT(OES_primitive_bounding_box);
+EXTRA_EXT(ARB_compute_variable_group_size);
 
 static const int
 extra_ARB_color_buffer_float_or_glcore[] = {
@@ -470,7 +508,6 @@ extra_NV_primitive_restart[] = {
 static const int extra_version_30[] = { EXTRA_VERSION_30, EXTRA_END };
 static const int extra_version_31[] = { EXTRA_VERSION_31, EXTRA_END };
 static const int extra_version_32[] = { EXTRA_VERSION_32, EXTRA_END };
-static const int extra_version_40[] = { EXTRA_VERSION_40, EXTRA_END };
 
 static const int extra_gl30_es3[] = {
     EXTRA_VERSION_30,
@@ -519,6 +556,13 @@ static const int extra_core_ARB_color_buffer_float_and_new_buffers[] = {
    EXTRA_END
 };
 
+static const int extra_EXT_shader_framebuffer_fetch[] = {
+   EXTRA_API_ES2,
+   EXTRA_API_ES3,
+   EXT(MESA_shader_framebuffer_fetch),
+   EXTRA_END
+};
+
 /* This is the big table describing all the enums we accept in
  * glGet*v().  The table is partitioned into six parts: enums
  * understood by all GL APIs (OpenGL, GLES and GLES2), enums shared
@@ -543,71 +587,6 @@ static const int extra_core_ARB_color_buffer_float_and_new_buffers[] = {
  * collisions for any enum (typical numbers).  And the code is very
  * simple, even though it feels a little magic. */
 
-#ifdef GET_DEBUG
-static void
-print_table_stats(int api)
-{
-   int i, j, collisions[11], count, hash, mask;
-   const struct value_desc *d;
-   const char *api_names[] = {
-      [API_OPENGL_COMPAT] = "GL",
-      [API_OPENGL_CORE] = "GL_CORE",
-      [API_OPENGLES] = "GLES",
-      [API_OPENGLES2] = "GLES2",
-   };
-   const char *api_name;
-
-   api_name = api < ARRAY_SIZE(api_names) ? api_names[api] : "N/A";
-   count = 0;
-   mask = ARRAY_SIZE(table(api)) - 1;
-   memset(collisions, 0, sizeof collisions);
-
-   for (i = 0; i < ARRAY_SIZE(table(api)); i++) {
-      if (!table(api)[i])
-         continue;
-      count++;
-      d = &values[table(api)[i]];
-      hash = (d->pname * prime_factor);
-      j = 0;
-      while (1) {
-         if (values[table(api)[hash & mask]].pname == d->pname)
-            break;
-         hash += prime_step;
-         j++;
-      }
-
-      if (j < 10)
-         collisions[j]++;
-      else
-         collisions[10]++;
-   }
-
-   printf("number of enums for %s: %d (total %ld)\n",
-         api_name, count, ARRAY_SIZE(values));
-   for (i = 0; i < ARRAY_SIZE(collisions) - 1; i++)
-      if (collisions[i] > 0)
-         printf("  %d enums with %d %scollisions\n",
-               collisions[i], i, i == 10 ? "or more " : "");
-}
-#endif
-
-/**
- * Initialize the enum hash for a given API 
- *
- * This is called from one_time_init() to insert the enum values that
- * are valid for the API in question into the enum hash table.
- *
- * \param the current context, for determining the API in question
- */
-void _mesa_init_get_hash(struct gl_context *ctx)
-{
-#ifdef GET_DEBUG
-   print_table_stats(ctx->API);
-#else
-   (void) ctx;
-#endif
-}
-
 /**
  * Handle irregular enums
  *
@@ -628,7 +607,7 @@ static void
 find_custom_value(struct gl_context *ctx, const struct value_desc *d, union value *v)
 {
    struct gl_buffer_object **buffer_obj;
-   struct gl_vertex_attrib_array *array;
+   struct gl_array_attributes *array;
    GLuint unit, *p;
 
    switch (d->pname) {
@@ -1097,6 +1076,10 @@ find_custom_value(struct gl_context *ctx, const struct value_desc *d, union valu
    case GL_SAMPLE_BUFFERS:
       v->value_int = _mesa_geometric_samples(ctx->DrawBuffer) > 0;
       break;
+   /* GL_EXT_textrue_integer */
+   case GL_RGBA_INTEGER_MODE_EXT:
+      v->value_int = (ctx->DrawBuffer->_IntegerBuffers != 0);
+      break;
    /* GL_ATI_meminfo & GL_NVX_gpu_memory_info */
    case GL_VBO_FREE_MEMORY_ATI:
    case GL_TEXTURE_FREE_MEMORY_ATI:
@@ -1204,6 +1187,11 @@ check_extra(struct gl_context *ctx, const char *func, const struct value_desc *d
       case EXTRA_API_ES31:
          api_check = GL_TRUE;
          if (_mesa_is_gles31(ctx))
+            api_found = GL_TRUE;
+	 break;
+      case EXTRA_API_ES32:
+         api_check = GL_TRUE;
+         if (_mesa_is_gles32(ctx))
             api_found = GL_TRUE;
 	 break;
       case EXTRA_API_GL:
@@ -1354,12 +1342,14 @@ find_value(const char *func, GLenum pname, void **p, union value *v)
     * value since it's compatible with GLES2 its entry in table_set[] is at the
     * end.
     */
-   STATIC_ASSERT(ARRAY_SIZE(table_set) == API_OPENGL_LAST + 3);
-   if (_mesa_is_gles3(ctx)) {
-      api = API_OPENGL_LAST + 1;
-   }
-   if (_mesa_is_gles31(ctx)) {
-      api = API_OPENGL_LAST + 2;
+   STATIC_ASSERT(ARRAY_SIZE(table_set) == API_OPENGL_LAST + 4);
+   if (ctx->API == API_OPENGLES2) {
+      if (ctx->Version >= 32)
+         api = API_OPENGL_LAST + 3;
+      else if (ctx->Version >= 31)
+         api = API_OPENGL_LAST + 2;
+      else if (ctx->Version >= 30)
+         api = API_OPENGL_LAST + 1;
    }
    mask = ARRAY_SIZE(table(api)) - 1;
    hash = (pname * prime_factor);
@@ -1436,6 +1426,11 @@ _mesa_GetBooleanv(GLenum pname, GLboolean *params)
       params[0] = INT_TO_BOOLEAN(d->offset);
       break;
 
+   case TYPE_FLOAT_8:
+      params[7] = FLOAT_TO_BOOLEAN(((GLfloat *) p)[7]);
+      params[6] = FLOAT_TO_BOOLEAN(((GLfloat *) p)[6]);
+      params[5] = FLOAT_TO_BOOLEAN(((GLfloat *) p)[5]);
+      params[4] = FLOAT_TO_BOOLEAN(((GLfloat *) p)[4]);
    case TYPE_FLOAT_4:
    case TYPE_FLOATN_4:
       params[3] = FLOAT_TO_BOOLEAN(((GLfloat *) p)[3]);
@@ -1524,6 +1519,11 @@ _mesa_GetFloatv(GLenum pname, GLfloat *params)
       params[0] = (GLfloat) d->offset;
       break;
 
+   case TYPE_FLOAT_8:
+      params[7] = ((GLfloat *) p)[7];
+      params[6] = ((GLfloat *) p)[6];
+      params[5] = ((GLfloat *) p)[5];
+      params[4] = ((GLfloat *) p)[4];
    case TYPE_FLOAT_4:
    case TYPE_FLOATN_4:
       params[3] = ((GLfloat *) p)[3];
@@ -1612,6 +1612,11 @@ _mesa_GetIntegerv(GLenum pname, GLint *params)
       params[0] = d->offset;
       break;
 
+   case TYPE_FLOAT_8:
+      params[7] = IROUND(((GLfloat *) p)[7]);
+      params[6] = IROUND(((GLfloat *) p)[6]);
+      params[5] = IROUND(((GLfloat *) p)[5]);
+      params[4] = IROUND(((GLfloat *) p)[4]);
    case TYPE_FLOAT_4:
       params[3] = IROUND(((GLfloat *) p)[3]);
    case TYPE_FLOAT_3:
@@ -1706,6 +1711,11 @@ _mesa_GetInteger64v(GLenum pname, GLint64 *params)
       params[0] = d->offset;
       break;
 
+   case TYPE_FLOAT_8:
+      params[7] = IROUND64(((GLfloat *) p)[7]);
+      params[6] = IROUND64(((GLfloat *) p)[6]);
+      params[5] = IROUND64(((GLfloat *) p)[5]);
+      params[4] = IROUND64(((GLfloat *) p)[4]);
    case TYPE_FLOAT_4:
       params[3] = IROUND64(((GLfloat *) p)[3]);
    case TYPE_FLOAT_3:
@@ -1717,19 +1727,19 @@ _mesa_GetInteger64v(GLenum pname, GLint64 *params)
       break;
 
    case TYPE_FLOATN_4:
-      params[3] = FLOAT_TO_INT64(((GLfloat *) p)[3]);
+      params[3] = FLOAT_TO_INT(((GLfloat *) p)[3]);
    case TYPE_FLOATN_3:
-      params[2] = FLOAT_TO_INT64(((GLfloat *) p)[2]);
+      params[2] = FLOAT_TO_INT(((GLfloat *) p)[2]);
    case TYPE_FLOATN_2:
-      params[1] = FLOAT_TO_INT64(((GLfloat *) p)[1]);
+      params[1] = FLOAT_TO_INT(((GLfloat *) p)[1]);
    case TYPE_FLOATN:
-      params[0] = FLOAT_TO_INT64(((GLfloat *) p)[0]);
+      params[0] = FLOAT_TO_INT(((GLfloat *) p)[0]);
       break;
 
    case TYPE_DOUBLEN_2:
-      params[1] = FLOAT_TO_INT64(((GLdouble *) p)[1]);
+      params[1] = FLOAT_TO_INT(((GLdouble *) p)[1]);
    case TYPE_DOUBLEN:
-      params[0] = FLOAT_TO_INT64(((GLdouble *) p)[0]);
+      params[0] = FLOAT_TO_INT(((GLdouble *) p)[0]);
       break;
 
    case TYPE_INT_4:
@@ -1800,6 +1810,11 @@ _mesa_GetDoublev(GLenum pname, GLdouble *params)
       params[0] = d->offset;
       break;
 
+   case TYPE_FLOAT_8:
+      params[7] = ((GLfloat *) p)[7];
+      params[6] = ((GLfloat *) p)[6];
+      params[5] = ((GLfloat *) p)[5];
+      params[4] = ((GLfloat *) p)[4];
    case TYPE_FLOAT_4:
    case TYPE_FLOATN_4:
       params[3] = ((GLfloat *) p)[3];
@@ -1900,11 +1915,11 @@ tex_binding_to_index(const struct gl_context *ctx, GLenum binding)
          || _mesa_is_gles3(ctx)
          ? TEXTURE_2D_ARRAY_INDEX : -1;
    case GL_TEXTURE_BINDING_BUFFER:
-      return ctx->API == API_OPENGL_CORE &&
-             ctx->Extensions.ARB_texture_buffer_object ?
+      return (_mesa_has_ARB_texture_buffer_object(ctx) ||
+              _mesa_has_OES_texture_buffer(ctx)) ?
              TEXTURE_BUFFER_INDEX : -1;
    case GL_TEXTURE_BINDING_CUBE_MAP_ARRAY:
-      return _mesa_is_desktop_gl(ctx) && ctx->Extensions.ARB_texture_cube_map_array
+      return _mesa_has_texture_cube_map_array(ctx)
          ? TEXTURE_CUBE_ARRAY_INDEX : -1;
    case GL_TEXTURE_BINDING_2D_MULTISAMPLE:
       return _mesa_is_desktop_gl(ctx) && ctx->Extensions.ARB_texture_multisample
@@ -1997,6 +2012,17 @@ find_value_indexed(const char *func, GLenum pname, GLuint index, union value *v)
       v->value_int_4[1] = ctx->Scissor.ScissorArray[index].Y;
       v->value_int_4[2] = ctx->Scissor.ScissorArray[index].Width;
       v->value_int_4[3] = ctx->Scissor.ScissorArray[index].Height;
+      return TYPE_INT_4;
+
+   case GL_WINDOW_RECTANGLE_EXT:
+      if (!ctx->Extensions.EXT_window_rectangles)
+         goto invalid_enum;
+      if (index >= ctx->Const.MaxWindowRectangles)
+         goto invalid_value;
+      v->value_int_4[0] = ctx->Scissor.WindowRects[index].X;
+      v->value_int_4[1] = ctx->Scissor.WindowRects[index].Y;
+      v->value_int_4[2] = ctx->Scissor.WindowRects[index].Width;
+      v->value_int_4[3] = ctx->Scissor.WindowRects[index].Height;
       return TYPE_INT_4;
 
    case GL_VIEWPORT:
@@ -2271,6 +2297,15 @@ find_value_indexed(const char *func, GLenum pname, GLuint index, union value *v)
       if (index >= 3)
          goto invalid_value;
       v->value_int = ctx->Const.MaxComputeWorkGroupSize[index];
+      return TYPE_INT;
+
+   /* ARB_compute_variable_group_size */
+   case GL_MAX_COMPUTE_VARIABLE_GROUP_SIZE_ARB:
+      if (!ctx->Extensions.ARB_compute_variable_group_size)
+         goto invalid_enum;
+      if (index >= 3)
+         goto invalid_value;
+      v->value_int = ctx->Const.MaxComputeVariableGroupSize[index];
       return TYPE_INT;
    }
 

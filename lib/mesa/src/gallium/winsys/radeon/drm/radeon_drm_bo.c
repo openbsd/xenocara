@@ -40,6 +40,14 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <inttypes.h>
+
+static struct pb_buffer *
+radeon_winsys_bo_create(struct radeon_winsys *rws,
+                        uint64_t size,
+                        unsigned alignment,
+                        enum radeon_bo_domain domain,
+                        enum radeon_bo_flag flags);
 
 static inline struct radeon_bo *radeon_bo(struct pb_buffer *bo)
 {
@@ -52,7 +60,7 @@ struct radeon_bo_va_hole {
     uint64_t         size;
 };
 
-static bool radeon_bo_is_busy(struct radeon_bo *bo)
+static bool radeon_real_bo_is_busy(struct radeon_bo *bo)
 {
     struct drm_radeon_gem_busy args = {0};
 
@@ -61,13 +69,64 @@ static bool radeon_bo_is_busy(struct radeon_bo *bo)
                                &args, sizeof(args)) != 0;
 }
 
-static void radeon_bo_wait_idle(struct radeon_bo *bo)
+static bool radeon_bo_is_busy(struct radeon_bo *bo)
+{
+    unsigned num_idle;
+    bool busy = false;
+
+    if (bo->handle)
+        return radeon_real_bo_is_busy(bo);
+
+    pipe_mutex_lock(bo->rws->bo_fence_lock);
+    for (num_idle = 0; num_idle < bo->u.slab.num_fences; ++num_idle) {
+        if (radeon_real_bo_is_busy(bo->u.slab.fences[num_idle])) {
+            busy = true;
+            break;
+        }
+        radeon_bo_reference(&bo->u.slab.fences[num_idle], NULL);
+    }
+    memmove(&bo->u.slab.fences[0], &bo->u.slab.fences[num_idle],
+            (bo->u.slab.num_fences - num_idle) * sizeof(bo->u.slab.fences[0]));
+    bo->u.slab.num_fences -= num_idle;
+    pipe_mutex_unlock(bo->rws->bo_fence_lock);
+
+    return busy;
+}
+
+static void radeon_real_bo_wait_idle(struct radeon_bo *bo)
 {
     struct drm_radeon_gem_wait_idle args = {0};
 
     args.handle = bo->handle;
     while (drmCommandWrite(bo->rws->fd, DRM_RADEON_GEM_WAIT_IDLE,
                            &args, sizeof(args)) == -EBUSY);
+}
+
+static void radeon_bo_wait_idle(struct radeon_bo *bo)
+{
+    if (bo->handle) {
+        radeon_real_bo_wait_idle(bo);
+    } else {
+        pipe_mutex_lock(bo->rws->bo_fence_lock);
+        while (bo->u.slab.num_fences) {
+            struct radeon_bo *fence = NULL;
+            radeon_bo_reference(&fence, bo->u.slab.fences[0]);
+            pipe_mutex_unlock(bo->rws->bo_fence_lock);
+
+            /* Wait without holding the fence lock. */
+            radeon_real_bo_wait_idle(fence);
+
+            pipe_mutex_lock(bo->rws->bo_fence_lock);
+            if (bo->u.slab.num_fences && fence == bo->u.slab.fences[0]) {
+                radeon_bo_reference(&bo->u.slab.fences[0], NULL);
+                memmove(&bo->u.slab.fences[0], &bo->u.slab.fences[1],
+                        (bo->u.slab.num_fences - 1) * sizeof(bo->u.slab.fences[0]));
+                bo->u.slab.num_fences--;
+            }
+            radeon_bo_reference(&fence, NULL);
+        }
+        pipe_mutex_unlock(bo->rws->bo_fence_lock);
+    }
 }
 
 static bool radeon_bo_wait(struct pb_buffer *_buf, uint64_t timeout,
@@ -143,7 +202,7 @@ static uint64_t radeon_bomgr_find_va(struct radeon_drm_winsys *rws,
     /* All VM address space holes will implicitly start aligned to the
      * size alignment, so we don't need to sanitize the alignment here
      */
-    size = align(size, rws->size_align);
+    size = align(size, rws->info.gart_page_size);
 
     pipe_mutex_lock(rws->bo_va_mutex);
     /* first look for a hole */
@@ -201,7 +260,7 @@ static void radeon_bomgr_free_va(struct radeon_drm_winsys *rws,
 {
     struct radeon_bo_va_hole *hole;
 
-    size = align(size, rws->size_align);
+    size = align(size, rws->info.gart_page_size);
 
     pipe_mutex_lock(rws->bo_va_mutex);
     if ((va + size) == rws->va_offset) {
@@ -268,6 +327,8 @@ void radeon_bo_destroy(struct pb_buffer *_buf)
     struct radeon_drm_winsys *rws = bo->rws;
     struct drm_gem_close args;
 
+    assert(bo->handle && "must not be called for slab entries");
+
     memset(&args, 0, sizeof(args));
 
     pipe_mutex_lock(rws->bo_handles_mutex);
@@ -278,8 +339,8 @@ void radeon_bo_destroy(struct pb_buffer *_buf)
     }
     pipe_mutex_unlock(rws->bo_handles_mutex);
 
-    if (bo->ptr)
-        os_munmap(bo->ptr, bo->base.size);
+    if (bo->u.real.ptr)
+        os_munmap(bo->u.real.ptr, bo->base.size);
 
     if (rws->info.has_virtual_memory) {
         if (rws->va_unmap_working) {
@@ -297,8 +358,8 @@ void radeon_bo_destroy(struct pb_buffer *_buf)
 				    sizeof(va)) != 0 &&
 		va.operation == RADEON_VA_RESULT_ERROR) {
                 fprintf(stderr, "radeon: Failed to deallocate virtual address for buffer:\n");
-                fprintf(stderr, "radeon:    size      : %d bytes\n", bo->base.size);
-                fprintf(stderr, "radeon:    va        : 0x%016llx\n", (unsigned long long)bo->va);
+                fprintf(stderr, "radeon:    size      : %"PRIu64" bytes\n", bo->base.size);
+                fprintf(stderr, "radeon:    va        : 0x%"PRIx64"\n", bo->va);
             }
 	}
 
@@ -309,12 +370,20 @@ void radeon_bo_destroy(struct pb_buffer *_buf)
     args.handle = bo->handle;
     drmIoctl(rws->fd, DRM_IOCTL_GEM_CLOSE, &args);
 
-    pipe_mutex_destroy(bo->map_mutex);
+    pipe_mutex_destroy(bo->u.real.map_mutex);
 
     if (bo->initial_domain & RADEON_DOMAIN_VRAM)
-        rws->allocated_vram -= align(bo->base.size, rws->size_align);
+        rws->allocated_vram -= align(bo->base.size, rws->info.gart_page_size);
     else if (bo->initial_domain & RADEON_DOMAIN_GTT)
-        rws->allocated_gtt -= align(bo->base.size, rws->size_align);
+        rws->allocated_gtt -= align(bo->base.size, rws->info.gart_page_size);
+
+    if (bo->u.real.map_count >= 1) {
+        if (bo->initial_domain & RADEON_DOMAIN_VRAM)
+            bo->rws->mapped_vram -= bo->base.size;
+        else
+            bo->rws->mapped_gtt -= bo->base.size;
+    }
+
     FREE(bo);
 }
 
@@ -322,8 +391,10 @@ static void radeon_bo_destroy_or_cache(struct pb_buffer *_buf)
 {
    struct radeon_bo *bo = radeon_bo(_buf);
 
-   if (bo->use_reusable_pool)
-      pb_cache_add_buffer(&bo->cache_entry);
+    assert(bo->handle && "must not be called for slab entries");
+
+   if (bo->u.real.use_reusable_pool)
+      pb_cache_add_buffer(&bo->u.real.cache_entry);
    else
       radeon_bo_destroy(_buf);
 }
@@ -332,18 +403,26 @@ void *radeon_bo_do_map(struct radeon_bo *bo)
 {
     struct drm_radeon_gem_mmap args = {0};
     void *ptr;
+    unsigned offset;
 
     /* If the buffer is created from user memory, return the user pointer. */
     if (bo->user_ptr)
         return bo->user_ptr;
 
+    if (bo->handle) {
+        offset = 0;
+    } else {
+        offset = bo->va - bo->u.slab.real->va;
+        bo = bo->u.slab.real;
+    }
+
     /* Map the buffer. */
-    pipe_mutex_lock(bo->map_mutex);
+    pipe_mutex_lock(bo->u.real.map_mutex);
     /* Return the pointer if it's already mapped. */
-    if (bo->ptr) {
-        bo->map_count++;
-        pipe_mutex_unlock(bo->map_mutex);
-        return bo->ptr;
+    if (bo->u.real.ptr) {
+        bo->u.real.map_count++;
+        pipe_mutex_unlock(bo->u.real.map_mutex);
+        return (uint8_t*)bo->u.real.ptr + offset;
     }
     args.handle = bo->handle;
     args.offset = 0;
@@ -352,7 +431,7 @@ void *radeon_bo_do_map(struct radeon_bo *bo)
                             DRM_RADEON_GEM_MMAP,
                             &args,
                             sizeof(args))) {
-        pipe_mutex_unlock(bo->map_mutex);
+        pipe_mutex_unlock(bo->u.real.map_mutex);
         fprintf(stderr, "radeon: gem_mmap failed: %p 0x%08X\n",
                 bo, bo->handle);
         return NULL;
@@ -367,16 +446,21 @@ void *radeon_bo_do_map(struct radeon_bo *bo)
         ptr = os_mmap(0, args.size, PROT_READ|PROT_WRITE, MAP_SHARED,
                       bo->rws->fd, args.addr_ptr);
         if (ptr == MAP_FAILED) {
-            pipe_mutex_unlock(bo->map_mutex);
+            pipe_mutex_unlock(bo->u.real.map_mutex);
             fprintf(stderr, "radeon: mmap failed, errno: %i\n", errno);
             return NULL;
         }
     }
-    bo->ptr = ptr;
-    bo->map_count = 1;
-    pipe_mutex_unlock(bo->map_mutex);
+    bo->u.real.ptr = ptr;
+    bo->u.real.map_count = 1;
 
-    return bo->ptr;
+    if (bo->initial_domain & RADEON_DOMAIN_VRAM)
+       bo->rws->mapped_vram += bo->base.size;
+    else
+       bo->rws->mapped_gtt += bo->base.size;
+
+    pipe_mutex_unlock(bo->u.real.map_mutex);
+    return (uint8_t*)bo->u.real.ptr + offset;
 }
 
 static void *radeon_bo_map(struct pb_buffer *buf,
@@ -464,21 +548,30 @@ static void radeon_bo_unmap(struct pb_buffer *_buf)
     if (bo->user_ptr)
         return;
 
-    pipe_mutex_lock(bo->map_mutex);
-    if (!bo->ptr) {
-        pipe_mutex_unlock(bo->map_mutex);
+    if (!bo->handle)
+        bo = bo->u.slab.real;
+
+    pipe_mutex_lock(bo->u.real.map_mutex);
+    if (!bo->u.real.ptr) {
+        pipe_mutex_unlock(bo->u.real.map_mutex);
         return; /* it's not been mapped */
     }
 
-    assert(bo->map_count);
-    if (--bo->map_count) {
-        pipe_mutex_unlock(bo->map_mutex);
+    assert(bo->u.real.map_count);
+    if (--bo->u.real.map_count) {
+        pipe_mutex_unlock(bo->u.real.map_mutex);
         return; /* it's been mapped multiple times */
     }
 
-    os_munmap(bo->ptr, bo->base.size);
-    bo->ptr = NULL;
-    pipe_mutex_unlock(bo->map_mutex);
+    os_munmap(bo->u.real.ptr, bo->base.size);
+    bo->u.real.ptr = NULL;
+
+    if (bo->initial_domain & RADEON_DOMAIN_VRAM)
+       bo->rws->mapped_vram -= bo->base.size;
+    else
+       bo->rws->mapped_gtt -= bo->base.size;
+
+    pipe_mutex_unlock(bo->u.real.map_mutex);
 }
 
 static const struct pb_vtbl radeon_bo_vtbl = {
@@ -502,7 +595,8 @@ static struct radeon_bo *radeon_create_bo(struct radeon_drm_winsys *rws,
                                           unsigned size, unsigned alignment,
                                           unsigned usage,
                                           unsigned initial_domains,
-                                          unsigned flags)
+                                          unsigned flags,
+                                          unsigned pb_cache_bucket)
 {
     struct radeon_bo *bo;
     struct drm_radeon_gem_create args;
@@ -529,12 +623,14 @@ static struct radeon_bo *radeon_create_bo(struct radeon_drm_winsys *rws,
     if (drmCommandWriteRead(rws->fd, DRM_RADEON_GEM_CREATE,
                             &args, sizeof(args))) {
         fprintf(stderr, "radeon: Failed to allocate a buffer:\n");
-        fprintf(stderr, "radeon:    size      : %d bytes\n", size);
-        fprintf(stderr, "radeon:    alignment : %d bytes\n", alignment);
-        fprintf(stderr, "radeon:    domains   : %d\n", args.initial_domain);
-        fprintf(stderr, "radeon:    flags     : %d\n", args.flags);
+        fprintf(stderr, "radeon:    size      : %u bytes\n", size);
+        fprintf(stderr, "radeon:    alignment : %u bytes\n", alignment);
+        fprintf(stderr, "radeon:    domains   : %u\n", args.initial_domain);
+        fprintf(stderr, "radeon:    flags     : %u\n", args.flags);
         return NULL;
     }
+
+    assert(args.handle != 0);
 
     bo = CALLOC_STRUCT(radeon_bo);
     if (!bo)
@@ -549,13 +645,17 @@ static struct radeon_bo *radeon_create_bo(struct radeon_drm_winsys *rws,
     bo->handle = args.handle;
     bo->va = 0;
     bo->initial_domain = initial_domains;
-    pipe_mutex_init(bo->map_mutex);
-    pb_cache_init_entry(&rws->bo_cache, &bo->cache_entry, &bo->base);
+    bo->hash = __sync_fetch_and_add(&rws->next_bo_hash, 1);
+    pipe_mutex_init(bo->u.real.map_mutex);
+    pb_cache_init_entry(&rws->bo_cache, &bo->u.real.cache_entry, &bo->base,
+                        pb_cache_bucket);
 
     if (rws->info.has_virtual_memory) {
         struct drm_radeon_gem_va va;
+        unsigned va_gap_size;
 
-        bo->va = radeon_bomgr_find_va(rws, size, alignment);
+        va_gap_size = rws->check_vm ? MAX2(4 * alignment, 64 * 1024) : 0;
+        bo->va = radeon_bomgr_find_va(rws, size + va_gap_size, alignment);
 
         va.handle = bo->handle;
         va.vm_id = 0;
@@ -590,9 +690,9 @@ static struct radeon_bo *radeon_create_bo(struct radeon_drm_winsys *rws,
     }
 
     if (initial_domains & RADEON_DOMAIN_VRAM)
-        rws->allocated_vram += align(size, rws->size_align);
+        rws->allocated_vram += align(size, rws->info.gart_page_size);
     else if (initial_domains & RADEON_DOMAIN_GTT)
-        rws->allocated_gtt += align(size, rws->size_align);
+        rws->allocated_gtt += align(size, rws->info.gart_page_size);
 
     return bo;
 }
@@ -605,6 +705,120 @@ bool radeon_bo_can_reclaim(struct pb_buffer *_buf)
       return false;
 
    return radeon_bo_wait(_buf, 0, RADEON_USAGE_READWRITE);
+}
+
+bool radeon_bo_can_reclaim_slab(void *priv, struct pb_slab_entry *entry)
+{
+    struct radeon_bo *bo = NULL; /* fix container_of */
+    bo = container_of(entry, bo, u.slab.entry);
+
+    return radeon_bo_can_reclaim(&bo->base);
+}
+
+static void radeon_bo_slab_destroy(struct pb_buffer *_buf)
+{
+    struct radeon_bo *bo = radeon_bo(_buf);
+
+    assert(!bo->handle);
+
+    pb_slab_free(&bo->rws->bo_slabs, &bo->u.slab.entry);
+}
+
+static const struct pb_vtbl radeon_winsys_bo_slab_vtbl = {
+    radeon_bo_slab_destroy
+    /* other functions are never called */
+};
+
+struct pb_slab *radeon_bo_slab_alloc(void *priv, unsigned heap,
+                                     unsigned entry_size,
+                                     unsigned group_index)
+{
+    struct radeon_drm_winsys *ws = priv;
+    struct radeon_slab *slab = CALLOC_STRUCT(radeon_slab);
+    enum radeon_bo_domain domains;
+    enum radeon_bo_flag flags = 0;
+    unsigned base_hash;
+
+    if (!slab)
+        return NULL;
+
+    if (heap & 1)
+        flags |= RADEON_FLAG_GTT_WC;
+    if (heap & 2)
+        flags |= RADEON_FLAG_CPU_ACCESS;
+
+    switch (heap >> 2) {
+    case 0:
+        domains = RADEON_DOMAIN_VRAM;
+        break;
+    default:
+    case 1:
+        domains = RADEON_DOMAIN_VRAM_GTT;
+        break;
+    case 2:
+        domains = RADEON_DOMAIN_GTT;
+        break;
+    }
+
+    slab->buffer = radeon_bo(radeon_winsys_bo_create(&ws->base,
+                                                     64 * 1024, 64 * 1024,
+                                                     domains, flags));
+    if (!slab->buffer)
+        goto fail;
+
+    assert(slab->buffer->handle);
+
+    slab->base.num_entries = slab->buffer->base.size / entry_size;
+    slab->base.num_free = slab->base.num_entries;
+    slab->entries = CALLOC(slab->base.num_entries, sizeof(*slab->entries));
+    if (!slab->entries)
+        goto fail_buffer;
+
+    LIST_INITHEAD(&slab->base.free);
+
+    base_hash = __sync_fetch_and_add(&ws->next_bo_hash, slab->base.num_entries);
+
+    for (unsigned i = 0; i < slab->base.num_entries; ++i) {
+        struct radeon_bo *bo = &slab->entries[i];
+
+        bo->base.alignment = entry_size;
+        bo->base.usage = slab->buffer->base.usage;
+        bo->base.size = entry_size;
+        bo->base.vtbl = &radeon_winsys_bo_slab_vtbl;
+        bo->rws = ws;
+        bo->va = slab->buffer->va + i * entry_size;
+        bo->initial_domain = domains;
+        bo->hash = base_hash + i;
+        bo->u.slab.entry.slab = &slab->base;
+        bo->u.slab.entry.group_index = group_index;
+        bo->u.slab.real = slab->buffer;
+
+        LIST_ADDTAIL(&bo->u.slab.entry.head, &slab->base.free);
+    }
+
+    return &slab->base;
+
+fail_buffer:
+    radeon_bo_reference(&slab->buffer, NULL);
+fail:
+    FREE(slab);
+    return NULL;
+}
+
+void radeon_bo_slab_free(void *priv, struct pb_slab *pslab)
+{
+    struct radeon_slab *slab = (struct radeon_slab *)pslab;
+
+    for (unsigned i = 0; i < slab->base.num_entries; ++i) {
+        struct radeon_bo *bo = &slab->entries[i];
+        for (unsigned j = 0; j < bo->u.slab.num_fences; ++j)
+            radeon_bo_reference(&bo->u.slab.fences[j], NULL);
+        FREE(bo->u.slab.fences);
+    }
+
+    FREE(slab->entries);
+    radeon_bo_reference(&slab->buffer, NULL);
+    FREE(slab);
 }
 
 static unsigned eg_tile_split(unsigned tile_split)
@@ -636,17 +850,13 @@ static unsigned eg_tile_split_rev(unsigned eg_tile_split)
     }
 }
 
-static void radeon_bo_get_tiling(struct pb_buffer *_buf,
-                                 enum radeon_bo_layout *microtiled,
-                                 enum radeon_bo_layout *macrotiled,
-                                 unsigned *bankw, unsigned *bankh,
-                                 unsigned *tile_split,
-                                 unsigned *stencil_tile_split,
-                                 unsigned *mtilea,
-                                 bool *scanout)
+static void radeon_bo_get_metadata(struct pb_buffer *_buf,
+				   struct radeon_bo_metadata *md)
 {
     struct radeon_bo *bo = radeon_bo(_buf);
     struct drm_radeon_gem_set_tiling args;
+
+    assert(bo->handle && "must not be called for slab entries");
 
     memset(&args, 0, sizeof(args));
 
@@ -657,81 +867,61 @@ static void radeon_bo_get_tiling(struct pb_buffer *_buf,
                         &args,
                         sizeof(args));
 
-    *microtiled = RADEON_LAYOUT_LINEAR;
-    *macrotiled = RADEON_LAYOUT_LINEAR;
+    md->microtile = RADEON_LAYOUT_LINEAR;
+    md->macrotile = RADEON_LAYOUT_LINEAR;
     if (args.tiling_flags & RADEON_TILING_MICRO)
-        *microtiled = RADEON_LAYOUT_TILED;
+        md->microtile = RADEON_LAYOUT_TILED;
     else if (args.tiling_flags & RADEON_TILING_MICRO_SQUARE)
-        *microtiled = RADEON_LAYOUT_SQUARETILED;
+        md->microtile = RADEON_LAYOUT_SQUARETILED;
 
     if (args.tiling_flags & RADEON_TILING_MACRO)
-        *macrotiled = RADEON_LAYOUT_TILED;
-    if (bankw && tile_split && stencil_tile_split && mtilea && tile_split) {
-        *bankw = (args.tiling_flags >> RADEON_TILING_EG_BANKW_SHIFT) & RADEON_TILING_EG_BANKW_MASK;
-        *bankh = (args.tiling_flags >> RADEON_TILING_EG_BANKH_SHIFT) & RADEON_TILING_EG_BANKH_MASK;
-        *tile_split = (args.tiling_flags >> RADEON_TILING_EG_TILE_SPLIT_SHIFT) & RADEON_TILING_EG_TILE_SPLIT_MASK;
-        *stencil_tile_split = (args.tiling_flags >> RADEON_TILING_EG_STENCIL_TILE_SPLIT_SHIFT) & RADEON_TILING_EG_STENCIL_TILE_SPLIT_MASK;
-        *mtilea = (args.tiling_flags >> RADEON_TILING_EG_MACRO_TILE_ASPECT_SHIFT) & RADEON_TILING_EG_MACRO_TILE_ASPECT_MASK;
-        *tile_split = eg_tile_split(*tile_split);
-    }
-    if (scanout)
-        *scanout = bo->rws->gen >= DRV_SI && !(args.tiling_flags & RADEON_TILING_R600_NO_SCANOUT);
+        md->macrotile = RADEON_LAYOUT_TILED;
+
+    md->bankw = (args.tiling_flags >> RADEON_TILING_EG_BANKW_SHIFT) & RADEON_TILING_EG_BANKW_MASK;
+    md->bankh = (args.tiling_flags >> RADEON_TILING_EG_BANKH_SHIFT) & RADEON_TILING_EG_BANKH_MASK;
+    md->tile_split = (args.tiling_flags >> RADEON_TILING_EG_TILE_SPLIT_SHIFT) & RADEON_TILING_EG_TILE_SPLIT_MASK;
+    md->mtilea = (args.tiling_flags >> RADEON_TILING_EG_MACRO_TILE_ASPECT_SHIFT) & RADEON_TILING_EG_MACRO_TILE_ASPECT_MASK;
+    md->tile_split = eg_tile_split(md->tile_split);
+    md->scanout = bo->rws->gen >= DRV_SI && !(args.tiling_flags & RADEON_TILING_R600_NO_SCANOUT);
 }
 
-static void radeon_bo_set_tiling(struct pb_buffer *_buf,
-                                 struct radeon_winsys_cs *rcs,
-                                 enum radeon_bo_layout microtiled,
-                                 enum radeon_bo_layout macrotiled,
-                                 unsigned pipe_config,
-                                 unsigned bankw, unsigned bankh,
-                                 unsigned tile_split,
-                                 unsigned stencil_tile_split,
-                                 unsigned mtilea, unsigned num_banks,
-                                 uint32_t pitch,
-                                 bool scanout)
+static void radeon_bo_set_metadata(struct pb_buffer *_buf,
+                                   struct radeon_bo_metadata *md)
 {
     struct radeon_bo *bo = radeon_bo(_buf);
-    struct radeon_drm_cs *cs = radeon_drm_cs(rcs);
     struct drm_radeon_gem_set_tiling args;
+
+    assert(bo->handle && "must not be called for slab entries");
 
     memset(&args, 0, sizeof(args));
 
-    /* Tiling determines how DRM treats the buffer data.
-     * We must flush CS when changing it if the buffer is referenced. */
-    if (cs && radeon_bo_is_referenced_by_cs(cs, bo)) {
-        cs->flush_cs(cs->flush_data, 0, NULL);
-    }
-
     os_wait_until_zero(&bo->num_active_ioctls, PIPE_TIMEOUT_INFINITE);
 
-    if (microtiled == RADEON_LAYOUT_TILED)
+    if (md->microtile == RADEON_LAYOUT_TILED)
         args.tiling_flags |= RADEON_TILING_MICRO;
-    else if (microtiled == RADEON_LAYOUT_SQUARETILED)
+    else if (md->microtile == RADEON_LAYOUT_SQUARETILED)
         args.tiling_flags |= RADEON_TILING_MICRO_SQUARE;
 
-    if (macrotiled == RADEON_LAYOUT_TILED)
+    if (md->macrotile == RADEON_LAYOUT_TILED)
         args.tiling_flags |= RADEON_TILING_MACRO;
 
-    args.tiling_flags |= (bankw & RADEON_TILING_EG_BANKW_MASK) <<
+    args.tiling_flags |= (md->bankw & RADEON_TILING_EG_BANKW_MASK) <<
         RADEON_TILING_EG_BANKW_SHIFT;
-    args.tiling_flags |= (bankh & RADEON_TILING_EG_BANKH_MASK) <<
+    args.tiling_flags |= (md->bankh & RADEON_TILING_EG_BANKH_MASK) <<
         RADEON_TILING_EG_BANKH_SHIFT;
-    if (tile_split) {
-	args.tiling_flags |= (eg_tile_split_rev(tile_split) &
+    if (md->tile_split) {
+	args.tiling_flags |= (eg_tile_split_rev(md->tile_split) &
 			      RADEON_TILING_EG_TILE_SPLIT_MASK) <<
 	    RADEON_TILING_EG_TILE_SPLIT_SHIFT;
     }
-    args.tiling_flags |= (stencil_tile_split &
-			  RADEON_TILING_EG_STENCIL_TILE_SPLIT_MASK) <<
-        RADEON_TILING_EG_STENCIL_TILE_SPLIT_SHIFT;
-    args.tiling_flags |= (mtilea & RADEON_TILING_EG_MACRO_TILE_ASPECT_MASK) <<
+    args.tiling_flags |= (md->mtilea & RADEON_TILING_EG_MACRO_TILE_ASPECT_MASK) <<
         RADEON_TILING_EG_MACRO_TILE_ASPECT_SHIFT;
 
-    if (bo->rws->gen >= DRV_SI && !scanout)
+    if (bo->rws->gen >= DRV_SI && !md->scanout)
         args.tiling_flags |= RADEON_TILING_R600_NO_SCANOUT;
 
     args.handle = bo->handle;
-    args.pitch = pitch;
+    args.pitch = md->stride;
 
     drmCommandWriteRead(bo->rws->fd,
                         DRM_RADEON_GEM_SET_TILING,
@@ -741,21 +931,76 @@ static void radeon_bo_set_tiling(struct pb_buffer *_buf,
 
 static struct pb_buffer *
 radeon_winsys_bo_create(struct radeon_winsys *rws,
-                        unsigned size,
+                        uint64_t size,
                         unsigned alignment,
-                        boolean use_reusable_pool,
                         enum radeon_bo_domain domain,
                         enum radeon_bo_flag flags)
 {
     struct radeon_drm_winsys *ws = radeon_drm_winsys(rws);
     struct radeon_bo *bo;
-    unsigned usage = 0;
+    unsigned usage = 0, pb_cache_bucket;
+
+    /* Only 32-bit sizes are supported. */
+    if (size > UINT_MAX)
+        return NULL;
+
+    /* Sub-allocate small buffers from slabs. */
+    if (!(flags & RADEON_FLAG_HANDLE) &&
+        size <= (1 << RADEON_SLAB_MAX_SIZE_LOG2) &&
+        ws->info.has_virtual_memory &&
+        alignment <= MAX2(1 << RADEON_SLAB_MIN_SIZE_LOG2, util_next_power_of_two(size))) {
+        struct pb_slab_entry *entry;
+        unsigned heap = 0;
+
+        if (flags & RADEON_FLAG_GTT_WC)
+            heap |= 1;
+        if (flags & RADEON_FLAG_CPU_ACCESS)
+            heap |= 2;
+        if (flags & ~(RADEON_FLAG_GTT_WC | RADEON_FLAG_CPU_ACCESS))
+            goto no_slab;
+
+        switch (domain) {
+        case RADEON_DOMAIN_VRAM:
+            heap |= 0 * 4;
+            break;
+        case RADEON_DOMAIN_VRAM_GTT:
+            heap |= 1 * 4;
+            break;
+        case RADEON_DOMAIN_GTT:
+            heap |= 2 * 4;
+            break;
+        default:
+            goto no_slab;
+        }
+
+        entry = pb_slab_alloc(&ws->bo_slabs, size, heap);
+        if (!entry) {
+            /* Clear the cache and try again. */
+            pb_cache_release_all_buffers(&ws->bo_cache);
+
+            entry = pb_slab_alloc(&ws->bo_slabs, size, heap);
+        }
+        if (!entry)
+            return NULL;
+
+        bo = NULL;
+        bo = container_of(entry, bo, u.slab.entry);
+
+        pipe_reference_init(&bo->base.reference, 1);
+
+        return &bo->base;
+    }
+no_slab:
+
+    /* This flag is irrelevant for the cache. */
+    flags &= ~RADEON_FLAG_HANDLE;
 
     /* Align size to page size. This is the minimum alignment for normal
      * BOs. Aligning this here helps the cached bufmgr. Especially small BOs,
      * like constant/uniform buffers, can benefit from better and more reuse.
      */
-    size = align(size, ws->size_align);
+    size = align(size, ws->info.gart_page_size);
+    alignment = align(alignment, ws->info.gart_page_size);
 
     /* Only set one usage bit each for domains and flags, or the cache manager
      * might consider different sets of domains / flags compatible
@@ -763,26 +1008,36 @@ radeon_winsys_bo_create(struct radeon_winsys *rws,
     if (domain == RADEON_DOMAIN_VRAM_GTT)
         usage = 1 << 2;
     else
-        usage = domain >> 1;
+        usage = (unsigned)domain >> 1;
     assert(flags < sizeof(usage) * 8 - 3);
     usage |= 1 << (flags + 3);
 
-    if (use_reusable_pool) {
-        bo = radeon_bo(pb_cache_reclaim_buffer(&ws->bo_cache, size, alignment, usage));
-        if (bo)
-            return &bo->base;
-    }
+    /* Determine the pb_cache bucket for minimizing pb_cache misses. */
+    pb_cache_bucket = 0;
+    if (domain & RADEON_DOMAIN_VRAM) /* VRAM or VRAM+GTT */
+       pb_cache_bucket += 1;
+    if (flags == RADEON_FLAG_GTT_WC) /* WC */
+       pb_cache_bucket += 2;
+    assert(pb_cache_bucket < ARRAY_SIZE(ws->bo_cache.buckets));
 
-    bo = radeon_create_bo(ws, size, alignment, usage, domain, flags);
+    bo = radeon_bo(pb_cache_reclaim_buffer(&ws->bo_cache, size, alignment,
+                                           usage, pb_cache_bucket));
+    if (bo)
+        return &bo->base;
+
+    bo = radeon_create_bo(ws, size, alignment, usage, domain, flags,
+                          pb_cache_bucket);
     if (!bo) {
         /* Clear the cache and try again. */
+        pb_slabs_reclaim(&ws->bo_slabs);
         pb_cache_release_all_buffers(&ws->bo_cache);
-        bo = radeon_create_bo(ws, size, alignment, usage, domain, flags);
+        bo = radeon_create_bo(ws, size, alignment, usage, domain, flags,
+                              pb_cache_bucket);
         if (!bo)
             return NULL;
     }
 
-    bo->use_reusable_pool = use_reusable_pool;
+    bo->u.real.use_reusable_pool = true;
 
     pipe_mutex_lock(ws->bo_handles_mutex);
     util_hash_table_set(ws->bo_handles, (void*)(uintptr_t)bo->handle, bo);
@@ -792,7 +1047,7 @@ radeon_winsys_bo_create(struct radeon_winsys *rws,
 }
 
 static struct pb_buffer *radeon_winsys_bo_from_ptr(struct radeon_winsys *rws,
-                                                   void *pointer, unsigned size)
+                                                   void *pointer, uint64_t size)
 {
     struct radeon_drm_winsys *ws = radeon_drm_winsys(rws);
     struct drm_radeon_gem_userptr args;
@@ -805,7 +1060,7 @@ static struct pb_buffer *radeon_winsys_bo_from_ptr(struct radeon_winsys *rws,
 
     memset(&args, 0, sizeof(args));
     args.addr = (uintptr_t)pointer;
-    args.size = align(size, sysconf(_SC_PAGE_SIZE));
+    args.size = align(size, ws->info.gart_page_size);
     args.flags = RADEON_GEM_USERPTR_ANONONLY |
         RADEON_GEM_USERPTR_VALIDATE |
         RADEON_GEM_USERPTR_REGISTER;
@@ -815,20 +1070,22 @@ static struct pb_buffer *radeon_winsys_bo_from_ptr(struct radeon_winsys *rws,
         return NULL;
     }
 
+    assert(args.handle != 0);
+
     pipe_mutex_lock(ws->bo_handles_mutex);
 
     /* Initialize it. */
     pipe_reference_init(&bo->base.reference, 1);
     bo->handle = args.handle;
     bo->base.alignment = 0;
-    bo->base.usage = PB_USAGE_GPU_WRITE | PB_USAGE_GPU_READ;
     bo->base.size = size;
     bo->base.vtbl = &radeon_bo_vtbl;
     bo->rws = ws;
     bo->user_ptr = pointer;
     bo->va = 0;
     bo->initial_domain = RADEON_DOMAIN_GTT;
-    pipe_mutex_init(bo->map_mutex);
+    bo->hash = __sync_fetch_and_add(&ws->next_bo_hash, 1);
+    pipe_mutex_init(bo->u.real.map_mutex);
 
     util_hash_table_set(ws->bo_handles, (void*)(uintptr_t)bo->handle, bo);
 
@@ -868,20 +1125,27 @@ static struct pb_buffer *radeon_winsys_bo_from_ptr(struct radeon_winsys *rws,
         pipe_mutex_unlock(ws->bo_handles_mutex);
     }
 
-    ws->allocated_gtt += align(bo->base.size, ws->size_align);
+    ws->allocated_gtt += align(bo->base.size, ws->info.gart_page_size);
 
     return (struct pb_buffer*)bo;
 }
 
 static struct pb_buffer *radeon_winsys_bo_from_handle(struct radeon_winsys *rws,
                                                       struct winsys_handle *whandle,
-                                                      unsigned *stride)
+                                                      unsigned *stride,
+                                                      unsigned *offset)
 {
     struct radeon_drm_winsys *ws = radeon_drm_winsys(rws);
     struct radeon_bo *bo;
     int r;
     unsigned handle;
     uint64_t size = 0;
+
+    if (!offset && whandle->offset != 0) {
+        fprintf(stderr, "attempt to import unsupported winsys offset %u\n",
+                whandle->offset);
+        return NULL;
+    }
 
     /* We must maintain a list of pairs <handle, bo>, so that we always return
      * the same BO for one particular handle. If we didn't do that and created
@@ -943,17 +1207,19 @@ static struct pb_buffer *radeon_winsys_bo_from_handle(struct radeon_winsys *rws,
         lseek(whandle->handle, 0, SEEK_SET);
     }
 
+    assert(handle != 0);
+
     bo->handle = handle;
 
     /* Initialize it. */
     pipe_reference_init(&bo->base.reference, 1);
     bo->base.alignment = 0;
-    bo->base.usage = PB_USAGE_GPU_WRITE | PB_USAGE_GPU_READ;
     bo->base.size = (unsigned) size;
     bo->base.vtbl = &radeon_bo_vtbl;
     bo->rws = ws;
     bo->va = 0;
-    pipe_mutex_init(bo->map_mutex);
+    bo->hash = __sync_fetch_and_add(&ws->next_bo_hash, 1);
+    pipe_mutex_init(bo->u.real.map_mutex);
 
     if (bo->flink_name)
         util_hash_table_set(ws->bo_names, (void*)(uintptr_t)bo->flink_name, bo);
@@ -965,6 +1231,8 @@ done:
 
     if (stride)
         *stride = whandle->stride;
+    if (offset)
+        *offset = whandle->offset;
 
     if (ws->info.has_virtual_memory && !bo->va) {
         struct drm_radeon_gem_va va;
@@ -1003,9 +1271,9 @@ done:
     bo->initial_domain = radeon_bo_get_initial_domain((void*)bo);
 
     if (bo->initial_domain & RADEON_DOMAIN_VRAM)
-        ws->allocated_vram += align(bo->base.size, ws->size_align);
+        ws->allocated_vram += align(bo->base.size, ws->info.gart_page_size);
     else if (bo->initial_domain & RADEON_DOMAIN_GTT)
-        ws->allocated_gtt += align(bo->base.size, ws->size_align);
+        ws->allocated_gtt += align(bo->base.size, ws->info.gart_page_size);
 
     return (struct pb_buffer*)bo;
 
@@ -1014,24 +1282,30 @@ fail:
     return NULL;
 }
 
-static boolean radeon_winsys_bo_get_handle(struct pb_buffer *buffer,
-                                           unsigned stride,
-                                           struct winsys_handle *whandle)
+static bool radeon_winsys_bo_get_handle(struct pb_buffer *buffer,
+                                        unsigned stride, unsigned offset,
+                                        unsigned slice_size,
+                                        struct winsys_handle *whandle)
 {
     struct drm_gem_flink flink;
     struct radeon_bo *bo = radeon_bo(buffer);
     struct radeon_drm_winsys *ws = bo->rws;
 
+    if (!bo->handle) {
+        offset += bo->va - bo->u.slab.real->va;
+        bo = bo->u.slab.real;
+    }
+
     memset(&flink, 0, sizeof(flink));
 
-    bo->use_reusable_pool = false;
+    bo->u.real.use_reusable_pool = false;
 
     if (whandle->type == DRM_API_HANDLE_TYPE_SHARED) {
         if (!bo->flink_name) {
             flink.handle = bo->handle;
 
             if (ioctl(ws->fd, DRM_IOCTL_GEM_FLINK, &flink)) {
-                return FALSE;
+                return false;
             }
 
             bo->flink_name = flink.name;
@@ -1045,11 +1319,14 @@ static boolean radeon_winsys_bo_get_handle(struct pb_buffer *buffer,
         whandle->handle = bo->handle;
     } else if (whandle->type == DRM_API_HANDLE_TYPE_FD) {
         if (drmPrimeHandleToFD(ws->fd, bo->handle, DRM_CLOEXEC, (int*)&whandle->handle))
-            return FALSE;
+            return false;
     }
 
     whandle->stride = stride;
-    return TRUE;
+    whandle->offset = offset;
+    whandle->offset += slice_size * whandle->layer;
+
+    return true;
 }
 
 static bool radeon_winsys_bo_is_user_ptr(struct pb_buffer *buf)
@@ -1062,10 +1339,20 @@ static uint64_t radeon_winsys_bo_va(struct pb_buffer *buf)
     return ((struct radeon_bo*)buf)->va;
 }
 
+static unsigned radeon_winsys_bo_get_reloc_offset(struct pb_buffer *buf)
+{
+    struct radeon_bo *bo = radeon_bo(buf);
+
+    if (bo->handle)
+        return 0;
+
+    return bo->va - bo->u.slab.real->va;
+}
+
 void radeon_drm_bo_init_functions(struct radeon_drm_winsys *ws)
 {
-    ws->base.buffer_set_tiling = radeon_bo_set_tiling;
-    ws->base.buffer_get_tiling = radeon_bo_get_tiling;
+    ws->base.buffer_set_metadata = radeon_bo_set_metadata;
+    ws->base.buffer_get_metadata = radeon_bo_get_metadata;
     ws->base.buffer_map = radeon_bo_map;
     ws->base.buffer_unmap = radeon_bo_unmap;
     ws->base.buffer_wait = radeon_bo_wait;
@@ -1075,5 +1362,6 @@ void radeon_drm_bo_init_functions(struct radeon_drm_winsys *ws)
     ws->base.buffer_is_user_ptr = radeon_winsys_bo_is_user_ptr;
     ws->base.buffer_get_handle = radeon_winsys_bo_get_handle;
     ws->base.buffer_get_virtual_address = radeon_winsys_bo_va;
+    ws->base.buffer_get_reloc_offset = radeon_winsys_bo_get_reloc_offset;
     ws->base.buffer_get_initial_domain = radeon_bo_get_initial_domain;
 }

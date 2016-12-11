@@ -39,8 +39,10 @@ struct NineDevice9;
 
 struct NineUnknown
 {
-    /* pointer to vtable  */
+    /* pointer to vtable (can be overriden outside gallium nine) */
     void *vtable;
+    /* pointer to internal vtable  */
+    void *vtable_internal;
 
     int32_t refs; /* external reference count */
     int32_t bind; /* internal bind count */
@@ -50,6 +52,9 @@ struct NineUnknown
     struct NineDevice9 *device;    /* referenced if (refs) */
 
     const GUID **guids; /* for QueryInterface */
+
+    /* for [GS]etPrivateData/FreePrivateData */
+    struct util_hash_table *pdata;
 
     void (*dtor)(void *data); /* top-level dtor */
 };
@@ -92,6 +97,23 @@ NineUnknown_Release( struct NineUnknown *This );
 HRESULT NINE_WINAPI
 NineUnknown_GetDevice( struct NineUnknown *This,
                        IDirect3DDevice9 **ppDevice );
+
+HRESULT NINE_WINAPI
+NineUnknown_SetPrivateData( struct NineUnknown *This,
+                            REFGUID refguid,
+                            const void *pData,
+                            DWORD SizeOfData,
+                            DWORD Flags );
+
+HRESULT NINE_WINAPI
+NineUnknown_GetPrivateData( struct NineUnknown *This,
+                            REFGUID refguid,
+                            void *pData,
+                            DWORD *pSizeOfData );
+
+HRESULT NINE_WINAPI
+NineUnknown_FreePrivateData( struct NineUnknown *This,
+                             REFGUID refguid );
 
 /*** Nine private methods ***/
 

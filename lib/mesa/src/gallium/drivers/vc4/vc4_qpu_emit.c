@@ -40,34 +40,35 @@ vc4_dump_program(struct vc4_compile *c)
                 vc4_qpu_disasm(&c->qpu_insts[i], 1);
                 fprintf(stderr, "\n");
         }
+        fprintf(stderr, "\n");
 }
 
 static void
-queue(struct vc4_compile *c, uint64_t inst)
+queue(struct qblock *block, uint64_t inst)
 {
-        struct queued_qpu_inst *q = rzalloc(c, struct queued_qpu_inst);
+        struct queued_qpu_inst *q = rzalloc(block, struct queued_qpu_inst);
         q->inst = inst;
-        list_addtail(&q->link, &c->qpu_inst_list);
+        list_addtail(&q->link, &block->qpu_inst_list);
 }
 
 static uint64_t *
-last_inst(struct vc4_compile *c)
+last_inst(struct qblock *block)
 {
         struct queued_qpu_inst *q =
-                (struct queued_qpu_inst *)c->qpu_inst_list.prev;
+                (struct queued_qpu_inst *)block->qpu_inst_list.prev;
         return &q->inst;
 }
 
 static void
-set_last_cond_add(struct vc4_compile *c, uint32_t cond)
+set_last_cond_add(struct qblock *block, uint32_t cond)
 {
-        *last_inst(c) = qpu_set_cond_add(*last_inst(c), cond);
+        *last_inst(block) = qpu_set_cond_add(*last_inst(block), cond);
 }
 
 static void
-set_last_cond_mul(struct vc4_compile *c, uint32_t cond)
+set_last_cond_mul(struct qblock *block, uint32_t cond)
 {
-        *last_inst(c) = qpu_set_cond_mul(*last_inst(c), cond);
+        *last_inst(block) = qpu_set_cond_mul(*last_inst(block), cond);
 }
 
 /**
@@ -96,6 +97,60 @@ swap_file(struct qpu_reg *src)
 }
 
 /**
+ * Sets up the VPM read FIFO before we do any VPM read.
+ *
+ * VPM reads (vertex attribute input) and VPM writes (varyings output) from
+ * the QPU reuse the VRI (varying interpolation) block's FIFOs to talk to the
+ * VPM block.  In the VS/CS (unlike in the FS), the block starts out
+ * uninitialized, and you need to emit setup to the block before any VPM
+ * reads/writes.
+ *
+ * VRI has a FIFO in each direction, with each FIFO able to hold four
+ * 32-bit-per-vertex values.  VPM reads come through the read FIFO and VPM
+ * writes go through the write FIFO.  The read/write setup values from QPU go
+ * through the write FIFO as well, with a sideband signal indicating that
+ * they're setup values.  Once a read setup reaches the other side of the
+ * FIFO, the VPM block will start asynchronously reading vertex attributes and
+ * filling the read FIFO -- that way hopefully the QPU doesn't have to block
+ * on reads later.
+ *
+ * VPM read setup can configure 16 32-bit-per-vertex values to be read at a
+ * time, which is 4 vec4s.  If more than that is being read (since we support
+ * 8 vec4 vertex attributes), then multiple read setup writes need to be done.
+ *
+ * The existence of the FIFO makes it seem like you should be able to emit
+ * both setups for the 5-8 attribute cases and then do all the attribute
+ * reads.  However, once the setup value makes it to the other end of the
+ * write FIFO, it will immediately update the VPM block's setup register.
+ * That updated setup register would be used for read FIFO fills from then on,
+ * breaking whatever remaining VPM values were supposed to be read into the
+ * read FIFO from the previous attribute set.
+ *
+ * As a result, we need to emit the read setup, pull every VPM read value from
+ * that setup, and only then emit the second setup if applicable.
+ */
+static void
+setup_for_vpm_read(struct vc4_compile *c, struct qblock *block)
+{
+        if (c->num_inputs_in_fifo) {
+                c->num_inputs_in_fifo--;
+                return;
+        }
+
+        c->num_inputs_in_fifo = MIN2(c->num_inputs_remaining, 16);
+
+        queue(block,
+              qpu_load_imm_ui(qpu_vrsetup(),
+                              c->vpm_read_offset |
+                              0x00001a00 |
+                              ((c->num_inputs_in_fifo & 0xf) << 20)));
+        c->num_inputs_remaining -= c->num_inputs_in_fifo;
+        c->vpm_read_offset += c->num_inputs_in_fifo;
+
+        c->num_inputs_in_fifo--;
+}
+
+/**
  * This is used to resolve the fact that we might register-allocate two
  * different operands of an instruction to the same physical register file
  * even though instructions have only one field for the register file source
@@ -105,7 +160,7 @@ swap_file(struct qpu_reg *src)
  * instruction, instead.  We reserve ra31/rb31 for this purpose.
  */
 static void
-fixup_raddr_conflict(struct vc4_compile *c,
+fixup_raddr_conflict(struct qblock *block,
                      struct qpu_reg dst,
                      struct qpu_reg *src0, struct qpu_reg *src1,
                      struct qinst *inst, uint64_t *unpack)
@@ -128,82 +183,63 @@ fixup_raddr_conflict(struct vc4_compile *c,
                  * in case of unpacks.
                  */
                 if (qir_is_float_input(inst))
-                        queue(c, qpu_a_FMAX(qpu_rb(31), *src0, *src0));
+                        queue(block, qpu_a_FMAX(qpu_rb(31), *src0, *src0));
                 else
-                        queue(c, qpu_a_MOV(qpu_rb(31), *src0));
+                        queue(block, qpu_a_MOV(qpu_rb(31), *src0));
 
                 /* If we had an unpack on this A-file source, we need to put
                  * it into this MOV, not into the later move from regfile B.
                  */
                 if (inst->src[0].pack) {
-                        *last_inst(c) |= *unpack;
+                        *last_inst(block) |= *unpack;
                         *unpack = 0;
                 }
                 *src0 = qpu_rb(31);
         } else {
-                queue(c, qpu_a_MOV(qpu_ra(31), *src0));
+                queue(block, qpu_a_MOV(qpu_ra(31), *src0));
                 *src0 = qpu_ra(31);
         }
 }
 
 static void
-set_last_dst_pack(struct vc4_compile *c, struct qinst *inst)
+set_last_dst_pack(struct qblock *block, struct qinst *inst)
 {
-        bool had_pm = *last_inst(c) & QPU_PM;
-        bool had_ws = *last_inst(c) & QPU_WS;
-        uint32_t unpack = QPU_GET_FIELD(*last_inst(c), QPU_UNPACK);
+        bool had_pm = *last_inst(block) & QPU_PM;
+        bool had_ws = *last_inst(block) & QPU_WS;
+        uint32_t unpack = QPU_GET_FIELD(*last_inst(block), QPU_UNPACK);
 
         if (!inst->dst.pack)
                 return;
 
-        *last_inst(c) |= QPU_SET_FIELD(inst->dst.pack, QPU_PACK);
+        *last_inst(block) |= QPU_SET_FIELD(inst->dst.pack, QPU_PACK);
 
         if (qir_is_mul(inst)) {
                 assert(!unpack || had_pm);
-                *last_inst(c) |= QPU_PM;
+                *last_inst(block) |= QPU_PM;
         } else {
                 assert(!unpack || !had_pm);
                 assert(!had_ws); /* dst must be a-file to pack. */
         }
 }
 
-void
-vc4_generate_code(struct vc4_context *vc4, struct vc4_compile *c)
+static void
+handle_r4_qpu_write(struct qblock *block, struct qinst *qinst,
+                    struct qpu_reg dst)
 {
-        struct qpu_reg *temp_registers = vc4_register_allocate(vc4, c);
-        bool discard = false;
-        uint32_t inputs_remaining = c->num_inputs;
-        uint32_t vpm_read_fifo_count = 0;
-        uint32_t vpm_read_offset = 0;
+        if (dst.mux != QPU_MUX_R4)
+                queue(block, qpu_a_MOV(dst, qpu_r4()));
+        else if (qinst->sf)
+                queue(block, qpu_a_MOV(qpu_ra(QPU_W_NOP), qpu_r4()));
+}
+
+static void
+vc4_generate_code_block(struct vc4_compile *c,
+                        struct qblock *block,
+                        struct qpu_reg *temp_registers)
+{
         int last_vpm_read_index = -1;
 
-        list_inithead(&c->qpu_inst_list);
-
-        switch (c->stage) {
-        case QSTAGE_VERT:
-        case QSTAGE_COORD:
-                /* There's a 4-entry FIFO for VPMVCD reads, each of which can
-                 * load up to 16 dwords (4 vec4s) per vertex.
-                 */
-                while (inputs_remaining) {
-                        uint32_t num_entries = MIN2(inputs_remaining, 16);
-                        queue(c, qpu_load_imm_ui(qpu_vrsetup(),
-                                                 vpm_read_offset |
-                                                 0x00001a00 |
-                                                 ((num_entries & 0xf) << 20)));
-                        inputs_remaining -= num_entries;
-                        vpm_read_offset += num_entries;
-                        vpm_read_fifo_count++;
-                }
-                assert(vpm_read_fifo_count <= 4);
-
-                queue(c, qpu_load_imm_ui(qpu_vwsetup(), 0x00001a00));
-                break;
-        case QSTAGE_FRAG:
-                break;
-        }
-
-        list_for_each_entry(struct qinst, qinst, &c->instructions, link) {
+        qir_for_each_inst(qinst, block) {
 #if 0
                 fprintf(stderr, "translating qinst to qpu: ");
                 qir_dump_inst(qinst);
@@ -257,6 +293,7 @@ vc4_generate_code(struct vc4_context *vc4, struct vc4_compile *c)
                         int index = qinst->src[i].index;
                         switch (qinst->src[i].file) {
                         case QFILE_NULL:
+                        case QFILE_LOAD_IMM:
                                 src[i] = qpu_rn(0);
                                 break;
                         case QFILE_TEMP:
@@ -285,12 +322,32 @@ vc4_generate_code(struct vc4_context *vc4, struct vc4_compile *c)
                                 assert(src[i].addr <= 47);
                                 break;
                         case QFILE_VPM:
+                                setup_for_vpm_read(c, block);
                                 assert((int)qinst->src[i].index >=
                                        last_vpm_read_index);
                                 (void)last_vpm_read_index;
                                 last_vpm_read_index = qinst->src[i].index;
                                 src[i] = qpu_ra(QPU_R_VPM);
                                 break;
+
+                        case QFILE_FRAG_X:
+                                src[i] = qpu_ra(QPU_R_XY_PIXEL_COORD);
+                                break;
+                        case QFILE_FRAG_Y:
+                                src[i] = qpu_rb(QPU_R_XY_PIXEL_COORD);
+                                break;
+                        case QFILE_FRAG_REV_FLAG:
+                                src[i] = qpu_rb(QPU_R_MS_REV_FLAGS);
+                                break;
+                        case QFILE_QPU_ELEMENT:
+                                src[i] = qpu_ra(QPU_R_ELEM_QPU);
+                                break;
+
+                        case QFILE_TLB_COLOR_WRITE:
+                        case QFILE_TLB_COLOR_WRITE_MS:
+                        case QFILE_TLB_Z_WRITE:
+                        case QFILE_TLB_STENCIL_SETUP:
+                                unreachable("bad qir src file");
                         }
                 }
 
@@ -305,9 +362,31 @@ vc4_generate_code(struct vc4_context *vc4, struct vc4_compile *c)
                 case QFILE_VPM:
                         dst = qpu_ra(QPU_W_VPM);
                         break;
+
+                case QFILE_TLB_COLOR_WRITE:
+                        dst = qpu_tlbc();
+                        break;
+
+                case QFILE_TLB_COLOR_WRITE_MS:
+                        dst = qpu_tlbc_ms();
+                        break;
+
+                case QFILE_TLB_Z_WRITE:
+                        dst = qpu_ra(QPU_W_TLB_Z);
+                        break;
+
+                case QFILE_TLB_STENCIL_SETUP:
+                        dst = qpu_ra(QPU_W_TLB_STENCIL_SETUP);
+                        break;
+
                 case QFILE_VARY:
                 case QFILE_UNIF:
                 case QFILE_SMALL_IMM:
+                case QFILE_LOAD_IMM:
+                case QFILE_FRAG_X:
+                case QFILE_FRAG_Y:
+                case QFILE_FRAG_REV_FLAG:
+                case QFILE_QPU_ELEMENT:
                         assert(!"not reached");
                         break;
                 }
@@ -321,51 +400,63 @@ vc4_generate_code(struct vc4_context *vc4, struct vc4_compile *c)
                 case QOP_LOG2:
                         switch (qinst->op) {
                         case QOP_RCP:
-                                queue(c, qpu_a_MOV(qpu_rb(QPU_W_SFU_RECIP),
-                                                   src[0]) | unpack);
+                                queue(block, qpu_a_MOV(qpu_rb(QPU_W_SFU_RECIP),
+                                                       src[0]) | unpack);
                                 break;
                         case QOP_RSQ:
-                                queue(c, qpu_a_MOV(qpu_rb(QPU_W_SFU_RECIPSQRT),
-                                                   src[0]) | unpack);
+                                queue(block, qpu_a_MOV(qpu_rb(QPU_W_SFU_RECIPSQRT),
+                                                       src[0]) | unpack);
                                 break;
                         case QOP_EXP2:
-                                queue(c, qpu_a_MOV(qpu_rb(QPU_W_SFU_EXP),
-                                                   src[0]) | unpack);
+                                queue(block, qpu_a_MOV(qpu_rb(QPU_W_SFU_EXP),
+                                                       src[0]) | unpack);
                                 break;
                         case QOP_LOG2:
-                                queue(c, qpu_a_MOV(qpu_rb(QPU_W_SFU_LOG),
-                                                   src[0]) | unpack);
+                                queue(block, qpu_a_MOV(qpu_rb(QPU_W_SFU_LOG),
+                                                       src[0]) | unpack);
                                 break;
                         default:
                                 abort();
                         }
 
-                        if (dst.mux != QPU_MUX_R4)
-                                queue(c, qpu_a_MOV(dst, qpu_r4()));
+                        handle_r4_qpu_write(block, qinst, dst);
 
                         break;
 
-                case QOP_FRAG_X:
-                        queue(c, qpu_a_ITOF(dst,
-                                            qpu_ra(QPU_R_XY_PIXEL_COORD)));
+                case QOP_LOAD_IMM:
+                        assert(qinst->src[0].file == QFILE_LOAD_IMM);
+                        queue(block, qpu_load_imm_ui(dst, qinst->src[0].index));
                         break;
 
-                case QOP_FRAG_Y:
-                        queue(c, qpu_a_ITOF(dst,
-                                            qpu_rb(QPU_R_XY_PIXEL_COORD)));
+                case QOP_LOAD_IMM_U2:
+                        queue(block, qpu_load_imm_u2(dst, qinst->src[0].index));
                         break;
 
-                case QOP_FRAG_REV_FLAG:
-                        queue(c, qpu_a_ITOF(dst,
-                                            qpu_rb(QPU_R_MS_REV_FLAGS)));
+                case QOP_LOAD_IMM_I2:
+                        queue(block, qpu_load_imm_i2(dst, qinst->src[0].index));
+                        break;
+
+                case QOP_ROT_MUL:
+                        /* Rotation at the hardware level occurs on the inputs
+                         * to the MUL unit, and they must be accumulators in
+                         * order to have the time necessary to move things.
+                         */
+                        assert(src[0].mux <= QPU_MUX_R3);
+
+                        queue(block,
+                              qpu_m_rot(dst, src[0], qinst->src[1].index -
+                                        QPU_SMALL_IMM_MUL_ROT) | unpack);
+                        set_last_cond_mul(block, qinst->cond);
+                        handled_qinst_cond = true;
+                        set_last_dst_pack(block, qinst);
                         break;
 
                 case QOP_MS_MASK:
                         src[1] = qpu_ra(QPU_R_MS_REV_FLAGS);
-                        fixup_raddr_conflict(c, dst, &src[0], &src[1],
+                        fixup_raddr_conflict(block, dst, &src[0], &src[1],
                                              qinst, &unpack);
-                        queue(c, qpu_a_AND(qpu_ra(QPU_W_MS_FLAGS),
-                                           src[0], src[1]) | unpack);
+                        queue(block, qpu_a_AND(qpu_ra(QPU_W_MS_FLAGS),
+                                               src[0], src[1]) | unpack);
                         break;
 
                 case QOP_FRAG_Z:
@@ -375,75 +466,55 @@ vc4_generate_code(struct vc4_context *vc4, struct vc4_compile *c)
                          */
                         break;
 
-                case QOP_TLB_DISCARD_SETUP:
-                        discard = true;
-                        queue(c, qpu_a_MOV(src[0], src[0]) | unpack);
-                        *last_inst(c) |= QPU_SF;
-                        break;
-
-                case QOP_TLB_STENCIL_SETUP:
-                        assert(!unpack);
-                        queue(c, qpu_a_MOV(qpu_ra(QPU_W_TLB_STENCIL_SETUP),
-                                           src[0]) | unpack);
-                        break;
-
-                case QOP_TLB_Z_WRITE:
-                        queue(c, qpu_a_MOV(qpu_ra(QPU_W_TLB_Z),
-                                           src[0]) | unpack);
-                        if (discard) {
-                                set_last_cond_add(c, QPU_COND_ZS);
-                        }
-                        break;
-
                 case QOP_TLB_COLOR_READ:
-                        queue(c, qpu_NOP());
-                        *last_inst(c) = qpu_set_sig(*last_inst(c),
-                                                    QPU_SIG_COLOR_LOAD);
-
-                        if (dst.mux != QPU_MUX_R4)
-                                queue(c, qpu_a_MOV(dst, qpu_r4()));
-                        break;
-
-                case QOP_TLB_COLOR_WRITE:
-                        queue(c, qpu_a_MOV(qpu_tlbc(), src[0]) | unpack);
-                        if (discard) {
-                                set_last_cond_add(c, QPU_COND_ZS);
-                        }
-                        break;
-
-                case QOP_TLB_COLOR_WRITE_MS:
-                        queue(c, qpu_a_MOV(qpu_tlbc_ms(), src[0]));
-                        if (discard) {
-                                set_last_cond_add(c, QPU_COND_ZS);
-                        }
+                        queue(block, qpu_NOP());
+                        *last_inst(block) = qpu_set_sig(*last_inst(block),
+                                                        QPU_SIG_COLOR_LOAD);
+                        handle_r4_qpu_write(block, qinst, dst);
                         break;
 
                 case QOP_VARY_ADD_C:
-                        queue(c, qpu_a_FADD(dst, src[0], qpu_r5()) | unpack);
+                        queue(block, qpu_a_FADD(dst, src[0], qpu_r5()) | unpack);
                         break;
 
                 case QOP_TEX_S:
                 case QOP_TEX_T:
                 case QOP_TEX_R:
                 case QOP_TEX_B:
-                        queue(c, qpu_a_MOV(qpu_rb(QPU_W_TMU0_S +
-                                                  (qinst->op - QOP_TEX_S)),
-                                           src[0]) | unpack);
+                        queue(block, qpu_a_MOV(qpu_rb(QPU_W_TMU0_S +
+                                                      (qinst->op - QOP_TEX_S)),
+                                               src[0]) | unpack);
                         break;
 
                 case QOP_TEX_DIRECT:
-                        fixup_raddr_conflict(c, dst, &src[0], &src[1],
+                        fixup_raddr_conflict(block, dst, &src[0], &src[1],
                                              qinst, &unpack);
-                        queue(c, qpu_a_ADD(qpu_rb(QPU_W_TMU0_S),
-                                           src[0], src[1]) | unpack);
+                        queue(block, qpu_a_ADD(qpu_rb(QPU_W_TMU0_S),
+                                               src[0], src[1]) | unpack);
                         break;
 
                 case QOP_TEX_RESULT:
-                        queue(c, qpu_NOP());
-                        *last_inst(c) = qpu_set_sig(*last_inst(c),
-                                                    QPU_SIG_LOAD_TMU0);
-                        if (dst.mux != QPU_MUX_R4)
-                                queue(c, qpu_a_MOV(dst, qpu_r4()));
+                        queue(block, qpu_NOP());
+                        *last_inst(block) = qpu_set_sig(*last_inst(block),
+                                                        QPU_SIG_LOAD_TMU0);
+                        handle_r4_qpu_write(block, qinst, dst);
+                        break;
+
+                case QOP_BRANCH:
+                        /* The branch target will be updated at QPU scheduling
+                         * time.
+                         */
+                        queue(block, (qpu_branch(qinst->cond, 0) |
+                                      QPU_BRANCH_REL));
+                        handled_qinst_cond = true;
+                        break;
+
+                case QOP_UNIFORMS_RESET:
+                        fixup_raddr_conflict(block, dst, &src[0], &src[1],
+                                             qinst, &unpack);
+
+                        queue(block, qpu_a_ADD(qpu_ra(QPU_W_UNIFORMS_ADDRESS),
+                                               src[0], src[1]));
                         break;
 
                 default:
@@ -463,22 +534,22 @@ vc4_generate_code(struct vc4_context *vc4, struct vc4_compile *c)
                         if (qir_get_op_nsrc(qinst->op) == 1)
                                 src[1] = src[0];
 
-                        fixup_raddr_conflict(c, dst, &src[0], &src[1],
+                        fixup_raddr_conflict(block, dst, &src[0], &src[1],
                                              qinst, &unpack);
 
                         if (qir_is_mul(qinst)) {
-                                queue(c, qpu_m_alu2(translate[qinst->op].op,
-                                                    dst,
-                                                    src[0], src[1]) | unpack);
-                                set_last_cond_mul(c, qinst->cond);
+                                queue(block, qpu_m_alu2(translate[qinst->op].op,
+                                                        dst,
+                                                        src[0], src[1]) | unpack);
+                                set_last_cond_mul(block, qinst->cond);
                         } else {
-                                queue(c, qpu_a_alu2(translate[qinst->op].op,
-                                                    dst,
-                                                    src[0], src[1]) | unpack);
-                                set_last_cond_add(c, qinst->cond);
+                                queue(block, qpu_a_alu2(translate[qinst->op].op,
+                                                        dst,
+                                                        src[0], src[1]) | unpack);
+                                set_last_cond_add(block, qinst->cond);
                         }
                         handled_qinst_cond = true;
-                        set_last_dst_pack(c, qinst);
+                        set_last_dst_pack(block, qinst);
 
                         break;
                 }
@@ -486,11 +557,33 @@ vc4_generate_code(struct vc4_context *vc4, struct vc4_compile *c)
                 assert(qinst->cond == QPU_COND_ALWAYS ||
                        handled_qinst_cond);
 
-                if (qinst->sf) {
-                        assert(!qir_is_multi_instruction(qinst));
-                        *last_inst(c) |= QPU_SF;
-                }
+                if (qinst->sf)
+                        *last_inst(block) |= QPU_SF;
         }
+}
+
+void
+vc4_generate_code(struct vc4_context *vc4, struct vc4_compile *c)
+{
+        struct qblock *start_block = list_first_entry(&c->blocks,
+                                                      struct qblock, link);
+
+        struct qpu_reg *temp_registers = vc4_register_allocate(vc4, c);
+        if (!temp_registers)
+                return;
+
+        switch (c->stage) {
+        case QSTAGE_VERT:
+        case QSTAGE_COORD:
+                c->num_inputs_remaining = c->num_inputs;
+                queue(start_block, qpu_load_imm_ui(qpu_vwsetup(), 0x00001a00));
+                break;
+        case QSTAGE_FRAG:
+                break;
+        }
+
+        qir_for_each_block(block, c)
+                vc4_generate_code_block(c, block, temp_registers);
 
         uint32_t cycles = qpu_schedule_instructions(c);
         uint32_t inst_count_at_schedule_time = c->qpu_inst_count;
@@ -518,6 +611,14 @@ vc4_generate_code(struct vc4_context *vc4, struct vc4_compile *c)
         /* thread end can't have TLB operations */
         if (qpu_inst_is_tlb(c->qpu_insts[c->qpu_inst_count - 1]))
                 qpu_serialize_one_inst(c, qpu_NOP());
+
+        /* Make sure there's no existing signal set (like for a small
+         * immediate)
+         */
+        if (QPU_GET_FIELD(c->qpu_insts[c->qpu_inst_count - 1],
+                          QPU_SIG) != QPU_SIG_NONE) {
+                qpu_serialize_one_inst(c, qpu_NOP());
+        }
 
         c->qpu_insts[c->qpu_inst_count - 1] =
                 qpu_set_sig(c->qpu_insts[c->qpu_inst_count - 1],

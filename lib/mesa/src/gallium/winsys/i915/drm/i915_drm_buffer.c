@@ -101,6 +101,9 @@ i915_drm_buffer_from_handle(struct i915_winsys *iws,
    if ((whandle->type != DRM_API_HANDLE_TYPE_SHARED) && (whandle->type != DRM_API_HANDLE_TYPE_FD))
       return NULL;
 
+   if (whandle->offset != 0)
+      return NULL;
+
    buf = CALLOC_STRUCT(i915_drm_buffer);
    if (!buf)
       return NULL;
@@ -150,6 +153,12 @@ i915_drm_buffer_get_handle(struct i915_winsys *iws,
       whandle->handle = buf->flink;
    } else if (whandle->type == DRM_API_HANDLE_TYPE_KMS) {
       whandle->handle = buf->bo->handle;
+   } else if (whandle->type == DRM_API_HANDLE_TYPE_FD) {
+      int fd;
+
+      if (drm_intel_bo_gem_export_to_prime(buf->bo, &fd))
+         return FALSE;
+      whandle->handle = fd;
    } else {
       assert(!"unknown usage");
       return FALSE;

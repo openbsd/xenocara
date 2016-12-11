@@ -21,8 +21,14 @@
  * IN THE SOFTWARE.
  */
 
+#include "brw_context.h"
+#include "brw_defines.h"
+#include "intel_fbo.h"
 #include "brw_meta_util.h"
+#include "brw_state.h"
+#include "main/blend.h"
 #include "main/fbobject.h"
+#include "util/format_srgb.h"
 
 /**
  * Helper function for handling mirror image blits.
@@ -41,65 +47,111 @@ fixup_mirroring(bool *mirror, float *coord0, float *coord1)
 }
 
 /**
- * Adjust {src,dst}_x{0,1} to account for clipping and scissoring of
- * destination coordinates.
+ * Compute the number of pixels to clip for each side of a rect
  *
- * Return true if there is still blitting to do, false if all pixels got
- * rejected by the clip and/or scissor.
+ * \param x0 The rect's left coordinate
+ * \param y0 The rect's bottom coordinate
+ * \param x1 The rect's right coordinate
+ * \param y1 The rect's top coordinate
+ * \param min_x The clipping region's left coordinate
+ * \param min_y The clipping region's bottom coordinate
+ * \param max_x The clipping region's right coordinate
+ * \param max_y The clipping region's top coordinate
+ * \param clipped_x0 The number of pixels to clip from the left side
+ * \param clipped_y0 The number of pixels to clip from the bottom side
+ * \param clipped_x1 The number of pixels to clip from the right side
+ * \param clipped_y1 The number of pixels to clip from the top side
  *
- * For clarity, the nomenclature of this function assumes we are clipping and
- * scissoring the X coordinate; the exact same logic applies for Y
- * coordinates.
- *
- * Note: this function may also be used to account for clipping of source
- * coordinates, by swapping the roles of src and dst.
+ * \return false if we clip everything away, true otherwise
  */
 static inline bool
-clip_or_scissor(bool mirror,
-                GLfloat *src_x0, GLfloat *src_x1,
-                GLfloat *dst_x0, GLfloat *dst_x1,
-                GLfloat fb_xmin, GLfloat fb_xmax)
+compute_pixels_clipped(float x0, float y0, float x1, float y1,
+                       float min_x, float min_y, float max_x, float max_y,
+                       float *clipped_x0, float *clipped_y0, float *clipped_x1, float *clipped_y1)
 {
-   float scale = (float) (*src_x1 - *src_x0) / (*dst_x1 - *dst_x0);
-   /* If we are going to scissor everything away, stop. */
-   if (!(fb_xmin < fb_xmax &&
-         *dst_x0 < fb_xmax &&
-         fb_xmin < *dst_x1 &&
-         *dst_x0 < *dst_x1)) {
+   /* If we are going to clip everything away, stop. */
+   if (!(min_x <= max_x &&
+         min_y <= max_y &&
+         x0 <= max_x &&
+         y0 <= max_y &&
+         min_x <= x1 &&
+         min_y <= y1 &&
+         x0 <= x1 &&
+         y0 <= y1)) {
       return false;
    }
 
-   /* Clip the destination rectangle, and keep track of how many pixels we
-    * clipped off of the left and right sides of it.
-    */
-   int pixels_clipped_left = 0;
-   int pixels_clipped_right = 0;
-   if (*dst_x0 < fb_xmin) {
-      pixels_clipped_left = fb_xmin - *dst_x0;
-      *dst_x0 = fb_xmin;
-   }
-   if (fb_xmax < *dst_x1) {
-      pixels_clipped_right = *dst_x1 - fb_xmax;
-      *dst_x1 = fb_xmax;
-   }
+   if (x0 < min_x)
+      *clipped_x0 = min_x - x0;
+   else
+      *clipped_x0 = 0;
+   if (max_x < x1)
+      *clipped_x1 = x1 - max_x;
+   else
+      *clipped_x1 = 0;
 
-   /* If we are mirrored, then before applying pixels_clipped_{left,right} to
-    * the source coordinates, we need to flip them to account for the
-    * mirroring.
-    */
-   if (mirror) {
-      int tmp = pixels_clipped_left;
-      pixels_clipped_left = pixels_clipped_right;
-      pixels_clipped_right = tmp;
-   }
-
-   /* Adjust the source rectangle to remove the pixels corresponding to those
-    * that were clipped/scissored out of the destination rectangle.
-    */
-   *src_x0 += pixels_clipped_left * scale;
-   *src_x1 -= pixels_clipped_right * scale;
+   if (y0 < min_y)
+      *clipped_y0 = min_y - y0;
+   else
+      *clipped_y0 = 0;
+   if (max_y < y1)
+      *clipped_y1 = y1 - max_y;
+   else
+      *clipped_y1 = 0;
 
    return true;
+}
+
+/**
+ * Clips a coordinate (left, right, top or bottom) for the src or dst rect
+ * (whichever requires the largest clip) and adjusts the coordinate
+ * for the other rect accordingly.
+ *
+ * \param mirror true if mirroring is required
+ * \param src the source rect coordinate (for example srcX0)
+ * \param dst0 the dst rect coordinate (for example dstX0)
+ * \param dst1 the opposite dst rect coordinate (for example dstX1)
+ * \param clipped_src0 number of pixels to clip from the src coordinate
+ * \param clipped_dst0 number of pixels to clip from the dst coordinate
+ * \param clipped_dst1 number of pixels to clip from the opposite dst coordinate
+ * \param scale the src vs dst scale involved for that coordinate
+ * \param isLeftOrBottom true if we are clipping the left or bottom sides
+ *        of the rect.
+ */
+static inline void
+clip_coordinates(bool mirror,
+                 float *src, float *dst0, float *dst1,
+                 float clipped_src0,
+                 float clipped_dst0,
+                 float clipped_dst1,
+                 float scale,
+                 bool isLeftOrBottom)
+{
+   /* When clipping we need to add or subtract pixels from the original
+    * coordinates depending on whether we are acting on the left/bottom
+    * or right/top sides of the rect respectively. We assume we have to
+    * add them in the code below, and multiply by -1 when we should
+    * subtract.
+    */
+   int mult = isLeftOrBottom ? 1 : -1;
+
+   if (!mirror) {
+      if (clipped_src0 >= clipped_dst0 * scale) {
+         *src += clipped_src0 * mult;
+         *dst0 += clipped_src0 / scale * mult;
+      } else {
+         *dst0 += clipped_dst0 * mult;
+         *src += clipped_dst0 * scale * mult;
+      }
+   } else {
+      if (clipped_src0 >= clipped_dst1 * scale) {
+         *src += clipped_src0 * mult;
+         *dst1 -= clipped_src0 / scale * mult;
+      } else {
+         *dst1 -= clipped_dst1 * mult;
+         *src += clipped_dst1 * scale * mult;
+      }
+   }
 }
 
 bool
@@ -121,23 +173,79 @@ brw_meta_mirror_clip_and_scissor(const struct gl_context *ctx,
    fixup_mirroring(mirror_y, srcY0, srcY1);
    fixup_mirroring(mirror_y, dstY0, dstY1);
 
-   /* If the destination rectangle needs to be clipped or scissored, do so. */
-   if (!(clip_or_scissor(*mirror_x, srcX0, srcX1, dstX0, dstX1,
-                         draw_fb->_Xmin, draw_fb->_Xmax) &&
-         clip_or_scissor(*mirror_y, srcY0, srcY1, dstY0, dstY1,
-                         draw_fb->_Ymin, draw_fb->_Ymax))) {
-      /* Everything got clipped/scissored away, so the blit was successful. */
-      return true;
-   }
+   /* Compute number of pixels to clip for each side of both rects. Return
+    * early if we are going to clip everything away.
+    */
+   float clip_src_x0;
+   float clip_src_x1;
+   float clip_src_y0;
+   float clip_src_y1;
+   float clip_dst_x0;
+   float clip_dst_x1;
+   float clip_dst_y0;
+   float clip_dst_y1;
 
-   /* If the source rectangle needs to be clipped or scissored, do so. */
-   if (!(clip_or_scissor(*mirror_x, dstX0, dstX1, srcX0, srcX1,
-                         0, read_fb->Width) &&
-         clip_or_scissor(*mirror_y, dstY0, dstY1, srcY0, srcY1,
-                         0, read_fb->Height))) {
-      /* Everything got clipped/scissored away, so the blit was successful. */
+   if (!compute_pixels_clipped(*srcX0, *srcY0, *srcX1, *srcY1,
+                               0, 0, read_fb->Width, read_fb->Height,
+                               &clip_src_x0, &clip_src_y0, &clip_src_x1, &clip_src_y1))
       return true;
-   }
+
+   if (!compute_pixels_clipped(*dstX0, *dstY0, *dstX1, *dstY1,
+                               draw_fb->_Xmin, draw_fb->_Ymin, draw_fb->_Xmax, draw_fb->_Ymax,
+                               &clip_dst_x0, &clip_dst_y0, &clip_dst_x1, &clip_dst_y1))
+      return true;
+
+   /* When clipping any of the two rects we need to adjust the coordinates in
+    * the other rect considering the scaling factor involved. To obtain the best
+    * precision we want to make sure that we only clip once per side to avoid
+    * accumulating errors due to the scaling adjustment.
+    *
+    * For example, if srcX0 and dstX0 need both to be clipped we want to avoid
+    * the situation where we clip srcX0 first, then adjust dstX0 accordingly
+    * but then we realize that the resulting dstX0 still needs to be clipped,
+    * so we clip dstX0 and adjust srcX0 again. Because we are applying scaling
+    * factors to adjust the coordinates in each clipping pass we lose some
+    * precision and that can affect the results of the blorp blit operation
+    * slightly. What we want to do here is detect the rect that we should
+    * clip first for each side so that when we adjust the other rect we ensure
+    * the resulting coordinate does not need to be clipped again.
+    *
+    * The code below implements this by comparing the number of pixels that
+    * we need to clip for each side of both rects  considering the scales
+    * involved. For example, clip_src_x0 represents the number of pixels to be
+    * clipped for the src rect's left side, so if clip_src_x0 = 5,
+    * clip_dst_x0 = 4 and scaleX = 2 it means that we are clipping more from
+    * the dst rect so we should clip dstX0 only and adjust srcX0. This is
+    * because clipping 4 pixels in the dst is equivalent to clipping
+    * 4 * 2 = 8 > 5 in the src.
+    */
+
+   float scaleX = (float) (*srcX1 - *srcX0) / (*dstX1 - *dstX0);
+   float scaleY = (float) (*srcY1 - *srcY0) / (*dstY1 - *dstY0);
+
+   /* Clip left side */
+   clip_coordinates(*mirror_x,
+                    srcX0, dstX0, dstX1,
+                    clip_src_x0, clip_dst_x0, clip_dst_x1,
+                    scaleX, true);
+
+   /* Clip right side */
+   clip_coordinates(*mirror_x,
+                    srcX1, dstX1, dstX0,
+                    clip_src_x1, clip_dst_x1, clip_dst_x0,
+                    scaleX, false);
+
+   /* Clip bottom side */
+   clip_coordinates(*mirror_y,
+                    srcY0, dstY0, dstY1,
+                    clip_src_y0, clip_dst_y0, clip_dst_y1,
+                    scaleY, true);
+
+   /* Clip top side */
+   clip_coordinates(*mirror_y,
+                    srcY1, dstY1, dstY0,
+                    clip_src_y1, clip_dst_y1, clip_dst_y0,
+                    scaleY, false);
 
    /* Account for the fact that in the system framebuffer, the origin is at
     * the lower left.
@@ -156,4 +264,180 @@ brw_meta_mirror_clip_and_scissor(const struct gl_context *ctx,
    }
 
    return false;
+}
+
+/**
+ * Creates a new named renderbuffer that wraps the first slice
+ * of an existing miptree.
+ *
+ * Clobbers the current renderbuffer binding (ctx->CurrentRenderbuffer).
+ */
+struct gl_renderbuffer *
+brw_get_rb_for_slice(struct brw_context *brw,
+                     struct intel_mipmap_tree *mt,
+                     unsigned level, unsigned layer, bool flat)
+{
+   struct gl_context *ctx = &brw->ctx;
+   struct gl_renderbuffer *rb = ctx->Driver.NewRenderbuffer(ctx, 0xDEADBEEF);
+   struct intel_renderbuffer *irb = intel_renderbuffer(rb);
+
+   rb->RefCount = 1;
+   rb->Format = mt->format;
+   rb->_BaseFormat = _mesa_get_format_base_format(mt->format);
+
+   /* Program takes care of msaa and mip-level access manually for stencil.
+    * The surface is also treated as Y-tiled instead of as W-tiled calling for
+    * twice the width and half the height in dimensions.
+    */
+   if (flat) {
+      const unsigned halign_stencil = 8;
+
+      rb->NumSamples = 0;
+      rb->Width = ALIGN(mt->total_width, halign_stencil) * 2;
+      rb->Height = (mt->total_height / mt->physical_depth0) / 2;
+      irb->mt_level = 0;
+   } else {
+      rb->NumSamples = mt->num_samples;
+      rb->Width = mt->logical_width0;
+      rb->Height = mt->logical_height0;
+      irb->mt_level = level;
+   }
+
+   irb->mt_layer = layer;
+
+   intel_miptree_reference(&irb->mt, mt);
+
+   return rb;
+}
+
+/**
+ * Determine if fast color clear supports the given clear color.
+ *
+ * Fast color clear can only clear to color values of 1.0 or 0.0.  At the
+ * moment we only support floating point, unorm, and snorm buffers.
+ */
+bool
+brw_is_color_fast_clear_compatible(struct brw_context *brw,
+                                   const struct intel_mipmap_tree *mt,
+                                   const union gl_color_union *color)
+{
+   const struct gl_context *ctx = &brw->ctx;
+
+   /* If we're mapping the render format to a different format than the
+    * format we use for texturing then it is a bit questionable whether it
+    * should be possible to use a fast clear. Although we only actually
+    * render using a renderable format, without the override workaround it
+    * wouldn't be possible to have a non-renderable surface in a fast clear
+    * state so the hardware probably legitimately doesn't need to support
+    * this case. At least on Gen9 this really does seem to cause problems.
+    */
+   if (brw->gen >= 9 &&
+       brw_format_for_mesa_format(mt->format) !=
+       brw->render_target_format[mt->format])
+      return false;
+
+   /* Gen9 doesn't support fast clear on single-sampled SRGB buffers. When
+    * GL_FRAMEBUFFER_SRGB is enabled any color renderbuffers will be
+    * resolved in intel_update_state. In that case it's pointless to do a
+    * fast clear because it's very likely to be immediately resolved.
+    */
+   if (brw->gen >= 9 &&
+       mt->num_samples <= 1 &&
+       ctx->Color.sRGBEnabled &&
+       _mesa_get_srgb_format_linear(mt->format) != mt->format)
+      return false;
+
+   const mesa_format format = _mesa_get_render_format(ctx, mt->format);
+   if (_mesa_is_format_integer_color(format)) {
+      if (brw->gen >= 8) {
+         perf_debug("Integer fast clear not enabled for (%s)",
+                    _mesa_get_format_name(format));
+      }
+      return false;
+   }
+
+   for (int i = 0; i < 4; i++) {
+      if (!_mesa_format_has_color_component(format, i)) {
+         continue;
+      }
+
+      if (brw->gen < 9 &&
+          color->f[i] != 0.0f && color->f[i] != 1.0f) {
+         return false;
+      }
+   }
+   return true;
+}
+
+/**
+ * Convert the given color to a bitfield suitable for ORing into DWORD 7 of
+ * SURFACE_STATE (DWORD 12-15 on SKL+).
+ *
+ * Returned boolean tells if the given color differs from the stored.
+ */
+bool
+brw_meta_set_fast_clear_color(struct brw_context *brw,
+                              struct intel_mipmap_tree *mt,
+                              const union gl_color_union *color)
+{
+   union gl_color_union override_color = *color;
+
+   /* The sampler doesn't look at the format of the surface when the fast
+    * clear color is used so we need to implement luminance, intensity and
+    * missing components manually.
+    */
+   switch (_mesa_get_format_base_format(mt->format)) {
+   case GL_INTENSITY:
+      override_color.ui[3] = override_color.ui[0];
+      /* flow through */
+   case GL_LUMINANCE:
+   case GL_LUMINANCE_ALPHA:
+      override_color.ui[1] = override_color.ui[0];
+      override_color.ui[2] = override_color.ui[0];
+      break;
+   default:
+      for (int i = 0; i < 3; i++) {
+         if (!_mesa_format_has_color_component(mt->format, i))
+            override_color.ui[i] = 0;
+      }
+      break;
+   }
+
+   if (!_mesa_format_has_color_component(mt->format, 3)) {
+      if (_mesa_is_format_integer_color(mt->format))
+         override_color.ui[3] = 1;
+      else
+         override_color.f[3] = 1.0f;
+   }
+
+   /* Handle linear→SRGB conversion */
+   if (brw->ctx.Color.sRGBEnabled &&
+       _mesa_get_srgb_format_linear(mt->format) != mt->format) {
+      for (int i = 0; i < 3; i++) {
+         override_color.f[i] =
+            util_format_linear_to_srgb_float(override_color.f[i]);
+      }
+   }
+
+   bool updated;
+   if (brw->gen >= 9) {
+      updated = memcmp(&mt->gen9_fast_clear_color, &override_color,
+                       sizeof(mt->gen9_fast_clear_color));
+      mt->gen9_fast_clear_color = override_color;
+   } else {
+      const uint32_t old_color_value = mt->fast_clear_color_value;
+
+      mt->fast_clear_color_value = 0;
+      for (int i = 0; i < 4; i++) {
+         /* Testing for non-0 works for integer and float colors */
+         if (override_color.f[i] != 0.0f) {
+             mt->fast_clear_color_value |=
+                1 << (GEN7_SURFACE_CLEAR_COLOR_SHIFT + (3 - i));
+         }
+      }
+
+      updated = (old_color_value != mt->fast_clear_color_value);
+   }
+
+   return updated;
 }

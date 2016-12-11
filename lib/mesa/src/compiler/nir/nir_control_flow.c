@@ -39,8 +39,6 @@
  * 3. Two basic blocks cannot be directly next to each other.
  * 4. If a basic block has a jump instruction, there must be only one and it
  *    must be at the end of the block.
- * 5. The CFG must always be connected - this means that we must insert a fake
- *    CFG edge for loops with no break statement.
  *
  * The purpose of the second one is so that we have places to insert code during
  * GCM, as well as eliminating the possibility of critical edges.
@@ -116,13 +114,8 @@ link_non_block_to_block(nir_cf_node *node, nir_block *block)
 
       nir_if *if_stmt = nir_cf_node_as_if(node);
 
-      nir_cf_node *last_then = nir_if_last_then_node(if_stmt);
-      assert(last_then->type == nir_cf_node_block);
-      nir_block *last_then_block = nir_cf_node_as_block(last_then);
-
-      nir_cf_node *last_else = nir_if_last_else_node(if_stmt);
-      assert(last_else->type == nir_cf_node_block);
-      nir_block *last_else_block = nir_cf_node_as_block(last_else);
+      nir_block *last_then_block = nir_if_last_then_block(if_stmt);
+      nir_block *last_else_block = nir_if_last_else_block(if_stmt);
 
       if (!block_ends_in_jump(last_then_block)) {
          unlink_block_successors(last_then_block);
@@ -135,25 +128,6 @@ link_non_block_to_block(nir_cf_node *node, nir_block *block)
       }
    } else {
       assert(node->type == nir_cf_node_loop);
-
-      /*
-       * We can only get to this codepath if we're inserting a new loop, or
-       * at least a loop with no break statements; we can't insert break
-       * statements into a loop when we haven't inserted it into the CFG
-       * because we wouldn't know which block comes after the loop
-       * and therefore, which block should be the successor of the block with
-       * the break). Therefore, we need to insert a fake edge (see invariant
-       * #5).
-       */
-
-      nir_loop *loop = nir_cf_node_as_loop(node);
-
-      nir_cf_node *last = nir_loop_last_cf_node(loop);
-      assert(last->type == nir_cf_node_block);
-      nir_block *last_block =  nir_cf_node_as_block(last);
-
-      last_block->successors[1] = block;
-      block_add_pred(block, last_block);
    }
 }
 
@@ -168,13 +142,8 @@ link_block_to_non_block(nir_block *block, nir_cf_node *node)
 
       nir_if *if_stmt = nir_cf_node_as_if(node);
 
-      nir_cf_node *first_then = nir_if_first_then_node(if_stmt);
-      assert(first_then->type == nir_cf_node_block);
-      nir_block *first_then_block = nir_cf_node_as_block(first_then);
-
-      nir_cf_node *first_else = nir_if_first_else_node(if_stmt);
-      assert(first_else->type == nir_cf_node_block);
-      nir_block *first_else_block = nir_cf_node_as_block(first_else);
+      nir_block *first_then_block = nir_if_first_then_block(if_stmt);
+      nir_block *first_else_block = nir_if_first_else_block(if_stmt);
 
       unlink_block_successors(block);
       link_blocks(block, first_then_block, first_else_block);
@@ -185,13 +154,9 @@ link_block_to_non_block(nir_block *block, nir_cf_node *node)
        * any predecessors that need to be unlinked.
        */
 
-      assert(node->type == nir_cf_node_loop);
-
       nir_loop *loop = nir_cf_node_as_loop(node);
 
-      nir_cf_node *loop_header = nir_loop_first_cf_node(loop);
-      assert(loop_header->type == nir_cf_node_block);
-      nir_block *loop_header_block = nir_cf_node_as_block(loop_header);
+      nir_block *loop_header_block = nir_loop_first_block(loop);
 
       unlink_block_successors(block);
       link_blocks(block, loop_header_block, NULL);
@@ -241,7 +206,7 @@ split_block_beginning(nir_block *block)
     * sourcse will be messed up. This will reverse the order of the phi's, but
     * order shouldn't matter.
     */
-   nir_foreach_instr_safe(block, instr) {
+   nir_foreach_instr_safe(instr, block) {
       if (instr->type != nir_instr_type_phi)
          break;
 
@@ -256,12 +221,12 @@ split_block_beginning(nir_block *block)
 static void
 rewrite_phi_preds(nir_block *block, nir_block *old_pred, nir_block *new_pred)
 {
-   nir_foreach_instr_safe(block, instr) {
+   nir_foreach_instr_safe(instr, block) {
       if (instr->type != nir_instr_type_phi)
          break;
 
       nir_phi_instr *phi = nir_instr_as_phi(instr);
-      nir_foreach_phi_src(phi, src) {
+      nir_foreach_phi_src(src, phi) {
          if (src->pred == old_pred) {
             src->pred = new_pred;
             break;
@@ -274,14 +239,15 @@ static void
 insert_phi_undef(nir_block *block, nir_block *pred)
 {
    nir_function_impl *impl = nir_cf_node_get_function(&block->cf_node);
-   nir_foreach_instr(block, instr) {
+   nir_foreach_instr(instr, block) {
       if (instr->type != nir_instr_type_phi)
          break;
 
       nir_phi_instr *phi = nir_instr_as_phi(instr);
       nir_ssa_undef_instr *undef =
          nir_ssa_undef_instr_create(ralloc_parent(phi),
-                                    phi->dest.ssa.num_components);
+                                    phi->dest.ssa.num_components,
+                                    phi->dest.ssa.bit_size);
       nir_instr_insert_before_cf_list(&impl->body, &undef->instr);
       nir_phi_src *src = ralloc(phi, nir_phi_src);
       src->pred = pred;
@@ -332,42 +298,33 @@ block_add_normal_succs(nir_block *block)
       nir_cf_node *parent = block->cf_node.parent;
       if (parent->type == nir_cf_node_if) {
          nir_cf_node *next = nir_cf_node_next(parent);
-         assert(next->type == nir_cf_node_block);
          nir_block *next_block = nir_cf_node_as_block(next);
 
          link_blocks(block, next_block, NULL);
-      } else {
-         assert(parent->type == nir_cf_node_loop);
+      } else if (parent->type == nir_cf_node_loop) {
          nir_loop *loop = nir_cf_node_as_loop(parent);
 
-         nir_cf_node *head = nir_loop_first_cf_node(loop);
-         assert(head->type == nir_cf_node_block);
-         nir_block *head_block = nir_cf_node_as_block(head);
+         nir_block *head_block = nir_loop_first_block(loop);
 
          link_blocks(block, head_block, NULL);
          insert_phi_undef(head_block, block);
+      } else {
+         nir_function_impl *impl = nir_cf_node_as_function(parent);
+         link_blocks(block, impl->end_block, NULL);
       }
    } else {
       nir_cf_node *next = nir_cf_node_next(&block->cf_node);
       if (next->type == nir_cf_node_if) {
          nir_if *next_if = nir_cf_node_as_if(next);
 
-         nir_cf_node *first_then = nir_if_first_then_node(next_if);
-         assert(first_then->type == nir_cf_node_block);
-         nir_block *first_then_block = nir_cf_node_as_block(first_then);
-
-         nir_cf_node *first_else = nir_if_first_else_node(next_if);
-         assert(first_else->type == nir_cf_node_block);
-         nir_block *first_else_block = nir_cf_node_as_block(first_else);
+         nir_block *first_then_block = nir_if_first_then_block(next_if);
+         nir_block *first_else_block = nir_if_first_else_block(next_if);
 
          link_blocks(block, first_then_block, first_else_block);
       } else {
-         assert(next->type == nir_cf_node_loop);
          nir_loop *next_loop = nir_cf_node_as_loop(next);
 
-         nir_cf_node *first = nir_loop_first_cf_node(next_loop);
-         assert(first->type == nir_cf_node_block);
-         nir_block *first_block = nir_cf_node_as_block(first);
+         nir_block *first_block = nir_loop_first_block(next_loop);
 
          link_blocks(block, first_block, NULL);
          insert_phi_undef(first_block, block);
@@ -400,7 +357,7 @@ split_block_before_instr(nir_instr *instr)
    assert(instr->type != nir_instr_type_phi);
    nir_block *new_block = split_block_beginning(instr->block);
 
-   nir_foreach_instr_safe(instr->block, cur_instr) {
+   nir_foreach_instr_safe(cur_instr, instr->block) {
       if (cur_instr == instr)
          break;
 
@@ -507,22 +464,12 @@ nir_handle_add_jump(nir_block *block)
       nir_loop *loop = nearest_loop(&block->cf_node);
 
       if (jump_instr->type == nir_jump_continue) {
-         nir_cf_node *first_node = nir_loop_first_cf_node(loop);
-         assert(first_node->type == nir_cf_node_block);
-         nir_block *first_block = nir_cf_node_as_block(first_node);
+         nir_block *first_block = nir_loop_first_block(loop);
          link_blocks(block, first_block, NULL);
       } else {
          nir_cf_node *after = nir_cf_node_next(&loop->cf_node);
-         assert(after->type == nir_cf_node_block);
          nir_block *after_block = nir_cf_node_as_block(after);
          link_blocks(block, after_block, NULL);
-
-         /* If we inserted a fake link, remove it */
-         nir_cf_node *last = nir_loop_last_cf_node(loop);
-         assert(last->type == nir_cf_node_block);
-         nir_block *last_block =  nir_cf_node_as_block(last);
-         if (last_block->successors[1] != NULL)
-            unlink_blocks(last_block, after_block);
       }
    } else {
       assert(jump_instr->type == nir_jump_return);
@@ -533,12 +480,12 @@ nir_handle_add_jump(nir_block *block)
 static void
 remove_phi_src(nir_block *block, nir_block *pred)
 {
-   nir_foreach_instr(block, instr) {
+   nir_foreach_instr(instr, block) {
       if (instr->type != nir_instr_type_phi)
          break;
 
       nir_phi_instr *phi = nir_instr_as_phi(instr);
-      nir_foreach_phi_src_safe(phi, src) {
+      nir_foreach_phi_src_safe(src, phi) {
          if (src->pred == pred) {
             list_del(&src->src.use_link);
             exec_node_remove(&src->node);
@@ -547,15 +494,13 @@ remove_phi_src(nir_block *block, nir_block *pred)
    }
 }
 
-/* Removes the successor of a block with a jump, and inserts a fake edge for
- * infinite loops. Note that the jump to be eliminated may be free-floating.
+/* Removes the successor of a block with a jump. Note that the jump to be
+ * eliminated may be free-floating.
  */
 
 static void
 unlink_jump(nir_block *block, nir_jump_type type, bool add_normal_successors)
 {
-   nir_block *next = block->successors[0];
-
    if (block->successors[0])
       remove_phi_src(block->successors[0], block);
    if (block->successors[1])
@@ -564,33 +509,6 @@ unlink_jump(nir_block *block, nir_jump_type type, bool add_normal_successors)
    unlink_block_successors(block);
    if (add_normal_successors)
       block_add_normal_succs(block);
-
-   /* If we've just removed a break, and the block we were jumping to (after
-    * the loop) now has zero predecessors, we've created a new infinite loop.
-    *
-    * NIR doesn't allow blocks (other than the start block) to have zero
-    * predecessors.  In particular, dominance assumes all blocks are reachable.
-    * So, we insert a "fake link" by making successors[1] point after the loop.
-    *
-    * Note that we have to do this after unlinking/recreating the block's
-    * successors.  If we removed a "break" at the end of the loop, then
-    * block == last_block, so block->successors[0] would already be "next",
-    * and adding a fake link would create two identical successors.  Doing
-    * this afterward works, as we'll have changed block->successors[0] to
-    * be the top of the loop.
-    */
-   if (type == nir_jump_break && next->predecessors->entries == 0) {
-      nir_loop *loop =
-         nir_cf_node_as_loop(nir_cf_node_prev(&next->cf_node));
-
-      /* insert fake link */
-      nir_cf_node *last = nir_loop_last_cf_node(loop);
-      assert(last->type == nir_cf_node_block);
-      nir_block *last_block = nir_cf_node_as_block(last);
-
-      last_block->successors[1] = next;
-      block_add_pred(next, last_block);
-   }
 }
 
 void
@@ -688,7 +606,8 @@ replace_ssa_def_uses(nir_ssa_def *def, void *void_impl)
    void *mem_ctx = ralloc_parent(impl);
 
    nir_ssa_undef_instr *undef =
-      nir_ssa_undef_instr_create(mem_ctx, def->num_components);
+      nir_ssa_undef_instr_create(mem_ctx, def->num_components,
+                                 def->bit_size);
    nir_instr_insert_before_cf_list(&impl->body, &undef->instr);
    nir_ssa_def_rewrite_uses(def, nir_src_for_ssa(&undef->def));
    return true;
@@ -701,7 +620,7 @@ cleanup_cf_node(nir_cf_node *node, nir_function_impl *impl)
    case nir_cf_node_block: {
       nir_block *block = nir_cf_node_as_block(node);
       /* We need to walk the instructions and clean up defs/uses */
-      nir_foreach_instr_safe(block, instr) {
+      nir_foreach_instr_safe(instr, block) {
          if (instr->type == nir_instr_type_jump) {
             nir_jump_type jump_type = nir_instr_as_jump(instr)->type;
             unlink_jump(block, jump_type, false);
@@ -746,6 +665,12 @@ nir_cf_extract(nir_cf_list *extracted, nir_cursor begin, nir_cursor end)
 {
    nir_block *block_begin, *block_end, *block_before, *block_after;
 
+   if (nir_cursors_equal(begin, end)) {
+      exec_list_make_empty(&extracted->list);
+      extracted->impl = NULL; /* we shouldn't need this */
+      return;
+   }
+
    /* In the case where begin points to an instruction in some basic block and
     * end points to the end of the same basic block, we rely on the fact that
     * splitting on an instruction moves earlier instructions into a new basic
@@ -784,6 +709,9 @@ void
 nir_cf_reinsert(nir_cf_list *cf_list, nir_cursor cursor)
 {
    nir_block *before, *after;
+
+   if (exec_list_is_empty(&cf_list->list))
+      return;
 
    split_block_cursor(cursor, &before, &after);
 

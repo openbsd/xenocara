@@ -35,6 +35,8 @@
 #include "st_texture.h"
 #include "st_format.h"
 #include "st_manager.h"
+#include "st_sampler_view.h"
+
 
 /**
  * Return the base format just like _mesa_base_fbo_format does.
@@ -119,6 +121,24 @@ st_bind_surface(struct gl_context *ctx, GLenum target,
 
    texFormat = st_pipe_format_to_mesa_format(ps->format);
 
+   /* TODO RequiredTextureImageUnits should probably be reset back
+    * to 1 somewhere if different texture is bound??
+    */
+   if (texFormat == MESA_FORMAT_NONE) {
+      switch (ps->format) {
+      case PIPE_FORMAT_NV12:
+         texFormat = MESA_FORMAT_R_UNORM8;
+         texObj->RequiredTextureImageUnits = 2;
+         break;
+      case PIPE_FORMAT_IYUV:
+         texFormat = MESA_FORMAT_R_UNORM8;
+         texObj->RequiredTextureImageUnits = 3;
+         break;
+      default:
+         unreachable("bad YUV format!");
+      }
+   }
+
    _mesa_init_teximage_fields(ctx, texImage,
                               ps->width, ps->height, 1, 0, internalFormat,
                               texFormat);
@@ -128,9 +148,6 @@ st_bind_surface(struct gl_context *ctx, GLenum target,
    st_texture_release_all_sampler_views(st, stObj);
    pipe_resource_reference(&stImage->pt, stObj->pt);
 
-   stObj->width0 = ps->width;
-   stObj->height0 = ps->height;
-   stObj->depth0 = 1;
    stObj->surface_format = ps->format;
 
    _mesa_dirty_texobj(ctx, texObj);

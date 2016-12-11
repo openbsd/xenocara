@@ -114,8 +114,6 @@ nouveau_codegen(int chipset, int type, struct tgsi_token tokens[],
 
    info.io.auxCBSlot = 15;
    info.io.ucpBase = NV50_CB_AUX_UCP_OFFSET;
-
-   info.io.resInfoCBSlot = 15;
    info.io.suInfoBase = NV50_CB_AUX_TEX_MS_OFFSET;
    info.io.msInfoCBSlot = 15;
    info.io.msInfoBase = NV50_CB_AUX_MS_OFFSET;
@@ -144,7 +142,7 @@ main(int argc, char *argv[])
    const char *filename = NULL;
    FILE *f;
    char text[65536] = {0};
-   unsigned size, *code;
+   unsigned size = 0, *code = NULL;
 
    for (i = 1; i < argc; i++) {
       if (!strcmp(argv[i], "-a"))
@@ -199,7 +197,7 @@ main(int argc, char *argv[])
       return 1;
    }
 
-   if (!tgsi_text_translate(text, tokens, Elements(tokens))) {
+   if (!tgsi_text_translate(text, tokens, ARRAY_SIZE(tokens))) {
       _debug_printf("Failed to parse TGSI shader\n");
       return 1;
    }

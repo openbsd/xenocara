@@ -44,12 +44,15 @@ brw_upload_cc_vp(struct brw_context *brw)
    struct gl_context *ctx = &brw->ctx;
    struct brw_cc_viewport *ccv;
 
+   /* BRW_NEW_VIEWPORT_COUNT */
+   const unsigned viewport_count = brw->clip.viewport_count;
+
    ccv = brw_state_batch(brw, AUB_TRACE_CC_VP_STATE,
-			 sizeof(*ccv) * ctx->Const.MaxViewports, 32,
+			 sizeof(*ccv) * viewport_count, 32,
                          &brw->cc.vp_offset);
 
    /* _NEW_TRANSFORM */
-   for (unsigned i = 0; i < ctx->Const.MaxViewports; i++) {
+   for (unsigned i = 0; i < viewport_count; i++) {
       if (ctx->Transform.DepthClamp) {
          /* _NEW_VIEWPORT */
          ccv[i].min_depth = MIN2(ctx->ViewportArray[i].Near,
@@ -76,7 +79,9 @@ const struct brw_tracked_state brw_cc_vp = {
    .dirty = {
       .mesa = _NEW_TRANSFORM |
               _NEW_VIEWPORT,
-      .brw = BRW_NEW_BATCH,
+      .brw = BRW_NEW_BATCH |
+             BRW_NEW_BLORP |
+             BRW_NEW_VIEWPORT_COUNT,
    },
    .emit = brw_upload_cc_vp
 };
@@ -158,7 +163,7 @@ static void upload_cc_unit(struct brw_context *brw)
    if (ctx->Color.ColorLogicOpEnabled && ctx->Color.LogicOp != GL_COPY) {
       cc->cc2.logicop_enable = 1;
       cc->cc5.logicop_func = intel_translate_logic_op(ctx->Color.LogicOp);
-   } else if (ctx->Color.BlendEnabled) {
+   } else if (ctx->Color.BlendEnabled && !ctx->Color._AdvancedBlendMode) {
       GLenum eqRGB = ctx->Color.Blend[0].EquationRGB;
       GLenum eqA = ctx->Color.Blend[0].EquationA;
       GLenum srcRGB = ctx->Color.Blend[0].SrcRGB;
@@ -247,6 +252,7 @@ const struct brw_tracked_state brw_cc_unit = {
               _NEW_DEPTH |
               _NEW_STENCIL,
       .brw = BRW_NEW_BATCH |
+             BRW_NEW_BLORP |
              BRW_NEW_CC_VP |
              BRW_NEW_STATS_WM,
    },
@@ -269,7 +275,8 @@ static void upload_blend_constant_color(struct brw_context *brw)
 const struct brw_tracked_state brw_blend_constant_color = {
    .dirty = {
       .mesa = _NEW_COLOR,
-      .brw = BRW_NEW_CONTEXT,
+      .brw = BRW_NEW_CONTEXT |
+             BRW_NEW_BLORP,
    },
    .emit = upload_blend_constant_color
 };

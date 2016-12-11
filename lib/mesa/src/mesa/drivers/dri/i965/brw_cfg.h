@@ -121,24 +121,36 @@ bblock_end_const(const struct bblock_t *block)
 static inline struct bblock_t *
 bblock_next(struct bblock_t *block)
 {
+   if (exec_node_is_tail_sentinel(block->link.next))
+      return NULL;
+
    return (struct bblock_t *)block->link.next;
 }
 
 static inline const struct bblock_t *
 bblock_next_const(const struct bblock_t *block)
 {
+   if (exec_node_is_tail_sentinel(block->link.next))
+      return NULL;
+
    return (const struct bblock_t *)block->link.next;
 }
 
 static inline struct bblock_t *
 bblock_prev(struct bblock_t *block)
 {
+   if (exec_node_is_head_sentinel(block->link.prev))
+      return NULL;
+
    return (struct bblock_t *)block->link.prev;
 }
 
 static inline const struct bblock_t *
 bblock_prev_const(const struct bblock_t *block)
 {
+   if (exec_node_is_head_sentinel(block->link.prev))
+      return NULL;
+
    return (const struct bblock_t *)block->link.prev;
 }
 
@@ -321,10 +333,9 @@ struct cfg_t {
    foreach_in_list(__type, __inst, &(__block)->instructions)
 
 #define foreach_inst_in_block_safe(__type, __inst, __block)    \
-   for (__type *__inst = (__type *)__block->instructions.head, \
-               *__next = (__type *)__inst->next,               \
-               *__end = (__type *)__block->instructions.tail;  \
-        __next != __end;                                       \
+   for (__type *__inst = (__type *)__block->instructions.head_sentinel.next, \
+               *__next = (__type *)__inst->next;               \
+        __next != NULL;                                        \
         __inst = __next,                                       \
         __next = (__type *)__next->next)
 

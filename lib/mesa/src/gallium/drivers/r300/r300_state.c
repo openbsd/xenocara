@@ -834,45 +834,6 @@ static void r300_set_stencil_ref(struct pipe_context* pipe,
     r300_mark_atom_dirty(r300, &r300->dsa_state);
 }
 
-static void r300_tex_set_tiling_flags(struct r300_context *r300,
-                                      struct r300_resource *tex,
-                                      unsigned level)
-{
-    /* Check if the macrotile flag needs to be changed.
-     * Skip changing the flags otherwise. */
-    if (tex->tex.macrotile[tex->surface_level] !=
-        tex->tex.macrotile[level]) {
-        r300->rws->buffer_set_tiling(tex->buf, r300->cs,
-                tex->tex.microtile, tex->tex.macrotile[level],
-                0, 0, 0, 0, 0, 0, 0,
-                tex->tex.stride_in_bytes[0], false);
-
-        tex->surface_level = level;
-    }
-}
-
-/* This switcheroo is needed just because of goddamned MACRO_SWITCH. */
-static void r300_fb_set_tiling_flags(struct r300_context *r300,
-                               const struct pipe_framebuffer_state *state)
-{
-    unsigned i;
-
-    /* Set tiling flags for new surfaces. */
-    for (i = 0; i < state->nr_cbufs; i++) {
-        if (!state->cbufs[i])
-            continue;
-
-        r300_tex_set_tiling_flags(r300,
-                                  r300_resource(state->cbufs[i]->texture),
-                                  state->cbufs[i]->u.tex.level);
-    }
-    if (state->zsbuf) {
-        r300_tex_set_tiling_flags(r300,
-                                  r300_resource(state->zsbuf->texture),
-                                  state->zsbuf->u.tex.level);
-    }
-}
-
 static void r300_print_fb_surf_info(struct pipe_surface *surf, unsigned index,
                                     const char *binding)
 {
@@ -1016,13 +977,6 @@ r300_set_framebuffer_state(struct pipe_context* pipe,
 
     /* Re-swizzle the blend color. */
     r300_set_blend_color(pipe, &((struct r300_blend_color_state*)r300->blend_color_state.state)->state);
-
-    if (r300->screen->info.drm_minor < 12) {
-       /* The tiling flags are dependent on the surface miplevel, unfortunately.
-        * This workarounds a bad design decision in old kernels which were
-        * rewriting tile fields in registers. */
-        r300_fb_set_tiling_flags(r300, state);
-    }
 
     if (unlock_zbuffer) {
         pipe_surface_reference(&r300->locked_zbuffer, NULL);
@@ -1515,7 +1469,7 @@ static void*
 }
 
 static void r300_bind_sampler_states(struct pipe_context* pipe,
-                                     unsigned shader,
+                                     enum pipe_shader_type shader,
                                      unsigned start, unsigned count,
                                      void** states)
 {
@@ -1568,7 +1522,8 @@ static uint32_t r300_assign_texture_cache_region(unsigned index, unsigned num)
         return R300_TX_CACHE(num + index);
 }
 
-static void r300_set_sampler_views(struct pipe_context* pipe, unsigned shader,
+static void r300_set_sampler_views(struct pipe_context* pipe,
+                                   enum pipe_shader_type shader,
                                    unsigned start, unsigned count,
                                    struct pipe_sampler_view** views)
 {
@@ -2049,7 +2004,7 @@ static void r300_delete_vs_state(struct pipe_context* pipe, void* shader)
 
 static void r300_set_constant_buffer(struct pipe_context *pipe,
                                      uint shader, uint index,
-                                     struct pipe_constant_buffer *cb)
+                                     const struct pipe_constant_buffer *cb)
 {
     struct r300_context* r300 = r300_context(pipe);
     struct r300_constant_buffer *cbuf;

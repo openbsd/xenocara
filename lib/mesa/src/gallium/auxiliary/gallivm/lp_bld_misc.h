@@ -55,10 +55,6 @@ extern void
 lp_set_target_options(void);
 
 
-extern LLVMValueRef
-lp_build_load_volatile(LLVMBuilderRef B, LLVMValueRef PointerVal,
-                       const char *Name);
-
 extern int
 lp_build_create_jit_compiler_for_module(LLVMExecutionEngineRef *OutJIT,
                                         struct lp_generated_code **OutCode,
@@ -76,6 +72,9 @@ lp_get_default_memory_manager();
 
 extern void
 lp_free_memory_manager(LLVMMCJITMemoryManagerRef memorymgr);
+
+extern void
+lp_add_attr_dereferenceable(LLVMValueRef val, uint64_t bytes);
 
 #ifdef __cplusplus
 }

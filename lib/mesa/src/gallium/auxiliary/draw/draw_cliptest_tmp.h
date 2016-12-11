@@ -25,6 +25,8 @@
  * 
  **************************************************************************/
 
+#include "util/u_bitcast.h"
+
 static boolean TAG(do_cliptest)( struct pt_post_vs *pvs,
                                  struct draw_vertex_info *info,
                                  const struct draw_prim_info *prim_info )
@@ -45,12 +47,12 @@ static boolean TAG(do_cliptest)( struct pt_post_vs *pvs,
       draw_current_shader_viewport_index_output(pvs->draw);
    int viewport_index = 
       draw_current_shader_uses_viewport_index(pvs->draw) ?
-      *((unsigned*)out->data[viewport_index_output]): 0;
+      u_bitcast_f2u(out->data[viewport_index_output][0]): 0;
    int num_written_clipdistance =
       draw_current_shader_num_written_clipdistances(pvs->draw);
 
-   cd[0] = draw_current_shader_clipdistance_output(pvs->draw, 0);
-   cd[1] = draw_current_shader_clipdistance_output(pvs->draw, 1);
+   cd[0] = draw_current_shader_ccdistance_output(pvs->draw, 0);
+   cd[1] = draw_current_shader_ccdistance_output(pvs->draw, 1);
 
    if (cd[0] != pos || cd[1] != pos)
       have_cd = true;
@@ -72,7 +74,7 @@ static boolean TAG(do_cliptest)( struct pt_post_vs *pvs,
          unsigned verts_per_prim = u_vertices_per_prim(prim_info->prim);
          /* only change the viewport_index for the leading vertex */
          if (!(j % verts_per_prim)) {
-            viewport_index = *((unsigned*)out->data[viewport_index_output]);
+            viewport_index = u_bitcast_f2u(out->data[viewport_index_output][0]);
             viewport_index = draw_clamp_viewport_idx(viewport_index);
          }
          scale = pvs->draw->viewports[viewport_index].scale;

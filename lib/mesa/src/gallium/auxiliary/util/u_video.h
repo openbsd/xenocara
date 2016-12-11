@@ -28,10 +28,6 @@
 #ifndef U_VIDEO_H
 #define U_VIDEO_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "pipe/p_defines.h"
 #include "pipe/p_video_enums.h"
 
@@ -39,6 +35,10 @@ extern "C" {
 #include "pipe/p_compiler.h"
 #include "util/u_debug.h"
 #include "util/u_math.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static inline enum pipe_video_format
 u_reduce_video_profile(enum pipe_video_profile profile)
@@ -126,6 +126,43 @@ u_copy_yv12_to_nv12(void *const *destination_data,
       }
       dst += stride;
       src += src_stride;
+   }
+}
+
+static inline void
+u_copy_yv12_img_to_nv12_surf(ubyte *const *src,
+                             ubyte *dst,
+                             unsigned width,
+                             unsigned height,
+                             unsigned src_stride,
+                             unsigned dst_stride,
+                             int field)
+{
+   if (field == 0) {
+      ubyte *src_0 = src[field];
+      for (int i = 0; i < height ; i++) {
+         memcpy(dst, src_0, width);
+         dst += dst_stride;
+         src_0 += src_stride;
+      }
+   } else if (field == 1) {
+      const ubyte *src_1 = src[field];
+      const ubyte *src_2 = src[field+1];
+      bool odd = true;
+      for (unsigned i = 0; i < height ; i++) {
+         for (unsigned j = 0; j < width*2 ; j++) {
+            if (odd == false) {
+               dst[j] = src_1[j/2];
+               odd = true;
+            } else {
+               dst[j] = src_2[j/2];
+               odd = false;
+            }
+         }
+         dst += dst_stride;
+         src_1 += src_stride;
+         src_2 += src_stride;
+      }
    }
 }
 

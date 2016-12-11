@@ -68,10 +68,10 @@ opt_cmod_propagation_local(bblock_t *block)
 
       bool read_flag = false;
       foreach_inst_in_block_reverse_starting_from(vec4_instruction, scan_inst, inst) {
-         if (inst->src[0].in_range(scan_inst->dst,
-                                   scan_inst->regs_written)) {
+         if (regions_overlap(inst->src[0], inst->size_read(0),
+                             scan_inst->dst, scan_inst->size_written)) {
             if ((scan_inst->predicate && scan_inst->opcode != BRW_OPCODE_SEL) ||
-                scan_inst->dst.reg_offset != inst->src[0].reg_offset ||
+                scan_inst->dst.offset != inst->src[0].offset ||
                 (scan_inst->dst.writemask != WRITEMASK_X &&
                  scan_inst->dst.writemask != WRITEMASK_XYZW) ||
                 (scan_inst->dst.writemask == WRITEMASK_XYZW &&
@@ -114,6 +114,18 @@ opt_cmod_propagation_local(bblock_t *block)
                progress = true;
                break;
             }
+
+            /* The conditional mod of the CMP/CMPN instructions behaves
+             * specially because the flag output is not calculated from the
+             * result of the instruction, but the other way around, which
+             * means that even if the condmod to propagate and the condmod
+             * from the CMP instruction are the same they will in general give
+             * different results because they are evaluated based on different
+             * inputs.
+             */
+            if (scan_inst->opcode == BRW_OPCODE_CMP ||
+                scan_inst->opcode == BRW_OPCODE_CMPN)
+               break;
 
             /* Otherwise, try propagating the conditional. */
             enum brw_conditional_mod cond =

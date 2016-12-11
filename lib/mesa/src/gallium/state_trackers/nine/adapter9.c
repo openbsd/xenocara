@@ -204,14 +204,18 @@ NineAdapter9_CheckDeviceType( struct NineAdapter9 *This,
     hr = NineAdapter9_GetScreen(This, DevType, &screen);
     if (FAILED(hr)) { return hr; }
 
+    /* The display format is not handled in Nine. We always present an XRGB8888
+     * buffer (and the display server will eventually do the conversion). We probably
+     * don't need to check for anything for the adapter format support, since if the
+     * display server advertise support, it will likely be able to do the conversion.
+     * We do the approximation that a format is available in the display server if
+     * the format passes with NINE_BIND_BACKBUFFER_FLAGS */
     dfmt = d3d9_to_pipe_format_checked(screen, AdapterFormat, PIPE_TEXTURE_2D,
                                        1,
-                                       PIPE_BIND_DISPLAY_TARGET |
-                                       PIPE_BIND_SHARED, FALSE, FALSE);
+                                       NINE_BIND_BACKBUFFER_FLAGS, FALSE, FALSE);
     bfmt = d3d9_to_pipe_format_checked(screen, BackBufferFormat, PIPE_TEXTURE_2D,
                                        1,
-                                       PIPE_BIND_DISPLAY_TARGET |
-                                       PIPE_BIND_SHARED, FALSE, FALSE);
+                                       NINE_BIND_BACKBUFFER_FLAGS, FALSE, FALSE);
     if (dfmt == PIPE_FORMAT_NONE || bfmt == PIPE_FORMAT_NONE) {
         DBG("Unsupported Adapter/BackBufferFormat.\n");
         return D3DERR_NOTAVAILABLE;
@@ -293,7 +297,11 @@ NineAdapter9_CheckDeviceFormat( struct NineAdapter9 *This,
 
     bind = 0;
     if (Usage & D3DUSAGE_RENDERTARGET) bind |= PIPE_BIND_RENDER_TARGET;
-    if (Usage & D3DUSAGE_DEPTHSTENCIL) bind |= PIPE_BIND_DEPTH_STENCIL;
+    if (Usage & D3DUSAGE_DEPTHSTENCIL) {
+        if (!depth_stencil_format(CheckFormat))
+            return D3DERR_NOTAVAILABLE;
+        bind |= d3d9_get_pipe_depth_format_bindings(CheckFormat);
+    }
 
     /* API hack because setting RT[0] to NULL is forbidden */
     if (CheckFormat == D3DFMT_NULL && bind == PIPE_BIND_RENDER_TARGET &&
@@ -326,6 +334,18 @@ NineAdapter9_CheckDeviceFormat( struct NineAdapter9 *This,
     case D3DRTYPE_VOLUMETEXTURE: bind |= PIPE_BIND_SAMPLER_VIEW; break;
     case D3DRTYPE_VERTEXBUFFER:  bind |= PIPE_BIND_VERTEX_BUFFER; break;
     case D3DRTYPE_INDEXBUFFER:   bind |= PIPE_BIND_INDEX_BUFFER; break;
+    case D3DRTYPE_SURFACE:
+        if (!(Usage & D3DUSAGE_DEPTHSTENCIL))
+            bind |= PIPE_BIND_SAMPLER_VIEW; /* StretchRect */
+        /* Offscreen surface support: Usage = 0.
+         * In practice drivers are very restrictive on the formats supported.
+         * Basically a few common formats + YUV and compressed formats. The
+         * reason is that offscreen surface are useful only for directdraw
+         * compatibility (a WONTIMPL of nine) + format conversion (useful in
+         * particular for YUV because the format was not advertised for textures
+         * on NV chips). */
+        if (Usage == 0)
+            bind |= PIPE_BIND_RENDER_TARGET; /* A current requirement of our impl, which we should get rid of. */
     default:
         break;
     }
@@ -369,6 +389,12 @@ NineAdapter9_CheckDeviceMultiSampleType( struct NineAdapter9 *This,
         d3dformat_to_string(SurfaceFormat), Windowed, MultiSampleType,
         pQualityLevels);
 
+    if (pQualityLevels) {
+        /* In error cases return only 1 quality level supported */
+        *pQualityLevels = 1;
+    }
+    user_assert(MultiSampleType <= D3DMULTISAMPLE_16_SAMPLES, D3DERR_INVALIDCALL);
+
     hr = NineAdapter9_GetScreen(This, DeviceType, &screen);
     if (FAILED(hr))
         return hr;
@@ -376,20 +402,33 @@ NineAdapter9_CheckDeviceMultiSampleType( struct NineAdapter9 *This,
     if (depth_stencil_format(SurfaceFormat))
         bind = d3d9_get_pipe_depth_format_bindings(SurfaceFormat);
     else /* render-target */
-        bind = PIPE_BIND_SAMPLER_VIEW | PIPE_BIND_TRANSFER_READ |
-               PIPE_BIND_TRANSFER_WRITE | PIPE_BIND_RENDER_TARGET;
+        bind = PIPE_BIND_SAMPLER_VIEW | PIPE_BIND_RENDER_TARGET;
+
+    pf = d3d9_to_pipe_format_checked(screen, SurfaceFormat, PIPE_TEXTURE_2D,
+                                     0, PIPE_BIND_SAMPLER_VIEW, FALSE, FALSE);
+
+    if (pf == PIPE_FORMAT_NONE && SurfaceFormat != D3DFMT_NULL) {
+        DBG("%s not available.\n", d3dformat_to_string(SurfaceFormat));
+        return D3DERR_INVALIDCALL;
+    }
 
     pf = d3d9_to_pipe_format_checked(screen, SurfaceFormat, PIPE_TEXTURE_2D,
                                      MultiSampleType, bind, FALSE, FALSE);
 
-    if (pf == PIPE_FORMAT_NONE) {
+    if (pf == PIPE_FORMAT_NONE && SurfaceFormat != D3DFMT_NULL) {
         DBG("%s with %u samples not available.\n",
             d3dformat_to_string(SurfaceFormat), MultiSampleType);
         return D3DERR_NOTAVAILABLE;
     }
 
-    if (pQualityLevels)
-        *pQualityLevels = 1; /* gallium doesn't have quality levels */
+    if (pQualityLevels) {
+        /* NONMASKABLE MultiSampleType might have more than one quality level,
+         * while MASKABLE MultiSampleTypes have only one level.
+         * Advertise quality levels and map each level to a sample count. */
+         (void ) d3dmultisample_type_check(screen, SurfaceFormat,
+                 &MultiSampleType, D3DMULTISAMPLE_16_SAMPLES, pQualityLevels);
+         DBG("advertising %u quality levels\n", *pQualityLevels);
+    }
 
     return D3D_OK;
 }
@@ -418,11 +457,10 @@ NineAdapter9_CheckDepthStencilMatch( struct NineAdapter9 *This,
     if (FAILED(hr)) { return hr; }
 
     dfmt = d3d9_to_pipe_format_checked(screen, AdapterFormat, PIPE_TEXTURE_2D, 0,
-                                       PIPE_BIND_DISPLAY_TARGET |
-                                       PIPE_BIND_SHARED, FALSE, FALSE);
+                                       NINE_BIND_BACKBUFFER_FLAGS, FALSE, FALSE);
     bfmt = d3d9_to_pipe_format_checked(screen, RenderTargetFormat,
                                        PIPE_TEXTURE_2D, 0,
-                                       PIPE_BIND_RENDER_TARGET, FALSE, FALSE);
+                                       NINE_BIND_BACKBUFFER_FLAGS, FALSE, FALSE);
     if (RenderTargetFormat == D3DFMT_NULL)
         bfmt = dfmt;
     zsfmt = d3d9_to_pipe_format_checked(screen, DepthStencilFormat,
@@ -462,11 +500,9 @@ NineAdapter9_CheckDeviceFormatConversion( struct NineAdapter9 *This,
     if (FAILED(hr)) { return hr; }
 
     dfmt = d3d9_to_pipe_format_checked(screen, TargetFormat, PIPE_TEXTURE_2D, 1,
-                                       PIPE_BIND_DISPLAY_TARGET |
-                                       PIPE_BIND_SHARED, FALSE, FALSE);
+                                       NINE_BIND_BACKBUFFER_FLAGS, FALSE, FALSE);
     bfmt = d3d9_to_pipe_format_checked(screen, SourceFormat, PIPE_TEXTURE_2D, 1,
-                                       PIPE_BIND_DISPLAY_TARGET |
-                                       PIPE_BIND_SHARED, FALSE, FALSE);
+                                       NINE_BIND_BACKBUFFER_FLAGS, FALSE, FALSE);
 
     if (dfmt == PIPE_FORMAT_NONE || bfmt == PIPE_FORMAT_NONE) {
         DBG("%s to %s not supported.\n",
@@ -563,7 +599,7 @@ NineAdapter9_GetDeviceCaps( struct NineAdapter9 *This,
                                D3DPMISCCAPS_TSSARGTEMP |
                                D3DPMISCCAPS_BLENDOP |
                                D3DPIPECAP(INDEP_BLEND_ENABLE, D3DPMISCCAPS_INDEPENDENTWRITEMASKS) |
-                               /*D3DPMISCCAPS_PERSTAGECONSTANT |*/ /* TODO */
+                               D3DPMISCCAPS_PERSTAGECONSTANT |
                                /*D3DPMISCCAPS_POSTBLENDSRGBCONVERT |*/ /* TODO */
                                D3DPMISCCAPS_FOGANDSPECULARALPHA | /* Note: documentation of the flag is wrong */
                                D3DPIPECAP(BLEND_EQUATION_SEPARATE, D3DPMISCCAPS_SEPARATEALPHABLEND) |
@@ -759,7 +795,7 @@ NineAdapter9_GetDeviceCaps( struct NineAdapter9 *This,
         pCaps->MaxSimultaneousTextures = NINE_MAX_SAMPLERS_PS;
 
     pCaps->VertexProcessingCaps = D3DVTXPCAPS_TEXGEN |
-                                  /*D3DVTXPCAPS_TEXGEN_SPHEREMAP |*/
+                                  D3DVTXPCAPS_TEXGEN_SPHEREMAP |
                                   D3DVTXPCAPS_MATERIALSOURCE7 |
                                   D3DVTXPCAPS_DIRECTIONALLIGHTS |
                                   D3DVTXPCAPS_POSITIONALLIGHTS |
@@ -770,7 +806,7 @@ NineAdapter9_GetDeviceCaps( struct NineAdapter9 *This,
     pCaps->MaxActiveLights = NINE_MAX_LIGHTS_ACTIVE; /* like GL_LIGHTi */
     pCaps->MaxUserClipPlanes = PIPE_MAX_CLIP_PLANES;
     pCaps->MaxVertexBlendMatrices = 4; /* 1 vec4 BLENDWEIGHT/INDICES input */
-    pCaps->MaxVertexBlendMatrixIndex = 7; /* D3DTS_WORLDMATRIX(0..7) */
+    pCaps->MaxVertexBlendMatrixIndex = 8; /* D3DTS_WORLDMATRIX(0..8) */
 
     pCaps->MaxPointSize = screen->get_paramf(screen, PIPE_CAPF_MAX_POINT_WIDTH);
 

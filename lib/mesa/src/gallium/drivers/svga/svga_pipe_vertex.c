@@ -275,7 +275,9 @@ svga_create_vertex_elements_state(struct pipe_context *pipe,
       }
    }
 
-   svga->hud.num_state_objects++;
+   svga->hud.num_vertexelement_objects++;
+   SVGA_STATS_COUNT_INC(svga_screen(svga->pipe.screen)->sws,
+                        SVGA_STATS_COUNT_VERTEXELEMENT);
 
    return velems;
 }
@@ -318,7 +320,7 @@ svga_delete_vertex_elements_state(struct pipe_context *pipe, void *state)
    }
 
    FREE(velems);
-   svga->hud.num_state_objects--;
+   svga->hud.num_vertexelement_objects--;
 }
 
 void svga_cleanup_vertex_state( struct svga_context *svga )
@@ -327,6 +329,11 @@ void svga_cleanup_vertex_state( struct svga_context *svga )
    
    for (i = 0 ; i < svga->curr.num_vertex_buffers; i++)
       pipe_resource_reference(&svga->curr.vb[i].buffer, NULL);
+
+   pipe_resource_reference(&svga->state.hw_draw.ib, NULL);
+
+   for (i = 0; i < svga->state.hw_draw.num_vbuffers; i++)
+      pipe_resource_reference(&svga->state.hw_draw.vbuffers[i], NULL);
 }
 
 

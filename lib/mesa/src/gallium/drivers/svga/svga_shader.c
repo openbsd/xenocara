@@ -166,37 +166,43 @@ svga_remap_generic_index(int8_t remap_table[MAX_GENERIC_VARYING],
  * state.  This is basically the texture-related state.
  */
 void
-svga_init_shader_key_common(const struct svga_context *svga, unsigned shader,
+svga_init_shader_key_common(const struct svga_context *svga,
+                            enum pipe_shader_type shader,
                             struct svga_compile_key *key)
 {
    unsigned i, idx = 0;
 
-   assert(shader < Elements(svga->curr.num_sampler_views));
+   assert(shader < ARRAY_SIZE(svga->curr.num_sampler_views));
 
-   for (i = 0; i < svga->curr.num_sampler_views[shader]; i++) {
+   /* In case the number of samplers and sampler_views doesn't match,
+    * loop over the lower of the two counts.
+    */
+   key->num_textures = MIN2(svga->curr.num_sampler_views[shader],
+                            svga->curr.num_samplers[shader]);
+
+   for (i = 0; i < key->num_textures; i++) {
       struct pipe_sampler_view *view = svga->curr.sampler_views[shader][i];
-      if (view) {
-         assert(svga->curr.sampler[shader][i]);
+      const struct svga_sampler_state *sampler = svga->curr.sampler[shader][i];
+      if (view && sampler) {
          assert(view->texture);
          assert(view->texture->target < (1 << 4)); /* texture_target:4 */
-
-         key->tex[i].texture_target = view->texture->target;
 
          /* 1D/2D array textures with one slice are treated as non-arrays
           * by the SVGA3D device.  Convert the texture type here so that
           * we emit the right TEX/SAMPLE instruction in the shader.
           */
-         if (view->texture->array_size == 1) {
-            if (view->texture->target == PIPE_TEXTURE_1D_ARRAY) {
-               key->tex[i].texture_target = PIPE_TEXTURE_1D;
+         if (view->texture->target == PIPE_TEXTURE_1D_ARRAY ||
+             view->texture->target == PIPE_TEXTURE_2D_ARRAY) {
+            if (view->texture->array_size == 1) {
+               key->tex[i].is_array = 0;
             }
-            else if (view->texture->target == PIPE_TEXTURE_2D_ARRAY) {
-               key->tex[i].texture_target = PIPE_TEXTURE_2D;
+            else {
+               assert(view->texture->array_size > 1);
+               key->tex[i].is_array = 1;
             }
          }
 
-         key->tex[i].texture_msaa = view->texture->nr_samples > 1;
-         if (!svga->curr.sampler[shader][i]->normalized_coords) {
+         if (!sampler->normalized_coords) {
             assert(idx < (1 << 5));  /* width_height_idx:5 bitfield */
             key->tex[i].width_height_idx = idx++;
             key->tex[i].unnormalized = TRUE;
@@ -207,11 +213,8 @@ svga_init_shader_key_common(const struct svga_context *svga, unsigned shader,
          key->tex[i].swizzle_g = view->swizzle_g;
          key->tex[i].swizzle_b = view->swizzle_b;
          key->tex[i].swizzle_a = view->swizzle_a;
-
-         key->tex[i].return_type = svga_get_texture_datatype(view->format);
       }
    }
-   key->num_textures = svga->curr.num_sampler_views[shader];
 }
 
 
@@ -348,19 +351,22 @@ svga_define_shader(struct svga_context *svga,
    unsigned codeLen = variant->nr_tokens * sizeof(variant->tokens[0]);
    enum pipe_error ret;
 
+   SVGA_STATS_TIME_PUSH(svga_sws(svga), SVGA_STATS_TIME_DEFINESHADER);
+
    variant->id = UTIL_BITMASK_INVALID_INDEX;
 
    if (svga_have_gb_objects(svga)) {
       if (svga_have_vgpu10(svga))
-         return define_gb_shader_vgpu10(svga, type, variant, codeLen);
+         ret = define_gb_shader_vgpu10(svga, type, variant, codeLen);
       else
-         return define_gb_shader_vgpu9(svga, type, variant, codeLen);
+         ret = define_gb_shader_vgpu9(svga, type, variant, codeLen);
    }
    else {
       /* Allocate an integer ID for the shader */
       variant->id = util_bitmask_add(svga->shader_id_bm);
       if (variant->id == UTIL_BITMASK_INVALID_INDEX) {
-         return PIPE_ERROR_OUT_OF_MEMORY;
+         ret = PIPE_ERROR_OUT_OF_MEMORY;
+         goto done;
       }
 
       /* Issue SVGA3D device command to define the shader */
@@ -377,6 +383,8 @@ svga_define_shader(struct svga_context *svga,
       }
    }
 
+done:
+   SVGA_STATS_TIME_POP(svga_sws(svga));
    return ret;
 }
 

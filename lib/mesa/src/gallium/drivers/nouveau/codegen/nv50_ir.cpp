@@ -870,22 +870,22 @@ Instruction::writesPredicate() const
    return false;
 }
 
-static bool
-insnCheckCommutationDefSrc(const Instruction *a, const Instruction *b)
+bool
+Instruction::canCommuteDefSrc(const Instruction *i) const
 {
-   for (int d = 0; a->defExists(d); ++d)
-      for (int s = 0; b->srcExists(s); ++s)
-         if (a->getDef(d)->interfers(b->getSrc(s)))
+   for (int d = 0; defExists(d); ++d)
+      for (int s = 0; i->srcExists(s); ++s)
+         if (getDef(d)->interfers(i->getSrc(s)))
             return false;
    return true;
 }
 
-static bool
-insnCheckCommutationDefDef(const Instruction *a, const Instruction *b)
+bool
+Instruction::canCommuteDefDef(const Instruction *i) const
 {
-   for (int d = 0; a->defExists(d); ++d)
-      for (int c = 0; b->defExists(c); ++c)
-         if (a->getDef(d)->interfers(b->getDef(c)))
+   for (int d = 0; defExists(d); ++d)
+      for (int c = 0; i->defExists(c); ++c)
+         if (getDef(d)->interfers(i->getDef(c)))
             return false;
    return true;
 }
@@ -893,10 +893,9 @@ insnCheckCommutationDefDef(const Instruction *a, const Instruction *b)
 bool
 Instruction::isCommutationLegal(const Instruction *i) const
 {
-   bool ret = insnCheckCommutationDefDef(this, i);
-   ret = ret && insnCheckCommutationDefSrc(this, i);
-   ret = ret && insnCheckCommutationDefSrc(i, this);
-   return ret;
+   return canCommuteDefDef(i) &&
+      canCommuteDefSrc(i) &&
+      i->canCommuteDefSrc(this);
 }
 
 TexInstruction::TexInstruction(Function *fn, operation op)
@@ -963,6 +962,57 @@ const struct TexInstruction::Target::Desc TexInstruction::Target::descTable[] =
    { "RECT_SHADOW",       2, 2, false, false, true  },
    { "CUBE_ARRAY_SHADOW", 2, 4, true,  true,  true  },
    { "BUFFER",            1, 1, false, false, false },
+};
+
+const struct TexInstruction::ImgFormatDesc TexInstruction::formatTable[] =
+{
+   { "NONE",         0, {  0,  0,  0,  0 },  UINT },
+
+   { "RGBA32F",      4, { 32, 32, 32, 32 }, FLOAT },
+   { "RGBA16F",      4, { 16, 16, 16, 16 }, FLOAT },
+   { "RG32F",        2, { 32, 32,  0,  0 }, FLOAT },
+   { "RG16F",        2, { 16, 16,  0,  0 }, FLOAT },
+   { "R11G11B10F",   3, { 11, 11, 10,  0 }, FLOAT },
+   { "R32F",         1, { 32,  0,  0,  0 }, FLOAT },
+   { "R16F",         1, { 16,  0,  0,  0 }, FLOAT },
+
+   { "RGBA32UI",     4, { 32, 32, 32, 32 },  UINT },
+   { "RGBA16UI",     4, { 16, 16, 16, 16 },  UINT },
+   { "RGB10A2UI",    4, { 10, 10, 10,  2 },  UINT },
+   { "RGBA8UI",      4, {  8,  8,  8,  8 },  UINT },
+   { "RG32UI",       2, { 32, 32,  0,  0 },  UINT },
+   { "RG16UI",       2, { 16, 16,  0,  0 },  UINT },
+   { "RG8UI",        2, {  8,  8,  0,  0 },  UINT },
+   { "R32UI",        1, { 32,  0,  0,  0 },  UINT },
+   { "R16UI",        1, { 16,  0,  0,  0 },  UINT },
+   { "R8UI",         1, {  8,  0,  0,  0 },  UINT },
+
+   { "RGBA32I",      4, { 32, 32, 32, 32 },  SINT },
+   { "RGBA16I",      4, { 16, 16, 16, 16 },  SINT },
+   { "RGBA8I",       4, {  8,  8,  8,  8 },  SINT },
+   { "RG32I",        2, { 32, 32,  0,  0 },  SINT },
+   { "RG16I",        2, { 16, 16,  0,  0 },  SINT },
+   { "RG8I",         2, {  8,  8,  0,  0 },  SINT },
+   { "R32I",         1, { 32,  0,  0,  0 },  SINT },
+   { "R16I",         1, { 16,  0,  0,  0 },  SINT },
+   { "R8I",          1, {  8,  0,  0,  0 },  SINT },
+
+   { "RGBA16",       4, { 16, 16, 16, 16 }, UNORM },
+   { "RGB10A2",      4, { 10, 10, 10,  2 }, UNORM },
+   { "RGBA8",        4, {  8,  8,  8,  8 }, UNORM },
+   { "RG16",         2, { 16, 16,  0,  0 }, UNORM },
+   { "RG8",          2, {  8,  8,  0,  0 }, UNORM },
+   { "R16",          1, { 16,  0,  0,  0 }, UNORM },
+   { "R8",           1, {  8,  0,  0,  0 }, UNORM },
+
+   { "RGBA16_SNORM", 4, { 16, 16, 16, 16 }, SNORM },
+   { "RGBA8_SNORM",  4, {  8,  8,  8,  8 }, SNORM },
+   { "RG16_SNORM",   2, { 16, 16,  0,  0 }, SNORM },
+   { "RG8_SNORM",    2, {  8,  8,  0,  0 }, SNORM },
+   { "R16_SNORM",    1, { 16,  0,  0,  0 }, SNORM },
+   { "R8_SNORM",     1, {  8,  0,  0,  0 }, SNORM },
+
+   { "BGRA8",        4, {  8,  8,  8,  8 }, UNORM, true },
 };
 
 void
@@ -1121,16 +1171,15 @@ extern "C" {
 static void
 nv50_ir_init_prog_info(struct nv50_ir_prog_info *info)
 {
-#if defined(PIPE_SHADER_HULL) && defined(PIPE_SHADER_DOMAIN)
-   if (info->type == PIPE_SHADER_HULL || info->type == PIPE_SHADER_DOMAIN) {
+   if (info->type == PIPE_SHADER_TESS_CTRL || info->type == PIPE_SHADER_TESS_EVAL) {
       info->prop.tp.domain = PIPE_PRIM_MAX;
       info->prop.tp.outputPrim = PIPE_PRIM_MAX;
    }
-#endif
    if (info->type == PIPE_SHADER_GEOMETRY) {
       info->prop.gp.instanceCount = 1;
       info->prop.gp.maxVertices = 1;
    }
+   info->prop.cp.numThreads = 1;
    info->io.pointSize = 0xff;
    info->io.instanceId = 0xff;
    info->io.vertexId = 0xff;

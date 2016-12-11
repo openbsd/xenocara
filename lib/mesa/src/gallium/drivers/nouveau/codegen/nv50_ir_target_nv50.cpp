@@ -113,13 +113,14 @@ void TargetNV50::initOpInfo()
 
    static const uint32_t commutative[(OP_LAST + 31) / 32] =
    {
-      // ADD,MAD,MUL,AND,OR,XOR,MAX,MIN
-      0x0670ca00, 0x0000003f, 0x00000000, 0x00000000
+      // ADD, MUL, MAD, FMA, AND, OR, XOR, MAX, MIN, SET_AND, SET_OR, SET_XOR,
+      // SET, SELP, SLCT
+      0x0ce0ca00, 0x0000007e, 0x00000000, 0x00000000
    };
    static const uint32_t shortForm[(OP_LAST + 31) / 32] =
    {
-      // MOV,ADD,SUB,MUL,MAD,SAD,L/PINTERP,RCP,TEX,TXF
-      0x00014e40, 0x00000040, 0x00000930, 0x00000000
+      // MOV, ADD, SUB, MUL, MAD, SAD, RCP, L/PINTERP, TEX, TXF
+      0x00014e40, 0x00000080, 0x00001260, 0x00000000
    };
    static const operation noDestList[] =
    {
@@ -207,6 +208,7 @@ TargetNV50::getFileSize(DataFile file) const
    case FILE_MEMORY_CONST:  return 65536;
    case FILE_SHADER_INPUT:  return 0x200;
    case FILE_SHADER_OUTPUT: return 0x200;
+   case FILE_MEMORY_BUFFER: return 0xffffffff;
    case FILE_MEMORY_GLOBAL: return 0xffffffff;
    case FILE_MEMORY_SHARED: return 16 << 10;
    case FILE_MEMORY_LOCAL:  return 48 << 10;
@@ -406,7 +408,8 @@ TargetNV50::isAccessSupported(DataFile file, DataType ty) const
    if (ty == TYPE_B96 || ty == TYPE_NONE)
       return false;
    if (typeSizeof(ty) > 4)
-      return (file == FILE_MEMORY_LOCAL) || (file == FILE_MEMORY_GLOBAL);
+      return (file == FILE_MEMORY_LOCAL) || (file == FILE_MEMORY_GLOBAL) ||
+             (file == FILE_MEMORY_BUFFER);
    return true;
 }
 
@@ -435,6 +438,7 @@ TargetNV50::isOpSupported(operation op, DataType ty) const
    case OP_EXTBF:
    case OP_EXIT: // want exit modifier instead (on NOP if required)
    case OP_MEMBAR:
+   case OP_SHLADD:
       return false;
    case OP_SAD:
       return ty == TYPE_S32;
@@ -509,6 +513,7 @@ int TargetNV50::getLatency(const Instruction *i) const
       switch (i->src(0).getFile()) {
       case FILE_MEMORY_LOCAL:
       case FILE_MEMORY_GLOBAL:
+      case FILE_MEMORY_BUFFER:
          return 100; // really 400 to 800
       default:
          return 22;
@@ -589,6 +594,8 @@ TargetNV50::parseDriverInfo(const struct nv50_ir_prog_info *info)
       wposMask = 0x8;
       sysvalLocation[SV_POSITION] = 0;
    }
+
+   Target::parseDriverInfo(info);
 }
 
 } // namespace nv50_ir

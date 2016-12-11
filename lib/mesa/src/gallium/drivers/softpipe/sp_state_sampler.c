@@ -49,7 +49,7 @@
  */
 static void
 softpipe_bind_sampler_states(struct pipe_context *pipe,
-                             unsigned shader,
+                             enum pipe_shader_type shader,
                              unsigned start,
                              unsigned num,
                              void **samplers)
@@ -58,7 +58,7 @@ softpipe_bind_sampler_states(struct pipe_context *pipe,
    unsigned i;
 
    assert(shader < PIPE_SHADER_TYPES);
-   assert(start + num <= Elements(softpipe->samplers[shader]));
+   assert(start + num <= ARRAY_SIZE(softpipe->samplers[shader]));
 
    draw_flush(softpipe->draw);
 
@@ -97,7 +97,7 @@ softpipe_sampler_view_destroy(struct pipe_context *pipe,
 
 void
 softpipe_set_sampler_views(struct pipe_context *pipe,
-                           unsigned shader,
+                           enum pipe_shader_type shader,
                            unsigned start,
                            unsigned num,
                            struct pipe_sampler_view **views)
@@ -106,7 +106,7 @@ softpipe_set_sampler_views(struct pipe_context *pipe,
    uint i;
 
    assert(shader < PIPE_SHADER_TYPES);
-   assert(start + num <= Elements(softpipe->sampler_views[shader]));
+   assert(start + num <= ARRAY_SIZE(softpipe->sampler_views[shader]));
 
    draw_flush(softpipe->draw);
 
@@ -199,7 +199,7 @@ prepare_shader_sampling(
 
          if (!sp_tex->dt) {
             /* regular texture - setup array of mipmap level offsets */
-            struct pipe_resource *res = view->texture;
+            MAYBE_UNUSED struct pipe_resource *res = view->texture;
             int j;
 
             if (view->target != PIPE_BUFFER) {
@@ -240,11 +240,9 @@ prepare_shader_sampling(
                img_stride[0] = 0;
 
                /* everything specified in number of elements here. */
-               width0 = view->u.buf.last_element - view->u.buf.first_element + 1;
-               addr = (uint8_t *)addr + view->u.buf.first_element *
-                               view_blocksize;
-               assert(view->u.buf.first_element <= view->u.buf.last_element);
-               assert(view->u.buf.last_element * view_blocksize < res->width0);
+               width0 = view->u.buf.size / view_blocksize;
+               addr = (uint8_t *)addr + view->u.buf.offset;
+               assert(view->u.buf.offset + view->u.buf.size <= res->width0);
             }
          }
          else {
@@ -289,7 +287,7 @@ void
 softpipe_cleanup_vertex_sampling(struct softpipe_context *ctx)
 {
    unsigned i;
-   for (i = 0; i < Elements(ctx->mapped_vs_tex); i++) {
+   for (i = 0; i < ARRAY_SIZE(ctx->mapped_vs_tex); i++) {
       pipe_resource_reference(&ctx->mapped_vs_tex[i], NULL);
    }
 }
@@ -311,7 +309,7 @@ void
 softpipe_cleanup_geometry_sampling(struct softpipe_context *ctx)
 {
    unsigned i;
-   for (i = 0; i < Elements(ctx->mapped_gs_tex); i++) {
+   for (i = 0; i < ARRAY_SIZE(ctx->mapped_gs_tex); i++) {
       pipe_resource_reference(&ctx->mapped_gs_tex[i], NULL);
    }
 }

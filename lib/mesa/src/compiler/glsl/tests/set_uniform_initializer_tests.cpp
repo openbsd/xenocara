@@ -25,6 +25,7 @@
 #include "main/mtypes.h"
 #include "main/macros.h"
 #include "util/ralloc.h"
+#include "util/string_to_uint_map.h"
 #include "uniform_initializer_utils.h"
 
 namespace linker {
@@ -108,6 +109,7 @@ establish_uniform_storage(struct gl_shader_program *prog, unsigned num_storage,
 					       + type->components()));
    const unsigned red_zone_components = total_components - data_components;
 
+   prog->UniformHash = new string_to_uint_map;
    prog->UniformStorage = rzalloc_array(prog, struct gl_uniform_storage,
 					num_storage);
    prog->NumUniformStorage = num_storage;
@@ -115,7 +117,6 @@ establish_uniform_storage(struct gl_shader_program *prog, unsigned num_storage,
    prog->UniformStorage[index_to_set].name = (char *) name;
    prog->UniformStorage[index_to_set].type = type;
    prog->UniformStorage[index_to_set].array_elements = array_size;
-   prog->UniformStorage[index_to_set].initialized = false;
    for (int sh = 0; sh < MESA_SHADER_STAGES; sh++) {
       prog->UniformStorage[index_to_set].opaque[sh].index = ~0;
       prog->UniformStorage[index_to_set].opaque[sh].active = false;
@@ -129,6 +130,9 @@ establish_uniform_storage(struct gl_shader_program *prog, unsigned num_storage,
 				     data_components,
 				     red_zone_components);
 
+   prog->UniformHash->put(index_to_set,
+                          prog->UniformStorage[index_to_set].name);
+
    for (unsigned i = 0; i < num_storage; i++) {
       if (i == index_to_set)
 	 continue;
@@ -136,7 +140,6 @@ establish_uniform_storage(struct gl_shader_program *prog, unsigned num_storage,
       prog->UniformStorage[i].name = (char *) "invalid slot";
       prog->UniformStorage[i].type = glsl_type::void_type;
       prog->UniformStorage[i].array_elements = 0;
-      prog->UniformStorage[i].initialized = false;
       for (int sh = 0; sh < MESA_SHADER_STAGES; sh++) {
          prog->UniformStorage[i].opaque[sh].index = ~0;
          prog->UniformStorage[i].opaque[sh].active = false;
@@ -147,21 +150,6 @@ establish_uniform_storage(struct gl_shader_program *prog, unsigned num_storage,
    }
 
    return red_zone_components;
-}
-
-/**
- * Verify that the correct uniform is marked as having been initialized.
- */
-static void
-verify_initialization(struct gl_shader_program *prog, unsigned actual_index)
-{
-   for (unsigned i = 0; i < prog->NumUniformStorage; i++) {
-      if (i == actual_index) {
-	 EXPECT_TRUE(prog->UniformStorage[actual_index].initialized);
-      } else {
-	 EXPECT_FALSE(prog->UniformStorage[i].initialized);
-      }
-   }
 }
 
 static void
@@ -181,7 +169,6 @@ non_array_test(void *mem_ctx, struct gl_shader_program *prog,
 
    linker::set_uniform_initializer(mem_ctx, prog, name, type, val, 0xF00F);
 
-   verify_initialization(prog, actual_index);
    verify_data(prog->UniformStorage[actual_index].storage, 0, val,
 	       red_zone_components, 0xF00F);
 }
@@ -338,7 +325,6 @@ array_test(void *mem_ctx, struct gl_shader_program *prog,
    linker::set_uniform_initializer(mem_ctx, prog, name, element_type, val,
                                    0xF00F);
 
-   verify_initialization(prog, actual_index);
    verify_data(prog->UniformStorage[actual_index].storage, array_size,
 	       val, red_zone_components, 0xF00F);
 }

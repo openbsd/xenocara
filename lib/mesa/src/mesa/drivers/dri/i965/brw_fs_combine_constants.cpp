@@ -45,7 +45,7 @@ static const bool debug = false;
  * replaced with a GRF source.
  */
 static bool
-could_coissue(const struct brw_device_info *devinfo, const fs_inst *inst)
+could_coissue(const struct gen_device_info *devinfo, const fs_inst *inst)
 {
    if (devinfo->gen != 7)
       return false;
@@ -65,7 +65,7 @@ could_coissue(const struct brw_device_info *devinfo, const fs_inst *inst)
  * Returns true for instructions that don't support immediate sources.
  */
 static bool
-must_promote_imm(const struct brw_device_info *devinfo, const fs_inst *inst)
+must_promote_imm(const struct gen_device_info *devinfo, const fs_inst *inst)
 {
    switch (inst->opcode) {
    case SHADER_OPCODE_POW:
@@ -147,8 +147,6 @@ struct table {
 static struct imm *
 find_imm(struct table *table, float val)
 {
-   assert(signbit(val) == 0);
-
    for (int i = 0; i < table->len; i++) {
       if (table->imm[i].val == val) {
          return &table->imm[i];
@@ -220,7 +218,8 @@ fs_visitor::opt_combine_constants()
              inst->src[i].type != BRW_REGISTER_TYPE_F)
             continue;
 
-         float val = fabsf(inst->src[i].f);
+         float val = !inst->can_do_source_mods(devinfo) ? inst->src[i].f :
+                     fabs(inst->src[i].f);
          struct imm *imm = find_imm(&table, val);
 
          if (imm) {
@@ -281,12 +280,12 @@ fs_visitor::opt_combine_constants()
 
       ibld.MOV(reg, brw_imm_f(imm->val));
       imm->nr = reg.nr;
-      imm->subreg_offset = reg.subreg_offset;
+      imm->subreg_offset = reg.offset;
 
-      reg.subreg_offset += sizeof(float);
-      if ((unsigned)reg.subreg_offset == 8 * sizeof(float)) {
+      reg.offset += sizeof(float);
+      if (reg.offset == 8 * sizeof(float)) {
          reg.nr = alloc.allocate(1);
-         reg.subreg_offset = 0;
+         reg.offset = 0;
       }
    }
    promoted_constants = table.len;
@@ -297,11 +296,11 @@ fs_visitor::opt_combine_constants()
          fs_reg *reg = link->reg;
          reg->file = VGRF;
          reg->nr = table.imm[i].nr;
-         reg->subreg_offset = table.imm[i].subreg_offset;
+         reg->offset = table.imm[i].subreg_offset;
          reg->stride = 0;
          reg->negate = signbit(reg->f) != signbit(table.imm[i].val);
          assert((isnan(reg->f) && isnan(table.imm[i].val)) ||
-                fabsf(reg->f) == table.imm[i].val);
+                fabsf(reg->f) == fabs(table.imm[i].val));
       }
    }
 

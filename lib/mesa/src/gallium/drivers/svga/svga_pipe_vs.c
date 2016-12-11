@@ -80,7 +80,7 @@ substitute_vs(unsigned shader_id, const struct tgsi_token *old_tokens)
 
    if (!tgsi_text_translate(text,
                              tokens,
-                             Elements(tokens)))
+                             ARRAY_SIZE(tokens)))
    {
       assert(0);
       return NULL;
@@ -103,6 +103,8 @@ svga_create_vs_state(struct pipe_context *pipe,
 
    if (!vs)
       return NULL;
+
+   SVGA_STATS_TIME_PUSH(svga_sws(svga), SVGA_STATS_TIME_CREATEVS);         
 
    /* substitute a debug shader?
     */
@@ -132,6 +134,7 @@ svga_create_vs_state(struct pipe_context *pipe,
                                                          &templ->stream_output);
    }
 
+   SVGA_STATS_TIME_POP(svga_sws(svga));
    return vs;
 }
 

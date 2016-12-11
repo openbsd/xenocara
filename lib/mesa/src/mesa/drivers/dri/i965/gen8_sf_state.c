@@ -21,6 +21,7 @@
  * IN THE SOFTWARE.
  */
 
+#include "compiler/nir/nir.h"
 #include "brw_context.h"
 #include "brw_state.h"
 #include "brw_defines.h"
@@ -34,12 +35,13 @@ upload_sbe(struct brw_context *brw)
 {
    struct gl_context *ctx = &brw->ctx;
    /* BRW_NEW_FS_PROG_DATA */
-   uint32_t num_outputs = brw->wm.prog_data->num_varying_inputs;
+   const struct brw_wm_prog_data *wm_prog_data =
+      brw_wm_prog_data(brw->wm.base.prog_data);
+   uint32_t num_outputs = wm_prog_data->num_varying_inputs;
    uint16_t attr_overrides[VARYING_SLOT_MAX];
    uint32_t urb_entry_read_length;
    uint32_t urb_entry_read_offset;
    uint32_t point_sprite_enables;
-   uint32_t flat_enables;
    int sbe_cmd_length;
 
    uint32_t dw1 =
@@ -61,12 +63,13 @@ upload_sbe(struct brw_context *brw)
    else
       dw1 |= GEN6_SF_POINT_SPRITE_UPPERLEFT;
 
-   /* BRW_NEW_VUE_MAP_GEOM_OUT | BRW_NEW_FRAGMENT_PROGRAM |
-    * _NEW_POINT | _NEW_LIGHT | _NEW_PROGRAM | BRW_NEW_FS_PROG_DATA
+   /* _NEW_POINT | _NEW_LIGHT | _NEW_PROGRAM,
+    * BRW_NEW_FS_PROG_DATA | BRW_NEW_FRAGMENT_PROGRAM |
+    * BRW_NEW_GS_PROG_DATA | BRW_NEW_PRIMITIVE | BRW_NEW_TES_PROG_DATA |
+    * BRW_NEW_VUE_MAP_GEOM_OUT
     */
    calculate_attr_overrides(brw, attr_overrides,
                             &point_sprite_enables,
-                            &flat_enables,
                             &urb_entry_read_length,
                             &urb_entry_read_offset);
 
@@ -92,8 +95,10 @@ upload_sbe(struct brw_context *brw)
       /* prepare the active component dwords */
       int input_index = 0;
       for (int attr = 0; attr < VARYING_SLOT_MAX; attr++) {
-         if (!(brw->fragment_program->Base.InputsRead & BITFIELD64_BIT(attr)))
+         if (!(brw->fragment_program->Base.nir->info.inputs_read &
+               BITFIELD64_BIT(attr))) {
             continue;
+         }
 
          assert(input_index < 32);
 
@@ -109,7 +114,7 @@ upload_sbe(struct brw_context *brw)
    OUT_BATCH(_3DSTATE_SBE << 16 | (sbe_cmd_length - 2));
    OUT_BATCH(dw1);
    OUT_BATCH(point_sprite_enables);
-   OUT_BATCH(flat_enables);
+   OUT_BATCH(wm_prog_data->flat_inputs);
    if (sbe_cmd_length >= 6) {
       OUT_BATCH(dw4);
       OUT_BATCH(dw5);
@@ -134,10 +139,14 @@ const struct brw_tracked_state gen8_sbe_state = {
       .mesa  = _NEW_BUFFERS |
                _NEW_LIGHT |
                _NEW_POINT |
+               _NEW_POLYGON |
                _NEW_PROGRAM,
-      .brw   = BRW_NEW_CONTEXT |
+      .brw   = BRW_NEW_BLORP |
+               BRW_NEW_CONTEXT |
                BRW_NEW_FRAGMENT_PROGRAM |
                BRW_NEW_FS_PROG_DATA |
+               BRW_NEW_GS_PROG_DATA |
+               BRW_NEW_TES_PROG_DATA |
                BRW_NEW_VUE_MAP_GEOM_OUT,
    },
    .emit = upload_sbe,
@@ -167,18 +176,18 @@ upload_sf(struct brw_context *brw)
       dw2 |= GEN6_SF_LINE_END_CAP_WIDTH_1_0;
    }
 
-   /* Clamp to ARB_point_parameters user limits */
+   /* _NEW_POINT - Clamp to ARB_point_parameters user limits */
    point_size = CLAMP(ctx->Point.Size, ctx->Point.MinSize, ctx->Point.MaxSize);
 
    /* Clamp to the hardware limits and convert to fixed point */
    dw3 |= U_FIXED(CLAMP(point_size, 0.125f, 255.875f), 3);
 
-   /* _NEW_PROGRAM | _NEW_POINT */
-   if (!(ctx->VertexProgram.PointSizeEnabled || ctx->Point._Attenuated))
+   /* _NEW_PROGRAM | _NEW_POINT, BRW_NEW_VUE_MAP_GEOM_OUT */
+   if (use_state_point_size(brw))
       dw3 |= GEN6_SF_USE_STATE_POINT_WIDTH;
 
    /* _NEW_POINT | _NEW_MULTISAMPLE */
-   if ((ctx->Point.SmoothFlag || ctx->Multisample._Enabled) &&
+   if ((ctx->Point.SmoothFlag || _mesa_is_multisample_enabled(ctx)) &&
        !ctx->Point.PointSprite) {
       dw3 |= GEN8_SF_SMOOTH_POINT_ENABLE;
    }
@@ -209,7 +218,9 @@ const struct brw_tracked_state gen8_sf_state = {
                _NEW_LINE |
                _NEW_MULTISAMPLE |
                _NEW_POINT,
-      .brw   = BRW_NEW_CONTEXT,
+      .brw   = BRW_NEW_BLORP |
+               BRW_NEW_CONTEXT |
+               BRW_NEW_VUE_MAP_GEOM_OUT,
    },
    .emit = upload_sf,
 };
@@ -249,7 +260,7 @@ upload_raster(struct brw_context *brw)
    if (ctx->Point.SmoothFlag)
       dw1 |= GEN8_RASTER_SMOOTH_POINT_ENABLE;
 
-   if (ctx->Multisample._Enabled)
+   if (_mesa_is_multisample_enabled(ctx))
       dw1 |= GEN8_RASTER_API_MULTISAMPLE_ENABLE;
 
    if (ctx->Polygon.OffsetFill)
@@ -326,7 +337,8 @@ const struct brw_tracked_state gen8_raster_state = {
                _NEW_POLYGON |
                _NEW_SCISSOR |
                _NEW_TRANSFORM,
-      .brw   = BRW_NEW_CONTEXT,
+      .brw   = BRW_NEW_BLORP |
+               BRW_NEW_CONTEXT,
    },
    .emit = upload_raster,
 };

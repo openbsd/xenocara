@@ -59,7 +59,6 @@ struct nv50_program {
    unsigned code_size;
    unsigned code_base;
    uint32_t *immd;
-   unsigned immd_size;
    unsigned parm_size; /* size limit of uniform buffer */
    uint32_t tls_space; /* required local memory per thread */
 
@@ -79,6 +78,9 @@ struct nv50_program {
       ubyte clpd[2];     /* output slot of clip distance[i]'s 1st component */
       ubyte clpd_nr;
       bool need_vertex_id;
+      uint32_t clip_mode;
+      uint8_t clip_enable; /* mask of defined clip planes */
+      uint8_t cull_enable; /* mask of defined cull distances */
    } vp;
 
    struct {
@@ -87,6 +89,7 @@ struct nv50_program {
       uint32_t colors; /* 0x1904 */
       uint8_t has_samplemask;
       uint8_t force_persample_interp;
+      uint8_t alphatest;
    } fp;
 
    struct {

@@ -253,6 +253,10 @@ HASH		^{SPC}#{SPC}
 				    yylval->n = strtol(yytext, NULL, 10);
 				    return INTCONSTANT;
 				}
+<PP>0				{
+				    yylval->n = 0;
+				    return INTCONSTANT;
+				}
 <PP>\n				{ BEGIN 0; yylineno++; yycolumn = 0; return EOL; }
 <PP>.				{ return yytext[0]; }
 
@@ -311,7 +315,7 @@ invariant	KEYWORD(120, 100, 120, 100, INVARIANT);
 flat		KEYWORD(130, 100, 130, 300, FLAT);
 smooth		KEYWORD(130, 300, 130, 300, SMOOTH);
 noperspective	KEYWORD(130, 300, 130, 0, NOPERSPECTIVE);
-patch		KEYWORD_WITH_ALT(0, 300, 400, 0, yyextra->ARB_tessellation_shader_enable, PATCH);
+patch		KEYWORD_WITH_ALT(0, 300, 400, 320, yyextra->has_tessellation_shader(), PATCH);
 
 sampler1D	DEPRECATED_ES_KEYWORD(SAMPLER1D);
 sampler2D	return SAMPLER2D;
@@ -348,10 +352,10 @@ isampler2DMSArray  KEYWORD_WITH_ALT(150, 300, 150, 320, yyextra->ARB_texture_mul
 usampler2DMSArray  KEYWORD_WITH_ALT(150, 300, 150, 320, yyextra->ARB_texture_multisample_enable || yyextra->OES_texture_storage_multisample_2d_array_enable, USAMPLER2DMSARRAY);
 
    /* keywords available with ARB_texture_cube_map_array_enable extension on desktop GLSL */
-samplerCubeArray   KEYWORD_WITH_ALT(400, 0, 400, 0, yyextra->ARB_texture_cube_map_array_enable, SAMPLERCUBEARRAY);
-isamplerCubeArray KEYWORD_WITH_ALT(400, 0, 400, 0, yyextra->ARB_texture_cube_map_array_enable, ISAMPLERCUBEARRAY);
-usamplerCubeArray KEYWORD_WITH_ALT(400, 0, 400, 0, yyextra->ARB_texture_cube_map_array_enable, USAMPLERCUBEARRAY);
-samplerCubeArrayShadow   KEYWORD_WITH_ALT(400, 0, 400, 0, yyextra->ARB_texture_cube_map_array_enable, SAMPLERCUBEARRAYSHADOW);
+samplerCubeArray   KEYWORD_WITH_ALT(400, 310, 400, 320, yyextra->ARB_texture_cube_map_array_enable || yyextra->OES_texture_cube_map_array_enable || yyextra->EXT_texture_cube_map_array_enable, SAMPLERCUBEARRAY);
+isamplerCubeArray KEYWORD_WITH_ALT(400, 310, 400, 320, yyextra->ARB_texture_cube_map_array_enable || yyextra->OES_texture_cube_map_array_enable || yyextra->EXT_texture_cube_map_array_enable, ISAMPLERCUBEARRAY);
+usamplerCubeArray KEYWORD_WITH_ALT(400, 310, 400, 320, yyextra->ARB_texture_cube_map_array_enable || yyextra->OES_texture_cube_map_array_enable || yyextra->EXT_texture_cube_map_array_enable, USAMPLERCUBEARRAY);
+samplerCubeArrayShadow   KEYWORD_WITH_ALT(400, 310, 400, 320, yyextra->ARB_texture_cube_map_array_enable || yyextra->OES_texture_cube_map_array_enable || yyextra->EXT_texture_cube_map_array_enable, SAMPLERCUBEARRAYSHADOW);
 
 samplerExternalOES		{
 			  if (yyextra->OES_EGL_image_external_enable)
@@ -361,7 +365,7 @@ samplerExternalOES		{
 		}
 
    /* keywords available with ARB_gpu_shader5 */
-precise		KEYWORD_WITH_ALT(400, 0, 400, 0, yyextra->ARB_gpu_shader5_enable, PRECISE);
+precise		KEYWORD_WITH_ALT(400, 310, 400, 320, yyextra->ARB_gpu_shader5_enable || yyextra->EXT_gpu_shader5_enable || yyextra->OES_gpu_shader5_enable, PRECISE);
 
    /* keywords available with ARB_shader_image_load_store */
 image1D         KEYWORD_WITH_ALT(130, 300, 420, 0, yyextra->ARB_shader_image_load_store_enable, IMAGE1D);
@@ -369,10 +373,10 @@ image2D         KEYWORD_WITH_ALT(130, 300, 420, 310, yyextra->ARB_shader_image_l
 image3D         KEYWORD_WITH_ALT(130, 300, 420, 310, yyextra->ARB_shader_image_load_store_enable, IMAGE3D);
 image2DRect     KEYWORD_WITH_ALT(130, 300, 420, 0, yyextra->ARB_shader_image_load_store_enable, IMAGE2DRECT);
 imageCube       KEYWORD_WITH_ALT(130, 300, 420, 310, yyextra->ARB_shader_image_load_store_enable, IMAGECUBE);
-imageBuffer     KEYWORD_WITH_ALT(130, 300, 420, 0, yyextra->ARB_shader_image_load_store_enable, IMAGEBUFFER);
+imageBuffer     KEYWORD_WITH_ALT(130, 300, 420, 320, yyextra->ARB_shader_image_load_store_enable || yyextra->EXT_texture_buffer_enable || yyextra->OES_texture_buffer_enable, IMAGEBUFFER);
 image1DArray    KEYWORD_WITH_ALT(130, 300, 420, 0, yyextra->ARB_shader_image_load_store_enable, IMAGE1DARRAY);
 image2DArray    KEYWORD_WITH_ALT(130, 300, 420, 310, yyextra->ARB_shader_image_load_store_enable, IMAGE2DARRAY);
-imageCubeArray  KEYWORD_WITH_ALT(130, 300, 420, 0, yyextra->ARB_shader_image_load_store_enable, IMAGECUBEARRAY);
+imageCubeArray  KEYWORD_WITH_ALT(130, 300, 420, 320, yyextra->ARB_shader_image_load_store_enable || yyextra->OES_texture_cube_map_array_enable || yyextra->EXT_texture_cube_map_array_enable, IMAGECUBEARRAY);
 image2DMS       KEYWORD_WITH_ALT(130, 300, 420, 0, yyextra->ARB_shader_image_load_store_enable, IMAGE2DMS);
 image2DMSArray  KEYWORD_WITH_ALT(130, 300, 420, 0, yyextra->ARB_shader_image_load_store_enable, IMAGE2DMSARRAY);
 iimage1D        KEYWORD_WITH_ALT(130, 300, 420, 0, yyextra->ARB_shader_image_load_store_enable, IIMAGE1D);
@@ -380,10 +384,10 @@ iimage2D        KEYWORD_WITH_ALT(130, 300, 420, 310, yyextra->ARB_shader_image_l
 iimage3D        KEYWORD_WITH_ALT(130, 300, 420, 310, yyextra->ARB_shader_image_load_store_enable, IIMAGE3D);
 iimage2DRect    KEYWORD_WITH_ALT(130, 300, 420, 0, yyextra->ARB_shader_image_load_store_enable, IIMAGE2DRECT);
 iimageCube      KEYWORD_WITH_ALT(130, 300, 420, 310, yyextra->ARB_shader_image_load_store_enable, IIMAGECUBE);
-iimageBuffer    KEYWORD_WITH_ALT(130, 300, 420, 0, yyextra->ARB_shader_image_load_store_enable, IIMAGEBUFFER);
+iimageBuffer    KEYWORD_WITH_ALT(130, 300, 420, 320, yyextra->ARB_shader_image_load_store_enable || yyextra->EXT_texture_buffer_enable || yyextra->OES_texture_buffer_enable, IIMAGEBUFFER);
 iimage1DArray   KEYWORD_WITH_ALT(130, 300, 420, 0, yyextra->ARB_shader_image_load_store_enable, IIMAGE1DARRAY);
 iimage2DArray   KEYWORD_WITH_ALT(130, 300, 420, 310, yyextra->ARB_shader_image_load_store_enable, IIMAGE2DARRAY);
-iimageCubeArray KEYWORD_WITH_ALT(130, 300, 420, 0, yyextra->ARB_shader_image_load_store_enable, IIMAGECUBEARRAY);
+iimageCubeArray KEYWORD_WITH_ALT(130, 300, 420, 320, yyextra->ARB_shader_image_load_store_enable || yyextra->OES_texture_cube_map_array_enable || yyextra->EXT_texture_cube_map_array_enable, IIMAGECUBEARRAY);
 iimage2DMS      KEYWORD_WITH_ALT(130, 300, 420, 0, yyextra->ARB_shader_image_load_store_enable, IIMAGE2DMS);
 iimage2DMSArray KEYWORD_WITH_ALT(130, 300, 420, 0, yyextra->ARB_shader_image_load_store_enable, IIMAGE2DMSARRAY);
 uimage1D        KEYWORD_WITH_ALT(130, 300, 420, 0, yyextra->ARB_shader_image_load_store_enable, UIMAGE1D);
@@ -391,10 +395,10 @@ uimage2D        KEYWORD_WITH_ALT(130, 300, 420, 310, yyextra->ARB_shader_image_l
 uimage3D        KEYWORD_WITH_ALT(130, 300, 420, 310, yyextra->ARB_shader_image_load_store_enable, UIMAGE3D);
 uimage2DRect    KEYWORD_WITH_ALT(130, 300, 420, 0, yyextra->ARB_shader_image_load_store_enable, UIMAGE2DRECT);
 uimageCube      KEYWORD_WITH_ALT(130, 300, 420, 310, yyextra->ARB_shader_image_load_store_enable, UIMAGECUBE);
-uimageBuffer    KEYWORD_WITH_ALT(130, 300, 420, 0, yyextra->ARB_shader_image_load_store_enable, UIMAGEBUFFER);
+uimageBuffer    KEYWORD_WITH_ALT(130, 300, 420, 320, yyextra->ARB_shader_image_load_store_enable || yyextra->EXT_texture_buffer_enable || yyextra->OES_texture_buffer_enable, UIMAGEBUFFER);
 uimage1DArray   KEYWORD_WITH_ALT(130, 300, 420, 0, yyextra->ARB_shader_image_load_store_enable, UIMAGE1DARRAY);
 uimage2DArray   KEYWORD_WITH_ALT(130, 300, 420, 310, yyextra->ARB_shader_image_load_store_enable, UIMAGE2DARRAY);
-uimageCubeArray KEYWORD_WITH_ALT(130, 300, 420, 0, yyextra->ARB_shader_image_load_store_enable, UIMAGECUBEARRAY);
+uimageCubeArray KEYWORD_WITH_ALT(130, 300, 420, 320, yyextra->ARB_shader_image_load_store_enable || yyextra->OES_texture_cube_map_array_enable || yyextra->EXT_texture_cube_map_array_enable, UIMAGECUBEARRAY);
 uimage2DMS      KEYWORD_WITH_ALT(130, 300, 420, 0, yyextra->ARB_shader_image_load_store_enable, UIMAGE2DMS);
 uimage2DMSArray KEYWORD_WITH_ALT(130, 300, 420, 0, yyextra->ARB_shader_image_load_store_enable, UIMAGE2DMSARRAY);
 image1DShadow           KEYWORD(130, 300, 0, 0, IMAGE1DSHADOW);
@@ -472,6 +476,13 @@ layout		{
 \.[0-9]+([eE][+-]?[0-9]+)?[fF]?		|
 [0-9]+\.([eE][+-]?[0-9]+)?[fF]?		|
 [0-9]+[eE][+-]?[0-9]+[fF]?		{
+			    struct _mesa_glsl_parse_state *state = yyextra;
+			    char suffix = yytext[strlen(yytext) - 1];
+			    if (!state->is_version(120, 300) &&
+			        (suffix == 'f' || suffix == 'F')) {
+			        _mesa_glsl_warning(yylloc, state,
+			                           "Float suffixes are invalid in GLSL 1.10");
+			    }
 			    yylval->real = _mesa_strtof(yytext, NULL);
 			    return FLOATCONSTANT;
 			}
@@ -565,19 +576,19 @@ common		KEYWORD(130, 300, 0, 0, COMMON);
 partition	KEYWORD(130, 300, 0, 0, PARTITION);
 active		KEYWORD(130, 300, 0, 0, ACTIVE);
 superp		KEYWORD(130, 100, 0, 0, SUPERP);
-samplerBuffer	KEYWORD(130, 300, 140, 0, SAMPLERBUFFER);
+samplerBuffer	KEYWORD_WITH_ALT(130, 300, 140, 320, yyextra->EXT_texture_buffer_enable || yyextra->OES_texture_buffer_enable, SAMPLERBUFFER);
 filter		KEYWORD(130, 300, 0, 0, FILTER);
 row_major	KEYWORD_WITH_ALT(130, 0, 140, 0, yyextra->ARB_uniform_buffer_object_enable && !yyextra->es_shader, ROW_MAJOR);
 
     /* Additional reserved words in GLSL 1.40 */
 isampler2DRect	KEYWORD(140, 300, 140, 0, ISAMPLER2DRECT);
 usampler2DRect	KEYWORD(140, 300, 140, 0, USAMPLER2DRECT);
-isamplerBuffer	KEYWORD(140, 300, 140, 0, ISAMPLERBUFFER);
-usamplerBuffer	KEYWORD(140, 300, 140, 0, USAMPLERBUFFER);
+isamplerBuffer	KEYWORD_WITH_ALT(140, 300, 140, 320, yyextra->EXT_texture_buffer_enable || yyextra->OES_texture_buffer_enable, ISAMPLERBUFFER);
+usamplerBuffer	KEYWORD_WITH_ALT(140, 300, 140, 320, yyextra->EXT_texture_buffer_enable || yyextra->OES_texture_buffer_enable, USAMPLERBUFFER);
 
     /* Additional reserved words in GLSL ES 3.00 */
-resource	KEYWORD(0, 300, 0, 0, RESOURCE);
-sample		KEYWORD_WITH_ALT(400, 300, 400, 0, yyextra->ARB_gpu_shader5_enable, SAMPLE);
+resource	KEYWORD(420, 300, 0, 0, RESOURCE);
+sample		KEYWORD_WITH_ALT(400, 300, 400, 320, yyextra->ARB_gpu_shader5_enable || yyextra->OES_shader_multisample_interpolation_enable, SAMPLE);
 subroutine	KEYWORD_WITH_ALT(400, 300, 400, 0, yyextra->ARB_shader_subroutine_enable, SUBROUTINE);
 
 

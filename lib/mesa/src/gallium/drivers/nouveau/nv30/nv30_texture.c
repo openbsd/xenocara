@@ -188,7 +188,7 @@ nv30_sampler_state_delete(struct pipe_context *pipe, void *hwcso)
 
 static void
 nv30_bind_sampler_states(struct pipe_context *pipe,
-                         unsigned shader, unsigned start_slot,
+                         enum pipe_shader_type shader, unsigned start_slot,
                          unsigned num_samplers, void **samplers)
 {
    switch (shader) {
@@ -198,6 +198,9 @@ nv30_bind_sampler_states(struct pipe_context *pipe,
    case PIPE_SHADER_FRAGMENT:
       nv30_fragtex_sampler_states_bind(pipe, num_samplers, samplers);
       break;
+   default:
+      assert(!"unexpected shader type");
+      break;
    }
 }
 
@@ -205,7 +208,7 @@ static inline uint32_t
 swizzle(const struct nv30_texfmt *fmt, unsigned cmp, unsigned swz)
 {
    uint32_t data = fmt->swz[swz].src << 8;
-   if (swz <= PIPE_SWIZZLE_ALPHA)
+   if (swz <= PIPE_SWIZZLE_W)
       data |= fmt->swz[swz].cmp;
    else
       data |= fmt->swz[cmp].cmp;

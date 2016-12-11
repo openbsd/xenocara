@@ -790,11 +790,22 @@
     </function>
 </category>
 
+<!-- 122. GL_EXT_shader_framebuffer_fetch -->
+<category name="GL_EXT_shader_framebuffer_fetch" number="122">
+    <enum name="FRAGMENT_SHADER_DISCARDS_SAMPLES_EXT" value="0x8A52"/>
+</category>
+
 <!-- 151. GL_EXT_draw_buffers -->
 <category name="GL_EXT_draw_buffers" number="151">
     <function name="DrawBuffersEXT" alias="DrawBuffers" es2="2.0">
         <param name="n" type="GLsizei" counter="true"/>
         <param name="bufs" type="const GLenum *" count="n"/>
+    </function>
+</category>
+
+<category name="GL_OES_sample_shading" number="169">
+    <function name="MinSampleShadingOES" alias="MinSampleShading" es2="3.0">
+        <param name="value" type="GLfloat"/>
     </function>
 </category>
 
@@ -815,6 +826,168 @@
         <param name="depth" type="GLsizei"/>
         <param name="fixedsamplelocations" type="GLboolean"/>
     </function>
+</category>
+
+<category name="GL_EXT_draw_buffers_indexed" number="176">
+
+  <function name="BlendFunciEXT" alias="BlendFunciARB" es2="3.0">
+    <param name="buf" type="GLuint"/>
+    <param name="sfactor" type="GLenum"/>
+    <param name="dfactor" type="GLenum"/>
+  </function>
+
+  <function name="BlendFuncSeparateiEXT" alias="BlendFuncSeparateiARB" es2="3.0">
+    <param name="buf" type="GLuint"/>
+    <param name="sfactorRGB" type="GLenum"/>
+    <param name="dfactorRGB" type="GLenum"/>
+    <param name="sfactorAlpha" type="GLenum"/>
+    <param name="dfactorAlpha" type="GLenum"/>
+  </function>
+
+  <function name="BlendEquationiEXT" alias="BlendEquationiARB" es2="3.0">
+    <param name="buf" type="GLuint"/>
+    <param name="mode" type="GLenum"/>
+  </function>
+
+  <function name="BlendEquationSeparateiEXT" alias="BlendEquationSeparateiARB" es2="3.0">
+    <param name="buf" type="GLuint"/>
+    <param name="modeRGB" type="GLenum"/>
+    <param name="modeA" type="GLenum"/>
+  </function>
+
+  <function name="ColorMaskiEXT" alias="ColorMaski" es2="3.0">
+    <param name="buf" type="GLuint"/>
+    <param name="r" type="GLboolean"/>
+    <param name="g" type="GLboolean"/>
+    <param name="b" type="GLboolean"/>
+    <param name="a" type="GLboolean"/>
+  </function>
+
+  <function name="EnableiEXT" alias="Enablei" es2="3.0">
+    <param name="target" type="GLenum"/>
+    <param name="index" type="GLuint"/>
+  </function>
+
+  <function name="DisableiEXT" alias="Disablei" es2="3.0">
+    <param name="target" type="GLenum"/>
+    <param name="index" type="GLuint"/>
+  </function>
+
+  <function name="IsEnablediEXT" alias="IsEnabledi" es2="3.0">
+    <param name="target" type="GLenum"/>
+    <param name="index" type="GLuint"/>
+    <return type="GLboolean"/>
+  </function>
+
+</category>
+
+<category name="GL_EXT_geometry_shader" number="177">
+    <!-- The rest of the bits for this are below in OES_geometry_shader. -->
+    <function name="FramebufferTextureEXT" alias="FramebufferTexture" es2="3.1">
+        <param name="target" type="GLenum"/>
+        <param name="attachment" type="GLenum"/>
+        <param name="texture" type="GLuint"/>
+        <param name="level" type="GLint"/>
+    </function>
+</category>
+
+<category name="GL_EXT_texture_border_clamp" number="182">
+
+    <!-- The *TexParameter* functions are added in EXT_texture_integer -->
+
+    <function name="SamplerParameterIivEXT" es2="3.0" alias="SamplerParameterIiv">
+      <param name="sampler" type="GLuint"/>
+      <param name="pname" type="GLenum"/>
+      <param name="params" type="const GLint *"/>
+    </function>
+
+    <function name="SamplerParameterIuivEXT" es2="3.0" alias="SamplerParameterIuiv">
+      <param name="sampler" type="GLuint"/>
+      <param name="pname" type="GLenum"/>
+      <param name="params" type="const GLuint *"/>
+    </function>
+
+    <function name="GetSamplerParameterIivEXT" es2="3.0" alias="GetSamplerParameterIiv">
+      <param name="sampler" type="GLuint"/>
+      <param name="pname" type="GLenum"/>
+      <param name="params" type="GLint *"/>
+    </function>
+
+    <function name="GetSamplerParameterIuivEXT" es2="3.0" alias="GetSamplerParameterIuiv">
+      <param name="sampler" type="GLuint"/>
+      <param name="pname" type="GLenum"/>
+      <param name="params" type="GLuint *"/>
+    </function>
+
+</category>
+
+<category name="GL_EXT_texture_buffer" number="183">
+
+    <function name="TexBufferEXT" es2="3.1" alias="TexBuffer">
+        <param name="target" type="GLenum"/>
+        <param name="internalFormat" type="GLenum"/>
+        <param name="buffer" type="GLuint"/>
+    </function>
+
+    <function name="TexBufferRangeEXT" es2="3.1" alias="TexBufferRange">
+        <param name="target" type="GLenum"/>
+        <param name="internalformat" type="GLenum"/>
+        <param name="buffer" type="GLuint"/>
+        <param name="offset" type="GLintptr"/>
+        <param name="size" type="GLsizeiptr"/>
+    </function>
+
+</category>
+
+<category name="GL_EXT_primitive_bounding_box" number="187">
+
+    <function name="PrimitiveBoundingBoxEXT" es2="3.1" alias="PrimitiveBoundingBox">
+        <param name="minX" type="GLfloat"/>
+        <param name="minY" type="GLfloat"/>
+        <param name="minZ" type="GLfloat"/>
+        <param name="minW" type="GLfloat"/>
+        <param name="maxX" type="GLfloat"/>
+        <param name="maxY" type="GLfloat"/>
+        <param name="maxZ" type="GLfloat"/>
+        <param name="maxW" type="GLfloat"/>
+    </function>
+
+</category>
+
+<xi:include href="KHR_robustness_es.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+<category name="GL_EXT_base_instance" number="203">
+
+  <function name="DrawArraysInstancedBaseInstanceEXT" es2="3.0"
+            alias="DrawArraysInstancedBaseInstance">
+    <param name="mode" type="GLenum"/>
+    <param name="first" type="GLint"/>
+    <param name="count" type="GLsizei"/>
+    <param name="instancecount" type="GLsizei"/>
+    <param name="baseinstance" type="GLuint"/>
+  </function>
+
+  <function name="DrawElementsInstancedBaseInstanceEXT" es2="3.0"
+            alias="DrawElementsInstancedBaseInstance">
+    <param name="mode" type="GLenum"/>
+    <param name="count" type="GLsizei"/>
+    <param name="type" type="GLenum"/>
+    <param name="indices" type="const GLvoid *"/>
+    <param name="instancecount" type="GLsizei"/>
+    <param name="baseinstance" type="GLuint"/>
+  </function>
+
+  <function name="DrawElementsInstancedBaseVertexBaseInstanceEXT" es2="3.0"
+            alias="DrawElementsInstancedBaseVertexBaseInstance">
+    <param name="mode" type="GLenum"/>
+    <param name="count" type="GLsizei"/>
+    <param name="type" type="GLenum"/>
+    <param name="indices" type="const GLvoid *"/>
+    <param name="instancecount" type="GLsizei"/>
+    <param name="basevertex" type="GLint"/>
+    <param name="baseinstance" type="GLuint"/>
+  </function>
+
 </category>
 
 <category name="GL_EXT_draw_elements_base_vertex" number="204">
@@ -857,6 +1030,114 @@
         <param name="indices" type="const GLvoid *"/>
         <param name="primcount" type="GLsizei"/>
         <param name="basevertex" type="GLint"/>
+    </function>
+
+</category>
+
+<category name="GL_EXT_copy_image" number="208">
+
+    <function name="CopyImageSubDataEXT" alias="CopyImageSubData" es2="3.0">
+        <param name="srcName" type="GLuint"/>
+        <param name="srcTarget" type="GLenum"/>
+        <param name="srcLevel" type="GLint"/>
+        <param name="srcX" type="GLint"/>
+        <param name="srcY" type="GLint"/>
+        <param name="srcZ" type="GLint"/>
+        <param name="dstName" type="GLuint"/>
+        <param name="dstTarget" type="GLenum"/>
+        <param name="dstLevel" type="GLint"/>
+        <param name="dstX" type="GLint"/>
+        <param name="dstY" type="GLint"/>
+        <param name="dstZ" type="GLint"/>
+        <param name="srcWidth" type="GLsizei"/>
+        <param name="srcHeight" type="GLsizei"/>
+        <param name="srcDepth" type="GLsizei"/>
+    </function>
+
+</category>
+
+<category name="GL_OES_draw_buffers_indexed" number="209">
+
+  <function name="BlendFunciOES" alias="BlendFunciARB" es2="3.0">
+    <param name="buf" type="GLuint"/>
+    <param name="sfactor" type="GLenum"/>
+    <param name="dfactor" type="GLenum"/>
+  </function>
+
+  <function name="BlendFuncSeparateiOES" alias="BlendFuncSeparateiARB" es2="3.0">
+    <param name="buf" type="GLuint"/>
+    <param name="sfactorRGB" type="GLenum"/>
+    <param name="dfactorRGB" type="GLenum"/>
+    <param name="sfactorAlpha" type="GLenum"/>
+    <param name="dfactorAlpha" type="GLenum"/>
+  </function>
+
+  <function name="BlendEquationiOES" alias="BlendEquationiARB" es2="3.0">
+    <param name="buf" type="GLuint"/>
+    <param name="mode" type="GLenum"/>
+  </function>
+
+  <function name="BlendEquationSeparateiOES" alias="BlendEquationSeparateiARB" es2="3.0">
+    <param name="buf" type="GLuint"/>
+    <param name="modeRGB" type="GLenum"/>
+    <param name="modeA" type="GLenum"/>
+  </function>
+
+  <function name="ColorMaskiOES" alias="ColorMaski" es2="3.0">
+    <param name="buf" type="GLuint"/>
+    <param name="r" type="GLboolean"/>
+    <param name="g" type="GLboolean"/>
+    <param name="b" type="GLboolean"/>
+    <param name="a" type="GLboolean"/>
+  </function>
+
+  <function name="EnableiOES" alias="Enablei" es2="3.0">
+    <param name="target" type="GLenum"/>
+    <param name="index" type="GLuint"/>
+  </function>
+
+  <function name="DisableiOES" alias="Disablei" es2="3.0">
+    <param name="target" type="GLenum"/>
+    <param name="index" type="GLuint"/>
+  </function>
+
+  <function name="IsEnablediOES" alias="IsEnabledi" es2="3.0">
+    <param name="target" type="GLenum"/>
+    <param name="index" type="GLuint"/>
+    <return type="GLboolean"/>
+  </function>
+
+</category>
+
+<category name="GL_EXT_primitive_bounding_box" number="212">
+
+    <function name="PrimitiveBoundingBoxOES" es2="3.1" alias="PrimitiveBoundingBox">
+        <param name="minX" type="GLfloat"/>
+        <param name="minY" type="GLfloat"/>
+        <param name="minZ" type="GLfloat"/>
+        <param name="minW" type="GLfloat"/>
+        <param name="maxX" type="GLfloat"/>
+        <param name="maxY" type="GLfloat"/>
+        <param name="maxZ" type="GLfloat"/>
+        <param name="maxW" type="GLfloat"/>
+    </function>
+
+</category>
+
+<category name="GL_OES_texture_buffer" number="216">
+
+    <function name="TexBufferOES" es2="3.1" alias="TexBuffer">
+        <param name="target" type="GLenum"/>
+        <param name="internalFormat" type="GLenum"/>
+        <param name="buffer" type="GLuint"/>
+    </function>
+
+    <function name="TexBufferRangeOES" es2="3.1" alias="TexBufferRange">
+        <param name="target" type="GLenum"/>
+        <param name="internalformat" type="GLenum"/>
+        <param name="buffer" type="GLuint"/>
+        <param name="offset" type="GLintptr"/>
+        <param name="size" type="GLsizeiptr"/>
     </function>
 
 </category>
@@ -941,6 +1222,28 @@
 
 </category>
 
+<category name="GL_OES_copy_image" number="208">
+
+    <function name="CopyImageSubDataOES" alias="CopyImageSubData" es2="3.0">
+        <param name="srcName" type="GLuint"/>
+        <param name="srcTarget" type="GLenum"/>
+        <param name="srcLevel" type="GLint"/>
+        <param name="srcX" type="GLint"/>
+        <param name="srcY" type="GLint"/>
+        <param name="srcZ" type="GLint"/>
+        <param name="dstName" type="GLuint"/>
+        <param name="dstTarget" type="GLenum"/>
+        <param name="dstLevel" type="GLint"/>
+        <param name="dstX" type="GLint"/>
+        <param name="dstY" type="GLint"/>
+        <param name="dstZ" type="GLint"/>
+        <param name="srcWidth" type="GLsizei"/>
+        <param name="srcHeight" type="GLsizei"/>
+        <param name="srcDepth" type="GLsizei"/>
+    </function>
+
+</category>
+
 <!-- 175. GL_OES_geometry_shader -->
 <category name="GL_OES_geometry_shader" number="210">
     <enum name="GEOMETRY_SHADER_OES"                             value="0x8DD9"/>
@@ -982,5 +1285,111 @@
         <param name="texture" type="GLuint"/>
         <param name="level" type="GLint"/>
     </function>
-  </category>
+</category>
+
+<category name="GL_OES_texture_border_clamp" number="215">
+
+    <enum name="TEXTURE_BORDER_COLOR_OES" value ="0x1004"/>
+    <enum name="CLAMP_TO_BORDER_OES"      value="0x812D"/>
+
+    <function name="TexParameterIivOES" es2="3.0" alias="TexParameterIiv">
+        <param name="target" type="GLenum"/>
+        <param name="pname"  type="GLenum"/>
+        <param name="params" type="const GLint *"/>
+    </function>
+
+    <function name="TexParameterIuivOES" es2="3.0" alias="TexParameterIuiv">
+        <param name="target" type="GLenum"/>
+        <param name="pname"  type="GLenum"/>
+        <param name="params" type="const GLuint *"/>
+    </function>
+
+    <function name="GetTexParameterIivOES" es2="3.0" alias="GetTexParameterIiv">
+        <param name="target" type="GLenum"/>
+        <param name="pname"  type="GLenum"/>
+        <param name="params" type="GLint *"/>
+    </function>
+
+    <function name="GetTexParameterIuivOES" es2="3.0" alias="GetTexParameterIuiv">
+        <param name="target" type="GLenum"/>
+        <param name="pname"  type="GLenum"/>
+        <param name="params" type="GLuint *"/>
+    </function>
+
+    <function name="SamplerParameterIivOES" es2="3.0" alias="SamplerParameterIiv">
+      <param name="sampler" type="GLuint"/>
+      <param name="pname" type="GLenum"/>
+      <param name="params" type="const GLint *"/>
+    </function>
+
+    <function name="SamplerParameterIuivOES" es2="3.0" alias="SamplerParameterIuiv">
+      <param name="sampler" type="GLuint"/>
+      <param name="pname" type="GLenum"/>
+      <param name="params" type="const GLuint *"/>
+    </function>
+
+    <function name="GetSamplerParameterIivOES" es2="3.0" alias="GetSamplerParameterIiv">
+      <param name="sampler" type="GLuint"/>
+      <param name="pname" type="GLenum"/>
+      <param name="params" type="GLint *"/>
+    </function>
+
+    <function name="GetSamplerParameterIuivOES" es2="3.0" alias="GetSamplerParameterIuiv">
+      <param name="sampler" type="GLuint"/>
+      <param name="pname" type="GLenum"/>
+      <param name="params" type="GLuint *"/>
+    </function>
+
+</category>
+
+<category name="GL_OES_viewport_array" number="267">
+    <function name="ViewportArrayvOES" es2="3.1" alias="ViewportArrayv">
+        <param name="first" type="GLuint"/>
+        <param name="count" type="GLsizei"/>
+        <param name="v" type="const GLfloat *"/>
+    </function>
+    <function name="ViewportIndexedfOES" es2="3.1" alias="ViewportIndexedf">
+        <param name="index" type="GLuint"/>
+        <param name="x" type="GLfloat"/>
+        <param name="y" type="GLfloat"/>
+        <param name="w" type="GLfloat"/>
+        <param name="h" type="GLfloat"/>
+    </function>
+    <function name="ViewportIndexedfvOES" es2="3.1" alias="ViewportIndexedfv">
+        <param name="index" type="GLuint"/>
+        <param name="v" type="const GLfloat *"/>
+    </function>
+    <function name="ScissorArrayvOES" es2="3.1" alias="ScissorArrayv">
+        <param name="first" type="GLuint"/>
+        <param name="count" type="GLsizei"/>
+        <param name="v" type="const int *"/>
+    </function>
+    <function name="ScissorIndexedOES" es2="3.1" alias="ScissorIndexed">
+        <param name="index" type="GLuint"/>
+        <param name="left" type="GLint"/>
+        <param name="bottom" type="GLint"/>
+        <param name="width" type="GLsizei"/>
+        <param name="height" type="GLsizei"/>
+    </function>
+    <function name="ScissorIndexedvOES" es2="3.1" alias="ScissorIndexedv">
+        <param name="index" type="GLuint"/>
+        <param name="v" type="const GLint *"/>
+    </function>
+    <function name="DepthRangeArrayfvOES" es2="3.1" desktop="false">
+        <param name="first" type="GLuint"/>
+        <param name="count" type="GLsizei"/>
+        <param name="v" type="const GLfloat *"/>
+    </function>
+    <function name="DepthRangeIndexedfOES" es2="3.1" desktop="false">
+        <param name="index" type="GLuint"/>
+        <param name="n" type="GLfloat"/>
+        <param name="f" type="GLfloat"/>
+    </function>
+    <function name="GetFloati_vOES" es2="3.1" alias="GetFloati_v">
+        <param name="target" type="GLenum"/>
+        <param name="index" type="GLuint"/>
+        <param name="data" type="GLfloat *"/>
+    </function>
+</category>
+
 </OpenGLAPI>

@@ -49,9 +49,7 @@ public:
                     const struct brw_vue_map *input_vue_map);
 
 protected:
-   virtual void emit_nir_code();
-   virtual dst_reg *make_reg_for_system_value(int location,
-                                              const glsl_type *type);
+   virtual dst_reg *make_reg_for_system_value(int location);
    virtual void nir_setup_system_value_intrinsic(nir_intrinsic_instr *instr);
    virtual void setup_payload();
    virtual void emit_prolog();
@@ -62,9 +60,11 @@ protected:
    void emit_input_urb_read(const dst_reg &dst,
                             const src_reg &vertex_index,
                             unsigned base_offset,
+                            unsigned first_component,
                             const src_reg &indirect_offset);
    void emit_output_urb_read(const dst_reg &dst,
                              unsigned base_offset,
+                             unsigned first_component,
                              const src_reg &indirect_offset);
 
    void emit_urb_write(const src_reg &value, unsigned writemask,

@@ -28,6 +28,7 @@
 
 #include "pipe/p_state.h"
 #include "util/u_string.h"
+#include "util/u_math.h"
 #include "util/u_memory.h"
 #include "util/u_inlines.h"
 #include "util/u_format.h"
@@ -50,8 +51,10 @@ static struct fd3_shader_stateobj *
 create_shader_stateobj(struct pipe_context *pctx, const struct pipe_shader_state *cso,
 		enum shader_t type)
 {
+	struct fd_context *ctx = fd_context(pctx);
+	struct ir3_compiler *compiler = ctx->screen->compiler;
 	struct fd3_shader_stateobj *so = CALLOC_STRUCT(fd3_shader_stateobj);
-	so->shader = ir3_shader_create(pctx, cso, type);
+	so->shader = ir3_shader_create(compiler, cso, type, &ctx->debug);
 	return so;
 }
 
@@ -82,6 +85,20 @@ fd3_vp_state_delete(struct pipe_context *pctx, void *hwcso)
 	struct fd3_shader_stateobj *so = hwcso;
 	delete_shader_stateobj(so);
 }
+
+bool
+fd3_needs_manual_clipping(const struct fd3_shader_stateobj *so,
+						  const struct pipe_rasterizer_state *rast)
+{
+	uint64_t outputs = ir3_shader_outputs(so->shader);
+
+	return (!rast->depth_clip ||
+			util_bitcount(rast->clip_plane_enable) > 6 ||
+			outputs & ((1ULL << VARYING_SLOT_CLIP_VERTEX) |
+					   (1ULL << VARYING_SLOT_CLIP_DIST0) |
+					   (1ULL << VARYING_SLOT_CLIP_DIST1)));
+}
+
 
 static void
 emit_shader(struct fd_ringbuffer *ring, const struct ir3_shader_variant *so)
@@ -139,14 +156,7 @@ fd3_program_emit(struct fd_ringbuffer *ring, struct fd3_emit *emit,
 	debug_assert(nr <= ARRAY_SIZE(color_regid));
 
 	vp = fd3_emit_get_vp(emit);
-
-	if (emit->key.binning_pass) {
-		/* use dummy stateobj to simplify binning vs non-binning: */
-		static const struct ir3_shader_variant binning_fp = {};
-		fp = &binning_fp;
-	} else {
-		fp = fd3_emit_get_fp(emit);
-	}
+	fp = fd3_emit_get_fp(emit);
 
 	vsi = &vp->info;
 	fsi = &fp->info;
@@ -397,7 +407,7 @@ fd3_program_emit(struct fd_ringbuffer *ring, struct fd3_emit *emit,
 			 */
 			uint32_t inloc = fp->inputs[j].inloc - 8;
 
-			if ((fp->inputs[j].interpolate == INTERP_QUALIFIER_FLAT) ||
+			if ((fp->inputs[j].interpolate == INTERP_MODE_FLAT) ||
 					(fp->inputs[j].rasterflat && emit->rasterflat)) {
 				uint32_t loc = inloc;
 

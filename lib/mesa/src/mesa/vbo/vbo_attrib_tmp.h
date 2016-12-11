@@ -25,7 +25,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 **************************************************************************/
 
-#include "util/u_format_r11g11b10f.h"
+#include "util/format_r11g11b10f.h"
 #include "main/varray.h"
 
 
@@ -226,7 +226,7 @@ static inline float conv_i2_to_norm_float(const struct gl_context *ctx, int i2)
    } while(0)
 
 #define ATTR_UI_INDEX(ctx, val, type, normalized, index, arg) do {	\
-      if ((index) == 0) {					\
+      if ((index) == 0 && _mesa_attr_zero_aliases_vertex(ctx)) {	\
 	 ATTR_UI(ctx, val, (type), normalized, 0, (arg));		\
       } else if ((index) < MAX_VERTEX_GENERIC_ATTRIBS) {		\
 	 ATTR_UI(ctx, val, (type), normalized, VBO_ATTRIB_GENERIC0 + (index), (arg)); \

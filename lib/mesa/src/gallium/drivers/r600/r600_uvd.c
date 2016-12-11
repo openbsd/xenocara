@@ -115,7 +115,7 @@ struct pipe_video_buffer *r600_video_buffer_create(struct pipe_context *pipe,
 		surfaces[i] = &resources[i]->surface;
 	}
 
-	rvid_join_surfaces(ctx->b.ws, templ.bind, pbs, surfaces);
+	rvid_join_surfaces(ctx->b.ws, pbs, surfaces);
 
 	for (i = 0; i < VL_NUM_COMPONENTS; ++i) {
 		if (!resources[i])
@@ -131,7 +131,7 @@ struct pipe_video_buffer *r600_video_buffer_create(struct pipe_context *pipe,
 
 error:
 	for (i = 0; i < VL_NUM_COMPONENTS; ++i)
-		pipe_resource_reference((struct pipe_resource **)&resources[i], NULL);
+		r600_texture_reference(&resources[i], NULL);
 
 	return NULL;
 }

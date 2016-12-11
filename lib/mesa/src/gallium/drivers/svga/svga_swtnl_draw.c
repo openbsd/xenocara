@@ -44,9 +44,12 @@ svga_swtnl_draw_vbo(struct svga_context *svga,
    struct pipe_transfer *ib_transfer = NULL;
    struct pipe_transfer *cb_transfer[SVGA_MAX_CONST_BUFS] = { 0 };
    struct draw_context *draw = svga->swtnl.draw;
-   unsigned i, old_num_vertex_buffers;
+   MAYBE_UNUSED unsigned old_num_vertex_buffers;
+   unsigned i;
    const void *map;
    enum pipe_error ret;
+
+   SVGA_STATS_TIME_PUSH(svga_sws(svga), SVGA_STATS_TIME_SWTNLDRAWVBO);
 
    assert(!svga->dirty);
    assert(svga->state.sw.need_swtnl);
@@ -90,7 +93,7 @@ svga_swtnl_draw_vbo(struct svga_context *svga,
    }
 
    /* Map constant buffers */
-   for (i = 0; i < Elements(svga->curr.constbufs[PIPE_SHADER_VERTEX]); ++i) {
+   for (i = 0; i < ARRAY_SIZE(svga->curr.constbufs[PIPE_SHADER_VERTEX]); ++i) {
       if (svga->curr.constbufs[PIPE_SHADER_VERTEX][i].buffer == NULL) {
          continue;
       }
@@ -128,7 +131,7 @@ svga_swtnl_draw_vbo(struct svga_context *svga,
       draw_set_indexes(draw, NULL, 0, 0);
    }
 
-   for (i = 0; i < Elements(svga->curr.constbufs[PIPE_SHADER_VERTEX]); ++i) {
+   for (i = 0; i < ARRAY_SIZE(svga->curr.constbufs[PIPE_SHADER_VERTEX]); ++i) {
       if (svga->curr.constbufs[PIPE_SHADER_VERTEX][i].buffer) {
          pipe_buffer_unmap(&svga->pipe, cb_transfer[i]);
       }
@@ -138,6 +141,7 @@ svga_swtnl_draw_vbo(struct svga_context *svga,
    svga->state.sw.in_swtnl_draw = FALSE;
    svga->dirty |= SVGA_NEW_NEED_PIPELINE | SVGA_NEW_NEED_SWVFETCH;
 
+   SVGA_STATS_TIME_POP(svga_sws(svga));
    return ret;
 }
 

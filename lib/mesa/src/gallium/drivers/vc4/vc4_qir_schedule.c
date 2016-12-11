@@ -80,8 +80,8 @@ struct schedule_state {
 enum direction { F, R };
 
 /**
- * Marks a dependency between two intructions, that @after must appear after
- * @before.
+ * Marks a dependency between two intructions, that \p after must appear after
+ * \p before.
  *
  * Our dependencies are tracked as a DAG.  Since we're scheduling bottom-up,
  * the latest instructions with nothing left to schedule are the DAG heads,
@@ -138,6 +138,7 @@ struct schedule_setup_state {
         struct schedule_node *last_tex_coord;
         struct schedule_node *last_tex_result;
         struct schedule_node *last_tlb;
+        struct schedule_node *last_uniforms_reset;
         enum direction dir;
 
 	/**
@@ -228,16 +229,8 @@ calculate_deps(struct schedule_setup_state *state, struct schedule_node *n)
                 add_write_dep(dir, &state->last_tex_result, n);
                 break;
 
-        case QOP_TLB_COLOR_WRITE:
         case QOP_TLB_COLOR_READ:
-        case QOP_TLB_Z_WRITE:
-        case QOP_TLB_STENCIL_SETUP:
         case QOP_MS_MASK:
-                add_write_dep(dir, &state->last_tlb, n);
-                break;
-
-        case QOP_TLB_DISCARD_SETUP:
-                add_write_dep(dir, &state->last_sf, n);
                 add_write_dep(dir, &state->last_tlb, n);
                 break;
 
@@ -245,10 +238,25 @@ calculate_deps(struct schedule_setup_state *state, struct schedule_node *n)
                 break;
         }
 
-        if (inst->dst.file == QFILE_VPM)
+        switch (inst->dst.file) {
+        case QFILE_VPM:
                 add_write_dep(dir, &state->last_vpm_write, n);
-        else if (inst->dst.file == QFILE_TEMP)
+                break;
+
+        case QFILE_TEMP:
                 add_write_dep(dir, &state->last_temp_write[inst->dst.index], n);
+                break;
+
+        case QFILE_TLB_COLOR_WRITE:
+        case QFILE_TLB_COLOR_WRITE_MS:
+        case QFILE_TLB_Z_WRITE:
+        case QFILE_TLB_STENCIL_SETUP:
+                add_write_dep(dir, &state->last_tlb, n);
+                break;
+
+        default:
+                break;
+        }
 
         if (qir_depends_on_flags(inst))
                 add_dep(dir, state->last_sf, n);
@@ -272,6 +280,16 @@ calculate_forward_deps(struct vc4_compile *c, void *mem_ctx,
                 struct qinst *inst = n->inst;
 
                 calculate_deps(&state, n);
+
+                for (int i = 0; i < qir_get_op_nsrc(inst->op); i++) {
+                        switch (inst->src[i].file) {
+                        case QFILE_UNIF:
+                                add_dep(state.dir, state.last_uniforms_reset, n);
+                                break;
+                        default:
+                                break;
+                        }
+                }
 
                 switch (inst->op) {
                 case QOP_TEX_S:
@@ -317,6 +335,11 @@ calculate_forward_deps(struct vc4_compile *c, void *mem_ctx,
                         memset(&state.tex_fifo[state.tex_fifo_pos], 0,
                                sizeof(state.tex_fifo[0]));
                         break;
+
+                case QOP_UNIFORMS_RESET:
+                        add_write_dep(state.dir, &state.last_uniforms_reset, n);
+                        break;
+
                 default:
                         assert(!qir_is_tex(inst));
                         break;
@@ -362,11 +385,13 @@ get_register_pressure_cost(struct schedule_state *state, struct qinst *inst)
 static bool
 locks_scoreboard(struct qinst *inst)
 {
-        switch (inst->op) {
-        case QOP_TLB_Z_WRITE:
-        case QOP_TLB_COLOR_WRITE:
-        case QOP_TLB_COLOR_WRITE_MS:
-        case QOP_TLB_COLOR_READ:
+        if (inst->op == QOP_TLB_COLOR_READ)
+                return true;
+
+        switch (inst->dst.file) {
+        case QFILE_TLB_Z_WRITE:
+        case QFILE_TLB_COLOR_WRITE:
+        case QFILE_TLB_COLOR_WRITE_MS:
                 return true;
         default:
                 return false;
@@ -379,6 +404,14 @@ choose_instruction(struct schedule_state *state)
         struct schedule_node *chosen = NULL;
 
         list_for_each_entry(struct schedule_node, n, &state->worklist, link) {
+                /* The branches aren't being tracked as dependencies.  Make
+                 * sure that they stay scheduled as the last instruction of
+                 * the block, which is to say the first one we choose to
+                 * schedule.
+                 */
+                if (n->inst->op == QOP_BRANCH)
+                        return n;
+
                 if (!chosen) {
                         chosen = n;
                         continue;
@@ -398,7 +431,7 @@ choose_instruction(struct schedule_state *state)
                 }
 
                 /* If we would block on the previously chosen node, but would
-                 * block less on this one, then then prefer it.
+                 * block less on this one, then prefer it.
                  */
                 if (chosen->unblocked_time > state->time &&
                     n->unblocked_time < chosen->unblocked_time) {
@@ -505,7 +538,8 @@ compute_delay(struct schedule_node *n)
 }
 
 static void
-schedule_instructions(struct vc4_compile *c, struct schedule_state *state)
+schedule_instructions(struct vc4_compile *c,
+                      struct qblock *block, struct schedule_state *state)
 {
         if (debug) {
                 fprintf(stderr, "initial deps:\n");
@@ -537,7 +571,7 @@ schedule_instructions(struct vc4_compile *c, struct schedule_state *state)
 
                 /* Schedule this instruction back onto the QIR list. */
                 list_del(&chosen->link);
-                list_add(&inst->link, &c->instructions);
+                list_add(&inst->link, &block->instructions);
 
                 /* Now that we've scheduled a new instruction, some of its
                  * children can be promoted to the list of instructions ready to
@@ -571,16 +605,12 @@ schedule_instructions(struct vc4_compile *c, struct schedule_state *state)
         }
 }
 
-void
-qir_schedule_instructions(struct vc4_compile *c)
+static void
+qir_schedule_instructions_block(struct vc4_compile *c,
+                                struct qblock *block)
 {
         void *mem_ctx = ralloc_context(NULL);
         struct schedule_state state = { { 0 } };
-
-        if (debug) {
-                fprintf(stderr, "Pre-schedule instructions\n");
-                qir_dump(c);
-        }
 
         state.temp_writes = rzalloc_array(mem_ctx, uint32_t, c->num_temps);
         state.temp_live = rzalloc_array(mem_ctx, BITSET_WORD,
@@ -588,7 +618,7 @@ qir_schedule_instructions(struct vc4_compile *c)
         list_inithead(&state.worklist);
 
         /* Wrap each instruction in a scheduler structure. */
-        list_for_each_entry_safe(struct qinst, inst, &c->instructions, link) {
+        qir_for_each_inst_safe(inst, block) {
                 struct schedule_node *n = rzalloc(mem_ctx, struct schedule_node);
 
                 n->inst = inst;
@@ -607,12 +637,25 @@ qir_schedule_instructions(struct vc4_compile *c)
         list_for_each_entry(struct schedule_node, n, &state.worklist, link)
                 compute_delay(n);
 
-        schedule_instructions(c, &state);
+        schedule_instructions(c, block, &state);
+
+        ralloc_free(mem_ctx);
+}
+
+void
+qir_schedule_instructions(struct vc4_compile *c)
+{
+
+        if (debug) {
+                fprintf(stderr, "Pre-schedule instructions\n");
+                qir_dump(c);
+        }
+
+        qir_for_each_block(block, c)
+                qir_schedule_instructions_block(c, block);
 
         if (debug) {
                 fprintf(stderr, "Post-schedule instructions\n");
                 qir_dump(c);
         }
-
-        ralloc_free(mem_ctx);
 }

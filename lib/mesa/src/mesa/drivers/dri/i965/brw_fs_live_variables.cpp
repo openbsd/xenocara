@@ -41,12 +41,12 @@ using namespace brw;
  * but we currently do not.  It is easier for the consumers of this
  * information to work with whole VGRFs.
  *
- * However, we internally track use/def information at the per-component
- * (reg_offset) level for greater accuracy.  Large VGRFs may be accessed
- * piecemeal over many (possibly non-adjacent) instructions.  In this case,
- * examining a single instruction is insufficient to decide whether a whole
- * VGRF is ultimately used or defined.  Tracking individual components
- * allows us to easily assemble this information.
+ * However, we internally track use/def information at the per-GRF level for
+ * greater accuracy.  Large VGRFs may be accessed piecemeal over many
+ * (possibly non-adjacent) instructions.  In this case, examining a single
+ * instruction is insufficient to decide whether a whole VGRF is ultimately
+ * used or defined.  Tracking individual components allows us to easily
+ * assemble this information.
  *
  * See Muchnick's Advanced Compiler Design and Implementation, section
  * 14.1 (p444).
@@ -118,38 +118,25 @@ fs_live_variables::setup_def_use()
             if (reg.file != VGRF)
                continue;
 
-            for (int j = 0; j < inst->regs_read(i); j++) {
+            for (unsigned j = 0; j < regs_read(inst, i); j++) {
                setup_one_read(bd, inst, ip, reg);
-               reg.reg_offset++;
+               reg.offset += REG_SIZE;
             }
 	 }
-         if (inst->reads_flag()) {
-            /* The vertical combination predicates read f0.0 and f0.1. */
-            if (inst->predicate == BRW_PREDICATE_ALIGN1_ANYV ||
-                inst->predicate == BRW_PREDICATE_ALIGN1_ALLV) {
-               assert(inst->flag_subreg == 0);
-               if (!BITSET_TEST(bd->flag_def, 1)) {
-                  BITSET_SET(bd->flag_use, 1);
-               }
-            }
-            if (!BITSET_TEST(bd->flag_def, inst->flag_subreg)) {
-               BITSET_SET(bd->flag_use, inst->flag_subreg);
-            }
-         }
+
+         bd->flag_use[0] |= inst->flags_read(v->devinfo) & ~bd->flag_def[0];
 
          /* Set def[] for this instruction */
          if (inst->dst.file == VGRF) {
             fs_reg reg = inst->dst;
-            for (int j = 0; j < inst->regs_written; j++) {
+            for (unsigned j = 0; j < regs_written(inst); j++) {
                setup_one_write(bd, inst, ip, reg);
-               reg.reg_offset++;
+               reg.offset += REG_SIZE;
             }
 	 }
-         if (inst->writes_flag()) {
-            if (!BITSET_TEST(bd->flag_use, inst->flag_subreg)) {
-               BITSET_SET(bd->flag_def, inst->flag_subreg);
-            }
-         }
+
+         if (!inst->predicate && inst->exec_size >= 8)
+            bd->flag_def[0] |= inst->flags_written() & ~bd->flag_use[0];
 
 	 ip++;
       }

@@ -29,6 +29,7 @@
 #include "brw_state.h"
 #include "brw_defines.h"
 #include "brw_wm.h"
+#include "main/framebuffer.h"
 
 /**
  * Helper function to emit depth related command packets.
@@ -89,6 +90,7 @@ emit_depth_packets(struct brw_context *brw,
       OUT_BATCH(0);
       ADVANCE_BATCH();
    } else {
+      assert(depth_mt);
       BEGIN_BATCH(5);
       OUT_BATCH(GEN7_3DSTATE_HIER_DEPTH_BUFFER << 16 | (5 - 2));
       OUT_BATCH((depth_mt->hiz_buf->pitch - 1) | mocs_wb << 25);
@@ -234,6 +236,9 @@ static bool
 pma_fix_enable(const struct brw_context *brw)
 {
    const struct gl_context *ctx = &brw->ctx;
+   /* BRW_NEW_FS_PROG_DATA */
+   const struct brw_wm_prog_data *wm_prog_data =
+      brw_wm_prog_data(brw->wm.base.prog_data);
    /* _NEW_BUFFERS */
    struct intel_renderbuffer *depth_irb =
       intel_get_renderbuffer(ctx->DrawBuffer, BUFFER_DEPTH);
@@ -250,10 +255,8 @@ pma_fix_enable(const struct brw_context *brw)
     */
    const bool hiz_enabled = depth_irb && intel_renderbuffer_has_hiz(depth_irb);
 
-   /* BRW_NEW_FS_PROG_DATA:
-    * 3DSTATE_WM::Early Depth/Stencil Control != EDSC_PREPS (2).
-    */
-   const bool edsc_not_preps = !brw->wm.prog_data->early_fragment_tests;
+   /* 3DSTATE_WM::Early Depth/Stencil Control != EDSC_PREPS (2). */
+   const bool edsc_not_preps = !wm_prog_data->early_fragment_tests;
 
    /* 3DSTATE_PS_EXTRA::PixelShaderValid is always true. */
    const bool pixel_shader_valid = true;
@@ -286,11 +289,9 @@ pma_fix_enable(const struct brw_context *brw)
     */
    const bool stencil_writes_enabled = ctx->Stencil._WriteEnabled;
 
-   /* BRW_NEW_FS_PROG_DATA:
-    * 3DSTATE_PS_EXTRA::Pixel Shader Computed Depth Mode != PSCDEPTH_OFF
-    */
+   /* 3DSTATE_PS_EXTRA::Pixel Shader Computed Depth Mode != PSCDEPTH_OFF */
    const bool ps_computes_depth =
-      brw->wm.prog_data->computed_depth_mode != BRW_PSCDEPTH_OFF;
+      wm_prog_data->computed_depth_mode != BRW_PSCDEPTH_OFF;
 
    /* BRW_NEW_FS_PROG_DATA:        3DSTATE_PS_EXTRA::PixelShaderKillsPixels
     * BRW_NEW_FS_PROG_DATA:        3DSTATE_PS_EXTRA::oMask Present to RenderTarget
@@ -301,9 +302,9 @@ pma_fix_enable(const struct brw_context *brw)
     * 3DSTATE_WM::ForceKillPix != ForceOff is always true.
     */
    const bool kill_pixel =
-      brw->wm.prog_data->uses_kill ||
-      brw->wm.prog_data->uses_omask ||
-      (ctx->Multisample._Enabled && ctx->Multisample.SampleAlphaToCoverage) ||
+      wm_prog_data->uses_kill ||
+      wm_prog_data->uses_omask ||
+      (_mesa_is_multisample_enabled(ctx) && ctx->Multisample.SampleAlphaToCoverage) ||
       ctx->Color.AlphaEnabled;
 
    /* The big formula in CACHE_MODE_1::NP PMA FIX ENABLE. */
@@ -318,8 +319,8 @@ pma_fix_enable(const struct brw_context *brw)
            (kill_pixel && (depth_writes_enabled || stencil_writes_enabled)));
 }
 
-static void
-write_pma_stall_bits(struct brw_context *brw, uint32_t pma_stall_bits)
+void
+gen8_write_pma_stall_bits(struct brw_context *brw, uint32_t pma_stall_bits)
 {
    struct gl_context *ctx = &brw->ctx;
 
@@ -372,7 +373,7 @@ gen8_emit_pma_stall_workaround(struct brw_context *brw)
    if (pma_fix_enable(brw))
       bits |= GEN8_HIZ_NP_PMA_FIX_ENABLE | GEN8_HIZ_NP_EARLY_Z_FAILS_DISABLE;
 
-   write_pma_stall_bits(brw, bits);
+   gen8_write_pma_stall_bits(brw, bits);
 }
 
 const struct brw_tracked_state gen8_pma_fix = {
@@ -382,7 +383,8 @@ const struct brw_tracked_state gen8_pma_fix = {
               _NEW_DEPTH |
               _NEW_MULTISAMPLE |
               _NEW_STENCIL,
-      .brw = BRW_NEW_FS_PROG_DATA,
+      .brw = BRW_NEW_BLORP |
+             BRW_NEW_FS_PROG_DATA,
    },
    .emit = gen8_emit_pma_stall_workaround
 };
@@ -395,14 +397,14 @@ const struct brw_tracked_state gen8_pma_fix = {
  */
 void
 gen8_hiz_exec(struct brw_context *brw, struct intel_mipmap_tree *mt,
-              unsigned int level, unsigned int layer, enum gen6_hiz_op op)
+              unsigned int level, unsigned int layer, enum blorp_hiz_op op)
 {
-   if (op == GEN6_HIZ_OP_NONE)
+   if (op == BLORP_HIZ_OP_NONE)
       return;
 
    /* Disable the PMA stall fix since we're about to do a HiZ operation. */
    if (brw->gen == 8)
-      write_pma_stall_bits(brw, 0);
+      gen8_write_pma_stall_bits(brw, 0);
 
    assert(mt->first_level == 0);
    assert(mt->logical_depth0 >= 1);
@@ -465,16 +467,16 @@ gen8_hiz_exec(struct brw_context *brw, struct intel_mipmap_tree *mt,
    uint32_t dw1 = 0;
 
    switch (op) {
-   case GEN6_HIZ_OP_DEPTH_RESOLVE:
+   case BLORP_HIZ_OP_DEPTH_RESOLVE:
       dw1 |= GEN8_WM_HZ_DEPTH_RESOLVE;
       break;
-   case GEN6_HIZ_OP_HIZ_RESOLVE:
+   case BLORP_HIZ_OP_HIZ_RESOLVE:
       dw1 |= GEN8_WM_HZ_HIZ_RESOLVE;
       break;
-   case GEN6_HIZ_OP_DEPTH_CLEAR:
+   case BLORP_HIZ_OP_DEPTH_CLEAR:
       dw1 |= GEN8_WM_HZ_DEPTH_CLEAR;
       break;
-   case GEN6_HIZ_OP_NONE:
+   case BLORP_HIZ_OP_NONE:
       unreachable("Should not get here.");
    }
 

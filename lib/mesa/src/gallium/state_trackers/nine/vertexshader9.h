@@ -23,9 +23,15 @@
 #ifndef _NINE_VERTEXSHADER9_H_
 #define _NINE_VERTEXSHADER9_H_
 
+#include "util/u_half.h"
+
 #include "iunknown.h"
+#include "device9.h"
+#include "nine_helpers.h"
 #include "nine_shader.h"
 #include "nine_state.h"
+
+struct NineVertexDeclaration9;
 
 struct NineVertexShader9
 {
@@ -47,20 +53,22 @@ struct NineVertexShader9
 
     boolean position_t; /* if true, disable vport transform */
     boolean point_size; /* if true, set rasterizer.point_size_per_vertex to 1 */
+    boolean swvp_only;
 
     unsigned const_used_size; /* in bytes */
 
     struct nine_lconstf lconstf;
 
-    const struct pipe_stream_output_info *so;
-
     uint64_t ff_key[3];
     void *ff_cso;
 
-    uint32_t last_key;
+    uint64_t last_key;
     void *last_cso;
 
-    uint32_t next_key;
+    uint64_t next_key;
+
+    /* so */
+    struct nine_shader_variant_so variant_so;
 };
 static inline struct NineVertexShader9 *
 NineVertexShader9( void *data )
@@ -70,10 +78,11 @@ NineVertexShader9( void *data )
 
 static inline BOOL
 NineVertexShader9_UpdateKey( struct NineVertexShader9 *vs,
-                             struct nine_state *state )
+                             struct NineDevice9 *device )
 {
+    struct nine_state *state = &(device->state);
     uint8_t samplers_shadow;
-    uint32_t key;
+    uint64_t key;
     BOOL res;
 
     samplers_shadow = (uint8_t)((state->samplers_shadow & NINE_VS_SAMPLERS_MASK) >> NINE_SAMPLER_VS(0));
@@ -81,7 +90,16 @@ NineVertexShader9_UpdateKey( struct NineVertexShader9 *vs,
     key = samplers_shadow;
 
     if (vs->byte_code.version < 0x30)
-        key |= state->rs[D3DRS_FOGENABLE] << 8;
+        key |= (uint32_t) ((!!state->rs[D3DRS_FOGENABLE]) << 8);
+    key |= (uint32_t) (device->swvp << 9);
+
+    /* We want to use a 64 bits key for performance.
+     * Use compressed float16 values for the pointsize min/max in the key.
+     * Shaders do not usually output psize.*/
+    if (vs->point_size) {
+        key |= ((uint64_t)util_float_to_half(asfloat(state->rs[D3DRS_POINTSIZE_MIN]))) << 32;
+        key |= ((uint64_t)util_float_to_half(asfloat(state->rs[D3DRS_POINTSIZE_MAX]))) << 48;
+    }
 
     res = vs->last_key != key;
     if (res)
@@ -91,6 +109,11 @@ NineVertexShader9_UpdateKey( struct NineVertexShader9 *vs,
 
 void *
 NineVertexShader9_GetVariant( struct NineVertexShader9 *vs );
+
+void *
+NineVertexShader9_GetVariantProcessVertices( struct NineVertexShader9 *vs,
+                                             struct NineVertexDeclaration9 *vdecl_out,
+                                             struct pipe_stream_output_info *so );
 
 /*** public ***/
 

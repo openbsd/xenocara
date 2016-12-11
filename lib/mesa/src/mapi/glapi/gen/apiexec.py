@@ -68,7 +68,7 @@ class exec_info():
 functions = {
     # OpenGL 3.1 / GL_ARB_texture_buffer_object.  Mesa only exposes this
     # extension with core profile.
-    "TexBuffer": exec_info(core=31),
+    "TexBuffer": exec_info(core=31, es2=31),
 
     # OpenGL 3.2 / GL_OES_geometry_shader.
     "FramebufferTexture": exec_info(core=32, es2=31),
@@ -133,12 +133,12 @@ functions = {
     #
     # Mesa does not support either of the geometry shader extensions, so
     # OpenGL 3.2 is required.
-    "ViewportArrayv": exec_info(core=32),
-    "ViewportIndexedf": exec_info(core=32),
-    "ViewportIndexedfv": exec_info(core=32),
-    "ScissorArrayv": exec_info(core=32),
-    "ScissorIndexed": exec_info(core=32),
-    "ScissorIndexedv": exec_info(core=32),
+    "ViewportArrayv": exec_info(core=32, es2=31),
+    "ViewportIndexedf": exec_info(core=32, es2=31),
+    "ViewportIndexedfv": exec_info(core=32, es2=31),
+    "ScissorArrayv": exec_info(core=32, es2=31),
+    "ScissorIndexed": exec_info(core=32, es2=31),
+    "ScissorIndexedv": exec_info(core=32, es2=31),
     "DepthRangeArrayv": exec_info(core=32),
     "DepthRangeIndexed": exec_info(core=32),
     # GetFloati_v also GL_ARB_shader_atomic_counters
@@ -146,7 +146,7 @@ functions = {
 
     # OpenGL 4.3 / GL_ARB_texture_buffer_range.  Mesa can expose the extension
     # with OpenGL 3.1.
-    "TexBufferRange": exec_info(core=31),
+    "TexBufferRange": exec_info(core=31, es2=31),
 
     # OpenGL 4.3 / GL_ARB_framebuffer_no_attachments.  Mesa can expose the
     # extension with OpenGL 3.0.

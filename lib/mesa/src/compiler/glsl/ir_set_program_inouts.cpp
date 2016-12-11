@@ -26,8 +26,8 @@
  *
  * Sets the InputsRead and OutputsWritten of Mesa programs.
  *
- * Additionally, for fragment shaders, sets the InterpQualifier array, the
- * IsCentroid and IsSample bitfields, and the UsesDFdy flag.
+ * Additionally, for fragment shaders, sets the InterpQualifier array, and the
+ * IsCentroid and IsSample bitfields.
  *
  * Mesa programs (gl_program, not gl_shader_program) have a set of
  * flags indicating which varyings are read and written.  Computing
@@ -58,7 +58,6 @@ public:
 
    virtual ir_visitor_status visit_enter(ir_dereference_array *);
    virtual ir_visitor_status visit_enter(ir_function_signature *);
-   virtual ir_visitor_status visit_enter(ir_expression *);
    virtual ir_visitor_status visit_enter(ir_discard *);
    virtual ir_visitor_status visit_enter(ir_texture *);
    virtual ir_visitor_status visit(ir_dereference_variable *);
@@ -94,10 +93,14 @@ mark(struct gl_program *prog, ir_variable *var, int offset, int len,
     */
 
    for (int i = 0; i < len; i++) {
-      int idx = var->data.location + var->data.index + offset + i;
+      assert(var->data.location != -1);
+
+      int idx = var->data.location + offset + i;
       bool is_patch_generic = var->data.patch &&
                               idx != VARYING_SLOT_TESS_LEVEL_INNER &&
-                              idx != VARYING_SLOT_TESS_LEVEL_OUTER;
+                              idx != VARYING_SLOT_TESS_LEVEL_OUTER &&
+                              idx != VARYING_SLOT_BOUNDING_BOX0 &&
+                              idx != VARYING_SLOT_BOUNDING_BOX1;
       GLbitfield64 bitfield;
 
       if (is_patch_generic) {
@@ -117,13 +120,13 @@ mark(struct gl_program *prog, ir_variable *var, int offset, int len,
 
          /* double inputs read is only for vertex inputs */
          if (stage == MESA_SHADER_VERTEX &&
-             var->type->without_array()->is_dual_slot_double())
+             var->type->without_array()->is_dual_slot())
             prog->DoubleInputsRead |= bitfield;
 
          if (stage == MESA_SHADER_FRAGMENT) {
             gl_fragment_program *fprog = (gl_fragment_program *) prog;
             fprog->InterpQualifier[idx] =
-               (glsl_interp_qualifier) var->data.interpolation;
+               (glsl_interp_mode) var->data.interpolation;
             if (var->data.centroid)
                fprog->IsCentroid |= bitfield;
             if (var->data.sample)
@@ -133,10 +136,16 @@ mark(struct gl_program *prog, ir_variable *var, int offset, int len,
          prog->SystemValuesRead |= bitfield;
       } else {
          assert(var->data.mode == ir_var_shader_out);
-         if (is_patch_generic)
+         if (is_patch_generic) {
             prog->PatchOutputsWritten |= bitfield;
-         else
+         } else if (!var->data.read_only) {
             prog->OutputsWritten |= bitfield;
+            if (var->data.index > 0)
+               prog->SecondaryOutputsWritten |= bitfield;
+         }
+
+         if (var->data.fb_fetch_output)
+            prog->OutputsRead |= bitfield;
       }
    }
 }
@@ -149,7 +158,7 @@ void
 ir_set_program_inouts_visitor::mark_whole_variable(ir_variable *var)
 {
    const glsl_type *type = var->type;
-   bool vertex_input = false;
+   bool is_vertex_input = false;
    if (this->shader_stage == MESA_SHADER_GEOMETRY &&
        var->data.mode == ir_var_shader_in && type->is_array()) {
       type = type->fields.array;
@@ -175,9 +184,9 @@ ir_set_program_inouts_visitor::mark_whole_variable(ir_variable *var)
 
    if (this->shader_stage == MESA_SHADER_VERTEX &&
        var->data.mode == ir_var_shader_in)
-      vertex_input = true;
+      is_vertex_input = true;
 
-   mark(this->prog, var, 0, type->count_attribute_slots(vertex_input),
+   mark(this->prog, var, 0, type->count_attribute_slots(is_vertex_input),
         this->shader_stage);
 }
 
@@ -258,15 +267,19 @@ ir_set_program_inouts_visitor::try_mark_partial_variable(ir_variable *var,
     * lowering passes (do_vec_index_to_swizzle() gets rid of indexing into
     * vectors, and lower_packed_varyings() gets rid of structs that occur in
     * varyings).
+    *
+    * However, we don't use varying packing in all cases - tessellation
+    * shaders bypass it.  This means we'll see varying structs and arrays
+    * of structs here.  For now, we just give up so the caller marks the
+    * entire variable as used.
     */
    if (!(type->is_matrix() ||
         (type->is_array() &&
          (type->fields.array->is_numeric() ||
           type->fields.array->is_boolean())))) {
-      assert(!"Unexpected indexing in ir_set_program_inouts");
 
-      /* For safety in release builds, in case we ever encounter unexpected
-       * indexing, give up and let the caller mark the whole variable as used.
+      /* If we don't know how to handle this case, give up and let the
+       * caller mark the whole variable as used.
        */
       return false;
    }
@@ -304,7 +317,7 @@ ir_set_program_inouts_visitor::try_mark_partial_variable(ir_variable *var,
    /* double element width for double types that takes two slots */
    if (this->shader_stage != MESA_SHADER_VERTEX ||
        var->data.mode != ir_var_shader_in) {
-      if (type->without_array()->is_dual_slot_double())
+      if (type->without_array()->is_dual_slot())
 	 elem_width *= 2;
    }
 
@@ -398,19 +411,6 @@ ir_set_program_inouts_visitor::visit_enter(ir_function_signature *ir)
 }
 
 ir_visitor_status
-ir_set_program_inouts_visitor::visit_enter(ir_expression *ir)
-{
-   if (this->shader_stage == MESA_SHADER_FRAGMENT &&
-       (ir->operation == ir_unop_dFdy ||
-        ir->operation == ir_unop_dFdy_coarse ||
-        ir->operation == ir_unop_dFdy_fine)) {
-      gl_fragment_program *fprog = (gl_fragment_program *) prog;
-      fprog->UsesDFdy = true;
-   }
-   return visit_continue;
-}
-
-ir_visitor_status
 ir_set_program_inouts_visitor::visit_enter(ir_discard *)
 {
    /* discards are only allowed in fragment shaders. */
@@ -438,6 +438,8 @@ do_set_program_inouts(exec_list *instructions, struct gl_program *prog,
 
    prog->InputsRead = 0;
    prog->OutputsWritten = 0;
+   prog->SecondaryOutputsWritten = 0;
+   prog->OutputsRead = 0;
    prog->PatchInputsRead = 0;
    prog->PatchOutputsWritten = 0;
    prog->SystemValuesRead = 0;
@@ -446,7 +448,6 @@ do_set_program_inouts(exec_list *instructions, struct gl_program *prog,
       memset(fprog->InterpQualifier, 0, sizeof(fprog->InterpQualifier));
       fprog->IsCentroid = 0;
       fprog->IsSample = 0;
-      fprog->UsesDFdy = false;
       fprog->UsesKill = false;
    }
    visit_list_elements(&v, instructions);

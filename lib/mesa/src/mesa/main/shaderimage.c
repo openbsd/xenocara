@@ -331,12 +331,54 @@ get_image_format_class(mesa_format format)
    }
 }
 
-/**
- * Return whether an image format should be supported based on the current API
- * version of the context.
- */
-static bool
-is_image_format_supported(const struct gl_context *ctx, GLenum format)
+static GLenum
+_image_format_class_to_glenum(enum image_format_class class)
+{
+   switch (class) {
+   case IMAGE_FORMAT_CLASS_NONE:
+      return GL_NONE;
+   case IMAGE_FORMAT_CLASS_1X8:
+      return GL_IMAGE_CLASS_1_X_8;
+   case IMAGE_FORMAT_CLASS_1X16:
+      return GL_IMAGE_CLASS_1_X_16;
+   case IMAGE_FORMAT_CLASS_1X32:
+      return GL_IMAGE_CLASS_1_X_32;
+   case IMAGE_FORMAT_CLASS_2X8:
+      return GL_IMAGE_CLASS_2_X_8;
+   case IMAGE_FORMAT_CLASS_2X16:
+      return GL_IMAGE_CLASS_2_X_16;
+   case IMAGE_FORMAT_CLASS_2X32:
+      return GL_IMAGE_CLASS_2_X_32;
+   case IMAGE_FORMAT_CLASS_10_11_11:
+      return GL_IMAGE_CLASS_11_11_10;
+   case IMAGE_FORMAT_CLASS_4X8:
+      return GL_IMAGE_CLASS_4_X_8;
+   case IMAGE_FORMAT_CLASS_4X16:
+      return GL_IMAGE_CLASS_4_X_16;
+   case IMAGE_FORMAT_CLASS_4X32:
+      return GL_IMAGE_CLASS_4_X_32;
+   case IMAGE_FORMAT_CLASS_2_10_10_10:
+      return GL_IMAGE_CLASS_10_10_10_2;
+   default:
+      assert(!"Invalid image_format_class");
+      return GL_NONE;
+   }
+}
+
+GLenum
+_mesa_get_image_format_class(GLenum format)
+{
+   mesa_format tex_format = _mesa_get_shader_image_format(format);
+   if (tex_format == MESA_FORMAT_NONE)
+      return GL_NONE;
+
+   enum image_format_class class = get_image_format_class(tex_format);
+   return _image_format_class_to_glenum(class);
+}
+
+bool
+_mesa_is_shader_image_format_supported(const struct gl_context *ctx,
+                                       GLenum format)
 {
    switch (format) {
    /* Formats supported on both desktop and ES GL, c.f. table 8.27 of the
@@ -503,7 +545,7 @@ validate_bind_image_texture(struct gl_context *ctx, GLuint unit,
       return GL_FALSE;
    }
 
-   if (!is_image_format_supported(ctx, format)) {
+   if (!_mesa_is_shader_image_format_supported(ctx, format)) {
       _mesa_error(ctx, GL_INVALID_VALUE, "glBindImageTexture(format)");
       return GL_FALSE;
    }
@@ -541,8 +583,13 @@ _mesa_BindImageTexture(GLuint unit, GLuint texture, GLint level,
        *
        * "An INVALID_OPERATION error is generated if texture is not the name
        *  of an immutable texture object."
+       *
+       * However note that issue 7 of the GL_OES_texture_buffer spec
+       * recognizes that there is no way to create immutable buffer textures,
+       * so those are excluded from this requirement.
        */
-      if (_mesa_is_gles(ctx) && !t->Immutable) {
+      if (_mesa_is_gles(ctx) && !t->Immutable &&
+          t->Target != GL_TEXTURE_BUFFER) {
          _mesa_error(ctx, GL_INVALID_OPERATION,
                      "glBindImageTexture(!immutable)");
          return;
@@ -668,7 +715,7 @@ _mesa_BindImageTextures(GLuint first, GLsizei count, const GLuint *textures)
             tex_format = image->InternalFormat;
          }
 
-         if (!is_image_format_supported(ctx, tex_format)) {
+         if (!_mesa_is_shader_image_format_supported(ctx, tex_format)) {
             /* The ARB_multi_bind spec says:
              *
              *   "An INVALID_OPERATION error is generated if the internal
@@ -705,55 +752,4 @@ _mesa_BindImageTextures(GLuint first, GLsizei count, const GLuint *textures)
    }
 
    _mesa_end_texture_lookups(ctx);
-}
-
-void GLAPIENTRY
-_mesa_MemoryBarrier(GLbitfield barriers)
-{
-   GET_CURRENT_CONTEXT(ctx);
-
-   if (ctx->Driver.MemoryBarrier)
-      ctx->Driver.MemoryBarrier(ctx, barriers);
-}
-
-void GLAPIENTRY
-_mesa_MemoryBarrierByRegion(GLbitfield barriers)
-{
-   GET_CURRENT_CONTEXT(ctx);
-
-   GLbitfield all_allowed_bits = GL_ATOMIC_COUNTER_BARRIER_BIT |
-                                 GL_FRAMEBUFFER_BARRIER_BIT |
-                                 GL_SHADER_IMAGE_ACCESS_BARRIER_BIT |
-                                 GL_SHADER_STORAGE_BARRIER_BIT |
-                                 GL_TEXTURE_FETCH_BARRIER_BIT |
-                                 GL_UNIFORM_BARRIER_BIT;
-
-   if (ctx->Driver.MemoryBarrier) {
-      /* From section 7.11.2 of the OpenGL ES 3.1 specification:
-       *
-       *    "When barriers is ALL_BARRIER_BITS, shader memory accesses will be
-       *     synchronized relative to all these barrier bits, but not to other
-       *     barrier bits specific to MemoryBarrier."
-       *
-       * That is, if barriers is the special value GL_ALL_BARRIER_BITS, then all
-       * barriers allowed by glMemoryBarrierByRegion should be activated."
-       */
-      if (barriers == GL_ALL_BARRIER_BITS) {
-         ctx->Driver.MemoryBarrier(ctx, all_allowed_bits);
-         return;
-      }
-
-      /* From section 7.11.2 of the OpenGL ES 3.1 specification:
-       *
-       *    "An INVALID_VALUE error is generated if barriers is not the special
-       *     value ALL_BARRIER_BITS, and has any bits set other than those
-       *     described above."
-       */
-      if ((barriers & ~all_allowed_bits) != 0) {
-         _mesa_error(ctx, GL_INVALID_VALUE,
-                     "glMemoryBarrierByRegion(unsupported barrier bit");
-      }
-
-      ctx->Driver.MemoryBarrier(ctx, barriers);
-   }
 }

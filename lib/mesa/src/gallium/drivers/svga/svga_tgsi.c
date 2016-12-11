@@ -50,15 +50,6 @@
  */
 static char err_buf[128];
 
-#if 0
-static void
-svga_destroy_shader_emitter(struct svga_shader_emitter *emit)
-{
-   if (emit->buf != err_buf)
-      FREE(emit->buf);
-}
-#endif
-
 
 static boolean
 svga_shader_expand(struct svga_shader_emitter *emit)
@@ -182,6 +173,8 @@ svga_tgsi_vgpu9_translate(struct svga_context *svga,
    struct svga_shader_variant *variant = NULL;
    struct svga_shader_emitter emit;
 
+   SVGA_STATS_TIME_PUSH(svga_sws(svga), SVGA_STATS_TIME_TGSIVGPU9TRANSLATE);
+
    memset(&emit, 0, sizeof(emit));
 
    emit.size = 1024;
@@ -261,10 +254,15 @@ svga_tgsi_vgpu9_translate(struct svga_context *svga,
    }
 #endif
 
-   return variant;
+   goto done;
 
- fail:
+fail:
    FREE(variant);
-   FREE(emit.buf);
-   return NULL;
+   if (emit.buf != err_buf)
+      FREE(emit.buf);
+   variant = NULL;
+
+done:
+   SVGA_STATS_TIME_POP(svga_sws(svga));
+   return variant;
 }

@@ -109,7 +109,7 @@ gen6_set_sample_maps(struct gl_context *ctx)
 {
    uint8_t map_2x[2] = {0, 1};
    uint8_t map_4x[4] = {0, 1, 2, 3};
-   uint8_t map_8x[8] = {5, 2, 4, 6, 0, 3, 7, 1};
+   uint8_t map_8x[8] = {3, 7, 5, 0, 1, 2, 4, 6};
    uint8_t map_16x[16] = { 15, 10, 9, 7, 4, 1, 3, 13,
                            12, 2, 0, 6, 11, 8, 5, 14 };
 
@@ -171,7 +171,7 @@ gen6_determine_sample_mask(struct brw_context *brw)
    /* BRW_NEW_NUM_SAMPLES */
    unsigned num_samples = brw->num_samples;
 
-   if (ctx->Multisample._Enabled) {
+   if (_mesa_is_multisample_enabled(ctx)) {
       if (ctx->Multisample.SampleCoverage) {
          coverage = ctx->Multisample.SampleCoverageValue;
          coverage_invert = ctx->Multisample.SampleCoverageInvert;
@@ -215,7 +215,8 @@ upload_multisample_state(struct brw_context *brw)
 const struct brw_tracked_state gen6_multisample_state = {
    .dirty = {
       .mesa = _NEW_MULTISAMPLE,
-      .brw = BRW_NEW_CONTEXT |
+      .brw = BRW_NEW_BLORP |
+             BRW_NEW_CONTEXT |
              BRW_NEW_NUM_SAMPLES,
    },
    .emit = upload_multisample_state

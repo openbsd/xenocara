@@ -86,7 +86,7 @@ def AddOptions(opts):
         from SCons.Options.EnumOption import EnumOption
     opts.Add(EnumOption('build', 'build type', 'debug',
                         allowed_values=('debug', 'checked', 'profile',
-                                        'release')))
+                                        'release', 'opt')))
     opts.Add(BoolOption('verbose', 'verbose output', 'no'))
     opts.Add(EnumOption('machine', 'use machine-specific assembly code',
                         default_machine,
@@ -97,6 +97,7 @@ def AddOptions(opts):
     opts.Add(BoolOption('embedded', 'embedded build', 'no'))
     opts.Add(BoolOption('analyze',
                         'enable static code analysis where available', 'no'))
+    opts.Add(BoolOption('asan', 'enable Address Sanitizer', 'no'))
     opts.Add('toolchain', 'compiler toolchain', default_toolchain)
     opts.Add(BoolOption('gles', 'EXPERIMENTAL: enable OpenGL ES support',
                         'no'))

@@ -242,11 +242,11 @@ static const struct vgpu10_format_entry format_conversion_table[] =
    { PIPE_FORMAT_R16G16B16A16_SINT,     SVGA3D_R16G16B16A16_SINT,   SVGA3D_R16G16B16A16_SINT,    0 },
    { PIPE_FORMAT_R32_UINT,              SVGA3D_R32_UINT,            SVGA3D_R32_UINT,             0 },
    { PIPE_FORMAT_R32G32_UINT,           SVGA3D_R32G32_UINT,         SVGA3D_R32G32_UINT,          0 },
-   { PIPE_FORMAT_R32G32B32_UINT,        SVGA3D_R32G32B32_UINT,      SVGA3D_R32G32B32_UINT,       0 },
+   { PIPE_FORMAT_R32G32B32_UINT,        SVGA3D_R32G32B32_UINT,      SVGA3D_FORMAT_INVALID,       0 },
    { PIPE_FORMAT_R32G32B32A32_UINT,     SVGA3D_R32G32B32A32_UINT,   SVGA3D_R32G32B32A32_UINT,    0 },
    { PIPE_FORMAT_R32_SINT,              SVGA3D_R32_SINT,            SVGA3D_R32_SINT,             0 },
    { PIPE_FORMAT_R32G32_SINT,           SVGA3D_R32G32_SINT,         SVGA3D_R32G32_SINT,          0 },
-   { PIPE_FORMAT_R32G32B32_SINT,        SVGA3D_R32G32B32_SINT,      SVGA3D_R32G32B32_SINT,       0 },
+   { PIPE_FORMAT_R32G32B32_SINT,        SVGA3D_R32G32B32_SINT,      SVGA3D_FORMAT_INVALID,       0 },
    { PIPE_FORMAT_R32G32B32A32_SINT,     SVGA3D_R32G32B32A32_SINT,   SVGA3D_R32G32B32A32_SINT,    0 },
    { PIPE_FORMAT_A8_UINT,               SVGA3D_FORMAT_INVALID,      SVGA3D_FORMAT_INVALID,       0 },
    { PIPE_FORMAT_I8_UINT,               SVGA3D_FORMAT_INVALID,      SVGA3D_FORMAT_INVALID,       0 },
@@ -366,8 +366,8 @@ svga_translate_vertex_format_vgpu10(enum pipe_format format,
                                     SVGA3dSurfaceFormat *svga_format,
                                     unsigned *vf_flags)
 {
-   assert(format < Elements(format_conversion_table));
-   if (format >= Elements(format_conversion_table)) {
+   assert(format < ARRAY_SIZE(format_conversion_table));
+   if (format >= ARRAY_SIZE(format_conversion_table)) {
       format = PIPE_FORMAT_NONE;
    }
    *svga_format = format_conversion_table[format].vertex_format;
@@ -379,7 +379,7 @@ svga_translate_vertex_format_vgpu10(enum pipe_format format,
  * Translate from gallium format to SVGA3D format.
  */
 SVGA3dSurfaceFormat
-svga_translate_format(struct svga_screen *ss,
+svga_translate_format(const struct svga_screen *ss,
                       enum pipe_format format,
                       unsigned bind)
 {
@@ -1686,18 +1686,14 @@ static const struct format_cap format_cap_table[] = {
       SVGA3DFORMAT_OP_OFFSCREEN_RENDERTARGET
    },
    {
-      /* Special case: no devcap / report sampler, render target and
-       * depth/stencil ability
-       */
       "SVGA3D_R32_FLOAT",
       SVGA3D_R32_FLOAT,
-      0, /*SVGA3D_DEVCAP_DXFMT_R32_FLOAT*/
+      SVGA3D_DEVCAP_DXFMT_R32_FLOAT,
       1, 1, 4,
       SVGA3DFORMAT_OP_TEXTURE |
       SVGA3DFORMAT_OP_VOLUMETEXTURE |
       SVGA3DFORMAT_OP_CUBETEXTURE |
-      SVGA3DFORMAT_OP_OFFSCREEN_RENDERTARGET |
-      SVGA3DFORMAT_OP_ZSTENCIL
+      SVGA3DFORMAT_OP_OFFSCREEN_RENDERTARGET
    },
    {
       "SVGA3D_R8G8_SNORM",
@@ -1838,13 +1834,13 @@ check_format_tables(void)
    if (first_call) {
       unsigned i;
 
-      STATIC_ASSERT(Elements(format_cap_table) == SVGA3D_FORMAT_MAX);
-      for (i = 0; i < Elements(format_cap_table); i++) {
+      STATIC_ASSERT(ARRAY_SIZE(format_cap_table) == SVGA3D_FORMAT_MAX);
+      for (i = 0; i < ARRAY_SIZE(format_cap_table); i++) {
          assert(format_cap_table[i].format == i);
       }
 
-      STATIC_ASSERT(Elements(format_conversion_table) == PIPE_FORMAT_COUNT);
-      for (i = 0; i < Elements(format_conversion_table); i++) {
+      STATIC_ASSERT(ARRAY_SIZE(format_conversion_table) == PIPE_FORMAT_COUNT);
+      for (i = 0; i < ARRAY_SIZE(format_conversion_table); i++) {
          assert(format_conversion_table[i].pformat == i);
       }
 
@@ -1873,7 +1869,7 @@ svga_get_format_cap(struct svga_screen *ss,
    (void) check_format_tables;
 #endif
 
-   assert(format < Elements(format_cap_table));
+   assert(format < ARRAY_SIZE(format_cap_table));
    entry = &format_cap_table[format];
    assert(entry->format == format);
 
@@ -1912,11 +1908,11 @@ svga_format_size(SVGA3dSurfaceFormat format,
                  unsigned *block_height,
                  unsigned *bytes_per_block)
 {
-   assert(format < Elements(format_cap_table));
+   assert(format < ARRAY_SIZE(format_cap_table));
    *block_width = format_cap_table[format].block_width;
    *block_height = format_cap_table[format].block_height;
    *bytes_per_block = format_cap_table[format].block_bytes;
-   /* Make sure the the table entry was valid */
+   /* Make sure the table entry was valid */
    if (*block_width == 0)
       debug_printf("Bad table entry for %s\n", svga_format_name(format));
    assert(*block_width);
@@ -1928,7 +1924,7 @@ svga_format_size(SVGA3dSurfaceFormat format,
 const char *
 svga_format_name(SVGA3dSurfaceFormat format)
 {
-   assert(format < Elements(format_cap_table));
+   assert(format < ARRAY_SIZE(format_cap_table));
    return format_cap_table[format].name;
 }
 
@@ -1970,7 +1966,7 @@ svga_format_is_integer(SVGA3dSurfaceFormat format)
 boolean
 svga_format_support_gen_mips(enum pipe_format format)
 {
-   assert(format < Elements(format_conversion_table));
+   assert(format < ARRAY_SIZE(format_conversion_table));
    return ((format_conversion_table[format].flags & TF_GEN_MIPS) > 0);
 }
 
@@ -2191,5 +2187,25 @@ svga_sampler_format(SVGA3dSurfaceFormat format)
       return SVGA3D_R32_FLOAT_X8X24_TYPELESS;
    default:
       return format;
+   }
+}
+
+
+/**
+ * Is the given format an uncompressed snorm format?
+ */
+bool
+svga_format_is_uncompressed_snorm(SVGA3dSurfaceFormat format)
+{
+   switch (format) {
+   case SVGA3D_R8G8B8A8_SNORM:
+   case SVGA3D_R8G8_SNORM:
+   case SVGA3D_R8_SNORM:
+   case SVGA3D_R16G16B16A16_SNORM:
+   case SVGA3D_R16G16_SNORM:
+   case SVGA3D_R16_SNORM:
+      return true;
+   default:
+      return false;
    }
 }

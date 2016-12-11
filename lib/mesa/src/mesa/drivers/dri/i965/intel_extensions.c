@@ -26,6 +26,7 @@
 #include "main/version.h"
 
 #include "brw_context.h"
+#include "brw_defines.h"
 #include "intel_batchbuffer.h"
 
 /**
@@ -196,6 +197,7 @@ intelInitExtensions(struct gl_context *ctx)
    ctx->Extensions.ARB_half_float_vertex = true;
    ctx->Extensions.ARB_instanced_arrays = true;
    ctx->Extensions.ARB_internalformat_query = true;
+   ctx->Extensions.ARB_internalformat_query2 = true;
    ctx->Extensions.ARB_map_buffer_range = true;
    ctx->Extensions.ARB_occlusion_query = true;
    ctx->Extensions.ARB_occlusion_query2 = true;
@@ -205,6 +207,7 @@ intelInitExtensions(struct gl_context *ctx)
    ctx->Extensions.ARB_shader_bit_encoding = true;
    ctx->Extensions.ARB_shader_draw_parameters = true;
    ctx->Extensions.ARB_shader_texture_lod = true;
+   ctx->Extensions.ARB_shading_language_packing = true;
    ctx->Extensions.ARB_shadow = true;
    ctx->Extensions.ARB_sync = true;
    ctx->Extensions.ARB_texture_border_clamp = true;
@@ -245,6 +248,7 @@ intelInitExtensions(struct gl_context *ctx)
    ctx->Extensions.EXT_texture_sRGB_decode = true;
    ctx->Extensions.EXT_texture_swizzle = true;
    ctx->Extensions.EXT_vertex_array_bgra = true;
+   ctx->Extensions.KHR_robustness = true;
    ctx->Extensions.AMD_seamless_cubemap_per_texture = true;
    ctx->Extensions.APPLE_object_purgeable = true;
    ctx->Extensions.ATI_separate_stencil = true;
@@ -266,16 +270,25 @@ intelInitExtensions(struct gl_context *ctx)
    ctx->Extensions.OES_texture_half_float = true;
    ctx->Extensions.OES_texture_half_float_linear = true;
 
-   if (brw->gen >= 6)
+   if (brw->gen >= 8)
+      ctx->Const.GLSLVersion = 450;
+   else if (brw->gen >= 6)
       ctx->Const.GLSLVersion = 330;
    else
       ctx->Const.GLSLVersion = 120;
    _mesa_override_glsl_version(&ctx->Const);
 
+   ctx->Extensions.EXT_shader_integer_mix = ctx->Const.GLSLVersion >= 130;
+   ctx->Extensions.MESA_shader_integer_functions = ctx->Const.GLSLVersion >= 130;
+
+   if (brw->is_g4x || brw->gen >= 5) {
+      ctx->Extensions.MESA_shader_framebuffer_fetch_non_coherent = true;
+      ctx->Extensions.KHR_blend_equation_advanced = true;
+   }
+
    if (brw->gen >= 5) {
       ctx->Extensions.ARB_texture_query_levels = ctx->Const.GLSLVersion >= 130;
       ctx->Extensions.ARB_texture_query_lod = true;
-      ctx->Extensions.EXT_shader_integer_mix = ctx->Const.GLSLVersion >= 130;
       ctx->Extensions.EXT_timer_query = true;
 
       if (brw->gen == 5 || can_write_oacontrol(brw)) {
@@ -288,12 +301,13 @@ intelInitExtensions(struct gl_context *ctx)
       ctx->Extensions.ARB_blend_func_extended =
          !driQueryOptionb(&brw->optionCache, "disable_blend_func_extended");
       ctx->Extensions.ARB_conditional_render_inverted = true;
+      ctx->Extensions.ARB_cull_distance = true;
       ctx->Extensions.ARB_draw_buffers_blend = true;
+      ctx->Extensions.ARB_enhanced_layouts = true;
       ctx->Extensions.ARB_ES3_compatibility = true;
       ctx->Extensions.ARB_fragment_layer_viewport = true;
       ctx->Extensions.ARB_sample_shading = true;
       ctx->Extensions.ARB_shading_language_420pack = true;
-      ctx->Extensions.ARB_shading_language_packing = true;
       ctx->Extensions.ARB_texture_buffer_object = true;
       ctx->Extensions.ARB_texture_buffer_object_rgb32 = true;
       ctx->Extensions.ARB_texture_buffer_range = true;
@@ -307,14 +321,16 @@ intelInitExtensions(struct gl_context *ctx)
       ctx->Extensions.EXT_framebuffer_multisample_blit_scaled = true;
       ctx->Extensions.EXT_transform_feedback = true;
       ctx->Extensions.OES_depth_texture_cube_map = true;
+      ctx->Extensions.OES_sample_variables = true;
 
-      ctx->Extensions.ARB_timer_query = brw->intelScreen->hw_has_timestamp;
+      ctx->Extensions.ARB_timer_query = brw->screen->hw_has_timestamp;
 
       /* Only enable this in core profile because other parts of Mesa behave
        * slightly differently when the extension is enabled.
        */
       if (ctx->API == API_OPENGL_CORE) {
          ctx->Extensions.ARB_shader_subroutine = true;
+         ctx->Extensions.ARB_shader_viewport_layer_array = true;
          ctx->Extensions.ARB_viewport_array = true;
          ctx->Extensions.AMD_vertex_shader_viewport_index = true;
       }
@@ -330,6 +346,7 @@ intelInitExtensions(struct gl_context *ctx)
       ctx->Extensions.ARB_framebuffer_no_attachments = true;
       ctx->Extensions.ARB_gpu_shader5 = true;
       ctx->Extensions.ARB_shader_atomic_counters = true;
+      ctx->Extensions.ARB_shader_atomic_counter_ops = true;
       ctx->Extensions.ARB_shader_clock = true;
       ctx->Extensions.ARB_shader_image_load_store = true;
       ctx->Extensions.ARB_shader_image_size = true;
@@ -339,6 +356,8 @@ intelInitExtensions(struct gl_context *ctx)
       ctx->Extensions.ARB_texture_view = true;
       ctx->Extensions.ARB_shader_storage_buffer_object = true;
       ctx->Extensions.EXT_shader_samples_identical = true;
+      ctx->Extensions.OES_primitive_bounding_box = true;
+      ctx->Extensions.OES_texture_buffer = true;
 
       if (brw->can_do_pipelined_register_writes) {
          ctx->Extensions.ARB_draw_indirect = true;
@@ -346,32 +365,56 @@ intelInitExtensions(struct gl_context *ctx)
          ctx->Extensions.ARB_transform_feedback3 = true;
          ctx->Extensions.ARB_transform_feedback_instanced = true;
 
-         if ((brw->gen >= 8 || brw->intelScreen->cmd_parser_version >= 5) &&
-             ctx->Const.MaxComputeWorkGroupSize[0] >= 1024)
+         if ((brw->gen >= 8 || brw->screen->cmd_parser_version >= 5) &&
+             ctx->Const.MaxComputeWorkGroupSize[0] >= 1024) {
             ctx->Extensions.ARB_compute_shader = true;
+            ctx->Extensions.ARB_ES3_1_compatibility =
+               brw->gen >= 8 || brw->is_haswell;
+         }
 
-         if (brw->intelScreen->cmd_parser_version >= 2)
+         if (brw->screen->cmd_parser_version >= 2)
             brw->predicate.supported = true;
       }
+   }
 
-      /* Only enable this in core profile because other parts of Mesa behave
-       * slightly differently when the extension is enabled.
+   if (brw->gen >= 8 || brw->is_haswell) {
+      ctx->Extensions.ARB_stencil_texturing = true;
+      ctx->Extensions.ARB_texture_stencil8 = true;
+   }
+
+   if (brw->gen >= 8 || brw->is_haswell || brw->is_baytrail) {
+      ctx->Extensions.ARB_robust_buffer_access_behavior = true;
+   }
+
+   if (brw->screen->has_mi_math_and_lrr) {
+      ctx->Extensions.ARB_query_buffer_object = true;
+   }
+
+   if (brw->gen >= 8 || brw->is_baytrail) {
+      /* For now, we only enable OES_copy_image on platforms that support
+       * ETC2 natively in hardware.  We would need more hacks to support it
+       * elsewhere.
        */
-      if (ctx->API == API_OPENGL_CORE) {
-         ctx->Extensions.ARB_viewport_array = true;
-         ctx->Extensions.AMD_vertex_shader_viewport_index = true;
-         ctx->Extensions.ARB_shader_subroutine = true;
-      }
+      ctx->Extensions.OES_copy_image = true;
    }
 
    if (brw->gen >= 8) {
-      ctx->Extensions.ARB_stencil_texturing = true;
+      ctx->Extensions.ARB_gpu_shader_fp64 = true;
+      ctx->Extensions.ARB_shader_precision = true;
+      ctx->Extensions.ARB_vertex_attrib_64bit = true;
+      ctx->Extensions.ARB_ES3_2_compatibility = true;
+      ctx->Extensions.OES_geometry_shader = true;
+      ctx->Extensions.OES_texture_cube_map_array = true;
+      ctx->Extensions.OES_viewport_array = true;
    }
 
    if (brw->gen >= 9) {
-      ctx->Extensions.KHR_texture_compression_astc_ldr = true;
-      ctx->Extensions.KHR_texture_compression_astc_hdr = true;
+      ctx->Extensions.ANDROID_extension_pack_es31a = true;
       ctx->Extensions.ARB_shader_stencil_export = true;
+      ctx->Extensions.KHR_blend_equation_advanced_coherent = true;
+      ctx->Extensions.KHR_texture_compression_astc_ldr = true;
+      ctx->Extensions.KHR_texture_compression_astc_sliced_3d = true;
+      ctx->Extensions.MESA_shader_framebuffer_fetch = true;
    }
 
    if (ctx->API == API_OPENGL_CORE)

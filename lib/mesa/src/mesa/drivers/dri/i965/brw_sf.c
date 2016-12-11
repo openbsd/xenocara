@@ -29,7 +29,7 @@
   *   Keith Whitwell <keithw@vmware.com>
   */
 
-
+#include "compiler/nir/nir.h"
 #include "main/macros.h"
 #include "main/mtypes.h"
 #include "main/enums.h"
@@ -59,7 +59,7 @@ static void compile_sf_prog( struct brw_context *brw,
    mem_ctx = ralloc_context(NULL);
    /* Begin the compilation:
     */
-   brw_init_codegen(brw->intelScreen->devinfo, &c.func, mem_ctx);
+   brw_init_codegen(&brw->screen->devinfo, &c.func, mem_ctx);
 
    c.key = *key;
    c.vue_map = brw->vue_map_geom_out;
@@ -118,7 +118,7 @@ static void compile_sf_prog( struct brw_context *brw,
 
    if (unlikely(INTEL_DEBUG & DEBUG_SF)) {
       fprintf(stderr, "sf:\n");
-      brw_disassemble(brw->intelScreen->devinfo,
+      brw_disassemble(&brw->screen->devinfo,
                       c.func.store, 0, program_size, stderr);
       fprintf(stderr, "\n");
    }
@@ -133,11 +133,26 @@ static void compile_sf_prog( struct brw_context *brw,
 
 /* Calculate interpolants for triangle and line rasterization.
  */
-static void
+void
 brw_upload_sf_prog(struct brw_context *brw)
 {
    struct gl_context *ctx = &brw->ctx;
    struct brw_sf_prog_key key;
+
+   if (!brw_state_dirty(brw,
+                        _NEW_BUFFERS |
+                        _NEW_HINT |
+                        _NEW_LIGHT |
+                        _NEW_POINT |
+                        _NEW_POLYGON |
+                        _NEW_PROGRAM |
+                        _NEW_TRANSFORM,
+                        BRW_NEW_BLORP |
+                        BRW_NEW_INTERPOLATION_MAP |
+                        BRW_NEW_REDUCED_PRIMITIVE |
+                        BRW_NEW_VUE_MAP_GEOM_OUT))
+      return;
+
    /* _NEW_BUFFERS */
    bool render_to_fbo = _mesa_is_user_fbo(ctx->DrawBuffer);
 
@@ -175,15 +190,13 @@ brw_upload_sf_prog(struct brw_context *brw)
    /* _NEW_POINT */
    key.do_point_sprite = ctx->Point.PointSprite;
    if (key.do_point_sprite) {
-      int i;
-
-      for (i = 0; i < 8; i++) {
-	 if (ctx->Point.CoordReplace[i])
-	    key.point_sprite_coord_replace |= (1 << i);
-      }
+      key.point_sprite_coord_replace = ctx->Point.CoordReplace & 0xff;
    }
-   if (brw->fragment_program->Base.InputsRead & BITFIELD64_BIT(VARYING_SLOT_PNTC))
+   if (brw->fragment_program->Base.nir->info.inputs_read &
+       BITFIELD64_BIT(VARYING_SLOT_PNTC)) {
       key.do_point_coord = 1;
+   }
+
    /*
     * Window coordinates in a FBO are inverted, which means point
     * sprite origin must be inverted, too.
@@ -213,21 +226,3 @@ brw_upload_sf_prog(struct brw_context *brw)
       compile_sf_prog( brw, &key );
    }
 }
-
-
-const struct brw_tracked_state brw_sf_prog = {
-   .dirty = {
-      .mesa  = _NEW_BUFFERS |
-               _NEW_HINT |
-               _NEW_LIGHT |
-               _NEW_POINT |
-               _NEW_POLYGON |
-               _NEW_PROGRAM |
-               _NEW_TRANSFORM,
-      .brw   = BRW_NEW_INTERPOLATION_MAP |
-               BRW_NEW_REDUCED_PRIMITIVE |
-               BRW_NEW_VUE_MAP_GEOM_OUT,
-   },
-   .emit = brw_upload_sf_prog
-};
-

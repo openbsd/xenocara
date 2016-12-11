@@ -574,10 +574,9 @@ monitor_needs_statistics_registers(struct brw_context *brw,
 static void
 snapshot_statistics_registers(struct brw_context *brw,
                               struct brw_perf_monitor_object *monitor,
-                              uint32_t offset_in_bytes)
+                              uint32_t offset)
 {
    struct gl_context *ctx = &brw->ctx;
-   const int offset = offset_in_bytes / sizeof(uint64_t);
    const int group = PIPELINE_STATS_COUNTERS;
    const int num_counters = ctx->PerfMonitor.Groups[group].NumCounters;
 
@@ -590,7 +589,7 @@ snapshot_statistics_registers(struct brw_context *brw,
 
          brw_store_register_mem64(brw, monitor->pipeline_stats_bo,
                                   brw->perfmon.statistics_registers[i],
-                                  offset + i);
+                                  offset + i * sizeof(uint64_t));
       }
    }
 }
@@ -687,12 +686,12 @@ stop_oa_counters(struct brw_context *brw)
  * The amount of batch space it takes to emit an MI_REPORT_PERF_COUNT snapshot,
  * including the required PIPE_CONTROL flushes.
  *
- * Sandybridge is the worst case scenario: brw_emit_mi_flush
- * expands to three PIPE_CONTROLs which are 4 DWords each.  We have to flush
- * before and after MI_REPORT_PERF_COUNT, so multiply by two.  Finally, add
- * the 3 DWords for MI_REPORT_PERF_COUNT itself.
+ * Sandybridge is the worst case scenario: brw_emit_mi_flush expands to four
+ * PIPE_CONTROLs which are 5 DWords each.  We have to flush before and after
+ * MI_REPORT_PERF_COUNT, so multiply by two.  Finally, add the 3 DWords for
+ * MI_REPORT_PERF_COUNT itself.
  */
-#define MI_REPORT_PERF_COUNT_BATCH_DWORDS (2 * (3 * 4) + 3)
+#define MI_REPORT_PERF_COUNT_BATCH_DWORDS (2 * (4 * 5) + 3)
 
 /**
  * Emit an MI_REPORT_PERF_COUNT command packet.
@@ -1017,7 +1016,7 @@ wrap_bookend_bo(struct brw_context *brw)
 }
 
 /* This is fairly arbitrary; the trade off is memory usage vs. extra overhead
- * from wrapping.  On Gen7, 32768 should be enough for for 128 snapshots before
+ * from wrapping.  On Gen7, 32768 should be enough for 128 snapshots before
  * wrapping (since each is 256 bytes).
  */
 #define BOOKEND_BO_SIZE_BYTES 32768

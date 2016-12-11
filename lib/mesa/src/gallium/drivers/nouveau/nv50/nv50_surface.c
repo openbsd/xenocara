@@ -277,7 +277,8 @@ nv50_clear_render_target(struct pipe_context *pipe,
                          struct pipe_surface *dst,
                          const union pipe_color_union *color,
                          unsigned dstx, unsigned dsty,
-                         unsigned width, unsigned height)
+                         unsigned width, unsigned height,
+                         bool render_condition_enabled)
 {
    struct nv50_context *nv50 = nv50_context(pipe);
    struct nouveau_pushbuf *push = nv50->base.pushbuf;
@@ -341,8 +342,10 @@ nv50_clear_render_target(struct pipe_context *pipe,
    PUSH_DATA (push, (width << 16) | dstx);
    PUSH_DATA (push, (height << 16) | dsty);
 
-   BEGIN_NV04(push, NV50_3D(COND_MODE), 1);
-   PUSH_DATA (push, NV50_3D_COND_MODE_ALWAYS);
+   if (!render_condition_enabled) {
+      BEGIN_NV04(push, NV50_3D(COND_MODE), 1);
+      PUSH_DATA (push, NV50_3D_COND_MODE_ALWAYS);
+   }
 
    BEGIN_NI04(push, NV50_3D(CLEAR_BUFFERS), sf->depth);
    for (z = 0; z < sf->depth; ++z) {
@@ -350,10 +353,12 @@ nv50_clear_render_target(struct pipe_context *pipe,
                  (z << NV50_3D_CLEAR_BUFFERS_LAYER__SHIFT));
    }
 
-   BEGIN_NV04(push, NV50_3D(COND_MODE), 1);
-   PUSH_DATA (push, nv50->cond_condmode);
+   if (!render_condition_enabled) {
+      BEGIN_NV04(push, NV50_3D(COND_MODE), 1);
+      PUSH_DATA (push, nv50->cond_condmode);
+   }
 
-   nv50->dirty |= NV50_NEW_FRAMEBUFFER | NV50_NEW_SCISSOR;
+   nv50->dirty_3d |= NV50_NEW_3D_FRAMEBUFFER | NV50_NEW_3D_SCISSOR;
 }
 
 static void
@@ -363,7 +368,8 @@ nv50_clear_depth_stencil(struct pipe_context *pipe,
                          double depth,
                          unsigned stencil,
                          unsigned dstx, unsigned dsty,
-                         unsigned width, unsigned height)
+                         unsigned width, unsigned height,
+                         bool render_condition_enabled)
 {
    struct nv50_context *nv50 = nv50_context(pipe);
    struct nouveau_pushbuf *push = nv50->base.pushbuf;
@@ -424,8 +430,10 @@ nv50_clear_depth_stencil(struct pipe_context *pipe,
    PUSH_DATA (push, (width << 16) | dstx);
    PUSH_DATA (push, (height << 16) | dsty);
 
-   BEGIN_NV04(push, NV50_3D(COND_MODE), 1);
-   PUSH_DATA (push, NV50_3D_COND_MODE_ALWAYS);
+   if (!render_condition_enabled) {
+      BEGIN_NV04(push, NV50_3D(COND_MODE), 1);
+      PUSH_DATA (push, NV50_3D_COND_MODE_ALWAYS);
+   }
 
    BEGIN_NI04(push, NV50_3D(CLEAR_BUFFERS), sf->depth);
    for (z = 0; z < sf->depth; ++z) {
@@ -433,10 +441,12 @@ nv50_clear_depth_stencil(struct pipe_context *pipe,
                  (z << NV50_3D_CLEAR_BUFFERS_LAYER__SHIFT));
    }
 
-   BEGIN_NV04(push, NV50_3D(COND_MODE), 1);
-   PUSH_DATA (push, nv50->cond_condmode);
+   if (!render_condition_enabled) {
+      BEGIN_NV04(push, NV50_3D(COND_MODE), 1);
+      PUSH_DATA (push, nv50->cond_condmode);
+   }
 
-   nv50->dirty |= NV50_NEW_FRAMEBUFFER | NV50_NEW_SCISSOR;
+   nv50->dirty_3d |= NV50_NEW_3D_FRAMEBUFFER | NV50_NEW_3D_SCISSOR;
 }
 
 void
@@ -472,7 +482,7 @@ nv50_clear_texture(struct pipe_context *pipe,
          desc->unpack_s_8uint(&stencil, 0, data, 0, 1, 1);
       }
       pipe->clear_depth_stencil(pipe, sf, clear, depth, stencil,
-                                box->x, box->y, box->width, box->height);
+                                box->x, box->y, box->width, box->height, false);
    } else {
       union pipe_color_union color;
 
@@ -508,7 +518,7 @@ nv50_clear_texture(struct pipe_context *pipe,
       }
 
       pipe->clear_render_target(pipe, sf, &color,
-                                box->x, box->y, box->width, box->height);
+                                box->x, box->y, box->width, box->height, false);
    }
    pipe->surface_destroy(pipe, sf);
 }
@@ -525,7 +535,7 @@ nv50_clear(struct pipe_context *pipe, unsigned buffers,
    uint32_t mode = 0;
 
    /* don't need NEW_BLEND, COLOR_MASK doesn't affect CLEAR_BUFFERS */
-   if (!nv50_state_validate(nv50, NV50_NEW_FRAMEBUFFER))
+   if (!nv50_state_validate_3d(nv50, NV50_NEW_3D_FRAMEBUFFER))
       return;
 
    /* We have to clear ALL of the layers, not up to the min number of layers
@@ -798,7 +808,7 @@ nv50_clear_buffer(struct pipe_context *pipe,
                              data, data_size);
    }
 
-   nv50->dirty |= NV50_NEW_FRAMEBUFFER | NV50_NEW_SCISSOR;
+   nv50->dirty_3d |= NV50_NEW_3D_FRAMEBUFFER | NV50_NEW_3D_SCISSOR;
 }
 
 /* =============================== BLIT CODE ===================================
@@ -825,6 +835,7 @@ struct nv50_blitctx
    enum pipe_texture_target target;
    struct {
       struct pipe_framebuffer_state fb;
+      struct nv50_window_rect_stateobj window_rect;
       struct nv50_rasterizer_stateobj *rast;
       struct nv50_program *vp;
       struct nv50_program *gp;
@@ -834,7 +845,7 @@ struct nv50_blitctx
       struct pipe_sampler_view *texture[2];
       struct nv50_tsc_entry *sampler[2];
       unsigned min_samples;
-      uint32_t dirty;
+      uint32_t dirty_3d;
    } saved;
    struct nv50_rasterizer_stateobj rast;
 };
@@ -900,7 +911,7 @@ nv50_blitter_make_fp(struct pipe_context *pipe,
        mode != NV50_BLIT_MODE_XS)
       cvt_un8 = true;
 
-   ureg = ureg_create(TGSI_PROCESSOR_FRAGMENT);
+   ureg = ureg_create(PIPE_SHADER_FRAGMENT);
    if (!ureg)
       return NULL;
 
@@ -1122,10 +1133,10 @@ nv50_blit_set_src(struct nv50_blitctx *blit,
    templ.format = format;
    templ.u.tex.first_level = templ.u.tex.last_level = level;
    templ.u.tex.first_layer = templ.u.tex.last_layer = layer;
-   templ.swizzle_r = PIPE_SWIZZLE_RED;
-   templ.swizzle_g = PIPE_SWIZZLE_GREEN;
-   templ.swizzle_b = PIPE_SWIZZLE_BLUE;
-   templ.swizzle_a = PIPE_SWIZZLE_ALPHA;
+   templ.swizzle_r = PIPE_SWIZZLE_X;
+   templ.swizzle_g = PIPE_SWIZZLE_Y;
+   templ.swizzle_b = PIPE_SWIZZLE_Z;
+   templ.swizzle_a = PIPE_SWIZZLE_W;
 
    if (layer == -1) {
       templ.u.tex.first_layer = 0;
@@ -1210,7 +1221,8 @@ nv50_blitctx_prepare_state(struct nv50_blitctx *blit)
 }
 
 static void
-nv50_blitctx_pre_blit(struct nv50_blitctx *ctx)
+nv50_blitctx_pre_blit(struct nv50_blitctx *ctx,
+                      const struct pipe_blit_info *info)
 {
    struct nv50_context *nv50 = ctx->nv50;
    struct nv50_blitter *blitter = nv50->screen->blitter;
@@ -1229,12 +1241,20 @@ nv50_blitctx_pre_blit(struct nv50_blitctx *ctx)
    ctx->saved.fp = nv50->fragprog;
 
    ctx->saved.min_samples = nv50->min_samples;
+   ctx->saved.window_rect = nv50->window_rect;
 
    nv50->rast = &ctx->rast;
 
    nv50->vertprog = &blitter->vp;
    nv50->gmtyprog = NULL;
    nv50->fragprog = ctx->fp;
+
+   nv50->window_rect.rects =
+      MIN2(info->num_window_rectangles, NV50_MAX_WINDOW_RECTANGLES);
+   nv50->window_rect.inclusive = info->window_rectangle_include;
+   if (nv50->window_rect.rects)
+      memcpy(nv50->window_rect.rect, info->window_rectangles,
+             sizeof(struct pipe_scissor_state) * nv50->window_rect.rects);
 
    for (s = 0; s < 3; ++s) {
       ctx->saved.num_textures[s] = nv50->num_textures[s];
@@ -1253,15 +1273,15 @@ nv50_blitctx_pre_blit(struct nv50_blitctx *ctx)
 
    nv50->min_samples = 1;
 
-   ctx->saved.dirty = nv50->dirty;
+   ctx->saved.dirty_3d = nv50->dirty_3d;
 
-   nouveau_bufctx_reset(nv50->bufctx_3d, NV50_BIND_FB);
-   nouveau_bufctx_reset(nv50->bufctx_3d, NV50_BIND_TEXTURES);
+   nouveau_bufctx_reset(nv50->bufctx_3d, NV50_BIND_3D_FB);
+   nouveau_bufctx_reset(nv50->bufctx_3d, NV50_BIND_3D_TEXTURES);
 
-   nv50->dirty =
-      NV50_NEW_FRAMEBUFFER | NV50_NEW_MIN_SAMPLES |
-      NV50_NEW_VERTPROG | NV50_NEW_FRAGPROG | NV50_NEW_GMTYPROG |
-      NV50_NEW_TEXTURES | NV50_NEW_SAMPLERS;
+   nv50->dirty_3d =
+      NV50_NEW_3D_FRAMEBUFFER | NV50_NEW_3D_MIN_SAMPLES |
+      NV50_NEW_3D_VERTPROG | NV50_NEW_3D_FRAGPROG | NV50_NEW_3D_GMTYPROG |
+      NV50_NEW_3D_TEXTURES | NV50_NEW_3D_SAMPLERS | NV50_NEW_3D_WINDOW_RECTS;
 }
 
 static void
@@ -1285,6 +1305,7 @@ nv50_blitctx_post_blit(struct nv50_blitctx *blit)
    nv50->fragprog = blit->saved.fp;
 
    nv50->min_samples = blit->saved.min_samples;
+   nv50->window_rect = blit->saved.window_rect;
 
    pipe_sampler_view_reference(&nv50->textures[2][0], NULL);
    pipe_sampler_view_reference(&nv50->textures[2][1], NULL);
@@ -1302,14 +1323,14 @@ nv50_blitctx_post_blit(struct nv50_blitctx *blit)
       nv50->base.pipe.render_condition(&nv50->base.pipe, nv50->cond_query,
                                        nv50->cond_cond, nv50->cond_mode);
 
-   nouveau_bufctx_reset(nv50->bufctx_3d, NV50_BIND_FB);
-   nouveau_bufctx_reset(nv50->bufctx_3d, NV50_BIND_TEXTURES);
+   nouveau_bufctx_reset(nv50->bufctx_3d, NV50_BIND_3D_FB);
+   nouveau_bufctx_reset(nv50->bufctx_3d, NV50_BIND_3D_TEXTURES);
 
-   nv50->dirty = blit->saved.dirty |
-      (NV50_NEW_FRAMEBUFFER | NV50_NEW_SCISSOR | NV50_NEW_SAMPLE_MASK |
-       NV50_NEW_RASTERIZER | NV50_NEW_ZSA | NV50_NEW_BLEND |
-       NV50_NEW_TEXTURES | NV50_NEW_SAMPLERS |
-       NV50_NEW_VERTPROG | NV50_NEW_GMTYPROG | NV50_NEW_FRAGPROG);
+   nv50->dirty_3d = blit->saved.dirty_3d |
+      (NV50_NEW_3D_FRAMEBUFFER | NV50_NEW_3D_SCISSOR | NV50_NEW_3D_SAMPLE_MASK |
+       NV50_NEW_3D_RASTERIZER | NV50_NEW_3D_ZSA | NV50_NEW_3D_BLEND |
+       NV50_NEW_3D_TEXTURES | NV50_NEW_3D_SAMPLERS | NV50_NEW_3D_WINDOW_RECTS |
+       NV50_NEW_3D_VERTPROG | NV50_NEW_3D_GMTYPROG | NV50_NEW_3D_FRAGPROG);
    nv50->scissors_dirty |= 1;
 
    nv50->base.pipe.set_min_samples(&nv50->base.pipe, blit->saved.min_samples);
@@ -1336,7 +1357,7 @@ nv50_blit_3d(struct nv50_context *nv50, const struct pipe_blit_info *info)
    blit->render_condition_enable = info->render_condition_enable;
 
    nv50_blit_select_fp(blit, info);
-   nv50_blitctx_pre_blit(blit);
+   nv50_blitctx_pre_blit(blit, info);
 
    nv50_blit_set_dst(blit, dst, info->dst.level, -1, info->dst.format);
    nv50_blit_set_src(blit, src, info->src.level, -1, info->src.format,
@@ -1344,7 +1365,7 @@ nv50_blit_3d(struct nv50_context *nv50, const struct pipe_blit_info *info)
 
    nv50_blitctx_prepare_state(blit);
 
-   nv50_state_validate(nv50, ~0);
+   nv50_state_validate_3d(nv50, ~0);
 
    x_range = (float)info->src.box.width / (float)info->dst.box.width;
    y_range = (float)info->src.box.height / (float)info->dst.box.height;
@@ -1688,6 +1709,9 @@ nv50_blit(struct pipe_context *pipe, const struct pipe_blit_info *info)
        info->dst.resource->nr_samples <= 1)
       eng3d = true;
 
+   if (info->num_window_rectangles > 0 || info->window_rectangle_include)
+      eng3d = true;
+
    /* FIXME: can't make this work with eng2d anymore */
    if ((info->src.resource->nr_samples | 1) !=
        (info->dst.resource->nr_samples | 1))
@@ -1756,6 +1780,7 @@ nv50_blitter_destroy(struct nv50_screen *screen)
       }
    }
 
+   pipe_mutex_destroy(blitter->mutex);
    FREE(blitter);
 }
 

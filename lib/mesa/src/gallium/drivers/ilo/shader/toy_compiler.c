@@ -449,7 +449,7 @@ tc_dump_inst(struct toy_compiler *tc, const struct toy_inst *inst)
 
    tc_dump_dst(tc, inst->dst);
 
-   for (i = 0; i < Elements(inst->src); i++) {
+   for (i = 0; i < ARRAY_SIZE(inst->src); i++) {
       if (tsrc_is_null(inst->src[i]))
          break;
 
@@ -491,9 +491,9 @@ toy_compiler_cleanup(struct toy_compiler *tc)
    struct toy_inst *inst, *next;
 
    LIST_FOR_EACH_ENTRY_SAFE(inst, next, &tc->instructions, list)
-      util_slab_free(&tc->mempool, inst);
+      slab_free_st(&tc->mempool, inst);
 
-   util_slab_destroy(&tc->mempool);
+   slab_destroy(&tc->mempool);
 }
 
 /**
@@ -522,10 +522,10 @@ tc_init_inst_templ(struct toy_compiler *tc)
    templ->marker = false;
 
    templ->dst = tdst_null();
-   for (i = 0; i < Elements(templ->src); i++)
+   for (i = 0; i < ARRAY_SIZE(templ->src); i++)
       templ->src[i] = tsrc_null();
 
-   for (i = 0; i < Elements(templ->tex.offsets); i++)
+   for (i = 0; i < ARRAY_SIZE(templ->tex.offsets); i++)
       templ->tex.offsets[i] = tsrc_null();
 
    list_inithead(&templ->list);
@@ -543,8 +543,8 @@ toy_compiler_init(struct toy_compiler *tc, const struct ilo_dev *dev)
 
    tc_init_inst_templ(tc);
 
-   util_slab_create(&tc->mempool, sizeof(struct toy_inst),
-         64, UTIL_SLAB_SINGLETHREADED);
+   slab_create(&tc->mempool, sizeof(struct toy_inst),
+         64);
 
    list_inithead(&tc->instructions);
    /* instructions are added to the tail */

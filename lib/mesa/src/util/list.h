@@ -71,12 +71,18 @@ static inline void list_addtail(struct list_head *item, struct list_head *list)
     list->prev = item;
 }
 
+static inline bool list_empty(struct list_head *list);
+
 static inline void list_replace(struct list_head *from, struct list_head *to)
 {
-    to->prev = from->prev;
-    to->next = from->next;
-    from->next->prev = to;
-    from->prev->next = to;
+    if (list_empty(from)) {
+        list_inithead(to);
+    } else {
+        to->prev = from->prev;
+        to->next = from->next;
+        from->next->prev = to;
+        from->prev->next = to;
+    }
 }
 
 static inline void list_del(struct list_head *item)
@@ -114,6 +120,28 @@ static inline unsigned list_length(struct list_head *list)
    for (node = list->next; node != list; node = node->next)
       length++;
    return length;
+}
+
+static inline void list_splice(struct list_head *src, struct list_head *dst)
+{
+   if (list_empty(src))
+      return;
+
+   src->next->prev = dst;
+   src->prev->next = dst->next;
+   dst->next->prev = src->prev;
+   dst->next = src->next;
+}
+
+static inline void list_splicetail(struct list_head *src, struct list_head *dst)
+{
+   if (list_empty(src))
+      return;
+
+   src->prev->next = dst;
+   src->next->prev = dst->prev;
+   dst->prev->next = src->next;
+   dst->prev = src->prev;
 }
 
 static inline void list_validate(struct list_head *list)

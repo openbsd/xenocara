@@ -52,14 +52,14 @@ fd4_screen_is_format_supported(struct pipe_screen *pscreen,
 	}
 
 	if ((usage & PIPE_BIND_VERTEX_BUFFER) &&
-			(fd4_pipe2vtx(format) != ~0)) {
+			(fd4_pipe2vtx(format) != (enum a4xx_vtx_fmt)~0)) {
 		retval |= PIPE_BIND_VERTEX_BUFFER;
 	}
 
 	if ((usage & PIPE_BIND_SAMPLER_VIEW) &&
 			(target == PIPE_BUFFER ||
 			 util_format_get_blocksize(format) != 12) &&
-			(fd4_pipe2tex(format) != ~0)) {
+			(fd4_pipe2tex(format) != (enum a4xx_tex_fmt)~0)) {
 		retval |= PIPE_BIND_SAMPLER_VIEW;
 	}
 
@@ -67,8 +67,8 @@ fd4_screen_is_format_supported(struct pipe_screen *pscreen,
 				PIPE_BIND_DISPLAY_TARGET |
 				PIPE_BIND_SCANOUT |
 				PIPE_BIND_SHARED)) &&
-			(fd4_pipe2color(format) != ~0) &&
-			(fd4_pipe2tex(format) != ~0)) {
+			(fd4_pipe2color(format) != (enum a4xx_color_fmt)~0) &&
+			(fd4_pipe2tex(format) != (enum a4xx_tex_fmt)~0)) {
 		retval |= usage & (PIPE_BIND_RENDER_TARGET |
 				PIPE_BIND_DISPLAY_TARGET |
 				PIPE_BIND_SCANOUT |
@@ -76,20 +76,15 @@ fd4_screen_is_format_supported(struct pipe_screen *pscreen,
 	}
 
 	if ((usage & PIPE_BIND_DEPTH_STENCIL) &&
-			(fd4_pipe2depth(format) != ~0) &&
-			(fd4_pipe2tex(format) != ~0)) {
+			(fd4_pipe2depth(format) != (enum a4xx_depth_format)~0) &&
+			(fd4_pipe2tex(format) != (enum a4xx_tex_fmt)~0)) {
 		retval |= PIPE_BIND_DEPTH_STENCIL;
 	}
 
 	if ((usage & PIPE_BIND_INDEX_BUFFER) &&
-			(fd_pipe2index(format) != ~0)) {
+			(fd_pipe2index(format) != (enum pc_di_index_size)~0)) {
 		retval |= PIPE_BIND_INDEX_BUFFER;
 	}
-
-	if (usage & PIPE_BIND_TRANSFER_READ)
-		retval |= PIPE_BIND_TRANSFER_READ;
-	if (usage & PIPE_BIND_TRANSFER_WRITE)
-		retval |= PIPE_BIND_TRANSFER_WRITE;
 
 	if (retval != usage) {
 		DBG("not supported: format=%s, target=%d, sample_count=%d, "
@@ -105,7 +100,7 @@ fd4_screen_init(struct pipe_screen *pscreen)
 {
 	struct fd_screen *screen = fd_screen(pscreen);
 	screen->max_rts = A4XX_MAX_RENDER_TARGETS;
-	screen->compiler = ir3_compiler_create(screen->gpu_id);
+	screen->compiler = ir3_compiler_create(screen->dev, screen->gpu_id);
 	pscreen->context_create = fd4_context_create;
 	pscreen->is_format_supported = fd4_screen_is_format_supported;
 }

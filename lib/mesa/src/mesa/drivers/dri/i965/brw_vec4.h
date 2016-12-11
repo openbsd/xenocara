@@ -114,9 +114,9 @@ public:
     * for the ir->location's used.
     */
    dst_reg output_reg[BRW_VARYING_SLOT_COUNT];
+   dst_reg output_generic_reg[MAX_VARYINGS_INCL_PATCH][4];
+   unsigned output_generic_num_components[MAX_VARYINGS_INCL_PATCH][4];
    const char *output_reg_annotation[BRW_VARYING_SLOT_COUNT];
-   int *uniform_size;
-   int uniform_array_size; /*< Size of the uniform_size array */
    int uniforms;
 
    src_reg shader_start_time;
@@ -215,6 +215,8 @@ public:
    EMIT3(MAD)
    EMIT2(ADDC)
    EMIT2(SUBB)
+   EMIT1(DIM)
+
 #undef EMIT1
 #undef EMIT2
 #undef EMIT3
@@ -259,9 +261,8 @@ public:
                      uint32_t constant_offset,
                      src_reg offset_value,
                      src_reg mcs,
-                     bool is_cube_array,
                      uint32_t surface, src_reg surface_reg,
-                     uint32_t sampler, src_reg sampler_reg);
+                     src_reg sampler_reg);
 
    src_reg emit_mcs_fetch(const glsl_type *coordinate_type, src_reg coordinate,
                           src_reg surface);
@@ -270,23 +271,15 @@ public:
    void emit_ndc_computation();
    void emit_psiz_and_flags(dst_reg reg);
    vec4_instruction *emit_generic_urb_slot(dst_reg reg, int varying);
+   void emit_generic_urb_slot(dst_reg reg, int varying, int component);
    virtual void emit_urb_slot(dst_reg reg, int varying);
 
    void emit_shader_time_begin();
    void emit_shader_time_end();
    void emit_shader_time_write(int shader_time_subindex, src_reg value);
 
-   void emit_untyped_atomic(unsigned atomic_op, unsigned surf_index,
-                            dst_reg dst, src_reg offset, src_reg src0,
-                            src_reg src1);
-
-   void emit_untyped_surface_read(unsigned surf_index, dst_reg dst,
-                                  src_reg offset);
-
    src_reg get_scratch_offset(bblock_t *block, vec4_instruction *inst,
 			      src_reg *reladdr, int reg_offset);
-   src_reg get_pull_constant_offset(bblock_t *block, vec4_instruction *inst,
-				    src_reg *reladdr, int reg_offset);
    void emit_scratch_read(bblock_t *block, vec4_instruction *inst,
 			  dst_reg dst,
 			  src_reg orig_src,
@@ -296,7 +289,8 @@ public:
    void emit_pull_constant_load(bblock_t *block, vec4_instruction *inst,
 				dst_reg dst,
 				src_reg orig_src,
-				int base_offset);
+                                int base_offset,
+                                src_reg indirect);
    void emit_pull_constant_load_reg(dst_reg dst,
                                     src_reg surf_index,
                                     src_reg offset,
@@ -336,19 +330,18 @@ public:
    virtual void nir_emit_undef(nir_ssa_undef_instr *instr);
    virtual void nir_emit_ssbo_atomic(int op, nir_intrinsic_instr *instr);
 
-   dst_reg get_nir_dest(nir_dest dest, enum brw_reg_type type);
-   dst_reg get_nir_dest(nir_dest dest, nir_alu_type type);
-   dst_reg get_nir_dest(nir_dest dest);
-   src_reg get_nir_src(nir_src src, enum brw_reg_type type,
+   dst_reg get_nir_dest(const nir_dest &dest, enum brw_reg_type type);
+   dst_reg get_nir_dest(const nir_dest &dest, nir_alu_type type);
+   dst_reg get_nir_dest(const nir_dest &dest);
+   src_reg get_nir_src(const nir_src &src, enum brw_reg_type type,
                        unsigned num_components = 4);
-   src_reg get_nir_src(nir_src src, nir_alu_type type,
+   src_reg get_nir_src(const nir_src &src, nir_alu_type type,
                        unsigned num_components = 4);
-   src_reg get_nir_src(nir_src src,
+   src_reg get_nir_src(const nir_src &src,
                        unsigned num_components = 4);
    src_reg get_indirect_offset(nir_intrinsic_instr *instr);
 
-   virtual dst_reg *make_reg_for_system_value(int location,
-                                              const glsl_type *type) = 0;
+   virtual dst_reg *make_reg_for_system_value(int location) = 0;
 
    dst_reg *nir_locals;
    dst_reg *nir_ssa_values;

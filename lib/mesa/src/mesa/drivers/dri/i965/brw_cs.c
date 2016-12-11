@@ -35,7 +35,7 @@
 #include "compiler/glsl/ir_uniform.h"
 
 static void
-assign_cs_binding_table_offsets(const struct brw_device_info *devinfo,
+assign_cs_binding_table_offsets(const struct gen_device_info *devinfo,
                                 const struct gl_shader_program *shader_prog,
                                 const struct gl_program *prog,
                                 struct brw_cs_prog_data *prog_data)
@@ -57,6 +57,7 @@ brw_codegen_cs_prog(struct brw_context *brw,
                     struct brw_compute_program *cp,
                     struct brw_cs_prog_key *key)
 {
+   const struct gen_device_info *devinfo = &brw->screen->devinfo;
    struct gl_context *ctx = &brw->ctx;
    const GLuint *program;
    void *mem_ctx = ralloc_context(NULL);
@@ -84,14 +85,17 @@ brw_codegen_cs_prog(struct brw_context *brw,
       prog_data.base.total_shared = prog->Comp.SharedSize;
    }
 
-   assign_cs_binding_table_offsets(brw->intelScreen->devinfo, prog,
+   assign_cs_binding_table_offsets(devinfo, prog,
                                    &cp->program.Base, &prog_data);
 
    /* Allocate the references to the uniforms that will end up in the
     * prog_data associated with the compiled program, and which will be freed
     * by the state cache.
     */
-   int param_count = cp->program.Base.nir->num_uniforms;
+   int param_count = cp->program.Base.nir->num_uniforms / 4;
+
+   /* The backend also sometimes add a param for the thread local id. */
+   prog_data.thread_local_id_index = param_count++;
 
    /* The backend also sometimes adds params for texture size. */
    param_count += 2 * ctx->Const.Program[MESA_SHADER_COMPUTE].MaxTextureImageUnits;
@@ -121,7 +125,7 @@ brw_codegen_cs_prog(struct brw_context *brw,
       st_index = brw_get_shader_time_index(brw, prog, &cp->program.Base, ST_CS);
 
    char *error_str;
-   program = brw_compile_cs(brw->intelScreen->compiler, brw, mem_ctx,
+   program = brw_compile_cs(brw->screen->compiler, brw, mem_ctx,
                             key, &prog_data, cp->program.Base.nir,
                             st_index, &program_size, &error_str);
    if (program == NULL) {
@@ -145,10 +149,29 @@ brw_codegen_cs_prog(struct brw_context *brw,
       }
    }
 
-   if (prog_data.base.total_scratch) {
-      brw_get_scratch_bo(brw, &brw->cs.base.scratch_bo,
-                         prog_data.base.total_scratch * brw->max_cs_threads);
-   }
+   const unsigned subslices = MAX2(brw->screen->subslice_total, 1);
+
+   /* WaCSScratchSize:hsw
+    *
+    * Haswell's scratch space address calculation appears to be sparse
+    * rather than tightly packed.  The Thread ID has bits indicating
+    * which subslice, EU within a subslice, and thread within an EU
+    * it is.  There's a maximum of two slices and two subslices, so these
+    * can be stored with a single bit.  Even though there are only 10 EUs
+    * per subslice, this is stored in 4 bits, so there's an effective
+    * maximum value of 16 EUs.  Similarly, although there are only 7
+    * threads per EU, this is stored in a 3 bit number, giving an effective
+    * maximum value of 8 threads per EU.
+    *
+    * This means that we need to use 16 * 8 instead of 10 * 7 for the
+    * number of threads per subslice.
+    */
+   const unsigned scratch_ids_per_subslice =
+      brw->is_haswell ? 16 * 8 : devinfo->max_cs_threads;
+
+   brw_alloc_stage_scratch(brw, &brw->cs.base,
+                           prog_data.base.total_scratch,
+                           scratch_ids_per_subslice * subslices);
 
    if (unlikely(INTEL_DEBUG & DEBUG_CS))
       fprintf(stderr, "\n");
@@ -157,7 +180,7 @@ brw_codegen_cs_prog(struct brw_context *brw,
                     key, sizeof(*key),
                     program, program_size,
                     &prog_data, sizeof(prog_data),
-                    &brw->cs.base.prog_offset, &brw->cs.prog_data);
+                    &brw->cs.base.prog_offset, &brw->cs.base.prog_data);
    ralloc_free(mem_ctx);
 
    return true;
@@ -176,8 +199,7 @@ brw_cs_populate_key(struct brw_context *brw, struct brw_cs_prog_key *key)
    memset(key, 0, sizeof(*key));
 
    /* _NEW_TEXTURE */
-   brw_populate_sampler_prog_key_data(ctx, prog, brw->cs.base.sampler_count,
-                                      &key->tex);
+   brw_populate_sampler_prog_key_data(ctx, prog, &key->tex);
 
    /* The unique compute program ID */
    key->program_string_id = cp->id;
@@ -199,21 +221,21 @@ brw_upload_cs_prog(struct brw_context *brw)
       return;
 
    brw->cs.base.sampler_count =
-      _mesa_fls(ctx->ComputeProgram._Current->Base.SamplersUsed);
+      util_last_bit(ctx->ComputeProgram._Current->Base.SamplersUsed);
 
    brw_cs_populate_key(brw, &key);
 
    if (!brw_search_cache(&brw->cache, BRW_CACHE_CS_PROG,
                          &key, sizeof(key),
-                         &brw->cs.base.prog_offset, &brw->cs.prog_data)) {
+                         &brw->cs.base.prog_offset,
+                         &brw->cs.base.prog_data)) {
       bool success =
          brw_codegen_cs_prog(brw,
-                             ctx->Shader.CurrentProgram[MESA_SHADER_COMPUTE],
+                             ctx->_Shader->CurrentProgram[MESA_SHADER_COMPUTE],
                              cp, &key);
       (void) success;
       assert(success);
    }
-   brw->cs.base.prog_data = &brw->cs.prog_data->base;
 }
 
 
@@ -234,12 +256,12 @@ brw_cs_precompile(struct gl_context *ctx,
    brw_setup_tex_for_precompile(brw, &key.tex, prog);
 
    uint32_t old_prog_offset = brw->cs.base.prog_offset;
-   struct brw_cs_prog_data *old_prog_data = brw->cs.prog_data;
+   struct brw_stage_prog_data *old_prog_data = brw->cs.base.prog_data;
 
    bool success = brw_codegen_cs_prog(brw, shader_prog, bcp, &key);
 
    brw->cs.base.prog_offset = old_prog_offset;
-   brw->cs.prog_data = old_prog_data;
+   brw->cs.base.prog_data = old_prog_data;
 
    return success;
 }

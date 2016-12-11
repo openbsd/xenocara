@@ -852,10 +852,19 @@ const struct function common_desktop_functions_possible[] = {
 // { "glTextureStorage3DMultisampleEXT", 43, -1 },      // XXX: Add to xml
 
 /* GL 4.5 */
+   /* aliased versions checked above */
+   //{ "glGetGraphicsResetStatus", 45, -1 },
+   //{ "glReadnPixels", 45, -1 },
+   //{ "glGetnUniformfv", 45, -1 },
+   //{ "glGetnUniformiv", 45, -1 },
+   //{ "glGetnUniformuiv", 45, -1 },
    { "glMemoryBarrierByRegion", 45, -1 },
 
    /* GL_ARB_internalformat_query */
    { "glGetInternalformativ", 30, -1 },
+
+   /* GL_ARB_internalformat_query */
+   { "glGetInternalformati64v", 30, -1 },
 
    /* GL_ARB_multi_bind */
    { "glBindBuffersBase", 44, -1 },
@@ -933,6 +942,9 @@ const struct function common_desktop_functions_possible[] = {
    { "glDispatchCompute", 43, -1 },
    { "glDispatchComputeIndirect", 43, -1 },
 
+   /* GL_ARB_compute_variable_group_size */
+   { "glDispatchComputeGroupSizeARB", 43, -1 },
+
    /* GL_EXT_polygon_offset_clamp */
    { "glPolygonOffsetClampEXT", 11, -1 },
 
@@ -942,6 +954,12 @@ const struct function common_desktop_functions_possible[] = {
 
    /* GL_GREMEDY_string_marker */
    { "glStringMarkerGREMEDY", 15, -1 },
+
+   /* GL_EXT_window_rectangles */
+   { "glWindowRectanglesEXT", 30, -1 },
+
+   /* GL_KHR_blend_equation_advanced */
+   { "glBlendBarrierKHR", 20, -1 },
 
    { NULL, 0, -1 }
 };
@@ -1851,6 +1869,9 @@ const struct function gl_core_functions_possible[] = {
    { "glMultiDrawArraysIndirectCountARB", 31, -1 },
    { "glMultiDrawElementsIndirectCountARB", 31, -1 },
 
+   /* GL_ARB_ES3_2_compatibility */
+   { "glPrimitiveBoundingBoxARB", 45, -1 },
+
    { NULL, 0, -1 }
 };
 
@@ -2060,6 +2081,9 @@ const struct function gles11_functions_possible[] = {
    { "glGetPointervKHR", 11, _gloffset_GetPointerv },
    { "glObjectLabelKHR", 11, -1 },
    { "glObjectPtrLabelKHR", 11, -1 },
+
+   /* GL_EXT_polygon_offset_clamp */
+   { "glPolygonOffsetClampEXT", 11, -1 },
 
    { NULL, 0, -1 }
 };
@@ -2297,6 +2321,19 @@ const struct function gles2_functions_possible[] = {
    { "glObjectLabelKHR", 20, -1 },
    { "glObjectPtrLabelKHR", 20, -1 },
 
+   /* GL_EXT_polygon_offset_clamp */
+   { "glPolygonOffsetClampEXT", 11, -1 },
+
+   /* GL_KHR_robustness */
+   { "glGetGraphicsResetStatusKHR", 20, -1 },
+   { "glReadnPixelsKHR", 20, -1 },
+   { "glGetnUniformfvKHR", 20, -1 },
+   { "glGetnUniformivKHR", 20, -1 },
+   { "glGetnUniformuivKHR", 20, -1 },
+
+   /* GL_KHR_blend_equation_advanced */
+   { "glBlendBarrierKHR", 20, -1 },
+
    { NULL, 0, -1 }
 };
 
@@ -2355,6 +2392,7 @@ const struct function gles3_functions_possible[] = {
    { "glGetInteger64v", 30, -1 },
    { "glGetIntegeri_v", 30, -1 },
    { "glGetInternalformativ", 30, -1 },
+   { "glGetInternalformati64v", 30, -1 },
    // glGetProgramBinary aliases glGetProgramBinaryOES in GLES 2
    { "glGetQueryiv", 30, -1 },
    { "glGetQueryObjectuiv", 30, -1 },
@@ -2435,6 +2473,44 @@ const struct function gles3_functions_possible[] = {
    { "glBindFragDataLocationIndexedEXT", 30, -1 },
    { "glGetFragDataIndexEXT", 30, -1 },
    { "glBindFragDataLocationEXT", 30, -1 },
+
+   /* GL_OES_texture_border_clamp */
+   { "glTexParameterIivOES", 30, -1 },
+   { "glTexParameterIuivOES", 30, -1 },
+   { "glGetTexParameterIivOES", 30, -1 },
+   { "glGetTexParameterIuivOES", 30, -1 },
+   { "glSamplerParameterIivOES", 30, -1 },
+   { "glSamplerParameterIuivOES", 30, -1 },
+   { "glGetSamplerParameterIivOES", 30, -1 },
+   { "glGetSamplerParameterIuivOES", 30, -1 },
+
+   /* GL_OES_texture_buffer */
+   { "glTexBufferOES", 31, -1 },
+   { "glTexBufferRangeOES", 31, -1 },
+
+   /* GL_OES_sample_shading */
+   { "glMinSampleShadingOES", 30, -1 },
+
+   /* GL_OES_copy_image */
+   { "glCopyImageSubDataOES", 30, -1 },
+
+   /* GL_OES_draw_buffers_indexed */
+   { "glBlendFunciOES", 30, -1 },
+   { "glBlendFuncSeparateiOES", 30, -1 },
+   { "glBlendEquationiOES", 30, -1 },
+   { "glBlendEquationSeparateiOES", 30, -1 },
+   { "glColorMaskiOES", 30, -1 },
+   { "glEnableiOES", 30, -1 },
+   { "glDisableiOES", 30, -1 },
+   { "glIsEnablediOES", 30, -1 },
+
+   /* GL_EXT_base_instance */
+   { "glDrawArraysInstancedBaseInstanceEXT", 30, -1 },
+   { "glDrawElementsInstancedBaseInstanceEXT", 30, -1 },
+   { "glDrawElementsInstancedBaseVertexBaseInstanceEXT", 30, -1 },
+
+   /* GL_EXT_window_rectangles */
+   { "glWindowRectanglesEXT", 30, -1 },
 
    { NULL, 0, -1 }
 };
@@ -2529,6 +2605,27 @@ const struct function gles31_functions_possible[] = {
 
    /* GL_OES_geometry_shader */
    { "glFramebufferTextureOES", 31, -1},
+
+   /* GL_EXT_geometry_shader */
+   // We check for the aliased OES version above
+   // { "glFramebufferTextureEXT", 31, -1},
+
+   /* GL_OES_tessellation_shader */
+   { "glPatchParameteriOES", 31, -1 },
+
+   /* GL_OES_primitive_bound_box */
+   { "glPrimitiveBoundingBoxOES", 31, -1 },
+
+   /* GL_OES_viewport_array */
+   { "glViewportArrayvOES", 31, -1 },
+   { "glViewportIndexedfOES", 31, -1 },
+   { "glViewportIndexedfvOES", 31, -1 },
+   { "glScissorArrayvOES", 31, -1 },
+   { "glScissorIndexedOES", 31, -1 },
+   { "glScissorIndexedvOES", 31, -1 },
+   { "glDepthRangeArrayfvOES", 31, -1 },
+   { "glDepthRangeIndexedfOES", 31, -1 },
+   { "glGetFloati_vOES", 31, -1 },
 
    { NULL, 0, -1 },
  };

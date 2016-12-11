@@ -77,12 +77,12 @@ debug_mask(const char *name, GLbitfield mask)
  * Returns true if the scissor is a noop (cuts out nothing).
  */
 static bool
-noop_scissor(struct gl_context *ctx, struct gl_framebuffer *fb)
+noop_scissor(struct gl_framebuffer *fb)
 {
-   return ctx->Scissor.ScissorArray[0].X <= 0 &&
-          ctx->Scissor.ScissorArray[0].Y <= 0 &&
-          ctx->Scissor.ScissorArray[0].Width >= fb->Width &&
-          ctx->Scissor.ScissorArray[0].Height >= fb->Height;
+   return fb->_Xmin <= 0 &&
+          fb->_Ymin <= 0 &&
+          fb->_Xmax >= fb->Width &&
+          fb->_Ymax >= fb->Height;
 }
 
 /**
@@ -117,7 +117,7 @@ brw_fast_clear_depth(struct gl_context *ctx)
     * a previous clear had happened at a different clear value and resolve it
     * first.
     */
-   if ((ctx->Scissor.EnableFlags & 1) && !noop_scissor(ctx, fb)) {
+   if ((ctx->Scissor.EnableFlags & 1) && !noop_scissor(fb)) {
       perf_debug("Failed to fast clear %dx%d depth because of scissors.  "
                  "Possible 5%% performance win if avoided.\n",
                  mt->logical_width0, mt->logical_height0);
@@ -187,11 +187,11 @@ brw_fast_clear_depth(struct gl_context *ctx)
       for (unsigned layer = 0; layer < depth_irb->layer_count; layer++) {
          intel_hiz_exec(brw, mt, depth_irb->mt_level,
                         depth_irb->mt_layer + layer,
-                        GEN6_HIZ_OP_DEPTH_CLEAR);
+                        BLORP_HIZ_OP_DEPTH_CLEAR);
       }
    } else {
       intel_hiz_exec(brw, mt, depth_irb->mt_level, depth_irb->mt_layer,
-                     GEN6_HIZ_OP_DEPTH_CLEAR);
+                     BLORP_HIZ_OP_DEPTH_CLEAR);
    }
 
    if (brw->gen == 6) {
@@ -220,7 +220,7 @@ brw_clear(struct gl_context *ctx, GLbitfield mask)
 {
    struct brw_context *brw = brw_context(ctx);
    struct gl_framebuffer *fb = ctx->DrawBuffer;
-   bool partial_clear = ctx->Scissor.EnableFlags && !noop_scissor(ctx, fb);
+   bool partial_clear = ctx->Scissor.EnableFlags && !noop_scissor(fb);
 
    if (!_mesa_check_conditional_render(ctx))
       return;
@@ -239,9 +239,18 @@ brw_clear(struct gl_context *ctx, GLbitfield mask)
       }
    }
 
-   /* Clear color buffers with fast clear or at least rep16 writes. */
+   if (mask & BUFFER_BIT_STENCIL) {
+      struct intel_renderbuffer *stencil_irb =
+         intel_get_renderbuffer(fb, BUFFER_STENCIL);
+      struct intel_mipmap_tree *mt = stencil_irb->mt;
+      if (mt && mt->stencil_mt)
+         mt->stencil_mt->r8stencil_needs_update = true;
+   }
+
+   /* BLORP is currently only supported on Gen6+. */
    if (brw->gen >= 6 && (mask & BUFFER_BITS_COLOR)) {
-      if (brw_meta_fast_clear(brw, fb, mask, partial_clear)) {
+      const bool encode_srgb = ctx->Color.sRGBEnabled;
+      if (brw_blorp_clear_color(brw, fb, mask, partial_clear, encode_srgb)) {
          debug_mask("blorp color", mask & BUFFER_BITS_COLOR);
          mask &= ~BUFFER_BITS_COLOR;
       }

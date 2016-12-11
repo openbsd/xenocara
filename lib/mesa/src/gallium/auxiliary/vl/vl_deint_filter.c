@@ -67,7 +67,7 @@ create_vert_shader(struct vl_deint_filter *filter)
    struct ureg_src i_vpos;
    struct ureg_dst o_vpos, o_vtex;
 
-   shader = ureg_create(TGSI_PROCESSOR_VERTEX);
+   shader = ureg_create(PIPE_SHADER_VERTEX);
    if (!shader)
       return NULL;
 
@@ -92,7 +92,7 @@ create_copy_frag_shader(struct vl_deint_filter *filter, unsigned field)
    struct ureg_dst o_fragment;
    struct ureg_dst t_tex;
 
-   shader = ureg_create(TGSI_PROCESSOR_FRAGMENT);
+   shader = ureg_create(PIPE_SHADER_FRAGMENT);
    if (!shader) {
       return NULL;
    }
@@ -136,7 +136,7 @@ create_deint_frag_shader(struct vl_deint_filter *filter, unsigned field,
    struct ureg_dst t_a, t_b;
    struct ureg_dst t_weave, t_linear;
 
-   shader = ureg_create(TGSI_PROCESSOR_FRAGMENT);
+   shader = ureg_create(PIPE_SHADER_FRAGMENT);
    if (!shader) {
       return NULL;
    }
@@ -447,7 +447,8 @@ vl_deint_filter_render(struct vl_deint_filter *filter,
    struct pipe_sampler_view *sampler_views[4];
    struct pipe_surface **dst_surfaces;
    const unsigned *plane_order;
-   int i, j;
+   int i;
+   unsigned j;
 
    assert(filter && prevprev && prev && cur && next && field <= 1);
 

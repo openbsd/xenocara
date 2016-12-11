@@ -59,6 +59,7 @@
 #define FB_BUFFER_SIZE 2048
 #define FB_BUFFER_SIZE_TONGA (2048 * 64)
 #define IT_SCALING_TABLE_SIZE 992
+#define UVD_SESSION_CONTEXT_SIZE (128 * 1024)
 
 /* UVD decoder representation */
 struct ruvd_decoder {
@@ -89,20 +90,20 @@ struct ruvd_decoder {
 	struct rvid_buffer		dpb;
 	bool				use_legacy;
 	struct rvid_buffer		ctx;
+	struct rvid_buffer		sessionctx;
 };
 
 /* flush IB to the hardware */
-static void flush(struct ruvd_decoder *dec)
+static int flush(struct ruvd_decoder *dec, unsigned flags)
 {
-	dec->ws->cs_flush(dec->cs, RADEON_FLUSH_ASYNC, NULL, 0);
+	return dec->ws->cs_flush(dec->cs, flags, NULL);
 }
 
 /* add a new set register command to the IB */
 static void set_reg(struct ruvd_decoder *dec, unsigned reg, uint32_t val)
 {
-	uint32_t *pm4 =	dec->cs->buf;
-	pm4[dec->cs->cdw++] = RUVD_PKT0(reg >> 2, 0);
-	pm4[dec->cs->cdw++] = val;
+	radeon_emit(dec->cs, RUVD_PKT0(reg >> 2, 0));
+	radeon_emit(dec->cs, val);
 }
 
 /* send a command to the VCPU through the GPCOM registers */
@@ -112,7 +113,8 @@ static void send_cmd(struct ruvd_decoder *dec, unsigned cmd,
 {
 	int reloc_idx;
 
-	reloc_idx = dec->ws->cs_add_buffer(dec->cs, buf, usage, domain,
+	reloc_idx = dec->ws->cs_add_buffer(dec->cs, buf, usage | RADEON_USAGE_SYNCHRONIZED,
+					   domain,
 					  RADEON_PRIO_UVD);
 	if (!dec->use_legacy) {
 		uint64_t addr;
@@ -121,6 +123,7 @@ static void send_cmd(struct ruvd_decoder *dec, unsigned cmd,
 		set_reg(dec, RUVD_GPCOM_VCPU_DATA0, addr);
 		set_reg(dec, RUVD_GPCOM_VCPU_DATA1, addr >> 32);
 	} else {
+		off += dec->ws->buffer_get_reloc_offset(buf);
 		set_reg(dec, RUVD_GPCOM_VCPU_DATA0, off);
 		set_reg(dec, RUVD_GPCOM_VCPU_DATA1, reloc_idx * 4);
 	}
@@ -171,6 +174,12 @@ static void send_msg_buf(struct ruvd_decoder *dec)
 	dec->fb = NULL;
 	dec->it = NULL;
 
+
+	if (dec->sessionctx.res)
+		send_cmd(dec, RUVD_CMD_SESSION_CONTEXT_BUFFER,
+			 dec->sessionctx.res->buf, 0, RADEON_USAGE_READWRITE,
+			 RADEON_DOMAIN_VRAM);
+
 	/* and send it to the hardware */
 	send_cmd(dec, RUVD_CMD_MSG_BUFFER, buf->res->buf, 0,
 		 RADEON_USAGE_READ, RADEON_DOMAIN_GTT);
@@ -209,7 +218,61 @@ static uint32_t profile2stream_type(struct ruvd_decoder *dec, unsigned family)
 	}
 }
 
-static unsigned calc_ctx_size(struct ruvd_decoder *dec)
+static unsigned calc_ctx_size_h264_perf(struct ruvd_decoder *dec)
+{
+	unsigned width_in_mb, height_in_mb, ctx_size;
+	unsigned width = align(dec->base.width, VL_MACROBLOCK_WIDTH);
+	unsigned height = align(dec->base.height, VL_MACROBLOCK_HEIGHT);
+
+	unsigned max_references = dec->base.max_references + 1;
+
+	// picture width & height in 16 pixel units
+	width_in_mb = width / VL_MACROBLOCK_WIDTH;
+	height_in_mb = align(height / VL_MACROBLOCK_HEIGHT, 2);
+
+	if (!dec->use_legacy) {
+		unsigned fs_in_mb = width_in_mb * height_in_mb;
+		unsigned num_dpb_buffer;
+		switch(dec->base.level) {
+		case 30:
+			num_dpb_buffer = 8100 / fs_in_mb;
+			break;
+		case 31:
+			num_dpb_buffer = 18000 / fs_in_mb;
+			break;
+		case 32:
+			num_dpb_buffer = 20480 / fs_in_mb;
+			break;
+		case 41:
+			num_dpb_buffer = 32768 / fs_in_mb;
+			break;
+		case 42:
+			num_dpb_buffer = 34816 / fs_in_mb;
+			break;
+		case 50:
+			num_dpb_buffer = 110400 / fs_in_mb;
+			break;
+		case 51:
+			num_dpb_buffer = 184320 / fs_in_mb;
+			break;
+		default:
+			num_dpb_buffer = 184320 / fs_in_mb;
+			break;
+		}
+		num_dpb_buffer++;
+		max_references = MAX2(MIN2(NUM_H264_REFS, num_dpb_buffer), max_references);
+		ctx_size = max_references * align(width_in_mb * height_in_mb  * 192, 256);
+	} else {
+		// the firmware seems to always assume a minimum of ref frames
+		max_references = MAX2(NUM_H264_REFS, max_references);
+		// macroblock context buffer
+		ctx_size = align(width_in_mb * height_in_mb * max_references * 192, 256);
+	}
+
+	return ctx_size;
+}
+
+static unsigned calc_ctx_size_h265_main(struct ruvd_decoder *dec)
 {
 	unsigned width = align(dec->base.width, VL_MACROBLOCK_WIDTH);
 	unsigned height = align(dec->base.height, VL_MACROBLOCK_HEIGHT);
@@ -224,6 +287,39 @@ static unsigned calc_ctx_size(struct ruvd_decoder *dec)
 	width = align (width, 16);
 	height = align (height, 16);
 	return ((width + 255) / 16) * ((height + 255) / 16) * 16 * max_references + 52 * 1024;
+}
+
+static unsigned calc_ctx_size_h265_main10(struct ruvd_decoder *dec, struct pipe_h265_picture_desc *pic)
+{
+	unsigned block_size, log2_ctb_size, width_in_ctb, height_in_ctb, num_16x16_block_per_ctb;
+	unsigned context_buffer_size_per_ctb_row, cm_buffer_size, max_mb_address, db_left_tile_pxl_size;
+	unsigned db_left_tile_ctx_size = 4096 / 16 * (32 + 16 * 4);
+
+	unsigned width = align(dec->base.width, VL_MACROBLOCK_WIDTH);
+	unsigned height = align(dec->base.height, VL_MACROBLOCK_HEIGHT);
+	unsigned coeff_10bit = (pic->pps->sps->bit_depth_luma_minus8 || pic->pps->sps->bit_depth_chroma_minus8) ? 2 : 1;
+
+	unsigned max_references = dec->base.max_references + 1;
+
+	if (dec->base.width * dec->base.height >= 4096*2000)
+		max_references = MAX2(max_references, 8);
+	else
+		max_references = MAX2(max_references, 17);
+
+	block_size = (1 << (pic->pps->sps->log2_min_luma_coding_block_size_minus3 + 3));
+	log2_ctb_size = block_size + pic->pps->sps->log2_diff_max_min_luma_coding_block_size;
+
+	width_in_ctb = (width + ((1 << log2_ctb_size) - 1)) >> log2_ctb_size;
+	height_in_ctb = (height + ((1 << log2_ctb_size) - 1)) >> log2_ctb_size;
+
+	num_16x16_block_per_ctb = ((1 << log2_ctb_size) >> 4) * ((1 << log2_ctb_size) >> 4);
+	context_buffer_size_per_ctb_row = align(width_in_ctb * num_16x16_block_per_ctb * 16, 256);
+	max_mb_address = (unsigned) ceil(height * 8 / 2048.0);
+
+	cm_buffer_size = max_references * context_buffer_size_per_ctb_row * height_in_ctb;
+	db_left_tile_pxl_size = coeff_10bit * (max_mb_address * 2 * 2048 + 1024);
+
+	return cm_buffer_size + db_left_tile_ctx_size + db_left_tile_pxl_size;
 }
 
 /* calculate size of reference picture buffer */
@@ -284,17 +380,23 @@ static unsigned calc_dpb_size(struct ruvd_decoder *dec)
 			num_dpb_buffer++;
 			max_references = MAX2(MIN2(NUM_H264_REFS, num_dpb_buffer), max_references);
 			dpb_size = image_size * max_references;
-			dpb_size += max_references * align(width_in_mb * height_in_mb  * 192, alignment);
-			dpb_size += align(width_in_mb * height_in_mb * 32, alignment);
+			if ((dec->stream_type != RUVD_CODEC_H264_PERF) ||
+			    (((struct r600_common_screen*)dec->screen)->family < CHIP_POLARIS10)) {
+				dpb_size += max_references * align(width_in_mb * height_in_mb  * 192, alignment);
+				dpb_size += align(width_in_mb * height_in_mb * 32, alignment);
+			}
 		} else {
 			// the firmware seems to allways assume a minimum of ref frames
 			max_references = MAX2(NUM_H264_REFS, max_references);
 			// reference picture buffer
 			dpb_size = image_size * max_references;
-			// macroblock context buffer
-			dpb_size += width_in_mb * height_in_mb * max_references * 192;
-			// IT surface buffer
-			dpb_size += width_in_mb * height_in_mb * 32;
+			if ((dec->stream_type != RUVD_CODEC_H264_PERF) ||
+			    (((struct r600_common_screen*)dec->screen)->family < CHIP_POLARIS10)) {
+				// macroblock context buffer
+				dpb_size += width_in_mb * height_in_mb * max_references * 192;
+				// IT surface buffer
+				dpb_size += width_in_mb * height_in_mb * 32;
+			}
 		}
 		break;
 	}
@@ -307,7 +409,10 @@ static unsigned calc_dpb_size(struct ruvd_decoder *dec)
 
 		width = align (width, 16);
 		height = align (height, 16);
-		dpb_size = align((width * height * 3) / 2, 256) * max_references;
+		if (dec->base.profile == PIPE_VIDEO_PROFILE_HEVC_MAIN_10)
+			dpb_size = align((width * height * 9) / 4, 256) * max_references;
+		else
+			dpb_size = align((width * height * 3) / 2, 256) * max_references;
 		break;
 
 	case PIPE_VIDEO_FORMAT_VC1:
@@ -598,6 +703,15 @@ static struct ruvd_h265 get_h265_msg(struct ruvd_decoder *dec, struct pipe_video
 			result.direct_reflist[i][j] = pic->RefPicList[i][j];
 	}
 
+	if ((pic->base.profile == PIPE_VIDEO_PROFILE_HEVC_MAIN_10) &&
+		(target->buffer_format == PIPE_FORMAT_NV12)) {
+		result.p010_mode = 0;
+		result.luma_10to8 = 5;
+		result.chroma_10to8 = 5;
+		result.sclr_luma10to8 = 4;
+		result.sclr_chroma10to8 = 4;
+	}
+
 	/* TODO
 	result.highestTid;
 	result.isNonRef;
@@ -823,7 +937,7 @@ static void ruvd_destroy(struct pipe_video_codec *decoder)
 	dec->msg->stream_handle = dec->stream_handle;
 	send_msg_buf(dec);
 
-	flush(dec);
+	flush(dec, 0);
 
 	dec->ws->cs_destroy(dec->cs);
 
@@ -833,8 +947,8 @@ static void ruvd_destroy(struct pipe_video_codec *decoder)
 	}
 
 	rvid_destroy_buffer(&dec->dpb);
-	if (u_reduce_video_profile(dec->base.profile) == PIPE_VIDEO_FORMAT_HEVC)
-		rvid_destroy_buffer(&dec->ctx);
+	rvid_destroy_buffer(&dec->ctx);
+	rvid_destroy_buffer(&dec->sessionctx);
 
 	FREE(dec);
 }
@@ -962,6 +1076,10 @@ static void ruvd_end_frame(struct pipe_video_codec *decoder,
 	dec->msg->body.decode.bsd_size = bs_size;
 	dec->msg->body.decode.db_pitch = align(dec->base.width, 16);
 
+	if (dec->stream_type == RUVD_CODEC_H264_PERF &&
+	    ((struct r600_common_screen*)dec->screen)->family >= CHIP_POLARIS10)
+		dec->msg->body.decode.dpb_reserved = dec->ctx.res->buf->size;
+
 	dt = dec->set_dtb(dec->msg, (struct vl_video_buffer *)target);
 	if (((struct r600_common_screen*)dec->screen)->family >= CHIP_STONEY)
 		dec->msg->body.decode.dt_wa_chroma_top_offset = dec->msg->body.decode.dt_pitch / 2;
@@ -973,6 +1091,20 @@ static void ruvd_end_frame(struct pipe_video_codec *decoder,
 
 	case PIPE_VIDEO_FORMAT_HEVC:
 		dec->msg->body.decode.codec.h265 = get_h265_msg(dec, target, (struct pipe_h265_picture_desc*)picture);
+		if (dec->ctx.res == NULL) {
+			unsigned ctx_size;
+			if (dec->base.profile == PIPE_VIDEO_PROFILE_HEVC_MAIN_10)
+				ctx_size = calc_ctx_size_h265_main10(dec, (struct pipe_h265_picture_desc*)picture);
+			else
+				ctx_size = calc_ctx_size_h265_main(dec);
+			if (!rvid_create_buffer(dec->screen, &dec->ctx, ctx_size, PIPE_USAGE_DEFAULT)) {
+				RVID_ERR("Can't allocated context buffer.\n");
+			}
+			rvid_clear_buffer(decoder->context, &dec->ctx);
+		}
+
+		if (dec->ctx.res)
+			dec->msg->body.decode.dpb_reserved = dec->ctx.res->buf->size;
 		break;
 
 	case PIPE_VIDEO_FORMAT_VC1:
@@ -1002,10 +1134,9 @@ static void ruvd_end_frame(struct pipe_video_codec *decoder,
 
 	send_cmd(dec, RUVD_CMD_DPB_BUFFER, dec->dpb.res->buf, 0,
 		 RADEON_USAGE_READWRITE, RADEON_DOMAIN_VRAM);
-	if (u_reduce_video_profile(picture->profile) == PIPE_VIDEO_FORMAT_HEVC) {
+	if (dec->ctx.res)
 		send_cmd(dec, RUVD_CMD_CONTEXT_BUFFER, dec->ctx.res->buf, 0,
 			RADEON_USAGE_READWRITE, RADEON_DOMAIN_VRAM);
-	}
 	send_cmd(dec, RUVD_CMD_BITSTREAM_BUFFER, bs_buf->res->buf,
 		 0, RADEON_USAGE_READ, RADEON_DOMAIN_GTT);
 	send_cmd(dec, RUVD_CMD_DECODING_TARGET_BUFFER, dt, 0,
@@ -1017,7 +1148,7 @@ static void ruvd_end_frame(struct pipe_video_codec *decoder,
 			 FB_BUFFER_OFFSET + dec->fb_size, RADEON_USAGE_READ, RADEON_DOMAIN_GTT);
 	set_reg(dec, RUVD_ENGINE_CNTL, 1);
 
-	flush(dec);
+	flush(dec, RADEON_FLUSH_ASYNC);
 	next_buffer(dec);
 }
 
@@ -1042,7 +1173,7 @@ struct pipe_video_codec *ruvd_create_decoder(struct pipe_context *context,
 	unsigned bs_buf_size;
 	struct radeon_info info;
 	struct ruvd_decoder *dec;
-	int i;
+	int r, i;
 
 	ws->query_info(ws, &info);
 
@@ -1053,6 +1184,9 @@ struct pipe_video_codec *ruvd_create_decoder(struct pipe_context *context,
 
 		/* fall through */
 	case PIPE_VIDEO_FORMAT_MPEG4:
+		width = align(width, VL_MACROBLOCK_WIDTH);
+		height = align(height, VL_MACROBLOCK_HEIGHT);
+		break;
 	case PIPE_VIDEO_FORMAT_MPEG4_AVC:
 		width = align(width, VL_MACROBLOCK_WIDTH);
 		height = align(height, VL_MACROBLOCK_HEIGHT);
@@ -1069,7 +1203,7 @@ struct pipe_video_codec *ruvd_create_decoder(struct pipe_context *context,
 		return NULL;
 
 	if (info.drm_major < 3)
-		dec->use_legacy = TRUE;
+		dec->use_legacy = true;
 
 	dec->base = *templ;
 	dec->base.context = context;
@@ -1088,7 +1222,7 @@ struct pipe_video_codec *ruvd_create_decoder(struct pipe_context *context,
 	dec->stream_handle = rvid_alloc_stream_handle();
 	dec->screen = context->screen;
 	dec->ws = ws;
-	dec->cs = ws->cs_create(rctx->ctx, RING_UVD, NULL, NULL, NULL);
+	dec->cs = ws->cs_create(rctx->ctx, RING_UVD, NULL, NULL);
 	if (!dec->cs) {
 		RVID_ERR("Can't get command submission context.\n");
 		goto error;
@@ -1096,7 +1230,7 @@ struct pipe_video_codec *ruvd_create_decoder(struct pipe_context *context,
 
 	dec->fb_size = (info.family == CHIP_TONGA) ? FB_BUFFER_SIZE_TONGA :
 			FB_BUFFER_SIZE;
-	bs_buf_size = width * height * 512 / (16 * 16);
+	bs_buf_size = width * height * (512 / (16 * 16));
 	for (i = 0; i < NUM_BUFFERS; ++i) {
 		unsigned msg_fb_it_size = FB_BUFFER_OFFSET + dec->fb_size;
 		STATIC_ASSERT(sizeof(struct ruvd_msg) <= FB_BUFFER_OFFSET);
@@ -1127,13 +1261,23 @@ struct pipe_video_codec *ruvd_create_decoder(struct pipe_context *context,
 
 	rvid_clear_buffer(context, &dec->dpb);
 
-	if (u_reduce_video_profile(dec->base.profile) == PIPE_VIDEO_FORMAT_HEVC) {
-		unsigned ctx_size = calc_ctx_size(dec);
+	if (dec->stream_type == RUVD_CODEC_H264_PERF && info.family >= CHIP_POLARIS10) {
+		unsigned ctx_size = calc_ctx_size_h264_perf(dec);
 		if (!rvid_create_buffer(dec->screen, &dec->ctx, ctx_size, PIPE_USAGE_DEFAULT)) {
 			RVID_ERR("Can't allocated context buffer.\n");
 			goto error;
 		}
 		rvid_clear_buffer(context, &dec->ctx);
+	}
+
+	if (info.family >= CHIP_POLARIS10 && info.drm_minor >= 3) {
+		if (!rvid_create_buffer(dec->screen, &dec->sessionctx,
+					UVD_SESSION_CONTEXT_SIZE,
+					PIPE_USAGE_DEFAULT)) {
+			RVID_ERR("Can't allocated session ctx.\n");
+			goto error;
+		}
+		rvid_clear_buffer(context, &dec->sessionctx);
 	}
 
 	map_msg_fb_it_buf(dec);
@@ -1145,7 +1289,10 @@ struct pipe_video_codec *ruvd_create_decoder(struct pipe_context *context,
 	dec->msg->body.create.height_in_samples = dec->base.height;
 	dec->msg->body.create.dpb_size = dpb_size;
 	send_msg_buf(dec);
-	flush(dec);
+	r = flush(dec, 0);
+	if (r)
+		goto error;
+
 	next_buffer(dec);
 
 	return &dec->base;
@@ -1159,8 +1306,8 @@ error:
 	}
 
 	rvid_destroy_buffer(&dec->dpb);
-	if (u_reduce_video_profile(dec->base.profile) == PIPE_VIDEO_FORMAT_HEVC)
-		rvid_destroy_buffer(&dec->ctx);
+	rvid_destroy_buffer(&dec->ctx);
+	rvid_destroy_buffer(&dec->sessionctx);
 
 	FREE(dec);
 

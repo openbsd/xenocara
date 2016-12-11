@@ -58,6 +58,8 @@ public:
    {
    }
 
+   virtual ir_visitor_status visit_enter(ir_assignment *ir);
+
    ir_rvalue *handle_expression(ir_expression *ir);
    void handle_rvalue(ir_rvalue **rvalue);
    bool reassociate_constant(ir_expression *ir1,
@@ -79,6 +81,23 @@ public:
 };
 
 } /* unnamed namespace */
+
+ir_visitor_status
+ir_algebraic_visitor::visit_enter(ir_assignment *ir)
+{
+   ir_variable *var = ir->lhs->variable_referenced();
+   if (var->data.invariant || var->data.precise) {
+      /* If we're assigning to an invariant or precise variable, just bail.
+       * Most of the algebraic optimizations aren't precision-safe.
+       *
+       * FINISHME: Find out which optimizations are precision-safe and enable
+       * then only for invariant or precise trees.
+       */
+      return visit_continue_with_parent;
+   } else {
+      return visit_continue;
+   }
+}
 
 static inline bool
 is_vec_zero(ir_constant *ir)
@@ -940,6 +959,16 @@ ir_algebraic_visitor::handle_expression(ir_expression *ir)
 	 return ir->operands[1];
       if (is_vec_zero(op_const[0]))
 	 return ir->operands[2];
+      break;
+
+   /* Remove interpolateAt* instructions for demoted inputs. They are
+    * assigned a constant expression to facilitate this.
+    */
+   case ir_unop_interpolate_at_centroid:
+   case ir_binop_interpolate_at_offset:
+   case ir_binop_interpolate_at_sample:
+      if (op_const[0])
+         return ir->operands[0];
       break;
 
    default:

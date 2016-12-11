@@ -100,7 +100,7 @@ lower_vertex_id_visitor::visit(ir_dereference_variable *ir)
       if (gl_BaseVertex == NULL) {
          gl_BaseVertex = new(mem_ctx) ir_variable(int_t, "gl_BaseVertex",
                                                   ir_var_system_value);
-         gl_BaseVertex->data.how_declared = ir_var_declared_implicitly;
+         gl_BaseVertex->data.how_declared = ir_var_hidden;
          gl_BaseVertex->data.read_only = true;
          gl_BaseVertex->data.location = SYSTEM_VALUE_BASE_VERTEX;
          gl_BaseVertex->data.explicit_location = true;
@@ -122,7 +122,7 @@ lower_vertex_id_visitor::visit(ir_dereference_variable *ir)
 }
 
 bool
-lower_vertex_id(gl_shader *shader)
+lower_vertex_id(gl_linked_shader *shader)
 {
    /* gl_VertexID only exists in the vertex shader.
     */
@@ -130,7 +130,7 @@ lower_vertex_id(gl_shader *shader)
       return false;
 
    ir_function_signature *const main_sig =
-      _mesa_get_main_function_signature(shader);
+      _mesa_get_main_function_signature(shader->symbols);
    if (main_sig == NULL) {
       assert(main_sig != NULL);
       return false;

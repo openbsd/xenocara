@@ -36,27 +36,28 @@ fs_reg *
 fs_visitor::emit_vs_system_value(int location)
 {
    fs_reg *reg = new(this->mem_ctx)
-      fs_reg(ATTR, 4 * _mesa_bitcount_64(nir->info.inputs_read),
+      fs_reg(ATTR, 4 * (_mesa_bitcount_64(nir->info.inputs_read) +
+                        _mesa_bitcount_64(nir->info.double_inputs_read)),
              BRW_REGISTER_TYPE_D);
-   brw_vs_prog_data *vs_prog_data = (brw_vs_prog_data *) prog_data;
+   struct brw_vs_prog_data *vs_prog_data = brw_vs_prog_data(prog_data);
 
    switch (location) {
    case SYSTEM_VALUE_BASE_VERTEX:
-      reg->reg_offset = 0;
+      reg->offset = 0;
       vs_prog_data->uses_basevertex = true;
       break;
    case SYSTEM_VALUE_BASE_INSTANCE:
-      reg->reg_offset = 1;
+      reg->offset = REG_SIZE;
       vs_prog_data->uses_baseinstance = true;
       break;
    case SYSTEM_VALUE_VERTEX_ID:
       unreachable("should have been lowered");
    case SYSTEM_VALUE_VERTEX_ID_ZERO_BASE:
-      reg->reg_offset = 2;
+      reg->offset = 2 * REG_SIZE;
       vs_prog_data->uses_vertexid = true;
       break;
    case SYSTEM_VALUE_INSTANCE_ID:
-      reg->reg_offset = 3;
+      reg->offset = 3 * REG_SIZE;
       vs_prog_data->uses_instanceid = true;
       break;
    case SYSTEM_VALUE_DRAW_ID:
@@ -66,7 +67,7 @@ fs_visitor::emit_vs_system_value(int location)
            BITFIELD64_BIT(SYSTEM_VALUE_VERTEX_ID_ZERO_BASE) |
            BITFIELD64_BIT(SYSTEM_VALUE_INSTANCE_ID)))
          reg->nr += 4;
-      reg->reg_offset = 0;
+      reg->offset = 0;
       vs_prog_data->uses_drawid = true;
       break;
    default:
@@ -96,167 +97,9 @@ fs_visitor::emit_mcs_fetch(const fs_reg &coordinate, unsigned components,
    /* We only care about one or two regs of response, but the sampler always
     * writes 4/8.
     */
-   inst->regs_written = 4 * dispatch_width / 8;
+   inst->size_written = 4 * dest.component_size(inst->exec_size);
 
    return dest;
-}
-
-void
-fs_visitor::emit_texture(ir_texture_opcode op,
-                         const glsl_type *dest_type,
-                         fs_reg coordinate, int coord_components,
-                         fs_reg shadow_c,
-                         fs_reg lod, fs_reg lod2, int grad_components,
-                         fs_reg sample_index,
-                         fs_reg offset_value,
-                         fs_reg mcs,
-                         int gather_component,
-                         bool is_cube_array,
-                         uint32_t surface,
-                         fs_reg surface_reg,
-                         uint32_t sampler,
-                         fs_reg sampler_reg)
-{
-   fs_inst *inst = NULL;
-
-   if (op == ir_query_levels) {
-      /* textureQueryLevels() is implemented in terms of TXS so we need to
-       * pass a valid LOD argument.
-       */
-      assert(lod.file == BAD_FILE);
-      lod = brw_imm_ud(0u);
-   }
-
-   if (op == ir_samples_identical) {
-      fs_reg dst = vgrf(glsl_type::get_instance(dest_type->base_type, 1, 1));
-
-      /* If mcs is an immediate value, it means there is no MCS.  In that case
-       * just return false.
-       */
-      if (mcs.file == BRW_IMMEDIATE_VALUE) {
-         bld.MOV(dst, brw_imm_ud(0u));
-      } else if ((key_tex->msaa_16 & (1 << sampler))) {
-         fs_reg tmp = vgrf(glsl_type::uint_type);
-         bld.OR(tmp, mcs, offset(mcs, bld, 1));
-         bld.CMP(dst, tmp, brw_imm_ud(0u), BRW_CONDITIONAL_EQ);
-      } else {
-         bld.CMP(dst, mcs, brw_imm_ud(0u), BRW_CONDITIONAL_EQ);
-      }
-
-      this->result = dst;
-      return;
-   }
-
-   /* Writemasking doesn't eliminate channels on SIMD8 texture
-    * samples, so don't worry about them.
-    */
-   fs_reg dst = vgrf(glsl_type::get_instance(dest_type->base_type, 4, 1));
-
-   fs_reg srcs[TEX_LOGICAL_NUM_SRCS];
-   srcs[TEX_LOGICAL_SRC_COORDINATE] = coordinate;
-   srcs[TEX_LOGICAL_SRC_SHADOW_C] = shadow_c;
-   srcs[TEX_LOGICAL_SRC_LOD] = lod;
-   srcs[TEX_LOGICAL_SRC_LOD2] = lod2;
-   srcs[TEX_LOGICAL_SRC_SAMPLE_INDEX] = sample_index;
-   srcs[TEX_LOGICAL_SRC_MCS] = mcs;
-   srcs[TEX_LOGICAL_SRC_SURFACE] = surface_reg;
-   srcs[TEX_LOGICAL_SRC_SAMPLER] = sampler_reg;
-   srcs[TEX_LOGICAL_SRC_OFFSET_VALUE] = offset_value;
-   srcs[TEX_LOGICAL_SRC_COORD_COMPONENTS] = brw_imm_d(coord_components);
-   srcs[TEX_LOGICAL_SRC_GRAD_COMPONENTS] = brw_imm_d(grad_components);
-
-   enum opcode opcode;
-   switch (op) {
-   case ir_tex:
-      opcode = SHADER_OPCODE_TEX_LOGICAL;
-      break;
-   case ir_txb:
-      opcode = FS_OPCODE_TXB_LOGICAL;
-      break;
-   case ir_txl:
-      opcode = SHADER_OPCODE_TXL_LOGICAL;
-      break;
-   case ir_txd:
-      opcode = SHADER_OPCODE_TXD_LOGICAL;
-      break;
-   case ir_txf:
-      opcode = SHADER_OPCODE_TXF_LOGICAL;
-      break;
-   case ir_txf_ms:
-      if ((key_tex->msaa_16 & (1 << sampler)))
-         opcode = SHADER_OPCODE_TXF_CMS_W_LOGICAL;
-      else
-         opcode = SHADER_OPCODE_TXF_CMS_LOGICAL;
-      break;
-   case ir_txs:
-   case ir_query_levels:
-      opcode = SHADER_OPCODE_TXS_LOGICAL;
-      break;
-   case ir_lod:
-      opcode = SHADER_OPCODE_LOD_LOGICAL;
-      break;
-   case ir_tg4:
-      opcode = (offset_value.file != BAD_FILE && offset_value.file != IMM ?
-                SHADER_OPCODE_TG4_OFFSET_LOGICAL : SHADER_OPCODE_TG4_LOGICAL);
-      break;
-   default:
-      unreachable("Invalid texture opcode.");
-   }
-
-   inst = bld.emit(opcode, dst, srcs, ARRAY_SIZE(srcs));
-   inst->regs_written = 4 * dispatch_width / 8;
-
-   if (shadow_c.file != BAD_FILE)
-      inst->shadow_compare = true;
-
-   if (offset_value.file == IMM)
-      inst->offset = offset_value.ud;
-
-   if (op == ir_tg4) {
-      if (gather_component == 1 &&
-          key_tex->gather_channel_quirk_mask & (1 << surface)) {
-         /* gather4 sampler is broken for green channel on RG32F --
-          * we must ask for blue instead.
-          */
-         inst->offset |= 2 << 16;
-      } else {
-         inst->offset |= gather_component << 16;
-      }
-
-      if (devinfo->gen == 6)
-         emit_gen6_gather_wa(key_tex->gen6_gather_wa[surface], dst);
-   }
-
-   /* fixup #layers for cube map arrays */
-   if (op == ir_txs && (devinfo->gen < 7 || is_cube_array)) {
-      fs_reg depth = offset(dst, bld, 2);
-      fs_reg fixed_depth = vgrf(glsl_type::int_type);
-
-      if (is_cube_array) {
-         bld.emit(SHADER_OPCODE_INT_QUOTIENT, fixed_depth, depth, brw_imm_d(6));
-      } else if (devinfo->gen < 7) {
-         /* Gen4-6 return 0 instead of 1 for single layer surfaces. */
-         bld.emit_minmax(fixed_depth, depth, brw_imm_d(1), BRW_CONDITIONAL_GE);
-      }
-
-      fs_reg *fixed_payload = ralloc_array(mem_ctx, fs_reg, inst->regs_written);
-      int components = inst->regs_written / (inst->exec_size / 8);
-      for (int i = 0; i < components; i++) {
-         if (i == 2) {
-            fixed_payload[i] = fixed_depth;
-         } else {
-            fixed_payload[i] = offset(dst, bld, i);
-         }
-      }
-      bld.LOAD_PAYLOAD(dst, fixed_payload, components, 0);
-   }
-
-   if (op == ir_query_levels) {
-      /* # levels is in .w */
-      dst = offset(dst, bld, 3);
-   }
-
-   this->result = dst;
 }
 
 /**
@@ -317,7 +160,7 @@ fs_visitor::emit_dummy_fs()
    /* Tell the SF we don't have any inputs.  Gen4-5 require at least one
     * varying to avoid GPU hangs, so set that.
     */
-   brw_wm_prog_data *wm_prog_data = (brw_wm_prog_data *) this->prog_data;
+   struct brw_wm_prog_data *wm_prog_data = brw_wm_prog_data(this->prog_data);
    wm_prog_data->num_varying_inputs = devinfo->gen < 6 ? 1 : 0;
    memset(wm_prog_data->urb_setup, -1,
           sizeof(wm_prog_data->urb_setup[0]) * VARYING_SLOT_MAX);
@@ -327,7 +170,7 @@ fs_visitor::emit_dummy_fs()
    stage_prog_data->nr_pull_params = 0;
    stage_prog_data->curb_read_length = 0;
    stage_prog_data->dispatch_grf_start_reg = 2;
-   wm_prog_data->dispatch_grf_start_reg_16 = 2;
+   wm_prog_data->dispatch_grf_start_reg_2 = 2;
    grf_used = 1; /* Gen4-5 don't allow zero GRF blocks */
 
    calculate_cfg();
@@ -341,7 +184,7 @@ struct brw_reg
 fs_visitor::interp_reg(int location, int channel)
 {
    assert(stage == MESA_SHADER_FRAGMENT);
-   brw_wm_prog_data *prog_data = (brw_wm_prog_data*) this->prog_data;
+   struct brw_wm_prog_data *prog_data = brw_wm_prog_data(this->prog_data);
    int regnr = prog_data->urb_setup[location] * 2 + channel / 2;
    int stride = (channel & 1) * 4;
 
@@ -370,9 +213,9 @@ fs_visitor::emit_interpolation_setup_gen4()
 
    abld = bld.annotate("compute pixel deltas from v0");
 
-   this->delta_xy[BRW_WM_PERSPECTIVE_PIXEL_BARYCENTRIC] =
+   this->delta_xy[BRW_BARYCENTRIC_PERSPECTIVE_PIXEL] =
       vgrf(glsl_type::vec2_type);
-   const fs_reg &delta_xy = this->delta_xy[BRW_WM_PERSPECTIVE_PIXEL_BARYCENTRIC];
+   const fs_reg &delta_xy = this->delta_xy[BRW_BARYCENTRIC_PERSPECTIVE_PIXEL];
    const fs_reg xstart(negate(brw_vec1_grf(1, 0)));
    const fs_reg ystart(negate(brw_vec1_grf(1, 1)));
 
@@ -465,9 +308,41 @@ fs_visitor::emit_interpolation_setup_gen6()
    this->wpos_w = vgrf(glsl_type::float_type);
    abld.emit(SHADER_OPCODE_RCP, this->wpos_w, this->pixel_w);
 
-   for (int i = 0; i < BRW_WM_BARYCENTRIC_INTERP_MODE_COUNT; ++i) {
+   struct brw_wm_prog_data *wm_prog_data = brw_wm_prog_data(prog_data);
+   uint32_t centroid_modes = wm_prog_data->barycentric_interp_modes &
+      (1 << BRW_BARYCENTRIC_PERSPECTIVE_CENTROID |
+       1 << BRW_BARYCENTRIC_NONPERSPECTIVE_CENTROID);
+
+   for (int i = 0; i < BRW_BARYCENTRIC_MODE_COUNT; ++i) {
       uint8_t reg = payload.barycentric_coord_reg[i];
       this->delta_xy[i] = fs_reg(brw_vec16_grf(reg, 0));
+
+      if (devinfo->needs_unlit_centroid_workaround &&
+          (centroid_modes & (1 << i))) {
+         /* Get the pixel/sample mask into f0 so that we know which
+          * pixels are lit.  Then, for each channel that is unlit,
+          * replace the centroid data with non-centroid data.
+          */
+         bld.emit(FS_OPCODE_MOV_DISPATCH_TO_FLAGS);
+
+         uint8_t pixel_reg = payload.barycentric_coord_reg[i - 1];
+
+         set_predicate_inv(BRW_PREDICATE_NORMAL, true,
+                           bld.half(0).MOV(brw_vec8_grf(reg, 0),
+                                           brw_vec8_grf(pixel_reg, 0)));
+         set_predicate_inv(BRW_PREDICATE_NORMAL, true,
+                           bld.half(0).MOV(brw_vec8_grf(reg + 1, 0),
+                                           brw_vec8_grf(pixel_reg + 1, 0)));
+         if (dispatch_width == 16) {
+            set_predicate_inv(BRW_PREDICATE_NORMAL, true,
+                              bld.half(1).MOV(brw_vec8_grf(reg + 2, 0),
+                                              brw_vec8_grf(pixel_reg + 2, 0)));
+            set_predicate_inv(BRW_PREDICATE_NORMAL, true,
+                              bld.half(1).MOV(brw_vec8_grf(reg + 3, 0),
+                                              brw_vec8_grf(pixel_reg + 3, 0)));
+         }
+         assert(dispatch_width != 32); /* not implemented yet */
+      }
    }
 }
 
@@ -531,7 +406,7 @@ fs_visitor::emit_single_fb_write(const fs_builder &bld,
                                  fs_reg src0_alpha, unsigned components)
 {
    assert(stage == MESA_SHADER_FRAGMENT);
-   brw_wm_prog_data *prog_data = (brw_wm_prog_data*) this->prog_data;
+   struct brw_wm_prog_data *prog_data = brw_wm_prog_data(this->prog_data);
 
    /* Hand over gl_FragDepth or the payload depth. */
    const fs_reg dst_depth = (payload.dest_depth_reg ?
@@ -551,7 +426,8 @@ fs_visitor::emit_single_fb_write(const fs_builder &bld,
 
    const fs_reg sources[] = {
       color0, color1, src0_alpha, src_depth, dst_depth, src_stencil,
-      sample_mask, brw_imm_ud(components)
+      (prog_data->uses_omask ? sample_mask : fs_reg()),
+      brw_imm_ud(components)
    };
    assert(ARRAY_SIZE(sources) - 1 == FB_WRITE_LOGICAL_SRC_COMPONENTS);
    fs_inst *write = bld.emit(FS_OPCODE_FB_WRITE_LOGICAL, fs_reg(),
@@ -569,7 +445,7 @@ void
 fs_visitor::emit_fb_writes()
 {
    assert(stage == MESA_SHADER_FRAGMENT);
-   brw_wm_prog_data *prog_data = (brw_wm_prog_data*) this->prog_data;
+   struct brw_wm_prog_data *prog_data = brw_wm_prog_data(this->prog_data);
    brw_wm_prog_key *key = (brw_wm_prog_key*) this->key;
 
    fs_inst *inst = NULL;
@@ -581,46 +457,37 @@ fs_visitor::emit_fb_writes()
        * sounds because the SIMD8 single-source message lacks channel selects
        * for the second and third subspans.
        */
-      no16("Missing support for simd16 depth writes on gen6\n");
+      limit_dispatch_width(8, "Depth writes unsupported in SIMD16+ mode.\n");
    }
 
    if (nir->info.outputs_written & BITFIELD64_BIT(FRAG_RESULT_STENCIL)) {
       /* From the 'Render Target Write message' section of the docs:
        * "Output Stencil is not supported with SIMD16 Render Target Write
        * Messages."
-       *
-       * FINISHME: split 16 into 2 8s
        */
-      no16("FINISHME: support 2 simd8 writes for gl_FragStencilRefARB\n");
+      limit_dispatch_width(8, "gl_FragStencilRefARB unsupported "
+                           "in SIMD16+ mode.\n");
    }
 
-   if (do_dual_src) {
-      const fs_builder abld = bld.annotate("FB dual-source write");
+   for (int target = 0; target < key->nr_color_regions; target++) {
+      /* Skip over outputs that weren't written. */
+      if (this->outputs[target].file == BAD_FILE)
+         continue;
 
-      inst = emit_single_fb_write(abld, this->outputs[0],
-                                  this->dual_src_output, reg_undef, 4);
-      inst->target = 0;
+      const fs_builder abld = bld.annotate(
+         ralloc_asprintf(this->mem_ctx, "FB write target %d", target));
 
-      prog_data->dual_src_blend = true;
-   } else {
-      for (int target = 0; target < key->nr_color_regions; target++) {
-         /* Skip over outputs that weren't written. */
-         if (this->outputs[target].file == BAD_FILE)
-            continue;
+      fs_reg src0_alpha;
+      if (devinfo->gen >= 6 && key->replicate_alpha && target != 0)
+         src0_alpha = offset(outputs[0], bld, 3);
 
-         const fs_builder abld = bld.annotate(
-            ralloc_asprintf(this->mem_ctx, "FB write target %d", target));
-
-         fs_reg src0_alpha;
-         if (devinfo->gen >= 6 && key->replicate_alpha && target != 0)
-            src0_alpha = offset(outputs[0], bld, 3);
-
-         inst = emit_single_fb_write(abld, this->outputs[target], reg_undef,
-                                     src0_alpha,
-                                     this->output_components[target]);
-         inst->target = target;
-      }
+      inst = emit_single_fb_write(abld, this->outputs[target],
+                                  this->dual_src_output, src0_alpha, 4);
+      inst->target = target;
    }
+
+   prog_data->dual_src_blend = (this->dual_src_output.file != BAD_FILE);
+   assert(!prog_data->dual_src_blend || key->nr_color_regions == 1);
 
    if (inst == NULL) {
       /* Even if there's no color buffers enabled, we still need to send
@@ -666,8 +533,7 @@ fs_visitor::setup_uniform_clipplane_values(gl_clip_plane *clip_planes)
  */
 void fs_visitor::compute_clip_distance(gl_clip_plane *clip_planes)
 {
-   struct brw_vue_prog_data *vue_prog_data =
-      (struct brw_vue_prog_data *) prog_data;
+   struct brw_vue_prog_data *vue_prog_data = brw_vue_prog_data(prog_data);
    const struct brw_vs_prog_key *key =
       (const struct brw_vs_prog_key *) this->key;
 
@@ -702,14 +568,12 @@ void fs_visitor::compute_clip_distance(gl_clip_plane *clip_planes)
    const fs_builder abld = bld.annotate("user clip distances");
 
    this->outputs[VARYING_SLOT_CLIP_DIST0] = vgrf(glsl_type::vec4_type);
-   this->output_components[VARYING_SLOT_CLIP_DIST0] = 4;
    this->outputs[VARYING_SLOT_CLIP_DIST1] = vgrf(glsl_type::vec4_type);
-   this->output_components[VARYING_SLOT_CLIP_DIST1] = 4;
 
    for (int i = 0; i < key->nr_userclip_plane_consts; i++) {
       fs_reg u = userplane[i];
-      fs_reg output = outputs[VARYING_SLOT_CLIP_DIST0 + i / 4];
-      output.reg_offset = i & 3;
+      const fs_reg output = offset(outputs[VARYING_SLOT_CLIP_DIST0 + i / 4],
+                                   bld, i & 3);
 
       abld.MUL(output, outputs[clip_vertex], u);
       for (int j = 1; j < 4; j++) {
@@ -725,7 +589,7 @@ fs_visitor::emit_urb_writes(const fs_reg &gs_vertex_count)
    int slot, urb_offset, length;
    int starting_urb_offset = 0;
    const struct brw_vue_prog_data *vue_prog_data =
-      (const struct brw_vue_prog_data *) this->prog_data;
+      brw_vue_prog_data(this->prog_data);
    const struct brw_vs_prog_key *vs_key =
       (const struct brw_vs_prog_key *) this->key;
    const GLbitfield64 psiz_mask =
@@ -751,6 +615,13 @@ fs_visitor::emit_urb_writes(const fs_reg &gs_vertex_count)
     *    "The write data payload can be between 1 and 8 message phases long."
     */
    if (vue_map->slots_valid == 0) {
+      /* For GS, just turn EmitVertex() into a no-op.  We don't want it to
+       * end the thread, and emit_gs_thread_end() already emits a SEND with
+       * EOT at the end of the program for us.
+       */
+      if (stage == MESA_SHADER_GEOMETRY)
+         return;
+
       fs_reg payload = fs_reg(VGRF, alloc.allocate(2), BRW_REGISTER_TYPE_UD);
       bld.exec_all().MOV(payload, urb_handle);
 
@@ -767,7 +638,7 @@ fs_visitor::emit_urb_writes(const fs_reg &gs_vertex_count)
 
    if (stage == MESA_SHADER_GEOMETRY) {
       const struct brw_gs_prog_data *gs_prog_data =
-         (const struct brw_gs_prog_data *) this->prog_data;
+         brw_gs_prog_data(this->prog_data);
 
       /* We need to increment the Global Offset to skip over the control data
        * header and the extra "Vertex Count" field (1 HWord) at the beginning
@@ -874,10 +745,8 @@ fs_visitor::emit_urb_writes(const fs_reg &gs_vertex_count)
                sources[length++] = reg;
             }
          } else {
-            for (unsigned i = 0; i < output_components[varying]; i++)
+            for (unsigned i = 0; i < 4; i++)
                sources[length++] = offset(this->outputs[varying], bld, i);
-            for (unsigned i = output_components[varying]; i < 4; i++)
-               sources[length++] = brw_imm_d(0);
          }
          break;
       }
@@ -1014,6 +883,9 @@ fs_visitor::init()
    case MESA_SHADER_VERTEX:
       key_tex = &((const brw_vs_prog_key *) key)->tex;
       break;
+   case MESA_SHADER_TESS_CTRL:
+      key_tex = &((const brw_tcs_prog_key *) key)->tex;
+      break;
    case MESA_SHADER_TESS_EVAL:
       key_tex = &((const brw_tes_prog_key *) key)->tex;
       break;
@@ -1028,8 +900,7 @@ fs_visitor::init()
    }
 
    if (stage == MESA_SHADER_COMPUTE) {
-      const brw_cs_prog_data *cs_prog_data =
-         (const brw_cs_prog_data *) prog_data;
+      const struct brw_cs_prog_data *cs_prog_data = brw_cs_prog_data(prog_data);
       unsigned size = cs_prog_data->local_size[0] *
                       cs_prog_data->local_size[1] *
                       cs_prog_data->local_size[2];
@@ -1039,17 +910,15 @@ fs_visitor::init()
       min_dispatch_width = 8;
    }
 
+   this->max_dispatch_width = 32;
    this->prog_data = this->stage_prog_data;
 
    this->failed = false;
-   this->simd16_unsupported = false;
-   this->no16_msg = NULL;
 
    this->nir_locals = NULL;
    this->nir_ssa_values = NULL;
 
    memset(&this->payload, 0, sizeof(this->payload));
-   memset(this->output_components, 0, sizeof(this->output_components));
    this->source_depth_to_render_target = false;
    this->runtime_check_aads_emit = false;
    this->first_non_payload_grf = 0;
@@ -1068,10 +937,6 @@ fs_visitor::init()
    this->promoted_constants = 0,
 
    this->spilled_any_registers = false;
-   this->do_dual_src = false;
-
-   if (dispatch_width == 8)
-      this->param_size = rzalloc_array(mem_ctx, int, stage_prog_data->nr_params);
 }
 
 fs_visitor::~fs_visitor()

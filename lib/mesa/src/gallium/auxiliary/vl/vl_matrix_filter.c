@@ -52,7 +52,7 @@ create_vert_shader(struct vl_matrix_filter *filter)
    struct ureg_src i_vpos;
    struct ureg_dst o_vpos, o_vtex;
 
-   shader = ureg_create(TGSI_PROCESSOR_VERTEX);
+   shader = ureg_create(PIPE_SHADER_VERTEX);
    if (!shader)
       return NULL;
 
@@ -85,9 +85,9 @@ create_frag_shader(struct vl_matrix_filter *filter, unsigned num_offsets,
    struct ureg_dst t_sum;
    struct ureg_dst o_fragment;
    bool first;
-   int i;
+   unsigned i;
 
-   shader = ureg_create(TGSI_PROCESSOR_FRAGMENT);
+   shader = ureg_create(PIPE_SHADER_FRAGMENT);
    if (!shader) {
       FREE(t_array);
       return NULL;

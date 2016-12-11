@@ -199,7 +199,7 @@ struct r300_sampler_view {
     unsigned width0_override;
     unsigned height0_override;
 
-    /* Swizzles in the UTIL_FORMAT_SWIZZLE_* representation,
+    /* Swizzles in the PIPE_SWIZZLE_* representation,
      * derived from base. */
     unsigned char swizzle[4];
 
@@ -596,7 +596,7 @@ struct r300_context {
     unsigned nr_vertex_buffers;
     struct u_upload_mgr *uploader;
 
-    struct util_slab_mempool pool_transfers;
+    struct slab_child_pool pool_transfers;
 
     /* Stat counter. */
     uint64_t flush_counter;

@@ -32,12 +32,6 @@
 
 #include "pipe/p_state.h"
 
-/* u_memory.h conflicts with st/mesa */
-#ifndef Elements
-#define Elements(x) (sizeof(x)/sizeof((x)[0]))
-#endif
-
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -116,6 +110,9 @@ struct blitter_context
 
    unsigned saved_num_sampler_views;
    struct pipe_sampler_view *saved_sampler_views[PIPE_MAX_SAMPLERS];
+
+   unsigned cb_slot;
+   struct pipe_constant_buffer saved_fs_constant_buffer;
 
    unsigned vb_slot;
    struct pipe_vertex_buffer saved_vertex_buffer;
@@ -251,6 +248,12 @@ void util_blitter_blit_generic(struct blitter_context *blitter,
 
 void util_blitter_blit(struct blitter_context *blitter,
 		       const struct pipe_blit_info *info);
+
+void util_blitter_generate_mipmap(struct blitter_context *blitter,
+                                  struct pipe_resource *tex,
+                                  enum pipe_format format,
+                                  unsigned base_level, unsigned last_level,
+                                  unsigned first_layer, unsigned last_layer);
 
 /**
  * Helper function to initialize a view for copy_texture_view.
@@ -464,7 +467,7 @@ util_blitter_save_fragment_sampler_states(
                   unsigned num_sampler_states,
                   void **sampler_states)
 {
-   assert(num_sampler_states <= Elements(blitter->saved_sampler_states));
+   assert(num_sampler_states <= ARRAY_SIZE(blitter->saved_sampler_states));
 
    blitter->saved_num_sampler_states = num_sampler_states;
    memcpy(blitter->saved_sampler_states, sampler_states,
@@ -477,12 +480,23 @@ util_blitter_save_fragment_sampler_views(struct blitter_context *blitter,
                                          struct pipe_sampler_view **views)
 {
    unsigned i;
-   assert(num_views <= Elements(blitter->saved_sampler_views));
+   assert(num_views <= ARRAY_SIZE(blitter->saved_sampler_views));
 
    blitter->saved_num_sampler_views = num_views;
    for (i = 0; i < num_views; i++)
       pipe_sampler_view_reference(&blitter->saved_sampler_views[i],
                                   views[i]);
+}
+
+static inline void
+util_blitter_save_fragment_constant_buffer_slot(
+                  struct blitter_context *blitter,
+                  struct pipe_constant_buffer *constant_buffers)
+{
+   pipe_resource_reference(&blitter->saved_fs_constant_buffer.buffer,
+                           constant_buffers[blitter->cb_slot].buffer);
+   memcpy(&blitter->saved_fs_constant_buffer, &constant_buffers[blitter->cb_slot],
+          sizeof(struct pipe_constant_buffer));
 }
 
 static inline void
@@ -501,7 +515,7 @@ util_blitter_save_so_targets(struct blitter_context *blitter,
                              struct pipe_stream_output_target **targets)
 {
    unsigned i;
-   assert(num_targets <= Elements(blitter->saved_so_targets));
+   assert(num_targets <= ARRAY_SIZE(blitter->saved_so_targets));
 
    blitter->saved_num_so_targets = num_targets;
    for (i = 0; i < num_targets; i++)
@@ -527,6 +541,21 @@ util_blitter_save_render_condition(struct blitter_context *blitter,
    blitter->saved_render_cond_mode = mode;
    blitter->saved_render_cond_cond = condition;
 }
+
+void util_blitter_common_clear_setup(struct blitter_context *blitter,
+                                     unsigned width, unsigned height,
+                                     unsigned clear_buffers,
+                                     void *custom_blend, void *custom_dsa);
+
+void util_blitter_set_running_flag(struct blitter_context *blitter);
+void util_blitter_unset_running_flag(struct blitter_context *blitter);
+
+void util_blitter_restore_vertex_states(struct blitter_context *blitter);
+void util_blitter_restore_fragment_states(struct blitter_context *blitter);
+void util_blitter_restore_render_cond(struct blitter_context *blitter);
+void util_blitter_restore_fb_state(struct blitter_context *blitter);
+void util_blitter_restore_textures(struct blitter_context *blitter);
+void util_blitter_restore_constant_buffer_state(struct blitter_context *blitter);
 
 #ifdef __cplusplus
 }

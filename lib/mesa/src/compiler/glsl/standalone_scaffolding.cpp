@@ -68,21 +68,43 @@ _mesa_shader_debug(struct gl_context *, GLenum, GLuint *,
 }
 
 struct gl_shader *
-_mesa_new_shader(struct gl_context *ctx, GLuint name, GLenum type)
+_mesa_new_shader(GLuint name, gl_shader_stage stage)
 {
    struct gl_shader *shader;
 
-   (void) ctx;
-
-   assert(type == GL_FRAGMENT_SHADER || type == GL_VERTEX_SHADER);
+   assert(stage == MESA_SHADER_FRAGMENT || stage == MESA_SHADER_VERTEX);
    shader = rzalloc(NULL, struct gl_shader);
    if (shader) {
-      shader->Type = type;
-      shader->Stage = _mesa_shader_enum_to_shader_stage(type);
+      shader->Stage = stage;
       shader->Name = name;
       shader->RefCount = 1;
    }
    return shader;
+}
+
+struct gl_linked_shader *
+_mesa_new_linked_shader(gl_shader_stage stage)
+{
+   struct gl_linked_shader *shader;
+
+   assert(stage == MESA_SHADER_FRAGMENT || stage == MESA_SHADER_VERTEX);
+   shader = rzalloc(NULL, struct gl_linked_shader);
+   if (shader) {
+      shader->Stage = stage;
+   }
+   return shader;
+}
+
+GLbitfield
+_mesa_program_state_flags(const gl_state_index state[STATE_LENGTH])
+{
+   return 0;
+}
+
+char *
+_mesa_program_state_string(const gl_state_index state[STATE_LENGTH])
+{
+   return NULL;
 }
 
 void
@@ -94,9 +116,22 @@ _mesa_delete_shader(struct gl_context *ctx, struct gl_shader *sh)
 }
 
 void
-_mesa_clear_shader_program_data(struct gl_shader_program *shProg)
+_mesa_delete_linked_shader(struct gl_context *ctx,
+                           struct gl_linked_shader *sh)
 {
-   unsigned i;
+   ralloc_free(sh);
+}
+
+void
+_mesa_clear_shader_program_data(struct gl_context *ctx,
+                                struct gl_shader_program *shProg)
+{
+   for (unsigned i = 0; i < MESA_SHADER_STAGES; i++) {
+      if (shProg->_LinkedShaders[i] != NULL) {
+         _mesa_delete_linked_shader(ctx, shProg->_LinkedShaders[i]);
+         shProg->_LinkedShaders[i] = NULL;
+      }
+   }
 
    shProg->NumUniformStorage = 0;
    shProg->UniformStorage = NULL;
@@ -107,10 +142,6 @@ _mesa_clear_shader_program_data(struct gl_shader_program *shProg)
    ralloc_free(shProg->InfoLog);
    shProg->InfoLog = ralloc_strdup(shProg, "");
 
-   ralloc_free(shProg->BufferInterfaceBlocks);
-   shProg->BufferInterfaceBlocks = NULL;
-   shProg->NumBufferInterfaceBlocks = 0;
-
    ralloc_free(shProg->UniformBlocks);
    shProg->UniformBlocks = NULL;
    shProg->NumUniformBlocks = 0;
@@ -118,16 +149,6 @@ _mesa_clear_shader_program_data(struct gl_shader_program *shProg)
    ralloc_free(shProg->ShaderStorageBlocks);
    shProg->ShaderStorageBlocks = NULL;
    shProg->NumShaderStorageBlocks = 0;
-
-   for (i = 0; i < MESA_SHADER_STAGES; i++) {
-      ralloc_free(shProg->InterfaceBlockStageIndex[i]);
-      shProg->InterfaceBlockStageIndex[i] = NULL;
-   }
-
-   ralloc_free(shProg->UboInterfaceBlockIndex);
-   shProg->UboInterfaceBlockIndex = NULL;
-   ralloc_free(shProg->SsboInterfaceBlockIndex);
-   shProg->SsboInterfaceBlockIndex = NULL;
 
    ralloc_free(shProg->AtomicBuffers);
    shProg->AtomicBuffers = NULL;
@@ -143,6 +164,7 @@ void initialize_context_to_defaults(struct gl_context *ctx, gl_api api)
    ctx->Extensions.dummy_false = false;
    ctx->Extensions.dummy_true = true;
    ctx->Extensions.ARB_compute_shader = true;
+   ctx->Extensions.ARB_compute_variable_group_size = true;
    ctx->Extensions.ARB_conservative_depth = true;
    ctx->Extensions.ARB_draw_instanced = true;
    ctx->Extensions.ARB_ES2_compatibility = true;
@@ -168,12 +190,15 @@ void initialize_context_to_defaults(struct gl_context *ctx, gl_api api)
    ctx->Extensions.ARB_texture_query_lod = true;
    ctx->Extensions.ARB_uniform_buffer_object = true;
    ctx->Extensions.ARB_viewport_array = true;
+   ctx->Extensions.ARB_cull_distance = true;
 
    ctx->Extensions.OES_EGL_image_external = true;
    ctx->Extensions.OES_standard_derivatives = true;
 
    ctx->Extensions.EXT_shader_integer_mix = true;
    ctx->Extensions.EXT_texture_array = true;
+
+   ctx->Extensions.MESA_shader_integer_functions = true;
 
    ctx->Extensions.NV_texture_rectangle = true;
 
@@ -203,6 +228,10 @@ void initialize_context_to_defaults(struct gl_context *ctx, gl_api api)
    ctx->Const.MaxComputeWorkGroupSize[1] = 1024;
    ctx->Const.MaxComputeWorkGroupSize[2] = 64;
    ctx->Const.MaxComputeWorkGroupInvocations = 1024;
+   ctx->Const.MaxComputeVariableGroupSize[0] = 512;
+   ctx->Const.MaxComputeVariableGroupSize[1] = 512;
+   ctx->Const.MaxComputeVariableGroupSize[2] = 64;
+   ctx->Const.MaxComputeVariableGroupInvocations = 512;
    ctx->Const.Program[MESA_SHADER_COMPUTE].MaxTextureImageUnits = 16;
    ctx->Const.Program[MESA_SHADER_COMPUTE].MaxUniformComponents = 1024;
    ctx->Const.Program[MESA_SHADER_COMPUTE].MaxInputComponents = 0; /* not used */

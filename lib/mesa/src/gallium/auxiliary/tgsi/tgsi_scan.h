@@ -65,6 +65,8 @@ struct tgsi_shader_info
    int file_max[TGSI_FILE_COUNT];  /**< highest index of declared registers */
    int const_file_max[PIPE_MAX_CONSTANT_BUFFERS];
    unsigned samplers_declared; /**< bitmask of declared samplers */
+   ubyte sampler_targets[PIPE_MAX_SHADER_SAMPLER_VIEWS];  /**< TGSI_TEXTURE_x values */
+   ubyte sampler_type[PIPE_MAX_SHADER_SAMPLER_VIEWS]; /**< TGSI_RETURN_TYPE_x */
 
    ubyte input_array_first[PIPE_MAX_SHADER_INPUTS];
    ubyte input_array_last[PIPE_MAX_SHADER_INPUTS];
@@ -74,6 +76,7 @@ struct tgsi_shader_info
 
    uint immediate_count; /**< number of immediates declared */
    uint num_instructions;
+   uint num_memory_instructions; /**< sampler, buffer, and image instructions */
 
    uint opcode_count[TGSI_OPCODE_LAST];  /**< opcode histogram */
 
@@ -110,12 +113,23 @@ struct tgsi_shader_info
    boolean writes_clipvertex;
    boolean writes_viewport_index;
    boolean writes_layer;
+   boolean writes_memory; /**< contains stores or atomics to buffers or images */
    boolean is_msaa_sampler[PIPE_MAX_SAMPLERS];
    boolean uses_doubles; /**< uses any of the double instructions */
+   boolean uses_derivatives;
    unsigned clipdist_writemask;
    unsigned culldist_writemask;
    unsigned num_written_culldistance;
    unsigned num_written_clipdistance;
+   /**
+    * Bitmask indicating which images are written to (STORE / ATOM*).
+    * Indirect image accesses are not reflected in this mask.
+    */
+   unsigned images_writemask;
+   /**
+    * Bitmask indicating which declared image is a buffer.
+    */
+   unsigned images_buffers;
    /**
     * Bitmask indicating which register files are accessed with
     * indirect addressing.  The bits are (1 << TGSI_FILE_x), etc.
@@ -136,10 +150,27 @@ struct tgsi_shader_info
    unsigned max_depth;
 };
 
+struct tgsi_array_info
+{
+   /** Whether an array with this ID was declared. */
+   bool declared;
+
+   /** The OR of all writemasks used to write to this array. */
+   ubyte writemask;
+
+   /** The range with which the array was declared. */
+   struct tgsi_declaration_range range;
+};
+
 extern void
 tgsi_scan_shader(const struct tgsi_token *tokens,
                  struct tgsi_shader_info *info);
 
+void
+tgsi_scan_arrays(const struct tgsi_token *tokens,
+                 unsigned file,
+                 unsigned max_array_id,
+                 struct tgsi_array_info *arrays);
 
 extern boolean
 tgsi_is_passthrough_shader(const struct tgsi_token *tokens);

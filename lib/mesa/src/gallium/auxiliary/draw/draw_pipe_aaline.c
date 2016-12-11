@@ -118,10 +118,12 @@ struct aaline_stage
    void (*driver_bind_fs_state)(struct pipe_context *, void *);
    void (*driver_delete_fs_state)(struct pipe_context *, void *);
 
-   void (*driver_bind_sampler_states)(struct pipe_context *, unsigned, unsigned,
+   void (*driver_bind_sampler_states)(struct pipe_context *,
+                                      enum pipe_shader_type, unsigned,
                                       unsigned, void **);
 
-   void (*driver_set_sampler_views)(struct pipe_context *, unsigned shader,
+   void (*driver_set_sampler_views)(struct pipe_context *,
+                                    enum pipe_shader_type shader,
                                     unsigned start, unsigned count,
                                     struct pipe_sampler_view **);
 };
@@ -163,7 +165,7 @@ aa_transform_decl(struct tgsi_transform_context *ctx,
       uint i;
       for (i = decl->Range.First;
            i <= decl->Range.Last; i++) {
-         aactx->samplersUsed |= 1 << i;
+         aactx->samplersUsed |= 1u << i;
       }
    }
    else if (decl->Declaration.File == TGSI_FILE_SAMPLER_VIEW) {
@@ -208,9 +210,11 @@ aa_transform_prolog(struct tgsi_transform_context *ctx)
    struct aa_transform_context *aactx = (struct aa_transform_context *) ctx;
    uint i;
 
+   STATIC_ASSERT(sizeof(aactx->samplersUsed) * 8 >= PIPE_MAX_SAMPLERS);
+
    /* find free sampler */
    aactx->freeSampler = free_bit(aactx->samplersUsed);
-   if (aactx->freeSampler >= PIPE_MAX_SAMPLERS)
+   if (aactx->freeSampler < 0 || aactx->freeSampler >= PIPE_MAX_SAMPLERS)
       aactx->freeSampler = PIPE_MAX_SAMPLERS - 1;
 
    /* find two free temp regs */
@@ -264,11 +268,11 @@ aa_transform_epilog(struct tgsi_transform_context *ctx)
    if (aactx->colorOutput != -1) {
       /* insert texture sampling code for antialiasing. */
 
-      /* TEX texTemp, input_coord, sampler */
-      tgsi_transform_tex_2d_inst(ctx,
-                                 TGSI_FILE_TEMPORARY, aactx->texTemp,
-                                 TGSI_FILE_INPUT, aactx->maxInput + 1,
-                                 aactx->freeSampler);
+      /* TEX texTemp, input_coord, sampler, 2D */
+      tgsi_transform_tex_inst(ctx,
+                              TGSI_FILE_TEMPORARY, aactx->texTemp,
+                              TGSI_FILE_INPUT, aactx->maxInput + 1,
+                              TGSI_TEXTURE_2D, aactx->freeSampler);
 
       /* MOV rgb */
       tgsi_transform_op1_inst(ctx, TGSI_OPCODE_MOV,
@@ -882,7 +886,8 @@ aaline_delete_fs_state(struct pipe_context *pipe, void *fs)
 
 
 static void
-aaline_bind_sampler_states(struct pipe_context *pipe, unsigned shader,
+aaline_bind_sampler_states(struct pipe_context *pipe,
+                           enum pipe_shader_type shader,
                            unsigned start, unsigned num, void **sampler)
 {
    struct aaline_stage *aaline = aaline_stage_from_pipe(pipe);
@@ -905,7 +910,8 @@ aaline_bind_sampler_states(struct pipe_context *pipe, unsigned shader,
 
 
 static void
-aaline_set_sampler_views(struct pipe_context *pipe, unsigned shader,
+aaline_set_sampler_views(struct pipe_context *pipe,
+                         enum pipe_shader_type shader,
                          unsigned start, unsigned num,
                          struct pipe_sampler_view **views)
 {

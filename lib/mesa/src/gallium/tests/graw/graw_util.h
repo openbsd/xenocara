@@ -43,6 +43,7 @@ graw_util_create_window(struct graw_info *info,
    int i;
 
    memset(info, 0, sizeof(*info));
+   memset(&resource_temp, 0, sizeof(resource_temp));
 
    /* It's hard to say whether window or screen should be created
     * first.  Different environments would prefer one or the other.
@@ -224,6 +225,7 @@ graw_util_create_tex2d(const struct graw_info *info,
    struct pipe_resource temp, *tex;
    struct pipe_box box;
 
+   memset(&temp, 0, sizeof(temp));
    temp.target = PIPE_TEXTURE_2D;
    temp.format = format;
    temp.width0 = width;
@@ -242,14 +244,14 @@ graw_util_create_tex2d(const struct graw_info *info,
 
    u_box_2d(0, 0, width, height, &box);
 
-   info->ctx->transfer_inline_write(info->ctx,
-                                    tex,
-                                    0,
-                                    PIPE_TRANSFER_WRITE,
-                                    &box,
-                                    data,
-                                    row_stride,
-                                    image_bytes);
+   info->ctx->texture_subdata(info->ctx,
+                              tex,
+                              0,
+                              PIPE_TRANSFER_WRITE,
+                              &box,
+                              data,
+                              row_stride,
+                              image_bytes);
 
    /* Possibly read back & compare against original data:
     */
@@ -315,10 +317,10 @@ graw_util_create_simple_sampler_view(const struct graw_info *info,
    memset(&sv_temp, 0, sizeof(sv_temp));
    sv_temp.format = texture->format;
    sv_temp.texture = texture;
-   sv_temp.swizzle_r = PIPE_SWIZZLE_RED;
-   sv_temp.swizzle_g = PIPE_SWIZZLE_GREEN;
-   sv_temp.swizzle_b = PIPE_SWIZZLE_BLUE;
-   sv_temp.swizzle_a = PIPE_SWIZZLE_ALPHA;
+   sv_temp.swizzle_r = PIPE_SWIZZLE_X;
+   sv_temp.swizzle_g = PIPE_SWIZZLE_Y;
+   sv_temp.swizzle_b = PIPE_SWIZZLE_Z;
+   sv_temp.swizzle_a = PIPE_SWIZZLE_W;
 
    sv = info->ctx->create_sampler_view(info->ctx, texture, &sv_temp);
 

@@ -43,8 +43,8 @@
 #include "main/samplerobj.h"
 #include "s_context.h"
 #include "s_texfetch.h"
-#include "../../gallium/auxiliary/util/u_format_rgb9e5.h"
-#include "../../gallium/auxiliary/util/u_format_r11g11b10f.h"
+#include "util/format_rgb9e5.h"
+#include "util/format_r11g11b10f.h"
 #include "util/format_srgb.h"
 
 
@@ -440,7 +440,28 @@ texfetch_funcs[] =
    FETCH_NULL(SRGB8_ALPHA8_ASTC_10x8),
    FETCH_NULL(SRGB8_ALPHA8_ASTC_10x10),
    FETCH_NULL(SRGB8_ALPHA8_ASTC_12x10),
-   FETCH_NULL(SRGB8_ALPHA8_ASTC_12x12)
+   FETCH_NULL(SRGB8_ALPHA8_ASTC_12x12),
+
+   FETCH_NULL(RGBA_ASTC_3x3x3),
+   FETCH_NULL(RGBA_ASTC_4x3x3),
+   FETCH_NULL(RGBA_ASTC_4x4x3),
+   FETCH_NULL(RGBA_ASTC_4x4x4),
+   FETCH_NULL(RGBA_ASTC_5x4x4),
+   FETCH_NULL(RGBA_ASTC_5x5x4),
+   FETCH_NULL(RGBA_ASTC_5x5x5),
+   FETCH_NULL(RGBA_ASTC_6x5x5),
+   FETCH_NULL(RGBA_ASTC_6x6x5),
+   FETCH_NULL(RGBA_ASTC_6x6x6),
+   FETCH_NULL(SRGB8_ALPHA8_ASTC_3x3x3),
+   FETCH_NULL(SRGB8_ALPHA8_ASTC_4x3x3),
+   FETCH_NULL(SRGB8_ALPHA8_ASTC_4x4x3),
+   FETCH_NULL(SRGB8_ALPHA8_ASTC_4x4x4),
+   FETCH_NULL(SRGB8_ALPHA8_ASTC_5x4x4),
+   FETCH_NULL(SRGB8_ALPHA8_ASTC_5x5x4),
+   FETCH_NULL(SRGB8_ALPHA8_ASTC_5x5x5),
+   FETCH_NULL(SRGB8_ALPHA8_ASTC_6x5x5),
+   FETCH_NULL(SRGB8_ALPHA8_ASTC_6x6x5),
+   FETCH_NULL(SRGB8_ALPHA8_ASTC_6x6x6)
 };
 
 

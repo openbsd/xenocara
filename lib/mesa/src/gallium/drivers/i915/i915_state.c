@@ -301,7 +301,7 @@ i915_bind_vertex_sampler_states(struct pipe_context *pipe,
    struct i915_context *i915 = i915_context(pipe);
    unsigned i;
 
-   assert(start + num <= Elements(i915->vertex_samplers));
+   assert(start + num <= ARRAY_SIZE(i915->vertex_samplers));
 
    /* Check for no-op */
    if (num == i915->num_vertex_samplers &&
@@ -358,7 +358,8 @@ static void i915_bind_fragment_sampler_states(struct pipe_context *pipe,
 
 
 static void
-i915_bind_sampler_states(struct pipe_context *pipe, unsigned shader,
+i915_bind_sampler_states(struct pipe_context *pipe,
+                         enum pipe_shader_type shader,
                          unsigned start, unsigned num_samplers,
                          void **samplers)
 {
@@ -443,7 +444,7 @@ i915_cleanup_vertex_sampling(struct i915_context *i915)
 {
    struct i915_winsys *iws = i915->iws;
    unsigned i;
-   for (i = 0; i < Elements(i915->mapped_vs_tex); i++) {
+   for (i = 0; i < ARRAY_SIZE(i915->mapped_vs_tex); i++) {
       if (i915->mapped_vs_tex_buffer[i]) { 
          iws->buffer_unmap(iws, i915->mapped_vs_tex_buffer[i]);
          pipe_resource_reference(&i915->mapped_vs_tex[i], NULL);
@@ -675,7 +676,7 @@ static void i915_delete_vs_state(struct pipe_context *pipe, void *shader)
 
 static void i915_set_constant_buffer(struct pipe_context *pipe,
                                      uint shader, uint index,
-                                     struct pipe_constant_buffer *cb)
+                                     const struct pipe_constant_buffer *cb)
 {
    struct i915_context *i915 = i915_context(pipe);
    struct pipe_resource *buf = cb ? cb->buffer : NULL;
@@ -769,7 +770,7 @@ i915_set_vertex_sampler_views(struct pipe_context *pipe,
    struct i915_context *i915 = i915_context(pipe);
    uint i;
 
-   assert(num <= Elements(i915->vertex_sampler_views));
+   assert(num <= ARRAY_SIZE(i915->vertex_sampler_views));
 
    /* Check for no-op */
    if (num == i915->num_vertex_sampler_views &&
@@ -777,7 +778,7 @@ i915_set_vertex_sampler_views(struct pipe_context *pipe,
       return;
    }
 
-   for (i = 0; i < Elements(i915->vertex_sampler_views); i++) {
+   for (i = 0; i < ARRAY_SIZE(i915->vertex_sampler_views); i++) {
       struct pipe_sampler_view *view = i < num ? views[i] : NULL;
 
       pipe_sampler_view_reference(&i915->vertex_sampler_views[i], view);
@@ -793,7 +794,7 @@ i915_set_vertex_sampler_views(struct pipe_context *pipe,
 
 
 static void
-i915_set_sampler_views(struct pipe_context *pipe, unsigned shader,
+i915_set_sampler_views(struct pipe_context *pipe, enum pipe_shader_type shader,
                        unsigned start, unsigned num,
                        struct pipe_sampler_view **views)
 {

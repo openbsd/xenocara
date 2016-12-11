@@ -267,6 +267,14 @@ make_color_buffer_mask(struct gl_context *ctx, GLint drawbuffer)
          mask |= BUFFER_BIT_FRONT_RIGHT;
       break;
    case GL_BACK:
+      /* For GLES contexts with a single buffered configuration, we actually
+       * only have a front renderbuffer, so any clear calls to GL_BACK should
+       * affect that buffer. See draw_buffer_enum_to_bitmask for details.
+       */
+      if (_mesa_is_gles(ctx))
+         if (!ctx->DrawBuffer->Visual.doubleBufferMode)
+            if (att[BUFFER_FRONT_LEFT].Renderbuffer)
+               mask |= BUFFER_BIT_FRONT_LEFT;
       if (att[BUFFER_BACK_LEFT].Renderbuffer)
          mask |= BUFFER_BIT_BACK_LEFT;
       if (att[BUFFER_BACK_RIGHT].Renderbuffer)
@@ -646,12 +654,12 @@ _mesa_ClearBufferfi(GLenum buffer, GLint drawbuffer,
  */
 void GLAPIENTRY
 _mesa_ClearNamedFramebufferfi(GLuint framebuffer, GLenum buffer,
-                              GLfloat depth, GLint stencil)
+                              GLint drawbuffer, GLfloat depth, GLint stencil)
 {
    GLint oldfb;
 
    _mesa_GetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &oldfb);
    _mesa_BindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer);
-   _mesa_ClearBufferfi(buffer, 0, depth, stencil);
+   _mesa_ClearBufferfi(buffer, drawbuffer, depth, stencil);
    _mesa_BindFramebuffer(GL_DRAW_FRAMEBUFFER, (GLuint) oldfb);
 }

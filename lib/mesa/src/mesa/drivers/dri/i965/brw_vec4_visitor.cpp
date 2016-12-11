@@ -46,7 +46,7 @@ vec4_instruction::vec4_instruction(enum opcode opcode, const dst_reg &dst,
    this->predicate = BRW_PREDICATE_NONE;
    this->predicate_inverse = false;
    this->target = 0;
-   this->regs_written = (dst.file == BAD_FILE ? 0 : 1);
+   this->size_written = (dst.file == BAD_FILE ? 0 : REG_SIZE);
    this->shadow_compare = false;
    this->ir = NULL;
    this->urb_write_flags = BRW_URB_WRITE_NO_FLAGS;
@@ -183,6 +183,7 @@ ALU3(MAD)
 ALU2_ACC(ADDC)
 ALU2_ACC(SUBB)
 ALU2(MAC)
+ALU1(DIM)
 
 /** Gen4 predicated IF. */
 vec4_instruction *
@@ -566,18 +567,12 @@ vec4_visitor::emit_pack_snorm_4x8(const dst_reg &dst, const src_reg &src0)
    emit(VEC4_OPCODE_PACK_BYTES, dst, bytes);
 }
 
-/**
- * Returns the minimum number of vec4 elements needed to pack a type.
- *
- * For simple types, it will return 1 (a single vec4); for matrices, the
- * number of columns; for array and struct, the sum of the vec4_size of
- * each of its elements; and for sampler and atomic, zero.
- *
- * This method is useful to calculate how much register space is needed to
- * store a particular type.
+/*
+ * Returns the minimum number of vec4 (as_vec4 == true) or dvec4 (as_vec4 ==
+ * false) elements needed to pack a type.
  */
-extern "C" int
-type_size_vec4(const struct glsl_type *type)
+static int
+type_size_xvec4(const struct glsl_type *type, bool as_vec4)
 {
    unsigned int i;
    int size;
@@ -587,23 +582,27 @@ type_size_vec4(const struct glsl_type *type)
    case GLSL_TYPE_INT:
    case GLSL_TYPE_FLOAT:
    case GLSL_TYPE_BOOL:
+   case GLSL_TYPE_DOUBLE:
       if (type->is_matrix()) {
-	 return type->matrix_columns;
+         const glsl_type *col_type = type->column_type();
+         unsigned col_slots =
+            (as_vec4 && col_type->is_dual_slot()) ? 2 : 1;
+         return type->matrix_columns * col_slots;
       } else {
-	 /* Regardless of size of vector, it gets a vec4. This is bad
-	  * packing for things like floats, but otherwise arrays become a
-	  * mess.  Hopefully a later pass over the code can pack scalars
-	  * down if appropriate.
-	  */
-	 return 1;
+         /* Regardless of size of vector, it gets a vec4. This is bad
+          * packing for things like floats, but otherwise arrays become a
+          * mess.  Hopefully a later pass over the code can pack scalars
+          * down if appropriate.
+          */
+         return (as_vec4 && type->is_dual_slot()) ? 2 : 1;
       }
    case GLSL_TYPE_ARRAY:
       assert(type->length > 0);
-      return type_size_vec4(type->fields.array) * type->length;
+      return type_size_xvec4(type->fields.array, as_vec4) * type->length;
    case GLSL_TYPE_STRUCT:
       size = 0;
       for (i = 0; i < type->length; i++) {
-	 size += type_size_vec4(type->fields.structure[i].type);
+	 size += type_size_xvec4(type->fields.structure[i].type, as_vec4);
       }
       return size;
    case GLSL_TYPE_SUBROUTINE:
@@ -619,7 +618,6 @@ type_size_vec4(const struct glsl_type *type)
    case GLSL_TYPE_IMAGE:
       return DIV_ROUND_UP(BRW_IMAGE_PARAM_SIZE, 4);
    case GLSL_TYPE_VOID:
-   case GLSL_TYPE_DOUBLE:
    case GLSL_TYPE_ERROR:
    case GLSL_TYPE_INTERFACE:
    case GLSL_TYPE_FUNCTION:
@@ -627,6 +625,47 @@ type_size_vec4(const struct glsl_type *type)
    }
 
    return 0;
+}
+
+/**
+ * Returns the minimum number of vec4 elements needed to pack a type.
+ *
+ * For simple types, it will return 1 (a single vec4); for matrices, the
+ * number of columns; for array and struct, the sum of the vec4_size of
+ * each of its elements; and for sampler and atomic, zero.
+ *
+ * This method is useful to calculate how much register space is needed to
+ * store a particular type.
+ */
+extern "C" int
+type_size_vec4(const struct glsl_type *type)
+{
+   return type_size_xvec4(type, true);
+}
+
+/**
+ * Returns the minimum number of dvec4 elements needed to pack a type.
+ *
+ * For simple types, it will return 1 (a single dvec4); for matrices, the
+ * number of columns; for array and struct, the sum of the dvec4_size of
+ * each of its elements; and for sampler and atomic, zero.
+ *
+ * This method is useful to calculate how much register space is needed to
+ * store a particular type.
+ *
+ * Measuring double-precision vertex inputs as dvec4 is required because
+ * ARB_vertex_attrib_64bit states that these uses the same number of locations
+ * than the single-precision version. That is, two consecutives dvec4 would be
+ * located in location "x" and location "x+1", not "x+2".
+ *
+ * In order to map vec4/dvec4 vertex inputs in the proper ATTRs,
+ * remap_vs_attrs() will take in account both the location and also if the
+ * type fits in one or two vec4 slots.
+ */
+extern "C" int
+type_size_dvec4(const struct glsl_type *type)
+{
+   return type_size_xvec4(type, false);
 }
 
 src_reg::src_reg(class vec4_visitor *v, const struct glsl_type *type)
@@ -758,7 +797,7 @@ vec4_visitor::emit_pull_constant_load_reg(dst_reg dst,
       pull->mlen = 2;
       pull->header_size = 1;
    } else if (devinfo->gen >= 7) {
-      dst_reg grf_offset = dst_reg(this, glsl_type::int_type);
+      dst_reg grf_offset = dst_reg(this, glsl_type::uint_type);
 
       grf_offset.type = offset_reg.type;
 
@@ -868,10 +907,8 @@ vec4_visitor::emit_texture(ir_texture_opcode op,
                            uint32_t constant_offset,
                            src_reg offset_value,
                            src_reg mcs,
-                           bool is_cube_array,
                            uint32_t surface,
                            src_reg surface_reg,
-                           uint32_t sampler,
                            src_reg sampler_reg)
 {
    /* The sampler can only meaningfully compute LOD for fragment shader
@@ -1056,16 +1093,10 @@ vec4_visitor::emit_texture(ir_texture_opcode op,
    /* fixup num layers (z) for cube arrays: hardware returns faces * layers;
     * spec requires layers.
     */
-   if (op == ir_txs) {
-      if (is_cube_array) {
-         emit_math(SHADER_OPCODE_INT_QUOTIENT,
-                   writemask(inst->dst, WRITEMASK_Z),
-                   src_reg(inst->dst), brw_imm_d(6));
-      } else if (devinfo->gen < 7) {
-         /* Gen4-6 return 0 instead of 1 for single layer surfaces. */
-         emit_minmax(BRW_CONDITIONAL_GE, writemask(inst->dst, WRITEMASK_Z),
-                     src_reg(inst->dst), brw_imm_d(1));
-      }
+   if (op == ir_txs && devinfo->gen < 7) {
+      /* Gen4-6 return 0 instead of 1 for single layer surfaces. */
+      emit_minmax(BRW_CONDITIONAL_GE, writemask(inst->dst, WRITEMASK_Z),
+                  src_reg(inst->dst), brw_imm_d(1));
    }
 
    if (devinfo->gen == 6 && op == ir_tg4) {
@@ -1109,7 +1140,7 @@ vec4_visitor::emit_gen6_gather_wa(uint8_t wa, dst_reg dst)
 }
 
 void
-vec4_visitor::gs_emit_vertex(int stream_id)
+vec4_visitor::gs_emit_vertex(int /* stream_id */)
 {
    unreachable("not reached");
 }
@@ -1118,61 +1149,6 @@ void
 vec4_visitor::gs_end_primitive()
 {
    unreachable("not reached");
-}
-
-void
-vec4_visitor::emit_untyped_atomic(unsigned atomic_op, unsigned surf_index,
-                                  dst_reg dst, src_reg surf_offset,
-                                  src_reg src0, src_reg src1)
-{
-   unsigned mlen = 1 + (src0.file != BAD_FILE) + (src1.file != BAD_FILE);
-   src_reg src_payload(this, glsl_type::uint_type, mlen);
-   dst_reg payload(src_payload);
-   payload.writemask = WRITEMASK_X;
-
-   /* Set the atomic operation offset. */
-   emit(MOV(offset(payload, 0), surf_offset));
-   unsigned i = 1;
-
-   /* Set the atomic operation arguments. */
-   if (src0.file != BAD_FILE) {
-      emit(MOV(offset(payload, i), src0));
-      i++;
-   }
-
-   if (src1.file != BAD_FILE) {
-      emit(MOV(offset(payload, i), src1));
-      i++;
-   }
-
-   /* Emit the instruction.  Note that this maps to the normal SIMD8
-    * untyped atomic message on Ivy Bridge, but that's OK because
-    * unused channels will be masked out.
-    */
-   vec4_instruction *inst = emit(SHADER_OPCODE_UNTYPED_ATOMIC, dst,
-                                 src_payload,
-                                 brw_imm_ud(surf_index), brw_imm_ud(atomic_op));
-   inst->mlen = mlen;
-}
-
-void
-vec4_visitor::emit_untyped_surface_read(unsigned surf_index, dst_reg dst,
-                                        src_reg surf_offset)
-{
-   dst_reg offset(this, glsl_type::uint_type);
-   offset.writemask = WRITEMASK_X;
-
-   /* Set the surface read offset. */
-   emit(MOV(offset, surf_offset));
-
-   /* Emit the instruction.  Note that this maps to the normal SIMD8
-    * untyped surface read message, but that's OK because unused
-    * channels will be masked out.
-    */
-   vec4_instruction *inst = emit(SHADER_OPCODE_UNTYPED_SURFACE_READ, dst,
-                                 src_reg(offset),
-                                 brw_imm_ud(surf_index), brw_imm_d(1));
-   inst->mlen = 1;
 }
 
 void
@@ -1295,10 +1271,32 @@ vec4_visitor::emit_generic_urb_slot(dst_reg reg, int varying)
    assert(varying < VARYING_SLOT_MAX);
    assert(output_reg[varying].type == reg.type);
    current_annotation = output_reg_annotation[varying];
-   if (output_reg[varying].file != BAD_FILE)
+   if (output_reg[varying].file != BAD_FILE) {
       return emit(MOV(reg, src_reg(output_reg[varying])));
-   else
+   } else
       return NULL;
+}
+
+void
+vec4_visitor::emit_generic_urb_slot(dst_reg reg, int varying, int component)
+{
+   assert(varying < VARYING_SLOT_MAX);
+   assert(varying >= VARYING_SLOT_VAR0);
+   varying = varying - VARYING_SLOT_VAR0;
+
+   unsigned num_comps = output_generic_num_components[varying][component];
+   if (num_comps == 0)
+      return;
+
+   assert(output_generic_reg[varying][component].type == reg.type);
+   current_annotation = output_reg_annotation[varying];
+   if (output_generic_reg[varying][component].file != BAD_FILE) {
+      src_reg src = src_reg(output_generic_reg[varying][component]);
+      src.swizzle = BRW_SWZ_COMP_OUTPUT(component);
+      reg.writemask =
+         brw_writemask_for_component_packing(num_comps, component);
+      emit(MOV(reg, src));
+   }
 }
 
 void
@@ -1340,13 +1338,19 @@ vec4_visitor::emit_urb_slot(dst_reg reg, int varying)
       /* No need to write to this slot */
       break;
    default:
-      emit_generic_urb_slot(reg, varying);
+      if (varying >= VARYING_SLOT_VAR0) {
+         for (int i = 0; i < 4; i++) {
+            emit_generic_urb_slot(reg, varying, i);
+         }
+      } else {
+         emit_generic_urb_slot(reg, varying);
+      }
       break;
    }
 }
 
 static int
-align_interleaved_urb_mlen(const struct brw_device_info *devinfo, int mlen)
+align_interleaved_urb_mlen(const struct gen_device_info *devinfo, int mlen)
 {
    if (devinfo->gen >= 6) {
       /* URB data written (does not include the message header reg) must
@@ -1465,27 +1469,6 @@ vec4_visitor::get_scratch_offset(bblock_t *block, vec4_instruction *inst,
    }
 }
 
-src_reg
-vec4_visitor::get_pull_constant_offset(bblock_t * block, vec4_instruction *inst,
-				       src_reg *reladdr, int reg_offset)
-{
-   if (reladdr) {
-      src_reg index = src_reg(this, glsl_type::int_type);
-
-      emit_before(block, inst, ADD(dst_reg(index), *reladdr,
-                                   brw_imm_d(reg_offset * 16)));
-
-      return index;
-   } else if (devinfo->gen >= 8) {
-      /* Store the offset in a GRF so we can send-from-GRF. */
-      src_reg offset = src_reg(this, glsl_type::int_type);
-      emit_before(block, inst, MOV(dst_reg(offset), brw_imm_d(reg_offset * 16)));
-      return offset;
-   } else {
-      return brw_imm_d(reg_offset * 16);
-   }
-}
-
 /**
  * Emits an instruction before @inst to load the value named by @orig_src
  * from scratch space at @base_offset to @temp.
@@ -1497,7 +1480,8 @@ vec4_visitor::emit_scratch_read(bblock_t *block, vec4_instruction *inst,
 				dst_reg temp, src_reg orig_src,
 				int base_offset)
 {
-   int reg_offset = base_offset + orig_src.reg_offset;
+   assert(orig_src.offset % REG_SIZE == 0);
+   int reg_offset = base_offset + orig_src.offset / REG_SIZE;
    src_reg index = get_scratch_offset(block, inst, orig_src.reladdr,
                                       reg_offset);
 
@@ -1514,7 +1498,8 @@ void
 vec4_visitor::emit_scratch_write(bblock_t *block, vec4_instruction *inst,
                                  int base_offset)
 {
-   int reg_offset = base_offset + inst->dst.reg_offset;
+   assert(inst->dst.offset % REG_SIZE == 0);
+   int reg_offset = base_offset + inst->dst.offset / REG_SIZE;
    src_reg index = get_scratch_offset(block, inst, inst->dst.reladdr,
                                       reg_offset);
 
@@ -1539,7 +1524,7 @@ vec4_visitor::emit_scratch_write(bblock_t *block, vec4_instruction *inst,
 
    inst->dst.file = temp.file;
    inst->dst.nr = temp.nr;
-   inst->dst.reg_offset = temp.reg_offset;
+   inst->dst.offset %= REG_SIZE;
    inst->dst.reladdr = NULL;
 }
 
@@ -1569,7 +1554,7 @@ vec4_visitor::emit_resolve_reladdr(int scratch_loc[], bblock_t *block,
       dst_reg temp = dst_reg(this, glsl_type::vec4_type);
       emit_scratch_read(block, inst, temp, src, scratch_loc[src.nr]);
       src.nr = temp.nr;
-      src.reg_offset = temp.reg_offset;
+      src.offset %= REG_SIZE;
       src.reladdr = NULL;
    }
 
@@ -1663,12 +1648,25 @@ vec4_visitor::move_grf_array_access_to_scratch()
 void
 vec4_visitor::emit_pull_constant_load(bblock_t *block, vec4_instruction *inst,
 				      dst_reg temp, src_reg orig_src,
-				      int base_offset)
+                                      int base_offset, src_reg indirect)
 {
-   int reg_offset = base_offset + orig_src.reg_offset;
+   assert(orig_src.offset % 16 == 0);
+   int reg_offset = base_offset + orig_src.offset / 16;
    const unsigned index = prog_data->base.binding_table.pull_constants_start;
-   src_reg offset = get_pull_constant_offset(block, inst, orig_src.reladdr,
-                                             reg_offset);
+
+   src_reg offset;
+   if (indirect.file != BAD_FILE) {
+      offset = src_reg(this, glsl_type::uint_type);
+
+      emit_before(block, inst, ADD(dst_reg(offset), indirect,
+                                   brw_imm_ud(reg_offset * 16)));
+   } else if (devinfo->gen >= 8) {
+      /* Store the offset in a GRF so we can send-from-GRF. */
+      offset = src_reg(this, glsl_type::uint_type);
+      emit_before(block, inst, MOV(dst_reg(offset), brw_imm_ud(reg_offset * 16)));
+   } else {
+      offset = brw_imm_d(reg_offset * 16);
+   }
 
    emit_pull_constant_load_reg(temp,
                                brw_imm_ud(index),
@@ -1693,61 +1691,65 @@ vec4_visitor::emit_pull_constant_load(bblock_t *block, vec4_instruction *inst,
 void
 vec4_visitor::move_uniform_array_access_to_pull_constants()
 {
+   /* The vulkan dirver doesn't support pull constants other than UBOs so
+    * everything has to be pushed regardless.
+    */
+   if (stage_prog_data->pull_param == NULL) {
+      split_uniform_registers();
+      return;
+   }
+
    int pull_constant_loc[this->uniforms];
    memset(pull_constant_loc, -1, sizeof(pull_constant_loc));
-   bool nested_reladdr;
 
-   /* Walk through and find array access of uniforms.  Put a copy of that
-    * uniform in the pull constant buffer.
-    *
-    * Note that we don't move constant-indexed accesses to arrays.  No
-    * testing has been done of the performance impact of this choice.
+   /* First, walk through the instructions and determine which things need to
+    * be pulled.  We mark something as needing to be pulled by setting
+    * pull_constant_loc to 0.
     */
-   do {
-      nested_reladdr = false;
+   foreach_block_and_inst(block, vec4_instruction, inst, cfg) {
+      /* We only care about MOV_INDIRECT of a uniform */
+      if (inst->opcode != SHADER_OPCODE_MOV_INDIRECT ||
+          inst->src[0].file != UNIFORM)
+         continue;
 
-      foreach_block_and_inst_safe(block, vec4_instruction, inst, cfg) {
-         for (int i = 0 ; i < 3; i++) {
-            if (inst->src[i].file != UNIFORM || !inst->src[i].reladdr)
-               continue;
+      int uniform_nr = inst->src[0].nr + inst->src[0].offset / 16;
 
-            int uniform = inst->src[i].nr;
+      for (unsigned j = 0; j < DIV_ROUND_UP(inst->src[2].ud, 16); j++)
+         pull_constant_loc[uniform_nr + j] = 0;
+   }
 
-            if (inst->src[i].reladdr->reladdr)
-               nested_reladdr = true;  /* will need another pass */
+   /* Next, we walk the list of uniforms and assign real pull constant
+    * locations and set their corresponding entries in pull_param.
+    */
+   for (int j = 0; j < this->uniforms; j++) {
+      if (pull_constant_loc[j] < 0)
+         continue;
 
-            /* If this array isn't already present in the pull constant buffer,
-             * add it.
-             */
-            if (pull_constant_loc[uniform] == -1) {
-               const gl_constant_value **values =
-                  &stage_prog_data->param[uniform * 4];
+      pull_constant_loc[j] = stage_prog_data->nr_pull_params / 4;
 
-               pull_constant_loc[uniform] = stage_prog_data->nr_pull_params / 4;
-
-               assert(uniform < uniform_array_size);
-               for (int j = 0; j < uniform_size[uniform] * 4; j++) {
-                  stage_prog_data->pull_param[stage_prog_data->nr_pull_params++]
-                     = values[j];
-               }
-            }
-
-            /* Set up the annotation tracking for new generated instructions. */
-            base_ir = inst->ir;
-            current_annotation = inst->annotation;
-
-            dst_reg temp = dst_reg(this, glsl_type::vec4_type);
-
-            emit_pull_constant_load(block, inst, temp, inst->src[i],
-                                    pull_constant_loc[uniform]);
-
-            inst->src[i].file = temp.file;
-            inst->src[i].nr = temp.nr;
-            inst->src[i].reg_offset = temp.reg_offset;
-            inst->src[i].reladdr = NULL;
-         }
+      for (int i = 0; i < 4; i++) {
+         stage_prog_data->pull_param[stage_prog_data->nr_pull_params++]
+            = stage_prog_data->param[j * 4 + i];
       }
-   } while (nested_reladdr);
+   }
+
+   /* Finally, we can walk through the instructions and lower MOV_INDIRECT
+    * instructions to actual uniform pulls.
+    */
+   foreach_block_and_inst_safe(block, vec4_instruction, inst, cfg) {
+      /* We only care about MOV_INDIRECT of a uniform */
+      if (inst->opcode != SHADER_OPCODE_MOV_INDIRECT ||
+          inst->src[0].file != UNIFORM)
+         continue;
+
+      int uniform_nr = inst->src[0].nr + inst->src[0].offset / 16;
+
+      assert(inst->src[0].swizzle == BRW_SWIZZLE_NOOP);
+
+      emit_pull_constant_load(block, inst, inst->dst, inst->src[0],
+                              pull_constant_loc[uniform_nr], inst->src[1]);
+      inst->remove(block);
+   }
 
    /* Now there are no accesses of the UNIFORM file with a reladdr, so
     * no need to track them as larger-than-vec4 objects.  This will be
@@ -1793,6 +1795,9 @@ vec4_visitor::vec4_visitor(const struct brw_compiler *compiler,
    this->current_annotation = NULL;
    memset(this->output_reg_annotation, 0, sizeof(this->output_reg_annotation));
 
+   memset(this->output_generic_num_components, 0,
+          sizeof(this->output_generic_num_components));
+
    this->virtual_grf_start = NULL;
    this->virtual_grf_end = NULL;
    this->live_intervals = NULL;
@@ -1800,17 +1805,6 @@ vec4_visitor::vec4_visitor(const struct brw_compiler *compiler,
    this->max_grf = devinfo->gen >= 7 ? GEN7_MRF_HACK_START : BRW_MAX_GRF;
 
    this->uniforms = 0;
-
-   /* Initialize uniform_array_size to at least 1 because pre-gen6 VS requires
-    * at least one. See setup_uniforms() in brw_vec4.cpp.
-    */
-   this->uniform_array_size = 1;
-   if (prog_data) {
-      this->uniform_array_size =
-         MAX2(DIV_ROUND_UP(stage_prog_data->nr_params, 4), 1);
-   }
-
-   this->uniform_size = rzalloc_array(mem_ctx, int, this->uniform_array_size);
 }
 
 vec4_visitor::~vec4_visitor()

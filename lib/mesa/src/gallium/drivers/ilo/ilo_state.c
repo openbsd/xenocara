@@ -1052,7 +1052,8 @@ ilo_create_sampler_state(struct pipe_context *pipe,
 }
 
 static void
-ilo_bind_sampler_states(struct pipe_context *pipe, unsigned shader,
+ilo_bind_sampler_states(struct pipe_context *pipe,
+                        enum pipe_shader_type shader,
                         unsigned start, unsigned count, void **samplers)
 {
    struct ilo_state_vector *vec = &ilo_context(pipe)->state_vector;
@@ -1060,7 +1061,7 @@ ilo_bind_sampler_states(struct pipe_context *pipe, unsigned shader,
    bool changed = false;
    unsigned i;
 
-   assert(start + count <= Elements(dst->cso));
+   assert(start + count <= ARRAY_SIZE(dst->cso));
 
    if (samplers) {
       for (i = 0; i < count; i++) {
@@ -1536,7 +1537,7 @@ ilo_set_clip_state(struct pipe_context *pipe,
 static void
 ilo_set_constant_buffer(struct pipe_context *pipe,
                         uint shader, uint index,
-                        struct pipe_constant_buffer *buf)
+                        const struct pipe_constant_buffer *buf)
 {
    const struct ilo_dev *dev = ilo_context(pipe)->dev;
    struct ilo_state_vector *vec = &ilo_context(pipe)->state_vector;
@@ -1544,8 +1545,8 @@ ilo_set_constant_buffer(struct pipe_context *pipe,
    const unsigned count = 1;
    unsigned i;
 
-   assert(shader < Elements(vec->cbuf));
-   assert(index + count <= Elements(vec->cbuf[shader].cso));
+   assert(shader < ARRAY_SIZE(vec->cbuf));
+   assert(index + count <= ARRAY_SIZE(vec->cbuf[shader].cso));
 
    if (buf) {
       for (i = 0; i < count; i++) {
@@ -1801,7 +1802,7 @@ ilo_set_viewport_states(struct pipe_context *pipe,
 }
 
 static void
-ilo_set_sampler_views(struct pipe_context *pipe, unsigned shader,
+ilo_set_sampler_views(struct pipe_context *pipe, enum pipe_shader_type shader,
                       unsigned start, unsigned count,
                       struct pipe_sampler_view **views)
 {
@@ -1809,7 +1810,7 @@ ilo_set_sampler_views(struct pipe_context *pipe, unsigned shader,
    struct ilo_view_state *dst = &vec->view[shader];
    unsigned i;
 
-   assert(start + count <= Elements(dst->states));
+   assert(start + count <= ARRAY_SIZE(dst->states));
 
    if (views) {
       for (i = 0; i < count; i++)
@@ -1845,20 +1846,23 @@ ilo_set_sampler_views(struct pipe_context *pipe, unsigned shader,
    case PIPE_SHADER_COMPUTE:
       vec->dirty |= ILO_DIRTY_VIEW_CS;
       break;
+   default:
+      assert(!"unexpected shader type");
+      break;
    }
 }
 
 static void
-ilo_set_shader_images(struct pipe_context *pipe, unsigned shader,
+ilo_set_shader_images(struct pipe_context *pipe, enum pipe_shader_type shader,
                       unsigned start, unsigned count,
-                      struct pipe_image_view *views)
+                      const struct pipe_image_view *views)
 {
 #if 0
    struct ilo_state_vector *vec = &ilo_context(pipe)->state_vector;
    struct ilo_resource_state *dst = &vec->resource;
    unsigned i;
 
-   assert(start + count <= Elements(dst->states));
+   assert(start + count <= ARRAY_SIZE(dst->states));
 
    if (surfaces) {
       for (i = 0; i < count; i++)
@@ -2015,9 +2019,8 @@ ilo_create_sampler_view(struct pipe_context *pipe,
 
       memset(&info, 0, sizeof(info));
       info.vma = ilo_resource_get_vma(res);
-      info.offset = templ->u.buf.first_element * info.struct_size;
-      info.size = (templ->u.buf.last_element -
-            templ->u.buf.first_element + 1) * info.struct_size;
+      info.offset = templ->u.buf.offset;
+      info.size = templ->u.buf.size;
       info.access = ILO_STATE_SURFACE_ACCESS_SAMPLER;
       info.format = ilo_format_translate_color(dev, templ->format);
       info.format_size = util_format_get_blocksize(templ->format);
@@ -2220,7 +2223,7 @@ ilo_set_compute_resources(struct pipe_context *pipe,
    struct ilo_resource_state *dst = &vec->cs_resource;
    unsigned i;
 
-   assert(start + count <= Elements(dst->states));
+   assert(start + count <= ARRAY_SIZE(dst->states));
 
    if (surfaces) {
       for (i = 0; i < count; i++)
@@ -2407,7 +2410,7 @@ ilo_state_vector_cleanup(struct ilo_state_vector *vec)
 {
    unsigned i, sh;
 
-   for (i = 0; i < Elements(vec->vb.states); i++) {
+   for (i = 0; i < ARRAY_SIZE(vec->vb.states); i++) {
       if (vec->vb.enabled_mask & (1 << i))
          pipe_resource_reference(&vec->vb.states[i].buffer, NULL);
    }
@@ -2424,7 +2427,7 @@ ilo_state_vector_cleanup(struct ilo_state_vector *vec)
          pipe_sampler_view_reference(&view, NULL);
       }
 
-      for (i = 0; i < Elements(vec->cbuf[sh].cso); i++) {
+      for (i = 0; i < ARRAY_SIZE(vec->cbuf[sh].cso); i++) {
          struct ilo_cbuf_cso *cbuf = &vec->cbuf[sh].cso[i];
          pipe_resource_reference(&cbuf->resource, NULL);
       }
@@ -2513,7 +2516,7 @@ ilo_state_vector_resource_renamed(struct ilo_state_vector *vec,
       }
 
       if (res->target == PIPE_BUFFER) {
-         for (i = 0; i < Elements(vec->cbuf[sh].cso); i++) {
+         for (i = 0; i < ARRAY_SIZE(vec->cbuf[sh].cso); i++) {
             struct ilo_cbuf_cso *cbuf = &vec->cbuf[sh].cso[i];
 
             if (cbuf->resource == res) {

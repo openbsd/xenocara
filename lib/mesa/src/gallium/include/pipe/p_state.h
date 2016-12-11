@@ -57,7 +57,7 @@ extern "C" {
 #define PIPE_MAX_CLIP_PLANES       8
 #define PIPE_MAX_COLOR_BUFS        8
 #define PIPE_MAX_CONSTANT_BUFFERS 32
-#define PIPE_MAX_SAMPLERS         18 /* 16 public + 2 driver internal */
+#define PIPE_MAX_SAMPLERS         32
 #define PIPE_MAX_SHADER_INPUTS    80 /* 32 GENERIC + 32 PATCH + 16 others */
 #define PIPE_MAX_SHADER_OUTPUTS   80 /* 32 GENERIC + 32 PATCH + 16 others */
 #define PIPE_MAX_SHADER_SAMPLER_VIEWS 32
@@ -69,6 +69,7 @@ extern "C" {
 #define PIPE_MAX_VIEWPORTS        16
 #define PIPE_MAX_CLIP_OR_CULL_DISTANCE_COUNT 8
 #define PIPE_MAX_CLIP_OR_CULL_DISTANCE_ELEMENT_COUNT 2
+#define PIPE_MAX_WINDOW_RECTANGLES 8
 
 
 struct pipe_reference
@@ -137,6 +138,13 @@ struct pipe_rasterizer_state
     * NOTE: D3D will always use depth clamping.
     */
    unsigned clip_halfz:1;
+
+   /**
+    * When true do not scale offset_units and use same rules for unorm and
+    * float depth buffers (D3D9). When false use GL/D3D1X behaviour.
+    * This depends on PIPE_CAP_POLYGON_OFFSET_UNITS_UNSCALED.
+    */
+   unsigned offset_units_unscaled:1;
 
    /**
     * Enable bits for clipping half-spaces.
@@ -211,13 +219,43 @@ struct pipe_stream_output_info
    } output[PIPE_MAX_SO_OUTPUTS];
 };
 
-
+/**
+ * The 'type' parameter identifies whether the shader state contains TGSI
+ * tokens, etc.  If the driver returns 'PIPE_SHADER_IR_TGSI' for the
+ * 'PIPE_SHADER_CAP_PREFERRED_IR' shader param, the ir will *always* be
+ * 'PIPE_SHADER_IR_TGSI' and the tokens ptr will be valid.  If the driver
+ * requests a different 'pipe_shader_ir' type, then it must check the 'type'
+ * enum to see if it is getting TGSI tokens or its preferred IR.
+ *
+ * TODO pipe_compute_state should probably get similar treatment to handle
+ * multiple IR's in a cleaner way..
+ *
+ * NOTE: since it is expected that the consumer will want to perform
+ * additional passes on the nir_shader, the driver takes ownership of
+ * the nir_shader.  If state trackers need to hang on to the IR (for
+ * example, variant management), it should use nir_shader_clone().
+ */
 struct pipe_shader_state
 {
+   enum pipe_shader_ir type;
+   /* TODO move tokens into union. */
    const struct tgsi_token *tokens;
+   union {
+      void *llvm;
+      void *native;
+      void *nir;
+   } ir;
    struct pipe_stream_output_info stream_output;
 };
 
+static inline void
+pipe_shader_state_from_tgsi(struct pipe_shader_state *state,
+                            const struct tgsi_token *tokens)
+{
+   state->type = PIPE_SHADER_IR_TGSI;
+   state->tokens = tokens;
+   memset(&state->stream_output, 0, sizeof(state->stream_output));
+}
 
 struct pipe_depth_state
 {
@@ -298,9 +336,17 @@ struct pipe_stencil_ref
 };
 
 
+/**
+ * Note that pipe_surfaces are "texture views for rendering"
+ * and so in the case of ARB_framebuffer_no_attachment there
+ * is no pipe_surface state available such that we may
+ * extract the number of samples and layers.
+ */
 struct pipe_framebuffer_state
 {
    unsigned width, height;
+   unsigned samples; /**< Number of samples in a no-attachment framebuffer */
+   unsigned layers;  /**< Number of layers  in a no-attachment framebuffer */
 
    /** multiple color buffers for multiple render targets */
    unsigned nr_cbufs;
@@ -331,6 +377,17 @@ struct pipe_sampler_state
    union pipe_color_union border_color;
 };
 
+union pipe_surface_desc {
+   struct {
+      unsigned level;
+      unsigned first_layer:16;
+      unsigned last_layer:16;
+   } tex;
+   struct {
+      unsigned first_element;
+      unsigned last_element;
+   } buf;
+};
 
 /**
  * A view into a texture that can be bound to a color render target /
@@ -349,17 +406,7 @@ struct pipe_surface
 
    unsigned writable:1;          /**< writable shader resource */
 
-   union {
-      struct {
-         unsigned level;
-         unsigned first_layer:16;
-         unsigned last_layer:16;
-      } tex;
-      struct {
-         unsigned first_element;
-         unsigned last_element;
-      } buf;
-   } u;
+   union pipe_surface_desc u;
 };
 
 
@@ -381,8 +428,8 @@ struct pipe_sampler_view
          unsigned last_level:8;    /**< last mipmap level to use */
       } tex;
       struct {
-         unsigned first_element;
-         unsigned last_element;
+         unsigned offset;   /**< offset in bytes */
+         unsigned size;     /**< size of the readable sub-range in bytes */
       } buf;
    } u;
    unsigned swizzle_r:3;         /**< PIPE_SWIZZLE_x for red component */
@@ -393,13 +440,14 @@ struct pipe_sampler_view
 
 
 /**
- * A description of a writable buffer or texture that can be bound to a shader
+ * A description of a buffer or texture image that can be bound to a shader
  * stage.
  */
 struct pipe_image_view
 {
    struct pipe_resource *resource; /**< resource into which this is a view  */
    enum pipe_format format;      /**< typed PIPE_FORMAT_x */
+   unsigned access;              /**< PIPE_IMAGE_ACCESS_x */
 
    union {
       struct {
@@ -408,8 +456,8 @@ struct pipe_image_view
          unsigned level:8;            /**< mipmap level to use */
       } tex;
       struct {
-         unsigned first_element;
-         unsigned last_element;
+         unsigned offset;   /**< offset in bytes */
+         unsigned size;     /**< size of the accessible sub-range in bytes */
       } buf;
    } u;
 };
@@ -450,6 +498,12 @@ struct pipe_resource
 
    unsigned bind;            /**< bitmask of PIPE_BIND_x */
    unsigned flags;           /**< bitmask of PIPE_RESOURCE_FLAG_x */
+
+   /**
+    * For planar images, ie. YUV EGLImage external, etc, pointer to the
+    * next plane.
+    */
+   struct pipe_resource *next;
 };
 
 
@@ -578,7 +632,7 @@ struct pipe_draw_info
 {
    boolean indexed;  /**< use index buffer */
 
-   unsigned mode;  /**< the mode of the primitive */
+   enum pipe_prim_type mode;  /**< the mode of the primitive */
    unsigned start;  /**< the index of the first vertex */
    unsigned count;  /**< number of vertices */
 
@@ -671,6 +725,11 @@ struct pipe_blit_info
    boolean scissor_enable;
    struct pipe_scissor_state scissor;
 
+   /* Window rectangles can either be inclusive or exclusive. */
+   boolean window_rectangle_include;
+   unsigned num_window_rectangles;
+   struct pipe_scissor_state window_rectangles[PIPE_MAX_WINDOW_RECTANGLES];
+
    boolean render_condition_enable; /**< whether the blit should honor the
                                     current render condition */
    boolean alpha_blend; /* dst.rgb = src.rgb * src.a + dst.rgb * (1 - src.a) */
@@ -692,6 +751,13 @@ struct pipe_grid_info
     * buffer of at least pipe_compute_state::req_input_mem bytes.
     */
    void *input;
+
+   /**
+    * Grid number of dimensions, 1-3, e.g. the work_dim parameter passed to
+    * clEnqueueNDRangeKernel. Note block[] and grid[] must be padded with
+    * 1 for non-used dimensions.
+    */
+   uint work_dim;
 
    /**
     * Determine the layout of the working block (in thread units) to be used.
@@ -726,6 +792,7 @@ struct pipe_llvm_program_header
 
 struct pipe_compute_state
 {
+   enum pipe_shader_ir ir_type; /**< IR type contained in prog. */
    const void *prog; /**< Compute program to be executed. */
    unsigned req_local_mem; /**< Required size of the LOCAL resource. */
    unsigned req_private_mem; /**< Required size of the PRIVATE resource. */
@@ -738,6 +805,12 @@ struct pipe_compute_state
  */
 struct pipe_debug_callback
 {
+   /**
+    * When set to \c true, the callback may be called asynchronously from a
+    * driver-created thread.
+    */
+   bool async;
+
    /**
     * Callback for the driver to report debug/performance/etc information back
     * to the state tracker.
@@ -754,6 +827,25 @@ struct pipe_debug_callback
                          enum pipe_debug_type type,
                          const char *fmt,
                          va_list args);
+   void *data;
+};
+
+/**
+ * Structure that contains a callback for device reset messages from the driver
+ * back to the state tracker.
+ *
+ * The callback must not be called from driver-created threads.
+ */
+struct pipe_device_reset_callback
+{
+   /**
+    * Callback for the driver to report when a device reset is detected.
+    *
+    * \param data   user-supplied data pointer
+    * \param status PIPE_*_RESET
+    */
+   void (*reset)(void *data, enum pipe_reset_status status);
+
    void *data;
 };
 

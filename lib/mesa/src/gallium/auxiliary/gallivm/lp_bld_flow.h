@@ -37,6 +37,9 @@
 
 #include "gallivm/lp_bld.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct lp_type;
 
@@ -193,9 +196,18 @@ lp_build_alloca(struct gallivm_state *gallivm,
                 const char *name);
 
 LLVMValueRef
+lp_build_alloca_undef(struct gallivm_state *gallivm,
+                      LLVMTypeRef type,
+                      const char *name);
+
+LLVMValueRef
 lp_build_array_alloca(struct gallivm_state *gallivm,
                       LLVMTypeRef type,
                       LLVMValueRef count,
                       const char *name);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* !LP_BLD_FLOW_H */

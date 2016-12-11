@@ -66,7 +66,7 @@ llvmpipe_create_sampler_state(struct pipe_context *pipe,
 
 static void
 llvmpipe_bind_sampler_states(struct pipe_context *pipe,
-                             unsigned shader,
+                             enum pipe_shader_type shader,
                              unsigned start,
                              unsigned num,
                              void **samplers)
@@ -75,7 +75,7 @@ llvmpipe_bind_sampler_states(struct pipe_context *pipe,
    unsigned i;
 
    assert(shader < PIPE_SHADER_TYPES);
-   assert(start + num <= Elements(llvmpipe->samplers[shader]));
+   assert(start + num <= ARRAY_SIZE(llvmpipe->samplers[shader]));
 
    draw_flush(llvmpipe->draw);
 
@@ -106,7 +106,7 @@ llvmpipe_bind_sampler_states(struct pipe_context *pipe,
 
 static void
 llvmpipe_set_sampler_views(struct pipe_context *pipe,
-                           unsigned shader,
+                           enum pipe_shader_type shader,
                            unsigned start,
                            unsigned num,
                            struct pipe_sampler_view **views)
@@ -117,7 +117,7 @@ llvmpipe_set_sampler_views(struct pipe_context *pipe,
    assert(num <= PIPE_MAX_SHADER_SAMPLER_VIEWS);
 
    assert(shader < PIPE_SHADER_TYPES);
-   assert(start + num <= Elements(llvmpipe->sampler_views[shader]));
+   assert(start + num <= ARRAY_SIZE(llvmpipe->sampler_views[shader]));
 
    draw_flush(llvmpipe->draw);
 
@@ -169,11 +169,13 @@ llvmpipe_create_sampler_view(struct pipe_context *pipe,
 {
    struct pipe_sampler_view *view = CALLOC_STRUCT(pipe_sampler_view);
    /*
-    * XXX we REALLY want to see the correct bind flag here but the OpenGL
-    * state tracker can't guarantee that at least for texture buffer objects.
+    * XXX: bind flags from OpenGL state tracker are notoriously unreliable.
+    * This looks unfixable, so fix the bind flags instead when it happens.
     */
-   if (!(texture->bind & PIPE_BIND_SAMPLER_VIEW))
+   if (!(texture->bind & PIPE_BIND_SAMPLER_VIEW)) {
       debug_printf("Illegal sampler view creation without bind flag\n");
+      texture->bind |= PIPE_BIND_SAMPLER_VIEW;
+   }
 
    if (view) {
       *view = *templ;
@@ -306,11 +308,9 @@ prepare_shader_sampling(
                img_stride[0] = 0;
 
                /* everything specified in number of elements here. */
-               width0 = view->u.buf.last_element - view->u.buf.first_element + 1;
-               addr = (uint8_t *)addr + view->u.buf.first_element *
-                               view_blocksize;
-               assert(view->u.buf.first_element <= view->u.buf.last_element);
-               assert(view->u.buf.last_element * view_blocksize < res->width0);
+               width0 = view->u.buf.size / view_blocksize;
+               addr = (uint8_t *)addr + view->u.buf.offset;
+               assert(view->u.buf.offset + view->u.buf.size <= res->width0);
             }
          }
          else {

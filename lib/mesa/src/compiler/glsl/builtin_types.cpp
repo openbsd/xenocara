@@ -177,11 +177,11 @@ static const struct builtin_type_versions {
    T(samplerCube,                     110, 100)
    T(sampler1DArray,                  130, 999)
    T(sampler2DArray,                  130, 300)
-   T(samplerCubeArray,                400, 999)
+   T(samplerCubeArray,                400, 320)
    T(sampler2DRect,                   140, 999)
-   T(samplerBuffer,                   140, 999)
+   T(samplerBuffer,                   140, 320)
    T(sampler2DMS,                     150, 310)
-   T(sampler2DMSArray,                150, 999)
+   T(sampler2DMSArray,                150, 320)
 
    T(isampler1D,                      130, 999)
    T(isampler2D,                      130, 300)
@@ -189,11 +189,11 @@ static const struct builtin_type_versions {
    T(isamplerCube,                    130, 300)
    T(isampler1DArray,                 130, 999)
    T(isampler2DArray,                 130, 300)
-   T(isamplerCubeArray,               400, 999)
+   T(isamplerCubeArray,               400, 320)
    T(isampler2DRect,                  140, 999)
-   T(isamplerBuffer,                  140, 999)
+   T(isamplerBuffer,                  140, 320)
    T(isampler2DMS,                    150, 310)
-   T(isampler2DMSArray,               150, 999)
+   T(isampler2DMSArray,               150, 320)
 
    T(usampler1D,                      130, 999)
    T(usampler2D,                      130, 300)
@@ -201,18 +201,18 @@ static const struct builtin_type_versions {
    T(usamplerCube,                    130, 300)
    T(usampler1DArray,                 130, 999)
    T(usampler2DArray,                 130, 300)
-   T(usamplerCubeArray,               400, 999)
+   T(usamplerCubeArray,               400, 320)
    T(usampler2DRect,                  140, 999)
-   T(usamplerBuffer,                  140, 999)
+   T(usamplerBuffer,                  140, 320)
    T(usampler2DMS,                    150, 310)
-   T(usampler2DMSArray,               150, 999)
+   T(usampler2DMSArray,               150, 320)
 
    T(sampler1DShadow,                 110, 999)
    T(sampler2DShadow,                 110, 300)
    T(samplerCubeShadow,               130, 300)
    T(sampler1DArrayShadow,            130, 999)
    T(sampler2DArrayShadow,            130, 300)
-   T(samplerCubeArrayShadow,          400, 999)
+   T(samplerCubeArrayShadow,          400, 320)
    T(sampler2DRectShadow,             140, 999)
 
    T(struct_gl_DepthRangeParameters,  110, 100)
@@ -222,10 +222,10 @@ static const struct builtin_type_versions {
    T(image3D,                         420, 310)
    T(image2DRect,                     420, 999)
    T(imageCube,                       420, 310)
-   T(imageBuffer,                     420, 999)
+   T(imageBuffer,                     420, 320)
    T(image1DArray,                    420, 999)
    T(image2DArray,                    420, 310)
-   T(imageCubeArray,                  420, 999)
+   T(imageCubeArray,                  420, 320)
    T(image2DMS,                       420, 999)
    T(image2DMSArray,                  420, 999)
    T(iimage1D,                        420, 999)
@@ -233,10 +233,10 @@ static const struct builtin_type_versions {
    T(iimage3D,                        420, 310)
    T(iimage2DRect,                    420, 999)
    T(iimageCube,                      420, 310)
-   T(iimageBuffer,                    420, 999)
+   T(iimageBuffer,                    420, 320)
    T(iimage1DArray,                   420, 999)
    T(iimage2DArray,                   420, 310)
-   T(iimageCubeArray,                 420, 999)
+   T(iimageCubeArray,                 420, 320)
    T(iimage2DMS,                      420, 999)
    T(iimage2DMSArray,                 420, 999)
    T(uimage1D,                        420, 999)
@@ -244,10 +244,10 @@ static const struct builtin_type_versions {
    T(uimage3D,                        420, 310)
    T(uimage2DRect,                    420, 999)
    T(uimageCube,                      420, 310)
-   T(uimageBuffer,                    420, 999)
+   T(uimageBuffer,                    420, 320)
    T(uimage1DArray,                   420, 999)
    T(uimage2DArray,                   420, 310)
-   T(uimageCubeArray,                 420, 999)
+   T(uimageCubeArray,                 420, 320)
    T(uimage2DMS,                      420, 999)
    T(uimage2DMSArray,                 420, 999)
 
@@ -298,18 +298,22 @@ _mesa_glsl_initialize_types(struct _mesa_glsl_parse_state *state)
     * by the version-based loop, but attempting to add them a second time
     * is harmless.
     */
-   if (state->ARB_texture_cube_map_array_enable) {
+   if (state->ARB_texture_cube_map_array_enable ||
+       state->EXT_texture_cube_map_array_enable ||
+       state->OES_texture_cube_map_array_enable) {
       add_type(symbols, glsl_type::samplerCubeArray_type);
       add_type(symbols, glsl_type::samplerCubeArrayShadow_type);
       add_type(symbols, glsl_type::isamplerCubeArray_type);
       add_type(symbols, glsl_type::usamplerCubeArray_type);
    }
 
-   if (state->ARB_texture_multisample_enable ||
-       state->OES_texture_storage_multisample_2d_array_enable) {
+   if (state->ARB_texture_multisample_enable) {
       add_type(symbols, glsl_type::sampler2DMS_type);
       add_type(symbols, glsl_type::isampler2DMS_type);
       add_type(symbols, glsl_type::usampler2DMS_type);
+   }
+   if (state->ARB_texture_multisample_enable ||
+       state->OES_texture_storage_multisample_2d_array_enable) {
       add_type(symbols, glsl_type::sampler2DMSArray_type);
       add_type(symbols, glsl_type::isampler2DMSArray_type);
       add_type(symbols, glsl_type::usampler2DMSArray_type);
@@ -335,6 +339,14 @@ _mesa_glsl_initialize_types(struct _mesa_glsl_parse_state *state)
       add_type(symbols, glsl_type::sampler3D_type);
    }
 
+   if (state->ARB_shader_image_load_store_enable ||
+       state->EXT_texture_cube_map_array_enable ||
+       state->OES_texture_cube_map_array_enable) {
+      add_type(symbols, glsl_type::imageCubeArray_type);
+      add_type(symbols, glsl_type::iimageCubeArray_type);
+      add_type(symbols, glsl_type::uimageCubeArray_type);
+   }
+
    if (state->ARB_shader_image_load_store_enable) {
       add_type(symbols, glsl_type::image1D_type);
       add_type(symbols, glsl_type::image2D_type);
@@ -344,7 +356,6 @@ _mesa_glsl_initialize_types(struct _mesa_glsl_parse_state *state)
       add_type(symbols, glsl_type::imageBuffer_type);
       add_type(symbols, glsl_type::image1DArray_type);
       add_type(symbols, glsl_type::image2DArray_type);
-      add_type(symbols, glsl_type::imageCubeArray_type);
       add_type(symbols, glsl_type::image2DMS_type);
       add_type(symbols, glsl_type::image2DMSArray_type);
       add_type(symbols, glsl_type::iimage1D_type);
@@ -355,7 +366,6 @@ _mesa_glsl_initialize_types(struct _mesa_glsl_parse_state *state)
       add_type(symbols, glsl_type::iimageBuffer_type);
       add_type(symbols, glsl_type::iimage1DArray_type);
       add_type(symbols, glsl_type::iimage2DArray_type);
-      add_type(symbols, glsl_type::iimageCubeArray_type);
       add_type(symbols, glsl_type::iimage2DMS_type);
       add_type(symbols, glsl_type::iimage2DMSArray_type);
       add_type(symbols, glsl_type::uimage1D_type);
@@ -366,9 +376,18 @@ _mesa_glsl_initialize_types(struct _mesa_glsl_parse_state *state)
       add_type(symbols, glsl_type::uimageBuffer_type);
       add_type(symbols, glsl_type::uimage1DArray_type);
       add_type(symbols, glsl_type::uimage2DArray_type);
-      add_type(symbols, glsl_type::uimageCubeArray_type);
       add_type(symbols, glsl_type::uimage2DMS_type);
       add_type(symbols, glsl_type::uimage2DMSArray_type);
+   }
+
+   if (state->EXT_texture_buffer_enable || state->OES_texture_buffer_enable) {
+      add_type(symbols, glsl_type::samplerBuffer_type);
+      add_type(symbols, glsl_type::isamplerBuffer_type);
+      add_type(symbols, glsl_type::usamplerBuffer_type);
+
+      add_type(symbols, glsl_type::imageBuffer_type);
+      add_type(symbols, glsl_type::iimageBuffer_type);
+      add_type(symbols, glsl_type::uimageBuffer_type);
    }
 
    if (state->has_atomic_counters()) {

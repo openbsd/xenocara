@@ -37,6 +37,7 @@
 #include "brw_state.h"
 #include "brw_defines.h"
 #include "brw_wm.h"
+#include "compiler/nir/nir.h"
 
 /***********************************************************************
  * WM unit - fragment programs and rasterization
@@ -53,11 +54,11 @@ brw_color_buffer_write_enabled(struct brw_context *brw)
    /* _NEW_BUFFERS */
    for (i = 0; i < ctx->DrawBuffer->_NumColorDrawBuffers; i++) {
       struct gl_renderbuffer *rb = ctx->DrawBuffer->_ColorDrawBuffers[i];
+      uint64_t outputs_written = fp->Base.nir->info.outputs_written;
 
       /* _NEW_COLOR */
-      if (rb &&
-	  (fp->Base.OutputsWritten & BITFIELD64_BIT(FRAG_RESULT_COLOR) ||
-	   fp->Base.OutputsWritten & BITFIELD64_BIT(FRAG_RESULT_DATA0 + i)) &&
+      if (rb && (outputs_written & BITFIELD64_BIT(FRAG_RESULT_COLOR) ||
+	         outputs_written & BITFIELD64_BIT(FRAG_RESULT_DATA0 + i)) &&
 	  (ctx->Color.ColorMask[i][0] ||
 	   ctx->Color.ColorMask[i][1] ||
 	   ctx->Color.ColorMask[i][2] ||
@@ -75,59 +76,50 @@ brw_color_buffer_write_enabled(struct brw_context *brw)
 static void
 brw_upload_wm_unit(struct brw_context *brw)
 {
+   const struct gen_device_info *devinfo = &brw->screen->devinfo;
    struct gl_context *ctx = &brw->ctx;
    /* BRW_NEW_FRAGMENT_PROGRAM */
    const struct gl_fragment_program *fp = brw->fragment_program;
    /* BRW_NEW_FS_PROG_DATA */
-   const struct brw_wm_prog_data *prog_data = brw->wm.prog_data;
+   const struct brw_wm_prog_data *prog_data =
+      brw_wm_prog_data(brw->wm.base.prog_data);
    struct brw_wm_unit_state *wm;
 
    wm = brw_state_batch(brw, AUB_TRACE_WM_STATE,
 			sizeof(*wm), 32, &brw->wm.base.state_offset);
    memset(wm, 0, sizeof(*wm));
 
-   if (prog_data->prog_offset_16) {
+   if (prog_data->dispatch_8 && prog_data->dispatch_16) {
       /* These two fields should be the same pre-gen6, which is why we
        * only have one hardware field to program for both dispatch
        * widths.
        */
       assert(prog_data->base.dispatch_grf_start_reg ==
-	     prog_data->dispatch_grf_start_reg_16);
+	     prog_data->dispatch_grf_start_reg_2);
    }
 
    /* BRW_NEW_PROGRAM_CACHE | BRW_NEW_FS_PROG_DATA */
-   if (prog_data->no_8) {
-      wm->wm5.enable_16_pix = 1;
-      wm->thread0.grf_reg_count = prog_data->reg_blocks_16;
-      wm->thread0.kernel_start_pointer =
-         brw_program_reloc(brw,
-                           brw->wm.base.state_offset +
-                           offsetof(struct brw_wm_unit_state, thread0),
-                           brw->wm.base.prog_offset +
-                           prog_data->prog_offset_16 +
-                           (prog_data->reg_blocks_16 << 1)) >> 6;
+   wm->wm5.enable_8_pix = prog_data->dispatch_8;
+   wm->wm5.enable_16_pix = prog_data->dispatch_16;
 
-   } else {
-      wm->thread0.grf_reg_count = prog_data->reg_blocks;
-      wm->wm9.grf_reg_count_2 = prog_data->reg_blocks_16;
-
-      wm->wm5.enable_8_pix = 1;
-      if (prog_data->prog_offset_16)
-         wm->wm5.enable_16_pix = 1;
-
+   if (prog_data->dispatch_8 || prog_data->dispatch_16) {
+      wm->thread0.grf_reg_count = prog_data->reg_blocks_0;
       wm->thread0.kernel_start_pointer =
          brw_program_reloc(brw,
                            brw->wm.base.state_offset +
                            offsetof(struct brw_wm_unit_state, thread0),
                            brw->wm.base.prog_offset +
                            (wm->thread0.grf_reg_count << 1)) >> 6;
+   }
 
+   if (prog_data->prog_offset_2) {
+      wm->wm9.grf_reg_count_2 = prog_data->reg_blocks_2;
       wm->wm9.kernel_start_pointer_2 =
          brw_program_reloc(brw,
                            brw->wm.base.state_offset +
                            offsetof(struct brw_wm_unit_state, wm9),
                            brw->wm.base.prog_offset +
-                           prog_data->prog_offset_16 +
+                           prog_data->prog_offset_2 +
                            (wm->wm9.grf_reg_count_2 << 1)) >> 6;
    }
 
@@ -144,7 +136,7 @@ brw_upload_wm_unit(struct brw_context *brw)
       wm->thread2.scratch_space_base_pointer =
 	 brw->wm.base.scratch_bo->offset64 >> 10; /* reloc */
       wm->thread2.per_thread_scratch_space =
-	 ffs(prog_data->base.total_scratch) - 11;
+	 ffs(brw->wm.base.per_thread_scratch) - 11;
    } else {
       wm->thread2.scratch_space_base_pointer = 0;
       wm->thread2.per_thread_scratch_space = 0;
@@ -176,7 +168,7 @@ brw_upload_wm_unit(struct brw_context *brw)
 
    /* BRW_NEW_FRAGMENT_PROGRAM */
    wm->wm5.program_uses_depth = prog_data->uses_src_depth;
-   wm->wm5.program_computes_depth = (fp->Base.OutputsWritten &
+   wm->wm5.program_computes_depth = (fp->Base.nir->info.outputs_written &
 				     BITFIELD64_BIT(FRAG_RESULT_DEPTH)) != 0;
    /* _NEW_BUFFERS
     * Override for NULL depthbuffer case, required by the Pixel Shader Computed
@@ -189,7 +181,7 @@ brw_upload_wm_unit(struct brw_context *brw)
    wm->wm5.program_uses_killpixel =
       prog_data->uses_kill || ctx->Color.AlphaEnabled;
 
-   wm->wm5.max_threads = brw->max_wm_threads - 1;
+   wm->wm5.max_threads = devinfo->max_wm_threads - 1;
 
    /* _NEW_BUFFERS | _NEW_COLOR */
    if (brw_color_buffer_write_enabled(brw) ||
@@ -271,6 +263,7 @@ const struct brw_tracked_state brw_wm_unit = {
               _NEW_POLYGON |
               _NEW_POLYGONSTIPPLE,
       .brw = BRW_NEW_BATCH |
+             BRW_NEW_BLORP |
              BRW_NEW_CURBE_OFFSETS |
              BRW_NEW_FRAGMENT_PROGRAM |
              BRW_NEW_FS_PROG_DATA |
@@ -280,4 +273,3 @@ const struct brw_tracked_state brw_wm_unit = {
    },
    .emit = brw_upload_wm_unit,
 };
-

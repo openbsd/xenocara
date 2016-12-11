@@ -23,6 +23,7 @@
 #if NOUVEAU_DRIVER == 0xc0
 # include "nvc0/nvc0_screen.h"
 # include "nvc0/nvc0_3d.xml.h"
+# include "nvc0/gm107_texture.xml.h"
 #else
 # include "nv50/nv50_screen.h"
 # include "nv50/nv50_3d.xml.h"
@@ -49,6 +50,7 @@
 #define U_IB  PIPE_BIND_BLENDABLE | U_IR
 #define U_TD  PIPE_BIND_SCANOUT | PIPE_BIND_DISPLAY_TARGET | U_TB
 #define U_TZ  PIPE_BIND_DEPTH_STENCIL | U_T
+#define U_ID  U_TD | U_I
 #if NOUVEAU_DRIVER == 0xc0
 # define U_TC  U_TB
 # define U_IC  U_IB
@@ -65,6 +67,7 @@
 #define SF_A(sz) G80_TIC_0_COMPONENTS_SIZES_##sz
 #define SF_B(sz) G200_TIC_0_COMPONENTS_SIZES_##sz
 #define SF_C(sz) GF100_TIC_0_COMPONENTS_SIZES_##sz
+#define SF_D(sz) GM107_TIC2_0_COMPONENTS_SIZES_##sz
 #define SF(c, pf, sf, r, g, b, a, t0, t1, t2, t3, sz, u)                \
    [PIPE_FORMAT_##pf] = {                                               \
       sf, {                                                             \
@@ -120,7 +123,7 @@ const struct nvc0_format nvc0_format_table[PIPE_FORMAT_COUNT] =
 const struct nv50_format nv50_format_table[PIPE_FORMAT_COUNT] =
 #endif
 {
-   C4(A, B8G8R8A8_UNORM, BGRA8_UNORM, B, G, R, A, UNORM, A8B8G8R8, TD),
+   C4(A, B8G8R8A8_UNORM, BGRA8_UNORM, B, G, R, A, UNORM, A8B8G8R8, ID),
    F3(A, B8G8R8X8_UNORM, BGRX8_UNORM, B, G, R, xx, UNORM, A8B8G8R8, TD),
    C4(A, B8G8R8A8_SRGB, BGRA8_SRGB, B, G, R, A, UNORM, A8B8G8R8, TD),
    F3(A, B8G8R8X8_SRGB, BGRX8_SRGB, B, G, R, xx, UNORM, A8B8G8R8, TD),
@@ -159,7 +162,7 @@ const struct nv50_format nv50_format_table[PIPE_FORMAT_COUNT] =
    F3(A, R11G11B10_FLOAT, R11G11B10_FLOAT, R, G, B, xx, FLOAT, BF10GF11RF11, IB),
 
    F3(A, L8_UNORM, R8_UNORM, R, R, R, xx, UNORM, R8, TB),
-   F3(A, L8_SRGB, R8_UNORM, R, R, R, xx, UNORM, R8, TB),
+   F3(A, L8_SRGB, NONE, R, R, R, xx, UNORM, R8, T),
    F3(A, L8_SNORM, R8_SNORM, R, R, R, xx, SNORM, R8, TC),
    I3(A, L8_SINT, R8_SINT, R, R, R, xx, SINT, R8, TR),
    I3(A, L8_UINT, R8_UINT, R, R, R, xx, UINT, R8, TR),
@@ -201,7 +204,7 @@ const struct nv50_format nv50_format_table[PIPE_FORMAT_COUNT] =
    C4(A, L4A4_UNORM, NONE, R, R, R, G, UNORM, G4R4, T),
    C4(A, L8A8_UNORM, RG8_UNORM, R, R, R, G, UNORM, G8R8, T),
    C4(A, L8A8_SNORM, RG8_SNORM, R, R, R, G, SNORM, G8R8, T),
-   C4(A, L8A8_SRGB, RG8_UNORM, R, R, R, G, UNORM, G8R8, T),
+   C4(A, L8A8_SRGB, NONE, R, R, R, G, UNORM, G8R8, T),
    C4(A, L8A8_SINT, RG8_SINT, R, R, R, G, SINT, G8R8, T),
    C4(A, L8A8_UINT, RG8_UINT, R, R, R, G, UINT, G8R8, T),
    C4(A, L16A16_UNORM, RG16_UNORM, R, R, R, G, UNORM, R16_G16, T),
@@ -235,6 +238,50 @@ const struct nv50_format nv50_format_table[PIPE_FORMAT_COUNT] =
    C4(C, BPTC_SRGBA,      NONE, R, G, B, A, UNORM, BC7U, t),
    F3(C, BPTC_RGB_FLOAT,  NONE, R, G, B, xx, FLOAT, BC6H_SF16, t),
    F3(C, BPTC_RGB_UFLOAT, NONE, R, G, B, xx, FLOAT, BC6H_UF16, t),
+
+#if NOUVEAU_DRIVER == 0xc0
+   F3(D, ETC1_RGB8,       NONE, R,  G,  B, xx, UNORM, ETC2_RGB,     t),
+   F3(D, ETC2_RGB8,       NONE, R,  G,  B, xx, UNORM, ETC2_RGB,     t),
+   F3(D, ETC2_SRGB8,      NONE, R,  G,  B, xx, UNORM, ETC2_RGB,     t),
+   C4(D, ETC2_RGB8A1,     NONE, R,  G,  B,  A, UNORM, ETC2_RGB_PTA, t),
+   C4(D, ETC2_SRGB8A1,    NONE, R,  G,  B,  A, UNORM, ETC2_RGB_PTA, t),
+   C4(D, ETC2_RGBA8,      NONE, R,  G,  B,  A, UNORM, ETC2_RGBA,    t),
+   C4(D, ETC2_SRGBA8,     NONE, R,  G,  B,  A, UNORM, ETC2_RGBA,    t),
+   F1(D, ETC2_R11_UNORM,  NONE, R, xx, xx, xx, UNORM, EAC,          t),
+   F1(D, ETC2_R11_SNORM,  NONE, R, xx, xx, xx, SNORM, EAC,          t),
+   F2(D, ETC2_RG11_UNORM, NONE, R,  G, xx, xx, UNORM, EACX2,        t),
+   F2(D, ETC2_RG11_SNORM, NONE, R,  G, xx, xx, SNORM, EACX2,        t),
+
+   C4(D, ASTC_4x4,        NONE, R, G, B, A, UNORM, ASTC_2D_4X4,   t),
+   C4(D, ASTC_5x4,        NONE, R, G, B, A, UNORM, ASTC_2D_5X4,   t),
+   C4(D, ASTC_5x5,        NONE, R, G, B, A, UNORM, ASTC_2D_5X5,   t),
+   C4(D, ASTC_6x5,        NONE, R, G, B, A, UNORM, ASTC_2D_6X5,   t),
+   C4(D, ASTC_6x6,        NONE, R, G, B, A, UNORM, ASTC_2D_6X6,   t),
+   C4(D, ASTC_8x5,        NONE, R, G, B, A, UNORM, ASTC_2D_8X5,   t),
+   C4(D, ASTC_8x6,        NONE, R, G, B, A, UNORM, ASTC_2D_8X6,   t),
+   C4(D, ASTC_8x8,        NONE, R, G, B, A, UNORM, ASTC_2D_8X8,   t),
+   C4(D, ASTC_10x5,       NONE, R, G, B, A, UNORM, ASTC_2D_10X5,  t),
+   C4(D, ASTC_10x6,       NONE, R, G, B, A, UNORM, ASTC_2D_10X6,  t),
+   C4(D, ASTC_10x8,       NONE, R, G, B, A, UNORM, ASTC_2D_10X8,  t),
+   C4(D, ASTC_10x10,      NONE, R, G, B, A, UNORM, ASTC_2D_10X10, t),
+   C4(D, ASTC_12x10,      NONE, R, G, B, A, UNORM, ASTC_2D_12X10, t),
+   C4(D, ASTC_12x12,      NONE, R, G, B, A, UNORM, ASTC_2D_12X12, t),
+
+   C4(D, ASTC_4x4_SRGB,   NONE, R, G, B, A, UNORM, ASTC_2D_4X4,   t),
+   C4(D, ASTC_5x4_SRGB,   NONE, R, G, B, A, UNORM, ASTC_2D_5X4,   t),
+   C4(D, ASTC_5x5_SRGB,   NONE, R, G, B, A, UNORM, ASTC_2D_5X5,   t),
+   C4(D, ASTC_6x5_SRGB,   NONE, R, G, B, A, UNORM, ASTC_2D_6X5,   t),
+   C4(D, ASTC_6x6_SRGB,   NONE, R, G, B, A, UNORM, ASTC_2D_6X6,   t),
+   C4(D, ASTC_8x5_SRGB,   NONE, R, G, B, A, UNORM, ASTC_2D_8X5,   t),
+   C4(D, ASTC_8x6_SRGB,   NONE, R, G, B, A, UNORM, ASTC_2D_8X6,   t),
+   C4(D, ASTC_8x8_SRGB,   NONE, R, G, B, A, UNORM, ASTC_2D_8X8,   t),
+   C4(D, ASTC_10x5_SRGB,  NONE, R, G, B, A, UNORM, ASTC_2D_10X5,  t),
+   C4(D, ASTC_10x6_SRGB,  NONE, R, G, B, A, UNORM, ASTC_2D_10X6,  t),
+   C4(D, ASTC_10x8_SRGB,  NONE, R, G, B, A, UNORM, ASTC_2D_10X8,  t),
+   C4(D, ASTC_10x10_SRGB, NONE, R, G, B, A, UNORM, ASTC_2D_10X10, t),
+   C4(D, ASTC_12x10_SRGB, NONE, R, G, B, A, UNORM, ASTC_2D_12X10, t),
+   C4(D, ASTC_12x12_SRGB, NONE, R, G, B, A, UNORM, ASTC_2D_12X12, t),
+#endif
 
    C4(A, R32G32B32A32_FLOAT, RGBA32_FLOAT, R, G, B, A, FLOAT, R32_G32_B32_A32, IB),
    C4(A, R32G32B32A32_UNORM, NONE, R, G, B, A, UNORM, R32_G32_B32_A32, T),
@@ -348,7 +395,7 @@ const struct nv50_vertex_format nv50_vertex_format[PIPE_FORMAT_COUNT] =
    VF(A, R10G10B10A2_SNORM, SNORM, 10_10_10_2, 0),
    VF(A, B10G10R10A2_SNORM, SNORM, 10_10_10_2, 1),
    VF(A, R10G10B10A2_UINT, UINT, 10_10_10_2, 0),
-   VF(A, B10G10R10A2_UINT, UINT, 10_10_10_2, 0),
+   VF(A, B10G10R10A2_UINT, UINT, 10_10_10_2, 1),
 
    VF(A, R11G11B10_FLOAT, FLOAT, 11_11_10, 0),
 

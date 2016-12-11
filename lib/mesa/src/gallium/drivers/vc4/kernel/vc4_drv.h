@@ -81,6 +81,8 @@ struct vc4_exec_info {
 	struct drm_gem_cma_object *tile_bo;
 	uint32_t tile_alloc_offset;
 
+	uint32_t tile_width, tile_height;
+
 	/**
 	 * Computed addresses pointing into exec_bo where we start the
 	 * bin thread (ct0) and render thread (ct1).
@@ -145,6 +147,9 @@ struct vc4_validated_shader_info
 	uint32_t uniforms_src_size;
 	uint32_t num_texture_samples;
 	struct vc4_texture_sample_info *texture_samples;
+
+	uint32_t num_uniform_addr_offsets;
+	uint32_t *uniform_addr_offsets;
 };
 
 /* vc4_validate.c */

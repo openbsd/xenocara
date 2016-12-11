@@ -40,16 +40,15 @@ extern "C" {
 	#define virtual virt
 #endif
 
-#include "drm.h"
-#include "intel_bufmgr.h"
-
-#include "intel_screen.h"
-#include "intel_tex_obj.h"
-#include "i915_drm.h"
-
+#include <drm.h>
+#include <intel_bufmgr.h>
+#include <i915_drm.h>
 #ifdef __cplusplus
 	#undef virtual
 #endif
+
+#include "intel_screen.h"
+#include "intel_tex_obj.h"
 
 #include "tnl/t_vertex.h"
 
@@ -104,13 +103,6 @@ extern void intelFallback(struct intel_context *intel, GLbitfield bit,
 #define unlikely(expr) (expr)
 #endif
 #endif
-
-struct intel_sync_object {
-   struct gl_sync_object Base;
-
-   /** Batch associated with this sync object */
-   drm_intel_bo *bo;
-};
 
 struct intel_batchbuffer {
    /** Current batchbuffer being queued up. */

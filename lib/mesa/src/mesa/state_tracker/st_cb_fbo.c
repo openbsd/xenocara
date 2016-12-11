@@ -266,7 +266,7 @@ st_new_renderbuffer(struct gl_context *ctx, GLuint name)
 
 
 /**
- * Allocate a renderbuffer for a an on-screen window (not a user-created
+ * Allocate a renderbuffer for an on-screen window (not a user-created
  * renderbuffer).  The window system code determines the format.
  */
 struct gl_renderbuffer *
@@ -644,6 +644,7 @@ st_validate_framebuffer(struct gl_context *ctx, struct gl_framebuffer *fb)
                                depth,
 			       PIPE_BIND_DEPTH_STENCIL)) {
       fb->_Status = GL_FRAMEBUFFER_UNSUPPORTED_EXT;
+      st_fbo_invalid("Invalid depth attachment");
       return;
    }
    if (!st_validate_attachment(ctx,
@@ -651,6 +652,7 @@ st_validate_framebuffer(struct gl_context *ctx, struct gl_framebuffer *fb)
                                stencil,
 			       PIPE_BIND_DEPTH_STENCIL)) {
       fb->_Status = GL_FRAMEBUFFER_UNSUPPORTED_EXT;
+      st_fbo_invalid("Invalid stencil attachment");
       return;
    }
    for (i = 0; i < ctx->Const.MaxColorAttachments; i++) {
@@ -663,6 +665,7 @@ st_validate_framebuffer(struct gl_context *ctx, struct gl_framebuffer *fb)
 				  att,
 				  PIPE_BIND_RENDER_TARGET)) {
 	 fb->_Status = GL_FRAMEBUFFER_UNSUPPORTED_EXT;
+	 st_fbo_invalid("Invalid color attachment");
 	 return;
       }
 
@@ -701,7 +704,7 @@ st_DrawBuffers(struct gl_context *ctx, GLsizei count, const GLenum *buffers)
 
    /* add the renderbuffers on demand */
    for (i = 0; i < fb->_NumColorDrawBuffers; i++) {
-      gl_buffer_index idx = fb->_ColorDrawBufferIndexes[i];
+      GLint idx = fb->_ColorDrawBufferIndexes[i];
 
       if (idx >= 0) {
          st_manager_add_color_renderbuffer(st, fb, idx);

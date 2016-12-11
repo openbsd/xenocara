@@ -48,7 +48,7 @@ static inline bool isTextureOp(operation op)
 
 static inline bool isSurfaceOp(operation op)
 {
-   return (op >= OP_SULDB && op <= OP_SULEA);
+   return (op >= OP_SULDB && op <= OP_SULEA) || (op == OP_SUQ);
 }
 
 static inline unsigned int typeSizeof(DataType ty)
@@ -126,7 +126,7 @@ static inline bool isFloatType(DataType ty)
 
 static inline bool isSignedIntType(DataType ty)
 {
-   return (ty == TYPE_S8 || ty == TYPE_S16 || ty == TYPE_S32);
+   return (ty == TYPE_S8 || ty == TYPE_S16 || ty == TYPE_S32 || ty == TYPE_S64);
 }
 
 static inline bool isSignedType(DataType ty)
@@ -136,6 +136,7 @@ static inline bool isSignedType(DataType ty)
    case TYPE_U8:
    case TYPE_U16:
    case TYPE_U32:
+   case TYPE_U64:
    case TYPE_B96:
    case TYPE_B128:
       return false;
@@ -147,6 +148,7 @@ static inline bool isSignedType(DataType ty)
 static inline DataType intTypeToSigned(DataType ty)
 {
    switch (ty) {
+   case TYPE_U64: return TYPE_S64;
    case TYPE_U32: return TYPE_S32;
    case TYPE_U16: return TYPE_S16;
    case TYPE_U8: return TYPE_S8;
@@ -281,14 +283,14 @@ Value *TexInstruction::getIndirectS() const
 
 CmpInstruction *Instruction::asCmp()
 {
-   if (op >= OP_SET_AND && op <= OP_SLCT)
+   if (op >= OP_SET_AND && op <= OP_SLCT && op != OP_SELP)
       return static_cast<CmpInstruction *>(this);
    return NULL;
 }
 
 const CmpInstruction *Instruction::asCmp() const
 {
-   if (op >= OP_SET_AND && op <= OP_SLCT)
+   if (op >= OP_SET_AND && op <= OP_SLCT && op != OP_SELP)
       return static_cast<const CmpInstruction *>(this);
    return NULL;
 }
@@ -309,14 +311,14 @@ const FlowInstruction *Instruction::asFlow() const
 
 TexInstruction *Instruction::asTex()
 {
-   if (op >= OP_TEX && op <= OP_SULEA)
+   if ((op >= OP_TEX && op <= OP_SULEA) || op == OP_SUQ)
       return static_cast<TexInstruction *>(this);
    return NULL;
 }
 
 const TexInstruction *Instruction::asTex() const
 {
-   if (op >= OP_TEX && op <= OP_SULEA)
+   if ((op >= OP_TEX && op <= OP_SULEA) || op == OP_SUQ)
       return static_cast<const TexInstruction *>(this);
    return NULL;
 }

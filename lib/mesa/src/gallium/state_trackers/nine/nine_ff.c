@@ -26,7 +26,7 @@
 
 #define DBG_CHANNEL DBG_FF
 
-#define NINE_FF_NUM_VS_CONST 256
+#define NINE_FF_NUM_VS_CONST 196
 #define NINE_FF_NUM_PS_CONST 24
 
 struct fvec4
@@ -54,10 +54,12 @@ struct nine_ff_vs_key
             uint32_t fog_mode : 2;
             uint32_t fog_range : 1;
             uint32_t color0in_one : 1;
-            uint32_t color1in_one : 1;
+            uint32_t color1in_zero : 1;
+            uint32_t has_normal : 1;
             uint32_t fog : 1;
-            uint32_t specular_enable : 1;
-            uint32_t pad1 : 6;
+            uint32_t normalizenormals : 1;
+            uint32_t ucp : 1;
+            uint32_t pad1 : 4;
             uint32_t tc_dim_input: 16; /* 8 * 2 bits */
             uint32_t pad2 : 16;
             uint32_t tc_dim_output: 24; /* 8 * 3 bits */
@@ -126,7 +128,7 @@ static unsigned nine_ff_vs_key_hash(void *key)
     struct nine_ff_vs_key *vs = key;
     unsigned i;
     uint32_t hash = vs->value32[0];
-    for (i = 1; i < Elements(vs->value32); ++i)
+    for (i = 1; i < ARRAY_SIZE(vs->value32); ++i)
         hash ^= vs->value32[i];
     return hash;
 }
@@ -142,7 +144,7 @@ static unsigned nine_ff_ps_key_hash(void *key)
     struct nine_ff_ps_key *ps = key;
     unsigned i;
     uint32_t hash = ps->value32[0];
-    for (i = 1; i < Elements(ps->value32); ++i)
+    for (i = 1; i < ARRAY_SIZE(ps->value32); ++i)
         hash ^= ps->value32[i];
     return hash;
 }
@@ -200,8 +202,8 @@ static void nine_ureg_tgsi_dump(struct ureg_program *ureg, boolean override)
  *
  * CONST[ 0.. 3] D3DTS_WORLD * D3DTS_VIEW * D3DTS_PROJECTION
  * CONST[ 4.. 7] D3DTS_WORLD * D3DTS_VIEW
- * CONST[ 8..11] D3DTS_VIEW * D3DTS_PROJECTION
- * CONST[12..15] D3DTS_VIEW
+ * CONST[ 8..11] D3DTS_PROJECTION
+ * CONST[12..15] D3DTS_VIEW^(-1)
  * CONST[16..18] Normal matrix
  *
  * CONST[19]      MATERIAL.Emissive + Material.Ambient * RS.Ambient
@@ -251,6 +253,7 @@ static void nine_ureg_tgsi_dump(struct ureg_program *ureg, boolean override)
  * CONST[100].x___ Viewport 2/width
  * CONST[100]._y__ Viewport 2/height
  * CONST[100].__z_ Viewport 1/(zmax - zmin)
+ * CONST[100].___w Viewport width
  * CONST[101].x___ Viewport x0
  * CONST[101]._y__ Viewport y0
  * CONST[101].__z_ Viewport z0
@@ -264,10 +267,10 @@ static void nine_ureg_tgsi_dump(struct ureg_program *ureg, boolean override)
  * CONST[152..155] D3DTS_TEXTURE6
  * CONST[156..159] D3DTS_TEXTURE7
  *
- * CONST[224] D3DTS_WORLDMATRIX[0]
- * CONST[228] D3DTS_WORLDMATRIX[1]
+ * CONST[160] D3DTS_WORLDMATRIX[0] * D3DTS_VIEW
+ * CONST[164] D3DTS_WORLDMATRIX[1] * D3DTS_VIEW
  * ...
- * CONST[252] D3DTS_WORLDMATRIX[7]
+ * CONST[192] D3DTS_WORLDMATRIX[8] * D3DTS_VIEW
  */
 struct vs_build_ctx
 {
@@ -314,46 +317,47 @@ build_vs_add_input(struct vs_build_ctx *vs, uint16_t ndecl)
 /* NOTE: dst may alias src */
 static inline void
 ureg_normalize3(struct ureg_program *ureg,
-                struct ureg_dst dst, struct ureg_src src,
-                struct ureg_dst tmp)
+                struct ureg_dst dst, struct ureg_src src)
 {
+    struct ureg_dst tmp = ureg_DECL_temporary(ureg);
     struct ureg_dst tmp_x = ureg_writemask(tmp, TGSI_WRITEMASK_X);
 
     ureg_DP3(ureg, tmp_x, src, src);
     ureg_RSQ(ureg, tmp_x, _X(tmp));
     ureg_MUL(ureg, dst, src, _X(tmp));
+    ureg_release_temporary(ureg, tmp);
 }
 
 static void *
 nine_ff_build_vs(struct NineDevice9 *device, struct vs_build_ctx *vs)
 {
     const struct nine_ff_vs_key *key = vs->key;
-    struct ureg_program *ureg = ureg_create(TGSI_PROCESSOR_VERTEX);
+    struct ureg_program *ureg = ureg_create(PIPE_SHADER_VERTEX);
     struct ureg_dst oPos, oCol[2], oPsz, oFog;
-    struct ureg_dst rVtx, rNrm;
-    struct ureg_dst r[8];
     struct ureg_dst AR;
-    struct ureg_dst tmp, tmp_x, tmp_y, tmp_z;
     unsigned i, c;
     unsigned label[32], l = 0;
-    unsigned num_r = 8;
-    boolean need_rNrm = key->lighting || key->pointscale || key->passthrough & (1 << NINE_DECLUSAGE_NORMAL);
-    boolean need_rVtx = key->lighting || key->fog_mode;
+    boolean need_aNrm = key->lighting || key->passthrough & (1 << NINE_DECLUSAGE_NORMAL);
+    boolean has_aNrm = need_aNrm && key->has_normal;
+    boolean need_aVtx = key->lighting || key->fog_mode || key->pointscale || key->ucp;
     const unsigned texcoord_sn = get_texcoord_sn(device->screen);
 
     vs->ureg = ureg;
 
     /* Check which inputs we should transform. */
     for (i = 0; i < 8 * 3; i += 3) {
-        switch ((key->tc_gen >> i) & 0x3) {
+        switch ((key->tc_gen >> i) & 0x7) {
         case NINED3DTSS_TCI_CAMERASPACENORMAL:
-            need_rNrm = TRUE;
+            need_aNrm = TRUE;
             break;
         case NINED3DTSS_TCI_CAMERASPACEPOSITION:
-            need_rVtx = TRUE;
+            need_aVtx = TRUE;
             break;
         case NINED3DTSS_TCI_CAMERASPACEREFLECTIONVECTOR:
-            need_rVtx = need_rNrm = TRUE;
+            need_aVtx = need_aNrm = TRUE;
+            break;
+        case NINED3DTSS_TCI_SPHEREMAP:
+            need_aVtx = need_aNrm = TRUE;
             break;
         default:
             break;
@@ -366,18 +370,19 @@ nine_ff_build_vs(struct NineDevice9 *device, struct vs_build_ctx *vs)
     vs->aVtx = build_vs_add_input(vs,
         key->position_t ? NINE_DECLUSAGE_POSITIONT : NINE_DECLUSAGE_POSITION);
 
-    if (need_rNrm)
+    vs->aNrm = ureg_imm1f(ureg, 0.0f);
+    if (has_aNrm)
         vs->aNrm = build_vs_add_input(vs, NINE_DECLUSAGE_NORMAL);
 
     vs->aCol[0] = ureg_imm1f(ureg, 1.0f);
-    vs->aCol[1] = ureg_imm1f(ureg, 1.0f);
+    vs->aCol[1] = ureg_imm1f(ureg, 0.0f);
 
     if (key->lighting || key->darkness) {
         const unsigned mask = key->mtl_diffuse | key->mtl_specular |
                               key->mtl_ambient | key->mtl_emissive;
         if ((mask & 0x1) && !key->color0in_one)
             vs->aCol[0] = build_vs_add_input(vs, NINE_DECLUSAGE_i(COLOR, 0));
-        if ((mask & 0x2) && !key->color1in_one)
+        if ((mask & 0x2) && !key->color1in_zero)
             vs->aCol[1] = build_vs_add_input(vs, NINE_DECLUSAGE_i(COLOR, 1));
 
         vs->mtlD = MATERIAL_CONST(1);
@@ -394,7 +399,7 @@ nine_ff_build_vs(struct NineDevice9 *device, struct vs_build_ctx *vs)
         if (key->mtl_emissive == 2) vs->mtlE = vs->aCol[1];
     } else {
         if (!key->color0in_one) vs->aCol[0] = build_vs_add_input(vs, NINE_DECLUSAGE_i(COLOR, 0));
-        if (!key->color1in_one) vs->aCol[1] = build_vs_add_input(vs, NINE_DECLUSAGE_i(COLOR, 1));
+        if (!key->color1in_zero) vs->aCol[1] = build_vs_add_input(vs, NINE_DECLUSAGE_i(COLOR, 1));
     }
 
     if (key->vertexpointsize)
@@ -425,144 +430,196 @@ nine_ff_build_vs(struct NineDevice9 *device, struct vs_build_ctx *vs)
         oPsz = ureg_writemask(oPsz, TGSI_WRITEMASK_X);
     }
 
-    /* Declare TEMPs:
-     */
-    for (i = 0; i < num_r; ++i)
-        r[i] = ureg_DECL_local_temporary(ureg);
-    tmp = r[0];
-    tmp_x = ureg_writemask(tmp, TGSI_WRITEMASK_X);
-    tmp_y = ureg_writemask(tmp, TGSI_WRITEMASK_Y);
-    tmp_z = ureg_writemask(tmp, TGSI_WRITEMASK_Z);
     if (key->lighting || key->vertexblend)
         AR = ureg_DECL_address(ureg);
 
-    rVtx = ureg_writemask(r[1], TGSI_WRITEMASK_XYZ);
-    rNrm = ureg_writemask(r[2], TGSI_WRITEMASK_XYZ);
-
     /* === Vertex transformation / vertex blending:
      */
-    if (key->vertextween) {
-        assert(!key->vertexblend);
-        ureg_LRP(ureg, r[2], _XXXX(_CONST(30)), vs->aVtx, vs->aVtx1);
-        if (need_rNrm)
-            ureg_LRP(ureg, r[3], _XXXX(_CONST(30)), vs->aNrm, vs->aNrm1);
-        vs->aVtx = ureg_src(r[2]);
-        vs->aNrm = ureg_src(r[3]);
-    }
 
-    if (key->vertexblend) {
+    if (key->position_t) {
+        if (device->driver_caps.window_space_position_support) {
+            ureg_MOV(ureg, oPos, vs->aVtx);
+        } else {
+            struct ureg_dst tmp = ureg_DECL_temporary(ureg);
+            /* vs->aVtx contains the coordinates buffer wise.
+            * later in the pipeline, clipping, viewport and division
+            * by w (rhw = 1/w) are going to be applied, so do the reverse
+            * of these transformations (except clipping) to have the good
+            * position at the end.*/
+            ureg_MOV(ureg, tmp, vs->aVtx);
+            /* X from [X_min, X_min + width] to [-1, 1], same for Y. Z to [0, 1] */
+            ureg_SUB(ureg, ureg_writemask(tmp, TGSI_WRITEMASK_XYZ), ureg_src(tmp), _CONST(101));
+            ureg_MUL(ureg, ureg_writemask(tmp, TGSI_WRITEMASK_XYZ), ureg_src(tmp), _CONST(100));
+            ureg_SUB(ureg, ureg_writemask(tmp, TGSI_WRITEMASK_XY), ureg_src(tmp), ureg_imm1f(ureg, 1.0f));
+            /* Y needs to be reversed */
+            ureg_MOV(ureg, ureg_writemask(tmp, TGSI_WRITEMASK_Y), ureg_negate(ureg_src(tmp)));
+            /* inverse rhw */
+            ureg_RCP(ureg, ureg_writemask(tmp, TGSI_WRITEMASK_W), _W(tmp));
+            /* multiply X, Y, Z by w */
+            ureg_MUL(ureg, ureg_writemask(tmp, TGSI_WRITEMASK_XYZ), ureg_src(tmp), _W(tmp));
+            ureg_MOV(ureg, oPos, ureg_src(tmp));
+            ureg_release_temporary(ureg, tmp);
+        }
+    } else if (key->vertexblend) {
+        struct ureg_dst tmp = ureg_DECL_temporary(ureg);
+        struct ureg_dst tmp2 = ureg_DECL_temporary(ureg);
+        struct ureg_dst aVtx_dst = ureg_DECL_temporary(ureg);
+        struct ureg_dst aNrm_dst = ureg_DECL_temporary(ureg);
+        struct ureg_dst sum_blendweights = ureg_DECL_temporary(ureg);
         struct ureg_src cWM[4];
 
-        for (i = 224; i <= 255; ++i)
+        for (i = 160; i <= 195; ++i)
             ureg_DECL_constant(ureg, i);
 
         /* translate world matrix index to constant file index */
         if (key->vertexblend_indexed) {
-            ureg_MAD(ureg, tmp, vs->aInd, ureg_imm1f(ureg, 4.0f), ureg_imm1f(ureg, 224.0f));
+            ureg_MAD(ureg, tmp, vs->aInd, ureg_imm1f(ureg, 4.0f), ureg_imm1f(ureg, 160.0f));
             ureg_ARL(ureg, AR, ureg_src(tmp));
         }
 
-        ureg_MOV(ureg, r[2], ureg_imm4f(ureg, 0.0f, 0.0f, 0.0f, 0.0f));
-        ureg_MOV(ureg, r[3], ureg_imm4f(ureg, 1.0f, 1.0f, 1.0f, 1.0f));
+        ureg_MOV(ureg, aVtx_dst, ureg_imm4f(ureg, 0.0f, 0.0f, 0.0f, 0.0f));
+        ureg_MOV(ureg, aNrm_dst, ureg_imm4f(ureg, 0.0f, 0.0f, 0.0f, 0.0f));
+        ureg_MOV(ureg, sum_blendweights, ureg_imm4f(ureg, 1.0f, 1.0f, 1.0f, 1.0f));
 
         for (i = 0; i < key->vertexblend; ++i) {
             for (c = 0; c < 4; ++c) {
-                cWM[c] = ureg_src_register(TGSI_FILE_CONSTANT, (224 + i * 4) * !key->vertexblend_indexed + c);
+                cWM[c] = ureg_src_register(TGSI_FILE_CONSTANT, (160 + i * 4) * !key->vertexblend_indexed + c);
                 if (key->vertexblend_indexed)
                     cWM[c] = ureg_src_indirect(cWM[c], ureg_scalar(ureg_src(AR), i));
             }
+
             /* multiply by WORLD(index) */
             ureg_MUL(ureg, tmp, _XXXX(vs->aVtx), cWM[0]);
             ureg_MAD(ureg, tmp, _YYYY(vs->aVtx), cWM[1], ureg_src(tmp));
             ureg_MAD(ureg, tmp, _ZZZZ(vs->aVtx), cWM[2], ureg_src(tmp));
             ureg_MAD(ureg, tmp, _WWWW(vs->aVtx), cWM[3], ureg_src(tmp));
 
+            if (has_aNrm) {
+                /* Note: the spec says the transpose of the inverse of the
+                 * WorldView matrices should be used, but all tests show
+                 * otherwise.
+                 * Only case unknown: D3DVBF_0WEIGHTS */
+                ureg_MUL(ureg, tmp2, _XXXX(vs->aNrm), cWM[0]);
+                ureg_MAD(ureg, tmp2, _YYYY(vs->aNrm), cWM[1], ureg_src(tmp2));
+                ureg_MAD(ureg, tmp2, _ZZZZ(vs->aNrm), cWM[2], ureg_src(tmp2));
+            }
+
             if (i < (key->vertexblend - 1)) {
                 /* accumulate weighted position value */
-                ureg_MAD(ureg, r[2], ureg_src(tmp), ureg_scalar(vs->aWgt, i), ureg_src(r[2]));
+                ureg_MAD(ureg, aVtx_dst, ureg_src(tmp), ureg_scalar(vs->aWgt, i), ureg_src(aVtx_dst));
+                if (has_aNrm)
+                    ureg_MAD(ureg, aNrm_dst, ureg_src(tmp2), ureg_scalar(vs->aWgt, i), ureg_src(aNrm_dst));
                 /* subtract weighted position value for last value */
-                ureg_SUB(ureg, r[3], ureg_src(r[3]), ureg_scalar(vs->aWgt, i));
+                ureg_SUB(ureg, sum_blendweights, ureg_src(sum_blendweights), ureg_scalar(vs->aWgt, i));
             }
         }
 
         /* the last weighted position is always 1 - sum_of_previous_weights */
-        ureg_MAD(ureg, r[2], ureg_src(tmp), ureg_scalar(ureg_src(r[3]), key->vertexblend - 1), ureg_src(r[2]));
+        ureg_MAD(ureg, aVtx_dst, ureg_src(tmp), ureg_scalar(ureg_src(sum_blendweights), key->vertexblend - 1), ureg_src(aVtx_dst));
+        if (has_aNrm)
+            ureg_MAD(ureg, aNrm_dst, ureg_src(tmp2), ureg_scalar(ureg_src(sum_blendweights), key->vertexblend - 1), ureg_src(aNrm_dst));
 
         /* multiply by VIEW_PROJ */
-        ureg_MUL(ureg, tmp, _X(r[2]), _CONST(8));
-        ureg_MAD(ureg, tmp, _Y(r[2]), _CONST(9),  ureg_src(tmp));
-        ureg_MAD(ureg, tmp, _Z(r[2]), _CONST(10), ureg_src(tmp));
-        ureg_MAD(ureg, oPos, _W(r[2]), _CONST(11), ureg_src(tmp));
+        ureg_MUL(ureg, tmp, _X(aVtx_dst), _CONST(8));
+        ureg_MAD(ureg, tmp, _Y(aVtx_dst), _CONST(9),  ureg_src(tmp));
+        ureg_MAD(ureg, tmp, _Z(aVtx_dst), _CONST(10), ureg_src(tmp));
+        ureg_MAD(ureg, oPos, _W(aVtx_dst), _CONST(11), ureg_src(tmp));
 
-        if (need_rVtx)
-            vs->aVtx = ureg_src(r[2]);
-    } else
-    if (key->position_t && device->driver_caps.window_space_position_support) {
-        ureg_MOV(ureg, oPos, vs->aVtx);
-    } else if (key->position_t) {
-        /* vs->aVtx contains the coordinates buffer wise.
-        * later in the pipeline, clipping, viewport and division
-        * by w (rhw = 1/w) are going to be applied, so do the reverse
-        * of these transformations (except clipping) to have the good
-        * position at the end.*/
-        ureg_MOV(ureg, tmp, vs->aVtx);
-        /* X from [X_min, X_min + width] to [-1, 1], same for Y. Z to [0, 1] */
-        ureg_SUB(ureg, ureg_writemask(tmp, TGSI_WRITEMASK_XYZ), ureg_src(tmp), _CONST(101));
-        ureg_MUL(ureg, ureg_writemask(tmp, TGSI_WRITEMASK_XYZ), ureg_src(tmp), _CONST(100));
-        ureg_SUB(ureg, ureg_writemask(tmp, TGSI_WRITEMASK_XY), ureg_src(tmp), ureg_imm1f(ureg, 1.0f));
-        /* Y needs to be reversed */
-        ureg_MOV(ureg, ureg_writemask(tmp, TGSI_WRITEMASK_Y), ureg_negate(ureg_src(tmp)));
-        /* inverse rhw */
-        ureg_RCP(ureg, ureg_writemask(tmp, TGSI_WRITEMASK_W), _W(tmp));
-        /* multiply X, Y, Z by w */
-        ureg_MUL(ureg, ureg_writemask(tmp, TGSI_WRITEMASK_XYZ), ureg_src(tmp), _W(tmp));
-        ureg_MOV(ureg, oPos, ureg_src(tmp));
+        if (need_aVtx)
+            vs->aVtx = ureg_src(aVtx_dst);
+
+        ureg_release_temporary(ureg, tmp);
+        ureg_release_temporary(ureg, tmp2);
+        ureg_release_temporary(ureg, sum_blendweights);
+        if (!need_aVtx)
+            ureg_release_temporary(ureg, aVtx_dst);
+
+        if (has_aNrm) {
+            if (key->normalizenormals)
+               ureg_normalize3(ureg, aNrm_dst, ureg_src(aNrm_dst));
+            vs->aNrm = ureg_src(aNrm_dst);
+        } else
+            ureg_release_temporary(ureg, aNrm_dst);
     } else {
+        struct ureg_dst tmp = ureg_DECL_temporary(ureg);
+
+        if (key->vertextween) {
+            struct ureg_dst aVtx_dst = ureg_DECL_temporary(ureg);
+            ureg_LRP(ureg, aVtx_dst, _XXXX(_CONST(30)), vs->aVtx1, vs->aVtx);
+            vs->aVtx = ureg_src(aVtx_dst);
+            if (has_aNrm) {
+                struct ureg_dst aNrm_dst = ureg_DECL_temporary(ureg);
+                ureg_LRP(ureg, aNrm_dst, _XXXX(_CONST(30)), vs->aNrm1, vs->aNrm);
+                vs->aNrm = ureg_src(aNrm_dst);
+            }
+        }
+
         /* position = vertex * WORLD_VIEW_PROJ */
         ureg_MUL(ureg, tmp, _XXXX(vs->aVtx), _CONST(0));
         ureg_MAD(ureg, tmp, _YYYY(vs->aVtx), _CONST(1), ureg_src(tmp));
         ureg_MAD(ureg, tmp, _ZZZZ(vs->aVtx), _CONST(2), ureg_src(tmp));
         ureg_MAD(ureg, oPos, _WWWW(vs->aVtx), _CONST(3), ureg_src(tmp));
-    }
+        ureg_release_temporary(ureg, tmp);
 
-    if (need_rVtx) {
-        ureg_MUL(ureg, rVtx, _XXXX(vs->aVtx), _CONST(4));
-        ureg_MAD(ureg, rVtx, _YYYY(vs->aVtx), _CONST(5), ureg_src(rVtx));
-        ureg_MAD(ureg, rVtx, _ZZZZ(vs->aVtx), _CONST(6), ureg_src(rVtx));
-        ureg_MAD(ureg, rVtx, _WWWW(vs->aVtx), _CONST(7), ureg_src(rVtx));
+        if (need_aVtx) {
+            struct ureg_dst aVtx_dst = ureg_writemask(ureg_DECL_temporary(ureg), TGSI_WRITEMASK_XYZ);
+            ureg_MUL(ureg, aVtx_dst, _XXXX(vs->aVtx), _CONST(4));
+            ureg_MAD(ureg, aVtx_dst, _YYYY(vs->aVtx), _CONST(5), ureg_src(aVtx_dst));
+            ureg_MAD(ureg, aVtx_dst, _ZZZZ(vs->aVtx), _CONST(6), ureg_src(aVtx_dst));
+            ureg_MAD(ureg, aVtx_dst, _WWWW(vs->aVtx), _CONST(7), ureg_src(aVtx_dst));
+            vs->aVtx = ureg_src(aVtx_dst);
+        }
+        if (has_aNrm) {
+            struct ureg_dst aNrm_dst = ureg_writemask(ureg_DECL_temporary(ureg), TGSI_WRITEMASK_XYZ);
+            ureg_MUL(ureg, aNrm_dst, _XXXX(vs->aNrm), _CONST(16));
+            ureg_MAD(ureg, aNrm_dst, _YYYY(vs->aNrm), _CONST(17), ureg_src(aNrm_dst));
+            ureg_MAD(ureg, aNrm_dst, _ZZZZ(vs->aNrm), _CONST(18), ureg_src(aNrm_dst));
+            if (key->normalizenormals)
+               ureg_normalize3(ureg, aNrm_dst, ureg_src(aNrm_dst));
+            vs->aNrm = ureg_src(aNrm_dst);
+        }
     }
-    if (need_rNrm) {
-        ureg_MUL(ureg, rNrm, _XXXX(vs->aNrm), _CONST(16));
-        ureg_MAD(ureg, rNrm, _YYYY(vs->aNrm), _CONST(17), ureg_src(rNrm));
-        ureg_MAD(ureg, rNrm, _ZZZZ(vs->aNrm), _CONST(18), ureg_src(rNrm));
-        ureg_normalize3(ureg, rNrm, ureg_src(rNrm), tmp);
-    }
-    /* NOTE: don't use vs->aVtx, vs->aNrm after this line */
 
     /* === Process point size:
      */
-    if (key->vertexpointsize) {
-        struct ureg_src cPsz1 = ureg_DECL_constant(ureg, 26);
-        ureg_MAX(ureg, tmp_x, _XXXX(vs->aPsz), _XXXX(cPsz1));
-        ureg_MIN(ureg, oPsz, _X(tmp), _YYYY(cPsz1));
-    } else if (key->pointscale) {
-        struct ureg_src cPsz1 = ureg_DECL_constant(ureg, 26);
-        struct ureg_src cPsz2 = ureg_DECL_constant(ureg, 27);
+    if (key->vertexpointsize || key->pointscale) {
+        struct ureg_dst tmp = ureg_DECL_temporary(ureg);
+        struct ureg_dst tmp_x = ureg_writemask(tmp, TGSI_WRITEMASK_X);
+        struct ureg_dst tmp_y = ureg_writemask(tmp, TGSI_WRITEMASK_Y);
+        struct ureg_dst tmp_z = ureg_writemask(tmp, TGSI_WRITEMASK_Z);
+        if (key->vertexpointsize) {
+            struct ureg_src cPsz1 = ureg_DECL_constant(ureg, 26);
+            ureg_MAX(ureg, tmp_z, _XXXX(vs->aPsz), _XXXX(cPsz1));
+            ureg_MIN(ureg, tmp_z, _Z(tmp), _YYYY(cPsz1));
+        } else {
+            struct ureg_src cPsz1 = ureg_DECL_constant(ureg, 26);
+            ureg_MOV(ureg, tmp_z, _ZZZZ(cPsz1));
+        }
 
-        ureg_DP3(ureg, tmp_x, ureg_src(r[1]), ureg_src(r[1]));
-        ureg_RSQ(ureg, tmp_y, _X(tmp));
-        ureg_MUL(ureg, tmp_y, _Y(tmp), _X(tmp));
-        ureg_CMP(ureg, tmp_y, ureg_negate(_Y(tmp)), _Y(tmp), ureg_imm1f(ureg, 0.0f));
-        ureg_MAD(ureg, tmp_x, _Y(tmp), _YYYY(cPsz2), _XXXX(cPsz2));
-        ureg_MAD(ureg, tmp_x, _Y(tmp), _X(tmp), _WWWW(cPsz1));
-        ureg_RCP(ureg, tmp_x, ureg_src(tmp));
-        ureg_MUL(ureg, tmp_x, ureg_src(tmp), _ZZZZ(cPsz1));
-        ureg_MAX(ureg, tmp_x, _X(tmp), _XXXX(cPsz1));
-        ureg_MIN(ureg, oPsz, _X(tmp), _YYYY(cPsz1));
+        if (key->pointscale) {
+            struct ureg_src cPsz1 = ureg_DECL_constant(ureg, 26);
+            struct ureg_src cPsz2 = ureg_DECL_constant(ureg, 27);
+
+            ureg_DP3(ureg, tmp_x, vs->aVtx, vs->aVtx);
+            ureg_RSQ(ureg, tmp_y, _X(tmp));
+            ureg_MUL(ureg, tmp_y, _Y(tmp), _X(tmp));
+            ureg_CMP(ureg, tmp_y, ureg_negate(_Y(tmp)), _Y(tmp), ureg_imm1f(ureg, 0.0f));
+            ureg_MAD(ureg, tmp_x, _Y(tmp), _YYYY(cPsz2), _XXXX(cPsz2));
+            ureg_MAD(ureg, tmp_x, _Y(tmp), _X(tmp), _WWWW(cPsz1));
+            ureg_RSQ(ureg, tmp_x, _X(tmp));
+            ureg_MUL(ureg, tmp_x, _X(tmp), _Z(tmp));
+            ureg_MUL(ureg, tmp_x, _X(tmp), _WWWW(_CONST(100)));
+            ureg_MAX(ureg, tmp_x, _X(tmp), _XXXX(cPsz1));
+            ureg_MIN(ureg, tmp_z, _X(tmp), _YYYY(cPsz1));
+        }
+
+        ureg_MOV(ureg, oPsz, _Z(tmp));
+        ureg_release_temporary(ureg, tmp);
     }
 
     for (i = 0; i < 8; ++i) {
-        struct ureg_dst oTex, input_coord, transformed, t;
+        struct ureg_dst tmp, tmp_x, tmp2;
+        struct ureg_dst oTex, input_coord, transformed, t, aVtx_normed;
         unsigned c, writemask;
         const unsigned tci = (key->tc_gen >> (i * 3)) & 0x7;
         const unsigned idx = (key->tc_idx >> (i * 3)) & 0x7;
@@ -573,8 +630,10 @@ nine_ff_build_vs(struct NineDevice9 *device, struct vs_build_ctx *vs)
         if (tci == NINED3DTSS_TCI_DISABLE)
             continue;
         oTex = ureg_DECL_output(ureg, texcoord_sn, i);
-        input_coord = r[5];
-        transformed = r[6];
+        tmp = ureg_DECL_temporary(ureg);
+        tmp_x = ureg_writemask(tmp, TGSI_WRITEMASK_X);
+        input_coord = ureg_DECL_temporary(ureg);
+        transformed = ureg_DECL_temporary(ureg);
 
         /* Get the coordinate */
         switch (tci) {
@@ -585,27 +644,53 @@ nine_ff_build_vs(struct NineDevice9 *device, struct vs_build_ctx *vs)
             ureg_MOV(ureg, input_coord, vs->aTex[idx]);
             break;
         case NINED3DTSS_TCI_CAMERASPACENORMAL:
-            ureg_MOV(ureg, ureg_writemask(input_coord, TGSI_WRITEMASK_XYZ), ureg_src(rNrm));
+            ureg_MOV(ureg, ureg_writemask(input_coord, TGSI_WRITEMASK_XYZ), vs->aNrm);
             ureg_MOV(ureg, ureg_writemask(input_coord, TGSI_WRITEMASK_W), ureg_imm1f(ureg, 1.0f));
             dim_input = 4;
             break;
         case NINED3DTSS_TCI_CAMERASPACEPOSITION:
-            ureg_MOV(ureg, ureg_writemask(input_coord, TGSI_WRITEMASK_XYZ), ureg_src(rVtx));
+            ureg_MOV(ureg, ureg_writemask(input_coord, TGSI_WRITEMASK_XYZ), vs->aVtx);
             ureg_MOV(ureg, ureg_writemask(input_coord, TGSI_WRITEMASK_W), ureg_imm1f(ureg, 1.0f));
             dim_input = 4;
             break;
         case NINED3DTSS_TCI_CAMERASPACEREFLECTIONVECTOR:
             tmp.WriteMask = TGSI_WRITEMASK_XYZ;
-            ureg_DP3(ureg, tmp_x, ureg_src(rVtx), ureg_src(rNrm));
-            ureg_MUL(ureg, tmp, ureg_src(rNrm), _X(tmp));
+            aVtx_normed = ureg_DECL_temporary(ureg);
+            ureg_normalize3(ureg, aVtx_normed, vs->aVtx);
+            ureg_DP3(ureg, tmp_x, ureg_src(aVtx_normed), vs->aNrm);
+            ureg_MUL(ureg, tmp, vs->aNrm, _X(tmp));
             ureg_ADD(ureg, tmp, ureg_src(tmp), ureg_src(tmp));
-            ureg_SUB(ureg, ureg_writemask(input_coord, TGSI_WRITEMASK_XYZ), ureg_src(rVtx), ureg_src(tmp));
+            ureg_SUB(ureg, ureg_writemask(input_coord, TGSI_WRITEMASK_XYZ), ureg_src(aVtx_normed), ureg_src(tmp));
             ureg_MOV(ureg, ureg_writemask(input_coord, TGSI_WRITEMASK_W), ureg_imm1f(ureg, 1.0f));
+            ureg_release_temporary(ureg, aVtx_normed);
             dim_input = 4;
             tmp.WriteMask = TGSI_WRITEMASK_XYZW;
             break;
         case NINED3DTSS_TCI_SPHEREMAP:
-            assert(!"TODO");
+            /* Implement the formula of GL_SPHERE_MAP */
+            tmp.WriteMask = TGSI_WRITEMASK_XYZ;
+            aVtx_normed = ureg_DECL_temporary(ureg);
+            tmp2 = ureg_DECL_temporary(ureg);
+            ureg_normalize3(ureg, aVtx_normed, vs->aVtx);
+            ureg_DP3(ureg, tmp_x, ureg_src(aVtx_normed), vs->aNrm);
+            ureg_MUL(ureg, tmp, vs->aNrm, _X(tmp));
+            ureg_ADD(ureg, tmp, ureg_src(tmp), ureg_src(tmp));
+            ureg_SUB(ureg, tmp, ureg_src(aVtx_normed), ureg_src(tmp));
+            /* now tmp = normed(Vtx) - 2 dot3(normed(Vtx), Nrm) Nrm */
+            ureg_MOV(ureg, ureg_writemask(tmp2, TGSI_WRITEMASK_XYZ), ureg_src(tmp));
+            ureg_MUL(ureg, tmp2, ureg_src(tmp2), ureg_src(tmp2));
+            ureg_DP3(ureg, ureg_writemask(tmp2, TGSI_WRITEMASK_X), ureg_src(tmp2), ureg_src(tmp2));
+            ureg_RSQ(ureg, ureg_writemask(tmp2, TGSI_WRITEMASK_X), ureg_src(tmp2));
+            ureg_MUL(ureg, ureg_writemask(tmp2, TGSI_WRITEMASK_X), ureg_src(tmp2), ureg_imm1f(ureg, 0.5f));
+            /* tmp2 = 0.5 / sqrt(tmp.x^2 + tmp.y^2 + (tmp.z+1)^2)
+             * TODO: z coordinates are a bit different gl vs d3d, should the formula be adapted ? */
+            ureg_MUL(ureg, tmp, ureg_src(tmp), _X(tmp2));
+            ureg_ADD(ureg, ureg_writemask(input_coord, TGSI_WRITEMASK_XY), ureg_src(tmp), ureg_imm1f(ureg, 0.5f));
+            ureg_MOV(ureg, ureg_writemask(input_coord, TGSI_WRITEMASK_ZW), ureg_imm4f(ureg, 0.0f, 0.0f, 0.0f, 1.0f));
+            ureg_release_temporary(ureg, aVtx_normed);
+            ureg_release_temporary(ureg, tmp2);
+            dim_input = 4;
+            tmp.WriteMask = TGSI_WRITEMASK_XYZW;
             break;
         default:
             assert(0);
@@ -616,6 +701,7 @@ nine_ff_build_vs(struct NineDevice9 *device, struct vs_build_ctx *vs)
         /* dim_output == 0 => do not transform the components.
          * XYZRHW also disables transformation */
         if (!dim_output || key->position_t) {
+            ureg_release_temporary(ureg, transformed);
             transformed = input_coord;
             writemask = TGSI_WRITEMASK_XYZW;
         } else {
@@ -637,9 +723,12 @@ nine_ff_build_vs(struct NineDevice9 *device, struct vs_build_ctx *vs)
                 }
             }
             writemask = (1 << dim_output) - 1;
+            ureg_release_temporary(ureg, input_coord);
         }
 
         ureg_MOV(ureg, ureg_writemask(oTex, writemask), ureg_src(transformed));
+        ureg_release_temporary(ureg, transformed);
+        ureg_release_temporary(ureg, tmp);
     }
 
     /* === Lighting:
@@ -684,18 +773,22 @@ nine_ff_build_vs(struct NineDevice9 *device, struct vs_build_ctx *vs)
      * specular += light.specular * atten * powFact;
      */
     if (key->lighting) {
-        struct ureg_dst rAtt = ureg_writemask(r[1], TGSI_WRITEMASK_W);
-        struct ureg_dst rHit = ureg_writemask(r[3], TGSI_WRITEMASK_XYZ);
-        struct ureg_dst rMid = ureg_writemask(r[4], TGSI_WRITEMASK_XYZ);
+        struct ureg_dst tmp = ureg_DECL_temporary(ureg);
+        struct ureg_dst tmp_x = ureg_writemask(tmp, TGSI_WRITEMASK_X);
+        struct ureg_dst tmp_y = ureg_writemask(tmp, TGSI_WRITEMASK_Y);
+        struct ureg_dst tmp_z = ureg_writemask(tmp, TGSI_WRITEMASK_Z);
+        struct ureg_dst rAtt = ureg_writemask(ureg_DECL_temporary(ureg), TGSI_WRITEMASK_W);
+        struct ureg_dst rHit = ureg_writemask(ureg_DECL_temporary(ureg), TGSI_WRITEMASK_XYZ);
+        struct ureg_dst rMid = ureg_writemask(ureg_DECL_temporary(ureg), TGSI_WRITEMASK_XYZ);
 
-        struct ureg_dst rCtr = ureg_writemask(r[2], TGSI_WRITEMASK_W);
+        struct ureg_dst rCtr = ureg_writemask(ureg_DECL_temporary(ureg), TGSI_WRITEMASK_W);
 
         struct ureg_dst AL = ureg_writemask(AR, TGSI_WRITEMASK_X);
 
         /* Light.*.Alpha is not used. */
-        struct ureg_dst rD = ureg_writemask(r[5], TGSI_WRITEMASK_XYZ);
-        struct ureg_dst rA = ureg_writemask(r[6], TGSI_WRITEMASK_XYZ);
-        struct ureg_dst rS = ureg_writemask(r[7], TGSI_WRITEMASK_XYZ);
+        struct ureg_dst rD = ureg_writemask(ureg_DECL_temporary(ureg), TGSI_WRITEMASK_XYZ);
+        struct ureg_dst rA = ureg_writemask(ureg_DECL_temporary(ureg), TGSI_WRITEMASK_XYZ);
+        struct ureg_dst rS = ureg_DECL_temporary(ureg);
 
         struct ureg_src mtlP = _XXXX(MATERIAL_CONST(4));
 
@@ -739,7 +832,7 @@ nine_ff_build_vs(struct NineDevice9 *device, struct vs_build_ctx *vs)
             /* hitDir = light.position - eyeVtx
              * d = length(hitDir)
              */
-            ureg_SUB(ureg, rHit, cLPos, ureg_src(rVtx));
+            ureg_SUB(ureg, rHit, cLPos, vs->aVtx);
             ureg_DP3(ureg, tmp_x, ureg_src(rHit), ureg_src(rHit));
             ureg_RSQ(ureg, tmp_y, _X(tmp));
             ureg_MUL(ureg, tmp_x, _X(tmp), _Y(tmp)); /* length */
@@ -756,7 +849,7 @@ nine_ff_build_vs(struct NineDevice9 *device, struct vs_build_ctx *vs)
         ureg_ENDIF(ureg);
 
         /* normalize hitDir */
-        ureg_normalize3(ureg, rHit, ureg_src(rHit), tmp);
+        ureg_normalize3(ureg, rHit, ureg_src(rHit));
 
         /* if (SPOT light) */
         ureg_SEQ(ureg, tmp_x, cLKind, ureg_imm1f(ureg, D3DLIGHT_SPOT));
@@ -785,28 +878,29 @@ nine_ff_build_vs(struct NineDevice9 *device, struct vs_build_ctx *vs)
         ureg_ENDIF(ureg);
 
         /* directional factors, let's not use LIT because of clarity */
-        ureg_DP3(ureg, ureg_saturate(tmp_x), ureg_src(rNrm), ureg_src(rHit));
-        ureg_MOV(ureg, tmp_y, ureg_imm1f(ureg, 0.0f));
-        ureg_IF(ureg, _X(tmp), &label[l++]);
-        {
-            /* midVec = normalize(hitDir + eyeDir) */
+
+        if (has_aNrm) {
             if (key->localviewer) {
-                ureg_normalize3(ureg, rMid, ureg_src(rVtx), tmp);
+                ureg_normalize3(ureg, rMid, vs->aVtx);
                 ureg_SUB(ureg, rMid, ureg_src(rHit), ureg_src(rMid));
             } else {
                 ureg_SUB(ureg, rMid, ureg_src(rHit), ureg_imm3f(ureg, 0.0f, 0.0f, 1.0f));
             }
-            ureg_normalize3(ureg, rMid, ureg_src(rMid), tmp);
-            ureg_DP3(ureg, ureg_saturate(tmp_y), ureg_src(rNrm), ureg_src(rMid));
-            ureg_POW(ureg, tmp_y, _Y(tmp), mtlP);
+            ureg_normalize3(ureg, rMid, ureg_src(rMid));
+            ureg_DP3(ureg, ureg_saturate(tmp_y), vs->aNrm, ureg_src(rMid));
+            ureg_IF(ureg, _Y(tmp), &label[l++]);
+            {
+                ureg_POW(ureg, tmp_y, _Y(tmp), mtlP);
+                ureg_MUL(ureg, tmp_y, _W(rAtt), _Y(tmp)); /* power factor * att */
+                ureg_MAD(ureg, rS, cLColS, _Y(tmp), ureg_src(rS)); /* accumulate specular */
+            }
+            ureg_fixup_label(ureg, label[l-1], ureg_get_instruction_number(ureg));
+            ureg_ENDIF(ureg);
 
+            ureg_DP3(ureg, ureg_saturate(tmp_x), vs->aNrm, ureg_src(rHit));
             ureg_MUL(ureg, tmp_x, _W(rAtt), _X(tmp)); /* dp3(normal,hitDir) * att */
-            ureg_MUL(ureg, tmp_y, _W(rAtt), _Y(tmp)); /* power factor * att */
             ureg_MAD(ureg, rD, cLColD, _X(tmp), ureg_src(rD)); /* accumulate diffuse */
-            ureg_MAD(ureg, rS, cLColS, _Y(tmp), ureg_src(rS)); /* accumulate specular */
         }
-        ureg_fixup_label(ureg, label[l-1], ureg_get_instruction_number(ureg));
-        ureg_ENDIF(ureg);
 
         ureg_MAD(ureg, rA, cLColA, _W(rAtt), ureg_src(rA)); /* accumulate ambient */
 
@@ -822,10 +916,8 @@ nine_ff_build_vs(struct NineDevice9 *device, struct vs_build_ctx *vs)
 
         /* Set alpha factors of illumination to 1.0 for the multiplications. */
         rD.WriteMask = TGSI_WRITEMASK_W; rD.Saturate = 0;
-        rS.WriteMask = TGSI_WRITEMASK_W; rS.Saturate = 0;
         rA.WriteMask = TGSI_WRITEMASK_W; rA.Saturate = 0;
         ureg_MOV(ureg, rD, ureg_imm1f(ureg, 1.0f));
-        ureg_MOV(ureg, rS, ureg_imm1f(ureg, 1.0f));
 
         /* Apply to material:
          *
@@ -843,25 +935,30 @@ nine_ff_build_vs(struct NineDevice9 *device, struct vs_build_ctx *vs)
             ureg_ADD(ureg, ureg_writemask(tmp, TGSI_WRITEMASK_W  ), vs->mtlA, vs->mtlE);
         }
 
-        if (key->specular_enable) {
-            /* add oCol[1] to oCol[0] */
-            ureg_MAD(ureg, tmp, ureg_src(rD), vs->mtlD, ureg_src(tmp));
-            ureg_MAD(ureg, oCol[0], ureg_src(rS), vs->mtlS, ureg_src(tmp));
-        } else {
-            ureg_MAD(ureg, oCol[0], ureg_src(rD), vs->mtlD, ureg_src(tmp));
-        }
+        ureg_MAD(ureg, oCol[0], ureg_src(rD), vs->mtlD, ureg_src(tmp));
         ureg_MUL(ureg, oCol[1], ureg_src(rS), vs->mtlS);
+        ureg_release_temporary(ureg, rAtt);
+        ureg_release_temporary(ureg, rHit);
+        ureg_release_temporary(ureg, rMid);
+        ureg_release_temporary(ureg, rCtr);
+        ureg_release_temporary(ureg, rD);
+        ureg_release_temporary(ureg, rA);
+        ureg_release_temporary(ureg, rS);
+        ureg_release_temporary(ureg, rAtt);
+        ureg_release_temporary(ureg, tmp);
     } else
     /* COLOR */
     if (key->darkness) {
         if (key->mtl_emissive == 0 && key->mtl_ambient == 0) {
             ureg_MAD(ureg, oCol[0], vs->mtlD, ureg_imm4f(ureg, 0.0f, 0.0f, 0.0f, 1.0f), _CONST(19));
         } else {
+            struct ureg_dst tmp = ureg_DECL_temporary(ureg);
             ureg_MAD(ureg, ureg_writemask(oCol[0], TGSI_WRITEMASK_XYZ), vs->mtlA, _CONST(25), vs->mtlE);
             ureg_ADD(ureg, ureg_writemask(tmp,     TGSI_WRITEMASK_W), vs->mtlA, vs->mtlE);
             ureg_ADD(ureg, ureg_writemask(oCol[0], TGSI_WRITEMASK_W), vs->mtlD, _W(tmp));
+            ureg_release_temporary(ureg, tmp);
         }
-        ureg_MUL(ureg, oCol[1], ureg_imm4f(ureg, 0.0f, 0.0f, 0.0f, 1.0f), vs->mtlS);
+        ureg_MOV(ureg, oCol[1], ureg_imm1f(ureg, 0.0f));
     } else {
         ureg_MOV(ureg, oCol[0], vs->aCol[0]);
         ureg_MOV(ureg, oCol[1], vs->aCol[1]);
@@ -872,15 +969,15 @@ nine_ff_build_vs(struct NineDevice9 *device, struct vs_build_ctx *vs)
      * exp(x) = ex2(log2(e) * x)
      */
     if (key->fog_mode) {
-        if (key->position_t) {
-            ureg_MOV(ureg, ureg_saturate(tmp_x), ureg_scalar(vs->aCol[1], TGSI_SWIZZLE_W));
-        } else
+        struct ureg_dst tmp = ureg_DECL_temporary(ureg);
+        struct ureg_dst tmp_x = ureg_writemask(tmp, TGSI_WRITEMASK_X);
+        struct ureg_dst tmp_z = ureg_writemask(tmp, TGSI_WRITEMASK_Z);
         if (key->fog_range) {
-            ureg_DP3(ureg, tmp_x, ureg_src(rVtx), ureg_src(rVtx));
+            ureg_DP3(ureg, tmp_x, vs->aVtx, vs->aVtx);
             ureg_RSQ(ureg, tmp_z, _X(tmp));
             ureg_MUL(ureg, tmp_z, _Z(tmp), _X(tmp));
         } else {
-            ureg_MOV(ureg, tmp_z, ureg_abs(_Z(rVtx)));
+            ureg_MOV(ureg, tmp_z, ureg_abs(_ZZZZ(vs->aVtx)));
         }
 
         if (key->fog_mode == D3DFOG_EXP) {
@@ -894,11 +991,12 @@ nine_ff_build_vs(struct NineDevice9 *device, struct vs_build_ctx *vs)
             ureg_MUL(ureg, tmp_x, _X(tmp), ureg_imm1f(ureg, -1.442695f));
             ureg_EX2(ureg, tmp_x, _X(tmp));
         } else
-        if (key->fog_mode == D3DFOG_LINEAR && !key->position_t) {
+        if (key->fog_mode == D3DFOG_LINEAR) {
             ureg_SUB(ureg, tmp_x, _XXXX(_CONST(28)), _Z(tmp));
             ureg_MUL(ureg, ureg_saturate(tmp_x), _X(tmp), _YYYY(_CONST(28)));
         }
         ureg_MOV(ureg, oFog, _X(tmp));
+        ureg_release_temporary(ureg, tmp);
     } else if (key->fog && !(key->passthrough & (1 << NINE_DECLUSAGE_FOG))) {
         ureg_MOV(ureg, oFog, ureg_scalar(vs->aCol[1], TGSI_SWIZZLE_W));
     }
@@ -950,6 +1048,17 @@ nine_ff_build_vs(struct NineDevice9 *device, struct vs_build_ctx *vs)
         (void) 0; /* TODO: replace z of position output ? */
     }
 
+    /* ucp for ff applies on world coordinates.
+     * aVtx is in worldview coordinates. */
+    if (key->ucp) {
+        struct ureg_dst clipVect = ureg_DECL_output(ureg, TGSI_SEMANTIC_CLIPVERTEX, 0);
+        struct ureg_dst tmp = ureg_DECL_temporary(ureg);
+        ureg_MUL(ureg, tmp, _XXXX(vs->aVtx), _CONST(12));
+        ureg_MAD(ureg, tmp, _YYYY(vs->aVtx), _CONST(13),  ureg_src(tmp));
+        ureg_MAD(ureg, tmp, _ZZZZ(vs->aVtx), _CONST(14), ureg_src(tmp));
+        ureg_ADD(ureg, clipVect, _CONST(15), ureg_src(tmp));
+        ureg_release_temporary(ureg, tmp);
+    }
 
     if (key->position_t && device->driver_caps.window_space_position_support)
         ureg_property(ureg, TGSI_PROPERTY_VS_WINDOW_SPACE_POSITION, TRUE);
@@ -981,7 +1090,6 @@ struct ps_build_ctx
 
     struct ureg_src vC[2]; /* DIFFUSE, SPECULAR */
     struct ureg_src vT[8]; /* TEXCOORD[i] */
-    struct ureg_dst r[6];  /* TEMPs */
     struct ureg_dst rCur; /* D3DTA_CURRENT */
     struct ureg_dst rMod;
     struct ureg_src rCurSrc;
@@ -995,7 +1103,6 @@ struct ps_build_ctx
     struct {
         unsigned index;
         unsigned index_pre_mod;
-        unsigned num_regs;
     } stage;
 };
 
@@ -1032,7 +1139,7 @@ ps_get_ts_arg(struct ps_build_ctx *ps, unsigned ta)
         break;
     }
     if (ta & D3DTA_COMPLEMENT) {
-        struct ureg_dst dst = ps->r[ps->stage.num_regs++];
+        struct ureg_dst dst = ureg_DECL_temporary(ps->ureg);
         ureg_SUB(ps->ureg, dst, ureg_imm1f(ps->ureg, 1.0f), reg);
         reg = ureg_src(dst);
     }
@@ -1097,8 +1204,8 @@ static void
 ps_do_ts_op(struct ps_build_ctx *ps, unsigned top, struct ureg_dst dst, struct ureg_src *arg)
 {
     struct ureg_program *ureg = ps->ureg;
-    struct ureg_dst tmp = ps->r[ps->stage.num_regs];
-    struct ureg_dst tmp2 = ps->r[ps->stage.num_regs+1];
+    struct ureg_dst tmp = ureg_DECL_temporary(ureg);
+    struct ureg_dst tmp2 = ureg_DECL_temporary(ureg);
     struct ureg_dst tmp_x = ureg_writemask(tmp, TGSI_WRITEMASK_X);
 
     tmp.WriteMask = dst.WriteMask;
@@ -1207,15 +1314,17 @@ ps_do_ts_op(struct ps_build_ctx *ps, unsigned top, struct ureg_dst dst, struct u
         assert(!"invalid D3DTOP");
         break;
     }
+    ureg_release_temporary(ureg, tmp);
+    ureg_release_temporary(ureg, tmp2);
 }
 
 static void *
 nine_ff_build_ps(struct NineDevice9 *device, struct nine_ff_ps_key *key)
 {
     struct ps_build_ctx ps;
-    struct ureg_program *ureg = ureg_create(TGSI_PROCESSOR_FRAGMENT);
+    struct ureg_program *ureg = ureg_create(PIPE_SHADER_FRAGMENT);
     struct ureg_dst oCol;
-    unsigned i, s;
+    unsigned s;
     const unsigned texcoord_sn = get_texcoord_sn(device->screen);
 
     memset(&ps, 0, sizeof(ps));
@@ -1224,15 +1333,17 @@ nine_ff_build_ps(struct NineDevice9 *device, struct nine_ff_ps_key *key)
 
     ps.vC[0] = ureg_DECL_fs_input(ureg, TGSI_SEMANTIC_COLOR, 0, TGSI_INTERPOLATE_COLOR);
 
-    /* Declare all TEMPs we might need, serious drivers have a register allocator. */
-    for (i = 0; i < Elements(ps.r); ++i)
-        ps.r[i] = ureg_DECL_local_temporary(ureg);
-    ps.rCur = ps.r[0];
-    ps.rTmp = ps.r[1];
-    ps.rTex = ps.r[2];
+    ps.rCur = ureg_DECL_temporary(ureg);
+    ps.rTmp = ureg_DECL_temporary(ureg);
+    ps.rTex = ureg_DECL_temporary(ureg);
     ps.rCurSrc = ureg_src(ps.rCur);
     ps.rTmpSrc = ureg_src(ps.rTmp);
     ps.rTexSrc = ureg_src(ps.rTex);
+
+    /* Initial values */
+    ureg_MOV(ureg, ps.rCur, ureg_imm1f(ureg, 0.0f));
+    ureg_MOV(ureg, ps.rTmp, ureg_imm1f(ureg, 0.0f));
+    ureg_MOV(ureg, ps.rTex, ureg_imm1f(ureg, 0.0f));
 
     for (s = 0; s < 8; ++s) {
         ps.s[s] = ureg_src_undef();
@@ -1292,7 +1403,6 @@ nine_ff_build_ps(struct NineDevice9 *device, struct nine_ff_ps_key *key)
             key->ts[s].alphaop == D3DTOP_DISABLE)
             continue;
         ps.stage.index = s;
-        ps.stage.num_regs = 3;
 
         DBG("STAGE[%u]: colorop=%s alphaop=%s\n", s,
             nine_D3DTOP_to_str(key->ts[s].colorop),
@@ -1300,6 +1410,8 @@ nine_ff_build_ps(struct NineDevice9 *device, struct nine_ff_ps_key *key)
 
         if (!ureg_src_is_undef(ps.s[s])) {
             unsigned target;
+            struct ureg_src texture_coord = ps.vT[s];
+            struct ureg_dst delta;
             switch (key->ts[s].textarget) {
             case 0: target = TGSI_TEXTURE_1D; break;
             case 1: target = TGSI_TEXTURE_2D; break;
@@ -1308,37 +1420,63 @@ nine_ff_build_ps(struct NineDevice9 *device, struct nine_ff_ps_key *key)
             /* this is a 2 bit bitfield, do I really need a default case ? */
             }
 
-            /* sample the texture */
-            if (key->ts[s].colorop == D3DTOP_BUMPENVMAP ||
-                key->ts[s].colorop == D3DTOP_BUMPENVMAPLUMINANCE) {
+            /* Modify coordinates */
+            if (s >= 1 &&
+                (key->ts[s-1].colorop == D3DTOP_BUMPENVMAP ||
+                 key->ts[s-1].colorop == D3DTOP_BUMPENVMAPLUMINANCE)) {
+                delta = ureg_DECL_temporary(ureg);
+                /* Du' = D3DTSS_BUMPENVMAT00(stage s-1)*t(s-1)R + D3DTSS_BUMPENVMAT10(stage s-1)*t(s-1)G */
+                ureg_MUL(ureg, ureg_writemask(delta, TGSI_WRITEMASK_X), _X(ps.rTex), _XXXX(_CONST(8 + s - 1)));
+                ureg_MAD(ureg, ureg_writemask(delta, TGSI_WRITEMASK_X), _Y(ps.rTex), _ZZZZ(_CONST(8 + s - 1)), ureg_src(delta));
+                /* Dv' = D3DTSS_BUMPENVMAT01(stage s-1)*t(s-1)R + D3DTSS_BUMPENVMAT11(stage s-1)*t(s-1)G */
+                ureg_MUL(ureg, ureg_writemask(delta, TGSI_WRITEMASK_Y), _X(ps.rTex), _YYYY(_CONST(8 + s - 1)));
+                ureg_MAD(ureg, ureg_writemask(delta, TGSI_WRITEMASK_Y), _Y(ps.rTex), _WWWW(_CONST(8 + s - 1)), ureg_src(delta));
+                texture_coord = ureg_src(ureg_DECL_temporary(ureg));
+                ureg_MOV(ureg, ureg_writemask(ureg_dst(texture_coord), ureg_dst(ps.vT[s]).WriteMask), ps.vT[s]);
+                ureg_ADD(ureg, ureg_writemask(ureg_dst(texture_coord), TGSI_WRITEMASK_XY), texture_coord, ureg_src(delta));
+                /* Prepare luminance multiplier
+                 * t(s)RGBA = t(s)RGBA * clamp[(t(s-1)B * D3DTSS_BUMPENVLSCALE(stage s-1)) + D3DTSS_BUMPENVLOFFSET(stage s-1)] */
+                if (key->ts[s-1].colorop == D3DTOP_BUMPENVMAPLUMINANCE) {
+                    struct ureg_src bumpenvlscale = ((s-1) & 1) ? _ZZZZ(_CONST(16 + (s-1) / 2)) : _XXXX(_CONST(16 + (s-1) / 2));
+                    struct ureg_src bumpenvloffset = ((s-1) & 1) ? _WWWW(_CONST(16 + (s-1) / 2)) : _YYYY(_CONST(16 + (s-1) / 2));
+
+                    ureg_MAD(ureg, ureg_saturate(ureg_writemask(delta, TGSI_WRITEMASK_X)), _Z(ps.rTex), bumpenvlscale, bumpenvloffset);
+                }
             }
             if (key->projected & (3 << (s *2))) {
                 unsigned dim = 1 + ((key->projected >> (2 * s)) & 3);
                 if (dim == 4)
-                    ureg_TXP(ureg, ps.rTex, target, ps.vT[s], ps.s[s]);
+                    ureg_TXP(ureg, ps.rTex, target, texture_coord, ps.s[s]);
                 else {
-                    ureg_RCP(ureg, ureg_writemask(ps.rTmp, TGSI_WRITEMASK_X), ureg_scalar(ps.vT[s], dim-1));
-                    ureg_MUL(ureg, ps.rTmp, _XXXX(ps.rTmpSrc), ps.vT[s]);
+                    struct ureg_dst tmp = ureg_DECL_temporary(ureg);
+                    ureg_RCP(ureg, ureg_writemask(tmp, TGSI_WRITEMASK_X), ureg_scalar(texture_coord, dim-1));
+                    ureg_MUL(ureg, ps.rTmp, _X(tmp), texture_coord);
                     ureg_TEX(ureg, ps.rTex, target, ps.rTmpSrc, ps.s[s]);
+                    ureg_release_temporary(ureg, tmp);
                 }
             } else {
-                ureg_TEX(ureg, ps.rTex, target, ps.vT[s], ps.s[s]);
+                ureg_TEX(ureg, ps.rTex, target, texture_coord, ps.s[s]);
             }
+            if (s >= 1 && key->ts[s-1].colorop == D3DTOP_BUMPENVMAPLUMINANCE)
+                ureg_MUL(ureg, ps.rTex, ureg_src(ps.rTex), _X(delta));
         }
 
-        if (s == 0 &&
-            (key->ts[0].resultarg != 0 /* not current */ ||
-             key->ts[0].colorop == D3DTOP_DISABLE ||
-             key->ts[0].alphaop == D3DTOP_DISABLE ||
-             key->ts[0].colorop == D3DTOP_BLENDCURRENTALPHA ||
-             key->ts[0].alphaop == D3DTOP_BLENDCURRENTALPHA ||
-             key->ts[0].colorarg0 == D3DTA_CURRENT ||
-             key->ts[0].colorarg1 == D3DTA_CURRENT ||
-             key->ts[0].colorarg2 == D3DTA_CURRENT ||
-             key->ts[0].alphaarg0 == D3DTA_CURRENT ||
-             key->ts[0].alphaarg1 == D3DTA_CURRENT ||
-             key->ts[0].alphaarg2 == D3DTA_CURRENT)
-           ) {
+        if (((s == 0 && key->ts[0].colorop != D3DTOP_BUMPENVMAP &&
+              key->ts[0].colorop != D3DTOP_BUMPENVMAPLUMINANCE) ||
+             (s == 1 &&
+              (key->ts[0].colorop == D3DTOP_BUMPENVMAP ||
+               key->ts[0].colorop == D3DTOP_BUMPENVMAPLUMINANCE)))&&
+            (key->ts[s].resultarg != 0 /* not current */ ||
+             key->ts[s].colorop == D3DTOP_DISABLE ||
+             key->ts[s].alphaop == D3DTOP_DISABLE ||
+             key->ts[s].colorop == D3DTOP_BLENDCURRENTALPHA ||
+             key->ts[s].alphaop == D3DTOP_BLENDCURRENTALPHA ||
+             key->ts[s].colorarg0 == D3DTA_CURRENT ||
+             key->ts[s].colorarg1 == D3DTA_CURRENT ||
+             key->ts[s].colorarg2 == D3DTA_CURRENT ||
+             key->ts[s].alphaarg0 == D3DTA_CURRENT ||
+             key->ts[s].alphaarg1 == D3DTA_CURRENT ||
+             key->ts[s].alphaarg2 == D3DTA_CURRENT)) {
             /* Initialize D3DTA_CURRENT.
              * (Yes we can do this before the loop but not until
              *  NVE4 has an instruction scheduling pass.)
@@ -1346,10 +1484,14 @@ nine_ff_build_ps(struct NineDevice9 *device, struct nine_ff_ps_key *key)
             ureg_MOV(ureg, ps.rCur, ps.vC[0]);
         }
 
+        if (key->ts[s].colorop == D3DTOP_BUMPENVMAP ||
+            key->ts[s].colorop == D3DTOP_BUMPENVMAPLUMINANCE)
+            continue;
+
         dst = ps_get_ts_dst(&ps, key->ts[s].resultarg ? D3DTA_TEMP : D3DTA_CURRENT);
 
         if (ps.stage.index_pre_mod == ps.stage.index) {
-            ps.rMod = ps.r[ps.stage.num_regs++];
+            ps.rMod = ureg_DECL_temporary(ureg);
             ureg_MUL(ureg, ps.rMod, ps.rCurSrc, ps.rTexSrc);
         }
 
@@ -1441,6 +1583,8 @@ nine_ff_get_vs(struct NineDevice9 *device)
     struct vs_build_ctx bld;
     struct nine_ff_vs_key key;
     unsigned s, i;
+    boolean has_indexes = false;
+    boolean has_weights = false;
     char input_texture_coord[8];
 
     assert(sizeof(key) <= sizeof(key.value32));
@@ -1454,7 +1598,7 @@ nine_ff_get_vs(struct NineDevice9 *device)
     /* FIXME: this shouldn't be NULL, but it is on init */
     if (state->vdecl) {
         key.color0in_one = 1;
-        key.color1in_one = 1;
+        key.color1in_zero = 1;
         for (i = 0; i < state->vdecl->nelems; i++) {
             uint16_t usage = state->vdecl->usage_map[i];
             if (usage == NINE_DECLUSAGE_POSITIONT)
@@ -1462,8 +1606,17 @@ nine_ff_get_vs(struct NineDevice9 *device)
             else if (usage == NINE_DECLUSAGE_i(COLOR, 0))
                 key.color0in_one = 0;
             else if (usage == NINE_DECLUSAGE_i(COLOR, 1))
-                key.color1in_one = 0;
-            else if (usage == NINE_DECLUSAGE_PSIZE)
+                key.color1in_zero = 0;
+            else if (usage == NINE_DECLUSAGE_i(BLENDINDICES, 0)) {
+                has_indexes = true;
+                key.passthrough |= 1 << usage;
+            } else if (usage == NINE_DECLUSAGE_i(BLENDWEIGHT, 0)) {
+                has_weights = true;
+                key.passthrough |= 1 << usage;
+            } else if (usage == NINE_DECLUSAGE_i(NORMAL, 0)) {
+                key.has_normal = 1;
+                key.passthrough |= 1 << usage;
+            } else if (usage == NINE_DECLUSAGE_PSIZE)
                 key.vertexpointsize = 1;
             else if (usage % NINE_DECLUSAGE_COUNT == NINE_DECLUSAGE_TEXCOORD) {
                 s = usage / NINE_DECLUSAGE_COUNT;
@@ -1480,8 +1633,9 @@ nine_ff_get_vs(struct NineDevice9 *device)
     key.passthrough &= ~((1 << NINE_DECLUSAGE_POSITION) | (1 << NINE_DECLUSAGE_PSIZE) |
                          (1 << NINE_DECLUSAGE_TEXCOORD) | (1 << NINE_DECLUSAGE_POSITIONT) |
                          (1 << NINE_DECLUSAGE_TESSFACTOR) | (1 << NINE_DECLUSAGE_SAMPLE));
-    if (!key.vertexpointsize)
-        key.pointscale = !!state->rs[D3DRS_POINTSCALEENABLE];
+    if (!key.position_t)
+        key.passthrough = 0;
+    key.pointscale = !!state->rs[D3DRS_POINTSCALEENABLE];
 
     key.lighting = !!state->rs[D3DRS_LIGHTING] &&  state->ff.num_lights_active;
     key.darkness = !!state->rs[D3DRS_LIGHTING] && !state->ff.num_lights_active;
@@ -1490,21 +1644,23 @@ nine_ff_get_vs(struct NineDevice9 *device)
         key.lighting = 0;
     }
     if ((key.lighting | key.darkness) && state->rs[D3DRS_COLORVERTEX]) {
-        key.mtl_diffuse = state->rs[D3DRS_DIFFUSEMATERIALSOURCE];
-        key.mtl_ambient = state->rs[D3DRS_AMBIENTMATERIALSOURCE];
-        key.mtl_specular = state->rs[D3DRS_SPECULARMATERIALSOURCE];
-        key.mtl_emissive = state->rs[D3DRS_EMISSIVEMATERIALSOURCE];
+        uint32_t mask = (key.color0in_one ? 0 : 1) | (key.color1in_zero ? 0 : 2);
+        key.mtl_diffuse = state->rs[D3DRS_DIFFUSEMATERIALSOURCE] & mask;
+        key.mtl_ambient = state->rs[D3DRS_AMBIENTMATERIALSOURCE] & mask;
+        key.mtl_specular = state->rs[D3DRS_SPECULARMATERIALSOURCE] & mask;
+        key.mtl_emissive = state->rs[D3DRS_EMISSIVEMATERIALSOURCE] & mask;
     }
     key.fog = !!state->rs[D3DRS_FOGENABLE];
-    key.fog_mode = state->rs[D3DRS_FOGENABLE] ? state->rs[D3DRS_FOGVERTEXMODE] : 0;
+    key.fog_mode = (!key.position_t && state->rs[D3DRS_FOGENABLE]) ? state->rs[D3DRS_FOGVERTEXMODE] : 0;
     if (key.fog_mode)
-        key.fog_range = !key.position_t && state->rs[D3DRS_RANGEFOGENABLE];
+        key.fog_range = state->rs[D3DRS_RANGEFOGENABLE];
 
     key.localviewer = !!state->rs[D3DRS_LOCALVIEWER];
-    key.specular_enable = !!state->rs[D3DRS_SPECULARENABLE];
+    key.normalizenormals = !!state->rs[D3DRS_NORMALIZENORMALS];
+    key.ucp = !!state->rs[D3DRS_CLIPPLANEENABLE];
 
     if (state->rs[D3DRS_VERTEXBLEND] != D3DVBF_DISABLE) {
-        key.vertexblend_indexed = !!state->rs[D3DRS_INDEXEDVERTEXBLENDENABLE];
+        key.vertexblend_indexed = !!state->rs[D3DRS_INDEXEDVERTEXBLENDENABLE] && has_indexes;
 
         switch (state->rs[D3DRS_VERTEXBLEND]) {
         case D3DVBF_0WEIGHTS: key.vertexblend = key.vertexblend_indexed; break;
@@ -1516,6 +1672,8 @@ nine_ff_get_vs(struct NineDevice9 *device)
             assert(!"invalid D3DVBF");
             break;
         }
+        if (!has_weights && state->rs[D3DRS_VERTEXBLEND] != D3DVBF_0WEIGHTS)
+            key.vertexblend = 0; /* TODO: if key.vertexblend_indexed, perhaps it should use 1.0 as weight, or revert to D3DVBF_0WEIGHTS */
     }
 
     for (s = 0; s < 8; ++s) {
@@ -1597,7 +1755,12 @@ nine_ff_get_ps(struct NineDevice9 *device)
             break;
         }
 
-        if (state->ff.tex_stage[s][D3DTSS_COLORARG1] == D3DTA_TEXTURE)
+        if (state->ff.tex_stage[s][D3DTSS_COLORARG0] == D3DTA_TEXTURE ||
+            state->ff.tex_stage[s][D3DTSS_COLORARG1] == D3DTA_TEXTURE ||
+            state->ff.tex_stage[s][D3DTSS_COLORARG2] == D3DTA_TEXTURE ||
+            state->ff.tex_stage[s][D3DTSS_ALPHAARG0] == D3DTA_TEXTURE ||
+            state->ff.tex_stage[s][D3DTSS_ALPHAARG1] == D3DTA_TEXTURE ||
+            state->ff.tex_stage[s][D3DTSS_ALPHAARG2] == D3DTA_TEXTURE)
             sampler_mask |= (1 << s);
 
         if (key.ts[s].colorop != D3DTOP_DISABLE) {
@@ -1638,6 +1801,7 @@ nine_ff_get_ps(struct NineDevice9 *device)
     }
 
     key.projected = nine_ff_get_projected_key(state);
+    key.specular = !!state->rs[D3DRS_SPECULARENABLE];
 
     for (; s < 8; ++s)
         key.ts[s].colorop = key.ts[s].alphaop = D3DTOP_DISABLE;
@@ -1687,21 +1851,22 @@ nine_ff_load_vs_transforms(struct NineDevice9 *device)
         nine_d3d_matrix_matrix_mul(&M[0], &M[1], GET_D3DTS(PROJECTION));
 
         /* normal matrix == transpose(inverse(WV)) */
-        nine_d3d_matrix_inverse_3x3(&T, &M[1]);
+        nine_d3d_matrix_inverse(&T, &M[1]);
         nine_d3d_matrix_transpose(&M[4], &T);
 
-        /* VP matrix */
-        nine_d3d_matrix_matrix_mul(&M[2], GET_D3DTS(VIEW), GET_D3DTS(PROJECTION));
+        /* P matrix */
+        M[2] = *GET_D3DTS(PROJECTION);
 
         /* V and W matrix */
-        M[3] = *GET_D3DTS(VIEW);
-        M[56] = *GET_D3DTS(WORLD);
+        nine_d3d_matrix_inverse(&M[3], GET_D3DTS(VIEW));
+        M[40] = M[1];
     }
 
     if (state->rs[D3DRS_VERTEXBLEND] != D3DVBF_DISABLE) {
         /* load other world matrices */
-        for (i = 1; i <= 7; ++i)
-            M[56 + i] = *GET_D3DTS(WORLDMATRIX(i));
+        for (i = 1; i <= 8; ++i) {
+            nine_d3d_matrix_matrix_mul(&M[40 + i], GET_D3DTS(WORLDMATRIX(i)), GET_D3DTS(VIEW));
+        }
     }
 
     device->ff.vs_const[30 * 4] = asfloat(state->rs[D3DRS_TWEENFACTOR]);
@@ -1808,11 +1973,11 @@ nine_ff_load_ps_params(struct NineDevice9 *device)
         dst[8 + s].z = asfloat(state->ff.tex_stage[s][D3DTSS_BUMPENVMAT10]);
         dst[8 + s].w = asfloat(state->ff.tex_stage[s][D3DTSS_BUMPENVMAT11]);
         if (s & 1) {
-            dst[8 + s / 2].z = asfloat(state->ff.tex_stage[s][D3DTSS_BUMPENVLSCALE]);
-            dst[8 + s / 2].w = asfloat(state->ff.tex_stage[s][D3DTSS_BUMPENVLOFFSET]);
+            dst[16 + s / 2].z = asfloat(state->ff.tex_stage[s][D3DTSS_BUMPENVLSCALE]);
+            dst[16 + s / 2].w = asfloat(state->ff.tex_stage[s][D3DTSS_BUMPENVLOFFSET]);
         } else {
-            dst[8 + s / 2].x = asfloat(state->ff.tex_stage[s][D3DTSS_BUMPENVLSCALE]);
-            dst[8 + s / 2].y = asfloat(state->ff.tex_stage[s][D3DTSS_BUMPENVLOFFSET]);
+            dst[16 + s / 2].x = asfloat(state->ff.tex_stage[s][D3DTSS_BUMPENVLSCALE]);
+            dst[16 + s / 2].y = asfloat(state->ff.tex_stage[s][D3DTSS_BUMPENVLOFFSET]);
         }
     }
 
@@ -1836,6 +2001,7 @@ nine_ff_load_viewport_info(struct NineDevice9 *device)
     dst[100].x = 2.0f / (float)(viewport->Width);
     dst[100].y = 2.0f / (float)(viewport->Height);
     dst[100].z = (diffZ == 0.0f) ? 0.0f : (1.0f / diffZ);
+    dst[100].w = (float)(viewport->Width);
     dst[101].x = (float)(viewport->X);
     dst[101].y = (float)(viewport->Y);
     dst[101].z = (float)(viewport->MinZ);
@@ -2305,6 +2471,11 @@ nine_d3d_matrix_inverse(D3DMATRIX *D, const D3DMATRIX *M)
         M->m[2][0] * D->m[0][2] +
         M->m[3][0] * D->m[0][3];
 
+    if (det < 1e-30) {/* non inversible */
+        *D = *M; /* wine tests */
+        return;
+    }
+
     det = 1.0 / det;
 
     for (i = 0; i < 4; i++)
@@ -2323,23 +2494,4 @@ nine_d3d_matrix_inverse(D3DMATRIX *D, const D3DMATRIX *M)
                 DBG("Matrix inversion check FAILED !\n");
     }
 #endif
-}
-
-/* TODO: don't use 4x4 inverse, unless this gets all nicely inlined ? */
-void
-nine_d3d_matrix_inverse_3x3(D3DMATRIX *D, const D3DMATRIX *M)
-{
-    D3DMATRIX T;
-    unsigned i, j;
-
-    for (i = 0; i < 3; ++i)
-    for (j = 0; j < 3; ++j)
-        T.m[i][j] = M->m[i][j];
-    for (i = 0; i < 3; ++i) {
-        T.m[i][3] = 0.0f;
-        T.m[3][i] = 0.0f;
-    }
-    T.m[3][3] = 1.0f;
-
-    nine_d3d_matrix_inverse(D, &T);
 }

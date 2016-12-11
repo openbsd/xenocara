@@ -34,17 +34,6 @@ extern "C" {
 
 #include <EGL/eglplatform.h>
 
-#ifndef EGL_MESA_drm_display
-#define EGL_MESA_drm_display 1
-
-#ifdef EGL_EGLEXT_PROTOTYPES
-EGLAPI EGLDisplay EGLAPIENTRY eglGetDRMDisplayMESA(int fd);
-#endif /* EGL_EGLEXT_PROTOTYPES */
-
-typedef EGLDisplay (EGLAPIENTRYP PFNEGLGETDRMDISPLAYMESA) (int fd);
-
-#endif /* EGL_MESA_drm_display */
-
 #ifdef EGL_MESA_drm_image
 /* Mesa's extension to EGL_MESA_drm_image... */
 #ifndef EGL_DRM_BUFFER_USE_CURSOR_MESA
@@ -94,6 +83,11 @@ typedef EGLBoolean (EGLAPIENTRYP PFNEGLSWAPBUFFERSREGIONNOK) (EGLDisplay dpy, EG
 #define EGL_MESA_configless_context 1
 #define EGL_NO_CONFIG_MESA			((EGLConfig)0)
 #endif
+
+#ifndef EGL_MESA_platform_surfaceless
+#define EGL_MESA_platform_surfaceless 1
+#define EGL_PLATFORM_SURFACELESS_MESA           0x31DD
+#endif /* EGL_MESA_platform_surfaceless */
 
 #ifdef __cplusplus
 }

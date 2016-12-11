@@ -48,7 +48,11 @@
 #include "tgsi/tgsi_scan.h"
 #include "tgsi/tgsi_info.h"
 
-#define LP_CHAN_ALL ~0
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define LP_CHAN_ALL ~0u
 
 #define LP_MAX_INSTRUCTIONS 256
 
@@ -190,14 +194,7 @@ struct lp_build_sampler_soa
    void
    (*emit_size_query)( const struct lp_build_sampler_soa *sampler,
                        struct gallivm_state *gallivm,
-                       struct lp_type type,
-                       unsigned unit,
-                       unsigned target,
-                       LLVMValueRef context_ptr,
-                       boolean need_nr_mips,
-                       enum lp_sampler_lod_property,
-                       LLVMValueRef explicit_lod, /* optional */
-                       LLVMValueRef *sizes_out);
+                       const struct lp_sampler_size_query_params *params);
 };
 
 
@@ -340,6 +337,10 @@ struct lp_build_tgsi_context
    struct lp_build_context int_bld;
 
    struct lp_build_context dbl_bld;
+
+   struct lp_build_context uint64_bld;
+   struct lp_build_context int64_bld;
+
    /** This array stores functions that are used to transform TGSI opcodes to
      * LLVM instructions.
      */
@@ -662,5 +663,9 @@ boolean
 lp_build_tgsi_llvm(
    struct lp_build_tgsi_context * bld_base,
    const struct tgsi_token *tokens);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* LP_BLD_TGSI_H */

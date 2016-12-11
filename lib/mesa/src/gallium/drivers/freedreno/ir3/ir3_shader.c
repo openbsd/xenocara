@@ -127,14 +127,14 @@ void * ir3_shader_assemble(struct ir3_shader_variant *v, uint32_t gpu_id)
 static void
 assemble_variant(struct ir3_shader_variant *v)
 {
-	struct fd_context *ctx = fd_context(v->shader->pctx);
-	uint32_t gpu_id = v->shader->compiler->gpu_id;
+	struct ir3_compiler *compiler = v->shader->compiler;
+	uint32_t gpu_id = compiler->gpu_id;
 	uint32_t sz, *bin;
 
 	bin = ir3_shader_assemble(v, gpu_id);
 	sz = v->info.sizedwords * 4;
 
-	v->bo = fd_bo_new(ctx->dev, sz,
+	v->bo = fd_bo_new(compiler->dev, sz,
 			DRM_FREEDRENO_GEM_CACHE_WCOMBINE |
 			DRM_FREEDRENO_GEM_TYPE_KMEM);
 
@@ -147,30 +147,35 @@ assemble_variant(struct ir3_shader_variant *v)
 		ir3_shader_disasm(v, bin);
 	}
 
-	if (fd_mesa_debug & FD_DBG_SHADERDB) {
-		/* print generic shader info: */
-		fprintf(stderr, "SHADER-DB: %s prog %d/%d: %u instructions, %u dwords\n",
-				ir3_shader_stage(v->shader),
-				v->shader->id, v->id,
-				v->info.instrs_count,
-				v->info.sizedwords);
-		fprintf(stderr, "SHADER-DB: %s prog %d/%d: %u half, %u full\n",
-				ir3_shader_stage(v->shader),
-				v->shader->id, v->id,
-				v->info.max_half_reg + 1,
-				v->info.max_reg + 1);
-		fprintf(stderr, "SHADER-DB: %s prog %d/%d: %u const, %u constlen\n",
-				ir3_shader_stage(v->shader),
-				v->shader->id, v->id,
-				v->info.max_const + 1,
-				v->constlen);
-	}
-
 	free(bin);
 
 	/* no need to keep the ir around beyond this point: */
 	ir3_destroy(v->ir);
 	v->ir = NULL;
+}
+
+static void
+dump_shader_info(struct ir3_shader_variant *v, struct pipe_debug_callback *debug)
+{
+	if (!unlikely(fd_mesa_debug & FD_DBG_SHADERDB))
+		return;
+
+	pipe_debug_message(debug, SHADER_INFO, "\n"
+			"SHADER-DB: %s prog %d/%d: %u instructions, %u dwords\n"
+			"SHADER-DB: %s prog %d/%d: %u half, %u full\n"
+			"SHADER-DB: %s prog %d/%d: %u const, %u constlen\n",
+			ir3_shader_stage(v->shader),
+			v->shader->id, v->id,
+			v->info.instrs_count,
+			v->info.sizedwords,
+			ir3_shader_stage(v->shader),
+			v->shader->id, v->id,
+			v->info.max_half_reg + 1,
+			v->info.max_reg + 1,
+			ir3_shader_stage(v->shader),
+			v->shader->id, v->id,
+			v->info.max_const + 1,
+			v->constlen);
 }
 
 static struct ir3_shader_variant *
@@ -207,7 +212,8 @@ fail:
 }
 
 struct ir3_shader_variant *
-ir3_shader_variant(struct ir3_shader *shader, struct ir3_shader_key key)
+ir3_shader_variant(struct ir3_shader *shader, struct ir3_shader_key key,
+		struct pipe_debug_callback *debug)
 {
 	struct ir3_shader_variant *v;
 
@@ -223,6 +229,7 @@ ir3_shader_variant(struct ir3_shader *shader, struct ir3_shader_key key)
 			key.vsaturate_s = 0;
 			key.vsaturate_t = 0;
 			key.vsaturate_r = 0;
+			key.vastc_srgb = 0;
 		}
 		break;
 	case SHADER_VERTEX:
@@ -233,6 +240,7 @@ ir3_shader_variant(struct ir3_shader *shader, struct ir3_shader_key key)
 			key.fsaturate_s = 0;
 			key.fsaturate_t = 0;
 			key.fsaturate_r = 0;
+			key.fastc_srgb = 0;
 		}
 		break;
 	}
@@ -246,6 +254,7 @@ ir3_shader_variant(struct ir3_shader *shader, struct ir3_shader_key key)
 	if (v) {
 		v->next = shader->variants;
 		shader->variants = v;
+		dump_shader_info(v, debug);
 	}
 
 	return v;
@@ -266,34 +275,42 @@ ir3_shader_destroy(struct ir3_shader *shader)
 }
 
 struct ir3_shader *
-ir3_shader_create(struct pipe_context *pctx,
-		const struct pipe_shader_state *cso,
-		enum shader_t type)
+ir3_shader_create(struct ir3_compiler *compiler,
+		const struct pipe_shader_state *cso, enum shader_t type,
+		struct pipe_debug_callback *debug)
 {
 	struct ir3_shader *shader = CALLOC_STRUCT(ir3_shader);
-	shader->compiler = fd_context(pctx)->screen->compiler;
+	shader->compiler = compiler;
 	shader->id = ++shader->compiler->shader_count;
-	shader->pctx = pctx;
 	shader->type = type;
-	if (fd_mesa_debug & FD_DBG_DISASM) {
-		DBG("dump tgsi: type=%d", shader->type);
-		tgsi_dump(cso->tokens, 0);
+
+	nir_shader *nir;
+	if (cso->type == PIPE_SHADER_IR_NIR) {
+		/* we take ownership of the reference: */
+		nir = cso->ir.nir;
+	} else {
+		if (fd_mesa_debug & FD_DBG_DISASM) {
+			DBG("dump tgsi: type=%d", shader->type);
+			tgsi_dump(cso->tokens, 0);
+		}
+		nir = ir3_tgsi_to_nir(cso->tokens);
 	}
-	nir_shader *nir = ir3_tgsi_to_nir(cso->tokens);
 	/* do first pass optimization, ignoring the key: */
 	shader->nir = ir3_optimize_nir(shader, nir, NULL);
 	if (fd_mesa_debug & FD_DBG_DISASM) {
 		DBG("dump nir%d: type=%d", shader->id, shader->type);
 		nir_print_shader(shader->nir, stdout);
 	}
+
 	shader->stream_output = cso->stream_output;
 	if (fd_mesa_debug & FD_DBG_SHADERDB) {
 		/* if shader-db run, create a standard variant immediately
 		 * (as otherwise nothing will trigger the shader to be
 		 * actually compiled)
 		 */
-		static struct ir3_shader_key key = {0};
-		ir3_shader_variant(shader, key);
+		static struct ir3_shader_key key;
+		memset(&key, 0, sizeof(key));
+		ir3_shader_variant(shader, key, debug);
 	}
 	return shader;
 }
@@ -452,6 +469,12 @@ ir3_shader_disasm(struct ir3_shader_variant *so, uint32_t *bin)
 	debug_printf("\n");
 }
 
+uint64_t
+ir3_shader_outputs(const struct ir3_shader *so)
+{
+	return so->nir->info.outputs_written;
+}
+
 /* This has to reach into the fd_context a bit more than the rest of
  * ir3, but it needs to be aligned with the compiler, so both agree
  * on which const regs hold what.  And the logic is identical between
@@ -463,10 +486,9 @@ ir3_shader_disasm(struct ir3_shader_variant *so, uint32_t *bin)
 #include "freedreno_resource.h"
 
 static void
-emit_user_consts(struct ir3_shader_variant *v, struct fd_ringbuffer *ring,
-		struct fd_constbuf_stateobj *constbuf)
+emit_user_consts(struct fd_context *ctx, const struct ir3_shader_variant *v,
+		struct fd_ringbuffer *ring, struct fd_constbuf_stateobj *constbuf)
 {
-	struct fd_context *ctx = fd_context(v->shader->pctx);
 	const unsigned index = 0;     /* user consts are index 0 */
 	/* TODO save/restore dirty_mask for binning pass instead: */
 	uint32_t dirty_mask = constbuf->enabled_mask;
@@ -492,7 +514,7 @@ emit_user_consts(struct ir3_shader_variant *v, struct fd_ringbuffer *ring,
 		size = MIN2(size, 4 * max_const);
 
 		if (size > 0) {
-			fd_wfi(ctx, ring);
+			fd_wfi(ctx->batch, ring);
 			ctx->emit_const(ring, v->type, 0,
 					cb->buffer_offset, size,
 					cb->user_buffer, cb->buffer);
@@ -502,15 +524,14 @@ emit_user_consts(struct ir3_shader_variant *v, struct fd_ringbuffer *ring,
 }
 
 static void
-emit_ubos(struct ir3_shader_variant *v, struct fd_ringbuffer *ring,
-		struct fd_constbuf_stateobj *constbuf)
+emit_ubos(struct fd_context *ctx, const struct ir3_shader_variant *v,
+		struct fd_ringbuffer *ring, struct fd_constbuf_stateobj *constbuf)
 {
 	uint32_t offset = v->first_driver_param + IR3_UBOS_OFF;
 	if (v->constlen > offset) {
-		struct fd_context *ctx = fd_context(v->shader->pctx);
 		uint32_t params = MIN2(4, v->constlen - offset) * 4;
 		uint32_t offsets[params];
-		struct fd_bo *bos[params];
+		struct pipe_resource *prscs[params];
 
 		for (uint32_t i = 0; i < params; i++) {
 			const uint32_t index = i + 1;   /* UBOs start at index 1 */
@@ -519,22 +540,22 @@ emit_ubos(struct ir3_shader_variant *v, struct fd_ringbuffer *ring,
 
 			if ((constbuf->enabled_mask & (1 << index)) && cb->buffer) {
 				offsets[i] = cb->buffer_offset;
-				bos[i] = fd_resource(cb->buffer)->bo;
+				prscs[i] = cb->buffer;
 			} else {
 				offsets[i] = 0;
-				bos[i] = NULL;
+				prscs[i] = NULL;
 			}
 		}
 
-		fd_wfi(ctx, ring);
-		ctx->emit_const_bo(ring, v->type, false, offset * 4, params, bos, offsets);
+		fd_wfi(ctx->batch, ring);
+		ctx->emit_const_bo(ring, v->type, false, offset * 4, params, prscs, offsets);
 	}
 }
 
 static void
-emit_immediates(struct ir3_shader_variant *v, struct fd_ringbuffer *ring)
+emit_immediates(struct fd_context *ctx, const struct ir3_shader_variant *v,
+		struct fd_ringbuffer *ring)
 {
-	struct fd_context *ctx = fd_context(v->shader->pctx);
 	int size = v->immediates_count;
 	uint32_t base = v->first_immediate;
 
@@ -548,7 +569,7 @@ emit_immediates(struct ir3_shader_variant *v, struct fd_ringbuffer *ring)
 	size *= 4;
 
 	if (size > 0) {
-		fd_wfi(ctx, ring);
+		fd_wfi(ctx->batch, ring);
 		ctx->emit_const(ring, v->type, base,
 			0, size, v->immediates[0].val, NULL);
 	}
@@ -556,17 +577,17 @@ emit_immediates(struct ir3_shader_variant *v, struct fd_ringbuffer *ring)
 
 /* emit stream-out buffers: */
 static void
-emit_tfbos(struct ir3_shader_variant *v, struct fd_ringbuffer *ring)
+emit_tfbos(struct fd_context *ctx, const struct ir3_shader_variant *v,
+		struct fd_ringbuffer *ring)
 {
 	/* streamout addresses after driver-params: */
 	uint32_t offset = v->first_driver_param + IR3_TFBOS_OFF;
 	if (v->constlen > offset) {
-		struct fd_context *ctx = fd_context(v->shader->pctx);
 		struct fd_streamout_stateobj *so = &ctx->streamout;
 		struct pipe_stream_output_info *info = &v->shader->stream_output;
 		uint32_t params = 4;
 		uint32_t offsets[params];
-		struct fd_bo *bos[params];
+		struct pipe_resource *prscs[params];
 
 		for (uint32_t i = 0; i < params; i++) {
 			struct pipe_stream_output_target *target = so->targets[i];
@@ -574,22 +595,21 @@ emit_tfbos(struct ir3_shader_variant *v, struct fd_ringbuffer *ring)
 			if (target) {
 				offsets[i] = (so->offsets[i] * info->stride[i] * 4) +
 						target->buffer_offset;
-				bos[i] = fd_resource(target->buffer)->bo;
+				prscs[i] = target->buffer;
 			} else {
 				offsets[i] = 0;
-				bos[i] = NULL;
+				prscs[i] = NULL;
 			}
 		}
 
-		fd_wfi(ctx, ring);
-		ctx->emit_const_bo(ring, v->type, true, offset * 4, params, bos, offsets);
+		fd_wfi(ctx->batch, ring);
+		ctx->emit_const_bo(ring, v->type, true, offset * 4, params, prscs, offsets);
 	}
 }
 
 static uint32_t
-max_tf_vtx(struct ir3_shader_variant *v)
+max_tf_vtx(struct fd_context *ctx, const struct ir3_shader_variant *v)
 {
-	struct fd_context *ctx = fd_context(v->shader->pctx);
 	struct fd_streamout_stateobj *so = &ctx->streamout;
 	struct pipe_stream_output_info *info = &v->shader->stream_output;
 	uint32_t maxvtxcnt = 0x7fffffff;
@@ -633,30 +653,28 @@ max_tf_vtx(struct ir3_shader_variant *v)
 }
 
 void
-ir3_emit_consts(struct ir3_shader_variant *v, struct fd_ringbuffer *ring,
-		const struct pipe_draw_info *info, uint32_t dirty)
+ir3_emit_consts(const struct ir3_shader_variant *v, struct fd_ringbuffer *ring,
+		struct fd_context *ctx, const struct pipe_draw_info *info, uint32_t dirty)
 {
-	struct fd_context *ctx = fd_context(v->shader->pctx);
-
 	if (dirty & (FD_DIRTY_PROG | FD_DIRTY_CONSTBUF)) {
 		struct fd_constbuf_stateobj *constbuf;
 		bool shader_dirty;
 
 		if (v->type == SHADER_VERTEX) {
 			constbuf = &ctx->constbuf[PIPE_SHADER_VERTEX];
-			shader_dirty = !!(ctx->prog.dirty & FD_SHADER_DIRTY_VP);
+			shader_dirty = !!(dirty & FD_SHADER_DIRTY_VP);
 		} else if (v->type == SHADER_FRAGMENT) {
 			constbuf = &ctx->constbuf[PIPE_SHADER_FRAGMENT];
-			shader_dirty = !!(ctx->prog.dirty & FD_SHADER_DIRTY_FP);
+			shader_dirty = !!(dirty & FD_SHADER_DIRTY_FP);
 		} else {
 			unreachable("bad shader type");
 			return;
 		}
 
-		emit_user_consts(v, ring, constbuf);
-		emit_ubos(v, ring, constbuf);
+		emit_user_consts(ctx, v, ring, constbuf);
+		emit_ubos(ctx, v, ring, constbuf);
 		if (shader_dirty)
-			emit_immediates(v, ring);
+			emit_immediates(ctx, v, ring);
 	}
 
 	/* emit driver params every time: */
@@ -667,7 +685,7 @@ ir3_emit_consts(struct ir3_shader_variant *v, struct fd_ringbuffer *ring,
 			uint32_t vertex_params[IR3_DP_COUNT] = {
 				[IR3_DP_VTXID_BASE] = info->indexed ?
 						info->index_bias : info->start,
-				[IR3_DP_VTXCNT_MAX] = max_tf_vtx(v),
+				[IR3_DP_VTXCNT_MAX] = max_tf_vtx(ctx, v),
 			};
 			/* if no user-clip-planes, we don't need to emit the
 			 * entire thing:
@@ -686,13 +704,13 @@ ir3_emit_consts(struct ir3_shader_variant *v, struct fd_ringbuffer *ring,
 				vertex_params_size = ARRAY_SIZE(vertex_params);
 			}
 
-			fd_wfi(ctx, ring);
+			fd_wfi(ctx->batch, ring);
 			ctx->emit_const(ring, SHADER_VERTEX, offset * 4, 0,
 					vertex_params_size, vertex_params, NULL);
 
 			/* if needed, emit stream-out buffer addresses: */
 			if (vertex_params[IR3_DP_VTXCNT_MAX] > 0) {
-				emit_tfbos(v, ring);
+				emit_tfbos(ctx, v, ring);
 			}
 		}
 	}

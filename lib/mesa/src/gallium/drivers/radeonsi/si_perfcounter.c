@@ -27,7 +27,6 @@
 
 #include "radeon/r600_cs.h"
 #include "radeon/r600_query.h"
-#include "radeon/r600_pipe_common.h"
 #include "util/u_memory.h"
 
 #include "si_pipe.h"
@@ -208,6 +207,7 @@ static struct si_pc_block_base cik_PA_SC = {
 	.layout = SI_PC_MULTI_ALTERNATE,
 };
 
+/* According to docs, PA_SU counters are only 48 bits wide. */
 static struct si_pc_block_base cik_PA_SU = {
 	.name = "PA_SU",
 	.num_counters = 4,
@@ -590,32 +590,8 @@ static void si_pc_emit_stop(struct r600_common_context *ctx,
 {
 	struct radeon_winsys_cs *cs = ctx->gfx.cs;
 
-	if (ctx->screen->chip_class == CIK) {
-		/* Workaround for cache flush problems: send two EOP events. */
-		radeon_emit(cs, PKT3(PKT3_EVENT_WRITE_EOP, 4, 0));
-		radeon_emit(cs, EVENT_TYPE(EVENT_TYPE_CACHE_FLUSH_AND_INV_TS_EVENT) |
-				EVENT_INDEX(5));
-		radeon_emit(cs, va);
-		radeon_emit(cs, (va >> 32) | EOP_DATA_SEL(1));
-		radeon_emit(cs, 0); /* immediate data */
-		radeon_emit(cs, 0); /* unused */
-	}
-
-	radeon_emit(cs, PKT3(PKT3_EVENT_WRITE_EOP, 4, 0));
-	radeon_emit(cs, EVENT_TYPE(EVENT_TYPE_CACHE_FLUSH_AND_INV_TS_EVENT) |
-			EVENT_INDEX(5));
-	radeon_emit(cs, va);
-	radeon_emit(cs, (va >> 32) | EOP_DATA_SEL(1));
-	radeon_emit(cs, 0); /* immediate data */
-	radeon_emit(cs, 0); /* unused */
-
-	radeon_emit(cs, PKT3(PKT3_WAIT_REG_MEM, 5, 0));
-	radeon_emit(cs, WAIT_REG_MEM_EQUAL | WAIT_REG_MEM_MEM_SPACE(1));
-	radeon_emit(cs, va);
-	radeon_emit(cs, va >> 32);
-	radeon_emit(cs, 0); /* reference value */
-	radeon_emit(cs, 0xffffffff); /* mask */
-	radeon_emit(cs, 4); /* poll interval */
+	r600_gfx_write_fence(ctx, buffer, va, 1, 0);
+	r600_gfx_wait_fence(ctx, va, 0, 0xffffffff);
 
 	radeon_emit(cs, PKT3(PKT3_EVENT_WRITE, 0, 0));
 	radeon_emit(cs, EVENT_TYPE(EVENT_TYPE_PERFCOUNTER_SAMPLE) | EVENT_INDEX(0));
@@ -648,24 +624,26 @@ static void si_pc_emit_read(struct r600_common_context *ctx,
 
 			radeon_emit(cs, PKT3(PKT3_COPY_DATA, 4, 0));
 			radeon_emit(cs, COPY_DATA_SRC_SEL(COPY_DATA_PERF) |
-					COPY_DATA_DST_SEL(COPY_DATA_MEM));
+					COPY_DATA_DST_SEL(COPY_DATA_MEM) |
+					COPY_DATA_COUNT_SEL); /* 64 bits */
 			radeon_emit(cs, reg >> 2);
 			radeon_emit(cs, 0); /* unused */
 			radeon_emit(cs, va);
 			radeon_emit(cs, va >> 32);
-			va += 4;
+			va += sizeof(uint64_t);
 			reg += reg_delta;
 		}
 	} else {
 		for (idx = 0; idx < count; ++idx) {
 			radeon_emit(cs, PKT3(PKT3_COPY_DATA, 4, 0));
 			radeon_emit(cs, COPY_DATA_SRC_SEL(COPY_DATA_IMM) |
-					COPY_DATA_DST_SEL(COPY_DATA_MEM));
+					COPY_DATA_DST_SEL(COPY_DATA_MEM) |
+					COPY_DATA_COUNT_SEL);
 			radeon_emit(cs, 0); /* immediate */
-			radeon_emit(cs, 0); /* unused */
+			radeon_emit(cs, 0);
 			radeon_emit(cs, va);
 			radeon_emit(cs, va >> 32);
-			va += 4;
+			va += sizeof(uint64_t);
 		}
 	}
 }
@@ -709,13 +687,9 @@ void si_init_perfcounters(struct si_screen *screen)
 		return;
 
 	pc->num_start_cs_dwords = 14;
-	pc->num_stop_cs_dwords = 20;
+	pc->num_stop_cs_dwords = 14 + r600_gfx_write_fence_dwords(&screen->b);
 	pc->num_instance_cs_dwords = 3;
 	pc->num_shaders_cs_dwords = 4;
-
-	if (screen->b.chip_class == CIK) {
-		pc->num_stop_cs_dwords += 6;
-	}
 
 	pc->num_shader_types = ARRAY_SIZE(si_pc_shader_type_bits);
 	pc->shader_type_suffixes = si_pc_shader_type_suffixes;

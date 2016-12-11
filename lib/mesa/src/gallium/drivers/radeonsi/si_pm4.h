@@ -29,7 +29,7 @@
 
 #include "radeon/radeon_winsys.h"
 
-#define SI_PM4_MAX_DW		160
+#define SI_PM4_MAX_DW		176
 #define SI_PM4_MAX_BO		1
 
 // forward defines
@@ -71,6 +71,7 @@ void si_pm4_add_bo(struct si_pm4_state *state,
 void si_pm4_upload_indirect_buffer(struct si_context *sctx,
 				   struct si_pm4_state *state);
 
+void si_pm4_clear_state(struct si_pm4_state *state);
 void si_pm4_free_state_simple(struct si_pm4_state *state);
 void si_pm4_free_state(struct si_context *sctx,
 		       struct si_pm4_state *state,

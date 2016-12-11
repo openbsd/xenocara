@@ -269,7 +269,7 @@ boolean u_vbuf_get_caps(struct pipe_screen *screen, struct u_vbuf_caps *caps)
    for (i = 0; i < PIPE_FORMAT_COUNT; i++)
       caps->format_translation[i] = i;
 
-   for (i = 0; i < Elements(vbuf_format_fallbacks); i++) {
+   for (i = 0; i < ARRAY_SIZE(vbuf_format_fallbacks); i++) {
       enum pipe_format format = vbuf_format_fallbacks[i].from;
 
       if (!screen->is_format_supported(screen, format, PIPE_BUFFER, 0,
@@ -627,6 +627,7 @@ u_vbuf_translate_begin(struct u_vbuf *mgr,
    for (i = 0; i < mgr->ve->count; i++) {
       struct translate_key *k;
       struct translate_element *te;
+      enum pipe_format output_format = mgr->ve->native_format[i];
       unsigned bit, vb_index = mgr->ve->ve[i].vertex_buffer_index;
       bit = 1 << vb_index;
 
@@ -644,7 +645,8 @@ u_vbuf_translate_begin(struct u_vbuf *mgr,
          }
       }
       assert(type < VB_NUM);
-      assert(translate_is_output_format_supported(mgr->ve->native_format[i]));
+      if (mgr->ve->ve[i].src_format != output_format)
+         assert(translate_is_output_format_supported(output_format));
       /*printf("velem=%i type=%i\n", i, type);*/
 
       /* Add the vertex element. */
@@ -657,7 +659,7 @@ u_vbuf_translate_begin(struct u_vbuf *mgr,
       te->input_buffer = vb_index;
       te->input_format = mgr->ve->ve[i].src_format;
       te->input_offset = mgr->ve->ve[i].src_offset;
-      te->output_format = mgr->ve->native_format[i];
+      te->output_format = output_format;
       te->output_offset = k->output_stride;
 
       k->output_stride += mgr->ve->native_format_size[i];
@@ -694,8 +696,8 @@ u_vbuf_translate_begin(struct u_vbuf *mgr,
             mgr->fallback_velems[i].vertex_buffer_index = mgr->fallback_vbs[type];
 
             /* elem_index[type][i] can only be set for one type. */
-            assert(type > VB_INSTANCE || elem_index[type+1][i] == ~0);
-            assert(type > VB_VERTEX   || elem_index[type+2][i] == ~0);
+            assert(type > VB_INSTANCE || elem_index[type+1][i] == ~0u);
+            assert(type > VB_VERTEX   || elem_index[type+2][i] == ~0u);
             break;
          }
       }
@@ -723,7 +725,7 @@ static void u_vbuf_translate_end(struct u_vbuf *mgr)
    /* Unreference the now-unused VBOs. */
    for (i = 0; i < VB_NUM; i++) {
       unsigned vb = mgr->fallback_vbs[i];
-      if (vb != ~0) {
+      if (vb != ~0u) {
          pipe_resource_reference(&mgr->real_vertex_buffer[vb].buffer, NULL);
          mgr->fallback_vbs[i] = ~0;
 
@@ -1197,7 +1199,7 @@ void u_vbuf_draw_vbo(struct u_vbuf *mgr, const struct pipe_draw_info *info)
       if (u_vbuf_need_minmax_index(mgr)) {
          int max_index;
 
-         if (new_info.max_index != ~0) {
+         if (new_info.max_index != ~0u) {
             min_index = new_info.min_index;
             max_index = new_info.max_index;
          } else {

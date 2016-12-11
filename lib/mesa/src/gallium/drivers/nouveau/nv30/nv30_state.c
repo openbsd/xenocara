@@ -327,7 +327,7 @@ nv30_set_sample_mask(struct pipe_context *pipe, unsigned sample_mask)
 
 static void
 nv30_set_constant_buffer(struct pipe_context *pipe, uint shader, uint index,
-                         struct pipe_constant_buffer *cb)
+                         const struct pipe_constant_buffer *cb)
 {
    struct nv30_context *nv30 = nv30_context(pipe);
    struct pipe_resource *buf = cb ? cb->buffer : NULL;
@@ -379,8 +379,9 @@ nv30_set_framebuffer_state(struct pipe_context *pipe,
        struct nv30_miptree *zeta_mt = nv30_miptree(fb->zsbuf->texture);
 
        if (color_mt->swizzled != zeta_mt->swizzled ||
-           (util_format_get_blocksize(fb->zsbuf->format) > 2) !=
-           (util_format_get_blocksize(fb->cbufs[0]->format) > 2)) {
+           (color_mt->swizzled &&
+            (util_format_get_blocksize(fb->zsbuf->format) > 2) !=
+            (util_format_get_blocksize(fb->cbufs[0]->format) > 2))) {
           nv30->framebuffer.zsbuf = NULL;
           debug_printf("Mismatched color and zeta formats, ignoring zeta.\n");
        }

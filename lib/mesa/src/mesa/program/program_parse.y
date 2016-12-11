@@ -212,8 +212,6 @@ static struct asm_instruction *asm_instruction_copy_ctor(
 %type <sym> addrReg
 %type <swiz_mask> addrComponent addrWriteMask
 
-%type <dst_reg> ccMaskRule ccTest ccMaskRule2 ccTest2 optionalCcMask
-
 %type <result> resultBinding resultColBinding
 %type <integer> optFaceType optColorType
 %type <integer> optResultFaceType optResultColorType
@@ -390,8 +388,6 @@ ARL_instruction: ARL maskedAddrReg ',' scalarSrcReg
 
 VECTORop_instruction: VECTOR_OP maskedDstReg ',' swizzleSrcReg
 	{
-	   if ($1.Opcode == OPCODE_DDY)
-	      state->fragment.UsesDFdy = 1;
 	   $$ = asm_instruction_copy_ctor(& $1, & $2, & $4, NULL, NULL);
 	}
 	;
@@ -469,13 +465,6 @@ SAMPLE_instruction: SAMPLE_OP maskedDstReg ',' swizzleSrcReg ',' texImageUnit ',
 KIL_instruction: KIL swizzleSrcReg
 	{
 	   $$ = asm_instruction_ctor(OPCODE_KIL, NULL, & $2, NULL, NULL);
-	   state->fragment.UsesKill = 1;
-	}
-	| KIL ccTest
-	{
-	   $$ = asm_instruction_ctor(OPCODE_KIL_NV, NULL, NULL, NULL, NULL);
-	   $$->Base.DstReg.CondMask = $2.CondMask;
-	   $$->Base.DstReg.CondSwizzle = $2.CondSwizzle;
 	   state->fragment.UsesKill = 1;
 	}
 	;
@@ -564,21 +553,6 @@ scalarSrcReg: optionalSign scalarUse
 	      $$.Base.Negate = ~$$.Base.Negate;
 	   }
 	}
-	| optionalSign '|' scalarUse '|'
-	{
-	   $$ = $3;
-
-	   if (!state->option.NV_fragment) {
-	      yyerror(& @2, state, "unexpected character '|'");
-	      YYERROR;
-	   }
-
-	   if ($1) {
-	      $$.Base.Negate = ~$$.Base.Negate;
-	   }
-
-	   $$.Base.Abs = 1;
-	}
 	;
 
 scalarUse:  srcReg scalarSuffix
@@ -587,23 +561,6 @@ scalarUse:  srcReg scalarSuffix
 
 	   $$.Base.Swizzle = _mesa_combine_swizzles($$.Base.Swizzle,
 						    $2.swizzle);
-	}
-	| paramConstScalarUse
-	{
-	   struct asm_symbol temp_sym;
-
-	   if (!state->option.NV_fragment) {
-	      yyerror(& @1, state, "expected scalar suffix");
-	      YYERROR;
-	   }
-
-	   memset(& temp_sym, 0, sizeof(temp_sym));
-	   temp_sym.param_binding_begin = ~0;
-	   initialize_symbol_from_const(state->prog, & temp_sym, & $1, GL_TRUE);
-
-	   set_src_reg_swz(& $$, PROGRAM_CONSTANT,
-                           temp_sym.param_binding_begin,
-                           temp_sym.param_binding_swizzle);
 	}
 	;
 
@@ -618,32 +575,12 @@ swizzleSrcReg: optionalSign srcReg swizzleSuffix
 	   $$.Base.Swizzle = _mesa_combine_swizzles($$.Base.Swizzle,
 						    $3.swizzle);
 	}
-	| optionalSign '|' srcReg swizzleSuffix '|'
-	{
-	   $$ = $3;
-
-	   if (!state->option.NV_fragment) {
-	      yyerror(& @2, state, "unexpected character '|'");
-	      YYERROR;
-	   }
-
-	   if ($1) {
-	      $$.Base.Negate = ~$$.Base.Negate;
-	   }
-
-	   $$.Base.Abs = 1;
-	   $$.Base.Swizzle = _mesa_combine_swizzles($$.Base.Swizzle,
-						    $4.swizzle);
-	}
-
 	;
 
-maskedDstReg: dstReg optionalMask optionalCcMask
+maskedDstReg: dstReg optionalMask
 	{
 	   $$ = $1;
 	   $$.WriteMask = $2.mask;
-	   $$.CondMask = $3.CondMask;
-	   $$.CondSwizzle = $3.CondSwizzle;
 
 	   if ($$.File == PROGRAM_OUTPUT) {
 	      /* Technically speaking, this should check that it is in
@@ -787,7 +724,7 @@ extSwizSel: INTEGER
 srcReg: USED_IDENTIFIER /* temporaryReg | progParamSingle */
 	{
 	   struct asm_symbol *const s = (struct asm_symbol *)
-	      _mesa_symbol_table_find_symbol(state->st, 0, $1);
+              _mesa_symbol_table_find_symbol(state->st, $1);
 
 	   free($1);
 
@@ -875,7 +812,7 @@ dstReg: resultBinding
 	| USED_IDENTIFIER /* temporaryReg | vertexResultReg */
 	{
 	   struct asm_symbol *const s = (struct asm_symbol *)
-	      _mesa_symbol_table_find_symbol(state->st, 0, $1);
+              _mesa_symbol_table_find_symbol(state->st, $1);
 
 	   free($1);
 
@@ -904,7 +841,7 @@ dstReg: resultBinding
 progParamArray: USED_IDENTIFIER
 	{
 	   struct asm_symbol *const s = (struct asm_symbol *)
-	      _mesa_symbol_table_find_symbol(state->st, 0, $1);
+              _mesa_symbol_table_find_symbol(state->st, $1);
 
 	   free($1);
 
@@ -977,7 +914,7 @@ addrRegNegOffset: INTEGER
 addrReg: USED_IDENTIFIER
 	{
 	   struct asm_symbol *const s = (struct asm_symbol *)
-	      _mesa_symbol_table_find_symbol(state->st, 0, $1);
+              _mesa_symbol_table_find_symbol(state->st, $1);
 
 	   free($1);
 
@@ -1027,79 +964,6 @@ swizzleSuffix: MASK1
 
 optionalMask: MASK4 | MASK3 | MASK2 | MASK1 
 	|              { $$.swizzle = SWIZZLE_NOOP; $$.mask = WRITEMASK_XYZW; }
-	;
-
-optionalCcMask: '(' ccTest ')'
-	{
-	   $$ = $2;
-	}
-	| '(' ccTest2 ')'
-	{
-	   $$ = $2;
-	}
-	|
-	{
-	   $$.CondMask = COND_TR;
-	   $$.CondSwizzle = SWIZZLE_NOOP;
-	}
-	;
-
-ccTest: ccMaskRule swizzleSuffix
-	{
-	   $$ = $1;
-	   $$.CondSwizzle = $2.swizzle;
-	}
-	;
-
-ccTest2: ccMaskRule2 swizzleSuffix
-	{
-	   $$ = $1;
-	   $$.CondSwizzle = $2.swizzle;
-	}
-	;
-
-ccMaskRule: IDENTIFIER
-	{
-	   const int cond = _mesa_parse_cc($1);
-	   if ((cond == 0) || ($1[2] != '\0')) {
-	      char *const err_str =
-		 make_error_string("invalid condition code \"%s\"", $1);
-
-	      yyerror(& @1, state, (err_str != NULL)
-		      ? err_str : "invalid condition code");
-
-	      if (err_str != NULL) {
-		 free(err_str);
-	      }
-
-	      YYERROR;
-	   }
-
-	   $$.CondMask = cond;
-	   $$.CondSwizzle = SWIZZLE_NOOP;
-	}
-	;
-
-ccMaskRule2: USED_IDENTIFIER
-	{
-	   const int cond = _mesa_parse_cc($1);
-	   if ((cond == 0) || ($1[2] != '\0')) {
-	      char *const err_str =
-		 make_error_string("invalid condition code \"%s\"", $1);
-
-	      yyerror(& @1, state, (err_str != NULL)
-		      ? err_str : "invalid condition code");
-
-	      if (err_str != NULL) {
-		 free(err_str);
-	      }
-
-	      YYERROR;
-	   }
-
-	   $$.CondMask = cond;
-	   $$.CondSwizzle = SWIZZLE_NOOP;
-	}
 	;
 
 namingStatement: ATTRIB_statement
@@ -1930,46 +1794,7 @@ optionalSign: '+'        { $$ = FALSE; }
 	|                { $$ = FALSE; }
 	;
 
-TEMP_statement: optVarSize TEMP { $<integer>$ = $2; } varNameList
-	;
-
-optVarSize: string
-	{
-	   /* NV_fragment_program_option defines the size qualifiers in a
-	    * fairly broken way.  "SHORT" or "LONG" can optionally be used
-	    * before TEMP or OUTPUT.  However, neither is a reserved word!
-	    * This means that we have to parse it as an identifier, then check
-	    * to make sure it's one of the valid values.  *sigh*
-	    *
-	    * In addition, the grammar in the extension spec does *not* allow
-	    * the size specifier to be optional, but all known implementations
-	    * do.
-	    */
-	   if (!state->option.NV_fragment) {
-	      yyerror(& @1, state, "unexpected IDENTIFIER");
-	      YYERROR;
-	   }
-
-	   if (strcmp("SHORT", $1) == 0) {
-	   } else if (strcmp("LONG", $1) == 0) {
-	   } else {
-	      char *const err_str =
-		 make_error_string("invalid storage size specifier \"%s\"",
-				   $1);
-
-	      yyerror(& @1, state, (err_str != NULL)
-		      ? err_str : "invalid storage size specifier");
-
-	      if (err_str != NULL) {
-		 free(err_str);
-	      }
-
-	      YYERROR;
-	   }
-	}
-	|
-	{
-	}
+TEMP_statement: TEMP { $<integer>$ = $1; } varNameList
 	;
 
 ADDRESS_statement: ADDRESS { $<integer>$ = $1; } varNameList
@@ -1991,16 +1816,16 @@ varNameList: varNameList ',' IDENTIFIER
 	}
 	;
 
-OUTPUT_statement: optVarSize OUTPUT IDENTIFIER '=' resultBinding
+OUTPUT_statement: OUTPUT IDENTIFIER '=' resultBinding
 	{
 	   struct asm_symbol *const s =
-	      declare_variable(state, $3, at_output, & @3);
+	      declare_variable(state, $2, at_output, & @2);
 
 	   if (s == NULL) {
-	      free($3);
+	      free($2);
 	      YYERROR;
 	   } else {
-	      s->output_binding = $5;
+	      s->output_binding = $4;
 	   }
 	}
 	;
@@ -2203,9 +2028,9 @@ legacyTexUnitNum: INTEGER
 ALIAS_statement: ALIAS IDENTIFIER '=' USED_IDENTIFIER
 	{
 	   struct asm_symbol *exist = (struct asm_symbol *)
-	      _mesa_symbol_table_find_symbol(state->st, 0, $2);
+              _mesa_symbol_table_find_symbol(state->st, $2);
 	   struct asm_symbol *target = (struct asm_symbol *)
-	      _mesa_symbol_table_find_symbol(state->st, 0, $4);
+              _mesa_symbol_table_find_symbol(state->st, $4);
 
 	   free($4);
 
@@ -2221,7 +2046,7 @@ ALIAS_statement: ALIAS IDENTIFIER '=' USED_IDENTIFIER
 		      "undefined variable binding in ALIAS statement");
 	      YYERROR;
 	   } else {
-	      _mesa_symbol_table_add_symbol(state->st, 0, $2, target);
+              _mesa_symbol_table_add_symbol(state->st, $2, target);
 	   }
 	}
 	;
@@ -2248,9 +2073,6 @@ asm_instruction_set_operands(struct asm_instruction *inst,
       inst->Base.DstReg = *dst;
    }
 
-   /* The only instruction that doesn't have any source registers is the
-    * condition-code based KIL instruction added by NV_fragment_program_option.
-    */
    if (src0 != NULL) {
       inst->Base.SrcReg[0] = src0->Base;
       inst->SrcReg[0] = *src0;
@@ -2306,10 +2128,7 @@ asm_instruction_copy_ctor(const struct prog_instruction *base,
    if (inst) {
       _mesa_init_instructions(& inst->Base, 1);
       inst->Base.Opcode = base->Opcode;
-      inst->Base.CondUpdate = base->CondUpdate;
-      inst->Base.CondDst = base->CondDst;
       inst->Base.Saturate = base->Saturate;
-      inst->Base.Precision = base->Precision;
 
       asm_instruction_set_operands(inst, dst, src0, src1, src2);
    }
@@ -2324,8 +2143,6 @@ init_dst_reg(struct prog_dst_register *r)
    memset(r, 0, sizeof(*r));
    r->File = PROGRAM_UNDEFINED;
    r->WriteMask = WRITEMASK_XYZW;
-   r->CondMask = COND_TR;
-   r->CondSwizzle = SWIZZLE_NOOP;
 }
 
 
@@ -2346,8 +2163,6 @@ set_dst_reg(struct prog_dst_register *r, gl_register_file file, GLint index)
    r->File = file;
    r->Index = index;
    r->WriteMask = WRITEMASK_XYZW;
-   r->CondMask = COND_TR;
-   r->CondSwizzle = SWIZZLE_NOOP;
 }
 
 
@@ -2420,7 +2235,7 @@ declare_variable(struct asm_parser_state *state, char *name, enum asm_type t,
 {
    struct asm_symbol *s = NULL;
    struct asm_symbol *exist = (struct asm_symbol *)
-      _mesa_symbol_table_find_symbol(state->st, 0, name);
+      _mesa_symbol_table_find_symbol(state->st, name);
 
 
    if (exist != NULL) {
@@ -2458,7 +2273,7 @@ declare_variable(struct asm_parser_state *state, char *name, enum asm_type t,
 	 break;
       }
 
-      _mesa_symbol_table_add_symbol(state->st, 0, s->name, s);
+      _mesa_symbol_table_add_symbol(state->st, s->name, s);
       s->next = state->sym;
       state->sym = s;
    }

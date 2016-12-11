@@ -36,7 +36,7 @@ private:
    void handleRCPRSQ(Instruction *); // double precision float recip/rsqrt
    void handleFTZ(Instruction *);
 
-private:
+protected:
    BuildUtil bld;
 };
 
@@ -55,10 +55,11 @@ private:
 
    struct TexUse
    {
-      TexUse(Instruction *use, const Instruction *tex)
-         : insn(use), tex(tex), level(-1) { }
+      TexUse(Instruction *use, const Instruction *tex, bool after)
+         : insn(use), tex(tex), after(after), level(-1) { }
       Instruction *insn;
       const Instruction *tex; // or split / mov
+      bool after;
       int level;
    };
    struct Limits
@@ -79,6 +80,7 @@ private:
 private:
    LValue *rZero;
    LValue *carry;
+   LValue *pOne;
    const bool needTexBar;
 };
 
@@ -101,11 +103,16 @@ protected:
    bool handleTXQ(TexInstruction *);
    virtual bool handleManualTXD(TexInstruction *);
    bool handleTXLQ(TexInstruction *);
-   bool handleSUQ(Instruction *);
+   bool handleSUQ(TexInstruction *);
    bool handleATOM(Instruction *);
    bool handleCasExch(Instruction *, bool needCctl);
+   void handleSurfaceOpGM107(TexInstruction *);
    void handleSurfaceOpNVE4(TexInstruction *);
+   void handleSurfaceOpNVC0(TexInstruction *);
    void handleSharedATOM(Instruction *);
+   void handleSharedATOMNVE4(Instruction *);
+   void handleLDST(Instruction *);
+   bool handleBUFQ(Instruction *);
 
    void checkPredicate(Instruction *);
 
@@ -117,14 +124,22 @@ private:
 
    void readTessCoord(LValue *dst, int c);
 
-   Value *loadResInfo32(Value *ptr, uint32_t off);
-   Value *loadResInfo64(Value *ptr, uint32_t off);
-   Value *loadResLength32(Value *ptr, uint32_t off);
+   Value *loadResInfo32(Value *ptr, uint32_t off, uint16_t base);
+   Value *loadResInfo64(Value *ptr, uint32_t off, uint16_t base);
+   Value *loadResLength32(Value *ptr, uint32_t off, uint16_t base);
+   Value *loadSuInfo32(Value *ptr, int slot, uint32_t off);
+   Value *loadBufInfo64(Value *ptr, uint32_t off);
+   Value *loadBufLength32(Value *ptr, uint32_t off);
+   Value *loadUboInfo64(Value *ptr, uint32_t off);
+   Value *loadUboLength32(Value *ptr, uint32_t off);
    Value *loadMsInfo32(Value *ptr, uint32_t off);
    Value *loadTexHandle(Value *ptr, unsigned int slot);
 
    void adjustCoordinatesMS(TexInstruction *);
+   void processSurfaceCoordsGM107(TexInstruction *);
    void processSurfaceCoordsNVE4(TexInstruction *);
+   void processSurfaceCoordsNVC0(TexInstruction *);
+   void convertSurfaceFormat(TexInstruction *);
 
 protected:
    BuildUtil bld;

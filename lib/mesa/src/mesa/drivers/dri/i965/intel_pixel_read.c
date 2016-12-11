@@ -110,22 +110,6 @@ intel_readpixels_tiled_memcpy(struct gl_context * ctx,
    if (ctx->_ImageTransferState)
       return false;
 
-   /* This renderbuffer can come from a texture.  In this case, we impose
-    * some of the same restrictions we have for textures and adjust for
-    * miplevels.
-    */
-   if (rb->TexImage) {
-      if (rb->TexImage->TexObject->Target != GL_TEXTURE_2D &&
-          rb->TexImage->TexObject->Target != GL_TEXTURE_RECTANGLE)
-         return false;
-
-      int level = rb->TexImage->Level + rb->TexImage->TexObject->MinLevel;
-
-      /* Adjust x and y offset based on miplevel */
-      xoffset += irb->mt->level[level].level_x;
-      yoffset += irb->mt->level[level].level_y;
-   }
-
    /* It is possible that the renderbuffer (or underlying texture) is
     * multisampled.  Since ReadPixels from a multisampled buffer requires a
     * multisample resolve, we can't handle this here
@@ -141,8 +125,7 @@ intel_readpixels_tiled_memcpy(struct gl_context * ctx,
    if (rb->_BaseFormat == GL_RGB)
       return false;
 
-   if (!intel_get_memcpy(rb->Format, format, type, &mem_copy, &cpp,
-                         INTEL_DOWNLOAD))
+   if (!intel_get_memcpy(rb->Format, format, type, &mem_copy, &cpp))
       return false;
 
    if (!irb->mt ||
@@ -169,6 +152,9 @@ intel_readpixels_tiled_memcpy(struct gl_context * ctx,
       DBG("%s: failed to map bo\n", __func__);
       return false;
    }
+
+   xoffset += irb->mt->level[irb->mt_level].slice[irb->mt_layer].x_offset;
+   yoffset += irb->mt->level[irb->mt_level].slice[irb->mt_layer].y_offset;
 
    dst_pitch = _mesa_image_row_stride(pack, width, format, type);
 
@@ -202,7 +188,7 @@ intel_readpixels_tiled_memcpy(struct gl_context * ctx,
       xoffset * cpp, (xoffset + width) * cpp,
       yoffset, yoffset + height,
       pixels - (ptrdiff_t) yoffset * dst_pitch - (ptrdiff_t) xoffset * cpp,
-      bo->virtual,
+      bo->virtual + irb->mt->offset,
       dst_pitch, irb->mt->pitch,
       brw->has_swizzling,
       irb->mt->tiling,

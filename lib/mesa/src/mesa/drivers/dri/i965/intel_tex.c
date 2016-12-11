@@ -5,6 +5,7 @@
 #include "main/mipmap.h"
 #include "drivers/common/meta.h"
 #include "brw_context.h"
+#include "brw_defines.h"
 #include "intel_buffer_objects.h"
 #include "intel_mipmap_tree.h"
 #include "intel_tex.h"
@@ -70,7 +71,7 @@ intel_alloc_texture_image_buffer(struct gl_context *ctx,
 
    /* Quantize sample count */
    if (image->NumSamples) {
-      image->NumSamples = intel_quantize_num_samples(brw->intelScreen, image->NumSamples);
+      image->NumSamples = intel_quantize_num_samples(brw->screen, image->NumSamples);
       if (!image->NumSamples)
          return false;
    }
@@ -127,7 +128,7 @@ intel_alloc_texture_storage(struct gl_context *ctx,
    struct brw_context *brw = brw_context(ctx);
    struct intel_texture_object *intel_texobj = intel_texture_object(texobj);
    struct gl_texture_image *first_image = texobj->Image[0][0];
-   int num_samples = intel_quantize_num_samples(brw->intelScreen,
+   int num_samples = intel_quantize_num_samples(brw->screen,
                                                 first_image->NumSamples);
    const int numFaces = _mesa_num_tex_faces(texobj->Target);
    int face;
@@ -140,6 +141,8 @@ intel_alloc_texture_storage(struct gl_context *ctx,
        !intel_miptree_match_image(intel_texobj->mt, first_image) ||
        intel_texobj->mt->last_level != levels - 1) {
       intel_miptree_release(&intel_texobj->mt);
+
+      intel_get_image_dims(first_image, &width, &height, &depth);
       intel_texobj->mt = intel_miptree_create(brw, texobj->Target,
                                               first_image->TexFormat,
                                               0, levels - 1,
@@ -362,7 +365,17 @@ intel_texture_barrier(struct gl_context *ctx)
 {
    struct brw_context *brw = brw_context(ctx);
 
-   brw_emit_mi_flush(brw);
+   if (brw->gen >= 6) {
+      brw_emit_pipe_control_flush(brw,
+                                  PIPE_CONTROL_DEPTH_CACHE_FLUSH |
+                                  PIPE_CONTROL_RENDER_TARGET_FLUSH |
+                                  PIPE_CONTROL_CS_STALL);
+
+      brw_emit_pipe_control_flush(brw,
+                                  PIPE_CONTROL_TEXTURE_CACHE_INVALIDATE);
+   } else {
+      brw_emit_mi_flush(brw);
+   }
 }
 
 void

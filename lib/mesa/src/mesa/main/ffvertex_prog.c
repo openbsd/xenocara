@@ -44,6 +44,7 @@
 #include "program/prog_parameter.h"
 #include "program/prog_print.h"
 #include "program/prog_statevars.h"
+#include "util/bitscan.h"
 
 
 /** Max of number of lights and texture coord units */
@@ -148,7 +149,7 @@ static GLboolean check_active_shininess( struct gl_context *ctx,
 static void make_state_key( struct gl_context *ctx, struct state_key *key )
 {
    const struct gl_fragment_program *fp;
-   GLuint i;
+   GLbitfield mask;
 
    memset(key, 0, sizeof(struct state_key));
    fp = ctx->FragmentProgram._Current;
@@ -183,23 +184,23 @@ static void make_state_key( struct gl_context *ctx, struct state_key *key )
 	 key->light_color_material_mask = ctx->Light._ColorMaterialBitmask;
       }
 
-      for (i = 0; i < MAX_LIGHTS; i++) {
-	 struct gl_light *light = &ctx->Light.Light[i];
+      mask = ctx->Light._EnabledLights;
+      while (mask) {
+         const int i = u_bit_scan(&mask);
+         struct gl_light *light = &ctx->Light.Light[i];
 
-	 if (light->Enabled) {
-	    key->unit[i].light_enabled = 1;
+         key->unit[i].light_enabled = 1;
 
-	    if (light->EyePosition[3] == 0.0F)
-	       key->unit[i].light_eyepos3_is_zero = 1;
+         if (light->EyePosition[3] == 0.0F)
+            key->unit[i].light_eyepos3_is_zero = 1;
 
-	    if (light->SpotCutoff == 180.0F)
-	       key->unit[i].light_spotcutoff_is_180 = 1;
+         if (light->SpotCutoff == 180.0F)
+            key->unit[i].light_spotcutoff_is_180 = 1;
 
-	    if (light->ConstantAttenuation != 1.0F ||
-		light->LinearAttenuation != 0.0F ||
-		light->QuadraticAttenuation != 0.0F)
-	       key->unit[i].light_attenuated = 1;
-	 }
+         if (light->ConstantAttenuation != 1.0F ||
+             light->LinearAttenuation != 0.0F ||
+             light->QuadraticAttenuation != 0.0F)
+            key->unit[i].light_attenuated = 1;
       }
 
       if (check_active_shininess(ctx, key, 0)) {
@@ -236,14 +237,17 @@ static void make_state_key( struct gl_context *ctx, struct state_key *key )
        ctx->Texture._MaxEnabledTexImageUnit != -1)
       key->texture_enabled_global = 1;
 
-   for (i = 0; i < MAX_TEXTURE_COORD_UNITS; i++) {
+   mask = ctx->Texture._EnabledCoordUnits | ctx->Texture._TexGenEnabled
+      | ctx->Texture._TexMatEnabled | ctx->Point.CoordReplace;
+   while (mask) {
+      const int i = u_bit_scan(&mask);
       struct gl_texture_unit *texUnit = &ctx->Texture.Unit[i];
 
       if (texUnit->_Current)
 	 key->unit[i].texunit_really_enabled = 1;
 
       if (ctx->Point.PointSprite)
-	 if (ctx->Point.CoordReplace[i])
+	 if (ctx->Point.CoordReplace & (1u << i))
 	    key->unit[i].coord_replace = 1;
 
       if (ctx->Texture._TexMatEnabled & ENABLE_TEXMAT(i))
@@ -293,10 +297,9 @@ struct ureg {
    GLuint file:4;
    GLint idx:9;      /* relative addressing may be negative */
                      /* sizeof(idx) should == sizeof(prog_src_reg::Index) */
-   GLuint abs:1;
    GLuint negate:1;
    GLuint swz:12;
-   GLuint pad:5;
+   GLuint pad:6;
 };
 
 
@@ -325,7 +328,6 @@ static const struct ureg undef = {
    0,
    0,
    0,
-   0,
    0
 };
 
@@ -344,19 +346,9 @@ static struct ureg make_ureg(GLuint file, GLint idx)
    struct ureg reg;
    reg.file = file;
    reg.idx = idx;
-   reg.abs = 0;
    reg.negate = 0;
    reg.swz = SWIZZLE_NOOP;
    reg.pad = 0;
-   return reg;
-}
-
-
-
-static struct ureg absolute( struct ureg reg )
-{
-   reg.abs = 1;
-   reg.negate = 0;
    return reg;
 }
 
@@ -537,7 +529,6 @@ static void emit_arg( struct prog_src_register *src,
    src->File = reg.file;
    src->Index = reg.idx;
    src->Swizzle = reg.swz;
-   src->Abs = reg.abs;
    src->Negate = reg.negate ? NEGATE_XYZW : NEGATE_NONE;
    src->RelAddr = 0;
    /* Check that bitfield sizes aren't exceeded */
@@ -552,8 +543,6 @@ static void emit_dst( struct prog_dst_register *dst,
    dst->Index = reg.idx;
    /* allow zero as a shorthand for xyzw */
    dst->WriteMask = mask ? mask : WRITEMASK_XYZW;
-   dst->CondMask = COND_TR;  /* always pass cond test */
-   dst->CondSwizzle = SWIZZLE_NOOP;
    /* Check that bitfield sizes aren't exceeded */
    assert(dst->Index == reg.idx);
 }
@@ -964,7 +953,8 @@ static struct ureg calculate_light_attenuation( struct tnl_program *p,
 
       emit_op2(p, OPCODE_DP3, spot, 0, negate(VPpli), spot_dir_norm);
       emit_op2(p, OPCODE_SLT, slt, 0, swizzle1(spot_dir_norm,W), spot);
-      emit_op2(p, OPCODE_POW, spot, 0, absolute(spot), swizzle1(attenuation, W));
+      emit_op1(p, OPCODE_ABS, spot, 0, spot);
+      emit_op2(p, OPCODE_POW, spot, 0, spot, swizzle1(attenuation, W));
       emit_op2(p, OPCODE_MUL, att, 0, slt, spot);
 
       release_temp(p, spot);

@@ -36,6 +36,8 @@
 
 #include "vl/vl_csc.h"
 
+#include "state_tracker/drm_driver.h"
+
 #include "vdpau_private.h"
 
 /**
@@ -74,12 +76,13 @@ vlVdpOutputSurfaceCreate(VdpDevice device,
    memset(&res_tmpl, 0, sizeof(res_tmpl));
 
    res_tmpl.target = PIPE_TEXTURE_2D;
-   res_tmpl.format = FormatRGBAToPipe(rgba_format);
+   res_tmpl.format = VdpFormatRGBAToPipe(rgba_format);
    res_tmpl.width0 = width;
    res_tmpl.height0 = height;
    res_tmpl.depth0 = 1;
    res_tmpl.array_size = 1;
-   res_tmpl.bind = PIPE_BIND_SAMPLER_VIEW | PIPE_BIND_RENDER_TARGET;
+   res_tmpl.bind = PIPE_BIND_SAMPLER_VIEW | PIPE_BIND_RENDER_TARGET |
+                   PIPE_BIND_SHARED;
    res_tmpl.usage = PIPE_USAGE_DEFAULT;
 
    pipe_mutex_lock(dev->mutex);
@@ -202,6 +205,9 @@ vlVdpOutputSurfaceGetBitsNative(VdpOutputSurface surface,
    if (!pipe)
       return VDP_STATUS_INVALID_HANDLE;
 
+   if (!destination_data || !destination_pitches)
+       return VDP_STATUS_INVALID_POINTER;
+
    pipe_mutex_lock(vlsurface->device->mutex);
    vlVdpResolveDelayedRendering(vlsurface->device, NULL, NULL);
 
@@ -244,13 +250,16 @@ vlVdpOutputSurfacePutBitsNative(VdpOutputSurface surface,
    if (!pipe)
       return VDP_STATUS_INVALID_HANDLE;
 
+   if (!source_data || !source_pitches)
+       return VDP_STATUS_INVALID_POINTER;
+
    pipe_mutex_lock(vlsurface->device->mutex);
    vlVdpResolveDelayedRendering(vlsurface->device, NULL, NULL);
 
    dst_box = RectToPipeBox(destination_rect, vlsurface->sampler_view->texture);
-   pipe->transfer_inline_write(pipe, vlsurface->sampler_view->texture, 0,
-                               PIPE_TRANSFER_WRITE, &dst_box, *source_data,
-                               *source_pitches, 0);
+   pipe->texture_subdata(pipe, vlsurface->sampler_view->texture, 0,
+                         PIPE_TRANSFER_WRITE, &dst_box, *source_data,
+                         *source_pitches, 0);
    pipe_mutex_unlock(vlsurface->device->mutex);
 
    return VDP_STATUS_OK;
@@ -337,9 +346,9 @@ vlVdpOutputSurfacePutBitsIndexed(VdpOutputSurface surface,
    box.height = res->height0;
    box.depth = res->depth0;
 
-   context->transfer_inline_write(context, res, 0, PIPE_TRANSFER_WRITE, &box,
-                                  source_data[0], source_pitch[0],
-                                  source_pitch[0] * res->height0);
+   context->texture_subdata(context, res, 0, PIPE_TRANSFER_WRITE, &box,
+                            source_data[0], source_pitch[0],
+                            source_pitch[0] * res->height0);
 
    memset(&sv_tmpl, 0, sizeof(sv_tmpl));
    u_sampler_view_default_template(&sv_tmpl, res, res->format);
@@ -370,8 +379,8 @@ vlVdpOutputSurfacePutBitsIndexed(VdpOutputSurface surface,
    box.height = res->height0;
    box.depth = res->depth0;
 
-   context->transfer_inline_write(context, res, 0, PIPE_TRANSFER_WRITE, &box, color_table,
-                                  util_format_get_stride(colortbl_format, res->width0), 0);
+   context->texture_subdata(context, res, 0, PIPE_TRANSFER_WRITE, &box, color_table,
+                            util_format_get_stride(colortbl_format, res->width0), 0);
 
    memset(&sv_tmpl, 0, sizeof(sv_tmpl));
    u_sampler_view_default_template(&sv_tmpl, res, res->format);
@@ -476,16 +485,16 @@ vlVdpOutputSurfacePutBitsYCbCr(VdpOutputSurface surface,
          sv->texture->width0, sv->texture->height0, 1
       };
 
-      pipe->transfer_inline_write(pipe, sv->texture, 0, PIPE_TRANSFER_WRITE, &dst_box,
-                                  source_data[i], source_pitches[i], 0);
+      pipe->texture_subdata(pipe, sv->texture, 0, PIPE_TRANSFER_WRITE, &dst_box,
+                            source_data[i], source_pitches[i], 0);
    }
 
    if (!csc_matrix) {
       vl_csc_matrix csc;
       vl_csc_get_matrix(VL_CSC_COLOR_STANDARD_BT_601, NULL, 1, &csc);
-      vl_compositor_set_csc_matrix(cstate, (const vl_csc_matrix*)&csc);
+      vl_compositor_set_csc_matrix(cstate, (const vl_csc_matrix*)&csc, 1.0f, 0.0f);
    } else {
-      vl_compositor_set_csc_matrix(cstate, csc_matrix);
+      vl_compositor_set_csc_matrix(cstate, csc_matrix, 1.0f, 0.0f);
    }
 
    vl_compositor_clear_layers(cstate);
@@ -762,4 +771,42 @@ struct pipe_resource *vlVdpOutputSurfaceGallium(VdpOutputSurface surface)
    pipe_mutex_unlock(vlsurface->device->mutex);
 
    return vlsurface->surface->texture;
+}
+
+VdpStatus vlVdpOutputSurfaceDMABuf(VdpOutputSurface surface,
+                                   struct VdpSurfaceDMABufDesc *result)
+{
+   vlVdpOutputSurface *vlsurface;
+   struct pipe_screen *pscreen;
+   struct winsys_handle whandle;
+
+   memset(result, 0, sizeof(*result));
+   result->handle = -1;
+
+   vlsurface = vlGetDataHTAB(surface);
+   if (!vlsurface || !vlsurface->surface)
+      return VDP_STATUS_INVALID_HANDLE;
+
+   pipe_mutex_lock(vlsurface->device->mutex);
+   vlVdpResolveDelayedRendering(vlsurface->device, NULL, NULL);
+   vlsurface->device->context->flush(vlsurface->device->context, NULL, 0);
+   pipe_mutex_unlock(vlsurface->device->mutex);
+
+   memset(&whandle, 0, sizeof(struct winsys_handle));
+   whandle.type = DRM_API_HANDLE_TYPE_FD;
+
+   pscreen = vlsurface->surface->texture->screen;
+   if (!pscreen->resource_get_handle(pscreen, vlsurface->device->context,
+                                     vlsurface->surface->texture, &whandle,
+				     PIPE_HANDLE_USAGE_READ_WRITE))
+      return VDP_STATUS_NO_IMPLEMENTATION;
+
+   result->handle = whandle.handle;
+   result->width = vlsurface->surface->width;
+   result->height = vlsurface->surface->height;
+   result->offset = whandle.offset;
+   result->stride = whandle.stride;
+   result->format = PipeToFormatRGBA(vlsurface->surface->format);
+
+   return VDP_STATUS_OK;
 }

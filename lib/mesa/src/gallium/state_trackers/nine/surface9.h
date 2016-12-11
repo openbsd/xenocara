@@ -48,7 +48,10 @@ struct NineSurface9
     D3DSURFACE_DESC desc;
 
     uint8_t *data; /* system memory backing */
+    uint8_t *data_conversion; /* for conversions */
+    enum pipe_format format_conversion;
     unsigned stride; /* for system memory backing */
+    unsigned stride_conversion;
 };
 static inline struct NineSurface9 *
 NineSurface9( void *data )
@@ -111,6 +114,13 @@ NineSurface9_SetResource( struct NineSurface9 *This,
     pipe_resource_reference(&This->base.resource, resource);
     pipe_surface_reference(&This->surface[0], NULL);
     pipe_surface_reference(&This->surface[1], NULL);
+}
+
+static inline void
+NineSurface9_SetMultiSampleType( struct NineSurface9 *This,
+                                 D3DMULTISAMPLE_TYPE mst )
+{
+    This->desc.MultiSampleType = mst;
 }
 
 void

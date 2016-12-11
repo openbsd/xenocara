@@ -45,9 +45,11 @@
 namespace {
 class lower_const_array_visitor : public ir_rvalue_visitor {
 public:
-   lower_const_array_visitor(exec_list *insts)
+   lower_const_array_visitor(exec_list *insts, unsigned s)
    {
       instructions = insts;
+      stage = s;
+      const_count = 0;
       progress = false;
    }
 
@@ -57,12 +59,21 @@ public:
       return progress;
    }
 
+   ir_visitor_status visit_enter(ir_texture *);
    void handle_rvalue(ir_rvalue **rvalue);
 
 private:
    exec_list *instructions;
+   unsigned stage;
+   unsigned const_count;
    bool progress;
 };
+
+ir_visitor_status
+lower_const_array_visitor::visit_enter(ir_texture *)
+{
+   return visit_continue_with_parent;
+}
 
 void
 lower_const_array_visitor::handle_rvalue(ir_rvalue **rvalue)
@@ -70,17 +81,22 @@ lower_const_array_visitor::handle_rvalue(ir_rvalue **rvalue)
    if (!*rvalue)
       return;
 
-   ir_dereference_array *dra = (*rvalue)->as_dereference_array();
-   if (!dra)
-      return;
-
-   ir_constant *con = dra->array->as_constant();
+   ir_constant *con = (*rvalue)->as_constant();
    if (!con || !con->type->is_array())
       return;
 
    void *mem_ctx = ralloc_parent(con);
 
-   char *uniform_name = ralloc_asprintf(mem_ctx, "constarray__%p", dra);
+   /* In the very unlikely event of 4294967295 constant arrays in a single
+    * shader, don't promote this to a uniform.
+    */
+   unsigned limit = ~0;
+   if (const_count == limit)
+      return;
+
+   char *uniform_name = ralloc_asprintf(mem_ctx, "constarray_%x_%u",
+                                        const_count, stage);
+   const_count++;
 
    ir_variable *uni =
       new(mem_ctx) ir_variable(con->type, uniform_name, ir_var_uniform);
@@ -93,8 +109,7 @@ lower_const_array_visitor::handle_rvalue(ir_rvalue **rvalue)
    uni->data.max_array_access = uni->type->length - 1;
    instructions->push_head(uni);
 
-   ir_dereference_variable *varref = new(mem_ctx) ir_dereference_variable(uni);
-   *rvalue = new(mem_ctx) ir_dereference_array(varref, dra->array_index);
+   *rvalue = new(mem_ctx) ir_dereference_variable(uni);
 
    progress = true;
 }
@@ -102,8 +117,8 @@ lower_const_array_visitor::handle_rvalue(ir_rvalue **rvalue)
 } /* anonymous namespace */
 
 bool
-lower_const_arrays_to_uniforms(exec_list *instructions)
+lower_const_arrays_to_uniforms(exec_list *instructions, unsigned stage)
 {
-   lower_const_array_visitor v(instructions);
+   lower_const_array_visitor v(instructions, stage);
    return v.run();
 }

@@ -68,15 +68,10 @@ dri3_fence_await(xcb_connection_t *c, struct loader_dri3_buffer *buffer)
 static void
 dri3_update_num_back(struct loader_dri3_drawable *draw)
 {
-   draw->num_back = 1;
-   if (draw->flipping) {
-      if (!draw->is_pixmap &&
-          !(draw->present_capabilities & XCB_PRESENT_CAPABILITY_ASYNC))
-         draw->num_back++;
-      draw->num_back++;
-   }
-   if (draw->vtable->get_swap_interval(draw) == 0)
-      draw->num_back++;
+   if (draw->flipping)
+      draw->num_back = 3;
+   else
+      draw->num_back = 2;
 }
 
 void
@@ -118,8 +113,14 @@ loader_dri3_drawable_fini(struct loader_dri3_drawable *draw)
          dri3_free_render_buffer(draw, draw->buffers[i]);
    }
 
-   if (draw->special_event)
+   if (draw->special_event) {
+      xcb_void_cookie_t cookie =
+         xcb_present_select_input_checked(draw->conn, draw->eid, draw->drawable,
+                                          XCB_PRESENT_EVENT_MASK_NO_EVENT);
+
+      xcb_discard_reply(draw->conn, cookie.sequence);
       xcb_unregister_for_special_event(draw->conn, draw->special_event);
+   }
 }
 
 int
@@ -129,7 +130,7 @@ loader_dri3_drawable_init(xcb_connection_t *conn,
                           bool is_different_gpu,
                           const __DRIconfig *dri_config,
                           struct loader_dri3_extensions *ext,
-                          struct loader_dri3_vtable *vtable,
+                          const struct loader_dri3_vtable *vtable,
                           struct loader_dri3_drawable *draw)
 {
    xcb_get_geometry_cookie_t cookie;
@@ -785,6 +786,7 @@ loader_dri3_open(xcb_connection_t *conn,
    }
 
    fd = xcb_dri3_open_reply_fds(conn, reply)[0];
+   free(reply);
    fcntl(fd, F_SETFD, fcntl(fd, F_GETFD) | FD_CLOEXEC);
 
    return fd;
@@ -858,7 +860,8 @@ dri3_alloc_render_buffer(struct loader_dri3_drawable *draw, unsigned int format,
                                                       width, height,
                                                       format,
                                                       __DRI_IMAGE_USE_SHARE |
-                                                      __DRI_IMAGE_USE_SCANOUT,
+                                                      __DRI_IMAGE_USE_SCANOUT |
+                                                      __DRI_IMAGE_USE_BACKBUFFER,
                                                       buffer);
       pixmap_buffer = buffer->image;
 
@@ -878,7 +881,8 @@ dri3_alloc_render_buffer(struct loader_dri3_drawable *draw, unsigned int format,
         (draw->ext->image->createImage)(draw->dri_screen,
                                         width, height, format,
                                         __DRI_IMAGE_USE_SHARE |
-                                           __DRI_IMAGE_USE_LINEAR,
+                                        __DRI_IMAGE_USE_LINEAR |
+                                        __DRI_IMAGE_USE_BACKBUFFER,
                                         buffer);
       pixmap_buffer = buffer->linear_buffer;
 
@@ -1113,6 +1117,7 @@ dri3_get_pixmap_buffer(__DRIdrawable *driDrawable, unsigned int format,
    xcb_sync_fence_t                     sync_fence;
    struct xshmfence                     *shm_fence;
    int                                  fence_fd;
+   __DRIscreen                          *cur_screen;
 
    if (buffer)
       return buffer;
@@ -1143,8 +1148,17 @@ dri3_get_pixmap_buffer(__DRIdrawable *driDrawable, unsigned int format,
    if (!bp_reply)
       goto no_image;
 
+   /* Get the currently-bound screen or revert to using the drawable's screen if
+    * no contexts are currently bound. The latter case is at least necessary for
+    * obs-studio, when using Window Capture (Xcomposite) as a Source.
+    */
+   cur_screen = draw->vtable->get_dri_screen(draw);
+   if (!cur_screen) {
+       cur_screen = draw->dri_screen;
+   }
+
    buffer->image = loader_dri3_create_image(draw->conn, bp_reply, format,
-                                            draw->dri_screen, draw->ext->image,
+                                            cur_screen, draw->ext->image,
                                             buffer);
    if (!buffer->image)
       goto no_image;

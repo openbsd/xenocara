@@ -196,6 +196,16 @@ wrap_mode_needs_border_color(unsigned wrap_mode)
           wrap_mode == GEN8_TEXCOORDMODE_HALF_BORDER;
 }
 
+static bool
+has_component(mesa_format format, int i)
+{
+   if (_mesa_is_format_color_format(format))
+      return _mesa_format_has_color_component(format, i);
+
+   /* depth and stencil have only one component */
+   return i == 0;
+}
+
 /**
  * Upload SAMPLER_BORDER_COLOR_STATE.
  */
@@ -203,7 +213,7 @@ static void
 upload_default_color(struct brw_context *brw,
                      const struct gl_sampler_object *sampler,
                      mesa_format format, GLenum base_format,
-                     bool is_integer_format,
+                     bool is_integer_format, bool is_stencil_sampling,
                      uint32_t *sdc_offset)
 {
    union gl_color_union color;
@@ -267,7 +277,7 @@ upload_default_color(struct brw_context *brw,
       uint32_t *sdc = brw_state_batch(brw, AUB_TRACE_SAMPLER_DEFAULT_COLOR,
                                       4 * 4, 64, sdc_offset);
       memcpy(sdc, color.ui, 4 * 4);
-   } else if (brw->is_haswell && is_integer_format) {
+   } else if (brw->is_haswell && (is_integer_format || is_stencil_sampling)) {
       /* Haswell's integer border color support is completely insane:
        * SAMPLER_BORDER_COLOR_STATE is 20 DWords.  The first four are
        * for float colors.  The next 12 DWords are MBZ and only exist to
@@ -281,7 +291,9 @@ upload_default_color(struct brw_context *brw,
       memset(sdc, 0, 20 * 4);
       sdc = &sdc[16];
 
-      int bits_per_channel = _mesa_get_format_bits(format, GL_RED_BITS);
+      bool stencil = format == MESA_FORMAT_S_UINT8 || is_stencil_sampling;
+      const int bits_per_channel =
+         _mesa_get_format_bits(format, stencil ? GL_STENCIL_BITS : GL_RED_BITS);
 
       /* From the Haswell PRM, "Command Reference: Structures", Page 36:
        * "If any color channel is missing from the surface format,
@@ -291,7 +303,7 @@ upload_default_color(struct brw_context *brw,
        */
       unsigned c[4] = { 0, 0, 0, 1 };
       for (int i = 0; i < 4; i++) {
-         if (_mesa_format_has_color_component(format, i))
+         if (has_component(format, i))
             c[i] = color.ui[i];
       }
 
@@ -376,12 +388,13 @@ upload_default_color(struct brw_context *brw,
  * Sets the sampler state for a single unit based off of the sampler key
  * entry.
  */
-void
+static void
 brw_update_sampler_state(struct brw_context *brw,
                          GLenum target, bool tex_cube_map_seamless,
                          GLfloat tex_unit_lod_bias,
                          mesa_format format, GLenum base_format,
                          bool is_integer_format,
+                         bool is_stencil_sampling,
                          const struct gl_sampler_object *sampler,
                          uint32_t *sampler_state,
                          uint32_t batch_offset_for_sampler_state)
@@ -459,10 +472,12 @@ brw_update_sampler_state(struct brw_context *brw,
        target == GL_TEXTURE_CUBE_MAP_ARRAY) {
       /* Cube maps must use the same wrap mode for all three coordinate
        * dimensions.  Prior to Haswell, only CUBE and CLAMP are valid.
+       *
+       * Ivybridge and Baytrail seem to have problems with CUBE mode and
+       * integer formats.  Fall back to CLAMP for now.
        */
       if ((tex_cube_map_seamless || sampler->CubeMapSeamless) &&
-         (sampler->MinFilter != GL_NEAREST ||
-          sampler->MagFilter != GL_NEAREST)) {
+          !(brw->gen == 7 && !brw->is_haswell && is_integer_format)) {
 	 wrap_s = BRW_TEXCOORDMODE_CUBE;
 	 wrap_t = BRW_TEXCOORDMODE_CUBE;
 	 wrap_r = BRW_TEXCOORDMODE_CUBE;
@@ -501,8 +516,8 @@ brw_update_sampler_state(struct brw_context *brw,
    if (wrap_mode_needs_border_color(wrap_s) ||
        wrap_mode_needs_border_color(wrap_t) ||
        wrap_mode_needs_border_color(wrap_r)) {
-      upload_default_color(brw, sampler,
-                           format, base_format, is_integer_format,
+      upload_default_color(brw, sampler, format, base_format,
+                           is_integer_format, is_stencil_sampling,
                            &border_color_offset);
    }
 
@@ -540,7 +555,7 @@ update_sampler_state(struct brw_context *brw,
    brw_update_sampler_state(brw, texObj->Target, ctx->Texture.CubeMapSeamless,
                             texUnit->LodBias,
                             firstImage->TexFormat, firstImage->_BaseFormat,
-                            texObj->_IsIntegerFormat,
+                            texObj->_IsIntegerFormat, texObj->StencilSampling,
                             sampler,
                             sampler_state, batch_offset_for_sampler_state);
 }
@@ -605,6 +620,7 @@ const struct brw_tracked_state brw_fs_samplers = {
    .dirty = {
       .mesa = _NEW_TEXTURE,
       .brw = BRW_NEW_BATCH |
+             BRW_NEW_BLORP |
              BRW_NEW_FRAGMENT_PROGRAM,
    },
    .emit = brw_upload_fs_samplers,
@@ -623,6 +639,7 @@ const struct brw_tracked_state brw_vs_samplers = {
    .dirty = {
       .mesa = _NEW_TEXTURE,
       .brw = BRW_NEW_BATCH |
+             BRW_NEW_BLORP |
              BRW_NEW_VERTEX_PROGRAM,
    },
    .emit = brw_upload_vs_samplers,
@@ -645,6 +662,7 @@ const struct brw_tracked_state brw_gs_samplers = {
    .dirty = {
       .mesa = _NEW_TEXTURE,
       .brw = BRW_NEW_BATCH |
+             BRW_NEW_BLORP |
              BRW_NEW_GEOMETRY_PROGRAM,
    },
    .emit = brw_upload_gs_samplers,
@@ -667,6 +685,7 @@ const struct brw_tracked_state brw_tcs_samplers = {
    .dirty = {
       .mesa = _NEW_TEXTURE,
       .brw = BRW_NEW_BATCH |
+             BRW_NEW_BLORP |
              BRW_NEW_TESS_PROGRAMS,
    },
    .emit = brw_upload_tcs_samplers,
@@ -689,6 +708,7 @@ const struct brw_tracked_state brw_tes_samplers = {
    .dirty = {
       .mesa = _NEW_TEXTURE,
       .brw = BRW_NEW_BATCH |
+             BRW_NEW_BLORP |
              BRW_NEW_TESS_PROGRAMS,
    },
    .emit = brw_upload_tes_samplers,
@@ -709,6 +729,7 @@ const struct brw_tracked_state brw_cs_samplers = {
    .dirty = {
       .mesa = _NEW_TEXTURE,
       .brw = BRW_NEW_BATCH |
+             BRW_NEW_BLORP |
              BRW_NEW_COMPUTE_PROGRAM,
    },
    .emit = brw_upload_cs_samplers,

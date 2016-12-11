@@ -50,7 +50,7 @@ create_vert_shader(struct vl_median_filter *filter)
    struct ureg_src i_vpos;
    struct ureg_dst o_vpos, o_vtex;
 
-   shader = ureg_create(TGSI_PROCESSOR_VERTEX);
+   shader = ureg_create(PIPE_SHADER_VERTEX);
    if (!shader)
       return NULL;
 
@@ -84,7 +84,7 @@ create_frag_shader(struct vl_median_filter *filter,
    struct ureg_dst *t_array = MALLOC(sizeof(struct ureg_dst) * num_offsets);
    struct ureg_dst o_fragment;
    const unsigned median = num_offsets >> 1;
-   int i, j;
+   unsigned i, j;
 
    assert(num_offsets & 1); /* we need an odd number of offsets */
    if (!(num_offsets & 1)) { /* yeah, we REALLY need an odd number of offsets!!! */
@@ -93,13 +93,13 @@ create_frag_shader(struct vl_median_filter *filter,
    }
 
    if (num_offsets > screen->get_shader_param(
-      screen, TGSI_PROCESSOR_FRAGMENT, PIPE_SHADER_CAP_MAX_TEMPS)) {
+      screen, PIPE_SHADER_FRAGMENT, PIPE_SHADER_CAP_MAX_TEMPS)) {
 
       FREE(t_array);
       return NULL;
    }
 
-   shader = ureg_create(TGSI_PROCESSOR_FRAGMENT);
+   shader = ureg_create(PIPE_SHADER_FRAGMENT);
    if (!shader) {
       FREE(t_array);
       return NULL;
@@ -158,7 +158,8 @@ static void
 generate_offsets(enum vl_median_filter_shape shape, unsigned size,
                  struct vertex2f **offsets, unsigned *num_offsets)
 {
-   int i = 0, half_size;
+   unsigned i = 0;
+   int half_size;
    struct vertex2f v;
 
    assert(offsets && num_offsets);

@@ -41,7 +41,6 @@
 #include "brw_defines.h"
 #include "brw_state.h"
 #include "intel_batchbuffer.h"
-#include "intel_reg.h"
 
 /**
  * Emit PIPE_CONTROLs to write the current GPU timestamp into a buffer.
@@ -56,7 +55,12 @@ brw_write_timestamp(struct brw_context *brw, drm_intel_bo *query_bo, int idx)
                                   PIPE_CONTROL_STALL_AT_SCOREBOARD);
    }
 
-   brw_emit_pipe_control_write(brw, PIPE_CONTROL_WRITE_TIMESTAMP,
+   uint32_t flags = PIPE_CONTROL_WRITE_TIMESTAMP;
+
+   if (brw->gen == 9 && brw->gt == 4)
+      flags |= PIPE_CONTROL_CS_STALL;
+
+   brw_emit_pipe_control_write(brw, flags,
                                query_bo, idx * sizeof(uint64_t), 0, 0);
 }
 
@@ -66,9 +70,12 @@ brw_write_timestamp(struct brw_context *brw, drm_intel_bo *query_bo, int idx)
 void
 brw_write_depth_count(struct brw_context *brw, drm_intel_bo *query_bo, int idx)
 {
-   brw_emit_pipe_control_write(brw,
-                               PIPE_CONTROL_WRITE_DEPTH_COUNT |
-                               PIPE_CONTROL_DEPTH_STALL,
+   uint32_t flags = PIPE_CONTROL_WRITE_DEPTH_COUNT | PIPE_CONTROL_DEPTH_STALL;
+
+   if (brw->gen == 9 && brw->gt == 4)
+      flags |= PIPE_CONTROL_CS_STALL;
+
+   brw_emit_pipe_control_write(brw, flags,
                                query_bo, idx * sizeof(uint64_t),
                                0, 0);
 }
@@ -462,7 +469,7 @@ brw_emit_query_end(struct brw_context *brw)
  * current GPU time.  This is unlike GL_TIME_ELAPSED, which measures the
  * time while the query is active.
  */
-static void
+void
 brw_query_counter(struct gl_context *ctx, struct gl_query_object *q)
 {
    struct brw_context *brw = brw_context(ctx);
@@ -488,7 +495,7 @@ brw_get_timestamp(struct gl_context *ctx)
    struct brw_context *brw = brw_context(ctx);
    uint64_t result = 0;
 
-   switch (brw->intelScreen->hw_has_timestamp) {
+   switch (brw->screen->hw_has_timestamp) {
    case 3: /* New kernel, always full 36bit accuracy */
       drm_intel_reg_read(brw->bufmgr, TIMESTAMP | 1, &result);
       break;
@@ -507,12 +514,45 @@ brw_get_timestamp(struct gl_context *ctx)
    return result;
 }
 
+/**
+ * Is this type of query written by PIPE_CONTROL?
+ */
+bool
+brw_is_query_pipelined(struct brw_query_object *query)
+{
+   switch (query->Base.Target) {
+   case GL_TIMESTAMP:
+   case GL_TIME_ELAPSED:
+   case GL_ANY_SAMPLES_PASSED:
+   case GL_ANY_SAMPLES_PASSED_CONSERVATIVE:
+   case GL_SAMPLES_PASSED_ARB:
+      return true;
+
+   case GL_PRIMITIVES_GENERATED:
+   case GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN:
+   case GL_VERTICES_SUBMITTED_ARB:
+   case GL_PRIMITIVES_SUBMITTED_ARB:
+   case GL_VERTEX_SHADER_INVOCATIONS_ARB:
+   case GL_GEOMETRY_SHADER_INVOCATIONS:
+   case GL_GEOMETRY_SHADER_PRIMITIVES_EMITTED_ARB:
+   case GL_FRAGMENT_SHADER_INVOCATIONS_ARB:
+   case GL_CLIPPING_INPUT_PRIMITIVES_ARB:
+   case GL_CLIPPING_OUTPUT_PRIMITIVES_ARB:
+   case GL_COMPUTE_SHADER_INVOCATIONS_ARB:
+   case GL_TESS_CONTROL_SHADER_PATCHES_ARB:
+   case GL_TESS_EVALUATION_SHADER_INVOCATIONS_ARB:
+      return false;
+
+   default:
+      unreachable("Unrecognized query target in is_query_pipelined()");
+   }
+}
+
 /* Initialize query object functions used on all generations. */
 void brw_init_common_queryobj_functions(struct dd_function_table *functions)
 {
    functions->NewQueryObject = brw_new_query_object;
    functions->DeleteQuery = brw_delete_query;
-   functions->QueryCounter = brw_query_counter;
    functions->GetTimestamp = brw_get_timestamp;
 }
 
@@ -523,4 +563,5 @@ void gen4_init_queryobj_functions(struct dd_function_table *functions)
    functions->EndQuery = brw_end_query;
    functions->CheckQuery = brw_check_query;
    functions->WaitQuery = brw_wait_query;
+   functions->QueryCounter = brw_query_counter;
 }

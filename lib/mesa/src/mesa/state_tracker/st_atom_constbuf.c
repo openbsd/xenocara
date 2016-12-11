@@ -34,7 +34,7 @@
 #include "main/imports.h"
 #include "program/prog_parameter.h"
 #include "program/prog_print.h"
-
+#include "main/shaderapi.h"
 #include "pipe/p_context.h"
 #include "pipe/p_defines.h"
 #include "util/u_inlines.h"
@@ -55,14 +55,31 @@
  */
 void st_upload_constants( struct st_context *st,
                           struct gl_program_parameter_list *params,
-                          unsigned shader_type)
+                          gl_shader_stage stage)
 {
+   enum pipe_shader_type shader_type = st_shader_stage_to_ptarget(stage);
+
    assert(shader_type == PIPE_SHADER_VERTEX ||
           shader_type == PIPE_SHADER_FRAGMENT ||
           shader_type == PIPE_SHADER_GEOMETRY ||
           shader_type == PIPE_SHADER_TESS_CTRL ||
           shader_type == PIPE_SHADER_TESS_EVAL ||
           shader_type == PIPE_SHADER_COMPUTE);
+
+   /* update the ATI constants before rendering */
+   if (shader_type == PIPE_SHADER_FRAGMENT && st->fp->ati_fs) {
+      struct ati_fragment_shader *ati_fs = st->fp->ati_fs;
+      unsigned c;
+
+      for (c = 0; c < MAX_NUM_FRAGMENT_CONSTANTS_ATI; c++) {
+         if (ati_fs->LocalConstDef & (1 << c))
+            memcpy(params->ParameterValues[c],
+                   ati_fs->Constants[c], sizeof(GLfloat) * 4);
+         else
+            memcpy(params->ParameterValues[c],
+                   st->ctx->ATIFragmentShader.GlobalConstants[c], sizeof(GLfloat) * 4);
+      }
+   }
 
    /* update constants */
    if (params && params->NumParameters) {
@@ -76,6 +93,8 @@ void st_upload_constants( struct st_context *st,
        */
       if (params->StateFlags)
          _mesa_load_state_parameters(st->ctx, params);
+
+      _mesa_shader_write_subroutine_indices(st->ctx, stage);
 
       /* We always need to get a new buffer, to keep the drivers simple and
        * avoid gratuitous rendering synchronization.
@@ -125,16 +144,11 @@ static void update_vs_constants(struct st_context *st )
    struct st_vertex_program *vp = st->vp;
    struct gl_program_parameter_list *params = vp->Base.Base.Parameters;
 
-   st_upload_constants( st, params, PIPE_SHADER_VERTEX );
+   st_upload_constants( st, params, MESA_SHADER_VERTEX );
 }
 
 
 const struct st_tracked_state st_update_vs_constants = {
-   "st_update_vs_constants",				/* name */
-   {							/* dirty */
-      _NEW_PROGRAM_CONSTANTS,                           /* mesa */
-      ST_NEW_VERTEX_PROGRAM,				/* st */
-   },
    update_vs_constants					/* update */
 };
 
@@ -148,16 +162,11 @@ static void update_fs_constants(struct st_context *st )
    struct st_fragment_program *fp = st->fp;
    struct gl_program_parameter_list *params = fp->Base.Base.Parameters;
 
-   st_upload_constants( st, params, PIPE_SHADER_FRAGMENT );
+   st_upload_constants( st, params, MESA_SHADER_FRAGMENT );
 }
 
 
 const struct st_tracked_state st_update_fs_constants = {
-   "st_update_fs_constants",				/* name */
-   {							/* dirty */
-      _NEW_PROGRAM_CONSTANTS,                           /* mesa */
-      ST_NEW_FRAGMENT_PROGRAM,				/* st */
-   },
    update_fs_constants					/* update */
 };
 
@@ -170,16 +179,11 @@ static void update_gs_constants(struct st_context *st )
 
    if (gp) {
       params = gp->Base.Base.Parameters;
-      st_upload_constants( st, params, PIPE_SHADER_GEOMETRY );
+      st_upload_constants( st, params, MESA_SHADER_GEOMETRY );
    }
 }
 
 const struct st_tracked_state st_update_gs_constants = {
-   "st_update_gs_constants",				/* name */
-   {							/* dirty */
-      _NEW_PROGRAM_CONSTANTS,                           /* mesa */
-      ST_NEW_GEOMETRY_PROGRAM,				/* st */
-   },
    update_gs_constants					/* update */
 };
 
@@ -192,16 +196,11 @@ static void update_tcs_constants(struct st_context *st )
 
    if (tcp) {
       params = tcp->Base.Base.Parameters;
-      st_upload_constants( st, params, PIPE_SHADER_TESS_CTRL );
+      st_upload_constants( st, params, MESA_SHADER_TESS_CTRL );
    }
 }
 
 const struct st_tracked_state st_update_tcs_constants = {
-   "st_update_tcs_constants",				/* name */
-   {							/* dirty */
-      _NEW_PROGRAM_CONSTANTS,                           /* mesa */
-      ST_NEW_TESSCTRL_PROGRAM,				/* st */
-   },
    update_tcs_constants					/* update */
 };
 
@@ -214,16 +213,11 @@ static void update_tes_constants(struct st_context *st )
 
    if (tep) {
       params = tep->Base.Base.Parameters;
-      st_upload_constants( st, params, PIPE_SHADER_TESS_EVAL );
+      st_upload_constants( st, params, MESA_SHADER_TESS_EVAL );
    }
 }
 
 const struct st_tracked_state st_update_tes_constants = {
-   "st_update_tes_constants",				/* name */
-   {							/* dirty */
-      _NEW_PROGRAM_CONSTANTS,                           /* mesa */
-      ST_NEW_TESSEVAL_PROGRAM,				/* st */
-   },
    update_tes_constants					/* update */
 };
 
@@ -236,21 +230,16 @@ static void update_cs_constants(struct st_context *st )
 
    if (cp) {
       params = cp->Base.Base.Parameters;
-      st_upload_constants( st, params, PIPE_SHADER_COMPUTE );
+      st_upload_constants( st, params, MESA_SHADER_COMPUTE );
    }
 }
 
 const struct st_tracked_state st_update_cs_constants = {
-   "st_update_cs_constants",				/* name */
-   {							/* dirty */
-      _NEW_PROGRAM_CONSTANTS,                           /* mesa */
-      ST_NEW_COMPUTE_PROGRAM,				/* st */
-   },
    update_cs_constants					/* update */
 };
 
 static void st_bind_ubos(struct st_context *st,
-                           struct gl_shader *shader,
+                           struct gl_linked_shader *shader,
                            unsigned shader_type)
 {
    unsigned i;
@@ -299,11 +288,6 @@ static void bind_vs_ubos(struct st_context *st)
 }
 
 const struct st_tracked_state st_bind_vs_ubos = {
-   "st_bind_vs_ubos",
-   {
-      0,
-      ST_NEW_VERTEX_PROGRAM | ST_NEW_UNIFORM_BUFFER,
-   },
    bind_vs_ubos
 };
 
@@ -319,11 +303,6 @@ static void bind_fs_ubos(struct st_context *st)
 }
 
 const struct st_tracked_state st_bind_fs_ubos = {
-   "st_bind_fs_ubos",
-   {
-      0,
-      ST_NEW_FRAGMENT_PROGRAM | ST_NEW_UNIFORM_BUFFER,
-   },
    bind_fs_ubos
 };
 
@@ -339,11 +318,6 @@ static void bind_gs_ubos(struct st_context *st)
 }
 
 const struct st_tracked_state st_bind_gs_ubos = {
-   "st_bind_gs_ubos",
-   {
-      0,
-      ST_NEW_GEOMETRY_PROGRAM | ST_NEW_UNIFORM_BUFFER,
-   },
    bind_gs_ubos
 };
 
@@ -359,11 +333,6 @@ static void bind_tcs_ubos(struct st_context *st)
 }
 
 const struct st_tracked_state st_bind_tcs_ubos = {
-   "st_bind_tcs_ubos",
-   {
-      0,
-      ST_NEW_TESSCTRL_PROGRAM | ST_NEW_UNIFORM_BUFFER,
-   },
    bind_tcs_ubos
 };
 
@@ -379,11 +348,6 @@ static void bind_tes_ubos(struct st_context *st)
 }
 
 const struct st_tracked_state st_bind_tes_ubos = {
-   "st_bind_tes_ubos",
-   {
-      0,
-      ST_NEW_TESSEVAL_PROGRAM | ST_NEW_UNIFORM_BUFFER,
-   },
    bind_tes_ubos
 };
 
@@ -400,10 +364,5 @@ static void bind_cs_ubos(struct st_context *st)
 }
 
 const struct st_tracked_state st_bind_cs_ubos = {
-   "st_bind_cs_ubos",
-   {
-      0,
-      ST_NEW_COMPUTE_PROGRAM | ST_NEW_UNIFORM_BUFFER,
-   },
    bind_cs_ubos
 };
