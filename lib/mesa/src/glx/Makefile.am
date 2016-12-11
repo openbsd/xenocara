@@ -46,7 +46,6 @@ AM_CFLAGS = \
 	$(EXTRA_DEFINES_XF86VIDMODE) \
 	-D_REENTRANT \
 	-DDEFAULT_DRIVER_DIR=\"$(DRI_DRIVER_SEARCH_DIR)\" \
-	-DGL_LIB_NAME=\"lib@GL_LIB@.so\" \
 	$(DEFINES) \
 	$(LIBDRM_CFLAGS) \
 	$(DRI2PROTO_CFLAGS) \
@@ -113,6 +112,7 @@ libglx_la_SOURCES += \
 	dri_common.c \
 	dri_common.h \
 	dri_common_query_renderer.c \
+	dri_common_interop.c \
 	xfont.c
 endif
 
@@ -145,6 +145,35 @@ SUBDIRS += apple
 libglx_la_LIBADD += $(builddir)/apple/libappleglx.la
 endif
 
+if HAVE_WINDOWSDRI
+libglx_la_SOURCES += \
+	  driwindows_glx.c
+
+SUBDIRS += windows
+libglx_la_LIBADD += \
+	  $(builddir)/windows/libwindowsdri.la \
+	  $(builddir)/windows/libwindowsglx.la
+endif
+
+if USE_LIBGLVND_GLX
+AM_CFLAGS += \
+	-DGL_LIB_NAME=\"lib@GL_LIB@.so\" \
+	$(GLVND_CFLAGS)
+
+libglx_la_SOURCES += \
+	g_glxglvnddispatchfuncs.c \
+	g_glxglvnddispatchindices.h \
+	glxglvnd.c \
+	glxglvnd.h \
+	glxglvnddispatchfuncs.h
+
+GL_LIB_VERSION=0
+else
+AM_CFLAGS += \
+	-DGL_LIB_NAME=\"lib@GL_LIB@.so\"
+GL_LIB_VERSION=1:2
+endif
+
 GL_LIBS = \
 	libglx.la \
 	$(top_builddir)/src/mapi/glapi/libglapi.la \
@@ -153,7 +182,7 @@ GL_LIBS = \
 
 GL_LDFLAGS = \
 	-no-undefined \
-	-version-number 1:2 \
+	-version-number $(GL_LIB_VERSION) \
 	$(BSYMBOLIC) \
 	$(GC_SECTIONS) \
 	$(LD_NO_UNDEFINED)
@@ -161,6 +190,10 @@ GL_LDFLAGS = \
 lib@GL_LIB@_la_SOURCES =
 lib@GL_LIB@_la_LIBADD = $(GL_LIBS)
 lib@GL_LIB@_la_LDFLAGS = $(GL_LDFLAGS)
+
+if HAVE_WINDOWSDRI
+lib@GL_LIB@_la_LDFLAGS += -lgdi32 -lopengl32 -Wl,--disable-stdcall-fixup
+endif
 
 SUBDIRS += . tests
 

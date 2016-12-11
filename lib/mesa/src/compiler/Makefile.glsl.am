@@ -187,6 +187,7 @@ am__v_YACC_ = $(am__v_YACC_$(AM_DEFAULT_VERBOSITY))
 am__v_YACC_0 = @echo "  YACC    " $@;
 am__v_YACC_1 =
 
+if REGEN_SOURCES
 YACC_GEN = $(AM_V_YACC)$(YACC) $(YFLAGS)
 LEX_GEN = $(AM_V_LEX)$(LEX) $(LFLAGS)
 PYTHON_GEN = $(AM_V_GEN)$(PYTHON2) $(PYTHON_FLAGS)
@@ -206,6 +207,7 @@ glsl/glcpp/glcpp-parse.c glsl/glcpp/glcpp-parse.h: glsl/glcpp/glcpp-parse.y
 glsl/glcpp/glcpp-lex.c: glsl/glcpp/glcpp-lex.l
 	$(MKDIR_GEN)
 	$(LEX_GEN) -o $@ $(srcdir)/glsl/glcpp/glcpp-lex.l
+endif
 
 glsl/ir_expression_operation.h: glsl/ir_expression_operation.py
 	$(MKDIR_GEN)

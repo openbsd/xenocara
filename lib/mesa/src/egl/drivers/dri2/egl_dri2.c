@@ -2811,7 +2811,7 @@ static EGLBoolean
 dri2_load(_EGLDriver *drv)
 {
    struct dri2_egl_driver *dri2_drv = dri2_egl_driver(drv);
-#ifdef HAVE_ANDROID_PLATFORM
+#if defined(HAVE_ANDROID_PLATFORM) || defined(__OpenBSD__)
    const char *libname = "libglapi.so";
 #elif defined(__APPLE__)
    const char *libname = "libglapi.0.dylib";

@@ -37,6 +37,52 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 
+#
+# Copyright © 2012 Jon TURNEY
+# Copyright (C) 2015 Intel Corporation
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice (including the next
+# paragraph) shall be included in all copies or substantial portions of the
+# Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+# IN THE SOFTWARE.
+
+#
+# Copyright © 2012 Jon TURNEY
+# Copyright (C) 2015 Intel Corporation
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice (including the next
+# paragraph) shall be included in all copies or substantial portions of the
+# Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+# IN THE SOFTWARE.
+
 
 VPATH = @srcdir@
 am__make_dryrun = \
@@ -75,22 +121,24 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
+DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.glsl.am \
+	$(srcdir)/Makefile.in $(srcdir)/Makefile.nir.am \
 	$(srcdir)/Makefile.sources $(top_srcdir)/bin/depcomp
 check_PROGRAMS = glsl/glcpp/glcpp$(EXEEXT) glsl/glsl_test$(EXEEXT) \
-	glsl/tests/blob-test$(EXEEXT) \
+	glsl/tests/blob-test$(EXEEXT) glsl/tests/cache-test$(EXEEXT) \
 	glsl/tests/general-ir-test$(EXEEXT) \
 	glsl/tests/sampler-types-test$(EXEEXT) \
 	glsl/tests/uniform-initializer-test$(EXEEXT) \
 	nir/tests/control_flow_tests$(EXEEXT)
 TESTS = glsl/glcpp/tests/glcpp-test glsl/glcpp/tests/glcpp-test-cr-lf \
-	glsl/tests/blob-test$(EXEEXT) \
+	glsl/tests/blob-test$(EXEEXT) glsl/tests/cache-test$(EXEEXT) \
 	glsl/tests/general-ir-test$(EXEEXT) \
 	glsl/tests/optimization-test \
 	glsl/tests/sampler-types-test$(EXEEXT) \
 	glsl/tests/uniform-initializer-test$(EXEEXT) \
-	nir/tests/control_flow_tests$(EXEEXT)
-noinst_PROGRAMS = glsl_compiler$(EXEEXT)
+	glsl/tests/warnings-test nir/tests/control_flow_tests$(EXEEXT)
+noinst_PROGRAMS = glsl_compiler$(EXEEXT) spirv2nir$(EXEEXT)
+@ENABLE_SHADER_CACHE_TRUE@am__append_1 = $(LIBGLSL_SHADER_CACHE_FILES)
 subdir = src/compiler
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_gnu_make.m4 \
@@ -121,34 +169,105 @@ am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
 glsl_libglsl_la_DEPENDENCIES = nir/libnir.la glsl/libglcpp.la
-am__objects_2 = glsl/ast_array_index.lo glsl/ast_expr.lo \
+am__glsl_libglsl_la_SOURCES_DIST = glsl/ir_expression_operation.h \
+	glsl/ir_expression_operation_constant.h \
+	glsl/ir_expression_operation_strings.h glsl/glsl_lexer.cpp \
+	glsl/glsl_parser.cpp glsl/glsl_parser.h glsl/ast.h \
+	glsl/ast_array_index.cpp glsl/ast_expr.cpp \
+	glsl/ast_function.cpp glsl/ast_to_hir.cpp glsl/ast_type.cpp \
+	glsl/blob.c glsl/blob.h glsl/builtin_functions.cpp \
+	glsl/builtin_types.cpp glsl/builtin_variables.cpp \
+	glsl/glsl_parser_extras.cpp glsl/glsl_parser_extras.h \
+	glsl/glsl_symbol_table.cpp glsl/glsl_symbol_table.h \
+	glsl/glsl_to_nir.cpp glsl/glsl_to_nir.h \
+	glsl/hir_field_selection.cpp glsl/ir_basic_block.cpp \
+	glsl/ir_basic_block.h glsl/ir_builder.cpp glsl/ir_builder.h \
+	glsl/ir_clone.cpp glsl/ir_constant_expression.cpp glsl/ir.cpp \
+	glsl/ir.h glsl/ir_equals.cpp glsl/ir_expression_flattening.cpp \
+	glsl/ir_expression_flattening.h \
+	glsl/ir_function_can_inline.cpp \
+	glsl/ir_function_detect_recursion.cpp \
+	glsl/ir_function_inlining.h glsl/ir_function.cpp \
+	glsl/ir_hierarchical_visitor.cpp \
+	glsl/ir_hierarchical_visitor.h glsl/ir_hv_accept.cpp \
+	glsl/ir_optimization.h glsl/ir_print_visitor.cpp \
+	glsl/ir_print_visitor.h glsl/ir_reader.cpp glsl/ir_reader.h \
+	glsl/ir_rvalue_visitor.cpp glsl/ir_rvalue_visitor.h \
+	glsl/ir_set_program_inouts.cpp glsl/ir_uniform.h \
+	glsl/ir_validate.cpp glsl/ir_variable_refcount.cpp \
+	glsl/ir_variable_refcount.h glsl/ir_visitor.h glsl/linker.cpp \
+	glsl/linker.h glsl/link_atomics.cpp glsl/link_functions.cpp \
+	glsl/link_interface_blocks.cpp glsl/link_uniforms.cpp \
+	glsl/link_uniform_initializers.cpp \
+	glsl/link_uniform_block_active_visitor.cpp \
+	glsl/link_uniform_block_active_visitor.h \
+	glsl/link_uniform_blocks.cpp glsl/link_varyings.cpp \
+	glsl/link_varyings.h glsl/list.h glsl/loop_analysis.cpp \
+	glsl/loop_analysis.h glsl/loop_controls.cpp \
+	glsl/loop_unroll.cpp glsl/lower_blend_equation_advanced.cpp \
+	glsl/lower_buffer_access.cpp glsl/lower_buffer_access.h \
+	glsl/lower_const_arrays_to_uniforms.cpp glsl/lower_discard.cpp \
+	glsl/lower_discard_flow.cpp glsl/lower_distance.cpp \
+	glsl/lower_if_to_cond_assign.cpp glsl/lower_instructions.cpp \
+	glsl/lower_jumps.cpp glsl/lower_mat_op_to_vec.cpp \
+	glsl/lower_noise.cpp glsl/lower_offset_array.cpp \
+	glsl/lower_packed_varyings.cpp \
+	glsl/lower_named_interface_blocks.cpp \
+	glsl/lower_packing_builtins.cpp glsl/lower_subroutine.cpp \
+	glsl/lower_tess_level.cpp glsl/lower_texture_projection.cpp \
+	glsl/lower_variable_index_to_cond_assign.cpp \
+	glsl/lower_vec_index_to_cond_assign.cpp \
+	glsl/lower_vec_index_to_swizzle.cpp glsl/lower_vector.cpp \
+	glsl/lower_vector_derefs.cpp glsl/lower_vector_insert.cpp \
+	glsl/lower_vertex_id.cpp glsl/lower_output_reads.cpp \
+	glsl/lower_shared_reference.cpp glsl/lower_ubo_reference.cpp \
+	glsl/opt_algebraic.cpp glsl/opt_array_splitting.cpp \
+	glsl/opt_conditional_discard.cpp glsl/opt_constant_folding.cpp \
+	glsl/opt_constant_propagation.cpp \
+	glsl/opt_constant_variable.cpp glsl/opt_copy_propagation.cpp \
+	glsl/opt_copy_propagation_elements.cpp \
+	glsl/opt_dead_builtin_variables.cpp \
+	glsl/opt_dead_builtin_varyings.cpp glsl/opt_dead_code.cpp \
+	glsl/opt_dead_code_local.cpp glsl/opt_dead_functions.cpp \
+	glsl/opt_flatten_nested_if_blocks.cpp \
+	glsl/opt_flip_matrices.cpp glsl/opt_function_inlining.cpp \
+	glsl/opt_if_simplification.cpp glsl/opt_minmax.cpp \
+	glsl/opt_noop_swizzle.cpp glsl/opt_rebalance_tree.cpp \
+	glsl/opt_redundant_jumps.cpp glsl/opt_structure_splitting.cpp \
+	glsl/opt_swizzle_swizzle.cpp glsl/opt_tree_grafting.cpp \
+	glsl/opt_vectorize.cpp glsl/program.h \
+	glsl/propagate_invariance.cpp glsl/s_expression.cpp \
+	glsl/s_expression.h glsl/cache.c glsl/cache.h
+am__objects_2 = glsl/glsl_lexer.lo glsl/glsl_parser.lo
+am__objects_3 = glsl/ast_array_index.lo glsl/ast_expr.lo \
 	glsl/ast_function.lo glsl/ast_to_hir.lo glsl/ast_type.lo \
 	glsl/blob.lo glsl/builtin_functions.lo glsl/builtin_types.lo \
 	glsl/builtin_variables.lo glsl/glsl_parser_extras.lo \
-	glsl/glsl_symbol_table.lo glsl/hir_field_selection.lo \
-	glsl/ir_basic_block.lo glsl/ir_builder.lo glsl/ir_clone.lo \
+	glsl/glsl_symbol_table.lo glsl/glsl_to_nir.lo \
+	glsl/hir_field_selection.lo glsl/ir_basic_block.lo \
+	glsl/ir_builder.lo glsl/ir_clone.lo \
 	glsl/ir_constant_expression.lo glsl/ir.lo glsl/ir_equals.lo \
 	glsl/ir_expression_flattening.lo \
 	glsl/ir_function_can_inline.lo \
 	glsl/ir_function_detect_recursion.lo glsl/ir_function.lo \
 	glsl/ir_hierarchical_visitor.lo glsl/ir_hv_accept.lo \
-	glsl/ir_import_prototypes.lo glsl/ir_print_visitor.lo \
-	glsl/ir_reader.lo glsl/ir_rvalue_visitor.lo \
-	glsl/ir_set_program_inouts.lo glsl/ir_validate.lo \
-	glsl/ir_variable_refcount.lo glsl/linker.lo \
-	glsl/link_atomics.lo glsl/link_functions.lo \
+	glsl/ir_print_visitor.lo glsl/ir_reader.lo \
+	glsl/ir_rvalue_visitor.lo glsl/ir_set_program_inouts.lo \
+	glsl/ir_validate.lo glsl/ir_variable_refcount.lo \
+	glsl/linker.lo glsl/link_atomics.lo glsl/link_functions.lo \
 	glsl/link_interface_blocks.lo glsl/link_uniforms.lo \
 	glsl/link_uniform_initializers.lo \
 	glsl/link_uniform_block_active_visitor.lo \
 	glsl/link_uniform_blocks.lo glsl/link_varyings.lo \
 	glsl/loop_analysis.lo glsl/loop_controls.lo \
-	glsl/loop_unroll.lo glsl/lower_buffer_access.lo \
-	glsl/lower_clip_distance.lo \
+	glsl/loop_unroll.lo glsl/lower_blend_equation_advanced.lo \
+	glsl/lower_buffer_access.lo \
 	glsl/lower_const_arrays_to_uniforms.lo glsl/lower_discard.lo \
-	glsl/lower_discard_flow.lo glsl/lower_if_to_cond_assign.lo \
-	glsl/lower_instructions.lo glsl/lower_jumps.lo \
-	glsl/lower_mat_op_to_vec.lo glsl/lower_noise.lo \
-	glsl/lower_offset_array.lo glsl/lower_packed_varyings.lo \
+	glsl/lower_discard_flow.lo glsl/lower_distance.lo \
+	glsl/lower_if_to_cond_assign.lo glsl/lower_instructions.lo \
+	glsl/lower_jumps.lo glsl/lower_mat_op_to_vec.lo \
+	glsl/lower_noise.lo glsl/lower_offset_array.lo \
+	glsl/lower_packed_varyings.lo \
 	glsl/lower_named_interface_blocks.lo \
 	glsl/lower_packing_builtins.lo glsl/lower_subroutine.lo \
 	glsl/lower_tess_level.lo glsl/lower_texture_projection.lo \
@@ -172,84 +291,84 @@ am__objects_2 = glsl/ast_array_index.lo glsl/ast_expr.lo \
 	glsl/opt_rebalance_tree.lo glsl/opt_redundant_jumps.lo \
 	glsl/opt_structure_splitting.lo glsl/opt_swizzle_swizzle.lo \
 	glsl/opt_tree_grafting.lo glsl/opt_vectorize.lo \
-	glsl/s_expression.lo
-am_glsl_libglsl_la_OBJECTS = glsl/glsl_lexer.lo glsl/glsl_parser.lo \
-	$(am__objects_2)
+	glsl/propagate_invariance.lo glsl/s_expression.lo
+am__objects_4 = glsl/cache.lo
+@ENABLE_SHADER_CACHE_TRUE@am__objects_5 = $(am__objects_4)
+am_glsl_libglsl_la_OBJECTS = $(am__objects_2) $(am__objects_3) \
+	$(am__objects_5)
 glsl_libglsl_la_OBJECTS = $(am_glsl_libglsl_la_OBJECTS)
+am__DEPENDENCIES_1 =
+glsl_libstandalone_la_DEPENDENCIES = glsl/libglsl.la \
+	$(top_builddir)/src/libglsl_util.la \
+	$(top_builddir)/src/util/libmesautil.la $(am__DEPENDENCIES_1)
+am__objects_6 = glsl/standalone_scaffolding.lo glsl/standalone.lo
+am_glsl_libstandalone_la_OBJECTS = $(am__objects_6)
+glsl_libstandalone_la_OBJECTS = $(am_glsl_libstandalone_la_OBJECTS)
 libcompiler_la_LIBADD =
-am__objects_3 = glsl_types.lo nir_types.lo shader_enums.lo
-am_libcompiler_la_OBJECTS = $(am__objects_3)
+am__objects_7 = glsl_types.lo nir_types.lo shader_enums.lo
+am_libcompiler_la_OBJECTS = $(am__objects_7)
 libcompiler_la_OBJECTS = $(am_libcompiler_la_OBJECTS)
 nir_libnir_la_DEPENDENCIES = libcompiler.la
-am__objects_4 = nir/nir_libnir_la-glsl_to_nir.lo \
-	nir/nir_libnir_la-nir.lo nir/nir_libnir_la-nir_clone.lo \
-	nir/nir_libnir_la-nir_control_flow.lo \
-	nir/nir_libnir_la-nir_dominance.lo \
-	nir/nir_libnir_la-nir_from_ssa.lo \
-	nir/nir_libnir_la-nir_gs_count_vertices.lo \
-	nir/nir_libnir_la-nir_intrinsics.lo \
-	nir/nir_libnir_la-nir_instr_set.lo \
-	nir/nir_libnir_la-nir_liveness.lo \
-	nir/nir_libnir_la-nir_lower_alu_to_scalar.lo \
-	nir/nir_libnir_la-nir_lower_atomics.lo \
-	nir/nir_libnir_la-nir_lower_clip.lo \
-	nir/nir_libnir_la-nir_lower_global_vars_to_local.lo \
-	nir/nir_libnir_la-nir_lower_gs_intrinsics.lo \
-	nir/nir_libnir_la-nir_lower_load_const_to_scalar.lo \
-	nir/nir_libnir_la-nir_lower_locals_to_regs.lo \
-	nir/nir_libnir_la-nir_lower_idiv.lo \
-	nir/nir_libnir_la-nir_lower_io.lo \
-	nir/nir_libnir_la-nir_lower_outputs_to_temporaries.lo \
-	nir/nir_libnir_la-nir_lower_phis_to_scalar.lo \
-	nir/nir_libnir_la-nir_lower_samplers.lo \
-	nir/nir_libnir_la-nir_lower_system_values.lo \
-	nir/nir_libnir_la-nir_lower_tex.lo \
-	nir/nir_libnir_la-nir_lower_to_source_mods.lo \
-	nir/nir_libnir_la-nir_lower_two_sided_color.lo \
-	nir/nir_libnir_la-nir_lower_vars_to_ssa.lo \
-	nir/nir_libnir_la-nir_lower_var_copies.lo \
-	nir/nir_libnir_la-nir_lower_vec_to_movs.lo \
-	nir/nir_libnir_la-nir_metadata.lo \
-	nir/nir_libnir_la-nir_move_vec_src_uses_to_dest.lo \
-	nir/nir_libnir_la-nir_normalize_cubemap_coords.lo \
-	nir/nir_libnir_la-nir_opt_constant_folding.lo \
-	nir/nir_libnir_la-nir_opt_copy_propagate.lo \
-	nir/nir_libnir_la-nir_opt_cse.lo \
-	nir/nir_libnir_la-nir_opt_dce.lo \
-	nir/nir_libnir_la-nir_opt_dead_cf.lo \
-	nir/nir_libnir_la-nir_opt_gcm.lo \
-	nir/nir_libnir_la-nir_opt_global_to_local.lo \
-	nir/nir_libnir_la-nir_opt_peephole_select.lo \
-	nir/nir_libnir_la-nir_opt_remove_phis.lo \
-	nir/nir_libnir_la-nir_opt_undef.lo \
-	nir/nir_libnir_la-nir_print.lo \
-	nir/nir_libnir_la-nir_remove_dead_variables.lo \
-	nir/nir_libnir_la-nir_search.lo \
-	nir/nir_libnir_la-nir_split_var_copies.lo \
-	nir/nir_libnir_la-nir_sweep.lo nir/nir_libnir_la-nir_to_ssa.lo \
-	nir/nir_libnir_la-nir_validate.lo \
-	nir/nir_libnir_la-nir_worklist.lo
-am__objects_5 = nir/nir_libnir_la-nir_constant_expressions.lo \
-	nir/nir_libnir_la-nir_opcodes.lo \
-	nir/nir_libnir_la-nir_opt_algebraic.lo
-am_nir_libnir_la_OBJECTS = $(am__objects_4) $(am__objects_5)
+am__objects_8 = nir/nir.lo nir/nir_clone.lo nir/nir_control_flow.lo \
+	nir/nir_dominance.lo nir/nir_from_ssa.lo \
+	nir/nir_gather_info.lo nir/nir_gs_count_vertices.lo \
+	nir/nir_inline_functions.lo nir/nir_instr_set.lo \
+	nir/nir_intrinsics.lo nir/nir_liveness.lo \
+	nir/nir_lower_alu_to_scalar.lo nir/nir_lower_atomics.lo \
+	nir/nir_lower_bitmap.lo nir/nir_lower_clamp_color_outputs.lo \
+	nir/nir_lower_clip.lo nir/nir_lower_double_ops.lo \
+	nir/nir_lower_double_packing.lo nir/nir_lower_drawpixels.lo \
+	nir/nir_lower_global_vars_to_local.lo \
+	nir/nir_lower_gs_intrinsics.lo \
+	nir/nir_lower_load_const_to_scalar.lo \
+	nir/nir_lower_locals_to_regs.lo nir/nir_lower_idiv.lo \
+	nir/nir_lower_indirect_derefs.lo nir/nir_lower_io.lo \
+	nir/nir_lower_io_to_temporaries.lo \
+	nir/nir_lower_io_to_scalar.lo nir/nir_lower_io_types.lo \
+	nir/nir_lower_passthrough_edgeflags.lo \
+	nir/nir_lower_phis_to_scalar.lo nir/nir_lower_returns.lo \
+	nir/nir_lower_samplers.lo nir/nir_lower_system_values.lo \
+	nir/nir_lower_tex.lo nir/nir_lower_to_source_mods.lo \
+	nir/nir_lower_two_sided_color.lo nir/nir_lower_vars_to_ssa.lo \
+	nir/nir_lower_var_copies.lo nir/nir_lower_vec_to_movs.lo \
+	nir/nir_lower_wpos_center.lo nir/nir_lower_wpos_ytransform.lo \
+	nir/nir_metadata.lo nir/nir_move_vec_src_uses_to_dest.lo \
+	nir/nir_normalize_cubemap_coords.lo \
+	nir/nir_opt_conditional_discard.lo \
+	nir/nir_opt_constant_folding.lo nir/nir_opt_copy_propagate.lo \
+	nir/nir_opt_cse.lo nir/nir_opt_dce.lo nir/nir_opt_dead_cf.lo \
+	nir/nir_opt_gcm.lo nir/nir_opt_global_to_local.lo \
+	nir/nir_opt_peephole_select.lo nir/nir_opt_remove_phis.lo \
+	nir/nir_opt_undef.lo nir/nir_phi_builder.lo nir/nir_print.lo \
+	nir/nir_propagate_invariant.lo \
+	nir/nir_remove_dead_variables.lo nir/nir_repair_ssa.lo \
+	nir/nir_search.lo nir/nir_split_var_copies.lo nir/nir_sweep.lo \
+	nir/nir_to_ssa.lo nir/nir_validate.lo nir/nir_worklist.lo
+am__objects_9 = spirv/spirv_info.lo spirv/spirv_to_nir.lo \
+	spirv/vtn_alu.lo spirv/vtn_cfg.lo spirv/vtn_glsl450.lo \
+	spirv/vtn_variables.lo
+am__objects_10 = nir/nir_constant_expressions.lo nir/nir_opcodes.lo \
+	nir/nir_opt_algebraic.lo
+am_nir_libnir_la_OBJECTS = $(am__objects_8) $(am__objects_9) \
+	$(am__objects_10)
 nir_libnir_la_OBJECTS = $(am_nir_libnir_la_OBJECTS)
 PROGRAMS = $(noinst_PROGRAMS)
 am_glsl_glcpp_glcpp_OBJECTS = glsl/glcpp/glcpp.$(OBJEXT)
 glsl_glcpp_glcpp_OBJECTS = $(am_glsl_glcpp_glcpp_OBJECTS)
 glsl_glcpp_glcpp_DEPENDENCIES = glsl/libglcpp.la \
 	$(top_builddir)/src/libglsl_util.la
-am_glsl_glsl_test_OBJECTS = glsl/standalone_scaffolding.$(OBJEXT) \
-	glsl/test.$(OBJEXT) glsl/test_optpass.$(OBJEXT)
+am_glsl_glsl_test_OBJECTS = glsl/test.$(OBJEXT) \
+	glsl/test_optpass.$(OBJEXT)
 glsl_glsl_test_OBJECTS = $(am_glsl_glsl_test_OBJECTS)
-am__DEPENDENCIES_1 =
-glsl_glsl_test_DEPENDENCIES = glsl/libglsl.la \
+glsl_glsl_test_DEPENDENCIES = glsl/libglsl.la glsl/libstandalone.la \
 	$(top_builddir)/src/libglsl_util.la $(am__DEPENDENCIES_1)
 am_glsl_tests_blob_test_OBJECTS = glsl/tests/blob_test.$(OBJEXT)
 glsl_tests_blob_test_OBJECTS = $(am_glsl_tests_blob_test_OBJECTS)
 glsl_tests_blob_test_DEPENDENCIES = glsl/libglsl.la
+am_glsl_tests_cache_test_OBJECTS = glsl/tests/cache_test.$(OBJEXT)
+glsl_tests_cache_test_OBJECTS = $(am_glsl_tests_cache_test_OBJECTS)
+glsl_tests_cache_test_DEPENDENCIES = glsl/libglsl.la
 am_glsl_tests_general_ir_test_OBJECTS =  \
-	glsl/standalone_scaffolding.$(OBJEXT) \
 	glsl/tests/builtin_variable_test.$(OBJEXT) \
 	glsl/tests/invalidate_locations_test.$(OBJEXT) \
 	glsl/tests/general_ir_test.$(OBJEXT) \
@@ -258,7 +377,8 @@ glsl_tests_general_ir_test_OBJECTS =  \
 	$(am_glsl_tests_general_ir_test_OBJECTS)
 glsl_tests_general_ir_test_DEPENDENCIES =  \
 	$(top_builddir)/src/gtest/libgtest.la glsl/libglsl.la \
-	$(top_builddir)/src/libglsl_util.la $(am__DEPENDENCIES_1)
+	glsl/libstandalone.la $(top_builddir)/src/libglsl_util.la \
+	$(am__DEPENDENCIES_1)
 am_glsl_tests_sampler_types_test_OBJECTS =  \
 	glsl/tests/sampler_types_test.$(OBJEXT)
 glsl_tests_sampler_types_test_OBJECTS =  \
@@ -275,18 +395,18 @@ glsl_tests_uniform_initializer_test_OBJECTS =  \
 glsl_tests_uniform_initializer_test_DEPENDENCIES =  \
 	$(top_builddir)/src/gtest/libgtest.la glsl/libglsl.la \
 	$(top_builddir)/src/libglsl_util.la $(am__DEPENDENCIES_1)
-am__objects_6 = glsl/standalone_scaffolding.$(OBJEXT) \
-	glsl/main.$(OBJEXT)
-am_glsl_compiler_OBJECTS = $(am__objects_6)
+am_glsl_compiler_OBJECTS = glsl/main.$(OBJEXT)
 glsl_compiler_OBJECTS = $(am_glsl_compiler_OBJECTS)
-glsl_compiler_DEPENDENCIES = glsl/libglsl.la \
-	$(top_builddir)/src/libglsl_util.la \
-	$(top_builddir)/src/util/libmesautil.la $(am__DEPENDENCIES_1)
+glsl_compiler_DEPENDENCIES = glsl/libstandalone.la
 am_nir_tests_control_flow_tests_OBJECTS = nir/tests/nir_tests_control_flow_tests-control_flow_tests.$(OBJEXT)
 nir_tests_control_flow_tests_OBJECTS =  \
 	$(am_nir_tests_control_flow_tests_OBJECTS)
 nir_tests_control_flow_tests_DEPENDENCIES =  \
 	$(top_builddir)/src/gtest/libgtest.la nir/libnir.la \
+	$(top_builddir)/src/util/libmesautil.la $(am__DEPENDENCIES_1)
+am_spirv2nir_OBJECTS = spirv/spirv2nir-spirv2nir.$(OBJEXT)
+spirv2nir_OBJECTS = $(am_spirv2nir_OBJECTS)
+spirv2nir_DEPENDENCIES = nir/libnir.la \
 	$(top_builddir)/src/util/libmesautil.la $(am__DEPENDENCIES_1)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -341,23 +461,27 @@ am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
 am__v_CXXLD_0 = @echo "  CXXLD   " $@;
 am__v_CXXLD_1 = 
 SOURCES = $(glsl_libglcpp_la_SOURCES) $(glsl_libglsl_la_SOURCES) \
-	$(libcompiler_la_SOURCES) $(nir_libnir_la_SOURCES) \
-	$(glsl_glcpp_glcpp_SOURCES) $(glsl_glsl_test_SOURCES) \
-	$(glsl_tests_blob_test_SOURCES) \
+	$(glsl_libstandalone_la_SOURCES) $(libcompiler_la_SOURCES) \
+	$(nir_libnir_la_SOURCES) $(glsl_glcpp_glcpp_SOURCES) \
+	$(glsl_glsl_test_SOURCES) $(glsl_tests_blob_test_SOURCES) \
+	$(glsl_tests_cache_test_SOURCES) \
 	$(glsl_tests_general_ir_test_SOURCES) \
 	$(glsl_tests_sampler_types_test_SOURCES) \
 	$(glsl_tests_uniform_initializer_test_SOURCES) \
 	$(glsl_compiler_SOURCES) \
-	$(nir_tests_control_flow_tests_SOURCES)
-DIST_SOURCES = $(glsl_libglcpp_la_SOURCES) $(glsl_libglsl_la_SOURCES) \
-	$(libcompiler_la_SOURCES) $(nir_libnir_la_SOURCES) \
-	$(glsl_glcpp_glcpp_SOURCES) $(glsl_glsl_test_SOURCES) \
-	$(glsl_tests_blob_test_SOURCES) \
+	$(nir_tests_control_flow_tests_SOURCES) $(spirv2nir_SOURCES) \
+	$(nodist_EXTRA_spirv2nir_SOURCES)
+DIST_SOURCES = $(glsl_libglcpp_la_SOURCES) \
+	$(am__glsl_libglsl_la_SOURCES_DIST) \
+	$(glsl_libstandalone_la_SOURCES) $(libcompiler_la_SOURCES) \
+	$(nir_libnir_la_SOURCES) $(glsl_glcpp_glcpp_SOURCES) \
+	$(glsl_glsl_test_SOURCES) $(glsl_tests_blob_test_SOURCES) \
+	$(glsl_tests_cache_test_SOURCES) \
 	$(glsl_tests_general_ir_test_SOURCES) \
 	$(glsl_tests_sampler_types_test_SOURCES) \
 	$(glsl_tests_uniform_initializer_test_SOURCES) \
 	$(glsl_compiler_SOURCES) \
-	$(nir_tests_control_flow_tests_SOURCES)
+	$(nir_tests_control_flow_tests_SOURCES) $(spirv2nir_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -438,6 +562,8 @@ GLESv2_LIB_DEPS = @GLESv2_LIB_DEPS@
 GLESv2_PC_LIB_PRIV = @GLESv2_PC_LIB_PRIV@
 GLPROTO_CFLAGS = @GLPROTO_CFLAGS@
 GLPROTO_LIBS = @GLPROTO_LIBS@
+GLVND_CFLAGS = @GLVND_CFLAGS@
+GLVND_LIBS = @GLVND_LIBS@
 GLX_TLS = @GLX_TLS@
 GL_LIB = @GL_LIB@
 GL_LIB_DEPS = @GL_LIB_DEPS@
@@ -469,11 +595,10 @@ LIBELF_CFLAGS = @LIBELF_CFLAGS@
 LIBELF_LIBS = @LIBELF_LIBS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
+LIBSENSORS_LDFLAGS = @LIBSENSORS_LDFLAGS@
 LIBSHA1_CFLAGS = @LIBSHA1_CFLAGS@
 LIBSHA1_LIBS = @LIBSHA1_LIBS@
 LIBTOOL = @LIBTOOL@
-LIBUDEV_CFLAGS = @LIBUDEV_CFLAGS@
-LIBUDEV_LIBS = @LIBUDEV_LIBS@
 LIB_DIR = @LIB_DIR@
 LIB_EXT = @LIB_EXT@
 LIPO = @LIPO@
@@ -536,6 +661,8 @@ PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 POSIX_SHELL = @POSIX_SHELL@
 PRESENTPROTO_CFLAGS = @PRESENTPROTO_CFLAGS@
 PRESENTPROTO_LIBS = @PRESENTPROTO_LIBS@
+PTHREADSTUBS_CFLAGS = @PTHREADSTUBS_CFLAGS@
+PTHREADSTUBS_LIBS = @PTHREADSTUBS_LIBS@
 PTHREAD_CC = @PTHREAD_CC@
 PTHREAD_CFLAGS = @PTHREAD_CFLAGS@
 PTHREAD_LIBS = @PTHREAD_LIBS@
@@ -556,11 +683,19 @@ SIMPENROSE_CFLAGS = @SIMPENROSE_CFLAGS@
 SIMPENROSE_LIBS = @SIMPENROSE_LIBS@
 SSE41_CFLAGS = @SSE41_CFLAGS@
 STRIP = @STRIP@
+SWR_AVX2_CXXFLAGS = @SWR_AVX2_CXXFLAGS@
+SWR_AVX_CXXFLAGS = @SWR_AVX_CXXFLAGS@
+SWR_CXX11_CXXFLAGS = @SWR_CXX11_CXXFLAGS@
+TIMESTAMP_CMD = @TIMESTAMP_CMD@
+VALGRIND_CFLAGS = @VALGRIND_CFLAGS@
+VALGRIND_LIBS = @VALGRIND_LIBS@
 VA_CFLAGS = @VA_CFLAGS@
 VA_LIBS = @VA_LIBS@
 VA_LIB_INSTALL_DIR = @VA_LIB_INSTALL_DIR@
 VA_MAJOR = @VA_MAJOR@
 VA_MINOR = @VA_MINOR@
+VC4_CFLAGS = @VC4_CFLAGS@
+VC4_LIBS = @VC4_LIBS@
 VDPAU_CFLAGS = @VDPAU_CFLAGS@
 VDPAU_LIBS = @VDPAU_LIBS@
 VDPAU_LIB_INSTALL_DIR = @VDPAU_LIB_INSTALL_DIR@
@@ -572,6 +707,7 @@ VISIBILITY_CFLAGS = @VISIBILITY_CFLAGS@
 VISIBILITY_CXXFLAGS = @VISIBILITY_CXXFLAGS@
 VL_CFLAGS = @VL_CFLAGS@
 VL_LIBS = @VL_LIBS@
+VULKAN_ICD_INSTALL_DIR = @VULKAN_ICD_INSTALL_DIR@
 WAYLAND_CFLAGS = @WAYLAND_CFLAGS@
 WAYLAND_LIBS = @WAYLAND_LIBS@
 WAYLAND_SCANNER = @WAYLAND_SCANNER@
@@ -595,6 +731,7 @@ XVMC_LIBS = @XVMC_LIBS@
 XVMC_LIB_INSTALL_DIR = @XVMC_LIB_INSTALL_DIR@
 XVMC_MAJOR = @XVMC_MAJOR@
 XVMC_MINOR = @XVMC_MINOR@
+XXD = @XXD@
 YACC = @YACC@
 YFLAGS = @YFLAGS@
 abs_builddir = @abs_builddir@
@@ -684,6 +821,8 @@ LIBGLSL_FILES = \
 	glsl/glsl_parser_extras.h \
 	glsl/glsl_symbol_table.cpp \
 	glsl/glsl_symbol_table.h \
+	glsl/glsl_to_nir.cpp \
+	glsl/glsl_to_nir.h \
 	glsl/hir_field_selection.cpp \
 	glsl/ir_basic_block.cpp \
 	glsl/ir_basic_block.h \
@@ -703,7 +842,6 @@ LIBGLSL_FILES = \
 	glsl/ir_hierarchical_visitor.cpp \
 	glsl/ir_hierarchical_visitor.h \
 	glsl/ir_hv_accept.cpp \
-	glsl/ir_import_prototypes.cpp \
 	glsl/ir_optimization.h \
 	glsl/ir_print_visitor.cpp \
 	glsl/ir_print_visitor.h \
@@ -734,12 +872,13 @@ LIBGLSL_FILES = \
 	glsl/loop_analysis.h \
 	glsl/loop_controls.cpp \
 	glsl/loop_unroll.cpp \
+	glsl/lower_blend_equation_advanced.cpp \
 	glsl/lower_buffer_access.cpp \
 	glsl/lower_buffer_access.h \
-	glsl/lower_clip_distance.cpp \
 	glsl/lower_const_arrays_to_uniforms.cpp \
 	glsl/lower_discard.cpp \
 	glsl/lower_discard_flow.cpp \
+	glsl/lower_distance.cpp \
 	glsl/lower_if_to_cond_assign.cpp \
 	glsl/lower_instructions.cpp \
 	glsl/lower_jumps.cpp \
@@ -788,21 +927,31 @@ LIBGLSL_FILES = \
 	glsl/opt_tree_grafting.cpp \
 	glsl/opt_vectorize.cpp \
 	glsl/program.h \
+	glsl/propagate_invariance.cpp \
 	glsl/s_expression.cpp \
 	glsl/s_expression.h
+
+LIBGLSL_SHADER_CACHE_FILES = \
+	glsl/cache.c \
+	glsl/cache.h
 
 
 # glsl_compiler
 GLSL_COMPILER_CXX_FILES = \
 	glsl/standalone_scaffolding.cpp \
 	glsl/standalone_scaffolding.h \
-	glsl/main.cpp
+	glsl/standalone.cpp \
+	glsl/standalone.h
 
 
 # libglsl generated sources
-LIBGLSL_GENERATED_CXX_FILES = \
+LIBGLSL_GENERATED_FILES = \
+	glsl/ir_expression_operation.h \
+	glsl/ir_expression_operation_constant.h \
+	glsl/ir_expression_operation_strings.h \
 	glsl/glsl_lexer.cpp \
-	glsl/glsl_parser.cpp
+	glsl/glsl_parser.cpp \
+	glsl/glsl_parser.h
 
 
 # libglcpp
@@ -822,8 +971,6 @@ NIR_GENERATED_FILES = \
 	nir/nir_opt_algebraic.c
 
 NIR_FILES = \
-	nir/glsl_to_nir.cpp \
-	nir/glsl_to_nir.h \
 	nir/nir.c \
 	nir/nir.h \
 	nir/nir_array.h \
@@ -835,23 +982,35 @@ NIR_FILES = \
 	nir/nir_control_flow_private.h \
 	nir/nir_dominance.c \
 	nir/nir_from_ssa.c \
+	nir/nir_gather_info.c \
 	nir/nir_gs_count_vertices.c \
-	nir/nir_intrinsics.c \
-	nir/nir_intrinsics.h \
+	nir/nir_inline_functions.c \
 	nir/nir_instr_set.c \
 	nir/nir_instr_set.h \
+	nir/nir_intrinsics.c \
+	nir/nir_intrinsics.h \
 	nir/nir_liveness.c \
 	nir/nir_lower_alu_to_scalar.c \
 	nir/nir_lower_atomics.c \
+	nir/nir_lower_bitmap.c \
+	nir/nir_lower_clamp_color_outputs.c \
 	nir/nir_lower_clip.c \
+	nir/nir_lower_double_ops.c \
+	nir/nir_lower_double_packing.c \
+	nir/nir_lower_drawpixels.c \
 	nir/nir_lower_global_vars_to_local.c \
 	nir/nir_lower_gs_intrinsics.c \
 	nir/nir_lower_load_const_to_scalar.c \
 	nir/nir_lower_locals_to_regs.c \
 	nir/nir_lower_idiv.c \
+	nir/nir_lower_indirect_derefs.c \
 	nir/nir_lower_io.c \
-	nir/nir_lower_outputs_to_temporaries.c \
+	nir/nir_lower_io_to_temporaries.c \
+	nir/nir_lower_io_to_scalar.c \
+	nir/nir_lower_io_types.c \
+	nir/nir_lower_passthrough_edgeflags.c \
 	nir/nir_lower_phis_to_scalar.c \
+	nir/nir_lower_returns.c \
 	nir/nir_lower_samplers.c \
 	nir/nir_lower_system_values.c \
 	nir/nir_lower_tex.c \
@@ -860,9 +1019,12 @@ NIR_FILES = \
 	nir/nir_lower_vars_to_ssa.c \
 	nir/nir_lower_var_copies.c \
 	nir/nir_lower_vec_to_movs.c \
+	nir/nir_lower_wpos_center.c \
+	nir/nir_lower_wpos_ytransform.c \
 	nir/nir_metadata.c \
 	nir/nir_move_vec_src_uses_to_dest.c \
 	nir/nir_normalize_cubemap_coords.c \
+	nir/nir_opt_conditional_discard.c \
 	nir/nir_opt_constant_folding.c \
 	nir/nir_opt_copy_propagate.c \
 	nir/nir_opt_cse.c \
@@ -873,10 +1035,15 @@ NIR_FILES = \
 	nir/nir_opt_peephole_select.c \
 	nir/nir_opt_remove_phis.c \
 	nir/nir_opt_undef.c \
+	nir/nir_phi_builder.c \
+	nir/nir_phi_builder.h \
 	nir/nir_print.c \
+	nir/nir_propagate_invariant.c \
 	nir/nir_remove_dead_variables.c \
+	nir/nir_repair_ssa.c \
 	nir/nir_search.c \
 	nir/nir_search.h \
+	nir/nir_search_helpers.h \
 	nir/nir_split_var_copies.c \
 	nir/nir_sweep.c \
 	nir/nir_to_ssa.c \
@@ -884,6 +1051,19 @@ NIR_FILES = \
 	nir/nir_vla.h \
 	nir/nir_worklist.c \
 	nir/nir_worklist.h
+
+SPIRV_FILES = \
+	spirv/GLSL.std.450.h \
+	spirv/nir_spirv.h \
+	spirv/spirv.h \
+	spirv/spirv_info.h \
+	spirv/spirv_info.c \
+	spirv/spirv_to_nir.c \
+	spirv/vtn_alu.c \
+	spirv/vtn_cfg.c \
+	spirv/vtn_glsl450.c \
+	spirv/vtn_private.h \
+	spirv/vtn_variables.c
 
 AM_CPPFLAGS = \
 	-I$(top_srcdir)/include \
@@ -893,6 +1073,8 @@ AM_CPPFLAGS = \
 	-I$(top_builddir)/src/compiler/glsl\
 	-I$(top_srcdir)/src/compiler/glsl\
 	-I$(top_srcdir)/src/compiler/glsl/glcpp\
+	-I$(top_builddir)/src/compiler/nir \
+	-I$(top_srcdir)/src/compiler/nir \
 	-I$(top_srcdir)/src/gallium/include \
 	-I$(top_srcdir)/src/gallium/auxiliary \
 	-I$(top_srcdir)/src/gtest/include \
@@ -907,7 +1089,7 @@ AM_CXXFLAGS = \
 	$(MSVC2013_COMPAT_CXXFLAGS)
 
 noinst_LTLIBRARIES = libcompiler.la glsl/libglsl.la glsl/libglcpp.la \
-	nir/libnir.la
+	glsl/libstandalone.la nir/libnir.la
 libcompiler_la_SOURCES = $(LIBCOMPILER_FILES)
 
 # Only the parsers (specifically the header files generated at the same time)
@@ -917,20 +1099,27 @@ libcompiler_la_SOURCES = $(LIBCOMPILER_FILES)
 # will be created at the appropriate times according to standard automake
 # dependency rules.
 BUILT_SOURCES = glsl/glsl_parser.cpp glsl/glsl_lexer.cpp \
+	glsl/ir_expression_operation.h \
+	glsl/ir_expression_operation_constant.h \
+	glsl/ir_expression_operation_strings.h \
 	glsl/glcpp/glcpp-parse.c glsl/glcpp/glcpp-lex.c \
 	$(NIR_GENERATED_FILES)
 CLEANFILES = glsl/glcpp/glcpp-parse.h glsl/glsl_parser.h \
 	glsl/glsl_parser.cpp glsl/glsl_lexer.cpp \
+	glsl/ir_expression_operation.h \
+	glsl/ir_expression_operation_constant.h \
+	glsl/ir_expression_operation_strings.h \
 	glsl/glcpp/glcpp-parse.c glsl/glcpp/glcpp-lex.c \
 	$(NIR_GENERATED_FILES)
 EXTRA_DIST = SConscript glsl/tests glsl/glcpp/tests glsl/README \
 	glsl/TODO glsl/glcpp/README glsl/glsl_lexer.ll \
-	glsl/glsl_parser.yy glsl/glcpp/glcpp-lex.l \
-	glsl/glcpp/glcpp-parse.y glsl/Makefile.sources glsl/SConscript \
-	nir/nir_algebraic.py nir/nir_builder_opcodes_h.py \
-	nir/nir_constant_expressions.py nir/nir_opcodes.py \
-	nir/nir_opcodes_c.py nir/nir_opcodes_h.py \
-	nir/nir_opt_algebraic.py nir/tests nir/Makefile.sources
+	glsl/glsl_parser.yy glsl/ir_expression_operation.py \
+	glsl/glcpp/glcpp-lex.l glsl/glcpp/glcpp-parse.y \
+	SConscript.glsl nir/nir_algebraic.py \
+	nir/nir_builder_opcodes_h.py nir/nir_constant_expressions.py \
+	nir/nir_opcodes.py nir/nir_opcodes_c.py nir/nir_opcodes_h.py \
+	nir/nir_opt_algebraic.py nir/tests SConscript.nir
+MKDIR_GEN = $(AM_V_at)$(MKDIR_P) $(@D)
 TESTS_ENVIRONMENT = \
 	export PYTHON2=$(PYTHON2); \
 	export PYTHON_FLAGS=$(PYTHON_FLAGS);
@@ -941,8 +1130,13 @@ glsl_tests_blob_test_SOURCES = \
 glsl_tests_blob_test_LDADD = \
 	glsl/libglsl.la
 
+glsl_tests_cache_test_SOURCES = \
+	glsl/tests/cache_test.c
+
+glsl_tests_cache_test_LDADD = \
+	glsl/libglsl.la
+
 glsl_tests_general_ir_test_SOURCES = \
-	glsl/standalone_scaffolding.cpp			\
 	glsl/tests/builtin_variable_test.cpp		\
 	glsl/tests/invalidate_locations_test.cpp	\
 	glsl/tests/general_ir_test.cpp			\
@@ -954,6 +1148,7 @@ glsl_tests_general_ir_test_CFLAGS = \
 glsl_tests_general_ir_test_LDADD = \
 	$(top_builddir)/src/gtest/libgtest.la		\
 	glsl/libglsl.la		\
+	glsl/libstandalone.la				\
 	$(top_builddir)/src/libglsl_util.la		\
 	$(PTHREAD_LIBS)
 
@@ -1005,29 +1200,31 @@ glsl_libglsl_la_LIBADD = \
 	nir/libnir.la \
 	glsl/libglcpp.la
 
-glsl_libglsl_la_SOURCES = \
-	glsl/glsl_lexer.cpp				\
-	glsl/glsl_parser.cpp				\
-	glsl/glsl_parser.h				\
-	$(LIBGLSL_FILES)
-
-glsl_compiler_SOURCES = \
+glsl_libglsl_la_SOURCES = $(LIBGLSL_GENERATED_FILES) $(LIBGLSL_FILES) \
+	$(am__append_1)
+glsl_libstandalone_la_SOURCES = \
 	$(GLSL_COMPILER_CXX_FILES)
 
-glsl_compiler_LDADD = \
+glsl_libstandalone_la_LIBADD = \
 	glsl/libglsl.la					\
 	$(top_builddir)/src/libglsl_util.la		\
 	$(top_builddir)/src/util/libmesautil.la		\
 	$(PTHREAD_LIBS)
 
+glsl_compiler_SOURCES = \
+	glsl/main.cpp
+
+glsl_compiler_LDADD = \
+	glsl/libstandalone.la
+
 glsl_glsl_test_SOURCES = \
-	glsl/standalone_scaffolding.cpp \
 	glsl/test.cpp \
 	glsl/test_optpass.cpp \
 	glsl/test_optpass.h
 
 glsl_glsl_test_LDADD = \
 	glsl/libglsl.la					\
+	glsl/libstandalone.la				\
 	$(top_builddir)/src/libglsl_util.la		\
 	$(PTHREAD_LIBS)
 
@@ -1059,22 +1256,34 @@ AM_V_YACC = $(am__v_YACC_$(V))
 am__v_YACC_ = $(am__v_YACC_$(AM_DEFAULT_VERBOSITY))
 am__v_YACC_0 = @echo "  YACC    " $@;
 am__v_YACC_1 = 
-MKDIR_GEN = $(AM_V_at)$(MKDIR_P) $(@D)
-YACC_GEN = $(AM_V_YACC)$(YACC) $(YFLAGS)
-LEX_GEN = $(AM_V_LEX)$(LEX) $(LFLAGS)
-nir_libnir_la_CPPFLAGS = \
-	$(AM_CPPFLAGS) \
-	-I$(top_builddir)/src/compiler/nir \
-	-I$(top_srcdir)/src/compiler/nir
-
+@REGEN_SOURCES_TRUE@YACC_GEN = $(AM_V_YACC)$(YACC) $(YFLAGS)
+@REGEN_SOURCES_TRUE@LEX_GEN = $(AM_V_LEX)$(LEX) $(LFLAGS)
+@REGEN_SOURCES_TRUE@PYTHON_GEN = $(AM_V_GEN)$(PYTHON2) $(PYTHON_FLAGS)
+PYTHON_GEN = $(AM_V_GEN)$(PYTHON2) $(PYTHON_FLAGS)
 nir_libnir_la_LIBADD = \
 	libcompiler.la
 
 nir_libnir_la_SOURCES = \
 	$(NIR_FILES)					\
+	$(SPIRV_FILES)					\
 	$(NIR_GENERATED_FILES)
 
-@REGEN_SOURCES_TRUE@PYTHON_GEN = $(AM_V_GEN)$(PYTHON2) $(PYTHON_FLAGS)
+spirv2nir_SOURCES = \
+	spirv/spirv2nir.c
+
+spirv2nir_CPPFLAGS = \
+	$(AM_CPPFLAGS)					\
+	-I$(top_builddir)/src/compiler/nir		\
+	-I$(top_srcdir)/src/compiler/nir		\
+	-I$(top_srcdir)/src/compiler/spirv
+
+spirv2nir_LDADD = \
+	nir/libnir.la					\
+	$(top_builddir)/src/util/libmesautil.la		\
+	-lm						\
+	$(PTHREAD_LIBS)
+
+nodist_EXTRA_spirv2nir_SOURCES = dummy.cpp
 nir_tests_control_flow_tests_CPPFLAGS = \
 	$(AM_CPPFLAGS) \
 	-I$(top_builddir)/src/compiler/nir \
@@ -1097,7 +1306,7 @@ all: $(BUILT_SOURCES)
 
 .SUFFIXES:
 .SUFFIXES: .c .cpp .lo .o .obj
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(srcdir)/Makefile.sources $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(srcdir)/Makefile.sources $(srcdir)/Makefile.glsl.am $(srcdir)/Makefile.nir.am $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -1118,7 +1327,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe);; \
 	esac;
-$(srcdir)/Makefile.sources:
+$(srcdir)/Makefile.sources $(srcdir)/Makefile.glsl.am $(srcdir)/Makefile.nir.am:
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
@@ -1182,6 +1391,8 @@ glsl/glsl_parser_extras.lo: glsl/$(am__dirstamp) \
 	glsl/$(DEPDIR)/$(am__dirstamp)
 glsl/glsl_symbol_table.lo: glsl/$(am__dirstamp) \
 	glsl/$(DEPDIR)/$(am__dirstamp)
+glsl/glsl_to_nir.lo: glsl/$(am__dirstamp) \
+	glsl/$(DEPDIR)/$(am__dirstamp)
 glsl/hir_field_selection.lo: glsl/$(am__dirstamp) \
 	glsl/$(DEPDIR)/$(am__dirstamp)
 glsl/ir_basic_block.lo: glsl/$(am__dirstamp) \
@@ -1204,8 +1415,6 @@ glsl/ir_function.lo: glsl/$(am__dirstamp) \
 glsl/ir_hierarchical_visitor.lo: glsl/$(am__dirstamp) \
 	glsl/$(DEPDIR)/$(am__dirstamp)
 glsl/ir_hv_accept.lo: glsl/$(am__dirstamp) \
-	glsl/$(DEPDIR)/$(am__dirstamp)
-glsl/ir_import_prototypes.lo: glsl/$(am__dirstamp) \
 	glsl/$(DEPDIR)/$(am__dirstamp)
 glsl/ir_print_visitor.lo: glsl/$(am__dirstamp) \
 	glsl/$(DEPDIR)/$(am__dirstamp)
@@ -1241,15 +1450,17 @@ glsl/loop_controls.lo: glsl/$(am__dirstamp) \
 	glsl/$(DEPDIR)/$(am__dirstamp)
 glsl/loop_unroll.lo: glsl/$(am__dirstamp) \
 	glsl/$(DEPDIR)/$(am__dirstamp)
-glsl/lower_buffer_access.lo: glsl/$(am__dirstamp) \
+glsl/lower_blend_equation_advanced.lo: glsl/$(am__dirstamp) \
 	glsl/$(DEPDIR)/$(am__dirstamp)
-glsl/lower_clip_distance.lo: glsl/$(am__dirstamp) \
+glsl/lower_buffer_access.lo: glsl/$(am__dirstamp) \
 	glsl/$(DEPDIR)/$(am__dirstamp)
 glsl/lower_const_arrays_to_uniforms.lo: glsl/$(am__dirstamp) \
 	glsl/$(DEPDIR)/$(am__dirstamp)
 glsl/lower_discard.lo: glsl/$(am__dirstamp) \
 	glsl/$(DEPDIR)/$(am__dirstamp)
 glsl/lower_discard_flow.lo: glsl/$(am__dirstamp) \
+	glsl/$(DEPDIR)/$(am__dirstamp)
+glsl/lower_distance.lo: glsl/$(am__dirstamp) \
 	glsl/$(DEPDIR)/$(am__dirstamp)
 glsl/lower_if_to_cond_assign.lo: glsl/$(am__dirstamp) \
 	glsl/$(DEPDIR)/$(am__dirstamp)
@@ -1345,10 +1556,19 @@ glsl/opt_tree_grafting.lo: glsl/$(am__dirstamp) \
 	glsl/$(DEPDIR)/$(am__dirstamp)
 glsl/opt_vectorize.lo: glsl/$(am__dirstamp) \
 	glsl/$(DEPDIR)/$(am__dirstamp)
+glsl/propagate_invariance.lo: glsl/$(am__dirstamp) \
+	glsl/$(DEPDIR)/$(am__dirstamp)
 glsl/s_expression.lo: glsl/$(am__dirstamp) \
 	glsl/$(DEPDIR)/$(am__dirstamp)
+glsl/cache.lo: glsl/$(am__dirstamp) glsl/$(DEPDIR)/$(am__dirstamp)
 glsl/libglsl.la: $(glsl_libglsl_la_OBJECTS) $(glsl_libglsl_la_DEPENDENCIES) $(EXTRA_glsl_libglsl_la_DEPENDENCIES) glsl/$(am__dirstamp)
 	$(AM_V_CXXLD)$(CXXLINK)  $(glsl_libglsl_la_OBJECTS) $(glsl_libglsl_la_LIBADD) $(LIBS)
+glsl/standalone_scaffolding.lo: glsl/$(am__dirstamp) \
+	glsl/$(DEPDIR)/$(am__dirstamp)
+glsl/standalone.lo: glsl/$(am__dirstamp) \
+	glsl/$(DEPDIR)/$(am__dirstamp)
+glsl/libstandalone.la: $(glsl_libstandalone_la_OBJECTS) $(glsl_libstandalone_la_DEPENDENCIES) $(EXTRA_glsl_libstandalone_la_DEPENDENCIES) glsl/$(am__dirstamp)
+	$(AM_V_CXXLD)$(CXXLINK)  $(glsl_libstandalone_la_OBJECTS) $(glsl_libstandalone_la_LIBADD) $(LIBS)
 libcompiler.la: $(libcompiler_la_OBJECTS) $(libcompiler_la_DEPENDENCIES) $(EXTRA_libcompiler_la_DEPENDENCIES) 
 	$(AM_V_CXXLD)$(CXXLINK)  $(libcompiler_la_OBJECTS) $(libcompiler_la_LIBADD) $(LIBS)
 nir/$(am__dirstamp):
@@ -1357,114 +1577,150 @@ nir/$(am__dirstamp):
 nir/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) nir/$(DEPDIR)
 	@: > nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-glsl_to_nir.lo: nir/$(am__dirstamp) \
+nir/nir.lo: nir/$(am__dirstamp) nir/$(DEPDIR)/$(am__dirstamp)
+nir/nir_clone.lo: nir/$(am__dirstamp) nir/$(DEPDIR)/$(am__dirstamp)
+nir/nir_control_flow.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir.lo: nir/$(am__dirstamp) \
+nir/nir_dominance.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_clone.lo: nir/$(am__dirstamp) \
+nir/nir_from_ssa.lo: nir/$(am__dirstamp) nir/$(DEPDIR)/$(am__dirstamp)
+nir/nir_gather_info.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_control_flow.lo: nir/$(am__dirstamp) \
+nir/nir_gs_count_vertices.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_dominance.lo: nir/$(am__dirstamp) \
+nir/nir_inline_functions.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_from_ssa.lo: nir/$(am__dirstamp) \
+nir/nir_instr_set.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_gs_count_vertices.lo: nir/$(am__dirstamp) \
+nir/nir_intrinsics.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_intrinsics.lo: nir/$(am__dirstamp) \
+nir/nir_liveness.lo: nir/$(am__dirstamp) nir/$(DEPDIR)/$(am__dirstamp)
+nir/nir_lower_alu_to_scalar.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_instr_set.lo: nir/$(am__dirstamp) \
+nir/nir_lower_atomics.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_liveness.lo: nir/$(am__dirstamp) \
+nir/nir_lower_bitmap.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_lower_alu_to_scalar.lo: nir/$(am__dirstamp) \
+nir/nir_lower_clamp_color_outputs.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_lower_atomics.lo: nir/$(am__dirstamp) \
+nir/nir_lower_clip.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_lower_clip.lo: nir/$(am__dirstamp) \
+nir/nir_lower_double_ops.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_lower_global_vars_to_local.lo:  \
-	nir/$(am__dirstamp) nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_lower_gs_intrinsics.lo: nir/$(am__dirstamp) \
+nir/nir_lower_double_packing.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_lower_load_const_to_scalar.lo:  \
-	nir/$(am__dirstamp) nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_lower_locals_to_regs.lo: nir/$(am__dirstamp) \
+nir/nir_lower_drawpixels.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_lower_idiv.lo: nir/$(am__dirstamp) \
+nir/nir_lower_global_vars_to_local.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_lower_io.lo: nir/$(am__dirstamp) \
+nir/nir_lower_gs_intrinsics.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_lower_outputs_to_temporaries.lo:  \
-	nir/$(am__dirstamp) nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_lower_phis_to_scalar.lo: nir/$(am__dirstamp) \
+nir/nir_lower_load_const_to_scalar.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_lower_samplers.lo: nir/$(am__dirstamp) \
+nir/nir_lower_locals_to_regs.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_lower_system_values.lo: nir/$(am__dirstamp) \
+nir/nir_lower_idiv.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_lower_tex.lo: nir/$(am__dirstamp) \
+nir/nir_lower_indirect_derefs.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_lower_to_source_mods.lo: nir/$(am__dirstamp) \
+nir/nir_lower_io.lo: nir/$(am__dirstamp) nir/$(DEPDIR)/$(am__dirstamp)
+nir/nir_lower_io_to_temporaries.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_lower_two_sided_color.lo: nir/$(am__dirstamp) \
+nir/nir_lower_io_to_scalar.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_lower_vars_to_ssa.lo: nir/$(am__dirstamp) \
+nir/nir_lower_io_types.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_lower_var_copies.lo: nir/$(am__dirstamp) \
+nir/nir_lower_passthrough_edgeflags.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_lower_vec_to_movs.lo: nir/$(am__dirstamp) \
+nir/nir_lower_phis_to_scalar.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_metadata.lo: nir/$(am__dirstamp) \
+nir/nir_lower_returns.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_move_vec_src_uses_to_dest.lo:  \
-	nir/$(am__dirstamp) nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_normalize_cubemap_coords.lo:  \
-	nir/$(am__dirstamp) nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_opt_constant_folding.lo: nir/$(am__dirstamp) \
+nir/nir_lower_samplers.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_opt_copy_propagate.lo: nir/$(am__dirstamp) \
+nir/nir_lower_system_values.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_opt_cse.lo: nir/$(am__dirstamp) \
+nir/nir_lower_tex.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_opt_dce.lo: nir/$(am__dirstamp) \
+nir/nir_lower_to_source_mods.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_opt_dead_cf.lo: nir/$(am__dirstamp) \
+nir/nir_lower_two_sided_color.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_opt_gcm.lo: nir/$(am__dirstamp) \
+nir/nir_lower_vars_to_ssa.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_opt_global_to_local.lo: nir/$(am__dirstamp) \
+nir/nir_lower_var_copies.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_opt_peephole_select.lo: nir/$(am__dirstamp) \
+nir/nir_lower_vec_to_movs.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_opt_remove_phis.lo: nir/$(am__dirstamp) \
+nir/nir_lower_wpos_center.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_opt_undef.lo: nir/$(am__dirstamp) \
+nir/nir_lower_wpos_ytransform.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_print.lo: nir/$(am__dirstamp) \
+nir/nir_metadata.lo: nir/$(am__dirstamp) nir/$(DEPDIR)/$(am__dirstamp)
+nir/nir_move_vec_src_uses_to_dest.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_remove_dead_variables.lo: nir/$(am__dirstamp) \
+nir/nir_normalize_cubemap_coords.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_search.lo: nir/$(am__dirstamp) \
+nir/nir_opt_conditional_discard.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_split_var_copies.lo: nir/$(am__dirstamp) \
+nir/nir_opt_constant_folding.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_sweep.lo: nir/$(am__dirstamp) \
+nir/nir_opt_copy_propagate.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_to_ssa.lo: nir/$(am__dirstamp) \
+nir/nir_opt_cse.lo: nir/$(am__dirstamp) nir/$(DEPDIR)/$(am__dirstamp)
+nir/nir_opt_dce.lo: nir/$(am__dirstamp) nir/$(DEPDIR)/$(am__dirstamp)
+nir/nir_opt_dead_cf.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_validate.lo: nir/$(am__dirstamp) \
+nir/nir_opt_gcm.lo: nir/$(am__dirstamp) nir/$(DEPDIR)/$(am__dirstamp)
+nir/nir_opt_global_to_local.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_worklist.lo: nir/$(am__dirstamp) \
+nir/nir_opt_peephole_select.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_constant_expressions.lo: nir/$(am__dirstamp) \
+nir/nir_opt_remove_phis.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_opcodes.lo: nir/$(am__dirstamp) \
+nir/nir_opt_undef.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
-nir/nir_libnir_la-nir_opt_algebraic.lo: nir/$(am__dirstamp) \
+nir/nir_phi_builder.lo: nir/$(am__dirstamp) \
+	nir/$(DEPDIR)/$(am__dirstamp)
+nir/nir_print.lo: nir/$(am__dirstamp) nir/$(DEPDIR)/$(am__dirstamp)
+nir/nir_propagate_invariant.lo: nir/$(am__dirstamp) \
+	nir/$(DEPDIR)/$(am__dirstamp)
+nir/nir_remove_dead_variables.lo: nir/$(am__dirstamp) \
+	nir/$(DEPDIR)/$(am__dirstamp)
+nir/nir_repair_ssa.lo: nir/$(am__dirstamp) \
+	nir/$(DEPDIR)/$(am__dirstamp)
+nir/nir_search.lo: nir/$(am__dirstamp) nir/$(DEPDIR)/$(am__dirstamp)
+nir/nir_split_var_copies.lo: nir/$(am__dirstamp) \
+	nir/$(DEPDIR)/$(am__dirstamp)
+nir/nir_sweep.lo: nir/$(am__dirstamp) nir/$(DEPDIR)/$(am__dirstamp)
+nir/nir_to_ssa.lo: nir/$(am__dirstamp) nir/$(DEPDIR)/$(am__dirstamp)
+nir/nir_validate.lo: nir/$(am__dirstamp) nir/$(DEPDIR)/$(am__dirstamp)
+nir/nir_worklist.lo: nir/$(am__dirstamp) nir/$(DEPDIR)/$(am__dirstamp)
+spirv/$(am__dirstamp):
+	@$(MKDIR_P) spirv
+	@: > spirv/$(am__dirstamp)
+spirv/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) spirv/$(DEPDIR)
+	@: > spirv/$(DEPDIR)/$(am__dirstamp)
+spirv/spirv_info.lo: spirv/$(am__dirstamp) \
+	spirv/$(DEPDIR)/$(am__dirstamp)
+spirv/spirv_to_nir.lo: spirv/$(am__dirstamp) \
+	spirv/$(DEPDIR)/$(am__dirstamp)
+spirv/vtn_alu.lo: spirv/$(am__dirstamp) \
+	spirv/$(DEPDIR)/$(am__dirstamp)
+spirv/vtn_cfg.lo: spirv/$(am__dirstamp) \
+	spirv/$(DEPDIR)/$(am__dirstamp)
+spirv/vtn_glsl450.lo: spirv/$(am__dirstamp) \
+	spirv/$(DEPDIR)/$(am__dirstamp)
+spirv/vtn_variables.lo: spirv/$(am__dirstamp) \
+	spirv/$(DEPDIR)/$(am__dirstamp)
+nir/nir_constant_expressions.lo: nir/$(am__dirstamp) \
+	nir/$(DEPDIR)/$(am__dirstamp)
+nir/nir_opcodes.lo: nir/$(am__dirstamp) nir/$(DEPDIR)/$(am__dirstamp)
+nir/nir_opt_algebraic.lo: nir/$(am__dirstamp) \
 	nir/$(DEPDIR)/$(am__dirstamp)
 nir/libnir.la: $(nir_libnir_la_OBJECTS) $(nir_libnir_la_DEPENDENCIES) $(EXTRA_nir_libnir_la_DEPENDENCIES) nir/$(am__dirstamp)
-	$(AM_V_CXXLD)$(CXXLINK)  $(nir_libnir_la_OBJECTS) $(nir_libnir_la_LIBADD) $(LIBS)
+	$(AM_V_CCLD)$(LINK)  $(nir_libnir_la_OBJECTS) $(nir_libnir_la_LIBADD) $(LIBS)
 
 clean-checkPROGRAMS:
 	@list='$(check_PROGRAMS)'; test -n "$$list" || exit 0; \
@@ -1488,8 +1744,6 @@ glsl/glcpp/glcpp.$(OBJEXT): glsl/glcpp/$(am__dirstamp) \
 glsl/glcpp/glcpp$(EXEEXT): $(glsl_glcpp_glcpp_OBJECTS) $(glsl_glcpp_glcpp_DEPENDENCIES) $(EXTRA_glsl_glcpp_glcpp_DEPENDENCIES) glsl/glcpp/$(am__dirstamp)
 	@rm -f glsl/glcpp/glcpp$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(glsl_glcpp_glcpp_OBJECTS) $(glsl_glcpp_glcpp_LDADD) $(LIBS)
-glsl/standalone_scaffolding.$(OBJEXT): glsl/$(am__dirstamp) \
-	glsl/$(DEPDIR)/$(am__dirstamp)
 glsl/test.$(OBJEXT): glsl/$(am__dirstamp) \
 	glsl/$(DEPDIR)/$(am__dirstamp)
 glsl/test_optpass.$(OBJEXT): glsl/$(am__dirstamp) \
@@ -1508,6 +1762,11 @@ glsl/tests/blob_test.$(OBJEXT): glsl/tests/$(am__dirstamp) \
 glsl/tests/blob-test$(EXEEXT): $(glsl_tests_blob_test_OBJECTS) $(glsl_tests_blob_test_DEPENDENCIES) $(EXTRA_glsl_tests_blob_test_DEPENDENCIES) glsl/tests/$(am__dirstamp)
 	@rm -f glsl/tests/blob-test$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(glsl_tests_blob_test_OBJECTS) $(glsl_tests_blob_test_LDADD) $(LIBS)
+glsl/tests/cache_test.$(OBJEXT): glsl/tests/$(am__dirstamp) \
+	glsl/tests/$(DEPDIR)/$(am__dirstamp)
+glsl/tests/cache-test$(EXEEXT): $(glsl_tests_cache_test_OBJECTS) $(glsl_tests_cache_test_DEPENDENCIES) $(EXTRA_glsl_tests_cache_test_DEPENDENCIES) glsl/tests/$(am__dirstamp)
+	@rm -f glsl/tests/cache-test$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(glsl_tests_cache_test_OBJECTS) $(glsl_tests_cache_test_LDADD) $(LIBS)
 glsl/tests/builtin_variable_test.$(OBJEXT):  \
 	glsl/tests/$(am__dirstamp) \
 	glsl/tests/$(DEPDIR)/$(am__dirstamp)
@@ -1554,6 +1813,11 @@ nir/tests/nir_tests_control_flow_tests-control_flow_tests.$(OBJEXT):  \
 nir/tests/control_flow_tests$(EXEEXT): $(nir_tests_control_flow_tests_OBJECTS) $(nir_tests_control_flow_tests_DEPENDENCIES) $(EXTRA_nir_tests_control_flow_tests_DEPENDENCIES) nir/tests/$(am__dirstamp)
 	@rm -f nir/tests/control_flow_tests$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(nir_tests_control_flow_tests_OBJECTS) $(nir_tests_control_flow_tests_LDADD) $(LIBS)
+spirv/spirv2nir-spirv2nir.$(OBJEXT): spirv/$(am__dirstamp) \
+	spirv/$(DEPDIR)/$(am__dirstamp)
+spirv2nir$(EXEEXT): $(spirv2nir_OBJECTS) $(spirv2nir_DEPENDENCIES) $(EXTRA_spirv2nir_DEPENDENCIES) 
+	@rm -f spirv2nir$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(spirv2nir_OBJECTS) $(spirv2nir_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -1565,6 +1829,8 @@ mostlyclean-compile:
 	-rm -f nir/*.$(OBJEXT)
 	-rm -f nir/*.lo
 	-rm -f nir/tests/*.$(OBJEXT)
+	-rm -f spirv/*.$(OBJEXT)
+	-rm -f spirv/*.lo
 
 distclean-compile:
 	-rm -f *.tab.c
@@ -1572,6 +1838,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glsl_types.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nir_types.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/shader_enums.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/spirv2nir-dummy.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/ast_array_index.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/ast_expr.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/ast_function.Plo@am__quote@
@@ -1581,10 +1848,12 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/builtin_functions.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/builtin_types.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/builtin_variables.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/cache.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/glsl_lexer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/glsl_parser.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/glsl_parser_extras.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/glsl_symbol_table.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/glsl_to_nir.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/hir_field_selection.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/ir.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/ir_basic_block.Plo@am__quote@
@@ -1598,7 +1867,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/ir_function_detect_recursion.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/ir_hierarchical_visitor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/ir_hv_accept.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/ir_import_prototypes.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/ir_print_visitor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/ir_reader.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/ir_rvalue_visitor.Plo@am__quote@
@@ -1617,11 +1885,12 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/loop_analysis.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/loop_controls.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/loop_unroll.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/lower_blend_equation_advanced.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/lower_buffer_access.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/lower_clip_distance.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/lower_const_arrays_to_uniforms.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/lower_discard.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/lower_discard_flow.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/lower_distance.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/lower_if_to_cond_assign.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/lower_instructions.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/lower_jumps.Plo@am__quote@
@@ -1670,8 +1939,10 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/opt_swizzle_swizzle.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/opt_tree_grafting.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/opt_vectorize.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/propagate_invariance.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/s_expression.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/standalone_scaffolding.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/standalone.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/standalone_scaffolding.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/$(DEPDIR)/test_optpass.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/glcpp/$(DEPDIR)/glcpp-lex.Plo@am__quote@
@@ -1680,6 +1951,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/glcpp/$(DEPDIR)/pp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/tests/$(DEPDIR)/blob_test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/tests/$(DEPDIR)/builtin_variable_test.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@glsl/tests/$(DEPDIR)/cache_test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/tests/$(DEPDIR)/copy_constant_to_storage_tests.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/tests/$(DEPDIR)/general_ir_test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/tests/$(DEPDIR)/invalidate_locations_test.Po@am__quote@
@@ -1687,60 +1959,84 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/tests/$(DEPDIR)/set_uniform_initializer_tests.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/tests/$(DEPDIR)/uniform_initializer_utils.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@glsl/tests/$(DEPDIR)/varyings_test.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-glsl_to_nir.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_clone.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_constant_expressions.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_control_flow.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_dominance.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_from_ssa.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_gs_count_vertices.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_instr_set.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_intrinsics.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_liveness.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_lower_alu_to_scalar.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_lower_atomics.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_lower_clip.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_lower_global_vars_to_local.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_lower_gs_intrinsics.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_lower_idiv.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_lower_io.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_lower_load_const_to_scalar.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_lower_locals_to_regs.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_lower_outputs_to_temporaries.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_lower_phis_to_scalar.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_lower_samplers.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_lower_system_values.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_lower_tex.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_lower_to_source_mods.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_lower_two_sided_color.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_lower_var_copies.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_lower_vars_to_ssa.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_lower_vec_to_movs.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_metadata.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_move_vec_src_uses_to_dest.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_normalize_cubemap_coords.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_opcodes.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_opt_algebraic.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_opt_constant_folding.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_opt_copy_propagate.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_opt_cse.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_opt_dce.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_opt_dead_cf.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_opt_gcm.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_opt_global_to_local.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_opt_peephole_select.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_opt_remove_phis.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_opt_undef.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_print.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_remove_dead_variables.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_search.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_split_var_copies.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_sweep.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_to_ssa.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_validate.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_libnir_la-nir_worklist.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_clone.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_constant_expressions.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_control_flow.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_dominance.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_from_ssa.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_gather_info.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_gs_count_vertices.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_inline_functions.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_instr_set.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_intrinsics.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_liveness.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_lower_alu_to_scalar.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_lower_atomics.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_lower_bitmap.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_lower_clamp_color_outputs.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_lower_clip.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_lower_double_ops.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_lower_double_packing.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_lower_drawpixels.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_lower_global_vars_to_local.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_lower_gs_intrinsics.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_lower_idiv.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_lower_indirect_derefs.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_lower_io.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_lower_io_to_scalar.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_lower_io_to_temporaries.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_lower_io_types.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_lower_load_const_to_scalar.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_lower_locals_to_regs.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_lower_passthrough_edgeflags.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_lower_phis_to_scalar.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_lower_returns.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_lower_samplers.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_lower_system_values.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_lower_tex.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_lower_to_source_mods.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_lower_two_sided_color.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_lower_var_copies.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_lower_vars_to_ssa.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_lower_vec_to_movs.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_lower_wpos_center.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_lower_wpos_ytransform.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_metadata.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_move_vec_src_uses_to_dest.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_normalize_cubemap_coords.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_opcodes.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_opt_algebraic.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_opt_conditional_discard.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_opt_constant_folding.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_opt_copy_propagate.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_opt_cse.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_opt_dce.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_opt_dead_cf.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_opt_gcm.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_opt_global_to_local.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_opt_peephole_select.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_opt_remove_phis.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_opt_undef.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_phi_builder.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_print.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_propagate_invariant.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_remove_dead_variables.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_repair_ssa.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_search.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_split_var_copies.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_sweep.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_to_ssa.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_validate.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@nir/$(DEPDIR)/nir_worklist.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@nir/tests/$(DEPDIR)/nir_tests_control_flow_tests-control_flow_tests.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@spirv/$(DEPDIR)/spirv2nir-spirv2nir.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@spirv/$(DEPDIR)/spirv_info.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@spirv/$(DEPDIR)/spirv_to_nir.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@spirv/$(DEPDIR)/vtn_alu.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@spirv/$(DEPDIR)/vtn_cfg.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@spirv/$(DEPDIR)/vtn_glsl450.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@spirv/$(DEPDIR)/vtn_variables.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
@@ -1766,369 +2062,19 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
 
-nir/nir_libnir_la-nir.lo: nir/nir.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir.Tpo -c -o nir/nir_libnir_la-nir.lo `test -f 'nir/nir.c' || echo '$(srcdir)/'`nir/nir.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir.Tpo nir/$(DEPDIR)/nir_libnir_la-nir.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir.c' object='nir/nir_libnir_la-nir.lo' libtool=yes @AMDEPBACKSLASH@
+spirv/spirv2nir-spirv2nir.o: spirv/spirv2nir.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(spirv2nir_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT spirv/spirv2nir-spirv2nir.o -MD -MP -MF spirv/$(DEPDIR)/spirv2nir-spirv2nir.Tpo -c -o spirv/spirv2nir-spirv2nir.o `test -f 'spirv/spirv2nir.c' || echo '$(srcdir)/'`spirv/spirv2nir.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) spirv/$(DEPDIR)/spirv2nir-spirv2nir.Tpo spirv/$(DEPDIR)/spirv2nir-spirv2nir.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='spirv/spirv2nir.c' object='spirv/spirv2nir-spirv2nir.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir.lo `test -f 'nir/nir.c' || echo '$(srcdir)/'`nir/nir.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(spirv2nir_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o spirv/spirv2nir-spirv2nir.o `test -f 'spirv/spirv2nir.c' || echo '$(srcdir)/'`spirv/spirv2nir.c
 
-nir/nir_libnir_la-nir_clone.lo: nir/nir_clone.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_clone.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_clone.Tpo -c -o nir/nir_libnir_la-nir_clone.lo `test -f 'nir/nir_clone.c' || echo '$(srcdir)/'`nir/nir_clone.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_clone.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_clone.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_clone.c' object='nir/nir_libnir_la-nir_clone.lo' libtool=yes @AMDEPBACKSLASH@
+spirv/spirv2nir-spirv2nir.obj: spirv/spirv2nir.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(spirv2nir_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT spirv/spirv2nir-spirv2nir.obj -MD -MP -MF spirv/$(DEPDIR)/spirv2nir-spirv2nir.Tpo -c -o spirv/spirv2nir-spirv2nir.obj `if test -f 'spirv/spirv2nir.c'; then $(CYGPATH_W) 'spirv/spirv2nir.c'; else $(CYGPATH_W) '$(srcdir)/spirv/spirv2nir.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) spirv/$(DEPDIR)/spirv2nir-spirv2nir.Tpo spirv/$(DEPDIR)/spirv2nir-spirv2nir.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='spirv/spirv2nir.c' object='spirv/spirv2nir-spirv2nir.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_clone.lo `test -f 'nir/nir_clone.c' || echo '$(srcdir)/'`nir/nir_clone.c
-
-nir/nir_libnir_la-nir_control_flow.lo: nir/nir_control_flow.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_control_flow.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_control_flow.Tpo -c -o nir/nir_libnir_la-nir_control_flow.lo `test -f 'nir/nir_control_flow.c' || echo '$(srcdir)/'`nir/nir_control_flow.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_control_flow.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_control_flow.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_control_flow.c' object='nir/nir_libnir_la-nir_control_flow.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_control_flow.lo `test -f 'nir/nir_control_flow.c' || echo '$(srcdir)/'`nir/nir_control_flow.c
-
-nir/nir_libnir_la-nir_dominance.lo: nir/nir_dominance.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_dominance.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_dominance.Tpo -c -o nir/nir_libnir_la-nir_dominance.lo `test -f 'nir/nir_dominance.c' || echo '$(srcdir)/'`nir/nir_dominance.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_dominance.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_dominance.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_dominance.c' object='nir/nir_libnir_la-nir_dominance.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_dominance.lo `test -f 'nir/nir_dominance.c' || echo '$(srcdir)/'`nir/nir_dominance.c
-
-nir/nir_libnir_la-nir_from_ssa.lo: nir/nir_from_ssa.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_from_ssa.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_from_ssa.Tpo -c -o nir/nir_libnir_la-nir_from_ssa.lo `test -f 'nir/nir_from_ssa.c' || echo '$(srcdir)/'`nir/nir_from_ssa.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_from_ssa.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_from_ssa.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_from_ssa.c' object='nir/nir_libnir_la-nir_from_ssa.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_from_ssa.lo `test -f 'nir/nir_from_ssa.c' || echo '$(srcdir)/'`nir/nir_from_ssa.c
-
-nir/nir_libnir_la-nir_gs_count_vertices.lo: nir/nir_gs_count_vertices.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_gs_count_vertices.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_gs_count_vertices.Tpo -c -o nir/nir_libnir_la-nir_gs_count_vertices.lo `test -f 'nir/nir_gs_count_vertices.c' || echo '$(srcdir)/'`nir/nir_gs_count_vertices.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_gs_count_vertices.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_gs_count_vertices.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_gs_count_vertices.c' object='nir/nir_libnir_la-nir_gs_count_vertices.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_gs_count_vertices.lo `test -f 'nir/nir_gs_count_vertices.c' || echo '$(srcdir)/'`nir/nir_gs_count_vertices.c
-
-nir/nir_libnir_la-nir_intrinsics.lo: nir/nir_intrinsics.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_intrinsics.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_intrinsics.Tpo -c -o nir/nir_libnir_la-nir_intrinsics.lo `test -f 'nir/nir_intrinsics.c' || echo '$(srcdir)/'`nir/nir_intrinsics.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_intrinsics.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_intrinsics.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_intrinsics.c' object='nir/nir_libnir_la-nir_intrinsics.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_intrinsics.lo `test -f 'nir/nir_intrinsics.c' || echo '$(srcdir)/'`nir/nir_intrinsics.c
-
-nir/nir_libnir_la-nir_instr_set.lo: nir/nir_instr_set.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_instr_set.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_instr_set.Tpo -c -o nir/nir_libnir_la-nir_instr_set.lo `test -f 'nir/nir_instr_set.c' || echo '$(srcdir)/'`nir/nir_instr_set.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_instr_set.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_instr_set.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_instr_set.c' object='nir/nir_libnir_la-nir_instr_set.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_instr_set.lo `test -f 'nir/nir_instr_set.c' || echo '$(srcdir)/'`nir/nir_instr_set.c
-
-nir/nir_libnir_la-nir_liveness.lo: nir/nir_liveness.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_liveness.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_liveness.Tpo -c -o nir/nir_libnir_la-nir_liveness.lo `test -f 'nir/nir_liveness.c' || echo '$(srcdir)/'`nir/nir_liveness.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_liveness.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_liveness.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_liveness.c' object='nir/nir_libnir_la-nir_liveness.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_liveness.lo `test -f 'nir/nir_liveness.c' || echo '$(srcdir)/'`nir/nir_liveness.c
-
-nir/nir_libnir_la-nir_lower_alu_to_scalar.lo: nir/nir_lower_alu_to_scalar.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_lower_alu_to_scalar.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_lower_alu_to_scalar.Tpo -c -o nir/nir_libnir_la-nir_lower_alu_to_scalar.lo `test -f 'nir/nir_lower_alu_to_scalar.c' || echo '$(srcdir)/'`nir/nir_lower_alu_to_scalar.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_lower_alu_to_scalar.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_lower_alu_to_scalar.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_lower_alu_to_scalar.c' object='nir/nir_libnir_la-nir_lower_alu_to_scalar.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_lower_alu_to_scalar.lo `test -f 'nir/nir_lower_alu_to_scalar.c' || echo '$(srcdir)/'`nir/nir_lower_alu_to_scalar.c
-
-nir/nir_libnir_la-nir_lower_atomics.lo: nir/nir_lower_atomics.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_lower_atomics.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_lower_atomics.Tpo -c -o nir/nir_libnir_la-nir_lower_atomics.lo `test -f 'nir/nir_lower_atomics.c' || echo '$(srcdir)/'`nir/nir_lower_atomics.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_lower_atomics.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_lower_atomics.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_lower_atomics.c' object='nir/nir_libnir_la-nir_lower_atomics.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_lower_atomics.lo `test -f 'nir/nir_lower_atomics.c' || echo '$(srcdir)/'`nir/nir_lower_atomics.c
-
-nir/nir_libnir_la-nir_lower_clip.lo: nir/nir_lower_clip.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_lower_clip.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_lower_clip.Tpo -c -o nir/nir_libnir_la-nir_lower_clip.lo `test -f 'nir/nir_lower_clip.c' || echo '$(srcdir)/'`nir/nir_lower_clip.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_lower_clip.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_lower_clip.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_lower_clip.c' object='nir/nir_libnir_la-nir_lower_clip.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_lower_clip.lo `test -f 'nir/nir_lower_clip.c' || echo '$(srcdir)/'`nir/nir_lower_clip.c
-
-nir/nir_libnir_la-nir_lower_global_vars_to_local.lo: nir/nir_lower_global_vars_to_local.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_lower_global_vars_to_local.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_lower_global_vars_to_local.Tpo -c -o nir/nir_libnir_la-nir_lower_global_vars_to_local.lo `test -f 'nir/nir_lower_global_vars_to_local.c' || echo '$(srcdir)/'`nir/nir_lower_global_vars_to_local.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_lower_global_vars_to_local.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_lower_global_vars_to_local.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_lower_global_vars_to_local.c' object='nir/nir_libnir_la-nir_lower_global_vars_to_local.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_lower_global_vars_to_local.lo `test -f 'nir/nir_lower_global_vars_to_local.c' || echo '$(srcdir)/'`nir/nir_lower_global_vars_to_local.c
-
-nir/nir_libnir_la-nir_lower_gs_intrinsics.lo: nir/nir_lower_gs_intrinsics.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_lower_gs_intrinsics.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_lower_gs_intrinsics.Tpo -c -o nir/nir_libnir_la-nir_lower_gs_intrinsics.lo `test -f 'nir/nir_lower_gs_intrinsics.c' || echo '$(srcdir)/'`nir/nir_lower_gs_intrinsics.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_lower_gs_intrinsics.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_lower_gs_intrinsics.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_lower_gs_intrinsics.c' object='nir/nir_libnir_la-nir_lower_gs_intrinsics.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_lower_gs_intrinsics.lo `test -f 'nir/nir_lower_gs_intrinsics.c' || echo '$(srcdir)/'`nir/nir_lower_gs_intrinsics.c
-
-nir/nir_libnir_la-nir_lower_load_const_to_scalar.lo: nir/nir_lower_load_const_to_scalar.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_lower_load_const_to_scalar.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_lower_load_const_to_scalar.Tpo -c -o nir/nir_libnir_la-nir_lower_load_const_to_scalar.lo `test -f 'nir/nir_lower_load_const_to_scalar.c' || echo '$(srcdir)/'`nir/nir_lower_load_const_to_scalar.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_lower_load_const_to_scalar.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_lower_load_const_to_scalar.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_lower_load_const_to_scalar.c' object='nir/nir_libnir_la-nir_lower_load_const_to_scalar.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_lower_load_const_to_scalar.lo `test -f 'nir/nir_lower_load_const_to_scalar.c' || echo '$(srcdir)/'`nir/nir_lower_load_const_to_scalar.c
-
-nir/nir_libnir_la-nir_lower_locals_to_regs.lo: nir/nir_lower_locals_to_regs.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_lower_locals_to_regs.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_lower_locals_to_regs.Tpo -c -o nir/nir_libnir_la-nir_lower_locals_to_regs.lo `test -f 'nir/nir_lower_locals_to_regs.c' || echo '$(srcdir)/'`nir/nir_lower_locals_to_regs.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_lower_locals_to_regs.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_lower_locals_to_regs.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_lower_locals_to_regs.c' object='nir/nir_libnir_la-nir_lower_locals_to_regs.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_lower_locals_to_regs.lo `test -f 'nir/nir_lower_locals_to_regs.c' || echo '$(srcdir)/'`nir/nir_lower_locals_to_regs.c
-
-nir/nir_libnir_la-nir_lower_idiv.lo: nir/nir_lower_idiv.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_lower_idiv.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_lower_idiv.Tpo -c -o nir/nir_libnir_la-nir_lower_idiv.lo `test -f 'nir/nir_lower_idiv.c' || echo '$(srcdir)/'`nir/nir_lower_idiv.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_lower_idiv.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_lower_idiv.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_lower_idiv.c' object='nir/nir_libnir_la-nir_lower_idiv.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_lower_idiv.lo `test -f 'nir/nir_lower_idiv.c' || echo '$(srcdir)/'`nir/nir_lower_idiv.c
-
-nir/nir_libnir_la-nir_lower_io.lo: nir/nir_lower_io.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_lower_io.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_lower_io.Tpo -c -o nir/nir_libnir_la-nir_lower_io.lo `test -f 'nir/nir_lower_io.c' || echo '$(srcdir)/'`nir/nir_lower_io.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_lower_io.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_lower_io.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_lower_io.c' object='nir/nir_libnir_la-nir_lower_io.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_lower_io.lo `test -f 'nir/nir_lower_io.c' || echo '$(srcdir)/'`nir/nir_lower_io.c
-
-nir/nir_libnir_la-nir_lower_outputs_to_temporaries.lo: nir/nir_lower_outputs_to_temporaries.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_lower_outputs_to_temporaries.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_lower_outputs_to_temporaries.Tpo -c -o nir/nir_libnir_la-nir_lower_outputs_to_temporaries.lo `test -f 'nir/nir_lower_outputs_to_temporaries.c' || echo '$(srcdir)/'`nir/nir_lower_outputs_to_temporaries.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_lower_outputs_to_temporaries.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_lower_outputs_to_temporaries.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_lower_outputs_to_temporaries.c' object='nir/nir_libnir_la-nir_lower_outputs_to_temporaries.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_lower_outputs_to_temporaries.lo `test -f 'nir/nir_lower_outputs_to_temporaries.c' || echo '$(srcdir)/'`nir/nir_lower_outputs_to_temporaries.c
-
-nir/nir_libnir_la-nir_lower_phis_to_scalar.lo: nir/nir_lower_phis_to_scalar.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_lower_phis_to_scalar.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_lower_phis_to_scalar.Tpo -c -o nir/nir_libnir_la-nir_lower_phis_to_scalar.lo `test -f 'nir/nir_lower_phis_to_scalar.c' || echo '$(srcdir)/'`nir/nir_lower_phis_to_scalar.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_lower_phis_to_scalar.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_lower_phis_to_scalar.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_lower_phis_to_scalar.c' object='nir/nir_libnir_la-nir_lower_phis_to_scalar.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_lower_phis_to_scalar.lo `test -f 'nir/nir_lower_phis_to_scalar.c' || echo '$(srcdir)/'`nir/nir_lower_phis_to_scalar.c
-
-nir/nir_libnir_la-nir_lower_samplers.lo: nir/nir_lower_samplers.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_lower_samplers.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_lower_samplers.Tpo -c -o nir/nir_libnir_la-nir_lower_samplers.lo `test -f 'nir/nir_lower_samplers.c' || echo '$(srcdir)/'`nir/nir_lower_samplers.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_lower_samplers.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_lower_samplers.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_lower_samplers.c' object='nir/nir_libnir_la-nir_lower_samplers.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_lower_samplers.lo `test -f 'nir/nir_lower_samplers.c' || echo '$(srcdir)/'`nir/nir_lower_samplers.c
-
-nir/nir_libnir_la-nir_lower_system_values.lo: nir/nir_lower_system_values.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_lower_system_values.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_lower_system_values.Tpo -c -o nir/nir_libnir_la-nir_lower_system_values.lo `test -f 'nir/nir_lower_system_values.c' || echo '$(srcdir)/'`nir/nir_lower_system_values.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_lower_system_values.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_lower_system_values.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_lower_system_values.c' object='nir/nir_libnir_la-nir_lower_system_values.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_lower_system_values.lo `test -f 'nir/nir_lower_system_values.c' || echo '$(srcdir)/'`nir/nir_lower_system_values.c
-
-nir/nir_libnir_la-nir_lower_tex.lo: nir/nir_lower_tex.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_lower_tex.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_lower_tex.Tpo -c -o nir/nir_libnir_la-nir_lower_tex.lo `test -f 'nir/nir_lower_tex.c' || echo '$(srcdir)/'`nir/nir_lower_tex.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_lower_tex.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_lower_tex.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_lower_tex.c' object='nir/nir_libnir_la-nir_lower_tex.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_lower_tex.lo `test -f 'nir/nir_lower_tex.c' || echo '$(srcdir)/'`nir/nir_lower_tex.c
-
-nir/nir_libnir_la-nir_lower_to_source_mods.lo: nir/nir_lower_to_source_mods.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_lower_to_source_mods.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_lower_to_source_mods.Tpo -c -o nir/nir_libnir_la-nir_lower_to_source_mods.lo `test -f 'nir/nir_lower_to_source_mods.c' || echo '$(srcdir)/'`nir/nir_lower_to_source_mods.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_lower_to_source_mods.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_lower_to_source_mods.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_lower_to_source_mods.c' object='nir/nir_libnir_la-nir_lower_to_source_mods.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_lower_to_source_mods.lo `test -f 'nir/nir_lower_to_source_mods.c' || echo '$(srcdir)/'`nir/nir_lower_to_source_mods.c
-
-nir/nir_libnir_la-nir_lower_two_sided_color.lo: nir/nir_lower_two_sided_color.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_lower_two_sided_color.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_lower_two_sided_color.Tpo -c -o nir/nir_libnir_la-nir_lower_two_sided_color.lo `test -f 'nir/nir_lower_two_sided_color.c' || echo '$(srcdir)/'`nir/nir_lower_two_sided_color.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_lower_two_sided_color.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_lower_two_sided_color.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_lower_two_sided_color.c' object='nir/nir_libnir_la-nir_lower_two_sided_color.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_lower_two_sided_color.lo `test -f 'nir/nir_lower_two_sided_color.c' || echo '$(srcdir)/'`nir/nir_lower_two_sided_color.c
-
-nir/nir_libnir_la-nir_lower_vars_to_ssa.lo: nir/nir_lower_vars_to_ssa.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_lower_vars_to_ssa.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_lower_vars_to_ssa.Tpo -c -o nir/nir_libnir_la-nir_lower_vars_to_ssa.lo `test -f 'nir/nir_lower_vars_to_ssa.c' || echo '$(srcdir)/'`nir/nir_lower_vars_to_ssa.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_lower_vars_to_ssa.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_lower_vars_to_ssa.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_lower_vars_to_ssa.c' object='nir/nir_libnir_la-nir_lower_vars_to_ssa.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_lower_vars_to_ssa.lo `test -f 'nir/nir_lower_vars_to_ssa.c' || echo '$(srcdir)/'`nir/nir_lower_vars_to_ssa.c
-
-nir/nir_libnir_la-nir_lower_var_copies.lo: nir/nir_lower_var_copies.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_lower_var_copies.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_lower_var_copies.Tpo -c -o nir/nir_libnir_la-nir_lower_var_copies.lo `test -f 'nir/nir_lower_var_copies.c' || echo '$(srcdir)/'`nir/nir_lower_var_copies.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_lower_var_copies.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_lower_var_copies.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_lower_var_copies.c' object='nir/nir_libnir_la-nir_lower_var_copies.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_lower_var_copies.lo `test -f 'nir/nir_lower_var_copies.c' || echo '$(srcdir)/'`nir/nir_lower_var_copies.c
-
-nir/nir_libnir_la-nir_lower_vec_to_movs.lo: nir/nir_lower_vec_to_movs.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_lower_vec_to_movs.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_lower_vec_to_movs.Tpo -c -o nir/nir_libnir_la-nir_lower_vec_to_movs.lo `test -f 'nir/nir_lower_vec_to_movs.c' || echo '$(srcdir)/'`nir/nir_lower_vec_to_movs.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_lower_vec_to_movs.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_lower_vec_to_movs.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_lower_vec_to_movs.c' object='nir/nir_libnir_la-nir_lower_vec_to_movs.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_lower_vec_to_movs.lo `test -f 'nir/nir_lower_vec_to_movs.c' || echo '$(srcdir)/'`nir/nir_lower_vec_to_movs.c
-
-nir/nir_libnir_la-nir_metadata.lo: nir/nir_metadata.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_metadata.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_metadata.Tpo -c -o nir/nir_libnir_la-nir_metadata.lo `test -f 'nir/nir_metadata.c' || echo '$(srcdir)/'`nir/nir_metadata.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_metadata.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_metadata.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_metadata.c' object='nir/nir_libnir_la-nir_metadata.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_metadata.lo `test -f 'nir/nir_metadata.c' || echo '$(srcdir)/'`nir/nir_metadata.c
-
-nir/nir_libnir_la-nir_move_vec_src_uses_to_dest.lo: nir/nir_move_vec_src_uses_to_dest.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_move_vec_src_uses_to_dest.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_move_vec_src_uses_to_dest.Tpo -c -o nir/nir_libnir_la-nir_move_vec_src_uses_to_dest.lo `test -f 'nir/nir_move_vec_src_uses_to_dest.c' || echo '$(srcdir)/'`nir/nir_move_vec_src_uses_to_dest.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_move_vec_src_uses_to_dest.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_move_vec_src_uses_to_dest.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_move_vec_src_uses_to_dest.c' object='nir/nir_libnir_la-nir_move_vec_src_uses_to_dest.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_move_vec_src_uses_to_dest.lo `test -f 'nir/nir_move_vec_src_uses_to_dest.c' || echo '$(srcdir)/'`nir/nir_move_vec_src_uses_to_dest.c
-
-nir/nir_libnir_la-nir_normalize_cubemap_coords.lo: nir/nir_normalize_cubemap_coords.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_normalize_cubemap_coords.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_normalize_cubemap_coords.Tpo -c -o nir/nir_libnir_la-nir_normalize_cubemap_coords.lo `test -f 'nir/nir_normalize_cubemap_coords.c' || echo '$(srcdir)/'`nir/nir_normalize_cubemap_coords.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_normalize_cubemap_coords.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_normalize_cubemap_coords.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_normalize_cubemap_coords.c' object='nir/nir_libnir_la-nir_normalize_cubemap_coords.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_normalize_cubemap_coords.lo `test -f 'nir/nir_normalize_cubemap_coords.c' || echo '$(srcdir)/'`nir/nir_normalize_cubemap_coords.c
-
-nir/nir_libnir_la-nir_opt_constant_folding.lo: nir/nir_opt_constant_folding.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_opt_constant_folding.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_opt_constant_folding.Tpo -c -o nir/nir_libnir_la-nir_opt_constant_folding.lo `test -f 'nir/nir_opt_constant_folding.c' || echo '$(srcdir)/'`nir/nir_opt_constant_folding.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_opt_constant_folding.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_opt_constant_folding.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_opt_constant_folding.c' object='nir/nir_libnir_la-nir_opt_constant_folding.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_opt_constant_folding.lo `test -f 'nir/nir_opt_constant_folding.c' || echo '$(srcdir)/'`nir/nir_opt_constant_folding.c
-
-nir/nir_libnir_la-nir_opt_copy_propagate.lo: nir/nir_opt_copy_propagate.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_opt_copy_propagate.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_opt_copy_propagate.Tpo -c -o nir/nir_libnir_la-nir_opt_copy_propagate.lo `test -f 'nir/nir_opt_copy_propagate.c' || echo '$(srcdir)/'`nir/nir_opt_copy_propagate.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_opt_copy_propagate.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_opt_copy_propagate.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_opt_copy_propagate.c' object='nir/nir_libnir_la-nir_opt_copy_propagate.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_opt_copy_propagate.lo `test -f 'nir/nir_opt_copy_propagate.c' || echo '$(srcdir)/'`nir/nir_opt_copy_propagate.c
-
-nir/nir_libnir_la-nir_opt_cse.lo: nir/nir_opt_cse.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_opt_cse.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_opt_cse.Tpo -c -o nir/nir_libnir_la-nir_opt_cse.lo `test -f 'nir/nir_opt_cse.c' || echo '$(srcdir)/'`nir/nir_opt_cse.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_opt_cse.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_opt_cse.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_opt_cse.c' object='nir/nir_libnir_la-nir_opt_cse.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_opt_cse.lo `test -f 'nir/nir_opt_cse.c' || echo '$(srcdir)/'`nir/nir_opt_cse.c
-
-nir/nir_libnir_la-nir_opt_dce.lo: nir/nir_opt_dce.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_opt_dce.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_opt_dce.Tpo -c -o nir/nir_libnir_la-nir_opt_dce.lo `test -f 'nir/nir_opt_dce.c' || echo '$(srcdir)/'`nir/nir_opt_dce.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_opt_dce.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_opt_dce.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_opt_dce.c' object='nir/nir_libnir_la-nir_opt_dce.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_opt_dce.lo `test -f 'nir/nir_opt_dce.c' || echo '$(srcdir)/'`nir/nir_opt_dce.c
-
-nir/nir_libnir_la-nir_opt_dead_cf.lo: nir/nir_opt_dead_cf.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_opt_dead_cf.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_opt_dead_cf.Tpo -c -o nir/nir_libnir_la-nir_opt_dead_cf.lo `test -f 'nir/nir_opt_dead_cf.c' || echo '$(srcdir)/'`nir/nir_opt_dead_cf.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_opt_dead_cf.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_opt_dead_cf.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_opt_dead_cf.c' object='nir/nir_libnir_la-nir_opt_dead_cf.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_opt_dead_cf.lo `test -f 'nir/nir_opt_dead_cf.c' || echo '$(srcdir)/'`nir/nir_opt_dead_cf.c
-
-nir/nir_libnir_la-nir_opt_gcm.lo: nir/nir_opt_gcm.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_opt_gcm.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_opt_gcm.Tpo -c -o nir/nir_libnir_la-nir_opt_gcm.lo `test -f 'nir/nir_opt_gcm.c' || echo '$(srcdir)/'`nir/nir_opt_gcm.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_opt_gcm.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_opt_gcm.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_opt_gcm.c' object='nir/nir_libnir_la-nir_opt_gcm.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_opt_gcm.lo `test -f 'nir/nir_opt_gcm.c' || echo '$(srcdir)/'`nir/nir_opt_gcm.c
-
-nir/nir_libnir_la-nir_opt_global_to_local.lo: nir/nir_opt_global_to_local.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_opt_global_to_local.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_opt_global_to_local.Tpo -c -o nir/nir_libnir_la-nir_opt_global_to_local.lo `test -f 'nir/nir_opt_global_to_local.c' || echo '$(srcdir)/'`nir/nir_opt_global_to_local.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_opt_global_to_local.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_opt_global_to_local.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_opt_global_to_local.c' object='nir/nir_libnir_la-nir_opt_global_to_local.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_opt_global_to_local.lo `test -f 'nir/nir_opt_global_to_local.c' || echo '$(srcdir)/'`nir/nir_opt_global_to_local.c
-
-nir/nir_libnir_la-nir_opt_peephole_select.lo: nir/nir_opt_peephole_select.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_opt_peephole_select.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_opt_peephole_select.Tpo -c -o nir/nir_libnir_la-nir_opt_peephole_select.lo `test -f 'nir/nir_opt_peephole_select.c' || echo '$(srcdir)/'`nir/nir_opt_peephole_select.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_opt_peephole_select.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_opt_peephole_select.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_opt_peephole_select.c' object='nir/nir_libnir_la-nir_opt_peephole_select.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_opt_peephole_select.lo `test -f 'nir/nir_opt_peephole_select.c' || echo '$(srcdir)/'`nir/nir_opt_peephole_select.c
-
-nir/nir_libnir_la-nir_opt_remove_phis.lo: nir/nir_opt_remove_phis.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_opt_remove_phis.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_opt_remove_phis.Tpo -c -o nir/nir_libnir_la-nir_opt_remove_phis.lo `test -f 'nir/nir_opt_remove_phis.c' || echo '$(srcdir)/'`nir/nir_opt_remove_phis.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_opt_remove_phis.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_opt_remove_phis.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_opt_remove_phis.c' object='nir/nir_libnir_la-nir_opt_remove_phis.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_opt_remove_phis.lo `test -f 'nir/nir_opt_remove_phis.c' || echo '$(srcdir)/'`nir/nir_opt_remove_phis.c
-
-nir/nir_libnir_la-nir_opt_undef.lo: nir/nir_opt_undef.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_opt_undef.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_opt_undef.Tpo -c -o nir/nir_libnir_la-nir_opt_undef.lo `test -f 'nir/nir_opt_undef.c' || echo '$(srcdir)/'`nir/nir_opt_undef.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_opt_undef.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_opt_undef.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_opt_undef.c' object='nir/nir_libnir_la-nir_opt_undef.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_opt_undef.lo `test -f 'nir/nir_opt_undef.c' || echo '$(srcdir)/'`nir/nir_opt_undef.c
-
-nir/nir_libnir_la-nir_print.lo: nir/nir_print.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_print.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_print.Tpo -c -o nir/nir_libnir_la-nir_print.lo `test -f 'nir/nir_print.c' || echo '$(srcdir)/'`nir/nir_print.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_print.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_print.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_print.c' object='nir/nir_libnir_la-nir_print.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_print.lo `test -f 'nir/nir_print.c' || echo '$(srcdir)/'`nir/nir_print.c
-
-nir/nir_libnir_la-nir_remove_dead_variables.lo: nir/nir_remove_dead_variables.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_remove_dead_variables.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_remove_dead_variables.Tpo -c -o nir/nir_libnir_la-nir_remove_dead_variables.lo `test -f 'nir/nir_remove_dead_variables.c' || echo '$(srcdir)/'`nir/nir_remove_dead_variables.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_remove_dead_variables.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_remove_dead_variables.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_remove_dead_variables.c' object='nir/nir_libnir_la-nir_remove_dead_variables.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_remove_dead_variables.lo `test -f 'nir/nir_remove_dead_variables.c' || echo '$(srcdir)/'`nir/nir_remove_dead_variables.c
-
-nir/nir_libnir_la-nir_search.lo: nir/nir_search.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_search.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_search.Tpo -c -o nir/nir_libnir_la-nir_search.lo `test -f 'nir/nir_search.c' || echo '$(srcdir)/'`nir/nir_search.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_search.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_search.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_search.c' object='nir/nir_libnir_la-nir_search.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_search.lo `test -f 'nir/nir_search.c' || echo '$(srcdir)/'`nir/nir_search.c
-
-nir/nir_libnir_la-nir_split_var_copies.lo: nir/nir_split_var_copies.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_split_var_copies.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_split_var_copies.Tpo -c -o nir/nir_libnir_la-nir_split_var_copies.lo `test -f 'nir/nir_split_var_copies.c' || echo '$(srcdir)/'`nir/nir_split_var_copies.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_split_var_copies.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_split_var_copies.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_split_var_copies.c' object='nir/nir_libnir_la-nir_split_var_copies.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_split_var_copies.lo `test -f 'nir/nir_split_var_copies.c' || echo '$(srcdir)/'`nir/nir_split_var_copies.c
-
-nir/nir_libnir_la-nir_sweep.lo: nir/nir_sweep.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_sweep.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_sweep.Tpo -c -o nir/nir_libnir_la-nir_sweep.lo `test -f 'nir/nir_sweep.c' || echo '$(srcdir)/'`nir/nir_sweep.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_sweep.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_sweep.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_sweep.c' object='nir/nir_libnir_la-nir_sweep.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_sweep.lo `test -f 'nir/nir_sweep.c' || echo '$(srcdir)/'`nir/nir_sweep.c
-
-nir/nir_libnir_la-nir_to_ssa.lo: nir/nir_to_ssa.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_to_ssa.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_to_ssa.Tpo -c -o nir/nir_libnir_la-nir_to_ssa.lo `test -f 'nir/nir_to_ssa.c' || echo '$(srcdir)/'`nir/nir_to_ssa.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_to_ssa.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_to_ssa.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_to_ssa.c' object='nir/nir_libnir_la-nir_to_ssa.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_to_ssa.lo `test -f 'nir/nir_to_ssa.c' || echo '$(srcdir)/'`nir/nir_to_ssa.c
-
-nir/nir_libnir_la-nir_validate.lo: nir/nir_validate.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_validate.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_validate.Tpo -c -o nir/nir_libnir_la-nir_validate.lo `test -f 'nir/nir_validate.c' || echo '$(srcdir)/'`nir/nir_validate.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_validate.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_validate.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_validate.c' object='nir/nir_libnir_la-nir_validate.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_validate.lo `test -f 'nir/nir_validate.c' || echo '$(srcdir)/'`nir/nir_validate.c
-
-nir/nir_libnir_la-nir_worklist.lo: nir/nir_worklist.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_worklist.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_worklist.Tpo -c -o nir/nir_libnir_la-nir_worklist.lo `test -f 'nir/nir_worklist.c' || echo '$(srcdir)/'`nir/nir_worklist.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_worklist.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_worklist.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_worklist.c' object='nir/nir_libnir_la-nir_worklist.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_worklist.lo `test -f 'nir/nir_worklist.c' || echo '$(srcdir)/'`nir/nir_worklist.c
-
-nir/nir_libnir_la-nir_constant_expressions.lo: nir/nir_constant_expressions.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_constant_expressions.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_constant_expressions.Tpo -c -o nir/nir_libnir_la-nir_constant_expressions.lo `test -f 'nir/nir_constant_expressions.c' || echo '$(srcdir)/'`nir/nir_constant_expressions.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_constant_expressions.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_constant_expressions.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_constant_expressions.c' object='nir/nir_libnir_la-nir_constant_expressions.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_constant_expressions.lo `test -f 'nir/nir_constant_expressions.c' || echo '$(srcdir)/'`nir/nir_constant_expressions.c
-
-nir/nir_libnir_la-nir_opcodes.lo: nir/nir_opcodes.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_opcodes.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_opcodes.Tpo -c -o nir/nir_libnir_la-nir_opcodes.lo `test -f 'nir/nir_opcodes.c' || echo '$(srcdir)/'`nir/nir_opcodes.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_opcodes.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_opcodes.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_opcodes.c' object='nir/nir_libnir_la-nir_opcodes.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_opcodes.lo `test -f 'nir/nir_opcodes.c' || echo '$(srcdir)/'`nir/nir_opcodes.c
-
-nir/nir_libnir_la-nir_opt_algebraic.lo: nir/nir_opt_algebraic.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nir/nir_libnir_la-nir_opt_algebraic.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-nir_opt_algebraic.Tpo -c -o nir/nir_libnir_la-nir_opt_algebraic.lo `test -f 'nir/nir_opt_algebraic.c' || echo '$(srcdir)/'`nir/nir_opt_algebraic.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-nir_opt_algebraic.Tpo nir/$(DEPDIR)/nir_libnir_la-nir_opt_algebraic.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='nir/nir_opt_algebraic.c' object='nir/nir_libnir_la-nir_opt_algebraic.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nir/nir_libnir_la-nir_opt_algebraic.lo `test -f 'nir/nir_opt_algebraic.c' || echo '$(srcdir)/'`nir/nir_opt_algebraic.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(spirv2nir_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o spirv/spirv2nir-spirv2nir.obj `if test -f 'spirv/spirv2nir.c'; then $(CYGPATH_W) 'spirv/spirv2nir.c'; else $(CYGPATH_W) '$(srcdir)/spirv/spirv2nir.c'; fi`
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
@@ -2154,13 +2100,6 @@ nir/nir_libnir_la-nir_opt_algebraic.lo: nir/nir_opt_algebraic.c
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LTCXXCOMPILE) -c -o $@ $<
 
-nir/nir_libnir_la-glsl_to_nir.lo: nir/glsl_to_nir.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT nir/nir_libnir_la-glsl_to_nir.lo -MD -MP -MF nir/$(DEPDIR)/nir_libnir_la-glsl_to_nir.Tpo -c -o nir/nir_libnir_la-glsl_to_nir.lo `test -f 'nir/glsl_to_nir.cpp' || echo '$(srcdir)/'`nir/glsl_to_nir.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) nir/$(DEPDIR)/nir_libnir_la-glsl_to_nir.Tpo nir/$(DEPDIR)/nir_libnir_la-glsl_to_nir.Plo
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='nir/glsl_to_nir.cpp' object='nir/nir_libnir_la-glsl_to_nir.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_libnir_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o nir/nir_libnir_la-glsl_to_nir.lo `test -f 'nir/glsl_to_nir.cpp' || echo '$(srcdir)/'`nir/glsl_to_nir.cpp
-
 nir/tests/nir_tests_control_flow_tests-control_flow_tests.o: nir/tests/control_flow_tests.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_tests_control_flow_tests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT nir/tests/nir_tests_control_flow_tests-control_flow_tests.o -MD -MP -MF nir/tests/$(DEPDIR)/nir_tests_control_flow_tests-control_flow_tests.Tpo -c -o nir/tests/nir_tests_control_flow_tests-control_flow_tests.o `test -f 'nir/tests/control_flow_tests.cpp' || echo '$(srcdir)/'`nir/tests/control_flow_tests.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) nir/tests/$(DEPDIR)/nir_tests_control_flow_tests-control_flow_tests.Tpo nir/tests/$(DEPDIR)/nir_tests_control_flow_tests-control_flow_tests.Po
@@ -2175,6 +2114,20 @@ nir/tests/nir_tests_control_flow_tests-control_flow_tests.obj: nir/tests/control
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(nir_tests_control_flow_tests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o nir/tests/nir_tests_control_flow_tests-control_flow_tests.obj `if test -f 'nir/tests/control_flow_tests.cpp'; then $(CYGPATH_W) 'nir/tests/control_flow_tests.cpp'; else $(CYGPATH_W) '$(srcdir)/nir/tests/control_flow_tests.cpp'; fi`
 
+spirv2nir-dummy.o: dummy.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(spirv2nir_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT spirv2nir-dummy.o -MD -MP -MF $(DEPDIR)/spirv2nir-dummy.Tpo -c -o spirv2nir-dummy.o `test -f 'dummy.cpp' || echo '$(srcdir)/'`dummy.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/spirv2nir-dummy.Tpo $(DEPDIR)/spirv2nir-dummy.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='dummy.cpp' object='spirv2nir-dummy.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(spirv2nir_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o spirv2nir-dummy.o `test -f 'dummy.cpp' || echo '$(srcdir)/'`dummy.cpp
+
+spirv2nir-dummy.obj: dummy.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(spirv2nir_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT spirv2nir-dummy.obj -MD -MP -MF $(DEPDIR)/spirv2nir-dummy.Tpo -c -o spirv2nir-dummy.obj `if test -f 'dummy.cpp'; then $(CYGPATH_W) 'dummy.cpp'; else $(CYGPATH_W) '$(srcdir)/dummy.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/spirv2nir-dummy.Tpo $(DEPDIR)/spirv2nir-dummy.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='dummy.cpp' object='spirv2nir-dummy.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(spirv2nir_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o spirv2nir-dummy.obj `if test -f 'dummy.cpp'; then $(CYGPATH_W) 'dummy.cpp'; else $(CYGPATH_W) '$(srcdir)/dummy.cpp'; fi`
+
 mostlyclean-libtool:
 	-rm -f *.lo
 
@@ -2185,6 +2138,7 @@ clean-libtool:
 	-rm -rf glsl/tests/.libs glsl/tests/_libs
 	-rm -rf nir/.libs nir/_libs
 	-rm -rf nir/tests/.libs nir/tests/_libs
+	-rm -rf spirv/.libs spirv/_libs
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -2423,6 +2377,8 @@ distclean-generic:
 	-rm -f nir/$(am__dirstamp)
 	-rm -f nir/tests/$(DEPDIR)/$(am__dirstamp)
 	-rm -f nir/tests/$(am__dirstamp)
+	-rm -f spirv/$(DEPDIR)/$(am__dirstamp)
+	-rm -f spirv/$(am__dirstamp)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
@@ -2434,7 +2390,7 @@ clean-am: clean-checkPROGRAMS clean-generic clean-libtool clean-local \
 	clean-noinstLTLIBRARIES clean-noinstPROGRAMS mostlyclean-am
 
 distclean: distclean-am
-	-rm -rf ./$(DEPDIR) glsl/$(DEPDIR) glsl/glcpp/$(DEPDIR) glsl/tests/$(DEPDIR) nir/$(DEPDIR) nir/tests/$(DEPDIR)
+	-rm -rf ./$(DEPDIR) glsl/$(DEPDIR) glsl/glcpp/$(DEPDIR) glsl/tests/$(DEPDIR) nir/$(DEPDIR) nir/tests/$(DEPDIR) spirv/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -2480,7 +2436,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-	-rm -rf ./$(DEPDIR) glsl/$(DEPDIR) glsl/glcpp/$(DEPDIR) glsl/tests/$(DEPDIR) nir/$(DEPDIR) nir/tests/$(DEPDIR)
+	-rm -rf ./$(DEPDIR) glsl/$(DEPDIR) glsl/glcpp/$(DEPDIR) glsl/tests/$(DEPDIR) nir/$(DEPDIR) nir/tests/$(DEPDIR) spirv/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
@@ -2533,6 +2489,18 @@ uninstall-am:
 @REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
 @REGEN_SOURCES_TRUE@	$(LEX_GEN) -o $@ $(srcdir)/glsl/glcpp/glcpp-lex.l
 
+glsl/ir_expression_operation.h: glsl/ir_expression_operation.py
+	$(MKDIR_GEN)
+	$(PYTHON_GEN) $(srcdir)/glsl/ir_expression_operation.py enum > $@ || ($(RM) $@; false)
+
+glsl/ir_expression_operation_constant.h: glsl/ir_expression_operation.py
+	$(MKDIR_GEN)
+	$(PYTHON_GEN) $(srcdir)/glsl/ir_expression_operation.py constant > $@ || ($(RM) $@; false)
+
+glsl/ir_expression_operation_strings.h: glsl/ir_expression_operation.py
+	$(MKDIR_GEN)
+	$(PYTHON_GEN) $(srcdir)/glsl/ir_expression_operation.py strings > $@ || ($(RM) $@; false)
+
 clean-local:
 	$(RM) -r subtest-cr subtest-cr-lf subtest-lf subtest-lf-cr
 
@@ -2540,25 +2508,25 @@ dist-hook:
 	$(RM) glsl/glcpp/tests/*.out
 	$(RM) glsl/glcpp/tests/subtest*/*.out
 
-@REGEN_SOURCES_TRUE@nir/nir_builder_opcodes.h: nir/nir_opcodes.py nir/nir_builder_opcodes_h.py
-@REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
-@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) $(srcdir)/nir/nir_builder_opcodes_h.py > $@ || ($(RM) $@; false)
+nir/nir_builder_opcodes.h: nir/nir_opcodes.py nir/nir_builder_opcodes_h.py
+	$(MKDIR_GEN)
+	$(PYTHON_GEN) $(srcdir)/nir/nir_builder_opcodes_h.py > $@ || ($(RM) $@; false)
 
-@REGEN_SOURCES_TRUE@nir/nir_constant_expressions.c: nir/nir_opcodes.py nir/nir_constant_expressions.py
-@REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
-@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) $(srcdir)/nir/nir_constant_expressions.py > $@ || ($(RM) $@; false)
+nir/nir_constant_expressions.c: nir/nir_opcodes.py nir/nir_constant_expressions.py
+	$(MKDIR_GEN)
+	$(PYTHON_GEN) $(srcdir)/nir/nir_constant_expressions.py > $@ || ($(RM) $@; false)
 
-@REGEN_SOURCES_TRUE@nir/nir_opcodes.h: nir/nir_opcodes.py nir/nir_opcodes_h.py
-@REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
-@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) $(srcdir)/nir/nir_opcodes_h.py > $@ || ($(RM) $@; false)
+nir/nir_opcodes.h: nir/nir_opcodes.py nir/nir_opcodes_h.py
+	$(MKDIR_GEN)
+	$(PYTHON_GEN) $(srcdir)/nir/nir_opcodes_h.py > $@ || ($(RM) $@; false)
 
-@REGEN_SOURCES_TRUE@nir/nir_opcodes.c: nir/nir_opcodes.py nir/nir_opcodes_c.py
-@REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
-@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) $(srcdir)/nir/nir_opcodes_c.py > $@ || ($(RM) $@; false)
+nir/nir_opcodes.c: nir/nir_opcodes.py nir/nir_opcodes_c.py
+	$(MKDIR_GEN)
+	$(PYTHON_GEN) $(srcdir)/nir/nir_opcodes_c.py > $@ || ($(RM) $@; false)
 
-@REGEN_SOURCES_TRUE@nir/nir_opt_algebraic.c: nir/nir_opt_algebraic.py nir/nir_algebraic.py
-@REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
-@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) $(srcdir)/nir/nir_opt_algebraic.py > $@ || ($(RM) $@; false)
+nir/nir_opt_algebraic.c: nir/nir_opt_algebraic.py nir/nir_algebraic.py
+	$(MKDIR_GEN)
+	$(PYTHON_GEN) $(srcdir)/nir/nir_opt_algebraic.py > $@ || ($(RM) $@; false)
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

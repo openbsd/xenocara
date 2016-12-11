@@ -33,8 +33,10 @@ noinst_LTLIBRARIES = libradeonsi.la
 
 libradeonsi_la_SOURCES = $(C_SOURCES) $(GENERATED_SOURCES)
 
+if REGEN_SOURCES
 sid_tables.h: $(srcdir)/sid_tables.py $(top_srcdir)/src/amd/common/sid.h
 	$(AM_V_GEN) $(PYTHON2) $(srcdir)/sid_tables.py $(top_srcdir)/src/amd/common/sid.h > $@
+endif
 
 EXTRA_DIST = \
 	sid_tables.py
