@@ -1256,9 +1256,8 @@ AM_V_YACC = $(am__v_YACC_$(V))
 am__v_YACC_ = $(am__v_YACC_$(AM_DEFAULT_VERBOSITY))
 am__v_YACC_0 = @echo "  YACC    " $@;
 am__v_YACC_1 = 
-@REGEN_SOURCES_TRUE@YACC_GEN = $(AM_V_YACC)$(YACC) $(YFLAGS)
-@REGEN_SOURCES_TRUE@LEX_GEN = $(AM_V_LEX)$(LEX) $(LFLAGS)
-@REGEN_SOURCES_TRUE@PYTHON_GEN = $(AM_V_GEN)$(PYTHON2) $(PYTHON_FLAGS)
+YACC_GEN = $(AM_V_YACC)$(YACC) $(YFLAGS)
+LEX_GEN = $(AM_V_LEX)$(LEX) $(LFLAGS)
 PYTHON_GEN = $(AM_V_GEN)$(PYTHON2) $(PYTHON_FLAGS)
 nir_libnir_la_LIBADD = \
 	libcompiler.la
@@ -2489,17 +2488,17 @@ uninstall-am:
 @REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
 @REGEN_SOURCES_TRUE@	$(LEX_GEN) -o $@ $(srcdir)/glsl/glcpp/glcpp-lex.l
 
-glsl/ir_expression_operation.h: glsl/ir_expression_operation.py
-	$(MKDIR_GEN)
-	$(PYTHON_GEN) $(srcdir)/glsl/ir_expression_operation.py enum > $@ || ($(RM) $@; false)
+@REGEN_SOURCES_TRUE@glsl/ir_expression_operation.h: glsl/ir_expression_operation.py
+@REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
+@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) $(srcdir)/glsl/ir_expression_operation.py enum > $@ || ($(RM) $@; false)
 
-glsl/ir_expression_operation_constant.h: glsl/ir_expression_operation.py
-	$(MKDIR_GEN)
-	$(PYTHON_GEN) $(srcdir)/glsl/ir_expression_operation.py constant > $@ || ($(RM) $@; false)
+@REGEN_SOURCES_TRUE@glsl/ir_expression_operation_constant.h: glsl/ir_expression_operation.py
+@REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
+@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) $(srcdir)/glsl/ir_expression_operation.py constant > $@ || ($(RM) $@; false)
 
-glsl/ir_expression_operation_strings.h: glsl/ir_expression_operation.py
-	$(MKDIR_GEN)
-	$(PYTHON_GEN) $(srcdir)/glsl/ir_expression_operation.py strings > $@ || ($(RM) $@; false)
+@REGEN_SOURCES_TRUE@glsl/ir_expression_operation_strings.h: glsl/ir_expression_operation.py
+@REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
+@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) $(srcdir)/glsl/ir_expression_operation.py strings > $@ || ($(RM) $@; false)
 
 clean-local:
 	$(RM) -r subtest-cr subtest-cr-lf subtest-lf subtest-lf-cr
@@ -2508,25 +2507,25 @@ dist-hook:
 	$(RM) glsl/glcpp/tests/*.out
 	$(RM) glsl/glcpp/tests/subtest*/*.out
 
-nir/nir_builder_opcodes.h: nir/nir_opcodes.py nir/nir_builder_opcodes_h.py
-	$(MKDIR_GEN)
-	$(PYTHON_GEN) $(srcdir)/nir/nir_builder_opcodes_h.py > $@ || ($(RM) $@; false)
+@REGEN_SOURCES_TRUE@nir/nir_builder_opcodes.h: nir/nir_opcodes.py nir/nir_builder_opcodes_h.py
+@REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
+@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) $(srcdir)/nir/nir_builder_opcodes_h.py > $@ || ($(RM) $@; false)
 
-nir/nir_constant_expressions.c: nir/nir_opcodes.py nir/nir_constant_expressions.py
-	$(MKDIR_GEN)
-	$(PYTHON_GEN) $(srcdir)/nir/nir_constant_expressions.py > $@ || ($(RM) $@; false)
+@REGEN_SOURCES_TRUE@nir/nir_constant_expressions.c: nir/nir_opcodes.py nir/nir_constant_expressions.py
+@REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
+@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) $(srcdir)/nir/nir_constant_expressions.py > $@ || ($(RM) $@; false)
 
-nir/nir_opcodes.h: nir/nir_opcodes.py nir/nir_opcodes_h.py
-	$(MKDIR_GEN)
-	$(PYTHON_GEN) $(srcdir)/nir/nir_opcodes_h.py > $@ || ($(RM) $@; false)
+@REGEN_SOURCES_TRUE@nir/nir_opcodes.h: nir/nir_opcodes.py nir/nir_opcodes_h.py
+@REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
+@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) $(srcdir)/nir/nir_opcodes_h.py > $@ || ($(RM) $@; false)
 
-nir/nir_opcodes.c: nir/nir_opcodes.py nir/nir_opcodes_c.py
-	$(MKDIR_GEN)
-	$(PYTHON_GEN) $(srcdir)/nir/nir_opcodes_c.py > $@ || ($(RM) $@; false)
+@REGEN_SOURCES_TRUE@nir/nir_opcodes.c: nir/nir_opcodes.py nir/nir_opcodes_c.py
+@REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
+@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) $(srcdir)/nir/nir_opcodes_c.py > $@ || ($(RM) $@; false)
 
-nir/nir_opt_algebraic.c: nir/nir_opt_algebraic.py nir/nir_algebraic.py
-	$(MKDIR_GEN)
-	$(PYTHON_GEN) $(srcdir)/nir/nir_opt_algebraic.py > $@ || ($(RM) $@; false)
+@REGEN_SOURCES_TRUE@nir/nir_opt_algebraic.c: nir/nir_opt_algebraic.py nir/nir_algebraic.py
+@REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
+@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) $(srcdir)/nir/nir_opt_algebraic.py > $@ || ($(RM) $@; false)
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

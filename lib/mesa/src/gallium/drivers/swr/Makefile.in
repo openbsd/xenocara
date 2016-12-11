@@ -864,8 +864,8 @@ BUILT_SOURCES = \
 	rasterizer/archrast/gen_ar_eventhandler.h \
 	rasterizer/archrast/gen_ar_eventhandlerfile.h
 
-MKDIR_GEN = $(AM_V_at)$(MKDIR_P) $(@D)
-PYTHON_GEN = $(AM_V_GEN)$(PYTHON2) $(PYTHON_FLAGS)
+@REGEN_SOURCES_TRUE@MKDIR_GEN = $(AM_V_at)$(MKDIR_P) $(@D)
+@REGEN_SOURCES_TRUE@PYTHON_GEN = $(AM_V_GEN)$(PYTHON2) $(PYTHON_FLAGS)
 COMMON_LIBADD = \
 	$(top_builddir)/src/gallium/auxiliary/libgallium.la \
 	$(top_builddir)/src/mesa/libmesagallium.la \
@@ -2375,86 +2375,86 @@ uninstall-am: uninstall-libLTLIBRARIES
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	tags uninstall uninstall-am uninstall-libLTLIBRARIES
 
-swr_context_llvm.h: rasterizer/jitter/scripts/gen_llvm_types.py swr_context.h
-	$(PYTHON_GEN) \
-		$(srcdir)/rasterizer/jitter/scripts/gen_llvm_types.py \
-		--input $(srcdir)/swr_context.h \
-		--output swr_context_llvm.h
+@REGEN_SOURCES_TRUE@swr_context_llvm.h: rasterizer/jitter/scripts/gen_llvm_types.py swr_context.h
+@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) \
+@REGEN_SOURCES_TRUE@		$(srcdir)/rasterizer/jitter/scripts/gen_llvm_types.py \
+@REGEN_SOURCES_TRUE@		--input $(srcdir)/swr_context.h \
+@REGEN_SOURCES_TRUE@		--output swr_context_llvm.h
 
-rasterizer/scripts/gen_knobs.cpp rasterizer/scripts/gen_knobs.h: rasterizer/scripts/gen_knobs.py rasterizer/scripts/knob_defs.py rasterizer/scripts/templates/knobs.template
-	$(MKDIR_GEN)
-	$(PYTHON_GEN) \
-		$(srcdir)/rasterizer/scripts/gen_knobs.py \
-		rasterizer/scripts
+@REGEN_SOURCES_TRUE@rasterizer/scripts/gen_knobs.cpp rasterizer/scripts/gen_knobs.h: rasterizer/scripts/gen_knobs.py rasterizer/scripts/knob_defs.py rasterizer/scripts/templates/knobs.template
+@REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
+@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) \
+@REGEN_SOURCES_TRUE@		$(srcdir)/rasterizer/scripts/gen_knobs.py \
+@REGEN_SOURCES_TRUE@		rasterizer/scripts
 
-rasterizer/jitter/state_llvm.h: rasterizer/jitter/scripts/gen_llvm_types.py rasterizer/core/state.h
-	$(MKDIR_GEN)
-	$(PYTHON_GEN) \
-		$(srcdir)/rasterizer/jitter/scripts/gen_llvm_types.py \
-		--input $(srcdir)/rasterizer/core/state.h \
-		--output rasterizer/jitter/state_llvm.h
+@REGEN_SOURCES_TRUE@rasterizer/jitter/state_llvm.h: rasterizer/jitter/scripts/gen_llvm_types.py rasterizer/core/state.h
+@REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
+@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) \
+@REGEN_SOURCES_TRUE@		$(srcdir)/rasterizer/jitter/scripts/gen_llvm_types.py \
+@REGEN_SOURCES_TRUE@		--input $(srcdir)/rasterizer/core/state.h \
+@REGEN_SOURCES_TRUE@		--output rasterizer/jitter/state_llvm.h
 
-rasterizer/jitter/builder_gen.h: rasterizer/jitter/scripts/gen_llvm_ir_macros.py
-	$(MKDIR_GEN)
-	$(PYTHON_GEN) \
-		$(srcdir)/rasterizer/jitter/scripts/gen_llvm_ir_macros.py \
-		--input $(LLVM_INCLUDEDIR)/llvm/IR/IRBuilder.h \
-		--output rasterizer/jitter/builder_gen.h \
-		--gen_h
+@REGEN_SOURCES_TRUE@rasterizer/jitter/builder_gen.h: rasterizer/jitter/scripts/gen_llvm_ir_macros.py
+@REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
+@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) \
+@REGEN_SOURCES_TRUE@		$(srcdir)/rasterizer/jitter/scripts/gen_llvm_ir_macros.py \
+@REGEN_SOURCES_TRUE@		--input $(LLVM_INCLUDEDIR)/llvm/IR/IRBuilder.h \
+@REGEN_SOURCES_TRUE@		--output rasterizer/jitter/builder_gen.h \
+@REGEN_SOURCES_TRUE@		--gen_h
 
-rasterizer/jitter/builder_gen.cpp: rasterizer/jitter/scripts/gen_llvm_ir_macros.py
-	$(MKDIR_GEN)
-	$(PYTHON_GEN) \
-		$(srcdir)/rasterizer/jitter/scripts/gen_llvm_ir_macros.py \
-		--input $(LLVM_INCLUDEDIR)/llvm/IR/IRBuilder.h \
-		--output rasterizer/jitter/builder_gen.cpp \
-		--gen_cpp
+@REGEN_SOURCES_TRUE@rasterizer/jitter/builder_gen.cpp: rasterizer/jitter/scripts/gen_llvm_ir_macros.py
+@REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
+@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) \
+@REGEN_SOURCES_TRUE@		$(srcdir)/rasterizer/jitter/scripts/gen_llvm_ir_macros.py \
+@REGEN_SOURCES_TRUE@		--input $(LLVM_INCLUDEDIR)/llvm/IR/IRBuilder.h \
+@REGEN_SOURCES_TRUE@		--output rasterizer/jitter/builder_gen.cpp \
+@REGEN_SOURCES_TRUE@		--gen_cpp
 
-rasterizer/jitter/builder_x86.h: rasterizer/jitter/scripts/gen_llvm_ir_macros.py
-	$(MKDIR_GEN)
-	$(PYTHON_GEN) \
-		$(srcdir)/rasterizer/jitter/scripts/gen_llvm_ir_macros.py \
-		--output rasterizer/jitter/builder_x86.h \
-		--gen_x86_h
+@REGEN_SOURCES_TRUE@rasterizer/jitter/builder_x86.h: rasterizer/jitter/scripts/gen_llvm_ir_macros.py
+@REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
+@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) \
+@REGEN_SOURCES_TRUE@		$(srcdir)/rasterizer/jitter/scripts/gen_llvm_ir_macros.py \
+@REGEN_SOURCES_TRUE@		--output rasterizer/jitter/builder_x86.h \
+@REGEN_SOURCES_TRUE@		--gen_x86_h
 
-rasterizer/jitter/builder_x86.cpp: rasterizer/jitter/scripts/gen_llvm_ir_macros.py
-	$(MKDIR_GEN)
-	$(PYTHON_GEN) \
-		$(srcdir)/rasterizer/jitter/scripts/gen_llvm_ir_macros.py \
-		--output rasterizer/jitter/builder_x86.cpp \
-		--gen_x86_cpp
+@REGEN_SOURCES_TRUE@rasterizer/jitter/builder_x86.cpp: rasterizer/jitter/scripts/gen_llvm_ir_macros.py
+@REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
+@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) \
+@REGEN_SOURCES_TRUE@		$(srcdir)/rasterizer/jitter/scripts/gen_llvm_ir_macros.py \
+@REGEN_SOURCES_TRUE@		--output rasterizer/jitter/builder_x86.cpp \
+@REGEN_SOURCES_TRUE@		--gen_x86_cpp
 
-rasterizer/archrast/gen_ar_event.h: rasterizer/scripts/gen_archrast.py rasterizer/scripts/templates/ar_event_h.template rasterizer/archrast/events.proto
-	$(MKDIR_GEN)
-	$(PYTHON_GEN) \
-		$(srcdir)/rasterizer/scripts/gen_archrast.py \
-		--proto $(srcdir)/rasterizer/archrast/events.proto \
-		--output rasterizer/archrast/gen_ar_event.h \
-		--gen_event_h
+@REGEN_SOURCES_TRUE@rasterizer/archrast/gen_ar_event.h: rasterizer/scripts/gen_archrast.py rasterizer/scripts/templates/ar_event_h.template rasterizer/archrast/events.proto
+@REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
+@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) \
+@REGEN_SOURCES_TRUE@		$(srcdir)/rasterizer/scripts/gen_archrast.py \
+@REGEN_SOURCES_TRUE@		--proto $(srcdir)/rasterizer/archrast/events.proto \
+@REGEN_SOURCES_TRUE@		--output rasterizer/archrast/gen_ar_event.h \
+@REGEN_SOURCES_TRUE@		--gen_event_h
 
-rasterizer/archrast/gen_ar_event.cpp: rasterizer/scripts/gen_archrast.py rasterizer/scripts/templates/ar_event_cpp.template rasterizer/archrast/events.proto
-	$(MKDIR_GEN)
-	$(PYTHON_GEN) \
-		$(srcdir)/rasterizer/scripts/gen_archrast.py \
-		--proto $(srcdir)/rasterizer/archrast/events.proto \
-		--output rasterizer/archrast/gen_ar_event.cpp \
-		--gen_event_cpp
+@REGEN_SOURCES_TRUE@rasterizer/archrast/gen_ar_event.cpp: rasterizer/scripts/gen_archrast.py rasterizer/scripts/templates/ar_event_cpp.template rasterizer/archrast/events.proto
+@REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
+@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) \
+@REGEN_SOURCES_TRUE@		$(srcdir)/rasterizer/scripts/gen_archrast.py \
+@REGEN_SOURCES_TRUE@		--proto $(srcdir)/rasterizer/archrast/events.proto \
+@REGEN_SOURCES_TRUE@		--output rasterizer/archrast/gen_ar_event.cpp \
+@REGEN_SOURCES_TRUE@		--gen_event_cpp
 
-rasterizer/archrast/gen_ar_eventhandler.h: rasterizer/scripts/gen_archrast.py rasterizer/scripts/templates/ar_eventhandler_h.template rasterizer/archrast/events.proto
-	$(MKDIR_GEN)
-	$(PYTHON_GEN) \
-		$(srcdir)/rasterizer/scripts/gen_archrast.py \
-		--proto $(srcdir)/rasterizer/archrast/events.proto \
-		--output rasterizer/archrast/gen_ar_eventhandler.h \
-		--gen_eventhandler_h
+@REGEN_SOURCES_TRUE@rasterizer/archrast/gen_ar_eventhandler.h: rasterizer/scripts/gen_archrast.py rasterizer/scripts/templates/ar_eventhandler_h.template rasterizer/archrast/events.proto
+@REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
+@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) \
+@REGEN_SOURCES_TRUE@		$(srcdir)/rasterizer/scripts/gen_archrast.py \
+@REGEN_SOURCES_TRUE@		--proto $(srcdir)/rasterizer/archrast/events.proto \
+@REGEN_SOURCES_TRUE@		--output rasterizer/archrast/gen_ar_eventhandler.h \
+@REGEN_SOURCES_TRUE@		--gen_eventhandler_h
 
-rasterizer/archrast/gen_ar_eventhandlerfile.h: rasterizer/scripts/gen_archrast.py rasterizer/scripts/templates/ar_eventhandlerfile_h.template rasterizer/archrast/events.proto
-	$(MKDIR_GEN)
-	$(PYTHON_GEN) \
-		$(srcdir)/rasterizer/scripts/gen_archrast.py \
-		--proto $(srcdir)/rasterizer/archrast/events.proto \
-		--output rasterizer/archrast/gen_ar_eventhandlerfile.h \
-		--gen_eventhandlerfile_h
+@REGEN_SOURCES_TRUE@rasterizer/archrast/gen_ar_eventhandlerfile.h: rasterizer/scripts/gen_archrast.py rasterizer/scripts/templates/ar_eventhandlerfile_h.template rasterizer/archrast/events.proto
+@REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
+@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) \
+@REGEN_SOURCES_TRUE@		$(srcdir)/rasterizer/scripts/gen_archrast.py \
+@REGEN_SOURCES_TRUE@		--proto $(srcdir)/rasterizer/archrast/events.proto \
+@REGEN_SOURCES_TRUE@		--output rasterizer/archrast/gen_ar_eventhandlerfile.h \
+@REGEN_SOURCES_TRUE@		--gen_eventhandlerfile_h
 
 # XXX: As we cannot use BUILT_SOURCES (the files will end up in the dist
 # tarball) just annotate the dependency directly.

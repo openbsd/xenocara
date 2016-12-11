@@ -1419,11 +1419,11 @@ $(GENXML_GENERATED_FILES): Makefile
 	cat $< | $(XXD) -i >> $@; \
 	echo "};" >> $@
 
-isl/isl_format_layout.c: isl/gen_format_layout.py \
-                         isl/isl_format_layout.csv
-	$(MKDIR_GEN)
-	$(PYTHON_GEN) $(srcdir)/isl/gen_format_layout.py \
-	    --csv $(srcdir)/isl/isl_format_layout.csv --out $@
+@REGEN_SOURCES_TRUE@isl/isl_format_layout.c: isl/gen_format_layout.py \
+@REGEN_SOURCES_TRUE@                         isl/isl_format_layout.csv
+@REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
+@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) $(srcdir)/isl/gen_format_layout.py \
+@REGEN_SOURCES_TRUE@	    --csv $(srcdir)/isl/isl_format_layout.csv --out $@
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

@@ -63,6 +63,7 @@ BUILT_SOURCES = \
 	rasterizer/archrast/gen_ar_eventhandler.h \
 	rasterizer/archrast/gen_ar_eventhandlerfile.h
 
+if REGEN_SOURCES
 MKDIR_GEN = $(AM_V_at)$(MKDIR_P) $(@D)
 PYTHON_GEN = $(AM_V_GEN)$(PYTHON2) $(PYTHON_FLAGS)
 swr_context_llvm.h: rasterizer/jitter/scripts/gen_llvm_types.py swr_context.h
@@ -145,6 +146,7 @@ rasterizer/archrast/gen_ar_eventhandlerfile.h: rasterizer/scripts/gen_archrast.p
 		--proto $(srcdir)/rasterizer/archrast/events.proto \
 		--output rasterizer/archrast/gen_ar_eventhandlerfile.h \
 		--gen_eventhandlerfile_h
+endif
 
 COMMON_LIBADD = \
 	$(top_builddir)/src/gallium/auxiliary/libgallium.la \
