@@ -1412,12 +1412,12 @@ $(GENXML_GENERATED_FILES): genxml/gen_pack_header.py
 
 $(GENXML_GENERATED_FILES): Makefile
 
-.xml_xml.h:
-	$(MKDIR_GEN)
-	$(AM_V_GEN) echo -n "static const uint8_t " > $@; \
-	echo "$(@F)_xml[] = {" | sed -e 's,_xml.h,,' >> $@; \
-	cat $< | $(XXD) -i >> $@; \
-	echo "};" >> $@
+@REGEN_SOURCES_TRUE@.xml_xml.h:
+@REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
+@REGEN_SOURCES_TRUE@	$(AM_V_GEN) echo -n "static const uint8_t " > $@; \
+@REGEN_SOURCES_TRUE@	echo "$(@F)_xml[] = {" | sed -e 's,_xml.h,,' >> $@; \
+@REGEN_SOURCES_TRUE@	cat $< | $(XXD) -i >> $@; \
+@REGEN_SOURCES_TRUE@	echo "};" >> $@
 
 @REGEN_SOURCES_TRUE@isl/isl_format_layout.c: isl/gen_format_layout.py \
 @REGEN_SOURCES_TRUE@                         isl/isl_format_layout.csv

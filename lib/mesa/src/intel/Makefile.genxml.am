@@ -43,12 +43,14 @@ endif
 
 $(GENXML_GENERATED_FILES): Makefile
 
+if REGEN_SOURCES
 .xml_xml.h:
 	$(MKDIR_GEN)
 	$(AM_V_GEN) echo -n "static const uint8_t " > $@; \
 	echo "$(@F)_xml[] = {" | sed -e 's,_xml.h,,' >> $@; \
 	cat $< | $(XXD) -i >> $@; \
 	echo "};" >> $@
+endif
 
 EXTRA_DIST += \
 	genxml/gen4.xml \
