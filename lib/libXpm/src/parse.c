@@ -234,8 +234,14 @@ xpmParseColors(
 		xpmFreeColorTable(colorTable, ncolors);
 		return (XpmNoMemory);
 	    }
-	    for (b = 0, s = color->string; b < cpp; b++, s++)
-		*s = xpmGetC(data);
+	    for (b = 0, s = color->string; b < cpp; b++, s++) {
+		int c = xpmGetC(data);
+		if (c < 0) {
+		    xpmFreeColorTable(colorTable, ncolors);
+		    return (XpmFileInvalid);
+		}
+		*s = (char) c;
+	    }
 	    *s = '\0';
 
 	    /*
@@ -322,8 +328,14 @@ xpmParseColors(
 		xpmFreeColorTable(colorTable, ncolors);
 		return (XpmNoMemory);
 	    }
-	    for (b = 0, s = color->string; b < cpp; b++, s++)
-		*s = xpmGetC(data);
+	    for (b = 0, s = color->string; b < cpp; b++, s++) {
+		int c = xpmGetC(data);
+		if (c < 0) {
+		    xpmFreeColorTable(colorTable, ncolors);
+		    return (XpmFileInvalid);
+		}
+		*s = (char) c;
+	    }
 	    *s = '\0';
 
 	    /*
@@ -505,8 +517,14 @@ do \
 		for (y = 0; y < height; y++) {
 		    xpmNextString(data);
 		    for (x = 0; x < width; x++, iptr++) {
-			for (a = 0, s = buf; a < cpp; a++, s++)
-			    *s = xpmGetC(data); /* int assigned to char, not a problem here */
+			for (a = 0, s = buf; a < cpp; a++, s++) {
+			    int c = xpmGetC(data);
+			    if (c < 0) {
+				XpmFree(iptr2);
+				return (XpmFileInvalid);
+			    }
+			    *s = (char) c;
+			}
 			slot = xpmHashSlot(hashtable, buf);
 			if (!*slot) {	/* no color matches */
 			    XpmFree(iptr2);
@@ -519,8 +537,14 @@ do \
 		for (y = 0; y < height; y++) {
 		    xpmNextString(data);
 		    for (x = 0; x < width; x++, iptr++) {
-			for (a = 0, s = buf; a < cpp; a++, s++)
-			    *s = xpmGetC(data); /* int assigned to char, not a problem here */
+			for (a = 0, s = buf; a < cpp; a++, s++) {
+			    int c = xpmGetC(data);
+			    if (c < 0) {
+				XpmFree(iptr2);
+				return (XpmFileInvalid);
+			    }
+			    *s = (char) c;
+			}
 			for (a = 0; a < ncolors; a++)
 			    if (!strcmp(colorTable[a].string, buf))
 				break;

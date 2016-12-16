@@ -1,3 +1,92 @@
+commit 1fab5e81fd761f628fb68d22934615536dbd0220
+Author: Matthieu Herrb <matthieu@herrb.eu>
+Date:   Mon Dec 12 23:09:52 2016 +0100
+
+    libXpm 3.5.12
+    
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+
+commit 8b3024e6871ce50b34bf2dff924774bd654703bc
+Author: Tobias Stoeckmann <tobias@stoeckmann.org>
+Date:   Sun Dec 11 13:50:05 2016 +0100
+
+    Handle size_t in file/buffer length
+    
+    The values of file sizes and buffer sizes can exceed current limits.
+    Therefore, use proper variable types for these operations.
+    
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+    Reviewed-by: Matthieu Herrb <matthieu@herrb.eu>
+
+commit d1167418f0fd02a27f617ec5afd6db053afbe185
+Author: Tobias Stoeckmann <tobias@stoeckmann.org>
+Date:   Thu Dec 8 17:07:55 2016 +0100
+
+    Avoid OOB write when handling malicious XPM files.
+    
+    libXpm uses unsigned int to store sizes, which fits size_t on 32 bit
+    systems, but leads to issues on 64 bit systems.
+    
+    On 64 bit systems, it is possible to overflow 32 bit integers while
+    parsing XPM extensions in a file.
+    
+    At first, it looks like a rather unimportant detail, because nobody
+    will seriously open a 4 GB file. But unfortunately XPM has support for
+    gzip compression out of the box. An attacker can therefore craft a
+    compressed file which is merely 4 MB in size, which makes an attack
+    much for feasable.
+    
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+    Reviewed-by: Matthieu Herrb <matthieu@herrb.eu>
+
+commit 1ec33006a9e4214b390045b820464e24297dc6c0
+Author: Tobias Stoeckmann <tobias@stoeckmann.org>
+Date:   Tue Dec 6 22:34:33 2016 +0100
+
+    Gracefully handle EOF while parsing files.
+    
+    libXpm does not properly handle EOF conditions when xpmGetC is called
+    multiple times in a row to construct a string. Instead of checking
+    its return value for EOF, the result is automatically casted into a
+    char and attached to a string.
+    
+    By carefully crafting the color table in an XPM file, it is possible to
+    send a libXpm program like gimp into a very long lasting loop and
+    massive memory allocations.
+    
+    Otherwise no memory issues arise, therefore this is just a purely
+    functional patch to dismiss invalid input.
+    
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+    Reviewed-by: Matthieu Herrb <Matthieu@herrb.eu>
+
+commit c46dedeba15edf7216d62633ed6daf40cd1f5bfd
+Author: Tobias Stoeckmann <tobias@stoeckmann.org>
+Date:   Tue Dec 6 22:31:53 2016 +0100
+
+    Fix out out boundary read on unknown colors
+    
+    libXpm is vulnerable to an out of boundary read if an XPM file contains
+    a color with a symbolic name but without any default color value.
+    
+    A caller must set XpmColorSymbols and a color with a NULL name in
+    the supplied XpmAttributes to XpmReadFileToImage (or other functions of
+    this type) in order to trigger this issue.
+    
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+    Reviewed-by: Matthieu Herrb <matthieu@herrb.eu>
+
+commit 42ca8d956276bc00bec09e410d76daf053ae35f9
+Author: Jörg Sonnenberger <joerg@NetBSD.org>
+Date:   Wed Mar 19 09:26:37 2014 +0100
+
+    Fix abs() usage.
+    
+    For long arguments, use labs().
+    
+    Reviewed-by: Matt Turner <mattst88@gmail.com>
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+
 commit 3425cbb0e6086f74783eafbe23df1121b655e006
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Sep 7 21:40:17 2013 -0700
@@ -969,9 +1058,6 @@ Date:   Tue Sep 21 17:57:35 2004 +0000
     Added new libs to the bindist control files.
     Removed inclusion of unnecessary kernel header on Linux. This may fail in
         an -ansi environment.
-
-Notes:
-    Fixes CVE-2004-0687 (integer overflows) and CVE-2004-0688 (stack overflows)
 
 commit 2773a7214e282f6f673483f5233b880505947c3f
 Author: Egbert Eich <eich@suse.de>

@@ -347,10 +347,10 @@ SetCloseColor(
 
 	    closenesses[i].cols_index = i;
 	    closenesses[i].closeness =
-		COLOR_FACTOR * (abs((long) col->red - (long) cols[i].red)
-				+ abs((long) col->green - (long) cols[i].green)
-				+ abs((long) col->blue - (long) cols[i].blue))
-		+ BRIGHTNESS_FACTOR * abs(((long) col->red +
+		COLOR_FACTOR * (labs((long) col->red - (long) cols[i].red)
+				+ labs((long) col->green - (long) cols[i].green)
+				+ labs((long) col->blue - (long) cols[i].blue))
+		+ BRIGHTNESS_FACTOR * labs(((long) col->red +
 					   (long) col->green +
 					   (long) col->blue)
 					   - ((long) cols[i].red +
@@ -647,7 +647,8 @@ CreateColors(
 			while (def_index <= 5 && defaults[def_index] == NULL)
 			    ++def_index;
 		    }
-		    if (def_index >= 2 && defaults[def_index] != NULL &&
+		    if (def_index >= 2 && def_index <= 5 &&
+			defaults[def_index] != NULL &&
 			!xpmstrcasecmp(symbol->value, defaults[def_index]))
 			break;
 		}

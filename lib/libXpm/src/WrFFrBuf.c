@@ -44,7 +44,7 @@ XpmWriteFileFromBuffer(
     const char	*filename,
     char	*buffer)
 {
-    int fcheck, len;
+    size_t fcheck, len;
     FILE *fp = fopen(filename, "w");
 
     if (!fp)
