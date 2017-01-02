@@ -39,7 +39,7 @@ typedef struct _LXOutputPrivateRec {
     GeodeMemPtr rotate_mem;
 } LXCrtcPrivateRec, *LXCrtcPrivatePtr;
 
-static void
+void
 lx_enable_dac_power(ScrnInfoPtr pScrni, int option)
 {
     GeodeRec *pGeode = GEODEPTR(pScrni);
@@ -59,7 +59,7 @@ lx_enable_dac_power(ScrnInfoPtr pScrni, int option)
         df_set_panel_enable(1);
 }
 
-static void
+void
 lx_disable_dac_power(ScrnInfoPtr pScrni, int option)
 {
     GeodeRec *pGeode = GEODEPTR(pScrni);

@@ -39,12 +39,19 @@
 #include <machine/amdmsr.h>
 #endif
 
+#ifdef __FreeBSD__
+#include <sys/ioctl.h>
+#include <sys/cpuctl.h>
+#endif
+
 #include "os.h"
 #include "geode.h"
 
 #ifdef __OpenBSD__
 #define _PATH_MSRDEV	"/dev/amdmsr"
 #define X_PRIVSEP
+#elif defined __FreeBSD__
+#define _PATH_MSRDEV	"/dev/cpuctl0"
 #else
 #define _PATH_MSRDEV	"/dev/cpu/0/msr"
 #endif
@@ -83,6 +90,18 @@ GeodeReadMSR(unsigned long addr, unsigned long *lo, unsigned long *hi)
 
     *hi = req.val >> 32;
     *lo = req.val & 0xffffffff;
+#elif defined __FreeBSD__
+    cpuctl_msr_args_t args;
+    int fd = _msr_open();
+
+    args.msr = addr;
+
+    if (ioctl(fd, CPUCTL_RDMSR, &args) == -1)
+	FatalError("Unable to read MSR at address %0x06x: %s\n", addr,
+	    strerror(errno));
+
+    *hi = args.data >> 32;
+    *lo = args.data & 0xffffffff;
 #else
     unsigned int data[2];
     int fd = _msr_open();
@@ -118,6 +137,16 @@ GeodeWriteMSR(unsigned long addr, unsigned long lo, unsigned long hi)
     req.val = (u_int64_t) hi << 32 | (u_int64_t)lo;
 
     if (ioctl(fd, WRMSR, &req) == -1)
+        FatalError("Unable to write MSR at address 0x%06x: %s\n", addr,
+            strerror(errno));
+#elif defined __FreeBSD__
+    cpuctl_msr_args_t args;
+    int fd = _msr_open();
+
+    args.msr = addr;
+    args.data = (u_int64_t) hi << 32 | (u_int64_t)lo;
+
+    if (ioctl(fd, CPUCTL_WRMSR, &args) == -1)
         FatalError("Unable to write MSR at address 0x%06x: %s\n", addr,
             strerror(errno));
 #else

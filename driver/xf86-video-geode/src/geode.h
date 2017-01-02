@@ -27,8 +27,10 @@
 #ifndef _GEODE_H_
 #define _GEODE_H_
 
-#include "geode_pcirename.h"
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
+#include "geode_pcirename.h"
 
 #ifdef HAVE_XAA_H
 #include "xaa.h"
@@ -438,6 +440,10 @@ void GXAccelSync(ScrnInfoPtr pScrni);
 
 /* gx_video.c */
 void GXInitVideo(ScreenPtr pScrn);
+
+/* lx_display.c */
+void lx_enable_dac_power(ScrnInfoPtr pScrni, int option);
+void lx_disable_dac_power(ScrnInfoPtr pScrni, int option);
 
 /* lx_driver.c */
 void LXSetupChipsetFPtr(ScrnInfoPtr pScrn);

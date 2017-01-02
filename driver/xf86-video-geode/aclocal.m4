@@ -1294,6 +1294,7 @@ m4_if(m4_version_compare(vers_have, [$1]), -1,
 m4_undefine([vers_have])
 m4_undefine([maj_have])
 m4_undefine([maj_needed])
+AM_MAINTAINER_MODE
 ]) # XORG_MACROS_VERSION
 
 # XORG_PROG_RAWCPP()

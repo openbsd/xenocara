@@ -689,6 +689,8 @@ LXLeaveGraphics(ScrnInfoPtr pScrni)
 
     gp_wait_until_idle();
 
+    lx_disable_dac_power(pScrni, DF_CRT_DISABLE);
+
     vg_set_custom_mode(&(pGeode->FBcimdisplaytiming.vgDisplayMode),
                        pGeode->FBcimdisplaytiming.wBpp);
 
@@ -717,6 +719,7 @@ LXLeaveGraphics(ScrnInfoPtr pScrni)
         vg_delay_milliseconds(3);
     }
 
+    lx_enable_dac_power(pScrni, 1);
     pScrni->vtSema = FALSE;
 }
 

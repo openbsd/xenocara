@@ -1,3 +1,105 @@
+commit ec3440ea602aa2c8fc826adfd921506aec60eb7d
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Sat Dec 10 15:18:28 2016 +0200
+
+    Geode 2.11.19
+    
+    This release restores compatibility with xserver-1.19 and newer.
+    
+    VALIDATION PLATFORM
+     * Debian (X server 1.19.0) on FIC ION603A (Geode LX800).
+    
+    Signed-off-by: Martin-Éric Racine <martin-eric.racine@iki.fi>
+
+commit 4d27afae183123ad947416e98cb6cb62e20aeebe
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jul 19 10:03:56 2016 -0400
+
+    Adapt Block/WakeupHandler signature for ABI 23
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 9b04a4df4239e7e9414402f8522cb31728481a27
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Wed Feb 3 20:38:37 2016 +0200
+
+    Geode 2.11.18
+    
+    This release restores compatibility with xserver-1.18 and newer.
+    
+    Conditional support for the Geode MSR device on FreeBSD is merged.
+    
+    GX acceleration and compositing is upgraded to current standards.
+    
+    LX switching to VT and back is restored. Farewell blanks screens!
+    
+    VALIDATION PLATFORM
+     * Debian (X server 1.18.0) on FIC ION603A (Geode LX800).
+    
+    Signed-off-by: Martin-Éric Racine <martin-eric.racine@iki.fi>
+
+commit cecdf5085739649dc3b52e343c246f6c3c1dda4d
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Tue Dec 1 18:45:59 2015 -0500
+
+    LX: Restore old VT switch code
+    
+    Calls for enabling and disabling outputs were removed from the VT switch
+    routine when RandR support was added. Presumably, this is because the
+    server already sets DPMS properly on a VT switch. However, DDX code can
+    undo what the server does so it seems best to keep the explicit calls.
+    
+    Closes: X.Org Bugzilla #80825
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+
+commit 44c508916af7a6e59d898829faaec599dbd51f4a
+Author: Arrigo Marchiori <ardovm@yahoo.it>
+Date:   Mon Sep 28 13:52:34 2015 +0300
+
+    Geode MSR support for FreeBSD
+    
+    The file src/geode_msr.c does not compile under FreeBSD.
+    The attached patch allows to compile the driver.
+    
+    Closes: Free Desktop Bug #92158
+    
+    Signed-off-by: Arrigo Marchiori <ardovm@yahoo.it>
+
+commit aecb0803d318e8100d6024f34a96df225ff738aa
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Thu Aug 27 01:09:53 2015 -0400
+
+    Fix GX UploadToScreen and DownloadFromScreen
+    
+    Even though most embedded drivers don't do it, there could be a slight
+    advantage on a single arch from reimplementing unaccelerated UTS and DFS
+    since the xserver avoids assembly. This does not remove them, it merely
+    updates them to work with the latest EXA.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+
+commit d0d07108b7db4536ec12a45d5b7633b1abb22f60
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Tue Aug 25 23:32:29 2015 -0400
+
+    Fix GX composite hooks
+    
+    These need to fallback for solid and gradient pictures.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+
+commit fc5d97e06c922de929017f676a58adf741770bc7
+Author: Matthew Green <mrg@NetBSD.org>
+Date:   Mon Jul 20 10:37:16 2015 +0200
+
+    Properly hide config.h inclusion inside HAVE_CONFIG_H.
+    
+    v2: make config.h inclusion the first one.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Emil Velikov <emil.l.velikov@gmail.com>
+
 commit 97e53b5896752a7e504d0159a7009418e2510521
 Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
 Date:   Wed May 20 11:24:30 2015 +0300
