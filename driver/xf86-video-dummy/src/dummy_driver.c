@@ -65,9 +65,6 @@ static ModeStatus DUMMYValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode,
 static Bool	DUMMYSaveScreen(ScreenPtr pScreen, int mode);
 
 /* Internally used functions */
-static Bool     dummyModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode);
-static void	dummySave(ScrnInfoPtr pScrn);
-static void	dummyRestore(ScrnInfoPtr pScrn, Bool restoreText);
 static Bool	dummyDriverFunc(ScrnInfoPtr pScrn, xorgDriverFuncOp op,
 				pointer ptr);
 
@@ -281,7 +278,7 @@ DUMMYPreInit(ScrnInfoPtr pScrn, int flags)
     ClockRangePtr clockRanges;
     int i;
     DUMMYPtr dPtr;
-    int maxClock = 230000;
+    int maxClock = 300000;
     GDevPtr device = xf86GetEntityInfo(pScrn->entityList[0])->device;
 
     if (flags & PROBE_DETECT) 
@@ -391,7 +388,7 @@ DUMMYPreInit(ScrnInfoPtr pScrn, int flags)
     clockRanges->next = NULL;
     clockRanges->ClockMulFactor = 1;
     clockRanges->minClock = 11000;   /* guessed §§§ */
-    clockRanges->maxClock = 300000;
+    clockRanges->maxClock = maxClock;
     clockRanges->clockIndex = -1;		/* programmable */
     clockRanges->interlaceAllowed = TRUE; 
     clockRanges->doubleScanAllowed = TRUE;
@@ -461,14 +458,6 @@ DUMMYPreInit(ScrnInfoPtr pScrn, int flags)
 static Bool
 DUMMYEnterVT(VT_FUNC_ARGS_DECL)
 {
-    SCRN_INFO_PTR(arg);
-    
-    /* Should we re-save the text mode on each VT enter? */
-    if(!dummyModeInit(pScrn, pScrn->currentMode))
-      return FALSE;
-
-    DUMMYAdjustFrame(ADJUST_FRAME_ARGS(pScrn, pScrn->frameX0, pScrn->frameY0));
-
     return TRUE;
 }
 
@@ -476,8 +465,6 @@ DUMMYEnterVT(VT_FUNC_ARGS_DECL)
 static void
 DUMMYLeaveVT(VT_FUNC_ARGS_DECL)
 {
-    SCRN_INFO_PTR(arg);
-    dummyRestore(pScrn, TRUE);
 }
 
 static void
@@ -535,15 +522,6 @@ DUMMYScreenInit(SCREEN_INIT_ARGS_DECL)
 
     if (!(dPtr->FBBase = malloc(pScrn->videoRam * 1024)))
 	return FALSE;
-    
-    /*
-     * next we save the current state and setup the first mode
-     */
-    dummySave(pScrn);
-    
-    if (!dummyModeInit(pScrn,pScrn->currentMode))
-	return FALSE;
-    DUMMYAdjustFrame(ADJUST_FRAME_ARGS(pScrn, pScrn->frameX0, pScrn->frameY0));
 
     /*
      * Reset visual list.
@@ -665,33 +643,13 @@ DUMMYScreenInit(SCREEN_INIT_ARGS_DECL)
 Bool
 DUMMYSwitchMode(SWITCH_MODE_ARGS_DECL)
 {
-    SCRN_INFO_PTR(arg);
-    return dummyModeInit(pScrn, mode);
+    return TRUE;
 }
 
 /* Mandatory */
 void
 DUMMYAdjustFrame(ADJUST_FRAME_ARGS_DECL)
 {
-    SCRN_INFO_PTR(arg);
-    int Base; 
-
-    Base = (y * pScrn->displayWidth + x) >> 2;
-
-    /* Scale Base by the number of bytes per pixel. */
-    switch (pScrn->depth) {
-    case  8 :
-	break;
-    case 15 :
-    case 16 :
-	Base *= 2;
-	break;
-    case 24 :
-	Base *= 3;
-	break;
-    default :
-	break;
-    }
 }
 
 /* Mandatory */
@@ -702,7 +660,6 @@ DUMMYCloseScreen(CLOSE_SCREEN_ARGS_DECL)
     DUMMYPtr dPtr = DUMMYPTR(pScrn);
 
     if(pScrn->vtSema){
- 	dummyRestore(pScrn, TRUE);
 	free(dPtr->FBBase);
     }
 
@@ -744,24 +701,6 @@ DUMMYValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode, Bool verbose, int flags)
     return(MODE_OK);
 }
 
-static void
-dummySave(ScrnInfoPtr pScrn)
-{
-}
-
-static void 
-dummyRestore(ScrnInfoPtr pScrn, Bool restoreText)
-{
-}
-    
-static Bool
-dummyModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
-{
-    dummyRestore(pScrn, FALSE);
-    
-    return(TRUE);
-}
-
 Atom VFB_PROP  = 0;
 #define  VFB_PROP_NAME  "VFB_IDENT"
 
@@ -790,8 +729,9 @@ DUMMYCreateWindow(WindowPtr pWin)
         if (! ValidAtom(VFB_PROP))
             VFB_PROP = MakeAtom(VFB_PROP_NAME, strlen(VFB_PROP_NAME), 1);
 
-        ret = ChangeWindowProperty(pWinRoot, VFB_PROP, XA_STRING, 
-		8, PropModeReplace, (int)4, (pointer)"TRUE", FALSE);
+        ret = dixChangeWindowProperty(serverClient, pWinRoot, VFB_PROP,
+                                      XA_STRING, 8, PropModeReplace,
+                                      (int)4, (pointer)"TRUE", FALSE);
 	if( ret != Success)
 		ErrorF("Could not set VFB root window property");
         dPtr->prop = TRUE;

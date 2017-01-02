@@ -1,3 +1,87 @@
+commit 4a6df6b4eecae769771eba0136bf8271d01258fb
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Wed Dec 14 21:57:18 2016 +0100
+
+    xf86-video-dummy 0.3.8
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit 52a6346c63c20c79f54c34e2950ccc5f1d2fb138
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Wed Dec 14 21:59:29 2016 +0100
+
+    configure: require xorg-server 1.4.99.901
+    
+    dixChangeWindowProperty was introduced in that release.
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit e434975017eb90fa702653592ae590bc22aa483c
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Thu Sep 22 09:14:26 2016 -0700
+
+    Remove pointless empty functions
+    
+    These functions might be useful in a real driver, but with no
+    hardware, they're pointless.  Get rid of them.
+    
+    v2: Rebase, get rid of pointless calls to DUMMYAdjustFrame, return TRUE from
+    DUMMYSwitchMode.
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+    Reviewed-by: Antoine Martin <antoine@nagafix.co.uk>
+    Tested-by: Antoine Martin <antoine@nagafix.co.uk>
+
+commit 367c778240b4266958f33cec3653d5389e283557
+Author: Antoine Martin <antoine@nagafix.co.uk>
+Date:   Tue Sep 20 13:34:40 2016 +0700
+
+    remove dead code in dummy driver
+    
+    Signed-off-by: Antoine Martin <antoine@nagafix.co.uk>
+    Reviewed-by: Eric Engestrom <eric.engestrom@imgtec.com>
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit 8706f60ab457867c120dd44e812b8fadc2be7179
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jan 14 10:30:40 2016 +1000
+
+    Switch to using dixChangeWindowProperty
+    
+    eb36924ead40564325aa56d54a973dc8fb4eae83 removed ChangeWindowProperty from the
+    server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jon Turney <jon.turney@dronecode.org.uk>
+
+commit 29433844c8b8989ea2ac64bd92b3ad61b6f9cf10
+Author: Antoine Martin <antoine@nagafix.co.uk>
+Date:   Thu Sep 17 10:55:25 2015 -0400
+
+    Honor DacSpeed setting in xorg.conf
+    
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+    Signed-off-by: Antoine Martin <antoine@nagafix.co.uk>
+
+commit 0e339b256a858bfd832c92e3c14619023dea826c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:39:32 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 85402253d0f9ca464d54336e48e9a7ac91fc39bb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:38:41 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 4160421c642fc6b2dd3100a06f236efc6bbe0e08
 Author: Julien Cristau <jcristau@debian.org>
 Date:   Mon Sep 9 19:45:23 2013 +0200

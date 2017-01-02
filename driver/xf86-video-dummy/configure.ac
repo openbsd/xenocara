@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-dummy],
-        [0.3.7],
+        [0.3.8],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-video-dummy])
 AC_CONFIG_SRCDIR([Makefile.am])
@@ -32,7 +32,6 @@ AC_CONFIG_AUX_DIR(.)
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
 
 # Require xorg-macros: XORG_DEFAULT_OPTIONS
 m4_ifndef([XORG_MACROS_VERSION],
@@ -67,7 +66,7 @@ AC_SUBST([DGA])
 AM_CONDITIONAL([DGA], [test "x$DGA" = xyes])
 
 # Obtain compiler/linker options for the driver dependencies
-PKG_CHECK_MODULES(XORG, [xorg-server >= 1.0.99.901] xproto fontsproto $REQUIRED_MODULES)
+PKG_CHECK_MODULES(XORG, [xorg-server >= 1.4.99.901] xproto fontsproto $REQUIRED_MODULES)
 
 # Checks for libraries.
 
