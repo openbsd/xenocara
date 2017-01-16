@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.10 2016/11/19 08:45:51 tb Exp $
+#	$OpenBSD: Makefile,v 1.11 2017/01/16 22:43:49 matthieu Exp $
 
 FONTCONFIG =	${.CURDIR}/../../../dist/fontconfig
 CONFIGDIR =	/etc/fonts/conf.d
@@ -29,6 +29,10 @@ CONF_LINKS = \
 
 AVAIL_FILES =				\
 	10-autohint.conf		\
+	10-hinting-full.conf		\
+	10-hinting-medium.conf		\
+	10-hinting-none.conf		\
+	10-hinting-slight.conf		\
 	10-no-sub-pixel.conf		\
 	10-scale-bitmap-fonts.conf	\
 	10-sub-pixel-bgr.conf		\
