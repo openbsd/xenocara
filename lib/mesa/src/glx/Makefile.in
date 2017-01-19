@@ -127,7 +127,7 @@ target_triplet = @target@
 @USE_LIBGLVND_GLX_TRUE@	glxglvnddispatchfuncs.h
 
 @USE_LIBGLVND_GLX_FALSE@am__append_14 = \
-@USE_LIBGLVND_GLX_FALSE@	-DGL_LIB_NAME=\"lib@GL_LIB@.so\"
+@USE_LIBGLVND_GLX_FALSE@	-DGL_LIB_NAME=\"lib@GL_LIB@.so.1\"
 
 @HAVE_WINDOWSDRI_TRUE@am__append_15 = -lgdi32 -lopengl32 -Wl,--disable-stdcall-fixup
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \

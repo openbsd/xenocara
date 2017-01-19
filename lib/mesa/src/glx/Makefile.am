@@ -170,7 +170,7 @@ libglx_la_SOURCES += \
 GL_LIB_VERSION=0
 else
 AM_CFLAGS += \
-	-DGL_LIB_NAME=\"lib@GL_LIB@.so\"
+	-DGL_LIB_NAME=\"lib@GL_LIB@.so.1\"
 GL_LIB_VERSION=1:2
 endif
 
