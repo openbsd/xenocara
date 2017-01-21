@@ -20,9 +20,9 @@
 #
 # Process this file with autoconf to produce a configure script
 
-AC_PREREQ(2.57)
+AC_PREREQ(2.60)
 AC_INIT([xf86-input-vmmouse],
-        [13.0.0],
+        [13.1.0],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-input-vmmouse)
 
@@ -32,7 +32,10 @@ AC_CONFIG_HEADERS([config.h])
 
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 
-AM_MAINTAINER_MODE
+# XORG_DEFAULT_OPTIONS below forces C99. Solaris GCC doesn't like that.
+AC_PROG_CC
+AC_PROG_CC_C89
+save_solaris_cc=$CC
 
 # Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
@@ -46,12 +49,11 @@ AC_SUBST([DRIVER_NAME])
 # Checks for programs.
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
-AC_PROG_CC
 
 AH_TOP([#include "xorg-server.h"])
 
 AC_ARG_WITH(xorg-module-dir,
-            AC_HELP_STRING([--with-xorg-module-dir=DIR],
+            AS_HELP_STRING([--with-xorg-module-dir=DIR],
                            [Default xorg module directory [[default=$libdir/xorg/modules]]]),
             [moduledir="$withval"],
             [moduledir="$libdir/xorg/modules"])
@@ -59,7 +61,7 @@ inputdir=${moduledir}/input
 AC_SUBST(inputdir)
 
 AC_ARG_WITH(xorg-conf-dir,
-            AC_HELP_STRING([--with-xorg-conf-dir=DIR],
+            AS_HELP_STRING([--with-xorg-conf-dir=DIR],
                            [Default xorg.conf.d directory [[default=from $PKG_CONFIG xorg-server]]]),
             [XORG_CONF_DIR="$withval"],
             [XORG_CONF_DIR="`$PKG_CONFIG --variable=sysconfigdir xorg-server`"])
@@ -67,7 +69,7 @@ AC_SUBST(XORG_CONF_DIR)
 AM_CONDITIONAL(HAS_XORG_CONF_DIR, [test "x$XORG_CONF_DIR" != "x" && test "x$XORG_CONF_DIR" != "xno"])
 
 AC_ARG_WITH(hal-bin-dir,
-	    AC_HELP_STRING([--with-hal-bin-dir=DIR],
+	    AS_HELP_STRING([--with-hal-bin-dir=DIR],
 			   [Directory where HAL binaries where installed [[default=$bindir]]]),
 	    [halbindir="$withval"],
 	    [halbindir="$bindir"])
@@ -75,7 +77,7 @@ HAL_BIN_DIR=${halbindir}
 AC_SUBST(HAL_BIN_DIR)
 
 AC_ARG_WITH(hal-callouts-dir,
-	    AC_HELP_STRING([--with-hal-callouts-dir=DIR],
+	    AS_HELP_STRING([--with-hal-callouts-dir=DIR],
 			   [Directory where HAL expects its callout scripts to be located
 			    [[default=$libdir/hal]]]),
 	    [halcalloutsdir="$withval"],
@@ -84,7 +86,7 @@ HAL_CALLOUTS_DIR=${halcalloutsdir}
 AC_SUBST(HAL_CALLOUTS_DIR)
 
 AC_ARG_WITH(hal-fdi-dir,
-	    AC_HELP_STRING([--with-hal-fdi-dir=DIR],
+	    AS_HELP_STRING([--with-hal-fdi-dir=DIR],
 			   [Directory where HAL expects its fdi files to be located
 			   [[default=$datadir/hal/fdi/policy/20thirdparty]]]),
 	    [halfdidir="$withval"],
@@ -92,17 +94,14 @@ AC_ARG_WITH(hal-fdi-dir,
 HAL_FDI_DIR=${halfdidir}
 AC_SUBST(HAL_FDI_DIR)
 
-
-PKG_CHECK_MODULES(UDEV, udev,
-                  [UDEV_RULES_DIR="`$PKG_CONFIG --variable=udevdir udev`/rules.d"],
-                  [UDEV_RULES_DIR=no])
-
+# Udev location for rules directory
 AC_ARG_WITH(udev-rules-dir,
-	    AC_HELP_STRING([--with-udev-rules-dir=DIR],
-			   [Default udev rules.d directory
-			    [[default=($prefix)/lib/udev/rules.d on Linux, none otherwise]]]),
-	    [UDEV_RULES_DIR="$withval"],
-	    [])
+	    AS_HELP_STRING([--with-udev-rules-dir=DIR],
+			   [Directory where udev expects its rules files
+			   [[default=$libdir/udev/rules.d]]]),
+	    [udevdir="$withval"],
+	    [udevdir="$libdir/udev/rules.d"])
+UDEV_RULES_DIR=${udevdir}
 AC_SUBST(UDEV_RULES_DIR)
 AM_CONDITIONAL(HAS_UDEV_RULES_DIR, [test "x$UDEV_RULES_DIR" != "xno"])
 
@@ -111,6 +110,73 @@ XORG_DRIVER_CHECK_EXT(RANDR, randrproto)
 XORG_DRIVER_CHECK_EXT(XINPUT, inputproto)
 
 # Checks for pkg-config packages
+libudev_check=yes
+AC_ARG_WITH([libudev],
+	[AS_HELP_STRING([--without-libudev],
+		[Use to build without libudev on linux])],
+	[if test x$withval = xno; then libudev_check=no; fi]
+	[])
+
+case $host_os in
+     linux*)
+	 if test $libudev_check != no; then
+             PKG_CHECK_MODULES(LIBUDEV, [libudev],
+					[AC_DEFINE([HAVE_LIBUDEV], 1,
+					[Has libudev installed])],
+					[]);
+         fi
+	 AC_CHECK_FUNCS(ioperm iopl,[],
+			[AC_MSG_ERROR
+			([cannot determine how to elevate io permissions)]],[1])
+	 AC_DEFINE(VMMOUSE_OS_GENERIC, 1,
+	           [Building for iopl / ioperm capable OS])
+     ;;
+     *bsd*)
+         AC_DEFINE(VMMOUSE_OS_BSD, 1, [Building for BSD flavour])
+     ;;
+     solaris*)
+	 if test "x$GCC" == "xyes"; then
+            CC="$save_solaris_cc -fms-extensions"
+	 fi
+         AC_DEFINE(VMMOUSE_OS_SOLARIS, 1, [Building for Solaris flavour])
+     ;;
+     *)
+	 AC_CHECK_FUNCS(ioperm iopl,[],
+			[AC_MSG_ERROR
+			([cannot determine how to elevate io permissions)]],[1])
+	 AC_DEFINE(VMMOUSE_OS_GENERIC, 1)
+     ;;
+esac
+
+case $host_cpu in
+     i*86)
+	case $host_os in
+		*freebsd*)	AC_DEFINE(USE_DEV_IO) ;;
+		*netbsd*)	AC_DEFINE(USE_I386_IOPL)
+				use_i386_iopl=yes ;;
+		*openbsd*)	AC_DEFINE(USE_I386_IOPL)
+				use_i386_iopl=yes ;;
+	esac
+	;;
+     x86_64*|amd64*)
+	case $host_os in
+		*freebsd*)	AC_DEFINE(USE_DEV_IO, 1, [BSD /dev/io]) ;;
+		*netbsd*)	AC_DEFINE(USE_I386_IOPL, 1, [BSD i386 iopl])
+				use_i386_iopl=yes ;;
+	esac
+	;;
+esac
+
+if test x$use_i386_iopl = xyes; then
+   AC_CHECK_LIB(i386, i386_iopl,[],
+		[AC_MSG_ERROR([cannot find library for i386_iopl])])
+fi
+
+if test x$use_amd64_iopl = xyes; then
+   AC_CHECK_LIB(amd64, amd64_iopl,[],
+		[AC_MSG_ERROR([cannot find library for amd64_iopl])])
+fi
+
 PKG_CHECK_MODULES(XORG, [xorg-server >= 1.0.1] xproto $REQUIRED_MODULES)
 
 PKG_CHECK_EXISTS([xorg-server >= 1.1.0],
@@ -137,4 +203,11 @@ PKG_CHECK_EXISTS([xorg-server >= 1.6.0],
 # Checks for header files.
 AC_HEADER_STDC
 
-AC_OUTPUT([Makefile shared/Makefile src/Makefile tools/Makefile fdi/Makefile man/Makefile])
+AC_CONFIG_FILES([Makefile
+	shared/Makefile
+	src/Makefile
+	tools/Makefile
+	fdi/Makefile
+	man/Makefile])
+
+AC_OUTPUT

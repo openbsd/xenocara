@@ -35,6 +35,10 @@
  *
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "vmmouse_client.h"
 #include "vmmouse_proto.h"
 
@@ -186,6 +190,13 @@ VMMouseClient_Enable(void) {
       VMwareLog(("VMMouseClient_Enable: data was not VERSION_ID"));
       return FALSE;
    }
+
+   /*
+    * Restrict access to the VMMouse backdoor handler.
+    */
+   vmpc.in.vEbx = VMMOUSE_RESTRICT_IOPL;
+   vmpc.in.command = VMMOUSE_PROTO_CMD_ABSPOINTER_RESTRICT;
+   VMMouseProto_SendCmd(&vmpc);
 
    /*
     * To quote Jeremy, "Go Go Go!"

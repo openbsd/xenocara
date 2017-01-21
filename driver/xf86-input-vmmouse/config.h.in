@@ -14,6 +14,21 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
+/* Define to 1 if you have the `ioperm' function. */
+#undef HAVE_IOPERM
+
+/* Define to 1 if you have the `iopl' function. */
+#undef HAVE_IOPL
+
+/* Define to 1 if you have the `amd64' library (-lamd64). */
+#undef HAVE_LIBAMD64
+
+/* Define to 1 if you have the `i386' library (-li386). */
+#undef HAVE_LIBI386
+
+/* Has libudev installed */
+#undef HAVE_LIBUDEV
+
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
@@ -84,5 +99,20 @@
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
+/* BSD /dev/io */
+#undef USE_DEV_IO
+
+/* BSD i386 iopl */
+#undef USE_I386_IOPL
+
 /* Version number of package */
 #undef VERSION
+
+/* Building for BSD flavour */
+#undef VMMOUSE_OS_BSD
+
+/* Building for iopl / ioperm capable OS */
+#undef VMMOUSE_OS_GENERIC
+
+/* Building for Solaris flavour */
+#undef VMMOUSE_OS_SOLARIS

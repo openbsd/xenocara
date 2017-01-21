@@ -69,4 +69,11 @@
 #define VMMOUSE_RIGHT_BUTTON	        0x10
 #define VMMOUSE_MIDDLE_BUTTON	        0x08
 
+/*
+ * VMMouse Restrict command
+ */
+#define VMMOUSE_RESTRICT_ANY            0x00
+#define VMMOUSE_RESTRICT_CPL0           0x01
+#define VMMOUSE_RESTRICT_IOPL           0x02
+
 #endif

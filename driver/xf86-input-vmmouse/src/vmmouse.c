@@ -807,7 +807,16 @@ MouseCommonOptions(InputInfoPtr pInfo)
 static void
 VMMouseUnInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 {
+   MouseDevPtr pMse = pInfo->private;
+
    xf86Msg(X_INFO, "VMWARE(0): VMMouseUnInit\n");
+
+   if (pMse) {
+       VMMousePrivPtr mPriv = (VMMousePrivPtr)pMse->mousePriv;
+       free(mPriv);
+   }
+
+   xf86DeleteInput(pInfo, flags);
 }
 
 
@@ -859,10 +868,10 @@ VMMouseDeviceControl(DeviceIntPtr device, int mode)
       btn_labels[0] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_LEFT);
       btn_labels[1] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_MIDDLE);
       btn_labels[2] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_RIGHT);
-      btn_labels[4] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_WHEEL_UP);
-      btn_labels[5] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_WHEEL_DOWN);
-      btn_labels[6] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_HWHEEL_LEFT);
-      btn_labels[7] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_HWHEEL_RIGHT);
+      btn_labels[3] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_WHEEL_UP);
+      btn_labels[4] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_WHEEL_DOWN);
+      btn_labels[5] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_HWHEEL_LEFT);
+      btn_labels[6] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_HWHEEL_RIGHT);
       /* other buttons are unknown */
 
 #ifdef ABS_VALUATOR_AXES
@@ -1010,6 +1019,15 @@ VMMouseDeviceControl(DeviceIntPtr device, int mode)
       usleep(300000);
       break;
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) * 100 + GET_ABI_MINOR(ABI_XINPUT_VERSION) >= 1901
+   case  DEVICE_ABORT:
+      if (pInfo->fd != -1) {
+	 VMMousePrivPtr mPriv = (VMMousePrivPtr)pMse->mousePriv;
+	 if( mPriv->vmmouseAvailable )
+	    VMMouseClient_Disable();
+         break;
+      }
+#endif
    }
 
    return Success;

@@ -39,6 +39,7 @@
 #ifndef _VMMOUSE_CLIENT_H_
 #define _VMMOUSE_CLIENT_H_
 
+#include "xorg-server.h"
 #include "xf86_OSproc.h"
 
 /*

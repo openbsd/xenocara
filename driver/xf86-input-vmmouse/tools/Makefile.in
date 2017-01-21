@@ -88,7 +88,10 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(calloutsdir)" \
 	"$(DESTDIR)$(confdir)" "$(DESTDIR)$(udevdir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_@DRIVER_NAME@_detect_OBJECTS = vmmouse_detect.$(OBJEXT)
+am_@DRIVER_NAME@_detect_OBJECTS =  \
+	@DRIVER_NAME@_detect-vmmouse_detect.$(OBJEXT) \
+	@DRIVER_NAME@_detect-vmmouse_udev.$(OBJEXT) \
+	@DRIVER_NAME@_detect-vmmouse_iopl.$(OBJEXT)
 @DRIVER_NAME@_detect_OBJECTS = $(am_@DRIVER_NAME@_detect_OBJECTS)
 @DRIVER_NAME@_detect_DEPENDENCIES =  \
 	$(top_builddir)/shared/lib@DRIVER_NAME@.la
@@ -96,6 +99,10 @@ AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+@DRIVER_NAME@_detect_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(@DRIVER_NAME@_detect_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
@@ -222,6 +229,8 @@ LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
+LIBUDEV_CFLAGS = @LIBUDEV_CFLAGS@
+LIBUDEV_LIBS = @LIBUDEV_LIBS@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LIPO = @LIPO@
@@ -257,8 +266,6 @@ SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
-UDEV_CFLAGS = @UDEV_CFLAGS@
-UDEV_LIBS = @UDEV_LIBS@
 UDEV_RULES_DIR = @UDEV_RULES_DIR@
 VERSION = @VERSION@
 XORG_CFLAGS = @XORG_CFLAGS@
@@ -319,8 +326,11 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CPPFLAGS = -I$(top_srcdir)/shared $(XORG_CFLAGS)
-@DRIVER_NAME@_detect_SOURCES = vmmouse_detect.c
-@DRIVER_NAME@_detect_LDADD = $(top_builddir)/shared/lib@DRIVER_NAME@.la
+@DRIVER_NAME@_detect_SOURCES = vmmouse_detect.c vmmouse_udev.c vmmouse_iopl.c
+@DRIVER_NAME@_detect_LDADD = $(top_builddir)/shared/lib@DRIVER_NAME@.la \
+				@LIBUDEV_LIBS@
+
+@DRIVER_NAME@_detect_CFLAGS = @LIBUDEV_CFLAGS@
 calloutsdir = $(HAL_CALLOUTS_DIR)
 callouts_SCRIPTS = hal-probe-vmmouse
 CLEANFILES = hal-probe-vmmouse $(am__append_1)
@@ -328,7 +338,7 @@ CLEANFILES = hal-probe-vmmouse $(am__append_1)
 @HAS_XORG_CONF_DIR_TRUE@dist_conf_DATA = 50-vmmouse.conf
 @HAS_UDEV_RULES_DIR_TRUE@udevdir = $(UDEV_RULES_DIR)
 @HAS_UDEV_RULES_DIR_TRUE@udev_DATA = 69-xorg-vmmouse.rules
-EXTRA_DIST = $(udev_DATA).in hal-probe-vmmouse.in
+EXTRA_DIST = 69-xorg-vmmouse.rules.in hal-probe-vmmouse.in
 all: all-am
 
 .SUFFIXES:
@@ -411,7 +421,7 @@ clean-binPROGRAMS:
 	rm -f $$list
 @DRIVER_NAME@_detect$(EXEEXT): $(@DRIVER_NAME@_detect_OBJECTS) $(@DRIVER_NAME@_detect_DEPENDENCIES) $(EXTRA_@DRIVER_NAME@_detect_DEPENDENCIES) 
 	@rm -f @DRIVER_NAME@_detect$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(@DRIVER_NAME@_detect_OBJECTS) $(@DRIVER_NAME@_detect_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(@DRIVER_NAME@_detect_LINK) $(@DRIVER_NAME@_detect_OBJECTS) $(@DRIVER_NAME@_detect_LDADD) $(LIBS)
 install-calloutsSCRIPTS: $(callouts_SCRIPTS)
 	@$(NORMAL_INSTALL)
 	@list='$(callouts_SCRIPTS)'; test -n "$(calloutsdir)" || list=; \
@@ -454,7 +464,9 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vmmouse_detect.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/@DRIVER_NAME@_detect-vmmouse_detect.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/@DRIVER_NAME@_detect-vmmouse_iopl.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/@DRIVER_NAME@_detect-vmmouse_udev.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -476,6 +488,48 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
+
+@DRIVER_NAME@_detect-vmmouse_detect.o: vmmouse_detect.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(@DRIVER_NAME@_detect_CFLAGS) $(CFLAGS) -MT @DRIVER_NAME@_detect-vmmouse_detect.o -MD -MP -MF $(DEPDIR)/@DRIVER_NAME@_detect-vmmouse_detect.Tpo -c -o @DRIVER_NAME@_detect-vmmouse_detect.o `test -f 'vmmouse_detect.c' || echo '$(srcdir)/'`vmmouse_detect.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/@DRIVER_NAME@_detect-vmmouse_detect.Tpo $(DEPDIR)/@DRIVER_NAME@_detect-vmmouse_detect.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='vmmouse_detect.c' object='@DRIVER_NAME@_detect-vmmouse_detect.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(@DRIVER_NAME@_detect_CFLAGS) $(CFLAGS) -c -o @DRIVER_NAME@_detect-vmmouse_detect.o `test -f 'vmmouse_detect.c' || echo '$(srcdir)/'`vmmouse_detect.c
+
+@DRIVER_NAME@_detect-vmmouse_detect.obj: vmmouse_detect.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(@DRIVER_NAME@_detect_CFLAGS) $(CFLAGS) -MT @DRIVER_NAME@_detect-vmmouse_detect.obj -MD -MP -MF $(DEPDIR)/@DRIVER_NAME@_detect-vmmouse_detect.Tpo -c -o @DRIVER_NAME@_detect-vmmouse_detect.obj `if test -f 'vmmouse_detect.c'; then $(CYGPATH_W) 'vmmouse_detect.c'; else $(CYGPATH_W) '$(srcdir)/vmmouse_detect.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/@DRIVER_NAME@_detect-vmmouse_detect.Tpo $(DEPDIR)/@DRIVER_NAME@_detect-vmmouse_detect.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='vmmouse_detect.c' object='@DRIVER_NAME@_detect-vmmouse_detect.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(@DRIVER_NAME@_detect_CFLAGS) $(CFLAGS) -c -o @DRIVER_NAME@_detect-vmmouse_detect.obj `if test -f 'vmmouse_detect.c'; then $(CYGPATH_W) 'vmmouse_detect.c'; else $(CYGPATH_W) '$(srcdir)/vmmouse_detect.c'; fi`
+
+@DRIVER_NAME@_detect-vmmouse_udev.o: vmmouse_udev.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(@DRIVER_NAME@_detect_CFLAGS) $(CFLAGS) -MT @DRIVER_NAME@_detect-vmmouse_udev.o -MD -MP -MF $(DEPDIR)/@DRIVER_NAME@_detect-vmmouse_udev.Tpo -c -o @DRIVER_NAME@_detect-vmmouse_udev.o `test -f 'vmmouse_udev.c' || echo '$(srcdir)/'`vmmouse_udev.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/@DRIVER_NAME@_detect-vmmouse_udev.Tpo $(DEPDIR)/@DRIVER_NAME@_detect-vmmouse_udev.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='vmmouse_udev.c' object='@DRIVER_NAME@_detect-vmmouse_udev.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(@DRIVER_NAME@_detect_CFLAGS) $(CFLAGS) -c -o @DRIVER_NAME@_detect-vmmouse_udev.o `test -f 'vmmouse_udev.c' || echo '$(srcdir)/'`vmmouse_udev.c
+
+@DRIVER_NAME@_detect-vmmouse_udev.obj: vmmouse_udev.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(@DRIVER_NAME@_detect_CFLAGS) $(CFLAGS) -MT @DRIVER_NAME@_detect-vmmouse_udev.obj -MD -MP -MF $(DEPDIR)/@DRIVER_NAME@_detect-vmmouse_udev.Tpo -c -o @DRIVER_NAME@_detect-vmmouse_udev.obj `if test -f 'vmmouse_udev.c'; then $(CYGPATH_W) 'vmmouse_udev.c'; else $(CYGPATH_W) '$(srcdir)/vmmouse_udev.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/@DRIVER_NAME@_detect-vmmouse_udev.Tpo $(DEPDIR)/@DRIVER_NAME@_detect-vmmouse_udev.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='vmmouse_udev.c' object='@DRIVER_NAME@_detect-vmmouse_udev.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(@DRIVER_NAME@_detect_CFLAGS) $(CFLAGS) -c -o @DRIVER_NAME@_detect-vmmouse_udev.obj `if test -f 'vmmouse_udev.c'; then $(CYGPATH_W) 'vmmouse_udev.c'; else $(CYGPATH_W) '$(srcdir)/vmmouse_udev.c'; fi`
+
+@DRIVER_NAME@_detect-vmmouse_iopl.o: vmmouse_iopl.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(@DRIVER_NAME@_detect_CFLAGS) $(CFLAGS) -MT @DRIVER_NAME@_detect-vmmouse_iopl.o -MD -MP -MF $(DEPDIR)/@DRIVER_NAME@_detect-vmmouse_iopl.Tpo -c -o @DRIVER_NAME@_detect-vmmouse_iopl.o `test -f 'vmmouse_iopl.c' || echo '$(srcdir)/'`vmmouse_iopl.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/@DRIVER_NAME@_detect-vmmouse_iopl.Tpo $(DEPDIR)/@DRIVER_NAME@_detect-vmmouse_iopl.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='vmmouse_iopl.c' object='@DRIVER_NAME@_detect-vmmouse_iopl.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(@DRIVER_NAME@_detect_CFLAGS) $(CFLAGS) -c -o @DRIVER_NAME@_detect-vmmouse_iopl.o `test -f 'vmmouse_iopl.c' || echo '$(srcdir)/'`vmmouse_iopl.c
+
+@DRIVER_NAME@_detect-vmmouse_iopl.obj: vmmouse_iopl.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(@DRIVER_NAME@_detect_CFLAGS) $(CFLAGS) -MT @DRIVER_NAME@_detect-vmmouse_iopl.obj -MD -MP -MF $(DEPDIR)/@DRIVER_NAME@_detect-vmmouse_iopl.Tpo -c -o @DRIVER_NAME@_detect-vmmouse_iopl.obj `if test -f 'vmmouse_iopl.c'; then $(CYGPATH_W) 'vmmouse_iopl.c'; else $(CYGPATH_W) '$(srcdir)/vmmouse_iopl.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/@DRIVER_NAME@_detect-vmmouse_iopl.Tpo $(DEPDIR)/@DRIVER_NAME@_detect-vmmouse_iopl.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='vmmouse_iopl.c' object='@DRIVER_NAME@_detect-vmmouse_iopl.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(@DRIVER_NAME@_detect_CFLAGS) $(CFLAGS) -c -o @DRIVER_NAME@_detect-vmmouse_iopl.obj `if test -f 'vmmouse_iopl.c'; then $(CYGPATH_W) 'vmmouse_iopl.c'; else $(CYGPATH_W) '$(srcdir)/vmmouse_iopl.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo

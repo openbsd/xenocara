@@ -36,11 +36,6 @@
 #ifndef _VMMOUSE_PROTO_H_
 #define _VMMOUSE_PROTO_H_
 
-
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <stdint.h>
 
 #ifdef HAVE_XORG_SERVER_1_1_0
@@ -69,6 +64,7 @@
 #define VMMOUSE_PROTO_CMD_ABSPOINTER_DATA	39
 #define VMMOUSE_PROTO_CMD_ABSPOINTER_STATUS	40
 #define VMMOUSE_PROTO_CMD_ABSPOINTER_COMMAND	41
+#define VMMOUSE_PROTO_CMD_ABSPOINTER_RESTRICT   86
 
 #define DECLARE_REG32_STRUCT(_r) \
    union { \

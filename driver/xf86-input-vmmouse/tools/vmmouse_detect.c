@@ -26,13 +26,15 @@
  */
 
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdlib.h>
 #include <signal.h>
 #include "vmmouse_client.h"
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+extern int vmmouse_uses_kernel_driver(void);
 
 void
 segvCB(int sig)
@@ -46,6 +48,9 @@ segvCB(int sig)
 int
 main(void)
 {
+   if (vmmouse_uses_kernel_driver())
+      return 1;
+
    /*
     * If the vmmouse test is not run in a VMware virtual machine, it
     * will segfault instead of successfully accessing the port.
@@ -53,6 +58,7 @@ main(void)
    signal(SIGSEGV, segvCB);
 
 #if defined __i386__ || defined __x86_64__ 
+   (void) xf86EnableIO();
    if (VMMouseClient_Enable()) {
       VMMouseClient_Disable();
       return 0;

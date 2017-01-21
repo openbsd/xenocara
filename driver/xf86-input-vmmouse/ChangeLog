@@ -1,3 +1,269 @@
+commit bbe41fae444e58c98db64db20114418ec78b99d6
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Thu Jun 25 03:20:34 2015 -0700
+
+    Bump version number for release
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Trivial.
+
+commit d2040bd52d2dde08ce729dedabb350d3476e294a
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Wed Apr 8 23:26:34 2015 -0700
+
+    vmmouse: Bump version number for release
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit 5b7d9cf15ae44361a3de506916f769d8dfec61d1
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Wed Apr 8 18:25:41 2015 +0200
+
+    vmmouse: Fix vmmouse_detect build on BSD
+    
+    Tested with FreeBSD, but changes affect also OpenBSD and NetBSD to fix
+    compiling and linking with the relevant system libraries.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Brian Paul <brianp@vmware.com>
+    Acked-by: Sinclair Yeh <syeh@vmware.com>
+
+commit c8ec00f537a640db049a1afb44a31c2199859085
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Thu Jan 15 10:59:46 2015 +0100
+
+    vmmouse: Add support for the access restrict command
+    
+    The access restrict command, if implemented, restricts vmmouse port
+    access to the indicated level.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Michael Banack <banackm@vmware.com>
+
+commit d5c1493b5fe0871f4f2823125f0d49f8e1edcda7
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Thu Jan 15 10:14:30 2015 +0100
+
+    vmmouse: Run vmmouse_detect as an io privileged process
+    
+    Many distros already include patches to do this in various more or less
+    hackish ways. Since VMware now is about to restrict access to the VMmouse
+    backdoor, let's try to support it officially.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Acked-by: Sinclair Yeh <syeh@vmware.com>
+
+commit 1cbbc03c4b37d57760c57bd2e0b0f89d744a5795
+Author: Stefan Dirsch <sndirsch@suse.de>
+Date:   Tue Oct 7 11:32:01 2014 +0200
+
+    vmmouse_client.h: Include xorg-server.h before xf86_OSproc.h
+    
+    xf86_OSproc.h cannot be included without first including xorg-server.h.
+    
+    Without this the build fails on systems with the latest glibc,
+    throwing this error:
+    
+    In file included from /usr/include/string.h:634:0,
+                     from /usr/include/xorg/os.h:53,
+                     from /usr/include/xorg/misc.h:115,
+                     from /usr/include/xorg/window.h:50,
+                     from /usr/include/xorg/globals.h:7,
+                     from /usr/include/xorg/opaque.h:34,
+                     from /usr/include/xorg/xf86_OSproc.h:127,
+                     from vmmouse_client.h:42,
+                     from vmmouse_client.c:38:
+    /usr/include/xorg/os.h:579:1: error: expected identifier or '(' before '__extension__'
+    strndup(const char *str, size_t n);
+    
+    This is caused by HAVE_STRNDUP not being set (it is set from xorg-server.h),
+    causing os.h to redefine it.
+    
+    Signed-off-by: Stefan Dirsch <sndirsch@suse.de>
+    Reviewed-by: Daniel Stone <daniels@collabora.com>
+    Acked-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit 576e8123d9f9f01ef6041cdfb96ca811197d05d2
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Wed Oct 1 21:04:30 2014 +0200
+
+    Back off if we detect a vmmouse kernel driver v3
+    
+    If a vmmouse kernel driver is active, vmmouse input is handled by the Xorg
+    evdev driver and not by the vmmouse driver, so make sure the vmmouse_detect
+    utility doesn't detect a vmmouse if a kernel driver is active.
+    
+    v2: Change the vmmouse kernel device name, fix comment.
+    v3: Fix up libudev error handling.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Sinclair Yeh <syeh@vmware.com>
+
+commit de58228aaf226baac21f4bb31712f7257b221370
+Author: Loïc Yhuel <loic.yhuel@gmail.com>
+Date:   Sat Jul 12 07:29:24 2014 +0200
+
+    Fix wheel button labels
+    
+    Wheel is using buttons 4/5, but btn_labels array is 0-based.
+    It matches mouse and evdev drivers, and fixes wheel in Qt5.3.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 336f8633837abe4a1e5ba84b53ac8b9dac5d29a2
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Thu Nov 28 11:59:53 2013 -0800
+
+    Always include config.h first
+    
+    This fixes some build warnings about CSRG_BASED being redefined due to
+    incorrect header include ordering.
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit 05492b038e7773aa8f90449387cde89e10bc614c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Sep 30 13:56:53 2013 -0400
+
+    tools: make install fails when user has no write permission in /lib
+    
+    The location of the udevdir is obtained from pkg-config. This is generally
+    /lib/udev. Most people run their build scripts as non-root and do not want to
+    overwrite or add files on their workstation system.
+    
+    This was not the behaviour in release 12.8.0. The code in configure.ac set
+    udevdir based on common installation prefixes /usr or /usr/local for which
+    the user would probably have root permission anyway. Other prefixes would
+    be assigned a udevdir value under the given $prefix.
+    
+    The patch proposes the default location $libdir/udev/rules.d and no longer
+    seeking it's value from pkg-config, just like what was done for hal.
+    
+    The expectation is that the xorg source tree can be built from top to bottom
+    out of the box without tweaks or workarounds. A developer need to
+    manually install a rule under development and run an admin command for it to
+    take effect. Unlike binaries or libraries, there is no "path" style
+    variable to append a rule in development from a different location.
+    
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit 740f2cbcc0781109a6c898685b5200bdb55acac8
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 21 14:09:04 2013 +1000
+
+    Drop AM_MAINTAINER_MODE
+    
+    Long writeup:
+    http://blogs.gnome.org/desrt/2011/09/08/am_maintainer_mode-is-not-cool/
+    
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+    Signed-off-by: Jakob Bornecrantz <jakob@vmware.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 9a815289f9df5577f5fdf4c2463b614a93819b7d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Feb 11 15:27:26 2013 +1000
+
+    Don't de-reference pMse if it hasn't been initialised yet
+    
+    If the device fails PreInit, UnInit is still called by pMse may be NULL.
+    Dereferencing it is a bad idea.
+    
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+    Signed-off-by: Jakob Bornecrantz <jakob@vmware.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 3d5b85d62c11a9f816dbcc041cb2ac2150af666d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Jan 30 10:54:11 2013 +1000
+
+    Handle DEVICE_ABORT on ABI 19.1
+    
+    Called on server abort, so let's just do the absolute minimum.
+    
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit eb23b149c176d1c735b4c658b33ce6686e47618b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Sep 22 18:09:27 2013 -0400
+
+    "make dist" fails when workstation has no udev package
+    
+    Unable to create a tar file for the vmmouse package or run distcheck for that
+    matter. In tools, when the dev package is not installed, the makefile code
+    under HAS_UDEV_RULES_DIR is commented out. That leaves $(udev_DATA) empty
+    which causes EXTRA_DIST to be missing a file.
+    
+    The solution is to spell out the file name. The name can never change as the
+    content of the tarball must be the same for everyone creating a tar file from
+    git, regardless of their workstation configuration.
+    
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 60a6e4ec6068f7b3f237ca0a044cd31d3bcf1aeb
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Sep 22 17:07:14 2013 -0400
+
+    Autoconf: Fix deprecated use of AC_OUTPUT
+    
+    Use AC_CONFIG_FILES (once or more) and then AC_OUTPUT.
+    
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 64df5e5fdef9c34bad4edf90ee5f489a5c519405
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Sep 22 16:58:27 2013 -0400
+
+    Autoconf: minimum level required is 2.60
+    
+    The minimum for all X.Org modules.
+    
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit c37d1dcf76eb9c9df7c69fe6d4d082350553a1a0
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Sep 22 16:55:42 2013 -0400
+
+    Autoconf: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    Just a macro name change.
+    
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d695372a7f8c54c0297c4dbd3513175417eade40
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Sep 22 16:50:58 2013 -0400
+
+    Autoconf: remove AC_PROG_CC which overrides AC_PROG_CC_C99 from util-macros
+    
+    All other X.Org modules and mainly the server are using C99 compiler.
+    Currently the compiler gets initialized twice, once to C99 from
+    util-macros and once to C89 from configure.ac.
+    
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 8cb6254ad3068537e74faaf80b9e346e525ea92d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Feb 1 11:52:53 2013 +1000
+
+    Free the vmmouse data on UnInit
+    
+    xf86DeleteInput() will free pInfo->private, but not the one hanging off
+    that.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Tested-by: Zack Rusin <zackr@vmware.com>
+
 commit a2e4aa9d2002dad6e976d9e4d3f129ad3127be81
 Author: Zack Rusin <zackr@vmware.com>
 Date:   Tue Jan 15 12:03:28 2013 -0800
