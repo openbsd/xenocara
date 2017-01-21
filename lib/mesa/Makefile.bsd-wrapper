@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.7 2016/12/11 08:53:19 jsg Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.8 2017/01/21 11:23:09 stsp Exp $
 
 .include <bsd.own.mk>
 
@@ -36,6 +36,12 @@ CONFIGURE_ARGS=		--with-dri-drivers=${DRI_DRIVERS} \
 # The i965 driver uses the cmpxchg8b instruction
 .if ${MACHINE} == i386
 CONFIGURE_ARGS+=	USER_CFLAGS="-march=i586" USER_CXXFLAGS="-march=i586"
+.endif
+
+# powerpc lacks the __sync_add_and_fetch8 gcc atomic builtin
+# which is used by the shader cache implementation
+.if ${MACHINE_ARCH} == powerpc
+CONFIGURE_ARGS+=	--disable-shader-cache
 .endif
 
 .if ${MACHINE} == alpha
