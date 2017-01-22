@@ -345,17 +345,33 @@ static CARD8 wsUsbMap[] = {
 	/* 132 */ KEY_NOTUSED,
 	/* 133 */ KEY_NOTUSED,
 	/* 134 */ KEY_NOTUSED,
-	/* 135 */ KEY_NOTUSED,
-	/* 136 */ KEY_NOTUSED,
-	/* 137 */ KEY_NOTUSED,
-	/* 138 */ KEY_NOTUSED,
-	/* 139 */ KEY_NOTUSED,
+/*
+ * Special keycodes for Japanese keyboards
+ * Override atKeyname HKTG and BSlash2 code to unique values for JP106 keyboards
+ */
+#undef KEY_HKTG
+#define KEY_HKTG	200	/* Japanese Hiragana Katakana Toggle */
+#undef KEY_BSlash2
+#define KEY_BSlash2	203	/* Japanese '\_' key */
+
+	/* 135 */ KEY_BSlash2,	/* Japanese 106 kbd: '\_' */
+	/* 136 */ KEY_HKTG,	/* Japanese 106 kbd: Hiragana Katakana toggle */
+	/* 137 */ KEY_Yen,	/* Japanese 106 kbd: '\|' */
+	/* 138 */ KEY_XFER,	/* Japanese 106 kbd: Henkan */
+	/* 139 */ KEY_NFER,	/* Japanese 106 kbd: Muhenkan */
 	/* 140 */ KEY_NOTUSED,
 	/* 141 */ KEY_NOTUSED,
 	/* 142 */ KEY_NOTUSED,
 	/* 143 */ KEY_NOTUSED,
-	/* 144 */ KEY_NOTUSED,
-	/* 145 */ KEY_NOTUSED,
+/*
+ * Special keycodes for Korean keyboards
+ * Define Hangul and Hangul_Hanja unique key codes
+ * These keys also use KANA and EISU on some Macintosh Japanese USB keyboards
+ */
+#define KEY_Hangul		201	/* Also KANA Key on Mac JP USB kbd */
+#define KEY_Hangul_Hanja	202	/* Also EISU Key on Mac JP USB kbd */
+	/* 144 */ KEY_Hangul,		/* Korean 106 kbd: Hangul */
+	/* 145 */ KEY_Hangul_Hanja,	/* Korean 106 kbd: Hangul Hanja */
 	/* 146 */ KEY_NOTUSED,
 	/* 147 */ KEY_NOTUSED,
 	/* 148 */ KEY_NOTUSED,

@@ -1,3 +1,61 @@
+commit 0c7f51291f91eee61fcaf05080001a5e9b22fb53
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Nov 17 14:21:48 2016 +1000
+
+    keyboard 1.9.0
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 157e0631b12d0aae4a5f38b81bee615a7eaf553f
+Author: Keith Packard <keithp@keithp.com>
+Date:   Mon May 30 01:27:49 2016 -0700
+
+    Use xf86AddEnabledDevice with threaded input
+    
+    We didn't use SIGIO input for keyboard processing, but we can use
+    threaded input.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 9ab899863a61b800d58e078e936c0d8d88bc0893
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Tue Nov 24 12:46:44 2015 +0500
+
+    Remove support for X input ABI < 12
+    
+    Signed-off-by: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 0317028c2bd0bfd06efd3c1f192ff9a494757187
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Tue Nov 24 12:46:43 2015 +0500
+
+    Reorder load module stuff
+    
+    Signed-off-by: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 8096183e9cb79944e322dcc0cd1f9e50c97ad2c8
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Tue Nov 24 12:46:42 2015 +0500
+
+    Remove empty function xf86KbdUnplug
+    
+    Signed-off-by: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit ccf63a61f39e1f107a67c33d6a7ad24ea4c76b7e
+Author: Yasushi Oshima <oshima-ya@yagoto-urayama.jp>
+Date:   Mon Jul 20 10:49:49 2015 +0200
+
+    Add defines for Japanese 106-key USB keyboards.
+    
+    Via http://gnats.netbsd.org/48347
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit 13d320076e5de2d6c3cbc170fc7e31c526ed8499
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Tue Apr 7 09:24:38 2015 +1000
