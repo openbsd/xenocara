@@ -154,8 +154,6 @@ case $host_cpu in
 		*freebsd*)	AC_DEFINE(USE_DEV_IO) ;;
 		*netbsd*)	AC_DEFINE(USE_I386_IOPL)
 				use_i386_iopl=yes ;;
-		*openbsd*)	AC_DEFINE(USE_I386_IOPL)
-				use_i386_iopl=yes ;;
 	esac
 	;;
      x86_64*|amd64*)

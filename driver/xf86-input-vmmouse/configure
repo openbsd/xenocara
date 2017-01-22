@@ -18058,9 +18058,6 @@ case $host_cpu in
 		*netbsd*)	$as_echo "#define USE_I386_IOPL 1" >>confdefs.h
 
 				use_i386_iopl=yes ;;
-		*openbsd*)	$as_echo "#define USE_I386_IOPL 1" >>confdefs.h
-
-				use_i386_iopl=yes ;;
 	esac
 	;;
      x86_64*|amd64*)
