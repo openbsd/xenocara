@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-input-synaptics],
-        [1.8.3],
+        [1.9.0],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-input-synaptics])
 AC_CONFIG_SRCDIR([Makefile.am])
@@ -121,6 +121,13 @@ esac
 if test "x$BUILD_EVENTCOMM" = xyes; then
     AC_DEFINE(BUILD_EVENTCOMM, 1, [Optional backend eventcomm enabled])
     PKG_CHECK_MODULES(LIBEVDEV, [libevdev >= 0.4])
+    SAVE_LIBS="$LIBS"
+    LIBS="$LIBEVDEV_LIBS"
+    AC_CHECK_LIB(evdev, libevdev_set_device_log_function,
+                      [AC_DEFINE(HAVE_LIBEVDEV_DEVICE_LOG_FUNCS, 1,
+                       [libevdev supports per-device log functions])],
+                       [])
+    LIBS="$SAVE_LIBS"
 fi
 if test "x$BUILD_PSMCOMM" = xyes; then
     AC_DEFINE(BUILD_PSMCOMM, 1, [Optional backend psmcomm enabled])

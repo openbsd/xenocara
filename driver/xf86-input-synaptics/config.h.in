@@ -21,6 +21,9 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
+/* libevdev supports per-device log functions */
+#undef HAVE_LIBEVDEV_DEVICE_LOG_FUNCS
+
 /* Define to 1 if you have the `m' library (-lm). */
 #undef HAVE_LIBM
 

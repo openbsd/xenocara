@@ -51,7 +51,7 @@
 /* 8 bit (BOOL) */
 #define SYNAPTICS_PROP_CLICKPAD "Synaptics ClickPad"
 
-/* 8 bit (BOOL) */
+/* 8 bit (BOOL), <deprecated> */
 #define SYNAPTICS_PROP_TAP_FAST "Synaptics Tap FastTap"
 
 /* 32 bit */

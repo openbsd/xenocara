@@ -36,6 +36,10 @@
 #define NO_DRIVER_SCALING 1
 #endif
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 23
+#define HAVE_THREADED_INPUT 1
+#endif
+
 #ifdef DBG
 #undef DBG
 #endif
@@ -225,6 +229,8 @@ typedef struct _SynapticsParameters {
     int area_left_edge, area_right_edge, area_top_edge, area_bottom_edge;       /* area coordinates absolute */
     int softbutton_areas[4][4]; /* soft button area coordinates, 0 => right, 1 => middle , 2 => secondary right, 3 => secondary middle button */
     int hyst_x, hyst_y;         /* x and y width of hysteresis box */
+
+    int maxDeltaMM;               /* maximum delta movement (vector length) in mm */
 } SynapticsParameters;
 
 struct _SynapticsPrivateRec {
@@ -282,7 +288,6 @@ struct _SynapticsPrivateRec {
     Bool circ_scroll_on;        /* Keeps track of currently active scroll modes */
     Bool circ_scroll_vert;      /* True: Generate vertical scroll events
                                    False: Generate horizontal events */
-    double frac_x, frac_y;      /* absolute -> relative fraction */
     enum MidButtonEmulation mid_emu_state;      /* emulated 3rd button */
     int repeatButtons;          /* buttons for repeat */
     int nextRepeat;             /* Time when to trigger next auto repeat event */
@@ -307,6 +312,7 @@ struct _SynapticsPrivateRec {
     Bool has_width;             /* device reports finger width */
     Bool has_scrollbuttons;     /* device has physical scrollbuttons */
     Bool has_semi_mt;           /* device is only semi-multitouch capable */
+    Bool has_mt_palm_detect;    /* device reports per finger width and pressure */
 
     enum TouchpadModel model;   /* The detected model */
     unsigned short id_vendor;   /* vendor id */

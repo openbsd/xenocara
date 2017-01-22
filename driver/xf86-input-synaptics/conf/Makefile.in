@@ -100,7 +100,7 @@ am__can_run_installinfo = \
     n|no|NO) false;; \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
-am__dist_config_DATA_DIST = 50-synaptics.conf
+am__dist_config_DATA_DIST = 70-synaptics.conf
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
@@ -281,7 +281,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-@HAS_XORG_CONF_DIR_TRUE@dist_config_DATA = 50-synaptics.conf
+@HAS_XORG_CONF_DIR_TRUE@dist_config_DATA = 70-synaptics.conf
 @HAS_XORG_CONF_DIR_FALSE@fdidir = $(datadir)/hal/fdi/policy/20thirdparty
 @HAS_XORG_CONF_DIR_FALSE@dist_fdi_DATA = 11-x11-synaptics.fdi
 all: all-am

@@ -1,31 +1,149 @@
-commit af7d8a15278a968d919bf539628281bf713f747b
+commit 3261e07c923c449f08a96a8439c97479b7ff899c
 Author: Peter Hutterer <peter.hutterer@who-t.net>
-Date:   Thu Oct 29 12:10:09 2015 +1000
+Date:   Fri Nov 18 13:00:09 2016 +1000
 
-    synaptics 1.8.3
+    synaptics 1.9.0
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
-commit 3e7508ac087028f8f8e116f5279dad1ebcdc58e6
-Author: Gabriele Mazzotta <gabriele.mzt@gmail.com>
-Date:   Thu Aug 14 20:03:42 2014 +0200
-
-    Use cumulative relative touch movements while scrolling
-    
-    Signed-off-by: Gabriele Mazzotta <gabriele.mzt@gmail.com>
-    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
-    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
-    (cherry picked from commit ec0901e5f81d9cad6cc8bbdcb5ea075009c13de5)
-
-commit 6f8d4bac14ac8f3fd2714f0a8a9e37c5136a4013
+commit a7d76f4275a88d98b18eed29a1ee94a70e7fa367
 Author: Peter Hutterer <peter.hutterer@who-t.net>
-Date:   Fri Mar 27 11:26:55 2015 +1000
+Date:   Sun Oct 9 19:27:47 2016 +1000
 
-    synaptics 1.8.2
+    synaptics 1.8.99.2
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
-commit 15caf2b53407379f8e677d48a022f4b46b97d83a
+commit 35b9472a189c88415fed137fb4c62a5081caaea5
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Sep 15 13:47:09 2016 +1000
+
+    Remove unused fraction calculations
+    
+    hw.x and the motion history are integers so our deltas are always integers.
+    It's a bit pointless to split them into the fractional and integral part.
+    
+    obsolete since defc1d008e5674306a or so
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 486322116d70365c2e2a1d9f45830057fa03153e
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Aug 17 11:32:12 2016 +1000
+
+    eventcomm: don't ever probe if a device is set
+    
+    If opening the fd fails we still need to fail the device. This is particularly
+    the case when a device disappears before we can open it - the current code
+    wouldn't exit but instead switch to auto-probe touchpad devices on the system.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+
+commit cd9f9799235aefff1ec1a0af9ec6b45969119659
+Author: Anton Lindqvist <anton.lindqvist@gmail.com>
+Date:   Fri Aug 5 10:21:59 2016 +0200
+
+    syndaemon: enable touchpad when pressing a modifier combo
+    
+    When ignoring modifiers, ensure the touchpad is enabled once a modifier
+    key is pressed disregarding any previous key press that caused the
+    touchpad to be disabled.
+    
+    Signed-off-by: Anton Lindqvist <anton.lindqvist@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 248c5936a0151d0766a95457330c7d3ef9335b94
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jun 2 10:05:02 2016 +1000
+
+    Support XINPUT ABI version 23
+    
+    Use input_lock/input_unlock calls instead of SIGIO functions
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 59e5db025307404fbfbc82f2fb3fe91d6a3005d7
+Author: Stefan Dirsch <sndirsch@suse.de>
+Date:   Thu May 19 17:35:57 2016 +0200
+
+    conf: rename to 70-synaptics.conf
+    
+    Bump up the synaptics driver to 70, so it get's preferred over libinput, which
+    was dropped down to 60. The synaptics driver is more of a leaf package
+    than libinput (which covers a multitude of device types) and can be removed by
+    default. When specifically installed by the user, the synaptics driver should
+    override the system default.
+    
+    Similar to what was done for wacom configuration file.
+    
+    https://bugzilla.suse.com/show_bug.cgi?id=979554
+    
+    Signed-off-by: Stefan Dirsch <sndirsch@suse.de>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 979fbec84197cd2c8ea3ffdd8e7726e8a617328b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Apr 29 10:51:17 2016 +1000
+
+    Revert MaxDoubleTapTime back to 180
+    
+    Fallout from 90c6d7fc60f3db1bd9db1c7702062fcaef3b3352 where it got changed to
+    100ms. This is too short for triple-tap-and-drag gestures so revert it to the
+    previous value.
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=95171
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 2a1a17244f067b2ae893ea01d737e135586b151c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Apr 29 08:48:19 2016 +1000
+
+    synaptics 1.8.99.1
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit f1f58fffbf482de74bc7907e0af69feb9fe88a45
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Apr 27 09:29:27 2016 +1000
+
+    eventcomm: fix typo checking for two-finger scrolling
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 0a4cf80a00663ff3ce8e76baf0940782576efe13
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Mar 26 16:28:56 2015 +1000
+
+    Drop touch events from the driver
+    
+    This was a bad idea. No-one seems to use this and it gives us little benefits.
+    To even get this feature a number of other features need to be turned off
+    (like two-finger scrolling and tapping). Many of these are enabled by default,
+    if they are disabled a client stack with full touchpad gesture support could
+    in theory support true touchpad gestures. This has never happened.
+    
+    Drop the touch events from the synaptics driver. This allows us to switch the
+    touchpad fully over to look like a relative device, thus also removing the
+    bug that changes the touchpad speed whenever a monitor is added/removed in.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+
+commit 7aa327603fb2a8af58c8df6f4a4dd46e8294050e
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Jun 17 15:31:08 2015 +1000
+
+    eventcomm: ignore key repeat events
+    
+    Usually doesn't happen, but the evtest output in
+    https://bugs.freedesktop.org/show_bug.cgi?id=90392
+    actually has repeat events for the button. Ignore them if they happen.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit fc9f490a2c87e6f87b0f483cd6bf5f526dddbb8d
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Tue Mar 24 15:41:39 2015 +1000
 
@@ -35,9 +153,8 @@ Date:   Tue Mar 24 15:41:39 2015 +1000
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
     Reviewed-by: Hans de Goede <hdegoede@redhat.com>
-    (cherry picked from commit fc9f490a2c87e6f87b0f483cd6bf5f526dddbb8d)
 
-commit ef8daaf696584f7c1d3e9f192de18b5b9f923bdc
+commit 30866b97be6939b895327b930154ef758eed7ff8
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Mon Mar 23 11:38:15 2015 +1000
 
@@ -49,9 +166,47 @@ Date:   Mon Mar 23 11:38:15 2015 +1000
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
     Reviewed-by: Hans de Goede <hdegoede@redhat.com>
-    (cherry picked from commit 30866b97be6939b895327b930154ef758eed7ff8)
 
-commit 90c6d7fc60f3db1bd9db1c7702062fcaef3b3352
+commit 5378a020a003cbdfa565d43c9e01997b570059c9
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Mar 17 16:06:41 2015 +1000
+
+    Revert "Support the new Lenovo X1 Carbon 3rd trackpoint buttons"
+    
+    This reverts commit 064445364b4775b25ba49c2250b22b169f291147.
+    
+    The Lenovo *50 series, including the X1 Carbon 3rd always require multiple
+    kernel patches to enable the touchpad buttons. This patch in synaptics only
+    addresses the re-routing of the top buttons.
+    
+    The final iteration of the kernel patches also route the trackpoint buttons
+    through the trackpoint device, rendering this patch unnecessary. These patches
+    are queued for 4.0.
+    
+    See kernel patch series up to commit cdd9dc195916ef5644cfac079094c3c1d1616e4c
+    Author: Benjamin Tissoires <benjamin.tissoires@redhat.com>
+    Date:   Sun Mar 8 22:35:41 2015 -0700
+    
+        Input: synaptics - re-route tracksticks buttons on the Lenovo 2015 series
+    
+    Currently in Dmitry's for-linus branch.
+    
+    Distributions running older kernels or the kernel stable series which has
+    partial backports of the above patch series are encouraged to leave the
+    0644453 commit in and undo this revert.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+
+commit 00db769067fa0703f96284bd50ea384efd47e2de
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 6 11:06:41 2015 +1000
+
+    conf: add Lenovo T450s and W451 to rules
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 37d34f0356cc556dd8a49ec5d1ed64d49417a9b2
 Author: Gabriele Mazzotta <gabriele.mzt@gmail.com>
 Date:   Thu Jan 15 22:04:17 2015 +0100
 
@@ -70,9 +225,38 @@ Date:   Thu Jan 15 22:04:17 2015 +0100
     
     Signed-off-by: Gabriele Mazzotta <gabriele.mzt@gmail.com>
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
-    (cherry picked from commit 37d34f0356cc556dd8a49ec5d1ed64d49417a9b2)
 
-commit 649b77f0ce617fd1ec073b281636e304e80b56c0
+commit 064445364b4775b25ba49c2250b22b169f291147
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jan 29 11:25:26 2015 +1000
+
+    Support the new Lenovo X1 Carbon 3rd trackpoint buttons
+    
+    This device has the trackpoint buttons wired up to the touchpad to send BTN_0,
+    BTN_1 and BTN_2 for left, right, middle. This conflicts with previous
+    touchpads that used those event codes for dedicated scroll buttons.
+    
+    Add an option HasTrackpointButtons that can be set via a xorg.conf.d
+    snippets. This option is not intended as a user-set option, rather
+    we expect distributions to ship some conglomerate of udev/hal rules with
+    xorg.conf snippets that take effect.
+    
+    If the option is set, we look at the three affected buttons at the beginning
+    of HandleState and send button events immediately for them. The HW state is
+    reset to neutral and other processing continues. This saves us from having to
+    synchronize these buttons with software buttons (also present on this device),
+    tapping, etc.
+    
+    Since the buttons are physically different and (mentally) associated with the
+    trackpoint device we also don't need to worry about having finger motion event
+    correctly synced up with the button presses - it's acceptable to send the
+    presses before the motion events.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+    Tested-by: Benjamin Tissoires <benjamin.tissoires@gmail.com>
+
+commit a357647d3fb918b94efbda98138fb0240a949ef2
 Author: Gabriele Mazzotta <gabriele.mzt@gmail.com>
 Date:   Thu Jan 15 22:04:16 2015 +0100
 
@@ -82,17 +266,81 @@ Date:   Thu Jan 15 22:04:16 2015 +0100
     
     Signed-off-by: Gabriele Mazzotta <gabriele.mzt@gmail.com>
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
-    (cherry picked from commit a357647d3fb918b94efbda98138fb0240a949ef2)
 
-commit d50c4bab8ae2836a0f38b29a5d22be2e950e4d08
-Author: Peter Hutterer <peter.hutterer@who-t.net>
-Date:   Thu Sep 18 07:40:13 2014 +1000
+commit 383355fa5f536205759f10efa99eaec4e5089376
+Author: Gabriele Mazzotta <gabriele.mzt@gmail.com>
+Date:   Fri Jan 9 17:01:42 2015 +0100
 
-    synaptics 1.8.1
+    Remove FastTap leftovers
     
+    FastTap was removed with d14ea867ad5d ("Purge fast-taps option"),
+    remove all of what remained.
+    
+    Signed-off-by: Gabriele Mazzotta <gabriele.mzt@gmail.com>
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
-commit bdf6a6b2e2603142e62ae5968c65e6e26f57e51d
+commit a05894d169be42f03d21fb8287da902d8c24c566
+Author: Gabriele Mazzotta <gabriele.mzt@gmail.com>
+Date:   Wed Jan 7 14:12:33 2015 +0100
+
+    Don't assume that touch devices report per finger width and pressure
+    
+    The palm detection relies on both the width and the pressure.
+    a897147be04 ("Use ABS_MT events for the palm detection when supported")
+    assumed that all the touch devices can report both ABS_MT_TOUCH_MAJOR
+    and ABS_MT_PRESSURE, but this is not necessarily true. This assumption
+    could hence break the palm detection when at least one of the mentioned
+    events is not declared but both ABS_TOOL_WIDTH and ABS_PRESSURE are
+    reported.
+    
+    Signed-off-by: Gabriele Mazzotta <gabriele.mzt@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a897147be04d74ed452cda166fd4e01f9615ff72
+Author: Gabriele Mazzotta <gabriele.mzt@gmail.com>
+Date:   Tue Sep 16 17:20:15 2014 +0200
+
+    Use ABS_MT events for the palm detection when supported
+    
+    Use ABS_MT_TOUCH_MAJOR and ABS_MT_PRESSURE instead of ABS_TOOL_WIDTH
+    and ABS_PRESSURE when supported so that the pressure and the width of
+    all the fingers is taken into account for the palm detection.
+    
+    This also fixes the palm detection for those touchpads for which the
+    kernel only sends ABS_MT_TOUCH_MAJOR and not ABS_TOOL_WIDTH.
+    
+    Signed-off-by: Gabriele Mazzotta <gabriele.mzt@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 41b2312c006fca1f24e1a366174d3203a63fa04a
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Sep 16 08:52:56 2014 +1000
+
+    Limit the movement to 20 mm per event
+    
+    Touchpads are limited by a fixed sampling rate (usually 80Hz). Some finger
+    changes may happen too fast for this sampling rate, resulting in two distinct
+    event sequences:
+    * finger 1 up and finger 2 down in the same EV_SYN frame. Synaptics sees one
+      finger down before and after and the changed coordinates
+    * finger 1 up and finger 2 down _between_ two EV_SYN frames. Synaptics sees one
+      touchpoint move from f1 position to f2 position.
+    
+    That move causes a large cursor jump. The former could be solved (with
+    difficulty) by adding fake EV_SYN handling after releasing touchpoints but
+    that won't fix the latter case.
+    
+    So as a solution for now limit the finger movement to 20mm per event.
+    Tests on a T440 and an x220 showed that this is just above what a reasonable
+    finger movement would trigger. If a movement is greater than that limit, reset
+    it to 0/0.
+    
+    On devices without resolution, use 0.25 of the touchpad's diagonal instead.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+
+commit 049611bd7f04e285909c55807478306cce83385f
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Tue Sep 16 10:44:40 2014 +1000
 
@@ -102,9 +350,8 @@ Date:   Tue Sep 16 10:44:40 2014 +1000
     just general weirdness.
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
-    (cherry picked from commit 049611bd7f04e285909c55807478306cce83385f)
 
-commit 2dd60417450af4ac4f9938e09b06707dd91bddfb
+commit afbbcfa10eb3a2295823720907f35bb59972dd82
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri Sep 5 15:14:47 2014 +1000
 
@@ -116,9 +363,8 @@ Date:   Fri Sep 5 15:14:47 2014 +1000
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
     Reviewed-by: Keith Packard <keithp@keithp.com>
-    (cherry picked from commit afbbcfa10eb3a2295823720907f35bb59972dd82)
 
-commit 9de611219bebd9b101b98bb79cc0173115ee1833
+commit d239f831f17ccf5468f5dc6b2f199a9c1f6e35af
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri Sep 5 14:24:29 2014 +1000
 
@@ -128,9 +374,44 @@ Date:   Fri Sep 5 14:24:29 2014 +1000
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
     Reviewed-by: Keith Packard <keithp@keithp.com>
-    (cherry picked from commit d239f831f17ccf5468f5dc6b2f199a9c1f6e35af)
 
-commit 36d7ee1c9d60752666a94ee4755b3a1d0f339164
+commit 4d3d761799436e80fbcf0d99797eed35e68c90d2
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Sep 5 14:15:46 2014 +1000
+
+    Shut up a coverity warning
+    
+    xf86-input-synaptics-1.8.0/src/synaptics.c:498: var_compare_op: Comparing
+    "end_str" to null implies that "end_str" might be null.
+    
+    end_str can't be null, so no need for this check and no need to get Coverity
+    all confused.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Keith Packard <keithp@keithp.com>
+
+commit 536e17c83e565ddba9c7c5a4cd613edf8378e9aa
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Sep 5 14:13:08 2014 +1000
+
+    Mark some switch case fallthroughs with comments
+    
+    Just to make it explicit
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Keith Packard <keithp@keithp.com>
+
+commit ec0901e5f81d9cad6cc8bbdcb5ea075009c13de5
+Author: Gabriele Mazzotta <gabriele.mzt@gmail.com>
+Date:   Thu Aug 14 20:03:42 2014 +0200
+
+    Use cumulative relative touch movements while scrolling
+    
+    Signed-off-by: Gabriele Mazzotta <gabriele.mzt@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 90d19302306f49722e210227b2fb5161e6f51880
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Thu Aug 28 14:13:38 2014 +1000
 
@@ -160,9 +441,8 @@ Date:   Thu Aug 28 14:13:38 2014 +1000
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
     Reviewed-by: Hans de Goede <hdegoede@redhat.com>
-    (cherry picked from commit 90d19302306f49722e210227b2fb5161e6f51880)
 
-commit 475e0d3668097f4deb9448c8765dd12b3f15534f
+commit 96e60a4ea242d2decf109835981ae186cc36f642
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri Aug 29 07:57:41 2014 +1000
 
@@ -181,9 +461,18 @@ Date:   Fri Aug 29 07:57:41 2014 +1000
     See http://lists.freedesktop.org/archives/xorg-devel/2014-July/043070.html
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
-    (cherry picked from commit 96e60a4ea242d2decf109835981ae186cc36f642)
 
-commit ae77fdfc8e57e612e8aa0e9b45bbea478a82c30b
+commit 68d22ecf145bb9073121fd3a9fc1fdd0f880e48b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Aug 28 16:50:18 2014 +1000
+
+    Silence two compiler warnings
+    
+    Potentially uninitialized, false positive in both cases.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 7d0ff39519e4d3760722b914883bee276035061c
 Author: Gabriele Mazzotta <gabriele.mzt@gmail.com>
 Date:   Sun Jul 27 12:58:18 2014 +0200
 
@@ -198,9 +487,29 @@ Date:   Sun Jul 27 12:58:18 2014 +0200
     
     Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
-    (cherry picked from commit 7d0ff39519e4d3760722b914883bee276035061c)
 
-commit cbf0ca508a14201d2c25f96dd6f38cea2cb1954b
+commit a36edf8307ab9b5bffca103dd875623a66012c0b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu May 15 08:34:55 2014 +1000
+
+    Use libevdev's per-device logging functions instead of the global handler
+    
+    Per-device logging functions don't interfere with other drivers if they also
+    use libevdev, so use those instead the global log handler if available. If not
+    available, drop libevdev logging, I don't want to maintain the ifdef mess and
+    the logging doesn't give us _that_ much benefit.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c1457c0f71e30c194180164320759849fa09bf9b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu May 29 14:44:43 2014 +1000
+
+    synaptics 1.8.99
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 730101223432f60397c61f74a5e6789b3ee34ecd
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Wed Aug 6 12:04:14 2014 +1000
 
@@ -220,7 +529,23 @@ Date:   Wed Aug 6 12:04:14 2014 +1000
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
     Reviewed-by: Hans de Goede <hdegoede@redhat.com>
-    (cherry picked from commit 730101223432f60397c61f74a5e6789b3ee34ecd)
+
+commit ddd8844a47bfa28974e40fc9aec9b17656415a6c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon May 19 08:06:46 2014 +1000
+
+    eventcomm: Drop requirement for a grab during init
+    
+    When we required a grab on the device, this was a shortcut so we didn't have
+    to query the device only to realise we can't read events off it anyway. Now
+    that we don't actually grab the device by default, this is unnecessary.
+    
+    Something else may have a temporary grab on the device during init, in which
+    case we just continue as usual and read events if and when they become
+    available.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Hans de Goede <hdegoede@redhat.com>
 
 commit 3a4cc96590ca0e0ff526a5e5406f29a402bddd1a
 Author: Peter Hutterer <peter.hutterer@who-t.net>
@@ -482,8 +807,8 @@ Date:   Wed Mar 12 14:11:29 2014 +1000
     This reverts commit eea73358760c7ff9c9dac061f265753637c6f25c.
     
     Conflicts:
-    	man/synaptics.man
-    	src/synaptics.c
+            man/synaptics.man
+            src/synaptics.c
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
@@ -609,24 +934,24 @@ Date:   Fri Feb 21 10:31:44 2014 +0100
     It is possible for a click to get reported before any related touch events
     get reported, here is the relevant part of an evemu-record session on a T440s:
     
-    E: 3.985585 0000 0000 0000	# ------------ SYN_REPORT (0) ----------
-    E: 3.997419 0003 0039 -001	# EV_ABS / ABS_MT_TRACKING_ID   -1
-    E: 3.997419 0001 014a 0000	# EV_KEY / BTN_TOUCH            0
-    E: 3.997419 0003 0018 0000	# EV_ABS / ABS_PRESSURE         0
-    E: 3.997419 0001 0145 0000	# EV_KEY / BTN_TOOL_FINGER      0
-    E: 3.997419 0000 0000 0000	# ------------ SYN_REPORT (0) ----------
-    E: 5.117881 0001 0110 0001	# EV_KEY / BTN_LEFT             1
-    E: 5.117881 0000 0000 0000	# ------------ SYN_REPORT (0) ----------
-    E: 5.133422 0003 0039 0187	# EV_ABS / ABS_MT_TRACKING_ID   187
-    E: 5.133422 0003 0035 3098	# EV_ABS / ABS_MT_POSITION_X    3098
-    E: 5.133422 0003 0036 3282	# EV_ABS / ABS_MT_POSITION_Y    3282
-    E: 5.133422 0003 003a 0046	# EV_ABS / ABS_MT_PRESSURE      46
-    E: 5.133422 0001 014a 0001	# EV_KEY / BTN_TOUCH            1
-    E: 5.133422 0003 0000 3102	# EV_ABS / ABS_X                3102
-    E: 5.133422 0003 0001 3282	# EV_ABS / ABS_Y                3282
-    E: 5.133422 0003 0018 0046	# EV_ABS / ABS_PRESSURE         46
-    E: 5.133422 0001 0145 0001	# EV_KEY / BTN_TOOL_FINGER      1
-    E: 5.133422 0000 0000 0000	# ------------ SYN_REPORT (0) ----------
+    E: 3.985585 0000 0000 0000      # ------------ SYN_REPORT (0) ----------
+    E: 3.997419 0003 0039 -001      # EV_ABS / ABS_MT_TRACKING_ID   -1
+    E: 3.997419 0001 014a 0000      # EV_KEY / BTN_TOUCH            0
+    E: 3.997419 0003 0018 0000      # EV_ABS / ABS_PRESSURE         0
+    E: 3.997419 0001 0145 0000      # EV_KEY / BTN_TOOL_FINGER      0
+    E: 3.997419 0000 0000 0000      # ------------ SYN_REPORT (0) ----------
+    E: 5.117881 0001 0110 0001      # EV_KEY / BTN_LEFT             1
+    E: 5.117881 0000 0000 0000      # ------------ SYN_REPORT (0) ----------
+    E: 5.133422 0003 0039 0187      # EV_ABS / ABS_MT_TRACKING_ID   187
+    E: 5.133422 0003 0035 3098      # EV_ABS / ABS_MT_POSITION_X    3098
+    E: 5.133422 0003 0036 3282      # EV_ABS / ABS_MT_POSITION_Y    3282
+    E: 5.133422 0003 003a 0046      # EV_ABS / ABS_MT_PRESSURE      46
+    E: 5.133422 0001 014a 0001      # EV_KEY / BTN_TOUCH            1
+    E: 5.133422 0003 0000 3102      # EV_ABS / ABS_X                3102
+    E: 5.133422 0003 0001 3282      # EV_ABS / ABS_Y                3282
+    E: 5.133422 0003 0018 0046      # EV_ABS / ABS_PRESSURE         46
+    E: 5.133422 0001 0145 0001      # EV_KEY / BTN_TOOL_FINGER      1
+    E: 5.133422 0000 0000 0000      # ------------ SYN_REPORT (0) ----------
     
     Notice the BTN_LEFT event all by itself!
     
@@ -876,8 +1201,8 @@ Date:   Thu Feb 13 14:55:12 2014 +1000
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
     
     Conflicts:
-    	man/synaptics.man
-    	src/synaptics.c
+            man/synaptics.man
+            src/synaptics.c
     
     Acked-by: Daniel Stone <daniel@fooishbar.org>
 
@@ -906,9 +1231,9 @@ Date:   Fri Jan 17 08:24:35 2014 +1000
     Lifebook E782 and others in the series.
     
     Conflicts:
-    	include/synaptics.h
-    	man/synaptics.man
-    	src/synaptics.c
+            include/synaptics.h
+            man/synaptics.man
+            src/synaptics.c
 
 commit 48fbf44a3903bc6975add21be35586914a53c310
 Author: Peter Hutterer <peter.hutterer@who-t.net>
@@ -3013,7 +3338,7 @@ Date:   Tue Feb 7 13:07:07 2012 -0800
     
     Conflicts:
     
-    	src/synaptics.c
+            src/synaptics.c
     
     Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
@@ -4693,7 +5018,7 @@ Date:   Mon Feb 21 11:55:17 2011 +1000
     
     Conflicts:
     
-    	src/synaptics.c
+            src/synaptics.c
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
@@ -4723,7 +5048,7 @@ Date:   Mon Feb 21 11:47:46 2011 +1000
     Merge branch 'devel' into merge
     
     Conflicts:
-    	src/synaptics.c
+            src/synaptics.c
 
 commit cc26edfba13216ceda02d9d352643535ba359e5e
 Author: Simon Thum <simon.thum@gmx.de>
@@ -5098,7 +5423,7 @@ Date:   Wed Sep 1 13:42:37 2010 +1000
     Merge branch 'input-api'
     
     Conflicts:
-    	src/properties.c
+            src/properties.c
 
 commit 81ad2e389d11691d5c2687d83150e8e9033cfe76
 Author: Peter Hutterer <peter.hutterer@who-t.net>
@@ -5735,7 +6060,7 @@ Date:   Tue May 25 13:00:04 2010 -0400
     config: unconditionaly build synclient and syndaemon apps
     
     The current conditional building of the apps was introduced by
-    commit 	080caee95c46bb471d1442dcab246460cad8c7be due to optional
+    commit  080caee95c46bb471d1442dcab246460cad8c7be due to optional
     support properties. This is no longer an issue.
     
     There are no longer any reason not to build these bona fide apps.
@@ -5893,25 +6218,25 @@ Date:   Sun May 30 21:19:29 2010 -0400
     
     Permutations of --enable-tools and dependencies:
     
-    build_tools	libXi installed Result
-    -----------	---------------	---------
-    yes		yes		build tools
+    build_tools     libXi installed Result
+    -----------     --------------- ---------
+    yes             yes             build tools
     auto            yes             build tools
-    no		yes		skip build
-    yes		no		abort configuration
-    auto		no		warn and skip build
-    no		no		warn and skip build
+    no              yes             skip build
+    yes             no              abort configuration
+    auto            no              warn and skip build
+    no              no              warn and skip build
     
     Permutations of libXtst, record.h and recordproto
     
-    libXtst		record.h	recordproto	syndaemon
-    installed	installed	installed	using XRecord?
+    libXtst         record.h        recordproto     syndaemon
+    installed       installed       installed       using XRecord?
     
-    yes		yes		yes		yes
-    yes		no		yes		no
-    no		no		yes		no
-    no		yes		yes		no
-    no		no		no		no
+    yes             yes             yes             yes
+    yes             no              yes             no
+    no              no              yes             no
+    no              yes             yes             no
+    no              no              no              no
     
     Other scenarios are possible where you have 2 different versions of
     record.h installed in different $prefix locations. The order
@@ -6453,7 +6778,7 @@ Date:   Sat Sep 12 09:52:50 2009 +0200
     functionality when using automake 1.11.
     
     Conflicts:
-    	configure.ac
+            configure.ac
 
 commit e01129440742f39650a50c193315b2824c0b303a
 Author: Peter Hutterer <peter.hutterer@who-t.net>
@@ -6591,7 +6916,7 @@ Date:   Wed Jul 22 10:41:08 2009 +1000
     
     Conflicts:
     
-    	src/synaptics.c
+            src/synaptics.c
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
@@ -8253,10 +8578,10 @@ Date:   Wed Aug 6 21:40:11 2008 +0200
     This adds 3 new options. Use them as follows:
     
     Section "InputDevice"
-    	...
-    	Option "ClickFinger1" "1"
-    	Option "ClickFinger2" "3"
-    	Option "ClickFinger3" "2"
+            ...
+            Option "ClickFinger1" "1"
+            Option "ClickFinger2" "3"
+            Option "ClickFinger3" "2"
     EndSection
     
     The driver would then report:
@@ -8502,8 +8827,8 @@ Date:   Fri Jun 6 21:56:59 2008 +0200
     
     Conflicts:
     
-    	linux_input.h
-    	src/synaptics.c
+            linux_input.h
+            src/synaptics.c
     
     Drop the changes from Matthew Garrett since he did not agree to the MIT license
     change.

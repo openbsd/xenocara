@@ -582,12 +582,15 @@ PS2ReadHwStateProto(InputInfoPtr pInfo,
                     case 8:
                         hw->multi[7] = ((buf[5] & 0x08)) ? 1 : 0;
                         hw->multi[6] = ((buf[4] & 0x08)) ? 1 : 0;
+                        /* fallthrough */
                     case 6:
                         hw->multi[5] = ((buf[5] & 0x04)) ? 1 : 0;
                         hw->multi[4] = ((buf[4] & 0x04)) ? 1 : 0;
+                        /* fallthrough */
                     case 4:
                         hw->multi[3] = ((buf[5] & 0x02)) ? 1 : 0;
                         hw->multi[2] = ((buf[4] & 0x02)) ? 1 : 0;
+                        /* fallthrough */
                     case 2:
                         hw->multi[1] = ((buf[5] & 0x01)) ? 1 : 0;
                         hw->multi[0] = ((buf[4] & 0x01)) ? 1 : 0;

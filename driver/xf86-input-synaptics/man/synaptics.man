@@ -591,7 +591,6 @@ A too long value can cause undesirable autorepeat in scroll bars and a
 too small value means that visual feedback from the gui application
 you are interacting with is harder to see.
 .
-For this parameter to have any effect, "FastTaps" has to be disabled.
 .SS Acceleration
 The MinSpeed, MaxSpeed and AccelFactor parameters control the pointer
 motion speed.
@@ -924,7 +923,7 @@ Configuration through
 .I InputClass
 sections is recommended in X servers 1.8 and later. See xorg.conf.d(5) for
 more details. An example xorg.conf.d snippet is provided in
-.I ${sourcecode}/conf/50-synaptics.conf
+.I ${sourcecode}/conf/70-synaptics.conf
 .LP
 Configuration through hal fdi files is recommended in X servers 1.5, 1.6 and
 1.7. An example hal policy file is provided in
@@ -966,8 +965,6 @@ The following options are no longer part of the driver configuration:
 .BI "Option \*qFingerPress\*q \*q" integer \*q
 .TP
 .BI "Option \*qTrackstickSpeed\*q \*q" float \*q
-.TP
-.BI "Option \*qFastTaps\*q \*q" boolean \*q
 .TP
 .BI "Option \*qEdgeMotionMinZ\*q \*q" integer \*q
 .TP
