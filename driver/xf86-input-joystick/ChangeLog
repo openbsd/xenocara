@@ -1,3 +1,64 @@
+commit de424865ece983d8da62b7f7e3d013eabac0b8b5
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Nov 18 08:58:35 2016 +1000
+
+    joystick 1.6.3
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 60d0e9c451b3f259d524b0ddcc5c1f21a4f82293
+Author: Matthieu Herrb <matthieu@herrb.eu>
+Date:   Sun Jul 31 12:54:14 2016 +0200
+
+    use xf86{Add,Remove}EnabledDevice()
+    
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit baf8bd4441d5dc6cdd687e066bf13cc1c3df1a41
+Author: Hans de Goede <hdegoede@redhat.com>
+Date:   Thu Mar 13 14:49:53 2014 +0100
+
+    Add support for server managed fds
+    
+    Keep things simple by handling server managed fds in the common parts
+    of the open and close paths.
+    
+    Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 341d23ceaa9d5483b5318425e7308e09f8941957
+Author: Hans de Goede <hdegoede@redhat.com>
+Date:   Thu Mar 13 14:49:52 2014 +0100
+
+    Add a generic jstkCloseDevice helper function
+    
+    This is a preparation patch for adding support for server managed fds.
+    
+    Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 6de3b75c453e4687b21f6d6acfcf87e7041c4fc5
+Author: Hans de Goede <hdegoede@redhat.com>
+Date:   Thu Mar 13 14:49:51 2014 +0100
+
+    Use jstkCloseDevice_* on error in jstkOpenDevice_* backend functions
+    
+    This is a preparation patch for adding support for server managed fds, this
+    also fixes a missing free() in an error handling path in the evdev back-end.
+    
+    Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a976a85aeff4f2511544c0385533d9387957afae
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Jan 30 12:57:51 2013 +1000
+
+    Handle DEVICE_ABORT for input ABI 19.1
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit 426c3aa3c8a2385f17e37ae73c1e78f072656027
 Author: Sascha Hlusiak <saschahlusiak@arcor.de>
 Date:   Wed Jan 16 10:52:12 2013 +0100
@@ -709,7 +770,7 @@ Date:   Fri Oct 2 11:32:40 2009 +0200
     Merge branch 'scancodes'
     
     Conflicts:
-    	configure.ac
+            configure.ac
 
 commit 1fa414dd6f32d68378bc9d571c439a603c2e7888
 Author: Sascha Hlusiak <saschahlusiak@arcor.de>
@@ -1136,8 +1197,8 @@ Date:   Tue Sep 16 20:58:40 2008 +0200
     Merge branch 'input-properties'
     
     Conflicts:
-    	src/jstk.h
-    	src/jstk_key.c
+            src/jstk.h
+            src/jstk_key.c
 
 commit a1b87df15dd2ad2a5593fed198b32053be5825cc
 Author: Sascha Hlusiak <saschahlusiak@arcor.de>

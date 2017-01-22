@@ -200,7 +200,8 @@ int jstkKeyboardPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
     pInfo->read_input = NULL;
     pInfo->control_proc = NULL;
     pInfo->switch_mode = NULL;
-    pInfo->fd = -1;
+    if (!(pInfo->flags & XI86_SERVER_FD))
+        pInfo->fd = -1;
     pInfo->type_name = XI_JOYSTICK;
 
     /* parse keyboard-related options */

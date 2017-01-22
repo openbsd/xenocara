@@ -55,6 +55,9 @@
 #define XI_JOYSTICK "JOYSTICK"
 #endif
 
+#ifndef XI86_SERVER_FD
+#define XI86_SERVER_FD 0x20
+#endif
 
 typedef enum _JOYSTICKEVENT {
     EVENT_NONE=0,
@@ -106,6 +109,7 @@ typedef struct _JoystickDevRec {
     jstkReadDataProc read_proc; /* Callback for reading data from the backend */
     void         *devicedata; /* Extra platform device dependend data */
     char         *device;     /* Name of the device */
+    InputInfoPtr joystick_device; /* Back pointer to the joystick device */
     InputInfoPtr keyboard_device; /* Slave device for keyboard events */
 
     OsTimerPtr   timer;       /* Timer for axis movement */
@@ -122,5 +126,7 @@ typedef struct _JoystickDevRec {
     AXIS axis[MAXAXES];           /* Configuration per axis */
     BUTTON button[MAXBUTTONS];    /* Configuration per button */
 } JoystickDevRec;
+
+void jstkCloseDevice(JoystickDevPtr priv);
 
 #endif
