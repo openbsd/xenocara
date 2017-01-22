@@ -59,7 +59,7 @@
   This document describes mouse support in the xf86-input-mouse driver
   for the Xorg X server.   This driver is mainly used on non-Linux
   operating systems such as BSD & Solaris, as modern Linux systems use
-  the xf86-input-evdev driver instead.
+  the xf86-input-evdev or xf86-input-libinput drivers instead.
 
   Mouse configuration has often been mysterious task for novice users.
   However, once you learn several basics, it is straightforward to write
@@ -158,7 +158,7 @@
   NetBSD/pc98       Ok        ?         Ok        NA        NA         NA
   OpenBSD           Ok        Ok        Ok        Ok*1      Ok*1       Ok*1
   SCO               Ok        ?         SP*1      SP*1      NA         ?
-  Solaris 2.x       Ok        NA*1      ?*1       Ok        Ok         SP*1
+  Solaris           Ok        NA*1      ?*1       Ok        Ok         SP*1
   SVR4              Ok        NA*1      SP*1      SP*1      NA         ?
   PANIX             Ok        ?         SP*1      SP*1      NA         ?
 
@@ -302,7 +302,7 @@
 
   3.14.  Solaris
 
-  Testing has been done with Solaris 2.5.1, 2.6, 7, 8, 9, 10, and 11.
+  Testing has been done with Solaris 10 and 11.
 
   On Solaris 10 1/06 and later versions with "virtual mouse" support,
   all PS/2 and USB mice connected to the system can be accessed via the

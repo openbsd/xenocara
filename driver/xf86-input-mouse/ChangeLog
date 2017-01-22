@@ -1,3 +1,71 @@
+commit 9d6c38eae40a435b4057a33d55759810ea7b91c1
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Nov 17 14:35:47 2016 +1000
+
+    mouse 1.9.2
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 2dda9b90b9c632d2f27a7b2f46bc4e4af1e9d82d
+Author: Keith Packard <keithp@keithp.com>
+Date:   Mon May 30 22:45:13 2016 -0700
+
+    Support ABI_XINPUT_VERSION 24 (remove LastSelectMask from block/wakeup)
+    
+    The block and wakeup handler API is changing so that the FD_SET type
+    isn't visible outside the OS layer anymore. The mouse driver didn't
+    need that argument anyways, so the change is just to adjust the APIs
+    to avoid compiler warnings.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 80952e5a5fcb4158249451f2339de618c4e63b82
+Author: Keith Packard <keithp@keithp.com>
+Date:   Mon May 30 22:45:12 2016 -0700
+
+    Support ABI_XINPUT_VERSION 23 (use input_lock/input_unlock)
+    
+    This makes using input_lock/input_unlock conditional on the ABI
+    version so that we don't get compiler warnings when compiling with the
+    newer server bits.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c22d3073dc1b82fe6c466e5ea71b6da755bb9a8e
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Mon Jul 27 00:06:06 2015 +0200
+
+    Add some standard defines to pkg-config file.
+    
+    Not strictly needed in the xorg build, but helps the NetBSD reachover
+    build, and follows implicit conventions about pkg-config files more
+    closely.
+    
+    See also http://gnats.netbsd.org/48991
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 85ee769d769e87b1e4a21b8c48944238c8ebe5f7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 28 09:38:38 2015 -0800
+
+    README: Drop ancient, no longer supported versions of Solaris
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 9d404d41b6edbee9b96ee8bad705f7e5fdd3e7c1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 28 09:36:29 2015 -0800
+
+    README: Add "or xf86-input-libinput" to -evdev note for Linux
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit 6886084b192e681739fc55892f30681efb4f79f0
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Mon Aug 11 23:36:23 2014 -0700
