@@ -103,7 +103,7 @@ AbortClient (pid_t pid)
 		LogError ("xdm can't kill client\n");
 	    case EINVAL:
 	    case ESRCH:
-		return;
+		goto done;
 	    }
 	}
 	sleep(10);
@@ -115,6 +115,7 @@ AbortClient (pid_t pid)
 	}
 	sig = SIGKILL;
     }
+done:
     signal(SIGCHLD, old);
 }
 
