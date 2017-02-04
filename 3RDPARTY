@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.283 2017/01/21 16:17:24 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.284 2017/02/04 02:37:52 jsg Exp $
 #
 Package: 	Freetype
 Version:	2.7.1
@@ -44,9 +44,9 @@ Archive Site:	http://dejavu-fonts.org/
 
 Package:	xlockmore
 Version:	5.22
-Current Vers:	5.47
-Maintainer:	bagleyd@tux.org
-Archive Site:	http://www.tux.org/~bagleyd/latest/
+Current Vers:	5.50
+Maintainer:	David A. Bagley
+Archive Site:	http://sillycycle.com/xlock/
 
 Package:	xkeyboard-config
 Version:	2.19
