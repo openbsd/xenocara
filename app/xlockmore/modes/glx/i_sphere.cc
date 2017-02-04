@@ -28,16 +28,16 @@ ThreeJet Param1(ThreeJet x) {
   double offset = 0;
   x %= 4;
   if (x > 2) { x = x+(-2); offset = 2; }
-  if (x <= 1) return x*2 + (x^2)*(-1) + offset;
-  else return (x^2) + x*(-2) + (2 + offset);
+  if (x <= 1) return x*2 + (x^(double)2)*(-1) + offset;
+  else return (x^(double)2) + x*(-2) + (2 + offset);
 }
 
 ThreeJet Param2(ThreeJet x) {
   double offset = 0;
   x %= 4;
   if (x > 2) { x = x+(-2); offset = 2; }
-  if (x <= 1) return (x^2) + offset;
-  else return (x^2)*(-1) + x*4 + (-2 + offset);
+  if (x <= 1) return (x^(double)2) + offset;
+  else return (x^(double)2)*(-1) + x*4 + (-2 + offset);
 }
 
 static inline ThreeJet TInterp(double x) {
@@ -48,7 +48,7 @@ ThreeJet UInterp(ThreeJet x) {
   x %= 2;
   if (x > 1)
     x = x*(-1) + 2;
-  return (x^2)*3 + (x^3) * (-2);
+  return (x^(double)2)*3 + (x^(double)3) * (-2);
 }
 
 #define FFPOW 3
@@ -59,7 +59,7 @@ ThreeJet FFInterp(ThreeJet x) {
   x = x*1.06 + -0.05;
   if (x < 0) return ThreeJet(0, 0, 0);
   else if (x > 1) return ThreeJet(0, 0, 0) + 1;
-  else return (x ^ (FFPOW-1)) * (FFPOW) + (x^FFPOW) * (-FFPOW+1);
+  else return (x ^ (double)(FFPOW-1)) * (FFPOW) + (x^(double)FFPOW) * (-FFPOW+1);
 }
 
 #define FSPOW 3
@@ -67,7 +67,7 @@ ThreeJet FSInterp(ThreeJet x) {
   x %= 2;
   if (x > 1)
     x = x*(-1) + 2;
-  return ((x ^ (FSPOW-1)) * (FSPOW) + (x^FSPOW) * (-FSPOW+1)) * (-0.2);
+  return ((x ^ (double)(FSPOW-1)) * (FSPOW) + (x^(double)FSPOW) * (-FSPOW+1)) * (-0.2);
 }
 
 ThreeJetVec Stage0(ThreeJet u, ThreeJet v) {

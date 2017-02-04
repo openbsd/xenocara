@@ -55,10 +55,10 @@ TwoJetVec Normalize(TwoJetVec v) {
 
 TwoJetVec RotateZ(TwoJetVec v, TwoJet angle) {
   TwoJetVec result;
-  TwoJet s,c;
+  TwoJet s, c;
   s = Sin (angle);
   c = Cos (angle);
-  result.x =          v.x*c + v.y*s;
+  result.x = v.x*c + v.y*s;
   result.y = v.x*s*-1 + v.y*c;
   result.z = v.z;
   return result;
@@ -71,13 +71,13 @@ TwoJetVec RotateY(TwoJetVec v, TwoJet angle) {
   c = Cos (angle);
   result.x = v.x*c + v.z*s*-1;
   result.y = v.y;
-  result.z = v.x*s + v.z*c    ;
+  result.z = v.x*s + v.z*c;
   return result;
 }
 
 TwoJetVec RotateX(TwoJetVec v, TwoJet angle) {
   TwoJetVec result;
-  TwoJet s,c;
+  TwoJet s, c;
   s = Sin (angle);
   c = Cos (angle);
   result.x = v.x;
@@ -92,5 +92,5 @@ TwoJetVec InterpolateVec(TwoJetVec v1, TwoJetVec v2, TwoJet weight) {
 
 TwoJet Length(TwoJetVec v)
 {
-  return (v.x^2 + v.y^2) ^ (.5);
+  return (v.x * v.x + v.y * v.y) ^ (.5);
 }

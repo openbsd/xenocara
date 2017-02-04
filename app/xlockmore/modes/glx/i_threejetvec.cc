@@ -63,10 +63,10 @@ ThreeJetVec Normalize(ThreeJetVec v) {
 
 ThreeJetVec RotateZ(ThreeJetVec v, ThreeJet angle) {
   ThreeJetVec result;
-  ThreeJet s,c;
+  ThreeJet s, c;
   s = Sin (angle);
   c = Cos (angle);
-  result.x =          v.x*c + v.y*s;
+  result.x = v.x*c + v.y*s;
   result.y = v.x*s*-1 + v.y*c;
   result.z = v.z;
   return result;
@@ -79,13 +79,13 @@ ThreeJetVec RotateY(ThreeJetVec v, ThreeJet angle) {
   c = Cos (angle);
   result.x = v.x*c + v.z*s*-1;
   result.y = v.y;
-  result.z = v.x*s + v.z*c    ;
+  result.z = v.x*s + v.z*c;
   return result;
 }
 
 ThreeJetVec RotateX(ThreeJetVec v, ThreeJet angle) {
   ThreeJetVec result;
-  ThreeJet s,c;
+  ThreeJet s, c;
   s = Sin (angle);
   c = Cos (angle);
   result.x = v.x;
@@ -100,5 +100,5 @@ ThreeJetVec InterpolateVec(ThreeJetVec v1, ThreeJetVec v2, ThreeJet weight) {
 
 ThreeJet Length(ThreeJetVec v)
 {
-  return (v.x^2 + v.y^2) ^ (.5);
+  return (v.x * v.x + v.y * v.y) ^ (.5);
 }

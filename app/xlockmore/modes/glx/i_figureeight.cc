@@ -28,7 +28,7 @@ TwoJetVec AddFigureEight(ThreeJetVec p, ThreeJet u, TwoJet v, ThreeJet form, Thr
   TwoJetVec w = Normalize(Cross(h, du))*(TwoJet(size)*1.1);
   return RotateZ(
     TwoJetVec(p) +
-      FigureEight(w, h, du*D(size, 0)*(D(u, 0)^(-1)), form, v),
+      FigureEight(w, h, du*D(size, 0)*(D(u, 0)^((double)-1)), form, v),
     v*(1./n_strips)
   );
 }
