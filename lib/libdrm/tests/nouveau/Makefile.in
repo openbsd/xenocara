@@ -173,8 +173,6 @@ LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
-LIBUDEV_CFLAGS = @LIBUDEV_CFLAGS@
-LIBUDEV_LIBS = @LIBUDEV_LIBS@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LIPO = @LIPO@
@@ -274,16 +272,17 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-AM_CPPFLAGS = \
+AM_CFLAGS = \
+	-pthread \
+	$(WARN_CFLAGS) \
 	-I$(top_srcdir)/include/drm \
 	-I$(top_srcdir)/nouveau \
 	-I$(top_srcdir)
 
-AM_CFLAGS = $(WARN_CFLAGS)
 LDADD = \
 	../../nouveau/libdrm_nouveau.la \
 	../../libdrm.la \
-	-ldl -lpthread
+	-ldl
 
 all: all-am
 

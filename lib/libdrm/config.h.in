@@ -54,9 +54,6 @@
 /* Enable if your compiler supports the Intel __sync_* atomic primitives */
 #undef HAVE_LIBDRM_ATOMIC_PRIMITIVES
 
-/* Have libudev support */
-#undef HAVE_LIBUDEV
-
 /* Enable if you have libatomic-ops-dev installed */
 #undef HAVE_LIB_ATOMIC_OPS
 

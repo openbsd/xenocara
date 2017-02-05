@@ -75,7 +75,7 @@ static inline int sync_wait(int fd, int timeout)
 			}
 			return 0;
 		} else if (ret == 0) {
-			errno = ETIME;
+			errno = ETIMEDOUT;
 			return -1;
 		}
 	} while (ret == -1 && (errno == EINTR || errno == EAGAIN));

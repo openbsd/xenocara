@@ -228,8 +228,6 @@ LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
-LIBUDEV_CFLAGS = @LIBUDEV_CFLAGS@
-LIBUDEV_LIBS = @LIBUDEV_LIBS@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LIPO = @LIPO@
@@ -359,10 +357,6 @@ libkms_la_LTLIBRARIES = libkms.la
 libkms_ladir = $(libdir)
 libkms_la_LDFLAGS = -version-number 1:0:0 -no-undefined
 libkms_la_LIBADD = ../libdrm.la
-
-#if HAVE_LIBUDEV
-#libkms_la_LIBADD += $(LIBUDEV_LIBS)
-#endif
 libkms_la_SOURCES = $(LIBKMS_FILES) $(am__append_1) $(am__append_2) \
 	$(am__append_3) $(am__append_4) $(am__append_5)
 libkmsincludedir = ${includedir}/libkms

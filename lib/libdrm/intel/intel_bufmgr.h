@@ -184,6 +184,11 @@ int drm_intel_gem_bo_map_unsynchronized(drm_intel_bo *bo);
 int drm_intel_gem_bo_map_gtt(drm_intel_bo *bo);
 int drm_intel_gem_bo_unmap_gtt(drm_intel_bo *bo);
 
+#define HAVE_DRM_INTEL_GEM_BO_DISABLE_IMPLICIT_SYNC 1
+int drm_intel_bufmgr_gem_can_disable_implicit_sync(drm_intel_bufmgr *bufmgr);
+void drm_intel_gem_bo_disable_implicit_sync(drm_intel_bo *bo);
+void drm_intel_gem_bo_enable_implicit_sync(drm_intel_bo *bo);
+
 void *drm_intel_gem_bo_map__cpu(drm_intel_bo *bo);
 void *drm_intel_gem_bo_map__gtt(drm_intel_bo *bo);
 void *drm_intel_gem_bo_map__wc(drm_intel_bo *bo);
@@ -212,9 +217,17 @@ int drm_intel_bufmgr_gem_get_devid(drm_intel_bufmgr *bufmgr);
 int drm_intel_gem_bo_wait(drm_intel_bo *bo, int64_t timeout_ns);
 
 drm_intel_context *drm_intel_gem_context_create(drm_intel_bufmgr *bufmgr);
+int drm_intel_gem_context_get_id(drm_intel_context *ctx,
+                                 uint32_t *ctx_id);
 void drm_intel_gem_context_destroy(drm_intel_context *ctx);
 int drm_intel_gem_bo_context_exec(drm_intel_bo *bo, drm_intel_context *ctx,
 				  int used, unsigned int flags);
+int drm_intel_gem_bo_fence_exec(drm_intel_bo *bo,
+				drm_intel_context *ctx,
+				int used,
+				int in_fence,
+				int *out_fence,
+				unsigned int flags);
 
 int drm_intel_bo_gem_export_to_prime(drm_intel_bo *bo, int *prime_fd);
 drm_intel_bo *drm_intel_bo_gem_create_from_prime(drm_intel_bufmgr *bufmgr,

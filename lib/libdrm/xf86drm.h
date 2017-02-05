@@ -753,6 +753,11 @@ typedef struct _drmEventContext {
 extern int drmHandleEvent(int fd, drmEventContextPtr evctx);
 
 extern char *drmGetDeviceNameFromFd(int fd);
+
+/* Improved version of drmGetDeviceNameFromFd which attributes for any type of
+ * device/node - card, control or renderD.
+ */
+extern char *drmGetDeviceNameFromFd2(int fd);
 extern int drmGetNodeTypeFromFd(int fd);
 
 extern int drmPrimeHandleToFD(int fd, uint32_t handle, uint32_t flags, int *prime_fd);
@@ -761,7 +766,10 @@ extern int drmPrimeFDToHandle(int fd, int prime_fd, uint32_t *handle);
 extern char *drmGetPrimaryDeviceNameFromFd(int fd);
 extern char *drmGetRenderDeviceNameFromFd(int fd);
 
-#define DRM_BUS_PCI   0
+#define DRM_BUS_PCI       0
+#define DRM_BUS_USB       1
+#define DRM_BUS_PLATFORM  2
+#define DRM_BUS_HOST1X    3
 
 typedef struct _drmPciBusInfo {
     uint16_t domain;
@@ -778,15 +786,51 @@ typedef struct _drmPciDeviceInfo {
     uint8_t revision_id;
 } drmPciDeviceInfo, *drmPciDeviceInfoPtr;
 
+typedef struct _drmUsbBusInfo {
+    uint8_t bus;
+    uint8_t dev;
+} drmUsbBusInfo, *drmUsbBusInfoPtr;
+
+typedef struct _drmUsbDeviceInfo {
+    uint16_t vendor;
+    uint16_t product;
+} drmUsbDeviceInfo, *drmUsbDeviceInfoPtr;
+
+#define DRM_PLATFORM_DEVICE_NAME_LEN 512
+
+typedef struct _drmPlatformBusInfo {
+    char fullname[DRM_PLATFORM_DEVICE_NAME_LEN];
+} drmPlatformBusInfo, *drmPlatformBusInfoPtr;
+
+typedef struct _drmPlatformDeviceInfo {
+    char **compatible; /* NULL terminated list of compatible strings */
+} drmPlatformDeviceInfo, *drmPlatformDeviceInfoPtr;
+
+#define DRM_HOST1X_DEVICE_NAME_LEN 512
+
+typedef struct _drmHost1xBusInfo {
+    char fullname[DRM_HOST1X_DEVICE_NAME_LEN];
+} drmHost1xBusInfo, *drmHost1xBusInfoPtr;
+
+typedef struct _drmHost1xDeviceInfo {
+    char **compatible; /* NULL terminated list of compatible strings */
+} drmHost1xDeviceInfo, *drmHost1xDeviceInfoPtr;
+
 typedef struct _drmDevice {
     char **nodes; /* DRM_NODE_MAX sized array */
     int available_nodes; /* DRM_NODE_* bitmask */
     int bustype;
     union {
         drmPciBusInfoPtr pci;
+        drmUsbBusInfoPtr usb;
+        drmPlatformBusInfoPtr platform;
+        drmHost1xBusInfoPtr host1x;
     } businfo;
     union {
         drmPciDeviceInfoPtr pci;
+        drmUsbDeviceInfoPtr usb;
+        drmPlatformDeviceInfoPtr platform;
+        drmHost1xDeviceInfoPtr host1x;
     } deviceinfo;
 } drmDevice, *drmDevicePtr;
 
@@ -795,6 +839,10 @@ extern void drmFreeDevice(drmDevicePtr *device);
 
 extern int drmGetDevices(drmDevicePtr devices[], int max_devices);
 extern void drmFreeDevices(drmDevicePtr devices[], int count);
+
+#define DRM_DEVICE_GET_PCI_REVISION (1 << 0)
+extern int drmGetDevice2(int fd, uint32_t flags, drmDevicePtr *device);
+extern int drmGetDevices2(uint32_t flags, drmDevicePtr devices[], int max_devices);
 
 #if defined(__cplusplus)
 }

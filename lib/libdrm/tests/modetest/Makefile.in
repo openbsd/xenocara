@@ -172,8 +172,6 @@ LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
-LIBUDEV_CFLAGS = @LIBUDEV_CFLAGS@
-LIBUDEV_LIBS = @LIBUDEV_LIBS@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LIPO = @LIPO@
@@ -280,15 +278,14 @@ MODETEST_FILES := \
 	cursor.h \
 	modetest.c
 
-AM_CFLAGS = $(filter-out -Wpointer-arith, $(WARN_CFLAGS)) \
+AM_CFLAGS = $(filter-out -Wpointer-arith, $(WARN_CFLAGS)) -pthread \
 	-I$(top_srcdir)/include/drm -I$(top_srcdir)/tests \
 	-I$(top_srcdir)
 modetest_SOURCES = $(MODETEST_FILES)
 modetest_LDADD = \
 	$(top_builddir)/libdrm.la \
 	$(top_builddir)/tests/util/libutil.la \
-	$(CAIRO_LIBS) \
-	-lpthread
+	$(CAIRO_LIBS)
 
 all: all-am
 

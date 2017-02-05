@@ -20,7 +20,7 @@
 
 AC_PREREQ([2.63])
 AC_INIT([libdrm],
-        [2.4.73],
+        [2.4.75],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=DRI],
         [libdrm])
 
@@ -61,7 +61,7 @@ LT_PREREQ([2.2])
 LT_INIT([disable-static])
 
 
-PKG_CHECK_MODULES(PTHREADSTUBS, pthread-stubs)
+
 AC_SUBST(PTHREADSTUBS_CFLAGS)
 AC_SUBST(PTHREADSTUBS_LIBS)
 
@@ -450,13 +450,6 @@ if test "x$CAIRO" = xyes; then
 fi
 AC_MSG_RESULT([$CAIRO])
 AM_CONDITIONAL(HAVE_CAIRO, [test "x$CAIRO" = xyes])
-
-# For enumerating devices in test case
-PKG_CHECK_MODULES(LIBUDEV, libudev, [HAVE_LIBUDEV=yes], [HAVE_LIBUDEV=no])
-if test "x$HAVE_LIBUDEV" = xyes; then
-   	AC_DEFINE(HAVE_LIBUDEV, 1, [Have libudev support])
-fi
-AM_CONDITIONAL(HAVE_LIBUDEV, [test "x$HAVE_LIBUDEV" = xyes])
 
 # xsltproc for docbook manpages
 AC_ARG_ENABLE([manpages],

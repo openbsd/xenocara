@@ -245,8 +245,6 @@ LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
-LIBUDEV_CFLAGS = @LIBUDEV_CFLAGS@
-LIBUDEV_LIBS = @LIBUDEV_LIBS@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LIPO = @LIPO@
@@ -397,7 +395,9 @@ EXTRA_DIST = \
 	tests/test-batch.sh \
 	$(TESTS)
 
-test_decode_LDADD = libdrm_intel.la ../libdrm.la
+test_decode_LDADD = libdrm_intel.la ../libdrm.la \
+	-lpthread
+
 pkgconfig_DATA = libdrm_intel.pc
 all: all-am
 
