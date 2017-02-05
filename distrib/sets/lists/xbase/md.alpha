@@ -103,7 +103,7 @@
 ./usr/X11R6/lib/libOSMesa.la
 ./usr/X11R6/lib/libOSMesa.so.10.1
 ./usr/X11R6/lib/libdrm.la
-./usr/X11R6/lib/libdrm.so.7.3
+./usr/X11R6/lib/libdrm.so.7.4
 ./usr/X11R6/lib/libdrm_amdgpu.la
 ./usr/X11R6/lib/libdrm_amdgpu.so.1.2
 ./usr/X11R6/lib/libdrm_nouveau.la
