@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.233 2016/12/19 14:17:26 okan Exp $
+ * $OpenBSD: client.c,v 1.234 2017/02/06 18:10:28 okan Exp $
  */
 
 #include <sys/types.h>
@@ -100,7 +100,7 @@ client_init(Window win, struct screen_ctx *sc, int active)
 
 	if (wattr.map_state != IsViewable) {
 		client_placecalc(cc);
-		client_move(cc);
+		client_resize(cc, 0);
 		if ((cc->wmh) && (cc->wmh->flags & StateHint))
 			client_set_wm_state(cc, cc->wmh->initial_state);
 	} else {
