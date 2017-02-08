@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.285 2017/02/05 05:52:14 jsg Exp $
+# $OpenBSD: 3RDPARTY,v 1.286 2017/02/08 21:36:21 danj Exp $
 #
 Package: 	Freetype
 Version:	2.7.1
@@ -49,8 +49,8 @@ Maintainer:	David A. Bagley
 Archive Site:	http://sillycycle.com/xlock/
 
 Package:	xkeyboard-config
-Version:	2.19
-Current Vers:	2.19
+Version:	2.20
+Current Vers:	2.20
 Maintainer:	xkb@listserv.bat.ru
 Archive Site:	http://www.freedesktop.org/wiki/Software/XKeyboardConfig
 
