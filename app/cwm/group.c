@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: group.c,v 1.125 2016/10/24 17:39:38 okan Exp $
+ * $OpenBSD: group.c,v 1.126 2017/02/10 15:00:54 okan Exp $
  */
 
 #include <sys/types.h>
@@ -164,7 +164,7 @@ group_movetogroup(struct client_ctx *cc, int idx)
 
 	if (cc->gc == gc)
 		return;
-	if (group_holds_only_hidden(gc))
+	if (gc->num != 0 && group_holds_only_hidden(gc))
 		client_hide(cc);
 	group_assign(gc, cc);
 }
