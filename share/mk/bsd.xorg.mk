@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.57 2016/11/19 14:22:05 tb Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.58 2017/02/12 18:19:54 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006,2012 Matthieu Herrb
 #
@@ -141,11 +141,11 @@ all:	config.status
 	@exec ${MAKE} ${_lt_libs}
 .endif
 
+autoreconf:
+	cd ${_SRCDIR}; ${AUTOTOOLS_ENV} exec autoreconf -v --install --force
+
 .if !target(config.status)
 config.status:
-.if defined(XENOCARA_RERUN_AUTOCONF) && ${XENOCARA_RERUN_AUTOCONF:L} == "yes"
-	cd ${_SRCDIR}; ${AUTOTOOLS_ENV} exec autoreconf -v --install --force
-.endif
 	${CONFIGURE_ENV} PATH=$(XENOCARA_PATH) \
 		exec sh ${_SRCDIR}/configure --prefix=${X11BASE} \
 		--sysconfdir=/etc \

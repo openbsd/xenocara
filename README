@@ -116,11 +116,8 @@ configure.ac mostly), you need to rebuild the configure script and
 makefiles skeletons. For that use the following command in the
 directory where you edited the autotools source files:
 
- doas env XENOCARA_RERUN_AUTOCONF=Yes make -f Makefile.bsd-wrapper build
-
-You can also set XENOCARA_RERUN_AUTOCONF in /etc/mk.conf or in the
-environment to force the regeneration of configure scripts
-in every component during a make build.
+ make autoreconf
+ doas make -f Makefile.bsd-wrapper build
 
 o Cleaning in packages managed by autotools
   -----------------------------------------
@@ -196,4 +193,4 @@ The core dump will be in /var/crash.
 See also <http://xorg.freedesktop.org/wiki/Development/Documentation/ServerDebugging>
 
 -- 
-$OpenBSD: README,v 1.37 2016/10/14 18:29:18 matthieu Exp $
+$OpenBSD: README,v 1.38 2017/02/12 18:19:54 matthieu Exp $
