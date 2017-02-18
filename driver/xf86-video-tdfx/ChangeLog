@@ -1,3 +1,19 @@
+commit 4dd4a5da0697d33df0f456ccf224d5be945b7aab
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Tue Jan 17 14:48:21 2017 -0800
+
+    xf86-video-tdfx 1.4.7
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit b99390efcb55d7d4a68e8c595119c1af4426fc0b
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jul 19 10:03:56 2016 -0400
+
+    Adapt Block/WakeupHandler signature for ABI 23
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
 commit 278042ff4c469f24ab7bc28e517e8a78e2821ddc
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Sun Feb 22 13:26:24 2015 -0800
