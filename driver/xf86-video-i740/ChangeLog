@@ -1,3 +1,19 @@
+commit 4ec050e2c080c5b8f24b4a11912489aa515c3b27
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Tue Jan 17 14:39:59 2017 -0800
+
+    xf86-video-i740 1.3.6
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 74e5a49cbf3b99ce0eb2b78a47a9008a1900bcf4
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jul 19 10:03:56 2016 -0400
+
+    Adapt Block/WakeupHandler signature for ABI 23
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
 commit 1f13c18a17914a6e919e604d1dc5589eb18f0141
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Sat Feb 21 12:28:33 2015 -0800
