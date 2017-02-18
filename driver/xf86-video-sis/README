@@ -1,5 +1,5 @@
   Information for SiS and XGI Users
-  Thomas Winischhofer  <thomas@winischhofer.net>
+  Thomas Winischhofer (thomas@winischhofer.net)
   6 July 2005
   ____________________________________________________________
 
@@ -17,7 +17,7 @@
 
   ______________________________________________________________________
 
-  [1m1.  Introduction[0m
+  1.  Introduction
 
 
   This driver is written by Thomas Winischhofer and is a (nearly)
@@ -26,45 +26,45 @@
 
   It currently supports the following chipsets:
 
-  +o  old series: SiS 5597/5598, 6236/AGP/DVD, 530/620
+  o  old series: SiS 5597/5598, 6236/AGP/DVD, 530/620
 
-  +o  300 series: SiS 300/305, 540, 630/730
+  o  300 series: SiS 300/305, 540, 630/730
 
-  +o  315 series: SiS 315/E/PRO, 55x, 650, 651, M650, 740,
+  o  315 series: SiS 315/E/PRO, 55x, 650, 651, M650, 740,
      [M]661&[F/M/G]X, [M]741[GX]
 
-  +o  330 series: SiS 330 ("Xabre"), [M]760[GX], [M]761[GX]
+  o  330 series: SiS 330 ("Xabre"), [M]760[GX], [M]761[GX]
 
-  +o  340 series: SiS 34x, XGI Volari Z7, V3XT, V5, V8
+  o  340 series: SiS 34x, XGI Volari Z7, V3XT, V5, V8
 
   Among other features, the driver supports
 
-  +o  8/16/24 bits color depth; old series also 15
+  o  8/16/24 bits color depth; old series also 15
 
-  +o  Hardware cursor; 315/330/340 series: Color HW cursor
+  o  Hardware cursor; 315/330/340 series: Color HW cursor
 
-  +o  XAA; EXA; XVideo (Xv); RENDER and other extensions
+  o  XAA; EXA; XVideo (Xv); RENDER and other extensions
 
-  +o  6326: TV output
+  o  6326: TV output
 
-  +o  300/315/330/340 series: TV output via Chrontel TV encoders or SiS
+  o  300/315/330/340 series: TV output via Chrontel TV encoders or SiS
      video bridges
 
-  +o  300/315/330/340 series: LCD output via LVDS transmitters or SiS
+  o  300/315/330/340 series: LCD output via LVDS transmitters or SiS
      video bridges
 
-  +o  300/315/330/340 series: Dual head mode; Xinerama; Merged
+  o  300/315/330/340 series: Dual head mode; Xinerama; Merged
      framebuffer mode
 
-  +o  300/315/330/340 series: Interface for SiSCtrl (see below)
+  o  300/315/330/340 series: Interface for SiSCtrl (see below)
 
   This document provides a brief overview over the driver's features and
   configuration options. Please see
-  http://www.winischhofer.at/linuxsisvga.shtml for detailed
+  http://www.winischhofer.eu/linuxsisvga.shtml for detailed
   documentation and updates.
 
 
-  [1m2.  xorg.conf Options[0m
+  2.  xorg.conf Options
 
 
   The following options are of particular interest for the SiS driver.
@@ -76,72 +76,72 @@
   "false" and "no" respectively have the same meaning.
 
 
-  [1m2.1.  For all chipsets[0m
+  2.1.  For all chipsets
 
 
 
-     [1mOption[0m
+     Option
         >
 
-     [1mOption[0m
+     Option
         These options select whether the software (SW) or hardware (HW)
         cursor should be used. The default is using the hardware cursor.
 
-     [1mOption[0m
+     Option
         Disables 2D acceleration. By default, 2D acceleration is
         enabled.
 
-     [1mOption[0m
+     Option
         Determines which acceleration architecture should be used.
         Possible arguments are "XAA" or "EXA". As of this writing, EXA
         is still experimental and it is not recommended to be used on
         production machines. By default, XAA will be used.
 
-     [1mOption[0m
+     Option
         This option enables clockwise ("CW") or counter-clockwise
         ("CCW") rotation of the display. Enabling either CW or CCW
         rotation disables the RandR extension as well as all 2D
         acceleration and Xv support. Default: no rotation.
 
-     [1mOption[0m
+     Option
         This option enables reflecting the display horizontally ("X"),
         vertically ("Y") or in both directions ("XY"). Enabling
         reflection disables the RandR extension as well as all 2D
         acceleration and Xv support. Default: no rotation.
 
-     [1mOption[0m
+     Option
         This option enables the shadow framebuffer layer. By default, it
         is disabled.
 
-     [1mOption[0m
+     Option
         Disables the XVideo (Xv) support. Apart from the XGI Volari Z7,
         all chipsets support Xv. By default, XVideo support is enabled.
 
-     [1mOption[0m
+     Option
         Enables or disables gamma correction. Default: gamma correction
         is enabled.
 
 
-  [1m2.2.  Old series specific options[0m
+  2.2.  Old series specific options
 
 
 
-     [1mOption[0m
+     Option
         Enables 1 cycle memory access for read and write operations. The
         default depends on the chipset used.
 
-     [1mOption[0m
+     Option
         SiS chipsets have the ability to extend the engine command queue
         in video RAM. This concept is called "TurboQueue" and gives some
         performance improvement. Due to hardware bugs, the TurboQueue is
         disabled on the 530/620, otherwise enabled by default.
 
-     [1mOption[0m
+     Option
         For 5597/5598 only. This option, if set, disables the CPU to VGA
         host bus.  Disabling the host bus will result in a severe
         performance regression.
 
-     [1mVideoRAM [size][0m
+     VideoRAM [size]
         The SiS 6326 can only directly address 4096K bytes of video RAM.
         However, there are some cards out there featuring 8192K (8MB) of
         video RAM. This RAM is not addressable by the engines.
@@ -152,41 +152,41 @@
         all other chipsets, this keyword is ignored. The size argument
         is expected in KB, but without "KB".
 
-     [1mOption[0m
+     Option
         Due to hardware bugs, XVideo may display a corrupt image when
         using YV12 encoded material. This option, if set, disables
         support for YV12 and hence forces the Xv-aware application to
         use either YUV2 or XShm for video output.
 
-     [1mOption[0m
+     Option
         (6326 only) Selects the TV output standard. May be PAL or NTSC.
         By default, this is selected by a jumper on the card.
 
 
-  [1m2.3.  300/315/330/340 series specific options[0m
+  2.3.  300/315/330/340 series specific options
 
 
 
-     [1mOption[0m
+     Option
         This option enables/disables the driver's interface for the
         SiSCtrl utility. Please see
-        http://www.winischhofer.at/linuxsisvga.shtml for more
+        http://www.winischhofer.eu/linuxsisvga.shtml for more
         information.
 
-     [1mOption[0m
+     Option
         (300 series only) SiS chipsets have the ability to extend the
         engine command queue in video RAM. This concept is called
         "TurboQueue" and gives some performance improvement. The
         TurboQueue is enabled by default.
 
-     [1mOption[0m
+     Option
         Enables or disables CRT1 (= the external VGA monitor). By
         default, the driver will use CRT1 if a monitor is detected
         during server start. Some older monitors can't be detected, so
         they may require setting this option to true. To disable CRT1
         output, set this option to false.
 
-     [1mOption[0m
+     Option
         (For SiS 650, M650, 651, 661, 741, 760 with either SiS 301LV,
         302LV or SiS 301C video bridge only) The argument may be "VGA",
         "LCD" or "OFF".  Specifying LCD will force the driver to use the
@@ -194,7 +194,7 @@
         free for TV usage. "OFF" is the same as setting the option
         ForceCRT1 to "false". Default is VGA.
 
-     [1mOption[0m
+     Option
         Selects the CRT2 output device type. Valid parameters are "LCD",
         "TV", "SVIDEO", "COMPOSITE", "SVIDEO+COMPOSITE", "SCART", "VGA",
         "YPBPR480I", "YPBPR480P", "YPBPR720P", "YPBPR1080I" or "NONE".
@@ -205,53 +205,53 @@
         secondary VGA and is only available on some SiS video bridges
         (301, 301B, 301C).
 
-     [1mOption[0m
+     Option
         (For SiS video bridges only) This option enables or disables
         gamma correction for CRT2. Default: gamma correction for CRT2 is
         enabled.
 
-     [1mOption[0m
+     Option
         Although this option is accepted for all chipsets, it currently
         only makes sense on the 300 series; DRI is only supported on
         these chipsets.  This option enables/disables DRI.
 
-     [1mOption[0m
+     Option
         Selects the TV output standard. May be PAL or NTSC, on some
         machines (depending on the hardware) also PALM and PALN.
         Default: BIOS setting.
 
-     [1mOption[0m
+     Option
         >
 
-     [1mOption[0m
+     Option
         These options allow relocating the image on your TV. Both
         options take an integer within the range of -16 to 16. Default:
         0. Not supported for Chrontel 7019.
 
-     [1mOption[0m
+     Option
         (For Chrontel TV encoders only) Selects whether TV output should
         be overscan or underscan.
 
-     [1mOption[0m
+     Option
         (For Chrontel 7005 TV encoders in PAL mode only) Selects whether
         TV output should be super-overscan (slightly larger than the
         viewable area) or not.
 
-     [1mOption[0m
+     Option
         >
 
-     [1mOption[0m
+     Option
         (For SiS video bridges only) These options allow zooming the
         image on your TV. SISTVXScale takes an integer within the range
         of -16 to 16.  SISTVYScale accepts -4 to 3. Default: 0. Not all
         modes can be scaled.
 
 
-  [1m2.4.  300 series specific options[0m
+  2.4.  300 series specific options
 
 
 
-     [1mOption[0m
+     Option
         This option might only be needed if you are running X on a Linux
         2.4 series kernel. This option is not needed and should be
         omitted on Linux 2.6 and *BSD.
@@ -291,17 +291,17 @@
         total video memory in the BIOS setup utility to 64MB.
 
 
-  [1m2.5.  315/330/340 series specific options[0m
+  2.5.  315/330/340 series specific options
 
 
 
-     [1mOption[0m
+     Option
         Enables or disables RENDER acceleration. This feature, for
         instance, accelerates output of anti-aliased text. By default,
         RENDER acceleration is enabled. RENDER acceleration is currently
         only supported for XAA, not EXA.
 
-     [1mOption[0m
+     Option
         (For 315, 650, 740, 330, 340 and XGI chips only) This option
         selects whether the XVideo (Xv) overlay should be displayed on
         CRT1 or CRT2. Setting this option means CRT2. The other CRT will

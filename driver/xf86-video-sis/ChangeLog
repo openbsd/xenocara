@@ -1,3 +1,29 @@
+commit 3b1aca65448a0660d8ecb60b2431a306b66d5a5a
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Tue Jan 17 14:45:31 2017 -0800
+
+    xf86-video-sis 0.10.9
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 96fee560cd8bf7bf27048ce5fe67b7af6838c8d0
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jul 19 10:03:56 2016 -0400
+
+    Adapt Block/WakeupHandler signature for ABI 23
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 328073e46f9b9fcc09e637c94496c90273a0a4f6
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Sun Sep 13 23:28:53 2015 +0200
+
+    Fix arguments for miSetPointerPosition.
+    
+    For the call for the API between versions 5 and 15.
+    
+    Reviewed-by: Connor Behan <connor.behan@gmail.com>
+
 commit 13b56dc68af8cc41f4fd44115302a3ebbe6662a1
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Sat Aug 29 16:35:43 2015 -0700
