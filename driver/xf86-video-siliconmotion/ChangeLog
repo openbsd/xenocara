@@ -1,3 +1,38 @@
+commit d269962724b57e21142c9e1c6631a45a46d87b47
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Tue Jan 17 14:44:51 2017 -0800
+
+    xf86-video-siliconmotion 1.7.9
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit e67f3949648c20e16ac756ae28ea4a2b4a1d0f4c
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jul 19 10:03:56 2016 -0400
+
+    Adapt Block/WakeupHandler signature for ABI 23
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 647e5a93d9387e3bc8d2c8569e3a5f996acfb169
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Mon Sep 14 18:36:32 2015 +0200
+
+    Use X11/Xarch.h for endian detection.
+    
+    Reviewed-by: Connor Behan <connor.behan@gmail.com>
+
+commit a4e406c20ab0590214f779c2319ac7b92594a606
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Sun Aug 23 11:46:37 2015 -0400
+
+    Check for drawables before compositing
+    
+    This should prevent a crash when something like Cairo tries to composite
+    a solid picture.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+
 commit 70d3d3a384651e5d22840a0de8644eb8b10c5775
 Author: Julien Cristau <jcristau@debian.org>
 Date:   Sat May 9 16:56:51 2015 +0200

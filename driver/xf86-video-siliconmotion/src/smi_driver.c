@@ -487,7 +487,7 @@ SMI_PreInit(ScrnInfoPtr pScrn, int flags)
     if (pScrn->depth > 8) {
 	/* The defaults are OK for us */
 	rgb zeros = {0, 0, 0};
-#if __BYTE_ORDER == __BIG_ENDIAN
+#if X_BYTE_ORDER == X_BIG_ENDIAN
 	rgb masks = {0xff00,0xff0000,0xff000000};
 #else
 	rgb masks = {0, 0, 0};

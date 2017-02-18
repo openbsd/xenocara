@@ -211,7 +211,7 @@ SMI_SetupForScreenToScreenCopy(ScrnInfoPtr pScrn, int xdir, int ydir, int rop,
     ENTER();
     DEBUG("xdir=%d ydir=%d rop=%02X trans=%08X\n", xdir, ydir, rop, trans);
 
-#if __BYTE_ORDER == __BIG_ENDIAN
+#if X_BYTE_ORDER == X_BIG_ENDIAN
     if (pScrn->depth >= 24)
 	trans = lswapl(trans);
 #endif
@@ -296,7 +296,7 @@ SMI_SetupForSolidFill(ScrnInfoPtr pScrn, int color, int rop,
 		   | SMI_BITBLT
 		   | SMI_START_ENGINE;
 
-#if __BYTE_ORDER == __BIG_ENDIAN
+#if X_BYTE_ORDER == X_BIG_ENDIAN
     if (pScrn->depth >= 24) {
 	/* because of the BGR values are in the MSB bytes,
 	 * 'white' is not possible and -1 has a different meaning.
@@ -408,7 +408,7 @@ SMI_SetupForCPUToScreenColorExpandFill(ScrnInfoPtr pScrn, int fg, int bg,
     ENTER();
     DEBUG("fg=%08X bg=%08X rop=%02X\n", fg, bg, rop);
 
-#if __BYTE_ORDER == __BIG_ENDIAN
+#if X_BYTE_ORDER == X_BIG_ENDIAN
     if (pScrn->depth >= 24) {
 	/* see remark elswere */
 	if (fg == 0x7FFFFFFF)
@@ -431,7 +431,7 @@ SMI_SetupForCPUToScreenColorExpandFill(ScrnInfoPtr pScrn, int fg, int bg,
 	WRITE_DPR(pSmi, 0x18, ~fg);
 	WRITE_DPR(pSmi, 0x20, fg);
     } else {
-#if __BYTE_ORDER == __BIG_ENDIAN
+#if X_BYTE_ORDER == X_BIG_ENDIAN
 	if (bg == 0xFFFFFF7F)
 	    bg = -1;
 #endif
@@ -498,7 +498,7 @@ SMI_SetupForMono8x8PatternFill(ScrnInfoPtr pScrn, int patx, int paty, int fg,
     DEBUG("patx=%08X paty=%08X fg=%08X bg=%08X rop=%02X\n",
 	  patx, paty, fg, bg, rop);
 
-#if __BYTE_ORDER == __BIG_ENDIAN
+#if X_BYTE_ORDER == X_BIG_ENDIAN
     if (pScrn->depth >= 24) {
 	if (fg == 0x7FFFFFFF)
 	    fg = -1;
@@ -524,7 +524,7 @@ SMI_SetupForMono8x8PatternFill(ScrnInfoPtr pScrn, int patx, int paty, int fg,
 	WRITE_DPR(pSmi, 0x34, patx);
 	WRITE_DPR(pSmi, 0x38, paty);
     } else {
-#if __BYTE_ORDER == __BIG_ENDIAN
+#if X_BYTE_ORDER == X_BIG_ENDIAN
 	if (bg == 0xFFFFFF7F)
 	    bg = -1;
 #endif
@@ -582,7 +582,7 @@ SMI_SetupForColor8x8PatternFill(ScrnInfoPtr pScrn, int patx, int paty, int rop,
 		   | SMI_COLOR_PATTERN
 		   | SMI_START_ENGINE;
 
-#if __BYTE_ORDER == __BIG_ENDIAN
+#if X_BYTE_ORDER == X_BIG_ENDIAN
     if (pScrn->depth >= 24)
 	trans_color = lswapl(trans_color);
 #endif
@@ -666,7 +666,7 @@ SMI_SetupForImageWrite(ScrnInfoPtr pScrn, int rop, unsigned int planemask,
     DEBUG("rop=%02X trans_color=%08X bpp=%d depth=%d\n",
 	  rop, trans_color, bpp, depth);
 
-#if __BYTE_ORDER == __BIG_ENDIAN
+#if X_BYTE_ORDER == X_BIG_ENDIAN
     if (pScrn->depth >= 24)
 	trans_color = lswapl(trans_color);
 #endif
@@ -675,7 +675,7 @@ SMI_SetupForImageWrite(ScrnInfoPtr pScrn, int rop, unsigned int planemask,
 		   | SMI_START_ENGINE;
 
     if (trans_color != -1) {
-#if __BYTE_ORDER == __BIG_ENDIAN
+#if X_BYTE_ORDER == X_BIG_ENDIAN
 	if (trans_color == 0xFFFFFF7F)
 	    trans_color = -1;
 #endif

@@ -623,6 +623,10 @@ SMI_PrepareComposite(int op, PicturePtr pSrcPicture, PicturePtr pMaskPicture, Pi
 {
     ScrnInfoPtr pScrn = xf86ScreenToScrn(pDst->drawable.pScreen);
     SMIPtr pSmi = SMIPTR(pScrn);
+
+    if (!pSrc) return FALSE;
+    if (!pSrcPicture->pDrawable) return FALSE;
+
     int src_pitch = exaGetPixmapPitch(pSrc) / (pSrc->drawable.bitsPerPixel >> 3);
     int dst_pitch = exaGetPixmapPitch(pDst) / (pDst->drawable.bitsPerPixel >> 3);
 
