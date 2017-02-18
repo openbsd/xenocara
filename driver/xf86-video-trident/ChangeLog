@@ -1,3 +1,19 @@
+commit dadf45e8eb52ec8404ee596ee13984470b736fbd
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Tue Jan 17 14:48:51 2017 -0800
+
+    xf86-video-trident 1.3.8
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit b5f4d35327863a14224d2a63885cd8b3b83a1815
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jul 19 10:03:56 2016 -0400
+
+    Adapt Block/WakeupHandler signature for ABI 23
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
 commit 64c02f307d7146641adf65e31bcaa2d1238479e7
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Mon Mar 30 10:06:15 2015 -0700
