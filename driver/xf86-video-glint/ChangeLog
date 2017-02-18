@@ -1,3 +1,46 @@
+commit c8b440e96b761c19676fb910c7ec20580197a4aa
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Tue Jan 17 14:36:45 2017 -0800
+
+    xf86-video-glint 1.2.9
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 2eb4d03d2280deec4d6f1b06aaa16477a641af9a
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jul 19 10:03:56 2016 -0400
+
+    Adapt Block/WakeupHandler signature for ABI 23
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 5b22c69898330d2e321596f7061b91362c0e6216
+Author: Michael Lorenz <macallan@NetBSD.org>
+Date:   Thu Feb 19 15:26:46 2015 +0100
+
+    Fix I2C for DDC2.
+    
+    When doing DDC2 on Permedia make sure to clear the USE_MONID bit
+    in the DDCdata register so the i2c bits actually do something.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+
+commit b54f27f0de0558880b2146a4315a99907eb72249
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Aug 11 12:29:28 2014 -0400
+
+    Pass the pci device through to fbdevHWInit
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 073d5b0b392781bf4a6aa7f9e2dbe2ae51caed2c
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Sep 25 08:54:38 2012 -0400
+
+    Remove mibstore.h
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
 commit be79ca10f6f3fd6d7f8aac2e5ae5d8b84480bd83
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Tue Jul 17 16:05:09 2012 +1000

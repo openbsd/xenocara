@@ -458,7 +458,8 @@ Permedia2I2CPutBits(I2CBusPtr b, int scl, int sda)
 {
     GLINTPtr pGlint = (GLINTPtr) b->DriverPrivate.ptr;
     int r = (pGlint->DDCBus == b) ? PMDDCData : VSSerialBusControl;
-    CARD32 v = GLINT_READ_REG(r) & ~(ClkOut | DataOut);
+
+    CARD32 v = 0;
 
     if (scl > 0) v |= ClkOut;
     if (sda > 0) v |= DataOut;

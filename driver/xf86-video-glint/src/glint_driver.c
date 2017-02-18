@@ -944,7 +944,9 @@ GLINTPreInit(ScrnInfoPtr pScrn, int flags)
     if (FBDevProbed) {
 	int default_depth, fbbpp;
 	
-	if (!fbdevHWInit(pScrn,NULL,xf86FindOptionValue(pGlint->pEnt->device->options,"fbdev"))) {
+	if (!fbdevHWInit(pScrn, pGlint->PciInfo,
+			 xf86FindOptionValue(pGlint->pEnt->device->options,
+					     "fbdev"))) {
 		xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "fbdevHWInit failed!\n");	
 		return FALSE;
 	}
@@ -1076,7 +1078,9 @@ GLINTPreInit(ScrnInfoPtr pScrn, int flags)
 		return FALSE;
 	}
 
-	if (!fbdevHWInit(pScrn,NULL,xf86FindOptionValue(pGlint->pEnt->device->options,"fbdev")))
+	if (!fbdevHWInit(pScrn, pGlint->PciInfo,
+			 xf86FindOptionValue(pGlint->pEnt->device->options,
+					     "fbdev")))
 	{
 		xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "fbdevHWInit failed!\n");
 		return FALSE;
