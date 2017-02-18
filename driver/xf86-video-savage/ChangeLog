@@ -1,3 +1,31 @@
+commit d0582b84231de1b089eda296cd3bb859e5df1acd
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Tue Jan 17 14:44:13 2017 -0800
+
+    xf86-video-savage 2.3.9
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit de3e1803314820968502156703d5bfe3fab24972
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jul 19 10:03:56 2016 -0400
+
+    Adapt Block/WakeupHandler signature for ABI 23
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit de61497415e58a21fa247faf6db180ca47fb5df0
+Author: Stefan Dirsch <sndirsch@suse.de>
+Date:   Wed Apr 27 16:02:13 2016 +0200
+
+    Disable tiling on SuperSavage by default
+    
+    Xserver cannot be started with Tiling enabled on SuperSavage.
+    https://bugzilla.opensuse.org/show_bug.cgi?id=805380
+    
+    Signed-off-by: Stefan Dirsch <sndirsch@suse.de>
+    Acked-by: Hans de Goede <hdegoede@redhat.com>
+
 commit f8f24e6856e2627f6620a8fd0474366d057496d2
 Author: Julien Cristau <jcristau@debian.org>
 Date:   Fri May 8 12:08:50 2015 +0200

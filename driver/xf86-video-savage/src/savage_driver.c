@@ -1669,7 +1669,11 @@ static Bool SavagePreInit(ScrnInfoPtr pScrn, int flags)
 #endif
 
     /* we can use Option "DisableTile TRUE" to disable tile mode */
-    psav->bDisableTile = FALSE; 
+    if (psav->Chipset == S3_SUPERSAVAGE)
+        /* apparently broken with these GPUs, see https://bugzilla.opensuse.org/show_bug.cgi?id=805380 */
+	psav->bDisableTile = TRUE;
+    else
+	psav->bDisableTile = FALSE;
     if (xf86GetOptValBool(psav->Options, OPTION_DISABLE_TILE,&psav->bDisableTile)) {
         xf86DrvMsg(pScrn->scrnIndex, X_CONFIG,
                    "Option: %s Tile Mode and Program it \n",(psav->bDisableTile?"Disable":"Enable"));
