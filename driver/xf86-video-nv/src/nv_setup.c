@@ -491,6 +491,8 @@ NVCommonSetup(ScrnInfoPtr pScrn)
 
     pNv->Television = FALSE;
 
+    vgaHWGetIOBase(pVga);
+
     if(!pNv->twoHeads) {
        pNv->CRTCnumber = 0;
        if((monitorA = NVProbeDDC(pScrn, 0))) {

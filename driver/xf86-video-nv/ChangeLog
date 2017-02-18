@@ -1,3 +1,65 @@
+commit e4134c4ebd3522e730689e0bda7b9f8fd39aedb8
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Tue Jan 17 14:42:07 2017 -0800
+
+    xf86-video-nv 2.1.21
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 42e260a7ab630fdfa4664f467dad25e7178ff809
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jul 19 10:03:56 2016 -0400
+
+    Adapt Block/WakeupHandler signature for ABI 23
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 38d888e0f377bf28373b55c3250c39ab5f8c95b3
+Author: Matthieu Herrb <matthieu@herrb.eu>
+Date:   Mon Nov 18 21:14:42 2013 +0100
+
+    Fix shadow framebuffer implementation.
+    
+    Makes it possible to run the nv driver without XAA on cards where
+    EXA is not supported.
+    
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit 0b6619fec39fada995646fb95bb25e72d3c9a491
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Tue Aug 13 20:36:59 2013 +0200
+
+    init: Initialize VGA IOBase before using it
+    
+    The NV driver did never set the VGA IOBase for those registers which
+    have different addresses dependent whether the VGA engine is running in
+    mono or color mode.
+    This has not been detected as the VGA mode and font save/restore
+    functions initialize this value themselves.
+    
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+    Reviewed-by: Mark Kettenis <kettenis@openbsd.org>
+
+commit 49ee1c26ea982e302169c949ebd0abb9d8ef362c
+Author: Jeremy White <jwhite@codeweavers.com>
+Date:   Thu Mar 21 08:59:06 2013 -0700
+
+    Include xf86Modes.h to use functions from hw/xfree86/modes/xf86Modes.c.
+    
+    Signed-off-by: Jeremy White <jwhite@codeweavers.com>
+    Reviewed-by: Robert Morell <rmorell@nvidia.com>
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit fc78fe98222b0204b8a2872a529763d6fe5048da
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Sep 25 08:54:49 2012 -0400
+
+    Remove mibstore.h
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
 commit e82fddd3e962189ad4493e2bf98ba533cf36d8c3
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Tue Jul 17 16:49:24 2012 +1000

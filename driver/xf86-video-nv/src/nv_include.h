@@ -27,6 +27,7 @@
 #include "micmap.h"
 
 #include "xf86DDC.h"
+#include "xf86Modes.h"
 
 #include "vbe.h"
 
