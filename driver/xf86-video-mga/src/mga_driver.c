@@ -87,7 +87,7 @@
 #include "mga_macros.h"
 #include "mga_maven.h"
 
-#ifdef HAVE_XAA_H
+#ifdef USE_XAA
 #include "xaa.h"
 #endif
 
@@ -315,7 +315,7 @@ static const struct mga_device_attributes attribs[] = {
     },
 
     /* G200SE A PCI */
-    [10] = { 0, 1, 0, 0, 1, 0, 0, 1, new_BARs,
+    [10] = { 0, 1, 0, 0, 1, 0, 0, 0, new_BARs,
             (TRANSC_SOLID_FILL | TWO_PASS_COLOR_EXPAND | USE_LINEAR_EXPANSION),
 	{
 	    { 50000, 230000 }, /* System VCO frequencies */
@@ -331,7 +331,7 @@ static const struct mga_device_attributes attribs[] = {
     },
 
     /* G200SE B PCI */
-    [11] = { 0, 1, 0, 0, 1, 0, 0, 1, new_BARs,
+    [11] = { 0, 1, 0, 0, 1, 0, 0, 0, new_BARs,
             (TRANSC_SOLID_FILL | TWO_PASS_COLOR_EXPAND | USE_LINEAR_EXPANSION),
 	{
 	    { 50000, 114000 }, /* System VCO frequencies */
@@ -408,6 +408,22 @@ static const struct mga_device_attributes attribs[] = {
 	},
 
 	16384, 0x4000,          /* Memory probe size & offset values */
+    },
+
+    /* G200WB */
+    [16] = { 0, 1, 0, 0, 1, 0, 0, 0, new_BARs,
+            (TRANSC_SOLID_FILL | TWO_PASS_COLOR_EXPAND | USE_LINEAR_EXPANSION),
+	{
+	    { 50000, 230000 }, /* System VCO frequencies */
+	    { 50000, 203400 }, /* Pixel VCO frequencies */
+	    { 0, 0 },          /* Video VCO frequencies */
+	    45000,            /* Memory clock */
+	    27050,             /* PLL reference frequency */
+	    0,                 /* Supports fast bitblt? */
+	    MGA_HOST_PCI       /* Host interface */
+	},
+
+	16384, 0x4000,          /* Memory probe size & offset values */
     }
 };
 
@@ -438,7 +454,9 @@ static const struct pci_id_match mga_device_match[] = {
 
     MGA_DEVICE_MATCH( PCI_CHIP_MGAG200_EH_PCI, 14 ),
 
-	MGA_DEVICE_MATCH(PCI_CHIP_MGAG200_ER_PCI, 15 ),
+    MGA_DEVICE_MATCH(PCI_CHIP_MGAG200_ER_PCI, 15 ),
+
+    MGA_DEVICE_MATCH( PCI_CHIP_MGAG200_EW3_PCI, 16 ),
 
     { 0, 0, 0 },
 };
@@ -459,6 +477,7 @@ static SymTabRec MGAChipsets[] = {
     { PCI_CHIP_MGAG200_EV_PCI,	"mgag200 EV Maxim" },
     { PCI_CHIP_MGAG200_ER_PCI,	"mgag200 ER SH7757" },	
     { PCI_CHIP_MGAG200_WINBOND_PCI,	"mgag200 eW Nuvoton" },
+    { PCI_CHIP_MGAG200_EW3_PCI,	"mgag200 eW3 Nuvoton" },
     { PCI_CHIP_MGAG200_EH_PCI,	"mgag200eH" },
     { PCI_CHIP_MGAG400,		"mgag400" },
     { PCI_CHIP_MGAG550,		"mgag550" },
@@ -483,6 +502,8 @@ static PciChipsets MGAPciChipsets[] = {
     { PCI_CHIP_MGAG200_ER_PCI, PCI_CHIP_MGAG200_ER_PCI,
 	RES_SHARED_VGA },
     { PCI_CHIP_MGAG200_WINBOND_PCI, PCI_CHIP_MGAG200_WINBOND_PCI,
+	RES_SHARED_VGA },
+    { PCI_CHIP_MGAG200_EW3_PCI, PCI_CHIP_MGAG200_EW3_PCI,
 	RES_SHARED_VGA },
     { PCI_CHIP_MGAG200_EH_PCI, PCI_CHIP_MGAG200_EH_PCI,
 	RES_SHARED_VGA },
@@ -923,6 +944,9 @@ MGAProbe(DriverPtr drv, int flags)
                 attrib_no = 15;
                 break;
 				
+            case PCI_CHIP_MGAG200_EW3_PCI:
+                attrib_no = 16;
+                break;
 
 	    default:
 		return FALSE;
@@ -1541,7 +1565,8 @@ MGAPreInit(ScrnInfoPtr pScrn, int flags)
     pMga->is_G200SE = (pMga->Chipset == PCI_CHIP_MGAG200_SE_A_PCI)
 	|| (pMga->Chipset == PCI_CHIP_MGAG200_SE_B_PCI);
     pMga->is_G200EV = (pMga->Chipset == PCI_CHIP_MGAG200_EV_PCI);
-    pMga->is_G200WB = (pMga->Chipset == PCI_CHIP_MGAG200_WINBOND_PCI);
+    pMga->is_G200WB = (pMga->Chipset == PCI_CHIP_MGAG200_WINBOND_PCI)
+	|| (pMga->Chipset ==  PCI_CHIP_MGAG200_EW3_PCI);
     pMga->is_G200EH = (pMga->Chipset == PCI_CHIP_MGAG200_EH_PCI);
     pMga->is_G200ER = (pMga->Chipset == PCI_CHIP_MGAG200_ER_PCI);
 
@@ -1911,14 +1936,12 @@ MGAPreInit(ScrnInfoPtr pScrn, int flags)
 	char *s = xf86GetOptValString(pMga->Options, OPTION_ACCELMETHOD);
 #endif
 	pMga->NoAccel = FALSE;
+	pMga->Exa = FALSE;
 #ifdef USE_EXA
-	pMga->Exa = TRUE;
-	if (!xf86NameCmp(s, "XAA")) {
-	    pMga->Exa = FALSE;
+	if (!xf86NameCmp(s, "EXA")) {
+	    pMga->Exa = TRUE;
 	    from = X_CONFIG;
 	}
-#else
-	pMga->Exa = FALSE;
 #endif
 	xf86DrvMsg(pScrn->scrnIndex, from, "Using %s acceleration\n",
 		   pMga->Exa ? "EXA" : "XAA");
@@ -2051,6 +2074,7 @@ MGAPreInit(ScrnInfoPtr pScrn, int flags)
     case PCI_CHIP_MGAG200_SE_A_PCI:
     case PCI_CHIP_MGAG200_SE_B_PCI:
     case PCI_CHIP_MGAG200_WINBOND_PCI:
+    case PCI_CHIP_MGAG200_EW3_PCI:
     case PCI_CHIP_MGAG200_EV_PCI:
     case PCI_CHIP_MGAG200_EH_PCI:
     case PCI_CHIP_MGAG200_ER_PCI:	
@@ -2165,8 +2189,9 @@ MGAPreInit(ScrnInfoPtr pScrn, int flags)
 	  case PCI_CHIP_MGAG200_SE_A_PCI:
 	  case PCI_CHIP_MGAG200_SE_B_PCI:
           case PCI_CHIP_MGAG200_WINBOND_PCI:
+	  case PCI_CHIP_MGAG200_EW3_PCI:
 	  case PCI_CHIP_MGAG200_EV_PCI:
-      case PCI_CHIP_MGAG200_EH_PCI:
+	  case PCI_CHIP_MGAG200_EH_PCI:
 	  case PCI_CHIP_MGAG200_ER_PCI:	  
 	    pMga->SrcOrg = 0;
 	    pMga->DstOrg = 0;
@@ -2349,6 +2374,7 @@ MGAPreInit(ScrnInfoPtr pScrn, int flags)
 	case PCI_CHIP_MGAG200_PCI:
 	case PCI_CHIP_MGAG200_SE_B_PCI:
         case PCI_CHIP_MGAG200_WINBOND_PCI:
+	case PCI_CHIP_MGAG200_EW3_PCI:
 	case PCI_CHIP_MGAG200_EV_PCI:
     case PCI_CHIP_MGAG200_EH_PCI:
 	case PCI_CHIP_MGAG200_ER_PCI:	
@@ -2596,7 +2622,8 @@ MGAMapMem(ScrnInfoPtr pScrn)
 	pciaddr_t fbsize = pMga->FbMapSize;
 	err = pci_device_map_range(dev,
 				   fbaddr, fbsize,
-				   PCI_DEV_MAP_FLAG_WRITABLE,
+				   PCI_DEV_MAP_FLAG_WRITABLE |
+				   PCI_DEV_MAP_FLAG_WRITE_COMBINE,
 				   (void **)&pMga->FbBase);
 
 	if (err) {
@@ -3827,7 +3854,7 @@ MGAValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode, Bool verbose, int flags)
 	        if (xf86ModeBandwidth(mode, pScrn->bitsPerPixel) > 244)
 	            return MODE_BANDWIDTH;
         } else {
-            if (pMga->reg_1e24 >= 0x02) {
+            if (pMga->reg_1e24 == 0x02) {
 	            if (mode->HDisplay > 1920)
 	                return MODE_VIRTUAL_X;
 	            if (mode->VDisplay > 1200)
@@ -3839,12 +3866,15 @@ MGAValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode, Bool verbose, int flags)
     } else if (pMga->is_G200WB){
         if (mode->Flags & V_DBLSCAN)
             return MODE_NO_DBLESCAN;
-	if (pMga->KVM && mode->HDisplay > 1280)
-	    return MODE_VIRTUAL_X;
-	if (pMga->KVM && mode->VDisplay > 1024)
-	    return MODE_VIRTUAL_Y;
-	if (xf86ModeBandwidth(mode, pScrn->bitsPerPixel) > 318.77)
-	    return MODE_BANDWIDTH;
+        if (pMga->Chipset != PCI_CHIP_MGAG200_EW3_PCI)
+        {
+	    if (pMga->KVM && mode->HDisplay > 1280)
+	        return MODE_VIRTUAL_X;
+	    if (pMga->KVM && mode->VDisplay > 1024)
+	        return MODE_VIRTUAL_Y;
+	    if (xf86ModeBandwidth(mode, pScrn->bitsPerPixel) > 318.77)
+	        return MODE_BANDWIDTH;
+        }
     } else if (pMga->is_G200EV
 	       && (xf86ModeBandwidth(mode, pScrn->bitsPerPixel) > 327)) {
 	return MODE_BANDWIDTH;

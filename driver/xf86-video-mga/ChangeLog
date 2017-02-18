@@ -1,3 +1,107 @@
+commit 979e0e73eb3424b6a97746e29c8b4a5b7e86196e
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Tue Jan 17 14:40:48 2017 -0800
+
+    xf86-video-mga 1.6.5
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit fc5d7acc23fcec9d87ca26fadf466fcf107671c0
+Author: Mathieu Larouche <mathieu.larouche@matrox.com>
+Date:   Wed Jul 20 09:18:49 2016 -0400
+
+    xf86-video-mga: Add support for the new G200e chipset -- V2
+    
+    - Added PLL algorithm for a new rev of G200e
+    - Removed the bandwidth limitation for the new G200e
+    
+    Fixes : https://bugs.freedesktop.org/show_bug.cgi?id=92540
+    
+    Change from V1 :
+    - Make sure we don't cause issue on previous chips. (Dave Airlie review)
+    
+    Signed-off-by: Mathieu Larouche <mathieu.larouche@matrox.com>
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 12781f2e3deb7f6d86fde53134384996a6004894
+Author: Mathieu Larouche <mathieu.larouche@matrox.com>
+Date:   Fri Jun 17 10:52:42 2016 -0400
+
+    xf86-video-mga: Add support for a new G200eW3 chipset
+    
+    - Added support for the new deviceID for G200eW3
+    - Added PLL algorithm for the G200eW3
+    - Added some initialization code for G200eW3
+    
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=92541
+    
+    Signed-off-by: Mathieu Larouche <mathieu.larouche@matrox.com>
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit df094bfffe4ef097bfd9a569f2d2e35649c1a3c7
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jul 19 10:03:56 2016 -0400
+
+    Adapt Block/WakeupHandler signature for ABI 23
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 72a8b5ef0bcb08d4cde7b329a13a59db35342f58
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Mon Feb 23 13:26:14 2015 +0100
+
+    Use correct type in function call.
+    
+    Fixes
+    passing argument 2 of 'pci_device_cfg_read_u32' from incompatible pointer type
+    pciaccess.h:153:5: note: expected '__uint32_t *' but argument is of type 'CARD32 *'
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Connor Behan <connor.behan@gmail.com>
+
+commit f1e6c73be073c8816319104b2fde329bc286f5ec
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Mon Aug 24 13:48:29 2015 -0400
+
+    Composite fixup
+    
+    A driver like this that tries to composite a lot will definitely need to
+    avoid crashing for solid pictures.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+
+commit e6770f7cc11800ab6cc2e88790f357189de7ce32
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Mon Aug 24 11:48:16 2015 -0400
+
+    Remove DownloadFromScreen
+    
+    This hook was broken and did the same thing as a software fallback.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+
+commit 04432b9c1db255e8e3d39a924f8803f83c407acc
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue May 5 11:05:44 2015 -0400
+
+    Enable write-combining on the framebuffer BAR
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit da1223394ac9b6f3974b0b2570cbf46a2425fc11
+Author: Matthew Rezny <matthew@reztek.cz>
+Date:   Sun Jun 21 19:50:43 2015 +0200
+
+    MGA DDX: make it possible to find EXA support
+    
+    Newer versions of the xserver stricter requirements on header order
+    which caused the configure tests for EXA support to erroneously fail.
+    Since XAA was already removed from an earlier version of xserver, the
+    configure failure meant no acceleration was possible. Patch configure
+    tests similar to r128.
+    
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
 commit 8ed77eb7920f375e9490a31f907eccb02fb123cd
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Thu Feb 19 13:39:18 2015 -0800

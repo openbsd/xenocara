@@ -318,6 +318,11 @@ mgaGetTexFormat(PicturePtr pPict)
 static Bool
 mgaCheckSourceTexture(int tmu, PicturePtr pPict)
 {
+    if (!pPict->pDrawable) {
+        DEBUG_MSG(("Solid / gradient pictures not supported\n"));
+        return FALSE;
+    }
+
     int w = pPict->pDrawable->width;
     int h = pPict->pDrawable->height;
 
@@ -354,7 +359,7 @@ static Bool
 mgaCheckComposite(int op, PicturePtr pSrcPict, PicturePtr pMaskPict,
                   PicturePtr pDstPict)
 {
-    MGAPtr pMga = xf86ScreenToScrn(pSrcPict->pDrawable->pScreen)->driverPrivate;
+    MGAPtr pMga = xf86ScreenToScrn(pDstPict->pDrawable->pScreen)->driverPrivate;
 
     if (op >= sizeof(mgaBlendOp) / sizeof(mgaBlendOp[0])) {
         DEBUG_MSG(("unsupported op %x\n", op));
@@ -521,6 +526,7 @@ mgaPrepareComposite(int op, PicturePtr pSrcPict, PicturePtr pMaskPict,
 {
     PMGA(pDst);
     CARD32 fcol = 0xff000000, ds0 = 0, ds1 = 0, cmd, blendcntl;
+    if (!pSrc || !pSrcPict->pDrawable) return FALSE;
 
     mgaSetup(pMga, pDst, pDstPict, 2);
     OUTREG(MGAREG_DSTORG, exaGetPixmapOffset(pDst));
@@ -723,31 +729,6 @@ mgaUploadToScreen(PixmapPtr pDst, int x, int y, int w, int h,
     return TRUE;
 }
 
-static Bool
-mgaDownloadFromScreen(PixmapPtr pSrc, int x, int y, int w, int h,
-                      char *dst, int dst_pitch)
-{
-    PMGA(pSrc);
-
-    char *src = (char *) exaGetPixmapFirstPixel(pSrc);
-    int src_pitch = exaGetPixmapPitch(pSrc);
-
-    int cpp = (pSrc->drawable.bitsPerPixel + 7) / 8;
-    int bytes = w * cpp;
-
-    src += y * src_pitch + x * cpp;
-
-    QUIESCE_DMA(pSrc);
-
-    while (h--) {
-	memcpy (dst, src, bytes);
-	src += src_pitch;
-	dst += dst_pitch;
-    }
-
-    return TRUE;
-}
-
 static void
 mgaWaitMarker(ScreenPtr pScreen, int marker)
 {
@@ -886,7 +867,6 @@ mgaExaInit(ScreenPtr pScreen)
     pExa->Copy = mgaCopy;
     pExa->DoneCopy = mgaNoopDone;
 
-#if 0
     if (pMga->Chipset == PCI_CHIP_MGAG400 ||
         pMga->Chipset == PCI_CHIP_MGAG550) {
         pExa->CheckComposite = mgaCheckComposite;
@@ -896,8 +876,6 @@ mgaExaInit(ScreenPtr pScreen)
     }
 
     pExa->UploadToScreen = mgaUploadToScreen;
-    pExa->DownloadFromScreen = mgaDownloadFromScreen;
-#endif
 
 #ifdef MGADRI
     if (pMga->directRenderingEnabled)

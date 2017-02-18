@@ -146,6 +146,12 @@ void MGAdbg_outreg32(ScrnInfoPtr, int,int, char*);
 #define PCI_CHIP_MGAG400                0x0525
 #define PCI_CHIP_MGAG550                0x2527
 
+#ifndef PCI_CHIP_MGAG200_EW3_PCI
+#define PCI_CHIP_MGAG200_EW3_PCI 0x0536
+#endif
+
+
+
 /*
  * Read/write to the DAC via MMIO 
  */
@@ -209,9 +215,9 @@ void MGAdbg_outreg32(ScrnInfoPtr, int,int, char*);
 typedef struct {
     unsigned char	ExtVga[6];
     unsigned char 	DacClk[6];
-    unsigned char	ExtVga_Index24;
+    unsigned char	ExtVga_MgaReq;
     unsigned char	Dac_Index90;
-    unsigned char * DacRegs;
+    unsigned char       * DacRegs;
     unsigned long	crtc2[0x58];
     unsigned char	dac2[0x21];
     CARD32		Option;

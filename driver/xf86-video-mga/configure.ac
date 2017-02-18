@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-mga],
-        [1.6.4],
+        [1.6.5],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-video-mga])
 AC_CONFIG_SRCDIR([Makefile.am])
@@ -138,9 +138,6 @@ if test "x$XAA" != xno; then
         CFLAGS=$XORG_CFLAGS
         CPPFLAGS="$XORG_CFLAGS"
         AC_CHECK_HEADERS([xaa.h], XAA=yes, XAA=no)
-	if test "x$XAA" = xyes; then
-		AC_DEFINE(USE_XAA, 1, [Build support for xaa])
-	fi
         CFLAGS=$save_CFLAGS
         CPPFLAGS=$save_CPPFLAGS
 fi
@@ -158,9 +155,9 @@ if test "x$EXA" = xyes; then
 
     SAVE_CPPFLAGS="$CPPFLAGS"
     CPPFLAGS="$CPPFLAGS $XORG_CFLAGS"
-    AC_CHECK_HEADER(exa.h,
+    AC_CHECK_HEADERS(exa.h,
                    [have_exa_h="yes"], [have_exa_h="no"],
-		   [#include "xorg-server.h"])
+                   [#include "xorg-server.h"])
     CPPFLAGS="$SAVE_CPPFLAGS"
 else
     AC_MSG_RESULT(no)

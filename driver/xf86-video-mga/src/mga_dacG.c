@@ -51,6 +51,75 @@ static Bool MGAGInit(ScrnInfoPtr, DisplayModePtr);
 static void MGAGLoadPalette(ScrnInfoPtr, int, int*, LOCO*, VisualPtr);
 static Bool MGAG_i2cInit(ScrnInfoPtr pScrn);
 
+#define P_ARRAY_SIZE 9
+
+void
+MGAG200E4ComputePLLParam(ScrnInfoPtr pScrn, long lFo, int *M, int *N, int *P)
+{
+    unsigned int ulComputedFo;
+    unsigned int ulFDelta;
+    unsigned int ulFPermitedDelta;
+    unsigned int ulFTmpDelta;
+    unsigned int ulVCOMax, ulVCOMin;
+    unsigned int ulTestP;
+    unsigned int ulTestM;
+    unsigned int ulTestN;
+    unsigned int ulFoInternal;
+    unsigned int ulPLLFreqRef;
+    unsigned int pulPValues[P_ARRAY_SIZE] = {16, 14, 12, 10, 8, 6, 4, 2, 1};
+    unsigned int i;
+    unsigned int ulVCO;
+    unsigned int ulFVV;
+
+    ulVCOMax        = 1600000;
+    ulVCOMin        = 800000;
+    ulPLLFreqRef    = 25000;
+
+    if(lFo < 25000)
+        lFo = 25000;
+
+    ulFoInternal = lFo * 2;
+
+    ulFDelta = 0xFFFFFFFF;
+    /* Permited delta is 0.5% as VESA Specification */
+    ulFPermitedDelta = ulFoInternal * 5 / 1000;  
+
+    for (i = 0 ; i < P_ARRAY_SIZE ; i++)
+    {
+        ulTestP = pulPValues[i];
+
+        if ((ulFoInternal * ulTestP) > ulVCOMax) continue;
+        if ((ulFoInternal * ulTestP) < ulVCOMin) continue;
+
+        for (ulTestN = 50; ulTestN <= 256; ulTestN++) {
+            for (ulTestM = 1; ulTestM <= 32; ulTestM++) {
+                ulComputedFo = (ulPLLFreqRef * ulTestN) / (ulTestM * ulTestP);
+                if (ulComputedFo > ulFoInternal)
+                    ulFTmpDelta = ulComputedFo - ulFoInternal;
+                else
+                    ulFTmpDelta = ulFoInternal - ulComputedFo;
+
+                if (ulFTmpDelta < ulFDelta) {
+                    ulFDelta = ulFTmpDelta;
+                    *M = ulTestM - 1;
+                    *N = ulTestN - 1;
+                    *P = ulTestP - 1;
+                }
+            }
+        }
+    }
+                                                                                                                    
+    ulVCO = ulPLLFreqRef * ((*N)+1) / ((*M)+1);
+    ulFVV = (ulVCO - 800000) / 50000;
+
+    if (ulFVV > 15)
+        ulFVV = 15;
+
+    *P |= (ulFVV << 4);                                                                                             
+
+    *M |= 0x80;
+}
+
 static void
 MGAG200SEComputePLLParam(ScrnInfoPtr pScrn, long lFo, int *M, int *N, int *P)
 {
@@ -205,6 +274,74 @@ MGAG200WBComputePLLParam(ScrnInfoPtr pScrn, long lFo, int *M, int *N, int *P)
 		   "lFo=%ld n=0x%x m=0x%x p=0x%x \n",
 		   lFo, *N, *M, *P );
 #endif
+}
+
+void
+MGAG200EW3ComputePLLParam(ScrnInfoPtr pScrn ,long lFo, int *M, int *N, int *P)
+{
+    unsigned int ulComputedFo;
+    unsigned int ulFDelta;
+    unsigned int ulFPermitedDelta;
+    unsigned int ulFTmpDelta;
+    unsigned int ulVCOMax, ulVCOMin;
+    unsigned int ulTestP1;
+    unsigned int ulTestP2;
+    unsigned int ulTestM;
+    unsigned int ulTestN;
+    unsigned int ulPLLFreqRef;
+    unsigned int ulTestP1Start;
+    unsigned int ulTestP1End;
+    unsigned int ulTestP2Start;
+    unsigned int ulTestP2End;
+    unsigned int ulTestMStart;
+    unsigned int ulTestMEnd;
+    unsigned int ulTestNStart;
+    unsigned int ulTestNEnd;
+
+    ulVCOMax        = 800000;
+    ulVCOMin        = 400000;
+    ulPLLFreqRef    = 25000;
+    ulTestP1Start   = 1;
+    ulTestP1End     = 8;
+    ulTestP2Start   = 1;
+    ulTestP2End     = 8;
+    ulTestMStart    = 1;
+    ulTestMEnd      = 26;
+    ulTestNStart    = 32;
+    ulTestNEnd      = 2048;
+
+    ulFDelta = 0xFFFFFFFF;
+    /* Permited delta is 0.5% as VESA Specification */
+    ulFPermitedDelta = lFo * 5 / 1000;
+
+    /* Then we need to minimize the M while staying within 0.5% */
+    for (ulTestP1 = ulTestP1Start; ulTestP1 < ulTestP1End; ulTestP1++) {
+        for (ulTestP2 = ulTestP2Start; ulTestP2 < ulTestP2End; ulTestP2++) {
+            if (ulTestP1 < ulTestP2) continue;
+            if ((lFo * ulTestP1 * ulTestP2) > ulVCOMax) continue;
+            if ((lFo * ulTestP1 * ulTestP2) < ulVCOMin) continue;
+
+            for (ulTestM = ulTestMStart; ulTestM < ulTestMEnd; ulTestM++) {
+                for (ulTestN = ulTestNStart; ulTestN < ulTestNEnd; ulTestN++) {
+                    ulComputedFo = (ulPLLFreqRef * ulTestN) / (ulTestM * ulTestP1 * ulTestP2);
+                    if (ulComputedFo > lFo)
+                        ulFTmpDelta = ulComputedFo - lFo;
+                    else
+                        ulFTmpDelta = lFo - ulComputedFo;
+
+                    if (ulFTmpDelta < ulFDelta) {
+                        ulFDelta = ulFTmpDelta;
+                        *M = (CARD8)((ulTestN & 0x100) >> 1) | 
+                             (CARD8)(ulTestM);
+                        *N = (CARD8)(ulTestN & 0xFF);
+                        *P = (CARD8)((ulTestN & 0x600) >> 3) | 
+                             (CARD8)(ulTestP2 << 3) | 
+                             (CARD8)ulTestP1;
+                    }
+                }
+            }
+        }
+    }
 }
 
 static void
@@ -890,7 +1027,11 @@ MGAGSetPCLK( ScrnInfoPtr pScrn, long f_out )
 	}
 
 	if (pMga->is_G200SE) {
-	    MGAG200SEComputePLLParam(pScrn, f_out, &m, &n, &p);
+            if (pMga->reg_1e24 >= 0x04) {
+                MGAG200E4ComputePLLParam(pScrn, f_out, &m, &n, &p);
+            } else {
+                MGAG200SEComputePLLParam(pScrn, f_out, &m, &n, &p);
+            }
 
 	    pReg->DacRegs[ MGA1064_PIX_PLLC_M ] = m;
 	    pReg->DacRegs[ MGA1064_PIX_PLLC_N ] = n;
@@ -902,7 +1043,14 @@ MGAGSetPCLK( ScrnInfoPtr pScrn, long f_out )
 	    pReg->PllN = n;
 	    pReg->PllP = p;
 	} else if (pMga->is_G200WB) {
-	    MGAG200WBComputePLLParam(pScrn, f_out, &m, &n, &p);
+            if (pMga->Chipset == PCI_CHIP_MGAG200_EW3_PCI)
+            {
+                 MGAG200EW3ComputePLLParam(pScrn, f_out, &m, &n, &p);
+            }
+            else
+            {
+	         MGAG200WBComputePLLParam(pScrn, f_out, &m, &n, &p);
+            }
 
 	    pReg->PllM = m;
 	    pReg->PllN = n;
@@ -1092,6 +1240,7 @@ MGAGInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
 		break;
 
         case PCI_CHIP_MGAG200_WINBOND_PCI:
+        case PCI_CHIP_MGAG200_EW3_PCI:
                 pReg->DacRegs[MGA1064_VREF_CTL] = 0x07;
                 pReg->Option = 0x41049120;
                 pReg->Option2 = 0x0000b000;
@@ -1232,7 +1381,7 @@ MGAGInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
         if (pMga->is_G200WB){
             pReg->ExtVga[1] |= 0x88;
         }
-	pReg->ExtVga_Index24 = 0x05;
+	pReg->ExtVga_MgaReq = 0x05;
 		
 	pVga->CRTC[0]	= ht - 4;
 	pVga->CRTC[1]	= hd;
@@ -1481,7 +1630,12 @@ MGA_NOT_HAL(
         {
 			outMGAdac(0x90, mgaReg->Dac_Index90);
         }
-   
+           if (pMga->is_G200SE && (pMga->reg_1e24 >= 0x04)) {
+              outMGAdac( 0x1a, 0x09);
+              usleep(500);
+              outMGAdac( 0x1a, 0x01);
+           }
+    
 	   if (!MGAISGx50(pMga)) {
 	       /* restore pci_option register */
 #ifdef XSERVER_LIBPCIACCESS
@@ -1528,7 +1682,15 @@ MGA_NOT_HAL(
 
            if (pMga->is_G200ER) {
                OUTREG8(MGAREG_CRTCEXT_INDEX, 0x24);
-               OUTREG8(MGAREG_CRTCEXT_DATA,  mgaReg->ExtVga_Index24);			   
+               OUTREG8(MGAREG_CRTCEXT_DATA,  mgaReg->ExtVga_MgaReq);			   
+           }
+
+           if (pMga->is_G200WB) {
+               if(pMga->Chipset == PCI_CHIP_MGAG200_EW3_PCI)
+               {
+                   OUTREG8(MGAREG_CRTCEXT_INDEX, 0x34);
+                   OUTREG8(MGAREG_CRTCEXT_DATA,  mgaReg->ExtVga_MgaReq);
+               } 
            }
 
 	   /* This handles restoring the generic VGA registers. */
@@ -1717,8 +1879,16 @@ MGAGSave(ScrnInfoPtr pScrn, vgaRegPtr vgaReg, MGARegPtr mgaReg,
 	if (pMga->is_G200ER)
 	{
 		OUTREG8(MGAREG_CRTCEXT_INDEX, 0x24);
-		mgaReg->ExtVga_Index24 = INREG8(MGAREG_CRTCEXT_DATA);
-	}
+		mgaReg->ExtVga_MgaReq = INREG8(MGAREG_CRTCEXT_DATA);
+ 	}
+        if (pMga->is_G200WB) 
+        {
+            if(pMga->Chipset == PCI_CHIP_MGAG200_EW3_PCI)
+            {
+                OUTREG8(MGAREG_CRTCEXT_INDEX, 0x34);
+                mgaReg->ExtVga_MgaReq = INREG8(MGAREG_CRTCEXT_DATA);                
+            }
+        }
 
 #ifdef DEBUG		
 	ErrorF("Saved values:\nDAC:");
