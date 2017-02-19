@@ -1,3 +1,53 @@
+commit b87c312590877800b4e18a17a012b47839f5c06b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Jan 23 13:44:58 2017 +1000
+
+    libXi 1.7.9
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 557b60798a9da49386f1034b133838332735de22
+Author: Emilio Pozuelo Monfort <pochu@debian.org>
+Date:   Tue Dec 27 17:24:10 2016 +0100
+
+    Fix possible free of uninitialized pointer
+    
+    If the _XReply() call fails, we'll try to free an uninitialized
+    pointer.
+    
+    https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=849026
+    
+    Reported-by: Thomas Walker <thwalker3@gmail.com>
+    Signed-off-by: Emilio Pozuelo Monfort <pochu@debian.org>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+    Tested-by: Thomas Walker <thwalker3@gmail.com>
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit 4c5c8d6246debc06a56120cff71bfdf1877884d0
+Author: Emilio Pozuelo Monfort <pochu@debian.org>
+Date:   Tue Oct 25 21:31:19 2016 +0200
+
+    Check that allocating a buffer succeeded
+    
+    Since we are going to write into the buffer, we should make sure the
+    allocation didn't fail.
+    
+    Reported-by: Julien Cristau <jcristau@debian.org>
+    Signed-off-by: Emilio Pozuelo Monfort <pochu@debian.org>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 7ac03c6c1907a39b5b42b17ad331295b8c85154d
+Author: Emilio Pozuelo Monfort <pochu@debian.org>
+Date:   Tue Oct 25 21:31:18 2016 +0200
+
+    Plug a memory leak
+    
+    Introduced in commit 19a9cd6.
+    
+    Reported-by: Julien Cristau <jcristau@debian.org>
+    Signed-off-by: Emilio Pozuelo Monfort <pochu@debian.org>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit 1bdeb431c3cc9eec7e12fdd29a83237f2f228865
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Tue Oct 25 12:43:44 2016 +1000
