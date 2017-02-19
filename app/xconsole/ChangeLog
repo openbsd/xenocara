@@ -1,3 +1,72 @@
+commit 61318786d4c171423cea84071da1bc7ab1a36427
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Sun Jan 29 11:17:53 2017 -0800
+
+    xconsole 1.0.7
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 73b530c4843bf0c6712b954cdfb5edc46e759ed8
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:20 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 2e8afc7e7f24003a5b8804bf990590ca41ec48a2
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 16fa2630b198c80b07311022a0d71858363f15c0
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 649966c9f22e868e7623507e098a03be6e13e6a7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu May 7 23:03:38 2015 -0700
+
+    config: add AC_USE_SYSTEM_EXTENSIONS
+    
+    Might fix https://bugs.freedesktop.org/show_bug.cgi?id=6336 on 64-bit Linux
+    Shouldn't hurt anyone
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8536b831dbaef02a547b9fc637347a1459413e2b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 22:20:38 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7bc0c3346c5311317f013e4b4796b20dd7502f77
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 22:20:38 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit f4ba22c10b9b1bd175fa39d25118bf904ba82eec
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Jul 18 21:24:07 2013 -0700
