@@ -57,6 +57,8 @@ in this Software without prior written authorization from The Open Group.
 #include <errno.h>
 #include "xauth.h"
 
+#include <sys/stat.h>
+#include <limits.h>
 
 #ifndef WIN32
 #include <arpa/inet.h>
@@ -189,30 +191,55 @@ struct addrlist *get_address_info (
 		src = buf;
 		len = strlen (buf);
 	    }
-	} else if(prefix == 0 && (strncmp (fulldpyname, "/tmp/launch", 11) == 0)) {
-        /* Use the bundle id (part preceding : in the basename) as our src id */
-        char *c;
+	} else {
+	    char path[PATH_MAX];
+	    struct stat sbuf;
+	    int is_path_to_socket = 0;
+
 #ifdef HAVE_STRLCPY
-        strlcpy(buf, strrchr(fulldpyname, '/') + 1, sizeof(buf));
+	    strlcpy(path, fulldpyname, sizeof(path));
 #else
-        strncpy(buf, strrchr(fulldpyname, '/') + 1, sizeof(buf));
-	buf[sizeof(buf) - 1] = '\0';
+	    strncpy(path, fulldpyname, sizeof(path));
+	    path[sizeof(path) - 1] = '\0';
+#endif
+	    if (0 == stat(path, &sbuf)) {
+		is_path_to_socket = 1;
+	    } else {
+		char *dot = strrchr(path, '.');
+		if (dot) {
+		    *dot = '\0';
+		    /* screen = atoi(dot + 1); */
+		    if (0 == stat(path, &sbuf)) {
+		        is_path_to_socket = 1;
+		    }
+		}
+	    }
+
+	    if (is_path_to_socket) {
+		/* Use the bundle id (part preceding : in the basename) as our src id */
+		char *c;
+#ifdef HAVE_STRLCPY
+		strlcpy(buf, strrchr(fulldpyname, '/') + 1, sizeof(buf));
+#else
+		strncpy(buf, strrchr(fulldpyname, '/') + 1, sizeof(buf));
+		buf[sizeof(buf) - 1] = '\0';
 #endif
 
-        c = strchr(buf, ':');
+		c = strchr(buf, ':');
 
-        /* In the legacy case with no bundle id, use the full path */
-        if(c == buf) {
-            src = fulldpyname;
-        } else {
-            *c = '\0';
-            src = buf;
-        }
+		/* In the legacy case with no bundle id, use the full path */
+		if(c == buf) {
+			src = fulldpyname;
+		} else {
+			*c = '\0';
+			src = buf;
+		}
 
-        len = strlen(src);
-    } else {
-	    src = fulldpyname;
-	    len = prefix;
+		len = strlen(src);
+	    } else {
+		src = fulldpyname;
+		len = prefix;
+            }
 	}
 	break;
       case FamilyInternet:		/* host:0 */

@@ -1,3 +1,146 @@
+commit 536d1003a5c4d5ac24cd3b8afd10492e4e6242df
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Sun Jan 29 13:09:12 2017 -0800
+
+    xauth 1.0.10
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 72717ccee0b6bdbf161cc9d44abe3dc1d824fe46
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Sun Jan 29 13:09:39 2017 -0800
+
+    Build xauth before running tests.
+    
+    Otherwise make check fails if make hasn't previously been run.
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 4dee6a980fdc0174d3825389f95ac1f27c2427db
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:20 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 4933bc594087c25dfbc9b1f6db46440f19d0b360
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit eaeb306e67c23657f713b3ca48765d1c6ed99986
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 179459471e83a0cd235a0c8ead99b3156390e00c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 21:03:14 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0e4c17c6d6980f07896f0631cffeb82a0e9705f7
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jan 26 10:26:30 2017 +1000
+
+    autogen.sh: stop using maintainer mode
+    
+    See xserver commit 4bf3eac5fe20f
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a64ca3aafcde516658d699047382ab294e3e974f
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Thu Sep 26 12:30:03 2013 -0400
+
+    usage(): Print summary for the -n option
+    
+    This option is mentioned in the man page, but not in the help text
+    
+    Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ad26f2137f6414c8cadc070f96a4476d435e994b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 2 09:49:52 2015 -0800
+
+    include POSIX-standard limits.h for PATH_MAX instead of sys/syslimits.h
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+    Reviewed-by: Mark Kettenis <kettenis@openbsd.org>
+
+commit a58c9d74c8f9c4292d367c6e23d15c4cba03dfde
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Fri Jan 2 16:18:52 2015 +0000
+
+    Fix !HAVE_STRLCPY case
+    
+    Fix error in the !HAVE_STRLCPY case, introduced in commit
+    f990dd936b5fd1a40290bb88cde517a0ac38f823
+    
+    It seems that "path[sizeof(path) - 1]" rather than "buf[sizeof(path) - 1]" must
+    be meant here, especially as the second instance doesn't even compile...
+    
+    parsedpy.c: In function ‘parse_displayname’:
+    parsedpy.c:176:9: error: ‘buf’ undeclared (first use in this function)
+    
+    Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit f990dd936b5fd1a40290bb88cde517a0ac38f823
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Wed Dec 31 02:42:17 2014 -0800
+
+    Update DISPLAY parsing to work with new launchd paths in Yosemite
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit 047f92a85796fca563d9345d6c4798b64be77cff
+Author: Dr. Tilmann Bubeck <tilmann@bubecks.de>
+Date:   Tue Jun 24 00:22:54 2014 +0200
+
+    Fix for xauth failing on ENOSPC (= disk full)
+    
+    If xauth must store its XAUTHORITY file on a file system which is
+    full, it will be unable to write the changes. This condition was
+    not detected and therefore often the whole XAUTHORITY file was
+    cleared. Here is the fix.
+    
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=21260
+    
+    Signed-off-by: Dr. Tilmann Bubeck <tilmann@bubecks.de>
+
+commit 12e63de4e0b3a45fad15863a66723609b068e668
+Author: Dr. Tilmann Bubeck <tilmann@bubecks.de>
+Date:   Wed Apr 2 22:13:48 2014 +0200
+
+    Clarified RELEASING in README
+    
+    Changed clone URL and improved text. Removed section GARBAGE.
+    
+    Signed-off-by: Dr. Tilmann Bubeck <tilmann@bubecks.de>
+
 commit 0b120e37be8ed44188b3497bf02db48e9cf638bc
 Author: Dr. Tilmann Bubeck <tilmann@bubecks.de>
 Date:   Wed Apr 2 20:02:00 2014 +0200

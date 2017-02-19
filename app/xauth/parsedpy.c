@@ -42,6 +42,9 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Xauth.h>			/* for FamilyLocal */
 #include <X11/Xmu/SysUtil.h>
 
+#include <sys/stat.h>
+#include <limits.h>
+
 #if defined(UNIXCONN) || defined(LOCALCONN)
 #define UNIX_CONNECTION "unix"
 #define UNIX_CONNECTION_LENGTH 4
@@ -158,8 +161,32 @@ parse_displayname (const char *displayname,
 
     if (!host) return False;
 
-    if(strncmp (host, "/tmp/launch", 11) == 0) {
-        family = FamilyLocal;
+    {
+        /*
+         * If using launchd socket, remove the screen number from the end
+         * of $DISPLAY and check if it is a path to a socket.
+         */
+        char path[PATH_MAX];
+        struct stat sbuf;
+
+#ifdef HAVE_STRLCPY
+        strlcpy(path, displayname, sizeof(path));
+#else
+        strncpy(path, displayname, sizeof(path));
+        path[sizeof(path) - 1] = '\0';
+#endif
+        if (0 == stat(path, &sbuf)) {
+            family = FamilyLocal;
+        } else {
+            char *dot = strrchr(path, '.');
+            if (dot) {
+                *dot = '\0';
+                /* screen = atoi(dot + 1); */
+                if (0 == stat(path, &sbuf)) {
+                    family = FamilyLocal;
+                }
+            }
+        }
     }
 
     /*

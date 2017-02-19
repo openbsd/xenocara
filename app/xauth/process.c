@@ -844,7 +844,10 @@ write_auth_file(char *tmp_nam)
 	}
     }
 
-    (void) fclose (fp);
+    if (fclose(fp)) {
+	return -1;
+    }
+
     return 0;
 }
 

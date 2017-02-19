@@ -68,6 +68,7 @@ usage(void)
 "    -q                             turn off extra messages",
 "    -i                             ignore locks on authority file",
 "    -b                             break locks on authority file",
+"    -n                             do not resolve host names in authority file",
 "    -V                             show version number of xauth",
 "",
 "and commands have the following syntax:",

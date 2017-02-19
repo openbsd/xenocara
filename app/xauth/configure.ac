@@ -22,11 +22,10 @@ dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.60])
 AC_INIT([xauth],
-	[1.0.9],
+	[1.0.10],
 	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
 	[xauth])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
 
 AC_CONFIG_HEADERS([config.h])
 

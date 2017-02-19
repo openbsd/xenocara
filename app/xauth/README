@@ -46,13 +46,17 @@ public. A detailed description of this process can be found at
 http://www.x.org/wiki/Development/Documentation/ReleaseHOWTO with a
 few clarification below.
 
-For releasing under Fedora make sure, that INSTALL in
-/usr/share/util-macros/ exists. If not, then please create that
+Remember, that the last commit _must_ include the version string in
+its diff (not the commit message). This is typically done by
+incrementing the version string in configure.ac.
+
+For releasing under Fedora make sure, that
+/usr/share/util-macros/INSTALL exists. If not, then please create that
 file.
 
 To release a new version of xauth, please follow this steps:
 
- * git clone git://anongit.freedesktop.org/git/xorg/app/xauth
+ * git clone ssh://git.freedesktop.org/git/xorg/app/xauth
  * cd xauth ; ./autogen.sh ; make ; make check
  * follow ReleaseHowto inside this directory.
 
@@ -63,12 +67,5 @@ Ignore these errors shown during release.sh:
 
    cp: cannot create regular file '../.INSTALL.tmp': Permission denied
    util-macros "pkgdatadir" from xorg-macros.pc not found: installing possibly empty INSTALL.
-
-   V. GARBAGE
-
-Please ignore this paragraph. It is only used to satisfying
-release.sh, which wants to see the version number to the last version
-in the diff, which is 1.0.9 in our case.  This paragraph can be
-deleted on the next release of xauth.
 
 [eof]
