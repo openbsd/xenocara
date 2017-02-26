@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.286 2017/02/08 21:36:21 danj Exp $
+# $OpenBSD: 3RDPARTY,v 1.287 2017/02/26 12:35:55 jsg Exp $
 #
 Package: 	Freetype
 Version:	2.7.1
@@ -13,8 +13,8 @@ Maintainer:	Thomas E. Dickey
 Archive Site:	http://invisible-island.net/xterm/xterm.html
 
 Package:	Mesa
-Version		13.0.3
-Current Vers:	13.0.4
+Version		13.0.5
+Current Vers:	17.0.0
 Maintainer:	Brian Paul
 Archive Site:	http://www.mesa3d.org/
 
@@ -26,7 +26,7 @@ Archive Site:	http://dri.freedesktop.org/
 
 Package:	libepoxy
 Version:	1.3.1
-Current Vers:	1.3.1
+Current Vers:	1.4.0
 Maintainer:	Eric Anholt
 Archive Site:	https://github.com/anholt/libepoxy/releases
 
