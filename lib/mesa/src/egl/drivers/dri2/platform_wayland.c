@@ -1081,6 +1081,7 @@ static struct dri2_egl_display_vtbl dri2_wl_display_vtbl = {
 
 static const __DRIextension *dri2_loader_extensions[] = {
    &dri2_loader_extension.base,
+   &image_loader_extension.base,
    &image_lookup_extension.base,
    &use_invalidate.base,
    NULL,
@@ -1283,6 +1284,8 @@ dri2_initialize_wayland_drm(_EGLDriver *drv, _EGLDisplay *disp)
  cleanup_registry:
    wl_registry_destroy(dri2_dpy->wl_registry);
    wl_event_queue_destroy(dri2_dpy->wl_queue);
+   if (disp->PlatformDisplay == NULL)
+      wl_display_disconnect(dri2_dpy->wl_dpy);
  cleanup_dpy:
    free(dri2_dpy);
    disp->DriverData = NULL;
@@ -1742,6 +1745,8 @@ dri2_wl_swrast_create_window_surface(_EGLDriver *drv, _EGLDisplay *disp,
       dri2_surf->format = WL_SHM_FORMAT_ARGB8888;
 
    dri2_surf->wl_win = window;
+   dri2_surf->wl_win->private = dri2_surf;
+   dri2_surf->wl_win->destroy_window_callback = destroy_window_callback;
 
    dri2_surf->base.Width = -1;
    dri2_surf->base.Height = -1;
@@ -1924,6 +1929,8 @@ dri2_initialize_wayland_swrast(_EGLDriver *drv, _EGLDisplay *disp)
  cleanup_registry:
    wl_registry_destroy(dri2_dpy->wl_registry);
    wl_event_queue_destroy(dri2_dpy->wl_queue);
+   if (disp->PlatformDisplay == NULL)
+      wl_display_disconnect(dri2_dpy->wl_dpy);
  cleanup_dpy:
    free(dri2_dpy);
    disp->DriverData = NULL;

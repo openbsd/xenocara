@@ -916,8 +916,12 @@ fs_generator::generate_tex(fs_inst *inst, struct brw_reg dst, struct brw_reg src
       if (brw_regs_equal(&surface_reg, &sampler_reg)) {
          brw_MUL(p, addr, sampler_reg, brw_imm_uw(0x101));
       } else {
-         brw_SHL(p, addr, sampler_reg, brw_imm_ud(8));
-         brw_OR(p, addr, addr, surface_reg);
+         if (sampler_reg.file == BRW_IMMEDIATE_VALUE) {
+            brw_OR(p, addr, surface_reg, brw_imm_ud(sampler_reg.ud << 8));
+         } else {
+            brw_SHL(p, addr, sampler_reg, brw_imm_ud(8));
+            brw_OR(p, addr, addr, surface_reg);
+         }
       }
       if (base_binding_table_index)
          brw_ADD(p, addr, addr, brw_imm_ud(base_binding_table_index));

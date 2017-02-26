@@ -102,9 +102,9 @@ indirect_uniform_load(struct vc4_compile *c, nir_intrinsic_instr *intr)
 
         /* Clamp to [0, array size).  Note that MIN/MAX are signed. */
         indirect_offset = qir_MAX(c, indirect_offset, qir_uniform_ui(c, 0));
-        indirect_offset = qir_MIN(c, indirect_offset,
-                                  qir_uniform_ui(c, (range->dst_offset +
-                                                     range->size - 4)));
+        indirect_offset = qir_MIN_NOIMM(c, indirect_offset,
+                                        qir_uniform_ui(c, (range->dst_offset +
+                                                           range->size - 4)));
 
         qir_TEX_DIRECT(c, indirect_offset, qir_uniform(c, QUNIFORM_UBO_ADDR, 0));
         c->num_texture_samples++;
@@ -322,7 +322,7 @@ ntq_emit_txf(struct vc4_compile *c, nir_tex_instr *instr)
 
         /* Perform the clamping required by kernel validation. */
         addr = qir_MAX(c, addr, qir_uniform_ui(c, 0));
-        addr = qir_MIN(c, addr,  qir_uniform_ui(c, size - 4));
+        addr = qir_MIN_NOIMM(c, addr, qir_uniform_ui(c, size - 4));
 
         qir_TEX_DIRECT(c, addr, qir_uniform(c, QUNIFORM_TEXTURE_MSAA_ADDR, unit));
 

@@ -164,7 +164,7 @@ struct fd_context {
 	 */
 	struct fd_batch *batch;
 
-	uint32_t last_fence;
+	struct pipe_fence_handle *last_fence;
 
 	/* Are we in process of shadowing a resource? Used to detect recursion
 	 * in transfer_map, and skip unneeded synchronization.

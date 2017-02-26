@@ -790,7 +790,6 @@ VdpStatus vlVdpOutputSurfaceDMABuf(VdpOutputSurface surface,
    pipe_mutex_lock(vlsurface->device->mutex);
    vlVdpResolveDelayedRendering(vlsurface->device, NULL, NULL);
    vlsurface->device->context->flush(vlsurface->device->context, NULL, 0);
-   pipe_mutex_unlock(vlsurface->device->mutex);
 
    memset(&whandle, 0, sizeof(struct winsys_handle));
    whandle.type = DRM_API_HANDLE_TYPE_FD;
@@ -798,8 +797,12 @@ VdpStatus vlVdpOutputSurfaceDMABuf(VdpOutputSurface surface,
    pscreen = vlsurface->surface->texture->screen;
    if (!pscreen->resource_get_handle(pscreen, vlsurface->device->context,
                                      vlsurface->surface->texture, &whandle,
-				     PIPE_HANDLE_USAGE_READ_WRITE))
+                                     PIPE_HANDLE_USAGE_READ_WRITE)) {
+      pipe_mutex_unlock(vlsurface->device->mutex);
       return VDP_STATUS_NO_IMPLEMENTATION;
+   }
+
+   pipe_mutex_unlock(vlsurface->device->mutex);
 
    result->handle = whandle.handle;
    result->width = vlsurface->surface->width;

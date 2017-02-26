@@ -234,7 +234,6 @@ batch_flush_func(void *job, int id)
 
 	fd_gmem_render_tiles(batch);
 	batch_reset_resources(batch);
-	batch->ctx->last_fence = fd_ringbuffer_timestamp(batch->gmem);
 }
 
 static void
@@ -275,7 +274,6 @@ batch_flush(struct fd_batch *batch)
 	} else {
 		fd_gmem_render_tiles(batch);
 		batch_reset_resources(batch);
-		batch->ctx->last_fence = fd_ringbuffer_timestamp(batch->gmem);
 	}
 
 	debug_assert(batch->reference.count > 0);

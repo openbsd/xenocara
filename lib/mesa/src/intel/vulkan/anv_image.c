@@ -79,8 +79,11 @@ choose_isl_surf_usage(VkImageUsageFlags vk_usage,
       isl_usage |= ISL_SURF_USAGE_TEXTURE_BIT;
    }
 
-   if (vk_usage & VK_IMAGE_USAGE_TRANSFER_DST_BIT) {
-      /* blorp implements transfers by rendering into the destination image. */
+   if (vk_usage & VK_IMAGE_USAGE_TRANSFER_DST_BIT &&
+       aspect == VK_IMAGE_ASPECT_COLOR_BIT) {
+      /* blorp implements transfers by rendering into the destination image.
+       * Only request this with color images, as we deal with depth/stencil
+       * formats differently. */
       isl_usage |= ISL_SURF_USAGE_RENDER_TARGET_BIT;
    }
 
@@ -190,6 +193,8 @@ make_surface(const struct anv_device *dev,
          anv_finishme("Implement gen7 HiZ");
       } else if (vk_info->mipLevels > 1) {
          anv_finishme("Test multi-LOD HiZ");
+      } else if (vk_info->arrayLayers > 1) {
+         anv_finishme("Implement multi-arrayLayer HiZ clears and resolves");
       } else if (dev->info.gen == 8 && vk_info->samples > 1) {
          anv_finishme("Test gen8 multisampled HiZ");
       } else {

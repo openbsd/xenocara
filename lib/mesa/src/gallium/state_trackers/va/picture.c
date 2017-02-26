@@ -81,7 +81,7 @@ vlVaBeginPicture(VADriverContextP ctx, VAContextID context_id, VASurfaceID rende
    }
 
    if (context->decoder->entrypoint != PIPE_VIDEO_ENTRYPOINT_ENCODE)
-      context->decoder->begin_frame(context->decoder, context->target, &context->desc.base);
+      context->needs_begin_frame = true;
 
    return VA_STATUS_SUCCESS;
 }
@@ -179,8 +179,7 @@ handlePictureParameterBuffer(vlVaDriver *drv, vlVaContext *context, vlVaBuffer *
       if (!context->decoder)
          return VA_STATUS_ERROR_ALLOCATION_FAILED;
 
-      context->decoder->begin_frame(context->decoder, context->target,
-         &context->desc.base);
+      context->needs_begin_frame = true;
    }
 
    return vaStatus;
@@ -310,6 +309,12 @@ handleVASliceDataBufferType(vlVaContext *context, vlVaBuffer *buf)
    buffers[num_buffers] = buf->data;
    sizes[num_buffers] = buf->size;
    ++num_buffers;
+
+   if (context->needs_begin_frame) {
+      context->decoder->begin_frame(context->decoder, context->target,
+         &context->desc.base);
+      context->needs_begin_frame = false;
+   }
    context->decoder->decode_bitstream(context->decoder, context->target, &context->desc.base,
       num_buffers, (const void * const*)buffers, sizes);
 }

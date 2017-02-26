@@ -40,7 +40,7 @@ struct pipe_fence_handle {
 };
 
 void
-fd_screen_fence_ref(struct pipe_screen *pscreen,
+fd_fence_ref(struct pipe_screen *pscreen,
 		struct pipe_fence_handle **ptr,
 		struct pipe_fence_handle *pfence)
 {
@@ -50,7 +50,7 @@ fd_screen_fence_ref(struct pipe_screen *pscreen,
 	*ptr = pfence;
 }
 
-boolean fd_screen_fence_finish(struct pipe_screen *screen,
+boolean fd_fence_finish(struct pipe_screen *pscreen,
 		struct pipe_context *ctx,
 		struct pipe_fence_handle *fence,
 		uint64_t timeout)
@@ -61,11 +61,10 @@ boolean fd_screen_fence_finish(struct pipe_screen *screen,
 	return true;
 }
 
-struct pipe_fence_handle * fd_fence_create(struct pipe_context *pctx,
+struct pipe_fence_handle * fd_fence_create(struct fd_context *ctx,
 		uint32_t timestamp)
 {
 	struct pipe_fence_handle *fence;
-	struct fd_context *ctx = fd_context(pctx);
 
 	fence = CALLOC_STRUCT(pipe_fence_handle);
 	if (!fence)

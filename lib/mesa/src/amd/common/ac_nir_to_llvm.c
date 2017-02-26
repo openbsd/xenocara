@@ -3946,7 +3946,7 @@ static void
 handle_shader_output_decl(struct nir_to_llvm_context *ctx,
 			  struct nir_variable *variable)
 {
-	int idx = variable->data.location;
+	int idx = variable->data.location + variable->data.index;
 	unsigned attrib_count = glsl_count_attribute_slots(variable->type, false);
 
 	variable->data.driver_location = idx * 4;
@@ -3976,7 +3976,7 @@ handle_shader_output_decl(struct nir_to_llvm_context *ctx,
 		                       si_build_alloca_undef(ctx, ctx->f32, "");
 		}
 	}
-	ctx->output_mask |= ((1ull << attrib_count) - 1) << variable->data.location;
+	ctx->output_mask |= ((1ull << attrib_count) - 1) << idx;
 }
 
 static void

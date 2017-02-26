@@ -799,7 +799,7 @@ nvc0_draw_stream_output(struct nvc0_context *nvc0,
    }
 
    while (num_instances--) {
-      nouveau_pushbuf_space(push, 9, 0, 1);
+      nouveau_pushbuf_space(push, 16, 0, 1);
       BEGIN_NVC0(push, NVC0_3D(VERTEX_BEGIN_GL), 1);
       PUSH_DATA (push, mode);
       BEGIN_NVC0(push, NVC0_3D(DRAW_TFB_BASE), 1);

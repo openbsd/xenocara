@@ -5396,10 +5396,13 @@ static void si_llvm_emit_barrier(const struct lp_build_tgsi_action *action,
 	struct si_shader_context *ctx = si_shader_context(bld_base);
 	struct gallivm_state *gallivm = bld_base->base.gallivm;
 
-	/* The real barrier instruction isn’t needed, because an entire patch
+	/* SI only (thanks to a hw bug workaround):
+	 * The real barrier instruction isn’t needed, because an entire patch
 	 * always fits into a single wave.
 	 */
-	if (ctx->type == PIPE_SHADER_TESS_CTRL) {
+	if (HAVE_LLVM >= 0x0309 &&
+	    ctx->screen->b.chip_class == SI &&
+	    ctx->type == PIPE_SHADER_TESS_CTRL) {
 		emit_waitcnt(ctx, LGKM_CNT & VM_CNT);
 		return;
 	}

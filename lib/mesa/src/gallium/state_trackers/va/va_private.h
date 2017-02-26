@@ -244,6 +244,7 @@ typedef struct {
    struct vl_deint_filter *deint;
    struct vlVaBuffer *coded_buf;
    int target_id;
+   bool needs_begin_frame;
 } vlVaContext;
 
 typedef struct {

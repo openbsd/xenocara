@@ -698,8 +698,10 @@ static void si_update_poly_offset_state(struct si_context *sctx)
 {
 	struct si_state_rasterizer *rs = sctx->queued.named.rasterizer;
 
-	if (!rs || !rs->uses_poly_offset || !sctx->framebuffer.state.zsbuf)
+	if (!rs || !rs->uses_poly_offset || !sctx->framebuffer.state.zsbuf) {
+		si_pm4_bind_state(sctx, poly_offset, NULL);
 		return;
+	}
 
 	/* Use the user format, not db_render_format, so that the polygon
 	 * offset behaves as expected by applications.

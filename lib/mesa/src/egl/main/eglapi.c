@@ -868,6 +868,9 @@ _eglCreateWindowSurfaceCommon(_EGLDisplay *disp, EGLConfig config,
 
    _EGL_CHECK_CONFIG(disp, conf, EGL_NO_SURFACE, drv);
 
+   if ((conf->SurfaceType & EGL_WINDOW_BIT) == 0)
+      RETURN_EGL_ERROR(disp, EGL_BAD_MATCH, EGL_NO_SURFACE);
+
    surf = drv->API.CreateWindowSurface(drv, disp, conf, native_window,
                                        attrib_list);
    ret = (surf) ? _eglLinkSurface(surf) : EGL_NO_SURFACE;
@@ -986,6 +989,10 @@ _eglCreatePixmapSurfaceCommon(_EGLDisplay *disp, EGLConfig config,
 #endif
 
    _EGL_CHECK_CONFIG(disp, conf, EGL_NO_SURFACE, drv);
+
+   if ((conf->SurfaceType & EGL_PIXMAP_BIT) == 0)
+      RETURN_EGL_ERROR(disp, EGL_BAD_MATCH, EGL_NO_SURFACE);
+
    surf = drv->API.CreatePixmapSurface(drv, disp, conf, native_pixmap,
                                        attrib_list);
    ret = (surf) ? _eglLinkSurface(surf) : EGL_NO_SURFACE;
@@ -1055,6 +1062,9 @@ eglCreatePbufferSurface(EGLDisplay dpy, EGLConfig config,
 
    _EGL_FUNC_START(disp, EGL_OBJECT_DISPLAY_KHR, NULL, EGL_NO_SURFACE);
    _EGL_CHECK_CONFIG(disp, conf, EGL_NO_SURFACE, drv);
+
+   if ((conf->SurfaceType & EGL_PBUFFER_BIT) == 0)
+      RETURN_EGL_ERROR(disp, EGL_BAD_MATCH, EGL_NO_SURFACE);
 
    surf = drv->API.CreatePbufferSurface(drv, disp, conf, attrib_list);
    ret = (surf) ? _eglLinkSurface(surf) : EGL_NO_SURFACE;

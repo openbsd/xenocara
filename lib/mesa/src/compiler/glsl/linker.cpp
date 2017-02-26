@@ -1183,11 +1183,10 @@ interstage_cross_validate_uniform_blocks(struct gl_shader_program *prog,
          if (stage_index != -1) {
             struct gl_linked_shader *sh = prog->_LinkedShaders[i];
 
-            blks[j].stageref |= (1 << i);
-
             struct gl_uniform_block **sh_blks = validate_ssbo ?
                sh->ShaderStorageBlocks : sh->UniformBlocks;
 
+            blks[j].stageref |= sh_blks[stage_index]->stageref;
             sh_blks[stage_index] = &blks[j];
          }
       }

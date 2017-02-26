@@ -106,6 +106,7 @@ generate_math2_gen4(struct brw_codegen *p,
 static void
 generate_tex(struct brw_codegen *p,
              struct brw_vue_prog_data *prog_data,
+             gl_shader_stage stage,
              vec4_instruction *inst,
              struct brw_reg dst,
              struct brw_reg src,
@@ -238,8 +239,16 @@ generate_tex(struct brw_codegen *p,
              */
             dw2 |= GEN9_SAMPLER_SIMD_MODE_EXTENSION_SIMD4X2;
 
-         if (dw2)
+         /* The VS, DS, and FS stages have the g0.2 payload delivered as 0,
+          * so header0.2 is 0 when g0 is copied.  The HS and GS stages do
+          * not, so we must set to to 0 to avoid setting undesirable bits
+          * in the message header.
+          */
+         if (dw2 ||
+             stage == MESA_SHADER_TESS_CTRL ||
+             stage == MESA_SHADER_GEOMETRY) {
             brw_MOV(p, get_element_ud(header, 2), brw_imm_ud(dw2));
+         }
 
          brw_adjust_sampler_state_pointer(p, header, sampler_index);
          brw_pop_insn_state(p);
@@ -298,8 +307,12 @@ generate_tex(struct brw_codegen *p,
       if (brw_regs_equal(&surface_reg, &sampler_reg)) {
          brw_MUL(p, addr, sampler_reg, brw_imm_uw(0x101));
       } else {
-         brw_SHL(p, addr, sampler_reg, brw_imm_ud(8));
-         brw_OR(p, addr, addr, surface_reg);
+         if (sampler_reg.file == BRW_IMMEDIATE_VALUE) {
+            brw_OR(p, addr, surface_reg, brw_imm_ud(sampler_reg.ud << 8));
+         } else {
+            brw_SHL(p, addr, sampler_reg, brw_imm_ud(8));
+            brw_OR(p, addr, addr, surface_reg);
+         }
       }
       if (base_binding_table_index)
          brw_ADD(p, addr, addr, brw_imm_ud(base_binding_table_index));
@@ -1725,7 +1738,8 @@ generate_code(struct brw_codegen *p,
       case SHADER_OPCODE_TG4:
       case SHADER_OPCODE_TG4_OFFSET:
       case SHADER_OPCODE_SAMPLEINFO:
-         generate_tex(p, prog_data, inst, dst, src[0], src[1], src[2]);
+         generate_tex(p, prog_data, nir->stage,
+                      inst, dst, src[0], src[1], src[2]);
          break;
 
       case VS_OPCODE_URB_WRITE:

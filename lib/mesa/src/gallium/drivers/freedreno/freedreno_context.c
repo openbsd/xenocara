@@ -43,22 +43,15 @@ fd_context_flush(struct pipe_context *pctx, struct pipe_fence_handle **fence,
 		unsigned flags)
 {
 	struct fd_context *ctx = fd_context(pctx);
-	uint32_t timestamp;
 
 	if (!ctx->screen->reorder) {
-		struct fd_batch *batch = NULL;
-		fd_batch_reference(&batch, ctx->batch);
-		fd_batch_flush(batch, true);
-		timestamp = fd_ringbuffer_timestamp(batch->gmem);
-		fd_batch_reference(&batch, NULL);
+		fd_batch_flush(ctx->batch, true);
 	} else {
-		timestamp = fd_bc_flush(&ctx->screen->batch_cache, ctx);
+		fd_bc_flush(&ctx->screen->batch_cache, ctx);
 	}
 
-	if (fence) {
-		fd_screen_fence_ref(pctx->screen, fence, NULL);
-		*fence = fd_fence_create(pctx, timestamp);
-	}
+	if (fence)
+		fd_fence_ref(pctx->screen, fence, ctx->last_fence);
 }
 
 /**
@@ -108,6 +101,8 @@ fd_context_destroy(struct pipe_context *pctx)
 
 	fd_batch_reference(&ctx->batch, NULL);  /* unref current batch */
 	fd_bc_invalidate_context(ctx);
+
+	fd_fence_ref(pctx->screen, &ctx->last_fence, NULL);
 
 	fd_prog_fini(pctx);
 	fd_hw_query_fini(pctx);

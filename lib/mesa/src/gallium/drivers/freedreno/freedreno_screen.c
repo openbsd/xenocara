@@ -696,8 +696,8 @@ fd_screen_create(struct fd_device *dev)
 
 	pscreen->get_timestamp = fd_screen_get_timestamp;
 
-	pscreen->fence_reference = fd_screen_fence_ref;
-	pscreen->fence_finish = fd_screen_fence_finish;
+	pscreen->fence_reference = fd_fence_ref;
+	pscreen->fence_finish = fd_fence_finish;
 
 	slab_create_parent(&screen->transfer_pool, sizeof(struct fd_transfer), 16);
 

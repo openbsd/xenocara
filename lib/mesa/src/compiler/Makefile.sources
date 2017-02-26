@@ -28,6 +28,8 @@ LIBGLSL_FILES = \
 	glsl/glsl_to_nir.cpp \
 	glsl/glsl_to_nir.h \
 	glsl/hir_field_selection.cpp \
+	glsl/ir_array_refcount.cpp \
+	glsl/ir_array_refcount.h \
 	glsl/ir_basic_block.cpp \
 	glsl/ir_basic_block.h \
 	glsl/ir_builder.cpp \

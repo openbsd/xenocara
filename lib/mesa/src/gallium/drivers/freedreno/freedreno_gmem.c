@@ -34,6 +34,7 @@
 
 #include "freedreno_gmem.h"
 #include "freedreno_context.h"
+#include "freedreno_fence.h"
 #include "freedreno_resource.h"
 #include "freedreno_query_hw.h"
 #include "freedreno_util.h"
@@ -394,6 +395,9 @@ fd_gmem_render_tiles(struct fd_batch *batch)
 	}
 
 	fd_ringbuffer_flush(batch->gmem);
+
+	fd_fence_ref(&ctx->screen->base, &ctx->last_fence, NULL);
+	ctx->last_fence = fd_fence_create(ctx, fd_ringbuffer_timestamp(batch->gmem));
 }
 
 /* tile needs restore if it isn't completely contained within the

@@ -1055,16 +1055,30 @@ vtn_handle_constant(struct vtn_builder *b, SpvOp opcode,
       SpvOp opcode = get_specialization(b, val, w[3]);
       switch (opcode) {
       case SpvOpVectorShuffle: {
-         struct vtn_value *v0 = vtn_value(b, w[4], vtn_value_type_constant);
-         struct vtn_value *v1 = vtn_value(b, w[5], vtn_value_type_constant);
-         unsigned len0 = glsl_get_vector_elements(v0->const_type);
-         unsigned len1 = glsl_get_vector_elements(v1->const_type);
+         struct vtn_value *v0 = &b->values[w[4]];
+         struct vtn_value *v1 = &b->values[w[5]];
+
+         assert(v0->value_type == vtn_value_type_constant ||
+                v0->value_type == vtn_value_type_undef);
+         assert(v1->value_type == vtn_value_type_constant ||
+                v1->value_type == vtn_value_type_undef);
+
+         unsigned len0 = v0->value_type == vtn_value_type_constant ?
+                         glsl_get_vector_elements(v0->const_type) :
+                         glsl_get_vector_elements(v0->type->type);
+         unsigned len1 = v1->value_type == vtn_value_type_constant ?
+                         glsl_get_vector_elements(v1->const_type) :
+                         glsl_get_vector_elements(v1->type->type);
 
          uint32_t u[8];
-         for (unsigned i = 0; i < len0; i++)
-            u[i] = v0->constant->value.u[i];
-         for (unsigned i = 0; i < len1; i++)
-            u[len0 + i] = v1->constant->value.u[i];
+         if (v0->value_type == vtn_value_type_constant) {
+            for (unsigned i = 0; i < len0; i++)
+               u[i] = v0->constant->value.u[i];
+         }
+         if (v1->value_type == vtn_value_type_constant) {
+            for (unsigned i = 0; i < len1; i++)
+               u[len0 + i] = v1->constant->value.u[i];
+         }
 
          for (unsigned i = 0; i < count - 6; i++) {
             uint32_t comp = w[i + 6];
@@ -2707,6 +2721,7 @@ vtn_handle_variable_or_type_instruction(struct vtn_builder *b, SpvOp opcode,
       vtn_handle_constant(b, opcode, w, count);
       break;
 
+   case SpvOpUndef:
    case SpvOpVariable:
       vtn_handle_variables(b, opcode, w, count);
       break;

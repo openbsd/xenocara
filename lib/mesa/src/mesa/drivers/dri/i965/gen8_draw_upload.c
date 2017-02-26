@@ -110,6 +110,22 @@ gen8_emit_vertices(struct brw_context *brw)
       ADVANCE_BATCH();
    }
 
+   /* Normally we don't need an element for the SGVS attribute because the
+    * 3DSTATE_VF_SGVS instruction lets you store the generated attribute in an
+    * element that is past the list in 3DSTATE_VERTEX_ELEMENTS. However if
+    * we're using draw parameters then we need an element for the those
+    * values.  Additionally if there is an edge flag element then the SGVS
+    * can't be inserted past that so we need a dummy element to ensure that
+    * the edge flag is the last one.
+    */
+   const bool needs_sgvs_element = (vs_prog_data->uses_basevertex ||
+                                    vs_prog_data->uses_baseinstance ||
+                                    ((vs_prog_data->uses_instanceid ||
+                                      vs_prog_data->uses_vertexid) &&
+                                     uses_edge_flag));
+   const unsigned nr_elements =
+      brw->vb.nr_enabled + needs_sgvs_element + vs_prog_data->uses_drawid;
+
    /* If the VS doesn't read any inputs (calculating vertex position from
     * a state variable for some reason, for example), emit a single pad
     * VERTEX_ELEMENT struct and bail.
@@ -117,7 +133,7 @@ gen8_emit_vertices(struct brw_context *brw)
     * The stale VB state stays in place, but they don't do anything unless
     * a VE loads from them.
     */
-   if (brw->vb.nr_enabled == 0) {
+   if (nr_elements == 0) {
       BEGIN_BATCH(3);
       OUT_BATCH((_3DSTATE_VERTEX_ELEMENTS << 16) | (3 - 2));
       OUT_BATCH((0 << GEN6_VE0_INDEX_SHIFT) |
@@ -171,22 +187,6 @@ gen8_emit_vertices(struct brw_context *brw)
       }
       ADVANCE_BATCH();
    }
-
-   /* Normally we don't need an element for the SGVS attribute because the
-    * 3DSTATE_VF_SGVS instruction lets you store the generated attribute in an
-    * element that is past the list in 3DSTATE_VERTEX_ELEMENTS. However if
-    * we're using draw parameters then we need an element for the those
-    * values.  Additionally if there is an edge flag element then the SGVS
-    * can't be inserted past that so we need a dummy element to ensure that
-    * the edge flag is the last one.
-    */
-   const bool needs_sgvs_element = (vs_prog_data->uses_basevertex ||
-                                    vs_prog_data->uses_baseinstance ||
-                                    ((vs_prog_data->uses_instanceid ||
-                                      vs_prog_data->uses_vertexid) &&
-                                     uses_edge_flag));
-   const unsigned nr_elements =
-      brw->vb.nr_enabled + needs_sgvs_element + vs_prog_data->uses_drawid;
 
    /* The hardware allows one more VERTEX_ELEMENTS than VERTEX_BUFFERS,
     * presumably for VertexID/InstanceID.

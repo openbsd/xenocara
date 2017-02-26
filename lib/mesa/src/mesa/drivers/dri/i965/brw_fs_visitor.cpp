@@ -672,6 +672,17 @@ fs_visitor::emit_urb_writes(const fs_reg &gs_vertex_count)
    length = 0;
    urb_offset = starting_urb_offset;
    flush = false;
+
+   /* SSO shaders can have VUE slots allocated which are never actually
+    * written to, so ignore them when looking for the last (written) slot.
+    */
+   int last_slot = vue_map->num_slots - 1;
+   while (last_slot > 0 &&
+          (vue_map->slot_to_varying[last_slot] == BRW_VARYING_SLOT_PAD ||
+           outputs[vue_map->slot_to_varying[last_slot]].file == BAD_FILE)) {
+      last_slot--;
+   }
+
    for (slot = 0; slot < vue_map->num_slots; slot++) {
       int varying = vue_map->slot_to_varying[slot];
       switch (varying) {
@@ -757,8 +768,7 @@ fs_visitor::emit_urb_writes(const fs_reg &gs_vertex_count)
        * the last slot or if we need to flush (see BAD_FILE varying case
        * above), emit a URB write send now to flush out the data.
        */
-      int last = slot == vue_map->num_slots - 1;
-      if (length == 8 || last)
+      if (length == 8 || slot == last_slot)
          flush = true;
       if (flush) {
          fs_reg *payload_sources =
@@ -777,7 +787,7 @@ fs_visitor::emit_urb_writes(const fs_reg &gs_vertex_count)
                            header_size);
 
          fs_inst *inst = abld.emit(opcode, reg_undef, payload);
-         inst->eot = last && stage != MESA_SHADER_GEOMETRY;
+         inst->eot = slot == last_slot && stage != MESA_SHADER_GEOMETRY;
          inst->mlen = length + header_size;
          inst->offset = urb_offset;
          urb_offset = starting_urb_offset + slot + 1;

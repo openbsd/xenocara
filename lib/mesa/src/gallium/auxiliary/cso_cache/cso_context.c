@@ -1275,7 +1275,6 @@ cso_restore_fragment_samplers(struct cso_context *ctx)
 {
    struct sampler_info *info = &ctx->samplers[PIPE_SHADER_FRAGMENT];
 
-   info->nr_samplers = ctx->nr_fragment_samplers_saved;
    memcpy(info->samplers, ctx->fragment_samplers_saved,
           sizeof(info->samplers));
    cso_single_sampler_done(ctx, PIPE_SHADER_FRAGMENT);
