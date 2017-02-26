@@ -6,7 +6,7 @@ Conventions used in this document:
     manual page available in section 1 of the manual pages for further
     reading, viewed by typing "man 1 somename".
 
-1. Start either xdm(1) or startx(1).
+1. Start either xenodm(1) or startx(1).
 
    a. Start xdm(1), the X display manager by activating the xdm_flags option
       in /etc/rc.conf.local(8).
@@ -27,4 +27,4 @@ Conventions used in this document:
 
 problem_blurb
 
-$OpenBSD: README.i386,v 1.10 2016/04/02 10:50:50 matthieu Exp $
+$OpenBSD: README.i386,v 1.11 2017/02/26 16:39:22 matthieu Exp $

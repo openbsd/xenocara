@@ -2,9 +2,8 @@
 ./etc/X11
 ./etc/X11/app-defaults
 ./etc/X11/twm
-./etc/X11/xdm
-./etc/X11/xdm/chooser
-./etc/X11/xdm/pixmaps
+./etc/X11/xenodm
+./etc/X11/xenodm/pixmaps
 ./etc/X11/xinit
 ./etc/X11/xsm
 ./etc/fonts
@@ -116,7 +115,7 @@
 ./usr/X11R6/bin/xcompmgr
 ./usr/X11R6/bin/xconsole
 ./usr/X11R6/bin/xcutsel
-./usr/X11R6/bin/xdm
+./usr/X11R6/bin/xenodm
 ./usr/X11R6/bin/xdpr
 ./usr/X11R6/bin/xdpyinfo
 ./usr/X11R6/bin/xedit

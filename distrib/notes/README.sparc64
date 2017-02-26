@@ -13,8 +13,9 @@ This setup is by far the easiest to configure and is supported on just
 about every machine OpenBSD/sparc64 runs on (both PCI and SBus based
 machines).  These setup do not require any configuration file.
 
-To use xdm from rc.conf, it is necessary to disable /dev/console in
-/etc/ttys, change the 'status' of /dev/console to 'off'.
+To use xenodm from rc.conf.local(8), it is necessary to disable
+/dev/console in /etc/ttys, change the 'status' of /dev/console to
+'off'.
 
 Single, accelerated display
 ---------------------------
@@ -90,9 +91,10 @@ displays and their location relative to the first, as in:
 
 See xorg.conf(5) for more options.
 
-To use xdm from rc.conf.local(8), it is necessary to disable /dev/console in
-/etc/ttys, change the 'status' of /dev/console to 'off'.
+To use xenodm from rc.conf.local(8), it is necessary to disable
+/dev/console in /etc/ttys, change the 'status' of /dev/console to
+'off'.
 
 problem_blurb
 
-$OpenBSD: README.sparc64,v 1.11 2014/07/30 20:06:30 matthieu Exp $
+$OpenBSD: README.sparc64,v 1.12 2017/02/26 16:39:22 matthieu Exp $

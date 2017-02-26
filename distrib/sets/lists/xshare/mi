@@ -1,7 +1,7 @@
-./etc/X11/xdm/pixmaps/OpenBSD_15bpp.xpm
-./etc/X11/xdm/pixmaps/OpenBSD_1bpp.xpm
-./etc/X11/xdm/pixmaps/OpenBSD_4bpp.xpm
-./etc/X11/xdm/pixmaps/OpenBSD_8bpp.xpm
+./etc/X11/xenodm/pixmaps/OpenBSD_15bpp.xpm
+./etc/X11/xenodm/pixmaps/OpenBSD_1bpp.xpm
+./etc/X11/xenodm/pixmaps/OpenBSD_4bpp.xpm
+./etc/X11/xenodm/pixmaps/OpenBSD_8bpp.xpm
 ./usr/X11R6/bin/gccmakedep
 ./usr/X11R6/bin/startx
 ./usr/X11R6/bin/x11perfcomp
@@ -860,7 +860,7 @@
 ./usr/X11R6/man/man1/xcompmgr.1
 ./usr/X11R6/man/man1/xconsole.1
 ./usr/X11R6/man/man1/xcutsel.1
-./usr/X11R6/man/man1/xdm.1
+./usr/X11R6/man/man1/xenodm.1
 ./usr/X11R6/man/man1/xdpr.1
 ./usr/X11R6/man/man1/xdpyinfo.1
 ./usr/X11R6/man/man1/xedit.1

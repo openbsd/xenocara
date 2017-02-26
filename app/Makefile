@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.34 2016/04/25 19:25:31 matthieu Exp $
+# $OpenBSD: Makefile,v 1.35 2017/02/26 16:39:22 matthieu Exp $
 .include <bsd.xconf.mk>
 
 SUBDIR= bdftopcf mkfontscale mkfontdir \
@@ -7,7 +7,7 @@ SUBDIR= bdftopcf mkfontscale mkfontdir \
 	rgb scripts sessreg setxkbmap showfont \
 	smproxy twm viewres x11perf xauth xbacklight xbiff xcalc \
 	xclipboard xclock xcmsdb xcompmgr xconsole  \
-	xdm xdpyinfo xedit xev xeyes xf86dga \
+	xenodm xdpyinfo xedit xev xeyes xf86dga \
 	xfd xfontsel xfsinfo xfwp xgamma xgc xhost \
 	xinit xinput xkbcomp xkbevd xkbprint xkbutils xkill xload xlogo \
 	xlsatoms xlsclients xlsfonts xmag xman xmessage \
