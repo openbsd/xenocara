@@ -711,6 +711,7 @@ AM_CFLAGS = \
 	$(GALLIUM_DRIVER_CFLAGS) \
 	$(FREEDRENO_CFLAGS)
 
+MKDIR_GEN = $(AM_V_at)$(MKDIR_P) $(@D)
 noinst_LTLIBRARIES = libfreedreno.la
 libfreedreno_la_SOURCES = \
 	$(C_SOURCES) \
@@ -1273,7 +1274,6 @@ uninstall-am:
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	tags uninstall uninstall-am
-
 
 ir3/ir3_nir_trig.c: ir3/ir3_nir_trig.py $(top_srcdir)/src/compiler/nir/nir_algebraic.py
 	$(MKDIR_GEN)

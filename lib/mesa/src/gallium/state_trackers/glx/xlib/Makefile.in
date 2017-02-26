@@ -531,6 +531,7 @@ GALLIUM_PIPE_LOADER_WINSYS_LIBS =  \
 	$(am__append_1) $(am__append_2)
 AM_CFLAGS = \
 	$(GALLIUM_CFLAGS) \
+	$(GLPROTO_CFLAGS) \
 	$(X11_INCLUDES)
 
 AM_CPPFLAGS = \

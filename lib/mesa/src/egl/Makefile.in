@@ -107,8 +107,8 @@ DIST_COMMON = $(egl_HEADERS) $(khr_HEADERS) $(srcdir)/Makefile.am \
 @HAVE_EGL_DRIVER_DRI2_TRUE@	-I$(top_srcdir)/src/egl/drivers/dri2 \
 @HAVE_EGL_DRIVER_DRI2_TRUE@	-I$(top_srcdir)/src/gbm/backends/dri \
 @HAVE_EGL_DRIVER_DRI2_TRUE@	-I$(top_srcdir)/src/egl/wayland/wayland-egl \
-@HAVE_EGL_DRIVER_DRI2_TRUE@	-I$(top_srcdir)/src/egl/wayland/wayland-drm \
 @HAVE_EGL_DRIVER_DRI2_TRUE@	-I$(top_builddir)/src/egl/wayland/wayland-drm \
+@HAVE_EGL_DRIVER_DRI2_TRUE@	-I$(top_srcdir)/src/egl/wayland/wayland-drm \
 @HAVE_EGL_DRIVER_DRI2_TRUE@	-DDEFAULT_DRIVER_DIR=\"$(DRI_DRIVER_SEARCH_DIR)\" \
 @HAVE_EGL_DRIVER_DRI2_TRUE@	-D_EGL_BUILT_IN_DRIVER_DRI2
 
