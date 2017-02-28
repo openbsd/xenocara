@@ -220,7 +220,8 @@ AC_CHECK_FUNCS([backtrace ffs geteuid getuid issetugid getresuid \
 	getdtablesize getifaddrs getpeereid getpeerucred getprogname getzoneid \
 	mmap posix_fallocate seteuid shmctl64 strncasecmp vasprintf vsnprintf \
 	walkcontext])
-AC_REPLACE_FUNCS([reallocarray strcasecmp strcasestr strlcat strlcpy strndup])
+AC_REPLACE_FUNCS([reallocarray strcasecmp strcasestr strlcat strlcpy strndup \
+	timingsafe_memcmp])
 
 AC_CHECK_DECLS([program_invocation_short_name], [], [], [[#include <errno.h>]])
 
