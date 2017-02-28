@@ -1,3 +1,70 @@
+commit 5457109783ee82599aeb6c6a690cc921a881d6bf
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Mon Feb 27 18:25:03 2017 -0800
+
+    sessreg 1.1.1
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 77befa7b9af5c69d1b715cba925f6e1e5e62ce68
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:20 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 7ebff8dedf3a0d67c475a1e216a0fb056e053c4e
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 37d8e5a28003e26b39e0fa6322acf8bcb8ca1823
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit eb41dc747ec4b0b4c40d6482081a0c7782dca8d9
+Author: Egbert Eich <eich@suse.de>
+Date:   Sun May 29 23:56:29 2016 +0200
+
+    Use off_t instead of long to make largefile support work
+    
+    We already use the macro AC_SYS_LARGEFILE in configure.ac. This will only
+    work properly if the correct types are used as well: replace long by off_t
+    when calculating file offsets - which makes a difference on 32-bit systems.
+    
+    http://bugzilla.opensuse.org/show_bug.cgi?id=981522
+    
+    Signed-off-by: Egbert Eich <eich@suse.de>
+    Found-by: Herbert Kütz <herbert.kuetz@ofd-z.niedersachsen.de>
+    Reviewed-by: Stefan Dirsch <sndirsch@suse.de>
+
+commit 93f5d5abf6b214a4b36e00cd09174d24b2ed0a6d
+Author: Stefan Dirsch <sndirsch@suse.de>
+Date:   Wed Sep 9 23:44:06 2015 +0200
+
+    Pass -P to the preprocessor when generating filenames for the manpage.
+    
+    Fixes build with GCC 5. Patch by Richard Biener <rguenther@suse.com>
+    
+    Tested-by: Matt Turner <mattst88@gmail.com>
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
 commit 0f904e33d53b0102e53685184bb59005be40fcf7
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Mon Jan 19 21:00:17 2015 -0800

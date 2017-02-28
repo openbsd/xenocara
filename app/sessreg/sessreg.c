@@ -366,7 +366,7 @@ main (int argc, char **argv)
 # else
 		utmp = open (utmp_file, O_RDWR);
 		if (utmp != -1) {
-			syserr ((int) lseek (utmp, (long) slot_number * sizeof (struct utmp), 0), "lseek");
+			syserr ((int) lseek (utmp, (off_t) slot_number * sizeof (struct utmp), 0), "lseek");
 			sysnerr (write (utmp, (char *) &utmp_entry, sizeof (utmp_entry))
 					== sizeof (utmp_entry), "write utmp entry");
 			close (utmp);
@@ -401,7 +401,7 @@ main (int argc, char **argv)
 		if (llog != -1) {
 			struct lastlog ll;
 
-			sysnerr (lseek(llog, (long) (pwd->pw_uid*sizeof(ll)), 0)
+			sysnerr (lseek(llog, (off_t) (pwd->pw_uid*sizeof(ll)), 0)
 					!= -1, "seeking lastlog entry");
 			memset(&ll, 0, sizeof(ll));
 			ll.ll_time = current_time;
@@ -668,7 +668,7 @@ findslot (char *line_name, char *host_name, int addp, int slot)
 	 * first, try to locate a previous entry for this display
 	 * also record location of a free slots in case we need a new one
 	 */
-	syserr ((int) lseek (utmp, (long) slot * sizeof (struct utmp), 0), "lseek");
+	syserr ((int) lseek (utmp, (off_t) slot * sizeof (struct utmp), 0), "lseek");
 
 	if (!host_name)
 		host_name = "";

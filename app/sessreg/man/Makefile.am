@@ -9,7 +9,7 @@ SUFFIXES = .$(APP_MAN_SUFFIX) .man
 
 AM_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir)
 filenames.sed: filenames.sed.c
-	$(AM_V_GEN)$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	$(AM_V_GEN)$(CPP) -P $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	    $(AM_CPPFLAGS) $(CPPFLAGS) $(srcdir)/filenames.sed.c | \
 	    $(SED) -n -e '/s|__/ p' -e '/^\/__/ p' > $@
 
