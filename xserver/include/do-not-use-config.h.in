@@ -224,6 +224,9 @@
 /* Define to 1 if you have the <libaudit.h> header file. */
 #undef HAVE_LIBAUDIT_H
 
+/* Define to 1 if you have the `bsd' library (-lbsd). */
+#undef HAVE_LIBBSD
+
 /* Define to 1 if you have the libdispatch (GCD) available */
 #undef HAVE_LIBDISPATCH
 
@@ -375,6 +378,9 @@
 
 /* Define to 1 if you have the <sys/vt.h> header file. */
 #undef HAVE_SYS_VT_H
+
+/* Define to 1 if you have the `timingsafe_memcmp' function. */
+#undef HAVE_TIMINGSAFE_MEMCMP
 
 /* Define to 1 if typeof works with your compiler. */
 #undef HAVE_TYPEOF
