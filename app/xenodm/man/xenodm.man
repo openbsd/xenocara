@@ -52,12 +52,8 @@ xenodm \- X Display Manager
 .SH DESCRIPTION
 .I Xenodm
 manages a collection of X displays on the local host.
-The design of
-.I xenodm
-was guided by the needs of X terminals as well as The Open Group standard
-XDMCP, the \fIX Display Manager Control Protocol\fP.
 .I Xenodm
-provides services similar to those provided by \fIinit\fP, \fIgetty\fP
+provides services similar to those provided by \fIgetty\fP
 and \fIlogin\fP on character terminals: prompting for login name and password,
 authenticating the user, and running a ``session.''
 .PP
@@ -394,9 +390,7 @@ kills and restarts the server (if possible) and the session.
 generates and uses authorization for the local server connections.  If
 authorization is used, \fBauthName\fP is a list
 of authorization mechanisms to use, separated by white space.
-XDMCP connections dynamically specify which
-authorization mechanisms are supported, so
-\fBauthName\fP is ignored in this case.  When \fBauthorize\fP is set for a
+When \fBauthorize\fP is set for a
 display and authorization is not available, the user is informed by having a
 different message displayed in the login widget.  By default, \fBauthorize\fP
 is ``true,''  \fBauthName\fP is ``MIT-MAGIC-COOKIE-1,'' or, if
@@ -477,13 +471,12 @@ or, if the values starts with a slash (/), the name of a file
 containing server specifications, one per line.
 .PP
 Each specification
-indicates a display which should constantly be managed and which is
-not using XDMCP.
-This method is used typically for local servers only.  If the resource
+indicates a display which should constantly be managed.
+If the resource
 or the file named by the resource is empty, \fIxenodm\fP will exit.
 .PP
 Each specification consists of at least three parts:  a display
-name, a display class, a display type, and (for local servers) a command
+name, a display class, a display type, and a command
 line to start the server.  A typical entry for local display number 0 would
 be:
 .nf
