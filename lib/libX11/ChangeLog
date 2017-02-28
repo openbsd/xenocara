@@ -1,3 +1,180 @@
+commit 42f4d7af9cf6d1dbfa575552e057328b054a20c9
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Sat Feb 25 21:54:22 2017 -0800
+
+    libX11 1.6.5
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit a0da5835e8078445947c828fe2d86c1a31439012
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Feb 14 15:33:29 2017 -0500
+
+    Revert "Compose sequences for rouble sign"
+    
+    This reverts commit d9e34061307748cb7318ed6b5f83ee5ee9b81fd0.
+    
+    Reported to break 'make check':
+    
+    https://lists.freedesktop.org/archives/xorg-devel/2017-February/052720.html
+
+commit d9e34061307748cb7318ed6b5f83ee5ee9b81fd0
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Fri Feb 10 18:48:18 2017 +0500
+
+    Compose sequences for rouble sign
+    
+    Cyrillic combinations mirror the Qwerty-Jcuken keyboard layout.
+    Also add Cyrillic sequences for hryvnia sign.
+    
+    Submitted-by: Victor V. Kustov <coyote@bks.tv>
+    Reviewed-by: Victor V. Kustov <coyote@bks.tv>
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 23d9623c661694aba8cf1e8f277dffa7a86cf065
+Author: Petr Písař <petr.pisar@atlas.cz>
+Date:   Sun Oct 30 12:49:11 2016 +0100
+
+    Revert cs_CZ.UTF-8 XLC_LOCALE to en_US.UTF-8
+    
+    The cs_CZ.UTF-8/XLC_LOCALE is an empty file leading to unsupported cs_CZ.UTF-8
+    locale and reporting this error:
+    
+    Warning: locale not supported by Xlib, locale set to C
+    
+    Therefore this patch reverts to the en_US.UTF-8 definition file that was used
+    before. This patch also deduplicates the cs_CZ.UTF-8 entry.
+    
+    <https://bugs.freedesktop.org/show_bug.cgi?id=98219>
+    
+    This reverts commit 33840a5465a2e5fecab520bfbdd2d1bd0a456f51
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit 71b0929ebc1f0f877f63e3f6de260f529daa6c69
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 13:52:49 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 2979011bc170c55894b9185b26376f8efc6db7d4
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 4a0082a1b6affa65d38294f0e13511525cd8ad15
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit c74b070f2712c95f0db7c320a10232b0e5c83049
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sat Jan 7 16:20:31 2017 +0100
+
+    Fix wrong Xfree in XListFonts failure path
+    
+    'ch' gets moved inside the allocated buffer as we're looping through
+    fonts, so keep a reference to the start of the buffer so we can pass
+    that to Xfree in the failure case.
+    
+    Fixes: commit 20a3f99eba5001925b8b313da3accb7900eb1927 "Plug a memory leak"
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 663f47075fe67bab4f99bc5d186c49175d4a4334
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 1 20:57:58 2017 -0800
+
+    specs/libX11: Update Portability Considerations for the 21st century
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 28f4b989b52fcf45c7e75a878d8d9c2583cd6b3c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 1 20:39:53 2017 -0800
+
+    specs/libX11: Fix broken synopsis for Data/Data16/Data32
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 382561951e3460b09c21a1a23748cde0315fbb19
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 1 20:31:54 2017 -0800
+
+    specs/libX11: Add missing parameter types for XGetWindowProperty()
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2beaecdb66965b861d6b790d151ba947f65f0a22
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 1 20:16:08 2017 -0800
+
+    specs/libX11: Make paramdef spacing more consistent
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4c436c6c14cfd4c397b011563bf13c2872861133
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 1 20:02:53 2017 -0800
+
+    specs/libX11: Fix paramdef entries listing multiple parameters
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1728b1a8a4718315da8e5c9cbc2c04bb75c74107
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 1 19:38:40 2017 -0800
+
+    specs/libX11: More synopsis fixes
+    
+    Mostly transforming macro definitions and functions taking void arguments
+    from undecorated <para> tags to use <funcsynopsis> tags to get decorations.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f0dc83db7e3a3d4a76c0f9d24763b80f01c893a9
+Author: Lucien Gentis <lucien.gentis@waika9.com>
+Date:   Wed Jun 1 17:02:47 2016 +0200
+
+    Typos in "Xlib - C Language X Interface" document - Chapter 02
+    
+    This patch fixes typos and lack of tags in "Xlib - C Language X Interface" document - Chapter 02.
+    
+    Signed-off-by: Lucien Gentis <lucien.gentis@waika9.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 20a3f99eba5001925b8b313da3accb7900eb1927
+Author: Emilio Pozuelo Monfort <pochu@debian.org>
+Date:   Tue Oct 25 21:30:15 2016 +0200
+
+    Plug a memory leak
+    
+    This was introduced in 8ea762f.
+    
+    Reported-by: Julien Cristau <jcristau@debian.org>
+    Signed-off-by: Emilio Pozuelo Monfort <pochu@debian.org>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit 8f349feac24aacc958bd816afcc52380764e3d92
 Author: Matthieu Herrb <matthieu.herrb@laas.fr>
 Date:   Tue Oct 4 21:01:39 2016 +0200
