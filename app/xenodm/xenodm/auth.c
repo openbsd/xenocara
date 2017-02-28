@@ -47,6 +47,7 @@ from The Open Group.
 
 #include <errno.h>
 #include <pwd.h>
+#include <string.h>
 
 #include <sys/ioctl.h>
 
@@ -487,15 +488,6 @@ openFiles (char *name, char *new_name, size_t len, FILE **oldp, FILE **newp)
 	return 1;
 }
 
-static int
-binaryEqual (char *a, char *b, unsigned short len)
-{
-	while (len-- > 0)
-		if (*a++ != *b++)
-			return FALSE;
-	return TRUE;
-}
-
 static void
 dumpBytes (unsigned short len, char *data)
 {
@@ -610,11 +602,11 @@ checkEntry (Xauth *auth)
 	for (a = addrs; a; a = a->next) {
 		if (a->family == auth->family &&
 		    a->address_length == auth->address_length &&
-		    binaryEqual (a->address, auth->address, auth->address_length) &&
+		    !memcmp (a->address, auth->address, auth->address_length) &&
 		    a->number_length == auth->number_length &&
-		    binaryEqual (a->number, auth->number, auth->number_length) &&
+		    !memcmp (a->number, auth->number, auth->number_length) &&
 		    a->name_length == auth->name_length &&
-		    binaryEqual (a->name, auth->name, auth->name_length))
+		    !memcmp (a->name, auth->name, auth->name_length))
 		{
 			return 1;
 		}
