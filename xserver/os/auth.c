@@ -305,7 +305,7 @@ GenerateAuthorization(unsigned name_length,
 void
 GenerateRandomData(int len, char *buf)
 {
-#ifndef HAVE_ARC4RANDOMBUF
+#ifndef HAVE_ARC4RANDOM_BUF
     int fd;
 
     fd = open("/dev/urandom", O_RDONLY);

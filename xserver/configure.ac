@@ -222,8 +222,8 @@ AC_CHECK_FUNCS([backtrace ffs geteuid getuid issetugid getresuid \
 	walkcontext])
 AC_REPLACE_FUNCS([reallocarray strcasecmp strcasestr strlcat strlcpy strndup \
 	timingsafe_memcmp])
-
 AC_CHECK_LIB([bsd], [arc4random_buf])
+AC_CHECK_FUNCS([arc4random_buf])
 
 AC_CHECK_DECLS([program_invocation_short_name], [], [], [[#include <errno.h>]])
 
