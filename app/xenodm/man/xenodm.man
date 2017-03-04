@@ -23,1041 +23,1327 @@
 .\" from The Open Group.
 .\"
 .\"
-.TH XENODM 1 __xorgversion__
-.SH NAME
-xenodm \- X Display Manager
-.SH SYNOPSIS
-.B xenodm
-[
-.B \-config
-.I configuration_file
-] [
-.B \-nodaemon
-] [
-.B \-debug
-.I debug_level
-] [
-.B \-error
-.I error_log_file
-] [
-.B \-resources
-.I resource_file
-] [
-.B \-server
-.I server_entry
-] [
-.B \-session
-.I session_program
-]
-.SH DESCRIPTION
-.I Xenodm
+.Dd $Mdocdate: March 4 2017 $
+.Dt XENODM 1
+.Os __xorgversion__
+.Sh NAME
+.Nm xenodm
+.Nd X Display Manager
+.Sh SYNOPSIS
+.Nm xenodm
+.Op Fl config Ar configuration_file
+.Op Fl nodaemon
+.Op Fl debug Ar debug_level
+.Op Fl error Ar error_log_file
+.Op Fl resources Ar resource_file
+.Op Fl server Ar server_entry
+.Op Fl session Ar session_program
+.Sh DESCRIPTION
+.Nm
 manages a collection of X displays on the local host.
-.I Xenodm
-provides services similar to those provided by \fIgetty\fP
-and \fIlogin\fP on character terminals: prompting for login name and password,
-authenticating the user, and running a ``session.''
-.PP
-A ``session'' is defined by the lifetime of a particular process; in the
+.Nm
+provides services similar to those provided by
+.Xr getty 8
+and
+.Xr login 1
+on character terminals: prompting for login name and password,
+authenticating the user, and running a
+.Dq session .
+.Pp
+A
+.Dq session
+is defined by the lifetime of a particular process; in the
 traditional character-based terminal world, it is the user's login shell.
 In the
-.I xenodm
-context, it is an arbitrary session manager.  This is because in a windowing
-environment, a user's login shell process does not necessarily have any
-terminal-like interface with which to connect.
+.Nm
+context, it is an arbitrary session manager.
+This is because in a windowing environment,
+a user's login shell process does not necessarily have any terminal-like
+interface with which to connect.
 When a real session manager is not available, a window manager or terminal
-emulator is typically used as the ``session manager,'' meaning that
-termination of this process terminates the user's session.
-.PP
-When the session is terminated, \fIxenodm\fP
+emulator is typically used as the
+.Dq session manager ,
+meaning that termination of this process terminates the user's session.
+.Pp
+When the session is terminated,
+.Nm
 resets the X server and (optionally) restarts the whole process.
-.PP
+.Pp
 Because
-.I xenodm
+.Nm
 provides the first interface that users will see, it is designed to be
 simple to use and easy to customize to the needs of a particular site.
-.I Xenodm
-has many options, most of which have reasonable defaults.  Browse through the
-various sections of this manual,
+.Nm
+has many options, most of which have reasonable defaults.
+Browse through the various sections of this manual,
 picking and choosing the things you want to change.
 Pay particular attention to the
-.B "Session Program"
-section, which will describe how to
-set up the style of session desired.
-.SH "OVERVIEW"
-\fIxenodm\fP is highly configurable, and most of its behavior can be
-controlled by resource files and shell scripts.  The names of these
-files themselves are resources read from the file \fIxenodm-config\fP or
-the file named by the \fB\-config\fP option.
-.PP
-\fIxenodm\fP  can manage
-X servers running on the local machine and specified in
-\fIXservers\fP.
-.PP
-The resources of the X clients run by \fIxenodm\fP outside the user's
-session, including \fIxenodm\fP's own login window, can be
-affected by setting resources in the \fIXresources\fP file.
-.PP
-After resetting the X server, \fIxenodm\fP runs the \fIXsetup\fP script
-to assist in setting up the screen the user sees along with the
-\fIxlogin\fP widget.
-.PP
-The \fIxlogin\fP widget, which \fIxenodm\fP presents,
-offers the familiar login and password prompts, unless
-\fIautoLogin\fP is set.
-.PP
-After the user logs in, \fIxenodm\fP runs the \fIXstartup\fP script as
-root.
-.PP
-Then \fIxenodm\fP runs the \fIXsession\fP script as the user.  This
-system session file may do some additional startup and typically runs
-the \fI.xsession\fP script in the user's home directory.
-When the \fIXsession\fP script exits, the session is over.
-.PP
-At the end of the session, the \fIXreset\fP script is run to clean up,
-the X server is reset, and the cycle starts over.
-.PP
-The file \fI XENODMLOGDIR/xenodm.log\fP will contain error
-messages from
-.I xenodm
-and anything output to stderr by \fIXsetup, Xstartup, Xsession\fP
-or \fIXreset\fP.
+.Sx SESSION PROGRAM
+section, which will describe how to set up the style of session desired.
+.Sh OVERVIEW
+.Nm
+is highly configurable,
+and most of its behavior can be controlled by resource files and shell scripts.
+The names of these files themselves are resources read from the file
+.Pa xenodm-config
+or the file named by the
+.Fl config
+option.
+.Pp
+.Nm
+can manage X servers running on the local machine and specified in
+.Pa Xservers .
+.Pp
+The resources of the X clients run by
+.Nm
+outside the user's session, including
+.Nm Ns 's
+own login window, can be affected by setting resources in the
+.Pa Xresources
+file.
+.Pp
+After resetting the X server,
+.Nm
+runs the
+.Pa Xsetup
+script to assist in setting up the screen the user sees along with the
+xlogin widget.
+.Pp
+The xlogin widget, which
+.Nm
+presents, offers the familiar login and password prompts, unless
+.Ic autoLogin
+is set.
+.Pp
+After the user logs in,
+.Nm
+runs the
+.Pa Xstartup
+script as root.
+.Pp
+Then
+.Nm
+runs the
+.Pa Xsession
+script as the user.
+This system session file may do some additional startup and typically runs the
+.Pa .xsession
+script in the user's home directory.
+When the
+.Pa Xsession
+script exits, the session is over.
+.Pp
+At the end of the session, the
+.Pa Xreset
+script is run to clean up, the X server is reset, and the cycle starts over.
+.Pp
+The file
+.Pa XENODMLOGDIR/xenodm.log
+will contain error messages from
+.Nm
+and anything output to
+.Dv stderr
+by
+.Pa Xsetup , Xstartup , Xsession
+or
+.Pa Xreset .
 When you have trouble getting
-.I xenodm
+.Nm
 working, check this file to see if
-.I xenodm
+.Nm
 has any clues to the trouble.
-.SH OPTIONS
-.PP
-All of these options, except \fB\-config\fP itself,
-specify values that can also be specified in the configuration file
+.Sh OPTIONS
+All of these options, except
+.Fl config
+itself, specify values that can also be specified in the configuration file
 as resources.
-.IP "\fB\-config\fP \fIconfiguration_file\fP"
+.Bl -tag -width Ds
+.It Fl config Ar configuration_file
 Names the configuration file, which specifies resources to control
 the behavior of
-.I xenodm.
-.I XENODMDIR/xenodm-config
+.Nm .
+.Pa XENODMDIR/xenodm-config
 is the default.
-See the section \fBConfiguration File\fP.
-.IP "\fB\-nodaemon\fP"
-Specifies ``false'' as the value for the \fBDisplayManager.daemonMode\fP
+See the section
+.Sx CONFIGURATION FILE .
+.It Fl nodaemon
+Specifies
+.Cm false
+as the value for the
+.Ic DisplayManager.daemonMode
 resource.
 This suppresses the normal daemon behavior, which is for
-.I xenodm
-to close all file descriptors, disassociate itself from
-the controlling terminal, and put
-itself in the background when it first starts up.
-.IP "\fB\-debug\fP \fIdebug_level\fP"
-Specifies the numeric value for the \fBDisplayManager.debugLevel\fP
-resource.  A non-zero value causes
-.I xenodm
+.Nm
+to close all file descriptors,
+disassociate itself from the controlling terminal,
+and put itself in the background when it first starts up.
+.It Fl debug Ar debug_level
+Specifies the numeric value for the
+.Ic DisplayManager.debugLevel
+resource.
+A non-zero value causes
+.Nm
 to print lots of debugging statements to the terminal; it also disables the
-\fBDisplayManager.daemonMode\fP resource, forcing
-.I xenodm
-to run synchronously.  To interpret these debugging messages, a copy
-of the source code for
-.I xenodm
-is almost a necessity.  No attempt has been
-made to rationalize or standardize the output.
-.IP "\fB\-error\fP \fIerror_log_file\fP"
-Specifies the value for the \fBDisplayManager.errorLogFile\fP resource.
+.Ic DisplayManager.daemonMode
+resource, forcing
+.Nm
+to run synchronously.
+To interpret these debugging messages, a copy of the source code for
+.Nm
+is almost a necessity.
+No attempt has been made to rationalize or standardize the output.
+.It Fl error Ar error_log_file
+Specifies the value for the
+.Ic DisplayManager.errorLogFile
+resource.
 This file contains errors from
-.I xenodm
-as well as anything written to stderr by the various scripts and programs
-run during the progress of the session.
-.IP "\fB\-resources\fP \fIresource_file\fP"
-Specifies the value for the \fBDisplayManager*resources\fP resource.  This file
-is loaded using
-.IR xrdb (__appmansuffix__)
-to specify configuration parameters for the
-authentication widget.
-.IP "\fB\-server\fP \fIserver_entry\fP"
-Specifies the value for the \fBDisplayManager.servers\fP resource.
+.Nm
+as well as anything written to
+.Dv stderr
+by the various scripts and programs run during the progress of the session.
+.It Fl resources Ar resource_file
+Specifies the value for the
+.Ic DisplayManager*resources
+resource.
+This file is loaded using
+.Xr xrdb 1
+to specify configuration parameters for the authentication widget.
+.It Fl server Ar server_entry
+Specifies the value for the
+.Ic DisplayManager.servers
+resource.
 See the section
-.B "Local Server Specification"
+.Sx LOCAL SERVER SPECIFICATION
 for a description of this resource.
-.IP "\fB\-session\fP \fIsession_program\fP"
-Specifies the value for the \fBDisplayManager*session\fP resource.  This
-indicates the program to run as the session after the user has logged in.
-.IP "\fB\-xrm\fP \fIresource_specification\fP"
-Allows an arbitrary resource to be specified, as in most
-X Toolkit applications.
-.SH RESOURCES
+.It Fl session Ar session_program
+Specifies the value for the
+.Ic DisplayManager*session
+resource.
+This indicates the program to run as the session after the user has logged in.
+.It Fl xrm Ar resource_specification
+Allows an arbitrary resource to be specified, as in most X Toolkit applications.
+.El
+.Sh RESOURCES
 At many stages the actions of
-.I xenodm
+.Nm
 can be controlled through the use of its configuration file, which is in the
 X resource format.
 Some resources modify the behavior of
-.I xenodm
-on all displays,
-while others modify its behavior on a single display.  Where actions relate
-to a specific display,
+.Nm
+on all displays, while others modify its behavior on a single display.
+Where actions relate to a specific display,
 the display name is inserted into the resource name between
-``DisplayManager'' and the final resource name segment.
-.PP
+.Dq DisplayManager
+and the final resource name segment.
+.Pp
 For local displays, the resource name and class are as read from the
-\fIXservers\fP file.
-.PP
-Because the resource
-manager uses colons to separate the name of the resource from its value and
-dots to separate resource name parts,
-.I xenodm
+.Pa Xservers
+file.
+.Pp
+Because the resource manager uses colons to separate the name of the resource
+from its value and dots to separate resource name parts,
+.Nm
 substitutes underscores for both dots and colons when generating the resource
 name.
-For example, \fBDisplayManager.expo_x_org_0.startup\fP is the name of the
-resource which defines the startup shell file for the ``expo.x.org:0'' display.
-.\"
-.IP "\fBDisplayManager.servers\fP"
+For example,
+.Ic DisplayManager.expo_x_org_0.startup
+is the name of the resource which defines the startup shell file for the
+.Dq expo.x.org:0
+display.
+.Bl -tag -width Ds
+.It Ic DisplayManager.servers
 This resource either specifies a file name full of server entries, one per
 line (if the value starts with a slash), or a single server entry.
-See the section \fBLocal Server Specification\fP for the details.
-.IP "\fBDisplayManager.errorLogFile\fP"
-Error output is normally directed at the system console.  To redirect it,
-set this resource to a file name.  A method to send these messages to
-.I syslog
-should be developed for systems which support it; however, the
-wide variety of interfaces precludes any system-independent
-implementation.  This file also contains any output directed to stderr
-by the \fIXsetup, Xstartup, Xsession\fP and \fIXreset\fP files,
-so it will contain descriptions
-of problems in those scripts as well.
-.IP "\fBDisplayManager.debugLevel\fP"
-If the integer value of this resource is greater than zero,
-reams of
-debugging information will be printed.  It also disables daemon mode, which
-would redirect the information into the bit-bucket, and
-allows non-root users to run
-.I xenodm,
-which would normally not be useful.
-.IP "\fBDisplayManager.daemonMode\fP"
-Normally,
-.I xenodm
-attempts to make itself into a daemon process unassociated with any terminal.
-This is
-accomplished by forking and leaving the parent process to exit, then closing
-file descriptors and releasing the controlling terminal.  In some
-environments this is not desired (in particular, when debugging).  Setting
-this resource to ``false'' will disable this feature.
-.IP "\fBDisplayManager.authDir\fP"
-This names a directory under which
-.I xenodm
-stores authorization files while initializing the session.  The
-default value is \fI XENODMXAUTHDIR.\fP
-Can be overridden for specific displays by
-DisplayManager.\fIDISPLAY\fP.authFile.
-.IP \fBDisplayManager.autoRescan\fP
-This boolean controls whether
-.I xenodm
-rescans the configuration, servers, access control and authentication keys
-files after a session terminates and the files have changed.  By default it
-is ``true.''  You can force
-.I xenodm
-to reread these files by sending a SIGHUP to the main process.
-.IP \fBDisplayManager.exportList\fP
-A list of additional environment variables, separated by white space,
-to pass on to the \fIXsetup\fP,
-\fIXstartup\fP, \fIXsession\fP, and \fIXreset\fP programs.
-.\"
-.IP "\fBDisplayManager.\fP\fIDISPLAY\fP\fB.autoLogin\fP"
-This resource specifes the name of an user that will be logged in
-automatically, without displaying the xlogin widget.
-.IP "\fBDisplayManager.\fP\fIDISPLAY\fP\fB.resources\fP"
-This resource specifies the name of the file to be loaded by \fIxrdb\fP
-as the resource database onto the root window of screen 0 of the display.
-The \fIXsetup\fP program and the Login widget will use
-the resources set in this file.
-This resource data base is loaded just before the authentication procedure
-is started, so it can control the appearance of the login window.  See the
-section
-.B "Authentication Widget,"
-which describes the various
-resources that are appropriate to place in this file.
-There is no default value for this resource, but
-\fI XENODMDIR/Xresources\fP
-is the conventional name.
-.IP "\fBDisplayManager.\fP\fIDISPLAY\fP\fB.xrdb\fP"
-Specifies the program used to load the resources.  By default,
-.I xenodm
-uses \fI BINDIR/xrdb\fP.
-.IP "\fBDisplayManager.\fP\fIDISPLAY\fP\fB.cpp\fP"
-This specifies the name of the C preprocessor which is used by \fIxrdb\fP.
-.IP "\fBDisplayManager.\fP\fIDISPLAY\fP\fB.setup\fP"
-This specifies a program which is run (as root) before offering the
-Login window.  This may be used to change the appearance of the screen
-around the Login window or to put up other windows (e.g., you may want
-to run \fIxconsole\fP here).
-By default, no program is run.  The conventional name for a
-file used here is \fIXsetup\fP.
-See the section \fBSetup Program.\fP
-.IP "\fBDisplayManager.\fP\fIDISPLAY\fP\fB.startup\fP"
-This specifies a program which is run (as root) after the authentication
-process succeeds.  By default, no program is run.  The conventional name for a
-file used here is \fIXstartup\fP.
-See the section \fBStartup Program.\fP
-.IP "\fBDisplayManager.\fP\fIDISPLAY\fP\fB.session\fP"
-This specifies the session to be executed (not running as root).
-By default, \fI BINDIR/xterm\fP is
-run.  The conventional name is \fIXsession\fP.
 See the section
-.B "Session Program."
-.IP "\fBDisplayManager.\fP\fIDISPLAY\fP\fB.reset\fP"
+.Sx LOCAL SERVER SPECIFICATION
+for the details.
+.It Ic DisplayManager.errorLogFile
+Error output is normally directed at the system console.
+To redirect it, set this resource to a file name.
+A method to send these messages to
+.Xr syslog 3
+should be developed for systems which support it; however, the wide variety
+of interfaces precludes any system-independent implementation.
+This file also contains any output directed to
+.Dv stderr
+by the
+.Pa Xsetup , Xstartup , Xsession
+and
+.Pa Xreset
+files, so it will contain descriptions of problems in those scripts as well.
+.It Ic DisplayManager.debugLevel
+If the integer value of this resource is greater than zero,
+reams of debugging information will be printed.
+It also disables daemon mode, which would redirect the information into
+the bit-bucket, and allows non-root users to run
+.Nm ,
+which would normally not be useful.
+.It Ic DisplayManager.daemonMode
+Normally,
+.Nm
+attempts to make itself into a daemon process unassociated with any terminal.
+This is accomplished by forking and leaving the parent process to exit,
+then closing file descriptors and releasing the controlling terminal.
+In some environments this is not desired (in particular, when debugging).
+Setting this resource to
+.Cm false
+will disable this feature.
+.It Ic DisplayManager.authDir
+This names a directory under which
+.Nm
+stores authorization files while initializing the session.
+The default value is
+.Pa XENODMXAUTHDIR .
+Can be overridden for specific displays by
+.Ic DisplayManager. Ns Ar DISPLAY Ns Ic .authFile .
+.It Ic DisplayManager.autoRescan
+This boolean controls whether
+.Nm
+rescans the configuration, servers, access control and authentication keys
+files after a session terminates and the files have changed.
+By default it is
+.Cm true .
+You can force
+.Nm
+to reread these files by sending a
+.Dv SIGHUP
+to the main process.
+.It Ic DisplayManager.exportList
+A list of additional environment variables, separated by white space,
+to pass on to the
+.Pa Xsetup , Xstartup , Xsession ,
+and
+.Pa Xreset
+programs.
+.It Ic DisplayManager. Ns Ar DISPLAY Ns Ic .autoLogin
+This resource specifies the name of an user that will be logged in
+automatically, without displaying the xlogin widget.
+.It Ic DisplayManager. Ns Ar DISPLAY Ns Ic .resources
+This resource specifies the name of the file to be loaded by
+.Xr xrdb 1
+as the resource database onto the root window of screen 0 of the display.
+The
+.Pa Xsetup
+program and the Login widget will use the resources set in this file.
+This resource database is loaded just before the authentication procedure
+is started, so it can control the appearance of the login window.
+See the section
+.Sx AUTHENTICATION WIDGET ,
+which describes the various resources
+that are appropriate to place in this file.
+There is no default value for this resource, but
+.Pa XENODMDIR/Xresources
+is the conventional name.
+.It Ic DisplayManager. Ns Ar DISPLAY Ns Ic .xrdb
+Specifies the program used to load the resources.
+By default,
+.Nm
+uses
+.Pa BINDIR/xrdb .
+.It Ic DisplayManager. Ns Ar DISPLAY Ns Ic .cpp
+This specifies the name of the C preprocessor which is used by
+.Xr xrdb 1 .
+.It Ic DisplayManager. Ns Ar DISPLAY Ns Ic .setup
+This specifies a program which is run (as root) before offering the
+Login window.
+This may be used to change the appearance of the screen
+around the Login window or to put up other windows (e.g., you may want
+to run
+.Xr xconsole 1
+here).
+By default, no program is run.
+The conventional name for a file used here is
+.Pa Xsetup .
+See the section
+.Sx SETUP PROGRAM .
+.It Ic DisplayManager. Ns Ar DISPLAY Ns Ic .startup
+This specifies a program which is run (as root) after the authentication
+process succeeds.
+By default, no program is run.
+The conventional name for a file used here is
+.Pa Xstartup .
+See the section
+.Sx STARTUP PROGRAM .
+.It Ic DisplayManager. Ns Ar DISPLAY Ns Ic .session
+This specifies the session to be executed (not running as root).
+By default,
+.Pa BINDIR/xterm
+is run.
+The conventional name is
+.Pa Xsession .
+See the section
+.Sx SESSION PROGRAM .
+.It Ic DisplayManager. Ns Ar DISPLAY Ns Ic .reset
 This specifies a program which is run (as root) after the session terminates.
 By default, no program is run.
-The conventional name is \fIXreset\fP.
+The conventional name is
+.Pa Xreset .
 See the section
-.B "Reset Program."
-.IP "\fBDisplayManager.\fP\fIDISPLAY\fP\fB.openDelay\fP"
-.IP "\fBDisplayManager.\fP\fIDISPLAY\fP\fB.openRepeat\fP"
-.IP "\fBDisplayManager.\fP\fIDISPLAY\fP\fB.openTimeout\fP"
-.IP "\fBDisplayManager.\fP\fIDISPLAY\fP\fB.startAttempts\fP"
-.IP "\fBDisplayManager.\fP\fIDISPLAY\fP\fB.reservAttempts\fP"
+.Sx RESET PROGRAM .
+.It Ic DisplayManager. Ns Ar DISPLAY Ns Ic .openDelay
+.It Ic DisplayManager. Ns Ar DISPLAY Ns Ic .openRepeat
+.It Ic DisplayManager. Ns Ar DISPLAY Ns Ic .openTimeout
+.It Ic DisplayManager. Ns Ar DISPLAY Ns Ic .startAttempts
+.It Ic DisplayManager. Ns Ar DISPLAY Ns Ic .reservAttempts
 These numeric resources control the behavior of
-.I xenodm
-when attempting to open intransigent servers.  \fBopenDelay\fP is
-the length of the
-pause in seconds between successive attempts, \fBopenRepeat\fP is the
-number of attempts to make, \fBopenTimeout\fP is the amount of time
-to wait while actually
-attempting the open (i.e., the maximum time spent in the
-.IR connect (2)
-system call) and \fBstartAttempts\fP is the number of times this
-entire process is done before giving up on the server.
-After \fBopenRepeat\fP attempts have been made, or
-if \fBopenTimeout\fP seconds elapse in any particular attempt,
-.I xenodm
+.Nm
+when attempting to open intransigent servers.
+.Ic openDelay
+is the length of the pause in seconds between successive attempts,
+.Ic openRepeat
+is the number of attempts to make,
+.Ic openTimeout
+is the amount of time to wait while actually attempting the open
+(i.e., the maximum time spent in the
+.Xr connect 2
+system call) and
+.Ic startAttempts
+is the number of times this entire process is done
+before giving up on the server.
+After
+.Ic openRepeat
+attempts have been made, or if
+.Ic openTimeout
+seconds elapse in any particular attempt,
+.Nm
 terminates and restarts the server, attempting to connect again.
-This process is repeated \fBstartAttempts\fP times, at which point
-the display is declared dead and disabled.  Although
-this behavior may seem arbitrary, it has been empirically developed and
-works quite well on most systems.  The bound \fBreservAttempts\fP
+This process is repeated
+.Ic startAttempts
+times, at which point the display is declared dead and disabled.
+Although this behavior may seem arbitrary,
+it has been empirically developed and works quite well on most systems.
+The bound
+.Ic reservAttempts
 is the number of times a successful connect is allowed to be followed
-by a fatal error.  When reached, the display is disabled.
+by a fatal error.
+When reached, the display is disabled.
 The default values are
-\fBopenDelay\fP: 15, \fBopenRepeat\fP: 5, \fBopenTimeout\fP: 120,
-\fBstartAttempts\fP: 4 and \fBreservAttempts\fP: 2.
-.IP "\fBDisplayManager.\fP\fIDISPLAY\fP\fB.terminateServer\fP"
+.Ic openDelay :
+15,
+.Ic openRepeat :
+5,
+.Ic openTimeout :
+120,
+.Ic startAttempts :
+4 and
+.Ic reservAttempts :
+2.
+.It Ic DisplayManager. Ns Ar DISPLAY Ns Ic .terminateServer
 This boolean resource specifies whether the X server should be terminated
-when a session terminates (instead of resetting it).  This option can be
-used when the server tends to grow without bound over time, in order to limit
-the amount of time the server is run.  The default value is ``false.''
-.IP "\fBDisplayManager.\fP\fIDISPLAY\fP\fB.userPath\fP"
-.I Xenodm
-sets the PATH environment variable for the session to this value.  It should
-be a colon separated list of directories; see
-.IR sh (__appmansuffix__)
+when a session terminates (instead of resetting it).
+This option can be used when the server tends to grow without bound over time,
+in order to limit the amount of time the server is run.
+The default value is
+.Cm false .
+.It Ic DisplayManager. Ns Ar DISPLAY Ns Ic .userPath
+.Nm
+sets the
+.Ev PATH
+environment variable for the session to this value.
+It should be a colon separated list of directories; see
+.Xr sh 1
 for a full description.
-The default value is ``DEF_USER_PATH''.
-.IP "\fBDisplayManager.\fP\fIDISPLAY\fP\fB.systemPath\fP"
-.I Xenodm
-sets the PATH environment variable for the startup and reset scripts to the
-value of this resource.  The default for this resource is ``DEF_SYSTEM_PATH''.
-Note the absence of ``.'' from this entry.  This is a good practice to
-follow for root; it avoids many common Trojan Horse system penetration
-schemes.
-.IP "\fBDisplayManager.\fP\fIDISPLAY\fP\fB.systemShell\fP"
-.I Xenodm
-sets the SHELL environment variable for the startup and reset scripts to the
-value of this resource.  It is \fI/bin/sh\fP by default.
-.IP "\fBDisplayManager.\fP\fIDISPLAY\fP\fB.failsafeClient\fP"
+The default value is
+.Dq DEF_USER_PATH .
+.It Ic DisplayManager. Ns Ar DISPLAY Ns Ic .systemPath
+.Nm
+sets the
+.Ev PATH
+environment variable for the startup and reset scripts to the
+value of this resource.
+The default for this resource is
+.Dq DEF_SYSTEM_PATH .
+Note the absence of
+.Ql \&.
+from this entry.
+This is a good practice to follow for root;
+it avoids many common Trojan Horse system penetration schemes.
+.It Ic DisplayManager. Ns Ar DISPLAY Ns Ic .systemShell
+.Nm
+sets the
+.Ev SHELL
+environment variable for the startup and reset scripts to the
+value of this resource.
+It is
+.Pa /bin/sh
+by default.
+.It Ic DisplayManager. Ns Ar DISPLAY Ns Ic .failsafeClient
 If the default session fails to execute,
-.I xenodm
-will fall back to this program.  This program is executed with no
-arguments, but executes using the same environment variables as
-the session would have had (see the section \fBSession Program\fP).
-By default, \fI BINDIR/xterm\fP is used.
-.IP "\fBDisplayManager.\fP\fIDISPLAY\fP\fB.grabServer\fP"
-.IP "\fBDisplayManager.\fP\fIDISPLAY\fP\fB.grabTimeout\fP"
+.Nm
+will fall back to this program.
+This program is executed with no arguments,
+but executes using the same environment variables as the session would have had
+(see the section
+.Sx SESSION PROGRAM ) .
+By default,
+.Pa BINDIR/xterm
+is used.
+.It Ic DisplayManager. Ns Ar DISPLAY Ns Ic .grabServer
+.It Ic DisplayManager. Ns Ar DISPLAY Ns Ic .grabTimeout
 To improve security,
-.I xenodm
+.Nm
 grabs the server and keyboard while reading the login name and password.
 The
-\fBgrabServer\fP resource specifies if the server should be held for the
-duration of the name/password reading.  When ``false,'' the server is ungrabbed
-after the keyboard grab succeeds, otherwise the server is grabbed until just
-before the session begins.  The default is ``false.''
-The \fBgrabTimeout\fP resource specifies the maximum time
-.I xenodm
-will wait for the grab to succeed.  The grab may fail if some other
-client has the server grabbed, or possibly if the network latencies
-are very high.  This resource has a default value of 3 seconds; you
-should be cautious when raising it, as a user can be spoofed by a
-look-alike window on the display.  If the grab fails,
-.I xenodm
+.Ic grabServer
+resource specifies if the server should be held
+for the duration of the name/password reading.
+When
+.Cm false ,
+the server is ungrabbed after the keyboard grab succeeds,
+otherwise the server is grabbed until just before the session begins.
+The default is
+.Cm false .
+The
+.Ic grabTimeout
+resource specifies the maximum time
+.Nm
+will wait for the grab to succeed.
+The grab may fail if some other client has the server grabbed,
+or possibly if the network latencies are very high.
+This resource has a default value of 3 seconds; you should be cautious when
+raising it, as a user can be spoofed by a look-alike window on the display.
+If the grab fails,
+.Nm
 kills and restarts the server (if possible) and the session.
-.IP "\fBDisplayManager.\fP\fIDISPLAY\fP\fB.authorize\fP"
-.IP "\fBDisplayManager.\fP\fIDISPLAY\fP\fB.authName\fP"
-\fBauthorize\fP is a boolean resource which controls whether
-.I xenodm
-generates and uses authorization for the local server connections.  If
-authorization is used, \fBauthName\fP is a list
-of authorization mechanisms to use, separated by white space.
-When \fBauthorize\fP is set for a
-display and authorization is not available, the user is informed by having a
-different message displayed in the login widget.  By default, \fBauthorize\fP
-is ``true,''  \fBauthName\fP is ``MIT-MAGIC-COOKIE-1,'' or, if
-XDM-AUTHORIZATION-1 is available, ``XDM-AUTHORIZATION-1\0MIT-MAGIC-COOKIE-1.''
-.IP \fBDisplayManager.\fP\fIDISPLAY\fP\fB.authFile\fP
+.It Ic DisplayManager. Ns Ar DISPLAY Ns Ic .authorize
+.It Ic DisplayManager. Ns Ar DISPLAY Ns Ic .authName
+.Ic authorize
+is a boolean resource which controls whether
+.Nm
+generates and uses authorization for the local server connections.
+If
+authorization is used,
+.Ic authName
+is a list of authorization mechanisms to use, separated by white space.
+When
+.Ic authorize
+is set for a display and authorization is not available, the user is informed
+by having a different message displayed in the login widget.
+By default,
+Ic authorize
+is
+.Cm true ,
+.Ic authName
+is
+.Dq MIT-MAGIC-COOKIE-1 ,
+or, if
+XDM-AUTHORIZATION-1 is available,
+.Dq XDM-AUTHORIZATION-1 MIT-MAGIC-COOKIE-1 .
+.It Ic DisplayManager. Ns Ar DISPLAY Ns Ic .authFile
 This file is used to communicate the authorization data from
-.I xenodm
-to the server, using the \fB\-auth\fP server command line option.
-It should be
-kept in a directory which is not world-writable as it could easily be
-removed, disabling the authorization mechanism in the server.
+.Nm
+to the server, using the
+.Fl auth
+server command line option.
+It should be kept in a directory which is not world-writable as it could easily
+be removed, disabling the authorization mechanism in the server.
 If not specified, a name is generated from DisplayManager.authDir and
 the name of the display.
-.IP "\fBDisplayManager.\fP\fIDISPLAY\fP\fB.authComplain\fP"
-If set to ``false,'' disables the use of the \fBunsecureGreeting\fP
+.It Ic DisplayManager. Ns Ar DISPLAY Ns Ic .authComplain
+If set to
+.Cm false ,
+disables the use of the
+.Ic unsecureGreeting
 in the login window.
-See the section \fBAuthentication Widget.\fP
-The default is ``true.''
-.IP "\fBDisplayManager.\fP\fIDISPLAY\fP\fB.resetSignal\fP"
-The number of the signal \fIxenodm\fP sends to reset the server.
-See the section \fBControlling the Server.\fP
-The default is 1 (SIGHUP).
-.IP "\fBDisplayManager.\fP\fIDISPLAY\fP\fB.termSignal\fP"
-The number of the signal \fIxenodm\fP sends to terminate the server.
-See the section \fBControlling the Server.\fP
-The default is 15 (SIGTERM).
-.IP "\fBDisplayManager.\fP\fIDISPLAY\fP\fB.resetForAuth\fP"
+See the section
+.Sx AUTHENTICATION WIDGET .
+The default is
+.Cm true .
+.It Ic DisplayManager. Ns Ar DISPLAY Ns Ic .resetSignal
+The number of the signal
+.Nm
+sends to reset the server.
+See the section
+.Sx CONTROLLING THE SERVER .
+The default is 1
+.Pq Dv SIGHUP .
+.It Ic DisplayManager. Ns Ar DISPLAY Ns Ic .termSignal
+The number of the signal
+.Nm
+sends to terminate the server.
+See the section
+.Sx CONTROLLING THE SERVER .
+The default is 15
+.Pq Dv SIGTERM .
+.It Ic DisplayManager. Ns Ar DISPLAY Ns Ic .resetForAuth
 The original implementation of authorization in the sample server reread the
-authorization file at server reset time, instead of when checking the
-initial connection.  As
-.I xenodm
-generates the authorization information just before connecting to the
-display, an old server would not get up-to-date authorization information.
+authorization file at server reset time,
+instead of when checking the initial connection.
+As
+.Nm
+generates the authorization information just before connecting to the display,
+an old server would not get up-to-date authorization information.
 This resource causes
-.I xenodm
-to send SIGHUP to the server after setting up the file, causing an
-additional server reset to occur, during which time the new authorization
-information will be read.
-The default is ``false,'' which will work for all MIT servers.
-.IP "\fBDisplayManager.\fP\fIDISPLAY\fP\fB.userAuthDir\fP"
+.Nm
+to send
+.Dv SIGHUP
+to the server after setting up the file, causing an additional server reset
+to occur, during which time the new authorization information will be read.
+The default is
+.Cm false ,
+which will work for all MIT servers.
+.It Ic DisplayManager. Ns Ar DISPLAY Ns Ic .userAuthDir
 When
-.I xenodm
-is unable to write to the usual user authorization file ($HOME/.Xauthority),
+.Nm
+is unable to write to the usual user authorization file
+.Pq Pa $HOME/.Xauthority ,
 it creates a unique file name in this directory and points the environment
-variable XAUTHORITY at the created file.  It uses \fI/tmp\fP by default.
-.SH "CONFIGURATION FILE"
+variable
+.Ev XAUTHORITY
+at the created file.
+It uses
+.Pa /tmp
+by default.
+.El
+.Sh CONFIGURATION FILE
 First, the
-.I xenodm
+.Nm
 configuration file should be set up.
-Make a directory (usually \fI XENODMDIR\fP) to contain all
-of the relevant files.
-.LP
-Here is a reasonable configuration file, which could be
-named \fIxenodm-config\fP:
-.nf
-
-.ta .5i 4i
-
-	DisplayManager.servers:	XENODMDIR/Xservers
-	DisplayManager.errorLogFile:	XENODMLOGDIR/xenodm.log
-	DisplayManager*resources:	XENODMDIR/Xresources
-	DisplayManager*startup:	XENODMDIR/Xstartup
-	DisplayManager*session:	XENODMDIR/Xsession
-	DisplayManager._0.authorize:	true
-	DisplayManager*authorize:	false
-
-.fi
-.PP
-Note that this file mostly contains references to other files.  Note also
-that some of the resources are specified with ``*'' separating the
-components.  These resources can be made unique for each different display,
-by replacing the ``*'' with the display-name, but normally this is not very
-useful.  See the \fBResources\fP section for a complete discussion.
-.SH "LOCAL SERVER SPECIFICATION"
-.PP
-The resource \fBDisplayManager.servers\fP gives a server specification
-or, if the values starts with a slash (/), the name of a file
-containing server specifications, one per line.
-.PP
+Make a directory (usually
+.Pa XENODMDIR )
+to contain all of the relevant files.
+.Pp
+Here is a reasonable configuration file, which could be named
+.Pa xenodm-config :
+.Bd -literal -offset Ds
+DisplayManager.servers:      XENODMDIR/Xservers
+DisplayManager.errorLogFile: XENODMLOGDIR/xenodm.log
+DisplayManager*resources:    XENODMDIR/Xresources
+DisplayManager*startup:      XENODMDIR/Xstartup
+DisplayManager*session:      XENODMDIR/Xsession
+DisplayManager._0.authorize: true
+DisplayManager*authorize:    false
+.Ed
+.Pp
+Note that this file mostly contains references to other files.
+Note also that some of the resources are specified with
+.Ql *
+separating the components.
+These resources can be made unique for each different display, by replacing the
+.Ql *
+with the display-name, but normally this is not very useful.
+See the
+.Sx RESOURCES
+section for a complete discussion.
+.Sh LOCAL SERVER SPECIFICATION
+The resource
+.Ic DisplayManager.servers
+gives a server specification or, if the value starts with a slash
+.Pq Ql / ,
+the name of a file containing server specifications, one per line.
+.Pp
 Each specification
 indicates a display which should constantly be managed.
-If the resource
-or the file named by the resource is empty, \fIxenodm\fP will exit.
-.PP
-Each specification consists of at least three parts:  a display
-name, a display class, a display type, and a command
-line to start the server.  A typical entry for local display number 0 would
-be:
-.nf
-
-  :0 local BINDIR/X :0
-
-.fi
-The only recognized display types is:
-.ta 1i
-.nf
-
-local		local display: \fIxenodm\fP will run the server
-
-.fi
-.PP
-The display name must be something that can be passed in the \fB\-display\fP
-option to an X program.  This string is used to generate the display-specific
-resource names, so be careful to match the
-names (e.g., use ``:0 local BINDIR/X :0'' instead of
-``localhost:0 local BINDIR/X :0''
+If the resource or the file named by the resource is empty,
+.Nm
+will exit.
+.Pp
+Each specification consists of at least three parts:
+a display name, a display class, a display type, and a command
+line to start the server.
+A typical entry for local display number 0 would be:
+.Pp
+.D1 :0 local BINDIR/X :0
+.Pp
+The only recognized display type is:
+.Bl -column local -offset indent
+.It Ic local Ta local display: Nm xenodm No will run the server
+.El
+.Pp
+The display name must be something that can be passed in the
+.Fl display
+option to an X program.
+This string is used to generate the display-specific resource names,
+so be careful to match the names (e.g., use
+.Dq :0 local BINDIR/X :0
+instead of
+.Dq localhost:0 local BINDIR/X :0
 if your other resources are specified as
-``DisplayManager._0.session'').  The display class portion is also used in the
-display-specific resources, as the class of the resource.  This is
+.Dq DisplayManager._0.session ) .
+The display class portion is also used in the display-specific resources,
+as the class of the resource.
+This is
 useful if you have a large collection of similar displays (such as a corral of
 X terminals) and would like to set resources for groups of them.
-.PP
-When \fIxenodm\fP starts a session, it sets up authorization data for the
-server.  For local servers, \fIxenodm\fP passes
-``\fB\-auth\fP \fIfilename\fP'' on the server's command line to point
-it at its authorization data.
-.SH RESOURCES FILE
-The \fIXresources\fP file is
-loaded onto the display as a resource database using
-.I xrdb.
-As the authentication
-widget reads this database before starting up, it usually contains
-parameters for that widget:
-.nf
-.ta .5i 1i
-
-	xlogin*login.translations: #override\\
-		Ctrl<Key>R: abort-display()\\n\\
-		<Key>F1: set-session-argument(failsafe) finish-field()\\n\\
-		<Key>Return: set-session-argument() finish-field()
-	xlogin*borderWidth: 3
-	xlogin*greeting: CLIENTHOST
-\&	#ifdef COLOR
-	xlogin*greetColor: CadetBlue
-	xlogin*failColor: red
-\&	#endif
-
-.fi
-.PP
-Please note the translations entry; it specifies
-a few new translations for the widget which allow users to escape from the
-default session (and avoid troubles that may occur in it).  Note that if
-\&#override is not specified, the default translations are removed and replaced
-by the new value, not a very useful result as some of the default translations
-are quite useful (such as ``<Key>: insert-char ()'' which responds to normal
-typing).
-.PP
+.Pp
+When
+.Nm
+starts a session, it sets up authorization data for the server.
+For local servers,
+.Nm
+passes
+.Dq Fl auth Ar filename
+on the server's command line to point it at its authorization data.
+.Sh RESOURCES FILE
+The
+.Pa Xresources
+file is loaded onto the display as a resource database using
+.Xr xrdb 1 .
+As the authentication widget reads this database before starting up,
+it usually contains parameters for that widget:
+.Bd -literal -offset Ds
+xlogin*login.translations: #override\e
+	Ctrl<Key>R: abort-display()\en\e
+	<Key>F1: set-session-argument(failsafe) finish-field()\en\e
+	<Key>Return: set-session-argument() finish-field()
+xlogin*borderWidth: 3
+xlogin*greeting: CLIENTHOST
+#ifdef COLOR
+xlogin*greetColor: CadetBlue
+xlogin*failColor: red
+#endif
+.Ed
+.Pp
+Please note the translations entry;
+it specifies a few new translations for the widget which allow users to escape
+from the default session (and avoid troubles that may occur in it).
+Note that if #override is not specified,
+the default translations are removed and replaced by the new value,
+not a very useful result as some of the default translations are quite useful
+(such as
+.Dq <Key>: insert-char ()
+which responds to normal typing).
+.Pp
 This file may also contain resources for the setup program.
-.SH "SETUP PROGRAM"
-The \fIXsetup\fP file is run after
-the server is reset, but before the Login window is offered.
+.Sh SETUP PROGRAM
+The
+.Pa Xsetup
+file is run after the server is reset, but before the Login window is offered.
 The file is typically a shell script.
 It is run as root, so should be careful about security.
 This is the place to change the root background or bring up other
 windows that should appear on the screen along with the Login widget.
-.PP
-In addition to any specified by \fBDisplayManager.exportList\fP,
+.Pp
+In addition to any specified by
+.Ic DisplayManager.exportList ,
 the following environment variables are passed:
-.nf
-.ta .5i 2i
-
-	DISPLAY	the associated display name
-	PATH	the value of \fBDisplayManager.\fP\fIDISPLAY\fP\fB.systemPath\fP
-	SHELL	the value of \fBDisplayManager.\fP\fIDISPLAY\fP\fB.systemShell\fP
-	XAUTHORITY	may be set to an authority file
-.fi
-.PP
-Note that since \fIxenodm\fP grabs the keyboard, any other windows will not be
-able to receive keyboard input.  They will be able to interact with
-the mouse, however; beware of potential security holes here.
-If \fBDisplayManager.\fP\fIDISPLAY\fP\fB.grabServer\fP is set,
-\fIXsetup\fP will not be able to connect
-to the display at all.
-Resources for this program
-can be put into the file named by
-\fBDisplayManager.\fP\fIDISPLAY\fP\fB.resources\fP.
-.PP
-Here is a sample \fIXsetup\fP script:
-.nf
-
-\&	#!/bin/sh
-\&	# Xsetup_0 \- setup script for one workstation
-	xcmsdb < XENODMDIR/monitors/alex.0
-	xconsole\0\-geometry\0480x130\-0\-0\0\-notify\0\-verbose\0\-exitOnFail &
-
-.fi
-.SH "AUTHENTICATION WIDGET"
+.Pp
+.Bl -tag -offset Ds -width XAUTHORITY -compact
+.It Ev DISPLAY
+the associated display name
+.It Ev PATH
+the value of
+.Ic DisplayManager. Ns Ar DISPLAY Ns Ic .systemPath
+.It Ev SHELL
+the value of
+.Ic DisplayManager. Ns Ar DISPLAY Ns Ic .systemShell
+.It Ev XAUTHORITY
+may be set to an authority file
+.El
+.Pp
+Note that since
+.Nm
+grabs the keyboard,
+any other windows will not be able to receive keyboard input.
+They will be able to interact with the mouse, however;
+beware of potential security holes here.
+If
+.Ic DisplayManager. Ns Ar DISPLAY Ns Ic .grabServer
+is set,
+.Pa Xsetup
+will not be able to connect to the display at all.
+Resources for this program can be put into the file named by
+.Ic DisplayManager. Ns Ar DISPLAY Ns Ic .resources .
+.Pp
+Here is a sample
+.Pa Xsetup
+script:
+.Bd -literal -offset Ds
+#!/bin/sh
+# Xsetup_0 - setup script for one workstation
+xcmsdb < XENODMDIR/monitors/alex.0
+xconsole -geometry 480x130-0-0 -notify -verbose -exitOnFail &
+.Ed
+.Sh AUTHENTICATION WIDGET
 The authentication widget prompts the user for the username, password, and/or
-other required authentication data from the keyboard.  Nearly every imaginable
-parameter can be controlled with a resource.  Resources for this widget
-should be put into the file named by
-\fBDisplayManager.\fP\fIDISPLAY\fP\fB.resources\fP.  All of these have reasonable
-default values, so it is not necessary to specify any of them.
-.PP
+other required authentication data from the keyboard.
+Nearly every imaginable parameter can be controlled with a resource.
+Resources for this widget should be put into the file named by
+.Ic DisplayManager. Ns Ar DISPLAY Ns Ic .resources .
+All of these have reasonable default values,
+so it is not necessary to specify any of them.
+.Pp
 The resource file is loaded with
-.IR xrdb (__appmansuffix__)
+.Xr xrdb 1
 so it may use the substitutions defined by that program such as CLIENTHOST
 for the client hostname in the login message, or C pre-processor #ifdef
 statements to produce different displays depending on color depth or other
 variables.
-.PP
-.I Xenodm
+.Pp
+.Nm
 is compiled with support for the
-.IR Xft (__libmansuffix__)
-library for font rendering.  Font faces are
-specified using the resources with names ending in ``face'' in the
-fontconfig face format described in the
-.I Font Names
+.Xr Xft 3
+library for font rendering.
+Font faces are specified using the resources with names ending in
+.Dq face
+in the fontconfig face format described in the
+.Dq Font Names
 section of
-.IR fonts.conf (__filemansuffix__).
-.IP "\fBxlogin.Login.width, xlogin.Login.height, xlogin.Login.x, xlogin.Login.y\fP"
-The geometry of the Login widget is normally computed automatically.  If you
+.Xr fonts.conf 5 .
+.Bl -tag -width Ds
+.It Ic xlogin.Login.width , xlogin.Login.height , xlogin.Login.x , \
+xlogin.Login.y
+The geometry of the Login widget is normally computed automatically.
+If you
 wish to position it elsewhere, specify each of these resources.
-.IP "\fBxlogin.Login.foreground\fP"
+.It Ic xlogin.Login.foreground
 The color used to display the input typed by the user.
-.IP "\fBxlogin.Login.face\fP"
+.It Ic xlogin.Login.face
 The face used to display the input typed by the user.
-The default is ``Serif-18''.
-.IP "\fBxlogin.Login.greeting\fP"
+The default is
+.Dq Serif-18 .
+.It Ic xlogin.Login.greeting
 A string which identifies this window.
-The default is ``X Window System.''
-.IP "\fBxlogin.Login.unsecureGreeting\fP"
-When X authorization is requested in the configuration file for this
-display and none is in use, this greeting replaces the standard
-greeting.  The default is ``This is an unsecure session''
-.IP "\fBxlogin.Login.greetFace\fP"
+The default is
+.Dq X Window System .
+.It Ic xlogin.Login.unsecureGreeting
+When X authorization is requested in the configuration file for this display
+and none is in use, this greeting replaces the standard greeting.
+The default is
+.Dq This is an unsecure session .
+.It Ic xlogin.Login.greetFace
 The face used to display the greeting.
-The default is ``Serif-24:italic''.
-.IP "\fBxlogin.Login.greetColor\fP"
+The default is
+.Dq Serif-24:italic .
+.It Ic xlogin.Login.greetColor
 The color used to display the greeting.
-.IP "\fBxlogin.Login.namePrompt\fP"
+.It Ic xlogin.Login.namePrompt
 The string displayed to prompt for a user name.
-.I Xrdb
-strips trailing white space from resource values, so to add spaces at
-the end of the prompt (usually a nice thing), add spaces escaped with
-backslashes.  The default is ``Login:  ''
-.IP "\fBxlogin.Login.passwdPrompt\fP"
+.Xr xrdb 1
+strips trailing white space from resource values, so to add spaces at the end
+of the prompt (usually a nice thing), add spaces escaped with backslashes.
+The default is
+.Dq "Login:  " .
+.It Ic xlogin.Login.passwdPrompt
 The string displayed to prompt for a password, when not using an authentication
 system such as PAM that provides its own prompts.
-The default is ``Password:  ''
-.IP "\fBxlogin.Login.promptFace\fP"
+The default is
+.Dq "Password:  " .
+.It Ic xlogin.Login.promptFace
 The face used to display prompts.
-The default is ``Serif-18:bold''.
-.IP "\fBxlogin.Login.promptColor\fP"
+The default is
+.Dq Serif-18:bold .
+.It Ic xlogin.Login.promptColor
 The color used to display prompts.
-.IP "\fBxlogin.Login.changePasswdMessage\fP"
-A message which is displayed when the users password has expired.
-The default is ``Password Change Required''
-.IP "\fBxlogin.Login.fail\fP"
+.It Ic xlogin.Login.changePasswdMessage
+A message which is displayed when the user's password has expired.
+The default is
+.Dq Password Change Required .
+.It Ic xlogin.Login.fail
 A message which is displayed when the authentication fails, when not using an
 authentication system such as PAM that provides its own prompts.
-The default is ``Login incorrect''
-.IP "\fBxlogin.Login.failFace\fP"
+The default is
+.Dq Login incorrect .
+.It Ic xlogin.Login.failFace
 The face used to display the failure message.
-The default is ``Serif-18:bold''.
-.IP "\fBxlogin.Login.failColor\fP"
+The default is
+.Dq Serif-18:bold .
+.It Ic xlogin.Login.failColor
 The color used to display the failure message.
-.IP "\fBxlogin.Login.failTimeout\fP"
+.It Ic xlogin.Login.failTimeout
 The number of seconds that the failure message is displayed.
 The default is 10.
-.IP "\fBxlogin.Login.logoFileName\fP"
-Name of an XPM format pixmap to display in the greeter window, if built with
-XPM support.   The default is no pixmap.
-.IP "\fBxlogin.Login.logoPadding\fP"
+.It Ic xlogin.Login.logoFileName
+Name of an XPM format pixmap to display in the greeter window,
+if built with XPM support.
+The default is no pixmap.
+.It Ic xlogin.Login.logoPadding
 Number of pixels of space between the logo pixmap and other elements of the
 greeter window, if the pixmap is displayed.
 The default is 5.
-.IP "\fBxlogin.Login.useShape\fP"
-If set to ``true'', when built with XPM support, attempt to use the
-X Non-Rectangular Window Shape Extension to set the window shape.
-The default is ``true''.
-.IP "\fBxlogin.Login.hiColor\fP, \fBxlogin.Login.shdColor\fP"
+.It Ic xlogin.Login.useShape
+If set to
+.Cm true ,
+when built with XPM support, attempt to use
+the X Non-Rectangular Window Shape Extension to set the window shape.
+The default is
+.Cm true .
+.It Ic xlogin.Login.hiColor , xlogin.Login.shdColor
 Raised appearance bezels may be drawn around
-the greeter frame and text input boxes by setting these resources.  hiColor
-is the highlight color, used on the top and left sides of the frame, and the
-bottom and right sides of text input areas.   shdColor is the shadow color,
-used on the bottom and right sides of the frame, and the top and left sides
-of text input areas.
+the greeter frame and text input boxes by setting these resources.
+.Ic hiColor
+is the highlight color, used on the top and left sides of the frame,
+and the bottom and right sides of text input areas.
+.Ic shdColor
+is the shadow color, used on the bottom and right sides of the frame,
+and the top and left sides of text input areas.
 The default for both is the foreground color, providing a flat appearance.
-.IP "\fBxlogin.Login.frameWidth\fP"
-frameWidth is the width in pixels of the area
-around the greeter frame drawn in hiColor and shdColor.
-.IP "\fBxlogin.Login.innerFramesWidth\fP"
-innerFramesWidth is the width in pixels of the
-area around text input areas drawn in hiColor and shdColor.
-.IP "\fBxlogin.Login.sepWidth\fP"
-sepWidth is the width in pixels of the
-bezeled line between the greeting and input areas
-drawn in hiColor and shdColor.
-.IP "\fBxlogin.Login.allowRootLogin\fP"
-If set to ``false'', don't allow root (and any other user with uid = 0) to
-log in directly.
-The default is ``true''.
+.It Ic xlogin.Login.frameWidth
+.Ic frameWidth
+is the width in pixels of the area around the greeter frame drawn in
+.Ic hiColor
+and
+.Ic shdColor .
+.It Ic xlogin.Login.innerFramesWidth
+.Ic innerFramesWidth
+is the width in pixels of the area around text input areas drawn in
+.Ic hiColor
+and
+.Ic shdColor .
+.It Ic xlogin.Login.sepWidth
+.Ic sepWidth
+is the width in pixels of the bezeled line between the greeting and input areas
+drawn in
+.Ic hiColor
+and
+.Ic shdColor .
+.It Ic xlogin.Login.allowRootLogin
+If set to
+.Cm false ,
+don't allow root (and any other user with uid = 0) to log in directly.
+The default is
+.Cm true .
 This setting is only checked by some of the authentication backends at this
 time.
-.IP "\fBxlogin.Login.allowNullPasswd\fP"
-If set to ``true'', allow an otherwise failing password match to succeed
+.It Ic xlogin.Login.allowNullPasswd
+If set to
+.Cm true ,
+allow an otherwise failing password match to succeed
 if the account does not require a password at all.
-The default is ``false'', so only users that have passwords assigned can
-log in.
-.IP "\fBxlogin.Login.echoPasswd\fP"
-If set to ``true'', a placeholder character (echoPasswdChar) will be shown
-for fields normally set to not echo, such as password input.
-The default is ``false''.
-.IP "\fBxlogin.Login.echoPasswdChar\fP"
-Character to display if echoPasswd is true.  The default is ``*''.
+The default is
+.Cm false ,
+so only users that have passwords assigned can log in.
+.It Ic xlogin.Login.echoPasswd
+If set to
+.Cm true ,
+a placeholder character
+.Pq Ic echoPasswdChar
+will be shown for fields normally set to not echo, such as password input.
+The default is
+.Cm false .
+.It Ic xlogin.Login.echoPasswdChar
+Character to display if
+.Ic echoPasswd
+is true.
+The default is
+.Ql * .
 If set to an empty value, the cursor will advance for each character input,
 but no text will be drawn.
-.IP "\fBxlogin.Login.translations\fP"
-This specifies the translations used for the login widget.  Refer to the X
-Toolkit documentation for a complete discussion on translations.  The default
-translation table is:
-.nf
-.ta .5i 2i
-
-	Ctrl<Key>H:	delete-previous-character() \\n\\
-	Ctrl<Key>D:	delete-character() \\n\\
-	Ctrl<Key>B:	move-backward-character() \\n\\
-	Ctrl<Key>F:	move-forward-character() \\n\\
-	Ctrl<Key>A:	move-to-begining() \\n\\
-	Ctrl<Key>E:	move-to-end() \\n\\
-	Ctrl<Key>K:	erase-to-end-of-line() \\n\\
-	Ctrl<Key>U:	erase-line() \\n\\
-	Ctrl<Key>X:	erase-line() \\n\\
-	Ctrl<Key>C:	restart-session() \\n\\
-	Ctrl<Key>\\\\:	abort-session() \\n\\
-	<Key>BackSpace:	delete-previous-character() \\n\\
-	<Key>Delete:	delete-previous-character() \\n\\
-	<Key>Return:	finish-field() \\n\\
-	<Key>:	insert-char() \\
-
-.fi
-.PP
+.It Ic xlogin.Login.translations
+This specifies the translations used for the login widget.
+Refer to the X Toolkit documentation for a complete discussion on translations.
+The default translation table is:
+.Bd -literal -offset Ds
+Ctrl<Key>H:     delete-previous-character() \en\e
+Ctrl<Key>D:     delete-character() \en\e
+Ctrl<Key>B:     move-backward-character() \en\e
+Ctrl<Key>F:     move-forward-character() \en\e
+Ctrl<Key>A:     move-to-begining() \en\e
+Ctrl<Key>E:     move-to-end() \en\e
+Ctrl<Key>K:     erase-to-end-of-line() \en\e
+Ctrl<Key>U:     erase-line() \en\e
+Ctrl<Key>X:     erase-line() \en\e
+Ctrl<Key>C:     restart-session() \en\e
+Ctrl<Key>\e\e:    abort-session() \en\e
+<Key>BackSpace: delete-previous-character() \en\e
+<Key>Delete:    delete-previous-character() \en\e
+<Key>Return:    finish-field() \en\e
+<Key>:          insert-char() \e
+.Ed
+.Pp
 The actions which are supported by the widget are:
-.IP "delete-previous-character"
+.Bl -tag -width Ds
+.It Ic delete-previous-character
 Erases the character before the cursor.
-.IP "delete-character"
+.It Ic delete-character
 Erases the character after the cursor.
-.IP "move-backward-character"
+.It Ic move-backward-character
 Moves the cursor backward.
-.IP "move-forward-character"
+.It Ic move-forward-character
 Moves the cursor forward.
-.IP "move-to-begining"
+.It Ic move-to-begining
 (Apologies about the spelling error.)
 Moves the cursor to the beginning of the editable text.
-.IP "move-to-end"
+.It Ic move-to-end
 Moves the cursor to the end of the editable text.
-.IP "erase-to-end-of-line"
+.It Ic erase-to-end-of-line
 Erases all text after the cursor.
-.IP "erase-line"
+.It Ic erase-line
 Erases the entire text.
-.IP "finish-field"
-If the cursor is in the name field, proceeds to the password field; if the
-cursor is in the password field, checks the current name/password pair.  If
-the name/password pair is valid, \fIxenodm\fP
-starts the session.  Otherwise the failure message is displayed and
-the user is prompted again.
-.IP "abort-session"
+.It Ic finish-field
+If the cursor is in the name field, proceeds to the password field;
+if the cursor is in the password field, checks the current name/password pair.
+If the name/password pair is valid,
+.Nm
+starts the session.
+Otherwise the failure message is displayed and the user is prompted again.
+.It Ic abort-session
 Terminates and restarts the server.
-.IP "abort-display"
-Terminates the server, disabling it.  This action
-is not accessible in the default configuration.
-There are various reasons to stop \fIxenodm\fP on a system console, such as
-when shutting the system down, when using \fIxdmshell\fP,
+.It Ic abort-display
+Terminates the server, disabling it.
+This action is not accessible in the default configuration.
+There are various reasons to stop
+.Nm
+on a system console, such as when shutting the system down, when using
+.Xr xdmshell 1 ,
 to start another type of server, or to generally access the console.
-Sending \fIxenodm\fP a SIGHUP will restart the display.  See the section
-\fBControlling XENODM\fP.
-.IP "restart-session"
-Resets the X server and starts a new session.  This can be used when
+Sending
+.Nm
+a
+.Dv SIGHUP
+will restart the display.
+See the section
+.Sx CONTROLLING XENODM .
+.It Ic restart-session
+Resets the X server and starts a new session.
+This can be used when
 the resources have been changed and you want to test them or when
 the screen has been overwritten with system messages.
-.IP "insert-char"
+.It Ic insert-char
 Inserts the character typed.
-.IP "set-session-argument"
+.It Ic set-session-argument
 Specifies a single word argument which is passed to the session at startup.
-See the section \fBSession Program\fP.
-.IP "allow-all-access"
-Disables access control in the server.  This can be used when
-the .Xauthority file cannot be created by
-.I xenodm.
+See the section
+.Sx SESSION PROGRAM .
+.It Ic allow-all-access
+Disables access control in the server.
+This can be used when the
+.Pa .Xauthority
+file cannot be created by
+.Nm .
 Be very careful using this;
 it might be better to disconnect the machine from the network
 before doing this.
-.PP
-On some systems (OpenBSD) the user's shell must be listed in
-.I /etc/shells
-to allow login through xenodm. The normal password and account expiration
-dates are enforced too.
-.SH "STARTUP PROGRAM"
-.PP
-The \fIXstartup\fP program is run as
-root when the user logs in.
+.El
+.El
+.Pp
+On some systems
+.Pq Ox
+the user's shell must be listed in
+.Pa /etc/shells
+to allow login through xenodm.
+The normal password and account expiration dates are enforced too.
+.Sh STARTUP PROGRAM
+The
+.Pa Xstartup
+program is run as root when the user logs in.
 It is typically a shell script.
-Since it is run as root, \fIXstartup\fP should be
-very careful about security.  This is the place to put commands which add
-entries to \fIutmp\fP or \fIwtmp\fP files,
-(the \fIsessreg\fP program may be useful here),
-mount users' home directories from file servers,
-or abort the session if logins are not
-allowed.
-.PP
-In addition to any specified by \fBDisplayManager.exportList\fP,
+Since it is run as root,
+.Pa Xstartup
+should be very careful about security.
+This is the place to put commands which add entries to
+.Xr utmp 5
+or
+.Xr wtmp 5
+files (the
+.Xr sessreg 1
+program may be useful here), mount users' home directories from file servers,
+or abort the session if logins are not allowed.
+.Pp
+In addition to any specified by
+.Ic DisplayManager.exportList ,
 the following environment variables are passed:
-.nf
-.ta .5i 2i
-
-	DISPLAY	the associated display name
-	HOME	the initial working directory of the user
-	LOGNAME	the user name
-	USER	the user name
-	PATH	the value of \fBDisplayManager.\fP\fIDISPLAY\fP\fB.systemPath\fP
-	SHELL	the value of \fBDisplayManager.\fP\fIDISPLAY\fP\fB.systemShell\fP
-	XAUTHORITY	may be set to an authority file
-	WINDOWPATH	may be set to the "window path" leading to the X server
-
-.fi
-.PP
+.Pp
+.Bl -tag -width WINDOWPATH -compact -offset Ds
+.It Ev DISPLAY
+the associated display name
+.It Ev HOME
+the initial working directory of the user
+.It Ev LOGNAME
+the user name
+.It Ev USER
+the user name
+.It Ev PATH
+the value of
+.Ic DisplayManager. Ns Ar DISPLAY Ns Ic .systemPath
+.It Ev SHELL
+the value of
+.Ic DisplayManager. Ns Ar DISPLAY Ns Ic .systemShell
+.It Ev XAUTHORITY
+may be set to an authority file
+.It Ev WINDOWPATH
+may be set to the window path leading to the X server
+.El
+.Pp
 No arguments are passed to the script.
-.I Xenodm
-waits until this script exits before starting the user session.  If the
-exit value of this script is non-zero,
-.I xenodm
-discontinues the session and starts another authentication
-cycle.
-.PP
-The sample \fIXstartup\fP file shown here prevents login while the
-file \fI/etc/nologin\fP
+.Nm
+waits until this script exits before starting the user session.
+If the exit value of this script is non-zero,
+.Nm
+discontinues the session and starts another authentication cycle.
+.Pp
+The sample
+.Pa Xstartup
+file shown here prevents login while the file
+.Pa /etc/nologin
 exists.
-Thus this is not a complete example, but
-simply a demonstration of the available functionality.
-.PP
-Here is a sample \fIXstartup\fP script:
-.nf
-.ta .5i 1i
-
-\&	#!/bin/sh
-\&	#
-\&	# Xstartup
-\&	#
-\&	# This program is run as root after the user is verified
-\&	#
-	if [ \-f /etc/nologin ]; then
-		xmessage\0\-file /etc/nologin\0\-timeout 30\0\-center
-		exit 1
-	fi
-	sessreg\0\-a\0\-l $DISPLAY\0\-x XENODMDIR/Xservers $LOGNAME
-	XENODMDIR/GiveConsole
-	exit 0
-.fi
-.SH "SESSION PROGRAM"
-.PP
-The \fIXsession\fP program is the command which is run as the user's session.
-It is run with
-the permissions of the authorized user.
-.PP
-In addition to any specified by \fBDisplayManager.exportList\fP,
+Thus this is not a complete example,
+but simply a demonstration of the available functionality.
+.Pp
+Here is a sample
+.Pa Xstartup
+script:
+.Bd -literal -offset Ds
+#!/bin/sh
+#
+# Xstartup
+#
+# This program is run as root after the user is verified
+#
+if [ -f /etc/nologin ]; then
+	xmessage -file /etc/nologin -timeout 30 -center
+	exit 1
+fi
+sessreg -a -l $DISPLAY -x XENODMDIR/Xservers $LOGNAME
+XENODMDIR/GiveConsole
+exit 0
+.Ed
+.Sh SESSION PROGRAM
+The
+.Pa Xsession
+program is the command which is run as the user's session.
+It is run with the permissions of the authorized user.
+.Pp
+In addition to any specified by
+.Ic DisplayManager.exportList ,
 the following environment variables are passed:
-.nf
-.ta .5i 2i
-
-	DISPLAY	the associated display name
-	HOME	the initial working directory of the user
-	LOGNAME	the user name
-	USER	the user name
-	PATH	the value of \fBDisplayManager.\fP\fIDISPLAY\fP\fB.userPath\fP
-	SHELL	the user's default shell (from \fIgetpwnam\fP)
-	XAUTHORITY	may be set to a non-standard authority file
-	KRB5CCNAME	may be set to a Kerberos credentials cache name
-	WINDOWPATH	may be set to the "window path" leading to the X server
-
-.fi
-.PP
-At most installations, \fIXsession\fP should look in $HOME for
-a file \fI\.xsession,\fP
+.Pp
+.Bl -tag -compact -width WINDOWPATH -offset Ds
+.It Ev DISPLAY
+the associated display name
+.It Ev HOME
+the initial working directory of the user
+.It Ev LOGNAME
+the user name
+.It Ev USER
+the user name
+.It Ev PATH
+the value of
+.Ic DisplayManager. Ns Ar DISPLAY Ns Ic .userPath
+.It Ev SHELL
+the user's default shell (from
+.Xr getpwnam 3 )
+.It Ev XAUTHORITY
+may be set to a non-standard authority file
+.It Ev KRB5CCNAME
+may be set to a Kerberos credentials cache name
+.It Ev WINDOWPATH
+may be set to the window path leading to the X server
+.El
+.Pp
+At most installations,
+.Pa Xsession
+should look in
+.Pa $HOME
+for a file
+.Pa .xsession ,
 which contains commands that each user would like to use as a session.
-\fIXsession\fP should also
-implement a system default session if no user-specified session exists.
-.PP
+.Pa Xsession
+should also implement a system default session
+if no user-specified session exists.
+.Pp
 An argument may be passed to this program from the authentication widget
-using the `set-session-argument' action.  This can be used to select
-different styles of session.  One good use of this feature is to allow
-the user to escape from the ordinary session when it fails.  This
-allows users to repair their own \fI.xsession\fP if it fails,
-without requiring administrative intervention.
-The example following
-demonstrates this feature.
-.PP
-This example recognizes
-the special
-``failsafe'' mode, specified in the translations
-in the \fIXresources\fP file, to provide an escape
-from the ordinary session.  It also requires that the .xsession file
-be executable so we don't have to guess what shell it wants to use.
-.nf
-.ta .5i 1i 1.5i
+using the
+.Ic set-session-argument
+action.
+This can be used to select different styles of session.
+One good use of this feature is to allow
+the user to escape from the ordinary session when it fails.
+This allows users to repair their own
+.Pa .xsession
+if it fails, without requiring administrative intervention.
+The example following demonstrates this feature.
+.Pp
+This example recognizes the special failsafe mode,
+specified in the translations in the
+.Pa Xresources
+file, to provide an escape from the ordinary session.
+It also requires that the
+.Pa .xsession
+file be executable so we don't have to guess what shell it wants to use.
+.Bd -literal -offset Ds
+#!/bin/sh
+#
+# Xsession
+#
+# This is the program that is run as the client
+# for the display manager.
 
-\&	#!/bin/sh
-\&	#
-\&	# Xsession
-\&	#
-\&	# This is the program that is run as the client
-\&	# for the display manager.
-
-	case $# in
-	1)
-		case $1 in
-		failsafe)
-			exec xterm \-geometry 80x24\-0\-0
-			;;
-		esac
+case $# in
+1)
+	case $1 in
+	failsafe)
+		exec xterm -geometry 80x24-0-0
+		;;
 	esac
+esac
 
-	startup=$HOME/.xsession
-	resources=$HOME/.Xresources
+startup=$HOME/.xsession
+resources=$HOME/.Xresources
 
-	if [ \-f "$startup" ]; then
-		exec "$startup"
-	else
-		if [ \-f "$resources" ]; then
-			xrdb \-load "$resources"
-		fi
-		twm &
-		xman \-geometry +10\-10 &
-		exec xterm \-geometry 80x24+10+10 \-ls
+if [ -f "$startup" ]; then
+	exec "$startup"
+else
+	if [ -f "$resources" ]; then
+		xrdb -load "$resources"
 	fi
-
-.fi
-.PP
-The user's \fI.xsession\fP file might look something like this
-example.  Don't forget that the file must have execute permission.
-.nf
-\&	#! /bin/csh
-\&	# no \-f in the previous line so .cshrc gets run to set $PATH
 	twm &
-	xrdb \-merge "$HOME/.Xresources"
-	emacs \-geometry +0+50 &
-	xbiff \-geometry \-430+5 &
-	xterm \-geometry \-0+50 -ls
-.fi
-.SH "RESET PROGRAM"
-.PP
-Symmetrical with \fIXstartup\fP,
-the \fIXreset\fP script is run after the user session has
-terminated.  Run as root, it should contain commands that undo
-the effects of commands in \fIXstartup,\fP updating entries
-in \fIutmp\fP or \fIwtmp\fP files,
-or unmounting directories from file servers.  The environment
-variables that were passed to \fIXstartup\fP are also
-passed to \fIXreset\fP.
-.PP
-A sample \fIXreset\fP script:
-.nf
-.ta .5i 1i
-\&	#!/bin/sh
-\&	#
-\&	# Xreset
-\&	#
-\&	# This program is run as root after the session ends
-\&	#
-	sessreg\0\-d\0\-l $DISPLAY\0\-x XENODMDIR/Xservers $LOGNAME
-	XENODMDIR/TakeConsole
-	exit 0
-.fi
-.SH "CONTROLLING THE SERVER"
-.I Xenodm
-controls local servers using POSIX signals.  SIGHUP is expected to reset the
-server, closing all client connections and performing other cleanup
-duties.  SIGTERM is expected to terminate the server.
-If these signals do not perform the expected actions,
-the resources \fBDisplayManager.\fP\fIDISPLAY\fP\fB.resetSignal\fP and
-\fBDisplayManager.\fP\fIDISPLAY\fP\fB.termSignal\fP can specify alternate signals.
-.SH "CONTROLLING XENODM"
-.PP
-.I Xenodm
-responds to two signals: SIGHUP and SIGTERM.  When sent a SIGHUP,
-.I xenodm
-rereads the configuration file, the access control file, and the servers
-file.  For the servers file, it notices if entries have been added or
-removed.  If a new entry has been added,
-.I xenodm
-starts a session on the associated display.  Entries which have been removed
-are disabled immediately, meaning that any session in progress will be
-terminated without notice and no new session will be started.
-.PP
-When sent a SIGTERM,
-.I xenodm
-terminates all sessions in progress and exits.  This can be used when
-shutting down the system.
-.PP
-.I Xenodm
+	xman -geometry +10-10 &
+	exec xterm -geometry 80x24+10+10 -ls
+fi
+.Ed
+.Pp
+The user's
+.Pa .xsession
+file might look something like this example.
+Don't forget that the file must have execute permission.
+.Bd -literal -offset Ds
+#! /bin/csh
+# no -f in the previous line so .cshrc gets run to set $PATH
+twm &
+xrdb -merge "$HOME/.Xresources"
+emacs -geometry +0+50 &
+xbiff -geometry -430+5 &
+xterm -geometry -0+50 -ls
+.Ed
+.Sh RESET PROGRAM
+Symmetrical with
+.Pa Xstartup ,
+the
+.Pa Xreset
+script is run after the user session has terminated.
+Run as root, it should contain commands that undo the effects of commands in
+.Pa Xstartup ,
+updating entries in
+.Xr utmp 5
+or
+.Xr wtmp 5
+files, or unmounting directories from file servers.
+The environment variables that were passed to
+.Pa Xstartup
+are also passed to
+.Pa Xreset .
+.Pp
+A sample
+.Pa Xreset
+script:
+.Bd -literal -offset Ds
+#!/bin/sh
+#
+# Xreset
+#
+# This program is run as root after the session ends
+#
+sessreg -d -l $DISPLAY -x XENODMDIR/Xservers $LOGNAME
+XENODMDIR/TakeConsole
+exit 0
+.Ed
+.Sh CONTROLLING THE SERVER
+.Nm
+controls local servers using POSIX signals.
+.Dv SIGHUP
+is expected to reset the server,
+closing all client connections and performing other cleanup duties.
+.Dv SIGTERM
+is expected to terminate the server.
+If these signals do not perform the expected actions, the resources
+.Ic DisplayManager. Ns Ar DISPLAY Ns Ic .resetSignal
+and
+.Ic DisplayManager. Ns Ar DISPLAY Ns Ic .termSignal
+can specify alternate signals.
+.Sh CONTROLLING XENODM
+.Nm
+responds to two signals:
+.Dv SIGHUP
+and
+.Dv SIGTERM .
+When sent a
+.Dv SIGHUP ,
+.Nm
+rereads the configuration file, the access control file, and the servers file.
+For the servers file, it notices if entries have been added or removed.
+If a new entry has been added,
+.Nm
+starts a session on the associated display.
+Entries which have been removed are disabled immediately,
+meaning that any session in progress will be terminated without notice
+and no new session will be started.
+.Pp
+When sent a
+.Dv SIGTERM ,
+.Nm
+terminates all sessions in progress and exits.
+This can be used when shutting down the system.
+.Pp
+.Nm
 attempts to mark its various sub-processes for
-.IR ps (__appmansuffix__)
-by editing the
-command line argument list in place.  Because
-.I xenodm
-can't allocate additional
-space for this task, it is useful to start
-.I xenodm
-with a reasonably long
-command line (using the full path name should be enough).
-Each process which is
-servicing a display is marked \fB\-\fP\fIdisplay.\fP
-.SH "ADDITIONAL LOCAL DISPLAYS"
-.PP
+.Xr ps 1
+by editing the command line argument list in place.
+Because
+.Nm
+can't allocate additional space for this task, it is useful to start
+.Nm
+with a reasonably long command line
+(using the full path name should be enough).
+Each process which is servicing a display is marked
+.Fl Ns Ar display .
+.Sh ADDITIONAL LOCAL DISPLAYS
 To add an additional local display, add a line for it to the
-\fIXservers\fP file.
-(See the section \fBLocal Server Specification\fP.)
-.PP
-Examine the display-specific resources in \fIxenodm-config\fP
-(e.g., \fBDisplayManager._0.authorize\fP)
+.Pa Xservers
+file.
+(See the section
+.Sx LOCAL SERVER SPECIFICATION . )
+.Pp
+Examine the display-specific resources in
+.Pa xenodm-config
+(e.g.,
+.Ic DisplayManager._0.authorize )
 and consider which of them should be copied for the new display.
-The default \fIxenodm-config\fP has all the appropriate lines for
-displays \fB:0\fP and \fB:1\fP.
-.SH "OTHER POSSIBILITIES"
-.PP
-You can use \fIxenodm\fP
-to run a single session at a time, using the 4.3 \fIinit\fP
-options or other suitable daemon by specifying the server on the command
-line:
-.nf
-.ta .5i
-
-	xenodm \-server \(lq:0 local BINDIR/X :0\(rq
-
-.fi
-.PP
-.SH LIMITATIONS
+The default
+.Pa xenodm-config
+has all the appropriate lines for displays :0 and :1.
+.Sh OTHER POSSIBILITIES
+You can use
+.Nm
+to run a single session at a time, using the 4.3
+.Xr init 8
+options or other suitable daemon by specifying the server on the command line:
+.Pp
+.D1 xenodm -server \(dq:0 local BINDIR/X :0\(dq
+.Sh LIMITATIONS
 One thing that
-.I xenodm
-isn't very good at doing is coexisting with other window systems.  To use
-multiple window systems on the same hardware, you'll probably be more
+.Nm
+isn't very good at doing is coexisting with other window systems.
+To use multiple window systems on the same hardware, you'll probably be more
 interested in
-.I xinit.
-.SH FILES
-.TP 20
-.I XENODMDIR/xenodm-config
+.Xr xinit 1 .
+.Sh FILES
+.Bl -tag -width Ds -compact
+.It Pa XENODMDIR/xenodm-config
 the default configuration file
-.TP 20
-.I $HOME/.Xauthority
-user authorization file where \fIxenodm\fP stores keys for clients to read
-.TP 20
-.I BINDIR/xrdb
+.It Pa $HOME/.Xauthority
+user authorization file where
+.Nm
+stores keys for clients to read
+.It Pa BINDIR/xrdb
 the default resource database loader
-.TP 20
-.I BINDIR/X
+.It Pa BINDIR/X
 the default server
-.TP 20
-.I BINDIR/xterm
+.It Pa BINDIR/xterm
 the default session program and failsafe client
-.TP 20
-.I XENODMXAUTHDIR/A<display>\-<suffix>
+.It Pa XENODMXAUTHDIR/A Ns Ar display Ns - Ns Ar suffix
 the default place for authorization files
-.TP 20
-.I /tmp/K5C<display>
+.It Pa /tmp/K5C Ns Ar display
 Kerberos credentials cache
-.SH "SEE ALSO"
-.IR X (__miscmansuffix__),
-.IR xinit (__appmansuffix__),
-.IR xauth (__appmansuffix__),
-.IR xrdb (__appmansuffix__),
-.IR Xsecurity (__miscmansuffix__),
-.IR sessreg (__appmansuffix__),
-.IR Xserver (__appmansuffix__),
-.IR fonts.conf (__filemansuffix__).
-.br
-.I "X Display Manager Control Protocol"
-.br
-.RI "IETF RFC 4291: " "IP Version 6 Addressing Architecture" .
-.SH AUTHOR
+.El
+.Sh SEE ALSO
+.Xr sessreg 1 ,
+.Xr xauth 1 ,
+.Xr xinit 1 ,
+.Xr xrdb 1 ,
+.Xr Xserver 1 ,
+.Xr fonts.conf 5 ,
+.Xr X 7 ,
+.Xr Xsecurity 7
+.Rs
+.%T X Display Manager Control Protocol
+.Re
+.Rs
+.%A R. Hinden
+.%A S. Deering
+.%D February 2006
+.%R RFC 4291
+.%T IP Version 6 Addressing Architecture
+.Re
+.Sh AUTHOR
 Keith Packard, MIT X Consortium
