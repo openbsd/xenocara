@@ -1115,8 +1115,6 @@ the user's default shell (from
 .Xr getpwnam 3 )
 .It Ev XAUTHORITY
 may be set to a non-standard authority file
-.It Ev KRB5CCNAME
-may be set to a Kerberos credentials cache name
 .It Ev WINDOWPATH
 may be set to the window path leading to the X server
 .El
@@ -1323,8 +1321,6 @@ the default server
 the default session program and failsafe client
 .It Pa XENODMXAUTHDIR/A Ns Ar display Ns - Ns Ar suffix
 the default place for authorization files
-.It Pa /tmp/K5C Ns Ar display
-Kerberos credentials cache
 .El
 .Sh SEE ALSO
 .Xr sessreg 1 ,
