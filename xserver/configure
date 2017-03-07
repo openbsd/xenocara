@@ -1075,6 +1075,8 @@ I386_VIDEO_FALSE
 I386_VIDEO_TRUE
 HPPA_VIDEO_FALSE
 HPPA_VIDEO_TRUE
+ARM64_VIDEO_FALSE
+ARM64_VIDEO_TRUE
 ARM_VIDEO_FALSE
 ARM_VIDEO_TRUE
 ALPHA_VIDEO_FALSE
@@ -22508,6 +22510,10 @@ DEFAULT_INT10="x86emu"
 
 
 case $host_cpu in
+  aarch64*)
+	ARM64_VIDEO=yes
+	GLX_ARCH_DEFINES="-D__GLX_ALIGN64"
+	;;
   alpha*)
 	ALPHA_VIDEO=yes
 	case $host_os in
@@ -22610,6 +22616,14 @@ fi
 else
   ARM_VIDEO_TRUE='#'
   ARM_VIDEO_FALSE=
+fi
+
+ if test "x$ARM64_VIDEO" = xyes; then
+  ARM64_VIDEO_TRUE=
+  ARM64_VIDEO_FALSE='#'
+else
+  ARM64_VIDEO_TRUE='#'
+  ARM64_VIDEO_FALSE=
 fi
 
  if test "x$HPPA_VIDEO" = xyes; then
@@ -31803,6 +31817,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${ARM_VIDEO_TRUE}" && test -z "${ARM_VIDEO_FALSE}"; then
   as_fn_error $? "conditional \"ARM_VIDEO\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${ARM64_VIDEO_TRUE}" && test -z "${ARM64_VIDEO_FALSE}"; then
+  as_fn_error $? "conditional \"ARM64_VIDEO\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${HPPA_VIDEO_TRUE}" && test -z "${HPPA_VIDEO_FALSE}"; then

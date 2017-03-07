@@ -35,6 +35,11 @@ ARCH_SOURCES = arm_video.c \
 	$(srcdir)/../shared/ioperm_noop.c
 endif
 
+if ARM64_VIDEO
+ARCH_SOURCES = arm64_video.c \
+	$(srcdir)/../shared/ioperm_noop.c
+endif
+
 if HPPA_VIDEO
 ARCH_SOURCES = hppa_video.c\
 	$(srcdir)/../shared/ioperm_noop.c

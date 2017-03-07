@@ -317,6 +317,10 @@ DEFAULT_INT10="x86emu"
 dnl Override defaults as needed for specific platforms:
 
 case $host_cpu in
+  aarch64*)
+	ARM64_VIDEO=yes
+	GLX_ARCH_DEFINES="-D__GLX_ALIGN64"
+	;;
   alpha*)
 	ALPHA_VIDEO=yes
 	case $host_os in
@@ -394,6 +398,7 @@ AC_SUBST(GLX_ARCH_DEFINES)
 dnl BSD *_video.c selection
 AM_CONDITIONAL(ALPHA_VIDEO, [test "x$ALPHA_VIDEO" = xyes])
 AM_CONDITIONAL(ARM_VIDEO, [test "x$ARM_VIDEO" = xyes])
+AM_CONDITIONAL(ARM64_VIDEO, [test "x$ARM64_VIDEO" = xyes])
 AM_CONDITIONAL(HPPA_VIDEO, [test "x$HPPA_VIDEO" = xyes])
 AM_CONDITIONAL(I386_VIDEO, [test "x$I386_VIDEO" = xyes])
 AM_CONDITIONAL(LUNA88K_VIDEO, [test "x$LUNA88K_VIDEO" = xyes])
