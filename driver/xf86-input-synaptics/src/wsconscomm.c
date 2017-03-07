@@ -252,6 +252,9 @@ WSConsReadHwState(InputInfoPtr pInfo,
             if (reset) {
                 /* Ensure that pointer motion stops. */
                 priv->count_packet_finger = 0;
+                /* Don't use stale coordinates for filtering. */
+                priv->hyst_center_x = hw->x;
+                priv->hyst_center_y = hw->y;
                 if (priv->vert_scroll_twofinger_on
                     || priv->horiz_scroll_twofinger_on) {
                     WSConsAdjustScrollCoords(priv, hw);
