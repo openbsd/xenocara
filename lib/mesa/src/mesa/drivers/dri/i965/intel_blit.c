@@ -333,11 +333,11 @@ static bool
 can_fast_copy_blit(struct brw_context *brw,
 		   drm_intel_bo *src_buffer,
                    int16_t src_x, int16_t src_y,
-                   uintptr_t src_offset, uint32_t src_pitch,
+                   uintptr_t src_offset, int32_t src_pitch,
                    uint32_t src_tiling, uint32_t src_tr_mode,
 		   drm_intel_bo *dst_buffer,
                    int16_t dst_x, int16_t dst_y,
-                   uintptr_t dst_offset, uint32_t dst_pitch,
+                   uintptr_t dst_offset, int32_t dst_pitch,
                    uint32_t dst_tiling, uint32_t dst_tr_mode,
                    int16_t w, int16_t h, uint32_t cpp,
                    GLenum logic_op)
@@ -373,10 +373,8 @@ can_fast_copy_blit(struct brw_context *brw,
    if (!_mesa_is_pow_two(cpp) || cpp > 16)
       return false;
 
-   /* For Fast Copy Blits the pitch cannot be a negative number. So, bit 15
-    * of the destination pitch must be zero.
-    */
-   if ((src_pitch >> 15 & 1) != 0 || (dst_pitch >> 15 & 1) != 0)
+   /* For Fast Copy Blits the pitch cannot be a negative number. */
+   if (src_pitch < 0 || dst_pitch < 0)
       return false;
 
    /* For Linear surfaces, the pitch has to be an OWord (16byte) multiple. */

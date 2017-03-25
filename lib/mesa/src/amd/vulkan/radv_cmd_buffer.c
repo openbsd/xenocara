@@ -345,7 +345,8 @@ radv_emit_graphics_raster_state(struct radv_cmd_buffer *cmd_buffer,
 			       raster->spi_interp_control);
 
 	radeon_set_context_reg_seq(cmd_buffer->cs, R_028A00_PA_SU_POINT_SIZE, 2);
-	radeon_emit(cmd_buffer->cs, 0);
+	unsigned tmp = (unsigned)(1.0 * 8.0);
+	radeon_emit(cmd_buffer->cs, S_028A00_HEIGHT(tmp) | S_028A00_WIDTH(tmp));
 	radeon_emit(cmd_buffer->cs, S_028A04_MIN_SIZE(radv_pack_float_12p4(0)) |
 		    S_028A04_MAX_SIZE(radv_pack_float_12p4(8192/2))); /* R_028A04_PA_SU_POINT_MINMAX */
 
@@ -1393,7 +1394,7 @@ void radv_CmdBindDescriptorSets(
 		radv_bind_descriptor_set(cmd_buffer, set, idx);
 
 		for(unsigned j = 0; j < set->layout->dynamic_offset_count; ++j, ++dyn_idx) {
-			unsigned idx = j + layout->set[i].dynamic_offset_start;
+			unsigned idx = j + layout->set[i + firstSet].dynamic_offset_start;
 			uint32_t *dst = cmd_buffer->dynamic_buffers + idx * 4;
 			assert(dyn_idx < dynamicOffsetCount);
 
@@ -1652,6 +1653,9 @@ void radv_CmdExecuteCommands(
 {
 	RADV_FROM_HANDLE(radv_cmd_buffer, primary, commandBuffer);
 
+	/* Emit pending flushes on primary prior to executing secondary */
+	si_emit_cache_flush(primary);
+
 	for (uint32_t i = 0; i < commandBufferCount; i++) {
 		RADV_FROM_HANDLE(radv_cmd_buffer, secondary, pCmdBuffers[i]);
 
@@ -1661,6 +1665,7 @@ void radv_CmdExecuteCommands(
 	/* if we execute secondary we need to re-emit out pipelines */
 	if (commandBufferCount) {
 		primary->state.emitted_pipeline = NULL;
+		primary->state.emitted_compute_pipeline = NULL;
 		primary->state.dirty |= RADV_CMD_DIRTY_PIPELINE;
 		primary->state.dirty |= RADV_CMD_DIRTY_DYNAMIC_ALL;
 	}
@@ -2293,6 +2298,7 @@ void radv_CmdPipelineBarrier(
 			break;
 		case VK_ACCESS_COLOR_ATTACHMENT_READ_BIT:
 		case VK_ACCESS_TRANSFER_READ_BIT:
+		case VK_ACCESS_TRANSFER_WRITE_BIT:
 		case VK_ACCESS_INPUT_ATTACHMENT_READ_BIT:
 			flush_bits |= RADV_CMD_FLUSH_AND_INV_FRAMEBUFFER | RADV_CMD_FLAG_INV_GLOBAL_L2;
 		default:

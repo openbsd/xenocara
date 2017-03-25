@@ -325,6 +325,9 @@ void anv_DestroyInstance(
 {
    ANV_FROM_HANDLE(anv_instance, instance, _instance);
 
+   if (!instance)
+      return;
+
    if (instance->physicalDeviceCount > 0) {
       /* We support at most one physical device. */
       assert(instance->physicalDeviceCount == 1);
@@ -503,9 +506,9 @@ void anv_GetPhysicalDeviceProperties(
       .maxPerStageResources                     = 128,
       .maxDescriptorSetSamplers                 = 256,
       .maxDescriptorSetUniformBuffers           = 256,
-      .maxDescriptorSetUniformBuffersDynamic    = 256,
+      .maxDescriptorSetUniformBuffersDynamic    = MAX_DYNAMIC_BUFFERS / 2,
       .maxDescriptorSetStorageBuffers           = 256,
-      .maxDescriptorSetStorageBuffersDynamic    = 256,
+      .maxDescriptorSetStorageBuffersDynamic    = MAX_DYNAMIC_BUFFERS / 2,
       .maxDescriptorSetSampledImages            = 256,
       .maxDescriptorSetStorageImages            = 256,
       .maxDescriptorSetInputAttachments         = 256,
@@ -978,6 +981,9 @@ void anv_DestroyDevice(
 {
    ANV_FROM_HANDLE(anv_device, device, _device);
 
+   if (!device)
+      return;
+
    anv_device_finish_blorp(device);
 
    anv_queue_finish(&device->queue);
@@ -1412,11 +1418,12 @@ VkResult anv_InvalidateMappedMemoryRanges(
 }
 
 void anv_GetBufferMemoryRequirements(
-    VkDevice                                    device,
+    VkDevice                                    _device,
     VkBuffer                                    _buffer,
     VkMemoryRequirements*                       pMemoryRequirements)
 {
    ANV_FROM_HANDLE(anv_buffer, buffer, _buffer);
+   ANV_FROM_HANDLE(anv_device, device, _device);
 
    /* The Vulkan spec (git aaed022) says:
     *
@@ -1425,20 +1432,21 @@ void anv_GetBufferMemoryRequirements(
     *    only if the memory type `i` in the VkPhysicalDeviceMemoryProperties
     *    structure for the physical device is supported.
     *
-    * We support exactly one memory type.
+    * We support exactly one memory type on LLC, two on non-LLC.
     */
-   pMemoryRequirements->memoryTypeBits = 1;
+   pMemoryRequirements->memoryTypeBits = device->info.has_llc ? 1 : 3;
 
    pMemoryRequirements->size = buffer->size;
    pMemoryRequirements->alignment = 16;
 }
 
 void anv_GetImageMemoryRequirements(
-    VkDevice                                    device,
+    VkDevice                                    _device,
     VkImage                                     _image,
     VkMemoryRequirements*                       pMemoryRequirements)
 {
    ANV_FROM_HANDLE(anv_image, image, _image);
+   ANV_FROM_HANDLE(anv_device, device, _device);
 
    /* The Vulkan spec (git aaed022) says:
     *
@@ -1447,9 +1455,9 @@ void anv_GetImageMemoryRequirements(
     *    only if the memory type `i` in the VkPhysicalDeviceMemoryProperties
     *    structure for the physical device is supported.
     *
-    * We support exactly one memory type.
+    * We support exactly one memory type on LLC, two on non-LLC.
     */
-   pMemoryRequirements->memoryTypeBits = 1;
+   pMemoryRequirements->memoryTypeBits = device->info.has_llc ? 1 : 3;
 
    pMemoryRequirements->size = image->size;
    pMemoryRequirements->alignment = image->alignment;

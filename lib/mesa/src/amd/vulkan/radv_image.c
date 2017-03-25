@@ -510,6 +510,7 @@ radv_image_alloc_fmask(struct radv_device *device,
 
 	image->fmask.offset = align64(image->size, image->fmask.alignment);
 	image->size = image->fmask.offset + image->fmask.size;
+	image->alignment = MAX2(image->alignment, image->fmask.alignment);
 }
 
 static void
@@ -575,6 +576,7 @@ radv_image_alloc_cmask(struct radv_device *device,
 	/* + 8 for storing the clear values */
 	image->clear_value_offset = image->cmask.offset + image->cmask.size;
 	image->size = image->cmask.offset + image->cmask.size + 8;
+	image->alignment = MAX2(image->alignment, image->cmask.alignment);
 }
 
 static void
@@ -585,6 +587,7 @@ radv_image_alloc_dcc(struct radv_device *device,
 	/* + 8 for storing the clear values */
 	image->clear_value_offset = image->dcc_offset + image->surface.dcc_size;
 	image->size = image->dcc_offset + image->surface.dcc_size + 8;
+	image->alignment = MAX2(image->alignment, image->surface.dcc_alignment);
 }
 
 static unsigned
@@ -654,6 +657,9 @@ radv_image_alloc_htile(struct radv_device *device,
 		       struct radv_image *image)
 {
 	if (env_var_as_boolean("RADV_HIZ_DISABLE", false))
+		return;
+
+	if (image->array_size > 1 || image->levels > 1)
 		return;
 
 	image->htile.size = radv_image_get_htile_size(device, image);

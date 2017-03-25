@@ -1345,11 +1345,17 @@ static uint32_t si_translate_texformat(struct pipe_screen *screen,
 		case PIPE_FORMAT_Z16_UNORM:
 			return V_008F14_IMG_DATA_FORMAT_16;
 		case PIPE_FORMAT_X24S8_UINT:
+		case PIPE_FORMAT_S8X24_UINT:
+			/*
+			 * Implemented as an 8_8_8_8 data format to fix texture
+			 * gathers in stencil sampling. This affects at least
+			 * GL45-CTS.texture_cube_map_array.sampling on VI.
+			 */
+			return V_008F14_IMG_DATA_FORMAT_8_8_8_8;
 		case PIPE_FORMAT_Z24X8_UNORM:
 		case PIPE_FORMAT_Z24_UNORM_S8_UINT:
 			return V_008F14_IMG_DATA_FORMAT_8_24;
 		case PIPE_FORMAT_X8Z24_UNORM:
-		case PIPE_FORMAT_S8X24_UINT:
 		case PIPE_FORMAT_S8_UINT_Z24_UNORM:
 			return V_008F14_IMG_DATA_FORMAT_24_8;
 		case PIPE_FORMAT_S8_UINT:
@@ -2078,11 +2084,15 @@ static void si_initialize_color_surface(struct si_context *sctx,
 		blend_bypass = 1;
 	}
 
-	if ((ntype == V_028C70_NUMBER_UINT || ntype == V_028C70_NUMBER_SINT) &&
-	    (format == V_028C70_COLOR_8 ||
-	     format == V_028C70_COLOR_8_8 ||
-	     format == V_028C70_COLOR_8_8_8_8))
-		surf->color_is_int8 = true;
+	if (ntype == V_028C70_NUMBER_UINT || ntype == V_028C70_NUMBER_SINT) {
+		if (format == V_028C70_COLOR_8 ||
+		    format == V_028C70_COLOR_8_8 ||
+		    format == V_028C70_COLOR_8_8_8_8)
+			surf->color_is_int8 = true;
+		else if (format == V_028C70_COLOR_10_10_10_2 ||
+			 format == V_028C70_COLOR_2_10_10_10)
+			surf->color_is_int10 = true;
+	}
 
 	color_info = S_028C70_FORMAT(format) |
 		S_028C70_COMP_SWAP(swap) |
@@ -2344,6 +2354,7 @@ static void si_set_framebuffer_state(struct pipe_context *ctx,
 	sctx->framebuffer.spi_shader_col_format_blend = 0;
 	sctx->framebuffer.spi_shader_col_format_blend_alpha = 0;
 	sctx->framebuffer.color_is_int8 = 0;
+	sctx->framebuffer.color_is_int10 = 0;
 
 	sctx->framebuffer.compressed_cb_mask = 0;
 	sctx->framebuffer.nr_samples = util_framebuffer_get_num_samples(state);
@@ -2372,6 +2383,8 @@ static void si_set_framebuffer_state(struct pipe_context *ctx,
 
 		if (surf->color_is_int8)
 			sctx->framebuffer.color_is_int8 |= 1 << i;
+		if (surf->color_is_int10)
+			sctx->framebuffer.color_is_int10 |= 1 << i;
 
 		if (rtex->fmask.size && rtex->cmask.size) {
 			sctx->framebuffer.compressed_cb_mask |= 1 << i;
@@ -2752,13 +2765,21 @@ si_make_texture_descriptor(struct si_screen *screen,
 	if (desc->colorspace == UTIL_FORMAT_COLORSPACE_ZS) {
 		const unsigned char swizzle_xxxx[4] = {0, 0, 0, 0};
 		const unsigned char swizzle_yyyy[4] = {1, 1, 1, 1};
+		const unsigned char swizzle_wwww[4] = {3, 3, 3, 3};
 
 		switch (pipe_format) {
 		case PIPE_FORMAT_S8_UINT_Z24_UNORM:
-		case PIPE_FORMAT_X24S8_UINT:
 		case PIPE_FORMAT_X32_S8X24_UINT:
 		case PIPE_FORMAT_X8Z24_UNORM:
 			util_format_compose_swizzles(swizzle_yyyy, state_swizzle, swizzle);
+			break;
+		case PIPE_FORMAT_X24S8_UINT:
+			/*
+			 * X24S8 is implemented as an 8_8_8_8 data format, to
+			 * fix texture gathers. This affects at least
+			 * GL45-CTS.texture_cube_map_array.sampling on VI.
+			 */
+			util_format_compose_swizzles(swizzle_wwww, state_swizzle, swizzle);
 			break;
 		default:
 			util_format_compose_swizzles(swizzle_xxxx, state_swizzle, swizzle);
