@@ -89,7 +89,7 @@ am_etnaviv_cmd_stream_test_OBJECTS =  \
 	etnaviv_cmd_stream_test.$(OBJEXT)
 etnaviv_cmd_stream_test_OBJECTS =  \
 	$(am_etnaviv_cmd_stream_test_OBJECTS)
-etnaviv_cmd_stream_test_DEPENDENCIES =  \
+etnaviv_cmd_stream_test_DEPENDENCIES = $(top_builddir)/libdrm.la \
 	$(top_builddir)/etnaviv/libdrm_etnaviv.la
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -305,6 +305,7 @@ etnaviv_2d_test_SOURCES = \
 	write_bmp.h
 
 etnaviv_cmd_stream_test_LDADD = \
+	$(top_builddir)/libdrm.la \
 	$(top_builddir)/etnaviv/libdrm_etnaviv.la
 
 etnaviv_cmd_stream_test_SOURCES = \

@@ -272,20 +272,6 @@ struct _drm_intel_bo_gem {
 	bool is_userptr;
 
 	/**
-	 * Boolean of whether this buffer can be placed in the full 48-bit
-	 * address range on gen8+.
-	 *
-	 * By default, buffers will be keep in a 32-bit range, unless this
-	 * flag is explicitly set.
-	 */
-	bool use_48b_address_range;
-
-	/**
-	 * Whether this buffer is softpinned at offset specified by the user
-	 */
-	bool is_softpin;
-
-	/**
 	 * Size in bytes of this buffer and its relocation descendents.
 	 *
 	 * Used to avoid costly tree walking in
@@ -440,7 +426,7 @@ drm_intel_gem_dump_validation_list(drm_intel_bufmgr_gem *bufmgr_gem)
 
 		if (bo_gem->relocs == NULL && bo_gem->softpin_target == NULL) {
 			DBG("%2d: %d %s(%s)\n", i, bo_gem->gem_handle,
-			    bo_gem->is_softpin ? "*" : "",
+			    bo_gem->kflags & EXEC_OBJECT_PINNED ? "*" : "",
 			    bo_gem->name);
 			continue;
 		}
@@ -454,7 +440,7 @@ drm_intel_gem_dump_validation_list(drm_intel_bufmgr_gem *bufmgr_gem)
 			    "%d (%s)@0x%08x %08x + 0x%08x\n",
 			    i,
 			    bo_gem->gem_handle,
-			    bo_gem->is_softpin ? "*" : "",
+			    bo_gem->kflags & EXEC_OBJECT_PINNED ? "*" : "",
 			    bo_gem->name,
 			    upper_32_bits(bo_gem->relocs[j].offset),
 			    lower_32_bits(bo_gem->relocs[j].offset),
@@ -473,7 +459,7 @@ drm_intel_gem_dump_validation_list(drm_intel_bufmgr_gem *bufmgr_gem)
 			    "%d *(%s)@0x%08x %08x\n",
 			    i,
 			    bo_gem->gem_handle,
-			    bo_gem->is_softpin ? "*" : "",
+			    bo_gem->kflags & EXEC_OBJECT_PINNED ? "*" : "",
 			    bo_gem->name,
 			    target_gem->gem_handle,
 			    target_gem->name,
@@ -545,14 +531,11 @@ drm_intel_add_validate_buffer2(drm_intel_bo *bo, int need_fence)
 	drm_intel_bufmgr_gem *bufmgr_gem = (drm_intel_bufmgr_gem *)bo->bufmgr;
 	drm_intel_bo_gem *bo_gem = (drm_intel_bo_gem *)bo;
 	int index;
-	int flags = 0;
+	unsigned long flags;
 
+	flags = 0;
 	if (need_fence)
 		flags |= EXEC_OBJECT_NEEDS_FENCE;
-	if (bo_gem->use_48b_address_range)
-		flags |= EXEC_OBJECT_SUPPORTS_48B_ADDRESS;
-	if (bo_gem->is_softpin)
-		flags |= EXEC_OBJECT_PINNED;
 
 	if (bo_gem->validate_index != -1) {
 		bufmgr_gem->exec2_objects[bo_gem->validate_index].flags |= flags;
@@ -583,7 +566,7 @@ drm_intel_add_validate_buffer2(drm_intel_bo *bo, int need_fence)
 	bufmgr_gem->exec2_objects[index].relocs_ptr = (uintptr_t)bo_gem->relocs;
 	bufmgr_gem->exec2_objects[index].alignment = bo->align;
 	bufmgr_gem->exec2_objects[index].offset = bo->offset64;
-	bufmgr_gem->exec2_objects[index].flags = flags | bo_gem->kflags;
+	bufmgr_gem->exec2_objects[index].flags = bo_gem->kflags | flags;
 	bufmgr_gem->exec2_objects[index].rsvd1 = 0;
 	bufmgr_gem->exec2_objects[index].rsvd2 = 0;
 	bufmgr_gem->exec_bos[index] = bo;
@@ -836,6 +819,10 @@ retry:
 		}
 
 		bo_gem->gem_handle = create.handle;
+		HASH_ADD(handle_hh, bufmgr_gem->handle_table,
+			 gem_handle, sizeof(bo_gem->gem_handle),
+			 bo_gem);
+
 		bo_gem->bo.handle = bo_gem->gem_handle;
 		bo_gem->bo.bufmgr = bufmgr;
 		bo_gem->bo.align = alignment;
@@ -848,10 +835,6 @@ retry:
 							 tiling_mode,
 							 stride))
 			goto err_free;
-
-		HASH_ADD(handle_hh, bufmgr_gem->handle_table,
-			 gem_handle, sizeof(bo_gem->gem_handle),
-			 bo_gem);
 	}
 
 	bo_gem->name = name;
@@ -861,7 +844,6 @@ retry:
 	bo_gem->used_as_reloc_target = false;
 	bo_gem->has_error = false;
 	bo_gem->reusable = true;
-	bo_gem->use_48b_address_range = false;
 
 	drm_intel_bo_gem_set_in_aperture_size(bufmgr_gem, bo_gem, alignment);
 	pthread_mutex_unlock(&bufmgr_gem->lock);
@@ -1020,7 +1002,6 @@ drm_intel_gem_bo_alloc_userptr(drm_intel_bufmgr *bufmgr,
 	bo_gem->used_as_reloc_target = false;
 	bo_gem->has_error = false;
 	bo_gem->reusable = false;
-	bo_gem->use_48b_address_range = false;
 
 	drm_intel_bo_gem_set_in_aperture_size(bufmgr_gem, bo_gem, 0);
 	pthread_mutex_unlock(&bufmgr_gem->lock);
@@ -1168,7 +1149,6 @@ drm_intel_bo_gem_create_from_name(drm_intel_bufmgr *bufmgr,
 	bo_gem->bo.handle = open_arg.handle;
 	bo_gem->global_name = handle;
 	bo_gem->reusable = false;
-	bo_gem->use_48b_address_range = false;
 
 	HASH_ADD(handle_hh, bufmgr_gem->handle_table,
 		 gem_handle, sizeof(bo_gem->gem_handle), bo_gem);
@@ -1414,8 +1394,6 @@ drm_intel_gem_bo_unreference_final(drm_intel_bo *bo, time_t time)
 
 		bo_gem->name = NULL;
 		bo_gem->validate_index = -1;
-
-		bo_gem->kflags = 0;
 
 		DRMLISTADDTAIL(&bo_gem->head, &bucket->head);
 	} else {
@@ -2060,7 +2038,11 @@ static void
 drm_intel_gem_bo_use_48b_address_range(drm_intel_bo *bo, uint32_t enable)
 {
 	drm_intel_bo_gem *bo_gem = (drm_intel_bo_gem *) bo;
-	bo_gem->use_48b_address_range = enable;
+
+	if (enable)
+		bo_gem->kflags |= EXEC_OBJECT_SUPPORTS_48B_ADDRESS;
+	else
+		bo_gem->kflags &= ~EXEC_OBJECT_SUPPORTS_48B_ADDRESS;
 }
 
 static int
@@ -2077,7 +2059,7 @@ drm_intel_gem_bo_add_softpin_target(drm_intel_bo *bo, drm_intel_bo *target_bo)
 		return -ENOMEM;
 	}
 
-	if (!target_bo_gem->is_softpin)
+	if (!(target_bo_gem->kflags & EXEC_OBJECT_PINNED))
 		return -EINVAL;
 	if (target_bo_gem == bo_gem)
 		return -EINVAL;
@@ -2109,7 +2091,7 @@ drm_intel_gem_bo_emit_reloc(drm_intel_bo *bo, uint32_t offset,
 	drm_intel_bufmgr_gem *bufmgr_gem = (drm_intel_bufmgr_gem *)bo->bufmgr;
 	drm_intel_bo_gem *target_bo_gem = (drm_intel_bo_gem *)target_bo;
 
-	if (target_bo_gem->is_softpin)
+	if (target_bo_gem->kflags & EXEC_OBJECT_PINNED)
 		return drm_intel_gem_bo_add_softpin_target(bo, target_bo);
 	else
 		return do_bo_emit_reloc(bo, offset, target_bo, target_offset,
@@ -2297,7 +2279,7 @@ drm_intel_update_buffer_offsets2 (drm_intel_bufmgr_gem *bufmgr_gem)
 			/* If we're seeing softpinned object here it means that the kernel
 			 * has relocated our object... Indicating a programming error
 			 */
-			assert(!bo_gem->is_softpin);
+			assert(!(bo_gem->kflags & EXEC_OBJECT_PINNED));
 			DBG("BO %d (%s) migrated: 0x%08x %08x -> 0x%08x %08x\n",
 			    bo_gem->gem_handle, bo_gem->name,
 			    upper_32_bits(bo->offset64),
@@ -2657,9 +2639,10 @@ drm_intel_gem_bo_set_softpin_offset(drm_intel_bo *bo, uint64_t offset)
 {
 	drm_intel_bo_gem *bo_gem = (drm_intel_bo_gem *) bo;
 
-	bo_gem->is_softpin = true;
 	bo->offset64 = offset;
 	bo->offset = offset;
+	bo_gem->kflags |= EXEC_OBJECT_PINNED;
+
 	return 0;
 }
 
@@ -2723,7 +2706,6 @@ drm_intel_bo_gem_create_from_prime(drm_intel_bufmgr *bufmgr, int prime_fd, int s
 	bo_gem->used_as_reloc_target = false;
 	bo_gem->has_error = false;
 	bo_gem->reusable = false;
-	bo_gem->use_48b_address_range = false;
 
 	memclear(get_tiling);
 	get_tiling.handle = bo_gem->gem_handle;
