@@ -1059,6 +1059,24 @@ int amdgpu_query_gds_info(amdgpu_device_handle dev,
 			struct amdgpu_gds_resource_info *gds_info);
 
 /**
+ * Query information about sensor.
+ *
+ * The return size is query-specific and depends on the "sensor_type"
+ * parameter. No more than "size" bytes is returned.
+ *
+ * \param   dev         - \c [in] Device handle. See #amdgpu_device_initialize()
+ * \param   sensor_type - \c [in] AMDGPU_INFO_SENSOR_*
+ * \param   size        - \c [in] Size of the returned value.
+ * \param   value       - \c [out] Pointer to the return value.
+ *
+ * \return   0 on success\n
+ *          <0 - Negative POSIX Error code
+ *
+*/
+int amdgpu_query_sensor_info(amdgpu_device_handle dev, unsigned sensor_type,
+			     unsigned size, void *value);
+
+/**
  * Read a set of consecutive memory-mapped registers.
  * Not all registers are allowed to be read by userspace.
  *
@@ -1184,6 +1202,34 @@ int amdgpu_bo_va_op(amdgpu_bo_handle bo,
 		    uint64_t addr,
 		    uint64_t flags,
 		    uint32_t ops);
+
+/**
+ *  VA mapping/unmapping for a buffer object or PRT region.
+ *
+ * This is not a simple drop-in extension for amdgpu_bo_va_op; instead, all
+ * parameters are treated "raw", i.e. size is not automatically aligned, and
+ * all flags must be specified explicitly.
+ *
+ * \param  dev		- \c [in] device handle
+ * \param  bo		- \c [in] BO handle (may be NULL)
+ * \param  offset	- \c [in] Start offset to map
+ * \param  size		- \c [in] Size to map
+ * \param  addr		- \c [in] Start virtual address.
+ * \param  flags	- \c [in] Supported flags for mapping/unmapping
+ * \param  ops		- \c [in] AMDGPU_VA_OP_MAP or AMDGPU_VA_OP_UNMAP
+ *
+ * \return   0 on success\n
+ *          <0 - Negative POSIX Error code
+ *
+*/
+
+int amdgpu_bo_va_op_raw(amdgpu_device_handle dev,
+			amdgpu_bo_handle bo,
+			uint64_t offset,
+			uint64_t size,
+			uint64_t addr,
+			uint64_t flags,
+			uint32_t ops);
 
 /**
  *  create semaphore
