@@ -45,7 +45,7 @@
 
 
 #ifndef lint
-static char sccsid[] = "@(#)fvwm.c " VERSION " " __DATE__ " fvwm";
+static char sccsid[] = "@(#)fvwm.c " VERSION " fvwm";
 #endif
 
 int master_pid;			/* process number of 1st fvwm process */
@@ -228,8 +228,7 @@ int main(int argc, char **argv)
     }
     else if (strncasecmp(argv[i], "-version", 8) == 0)
     {
-      fvwm_msg(INFO,"main", "Fvwm Version %s compiled on %s at %s\n",
-              VERSION,__DATE__,__TIME__);
+      fvwm_msg(INFO,"main", "Fvwm Version %s\n", VERSION);
     }
     else
     {
