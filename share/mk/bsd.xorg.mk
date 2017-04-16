@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.59 2017/03/07 21:35:58 naddy Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.60 2017/04/16 09:58:50 robert Exp $ -*- makefile  -*-
 #
 # Copyright © 2006,2012 Matthieu Herrb
 #
@@ -60,6 +60,7 @@ CONFIGURE_ENV=	PKG_CONFIG_LIBDIR="$(PKG_CONFIG_LIBDIR)" \
 		CFLAGS="$(CFLAGS:C/ *$//)" \
 		CXX="$(CXX)" \
 		CXXFLAGS="$(CXXFLAGS:C/ *$//)" \
+		AR_FLAGS="cruD" \
 		MAKE="${MAKE}"
 
 CONFIGURE_ARGS+= --disable-silent-rules
