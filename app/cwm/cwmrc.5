@@ -1,4 +1,4 @@
-.\"	$OpenBSD: cwmrc.5,v 1.66 2017/01/15 21:07:44 okan Exp $
+.\"	$OpenBSD: cwmrc.5,v 1.67 2017/04/24 12:18:04 okan Exp $
 .\"
 .\" Copyright (c) 2004,2005 Marius Aamodt Eriksen <marius@monkey.org>
 .\"
@@ -14,7 +14,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: January 15 2017 $
+.Dd $Mdocdate: April 24 2017 $
 .Dt CWMRC 5
 .Os
 .Sh NAME
@@ -324,11 +324,13 @@ Vertically maximize current window (gap + border honored).
 .It window-hmaximize
 Horizontally maximize current window (gap + border honored).
 .It window-htile
-Current window is placed at the top of the screen and maximized
-horizontally, other windows in its group share remaining screen space.
+Current window is placed at the top of the screen, maximized
+horizontally and resized to half of the vertical screen space. Other
+windows in its group share remaining screen space.
 .It window-vtile
-Current window is placed on the left of the screen and maximized
-vertically, other windows in its group share remaining screen space.
+Current window is placed on the left of the screen, maximized vertically
+and resized to half of the horizontal screen space. Other windows in its
+group share remaining screen space.
 .It window-move
 Move current window.
 .It window-resize
