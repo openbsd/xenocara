@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.235 2017/04/24 12:18:04 okan Exp $
+ * $OpenBSD: client.c,v 1.236 2017/04/24 12:27:32 okan Exp $
  */
 
 #include <sys/types.h>
@@ -645,7 +645,7 @@ match:
 void
 client_cycle(struct screen_ctx *sc, int flags)
 {
-	struct client_ctx	*newcc, *oldcc;
+	struct client_ctx	*newcc, *oldcc, *prevcc;
 	int			 again = 1;
 
 	/* For X apps that ignore events. */
@@ -655,6 +655,7 @@ client_cycle(struct screen_ctx *sc, int flags)
 	if (TAILQ_EMPTY(&sc->clientq))
 		return;
 
+	prevcc = TAILQ_FIRST(&sc->clientq);
 	oldcc = client_current();
 	if (oldcc == NULL)
 		oldcc = (flags & CWM_CYCLE_REVERSE) ?
@@ -686,6 +687,7 @@ client_cycle(struct screen_ctx *sc, int flags)
 	/* reset when cycling mod is released. XXX I hate this hack */
 	sc->cycling = 1;
 	client_ptrsave(oldcc);
+	client_raise(prevcc);
 	client_raise(newcc);
 	if (!client_inbound(newcc, newcc->ptr.x, newcc->ptr.y)) {
 		newcc->ptr.x = newcc->geom.w / 2;
