@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: search.c,v 1.60 2017/04/24 13:35:25 okan Exp $
+ * $OpenBSD: search.c,v 1.61 2017/04/24 15:06:11 okan Exp $
  */
 
 #include <sys/types.h>
@@ -170,7 +170,7 @@ search_match_path(struct menu_q *menuq, struct menu_q *resultq, char *search)
 {
 	TAILQ_INIT(resultq);
 
-	return(search_match_path_type(menuq, resultq, search, PATH_ANY));
+	search_match_path_type(menuq, resultq, search, PATH_ANY);
 }
 
 void
