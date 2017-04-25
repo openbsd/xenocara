@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: menu.c,v 1.101 2016/12/06 21:59:33 okan Exp $
+ * $OpenBSD: menu.c,v 1.102 2017/04/25 12:08:05 okan Exp $
  */
 
 #include <sys/types.h>
@@ -52,7 +52,6 @@ struct menu_ctx {
 	int			 list;
 	int			 listing;
 	int			 changed;
-	int			 noresult;
 	int			 prev;
 	int			 entry;
 	int			 num;
@@ -313,15 +312,10 @@ menu_handle_key(XEvent *e, struct menu_ctx *mc, struct menu_q *menuq,
 		(void)strlcat(mc->searchstr, chr, sizeof(mc->searchstr));
 	}
 
-	mc->noresult = 0;
-	if (mc->changed && mc->searchstr[0] != '\0') {
-		(*mc->match)(menuq, resultq, mc->searchstr);
-		/* If menuq is empty, never show we've failed */
-		mc->noresult = TAILQ_EMPTY(resultq) && !TAILQ_EMPTY(menuq);
-	} else if (mc->changed)
-		TAILQ_INIT(resultq);
-
-	if (!mc->list && mc->listing && !mc->changed) {
+	if (mc->changed) {
+		if (mc->searchstr[0] != '\0')
+			(*mc->match)(menuq, resultq, mc->searchstr);
+	} else if (!mc->list && mc->listing) {
 		TAILQ_INIT(resultq);
 		mc->listing = 0;
 	}
