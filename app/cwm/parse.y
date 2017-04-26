@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.67 2016/12/01 17:17:27 okan Exp $ */
+/*	$OpenBSD: parse.y,v 1.68 2017/04/26 21:10:54 okan Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -116,7 +116,7 @@ main		: FONTNAME STRING		{
 			conf->stickygroups = $2;
 		}
 		| BORDERWIDTH NUMBER {
-			if ($2 < 0 || $2 > UINT_MAX) {
+			if ($2 < 0 || $2 > INT_MAX) {
 				yyerror("invalid borderwidth");
 				YYERROR;
 			}
