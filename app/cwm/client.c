@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.238 2017/04/26 21:10:54 okan Exp $
+ * $OpenBSD: client.c,v 1.239 2017/05/01 12:54:55 okan Exp $
  */
 
 #include <sys/types.h>
@@ -468,6 +468,24 @@ client_config(struct client_ctx *cc)
 	cn.override_redirect = 0;
 
 	XSendEvent(X_Dpy, cc->win, False, StructureNotifyMask, (XEvent *)&cn);
+}
+
+void
+client_ptr_inbound(struct client_ctx *cc, int getpos)
+{
+	if (getpos)
+		xu_ptr_getpos(cc->win, &cc->ptr.x, &cc->ptr.y);
+
+	if (cc->ptr.x < 0)
+		cc->ptr.x = 0;
+	else if (cc->ptr.x > cc->geom.w - 1)
+		cc->ptr.x = cc->geom.w - 1;
+	if (cc->ptr.y < 0)
+		cc->ptr.y = 0;
+	else if (cc->ptr.y > cc->geom.h - 1)
+		cc->ptr.y = cc->geom.h - 1;
+
+	client_ptrwarp(cc);
 }
 
 void
