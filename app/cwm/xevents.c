@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xevents.c,v 1.127 2017/05/09 13:40:18 okan Exp $
+ * $OpenBSD: xevents.c,v 1.128 2017/05/09 18:43:40 okan Exp $
  */
 
 /*
@@ -215,7 +215,6 @@ xev_handle_enternotify(XEvent *ee)
 		client_setactive(cc);
 }
 
-/* We can split this into two event handlers. */
 static void
 xev_handle_buttonpress(XEvent *ee)
 {
