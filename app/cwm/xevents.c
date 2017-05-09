@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xevents.c,v 1.126 2016/10/18 17:03:30 okan Exp $
+ * $OpenBSD: xevents.c,v 1.127 2017/05/09 13:40:18 okan Exp $
  */
 
 /*
@@ -233,22 +233,23 @@ xev_handle_buttonpress(XEvent *ee)
 
 	if (mb == NULL)
 		return;
+	mb->cargs->xev = CWM_XEV_BTN;
 	switch (mb->context) {
 	case CWM_CONTEXT_CC:
 		if (((cc = client_find(e->window)) == NULL) &&
 		    (cc = client_current()) == NULL)
 			return;
-		(*mb->callback)(cc, &mb->argument, CWM_XEV_BTN);
+		(*mb->callback)(cc, mb->cargs);
 		break;
 	case CWM_CONTEXT_SC:
 		if (e->window != e->root)
 			return;
 		if ((sc = screen_find(e->window)) == NULL)
 			return;
-		(*mb->callback)(sc, &mb->argument, CWM_XEV_BTN);
+		(*mb->callback)(sc, mb->cargs);
 		break;
 	case CWM_CONTEXT_NONE:
-		(*mb->callback)(NULL, &mb->argument, CWM_XEV_BTN);
+		(*mb->callback)(NULL, mb->cargs);
 		break;
 	}
 }
@@ -295,20 +296,21 @@ xev_handle_keypress(XEvent *ee)
 
 	if (kb == NULL)
 		return;
+	kb->cargs->xev = CWM_XEV_KEY;
 	switch (kb->context) {
 	case CWM_CONTEXT_CC:
 		if (((cc = client_find(e->window)) == NULL) &&
 		    (cc = client_current()) == NULL)
 			return;
-		(*kb->callback)(cc, &kb->argument, CWM_XEV_KEY);
+		(*kb->callback)(cc, kb->cargs);
 		break;
 	case CWM_CONTEXT_SC:
 		if ((sc = screen_find(e->window)) == NULL)
 			return;
-		(*kb->callback)(sc, &kb->argument, CWM_XEV_KEY);
+		(*kb->callback)(sc, kb->cargs);
 		break;
 	case CWM_CONTEXT_NONE:
-		(*kb->callback)(NULL, &kb->argument, CWM_XEV_KEY);
+		(*kb->callback)(NULL, kb->cargs);
 		break;
 	}
 }
