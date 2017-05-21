@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.8 2017/01/21 11:23:09 stsp Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.9 2017/05/21 13:18:29 visa Exp $
 
 .include <bsd.own.mk>
 
@@ -13,7 +13,8 @@ DRI_DRIVERS=swrast,radeon,r200,i915,i965
 GALLIUM_DRIVERS=swrast,r300,r600
 .endif
 
-.if ${MACHINE} == macppc || ${MACHINE} == sparc64
+.if ${MACHINE} == loongson || ${MACHINE} == macppc || \
+    ${MACHINE} == sparc64
 DRI_DRIVERS=swrast,radeon,r200
 GALLIUM_DRIVERS=swrast,r300,r600
 .endif

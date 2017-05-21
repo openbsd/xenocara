@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.69 2017/02/03 04:29:26 jsg Exp $
+# $OpenBSD: Makefile,v 1.70 2017/05/21 13:18:29 visa Exp $
 
 INPUT_DRV_DEFAULT= \
 	xf86-input-keyboard \
@@ -73,7 +73,7 @@ VIDEO_DRV_i386= \
 VIDEO_DRV_landisk=
 
 VIDEO_DRV_loongson= \
-	xf86-video-wsfb
+	xf86-video-ati xf86-video-wsfb
 
 VIDEO_DRV_luna88k= \
 	xf86-video-wsfb

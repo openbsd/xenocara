@@ -53,6 +53,7 @@ xf86OSInitVidMem(VidMemInfoPtr pVidMem)
 _X_EXPORT void
 xf86PrivilegedInit(void)
 {
+	pci_system_init();
 	xf86OpenConsole();
 }
 #endif
