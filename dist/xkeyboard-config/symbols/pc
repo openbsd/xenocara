@@ -31,6 +31,18 @@ xkb_symbols "pc105" {
     key <RWIN> {	[ Super_R		]	};
     key <MENU> {	[ Menu			]	};
 
+    // "Sun LKeys" section
+    key <STOP>	{ [ Cancel,     Cancel,   F11	]	};
+    key <AGAI>	{ [ Redo,       Redo,     F12	]	};
+    key <PROP>	{ [ SunProps,   SunProps, F13	]	};
+    key <UNDO>	{ [ Undo,       Undo,     F14	]	};
+    key <FRNT>	{ [ SunFront,   SunFront, F15	]	};
+    key <COPY>	{ [ SunCopy,    SunCopy,  F16	]	};
+    key <OPEN>	{ [ SunOpen,    SunOpen,  F17	]	};
+    key <PAST>	{ [ SunPaste,   SunPaste, F18	]	};
+    key <FIND>	{ [ Find,       Find,     F19	]	};
+    key <CUT>	{ [ SunCut,     SunCut,   F20	]	};
+
     // Beginning of modifier mappings.
     modifier_map Shift  { Shift_L, Shift_R };
     modifier_map Lock   { Caps_Lock };
