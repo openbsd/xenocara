@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.31 2016/11/03 14:25:06 matthieu Exp $
+# $OpenBSD: Makefile,v 1.32 2017/06/18 21:09:07 espie Exp $
 .include <bsd.xconf.mk>
 
 SUBDIR=	icons resize
@@ -55,6 +55,7 @@ builtin_icons.h :
 	awk '/^CASE_/{printf "#define %s %d\n", $$1, n++}' < $< >$@
 
 beforedepend: builtin_icons.h VTparse.hin
+BUILDFIRST = builtin_icons.h VTparse.hin
 
 .SUFFIXES: .man .1
 

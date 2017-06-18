@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.4 2015/04/05 16:05:34 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.5 2017/06/18 21:09:07 espie Exp $
 
 FONTCONFIG =	${.CURDIR}/../../dist/fontconfig
 FC_DEFAULT_FONTS = ${X11BASE}/lib/X11/fonts
@@ -6,7 +6,14 @@ FC_FONTPATH = "<dir>/usr/local/share/fonts</dir>"
 CONFIGDIR = conf.d
 FC_CACHEDIR = /var/cache/fontconfig
 
-SUBDIR =	fc-case fc-lang fc-glyphname src \
+# Respect order:
+SUBDIR =	fc-case 
+
+# fc-lang depends on fc-case
+SUBDIR += 	fc-lang fc-glyphname 
+
+# src requires fc-case fc-lang and fc-glyphname
+SUBDIR +=	src \
 		fc-cache fc-cat fc-list fc-match fc-pattern fc-query \
 		fc-scan fc-validate conf.d pc doc
 

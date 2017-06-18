@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.47 2017/01/13 11:19:58 dcoppa Exp $
+#	$OpenBSD: Makefile,v 1.48 2017/06/18 21:09:07 espie Exp $
 
 FREETYPESRC=	${.CURDIR}/src
 
@@ -30,6 +30,7 @@ CLEANFILES+=	freetype-config freetype2.pc
 obj:	_xenocara_obj
 
 beforedepend:	freetype-config freetype2.pc
+BUILDFIRST =	freetype-config freetype2.pc
 
 beforeinstall:
 	cd ${.CURDIR} ; exec ${MAKE} ${MAKE_FLAGS} includes

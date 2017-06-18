@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2013/03/09 14:34:44 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.2 2017/06/18 21:09:07 espie Exp $
 
 FONTCONFIG=	${.CURDIR}/../../../dist/fontconfig
 
@@ -7,6 +7,7 @@ PROG=	fc-lang
 CFLAGS+=	-I../fc-case
 
 afterdepend: fclang.h
+all: fclang.h
 
 fclang.h: ${PROG}
 	./${PROG} -d ${FONTCONFIG}/fc-lang ${ORTH} \

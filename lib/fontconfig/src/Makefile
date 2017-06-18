@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.8 2016/08/09 18:57:45 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.9 2017/06/18 21:09:07 espie Exp $
 
 .include <bsd.xconf.mk>
 
@@ -68,6 +68,7 @@ fcobjshash.h: fcobjshash.gperf
 .endif
 
 beforedepend: fcalias.h fcftalias.h fcobjshash.h lib${LIB}.la
+BUILDFIRST = fcalias.h fcftalias.h fcobjshash.h lib${LIB}.la
 
 lib${LIB}.la: ${.CURDIR}/lib${LIB}.la.in
 	sed -e 's#@libdir@#${LIBDIR}#g' \
