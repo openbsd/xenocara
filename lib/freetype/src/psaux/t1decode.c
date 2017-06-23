@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    PostScript Type 1 decoding routines (body).                          */
 /*                                                                         */
-/*  Copyright 2000-2016 by                                                 */
+/*  Copyright 2000-2017 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -666,9 +666,9 @@
 
 #ifdef FT_DEBUG_LEVEL_TRACE
         if ( large_int )
-          FT_TRACE4(( " %ld", value ));
+          FT_TRACE4(( " %d", value ));
         else
-          FT_TRACE4(( " %ld", value / 65536 ));
+          FT_TRACE4(( " %d", value / 65536 ));
 #endif
 
         *top++       = value;
