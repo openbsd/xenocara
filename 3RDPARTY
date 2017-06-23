@@ -1,7 +1,7 @@
-# $OpenBSD: 3RDPARTY,v 1.290 2017/06/16 15:13:29 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.291 2017/06/23 19:28:03 dcoppa Exp $
 #
 Package: 	Freetype
-Version:	2.7.1
+Version:	2.8.0
 Current Vers:	2.8.0
 Maintainer:	Freetype.org
 Archive Site:	http://download.savannah.gnu.org/releases/freetype/
