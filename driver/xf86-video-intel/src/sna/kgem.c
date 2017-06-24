@@ -6019,6 +6019,7 @@ retry:
 	mmap_arg.handle = bo->handle;
 	mmap_arg.offset = 0;
 	mmap_arg.size = bytes(bo);
+	mmap_arg.flags = 0;
 	if ((err = do_ioctl(kgem->fd, DRM_IOCTL_I915_GEM_MMAP, &mmap_arg))) {
 		assert(err != EINVAL);
 
