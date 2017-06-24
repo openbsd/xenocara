@@ -68,7 +68,7 @@
             including look, style, serifs, etc.  Typographically
             speaking, one has to distinguish between a <em>font
             family</em> and its multiple <em>font faces</em>, which
-            usually differ in style though come from the same
+            usually differ in style though coming from the same
             template.</p>
 
           <p>For example, &lsquo;Palatino Regular&rsquo; and
@@ -80,7 +80,7 @@
             in ambiguous ways to refer to either a given family or
             given face, depending on the context.  For example, most
             users of word-processors use &lsquo;font&rsquo; to
-            describe a font family (e.g. &lsquo;Courier&rsquo;,
+            describe a font family (e.g., &lsquo;Courier&rsquo;,
             &lsquo;Palatino&rsquo;, etc.); however, most of these
             families are implemented through several data files
             depending on the file format: For TrueType, this is
@@ -108,18 +108,18 @@
             rather rare but can be seen in many Asian fonts, which
             contain images for two or more representation forms of a
             given scripts (usually for horizontal and vertical
-            layout.</p>
+            layout).</p>
 
 
           <h3 id="section-2">2. Character images and
           mappings</h3>
 
           <p>The character images are called <em>glyphs</em>.  A
-            single character can have several distinct images,
-            i.e. several glyphs, depending on script, usage or
-            context.  Several characters can also take a single glyph
-            (good examples are Roman ligatures like &lsquo;fi&rsquo;
-            and &lsquo;fl&rsquo; which can be represented by a single
+            single character can have several distinct images, i.e.,
+            several glyphs, depending on script, usage or context.
+            Several characters can also take a single glyph (good
+            examples are Roman ligatures like &lsquo;fi&rsquo; and
+            &lsquo;fl&rsquo; which can be represented by a single
             glyph).  The relationship between characters and glyphs
             can be very complex but won't be discussed in this
             document.  Moreover, some formats use more or less
@@ -142,10 +142,10 @@
                 <em>character maps</em> (also called
                 &lsquo;charmaps&rsquo; or &lsquo;cmaps&rsquo; for
                 short), which are used to convert character codes for
-                a given encoding (e.g. ASCII, Unicode, DBCS, Big5,
+                a given encoding (e.g., ASCII, Unicode, Big5, ShiftJIS,
                 etc.) into glyph indices relative to the font file.  A
                 single font face may contain several charmaps.  For
-                example, many TrueType fonts contain an Apple-specific
+                example, many OpenType fonts contain an Apple-specific
                 charmap as well as a Unicode charmap, which makes them
                 usable on both Mac and Windows platforms.</p>
             </li>
@@ -157,9 +157,10 @@
           <p>Each glyph image is associated with various metrics which
             describe how to place and manage it when rendering text;
             see <a href="glyphs-3.html">section&nbsp;III</a> for more.
-            Metrics relate to glyph placement, cursor advances as well
-            as text layout.  They are extremely important to compute
-            the flow of text when rendering a string of text.</p>
+            Metrics relate to glyph placement, cursor advances, as
+            well as text layout.  They are extremely important to
+            compute the flow of text when rendering a string of
+            text.</p>
 
           <p>Each scalable format also contains some global metrics,
             expressed in notional (i.e. font) units, to describe some
@@ -175,7 +176,7 @@
         <!-- ************************************************** -->
 
         <div class="updated">
-          <p>Last update: 07-Dec-2014</p>
+          <p>Last update: 02-May-2017</p>
         </div>
       </div>
     </div>
@@ -201,10 +202,10 @@
              align="middle">
       </a></p>
 
-      <p><a href="https://flattr.com/thing/421342/lemzwerg-on-Flattr"
+      <p><a href="https://flattr.com/submit/auto?fid=mq2xxp&url=https%3A%2F%2Fwww.freetype.org"
          target="_blank">
         <img class="with-border"
-             src="http://api.flattr.com/button/flattr-badge-large.png"
+             src="https://button.flattr.com/flattr-badge-large.png"
              alt="Flattr this"
              title="Flattr this"
              border="0"

@@ -63,16 +63,15 @@
             of glyph images, called outlines, are used by FreeType as
             well as client applications.</p>
 
-          <h3 id="section-1">1. Pixels, points and device
+          <h3 id="section-1">1. Pixels, points, and device
             resolutions</h3>
 
           <p>Though it is a very common assumption when dealing with
             computer graphics programs, the physical dimensions of a
             given pixel (be it for screens or printers) are not
-            squared.  Often, the output device, be it a screen device
-            or a printer, exhibits varying resolutions in both
-            horizontal and vertical directions, and this must be taken
-            care of when rendering text.</p>
+            squared.  Often, the output device exhibits varying
+            resolutions in both horizontal and vertical directions,
+            and this must be taken care of when rendering text.</p>
 
           <p>It is thus common to define a device's characteristics
             through two numbers expressed in <em>dpi</em> (dots per
@@ -96,7 +95,7 @@
             from the size in points with the following formula:</p>
 
           <center>
-            <tt>pixel_size = point_size * resolution / 72</tt>
+            <code>pixel_size = point_size * resolution / 72</code>
           </center>
 
           <p>The resolution is expressed in <em>dpi</em>.  Since
@@ -108,7 +107,7 @@
               in pixels&rsquo; is not directly related to the real
               dimensions of characters when they are displayed or
               printed.  The relationship between these two concepts is
-              a bit more complex and depend on some design choices
+              a bit more complex and depends on some design choices
               made by the font designer.  This is described in more
               detail in the next sub-section (see the explanations on
               the EM square).</em></p>
@@ -129,8 +128,9 @@
             Note that conic B&eacute;ziers are usually called
             <em>quadratic</em> B&eacute;ziers in the literature.
             Hence, FreeType associates each point of the outline with
-            flag to indicate its type (normal or control point).  And
-            scaling the points will scale the whole outline.</p>
+            flags to indicate its type (normal or control point).  As
+            a consequence, scaling the points will scale the whole
+            outline.</p>
 
           <p>Each glyph's original outline points are located on a
             grid of indivisible units.  The points are usually stored
@@ -164,9 +164,14 @@
                 from grid units to pixels uses the formula:</p>
 
               <p align="center">
-                <tt>pixel_size = point_size * resolution / 72</tt><br>
-                <tt>pixel_coord = grid_coord * pixel_size / EM_size</tt>
+                <code>pixel_size = point_size * resolution / 72</code><br>
+                <code>pixel_coord = grid_coord * pixel_size / EM_size</code>
               </p>
+
+              <p>Another acronym used for the pixel size
+              is <em>ppem</em> (pixel per EM); this value can be
+              fractional also.  Note that fractional ppem values are
+              not supported everywhere.</p>
             </li>
             <li>
               <p>The greater the EM size is, the larger resolution the
@@ -189,14 +194,14 @@
           <p>Grid units are very often called <em>font units</em>
             or <em>EM units</em>.</p>
 
-          <p><em>As said before, <tt>pixel_size</tt> computed in the
-              above formula does not directly relate to the size of
-              characters on the screen.  It simply is the size of the
-              EM square if it was to be displayed.  Each font designer
-              is free to place its glyphs as it pleases him within the
-              square.  This explains why the letters of the following
-              text have not the same height, even though they are
-              displayed at the same point size with distinct
+          <p><em>As said before, <code>pixel_size</code> computed in
+              the above formula does not directly relate to the size
+              of characters on the screen.  It simply is the size of
+              the EM square if it was to be displayed.  Each font
+              designer is free to place its glyphs as it pleases him
+              within the square.  This explains why the letters of the
+              following text have not the same height, even though
+              they are displayed at the same point size with distinct
               fonts:</em></p>
 
           <p align="center">
@@ -216,13 +221,14 @@
           <h3 id="section-3">3. Hinting and Bitmap rendering</h3>
 
           <p>The outline as stored in a font file is called the
-            &lsquo;master&rsquo; outline, as its points coordinates
-            are expressed in font units.  Before it can be converted
-            into a bitmap, it must be scaled to a given size and
+            &lsquo;master&rsquo; outline, as its point coordinates are
+            expressed in font units.  Before it can be converted into
+            a bitmap, it must be scaled to a given size and
             resolution.  This is done with a very simple
-            transformation, but always creates undesirable artifacts,
-            in particular stems of different widths or heights in
-            letters like &lsquo;E&rsquo; or &lsquo;H&rsquo;.</p>
+            transformation, but especially at small sizes undesirable
+            artifacts can appear, in particular stems of different
+            width or height in letters like &lsquo;E&rsquo; or
+            &lsquo;H&rsquo; can occur.</p>
 
           <p>As a consequence, proper glyph rendering needs the scaled
             points to be aligned along the target device pixel grid,
@@ -231,9 +237,10 @@
             ensure that important widths and heights are respected
             throughout the whole font (for example, it is very often
             desirable that the &lsquo;I&rsquo; and the &lsquo;T&rsquo;
-            have their central vertical line of the same pixel width),
-            as well as to manage features like stems and overshoots,
-            which can cause problems at small pixel sizes.</p>
+            glyphs have their central vertical line of the same pixel
+            width), as well as to manage features like stems and
+            overshoots, which can cause problems at small pixel
+            sizes.</p>
 
           <p>There are several ways to perform grid-fitting properly;
             most scalable formats associate some control data or
@@ -245,24 +252,25 @@
               <p>explicit grid-fitting</p>
 
               <p>The TrueType format defines a stack-based virtual
-                machine, for which programs can be written with the
-                help of more than 200&nbsp;opcodes (most of them
-                relating to geometrical operations).  Each glyph is
-                thus made of both an outline and a control program to
-                perform the actual grid-fitting in the way defined by
-                the font designer.</p>
+                machine, for which programs (also
+                called <em>bytecode</em>) can be written with the help
+                of more than 200&nbsp;operators, most of them related
+                to geometrical operations.  Each glyph is thus made of
+                both an outline and a control program to perform the
+                actual grid-fitting in the way defined by the font
+                designer.</p>
             </li>
             <li class="emph">
               <p>implicit grid-fitting (also called hinting)</p>
 
-              <p>The Type&nbsp;1 and CFF formats take a much simpler
-                approach: Each glyph is made of an outline as well as
-                several pieces called <em>hints</em> which are used to
-                describe some important features of the glyph, like
-                the presence of stems, some width regularities, and
-                the like.  There aren't a lot of hint types, and it is
-                up to the final renderer to interpret the hints in
-                order to produce a fitted outline.</p>
+              <p>The Type&nbsp;1, CFF, and CFF2 formats take a much
+                simpler approach: Each glyph is made of an outline as
+                well as several pieces called <em>hints</em> which are
+                used to describe some important features of the glyph,
+                like the presence of stems, some width regularities,
+                and the like.  There aren't a lot of hint types, and
+                it is up to the final renderer to interpret the hints
+                in order to produce a fitted outline.</p>
             </li>
             <li class="emph">
               <p>automatic grid-fitting</p>
@@ -376,7 +384,7 @@
         <!-- ************************************************** -->
 
         <div class="updated">
-          <p>Last update: 07-Dec-2014</p>
+          <p>Last update: 02-May-2017</p>
         </div>
       </div>
     </div>
@@ -402,10 +410,10 @@
              align="middle">
       </a></p>
 
-      <p><a href="https://flattr.com/thing/421342/lemzwerg-on-Flattr"
+      <p><a href="https://flattr.com/submit/auto?fid=mq2xxp&url=https%3A%2F%2Fwww.freetype.org"
          target="_blank">
         <img class="with-border"
-             src="http://api.flattr.com/button/flattr-badge-large.png"
+             src="https://button.flattr.com/flattr-badge-large.png"
              alt="Flattr this"
              title="Flattr this"
              border="0"

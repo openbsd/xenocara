@@ -66,26 +66,34 @@
 
           <ol>
             <li class="emph">
-              <p>Locate the FreeType&nbsp;2 <tt>include</tt>
+              <p>Locate the FreeType&nbsp;2 <code>include</code>
                 directory.</p>
 
               <p>You have to add it to your compilation include
                 path.</p>
 
               <p>In Unix-like environments you can run the
-                <tt>freetype-config</tt> script with
-                the <tt>--cflags</tt> option to retrieve the
+                <code>freetype-config</code> script with
+                the <code>--cflags</code> option to retrieve the
                 appropriate compilation flags.  This script can also
                 be used to check the version of the library that is
                 installed on your system, as well as the required
                 librarian and linker flags.</p>
+
+              <p>An alternative solution is <code>pkg-config</code>;
+                say</p>
+
+              <pre>
+pkg-config --cflags freetype2</pre>
+
+              <p>to get the compilation flags.</p>
             </li>
 
             <li class="emph">
-              <p>Include the file named <tt>ft2build.h</tt>.</p>
+              <p>Include the file named <code>ft2build.h</code>.</p>
 
               <p>It contains various macro declarations that are later
-                used to <tt>#include</tt> the appropriate public
+                used to <code>#include</code> the appropriate public
                 FreeType&nbsp;2 header files.</p>
             </li>
 
@@ -93,15 +101,15 @@
               <p>Include the main FreeType&nbsp;2 API header file.</p>
 
               <p>You should do that using the
-                macro <tt>FT_FREETYPE_H</tt>, like in the following
-                example.</p>
+                macro <code>FT_FREETYPE_H</code>, like in the
+                following example.</p>
 
               <pre>
 #include &lt;ft2build.h&gt;
 #include FT_FREETYPE_H</pre>
 
-              <p><tt>FT_FREETYPE_H</tt> is a special macro defined in
-                file <tt>ftheader.h</tt>.  It contains some
+              <p><code>FT_FREETYPE_H</code> is a special macro defined
+                in file <code>ftheader.h</code>.  It contains some
                 installation-specific macros to name other public
                 header files of the FreeType&nbsp;2 API.</p>
 
@@ -112,7 +120,7 @@
             </li>
           </ol>
 
-          <p>The use of macros in <tt>#include</tt> statements is
+          <p>The use of macros in <code>#include</code> statements is
             ANSI-compliant.  It is used for several reasons.</p>
 
           <ul>
@@ -120,10 +128,11 @@
               public header files.</li>
 
             <li>The macro names are not limited to the DOS 8.3 file
-              naming limit; names like <tt>FT_MULTIPLE_MASTERS_H</tt>
-              or <tt>FT_SFNT_NAMES_H</tt> are a lot more readable and
-              explanatory than the real file names
-              <tt>ftmm.h</tt> and <tt>ftsnames.h</tt>.</li>
+              naming limit; names
+              like <code>FT_MULTIPLE_MASTERS_H</code>
+              or <code>FT_SFNT_NAMES_H</code> are a lot more readable
+              and explanatory than the real file names
+              <code>ftmm.h</code> and <code>ftsnames.h</code>.</li>
 
             <li>It allows special installation tricks that will not be
               discussed here.</li>
@@ -133,9 +142,9 @@
           <h3 id="section-2">2. Library Initialization</h3>
 
           <p>To initialize the FreeType library, create a variable of
-            type <a href="../reference/ft2-base_interface.html#FT_Library"><tt>FT_Library</tt></a>
-            named, for example, <tt>library</tt>, and call the
-            function <a href="../reference/ft2-base_interface.html#FT_Init_FreeType"><tt>FT_Init_FreeType</tt></a>.</p>
+            type <a href="../reference/ft2-base_interface.html#FT_Library"><code>FT_Library</code></a>
+            named, for example, <code>library</code>, and call the
+            function <a href="../reference/ft2-base_interface.html#FT_Init_FreeType"><code>FT_Init_FreeType</code></a>.</p>
 
           <pre>
 #include &lt;ft2build.h&gt;
@@ -156,28 +165,32 @@ if ( error )
 
           <ul>
             <li>creating a new instance of the FreeType&nbsp;2 library
-              and setting the handle <tt>library</tt> to it, and</li>
+              and setting the handle <code>library</code> to it,
+              and</li>
 
             <li>loading each module that FreeType knows about in the
-              library.  Among others, your new <tt>library</tt> object
-              is able to handle TrueType, Type&nbsp;1, CID-keyed &amp;
-              OpenType/CFF fonts gracefully.</li>
+              library.  Among others, your new <code>library</code>
+              object is able to handle TrueType, Type&nbsp;1,
+              CID-keyed &amp; OpenType/CFF fonts gracefully.</li>
           </ul>
 
           <p>As you can see, the function returns an error code, like
             most other functions of the FreeType API.  An error code
             of&nbsp;0 (also known
-            as <tt>FT_Err_Ok</tt>) <em>always</em> means that the
+            as <code>FT_Err_Ok</code>) <em>always</em> means that the
             operation was successful; otherwise, the value describes
-            the error, and <tt>library</tt> is set to NULL.</p>
+            the error, and <code>library</code> is set to NULL.</p>
+
+          <p>A list of all FreeType error codes can be found in
+            file <code>fterrdef.h</code>.</p>
 
 
           <h3 id="section-3">3. Loading a Font Face</h3>
 
           <h4>a. From a Font File</h4>
 
-          <p>Create a new <tt>face</tt> object by
-            calling <a href="../reference/ft2-base_interface.html#FT_New_Face"><tt>FT_New_Face</tt></a>.
+          <p>Create a new <code>face</code> object by
+            calling <a href="../reference/ft2-base_interface.html#FT_New_Face"><code>FT_New_Face</code></a>.
             A <em>face</em> describes a given typeface and style.  For
             example, &lsquo;Times New Roman Regular&rsquo; and
             &lsquo;Times New Roman Italic&rsquo; correspond to two
@@ -206,9 +219,9 @@ else if ( error )
   ... be opened or read, or that it is broken...
 }</pre>
 
-          <p>As you can certainly imagine, <tt>FT_New_Face</tt> opens
-            a font file, then tries to extract one face from it.  Its
-            parameters are as follows.</p>
+          <p>As you can certainly imagine, <code>FT_New_Face</code>
+            opens a font file, then tries to extract one face from it.
+            Its parameters are as follows.</p>
 
           <dl>
             <dt>library</dt>
@@ -238,18 +251,18 @@ else if ( error )
             </dd>
           </dl>
 
-          <p>To know how many faces a given font file contains, load
-            its first face (this is, <tt>face_index</tt> should be set
-            to zero), then check the value
-            of <tt>face-&gt;num_faces</tt>, which indicates how many
-            faces are embedded in the font file.</p>
+          <p>To know how many faces a given font file contains, set
+            <code>face_index</code> to&nbsp;<code>-1</code>, then
+            check the value of <code>face-&gt;num_faces</code>, which
+            indicates how many faces are embedded in the font
+            file.</p>
 
           <h4>b. From Memory</h4>
 
           <p>In the case where you have already loaded the font file
             into memory, you can similarly create a new face object
             for it by
-            calling <a href="../reference/ft2-base_interface.html#FT_New_Memory_Face"><tt>FT_New_Memory_Face</tt></a>.</p>
+            calling <a href="../reference/ft2-base_interface.html#FT_New_Memory_Face"><code>FT_New_Memory_Face</code></a>.</p>
 
           <pre>
 FT_Library  library;   <span class="comment">/* handle to library     */</span>
@@ -266,14 +279,15 @@ error = FT_New_Memory_Face( library,
                             &amp;face );
 if ( error ) { ... }</pre>
 
-          <p>As you can see, <tt>FT_New_Memory_Face</tt> takes a
+          <p>As you can see, <code>FT_New_Memory_Face</code> takes a
             pointer to the font file buffer and its size in bytes
             instead of a file pathname.  Other than that, it has
             exactly the same semantics as
-            <tt>FT_New_Face</tt>.</p>
+            <code>FT_New_Face</code>.</p>
 
-          <p>Note that you must not deallocate the memory before calling
-            <a href="../reference/ft2-base_interface.html#FT_Done_Face"><tt>FT_Done_Face</tt></a>.</p>
+          <p>Note that you must not deallocate the font file buffer
+            before calling
+            <a href="../reference/ft2-base_interface.html#FT_Done_Face"><code>FT_Done_Face</code></a>.</p>
 
           <h4>c. From Other Sources (Compressed Files, Network,
             etc.)</h4>
@@ -284,7 +298,7 @@ if ( error ) { ... }</pre>
             implementation of I/O routines.</p>
 
           <p>This is done through
-            the <a href="../reference/ft2-base_interface.html#FT_Open_Face"><tt>FT_Open_Face</tt></a>
+            the <a href="../reference/ft2-base_interface.html#FT_Open_Face"><code>FT_Open_Face</code></a>
             function, which can be used to open a new font face with a
             custom input stream, select a specific driver for opening,
             or even pass extra parameters to the font driver when
@@ -298,10 +312,10 @@ if ( error ) { ... }</pre>
           <p>A <em>face object</em> models all information that
             globally describes the face.  Usually, this data can be
             accessed directly by dereferencing a handle, like
-            in <tt>face&minus;&gt;num_glyphs</tt>.</p>
+            in <code>face&minus;&gt;num_glyphs</code>.</p>
 
           <p>The complete list of available fields is in
-            the <a href="../reference/ft2-base_interface.html#FT_FaceRec"><tt>FT_FaceRec</tt></a>
+            the <a href="../reference/ft2-base_interface.html#FT_FaceRec"><code>FT_FaceRec</code></a>
             structure description.  However, we describe here a few of
             them in more detail.</p>
 
@@ -315,9 +329,9 @@ if ( error ) { ... }</pre>
             <dt>face_flags</dt>
             <dd>A 32-bit integer containing bit flags that describe
               some face properties.  For example, the flag
-              <tt>FT_FACE_FLAG_SCALABLE</tt> indicates that the face's
-              font format is scalable and that glyph images can be
-              rendered for all character pixel sizes.  For more
+              <code>FT_FACE_FLAG_SCALABLE</code> indicates that the
+              face's font format is scalable and that glyph images can
+              be rendered for all character pixel sizes.  For more
               information on face flags, please read
               the <a href="../reference/ft2-base_interface.html#FT_FACE_FLAG_XXX">FreeType&nbsp;2
               API Reference</a>.</dd>
@@ -338,11 +352,11 @@ if ( error ) { ... }</pre>
             <dt>available_sizes</dt>
             <dd>
               <p>A pointer to an array
-                of <a href="../reference/ft2-base_interface.html#FT_Bitmap_Size"><tt>FT_Bitmap_Size</tt></a>
-                elements.  Each <tt>FT_Bitmap_Size</tt> indicates the
-                horizontal and vertical <em>character pixel sizes</em>
-                for each of the strikes that are present in the
-                face.</p>
+                of <a href="../reference/ft2-base_interface.html#FT_Bitmap_Size"><code>FT_Bitmap_Size</code></a>
+                elements.  Each <code>FT_Bitmap_Size</code> indicates
+                the horizontal and vertical <em>character pixel
+                sizes</em> for each of the strikes that are present in
+                the face.</p>
 
               <p class="warning">Note that, generally speaking, these
                 are <em>not</em> the <em>cell size</em> of the bitmap
@@ -358,25 +372,25 @@ if ( error ) { ... }</pre>
             face.  For example, a size object holds the value of
             certain metrics like the ascender or text height,
             expressed in 1/64th of a pixel, for a character size of
-            12&nbsp;points.</p>
+            12&nbsp;points (however, those values are rounded to
+            integers, i.e., multiples of 64).</p>
 
-          <p>When the <tt>FT_New_Face</tt> function is called (or one
-            of its siblings), it <em>automatically</em> creates a new
-            size object for the returned face.  This size object is
-            directly accessible as
-            <tt>face&minus;&gt;size</tt>.</p>
+          <p>When the <code>FT_New_Face</code> function is called (or
+            one of its siblings), it <em>automatically</em> creates a
+            new size object for the returned face.  This size object
+            is directly accessible as
+            <code>face&minus;&gt;size</code>.</p>
 
           <p class="note">NOTE: A single face object can deal with one
             or more size objects at a time; however, this is something
             that few programmers really need to do.  We have thus
-            decided to simplify the API for the most common use (i.e.,
-            one size per face) while keeping this feature available
-            through additional functions.</p>
+            decided to make this feature available through additional
+            functions.</p>
 
           <p>When a new face object is created, all elements are set
             to&nbsp;0 during initialization.  To populate the
             structure with sensible values, you should
-            call <a href="../reference/ft2-base_interface.html#FT_Set_Char_Size"><tt>FT_Set_Char_Size</tt></a>.
+            call <a href="../reference/ft2-base_interface.html#FT_Set_Char_Size"><code>FT_Set_Char_Size</code></a>.
             Here is an example, setting the character size to 16pt for
             a 300&times;300dpi device:</p>
 
@@ -419,11 +433,14 @@ error = FT_Set_Char_Size(
               size object.</li>
           </ul>
 
-          <p>This function computes the character pixel size that
-            corresponds to the character width and height and device
-            resolutions.  However, if you want to specify the pixel
-            sizes yourself, you can call
-            <a href="../reference/ft2-base_interface.html#FT_Set_Pixel_Sizes"><tt>FT_Set_Pixel_Sizes</tt></a>.</p>
+          <p>This function computes the (possibly fractional)
+            character pixel size that corresponds to the character
+            width and height and device resolutions.  A common acronym
+            for the pixel size is <em>ppem</em> (pixel per em).</p>
+
+          <p>If you want to specify the (integer) pixel sizes
+            yourself, you can call
+            <a href="../reference/ft2-base_interface.html#FT_Set_Pixel_Sizes"><code>FT_Set_Pixel_Sizes</code></a>.</p>
 
           <pre>
 error = FT_Set_Pixel_Sizes(
@@ -439,7 +456,14 @@ error = FT_Set_Pixel_Sizes(
           <p>Note that both functions return an error code.  Usually,
             an error occurs with a fixed-size font format (like FNT or
             PCF) when trying to set the pixel size to a value that is
-            not listed in the <tt>face-&gt;fixed_sizes</tt> array.</p>
+            not listed in the <code>face-&gt;fixed_sizes</code>
+            array.</p>
+
+          <p>Be aware that fractional ppem values are not always
+            supported.  For example, the native bytecode engine for
+            hinting TrueType fonts (TTFs) only supports integer ppem
+            values, and FreeType rounds fractional ppem values
+            accordingly.</p>
 
 
           <h3 id="section-6">6. Loading a Glyph Image</h3>
@@ -464,8 +488,8 @@ error = FT_Set_Pixel_Sizes(
             that a given charmap might not map to all the glyphs
             present in the font.</p>
 
-          <p>By default, when a new face object is created, it selects
-            a Unicode charmap.  FreeType tries to emulate a Unicode
+          <p>By default, when a new face object is created, FreeType
+            tries to select a Unicode charmap.  It emulates a Unicode
             charmap if the font doesn't contain such a charmap, based
             on glyph names.  Note that it is possible that the
             emulation misses glyphs if glyph names are non-standard.
@@ -475,19 +499,19 @@ error = FT_Set_Pixel_Sizes(
           <p>Later on we will describe how to look for specific
             charmaps in a face.  For now, we assume that the face
             contains at least a Unicode charmap that was selected
-            during a call to <tt>FT_New_Face</tt>.  To convert a
+            during a call to <code>FT_New_Face</code>.  To convert a
             Unicode character code to a font glyph index, we use
-            <a href="../reference/ft2-base_interface.html#FT_Get_Char_Index"><tt>FT_Get_Char_Index</tt></a>.</p>
+            <a href="../reference/ft2-base_interface.html#FT_Get_Char_Index"><code>FT_Get_Char_Index</code></a>.</p>
 
           <pre>
 glyph_index = FT_Get_Char_Index( face, charcode );</pre>
 
           <p>This code line looks up the glyph index corresponding to
-            the given <tt>charcode</tt> in the charmap that is
+            the given <code>charcode</code> in the charmap that is
             currently selected for the face.  You should use the
             UTF-32 representation form of Unicode; for example, if you
             want to load character U+1F028, use value 0x1F028 as the
-            value for <tt>charcode</tt>.
+            value for <code>charcode</code>.
 
           <p>If no charmap was selected, the function returns
             the charcode.</p>
@@ -518,13 +542,13 @@ glyph_index = FT_Get_Char_Index( face, charcode );</pre>
             is a container that is able to hold one glyph image at a
             time, be it a bitmap, an outline, or something else.  Each
             face object has a single glyph slot object that can be
-            accessed as <tt>face-&gt;glyph</tt>.  Its fields are
+            accessed as <code>face-&gt;glyph</code>.  Its fields are
             explained by
-            the <a href="../reference/ft2-base_interface.html#FT_GlyphSlotRec"><tt>FT_GlyphSlotRec</tt></a>
+            the <a href="../reference/ft2-base_interface.html#FT_GlyphSlotRec"><code>FT_GlyphSlotRec</code></a>
             structure documentation.</p>
 
           <p>Loading a glyph image into the slot is performed by
-            calling <a href="../reference/ft2-base_interface.html#FT_Load_Glyph"><tt>FT_Load_Glyph</tt></a>.</p>
+            calling <a href="../reference/ft2-base_interface.html#FT_Load_Glyph"><code>FT_Load_Glyph</code></a>.</p>
 
           <pre>
 error = FT_Load_Glyph(
@@ -532,9 +556,9 @@ error = FT_Load_Glyph(
           glyph_index,   <span class="comment">/* glyph index           */</span>
           load_flags );  <span class="comment">/* load flags, see below */</span></pre>
 
-          <p>The <tt>load_flags</tt> value is a set of bit flags to
-            indicate some special operations.  The default value
-            <tt>FT_LOAD_DEFAULT</tt> is&nbsp;0.</p>
+          <p>The <code>load_flags</code> value is a set of bit flags
+            to indicate some special operations.  The default value
+            <code>FT_LOAD_DEFAULT</code> is&nbsp;0.</p>
 
           <p>This function tries to load the corresponding glyph image
             from the face.</p>
@@ -545,7 +569,7 @@ error = FT_Load_Glyph(
               bitmaps are always favoured over native image formats,
               because we assume that they are higher-quality versions
               of the same glyph.  This can be changed by using
-              the <tt>FT_LOAD_NO_BITMAP</tt> flag.</li>
+              the <code>FT_LOAD_NO_BITMAP</code> flag.</li>
 
             <li>Otherwise, a native image for the glyph is loaded.  It
               is also scaled to the current pixel size, as well as
@@ -553,60 +577,63 @@ error = FT_Load_Glyph(
               Type&nbsp;1.</li>
           </ul>
 
-          <p>The field <tt>face&minus;&gt;glyph&minus;&gt;format</tt>
+          <p>The
+            field <code>face&minus;&gt;glyph&minus;&gt;format</code>
             describes the format used for storing the glyph image in
-            the slot.  If it is not <tt>FT_GLYPH_FORMAT_BITMAP</tt>,
-            one can immediately convert it to a bitmap
-            through <a href="../reference/ft2-base_interface.html#FT_Render_Glyph"><tt>FT_Render_Glyph</tt></a>.</p>
+            the slot.  If it is
+            not <code>FT_GLYPH_FORMAT_BITMAP</code>, one can
+            immediately convert it to a bitmap
+            through <a href="../reference/ft2-base_interface.html#FT_Render_Glyph"><code>FT_Render_Glyph</code></a>.</p>
 
           <pre>
 error = FT_Render_Glyph( face-&gt;glyph,   <span class="comment">/* glyph slot  */</span>
                          render_mode ); <span class="comment">/* render mode */</span></pre>
 
-          <p>The parameter <tt>render_mode</tt> is a set of bit flags
-            to specify how to render the glyph image.
-            <tt>FT_RENDER_MODE_NORMAL</tt>, the default, renders an
-            anti-aliased coverage bitmap with 256 gray levels (also
+          <p>The parameter <code>render_mode</code> is a set of bit
+            flags to specify how to render the glyph image.
+            <code>FT_RENDER_MODE_NORMAL</code>, the default, renders
+            an anti-aliased coverage bitmap with 256 gray levels (also
             called a <em>pixmap</em>), as this is the default.  You
-            can alternatively use <tt>FT_RENDER_MODE_MONO</tt> if you
-            want to generate a 1-bit monochrome bitmap.  More values
-            are available for
-            the <a href="../reference/ft2-base_interface.html#FT_Render_Mode"><tt>FT_Render_Mode</tt></a>
+            can alternatively use <code>FT_RENDER_MODE_MONO</code> if
+            you want to generate a 1-bit monochrome bitmap.  More
+            values are available for
+            the <a href="../reference/ft2-base_interface.html#FT_Render_Mode"><code>FT_Render_Mode</code></a>
             enumeration value.</p>
 
           <p>Once you have a bitmapped glyph image, you can access it
-            directly through <tt>glyph-&gt;bitmap</tt> (a simple
+            directly through <code>glyph-&gt;bitmap</code> (a simple
             descriptor for bitmaps or pixmaps), and position it
-            through <tt>glyph-&gt;bitmap_left</tt> and
-            <tt>glyph-&gt;bitmap_top</tt>.  For optimal rendering on a
-            screen the bitmap should be used as an alpha channel in
-            linear blending with gamma correction.</p>
+            through <code>glyph-&gt;bitmap_left</code> and
+            <code>glyph-&gt;bitmap_top</code>.  For optimal rendering
+            on a screen the bitmap should be used as an alpha channel
+            in linear blending with gamma correction.</p>
 
-          <p>Note that <tt>bitmap_left</tt> is the horizontal distance
-            from the current pen position to the leftmost border of
-            the glyph bitmap, while <tt>bitmap_top</tt> is the
-            vertical distance from the pen position (on the baseline)
-            to the topmost border of the glyph bitmap.  <em>It is
-            positive to indicate an upwards distance</em>.</p>
+          <p>Note that <code>bitmap_left</code> is the horizontal
+            distance from the current pen position to the leftmost
+            border of the glyph bitmap, while <code>bitmap_top</code>
+            is the vertical distance from the pen position (on the
+            baseline) to the topmost border of the glyph
+            bitmap.  <em>It is positive to indicate an upwards
+            distance</em>.</p>
 
           <h4>c. Using Other Charmaps</h4>
 
           <p>As said before, when a new face object is created, it
             looks for a Unicode charmap and select it.  The currently
             selected charmap can be accessed
-            via <tt>face-&gt;charmap</tt>.  This field is NULL if no
-            charmap is selected, which typically happens when you
-            create a new <tt>FT_Face</tt> object from a font file that
-            doesn't contain a Unicode charmap (which is rather
+            via <code>face-&gt;charmap</code>.  This field is NULL if
+            no charmap is selected, which typically happens when you
+            create a new <code>FT_Face</code> object from a font file
+            that doesn't contain a Unicode charmap (which is rather
             infrequent today).</p>
 
           <p>There are two ways to select a different charmap with
             FreeType.  It's easiest if the encoding you need already
             has a corresponding enumeration defined
-            in <tt>FT_FREETYPE_H</tt>, for
-            example <tt>FT_ENCODING_BIG5</tt>.  In this case, you can
-            call
-            <a href="../reference/ft2-base_interface.html#FT_Select_Charmap"><tt>FT_Select_Charmap</tt></a>.</p>
+            in <code>FT_FREETYPE_H</code>, for
+            example <code>FT_ENCODING_BIG5</code>.  In this case, you
+            can call
+            <a href="../reference/ft2-base_interface.html#FT_Select_Charmap"><code>FT_Select_Charmap</code></a>.</p>
 
           <pre>
 error = FT_Select_Charmap(
@@ -615,28 +642,29 @@ error = FT_Select_Charmap(
 
           <p>Another way is to manually parse the list of charmaps for
             the face; this is accessible through the
-            fields <tt>num_charmaps</tt> and
-            <tt>charmaps</tt> (notice the &lsquo;s&rsquo;) of the face
-            object.  As you could expect, the first is the number of
-            charmaps in the face, while the second is <em>a table of
-            pointers to the charmaps</em> embedded in the face.</p>
+            fields <code>num_charmaps</code> and
+            <code>charmaps</code> (notice the &lsquo;s&rsquo;) of the
+            face object.  As you could expect, the first is the number
+            of charmaps in the face, while the second is <em>a table
+            of pointers to the charmaps</em> embedded in the face.</p>
 
           <p>Each charmap has a few visible fields to describe it more
             precisely.  The most important ones are
-            <tt>charmap-&gt;platform_id</tt>
-            and <tt>charmap-&gt;encoding_id</tt>, defining a pair of
-            values that describe the charmap in a rather generic way:
-            Each value pair corresponds to a given encoding.  For
+            <code>charmap-&gt;platform_id</code>
+            and <code>charmap-&gt;encoding_id</code>, defining a pair
+            of values that describe the charmap in a rather generic
+            way: Each value pair corresponds to a given encoding.  For
             example, the pair (3,1) corresponds to Unicode.  The list
-            is defined in the TrueType specification; you can also use
-            the file <tt>FT_TRUETYPE_IDS_H</tt>, which defines several
-            helpful constants to deal with them.</p>
+            is defined in the OpenType specification; you can also use
+            the file <code>FT_TRUETYPE_IDS_H</code>, which defines
+            several helpful constants to deal with them.  Note that we
+            use the OpenType enumeration values for non-OpenType fonts
+            also (by defining additional constants where
+            necessary).</p>
 
           <p>To select a specific encoding, you need to find a
             corresponding value pair in the specification, then look
-            for it in the charmaps list.  Don't forget that there are
-            encodings that correspond to several value pairs due to
-            historical reasons.</p>
+            for it in the charmaps list.</p>
 
           <pre>
 FT_CharMap  found = 0;
@@ -662,15 +690,15 @@ error = FT_Set_Charmap( face, found );
 if ( error ) { ... }</pre>
 
           <p>Once a charmap has been selected, either through
-            <tt>FT_Select_Charmap</tt>
-            or <a href="../reference/ft2-base_interface.html#FT_Set_Charmap"><tt>FT_Set_Charmap</tt></a>,
+            <code>FT_Select_Charmap</code>
+            or <a href="../reference/ft2-base_interface.html#FT_Set_Charmap"><code>FT_Set_Charmap</code></a>,
             it is used by all subsequent calls
-            to <tt>FT_Get_Char_Index</tt>.</p>
+            to <code>FT_Get_Char_Index</code>.</p>
 
           <h4>d. Glyph Transformations</h4>
 
           <p>It is possible to specify an affine transformation with
-            <a href="../reference/ft2-base_interface.html#FT_Set_Transform"><tt>FT_Set_Transform</tt></a>,
+            <a href="../reference/ft2-base_interface.html#FT_Set_Transform"><code>FT_Set_Transform</code></a>,
             to be applied to glyph images when they are loaded.  Of
             course, this only works for scalable (vectorial) font
             formats.</p>
@@ -683,10 +711,10 @@ error = FT_Set_Transform(
 
           <p>This function sets the current transformation for a given
             face object.  Its second parameter is a pointer to an
-            <a href="../reference/ft2-basic_types.html#FT_Matrix"><tt>FT_Matrix</tt></a>
+            <a href="../reference/ft2-basic_types.html#FT_Matrix"><code>FT_Matrix</code></a>
             structure that describes a 2&times;2 affine matrix.  The
             third parameter is a pointer to
-            an <a href="../reference/ft2-basic_types.html#FT_Vector"><tt>FT_Vector</tt></a>
+            an <a href="../reference/ft2-basic_types.html#FT_Vector"><code>FT_Vector</code></a>
             structure, describing a two-dimensional vector that
             translates the glyph image <em>after</em> the 2&times;2
             transformation.</p>
@@ -701,20 +729,20 @@ error = FT_Set_Transform(
             fixed-point numbers).</p>
 
           <p class="warning">The transformation is applied to every
-            glyph that is loaded through <tt>FT_Load_Glyph</tt> and
-            is <em>completely independent of any hinting process</em>.
-            This means that you won't get the same results if you load
-            a glyph at the size of 24&nbsp;pixels, or a glyph at the
-            size of 12&nbsp;pixels scaled by&nbsp;2 through a
-            transformation, because the hints are computed differently
-            (except if you have disabled hints).</p>
+            glyph that is loaded through <code>FT_Load_Glyph</code>
+            and is <em>completely independent of any hinting
+            process</em>.  This means that you won't get the same
+            results if you load a glyph at the size of 24&nbsp;pixels,
+            or a glyph at the size of 12&nbsp;pixels scaled by&nbsp;2
+            through a transformation, because the hints are computed
+            differently (except if you have disabled hints).</p>
 
           <p>If you ever need to use a non-orthogonal transformation
             with optimal hints, you first have to decompose your
             transformation into a scaling part and a rotation/shearing
             part.  Use the scaling part to compute a new character
             pixel size, then the other one to call
-            <tt>FT_Set_Transform</tt>.  This is explained in more
+            <code>FT_Set_Transform</code>.  This is explained in more
             detail in part&nbsp;II of this tutorial.</p>
 
           <p class="warning">Rotation usually disables hinting.</p>
@@ -782,35 +810,36 @@ for ( n = 0; n &lt; num_chars; n++ )
           <p>This code needs a few explanations.</p>
 
           <ul>
-            <li>We define a handle named <tt>slot</tt> that points to
-              the face object's glyph slot.  (The
-              type <a href="../reference/ft2-base_interface.html#FT_GlyphSlot"><tt>FT_GlyphSlot</tt></a>
+            <li>We define a handle named <code>slot</code> that points
+              to the face object's glyph slot.  (The
+              type <a href="../reference/ft2-base_interface.html#FT_GlyphSlot"><code>FT_GlyphSlot</code></a>
               is a pointer).  That is a convenience to avoid using
-              <tt>face-&gt;glyph-&gt;XXX</tt> every time.</li>
+              <code>face-&gt;glyph-&gt;XXX</code> every time.</li>
 
             <li>We increment the pen position with the vector
-              <tt>slot-&gt;advance</tt>, which correspond to the
+              <code>slot-&gt;advance</code>, which correspond to the
               glyph's <em>advance width</em> (also known as
               its <em>escapement</em>).  The advance vector is
               expressed in 1/64th of pixels, and is truncated to
               integer pixels on each iteration.</li>
 
-            <li>The function <tt>my_draw_bitmap</tt> is not part of
-              FreeType but must be provided by the application to draw
-              the bitmap to the target surface.  In this example, it
-              takes a pointer to
-              an <a href="../reference/ft2-basic_types.html#FT_Bitmap"><tt>FT_Bitmap</tt></a>
+            <li>The function <code>my_draw_bitmap</code> is not part
+              of FreeType but must be provided by the application to
+              draw the bitmap to the target surface.  In this example,
+              it takes a pointer to
+              an <a href="../reference/ft2-basic_types.html#FT_Bitmap"><code>FT_Bitmap</code></a>
               descriptor and the position of its top-left corner as
               arguments.  For ideal rendering on a screen this
               function should perform linear blending with gamma
               correction, using the bitmap as an alpha channel.</li>
 
-            <li>The value of <tt>slot-&gt;bitmap_top</tt> is positive
-              for an <em>upwards</em> vertical distance.  Assuming
-              that the coordinates taken by <tt>my_draw_bitmap</tt>
-              use the opposite convention (increasing&nbsp;Y
-              corresponds to downwards scanlines), we subtract it
-              from <tt>pen_y</tt>, instead of adding to it.</li>
+            <li>The value of <code>slot-&gt;bitmap_top</code> is
+              positive for an <em>upwards</em> vertical distance.
+              Assuming that the coordinates taken
+              by <code>my_draw_bitmap</code> use the opposite
+              convention (increasing&nbsp;Y corresponds to downwards
+              scanlines), we subtract it from <code>pen_y</code>,
+              instead of adding to it.</li>
           </ul>
 
           <h4>b.Refined code</h4>
@@ -854,24 +883,25 @@ for ( n = 0; n &lt; num_chars; n++ )
 
           <ul>
             <li>We use the
-              function <a href="../reference/ft2-base_interface.html#FT_Load_Char"><tt>FT_Load_Char</tt></a>
-              instead of <tt>FT_Load_Glyph</tt>.  As you probably
+              function <a href="../reference/ft2-base_interface.html#FT_Load_Char"><code>FT_Load_Char</code></a>
+              instead of <code>FT_Load_Glyph</code>.  As you probably
               imagine, it is equivalent to
-              calling <tt>FT_Get_Char_Index</tt>, then
-              <tt>FT_Load_Glyph</tt>.</li>
+              calling <code>FT_Get_Char_Index</code>, then
+              <code>FT_Load_Glyph</code>.</li>
 
             <li>
-              <p>We do not use <tt>FT_LOAD_DEFAULT</tt> for the
+              <p>We do not use <code>FT_LOAD_DEFAULT</code> for the
                 loading mode, but the bit
-                flag <tt>FT_LOAD_RENDER</tt>.  It indicates that the
-                glyph image must be immediately converted to an
+                flag <code>FT_LOAD_RENDER</code>.  It indicates that
+                the glyph image must be immediately converted to an
                 anti-aliased bitmap.  This is of course a shortcut
-                that avoids calling <tt>FT_Render_Glyph</tt>
+                that avoids calling <code>FT_Render_Glyph</code>
                 explicitly but is strictly equivalent.</p>
 
               <p>Note that you can also specify that you want a
                 monochrome bitmap instead by using the
-                additional <tt>FT_LOAD_MONOCHROME</tt> load flag.</p>
+                additional <code>FT_LOAD_MONOCHROME</code> load
+                flag.</p>
             </li>
           </ul>
 
@@ -879,7 +909,7 @@ for ( n = 0; n &lt; num_chars; n++ )
 
           <p>Let us try to render transformed text now (for example
             through a rotation).  We can do this
-            using <tt>FT_Set_Transform</tt>.</p>
+            using <code>FT_Set_Transform</code>.</p>
 
           <pre>
 FT_GlyphSlot  slot;
@@ -929,7 +959,7 @@ for ( n = 0; n &lt; num_chars; n++ )
           <p>Some remarks.</p>
 
           <ul>
-            <li>We now use a vector of type <tt>FT_Vector</tt> to
+            <li>We now use a vector of type <code>FT_Vector</code> to
               store the pen position, with coordinates expressed as
               1/64th of pixels, hence a multiplication.  The position
               is expressed in cartesian space.</li>
@@ -947,11 +977,11 @@ for ( n = 0; n &lt; num_chars; n++ )
               the rotation matrix as well as a delta that moves the
               transformed image to the current pen position (in
               cartesian space, not bitmap space).  As a consequence,
-              the values of <tt>bitmap_left</tt>
-              and <tt>bitmap_top</tt> correspond to the bitmap origin
-              in target space pixels.  We thus don't
-              add <tt>pen.x</tt> or <tt>pen.y</tt> to their values
-              when calling <tt>my_draw_bitmap</tt>.</li>
+              the values of <code>bitmap_left</code>
+              and <code>bitmap_top</code> correspond to the bitmap
+              origin in target space pixels.  We thus don't
+              add <code>pen.x</code> or <code>pen.y</code> to their
+              values when calling <code>my_draw_bitmap</code>.</li>
 
             <li>The advance width is always returned transformed,
               which is why it can be directly added to the current pen
@@ -975,7 +1005,7 @@ for ( n = 0; n &lt; num_chars; n++ )
         <!-- ************************************************** -->
 
         <div class="updated">
-          <p>Last update: 8-Dec-2015</p>
+          <p>Last update: 2-May-2017</p>
         </div>
       </div>
     </div>
@@ -1001,10 +1031,10 @@ for ( n = 0; n &lt; num_chars; n++ )
              align="middle">
       </a></p>
 
-      <p><a href="https://flattr.com/thing/421342/lemzwerg-on-Flattr"
+      <p><a href="https://flattr.com/submit/auto?fid=mq2xxp&url=https%3A%2F%2Fwww.freetype.org"
          target="_blank">
         <img class="with-border"
-             src="http://api.flattr.com/button/flattr-badge-large.png"
+             src="https://button.flattr.com/flattr-badge-large.png"
              alt="Flattr this"
              title="Flattr this"
              border="0"

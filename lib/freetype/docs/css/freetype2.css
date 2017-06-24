@@ -5,9 +5,9 @@
 
 
 /* use Droid fonts */
-@import url("http://fonts.googleapis.com/css?family=Droid+Serif:r,i,b,bi");
-@import url("http://fonts.googleapis.com/css?family=Droid+Sans:r,b");
-@import url("http://fonts.googleapis.com/css?family=Droid+Sans+Mono");
+@import url("https://fonts.googleapis.com/css?family=Droid+Serif:r,i,b,bi");
+@import url("https://fonts.googleapis.com/css?family=Droid+Sans:r,b");
+@import url("https://fonts.googleapis.com/css?family=Droid+Sans+Mono");
 
 
 /* top-level appearance */
@@ -180,6 +180,7 @@ blockquote {
   font-style: italic; }
 
 code {
+  white-space: nowrap;
   font-family: "Droid Sans Mono", "monospace"; }
 
 tt {

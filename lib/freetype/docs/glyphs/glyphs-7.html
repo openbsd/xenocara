@@ -106,29 +106,29 @@
 	  </p>
 
 
-	  <h3 id="section-2">2. The <tt>FT_Bitmap</tt> descriptor</h3>
+	  <h3 id="section-2">2. The <code>FT_Bitmap</code> descriptor</h3>
 
 	  <p>In FreeType, a bitmap or pixmap is described through a
-	  single structure,
-	  called <a href="../reference/ft2-basic_types.html#FT_Bitmap"><tt>FT_Bitmap</tt></a>.
+	  single structure
+	  called <a href="../reference/ft2-basic_types.html#FT_Bitmap"><code>FT_Bitmap</code></a>.
 	  The fields we are interested in are:</p>
 
 	  <table>
 	    <caption>
-	      <b><tt>FT_Bitmap</tt></b>
+	      <b><code>FT_Bitmap</code></b>
 	    </caption>
 
 	    <tr>
 	      <td valign="top">
-		<tt>rows</tt>
+		<code>rows</code>
 	      </td>
 	      <td valign="top">
-		the number of rows, i.e. lines, in the bitmap
+		the number of rows, i.e., lines, in the bitmap
 	      </td>
 	    </tr>
 	    <tr>
 	      <td valign="top">
-		<tt>width</tt>
+		<code>width</code>
 	      </td>
 	      <td valign="top">
 		the number of horizontal pixels in the bitmap
@@ -136,7 +136,7 @@
 	    </tr>
 	    <tr>
 	      <td valign="top">
-		<tt>pitch</tt>
+		<code>pitch</code>
 	      </td>
 	      <td valign="top">
 		its absolute value is the number of bytes per bitmap
@@ -146,7 +146,7 @@
 	    </tr>
 	    <tr>
 	      <td valign="top">
-		<tt>buffer</tt>
+		<code>buffer</code>
 	      </td>
 	      <td valign="top">
 		a typeless pointer to the bitmap pixel buffer
@@ -154,19 +154,20 @@
 	    </tr>
 	    <tr>
 	      <td valign="top">
-		<tt>pixel_mode</tt>
+		<code>pixel_mode</code>
 	      </td>
 	      <td valign="top">
 		an enumeration used to describe the pixel format of
-		the bitmap; examples are <tt>ft_pixel_mode_mono</tt>
-		for 1-bit monochrome bitmaps
-		and <tt>ft_pixel_mode_grays</tt> for 8-bit
+		the bitmap; examples
+		are <code>ft_pixel_mode_mono</code> for 1-bit
+		monochrome bitmaps
+		and <code>ft_pixel_mode_grays</code> for 8-bit
 		anti-aliased &lsquo;gray&rsquo; values
 	      </td>
 	    </tr>
 	    <tr>
 	      <td valign="top">
-		<tt>num_grays</tt>
+		<code>num_grays</code>
 	      </td>
 	      <td valign="top">
 		this is only used for &lsquo;gray&rsquo; pixel modes,
@@ -177,9 +178,9 @@
 	    </tr>
 	  </table>
 
-	  <p>Note that the sign of the <tt>pitch</tt> field determines
-	    whether the rows in the pixel buffer are stored in
-	    ascending or descending order.</p>
+	  <p>Note that the sign of the <code>pitch</code> field
+	    determines whether the rows in the pixel buffer are stored
+	    in ascending or descending order.</p>
 
 	  <p>Remember that FreeType uses the <em>Y&nbsp;upwards</em>
 	    convention in the 2D plane, which means that a coordinate
@@ -217,6 +218,13 @@
 
 	  <p>The &lsquo;positive pitch&rsquo; convention is very often
 	    used, though some systems might need the other.</p>
+
+          <p>To speed up memory access, <code>pitch</code> is in most
+            cases a multiple of 16bit, 32bit, or even 64bit.  It often
+            happens that the pitch is thus larger than the necessary
+            bits (or bytes) for a bitmap or pixmap row; in such cases,
+            unused bits (or bytes) are at the very right (i.e., the
+            end) of a row.</p>
 
 
 	  <h3 id="section-3">3. Converting outlines into bitmaps and
@@ -289,16 +297,15 @@
 	    the target window.</p>
 
 	  <p>For example, the correct way of creating
-	    a <em>standalone</em> glyph bitmap is as follows:</p>
+	    a <em>stand-alone</em> glyph bitmap is as follows:</p>
 
 	  <ul>
 	    <li>
-              <p>Compute the size of the glyph bitmap.  It can be
-		computed directly from the glyph metrics, or by
-		computing its bounding box (this is useful when a
-		transformation has been applied to the outline after
-		loading it, as the glyph metrics are not valid
-		anymore).</p>
+              <p>Get the size of the glyph bitmap.  It can be computed
+		directly from the glyph metrics, or by computing its
+		bounding box (this is useful when a transformation has
+		been applied to the outline after loading it, as the
+		glyph metrics are not valid anymore).</p>
 	    </li>
 	    <li>
               <p>Create the bitmap with the computed dimensions.
@@ -317,7 +324,7 @@
 	    </li>
 	    <li>
               <p>Call the rendering function (it can be
-		<a href="../reference/ft2-outline_processing.html#FT_Outline_Render"><tt>FT_Outline_Render</tt></a>,
+		<a href="../reference/ft2-outline_processing.html#FT_Outline_Render"><code>FT_Outline_Render</code></a>,
 		for example).</p>
 	    </li>
 	  </ul>
@@ -331,7 +338,7 @@
         <!-- ************************************************** -->
 
         <div class="updated">
-          <p>Last update: 07-Dec-2014</p>
+          <p>Last update: 02-May-2017</p>
         </div>
       </div>
     </div>
@@ -357,10 +364,10 @@
              align="middle">
       </a></p>
 
-      <p><a href="https://flattr.com/thing/421342/lemzwerg-on-Flattr"
+      <p><a href="https://flattr.com/submit/auto?fid=mq2xxp&url=https%3A%2F%2Fwww.freetype.org"
          target="_blank">
         <img class="with-border"
-             src="http://api.flattr.com/button/flattr-badge-large.png"
+             src="https://button.flattr.com/flattr-badge-large.png"
              alt="Flattr this"
              title="Flattr this"
              border="0"

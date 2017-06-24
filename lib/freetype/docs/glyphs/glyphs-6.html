@@ -75,7 +75,7 @@
             polynomials.  The former are also called quadratic or
             conic arcs, and they are used in the TrueType format.  The
             latter are called cubic arcs and are mostly used in the
-            PostScript Type&nbsp;1 and Type&nbsp;formats.</p>
+            PostScript Type&nbsp;1, CFF, and CFF2 formats.</p>
 
           <p>Each arc is described through a series of start, end, and
             control points.  Each point of the outline has a specific
@@ -85,7 +85,7 @@
           <table>
             <tr>
               <td valign="top">
-                <p><tt>FT_CURVE_TAG_ON</tt></p>
+                <p><code>FT_CURVE_TAG_ON</code></p>
               </td>
               <td valign="top">
                 <p>Used when the point is &lsquo;on&rsquo; the curve.
@@ -98,7 +98,7 @@
             </tr>
             <tr>
               <td valign="top">
-                <p><tt>FT_CURVE_TAG_CONIC</tt></p>
+                <p><code>FT_CURVE_TAG_CONIC</code></p>
               </td>
               <td valign="top">
                 <p>Used for an &lsquo;off&rsquo; point used to control
@@ -107,7 +107,7 @@
             </tr>
             <tr>
               <td valign="top">
-                <p><tt>FT_CURVE_TAG_CUBIC</tt></p>
+                <p><code>FT_CURVE_TAG_CUBIC</code></p>
               </td>
               <td valign="top">
                 <p>Used for an &lsquo;off&rsquo; point used to control
@@ -116,7 +116,7 @@
             </tr>
           </table>
 
-          <p>Use the <tt>FT_CURVE_TAG(tag)</tt> macro to filter out
+          <p>Use the <code>FT_CURVE_TAG(tag)</code> macro to filter out
             other, internally used flags.
 
           <p>The following rules are applied to decompose the
@@ -210,21 +210,21 @@
           </table>
 
 
-          <h4>b. The <tt>FT_Outline</tt> descriptor</h4>
+          <h4>b. The <code>FT_Outline</code> descriptor</h4>
         
           <p>A FreeType outline is described through a simple
             structure
-            called <a href="../reference/ft2-outline_processing.html#FT_Outline"><tt>FT_Outline</tt></a>.
+            called <a href="../reference/ft2-outline_processing.html#FT_Outline"><code>FT_Outline</code></a>.
             Right now, the following fields are of interest:</p>
 
           <table>
             <caption>
-              <b><tt>FT_Outline</tt></b>
+              <b><code>FT_Outline</code></b>
             </caption>
             <tbody>
               <tr>
                 <td>
-                  <tt>n_points</tt>
+                  <code>n_points</code>
                 </td>
                 <td>
                   the number of points in the outline
@@ -232,7 +232,7 @@
               </tr>
               <tr>
                 <td>
-                  <tt>n_contours</tt>
+                  <code>n_contours</code>
                 </td>
                 <td>
                   the number of contours in the outline
@@ -240,7 +240,7 @@
               </tr>
               <tr>
                 <td>
-                  <tt>points</tt>
+                  <code>points</code>
                 </td>
                 <td>
                   array of point coordinates
@@ -248,7 +248,7 @@
               </tr>
               <tr>
                 <td>
-                  <tt>contours</tt>
+                  <code>contours</code>
                 </td>
                 <td>
                   array of contour end indices
@@ -256,7 +256,7 @@
               </tr>
               <tr>
                 <td>
-                  <tt>tags</tt>
+                  <code>tags</code>
                 </td>
                 <td>
                   array of point flags
@@ -265,28 +265,28 @@
             </tbody>
           </table>
         
-          <p>Here, <tt>points</tt> is a pointer to an array of
-            <a href="../reference/ft2-basic_types.html#FT_Vector"><tt>FT_Vector</tt></a>
+          <p>Here, <code>points</code> is a pointer to an array of
+            <a href="../reference/ft2-basic_types.html#FT_Vector"><code>FT_Vector</code></a>
             records, used to store the vectorial coordinates of each
             outline point.  These are expressed in 1/64th of a pixel,
             which is also known as the <em>26.6&nbsp;fixed-point
             format</em>.</p>
 
-          <p><tt>contours</tt> is an array of point indices to delimit
-            contours in the outline.  For example, the first contour
-            always starts at point&nbsp;0, and ends at
-            point <tt>contours[0]</tt>.  The second contour starts at
-            point <tt>contours[0]+1</tt> and ends at
-            <tt>contours[1]</tt>, etc.  To traverse these points in a
+          <p><code>contours</code> is an array of point indices to
+            delimit contours in the outline.  For example, the first
+            contour always starts at point&nbsp;0, and ends at
+            point <code>contours[0]</code>.  The second contour starts
+            at point <code>contours[0]+1</code> and ends at
+            <code>contours[1]</code>, etc.  To traverse these points in a
             callback based manner,
-            use <a href="../reference/ft2-outline_processing.html#FT_Outline_Decompose"><tt>FT_Outline_Decompose</tt></a>.</p>
+            use <a href="../reference/ft2-outline_processing.html#FT_Outline_Decompose"><code>FT_Outline_Decompose</code></a>.</p>
 
-          <p>Note that each contour is closed, and that value
-            of <tt>n_points</tt> should be equal
-            to <tt>contours[n_contours-1]+1</tt> for a valid
+          <p>Note that each contour is closed, and that the value
+            of <code>n_points</code> should be equal
+            to <code>contours[n_contours-1]+1</code> for a valid
             outline.</p>
 
-          <p>Finally, <tt>tags</tt> is an array of bytes, used to
+          <p>Finally, <code>tags</code> is an array of bytes, used to
             store each outline point's tag.</p>
 
 
@@ -309,8 +309,7 @@
             because most font designers and creation tools always
             place &lsquo;on&rsquo; points at the extrema of each
             curved edges (as both the TrueType and PostScript
-            specifications recommend), as it makes hinting much
-            easier.</p>
+            specifications recommend), making hinting much easier.</p>
 
           <p>We thus define the <em>control box</em> (also
             called <em>cbox</em>) as the smallest possible rectangle
@@ -340,9 +339,9 @@
 
           <p>Control and bounding boxes can be computed automatically
             using the
-            functions <a href="../reference/ft2-outline_processing.html#FT_Outline_Get_CBox"><tt>FT_Outline_Get_CBox</tt></a>
+            functions <a href="../reference/ft2-outline_processing.html#FT_Outline_Get_CBox"><code>FT_Outline_Get_CBox</code></a>
             and
-            <a href="../reference/ft2-outline_processing.html#FT_Outline_Get_BBox"><tt>FT_Outline_Get_BBox</tt></a>.
+            <a href="../reference/ft2-outline_processing.html#FT_Outline_Get_BBox"><code>FT_Outline_Get_BBox</code></a>.
             The former function is always very fast, while the
             latter <em>may</em> be slow in the case of
             &lsquo;outside&rsquo; control points (as it needs to find
@@ -360,7 +359,7 @@
             grid-fitting</h3>
 
           <p>An outline point's vectorial coordinates are expressed in
-            the 26.6&nbsp;format, i.e. in 1/64th of a pixel, hence the
+            the 26.6&nbsp;format, i.e., in 1/64th of a pixel, hence the
             coordinates &lsquo;(1.0,-2.5)&rsquo; is stored as the
             integer pair &lsquo;(64,-192)&rsquo;, to name an
             example.</p>
@@ -371,7 +370,7 @@
             points (mainly edge delimiters) to the pixel grid.  Even
             though this process is much too complex to be described in
             a few lines, its purpose is mainly to round point
-            positions, while trying to preserve important properties
+            positions while trying to preserve important properties
             like widths, stems, etc.</p>
 
           <p>The following operations can be used to round vectorial
@@ -412,7 +411,7 @@ ymin = floor( bbox.yMin )
 ymax = ceiling( bbox.yMax )</pre>
             </li>
             <li>
-              <p>return pixel dimensions, i.e.</p>
+              <p>return pixel dimensions, i.e.,</p>
 
               <pre>
 width = (xmax - xmin)/64</pre>
@@ -441,7 +440,7 @@ height = (ymax - ymin)/64</pre>
         <!-- ************************************************** -->
 
         <div class="updated">
-          <p>Last update: 07-Dec-2014</p>
+          <p>Last update: 02-May-2017</p>
         </div>
       </div>
     </div>
@@ -467,10 +466,10 @@ height = (ymax - ymin)/64</pre>
              align="middle">
       </a></p>
 
-      <p><a href="https://flattr.com/thing/421342/lemzwerg-on-Flattr"
+      <p><a href="https://flattr.com/submit/auto?fid=mq2xxp&url=https%3A%2F%2Fwww.freetype.org"
          target="_blank">
         <img class="with-border"
-             src="http://api.flattr.com/button/flattr-badge-large.png"
+             src="https://button.flattr.com/flattr-badge-large.png"
              alt="Flattr this"
              title="Flattr this"
              border="0"

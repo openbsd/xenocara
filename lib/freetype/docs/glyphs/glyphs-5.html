@@ -75,7 +75,7 @@
           <h3 id="section-1">1. Writing simple text strings</h3>
 
           <p>In this first example, we will generate a simple string
-            of text in the Latin script, i.e. with a horizontal
+            of text in the Latin script, i.e., with a horizontal
             left-to-right layout.  Using exclusively pixel metrics,
             the process looks like:
 
@@ -114,13 +114,13 @@
           <p>Note that kerning isn't part of this algorithm.</p>
 
 
-          <h3 id="section-2">2. Pseudo-subpixel positioning</h3>
+          <h3 id="section-2">2. Subpixel positioning</h3>
 
-          <p>It is somewhat useful to use subpixel positioning when
-          rendering text.  This is crucial, for example, to provide
-          semi-WYSIWYG text layouts.  Text rendering is very similar
-          to the algorithm described in subsection&nbsp;1, with the
-          following few differences:</p>
+          <p>This algorithm can be used for hinting modes that don't
+            apply horizontal hinting.  It essentially provides WYSIWYG
+            text layout.  Text rendering is very similar to the
+            algorithm described in subsection&nbsp;1, with the
+            following few differences:</p>
 
           <ul>
             <li>
@@ -128,10 +128,8 @@
                 pixels.</p>
             </li>
             <li>
-              <p>Because translating a hinted outline by a non-integer
-                distance will ruin its grid-fitting, the position of
-                the glyph origin must be rounded before rendering the
-                character image.</p>
+              <p>The hinted outline must be shifted horizontally to
+                the proper sub-pixel position.</p>
             </li>
             <li>
               <p>The advance width is expressed in fractional pixels,
@@ -154,11 +152,12 @@
               Get or load the glyph image.
             </li>
             <li>
-              Translate the glyph so that its &lsquo;origin&rsquo;
-              matches the rounded pen position.
+              Translate the glyph by &lsquo;pen_pos -
+              floor(pen_pos)&rsquo;.
             </li>
             <li>
-              Render the glyph to the target device.
+              Render the glyph to the target device at
+              &lsquo;floor(pen_pos)&rsquo;.
             </li>
             <li>
               Increment the pen position by the glyph's advance width
@@ -173,18 +172,6 @@
               pen position.
             </li>
           </ol>
-
-          <p>Note that with fractional pixel positioning, the space
-            between two given letters isn't fixed, but determined by
-            the accumulation of previous rounding errors in glyph
-            positioning.  For auto-hinted glyphs, this problem can be
-            alleviated by using the <tt>lsb_delta</tt>
-            and <tt>rsb_delta</tt> values (see the documentation of
-            the <a href="../reference/ft2-base_interface.html#FT_GlyphSlotRec">FT_GlyphSlotRec</a>
-            structure for more details).</p>
-
-          <p>TODO: Real subpixel positioning with glyph shifting
-            before hinting.</p>
 
 
           <h3 id="section-3">3. Simple kerning</h3>
@@ -248,15 +235,16 @@
               the pen position.
             </li>
             <li>
-              Translate the glyph so that its &lsquo;origin&rsquo;
-              matches the rounded pen position.
+              Translate the glyph by &lsquo;pen_pos -
+              int(pen_pos)&rsquo;.
             </li>
             <li>
-              Render the glyph to the target device.
+              Render the glyph to the target device at
+              &lsquo;int(pen_pos)&rsquo;.
             </li>
             <li>
-              Increment the pen position by the glyph's advance
-              width in fractional pixels.
+              Increment the pen position by the glyph's advance width
+              in fractional pixels.
             </li>
             <li>
               Start over at step&nbsp;3 for each of the remaining
@@ -368,7 +356,7 @@
         <!-- ************************************************** -->
 
         <div class="updated">
-          <p>Last update: 07-Dec-2014</p>
+          <p>Last update: 02-May-2017</p>
         </div>
       </div>
     </div>
@@ -394,10 +382,10 @@
              align="middle">
       </a></p>
 
-      <p><a href="https://flattr.com/thing/421342/lemzwerg-on-Flattr"
+      <p><a href="https://flattr.com/submit/auto?fid=mq2xxp&url=https%3A%2F%2Fwww.freetype.org"
          target="_blank">
         <img class="with-border"
-             src="http://api.flattr.com/button/flattr-badge-large.png"
+             src="https://button.flattr.com/flattr-badge-large.png"
              alt="Flattr this"
              title="Flattr this"
              border="0"

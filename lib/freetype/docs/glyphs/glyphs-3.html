@@ -63,11 +63,11 @@
 
 	  <p>The baseline is an imaginary line that is used to
 	    &lsquo;guide&rsquo; glyphs when rendering text.  It can be
-	    horizontal (e.g. Latin, Cyrillic, Arabic, etc.) or
-	    vertical (e.g. Chinese, Japanese, Mongolian, etc.).
-	    Moreover, to render text, a virtual point, located on the
-	    baseline, called the <em>pen position</em>
-	    or <em>origin</em>, is used to locate glyphs.</p>
+	    horizontal (e.g., Latin, Cyrillic, Arabic) or vertical
+	    (e.g., Chinese, Japanese, Mongolian).  Moreover, to render
+	    text, a virtual point, located on the baseline, called
+	    the <em>pen position</em> or <em>origin</em>, is used to
+	    locate glyphs.</p>
 
 	  <p>Each layout uses a different convention for glyph
 	  placement:</p>
@@ -142,7 +142,7 @@
 		computed as
 
 	      <p align="center">
-		<tt>linespace = ascent - descent + linegap</tt>
+		<code>linespace = ascent - descent + linegap</code>
 	      </p>
 
               <p>if you use the typographic values.</p>
@@ -158,12 +158,12 @@
               <p>This is an imaginary box that encloses all glyphs
 		from the font, usually as tightly as possible.  It is
 		represented by four parameters,
-		namely <tt>xMin</tt>, <tt>yMin</tt>, <tt>xMax</tt>,
-		and <tt>yMax</tt>, that can be computed for any
-		outline.  Their values can be in font units if
-		measured in the original outline, or in integer (or
-		fractional) pixel units when measured on scaled
-		outlines.</p>
+		namely <code>xMin</code>, <code>yMin</code>,
+                <code>xMax</code>, and <code>yMax</code>, that can be
+		computed for any outline.  Their values can be in font
+		units if measured in the original outline, or in
+		integer (or fractional) pixel units when measured on
+		scaled outlines.</p>
 
 	      <p>A common shorthand for the bounding box is
 		&lsquo;bbox&rsquo;.</p>
@@ -178,7 +178,7 @@
 		It usually can be computed as</p>
 
               <p align="center">
-		<tt>internal leading = ascent - descent - EM_size</tt>
+		<code>internal leading = ascent - descent - EM_size</code>
               </p>
 	    </li>
 	    <li class="emph">
@@ -206,7 +206,7 @@
 		vertical ones.</p>
 
               <p>In the FreeType API, this is also called
-		<tt>bearingX</tt>.  Another shorthand is
+		<code>bearingX</code>.  Another shorthand is
 		&lsquo;lsb&rsquo;.</p>
 	    </li>
 	    <li class="emph">
@@ -218,7 +218,7 @@
 		ones.</p>
 
               <p>In the FreeType API, this is also called
-		<tt>bearingY</tt>.</p>
+		<code>bearingY</code>.</p>
 	    </li>
 	    <li class="emph">
               <p>Advance width</p>
@@ -231,7 +231,7 @@
 		ones.</p>
 
               <p>In the FreeType API, this is also called
-		<tt>advanceX</tt>.</p>
+		<code>advanceX</code>.</p>
 	    </li>
 	    <li class="emph">
               <p>Advance height</p>
@@ -242,7 +242,7 @@
 		layouts.</p>
 	
               <p>In the FreeType API, this is also called
-		<tt>advanceY</tt>.</p>
+		<code>advanceY</code>.</p>
 	    </li>
 	    <li class="emph">
               <p>Glyph width</p>
@@ -251,7 +251,7 @@
 		coordinates, it is</p>
 
 	      <p align="center">
-		<tt>glyph width = bbox.xMax - bbox.xMin</tt>
+		<code>glyph width = bbox.xMax - bbox.xMin</code>
 	      </p>
 
 	      <p>For scaled glyphs, its computation requests specific
@@ -264,7 +264,7 @@
 		coordinates, it is</p>
 
 	      <p align="center">
-		<tt>glyph height = bbox.yMax - bbox.yMin</tt>
+		<code>glyph height = bbox.yMax - bbox.yMin</code>
 	      </p>
 
 	      <p>For scaled glyphs, its computation requests specific
@@ -372,11 +372,21 @@
 	    hinted outlines, one should always take care
 	    of <b>exclusively using integer pixel distances</b> (which
 	    means that the parameters to the
-	    <tt>FT_Outline_Translate</tt> API function should all be
-	    multiples of&nbsp;64, as the point coordinates are in
+	    <code>FT_Outline_Translate</code> API function should all
+	    be multiples of&nbsp;64, as the point coordinates are in
 	    26.6&nbsp;fixed-point format).  Otherwise, the translation
 	    will simply <em>ruin the hinter's work</em>, resulting in
 	    very low quality bitmaps!</p>
+
+          <p>Note, however, that the restriction to integer pixel
+            distances mentioned in the previous paragraph has become
+            weaker; today, it is quite common to do <em>no</em>
+            hinting along the horizontal axis, only adjusting the
+            glyphs vertically.  Typical examples are Microsoft's
+            ClearType implementation, FreeType's new CFF engine
+            (contributed by Adobe), or the &lsquo;light&rsquo;
+            auto-hinting mode.  For such modes you get best rendering
+            results if you do sub-pixel glyph positioning.</p>
 
 
 	  <h3 id="section-5">5. Text widths and bounding box</h3>
@@ -392,10 +402,10 @@
 	  <p>Likewise, the glyph's &lsquo;advance width&rsquo; is the
 	    increment to apply to the pen position during layout, and
 	    is not related to the glyph's &lsquo;width&rsquo;, which
-	    really is the glyph's bounding width.</p>
+	    really is the glyph's bounding box width.</p>
 
-	  <p>The same conventions apply to strings of text.  This
-	  means that:</p>
+	  <p>The same conventions apply to strings of text, with the
+	  following consequences.</p>
 
 	  <ul>
 	    <li>
@@ -406,7 +416,7 @@
 	    <li>
               <p>The string's advance width isn't related to its
 		bounding box dimensions.  Especially if it contains
-		beginning and terminal spaces or tabs.</p>
+		leading and trailing spaces or tabs.</p>
 	    </li>
 	    <li>
               <p>Finally, additional processing like kerning creates
@@ -423,7 +433,7 @@
         <!-- ************************************************** -->
 
         <div class="updated">
-          <p>Last update: 07-Dec-2014</p>
+          <p>Last update: 02-May-2017</p>
         </div>
       </div>
     </div>
@@ -449,10 +459,10 @@
              align="middle">
       </a></p>
 
-      <p><a href="https://flattr.com/thing/421342/lemzwerg-on-Flattr"
+      <p><a href="https://flattr.com/submit/auto?fid=mq2xxp&url=https%3A%2F%2Fwww.freetype.org"
          target="_blank">
         <img class="with-border"
-             src="http://api.flattr.com/button/flattr-badge-large.png"
+             src="https://button.flattr.com/flattr-badge-large.png"
              alt="Flattr this"
              title="Flattr this"
              border="0"
