@@ -630,6 +630,7 @@
 ./usr/X11R6/include/freetype2/freetype/ftmoderr.h
 ./usr/X11R6/include/freetype2/freetype/ftotval.h
 ./usr/X11R6/include/freetype2/freetype/ftoutln.h
+./usr/X11R6/include/freetype2/freetype/ftpcfdrv.h
 ./usr/X11R6/include/freetype2/freetype/ftpfr.h
 ./usr/X11R6/include/freetype2/freetype/ftrender.h
 ./usr/X11R6/include/freetype2/freetype/ftsizes.h
@@ -860,10 +861,10 @@
 ./usr/X11R6/man/man1/xcompmgr.1
 ./usr/X11R6/man/man1/xconsole.1
 ./usr/X11R6/man/man1/xcutsel.1
-./usr/X11R6/man/man1/xenodm.1
 ./usr/X11R6/man/man1/xdpr.1
 ./usr/X11R6/man/man1/xdpyinfo.1
 ./usr/X11R6/man/man1/xedit.1
+./usr/X11R6/man/man1/xenodm.1
 ./usr/X11R6/man/man1/xev.1
 ./usr/X11R6/man/man1/xeyes.1
 ./usr/X11R6/man/man1/xfd.1
