@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.60 2017/04/16 09:58:50 robert Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.61 2017/07/02 09:53:05 espie Exp $ -*- makefile  -*-
 #
 # Copyright © 2006,2012 Matthieu Herrb
 #
@@ -192,7 +192,6 @@ build:
 build:
 	cd ${.CURDIR} && \
 	    su ${BUILDUSER} -c 'exec ${MAKE} ${MAKE_FLAGS} ${_wrapper} cleandir' && \
-	    su ${BUILDUSER} -c 'exec ${MAKE} ${MAKE_FLAGS} ${_wrapper} depend' && \
 	    su ${BUILDUSER} -c 'exec ${MAKE} ${MAKE_FLAGS} ${_wrapper} all' && \
 	    exec ${MAKE} ${MAKE_FLAGS} ${_wrapper} install
 .endif
