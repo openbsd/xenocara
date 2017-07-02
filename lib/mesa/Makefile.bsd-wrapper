@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.9 2017/05/21 13:18:29 visa Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.10 2017/07/02 09:52:23 espie Exp $
 
 .include <bsd.own.mk>
 
@@ -65,9 +65,11 @@ O2= ${O1} -fthread-jumps -fcrossjumping -foptimize-sibling-calls \
 CONFIGURE_ARGS+=       USER_CFLAGS="-O0 ${O2}"
 .endif
 
-depend:
-.if !exists(${.OBJDIR}/src/util/format_srgb.c)
+${.OBJDIR}/src/util/format_srgb.c:
 	lndir -s -e obj -e obj.${MACHINE_ARCH} -e Makefile.bsd-wrapper ${.CURDIR}
-.endif
 
 .include <bsd.xorg.mk>
+
+# XXX needs to come after bsd.xorg.mk, because .if !target(config.status)
+# won't trigger otherwise.
+config.status: ${.OBJDIR}/src/util/format_srgb.c
