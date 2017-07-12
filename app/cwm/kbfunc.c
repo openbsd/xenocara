@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.146 2017/07/10 13:36:58 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.147 2017/07/12 16:56:26 okan Exp $
  */
 
 #include <sys/types.h>
@@ -522,7 +522,7 @@ out:
 }
 
 void
-kbfunc_menu_client_label(void *ctx, struct cargs *cargs)
+kbfunc_client_menu_label(void *ctx, struct cargs *cargs)
 {
 	struct client_ctx	*cc = ctx;
 	struct menu		*mi;
