@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.232 2017/07/12 16:56:26 okan Exp $
+ * $OpenBSD: conf.c,v 1.233 2017/07/14 17:23:38 okan Exp $
  */
 
 #include <sys/types.h>
@@ -92,7 +92,7 @@ static const struct {
 	{ "window-movetogroup-8", kbfunc_client_movetogroup, CWM_CONTEXT_CC, 8 },
 	{ "window-movetogroup-9", kbfunc_client_movetogroup, CWM_CONTEXT_CC, 9 },
 
-	{ "window-move", mousefunc_client_move, CWM_CONTEXT_CC, 0 },
+	{ "window-move", kbfunc_client_move, CWM_CONTEXT_CC, 0 },
 	{ "window-move-up", kbfunc_client_move, CWM_CONTEXT_CC,
 	    (CWM_UP) },
 	{ "window-move-down", kbfunc_client_move, CWM_CONTEXT_CC,
@@ -109,7 +109,7 @@ static const struct {
 	    (CWM_RIGHT | CWM_BIGAMOUNT) },
 	{ "window-move-left-big", kbfunc_client_move, CWM_CONTEXT_CC,
 	    (CWM_LEFT | CWM_BIGAMOUNT) },
-	{ "window-resize", mousefunc_client_resize, CWM_CONTEXT_CC, 0 },
+	{ "window-resize", kbfunc_client_resize, CWM_CONTEXT_CC, 0 },
 	{ "window-resize-up", kbfunc_client_resize, CWM_CONTEXT_CC,
 	    (CWM_UP) },
 	{ "window-resize-down", kbfunc_client_resize, CWM_CONTEXT_CC,

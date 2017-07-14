@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.340 2017/07/12 16:56:26 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.341 2017/07/14 17:23:38 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -492,9 +492,6 @@ void			 kbfunc_client_menu_label(void *, struct cargs *);
 void			 kbfunc_exec_cmd(void *, struct cargs *);
 void			 kbfunc_exec_lock(void *, struct cargs *);
 void			 kbfunc_exec_term(void *, struct cargs *);
-
-void			 mousefunc_client_move(void *, struct cargs *);
-void			 mousefunc_client_resize(void *, struct cargs *);
 
 void			 menu_windraw(struct screen_ctx *, Window,
 			     const char *, ...);
