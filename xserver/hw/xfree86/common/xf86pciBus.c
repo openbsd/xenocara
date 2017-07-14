@@ -1173,30 +1173,29 @@ xf86VideoPtrToDriverList(struct pci_device *dev,
 		case 0x0bef:
 			/* Use fbdev/vesa driver on Oaktrail, Medfield, CDV */
 			break;
-		/* Broadwell */
-		case 0x1602:
-		case 0x1606:
-		case 0x160a:
-		case 0x160b:
-		case 0x160d:
-		case 0x160e:
-		case 0x1612:
-		case 0x1616:
-		case 0x161a:
-		case 0x161b:
-		case 0x161d:
-		case 0x161e:
-		case 0x1622:
-		case 0x1626:
-		case 0x162a:
-		case 0x162b:
-		case 0x162d:
-		case 0x162e:
-			/* Use modesetting driver on Broadwell */
-			driverList[0] = "modesetting";
+		case 0x3577:
+		case 0x2562:
+		case 0x3582:
+		case 0x358e:
+		case 0x2572:
+		case 0x2582:
+		case 0x258a:
+		case 0x2592:
+		case 0x2772:
+		case 0x27a2:
+		case 0x27ae:
+		case 0x2972:
+		case 0x29b2:
+		case 0x29c2:
+		case 0x29d2:
+		case 0xa001:
+		case 0xa011:
+			/* Use intel driver on 2nd and 3rd generation */
+			driverList[0] = "intel";
 			break;
 		default:
-			driverList[0] = "intel";
+			/* Use modesetting driver on 4th generation and up */
+			driverList[0] = "modesetting";
 			break;
         }
         break;
