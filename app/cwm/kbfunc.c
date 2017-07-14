@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.148 2017/07/14 17:23:38 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.149 2017/07/14 18:01:46 okan Exp $
  */
 
 #include <sys/types.h>
@@ -90,7 +90,7 @@ kbfunc_ptrmove(void *ctx, struct cargs *cargs)
 void
 kbfunc_client_move(void *ctx, struct cargs *cargs)
 {
-	if ((cargs->xev == CWM_XEV_BTN))
+	if (cargs->xev == CWM_XEV_BTN)
 		kbfunc_client_move_mb(ctx, cargs);
 	else
 		kbfunc_client_move_kb(ctx, cargs);
@@ -99,7 +99,7 @@ kbfunc_client_move(void *ctx, struct cargs *cargs)
 void
 kbfunc_client_resize(void *ctx, struct cargs *cargs)
 {
-	if ((cargs->xev == CWM_XEV_BTN))
+	if (cargs->xev == CWM_XEV_BTN)
 		kbfunc_client_resize_mb(ctx, cargs);
 	else
 		kbfunc_client_resize_kb(ctx, cargs);
