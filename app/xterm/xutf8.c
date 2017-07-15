@@ -1,6 +1,7 @@
-/* $XTermId: xutf8.c,v 1.13 2012/05/09 20:56:09 tom Exp $ */
+/* $XTermId: xutf8.c,v 1.16 2017/05/31 09:05:00 tom Exp $ */
 
 /*
+ * Copyright 2002-2016,2017 by Thomas E. Dickey
  * Copyright (c) 2001 by Juliusz Chroboczek
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -40,7 +41,7 @@
 #include "keysym2ucs.c"
 
 Atom
-_xa_utf8_string(Display * dpy)
+_xa_utf8_string(Display *dpy)
 {
     static AtomPtr p = NULL;
 
@@ -94,10 +95,10 @@ utf8insert(char *dest, int c, size_t *len_return)
     }
 }
 
-static int
+static size_t
 l1countUtf8Bytes(char *s, size_t len)
 {
-    int l = 0;
+    size_t l = 0;
     while (len != 0) {
 	if ((*s & 0x80) == 0)
 	    l++;
@@ -179,7 +180,7 @@ utf8l1strlen(char *s)
 }
 
 int
-Xutf8TextPropertyToTextList(Display * dpy,
+Xutf8TextPropertyToTextList(Display *dpy,
 			    const XTextProperty * tp,
 			    char ***list_return,
 			    int *count_return)
@@ -225,7 +226,7 @@ Xutf8TextPropertyToTextList(Display * dpy,
     else
 	len = l1countUtf8Bytes((char *) tp->value, datalen);
 
-    start = CastMallocN(char, len);
+    start = TextAlloc(len);
     if (!start) {
 	free(list);
 	return XNoMemory;
@@ -252,7 +253,7 @@ Xutf8TextPropertyToTextList(Display * dpy,
 }
 
 int
-Xutf8TextListToTextProperty(Display * dpy,
+Xutf8TextListToTextProperty(Display *dpy,
 			    char **list,
 			    int count,
 			    XICCEncodingStyle style,
@@ -325,7 +326,7 @@ Xutf8TextListToTextProperty(Display * dpy,
 
 int
 Xutf8LookupString(XIC ic GCC_UNUSED,
-		  XKeyEvent * ev,
+		  XKeyEvent *ev,
 		  char *buffer,
 		  int nbytes,
 		  KeySym * keysym_return,
@@ -369,6 +370,7 @@ Xutf8LookupString(XIC ic GCC_UNUSED,
     }
     return (int) len;
 }
+
 #else /* X_HAVE_UTF8_STRING */
 /* Silence the compiler */
 void

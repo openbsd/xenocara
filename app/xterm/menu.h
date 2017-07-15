@@ -1,4 +1,4 @@
-/* $XTermId: menu.h,v 1.138 2016/01/28 02:15:29 tom Exp $ */
+/* $XTermId: menu.h,v 1.139 2016/12/22 02:04:51 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -79,6 +79,7 @@ extern void HandleAllow132         PROTO_XT_ACTIONS_ARGS;
 extern void HandleAllowBoldFonts   PROTO_XT_ACTIONS_ARGS;
 extern void HandleAllowColorOps    PROTO_XT_ACTIONS_ARGS;
 extern void HandleAllowFontOps     PROTO_XT_ACTIONS_ARGS;
+extern void HandleAllowMouseOps    PROTO_XT_ACTIONS_ARGS;
 extern void HandleAllowSends       PROTO_XT_ACTIONS_ARGS;
 extern void HandleAllowTcapOps     PROTO_XT_ACTIONS_ARGS;
 extern void HandleAllowTitleOps    PROTO_XT_ACTIONS_ARGS;
@@ -319,6 +320,7 @@ typedef enum {
     fontMenu_line3,
     fontMenu_allowColorOps,
     fontMenu_allowFontOps,
+    fontMenu_allowMouseOps,
     fontMenu_allowTcapOps,
     fontMenu_allowTitleOps,
     fontMenu_allowWindowOps,
@@ -469,6 +471,7 @@ extern void update_font_escape(void);
 #if OPT_ALLOW_XXX_OPS
 extern void update_menu_allowColorOps(void);
 extern void update_menu_allowFontOps(void);
+extern void update_menu_allowMouseOps(void);
 extern void update_menu_allowTcapOps(void);
 extern void update_menu_allowTitleOps(void);
 extern void update_menu_allowWindowOps(void);

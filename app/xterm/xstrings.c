@@ -1,7 +1,7 @@
-/* $XTermId: xstrings.c,v 1.63 2016/05/22 18:28:27 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.70 2017/06/11 21:20:37 tom Exp $ */
 
 /*
- * Copyright 2000-2015,2016 by Thomas E. Dickey
+ * Copyright 2000-2016,2017 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -47,6 +47,14 @@ alloc_pw(struct passwd *target, struct passwd *source)
     target->pw_dir = x_strdup(source->pw_dir);
     target->pw_name = x_strdup(source->pw_name);
     target->pw_shell = x_strdup(source->pw_shell);
+}
+
+static void
+free_pw(struct passwd *source)
+{
+    free(source->pw_dir);
+    free(source->pw_name);
+    free(source->pw_shell);
 }
 
 void
@@ -154,12 +162,14 @@ login_alias(char *login_name, uid_t uid, struct passwd *in_out)
     if (!IsEmpty(login_name)
 	&& strcmp(login_name, in_out->pw_name)) {
 	struct passwd pw2;
+	Boolean ok2;
 
-	if (x_getpwnam(login_name, &pw2)) {
+	if ((ok2 = x_getpwnam(login_name, &pw2))) {
 	    uid_t uid2 = pw2.pw_uid;
 	    struct passwd pw3;
+	    Boolean ok3;
 
-	    if (x_getpwuid(uid, &pw3)
+	    if ((ok3 = x_getpwuid(uid, &pw3))
 		&& ((uid_t) pw3.pw_uid == uid2)) {
 		/* use the other passwd-data including shell */
 		alloc_pw(in_out, &pw2);
@@ -167,6 +177,10 @@ login_alias(char *login_name, uid_t uid, struct passwd *in_out)
 		free(login_name);
 		login_name = NULL;
 	    }
+	    if (ok2)
+		free_pw(&pw2);
+	    if (ok3)
+		free_pw(&pw3);
 	}
     }
     return login_name;
@@ -415,7 +429,7 @@ x_strdup(const char *s)
     char *result = 0;
 
     if (s != 0) {
-	char *t = CastMallocN(char, strlen(s) + 1);
+	char *t = TextAlloc(4 + strlen(s));
 	if (t != 0) {
 	    strcpy(t, s);
 	}
@@ -485,9 +499,8 @@ x_strrtrim(const char *source)
     if (source != 0 && *source != '\0') {
 	char *t = x_strdup(source);
 	if (t != 0) {
-	    char *s = t;
 	    if (*t != '\0') {
-		s = t + strlen(t);
+		char *s = t + strlen(t);
 		while (s != t && IsSpace(CharOf(s[-1]))) {
 		    *--s = '\0';
 		}
@@ -523,5 +536,43 @@ x_toupper(int ch)
 	result = table[CharOf(ch)];
     }
 
+    return result;
+}
+
+/*
+ * Match strings ignoring case and allowing glob-like '*' and '?'
+ */
+int
+x_wildstrcmp(const char *pattern, const char *actual)
+{
+    int result = 0;
+
+    while (*pattern && *actual) {
+	char c1 = x_toupper(*pattern);
+	char c2 = x_toupper(*actual);
+
+	if (c1 == '*') {
+	    Boolean found = False;
+	    pattern++;
+	    while (*actual != '\0') {
+		if (!x_wildstrcmp(pattern, actual++)) {
+		    found = True;
+		    break;
+		}
+	    }
+	    if (!found) {
+		result = 1;
+		break;
+	    }
+	} else if (c1 == '?') {
+	    ++pattern;
+	    ++actual;
+	} else if ((result = (c1 != c2)) == 0) {
+	    ++pattern;
+	    ++actual;
+	} else {
+	    break;
+	}
+    }
     return result;
 }

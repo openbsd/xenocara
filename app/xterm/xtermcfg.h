@@ -187,6 +187,7 @@
 /* #undef OPT_XMC_GLITCH */		/* CF_ARG_ENABLE(xmc-glitch) */
 /* #undef OPT_ZICONBEEP */		/* CF_ARG_DISABLE(ziconbeep) */
 /* #undef OWN_TERMINFO_DIR */		/* AC_ARG_WITH(own-terminfo) */
+/* +#undef OWN_TERMINFO_ENV		/* AC_ARG_ENABLE(env-terminfo) */
 /* #undef PROCFS_ROOT */		/* CF_ARG_ENABLE(exec-xterm) */
 #define SCROLLBAR_RIGHT 1		/* CF_ARG_ENABLE(rightbar) */
 #define SIG_ATOMIC_T volatile sig_atomic_t		/* CF_SIG_ATOMIC_T */

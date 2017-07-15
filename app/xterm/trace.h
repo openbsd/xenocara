@@ -1,7 +1,7 @@
-/* $XTermId: trace.h,v 1.78 2016/10/05 08:56:36 tom Exp $ */
+/* $XTermId: trace.h,v 1.80 2017/01/20 22:36:24 tom Exp $ */
 
 /*
- * Copyright 1997-2015,2016 by Thomas E. Dickey
+ * Copyright 1997-2016,2017 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -67,6 +67,8 @@ extern	const char * visibleSelectionTarget(Display * /* d */, Atom /* a */);
 extern	const char * visibleTekparse (int);
 extern	const char * visibleVTparse (int);
 extern	const char * visibleXError (int /* code */);
+
+extern	const char * TraceAtomName(Display * /* d */, Atom /* a */);
 
 extern	void	TraceArgv(const char * /* tag */, char ** /* argv */);
 #undef  TRACE_ARGV

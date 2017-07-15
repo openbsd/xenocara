@@ -1,7 +1,7 @@
-/* $XTermId: cachedGCs.c,v 1.64 2016/05/16 09:26:15 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.67 2017/01/02 18:58:13 tom Exp $ */
 
 /*
- * Copyright 2007-2014,2016 by Thomas E. Dickey
+ * Copyright 2007-2016,2017 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -32,10 +32,9 @@
 
 #include <data.h>
 #include <xstrings.h>
+#include <fontutils.h>
 
 #include <X11/Xmu/Drawing.h>
-
-#include <stdio.h>
 
 /*
  * hide (or eliminate) calls to
@@ -495,15 +494,16 @@ setCgsFont(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, XTermFonts * font)
     CgsCache *me;
 
     if ((me = myCache(xw, cgsWin, cgsId)) != 0) {
+	TScreen *screen = TScreenOf(xw);
 	if (!HaveFont(font)) {
 	    if (cgsId != gcNorm)
 		(void) getCgsGC(xw, cgsWin, gcNorm);
 #ifndef NO_ACTIVE_ICON
 	    if (cgsWin == &(TScreenOf(xw)->iconVwin))
-		font = &(TScreenOf(xw)->fnt_icon);
+		font = getIconicFont(screen);
 	    else
 #endif
-		font = &(TScreenOf(xw)->fnts[fNorm]);
+		font = getNormalFont(screen, fNorm);
 	}
 	if (HaveFont(font) && okFont(font->fs)) {
 	    TRACE2(("setCgsFont next: %s for %s slot %p, gc %p\n",

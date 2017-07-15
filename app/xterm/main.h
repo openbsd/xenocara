@@ -1,7 +1,7 @@
-/* $XTermId: main.h,v 1.61 2013/04/24 08:52:20 tom Exp $ */
+/* $XTermId: main.h,v 1.63 2016/12/22 23:43:46 tom Exp $ */
 
 /*
- * Copyright 2000-2012,2013 by Thomas E. Dickey
+ * Copyright 2000-2013,2016 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -103,6 +103,10 @@
 #define DEF_ALLOW_FONT		True
 #endif
 
+#ifndef DEF_ALLOW_MOUSE
+#define DEF_ALLOW_MOUSE		True
+#endif
+
 #ifndef DEF_ALLOW_TCAP
 #define DEF_ALLOW_TCAP		True
 #endif
@@ -121,6 +125,10 @@
 
 #ifndef DEF_DISALLOWED_FONT
 #define DEF_DISALLOWED_FONT	"SetFont,GetFont"
+#endif
+
+#ifndef DEF_DISALLOWED_MOUSE
+#define DEF_DISALLOWED_MOUSE	"*"
 #endif
 
 #ifndef DEF_DISALLOWED_TCAP

@@ -1,4 +1,4 @@
--- $XTermId: THANKS,v 1.15 2015/08/28 08:17:31 tom Exp $
+-- $XTermId: THANKS,v 1.16 2017/05/27 16:55:42 tom Exp $
 -- vile:txtmode fk=8bit
 There's no AUTHORS file in this distribution; it would be redundant since
 I (Thomas E. Dickey) have done more than 80% of the work on xterm since 1996.
@@ -28,6 +28,7 @@ Andrey Panov
 Andries E Brouwer
 Anton Kovalenko
 Balazs Kezes
+Ben Wiley Sittler
 Ben Yoshino
 Bernhard R Link
 Bernhard Rosenkraenzer
@@ -45,6 +46,7 @@ Christian Biere
 Christian Weisgerber
 Chuck Blake
 D Roland Walker
+Dan Church
 Daniel Colascione
 Daniel Drake
 Daniel Jacobowitz
@@ -110,6 +112,7 @@ Kevin Buhr
 Kevin Ryde
 Kevin Schoedel
 Kiyokazu Suto
+Larry Hynes
 Larry Riedel
 Lee Olsen
 Loïc Minier
@@ -126,6 +129,7 @@ Matthias Baake
 Matthias Scheler
 Matthieu Herrb
 Matthieu Lagouge
+Mattias Engdegård
 Max Mikhanosha
 Michael Riepe
 Michael Rohleder
@@ -133,6 +137,7 @@ Michael Schroeder
 Mike Castle
 Mike Fabian
 Mike Hopkirk
+Milan Mehner
 Min Sik Kim
 Miroslav Lichvar
 Nam SungHyun
@@ -189,7 +194,7 @@ Tomohiro Kubota
 Tor Lillqvist
 Torrey Lyons
 Victor Stinner
-Vincent Lefevre
+Vincent Lefèvre
 Werner Fink
 Werner Lemberg
 Will Day

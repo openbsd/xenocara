@@ -1,7 +1,7 @@
-/* $XTermId: menu.c,v 1.338 2016/05/30 20:58:39 tom Exp $ */
+/* $XTermId: menu.c,v 1.344 2017/01/02 23:46:03 tom Exp $ */
 
 /*
- * Copyright 1999-2015,2016 by Thomas E. Dickey
+ * Copyright 1999-2016,2017 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -196,6 +196,7 @@ static void do_activeicon      PROTO_XT_CALLBACK_ARGS;
 static void enable_allow_xxx_ops (Bool);
 static void do_allowColorOps   PROTO_XT_CALLBACK_ARGS;
 static void do_allowFontOps    PROTO_XT_CALLBACK_ARGS;
+static void do_allowMouseOps   PROTO_XT_CALLBACK_ARGS;
 static void do_allowTcapOps    PROTO_XT_CALLBACK_ARGS;
 static void do_allowTitleOps   PROTO_XT_CALLBACK_ARGS;
 static void do_allowWindowOps  PROTO_XT_CALLBACK_ARGS;
@@ -444,6 +445,7 @@ MenuEntry fontMenuEntries[] = {
     { "line3",		NULL,		NULL },
     { "allow-color-ops",do_allowColorOps,NULL },
     { "allow-font-ops",	do_allowFontOps,NULL },
+    { "allow-mouse-ops",do_allowMouseOps,NULL },
     { "allow-tcap-ops",	do_allowTcapOps,NULL },
     { "allow-title-ops",do_allowTitleOps,NULL },
     { "allow-window-ops",do_allowWindowOps,NULL },
@@ -612,7 +614,7 @@ unusedEntries(XtermWidget xw, MenuIndex num)
 	break;
     case vtMenu:
 #ifndef NO_ACTIVE_ICON
-	if (!screen->fnt_icon.fs || !screen->iconVwin.window) {
+	if (!getIconicFont(screen)->fs || !screen->iconVwin.window) {
 	    result[vtMenu_activeicon] = True;
 	}
 #endif /* NO_ACTIVE_ICON */
@@ -867,6 +869,7 @@ domenu(Widget w,
 #if OPT_ALLOW_XXX_OPS
 	    update_menu_allowColorOps();
 	    update_menu_allowFontOps();
+	    update_menu_allowMouseOps();
 	    update_menu_allowTcapOps();
 	    update_menu_allowTitleOps();
 	    update_menu_allowWindowOps();
@@ -1039,16 +1042,6 @@ HandleSecure(Widget w GCC_UNUSED,
 	     String *params GCC_UNUSED,		/* [0] = volume */
 	     Cardinal *param_count GCC_UNUSED)	/* 0 or 1 */
 {
-#if 0
-    Time ev_time = CurrentTime;
-
-    if ((event->xany.type == KeyPress) ||
-	(event->xany.type == KeyRelease))
-	ev_time = event->xkey.time;
-    else if ((event->xany.type == ButtonPress) ||
-	     (event->xany.type == ButtonRelease))
-	ev_time = event->xbutton.time;
-#endif
     do_securekbd(vt_shell[mainMenu].w, (XtPointer) 0, (XtPointer) 0);
 }
 
@@ -3722,7 +3715,7 @@ update_font_renderfont(void)
 		   fontMenu_render_font,
 		   (term->work.render_font == True));
     SetItemSensitivity(fontMenuEntries[fontMenu_render_font].widget,
-		       !IsEmpty(term->misc.face_name));
+		       !IsEmpty(CurrentXftFont(term)));
     update_fontmenu(term);
 }
 #endif
@@ -3787,6 +3780,7 @@ static void
 enable_allow_xxx_ops(Bool enable)
 {
     SetItemSensitivity(fontMenuEntries[fontMenu_allowFontOps].widget, enable);
+    SetItemSensitivity(fontMenuEntries[fontMenu_allowMouseOps].widget, enable);
     SetItemSensitivity(fontMenuEntries[fontMenu_allowTcapOps].widget, enable);
     SetItemSensitivity(fontMenuEntries[fontMenu_allowTitleOps].widget, enable);
     SetItemSensitivity(fontMenuEntries[fontMenu_allowWindowOps].widget, enable);
@@ -3813,6 +3807,18 @@ do_allowFontOps(Widget w,
     if (xw != 0) {
 	ToggleFlag(TScreenOf(xw)->allowFontOps);
 	update_menu_allowFontOps();
+    }
+}
+
+static void
+do_allowMouseOps(Widget w,
+		 XtPointer closure GCC_UNUSED,
+		 XtPointer data GCC_UNUSED)
+{
+    XtermWidget xw = getXtermWidget(w);
+    if (xw != 0) {
+	ToggleFlag(TScreenOf(xw)->allowMouseOps);
+	update_menu_allowMouseOps();
     }
 }
 
@@ -3871,6 +3877,15 @@ HandleAllowFontOps(Widget w,
 }
 
 void
+HandleAllowMouseOps(Widget w,
+		    XEvent *event GCC_UNUSED,
+		    String *params,
+		    Cardinal *param_count)
+{
+    HANDLE_VT_TOGGLE(allowMouseOps);
+}
+
+void
 HandleAllowTcapOps(Widget w,
 		   XEvent *event GCC_UNUSED,
 		   String *params,
@@ -3913,6 +3928,15 @@ update_menu_allowFontOps(void)
 		   fontMenuEntries,
 		   fontMenu_allowFontOps,
 		   TScreenOf(term)->allowFontOps);
+}
+
+void
+update_menu_allowMouseOps(void)
+{
+    UpdateCheckbox("update_menu_allowMouseOps",
+		   fontMenuEntries,
+		   fontMenu_allowMouseOps,
+		   TScreenOf(term)->allowMouseOps);
 }
 
 void

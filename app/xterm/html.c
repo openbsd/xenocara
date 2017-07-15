@@ -1,4 +1,4 @@
-/* $XTermId: html.c,v 1.5 2016/02/12 00:20:24 tom Exp $ */
+/* $XTermId: html.c,v 1.6 2017/05/30 09:14:55 tom Exp $ */
 
 /*
  * Copyright 2015 Jens Schweikhardt
@@ -235,8 +235,8 @@ dumpHtmlLine(XtermWidget xw, int row, FILE *fp)
 	slen += sprintf(attr + slen,
 			" ' style='color: rgb(%.2f%%, %.2f%%, %.2f%%);",
 			RGBPCT(fgcolor));
-	slen += sprintf(attr + slen,
-			" background: rgb(%.2f%%, %.2f%%, %.2f%%)'>", RGBPCT(bgcolor));
+	(void) sprintf(attr + slen,
+		       " background: rgb(%.2f%%, %.2f%%, %.2f%%)'>", RGBPCT(bgcolor));
 	if (col == 0) {
 	    fputs(attr, fp);
 	    attr = &attrs[attr_index ^= 1][0];

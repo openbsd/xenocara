@@ -25,7 +25,9 @@ PKG_DESKTOP	:= /usr/share/applications
 DSTDIR		:= $(CURDIR)/debian/$(PACKAGE)
 MY_DESKTOP	:= $(DSTDIR)/usr/share/applications
 
-CFLAGS =
+CPPFLAGS	:= $(shell dpkg-buildflags --get CPPFLAGS)
+CFLAGS		:= $(shell dpkg-buildflags --get CFLAGS)
+LDFLAGS		:= $(shell dpkg-buildflags --get LDFLAGS)
 
 ifneq (,$(findstring debug,$(DEB_BUILD_OPTIONS)))
 DEBOP=--enable-debug
@@ -46,6 +48,9 @@ configure: configure-stamp
 configure-stamp:
 	dh_testdir
 
+	CPPFLAGS="$(CPPFLAGS)" \
+	CFLAGS="$(CFLAGS)" \
+	LDFLAGS="$(LDFLAGS)" \
 	./configure \
 		--host=$(DEB_HOST_GNU_TYPE) \
 		--build=$(DEB_BUILD_GNU_TYPE) \

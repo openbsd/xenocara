@@ -2,7 +2,7 @@
  *****************************************************************************
  * this file is part of xterm                                                *
  *                                                                           *
- * Copyright 1997-2015,2016 by Thomas E. Dickey                              *
+ * Copyright 1997-2016,2017 by Thomas E. Dickey                              *
  *                                                                           *
  * All Rights Reserved                                                       *
  *                                                                           *
@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1693 2016/10/08 00:44:44 tom Exp $
+  $XTermId: xterm.log.html,v 1.1765 2017/06/21 00:48:25 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -53,7 +53,7 @@
 <body>
   <hr>
 
-  <p>Copyright &copy; 1997-2013,2014 by <a href=
+  <p>Copyright &copy; 1997-2016,2017 by <a href=
   "mailto:dickey@invisible-island.net">Thomas E. Dickey</a></p>
   <hr>
 
@@ -68,10 +68,16 @@
   that other changes were made as well, by other people, to fix
   bugs and correct ifdef's for portability. Until mid-2006, most of
   these were summarized in the XFree86 <a href=
-  "http://cvsweb.xfree86.org/cvsweb/xc/programs/Xserver/hw/xfree86/CHANGELOG">
+  "https://web.archive.org/web/20070101220948/http://cvsweb.xfree86.org/cvsweb/xc/programs/Xserver/hw/xfree86/CHANGELOG">
   CHANGELOG</a>).</p>
 
   <ul>
+    <li><a href="#xterm_330">Patch #330 - 2017/06/20</a></li>
+
+    <li><a href="#xterm_329">Patch #329 - 2017/06/12</a></li>
+
+    <li><a href="#xterm_328">Patch #328 - 2017/06/01</a></li>
+
     <li><a href="#xterm_327">Patch #327 - 2016/10/07</a></li>
 
     <li><a href="#xterm_326">Patch #326 - 2016/09/25</a></li>
@@ -939,6 +945,387 @@
     <li><a href="#xterm_01">Patch #1 - 1996/1/6</a></li>
   </ul>
 
+  <h1><a name="xterm_330" id="xterm_330">Patch #330 -
+  2017/06/20</a></h1>
+
+  <ul>
+    <li>updates for ReGIS (Ross Combs):
+
+      <ul>
+        <li>remove redundant text command error check which broke
+        <code>T(B)</code> and <code>T(E)</code>.</li>
+
+        <li>retain the loading alphabet number across multiple
+        &ldquo;L&rdquo; commands.</li>
+
+        <li>add <code>S(T)</code> delay handler.</li>
+
+        <li>fix some color handling error messages.</li>
+
+        <li>add stubbed-out macrograph handling.</li>
+
+        <li>use <code>fragment_remaining()</code> and
+        <code>fragment_consumed()</code> instead of manually
+        checking position / length in various places.</li>
+
+        <li>rename some local variables in string / extent / option
+        parsing</li>
+
+        <li>wrap some long lines.</li>
+
+        <li>move macrograph command handling out of the
+        top-level.</li>
+      </ul>
+    </li>
+
+    <li>add a summary of the italic fonts loaded to
+    <code>-report-fonts</code> option.</li>
+
+    <li>modify the font-lookup for italics to allow for
+    &ldquo;<code>-i-</code>&rdquo; if no match is found with slant
+    &ldquo;<code>-o-</code>&rdquo; (prompted by patch by Ben
+    Wong).</li>
+
+    <li>change default values for <code>mkSamplePass</code> and
+    <code>mkSampleSize</code> to reflect generally-improved locale
+    support in various operating systems (FreeBSD #219800).</li>
+
+    <li>modify <code>wcwidth.c</code> to return -1 for non-Unicode
+    values, and adjust a couple of blocks to better match
+    assumptions about ambiguous-width characters in other
+    implementations. Also modify <code>wcwidth.c</code> to support
+    configurable soft-hyphen, so there is no drawback to using this
+    version rather than a system <code>wcwidth</code>.</li>
+
+    <li>amend change made in <a href="#xterm_328">patch #328</a>
+    for cursor-visibility to handle case where an application is
+    updating the reverse-video state (FreeBSD #219800).</li>
+
+    <li>update tables of combining and ambiguous-width characters
+    in wcwidth.c based on Unicode 10.0.0.</li>
+
+    <li>build-fix for <code>--enable-sixel-graphics</code> without
+    <code>--enable-regis-graphics</code> (reports by Sven Joachim,
+    FreeBSD #219945).</li>
+  </ul>
+
+  <h1><a name="xterm_329" id="xterm_329">Patch #329 -
+  2017/06/12</a></h1>
+
+  <ul>
+    <li>add control sequences for reading the Sixel and ReGIS
+    graphics sizes (suggested by Ben Wong).</li>
+
+    <li>add a workaround for <code>wcwidth</code> returning -1 for
+    characters which should have been printable (FreeBSD
+    #219800).</li>
+
+    <li>fix a bug in font initialization from <a href=
+    "#xterm_328">patch #328</a> (FreeBSD #219800).</li>
+
+    <li>fix a special case in <code>HideCursor</code> which
+    assigned a bold font to the slot used for normal font in
+    changes for italics in <a href="#xterm_307">patch #307</a>
+    (Debian #858304).</li>
+
+    <li>updates for ReGIS (Ross Combs):
+
+      <ul>
+        <li>Strings specified with no command are used as
+        "comments". Print these in the log when tracing.</li>
+
+        <li>Catch attempts to use "alternate display" mode (AKA
+        "blink") from the GIGI, but do not implement it.</li>
+
+        <li>The <code>T(M)</code> command should only multiply the
+        height by 10, not 20.</li>
+
+        <li>Make the <code>S(E)</code> command reset more state
+        than just the screen contents.</li>
+
+        <li>Remove two rotation variables which were only being
+        printed.</li>
+
+        <li>Numerous minor fixes and comment updates in the
+        <code>R</code> command.</li>
+
+        <li>Unknown <code>R</code> command option names trigger an
+        empty response.</li>
+
+        <li>Fix the output position after printing rotated text (it
+        was missing the the sign before).</li>
+
+        <li>Fix the position change with pixelvectors and rotated
+        text (the rotation transform was not being applied).</li>
+
+        <li>Update the <em>TODO</em> list and remove a verification
+        <em>FIXME</em> (slanted text positioning is correct as
+        is).</li>
+
+        <li>Emulate the approximately 1.4x enlargement for text
+        which isn't rotated at right angles.</li>
+
+        <li>Only update the color planes specified in the plane
+        mask (the <code>W</code> command's <code>F</code>
+        option).</li>
+      </ul>
+    </li>
+
+    <li>fix a bug introduced by the changes to font information in
+    <a href="#xterm-328">patch #328</a>. When processing the
+    "checkfont" option of the <code>locale</code> resource, the
+    program referred to the <em>request</em> data, to an array
+    which was only allocated in the <em>new/result</em> widget
+    (report by H Merijn Brand).</li>
+
+    <li>fix a missing assignment initialization to make the
+    <code>utf8</code> resource control whether escape sequences to
+    enable/disable UTF-8 mode are allowed.</li>
+  </ul>
+
+  <h1><a name="xterm_328" id="xterm_328">Patch #328 -
+  2017/06/01</a></h1>
+
+  <ul>
+    <li>revise parser for <code>charClass</code> resource, making
+    these improvements:
+
+      <ul>
+        <li>accept octal and hexadecimal values</li>
+
+        <li>allow embedded whitespace</li>
+
+        <li>allow the class after colon to be optional, e.g., to
+        clear class settings for a range of characters.</li>
+      </ul>
+    </li>
+
+    <li>add command-line option
+    <code>-report-charclass</code>.</li>
+
+    <li>fix most lintian warnings about test-package</li>
+
+    <li>add <code>eraseSavedLines</code> resource.</li>
+
+    <li>document <code>DECSED&nbsp;3</code> in
+    <code>ctlseqs.ms</code> (report by Ben Longmans).</li>
+
+    <li>improve integration between configure-events and updates
+    for reported screensize, in particular when switching between
+    vt100 and tek4014 modes.</li>
+
+    <li>modify selection-highlighting of reverse-video text to keep
+    that distinct, e.g., by reversing the selection foreground and
+    background colors as one would expect. This fixes a "useless"
+    case in the description of
+    <code>highlightColorMode</code>.</li>
+
+    <li>improve fix for Debian #759734, addressing a case where
+    non-colored cursor would be invisible against reverse-video
+    (see <a href="#xterm_311">patch #311</a>).</li>
+
+    <li>updates for ReGIS (Ross Combs):
+
+      <ul>
+        <li>the "H" option of the "T" command should multiply by
+        10, not 20.</li>
+
+        <li>display unknown glyphs as a solid block.</li>
+
+        <li>given a succession of text-direction options, use the
+        last.</li>
+
+        <li>fix the direction of ReGIS slanted text so that
+        negative values produce oblique output .</li>
+
+        <li>fix the ReGIS text direction option to only rotate
+        characters when no following size option is used.</li>
+      </ul>
+    </li>
+
+    <li>update terminfo to better match corresponding entries in
+    ncurses, e.g., <code>u8</code> pattern to match the VT220,
+    VT420, etc., primary responses, as well as adding
+    <code>smxx</code> and <code>rmxx</code>.</li>
+
+    <li>fixes from J&ouml;rg Sommer:
+
+      <ul>
+        <li>corrected a trace-message regarding maximum
+        graphics-size; it used the similar ReGIS maximum size which
+        might not be configured.</li>
+
+        <li>in <code>do_select_regex</code>, clear selection if
+        there is no match. If the regex does not match anything
+        around the cursor, the selection returned must be empty,
+        otherwise the whole line is treated as a match. This way
+        the command defined by <code>exec-selectable</code> will
+        not be executed if there is no match.</li>
+
+        <li>modify limit in <code>do_select_regex</code> to include
+        the character at the cursor in the match, making it easier
+        to type something and then hit the key to trigger
+        <code>exec-selectable</code>.</li>
+
+        <li>If <code>exec-selectable</code> or
+        <code>insert-selection</code> is triggered by a mouse
+        button click, the position of the mouse pointer should be
+        used. This makes it easier to address any position on the
+        window and it makes it possible to use the mouse, e.g., for
+        applications such as mutt where you cannot move the
+        cursor.</li>
+      </ul>
+    </li>
+
+    <li>modify <code>DECRC</code> to save/restore xterm's
+    last-column flag used to control wrapping behavior rather than
+    manipulating <code>DECAWM</code> (report/analysis by Mattias
+    Engdeg&aring;rd).</li>
+
+    <li>add configure option <code>--enable-terminfo-env</code> to
+    use the value set by <code>--with-own-terminfo</code> for the
+    <code>$TERMINFO</code> environment variable. That variable was
+    set automatically for HPUX, but would be useful in other
+    systems, e.g., for Solaris (request by Jeff Wieland).</li>
+
+    <li>fix a race condition when setting up a signal handler to
+    timeout if opening <code>/dev/tty</code> hangs (patch by Tobias
+    Stoeckmann).</li>
+
+    <li>review/cleanup resources which were not in the manual page
+    (report by Maxwell Anselm):
+
+      <ul>
+        <li>add manual page description as needed.</li>
+
+        <li>drop resource name for <code>menuBar</code>, as
+        unnecessary.</li>
+
+        <li>modify fallback numeric value for
+        <code>regisScreenSize</code> resource to match that for
+        <code>maxGraphicSize</code>.</li>
+      </ul>
+    </li>
+
+    <li>updated configure macros <code>CF_ADD_CFLAGS</code>,
+    <code>CF_CC_ENV_FLAGS</code>, <code>CF_GNU_SOURCE</code>,
+    <code>CF_MATH_LIB</code>, and <code>CF_XOPEN_SOURCE</code> from
+    other program-changes.</li>
+
+    <li>update config.guess, config.sub</li>
+
+    <li>change &ldquo;maximum screensize&rdquo; assumed by
+    <code>resize</code> to 9999x9999, to accommodate people using
+    the <em><code>Unreadable</code></em> font.</li>
+
+    <li>drop <code>Utility</code> from default value of
+    <code>--with-desktop-category</code> (Debian #780176).</li>
+
+    <li>widen the configure script pattern used for finding related
+    ".desktop" files, including &ldquo;Terminal&rdquo;</li>
+
+    <li>several minor improvements to font utility functions:
+
+      <ul>
+        <li>provide for later modification to implement font-sets
+        by parsing the font resources as comma-separated
+        lists.</li>
+
+        <li>parse <code>-fn</code> and <code>-fa</code> similarly,
+        using &ldquo;x:&rdquo; and &ldquo;xft:&rdquo; prefixes for
+        font name/family strings to distinguish between XLFD and
+        Xft font specifications.</li>
+
+        <li>use loops to iterate over font classes</li>
+
+        <li>use getters/setters for font data to allow for
+        on-demand lookups.</li>
+
+        <li>make the debugging trace for missing glyph less verbose
+        since that interferes with the <code>-report-fonts</code>
+        option.</li>
+
+        <li>refactor <code>xtermLoadFont</code> to make it clearer
+        how some fonts are derived from others, e.g., bold,
+        wide.</li>
+
+        <li>make the triggering and suppressing of font-warnings
+        more consistent by storing the last state in the
+        widget.</li>
+
+        <li>reduce font-warnings by checking for repeated
+        warnings.</li>
+      </ul>
+    </li>
+
+    <li>add <code>vttests/query-status.pl</code></li>
+
+    <li>add <code>vttests/closest-rgb</code></li>
+
+    <li>add special case for displaying soft-hyphen if it happens
+    to fall at the right margin, and omitting similar case such as
+    the BIDI markers, where a zero-width character is neither a
+    control character nor a combining character (Debian
+    #844325).</li>
+
+    <li>modify logic for <code>OSC&nbsp;52</code>, <em>manipulate
+    selection data</em>, to update the selection-time to include
+    the latest X events. This fixes some cases where the selection
+    was invalid, e.g., after an event due to focus-follows-mouse
+    (report/testcase by Stephane Chauveau).</li>
+
+    <li>revise macro <code>CastMallocN</code> as new macro
+    <code>TextAlloc</code> to make explicit use of
+    <code>sizeof(char)</code> (prompted by patch by Cade
+    Foster).</li>
+
+    <li>add <em>&ldquo;Mouse Ops&rdquo;</em> menu entry and related
+    resources to allow runtime disabling/enabling of the mouse
+    protocol escape sequences (discussion with Bob Proulx).</li>
+
+    <li>improve discussion of mouse actions versus protocol in the
+    manual (discussion with Bob Proulx).</li>
+
+    <li>improve discussion of environment variables in the manual,
+    pointing out where some features (such as termcap and the
+    System5 <code>COLUMNS</code> and <code>LINES</code> variables)
+    are used rarely, mainly to support legacy applications.</li>
+
+    <li>add examples of <code>translations</code> resource for
+    select/paste, and for font-size changes to the manual.</li>
+
+    <li>minor reordering of some entries in <code>ctlseqs.ms</code>
+    for consistency (report by Arran Ubels).</li>
+
+    <li>add <code>-s</code> option to <code>256colors2.pl</code>
+    and <code>88colors2.pl</code>, to demonstrate modifying the
+    &ldquo;system&rdquo; colors 0&ndash;15.</li>
+
+    <li>omit <code>XFT_SPACING</code> property from call to <code>
+      XftPatternBuild</code>, to work around a bug in
+      <em>fontconfig</em> for handling Google Go fonts, whose names
+      sort in an order not expected by <em>fontconfig</em>, causing
+      the request for a monospaced font to return <em>italics</em>,
+      e.g.,
+
+      <blockquote>
+        <pre>
+$ fc-match 'Go Mono:spacing=monospace'
+Go-Mono-Italic.ttf: "Go Mono" "Italic"
+(report by Giacomo Boffi on <a href=
+"http://unix.stackexchange.com/questions/324941/xterm-displays-an-italic-face-instead-of-regular">Stackoverflow</a>).
+
+</pre>
+      </blockquote>
+    </li>
+
+    <li>modify <code>minstall.in</code> to improve a workaround
+    added to the manual page in <a href="#xterm_182">patch #182</a>
+    to avoid having the C preprocessor used in the imake
+    configuration strip out the comments in the character classes
+    section (reports by Ted Unangst, Anthony J Bentley).</li>
+  </ul>
+
   <h1><a name="xterm_327" id="xterm_327">Patch #327 -
   2016/10/07</a></h1>
 
@@ -1072,12 +1459,12 @@
     <li>add <code>cppcheck</code> to lint-like programs in
     configure script and makefile.</li>
 
+    <li>fix some const correctness issues and point out an array
+    lifetime issue (Ross Combs).</li>
+
     <li>updates for SIXEL and ReGIS (Ross Combs):
 
       <ul>
-        <li>Fixes some const correctness issues and points out an
-        array lifetime issue</li>
-
         <li>Sixel drawing should still happen after an error if
         some commands have been processed</li>
 
@@ -1099,7 +1486,7 @@
     process receives a <code>STOP</code> signal.</li>
 
     <li>revert change to <code>CF_POSIX_C_SOURCE</code> from
-    <a href="#xterm-323">patch #323</a> (reports by Ashish Shukla,
+    <a href="#xterm_323">patch #323</a> (reports by Ashish Shukla,
     Christian Weisgerber).</li>
   </ul>
 

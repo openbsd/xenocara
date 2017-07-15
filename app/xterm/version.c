@@ -1,4 +1,4 @@
-/* $XTermId: version.c,v 1.3 2016/05/22 17:10:59 tom Exp $ */
+/* $XTermId: version.c,v 1.4 2016/12/23 14:30:49 tom Exp $ */
 
 /*
  * Copyright 2013-2015,2016 by Thomas E. Dickey
@@ -49,7 +49,7 @@ xtermVersion(void)
     if (buffer == 0) {
 	const char *vendor = vendor_version;
 
-	buffer = CastMallocN(char, strlen(vendor) + 9);
+	buffer = TextAlloc(strlen(vendor) + 9);
 	if (buffer == 0) {
 	    result = vendor;
 	} else {

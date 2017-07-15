@@ -1,7 +1,7 @@
-/* $XTermId: ptydata.c,v 1.105 2016/05/22 16:34:03 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.107 2017/06/16 23:40:20 tom Exp $ */
 
 /*
- * Copyright 1999-2014,2016 by Thomas E. Dickey
+ * Copyright 1999-2016,2017 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -34,6 +34,7 @@
 
 #if OPT_WIDE_CHARS
 #include <menu.h>
+#include <wcwidth.h>
 #endif
 
 /*
@@ -295,6 +296,7 @@ switchPtyData(TScreen *screen, int flag)
     if (screen->utf8_mode != flag) {
 	screen->utf8_mode = flag;
 	screen->utf8_inparse = (Boolean) (flag != 0);
+	mk_wcwidth_init(screen->utf8_mode);
 
 	TRACE(("turning UTF-8 mode %s\n", BtoS(flag)));
 	update_font_utf8_mode();

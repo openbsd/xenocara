@@ -1,7 +1,7 @@
-/* $XTermId: cursor.c,v 1.70 2016/05/15 18:35:39 tom Exp $ */
+/* $XTermId: cursor.c,v 1.71 2017/05/06 00:58:27 tom Exp $ */
 
 /*
- * Copyright 2002-2013,2016 by Thomas E. Dickey
+ * Copyright 2002-2016,2017 by Thomas E. Dickey
  * 
  *                         All Rights Reserved
  * 
@@ -322,6 +322,7 @@ CursorSave(XtermWidget xw)
     sc->flags = xw->flags;
     sc->curgl = screen->curgl;
     sc->curgr = screen->curgr;
+    sc->wrap_flag = screen->do_wrap;
 #if OPT_ISO_COLORS
     sc->cur_foreground = xw->cur_foreground;
     sc->cur_background = xw->cur_background;
@@ -334,7 +335,7 @@ CursorSave(XtermWidget xw)
  * We save/restore all visible attributes, plus wrapping, origin mode, and the
  * selective erase attribute.
  */
-#define DECSC_FLAGS (ATTRIBUTES|ORIGIN|WRAPAROUND|PROTECTED)
+#define DECSC_FLAGS (ATTRIBUTES|ORIGIN|PROTECTED)
 
 /*
  * Restore Cursor and Attributes
@@ -363,13 +364,13 @@ CursorRestore(XtermWidget xw)
 	       ? sc->row - screen->top_marg
 	       : sc->row),
 	      sc->col, xw->flags);
+    screen->do_wrap = sc->wrap_flag;	/* after CursorSet/ResetWrap */
 
 #if OPT_ISO_COLORS
     xw->sgr_foreground = sc->sgr_foreground;
     SGR_Foreground(xw, (xw->flags & FG_COLOR) ? sc->cur_foreground : -1);
     SGR_Background(xw, (xw->flags & BG_COLOR) ? sc->cur_background : -1);
 #endif
-    update_autowrap();
 }
 
 /*

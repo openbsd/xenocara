@@ -1,22 +1,38 @@
 The NEWS file was generated from xterm.log.html, which serves as the changelog
 for xterm.
 --------------------------------------------------------------------------------
-                            Patch #327 - 2016/10/07
+                            Patch #330 - 2017/06/20
 
-     * add  a  check in the function which handles end-of-line wrapping to
-       ensure   that   C1   controls   are   allocated   one  column  when
-       allowC1Printable is set (Debian #738794).
-     * use  consistent  error-checking  after  strtol  calls, fixes a case
-       where  a  query  with  OSC 6 did not ensure there was a valid color
-       number (report by Alex Smith).
-     * add -baudrate option, for testing ncurses.
-     * always  generate  the CASE_xxx symbols in VTparse.h and Tekparse.h,
-       as  part of a change to improve debug-logging. This makes the build
-       always depend upon awk.
-     * modify   allowC1Printable   to  disallow  codes  160-254  as  being
-       equivalent  to  codes  32-126 when parsing escape sequences (Debian
-       #839220).
-     * amend  fix from patch #326 for TrueType fonts to exclude the hidden
-       character used for double-width cells (report by Grady Martin).
-     * fix a typo in ctlseqs.ms
+     * updates for ReGIS (Ross Combs):
+          + remove redundant text command error check which broke T(B) and
+            T(E).
+          + retain  the  loading  alphabet  number across multiple “L”
+            commands.
+          + add S(T) delay handler.
+          + fix some color handling error messages.
+          + add stubbed-out macrograph handling.
+          + use  fragment_remaining()  and  fragment_consumed() instead of
+            manually checking position / length in various places.
+          + rename  some  local  variables  in  string  /  extent / option
+            parsing
+          + wrap some long lines.
+          + move macrograph command handling out of the top-level.
+     * add a summary of the italic fonts loaded to -report-fonts option.
+     * modify the font-lookup for italics to allow for “-i-” if no match
+       is found with slant “-o-” (prompted by patch by Ben Wong).
+     * change  default values for mkSamplePass and mkSampleSize to reflect
+       generally-improved  locale  support  in  various  operating systems
+       (FreeBSD #219800).
+     * modify  wcwidth.c to return -1 for non-Unicode values, and adjust a
+       couple  of blocks to better match assumptions about ambiguous-width
+       characters  in  other  implementations.  Also  modify  wcwidth.c to
+       support  configurable soft-hyphen, so there is no drawback to using
+       this version rather than a system wcwidth.
+     * amend  change  made  in  patch #328 for cursor-visibility to handle
+       case  where  an  application  is  updating  the reverse-video state
+       (FreeBSD #219800).
+     * update  tables  of  combining  and  ambiguous-width  characters  in
+       wcwidth.c based on Unicode 10.0.0.
+     * build-fix         for        --enable-sixel-graphics        without
+       --enable-regis-graphics (reports by Sven Joachim, FreeBSD #219945).
 

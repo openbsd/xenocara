@@ -1,7 +1,7 @@
-/* $XTermId: input.c,v 1.355 2016/05/17 12:12:51 tom Exp $ */
+/* $XTermId: input.c,v 1.357 2017/05/29 20:11:03 tom Exp $ */
 
 /*
- * Copyright 1999-2015,2016 by Thomas E. Dickey
+ * Copyright 1999-2016,2017 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -815,6 +815,8 @@ lookupKeyData(KEY_DATA * kd, XtermWidget xw, XKeyEvent *event)
     TKeyboard *keyboard = &(xw->keyboard);
 #endif
 #endif
+
+    (void) screen;
 
     TRACE(("%s %#x\n", visibleEventType(event->type), event->keycode));
 

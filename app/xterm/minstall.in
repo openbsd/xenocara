@@ -1,9 +1,9 @@
 #!/bin/sh
-# $XTermId: minstall.in,v 1.22 2015/02/11 10:07:19 tom Exp $
+# $XTermId: minstall.in,v 1.24 2016/10/24 22:29:20 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2001-2014,2015 by Thomas E. Dickey
+# Copyright 2001-2015,2016 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -162,6 +162,7 @@ sed	-e 's%__vendorversion__%"X Window System"%' \
 	-e s%/etc/utmp%$UTMP_PATH%g \
 	-e s%fIwtmp'\\%fI'$WTMP_NAME'\\%g' \
 	-e s%/etc/wtmp%$WTMP_PATH%g \
+	-e 's%/\\(\*\*%/*%g' \
 	$OLD_FILE >$NEW_FILE
 # diff -u $OLD_FILE $NEW_FILE
 

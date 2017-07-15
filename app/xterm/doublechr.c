@@ -1,7 +1,7 @@
-/* $XTermId: doublechr.c,v 1.86 2016/05/17 08:33:58 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.92 2017/01/07 15:01:50 tom Exp $ */
 
 /*
- * Copyright 1997-2014,2016 by Thomas E. Dickey
+ * Copyright 1997-2016,2017 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -172,7 +172,7 @@ static void
 discard_font(XtermWidget xw, int n)
 {
     TScreen *screen = TScreenOf(xw);
-    XTermFonts *data = &(screen->double_fonts[n]);
+    XTermFonts *data = getDoubleFont(screen, n);
 
     TRACE(("discard_font chrset=%d %s\n", data->chrset,
 	   (data->fn != 0) ? data->fn : "<no-name>"));
@@ -183,7 +183,7 @@ discard_font(XtermWidget xw, int n)
 	free(data->fn);
 	data->fn = 0;
     }
-    (void) xtermCloseFont(xw, data);
+    xtermCloseFont(xw, data);
 
     screen->fonts_used -= 1;
     while (n < screen->fonts_used) {
@@ -197,7 +197,7 @@ static XTermFonts *
 pushback_font(XtermWidget xw, XTermFonts * source)
 {
     TScreen *screen = TScreenOf(xw);
-    XTermFonts *data = screen->double_fonts;
+    XTermFonts *data = getDoubleFont(screen, 0);
     int n;
 
     if (screen->fonts_used >= screen->cache_doublesize) {
@@ -222,7 +222,7 @@ xterm_Double_index(XtermWidget xw, unsigned chrset, unsigned flags)
     int n;
     int result = -1;
     TScreen *screen = TScreenOf(xw);
-    XTermFonts *data = screen->double_fonts;
+    XTermFonts *data = getDoubleFont(screen, 0);
 
     flags &= BOLD;
     TRACE(("xterm_Double_index chrset=%#x, flags=%#x\n", chrset, flags));
@@ -265,14 +265,14 @@ xterm_DoubleGC(XtermWidget xw,
     char *name;
     GC result = 0;
 
-    if ((name = xtermSpecialFont(screen, attr_flags, draw_flags, chrset)) != 0) {
+    if ((name = xtermSpecialFont(xw, attr_flags, draw_flags, chrset)) != 0) {
 	CgsEnum cgsId = WhichCgsId(attr_flags);
 	Boolean found = False;
 	XTermFonts *data = 0;
 	int n;
 
 	if ((n = xterm_Double_index(xw, chrset, attr_flags)) >= 0) {
-	    data = &(screen->double_fonts[n]);
+	    data = getDoubleFont(screen, n);
 	    if (data->fn != 0) {
 		if (!strcmp(data->fn, name)
 		    && data->fs != 0) {
@@ -294,17 +294,18 @@ xterm_DoubleGC(XtermWidget xw,
 	    temp.fn = name;
 	    temp.chrset = chrset;
 	    temp.flags = (attr_flags & BOLD);
+	    temp.warn = fwResource;
 
-	    if (!xtermOpenFont(xw, name, &temp, fwAlways, False)) {
+	    if (!xtermOpenFont(xw, name, &temp, False)) {
 		/* Retry with * in resolutions */
-		char *nname = xtermSpecialFont(screen,
+		char *nname = xtermSpecialFont(xw,
 					       attr_flags,
 					       draw_flags | NORESOLUTION,
 					       chrset);
 
 		if (nname != 0) {
 		    found = (Boolean) xtermOpenFont(xw, nname, &temp,
-						    fwAlways, False);
+						    False);
 		    free(nname);
 		}
 	    } else {

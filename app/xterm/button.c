@@ -1,7 +1,7 @@
-/* $XTermId: button.c,v 1.505 2016/05/30 19:42:44 tom Exp $ */
+/* $XTermId: button.c,v 1.524 2017/05/30 08:58:29 tom Exp $ */
 
 /*
- * Copyright 1999-2015,2016 by Thomas E. Dickey
+ * Copyright 1999-2016,2017 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -92,7 +92,7 @@ button.c	Handles button events in the terminal emulator.
 #include <wcwidth.h>
 #else
 #define CharacterClass(value) \
-	charClass[value & ((sizeof(charClass)/sizeof(charClass[0]))-1)]
+	charClass[(value) & ((sizeof(charClass)/sizeof(charClass[0]))-1)]
 #endif
 
     /*
@@ -251,11 +251,10 @@ EmitMousePositionSeparator(TScreen *screen, Char line[], unsigned count)
 Bool
 SendMousePosition(XtermWidget xw, XEvent *event)
 {
-    TScreen *screen = TScreenOf(xw);
     XButtonEvent *my_event = (XButtonEvent *) event;
     Bool result = False;
 
-    switch (screen->send_mouse_pos) {
+    switch (okSendMousePos(xw)) {
     case MOUSE_OFF:
 	/* If send_mouse_pos mode isn't on, we shouldn't be here */
 	break;
@@ -279,47 +278,48 @@ SendMousePosition(XtermWidget xw, XEvent *event)
 	}
 	break;
 
-    default:
-	/* Make sure the event is an appropriate type */
+    case X10_MOUSE:		/* X10 compatibility sequences */
 	if (IsBtnEvent(event)) {
-	    switch (screen->send_mouse_pos) {
-	    case X10_MOUSE:	/* X10 compatibility sequences */
-
-		if (BtnModifiers(my_event) == 0) {
-		    if (my_event->type == ButtonPress)
-			EditorButton(xw, my_event);
-		    result = True;
-		}
-		break;
-
-	    case VT200_HIGHLIGHT_MOUSE:	/* DEC vt200 hilite tracking */
-		if (my_event->type == ButtonPress &&
-		    BtnModifiers(my_event) == 0 &&
-		    my_event->button == Button1) {
-		    TrackDown(xw, my_event);
-		    result = True;
-		} else if (BtnModifiers(my_event) == 0
-			   || BtnModifiers(my_event) == ControlMask) {
+	    if (BtnModifiers(my_event) == 0) {
+		if (my_event->type == ButtonPress)
 		    EditorButton(xw, my_event);
-		    result = True;
-		}
-		break;
-
-	    case VT200_MOUSE:	/* DEC vt200 compatible */
-		if (BtnModifiers(my_event) == 0
-		    || BtnModifiers(my_event) == ControlMask) {
-		    EditorButton(xw, my_event);
-		    result = True;
-		}
-		break;
-
-#if OPT_DEC_LOCATOR
-	    case DEC_LOCATOR:
-		result = SendLocatorPosition(xw, my_event);
-		break;
-#endif /* OPT_DEC_LOCATOR */
+		result = True;
 	    }
 	}
+	break;
+
+    case VT200_HIGHLIGHT_MOUSE:	/* DEC vt200 hilite tracking */
+	if (IsBtnEvent(event)) {
+	    if (my_event->type == ButtonPress &&
+		BtnModifiers(my_event) == 0 &&
+		my_event->button == Button1) {
+		TrackDown(xw, my_event);
+		result = True;
+	    } else if (BtnModifiers(my_event) == 0
+		       || BtnModifiers(my_event) == ControlMask) {
+		EditorButton(xw, my_event);
+		result = True;
+	    }
+	}
+	break;
+
+    case VT200_MOUSE:		/* DEC vt200 compatible */
+	if (IsBtnEvent(event)) {
+	    if (BtnModifiers(my_event) == 0
+		|| BtnModifiers(my_event) == ControlMask) {
+		EditorButton(xw, my_event);
+		result = True;
+	    }
+	}
+	break;
+
+    case DEC_LOCATOR:
+	if (IsBtnEvent(event)) {
+#if OPT_DEC_LOCATOR
+	    result = SendLocatorPosition(xw, my_event);
+#endif /* OPT_DEC_LOCATOR */
+	}
+	break;
     }
     return result;
 }
@@ -430,8 +430,8 @@ SendLocatorPosition(XtermWidget xw, XButtonEvent *event)
     }
     /*
      * mask:
-     * bit 7   bit 6   bit 5   bit 4   bit 3   bit 2       bit 1         bit 0
-     *                                 M4 down left down   middle down   right down
+     * bit7   bit6   bit5   bit4   bit3     bit2       bit1         bit0
+     *                             M4 down  left down  middle down  right down
      *
      * Notice that Button1 (left) and Button3 (right) are swapped in the mask.
      * Also, mask should be the state after the button press/release,
@@ -460,8 +460,9 @@ SendLocatorPosition(XtermWidget xw, XButtonEvent *event)
     }
 
     /*
-     * DECterm turns the Locator off if a button is pressed while a filter rectangle
-     * is active. This might be a bug, but I don't know, so I'll emulate it anyways.
+     * DECterm turns the Locator off if a button is pressed while a filter
+     * rectangle is active.  This might be a bug, but I don't know, so I'll
+     * emulate it anyway.
      */
     if (screen->loc_filter) {
 	screen->send_mouse_pos = MOUSE_OFF;
@@ -481,9 +482,9 @@ SendLocatorPosition(XtermWidget xw, XButtonEvent *event)
  * Button1 (left) and Button3 (right) are swapped in the mask relative to X.
  */
 #define	ButtonState(state, mask)	\
-{ (state) = (int) (((mask) & (Button1Mask | Button2Mask | Button3Mask | Button4Mask)) >> 8);	\
+{ int stemp = (int) (((mask) & (Button1Mask | Button2Mask | Button3Mask | Button4Mask)) >> 8);	\
   /* swap Button1 & Button3 */								\
-  (state) = ((state) & ~(4|1)) | (((state)&1)?4:0) | (((state)&4)?1:0);			\
+  (state) = (stemp & ~(4|1)) | ((stemp & 1) ? 4 : 0) | ((stemp & 4) ? 1 : 0);			\
 }
 
 void
@@ -500,8 +501,9 @@ GetLocatorPosition(XtermWidget xw)
     int state;
 
     /*
-     * DECterm turns the Locator off if the position is requested while a filter rectangle
-     * is active.  This might be a bug, but I don't know, so I'll emulate it anyways.
+     * DECterm turns the Locator off if the position is requested while a
+     * filter rectangle is active.  This might be a bug, but I don't know, so
+     * I'll emulate it anyways.
      */
     if (screen->loc_filter) {
 	screen->send_mouse_pos = MOUSE_OFF;
@@ -513,7 +515,7 @@ GetLocatorPosition(XtermWidget xw)
     memset(&reply, 0, sizeof(reply));
     reply.a_type = ANSI_CSI;
 
-    if (screen->send_mouse_pos == DEC_LOCATOR) {
+    if (okSendMousePos(xw) == DEC_LOCATOR) {
 	ret = XQueryPointer(screen->display, VWindow(screen), &root,
 			    &child, &rx, &ry, &x, &y, &mask);
 	if (ret) {
@@ -728,14 +730,15 @@ CheckLocatorPosition(XtermWidget xw, XButtonEvent *event)
 
 #if OPT_READLINE
 static int
-isClick1_clean(TScreen *screen, XButtonEvent *event)
+isClick1_clean(XtermWidget xw, XButtonEvent *event)
 {
+    TScreen *screen = TScreenOf(xw);
     int delta;
 
     if (!IsBtnEvent(event)
     /* Disable on Shift-Click-1, including the application-mouse modes */
 	|| (BtnModifiers(event) & ShiftMask)
-	|| (screen->send_mouse_pos != MOUSE_OFF)	/* Kinda duplicate... */
+	|| (okSendMousePos(xw) != MOUSE_OFF)	/* Kinda duplicate... */
 	||ExtendingSelection)	/* Was moved */
 	return 0;
 
@@ -917,13 +920,14 @@ ReadLineDelete(TScreen *screen, CELL *cell1, CELL *cell2)
 }
 
 static void
-readlineExtend(TScreen *screen, XEvent *event)
+readlineExtend(XtermWidget xw, XEvent *event)
 {
+    TScreen *screen = TScreenOf(xw);
     int ldelta1, ldelta2;
 
     if (IsBtnEvent(event)) {
 	XButtonEvent *my_event = (XButtonEvent *) event;
-	if (isClick1_clean(screen, my_event)
+	if (isClick1_clean(xw, my_event)
 	    && SCREEN_FLAG(screen, click1_moves)
 	    && rowOnCurrentLine(screen, eventRow(screen, event), &ldelta1)) {
 	    ReadLineMovePoint(screen, eventColBetween(screen, event), ldelta1);
@@ -987,7 +991,7 @@ ReadLineButton(Widget w,
 	int line, col, ldelta = 0;
 
 	if (!IsBtnEvent(event)
-	    || (screen->send_mouse_pos != MOUSE_OFF) || ExtendingSelection)
+	    || (okSendMousePos(xw) != MOUSE_OFF) || ExtendingSelection)
 	    goto finish;
 	if (event->type == ButtonRelease) {
 	    int delta;
@@ -1098,8 +1102,8 @@ HandleSelectExtend(Widget w,
 	       character process as a key sequence \E[M... */
 	case NORMAL:
 	    /* will get here if send_mouse_pos != MOUSE_OFF */
-	    if (screen->send_mouse_pos == BTN_EVENT_MOUSE
-		|| screen->send_mouse_pos == ANY_EVENT_MOUSE) {
+	    if (okSendMousePos(xw) == BTN_EVENT_MOUSE
+		|| okSendMousePos(xw) == ANY_EVENT_MOUSE) {
 		(void) SendMousePosition(xw, event);
 	    }
 	    break;
@@ -1142,7 +1146,7 @@ do_select_end(XtermWidget xw,
     case RIGHTEXTENSION:
 	EndExtend(xw, event, params, *num_params, use_cursor_loc);
 #if OPT_READLINE
-	readlineExtend(screen, event);
+	readlineExtend(xw, event);
 #endif /* OPT_READLINE */
 	break;
     }
@@ -1580,7 +1584,7 @@ MapSelections(XtermWidget xw, String *params, Cardinal num_params)
 {
     String *result = params;
 
-    if (num_params > 0) {
+    if (params != 0 && num_params > 0) {
 	Cardinal j;
 	Boolean map = False;
 
@@ -1776,9 +1780,7 @@ static void
 GettingSelection(Display *dpy, Atom type, Char *line, unsigned long len)
 {
     Char *cp;
-    char *name;
-
-    name = XGetAtomName(dpy, type);
+    const char *name = TraceAtomName(dpy, type);
 
     TRACE(("Getting %s (type=%ld, length=%ld)\n", name, (long int) type, len));
     for (cp = line; cp < line + len; cp++) {
@@ -2140,7 +2142,7 @@ SelectionReceived(Widget w,
     text_prop.nitems = *length;
 
     TRACE(("SelectionReceived %s %s format %d, nitems %ld\n",
-	   XGetAtomName(screen->display, *selection),
+	   TraceAtomName(screen->display, *selection),
 	   visibleSelectionTarget(dpy, text_prop.encoding),
 	   text_prop.format,
 	   text_prop.nitems));
@@ -2298,7 +2300,7 @@ HandleInsertSelection(Widget w,
 	    if (IsBtnEvent(event)
 	    /* Disable on Shift-mouse, including the application-mouse modes */
 		&& !(KeyModifiers(event) & ShiftMask)
-		&& (screen->send_mouse_pos == MOUSE_OFF)
+		&& (okSendMousePos(xw) == MOUSE_OFF)
 		&& SCREEN_FLAG(screen, paste_moves)
 		&& rowOnCurrentLine(screen, eventRow(screen, event), &ldelta))
 		ReadLineMovePoint(screen, eventColBetween(screen, event), ldelta);
@@ -3021,6 +3023,126 @@ class_of(LineData *ld, CELL *cell)
 
 #define CClassOf(name) class_of(ld.name, &((screen->name)))
 
+#if OPT_REPORT_CCLASS
+static int
+show_cclass_range(int lo, int hi)
+{
+    int cclass = CharacterClass(lo);
+    int ident = (cclass == lo);
+    int more = 0;
+    if (ident) {
+	int ch;
+	for (ch = lo + 1; ch <= hi; ch++) {
+	    if (CharacterClass(ch) != ch) {
+		ident = 0;
+		break;
+	    }
+	}
+	if (ident && (hi < 255)) {
+	    ch = hi + 1;
+	    if (CharacterClass(ch) == ch) {
+		if (ch >= 255 || CharacterClass(ch + 1) != ch) {
+		    more = 1;
+		}
+	    }
+	}
+    }
+    if (!more) {
+	if (lo == hi) {
+	    printf("\t%d", lo);
+	} else {
+	    printf("\t%d-%d", lo, hi);
+	}
+	if (!ident)
+	    printf(":%d", cclass);
+	if (hi < 255)
+	    printf(", \\");
+	printf("\n");
+    }
+    return !more;
+}
+
+void
+report_char_class(XtermWidget xw)
+{
+    /* simple table, to match documentation */
+    static const char charnames[] =
+    "NUL\0" "SOH\0" "STX\0" "ETX\0" "EOT\0" "ENQ\0" "ACK\0" "BEL\0"
+    " BS\0" " HT\0" " NL\0" " VT\0" " NP\0" " CR\0" " SO\0" " SI\0"
+    "DLE\0" "DC1\0" "DC2\0" "DC3\0" "DC4\0" "NAK\0" "SYN\0" "ETB\0"
+    "CAN\0" " EM\0" "SUB\0" "ESC\0" " FS\0" " GS\0" " RS\0" " US\0"
+    " SP\0" "  !\0" "  \"\0" "  #\0" "  $\0" "  %\0" "  &\0" "  '\0"
+    "  (\0" "  )\0" "  *\0" "  +\0" "  ,\0" "  -\0" "  .\0" "  /\0"
+    "  0\0" "  1\0" "  2\0" "  3\0" "  4\0" "  5\0" "  6\0" "  7\0"
+    "  8\0" "  9\0" "  :\0" "  ;\0" "  <\0" "  =\0" "  >\0" "  ?\0"
+    "  @\0" "  A\0" "  B\0" "  C\0" "  D\0" "  E\0" "  F\0" "  G\0"
+    "  H\0" "  I\0" "  J\0" "  K\0" "  L\0" "  M\0" "  N\0" "  O\0"
+    "  P\0" "  Q\0" "  R\0" "  S\0" "  T\0" "  U\0" "  V\0" "  W\0"
+    "  X\0" "  Y\0" "  Z\0" "  [\0" "  \\\0" "  ]\0" "  ^\0" "  _\0"
+    "  `\0" "  a\0" "  b\0" "  c\0" "  d\0" "  e\0" "  f\0" "  g\0"
+    "  h\0" "  i\0" "  j\0" "  k\0" "  l\0" "  m\0" "  n\0" "  o\0"
+    "  p\0" "  q\0" "  r\0" "  s\0" "  t\0" "  u\0" "  v\0" "  w\0"
+    "  x\0" "  y\0" "  z\0" "  {\0" "  |\0" "  }\0" "  ~\0" "DEL\0"
+    "x80\0" "x81\0" "x82\0" "x83\0" "IND\0" "NEL\0" "SSA\0" "ESA\0"
+    "HTS\0" "HTJ\0" "VTS\0" "PLD\0" "PLU\0" " RI\0" "SS2\0" "SS3\0"
+    "DCS\0" "PU1\0" "PU2\0" "STS\0" "CCH\0" " MW\0" "SPA\0" "EPA\0"
+    "x98\0" "x99\0" "x9A\0" "CSI\0" " ST\0" "OSC\0" " PM\0" "APC\0"
+    "  -\0" "  i\0" " c/\0" "  L\0" " ox\0" " Y-\0" "  |\0" " So\0"
+    " ..\0" " c0\0" " ip\0" " <<\0" "  _\0" "   \0" " R0\0" "  -\0"
+    "  o\0" " +-\0" "  2\0" "  3\0" "  '\0" "  u\0" " q|\0" "  .\0"
+    "  ,\0" "  1\0" "  2\0" " >>\0" "1/4\0" "1/2\0" "3/4\0" "  ?\0"
+    " A`\0" " A'\0" " A^\0" " A~\0" " A:\0" " Ao\0" " AE\0" " C,\0"
+    " E`\0" " E'\0" " E^\0" " E:\0" " I`\0" " I'\0" " I^\0" " I:\0"
+    " D-\0" " N~\0" " O`\0" " O'\0" " O^\0" " O~\0" " O:\0" "  X\0"
+    " O/\0" " U`\0" " U'\0" " U^\0" " U:\0" " Y'\0" "  P\0" "  B\0"
+    " a`\0" " a'\0" " a^\0" " a~\0" " a:\0" " ao\0" " ae\0" " c,\0"
+    " e`\0" " e'\0" " e^\0" " e:\0" " i`\0" " i'\0" " i^\0" " i:\0"
+    "  d\0" " n~\0" " o`\0" " o'\0" " o^\0" " o~\0" " o:\0" " -:\0"
+    " o/\0" " u`\0" " u'\0" " u^\0" " u:\0" " y'\0" "  P\0" " y:\0";
+    int ch, dh;
+    int class_p;
+
+    (void) xw;
+
+    printf("static int charClass[256] = {\n");
+    for (ch = 0; ch < 256; ++ch) {
+	const char *s = charnames + (ch * 4);
+	if ((ch & 7) == 0)
+	    printf("/*");
+	printf(" %s ", s);
+	if (((ch + 1) & 7) == 0) {
+	    printf("*/\n  ");
+	    for (dh = ch - 7; dh <= ch; ++dh) {
+		printf(" %3d%s", CharacterClass(dh), dh == 255 ? "};" : ",");
+	    }
+	    printf("\n");
+	}
+    }
+
+    /* print the table as if it were the charClass resource */
+    printf("\n");
+    printf("The table is equivalent to this \"charClass\" resource:\n");
+    class_p = CharacterClass(dh = 0);
+    for (ch = 0; ch < 256; ++ch) {
+	int class_c = CharacterClass(ch);
+	if (class_c != class_p) {
+	    if (show_cclass_range(dh, ch - 1)) {
+		dh = ch;
+		class_p = class_c;
+	    }
+	}
+    }
+    if (dh < 255) {
+	show_cclass_range(dh, 255);
+    }
+
+    if_OPT_WIDE_CHARS(TScreenOf(xw), {
+	/* if this is a wide-character configuration, print all intervals */
+	report_wide_char_class();
+    });
+}
+#endif
+
 /*
  * If the given column is past the end of text on the given row, bump to the
  * beginning of the next line.
@@ -3282,6 +3404,11 @@ do_select_regex(TScreen *screen, CELL *startc, CELL *endc)
 		    int best_col = -1;
 		    int best_len = -1;
 
+		    startc->row = 0;
+		    startc->col = 0;
+		    endc->row = 0;
+		    endc->col = 0;
+
 		    for (col = 0; indexed[col] < len; ++col) {
 			if (regexec(&preg,
 				    search + indexed[col],
@@ -3292,7 +3419,7 @@ do_select_regex(TScreen *screen, CELL *startc, CELL *endc)
 			    int finis_col = indexToCol(indexed, len, finis_inx);
 
 			    if (start_col <= actual &&
-				actual < finis_col) {
+				actual <= finis_col) {
 				int test = finis_col - start_col;
 				if (best_len < test) {
 				    best_len = test;
@@ -3659,7 +3786,8 @@ ReHiliteText(XtermWidget xw,
 }
 
 /*
- * Guaranteed that (cellc->row, cellc->col) <= (cell->row, cell->col), and that both points are valid
+ * Guaranteed that (cellc->row, cellc->col) <= (cell->row, cell->col),
+ * and that both points are valid
  * (may have cell->row = screen->max_row+1, cell->col = 0).
  */
 static void
@@ -4151,7 +4279,7 @@ LoseSelection(Widget w, Atom *selection)
 	return;
 
     screen = TScreenOf(xw);
-    TRACE(("LoseSelection %s\n", XGetAtomName(screen->display, *selection)));
+    TRACE(("LoseSelection %s\n", TraceAtomName(screen->display, *selection)));
 
     for (i = 0, atomP = screen->selection_atoms;
 	 i < screen->selection_count; i++, atomP++) {
@@ -4472,15 +4600,16 @@ BtnCode(XButtonEvent *event, int button)
 }
 
 static unsigned
-EmitButtonCode(TScreen *screen,
+EmitButtonCode(XtermWidget xw,
 	       Char *line,
 	       unsigned count,
 	       XButtonEvent *event,
 	       int button)
 {
+    TScreen *screen = TScreenOf(xw);
     int value;
 
-    if (screen->send_mouse_pos == X10_MOUSE) {
+    if (okSendMousePos(xw) == X10_MOUSE) {
 	value = CharOf(' ' + button);
     } else {
 	value = BtnCode(event, button);
@@ -4524,7 +4653,7 @@ FirstBitN(int bits)
 
 #define ButtonBit(button) ((button >= 0) ? (1 << (button)) : 0)
 
-#define EMIT_BUTTON(button) EmitButtonCode(screen, line, count, event, button)
+#define EMIT_BUTTON(button) EmitButtonCode(xw, line, count, event, button)
 
 static void
 EditorButton(XtermWidget xw, XButtonEvent *event)
@@ -4594,7 +4723,7 @@ EditorButton(XtermWidget xw, XButtonEvent *event)
     }
 
     /* Add event code to key sequence */
-    if (screen->send_mouse_pos == X10_MOUSE) {
+    if (okSendMousePos(xw) == X10_MOUSE) {
 	count = EMIT_BUTTON(button);
     } else {
 	/* Button-Motion events */
@@ -4665,13 +4794,68 @@ EditorButton(XtermWidget xw, XButtonEvent *event)
     return;
 }
 
+/*
+ * Check the current send_mouse_pos against allowed mouse-operations, returning
+ * none if it is disallowed.
+ */
+XtermMouseModes
+okSendMousePos(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    XtermMouseModes result = screen->send_mouse_pos;
+
+    switch (result) {
+    case MOUSE_OFF:
+	break;
+    case X10_MOUSE:
+	if (!AllowMouseOps(xw, emX10))
+	    result = MOUSE_OFF;
+	break;
+    case VT200_MOUSE:
+	if (!AllowMouseOps(xw, emVT200Click))
+	    result = MOUSE_OFF;
+	break;
+    case VT200_HIGHLIGHT_MOUSE:
+	if (!AllowMouseOps(xw, emVT200Hilite))
+	    result = MOUSE_OFF;
+	break;
+    case BTN_EVENT_MOUSE:
+	if (!AllowMouseOps(xw, emAnyButton))
+	    result = MOUSE_OFF;
+	break;
+    case ANY_EVENT_MOUSE:
+	if (!AllowMouseOps(xw, emAnyEvent))
+	    result = MOUSE_OFF;
+	break;
+    case DEC_LOCATOR:
+	if (!AllowMouseOps(xw, emLocator))
+	    result = MOUSE_OFF;
+	break;
+    }
+    return result;
+}
+
 #if OPT_FOCUS_EVENT
+/*
+ * Check the current send_focus_pos against allowed mouse-operations, returning
+ * none if it is disallowed.
+ */
+static int
+okSendFocusPos(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    int result = screen->send_focus_pos;
+
+    if (!AllowMouseOps(xw, emFocusEvent)) {
+	result = False;
+    }
+    return result;
+}
+
 void
 SendFocusButton(XtermWidget xw, XFocusChangeEvent *event)
 {
-    TScreen *screen = TScreenOf(xw);
-
-    if (screen->send_focus_pos) {
+    if (okSendFocusPos(xw)) {
 	ANSI reply;
 
 	memset(&reply, 0, sizeof(reply));
@@ -4741,7 +4925,7 @@ doSelectionFormat(XtermWidget xw,
 
 /* obtain data from the screen, passing the endpoints to caller's parameters */
 static char *
-getDataFromScreen(XtermWidget xw, String method, CELL *start, CELL *finish)
+getDataFromScreen(XtermWidget xw, XEvent *event, String method, CELL *start, CELL *finish)
 {
     TScreen *screen = TScreenOf(xw);
 
@@ -4782,10 +4966,22 @@ getDataFromScreen(XtermWidget xw, String method, CELL *start, CELL *finish)
     screen->selectUnit = screen->selectMap[noClick];
 
     memset(start, 0, sizeof(*start));
-    start->row = screen->cur_row;
-    start->col = screen->cur_col;
-    finish->row = screen->cur_row;
-    finish->col = screen->max_col;
+    if (IsBtnEvent(event)) {
+	XButtonEvent *btn_event = (XButtonEvent *) event;
+	CELL cell;
+	screen->firstValidRow = 0;
+	screen->lastValidRow = screen->max_row;
+	PointToCELL(screen, btn_event->y, btn_event->x, &cell);
+	start->row = cell.row;
+	start->col = cell.col;
+	finish->row = cell.row;
+	finish->col = screen->max_col;
+    } else {
+	start->row = screen->cur_row;
+	start->col = screen->cur_col;
+	finish->row = screen->cur_row;
+	finish->col = screen->max_col;
+    }
 
     ComputeSelect(xw, start, finish, False);
     SaltTextAway(xw, &(screen->startSel), &(screen->endSel));
@@ -5113,6 +5309,7 @@ executeCommand(pid_t pid, char **argv)
 	    execvp(argv[0], argv);
 	    exit(EXIT_FAILURE);
 	}
+	free(child_cwd);
     }
 }
 
@@ -5168,7 +5365,7 @@ HandleExecFormatted(Widget w,
 
 void
 HandleExecSelectable(Widget w,
-		     XEvent *event GCC_UNUSED,
+		     XEvent *event,
 		     String *params,	/* selections */
 		     Cardinal *num_params)
 {
@@ -5182,7 +5379,7 @@ HandleExecSelectable(Widget w,
 	    char *data;
 	    char **argv;
 
-	    data = getDataFromScreen(xw, params[1], &start, &finish);
+	    data = getDataFromScreen(xw, event, params[1], &start, &finish);
 	    if (data != 0) {
 		if ((argv = tokenizeFormat(params[0])) != 0) {
 		    char *blob = argv[0];
@@ -5234,7 +5431,7 @@ HandleInsertFormatted(Widget w,
 
 void
 HandleInsertSelectable(Widget w,
-		       XEvent *event GCC_UNUSED,
+		       XEvent *event,
 		       String *params,	/* selections */
 		       Cardinal *num_params)
 {
@@ -5248,7 +5445,7 @@ HandleInsertSelectable(Widget w,
 	    char *data;
 	    char *temp = x_strdup(params[0]);
 
-	    data = getDataFromScreen(xw, params[1], &start, &finish);
+	    data = getDataFromScreen(xw, event, params[1], &start, &finish);
 	    if (data != 0) {
 		char *exps = expandFormat(xw, temp, data, &start, &finish);
 		if (exps != 0) {

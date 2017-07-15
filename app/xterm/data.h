@@ -1,7 +1,7 @@
-/* $XTermId: data.h,v 1.127 2016/06/01 09:13:59 tom Exp $ */
+/* $XTermId: data.h,v 1.130 2017/05/31 01:13:01 tom Exp $ */
 
 /*
- * Copyright 2002-2014,2016 by Thomas E. Dickey
+ * Copyright 2002-2016,2017 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -208,6 +208,9 @@ typedef struct XTERM_RESOURCE {
     Boolean ptyHandshake;	/* use pty-handshaking */
     Boolean ptySttySize;	/* reset TTY size after pty handshake */
 #endif
+#if OPT_REPORT_CCLASS
+    Boolean reportCClass;	/* show character-class information */
+#endif
 #if OPT_REPORT_COLORS
     Boolean reportColors;	/* show color information as allocated */
 #endif
@@ -234,7 +237,7 @@ typedef struct XTERM_RESOURCE {
 #endif
 } XTERM_RESOURCE;
 
-Boolean guard_keyboard_type;
+extern Boolean guard_keyboard_type;
 extern XTERM_RESOURCE resource;
 
 #ifdef USE_IGNORE_RC

@@ -1,7 +1,7 @@
-/* $XTermId: xstrings.h,v 1.29 2015/08/27 23:31:23 Martin.Tournoij Exp $ */
+/* $XTermId: xstrings.h,v 1.30 2016/12/22 23:48:38 tom Exp $ */
 
 /*
- * Copyright 2000-2012,2015 by Thomas E. Dickey
+ * Copyright 2000-2015,2016 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -58,6 +58,7 @@ extern char x_toupper(int /* ch */);
 extern int x_hex2int(int /* ch */);
 extern int x_strcasecmp(const char * /* s1 */, const char * /* s2 */);
 extern int x_strncasecmp(const char * /* s1 */, const char * /* s2 */, unsigned  /* n */);
+extern int x_wildstrcmp(const char * /* pattern */, const char * /* actual */);
 extern unsigned x_countargv(char ** /* argv */);
 extern void x_appendargv(char ** /* target */, char ** /* source */);
 extern void x_freeargs(char ** /* argv */);

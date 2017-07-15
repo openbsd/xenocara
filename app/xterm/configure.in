@@ -1,9 +1,9 @@
-dnl $XTermId: configure.in,v 1.340 2016/05/28 16:51:40 tom Exp $
+dnl $XTermId: configure.in,v 1.345 2017/05/31 08:38:47 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
 dnl
-dnl Copyright 1997-2015,2016 by Thomas E. Dickey
+dnl Copyright 1997-2016,2017 by Thomas E. Dickey
 dnl 
 dnl                         All Rights Reserved
 dnl 
@@ -33,7 +33,7 @@ dnl authorization.
 dnl ---------------------------------------------------------------------------
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_PREREQ(2.52.20121002)
+AC_PREREQ(2.52.20170501)
 AC_INIT
 AC_CONFIG_SRCDIR([charproc.c])
 AC_CONFIG_HEADER(xtermcfg.h:xtermcfg.hin)
@@ -61,7 +61,7 @@ AC_ARG_PROGRAM
 CF_PROG_LINT
 
 ###	checks for compiler characteristics
-CF_XOPEN_SOURCE
+CF_XOPEN_SOURCE(700)
 CF_SIGWINCH
 
 ###	checks for header files
@@ -116,8 +116,8 @@ CF_WITH_ICON_SYMLINK(xterm)
 CF_WITH_ICON_THEME([icons/$ICON_NAME icons/${ICON_NAME}_48x48],,,icons/${ICON_NAME}_48x48)
 CF_DISABLE_DESKTOP(xterm)
 CF_WITH_DESKTOP_CATEGORY(xterm,
-	[*rxvt*|konsole|*-terminal],
-	[System|TerminalEmulator|Utility|*])
+	[*rxvt*|*konsole|*[[Tt]]erminal],
+	[System|TerminalEmulator|*])
 
 AC_MSG_CHECKING(for install-permissions reference)
 AC_ARG_WITH(reference,
@@ -374,6 +374,14 @@ if test "$cf_tic_prog" = yes ; then
 	elif test "$TERMINFO_DIR" != none ; then
 		if test -d $TERMINFO_DIR ; then
 			AC_DEFINE_UNQUOTED(OWN_TERMINFO_DIR,"$TERMINFO_DIR",[Define to override default TERMINFO value])
+			AC_MSG_CHECKING(if \$TERMINFO should also be set)
+			AC_ARG_ENABLE(env-terminfo,
+				[  --enable-env-terminfo   setenv $TERMINFO if --with-own-terminfo gives value],
+				[cf_env_terminfo=yes],
+				[cf_env_terminfo=no])
+			AC_MSG_RESULT($cf_env_terminfo)
+			test $cf_env_terminfo = yes &&
+			AC_DEFINE(OWN_TERMINFO_ENV,1,[Define to 1 to enable setenv of $TERMINFO value])
 		else
 			AC_MSG_WARN(not a directory)
 		fi

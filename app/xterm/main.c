@@ -1,7 +1,7 @@
-/* $XTermId: main.c,v 1.784 2016/10/07 00:40:34 tom Exp $ */
+/* $XTermId: main.c,v 1.807 2017/06/20 22:59:13 tom Exp $ */
 
 /*
- * Copyright 2002-2015,2016 by Thomas E. Dickey
+ * Copyright 2002-2016,2017 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -823,7 +823,7 @@ static sigjmp_buf env;
 #  define SetUtmpSysLen(utmp) 			   \
 	{ \
 	    utmp.ut_host[sizeof(utmp.ut_host)-1] = '\0'; \
-	    utmp.ut_syslen = strlen(utmp.ut_host) + 1; \
+	    utmp.ut_syslen = (short) strlen(utmp.ut_host) + 1; \
 	}
 #endif
 
@@ -882,6 +882,9 @@ static XtResource application_resources[] =
     Bres("waitForMap", "WaitForMap", wait_for_map, False),
     Bres("ptyHandshake", "PtyHandshake", ptyHandshake, True),
     Bres("ptySttySize", "PtySttySize", ptySttySize, DEF_PTY_STTY_SIZE),
+#endif
+#if OPT_REPORT_CCLASS
+    Bres("reportCClass", "ReportCClass", reportCClass, False),
 #endif
 #if OPT_REPORT_COLORS
     Bres("reportColors", "ReportColors", reportColors, False),
@@ -1027,6 +1030,9 @@ static XrmOptionDescRec optionDescList[] = {
 {"+s",		"*multiScroll",	XrmoptionNoArg,		(XPointer) "off"},
 {"-sb",		"*scrollBar",	XrmoptionNoArg,		(XPointer) "on"},
 {"+sb",		"*scrollBar",	XrmoptionNoArg,		(XPointer) "off"},
+#if OPT_REPORT_CCLASS
+{"-report-charclass","*reportCClass", XrmoptionNoArg,	(XPointer) "on"},
+#endif
 #if OPT_REPORT_COLORS
 {"-report-colors","*reportColors", XrmoptionNoArg,	(XPointer) "on"},
 #endif
@@ -1221,6 +1227,9 @@ static OptionHelp xtermOptions[] = {
 { "-/+rw",                 "turn on/off reverse wraparound" },
 { "-/+s",                  "turn on/off multiscroll" },
 { "-/+sb",                 "turn on/off scrollbar" },
+#if OPT_REPORT_CCLASS
+{"-report-charclass",      "report \"charClass\" after initialization"},
+#endif
 #if OPT_REPORT_COLORS
 { "-report-colors",        "report colors as they are allocated" },
 #endif
@@ -2942,14 +2951,14 @@ set_pty_permissions(uid_t uid, unsigned gid, unsigned mode)
     struct group *ttygrp;
 
     if ((ttygrp = getgrnam(TTY_GROUP_NAME)) != 0) {
-	gid = ttygrp->gr_gid;
+	gid = (unsigned) ttygrp->gr_gid;
 	mode &= 0660U;
     }
     endgrent();
 #endif /* USE_TTY_GROUP */
 
     TRACE_IDS;
-    set_owner(ttydev, uid, gid, mode);
+    set_owner(ttydev, (unsigned) uid, gid, mode);
 }
 
 #ifdef get_pty			/* USE_UTMP_SETGID */
@@ -3222,16 +3231,16 @@ void
 first_map_occurred(void)
 {
     if (resource.wait_for_map) {
-	handshake_t handshake;
-	TScreen *screen = TScreenOf(term);
-
-	memset(&handshake, 0, sizeof(handshake));
-	handshake.status = PTY_EXEC;
-	handshake.rows = screen->max_row;
-	handshake.cols = screen->max_col;
-
 	if (pc_pipe[1] >= 0) {
-	    TRACE(("first_map_occurred: %dx%d\n", handshake.rows, handshake.cols));
+	    handshake_t handshake;
+	    TScreen *screen = TScreenOf(term);
+
+	    memset(&handshake, 0, sizeof(handshake));
+	    handshake.status = PTY_EXEC;
+	    handshake.rows = screen->max_row;
+	    handshake.cols = screen->max_col;
+
+	    TRACE(("first_map_occurred: %dx%d\n", MaxRows(screen), MaxCols(screen)));
 	    TRACE_HANDSHAKE("writing", &handshake);
 	    IGNORE_RC(write(pc_pipe[1],
 			    (const char *) &handshake,
@@ -3265,7 +3274,7 @@ set_owner(char *device, unsigned uid, unsigned gid, unsigned mode)
     TRACE(("set_owner(%s, uid=%d, gid=%d, mode=%#o\n",
 	   device, (int) uid, (int) gid, (unsigned) mode));
 
-    if (chown(device, uid, gid) < 0) {
+    if (chown(device, (uid_t) uid, (gid_t) gid) < 0) {
 	why = errno;
 	if (why != ENOENT
 	    && save_ruid == 0) {
@@ -3273,7 +3282,7 @@ set_owner(char *device, unsigned uid, unsigned gid, unsigned mode)
 			device, (long) uid, (long) gid);
 	}
 	TRACE(("...chown failed: %s\n", strerror(why)));
-    } else if (chmod(device, mode) < 0) {
+    } else if (chmod(device, (mode_t) mode) < 0) {
 	why = errno;
 	if (why != ENOENT) {
 	    struct stat sb;
@@ -3320,7 +3329,7 @@ static void
 init_utmp(int type, struct UTMP_STR *tofind)
 {
     memset(tofind, 0, sizeof(*tofind));
-    tofind->ut_type = type;
+    tofind->ut_type = (short) type;
     copy_filled(tofind->ut_id, my_utmp_id(ttydev), sizeof(tofind->ut_id));
     copy_filled(tofind->ut_line, my_pty_name(ttydev), sizeof(tofind->ut_line));
 }
@@ -3570,9 +3579,9 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 	 * defaults.
 	 */
 
-	signal(SIGALRM, hungtty);
-	alarm(2);		/* alarm(1) might return too soon */
 	if (!sigsetjmp(env, 1)) {
+	    signal(SIGALRM, hungtty);
+	    alarm(2);		/* alarm(1) might return too soon */
 	    ttyfd = open("/dev/tty", O_RDWR);
 	    alarm(0);
 	    tty_got_hung = False;
@@ -3699,7 +3708,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 	if (get_pty(&screen->respond, XDisplayString(screen->display))) {
 	    SysError(ERROR_PTYS);
 	}
-	TRACE_TTYSIZE(screen->respond, "after get_pty");
+	TRACE_GET_TTYSIZE(screen->respond, "after get_pty");
 #if OPT_INITIAL_ERASE
 	if (resource.ptyInitialErase) {
 #ifdef TERMIO_STRUCT
@@ -3830,21 +3839,14 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
     /* tell tty how big window is */
 #if OPT_TEK4014
     if (TEK4014_ACTIVE(xw)) {
-	TTYSIZE_ROWS(ts) = 38;
-	TTYSIZE_COLS(ts) = 81;
-#if defined(USE_STRUCT_WINSIZE)
-	ts.ws_xpixel = TFullWidth(TekScreenOf(tekWidget));
-	ts.ws_ypixel = TFullHeight(TekScreenOf(tekWidget));
-#endif
+	setup_winsize(ts, TDefaultRows, TDefaultCols,
+		      TFullHeight(TekScreenOf(tekWidget)),
+		      TFullWidth(TekScreenOf(tekWidget)));
     } else
 #endif
     {
-	TTYSIZE_ROWS(ts) = (ttySize_t) MaxRows(screen);
-	TTYSIZE_COLS(ts) = (ttySize_t) MaxCols(screen);
-#if defined(USE_STRUCT_WINSIZE)
-	ts.ws_xpixel = (ttySize_t) FullWidth(screen);
-	ts.ws_ypixel = (ttySize_t) FullHeight(screen);
-#endif
+	setup_winsize(ts, MaxRows(screen), MaxCols(screen),
+		      FullHeight(screen), FullWidth(screen));
     }
     TRACE_RC(i, SET_TTYSIZE(screen->respond, ts));
     TRACE(("spawn SET_TTYSIZE %dx%d return %d\n",
@@ -3862,7 +3864,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 #endif
 #if !defined(USE_USG_PTYS) && defined(HAVE_POSIX_OPENPT)
     unlockpt(screen->respond);
-    TRACE_TTYSIZE(screen->respond, "after unlockpt");
+    TRACE_GET_TTYSIZE(screen->respond, "after unlockpt");
 #endif
 #endif /* !USE_OPENPTY */
 
@@ -3912,7 +3914,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 		setpgrp();
 #endif
 	    unlockpt(screen->respond);
-	    TRACE_TTYSIZE(screen->respond, "after unlockpt");
+	    TRACE_GET_TTYSIZE(screen->respond, "after unlockpt");
 	    if ((pty_name = ptsname(screen->respond)) == 0) {
 		SysError(ERROR_PTSNAME);
 	    } else if ((ptyfd = open(pty_name, O_RDWR)) < 0) {
@@ -3946,22 +3948,16 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 	    /* tell tty how big window is */
 #if OPT_TEK4014
 	    if (TEK4014_ACTIVE(xw)) {
-		TTYSIZE_ROWS(ts) = 24;
-		TTYSIZE_COLS(ts) = 80;
-#ifdef USE_STRUCT_WINSIZE
-		ts.ws_xpixel = TFullWidth(TekScreenOf(tekWidget));
-		ts.ws_ypixel = TFullHeight(TekScreenOf(tekWidget));
-#endif
+		setup_winsize(ts, TDefaultRows, TDefaultCols,
+			      TFullHeight(TekScreenOf(tekWidget)),
+			      TFullWidth(TekScreenOf(tekWidget)));
 	    } else
 #endif /* OPT_TEK4014 */
 	    {
-		TTYSIZE_ROWS(ts) = (ttySize_t) MaxRows(screen);
-		TTYSIZE_COLS(ts) = (ttySize_t) MaxCols(screen);
-#ifdef USE_STRUCT_WINSIZE
-		ts.ws_xpixel = (ttySize_t) FullWidth(screen);
-		ts.ws_ypixel = (ttySize_t) FullHeight(screen);
-#endif
+		setup_winsize(ts, MaxRows(screen), MaxCols(screen),
+			      FullHeight(screen), FullWidth(screen));
 	    }
+	    trace_winsize(ts, "initial tty size");
 #endif /* TTYSIZE_STRUCT */
 
 #endif /* USE_USG_PTYS */
@@ -4037,9 +4033,9 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 		    IGNORE_RC(revoke(ttydev));
 #endif
 		    if ((ttyfd = open(ttydev, O_RDWR)) >= 0) {
-			TRACE_TTYSIZE(ttyfd, "after open");
+			TRACE_GET_TTYSIZE(ttyfd, "after open");
 			TRACE_RC(i, SET_TTYSIZE(ttyfd, ts));
-			TRACE_TTYSIZE(ttyfd, "after fixup");
+			TRACE_GET_TTYSIZE(ttyfd, "after SET_TTYSIZE fixup");
 #if defined(CRAY) && defined(TCSETCTTY)
 			/* make /dev/tty work */
 			ioctl(ttyfd, TCSETCTTY, 0);
@@ -4107,7 +4103,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 #endif /* OPT_PTY_HANDSHAKE -- from near fork */
 
 	    set_pty_permissions(screen->uid,
-				screen->gid,
+				(unsigned) screen->gid,
 				(resource.messages
 				 ? 0622U
 				 : 0600U));
@@ -4227,8 +4223,11 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 #ifdef __hpux
 		/* ioctl chokes when the "reserved" process group controls
 		 * are not set to _POSIX_VDISABLE */
-		ltc.t_rprntc = ltc.t_rprntc = ltc.t_flushc =
-		    ltc.t_werasc = ltc.t_lnextc = _POSIX_VDISABLE;
+		ltc.t_rprntc = _POSIX_VDISABLE;
+		ltc.t_rprntc = _POSIX_VDISABLE;
+		ltc.t_flushc = _POSIX_VDISABLE;
+		ltc.t_werasc = _POSIX_VDISABLE;
+		ltc.t_lnextc = _POSIX_VDISABLE;
 #endif /* __hpux */
 		if (ioctl(ttyfd, TIOCSLTC, &ltc) == -1)
 		    HsSysError(ERROR_TIOCSETC);
@@ -4651,7 +4650,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 	    if (xw->misc.login_shell &&
 		(i = open(etc_lastlog, O_WRONLY)) >= 0) {
 		size_t size = sizeof(struct lastlog);
-		off_t offset = (off_t) (screen->uid * size);
+		off_t offset = (off_t) ((size_t) screen->uid * size);
 
 		memset(&lastlog, 0, size);
 		(void) strncpy(lastlog.ll_line,
@@ -4727,18 +4726,15 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 			exit(ERROR_PTY_EXEC);
 		    }
 		    if (handshake.rows > 0 && handshake.cols > 0) {
-			TRACE(("handshake ttysize: %dx%d\n",
+			TRACE(("handshake read ttysize: %dx%d\n",
 			       handshake.rows, handshake.cols));
 			set_max_row(screen, handshake.rows);
 			set_max_col(screen, handshake.cols);
 #ifdef TTYSIZE_STRUCT
 			got_handshake_size = True;
-			TTYSIZE_ROWS(ts) = (ttySize_t) MaxRows(screen);
-			TTYSIZE_COLS(ts) = (ttySize_t) MaxCols(screen);
-#if defined(USE_STRUCT_WINSIZE)
-			ts.ws_xpixel = (ttySize_t) FullWidth(screen);
-			ts.ws_ypixel = (ttySize_t) FullHeight(screen);
-#endif
+			setup_winsize(ts, MaxRows(screen), MaxCols(screen),
+				      FullHeight(screen), FullWidth(screen));
+			trace_winsize(ts, "got handshake");
 #endif /* TTYSIZE_STRUCT */
 		    }
 		}
@@ -4761,9 +4757,6 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 		    xtermSetenv("SHELL", pw.pw_shell);
 	    }
 #endif /* HAVE_UTMP */
-#ifdef OWN_TERMINFO_DIR
-	    xtermSetenv("TERMINFO", OWN_TERMINFO_DIR);
-#endif
 #else /* USE_SYSV_ENVVARS */
 	    if (*(newtc = get_tcap_buffer(xw)) != '\0') {
 		resize_termcap(xw);
@@ -4797,6 +4790,9 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 		}
 	    }
 #endif /* USE_SYSV_ENVVARS */
+#ifdef OWN_TERMINFO_ENV
+	    xtermSetenv("TERMINFO", OWN_TERMINFO_DIR);
+#endif
 
 #if OPT_PTY_HANDSHAKE
 	    /*
@@ -4805,14 +4801,17 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 	     * If we expect the waitForMap logic to set the handshake-size,
 	     * use that to prevent races.
 	     */
+	    TRACE(("should we reset screensize after pty-handshake?\n"));
+	    TRACE(("... ptyHandshake      :%d\n", resource.ptyHandshake));
+	    TRACE(("... ptySttySize       :%d\n", resource.ptySttySize));
+	    TRACE(("... got_handshake_size:%d\n", got_handshake_size));
+	    TRACE(("... wait_for_map0     :%d\n", resource.wait_for_map0));
 	    if (resource.ptyHandshake
 		&& resource.ptySttySize
 		&& (got_handshake_size || !resource.wait_for_map0)) {
 #ifdef TTYSIZE_STRUCT
 		TRACE_RC(i, SET_TTYSIZE(0, ts));
-		TRACE(("ptyHandshake SET_TTYSIZE %dx%d return %d\n",
-		       TTYSIZE_ROWS(ts),
-		       TTYSIZE_COLS(ts), i));
+		trace_winsize(ts, "ptyHandshake SET_TTYSIZE");
 #endif /* TTYSIZE_STRUCT */
 	    }
 #endif /* OPT_PTY_HANDSHAKE */
@@ -4889,7 +4888,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 	    signal(SIGHUP, SIG_DFL);
 #endif
 
-	    if ((shname_minus = CastMallocN(char, strlen(shname) + 2)) != 0) {
+	    if ((shname_minus = TextAlloc(strlen(shname) + 1)) != 0) {
 		(void) strcpy(shname_minus, "-");
 		(void) strcat(shname_minus, shname);
 	    } else {

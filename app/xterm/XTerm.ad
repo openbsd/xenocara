@@ -1,4 +1,4 @@
-! $XTermId: XTerm.ad,v 1.101 2016/01/28 02:15:29 tom Exp $
+! $XTermId: XTerm.ad,v 1.102 2016/12/22 02:07:39 tom Exp $
 ! -----------------------------------------------------------------------------
 ! this file is part of xterm
 !
@@ -135,6 +135,7 @@
 
 *fontMenu*allow-color-ops*Label:	Allow Color Ops
 *fontMenu*allow-font-ops*Label:	Allow Font Ops
+*fontMenu*allow-mouse-ops*Label:	Allow Mouse Ops
 *fontMenu*allow-tcap-ops*Label:	Allow Termcap Ops
 *fontMenu*allow-title-ops*Label:	Allow Title Ops
 *fontMenu*allow-window-ops*Label:	Allow Window Ops

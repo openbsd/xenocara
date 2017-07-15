@@ -1,7 +1,7 @@
-/* $XTermId: fontutils.h,v 1.94 2014/06/08 21:10:27 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.119 2017/06/19 08:31:10 tom Exp $ */
 
 /*
- * Copyright 1998-2013,2014 by Thomas E. Dickey
+ * Copyright 1998-2016,2017 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -37,25 +37,46 @@
 /* *INDENT-OFF* */
 
 extern Bool xtermLoadDefaultFonts (XtermWidget /* xw */);
-extern Bool xtermOpenFont (XtermWidget /* xw */, const char */* name */, XTermFonts * /* result */, fontWarningTypes /* warn */, Bool /* force */);
-extern XTermFonts * xtermCloseFont (XtermWidget /* xw */, XTermFonts * /* fnt */);
+extern Bool xtermOpenFont (XtermWidget /* xw */, const char */* name */, XTermFonts * /* result */, Bool /* force */);
+extern XTermFonts * getDoubleFont (TScreen * /* screen */, int /* which */);
+extern XTermFonts * getItalicFont (TScreen * /* screen */, int /* which */);
+extern XTermFonts * getNormalFont (TScreen * /* screen */, int /* which */);
+extern const VTFontNames * defaultVTFontNames(XtermWidget /* xw */);
 extern const VTFontNames * xtermFontName (const char */* normal */);
+extern const char * whichFontEnum (VTFontEnum /* value */);
+extern const char * whichFontList (XtermWidget /* xw */, VTFontList * /* value */);
+extern const char * whichFontList2(XtermWidget /* xw */, char ** /* value */);
 extern int lookupRelativeFontSize (XtermWidget /* xw */, int /* old */, int /* relative */);
-extern int xtermGetFont(const char * /* param */);
+extern int xtermGetFont (const char * /* param */);
 extern int xtermLoadFont (XtermWidget /* xw */, const VTFontNames */* fonts */, Bool /* doresize */, int /* fontnum */);
 extern void HandleSetFont PROTO_XT_ACTIONS_ARGS;
 extern void SetVTFont (XtermWidget /* xw */, int /* i */, Bool /* doresize */, const VTFontNames */* fonts */);
+extern void allocFontList (XtermWidget /* xw */, const char * /* name */, XtermFontNames * /* target */, VTFontEnum /* which */, const char * /* source */, Bool /* ttf */);
+extern void copyFontList (char *** /* targetp */, char ** /* source */);
+extern void initFontLists (XtermWidget /* xw */);
+extern void freeFontList (char *** /* targetp */);
+extern void freeFontLists (VTFontList * /* lists */);
+extern void xtermCloseFont (XtermWidget /* xw */, XTermFonts * /* fnt */);
 extern void xtermCloseFonts (XtermWidget /* xw */, XTermFonts * /* fnts[fMAX] */);
 extern void xtermComputeFontInfo (XtermWidget /* xw */, VTwin */* win */, XFontStruct */* font */, int /* sbwidth */);
 extern void xtermCopyFontInfo (XTermFonts * /* target */, XTermFonts * /* source */);
 extern void xtermFreeFontInfo (XTermFonts * /* target */);
 extern void xtermSaveFontInfo (TScreen * /* screen */, XFontStruct */* font */);
 extern void xtermSetCursorBox (TScreen * /* screen */);
+extern void xtermUpdateFontGCs (XtermWidget /* xw */, Bool /* italic */);
 extern void xtermUpdateFontInfo (XtermWidget /* xw */, Bool /* doresize */);
-extern void xtermUpdateFontGCs (XtermWidget /* xw */, XTermFonts * /* fnts */);
+
+#define getIconicFont(screen) (&((screen)->fnt_icon))
+
+#define FirstItemOf(vector) ((vector) ? (vector)[0] : 0)
+#define CurrentXftFont(xw)  ((xw)->work.fonts.xft.list_n[0])
+#define DefaultFontN(xw)    ((xw)->work.fonts.x11.list_n[0])
+#define DefaultFontB(xw)    ((xw)->work.fonts.x11.list_b[0])
+#define DefaultFontW(xw)    ((xw)->work.fonts.x11.list_w[0])
+#define DefaultFontWB(xw)   ((xw)->work.fonts.x11.list_wb[0])
 
 #if OPT_DEC_CHRSET
-extern char *xtermSpecialFont (TScreen */* screen */, unsigned /* attr_flags */, unsigned /* draw_flags */, unsigned /* chrset */);
+extern char *xtermSpecialFont (XtermWidget /* xw */, unsigned /* attr_flags */, unsigned /* draw_flags */, unsigned /* chrset */);
 #endif
 
 #define FontLacksMetrics(font) \
@@ -108,25 +129,27 @@ extern void HandleLoadVTFonts PROTO_XT_ACTIONS_ARGS;
 
 #if OPT_LOAD_VTFONTS || OPT_WIDE_CHARS
 extern Bool xtermLoadWideFonts (XtermWidget /* w */, Bool /* nullOk */);
-extern void xtermSaveVTFonts(XtermWidget /* xw */);
+extern void xtermSaveVTFonts (XtermWidget /* xw */);
 #endif
 
 #define xtermIsDecGraphic(ch)	((ch) > 0 && (ch) < 32)
 
 #if OPT_RENDERFONT
 extern Bool xtermXftMissing (XtermWidget /* xw */, XftFont * /* font */, unsigned /* wc */);
-extern void xtermCloseXft(TScreen * /* screen */, XTermXftFonts * /* pub */);
+extern XTermXftFonts *getMyXftFont (XtermWidget /* xw */, int /* which */, int /* fontnum */);
+extern XftFont *getXftFont (XtermWidget /* xw */, VTFontEnum /* which */, int /* fontnum */);
+extern void xtermCloseXft (TScreen * /* screen */, XTermXftFonts * /* pub */);
 #endif
 
 #if OPT_SHIFT_FONTS
-extern String getFaceName(XtermWidget /* xw */, Bool /* wideName */);
+extern String getFaceName (XtermWidget /* xw */, Bool /* wideName */);
 extern void HandleLargerFont PROTO_XT_ACTIONS_ARGS;
 extern void HandleSmallerFont PROTO_XT_ACTIONS_ARGS;
-extern void setFaceName(XtermWidget /* xw */, const char * /*value */);
+extern void setFaceName (XtermWidget /* xw */, const char * /*value */);
 #endif
 
 #if OPT_WIDE_ATTRS
-extern void xtermLoadItalics(XtermWidget /* xw */);
+extern void xtermLoadItalics (XtermWidget /* xw */);
 #endif
 
 #if OPT_WIDE_CHARS

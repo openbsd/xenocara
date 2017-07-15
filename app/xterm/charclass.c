@@ -1,4 +1,4 @@
-/* $XTermId: charclass.c,v 1.23 2014/05/26 17:12:51 tom Exp $ */
+/* $XTermId: charclass.c,v 1.28 2017/05/29 17:43:54 tom Exp $ */
 
 /*
  * Compact and efficient reimplementation of the
@@ -45,6 +45,8 @@ static struct classentry {
 int
 SetCharacterClassRange(int low, int high, int value)
 {
+    TRACE(("...SetCharacterClassRange (%#x .. %#x) = %d\n", low, high, value));
+
     if (high < low)
 	return -1;		/* nothing to do */
 
@@ -70,13 +72,21 @@ typedef enum {
     IDENT = -1,
     ALNUM = 48,
     CNTRL = 1,
-    BLANK = 32
+    BLANK = 32,
+    U_CJK = 0x4e00,
+    U_SUP = 0x2070,
+    U_SUB = 0x2080,
+    U_HIR = 0x3040,
+    U_KAT = 0x30a0,
+    U_HAN = 0xac00
 } Classes;
 
 void
 init_classtab(void)
 {
     const int size = 50;
+
+    TRACE(("init_classtab {{\n"));
 
     classtab = TypeMallocN(struct classentry, (unsigned) size);
     if (!classtab)
@@ -114,21 +124,22 @@ init_classtab(void)
     SetCharacterClassRange(0x1800, 0x180a, IDENT);	/* Mongolian punctuation */
     SetCharacterClassRange(0x2000, 0x200a, BLANK);	/* spaces */
     SetCharacterClassRange(0x200b, 0x27ff, IDENT);	/* punctuation and symbols */
-    SetCharacterClassRange(0x2070, 0x207f, 0x2070);	/* superscript */
-    SetCharacterClassRange(0x2080, 0x208f, 0x2080);	/* subscript */
+    SetCharacterClassRange(0x2070, 0x207f, U_SUP);	/* superscript */
+    SetCharacterClassRange(0x2080, 0x208f, U_SUB);	/* subscript */
     SetCharacterClassRange(0x3000, 0x3000, BLANK);	/* ideographic space */
     SetCharacterClassRange(0x3001, 0x3020, IDENT);	/* ideographic punctuation */
-    SetCharacterClassRange(0x3040, 0x309f, 0x3040);	/* Hiragana */
-    SetCharacterClassRange(0x30a0, 0x30ff, 0x30a0);	/* Katakana */
-    SetCharacterClassRange(0x3300, 0x9fff, 0x4e00);	/* CJK Ideographs */
-    SetCharacterClassRange(0xac00, 0xd7a3, 0xac00);	/* Hangul Syllables */
-    SetCharacterClassRange(0xf900, 0xfaff, 0x4e00);	/* CJK Ideographs */
+    SetCharacterClassRange(0x3040, 0x309f, U_HIR);	/* Hiragana */
+    SetCharacterClassRange(0x30a0, 0x30ff, U_KAT);	/* Katakana */
+    SetCharacterClassRange(0x3300, 0x9fff, U_CJK);	/* CJK Ideographs */
+    SetCharacterClassRange(0xac00, 0xd7a3, U_HAN);	/* Hangul Syllables */
+    SetCharacterClassRange(0xf900, 0xfaff, U_CJK);	/* CJK Ideographs */
     SetCharacterClassRange(0xfe30, 0xfe6b, IDENT);	/* punctuation forms */
     SetCharacterClassRange(0xff00, 0xff0f, IDENT);	/* half/fullwidth ASCII */
     SetCharacterClassRange(0xff1a, 0xff20, IDENT);	/* half/fullwidth ASCII */
     SetCharacterClassRange(0xff3b, 0xff40, IDENT);	/* half/fullwidth ASCII */
     SetCharacterClassRange(0xff5b, 0xff64, IDENT);	/* half/fullwidth ASCII */
 
+    TRACE(("}} init_classtab\n"));
     return;
 }
 
@@ -146,6 +157,78 @@ CharacterClass(int c)
 
     return cclass;
 }
+
+#if OPT_REPORT_CCLASS
+#define charFormat(code) ((code) > 255 ? "0x%04X" : "%d")
+static const char *
+class_name(Classes code)
+{
+    static char buffer[80];
+    const char *result = "?";
+    switch (code) {
+    case IDENT:
+	result = "IDENT";
+	break;
+    case ALNUM:
+	result = "ALNUM";
+	break;
+    case CNTRL:
+	result = "CNTRL";
+	break;
+    case BLANK:
+	result = "BLANK";
+	break;
+    case U_SUP:
+	result = "superscript";
+	break;
+    case U_SUB:
+	result = "subscript";
+	break;
+    case U_CJK:
+	result = "CJK Ideographs";
+	break;
+    case U_HIR:
+	result = "Hiragana";
+	break;
+    case U_KAT:
+	result = "Katakana";
+	break;
+    case U_HAN:
+	result = "Hangul Syllables";
+	break;
+    default:
+	sprintf(buffer, charFormat(code), code);
+	result = buffer;
+	break;
+    }
+    return result;
+}
+
+void
+report_wide_char_class(void)
+{
+    static const Classes known_classes[] =
+    {IDENT, ALNUM, CNTRL, BLANK, U_SUP, U_SUB, U_HIR, U_KAT, U_CJK, U_HAN};
+    int i;
+
+    printf("\n");
+    printf("Unicode charClass data uses the last match\n");
+    printf("from these overlapping intervals of character codes:\n");
+    for (i = classtab[0].first; i <= classtab[0].last; i++) {
+	printf("\tU+%04X .. U+%04X %s\n",
+	       classtab[i].first,
+	       classtab[i].last,
+	       class_name(classtab[i].cclass));
+    }
+    printf("\n");
+    printf("These class-names are used internally (the first character code in a class):\n");
+    for (i = 0; i < (int) XtNumber(known_classes); ++i) {
+	printf("\t");
+	printf(charFormat(known_classes[i]), known_classes[i]);
+	printf(" = %s\n", class_name(known_classes[i]));
+    }
+}
+#endif /* OPT_REPORT_CCLASS */
 
 #ifdef NO_LEAKS
 void

@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
-# $XTermId: query-color.pl,v 1.4 2014/02/26 20:14:40 tom Exp $
+# $XTermId: query-color.pl,v 1.5 2017/01/22 18:34:06 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2012,2014 by Thomas E. Dickey
+# Copyright 2012-2014,2017 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -42,7 +42,7 @@ use warnings;
 use Getopt::Std;
 use IO::Handle;
 
-our ( $opt_s );
+our ($opt_s);
 &getopts('s') || die(
     "Usage: $0 [options] [color1[-color2]]\n
 Options:\n
@@ -84,32 +84,32 @@ sub visible($) {
     my $n;
     my $result = "";
     for ( $n = 0 ; $n < length($reply) ; ) {
-	my $c = substr( $reply, $n, 1 );
-	if ( $c =~ /[[:print:]]/ ) {
-	    $result .= $c;
-	}
-	else {
-	    my $k = ord substr( $reply, $n, 1 );
-	    if ( ord $k == 0x1b ) {
-		$result .= "\\E";
-	    }
-	    elsif ( $k == 0x7f ) {
-		$result .= "^?";
-	    }
-	    elsif ( $k == 32 ) {
-		$result .= "\\s";
-	    }
-	    elsif ( $k < 32 ) {
-		$result .= sprintf( "^%c", $k + 64 );
-	    }
-	    elsif ( $k > 128 ) {
-		$result .= sprintf( "\\%03o", $k );
-	    }
-	    else {
-		$result .= chr($k);
-	    }
-	}
-	$n += 1;
+        my $c = substr( $reply, $n, 1 );
+        if ( $c =~ /[[:print:]]/ ) {
+            $result .= $c;
+        }
+        else {
+            my $k = ord substr( $reply, $n, 1 );
+            if ( ord $k == 0x1b ) {
+                $result .= "\\E";
+            }
+            elsif ( $k == 0x7f ) {
+                $result .= "^?";
+            }
+            elsif ( $k == 32 ) {
+                $result .= "\\s";
+            }
+            elsif ( $k < 32 ) {
+                $result .= sprintf( "^%c", $k + 64 );
+            }
+            elsif ( $k > 128 ) {
+                $result .= sprintf( "\\%03o", $k );
+            }
+            else {
+                $result .= chr($k);
+            }
+        }
+        $n += 1;
     }
 
     return $result;
@@ -146,24 +146,26 @@ sub query_color($) {
 }
 
 sub query_colors($$) {
-	my $lo = $_[0];
-	my $hi = $_[1];
-	my $n;
-        for ( $n = $lo ; $n <= $hi ; ++$n ) {
-		query_color($n);
-	}
+    my $lo = $_[0];
+    my $hi = $_[1];
+    my $n;
+    for ( $n = $lo ; $n <= $hi ; ++$n ) {
+        query_color($n);
+    }
 }
 
 if ( $#ARGV >= 0 ) {
-	while ( $#ARGV >= 0 ) {
-		if ( $ARGV[0] =~ /-/ ) {
-			my @args = split /-/, $ARGV[0];
-			&query_colors ( $args[0], $args[1] );
-		} else {
-			&query_colors ( $ARGV[0], $ARGV[0] );
-		}
-		shift @ARGV;
-	}
-} else {
-	&query_colors(0,7);
+    while ( $#ARGV >= 0 ) {
+        if ( $ARGV[0] =~ /-/ ) {
+            my @args = split /-/, $ARGV[0];
+            &query_colors( $args[0], $args[1] );
+        }
+        else {
+            &query_colors( $ARGV[0], $ARGV[0] );
+        }
+        shift @ARGV;
+    }
+}
+else {
+    &query_colors( 0, 7 );
 }

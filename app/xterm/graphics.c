@@ -1,7 +1,7 @@
-/* $XTermId: graphics.c,v 1.69 2016/05/17 10:04:40 tom Exp $ */
+/* $XTermId: graphics.c,v 1.73 2017/06/18 18:20:22 tom Exp $ */
 
 /*
- * Copyright 2013-2015,2016 by Ross Combs
+ * Copyright 2013-2016,2017 by Ross Combs
  *
  *                         All Rights Reserved
  *
@@ -53,17 +53,20 @@
  *
  * ReGIS:
  * - ship a default alphabet zero font instead of scaling Xft fonts
- * - input and output cursors
- * - mouse input
+ * - input cursors
+ * - output cursors
+ * - mouse/tablet/arrow-key input
  * - fix graphic pages for ReGIS -- they should also apply to text and sixel graphics
  * - fix interpolated curves to more closely match implementation (identical despite direction and starting point)
  * - non-ASCII alphabets
  * - enter/leave anywhere in a command
  * - locator key definitions (DECLKD)
  * - command display mode
- * - re-rasterization on resize
+ * - re-rasterization on window resize
  * - macros
  * - improved fills for narrow angles (track actual lines not just pixels)
+ * - hardcopy/screen-capture support (need dialog of some sort for safety)
+ * - error reporting
  *
  * sixel:
  * - fix problem where new_row < 0 during sixel parsing (see FIXME)
@@ -105,10 +108,9 @@
  *
  * ReGIS extensions:
  * - non-integer text scaling
- * - free distortionless text rotation
+ * - free distortionless text rotation (vs. simulating the distortion and aligning to 45deg increments)
  * - font characteristics: bold/underline/italic
  * - remove/increase arbitrary limits (pattern size, pages, alphabets, stack size, font names, etc.)
- * - comment command
  * - shade/fill with borders
  * - sprites (copy portion of page into/out of buffer with scaling and rotation)
  * - ellipses
@@ -120,7 +122,7 @@
  * - background color as stackable write control
  * - true color (virtual color registers created upon lookup)
  * - anti-aliasing
- * - variable-width text
+ * - variable-width (proportional) text
  */
 
 /* font sizes:

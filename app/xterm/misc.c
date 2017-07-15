@@ -1,7 +1,7 @@
-/* $XTermId: misc.c,v 1.743 2016/10/07 00:41:14 tom Exp $ */
+/* $XTermId: misc.c,v 1.757 2017/06/20 08:52:18 tom Exp $ */
 
 /*
- * Copyright 1999-2015,2016 by Thomas E. Dickey
+ * Copyright 1999-2016,2017 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -55,6 +55,7 @@
 #include <version.h>
 #include <main.h>
 #include <xterm.h>
+#include <xterm_io.h>
 
 #include <sys/stat.h>
 #include <stdio.h>
@@ -1309,6 +1310,7 @@ xtermWarning(const char *fmt,...)
     int save_err = errno;
     va_list ap;
 
+    fflush(stdout);
     TRACE(("xtermWarning fmt='%s'\n", fmt));
     fprintf(stderr, "%s: ", ProgramName);
     va_start(ap, fmt);
@@ -1326,6 +1328,7 @@ xtermPerror(const char *fmt,...)
     char *msg = strerror(errno);
     va_list ap;
 
+    fflush(stdout);
     TRACE(("xtermPerror fmt='%s', msg='%s'\n", fmt, NonNull(msg)));
     fprintf(stderr, "%s: ", ProgramName);
     va_start(ap, fmt);
@@ -2959,9 +2962,12 @@ ManipulateSelectionData(XtermWidget xw, TScreen *screen, char *buf, int final)
 			screen->base64_paste = n;
 			screen->base64_final = final;
 
+			screen->selection_time =
+			    XtLastTimestampProcessed(TScreenOf(xw)->display);
+
 			/* terminator will be written in this call */
 			xtermGetSelection((Widget) xw,
-					  XtLastTimestampProcessed(TScreenOf(xw)->display),
+					  screen->selection_time,
 					  select_args, n,
 					  NULL);
 			/*
@@ -2974,6 +2980,8 @@ ManipulateSelectionData(XtermWidget xw, TScreen *screen, char *buf, int final)
 		} else {
 		    if (AllowWindowOps(xw, ewSetSelection)) {
 			TRACE(("Setting selection with %s\n", buf));
+			screen->selection_time =
+			    XtLastTimestampProcessed(TScreenOf(xw)->display);
 			ClearSelectionBuffer(screen);
 			while (*buf != '\0')
 			    AppendToSelectionBuffer(screen, CharOf(*buf++));
@@ -3276,6 +3284,9 @@ ResetColorsRequest(XtermWidget xw,
 {
     Bool result = False;
 
+    (void) xw;
+    (void) code;
+
     TRACE(("ResetColorsRequest code=%d\n", code));
 
 #if OPT_COLOR_RES
@@ -3562,7 +3573,7 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
      * Check if the palette changed and there are no more immediate changes
      * that could be deferred to the next repaint.
      */
-    if (xw->misc.palette_changed) {
+    if (xw->work.palette_changed) {
 	switch (mode) {
 	case 3:		/* change X property */
 	case 30:		/* Konsole (unused) */
@@ -3573,7 +3584,7 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 	case 52:		/* selection data */
 #endif
 	    TRACE(("forced repaint after palette changed\n"));
-	    xw->misc.palette_changed = False;
+	    xw->work.palette_changed = False;
 	    xtermRepaint(xw);
 	    break;
 	}
@@ -3652,7 +3663,7 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 	/* FALLTHRU */
     case 4:
 	if (ChangeAnsiColorRequest(xw, buf, ansi_colors, final))
-	    xw->misc.palette_changed = True;
+	    xw->work.palette_changed = True;
 	break;
     case 6:
 	/* FALLTHRU */
@@ -3676,7 +3687,7 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 		++buf;
 	    } else {
 		value = strtol(buf, &next, 10);
-		if (!PartS2L(buf, next) || (which < 0))
+		if (!PartS2L(buf, next) || (value < 0))
 		    break;
 		buf = next;
 		if (*buf == ';')
@@ -3712,7 +3723,7 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 	/* FALLTHRU */
     case OSC_Reset(4):
 	if (ResetAnsiColorRequest(xw, buf, ansi_colors))
-	    xw->misc.palette_changed = True;
+	    xw->work.palette_changed = True;
 	break;
 #endif
     case OSC_TEXT_FG:
@@ -3766,8 +3777,7 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 	 */
 	if (strcmp(buf, "?")) {
 	    char *bp;
-	    if ((bp = CastMallocN(char, strlen(buf))) != NULL) {
-		strcpy(bp, buf);
+	    if ((bp = x_strdup(buf)) != NULL) {
 		if (screen->logfile)
 		    free(screen->logfile);
 		screen->logfile = bp;
@@ -3855,7 +3865,7 @@ parse_decudk(XtermWidget xw, const char *cp)
 {
     while (*cp) {
 	const char *base = cp;
-	char *str = CastMallocN(char, strlen(cp) + 2);
+	char *str = TextAlloc(strlen(cp) + 2);
 	unsigned key = 0;
 	int len = 0;
 
@@ -5487,7 +5497,7 @@ xtermSetenv(const char *var, const char *value)
 	    environ = environ;
 	}
 
-	environ[found] = CastMallocN(char, 1 + len + strlen(value));
+	environ[found] = TextAlloc(1 + len + strlen(value));
 	if (environ[found] == 0) {
 	    xtermWarning("Cannot allocate environment %s\n", var);
 	    return;
@@ -5677,6 +5687,8 @@ end_tek_mode(void)
 
     if (TEK4014_ACTIVE(xw)) {
 	FlushLog(xw);
+	TEK4014_ACTIVE(xw) = False;
+	xtermSetWinSize(xw);
 	longjmp(Tekend, 1);
     }
     return;
@@ -5690,6 +5702,7 @@ end_vt_mode(void)
     if (!TEK4014_ACTIVE(xw)) {
 	FlushLog(xw);
 	TEK4014_ACTIVE(xw) = True;
+	TekSetWinSize(tekWidget);
 	longjmp(VTend, 1);
     }
     return;
@@ -5851,10 +5864,9 @@ sortedOpts(OptionHelp * options, XrmOptionDescRec * descs, Cardinal numDescs)
 			}
 			if (strncmp(mesg, opt_array[j].desc, strlen(mesg))) {
 			    if (strncmp(opt_array[j].desc, "turn ", (size_t) 5)) {
-				char *s = CastMallocN(char,
-						      strlen(mesg)
-						      + 1
-						      + strlen(opt_array[j].desc));
+				char *s = TextAlloc(strlen(mesg)
+						    + 1
+						    + strlen(opt_array[j].desc));
 				if (s != 0) {
 				    sprintf(s, "%s %s", mesg, opt_array[j].desc);
 				    opt_array[j].desc = s;
@@ -6175,4 +6187,46 @@ void
 free_string(String value)
 {
     free((void *) value);
+}
+
+/* Set tty's idea of window size, using the given file descriptor 'fd'. */
+void
+update_winsize(int fd, int rows, int cols, int height, int width)
+{
+#ifdef TTYSIZE_STRUCT
+    TTYSIZE_STRUCT ts;
+    int code;
+
+    setup_winsize(ts, rows, cols, height, width);
+    TRACE_RC(code, SET_TTYSIZE(fd, ts));
+    trace_winsize(ts, "from SET_TTYSIZE");
+    (void) code;
+#endif
+
+    (void) rows;
+    (void) cols;
+    (void) height;
+    (void) width;
+}
+
+/*
+ * Update stty settings to match the values returned by dtterm window
+ * manipulation 18 and 19.
+ */
+void
+xtermSetWinSize(XtermWidget xw)
+{
+#if OPT_TEK4014
+    if (!TEK4014_ACTIVE(xw))
+#endif
+	if (XtIsRealized((Widget) xw)) {
+	    TScreen *screen = TScreenOf(xw);
+
+	    TRACE(("xtermSetWinSize\n"));
+	    update_winsize(screen->respond,
+			   MaxRows(screen),
+			   MaxCols(screen),
+			   Height(screen),
+			   Width(screen));
+	}
 }

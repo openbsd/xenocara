@@ -1,7 +1,7 @@
-/* $XTermId: xterm_io.h,v 1.58 2014/07/25 08:26:56 tom Exp $ */
+/* $XTermId: xterm_io.h,v 1.64 2017/05/18 21:15:14 tom Exp $ */
 
 /*
- * Copyright 2000-2013,2014 by Thomas E. Dickey
+ * Copyright 2000-2014,2017 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -202,22 +202,13 @@
 #undef FIONCLEX
 #endif /* macII */
 
-#ifdef __QNX__
+#if defined(__QNX__) || defined(__GNU__) || defined(__MVS__) || defined(__osf__)
 #undef TIOCSLTC			/* <sgtty.h> conflicts with <termios.h> */
-#undef TIOCLSET
-#endif
-
-#if defined(__sgi) && (OSMAJORVERSION >= 5)
-#undef TIOCLSET			/* defined, but not useable */
-#endif
-
-#if defined(__GNU__) || defined(__MVS__) || defined(__osf__)
-#undef TIOCLSET
 #undef TIOCSLTC
 #endif
 
 #if defined (__sgi) || (defined(__linux__) && defined(__sparc__)) || defined(__UNIXWARE__)
-#undef TIOCLSET			/* XXX why is this undef-ed again? */
+#undef TIOCLSET			/* defined, but not useable */
 #endif
 
 #if defined(sun) || defined(__UNIXWARE__)
@@ -243,18 +234,44 @@
 #error "There is a configuration error with struct winsize ifdef"
 #endif
 
+/* "resize" depends upon order of assignments in this macro */
+#ifdef USE_STRUCT_WINSIZE
+#define setup_winsize(ts, rows, cols, height, width) \
+    (ts).ws_xpixel = (ttySize_t) (width), \
+    (ts).ws_ypixel = (ttySize_t) (height), \
+    TTYSIZE_ROWS(ts) = (ttySize_t) (rows), \
+    TTYSIZE_COLS(ts) = (ttySize_t) (cols)
+#else
+#define setup_winsize(ts, rows, cols, height, width) \
+    TTYSIZE_ROWS(ts) = (ttySize_t) (rows), \
+    TTYSIZE_COLS(ts) = (ttySize_t) (cols)
+#endif
+
 #if OPT_TRACE
-#define TRACE_TTYSIZE(fd, id) { \
+
+#ifdef USE_STRUCT_WINSIZE
+#define trace_winsize(ts, id) \
+    TRACE(("%s@%d, TTYSIZE %s chars %dx%d pixels %dx%d\n", \
+    	   __FILE__, __LINE__, id, \
+	   TTYSIZE_ROWS(ts), TTYSIZE_COLS(ts), (ts).ws_ypixel, (ts).ws_xpixel))
+#else
+#define trace_winsize(ts, id) \
+    TRACE(("%s@%d, TTYSIZE %s chars %dx%d\n", __FILE__, __LINE__, id, \
+    	   TTYSIZE_ROWS(ts), TTYSIZE_COLS(ts)))
+#endif
+
+#define TRACE_GET_TTYSIZE(fd, id) { \
 	    TTYSIZE_STRUCT debug_ttysize; \
 	    if (GET_TTYSIZE(fd, debug_ttysize) == 0) \
-		TRACE(("%s@%d, TTYSIZE %s %d %d\n", __FILE__, __LINE__, id, TTYSIZE_ROWS(debug_ttysize), TTYSIZE_COLS(debug_ttysize))); \
+		trace_winsize(debug_ttysize, id); \
 	    else \
 		TRACE(("%s@%d, TTYSIZE failed %s\n", __FILE__, __LINE__, strerror(errno))); \
 	}
 #else
-#define TRACE_TTYSIZE(fd, id) /* nothing */
+#define trace_winsize(ts, id)	/* nothing */
+#define TRACE_GET_TTYSIZE(fd, id)	/* nothing */
 #endif
 
 typedef unsigned short ttySize_t;
 
-#endif	/* included_xterm_io_h */
+#endif /* included_xterm_io_h */
