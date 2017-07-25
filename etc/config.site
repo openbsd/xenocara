@@ -1,13 +1,13 @@
-# $OpenBSD: config.site,v 1.7 2016/09/14 08:31:47 matthieu Exp $
+# $OpenBSD: config.site,v 1.8 2017/07/25 19:59:14 robert Exp $
 ac_cv_c_compiler_gnu=${ac_cv_c_compiler_gnu=yes}
 ac_cv_c_const=${ac_cv_c_const=yes}
 ac_cv_cxx_compiler_gnu=${ac_cv_cxx_compiler_gnu=yes}
 ac_cv_f77_compiler_gnu=${ac_cv_f77_compiler_gnu=yes}
-ac_cv_path_CPP_PATH=${ac_cv_path_CPP_PATH=/usr/bin/cpp}
+ac_cv_path_CPP_PATH=${ac_cv_path_CPP_PATH=/usr/libexec/tradcpp}
 ac_cv_path_GZIP=${ac_cv_path_GZIP=/usr/bin/gzip}
 ac_cv_path_MKTEMP_COMMAND=${ac_cv_path_MKTEMP_COMMAND=/usr/bin/mktemp}
 ac_cv_path_PERL=${ac_cv_path_PERL=/usr/bin/perl}
-ac_cv_path_RAWCPP=${ac_cv_path_RAWCPP=/usr/bin/cpp}
+ac_cv_path_RAWCPP=${ac_cv_path_RAWCPP=/usr/libexec/tradcpp}
 ac_cv_path_RSH=${ac_cv_path_RSH=/usr/bin/rsh}
 ac_cv_path_SED=${ac_cv_path_SED=/usr/bin/sed}
 ac_cv_path_ac_pt_PKG_CONFIG=${ac_cv_path_ac_pt_PKG_CONFIG=/usr/bin/pkg-config}
