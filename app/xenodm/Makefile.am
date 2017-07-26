@@ -37,9 +37,6 @@ lint:
 	(cd greeter && $(MAKE) $(AM_MAKEFLAGS) lint)
 endif LINT
 
-CLEANFILES = xdm.service
-EXTRA_DIST = xdm.service.in
-
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 
 .PHONY: ChangeLog INSTALL
