@@ -358,8 +358,6 @@ DISTCHECK_CONFIGURE_FLAGS = \
 @LINT_TRUE@ALL_LINT_FLAGS = $(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 @LINT_TRUE@		$(AM_CPPFLAGS) $(CPPFLAGS)
 
-CLEANFILES = xdm.service
-EXTRA_DIST = xdm.service.in
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -770,7 +768,6 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
-	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
