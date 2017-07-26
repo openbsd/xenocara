@@ -42,7 +42,6 @@ m4_ifndef([XORG_MACROS_VERSION],
           [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
 XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
-XORG_PROG_RAWCPP
 XORG_WITH_LINT
 
 # Checks for typedefs, structures, and compiler characteristics.
@@ -328,5 +327,11 @@ AC_CONFIG_FILES([Makefile
 		greeter/Makefile
 		include/Makefile
 		man/Makefile
-		xenodm/Makefile])
+		xenodm/Makefile
+		config/Xreset
+		config/Xresources
+		config/Xservers
+		config/Xsession
+		config/Xstartup
+		config/xenodm-config])
 AC_OUTPUT

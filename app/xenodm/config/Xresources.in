@@ -1,4 +1,4 @@
-! $OpenBSD: Xresources.cpp,v 1.1 2016/10/23 08:30:37 matthieu Exp $
+! $OpenBSD: Xresources.in,v 1.1 2017/07/26 21:14:54 matthieu Exp $
 !
 !
 !
@@ -6,25 +6,25 @@
 !
 
 
-#define BS \ /* cpp can be trickier than m4 */
-#define NLBS \n\ /* don't remove these comments */
-xlogin*login.translations: #override BS
-	Ctrl<Key>R: abort-display()NLBS
-	<Key>F1: set-session-argument(failsafe) finish-field()NLBS
-	<Key>Left: move-backward-character()NLBS
-	<Key>Right: move-forward-character()NLBS
-	<Key>Home: move-to-begining()NLBS
-	<Key>End: move-to-end()NLBS
-	Ctrl<Key>KP_Enter: set-session-argument(failsafe) finish-field()NLBS
-	<Key>KP_Enter: set-session-argument() finish-field()NLBS
-	Ctrl<Key>Return: set-session-argument(failsafe) finish-field()NLBS
+
+
+xlogin*login.translations: #override \
+	Ctrl<Key>R: abort-display()\n\
+	<Key>F1: set-session-argument(failsafe) finish-field()\n\
+	<Key>Left: move-backward-character()\n\
+	<Key>Right: move-forward-character()\n\
+	<Key>Home: move-to-begining()\n\
+	<Key>End: move-to-end()\n\
+	Ctrl<Key>KP_Enter: set-session-argument(failsafe) finish-field()\n\
+	<Key>KP_Enter: set-session-argument() finish-field()\n\
+	Ctrl<Key>Return: set-session-argument(failsafe) finish-field()\n\
 	<Key>Return: set-session-argument() finish-field()
 
 xlogin*greeting: CLIENTHOST
 xlogin*namePrompt: \040\040\040\040\040\040\040Login:
 xlogin*fail: Login incorrect or forbidden
 
-XHASHif WIDTH > 800
+#if WIDTH > 800
 xlogin*greetFont: -adobe-helvetica-bold-o-normal--24-240-75-75-p-138-iso8859-1
 xlogin*font: -adobe-helvetica-medium-r-normal--18-180-75-75-p-98-iso8859-1
 xlogin*promptFont: -adobe-helvetica-bold-r-normal--18-180-75-75-p-103-iso8859-1
@@ -33,7 +33,7 @@ xlogin*greetFace:       DejaVu Sans Condensed-22:bold:italic:dpi=75
 xlogin*face:            DejaVu Sans Condensed-16:dpi=75
 xlogin*promptFace:      DejaVu Sans Condensed-16:bold:dpi=75
 xlogin*failFace:        DejaVu Sans Condensed-16:bold:dpi=75
-XHASHelse
+#else
 xlogin*greetFont: -adobe-helvetica-bold-o-normal--17-120-100-100-p-92-iso8859-1
 xlogin*font: -adobe-helvetica-medium-r-normal--12-120-75-75-p-67-iso8859-1
 xlogin*promptFont: -adobe-helvetica-bold-r-normal--12-120-75-75-p-70-iso8859-1
@@ -42,33 +42,33 @@ xlogin*greetFace:       DejaVu Sans Condensed-18:bold:italic:dpi=75
 xlogin*face:            DejaVu Sans Condensed-12:dpi=75
 xlogin*promptFace:      DejaVu Sans Condensed-12:bold:dpi=75
 xlogin*failFace:        DejaVu Sans Condensed-12:bold:dpi=75
-XHASHendif
+#endif
 
-XHASHif !(defined(bpp1) || defined(bpp4) || defined(bpp8) || defined(bpp15))
-XHASH if PLANES < 4
-XHASH  ifndef bpp1
-XHASH   define bpp1
-XHASH  endif
-XHASH else
-XHASH  if PLANES > 4
-XHASH   if PLANES > 8
-XHASH    ifndef bpp15
-XHASH     define bpp15
-XHASH    endif
-XHASH   else
-XHASH    ifndef bpp8
-XHASH     define bpp8
-XHASH    endif bpp8
-XHASH   endif
-XHASH  else
-XHASH   ifndef bpp4
-XHASH    define bpp4
-XHASH   endif
-XHASH  endif
-XHASH endif
-XHASHendif  //**/* If manual override */**//
+#if !(defined(bpp1) || defined(bpp4) || defined(bpp8) || defined(bpp15))
+# if PLANES < 4
+#  ifndef bpp1
+#   define bpp1
+#  endif
+# else
+#  if PLANES > 4
+#   if PLANES > 8
+#    ifndef bpp15
+#     define bpp15
+#    endif
+#   else
+#    ifndef bpp8
+#     define bpp8
+#    endif bpp8
+#   endif
+#  else
+#   ifndef bpp4
+#    define bpp4
+#   endif
+#  endif
+# endif
+#endif  /* If manual override */
 
-XHASHifndef bpp1
+#ifndef bpp1
 xlogin*borderWidth: 1
 xlogin*frameWidth: 2
 xlogin*innerFramesWidth: 0
@@ -83,11 +83,11 @@ xlogin*shdColor: #667788
 
 ! 'Welcome to..' text color
 xlogin*greetColor: #fef886
-XHASHif defined(bpp4) || defined(bpp8) || defined(bpp15)
+#if defined(bpp4) || defined(bpp8) || defined(bpp15)
 ! flood fill
 xlogin*background: #798a99
 xlogin*inpColor: #99aab9
-XHASHendif
+#endif
 xlogin*failColor: #aa0000
 
 ! 'Login:' and 'Password:'
@@ -95,7 +95,7 @@ xlogin*failColor: #aa0000
 
 ! border/shadow
 *Background: #000000
-XHASHelse
+#else
 xlogin*borderWidth: 3
 xlogin*frameWidth: 5
 xlogin*innerFramesWidth: 1
@@ -107,19 +107,19 @@ xlogin*failColor: white
 xlogin*promptColor: white
 *Foreground: white
 *Background: black
-XHASHendif
-XHASHifdef bpp1
-xlogin*logoFileName: BITMAPDIR/**//OpenBSD_1bpp.xpm
-XHASHendif
-XHASHifdef bpp4
-xlogin*logoFileName: BITMAPDIR/**//OpenBSD_4bpp.xpm
-XHASHendif
-XHASHifdef bpp8
-xlogin*logoFileName: BITMAPDIR/**//OpenBSD_8bpp.xpm
-XHASHendif
-XHASHifdef bpp15
-xlogin*logoFileName: BITMAPDIR/**//OpenBSD_15bpp.xpm
-XHASHendif
+#endif
+#ifdef bpp1
+xlogin*logoFileName: @XENODM_PIXMAPDIR@/OpenBSD_1bpp.xpm
+#endif
+#ifdef bpp4
+xlogin*logoFileName: @XENODM_PIXMAPDIR@/OpenBSD_4bpp.xpm
+#endif
+#ifdef bpp8
+xlogin*logoFileName: @XENODM_PIXMAPDIR@/OpenBSD_8bpp.xpm
+#endif
+#ifdef bpp15
+xlogin*logoFileName: @XENODM_PIXMAPDIR@/OpenBSD_15bpp.xpm
+#endif
 
 xlogin*useShape: true
 xlogin*logoPadding: 10

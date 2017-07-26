@@ -1,8 +1,10 @@
-XCOMM!SHELL_CMD
-XCOMM
-XCOMM $OpenBSD: Xsession.cpp,v 1.2 2016/11/11 15:58:35 matthieu Exp $
+#!@SHELL_CMD@
+#
+# $OpenBSD: Xsession.in,v 1.1 2017/07/26 21:14:54 matthieu Exp $
+prefix="@prefix@"
+exec_prefix="@exec_prefix@"
 
-XCOMM redirect errors to a file in user's home directory if we can
+# redirect errors to a file in user's home directory if we can
 
 errfile="$HOME/.xsession-errors"
 if ( umask 077 && cp /dev/null "$errfile" 2> /dev/null )
@@ -20,7 +22,7 @@ else
 	done
 fi
 
-XCOMM if we have private ssh key(s), start ssh-agent and add the key(s)
+# if we have private ssh key(s), start ssh-agent and add the key(s)
 id1=$HOME/.ssh/identity
 id2=$HOME/.ssh/id_dsa
 id3=$HOME/.ssh/id_rsa
@@ -47,13 +49,13 @@ case $# in
 1)
 	case $1 in
 	failsafe)
-		BINDIR/xterm -geometry 80x24-0-0
+		@bindir@/xterm -geometry 80x24-0-0
 		do_exit
 		;;
 	esac
 esac
 
-XCOMM The startup script is not intended to have arguments.
+# The startup script is not intended to have arguments.
 
 startup=$HOME/.xsession
 resources=$HOME/.Xresources
@@ -66,9 +68,9 @@ if [ -s "$startup" ]; then
 	fi
 else
 	if [ -f "$resources" ]; then
-		BINDIR/xrdb -load "$resources"
+		@XRDB_PROGRAM@ -load "$resources"
 	fi
-	BINDIR/xterm &
-	BINDIR/fvwm
+	@bindir@/xterm &
+	@bindir@/fvwm
 fi
 do_exit

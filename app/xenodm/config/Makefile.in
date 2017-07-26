@@ -16,10 +16,6 @@
 
 #
 
-#							-*- Makefile -*-
-# Rules for generating files using the C pre-processor
-# (Replaces CppFileTarget from Imake)
-
 
 VPATH = @srcdir@
 am__make_dryrun = \
@@ -57,10 +53,12 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
+subdir = config
 DIST_COMMON = README $(dist_pixmap_DATA) $(dist_xenodmscript_SCRIPTS) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(top_srcdir)/cpprules.in
-subdir = config
+	$(srcdir)/Xreset.in $(srcdir)/Xresources.in \
+	$(srcdir)/Xservers.in $(srcdir)/Xsession.in \
+	$(srcdir)/Xstartup.in $(srcdir)/xenodm-config.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_define_dir.m4 \
 	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
@@ -70,7 +68,8 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
-CONFIG_CLEAN_FILES =
+CONFIG_CLEAN_FILES = Xreset Xresources Xservers Xsession Xstartup \
+	xenodm-config
 CONFIG_CLEAN_VPATH_FILES =
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
@@ -218,15 +217,12 @@ PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 RANLIB = @RANLIB@
-RAWCPP = @RAWCPP@
-RAWCPPFLAGS = @RAWCPPFLAGS@
-SED = sed
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 SHELL_CMD = @SHELL_CMD@
 STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
-TRADITIONALCPPFLAGS = @TRADITIONALCPPFLAGS@
 UTMP_FILE = @UTMP_FILE@
 VERSION = @VERSION@
 WTMP_FILE = @WTMP_FILE@
@@ -307,22 +303,6 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-SUFFIXES = .cpp
-WCHAR32_FLAGS = -DWCHAR32=@WCHAR32@
-
-# Translate XCOMM into pound sign with sed, rather than passing -DXCOMM=XCOMM
-# to cpp, because that trick does not work on all ANSI C preprocessors.
-# Delete line numbers from the cpp output (-P is not portable, I guess).
-# Allow XCOMM to be preceded by whitespace and provide a means of generating
-# output lines with trailing backslashes.
-# Allow XHASH to always be substituted, even in cases where XCOMM isn't.
-CPP_SED_MAGIC = $(SED) -e '/^\#  *[0-9][0-9]*  *.*$$/d' \
-                       -e '/^\#line  *[0-9][0-9]*  *.*$$/d' \
-                       -e '/^[         ]*XCOMM$$/s/XCOMM/\#/' \
-                       -e '/^[         ]*XCOMM[^a-zA-Z0-9_]/s/XCOMM/\#/' \
-                       -e '/^[         ]*XHASH/s/XHASH/\#/' \
-                       -e '/\@\@$$/s/\@\@$$/\\/'
-
 xenodmscriptdir = $(XENODMSCRIPTDIR)
 xenodmconfigdir = $(XENODMCONFIGDIR)
 xenodmconfig_DATA = \
@@ -344,30 +324,11 @@ pixmapdir = $(XENODM_PIXMAPDIR)
 dist_pixmap_DATA = OpenBSD_15bpp.xpm OpenBSD_1bpp.xpm \
 		OpenBSD_4bpp.xpm OpenBSD_8bpp.xpm
 
-BUILT_SOURCES = Xservers xenodm-config Xreset Xresources Xsession Xstartup
 CLEANFILES = $(BUILT_SOURCES) Xservers
-EXTRA_DIST = Xservers.cpp \
-	xenodm-config.cpp Xreset.cpp Xresources.cpp Xsession.cpp Xstartup.cpp
-
-
-# Defines used when cpp'ing config files to replace settings in the files
-XPMDEFINES = -DXPM -DBITMAPDIR=$(XENODM_PIXMAPDIR) -DXENODM_PIXMAP=$(XENODM_PIXMAP) \
-        -DXENODM_BWPIXMAP=$(XENODM_BWPIXMAP)
-
-CPP_FILES_FLAGS = -DBINDIR="$(bindir)" -DDEFAULTVT="$(DEFAULTVT)" \
-    -DUTMP_FILE="$(UTMP_FILE)" -DWTMP_FILE="$(WTMP_FILE)" \
-    -DXENODMDIR="$(XENODMLIBDIR)" -DXENODMLOGDIR="$(XENODMLOGDIR)" \
-    -DXENODMXAUTHDIR="$(XENODMXAUTHDIR)" \
-    -DXENODMCONFIGDIR="$(XENODMCONFIGDIR)" \
-    -DXENODMSCRIPTDIR="$(XENODMSCRIPTDIR)" \
-    $(XPMDEFINES) -DSHELL_CMD="$(SHELL_CMD)"
-
-all: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) all-am
+all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .cpp
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/cpprules.in $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -388,7 +349,6 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe);; \
 	esac;
-$(top_srcdir)/cpprules.in:
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
@@ -398,6 +358,18 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
+Xreset: $(top_builddir)/config.status $(srcdir)/Xreset.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+Xresources: $(top_builddir)/config.status $(srcdir)/Xresources.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+Xservers: $(top_builddir)/config.status $(srcdir)/Xservers.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+Xsession: $(top_builddir)/config.status $(srcdir)/Xsession.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+Xstartup: $(top_builddir)/config.status $(srcdir)/Xstartup.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+xenodm-config: $(top_builddir)/config.status $(srcdir)/xenodm-config.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 install-dist_xenodmscriptSCRIPTS: $(dist_xenodmscript_SCRIPTS)
 	@$(NORMAL_INSTALL)
 	@list='$(dist_xenodmscript_SCRIPTS)'; test -n "$(xenodmscriptdir)" || list=; \
@@ -556,15 +528,13 @@ distdir: $(DISTFILES)
 	  fi; \
 	done
 check-am: all-am
-check: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) check-am
+check: check-am
 all-am: Makefile $(SCRIPTS) $(DATA)
 installdirs:
 	for dir in "$(DESTDIR)$(xenodmscriptdir)" "$(DESTDIR)$(xenodmscriptdir)" "$(DESTDIR)$(pixmapdir)" "$(DESTDIR)$(xenodmconfigdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
-install: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) install-am
+install: install-am
 install-exec: install-exec-am
 install-data: install-data-am
 uninstall: uninstall-am
@@ -595,7 +565,6 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 clean: clean-am
 
 clean-am: clean-generic clean-libtool mostlyclean-am
@@ -666,7 +635,7 @@ uninstall-am: uninstall-dist_pixmapDATA \
 	uninstall-dist_xenodmscriptSCRIPTS uninstall-xenodmconfigDATA \
 	uninstall-xenodmscriptSCRIPTS
 
-.MAKE: all check install install-am install-strip
+.MAKE: install-am install-strip
 
 .PHONY: all all-am check check-am clean clean-generic clean-libtool \
 	distclean distclean-generic distclean-libtool distdir dvi \
@@ -683,12 +652,6 @@ uninstall-am: uninstall-dist_pixmapDATA \
 	uninstall-dist_pixmapDATA uninstall-dist_xenodmscriptSCRIPTS \
 	uninstall-xenodmconfigDATA uninstall-xenodmscriptSCRIPTS
 
-
-.cpp:
-	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $< | $(CPP_SED_MAGIC) > $@
-
-Xservers: $(srcdir)/Xservers.cpp
-	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $(srcdir)/Xservers.cpp | $(CPP_SED_MAGIC) > $@
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

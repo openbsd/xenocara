@@ -681,9 +681,6 @@ LINT_FALSE
 LINT_TRUE
 LINT_FLAGS
 LINT
-TRADITIONALCPPFLAGS
-RAWCPPFLAGS
-RAWCPP
 AM_BACKSLASH
 AM_DEFAULT_VERBOSITY
 AM_DEFAULT_V
@@ -17969,107 +17966,6 @@ AM_BACKSLASH='\'
 
 
 
-for ac_prog in cpp
-do
-  # Extract the first word of "$ac_prog", so it can be a program name with args.
-set dummy $ac_prog; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_path_RAWCPP+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  case $RAWCPP in
-  [\\/]* | ?:[\\/]*)
-  ac_cv_path_RAWCPP="$RAWCPP" # Let the user override the test with a path.
-  ;;
-  *)
-  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-as_dummy="$PATH:/bin:/usr/bin:/usr/lib:/usr/libexec:/usr/ccs/lib:/usr/ccs/lbin:/lib"
-for as_dir in $as_dummy
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_path_RAWCPP="$as_dir/$ac_word$ac_exec_ext"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-  ;;
-esac
-fi
-RAWCPP=$ac_cv_path_RAWCPP
-if test -n "$RAWCPP"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $RAWCPP" >&5
-$as_echo "$RAWCPP" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
-
-
-  test -n "$RAWCPP" && break
-done
-test -n "$RAWCPP" || RAWCPP="${CPP}"
-
-
-# Check for flag to avoid builtin definitions - assumes unix is predefined,
-# which is not the best choice for supporting other OS'es, but covers most
-# of the ones we need for now.
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $RAWCPP requires -undef" >&5
-$as_echo_n "checking if $RAWCPP requires -undef... " >&6; }
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-Does cpp redefine unix ?
-_ACEOF
-if test `${RAWCPP} < conftest.$ac_ext | grep -c 'unix'` -eq 1 ; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-else
-	if test `${RAWCPP} -undef < conftest.$ac_ext | grep -c 'unix'` -eq 1 ; then
-		RAWCPPFLAGS=-undef
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-	# under Cygwin unix is still defined even with -undef
-	elif test `${RAWCPP} -undef -ansi < conftest.$ac_ext | grep -c 'unix'` -eq 1 ; then
-		RAWCPPFLAGS="-undef -ansi"
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: yes, with -ansi" >&5
-$as_echo "yes, with -ansi" >&6; }
-	else
-		as_fn_error $? "${RAWCPP} defines unix with or without -undef.  I don't know what to do." "$LINENO" 5
-	fi
-fi
-rm -f conftest.$ac_ext
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $RAWCPP requires -traditional" >&5
-$as_echo_n "checking if $RAWCPP requires -traditional... " >&6; }
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-Does cpp preserve   "whitespace"?
-_ACEOF
-if test `${RAWCPP} < conftest.$ac_ext | grep -c 'preserve   \"'` -eq 1 ; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-else
-	if test `${RAWCPP} -traditional < conftest.$ac_ext | grep -c 'preserve   \"'` -eq 1 ; then
-		TRADITIONALCPPFLAGS="-traditional"
-		RAWCPPFLAGS="${RAWCPPFLAGS} -traditional"
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-	else
-		as_fn_error $? "${RAWCPP} does not preserve whitespace with or without -traditional.  I don't know what to do." "$LINENO" 5
-	fi
-fi
-rm -f conftest.$ac_ext
-
-
-
-
-
 
 
 
@@ -20209,7 +20105,7 @@ fi
 
 
 
-ac_config_files="$ac_config_files Makefile config/Makefile greeter/Makefile include/Makefile man/Makefile xenodm/Makefile"
+ac_config_files="$ac_config_files Makefile config/Makefile greeter/Makefile include/Makefile man/Makefile xenodm/Makefile config/Xreset config/Xresources config/Xservers config/Xsession config/Xstartup config/xenodm-config"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -21234,6 +21130,12 @@ do
     "include/Makefile") CONFIG_FILES="$CONFIG_FILES include/Makefile" ;;
     "man/Makefile") CONFIG_FILES="$CONFIG_FILES man/Makefile" ;;
     "xenodm/Makefile") CONFIG_FILES="$CONFIG_FILES xenodm/Makefile" ;;
+    "config/Xreset") CONFIG_FILES="$CONFIG_FILES config/Xreset" ;;
+    "config/Xresources") CONFIG_FILES="$CONFIG_FILES config/Xresources" ;;
+    "config/Xservers") CONFIG_FILES="$CONFIG_FILES config/Xservers" ;;
+    "config/Xsession") CONFIG_FILES="$CONFIG_FILES config/Xsession" ;;
+    "config/Xstartup") CONFIG_FILES="$CONFIG_FILES config/Xstartup" ;;
+    "config/xenodm-config") CONFIG_FILES="$CONFIG_FILES config/xenodm-config" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac
