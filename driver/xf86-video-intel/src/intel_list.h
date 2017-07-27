@@ -305,9 +305,15 @@ list_is_empty(const struct list *head)
 #define list_last_entry(ptr, type, member) \
     list_entry((ptr)->prev, type, member)
 
+/*
+ * Do not redefine __container_of, we better off using the one in xorg/list.h.
+ */
+#ifndef __container_of
 #define __container_of(ptr, sample, member)				\
     (void *)((char *)(ptr)						\
 	     - ((char *)&(sample)->member - (char *)(sample)))
+#endif
+
 /**
  * Loop through the list given by head and set pos to struct in the list.
  *

@@ -129,6 +129,9 @@
 /* Define to 1 if you have the <sys/types.h> header file. */
 #undef HAVE_SYS_TYPES_H
 
+/* Define to 1 if typeof works with your compiler. */
+#undef HAVE_TYPEOF
+
 /* Enable udev-based monitor hotplug detection */
 #undef HAVE_UDEV
 
@@ -257,3 +260,6 @@
 
 /* Define for large files, on AIX-style hosts. */
 #undef _LARGE_FILES
+
+/* Define to __typeof__ if your compiler spells it that way. */
+#undef typeof

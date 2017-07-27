@@ -65,6 +65,8 @@ AC_SYS_LARGEFILE
 # Check for common libc routines redefined by os.h
 AC_CHECK_FUNCS([strlcpy strlcat strndup], [], [])
 
+AC_C_TYPEOF
+
 # Platform specific settings
 case $host_os in
   *linux*)
