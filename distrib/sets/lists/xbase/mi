@@ -115,10 +115,10 @@
 ./usr/X11R6/bin/xcompmgr
 ./usr/X11R6/bin/xconsole
 ./usr/X11R6/bin/xcutsel
-./usr/X11R6/bin/xenodm
 ./usr/X11R6/bin/xdpr
 ./usr/X11R6/bin/xdpyinfo
 ./usr/X11R6/bin/xedit
+./usr/X11R6/bin/xenodm
 ./usr/X11R6/bin/xev
 ./usr/X11R6/bin/xeyes
 ./usr/X11R6/bin/xfd
@@ -507,6 +507,7 @@
 ./usr/X11R6/share/X11/app-defaults/Xmessage
 ./usr/X11R6/share/X11/app-defaults/Xmessage-color
 ./usr/X11R6/share/X11/app-defaults/Xvidtune
+./usr/X11R6/share/libdrm
 ./usr/X11R6/share/xcb
 ./usr/X11R6/share/xcb/xcb.xsd
 ./usr/X11R6/share/xcb/xkb.xml
