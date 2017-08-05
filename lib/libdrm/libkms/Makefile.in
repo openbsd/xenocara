@@ -308,6 +308,7 @@ infodir = @infodir@
 install_sh = @install_sh@
 kernel_source = @kernel_source@
 libdir = @libdir@
+libdrmdatadir = @libdrmdatadir@
 libexecdir = @libexecdir@
 localedir = @localedir@
 localstatedir = @localstatedir@

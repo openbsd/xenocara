@@ -213,7 +213,7 @@ ETAGS = etags
 CTAGS = ctags
 CSCOPE = cscope
 DIST_SUBDIRS = . libkms intel nouveau radeon amdgpu omap exynos \
-	freedreno tegra vc4 etnaviv tests man
+	freedreno tegra vc4 etnaviv data tests man
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -386,6 +386,7 @@ infodir = @infodir@
 install_sh = @install_sh@
 kernel_source = @kernel_source@
 libdir = @libdir@
+libdrmdatadir = @libdrmdatadir@
 libexecdir = @libexecdir@
 localedir = @localedir@
 localstatedir = @localstatedir@
@@ -495,6 +496,7 @@ SUBDIRS = \
 	$(TEGRA_SUBDIR) \
 	$(VC4_SUBDIR) \
 	$(ETNAVIV_SUBDIR) \
+	data \
 	tests \
 	$(MAN_SUBDIR)
 

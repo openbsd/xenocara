@@ -123,9 +123,9 @@ am__installdirs = "$(DESTDIR)$(libdrm_amdgpu_ladir)" \
 	"$(DESTDIR)$(libdrm_amdgpuincludedir)"
 LTLIBRARIES = $(libdrm_amdgpu_la_LTLIBRARIES)
 libdrm_amdgpu_la_DEPENDENCIES = ../libdrm.la
-am__objects_1 = amdgpu_bo.lo amdgpu_cs.lo amdgpu_device.lo \
-	amdgpu_gpu_info.lo amdgpu_vamgr.lo util_hash.lo \
-	util_hash_table.lo
+am__objects_1 = amdgpu_asic_id.lo amdgpu_bo.lo amdgpu_cs.lo \
+	amdgpu_device.lo amdgpu_gpu_info.lo amdgpu_vamgr.lo \
+	util_hash.lo util_hash_table.lo
 am_libdrm_amdgpu_la_OBJECTS = $(am__objects_1)
 libdrm_amdgpu_la_OBJECTS = $(am_libdrm_amdgpu_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -316,6 +316,7 @@ infodir = @infodir@
 install_sh = @install_sh@
 kernel_source = @kernel_source@
 libdir = @libdir@
+libdrmdatadir = @libdrmdatadir@
 libexecdir = @libexecdir@
 localedir = @localedir@
 localstatedir = @localstatedir@
@@ -336,7 +337,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 LIBDRM_AMDGPU_FILES := \
-	amdgpu_asic_id.h \
+	amdgpu_asic_id.c \
 	amdgpu_bo.c \
 	amdgpu_cs.c \
 	amdgpu_device.c \
@@ -356,6 +357,9 @@ AM_CFLAGS = \
 	-I$(top_srcdir) \
 	$(PTHREADSTUBS_CFLAGS) \
 	-I$(top_srcdir)/include/drm
+
+AM_CPPFLAGS = -DAMDGPU_ASIC_ID_TABLE=\"${libdrmdatadir}/amdgpu.ids\" \
+	-DAMDGPU_ASIC_ID_TABLE_NUM_ENTRIES=$(ASIC_ID_TABLE_NUM_ENTRIES)
 
 libdrm_amdgpu_la_LTLIBRARIES = libdrm_amdgpu.la
 libdrm_amdgpu_ladir = $(libdir)
@@ -447,6 +451,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/amdgpu_asic_id.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/amdgpu_bo.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/amdgpu_cs.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/amdgpu_device.Plo@am__quote@
@@ -843,6 +848,9 @@ uninstall-am: uninstall-libdrm_amdgpu_laLTLIBRARIES \
 	uninstall-libdrm_amdgpu_laLTLIBRARIES \
 	uninstall-libdrm_amdgpuincludeHEADERS uninstall-pkgconfigDATA
 
+ASIC_ID_TABLE_NUM_ENTRIES != egrep -ci '^[0-9a-f]{4},.*[0-9a-f]+,' \
+	$(top_srcdir)/data/amdgpu.ids
+amdgpu_asic_id.lo: $(top_srcdir)/data/amdgpu.ids
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
