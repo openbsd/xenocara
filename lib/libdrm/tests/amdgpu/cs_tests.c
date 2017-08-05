@@ -32,7 +32,7 @@
 #include "util_math.h"
 
 #include "amdgpu_test.h"
-#include "uvd_messages.h"
+#include "decode_messages.h"
 #include "amdgpu_drm.h"
 #include "amdgpu_internal.h"
 
@@ -289,7 +289,8 @@ static void amdgpu_cs_uvd_decode(void)
 	r = amdgpu_bo_cpu_map(buf_handle, (void **)&ptr);
 	CU_ASSERT_EQUAL(r, 0);
 
-	memcpy(ptr, uvd_decode_msg, sizeof(uvd_create_msg));
+	memcpy(ptr, uvd_decode_msg, sizeof(uvd_decode_msg));
+	memcpy(ptr + sizeof(uvd_decode_msg), avc_decode_msg, sizeof(avc_decode_msg));
 
 	if (family_id >= AMDGPU_FAMILY_VI) {
 		ptr[0x10] = 7;
@@ -377,7 +378,7 @@ static void amdgpu_cs_uvd_decode(void)
 	/* TODO: use a real CRC32 */
 	for (i = 0, sum = 0; i < dt_size; ++i)
 		sum += ptr[i];
-	CU_ASSERT_EQUAL(sum, 0x20345d8);
+	CU_ASSERT_EQUAL(sum, SUM_DECODE);
 
 	r = amdgpu_bo_cpu_unmap(buf_handle);
 	CU_ASSERT_EQUAL(r, 0);
