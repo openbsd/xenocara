@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.294 2017/08/05 14:29:27 jsg Exp $
+# $OpenBSD: 3RDPARTY,v 1.295 2017/08/07 07:03:44 jasper Exp $
 #
 Package: 	Freetype
 Version:	2.8.0
@@ -67,6 +67,6 @@ Comment:	Locally forked, newer upstream versions have incompatible
 
 Packge:		xcb-util-xrm
 Version:	1.0
-Current Vers:	1.0
+Current Vers:	1.2
 Maintainer:	Ingo Buerk
 Archive Site:	https://github.com/Airblader/xcb-util-xrm
