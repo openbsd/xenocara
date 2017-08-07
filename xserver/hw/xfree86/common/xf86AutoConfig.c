@@ -189,6 +189,51 @@ xf86AutoConfig(void)
     return ret == CONFIG_OK;
 }
 
+#ifdef __OpenBSD__
+
+static void
+listPossibleVideoDrivers(char *matches[], int nmatches)
+{
+    int fd = xf86Info.consoleFd;
+    u_int gtype;
+    int i;
+
+    for (i = 0; i < nmatches; i++) {
+        matches[i] = NULL;
+    }
+    i = 0;
+
+    if (ioctl(fd, WSDISPLAYIO_GTYPE, &gtype) == -1)
+        return;
+
+    switch (gtype) {
+#ifdef XSERVER_LIBPCIACCESS
+    case WSDISPLAY_TYPE_PCIVGA:
+    case WSDISPLAY_TYPE_MACHFB:
+    case WSDISPLAY_TYPE_INTELDRM:
+    case WSDISPLAY_TYPE_RADEONDRM:
+        i = xf86PciMatchDriver(matches, nmatches);
+        break;
+#endif
+    case WSDISPLAY_TYPE_IFB:
+        matches[i++] = xnfstrdup("wildcatfb");
+        break;
+    case WSDISPLAY_TYPE_SUNFFB:
+        matches[i++] = xnfstrdup("sunffb");
+        break;
+    default:
+        matches[i++] = xnfstrdup("wsfb");
+        break;
+    }
+
+#if defined(__i386__) || defined(__amd64__)
+    if (gtype == WSDISPLAY_TYPE_PCIVGA && i < (nmatches - 1))
+        matches[i++] = xnfstrdup("vesa");
+#endif
+}
+
+#else
+
 static void
 listPossibleVideoDrivers(char *matches[], int nmatches)
 {
@@ -297,6 +342,8 @@ listPossibleVideoDrivers(char *matches[], int nmatches)
 #endif
     }
 }
+
+#endif
 
 /* copy a screen section and enter the desired driver
  * and insert it at i in the list of screens */
