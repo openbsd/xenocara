@@ -22,10 +22,50 @@
  * of the Software.
  *
  */
-#pragma once
 
+#ifndef AC_LLVM_UTIL_H
+#define AC_LLVM_UTIL_H
+
+#include <stdbool.h>
 #include <llvm-c/TargetMachine.h>
 
 #include "amd_family.h"
 
-LLVMTargetMachineRef ac_create_target_machine(enum radeon_family family);
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+enum ac_func_attr {
+	AC_FUNC_ATTR_ALWAYSINLINE = (1 << 0),
+	AC_FUNC_ATTR_BYVAL        = (1 << 1),
+	AC_FUNC_ATTR_INREG        = (1 << 2),
+	AC_FUNC_ATTR_NOALIAS      = (1 << 3),
+	AC_FUNC_ATTR_NOUNWIND     = (1 << 4),
+	AC_FUNC_ATTR_READNONE     = (1 << 5),
+	AC_FUNC_ATTR_READONLY     = (1 << 6),
+	AC_FUNC_ATTR_WRITEONLY    = HAVE_LLVM >= 0x0400 ? (1 << 7) : 0,
+	AC_FUNC_ATTR_INACCESSIBLE_MEM_ONLY = HAVE_LLVM >= 0x0400 ? (1 << 8) : 0,
+	AC_FUNC_ATTR_CONVERGENT = HAVE_LLVM >= 0x0400 ? (1 << 9) : 0,
+
+	/* Legacy intrinsic that needs attributes on function declarations
+	 * and they must match the internal LLVM definition exactly, otherwise
+	 * intrinsic selection fails.
+	 */
+	AC_FUNC_ATTR_LEGACY       = (1u << 31),
+};
+
+LLVMTargetMachineRef ac_create_target_machine(enum radeon_family family, bool supports_spill);
+
+void ac_add_attr_dereferenceable(LLVMValueRef val, uint64_t bytes);
+bool ac_is_sgpr_param(LLVMValueRef param);
+void ac_add_function_attr(LLVMContextRef ctx, LLVMValueRef function,
+                          int attr_idx, enum ac_func_attr attr);
+void ac_add_func_attributes(LLVMContextRef ctx, LLVMValueRef function,
+			    unsigned attrib_mask);
+void ac_dump_module(LLVMModuleRef module);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* AC_LLVM_UTIL_H */

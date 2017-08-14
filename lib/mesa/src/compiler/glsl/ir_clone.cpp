@@ -209,8 +209,8 @@ ir_texture::clone(void *mem_ctx, struct hash_table *ht) const
       new_tex->coordinate = this->coordinate->clone(mem_ctx, ht);
    if (this->projector)
       new_tex->projector = this->projector->clone(mem_ctx, ht);
-   if (this->shadow_comparitor) {
-      new_tex->shadow_comparitor = this->shadow_comparitor->clone(mem_ctx, ht);
+   if (this->shadow_comparator) {
+      new_tex->shadow_comparator = this->shadow_comparator->clone(mem_ctx, ht);
    }
 
    if (this->offset != NULL)
@@ -337,6 +337,8 @@ ir_constant::clone(void *mem_ctx, struct hash_table *ht) const
    case GLSL_TYPE_FLOAT:
    case GLSL_TYPE_DOUBLE:
    case GLSL_TYPE_BOOL:
+   case GLSL_TYPE_UINT64:
+   case GLSL_TYPE_INT64:
       return new(mem_ctx) ir_constant(this->type, &this->value);
 
    case GLSL_TYPE_STRUCT: {

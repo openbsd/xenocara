@@ -34,7 +34,7 @@
 #include "brw_meta_util.h"
 #include "brw_state.h"
 #include "intel_fbo.h"
-#include "intel_debug.h"
+#include "common/gen_debug.h"
 
 #define FILE_DEBUG_FLAG DEBUG_BLORP
 
@@ -48,7 +48,7 @@ brw_blorp_lookup_shader(struct blorp_context *blorp,
                            key, key_size, kernel_out, prog_data_out);
 }
 
-static void
+static bool
 brw_blorp_upload_shader(struct blorp_context *blorp,
                         const void *key, uint32_t key_size,
                         const void *kernel, uint32_t kernel_size,
@@ -60,6 +60,7 @@ brw_blorp_upload_shader(struct blorp_context *blorp,
    brw_upload_cache(&brw->cache, BRW_CACHE_BLORP_PROG, key, key_size,
                     kernel, kernel_size, prog_data, prog_data_size,
                     kernel_out, prog_data_out);
+   return true;
 }
 
 void
@@ -112,7 +113,7 @@ apply_gen6_stencil_hiz_offset(struct isl_surf *surf,
                               uint32_t lod,
                               uint32_t *offset)
 {
-   assert(mt->array_layout == ALL_SLICES_AT_EACH_LOD);
+   assert(mt->array_layout == GEN6_HIZ_STENCIL);
 
    if (mt->format == MESA_FORMAT_S_UINT8) {
       /* Note: we can't compute the stencil offset using
@@ -124,8 +125,7 @@ apply_gen6_stencil_hiz_offset(struct isl_surf *surf,
    } else {
       *offset = intel_miptree_get_aligned_offset(mt,
                                                  mt->level[lod].level_x,
-                                                 mt->level[lod].level_y,
-                                                 false);
+                                                 mt->level[lod].level_y);
    }
 
    surf->logical_level0_px.width = minify(surf->logical_level0_px.width, lod);
@@ -142,9 +142,25 @@ blorp_surf_for_miptree(struct brw_context *brw,
                        struct blorp_surf *surf,
                        struct intel_mipmap_tree *mt,
                        bool is_render_target,
+                       uint32_t safe_aux_usage,
                        unsigned *level,
+                       unsigned start_layer, unsigned num_layers,
                        struct isl_surf tmp_surfs[2])
 {
+   if (mt->msaa_layout == INTEL_MSAA_LAYOUT_UMS ||
+       mt->msaa_layout == INTEL_MSAA_LAYOUT_CMS) {
+      const unsigned num_samples = MAX2(1, mt->num_samples);
+      for (unsigned i = 0; i < num_layers; i++) {
+         for (unsigned s = 0; s < num_samples; s++) {
+            const unsigned phys_layer = (start_layer + i) * num_samples + s;
+            intel_miptree_check_level_layer(mt, *level, phys_layer);
+         }
+      }
+   } else {
+      for (unsigned i = 0; i < num_layers; i++)
+         intel_miptree_check_level_layer(mt, *level, start_layer + i);
+   }
+
    intel_miptree_get_isl_surf(brw, mt, &tmp_surfs[0]);
    surf->surf = &tmp_surfs[0];
    surf->addr = (struct blorp_address) {
@@ -156,12 +172,12 @@ blorp_surf_for_miptree(struct brw_context *brw,
    };
 
    if (brw->gen == 6 && mt->format == MESA_FORMAT_S_UINT8 &&
-       mt->array_layout == ALL_SLICES_AT_EACH_LOD) {
-      /* Sandy bridge stencil and HiZ use this ALL_SLICES_AT_EACH_LOD hack in
+       mt->array_layout == GEN6_HIZ_STENCIL) {
+      /* Sandy bridge stencil and HiZ use this GEN6_HIZ_STENCIL hack in
        * order to allow for layered rendering.  The hack makes each LOD of the
        * stencil or HiZ buffer a single tightly packed array surface at some
        * offset into the surface.  Since ISL doesn't know how to deal with the
-       * crazy ALL_SLICES_AT_EACH_LOD layout and since we have to do a manual
+       * crazy GEN6_HIZ_STENCIL layout and since we have to do a manual
        * offset of it anyway, we might as well do the offset here and keep the
        * hacks inside the i965 driver.
        *
@@ -176,10 +192,40 @@ blorp_surf_for_miptree(struct brw_context *brw,
    struct isl_surf *aux_surf = &tmp_surfs[1];
    intel_miptree_get_aux_isl_surf(brw, mt, aux_surf, &surf->aux_usage);
 
-   /* For textures that are in the RESOLVED state, we ignore the MCS */
-   if (mt->mcs_mt && !is_render_target &&
-       mt->fast_clear_state == INTEL_FAST_CLEAR_STATE_RESOLVED)
-      surf->aux_usage = ISL_AUX_USAGE_NONE;
+   if (surf->aux_usage != ISL_AUX_USAGE_NONE) {
+      if (surf->aux_usage == ISL_AUX_USAGE_HIZ) {
+         /* If we're not going to use it as a depth buffer, resolve HiZ */
+         if (!(safe_aux_usage & (1 << ISL_AUX_USAGE_HIZ))) {
+            for (unsigned i = 0; i < num_layers; i++) {
+               intel_miptree_slice_resolve_depth(brw, mt, *level,
+                                                 start_layer + i);
+
+               /* If we're rendering to it then we'll need a HiZ resolve once
+                * we're done before we can use it with HiZ again.
+                */
+               if (is_render_target)
+                  intel_miptree_slice_set_needs_hiz_resolve(mt, *level,
+                                                            start_layer + i);
+            }
+            surf->aux_usage = ISL_AUX_USAGE_NONE;
+         }
+      } else if (!(safe_aux_usage & (1 << surf->aux_usage))) {
+         uint32_t flags = 0;
+         if (safe_aux_usage & (1 << ISL_AUX_USAGE_CCS_E))
+            flags |= INTEL_MIPTREE_IGNORE_CCS_E;
+
+         intel_miptree_resolve_color(brw, mt,
+                                     *level, start_layer, num_layers, flags);
+
+         assert(!intel_miptree_has_color_unresolved(mt, *level, 1,
+                                                    start_layer, num_layers));
+         surf->aux_usage = ISL_AUX_USAGE_NONE;
+      }
+   }
+
+   if (is_render_target)
+      intel_miptree_used_for_rendering(brw, mt, *level,
+                                       start_layer, num_layers);
 
    if (surf->aux_usage != ISL_AUX_USAGE_NONE) {
       /* We only really need a clear color if we also have an auxiliary
@@ -194,29 +240,26 @@ blorp_surf_for_miptree(struct brw_context *brw,
          .write_domain = is_render_target ? I915_GEM_DOMAIN_RENDER : 0,
       };
 
-      if (mt->mcs_mt) {
-         surf->aux_addr.buffer = mt->mcs_mt->bo;
-         surf->aux_addr.offset = mt->mcs_mt->offset;
+      if (mt->mcs_buf) {
+         surf->aux_addr.buffer = mt->mcs_buf->bo;
+         surf->aux_addr.offset = mt->mcs_buf->offset;
       } else {
          assert(surf->aux_usage == ISL_AUX_USAGE_HIZ);
+
+         surf->aux_addr.buffer = mt->hiz_buf->aux_base.bo;
+         surf->aux_addr.offset = mt->hiz_buf->aux_base.offset;
+
          struct intel_mipmap_tree *hiz_mt = mt->hiz_buf->mt;
          if (hiz_mt) {
-            surf->aux_addr.buffer = hiz_mt->bo;
-            if (brw->gen == 6 &&
-                hiz_mt->array_layout == ALL_SLICES_AT_EACH_LOD) {
-               /* gen6 requires the HiZ buffer to be manually offset to the
-                * right location.  We could fixup the surf but it doesn't
-                * matter since most of those fields don't matter.
-                */
-               apply_gen6_stencil_hiz_offset(aux_surf, hiz_mt, *level,
-                                             &surf->aux_addr.offset);
-            } else {
-               surf->aux_addr.offset = 0;
-            }
+            assert(brw->gen == 6 && hiz_mt->array_layout == GEN6_HIZ_STENCIL);
+
+            /* gen6 requires the HiZ buffer to be manually offset to the
+             * right location.  We could fixup the surf but it doesn't
+             * matter since most of those fields don't matter.
+             */
+            apply_gen6_stencil_hiz_offset(aux_surf, hiz_mt, *level,
+                                          &surf->aux_addr.offset);
             assert(hiz_mt->pitch == aux_surf->row_pitch);
-         } else {
-            surf->aux_addr.buffer = mt->hiz_buf->bo;
-            surf->aux_addr.offset = 0;
          }
       }
    } else {
@@ -251,7 +294,7 @@ brw_blorp_to_isl_format(struct brw_context *brw, mesa_format format,
          assert(brw->format_supported_as_render_target[format]);
          return brw->render_target_format[format];
       } else {
-         return brw_format_for_mesa_format(format);
+         return brw_isl_format_for_mesa_format(format);
       }
       break;
    }
@@ -291,23 +334,6 @@ physical_to_logical_layer(struct intel_mipmap_tree *mt,
    }
 }
 
-static void
-miptree_check_level_logical_layer(struct intel_mipmap_tree *mt,
-                                  unsigned level,
-                                  unsigned logical_layer)
-{
-   if (mt->msaa_layout == INTEL_MSAA_LAYOUT_UMS ||
-       mt->msaa_layout == INTEL_MSAA_LAYOUT_CMS) {
-      const unsigned num_samples = MAX2(1, mt->num_samples);
-      for (unsigned s = 0; s < num_samples; s++) {
-         const unsigned physical_layer = (logical_layer * num_samples) + s;
-         intel_miptree_check_level_layer(mt, level, physical_layer);
-      }
-   } else {
-      intel_miptree_check_level_layer(mt, level, logical_layer);
-   }
-}
-
 /**
  * Note: if the src (or dst) is a 2D multisample array texture on Gen7+ using
  * INTEL_MSAA_LAYOUT_UMS or INTEL_MSAA_LAYOUT_CMS, src_layer (dst_layer) is
@@ -330,15 +356,9 @@ brw_blorp_blit_miptrees(struct brw_context *brw,
                         GLenum filter, bool mirror_x, bool mirror_y,
                         bool decode_srgb, bool encode_srgb)
 {
-   /* Get ready to blit.  This includes depth resolving the src and dst
-    * buffers if necessary.  Note: it's not necessary to do a color resolve on
-    * the destination buffer because we use the standard render path to render
-    * to destination color buffers, and the standard render path is
-    * fast-color-aware.
-    */
-   intel_miptree_resolve_color(brw, src_mt, INTEL_MIPTREE_IGNORE_CCS_E);
-   intel_miptree_slice_resolve_depth(brw, src_mt, src_level, src_layer);
-   intel_miptree_slice_resolve_depth(brw, dst_mt, dst_level, dst_layer);
+   /* Blorp operates in logical layers */
+   src_layer = physical_to_logical_layer(src_mt, src_layer);
+   dst_layer = physical_to_logical_layer(dst_mt, dst_layer);
 
    DBG("%s from %dx %s mt %p %d %d (%f,%f) (%f,%f)"
        "to %dx %s mt %p %d %d (%f,%f) (%f,%f) (flip %d,%d)\n",
@@ -372,16 +392,22 @@ brw_blorp_blit_miptrees(struct brw_context *brw,
       src_format = dst_format = MESA_FORMAT_R_FLOAT32;
    }
 
-   intel_miptree_check_level_layer(src_mt, src_level, src_layer);
-   intel_miptree_check_level_layer(dst_mt, dst_level, dst_layer);
-   intel_miptree_used_for_rendering(dst_mt);
+   uint32_t src_usage_flags = (1 << ISL_AUX_USAGE_MCS);
+   if (src_format == src_mt->format)
+      src_usage_flags |= (1 << ISL_AUX_USAGE_CCS_E);
+
+   uint32_t dst_usage_flags = (1 << ISL_AUX_USAGE_MCS);
+   if (dst_format == dst_mt->format) {
+      dst_usage_flags |= (1 << ISL_AUX_USAGE_CCS_E) |
+                         (1 << ISL_AUX_USAGE_CCS_D);
+   }
 
    struct isl_surf tmp_surfs[4];
    struct blorp_surf src_surf, dst_surf;
-   blorp_surf_for_miptree(brw, &src_surf, src_mt, false,
-                          &src_level, &tmp_surfs[0]);
-   blorp_surf_for_miptree(brw, &dst_surf, dst_mt, true,
-                          &dst_level, &tmp_surfs[2]);
+   blorp_surf_for_miptree(brw, &src_surf, src_mt, false, src_usage_flags,
+                          &src_level, src_layer, 1, &tmp_surfs[0]);
+   blorp_surf_for_miptree(brw, &dst_surf, dst_mt, true, dst_usage_flags,
+                          &dst_level, dst_layer, 1, &tmp_surfs[2]);
 
    struct isl_swizzle src_isl_swizzle = {
       .r = swizzle_to_scs(GET_SWZ(src_swizzle, 0)),
@@ -392,22 +418,15 @@ brw_blorp_blit_miptrees(struct brw_context *brw,
 
    struct blorp_batch batch;
    blorp_batch_init(&brw->blorp, &batch, brw, 0);
-   blorp_blit(&batch, &src_surf, src_level,
-              physical_to_logical_layer(src_mt, src_layer),
+   blorp_blit(&batch, &src_surf, src_level, src_layer,
               brw_blorp_to_isl_format(brw, src_format, false), src_isl_swizzle,
-              &dst_surf, dst_level,
-              physical_to_logical_layer(dst_mt, dst_layer),
+              &dst_surf, dst_level, dst_layer,
               brw_blorp_to_isl_format(brw, dst_format, true),
               ISL_SWIZZLE_IDENTITY,
               src_x0, src_y0, src_x1, src_y1,
               dst_x0, dst_y0, dst_x1, dst_y1,
               filter, mirror_x, mirror_y);
    blorp_batch_finish(&batch);
-
-   intel_miptree_slice_set_needs_hiz_resolve(dst_mt, dst_level, dst_layer);
-
-   if (intel_miptree_is_lossless_compressed(brw, dst_mt))
-      dst_mt->fast_clear_state = INTEL_FAST_CLEAR_STATE_UNRESOLVED;
 }
 
 void
@@ -420,16 +439,6 @@ brw_blorp_copy_miptrees(struct brw_context *brw,
                         unsigned dst_x, unsigned dst_y,
                         unsigned src_width, unsigned src_height)
 {
-   /* Get ready to blit.  This includes depth resolving the src and dst
-    * buffers if necessary.  Note: it's not necessary to do a color resolve on
-    * the destination buffer because we use the standard render path to render
-    * to destination color buffers, and the standard render path is
-    * fast-color-aware.
-    */
-   intel_miptree_resolve_color(brw, src_mt, INTEL_MIPTREE_IGNORE_CCS_E);
-   intel_miptree_slice_resolve_depth(brw, src_mt, src_level, src_layer);
-   intel_miptree_slice_resolve_depth(brw, dst_mt, dst_level, dst_layer);
-
    DBG("%s from %dx %s mt %p %d %d (%d,%d) %dx%d"
        "to %dx %s mt %p %d %d (%d,%d)\n",
        __func__,
@@ -438,16 +447,16 @@ brw_blorp_copy_miptrees(struct brw_context *brw,
        dst_mt->num_samples, _mesa_get_format_name(dst_mt->format), dst_mt,
        dst_level, dst_layer, dst_x, dst_y);
 
-   miptree_check_level_logical_layer(src_mt, src_level, src_layer);
-   miptree_check_level_logical_layer(dst_mt, dst_level, dst_layer);
-   intel_miptree_used_for_rendering(dst_mt);
-
    struct isl_surf tmp_surfs[4];
    struct blorp_surf src_surf, dst_surf;
    blorp_surf_for_miptree(brw, &src_surf, src_mt, false,
-                          &src_level, &tmp_surfs[0]);
+                          (1 << ISL_AUX_USAGE_MCS) |
+                          (1 << ISL_AUX_USAGE_CCS_E),
+                          &src_level, src_layer, 1, &tmp_surfs[0]);
    blorp_surf_for_miptree(brw, &dst_surf, dst_mt, true,
-                          &dst_level, &tmp_surfs[2]);
+                          (1 << ISL_AUX_USAGE_MCS) |
+                          (1 << ISL_AUX_USAGE_CCS_E),
+                          &dst_level, dst_layer, 1, &tmp_surfs[2]);
 
    struct blorp_batch batch;
    blorp_batch_init(&brw->blorp, &batch, brw, 0);
@@ -455,11 +464,6 @@ brw_blorp_copy_miptrees(struct brw_context *brw,
               &dst_surf, dst_level, dst_layer,
               src_x, src_y, dst_x, dst_y, src_width, src_height);
    blorp_batch_finish(&batch);
-
-   intel_miptree_slice_set_needs_hiz_resolve(dst_mt, dst_level, dst_layer);
-
-   if (intel_miptree_is_lossless_compressed(brw, dst_mt))
-      dst_mt->fast_clear_state = INTEL_FAST_CLEAR_STATE_UNRESOLVED;
 }
 
 static struct intel_mipmap_tree *
@@ -804,33 +808,47 @@ do_single_blorp_clear(struct brw_context *brw, struct gl_framebuffer *fb,
    if (set_write_disables(irb, ctx->Color.ColorMask[buf], color_write_disable))
       can_fast_clear = false;
 
-   if (irb->mt->fast_clear_state == INTEL_FAST_CLEAR_STATE_NO_MCS ||
+   if (irb->mt->aux_disable & INTEL_AUX_DISABLE_CCS ||
        !brw_is_color_fast_clear_compatible(brw, irb->mt, &ctx->Color.ClearColor))
       can_fast_clear = false;
 
-   const bool is_lossless_compressed = intel_miptree_is_lossless_compressed(
-                                          brw, irb->mt);
+   const unsigned logical_layer = irb_logical_mt_layer(irb);
+   const enum intel_fast_clear_state fast_clear_state =
+      intel_miptree_get_fast_clear_state(irb->mt, irb->mt_level,
+                                         logical_layer);
+
+   /* Surface state can only record one fast clear color value. Therefore
+    * unless different levels/layers agree on the color it can be used to
+    * represent only single level/layer. Here it will be reserved for the
+    * first slice (level 0, layer 0).
+    */
+   if (irb->layer_count > 1 || irb->mt_level || irb->mt_layer)
+      can_fast_clear = false;
 
    if (can_fast_clear) {
+      union gl_color_union override_color =
+         brw_meta_convert_fast_clear_color(brw, irb->mt,
+                                           &ctx->Color.ClearColor);
+
       /* Record the clear color in the miptree so that it will be
        * programmed in SURFACE_STATE by later rendering and resolve
        * operations.
        */
       const bool color_updated = brw_meta_set_fast_clear_color(
-                                    brw, irb->mt, &ctx->Color.ClearColor);
+                                    brw, &irb->mt->gen9_fast_clear_color,
+                                    &override_color);
 
       /* If the buffer is already in INTEL_FAST_CLEAR_STATE_CLEAR, the clear
        * is redundant and can be skipped.
        */
-      if (!color_updated &&
-          irb->mt->fast_clear_state == INTEL_FAST_CLEAR_STATE_CLEAR)
+      if (!color_updated && fast_clear_state == INTEL_FAST_CLEAR_STATE_CLEAR)
          return true;
 
       /* If the MCS buffer hasn't been allocated yet, we need to allocate
        * it now.
        */
-      if (!irb->mt->mcs_mt) {
-         assert(!is_lossless_compressed);
+      if (!irb->mt->mcs_buf) {
+         assert(!intel_miptree_is_lossless_compressed(brw, irb->mt));
          if (!intel_miptree_alloc_non_msrt_mcs(brw, irb->mt, false)) {
             /* MCS allocation failed--probably this will only happen in
              * out-of-memory conditions.  But in any case, try to recover
@@ -841,32 +859,53 @@ do_single_blorp_clear(struct brw_context *brw, struct gl_framebuffer *fb,
       }
    }
 
-   intel_miptree_used_for_rendering(irb->mt);
+   const unsigned num_layers = fb->MaxNumLayers ? irb->layer_count : 1;
 
    /* We can't setup the blorp_surf until we've allocated the MCS above */
    struct isl_surf isl_tmp[2];
    struct blorp_surf surf;
    unsigned level = irb->mt_level;
-   blorp_surf_for_miptree(brw, &surf, irb->mt, true, &level, isl_tmp);
-   const unsigned num_layers = fb->MaxNumLayers ? irb->layer_count : 1;
+   blorp_surf_for_miptree(brw, &surf, irb->mt, true,
+                          (1 << ISL_AUX_USAGE_MCS) |
+                          (1 << ISL_AUX_USAGE_CCS_E) |
+                          (1 << ISL_AUX_USAGE_CCS_D),
+                          &level, logical_layer, num_layers, isl_tmp);
 
    if (can_fast_clear) {
       DBG("%s (fast) to mt %p level %d layers %d+%d\n", __FUNCTION__,
           irb->mt, irb->mt_level, irb->mt_layer, num_layers);
 
+      /* Ivybrigde PRM Vol 2, Part 1, "11.7 MCS Buffer for Render Target(s)":
+       *
+       *    "Any transition from any value in {Clear, Render, Resolve} to a
+       *    different value in {Clear, Render, Resolve} requires end of pipe
+       *    synchronization."
+       *
+       * In other words, fast clear ops are not properly synchronized with
+       * other drawing.  We need to use a PIPE_CONTROL to ensure that the
+       * contents of the previous draw hit the render target before we resolve
+       * and again afterwards to ensure that the resolve is complete before we
+       * do any more regular drawing.
+       */
+      brw_emit_end_of_pipe_sync(brw, PIPE_CONTROL_RENDER_TARGET_FLUSH);
+
       struct blorp_batch batch;
       blorp_batch_init(&brw->blorp, &batch, brw, 0);
       blorp_fast_clear(&batch, &surf,
                        (enum isl_format)brw->render_target_format[format],
-                       level, irb_logical_mt_layer(irb), num_layers,
+                       level, logical_layer, num_layers,
                        x0, y0, x1, y1);
       blorp_batch_finish(&batch);
+
+      brw_emit_end_of_pipe_sync(brw, PIPE_CONTROL_RENDER_TARGET_FLUSH);
 
       /* Now that the fast clear has occurred, put the buffer in
        * INTEL_FAST_CLEAR_STATE_CLEAR so that we won't waste time doing
        * redundant clears.
        */
-      irb->mt->fast_clear_state = INTEL_FAST_CLEAR_STATE_CLEAR;
+      intel_miptree_set_fast_clear_state(brw, irb->mt, irb->mt_level,
+                                         logical_layer, num_layers,
+                                         INTEL_FAST_CLEAR_STATE_CLEAR);
    } else {
       DBG("%s (slow) to mt %p level %d layer %d+%d\n", __FUNCTION__,
           irb->mt, irb->mt_level, irb->mt_layer, num_layers);
@@ -883,14 +922,6 @@ do_single_blorp_clear(struct brw_context *brw, struct gl_framebuffer *fb,
                   x0, y0, x1, y1,
                   clear_color, color_write_disable);
       blorp_batch_finish(&batch);
-
-      if (is_lossless_compressed) {
-         /* Compressed buffers can be cleared also using normal rep-clear. In
-          * such case they behave such as if they were drawn using normal 3D
-          * render pipeline, and we simply mark the mcs as dirty.
-          */
-         irb->mt->fast_clear_state = INTEL_FAST_CLEAR_STATE_UNRESOLVED;
-      }
    }
 
    return true;
@@ -915,11 +946,6 @@ brw_blorp_clear_color(struct brw_context *brw, struct gl_framebuffer *fb,
       if (rb == NULL)
          continue;
 
-      const unsigned num_layers = fb->MaxNumLayers ? irb->layer_count : 1;
-      for (unsigned layer = 0; layer < num_layers; layer++) {
-         intel_miptree_check_level_layer(irb->mt, irb->mt_level, layer);
-      }
-
       if (!do_single_blorp_clear(brw, fb, rb, buf, partial_clear,
                                  encode_srgb)) {
          return false;
@@ -932,41 +958,69 @@ brw_blorp_clear_color(struct brw_context *brw, struct gl_framebuffer *fb,
 }
 
 void
-brw_blorp_resolve_color(struct brw_context *brw, struct intel_mipmap_tree *mt)
+brw_blorp_resolve_color(struct brw_context *brw, struct intel_mipmap_tree *mt,
+                        unsigned level, unsigned layer)
 {
-   DBG("%s to mt %p\n", __FUNCTION__, mt);
+   DBG("%s to mt %p level %u layer %u\n", __FUNCTION__, mt, level, layer);
 
    const mesa_format format = _mesa_get_srgb_format_linear(mt->format);
 
-   intel_miptree_check_level_layer(mt, 0 /* level */, 0 /* layer */);
-   intel_miptree_used_for_rendering(mt);
-
    struct isl_surf isl_tmp[2];
    struct blorp_surf surf;
-   unsigned level = 0;
-   blorp_surf_for_miptree(brw, &surf, mt, true, &level, isl_tmp);
+   blorp_surf_for_miptree(brw, &surf, mt, true,
+                          (1 << ISL_AUX_USAGE_CCS_E) |
+                          (1 << ISL_AUX_USAGE_CCS_D),
+                          &level, layer, 1 /* num_layers */,
+                          isl_tmp);
+
+   enum blorp_fast_clear_op resolve_op;
+   if (brw->gen >= 9) {
+      if (surf.aux_usage == ISL_AUX_USAGE_CCS_E)
+         resolve_op = BLORP_FAST_CLEAR_OP_RESOLVE_FULL;
+      else
+         resolve_op = BLORP_FAST_CLEAR_OP_RESOLVE_PARTIAL;
+   } else {
+      assert(surf.aux_usage == ISL_AUX_USAGE_CCS_D);
+      /* Broadwell and earlier do not have a partial resolve */
+      resolve_op = BLORP_FAST_CLEAR_OP_RESOLVE_FULL;
+   }
+
+   /* Ivybrigde PRM Vol 2, Part 1, "11.7 MCS Buffer for Render Target(s)":
+    *
+    *    "Any transition from any value in {Clear, Render, Resolve} to a
+    *    different value in {Clear, Render, Resolve} requires end of pipe
+    *    synchronization."
+    *
+    * In other words, fast clear ops are not properly synchronized with
+    * other drawing.  We need to use a PIPE_CONTROL to ensure that the
+    * contents of the previous draw hit the render target before we resolve
+    * and again afterwards to ensure that the resolve is complete before we
+    * do any more regular drawing.
+    */
+   brw_emit_end_of_pipe_sync(brw, PIPE_CONTROL_RENDER_TARGET_FLUSH);
+
 
    struct blorp_batch batch;
    blorp_batch_init(&brw->blorp, &batch, brw, 0);
-   blorp_ccs_resolve(&batch, &surf,
-                     brw_blorp_to_isl_format(brw, format, true));
+   blorp_ccs_resolve(&batch, &surf, level, layer,
+                     brw_blorp_to_isl_format(brw, format, true),
+                     resolve_op);
    blorp_batch_finish(&batch);
 
-   mt->fast_clear_state = INTEL_FAST_CLEAR_STATE_RESOLVED;
+   /* See comment above */
+   brw_emit_end_of_pipe_sync(brw, PIPE_CONTROL_RENDER_TARGET_FLUSH);
 }
 
 static void
 gen6_blorp_hiz_exec(struct brw_context *brw, struct intel_mipmap_tree *mt,
                     unsigned int level, unsigned int layer, enum blorp_hiz_op op)
 {
-   intel_miptree_check_level_layer(mt, level, layer);
-   intel_miptree_used_for_rendering(mt);
-
    assert(intel_miptree_level_has_hiz(mt, level));
 
    struct isl_surf isl_tmp[2];
    struct blorp_surf surf;
-   blorp_surf_for_miptree(brw, &surf, mt, true, &level, isl_tmp);
+   blorp_surf_for_miptree(brw, &surf, mt, true, (1 << ISL_AUX_USAGE_HIZ),
+                          &level, layer, 1, isl_tmp);
 
    struct blorp_batch batch;
    blorp_batch_init(&brw->blorp, &batch, brw, 0);
@@ -985,7 +1039,8 @@ gen6_blorp_hiz_exec(struct brw_context *brw, struct intel_mipmap_tree *mt,
  */
 void
 intel_hiz_exec(struct brw_context *brw, struct intel_mipmap_tree *mt,
-	       unsigned int level, unsigned int layer, enum blorp_hiz_op op)
+               unsigned int level, unsigned int start_layer,
+               unsigned int num_layers, enum blorp_hiz_op op)
 {
    const char *opname = NULL;
 
@@ -1004,12 +1059,85 @@ intel_hiz_exec(struct brw_context *brw, struct intel_mipmap_tree *mt,
       break;
    }
 
-   DBG("%s %s to mt %p level %d layer %d\n",
-       __func__, opname, mt, level, layer);
+   DBG("%s %s to mt %p level %d layers %d-%d\n",
+       __func__, opname, mt, level, start_layer, start_layer + num_layers - 1);
+
+   /* The following stalls and flushes are only documented to be required for
+    * HiZ clear operations.  However, they also seem to be required for the
+    * HiZ resolve operation which is basically the same as a fast clear only a
+    * different value is written into the HiZ surface.
+    */
+   if (op == BLORP_HIZ_OP_DEPTH_CLEAR || op == BLORP_HIZ_OP_HIZ_RESOLVE) {
+      if (brw->gen == 6) {
+         /* From the Sandy Bridge PRM, volume 2 part 1, page 313:
+          *
+          *   "If other rendering operations have preceded this clear, a
+          *   PIPE_CONTROL with write cache flush enabled and Z-inhibit
+          *   disabled must be issued before the rectangle primitive used for
+          *   the depth buffer clear operation.
+          */
+          brw_emit_pipe_control_flush(brw,
+                                      PIPE_CONTROL_RENDER_TARGET_FLUSH |
+                                      PIPE_CONTROL_DEPTH_CACHE_FLUSH |
+                                      PIPE_CONTROL_CS_STALL);
+      } else if (brw->gen >= 7) {
+         /*
+          * From the Ivybridge PRM, volume 2, "Depth Buffer Clear":
+          *
+          *   If other rendering operations have preceded this clear, a
+          *   PIPE_CONTROL with depth cache flush enabled, Depth Stall bit
+          *   enabled must be issued before the rectangle primitive used for
+          *   the depth buffer clear operation.
+          *
+          * Same applies for Gen8 and Gen9.
+          *
+          * In addition, from the Ivybridge PRM, volume 2, 1.10.4.1
+          * PIPE_CONTROL, Depth Cache Flush Enable:
+          *
+          *   This bit must not be set when Depth Stall Enable bit is set in
+          *   this packet.
+          *
+          * This is confirmed to hold for real, HSW gets immediate gpu hangs.
+          *
+          * Therefore issue two pipe control flushes, one for cache flush and
+          * another for depth stall.
+          */
+          brw_emit_pipe_control_flush(brw,
+                                      PIPE_CONTROL_DEPTH_CACHE_FLUSH |
+                                      PIPE_CONTROL_CS_STALL);
+
+          brw_emit_pipe_control_flush(brw, PIPE_CONTROL_DEPTH_STALL);
+      }
+   }
 
    if (brw->gen >= 8) {
-      gen8_hiz_exec(brw, mt, level, layer, op);
+      for (unsigned a = 0; a < num_layers; a++)
+         gen8_hiz_exec(brw, mt, level, start_layer + a, op);
    } else {
-      gen6_blorp_hiz_exec(brw, mt, level, layer, op);
+      for (unsigned a = 0; a < num_layers; a++)
+         gen6_blorp_hiz_exec(brw, mt, level, start_layer + a, op);
+   }
+
+
+   /* The following stalls and flushes are only documented to be required for
+    * HiZ clear operations.  However, they also seem to be required for the
+    * HiZ resolve operation which is basically the same as a fast clear only a
+    * different value is written into the HiZ surface.
+    */
+   if (op == BLORP_HIZ_OP_DEPTH_CLEAR || op == BLORP_HIZ_OP_HIZ_RESOLVE) {
+      if (brw->gen == 6) {
+         /* From the Sandy Bridge PRM, volume 2 part 1, page 314:
+          *
+          *     "DevSNB, DevSNB-B{W/A}]: Depth buffer clear pass must be
+          *     followed by a PIPE_CONTROL command with DEPTH_STALL bit set
+          *     and Then followed by Depth FLUSH'
+         */
+         brw_emit_pipe_control_flush(brw,
+                                     PIPE_CONTROL_DEPTH_STALL);
+
+         brw_emit_pipe_control_flush(brw,
+                                     PIPE_CONTROL_DEPTH_CACHE_FLUSH |
+                                     PIPE_CONTROL_CS_STALL);
+      }
    }
 }

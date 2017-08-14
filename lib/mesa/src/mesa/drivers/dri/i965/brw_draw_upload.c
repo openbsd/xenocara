@@ -39,186 +39,186 @@
 
 static const GLuint double_types_float[5] = {
    0,
-   BRW_SURFACEFORMAT_R64_FLOAT,
-   BRW_SURFACEFORMAT_R64G64_FLOAT,
-   BRW_SURFACEFORMAT_R64G64B64_FLOAT,
-   BRW_SURFACEFORMAT_R64G64B64A64_FLOAT
+   ISL_FORMAT_R64_FLOAT,
+   ISL_FORMAT_R64G64_FLOAT,
+   ISL_FORMAT_R64G64B64_FLOAT,
+   ISL_FORMAT_R64G64B64A64_FLOAT
 };
 
 static const GLuint double_types_passthru[5] = {
    0,
-   BRW_SURFACEFORMAT_R64_PASSTHRU,
-   BRW_SURFACEFORMAT_R64G64_PASSTHRU,
-   BRW_SURFACEFORMAT_R64G64B64_PASSTHRU,
-   BRW_SURFACEFORMAT_R64G64B64A64_PASSTHRU
+   ISL_FORMAT_R64_PASSTHRU,
+   ISL_FORMAT_R64G64_PASSTHRU,
+   ISL_FORMAT_R64G64B64_PASSTHRU,
+   ISL_FORMAT_R64G64B64A64_PASSTHRU
 };
 
 static const GLuint float_types[5] = {
    0,
-   BRW_SURFACEFORMAT_R32_FLOAT,
-   BRW_SURFACEFORMAT_R32G32_FLOAT,
-   BRW_SURFACEFORMAT_R32G32B32_FLOAT,
-   BRW_SURFACEFORMAT_R32G32B32A32_FLOAT
+   ISL_FORMAT_R32_FLOAT,
+   ISL_FORMAT_R32G32_FLOAT,
+   ISL_FORMAT_R32G32B32_FLOAT,
+   ISL_FORMAT_R32G32B32A32_FLOAT
 };
 
 static const GLuint half_float_types[5] = {
    0,
-   BRW_SURFACEFORMAT_R16_FLOAT,
-   BRW_SURFACEFORMAT_R16G16_FLOAT,
-   BRW_SURFACEFORMAT_R16G16B16_FLOAT,
-   BRW_SURFACEFORMAT_R16G16B16A16_FLOAT
+   ISL_FORMAT_R16_FLOAT,
+   ISL_FORMAT_R16G16_FLOAT,
+   ISL_FORMAT_R16G16B16_FLOAT,
+   ISL_FORMAT_R16G16B16A16_FLOAT
 };
 
 static const GLuint fixed_point_types[5] = {
    0,
-   BRW_SURFACEFORMAT_R32_SFIXED,
-   BRW_SURFACEFORMAT_R32G32_SFIXED,
-   BRW_SURFACEFORMAT_R32G32B32_SFIXED,
-   BRW_SURFACEFORMAT_R32G32B32A32_SFIXED,
+   ISL_FORMAT_R32_SFIXED,
+   ISL_FORMAT_R32G32_SFIXED,
+   ISL_FORMAT_R32G32B32_SFIXED,
+   ISL_FORMAT_R32G32B32A32_SFIXED,
 };
 
 static const GLuint uint_types_direct[5] = {
    0,
-   BRW_SURFACEFORMAT_R32_UINT,
-   BRW_SURFACEFORMAT_R32G32_UINT,
-   BRW_SURFACEFORMAT_R32G32B32_UINT,
-   BRW_SURFACEFORMAT_R32G32B32A32_UINT
+   ISL_FORMAT_R32_UINT,
+   ISL_FORMAT_R32G32_UINT,
+   ISL_FORMAT_R32G32B32_UINT,
+   ISL_FORMAT_R32G32B32A32_UINT
 };
 
 static const GLuint uint_types_norm[5] = {
    0,
-   BRW_SURFACEFORMAT_R32_UNORM,
-   BRW_SURFACEFORMAT_R32G32_UNORM,
-   BRW_SURFACEFORMAT_R32G32B32_UNORM,
-   BRW_SURFACEFORMAT_R32G32B32A32_UNORM
+   ISL_FORMAT_R32_UNORM,
+   ISL_FORMAT_R32G32_UNORM,
+   ISL_FORMAT_R32G32B32_UNORM,
+   ISL_FORMAT_R32G32B32A32_UNORM
 };
 
 static const GLuint uint_types_scale[5] = {
    0,
-   BRW_SURFACEFORMAT_R32_USCALED,
-   BRW_SURFACEFORMAT_R32G32_USCALED,
-   BRW_SURFACEFORMAT_R32G32B32_USCALED,
-   BRW_SURFACEFORMAT_R32G32B32A32_USCALED
+   ISL_FORMAT_R32_USCALED,
+   ISL_FORMAT_R32G32_USCALED,
+   ISL_FORMAT_R32G32B32_USCALED,
+   ISL_FORMAT_R32G32B32A32_USCALED
 };
 
 static const GLuint int_types_direct[5] = {
    0,
-   BRW_SURFACEFORMAT_R32_SINT,
-   BRW_SURFACEFORMAT_R32G32_SINT,
-   BRW_SURFACEFORMAT_R32G32B32_SINT,
-   BRW_SURFACEFORMAT_R32G32B32A32_SINT
+   ISL_FORMAT_R32_SINT,
+   ISL_FORMAT_R32G32_SINT,
+   ISL_FORMAT_R32G32B32_SINT,
+   ISL_FORMAT_R32G32B32A32_SINT
 };
 
 static const GLuint int_types_norm[5] = {
    0,
-   BRW_SURFACEFORMAT_R32_SNORM,
-   BRW_SURFACEFORMAT_R32G32_SNORM,
-   BRW_SURFACEFORMAT_R32G32B32_SNORM,
-   BRW_SURFACEFORMAT_R32G32B32A32_SNORM
+   ISL_FORMAT_R32_SNORM,
+   ISL_FORMAT_R32G32_SNORM,
+   ISL_FORMAT_R32G32B32_SNORM,
+   ISL_FORMAT_R32G32B32A32_SNORM
 };
 
 static const GLuint int_types_scale[5] = {
    0,
-   BRW_SURFACEFORMAT_R32_SSCALED,
-   BRW_SURFACEFORMAT_R32G32_SSCALED,
-   BRW_SURFACEFORMAT_R32G32B32_SSCALED,
-   BRW_SURFACEFORMAT_R32G32B32A32_SSCALED
+   ISL_FORMAT_R32_SSCALED,
+   ISL_FORMAT_R32G32_SSCALED,
+   ISL_FORMAT_R32G32B32_SSCALED,
+   ISL_FORMAT_R32G32B32A32_SSCALED
 };
 
 static const GLuint ushort_types_direct[5] = {
    0,
-   BRW_SURFACEFORMAT_R16_UINT,
-   BRW_SURFACEFORMAT_R16G16_UINT,
-   BRW_SURFACEFORMAT_R16G16B16_UINT,
-   BRW_SURFACEFORMAT_R16G16B16A16_UINT
+   ISL_FORMAT_R16_UINT,
+   ISL_FORMAT_R16G16_UINT,
+   ISL_FORMAT_R16G16B16_UINT,
+   ISL_FORMAT_R16G16B16A16_UINT
 };
 
 static const GLuint ushort_types_norm[5] = {
    0,
-   BRW_SURFACEFORMAT_R16_UNORM,
-   BRW_SURFACEFORMAT_R16G16_UNORM,
-   BRW_SURFACEFORMAT_R16G16B16_UNORM,
-   BRW_SURFACEFORMAT_R16G16B16A16_UNORM
+   ISL_FORMAT_R16_UNORM,
+   ISL_FORMAT_R16G16_UNORM,
+   ISL_FORMAT_R16G16B16_UNORM,
+   ISL_FORMAT_R16G16B16A16_UNORM
 };
 
 static const GLuint ushort_types_scale[5] = {
    0,
-   BRW_SURFACEFORMAT_R16_USCALED,
-   BRW_SURFACEFORMAT_R16G16_USCALED,
-   BRW_SURFACEFORMAT_R16G16B16_USCALED,
-   BRW_SURFACEFORMAT_R16G16B16A16_USCALED
+   ISL_FORMAT_R16_USCALED,
+   ISL_FORMAT_R16G16_USCALED,
+   ISL_FORMAT_R16G16B16_USCALED,
+   ISL_FORMAT_R16G16B16A16_USCALED
 };
 
 static const GLuint short_types_direct[5] = {
    0,
-   BRW_SURFACEFORMAT_R16_SINT,
-   BRW_SURFACEFORMAT_R16G16_SINT,
-   BRW_SURFACEFORMAT_R16G16B16_SINT,
-   BRW_SURFACEFORMAT_R16G16B16A16_SINT
+   ISL_FORMAT_R16_SINT,
+   ISL_FORMAT_R16G16_SINT,
+   ISL_FORMAT_R16G16B16_SINT,
+   ISL_FORMAT_R16G16B16A16_SINT
 };
 
 static const GLuint short_types_norm[5] = {
    0,
-   BRW_SURFACEFORMAT_R16_SNORM,
-   BRW_SURFACEFORMAT_R16G16_SNORM,
-   BRW_SURFACEFORMAT_R16G16B16_SNORM,
-   BRW_SURFACEFORMAT_R16G16B16A16_SNORM
+   ISL_FORMAT_R16_SNORM,
+   ISL_FORMAT_R16G16_SNORM,
+   ISL_FORMAT_R16G16B16_SNORM,
+   ISL_FORMAT_R16G16B16A16_SNORM
 };
 
 static const GLuint short_types_scale[5] = {
    0,
-   BRW_SURFACEFORMAT_R16_SSCALED,
-   BRW_SURFACEFORMAT_R16G16_SSCALED,
-   BRW_SURFACEFORMAT_R16G16B16_SSCALED,
-   BRW_SURFACEFORMAT_R16G16B16A16_SSCALED
+   ISL_FORMAT_R16_SSCALED,
+   ISL_FORMAT_R16G16_SSCALED,
+   ISL_FORMAT_R16G16B16_SSCALED,
+   ISL_FORMAT_R16G16B16A16_SSCALED
 };
 
 static const GLuint ubyte_types_direct[5] = {
    0,
-   BRW_SURFACEFORMAT_R8_UINT,
-   BRW_SURFACEFORMAT_R8G8_UINT,
-   BRW_SURFACEFORMAT_R8G8B8_UINT,
-   BRW_SURFACEFORMAT_R8G8B8A8_UINT
+   ISL_FORMAT_R8_UINT,
+   ISL_FORMAT_R8G8_UINT,
+   ISL_FORMAT_R8G8B8_UINT,
+   ISL_FORMAT_R8G8B8A8_UINT
 };
 
 static const GLuint ubyte_types_norm[5] = {
    0,
-   BRW_SURFACEFORMAT_R8_UNORM,
-   BRW_SURFACEFORMAT_R8G8_UNORM,
-   BRW_SURFACEFORMAT_R8G8B8_UNORM,
-   BRW_SURFACEFORMAT_R8G8B8A8_UNORM
+   ISL_FORMAT_R8_UNORM,
+   ISL_FORMAT_R8G8_UNORM,
+   ISL_FORMAT_R8G8B8_UNORM,
+   ISL_FORMAT_R8G8B8A8_UNORM
 };
 
 static const GLuint ubyte_types_scale[5] = {
    0,
-   BRW_SURFACEFORMAT_R8_USCALED,
-   BRW_SURFACEFORMAT_R8G8_USCALED,
-   BRW_SURFACEFORMAT_R8G8B8_USCALED,
-   BRW_SURFACEFORMAT_R8G8B8A8_USCALED
+   ISL_FORMAT_R8_USCALED,
+   ISL_FORMAT_R8G8_USCALED,
+   ISL_FORMAT_R8G8B8_USCALED,
+   ISL_FORMAT_R8G8B8A8_USCALED
 };
 
 static const GLuint byte_types_direct[5] = {
    0,
-   BRW_SURFACEFORMAT_R8_SINT,
-   BRW_SURFACEFORMAT_R8G8_SINT,
-   BRW_SURFACEFORMAT_R8G8B8_SINT,
-   BRW_SURFACEFORMAT_R8G8B8A8_SINT
+   ISL_FORMAT_R8_SINT,
+   ISL_FORMAT_R8G8_SINT,
+   ISL_FORMAT_R8G8B8_SINT,
+   ISL_FORMAT_R8G8B8A8_SINT
 };
 
 static const GLuint byte_types_norm[5] = {
    0,
-   BRW_SURFACEFORMAT_R8_SNORM,
-   BRW_SURFACEFORMAT_R8G8_SNORM,
-   BRW_SURFACEFORMAT_R8G8B8_SNORM,
-   BRW_SURFACEFORMAT_R8G8B8A8_SNORM
+   ISL_FORMAT_R8_SNORM,
+   ISL_FORMAT_R8G8_SNORM,
+   ISL_FORMAT_R8G8B8_SNORM,
+   ISL_FORMAT_R8G8B8A8_SNORM
 };
 
 static const GLuint byte_types_scale[5] = {
    0,
-   BRW_SURFACEFORMAT_R8_SSCALED,
-   BRW_SURFACEFORMAT_R8G8_SSCALED,
-   BRW_SURFACEFORMAT_R8G8B8_SSCALED,
-   BRW_SURFACEFORMAT_R8G8B8A8_SSCALED
+   ISL_FORMAT_R8_SSCALED,
+   ISL_FORMAT_R8G8_SSCALED,
+   ISL_FORMAT_R8G8B8_SSCALED,
+   ISL_FORMAT_R8G8B8A8_SSCALED
 };
 
 static GLuint
@@ -231,11 +231,95 @@ double_types(struct brw_context *brw,
     * 64-bit components are stored in the URB without any conversion."
     * Also included on BDW PRM, Volume 7, page 470, table "Source Element
     * Formats Supported in VF Unit"
-    * Previous PRMs don't include those references.
+    *
+    * Previous PRMs don't include those references, so for gen7 we can't use
+    * PASSTHRU formats directly. But in any case, we prefer to return passthru
+    * even in that case, because that reflects what we want to achieve, even
+    * if we would need to workaround on gen < 8.
     */
-   return (brw->gen >= 8 && doubles
+   return (doubles
            ? double_types_passthru[size]
            : double_types_float[size]);
+}
+
+static bool
+is_passthru_format(uint32_t format)
+{
+   switch (format) {
+   case ISL_FORMAT_R64_PASSTHRU:
+   case ISL_FORMAT_R64G64_PASSTHRU:
+   case ISL_FORMAT_R64G64B64_PASSTHRU:
+   case ISL_FORMAT_R64G64B64A64_PASSTHRU:
+      return true;
+   default:
+      return false;
+   }
+}
+
+static int
+uploads_needed(uint32_t format)
+{
+   if (!is_passthru_format(format))
+      return 1;
+
+   switch (format) {
+   case ISL_FORMAT_R64_PASSTHRU:
+   case ISL_FORMAT_R64G64_PASSTHRU:
+      return 1;
+   case ISL_FORMAT_R64G64B64_PASSTHRU:
+   case ISL_FORMAT_R64G64B64A64_PASSTHRU:
+      return 2;
+   default:
+      unreachable("not reached");
+   }
+}
+
+/*
+ * Returns the number of componentes associated with a format that is used on
+ * a 64 to 32 format split. See downsize_format()
+ */
+static int
+upload_format_size(uint32_t upload_format)
+{
+   switch (upload_format) {
+   case ISL_FORMAT_R32G32_FLOAT:
+      return 2;
+   case ISL_FORMAT_R32G32B32A32_FLOAT:
+      return 4;
+   default:
+      unreachable("not reached");
+   }
+}
+
+/*
+ * Returns the format that we are finally going to use when upload a vertex
+ * element. It will only change if we are using *64*PASSTHRU formats, as for
+ * gen < 8 they need to be splitted on two *32*FLOAT formats.
+ *
+ * @upload points in which upload we are. Valid values are [0,1]
+ */
+static uint32_t
+downsize_format_if_needed(uint32_t format,
+                          int upload)
+{
+   assert(upload == 0 || upload == 1);
+
+   if (!is_passthru_format(format))
+      return format;
+
+   switch (format) {
+   case ISL_FORMAT_R64_PASSTHRU:
+      return ISL_FORMAT_R32G32_FLOAT;
+   case ISL_FORMAT_R64G64_PASSTHRU:
+      return ISL_FORMAT_R32G32B32A32_FLOAT;
+   case ISL_FORMAT_R64G64B64_PASSTHRU:
+      return !upload ? ISL_FORMAT_R32G32B32A32_FLOAT
+                     : ISL_FORMAT_R32G32_FLOAT;
+   case ISL_FORMAT_R64G64B64A64_PASSTHRU:
+      return ISL_FORMAT_R32G32B32A32_FLOAT;
+   default:
+      unreachable("not reached");
+   }
 }
 
 /**
@@ -245,7 +329,7 @@ double_types(struct brw_context *brw,
  */
 unsigned
 brw_get_vertex_surface_type(struct brw_context *brw,
-                            const struct gl_client_array *glarray)
+                            const struct gl_vertex_array *glarray)
 {
    int size = glarray->Size;
    const bool is_ivybridge_or_older =
@@ -284,12 +368,13 @@ brw_get_vertex_surface_type(struct brw_context *brw,
       default: unreachable("not reached");
       }
    } else if (glarray->Type == GL_UNSIGNED_INT_10F_11F_11F_REV) {
-      return BRW_SURFACEFORMAT_R11G11B10_FLOAT;
+      return ISL_FORMAT_R11G11B10_FLOAT;
    } else if (glarray->Normalized) {
       switch (glarray->Type) {
       case GL_DOUBLE: return double_types(brw, size, glarray->Doubles);
       case GL_FLOAT: return float_types[size];
       case GL_HALF_FLOAT:
+      case GL_HALF_FLOAT_OES:
          if (brw->gen < 6 && size == 3)
             return half_float_types[4];
          else
@@ -303,7 +388,7 @@ brw_get_vertex_surface_type(struct brw_context *brw,
          if (glarray->Format == GL_BGRA) {
             /* See GL_EXT_vertex_array_bgra */
             assert(size == 4);
-            return BRW_SURFACEFORMAT_B8G8R8A8_UNORM;
+            return ISL_FORMAT_B8G8R8A8_UNORM;
          }
          else {
             return ubyte_types_norm[size];
@@ -325,18 +410,18 @@ brw_get_vertex_surface_type(struct brw_context *brw,
          assert(size == 4);
          if (brw->gen >= 8 || brw->is_haswell) {
             return glarray->Format == GL_BGRA
-               ? BRW_SURFACEFORMAT_B10G10R10A2_SNORM
-               : BRW_SURFACEFORMAT_R10G10B10A2_SNORM;
+               ? ISL_FORMAT_B10G10R10A2_SNORM
+               : ISL_FORMAT_R10G10B10A2_SNORM;
          }
-         return BRW_SURFACEFORMAT_R10G10B10A2_UINT;
+         return ISL_FORMAT_R10G10B10A2_UINT;
       case GL_UNSIGNED_INT_2_10_10_10_REV:
          assert(size == 4);
          if (brw->gen >= 8 || brw->is_haswell) {
             return glarray->Format == GL_BGRA
-               ? BRW_SURFACEFORMAT_B10G10R10A2_UNORM
-               : BRW_SURFACEFORMAT_R10G10B10A2_UNORM;
+               ? ISL_FORMAT_B10G10R10A2_UNORM
+               : ISL_FORMAT_R10G10B10A2_UNORM;
          }
-         return BRW_SURFACEFORMAT_R10G10B10A2_UINT;
+         return ISL_FORMAT_R10G10B10A2_UINT;
       default: unreachable("not reached");
       }
    }
@@ -350,24 +435,25 @@ brw_get_vertex_surface_type(struct brw_context *brw,
          assert(size == 4);
          if (brw->gen >= 8 || brw->is_haswell) {
             return glarray->Format == GL_BGRA
-               ? BRW_SURFACEFORMAT_B10G10R10A2_SSCALED
-               : BRW_SURFACEFORMAT_R10G10B10A2_SSCALED;
+               ? ISL_FORMAT_B10G10R10A2_SSCALED
+               : ISL_FORMAT_R10G10B10A2_SSCALED;
          }
-         return BRW_SURFACEFORMAT_R10G10B10A2_UINT;
+         return ISL_FORMAT_R10G10B10A2_UINT;
       } else if (glarray->Type == GL_UNSIGNED_INT_2_10_10_10_REV) {
          assert(size == 4);
          if (brw->gen >= 8 || brw->is_haswell) {
             return glarray->Format == GL_BGRA
-               ? BRW_SURFACEFORMAT_B10G10R10A2_USCALED
-               : BRW_SURFACEFORMAT_R10G10B10A2_USCALED;
+               ? ISL_FORMAT_B10G10R10A2_USCALED
+               : ISL_FORMAT_R10G10B10A2_USCALED;
          }
-         return BRW_SURFACEFORMAT_R10G10B10A2_UINT;
+         return ISL_FORMAT_R10G10B10A2_UINT;
       }
       assert(glarray->Format == GL_RGBA); /* sanity check */
       switch (glarray->Type) {
       case GL_DOUBLE: return double_types(brw, size, glarray->Doubles);
       case GL_FLOAT: return float_types[size];
       case GL_HALF_FLOAT:
+      case GL_HALF_FLOAT_OES:
          if (brw->gen < 6 && size == 3)
             return half_float_types[4];
          else
@@ -421,13 +507,22 @@ copy_array_to_vbo_array(struct brw_context *brw,
    uint8_t *dst = intel_upload_space(brw, size, dst_stride,
                                      &buffer->bo, &buffer->offset);
 
-   if (dst_stride == src_stride) {
-      memcpy(dst, src, size);
-   } else {
-      while (count--) {
-	 memcpy(dst, src, dst_stride);
-	 src += src_stride;
-	 dst += dst_stride;
+   /* The GL 4.5 spec says:
+    *      "If any enabled array’s buffer binding is zero when DrawArrays or
+    *      one of the other drawing commands defined in section 10.4 is called,
+    *      the result is undefined."
+    *
+    * In this case, let's the dst with undefined values
+    */
+   if (src != NULL) {
+      if (dst_stride == src_stride) {
+         memcpy(dst, src, size);
+      } else {
+         while (count--) {
+            memcpy(dst, src, dst_stride);
+            src += src_stride;
+            dst += dst_stride;
+         }
       }
    }
    buffer->stride = dst_stride;
@@ -470,10 +565,16 @@ brw_prepare_vertices(struct brw_context *brw)
    /* Accumulate the list of enabled arrays. */
    brw->vb.nr_enabled = 0;
    while (vs_inputs) {
-      GLuint index = ffsll(vs_inputs) - 1;
+      GLuint first = ffsll(vs_inputs) - 1;
+      assert (first < 64);
+      GLuint index =
+         first - DIV_ROUND_UP(_mesa_bitcount_64(vs_prog_data->double_inputs_read &
+                                                BITFIELD64_MASK(first)), 2);
       struct brw_vertex_element *input = &brw->vb.inputs[index];
-
-      vs_inputs &= ~BITFIELD64_BIT(index);
+      input->is_dual_slot = (vs_prog_data->double_inputs_read & BITFIELD64_BIT(first)) != 0;
+      vs_inputs &= ~BITFIELD64_BIT(first);
+      if (input->is_dual_slot)
+         vs_inputs &= ~BITFIELD64_BIT(first + 1);
       brw->vb.enabled[brw->vb.nr_enabled++] = input;
    }
 
@@ -490,7 +591,7 @@ brw_prepare_vertices(struct brw_context *brw)
 
    for (i = j = 0; i < brw->vb.nr_enabled; i++) {
       struct brw_vertex_element *input = brw->vb.enabled[i];
-      const struct gl_client_array *glarray = input->glarray;
+      const struct gl_vertex_array *glarray = input->glarray;
 
       if (_mesa_is_bufferobj(glarray->BufferObj)) {
 	 struct intel_buffer_object *intel_buffer =
@@ -522,7 +623,7 @@ brw_prepare_vertices(struct brw_context *brw)
 	  */
 	 unsigned k;
 	 for (k = 0; k < i; k++) {
-	    const struct gl_client_array *other = brw->vb.enabled[k]->glarray;
+	    const struct gl_vertex_array *other = brw->vb.enabled[k]->glarray;
 	    if (glarray->BufferObj == other->BufferObj &&
 		glarray->StrideB == other->StrideB &&
 		glarray->InstanceDivisor == other->InstanceDivisor &&
@@ -563,15 +664,16 @@ brw_prepare_vertices(struct brw_context *brw)
 	    ptr = glarray->Ptr;
 	 }
 	 else if (interleaved != glarray->StrideB ||
+                  glarray->InstanceDivisor != 0 ||
                   glarray->Ptr < ptr ||
                   (uintptr_t)(glarray->Ptr - ptr) + glarray->_ElementSize > interleaved)
 	 {
             /* If our stride is different from the first attribute's stride,
-             * or if the first attribute's stride didn't cover our element,
-             * disable the interleaved upload optimization.  The second case
-             * can most commonly occur in cases where there is a single vertex
-             * and, for example, the data is stored on the application's
-             * stack.
+             * or if we are using an instance divisor or if the first
+             * attribute's stride didn't cover our element, disable the
+             * interleaved upload optimization.  The second case can most
+             * commonly occur in cases where there is a single vertex and, for
+             * example, the data is stored on the application's stack.
              *
              * NOTE: This will also disable the optimization in cases where
              * the data is in a different order than the array indices.
@@ -601,7 +703,7 @@ brw_prepare_vertices(struct brw_context *brw)
       const uint32_t range = buffer_range_end[i] - buffer_range_start[i];
 
       buffer->bo = intel_bufferobj_buffer(brw, enabled_buffer[i], start, range);
-      drm_intel_bo_reference(buffer->bo);
+      brw_bo_reference(buffer->bo);
    }
 
    /* If we need to upload all the arrays, then we can trim those arrays to
@@ -626,6 +728,7 @@ brw_prepare_vertices(struct brw_context *brw)
 				 buffer, interleaved);
 	 buffer->offset -= delta * interleaved;
          buffer->size += delta * interleaved;
+         buffer->step_rate = 0;
 
 	 for (i = 0; i < nr_uploads; i++) {
 	    /* Then, just point upload[i] at upload[0]'s buffer. */
@@ -691,7 +794,7 @@ brw_prepare_shader_draw_parameters(struct brw_context *brw)
 uint32_t *
 brw_emit_vertex_buffer_state(struct brw_context *brw,
                              unsigned buffer_nr,
-                             drm_intel_bo *bo,
+                             struct brw_bo *bo,
                              unsigned start_offset,
                              unsigned end_offset,
                              unsigned stride,
@@ -784,6 +887,18 @@ brw_emit_vertices(struct brw_context *brw)
    if (vs_prog_data->uses_drawid)
       nr_elements++;
 
+   /* If any of the formats of vb.enabled needs more that one upload, we need
+    * to add it to nr_elements */
+   unsigned extra_uploads = 0;
+   for (unsigned i = 0; i < brw->vb.nr_enabled; i++) {
+      struct brw_vertex_element *input = brw->vb.enabled[i];
+      uint32_t format = brw_get_vertex_surface_type(brw, input->glarray);
+
+      if (uploads_needed(format) > 1)
+         extra_uploads++;
+   }
+   nr_elements += extra_uploads;
+
    /* If the VS doesn't read any inputs (calculating vertex position from
     * a state variable for some reason, for example), emit a single pad
     * VERTEX_ELEMENT struct and bail.
@@ -797,12 +912,12 @@ brw_emit_vertices(struct brw_context *brw)
       if (brw->gen >= 6) {
 	 OUT_BATCH((0 << GEN6_VE0_INDEX_SHIFT) |
 		   GEN6_VE0_VALID |
-		   (BRW_SURFACEFORMAT_R32G32B32A32_FLOAT << BRW_VE0_FORMAT_SHIFT) |
+		   (ISL_FORMAT_R32G32B32A32_FLOAT << BRW_VE0_FORMAT_SHIFT) |
 		   (0 << BRW_VE0_SRC_OFFSET_SHIFT));
       } else {
 	 OUT_BATCH((0 << BRW_VE0_INDEX_SHIFT) |
 		   BRW_VE0_VALID |
-		   (BRW_SURFACEFORMAT_R32G32B32A32_FLOAT << BRW_VE0_FORMAT_SHIFT) |
+		   (ISL_FORMAT_R32G32B32A32_FLOAT << BRW_VE0_FORMAT_SHIFT) |
 		   (0 << BRW_VE0_SRC_OFFSET_SHIFT));
       }
       OUT_BATCH((BRW_VE1_COMPONENT_STORE_0 << BRW_VE1_COMPONENT_0_SHIFT) |
@@ -887,6 +1002,10 @@ brw_emit_vertices(struct brw_context *brw)
       uint32_t comp1 = BRW_VE1_COMPONENT_STORE_SRC;
       uint32_t comp2 = BRW_VE1_COMPONENT_STORE_SRC;
       uint32_t comp3 = BRW_VE1_COMPONENT_STORE_SRC;
+      unsigned num_uploads = 1;
+      unsigned c;
+
+      num_uploads = uploads_needed(format);
 
       if (input == &brw->vb.inputs[VERT_ATTRIB_EDGEFLAG]) {
          /* Gen6+ passes edgeflag as sideband along with the vertex, instead
@@ -899,38 +1018,51 @@ brw_emit_vertices(struct brw_context *brw)
          }
       }
 
-      switch (input->glarray->Size) {
-      case 0: comp0 = BRW_VE1_COMPONENT_STORE_0;
-      case 1: comp1 = BRW_VE1_COMPONENT_STORE_0;
-      case 2: comp2 = BRW_VE1_COMPONENT_STORE_0;
-      case 3: comp3 = input->glarray->Integer ? BRW_VE1_COMPONENT_STORE_1_INT
-                                              : BRW_VE1_COMPONENT_STORE_1_FLT;
-	 break;
-      }
+      for (c = 0; c < num_uploads; c++) {
+         uint32_t upload_format = downsize_format_if_needed(format, c);
+         /* If we need more that one upload, the offset stride would be 128
+          * bits (16 bytes), as for previous uploads we are using the full
+          * entry. */
+         unsigned int offset = input->offset + c * 16;
+         int size = input->glarray->Size;
 
-      if (brw->gen >= 6) {
-	 OUT_BATCH((input->buffer << GEN6_VE0_INDEX_SHIFT) |
-		   GEN6_VE0_VALID |
-		   (format << BRW_VE0_FORMAT_SHIFT) |
-		   (input->offset << BRW_VE0_SRC_OFFSET_SHIFT));
-      } else {
-	 OUT_BATCH((input->buffer << BRW_VE0_INDEX_SHIFT) |
-		   BRW_VE0_VALID |
-		   (format << BRW_VE0_FORMAT_SHIFT) |
-		   (input->offset << BRW_VE0_SRC_OFFSET_SHIFT));
-      }
+         if (is_passthru_format(format))
+            size = upload_format_size(upload_format);
 
-      if (brw->gen >= 5)
-          OUT_BATCH((comp0 << BRW_VE1_COMPONENT_0_SHIFT) |
-                    (comp1 << BRW_VE1_COMPONENT_1_SHIFT) |
-                    (comp2 << BRW_VE1_COMPONENT_2_SHIFT) |
-                    (comp3 << BRW_VE1_COMPONENT_3_SHIFT));
-      else
-          OUT_BATCH((comp0 << BRW_VE1_COMPONENT_0_SHIFT) |
-                    (comp1 << BRW_VE1_COMPONENT_1_SHIFT) |
-                    (comp2 << BRW_VE1_COMPONENT_2_SHIFT) |
-                    (comp3 << BRW_VE1_COMPONENT_3_SHIFT) |
-                    ((i * 4) << BRW_VE1_DST_OFFSET_SHIFT));
+         switch (size) {
+         case 0: comp0 = BRW_VE1_COMPONENT_STORE_0;
+         case 1: comp1 = BRW_VE1_COMPONENT_STORE_0;
+         case 2: comp2 = BRW_VE1_COMPONENT_STORE_0;
+         case 3: comp3 = input->glarray->Integer
+                         ? BRW_VE1_COMPONENT_STORE_1_INT
+                         : BRW_VE1_COMPONENT_STORE_1_FLT;
+            break;
+         }
+
+         if (brw->gen >= 6) {
+            OUT_BATCH((input->buffer << GEN6_VE0_INDEX_SHIFT) |
+                      GEN6_VE0_VALID |
+                      (upload_format << BRW_VE0_FORMAT_SHIFT) |
+                      (offset << BRW_VE0_SRC_OFFSET_SHIFT));
+         } else {
+            OUT_BATCH((input->buffer << BRW_VE0_INDEX_SHIFT) |
+                      BRW_VE0_VALID |
+                      (upload_format << BRW_VE0_FORMAT_SHIFT) |
+                      (offset << BRW_VE0_SRC_OFFSET_SHIFT));
+         }
+
+         if (brw->gen >= 5)
+            OUT_BATCH((comp0 << BRW_VE1_COMPONENT_0_SHIFT) |
+                      (comp1 << BRW_VE1_COMPONENT_1_SHIFT) |
+                      (comp2 << BRW_VE1_COMPONENT_2_SHIFT) |
+                      (comp3 << BRW_VE1_COMPONENT_3_SHIFT));
+         else
+            OUT_BATCH((comp0 << BRW_VE1_COMPONENT_0_SHIFT) |
+                      (comp1 << BRW_VE1_COMPONENT_1_SHIFT) |
+                      (comp2 << BRW_VE1_COMPONENT_2_SHIFT) |
+                      (comp3 << BRW_VE1_COMPONENT_3_SHIFT) |
+                      ((i * 4) << BRW_VE1_DST_OFFSET_SHIFT));
+      }
    }
 
    if (vs_prog_data->uses_vertexid || vs_prog_data->uses_instanceid ||
@@ -961,11 +1093,11 @@ brw_emit_vertices(struct brw_context *brw)
       if (brw->gen >= 6) {
          dw0 |= GEN6_VE0_VALID |
                 brw->vb.nr_buffers << GEN6_VE0_INDEX_SHIFT |
-                BRW_SURFACEFORMAT_R32G32_UINT << BRW_VE0_FORMAT_SHIFT;
+                ISL_FORMAT_R32G32_UINT << BRW_VE0_FORMAT_SHIFT;
       } else {
          dw0 |= BRW_VE0_VALID |
                 brw->vb.nr_buffers << BRW_VE0_INDEX_SHIFT |
-                BRW_SURFACEFORMAT_R32G32_UINT << BRW_VE0_FORMAT_SHIFT;
+                ISL_FORMAT_R32G32_UINT << BRW_VE0_FORMAT_SHIFT;
 	 dw1 |= (i * 4) << BRW_VE1_DST_OFFSET_SHIFT;
       }
 
@@ -988,11 +1120,11 @@ brw_emit_vertices(struct brw_context *brw)
       if (brw->gen >= 6) {
          dw0 |= GEN6_VE0_VALID |
                 ((brw->vb.nr_buffers + 1) << GEN6_VE0_INDEX_SHIFT) |
-                (BRW_SURFACEFORMAT_R32_UINT << BRW_VE0_FORMAT_SHIFT);
+                (ISL_FORMAT_R32_UINT << BRW_VE0_FORMAT_SHIFT);
       } else {
          dw0 |= BRW_VE0_VALID |
                 ((brw->vb.nr_buffers + 1) << BRW_VE0_INDEX_SHIFT) |
-                (BRW_SURFACEFORMAT_R32_UINT << BRW_VE0_FORMAT_SHIFT);
+                (ISL_FORMAT_R32_UINT << BRW_VE0_FORMAT_SHIFT);
 
 	 dw1 |= (i * 4) << BRW_VE1_DST_OFFSET_SHIFT;
       }
@@ -1036,7 +1168,7 @@ brw_upload_indices(struct brw_context *brw)
    struct gl_context *ctx = &brw->ctx;
    const struct _mesa_index_buffer *index_buffer = brw->ib.ib;
    GLuint ib_size;
-   drm_intel_bo *old_bo = brw->ib.bo;
+   struct brw_bo *old_bo = brw->ib.bo;
    struct gl_buffer_object *bufferobj;
    GLuint offset;
    GLuint ib_type_size;
@@ -1080,14 +1212,14 @@ brw_upload_indices(struct brw_context *brw)
 
          ctx->Driver.UnmapBuffer(ctx, bufferobj, MAP_INTERNAL);
       } else {
-         drm_intel_bo *bo =
+         struct brw_bo *bo =
             intel_bufferobj_buffer(brw, intel_buffer_object(bufferobj),
                                    offset, ib_size);
          if (bo != brw->ib.bo) {
-            drm_intel_bo_unreference(brw->ib.bo);
+            brw_bo_unreference(brw->ib.bo);
             brw->ib.bo = bo;
             brw->ib.size = bufferobj->Size;
-            drm_intel_bo_reference(bo);
+            brw_bo_reference(bo);
          }
       }
    }

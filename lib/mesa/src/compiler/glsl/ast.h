@@ -22,7 +22,6 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#pragma once
 #ifndef AST_H
 #define AST_H
 
@@ -49,7 +48,7 @@ struct YYLTYPE;
  */
 class ast_node {
 public:
-   DECLARE_RALLOC_CXX_OPERATORS(ast_node);
+   DECLARE_LINEAR_ZALLOC_CXX_OPERATORS(ast_node);
 
    /**
     * Print an AST node in something approximating the original GLSL code
@@ -195,6 +194,8 @@ enum ast_operators {
    ast_float_constant,
    ast_bool_constant,
    ast_double_constant,
+   ast_int64_constant,
+   ast_uint64_constant,
 
    ast_sequence,
    ast_aggregate
@@ -255,6 +256,8 @@ public:
       unsigned uint_constant;
       int bool_constant;
       double double_constant;
+      uint64_t uint64_constant;
+      int64_t int64_constant;
    } primary_expression;
 
 
@@ -377,8 +380,7 @@ public:
 
    bool process_qualifier_constant(struct _mesa_glsl_parse_state *state,
                                    const char *qual_indentifier,
-                                   unsigned *value, bool can_be_zero,
-                                   bool must_match = false);
+                                   unsigned *value, bool can_be_zero);
 
    void merge_qualifier(ast_layout_expression *l_expr)
    {
@@ -460,6 +462,14 @@ enum {
    ast_precision_low
 };
 
+enum {
+   ast_depth_none = 0, /**< Absence of depth qualifier. */
+   ast_depth_any,
+   ast_depth_greater,
+   ast_depth_less,
+   ast_depth_unchanged
+};
+
 struct ast_type_qualifier {
    DECLARE_RALLOC_CXX_OPERATORS(ast_type_qualifier);
 
@@ -525,10 +535,7 @@ struct ast_type_qualifier {
 
          /** \name Layout qualifiers for GL_AMD_conservative_depth */
          /** \{ */
-         unsigned depth_any:1;
-         unsigned depth_greater:1;
-         unsigned depth_less:1;
-         unsigned depth_unchanged:1;
+         unsigned depth_type:1;
          /** \} */
 
 	 /** \name Layout qualifiers for GL_ARB_uniform_buffer_object */
@@ -599,13 +606,22 @@ struct ast_type_qualifier {
          /** \name Qualifiers for GL_ARB_shader_subroutine */
 	 /** \{ */
          unsigned subroutine:1;  /**< Is this marked 'subroutine' */
-         unsigned subroutine_def:1; /**< Is this marked 'subroutine' with a list of types */
 	 /** \} */
 
          /** \name Qualifiers for GL_KHR_blend_equation_advanced */
          /** \{ */
          unsigned blend_support:1; /**< Are there any blend_support_ qualifiers */
          /** \} */
+
+         /**
+          * Flag set if GL_ARB_post_depth_coverage layout qualifier is used.
+          */
+         unsigned post_depth_coverage:1;
+         /**
+          * Flag set if GL_INTEL_conservartive_rasterization layout qualifier
+          * is used.
+          */
+         unsigned inner_coverage:1;
       }
       /** \brief Set of flags, accessed by name. */
       q;
@@ -616,6 +632,9 @@ struct ast_type_qualifier {
 
    /** Precision of the type (highp/medium/lowp). */
    unsigned precision:2;
+
+   /** Type of layout qualifiers for GL_AMD_conservative_depth. */
+   unsigned depth_type:3;
 
    /**
     * Alignment specified via GL_ARB_enhanced_layouts "align" layout qualifier
@@ -695,7 +714,7 @@ struct ast_type_qualifier {
    ast_layout_expression *local_size[3];
 
    /** Tessellation evaluation shader: vertex spacing (equal, fractional even/odd) */
-   GLenum vertex_spacing;
+   enum gl_tess_spacing vertex_spacing;
 
    /** Tessellation evaluation shader: vertex ordering (CW or CCW) */
    GLenum ordering;
@@ -725,9 +744,6 @@ struct ast_type_qualifier {
     */
    glsl_base_type image_base_type;
 
-   /** Flag to know if this represents a default value for a qualifier */
-   bool is_default_qualifier;
-
    /**
     * Return true if and only if an interpolation qualifier is present.
     */
@@ -748,20 +764,53 @@ struct ast_type_qualifier {
     */
    bool has_auxiliary_storage() const;
 
+   /**
+    * Return true if and only if a memory qualifier is present.
+    */
+   bool has_memory() const;
+
+   /**
+    * Return true if the qualifier is a subroutine declaration.
+    */
+   bool is_subroutine_decl() const;
+
    bool merge_qualifier(YYLTYPE *loc,
 			_mesa_glsl_parse_state *state,
                         const ast_type_qualifier &q,
-                        bool is_single_layout_merge);
+                        bool is_single_layout_merge,
+                        bool is_multiple_layouts_merge = false);
 
-   bool merge_out_qualifier(YYLTYPE *loc,
-                           _mesa_glsl_parse_state *state,
-                           const ast_type_qualifier &q,
-                           ast_node* &node, bool create_node);
+   /**
+    * Validate current qualifier against the global out one.
+    */
+   bool validate_out_qualifier(YYLTYPE *loc,
+                               _mesa_glsl_parse_state *state);
 
-   bool merge_in_qualifier(YYLTYPE *loc,
-                           _mesa_glsl_parse_state *state,
-                           const ast_type_qualifier &q,
-                           ast_node* &node, bool create_node);
+   /**
+    * Merge current qualifier into the global out one.
+    */
+   bool merge_into_out_qualifier(YYLTYPE *loc,
+                                 _mesa_glsl_parse_state *state,
+                                 ast_node* &node);
+
+   /**
+    * Validate current qualifier against the global in one.
+    */
+   bool validate_in_qualifier(YYLTYPE *loc,
+                              _mesa_glsl_parse_state *state);
+
+   /**
+    * Merge current qualifier into the global in one.
+    */
+   bool merge_into_in_qualifier(YYLTYPE *loc,
+                                _mesa_glsl_parse_state *state,
+                                ast_node* &node);
+
+   /**
+    * Push pending layout qualifiers to the global values.
+    */
+   bool push_to_global(YYLTYPE *loc,
+                       _mesa_glsl_parse_state *state);
 
    bool validate_flags(YYLTYPE *loc,
                        _mesa_glsl_parse_state *state,
@@ -775,7 +824,7 @@ class ast_declarator_list;
 
 class ast_struct_specifier : public ast_node {
 public:
-   ast_struct_specifier(const char *identifier,
+   ast_struct_specifier(void *lin_ctx, const char *identifier,
 			ast_declarator_list *declarator_list);
    virtual void print(void) const;
 
@@ -1139,6 +1188,7 @@ public:
    virtual ir_rvalue *hir(exec_list *instructions,
 			  struct _mesa_glsl_parse_state *state);
 
+   ast_type_qualifier default_layout;
    ast_type_qualifier layout;
    const char *block_name;
 

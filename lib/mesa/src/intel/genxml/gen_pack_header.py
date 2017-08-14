@@ -1,4 +1,3 @@
-#!/usr/bin/env python2
 #encoding=utf-8
 
 from __future__ import (
@@ -267,6 +266,8 @@ class Field(object):
             type = 'uint32_t'
         elif self.type in self.parser.structs:
             type = 'struct ' + self.parser.gen_prefix(safe_name(self.type))
+        elif self.type in self.parser.enums:
+            type = 'enum ' + self.parser.gen_prefix(safe_name(self.type))
         elif self.type == 'mbo':
             return
         else:
@@ -414,48 +415,49 @@ class Group(object):
                 v = "0"
 
             field_index = 0
+            non_address_fields = []
             for field in dw.fields:
                 if field.type != "mbo":
                     name = field.name + field.dim
 
                 if field.type == "mbo":
-                    s = "__gen_mbo(%d, %d)" % \
-                        (field.start - dword_start, field.end - dword_start)
+                    non_address_fields.append("__gen_mbo(%d, %d)" % \
+                        (field.start - dword_start, field.end - dword_start))
                 elif field.type == "address":
-                    s = None
+                    pass
                 elif field.type == "uint":
-                    s = "__gen_uint(values->%s, %d, %d)" % \
-                        (name, field.start - dword_start, field.end - dword_start)
+                    non_address_fields.append("__gen_uint(values->%s, %d, %d)" % \
+                        (name, field.start - dword_start, field.end - dword_start))
+                elif field.type in self.parser.enums:
+                    non_address_fields.append("__gen_uint(values->%s, %d, %d)" % \
+                        (name, field.start - dword_start, field.end - dword_start))
                 elif field.type == "int":
-                    s = "__gen_sint(values->%s, %d, %d)" % \
-                        (name, field.start - dword_start, field.end - dword_start)
+                    non_address_fields.append("__gen_sint(values->%s, %d, %d)" % \
+                        (name, field.start - dword_start, field.end - dword_start))
                 elif field.type == "bool":
-                    s = "__gen_uint(values->%s, %d, %d)" % \
-                        (name, field.start - dword_start, field.end - dword_start)
+                    non_address_fields.append("__gen_uint(values->%s, %d, %d)" % \
+                        (name, field.start - dword_start, field.end - dword_start))
                 elif field.type == "float":
-                    s = "__gen_float(values->%s)" % name
+                    non_address_fields.append("__gen_float(values->%s)" % name)
                 elif field.type == "offset":
-                    s = "__gen_offset(values->%s, %d, %d)" % \
-                        (name, field.start - dword_start, field.end - dword_start)
+                    non_address_fields.append("__gen_offset(values->%s, %d, %d)" % \
+                        (name, field.start - dword_start, field.end - dword_start))
                 elif field.type == 'ufixed':
-                    s = "__gen_ufixed(values->%s, %d, %d, %d)" % \
-                        (name, field.start - dword_start, field.end - dword_start, field.fractional_size)
+                    non_address_fields.append("__gen_ufixed(values->%s, %d, %d, %d)" % \
+                        (name, field.start - dword_start, field.end - dword_start, field.fractional_size))
                 elif field.type == 'sfixed':
-                    s = "__gen_sfixed(values->%s, %d, %d, %d)" % \
-                        (name, field.start - dword_start, field.end - dword_start, field.fractional_size)
+                    non_address_fields.append("__gen_sfixed(values->%s, %d, %d, %d)" % \
+                        (name, field.start - dword_start, field.end - dword_start, field.fractional_size))
                 elif field.type in self.parser.structs:
-                    s = "__gen_uint(v%d_%d, %d, %d)" % \
-                        (index, field_index, field.start - dword_start, field.end - dword_start)
+                    non_address_fields.append("__gen_uint(v%d_%d, %d, %d)" % \
+                        (index, field_index, field.start - dword_start, field.end - dword_start))
                     field_index = field_index + 1
                 else:
-                    print("/* unhandled field %s, type %s */\n" % (name, field.type))
-                    s = None
+                    non_address_fields.append("/* unhandled field %s, type %s */\n" % \
+                                              (name, field.type))
 
-                if not s == None:
-                    if field == dw.fields[-1]:
-                        print("      %s;" % s)
-                    else:
-                        print("      %s |" % s)
+            if len(non_address_fields) > 0:
+                print(" |\n".join("      " + f for f in non_address_fields) + ";")
 
             if dw.size == 32:
                 if dw.address:
@@ -484,6 +486,7 @@ class Parser(object):
 
         self.instruction = None
         self.structs = {}
+        self.enums = {}
         self.registers = {}
 
     def gen_prefix(self, name):
@@ -530,6 +533,7 @@ class Parser(object):
         elif name == "enum":
             self.values = []
             self.enum = safe_name(attrs["name"])
+            self.enums[attrs["name"]] = 1
             if "prefix" in attrs:
                 self.prefix = safe_name(attrs["prefix"])
             else:
@@ -626,14 +630,14 @@ class Parser(object):
         self.emit_pack_function(self.struct, self.group)
 
     def emit_enum(self):
-        print('/* enum %s */' % self.gen_prefix(self.enum))
+        print('enum %s {' % self.gen_prefix(self.enum))
         for value in self.values:
             if self.prefix:
                 name = self.prefix + "_" + value.name
             else:
                 name = value.name
-            print('#define %-36s %6d' % (name.upper(), value.value))
-        print('')
+            print('   %-36s = %6d,' % (name.upper(), value.value))
+        print('};\n')
 
     def parse(self, filename):
         file = open(filename, "rb")

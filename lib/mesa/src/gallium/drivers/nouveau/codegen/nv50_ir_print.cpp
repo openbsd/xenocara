@@ -23,7 +23,6 @@
 #include "codegen/nv50_ir.h"
 #include "codegen/nv50_ir_target.h"
 
-#define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
 namespace nv50_ir {
@@ -231,6 +230,16 @@ static const char *emitOpStr[] =
    "", "restart"
 };
 
+static const char *cctlOpStr[] =
+{
+   "", "", "", "", "", "iv", "ivall"
+};
+
+static const char *barOpStr[] =
+{
+   "sync", "arrive", "red and", "red or", "red popc"
+};
+
 static const char *DataTypeStr[] =
 {
    "-",
@@ -314,6 +323,11 @@ static const char *SemanticStr[SV_LAST + 1] =
    "BASEINSTANCE",
    "DRAWID",
    "WORK_DIM",
+   "LANEMASK_EQ",
+   "LANEMASK_LT",
+   "LANEMASK_LE",
+   "LANEMASK_GT",
+   "LANEMASK_GE",
    "?",
    "(INVALID)"
 };
@@ -601,6 +615,14 @@ void Instruction::print() const
       case OP_EMIT:
          if (subOp < ARRAY_SIZE(emitOpStr))
             PRINT("%s ", emitOpStr[subOp]);
+         break;
+      case OP_CCTL:
+         if (subOp < ARRAY_SIZE(cctlOpStr))
+            PRINT("%s ", cctlOpStr[subOp]);
+         break;
+      case OP_BAR:
+         if (subOp < ARRAY_SIZE(barOpStr))
+            PRINT("%s ", barOpStr[subOp]);
          break;
       default:
          if (subOp)

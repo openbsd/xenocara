@@ -48,6 +48,8 @@ enum {
 	FAMILY_VI,
 	FAMILY_CZ,
 	FAMILY_PI,
+	FAMILY_AI,
+	FAMILY_RV,
 	FAMILY_LAST,
 };
 
@@ -142,6 +144,8 @@ enum {
 
 	VI_POLARIS11_M_A0 = 90,
 
+	VI_POLARIS12_V_A0 = 100,
+
 	VI_UNKNOWN        = 0xFF
 };
 
@@ -155,7 +159,9 @@ enum {
 #define ASICREV_IS_POLARIS10_P(eChipRev)\
 	((eChipRev >= VI_POLARIS10_P_A0) && (eChipRev < VI_POLARIS11_M_A0))
 #define ASICREV_IS_POLARIS11_M(eChipRev)   \
-	(eChipRev >= VI_POLARIS11_M_A0)
+	(eChipRev >= VI_POLARIS11_M_A0 && eChipRev < VI_POLARIS12_V_A0)
+#define ASICREV_IS_POLARIS12_V(eChipRev)\
+	(eChipRev >= VI_POLARIS12_V_A0)
 
 /* CZ specific rev IDs */
 enum {
@@ -169,5 +175,24 @@ enum {
 
 #define ASICREV_IS_STONEY(eChipRev) \
 	((eChipRev >= STONEY_A0) && (eChipRev < CZ_UNKNOWN))
+
+/* AI specific rev IDs */
+enum {
+   AI_VEGA10_P_A0 = 0x01,
+
+   AI_UNKNOWN        = 0xFF
+};
+
+#define ASICREV_IS_VEGA10_P(eChipRev) \
+   ((eChipRev) >= AI_VEGA10_P_A0 && (eChipRev) < AI_UNKNOWN)
+
+/* RV specific rev IDs */
+enum {
+   RAVEN_A0      = 0x01,
+   RAVEN_UNKNOWN = 0xFF
+};
+
+#define ASICREV_IS_RAVEN(eChipRev) \
+   ((eChipRev) >= RAVEN_A0 && (eChipRev) < RAVEN_UNKNOWN)
 
 #endif /* AMDGPU_ID_H */

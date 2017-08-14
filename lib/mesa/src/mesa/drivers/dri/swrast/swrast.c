@@ -208,6 +208,7 @@ static const __DRI2rendererQueryExtension swrast_query_renderer_extension = {
 static const __DRIextension *dri_screen_extensions[] = {
     &swrastTexBufferExtension.base,
     &swrast_query_renderer_extension.base,
+    &dri2ConfigQueryExtension.base,
     NULL
 };
 
@@ -569,12 +570,14 @@ dri_create_buffer(__DRIscreen * sPriv,
 
     /* add front renderbuffer */
     frontrb = swrast_new_renderbuffer(visual, dPriv, GL_TRUE);
-    _mesa_add_renderbuffer(fb, BUFFER_FRONT_LEFT, &frontrb->Base.Base);
+    _mesa_add_renderbuffer_without_ref(fb, BUFFER_FRONT_LEFT,
+                                       &frontrb->Base.Base);
 
     /* add back renderbuffer */
     if (visual->doubleBufferMode) {
 	backrb = swrast_new_renderbuffer(visual, dPriv, GL_FALSE);
-	_mesa_add_renderbuffer(fb, BUFFER_BACK_LEFT, &backrb->Base.Base);
+        _mesa_add_renderbuffer_without_ref(fb, BUFFER_BACK_LEFT,
+                                           &backrb->Base.Base);
     }
 
     /* add software renderbuffers */
@@ -960,7 +963,6 @@ static const __DRIextension *swrast_driver_extensions[] = {
     &driCoreExtension.base,
     &driSWRastExtension.base,
     &driCopySubBufferExtension.base,
-    &dri2ConfigQueryExtension.base,
     &swrast_vtable.base,
     NULL
 };

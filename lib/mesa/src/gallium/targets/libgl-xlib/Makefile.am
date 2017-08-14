@@ -54,6 +54,7 @@ lib@GL_LIB@_la_SOURCES = xlib.c
 lib@GL_LIB@_la_LDFLAGS = \
 	-no-undefined \
 	-version-number $(GL_MAJOR):$(GL_MINOR):$(GL_TINY) \
+	$(BSYMBOLIC) \
 	$(GC_SECTIONS) \
 	$(LD_NO_UNDEFINED)
 
@@ -73,9 +74,10 @@ lib@GL_LIB@_la_LIBADD = \
 	$(top_builddir)/src/gallium/auxiliary/libgallium.la \
 	$(SHARED_GLAPI_LIB) \
 	$(GL_LIB_DEPS) \
-	$(CLOCK_LIB)
+	$(CLOCK_LIB) \
+	$(LIBUNWIND_LIBS)
 
-if HAVE_MESA_LLVM
+if HAVE_GALLIUM_LLVM
 lib@GL_LIB@_la_LIBADD += $(top_builddir)/src/gallium/drivers/llvmpipe/libllvmpipe.la $(LLVM_LIBS)
 AM_CPPFLAGS += -DGALLIUM_LLVMPIPE
 lib@GL_LIB@_la_LDFLAGS += $(LLVM_LDFLAGS)

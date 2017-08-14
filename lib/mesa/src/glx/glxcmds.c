@@ -2651,7 +2651,7 @@ _GLX_PUBLIC void (*glXGetProcAddressARB(const GLubyte * procName)) (void)
    f = (gl_function) get_glx_proc_address((const char *) procName);
    if ((f == NULL) && (procName[0] == 'g') && (procName[1] == 'l')
        && (procName[2] != 'X')) {
-#ifdef GLX_SHARED_GLAPI
+#ifdef GLX_INDIRECT_RENDERING
       f = (gl_function) __indirect_get_proc_address((const char *) procName);
 #endif
       if (!f)
@@ -2675,19 +2675,10 @@ _GLX_PUBLIC void (*glXGetProcAddressARB(const GLubyte * procName)) (void)
  *
  * \sa glXGetProcAddressARB
  */
-_GLX_PUBLIC void (*glXGetProcAddress(const GLubyte * procName)) (void)
-#if defined(__GNUC__) && !defined(GLX_ALIAS_UNSUPPORTED)
-# if defined(USE_MGL_NAMESPACE)
-   __attribute__ ((alias("mglXGetProcAddressARB")));
-# else
-   __attribute__ ((alias("glXGetProcAddressARB")));
-# endif
-#else
-{
-   return glXGetProcAddressARB(procName);
-}
-#endif /* __GNUC__ */
-
+_GLX_PUBLIC
+GLX_ALIAS(__GLXextFuncPtr, glXGetProcAddress,
+          (const GLubyte * procName),
+          (procName), glXGetProcAddressARB)
 
 #if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
 /**

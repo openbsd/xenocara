@@ -47,8 +47,7 @@ brw_upload_cc_vp(struct brw_context *brw)
    /* BRW_NEW_VIEWPORT_COUNT */
    const unsigned viewport_count = brw->clip.viewport_count;
 
-   ccv = brw_state_batch(brw, AUB_TRACE_CC_VP_STATE,
-			 sizeof(*ccv) * viewport_count, 32,
+   ccv = brw_state_batch(brw, sizeof(*ccv) * viewport_count, 32,
                          &brw->cc.vp_offset);
 
    /* _NEW_TRANSFORM */
@@ -116,8 +115,7 @@ static void upload_cc_unit(struct brw_context *brw)
    struct gl_context *ctx = &brw->ctx;
    struct brw_cc_unit_state *cc;
 
-   cc = brw_state_batch(brw, AUB_TRACE_CC_STATE,
-			sizeof(*cc), 64, &brw->cc.state_offset);
+   cc = brw_state_batch(brw, sizeof(*cc), 64, &brw->cc.state_offset);
    memset(cc, 0, sizeof(*cc));
 
    /* _NEW_STENCIL | _NEW_BUFFERS */
@@ -225,7 +223,7 @@ static void upload_cc_unit(struct brw_context *brw)
       cc->cc2.depth_test = 1;
       cc->cc2.depth_test_function =
 	 intel_translate_compare_func(ctx->Depth.Func);
-      cc->cc2.depth_write_enable = ctx->Depth.Mask;
+      cc->cc2.depth_write_enable = brw_depth_writes_enabled(brw);
    }
 
    if (brw->stats_wm || unlikely(INTEL_DEBUG & DEBUG_STATS))
@@ -238,11 +236,11 @@ static void upload_cc_unit(struct brw_context *brw)
    brw->ctx.NewDriverState |= BRW_NEW_GEN4_UNIT_STATE;
 
    /* Emit CC viewport relocation */
-   drm_intel_bo_emit_reloc(brw->batch.bo,
-			   (brw->cc.state_offset +
-			    offsetof(struct brw_cc_unit_state, cc4)),
-			   brw->batch.bo, brw->cc.vp_offset,
-			   I915_GEM_DOMAIN_INSTRUCTION, 0);
+   brw_emit_reloc(&brw->batch,
+                  (brw->cc.state_offset +
+                   offsetof(struct brw_cc_unit_state, cc4)),
+                  brw->batch.bo, brw->cc.vp_offset,
+                  I915_GEM_DOMAIN_INSTRUCTION, 0);
 }
 
 const struct brw_tracked_state brw_cc_unit = {

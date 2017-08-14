@@ -1193,7 +1193,7 @@ svga_get_query_result(struct pipe_context *pipe,
 
 static void
 svga_render_condition(struct pipe_context *pipe, struct pipe_query *q,
-                      boolean condition, uint mode)
+                      boolean condition, enum pipe_render_cond_flag mode)
 {
    struct svga_context *svga = svga_context(pipe);
    struct svga_winsys_screen *sws = svga_screen(svga->pipe.screen)->sws;
@@ -1239,7 +1239,11 @@ svga_render_condition(struct pipe_context *pipe, struct pipe_query *q,
          ret = SVGA3D_vgpu10_SetPredication(svga->swc, queryId,
                                             (uint32) condition);
       }
+      svga->pred.query_id = queryId;
+      svga->pred.cond = condition;
    }
+
+   svga->render_condition = (sq != NULL);
 }
 
 

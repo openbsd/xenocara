@@ -146,6 +146,8 @@ svga_buffer_create_host_surface(struct svga_screen *ss,
    assert(!sbuf->user);
 
    if (!sbuf->handle) {
+      boolean validated;
+
       sbuf->key.flags = 0;
 
       sbuf->key.format = SVGA3D_BUFFER;
@@ -187,7 +189,8 @@ svga_buffer_create_host_surface(struct svga_screen *ss,
                sbuf->b.b.width0);
 
       sbuf->handle = svga_screen_surface_create(ss, sbuf->b.b.bind,
-                                                sbuf->b.b.usage, &sbuf->key);
+                                                sbuf->b.b.usage,
+                                                &validated, &sbuf->key);
       if (!sbuf->handle)
          return PIPE_ERROR_OUT_OF_MEMORY;
 
@@ -638,12 +641,12 @@ svga_buffer_update_hw(struct svga_context *svga, struct svga_buffer *sbuf)
       if (ret != PIPE_OK)
          return ret;
 
-      pipe_mutex_lock(ss->swc_mutex);
+      mtx_lock(&ss->swc_mutex);
       map = svga_buffer_hw_storage_map(svga, sbuf, PIPE_TRANSFER_WRITE, &retry);
       assert(map);
       assert(!retry);
       if (!map) {
-	 pipe_mutex_unlock(ss->swc_mutex);
+	 mtx_unlock(&ss->swc_mutex);
          svga_buffer_destroy_hw_storage(ss, sbuf);
          return PIPE_ERROR;
       }
@@ -667,7 +670,7 @@ svga_buffer_update_hw(struct svga_context *svga, struct svga_buffer *sbuf)
          sbuf->swbuf = NULL;
       }
 
-      pipe_mutex_unlock(ss->swc_mutex);
+      mtx_unlock(&ss->swc_mutex);
    }
 
    return PIPE_OK;

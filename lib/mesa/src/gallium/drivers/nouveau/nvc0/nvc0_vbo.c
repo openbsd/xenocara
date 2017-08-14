@@ -976,19 +976,17 @@ nvc0_draw_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info)
 
    nvc0_state_validate_3d(nvc0, ~0);
 
-   if (nvc0->vertprog->vp.need_draw_parameters) {
+   if (nvc0->vertprog->vp.need_draw_parameters && !info->indirect) {
       PUSH_SPACE(push, 9);
       BEGIN_NVC0(push, NVC0_3D(CB_SIZE), 3);
       PUSH_DATA (push, NVC0_CB_AUX_SIZE);
       PUSH_DATAh(push, screen->uniform_bo->offset + NVC0_CB_AUX_INFO(0));
       PUSH_DATA (push, screen->uniform_bo->offset + NVC0_CB_AUX_INFO(0));
-      if (!info->indirect) {
-         BEGIN_1IC0(push, NVC0_3D(CB_POS), 1 + 3);
-         PUSH_DATA (push, NVC0_CB_AUX_DRAW_INFO);
-         PUSH_DATA (push, info->index_bias);
-         PUSH_DATA (push, info->start_instance);
-         PUSH_DATA (push, info->drawid);
-      }
+      BEGIN_1IC0(push, NVC0_3D(CB_POS), 1 + 3);
+      PUSH_DATA (push, NVC0_CB_AUX_DRAW_INFO);
+      PUSH_DATA (push, info->index_bias);
+      PUSH_DATA (push, info->start_instance);
+      PUSH_DATA (push, info->drawid);
    }
 
    if (nvc0->screen->base.class_3d < NVE4_3D_CLASS &&

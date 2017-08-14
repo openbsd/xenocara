@@ -33,7 +33,6 @@
  */
 struct vertex_attrs {
 	float position[2]; /**< 3DPRIM_RECTLIST */
-	float tex_position[2];
 };
 
 /* passthrough vertex shader */
@@ -45,11 +44,9 @@ build_nir_vs(void)
 	nir_builder b;
 	nir_variable *a_position;
 	nir_variable *v_position;
-	nir_variable *a_tex_position;
-	nir_variable *v_tex_position;
 
 	nir_builder_init_simple_shader(&b, NULL, MESA_SHADER_VERTEX, NULL);
-	b.shader->info.name = ralloc_strdup(b.shader, "meta_resolve_vs");
+	b.shader->info->name = ralloc_strdup(b.shader, "meta_resolve_vs");
 
 	a_position = nir_variable_create(b.shader, nir_var_shader_in, vec4,
 					 "a_position");
@@ -59,16 +56,7 @@ build_nir_vs(void)
 					 "gl_Position");
 	v_position->data.location = VARYING_SLOT_POS;
 
-	a_tex_position = nir_variable_create(b.shader, nir_var_shader_in, vec4,
-					     "a_tex_position");
-	a_tex_position->data.location = VERT_ATTRIB_GENERIC1;
-
-	v_tex_position = nir_variable_create(b.shader, nir_var_shader_out, vec4,
-					     "v_tex_position");
-	v_tex_position->data.location = VARYING_SLOT_VAR0;
-
 	nir_copy_var(&b, v_position, a_position);
-	nir_copy_var(&b, v_tex_position, a_tex_position);
 
 	return b.shader;
 }
@@ -79,22 +67,16 @@ build_nir_fs(void)
 {
 	const struct glsl_type *vec4 = glsl_vec4_type();
 	nir_builder b;
-	nir_variable *v_tex_position; /* vec4, varying texture coordinate */
 	nir_variable *f_color; /* vec4, fragment output color */
 
 	nir_builder_init_simple_shader(&b, NULL, MESA_SHADER_FRAGMENT, NULL);
-	b.shader->info.name = ralloc_asprintf(b.shader,
-					      "meta_resolve_fs");
-
-	v_tex_position = nir_variable_create(b.shader, nir_var_shader_in, vec4,
-					     "v_tex_position");
-	v_tex_position->data.location = VARYING_SLOT_VAR0;
+	b.shader->info->name = ralloc_asprintf(b.shader,
+					       "meta_resolve_fs");
 
 	f_color = nir_variable_create(b.shader, nir_var_shader_out, vec4,
 				      "f_color");
 	f_color->data.location = FRAG_RESULT_DATA0;
-
-	nir_copy_var(&b, f_color, v_tex_position);
+	nir_store_var(&b, f_color, nir_imm_vec4(&b, 0.0, 0.0, 0.0, 1.0), 0xf);
 
 	return b.shader;
 }
@@ -113,9 +95,11 @@ create_pass(struct radv_device *device)
 		attachments[i].samples = 1;
 		attachments[i].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
 		attachments[i].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		attachments[i].initialLayout = VK_IMAGE_LAYOUT_GENERAL;
-		attachments[i].finalLayout = VK_IMAGE_LAYOUT_GENERAL;
 	}
+	attachments[0].initialLayout = VK_IMAGE_LAYOUT_GENERAL;
+	attachments[0].finalLayout = VK_IMAGE_LAYOUT_GENERAL;
+	attachments[1].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+	attachments[1].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
 	result = radv_CreateRenderPass(device_h,
 				       &(VkRenderPassCreateInfo) {
@@ -134,7 +118,7 @@ create_pass(struct radv_device *device)
 							       },
 							       {
 								       .attachment = 1,
-								       .layout = VK_IMAGE_LAYOUT_GENERAL,
+								       .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 							       },
 						       },
 						       .pResolveAttachments = NULL,
@@ -198,7 +182,7 @@ create_pipeline(struct radv_device *device,
 								       .inputRate = VK_VERTEX_INPUT_RATE_VERTEX
 							       },
 						       },
-						       .vertexAttributeDescriptionCount = 2,
+						       .vertexAttributeDescriptionCount = 1,
 						       .pVertexAttributeDescriptions = (VkVertexInputAttributeDescription[]) {
 							       {
 								       /* Position */
@@ -206,13 +190,6 @@ create_pipeline(struct radv_device *device,
 								       .binding = 0,
 								       .format = VK_FORMAT_R32G32_SFLOAT,
 								       .offset = offsetof(struct vertex_attrs, position),
-							       },
-							       {
-								       /* Texture Coordinate */
-								       .location = 1,
-								       .binding = 0,
-								       .format = VK_FORMAT_R32G32_SFLOAT,
-								       .offset = offsetof(struct vertex_attrs, tex_position),
 							       },
 						       },
 					       },
@@ -223,8 +200,8 @@ create_pipeline(struct radv_device *device,
 					       },
 					       .pViewportState = &(VkPipelineViewportStateCreateInfo) {
 						       .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
-						       .viewportCount = 0,
-						       .scissorCount = 0,
+						       .viewportCount = 1,
+						       .scissorCount = 1,
 					       },
 					       .pRasterizationState = &(VkPipelineRasterizationStateCreateInfo) {
 						       .sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
@@ -259,7 +236,14 @@ create_pipeline(struct radv_device *device,
 							       }
 						       },
 						},
-						  .pDynamicState = NULL,
+						.pDynamicState = &(VkPipelineDynamicStateCreateInfo) {
+							.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
+							.dynamicStateCount = 2,
+							.pDynamicStates = (VkDynamicState[]) {
+								VK_DYNAMIC_STATE_VIEWPORT,
+								VK_DYNAMIC_STATE_SCISSOR,
+							},
+						},
 																       .renderPass = device->meta_state.resolve.pass,
 																       .subpass = 0,
 																       },
@@ -333,7 +317,6 @@ cleanup:
 
 static void
 emit_resolve(struct radv_cmd_buffer *cmd_buffer,
-             const VkOffset2D *src_offset,
              const VkOffset2D *dest_offset,
              const VkExtent2D *resolve_extent)
 {
@@ -343,32 +326,20 @@ emit_resolve(struct radv_cmd_buffer *cmd_buffer,
 	const struct vertex_attrs vertex_data[3] = {
 		{
 			.position = {
-				dest_offset->x,
-				dest_offset->y,
-			},
-			.tex_position = {
-				src_offset->x,
-				src_offset->y,
+				-1.0,
+				-1.0,
 			},
 		},
 		{
 			.position = {
-				dest_offset->x,
-				dest_offset->y + resolve_extent->height,
-			},
-			.tex_position = {
-				src_offset->x,
-				src_offset->y + resolve_extent->height,
+				-1.0,
+				1.0,
 			},
 		},
 		{
 			.position = {
-				dest_offset->x + resolve_extent->width,
-				dest_offset->y,
-			},
-			.tex_position = {
-				src_offset->x + resolve_extent->width,
-				src_offset->y,
+				1.0,
+				-1.0,
 			},
 		},
 	};
@@ -398,9 +369,22 @@ emit_resolve(struct radv_cmd_buffer *cmd_buffer,
 				     pipeline_h);
 	}
 
+	radv_CmdSetViewport(radv_cmd_buffer_to_handle(cmd_buffer), 0, 1, &(VkViewport) {
+		.x = dest_offset->x,
+		.y = dest_offset->y,
+		.width = resolve_extent->width,
+		.height = resolve_extent->height,
+		.minDepth = 0.0f,
+		.maxDepth = 1.0f
+	});
+
+	radv_CmdSetScissor(radv_cmd_buffer_to_handle(cmd_buffer), 0, 1, &(VkRect2D) {
+		.offset = *dest_offset,
+		.extent = *resolve_extent,
+	});
+
 	radv_CmdDraw(cmd_buffer_h, 3, 1, 0, 0);
 	cmd_buffer->state.flush_bits |= RADV_CMD_FLAG_FLUSH_AND_INV_CB;
-	si_emit_cache_flush(cmd_buffer);
 }
 
 void radv_CmdResolveImage(
@@ -440,7 +424,6 @@ void radv_CmdResolveImage(
 
 	if (use_compute_resolve) {
 
-		radv_fast_clear_flush_image_inplace(cmd_buffer, src_image);
 		radv_meta_resolve_compute_image(cmd_buffer,
 						src_image,
 						src_image_layout,
@@ -466,6 +449,9 @@ void radv_CmdResolveImage(
 	if (src_image->array_size > 1)
 		radv_finishme("vkCmdResolveImage: multisample array images");
 
+	if (dest_image->surface.dcc_size) {
+		radv_initialize_dcc(cmd_buffer, dest_image, 0xffffffff);
+	}
 	for (uint32_t r = 0; r < region_count; ++r) {
 		const VkImageResolve *region = &regions[r];
 
@@ -505,8 +491,6 @@ void radv_CmdResolveImage(
 		 */
 		const struct VkExtent3D extent =
 			radv_sanitize_image_extent(src_image->type, region->extent);
-		const struct VkOffset3D srcOffset =
-			radv_sanitize_image_offset(src_image->type, region->srcOffset);
 		const struct VkOffset3D dstOffset =
 			radv_sanitize_image_offset(dest_image->type, region->dstOffset);
 
@@ -588,10 +572,6 @@ void radv_CmdResolveImage(
 
 			emit_resolve(cmd_buffer,
 				     &(VkOffset2D) {
-					     .x = srcOffset.x,
-					     .y = srcOffset.y,
-				     },
-				     &(VkOffset2D) {
 					     .x = dstOffset.x,
 					     .y = dstOffset.y,
 				     },
@@ -662,7 +642,6 @@ radv_cmd_buffer_resolve_subpass(struct radv_cmd_buffer *cmd_buffer)
 		 * 3DSTATE_DRAWING_RECTANGLE when draing a 3DPRIM_RECTLIST?
 		 */
 		emit_resolve(cmd_buffer,
-			     &(VkOffset2D) { 0, 0 },
 			     &(VkOffset2D) { 0, 0 },
 			     &(VkExtent2D) { fb->width, fb->height });
 	}

@@ -161,7 +161,7 @@ dd_context_set_active_query_state(struct pipe_context *_pipe, boolean enable)
 static void
 dd_context_render_condition(struct pipe_context *_pipe,
                             struct pipe_query *query, boolean condition,
-                            uint mode)
+                            enum pipe_render_cond_flag mode)
 {
    struct dd_context *dctx = dd_context(_pipe);
    struct pipe_context *pipe = dctx->pipe;
@@ -371,7 +371,7 @@ DD_IMM_STATE(polygon_stipple, const struct pipe_poly_stipple, *state, state)
 
 static void
 dd_context_set_constant_buffer(struct pipe_context *_pipe,
-                               uint shader, uint index,
+                               enum pipe_shader_type shader, uint index,
                                const struct pipe_constant_buffer *constant_buffer)
 {
    struct dd_context *dctx = dd_context(_pipe);
@@ -594,11 +594,11 @@ dd_context_destroy(struct pipe_context *_pipe)
    struct pipe_context *pipe = dctx->pipe;
 
    if (dctx->thread) {
-      pipe_mutex_lock(dctx->mutex);
+      mtx_lock(&dctx->mutex);
       dctx->kill_thread = 1;
-      pipe_mutex_unlock(dctx->mutex);
-      pipe_thread_wait(dctx->thread);
-      pipe_mutex_destroy(dctx->mutex);
+      mtx_unlock(&dctx->mutex);
+      thrd_join(dctx->thread, NULL);
+      mtx_destroy(&dctx->mutex);
       assert(!dctx->records);
    }
 
@@ -676,11 +676,11 @@ dd_context_texture_subdata(struct pipe_context *_pipe,
  */
 
 static void
-dd_context_texture_barrier(struct pipe_context *_pipe)
+dd_context_texture_barrier(struct pipe_context *_pipe, unsigned flags)
 {
    struct pipe_context *pipe = dd_context(_pipe)->pipe;
 
-   pipe->texture_barrier(pipe);
+   pipe->texture_barrier(pipe, flags);
 }
 
 static void
@@ -689,6 +689,16 @@ dd_context_memory_barrier(struct pipe_context *_pipe, unsigned flags)
    struct pipe_context *pipe = dd_context(_pipe)->pipe;
 
    pipe->memory_barrier(pipe, flags);
+}
+
+static bool
+dd_context_resource_commit(struct pipe_context *_pipe,
+                           struct pipe_resource *resource,
+                           unsigned level, struct pipe_box *box, bool commit)
+{
+   struct pipe_context *pipe = dd_context(_pipe)->pipe;
+
+   return pipe->resource_commit(pipe, resource, level, box, commit);
 }
 
 static void
@@ -763,6 +773,8 @@ dd_context_create(struct dd_screen *dscreen, struct pipe_context *pipe)
    dctx->pipe = pipe;
    dctx->base.priv = pipe->priv; /* expose wrapped priv data */
    dctx->base.screen = &dscreen->base;
+   dctx->base.stream_uploader = pipe->stream_uploader;
+   dctx->base.const_uploader = pipe->const_uploader;
 
    dctx->base.destroy = dd_context_destroy;
 
@@ -837,6 +849,7 @@ dd_context_create(struct dd_screen *dscreen, struct pipe_context *pipe)
    CTX_INIT(texture_subdata);
    CTX_INIT(texture_barrier);
    CTX_INIT(memory_barrier);
+   CTX_INIT(resource_commit);
    /* create_video_codec */
    /* create_video_buffer */
    /* set_compute_resources */
@@ -868,10 +881,10 @@ dd_context_create(struct dd_screen *dscreen, struct pipe_context *pipe)
 
       *dctx->mapped_fence = 0;
 
-      pipe_mutex_init(dctx->mutex);
-      dctx->thread = pipe_thread_create(dd_thread_pipelined_hang_detect, dctx);
+      (void) mtx_init(&dctx->mutex, mtx_plain);
+      dctx->thread = u_thread_create(dd_thread_pipelined_hang_detect, dctx);
       if (!dctx->thread) {
-         pipe_mutex_destroy(dctx->mutex);
+         mtx_destroy(&dctx->mutex);
          goto fail;
       }
    }

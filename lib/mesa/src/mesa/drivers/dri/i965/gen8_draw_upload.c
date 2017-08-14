@@ -39,10 +39,10 @@ static bool
 is_passthru_format(uint32_t format)
 {
    switch (format) {
-   case BRW_SURFACEFORMAT_R64_PASSTHRU:
-   case BRW_SURFACEFORMAT_R64G64_PASSTHRU:
-   case BRW_SURFACEFORMAT_R64G64B64_PASSTHRU:
-   case BRW_SURFACEFORMAT_R64G64B64A64_PASSTHRU:
+   case ISL_FORMAT_R64_PASSTHRU:
+   case ISL_FORMAT_R64G64_PASSTHRU:
+   case ISL_FORMAT_R64G64B64_PASSTHRU:
+   case ISL_FORMAT_R64G64B64A64_PASSTHRU:
       return true;
    default:
       return false;
@@ -138,7 +138,7 @@ gen8_emit_vertices(struct brw_context *brw)
       OUT_BATCH((_3DSTATE_VERTEX_ELEMENTS << 16) | (3 - 2));
       OUT_BATCH((0 << GEN6_VE0_INDEX_SHIFT) |
                 GEN6_VE0_VALID |
-                (BRW_SURFACEFORMAT_R32G32B32A32_FLOAT << BRW_VE0_FORMAT_SHIFT) |
+                (ISL_FORMAT_R32G32B32A32_FLOAT << BRW_VE0_FORMAT_SHIFT) |
                 (0 << BRW_VE0_SRC_OFFSET_SHIFT));
       OUT_BATCH((BRW_VE1_COMPONENT_STORE_0 << BRW_VE1_COMPONENT_0_SHIFT) |
                 (BRW_VE1_COMPONENT_STORE_0 << BRW_VE1_COMPONENT_1_SHIFT) |
@@ -230,8 +230,15 @@ gen8_emit_vertices(struct brw_context *brw)
       case 0: comp0 = BRW_VE1_COMPONENT_STORE_0;
       case 1: comp1 = BRW_VE1_COMPONENT_STORE_0;
       case 2: comp2 = BRW_VE1_COMPONENT_STORE_0;
-      case 3: comp3 = input->glarray->Integer ? BRW_VE1_COMPONENT_STORE_1_INT
-                                              : BRW_VE1_COMPONENT_STORE_1_FLT;
+      case 3:
+         if (input->glarray->Doubles) {
+            comp3 = BRW_VE1_COMPONENT_STORE_0;
+         } else if (input->glarray->Integer) {
+            comp3 = BRW_VE1_COMPONENT_STORE_1_INT;
+         } else {
+            comp3 = BRW_VE1_COMPONENT_STORE_1_FLT;
+         }
+
          break;
       }
 
@@ -250,24 +257,12 @@ gen8_emit_vertices(struct brw_context *brw)
        *     to be specified as VFCOMP_STORE_0 in order to output a 256-bit vertex
        *     element."
        */
-      if (input->glarray->Doubles) {
-         switch (input->glarray->Size) {
-         case 0:
-         case 1:
-         case 2:
-            /*  Use 128-bits instead of 256-bits to write double and dvec2
-             *  vertex elements.
-             */
-            comp2 = BRW_VE1_COMPONENT_NOSTORE;
-            comp3 = BRW_VE1_COMPONENT_NOSTORE;
-            break;
-         case 3:
-            /* Pad the output using VFCOMP_STORE_0 as suggested
-             * by the BDW PRM.
-             */
-            comp3 = BRW_VE1_COMPONENT_STORE_0;
-            break;
-         }
+      if (input->glarray->Doubles && !input->is_dual_slot) {
+         /* Store vertex elements which correspond to double and dvec2 vertex
+          * shader inputs as 128-bit vertex elements, instead of 256-bits.
+          */
+         comp2 = BRW_VE1_COMPONENT_NOSTORE;
+         comp3 = BRW_VE1_COMPONENT_NOSTORE;
       }
 
       OUT_BATCH((input->buffer << GEN6_VE0_INDEX_SHIFT) |
@@ -286,7 +281,7 @@ gen8_emit_vertices(struct brw_context *brw)
           vs_prog_data->uses_baseinstance) {
          OUT_BATCH(GEN6_VE0_VALID |
                    brw->vb.nr_buffers << GEN6_VE0_INDEX_SHIFT |
-                   BRW_SURFACEFORMAT_R32G32_UINT << BRW_VE0_FORMAT_SHIFT);
+                   ISL_FORMAT_R32G32_UINT << BRW_VE0_FORMAT_SHIFT);
          OUT_BATCH((BRW_VE1_COMPONENT_STORE_SRC << BRW_VE1_COMPONENT_0_SHIFT) |
                    (BRW_VE1_COMPONENT_STORE_SRC << BRW_VE1_COMPONENT_1_SHIFT) |
                    (BRW_VE1_COMPONENT_STORE_0 << BRW_VE1_COMPONENT_2_SHIFT) |
@@ -303,7 +298,7 @@ gen8_emit_vertices(struct brw_context *brw)
    if (vs_prog_data->uses_drawid) {
       OUT_BATCH(GEN6_VE0_VALID |
                 ((brw->vb.nr_buffers + 1) << GEN6_VE0_INDEX_SHIFT) |
-                (BRW_SURFACEFORMAT_R32_UINT << BRW_VE0_FORMAT_SHIFT));
+                (ISL_FORMAT_R32_UINT << BRW_VE0_FORMAT_SHIFT));
       OUT_BATCH((BRW_VE1_COMPONENT_STORE_SRC << BRW_VE1_COMPONENT_0_SHIFT) |
                    (BRW_VE1_COMPONENT_STORE_0 << BRW_VE1_COMPONENT_1_SHIFT) |
                    (BRW_VE1_COMPONENT_STORE_0 << BRW_VE1_COMPONENT_2_SHIFT) |

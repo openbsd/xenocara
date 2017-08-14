@@ -29,6 +29,9 @@
  * were defined in the scope.
  */
 
+#ifndef GLSL_IR_VARIABLE_REFCOUNT_H
+#define GLSL_IR_VARIABLE_REFCOUNT_H
+
 #include "ir.h"
 #include "ir_visitor.h"
 #include "compiler/glsl_types.h"
@@ -72,9 +75,17 @@ public:
    virtual ir_visitor_status visit_enter(ir_function_signature *);
    virtual ir_visitor_status visit_leave(ir_assignment *);
 
+   /**
+    * Find variable in the hash table, and insert it if not present
+    */
    ir_variable_refcount_entry *get_variable_entry(ir_variable *var);
 
+   /**
+    * Hash table mapping ir_variable to ir_variable_refcount_entry.
+    */
    struct hash_table *ht;
 
    void *mem_ctx;
 };
+
+#endif /* GLSL_IR_VARIABLE_REFCOUNT_H */

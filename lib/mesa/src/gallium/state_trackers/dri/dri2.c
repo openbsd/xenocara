@@ -1038,20 +1038,23 @@ dri2_query_image(__DRIimage *image, int attrib, int *value)
    switch (attrib) {
    case __DRI_IMAGE_ATTRIB_STRIDE:
       whandle.type = DRM_API_HANDLE_TYPE_KMS;
-      image->texture->screen->resource_get_handle(image->texture->screen,
-            NULL, image->texture, &whandle, usage);
+      if (!image->texture->screen->resource_get_handle(image->texture->screen,
+            NULL, image->texture, &whandle, usage))
+         return GL_FALSE;
       *value = whandle.stride;
       return GL_TRUE;
    case __DRI_IMAGE_ATTRIB_HANDLE:
       whandle.type = DRM_API_HANDLE_TYPE_KMS;
-      image->texture->screen->resource_get_handle(image->texture->screen,
-         NULL, image->texture, &whandle, usage);
+      if (!image->texture->screen->resource_get_handle(image->texture->screen,
+         NULL, image->texture, &whandle, usage))
+         return GL_FALSE;
       *value = whandle.handle;
       return GL_TRUE;
    case __DRI_IMAGE_ATTRIB_NAME:
       whandle.type = DRM_API_HANDLE_TYPE_SHARED;
-      image->texture->screen->resource_get_handle(image->texture->screen,
-         NULL, image->texture, &whandle, usage);
+      if (!image->texture->screen->resource_get_handle(image->texture->screen,
+         NULL, image->texture, &whandle, usage))
+         return GL_FALSE;
       *value = whandle.handle;
       return GL_TRUE;
    case __DRI_IMAGE_ATTRIB_FD:
@@ -1167,6 +1170,10 @@ dri2_from_planar(__DRIimage *image, int plane, void *loaderPrivate)
    img = dri2_dup_image(image, loaderPrivate);
    if (img == NULL)
       return NULL;
+
+   if (img->texture->screen->resource_changed)
+      img->texture->screen->resource_changed(img->texture->screen,
+                                             img->texture);
 
    /* set this to 0 for sub images. */
    img->dri_components = 0;
@@ -1427,10 +1434,10 @@ dri2_load_opencl_interop(struct dri_screen *screen)
 #if defined(RTLD_DEFAULT)
    bool success;
 
-   pipe_mutex_lock(screen->opencl_func_mutex);
+   mtx_lock(&screen->opencl_func_mutex);
 
    if (dri2_is_opencl_interop_loaded_locked(screen)) {
-      pipe_mutex_unlock(screen->opencl_func_mutex);
+      mtx_unlock(&screen->opencl_func_mutex);
       return true;
    }
 
@@ -1444,7 +1451,7 @@ dri2_load_opencl_interop(struct dri_screen *screen)
       dlsym(RTLD_DEFAULT, "opencl_dri_event_get_fence");
 
    success = dri2_is_opencl_interop_loaded_locked(screen);
-   pipe_mutex_unlock(screen->opencl_func_mutex);
+   mtx_unlock(&screen->opencl_func_mutex);
    return success;
 #else
    return false;
@@ -1456,6 +1463,18 @@ struct dri2_fence {
    struct pipe_fence_handle *pipe_fence;
    void *cl_event;
 };
+
+static unsigned dri2_fence_get_caps(__DRIscreen *_screen)
+{
+   struct dri_screen *driscreen = dri_screen(_screen);
+   struct pipe_screen *screen = driscreen->base.screen;
+   unsigned caps = 0;
+
+   if (screen->get_param(screen, PIPE_CAP_NATIVE_FENCE_FD))
+      caps |= __DRI_FENCE_CAP_NATIVE_FD;
+
+   return caps;
+}
 
 static void *
 dri2_create_fence(__DRIcontext *_ctx)
@@ -1475,6 +1494,39 @@ dri2_create_fence(__DRIcontext *_ctx)
 
    fence->driscreen = dri_screen(_ctx->driScreenPriv);
    return fence;
+}
+
+static void *
+dri2_create_fence_fd(__DRIcontext *_ctx, int fd)
+{
+   struct pipe_context *ctx = dri_context(_ctx)->st->pipe;
+   struct dri2_fence *fence = CALLOC_STRUCT(dri2_fence);
+
+   if (fd == -1) {
+      /* exporting driver created fence, flush: */
+      ctx->flush(ctx, &fence->pipe_fence,
+                 PIPE_FLUSH_DEFERRED | PIPE_FLUSH_FENCE_FD);
+   } else {
+      /* importing a foreign fence fd: */
+      ctx->create_fence_fd(ctx, &fence->pipe_fence, fd);
+   }
+   if (!fence->pipe_fence) {
+      FREE(fence);
+      return NULL;
+   }
+
+   fence->driscreen = dri_screen(_ctx->driScreenPriv);
+   return fence;
+}
+
+static int
+dri2_get_fence_fd(__DRIscreen *_screen, void *_fence)
+{
+   struct dri_screen *driscreen = dri_screen(_screen);
+   struct pipe_screen *screen = driscreen->base.screen;
+   struct dri2_fence *fence = (struct dri2_fence*)_fence;
+
+   return screen->fence_get_fd(screen, fence->pipe_fence);
 }
 
 static void *
@@ -1548,17 +1600,24 @@ dri2_client_wait_sync(__DRIcontext *_ctx, void *_fence, unsigned flags,
 static void
 dri2_server_wait_sync(__DRIcontext *_ctx, void *_fence, unsigned flags)
 {
-   /* AFAIK, no driver currently supports parallel context execution. */
+   struct pipe_context *ctx = dri_context(_ctx)->st->pipe;
+   struct dri2_fence *fence = (struct dri2_fence*)_fence;
+
+   if (ctx->fence_server_sync)
+      ctx->fence_server_sync(ctx, fence->pipe_fence);
 }
 
 static __DRI2fenceExtension dri2FenceExtension = {
-   .base = { __DRI2_FENCE, 1 },
+   .base = { __DRI2_FENCE, 2 },
 
    .create_fence = dri2_create_fence,
    .get_fence_from_cl_event = dri2_get_fence_from_cl_event,
    .destroy_fence = dri2_destroy_fence,
    .client_wait_sync = dri2_client_wait_sync,
-   .server_wait_sync = dri2_server_wait_sync
+   .server_wait_sync = dri2_server_wait_sync,
+   .get_capabilities = dri2_fence_get_caps,
+   .create_fence_fd = dri2_create_fence_fd,
+   .get_fence_fd = dri2_get_fence_fd,
 };
 
 static const __DRIrobustnessExtension dri2Robustness = {
@@ -1752,7 +1811,7 @@ dri2_interop_export_object(__DRIcontext *_ctx,
          return MESA_GLINTEROP_INVALID_MIP_LEVEL;
       }
 
-      if (!st_finalize_texture(ctx, st->pipe, obj)) {
+      if (!st_finalize_texture(ctx, st->pipe, obj, 0)) {
          mtx_unlock(&ctx->Shared->Mutex);
          return MESA_GLINTEROP_OUT_OF_RESOURCES;
       }
@@ -1874,7 +1933,7 @@ dri2_init_screen(__DRIscreen * sPriv)
 
    screen->sPriv = sPriv;
    screen->fd = sPriv->fd;
-   pipe_mutex_init(screen->opencl_func_mutex);
+   (void) mtx_init(&screen->opencl_func_mutex, mtx_plain);
 
    sPriv->driverPrivate = (void *)screen;
 

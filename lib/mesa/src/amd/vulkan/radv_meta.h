@@ -85,6 +85,9 @@ void radv_device_finish_meta_blit2d_state(struct radv_device *device);
 VkResult radv_device_init_meta_buffer_state(struct radv_device *device);
 void radv_device_finish_meta_buffer_state(struct radv_device *device);
 
+VkResult radv_device_init_meta_query_state(struct radv_device *device);
+void radv_device_finish_meta_query_state(struct radv_device *device);
+
 VkResult radv_device_init_meta_resolve_compute_state(struct radv_device *device);
 void radv_device_finish_meta_resolve_compute_state(struct radv_device *device);
 void radv_meta_save(struct radv_meta_saved_state *state,
@@ -159,12 +162,33 @@ void radv_meta_begin_bufimage(struct radv_cmd_buffer *cmd_buffer,
 			      struct radv_meta_saved_compute_state *save);
 void radv_meta_end_bufimage(struct radv_cmd_buffer *cmd_buffer,
 			    struct radv_meta_saved_compute_state *save);
-
+void radv_meta_begin_itoi(struct radv_cmd_buffer *cmd_buffer,
+			  struct radv_meta_saved_compute_state *save);
+void radv_meta_end_itoi(struct radv_cmd_buffer *cmd_buffer,
+			struct radv_meta_saved_compute_state *save);
+void radv_meta_begin_cleari(struct radv_cmd_buffer *cmd_buffer,
+			    struct radv_meta_saved_compute_state *save);
+void radv_meta_end_cleari(struct radv_cmd_buffer *cmd_buffer,
+			  struct radv_meta_saved_compute_state *save);
 void radv_meta_image_to_buffer(struct radv_cmd_buffer *cmd_buffer,
 			       struct radv_meta_blit2d_surf *src,
 			       struct radv_meta_blit2d_buffer *dst,
 			       unsigned num_rects,
 			       struct radv_meta_blit2d_rect *rects);
+
+void radv_meta_buffer_to_image_cs(struct radv_cmd_buffer *cmd_buffer,
+				  struct radv_meta_blit2d_buffer *src,
+				  struct radv_meta_blit2d_surf *dst,
+				  unsigned num_rects,
+				  struct radv_meta_blit2d_rect *rects);
+void radv_meta_image_to_image_cs(struct radv_cmd_buffer *cmd_buffer,
+				 struct radv_meta_blit2d_surf *src,
+				 struct radv_meta_blit2d_surf *dst,
+				 unsigned num_rects,
+				 struct radv_meta_blit2d_rect *rects);
+void radv_meta_clear_image_cs(struct radv_cmd_buffer *cmd_buffer,
+			      struct radv_meta_blit2d_surf *dst,
+			      const VkClearColorValue *clear_color);
 
 void radv_decompress_depth_image_inplace(struct radv_cmd_buffer *cmd_buffer,
 					 struct radv_image *image,
@@ -173,7 +197,8 @@ void radv_resummarize_depth_image_inplace(struct radv_cmd_buffer *cmd_buffer,
 					  struct radv_image *image,
 					  VkImageSubresourceRange *subresourceRange);
 void radv_fast_clear_flush_image_inplace(struct radv_cmd_buffer *cmd_buffer,
-					 struct radv_image *image);
+					 struct radv_image *image,
+					 const VkImageSubresourceRange *subresourceRange);
 
 void radv_meta_save_graphics_reset_vport_scissor(struct radv_meta_saved_state *saved_state,
 						 struct radv_cmd_buffer *cmd_buffer);
@@ -186,6 +211,9 @@ void radv_meta_resolve_compute_image(struct radv_cmd_buffer *cmd_buffer,
 				     uint32_t region_count,
 				     const VkImageResolve *regions);
 
+void radv_blit_to_prime_linear(struct radv_cmd_buffer *cmd_buffer,
+			       struct radv_image *image,
+			       struct radv_image *linear_image);
 #ifdef __cplusplus
 }
 #endif

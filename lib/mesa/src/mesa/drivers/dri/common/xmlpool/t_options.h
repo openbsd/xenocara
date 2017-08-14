@@ -115,6 +115,16 @@ DRI_CONF_OPT_BEGIN_B(allow_glsl_extension_directive_midshader, def) \
         DRI_CONF_DESC(en,gettext("Allow GLSL #extension directives in the middle of shaders")) \
 DRI_CONF_OPT_END
 
+#define DRI_CONF_ALLOW_HIGHER_COMPAT_VERSION(def) \
+DRI_CONF_OPT_BEGIN_B(allow_higher_compat_version, def) \
+        DRI_CONF_DESC(en,gettext("Allow a higher compat profile (version 3.1+) for apps that request it")) \
+DRI_CONF_OPT_END
+
+#define DRI_CONF_FORCE_GLSL_ABS_SQRT(def) \
+DRI_CONF_OPT_BEGIN_B(force_glsl_abs_sqrt, def) \
+        DRI_CONF_DESC(en,gettext("Force computing the absolute value for sqrt() and inversesqrt()")) \
+DRI_CONF_OPT_END
+
 
 
 /**
@@ -308,6 +318,10 @@ DRI_CONF_OPT_BEGIN_V(texture_heaps,enum,def,"0:2") \
 	DRI_CONF_DESC_END \
 DRI_CONF_OPT_END
 
+#define DRI_CONF_MESA_GLTHREAD(def) \
+DRI_CONF_OPT_BEGIN_B(mesa_glthread, def) \
+        DRI_CONF_DESC(en,gettext("Enable offloading GL driver work to a separate thread")) \
+DRI_CONF_OPT_END
 
 
 /**
@@ -374,5 +388,20 @@ DRI_CONF_OPT_END
 
 #define DRI_CONF_NINE_OVERRIDEVENDOR(def) \
 DRI_CONF_OPT_BEGIN(override_vendorid, int, def) \
-        DRI_CONF_DESC(en,"Define the vendor_id to report. This allows faking another hardware vendor.") \
+        DRI_CONF_DESC(en,gettext("Define the vendor_id to report. This allows faking another hardware vendor.")) \
+DRI_CONF_OPT_END
+
+#define DRI_CONF_NINE_ALLOWDISCARDDELAYEDRELEASE(def) \
+DRI_CONF_OPT_BEGIN_B(discard_delayed_release, def) \
+        DRI_CONF_DESC(en,gettext("Whether to allow the display server to release buffers with a delay when using d3d's presentation mode DISCARD. Default to true. Set to false if suffering from lag (thread_submit=true can also help in this situation).")) \
+DRI_CONF_OPT_END
+
+#define DRI_CONF_NINE_TEARFREEDISCARD(def) \
+DRI_CONF_OPT_BEGIN_B(tearfree_discard, def) \
+        DRI_CONF_DESC(en,gettext("Whether to make d3d's presentation mode DISCARD (games usually use that mode) Tear Free. If rendering above screen refresh, some frames will get skipped. false by default.")) \
+DRI_CONF_OPT_END
+
+#define DRI_CONF_NINE_CSMT(def) \
+DRI_CONF_OPT_BEGIN(csmt_force, int, def) \
+        DRI_CONF_DESC(en,gettext("If set to 1, force gallium nine CSMT. If set to 0, disable it. By default (-1) CSMT is enabled on known thread-safe drivers.")) \
 DRI_CONF_OPT_END

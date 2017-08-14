@@ -28,12 +28,14 @@
 #include "gallivm/lp_bld_init.h"
 #include "gallivm/lp_bld_tgsi.h"
 #include "tgsi/tgsi_parse.h"
+#include "ac_llvm_util.h"
+#include "ac_llvm_build.h"
 
 #include <llvm-c/Core.h>
 #include <llvm-c/TargetMachine.h>
 
 struct pipe_debug_callback;
-struct radeon_shader_binary;
+struct ac_shader_binary;
 
 #define RADEON_LLVM_MAX_INPUT_SLOTS 32
 #define RADEON_LLVM_MAX_INPUTS 32 * 4
@@ -41,22 +43,22 @@ struct radeon_shader_binary;
 
 #define RADEON_LLVM_INITIAL_CF_DEPTH 4
 
-#define RADEON_LLVM_MAX_SYSTEM_VALUES 4
+#define RADEON_LLVM_MAX_SYSTEM_VALUES 11
+#define RADEON_LLVM_MAX_ADDRS 16
 
 struct si_llvm_flow;
 
 struct si_shader_context {
-	struct lp_build_tgsi_soa_context soa;
+	struct lp_build_tgsi_context bld_base;
 	struct gallivm_state gallivm;
+	struct ac_llvm_context ac;
 	struct si_shader *shader;
 	struct si_screen *screen;
 
 	unsigned type; /* PIPE_SHADER_* specifies the type of shader. */
-	bool is_gs_copy_shader;
-	/* Whether to generate the optimized shader variant compiled as a whole
-	 * (without a prolog and epilog)
-	 */
-	bool is_monolithic;
+
+	/* Whether the prolog will be compiled separately. */
+	bool separate_prolog;
 
 	/** This function is responsible for initilizing the inputs array and will be
 	  * called once for each input declared in the TGSI shader.
@@ -80,6 +82,7 @@ struct si_shader_context {
 	struct tgsi_full_declaration input_decls[RADEON_LLVM_MAX_INPUT_SLOTS];
 	LLVMValueRef inputs[RADEON_LLVM_MAX_INPUTS];
 	LLVMValueRef outputs[RADEON_LLVM_MAX_OUTPUTS][TGSI_NUM_CHANNELS];
+	LLVMValueRef addrs[RADEON_LLVM_MAX_ADDRS][TGSI_NUM_CHANNELS];
 
 	/** This pointer is used to contain the temporary values.
 	  * The amount of temporary used in tgsi can't be bound to a max value and
@@ -88,6 +91,9 @@ struct si_shader_context {
 	LLVMValueRef *temps;
 	unsigned temps_count;
 	LLVMValueRef system_values[RADEON_LLVM_MAX_SYSTEM_VALUES];
+
+	LLVMValueRef *imms;
+	unsigned imms_num;
 
 	struct si_llvm_flow *flow;
 	unsigned flow_depth;
@@ -116,19 +122,11 @@ struct si_shader_context {
 	int param_es2gs_offset;
 	int param_oc_lds;
 
-	/* Sets a bit if the dynamic HS control word was 0x80000000. The bit is
-	 * 0x800000 for VS, 0x1 for ES.
-	 */
-	int param_tess_offchip;
-
 	LLVMTargetMachineRef tm;
 
-	unsigned invariant_load_md_kind;
 	unsigned range_md_kind;
-	unsigned uniform_md_kind;
 	unsigned fpmath_md_kind;
 	LLVMValueRef fpmath_md_2p5_ulp;
-	LLVMValueRef empty_md;
 
 	/* Preloaded descriptors. */
 	LLVMValueRef esgs_ring;
@@ -151,6 +149,9 @@ struct si_shader_context {
 	LLVMTypeRef v4f32;
 	LLVMTypeRef v8i32;
 
+	LLVMValueRef i32_0;
+	LLVMValueRef i32_1;
+
 	LLVMValueRef shared_memory;
 };
 
@@ -165,7 +166,7 @@ void si_llvm_shader_type(LLVMValueRef F, unsigned type);
 
 LLVMTargetRef si_llvm_get_amdgpu_target(const char *triple);
 
-unsigned si_llvm_compile(LLVMModuleRef M, struct radeon_shader_binary *binary,
+unsigned si_llvm_compile(LLVMModuleRef M, struct ac_shader_binary *binary,
 			 LLVMTargetMachineRef tm,
 			 struct pipe_debug_callback *debug);
 
@@ -180,11 +181,14 @@ LLVMValueRef si_llvm_bound_index(struct si_shader_context *ctx,
 				 unsigned num);
 
 void si_llvm_context_init(struct si_shader_context *ctx,
-			  const char *triple,
+			  struct si_screen *sscreen,
+			  struct si_shader *shader,
+			  LLVMTargetMachineRef tm,
 			  const struct tgsi_shader_info *info,
 			  const struct tgsi_token *tokens);
 
 void si_llvm_create_func(struct si_shader_context *ctx,
+			 const char *name,
 			 LLVMTypeRef *return_types, unsigned num_return_elems,
 			 LLVMTypeRef *ParamTypes, unsigned ParamCount);
 
@@ -198,9 +202,6 @@ LLVMValueRef si_llvm_emit_fetch_64bit(struct lp_build_tgsi_context *bld_base,
 				      LLVMValueRef ptr,
 				      LLVMValueRef ptr2);
 
-LLVMValueRef si_llvm_saturate(struct lp_build_tgsi_context *bld_base,
-			      LLVMValueRef value);
-
 LLVMValueRef si_llvm_emit_fetch(struct lp_build_tgsi_context *bld_base,
 				const struct tgsi_full_src_register *reg,
 				enum tgsi_opcode_type type,
@@ -212,9 +213,5 @@ void si_llvm_emit_store(struct lp_build_tgsi_context *bld_base,
 			LLVMValueRef dst[4]);
 
 void si_shader_context_init_alu(struct lp_build_tgsi_context *bld_base);
-void si_prepare_cube_coords(struct lp_build_tgsi_context *bld_base,
-			    struct lp_build_emit_data *emit_data,
-			    LLVMValueRef *coords_arg,
-			    LLVMValueRef *derivs_arg);
 
 #endif

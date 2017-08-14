@@ -486,7 +486,7 @@ void radeon_drm_cs_sync_flush(struct radeon_winsys_cs *rcs)
 
     /* Wait for any pending ioctl of this CS to complete. */
     if (util_queue_is_initialized(&cs->ws->cs_queue))
-        util_queue_job_wait(&cs->flush_completed);
+        util_queue_fence_wait(&cs->flush_completed);
 }
 
 /* Add the given fence to a slab buffer fence list.
@@ -593,18 +593,20 @@ static int radeon_drm_cs_flush(struct radeon_winsys_cs *rcs,
             fence = radeon_cs_create_fence(rcs);
         }
 
-        if (pfence)
-            radeon_fence_reference(pfence, fence);
+        if (fence) {
+            if (pfence)
+                radeon_fence_reference(pfence, fence);
 
-        pipe_mutex_lock(cs->ws->bo_fence_lock);
-        for (unsigned i = 0; i < cs->csc->num_slab_buffers; ++i) {
-            struct radeon_bo *bo = cs->csc->slab_buffers[i].bo;
-            p_atomic_inc(&bo->num_active_ioctls);
-            radeon_bo_slab_fence(bo, (struct radeon_bo *)fence);
+            mtx_lock(&cs->ws->bo_fence_lock);
+            for (unsigned i = 0; i < cs->csc->num_slab_buffers; ++i) {
+                struct radeon_bo *bo = cs->csc->slab_buffers[i].bo;
+                p_atomic_inc(&bo->num_active_ioctls);
+                radeon_bo_slab_fence(bo, (struct radeon_bo *)fence);
+            }
+            mtx_unlock(&cs->ws->bo_fence_lock);
+
+            radeon_fence_reference(&fence, NULL);
         }
-        pipe_mutex_unlock(cs->ws->bo_fence_lock);
-
-        radeon_fence_reference(&fence, NULL);
     } else {
         radeon_fence_reference(&cs->next_fence, NULL);
     }
@@ -691,7 +693,10 @@ static int radeon_drm_cs_flush(struct radeon_winsys_cs *rcs,
     cs->base.used_vram = 0;
     cs->base.used_gart = 0;
 
-    cs->ws->num_cs_flushes++;
+    if (cs->ring_type == RING_GFX)
+        cs->ws->num_gfx_IBs++;
+    else if (cs->ring_type == RING_DMA)
+        cs->ws->num_sdma_IBs++;
     return 0;
 }
 
@@ -747,6 +752,9 @@ radeon_cs_create_fence(struct radeon_winsys_cs *rcs)
     /* Create a fence, which is a dummy BO. */
     fence = cs->ws->base.buffer_create(&cs->ws->base, 1, 1,
                                        RADEON_DOMAIN_GTT, RADEON_FLAG_HANDLE);
+    if (!fence)
+       return NULL;
+
     /* Add the fence as a dummy relocation. */
     cs->ws->base.cs_add_buffer(rcs, fence,
                               RADEON_USAGE_READWRITE, RADEON_DOMAIN_GTT,

@@ -78,13 +78,13 @@ vk_format_for_size(int bs)
 }
 
 static struct radv_meta_blit2d_surf
-blit_surf_for_image_level_layer(struct radv_image* image, VkImageAspectFlags aspectMask,
-				int level, int layer)
+blit_surf_for_image_level_layer(struct radv_image *image,
+				const VkImageSubresourceLayers *subres)
 {
 	VkFormat format = image->vk_format;
-	if (aspectMask & VK_IMAGE_ASPECT_DEPTH_BIT)
+	if (subres->aspectMask & VK_IMAGE_ASPECT_DEPTH_BIT)
 		format = vk_format_depth_only(format);
-	else if (aspectMask & VK_IMAGE_ASPECT_STENCIL_BIT)
+	else if (subres->aspectMask & VK_IMAGE_ASPECT_STENCIL_BIT)
 		format = vk_format_stencil_only(format);
 
 	if (!image->surface.dcc_size)
@@ -93,12 +93,17 @@ blit_surf_for_image_level_layer(struct radv_image* image, VkImageAspectFlags asp
 	return (struct radv_meta_blit2d_surf) {
 		.format = format,
 		.bs = vk_format_get_blocksize(format),
-		.level = level,
-		.layer = layer,
+		.level = subres->mipLevel,
+		.layer = subres->baseArrayLayer,
 		.image = image,
-		.aspect_mask = aspectMask,
+		.aspect_mask = subres->aspectMask,
 	};
 }
+
+union meta_saved_state {
+	struct radv_meta_saved_state gfx;
+	struct radv_meta_saved_compute_state compute;
+};
 
 static void
 meta_copy_buffer_to_image(struct radv_cmd_buffer *cmd_buffer,
@@ -107,14 +112,18 @@ meta_copy_buffer_to_image(struct radv_cmd_buffer *cmd_buffer,
                           uint32_t regionCount,
                           const VkBufferImageCopy* pRegions)
 {
-	struct radv_meta_saved_state saved_state;
+	bool cs = cmd_buffer->queue_family_index == RADV_QUEUE_COMPUTE;
+	union meta_saved_state saved_state;
 
 	/* The Vulkan 1.0 spec says "dstImage must have a sample count equal to
 	 * VK_SAMPLE_COUNT_1_BIT."
 	 */
 	assert(image->samples == 1);
 
-	radv_meta_save_graphics_reset_vport_scissor(&saved_state, cmd_buffer);
+	if (cs)
+		radv_meta_begin_bufimage(cmd_buffer, &saved_state.compute);
+	else
+		radv_meta_save_graphics_reset_vport_scissor(&saved_state.gfx, cmd_buffer);
 
 	for (unsigned r = 0; r < regionCount; r++) {
 
@@ -150,9 +159,7 @@ meta_copy_buffer_to_image(struct radv_cmd_buffer *cmd_buffer,
 		/* Create blit surfaces */
 		struct radv_meta_blit2d_surf img_bsurf =
 			blit_surf_for_image_level_layer(image,
-							pRegions[r].imageSubresource.aspectMask,
-							pRegions[r].imageSubresource.mipLevel,
-							pRegions[r].imageSubresource.baseArrayLayer);
+							&pRegions[r].imageSubresource);
 
 		struct radv_meta_blit2d_buffer buf_bsurf = {
 			.bs = img_bsurf.bs,
@@ -162,6 +169,8 @@ meta_copy_buffer_to_image(struct radv_cmd_buffer *cmd_buffer,
 			.pitch = buf_extent_el.width,
 		};
 
+		if (image->type == VK_IMAGE_TYPE_3D)
+			img_bsurf.layer = img_offset_el.z;
 		/* Loop through each 3D or array slice */
 		unsigned num_slices_3d = img_extent_el.depth;
 		unsigned num_slices_array = pRegions[r].imageSubresource.layerCount;
@@ -174,7 +183,10 @@ meta_copy_buffer_to_image(struct radv_cmd_buffer *cmd_buffer,
 
 
 			/* Perform Blit */
-			radv_meta_blit2d(cmd_buffer, NULL, &buf_bsurf, &img_bsurf, 1, &rect);
+			if (cs)
+				radv_meta_buffer_to_image_cs(cmd_buffer, &buf_bsurf, &img_bsurf, 1, &rect);
+			else
+				radv_meta_blit2d(cmd_buffer, NULL, &buf_bsurf, &img_bsurf, 1, &rect);
 
 			/* Once we've done the blit, all of the actual information about
 			 * the image is embedded in the command buffer so we can just
@@ -190,7 +202,10 @@ meta_copy_buffer_to_image(struct radv_cmd_buffer *cmd_buffer,
 				slice_array++;
 		}
 	}
-	radv_meta_restore(&saved_state, cmd_buffer);
+	if (cs)
+		radv_meta_end_bufimage(cmd_buffer, &saved_state.compute);
+	else
+		radv_meta_restore(&saved_state.gfx, cmd_buffer);
 }
 
 void radv_CmdCopyBufferToImage(
@@ -253,9 +268,8 @@ meta_copy_image_to_buffer(struct radv_cmd_buffer *cmd_buffer,
 		/* Create blit surfaces */
 		struct radv_meta_blit2d_surf img_info =
 			blit_surf_for_image_level_layer(image,
-							pRegions[r].imageSubresource.aspectMask,
-							pRegions[r].imageSubresource.mipLevel,
-							pRegions[r].imageSubresource.baseArrayLayer);
+							&pRegions[r].imageSubresource);
+
 		struct radv_meta_blit2d_buffer buf_info = {
 			.bs = img_info.bs,
 			.format = img_info.format,
@@ -264,6 +278,8 @@ meta_copy_image_to_buffer(struct radv_cmd_buffer *cmd_buffer,
 			.pitch = buf_extent_el.width,
 		};
 
+		if (image->type == VK_IMAGE_TYPE_3D)
+			img_info.layer = img_offset_el.z;
 		/* Loop through each 3D or array slice */
 		unsigned num_slices_3d = img_extent_el.depth;
 		unsigned num_slices_array = pRegions[r].imageSubresource.layerCount;
@@ -306,19 +322,15 @@ void radv_CmdCopyImageToBuffer(
 				  regionCount, pRegions);
 }
 
-void radv_CmdCopyImage(
-	VkCommandBuffer                             commandBuffer,
-	VkImage                                     srcImage,
-	VkImageLayout                               srcImageLayout,
-	VkImage                                     destImage,
-	VkImageLayout                               destImageLayout,
-	uint32_t                                    regionCount,
-	const VkImageCopy*                          pRegions)
+static void
+meta_copy_image(struct radv_cmd_buffer *cmd_buffer,
+		struct radv_image *src_image,
+		struct radv_image *dest_image,
+		uint32_t regionCount,
+		const VkImageCopy *pRegions)
 {
-	RADV_FROM_HANDLE(radv_cmd_buffer, cmd_buffer, commandBuffer);
-	RADV_FROM_HANDLE(radv_image, src_image, srcImage);
-	RADV_FROM_HANDLE(radv_image, dest_image, destImage);
-	struct radv_meta_saved_state saved_state;
+	bool cs = cmd_buffer->queue_family_index == RADV_QUEUE_COMPUTE;
+	union meta_saved_state saved_state;
 
 	/* From the Vulkan 1.0 spec:
 	 *
@@ -326,8 +338,10 @@ void radv_CmdCopyImage(
 	 *    images, but both images must have the same number of samples.
 	 */
 	assert(src_image->samples == dest_image->samples);
-
-	radv_meta_save_graphics_reset_vport_scissor(&saved_state, cmd_buffer);
+	if (cs)
+		radv_meta_begin_itoi(cmd_buffer, &saved_state.compute);
+	else
+		radv_meta_save_graphics_reset_vport_scissor(&saved_state.gfx, cmd_buffer);
 
 	for (unsigned r = 0; r < regionCount; r++) {
 		assert(pRegions[r].srcSubresource.aspectMask ==
@@ -336,14 +350,11 @@ void radv_CmdCopyImage(
 		/* Create blit surfaces */
 		struct radv_meta_blit2d_surf b_src =
 			blit_surf_for_image_level_layer(src_image,
-							pRegions[r].srcSubresource.aspectMask,
-							pRegions[r].srcSubresource.mipLevel,
-							pRegions[r].srcSubresource.baseArrayLayer);
+							&pRegions[r].srcSubresource);
+
 		struct radv_meta_blit2d_surf b_dst =
 			blit_surf_for_image_level_layer(dest_image,
-							pRegions[r].dstSubresource.aspectMask,
-							pRegions[r].dstSubresource.mipLevel,
-							pRegions[r].dstSubresource.baseArrayLayer);
+							&pRegions[r].dstSubresource);
 
 		/* for DCC */
 		b_src.format = b_dst.format;
@@ -362,13 +373,16 @@ void radv_CmdCopyImage(
 		const VkOffset3D src_offset_el =
 			meta_region_offset_el(src_image, &pRegions[r].srcOffset);
 		const VkExtent3D img_extent_el =
-			meta_region_extent_el(src_image, &pRegions[r].extent);
+			meta_region_extent_el(dest_image, &pRegions[r].extent);
 
 		/* Start creating blit rect */
 		struct radv_meta_blit2d_rect rect = {
 			.width = img_extent_el.width,
 			.height = img_extent_el.height,
 		};
+
+		if (dest_image->type == VK_IMAGE_TYPE_3D)
+			b_dst.layer = dst_offset_el.z;
 
 		/* Loop through each 3D or array slice */
 		unsigned num_slices_3d = img_extent_el.depth;
@@ -384,7 +398,10 @@ void radv_CmdCopyImage(
 			rect.src_y = src_offset_el.y;
 
 			/* Perform Blit */
-			radv_meta_blit2d(cmd_buffer, &b_src, NULL, &b_dst, 1, &rect);
+			if (cs)
+				radv_meta_image_to_image_cs(cmd_buffer, &b_src, &b_dst, 1, &rect);
+			else
+				radv_meta_blit2d(cmd_buffer, &b_src, NULL, &b_dst, 1, &rect);
 
 			b_src.layer++;
 			b_dst.layer++;
@@ -395,5 +412,45 @@ void radv_CmdCopyImage(
 		}
 	}
 
-	radv_meta_restore(&saved_state, cmd_buffer);
+	if (cs)
+		radv_meta_end_itoi(cmd_buffer, &saved_state.compute);
+	else
+		radv_meta_restore(&saved_state.gfx, cmd_buffer);
+}
+
+void radv_CmdCopyImage(
+	VkCommandBuffer                             commandBuffer,
+	VkImage                                     srcImage,
+	VkImageLayout                               srcImageLayout,
+	VkImage                                     destImage,
+	VkImageLayout                               destImageLayout,
+	uint32_t                                    regionCount,
+	const VkImageCopy*                          pRegions)
+{
+	RADV_FROM_HANDLE(radv_cmd_buffer, cmd_buffer, commandBuffer);
+	RADV_FROM_HANDLE(radv_image, src_image, srcImage);
+	RADV_FROM_HANDLE(radv_image, dest_image, destImage);
+
+	meta_copy_image(cmd_buffer, src_image, dest_image,
+			regionCount, pRegions);
+}
+
+void radv_blit_to_prime_linear(struct radv_cmd_buffer *cmd_buffer,
+			       struct radv_image *image,
+			       struct radv_image *linear_image)
+{
+	struct VkImageCopy image_copy = { 0 };
+
+	image_copy.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	image_copy.srcSubresource.layerCount = 1;
+
+	image_copy.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	image_copy.dstSubresource.layerCount = 1;
+
+	image_copy.extent.width = image->extent.width;
+	image_copy.extent.height = image->extent.height;
+	image_copy.extent.depth = 1;
+
+	meta_copy_image(cmd_buffer, image, linear_image,
+			1, &image_copy);
 }

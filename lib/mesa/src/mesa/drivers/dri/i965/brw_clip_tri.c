@@ -37,7 +37,6 @@
 
 #include "brw_defines.h"
 #include "brw_context.h"
-#include "brw_eu.h"
 #include "brw_clip.h"
 
 static void release_tmps( struct brw_clip_compile *c )
@@ -650,7 +649,7 @@ void brw_emit_tri_clip( struct brw_clip_compile *c )
     * flatshading, need to apply the flatshade here because we don't
     * respect the PV when converting to trifan for emit:
     */
-   if (c->has_flat_shading)
+   if (c->key.contains_flat_varying)
       brw_clip_tri_flat_shade(c);
 
    if ((c->key.clip_mode == BRW_CLIPMODE_NORMAL) ||

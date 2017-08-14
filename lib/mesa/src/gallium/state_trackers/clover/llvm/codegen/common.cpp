@@ -121,15 +121,15 @@ namespace {
          } else {
             // Other types.
             const auto actual_type =
-               isa<::llvm::PointerType>(arg_type) && arg.hasByValAttr() ?
-               cast<::llvm::PointerType>(arg_type)->getElementType() : arg_type;
+               isa< ::llvm::PointerType>(arg_type) && arg.hasByValAttr() ?
+               cast< ::llvm::PointerType>(arg_type)->getElementType() : arg_type;
 
             if (actual_type->isPointerTy()) {
                const unsigned address_space =
-                  cast<::llvm::PointerType>(actual_type)->getAddressSpace();
+                  cast< ::llvm::PointerType>(actual_type)->getAddressSpace();
 
                if (address_space == address_spaces[clang::LangAS::opencl_local
-                                                   - clang::LangAS::Offset]) {
+                                                   - compat::lang_as_offset]) {
                   args.emplace_back(module::argument::local, arg_api_size,
                                     target_size, target_align,
                                     module::argument::zero_ext);
@@ -179,7 +179,8 @@ namespace {
    module::section
    make_text_section(const std::vector<char> &code) {
       const pipe_llvm_program_header header { uint32_t(code.size()) };
-      module::section text { 0, module::section::text, header.num_bytes, {} };
+      module::section text { 0, module::section::text_executable,
+                             header.num_bytes, {} };
 
       text.data.insert(text.data.end(), reinterpret_cast<const char *>(&header),
                        reinterpret_cast<const char *>(&header) + sizeof(header));

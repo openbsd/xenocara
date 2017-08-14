@@ -33,6 +33,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
+#include <unistd.h>
+#include <stdlib.h>
 #ifdef MAJOR_IN_MKDEV
 #include <sys/mkdev.h>
 #endif
@@ -42,8 +44,6 @@
 #include "loader.h"
 
 #ifdef HAVE_LIBDRM
-#include <stdlib.h>
-#include <unistd.h>
 #include <xf86drm.h>
 #ifdef USE_DRICONF
 #include "xmlconfig.h"
@@ -145,7 +145,7 @@ static char *drm_get_id_path_tag_for_fd(int fd)
    drmDevicePtr device;
    char *tag;
 
-   if (drmGetDevice(fd, &device) != 0)
+   if (drmGetDevice2(fd, 0, &device) != 0)
        return NULL;
 
    tag = drm_construct_id_path_tag(device);
@@ -179,7 +179,7 @@ int loader_get_user_preferred_fd(int default_fd, int *different_device)
    if (default_tag == NULL)
       goto err;
 
-   num_devices = drmGetDevices(devices, MAX_DRM_DEVICES);
+   num_devices = drmGetDevices2(0, devices, MAX_DRM_DEVICES);
    if (num_devices < 0)
       goto err;
 
@@ -275,14 +275,14 @@ drm_get_pci_id_for_fd(int fd, int *vendor_id, int *chip_id)
    drmDevicePtr device;
    int ret;
 
-   if (drmGetDevice(fd, &device) == 0) {
+   if (drmGetDevice2(fd, 0, &device) == 0) {
       if (device->bustype == DRM_BUS_PCI) {
          *vendor_id = device->deviceinfo.pci->vendor_id;
          *chip_id = device->deviceinfo.pci->device_id;
          ret = 1;
       }
       else {
-         log_(_LOADER_WARNING, "MESA-LOADER: device is not located on the PCI bus\n");
+         log_(_LOADER_DEBUG, "MESA-LOADER: device is not located on the PCI bus\n");
          ret = 0;
       }
       drmFreeDevice(&device);
@@ -345,6 +345,17 @@ loader_get_driver_for_fd(int fd)
    int vendor_id, chip_id, i, j;
    char *driver = NULL;
 
+   /* Allow an environment variable to force choosing a different driver
+    * binary.  If that driver binary can't survive on this FD, that's the
+    * user's problem, but this allows vc4 simulator to run on an i965 host,
+    * and may be useful for some touch testing of i915 on an i965 host.
+    */
+   if (geteuid() == getuid()) {
+      driver = getenv("MESA_LOADER_DRIVER_OVERRIDE");
+      if (driver)
+         return strdup(driver);
+   }
+
    if (!loader_get_pci_id_for_fd(fd, &vendor_id, &chip_id)) {
 
 #if HAVE_LIBDRM
@@ -395,4 +406,29 @@ void
 loader_set_logger(void (*logger)(int level, const char *fmt, ...))
 {
    log_ = logger;
+}
+
+/* XXX: Local definition to avoid pulling the heavyweight GL/gl.h and
+ * GL/internal/dri_interface.h
+ */
+
+#ifndef __DRI_DRIVER_GET_EXTENSIONS
+#define __DRI_DRIVER_GET_EXTENSIONS "__driDriverGetExtensions"
+#endif
+
+char *
+loader_get_extensions_name(const char *driver_name)
+{
+   char *name = NULL;
+
+   if (asprintf(&name, "%s_%s", __DRI_DRIVER_GET_EXTENSIONS, driver_name) < 0)
+      return NULL;
+
+   const size_t len = strlen(name);
+   for (size_t i = 0; i < len; i++) {
+	   if (name[i] == '-')
+		   name[i] = '_';
+   }
+
+   return name;
 }

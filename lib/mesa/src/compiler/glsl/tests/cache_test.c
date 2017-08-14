@@ -30,39 +30,34 @@
 #include <ftw.h>
 #include <errno.h>
 #include <stdarg.h>
+#include <inttypes.h>
+#include <limits.h>
+#include <time.h>
+#include <unistd.h>
 
 #include "util/mesa-sha1.h"
-#include "cache.h"
+#include "util/disk_cache.h"
 
 bool error = false;
 
 #ifdef ENABLE_SHADER_CACHE
-void
-_mesa_warning(void *ctx, const char *fmt, ...);
 
-void
-_mesa_warning(void *ctx, const char *fmt, ...)
+static void
+expect_true(bool result, const char *test)
 {
-    va_list vargs;
-    (void) ctx;
-
-    va_start(vargs, fmt);
-
-    /* This output is not thread-safe, but that's good enough for the
-     * standalone compiler.
-     */
-    fprintf(stderr, "Mesa warning: ");
-    vfprintf(stderr, fmt, vargs);
-    fprintf(stderr, "\n");
-
-    va_end(vargs);
+   if (!result) {
+      fprintf(stderr, "Error: Test '%s' failed: Expected=true"
+              ", Actual=false\n", test);
+      error = true;
+   }
 }
 
 static void
 expect_equal(uint64_t actual, uint64_t expected, const char *test)
 {
    if (actual != expected) {
-      fprintf(stderr, "Error: Test '%s' failed: Expected=%ld, Actual=%ld\n",
+      fprintf(stderr, "Error: Test '%s' failed: Expected=%" PRIu64
+              ", Actual=%" PRIu64 "\n",
               test, expected, actual);
       error = true;
    }
@@ -129,71 +124,95 @@ rmrf_local(const char *path)
    if (path == NULL || *path == '\0' || *path != '.')
       return -1;
 
-   return nftw(path, remove_entry, 64, FTW_DEPTH | FTW_PHYS | FTW_MOUNT);
+   return nftw(path, remove_entry, 64, FTW_DEPTH | FTW_PHYS);
+}
+
+static void
+check_directories_created(const char *cache_dir)
+{
+   bool sub_dirs_created = false;
+
+   char buf[PATH_MAX];
+   if (getcwd(buf, PATH_MAX)) {
+      char *full_path = NULL;
+      if (asprintf(&full_path, "%s%s", buf, ++cache_dir) != -1 ) {
+         struct stat sb;
+         if (stat(full_path, &sb) != -1 && S_ISDIR(sb.st_mode))
+            sub_dirs_created = true;
+
+         free(full_path);
+      }
+   }
+
+   expect_true(sub_dirs_created, "create sub dirs");
 }
 
 #define CACHE_TEST_TMP "./cache-test-tmp"
 
 static void
-test_cache_create(void)
+test_disk_cache_create(void)
 {
-   struct program_cache *cache;
+   struct disk_cache *cache;
    int err;
 
    /* Before doing anything else, ensure that with
-    * MESA_GLSL_CACHE_DISABLE set, that cache_create returns NULL.
+    * MESA_GLSL_CACHE_DISABLE set, that disk_cache_create returns NULL.
     */
    setenv("MESA_GLSL_CACHE_DISABLE", "1", 1);
-   cache = cache_create();
-   expect_null(cache, "cache_create with MESA_GLSL_CACHE_DISABLE set");
+   cache = disk_cache_create("test", "make_check");
+   expect_null(cache, "disk_cache_create with MESA_GLSL_CACHE_DISABLE set");
 
    unsetenv("MESA_GLSL_CACHE_DISABLE");
 
-   /* For the first real cache_create() clear these environment
+   /* For the first real disk_cache_create() clear these environment
     * variables to test creation of cache in home directory.
     */
    unsetenv("MESA_GLSL_CACHE_DIR");
    unsetenv("XDG_CACHE_HOME");
 
-   cache = cache_create();
-   expect_non_null(cache, "cache_create with no environment variables");
+   cache = disk_cache_create("test", "make_check");
+   expect_non_null(cache, "disk_cache_create with no environment variables");
 
-   cache_destroy(cache);
+   disk_cache_destroy(cache);
 
    /* Test with XDG_CACHE_HOME set */
    setenv("XDG_CACHE_HOME", CACHE_TEST_TMP "/xdg-cache-home", 1);
-   cache = cache_create();
-   expect_null(cache, "cache_create with XDG_CACHE_HOME set with"
+   cache = disk_cache_create("test", "make_check");
+   expect_null(cache, "disk_cache_create with XDG_CACHE_HOME set with"
                "a non-existing parent directory");
 
    mkdir(CACHE_TEST_TMP, 0755);
-   cache = cache_create();
-   expect_non_null(cache, "cache_create with XDG_CACHE_HOME set");
+   cache = disk_cache_create("test", "make_check");
+   expect_non_null(cache, "disk_cache_create with XDG_CACHE_HOME set");
 
-   cache_destroy(cache);
+   check_directories_created(CACHE_TEST_TMP "/xdg-cache-home/mesa");
+
+   disk_cache_destroy(cache);
 
    /* Test with MESA_GLSL_CACHE_DIR set */
    err = rmrf_local(CACHE_TEST_TMP);
    expect_equal(err, 0, "Removing " CACHE_TEST_TMP);
 
    setenv("MESA_GLSL_CACHE_DIR", CACHE_TEST_TMP "/mesa-glsl-cache-dir", 1);
-   cache = cache_create();
-   expect_null(cache, "cache_create with MESA_GLSL_CACHE_DIR set with"
+   cache = disk_cache_create("test", "make_check");
+   expect_null(cache, "disk_cache_create with MESA_GLSL_CACHE_DIR set with"
                "a non-existing parent directory");
 
    mkdir(CACHE_TEST_TMP, 0755);
-   cache = cache_create();
-   expect_non_null(cache, "cache_create with MESA_GLSL_CACHE_DIR set");
+   cache = disk_cache_create("test", "make_check");
+   expect_non_null(cache, "disk_cache_create with MESA_GLSL_CACHE_DIR set");
 
-   cache_destroy(cache);
+   check_directories_created(CACHE_TEST_TMP "/mesa-glsl-cache-dir/mesa");
+
+   disk_cache_destroy(cache);
 }
 
 static bool
-does_cache_contain(struct program_cache *cache, cache_key key)
+does_cache_contain(struct disk_cache *cache, const cache_key key)
 {
    void *result;
 
-   result = cache_get(cache, key, NULL);
+   result = disk_cache_get(cache, key, NULL);
 
    if (result) {
       free(result);
@@ -204,15 +223,31 @@ does_cache_contain(struct program_cache *cache, cache_key key)
 }
 
 static void
+wait_until_file_written(struct disk_cache *cache, const cache_key key)
+{
+   struct timespec req;
+   struct timespec rem;
+
+   /* Set 100ms delay */
+   req.tv_sec = 0;
+   req.tv_nsec = 100000000;
+
+   unsigned retries = 0;
+   while (retries++ < 20) {
+      if (does_cache_contain(cache, key)) {
+         break;
+      }
+
+      nanosleep(&req, &rem);
+   }
+}
+
+static void
 test_put_and_get(void)
 {
-   struct program_cache *cache;
-   /* If the text of this blob is changed, then blob_key_byte_zero
-    * also needs to be updated.
-    */
+   struct disk_cache *cache;
    char blob[] = "This is a blob of thirty-seven bytes";
    uint8_t blob_key[20];
-   uint8_t blob_key_byte_zero = 0xca;
    char string[] = "While this string has thirty-four";
    uint8_t string_key[20];
    char *result;
@@ -221,39 +256,49 @@ test_put_and_get(void)
    uint8_t one_KB_key[20], one_MB_key[20];
    int count;
 
-   cache = cache_create();
+   cache = disk_cache_create("test", "make_check");
 
-   _mesa_sha1_compute(blob, sizeof(blob), blob_key);
+   disk_cache_compute_key(cache, blob, sizeof(blob), blob_key);
 
-   /* Ensure that cache_get returns nothing before anything is added. */
-   result = cache_get(cache, blob_key, &size);
-   expect_null(result, "cache_get with non-existent item (pointer)");
-   expect_equal(size, 0, "cache_get with non-existent item (size)");
+   /* Ensure that disk_cache_get returns nothing before anything is added. */
+   result = disk_cache_get(cache, blob_key, &size);
+   expect_null(result, "disk_cache_get with non-existent item (pointer)");
+   expect_equal(size, 0, "disk_cache_get with non-existent item (size)");
 
    /* Simple test of put and get. */
-   cache_put(cache, blob_key, blob, sizeof(blob));
+   disk_cache_put(cache, blob_key, blob, sizeof(blob));
 
-   result = cache_get(cache, blob_key, &size);
-   expect_equal_str(blob, result, "cache_get of existing item (pointer)");
-   expect_equal(size, sizeof(blob), "cache_get of existing item (size)");
+   /* disk_cache_put() hands things off to a thread give it some time to
+    * finish.
+    */
+   wait_until_file_written(cache, blob_key);
+
+   result = disk_cache_get(cache, blob_key, &size);
+   expect_equal_str(blob, result, "disk_cache_get of existing item (pointer)");
+   expect_equal(size, sizeof(blob), "disk_cache_get of existing item (size)");
 
    free(result);
 
    /* Test put and get of a second item. */
-   _mesa_sha1_compute(string, sizeof(string), string_key);
-   cache_put(cache, string_key, string, sizeof(string));
+   disk_cache_compute_key(cache, string, sizeof(string), string_key);
+   disk_cache_put(cache, string_key, string, sizeof(string));
 
-   result = cache_get(cache, string_key, &size);
-   expect_equal_str(result, string, "2nd cache_get of existing item (pointer)");
-   expect_equal(size, sizeof(string), "2nd cache_get of existing item (size)");
+   /* disk_cache_put() hands things off to a thread give it some time to
+    * finish.
+    */
+   wait_until_file_written(cache, string_key);
+
+   result = disk_cache_get(cache, string_key, &size);
+   expect_equal_str(result, string, "2nd disk_cache_get of existing item (pointer)");
+   expect_equal(size, sizeof(string), "2nd disk_cache_get of existing item (size)");
 
    free(result);
 
    /* Set the cache size to 1KB and add a 1KB item to force an eviction. */
-   cache_destroy(cache);
+   disk_cache_destroy(cache);
 
    setenv("MESA_GLSL_CACHE_MAX_SIZE", "1K", 1);
-   cache = cache_create();
+   cache = disk_cache_create("test", "make_check");
 
    one_KB = calloc(1, 1024);
 
@@ -263,7 +308,7 @@ test_put_and_get(void)
     * (with only three files in the cache), the probability is good
     * that each of the three files will end up in their own
     * directory. Then, if the directory containing the .tmp file for
-    * the new item being added for cache_put() is the chosen victim
+    * the new item being added for disk_cache_put() is the chosen victim
     * directory for eviction, then no suitable file will be found and
     * nothing will be evicted.
     *
@@ -274,22 +319,28 @@ test_put_and_get(void)
     * For this test, we force this signature to land in the same
     * directory as the original blob first written to the cache.
     */
-   _mesa_sha1_compute(one_KB, 1024, one_KB_key);
-   one_KB_key[0] = blob_key_byte_zero;
+   disk_cache_compute_key(cache, one_KB, 1024, one_KB_key);
+   one_KB_key[0] = blob_key[0];
 
-   cache_put(cache, one_KB_key, one_KB, 1024);
+   disk_cache_put(cache, one_KB_key, one_KB, 1024);
 
    free(one_KB);
 
-   result = cache_get(cache, one_KB_key, &size);
-   expect_non_null(result, "3rd cache_get of existing item (pointer)");
-   expect_equal(size, 1024, "3rd cache_get of existing item (size)");
+   /* disk_cache_put() hands things off to a thread give it some time to
+    * finish.
+    */
+   wait_until_file_written(cache, one_KB_key);
+
+   result = disk_cache_get(cache, one_KB_key, &size);
+   expect_non_null(result, "3rd disk_cache_get of existing item (pointer)");
+   expect_equal(size, 1024, "3rd disk_cache_get of existing item (size)");
 
    free(result);
 
-   /* Ensure eviction happened by checking that only one of the two
-    * previously-added items can still be fetched.
+   /* Ensure eviction happened by checking that both of the previous
+    * cache itesm were evicted.
     */
+   bool contains_1KB_file = false;
    count = 0;
    if (does_cache_contain(cache, blob_key))
        count++;
@@ -297,18 +348,31 @@ test_put_and_get(void)
    if (does_cache_contain(cache, string_key))
        count++;
 
-   expect_equal(count, 1, "cache_put eviction with MAX_SIZE=1K");
+   if (does_cache_contain(cache, one_KB_key)) {
+      count++;
+      contains_1KB_file = true;
+   }
+
+   expect_true(contains_1KB_file,
+               "disk_cache_put eviction last file == MAX_SIZE (1KB)");
+   expect_equal(count, 1, "disk_cache_put eviction with MAX_SIZE=1K");
 
    /* Now increase the size to 1M, add back both items, and ensure all
-    * three that have been added are available via cache_get.
+    * three that have been added are available via disk_cache_get.
     */
-   cache_destroy(cache);
+   disk_cache_destroy(cache);
 
    setenv("MESA_GLSL_CACHE_MAX_SIZE", "1M", 1);
-   cache = cache_create();
+   cache = disk_cache_create("test", "make_check");
 
-   cache_put(cache, blob_key, blob, sizeof(blob));
-   cache_put(cache, string_key, string, sizeof(string));
+   disk_cache_put(cache, blob_key, blob, sizeof(blob));
+   disk_cache_put(cache, string_key, string, sizeof(string));
+
+   /* disk_cache_put() hands things off to a thread give it some time to
+    * finish.
+    */
+   wait_until_file_written(cache, blob_key);
+   wait_until_file_written(cache, string_key);
 
    count = 0;
    if (does_cache_contain(cache, blob_key))
@@ -325,13 +389,19 @@ test_put_and_get(void)
    /* Finally, check eviction again after adding an object of size 1M. */
    one_MB = calloc(1024, 1024);
 
-   _mesa_sha1_compute(one_MB, 1024 * 1024, one_MB_key);
-   one_MB_key[0] = blob_key_byte_zero;;
+   disk_cache_compute_key(cache, one_MB, 1024 * 1024, one_MB_key);
+   one_MB_key[0] = blob_key[0];
 
-   cache_put(cache, one_MB_key, one_MB, 1024 * 1024);
+   disk_cache_put(cache, one_MB_key, one_MB, 1024 * 1024);
 
    free(one_MB);
 
+   /* disk_cache_put() hands things off to a thread give it some time to
+    * finish.
+    */
+   wait_until_file_written(cache, one_MB_key);
+
+   bool contains_1MB_file = false;
    count = 0;
    if (does_cache_contain(cache, blob_key))
        count++;
@@ -342,15 +412,22 @@ test_put_and_get(void)
    if (does_cache_contain(cache, one_KB_key))
        count++;
 
-   expect_equal(count, 2, "eviction after overflow with MAX_SIZE=1M");
+   if (does_cache_contain(cache, one_MB_key)) {
+      count++;
+      contains_1MB_file = true;
+   }
 
-   cache_destroy(cache);
+   expect_true(contains_1MB_file,
+               "disk_cache_put eviction last file == MAX_SIZE (1MB)");
+   expect_equal(count, 1, "eviction after overflow with MAX_SIZE=1M");
+
+   disk_cache_destroy(cache);
 }
 
 static void
 test_put_key_and_get_key(void)
 {
-   struct program_cache *cache;
+   struct disk_cache *cache;
    bool result;
 
    uint8_t key_a[20] = {  0,  1,  2,  3,  4,  5,  6,  7,  8,  9,
@@ -361,42 +438,42 @@ test_put_key_and_get_key(void)
                         { 0,  1, 42, 43, 44, 45, 46, 47, 48, 49,
                          50, 55, 52, 53, 54, 55, 56, 57, 58, 59};
 
-   cache = cache_create();
+   cache = disk_cache_create("test", "make_check");
 
-   /* First test that cache_has_key returns false before cache_put_key */
-   result = cache_has_key(cache, key_a);
-   expect_equal(result, 0, "cache_has_key before key added");
+   /* First test that disk_cache_has_key returns false before disk_cache_put_key */
+   result = disk_cache_has_key(cache, key_a);
+   expect_equal(result, 0, "disk_cache_has_key before key added");
 
-   /* Then a couple of tests of cache_put_key followed by cache_has_key */
-   cache_put_key(cache, key_a);
-   result = cache_has_key(cache, key_a);
-   expect_equal(result, 1, "cache_has_key after key added");
+   /* Then a couple of tests of disk_cache_put_key followed by disk_cache_has_key */
+   disk_cache_put_key(cache, key_a);
+   result = disk_cache_has_key(cache, key_a);
+   expect_equal(result, 1, "disk_cache_has_key after key added");
 
-   cache_put_key(cache, key_b);
-   result = cache_has_key(cache, key_b);
-   expect_equal(result, 1, "2nd cache_has_key after key added");
+   disk_cache_put_key(cache, key_b);
+   result = disk_cache_has_key(cache, key_b);
+   expect_equal(result, 1, "2nd disk_cache_has_key after key added");
 
    /* Test that a key with the same two bytes as an existing key
     * forces an eviction.
     */
-   cache_put_key(cache, key_a_collide);
-   result = cache_has_key(cache, key_a_collide);
+   disk_cache_put_key(cache, key_a_collide);
+   result = disk_cache_has_key(cache, key_a_collide);
    expect_equal(result, 1, "put_key of a colliding key lands in the cache");
 
-   result = cache_has_key(cache, key_a);
+   result = disk_cache_has_key(cache, key_a);
    expect_equal(result, 0, "put_key of a colliding key evicts from the cache");
 
    /* And finally test that we can re-add the original key to re-evict
     * the colliding key.
     */
-   cache_put_key(cache, key_a);
-   result = cache_has_key(cache, key_a);
+   disk_cache_put_key(cache, key_a);
+   result = disk_cache_has_key(cache, key_a);
    expect_equal(result, 1, "put_key of original key lands again");
 
-   result = cache_has_key(cache, key_a_collide);
+   result = disk_cache_has_key(cache, key_a_collide);
    expect_equal(result, 0, "put_key of orginal key evicts the colliding key");
 
-   cache_destroy(cache);
+   disk_cache_destroy(cache);
 }
 #endif /* ENABLE_SHADER_CACHE */
 
@@ -406,7 +483,7 @@ main(void)
 #ifdef ENABLE_SHADER_CACHE
    int err;
 
-   test_cache_create();
+   test_disk_cache_create();
 
    test_put_and_get();
 

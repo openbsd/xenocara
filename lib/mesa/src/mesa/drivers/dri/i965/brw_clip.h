@@ -34,7 +34,7 @@
 
 
 #include "brw_context.h"
-#include "brw_eu.h"
+#include "compiler/brw_eu.h"
 
 /* Initial 3 verts, plus at most 6 additional verts from intersections
  * with fixed planes, plus at most 8 additional verts from intersections
@@ -47,7 +47,9 @@
  */
 struct brw_clip_prog_key {
    GLbitfield64 attrs;
-   struct interpolation_mode_map interpolation_mode;
+   bool contains_flat_varying;
+   bool contains_noperspective_varying;
+   const unsigned char *interp_mode;
    GLuint primitive:4;
    GLuint nr_userclip:4;
    GLuint pv_first:1;
@@ -128,9 +130,6 @@ struct brw_clip_compile {
    bool need_direction;
 
    struct brw_vue_map vue_map;
-
-   bool has_flat_shading;
-   bool has_noperspective_shading;
 };
 
 /**

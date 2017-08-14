@@ -37,7 +37,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "main/api_arrayelt.h"
 #include "main/api_exec.h"
 #include "main/context.h"
-#include "util/simple_list.h"
 #include "main/imports.h"
 #include "main/extensions.h"
 #include "main/version.h"
@@ -200,7 +199,6 @@ GLboolean r200CreateContext( gl_api api,
       return false;
    }
 
-   assert(glVisual);
    assert(driContextPriv);
    assert(screen);
 

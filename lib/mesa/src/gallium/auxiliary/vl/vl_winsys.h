@@ -32,7 +32,9 @@
 #ifndef vl_winsys_h
 #define vl_winsys_h
 
+#ifdef HAVE_X11_PLATFORM
 #include <X11/Xlib.h>
+#endif
 #include "pipe/p_defines.h"
 #include "pipe/p_format.h"
 
@@ -59,19 +61,37 @@ struct vl_screen
    void *
    (*get_private)(struct vl_screen *vscreen);
 
+   void
+   (*set_back_texture_from_output)(struct vl_screen *vscreen,
+                                   struct pipe_resource *buffer,
+                                   uint32_t width, uint32_t height);
+
    struct pipe_screen *pscreen;
    struct pipe_loader_device *dev;
 };
 
+#ifdef HAVE_X11_PLATFORM
 struct vl_screen *
 vl_dri2_screen_create(Display *display, int screen);
+#else
+static inline struct vl_screen *
+vl_dri2_screen_create(void *display, int screen) { return NULL; };
+#endif
 
-struct vl_screen *
-vl_drm_screen_create(int fd);
-
-#if defined(HAVE_DRI3)
+#if defined(HAVE_X11_PLATFORM) && defined(HAVE_DRI3)
 struct vl_screen *
 vl_dri3_screen_create(Display *display, int screen);
+#else
+static inline struct vl_screen *
+vl_dri3_screen_create(void *display, int screen) { return NULL; };
+#endif
+
+#ifdef HAVE_DRM_PLATFORM
+struct vl_screen *
+vl_drm_screen_create(int fd);
+#else
+static inline struct vl_screen *
+vl_drm_screen_create(int fd) { return NULL; };
 #endif
 
 #endif

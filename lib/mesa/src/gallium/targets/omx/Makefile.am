@@ -29,9 +29,14 @@ libomx_mesa_la_LIBADD = \
 	$(top_builddir)/src/gallium/auxiliary/libgallium.la \
 	$(top_builddir)/src/util/libmesautil.la \
 	$(OMX_LIBS) \
-	$(VL_LIBS) \
 	$(LIBDRM_LIBS) \
 	$(GALLIUM_COMMON_LIB_DEPS)
+
+if HAVE_PLATFORM_X11
+libomx_mesa_la_LIBADD += \
+	$(VL_LIBS) \
+	$(XCB_DRI3_LIBS)
+endif
 
 EXTRA_libomx_mesa_la_DEPENDENCIES = omx.sym
 EXTRA_DIST = omx.sym
@@ -63,7 +68,7 @@ libomx_mesa_la_LIBADD += \
 
 endif # HAVE_GALLIUM_STATIC_TARGETS
 
-if HAVE_MESA_LLVM
+if HAVE_GALLIUM_LLVM
 libomx_mesa_la_LIBADD += $(LLVM_LIBS)
 libomx_mesa_la_LDFLAGS += $(LLVM_LDFLAGS)
 endif

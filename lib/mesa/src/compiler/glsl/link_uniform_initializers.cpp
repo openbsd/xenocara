@@ -38,7 +38,7 @@ get_storage(struct gl_shader_program *prog, const char *name)
 {
    unsigned id;
    if (prog->UniformHash->get(id, name))
-      return &prog->UniformStorage[id];
+      return &prog->data->UniformStorage[id];
 
    assert(!"No uniform storage found!");
    return NULL;
@@ -64,6 +64,8 @@ copy_constant_to_storage(union gl_constant_value *storage,
          storage[i].f = val->value.f[i];
          break;
       case GLSL_TYPE_DOUBLE:
+      case GLSL_TYPE_UINT64:
+      case GLSL_TYPE_INT64:
          /* XXX need to check on big-endian */
          memcpy(&storage[i * 2].u, &val->value.d[i], sizeof(double));
          break;
@@ -130,20 +132,21 @@ set_opaque_binding(void *mem_ctx, gl_shader_program *prog,
         gl_linked_shader *shader = prog->_LinkedShaders[sh];
 
          if (shader) {
-            if (storage->type->base_type == GLSL_TYPE_SAMPLER &&
-                storage->opaque[sh].active) {
+            if (storage->type->is_sampler() && storage->opaque[sh].active) {
                for (unsigned i = 0; i < elements; i++) {
                   const unsigned index = storage->opaque[sh].index + i;
-                  shader->SamplerUnits[index] = storage->storage[i].i;
+                  shader->Program->SamplerUnits[index] =
+                     storage->storage[i].i;
                }
 
-            } else if (storage->type->base_type == GLSL_TYPE_IMAGE &&
+            } else if (storage->type->is_image() &&
                     storage->opaque[sh].active) {
                for (unsigned i = 0; i < elements; i++) {
                   const unsigned index = storage->opaque[sh].index + i;
-                  if (index >= ARRAY_SIZE(shader->ImageUnits))
+                  if (index >= ARRAY_SIZE(shader->Program->sh.ImageUnits))
                      break;
-                  shader->ImageUnits[index] = storage->storage[i].i;
+                  shader->Program->sh.ImageUnits[index] =
+                     storage->storage[i].i;
                }
             }
          }
@@ -155,10 +158,11 @@ void
 set_block_binding(gl_shader_program *prog, const char *block_name,
                   unsigned mode, int binding)
 {
-   unsigned num_blocks = mode == ir_var_uniform ? prog->NumUniformBlocks :
-      prog->NumShaderStorageBlocks;
+   unsigned num_blocks = mode == ir_var_uniform ?
+      prog->data->NumUniformBlocks :
+      prog->data->NumShaderStorageBlocks;
    struct gl_uniform_block *blks = mode == ir_var_uniform ?
-      prog->UniformBlocks : prog->ShaderStorageBlocks;
+      prog->data->UniformBlocks : prog->data->ShaderStorageBlocks;
 
    for (unsigned i = 0; i < num_blocks; i++) {
       if (!strcmp(blks[i].Name, block_name)) {
@@ -240,7 +244,7 @@ set_uniform_initializer(void *mem_ctx, gl_shader_program *prog,
             if (shader && storage->opaque[sh].active) {
                unsigned index = storage->opaque[sh].index;
 
-               shader->SamplerUnits[index] = storage->storage[0].i;
+               shader->Program->SamplerUnits[index] = storage->storage[0].i;
             }
          }
       }

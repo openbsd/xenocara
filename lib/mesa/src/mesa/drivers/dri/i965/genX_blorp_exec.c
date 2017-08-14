@@ -25,6 +25,7 @@
 
 #include "intel_batchbuffer.h"
 #include "intel_mipmap_tree.h"
+#include "intel_fbo.h"
 
 #include "brw_context.h"
 #include "brw_state.h"
@@ -54,17 +55,10 @@ blorp_emit_reloc(struct blorp_batch *batch,
    struct brw_context *brw = batch->driver_batch;
 
    uint32_t offset = (char *)location - (char *)brw->batch.map;
-   if (brw->gen >= 8) {
-      return intel_batchbuffer_reloc64(brw, address.buffer, offset,
-                                       address.read_domains,
-                                       address.write_domain,
-                                       address.offset + delta);
-   } else {
-      return intel_batchbuffer_reloc(brw, address.buffer, offset,
-                                     address.read_domains,
-                                     address.write_domain,
-                                     address.offset + delta);
-   }
+   return brw_emit_reloc(&brw->batch, offset,
+                         address.buffer, address.offset + delta,
+                         address.read_domains,
+                         address.write_domain);
 }
 
 static void
@@ -73,11 +67,10 @@ blorp_surface_reloc(struct blorp_batch *batch, uint32_t ss_offset,
 {
    assert(batch->blorp->driver_ctx == batch->driver_batch);
    struct brw_context *brw = batch->driver_batch;
-   drm_intel_bo *bo = address.buffer;
+   struct brw_bo *bo = address.buffer;
 
-   drm_intel_bo_emit_reloc(brw->batch.bo, ss_offset,
-                           bo, address.offset + delta,
-                           address.read_domains, address.write_domain);
+   brw_emit_reloc(&brw->batch, ss_offset, bo, address.offset + delta,
+                  address.read_domains, address.write_domain);
 
    uint64_t reloc_val = bo->offset64 + address.offset + delta;
    void *reloc_ptr = (void *)brw->batch.map + ss_offset;
@@ -90,7 +83,6 @@ blorp_surface_reloc(struct blorp_batch *batch, uint32_t ss_offset,
 
 static void *
 blorp_alloc_dynamic_state(struct blorp_batch *batch,
-                          enum aub_state_struct_type type,
                           uint32_t size,
                           uint32_t alignment,
                           uint32_t *offset)
@@ -98,7 +90,7 @@ blorp_alloc_dynamic_state(struct blorp_batch *batch,
    assert(batch->blorp->driver_ctx == batch->driver_batch);
    struct brw_context *brw = batch->driver_batch;
 
-   return brw_state_batch(brw, type, size, alignment, offset);
+   return brw_state_batch(brw, size, alignment, offset);
 }
 
 static void
@@ -110,12 +102,12 @@ blorp_alloc_binding_table(struct blorp_batch *batch, unsigned num_entries,
    assert(batch->blorp->driver_ctx == batch->driver_batch);
    struct brw_context *brw = batch->driver_batch;
 
-   uint32_t *bt_map = brw_state_batch(brw, AUB_TRACE_BINDING_TABLE,
+   uint32_t *bt_map = brw_state_batch(brw,
                                       num_entries * sizeof(uint32_t), 32,
                                       bt_offset);
 
    for (unsigned i = 0; i < num_entries; i++) {
-      surface_maps[i] = brw_state_batch(brw, AUB_TRACE_SURFACE_STATE,
+      surface_maps[i] = brw_state_batch(brw,
                                         state_size, state_alignment,
                                         &(surface_offsets)[i]);
       bt_map[i] = surface_offsets[i];
@@ -129,9 +121,20 @@ blorp_alloc_vertex_buffer(struct blorp_batch *batch, uint32_t size,
    assert(batch->blorp->driver_ctx == batch->driver_batch);
    struct brw_context *brw = batch->driver_batch;
 
+   /* From the Skylake PRM, 3DSTATE_VERTEX_BUFFERS:
+    *
+    *    "The VF cache needs to be invalidated before binding and then using
+    *    Vertex Buffers that overlap with any previously bound Vertex Buffer
+    *    (at a 64B granularity) since the last invalidation.  A VF cache
+    *    invalidate is performed by setting the "VF Cache Invalidation Enable"
+    *    bit in PIPE_CONTROL."
+    *
+    * This restriction first appears in the Skylake PRM but the internal docs
+    * also list it as being an issue on Broadwell.  In order to avoid this
+    * problem, we align all vertex buffer allocations to 64 bytes.
+    */
    uint32_t offset;
-   void *data = brw_state_batch(brw, AUB_TRACE_VERTEX_BUFFER,
-                                size, 32, &offset);
+   void *data = brw_state_batch(brw, size, 64, &offset);
 
    *addr = (struct blorp_address) {
       .buffer = brw->batch.bo,
@@ -177,7 +180,7 @@ genX(blorp_exec)(struct blorp_batch *batch,
    assert(batch->blorp->driver_ctx == batch->driver_batch);
    struct brw_context *brw = batch->driver_batch;
    struct gl_context *ctx = &brw->ctx;
-   const uint32_t estimated_max_batch_usage = GEN_GEN >= 8 ? 1800 : 1500;
+   const uint32_t estimated_max_batch_usage = GEN_GEN >= 8 ? 1920 : 1700;
    bool check_aperture_failed_once = false;
 
    /* Flush the sampler and render caches.  We definitely need to flush the
@@ -187,14 +190,16 @@ genX(blorp_exec)(struct blorp_batch *batch,
     * data with different formats, which blorp does for stencil and depth
     * data.
     */
-   brw_emit_mi_flush(brw);
+   if (params->src.enabled)
+      brw_render_cache_set_check_flush(brw, params->src.addr.buffer);
+   brw_render_cache_set_check_flush(brw, params->dst.addr.buffer);
 
    brw_select_pipeline(brw, BRW_RENDER_PIPELINE);
 
 retry:
    intel_batchbuffer_require_space(brw, estimated_max_batch_usage, RENDER_RING);
    intel_batchbuffer_save_state(brw);
-   drm_intel_bo *saved_bo = brw->batch.bo;
+   struct brw_bo *saved_bo = brw->batch.bo;
    uint32_t saved_used = USED_BATCH(brw->batch);
    uint32_t saved_state_batch_offset = brw->batch.state_batch_offset;
 
@@ -208,9 +213,6 @@ retry:
 #if GEN_GEN >= 8
    gen7_l3_state.emit(brw);
 #endif
-
-   if (brw->use_resource_streamer)
-      gen7_disable_hw_binding_tables(brw);
 
    brw_emit_depth_stall_flushes(brw);
 
@@ -241,7 +243,7 @@ retry:
     * map all the BOs into the GPU at batch exec time later.  If so, flush the
     * batch and try again with nothing else in the batch.
     */
-   if (dri_bufmgr_check_aperture_space(&brw->batch.bo, 1)) {
+   if (!brw_batch_has_aperture_space(brw, 0)) {
       if (!check_aperture_failed_once) {
          check_aperture_failed_once = true;
          intel_batchbuffer_reset_to_saved(brw);
@@ -264,8 +266,10 @@ retry:
    brw->no_depth_or_stencil = false;
    brw->ib.type = -1;
 
-   /* Flush the sampler cache so any texturing from the destination is
-    * coherent.
-    */
-   brw_emit_mi_flush(brw);
+   if (params->dst.enabled)
+      brw_render_cache_set_add_bo(brw, params->dst.addr.buffer);
+   if (params->depth.enabled)
+      brw_render_cache_set_add_bo(brw, params->depth.addr.buffer);
+   if (params->stencil.enabled)
+      brw_render_cache_set_add_bo(brw, params->stencil.addr.buffer);
 }

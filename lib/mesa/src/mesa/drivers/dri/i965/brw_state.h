@@ -57,7 +57,6 @@ extern const struct brw_tracked_state brw_invariant_state;
 extern const struct brw_tracked_state brw_fs_samplers;
 extern const struct brw_tracked_state brw_gs_unit;
 extern const struct brw_tracked_state brw_line_stipple;
-extern const struct brw_tracked_state brw_aa_line_parameters;
 extern const struct brw_tracked_state brw_binding_table_pointers;
 extern const struct brw_tracked_state brw_depthbuffer;
 extern const struct brw_tracked_state brw_polygon_stipple_offset;
@@ -147,10 +146,8 @@ extern const struct brw_tracked_state gen7_tes_push_constants;
 extern const struct brw_tracked_state gen7_urb;
 extern const struct brw_tracked_state gen7_vs_state;
 extern const struct brw_tracked_state gen7_wm_state;
-extern const struct brw_tracked_state gen7_hw_binding_tables;
 extern const struct brw_tracked_state haswell_cut_index;
 extern const struct brw_tracked_state gen8_blend_state;
-extern const struct brw_tracked_state gen8_disable_stages;
 extern const struct brw_tracked_state gen8_ds_state;
 extern const struct brw_tracked_state gen8_gs_state;
 extern const struct brw_tracked_state gen8_hs_state;
@@ -219,28 +216,35 @@ brw_select_pipeline(struct brw_context *brw, enum brw_pipeline pipeline)
 }
 
 /***********************************************************************
- * brw_state_cache.c
+ * brw_program_cache.c
  */
 
 void brw_upload_cache(struct brw_cache *cache,
-		      enum brw_cache_id cache_id,
-		      const void *key,
-		      GLuint key_sz,
-		      const void *data,
-		      GLuint data_sz,
-		      const void *aux,
-		      GLuint aux_sz,
-		      uint32_t *out_offset, void *out_aux);
+                      enum brw_cache_id cache_id,
+                      const void *key,
+                      GLuint key_sz,
+                      const void *data,
+                      GLuint data_sz,
+                      const void *aux,
+                      GLuint aux_sz,
+                      uint32_t *out_offset, void *out_aux);
 
 bool brw_search_cache(struct brw_cache *cache,
-		      enum brw_cache_id cache_id,
-		      const void *key,
-		      GLuint key_size,
-		      uint32_t *inout_offset, void *inout_aux);
-void brw_state_cache_check_size( struct brw_context *brw );
+                      enum brw_cache_id cache_id,
+                      const void *key,
+                      GLuint key_size,
+                      uint32_t *inout_offset, void *inout_aux);
+
+const void *brw_find_previous_compile(struct brw_cache *cache,
+                                      enum brw_cache_id cache_id,
+                                      unsigned program_string_id);
+
+void brw_program_cache_check_size(struct brw_context *brw);
 
 void brw_init_caches( struct brw_context *brw );
 void brw_destroy_caches( struct brw_context *brw );
+
+void brw_print_program_cache(struct brw_context *brw);
 
 /***********************************************************************
  * brw_state_batch.c
@@ -248,34 +252,29 @@ void brw_destroy_caches( struct brw_context *brw );
 #define BRW_BATCH_STRUCT(brw, s) \
    intel_batchbuffer_data(brw, (s), sizeof(*(s)), RENDER_RING)
 
-void *__brw_state_batch(struct brw_context *brw,
-                        enum aub_state_struct_type type,
-                        int size,
-                        int alignment,
-                        int index,
-                        uint32_t *out_offset);
-#define brw_state_batch(brw, type, size, alignment, out_offset) \
-   __brw_state_batch(brw, type, size, alignment, 0, out_offset)
+void *brw_state_batch(struct brw_context *brw,
+                      int size, int alignment, uint32_t *out_offset);
+uint32_t brw_state_batch_size(struct brw_context *brw, uint32_t offset);
 
 /* brw_wm_surface_state.c */
 void gen4_init_vtable_surface_functions(struct brw_context *brw);
 uint32_t brw_get_surface_tiling_bits(uint32_t tiling);
 uint32_t brw_get_surface_num_multisamples(unsigned num_samples);
 
-uint32_t brw_format_for_mesa_format(mesa_format mesa_format);
+uint32_t brw_isl_format_for_mesa_format(mesa_format mesa_format);
 
 GLuint translate_tex_target(GLenum target);
 
 GLuint translate_tex_format(struct brw_context *brw,
                             mesa_format mesa_format,
-			    GLenum srgb_decode);
+                            GLenum srgb_decode);
 
 int brw_get_texture_swizzle(const struct gl_context *ctx,
                             const struct gl_texture_object *t);
 
 void brw_emit_buffer_surface_state(struct brw_context *brw,
                                    uint32_t *out_offset,
-                                   drm_intel_bo *bo,
+                                   struct brw_bo *bo,
                                    unsigned buffer_offset,
                                    unsigned surface_format,
                                    unsigned buffer_size,
@@ -373,23 +372,6 @@ void
 gen7_upload_constant_state(struct brw_context *brw,
                            const struct brw_stage_state *stage_state,
                            bool active, unsigned opcode);
-
-void gen7_rs_control(struct brw_context *brw, int enable);
-
-void gen7_edit_hw_binding_table_entry(struct brw_context *brw,
-                                      gl_shader_stage stage,
-                                      uint32_t index,
-                                      uint32_t surf_offset);
-void gen7_update_binding_table_from_array(struct brw_context *brw,
-                                          gl_shader_stage stage,
-                                          const uint32_t* binding_table,
-                                          int num_surfaces);
-void gen7_enable_hw_binding_tables(struct brw_context *brw);
-void gen7_disable_hw_binding_tables(struct brw_context *brw);
-void gen7_reset_hw_bt_pool_offsets(struct brw_context *brw);
-
-/* brw_interpolation_map.c */
-void brw_setup_vue_interpolation(struct brw_context *brw);
 
 /* brw_clip.c */
 void brw_upload_clip_prog(struct brw_context *brw);

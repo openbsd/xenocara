@@ -91,6 +91,7 @@ nvc0_blend_state_create(struct pipe_context *pipe,
    struct nvc0_blend_stateobj *so = CALLOC_STRUCT(nvc0_blend_stateobj);
    int i;
    int r; /* reference */
+   uint32_t ms;
    uint8_t blend_en = 0;
    bool indep_masks = false;
    bool indep_funcs = false;
@@ -176,6 +177,15 @@ nvc0_blend_state_create(struct pipe_context *pipe,
       }
    }
 
+   ms = 0;
+   if (cso->alpha_to_coverage)
+      ms |= NVC0_3D_MULTISAMPLE_CTRL_ALPHA_TO_COVERAGE;
+   if (cso->alpha_to_one)
+      ms |= NVC0_3D_MULTISAMPLE_CTRL_ALPHA_TO_ONE;
+
+   SB_BEGIN_3D(so, MULTISAMPLE_CTRL, 1);
+   SB_DATA    (so, ms);
+
    assert(so->size <= ARRAY_SIZE(so->state));
    return so;
 }
@@ -201,6 +211,7 @@ nvc0_rasterizer_state_create(struct pipe_context *pipe,
                              const struct pipe_rasterizer_state *cso)
 {
     struct nvc0_rasterizer_stateobj *so;
+    uint16_t class_3d = nouveau_screen(pipe->screen)->class_3d;
     uint32_t reg;
 
     so = CALLOC_STRUCT(nvc0_rasterizer_stateobj);
@@ -250,6 +261,12 @@ nvc0_rasterizer_state_create(struct pipe_context *pipe,
     SB_DATA    (so, ((cso->sprite_coord_enable & 0xff) << 3) | reg);
     SB_IMMED_3D(so, POINT_SPRITE_ENABLE, cso->point_quad_rasterization);
     SB_IMMED_3D(so, POINT_SMOOTH_ENABLE, cso->point_smooth);
+
+    if (class_3d >= GM200_3D_CLASS) {
+       SB_IMMED_3D(so, FILL_RECTANGLE,
+                   cso->fill_front == PIPE_POLYGON_MODE_FILL_RECTANGLE ?
+                   NVC0_3D_FILL_RECTANGLE_ENABLE : 0);
+    }
 
     SB_BEGIN_3D(so, MACRO_POLYGON_MODE_FRONT, 1);
     SB_DATA    (so, nvgl_polygon_mode(cso->fill_front));
@@ -685,6 +702,10 @@ nvc0_cp_state_create(struct pipe_context *pipe,
 
    prog->pipe.tokens = tgsi_dup_tokens((const struct tgsi_token *)cso->prog);
 
+   prog->translated = nvc0_program_translate(
+      prog, nvc0_context(pipe)->screen->base.device->chipset,
+      &nouveau_context(pipe)->debug);
+
    return (void *)prog;
 }
 
@@ -698,7 +719,8 @@ nvc0_cp_state_bind(struct pipe_context *pipe, void *hwcso)
 }
 
 static void
-nvc0_set_constant_buffer(struct pipe_context *pipe, uint shader, uint index,
+nvc0_set_constant_buffer(struct pipe_context *pipe,
+                         enum pipe_shader_type shader, uint index,
                          const struct pipe_constant_buffer *cb)
 {
    struct nvc0_context *nvc0 = nvc0_context(pipe);

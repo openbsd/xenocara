@@ -17,13 +17,13 @@
 struct nvc0_blend_stateobj {
    struct pipe_blend_state pipe;
    int size;
-   uint32_t state[70];
+   uint32_t state[72];
 };
 
 struct nvc0_rasterizer_stateobj {
    struct pipe_rasterizer_state pipe;
    int size;
-   uint32_t state[42];
+   uint32_t state[43];
 };
 
 struct nvc0_zsa_stateobj {

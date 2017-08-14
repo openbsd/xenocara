@@ -29,9 +29,14 @@ gallium_drv_video_la_LIBADD = \
 	$(top_builddir)/src/gallium/auxiliary/libgalliumvl.la \
 	$(top_builddir)/src/gallium/auxiliary/libgallium.la \
 	$(top_builddir)/src/util/libmesautil.la \
-	$(VL_LIBS) \
 	$(LIBDRM_LIBS) \
 	$(GALLIUM_COMMON_LIB_DEPS)
+
+if HAVE_PLATFORM_X11
+gallium_drv_video_la_LIBADD += \
+	$(VL_LIBS) \
+	$(XCB_DRI3_LIBS)
+endif
 
 EXTRA_gallium_drv_video_la_DEPENDENCIES = va.sym
 EXTRA_DIST = va.sym
@@ -62,7 +67,7 @@ gallium_drv_video_la_LIBADD += \
 
 endif # HAVE_GALLIUM_STATIC_TARGETS
 
-if HAVE_MESA_LLVM
+if HAVE_GALLIUM_LLVM
 gallium_drv_video_la_LIBADD += $(LLVM_LIBS)
 gallium_drv_video_la_LDFLAGS += $(LLVM_LDFLAGS)
 endif

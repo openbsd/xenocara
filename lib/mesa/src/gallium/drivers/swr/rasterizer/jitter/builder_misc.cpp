@@ -30,6 +30,7 @@
 #include "builder.h"
 #include "common/rdtsc_buckets.h"
 
+#include <cstdarg>
 
 namespace SwrJit
 {
@@ -235,13 +236,6 @@ namespace SwrJit
         return UndefValue::get(VectorType::get(t, mVWidth));
     }
 
-    #if HAVE_LLVM == 0x306
-    Value *Builder::VINSERT(Value *vec, Value *val, uint64_t index)
-    {
-        return VINSERT(vec, val, C((int64_t)index));
-    }
-    #endif
-
     Value *Builder::VBROADCAST(Value *src)
     {
         // check if src is already a vector
@@ -323,7 +317,6 @@ namespace SwrJit
         return CALLA(Callee, args);
     }
 
-    #if HAVE_LLVM > 0x306
     CallInst *Builder::CALL(Value *Callee, Value* arg)
     {
         std::vector<Value*> args;
@@ -347,7 +340,13 @@ namespace SwrJit
         args.push_back(arg3);
         return CALLA(Callee, args);
     }
-    #endif
+
+    //////////////////////////////////////////////////////////////////////////
+    Value *Builder::DEBUGTRAP()
+    {
+        Function *func = Intrinsic::getDeclaration(JM()->mpCurrentModule, Intrinsic::debugtrap);
+        return CALL(func);
+    }
 
     Value *Builder::VRCP(Value *va)
     {
@@ -496,11 +495,7 @@ namespace SwrJit
 
         // get a pointer to the first character in the constant string array
         std::vector<Constant*> geplist{C(0),C(0)};
-    #if HAVE_LLVM == 0x306
-        Constant *strGEP = ConstantExpr::getGetElementPtr(gvPtr,geplist,false);
-    #else
         Constant *strGEP = ConstantExpr::getGetElementPtr(nullptr, gvPtr,geplist,false);
-    #endif
 
         // insert the pointer to the format string in the argument vector
         printCallArgs[0] = strGEP;
@@ -625,6 +620,55 @@ namespace SwrJit
                 vGather = VINSERT(vGather, val, C(i));
             }
 
+            STACKRESTORE(pStack);
+        }
+        return vGather;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    /// @brief Generate a masked gather operation in LLVM IR.  If not
+    /// supported on the underlying platform, emulate it with loads
+    /// @param vSrc - SIMD wide value that will be loaded if mask is invalid
+    /// @param pBase - Int8* base VB address pointer value
+    /// @param vIndices - SIMD wide value of VB byte offsets
+    /// @param vMask - SIMD wide mask that controls whether to access memory or the src values
+    /// @param scale - value to scale indices by
+    Value *Builder::GATHERPD(Value* vSrc, Value* pBase, Value* vIndices, Value* vMask, Value* scale)
+    {
+        Value* vGather;
+
+        // use avx2 gather instruction if available
+        if(JM()->mArch.AVX2())
+        {
+            vGather = VGATHERPD(vSrc, pBase, vIndices, vMask, scale);
+        }
+        else
+        {
+            Value* pStack = STACKSAVE();
+
+            // store vSrc on the stack.  this way we can select between a valid load address and the vSrc address
+            Value* vSrcPtr = ALLOCA(vSrc->getType());
+            STORE(vSrc, vSrcPtr);
+
+            vGather = UndefValue::get(VectorType::get(mDoubleTy, 4));
+            Value *vScaleVec = VECTOR_SPLAT(4, Z_EXT(scale,mInt32Ty));
+            Value *vOffsets = MUL(vIndices,vScaleVec);
+            Value *mask = MASK(vMask);
+            for(uint32_t i = 0; i < mVWidth/2; ++i)
+            {
+                // single component byte index
+                Value *offset = VEXTRACT(vOffsets,C(i));
+                // byte pointer to component
+                Value *loadAddress = GEP(pBase,offset);
+                loadAddress = BITCAST(loadAddress,PointerType::get(mDoubleTy,0));
+                // pointer to the value to load if we're masking off a component
+                Value *maskLoadAddress = GEP(vSrcPtr,{C(0), C(i)});
+                Value *selMask = VEXTRACT(mask,C(i));
+                // switch in a safe address to load if we're trying to access a vertex
+                Value *validAddress = SELECT(selMask, loadAddress, maskLoadAddress);
+                Value *val = LOAD(validAddress);
+                vGather = VINSERT(vGather,val,C(i));
+            }
             STACKRESTORE(pStack);
         }
         return vGather;
@@ -1040,7 +1084,7 @@ namespace SwrJit
             }
                 break;
             default:
-                SWR_ASSERT(0, "Invalid float format");
+                SWR_INVALID("Invalid float format");
                 break;
         }
     }
@@ -1127,7 +1171,7 @@ namespace SwrJit
             }
                 break;
             default:
-                SWR_ASSERT(0, "unsupported format");
+                SWR_INVALID("unsupported format");
             break;
         }
     }
@@ -1479,11 +1523,7 @@ namespace SwrJit
     Value* Builder::STACKSAVE()
     {
         Function* pfnStackSave = Intrinsic::getDeclaration(JM()->mpCurrentModule, Intrinsic::stacksave);
-    #if HAVE_LLVM == 0x306
-        return CALL(pfnStackSave);
-    #else
         return CALLA(pfnStackSave);
-    #endif
     }
 
     void Builder::STACKRESTORE(Value* pSaved)
@@ -1537,29 +1577,16 @@ namespace SwrJit
 
     Value *Builder::VEXTRACTI128(Value* a, Constant* imm8)
     {
-    #if HAVE_LLVM == 0x306
-        Function *func =
-            Intrinsic::getDeclaration(JM()->mpCurrentModule,
-                                      Intrinsic::x86_avx_vextractf128_si_256);
-        return CALL(func, {a, imm8});
-    #else
         bool flag = !imm8->isZeroValue();
         SmallVector<Constant*,8> idx;
         for (unsigned i = 0; i < mVWidth / 2; i++) {
             idx.push_back(C(flag ? i + mVWidth / 2 : i));
         }
         return VSHUFFLE(a, VUNDEF_I(), ConstantVector::get(idx));
-    #endif
     }
 
     Value *Builder::VINSERTI128(Value* a, Value* b, Constant* imm8)
     {
-    #if HAVE_LLVM == 0x306
-        Function *func =
-            Intrinsic::getDeclaration(JM()->mpCurrentModule,
-                                      Intrinsic::x86_avx_vinsertf128_si_256);
-        return CALL(func, {a, b, imm8});
-    #else
         bool flag = !imm8->isZeroValue();
         SmallVector<Constant*,8> idx;
         for (unsigned i = 0; i < mVWidth; i++) {
@@ -1575,7 +1602,6 @@ namespace SwrJit
             idx2.push_back(C(flag ? i + mVWidth / 2 : i));
         }
         return VSHUFFLE(a, inter, ConstantVector::get(idx2));
-    #endif
     }
 
     // rdtsc buckets macros

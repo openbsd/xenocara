@@ -25,6 +25,9 @@
  *
  */
 
+#ifndef _VTN_PRIVATE_H_
+#define _VTN_PRIVATE_H_
+
 #include "nir/nir.h"
 #include "nir/nir_builder.h"
 #include "nir/nir_array.h"
@@ -279,9 +282,25 @@ struct vtn_variable {
 
    unsigned descriptor_set;
    unsigned binding;
+   unsigned input_attachment_index;
+   bool patch;
 
    nir_variable *var;
    nir_variable **members;
+
+   /**
+    * In some early released versions of GLSLang, it implemented all function
+    * calls by making copies of all parameters into temporary variables and
+    * passing those variables into the function.  It even did so for samplers
+    * and images which violates the SPIR-V spec.  Unfortunately, two games
+    * (Talos Principle and Doom) shipped with this old version of GLSLang and
+    * also happen to pass samplers into functions.  Talos Principle received
+    * an update fairly shortly after release with an updated GLSLang.  Doom,
+    * on the other hand, has never received an update so we need to work
+    * around this GLSLang issue in SPIR-V -> NIR.  Hopefully, we can drop this
+    * hack at some point in the future.
+    */
+   struct vtn_access_chain *copy_prop_sampler;
 
    struct vtn_access_chain chain;
 };
@@ -346,6 +365,7 @@ struct vtn_builder {
 
    nir_shader *shader;
    nir_function_impl *impl;
+   const struct nir_spirv_supported_extensions *ext;
    struct vtn_block *block;
 
    /* Current file, line, and column.  Useful for debugging.  Set
@@ -479,10 +499,19 @@ typedef void (*vtn_execution_mode_foreach_cb)(struct vtn_builder *,
 void vtn_foreach_execution_mode(struct vtn_builder *b, struct vtn_value *value,
                                 vtn_execution_mode_foreach_cb cb, void *data);
 
-nir_op vtn_nir_alu_op_for_spirv_opcode(SpvOp opcode, bool *swap);
+nir_op vtn_nir_alu_op_for_spirv_opcode(SpvOp opcode, bool *swap,
+                                       nir_alu_type src, nir_alu_type dst);
 
 void vtn_handle_alu(struct vtn_builder *b, SpvOp opcode,
                     const uint32_t *w, unsigned count);
 
 bool vtn_handle_glsl450_instruction(struct vtn_builder *b, uint32_t ext_opcode,
                                     const uint32_t *words, unsigned count);
+
+static inline uint64_t
+vtn_u64_literal(const uint32_t *w)
+{
+   return (uint64_t)w[1] << 32 | w[0];
+}
+
+#endif /* _VTN_PRIVATE_H_ */

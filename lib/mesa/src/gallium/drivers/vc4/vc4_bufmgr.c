@@ -97,7 +97,7 @@ vc4_bo_from_cache(struct vc4_screen *screen, uint32_t size, const char *name)
                 return NULL;
 
         struct vc4_bo *bo = NULL;
-        pipe_mutex_lock(cache->lock);
+        mtx_lock(&cache->lock);
         if (!list_empty(&cache->size_list[page_index])) {
                 bo = LIST_ENTRY(struct vc4_bo, cache->size_list[page_index].next,
                                 size_list);
@@ -107,7 +107,7 @@ vc4_bo_from_cache(struct vc4_screen *screen, uint32_t size, const char *name)
                  * user will proceed to CPU map it and fill it with stuff.
                  */
                 if (!vc4_bo_wait(bo, 0, NULL)) {
-                        pipe_mutex_unlock(cache->lock);
+                        mtx_unlock(&cache->lock);
                         return NULL;
                 }
 
@@ -116,7 +116,7 @@ vc4_bo_from_cache(struct vc4_screen *screen, uint32_t size, const char *name)
 
                 bo->name = name;
         }
-        pipe_mutex_unlock(cache->lock);
+        mtx_unlock(&cache->lock);
         return bo;
 }
 
@@ -148,28 +148,17 @@ vc4_bo_alloc(struct vc4_screen *screen, uint32_t size, const char *name)
         bo->name = name;
         bo->private = true;
 
+ retry:
+        ;
+
         bool cleared_and_retried = false;
-retry:
-        if (!using_vc4_simulator) {
-                struct drm_vc4_create_bo create;
-                memset(&create, 0, sizeof(create));
+        struct drm_vc4_create_bo create = {
+                .size = size
+        };
 
-                create.size = size;
+        ret = vc4_ioctl(screen->fd, DRM_IOCTL_VC4_CREATE_BO, &create);
+        bo->handle = create.handle;
 
-                ret = drmIoctl(screen->fd, DRM_IOCTL_VC4_CREATE_BO, &create);
-                bo->handle = create.handle;
-        } else {
-                struct drm_mode_create_dumb create;
-                memset(&create, 0, sizeof(create));
-
-                create.width = 128;
-                create.bpp = 8;
-                create.height = (size + 127) / 128;
-
-                ret = drmIoctl(screen->fd, DRM_IOCTL_MODE_CREATE_DUMB, &create);
-                bo->handle = create.handle;
-                assert(create.size >= size);
-        }
         if (ret != 0) {
                 if (!list_empty(&screen->bo_cache.time_list) &&
                     !cleared_and_retried) {
@@ -199,9 +188,9 @@ vc4_bo_last_unreference(struct vc4_bo *bo)
 
         struct timespec time;
         clock_gettime(CLOCK_MONOTONIC, &time);
-        pipe_mutex_lock(screen->bo_cache.lock);
+        mtx_lock(&screen->bo_cache.lock);
         vc4_bo_last_unreference_locked_timed(bo, time.tv_sec);
-        pipe_mutex_unlock(screen->bo_cache.lock);
+        mtx_unlock(&screen->bo_cache.lock);
 }
 
 static void
@@ -210,20 +199,19 @@ vc4_bo_free(struct vc4_bo *bo)
         struct vc4_screen *screen = bo->screen;
 
         if (bo->map) {
-#ifdef USE_VC4_SIMULATOR
-                if (bo->simulator_winsys_map) {
+                if (using_vc4_simulator && bo->name &&
+                    strcmp(bo->name, "winsys") == 0) {
                         free(bo->map);
-                        bo->map = bo->simulator_winsys_map;
+                } else {
+                        munmap(bo->map, bo->size);
+                        VG(VALGRIND_FREELIKE_BLOCK(bo->map, 0));
                 }
-#endif
-                munmap(bo->map, bo->size);
-                VG(VALGRIND_FREELIKE_BLOCK(bo->map, 0));
         }
 
         struct drm_gem_close c;
         memset(&c, 0, sizeof(c));
         c.handle = bo->handle;
-        int ret = drmIoctl(screen->fd, DRM_IOCTL_GEM_CLOSE, &c);
+        int ret = vc4_ioctl(screen->fd, DRM_IOCTL_GEM_CLOSE, &c);
         if (ret != 0)
                 fprintf(stderr, "close object %d: %s\n", bo->handle, strerror(errno));
 
@@ -273,13 +261,13 @@ free_stale_bos(struct vc4_screen *screen, time_t time)
 static void
 vc4_bo_cache_free_all(struct vc4_bo_cache *cache)
 {
-        pipe_mutex_lock(cache->lock);
+        mtx_lock(&cache->lock);
         list_for_each_entry_safe(struct vc4_bo, bo, &cache->time_list,
                                  time_list) {
                 vc4_bo_remove_from_cache(cache, bo);
                 vc4_bo_free(bo);
         }
-        pipe_mutex_unlock(cache->lock);
+        mtx_unlock(&cache->lock);
 }
 
 void
@@ -301,17 +289,8 @@ vc4_bo_last_unreference_locked_timed(struct vc4_bo *bo, time_t time)
                 /* Move old list contents over (since the array has moved, and
                  * therefore the pointers to the list heads have to change).
                  */
-                for (int i = 0; i < cache->size_list_size; i++) {
-                        struct list_head *old_head = &cache->size_list[i];
-                        if (list_empty(old_head))
-                                list_inithead(&new_list[i]);
-                        else {
-                                new_list[i].next = old_head->next;
-                                new_list[i].prev = old_head->prev;
-                                new_list[i].next->prev = &new_list[i];
-                                new_list[i].prev->next = &new_list[i];
-                        }
-                }
+                for (int i = 0; i < cache->size_list_size; i++)
+                        list_replace(&cache->size_list[i], &new_list[i]);
                 for (int i = cache->size_list_size; i < page_index + 1; i++)
                         list_inithead(&new_list[i]);
 
@@ -343,7 +322,7 @@ vc4_bo_open_handle(struct vc4_screen *screen,
 
         assert(size);
 
-        pipe_mutex_lock(screen->bo_handles_mutex);
+        mtx_lock(&screen->bo_handles_mutex);
 
         bo = util_hash_table_get(screen->bo_handles, (void*)(uintptr_t)handle);
         if (bo) {
@@ -360,16 +339,15 @@ vc4_bo_open_handle(struct vc4_screen *screen,
         bo->private = false;
 
 #ifdef USE_VC4_SIMULATOR
-        vc4_bo_map(bo);
-        bo->simulator_winsys_map = bo->map;
-        bo->simulator_winsys_stride = winsys_stride;
+        vc4_simulator_open_from_handle(screen->fd, winsys_stride,
+                                       bo->handle, bo->size);
         bo->map = malloc(bo->size);
 #endif
 
         util_hash_table_set(screen->bo_handles, (void *)(uintptr_t)handle, bo);
 
 done:
-        pipe_mutex_unlock(screen->bo_handles_mutex);
+        mtx_unlock(&screen->bo_handles_mutex);
         return bo;
 }
 
@@ -380,7 +358,7 @@ vc4_bo_open_name(struct vc4_screen *screen, uint32_t name,
         struct drm_gem_open o = {
                 .name = name
         };
-        int ret = drmIoctl(screen->fd, DRM_IOCTL_GEM_OPEN, &o);
+        int ret = vc4_ioctl(screen->fd, DRM_IOCTL_GEM_OPEN, &o);
         if (ret) {
                 fprintf(stderr, "Failed to open bo %d: %s\n",
                         name, strerror(errno));
@@ -423,10 +401,10 @@ vc4_bo_get_dmabuf(struct vc4_bo *bo)
                 return -1;
         }
 
-        pipe_mutex_lock(bo->screen->bo_handles_mutex);
+        mtx_lock(&bo->screen->bo_handles_mutex);
         bo->private = false;
         util_hash_table_set(bo->screen->bo_handles, (void *)(uintptr_t)bo->handle, bo);
-        pipe_mutex_unlock(bo->screen->bo_handles_mutex);
+        mtx_unlock(&bo->screen->bo_handles_mutex);
 
         return fd;
 }
@@ -447,30 +425,15 @@ vc4_bo_alloc_shader(struct vc4_screen *screen, const void *data, uint32_t size)
         bo->name = "code";
         bo->private = false; /* Make sure it doesn't go back to the cache. */
 
-        if (!using_vc4_simulator) {
-                struct drm_vc4_create_shader_bo create = {
-                        .size = size,
-                        .data = (uintptr_t)data,
-                };
+        struct drm_vc4_create_shader_bo create = {
+                .size = size,
+                .data = (uintptr_t)data,
+        };
 
-                ret = drmIoctl(screen->fd, DRM_IOCTL_VC4_CREATE_SHADER_BO,
-                               &create);
-                bo->handle = create.handle;
-        } else {
-                struct drm_mode_create_dumb create;
-                memset(&create, 0, sizeof(create));
+        ret = vc4_ioctl(screen->fd, DRM_IOCTL_VC4_CREATE_SHADER_BO,
+                        &create);
+        bo->handle = create.handle;
 
-                create.width = 128;
-                create.bpp = 8;
-                create.height = (size + 127) / 128;
-
-                ret = drmIoctl(screen->fd, DRM_IOCTL_MODE_CREATE_DUMB, &create);
-                bo->handle = create.handle;
-                assert(create.size >= size);
-
-                vc4_bo_map(bo);
-                memcpy(bo->map, data, size);
-        }
         if (ret != 0) {
                 fprintf(stderr, "create shader ioctl failure\n");
                 abort();
@@ -492,7 +455,7 @@ vc4_bo_flink(struct vc4_bo *bo, uint32_t *name)
         struct drm_gem_flink flink = {
                 .handle = bo->handle,
         };
-        int ret = drmIoctl(bo->screen->fd, DRM_IOCTL_GEM_FLINK, &flink);
+        int ret = vc4_ioctl(bo->screen->fd, DRM_IOCTL_GEM_FLINK, &flink);
         if (ret) {
                 fprintf(stderr, "Failed to flink bo %d: %s\n",
                         bo->handle, strerror(errno));
@@ -508,14 +471,11 @@ vc4_bo_flink(struct vc4_bo *bo, uint32_t *name)
 
 static int vc4_wait_seqno_ioctl(int fd, uint64_t seqno, uint64_t timeout_ns)
 {
-        if (using_vc4_simulator)
-                return 0;
-
         struct drm_vc4_wait_seqno wait = {
                 .seqno = seqno,
                 .timeout_ns = timeout_ns,
         };
-        int ret = drmIoctl(fd, DRM_IOCTL_VC4_WAIT_SEQNO, &wait);
+        int ret = vc4_ioctl(fd, DRM_IOCTL_VC4_WAIT_SEQNO, &wait);
         if (ret == -1)
                 return -errno;
         else
@@ -553,14 +513,11 @@ vc4_wait_seqno(struct vc4_screen *screen, uint64_t seqno, uint64_t timeout_ns,
 
 static int vc4_wait_bo_ioctl(int fd, uint32_t handle, uint64_t timeout_ns)
 {
-        if (using_vc4_simulator)
-                return 0;
-
         struct drm_vc4_wait_bo wait = {
                 .handle = handle,
                 .timeout_ns = timeout_ns,
         };
-        int ret = drmIoctl(fd, DRM_IOCTL_VC4_WAIT_BO, &wait);
+        int ret = vc4_ioctl(fd, DRM_IOCTL_VC4_WAIT_BO, &wait);
         if (ret == -1)
                 return -errno;
         else
@@ -602,19 +559,11 @@ vc4_bo_map_unsynchronized(struct vc4_bo *bo)
         if (bo->map)
                 return bo->map;
 
-        if (!using_vc4_simulator) {
-                struct drm_vc4_mmap_bo map;
-                memset(&map, 0, sizeof(map));
-                map.handle = bo->handle;
-                ret = drmIoctl(bo->screen->fd, DRM_IOCTL_VC4_MMAP_BO, &map);
-                offset = map.offset;
-        } else {
-                struct drm_mode_map_dumb map;
-                memset(&map, 0, sizeof(map));
-                map.handle = bo->handle;
-                ret = drmIoctl(bo->screen->fd, DRM_IOCTL_MODE_MAP_DUMB, &map);
-                offset = map.offset;
-        }
+        struct drm_vc4_mmap_bo map;
+        memset(&map, 0, sizeof(map));
+        map.handle = bo->handle;
+        ret = vc4_ioctl(bo->screen->fd, DRM_IOCTL_VC4_MMAP_BO, &map);
+        offset = map.offset;
         if (ret != 0) {
                 fprintf(stderr, "map ioctl failure\n");
                 abort();

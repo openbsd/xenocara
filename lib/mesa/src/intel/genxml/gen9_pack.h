@@ -158,6 +158,429 @@ __gen_ufixed(float v, uint32_t start, uint32_t end, uint32_t fract_bits)
 #endif
 
 
+enum GEN9_3D_Prim_Topo_Type {
+   _3DPRIM_POINTLIST                    =      1,
+   _3DPRIM_LINELIST                     =      2,
+   _3DPRIM_LINESTRIP                    =      3,
+   _3DPRIM_TRILIST                      =      4,
+   _3DPRIM_TRISTRIP                     =      5,
+   _3DPRIM_TRIFAN                       =      6,
+   _3DPRIM_QUADLIST                     =      7,
+   _3DPRIM_QUADSTRIP                    =      8,
+   _3DPRIM_LINELIST_ADJ                 =      9,
+   _3DPRIM_LINESTRIP_ADJ                =     10,
+   _3DPRIM_TRILIST_ADJ                  =     11,
+   _3DPRIM_TRISTRIP_ADJ                 =     12,
+   _3DPRIM_TRISTRIP_REVERSE             =     13,
+   _3DPRIM_POLYGON                      =     14,
+   _3DPRIM_RECTLIST                     =     15,
+   _3DPRIM_LINELOOP                     =     16,
+   _3DPRIM_POINTLIST_BF                 =     17,
+   _3DPRIM_LINESTRIP_CONT               =     18,
+   _3DPRIM_LINESTRIP_BF                 =     19,
+   _3DPRIM_LINESTRIP_CONT_BF            =     20,
+   _3DPRIM_TRIFAN_NOSTIPPLE             =     22,
+   _3DPRIM_PATCHLIST_1                  =     32,
+   _3DPRIM_PATCHLIST_2                  =     33,
+   _3DPRIM_PATCHLIST_3                  =     34,
+   _3DPRIM_PATCHLIST_4                  =     35,
+   _3DPRIM_PATCHLIST_5                  =     36,
+   _3DPRIM_PATCHLIST_6                  =     37,
+   _3DPRIM_PATCHLIST_7                  =     38,
+   _3DPRIM_PATCHLIST_8                  =     39,
+   _3DPRIM_PATCHLIST_9                  =     40,
+   _3DPRIM_PATCHLIST_10                 =     41,
+   _3DPRIM_PATCHLIST_11                 =     42,
+   _3DPRIM_PATCHLIST_12                 =     43,
+   _3DPRIM_PATCHLIST_13                 =     44,
+   _3DPRIM_PATCHLIST_14                 =     45,
+   _3DPRIM_PATCHLIST_15                 =     46,
+   _3DPRIM_PATCHLIST_16                 =     47,
+   _3DPRIM_PATCHLIST_17                 =     48,
+   _3DPRIM_PATCHLIST_18                 =     49,
+   _3DPRIM_PATCHLIST_19                 =     50,
+   _3DPRIM_PATCHLIST_20                 =     51,
+   _3DPRIM_PATCHLIST_21                 =     52,
+   _3DPRIM_PATCHLIST_22                 =     53,
+   _3DPRIM_PATCHLIST_23                 =     54,
+   _3DPRIM_PATCHLIST_24                 =     55,
+   _3DPRIM_PATCHLIST_25                 =     56,
+   _3DPRIM_PATCHLIST_26                 =     57,
+   _3DPRIM_PATCHLIST_27                 =     58,
+   _3DPRIM_PATCHLIST_28                 =     59,
+   _3DPRIM_PATCHLIST_29                 =     60,
+   _3DPRIM_PATCHLIST_30                 =     61,
+   _3DPRIM_PATCHLIST_31                 =     62,
+   _3DPRIM_PATCHLIST_32                 =     63,
+};
+
+enum GEN9_3D_Vertex_Component_Control {
+   VFCOMP_NOSTORE                       =      0,
+   VFCOMP_STORE_SRC                     =      1,
+   VFCOMP_STORE_0                       =      2,
+   VFCOMP_STORE_1_FP                    =      3,
+   VFCOMP_STORE_1_INT                   =      4,
+   VFCOMP_STORE_PID                     =      7,
+};
+
+enum GEN9_COMPONENT_ENABLES {
+   CE_NONE                              =      0,
+   CE_X                                 =      1,
+   CE_Y                                 =      2,
+   CE_XY                                =      3,
+   CE_Z                                 =      4,
+   CE_XZ                                =      5,
+   CE_YZ                                =      6,
+   CE_XYZ                               =      7,
+   CE_W                                 =      8,
+   CE_XW                                =      9,
+   CE_YW                                =     10,
+   CE_XYW                               =     11,
+   CE_ZW                                =     12,
+   CE_XZW                               =     13,
+   CE_YZW                               =     14,
+   CE_XYZW                              =     15,
+};
+
+enum GEN9_Attribute_Component_Format {
+   ACF_DISABLED                         =      0,
+   ACF_XY                               =      1,
+   ACF_XYZ                              =      2,
+   ACF_XYZW                             =      3,
+};
+
+enum GEN9_WRAP_SHORTEST_ENABLE {
+   WSE_X                                =      1,
+   WSE_Y                                =      2,
+   WSE_XY                               =      3,
+   WSE_Z                                =      4,
+   WSE_XZ                               =      5,
+   WSE_YZ                               =      6,
+   WSE_XYZ                              =      7,
+   WSE_W                                =      8,
+   WSE_XW                               =      9,
+   WSE_YW                               =     10,
+   WSE_XYW                              =     11,
+   WSE_ZW                               =     12,
+   WSE_XZW                              =     13,
+   WSE_YZW                              =     14,
+   WSE_XYZW                             =     15,
+};
+
+enum GEN9_3D_Stencil_Operation {
+   STENCILOP_KEEP                       =      0,
+   STENCILOP_ZERO                       =      1,
+   STENCILOP_REPLACE                    =      2,
+   STENCILOP_INCRSAT                    =      3,
+   STENCILOP_DECRSAT                    =      4,
+   STENCILOP_INCR                       =      5,
+   STENCILOP_DECR                       =      6,
+   STENCILOP_INVERT                     =      7,
+};
+
+enum GEN9_3D_Color_Buffer_Blend_Factor {
+   BLENDFACTOR_ONE                      =      1,
+   BLENDFACTOR_SRC_COLOR                =      2,
+   BLENDFACTOR_SRC_ALPHA                =      3,
+   BLENDFACTOR_DST_ALPHA                =      4,
+   BLENDFACTOR_DST_COLOR                =      5,
+   BLENDFACTOR_SRC_ALPHA_SATURATE       =      6,
+   BLENDFACTOR_CONST_COLOR              =      7,
+   BLENDFACTOR_CONST_ALPHA              =      8,
+   BLENDFACTOR_SRC1_COLOR               =      9,
+   BLENDFACTOR_SRC1_ALPHA               =     10,
+   BLENDFACTOR_ZERO                     =     17,
+   BLENDFACTOR_INV_SRC_COLOR            =     18,
+   BLENDFACTOR_INV_SRC_ALPHA            =     19,
+   BLENDFACTOR_INV_DST_ALPHA            =     20,
+   BLENDFACTOR_INV_DST_COLOR            =     21,
+   BLENDFACTOR_INV_CONST_COLOR          =     23,
+   BLENDFACTOR_INV_CONST_ALPHA          =     24,
+   BLENDFACTOR_INV_SRC1_COLOR           =     25,
+   BLENDFACTOR_INV_SRC1_ALPHA           =     26,
+};
+
+enum GEN9_3D_Color_Buffer_Blend_Function {
+   BLENDFUNCTION_ADD                    =      0,
+   BLENDFUNCTION_SUBTRACT               =      1,
+   BLENDFUNCTION_REVERSE_SUBTRACT       =      2,
+   BLENDFUNCTION_MIN                    =      3,
+   BLENDFUNCTION_MAX                    =      4,
+};
+
+enum GEN9_3D_Compare_Function {
+   COMPAREFUNCTION_ALWAYS               =      0,
+   COMPAREFUNCTION_NEVER                =      1,
+   COMPAREFUNCTION_LESS                 =      2,
+   COMPAREFUNCTION_EQUAL                =      3,
+   COMPAREFUNCTION_LEQUAL               =      4,
+   COMPAREFUNCTION_GREATER              =      5,
+   COMPAREFUNCTION_NOTEQUAL             =      6,
+   COMPAREFUNCTION_GEQUAL               =      7,
+};
+
+enum GEN9_3D_Logic_Op_Function {
+   LOGICOP_CLEAR                        =      0,
+   LOGICOP_NOR                          =      1,
+   LOGICOP_AND_INVERTED                 =      2,
+   LOGICOP_COPY_INVERTED                =      3,
+   LOGICOP_AND_REVERSE                  =      4,
+   LOGICOP_INVERT                       =      5,
+   LOGICOP_XOR                          =      6,
+   LOGICOP_NAND                         =      7,
+   LOGICOP_AND                          =      8,
+   LOGICOP_EQUIV                        =      9,
+   LOGICOP_NOOP                         =     10,
+   LOGICOP_OR_INVERTED                  =     11,
+   LOGICOP_COPY                         =     12,
+   LOGICOP_OR_REVERSE                   =     13,
+   LOGICOP_OR                           =     14,
+   LOGICOP_SET                          =     15,
+};
+
+enum GEN9_SURFACE_FORMAT {
+   SF_R32G32B32A32_FLOAT                =      0,
+   SF_R32G32B32A32_SINT                 =      1,
+   SF_R32G32B32A32_UINT                 =      2,
+   SF_R32G32B32A32_UNORM                =      3,
+   SF_R32G32B32A32_SNORM                =      4,
+   SF_R64G64_FLOAT                      =      5,
+   SF_R32G32B32X32_FLOAT                =      6,
+   SF_R32G32B32A32_SSCALED              =      7,
+   SF_R32G32B32A32_USCALED              =      8,
+   SF_R32G32B32A32_SFIXED               =     32,
+   SF_R64G64_PASSTHRU                   =     33,
+   SF_R32G32B32_FLOAT                   =     64,
+   SF_R32G32B32_SINT                    =     65,
+   SF_R32G32B32_UINT                    =     66,
+   SF_R32G32B32_UNORM                   =     67,
+   SF_R32G32B32_SNORM                   =     68,
+   SF_R32G32B32_SSCALED                 =     69,
+   SF_R32G32B32_USCALED                 =     70,
+   SF_R32G32B32_SFIXED                  =     80,
+   SF_R16G16B16A16_UNORM                =    128,
+   SF_R16G16B16A16_SNORM                =    129,
+   SF_R16G16B16A16_SINT                 =    130,
+   SF_R16G16B16A16_UINT                 =    131,
+   SF_R16G16B16A16_FLOAT                =    132,
+   SF_R32G32_FLOAT                      =    133,
+   SF_R32G32_SINT                       =    134,
+   SF_R32G32_UINT                       =    135,
+   SF_R32_FLOAT_X8X24_TYPELESS          =    136,
+   SF_X32_TYPELESS_G8X24_UINT           =    137,
+   SF_L32A32_FLOAT                      =    138,
+   SF_R32G32_UNORM                      =    139,
+   SF_R32G32_SNORM                      =    140,
+   SF_R64_FLOAT                         =    141,
+   SF_R16G16B16X16_UNORM                =    142,
+   SF_R16G16B16X16_FLOAT                =    143,
+   SF_A32X32_FLOAT                      =    144,
+   SF_L32X32_FLOAT                      =    145,
+   SF_I32X32_FLOAT                      =    146,
+   SF_R16G16B16A16_SSCALED              =    147,
+   SF_R16G16B16A16_USCALED              =    148,
+   SF_R32G32_SSCALED                    =    149,
+   SF_R32G32_USCALED                    =    150,
+   SF_R32G32_SFIXED                     =    160,
+   SF_R64_PASSTHRU                      =    161,
+   SF_B8G8R8A8_UNORM                    =    192,
+   SF_B8G8R8A8_UNORM_SRGB               =    193,
+   SF_R10G10B10A2_UNORM                 =    194,
+   SF_R10G10B10A2_UNORM_SRGB            =    195,
+   SF_R10G10B10A2_UINT                  =    196,
+   SF_R10G10B10_SNORM_A2_UNORM          =    197,
+   SF_R8G8B8A8_UNORM                    =    199,
+   SF_R8G8B8A8_UNORM_SRGB               =    200,
+   SF_R8G8B8A8_SNORM                    =    201,
+   SF_R8G8B8A8_SINT                     =    202,
+   SF_R8G8B8A8_UINT                     =    203,
+   SF_R16G16_UNORM                      =    204,
+   SF_R16G16_SNORM                      =    205,
+   SF_R16G16_SINT                       =    206,
+   SF_R16G16_UINT                       =    207,
+   SF_R16G16_FLOAT                      =    208,
+   SF_B10G10R10A2_UNORM                 =    209,
+   SF_B10G10R10A2_UNORM_SRGB            =    210,
+   SF_R11G11B10_FLOAT                   =    211,
+   SF_R32_SINT                          =    214,
+   SF_R32_UINT                          =    215,
+   SF_R32_FLOAT                         =    216,
+   SF_R24_UNORM_X8_TYPELESS             =    217,
+   SF_X24_TYPELESS_G8_UINT              =    218,
+   SF_L32_UNORM                         =    221,
+   SF_A32_UNORM                         =    222,
+   SF_L16A16_UNORM                      =    223,
+   SF_I24X8_UNORM                       =    224,
+   SF_L24X8_UNORM                       =    225,
+   SF_A24X8_UNORM                       =    226,
+   SF_I32_FLOAT                         =    227,
+   SF_L32_FLOAT                         =    228,
+   SF_A32_FLOAT                         =    229,
+   SF_X8B8_UNORM_G8R8_SNORM             =    230,
+   SF_A8X8_UNORM_G8R8_SNORM             =    231,
+   SF_B8X8_UNORM_G8R8_SNORM             =    232,
+   SF_B8G8R8X8_UNORM                    =    233,
+   SF_B8G8R8X8_UNORM_SRGB               =    234,
+   SF_R8G8B8X8_UNORM                    =    235,
+   SF_R8G8B8X8_UNORM_SRGB               =    236,
+   SF_R9G9B9E5_SHAREDEXP                =    237,
+   SF_B10G10R10X2_UNORM                 =    238,
+   SF_L16A16_FLOAT                      =    240,
+   SF_R32_UNORM                         =    241,
+   SF_R32_SNORM                         =    242,
+   SF_R10G10B10X2_USCALED               =    243,
+   SF_R8G8B8A8_SSCALED                  =    244,
+   SF_R8G8B8A8_USCALED                  =    245,
+   SF_R16G16_SSCALED                    =    246,
+   SF_R16G16_USCALED                    =    247,
+   SF_R32_SSCALED                       =    248,
+   SF_R32_USCALED                       =    249,
+   SF_B5G6R5_UNORM                      =    256,
+   SF_B5G6R5_UNORM_SRGB                 =    257,
+   SF_B5G5R5A1_UNORM                    =    258,
+   SF_B5G5R5A1_UNORM_SRGB               =    259,
+   SF_B4G4R4A4_UNORM                    =    260,
+   SF_B4G4R4A4_UNORM_SRGB               =    261,
+   SF_R8G8_UNORM                        =    262,
+   SF_R8G8_SNORM                        =    263,
+   SF_R8G8_SINT                         =    264,
+   SF_R8G8_UINT                         =    265,
+   SF_R16_UNORM                         =    266,
+   SF_R16_SNORM                         =    267,
+   SF_R16_SINT                          =    268,
+   SF_R16_UINT                          =    269,
+   SF_R16_FLOAT                         =    270,
+   SF_A8P8_UNORM_PALETTE0               =    271,
+   SF_A8P8_UNORM_PALETTE1               =    272,
+   SF_I16_UNORM                         =    273,
+   SF_L16_UNORM                         =    274,
+   SF_A16_UNORM                         =    275,
+   SF_L8A8_UNORM                        =    276,
+   SF_I16_FLOAT                         =    277,
+   SF_L16_FLOAT                         =    278,
+   SF_A16_FLOAT                         =    279,
+   SF_L8A8_UNORM_SRGB                   =    280,
+   SF_R5G5_SNORM_B6_UNORM               =    281,
+   SF_B5G5R5X1_UNORM                    =    282,
+   SF_B5G5R5X1_UNORM_SRGB               =    283,
+   SF_R8G8_SSCALED                      =    284,
+   SF_R8G8_USCALED                      =    285,
+   SF_R16_SSCALED                       =    286,
+   SF_R16_USCALED                       =    287,
+   SF_P8A8_UNORM_PALETTE0               =    290,
+   SF_P8A8_UNORM_PALETTE1               =    291,
+   SF_A1B5G5R5_UNORM                    =    292,
+   SF_A4B4G4R4_UNORM                    =    293,
+   SF_L8A8_UINT                         =    294,
+   SF_L8A8_SINT                         =    295,
+   SF_R8_UNORM                          =    320,
+   SF_R8_SNORM                          =    321,
+   SF_R8_SINT                           =    322,
+   SF_R8_UINT                           =    323,
+   SF_A8_UNORM                          =    324,
+   SF_I8_UNORM                          =    325,
+   SF_L8_UNORM                          =    326,
+   SF_P4A4_UNORM_PALETTE0               =    327,
+   SF_A4P4_UNORM_PALETTE0               =    328,
+   SF_R8_SSCALED                        =    329,
+   SF_R8_USCALED                        =    330,
+   SF_P8_UNORM_PALETTE0                 =    331,
+   SF_L8_UNORM_SRGB                     =    332,
+   SF_P8_UNORM_PALETTE1                 =    333,
+   SF_P4A4_UNORM_PALETTE1               =    334,
+   SF_A4P4_UNORM_PALETTE1               =    335,
+   SF_Y8_UNORM                          =    336,
+   SF_L8_UINT                           =    338,
+   SF_L8_SINT                           =    339,
+   SF_I8_UINT                           =    340,
+   SF_I8_SINT                           =    341,
+   SF_DXT1_RGB_SRGB                     =    384,
+   SF_R1_UNORM                          =    385,
+   SF_YCRCB_NORMAL                      =    386,
+   SF_YCRCB_SWAPUVY                     =    387,
+   SF_P2_UNORM_PALETTE0                 =    388,
+   SF_P2_UNORM_PALETTE1                 =    389,
+   SF_BC1_UNORM                         =    390,
+   SF_BC2_UNORM                         =    391,
+   SF_BC3_UNORM                         =    392,
+   SF_BC4_UNORM                         =    393,
+   SF_BC5_UNORM                         =    394,
+   SF_BC1_UNORM_SRGB                    =    395,
+   SF_BC2_UNORM_SRGB                    =    396,
+   SF_BC3_UNORM_SRGB                    =    397,
+   SF_MONO8                             =    398,
+   SF_YCRCB_SWAPUV                      =    399,
+   SF_YCRCB_SWAPY                       =    400,
+   SF_DXT1_RGB                          =    401,
+   SF_FXT1                              =    402,
+   SF_R8G8B8_UNORM                      =    403,
+   SF_R8G8B8_SNORM                      =    404,
+   SF_R8G8B8_SSCALED                    =    405,
+   SF_R8G8B8_USCALED                    =    406,
+   SF_R64G64B64A64_FLOAT                =    407,
+   SF_R64G64B64_FLOAT                   =    408,
+   SF_BC4_SNORM                         =    409,
+   SF_BC5_SNORM                         =    410,
+   SF_R16G16B16_FLOAT                   =    411,
+   SF_R16G16B16_UNORM                   =    412,
+   SF_R16G16B16_SNORM                   =    413,
+   SF_R16G16B16_SSCALED                 =    414,
+   SF_R16G16B16_USCALED                 =    415,
+   SF_BC6H_SF16                         =    417,
+   SF_BC7_UNORM                         =    418,
+   SF_BC7_UNORM_SRGB                    =    419,
+   SF_BC6H_UF16                         =    420,
+   SF_PLANAR_420_8                      =    421,
+   SF_R8G8B8_UNORM_SRGB                 =    424,
+   SF_ETC1_RGB8                         =    425,
+   SF_ETC2_RGB8                         =    426,
+   SF_EAC_R11                           =    427,
+   SF_EAC_RG11                          =    428,
+   SF_EAC_SIGNED_R11                    =    429,
+   SF_EAC_SIGNED_RG11                   =    430,
+   SF_ETC2_SRGB8                        =    431,
+   SF_R16G16B16_UINT                    =    432,
+   SF_R16G16B16_SINT                    =    433,
+   SF_R32_SFIXED                        =    434,
+   SF_R10G10B10A2_SNORM                 =    435,
+   SF_R10G10B10A2_USCALED               =    436,
+   SF_R10G10B10A2_SSCALED               =    437,
+   SF_R10G10B10A2_SINT                  =    438,
+   SF_B10G10R10A2_SNORM                 =    439,
+   SF_B10G10R10A2_USCALED               =    440,
+   SF_B10G10R10A2_SSCALED               =    441,
+   SF_B10G10R10A2_UINT                  =    442,
+   SF_B10G10R10A2_SINT                  =    443,
+   SF_R64G64B64A64_PASSTHRU             =    444,
+   SF_R64G64B64_PASSTHRU                =    445,
+   SF_ETC2_RGB8_PTA                     =    448,
+   SF_ETC2_SRGB8_PTA                    =    449,
+   SF_ETC2_EAC_RGBA8                    =    450,
+   SF_ETC2_EAC_SRGB8_A8                 =    451,
+   SF_R8G8B8_UINT                       =    456,
+   SF_R8G8B8_SINT                       =    457,
+   SF_RAW                               =    511,
+};
+
+enum GEN9_ShaderChannelSelect {
+   SCS_ZERO                             =      0,
+   SCS_ONE                              =      1,
+   SCS_RED                              =      4,
+   SCS_GREEN                            =      5,
+   SCS_BLUE                             =      6,
+   SCS_ALPHA                            =      7,
+};
+
+enum GEN9_TextureCoordinateMode {
+   TCM_WRAP                             =      0,
+   TCM_MIRROR                           =      1,
+   TCM_CLAMP                            =      2,
+   TCM_CUBE                             =      3,
+   TCM_CLAMP_BORDER                     =      4,
+   TCM_MIRROR_ONCE                      =      5,
+   TCM_HALF_BORDER                      =      6,
+};
+
 #define GEN9_3DSTATE_CONSTANT_BODY_length     10
 struct GEN9_3DSTATE_CONSTANT_BODY {
    uint32_t                             ConstantBuffer1ReadLength;
@@ -298,13 +721,13 @@ GEN9_VERTEX_BUFFER_STATE_pack(__gen_user_data *data, void * restrict dst,
 struct GEN9_VERTEX_ELEMENT_STATE {
    uint32_t                             VertexBufferIndex;
    bool                                 Valid;
-   uint32_t                             SourceElementFormat;
+   enum GEN9_SURFACE_FORMAT             SourceElementFormat;
    bool                                 EdgeFlagEnable;
    uint32_t                             SourceElementOffset;
-   uint32_t                             Component0Control;
-   uint32_t                             Component1Control;
-   uint32_t                             Component2Control;
-   uint32_t                             Component3Control;
+   enum GEN9_3D_Vertex_Component_Control Component0Control;
+   enum GEN9_3D_Vertex_Component_Control Component1Control;
+   enum GEN9_3D_Vertex_Component_Control Component2Control;
+   enum GEN9_3D_Vertex_Component_Control Component3Control;
 };
 
 static inline void
@@ -517,7 +940,7 @@ GEN9_SF_CLIP_VIEWPORT_pack(__gen_user_data *data, void * restrict dst,
 #define GEN9_BLEND_STATE_ENTRY_length          2
 struct GEN9_BLEND_STATE_ENTRY {
    bool                                 LogicOpEnable;
-   uint32_t                             LogicOpFunction;
+   enum GEN9_3D_Logic_Op_Function       LogicOpFunction;
    bool                                 PreBlendSourceOnlyClampEnable;
    uint32_t                             ColorClampRange;
 #define COLORCLAMP_UNORM                         0
@@ -526,12 +949,12 @@ struct GEN9_BLEND_STATE_ENTRY {
    bool                                 PreBlendColorClampEnable;
    bool                                 PostBlendColorClampEnable;
    bool                                 ColorBufferBlendEnable;
-   uint32_t                             SourceBlendFactor;
-   uint32_t                             DestinationBlendFactor;
-   uint32_t                             ColorBlendFunction;
-   uint32_t                             SourceAlphaBlendFactor;
-   uint32_t                             DestinationAlphaBlendFactor;
-   uint32_t                             AlphaBlendFunction;
+   enum GEN9_3D_Color_Buffer_Blend_Factor SourceBlendFactor;
+   enum GEN9_3D_Color_Buffer_Blend_Factor DestinationBlendFactor;
+   enum GEN9_3D_Color_Buffer_Blend_Function ColorBlendFunction;
+   enum GEN9_3D_Color_Buffer_Blend_Factor SourceAlphaBlendFactor;
+   enum GEN9_3D_Color_Buffer_Blend_Factor DestinationAlphaBlendFactor;
+   enum GEN9_3D_Color_Buffer_Blend_Function AlphaBlendFunction;
    bool                                 WriteDisableAlpha;
    bool                                 WriteDisableRed;
    bool                                 WriteDisableGreen;
@@ -573,7 +996,7 @@ struct GEN9_BLEND_STATE {
    bool                                 AlphaToOneEnable;
    bool                                 AlphaToCoverageDitherEnable;
    bool                                 AlphaTestEnable;
-   uint32_t                             AlphaTestFunction;
+   enum GEN9_3D_Compare_Function        AlphaTestFunction;
    bool                                 ColorDitherEnable;
    uint32_t                             XDitherOffset;
    uint32_t                             YDitherOffset;
@@ -698,7 +1121,6 @@ GEN9_EXECUTION_UNIT_EXTENDED_MESSAGE_DESCRIPTOR_pack(__gen_user_data *data, void
 #define GEN9_INTERFACE_DESCRIPTOR_DATA_length      8
 struct GEN9_INTERFACE_DESCRIPTOR_DATA {
    uint64_t                             KernelStartPointer;
-   uint64_t                             KernelStartPointerHigh;
    uint32_t                             DenormMode;
 #define Ftz                                      0
 #define SetByKernel                              1
@@ -749,11 +1171,10 @@ GEN9_INTERFACE_DESCRIPTOR_DATA_pack(__gen_user_data *data, void * restrict dst,
 {
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
-   dw[0] =
-      __gen_offset(values->KernelStartPointer, 6, 31);
-
-   dw[1] =
-      __gen_offset(values->KernelStartPointerHigh, 0, 15);
+   const uint64_t v0 =
+      __gen_offset(values->KernelStartPointer, 6, 47);
+   dw[0] = v0;
+   dw[1] = v0 >> 32;
 
    dw[2] =
       __gen_uint(values->DenormMode, 19, 19) |
@@ -857,7 +1278,7 @@ struct GEN9_RENDER_SURFACE_STATE {
 #define SURFTYPE_STRBUF                          5
 #define SURFTYPE_NULL                            7
    bool                                 SurfaceArray;
-   uint32_t                             SurfaceFormat;
+   enum GEN9_SURFACE_FORMAT             SurfaceFormat;
    uint32_t                             SurfaceVerticalAlignment;
 #define VALIGN4                                  1
 #define VALIGN8                                  2
@@ -1323,416 +1744,6 @@ GEN9_SAMPLER_STATE_8X8_AVS_COEFFICIENTS_pack(__gen_user_data *data, void * restr
       __gen_sfixed(values->Table1YFilterCoefficientn4, 0, 7, 6);
 }
 
-/* enum GEN9_3D_Prim_Topo_Type */
-#define _3DPRIM_POINTLIST                         1
-#define _3DPRIM_LINELIST                          2
-#define _3DPRIM_LINESTRIP                         3
-#define _3DPRIM_TRILIST                           4
-#define _3DPRIM_TRISTRIP                          5
-#define _3DPRIM_TRIFAN                            6
-#define _3DPRIM_QUADLIST                          7
-#define _3DPRIM_QUADSTRIP                         8
-#define _3DPRIM_LINELIST_ADJ                      9
-#define _3DPRIM_LINESTRIP_ADJ                    10
-#define _3DPRIM_TRILIST_ADJ                      11
-#define _3DPRIM_TRISTRIP_ADJ                     12
-#define _3DPRIM_TRISTRIP_REVERSE                 13
-#define _3DPRIM_POLYGON                          14
-#define _3DPRIM_RECTLIST                         15
-#define _3DPRIM_LINELOOP                         16
-#define _3DPRIM_POINTLIST_BF                     17
-#define _3DPRIM_LINESTRIP_CONT                   18
-#define _3DPRIM_LINESTRIP_BF                     19
-#define _3DPRIM_LINESTRIP_CONT_BF                20
-#define _3DPRIM_TRIFAN_NOSTIPPLE                 22
-#define _3DPRIM_PATCHLIST_1                      32
-#define _3DPRIM_PATCHLIST_2                      33
-#define _3DPRIM_PATCHLIST_3                      34
-#define _3DPRIM_PATCHLIST_4                      35
-#define _3DPRIM_PATCHLIST_5                      36
-#define _3DPRIM_PATCHLIST_6                      37
-#define _3DPRIM_PATCHLIST_7                      38
-#define _3DPRIM_PATCHLIST_8                      39
-#define _3DPRIM_PATCHLIST_9                      40
-#define _3DPRIM_PATCHLIST_10                     41
-#define _3DPRIM_PATCHLIST_11                     42
-#define _3DPRIM_PATCHLIST_12                     43
-#define _3DPRIM_PATCHLIST_13                     44
-#define _3DPRIM_PATCHLIST_14                     45
-#define _3DPRIM_PATCHLIST_15                     46
-#define _3DPRIM_PATCHLIST_16                     47
-#define _3DPRIM_PATCHLIST_17                     48
-#define _3DPRIM_PATCHLIST_18                     49
-#define _3DPRIM_PATCHLIST_19                     50
-#define _3DPRIM_PATCHLIST_20                     51
-#define _3DPRIM_PATCHLIST_21                     52
-#define _3DPRIM_PATCHLIST_22                     53
-#define _3DPRIM_PATCHLIST_23                     54
-#define _3DPRIM_PATCHLIST_24                     55
-#define _3DPRIM_PATCHLIST_25                     56
-#define _3DPRIM_PATCHLIST_26                     57
-#define _3DPRIM_PATCHLIST_27                     58
-#define _3DPRIM_PATCHLIST_28                     59
-#define _3DPRIM_PATCHLIST_29                     60
-#define _3DPRIM_PATCHLIST_30                     61
-#define _3DPRIM_PATCHLIST_31                     62
-#define _3DPRIM_PATCHLIST_32                     63
-
-/* enum GEN9_3D_Vertex_Component_Control */
-#define VFCOMP_NOSTORE                            0
-#define VFCOMP_STORE_SRC                          1
-#define VFCOMP_STORE_0                            2
-#define VFCOMP_STORE_1_FP                         3
-#define VFCOMP_STORE_1_INT                        4
-#define VFCOMP_STORE_PID                          7
-
-/* enum GEN9_COMPONENT_ENABLES */
-#define CE_NONE                                   0
-#define CE_X                                      1
-#define CE_Y                                      2
-#define CE_XY                                     3
-#define CE_Z                                      4
-#define CE_XZ                                     5
-#define CE_YZ                                     6
-#define CE_XYZ                                    7
-#define CE_W                                      8
-#define CE_XW                                     9
-#define CE_YW                                    10
-#define CE_XYW                                   11
-#define CE_ZW                                    12
-#define CE_XZW                                   13
-#define CE_YZW                                   14
-#define CE_XYZW                                  15
-
-/* enum GEN9_Attribute_Component_Format */
-#define ACF_DISABLED                              0
-#define ACF_XY                                    1
-#define ACF_XYZ                                   2
-#define ACF_XYZW                                  3
-
-/* enum GEN9_WRAP_SHORTEST_ENABLE */
-#define WSE_X                                     1
-#define WSE_Y                                     2
-#define WSE_XY                                    3
-#define WSE_Z                                     4
-#define WSE_XZ                                    5
-#define WSE_YZ                                    6
-#define WSE_XYZ                                   7
-#define WSE_W                                     8
-#define WSE_XW                                    9
-#define WSE_YW                                   10
-#define WSE_XYW                                  11
-#define WSE_ZW                                   12
-#define WSE_XZW                                  13
-#define WSE_YZW                                  14
-#define WSE_XYZW                                 15
-
-/* enum GEN9_3D_Stencil_Operation */
-#define STENCILOP_KEEP                            0
-#define STENCILOP_ZERO                            1
-#define STENCILOP_REPLACE                         2
-#define STENCILOP_INCRSAT                         3
-#define STENCILOP_DECRSAT                         4
-#define STENCILOP_INCR                            5
-#define STENCILOP_DECR                            6
-#define STENCILOP_INVERT                          7
-
-/* enum GEN9_3D_Color_Buffer_Blend_Factor */
-#define BLENDFACTOR_ONE                           1
-#define BLENDFACTOR_SRC_COLOR                     2
-#define BLENDFACTOR_SRC_ALPHA                     3
-#define BLENDFACTOR_DST_ALPHA                     4
-#define BLENDFACTOR_DST_COLOR                     5
-#define BLENDFACTOR_SRC_ALPHA_SATURATE            6
-#define BLENDFACTOR_CONST_COLOR                   7
-#define BLENDFACTOR_CONST_ALPHA                   8
-#define BLENDFACTOR_SRC1_COLOR                    9
-#define BLENDFACTOR_SRC1_ALPHA                   10
-#define BLENDFACTOR_ZERO                         17
-#define BLENDFACTOR_INV_SRC_COLOR                18
-#define BLENDFACTOR_INV_SRC_ALPHA                19
-#define BLENDFACTOR_INV_DST_ALPHA                20
-#define BLENDFACTOR_INV_DST_COLOR                21
-#define BLENDFACTOR_INV_CONST_COLOR              23
-#define BLENDFACTOR_INV_CONST_ALPHA              24
-#define BLENDFACTOR_INV_SRC1_COLOR               25
-#define BLENDFACTOR_INV_SRC1_ALPHA               26
-
-/* enum GEN9_3D_Color_Buffer_Blend_Function */
-#define BLENDFUNCTION_ADD                         0
-#define BLENDFUNCTION_SUBTRACT                    1
-#define BLENDFUNCTION_REVERSE_SUBTRACT            2
-#define BLENDFUNCTION_MIN                         3
-#define BLENDFUNCTION_MAX                         4
-
-/* enum GEN9_3D_Compare_Function */
-#define COMPAREFUNCTION_ALWAYS                    0
-#define COMPAREFUNCTION_NEVER                     1
-#define COMPAREFUNCTION_LESS                      2
-#define COMPAREFUNCTION_EQUAL                     3
-#define COMPAREFUNCTION_LEQUAL                    4
-#define COMPAREFUNCTION_GREATER                   5
-#define COMPAREFUNCTION_NOTEQUAL                  6
-#define COMPAREFUNCTION_GEQUAL                    7
-
-/* enum GEN9_3D_Logic_Op_Function */
-#define LOGICOP_CLEAR                             0
-#define LOGICOP_NOR                               1
-#define LOGICOP_AND_INVERTED                      2
-#define LOGICOP_COPY_INVERTED                     3
-#define LOGICOP_AND_REVERSE                       4
-#define LOGICOP_INVERT                            5
-#define LOGICOP_XOR                               6
-#define LOGICOP_NAND                              7
-#define LOGICOP_AND                               8
-#define LOGICOP_EQUIV                             9
-#define LOGICOP_NOOP                             10
-#define LOGICOP_OR_INVERTED                      11
-#define LOGICOP_COPY                             12
-#define LOGICOP_OR_REVERSE                       13
-#define LOGICOP_OR                               14
-#define LOGICOP_SET                              15
-
-/* enum GEN9_SURFACE_FORMAT */
-#define SF_R32G32B32A32_FLOAT                     0
-#define SF_R32G32B32A32_SINT                      1
-#define SF_R32G32B32A32_UINT                      2
-#define SF_R32G32B32A32_UNORM                     3
-#define SF_R32G32B32A32_SNORM                     4
-#define SF_R64G64_FLOAT                           5
-#define SF_R32G32B32X32_FLOAT                     6
-#define SF_R32G32B32A32_SSCALED                   7
-#define SF_R32G32B32A32_USCALED                   8
-#define SF_R32G32B32A32_SFIXED                   32
-#define SF_R64G64_PASSTHRU                       33
-#define SF_R32G32B32_FLOAT                       64
-#define SF_R32G32B32_SINT                        65
-#define SF_R32G32B32_UINT                        66
-#define SF_R32G32B32_UNORM                       67
-#define SF_R32G32B32_SNORM                       68
-#define SF_R32G32B32_SSCALED                     69
-#define SF_R32G32B32_USCALED                     70
-#define SF_R32G32B32_SFIXED                      80
-#define SF_R16G16B16A16_UNORM                   128
-#define SF_R16G16B16A16_SNORM                   129
-#define SF_R16G16B16A16_SINT                    130
-#define SF_R16G16B16A16_UINT                    131
-#define SF_R16G16B16A16_FLOAT                   132
-#define SF_R32G32_FLOAT                         133
-#define SF_R32G32_SINT                          134
-#define SF_R32G32_UINT                          135
-#define SF_R32_FLOAT_X8X24_TYPELESS             136
-#define SF_X32_TYPELESS_G8X24_UINT              137
-#define SF_L32A32_FLOAT                         138
-#define SF_R32G32_UNORM                         139
-#define SF_R32G32_SNORM                         140
-#define SF_R64_FLOAT                            141
-#define SF_R16G16B16X16_UNORM                   142
-#define SF_R16G16B16X16_FLOAT                   143
-#define SF_A32X32_FLOAT                         144
-#define SF_L32X32_FLOAT                         145
-#define SF_I32X32_FLOAT                         146
-#define SF_R16G16B16A16_SSCALED                 147
-#define SF_R16G16B16A16_USCALED                 148
-#define SF_R32G32_SSCALED                       149
-#define SF_R32G32_USCALED                       150
-#define SF_R32G32_SFIXED                        160
-#define SF_R64_PASSTHRU                         161
-#define SF_B8G8R8A8_UNORM                       192
-#define SF_B8G8R8A8_UNORM_SRGB                  193
-#define SF_R10G10B10A2_UNORM                    194
-#define SF_R10G10B10A2_UNORM_SRGB               195
-#define SF_R10G10B10A2_UINT                     196
-#define SF_R10G10B10_SNORM_A2_UNORM             197
-#define SF_R8G8B8A8_UNORM                       199
-#define SF_R8G8B8A8_UNORM_SRGB                  200
-#define SF_R8G8B8A8_SNORM                       201
-#define SF_R8G8B8A8_SINT                        202
-#define SF_R8G8B8A8_UINT                        203
-#define SF_R16G16_UNORM                         204
-#define SF_R16G16_SNORM                         205
-#define SF_R16G16_SINT                          206
-#define SF_R16G16_UINT                          207
-#define SF_R16G16_FLOAT                         208
-#define SF_B10G10R10A2_UNORM                    209
-#define SF_B10G10R10A2_UNORM_SRGB               210
-#define SF_R11G11B10_FLOAT                      211
-#define SF_R32_SINT                             214
-#define SF_R32_UINT                             215
-#define SF_R32_FLOAT                            216
-#define SF_R24_UNORM_X8_TYPELESS                217
-#define SF_X24_TYPELESS_G8_UINT                 218
-#define SF_L32_UNORM                            221
-#define SF_A32_UNORM                            222
-#define SF_L16A16_UNORM                         223
-#define SF_I24X8_UNORM                          224
-#define SF_L24X8_UNORM                          225
-#define SF_A24X8_UNORM                          226
-#define SF_I32_FLOAT                            227
-#define SF_L32_FLOAT                            228
-#define SF_A32_FLOAT                            229
-#define SF_X8B8_UNORM_G8R8_SNORM                230
-#define SF_A8X8_UNORM_G8R8_SNORM                231
-#define SF_B8X8_UNORM_G8R8_SNORM                232
-#define SF_B8G8R8X8_UNORM                       233
-#define SF_B8G8R8X8_UNORM_SRGB                  234
-#define SF_R8G8B8X8_UNORM                       235
-#define SF_R8G8B8X8_UNORM_SRGB                  236
-#define SF_R9G9B9E5_SHAREDEXP                   237
-#define SF_B10G10R10X2_UNORM                    238
-#define SF_L16A16_FLOAT                         240
-#define SF_R32_UNORM                            241
-#define SF_R32_SNORM                            242
-#define SF_R10G10B10X2_USCALED                  243
-#define SF_R8G8B8A8_SSCALED                     244
-#define SF_R8G8B8A8_USCALED                     245
-#define SF_R16G16_SSCALED                       246
-#define SF_R16G16_USCALED                       247
-#define SF_R32_SSCALED                          248
-#define SF_R32_USCALED                          249
-#define SF_B5G6R5_UNORM                         256
-#define SF_B5G6R5_UNORM_SRGB                    257
-#define SF_B5G5R5A1_UNORM                       258
-#define SF_B5G5R5A1_UNORM_SRGB                  259
-#define SF_B4G4R4A4_UNORM                       260
-#define SF_B4G4R4A4_UNORM_SRGB                  261
-#define SF_R8G8_UNORM                           262
-#define SF_R8G8_SNORM                           263
-#define SF_R8G8_SINT                            264
-#define SF_R8G8_UINT                            265
-#define SF_R16_UNORM                            266
-#define SF_R16_SNORM                            267
-#define SF_R16_SINT                             268
-#define SF_R16_UINT                             269
-#define SF_R16_FLOAT                            270
-#define SF_A8P8_UNORM_PALETTE0                  271
-#define SF_A8P8_UNORM_PALETTE1                  272
-#define SF_I16_UNORM                            273
-#define SF_L16_UNORM                            274
-#define SF_A16_UNORM                            275
-#define SF_L8A8_UNORM                           276
-#define SF_I16_FLOAT                            277
-#define SF_L16_FLOAT                            278
-#define SF_A16_FLOAT                            279
-#define SF_L8A8_UNORM_SRGB                      280
-#define SF_R5G5_SNORM_B6_UNORM                  281
-#define SF_B5G5R5X1_UNORM                       282
-#define SF_B5G5R5X1_UNORM_SRGB                  283
-#define SF_R8G8_SSCALED                         284
-#define SF_R8G8_USCALED                         285
-#define SF_R16_SSCALED                          286
-#define SF_R16_USCALED                          287
-#define SF_P8A8_UNORM_PALETTE0                  290
-#define SF_P8A8_UNORM_PALETTE1                  291
-#define SF_A1B5G5R5_UNORM                       292
-#define SF_A4B4G4R4_UNORM                       293
-#define SF_L8A8_UINT                            294
-#define SF_L8A8_SINT                            295
-#define SF_R8_UNORM                             320
-#define SF_R8_SNORM                             321
-#define SF_R8_SINT                              322
-#define SF_R8_UINT                              323
-#define SF_A8_UNORM                             324
-#define SF_I8_UNORM                             325
-#define SF_L8_UNORM                             326
-#define SF_P4A4_UNORM_PALETTE0                  327
-#define SF_A4P4_UNORM_PALETTE0                  328
-#define SF_R8_SSCALED                           329
-#define SF_R8_USCALED                           330
-#define SF_P8_UNORM_PALETTE0                    331
-#define SF_L8_UNORM_SRGB                        332
-#define SF_P8_UNORM_PALETTE1                    333
-#define SF_P4A4_UNORM_PALETTE1                  334
-#define SF_A4P4_UNORM_PALETTE1                  335
-#define SF_Y8_UNORM                             336
-#define SF_L8_UINT                              338
-#define SF_L8_SINT                              339
-#define SF_I8_UINT                              340
-#define SF_I8_SINT                              341
-#define SF_DXT1_RGB_SRGB                        384
-#define SF_R1_UNORM                             385
-#define SF_YCRCB_NORMAL                         386
-#define SF_YCRCB_SWAPUVY                        387
-#define SF_P2_UNORM_PALETTE0                    388
-#define SF_P2_UNORM_PALETTE1                    389
-#define SF_BC1_UNORM                            390
-#define SF_BC2_UNORM                            391
-#define SF_BC3_UNORM                            392
-#define SF_BC4_UNORM                            393
-#define SF_BC5_UNORM                            394
-#define SF_BC1_UNORM_SRGB                       395
-#define SF_BC2_UNORM_SRGB                       396
-#define SF_BC3_UNORM_SRGB                       397
-#define SF_MONO8                                398
-#define SF_YCRCB_SWAPUV                         399
-#define SF_YCRCB_SWAPY                          400
-#define SF_DXT1_RGB                             401
-#define SF_FXT1                                 402
-#define SF_R8G8B8_UNORM                         403
-#define SF_R8G8B8_SNORM                         404
-#define SF_R8G8B8_SSCALED                       405
-#define SF_R8G8B8_USCALED                       406
-#define SF_R64G64B64A64_FLOAT                   407
-#define SF_R64G64B64_FLOAT                      408
-#define SF_BC4_SNORM                            409
-#define SF_BC5_SNORM                            410
-#define SF_R16G16B16_FLOAT                      411
-#define SF_R16G16B16_UNORM                      412
-#define SF_R16G16B16_SNORM                      413
-#define SF_R16G16B16_SSCALED                    414
-#define SF_R16G16B16_USCALED                    415
-#define SF_BC6H_SF16                            417
-#define SF_BC7_UNORM                            418
-#define SF_BC7_UNORM_SRGB                       419
-#define SF_BC6H_UF16                            420
-#define SF_PLANAR_420_8                         421
-#define SF_R8G8B8_UNORM_SRGB                    424
-#define SF_ETC1_RGB8                            425
-#define SF_ETC2_RGB8                            426
-#define SF_EAC_R11                              427
-#define SF_EAC_RG11                             428
-#define SF_EAC_SIGNED_R11                       429
-#define SF_EAC_SIGNED_RG11                      430
-#define SF_ETC2_SRGB8                           431
-#define SF_R16G16B16_UINT                       432
-#define SF_R16G16B16_SINT                       433
-#define SF_R32_SFIXED                           434
-#define SF_R10G10B10A2_SNORM                    435
-#define SF_R10G10B10A2_USCALED                  436
-#define SF_R10G10B10A2_SSCALED                  437
-#define SF_R10G10B10A2_SINT                     438
-#define SF_B10G10R10A2_SNORM                    439
-#define SF_B10G10R10A2_USCALED                  440
-#define SF_B10G10R10A2_SSCALED                  441
-#define SF_B10G10R10A2_UINT                     442
-#define SF_B10G10R10A2_SINT                     443
-#define SF_R64G64B64A64_PASSTHRU                444
-#define SF_R64G64B64_PASSTHRU                   445
-#define SF_ETC2_RGB8_PTA                        448
-#define SF_ETC2_SRGB8_PTA                       449
-#define SF_ETC2_EAC_RGBA8                       450
-#define SF_ETC2_EAC_SRGB8_A8                    451
-#define SF_R8G8B8_UINT                          456
-#define SF_R8G8B8_SINT                          457
-#define SF_RAW                                  511
-
-/* enum GEN9_ShaderChannelSelect */
-#define SCS_ZERO                                  0
-#define SCS_ONE                                   1
-#define SCS_RED                                   4
-#define SCS_GREEN                                 5
-#define SCS_BLUE                                  6
-#define SCS_ALPHA                                 7
-
-/* enum GEN9_TextureCoordinateMode */
-#define TCM_WRAP                                  0
-#define TCM_MIRROR                                1
-#define TCM_CLAMP                                 2
-#define TCM_CUBE                                  3
-#define TCM_CLAMP_BORDER                          4
-#define TCM_MIRROR_ONCE                           5
-#define TCM_HALF_BORDER                           6
-
 #define GEN9_3DPRIMITIVE_length                7
 #define GEN9_3DPRIMITIVE_length_bias           2
 #define GEN9_3DPRIMITIVE_header                 \
@@ -1755,7 +1766,7 @@ struct GEN9_3DPRIMITIVE {
    uint32_t                             VertexAccessType;
 #define SEQUENTIAL                               0
 #define RANDOM                                   1
-   uint32_t                             PrimitiveTopologyType;
+   enum GEN9_3D_Prim_Topo_Type          PrimitiveTopologyType;
    uint32_t                             VertexCountPerInstance;
    uint32_t                             StartVertexLocation;
    uint32_t                             InstanceCount;
@@ -2454,7 +2465,7 @@ struct GEN9_3DSTATE_CLIP {
    bool                                 EarlyCullEnable;
    bool                                 ForceUserClipDistanceClipTestEnableBitmask;
    bool                                 ForceClipMode;
-   bool                                 ClipperStatisticsEnable;
+   bool                                 StatisticsEnable;
    uint32_t                             UserClipDistanceCullTestEnableBitmask;
    bool                                 ClipEnable;
    uint32_t                             APIMode;
@@ -2497,7 +2508,7 @@ GEN9_3DSTATE_CLIP_pack(__gen_user_data *data, void * restrict dst,
       __gen_uint(values->EarlyCullEnable, 18, 18) |
       __gen_uint(values->ForceUserClipDistanceClipTestEnableBitmask, 17, 17) |
       __gen_uint(values->ForceClipMode, 16, 16) |
-      __gen_uint(values->ClipperStatisticsEnable, 10, 10) |
+      __gen_uint(values->StatisticsEnable, 10, 10) |
       __gen_uint(values->UserClipDistanceCullTestEnableBitmask, 0, 7);
 
    dw[2] =
@@ -3326,7 +3337,7 @@ struct GEN9_3DSTATE_GS {
    uint32_t                             PerThreadScratchSpace;
    uint32_t                             DispatchGRFStartRegisterForURBData54;
    uint32_t                             OutputVertexSize;
-   uint32_t                             OutputTopology;
+   enum GEN9_3D_Prim_Topo_Type          OutputTopology;
    uint32_t                             VertexURBEntryReadLength;
    bool                                 IncludeVertexHandles;
    uint32_t                             VertexURBEntryReadOffset;
@@ -3346,7 +3357,7 @@ struct GEN9_3DSTATE_GS {
 #define LEADING                                  0
 #define TRAILING                                 1
    bool                                 DiscardAdjacency;
-   bool                                 Enable;
+   bool                                 FunctionEnable;
    uint32_t                             ControlDataFormat;
 #define CUT                                      0
 #define SID                                      1
@@ -3417,7 +3428,7 @@ GEN9_3DSTATE_GS_pack(__gen_user_data *data, void * restrict dst,
       __gen_uint(values->Hint, 3, 3) |
       __gen_uint(values->ReorderMode, 2, 2) |
       __gen_uint(values->DiscardAdjacency, 1, 1) |
-      __gen_uint(values->Enable, 0, 0);
+      __gen_uint(values->FunctionEnable, 0, 0);
 
    dw[8] =
       __gen_uint(values->ControlDataFormat, 31, 31) |
@@ -3513,7 +3524,7 @@ struct GEN9_3DSTATE_HS {
 #define alternate                                1
    bool                                 IllegalOpcodeExceptionEnable;
    bool                                 SoftwareExceptionEnable;
-   bool                                 Enable;
+   bool                                 FunctionEnable;
    bool                                 StatisticsEnable;
    uint32_t                             MaximumNumberofThreads;
    uint32_t                             InstanceCount;
@@ -3557,7 +3568,7 @@ GEN9_3DSTATE_HS_pack(__gen_user_data *data, void * restrict dst,
       __gen_uint(values->SoftwareExceptionEnable, 12, 12);
 
    dw[2] =
-      __gen_uint(values->Enable, 31, 31) |
+      __gen_uint(values->FunctionEnable, 31, 31) |
       __gen_uint(values->StatisticsEnable, 29, 29) |
       __gen_uint(values->MaximumNumberofThreads, 8, 16) |
       __gen_uint(values->InstanceCount, 0, 3);
@@ -4078,10 +4089,10 @@ struct GEN9_3DSTATE_PS_BLEND {
    bool                                 AlphaToCoverageEnable;
    bool                                 HasWriteableRT;
    bool                                 ColorBufferBlendEnable;
-   uint32_t                             SourceAlphaBlendFactor;
-   uint32_t                             DestinationAlphaBlendFactor;
-   uint32_t                             SourceBlendFactor;
-   uint32_t                             DestinationBlendFactor;
+   enum GEN9_3D_Color_Buffer_Blend_Factor SourceAlphaBlendFactor;
+   enum GEN9_3D_Color_Buffer_Blend_Factor DestinationAlphaBlendFactor;
+   enum GEN9_3D_Color_Buffer_Blend_Factor SourceBlendFactor;
+   enum GEN9_3D_Color_Buffer_Blend_Factor DestinationBlendFactor;
    bool                                 AlphaTestEnable;
    bool                                 IndependentAlphaBlendEnable;
 };
@@ -6156,7 +6167,7 @@ struct GEN9_3DSTATE_VF_TOPOLOGY {
    uint32_t                             _3DCommandOpcode;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             DWordLength;
-   uint32_t                             PrimitiveTopologyType;
+   enum GEN9_3D_Prim_Topo_Type          PrimitiveTopologyType;
 };
 
 static inline void
@@ -6371,9 +6382,9 @@ struct GEN9_3DSTATE_WM {
    bool                                 LegacyHierarchicalDepthBufferResolveEnable;
    bool                                 LegacyDiamondLineRasterization;
    uint32_t                             EarlyDepthStencilControl;
-#define NORMAL                                   0
-#define PSEXEC                                   1
-#define PREPS                                    2
+#define EDSC_NORMAL                              0
+#define EDSC_PSEXEC                              1
+#define EDSC_PREPS                               2
    uint32_t                             ForceThreadDispatchEnable;
 #define ForceOff                                 1
 #define ForceON                                  2
@@ -6382,6 +6393,12 @@ struct GEN9_3DSTATE_WM {
 #define INTERP_CENTROID                          2
 #define INTERP_SAMPLE                            3
    uint32_t                             BarycentricInterpolationMode;
+#define BIM_PERSPECTIVE_PIXEL                    1
+#define BIM_PERSPECTIVE_CENTROID                 2
+#define BIM_PERSPECTIVE_SAMPLE                   4
+#define BIM_LINEAR_PIXEL                         8
+#define BIM_LINEAR_CENTROID                      16
+#define BIM_LINEAR_SAMPLE                        32
    uint32_t                             LineEndCapAntialiasingRegionWidth;
 #define _05pixels                                0
 #define _10pixels                                1
@@ -6483,15 +6500,15 @@ struct GEN9_3DSTATE_WM_DEPTH_STENCIL {
    uint32_t                             _3DCommandOpcode;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             DWordLength;
-   uint32_t                             StencilFailOp;
-   uint32_t                             StencilPassDepthFailOp;
-   uint32_t                             StencilPassDepthPassOp;
-   uint32_t                             BackfaceStencilTestFunction;
-   uint32_t                             BackfaceStencilFailOp;
-   uint32_t                             BackfaceStencilPassDepthFailOp;
-   uint32_t                             BackfaceStencilPassDepthPassOp;
-   uint32_t                             StencilTestFunction;
-   uint32_t                             DepthTestFunction;
+   enum GEN9_3D_Stencil_Operation       StencilFailOp;
+   enum GEN9_3D_Stencil_Operation       StencilPassDepthFailOp;
+   enum GEN9_3D_Stencil_Operation       StencilPassDepthPassOp;
+   enum GEN9_3D_Compare_Function        BackfaceStencilTestFunction;
+   enum GEN9_3D_Stencil_Operation       BackfaceStencilFailOp;
+   enum GEN9_3D_Stencil_Operation       BackfaceStencilPassDepthFailOp;
+   enum GEN9_3D_Stencil_Operation       BackfaceStencilPassDepthPassOp;
+   enum GEN9_3D_Compare_Function        StencilTestFunction;
+   enum GEN9_3D_Compare_Function        DepthTestFunction;
    bool                                 DoubleSidedStencilEnable;
    bool                                 StencilTestEnable;
    bool                                 StencilBufferWriteEnable;
@@ -8357,8 +8374,7 @@ struct GEN9_MI_STORE_DATA_IMM {
    uint32_t                             DWordLength;
    __gen_address_type                   Address;
    uint32_t                             CoreModeEnable;
-   uint32_t                             DataDWord0;
-   uint32_t                             DataDWord1;
+   uint64_t                             ImmediateData;
 };
 
 static inline void
@@ -8381,8 +8397,10 @@ GEN9_MI_STORE_DATA_IMM_pack(__gen_user_data *data, void * restrict dst,
    dw[1] = v1_address;
    dw[2] = v1_address >> 32;
 
-   dw[3] =
-      __gen_uint(values->DataDWord0, 0, 31);
+   const uint64_t v3 =
+      __gen_uint(values->ImmediateData, 0, 63);
+   dw[3] = v3;
+   dw[4] = v3 >> 32;
 }
 
 #define GEN9_MI_STORE_DATA_INDEX_length        3
@@ -8528,7 +8546,7 @@ GEN9_MI_SUSPEND_FLUSH_pack(__gen_user_data *data, void * restrict dst,
 struct GEN9_MI_TOPOLOGY_FILTER {
    uint32_t                             CommandType;
    uint32_t                             MICommandOpcode;
-   uint32_t                             TopologyFilterValue;
+   enum GEN9_3D_Prim_Topo_Type          TopologyFilterValue;
 };
 
 static inline void
@@ -9009,6 +9027,378 @@ GEN9_STATE_SIP_pack(__gen_user_data *data, void * restrict dst,
    dw[2] = v1 >> 32;
 }
 
+#define GEN9_IA_VERTICES_COUNT_num        0x2310
+#define GEN9_IA_VERTICES_COUNT_length          2
+struct GEN9_IA_VERTICES_COUNT {
+   uint64_t                             IAVerticesCountReport;
+};
+
+static inline void
+GEN9_IA_VERTICES_COUNT_pack(__gen_user_data *data, void * restrict dst,
+                            const struct GEN9_IA_VERTICES_COUNT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   const uint64_t v0 =
+      __gen_uint(values->IAVerticesCountReport, 0, 63);
+   dw[0] = v0;
+   dw[1] = v0 >> 32;
+}
+
+#define GEN9_IA_PRIMITIVES_COUNT_num      0x2318
+#define GEN9_IA_PRIMITIVES_COUNT_length        2
+struct GEN9_IA_PRIMITIVES_COUNT {
+   uint64_t                             IAPrimitivesCountReport;
+};
+
+static inline void
+GEN9_IA_PRIMITIVES_COUNT_pack(__gen_user_data *data, void * restrict dst,
+                              const struct GEN9_IA_PRIMITIVES_COUNT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   const uint64_t v0 =
+      __gen_uint(values->IAPrimitivesCountReport, 0, 63);
+   dw[0] = v0;
+   dw[1] = v0 >> 32;
+}
+
+#define GEN9_VS_INVOCATION_COUNT_num      0x2320
+#define GEN9_VS_INVOCATION_COUNT_length        2
+struct GEN9_VS_INVOCATION_COUNT {
+   uint64_t                             VSInvocationCountReport;
+};
+
+static inline void
+GEN9_VS_INVOCATION_COUNT_pack(__gen_user_data *data, void * restrict dst,
+                              const struct GEN9_VS_INVOCATION_COUNT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   const uint64_t v0 =
+      __gen_uint(values->VSInvocationCountReport, 0, 63);
+   dw[0] = v0;
+   dw[1] = v0 >> 32;
+}
+
+#define GEN9_HS_INVOCATION_COUNT_num      0x2300
+#define GEN9_HS_INVOCATION_COUNT_length        2
+struct GEN9_HS_INVOCATION_COUNT {
+   uint64_t                             HSInvocationCountReport;
+};
+
+static inline void
+GEN9_HS_INVOCATION_COUNT_pack(__gen_user_data *data, void * restrict dst,
+                              const struct GEN9_HS_INVOCATION_COUNT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   const uint64_t v0 =
+      __gen_uint(values->HSInvocationCountReport, 0, 63);
+   dw[0] = v0;
+   dw[1] = v0 >> 32;
+}
+
+#define GEN9_DS_INVOCATION_COUNT_num      0x2308
+#define GEN9_DS_INVOCATION_COUNT_length        2
+struct GEN9_DS_INVOCATION_COUNT {
+   uint64_t                             DSInvocationCountReport;
+};
+
+static inline void
+GEN9_DS_INVOCATION_COUNT_pack(__gen_user_data *data, void * restrict dst,
+                              const struct GEN9_DS_INVOCATION_COUNT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   const uint64_t v0 =
+      __gen_uint(values->DSInvocationCountReport, 0, 63);
+   dw[0] = v0;
+   dw[1] = v0 >> 32;
+}
+
+#define GEN9_GS_INVOCATION_COUNT_num      0x2328
+#define GEN9_GS_INVOCATION_COUNT_length        2
+struct GEN9_GS_INVOCATION_COUNT {
+   uint64_t                             GSInvocationCountReport;
+};
+
+static inline void
+GEN9_GS_INVOCATION_COUNT_pack(__gen_user_data *data, void * restrict dst,
+                              const struct GEN9_GS_INVOCATION_COUNT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   const uint64_t v0 =
+      __gen_uint(values->GSInvocationCountReport, 0, 63);
+   dw[0] = v0;
+   dw[1] = v0 >> 32;
+}
+
+#define GEN9_GS_PRIMITIVES_COUNT_num      0x2330
+#define GEN9_GS_PRIMITIVES_COUNT_length        2
+struct GEN9_GS_PRIMITIVES_COUNT {
+   uint64_t                             GSPrimitivesCountReport;
+};
+
+static inline void
+GEN9_GS_PRIMITIVES_COUNT_pack(__gen_user_data *data, void * restrict dst,
+                              const struct GEN9_GS_PRIMITIVES_COUNT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   const uint64_t v0 =
+      __gen_uint(values->GSPrimitivesCountReport, 0, 63);
+   dw[0] = v0;
+   dw[1] = v0 >> 32;
+}
+
+#define GEN9_CL_INVOCATION_COUNT_num      0x2338
+#define GEN9_CL_INVOCATION_COUNT_length        2
+struct GEN9_CL_INVOCATION_COUNT {
+   uint64_t                             CLInvocationCountReport;
+};
+
+static inline void
+GEN9_CL_INVOCATION_COUNT_pack(__gen_user_data *data, void * restrict dst,
+                              const struct GEN9_CL_INVOCATION_COUNT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   const uint64_t v0 =
+      __gen_uint(values->CLInvocationCountReport, 0, 63);
+   dw[0] = v0;
+   dw[1] = v0 >> 32;
+}
+
+#define GEN9_CL_PRIMITIVES_COUNT_num      0x2340
+#define GEN9_CL_PRIMITIVES_COUNT_length        2
+struct GEN9_CL_PRIMITIVES_COUNT {
+   uint64_t                             CLPrimitivesCountReport;
+};
+
+static inline void
+GEN9_CL_PRIMITIVES_COUNT_pack(__gen_user_data *data, void * restrict dst,
+                              const struct GEN9_CL_PRIMITIVES_COUNT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   const uint64_t v0 =
+      __gen_uint(values->CLPrimitivesCountReport, 0, 63);
+   dw[0] = v0;
+   dw[1] = v0 >> 32;
+}
+
+#define GEN9_PS_INVOCATION_COUNT_num      0x2348
+#define GEN9_PS_INVOCATION_COUNT_length        2
+struct GEN9_PS_INVOCATION_COUNT {
+   uint64_t                             PSInvocationCountReport;
+};
+
+static inline void
+GEN9_PS_INVOCATION_COUNT_pack(__gen_user_data *data, void * restrict dst,
+                              const struct GEN9_PS_INVOCATION_COUNT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   const uint64_t v0 =
+      __gen_uint(values->PSInvocationCountReport, 0, 63);
+   dw[0] = v0;
+   dw[1] = v0 >> 32;
+}
+
+#define GEN9_CS_INVOCATION_COUNT_num      0x2290
+#define GEN9_CS_INVOCATION_COUNT_length        2
+struct GEN9_CS_INVOCATION_COUNT {
+   uint64_t                             CSInvocationCountReport;
+};
+
+static inline void
+GEN9_CS_INVOCATION_COUNT_pack(__gen_user_data *data, void * restrict dst,
+                              const struct GEN9_CS_INVOCATION_COUNT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   const uint64_t v0 =
+      __gen_uint(values->CSInvocationCountReport, 0, 63);
+   dw[0] = v0;
+   dw[1] = v0 >> 32;
+}
+
+#define GEN9_BCS_INSTDONE_num             0x2206c
+#define GEN9_BCS_INSTDONE_length               1
+struct GEN9_BCS_INSTDONE {
+   bool                                 RingEnable;
+   bool                                 BlitterIDLE;
+   bool                                 GABIDLE;
+   bool                                 BCSDone;
+};
+
+static inline void
+GEN9_BCS_INSTDONE_pack(__gen_user_data *data, void * restrict dst,
+                       const struct GEN9_BCS_INSTDONE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->RingEnable, 0, 0) |
+      __gen_uint(values->BlitterIDLE, 1, 1) |
+      __gen_uint(values->GABIDLE, 2, 2) |
+      __gen_uint(values->BCSDone, 3, 3);
+}
+
+#define GEN9_INSTDONE_1_num               0x206c
+#define GEN9_INSTDONE_1_length                 1
+struct GEN9_INSTDONE_1 {
+   bool                                 PRB0RingEnable;
+   bool                                 VFGDone;
+   bool                                 VSDone;
+   bool                                 HSDone;
+   bool                                 TEDone;
+   bool                                 DSDone;
+   bool                                 GSDone;
+   bool                                 SOLDone;
+   bool                                 CLDone;
+   bool                                 SFDone;
+   bool                                 TDGDone;
+   bool                                 URBMDone;
+   bool                                 SVGDone;
+   bool                                 GAFSDone;
+   bool                                 VFEDone;
+   bool                                 TSGDone;
+   bool                                 GAFMDone;
+   bool                                 GAMDone;
+   bool                                 SDEDone;
+   bool                                 RCCFBCCSDone;
+};
+
+static inline void
+GEN9_INSTDONE_1_pack(__gen_user_data *data, void * restrict dst,
+                     const struct GEN9_INSTDONE_1 * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->PRB0RingEnable, 0, 0) |
+      __gen_uint(values->VFGDone, 1, 1) |
+      __gen_uint(values->VSDone, 2, 2) |
+      __gen_uint(values->HSDone, 3, 3) |
+      __gen_uint(values->TEDone, 4, 4) |
+      __gen_uint(values->DSDone, 5, 5) |
+      __gen_uint(values->GSDone, 6, 6) |
+      __gen_uint(values->SOLDone, 7, 7) |
+      __gen_uint(values->CLDone, 8, 8) |
+      __gen_uint(values->SFDone, 9, 9) |
+      __gen_uint(values->TDGDone, 12, 12) |
+      __gen_uint(values->URBMDone, 13, 13) |
+      __gen_uint(values->SVGDone, 14, 14) |
+      __gen_uint(values->GAFSDone, 15, 15) |
+      __gen_uint(values->VFEDone, 16, 16) |
+      __gen_uint(values->TSGDone, 17, 17) |
+      __gen_uint(values->GAFMDone, 18, 18) |
+      __gen_uint(values->GAMDone, 19, 19) |
+      __gen_uint(values->SDEDone, 22, 22) |
+      __gen_uint(values->RCCFBCCSDone, 23, 23);
+}
+
+#define GEN9_VCS_INSTDONE_num             0x1206c
+#define GEN9_VCS_INSTDONE_length               1
+struct GEN9_VCS_INSTDONE {
+   bool                                 RingEnable;
+   bool                                 USBDone;
+   bool                                 QRCDone;
+   bool                                 SECDone;
+   bool                                 MPCDone;
+   bool                                 VFTDone;
+   bool                                 BSPDone;
+   bool                                 VLFDone;
+   bool                                 VOPDone;
+   bool                                 VMCDone;
+   bool                                 VIPDone;
+   bool                                 VITDone;
+   bool                                 VDSDone;
+   bool                                 VMXDone;
+   bool                                 VCPDone;
+   bool                                 VCDDone;
+   bool                                 VADDone;
+   bool                                 VMDDone;
+   bool                                 VISDone;
+   bool                                 VACDone;
+   bool                                 VAMDone;
+   bool                                 JPGDone;
+   bool                                 VBPDone;
+   bool                                 VHRDone;
+   bool                                 VCIDone;
+   bool                                 VCRDone;
+   bool                                 VINDone;
+   bool                                 VPRDone;
+   bool                                 VTQDone;
+   bool                                 Reserved;
+   bool                                 VCSDone;
+   bool                                 GACDone;
+};
+
+static inline void
+GEN9_VCS_INSTDONE_pack(__gen_user_data *data, void * restrict dst,
+                       const struct GEN9_VCS_INSTDONE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->RingEnable, 0, 0) |
+      __gen_uint(values->USBDone, 1, 1) |
+      __gen_uint(values->QRCDone, 2, 2) |
+      __gen_uint(values->SECDone, 3, 3) |
+      __gen_uint(values->MPCDone, 4, 4) |
+      __gen_uint(values->VFTDone, 5, 5) |
+      __gen_uint(values->BSPDone, 6, 6) |
+      __gen_uint(values->VLFDone, 7, 7) |
+      __gen_uint(values->VOPDone, 8, 8) |
+      __gen_uint(values->VMCDone, 9, 9) |
+      __gen_uint(values->VIPDone, 10, 10) |
+      __gen_uint(values->VITDone, 11, 11) |
+      __gen_uint(values->VDSDone, 12, 12) |
+      __gen_uint(values->VMXDone, 13, 13) |
+      __gen_uint(values->VCPDone, 14, 14) |
+      __gen_uint(values->VCDDone, 15, 15) |
+      __gen_uint(values->VADDone, 16, 16) |
+      __gen_uint(values->VMDDone, 17, 17) |
+      __gen_uint(values->VISDone, 18, 18) |
+      __gen_uint(values->VACDone, 19, 19) |
+      __gen_uint(values->VAMDone, 20, 20) |
+      __gen_uint(values->JPGDone, 21, 21) |
+      __gen_uint(values->VBPDone, 22, 22) |
+      __gen_uint(values->VHRDone, 23, 23) |
+      __gen_uint(values->VCIDone, 24, 24) |
+      __gen_uint(values->VCRDone, 25, 25) |
+      __gen_uint(values->VINDone, 26, 26) |
+      __gen_uint(values->VPRDone, 27, 27) |
+      __gen_uint(values->VTQDone, 28, 28) |
+      __gen_uint(values->Reserved, 29, 29) |
+      __gen_uint(values->VCSDone, 30, 30) |
+      __gen_uint(values->GACDone, 31, 31);
+}
+
+#define GEN9_VECS_INSTDONE_num            0x1a06c
+#define GEN9_VECS_INSTDONE_length              1
+struct GEN9_VECS_INSTDONE {
+   bool                                 RingEnable;
+   bool                                 VECSDone;
+   bool                                 GAMDone;
+};
+
+static inline void
+GEN9_VECS_INSTDONE_pack(__gen_user_data *data, void * restrict dst,
+                        const struct GEN9_VECS_INSTDONE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->RingEnable, 0, 0) |
+      __gen_uint(values->VECSDone, 30, 30) |
+      __gen_uint(values->GAMDone, 31, 31);
+}
+
 #define GEN9_L3CNTLREG_num                0x7034
 #define GEN9_L3CNTLREG_length                  1
 struct GEN9_L3CNTLREG {
@@ -9031,6 +9421,419 @@ GEN9_L3CNTLREG_pack(__gen_user_data *data, void * restrict dst,
       __gen_uint(values->ROAllocation, 11, 17) |
       __gen_uint(values->DCAllocation, 18, 24) |
       __gen_uint(values->AllAllocation, 25, 31);
+}
+
+#define GEN9_SO_WRITE_OFFSET0_num         0x5280
+#define GEN9_SO_WRITE_OFFSET0_length           1
+struct GEN9_SO_WRITE_OFFSET0 {
+   uint64_t                             WriteOffset;
+};
+
+static inline void
+GEN9_SO_WRITE_OFFSET0_pack(__gen_user_data *data, void * restrict dst,
+                           const struct GEN9_SO_WRITE_OFFSET0 * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_offset(values->WriteOffset, 2, 31);
+}
+
+#define GEN9_SO_WRITE_OFFSET1_num         0x5284
+#define GEN9_SO_WRITE_OFFSET1_length           1
+struct GEN9_SO_WRITE_OFFSET1 {
+   uint64_t                             WriteOffset;
+};
+
+static inline void
+GEN9_SO_WRITE_OFFSET1_pack(__gen_user_data *data, void * restrict dst,
+                           const struct GEN9_SO_WRITE_OFFSET1 * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_offset(values->WriteOffset, 2, 31);
+}
+
+#define GEN9_SO_WRITE_OFFSET2_num         0x5288
+#define GEN9_SO_WRITE_OFFSET2_length           1
+struct GEN9_SO_WRITE_OFFSET2 {
+   uint64_t                             WriteOffset;
+};
+
+static inline void
+GEN9_SO_WRITE_OFFSET2_pack(__gen_user_data *data, void * restrict dst,
+                           const struct GEN9_SO_WRITE_OFFSET2 * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_offset(values->WriteOffset, 2, 31);
+}
+
+#define GEN9_SO_WRITE_OFFSET3_num         0x528c
+#define GEN9_SO_WRITE_OFFSET3_length           1
+struct GEN9_SO_WRITE_OFFSET3 {
+   uint64_t                             WriteOffset;
+};
+
+static inline void
+GEN9_SO_WRITE_OFFSET3_pack(__gen_user_data *data, void * restrict dst,
+                           const struct GEN9_SO_WRITE_OFFSET3 * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_offset(values->WriteOffset, 2, 31);
+}
+
+#define GEN9_CACHE_MODE_0_num             0x7000
+#define GEN9_CACHE_MODE_0_length               1
+struct GEN9_CACHE_MODE_0 {
+   bool                                 Nulltilefixdisable;
+   bool                                 Disableclockgatinginthepixelbackend;
+   bool                                 HierarchicalZRAWStallOptimizationDisable;
+   bool                                 RCCEvictionPolicy;
+   bool                                 STCPMAOptimizationEnable;
+   uint32_t                             SamplerL2RequestArbitration;
+#define RoundRobin                               0
+#define FetchareHighestPriority                  1
+#define ConstantsareHighestPriority              2
+   bool                                 SamplerL2TLBPrefetchEnable;
+   bool                                 SamplerSetRemappingfor3DDisable;
+   uint32_t                             MSAACompressionPlaneNumberThresholdforeLLC;
+   bool                                 SamplerL2Disable;
+   bool                                 NulltilefixdisableMask;
+   bool                                 DisableclockgatinginthepixelbackendMask;
+   bool                                 HierarchicalZRAWStallOptimizationDisableMask;
+   bool                                 RCCEvictionPolicyMask;
+   bool                                 STCPMAOptimizationEnableMask;
+   uint32_t                             SamplerL2RequestArbitrationMask;
+   bool                                 SamplerL2TLBPrefetchEnableMask;
+   bool                                 SamplerSetRemappingfor3DDisableMask;
+   uint32_t                             MSAACompressionPlaneNumberThresholdforeLLCMask;
+   bool                                 SamplerL2DisableMask;
+};
+
+static inline void
+GEN9_CACHE_MODE_0_pack(__gen_user_data *data, void * restrict dst,
+                       const struct GEN9_CACHE_MODE_0 * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->Nulltilefixdisable, 0, 0) |
+      __gen_uint(values->Disableclockgatinginthepixelbackend, 1, 1) |
+      __gen_uint(values->HierarchicalZRAWStallOptimizationDisable, 2, 2) |
+      __gen_uint(values->RCCEvictionPolicy, 4, 4) |
+      __gen_uint(values->STCPMAOptimizationEnable, 5, 5) |
+      __gen_uint(values->SamplerL2RequestArbitration, 6, 7) |
+      __gen_uint(values->SamplerL2TLBPrefetchEnable, 9, 9) |
+      __gen_uint(values->SamplerSetRemappingfor3DDisable, 11, 11) |
+      __gen_uint(values->MSAACompressionPlaneNumberThresholdforeLLC, 12, 14) |
+      __gen_uint(values->SamplerL2Disable, 15, 15) |
+      __gen_uint(values->NulltilefixdisableMask, 16, 16) |
+      __gen_uint(values->DisableclockgatinginthepixelbackendMask, 17, 17) |
+      __gen_uint(values->HierarchicalZRAWStallOptimizationDisableMask, 18, 18) |
+      __gen_uint(values->RCCEvictionPolicyMask, 20, 20) |
+      __gen_uint(values->STCPMAOptimizationEnableMask, 21, 21) |
+      __gen_uint(values->SamplerL2RequestArbitrationMask, 22, 23) |
+      __gen_uint(values->SamplerL2TLBPrefetchEnableMask, 25, 25) |
+      __gen_uint(values->SamplerSetRemappingfor3DDisableMask, 27, 27) |
+      __gen_uint(values->MSAACompressionPlaneNumberThresholdforeLLCMask, 28, 30) |
+      __gen_uint(values->SamplerL2DisableMask, 31, 31);
+}
+
+#define GEN9_GFX_ARB_ERROR_RPT_num        0x40a0
+#define GEN9_GFX_ARB_ERROR_RPT_length          1
+struct GEN9_GFX_ARB_ERROR_RPT {
+   bool                                 TLBPageFaultError;
+   bool                                 RSTRMPAVPReadInvalid;
+   bool                                 InvalidPageDirectoryEntryError;
+   bool                                 ROSTRMPAVPInvalidPhysicalAddress;
+   bool                                 TLBPageVTDTranslationError;
+   bool                                 WRDPPAVPInvalid;
+   bool                                 PageDirectoryEntryVTDTranslationError;
+   bool                                 UnloadedPDError;
+   bool                                 GuCVTdtranslationPageFault2ndlevelUndefineddoorbell;
+   bool                                 NonWBmemorytypeforAdvancedContext;
+   bool                                 PASIDNotEnabled;
+   bool                                 PASIDBoundaryViolation;
+   bool                                 PASIDNotValid;
+   bool                                 PASIDWasZeroForUntranslatedRequest;
+   bool                                 ContextWasNotMarkedAsPresentWhenDoingDMA;
+};
+
+static inline void
+GEN9_GFX_ARB_ERROR_RPT_pack(__gen_user_data *data, void * restrict dst,
+                            const struct GEN9_GFX_ARB_ERROR_RPT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->TLBPageFaultError, 0, 0) |
+      __gen_uint(values->RSTRMPAVPReadInvalid, 1, 1) |
+      __gen_uint(values->InvalidPageDirectoryEntryError, 2, 2) |
+      __gen_uint(values->ROSTRMPAVPInvalidPhysicalAddress, 3, 3) |
+      __gen_uint(values->TLBPageVTDTranslationError, 4, 4) |
+      __gen_uint(values->WRDPPAVPInvalid, 5, 5) |
+      __gen_uint(values->PageDirectoryEntryVTDTranslationError, 6, 6) |
+      __gen_uint(values->UnloadedPDError, 8, 8) |
+      __gen_uint(values->GuCVTdtranslationPageFault2ndlevelUndefineddoorbell, 9, 9) |
+      __gen_uint(values->NonWBmemorytypeforAdvancedContext, 10, 10) |
+      __gen_uint(values->PASIDNotEnabled, 11, 11) |
+      __gen_uint(values->PASIDBoundaryViolation, 12, 12) |
+      __gen_uint(values->PASIDNotValid, 13, 13) |
+      __gen_uint(values->PASIDWasZeroForUntranslatedRequest, 14, 14) |
+      __gen_uint(values->ContextWasNotMarkedAsPresentWhenDoingDMA, 15, 15);
+}
+
+#define GEN9_ACTHD_UDW_num                0x205c
+#define GEN9_ACTHD_UDW_length                  1
+struct GEN9_ACTHD_UDW {
+   uint32_t                             HeadPointerUpperDWORD;
+};
+
+static inline void
+GEN9_ACTHD_UDW_pack(__gen_user_data *data, void * restrict dst,
+                    const struct GEN9_ACTHD_UDW * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->HeadPointerUpperDWORD, 0, 15);
+}
+
+#define GEN9_BCS_ACTHD_UDW_num            0x2205c
+#define GEN9_BCS_ACTHD_UDW_length              1
+struct GEN9_BCS_ACTHD_UDW {
+   uint32_t                             HeadPointerUpperDWORD;
+};
+
+static inline void
+GEN9_BCS_ACTHD_UDW_pack(__gen_user_data *data, void * restrict dst,
+                        const struct GEN9_BCS_ACTHD_UDW * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->HeadPointerUpperDWORD, 0, 15);
+}
+
+#define GEN9_VCS_ACTHD_UDW_num            0x1205c
+#define GEN9_VCS_ACTHD_UDW_length              1
+struct GEN9_VCS_ACTHD_UDW {
+   uint32_t                             HeadPointerUpperDWORD;
+};
+
+static inline void
+GEN9_VCS_ACTHD_UDW_pack(__gen_user_data *data, void * restrict dst,
+                        const struct GEN9_VCS_ACTHD_UDW * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->HeadPointerUpperDWORD, 0, 15);
+}
+
+#define GEN9_VECS_ACTHD_UDW_num           0x1a05c
+#define GEN9_VECS_ACTHD_UDW_length             1
+struct GEN9_VECS_ACTHD_UDW {
+   uint32_t                             HeadPointerUpperDWORD;
+};
+
+static inline void
+GEN9_VECS_ACTHD_UDW_pack(__gen_user_data *data, void * restrict dst,
+                         const struct GEN9_VECS_ACTHD_UDW * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->HeadPointerUpperDWORD, 0, 15);
+}
+
+#define GEN9_FAULT_REG_num                0x4094
+#define GEN9_FAULT_REG_length                  1
+struct GEN9_FAULT_REG {
+   bool                                 ValidBit;
+   uint32_t                             FaultType;
+#define InvalidPTEFault                          0
+#define InvalidPDEFault                          1
+#define InvalidPDPEFault                         2
+#define InvalidPML4EFault                        3
+   uint32_t                             SRCIDofFault;
+   uint32_t                             GTTSEL;
+#define PPGTT                                    0
+#define GGTT                                     1
+   uint32_t                             EngineID;
+#define GFX                                      0
+#define MFX0                                     1
+#define MFX1                                     2
+#define VEBX                                     3
+#define BLT                                      4
+#define GUC                                      5
+};
+
+static inline void
+GEN9_FAULT_REG_pack(__gen_user_data *data, void * restrict dst,
+                    const struct GEN9_FAULT_REG * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->ValidBit, 0, 0) |
+      __gen_uint(values->FaultType, 1, 2) |
+      __gen_uint(values->SRCIDofFault, 3, 10) |
+      __gen_uint(values->GTTSEL, 11, 11) |
+      __gen_uint(values->EngineID, 12, 14);
+}
+
+#define GEN9_BCS_RING_BUFFER_CTL_num      0x2203c
+#define GEN9_BCS_RING_BUFFER_CTL_length        1
+struct GEN9_BCS_RING_BUFFER_CTL {
+   bool                                 RingBufferEnable;
+   uint32_t                             AutomaticReportHeadPointer;
+#define MI_AUTOREPORT_OFF                        0
+#define MI_AUTOREPORT_64KB                       1
+#define MI_AUTOREPORT_4KB                        2
+#define MI_AUTOREPORT_128KB                      3
+   bool                                 DisableRegisterAccesses;
+   bool                                 SemaphoreWait;
+   bool                                 RBWait;
+   uint32_t                             BufferLengthinpages1;
+};
+
+static inline void
+GEN9_BCS_RING_BUFFER_CTL_pack(__gen_user_data *data, void * restrict dst,
+                              const struct GEN9_BCS_RING_BUFFER_CTL * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->RingBufferEnable, 0, 0) |
+      __gen_uint(values->AutomaticReportHeadPointer, 1, 2) |
+      __gen_uint(values->DisableRegisterAccesses, 8, 8) |
+      __gen_uint(values->SemaphoreWait, 10, 10) |
+      __gen_uint(values->RBWait, 11, 11) |
+      __gen_uint(values->BufferLengthinpages1, 12, 20);
+}
+
+#define GEN9_RCS_RING_BUFFER_CTL_num      0x203c
+#define GEN9_RCS_RING_BUFFER_CTL_length        1
+struct GEN9_RCS_RING_BUFFER_CTL {
+   bool                                 RingBufferEnable;
+   uint32_t                             AutomaticReportHeadPointer;
+#define MI_AUTOREPORT_OFF                        0
+#define MI_AUTOREPORT_64KB                       1
+#define MI_AUTOREPORT_4KB                        2
+#define MI_AUTOREPORT_128KB                      3
+   bool                                 SemaphoreWait;
+   bool                                 RBWait;
+   uint32_t                             BufferLengthinpages1;
+};
+
+static inline void
+GEN9_RCS_RING_BUFFER_CTL_pack(__gen_user_data *data, void * restrict dst,
+                              const struct GEN9_RCS_RING_BUFFER_CTL * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->RingBufferEnable, 0, 0) |
+      __gen_uint(values->AutomaticReportHeadPointer, 1, 2) |
+      __gen_uint(values->SemaphoreWait, 10, 10) |
+      __gen_uint(values->RBWait, 11, 11) |
+      __gen_uint(values->BufferLengthinpages1, 12, 20);
+}
+
+#define GEN9_VECS_RING_BUFFER_CTL_num     0x1a03c
+#define GEN9_VECS_RING_BUFFER_CTL_length       1
+struct GEN9_VECS_RING_BUFFER_CTL {
+   bool                                 RingBufferEnable;
+   uint32_t                             AutomaticReportHeadPointer;
+#define MI_AUTOREPORT_OFF                        0
+#define MI_AUTOREPORT_64KB                       1
+#define MI_AUTOREPORT_4KB                        2
+#define MI_AUTOREPORT_128KB                      3
+   bool                                 DisableRegisterAccesses;
+   bool                                 SemaphoreWait;
+   bool                                 RBWait;
+   uint32_t                             BufferLengthinpages1;
+};
+
+static inline void
+GEN9_VECS_RING_BUFFER_CTL_pack(__gen_user_data *data, void * restrict dst,
+                               const struct GEN9_VECS_RING_BUFFER_CTL * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->RingBufferEnable, 0, 0) |
+      __gen_uint(values->AutomaticReportHeadPointer, 1, 2) |
+      __gen_uint(values->DisableRegisterAccesses, 8, 8) |
+      __gen_uint(values->SemaphoreWait, 10, 10) |
+      __gen_uint(values->RBWait, 11, 11) |
+      __gen_uint(values->BufferLengthinpages1, 12, 20);
+}
+
+#define GEN9_VCS_RING_BUFFER_CTL_num      0x1203c
+#define GEN9_VCS_RING_BUFFER_CTL_length        1
+struct GEN9_VCS_RING_BUFFER_CTL {
+   bool                                 RingBufferEnable;
+   uint32_t                             AutomaticReportHeadPointer;
+#define MI_AUTOREPORT_OFF                        0
+#define MI_AUTOREPORT_64KB                       1
+#define MI_AUTOREPORT_4KB                        2
+#define MI_AUTOREPORT_128KB                      3
+   bool                                 DisableRegisterAccesses;
+   bool                                 SemaphoreWait;
+   bool                                 RBWait;
+   uint32_t                             BufferLengthinpages1;
+};
+
+static inline void
+GEN9_VCS_RING_BUFFER_CTL_pack(__gen_user_data *data, void * restrict dst,
+                              const struct GEN9_VCS_RING_BUFFER_CTL * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->RingBufferEnable, 0, 0) |
+      __gen_uint(values->AutomaticReportHeadPointer, 1, 2) |
+      __gen_uint(values->DisableRegisterAccesses, 8, 8) |
+      __gen_uint(values->SemaphoreWait, 10, 10) |
+      __gen_uint(values->RBWait, 11, 11) |
+      __gen_uint(values->BufferLengthinpages1, 12, 20);
+}
+
+#define GEN9_VCS2_RING_BUFFER_CTL_num     0x1203c
+#define GEN9_VCS2_RING_BUFFER_CTL_length       1
+struct GEN9_VCS2_RING_BUFFER_CTL {
+   bool                                 RingBufferEnable;
+   uint32_t                             AutomaticReportHeadPointer;
+#define MI_AUTOREPORT_OFF                        0
+#define MI_AUTOREPORT_64KB                       1
+#define MI_AUTOREPORT_4KB                        2
+#define MI_AUTOREPORT_128KB                      3
+   bool                                 DisableRegisterAccesses;
+   bool                                 SemaphoreWait;
+   bool                                 RBWait;
+   uint32_t                             BufferLengthinpages1;
+};
+
+static inline void
+GEN9_VCS2_RING_BUFFER_CTL_pack(__gen_user_data *data, void * restrict dst,
+                               const struct GEN9_VCS2_RING_BUFFER_CTL * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->RingBufferEnable, 0, 0) |
+      __gen_uint(values->AutomaticReportHeadPointer, 1, 2) |
+      __gen_uint(values->DisableRegisterAccesses, 8, 8) |
+      __gen_uint(values->SemaphoreWait, 10, 10) |
+      __gen_uint(values->RBWait, 11, 11) |
+      __gen_uint(values->BufferLengthinpages1, 12, 20);
 }
 
 #endif /* GEN9_PACK_H */

@@ -25,13 +25,14 @@
 
 #include "util/u_math.h"
 #include "util/u_memory.h"
-#include "util/u_hash.h"
+#include "util/crc32.h"
 
 #include "svga_debug.h"
 #include "svga_format.h"
 #include "svga_winsys.h"
 #include "svga_screen.h"
 #include "svga_screen_cache.h"
+#include "svga_context.h"
 
 
 #define SVGA_SURFACE_CACHE_ENABLED 1
@@ -47,6 +48,7 @@ surface_size(const struct svga_host_surface_cache_key *key)
 
    assert(key->numMipLevels > 0);
    assert(key->numFaces > 0);
+   assert(key->arraySize > 0);
 
    if (key->format == SVGA3D_BUFFER) {
       /* Special case: we don't want to count vertex/index buffers
@@ -67,7 +69,7 @@ surface_size(const struct svga_host_surface_cache_key *key)
       total_size += img_size;
    }
 
-   total_size *= key->numFaces;
+   total_size *= key->numFaces * key->arraySize;
 
    return total_size;
 }
@@ -104,7 +106,7 @@ svga_screen_cache_lookup(struct svga_screen *svgascreen,
 
    bucket = svga_screen_cache_bucket(key);
 
-   pipe_mutex_lock(cache->mutex);
+   mtx_lock(&cache->mutex);
 
    curr = cache->bucket[bucket].next;
    next = curr->next;
@@ -154,7 +156,7 @@ svga_screen_cache_lookup(struct svga_screen *svgascreen,
       next = curr->next;
    }
 
-   pipe_mutex_unlock(cache->mutex);
+   mtx_unlock(&cache->mutex);
 
    if (SVGA_DEBUG & DEBUG_DMA)
       debug_printf("%s: cache %s after %u tries (bucket %d)\n", __FUNCTION__,
@@ -226,12 +228,12 @@ svga_screen_cache_add(struct svga_screen *svgascreen,
    surf_size = surface_size(key);
 
    *p_handle = NULL;
-   pipe_mutex_lock(cache->mutex);
+   mtx_lock(&cache->mutex);
 
    if (surf_size >= SVGA_HOST_SURFACE_CACHE_BYTES) {
       /* this surface is too large to cache, just free it */
       sws->surface_reference(sws, &handle, NULL);
-      pipe_mutex_unlock(cache->mutex);
+      mtx_unlock(&cache->mutex);
       return;
    }
 
@@ -249,7 +251,7 @@ svga_screen_cache_add(struct svga_screen *svgascreen,
           * just discard this surface.
           */
          sws->surface_reference(sws, &handle, NULL);
-         pipe_mutex_unlock(cache->mutex);
+         mtx_unlock(&cache->mutex);
          return;
       }
    }
@@ -300,7 +302,7 @@ svga_screen_cache_add(struct svga_screen *svgascreen,
       sws->surface_reference(sws, &handle, NULL);
    }
 
-   pipe_mutex_unlock(cache->mutex);
+   mtx_unlock(&cache->mutex);
 }
 
 
@@ -310,6 +312,7 @@ svga_screen_cache_add(struct svga_screen *svgascreen,
  */
 void
 svga_screen_cache_flush(struct svga_screen *svgascreen,
+                        struct svga_context *svga,
                         struct pipe_fence_handle *fence)
 {
    struct svga_host_surface_cache *cache = &svgascreen->cache;
@@ -318,7 +321,7 @@ svga_screen_cache_flush(struct svga_screen *svgascreen,
    struct list_head *curr, *next;
    unsigned bucket;
 
-   pipe_mutex_lock(cache->mutex);
+   mtx_lock(&cache->mutex);
 
    /* Loop over entries in the invalidated list */
    curr = cache->invalidated.next;
@@ -357,8 +360,24 @@ svga_screen_cache_flush(struct svga_screen *svgascreen,
          /* remove entry from the validated list */
          LIST_DEL(&entry->head);
 
-         /* it is now safe to invalidate the surface content. */
-         sws->surface_invalidate(sws, entry->handle);
+         /* It is now safe to invalidate the surface content.
+          * It will be done using the current context.
+          */
+         if (svga->swc->surface_invalidate(svga->swc, entry->handle) != PIPE_OK) {
+            enum pipe_error ret;
+
+            /* Even though surface invalidation here is done after the command
+             * buffer is flushed, it is still possible that it will
+             * fail because there might be just enough of this command that is
+             * filling up the command buffer, so in this case we will call
+             * the winsys flush directly to flush the buffer.
+             * Note, we don't want to call svga_context_flush() here because
+             * this function itself is called inside svga_context_flush().
+             */
+            svga->swc->flush(svga->swc, NULL);
+            ret = svga->swc->surface_invalidate(svga->swc, entry->handle);
+            assert(ret == PIPE_OK);
+         }
 
          /* add the entry to the invalidated list */
          LIST_ADD(&entry->head, &cache->invalidated);
@@ -368,7 +387,7 @@ svga_screen_cache_flush(struct svga_screen *svgascreen,
       next = curr->next;
    }
 
-   pipe_mutex_unlock(cache->mutex);
+   mtx_unlock(&cache->mutex);
 }
 
 
@@ -396,7 +415,7 @@ svga_screen_cache_cleanup(struct svga_screen *svgascreen)
          sws->fence_reference(sws, &cache->entries[i].fence, NULL);
    }
 
-   pipe_mutex_destroy(cache->mutex);
+   mtx_destroy(&cache->mutex);
 }
 
 
@@ -408,7 +427,7 @@ svga_screen_cache_init(struct svga_screen *svgascreen)
 
    assert(cache->total_size == 0);
 
-   pipe_mutex_init(cache->mutex);
+   (void) mtx_init(&cache->mutex, mtx_plain);
 
    for (i = 0; i < SVGA_HOST_SURFACE_CACHE_BUCKETS; ++i)
       LIST_INITHEAD(&cache->bucket[i]);
@@ -433,10 +452,12 @@ svga_screen_cache_init(struct svga_screen *svgascreen)
  * allocate a new surface.
  * \param bind_flags  bitmask of PIPE_BIND_x flags
  * \param usage  one of PIPE_USAGE_x values
+ * \param validated return True if the surface is a reused surface
  */
 struct svga_winsys_surface *
 svga_screen_surface_create(struct svga_screen *svgascreen,
                            unsigned bind_flags, enum pipe_resource_usage usage,
+                           boolean *validated,
                            struct svga_host_surface_cache_key *key)
 {
    struct svga_winsys_screen *sws = svgascreen->sws;
@@ -510,6 +531,7 @@ svga_screen_surface_create(struct svga_screen *svgascreen,
                      key->numMipLevels,
                      key->numFaces,
                      key->arraySize);
+         *validated = TRUE;
       }
    }
 
@@ -536,6 +558,8 @@ svga_screen_surface_create(struct svga_screen *svgascreen,
                   key->size.width,
                   key->size.height,
                   key->size.depth);
+
+      *validated = FALSE;
    }
 
    return handle;

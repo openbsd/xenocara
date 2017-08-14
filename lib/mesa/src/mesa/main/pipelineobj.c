@@ -58,10 +58,12 @@ _mesa_delete_pipeline_object(struct gl_context *ctx,
 {
    unsigned i;
 
-   _mesa_reference_shader_program(ctx, &obj->_CurrentFragmentProgram, NULL);
+   _mesa_reference_program(ctx, &obj->_CurrentFragmentProgram, NULL);
 
-   for (i = 0; i < MESA_SHADER_STAGES; i++)
-      _mesa_reference_shader_program(ctx, &obj->CurrentProgram[i], NULL);
+   for (i = 0; i < MESA_SHADER_STAGES; i++) {
+      _mesa_reference_program(ctx, &obj->CurrentProgram[i], NULL);
+      _mesa_reference_shader_program(ctx, &obj->ReferencedPrograms[i], NULL);
+   }
 
    _mesa_reference_shader_program(ctx, &obj->ActiveProgram, NULL);
    mtx_destroy(&obj->Mutex);
@@ -218,6 +220,18 @@ _mesa_reference_pipeline_object_(struct gl_context *ctx,
    }
 }
 
+static void
+use_program_stage(struct gl_context *ctx, GLenum type,
+                  struct gl_shader_program *shProg,
+                  struct gl_pipeline_object *pipe) {
+   gl_shader_stage stage = _mesa_shader_enum_to_shader_stage(type);
+   struct gl_program *prog = NULL;
+   if (shProg && shProg->_LinkedShaders[stage])
+      prog = shProg->_LinkedShaders[stage]->Program;
+
+   _mesa_use_program(ctx, stage, shProg, prog, pipe);
+}
+
 /**
  * Bound program to severals stages of the pipeline
  */
@@ -297,7 +311,7 @@ _mesa_UseProgramStages(GLuint pipeline, GLbitfield stages, GLuint program)
        *     shader stages in the pipeline program pipeline object are not
        *     modified."
        */
-      if (!shProg->LinkStatus) {
+      if (!shProg->data->LinkStatus) {
          _mesa_error(ctx, GL_INVALID_OPERATION,
                      "glUseProgramStages(program not linked)");
          return;
@@ -325,22 +339,22 @@ _mesa_UseProgramStages(GLuint pipeline, GLbitfield stages, GLuint program)
     *     configured for the indicated shader stages."
     */
    if ((stages & GL_VERTEX_SHADER_BIT) != 0)
-      _mesa_use_shader_program(ctx, GL_VERTEX_SHADER, shProg, pipe);
+      use_program_stage(ctx, GL_VERTEX_SHADER, shProg, pipe);
 
    if ((stages & GL_FRAGMENT_SHADER_BIT) != 0)
-      _mesa_use_shader_program(ctx, GL_FRAGMENT_SHADER, shProg, pipe);
+      use_program_stage(ctx, GL_FRAGMENT_SHADER, shProg, pipe);
 
    if ((stages & GL_GEOMETRY_SHADER_BIT) != 0)
-      _mesa_use_shader_program(ctx, GL_GEOMETRY_SHADER, shProg, pipe);
+      use_program_stage(ctx, GL_GEOMETRY_SHADER, shProg, pipe);
 
    if ((stages & GL_TESS_CONTROL_SHADER_BIT) != 0)
-      _mesa_use_shader_program(ctx, GL_TESS_CONTROL_SHADER, shProg, pipe);
+      use_program_stage(ctx, GL_TESS_CONTROL_SHADER, shProg, pipe);
 
    if ((stages & GL_TESS_EVALUATION_SHADER_BIT) != 0)
-      _mesa_use_shader_program(ctx, GL_TESS_EVALUATION_SHADER, shProg, pipe);
+      use_program_stage(ctx, GL_TESS_EVALUATION_SHADER, shProg, pipe);
 
    if ((stages & GL_COMPUTE_SHADER_BIT) != 0)
-      _mesa_use_shader_program(ctx, GL_COMPUTE_SHADER, shProg, pipe);
+      use_program_stage(ctx, GL_COMPUTE_SHADER, shProg, pipe);
 
    pipe->Validated = false;
 }
@@ -376,7 +390,7 @@ _mesa_ActiveShaderProgram(GLuint pipeline, GLuint program)
     */
    pipe->EverBound = GL_TRUE;
 
-   if ((shProg != NULL) && !shProg->LinkStatus) {
+   if ((shProg != NULL) && !shProg->data->LinkStatus) {
       _mesa_error(ctx, GL_INVALID_OPERATION,
             "glActiveShaderProgram(program %u not linked)", shProg->Name);
       return;
@@ -455,6 +469,8 @@ _mesa_bind_pipeline(struct gl_context *ctx,
     *     considered current."
     */
    if (&ctx->Shader != ctx->_Shader) {
+      FLUSH_VERTICES(ctx, _NEW_PROGRAM | _NEW_PROGRAM_CONSTANTS);
+
       if (pipe != NULL) {
          /* Bound the pipeline to the current program and
           * restore the pipeline state
@@ -466,10 +482,12 @@ _mesa_bind_pipeline(struct gl_context *ctx,
                                          ctx->Pipeline.Default);
       }
 
-      FLUSH_VERTICES(ctx, _NEW_PROGRAM | _NEW_PROGRAM_CONSTANTS);
-
-      for (i = 0; i < MESA_SHADER_STAGES; i++)
-         _mesa_shader_program_init_subroutine_defaults(ctx, ctx->_Shader->CurrentProgram[i]);
+      for (i = 0; i < MESA_SHADER_STAGES; i++) {
+         struct gl_program *prog = ctx->_Shader->CurrentProgram[i];
+         if (prog) {
+            _mesa_program_init_subroutine_defaults(ctx, prog);
+         }
+      }
    }
 }
 
@@ -653,35 +671,35 @@ _mesa_GetProgramPipelineiv(GLuint pipeline, GLenum pname, GLint *params)
       return;
    case GL_VERTEX_SHADER:
       *params = pipe->CurrentProgram[MESA_SHADER_VERTEX]
-         ? pipe->CurrentProgram[MESA_SHADER_VERTEX]->Name : 0;
+         ? pipe->CurrentProgram[MESA_SHADER_VERTEX]->Id : 0;
       return;
    case GL_TESS_EVALUATION_SHADER:
       if (!has_tess)
          break;
       *params = pipe->CurrentProgram[MESA_SHADER_TESS_EVAL]
-         ? pipe->CurrentProgram[MESA_SHADER_TESS_EVAL]->Name : 0;
+         ? pipe->CurrentProgram[MESA_SHADER_TESS_EVAL]->Id : 0;
       return;
    case GL_TESS_CONTROL_SHADER:
       if (!has_tess)
          break;
       *params = pipe->CurrentProgram[MESA_SHADER_TESS_CTRL]
-         ? pipe->CurrentProgram[MESA_SHADER_TESS_CTRL]->Name : 0;
+         ? pipe->CurrentProgram[MESA_SHADER_TESS_CTRL]->Id : 0;
       return;
    case GL_GEOMETRY_SHADER:
       if (!has_gs)
          break;
       *params = pipe->CurrentProgram[MESA_SHADER_GEOMETRY]
-         ? pipe->CurrentProgram[MESA_SHADER_GEOMETRY]->Name : 0;
+         ? pipe->CurrentProgram[MESA_SHADER_GEOMETRY]->Id : 0;
       return;
    case GL_FRAGMENT_SHADER:
       *params = pipe->CurrentProgram[MESA_SHADER_FRAGMENT]
-         ? pipe->CurrentProgram[MESA_SHADER_FRAGMENT]->Name : 0;
+         ? pipe->CurrentProgram[MESA_SHADER_FRAGMENT]->Id : 0;
       return;
    case GL_COMPUTE_SHADER:
       if (!_mesa_has_compute_shaders(ctx))
          break;
       *params = pipe->CurrentProgram[MESA_SHADER_COMPUTE]
-         ? pipe->CurrentProgram[MESA_SHADER_COMPUTE]->Name : 0;
+         ? pipe->CurrentProgram[MESA_SHADER_COMPUTE]->Id : 0;
       return;
    default:
       break;
@@ -697,23 +715,22 @@ _mesa_GetProgramPipelineiv(GLuint pipeline, GLenum pname, GLint *params)
  */
 static bool
 program_stages_all_active(struct gl_pipeline_object *pipe,
-                          const struct gl_shader_program *prog)
+                          const struct gl_program *prog)
 {
-   unsigned i;
    bool status = true;
 
    if (!prog)
       return true;
 
-   for (i = 0; i < MESA_SHADER_STAGES; i++) {
-      if (prog->_LinkedShaders[i]) {
-         if (pipe->CurrentProgram[i]) {
-            if (prog->Name != pipe->CurrentProgram[i]->Name) {
-               status = false;
-            }
-         } else {
+   unsigned mask = prog->sh.data->linked_stages;
+   while (mask) {
+      const int i = u_bit_scan(&mask);
+      if (pipe->CurrentProgram[i]) {
+         if (prog->Id != pipe->CurrentProgram[i]->Id) {
             status = false;
          }
+      } else {
+         status = false;
       }
    }
 
@@ -721,7 +738,7 @@ program_stages_all_active(struct gl_pipeline_object *pipe,
       pipe->InfoLog = ralloc_asprintf(pipe,
                                       "Program %d is not active for all "
                                       "shaders that was linked",
-                                      prog->Name);
+                                      prog->Id);
    }
 
    return status;
@@ -730,30 +747,33 @@ program_stages_all_active(struct gl_pipeline_object *pipe,
 static bool
 program_stages_interleaved_illegally(const struct gl_pipeline_object *pipe)
 {
-   struct gl_shader_program *prev = NULL;
-   unsigned i, j;
+   unsigned prev_linked_stages = 0;
 
    /* Look for programs bound to stages: A -> B -> A, with any intervening
     * sequence of unrelated programs or empty stages.
     */
-   for (i = 0; i < MESA_SHADER_STAGES; i++) {
-      struct gl_shader_program *cur = pipe->CurrentProgram[i];
+   for (unsigned i = 0; i < MESA_SHADER_STAGES; i++) {
+      struct gl_program *cur = pipe->CurrentProgram[i];
 
-      /* Empty stages anywhere in the pipe are OK */
-      if (!cur || cur == prev)
+      /* Empty stages anywhere in the pipe are OK.  Also we can be confident
+       * that if the linked_stages mask matches we are looking at the same
+       * linked program because a previous validation call to
+       * program_stages_all_active() will have already failed if two different
+       * programs with the sames stages linked are not active for all linked
+       * stages.
+       */
+      if (!cur || cur->sh.data->linked_stages == prev_linked_stages)
          continue;
 
-      if (prev) {
+      if (prev_linked_stages) {
          /* We've seen an A -> B transition; look at the rest of the pipe
           * to see if we ever see A again.
           */
-         for (j = i + 1; j < MESA_SHADER_STAGES; j++) {
-            if (pipe->CurrentProgram[j] == prev)
-               return true;
-         }
+         if (prev_linked_stages >> (i + 1))
+            return true;
       }
 
-      prev = cur;
+      prev_linked_stages = cur->sh.data->linked_stages;
    }
 
    return false;
@@ -852,11 +872,12 @@ _mesa_validate_program_pipeline(struct gl_context* ctx,
     *           PROGRAM_SEPARABLE parameter set to FALSE.
     */
    for (i = 0; i < MESA_SHADER_STAGES; i++) {
-      if (pipe->CurrentProgram[i] && !pipe->CurrentProgram[i]->SeparateShader) {
+      if (pipe->CurrentProgram[i] &&
+          !pipe->CurrentProgram[i]->info.separate_shader) {
          pipe->InfoLog = ralloc_asprintf(pipe,
                                          "Program %d was relinked without "
                                          "PROGRAM_SEPARABLE state",
-                                         pipe->CurrentProgram[i]->Name);
+                                         pipe->CurrentProgram[i]->Id);
          return GL_FALSE;
       }
    }

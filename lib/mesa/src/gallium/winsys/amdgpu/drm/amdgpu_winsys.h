@@ -52,16 +52,19 @@ struct amdgpu_winsys {
 
    amdgpu_device_handle dev;
 
-   pipe_mutex bo_fence_lock;
+   mtx_t bo_fence_lock;
 
    int num_cs; /* The number of command streams created. */
+   unsigned num_total_rejected_cs;
    uint32_t next_bo_unique_id;
    uint64_t allocated_vram;
    uint64_t allocated_gtt;
    uint64_t mapped_vram;
    uint64_t mapped_gtt;
    uint64_t buffer_wait_time; /* time spent in buffer_wait in ns */
-   uint64_t num_cs_flushes;
+   uint64_t num_gfx_IBs;
+   uint64_t num_sdma_IBs;
+   uint64_t num_mapped_buffers;
 
    struct radeon_info info;
 
@@ -76,7 +79,7 @@ struct amdgpu_winsys {
    bool check_vm;
 
    /* List of all allocated buffers */
-   pipe_mutex global_bo_list_lock;
+   mtx_t global_bo_list_lock;
    struct list_head global_bo_list;
    unsigned num_buffers;
 };

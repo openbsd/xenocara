@@ -44,6 +44,7 @@ git_sha1.h: git_sha1.h.tmp
 
 BUILT_SOURCES = git_sha1.h
 CLEANFILES = $(BUILT_SOURCES)
+EXTRA_DIST =
 
 SUBDIRS = . gtest util mapi/glapi/gen mapi
 
@@ -74,6 +75,16 @@ endif
 # include only conditionally ?
 SUBDIRS += compiler
 
+## Optionally required by GBM, EGL and Vulkan
+if HAVE_PLATFORM_WAYLAND
+SUBDIRS += egl/wayland/wayland-drm
+endif
+
+if HAVE_VULKAN_COMMON
+SUBDIRS += vulkan
+endif
+EXTRA_DIST += vulkan/registry/vk.xml
+
 if HAVE_AMD_DRIVERS
 SUBDIRS += amd
 endif
@@ -92,11 +103,6 @@ if HAVE_DRI_GLX
 SUBDIRS += glx
 endif
 
-## Optionally required by GBM and EGL
-if HAVE_PLATFORM_WAYLAND
-SUBDIRS += egl/wayland/wayland-drm
-endif
-
 ## Optionally required by EGL (aka PLATFORM_GBM)
 if HAVE_GBM
 SUBDIRS += gbm
@@ -111,22 +117,8 @@ if HAVE_EGL
 SUBDIRS += egl
 endif
 
-if HAVE_INTEL_DRIVERS
-SUBDIRS += intel/tools
-endif
-
-if HAVE_VULKAN_COMMON
-SUBDIRS += vulkan/wsi
-endif
-
-## Requires the i965 compiler (part of mesa) and wayland-drm
-if HAVE_INTEL_VULKAN
-SUBDIRS += intel/vulkan
-endif
-
 # Requires wayland-drm
 if HAVE_RADEON_VULKAN
-SUBDIRS += amd/common
 SUBDIRS += amd/vulkan
 endif
 
@@ -134,7 +126,7 @@ if HAVE_GALLIUM
 SUBDIRS += gallium
 endif
 
-EXTRA_DIST = \
+EXTRA_DIST += \
 	getopt hgl SConscript \
 	$(top_srcdir)/include/GL/mesa_glinterop.h
 

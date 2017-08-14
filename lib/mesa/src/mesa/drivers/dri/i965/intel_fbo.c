@@ -442,13 +442,9 @@ intel_create_renderbuffer(mesa_format format, unsigned num_samples)
    struct intel_renderbuffer *irb;
    struct gl_renderbuffer *rb;
 
-   GET_CURRENT_CONTEXT(ctx);
-
    irb = CALLOC_STRUCT(intel_renderbuffer);
-   if (!irb) {
-      _mesa_error(ctx, GL_OUT_OF_MEMORY, "creating renderbuffer");
+   if (!irb)
       return NULL;
-   }
 
    rb = &irb->Base.Base;
    irb->layer_count = 1;
@@ -540,7 +536,7 @@ intel_renderbuffer_update_wrapper(struct brw_context *brw,
    switch (mt->msaa_layout) {
       case INTEL_MSAA_LAYOUT_UMS:
       case INTEL_MSAA_LAYOUT_CMS:
-         layer_multiplier = mt->num_samples;
+         layer_multiplier = MAX2(mt->num_samples, 1);
          break;
 
       default:
@@ -1058,7 +1054,7 @@ brw_render_cache_set_clear(struct brw_context *brw)
 }
 
 void
-brw_render_cache_set_add_bo(struct brw_context *brw, drm_intel_bo *bo)
+brw_render_cache_set_add_bo(struct brw_context *brw, struct brw_bo *bo)
 {
    _mesa_set_add(brw->render_cache, bo);
 }
@@ -1076,7 +1072,7 @@ brw_render_cache_set_add_bo(struct brw_context *brw, drm_intel_bo *bo)
  * different caches within a batchbuffer, it's all our responsibility.
  */
 void
-brw_render_cache_set_check_flush(struct brw_context *brw, drm_intel_bo *bo)
+brw_render_cache_set_check_flush(struct brw_context *brw, struct brw_bo *bo)
 {
    if (!_mesa_set_search(brw->render_cache, bo))
       return;

@@ -257,9 +257,11 @@ struct fd_context {
 	void (*emit_tile_mem2gmem)(struct fd_batch *batch, struct fd_tile *tile);
 	void (*emit_tile_renderprep)(struct fd_batch *batch, struct fd_tile *tile);
 	void (*emit_tile_gmem2mem)(struct fd_batch *batch, struct fd_tile *tile);
+	void (*emit_tile_fini)(struct fd_batch *batch);   /* optional */
 
 	/* optional, for GMEM bypass: */
 	void (*emit_sysmem_prep)(struct fd_batch *batch);
+	void (*emit_sysmem_fini)(struct fd_batch *batch);
 
 	/* draw: */
 	bool (*draw_vbo)(struct fd_context *ctx, const struct pipe_draw_info *info);
@@ -314,13 +316,13 @@ fd_context_assert_locked(struct fd_context *ctx)
 static inline void
 fd_context_lock(struct fd_context *ctx)
 {
-	pipe_mutex_lock(ctx->screen->lock);
+	mtx_lock(&ctx->screen->lock);
 }
 
 static inline void
 fd_context_unlock(struct fd_context *ctx)
 {
-	pipe_mutex_unlock(ctx->screen->lock);
+	mtx_unlock(&ctx->screen->lock);
 }
 
 static inline struct pipe_scissor_state *

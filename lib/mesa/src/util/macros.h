@@ -175,6 +175,10 @@ do {                       \
 #      if ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 3)))
 #         define HAS_TRIVIAL_DESTRUCTOR(T) __has_trivial_destructor(T)
 #      endif
+#   elif defined(_MSC_VER) && !defined(__INTEL_COMPILER)
+#      if _MSC_VER >= 1800
+#         define HAS_TRIVIAL_DESTRUCTOR(T) __has_trivial_destructor(T)
+#      endif
 #   endif
 #   ifndef HAS_TRIVIAL_DESTRUCTOR
        /* It's always safe (if inefficient) to assume that a

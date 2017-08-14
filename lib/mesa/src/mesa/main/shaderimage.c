@@ -30,6 +30,7 @@
 #include "mtypes.h"
 #include "formats.h"
 #include "errors.h"
+#include "hash.h"
 #include "context.h"
 #include "texobj.h"
 #include "teximage.h"
@@ -401,7 +402,7 @@ _mesa_is_shader_image_format_supported(const struct gl_context *ctx,
 
    /* Formats supported on unextended desktop GL and the original
     * ARB_shader_image_load_store extension, c.f. table 3.21 of the OpenGL 4.2
-    * specification.
+    * specification or by GLES 3.1 with GL_NV_image_formats extension.
     */
    case GL_RG32F:
    case GL_RG16F:
@@ -418,17 +419,27 @@ _mesa_is_shader_image_format_supported(const struct gl_context *ctx,
    case GL_RG8I:
    case GL_R16I:
    case GL_R8I:
-   case GL_RGBA16:
    case GL_RGB10_A2:
-   case GL_RG16:
    case GL_RG8:
-   case GL_R16:
    case GL_R8:
-   case GL_RGBA16_SNORM:
-   case GL_RG16_SNORM:
    case GL_RG8_SNORM:
-   case GL_R16_SNORM:
    case GL_R8_SNORM:
+      return true;
+
+   /* Formats supported on unextended desktop GL and the original
+    * ARB_shader_image_load_store extension, c.f. table 3.21 of the OpenGL 4.2
+    * specification.
+    *
+    * These can be supported by GLES 3.1 with GL_NV_image_formats &
+    * GL_EXT_texture_norm16 extensions but we don't have support for the
+    * latter in Mesa yet.
+    */
+   case GL_RGBA16:
+   case GL_RGBA16_SNORM:
+   case GL_RG16:
+   case GL_RG16_SNORM:
+   case GL_R16:
+   case GL_R16_SNORM:
       return _mesa_is_desktop_gl(ctx);
 
    default:
@@ -663,7 +674,7 @@ _mesa_BindImageTextures(GLuint first, GLsizei count, const GLuint *textures)
     *       their parameters are valid and no other error occurs."
     */
 
-   _mesa_begin_texture_lookups(ctx);
+   _mesa_HashLockMutex(ctx->Shared->TexObjects);
 
    for (i = 0; i < count; i++) {
       struct gl_image_unit *u = &ctx->ImageUnits[first + i];
@@ -751,5 +762,5 @@ _mesa_BindImageTextures(GLuint first, GLsizei count, const GLuint *textures)
       }
    }
 
-   _mesa_end_texture_lookups(ctx);
+   _mesa_HashUnlockMutex(ctx->Shared->TexObjects);
 }
