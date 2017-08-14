@@ -93,7 +93,9 @@ EXTRA_DIST = \
 # .c and .h files in one go so we don't hit problems with parallel
 # make and multiple invocations of the same script trying to write
 # to the same files.
+if REGEN_SOURCES
 brw_oa_hsw.h: brw_oa.py brw_oa_hsw.xml
 	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --header=$(builddir)/brw_oa_hsw.h --chipset=hsw $(srcdir)/brw_oa_hsw.xml
 brw_oa_hsw.c: brw_oa.py brw_oa_hsw.xml
 	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --code=$(builddir)/brw_oa_hsw.c --chipset=hsw $(srcdir)/brw_oa_hsw.xml
+endif
