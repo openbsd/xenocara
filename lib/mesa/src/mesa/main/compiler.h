@@ -41,11 +41,6 @@
 #include "c99_compat.h" /* inline, __func__, etc. */
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
 /**
  * Either define MESA_BIG_ENDIAN or MESA_LITTLE_ENDIAN, and CPU_TO_LE32.
  * Do not use these unless absolutely necessary!
@@ -64,11 +59,6 @@ extern "C" {
 #endif /* __OpenBSD__ */
 
 #define IEEE_ONE 0x3f800000
-
-
-#ifdef __cplusplus
-}
-#endif
 
 
 #endif /* COMPILER_H */

@@ -21,7 +21,7 @@
  * MATERIALS OR THE USE OR OTHER DEALINGS IN THE MATERIALS.
  **********************************************************************************/
 
-/* $Revision: 1.6 $ on $Date: 2017/03/25 00:29:27 $ */
+/* $Revision: 1.7 $ on $Date: 2017/08/14 09:57:57 $ */
 
 /* cl_gl_ext.h contains vendor (non-KHR) OpenCL extensions which have           */
 /* OpenGL dependencies.                                                         */
