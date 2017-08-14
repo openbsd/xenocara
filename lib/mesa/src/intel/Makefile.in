@@ -3978,10 +3978,10 @@ uninstall-am: uninstall-icdconfDATA uninstall-libLTLIBRARIES \
 	uninstall-vulkan_includeHEADERS
 
 
-compiler/brw_nir_trig_workarounds.c: compiler/brw_nir_trig_workarounds.py \
-                                     $(top_srcdir)/src/compiler/nir/nir_algebraic.py
-	$(MKDIR_GEN)
-	$(AM_V_GEN) PYTHONPATH=$(top_srcdir)/src/compiler/nir $(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/compiler/brw_nir_trig_workarounds.py > $@ || ($(RM) $@; false)
+@REGEN_SOURCES_TRUE@compiler/brw_nir_trig_workarounds.c: compiler/brw_nir_trig_workarounds.py \
+@REGEN_SOURCES_TRUE@                                     $(top_srcdir)/src/compiler/nir/nir_algebraic.py
+@REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
+@REGEN_SOURCES_TRUE@	$(AM_V_GEN) PYTHONPATH=$(top_srcdir)/src/compiler/nir $(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/compiler/brw_nir_trig_workarounds.py > $@ || ($(RM) $@; false)
 
 $(GENXML_GENERATED_PACK_FILES): genxml/gen_pack_header.py
 
@@ -4003,11 +4003,11 @@ $(GENXML_GENERATED_PACK_FILES): genxml/gen_pack_header.py
 @REGEN_SOURCES_TRUE@	$(PYTHON_GEN) $(srcdir)/isl/gen_format_layout.py \
 @REGEN_SOURCES_TRUE@	    --csv $(srcdir)/isl/isl_format_layout.csv --out $@
 
-vulkan/anv_entrypoints.c: vulkan/anv_entrypoints_gen.py $(vulkan_api_xml)
-	$(MKDIR_GEN)
-	$(AM_V_GEN)$(PYTHON2) $(srcdir)/vulkan/anv_entrypoints_gen.py \
-		--xml $(vulkan_api_xml) --outdir $(builddir)/vulkan
-vulkan/anv_entrypoints.h: vulkan/anv_entrypoints.c
+@REGEN_SOURCES_TRUE@vulkan/anv_entrypoints.c: vulkan/anv_entrypoints_gen.py $(vulkan_api_xml)
+@REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
+@REGEN_SOURCES_TRUE@	$(AM_V_GEN)$(PYTHON2) $(srcdir)/vulkan/anv_entrypoints_gen.py \
+@REGEN_SOURCES_TRUE@		--xml $(vulkan_api_xml) --outdir $(builddir)/vulkan
+@REGEN_SOURCES_TRUE@vulkan/anv_entrypoints.h: vulkan/anv_entrypoints.c
 
 vulkan/dev_icd.json : vulkan/dev_icd.json.in
 	$(AM_V_GEN) $(SED) \

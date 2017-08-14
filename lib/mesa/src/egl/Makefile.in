@@ -1285,17 +1285,17 @@ uninstall-am: uninstall-eglHEADERS uninstall-libLTLIBRARIES \
 	uninstall-am uninstall-eglHEADERS uninstall-libLTLIBRARIES \
 	uninstall-pkgconfigDATA uninstall-vendorjsonDATA
 
-g_egldispatchstubs.c: $(GLVND_GEN_DEPS)
-	$(PYTHON_GEN) $(top_srcdir)/src/egl/generate/gen_egl_dispatch.py source \
-		$(top_srcdir)/src/egl/generate/eglFunctionList.py \
-		$(top_srcdir)/src/egl/generate/egl.xml \
-		$(top_srcdir)/src/egl/generate/egl_other.xml > $@
+@REGEN_SOURCES_TRUE@g_egldispatchstubs.c: $(GLVND_GEN_DEPS)
+@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) $(top_srcdir)/src/egl/generate/gen_egl_dispatch.py source \
+@REGEN_SOURCES_TRUE@		$(top_srcdir)/src/egl/generate/eglFunctionList.py \
+@REGEN_SOURCES_TRUE@		$(top_srcdir)/src/egl/generate/egl.xml \
+@REGEN_SOURCES_TRUE@		$(top_srcdir)/src/egl/generate/egl_other.xml > $@
 
-g_egldispatchstubs.h: $(GLVND_GEN_DEPS)
-	$(PYTHON_GEN) $(top_srcdir)/src/egl/generate/gen_egl_dispatch.py header \
-		$(top_srcdir)/src/egl/generate/eglFunctionList.py \
-		$(top_srcdir)/src/egl/generate/egl.xml \
-		$(top_srcdir)/src/egl/generate/egl_other.xml > $@
+@REGEN_SOURCES_TRUE@g_egldispatchstubs.h: $(GLVND_GEN_DEPS)
+@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) $(top_srcdir)/src/egl/generate/gen_egl_dispatch.py header \
+@REGEN_SOURCES_TRUE@		$(top_srcdir)/src/egl/generate/eglFunctionList.py \
+@REGEN_SOURCES_TRUE@		$(top_srcdir)/src/egl/generate/egl.xml \
+@REGEN_SOURCES_TRUE@		$(top_srcdir)/src/egl/generate/egl_other.xml > $@
 
 @BUILD_SHARED_TRUE@@HAVE_COMPAT_SYMLINKS_TRUE@all-local : .install-mesa-links
 
