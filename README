@@ -177,9 +177,9 @@ Several things are needed:
    anywhere in the configuration file.
 
 3) start the X server as root, with the -keepPriv option. A regular
-   user is not allowed to use this option. If you use xdm, you can add
-   the option in /etc/X11/xdm/Xservers. If you want to use startx, you
-   need to run it as root, like this:
+   user is not allowed to use this option. If you use xenodm, you can
+   add the option in /etc/X11/xenodm/Xservers. If you want to use
+   startx, you need to run it as root, like this:
 
    startx -- /usr/X11R6/bin/X -keepPriv
 
@@ -193,4 +193,4 @@ The core dump will be in /var/crash.
 See also <http://xorg.freedesktop.org/wiki/Development/Documentation/ServerDebugging>
 
 -- 
-$OpenBSD: README,v 1.39 2017/02/24 03:07:03 jsg Exp $
+$OpenBSD: README,v 1.40 2017/08/19 09:12:13 matthieu Exp $
