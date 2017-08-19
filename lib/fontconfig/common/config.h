@@ -25,6 +25,9 @@
 /* System font directory */
 #define FC_DEFAULT_FONTS "/usr/X11R6/lib/X11/fonts"
 
+/* The type of len parameter of the gperf hash/lookup function */
+#define FC_GPERF_SIZE_T unsigned int
+
 /* Define to nothing if C supports flexible array members, and to 1 if it does
    not. That way, with a declaration like `struct s { int n; double
    d[FLEXIBLE_ARRAY_MEMBER]; };', the struct hack can be used with pre-C99
@@ -254,7 +257,7 @@
 #define PACKAGE_NAME "fontconfig"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "fontconfig 2.12.1"
+#define PACKAGE_STRING "fontconfig 2.12.4"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "fontconfig"
@@ -263,7 +266,7 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "2.12.1"
+#define PACKAGE_VERSION "2.12.4"
 
 /* Define to necessary symbol if this constant uses a non-standard name on
    your system. */
@@ -320,7 +323,7 @@
 
 
 /* Version number of package */
-#define VERSION "2.12.1"
+#define VERSION "2.12.4"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

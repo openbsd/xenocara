@@ -1,4 +1,8 @@
+if FREETYPE_PCF_LONG_FAMILY_NAMES
+check_SCRIPTS=run-test271.sh
+else
 check_SCRIPTS=run-test.sh
+endif
 TEST_EXTENSIONS = \
 	.sh \
 	$(NULL)
@@ -10,9 +14,13 @@ AM_TESTS_ENVIRONMENT= \
 
 SH_LOG_COMPILER = sh
 
+if FREETYPE_PCF_LONG_FAMILY_NAMES
+TESTS=run-test271.sh
+else
 TESTS=run-test.sh
+endif
 
-TESTDATA=4x6.pcf 8x16.pcf out.expected fonts.conf.in
+TESTDATA=4x6.pcf 8x16.pcf out.expected out271.expected fonts.conf.in
 
 AM_CPPFLAGS = -I$(top_srcdir) -I$(top_builddir)
 
@@ -31,6 +39,10 @@ test_bz89617_CFLAGS = \
 test_bz89617_LDADD = $(top_builddir)/src/libfontconfig.la
 TESTS += test-bz89617
 
+check_PROGRAMS += test-bz131804
+test_bz131804_LDADD = $(top_builddir)/src/libfontconfig.la
+TESTS += test-bz131804
+
 noinst_PROGRAMS = $(check_PROGRAMS)
 
 if !OS_WIN32
@@ -42,7 +54,7 @@ check_PROGRAMS += test-bz96676
 test_bz96676_LDADD = $(top_builddir)/src/libfontconfig.la
 TESTS += test-bz96676
 
-EXTRA_DIST=$(check_SCRIPTS) $(TESTDATA)
+EXTRA_DIST=run-test.sh run-test271.sh $(TESTDATA)
 
 CLEANFILES=
 

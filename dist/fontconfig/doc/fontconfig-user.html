@@ -507,8 +507,8 @@ CLASS="LITERAL"
 where <TT
 CLASS="LITERAL"
 >&#60;version&#62;</TT
-> is the font configuration file
-version number (currently 5).
+> is the fontconfig cache file
+version number (currently 7).
   </P
 ></DIV
 ><DIV
@@ -1525,6 +1525,13 @@ HREF="#DEBUG"
 ><P
 ><I
 CLASS="EMPHASIS"
+>FC_LANG</I
+>
+is used to specify the default language as the weak binding in the query. if this isn't set, the default language will be determined from current locale.
+  </P
+><P
+><I
+CLASS="EMPHASIS"
 >FONTCONFIG_USE_MMAP</I
 >
 is used to control the use of mmap(2) for the cache files if available. this take a boolean value. fontconfig will checks if the cache files are stored on the filesystem that is safe to use mmap(2). explicitly setting this environment variable will causes skipping this check and enforce to use or not use mmap(2) anyway.
@@ -1533,7 +1540,7 @@ is used to control the use of mmap(2) for the cache files if available. this tak
 ><DIV
 CLASS="REFSECT1"
 ><A
-NAME="AEN276"
+NAME="AEN278"
 ></A
 ><H2
 >See Also</H2
@@ -1544,12 +1551,12 @@ NAME="AEN276"
 ><DIV
 CLASS="REFSECT1"
 ><A
-NAME="AEN279"
+NAME="AEN281"
 ></A
 ><H2
 >Version</H2
 ><P
->Fontconfig version 2.12.1
+>Fontconfig version 2.12.4
 
 	    </P
 ></DIV

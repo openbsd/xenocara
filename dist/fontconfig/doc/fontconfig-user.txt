@@ -307,8 +307,8 @@ Configuration File Format
    Specification for more details. The default directory is
    ``$XDG_CACHE_HOME/fontconfig'' and it contains the cache files
    named ``<hash value>-<architecture>.cache-<version>'', where
-   <version> is the font configuration file version number
-   (currently 5).
+   <version> is the fontconfig cache file version number
+   (currently 7).
 
 <include ignore_missing="no" prefix="default">
 
@@ -817,6 +817,10 @@ Environment variables
    when FC_DEBUG has MATCH2. see Debugging Applications section
    for more details.
 
+   FC_LANG is used to specify the default language as the weak
+   binding in the query. if this isn't set, the default language
+   will be determined from current locale.
+
    FONTCONFIG_USE_MMAP is used to control the use of mmap(2) for
    the cache files if available. this take a boolean value.
    fontconfig will checks if the cache files are stored on the
@@ -830,4 +834,4 @@ See Also
 
 Version
 
-   Fontconfig version 2.12.1
+   Fontconfig version 2.12.4

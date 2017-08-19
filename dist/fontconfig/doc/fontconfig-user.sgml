@@ -322,8 +322,8 @@ will be used to store the cache files.  If it starts with '~', it refers to
 a directory in the users home directory.  If 'prefix' is set to "xdg", the value in the XDG_CACHE_HOME environment variable will be added as the path prefix. please see XDG Base Directory Specification for more details.
 The default directory is ``$XDG_CACHE_HOME/fontconfig'' and it contains the cache files
 named ``<literal>&lt;hash value&gt;</literal>-<literal>&lt;architecture&gt;</literal>.cache-<literal>&lt;version&gt;</literal>'',
-where <literal>&lt;version&gt;</literal> is the font configuration file
-version number (currently 5).
+where <literal>&lt;version&gt;</literal> is the fontconfig cache file
+version number (currently 7).
   </para></refsect2>
   <refsect2><title><literal>&lt;include ignore_missing="no" prefix="default"&gt;</literal></title><para>
 This element contains the name of an additional configuration file or
@@ -789,6 +789,10 @@ is used to output the detailed debugging messages. see <link linkend="debug">Deb
   <para>
 <emphasis>FC_DBG_MATCH_FILTER</emphasis>
 is used to filter out the patterns. this takes a comma-separated list of object names and effects only when FC_DEBUG has MATCH2. see <link linkend="debug">Debugging Applications</link> section for more details.
+  </para>
+  <para>
+<emphasis>FC_LANG</emphasis>
+is used to specify the default language as the weak binding in the query. if this isn't set, the default language will be determined from current locale.
   </para>
   <para>
 <emphasis>FONTCONFIG_USE_MMAP</emphasis>

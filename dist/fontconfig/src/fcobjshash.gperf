@@ -44,7 +44,7 @@ int id;
 "rgba",FC_RGBA_OBJECT
 "scale",FC_SCALE_OBJECT
 "minspace",FC_MINSPACE_OBJECT
-"charwidth",FC_CHAR_WIDTH_OBJECT
+"charwidth",FC_CHARWIDTH_OBJECT
 "charheight",FC_CHAR_HEIGHT_OBJECT
 "matrix",FC_MATRIX_OBJECT
 "charset",FC_CHARSET_OBJECT
