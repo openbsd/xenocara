@@ -1,4 +1,4 @@
-/*	$OpenBSD: xidle.c,v 1.3 2011/11/18 00:16:57 fgsch Exp $	*/
+/*	$OpenBSD: xidle.c,v 1.4 2017/08/20 16:42:21 matthieu Exp $	*/
 /*
  * Copyright (c) 2005 Federico G. Schwindt
  * Copyright (c) 2005 Claudio Castiglia
@@ -31,7 +31,9 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <err.h>
+#include <fcntl.h>
 #include <limits.h>
+#include <paths.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -184,6 +186,7 @@ action(struct xinfo *xi, char **args)
 		/* NOTREACHED */
 
 	case 0:
+		setsid();
 		execv(*args, args);
 		exit(1);
 		/* NOTREACHED */
@@ -333,10 +336,12 @@ main(int argc, char **argv)
 	char *args[10];
 	int area = 2, delay = 2, timeout = 0;
 	int position = north|west;
+	int fd;
 	u_long last_serial = 0;
 
 	bzero(&x, sizeof(struct xinfo));
 
+	
 	parse_opts(argc, argv, &x.dpy, &area, &delay, &timeout,
 	    &position, args);
 
@@ -351,6 +356,15 @@ main(int argc, char **argv)
 	signal(SIGINT, handler);
 	signal(SIGTERM, handler);
 	signal(SIGUSR1, handler);
+
+	fd = open(_PATH_DEVNULL, O_RDWR, 0);
+	if (fd < 0)
+		err(1, _PATH_DEVNULL);
+	dup2(fd, STDIN_FILENO);
+	dup2(fd, STDOUT_FILENO);
+	dup2(fd, STDERR_FILENO);
+	if (fd > 2)
+		close(fd);
 
 	for (;;) {
 		XEvent ev;
