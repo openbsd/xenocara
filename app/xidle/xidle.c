@@ -1,4 +1,4 @@
-/*	$OpenBSD: xidle.c,v 1.4 2017/08/20 16:42:21 matthieu Exp $	*/
+/*	$OpenBSD: xidle.c,v 1.5 2017/08/20 16:43:25 matthieu Exp $	*/
 /*
  * Copyright (c) 2005 Federico G. Schwindt
  * Copyright (c) 2005 Claudio Castiglia
@@ -365,6 +365,9 @@ main(int argc, char **argv)
 	dup2(fd, STDERR_FILENO);
 	if (fd > 2)
 		close(fd);
+
+	if (pledge("stdio proc exec", NULL) == -1)
+		err(1, "pledge");
 
 	for (;;) {
 		XEvent ev;
