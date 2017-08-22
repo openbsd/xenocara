@@ -23,7 +23,7 @@
 .\" from The Open Group.
 .\"
 .\"
-.Dd $Mdocdate: March 4 2017 $
+.Dd $Mdocdate: August 22 2017 $
 .Dt XENODM 1
 .Os __xorgversion__
 .Sh NAME
@@ -520,7 +520,7 @@ When
 is set for a display and authorization is not available, the user is informed
 by having a different message displayed in the login widget.
 By default,
-Ic authorize
+.Ic authorize
 is
 .Cm true ,
 .Ic authName
