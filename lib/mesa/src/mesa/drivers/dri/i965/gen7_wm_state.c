@@ -25,7 +25,6 @@
 #include "brw_context.h"
 #include "brw_state.h"
 #include "brw_defines.h"
-#include "compiler/brw_eu_defines.h"
 #include "brw_util.h"
 #include "brw_wm.h"
 #include "program/program.h"
@@ -70,12 +69,11 @@ upload_wm_state(struct brw_context *brw)
    dw1 |= prog_data->barycentric_interp_modes <<
       GEN7_WM_BARYCENTRIC_INTERPOLATION_MODE_SHIFT;
 
-   /* _NEW_COLOR, _NEW_MULTISAMPLE _NEW_BUFFERS */
+   /* _NEW_COLOR, _NEW_MULTISAMPLE */
    /* Enable if the pixel shader kernel generates and outputs oMask.
     */
-   if (prog_data->uses_kill ||
-       _mesa_is_alpha_test_enabled(ctx) ||
-       _mesa_is_alpha_to_coverage_enabled(ctx) ||
+   if (prog_data->uses_kill || ctx->Color.AlphaEnabled ||
+       ctx->Multisample.SampleAlphaToCoverage ||
        prog_data->uses_omask) {
       dw1 |= GEN7_WM_KILL_ENABLE;
    }

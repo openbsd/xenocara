@@ -27,9 +27,6 @@
  * Provides a visitor which produces a list of variables referenced.
  */
 
-#ifndef GLSL_IR_ARRAY_REFCOUNT_H
-#define GLSL_IR_ARRAY_REFCOUNT_H
-
 #include "ir.h"
 #include "ir_visitor.h"
 #include "compiler/glsl_types.h"
@@ -184,5 +181,3 @@ private:
    unsigned derefs_size;
    /*@}*/
 };
-
-#endif /* GLSL_IR_ARRAY_REFCOUNT_H */

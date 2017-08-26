@@ -56,6 +56,7 @@ struct primconvert_context
    struct pipe_index_buffer saved_ib;
    uint32_t primtypes_mask;
    unsigned api_pv;
+   struct u_upload_mgr *upload;
 };
 
 
@@ -73,6 +74,8 @@ util_primconvert_create(struct pipe_context *pipe, uint32_t primtypes_mask)
 void
 util_primconvert_destroy(struct primconvert_context *pc)
 {
+   if (pc->upload)
+      u_upload_destroy(pc->upload);
    util_primconvert_save_index_buffer(pc, NULL);
    FREE(pc);
 }
@@ -128,15 +131,12 @@ util_primconvert_draw_vbo(struct primconvert_context *pc,
    new_info.primitive_restart = info->primitive_restart;
    new_info.restart_index = info->restart_index;
    if (info->indexed) {
-      enum pipe_prim_type mode = 0;
-
       u_index_translator(pc->primtypes_mask,
                          info->mode, pc->saved_ib.index_size, info->count,
                          pc->api_pv, pc->api_pv,
                          info->primitive_restart ? PR_ENABLE : PR_DISABLE,
-                         &mode, &new_ib.index_size, &new_info.count,
+                         &new_info.mode, &new_ib.index_size, &new_info.count,
                          &trans_func);
-      new_info.mode = mode;
       src = ib->user_buffer;
       if (!src) {
          src = pipe_buffer_map(pc->pipe, ib->buffer,
@@ -145,17 +145,19 @@ util_primconvert_draw_vbo(struct primconvert_context *pc,
       src = (const uint8_t *)src + ib->offset;
    }
    else {
-      enum pipe_prim_type mode = 0;
-
       u_index_generator(pc->primtypes_mask,
                         info->mode, info->start, info->count,
                         pc->api_pv, pc->api_pv,
-                        &mode, &new_ib.index_size, &new_info.count,
+                        &new_info.mode, &new_ib.index_size, &new_info.count,
                         &gen_func);
-      new_info.mode = mode;
    }
 
-   u_upload_alloc(pc->pipe->stream_uploader, 0, new_ib.index_size * new_info.count, 4,
+   if (!pc->upload) {
+      pc->upload = u_upload_create(pc->pipe, 4096, PIPE_BIND_INDEX_BUFFER,
+                                   PIPE_USAGE_STREAM);
+   }
+
+   u_upload_alloc(pc->upload, 0, new_ib.index_size * new_info.count, 4,
                   &new_ib.offset, &new_ib.buffer, &dst);
 
    if (info->indexed) {
@@ -168,7 +170,7 @@ util_primconvert_draw_vbo(struct primconvert_context *pc,
    if (src_transfer)
       pipe_buffer_unmap(pc->pipe, src_transfer);
 
-   u_upload_unmap(pc->pipe->stream_uploader);
+   u_upload_unmap(pc->upload);
 
    /* bind new index buffer: */
    pc->pipe->set_index_buffer(pc->pipe, &new_ib);

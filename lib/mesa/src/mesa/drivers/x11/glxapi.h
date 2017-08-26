@@ -37,6 +37,7 @@
  * work properly.
  */
 typedef struct __GLXcontextRec {
+   Display *currentDpy;
    GLboolean isDirect;
    GLXDrawable currentDrawable;
    GLXDrawable currentReadable;

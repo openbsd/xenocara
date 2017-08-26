@@ -25,7 +25,6 @@
 
 /* common allocation inlines for vulkan drivers */
 
-#include <string.h>
 #include <vulkan/vulkan.h>
 
 static inline void *
@@ -47,9 +46,6 @@ vk_realloc(const VkAllocationCallbacks *alloc,
 static inline void
 vk_free(const VkAllocationCallbacks *alloc, void *data)
 {
-   if (data == NULL)
-      return;
-
    alloc->pfnFree(alloc->pUserData, data);
 }
 
@@ -63,21 +59,6 @@ vk_alloc2(const VkAllocationCallbacks *parent_alloc,
       return vk_alloc(alloc, size, align, scope);
    else
       return vk_alloc(parent_alloc, size, align, scope);
-}
-
-static inline void *
-vk_zalloc2(const VkAllocationCallbacks *parent_alloc,
-           const VkAllocationCallbacks *alloc,
-           size_t size, size_t align,
-           VkSystemAllocationScope scope)
-{
-   void *mem = vk_alloc2(parent_alloc, alloc, size, align, scope);
-   if (mem == NULL)
-      return NULL;
-
-   memset(mem, 0, size);
-
-   return mem;
 }
 
 static inline void

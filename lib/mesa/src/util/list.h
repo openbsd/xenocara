@@ -41,7 +41,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <assert.h>
-#include "c99_compat.h"
 
 
 struct list_head

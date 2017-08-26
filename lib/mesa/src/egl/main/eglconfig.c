@@ -728,7 +728,7 @@ _eglFilterConfigArray(_EGLArray *array, EGLConfig *configs,
    EGLint i, count;
 
    if (!num_configs)
-      return _eglError(EGL_BAD_PARAMETER, "eglChooseConfig");
+      return _eglError(EGL_BAD_PARAMETER, "eglChooseConfigs");
 
    /* get the number of matched configs */
    count = _eglFilterArray(array, NULL, 0,

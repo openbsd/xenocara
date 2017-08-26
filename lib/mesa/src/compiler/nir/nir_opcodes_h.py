@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 
 template = """\
 /* Copyright (C) 2014 Connor Abbott

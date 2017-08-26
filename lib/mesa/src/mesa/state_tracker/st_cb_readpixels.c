@@ -112,7 +112,8 @@ try_pbo_readpixels(struct st_context *st, struct st_renderbuffer *strb,
    if (texture->nr_samples > 1)
       return false;
 
-   if (!screen->is_format_supported(screen, dst_format, PIPE_BUFFER, 0,
+   if (!screen->is_format_supported(screen, dst_format, PIPE_TEXTURE_2D,
+                                    texture->nr_samples,
                                     PIPE_BIND_SHADER_IMAGE))
       return false;
 
@@ -232,7 +233,7 @@ try_pbo_readpixels(struct st_context *st, struct st_renderbuffer *strb,
 
    /* Set up the fragment shader */
    {
-      void *fs = st_pbo_get_download_fs(st, view_target, src_format, dst_format);
+      void *fs = st_pbo_get_download_fs(st, view_target);
       if (!fs)
          goto fail;
 
@@ -422,7 +423,7 @@ st_ReadPixels(struct gl_context *ctx, GLint x, GLint y,
 
    /* Validate state (to be sure we have up-to-date framebuffer surfaces)
     * and flush the bitmap cache prior to reading. */
-   st_validate_state(st, ST_PIPELINE_UPDATE_FRAMEBUFFER);
+   st_validate_state(st, ST_PIPELINE_RENDER);
    st_flush_bitmap_cache(st);
 
    if (!st->prefer_blit_based_texture_transfer) {

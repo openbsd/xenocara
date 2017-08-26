@@ -137,15 +137,9 @@ create_frag_shader_weave(struct ureg_program *shader, struct ureg_dst fragment)
    i_tc[0] = ureg_DECL_fs_input(shader, TGSI_SEMANTIC_GENERIC, VS_O_VTOP, TGSI_INTERPOLATE_LINEAR);
    i_tc[1] = ureg_DECL_fs_input(shader, TGSI_SEMANTIC_GENERIC, VS_O_VBOTTOM, TGSI_INTERPOLATE_LINEAR);
 
-   for (i = 0; i < 3; ++i) {
+   for (i = 0; i < 3; ++i)
       sampler[i] = ureg_DECL_sampler(shader, i);
-      ureg_DECL_sampler_view(shader, i, TGSI_TEXTURE_2D_ARRAY,
-                             TGSI_RETURN_TYPE_FLOAT,
-                             TGSI_RETURN_TYPE_FLOAT,
-                             TGSI_RETURN_TYPE_FLOAT,
-                             TGSI_RETURN_TYPE_FLOAT);
-   }
-   
+
    for (i = 0; i < 2; ++i) {
       t_tc[i] = ureg_DECL_temporary(shader);
       t_texel[i] = ureg_DECL_temporary(shader);
@@ -157,8 +151,8 @@ create_frag_shader_weave(struct ureg_program *shader, struct ureg_dst fragment)
     */
    for (i = 0; i < 2; ++i) {
       ureg_MOV(shader, ureg_writemask(t_tc[i], TGSI_WRITEMASK_X), i_tc[i]);
-      ureg_ADD(shader, ureg_writemask(t_tc[i], TGSI_WRITEMASK_YZ),
-               i_tc[i], ureg_imm1f(shader, -0.5f));
+      ureg_SUB(shader, ureg_writemask(t_tc[i], TGSI_WRITEMASK_YZ),
+               i_tc[i], ureg_imm1f(shader, 0.5f));
       ureg_ROUND(shader, ureg_writemask(t_tc[i], TGSI_WRITEMASK_YZ), ureg_src(t_tc[i]));
       ureg_MOV(shader, ureg_writemask(t_tc[i], TGSI_WRITEMASK_W),
                ureg_imm1f(shader, i ? 1.0f : 0.0f));
@@ -254,15 +248,9 @@ create_frag_shader_video_buffer(struct vl_compositor *c)
       return false;
 
    tc = ureg_DECL_fs_input(shader, TGSI_SEMANTIC_GENERIC, VS_O_VTEX, TGSI_INTERPOLATE_LINEAR);
-   for (i = 0; i < 3; ++i) {
+   for (i = 0; i < 3; ++i)
       sampler[i] = ureg_DECL_sampler(shader, i);
-      ureg_DECL_sampler_view(shader, i, TGSI_TEXTURE_2D_ARRAY,
-                             TGSI_RETURN_TYPE_FLOAT,
-                             TGSI_RETURN_TYPE_FLOAT,
-                             TGSI_RETURN_TYPE_FLOAT,
-                             TGSI_RETURN_TYPE_FLOAT);
-   }
-   
+
    texel = ureg_DECL_temporary(shader);
    fragment = ureg_DECL_output(shader, TGSI_SEMANTIC_COLOR, 0);
 
@@ -354,18 +342,8 @@ create_frag_shader_palette(struct vl_compositor *c, bool include_cc)
 
    tc = ureg_DECL_fs_input(shader, TGSI_SEMANTIC_GENERIC, VS_O_VTEX, TGSI_INTERPOLATE_LINEAR);
    sampler = ureg_DECL_sampler(shader, 0);
-   ureg_DECL_sampler_view(shader, 0, TGSI_TEXTURE_2D,
-                          TGSI_RETURN_TYPE_FLOAT,
-                          TGSI_RETURN_TYPE_FLOAT,
-                          TGSI_RETURN_TYPE_FLOAT,
-                          TGSI_RETURN_TYPE_FLOAT);
    palette = ureg_DECL_sampler(shader, 1);
-   ureg_DECL_sampler_view(shader, 1, TGSI_TEXTURE_1D,
-                          TGSI_RETURN_TYPE_FLOAT,
-                          TGSI_RETURN_TYPE_FLOAT,
-                          TGSI_RETURN_TYPE_FLOAT,
-                          TGSI_RETURN_TYPE_FLOAT);
-   
+
    texel = ureg_DECL_temporary(shader);
    fragment = ureg_DECL_output(shader, TGSI_SEMANTIC_COLOR, 0);
 
@@ -406,11 +384,6 @@ create_frag_shader_rgba(struct vl_compositor *c)
    tc = ureg_DECL_fs_input(shader, TGSI_SEMANTIC_GENERIC, VS_O_VTEX, TGSI_INTERPOLATE_LINEAR);
    color = ureg_DECL_fs_input(shader, TGSI_SEMANTIC_COLOR, VS_O_COLOR, TGSI_INTERPOLATE_LINEAR);
    sampler = ureg_DECL_sampler(shader, 0);
-   ureg_DECL_sampler_view(shader, 0, TGSI_TEXTURE_2D,
-                          TGSI_RETURN_TYPE_FLOAT,
-                          TGSI_RETURN_TYPE_FLOAT,
-                          TGSI_RETURN_TYPE_FLOAT,
-                          TGSI_RETURN_TYPE_FLOAT);
    texel = ureg_DECL_temporary(shader);
    fragment = ureg_DECL_output(shader, TGSI_SEMANTIC_COLOR, 0);
 
@@ -809,7 +782,7 @@ gen_vertex_data(struct vl_compositor *c, struct vl_compositor_state *s, struct u
    assert(c);
 
    /* Allocate new memory for vertices. */
-   u_upload_alloc(c->pipe->stream_uploader, 0,
+   u_upload_alloc(c->upload, 0,
                   c->vertex_buf.stride * VL_COMPOSITOR_MAX_LAYERS * 4, /* size */
                   4, /* alignment */
                   &c->vertex_buf.buffer_offset, &c->vertex_buf.buffer,
@@ -844,7 +817,7 @@ gen_vertex_data(struct vl_compositor *c, struct vl_compositor_state *s, struct u
       }
    }
 
-   u_upload_unmap(c->pipe->stream_uploader);
+   u_upload_unmap(c->upload);
 }
 
 static void
@@ -940,12 +913,13 @@ vl_compositor_cleanup(struct vl_compositor *c)
 {
    assert(c);
 
+   u_upload_destroy(c->upload);
    cleanup_buffers(c);
    cleanup_shaders(c);
    cleanup_pipe_state(c);
 }
 
-bool
+void
 vl_compositor_set_csc_matrix(struct vl_compositor_state *s,
                              vl_csc_matrix const *matrix,
                              float luma_min, float luma_max)
@@ -958,9 +932,6 @@ vl_compositor_set_csc_matrix(struct vl_compositor_state *s,
                                PIPE_TRANSFER_WRITE | PIPE_TRANSFER_DISCARD_RANGE,
                                &buf_transfer);
 
-   if (!ptr)
-      return false;
-
    memcpy(ptr, matrix, sizeof(vl_csc_matrix));
 
    ptr += sizeof(vl_csc_matrix)/sizeof(float);
@@ -968,8 +939,6 @@ vl_compositor_set_csc_matrix(struct vl_compositor_state *s,
    ptr[1] = luma_max;
 
    pipe_buffer_unmap(s->pipe, buf_transfer);
-
-   return true;
 }
 
 void
@@ -1223,16 +1192,25 @@ vl_compositor_init(struct vl_compositor *c, struct pipe_context *pipe)
 
    c->pipe = pipe;
 
+   c->upload = u_upload_create(pipe, 128 * 1024, PIPE_BIND_VERTEX_BUFFER,
+                               PIPE_USAGE_STREAM);
+
+   if (!c->upload)
+      return false;
+
    if (!init_pipe_state(c)) {
+      u_upload_destroy(c->upload);
       return false;
    }
 
    if (!init_shaders(c)) {
+      u_upload_destroy(c->upload);
       cleanup_pipe_state(c);
       return false;
    }
 
    if (!init_buffers(c)) {
+      u_upload_destroy(c->upload);
       cleanup_shaders(c);
       cleanup_pipe_state(c);
       return false;
@@ -1268,14 +1246,10 @@ vl_compositor_init_state(struct vl_compositor_state *s, struct pipe_context *pip
       sizeof(csc_matrix) + 2*sizeof(float)
    );
 
-   if (!s->csc_matrix)
-      return false;
-
    vl_compositor_clear_layers(s);
 
    vl_csc_get_matrix(VL_CSC_COLOR_STANDARD_IDENTITY, NULL, true, &csc_matrix);
-   if (!vl_compositor_set_csc_matrix(s, (const vl_csc_matrix *)&csc_matrix, 1.0f, 0.0f))
-      return false;
+   vl_compositor_set_csc_matrix(s, (const vl_csc_matrix *)&csc_matrix, 1.0f, 0.0f);
 
    return true;
 }

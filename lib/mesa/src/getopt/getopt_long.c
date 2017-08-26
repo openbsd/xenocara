@@ -1,4 +1,4 @@
-/*	$OpenBSD: getopt_long.c,v 1.7 2017/08/14 09:58:00 jsg Exp $	*/
+/*	$OpenBSD: getopt_long.c,v 1.8 2017/08/26 16:59:32 jsg Exp $	*/
 /*	$NetBSD: getopt_long.c,v 1.15 2002/01/31 22:43:40 tv Exp $	*/
 
 /*

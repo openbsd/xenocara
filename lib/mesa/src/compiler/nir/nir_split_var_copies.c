@@ -62,7 +62,7 @@
  */
 
 struct split_var_copies_state {
-   nir_shader *shader;
+   void *mem_ctx;
    void *dead_ctx;
    bool progress;
 };
@@ -82,7 +82,7 @@ struct split_var_copies_state {
  */
 static void
 split_var_copy_instr(nir_intrinsic_instr *old_copy,
-                     nir_deref_var *dest_head, nir_deref_var *src_head,
+                     nir_deref *dest_head, nir_deref *src_head,
                      nir_deref *dest_tail, nir_deref *src_tail,
                      struct split_var_copies_state *state)
 {
@@ -147,9 +147,7 @@ split_var_copy_instr(nir_intrinsic_instr *old_copy,
       break;
 
    case GLSL_TYPE_UINT:
-   case GLSL_TYPE_UINT64:
    case GLSL_TYPE_INT:
-   case GLSL_TYPE_INT64:
    case GLSL_TYPE_FLOAT:
    case GLSL_TYPE_DOUBLE:
    case GLSL_TYPE_BOOL:
@@ -178,14 +176,17 @@ split_var_copy_instr(nir_intrinsic_instr *old_copy,
           * actually add the new copy instruction.
           */
          nir_intrinsic_instr *new_copy =
-            nir_intrinsic_instr_create(state->shader, nir_intrinsic_copy_var);
+            nir_intrinsic_instr_create(state->mem_ctx, nir_intrinsic_copy_var);
 
          /* We need to make copies because a) this deref chain actually
           * belongs to the copy instruction and b) the deref chains may
           * have some of the same links due to the way we constructed them
           */
-         new_copy->variables[0] = nir_deref_var_clone(dest_head, new_copy);
-         new_copy->variables[1] = nir_deref_var_clone(src_head, new_copy);
+         nir_deref *src = nir_copy_deref(new_copy, src_head);
+         nir_deref *dest = nir_copy_deref(new_copy, dest_head);
+
+         new_copy->variables[0] = nir_deref_as_var(dest);
+         new_copy->variables[1] = nir_deref_as_var(src);
 
          /* Emit the copy instruction after the old instruction.  We'll
           * remove the old one later.
@@ -215,10 +216,10 @@ split_var_copies_block(nir_block *block, struct split_var_copies_state *state)
       if (intrinsic->intrinsic != nir_intrinsic_copy_var)
          continue;
 
-      nir_deref_var *dest_head = intrinsic->variables[0];
-      nir_deref_var *src_head = intrinsic->variables[1];
-      nir_deref *dest_tail = nir_deref_tail(&dest_head->deref);
-      nir_deref *src_tail = nir_deref_tail(&src_head->deref);
+      nir_deref *dest_head = &intrinsic->variables[0]->deref;
+      nir_deref *src_head = &intrinsic->variables[1]->deref;
+      nir_deref *dest_tail = nir_deref_tail(dest_head);
+      nir_deref *src_tail = nir_deref_tail(src_head);
 
       switch (glsl_get_base_type(src_tail->type)) {
       case GLSL_TYPE_ARRAY:
@@ -230,19 +231,15 @@ split_var_copies_block(nir_block *block, struct split_var_copies_state *state)
          break;
       case GLSL_TYPE_FLOAT:
       case GLSL_TYPE_DOUBLE:
+      case GLSL_TYPE_INT:
+      case GLSL_TYPE_UINT:
+      case GLSL_TYPE_BOOL:
          if (glsl_type_is_matrix(src_tail->type)) {
             split_var_copy_instr(intrinsic, dest_head, src_head,
                                  dest_tail, src_tail, state);
             nir_instr_remove(&intrinsic->instr);
             ralloc_steal(state->dead_ctx, instr);
          }
-         break;
-      case GLSL_TYPE_INT:
-      case GLSL_TYPE_UINT:
-      case GLSL_TYPE_INT64:
-      case GLSL_TYPE_UINT64:
-      case GLSL_TYPE_BOOL:
-         assert(!glsl_type_is_matrix(src_tail->type));
          break;
       default:
          unreachable("Invalid type");
@@ -258,7 +255,7 @@ split_var_copies_impl(nir_function_impl *impl)
 {
    struct split_var_copies_state state;
 
-   state.shader = impl->function->shader;
+   state.mem_ctx = ralloc_parent(impl);
    state.dead_ctx = ralloc_context(NULL);
    state.progress = false;
 

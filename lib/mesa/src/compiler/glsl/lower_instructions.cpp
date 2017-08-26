@@ -168,7 +168,6 @@ private:
    void find_lsb_to_float_cast(ir_expression *ir);
    void find_msb_to_float_cast(ir_expression *ir);
    void imul_high_to_mul(ir_expression *ir);
-   void sqrt_to_abs_sqrt(ir_expression *ir);
 
    ir_expression *_carry(operand a, operand b);
 };
@@ -396,6 +395,7 @@ lower_instructions_visitor::ldexp_to_arith(ir_expression *ir)
    ir_constant *sign_mask = new(ir) ir_constant(0x80000000u, vec_elem);
 
    ir_constant *exp_shift = new(ir) ir_constant(23, vec_elem);
+   ir_constant *exp_width = new(ir) ir_constant(8, vec_elem);
 
    /* Temporary variables */
    ir_variable *x = new(ir) ir_variable(ir->type, "x", ir_var_temporary);
@@ -458,22 +458,10 @@ lower_instructions_visitor::ldexp_to_arith(ir_expression *ir)
     */
 
    ir_constant *exp_shift_clone = exp_shift->clone(ir, NULL);
-
-   /* Don't generate new IR that would need to be lowered in an additional
-    * pass.
-    */
-   if (!lowering(INSERT_TO_SHIFTS)) {
-      ir_constant *exp_width = new(ir) ir_constant(8, vec_elem);
-      ir->operation = ir_unop_bitcast_i2f;
-      ir->operands[0] = bitfield_insert(bitcast_f2i(x), resulting_biased_exp,
-                                        exp_shift_clone, exp_width);
-      ir->operands[1] = NULL;
-   } else {
-      ir_constant *sign_mantissa_mask = new(ir) ir_constant(0x807fffffu, vec_elem);
-      ir->operation = ir_unop_bitcast_u2f;
-      ir->operands[0] = bit_or(bit_and(bitcast_f2u(x), sign_mantissa_mask),
-                               lshift(i2u(resulting_biased_exp), exp_shift_clone));
-   }
+   ir->operation = ir_unop_bitcast_i2f;
+   ir->operands[0] = bitfield_insert(bitcast_f2i(x), resulting_biased_exp,
+                                     exp_shift_clone, exp_width);
+   ir->operands[1] = NULL;
 
    this->progress = true;
 }
@@ -1583,13 +1571,6 @@ lower_instructions_visitor::imul_high_to_mul(ir_expression *ir)
    }
 }
 
-void
-lower_instructions_visitor::sqrt_to_abs_sqrt(ir_expression *ir)
-{
-   ir->operands[0] = new(ir) ir_expression(ir_unop_abs, ir->operands[0]);
-   this->progress = true;
-}
-
 ir_visitor_status
 lower_instructions_visitor::visit_leave(ir_expression *ir)
 {
@@ -1725,12 +1706,6 @@ lower_instructions_visitor::visit_leave(ir_expression *ir)
    case ir_binop_imul_high:
       if (lowering(IMUL_HIGH_TO_MUL))
          imul_high_to_mul(ir);
-      break;
-
-   case ir_unop_rsq:
-   case ir_unop_sqrt:
-      if (lowering(SQRT_TO_ABS_SQRT))
-         sqrt_to_abs_sqrt(ir);
       break;
 
    default:

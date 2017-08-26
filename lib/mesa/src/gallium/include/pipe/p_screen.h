@@ -58,7 +58,6 @@ struct pipe_surface;
 struct pipe_transfer;
 struct pipe_box;
 struct pipe_memory_info;
-struct disk_cache;
 
 
 /**
@@ -97,8 +96,7 @@ struct pipe_screen {
     * Query a per-shader-stage integer-valued capability/parameter/limit
     * \param param  one of PIPE_CAP_x
     */
-   int (*get_shader_param)( struct pipe_screen *, enum pipe_shader_type shader,
-                            enum pipe_shader_cap param );
+   int (*get_shader_param)( struct pipe_screen *, unsigned shader, enum pipe_shader_cap param );
 
    /**
     * Query an integer-valued capability/parameter/limit for a codec/profile
@@ -226,14 +224,6 @@ struct pipe_screen {
 				  struct winsys_handle *handle,
 				  unsigned usage);
 
-   /**
-    * Mark the resource as changed so derived internal resources will be
-    * recreated on next use.
-    *
-    * This is necessary when reimporting external images that can't be directly
-    * used as texture sampler source, to avoid sampling from old copies.
-    */
-   void (*resource_changed)(struct pipe_screen *, struct pipe_resource *pt);
 
    void (*resource_destroy)(struct pipe_screen *,
 			    struct pipe_resource *pt);
@@ -275,16 +265,6 @@ struct pipe_screen {
                            uint64_t timeout);
 
    /**
-    * For fences created with PIPE_FLUSH_FENCE_FD (exported fd) or
-    * by create_fence_fd() (imported fd), return the native fence fd
-    * associated with the fence.  This may return -1 for fences
-    * created with PIPE_FLUSH_DEFERRED if the fence command has not
-    * been flushed yet.
-    */
-   int (*fence_get_fd)(struct pipe_screen *screen,
-                       struct pipe_fence_handle *fence);
-
-   /**
     * Returns a driver-specific query.
     *
     * If \p info is NULL, the number of available queries is returned.
@@ -319,15 +299,7 @@ struct pipe_screen {
     */
    const void *(*get_compiler_options)(struct pipe_screen *screen,
                                       enum pipe_shader_ir ir,
-                                      enum pipe_shader_type shader);
-
-   /**
-    * Returns a pointer to a driver-specific on-disk shader cache. If the
-    * driver failed to create the cache or does not support an on-disk shader
-    * cache NULL is returned. The callback itself may also be NULL if the
-    * driver doesn't support an on-disk shader cache.
-    */
-   struct disk_cache *(*get_disk_shader_cache)(struct pipe_screen *screen);
+                                      unsigned shader);
 };
 
 

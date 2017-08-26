@@ -39,9 +39,6 @@ struct d3dadapter9_context
     int throttling_value;
     int vblank_mode;
     BOOL thread_submit;
-    BOOL discard_delayed_release;
-    BOOL tearfree_discard;
-    int csmt_force;
 
     void (*destroy)( struct d3dadapter9_context *ctx );
 };

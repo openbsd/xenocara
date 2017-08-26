@@ -22,6 +22,7 @@
  */
 
 #include "si_pipe.h"
+#include "sid.h"
 #include "util/u_format.h"
 #include "util/u_surface.h"
 
@@ -78,7 +79,7 @@ static void si_blitter_begin(struct pipe_context *ctx, enum si_blitter_op op)
 	if (op & SI_SAVE_TEXTURES) {
 		util_blitter_save_fragment_sampler_states(
 			sctx->blitter, 2,
-			(void**)sctx->samplers[PIPE_SHADER_FRAGMENT].views.sampler_states);
+			sctx->samplers[PIPE_SHADER_FRAGMENT].views.sampler_states);
 
 		util_blitter_save_fragment_sampler_views(sctx->blitter, 2,
 			sctx->samplers[PIPE_SHADER_FRAGMENT].views.views);
@@ -427,7 +428,8 @@ static void si_blit_decompress_color(struct pipe_context *ctx,
 
 		/* disable levels without DCC */
 		for (int i = first_level; i <= last_level; i++) {
-			if (!vi_dcc_enabled(rtex, i))
+			if (!rtex->dcc_offset ||
+			    !rtex->surface.level[i].dcc_enabled)
 				level_mask &= ~(1 << i);
 		}
 	} else if (rtex->fmask.size) {
@@ -469,19 +471,6 @@ static void si_blit_decompress_color(struct pipe_context *ctx,
 }
 
 static void
-si_decompress_color_texture(struct si_context *sctx, struct r600_texture *tex,
-			    unsigned first_level, unsigned last_level)
-{
-	/* CMASK or DCC can be discarded and we can still end up here. */
-	if (!tex->cmask.size && !tex->fmask.size && !tex->dcc_offset)
-		return;
-
-	si_blit_decompress_color(&sctx->b.b, tex, first_level, last_level, 0,
-				 util_max_layer(&tex->resource.b.b, first_level),
-				 false);
-}
-
-static void
 si_decompress_sampler_color_textures(struct si_context *sctx,
 				     struct si_textures_info *textures)
 {
@@ -498,9 +487,14 @@ si_decompress_sampler_color_textures(struct si_context *sctx,
 		assert(view);
 
 		tex = (struct r600_texture *)view->texture;
+		/* CMASK or DCC can be discarded and we can still end up here. */
+		if (!tex->cmask.size && !tex->fmask.size && !tex->dcc_offset)
+			continue;
 
-		si_decompress_color_texture(sctx, tex, view->u.tex.first_level,
-					    view->u.tex.last_level);
+		si_blit_decompress_color(&sctx->b.b, tex,
+					 view->u.tex.first_level, view->u.tex.last_level,
+					 0, util_max_layer(&tex->resource.b.b, view->u.tex.first_level),
+					 false);
 	}
 }
 
@@ -521,44 +515,14 @@ si_decompress_image_color_textures(struct si_context *sctx,
 		assert(view->resource->target != PIPE_BUFFER);
 
 		tex = (struct r600_texture *)view->resource;
-
-		si_decompress_color_texture(sctx, tex, view->u.tex.level,
-					    view->u.tex.level);
-	}
-}
-
-static void si_check_render_feedback_texture(struct si_context *sctx,
-					     struct r600_texture *tex,
-					     unsigned first_level,
-					     unsigned last_level,
-					     unsigned first_layer,
-					     unsigned last_layer)
-{
-	bool render_feedback = false;
-
-	if (!tex->dcc_offset)
-		return;
-
-	for (unsigned j = 0; j < sctx->framebuffer.state.nr_cbufs; ++j) {
-		struct r600_surface * surf;
-
-		if (!sctx->framebuffer.state.cbufs[j])
+		if (!tex->cmask.size && !tex->fmask.size && !tex->dcc_offset)
 			continue;
 
-		surf = (struct r600_surface*)sctx->framebuffer.state.cbufs[j];
-
-		if (tex == (struct r600_texture *)surf->base.texture &&
-		    surf->base.u.tex.level >= first_level &&
-		    surf->base.u.tex.level <= last_level &&
-		    surf->base.u.tex.first_layer <= last_layer &&
-		    surf->base.u.tex.last_layer >= first_layer) {
-			render_feedback = true;
-			break;
-		}
+		si_blit_decompress_color(&sctx->b.b, tex,
+					 view->u.tex.level, view->u.tex.level,
+					 0, util_max_layer(&tex->resource.b.b, view->u.tex.level),
+					 false);
 	}
-
-	if (render_feedback)
-		r600_texture_disable_dcc(&sctx->b, tex);
 }
 
 static void si_check_render_feedback_textures(struct si_context *sctx,
@@ -569,6 +533,7 @@ static void si_check_render_feedback_textures(struct si_context *sctx,
 	while (mask) {
 		const struct pipe_sampler_view *view;
 		struct r600_texture *tex;
+		bool render_feedback = false;
 
 		unsigned i = u_bit_scan(&mask);
 
@@ -577,12 +542,27 @@ static void si_check_render_feedback_textures(struct si_context *sctx,
 			continue;
 
 		tex = (struct r600_texture *)view->texture;
+		if (!tex->dcc_offset)
+			continue;
 
-		si_check_render_feedback_texture(sctx, tex,
-						 view->u.tex.first_level,
-						 view->u.tex.last_level,
-						 view->u.tex.first_layer,
-						 view->u.tex.last_layer);
+		for (unsigned j = 0; j < sctx->framebuffer.state.nr_cbufs; ++j) {
+			struct r600_surface * surf;
+
+			if (!sctx->framebuffer.state.cbufs[j])
+				continue;
+
+			surf = (struct r600_surface*)sctx->framebuffer.state.cbufs[j];
+
+			if (tex == (struct r600_texture*)surf->base.texture &&
+			    surf->base.u.tex.level >= view->u.tex.first_level &&
+			    surf->base.u.tex.level <= view->u.tex.last_level &&
+			    surf->base.u.tex.first_layer <= view->u.tex.last_layer &&
+			    surf->base.u.tex.last_layer >= view->u.tex.first_layer)
+				render_feedback = true;
+		}
+
+		if (render_feedback)
+			r600_texture_disable_dcc(&sctx->b, tex);
 	}
 }
 
@@ -594,6 +574,7 @@ static void si_check_render_feedback_images(struct si_context *sctx,
 	while (mask) {
 		const struct pipe_image_view *view;
 		struct r600_texture *tex;
+		bool render_feedback = false;
 
 		unsigned i = u_bit_scan(&mask);
 
@@ -602,12 +583,26 @@ static void si_check_render_feedback_images(struct si_context *sctx,
 			continue;
 
 		tex = (struct r600_texture *)view->resource;
+		if (!tex->dcc_offset)
+			continue;
 
-		si_check_render_feedback_texture(sctx, tex,
-						 view->u.tex.level,
-						 view->u.tex.level,
-						 view->u.tex.first_layer,
-						 view->u.tex.last_layer);
+		for (unsigned j = 0; j < sctx->framebuffer.state.nr_cbufs; ++j) {
+			struct r600_surface * surf;
+
+			if (!sctx->framebuffer.state.cbufs[j])
+				continue;
+
+			surf = (struct r600_surface*)sctx->framebuffer.state.cbufs[j];
+
+			if (tex == (struct r600_texture*)surf->base.texture &&
+			    surf->base.u.tex.level == view->u.tex.level &&
+			    surf->base.u.tex.first_layer <= view->u.tex.last_layer &&
+			    surf->base.u.tex.last_layer >= view->u.tex.first_layer)
+				render_feedback = true;
+		}
+
+		if (render_feedback)
+			r600_texture_disable_dcc(&sctx->b, tex);
 	}
 }
 
@@ -624,9 +619,10 @@ static void si_check_render_feedback(struct si_context *sctx)
 	sctx->need_check_render_feedback = false;
 }
 
-static void si_decompress_textures(struct si_context *sctx, unsigned shader_mask)
+static void si_decompress_textures(struct si_context *sctx, int shader_start,
+                                   int shader_end)
 {
-	unsigned compressed_colortex_counter, mask;
+	unsigned compressed_colortex_counter;
 
 	if (sctx->blitter->running)
 		return;
@@ -638,11 +634,8 @@ static void si_decompress_textures(struct si_context *sctx, unsigned shader_mask
 		si_update_compressed_colortex_masks(sctx);
 	}
 
-	/* Decompress color & depth textures if needed. */
-	mask = sctx->compressed_tex_shader_mask & shader_mask;
-	while (mask) {
-		unsigned i = u_bit_scan(&mask);
-
+	/* Flush depth textures which need to be flushed. */
+	for (int i = shader_start; i < shader_end; i++) {
 		if (sctx->samplers[i].depth_texture_mask) {
 			si_flush_depth_textures(sctx, &sctx->samplers[i]);
 		}
@@ -659,12 +652,12 @@ static void si_decompress_textures(struct si_context *sctx, unsigned shader_mask
 
 void si_decompress_graphics_textures(struct si_context *sctx)
 {
-	si_decompress_textures(sctx, u_bit_consecutive(0, SI_NUM_GRAPHICS_SHADERS));
+	si_decompress_textures(sctx, 0, SI_NUM_GRAPHICS_SHADERS);
 }
 
 void si_decompress_compute_textures(struct si_context *sctx)
 {
-	si_decompress_textures(sctx, 1 << PIPE_SHADER_COMPUTE);
+	si_decompress_textures(sctx, SI_NUM_GRAPHICS_SHADERS, SI_NUM_SHADERS);
 }
 
 static void si_clear(struct pipe_context *ctx, unsigned buffers,
@@ -847,16 +840,15 @@ void si_resource_copy_region(struct pipe_context *ctx,
 			     const struct pipe_box *src_box)
 {
 	struct si_context *sctx = (struct si_context *)ctx;
-	struct r600_texture *rsrc = (struct r600_texture*)src;
 	struct pipe_surface *dst_view, dst_templ;
 	struct pipe_sampler_view src_templ, *src_view;
 	unsigned dst_width, dst_height, src_width0, src_height0;
-	unsigned dst_width0, dst_height0, src_force_level = 0;
+	unsigned src_force_level = 0;
 	struct pipe_box sbox, dstbox;
 
 	/* Handle buffers first. */
 	if (dst->target == PIPE_BUFFER && src->target == PIPE_BUFFER) {
-		si_copy_buffer(sctx, dst, src, dstx, src_box->x, src_box->width, 0);
+		si_copy_buffer(sctx, dst, src, dstx, src_box->x, src_box->width);
 		return;
 	}
 
@@ -869,8 +861,6 @@ void si_resource_copy_region(struct pipe_context *ctx,
 
 	dst_width = u_minify(dst->width0, dst_level);
 	dst_height = u_minify(dst->height0, dst_level);
-	dst_width0 = dst->width0;
-	dst_height0 = dst->height0;
 	src_width0 = src->width0;
 	src_height0 = src->height0;
 
@@ -879,7 +869,7 @@ void si_resource_copy_region(struct pipe_context *ctx,
 
 	if (util_format_is_compressed(src->format) ||
 	    util_format_is_compressed(dst->format)) {
-		unsigned blocksize = rsrc->surface.bpe;
+		unsigned blocksize = util_format_get_blocksize(src->format);
 
 		if (blocksize == 8)
 			src_templ.format = PIPE_FORMAT_R16G16B16A16_UINT; /* 64-bit block */
@@ -889,8 +879,6 @@ void si_resource_copy_region(struct pipe_context *ctx,
 
 		dst_width = util_format_get_nblocksx(dst->format, dst_width);
 		dst_height = util_format_get_nblocksy(dst->format, dst_height);
-		dst_width0 = util_format_get_nblocksx(dst->format, dst_width0);
-		dst_height0 = util_format_get_nblocksy(dst->format, dst_height0);
 		src_width0 = util_format_get_nblocksx(src->format, src_width0);
 		src_height0 = util_format_get_nblocksy(src->format, src_height0);
 
@@ -906,13 +894,14 @@ void si_resource_copy_region(struct pipe_context *ctx,
 		src_box = &sbox;
 
 		src_force_level = src_level;
-	} else if (!util_blitter_is_copy_supported(sctx->blitter, dst, src)) {
+	} else if (!util_blitter_is_copy_supported(sctx->blitter, dst, src) ||
+		   /* also *8_SNORM has precision issues, use UNORM instead */
+		   util_format_is_snorm8(src->format)) {
 		if (util_format_is_subsampled_422(src->format)) {
 			src_templ.format = PIPE_FORMAT_R8G8B8A8_UINT;
 			dst_templ.format = PIPE_FORMAT_R8G8B8A8_UINT;
 
 			dst_width = util_format_get_nblocksx(dst->format, dst_width);
-			dst_width0 = util_format_get_nblocksx(dst->format, dst_width0);
 			src_width0 = util_format_get_nblocksx(src->format, src_width0);
 
 			dstx = util_format_get_nblocksx(dst->format, dstx);
@@ -922,7 +911,7 @@ void si_resource_copy_region(struct pipe_context *ctx,
 			sbox.width = util_format_get_nblocksx(src->format, src_box->width);
 			src_box = &sbox;
 		} else {
-			unsigned blocksize = rsrc->surface.bpe;
+			unsigned blocksize = util_format_get_blocksize(src->format);
 
 			switch (blocksize) {
 			case 1:
@@ -953,14 +942,8 @@ void si_resource_copy_region(struct pipe_context *ctx,
 		}
 	}
 
-	vi_disable_dcc_if_incompatible_format(&sctx->b, dst, dst_level,
-					      dst_templ.format);
-	vi_disable_dcc_if_incompatible_format(&sctx->b, src, src_level,
-					      src_templ.format);
-
 	/* Initialize the surface. */
 	dst_view = r600_create_surface_custom(ctx, dst, &dst_templ,
-					      dst_width0, dst_height0,
 					      dst_width, dst_height);
 
 	/* Initialize the sampler view. */
@@ -989,7 +972,6 @@ static bool do_hardware_msaa_resolve(struct pipe_context *ctx,
 	struct si_context *sctx = (struct si_context*)ctx;
 	struct r600_texture *src = (struct r600_texture*)info->src.resource;
 	struct r600_texture *dst = (struct r600_texture*)info->dst.resource;
-	MAYBE_UNUSED struct r600_texture *rtmp;
 	unsigned dst_width = u_minify(info->dst.resource->width0, info->dst.level);
 	unsigned dst_height = u_minify(info->dst.resource->height0, info->dst.level);
 	enum pipe_format format = info->src.format;
@@ -1031,7 +1013,7 @@ static bool do_hardware_msaa_resolve(struct pipe_context *ctx,
 	    info->src.box.width == dst_width &&
 	    info->src.box.height == dst_height &&
 	    info->src.box.depth == 1 &&
-	    !dst->surface.is_linear &&
+	    dst->surface.level[info->dst.level].mode >= RADEON_SURF_MODE_1D &&
 	    (!dst->cmask.size || !dst->dirty_level_mask)) { /* dst cannot be fast-cleared */
 		/* Check the last constraint. */
 		if (src->surface.micro_tile_mode != dst->surface.micro_tile_mode) {
@@ -1048,12 +1030,8 @@ static bool do_hardware_msaa_resolve(struct pipe_context *ctx,
 		 * it's being overwritten anyway, clear it to uncompressed.
 		 * This is still the fastest codepath even with this clear.
 		 */
-		if (vi_dcc_enabled(dst, info->dst.level)) {
-			/* TODO: Implement per-level DCC clears for GFX9. */
-			if (sctx->b.chip_class >= GFX9 &&
-			    info->dst.resource->last_level != 0)
-				goto resolve_to_temp;
-
+		if (dst->dcc_offset &&
+		    dst->surface.level[info->dst.level].dcc_enabled) {
 			vi_dcc_clear_level(&sctx->b, dst, info->dst.level,
 					   0xFFFFFFFF);
 			dst->dirty_level_mask &= ~(1 << info->dst.level);
@@ -1088,7 +1066,7 @@ resolve_to_temp:
 		      R600_RESOURCE_FLAG_DISABLE_DCC;
 
 	/* The src and dst microtile modes must be the same. */
-	if (src->surface.micro_tile_mode == RADEON_MICRO_MODE_DISPLAY)
+	if (src->surface.micro_tile_mode == V_009910_ADDR_SURF_DISPLAY_MICRO_TILING)
 		templ.bind = PIPE_BIND_SCANOUT;
 	else
 		templ.bind = 0;
@@ -1096,10 +1074,9 @@ resolve_to_temp:
 	tmp = ctx->screen->resource_create(ctx->screen, &templ);
 	if (!tmp)
 		return false;
-	rtmp = (struct r600_texture*)tmp;
 
-	assert(!rtmp->surface.is_linear);
-	assert(src->surface.micro_tile_mode == rtmp->surface.micro_tile_mode);
+	assert(src->surface.micro_tile_mode ==
+	       ((struct r600_texture*)tmp)->surface.micro_tile_mode);
 
 	/* resolve */
 	si_blitter_begin(ctx, SI_COLOR_RESOLVE |
@@ -1140,7 +1117,8 @@ static void si_blit(struct pipe_context *ctx,
 	 * resource_copy_region can't do this yet, because dma_copy calls it
 	 * on failure (recursion).
 	 */
-	if (rdst->surface.is_linear &&
+	if (rdst->surface.level[info->dst.level].mode ==
+	    RADEON_SURF_MODE_LINEAR_ALIGNED &&
 	    sctx->b.dma_copy &&
 	    util_can_blit_via_copy_region(info, false)) {
 		sctx->b.dma_copy(ctx, info->dst.resource, info->dst.level,
@@ -1155,10 +1133,10 @@ static void si_blit(struct pipe_context *ctx,
 
 	/* The driver doesn't decompress resources automatically while
 	 * u_blitter is rendering. */
-	vi_disable_dcc_if_incompatible_format(&sctx->b, info->src.resource,
+	vi_dcc_disable_if_incompatible_format(&sctx->b, info->src.resource,
 					      info->src.level,
 					      info->src.format);
-	vi_disable_dcc_if_incompatible_format(&sctx->b, info->dst.resource,
+	vi_dcc_disable_if_incompatible_format(&sctx->b, info->dst.resource,
 					      info->dst.level,
 					      info->dst.format);
 	si_decompress_subresource(ctx, info->src.resource, info->mask,
@@ -1190,7 +1168,7 @@ static boolean si_generate_mipmap(struct pipe_context *ctx,
 
 	/* The driver doesn't decompress resources automatically while
 	 * u_blitter is rendering. */
-	vi_disable_dcc_if_incompatible_format(&sctx->b, tex, base_level,
+	vi_dcc_disable_if_incompatible_format(&sctx->b, tex, base_level,
 					      format);
 	si_decompress_subresource(ctx, tex, PIPE_MASK_RGBAZS,
 				  base_level, first_layer, last_layer);

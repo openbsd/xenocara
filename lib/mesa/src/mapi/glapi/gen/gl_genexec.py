@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 
 # Copyright (C) 2012 Intel Corporation
 #
@@ -91,7 +92,6 @@ header = """/**
 #include "main/objectlabel.h"
 #include "main/objectpurge.h"
 #include "main/performance_monitor.h"
-#include "main/performance_query.h"
 #include "main/pipelineobj.h"
 #include "main/pixel.h"
 #include "main/pixelstore.h"

@@ -25,8 +25,7 @@
  *
  */
 
-#ifndef NIR_ARRAY_H
-#define NIR_ARRAY_H
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -95,5 +94,3 @@ nir_array_grow(nir_array *arr, size_t additional)
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
-
-#endif /* NIR_ARRAY_H */

@@ -37,7 +37,6 @@
 #include "util/u_memory.h"
 #include "util/u_pstipple.h"
 #include "util/u_inlines.h"
-#include "util/u_upload_mgr.h"
 #include "tgsi/tgsi_exec.h"
 #include "sp_buffer.h"
 #include "sp_clear.h"
@@ -86,9 +85,6 @@ softpipe_destroy( struct pipe_context *pipe )
 
    if (softpipe->quad.pstipple)
       softpipe->quad.pstipple->destroy( softpipe->quad.pstipple );
-
-   if (softpipe->pipe.stream_uploader)
-      u_upload_destroy(softpipe->pipe.stream_uploader);
 
    for (i = 0; i < PIPE_MAX_COLOR_BUFS; i++) {
       sp_destroy_tile_cache(softpipe->cbuf_cache[i]);
@@ -271,10 +267,6 @@ softpipe_create_context(struct pipe_screen *screen,
    softpipe->quad.blend = sp_quad_blend_stage(softpipe);
    softpipe->quad.pstipple = sp_quad_polygon_stipple_stage(softpipe);
 
-   softpipe->pipe.stream_uploader = u_upload_create_default(&softpipe->pipe);
-   if (!softpipe->pipe.stream_uploader)
-      goto fail;
-   softpipe->pipe.const_uploader = softpipe->pipe.stream_uploader;
 
    /*
     * Create drawing context and plug our rendering stage into it.

@@ -33,6 +33,7 @@ static void
 upload_vs_state(struct brw_context *brw)
 {
    const struct gen_device_info *devinfo = &brw->screen->devinfo;
+   struct gl_context *ctx = &brw->ctx;
    const struct brw_stage_state *stage_state = &brw->vs.base;
    uint32_t floating_point_mode = 0;
 
@@ -80,13 +81,16 @@ upload_vs_state(struct brw_context *brw)
              simd8_enable |
              GEN6_VS_ENABLE);
 
-   OUT_BATCH(vue_prog_data->cull_distance_mask);
+   /* _NEW_TRANSFORM */
+   OUT_BATCH(vue_prog_data->cull_distance_mask |
+             (ctx->Transform.ClipPlanesEnabled <<
+              GEN8_VS_USER_CLIP_DISTANCE_SHIFT));
    ADVANCE_BATCH();
 }
 
 const struct brw_tracked_state gen8_vs_state = {
    .dirty = {
-      .mesa  = 0,
+      .mesa  = _NEW_TRANSFORM,
       .brw   = BRW_NEW_BATCH |
                BRW_NEW_BLORP |
                BRW_NEW_CONTEXT |

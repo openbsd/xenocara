@@ -55,7 +55,7 @@ LLVMValueRef
 lp_build_gather(struct gallivm_state *gallivm,
                 unsigned length,
                 unsigned src_width,
-                struct lp_type dst_type,
+                unsigned dst_width,
                 boolean aligned,
                 LLVMValueRef base_ptr,
                 LLVMValueRef offsets,

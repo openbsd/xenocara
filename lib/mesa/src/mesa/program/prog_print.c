@@ -208,7 +208,7 @@ arb_input_attrib_string(GLuint index, GLenum progType)
 
 
 /**
- * Print a vertex program's inputs_read field in human-readable format.
+ * Print a vertex program's InputsRead field in human-readable format.
  * For debugging.
  */
 void
@@ -226,7 +226,7 @@ _mesa_print_vp_inputs(GLbitfield inputs)
 
 
 /**
- * Print a fragment program's inputs_read field in human-readable format.
+ * Print a fragment program's InputsRead field in human-readable format.
  * For debugging.
  */
 void
@@ -551,6 +551,16 @@ fprint_src_reg(FILE *f,
 }
 
 
+static void
+fprint_comment(FILE *f, const struct prog_instruction *inst)
+{
+   if (inst->Comment)
+      fprintf(f, ";  # %s\n", inst->Comment);
+   else
+      fprintf(f, ";\n");
+}
+
+
 void
 _mesa_fprint_alu_instruction(FILE *f,
 			     const struct prog_instruction *inst,
@@ -583,7 +593,7 @@ _mesa_fprint_alu_instruction(FILE *f,
 	 fprintf(f, ", ");
    }
 
-   fprintf(f, ";\n");
+   fprint_comment(f, inst);
 }
 
 
@@ -630,7 +640,7 @@ _mesa_fprint_instruction_opt(FILE *f,
 	      inst->SrcReg[0].Index,
 	      _mesa_swizzle_string(inst->SrcReg[0].Swizzle,
 				   inst->SrcReg[0].Negate, GL_TRUE));
-      fprintf(f, ";\n");
+      fprint_comment(f, inst);
       break;
    case OPCODE_TEX:
    case OPCODE_TXP:
@@ -664,28 +674,28 @@ _mesa_fprint_instruction_opt(FILE *f,
       }
       if (inst->TexShadow)
          fprintf(f, " SHADOW");
-      fprintf(f, ";\n");
+      fprint_comment(f, inst);
       break;
 
    case OPCODE_KIL:
       fprintf(f, "%s", _mesa_opcode_string(inst->Opcode));
       fprintf(f, " ");
       fprint_src_reg(f, &inst->SrcReg[0], mode, prog);
-      fprintf(f, ";\n");
+      fprint_comment(f, inst);
       break;
    case OPCODE_ARL:
       fprintf(f, "ARL ");
       fprint_dst_reg(f, &inst->DstReg, mode, prog);
       fprintf(f, ", ");
       fprint_src_reg(f, &inst->SrcReg[0], mode, prog);
-      fprintf(f, ";\n");
+      fprint_comment(f, inst);
       break;
    case OPCODE_IF:
       fprintf(f, "IF ");
       fprint_src_reg(f, &inst->SrcReg[0], mode, prog);
       fprintf(f, "; ");
       fprintf(f, " # (if false, goto %d)", inst->BranchTarget);
-      fprintf(f, ";\n");
+      fprint_comment(f, inst);
       return indent + 3;
    case OPCODE_ELSE:
       fprintf(f, "ELSE; # (goto %d)\n", inst->BranchTarget);
@@ -704,26 +714,26 @@ _mesa_fprint_instruction_opt(FILE *f,
       fprintf(f, "%s; # (goto %d)",
 	      _mesa_opcode_string(inst->Opcode),
 	      inst->BranchTarget);
-      fprintf(f, ";\n");
+      fprint_comment(f, inst);
       break;
 
    case OPCODE_BGNSUB:
       fprintf(f, "BGNSUB");
-      fprintf(f, ";\n");
+      fprint_comment(f, inst);
       return indent + 3;
    case OPCODE_ENDSUB:
       if (mode == PROG_PRINT_DEBUG) {
          fprintf(f, "ENDSUB");
-         fprintf(f, ";\n");
+         fprint_comment(f, inst);
       }
       break;
    case OPCODE_CAL:
       fprintf(f, "CAL %u", inst->BranchTarget);
-      fprintf(f, ";\n");
+      fprint_comment(f, inst);
       break;
    case OPCODE_RET:
       fprintf(f, "RET");
-      fprintf(f, ";\n");
+      fprint_comment(f, inst);
       break;
 
    case OPCODE_END:
@@ -732,7 +742,11 @@ _mesa_fprint_instruction_opt(FILE *f,
    case OPCODE_NOP:
       if (mode == PROG_PRINT_DEBUG) {
          fprintf(f, "NOP");
-         fprintf(f, ";\n");
+         fprint_comment(f, inst);
+      }
+      else if (inst->Comment) {
+         /* ARB/NV extensions don't have NOP instruction */
+         fprintf(f, "# %s\n", inst->Comment);
       }
       break;
    /* XXX may need other special-case instructions */
@@ -803,10 +817,10 @@ _mesa_fprint_program_opt(FILE *f,
       fprintf(f, "# Geometry Shader\n");
    }
 
-   for (i = 0; i < prog->arb.NumInstructions; i++) {
+   for (i = 0; i < prog->NumInstructions; i++) {
       if (lineNumbers)
          fprintf(f, "%3d: ", i);
-      indent = _mesa_fprint_instruction_opt(f, prog->arb.Instructions + i,
+      indent = _mesa_fprint_instruction_opt(f, prog->Instructions + i,
                                            indent, mode, prog);
    }
 }
@@ -858,18 +872,16 @@ _mesa_fprint_program_parameters(FILE *f,
    GLuint i;
 
    fprintf(f, "InputsRead: %" PRIx64 " (0b%s)\n",
-           (uint64_t) prog->info.inputs_read, binary(prog->info.inputs_read));
+           (uint64_t) prog->InputsRead, binary(prog->InputsRead));
    fprintf(f, "OutputsWritten: %" PRIx64 " (0b%s)\n",
-           (uint64_t) prog->info.outputs_written,
-           binary(prog->info.outputs_written));
-   fprintf(f, "NumInstructions=%d\n", prog->arb.NumInstructions);
-   fprintf(f, "NumTemporaries=%d\n", prog->arb.NumTemporaries);
-   fprintf(f, "NumParameters=%d\n", prog->arb.NumParameters);
-   fprintf(f, "NumAttributes=%d\n", prog->arb.NumAttributes);
-   fprintf(f, "NumAddressRegs=%d\n", prog->arb.NumAddressRegs);
+           (uint64_t) prog->OutputsWritten, binary(prog->OutputsWritten));
+   fprintf(f, "NumInstructions=%d\n", prog->NumInstructions);
+   fprintf(f, "NumTemporaries=%d\n", prog->NumTemporaries);
+   fprintf(f, "NumParameters=%d\n", prog->NumParameters);
+   fprintf(f, "NumAttributes=%d\n", prog->NumAttributes);
+   fprintf(f, "NumAddressRegs=%d\n", prog->NumAddressRegs);
    fprintf(f, "IndirectRegisterFiles: 0x%x (0b%s)\n",
-           prog->arb.IndirectRegisterFiles,
-           binary(prog->arb.IndirectRegisterFiles));
+           prog->IndirectRegisterFiles, binary(prog->IndirectRegisterFiles));
    fprintf(f, "SamplersUsed: 0x%x (0b%s)\n",
                  prog->SamplersUsed, binary(prog->SamplersUsed));
    fprintf(f, "Samplers=[ ");
@@ -976,11 +988,7 @@ _mesa_write_shader_to_file(const struct gl_shader *shader)
       return;
    }
 
-#ifdef DEBUG
    fprintf(f, "/* Shader %u source, checksum %u */\n", shader->Name, shader->SourceChecksum);
-#else
-   fprintf(f, "/* Shader %u source */\n", shader->Name);
-#endif
    fputs(shader->Source, f);
    fprintf(f, "\n");
 
@@ -1001,13 +1009,14 @@ _mesa_write_shader_to_file(const struct gl_shader *shader)
  * _mesa_write_shader_to_file function.
  */
 void
-_mesa_append_uniforms_to_file(const struct gl_program *prog)
+_mesa_append_uniforms_to_file(const struct gl_linked_shader *shader)
 {
+   const struct gl_program *const prog = shader->Program;
    const char *type;
    char filename[100];
    FILE *f;
 
-   if (prog->info.stage == MESA_SHADER_FRAGMENT)
+   if (shader->Stage == MESA_SHADER_FRAGMENT)
       type = "frag";
    else
       type = "vert";

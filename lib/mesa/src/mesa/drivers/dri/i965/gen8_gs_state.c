@@ -30,6 +30,7 @@ static void
 gen8_upload_gs_state(struct brw_context *brw)
 {
    const struct gen_device_info *devinfo = &brw->screen->devinfo;
+   struct gl_context *ctx = &brw->ctx;
    const struct brw_stage_state *stage_state = &brw->gs.base;
    /* BRW_NEW_GEOMETRY_PROGRAM */
    bool active = brw->geometry_program;
@@ -111,8 +112,10 @@ gen8_upload_gs_state(struct brw_context *brw)
       /* DW8 */
       OUT_BATCH(dw8);
 
-      /* DW9 */
-      OUT_BATCH(vue_prog_data->cull_distance_mask |
+      /* DW9 / _NEW_TRANSFORM */
+      OUT_BATCH((vue_prog_data->cull_distance_mask |
+                 ctx->Transform.ClipPlanesEnabled <<
+                 GEN8_GS_USER_CLIP_DISTANCE_SHIFT) |
                 (urb_entry_output_length << GEN8_GS_URB_OUTPUT_LENGTH_SHIFT) |
                 (urb_entry_write_offset <<
                  GEN8_GS_URB_ENTRY_OUTPUT_OFFSET_SHIFT));
@@ -135,7 +138,7 @@ gen8_upload_gs_state(struct brw_context *brw)
 
 const struct brw_tracked_state gen8_gs_state = {
    .dirty = {
-      .mesa  = 0,
+      .mesa  = _NEW_TRANSFORM,
       .brw   = BRW_NEW_BATCH |
                BRW_NEW_BLORP |
                BRW_NEW_CONTEXT |

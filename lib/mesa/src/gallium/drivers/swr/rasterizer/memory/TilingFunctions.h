@@ -274,21 +274,18 @@ INLINE void ComputeLODOffset1D(
     else
     {
         uint32_t curWidth = baseWidth;
-        // @note hAlign is already in blocks for compressed formats so upconvert
-        //       so that we have the desired alignment post-divide.
-        if (info.isBC)
-        {
-            hAlign *= info.bcWidth;
-        }
+        // translate mip width from pixels to blocks for block compressed formats
+        // @note hAlign is already in blocks for compressed formats so no need to convert
+        if (info.isBC) curWidth /= info.bcWidth;
 
         offset = GFX_ALIGN(curWidth, hAlign);
         for (uint32_t l = 1; l < lod; ++l)
         {
-            curWidth = std::max<uint32_t>(curWidth >> 1, 1U);
-            offset += GFX_ALIGN(curWidth, hAlign);
+            curWidth = GFX_ALIGN(std::max<uint32_t>(curWidth >> 1, 1U), hAlign);
+            offset += curWidth;
         }
 
-        if (info.isSubsampled || info.isBC)
+        if (info.isSubsampled)
         {
             offset /= info.bcWidth;
         }
@@ -315,17 +312,14 @@ INLINE void ComputeLODOffsetX(
     else
     {
         uint32_t curWidth = baseWidth;
-        // @note hAlign is already in blocks for compressed formats so upconvert
-        //       so that we have the desired alignment post-divide.
-        if (info.isBC)
-        {
-            hAlign *= info.bcWidth;
-        }
+        // convert mip width from pixels to blocks for block compressed formats
+        // @note hAlign is already in blocks for compressed formats so no need to convert
+        if (info.isBC) curWidth /= info.bcWidth;
 
         curWidth = std::max<uint32_t>(curWidth >> 1, 1U);
         curWidth = GFX_ALIGN(curWidth, hAlign);
 
-        if (info.isSubsampled || info.isBC)
+        if (info.isSubsampled)
         {
             curWidth /= info.bcWidth;
         }
@@ -356,23 +350,15 @@ INLINE void ComputeLODOffsetY(
         offset = 0;
         uint32_t mipHeight = baseHeight;
 
-        // @note vAlign is already in blocks for compressed formats so upconvert
-        //       so that we have the desired alignment post-divide.
-        if (info.isBC)
-        {
-            vAlign *= info.bcHeight;
-        }
+        // translate mip height from pixels to blocks for block compressed formats
+        // @note VAlign is already in blocks for compressed formats so no need to convert
+        if (info.isBC) mipHeight /= info.bcHeight;
 
         for (uint32_t l = 1; l <= lod; ++l)
         {
             uint32_t alignedMipHeight = GFX_ALIGN(mipHeight, vAlign);
             offset += ((l != 2) ? alignedMipHeight : 0);
             mipHeight = std::max<uint32_t>(mipHeight >> 1, 1U);
-        }
-
-        if (info.isBC)
-        {
-            offset /= info.bcHeight;
         }
     }
 }
@@ -622,7 +608,7 @@ uint32_t TileSwizzle2D(uint32_t xOffsetBytes, uint32_t yOffsetRows, const SWR_SU
     case SWR_TILE_MODE_XMAJOR: return ComputeTileSwizzle2D<TilingTraits<SWR_TILE_MODE_XMAJOR, 8> >(xOffsetBytes, yOffsetRows, pState);
     case SWR_TILE_MODE_YMAJOR: return ComputeTileSwizzle2D<TilingTraits<SWR_TILE_MODE_YMAJOR, 32> >(xOffsetBytes, yOffsetRows, pState);
     case SWR_TILE_MODE_WMAJOR: return ComputeTileSwizzle2D<TilingTraits<SWR_TILE_MODE_WMAJOR, 8> >(xOffsetBytes, yOffsetRows, pState);
-    default: SWR_INVALID("Unsupported tiling mode");
+    default: SWR_ASSERT(0, "Unsupported tiling mode");
     }
     return (uint32_t) NULL;
 }
@@ -642,7 +628,7 @@ uint32_t TileSwizzle3D(uint32_t xOffsetBytes, uint32_t yOffsetRows, uint32_t zOf
     case SWR_TILE_NONE: return ComputeTileSwizzle3D<TilingTraits<SWR_TILE_NONE, 32> >(xOffsetBytes, yOffsetRows, zOffsetSlices, pState);
     case SWR_TILE_SWRZ: return ComputeTileSwizzle3D<TilingTraits<SWR_TILE_SWRZ, 32> >(xOffsetBytes, yOffsetRows, zOffsetSlices, pState);
     case SWR_TILE_MODE_YMAJOR: return ComputeTileSwizzle3D<TilingTraits<SWR_TILE_MODE_YMAJOR, 32> >(xOffsetBytes, yOffsetRows, zOffsetSlices, pState);
-    default: SWR_INVALID("Unsupported tiling mode");
+    default: SWR_ASSERT(0, "Unsupported tiling mode");
     }
     return (uint32_t) NULL;
 }
@@ -674,7 +660,7 @@ uint32_t ComputeSurfaceOffset(uint32_t x, uint32_t y, uint32_t z, uint32_t array
         ComputeSurfaceOffset2D<UseCachedOffsets>(x, y, array, sampleNum, lod, pState, offsetX, offsetY);
         return TileSwizzle2D(offsetX, offsetY, pState);
         break;
-    default: SWR_INVALID("Unsupported format");
+    default: SWR_ASSERT(0, "Unsupported format");
     }
 
     return (uint32_t) NULL;

@@ -123,9 +123,9 @@ vc4_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
         case PIPE_CAP_TEXTURE_SHADOW_MAP:
         case PIPE_CAP_BLEND_EQUATION_SEPARATE:
         case PIPE_CAP_TWO_SIDED_STENCIL:
+        case PIPE_CAP_USER_INDEX_BUFFERS:
         case PIPE_CAP_TEXTURE_MULTISAMPLE:
         case PIPE_CAP_TEXTURE_SWIZZLE:
-        case PIPE_CAP_GLSL_OPTIMIZE_CONSERVATIVELY:
                 return 1;
 
                 /* lying for GL 2.0 */
@@ -225,8 +225,8 @@ vc4_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
         case PIPE_CAP_STRING_MARKER:
         case PIPE_CAP_SURFACE_REINTERPRET_BLOCKS:
         case PIPE_CAP_QUERY_BUFFER_OBJECT:
-        case PIPE_CAP_QUERY_MEMORY_INFO:
-        case PIPE_CAP_PCI_GROUP:
+	case PIPE_CAP_QUERY_MEMORY_INFO:
+	case PIPE_CAP_PCI_GROUP:
         case PIPE_CAP_PCI_BUS:
         case PIPE_CAP_PCI_DEVICE:
         case PIPE_CAP_PCI_FUNCTION:
@@ -239,25 +239,11 @@ vc4_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
         case PIPE_CAP_POLYGON_OFFSET_UNITS_UNSCALED:
         case PIPE_CAP_VIEWPORT_SUBPIXEL_BITS:
         case PIPE_CAP_TGSI_ARRAY_COMPONENTS:
-        case PIPE_CAP_TGSI_CAN_READ_OUTPUTS:
-        case PIPE_CAP_NATIVE_FENCE_FD:
-        case PIPE_CAP_TGSI_FS_FBFETCH:
-        case PIPE_CAP_TGSI_MUL_ZERO_WINS:
-        case PIPE_CAP_DOUBLES:
-        case PIPE_CAP_INT64:
-        case PIPE_CAP_INT64_DIVMOD:
-        case PIPE_CAP_TGSI_TEX_TXF_LZ:
-        case PIPE_CAP_TGSI_CLOCK:
-        case PIPE_CAP_POLYGON_MODE_FILL_RECTANGLE:
-        case PIPE_CAP_SPARSE_BUFFER_PAGE_SIZE:
-        case PIPE_CAP_TGSI_BALLOT:
-        case PIPE_CAP_TGSI_TES_LAYER_VIEWPORT:
                 return 0;
 
                 /* Stream output. */
         case PIPE_CAP_MAX_STREAM_OUTPUT_BUFFERS:
         case PIPE_CAP_STREAM_OUTPUT_PAUSE_RESUME:
-        case PIPE_CAP_STREAM_OUTPUT_INTERLEAVE_BUFFERS:
         case PIPE_CAP_MAX_STREAM_OUTPUT_SEPARATE_COMPONENTS:
         case PIPE_CAP_MAX_STREAM_OUTPUT_INTERLEAVED_COMPONENTS:
                 return 0;
@@ -350,9 +336,8 @@ vc4_screen_get_paramf(struct pipe_screen *pscreen, enum pipe_capf param)
 }
 
 static int
-vc4_screen_get_shader_param(struct pipe_screen *pscreen,
-                            enum pipe_shader_type shader,
-                            enum pipe_shader_cap param)
+vc4_screen_get_shader_param(struct pipe_screen *pscreen, unsigned shader,
+                           enum pipe_shader_cap param)
 {
         if (shader != PIPE_SHADER_VERTEX &&
             shader != PIPE_SHADER_FRAGMENT) {
@@ -371,7 +356,10 @@ vc4_screen_get_shader_param(struct pipe_screen *pscreen,
                 return vc4_screen(pscreen)->has_control_flow;
 
         case PIPE_SHADER_CAP_MAX_INPUTS:
-                return 8;
+                if (shader == PIPE_SHADER_FRAGMENT)
+                        return 8;
+                else
+                        return 16;
         case PIPE_SHADER_CAP_MAX_OUTPUTS:
                 return shader == PIPE_SHADER_FRAGMENT ? 1 : 8;
         case PIPE_SHADER_CAP_MAX_TEMPS:
@@ -380,6 +368,8 @@ vc4_screen_get_shader_param(struct pipe_screen *pscreen,
                 return 16 * 1024 * sizeof(float);
         case PIPE_SHADER_CAP_MAX_CONST_BUFFERS:
                 return 1;
+        case PIPE_SHADER_CAP_MAX_PREDS:
+                return 0; /* nothing uses this */
         case PIPE_SHADER_CAP_TGSI_CONT_SUPPORTED:
                 return 0;
         case PIPE_SHADER_CAP_INDIRECT_INPUT_ADDR:
@@ -394,6 +384,7 @@ vc4_screen_get_shader_param(struct pipe_screen *pscreen,
                 return 0;
         case PIPE_SHADER_CAP_INTEGERS:
                 return 1;
+        case PIPE_SHADER_CAP_DOUBLES:
         case PIPE_SHADER_CAP_TGSI_DROUND_SUPPORTED:
         case PIPE_SHADER_CAP_TGSI_DFRACEXP_DLDEXP_SUPPORTED:
         case PIPE_SHADER_CAP_TGSI_FMA_SUPPORTED:
@@ -410,7 +401,6 @@ vc4_screen_get_shader_param(struct pipe_screen *pscreen,
 		return 32;
         case PIPE_SHADER_CAP_MAX_SHADER_BUFFERS:
         case PIPE_SHADER_CAP_MAX_SHADER_IMAGES:
-	case PIPE_SHADER_CAP_LOWER_IF_THRESHOLD:
                 return 0;
         default:
                 fprintf(stderr, "unknown shader param %d\n", param);
@@ -426,7 +416,6 @@ vc4_screen_is_format_supported(struct pipe_screen *pscreen,
                                unsigned sample_count,
                                unsigned usage)
 {
-        struct vc4_screen *screen = vc4_screen(pscreen);
         unsigned retval = 0;
 
         if (sample_count > 1 && sample_count != VC4_MAX_SAMPLES)
@@ -496,8 +485,7 @@ vc4_screen_is_format_supported(struct pipe_screen *pscreen,
         }
 
         if ((usage & PIPE_BIND_SAMPLER_VIEW) &&
-            vc4_tex_format_supported(format) &&
-            (format != PIPE_FORMAT_ETC1_RGB8 || screen->has_etc1)) {
+            vc4_tex_format_supported(format)) {
                 retval |= PIPE_BIND_SAMPLER_VIEW;
         }
 
@@ -538,12 +526,16 @@ static int handle_compare(void *key1, void *key2)
 }
 
 static bool
-vc4_has_feature(struct vc4_screen *screen, uint32_t feature)
+vc4_supports_branches(struct vc4_screen *screen)
 {
+#if USE_VC4_SIMULATOR
+        return true;
+#endif
+
         struct drm_vc4_get_param p = {
-                .param = feature,
+                .param = DRM_VC4_PARAM_SUPPORTS_BRANCHES,
         };
-        int ret = vc4_ioctl(screen->fd, DRM_IOCTL_VC4_GET_PARAM, &p);
+        int ret = drmIoctl(screen->fd, DRM_IOCTL_VC4_GET_PARAM, &p);
 
         if (ret != 0)
                 return false;
@@ -554,6 +546,11 @@ vc4_has_feature(struct vc4_screen *screen, uint32_t feature)
 static bool
 vc4_get_chip_info(struct vc4_screen *screen)
 {
+#if USE_VC4_SIMULATOR
+        screen->v3d_ver = 21;
+        return true;
+#endif
+
         struct drm_vc4_get_param ident0 = {
                 .param = DRM_VC4_PARAM_V3D_IDENT0,
         };
@@ -562,7 +559,7 @@ vc4_get_chip_info(struct vc4_screen *screen)
         };
         int ret;
 
-        ret = vc4_ioctl(screen->fd, DRM_IOCTL_VC4_GET_PARAM, &ident0);
+        ret = drmIoctl(screen->fd, DRM_IOCTL_VC4_GET_PARAM, &ident0);
         if (ret != 0) {
                 if (errno == EINVAL) {
                         /* Backwards compatibility with 2835 kernels which
@@ -576,7 +573,7 @@ vc4_get_chip_info(struct vc4_screen *screen)
                         return false;
                 }
         }
-        ret = vc4_ioctl(screen->fd, DRM_IOCTL_VC4_GET_PARAM, &ident1);
+        ret = drmIoctl(screen->fd, DRM_IOCTL_VC4_GET_PARAM, &ident1);
         if (ret != 0) {
                 fprintf(stderr, "Couldn't get V3D IDENT1: %s\n",
                         strerror(errno));
@@ -615,15 +612,11 @@ vc4_screen_create(int fd)
 
         screen->fd = fd;
         list_inithead(&screen->bo_cache.time_list);
-        (void) mtx_init(&screen->bo_handles_mutex, mtx_plain);
+        pipe_mutex_init(screen->bo_handles_mutex);
         screen->bo_handles = util_hash_table_create(handle_hash, handle_compare);
 
-        screen->has_control_flow =
-                vc4_has_feature(screen, DRM_VC4_PARAM_SUPPORTS_BRANCHES);
-        screen->has_etc1 =
-                vc4_has_feature(screen, DRM_VC4_PARAM_SUPPORTS_ETC1);
-        screen->has_threaded_fs =
-                vc4_has_feature(screen, DRM_VC4_PARAM_SUPPORTS_THREADED_FS);
+        if (vc4_supports_branches(screen))
+                screen->has_control_flow = true;
 
         if (!vc4_get_chip_info(screen))
                 goto fail;

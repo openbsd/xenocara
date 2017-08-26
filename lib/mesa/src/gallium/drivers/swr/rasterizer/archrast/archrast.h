@@ -28,21 +28,14 @@
 #pragma once
 
 #include "common/os.h"
-#include "gen_ar_event.hpp"
+#include "gen_ar_event.h"
 
 namespace ArchRast
 {
-    enum class AR_THREAD
-    {
-        API = 0,
-        WORKER = 1
-    };
-
-    HANDLE CreateThreadContext(AR_THREAD type);
+    HANDLE CreateThreadContext();
     void DestroyThreadContext(HANDLE hThreadContext);
 
     // Dispatch event for this thread.
-    void Dispatch(HANDLE hThreadContext, const Event& event);
-    void FlushDraw(HANDLE hThreadContext, uint32_t drawId);
+    void dispatch(HANDLE hThreadContext, Event& event);
 };
 

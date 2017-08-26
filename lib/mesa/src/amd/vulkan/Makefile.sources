@@ -33,7 +33,6 @@ RADV_WS_AMDGPU_FILES := \
 VULKAN_FILES := \
 	radv_cmd_buffer.c \
 	radv_cs.h \
-	radv_debug.h \
 	radv_device.c \
 	radv_descriptor_set.c \
 	radv_descriptor_set.h \
@@ -73,5 +72,6 @@ VULKAN_WSI_X11_FILES := \
 
 VULKAN_GENERATED_FILES := \
 	radv_entrypoints.c \
-	radv_entrypoints.h
+	radv_entrypoints.h \
+	radv_timestamp.h
 

@@ -74,7 +74,7 @@ struct hgl_context
 	Bitmap* bitmap;
 	color_space colorSpace;
 
-	mtx_t fbMutex;
+	pipe_mutex fbMutex;
 
 	struct hgl_buffer* draw;
 	struct hgl_buffer* read;

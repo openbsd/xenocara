@@ -229,8 +229,6 @@ ProfileToPipe(VdpDecoderProfile vdpau_profile)
          return PIPE_VIDEO_PROFILE_MPEG2_MAIN;
       case VDP_DECODER_PROFILE_H264_BASELINE:
          return PIPE_VIDEO_PROFILE_MPEG4_AVC_BASELINE;
-      case VDP_DECODER_PROFILE_H264_CONSTRAINED_BASELINE:
-         return PIPE_VIDEO_PROFILE_MPEG4_AVC_CONSTRAINED_BASELINE;
       case VDP_DECODER_PROFILE_H264_MAIN:
          return PIPE_VIDEO_PROFILE_MPEG4_AVC_MAIN;
       case VDP_DECODER_PROFILE_H264_HIGH:
@@ -272,8 +270,6 @@ PipeToProfile(enum pipe_video_profile p_profile)
          return VDP_DECODER_PROFILE_MPEG2_MAIN;
       case PIPE_VIDEO_PROFILE_MPEG4_AVC_BASELINE:
          return VDP_DECODER_PROFILE_H264_BASELINE;
-      case PIPE_VIDEO_PROFILE_MPEG4_AVC_CONSTRAINED_BASELINE:
-         return VDP_DECODER_PROFILE_H264_CONSTRAINED_BASELINE;
       case PIPE_VIDEO_PROFILE_MPEG4_AVC_MAIN:
          return VDP_DECODER_PROFILE_H264_MAIN;
       case PIPE_VIDEO_PROFILE_MPEG4_AVC_HIGH:
@@ -354,7 +350,12 @@ typedef struct
    struct pipe_context *context;
    struct vl_compositor compositor;
    struct pipe_sampler_view *dummy_sv;
-   mtx_t mutex;
+   pipe_mutex mutex;
+
+   struct {
+      struct vl_compositor_state *cstate;
+      VdpOutputSurface surface;
+   } delayed_rendering;
 } vlVdpDevice;
 
 typedef struct
@@ -419,7 +420,6 @@ typedef struct
    struct pipe_fence_handle *fence;
    struct vl_compositor_state cstate;
    struct u_rect dirty_area;
-   bool send_to_X;
 } vlVdpOutputSurface;
 
 typedef struct
@@ -439,7 +439,7 @@ typedef struct
 typedef struct
 {
    vlVdpDevice *device;
-   mtx_t mutex;
+   pipe_mutex mutex;
    struct pipe_video_codec *decoder;
 } vlVdpDecoder;
 
@@ -457,6 +457,10 @@ boolean vlGetFuncFTAB(VdpFuncId function_id, void **func);
 VdpDeviceCreateX11 vdp_imp_device_create_x11;
 
 void vlVdpDefaultSamplerViewTemplate(struct pipe_sampler_view *templ, struct pipe_resource *res);
+
+/* Delayed rendering funtionality */
+void vlVdpResolveDelayedRendering(vlVdpDevice *dev, struct pipe_surface *surface, struct u_rect *dirty_area);
+void vlVdpSave4DelayedRendering(vlVdpDevice *dev, VdpOutputSurface surface, struct vl_compositor_state *cstate);
 
 /* Internal function pointers */
 VdpGetErrorString vlVdpGetErrorString;

@@ -117,7 +117,7 @@ error:
    if (dst_transfer)
       pipe_buffer_unmap(context, dst_transfer);
    if (*dst_buffer)
-      pipe_resource_reference(dst_buffer, NULL);
+      screen->resource_destroy(screen, *dst_buffer);
    return PIPE_ERROR_OUT_OF_MEMORY;
 }
 

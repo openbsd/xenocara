@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 
 # (C) Copyright IBM Corporation 2004, 2005
 # All Rights Reserved.
@@ -133,11 +134,11 @@ class PrintGlOffsets(gl_XML.gl_print_base):
  *   #define KEYWORD1
  *   #define KEYWORD2
  *   #define NAME(func)  gl##func
- *   #define DISPATCH(func, args, msg)                             \\
- *          struct _glapi_table *dispatch = CurrentClientDispatch; \\
+ *   #define DISPATCH(func, args, msg)                           \\
+ *          struct _glapi_table *dispatch = CurrentDispatch;     \\
  *          (*dispatch->func) args
- *   #define RETURN DISPATCH(func, args, msg)                      \\
- *          struct _glapi_table *dispatch = CurrentClientDispatch; \\
+ *   #define RETURN DISPATCH(func, args, msg)                    \\
+ *          struct _glapi_table *dispatch = CurrentDispatch;     \\
  *          return (*dispatch->func) args
  *
  */

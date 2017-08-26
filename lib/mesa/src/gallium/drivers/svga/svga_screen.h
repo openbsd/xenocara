@@ -66,9 +66,9 @@ struct svga_screen
    } debug;
 
    unsigned texture_timestamp;
-   mtx_t tex_mutex;
+   pipe_mutex tex_mutex; 
 
-   mtx_t swc_mutex; /* Used for buffer uploads */
+   pipe_mutex swc_mutex; /* Used for buffer uploads */
 
    /* which formats to translate depth formats into */
    struct {

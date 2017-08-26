@@ -39,7 +39,6 @@ typedef enum __GLXdispatchIndex {
     DI_GetCurrentDisplayEXT,
     // GetCurrentDrawable implemented by libglvnd
     // GetCurrentReadDrawable implemented by libglvnd
-    DI_GetDriverConfig,
     // GetFBConfigAttrib implemented by libglvnd
     DI_GetFBConfigAttribSGIX,
     DI_GetFBConfigFromVisualSGIX,

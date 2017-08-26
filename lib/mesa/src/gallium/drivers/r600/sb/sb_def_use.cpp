@@ -106,51 +106,58 @@ void def_use::process_defs(node *n, vvec &vv, bool arr_def) {
 }
 
 void def_use::process_uses(node* n) {
-	for (vvec::iterator I = n->src.begin(), E = n->src.end(); I != E; ++I) {
+	unsigned k = 0;
+
+	for (vvec::iterator I = n->src.begin(), E = n->src.end(); I != E;
+			++I, ++k) {
 		value *v = *I;
 		if (!v || v->is_readonly())
 			continue;
 
 		if (v->is_rel()) {
 			if (!v->rel->is_readonly())
-				v->rel->add_use(n);
+				v->rel->add_use(n, UK_SRC_REL, k);
 
+			unsigned k2 = 0;
 			for (vvec::iterator I = v->muse.begin(), E = v->muse.end();
-					I != E; ++I) {
+					I != E; ++I, ++k2) {
 				value *v = *I;
 				if (!v)
 					continue;
 
-				v->add_use(n);
+				v->add_use(n, UK_MAYUSE, k2);
 			}
 		} else
-			v->add_use(n);
+			v->add_use(n, UK_SRC, k);
 	}
 
-	for (vvec::iterator I = n->dst.begin(), E = n->dst.end(); I != E; ++I) {
+	k = 0;
+	for (vvec::iterator I = n->dst.begin(), E = n->dst.end(); I != E;
+			++I, ++k) {
 		value *v = *I;
 		if (!v || !v->is_rel())
 			continue;
 
 		if (!v->rel->is_readonly())
-			v->rel->add_use(n);
+			v->rel->add_use(n, UK_DST_REL, k);
+		unsigned k2 = 0;
 		for (vvec::iterator I = v->muse.begin(), E = v->muse.end();
-				I != E; ++I) {
+				I != E; ++I, ++k2) {
 			value *v = *I;
 			if (!v)
 				continue;
 
-			v->add_use(n);
+			v->add_use(n, UK_MAYDEF, k2);
 		}
 	}
 
 	if (n->pred)
-		n->pred->add_use(n);
+		n->pred->add_use(n, UK_PRED, 0);
 
 	if (n->type == NT_IF) {
 		if_node *i = static_cast<if_node*>(n);
 		if (i->cond)
-			i->cond->add_use(i);
+			i->cond->add_use(i, UK_COND, 0);
 	}
 }
 

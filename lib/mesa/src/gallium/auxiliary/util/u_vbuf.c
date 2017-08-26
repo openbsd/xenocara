@@ -146,6 +146,7 @@ struct u_vbuf {
    struct pipe_context *pipe;
    struct translate_cache *translate_cache;
    struct cso_cache *cso_cache;
+   struct u_upload_mgr *uploader;
 
    /* This is what was set in set_vertex_buffers.
     * May contain user buffers. */
@@ -255,8 +256,7 @@ static const struct {
    { PIPE_FORMAT_R8G8B8A8_SSCALED,     PIPE_FORMAT_R32G32B32A32_FLOAT },
 };
 
-boolean u_vbuf_get_caps(struct pipe_screen *screen, struct u_vbuf_caps *caps,
-                        unsigned flags)
+boolean u_vbuf_get_caps(struct pipe_screen *screen, struct u_vbuf_caps *caps)
 {
    unsigned i;
    boolean fallback = FALSE;
@@ -294,7 +294,7 @@ boolean u_vbuf_get_caps(struct pipe_screen *screen, struct u_vbuf_caps *caps,
    if (!caps->buffer_offset_unaligned ||
        !caps->buffer_stride_unaligned ||
        !caps->velem_src_offset_unaligned ||
-       (!(flags & U_VBUF_FLAG_NO_USER_VBOS) && !caps->user_vertex_buffers)) {
+       !caps->user_vertex_buffers) {
       fallback = TRUE;
    }
 
@@ -313,6 +313,10 @@ u_vbuf_create(struct pipe_context *pipe,
    mgr->cso_cache = cso_cache_create();
    mgr->translate_cache = translate_cache_create();
    memset(mgr->fallback_vbs, ~0, sizeof(mgr->fallback_vbs));
+
+   mgr->uploader = u_upload_create(pipe, 1024 * 1024,
+                                   PIPE_BIND_VERTEX_BUFFER,
+                                   PIPE_USAGE_STREAM);
 
    return mgr;
 }
@@ -386,6 +390,7 @@ void u_vbuf_destroy(struct u_vbuf *mgr)
    pipe_resource_reference(&mgr->aux_vertex_buffer_saved.buffer, NULL);
 
    translate_cache_destroy(mgr->translate_cache);
+   u_upload_destroy(mgr->uploader);
    cso_cache_delete(mgr->cso_cache);
    FREE(mgr);
 }
@@ -423,22 +428,8 @@ u_vbuf_translate_buffers(struct u_vbuf *mgr, struct translate_key *key,
          unsigned size = vb->stride ? num_vertices * vb->stride
                                     : sizeof(double)*4;
 
-         if (offset + size > vb->buffer->width0) {
-            /* Don't try to map past end of buffer.  This often happens when
-             * we're translating an attribute that's at offset > 0 from the
-             * start of the vertex.  If we'd subtract attrib's offset from
-             * the size, this probably wouldn't happen.
-             */
+         if (offset+size > vb->buffer->width0) {
             size = vb->buffer->width0 - offset;
-
-            /* Also adjust num_vertices.  A common user error is to call
-             * glDrawRangeElements() with incorrect 'end' argument.  The 'end
-             * value should be the max index value, but people often
-             * accidentally add one to this value.  This adjustment avoids
-             * crashing (by reading past the end of a hardware buffer mapping)
-             * when people do that.
-             */
-            num_vertices = (size + vb->stride - 1) / vb->stride;
          }
 
          map = pipe_buffer_map_range(mgr->pipe, vb->buffer, offset, size,
@@ -463,7 +454,7 @@ u_vbuf_translate_buffers(struct u_vbuf *mgr, struct translate_key *key,
       assert((ib->buffer || ib->user_buffer) && ib->index_size);
 
       /* Create and map the output buffer. */
-      u_upload_alloc(mgr->pipe->stream_uploader, 0,
+      u_upload_alloc(mgr->uploader, 0,
                      key->output_stride * num_indices, 4,
                      &out_offset, &out_buffer,
                      (void**)&out_map);
@@ -495,7 +486,7 @@ u_vbuf_translate_buffers(struct u_vbuf *mgr, struct translate_key *key,
       }
    } else {
       /* Create and map the output buffer. */
-      u_upload_alloc(mgr->pipe->stream_uploader,
+      u_upload_alloc(mgr->uploader,
                      key->output_stride * start_vertex,
                      key->output_stride * num_vertices, 4,
                      &out_offset, &out_buffer,
@@ -999,7 +990,7 @@ u_vbuf_upload_buffers(struct u_vbuf *mgr,
       real_vb = &mgr->real_vertex_buffer[i];
       ptr = mgr->vertex_buffer[i].user_buffer;
 
-      u_upload_data(mgr->pipe->stream_uploader, start, end - start, 4, ptr + start,
+      u_upload_data(mgr->uploader, start, end - start, 4, ptr + start,
                     &real_vb->buffer_offset, &real_vb->buffer);
       if (!real_vb->buffer)
          return PIPE_ERROR_OUT_OF_MEMORY;
@@ -1304,7 +1295,7 @@ void u_vbuf_draw_vbo(struct u_vbuf *mgr, const struct pipe_draw_info *info)
    }
    */
 
-   u_upload_unmap(pipe->stream_uploader);
+   u_upload_unmap(mgr->uploader);
    u_vbuf_set_driver_vertex_buffers(mgr);
 
    pipe->draw_vbo(pipe, &new_info);

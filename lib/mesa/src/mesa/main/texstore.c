@@ -1360,17 +1360,10 @@ _mesa_store_compressed_texsubimage(struct gl_context *ctx, GLuint dims,
       if (dstMap) {
 
          /* copy rows of blocks */
-         if (dstRowStride == store.TotalBytesPerRow &&
-             dstRowStride == store.CopyBytesPerRow) {
-            memcpy(dstMap, src, store.CopyBytesPerRow * store.CopyRowsPerSlice);
-            src += store.CopyBytesPerRow * store.CopyRowsPerSlice;
-         }
-         else {
-            for (i = 0; i < store.CopyRowsPerSlice; i++) {
-               memcpy(dstMap, src, store.CopyBytesPerRow);
-               dstMap += dstRowStride;
-               src += store.TotalBytesPerRow;
-            }
+         for (i = 0; i < store.CopyRowsPerSlice; i++) {
+            memcpy(dstMap, src, store.CopyBytesPerRow);
+            dstMap += dstRowStride;
+            src += store.TotalBytesPerRow;
          }
 
          ctx->Driver.UnmapTextureImage(ctx, texImage, slice + zoffset);

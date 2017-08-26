@@ -308,16 +308,16 @@ st_GetPerfMonitorResult(struct gl_context *ctx,
       data[offset++] = cid;
       switch (type) {
       case GL_UNSIGNED_INT64_AMD:
-         memcpy(&data[offset], &result.u64, sizeof(uint64_t));
+         *(uint64_t *)&data[offset] = result.u64;
          offset += sizeof(uint64_t) / sizeof(GLuint);
          break;
       case GL_UNSIGNED_INT:
-         memcpy(&data[offset], &result.u32, sizeof(uint32_t));
+         *(uint32_t *)&data[offset] = result.u32;
          offset += sizeof(uint32_t) / sizeof(GLuint);
          break;
       case GL_FLOAT:
       case GL_PERCENTAGE_AMD:
-         memcpy(&data[offset], &result.f, sizeof(GLfloat));
+         *(GLfloat *)&data[offset] = result.f;
          offset += sizeof(GLfloat) / sizeof(GLuint);
          break;
       }

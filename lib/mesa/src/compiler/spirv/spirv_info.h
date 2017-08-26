@@ -21,12 +21,7 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef _SPIRV_INFO_H_
-#define _SPIRV_INFO_H_
-
 #include "spirv.h"
 
 const char *spirv_capability_to_string(SpvCapability cap);
 const char *spirv_decoration_to_string(SpvDecoration dec);
-
-#endif /* SPIRV_INFO_H */

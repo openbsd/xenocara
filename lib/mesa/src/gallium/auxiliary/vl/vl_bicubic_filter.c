@@ -35,7 +35,6 @@
 #include "util/u_memory.h"
 #include "util/u_math.h"
 #include "util/u_rect.h"
-#include "util/u_upload_mgr.h"
 
 #include "vl_types.h"
 #include "vl_vertex_buffers.h"
@@ -174,11 +173,6 @@ create_frag_shader(struct vl_bicubic_filter *filter, unsigned video_width,
 
    i_vtex = ureg_DECL_fs_input(shader, TGSI_SEMANTIC_GENERIC, VS_O_VTEX, TGSI_INTERPOLATE_LINEAR);
    sampler = ureg_DECL_sampler(shader, 0);
-   ureg_DECL_sampler_view(shader, 0, TGSI_TEXTURE_2D,
-                          TGSI_RETURN_TYPE_FLOAT,
-                          TGSI_RETURN_TYPE_FLOAT,
-                          TGSI_RETURN_TYPE_FLOAT,
-                          TGSI_RETURN_TYPE_FLOAT);
 
    for (i = 0; i < 23; ++i)
       t_array[i] = ureg_DECL_temporary(shader);
@@ -192,8 +186,8 @@ create_frag_shader(struct vl_bicubic_filter *filter, unsigned video_width,
     * t = frac(temp)
     * vtex = floor(i_vtex)/i_size
     */
-   ureg_ADD(shader, ureg_writemask(t_array[21], TGSI_WRITEMASK_XY),
-            i_vtex, ureg_negate(half_pixel));
+   ureg_SUB(shader, ureg_writemask(t_array[21], TGSI_WRITEMASK_XY),
+            i_vtex, half_pixel);
    ureg_MUL(shader, ureg_writemask(t_array[22], TGSI_WRITEMASK_XY),
             ureg_src(t_array[21]), ureg_imm2f(shader, video_width, video_height));
    ureg_FRC(shader, ureg_writemask(t, TGSI_WRITEMASK_XY),
@@ -390,7 +384,8 @@ vl_bicubic_filter_render(struct vl_bicubic_filter *filter,
    struct pipe_framebuffer_state fb_state;
    struct pipe_scissor_state scissor;
    union pipe_color_union clear_color;
-
+   struct pipe_transfer *buf_transfer;
+   struct pipe_resource *surface_size;
    assert(filter && src && dst);
 
    if (dst_clip) {
@@ -407,6 +402,14 @@ vl_bicubic_filter_render(struct vl_bicubic_filter *filter,
 
    clear_color.f[0] = clear_color.f[1] = 0.0f;
    clear_color.f[2] = clear_color.f[3] = 0.0f;
+   surface_size = pipe_buffer_create
+   (
+      filter->pipe->screen,
+      PIPE_BIND_CONSTANT_BUFFER,
+      PIPE_USAGE_DEFAULT,
+      2*sizeof(float)
+   );
+
 
    memset(&viewport, 0, sizeof(viewport));
    if(dst_area){
@@ -420,18 +423,14 @@ vl_bicubic_filter_render(struct vl_bicubic_filter *filter,
    }
    viewport.scale[2] = 1;
 
-   struct pipe_constant_buffer cb = {};
-   float *ptr = NULL;
+   float *ptr = pipe_buffer_map(filter->pipe, surface_size,
+                               PIPE_TRANSFER_WRITE | PIPE_TRANSFER_DISCARD_RANGE,
+                               &buf_transfer);
 
-   u_upload_alloc(filter->pipe->const_uploader, 0, 2 * sizeof(float), 256,
-                  &cb.buffer_offset, &cb.buffer, (void**)&ptr);
-   cb.buffer_size = 2 * sizeof(float);
+   ptr[0] = 0.5f/viewport.scale[0];
+   ptr[1] = 0.5f/viewport.scale[1];
 
-   if (ptr) {
-      ptr[0] = 0.5f/viewport.scale[0];
-      ptr[1] = 0.5f/viewport.scale[1];
-   }
-   u_upload_unmap(filter->pipe->const_uploader);
+   pipe_buffer_unmap(filter->pipe, buf_transfer);
 
    memset(&fb_state, 0, sizeof(fb_state));
    fb_state.width = dst->width;
@@ -442,8 +441,7 @@ vl_bicubic_filter_render(struct vl_bicubic_filter *filter,
    filter->pipe->set_scissor_states(filter->pipe, 0, 1, &scissor);
    filter->pipe->clear_render_target(filter->pipe, dst, &clear_color,
                                      0, 0, dst->width, dst->height, false);
-   filter->pipe->set_constant_buffer(filter->pipe, PIPE_SHADER_FRAGMENT,
-                                     0, &cb);
+   pipe_set_constant_buffer(filter->pipe, PIPE_SHADER_FRAGMENT, 0, surface_size);
    filter->pipe->bind_rasterizer_state(filter->pipe, filter->rs_state);
    filter->pipe->bind_blend_state(filter->pipe, filter->blend);
    filter->pipe->bind_sampler_states(filter->pipe, PIPE_SHADER_FRAGMENT,

@@ -281,8 +281,7 @@ tgsi_transform_op2_inst(struct tgsi_transform_context *ctx,
                         unsigned src0_file,
                         unsigned src0_index,
                         unsigned src1_file,
-                        unsigned src1_index,
-                        bool src1_negate)
+                        unsigned src1_index)
 {
    struct tgsi_full_instruction inst;
 
@@ -297,7 +296,6 @@ tgsi_transform_op2_inst(struct tgsi_transform_context *ctx,
    inst.Src[0].Register.Index = src0_index;
    inst.Src[1].Register.File = src1_file;
    inst.Src[1].Register.Index = src1_index;
-   inst.Src[1].Register.Negate = src1_negate;
 
    ctx->emit_instruction(ctx, &inst);
 }
@@ -390,8 +388,7 @@ tgsi_transform_op2_swz_inst(struct tgsi_transform_context *ctx,
                             unsigned src0_swizzle,
                             unsigned src1_file,
                             unsigned src1_index,
-                            unsigned src1_swizzle,
-                            bool src1_negate)
+                            unsigned src1_swizzle)
 {
    struct tgsi_full_instruction inst;
 
@@ -406,7 +403,6 @@ tgsi_transform_op2_swz_inst(struct tgsi_transform_context *ctx,
    inst.Src[0].Register.Index = src0_index;
    inst.Src[1].Register.File = src1_file;
    inst.Src[1].Register.Index = src1_index;
-   inst.Src[1].Register.Negate = src1_negate;
    switch (dst_writemask) {
    case TGSI_WRITEMASK_X:
       inst.Src[0].Register.SwizzleX = src0_swizzle;

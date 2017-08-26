@@ -373,17 +373,14 @@ _mesa_fetch_state(struct gl_context *ctx, const gl_state_index state[],
                COPY_4V(value, ctx->FragmentProgram.Parameters[idx]);
                return;
             case STATE_LOCAL:
-               if (!ctx->FragmentProgram.Current->arb.LocalParams) {
-                  ctx->FragmentProgram.Current->arb.LocalParams =
-                     rzalloc_array_size(ctx->FragmentProgram.Current,
-                                        sizeof(float[4]),
-                                        MAX_PROGRAM_LOCAL_PARAMS);
-                  if (!ctx->FragmentProgram.Current->arb.LocalParams)
+               if (!ctx->FragmentProgram.Current->Base.LocalParams) {
+                  ctx->FragmentProgram.Current->Base.LocalParams =
+                     calloc(MAX_PROGRAM_LOCAL_PARAMS, sizeof(float[4]));
+                  if (!ctx->FragmentProgram.Current->Base.LocalParams)
                      return;
                }
 
-               COPY_4V(value,
-                       ctx->FragmentProgram.Current->arb.LocalParams[idx]);
+               COPY_4V(value, ctx->FragmentProgram.Current->Base.LocalParams[idx]);
                return;
             default:
                _mesa_problem(ctx, "Bad state switch in _mesa_fetch_state()");
@@ -402,17 +399,14 @@ _mesa_fetch_state(struct gl_context *ctx, const gl_state_index state[],
                COPY_4V(value, ctx->VertexProgram.Parameters[idx]);
                return;
             case STATE_LOCAL:
-               if (!ctx->VertexProgram.Current->arb.LocalParams) {
-                  ctx->VertexProgram.Current->arb.LocalParams =
-                     rzalloc_array_size(ctx->VertexProgram.Current,
-                                        sizeof(float[4]),
-                                        MAX_PROGRAM_LOCAL_PARAMS);
-                  if (!ctx->VertexProgram.Current->arb.LocalParams)
+               if (!ctx->VertexProgram.Current->Base.LocalParams) {
+                  ctx->VertexProgram.Current->Base.LocalParams =
+                     calloc(MAX_PROGRAM_LOCAL_PARAMS, sizeof(float[4]));
+                  if (!ctx->VertexProgram.Current->Base.LocalParams)
                      return;
                }
 
-               COPY_4V(value,
-                       ctx->VertexProgram.Current->arb.LocalParams[idx]);
+               COPY_4V(value, ctx->VertexProgram.Current->Base.LocalParams[idx]);
                return;
             default:
                _mesa_problem(ctx, "Bad state switch in _mesa_fetch_state()");
@@ -456,6 +450,24 @@ _mesa_fetch_state(struct gl_context *ctx, const gl_state_index state[],
                    ctx->_ModelViewInvScale, 
                    ctx->_ModelViewInvScale, 
                    1);
+         return;
+
+      case STATE_TEXRECT_SCALE:
+         /* Value = { 1/texWidth, 1/texHeight, 0, 1 }.
+          * Used to convert unnormalized texcoords to normalized texcoords.
+          */
+         {
+            const int unit = (int) state[2];
+            const struct gl_texture_object *texObj
+               = ctx->Texture.Unit[unit]._Current;
+            if (texObj) {
+               struct gl_texture_image *texImage = texObj->Image[0][0];
+               ASSIGN_4V(value,
+                         (GLfloat) (1.0 / texImage->Width),
+                         (GLfloat) (1.0 / texImage->Height),
+                         0.0f, 1.0f);
+            }
+         }
          return;
 
       case STATE_FOG_PARAMS_OPTIMIZED:
@@ -592,7 +604,7 @@ _mesa_fetch_state(struct gl_context *ctx, const gl_state_index state[],
 
       case STATE_TES_PATCH_VERTICES_IN:
          if (ctx->TessCtrlProgram._Current)
-            val[0].i = ctx->TessCtrlProgram._Current->info.tess.tcs_vertices_out;
+            val[0].i = ctx->TessCtrlProgram._Current->VerticesOut;
          else
             val[0].i = ctx->TessCtrlProgram.patch_vertices;
          return;
@@ -641,9 +653,9 @@ _mesa_program_state_flags(const gl_state_index state[STATE_LENGTH])
       return _NEW_LIGHT;
 
    case STATE_TEXGEN:
-      return _NEW_TEXTURE_STATE;
+      return _NEW_TEXTURE;
    case STATE_TEXENV_COLOR:
-      return _NEW_TEXTURE_STATE | _NEW_BUFFERS | _NEW_FRAG_CLAMP;
+      return _NEW_TEXTURE | _NEW_BUFFERS | _NEW_FRAG_CLAMP;
 
    case STATE_FOG_COLOR:
       return _NEW_FOG | _NEW_BUFFERS | _NEW_FRAG_CLAMP;
@@ -691,6 +703,8 @@ _mesa_program_state_flags(const gl_state_index state[STATE_LENGTH])
       case STATE_NORMAL_SCALE:
          return _NEW_MODELVIEW;
 
+      case STATE_TEXRECT_SCALE:
+	 return _NEW_TEXTURE;
       case STATE_FOG_PARAMS_OPTIMIZED:
 	 return _NEW_FOG;
       case STATE_POINT_SIZE_CLAMPED:
@@ -884,6 +898,9 @@ append_token(char *dst, gl_state_index k)
       break;
    case STATE_NORMAL_SCALE:
       append(dst, "normalScale");
+      break;
+   case STATE_TEXRECT_SCALE:
+      append(dst, "texrectScale");
       break;
    case STATE_FOG_PARAMS_OPTIMIZED:
       append(dst, "fogParamsOptimized");

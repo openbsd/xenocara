@@ -55,18 +55,6 @@ enum qfile {
         QFILE_TLB_Z_WRITE,
         QFILE_TLB_STENCIL_SETUP,
 
-        /* If tex_s is written on its own without preceding t/r/b setup, it's
-         * a direct memory access using the input value, without the sideband
-         * uniform load.  We represent these in QIR as a separate write
-         * destination so we can tell if the sideband uniform is present.
-         */
-        QFILE_TEX_S_DIRECT,
-
-        QFILE_TEX_S,
-        QFILE_TEX_T,
-        QFILE_TEX_R,
-        QFILE_TEX_B,
-
         /* Payload registers that aren't in the physical register file, so we
          * can just use the corresponding qpu_reg at qpu_emit time.
          */
@@ -145,21 +133,29 @@ enum qop {
         QOP_FRAG_Z,
         QOP_FRAG_W,
 
+        /** Texture x coordinate parameter write */
+        QOP_TEX_S,
+        /** Texture y coordinate parameter write */
+        QOP_TEX_T,
+        /** Texture border color parameter or cube map z coordinate write */
+        QOP_TEX_R,
+        /** Texture LOD bias parameter write */
+        QOP_TEX_B,
+
+        /**
+         * Texture-unit 4-byte read with address provided direct in S
+         * cooordinate.
+         *
+         * The first operand is the offset from the start of the UBO, and the
+         * second is the uniform that has the UBO's base pointer.
+         */
+        QOP_TEX_DIRECT,
+
         /**
          * Signal of texture read being necessary and then reading r4 into
          * the destination
          */
         QOP_TEX_RESULT,
-
-        /**
-         * Insert the signal for switching threads in a threaded fragment
-         * shader.  No value can be live in an accumulator across a thrsw.
-         *
-         * At the QPU level, this will have several delay slots before the
-         * switch happens.  Those slots are the responsibility of the
-         * scheduler.
-         */
-        QOP_THRSW,
 
         /* 32-bit immediate loaded to each SIMD channel */
         QOP_LOAD_IMM,
@@ -198,7 +194,7 @@ struct qinst {
 
         enum qop op;
         struct qreg dst;
-        struct qreg src[3];
+        struct qreg *src;
         bool sf;
         bool cond_is_exec_mask;
         uint8_t cond;
@@ -506,12 +502,8 @@ struct vc4_compile {
         struct qblock *cur_block;
         struct qblock *loop_cont_block;
         struct qblock *loop_break_block;
-        struct qblock *last_top_block;
 
         struct list_head qpu_inst_list;
-
-        /* Pre-QPU-scheduled instruction containing the last THRSW */
-        uint64_t *last_thrsw;
 
         uint64_t *qpu_insts;
         uint32_t qpu_inst_count;
@@ -532,15 +524,6 @@ struct vc4_compile {
 
         uint32_t program_id;
         uint32_t variant_id;
-
-        /* Set to compile program in threaded FS mode, where SIG_THREAD_SWITCH
-         * is used to hide texturing latency at the cost of limiting ourselves
-         * to the bottom half of physical reg space.
-         */
-        bool fs_threaded;
-
-        bool last_thrsw_at_top_level;
-
         bool failed;
 };
 
@@ -560,6 +543,11 @@ struct qblock *qir_entry_block(struct vc4_compile *c);
 struct qblock *qir_exit_block(struct vc4_compile *c);
 struct qinst *qir_inst(enum qop op, struct qreg dst,
                        struct qreg src0, struct qreg src1);
+struct qinst *qir_inst4(enum qop op, struct qreg dst,
+                        struct qreg a,
+                        struct qreg b,
+                        struct qreg c,
+                        struct qreg d);
 void qir_remove_instruction(struct vc4_compile *c, struct qinst *qinst);
 struct qreg qir_uniform(struct vc4_compile *c,
                         enum quniform_contents contents,
@@ -573,17 +561,13 @@ struct qinst *qir_emit_nondef(struct vc4_compile *c, struct qinst *inst);
 
 struct qreg qir_get_temp(struct vc4_compile *c);
 void qir_calculate_live_intervals(struct vc4_compile *c);
-int qir_get_nsrc(struct qinst *inst);
-int qir_get_non_sideband_nsrc(struct qinst *inst);
-int qir_get_tex_uniform_src(struct qinst *inst);
+int qir_get_op_nsrc(enum qop qop);
 bool qir_reg_equals(struct qreg a, struct qreg b);
 bool qir_has_side_effects(struct vc4_compile *c, struct qinst *inst);
 bool qir_has_side_effect_reads(struct vc4_compile *c, struct qinst *inst);
-bool qir_has_uniform_read(struct qinst *inst);
 bool qir_is_mul(struct qinst *inst);
 bool qir_is_raw_mov(struct qinst *inst);
 bool qir_is_tex(struct qinst *inst);
-bool qir_has_implicit_tex_uniform(struct qinst *inst);
 bool qir_is_float_input(struct qinst *inst);
 bool qir_depends_on_flags(struct qinst *inst);
 bool qir_writes_r4(struct qinst *inst);
@@ -598,7 +582,6 @@ void qir_validate(struct vc4_compile *c);
 
 void qir_optimize(struct vc4_compile *c);
 bool qir_opt_algebraic(struct vc4_compile *c);
-bool qir_opt_coalesce_ff_writes(struct vc4_compile *c);
 bool qir_opt_constant_folding(struct vc4_compile *c);
 bool qir_opt_copy_propagation(struct vc4_compile *c);
 bool qir_opt_dead_code(struct vc4_compile *c);
@@ -739,6 +722,11 @@ QIR_ALU1(RSQ)
 QIR_ALU1(EXP2)
 QIR_ALU1(LOG2)
 QIR_ALU1(VARY_ADD_C)
+QIR_NODST_2(TEX_S)
+QIR_NODST_2(TEX_T)
+QIR_NODST_2(TEX_R)
+QIR_NODST_2(TEX_B)
+QIR_NODST_2(TEX_DIRECT)
 QIR_PAYLOAD(FRAG_Z)
 QIR_PAYLOAD(FRAG_W)
 QIR_ALU0(TEX_RESULT)
@@ -749,8 +737,10 @@ static inline struct qreg
 qir_SEL(struct vc4_compile *c, uint8_t cond, struct qreg src0, struct qreg src1)
 {
         struct qreg t = qir_get_temp(c);
-        qir_MOV_dest(c, t, src1);
-        qir_MOV_dest(c, t, src0)->cond = cond;
+        struct qinst *a = qir_MOV_dest(c, t, src0);
+        struct qinst *b = qir_MOV_dest(c, t, src1);
+        a->cond = cond;
+        b->cond = qpu_cond_complement(cond);
         return t;
 }
 
@@ -891,6 +881,6 @@ qir_BRANCH(struct vc4_compile *c, uint8_t cond)
 
 #define qir_for_each_inst_inorder(inst, c)                              \
         qir_for_each_block(_block, c)                                   \
-                qir_for_each_inst_safe(inst, _block)
+                qir_for_each_inst(inst, _block)
 
 #endif /* VC4_QIR_H */

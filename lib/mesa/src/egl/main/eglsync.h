@@ -48,7 +48,6 @@ struct _egl_sync
    EGLenum SyncStatus;
    EGLenum SyncCondition;
    EGLAttrib CLEvent;
-   EGLint SyncFd;
 };
 
 

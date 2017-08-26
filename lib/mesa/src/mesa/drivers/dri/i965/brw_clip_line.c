@@ -37,6 +37,7 @@
 
 #include "brw_defines.h"
 #include "brw_context.h"
+#include "brw_eu.h"
 #include "brw_clip.h"
 
 
@@ -301,7 +302,7 @@ void brw_emit_line_clip( struct brw_clip_compile *c )
    brw_clip_line_alloc_regs(c);
    brw_clip_init_ff_sync(c);
 
-   if (c->key.contains_flat_varying) {
+   if (c->has_flat_shading) {
       if (c->key.pv_first)
          brw_clip_copy_flatshaded_attributes(c, 1, 0);
       else

@@ -212,7 +212,6 @@ st_pipe_vertex_format(GLenum type, GLuint size, GLenum format,
 {
    assert((type >= GL_BYTE && type <= GL_DOUBLE) ||
           type == GL_FIXED || type == GL_HALF_FLOAT ||
-          type == GL_HALF_FLOAT_OES ||
           type == GL_INT_2_10_10_10_REV ||
           type == GL_UNSIGNED_INT_2_10_10_10_REV ||
           type == GL_UNSIGNED_INT_10F_11F_11F_REV);
@@ -282,8 +281,7 @@ st_pipe_vertex_format(GLenum type, GLuint size, GLenum format,
       switch (type) {
       case GL_DOUBLE: return double_types[size-1];
       case GL_FLOAT: return float_types[size-1];
-      case GL_HALF_FLOAT:
-      case GL_HALF_FLOAT_OES: return half_float_types[size-1];
+      case GL_HALF_FLOAT: return half_float_types[size-1];
       case GL_INT: return int_types_norm[size-1];
       case GL_SHORT: return short_types_norm[size-1];
       case GL_BYTE: return byte_types_norm[size-1];
@@ -298,8 +296,7 @@ st_pipe_vertex_format(GLenum type, GLuint size, GLenum format,
       switch (type) {
       case GL_DOUBLE: return double_types[size-1];
       case GL_FLOAT: return float_types[size-1];
-      case GL_HALF_FLOAT:
-      case GL_HALF_FLOAT_OES: return half_float_types[size-1];
+      case GL_HALF_FLOAT: return half_float_types[size-1];
       case GL_INT: return int_types_scale[size-1];
       case GL_SHORT: return short_types_scale[size-1];
       case GL_BYTE: return byte_types_scale[size-1];
@@ -313,9 +310,9 @@ st_pipe_vertex_format(GLenum type, GLuint size, GLenum format,
    return PIPE_FORMAT_NONE; /* silence compiler warning */
 }
 
-static const struct gl_vertex_array *
+static const struct gl_client_array *
 get_client_array(const struct st_vertex_program *vp,
-                 const struct gl_vertex_array **arrays,
+                 const struct gl_client_array **arrays,
                  int attr)
 {
    const GLuint mesaAttr = vp->index_to_input[attr];
@@ -332,7 +329,7 @@ get_client_array(const struct st_vertex_program *vp,
 static GLboolean
 is_interleaved_arrays(const struct st_vertex_program *vp,
                       const struct st_vp_variant *vpv,
-                      const struct gl_vertex_array **arrays)
+                      const struct gl_client_array **arrays)
 {
    GLuint attr;
    const struct gl_buffer_object *firstBufObj = NULL;
@@ -341,7 +338,7 @@ is_interleaved_arrays(const struct st_vertex_program *vp,
    GLboolean userSpaceBuffer = GL_FALSE;
 
    for (attr = 0; attr < vpv->num_inputs; attr++) {
-      const struct gl_vertex_array *array;
+      const struct gl_client_array *array;
       const struct gl_buffer_object *bufObj;
       GLsizei stride;
 
@@ -447,7 +444,7 @@ static boolean
 setup_interleaved_attribs(struct st_context *st,
                           const struct st_vertex_program *vp,
                           const struct st_vp_variant *vpv,
-                          const struct gl_vertex_array **arrays,
+                          const struct gl_client_array **arrays,
                           struct pipe_vertex_buffer *vbuffer,
                           struct pipe_vertex_element velements[])
 {
@@ -461,7 +458,7 @@ setup_interleaved_attribs(struct st_context *st,
     * Init bufobj and stride.
     */
    if (vpv->num_inputs) {
-      const struct gl_vertex_array *array;
+      const struct gl_client_array *array;
 
       array = get_client_array(vp, arrays, 0);
       assert(array);
@@ -495,7 +492,7 @@ setup_interleaved_attribs(struct st_context *st,
    usingVBO = _mesa_is_bufferobj(bufobj);
 
    for (attr = 0; attr < vpv->num_inputs;) {
-      const struct gl_vertex_array *array;
+      const struct gl_client_array *array;
       unsigned src_offset;
       unsigned src_format;
 
@@ -560,7 +557,7 @@ static boolean
 setup_non_interleaved_attribs(struct st_context *st,
                               const struct st_vertex_program *vp,
                               const struct st_vp_variant *vpv,
-                              const struct gl_vertex_array **arrays,
+                              const struct gl_client_array **arrays,
                               struct pipe_vertex_buffer vbuffer[],
                               struct pipe_vertex_element velements[],
                               unsigned *num_vbuffers)
@@ -572,7 +569,7 @@ setup_non_interleaved_attribs(struct st_context *st,
 
    for (attr = 0; attr < vpv->num_inputs;) {
       const GLuint mesaAttr = vp->index_to_input[attr];
-      const struct gl_vertex_array *array;
+      const struct gl_client_array *array;
       struct gl_buffer_object *bufobj;
       GLsizei stride;
       unsigned src_format;
@@ -590,7 +587,7 @@ setup_non_interleaved_attribs(struct st_context *st,
 
       if (_mesa_is_bufferobj(bufobj)) {
          /* Attribute data is in a VBO.
-          * Recall that for VBOs, the gl_vertex_array->Ptr field is
+          * Recall that for VBOs, the gl_client_array->Ptr field is
           * really an offset from the start of the VBO, not a pointer.
           */
          struct st_buffer_object *stobj = st_buffer_object(bufobj);
@@ -643,7 +640,7 @@ setup_non_interleaved_attribs(struct st_context *st,
 static void update_array(struct st_context *st)
 {
    struct gl_context *ctx = st->ctx;
-   const struct gl_vertex_array **arrays = ctx->Array._DrawArrays;
+   const struct gl_client_array **arrays = ctx->Array._DrawArrays;
    const struct st_vertex_program *vp;
    const struct st_vp_variant *vpv;
    struct pipe_vertex_buffer vbuffer[PIPE_MAX_SHADER_INPUTS];

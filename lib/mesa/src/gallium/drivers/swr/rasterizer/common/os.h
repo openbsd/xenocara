@@ -33,11 +33,8 @@
 
 #ifndef NOMINMAX
 #define NOMINMAX
-#include <windows.h>
-#undef NOMINMAX
-#else
-#include <windows.h>
 #endif
+#include <windows.h>
 #include <intrin.h>
 #include <cstdint>
 
@@ -47,19 +44,8 @@
 #endif
 
 #define OSALIGN(RWORD, WIDTH) __declspec(align(WIDTH)) RWORD
-
-#if defined(_DEBUG)
-// We compile Debug builds with inline function expansion enabled.  This allows
-// functions compiled with __forceinline to be inlined even in Debug builds.
-// The inline_depth(0) pragma below will disable inline function expansion for
-// normal INLINE / inline functions, but not for __forceinline functions.
-// Our SIMD function wrappers (see simdlib.hpp) use __forceinline even in
-// Debug builds.
-#define INLINE inline
-#pragma inline_depth(0)
-#else
+#define THREAD __declspec(thread)
 #define INLINE __forceinline
-#endif
 #define DEBUGBREAK __debugbreak()
 
 #define PRAGMA_WARNING_PUSH_DISABLE(...) \
@@ -119,6 +105,7 @@ typedef unsigned int    DWORD;
 #define MAX_PATH PATH_MAX
 
 #define OSALIGN(RWORD, WIDTH) RWORD __attribute__((aligned(WIDTH)))
+#define THREAD __thread
 #ifndef INLINE
 #define INLINE __inline
 #endif
@@ -171,12 +158,6 @@ void _mm256_storeu2_m128i(__m128i *hi, __m128i *lo, __m256i a)
     _mm_storeu_si128((__m128i*)lo, _mm256_castsi256_si128(a));
     _mm_storeu_si128((__m128i*)hi, _mm256_extractf128_si256(a, 0x1));
 }
-
-// gcc prior to 4.9 doesn't have _mm*_undefined_*
-#if (__GNUC__) && (GCC_VERSION < 409000)
-#define _mm_undefined_si128 _mm_setzero_si128
-#define _mm256_undefined_ps _mm256_setzero_ps
-#endif
 #endif
 
 inline
@@ -235,6 +216,8 @@ void AlignedFree(void* p)
 #define sprintf_s sprintf
 #define strcpy_s(dst,size,src) strncpy(dst,src,size)
 #define GetCurrentProcessId getpid
+pid_t gettid(void);
+#define GetCurrentThreadId gettid
 
 #define CreateDirectory(name, pSecurity) mkdir(name, 0777)
 
@@ -255,8 +238,6 @@ void AlignedFree(void* p)
 #error Unsupported OS/system.
 
 #endif
-
-#define THREAD thread_local
 
 // Universal types
 typedef uint8_t     KILOBYTE[1024];

@@ -59,7 +59,7 @@
 
 static boolean close_stream = FALSE;
 static FILE *stream = NULL;
-static mtx_t call_mutex = _MTX_INITIALIZER_NP;
+pipe_static_mutex(call_mutex);
 static long unsigned call_no = 0;
 static boolean dumping = FALSE;
 
@@ -134,6 +134,15 @@ trace_dump_newline(void)
 
 
 static inline void
+trace_dump_tag(const char *name)
+{
+   trace_dump_writes("<");
+   trace_dump_writes(name);
+   trace_dump_writes("/>");
+}
+
+
+static inline void
 trace_dump_tag_begin(const char *name)
 {
    trace_dump_writes("<");
@@ -152,6 +161,49 @@ trace_dump_tag_begin1(const char *name,
    trace_dump_writes("='");
    trace_dump_escape(value1);
    trace_dump_writes("'>");
+}
+
+
+static inline void
+trace_dump_tag_begin2(const char *name,
+                      const char *attr1, const char *value1,
+                      const char *attr2, const char *value2)
+{
+   trace_dump_writes("<");
+   trace_dump_writes(name);
+   trace_dump_writes(" ");
+   trace_dump_writes(attr1);
+   trace_dump_writes("=\'");
+   trace_dump_escape(value1);
+   trace_dump_writes("\' ");
+   trace_dump_writes(attr2);
+   trace_dump_writes("=\'");
+   trace_dump_escape(value2);
+   trace_dump_writes("\'>");
+}
+
+
+static inline void
+trace_dump_tag_begin3(const char *name,
+                      const char *attr1, const char *value1,
+                      const char *attr2, const char *value2,
+                      const char *attr3, const char *value3)
+{
+   trace_dump_writes("<");
+   trace_dump_writes(name);
+   trace_dump_writes(" ");
+   trace_dump_writes(attr1);
+   trace_dump_writes("=\'");
+   trace_dump_escape(value1);
+   trace_dump_writes("\' ");
+   trace_dump_writes(attr2);
+   trace_dump_writes("=\'");
+   trace_dump_escape(value2);
+   trace_dump_writes("\' ");
+   trace_dump_writes(attr3);
+   trace_dump_writes("=\'");
+   trace_dump_escape(value3);
+   trace_dump_writes("\'>");
 }
 
 
@@ -250,12 +302,12 @@ boolean trace_dump_trace_enabled(void)
 
 void trace_dump_call_lock(void)
 {
-   mtx_lock(&call_mutex);
+   pipe_mutex_lock(call_mutex);
 }
 
 void trace_dump_call_unlock(void)
 {
-   mtx_unlock(&call_mutex);
+   pipe_mutex_unlock(call_mutex);
 }
 
 /*
@@ -279,24 +331,24 @@ boolean trace_dumping_enabled_locked(void)
 
 void trace_dumping_start(void)
 {
-   mtx_lock(&call_mutex);
+   pipe_mutex_lock(call_mutex);
    trace_dumping_start_locked();
-   mtx_unlock(&call_mutex);
+   pipe_mutex_unlock(call_mutex);
 }
 
 void trace_dumping_stop(void)
 {
-   mtx_lock(&call_mutex);
+   pipe_mutex_lock(call_mutex);
    trace_dumping_stop_locked();
-   mtx_unlock(&call_mutex);
+   pipe_mutex_unlock(call_mutex);
 }
 
 boolean trace_dumping_enabled(void)
 {
    boolean ret;
-   mtx_lock(&call_mutex);
+   pipe_mutex_lock(call_mutex);
    ret = trace_dumping_enabled_locked();
-   mtx_unlock(&call_mutex);
+   pipe_mutex_unlock(call_mutex);
    return ret;
 }
 
@@ -343,14 +395,14 @@ void trace_dump_call_end_locked(void)
 
 void trace_dump_call_begin(const char *klass, const char *method)
 {
-   mtx_lock(&call_mutex);
+   pipe_mutex_lock(call_mutex);
    trace_dump_call_begin_locked(klass, method);
 }
 
 void trace_dump_call_end(void)
 {
    trace_dump_call_end_locked();
-   mtx_unlock(&call_mutex);
+   pipe_mutex_unlock(call_mutex);
 }
 
 void trace_dump_arg_begin(const char *name)
@@ -571,6 +623,20 @@ void trace_dump_ptr(const void *value)
       trace_dump_writef("<ptr>0x%08lx</ptr>", (unsigned long)(uintptr_t)value);
    else
       trace_dump_null();
+}
+
+
+void trace_dump_resource_ptr(struct pipe_resource *_resource)
+{
+   if (!dumping)
+      return;
+
+   if (_resource) {
+      struct trace_resource *tr_resource = trace_resource(_resource);
+      trace_dump_ptr(tr_resource->resource);
+   } else {
+      trace_dump_null();
+   }
 }
 
 void trace_dump_surface_ptr(struct pipe_surface *_surface)

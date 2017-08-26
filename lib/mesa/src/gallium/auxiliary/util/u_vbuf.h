@@ -40,8 +40,6 @@
 struct cso_context;
 struct u_vbuf;
 
-#define U_VBUF_FLAG_NO_USER_VBOS (1 << 0)
-
 /* Hardware vertex fetcher limitations can be described by this structure. */
 struct u_vbuf_caps {
    enum pipe_format format_translation[PIPE_FORMAT_COUNT];
@@ -57,8 +55,7 @@ struct u_vbuf_caps {
 };
 
 
-boolean u_vbuf_get_caps(struct pipe_screen *screen, struct u_vbuf_caps *caps,
-                        unsigned flags);
+boolean u_vbuf_get_caps(struct pipe_screen *screen, struct u_vbuf_caps *caps);
 
 struct u_vbuf *
 u_vbuf_create(struct pipe_context *pipe,

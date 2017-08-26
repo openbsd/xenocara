@@ -37,6 +37,7 @@
 
 #include "brw_defines.h"
 #include "brw_context.h"
+#include "brw_eu.h"
 #include "brw_clip.h"
 
 

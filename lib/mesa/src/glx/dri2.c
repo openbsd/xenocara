@@ -94,6 +94,7 @@ DRI2WireToEvent(Display *dpy, XEvent *event, xEvent *wire)
 
    switch ((wire->u.u.type & 0x7f) - info->codes->first_event) {
 
+#ifdef X_DRI2SwapBuffers
    case DRI2_BufferSwapComplete:
    {
       GLXBufferSwapComplete *aevent = (GLXBufferSwapComplete *)event;
@@ -142,6 +143,8 @@ DRI2WireToEvent(Display *dpy, XEvent *event, xEvent *wire)
 
       return True;
    }
+#endif
+#ifdef DRI2_InvalidateBuffers
    case DRI2_InvalidateBuffers:
    {
       xDRI2InvalidateBuffers *awire = (xDRI2InvalidateBuffers *)wire;
@@ -149,6 +152,7 @@ DRI2WireToEvent(Display *dpy, XEvent *event, xEvent *wire)
       dri2InvalidateBuffers(dpy, awire->drawable);
       return False;
    }
+#endif
    default:
       /* client doesn't support server event */
       break;
@@ -281,6 +285,7 @@ DRI2Connect(Display * dpy, XID window, char **driverName, char **deviceName)
    req->window = window;
 
    req->driverType = DRI2DriverDRI;
+#ifdef DRI2DriverPrimeShift
    {
       char *prime = getenv("DRI_PRIME");
       if (prime) {
@@ -292,6 +297,7 @@ DRI2Connect(Display * dpy, XID window, char **driverName, char **deviceName)
                ((primeid & DRI2DriverPrimeMask) << DRI2DriverPrimeShift);
       }
    }
+#endif
 
    if (!_XReply(dpy, (xReply *) & rep, 0, xFalse)) {
       UnlockDisplay(dpy);

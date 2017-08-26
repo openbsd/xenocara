@@ -111,13 +111,13 @@ st_texture_create(struct st_context *st,
  */
 void
 st_gl_texture_dims_to_pipe_dims(GLenum texture,
-                                unsigned widthIn,
-                                uint16_t heightIn,
-                                uint16_t depthIn,
-                                unsigned *widthOut,
-                                uint16_t *heightOut,
-                                uint16_t *depthOut,
-                                uint16_t *layersOut)
+                                GLuint widthIn,
+                                GLuint heightIn,
+                                GLuint depthIn,
+                                GLuint *widthOut,
+                                GLuint *heightOut,
+                                GLuint *depthOut,
+                                GLuint *layersOut)
 {
    switch (texture) {
    case GL_TEXTURE_1D:
@@ -202,8 +202,7 @@ st_texture_match_image(struct st_context *st,
                        const struct pipe_resource *pt,
                        const struct gl_texture_image *image)
 {
-   unsigned ptWidth;
-   uint16_t ptHeight, ptDepth, ptLayers;
+   GLuint ptWidth, ptHeight, ptDepth, ptLayers;
 
    /* Images with borders are never pulled into mipmap textures. 
     */

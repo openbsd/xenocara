@@ -33,7 +33,7 @@ extern "C" {
 ** used to make the header, and the header can be found at
 **   http://www.opengl.org/registry/
 **
-** Khronos $Revision: 1.7 $ on $Date: 2017/08/14 09:57:57 $
+** Khronos $Revision: 1.8 $ on $Date: 2017/08/26 16:59:18 $
 */
 
 #define GLX_GLXEXT_VERSION 20160531

@@ -41,9 +41,7 @@ VkBool32 anv_GetPhysicalDeviceXcbPresentationSupportKHR(
    return wsi_get_physical_device_xcb_presentation_support(
       &device->wsi_device,
       &device->instance->alloc,
-      queueFamilyIndex,
-      device->local_fd, false,
-      connection, visual_id);
+      queueFamilyIndex, connection, visual_id);
 }
 
 VkBool32 anv_GetPhysicalDeviceXlibPresentationSupportKHR(
@@ -57,9 +55,7 @@ VkBool32 anv_GetPhysicalDeviceXlibPresentationSupportKHR(
    return wsi_get_physical_device_xcb_presentation_support(
       &device->wsi_device,
       &device->instance->alloc,
-      queueFamilyIndex,
-      device->local_fd, false,
-      XGetXCBConnection(dpy), visualID);
+      queueFamilyIndex, XGetXCBConnection(dpy), visualID);
 }
 
 VkResult anv_CreateXcbSurfaceKHR(

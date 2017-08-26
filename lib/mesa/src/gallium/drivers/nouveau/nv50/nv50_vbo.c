@@ -702,7 +702,6 @@ nv50_draw_elements(struct nv50_context *nv50, bool shorten,
          prim |= NV50_3D_VERTEX_BEGIN_GL_INSTANCE_NEXT;
       }
    }
-   NOUVEAU_DRV_STAT(&nv50->screen->base, draw_calls_indexed, 1);
 }
 
 static void
@@ -822,12 +821,6 @@ nv50_draw_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info)
       nv50->state.seamless_cube_map = nv50->seamless_cube_map;
       BEGIN_NV04(push, SUBC_3D(NVA0_3D_TEX_MISC), 1);
       PUSH_DATA (push, nv50->seamless_cube_map ? NVA0_3D_TEX_MISC_SEAMLESS_CUBE_MAP : 0);
-   }
-
-   if (nv50->vertprog->mul_zero_wins != nv50->state.mul_zero_wins) {
-      nv50->state.mul_zero_wins = nv50->vertprog->mul_zero_wins;
-      BEGIN_NV04(push, NV50_3D(UNK1690), 1);
-      PUSH_DATA (push, 0x00010000 * !!nv50->state.mul_zero_wins);
    }
 
    if (nv50->vbo_fifo) {

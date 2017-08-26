@@ -119,7 +119,6 @@ nv50_blend_state_create(struct pipe_context *pipe,
    struct nv50_blend_stateobj *so = CALLOC_STRUCT(nv50_blend_stateobj);
    int i;
    bool emit_common_func = cso->rt[0].blend_enable;
-   uint32_t ms;
 
    if (nv50_context(pipe)->screen->tesla->oclass >= NVA3_3D_CLASS) {
       SB_BEGIN_3D(so, BLEND_INDEPENDENT, 1);
@@ -190,15 +189,6 @@ nv50_blend_state_create(struct pipe_context *pipe,
       SB_BEGIN_3D(so, COLOR_MASK(0), 1);
       SB_DATA    (so, nv50_colormask(cso->rt[0].colormask));
    }
-
-   ms = 0;
-   if (cso->alpha_to_coverage)
-      ms |= NV50_3D_MULTISAMPLE_CTRL_ALPHA_TO_COVERAGE;
-   if (cso->alpha_to_one)
-      ms |= NV50_3D_MULTISAMPLE_CTRL_ALPHA_TO_ONE;
-
-   SB_BEGIN_3D(so, MULTISAMPLE_CTRL, 1);
-   SB_DATA    (so, ms);
 
    assert(so->size <= ARRAY_SIZE(so->state));
    return so;
@@ -859,8 +849,7 @@ nv50_cp_state_bind(struct pipe_context *pipe, void *hwcso)
 }
 
 static void
-nv50_set_constant_buffer(struct pipe_context *pipe,
-                         enum pipe_shader_type shader, uint index,
+nv50_set_constant_buffer(struct pipe_context *pipe, uint shader, uint index,
                          const struct pipe_constant_buffer *cb)
 {
    struct nv50_context *nv50 = nv50_context(pipe);

@@ -1385,7 +1385,7 @@ _mesa_PopAttrib(void)
                struct texture_state *texstate
                   = (struct texture_state *) attr->data;
                pop_texture_group(ctx, texstate);
-	       ctx->NewState |= _NEW_TEXTURE_OBJECT | _NEW_TEXTURE_STATE;
+	       ctx->NewState |= _NEW_TEXTURE;
             }
             break;
          case GL_VIEWPORT_BIT:
@@ -1485,7 +1485,7 @@ copy_array_object(struct gl_context *ctx,
    for (i = 0; i < ARRAY_SIZE(src->VertexAttrib); i++) {
       _mesa_copy_client_array(ctx, &dest->_VertexAttrib[i], &src->_VertexAttrib[i]);
       _mesa_copy_vertex_attrib_array(ctx, &dest->VertexAttrib[i], &src->VertexAttrib[i]);
-      _mesa_copy_vertex_buffer_binding(ctx, &dest->BufferBinding[i], &src->BufferBinding[i]);
+      _mesa_copy_vertex_buffer_binding(ctx, &dest->VertexBinding[i], &src->VertexBinding[i]);
    }
 
    /* _Enabled must be the same than on push */

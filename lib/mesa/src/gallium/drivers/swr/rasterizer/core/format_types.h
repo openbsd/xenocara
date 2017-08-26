@@ -42,7 +42,7 @@ struct PackTraits
     static simdscalar pack(simdscalar &in) = delete;
 #if ENABLE_AVX512_SIMD16
     static simd16scalar loadSOA_16(const uint8_t *pSrc) = delete;
-    static void SIMDAPI storeSOA(uint8_t *pDst, simd16scalar src) = delete;
+    static void storeSOA(uint8_t *pDst, simd16scalar src) = delete;
     static simd16scalar unpack(simd16scalar &in) = delete;
     static simd16scalar pack(simd16scalar &in) = delete;
 #endif
@@ -62,7 +62,7 @@ struct PackTraits<0, false>
     static simdscalar pack(simdscalar &in) { return _simd_setzero_ps(); }
 #if ENABLE_AVX512_SIMD16
     static simd16scalar loadSOA_16(const uint8_t *pSrc) { return _simd16_setzero_ps(); }
-    static void SIMDAPI storeSOA(uint8_t *pDst, simd16scalar src) { return; }
+    static void storeSOA(uint8_t *pDst, simd16scalar src) { return; }
     static simd16scalar unpack(simd16scalar &in) { return _simd16_setzero_ps(); }
     static simd16scalar pack(simd16scalar &in) { return _simd16_setzero_ps(); }
 #endif
@@ -82,6 +82,16 @@ struct PackTraits<8, false>
         __m256 result = _mm256_setzero_ps();
         __m128 vLo = _mm_castpd_ps(_mm_load_sd((double*)pSrc));
         return _mm256_insertf128_ps(result, vLo, 0);
+#elif KNOB_SIMD_WIDTH == 16
+#if ENABLE_AVX512_EMULATION
+        simdscalar result = _simd_setzero_ps();
+
+        __m128 src = _mm_load_ps(reinterpret_cast<const float*>(pSrc));
+
+        result.lo = _mm256_insertf128_ps(result.lo, src, 0);
+
+        return result;
+#endif
 #else
 #error Unsupported vector width
 #endif
@@ -92,6 +102,10 @@ struct PackTraits<8, false>
         // store simd bytes
 #if KNOB_SIMD_WIDTH == 8
         _mm_storel_pd((double*)pDst, _mm_castps_pd(_mm256_castps256_ps128(src)));
+#elif KNOB_SIMD_WIDTH == 16
+#if ENABLE_AVX512_EMULATION
+        _mm_store_ps(reinterpret_cast<float*>(pDst), _mm256_castps256_ps128(src.lo));
+#endif
 #else
 #error Unsupported vector width
 #endif
@@ -100,7 +114,7 @@ struct PackTraits<8, false>
     static simdscalar unpack(simdscalar &in)
     {
 #if KNOB_SIMD_WIDTH == 8
-#if KNOB_ARCH <= KNOB_ARCH_AVX
+#if KNOB_ARCH==KNOB_ARCH_AVX
         __m128i src = _mm_castps_si128(_mm256_castps256_ps128(in));
         __m128i resLo = _mm_cvtepu8_epi32(src);
         __m128i resHi = _mm_shuffle_epi8(src,
@@ -109,8 +123,20 @@ struct PackTraits<8, false>
         __m256i result = _mm256_castsi128_si256(resLo);
         result = _mm256_insertf128_si256(result, resHi, 1);
         return _mm256_castsi256_ps(result);
-#else
+#elif KNOB_ARCH>=KNOB_ARCH_AVX2
         return _mm256_castsi256_ps(_mm256_cvtepu8_epi32(_mm_castps_si128(_mm256_castps256_ps128(in))));
+#endif
+#elif KNOB_SIMD_WIDTH == 16
+#if ENABLE_AVX512_EMULATION
+        simdscalari result;
+
+        __m128i src = _mm_castps_si128(_mm256_castps256_ps128(in.lo));
+
+        result.lo = _mm256_cvtepu8_epi32(src);
+
+        result.hi = _mm256_cvtepu8_epi32(_mm_srli_si128(src, 8));
+
+        return _simd_castsi_ps(result);
 #endif
 #else
 #error Unsupported vector width
@@ -124,6 +150,20 @@ struct PackTraits<8, false>
         __m128i res16 = _mm_packus_epi32(_mm256_castsi256_si128(src), _mm256_extractf128_si256(src, 1));
         __m128i res8 = _mm_packus_epi16(res16, _mm_undefined_si128());
         return _mm256_castsi256_ps(_mm256_castsi128_si256(res8));
+#elif KNOB_SIMD_WIDTH == 16
+#if ENABLE_AVX512_EMULATION
+        simdscalari result = _simd_setzero_si();
+
+        __m128i templo = _mm_packus_epi32(_mm256_castsi256_si128(_mm256_castps_si256(in.lo)), _mm256_extractf128_si256(_mm256_castps_si256(in.lo), 1));
+
+        __m128i temphi = _mm_packus_epi32(_mm256_castsi256_si128(_mm256_castps_si256(in.hi)), _mm256_extractf128_si256(_mm256_castps_si256(in.hi), 1));
+
+        __m128i temp = _mm_packus_epi16(templo, temphi);
+
+        result.lo = _mm256_insertf128_si256(result.lo, temp, 0);
+
+        return _simd_castsi_ps(result);
+#endif
 #else
 #error Unsupported vector width
 #endif
@@ -143,7 +183,7 @@ struct PackTraits<8, false>
         return result;
     }
 
-    static void SIMDAPI storeSOA(uint8_t *pDst, simd16scalar src)
+    static void storeSOA(uint8_t *pDst, simd16scalar src)
     {
         // store simd16 bytes
         _mm_store_ps(reinterpret_cast<float *>(pDst), _mm256_castps256_ps128(_simd16_extract_ps(src, 0)));
@@ -151,7 +191,12 @@ struct PackTraits<8, false>
 
     static simd16scalar unpack(simd16scalar &in)
     {
-        simd16scalari result = _simd16_cvtepu8_epi32(_mm_castps_si128(_mm256_castps256_ps128(_simd16_extract_ps(in, 0))));
+        simd16scalari result = _simd16_setzero_si();
+
+        __m128i src = _mm_castps_si128(_mm256_castps256_ps128(_simd16_extract_ps(in, 0)));
+
+        result = _simd16_insert_si(result, _simd_cvtepu8_epi32(src), 0);
+        result = _simd16_insert_si(result, _simd_cvtepu8_epi32(_mm_srli_si128(src, 8)), 1);
 
         return _simd16_castsi_ps(result);
     }
@@ -159,23 +204,15 @@ struct PackTraits<8, false>
     static simd16scalar pack(simd16scalar &in)
     {
         simd16scalari result = _simd16_setzero_si();
+        simdscalari resultlo = _simd_setzero_si();
 
-        simdscalari inlo = _simd_castps_si(_simd16_extract_ps(in, 0));          // r0 r1 r2 r3 r4 r5 r6 r7 (32b)
-        simdscalari inhi = _simd_castps_si(_simd16_extract_ps(in, 1));          // r8 r9 rA rB rC rD rE rF
+        __m128i templo = _mm_packus_epi32(_mm256_castsi256_si128(_mm256_castps_si256(_simd16_extract_ps(in, 0))), _mm256_extractf128_si256(_mm256_castps_si256(_simd16_extract_ps(in, 0)), 1));
+        __m128i temphi = _mm_packus_epi32(_mm256_castsi256_si128(_mm256_castps_si256(_simd16_extract_ps(in, 1))), _mm256_extractf128_si256(_mm256_castps_si256(_simd16_extract_ps(in, 1)), 1));
 
-        simdscalari permlo = _simd_permute2f128_si(inlo, inhi, 0x20);           // r0 r1 r2 r3 r8 r9 rA rB (32b)
-        simdscalari permhi = _simd_permute2f128_si(inlo, inhi, 0x31);           // r4 r5 r6 r7 rC rD rE rF (32b)
+        __m128i temp = _mm_packus_epi16(templo, temphi);
 
-        simdscalari pack = _simd_packus_epi32(permlo, permhi);                  // r0 r1 r2 r3 r4 r5 r6 r7 r8 r9 rA rB rC rD rE rF (16b)
-
-        const simdscalari zero = _simd_setzero_si();
-
-        permlo = _simd_permute2f128_si(pack, zero, 0x20);   // (2, 0)           // r0 r1 r2 r3 r4 r5 r6 r7 00 00 00 00 00 00 00 00 (16b)
-        permhi = _simd_permute2f128_si(pack, zero, 0x31);   // (3, 1)           // r8 r9 rA rB rC rD rE rF 00 00 00 00 00 00 00 00 (16b)
-
-        pack = _simd_packus_epi16(permlo, permhi);                              // r0 r1 r2 r3 r4 r5 r6 r7 r8 r9 rA rB rC rD rE rF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 (8b)
-
-        result = _simd16_insert_si(result, pack, 0);
+        resultlo = _mm256_inserti128_si256(resultlo, temp, 0);
+        result = _simd16_insert_si(result, resultlo, 0);
 
         return _simd16_castsi_ps(result);
     }
@@ -196,6 +233,16 @@ struct PackTraits<8, true>
         __m256 result = _mm256_setzero_ps();
         __m128 vLo = _mm_castpd_ps(_mm_load_sd((double*)pSrc));
         return _mm256_insertf128_ps(result, vLo, 0);
+#elif KNOB_SIMD_WIDTH == 16
+#if ENABLE_AVX512_EMULATION
+        simdscalar result = _simd_setzero_ps();
+
+        __m128 src = _mm_load_ps(reinterpret_cast<const float*>(pSrc));
+
+        result.lo = _mm256_insertf128_ps(result.lo, src, 0);
+
+        return result;
+#endif
 #else
 #error Unsupported vector width
 #endif
@@ -206,6 +253,10 @@ struct PackTraits<8, true>
         // store simd bytes
 #if KNOB_SIMD_WIDTH == 8
         _mm_storel_pd((double*)pDst, _mm_castps_pd(_mm256_castps256_ps128(src)));
+#elif KNOB_SIMD_WIDTH == 16
+#if ENABLE_AVX512_EMULATION
+        _mm_store_ps(reinterpret_cast<float*>(pDst), _mm256_castps256_ps128(src.lo));
+#endif
 #else
 #error Unsupported vector width
 #endif
@@ -214,8 +265,8 @@ struct PackTraits<8, true>
     static simdscalar unpack(simdscalar &in)
     {
 #if KNOB_SIMD_WIDTH == 8
-#if KNOB_ARCH <= KNOB_ARCH_AVX
-        SWR_INVALID("I think this may be incorrect.");
+#if KNOB_ARCH==KNOB_ARCH_AVX
+        SWR_ASSERT(0); // I think this may be incorrect.
         __m128i src = _mm_castps_si128(_mm256_castps256_ps128(in));
         __m128i resLo = _mm_cvtepi8_epi32(src);
         __m128i resHi = _mm_shuffle_epi8(src,
@@ -224,8 +275,20 @@ struct PackTraits<8, true>
         __m256i result = _mm256_castsi128_si256(resLo);
         result = _mm256_insertf128_si256(result, resHi, 1);
         return _mm256_castsi256_ps(result);
-#else
+#elif KNOB_ARCH>=KNOB_ARCH_AVX2
         return _mm256_castsi256_ps(_mm256_cvtepi8_epi32(_mm_castps_si128(_mm256_castps256_ps128(in))));
+#endif
+#elif KNOB_SIMD_WIDTH == 16
+#if ENABLE_AVX512_EMULATION
+        simdscalari result;
+
+        __m128i src = _mm_castps_si128(_mm256_castps256_ps128(in.lo));
+
+        result.lo = _mm256_cvtepu8_epi32(src);
+
+        result.hi = _mm256_cvtepu8_epi32(_mm_srli_si128(src, 8));
+
+        return _simd_castsi_ps(result);
 #endif
 #else
 #error Unsupported vector width
@@ -239,6 +302,20 @@ struct PackTraits<8, true>
         __m128i res16 = _mm_packs_epi32(_mm256_castsi256_si128(src), _mm256_extractf128_si256(src, 1));
         __m128i res8 = _mm_packs_epi16(res16, _mm_undefined_si128());
         return _mm256_castsi256_ps(_mm256_castsi128_si256(res8));
+#elif KNOB_SIMD_WIDTH == 16
+#if ENABLE_AVX512_EMULATION
+        simdscalari result = _simd_setzero_si();
+
+        __m128i templo = _mm_packs_epi32(_mm256_castsi256_si128(_mm256_castps_si256(in.lo)), _mm256_extractf128_si256(_mm256_castps_si256(in.lo), 1));
+
+        __m128i temphi = _mm_packs_epi32(_mm256_castsi256_si128(_mm256_castps_si256(in.hi)), _mm256_extractf128_si256(_mm256_castps_si256(in.hi), 1));
+
+        __m128i temp = _mm_packs_epi16(templo, temphi);
+
+        result.lo = _mm256_insertf128_si256(result.lo, temp, 0);
+
+        return _simd_castsi_ps(result);
+#endif
 #else
 #error Unsupported vector width
 #endif
@@ -258,7 +335,7 @@ struct PackTraits<8, true>
         return result;
     }
 
-    static void SIMDAPI storeSOA(uint8_t *pDst, simd16scalar src)
+    static void storeSOA(uint8_t *pDst, simd16scalar src)
     {
         // store simd16 bytes
         _mm_store_ps(reinterpret_cast<float *>(pDst), _mm256_castps256_ps128(_simd16_extract_ps(src, 0)));
@@ -266,7 +343,12 @@ struct PackTraits<8, true>
 
     static simd16scalar unpack(simd16scalar &in)
     {
-        simd16scalari result = _simd16_cvtepu8_epi32(_mm_castps_si128(_mm256_castps256_ps128(_simd16_extract_ps(in, 0))));
+        simd16scalari result = _simd16_setzero_si();
+
+        __m128i src = _mm_castps_si128(_mm256_castps256_ps128(_simd16_extract_ps(in, 0)));
+
+        result = _simd16_insert_si(result, _simd_cvtepu8_epi32(src), 0);
+        result = _simd16_insert_si(result, _simd_cvtepu8_epi32(_mm_srli_si128(src, 8)), 1);
 
         return _simd16_castsi_ps(result);
     }
@@ -274,23 +356,15 @@ struct PackTraits<8, true>
     static simd16scalar pack(simd16scalar &in)
     {
         simd16scalari result = _simd16_setzero_si();
+        simdscalari resultlo = _simd_setzero_si();
 
-        simdscalari inlo = _simd_castps_si(_simd16_extract_ps(in, 0));          // r0 r1 r2 r3 r4 r5 r6 r7 (32b)
-        simdscalari inhi = _simd_castps_si(_simd16_extract_ps(in, 1));          // r8 r9 rA rB rC rD rE rF
+        __m128i templo = _mm_packs_epi32(_mm256_castsi256_si128(_mm256_castps_si256(_simd16_extract_ps(in, 0))), _mm256_extractf128_si256(_mm256_castps_si256(_simd16_extract_ps(in, 0)), 1));
+        __m128i temphi = _mm_packs_epi32(_mm256_castsi256_si128(_mm256_castps_si256(_simd16_extract_ps(in, 1))), _mm256_extractf128_si256(_mm256_castps_si256(_simd16_extract_ps(in, 1)), 1));
 
-        simdscalari permlo = _simd_permute2f128_si(inlo, inhi, 0x20);           // r0 r1 r2 r3 r8 r9 rA rB (32b)
-        simdscalari permhi = _simd_permute2f128_si(inlo, inhi, 0x31);           // r4 r5 r6 r7 rC rD rE rF (32b)
+        __m128i temp = _mm_packs_epi16(templo, temphi);
 
-        simdscalari pack = _simd_packs_epi32(permlo, permhi);                   // r0 r1 r2 r3 r4 r5 r6 r7 r8 r9 rA rB rC rD rE rF (16b)
-
-        const simdscalari zero = _simd_setzero_si();
-
-        permlo = _simd_permute2f128_si(pack, zero, 0x20);   // (2, 0)           // r0 r1 r2 r3 r4 r5 r6 r7 00 00 00 00 00 00 00 00 (16b)
-        permhi = _simd_permute2f128_si(pack, zero, 0x31);   // (3, 1)           // r8 r9 rA rB rC rD rE rF 00 00 00 00 00 00 00 00 (16b)
-
-        pack = _simd_packs_epi16(permlo, permhi);                               // r0 r1 r2 r3 r4 r5 r6 r7 r8 r9 rA rB rC rD rE rF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 (8b)
-
-        result = _simd16_insert_si(result, pack, 0);
+        resultlo = _mm256_inserti128_si256(resultlo, temp, 0);
+        result = _simd16_insert_si(result, resultlo, 0);
 
         return _simd16_castsi_ps(result);
     }
@@ -311,6 +385,16 @@ struct PackTraits<16, false>
         __m256 result = _mm256_setzero_ps();
         __m128 vLo = _mm_load_ps((const float*)pSrc);
         return _mm256_insertf128_ps(result, vLo, 0);
+#elif KNOB_SIMD_WIDTH == 16
+#if ENABLE_AVX512_EMULATION
+        simdscalar result;
+
+        result.lo = _mm256_load_ps(reinterpret_cast<const float*>(pSrc));
+
+        result.hi = _mm256_undefined_ps();
+
+        return result;
+#endif
 #else
 #error Unsupported vector width
 #endif
@@ -321,6 +405,10 @@ struct PackTraits<16, false>
 #if KNOB_SIMD_WIDTH == 8
         // store 16B (2B * 8)
         _mm_store_ps((float*)pDst, _mm256_castps256_ps128(src));
+#elif KNOB_SIMD_WIDTH == 16
+#if ENABLE_AVX512_EMULATION
+        _mm256_store_ps(reinterpret_cast<float*>(pDst), src.lo);
+#endif
 #else
 #error Unsupported vector width
 #endif
@@ -329,7 +417,7 @@ struct PackTraits<16, false>
     static simdscalar unpack(simdscalar &in)
     {
 #if KNOB_SIMD_WIDTH == 8
-#if KNOB_ARCH <= KNOB_ARCH_AVX
+#if KNOB_ARCH==KNOB_ARCH_AVX
         __m128i src = _mm_castps_si128(_mm256_castps256_ps128(in));
         __m128i resLo = _mm_cvtepu16_epi32(src);
         __m128i resHi = _mm_shuffle_epi8(src,
@@ -338,8 +426,18 @@ struct PackTraits<16, false>
         __m256i result = _mm256_castsi128_si256(resLo);
         result = _mm256_insertf128_si256(result, resHi, 1);
         return _mm256_castsi256_ps(result);
-#else
+#elif KNOB_ARCH>=KNOB_ARCH_AVX2
         return _mm256_castsi256_ps(_mm256_cvtepu16_epi32(_mm_castps_si128(_mm256_castps256_ps128(in))));
+#endif
+#elif KNOB_SIMD_WIDTH == 16
+#if ENABLE_AVX512_EMULATION
+        simdscalari result;
+
+        result.lo = _mm256_cvtepu16_epi32(_mm256_extracti128_si256(_mm256_castps_si256(in.lo), 0));
+
+        result.hi = _mm256_cvtepu16_epi32(_mm256_extracti128_si256(_mm256_castps_si256(in.lo), 1));
+
+        return _simd_castsi_ps(result);
 #endif
 #else
 #error Unsupported vector width
@@ -352,6 +450,21 @@ struct PackTraits<16, false>
         simdscalari src = _simd_castps_si(in);
         __m256i res = _mm256_castsi128_si256(_mm_packus_epi32(_mm256_castsi256_si128(src), _mm256_extractf128_si256(src, 1)));
         return _mm256_castsi256_ps(res);
+#elif KNOB_SIMD_WIDTH == 16
+#if ENABLE_AVX512_EMULATION
+        simdscalari result;
+
+        __m256i inlo = _mm256_castps_si256(in.lo);
+        __m256i inhi = _mm256_castps_si256(in.hi);
+
+        __m256i templo = _mm256_permute2x128_si256(inlo, inhi, 0x20);
+        __m256i temphi = _mm256_permute2x128_si256(inlo, inhi, 0x31);
+
+        result.lo = _mm256_packus_epi32(templo, temphi);
+        result.hi = _mm256_undefined_si256();
+
+        return _simd_castsi_ps(result);
+#endif
 #else
 #error Unsupported vector width
 #endif
@@ -369,26 +482,32 @@ struct PackTraits<16, false>
         return result;
     }
 
-    static void SIMDAPI storeSOA(uint8_t *pDst, simd16scalar src)
+    static void storeSOA(uint8_t *pDst, simd16scalar src)
     {
         _simd_store_ps(reinterpret_cast<float *>(pDst), _simd16_extract_ps(src, 0));
     }
 
     static simd16scalar unpack(simd16scalar &in)
     {
-        simd16scalari result = _simd16_cvtepu16_epi32(_simd_castps_si(_simd16_extract_ps(in, 0)));
+        simd16scalari result = _simd16_setzero_si();
+
+        result = _simd16_insert_si(result, _simd_cvtepu16_epi32(_mm256_extracti128_si256(_mm256_castps_si256(_simd16_extract_ps(in, 0)), 0)), 0);
+        result = _simd16_insert_si(result, _simd_cvtepu16_epi32(_mm256_extracti128_si256(_mm256_castps_si256(_simd16_extract_ps(in, 0)), 1)), 1);
 
         return _simd16_castsi_ps(result);
     }
 
     static simd16scalar pack(simd16scalar &in)
     {
-        const simd16scalari zero = _simd16_setzero_si();
+        simd16scalari result = _simd16_setzero_si();
 
-        simd16scalari permlo = _simd16_permute2f128_si(_simd16_castps_si(in), zero, 0x08);  // (0, 0, 2, 0) // r0 r1 r2 r3 r8 r9 rA rB 00 00 00 00 00 00 00 00 (32b)
-        simd16scalari permhi = _simd16_permute2f128_si(_simd16_castps_si(in), zero, 0x0D);  // (0, 0, 3, 1) // r4 r5 r6 r7 rC rD rE rF 00 00 00 00 00 00 00 00
+        simdscalari inlo = _simd_castps_si(_simd16_extract_ps(in, 0));
+        simdscalari inhi = _simd_castps_si(_simd16_extract_ps(in, 1));
 
-        simd16scalari result = _simd16_packus_epi32(permlo, permhi);    // r0 r1 r2 r3 r4 r5 r6 r7 r8 r9 rA rB rC rD rE rF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 (16b)
+        simdscalari templo = _simd_permute2f128_si(inlo, inhi, 0x20);
+        simdscalari temphi = _simd_permute2f128_si(inlo, inhi, 0x31);
+
+        result = _simd16_insert_si(result, _simd_packus_epi32(templo, temphi), 0);
 
         return _simd16_castsi_ps(result);
     }
@@ -409,6 +528,16 @@ struct PackTraits<16, true>
         __m256 result = _mm256_setzero_ps();
         __m128 vLo = _mm_load_ps((const float*)pSrc);
         return _mm256_insertf128_ps(result, vLo, 0);
+#elif KNOB_SIMD_WIDTH == 16
+#if ENABLE_AVX512_EMULATION
+        simdscalar result;
+
+        result.lo = _mm256_load_ps(reinterpret_cast<const float*>(pSrc));
+
+        result.hi = _mm256_undefined_ps();
+
+        return result;
+#endif
 #else
 #error Unsupported vector width
 #endif
@@ -419,6 +548,10 @@ struct PackTraits<16, true>
 #if KNOB_SIMD_WIDTH == 8
         // store 16B (2B * 8)
         _mm_store_ps((float*)pDst, _mm256_castps256_ps128(src));
+#elif KNOB_SIMD_WIDTH == 16
+#if ENABLE_AVX512_EMULATION
+        _mm256_store_ps(reinterpret_cast<float*>(pDst), src.lo);
+#endif
 #else
 #error Unsupported vector width
 #endif
@@ -427,8 +560,8 @@ struct PackTraits<16, true>
     static simdscalar unpack(simdscalar &in)
     {
 #if KNOB_SIMD_WIDTH == 8
-#if KNOB_ARCH <= KNOB_ARCH_AVX
-        SWR_INVALID("I think this may be incorrect.");
+#if KNOB_ARCH==KNOB_ARCH_AVX
+        SWR_ASSERT(0); // I think this is incorrectly implemented
         __m128i src = _mm_castps_si128(_mm256_castps256_ps128(in));
         __m128i resLo = _mm_cvtepi16_epi32(src);
         __m128i resHi = _mm_shuffle_epi8(src,
@@ -437,8 +570,18 @@ struct PackTraits<16, true>
         __m256i result = _mm256_castsi128_si256(resLo);
         result = _mm256_insertf128_si256(result, resHi, 1);
         return _mm256_castsi256_ps(result);
-#else
+#elif KNOB_ARCH>=KNOB_ARCH_AVX2
         return _mm256_castsi256_ps(_mm256_cvtepi16_epi32(_mm_castps_si128(_mm256_castps256_ps128(in))));
+#endif
+#elif KNOB_SIMD_WIDTH == 16
+#if ENABLE_AVX512_EMULATION
+        simdscalari result;
+
+        result.lo = _mm256_cvtepu16_epi32(_mm256_extracti128_si256(_mm256_castps_si256(in.lo), 0));
+
+        result.hi = _mm256_cvtepu16_epi32(_mm256_extracti128_si256(_mm256_castps_si256(in.lo), 1));
+
+        return _simd_castsi_ps(result);
 #endif
 #else
 #error Unsupported vector width
@@ -451,6 +594,21 @@ struct PackTraits<16, true>
         simdscalari src = _simd_castps_si(in);
         __m256i res = _mm256_castsi128_si256(_mm_packs_epi32(_mm256_castsi256_si128(src), _mm256_extractf128_si256(src, 1)));
         return _mm256_castsi256_ps(res);
+#elif KNOB_SIMD_WIDTH == 16
+#if ENABLE_AVX512_EMULATION
+        simdscalari result;
+
+        __m256i inlo = _mm256_castps_si256(in.lo);
+        __m256i inhi = _mm256_castps_si256(in.hi);
+
+        __m256i templo = _mm256_permute2x128_si256(inlo, inhi, 0x20);
+        __m256i temphi = _mm256_permute2x128_si256(inlo, inhi, 0x31);
+
+        result.lo = _mm256_packs_epi32(templo, temphi);
+        result.hi = _mm256_undefined_si256();
+
+        return _simd_castsi_ps(result);
+#endif
 #else
 #error Unsupported vector width
 #endif
@@ -468,26 +626,32 @@ struct PackTraits<16, true>
         return result;
     }
 
-    static void SIMDAPI storeSOA(uint8_t *pDst, simd16scalar src)
+    static void storeSOA(uint8_t *pDst, simd16scalar src)
     {
         _simd_store_ps(reinterpret_cast<float *>(pDst), _simd16_extract_ps(src, 0));
     }
 
     static simd16scalar unpack(simd16scalar &in)
     {
-        simd16scalari result = _simd16_cvtepu16_epi32(_simd_castps_si(_simd16_extract_ps(in, 0)));
+        simd16scalari result = _simd16_setzero_si();
+
+        result = _simd16_insert_si(result, _simd_cvtepu16_epi32(_mm256_extracti128_si256(_mm256_castps_si256(_simd16_extract_ps(in, 0)), 0)), 0);
+        result = _simd16_insert_si(result, _simd_cvtepu16_epi32(_mm256_extracti128_si256(_mm256_castps_si256(_simd16_extract_ps(in, 0)), 1)), 1);
 
         return _simd16_castsi_ps(result);
     }
 
     static simd16scalar pack(simd16scalar &in)
     {
-        const simd16scalari zero = _simd16_setzero_si();
+        simd16scalari result = _simd16_setzero_si();
 
-        simd16scalari permlo = _simd16_permute2f128_si(_simd16_castps_si(in), zero, 0x08);  // (0, 0, 2, 0) // r0 r1 r2 r3 r8 r9 rA rB 00 00 00 00 00 00 00 00 (32b)
-        simd16scalari permhi = _simd16_permute2f128_si(_simd16_castps_si(in), zero, 0x0D);  // (0, 0, 3, 1) // r4 r5 r6 r7 rC rD rE rF 00 00 00 00 00 00 00 00
+        simdscalari inlo = _simd_castps_si(_simd16_extract_ps(in, 0));
+        simdscalari inhi = _simd_castps_si(_simd16_extract_ps(in, 1));
 
-        simd16scalari result = _simd16_packs_epi32(permlo, permhi);     // r0 r1 r2 r3 r4 r5 r6 r7 r8 r9 rA rB rC rD rE rF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 (16b)
+        simdscalari templo = _simd_permute2f128_si(inlo, inhi, 0x20);
+        simdscalari temphi = _simd_permute2f128_si(inlo, inhi, 0x31);
+
+        result = _simd16_insert_si(result, _simd_packus_epi32(templo, temphi), 0);
 
         return _simd16_castsi_ps(result);
     }
@@ -513,7 +677,7 @@ struct PackTraits<32, false>
         return _simd16_load_ps(reinterpret_cast<const float *>(pSrc));
     }
 
-    static void SIMDAPI storeSOA(uint8_t *pDst, simd16scalar src)
+    static void storeSOA(uint8_t *pDst, simd16scalar src)
     {
         _simd16_store_ps(reinterpret_cast<float *>(pDst), src);
     }
@@ -538,8 +702,8 @@ struct TypeTraits : PackTraits<NumBits>
 {
     static const SWR_TYPE MyType = type;
     static float toFloat() { return 0.0; }
-    static float fromFloat() { SWR_NOT_IMPL; return 0.0; }
-    static simdscalar convertSrgb(simdscalar &in) { SWR_NOT_IMPL; return _simd_setzero_ps(); }
+    static float fromFloat() { SWR_ASSERT(0); return 0.0; }
+    static simdscalar convertSrgb(simdscalar &in) { SWR_ASSERT(0); return _simd_setzero_ps(); }
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -549,8 +713,8 @@ template<> struct TypeTraits<SWR_TYPE_UINT, 8> : PackTraits<8>
 {
     static const SWR_TYPE MyType = SWR_TYPE_UINT;
     static float toFloat() { return 0.0; }
-    static float fromFloat() { SWR_NOT_IMPL; return 0.0; }
-    static simdscalar convertSrgb(simdscalar &in) { SWR_NOT_IMPL; return _simd_setzero_ps(); }
+    static float fromFloat() { SWR_ASSERT(0); return 0.0; }
+    static simdscalar convertSrgb(simdscalar &in) { SWR_ASSERT(0); return _simd_setzero_ps(); }
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -560,8 +724,8 @@ template<> struct TypeTraits<SWR_TYPE_SINT, 8> : PackTraits<8, true>
 {
     static const SWR_TYPE MyType = SWR_TYPE_SINT;
     static float toFloat() { return 0.0; }
-    static float fromFloat() { SWR_NOT_IMPL; return 0.0; }
-    static simdscalar convertSrgb(simdscalar &in) { SWR_NOT_IMPL; return _simd_setzero_ps(); }
+    static float fromFloat() { SWR_ASSERT(0); return 0.0; }
+    static simdscalar convertSrgb(simdscalar &in) { SWR_ASSERT(0); return _simd_setzero_ps(); }
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -571,8 +735,8 @@ template<> struct TypeTraits<SWR_TYPE_UINT, 16> : PackTraits<16>
 {
     static const SWR_TYPE MyType = SWR_TYPE_UINT;
     static float toFloat() { return 0.0; }
-    static float fromFloat() { SWR_NOT_IMPL; return 0.0; }
-    static simdscalar convertSrgb(simdscalar &in) { SWR_NOT_IMPL; return _simd_setzero_ps(); }
+    static float fromFloat() { SWR_ASSERT(0); return 0.0; }
+    static simdscalar convertSrgb(simdscalar &in) { SWR_ASSERT(0); return _simd_setzero_ps(); }
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -582,8 +746,8 @@ template<> struct TypeTraits<SWR_TYPE_SINT, 16> : PackTraits<16, true>
 {
     static const SWR_TYPE MyType = SWR_TYPE_SINT;
     static float toFloat() { return 0.0; }
-    static float fromFloat() { SWR_NOT_IMPL; return 0.0; }
-    static simdscalar convertSrgb(simdscalar &in) { SWR_NOT_IMPL; return _simd_setzero_ps(); }
+    static float fromFloat() { SWR_ASSERT(0); return 0.0; }
+    static simdscalar convertSrgb(simdscalar &in) { SWR_ASSERT(0); return _simd_setzero_ps(); }
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -593,8 +757,8 @@ template<> struct TypeTraits<SWR_TYPE_UINT, 32> : PackTraits<32>
 {
     static const SWR_TYPE MyType = SWR_TYPE_UINT;
     static float toFloat() { return 0.0; }
-    static float fromFloat() { SWR_NOT_IMPL; return 0.0; }
-    static simdscalar convertSrgb(simdscalar &in) { SWR_NOT_IMPL; return _simd_setzero_ps(); }
+    static float fromFloat() { SWR_ASSERT(0); return 0.0; }
+    static simdscalar convertSrgb(simdscalar &in) { SWR_ASSERT(0); return _simd_setzero_ps(); }
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -604,8 +768,8 @@ template<> struct TypeTraits<SWR_TYPE_SINT, 32> : PackTraits<32>
 {
     static const SWR_TYPE MyType = SWR_TYPE_SINT;
     static float toFloat() { return 0.0; }
-    static float fromFloat() { SWR_NOT_IMPL; return 0.0; }
-    static simdscalar convertSrgb(simdscalar &in) { SWR_NOT_IMPL; return _simd_setzero_ps(); }
+    static float fromFloat() { SWR_ASSERT(0); return 0.0; }
+    static simdscalar convertSrgb(simdscalar &in) { SWR_ASSERT(0); return _simd_setzero_ps(); }
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -616,7 +780,7 @@ template<> struct TypeTraits<SWR_TYPE_UNORM, 5> : PackTraits<5>
     static const SWR_TYPE MyType = SWR_TYPE_UNORM;
     static float toFloat() { return 1.0f / 31.0f; }
     static float fromFloat() { return 31.0f; }
-    static simdscalar convertSrgb(simdscalar &in) { SWR_NOT_IMPL; return _simd_setzero_ps(); }
+    static simdscalar convertSrgb(simdscalar &in) { SWR_ASSERT(0); return _simd_setzero_ps(); }
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -627,7 +791,7 @@ template<> struct TypeTraits<SWR_TYPE_UNORM, 6> : PackTraits<6>
     static const SWR_TYPE MyType = SWR_TYPE_UNORM;
     static float toFloat() { return 1.0f / 63.0f; }
     static float fromFloat() { return 63.0f; }
-    static simdscalar convertSrgb(simdscalar &in) { SWR_NOT_IMPL; return _simd_setzero_ps(); }
+    static simdscalar convertSrgb(simdscalar &in) { SWR_ASSERT(0); return _simd_setzero_ps(); }
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -638,7 +802,7 @@ template<> struct TypeTraits<SWR_TYPE_UNORM, 8> : PackTraits<8>
     static const SWR_TYPE MyType = SWR_TYPE_UNORM;
     static float toFloat() { return 1.0f / 255.0f; }
     static float fromFloat() { return 255.0f; }
-    static simdscalar convertSrgb(simdscalar &in) { SWR_NOT_IMPL; return _simd_setzero_ps(); }
+    static simdscalar convertSrgb(simdscalar &in) { SWR_ASSERT(0); return _simd_setzero_ps(); }
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -649,7 +813,7 @@ template<> struct TypeTraits<SWR_TYPE_SNORM, 8> : PackTraits<8, true>
     static const SWR_TYPE MyType = SWR_TYPE_SNORM;
     static float toFloat() { return 1.0f / 127.0f; }
     static float fromFloat() { return 127.0f; }
-    static simdscalar convertSrgb(simdscalar &in) { SWR_NOT_IMPL; return _simd_setzero_ps(); }
+    static simdscalar convertSrgb(simdscalar &in) { SWR_ASSERT(0); return _simd_setzero_ps(); }
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -660,7 +824,7 @@ template<> struct TypeTraits<SWR_TYPE_UNORM, 16> : PackTraits<16>
     static const SWR_TYPE MyType = SWR_TYPE_UNORM;
     static float toFloat() { return 1.0f / 65535.0f; }
     static float fromFloat() { return 65535.0f; }
-    static simdscalar convertSrgb(simdscalar &in) { SWR_NOT_IMPL; return _simd_setzero_ps(); }
+    static simdscalar convertSrgb(simdscalar &in) { SWR_ASSERT(0); return _simd_setzero_ps(); }
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -671,7 +835,7 @@ template<> struct TypeTraits<SWR_TYPE_SNORM, 16> : PackTraits<16, true>
     static const SWR_TYPE MyType = SWR_TYPE_UNORM;
     static float toFloat() { return 1.0f / 32767.0f; }
     static float fromFloat() { return 32767.0f; }
-    static simdscalar convertSrgb(simdscalar &in) { SWR_NOT_IMPL; return _simd_setzero_ps(); }
+    static simdscalar convertSrgb(simdscalar &in) { SWR_ASSERT(0); return _simd_setzero_ps(); }
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -683,7 +847,7 @@ struct TypeTraits < SWR_TYPE_UNORM, 24 > : PackTraits<32>
     static const SWR_TYPE MyType = SWR_TYPE_UNORM;
     static float toFloat() { return 1.0f / 16777215.0f; }
     static float fromFloat() { return 16777215.0f; }
-    static simdscalar convertSrgb(simdscalar &in) { SWR_NOT_IMPL; return _simd_setzero_ps(); }
+    static simdscalar convertSrgb(simdscalar &in) { SWR_ASSERT(0); return _simd_setzero_ps(); }
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -811,7 +975,7 @@ static inline __m128 ConvertFloatToSRGB2(__m128& Src)
 
 #if ENABLE_AVX512_SIMD16
 template< unsigned expnum, unsigned expden, unsigned coeffnum, unsigned coeffden >
-inline static simd16scalar SIMDAPI fastpow(simd16scalar value)
+inline static simd16scalar fastpow(simd16scalar value)
 {
     static const float factor1 = exp2(127.0f * expden / expnum - 127.0f)
         * powf(1.0f * coeffnum / coeffden, 1.0f * expden / expnum);
@@ -833,7 +997,7 @@ inline static simd16scalar SIMDAPI fastpow(simd16scalar value)
     return result;
 }
 
-inline static simd16scalar SIMDAPI pow512_4(simd16scalar arg)
+inline static simd16scalar pow512_4(simd16scalar arg)
 {
     // 5/12 is too small, so compute the 4th root of 20/12 instead.
     // 20/12 = 5/3 = 1 + 2/3 = 2 - 1/3. 2/3 is a suitable argument for fastpow.
@@ -854,7 +1018,7 @@ inline static simd16scalar SIMDAPI pow512_4(simd16scalar arg)
     return xavg;
 }
 
-inline static simd16scalar SIMDAPI powf_wrapper(const simd16scalar base, float exp)
+inline static simd16scalar powf_wrapper(const simd16scalar base, float exp)
 {
     const float *f = reinterpret_cast<const float *>(&base);
 
@@ -926,7 +1090,7 @@ template<> struct TypeTraits<SWR_TYPE_FLOAT, 16> : PackTraits<16>
     static const SWR_TYPE MyType = SWR_TYPE_FLOAT;
     static float toFloat() { return 1.0f; }
     static float fromFloat() { return 1.0f; }
-    static simdscalar convertSrgb(simdscalar &in) { SWR_NOT_IMPL; return _simd_setzero_ps(); }
+    static simdscalar convertSrgb(simdscalar &in) { SWR_ASSERT(0); return _simd_setzero_ps(); }
 
     static simdscalar pack(const simdscalar &in)
     {
@@ -1029,6 +1193,20 @@ template<> struct TypeTraits<SWR_TYPE_FLOAT, 16> : PackTraits<16>
 #else
         return _mm256_castsi256_ps(_mm256_castsi128_si256(_mm256_cvtps_ph(in, _MM_FROUND_TRUNC)));
 #endif
+#elif KNOB_SIMD_WIDTH == 16
+#if ENABLE_AVX512_EMULATION
+simdscalari result;
+
+        __m128i templo = _mm256_cvtps_ph(in.lo, _MM_FROUND_TRUNC);
+        __m128i temphi = _mm256_cvtps_ph(in.hi, _MM_FROUND_TRUNC);
+
+        result.lo = _mm256_castsi128_si256(templo);
+        result.lo = _mm256_insertf128_si256(result.lo, temphi, 1);
+
+        result.hi = _mm256_undefined_si256();
+
+        return _simd_castsi_ps(result);
+#endif
 #else
 #error Unsupported vector width
 #endif
@@ -1037,7 +1215,7 @@ template<> struct TypeTraits<SWR_TYPE_FLOAT, 16> : PackTraits<16>
     static simdscalar unpack(const simdscalar &in)
     {
         // input is 8 packed float16, output is 8 packed float32
-        SWR_NOT_IMPL; // @todo
+        SWR_ASSERT(0); // @todo
         return _simd_setzero_ps();
     }
 #if ENABLE_AVX512_SIMD16
@@ -1051,16 +1229,16 @@ template<> struct TypeTraits<SWR_TYPE_FLOAT, 16> : PackTraits<16>
         simdscalar simdlo = pack(_simd16_extract_ps(in, 0));
         simdscalar simdhi = pack(_simd16_extract_ps(in, 1));
 
-        __m128i templo = _simd_extractf128_si(_simd_castps_si(simdlo), 0);
-        __m128i temphi = _simd_extractf128_si(_simd_castps_si(simdhi), 0);
+        __m128i templo = _mm256_extractf128_si256(_simd_castps_si(simdlo), 0);
+        __m128i temphi = _mm256_extractf128_si256(_simd_castps_si(simdhi), 0);
 
 #else
         __m128i templo = _mm256_cvtps_ph(_simd16_extract_ps(in, 0), _MM_FROUND_TRUNC);
         __m128i temphi = _mm256_cvtps_ph(_simd16_extract_ps(in, 1), _MM_FROUND_TRUNC);
 
 #endif
-        resultlo = _simd_insertf128_si(resultlo, templo, 0);
-        resultlo = _simd_insertf128_si(resultlo, temphi, 1);
+        resultlo = _mm256_insertf128_si256(resultlo, templo, 0);
+        resultlo = _mm256_insertf128_si256(resultlo, temphi, 1);
 
         result = _simd16_insert_si(result, resultlo, 0);
 
@@ -1070,7 +1248,7 @@ template<> struct TypeTraits<SWR_TYPE_FLOAT, 16> : PackTraits<16>
     static simd16scalar unpack(const simd16scalar &in)
     {
         // input is 16 packed float16, output is 16 packed float32
-        SWR_NOT_IMPL; //  @todo
+        SWR_ASSERT(0); // @todo
         return _simd16_setzero_ps();
     }
 #endif
@@ -1087,6 +1265,7 @@ template<> struct TypeTraits<SWR_TYPE_FLOAT, 32> : PackTraits<32>
     static inline simdscalar convertSrgb(simdscalar &in)
     {
 #if KNOB_SIMD_WIDTH == 8
+#if (KNOB_ARCH == KNOB_ARCH_AVX || KNOB_ARCH == KNOB_ARCH_AVX2)
         __m128 srcLo = _mm256_extractf128_ps(in, 0);
         __m128 srcHi = _mm256_extractf128_ps(in, 1);
 
@@ -1095,6 +1274,24 @@ template<> struct TypeTraits<SWR_TYPE_FLOAT, 32> : PackTraits<32>
 
         in = _mm256_insertf128_ps(in, srcLo, 0);
         in = _mm256_insertf128_ps(in, srcHi, 1);
+#endif
+#elif KNOB_SIMD_WIDTH == 16
+#if ENABLE_AVX512_EMULATION
+        __m128 inlo0 = _mm256_extractf128_ps(in.lo, 0);
+        __m128 inlo1 = _mm256_extractf128_ps(in.lo, 1);
+        __m128 inhi0 = _mm256_extractf128_ps(in.hi, 0);
+        __m128 inhi1 = _mm256_extractf128_ps(in.hi, 1);
+
+        inlo0 = ConvertFloatToSRGB2(inlo0);
+        inlo1 = ConvertFloatToSRGB2(inlo1);
+        inhi0 = ConvertFloatToSRGB2(inhi0);
+        inhi1 = ConvertFloatToSRGB2(inhi1);
+
+        in.lo = _mm256_insertf128_ps(in.lo, inlo0, 0);
+        in.lo = _mm256_insertf128_ps(in.lo, inlo1, 1);
+        in.hi = _mm256_insertf128_ps(in.hi, inhi0, 0);
+        in.hi = _mm256_insertf128_ps(in.hi, inhi1, 1);
+#endif
 #else
 #error Unsupported vector width
 #endif
@@ -1289,13 +1486,6 @@ struct ComponentTraits
         return CompType[comp];
     }
 
-    INLINE static constexpr uint32_t GetConstBPC(uint32_t comp)
-    {
-        return (comp == 3) ? NumBitsW :
-            ((comp == 2) ? NumBitsZ :
-                ((comp == 1) ? NumBitsY : NumBitsX) );
-    }
-
     INLINE static uint32_t GetBPC(uint32_t comp)
     {
         static const uint32_t MyBpc[4]{ NumBitsX, NumBitsY, NumBitsZ, NumBitsW };
@@ -1315,7 +1505,7 @@ struct ComponentTraits
         case 3:
             return (W == SWR_TYPE_UNORM || W == SWR_TYPE_SNORM) ? true : false;
         }
-        SWR_INVALID("Invalid component: %d", comp);
+        SWR_ASSERT(0);
         return false;
     }
 
@@ -1332,7 +1522,7 @@ struct ComponentTraits
         case 3:
             return TypeTraits<W, NumBitsW>::toFloat();
         }
-        SWR_INVALID("Invalid component: %d", comp);
+        SWR_ASSERT(0);
         return TypeTraits<X, NumBitsX>::toFloat();
 
     }
@@ -1350,7 +1540,7 @@ struct ComponentTraits
         case 3:
             return TypeTraits<W, NumBitsW>::fromFloat();
         }
-        SWR_INVALID("Invalid component: %d", comp);
+        SWR_ASSERT(0);
         return TypeTraits<X, NumBitsX>::fromFloat();
     }
 
@@ -1367,7 +1557,7 @@ struct ComponentTraits
         case 3:
             return TypeTraits<W, NumBitsW>::loadSOA(pSrc);
         }
-        SWR_INVALID("Invalid component: %d", comp);
+        SWR_ASSERT(0);
         return TypeTraits<X, NumBitsX>::loadSOA(pSrc);
     }
 
@@ -1388,7 +1578,7 @@ struct ComponentTraits
             TypeTraits<W, NumBitsW>::storeSOA(pDst, src);
             return;
         }
-        SWR_INVALID("Invalid component: %d", comp);
+        SWR_ASSERT(0);
         TypeTraits<X, NumBitsX>::storeSOA(pDst, src);
     }
 
@@ -1405,7 +1595,7 @@ struct ComponentTraits
         case 3:
             return TypeTraits<W, NumBitsW>::unpack(in);
         }
-        SWR_INVALID("Invalid component: %d", comp);
+        SWR_ASSERT(0);
         return TypeTraits<X, NumBitsX>::unpack(in);
     }
 
@@ -1422,7 +1612,7 @@ struct ComponentTraits
         case 3:
             return TypeTraits<W, NumBitsW>::pack(in);
         }
-        SWR_INVALID("Invalid component: %d", comp);
+        SWR_ASSERT(0);
         return TypeTraits<X, NumBitsX>::pack(in);
     }
 
@@ -1439,7 +1629,7 @@ struct ComponentTraits
         case 3:
             return TypeTraits<W, NumBitsW>::convertSrgb(in);
         }
-        SWR_INVALID("Invalid component: %d", comp);
+        SWR_ASSERT(0);
         return TypeTraits<X, NumBitsX>::convertSrgb(in);
     }
 #if ENABLE_AVX512_SIMD16
@@ -1457,11 +1647,11 @@ struct ComponentTraits
         case 3:
             return TypeTraits<W, NumBitsW>::loadSOA_16(pSrc);
         }
-        SWR_INVALID("Invalid component: %d", comp);
+        SWR_ASSERT(0);
         return TypeTraits<X, NumBitsX>::loadSOA_16(pSrc);
     }
 
-    INLINE static void SIMDAPI storeSOA(uint32_t comp, uint8_t *pDst, simd16scalar src)
+    INLINE static void storeSOA(uint32_t comp, uint8_t *pDst, simd16scalar src)
     {
         switch (comp)
         {
@@ -1478,7 +1668,7 @@ struct ComponentTraits
             TypeTraits<W, NumBitsW>::storeSOA(pDst, src);
             return;
         }
-        SWR_INVALID("Invalid component: %d", comp);
+        SWR_ASSERT(0);
         TypeTraits<X, NumBitsX>::storeSOA(pDst, src);
     }
 
@@ -1495,7 +1685,7 @@ struct ComponentTraits
         case 3:
             return TypeTraits<W, NumBitsW>::unpack(in);
         }
-        SWR_INVALID("Invalid component: %d", comp);
+        SWR_ASSERT(0);
         return TypeTraits<X, NumBitsX>::unpack(in);
     }
 
@@ -1512,7 +1702,7 @@ struct ComponentTraits
         case 3:
             return TypeTraits<W, NumBitsW>::pack(in);
         }
-        SWR_INVALID("Invalid component: %d", comp);
+        SWR_ASSERT(0);
         return TypeTraits<X, NumBitsX>::pack(in);
     }
 
@@ -1529,7 +1719,7 @@ struct ComponentTraits
         case 3:
             return TypeTraits<W, NumBitsW>::convertSrgb(in);
         }
-        SWR_INVALID("Invalid component: %d", comp);
+        SWR_ASSERT(0);
         return TypeTraits<X, NumBitsX>::convertSrgb(in);
     }
 #endif

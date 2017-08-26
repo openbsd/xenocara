@@ -91,7 +91,7 @@ void r600_emit_alphatest_state(struct r600_context *rctx, struct r600_atom *atom
 	radeon_set_context_reg(cs, R_028438_SX_ALPHA_REF, alpha_ref);
 }
 
-static void r600_texture_barrier(struct pipe_context *ctx, unsigned flags)
+static void r600_texture_barrier(struct pipe_context *ctx)
 {
 	struct r600_context *rctx = (struct r600_context *)ctx;
 
@@ -186,10 +186,6 @@ static void r600_bind_blend_state_internal(struct r600_context *rctx,
 	}
 	if (update_cb) {
 		r600_mark_atom_dirty(rctx, &rctx->cb_misc_state.atom);
-	}
-	if (rctx->framebuffer.dual_src_blend != blend->dual_src_blend) {
-		rctx->framebuffer.dual_src_blend = blend->dual_src_blend;
-		r600_mark_atom_dirty(rctx, &rctx->framebuffer.atom);
 	}
 }
 
@@ -712,47 +708,49 @@ static void r600_update_compressed_colortex_mask(struct r600_samplerview_state *
 }
 
 /* Compute the key for the hw shader variant */
-static inline void r600_shader_selector_key(const struct pipe_context *ctx,
-		const struct r600_pipe_shader_selector *sel,
-		union r600_shader_key *key)
+static inline union r600_shader_key r600_shader_selector_key(struct pipe_context * ctx,
+		struct r600_pipe_shader_selector * sel)
 {
-	const struct r600_context *rctx = (struct r600_context *)ctx;
-	memset(key, 0, sizeof(*key));
+	struct r600_context *rctx = (struct r600_context *)ctx;
+	union r600_shader_key key;
+	memset(&key, 0, sizeof(key));
 
 	switch (sel->type) {
 	case PIPE_SHADER_VERTEX: {
-		key->vs.as_ls = (rctx->tes_shader != NULL);
-		if (!key->vs.as_ls)
-			key->vs.as_es = (rctx->gs_shader != NULL);
+		key.vs.as_ls = (rctx->tes_shader != NULL);
+		if (!key.vs.as_ls)
+			key.vs.as_es = (rctx->gs_shader != NULL);
 
 		if (rctx->ps_shader->current->shader.gs_prim_id_input && !rctx->gs_shader) {
-			key->vs.as_gs_a = true;
-			key->vs.prim_id_out = rctx->ps_shader->current->shader.input[rctx->ps_shader->current->shader.ps_prim_id_input].spi_sid;
+			key.vs.as_gs_a = true;
+			key.vs.prim_id_out = rctx->ps_shader->current->shader.input[rctx->ps_shader->current->shader.ps_prim_id_input].spi_sid;
 		}
 		break;
 	}
 	case PIPE_SHADER_GEOMETRY:
 		break;
 	case PIPE_SHADER_FRAGMENT: {
-		key->ps.color_two_side = rctx->rasterizer && rctx->rasterizer->two_side;
-		key->ps.alpha_to_one = rctx->alpha_to_one &&
+		key.ps.color_two_side = rctx->rasterizer && rctx->rasterizer->two_side;
+		key.ps.alpha_to_one = rctx->alpha_to_one &&
 				      rctx->rasterizer && rctx->rasterizer->multisample_enable &&
 				      !rctx->framebuffer.cb0_is_integer;
-		key->ps.nr_cbufs = rctx->framebuffer.state.nr_cbufs;
+		key.ps.nr_cbufs = rctx->framebuffer.state.nr_cbufs;
 		/* Dual-source blending only makes sense with nr_cbufs == 1. */
-		if (key->ps.nr_cbufs == 1 && rctx->dual_src_blend)
-			key->ps.nr_cbufs = 2;
+		if (key.ps.nr_cbufs == 1 && rctx->dual_src_blend)
+			key.ps.nr_cbufs = 2;
 		break;
 	}
 	case PIPE_SHADER_TESS_EVAL:
-		key->tes.as_es = (rctx->gs_shader != NULL);
+		key.tes.as_es = (rctx->gs_shader != NULL);
 		break;
 	case PIPE_SHADER_TESS_CTRL:
-		key->tcs.prim_mode = rctx->tes_shader->info.properties[TGSI_PROPERTY_TES_PRIM_MODE];
+		key.tcs.prim_mode = rctx->tes_shader->info.properties[TGSI_PROPERTY_TES_PRIM_MODE];
 		break;
 	default:
 		assert(0);
 	}
+
+	return key;
 }
 
 /* Select the hw shader variant depending on the current state.
@@ -765,7 +763,8 @@ static int r600_shader_select(struct pipe_context *ctx,
 	struct r600_pipe_shader * shader = NULL;
 	int r;
 
-	r600_shader_selector_key(ctx, sel, &key);
+	memset(&key, 0, sizeof(key));
+	key = r600_shader_selector_key(ctx, sel);
 
 	/* Check if we don't need to change anything.
 	 * This path is also used for most shaders that don't need multiple
@@ -809,7 +808,7 @@ static int r600_shader_select(struct pipe_context *ctx,
 		if (sel->type == PIPE_SHADER_FRAGMENT &&
 				sel->num_shaders == 0) {
 			sel->nr_ps_max_color_exports = shader->shader.nr_ps_max_color_exports;
-			r600_shader_selector_key(ctx, sel, &key);
+			key = r600_shader_selector_key(ctx, sel);
 		}
 
 		memcpy(&shader->key, &key, sizeof(key));
@@ -931,7 +930,7 @@ static void r600_bind_vs_state(struct pipe_context *ctx, void *state)
 {
 	struct r600_context *rctx = (struct r600_context *)ctx;
 
-	if (!state || rctx->vs_shader == state)
+	if (!state)
 		return;
 
 	rctx->vs_shader = (struct r600_pipe_shader_selector *)state;
@@ -942,9 +941,6 @@ static void r600_bind_vs_state(struct pipe_context *ctx, void *state)
 static void r600_bind_gs_state(struct pipe_context *ctx, void *state)
 {
 	struct r600_context *rctx = (struct r600_context *)ctx;
-
-	if (state == rctx->gs_shader)
-		return;
 
 	rctx->gs_shader = (struct r600_pipe_shader_selector *)state;
 	r600_update_vs_writes_viewport_index(&rctx->b, r600_get_vs_info(rctx));
@@ -964,9 +960,6 @@ static void r600_bind_tcs_state(struct pipe_context *ctx, void *state)
 static void r600_bind_tes_state(struct pipe_context *ctx, void *state)
 {
 	struct r600_context *rctx = (struct r600_context *)ctx;
-
-	if (state == rctx->tes_shader)
-		return;
 
 	rctx->tes_shader = (struct r600_pipe_shader_selector *)state;
 	r600_update_vs_writes_viewport_index(&rctx->b, r600_get_vs_info(rctx));
@@ -1062,8 +1055,7 @@ void r600_constant_buffers_dirty(struct r600_context *rctx, struct r600_constbuf
 	}
 }
 
-static void r600_set_constant_buffer(struct pipe_context *ctx,
-				     enum pipe_shader_type shader, uint index,
+static void r600_set_constant_buffer(struct pipe_context *ctx, uint shader, uint index,
 				     const struct pipe_constant_buffer *input)
 {
 	struct r600_context *rctx = (struct r600_context *)ctx;
@@ -1101,13 +1093,10 @@ static void r600_set_constant_buffer(struct pipe_context *ctx,
 				tmpPtr[i] = util_cpu_to_le32(((uint32_t *)ptr)[i]);
 			}
 
-			u_upload_data(ctx->stream_uploader, 0, size, 256,
-                                      tmpPtr, &cb->buffer_offset, &cb->buffer);
+			u_upload_data(rctx->b.uploader, 0, size, 256, tmpPtr, &cb->buffer_offset, &cb->buffer);
 			free(tmpPtr);
 		} else {
-			u_upload_data(ctx->stream_uploader, 0,
-                                      input->buffer_size, 256, ptr,
-                                      &cb->buffer_offset, &cb->buffer);
+			u_upload_data(rctx->b.uploader, 0, input->buffer_size, 256, ptr, &cb->buffer_offset, &cb->buffer);
 		}
 		/* account it in gtt */
 		rctx->b.gtt += input->buffer_size;
@@ -1337,14 +1326,14 @@ static void update_gs_block_state(struct r600_context *rctx, unsigned enable)
 		if (enable && !rctx->gs_rings.esgs_ring.buffer) {
 			unsigned size = 0x1C000;
 			rctx->gs_rings.esgs_ring.buffer =
-					pipe_buffer_create(rctx->b.b.screen, 0,
+					pipe_buffer_create(rctx->b.b.screen, PIPE_BIND_CUSTOM,
 							PIPE_USAGE_DEFAULT, size);
 			rctx->gs_rings.esgs_ring.buffer_size = size;
 
 			size = 0x4000000;
 
 			rctx->gs_rings.gsvs_ring.buffer =
-					pipe_buffer_create(rctx->b.b.screen, 0,
+					pipe_buffer_create(rctx->b.b.screen, PIPE_BIND_CUSTOM,
 							PIPE_USAGE_DEFAULT, size);
 			rctx->gs_rings.gsvs_ring.buffer_size = size;
 		}
@@ -1672,52 +1661,21 @@ void r600_emit_clip_misc_state(struct r600_context *rctx, struct r600_atom *atom
 				       S_028AB4_REUSE_OFF(state->vs_out_viewport));
 }
 
-/* rast_prim is the primitive type after GS. */
-static inline void r600_emit_rasterizer_prim_state(struct r600_context *rctx)
-{
-	struct radeon_winsys_cs *cs = rctx->b.gfx.cs;
-	enum pipe_prim_type rast_prim = rctx->current_rast_prim;
-
-	/* Skip this if not rendering lines. */
-	if (rast_prim != PIPE_PRIM_LINES &&
-	    rast_prim != PIPE_PRIM_LINE_LOOP &&
-	    rast_prim != PIPE_PRIM_LINE_STRIP &&
-	    rast_prim != PIPE_PRIM_LINES_ADJACENCY &&
-	    rast_prim != PIPE_PRIM_LINE_STRIP_ADJACENCY)
-		return;
-
-	if (rast_prim == rctx->last_rast_prim)
-		return;
-
-	/* For lines, reset the stipple pattern at each primitive. Otherwise,
-	 * reset the stipple pattern at each packet (line strips, line loops).
-	 */
-	radeon_set_context_reg(cs, R_028A0C_PA_SC_LINE_STIPPLE,
-			       S_028A0C_AUTO_RESET_CNTL(rast_prim == PIPE_PRIM_LINES ? 1 : 2) |
-			       (rctx->rasterizer ? rctx->rasterizer->pa_sc_line_stipple : 0));
-	rctx->last_rast_prim = rast_prim;
-}
-
-static void r600_draw_vbo(struct pipe_context *ctx, const struct pipe_draw_info *info)
+static void r600_draw_vbo(struct pipe_context *ctx, const struct pipe_draw_info *dinfo)
 {
 	struct r600_context *rctx = (struct r600_context *)ctx;
+	struct pipe_draw_info info = *dinfo;
 	struct pipe_index_buffer ib = {};
 	struct radeon_winsys_cs *cs = rctx->b.gfx.cs;
 	bool render_cond_bit = rctx->b.render_cond && !rctx->b.render_cond_force_off;
 	uint64_t mask;
-	unsigned num_patches, dirty_tex_counter;
-	int index_bias;
+	unsigned num_patches, dirty_fb_counter;
 
-	if (!info->indirect && !info->count && (info->indexed || !info->count_from_stream_output)) {
+	if (!info.indirect && !info.count && (info.indexed || !info.count_from_stream_output)) {
 		return;
 	}
 
-	if (unlikely(!rctx->vs_shader)) {
-		assert(0);
-		return;
-	}
-	if (unlikely(!rctx->ps_shader &&
-		     (!rctx->rasterizer || !rctx->rasterizer->rasterizer_discard))) {
+	if (!rctx->vs_shader || !rctx->ps_shader) {
 		assert(0);
 		return;
 	}
@@ -1728,9 +1686,9 @@ static void r600_draw_vbo(struct pipe_context *ctx, const struct pipe_draw_info 
 	}
 
 	/* Re-emit the framebuffer state if needed. */
-	dirty_tex_counter = p_atomic_read(&rctx->b.screen->dirty_tex_counter);
-	if (unlikely(dirty_tex_counter != rctx->b.last_dirty_tex_counter)) {
-		rctx->b.last_dirty_tex_counter = dirty_tex_counter;
+	dirty_fb_counter = p_atomic_read(&rctx->b.screen->dirty_fb_counter);
+	if (dirty_fb_counter != rctx->b.last_dirty_fb_counter) {
+		rctx->b.last_dirty_fb_counter = dirty_fb_counter;
 		r600_mark_atom_dirty(rctx, &rctx->framebuffer.atom);
 	}
 
@@ -1741,18 +1699,14 @@ static void r600_draw_vbo(struct pipe_context *ctx, const struct pipe_draw_info 
 		return;
 	}
 
-	rctx->current_rast_prim = (rctx->gs_shader)? rctx->gs_shader->gs_output_prim
-		: (rctx->tes_shader)? rctx->tes_shader->info.properties[TGSI_PROPERTY_TES_PRIM_MODE]
-		: info->mode;
-
-	if (info->indexed) {
+	if (info.indexed) {
 		/* Initialize the index buffer struct. */
 		pipe_resource_reference(&ib.buffer, rctx->index_buffer.buffer);
 		ib.user_buffer = rctx->index_buffer.user_buffer;
 		ib.index_size = rctx->index_buffer.index_size;
 		ib.offset = rctx->index_buffer.offset;
-		if (!info->indirect) {
-			ib.offset += info->start * ib.index_size;
+		if (!info.indirect) {
+			ib.offset += info.start * ib.index_size;
 		}
 
 		/* Translate 8-bit indices to 16-bit. */
@@ -1762,17 +1716,17 @@ static void r600_draw_vbo(struct pipe_context *ctx, const struct pipe_draw_info 
 			void *ptr;
 			unsigned start, count;
 
-			if (likely(!info->indirect)) {
+			if (likely(!info.indirect)) {
 				start = 0;
-				count = info->count;
+				count = info.count;
 			}
 			else {
 				/* Have to get start/count from indirect buffer, slow path ahead... */
-				struct r600_resource *indirect_resource = (struct r600_resource *)info->indirect;
+				struct r600_resource *indirect_resource = (struct r600_resource *)info.indirect;
 				unsigned *data = r600_buffer_map_sync_with_rings(&rctx->b, indirect_resource,
 					PIPE_TRANSFER_READ);
 				if (data) {
-					data += info->indirect_offset / sizeof(unsigned);
+					data += info.indirect_offset / sizeof(unsigned);
 					start = data[2] * ib.index_size;
 					count = data[0];
 				}
@@ -1782,12 +1736,8 @@ static void r600_draw_vbo(struct pipe_context *ctx, const struct pipe_draw_info 
 				}
 			}
 
-			u_upload_alloc(ctx->stream_uploader, start, count * 2,
-                                       256, &out_offset, &out_buffer, &ptr);
-			if (unlikely(!ptr)) {
-				pipe_resource_reference(&ib.buffer, NULL);
-				return;
-			}
+			u_upload_alloc(rctx->b.uploader, start, count * 2, 256,
+				       &out_offset, &out_buffer, &ptr);
 
 			util_shorten_ubyte_elts_to_userptr(
 						&rctx->b.b, &ib, 0, 0, ib.offset + start, count, ptr);
@@ -1804,27 +1754,25 @@ static void r600_draw_vbo(struct pipe_context *ctx, const struct pipe_draw_info 
 		 * and the indices are emitted via PKT3_DRAW_INDEX_IMMD.
 		 * Indirect draws never use immediate indices.
 		 * Note: Instanced rendering in combination with immediate indices hangs. */
-		if (ib.user_buffer && (R600_BIG_ENDIAN || info->indirect ||
-						 info->instance_count > 1 ||
-						 info->count*ib.index_size > 20)) {
-			u_upload_data(ctx->stream_uploader, 0,
-                                      info->count * ib.index_size, 256,
+		if (ib.user_buffer && (R600_BIG_ENDIAN || info.indirect ||
+						 info.instance_count > 1 ||
+						 info.count*ib.index_size > 20)) {
+			u_upload_data(rctx->b.uploader, 0, info.count * ib.index_size, 256,
 				      ib.user_buffer, &ib.offset, &ib.buffer);
 			ib.user_buffer = NULL;
 		}
-		index_bias = info->index_bias;
 	} else {
-		index_bias = info->start;
+		info.index_bias = info.start;
 	}
 
 	/* Set the index offset and primitive restart. */
-	if (rctx->vgt_state.vgt_multi_prim_ib_reset_en != info->primitive_restart ||
-	    rctx->vgt_state.vgt_multi_prim_ib_reset_indx != info->restart_index ||
-	    rctx->vgt_state.vgt_indx_offset != index_bias ||
-	    (rctx->vgt_state.last_draw_was_indirect && !info->indirect)) {
-		rctx->vgt_state.vgt_multi_prim_ib_reset_en = info->primitive_restart;
-		rctx->vgt_state.vgt_multi_prim_ib_reset_indx = info->restart_index;
-		rctx->vgt_state.vgt_indx_offset = index_bias;
+	if (rctx->vgt_state.vgt_multi_prim_ib_reset_en != info.primitive_restart ||
+	    rctx->vgt_state.vgt_multi_prim_ib_reset_indx != info.restart_index ||
+	    rctx->vgt_state.vgt_indx_offset != info.index_bias ||
+	    (rctx->vgt_state.last_draw_was_indirect && !info.indirect)) {
+		rctx->vgt_state.vgt_multi_prim_ib_reset_en = info.primitive_restart;
+		rctx->vgt_state.vgt_multi_prim_ib_reset_indx = info.restart_index;
+		rctx->vgt_state.vgt_indx_offset = info.index_bias;
 		r600_mark_atom_dirty(rctx, &rctx->vgt_state.atom);
 	}
 
@@ -1835,7 +1783,7 @@ static void r600_draw_vbo(struct pipe_context *ctx, const struct pipe_draw_info 
 	}
 
 	if (rctx->b.chip_class >= EVERGREEN)
-		evergreen_setup_tess_constants(rctx, info, &num_patches);
+		evergreen_setup_tess_constants(rctx, &info, &num_patches);
 
 	/* Emit states. */
 	r600_need_cs_space(rctx, ib.user_buffer ? 5 : 0, TRUE);
@@ -1870,7 +1818,7 @@ static void r600_draw_vbo(struct pipe_context *ctx, const struct pipe_draw_info 
 	}
 
 	if (rctx->b.chip_class >= EVERGREEN) {
-		uint32_t ls_hs_config = evergreen_get_ls_hs_config(rctx, info,
+		uint32_t ls_hs_config = evergreen_get_ls_hs_config(rctx, &info,
 								   num_patches);
 
 		evergreen_set_ls_hs_config(rctx, cs, ls_hs_config);
@@ -1881,7 +1829,7 @@ static void r600_draw_vbo(struct pipe_context *ctx, const struct pipe_draw_info 
 	 * even though it should have no effect on those. */
 	if (rctx->b.chip_class == R600 && rctx->rasterizer) {
 		unsigned su_sc_mode_cntl = rctx->rasterizer->pa_su_sc_mode_cntl;
-		unsigned prim = info->mode;
+		unsigned prim = info.mode;
 
 		if (rctx->gs_shader) {
 			prim = rctx->gs_shader->gs_output_prim;
@@ -1890,33 +1838,45 @@ static void r600_draw_vbo(struct pipe_context *ctx, const struct pipe_draw_info 
 
 		if (prim == V_028A6C_OUTPRIM_TYPE_POINTLIST ||
 		    prim == V_028A6C_OUTPRIM_TYPE_LINESTRIP ||
-		    info->mode == R600_PRIM_RECTANGLE_LIST) {
+		    info.mode == R600_PRIM_RECTANGLE_LIST) {
 			su_sc_mode_cntl &= C_028814_CULL_FRONT;
 		}
 		radeon_set_context_reg(cs, R_028814_PA_SU_SC_MODE_CNTL, su_sc_mode_cntl);
 	}
 
 	/* Update start instance. */
-	if (!info->indirect && rctx->last_start_instance != info->start_instance) {
-		radeon_set_ctl_const(cs, R_03CFF4_SQ_VTX_START_INST_LOC, info->start_instance);
-		rctx->last_start_instance = info->start_instance;
+	if (!info.indirect && rctx->last_start_instance != info.start_instance) {
+		radeon_set_ctl_const(cs, R_03CFF4_SQ_VTX_START_INST_LOC, info.start_instance);
+		rctx->last_start_instance = info.start_instance;
 	}
 
 	/* Update the primitive type. */
-	if (rctx->last_primitive_type != info->mode) {
-		r600_emit_rasterizer_prim_state(rctx);
-		radeon_set_config_reg(cs, R_008958_VGT_PRIMITIVE_TYPE,
-				      r600_conv_pipe_prim(info->mode));
+	if (rctx->last_primitive_type != info.mode) {
+		unsigned ls_mask = 0;
 
-		rctx->last_primitive_type = info->mode;
+		if (info.mode == PIPE_PRIM_LINES)
+			ls_mask = 1;
+		else if (info.mode == PIPE_PRIM_LINE_STRIP ||
+			 info.mode == PIPE_PRIM_LINE_LOOP)
+			ls_mask = 2;
+
+		radeon_set_context_reg(cs, R_028A0C_PA_SC_LINE_STIPPLE,
+				       S_028A0C_AUTO_RESET_CNTL(ls_mask) |
+				       (rctx->rasterizer ? rctx->rasterizer->pa_sc_line_stipple : 0));
+		radeon_set_config_reg(cs, R_008958_VGT_PRIMITIVE_TYPE,
+				      r600_conv_pipe_prim(info.mode));
+
+		rctx->last_primitive_type = info.mode;
 	}
 
 	/* Draw packets. */
-	if (likely(!info->indirect)) {
+	if (!info.indirect) {
 		radeon_emit(cs, PKT3(PKT3_NUM_INSTANCES, 0, 0));
-		radeon_emit(cs, info->instance_count);
-	} else {
-		uint64_t va = r600_resource(info->indirect)->gpu_address;
+		radeon_emit(cs, info.instance_count);
+	}
+
+	if (unlikely(info.indirect)) {
+		uint64_t va = r600_resource(info.indirect)->gpu_address;
 		assert(rctx->b.chip_class >= EVERGREEN);
 
 		// Invalidate so non-indirect draw calls reset this state
@@ -1930,32 +1890,32 @@ static void r600_draw_vbo(struct pipe_context *ctx, const struct pipe_draw_info 
 
 		radeon_emit(cs, PKT3(PKT3_NOP, 0, 0));
 		radeon_emit(cs, radeon_add_to_buffer_list(&rctx->b, &rctx->b.gfx,
-							  (struct r600_resource*)info->indirect,
+							  (struct r600_resource*)info.indirect,
 							  RADEON_USAGE_READ,
                                                           RADEON_PRIO_DRAW_INDIRECT));
 	}
 
-	if (info->indexed) {
+	if (info.indexed) {
 		radeon_emit(cs, PKT3(PKT3_INDEX_TYPE, 0, 0));
 		radeon_emit(cs, ib.index_size == 4 ?
 				(VGT_INDEX_32 | (R600_BIG_ENDIAN ? VGT_DMA_SWAP_32_BIT : 0)) :
 				(VGT_INDEX_16 | (R600_BIG_ENDIAN ? VGT_DMA_SWAP_16_BIT : 0)));
 
 		if (ib.user_buffer) {
-			unsigned size_bytes = info->count*ib.index_size;
+			unsigned size_bytes = info.count*ib.index_size;
 			unsigned size_dw = align(size_bytes, 4) / 4;
 			radeon_emit(cs, PKT3(PKT3_DRAW_INDEX_IMMD, 1 + size_dw, render_cond_bit));
-			radeon_emit(cs, info->count);
+			radeon_emit(cs, info.count);
 			radeon_emit(cs, V_0287F0_DI_SRC_SEL_IMMEDIATE);
 			radeon_emit_array(cs, ib.user_buffer, size_dw);
 		} else {
 			uint64_t va = r600_resource(ib.buffer)->gpu_address + ib.offset;
 
-			if (likely(!info->indirect)) {
+			if (likely(!info.indirect)) {
 				radeon_emit(cs, PKT3(PKT3_DRAW_INDEX, 3, render_cond_bit));
 				radeon_emit(cs, va);
 				radeon_emit(cs, (va >> 32UL) & 0xFF);
-				radeon_emit(cs, info->count);
+				radeon_emit(cs, info.count);
 				radeon_emit(cs, V_0287F0_DI_SRC_SEL_DMA);
 				radeon_emit(cs, PKT3(PKT3_NOP, 0, 0));
 				radeon_emit(cs, radeon_add_to_buffer_list(&rctx->b, &rctx->b.gfx,
@@ -1980,13 +1940,13 @@ static void r600_draw_vbo(struct pipe_context *ctx, const struct pipe_draw_info 
 				radeon_emit(cs, max_size);
 
 				radeon_emit(cs, PKT3(EG_PKT3_DRAW_INDEX_INDIRECT, 1, render_cond_bit));
-				radeon_emit(cs, info->indirect_offset);
+				radeon_emit(cs, info.indirect_offset);
 				radeon_emit(cs, V_0287F0_DI_SRC_SEL_DMA);
 			}
 		}
 	} else {
-		if (unlikely(info->count_from_stream_output)) {
-			struct r600_so_target *t = (struct r600_so_target*)info->count_from_stream_output;
+		if (unlikely(info.count_from_stream_output)) {
+			struct r600_so_target *t = (struct r600_so_target*)info.count_from_stream_output;
 			uint64_t va = t->buf_filled_size->gpu_address + t->buf_filled_size_offset;
 
 			radeon_set_context_reg(cs, R_028B30_VGT_STRMOUT_DRAW_OPAQUE_VERTEX_STRIDE, t->stride_in_dw);
@@ -2004,16 +1964,16 @@ static void r600_draw_vbo(struct pipe_context *ctx, const struct pipe_draw_info 
 								  RADEON_PRIO_SO_FILLED_SIZE));
 		}
 
-		if (likely(!info->indirect)) {
+		if (likely(!info.indirect)) {
 			radeon_emit(cs, PKT3(PKT3_DRAW_INDEX_AUTO, 1, render_cond_bit));
-			radeon_emit(cs, info->count);
+			radeon_emit(cs, info.count);
 		}
 		else {
 			radeon_emit(cs, PKT3(EG_PKT3_DRAW_INDIRECT, 1, render_cond_bit));
-			radeon_emit(cs, info->indirect_offset);
+			radeon_emit(cs, info.indirect_offset);
 		}
 		radeon_emit(cs, V_0287F0_DI_SRC_SEL_AUTO_INDEX |
-				(info->count_from_stream_output ? S_0287F0_USE_OPAQUE(1) : 0));
+				(info.count_from_stream_output ? S_0287F0_USE_OPAQUE(1) : 0));
 	}
 
 	/* SMX returns CONTEXT_DONE too early workaround */

@@ -392,8 +392,7 @@ Program::emitBinary(struct nv50_ir_prog_info *info)
          for (Instruction *i = fn->bbArray[b]->getEntry(); i; i = i->next) {
             emit->emitInstruction(i);
             info->bin.instructions++;
-            if ((typeSizeof(i->sType) == 8 || typeSizeof(i->dType) == 8) &&
-                (isFloatType(i->sType) || isFloatType(i->dType)))
+            if (i->sType == TYPE_F64 || i->dType == TYPE_F64)
                info->io.fp64 = true;
          }
       }

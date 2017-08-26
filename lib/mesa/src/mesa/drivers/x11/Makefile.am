@@ -76,7 +76,6 @@ lib@GL_LIB@_la_LIBADD = \
 lib@GL_LIB@_la_LDFLAGS = \
 	-no-undefined \
 	-version-number $(GL_MAJOR):$(GL_MINOR):$(GL_PATCH) \
-	$(BSYMBOLIC) \
 	$(GC_SECTIONS) \
 	$(LD_NO_UNDEFINED)
 

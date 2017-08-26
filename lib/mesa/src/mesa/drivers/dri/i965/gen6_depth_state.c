@@ -164,17 +164,18 @@ gen6_emit_depth_stencil_hiz(struct brw_context *brw,
          struct intel_mipmap_tree *hiz_mt = depth_mt->hiz_buf->mt;
          uint32_t offset = 0;
 
-         if (hiz_mt->array_layout == GEN6_HIZ_STENCIL) {
+         if (hiz_mt->array_layout == ALL_SLICES_AT_EACH_LOD) {
             offset = intel_miptree_get_aligned_offset(
                         hiz_mt,
                         hiz_mt->level[lod].level_x,
-                        hiz_mt->level[lod].level_y);
+                        hiz_mt->level[lod].level_y,
+                        false);
          }
 
 	 BEGIN_BATCH(3);
 	 OUT_BATCH((_3DSTATE_HIER_DEPTH_BUFFER << 16) | (3 - 2));
-	 OUT_BATCH(depth_mt->hiz_buf->aux_base.pitch - 1);
-	 OUT_RELOC(depth_mt->hiz_buf->aux_base.bo,
+	 OUT_BATCH(hiz_mt->pitch - 1);
+	 OUT_RELOC(hiz_mt->bo,
 		   I915_GEM_DOMAIN_RENDER, I915_GEM_DOMAIN_RENDER,
 		   offset);
 	 ADVANCE_BATCH();
@@ -190,15 +191,22 @@ gen6_emit_depth_stencil_hiz(struct brw_context *brw,
       if (separate_stencil) {
          uint32_t offset = 0;
 
-         if (stencil_mt->array_layout == GEN6_HIZ_STENCIL) {
-            assert(stencil_mt->format == MESA_FORMAT_S_UINT8);
-
-            /* Note: we can't compute the stencil offset using
-             * intel_region_get_aligned_offset(), because stencil_region
-             * claims that the region is untiled even though it's W tiled.
-             */
-            offset = stencil_mt->level[lod].level_y * stencil_mt->pitch +
-                     stencil_mt->level[lod].level_x * 64;
+         if (stencil_mt->array_layout == ALL_SLICES_AT_EACH_LOD) {
+            if (stencil_mt->format == MESA_FORMAT_S_UINT8) {
+               /* Note: we can't compute the stencil offset using
+                * intel_region_get_aligned_offset(), because stencil_region
+                * claims that the region is untiled even though it's W tiled.
+                */
+               offset =
+                  stencil_mt->level[lod].level_y * stencil_mt->pitch +
+                  stencil_mt->level[lod].level_x * 64;
+            } else {
+               offset = intel_miptree_get_aligned_offset(
+                           stencil_mt,
+                           stencil_mt->level[lod].level_x,
+                           stencil_mt->level[lod].level_y,
+                           false);
+            }
          }
 
 	 BEGIN_BATCH(3);

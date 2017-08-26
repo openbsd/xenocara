@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 
 # (C) Copyright IBM Corporation 2004, 2005
 # All Rights Reserved.
@@ -382,7 +383,7 @@ const GLuint __glXDefaultPixelStore[9] = { 0, 0, 0, 0, 0, 0, 0, 0, 1 };
                     procs[n] = func.static_glx_name(n)
 
         print """
-#ifdef GLX_INDIRECT_RENDERING
+#ifdef GLX_SHARED_GLAPI
 
 static const struct proc_pair
 {
@@ -418,7 +419,7 @@ __indirect_get_proc_address(const char *name)
    return (pair) ? pair->proc : NULL;
 }
 
-#endif /* GLX_INDIRECT_RENDERING */
+#endif /* GLX_SHARED_GLAPI */
 """
         return
 
@@ -572,7 +573,7 @@ generic_%u_byte( GLint rop, const void * ptr )
                         condition = 'compsize > 0'
 
                     print 'if (%s) {' % (condition)
-                    print '    gc->fillImage(gc, %s, %s, %s, %s, %s, %s, %s, %s, %s);' % (dim_str, width, height, depth, param.img_format, param.img_type, param.name, pcPtr, pixHeaderPtr)
+                    print '    (*gc->fillImage)(gc, %s, %s, %s, %s, %s, %s, %s, %s, %s);' % (dim_str, width, height, depth, param.img_format, param.img_type, param.name, pcPtr, pixHeaderPtr)
                     print '} else {'
                     print '    (void) memcpy( %s, default_pixel_store_%uD, default_pixel_store_%uD_size );' % (pixHeaderPtr, dim, dim)
                     print '}'
@@ -1113,7 +1114,7 @@ extern _X_HIDDEN NOINLINE FASTCALL GLubyte * __glXSetupVendorRequest(
                     break
 
         print ''
-        print '#ifdef GLX_INDIRECT_RENDERING'
+        print '#ifdef GLX_SHARED_GLAPI'
         print 'extern _X_HIDDEN void (*__indirect_get_proc_address(const char *name))(void);'
         print '#endif'
 

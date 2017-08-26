@@ -25,21 +25,18 @@
  */
 
 /**
-****************************************************************************************************
+***************************************************************************************************
 * @file  egbaddrlib.h
-* @brief Contains the EgBasedLib class definition.
-****************************************************************************************************
+* @brief Contains the EgBasedAddrLib class definition.
+***************************************************************************************************
 */
 
 #ifndef __EG_BASED_ADDR_LIB_H__
 #define __EG_BASED_ADDR_LIB_H__
 
-#include "addrlib1.h"
+#include "addrlib.h"
 
-namespace Addr
-{
-namespace V1
-{
+
 /// Structures for functions
 struct CoordFromBankPipe
 {
@@ -56,16 +53,16 @@ struct CoordFromBankPipe
 };
 
 /**
-****************************************************************************************************
+***************************************************************************************************
 * @brief This class is the Evergreen based address library
 * @note  Abstract class
-****************************************************************************************************
+***************************************************************************************************
 */
-class EgBasedLib : public Lib
+class EgBasedAddrLib : public AddrLib
 {
 protected:
-    EgBasedLib(const Client* pClient);
-    virtual ~EgBasedLib();
+    EgBasedAddrLib(const AddrClient* pClient);
+    virtual ~EgBasedAddrLib();
 
 public:
 
@@ -137,9 +134,8 @@ protected:
         const ADDR_COMPUTE_FMASK_COORDFROMADDR_INPUT* pIn,
         ADDR_COMPUTE_FMASK_COORDFROMADDR_OUTPUT* pOut) const;
 
-    virtual BOOL_32 HwlGetAlignmentInfoMacroTiled(
-        const ADDR_COMPUTE_SURFACE_INFO_INPUT* pIn,
-        UINT_32* pPitchAlign, UINT_32* pHeightAlign, UINT_32* pSizeAlign) const;
+    virtual BOOL_32 HwlDegradeBaseLevel(
+        const ADDR_COMPUTE_SURFACE_INFO_INPUT* pIn) const;
 
     virtual UINT_32 HwlComputeQbStereoRightSwizzle(
         ADDR_COMPUTE_SURFACE_INFO_OUTPUT* pInfo) const;
@@ -153,7 +149,7 @@ protected:
     /// Return Cmask block max
     virtual BOOL_32 HwlGetMaxCmaskBlockMax() const
     {
-        return 0x3FFF; // 14 bits, 0n16383
+        return 16383; // 14 bits
     }
 
     // Sub-hwl interface
@@ -228,7 +224,12 @@ protected:
     {
     }
 
-    virtual UINT_32 HwlStereoCheckRightOffsetPadding(ADDR_TILEINFO* pTileInfo) const;
+    /// Virtual function to check if the height needs extra padding
+    /// for stereo right eye offset, to avoid bank pipe swizzle
+    virtual BOOL_32 HwlStereoCheckRightOffsetPadding() const
+    {
+        return FALSE;
+    }
 
     virtual BOOL_32 HwlReduceBankWidthHeight(
         UINT_32 tileSize, UINT_32 bpp, ADDR_SURFACE_FLAGS flags, UINT_32 numSamples,
@@ -258,13 +259,6 @@ protected:
         ADDR_TILEINFO* pTileInfo) const;
 
     /// Addressing functions
-    virtual ADDR_E_RETURNCODE ComputeBankEquation(
-        UINT_32 log2BytesPP, UINT_32 threshX, UINT_32 threshY,
-        ADDR_TILEINFO* pTileInfo, ADDR_EQUATION* pEquation) const
-    {
-        return ADDR_NOTSUPPORTED;
-    }
-
     UINT_32 ComputeBankFromCoord(
         UINT_32 x, UINT_32 y, UINT_32 slice,
         AddrTileMode tileMode, UINT_32 bankSwizzle, UINT_32 tileSpitSlice,
@@ -292,20 +286,10 @@ protected:
         UINT_32 pitch, UINT_32 height, UINT_32 bpp,
         BOOL_32 isLinear, UINT_32 numSlices, UINT_64* sliceBytes, UINT_32 baseAlign) const;
 
-    ADDR_E_RETURNCODE ComputeMacroTileEquation(
-        UINT_32 log2BytesPP, AddrTileMode tileMode, AddrTileType microTileType,
-        ADDR_TILEINFO* pTileInfo, ADDR_EQUATION* pEquation) const;
-
     // Static functions
-    static BOOL_32 IsTileInfoAllZero(const ADDR_TILEINFO* pTileInfo);
+    static BOOL_32 IsTileInfoAllZero(ADDR_TILEINFO* pTileInfo);
     static UINT_32 ComputeFmaskNumPlanesFromNumSamples(UINT_32 numSamples);
     static UINT_32 ComputeFmaskResolvedBppFromNumSamples(UINT_32 numSamples);
-
-    virtual VOID HwlComputeSurfaceAlignmentsMacroTiled(
-        AddrTileMode tileMode, UINT_32 bpp, ADDR_SURFACE_FLAGS flags,
-        UINT_32 mipLevel, UINT_32 numSamples, ADDR_COMPUTE_SURFACE_INFO_OUTPUT* pOut) const
-    {
-    }
 
 private:
 
@@ -338,14 +322,15 @@ private:
     BOOL_32 ComputeSurfaceAlignmentsMacroTiled(
         AddrTileMode tileMode, UINT_32 bpp, ADDR_SURFACE_FLAGS flags,
         UINT_32 mipLevel, UINT_32 numSamples,
-        ADDR_COMPUTE_SURFACE_INFO_OUTPUT* pOut) const;
+        ADDR_TILEINFO* pTileInfo,
+        UINT_32* pBaseAlign, UINT_32* pPitchAlign, UINT_32* pHeightAlign) const;
 
     /// Surface addressing functions
     UINT_64 DispatchComputeSurfaceAddrFromCoord(
         const ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_INPUT* pIn,
         ADDR_COMPUTE_SURFACE_ADDRFROMCOORD_OUTPUT* pOut) const;
 
-    VOID DispatchComputeSurfaceCoordFromAddr(
+    VOID    DispatchComputeSurfaceCoordFromAddr(
         const ADDR_COMPUTE_SURFACE_COORDFROMADDR_INPUT* pIn,
         ADDR_COMPUTE_SURFACE_COORDFROMADDR_OUTPUT* pOut) const;
 
@@ -365,7 +350,7 @@ private:
         ADDR_TILEINFO* pTileInfo,
         UINT_32* pBitPosition) const;
 
-    VOID ComputeSurfaceCoordFromAddrMacroTiled(
+    VOID    ComputeSurfaceCoordFromAddrMacroTiled(
         UINT_64 addr, UINT_32 bitPosition,
         UINT_32 bpp, UINT_32 pitch, UINT_32 height, UINT_32 numSamples,
         AddrTileMode tileMode, UINT_32 tileBase, UINT_32 compBits,
@@ -379,7 +364,7 @@ private:
         const ADDR_COMPUTE_FMASK_ADDRFROMCOORD_INPUT* pIn,
         ADDR_COMPUTE_FMASK_ADDRFROMCOORD_OUTPUT* pOut) const;
 
-    VOID DispatchComputeFmaskCoordFromAddr(
+    VOID    DispatchComputeFmaskCoordFromAddr(
         const ADDR_COMPUTE_FMASK_COORDFROMADDR_INPUT* pIn,
         ADDR_COMPUTE_FMASK_COORDFROMADDR_OUTPUT* pOut) const;
 
@@ -389,13 +374,13 @@ private:
         UINT_32 pitch, UINT_32 height, UINT_32 numSamples, AddrTileMode tileMode,
         BOOL_32 resolved, UINT_32* pBitPosition) const;
 
-    VOID ComputeFmaskCoordFromAddrMicroTiled(
+    VOID    ComputeFmaskCoordFromAddrMicroTiled(
         UINT_64 addr, UINT_32 bitPosition,
         UINT_32 pitch, UINT_32 height, UINT_32 numSamples,
         AddrTileMode tileMode, BOOL_32 resolved,
         UINT_32* pX, UINT_32* pY, UINT_32* pSlice, UINT_32* pSample, UINT_32* pPlane) const;
 
-    VOID ComputeFmaskCoordFromAddrMacroTiled(
+    VOID    ComputeFmaskCoordFromAddrMacroTiled(
         UINT_64 addr, UINT_32 bitPosition,
         UINT_32 pitch, UINT_32 height, UINT_32 numSamples, AddrTileMode tileMode,
         UINT_32 pipeSwizzle, UINT_32 bankSwizzle,
@@ -422,9 +407,6 @@ protected:
     UINT_32 m_logicalBanks;         ///< Logical banks = m_banks * m_ranks if m_banks != 16
     UINT_32 m_bankInterleave;       ///< Bank interleave, as a multiple of pipe interleave size
 };
-
-} // V1
-} // Addr
 
 #endif
 

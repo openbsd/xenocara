@@ -31,7 +31,7 @@
 #include "glheader.h"
 #include "bufferobj.h"
 
-struct gl_vertex_array;
+struct gl_client_array;
 struct gl_context;
 
 /**
@@ -50,12 +50,12 @@ _mesa_vertex_attrib_address(const struct gl_array_attributes *array,
 }
 
 /**
- * Sets the fields in a gl_vertex_array to values derived from a
+ * Sets the fields in a gl_client_array to values derived from a
  * gl_vertex_attrib_array and a gl_vertex_buffer_binding.
  */
 static inline void
 _mesa_update_client_array(struct gl_context *ctx,
-                          struct gl_vertex_array *dst,
+                          struct gl_client_array *dst,
                           const struct gl_array_attributes *src,
                           const struct gl_vertex_buffer_binding *binding)
 {
@@ -94,7 +94,7 @@ _mesa_update_array_format(struct gl_context *ctx,
                           GLuint attrib, GLint size, GLenum type,
                           GLenum format, GLboolean normalized,
                           GLboolean integer, GLboolean doubles,
-                          GLuint relativeOffset);
+                          GLuint relativeOffset, bool flush_vertices);
 
 extern void
 _mesa_enable_vertex_array_attrib(struct gl_context *ctx,
@@ -373,8 +373,8 @@ _mesa_VertexArrayBindingDivisor(GLuint vaobj, GLuint bindingIndex, GLuint diviso
 
 extern void
 _mesa_copy_client_array(struct gl_context *ctx,
-                        struct gl_vertex_array *dst,
-                        struct gl_vertex_array *src);
+                        struct gl_client_array *dst,
+                        struct gl_client_array *src);
 
 extern void
 _mesa_copy_vertex_attrib_array(struct gl_context *ctx,

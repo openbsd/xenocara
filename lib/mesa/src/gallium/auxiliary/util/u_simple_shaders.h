@@ -73,14 +73,12 @@ util_make_fragment_tex_shader_writemask(struct pipe_context *pipe,
                                         unsigned tex_target,
                                         unsigned interp_mode,
                                         unsigned writemask,
-                                        enum tgsi_return_type stype,
-                                        enum tgsi_return_type dtype);
+                                        enum tgsi_return_type stype);
 
 extern void *
 util_make_fragment_tex_shader(struct pipe_context *pipe, unsigned tex_target,
                               unsigned interp_mode,
-                              enum tgsi_return_type stype,
-                              enum tgsi_return_type dtype);
+                              enum tgsi_return_type stype);
 
 extern void *
 util_make_fragment_tex_shader_writedepth(struct pipe_context *pipe,
@@ -120,8 +118,7 @@ util_make_fragment_cloneinput_shader(struct pipe_context *pipe, int num_cbufs,
 extern void *
 util_make_fs_blit_msaa_color(struct pipe_context *pipe,
                              unsigned tgsi_tex,
-                             enum tgsi_return_type stype,
-                             enum tgsi_return_type dtype);
+                             enum tgsi_return_type stype);
 
 
 extern void *

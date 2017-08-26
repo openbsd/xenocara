@@ -354,7 +354,6 @@ static const struct vgpu10_format_entry format_conversion_table[] =
    { PIPE_FORMAT_ASTC_10x10_SRGB,       SVGA3D_FORMAT_INVALID,      SVGA3D_FORMAT_INVALID,       0 },
    { PIPE_FORMAT_ASTC_12x10_SRGB,       SVGA3D_FORMAT_INVALID,      SVGA3D_FORMAT_INVALID,       0 },
    { PIPE_FORMAT_ASTC_12x12_SRGB,       SVGA3D_FORMAT_INVALID,      SVGA3D_FORMAT_INVALID,       0 },
-   { PIPE_FORMAT_P016,                  SVGA3D_FORMAT_INVALID,      SVGA3D_FORMAT_INVALID,       0 },
 };
 
 
@@ -2205,37 +2204,6 @@ svga_format_is_uncompressed_snorm(SVGA3dSurfaceFormat format)
    case SVGA3D_R16G16B16A16_SNORM:
    case SVGA3D_R16G16_SNORM:
    case SVGA3D_R16_SNORM:
-      return true;
-   default:
-      return false;
-   }
-}
-
-
-bool
-svga_format_is_typeless(SVGA3dSurfaceFormat format)
-{
-   switch (format) {
-   case SVGA3D_R32G32B32A32_TYPELESS:
-   case SVGA3D_R32G32B32_TYPELESS:
-   case SVGA3D_R16G16B16A16_TYPELESS:
-   case SVGA3D_R32G32_TYPELESS:
-   case SVGA3D_R32G8X24_TYPELESS:
-   case SVGA3D_R10G10B10A2_TYPELESS:
-   case SVGA3D_R8G8B8A8_TYPELESS:
-   case SVGA3D_R16G16_TYPELESS:
-   case SVGA3D_R32_TYPELESS:
-   case SVGA3D_R24G8_TYPELESS:
-   case SVGA3D_R8G8_TYPELESS:
-   case SVGA3D_R16_TYPELESS:
-   case SVGA3D_R8_TYPELESS:
-   case SVGA3D_BC1_TYPELESS:
-   case SVGA3D_BC2_TYPELESS:
-   case SVGA3D_BC3_TYPELESS:
-   case SVGA3D_BC4_TYPELESS:
-   case SVGA3D_BC5_TYPELESS:
-   case SVGA3D_B8G8R8A8_TYPELESS:
-   case SVGA3D_B8G8R8X8_TYPELESS:
       return true;
    default:
       return false;

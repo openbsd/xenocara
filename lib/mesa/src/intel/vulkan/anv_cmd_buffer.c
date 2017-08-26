@@ -117,15 +117,8 @@ anv_cmd_state_reset(struct anv_cmd_buffer *cmd_buffer)
 {
    struct anv_cmd_state *state = &cmd_buffer->state;
 
-   cmd_buffer->batch.status = VK_SUCCESS;
-
    memset(&state->descriptors, 0, sizeof(state->descriptors));
-   for (uint32_t i = 0; i < MESA_SHADER_STAGES; i++) {
-      if (state->push_constants[i] != NULL) {
-         vk_free(&cmd_buffer->pool->alloc, state->push_constants[i]);
-         state->push_constants[i] = NULL;
-      }
-   }
+   memset(&state->push_constants, 0, sizeof(state->push_constants));
    memset(state->binding_tables, 0, sizeof(state->binding_tables));
    memset(state->samplers, 0, sizeof(state->samplers));
 
@@ -138,15 +131,10 @@ anv_cmd_state_reset(struct anv_cmd_buffer *cmd_buffer)
    state->descriptors_dirty = 0;
    state->push_constants_dirty = 0;
    state->pipeline = NULL;
-   state->framebuffer = NULL;
-   state->pass = NULL;
-   state->subpass = NULL;
    state->push_constant_stages = 0;
    state->restart_index = UINT32_MAX;
    state->dynamic = default_dynamic_state;
    state->need_query_wa = true;
-   state->pma_fix_enabled = false;
-   state->hiz_enabled = false;
 
    if (state->attachments != NULL) {
       vk_free(&cmd_buffer->pool->alloc, state->attachments);
@@ -154,6 +142,62 @@ anv_cmd_state_reset(struct anv_cmd_buffer *cmd_buffer)
    }
 
    state->gen7.index_buffer = NULL;
+}
+
+/**
+ * Setup anv_cmd_state::attachments for vkCmdBeginRenderPass.
+ */
+void
+anv_cmd_state_setup_attachments(struct anv_cmd_buffer *cmd_buffer,
+                                const VkRenderPassBeginInfo *info)
+{
+   struct anv_cmd_state *state = &cmd_buffer->state;
+   ANV_FROM_HANDLE(anv_render_pass, pass, info->renderPass);
+
+   vk_free(&cmd_buffer->pool->alloc, state->attachments);
+
+   if (pass->attachment_count == 0) {
+      state->attachments = NULL;
+      return;
+   }
+
+   state->attachments = vk_alloc(&cmd_buffer->pool->alloc,
+                                  pass->attachment_count *
+                                       sizeof(state->attachments[0]),
+                                  8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (state->attachments == NULL) {
+      /* FIXME: Propagate VK_ERROR_OUT_OF_HOST_MEMORY to vkEndCommandBuffer */
+      abort();
+   }
+
+   for (uint32_t i = 0; i < pass->attachment_count; ++i) {
+      struct anv_render_pass_attachment *att = &pass->attachments[i];
+      VkImageAspectFlags att_aspects = vk_format_aspects(att->format);
+      VkImageAspectFlags clear_aspects = 0;
+
+      if (att_aspects == VK_IMAGE_ASPECT_COLOR_BIT) {
+         /* color attachment */
+         if (att->load_op == VK_ATTACHMENT_LOAD_OP_CLEAR) {
+            clear_aspects |= VK_IMAGE_ASPECT_COLOR_BIT;
+         }
+      } else {
+         /* depthstencil attachment */
+         if ((att_aspects & VK_IMAGE_ASPECT_DEPTH_BIT) &&
+             att->load_op == VK_ATTACHMENT_LOAD_OP_CLEAR) {
+            clear_aspects |= VK_IMAGE_ASPECT_DEPTH_BIT;
+         }
+         if ((att_aspects & VK_IMAGE_ASPECT_STENCIL_BIT) &&
+             att->stencil_load_op == VK_ATTACHMENT_LOAD_OP_CLEAR) {
+            clear_aspects |= VK_IMAGE_ASPECT_STENCIL_BIT;
+         }
+      }
+
+      state->attachments[i].pending_clear_aspects = clear_aspects;
+      if (clear_aspects) {
+         assert(info->clearValueCount > i);
+         state->attachments[i].clear_value = info->pClearValues[i];
+      }
+   }
 }
 
 VkResult
@@ -165,17 +209,13 @@ anv_cmd_buffer_ensure_push_constants_size(struct anv_cmd_buffer *cmd_buffer,
    if (*ptr == NULL) {
       *ptr = vk_alloc(&cmd_buffer->pool->alloc, size, 8,
                        VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-      if (*ptr == NULL) {
-         anv_batch_set_error(&cmd_buffer->batch, VK_ERROR_OUT_OF_HOST_MEMORY);
+      if (*ptr == NULL)
          return vk_error(VK_ERROR_OUT_OF_HOST_MEMORY);
-      }
    } else if ((*ptr)->size < size) {
       *ptr = vk_realloc(&cmd_buffer->pool->alloc, *ptr, size, 8,
                          VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-      if (*ptr == NULL) {
-         anv_batch_set_error(&cmd_buffer->batch, VK_ERROR_OUT_OF_HOST_MEMORY);
+      if (*ptr == NULL)
          return vk_error(VK_ERROR_OUT_OF_HOST_MEMORY);
-      }
    }
    (*ptr)->size = size;
 
@@ -196,11 +236,6 @@ static VkResult anv_create_cmd_buffer(
    if (cmd_buffer == NULL)
       return vk_error(VK_ERROR_OUT_OF_HOST_MEMORY);
 
-   cmd_buffer->batch.status = VK_SUCCESS;
-
-   for (uint32_t i = 0; i < MESA_SHADER_STAGES; i++) {
-      cmd_buffer->state.push_constants[i] = NULL;
-   }
    cmd_buffer->_loader_data.loaderMagic = ICD_LOADER_MAGIC;
    cmd_buffer->device = device;
    cmd_buffer->pool = pool;
@@ -215,9 +250,6 @@ static VkResult anv_create_cmd_buffer(
                          &device->surface_state_block_pool);
    anv_state_stream_init(&cmd_buffer->dynamic_state_stream,
                          &device->dynamic_state_block_pool);
-
-   memset(&cmd_buffer->state.push_descriptor, 0,
-          sizeof(cmd_buffer->state.push_descriptor));
 
    if (pool) {
       list_addtail(&cmd_buffer->pool_link, &pool->cmd_buffers);
@@ -320,24 +352,6 @@ VkResult anv_ResetCommandBuffer(
 {
    ANV_FROM_HANDLE(anv_cmd_buffer, cmd_buffer, commandBuffer);
    return anv_cmd_buffer_reset(cmd_buffer);
-}
-
-void
-anv_cmd_buffer_emit_state_base_address(struct anv_cmd_buffer *cmd_buffer)
-{
-   switch (cmd_buffer->device->info.gen) {
-   case 7:
-      if (cmd_buffer->device->info.is_haswell)
-         return gen75_cmd_buffer_emit_state_base_address(cmd_buffer);
-      else
-         return gen7_cmd_buffer_emit_state_base_address(cmd_buffer);
-   case 8:
-      return gen8_cmd_buffer_emit_state_base_address(cmd_buffer);
-   case 9:
-      return gen9_cmd_buffer_emit_state_base_address(cmd_buffer);
-   default:
-      unreachable("unsupported gen\n");
-   }
 }
 
 void anv_CmdBindPipeline(
@@ -523,31 +537,42 @@ void anv_CmdBindDescriptorSets(
 
    assert(firstSet + descriptorSetCount < MAX_SETS);
 
-   uint32_t dynamic_slot = 0;
    for (uint32_t i = 0; i < descriptorSetCount; i++) {
       ANV_FROM_HANDLE(anv_descriptor_set, set, pDescriptorSets[i]);
       set_layout = layout->set[firstSet + i].layout;
 
-      cmd_buffer->state.descriptors[firstSet + i] = set;
-
-      if (set_layout->dynamic_offset_count > 0) {
-         uint32_t dynamic_offset_start =
-            layout->set[firstSet + i].dynamic_offset_start;
-
-         /* Assert that everything is in range */
-         assert(dynamic_offset_start + set_layout->dynamic_offset_count <=
-                ARRAY_SIZE(cmd_buffer->state.dynamic_offsets));
-         assert(dynamic_slot + set_layout->dynamic_offset_count <=
-                dynamicOffsetCount);
-
-         typed_memcpy(&cmd_buffer->state.dynamic_offsets[dynamic_offset_start],
-                      &pDynamicOffsets[dynamic_slot],
-                      set_layout->dynamic_offset_count);
-
-         dynamic_slot += set_layout->dynamic_offset_count;
+      if (cmd_buffer->state.descriptors[firstSet + i] != set) {
+         cmd_buffer->state.descriptors[firstSet + i] = set;
+         cmd_buffer->state.descriptors_dirty |= set_layout->shader_stages;
       }
 
-      cmd_buffer->state.descriptors_dirty |= set_layout->shader_stages;
+      if (set_layout->dynamic_offset_count > 0) {
+         anv_foreach_stage(s, set_layout->shader_stages) {
+            anv_cmd_buffer_ensure_push_constant_field(cmd_buffer, s, dynamic);
+
+            struct anv_push_constants *push =
+               cmd_buffer->state.push_constants[s];
+
+            unsigned d = layout->set[firstSet + i].dynamic_offset_start;
+            const uint32_t *offsets = pDynamicOffsets;
+            struct anv_descriptor *desc = set->descriptors;
+
+            for (unsigned b = 0; b < set_layout->binding_count; b++) {
+               if (set_layout->binding[b].dynamic_offset_index < 0)
+                  continue;
+
+               unsigned array_size = set_layout->binding[b].array_size;
+               for (unsigned j = 0; j < array_size; j++) {
+                  push->dynamic[d].offset = *(offsets++);
+                  push->dynamic[d].range = (desc->buffer_view) ?
+                                            desc->buffer_view->range : 0;
+                  desc++;
+                  d++;
+               }
+            }
+         }
+         cmd_buffer->state.push_constants_dirty |= set_layout->shader_stages;
+      }
    }
 }
 
@@ -564,7 +589,7 @@ void anv_CmdBindVertexBuffers(
    /* We have to defer setting up vertex buffer since we need the buffer
     * stride from the pipeline. */
 
-   assert(firstBinding + bindingCount <= MAX_VBS);
+   assert(firstBinding + bindingCount < MAX_VBS);
    for (uint32_t i = 0; i < bindingCount; i++) {
       vb[firstBinding + i].buffer = anv_buffer_from_handle(pBuffers[i]);
       vb[firstBinding + i].offset = pOffsets[i];
@@ -598,7 +623,8 @@ anv_cmd_buffer_emit_dynamic(struct anv_cmd_buffer *cmd_buffer,
    state = anv_cmd_buffer_alloc_dynamic_state(cmd_buffer, size, alignment);
    memcpy(state.map, data, size);
 
-   anv_state_flush(cmd_buffer->device, state);
+   if (!cmd_buffer->device->info.has_llc)
+      anv_state_clflush(state);
 
    VG(VALGRIND_CHECK_MEM_IS_DEFINED(state.map, size));
 
@@ -619,7 +645,8 @@ anv_cmd_buffer_merge_dynamic(struct anv_cmd_buffer *cmd_buffer,
    for (uint32_t i = 0; i < dwords; i++)
       p[i] = a[i] | b[i];
 
-   anv_state_flush(cmd_buffer->device, state);
+   if (!cmd_buffer->device->info.has_llc)
+      anv_state_clflush(state);
 
    VG(VALGRIND_CHECK_MEM_IS_DEFINED(p, dwords * 4));
 
@@ -655,7 +682,8 @@ anv_cmd_buffer_push_constants(struct anv_cmd_buffer *cmd_buffer,
       u32_map[i] = *(uint32_t *)((uint8_t *)data + offset);
    }
 
-   anv_state_flush(cmd_buffer->device, state);
+   if (!cmd_buffer->device->info.has_llc)
+      anv_state_clflush(state);
 
    return state;
 }
@@ -714,7 +742,8 @@ anv_cmd_buffer_cs_push_constants(struct anv_cmd_buffer *cmd_buffer)
       }
    }
 
-   anv_state_flush(cmd_buffer->device, state);
+   if (!cmd_buffer->device->info.has_llc)
+      anv_state_clflush(state);
 
    return state;
 }
@@ -730,11 +759,7 @@ void anv_CmdPushConstants(
    ANV_FROM_HANDLE(anv_cmd_buffer, cmd_buffer, commandBuffer);
 
    anv_foreach_stage(stage, stageFlags) {
-      VkResult result =
-         anv_cmd_buffer_ensure_push_constant_field(cmd_buffer,
-                                                   stage, client_data);
-      if (result != VK_SUCCESS)
-         return;
+      anv_cmd_buffer_ensure_push_constant_field(cmd_buffer, stage, client_data);
 
       memcpy(cmd_buffer->state.push_constants[stage]->client_data + offset,
              pValues, size);
@@ -803,14 +828,6 @@ VkResult anv_ResetCommandPool(
    return VK_SUCCESS;
 }
 
-void anv_TrimCommandPoolKHR(
-    VkDevice                                    device,
-    VkCommandPool                               commandPool,
-    VkCommandPoolTrimFlagsKHR                   flags)
-{
-   /* Nothing for us to do here.  Our pools stay pretty tidy. */
-}
-
 /**
  * Return NULL if the current subpass has no depthstencil attachment.
  */
@@ -820,134 +837,14 @@ anv_cmd_buffer_get_depth_stencil_view(const struct anv_cmd_buffer *cmd_buffer)
    const struct anv_subpass *subpass = cmd_buffer->state.subpass;
    const struct anv_framebuffer *fb = cmd_buffer->state.framebuffer;
 
-   if (subpass->depth_stencil_attachment.attachment == VK_ATTACHMENT_UNUSED)
+   if (subpass->depth_stencil_attachment == VK_ATTACHMENT_UNUSED)
       return NULL;
 
    const struct anv_image_view *iview =
-      fb->attachments[subpass->depth_stencil_attachment.attachment];
+      fb->attachments[subpass->depth_stencil_attachment];
 
    assert(iview->aspect_mask & (VK_IMAGE_ASPECT_DEPTH_BIT |
                                 VK_IMAGE_ASPECT_STENCIL_BIT));
 
    return iview;
-}
-
-void anv_CmdPushDescriptorSetKHR(
-    VkCommandBuffer commandBuffer,
-    VkPipelineBindPoint pipelineBindPoint,
-    VkPipelineLayout _layout,
-    uint32_t _set,
-    uint32_t descriptorWriteCount,
-    const VkWriteDescriptorSet* pDescriptorWrites)
-{
-   ANV_FROM_HANDLE(anv_cmd_buffer, cmd_buffer, commandBuffer);
-   ANV_FROM_HANDLE(anv_pipeline_layout, layout, _layout);
-
-   assert(pipelineBindPoint == VK_PIPELINE_BIND_POINT_GRAPHICS ||
-          pipelineBindPoint == VK_PIPELINE_BIND_POINT_COMPUTE);
-   assert(_set < MAX_SETS);
-
-   const struct anv_descriptor_set_layout *set_layout =
-      layout->set[_set].layout;
-   struct anv_descriptor_set *set = &cmd_buffer->state.push_descriptor.set;
-
-   set->layout = set_layout;
-   set->size = anv_descriptor_set_layout_size(set_layout);
-   set->buffer_count = set_layout->buffer_count;
-   set->buffer_views = cmd_buffer->state.push_descriptor.buffer_views;
-
-   /* Go through the user supplied descriptors. */
-   for (uint32_t i = 0; i < descriptorWriteCount; i++) {
-      const VkWriteDescriptorSet *write = &pDescriptorWrites[i];
-
-      switch (write->descriptorType) {
-      case VK_DESCRIPTOR_TYPE_SAMPLER:
-      case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
-      case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
-      case VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:
-      case VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT:
-         for (uint32_t j = 0; j < write->descriptorCount; j++) {
-            anv_descriptor_set_write_image_view(set, &cmd_buffer->device->info,
-                                                write->pImageInfo + j,
-                                                write->descriptorType,
-                                                write->dstBinding,
-                                                write->dstArrayElement + j);
-         }
-         break;
-
-      case VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER:
-      case VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER:
-         for (uint32_t j = 0; j < write->descriptorCount; j++) {
-            ANV_FROM_HANDLE(anv_buffer_view, bview,
-                            write->pTexelBufferView[j]);
-
-            anv_descriptor_set_write_buffer_view(set,
-                                                 write->descriptorType,
-                                                 bview,
-                                                 write->dstBinding,
-                                                 write->dstArrayElement + j);
-         }
-         break;
-
-      case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
-      case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
-      case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:
-      case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
-         for (uint32_t j = 0; j < write->descriptorCount; j++) {
-            assert(write->pBufferInfo[j].buffer);
-            ANV_FROM_HANDLE(anv_buffer, buffer, write->pBufferInfo[j].buffer);
-            assert(buffer);
-
-            anv_descriptor_set_write_buffer(set,
-                                            cmd_buffer->device,
-                                            &cmd_buffer->surface_state_stream,
-                                            write->descriptorType,
-                                            buffer,
-                                            write->dstBinding,
-                                            write->dstArrayElement + j,
-                                            write->pBufferInfo[j].offset,
-                                            write->pBufferInfo[j].range);
-         }
-         break;
-
-      default:
-         break;
-      }
-   }
-
-   cmd_buffer->state.descriptors[_set] = set;
-   cmd_buffer->state.descriptors_dirty |= set_layout->shader_stages;
-}
-
-void anv_CmdPushDescriptorSetWithTemplateKHR(
-    VkCommandBuffer                             commandBuffer,
-    VkDescriptorUpdateTemplateKHR               descriptorUpdateTemplate,
-    VkPipelineLayout                            _layout,
-    uint32_t                                    _set,
-    const void*                                 pData)
-{
-   ANV_FROM_HANDLE(anv_cmd_buffer, cmd_buffer, commandBuffer);
-   ANV_FROM_HANDLE(anv_descriptor_update_template, template,
-                   descriptorUpdateTemplate);
-   ANV_FROM_HANDLE(anv_pipeline_layout, layout, _layout);
-
-   assert(_set < MAX_PUSH_DESCRIPTORS);
-
-   const struct anv_descriptor_set_layout *set_layout =
-      layout->set[_set].layout;
-   struct anv_descriptor_set *set = &cmd_buffer->state.push_descriptor.set;
-
-   set->layout = set_layout;
-   set->size = anv_descriptor_set_layout_size(set_layout);
-   set->buffer_count = set_layout->buffer_count;
-   set->buffer_views = cmd_buffer->state.push_descriptor.buffer_views;
-
-   anv_descriptor_set_write_template(set,
-                                     cmd_buffer->device,
-                                     &cmd_buffer->surface_state_stream,
-                                     template,
-                                     pData);
-
-   cmd_buffer->state.descriptors[_set] = set;
-   cmd_buffer->state.descriptors_dirty |= set_layout->shader_stages;
 }

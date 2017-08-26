@@ -435,7 +435,26 @@ sb_ostream& operator << (sb_ostream &o, value &v);
 
 typedef uint32_t value_hash;
 
-typedef std::list< node * > uselist;
+enum use_kind {
+	UK_SRC,
+	UK_SRC_REL,
+	UK_DST_REL,
+	UK_MAYDEF,
+	UK_MAYUSE,
+	UK_PRED,
+	UK_COND
+};
+
+struct use_info {
+	node *op;
+	use_kind kind;
+	int arg;
+
+	use_info(node *n, use_kind kind, int arg)
+		: op(n), kind(kind), arg(arg) {}
+};
+
+typedef std::list< use_info * > uselist;
 
 enum constraint_kind {
 	CK_SAME_REG,
@@ -566,7 +585,7 @@ public:
 				&& literal_value != literal(1.0);
 	}
 
-	void add_use(node *n);
+	void add_use(node *n, use_kind kind, int arg);
 	void remove_use(const node *n);
 
 	value_hash hash();

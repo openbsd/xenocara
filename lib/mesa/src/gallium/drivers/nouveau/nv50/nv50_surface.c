@@ -821,7 +821,7 @@ struct nv50_blitter
 
    struct nv50_tsc_entry sampler[2]; /* nearest, bilinear */
 
-   mtx_t mutex;
+   pipe_mutex mutex;
 };
 
 struct nv50_blitctx
@@ -1078,11 +1078,11 @@ nv50_blit_select_fp(struct nv50_blitctx *ctx, const struct pipe_blit_info *info)
    const unsigned mode = ctx->mode;
 
    if (!blitter->fp[targ][mode]) {
-      mtx_lock(&blitter->mutex);
+      pipe_mutex_lock(blitter->mutex);
       if (!blitter->fp[targ][mode])
          blitter->fp[targ][mode] =
             nv50_blitter_make_fp(&ctx->nv50->base.pipe, mode, ptarg);
-      mtx_unlock(&blitter->mutex);
+      pipe_mutex_unlock(blitter->mutex);
    }
    ctx->fp = blitter->fp[targ][mode];
 }
@@ -1755,7 +1755,7 @@ nv50_blitter_create(struct nv50_screen *screen)
       return false;
    }
 
-   (void) mtx_init(&screen->blitter->mutex, mtx_plain);
+   pipe_mutex_init(screen->blitter->mutex);
 
    nv50_blitter_make_vp(screen->blitter);
    nv50_blitter_make_sampler(screen->blitter);
@@ -1780,7 +1780,7 @@ nv50_blitter_destroy(struct nv50_screen *screen)
       }
    }
 
-   mtx_destroy(&blitter->mutex);
+   pipe_mutex_destroy(blitter->mutex);
    FREE(blitter);
 }
 

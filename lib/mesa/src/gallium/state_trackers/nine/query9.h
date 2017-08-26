@@ -40,7 +40,6 @@ struct NineQuery9
     D3DQUERYTYPE type;
     enum nine_query_state state;
     boolean instant; /* true if D3DISSUE_BEGIN is not needed / invalid */
-    unsigned counter; /* Number of pending Begin/End (0 if internal multithreading off) */
 };
 static inline struct NineQuery9 *
 NineQuery9( void *data )

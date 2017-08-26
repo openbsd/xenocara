@@ -27,6 +27,7 @@
 #include "blorp_priv.h"
 #include "common/gen_device_info.h"
 #include "common/gen_sample_positions.h"
+#include "intel_aub.h"
 
 /**
  * This file provides the blorp pipeline setup and execution functionality.
@@ -52,6 +53,7 @@ blorp_emit_reloc(struct blorp_batch *batch,
 
 static void *
 blorp_alloc_dynamic_state(struct blorp_batch *batch,
+                          enum aub_state_struct_type type,
                           uint32_t size,
                           uint32_t alignment,
                           uint32_t *offset);
@@ -108,29 +110,15 @@ _blorp_combine_address(struct blorp_batch *batch, void *location,
         _blorp_cmd_pack(cmd)(batch, (void *)_dst, &name),         \
         _dst = NULL)
 
-#define blorp_emitn(batch, cmd, n) ({                       \
-      uint32_t *_dw = blorp_emit_dwords(batch, n);          \
-      if (_dw) {                                            \
-         struct cmd template = {                            \
-            _blorp_cmd_header(cmd),                         \
-            .DWordLength = n - _blorp_cmd_length_bias(cmd), \
-         };                                                 \
-         _blorp_cmd_pack(cmd)(batch, _dw, &template);       \
-      }                                                     \
-      _dw ? _dw + 1 : NULL; /* Array starts at dw[1] */     \
+#define blorp_emitn(batch, cmd, n) ({                    \
+      uint32_t *_dw = blorp_emit_dwords(batch, n);       \
+      struct cmd template = {                            \
+         _blorp_cmd_header(cmd),                         \
+         .DWordLength = n - _blorp_cmd_length_bias(cmd), \
+      };                                                 \
+      _blorp_cmd_pack(cmd)(batch, _dw, &template);       \
+      _dw + 1; /* Array starts at dw[1] */               \
    })
-
-#define STRUCT_ZERO(S) ({ struct S t; memset(&t, 0, sizeof(t)); t; })
-
-#define blorp_emit_dynamic(batch, state, name, align, offset)      \
-   for (struct state name = STRUCT_ZERO(state),                         \
-        *_dst = blorp_alloc_dynamic_state(batch,                   \
-                                          _blorp_cmd_length(state) * 4, \
-                                          align, offset);               \
-        __builtin_expect(_dst != NULL, 1);                              \
-        _blorp_cmd_pack(state)(batch, (void *)_dst, &name),             \
-        blorp_flush_range(batch, _dst, _blorp_cmd_length(state) * 4),   \
-        _dst = NULL)
 
 /* 3DSTATE_URB
  * 3DSTATE_URB_VS
@@ -210,36 +198,28 @@ blorp_emit_input_varying_data(struct blorp_batch *batch,
    const unsigned vec4_size_in_bytes = 4 * sizeof(float);
    const unsigned max_num_varyings =
       DIV_ROUND_UP(sizeof(params->wm_inputs), vec4_size_in_bytes);
-   const unsigned num_varyings =
-      params->wm_prog_data ? params->wm_prog_data->num_varying_inputs : 0;
+   const unsigned num_varyings = params->wm_prog_data->num_varying_inputs;
 
-   *size = 16 + num_varyings * vec4_size_in_bytes;
+   *size = num_varyings * vec4_size_in_bytes;
 
    const uint32_t *const inputs_src = (const uint32_t *)&params->wm_inputs;
    void *data = blorp_alloc_vertex_buffer(batch, *size, addr);
    uint32_t *inputs = data;
 
-   /* Copy in the VS inputs */
-   assert(sizeof(params->vs_inputs) == 16);
-   memcpy(inputs, &params->vs_inputs, sizeof(params->vs_inputs));
-   inputs += 4;
+   /* Walk over the attribute slots, determine if the attribute is used by
+    * the program and when necessary copy the values from the input storage to
+    * the vertex data buffer.
+    */
+   for (unsigned i = 0; i < max_num_varyings; i++) {
+      const gl_varying_slot attr = VARYING_SLOT_VAR0 + i;
 
-   if (params->wm_prog_data) {
-      /* Walk over the attribute slots, determine if the attribute is used by
-       * the program and when necessary copy the values from the input storage
-       * to the vertex data buffer.
-       */
-      for (unsigned i = 0; i < max_num_varyings; i++) {
-         const gl_varying_slot attr = VARYING_SLOT_VAR0 + i;
+      const int input_index = params->wm_prog_data->urb_setup[attr];
+      if (input_index < 0)
+         continue;
 
-         const int input_index = params->wm_prog_data->urb_setup[attr];
-         if (input_index < 0)
-            continue;
+      memcpy(inputs, inputs_src + i * 4, vec4_size_in_bytes);
 
-         memcpy(inputs, inputs_src + i * 4, vec4_size_in_bytes);
-
-         inputs += 4;
-      }
+      inputs += 4;
    }
 
    blorp_flush_range(batch, data, *size);
@@ -251,6 +231,8 @@ blorp_emit_vertex_buffers(struct blorp_batch *batch,
 {
    struct GENX(VERTEX_BUFFER_STATE) vb[2];
    memset(vb, 0, sizeof(vb));
+
+   unsigned num_buffers = 1;
 
    uint32_t size;
    blorp_emit_vertex_data(batch, params, &vb[0].BufferStartingAddress, &size);
@@ -268,28 +250,30 @@ blorp_emit_vertex_buffers(struct blorp_batch *batch,
    vb[0].EndAddress.offset += size - 1;
 #endif
 
-   blorp_emit_input_varying_data(batch, params,
-                                 &vb[1].BufferStartingAddress, &size);
-   vb[1].VertexBufferIndex = 1;
-   vb[1].BufferPitch = 0;
-   vb[1].VertexBufferMOCS = batch->blorp->mocs.vb;
+   if (params->wm_prog_data && params->wm_prog_data->num_varying_inputs) {
+      blorp_emit_input_varying_data(batch, params,
+                                    &vb[1].BufferStartingAddress, &size);
+      vb[1].VertexBufferIndex = 1;
+      vb[1].BufferPitch = 0;
+      vb[1].VertexBufferMOCS = batch->blorp->mocs.vb;
 #if GEN_GEN >= 7
-   vb[1].AddressModifyEnable = true;
+      vb[1].AddressModifyEnable = true;
 #endif
 #if GEN_GEN >= 8
-   vb[1].BufferSize = size;
+      vb[1].BufferSize = size;
 #else
-   vb[1].BufferAccessType = INSTANCEDATA;
-   vb[1].EndAddress = vb[1].BufferStartingAddress;
-   vb[1].EndAddress.offset += size - 1;
+      vb[1].BufferAccessType = INSTANCEDATA;
+      vb[1].EndAddress = vb[1].BufferStartingAddress;
+      vb[1].EndAddress.offset += size - 1;
 #endif
+      num_buffers++;
+   }
 
-   const unsigned num_dwords = 1 + GENX(VERTEX_BUFFER_STATE_length) * 2;
+   const unsigned num_dwords =
+      1 + GENX(VERTEX_BUFFER_STATE_length) * num_buffers;
    uint32_t *dw = blorp_emitn(batch, GENX(3DSTATE_VERTEX_BUFFERS), num_dwords);
-   if (!dw)
-      return;
 
-   for (unsigned i = 0; i < 2; i++) {
+   for (unsigned i = 0; i < num_buffers; i++) {
       GENX(VERTEX_BUFFER_STATE_pack)(batch, dw, &vb[i]);
       dw += GENX(VERTEX_BUFFER_STATE_length);
    }
@@ -352,11 +336,11 @@ blorp_emit_vertex_elements(struct blorp_batch *batch,
     *
     * See the vertex element setup below.
     */
-   ve[0].VertexBufferIndex = 1;
+   ve[0].VertexBufferIndex = 0;
    ve[0].Valid = true;
    ve[0].SourceElementFormat = ISL_FORMAT_R32G32B32A32_FLOAT;
    ve[0].SourceElementOffset = 0;
-   ve[0].Component0Control = VFCOMP_STORE_SRC;
+   ve[0].Component0Control = VFCOMP_STORE_0;
 
    /* From Gen8 onwards hardware is no more instructed to overwrite components
     * using an element specifier. Instead one has separate 3DSTATE_VF_SGVS
@@ -367,8 +351,8 @@ blorp_emit_vertex_elements(struct blorp_batch *batch,
 #else
    ve[0].Component1Control = VFCOMP_STORE_IID;
 #endif
-   ve[0].Component2Control = VFCOMP_STORE_SRC;
-   ve[0].Component3Control = VFCOMP_STORE_SRC;
+   ve[0].Component2Control = VFCOMP_STORE_0;
+   ve[0].Component3Control = VFCOMP_STORE_0;
 
    ve[1].VertexBufferIndex = 0;
    ve[1].Valid = true;
@@ -383,7 +367,7 @@ blorp_emit_vertex_elements(struct blorp_batch *batch,
       ve[i + 2].VertexBufferIndex = 1;
       ve[i + 2].Valid = true;
       ve[i + 2].SourceElementFormat = ISL_FORMAT_R32G32B32A32_FLOAT;
-      ve[i + 2].SourceElementOffset = 16 + i * 4 * sizeof(float);
+      ve[i + 2].SourceElementOffset = i * 4 * sizeof(float);
       ve[i + 2].Component0Control = VFCOMP_STORE_SRC;
       ve[i + 2].Component1Control = VFCOMP_STORE_SRC;
       ve[i + 2].Component2Control = VFCOMP_STORE_SRC;
@@ -393,8 +377,6 @@ blorp_emit_vertex_elements(struct blorp_batch *batch,
    const unsigned num_dwords =
       1 + GENX(VERTEX_ELEMENT_STATE_length) * num_elements;
    uint32_t *dw = blorp_emitn(batch, GENX(3DSTATE_VERTEX_ELEMENTS), num_dwords);
-   if (!dw)
-      return;
 
    for (unsigned i = 0; i < num_elements; i++) {
       GENX(VERTEX_ELEMENT_STATE_pack)(batch, dw, &ve[i]);
@@ -422,35 +404,6 @@ blorp_emit_vertex_elements(struct blorp_batch *batch,
       topo.PrimitiveTopologyType = _3DPRIM_RECTLIST;
    }
 #endif
-}
-
-static void
-blorp_emit_vs_config(struct blorp_batch *batch,
-                     const struct blorp_params *params)
-{
-   struct brw_vs_prog_data *vs_prog_data = params->vs_prog_data;
-
-   blorp_emit(batch, GENX(3DSTATE_VS), vs) {
-      if (vs_prog_data) {
-         vs.FunctionEnable = true;
-
-         vs.KernelStartPointer = params->vs_prog_kernel;
-
-         vs.DispatchGRFStartRegisterForURBData =
-            vs_prog_data->base.base.dispatch_grf_start_reg;
-         vs.VertexURBEntryReadLength =
-            vs_prog_data->base.urb_read_length;
-         vs.VertexURBEntryReadOffset = 0;
-
-         vs.MaximumNumberofThreads =
-            batch->blorp->isl_dev->info->max_vs_threads - 1;
-
-#if GEN_GEN >= 8
-         vs.SIMD8DispatchEnable =
-            vs_prog_data->base.dispatch_mode == DISPATCH_MODE_SIMD8;
-#endif
-      }
-   }
 }
 
 static void
@@ -511,7 +464,7 @@ blorp_emit_sf_config(struct blorp_batch *batch,
       sf.FrontFaceFillMode = FILL_MODE_SOLID;
       sf.BackFaceFillMode = FILL_MODE_SOLID;
 
-      sf.MultisampleRasterizationMode = params->num_samples > 1 ?
+      sf.MultisampleRasterizationMode = params->dst.surf.samples > 1 ?
          MSRASTMODE_ON_PATTERN : MSRASTMODE_OFF_PIXEL;
 
 #if GEN_GEN == 7
@@ -537,7 +490,7 @@ blorp_emit_sf_config(struct blorp_batch *batch,
       sf.FrontFaceFillMode = FILL_MODE_SOLID;
       sf.BackFaceFillMode = FILL_MODE_SOLID;
 
-      sf.MultisampleRasterizationMode = params->num_samples > 1 ?
+      sf.MultisampleRasterizationMode = params->dst.surf.samples > 1 ?
          MSRASTMODE_ON_PATTERN : MSRASTMODE_OFF_PIXEL;
 
       sf.VertexURBEntryReadOffset = 1;
@@ -663,9 +616,9 @@ blorp_emit_ps_config(struct blorp_batch *batch,
          wm.ThreadDispatchEnable = true;
 
       if (params->src.enabled)
-         wm.PixelShaderKillsPixel = true;
+         wm.PixelShaderKillPixel = true;
 
-      if (params->num_samples > 1) {
+      if (params->dst.surf.samples > 1) {
          wm.MultisampleRasterizationMode = MSRASTMODE_ON_PATTERN;
          wm.MultisampleDispatchMode =
             (prog_data && prog_data->persample_dispatch) ?
@@ -685,9 +638,9 @@ blorp_emit_ps_config(struct blorp_batch *batch,
 #endif
 
       if (prog_data) {
-         ps.DispatchGRFStartRegisterForConstantSetupData0 =
+         ps.DispatchGRFStartRegisterforConstantSetupData0 =
             prog_data->base.dispatch_grf_start_reg;
-         ps.DispatchGRFStartRegisterForConstantSetupData2 =
+         ps.DispatchGRFStartRegisterforConstantSetupData2 =
             prog_data->dispatch_grf_start_reg_2;
 
          ps.KernelStartPointer0 = params->wm_prog_kernel;
@@ -747,9 +700,9 @@ blorp_emit_ps_config(struct blorp_batch *batch,
       if (prog_data) {
          wm.ThreadDispatchEnable = true;
 
-         wm.DispatchGRFStartRegisterForConstantSetupData0 =
+         wm.DispatchGRFStartRegisterforConstantSetupData0 =
             prog_data->base.dispatch_grf_start_reg;
-         wm.DispatchGRFStartRegisterForConstantSetupData2 =
+         wm.DispatchGRFStartRegisterforConstantSetupData2 =
             prog_data->dispatch_grf_start_reg_2;
 
          wm.KernelStartPointer0 = params->wm_prog_kernel;
@@ -764,10 +717,10 @@ blorp_emit_ps_config(struct blorp_batch *batch,
 
       if (params->src.enabled) {
          wm.SamplerCount = 1; /* Up to 4 samplers */
-         wm.PixelShaderKillsPixel = true; /* TODO: temporarily smash on */
+         wm.PixelShaderKillPixel = true; /* TODO: temporarily smash on */
       }
 
-      if (params->num_samples > 1) {
+      if (params->dst.surf.samples > 1) {
          wm.MultisampleRasterizationMode = MSRASTMODE_ON_PATTERN;
          wm.MultisampleDispatchMode =
             (prog_data && prog_data->persample_dispatch) ?
@@ -804,73 +757,133 @@ static void
 blorp_emit_depth_stencil_config(struct blorp_batch *batch,
                                 const struct blorp_params *params)
 {
-   const struct isl_device *isl_dev = batch->blorp->isl_dev;
-
-   uint32_t *dw = blorp_emit_dwords(batch, isl_dev->ds.size / 4);
-   if (dw == NULL)
-      return;
-
-   struct isl_depth_stencil_hiz_emit_info info = {
 #if GEN_GEN >= 7
-      .mocs = 1, /* GEN7_MOCS_L3 */
+   const uint32_t mocs = 1; /* GEN7_MOCS_L3 */
 #else
-      .mocs = 0,
+   const uint32_t mocs = 0;
 #endif
-   };
 
-   if (params->depth.enabled) {
-      info.view = &params->depth.view;
-   } else if (params->stencil.enabled) {
-      info.view = &params->stencil.view;
-   }
+   blorp_emit(batch, GENX(3DSTATE_DEPTH_BUFFER), db) {
+#if GEN_GEN >= 7
+      db.DepthWriteEnable = params->depth.enabled;
+      db.StencilWriteEnable = params->stencil.enabled;
+#endif
 
-   if (params->depth.enabled) {
-      info.depth_surf = &params->depth.surf;
+#if GEN_GEN <= 6
+      db.SeparateStencilBufferEnable = true;
+#endif
 
-      info.depth_address =
-         blorp_emit_reloc(batch, dw + isl_dev->ds.depth_offset / 4,
-                          params->depth.addr, 0);
+      if (params->depth.enabled) {
+         db.SurfaceFormat = params->depth_format;
+         db.SurfaceType = isl_to_gen_ds_surftype[params->depth.surf.dim];
 
-      info.hiz_usage = params->depth.aux_usage;
-      if (info.hiz_usage == ISL_AUX_USAGE_HIZ) {
-         info.hiz_surf = &params->depth.aux_surf;
+#if GEN_GEN <= 6
+         db.TiledSurface = true;
+         db.TileWalk = TILEWALK_YMAJOR;
+         db.MIPMapLayoutMode = MIPLAYOUT_BELOW;
+#endif
 
-         info.hiz_address =
-            blorp_emit_reloc(batch, dw + isl_dev->ds.hiz_offset / 4,
-                             params->depth.aux_addr, 0);
+         db.HierarchicalDepthBufferEnable =
+            params->depth.aux_usage == ISL_AUX_USAGE_HIZ;
 
-         info.depth_clear_value = params->depth.clear_color.u32[0];
+         db.Width = params->depth.surf.logical_level0_px.width - 1;
+         db.Height = params->depth.surf.logical_level0_px.height - 1;
+         db.RenderTargetViewExtent = db.Depth =
+            params->depth.view.array_len - 1;
+
+         db.LOD = params->depth.view.base_level;
+         db.MinimumArrayElement = params->depth.view.base_array_layer;
+
+         db.SurfacePitch = params->depth.surf.row_pitch - 1;
+#if GEN_GEN >= 8
+         db.SurfaceQPitch =
+            isl_surf_get_array_pitch_el_rows(&params->depth.surf) >> 2,
+#endif
+
+         db.SurfaceBaseAddress = params->depth.addr;
+         db.DepthBufferMOCS = mocs;
+      } else if (params->stencil.enabled) {
+         db.SurfaceFormat = D32_FLOAT;
+         db.SurfaceType = isl_to_gen_ds_surftype[params->stencil.surf.dim];
+
+         db.Width = params->stencil.surf.logical_level0_px.width - 1;
+         db.Height = params->stencil.surf.logical_level0_px.height - 1;
+         db.RenderTargetViewExtent = db.Depth =
+            params->stencil.view.array_len - 1;
+
+         db.LOD = params->stencil.view.base_level;
+         db.MinimumArrayElement = params->stencil.view.base_array_layer;
+      } else {
+         db.SurfaceType = SURFTYPE_NULL;
+         db.SurfaceFormat = D32_FLOAT;
       }
    }
 
-   if (params->stencil.enabled) {
-      info.stencil_surf = &params->stencil.surf;
-
-      info.stencil_address =
-         blorp_emit_reloc(batch, dw + isl_dev->ds.stencil_offset / 4,
-                          params->stencil.addr, 0);
+   blorp_emit(batch, GENX(3DSTATE_HIER_DEPTH_BUFFER), hiz) {
+      if (params->depth.aux_usage == ISL_AUX_USAGE_HIZ) {
+         hiz.SurfacePitch = params->depth.aux_surf.row_pitch - 1;
+         hiz.SurfaceBaseAddress = params->depth.aux_addr;
+         hiz.HierarchicalDepthBufferMOCS = mocs;
+#if GEN_GEN >= 8
+         hiz.SurfaceQPitch =
+            isl_surf_get_array_pitch_sa_rows(&params->depth.aux_surf) >> 2;
+#endif
+      }
    }
 
-   isl_emit_depth_stencil_hiz_s(isl_dev, dw, &info);
+   blorp_emit(batch, GENX(3DSTATE_STENCIL_BUFFER), sb) {
+      if (params->stencil.enabled) {
+#if GEN_GEN >= 8 || GEN_IS_HASWELL
+         sb.StencilBufferEnable = true;
+#endif
+
+         sb.SurfacePitch = params->stencil.surf.row_pitch - 1,
+#if GEN_GEN >= 8
+         sb.SurfaceQPitch =
+            isl_surf_get_array_pitch_el_rows(&params->stencil.surf) >> 2,
+#endif
+
+         sb.SurfaceBaseAddress = params->stencil.addr;
+         sb.StencilBufferMOCS = batch->blorp->mocs.tex;
+      }
+   }
+
+   /* 3DSTATE_CLEAR_PARAMS
+    *
+    * From the Sandybridge PRM, Volume 2, Part 1, Section 3DSTATE_CLEAR_PARAMS:
+    *   [DevSNB] 3DSTATE_CLEAR_PARAMS packet must follow the DEPTH_BUFFER_STATE
+    *   packet when HiZ is enabled and the DEPTH_BUFFER_STATE changes.
+    */
+   blorp_emit(batch, GENX(3DSTATE_CLEAR_PARAMS), clear) {
+      clear.DepthClearValueValid = true;
+      clear.DepthClearValue = params->depth.clear_color.u32[0];
+   }
 }
 
 static uint32_t
 blorp_emit_blend_state(struct blorp_batch *batch,
                        const struct blorp_params *params)
 {
-   uint32_t offset;
-   blorp_emit_dynamic(batch, GENX(BLEND_STATE), blend, 64, &offset) {
-      for (unsigned i = 0; i < params->num_draw_buffers; ++i) {
-         blend.Entry[i].PreBlendColorClampEnable = true;
-         blend.Entry[i].PostBlendColorClampEnable = true;
-         blend.Entry[i].ColorClampRange = COLORCLAMP_RTFORMAT;
+   struct GENX(BLEND_STATE) blend;
+   memset(&blend, 0, sizeof(blend));
 
-         blend.Entry[i].WriteDisableRed = params->color_write_disable[0];
-         blend.Entry[i].WriteDisableGreen = params->color_write_disable[1];
-         blend.Entry[i].WriteDisableBlue = params->color_write_disable[2];
-         blend.Entry[i].WriteDisableAlpha = params->color_write_disable[3];
-      }
+   for (unsigned i = 0; i < params->num_draw_buffers; ++i) {
+      blend.Entry[i].PreBlendColorClampEnable = true;
+      blend.Entry[i].PostBlendColorClampEnable = true;
+      blend.Entry[i].ColorClampRange = COLORCLAMP_RTFORMAT;
+
+      blend.Entry[i].WriteDisableRed = params->color_write_disable[0];
+      blend.Entry[i].WriteDisableGreen = params->color_write_disable[1];
+      blend.Entry[i].WriteDisableBlue = params->color_write_disable[2];
+      blend.Entry[i].WriteDisableAlpha = params->color_write_disable[3];
    }
+
+   uint32_t offset;
+   void *state = blorp_alloc_dynamic_state(batch, AUB_TRACE_BLEND_STATE,
+                                           GENX(BLEND_STATE_length) * 4,
+                                           64, &offset);
+   GENX(BLEND_STATE_pack)(NULL, state, &blend);
+   blorp_flush_range(batch, state, GENX(BLEND_STATE_length) * 4);
 
 #if GEN_GEN >= 7
    blorp_emit(batch, GENX(3DSTATE_BLEND_STATE_POINTERS), sp) {
@@ -894,12 +907,18 @@ static uint32_t
 blorp_emit_color_calc_state(struct blorp_batch *batch,
                             const struct blorp_params *params)
 {
-   uint32_t offset;
-   blorp_emit_dynamic(batch, GENX(COLOR_CALC_STATE), cc, 64, &offset) {
+   struct GENX(COLOR_CALC_STATE) cc = { 0 };
+
 #if GEN_GEN <= 8
-      cc.StencilReferenceValue = params->stencil_ref;
+   cc.StencilReferenceValue = params->stencil_ref;
 #endif
-   }
+
+   uint32_t offset;
+   void *state = blorp_alloc_dynamic_state(batch, AUB_TRACE_CC_STATE,
+                                           GENX(COLOR_CALC_STATE_length) * 4,
+                                           64, &offset);
+   GENX(COLOR_CALC_STATE_pack)(NULL, state, &cc);
+   blorp_flush_range(batch, state, GENX(COLOR_CALC_STATE_length) * 4);
 
 #if GEN_GEN >= 7
    blorp_emit(batch, GENX(3DSTATE_CC_STATE_POINTERS), sp) {
@@ -969,13 +988,10 @@ blorp_emit_depth_stencil_state(struct blorp_batch *batch,
    uint32_t offset = 0;
    uint32_t *dw = blorp_emit_dwords(batch,
                                     GENX(3DSTATE_WM_DEPTH_STENCIL_length));
-   if (!dw)
-      return 0;
-
    GENX(3DSTATE_WM_DEPTH_STENCIL_pack)(NULL, dw, &ds);
 #else
    uint32_t offset;
-   void *state = blorp_alloc_dynamic_state(batch,
+   void *state = blorp_alloc_dynamic_state(batch, AUB_TRACE_DEPTH_STENCIL_STATE,
                                            GENX(DEPTH_STENCIL_STATE_length) * 4,
                                            64, &offset);
    GENX(DEPTH_STENCIL_STATE_pack)(NULL, state, &ds);
@@ -991,13 +1007,28 @@ blorp_emit_depth_stencil_state(struct blorp_batch *batch,
    return offset;
 }
 
+struct surface_state_info {
+   unsigned num_dwords;
+   unsigned ss_align; /* Required alignment of RENDER_SURFACE_STATE in bytes */
+   unsigned reloc_dw;
+   unsigned aux_reloc_dw;
+};
+
+static const struct surface_state_info surface_state_infos[] = {
+   [6] = {6,  32, 1,  0},
+   [7] = {8,  32, 1,  6},
+   [8] = {13, 64, 8,  10},
+   [9] = {16, 64, 8,  10},
+};
+
 static void
 blorp_emit_surface_state(struct blorp_batch *batch,
                          const struct brw_blorp_surface_info *surface,
-                         void *state, uint32_t state_offset,
+                         uint32_t *state, uint32_t state_offset,
                          bool is_render_target)
 {
-   const struct isl_device *isl_dev = batch->blorp->isl_dev;
+   const struct surface_state_info ss_info = surface_state_infos[GEN_GEN];
+
    struct isl_surf surf = surface->surf;
 
    if (surf.dim == ISL_SURF_DIM_1D &&
@@ -1019,7 +1050,7 @@ blorp_emit_surface_state(struct blorp_batch *batch,
                        .aux_surf = &surface->aux_surf, .aux_usage = aux_usage,
                        .mocs = mocs, .clear_color = surface->clear_color);
 
-   blorp_surface_reloc(batch, state_offset + isl_dev->ss.addr_offset,
+   blorp_surface_reloc(batch, state_offset + ss_info.reloc_dw * 4,
                        surface->addr, 0);
 
    if (aux_usage != ISL_AUX_USAGE_NONE) {
@@ -1028,9 +1059,8 @@ blorp_emit_surface_state(struct blorp_batch *batch,
        * surface buffer addresses are always 4K page alinged.
        */
       assert((surface->aux_addr.offset & 0xfff) == 0);
-      uint32_t *aux_addr = state + isl_dev->ss.aux_addr_offset;
-      blorp_surface_reloc(batch, state_offset + isl_dev->ss.aux_addr_offset,
-                          surface->aux_addr, *aux_addr);
+      blorp_surface_reloc(batch, state_offset + ss_info.aux_reloc_dw * 4,
+                          surface->aux_addr, state[ss_info.aux_reloc_dw]);
    }
 
    blorp_flush_range(batch, state, GENX(RENDER_SURFACE_STATE_length) * 4);
@@ -1072,36 +1102,33 @@ static void
 blorp_emit_surface_states(struct blorp_batch *batch,
                           const struct blorp_params *params)
 {
-   const struct isl_device *isl_dev = batch->blorp->isl_dev;
    uint32_t bind_offset, surface_offsets[2];
    void *surface_maps[2];
 
-   if (params->use_pre_baked_binding_table) {
-      bind_offset = params->pre_baked_binding_table_offset;
+   const unsigned ss_size = GENX(RENDER_SURFACE_STATE_length) * 4;
+   const unsigned ss_align = GENX(RENDER_SURFACE_STATE_length) > 8 ? 64 : 32;
+
+   unsigned num_surfaces = 1 + params->src.enabled;
+   blorp_alloc_binding_table(batch, num_surfaces, ss_size, ss_align,
+                             &bind_offset, surface_offsets, surface_maps);
+
+   if (params->dst.enabled) {
+      blorp_emit_surface_state(batch, &params->dst,
+                               surface_maps[BLORP_RENDERBUFFER_BT_INDEX],
+                               surface_offsets[BLORP_RENDERBUFFER_BT_INDEX],
+                               true);
    } else {
-      unsigned num_surfaces = 1 + params->src.enabled;
-      blorp_alloc_binding_table(batch, num_surfaces,
-                                isl_dev->ss.size, isl_dev->ss.align,
-                                &bind_offset, surface_offsets, surface_maps);
+      assert(params->depth.enabled || params->stencil.enabled);
+      const struct brw_blorp_surface_info *surface =
+         params->depth.enabled ? &params->depth : &params->stencil;
+      blorp_emit_null_surface_state(batch, surface,
+                                    surface_maps[BLORP_RENDERBUFFER_BT_INDEX]);
+   }
 
-      if (params->dst.enabled) {
-         blorp_emit_surface_state(batch, &params->dst,
-                                  surface_maps[BLORP_RENDERBUFFER_BT_INDEX],
-                                  surface_offsets[BLORP_RENDERBUFFER_BT_INDEX],
-                                  true);
-      } else {
-         assert(params->depth.enabled || params->stencil.enabled);
-         const struct brw_blorp_surface_info *surface =
-            params->depth.enabled ? &params->depth : &params->stencil;
-         blorp_emit_null_surface_state(batch, surface,
-                                       surface_maps[BLORP_RENDERBUFFER_BT_INDEX]);
-      }
-
-      if (params->src.enabled) {
-         blorp_emit_surface_state(batch, &params->src,
-                                  surface_maps[BLORP_TEXTURE_BT_INDEX],
-                                  surface_offsets[BLORP_TEXTURE_BT_INDEX], false);
-      }
+   if (params->src.enabled) {
+      blorp_emit_surface_state(batch, &params->src,
+                               surface_maps[BLORP_TEXTURE_BT_INDEX],
+                               surface_offsets[BLORP_TEXTURE_BT_INDEX], false);
    }
 
 #if GEN_GEN >= 7
@@ -1125,25 +1152,31 @@ static void
 blorp_emit_sampler_state(struct blorp_batch *batch,
                          const struct blorp_params *params)
 {
+   struct GENX(SAMPLER_STATE) sampler = {
+      .MipModeFilter = MIPFILTER_NONE,
+      .MagModeFilter = MAPFILTER_LINEAR,
+      .MinModeFilter = MAPFILTER_LINEAR,
+      .MinLOD = 0,
+      .MaxLOD = 0,
+      .TCXAddressControlMode = TCM_CLAMP,
+      .TCYAddressControlMode = TCM_CLAMP,
+      .TCZAddressControlMode = TCM_CLAMP,
+      .MaximumAnisotropy = RATIO21,
+      .RAddressMinFilterRoundingEnable = true,
+      .RAddressMagFilterRoundingEnable = true,
+      .VAddressMinFilterRoundingEnable = true,
+      .VAddressMagFilterRoundingEnable = true,
+      .UAddressMinFilterRoundingEnable = true,
+      .UAddressMagFilterRoundingEnable = true,
+      .NonnormalizedCoordinateEnable = true,
+   };
+
    uint32_t offset;
-   blorp_emit_dynamic(batch, GENX(SAMPLER_STATE), sampler, 32, &offset) {
-      sampler.MipModeFilter = MIPFILTER_NONE;
-      sampler.MagModeFilter = MAPFILTER_LINEAR;
-      sampler.MinModeFilter = MAPFILTER_LINEAR;
-      sampler.MinLOD = 0;
-      sampler.MaxLOD = 0;
-      sampler.TCXAddressControlMode = TCM_CLAMP;
-      sampler.TCYAddressControlMode = TCM_CLAMP;
-      sampler.TCZAddressControlMode = TCM_CLAMP;
-      sampler.MaximumAnisotropy = RATIO21;
-      sampler.RAddressMinFilterRoundingEnable = true;
-      sampler.RAddressMagFilterRoundingEnable = true;
-      sampler.VAddressMinFilterRoundingEnable = true;
-      sampler.VAddressMagFilterRoundingEnable = true;
-      sampler.UAddressMinFilterRoundingEnable = true;
-      sampler.UAddressMagFilterRoundingEnable = true;
-      sampler.NonnormalizedCoordinateEnable = true;
-   }
+   void *state = blorp_alloc_dynamic_state(batch, AUB_TRACE_SAMPLER_STATE,
+                                           GENX(SAMPLER_STATE_length) * 4,
+                                           32, &offset);
+   GENX(SAMPLER_STATE_pack)(NULL, state, &sampler);
+   blorp_flush_range(batch, state, GENX(SAMPLER_STATE_length) * 4);
 
 #if GEN_GEN >= 7
    blorp_emit(batch, GENX(3DSTATE_SAMPLER_STATE_POINTERS_PS), ssp) {
@@ -1163,8 +1196,10 @@ static void
 blorp_emit_3dstate_multisample(struct blorp_batch *batch,
                                const struct blorp_params *params)
 {
+   const unsigned samples = params->dst.surf.samples;
+
    blorp_emit(batch, GENX(3DSTATE_MULTISAMPLE), ms) {
-      ms.NumberofMultisamples       = __builtin_ffs(params->num_samples) - 1;
+      ms.NumberofMultisamples       = __builtin_ffs(samples) - 1;
 
 #if GEN_GEN >= 8
       /* The PRM says that this bit is valid only for DX9:
@@ -1177,7 +1212,7 @@ blorp_emit_3dstate_multisample(struct blorp_batch *batch,
 #elif GEN_GEN >= 7
       ms.PixelLocation              = PIXLOC_CENTER;
 
-      switch (params->num_samples) {
+      switch (samples) {
       case 1:
          GEN_SAMPLE_POS_1X(ms.Sample);
          break;
@@ -1200,96 +1235,23 @@ blorp_emit_3dstate_multisample(struct blorp_batch *batch,
    }
 }
 
-#if GEN_GEN >= 8
-/* Emits the Optimized HiZ sequence specified in the BDW+ PRMs. The
- * depth/stencil buffer extents are ignored to handle APIs which perform
- * clearing operations without such information.
- * */
-static void
-blorp_emit_gen8_hiz_op(struct blorp_batch *batch,
-                       const struct blorp_params *params)
-{
-   /* We should be performing an operation on a depth or stencil buffer.
-    */
-   assert(params->depth.enabled || params->stencil.enabled);
-
-   /* The stencil buffer should only be enabled if a fast clear operation is
-    * requested.
-    */
-   if (params->stencil.enabled)
-      assert(params->hiz_op == BLORP_HIZ_OP_DEPTH_CLEAR);
-
-   /* If we can't alter the depth stencil config and multiple layers are
-    * involved, the HiZ op will fail. This is because the op requires that a
-    * new config is emitted for each additional layer.
-    */
-   if (batch->flags & BLORP_BATCH_NO_EMIT_DEPTH_STENCIL) {
-      assert(params->num_layers <= 1);
-   } else {
-      blorp_emit_depth_stencil_config(batch, params);
-   }
-
-   blorp_emit(batch, GENX(3DSTATE_WM_HZ_OP), hzp) {
-      switch (params->hiz_op) {
-      case BLORP_HIZ_OP_DEPTH_CLEAR:
-         hzp.StencilBufferClearEnable = params->stencil.enabled;
-         hzp.DepthBufferClearEnable = params->depth.enabled;
-         hzp.StencilClearValue = params->stencil_ref;
-         break;
-      case BLORP_HIZ_OP_DEPTH_RESOLVE:
-         hzp.DepthBufferResolveEnable = true;
-         break;
-      case BLORP_HIZ_OP_HIZ_RESOLVE:
-         hzp.HierarchicalDepthBufferResolveEnable = true;
-         break;
-      case BLORP_HIZ_OP_NONE:
-         unreachable("Invalid HIZ op");
-      }
-
-      hzp.NumberofMultisamples = ffs(params->num_samples) - 1;
-      hzp.SampleMask = 0xFFFF;
-
-      /* Due to a hardware issue, this bit MBZ */
-      assert(hzp.ScissorRectangleEnable == false);
-
-      /* Contrary to the HW docs both fields are inclusive */
-      hzp.ClearRectangleXMin = params->x0;
-      hzp.ClearRectangleYMin = params->y0;
-
-      /* Contrary to the HW docs both fields are exclusive */
-      hzp.ClearRectangleXMax = params->x1;
-      hzp.ClearRectangleYMax = params->y1;
-   }
-
-   /* PIPE_CONTROL w/ all bits clear except for “Post-Sync Operation” must set
-    * to “Write Immediate Data” enabled.
-    */
-   blorp_emit(batch, GENX(PIPE_CONTROL), pc) {
-      pc.PostSyncOperation = WriteImmediateData;
-   }
-
-   blorp_emit(batch, GENX(3DSTATE_WM_HZ_OP), hzp);
-
-   /* Perform depth clear specific flushing */
-   if (params->hiz_op == BLORP_HIZ_OP_DEPTH_CLEAR && params->depth.enabled) {
-      blorp_emit(batch, GENX(PIPE_CONTROL), pc) {
-         pc.DepthStallEnable = true;
-         pc.DepthCacheFlushEnable = true;
-      }
-   }
-}
-#endif
-
 /* 3DSTATE_VIEWPORT_STATE_POINTERS */
 static void
 blorp_emit_viewport_state(struct blorp_batch *batch,
                           const struct blorp_params *params)
 {
    uint32_t cc_vp_offset;
-   blorp_emit_dynamic(batch, GENX(CC_VIEWPORT), vp, 32, &cc_vp_offset) {
-      vp.MinimumDepth = 0.0;
-      vp.MaximumDepth = 1.0;
-   }
+
+   void *state = blorp_alloc_dynamic_state(batch, AUB_TRACE_CC_VP_STATE,
+                                           GENX(CC_VIEWPORT_length) * 4, 32,
+                                           &cc_vp_offset);
+
+   GENX(CC_VIEWPORT_pack)(batch, state,
+      &(struct GENX(CC_VIEWPORT)) {
+         .MinimumDepth = 0.0,
+         .MaximumDepth = 1.0,
+      });
+   blorp_flush_range(batch, state, GENX(CC_VIEWPORT_length) * 4);
 
 #if GEN_GEN >= 7
    blorp_emit(batch, GENX(3DSTATE_VIEWPORT_STATE_POINTERS_CC), vsp) {
@@ -1319,13 +1281,6 @@ blorp_exec(struct blorp_batch *batch, const struct blorp_params *params)
    uint32_t blend_state_offset = 0;
    uint32_t color_calc_state_offset = 0;
    uint32_t depth_stencil_state_offset;
-
-#if GEN_GEN >= 8
-   if (params->hiz_op != BLORP_HIZ_OP_NONE) {
-      blorp_emit_gen8_hiz_op(batch, params);
-      return;
-   }
-#endif
 
    blorp_emit_vertex_buffers(batch, params);
    blorp_emit_vertex_elements(batch, params);
@@ -1380,7 +1335,7 @@ blorp_exec(struct blorp_batch *batch, const struct blorp_params *params)
    blorp_emit_3dstate_multisample(batch, params);
 
    blorp_emit(batch, GENX(3DSTATE_SAMPLE_MASK), mask) {
-      mask.SampleMask = (1 << params->num_samples) - 1;
+      mask.SampleMask = (1 << params->dst.surf.samples) - 1;
    }
 
    /* From the BSpec, 3D Pipeline > Geometry > Vertex Shader > State,
@@ -1393,7 +1348,7 @@ blorp_exec(struct blorp_batch *batch, const struct blorp_params *params)
     *
     * We've already done one at the start of the BLORP operation.
     */
-   blorp_emit_vs_config(batch, params);
+   blorp_emit(batch, GENX(3DSTATE_VS), vs);
 #if GEN_GEN >= 7
    blorp_emit(batch, GENX(3DSTATE_HS), hs);
    blorp_emit(batch, GENX(3DSTATE_TE), te);

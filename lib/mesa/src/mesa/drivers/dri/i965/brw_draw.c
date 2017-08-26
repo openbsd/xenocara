@@ -43,9 +43,9 @@
 #include "brw_blorp.h"
 #include "brw_draw.h"
 #include "brw_defines.h"
-#include "compiler/brw_eu_defines.h"
 #include "brw_context.h"
 #include "brw_state.h"
+#include "brw_vs.h"
 
 #include "intel_batchbuffer.h"
 #include "intel_buffers.h"
@@ -220,7 +220,7 @@ brw_emit_prim(struct brw_context *brw,
       ADVANCE_BATCH();
    } else if (prim->is_indirect) {
       struct gl_buffer_object *indirect_buffer = brw->ctx.DrawIndirectBuffer;
-      struct brw_bo *bo = intel_bufferobj_buffer(brw,
+      drm_intel_bo *bo = intel_bufferobj_buffer(brw,
             intel_buffer_object(indirect_buffer),
             prim->indirect_offset, 5 * sizeof(GLuint));
 
@@ -285,13 +285,13 @@ brw_emit_prim(struct brw_context *brw,
 
 static void
 brw_merge_inputs(struct brw_context *brw,
-                 const struct gl_vertex_array *arrays[])
+                 const struct gl_client_array *arrays[])
 {
    const struct gl_context *ctx = &brw->ctx;
    GLuint i;
 
    for (i = 0; i < brw->vb.nr_buffers; i++) {
-      brw_bo_unreference(brw->vb.buffers[i].bo);
+      drm_intel_bo_unreference(brw->vb.buffers[i].bo);
       brw->vb.buffers[i].bo = NULL;
    }
    brw->vb.nr_buffers = 0;
@@ -302,7 +302,7 @@ brw_merge_inputs(struct brw_context *brw,
    }
 
    if (brw->gen < 8 && !brw->is_haswell) {
-      uint64_t mask = ctx->VertexProgram._Current->info.inputs_read;
+      uint64_t mask = ctx->VertexProgram._Current->Base.nir->info.inputs_read;
       /* Prior to Haswell, the hardware can't natively support GL_FIXED or
        * 2_10_10_10_REV vertex formats.  Set appropriate workaround flags.
        */
@@ -372,7 +372,7 @@ brw_postdraw_set_buffers_need_resolve(struct brw_context *brw)
       front_irb->need_downsample = true;
    if (back_irb)
       back_irb->need_downsample = true;
-   if (depth_irb && brw_depth_writes_enabled(brw)) {
+   if (depth_irb && ctx->Depth.Mask) {
       intel_renderbuffer_att_set_needs_depth_resolve(depth_att);
       brw_render_cache_set_add_bo(brw, depth_irb->mt->bo);
    }
@@ -386,12 +386,13 @@ brw_postdraw_set_buffers_need_resolve(struct brw_context *brw)
       struct intel_renderbuffer *irb =
          intel_renderbuffer(fb->_ColorDrawBuffers[i]);
 
-      if (!irb)
-         continue;
-     
-      brw_render_cache_set_add_bo(brw, irb->mt->bo);
-      intel_miptree_used_for_rendering(
-         brw, irb->mt, irb->mt_level, irb->mt_layer, irb->layer_count);
+      if (irb) {
+         brw_render_cache_set_add_bo(brw, irb->mt->bo);
+
+         if (intel_miptree_is_lossless_compressed(brw, irb->mt)) {
+            irb->mt->fast_clear_state = INTEL_FAST_CLEAR_STATE_UNRESOLVED;
+         }
+      }
    }
 }
 
@@ -411,20 +412,6 @@ brw_predraw_set_aux_buffers(struct brw_context *brw)
       if (!irb) {
          continue;
       }
-
-      /* For layered rendering non-compressed fast cleared buffers need to be
-       * resolved. Surface state can carry only one fast color clear value
-       * while each layer may have its own fast clear color value. For
-       * compressed buffers color value is available in the color buffer.
-       */
-      if (irb->layer_count > 1 &&
-          !(irb->mt->aux_disable & INTEL_AUX_DISABLE_CCS) &&
-          !intel_miptree_is_lossless_compressed(brw, irb->mt)) {
-         assert(brw->gen >= 8);
-
-         intel_miptree_resolve_color(brw, irb->mt, irb->mt_level,
-                                     irb->mt_layer, irb->layer_count, 0);
-      }
    }
 }
 
@@ -433,7 +420,7 @@ brw_predraw_set_aux_buffers(struct brw_context *brw)
  */
 static void
 brw_try_draw_prims(struct gl_context *ctx,
-                   const struct gl_vertex_array *arrays[],
+                   const struct gl_client_array *arrays[],
                    const struct _mesa_prim *prims,
                    GLuint nr_prims,
                    const struct _mesa_index_buffer *ib,
@@ -465,15 +452,15 @@ brw_try_draw_prims(struct gl_context *ctx,
     * index.
     */
    brw->wm.base.sampler_count =
-      util_last_bit(ctx->FragmentProgram._Current->SamplersUsed);
+      util_last_bit(ctx->FragmentProgram._Current->Base.SamplersUsed);
    brw->gs.base.sampler_count = ctx->GeometryProgram._Current ?
-      util_last_bit(ctx->GeometryProgram._Current->SamplersUsed) : 0;
+      util_last_bit(ctx->GeometryProgram._Current->Base.SamplersUsed) : 0;
    brw->tes.base.sampler_count = ctx->TessEvalProgram._Current ?
-      util_last_bit(ctx->TessEvalProgram._Current->SamplersUsed) : 0;
+      util_last_bit(ctx->TessEvalProgram._Current->Base.SamplersUsed) : 0;
    brw->tcs.base.sampler_count = ctx->TessCtrlProgram._Current ?
-      util_last_bit(ctx->TessCtrlProgram._Current->SamplersUsed) : 0;
+      util_last_bit(ctx->TessCtrlProgram._Current->Base.SamplersUsed) : 0;
    brw->vs.base.sampler_count =
-      util_last_bit(ctx->VertexProgram._Current->SamplersUsed);
+      util_last_bit(ctx->VertexProgram._Current->Base.SamplersUsed);
 
    intel_prepare_render(brw);
    brw_predraw_set_aux_buffers(brw);
@@ -551,13 +538,13 @@ brw_try_draw_prims(struct gl_context *ctx,
 
       brw->draw.params.gl_basevertex = new_basevertex;
       brw->draw.params.gl_baseinstance = new_baseinstance;
-      brw_bo_unreference(brw->draw.draw_params_bo);
+      drm_intel_bo_unreference(brw->draw.draw_params_bo);
 
       if (prims[i].is_indirect) {
          /* Point draw_params_bo at the indirect buffer. */
          brw->draw.draw_params_bo =
             intel_buffer_object(ctx->DrawIndirectBuffer)->buffer;
-         brw_bo_reference(brw->draw.draw_params_bo);
+         drm_intel_bo_reference(brw->draw.draw_params_bo);
          brw->draw.draw_params_offset =
             prims[i].indirect_offset + (prims[i].indexed ? 12 : 8);
       } else {
@@ -575,7 +562,7 @@ brw_try_draw_prims(struct gl_context *ctx,
        * the loop.
        */
       brw->draw.gl_drawid = prims[i].draw_id;
-      brw_bo_unreference(brw->draw.draw_id_bo);
+      drm_intel_bo_unreference(brw->draw.draw_id_bo);
       brw->draw.draw_id_bo = NULL;
       if (i > 0 && vs_prog_data->uses_drawid)
          brw->ctx.NewDriverState |= BRW_NEW_VERTICES;
@@ -601,7 +588,7 @@ retry:
 
       brw->no_batch_wrap = false;
 
-      if (!brw_batch_has_aperture_space(brw, 0)) {
+      if (dri_bufmgr_check_aperture_space(&brw->batch.bo, 1)) {
          if (!fail_next) {
             intel_batchbuffer_reset_to_saved(brw);
             intel_batchbuffer_flush(brw);
@@ -625,7 +612,7 @@ retry:
    if (brw->always_flush_batch)
       intel_batchbuffer_flush(brw);
 
-   brw_program_cache_check_size(brw);
+   brw_state_cache_check_size(brw);
    brw_postdraw_set_buffers_need_resolve(brw);
 
    return;
@@ -644,7 +631,7 @@ brw_draw_prims(struct gl_context *ctx,
                struct gl_buffer_object *indirect)
 {
    struct brw_context *brw = brw_context(ctx);
-   const struct gl_vertex_array **arrays = ctx->Array._DrawArrays;
+   const struct gl_client_array **arrays = ctx->Array._DrawArrays;
    struct brw_transform_feedback_object *xfb_obj =
       (struct brw_transform_feedback_object *) gl_xfb_obj;
 
@@ -711,7 +698,7 @@ brw_draw_destroy(struct brw_context *brw)
    unsigned i;
 
    for (i = 0; i < brw->vb.nr_buffers; i++) {
-      brw_bo_unreference(brw->vb.buffers[i].bo);
+      drm_intel_bo_unreference(brw->vb.buffers[i].bo);
       brw->vb.buffers[i].bo = NULL;
    }
    brw->vb.nr_buffers = 0;
@@ -721,6 +708,6 @@ brw_draw_destroy(struct brw_context *brw)
    }
    brw->vb.nr_enabled = 0;
 
-   brw_bo_unreference(brw->ib.bo);
+   drm_intel_bo_unreference(brw->ib.bo);
    brw->ib.bo = NULL;
 }

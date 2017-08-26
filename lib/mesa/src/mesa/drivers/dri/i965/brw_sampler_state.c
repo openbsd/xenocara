@@ -104,9 +104,10 @@ brw_emit_sampler_state(struct brw_context *brw,
    ss[2] = border_color_offset;
    if (brw->gen < 6) {
       ss[2] += brw->batch.bo->offset64; /* reloc */
-      brw_emit_reloc(&brw->batch, batch_offset_for_sampler_state + 8,
-                     brw->batch.bo, border_color_offset,
-                     I915_GEM_DOMAIN_SAMPLER, 0);
+      drm_intel_bo_emit_reloc(brw->batch.bo,
+                              batch_offset_for_sampler_state + 8,
+                              brw->batch.bo, border_color_offset,
+                              I915_GEM_DOMAIN_SAMPLER, 0);
    }
 
    ss[3] = SET_FIELD(max_anisotropy, BRW_SAMPLER_MAX_ANISOTROPY) |
@@ -164,7 +165,7 @@ brw_emit_sampler_state(struct brw_context *brw,
 static uint32_t
 translate_wrap_mode(struct brw_context *brw, GLenum wrap, bool using_nearest)
 {
-   switch (wrap) {
+   switch( wrap ) {
    case GL_REPEAT:
       return BRW_TEXCOORDMODE_WRAP;
    case GL_CLAMP:
@@ -289,7 +290,8 @@ upload_default_color(struct brw_context *brw,
        * format.  This matches the sampler->BorderColor union exactly; just
        * memcpy the values.
        */
-      uint32_t *sdc = brw_state_batch(brw, 4 * 4, 64, sdc_offset);
+      uint32_t *sdc = brw_state_batch(brw, AUB_TRACE_SAMPLER_DEFAULT_COLOR,
+                                      4 * 4, 64, sdc_offset);
       memcpy(sdc, color.ui, 4 * 4);
    } else if (brw->is_haswell && (is_integer_format || is_stencil_sampling)) {
       /* Haswell's integer border color support is completely insane:
@@ -300,7 +302,8 @@ upload_default_color(struct brw_context *brw,
        * has the "Integer Surface Format" bit set.  Even then, the
        * arrangement of the RGBA data devolves into madness.
        */
-      uint32_t *sdc = brw_state_batch(brw, 20 * 4, 512, sdc_offset);
+      uint32_t *sdc = brw_state_batch(brw, AUB_TRACE_SAMPLER_DEFAULT_COLOR,
+                                      20 * 4, 512, sdc_offset);
       memset(sdc, 0, 20 * 4);
       sdc = &sdc[16];
 
@@ -356,7 +359,8 @@ upload_default_color(struct brw_context *brw,
    } else if (brw->gen == 5 || brw->gen == 6) {
       struct gen5_sampler_default_color *sdc;
 
-      sdc = brw_state_batch(brw, sizeof(*sdc), 32, sdc_offset);
+      sdc = brw_state_batch(brw, AUB_TRACE_SAMPLER_DEFAULT_COLOR,
+			    sizeof(*sdc), 32, sdc_offset);
 
       memset(sdc, 0, sizeof(*sdc));
 
@@ -390,7 +394,8 @@ upload_default_color(struct brw_context *brw,
       sdc->f[2] = color.f[2];
       sdc->f[3] = color.f[3];
    } else {
-      float *sdc = brw_state_batch(brw, 4 * 4, 32, sdc_offset);
+      float *sdc = brw_state_batch(brw, AUB_TRACE_SAMPLER_DEFAULT_COLOR,
+			           4 * 4, 32, sdc_offset);
       memcpy(sdc, color.f, 4 * 4);
    }
 }
@@ -450,10 +455,8 @@ brw_update_sampler_state(struct brw_context *brw,
    /* Enable anisotropic filtering if desired. */
    unsigned max_anisotropy = BRW_ANISORATIO_2;
    if (sampler->MaxAnisotropy > 1.0f) {
-      if (min_filter == BRW_MAPFILTER_LINEAR)
-         min_filter = BRW_MAPFILTER_ANISOTROPIC;
-      if (mag_filter == BRW_MAPFILTER_LINEAR)
-         mag_filter = BRW_MAPFILTER_ANISOTROPIC;
+      min_filter = BRW_MAPFILTER_ANISOTROPIC;
+      mag_filter = BRW_MAPFILTER_ANISOTROPIC;
 
       if (sampler->MaxAnisotropy > 2.0f) {
 	 max_anisotropy =
@@ -515,13 +518,10 @@ brw_update_sampler_state(struct brw_context *brw,
    }
 
    const int lod_bits = brw->gen >= 7 ? 8 : 6;
-   const float hw_max_lod = brw->gen >= 7 ? 14 : 13;
+   const unsigned min_lod = U_FIXED(CLAMP(sampler->MinLod, 0, 13), lod_bits);
+   const unsigned max_lod = U_FIXED(CLAMP(sampler->MaxLod, 0, 13), lod_bits);
    const unsigned base_level =
-      U_FIXED(CLAMP(texObj->MinLevel + texObj->BaseLevel, 0, hw_max_lod), 1);
-   const unsigned min_lod =
-      U_FIXED(CLAMP(sampler->MinLod, 0, hw_max_lod), lod_bits);
-   const unsigned max_lod =
-      U_FIXED(CLAMP(sampler->MaxLod, 0, hw_max_lod), lod_bits);
+      U_FIXED(CLAMP(texObj->MinLevel + texObj->BaseLevel, 0, max_lod), 1);
    const int lod_bias =
       S_FIXED(CLAMP(tex_unit_lod_bias + sampler->LodBias, -16, 15), lod_bits);
 
@@ -593,7 +593,7 @@ brw_upload_sampler_state_table(struct brw_context *brw,
    const int dwords = 4;
    const int size_in_bytes = dwords * sizeof(uint32_t);
 
-   uint32_t *sampler_state = brw_state_batch(brw,
+   uint32_t *sampler_state = brw_state_batch(brw, AUB_TRACE_SAMPLER_STATE,
                                              sampler_count * size_in_bytes,
                                              32, &stage_state->sampler_offset);
    memset(sampler_state, 0, sampler_count * size_in_bytes);

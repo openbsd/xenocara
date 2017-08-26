@@ -31,6 +31,7 @@
  * shared variables.
  */
 
+#pragma once
 #ifndef LOWER_BUFFER_ACCESS_H
 #define LOWER_BUFFER_ACCESS_H
 

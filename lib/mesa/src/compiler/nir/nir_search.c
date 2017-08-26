@@ -247,9 +247,6 @@ match_expression(const nir_search_expression *expr, nir_alu_instr *instr,
                  unsigned num_components, const uint8_t *swizzle,
                  struct match_state *state)
 {
-   if (expr->cond && !expr->cond(instr))
-      return false;
-
    if (instr->op != expr->opcode)
       return false;
 
@@ -333,7 +330,7 @@ static bitsize_tree *
 build_bitsize_tree(void *mem_ctx, struct match_state *state,
                    const nir_search_value *value)
 {
-   bitsize_tree *tree = rzalloc(mem_ctx, bitsize_tree);
+   bitsize_tree *tree = ralloc(mem_ctx, bitsize_tree);
 
    switch (value->type) {
    case nir_search_value_expression: {

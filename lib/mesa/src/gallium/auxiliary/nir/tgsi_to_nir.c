@@ -314,11 +314,8 @@ ttn_emit_declaration(struct ttn_compile *c)
              file == TGSI_FILE_CONSTANT);
 
       /* nothing to do for UBOs: */
-      if ((file == TGSI_FILE_CONSTANT) && decl->Declaration.Dimension) {
-         b->shader->info->num_ubos =
-            MAX2(b->shader->info->num_ubos, decl->Dim.Index2D);
+      if ((file == TGSI_FILE_CONSTANT) && decl->Declaration.Dimension)
          return;
-      }
 
       if ((file == TGSI_FILE_INPUT) || (file == TGSI_FILE_OUTPUT)) {
          is_array = (is_array && decl->Declaration.Array &&
@@ -374,7 +371,7 @@ ttn_emit_declaration(struct ttn_compile *c)
             exec_list_push_tail(&b->shader->inputs, &var->node);
 
             for (int i = 0; i < array_size; i++)
-               b->shader->info->inputs_read |= 1 << (var->data.location + i);
+               b->shader->info.inputs_read |= 1 << (var->data.location + i);
 
             break;
          case TGSI_FILE_OUTPUT: {
@@ -440,7 +437,7 @@ ttn_emit_declaration(struct ttn_compile *c)
             exec_list_push_tail(&b->shader->outputs, &var->node);
 
             for (int i = 0; i < array_size; i++)
-               b->shader->info->outputs_written |= 1 << (var->data.location + i);
+               b->shader->info.outputs_written |= 1 << (var->data.location + i);
          }
             break;
          case TGSI_FILE_CONSTANT:
@@ -587,7 +584,7 @@ ttn_src_for_file_and_index(struct ttn_compile *c, unsigned file, unsigned index,
 
       src = nir_src_for_ssa(&load->dest.ssa);
 
-      b->shader->info->system_values_read |=
+      b->shader->info.system_values_read |=
          (1 << nir_system_value_from_intrinsic(op));
 
       break;
@@ -866,7 +863,7 @@ ttn_move_dest(nir_builder *b, nir_alu_dest dest, nir_ssa_def *def)
 static void
 ttn_arl(nir_builder *b, nir_op op, nir_alu_dest dest, nir_ssa_def **src)
 {
-   ttn_move_dest(b, dest, nir_f2i32(b, nir_ffloor(b, src[0])));
+   ttn_move_dest(b, dest, nir_f2i(b, nir_ffloor(b, src[0])));
 }
 
 /* EXP - Approximate Exponential Base 2
@@ -986,6 +983,12 @@ ttn_sgt(nir_builder *b, nir_op op, nir_alu_dest dest, nir_ssa_def **src)
 }
 
 static void
+ttn_clamp(nir_builder *b, nir_op op, nir_alu_dest dest, nir_ssa_def **src)
+{
+   ttn_move_dest(b, dest, nir_fmin(b, nir_fmax(b, src[0], src[1]), src[2]));
+}
+
+static void
 ttn_xpd(nir_builder *b, nir_op op, nir_alu_dest dest, nir_ssa_def **src)
 {
    ttn_move_dest_masked(b, dest,
@@ -1068,7 +1071,7 @@ ttn_kill(nir_builder *b, nir_op op, nir_alu_dest dest, nir_ssa_def **src)
    nir_intrinsic_instr *discard =
       nir_intrinsic_instr_create(b->shader, nir_intrinsic_discard);
    nir_builder_instr_insert(b, &discard->instr);
-   b->shader->info->fs.uses_discard = true;
+   b->shader->info.fs.uses_discard = true;
 }
 
 static void
@@ -1081,7 +1084,7 @@ ttn_kill_if(nir_builder *b, nir_op op, nir_alu_dest dest, nir_ssa_def **src)
       nir_intrinsic_instr_create(b->shader, nir_intrinsic_discard_if);
    discard->src[0] = nir_src_for_ssa(cmp);
    nir_builder_instr_insert(b, &discard->instr);
-   b->shader->info->fs.uses_discard = true;
+   b->shader->info.fs.uses_discard = true;
 }
 
 static void
@@ -1338,7 +1341,6 @@ ttn_tex(struct ttn_compile *c, nir_alu_dest dest, nir_ssa_def **src)
       instr->coord_components = 3;
       break;
    case GLSL_SAMPLER_DIM_SUBPASS:
-   case GLSL_SAMPLER_DIM_SUBPASS_MS:
       unreachable("invalid sampler_dim");
    }
 
@@ -1431,7 +1433,7 @@ ttn_tex(struct ttn_compile *c, nir_alu_dest dest, nir_ssa_def **src)
       else
          instr->src[src_number].src = nir_src_for_ssa(ttn_channel(b, src[0], Z));
 
-      instr->src[src_number].src_type = nir_tex_src_comparator;
+      instr->src[src_number].src_type = nir_tex_src_comparitor;
       src_number++;
    }
 
@@ -1529,16 +1531,19 @@ static const nir_op op_trans[TGSI_OPCODE_LAST] = {
    [TGSI_OPCODE_SLT] = nir_op_slt,
    [TGSI_OPCODE_SGE] = nir_op_sge,
    [TGSI_OPCODE_MAD] = nir_op_ffma,
+   [TGSI_OPCODE_SUB] = nir_op_fsub,
    [TGSI_OPCODE_LRP] = 0,
    [TGSI_OPCODE_SQRT] = nir_op_fsqrt,
    [TGSI_OPCODE_DP2A] = 0,
    [TGSI_OPCODE_FRC] = nir_op_ffract,
+   [TGSI_OPCODE_CLAMP] = 0,
    [TGSI_OPCODE_FLR] = nir_op_ffloor,
    [TGSI_OPCODE_ROUND] = nir_op_fround_even,
    [TGSI_OPCODE_EX2] = nir_op_fexp2,
    [TGSI_OPCODE_LG2] = nir_op_flog2,
    [TGSI_OPCODE_POW] = nir_op_fpow,
    [TGSI_OPCODE_XPD] = 0,
+   [TGSI_OPCODE_ABS] = nir_op_fabs,
    [TGSI_OPCODE_DPH] = 0,
    [TGSI_OPCODE_COS] = nir_op_fcos,
    [TGSI_OPCODE_DDX] = nir_op_fddx,
@@ -1587,7 +1592,7 @@ static const nir_op op_trans[TGSI_OPCODE_LAST] = {
    [TGSI_OPCODE_POPA] = 0, /* XXX */
 
    [TGSI_OPCODE_CEIL] = nir_op_fceil,
-   [TGSI_OPCODE_I2F] = nir_op_i2f32,
+   [TGSI_OPCODE_I2F] = nir_op_i2f,
    [TGSI_OPCODE_NOT] = nir_op_inot,
    [TGSI_OPCODE_TRUNC] = nir_op_ftrunc,
    [TGSI_OPCODE_SHL] = nir_op_ishl,
@@ -1624,7 +1629,7 @@ static const nir_op op_trans[TGSI_OPCODE_LAST] = {
 
    [TGSI_OPCODE_END] = 0,
 
-   [TGSI_OPCODE_F2I] = nir_op_f2i32,
+   [TGSI_OPCODE_F2I] = nir_op_f2i,
    [TGSI_OPCODE_IDIV] = nir_op_idiv,
    [TGSI_OPCODE_IMAX] = nir_op_imax,
    [TGSI_OPCODE_IMIN] = nir_op_imin,
@@ -1632,8 +1637,8 @@ static const nir_op op_trans[TGSI_OPCODE_LAST] = {
    [TGSI_OPCODE_ISGE] = nir_op_ige,
    [TGSI_OPCODE_ISHR] = nir_op_ishr,
    [TGSI_OPCODE_ISLT] = nir_op_ilt,
-   [TGSI_OPCODE_F2U] = nir_op_f2u32,
-   [TGSI_OPCODE_U2F] = nir_op_u2f32,
+   [TGSI_OPCODE_F2U] = nir_op_f2u,
+   [TGSI_OPCODE_U2F] = nir_op_u2f,
    [TGSI_OPCODE_UADD] = nir_op_iadd,
    [TGSI_OPCODE_UDIV] = nir_op_udiv,
    [TGSI_OPCODE_UMAD] = 0,
@@ -1756,6 +1761,10 @@ ttn_emit_instruction(struct ttn_compile *c)
 
    case TGSI_OPCODE_LIT:
       ttn_lit(b, op_trans[tgsi_op], dest, src);
+      break;
+
+   case TGSI_OPCODE_CLAMP:
+      ttn_clamp(b, op_trans[tgsi_op], dest, src);
       break;
 
    case TGSI_OPCODE_XPD:

@@ -21,6 +21,7 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#pragma once
 #ifndef IR_UNIFORM_H
 #define IR_UNIFORM_H
 

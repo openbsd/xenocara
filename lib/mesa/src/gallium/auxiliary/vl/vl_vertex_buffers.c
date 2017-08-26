@@ -241,6 +241,7 @@ vl_vb_init(struct vl_vertex_buffer *buffer, struct pipe_context *pipe,
          goto error_mv;
    }
 
+   vl_vb_map(buffer, pipe);
    return true;
 
 error_mv:

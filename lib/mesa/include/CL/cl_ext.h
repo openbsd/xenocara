@@ -21,7 +21,7 @@
  * MATERIALS OR THE USE OR OTHER DEALINGS IN THE MATERIALS.
  ******************************************************************************/
 
-/* $Revision: 1.7 $ on $Date: 2017/08/14 09:57:57 $ */
+/* $Revision: 1.8 $ on $Date: 2017/08/26 16:59:18 $ */
 
 /* cl_ext.h contains OpenCL extensions which don't have external */
 /* (OpenGL, D3D) dependencies.                                   */

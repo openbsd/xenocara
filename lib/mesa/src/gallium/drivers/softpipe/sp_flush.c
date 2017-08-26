@@ -169,7 +169,7 @@ softpipe_flush_resource(struct pipe_context *pipe,
    return TRUE;
 }
 
-void softpipe_texture_barrier(struct pipe_context *pipe, unsigned flags)
+void softpipe_texture_barrier(struct pipe_context *pipe)
 {
    struct softpipe_context *softpipe = softpipe_context(pipe);
    uint i, sh;
@@ -192,5 +192,5 @@ void softpipe_texture_barrier(struct pipe_context *pipe, unsigned flags)
 
 void softpipe_memory_barrier(struct pipe_context *pipe, unsigned flags)
 {
-   softpipe_texture_barrier(pipe, 0);
+   softpipe_texture_barrier(pipe);
 }

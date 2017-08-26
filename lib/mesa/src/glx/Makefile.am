@@ -155,7 +155,7 @@ libglx_la_LIBADD += \
 	  $(builddir)/windows/libwindowsglx.la
 endif
 
-if USE_LIBGLVND
+if USE_LIBGLVND_GLX
 AM_CFLAGS += \
 	-DGL_LIB_NAME=\"lib@GL_LIB@.so\" \
 	$(GLVND_CFLAGS)
@@ -174,10 +174,7 @@ AM_CFLAGS += \
 GL_LIB_VERSION=1:2
 endif
 
-# Push the libdrm furhter up, as due to libtool bug we might end up relinking
-# against the system one.
 GL_LIBS = \
-	$(LIBDRM_LIBS) \
 	libglx.la \
 	$(top_builddir)/src/mapi/glapi/libglapi.la \
 	$(SHARED_GLAPI_LIB) \

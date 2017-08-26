@@ -33,30 +33,25 @@
 #include <GL/gl.h>
 #include <GL/wglext.h>
 #include "util/u_debug.h"
-#include "stw_device.h"
 
-
-/**
- * Note that our implementation of swap intervals is a bit of a hack.
- * We implement it based on querying the time and Sleep()'ing.  We don't
- * sync to the vblank.
+/* A dummy implementation of this extension.
+ *
+ * Required as some applications retrieve and call these functions
+ * regardless of the fact that we don't advertise the extension and
+ * further more the results of wglGetProcAddress are NULL.
  */
 WINGDIAPI BOOL APIENTRY
 wglSwapIntervalEXT(int interval)
 {
-   if (interval < 0) {
-      SetLastError(ERROR_INVALID_DATA);
-      return FALSE;
-   }
-   if (stw_dev) {
-      stw_dev->swap_interval = interval;
-   }
+   (void) interval;
+   debug_printf("%s: %d\n", __FUNCTION__, interval);
    return TRUE;
 }
-
 
 WINGDIAPI int APIENTRY
 wglGetSwapIntervalEXT(void)
 {
-   return stw_dev ? stw_dev->swap_interval : 0;
+   return 0;
 }
+
+

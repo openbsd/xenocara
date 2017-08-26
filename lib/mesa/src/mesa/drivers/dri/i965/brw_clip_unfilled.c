@@ -37,6 +37,7 @@
 
 #include "brw_defines.h"
 #include "brw_context.h"
+#include "brw_eu.h"
 #include "brw_clip.h"
 
 
@@ -518,7 +519,7 @@ void brw_emit_unfilled_clip( struct brw_clip_compile *c )
 
    /* Need to do this whether we clip or not:
     */
-   if (c->key.contains_flat_varying)
+   if (c->has_flat_shading)
       brw_clip_tri_flat_shade(c);
 
    brw_clip_init_clipmask(c);

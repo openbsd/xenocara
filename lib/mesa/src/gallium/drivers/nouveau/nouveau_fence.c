@@ -30,7 +30,8 @@
 #endif
 
 bool
-nouveau_fence_new(struct nouveau_screen *screen, struct nouveau_fence **fence)
+nouveau_fence_new(struct nouveau_screen *screen, struct nouveau_fence **fence,
+                  bool emit)
 {
    *fence = CALLOC_STRUCT(nouveau_fence);
    if (!*fence)
@@ -39,6 +40,9 @@ nouveau_fence_new(struct nouveau_screen *screen, struct nouveau_fence **fence)
    (*fence)->screen = screen;
    (*fence)->ref = 1;
    LIST_INITHEAD(&(*fence)->work);
+
+   if (emit)
+      nouveau_fence_emit(*fence);
 
    return true;
 }
@@ -238,7 +242,7 @@ nouveau_fence_next(struct nouveau_screen *screen)
 
    nouveau_fence_ref(NULL, &screen->fence.current);
 
-   nouveau_fence_new(screen, &screen->fence.current);
+   nouveau_fence_new(screen, &screen->fence.current, false);
 }
 
 void

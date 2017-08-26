@@ -32,6 +32,14 @@
  */
 
 
+#ifndef __STDC_LIMIT_MACROS
+#define __STDC_LIMIT_MACROS
+#endif
+
+#ifndef __STDC_CONSTANT_MACROS
+#define __STDC_CONSTANT_MACROS
+#endif
+
 // Undef these vars just to silence warnings
 #undef PACKAGE_BUGREPORT
 #undef PACKAGE_NAME
@@ -69,9 +77,6 @@
 
 #include <llvm/Support/TargetSelect.h>
 
-#if HAVE_LLVM >= 0x0305
-#include <llvm/IR/CallSite.h>
-#endif
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Module.h>
 #include <llvm/Support/CBindingWrapping.h>
@@ -535,20 +540,6 @@ lp_build_create_jit_compiler_for_module(LLVMExecutionEngineRef *OutJIT,
    llvm::SmallVector<std::string, 16> MAttrs;
 
 #if defined(PIPE_ARCH_X86) || defined(PIPE_ARCH_X86_64)
-#if HAVE_LLVM >= 0x0400
-   /* llvm-3.7+ implements sys::getHostCPUFeatures for x86,
-    * which allows us to enable/disable code generation based
-    * on the results of cpuid.
-    */
-   llvm::StringMap<bool> features;
-   llvm::sys::getHostCPUFeatures(features);
-
-   for (StringMapIterator<bool> f = features.begin();
-        f != features.end();
-        ++f) {
-      MAttrs.push_back(((*f).second ? "+" : "-") + (*f).first().str());
-   }
-#else
    /*
     * We need to unset attributes because sometimes LLVM mistakenly assumes
     * certain features are present given the processor name.
@@ -601,7 +592,6 @@ lp_build_create_jit_compiler_for_module(LLVMExecutionEngineRef *OutJIT,
    MAttrs.push_back("-avx512bw");
    MAttrs.push_back("-avx512dq");
    MAttrs.push_back("-avx512vl");
-#endif
 #endif
 #endif
 
@@ -747,49 +737,13 @@ lp_free_memory_manager(LLVMMCJITMemoryManagerRef memorymgr)
    delete reinterpret_cast<BaseMemoryManager*>(memorymgr);
 }
 
-extern "C" LLVMValueRef
-lp_get_called_value(LLVMValueRef call)
+extern "C" void
+lp_add_attr_dereferenceable(LLVMValueRef val, uint64_t bytes)
 {
-#if HAVE_LLVM >= 0x0309
-	return LLVMGetCalledValue(call);
-#elif HAVE_LLVM >= 0x0305
-	return llvm::wrap(llvm::CallSite(llvm::unwrap<llvm::Instruction>(call)).getCalledValue());
-#else
-	return NULL; /* radeonsi doesn't support so old LLVM. */
+#if HAVE_LLVM >= 0x0306
+   llvm::Argument *A = llvm::unwrap<llvm::Argument>(val);
+   llvm::AttrBuilder B;
+   B.addDereferenceableAttr(bytes);
+   A->addAttr(llvm::AttributeSet::get(A->getContext(), A->getArgNo() + 1,  B));
 #endif
-}
-
-extern "C" bool
-lp_is_function(LLVMValueRef v)
-{
-#if HAVE_LLVM >= 0x0309
-	return LLVMGetValueKind(v) == LLVMFunctionValueKind;
-#else
-	return llvm::isa<llvm::Function>(llvm::unwrap(v));
-#endif
-}
-
-extern "C" LLVMBuilderRef
-lp_create_builder(LLVMContextRef ctx, enum lp_float_mode float_mode)
-{
-   LLVMBuilderRef builder = LLVMCreateBuilderInContext(ctx);
-
-#if HAVE_LLVM >= 0x0308
-   llvm::FastMathFlags flags;
-
-   switch (float_mode) {
-   case LP_FLOAT_MODE_DEFAULT:
-      break;
-   case LP_FLOAT_MODE_NO_SIGNED_ZEROS_FP_MATH:
-      flags.setNoSignedZeros();
-      llvm::unwrap(builder)->setFastMathFlags(flags);
-      break;
-   case LP_FLOAT_MODE_UNSAFE_FP_MATH:
-      flags.setUnsafeAlgebra();
-      llvm::unwrap(builder)->setFastMathFlags(flags);
-      break;
-   }
-#endif
-
-   return builder;
 }

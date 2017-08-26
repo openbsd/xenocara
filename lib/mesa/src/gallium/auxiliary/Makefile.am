@@ -8,7 +8,6 @@ AM_CFLAGS = \
 	-I$(top_builddir)/src/compiler/nir \
 	-I$(top_srcdir)/src/gallium/auxiliary/util \
 	$(GALLIUM_CFLAGS) \
-	$(LIBUNWIND_CFLAGS) \
 	$(VISIBILITY_CFLAGS) \
 	$(MSVC2013_COMPAT_CFLAGS)
 
@@ -21,17 +20,7 @@ libgallium_la_SOURCES = \
 	$(NIR_SOURCES) \
 	$(GENERATED_SOURCES)
 
-if HAVE_LIBDRM
-
-AM_CFLAGS += \
-	$(LIBDRM_CFLAGS)
-
-libgallium_la_SOURCES += \
-	$(RENDERONLY_SOURCES)
-
-endif
-
-if HAVE_GALLIUM_LLVM
+if HAVE_MESA_LLVM
 
 AM_CFLAGS += \
 	$(LLVM_CFLAGS)
@@ -44,6 +33,8 @@ libgallium_la_SOURCES += \
 	$(GALLIVM_SOURCES)
 
 endif
+
+libgallium_la_LDFLAGS = $(LIBSENSORS_LDFLAGS)
 
 MKDIR_GEN = $(AM_V_at)$(MKDIR_P) $(@D)
 
@@ -75,7 +66,6 @@ if NEED_GALLIUM_VL
 COMMON_VL_CFLAGS = \
 	$(AM_CFLAGS) \
 	$(VL_CFLAGS) \
-	$(XCB_DRI3_CFLAGS) \
 	$(DRI2PROTO_CFLAGS) \
 	$(LIBDRM_CFLAGS)
 
@@ -91,23 +81,22 @@ if NEED_GALLIUM_VL_WINSYS
 
 noinst_LTLIBRARIES += libgalliumvlwinsys.la
 
-libgalliumvlwinsys_la_CFLAGS = $(COMMON_VL_CFLAGS)
-libgalliumvlwinsys_la_SOURCES = $(VL_WINSYS_SOURCES)
+libgalliumvlwinsys_la_CFLAGS = \
+	$(COMMON_VL_CFLAGS)
 
-if HAVE_PLATFORM_X11
-libgalliumvlwinsys_la_SOURCES += $(VL_WINSYS_DRI2_SOURCES)
+libgalliumvlwinsys_la_SOURCES = \
+	$(VL_WINSYS_SOURCES)
 
 if HAVE_DRI3
-libgalliumvlwinsys_la_SOURCES += $(VL_WINSYS_DRI3_SOURCES)
-endif
+
+libgalliumvlwinsys_la_SOURCES += \
+	$(VL_WINSYS_DRI3_SOURCES)
+
 endif
 
-if HAVE_PLATFORM_DRM
-libgalliumvlwinsys_la_SOURCES += $(VL_WINSYS_DRM_SOURCES)
 endif
 
-endif # NEED_GALLIUM_VL_WINSYS
-endif # NEED_GALLIUM_VL
+endif
 
 EXTRA_DIST = \
 	SConscript \

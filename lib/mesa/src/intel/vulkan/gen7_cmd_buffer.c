@@ -28,7 +28,6 @@
 #include <fcntl.h>
 
 #include "anv_private.h"
-#include "vk_format_info.h"
 
 #include "genxml/gen_macros.h"
 #include "genxml/genX_pack.h"
@@ -90,7 +89,8 @@ gen7_cmd_buffer_emit_scissor(struct anv_cmd_buffer *cmd_buffer)
       ssp.ScissorRectPointer = scissor_state.offset;
    }
 
-   anv_state_flush(cmd_buffer->device, scissor_state);
+   if (!cmd_buffer->device->info.has_llc)
+      anv_state_clflush(scissor_state);
 }
 #endif
 
@@ -121,36 +121,6 @@ void genX(CmdBindIndexBuffer)(
    cmd_buffer->state.gen7.index_offset = offset;
 }
 
-static uint32_t
-get_depth_format(struct anv_cmd_buffer *cmd_buffer)
-{
-   const struct anv_render_pass *pass = cmd_buffer->state.pass;
-   const struct anv_subpass *subpass = cmd_buffer->state.subpass;
-
-   if (subpass->depth_stencil_attachment.attachment >= pass->attachment_count)
-      return D16_UNORM;
-
-   struct anv_render_pass_attachment *att =
-      &pass->attachments[subpass->depth_stencil_attachment.attachment];
-
-   switch (att->format) {
-   case VK_FORMAT_D16_UNORM:
-   case VK_FORMAT_D16_UNORM_S8_UINT:
-      return D16_UNORM;
-
-   case VK_FORMAT_X8_D24_UNORM_PACK32:
-   case VK_FORMAT_D24_UNORM_S8_UINT:
-      return D24_UNORM_X8_UINT;
-
-   case VK_FORMAT_D32_SFLOAT:
-   case VK_FORMAT_D32_SFLOAT_S8_UINT:
-      return D32_FLOAT;
-
-   default:
-      return D16_UNORM;
-   }
-}
-
 void
 genX(cmd_buffer_flush_dynamic_state)(struct anv_cmd_buffer *cmd_buffer)
 {
@@ -160,10 +130,20 @@ genX(cmd_buffer_flush_dynamic_state)(struct anv_cmd_buffer *cmd_buffer)
                                   ANV_CMD_DIRTY_RENDER_TARGETS |
                                   ANV_CMD_DIRTY_DYNAMIC_LINE_WIDTH |
                                   ANV_CMD_DIRTY_DYNAMIC_DEPTH_BIAS)) {
+
+      const struct anv_image_view *iview =
+         anv_cmd_buffer_get_depth_stencil_view(cmd_buffer);
+      const struct anv_image *image = iview ? iview->image : NULL;
+      const bool has_depth =
+         image && (image->aspects & VK_IMAGE_ASPECT_DEPTH_BIT);
+      const uint32_t depth_format = has_depth ?
+         isl_surf_get_depth_format(&cmd_buffer->device->isl_dev,
+                                   &image->depth_surface.isl) : D16_UNORM;
+
       uint32_t sf_dw[GENX(3DSTATE_SF_length)];
       struct GENX(3DSTATE_SF) sf = {
          GENX(3DSTATE_SF_header),
-         .DepthBufferSurfaceFormat = get_depth_format(cmd_buffer),
+         .DepthBufferSurfaceFormat = depth_format,
          .LineWidth = cmd_buffer->state.dynamic.line_width,
          .GlobalDepthOffsetConstant = cmd_buffer->state.dynamic.depth_bias.bias,
          .GlobalDepthOffsetScale = cmd_buffer->state.dynamic.depth_bias.slope,
@@ -190,7 +170,8 @@ genX(cmd_buffer_flush_dynamic_state)(struct anv_cmd_buffer *cmd_buffer)
          .BackfaceStencilReferenceValue = d->stencil_reference.back & 0xff,
       };
       GENX(COLOR_CALC_STATE_pack)(NULL, cc_state.map, &cc);
-      anv_state_flush(cmd_buffer->device, cc_state);
+      if (!cmd_buffer->device->info.has_llc)
+         anv_state_clflush(cc_state);
 
       anv_batch_emit(&cmd_buffer->batch, GENX(3DSTATE_CC_STATE_POINTERS), ccp) {
          ccp.ColorCalcStatePointer = cc_state.offset;
@@ -210,10 +191,6 @@ genX(cmd_buffer_flush_dynamic_state)(struct anv_cmd_buffer *cmd_buffer)
 
          .BackfaceStencilTestMask = d->stencil_compare_mask.back & 0xff,
          .BackfaceStencilWriteMask = d->stencil_write_mask.back & 0xff,
-
-         .StencilBufferWriteEnable =
-            (d->stencil_write_mask.front || d->stencil_write_mask.back) &&
-            pipeline->writes_stencil,
       };
       GENX(DEPTH_STENCIL_STATE_pack)(NULL, depth_stencil_dw, &depth_stencil);
 
@@ -259,10 +236,10 @@ genX(cmd_buffer_flush_dynamic_state)(struct anv_cmd_buffer *cmd_buffer)
 }
 
 void
-genX(cmd_buffer_enable_pma_fix)(struct anv_cmd_buffer *cmd_buffer,
-                                bool enable)
+genX(cmd_buffer_emit_hz_op)(struct anv_cmd_buffer *cmd_buffer,
+                          enum blorp_hiz_op op)
 {
-   /* The NP PMA fix doesn't exist on gen7 */
+   anv_finishme("Implement Gen7 HZ ops");
 }
 
 void genX(CmdSetEvent)(
@@ -270,7 +247,7 @@ void genX(CmdSetEvent)(
     VkEvent                                     event,
     VkPipelineStageFlags                        stageMask)
 {
-   anv_finishme("Implement events on gen7");
+   stub();
 }
 
 void genX(CmdResetEvent)(
@@ -278,7 +255,7 @@ void genX(CmdResetEvent)(
     VkEvent                                     event,
     VkPipelineStageFlags                        stageMask)
 {
-   anv_finishme("Implement events on gen7");
+   stub();
 }
 
 void genX(CmdWaitEvents)(
@@ -294,7 +271,7 @@ void genX(CmdWaitEvents)(
     uint32_t                                    imageMemoryBarrierCount,
     const VkImageMemoryBarrier*                 pImageMemoryBarriers)
 {
-   anv_finishme("Implement events on gen7");
+   stub();
 
    genX(CmdPipelineBarrier)(commandBuffer, srcStageMask, destStageMask,
                             false, /* byRegion */

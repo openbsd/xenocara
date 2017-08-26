@@ -306,7 +306,7 @@ _mesa_ActiveTexture(GLenum texture)
       return;
    }
 
-   FLUSH_VERTICES(ctx, _NEW_TEXTURE_STATE);
+   FLUSH_VERTICES(ctx, _NEW_TEXTURE);
 
    ctx->Texture.CurrentUnit = texUnit;
    if (ctx->Transform.MatrixMode == GL_TEXTURE) {
@@ -350,13 +350,13 @@ _mesa_ClientActiveTexture(GLenum texture)
 /**
  * \note This routine refers to derived texture attribute values to
  * compute the ENABLE_TEXMAT flags, but is only called on
- * _NEW_TEXTURE_MATRIX.  On changes to _NEW_TEXTURE_OBJECT/STATE,
- * the ENABLE_TEXMAT flags are updated by _mesa_update_textures(), below.
+ * _NEW_TEXTURE_MATRIX.  On changes to _NEW_TEXTURE, the ENABLE_TEXMAT
+ * flags are updated by _mesa_update_textures(), below.
  *
  * \param ctx GL context.
  */
-void
-_mesa_update_texture_matrices(struct gl_context *ctx)
+static void
+update_texture_matrices( struct gl_context *ctx )
 {
    GLuint u;
 
@@ -371,107 +371,6 @@ _mesa_update_texture_matrices(struct gl_context *ctx)
 	     ctx->TextureMatrixStack[u].Top->type != MATRIX_IDENTITY)
 	    ctx->Texture._TexMatEnabled |= ENABLE_TEXMAT(u);
       }
-   }
-}
-
-
-/**
- * Translate GL combiner state into a MODE_x value
- */
-static uint32_t
-tex_combine_translate_mode(GLenum envMode, GLenum mode)
-{
-   switch (mode) {
-   case GL_REPLACE: return TEXENV_MODE_REPLACE;
-   case GL_MODULATE: return TEXENV_MODE_MODULATE;
-   case GL_ADD:
-      if (envMode == GL_COMBINE4_NV)
-	 return TEXENV_MODE_ADD_PRODUCTS_NV;
-      else
-	 return TEXENV_MODE_ADD;
-   case GL_ADD_SIGNED:
-      if (envMode == GL_COMBINE4_NV)
-	 return TEXENV_MODE_ADD_PRODUCTS_SIGNED_NV;
-      else
-	 return TEXENV_MODE_ADD_SIGNED;
-   case GL_INTERPOLATE: return TEXENV_MODE_INTERPOLATE;
-   case GL_SUBTRACT: return TEXENV_MODE_SUBTRACT;
-   case GL_DOT3_RGB: return TEXENV_MODE_DOT3_RGB;
-   case GL_DOT3_RGB_EXT: return TEXENV_MODE_DOT3_RGB_EXT;
-   case GL_DOT3_RGBA: return TEXENV_MODE_DOT3_RGBA;
-   case GL_DOT3_RGBA_EXT: return TEXENV_MODE_DOT3_RGBA_EXT;
-   case GL_MODULATE_ADD_ATI: return TEXENV_MODE_MODULATE_ADD_ATI;
-   case GL_MODULATE_SIGNED_ADD_ATI: return TEXENV_MODE_MODULATE_SIGNED_ADD_ATI;
-   case GL_MODULATE_SUBTRACT_ATI: return TEXENV_MODE_MODULATE_SUBTRACT_ATI;
-   default:
-      unreachable("Invalid TexEnv Combine mode");
-   }
-}
-
-
-static uint8_t
-tex_combine_translate_source(GLenum src)
-{
-   switch (src) {
-   case GL_TEXTURE0:
-   case GL_TEXTURE1:
-   case GL_TEXTURE2:
-   case GL_TEXTURE3:
-   case GL_TEXTURE4:
-   case GL_TEXTURE5:
-   case GL_TEXTURE6:
-   case GL_TEXTURE7: return TEXENV_SRC_TEXTURE0 + (src - GL_TEXTURE0);
-   case GL_TEXTURE: return TEXENV_SRC_TEXTURE;
-   case GL_PREVIOUS: return TEXENV_SRC_PREVIOUS;
-   case GL_PRIMARY_COLOR: return TEXENV_SRC_PRIMARY_COLOR;
-   case GL_CONSTANT: return TEXENV_SRC_CONSTANT;
-   case GL_ZERO: return TEXENV_SRC_ZERO;
-   case GL_ONE: return TEXENV_SRC_ONE;
-   default:
-      unreachable("Invalid TexEnv Combine argument source");
-   }
-}
-
-
-static uint8_t
-tex_combine_translate_operand(GLenum operand)
-{
-   switch (operand) {
-   case GL_SRC_COLOR: return TEXENV_OPR_COLOR;
-   case GL_ONE_MINUS_SRC_COLOR: return TEXENV_OPR_ONE_MINUS_COLOR;
-   case GL_SRC_ALPHA: return TEXENV_OPR_ALPHA;
-   case GL_ONE_MINUS_SRC_ALPHA: return TEXENV_OPR_ONE_MINUS_ALPHA;
-   default:
-      unreachable("Invalid TexEnv Combine argument source");
-   }
-}
-
-
-static void
-pack_tex_combine(struct gl_texture_unit *texUnit)
-{
-   struct gl_tex_env_combine_state *state = texUnit->_CurrentCombine;
-   struct gl_tex_env_combine_packed *packed = &texUnit->_CurrentCombinePacked;
-
-   memset(packed, 0, sizeof *packed);
-
-   packed->ModeRGB = tex_combine_translate_mode(texUnit->EnvMode, state->ModeRGB);
-   packed->ModeA = tex_combine_translate_mode(texUnit->EnvMode, state->ModeA);
-   packed->ScaleShiftRGB = state->ScaleShiftRGB;
-   packed->ScaleShiftA = state->ScaleShiftA;
-   packed->NumArgsRGB = state->_NumArgsRGB;
-   packed->NumArgsA = state->_NumArgsA;
-
-   for (int i = 0; i < state->_NumArgsRGB; ++i)
-   {
-      packed->ArgsRGB[i].Source = tex_combine_translate_source(state->SourceRGB[i]);
-      packed->ArgsRGB[i].Operand = tex_combine_translate_operand(state->OperandRGB[i]);
-   }
-
-   for (int i = 0; i < state->_NumArgsA; ++i)
-   {
-      packed->ArgsA[i].Source = tex_combine_translate_source(state->SourceA[i]);
-      packed->ArgsA[i].Operand = tex_combine_translate_operand(state->OperandA[i]);
    }
 }
 
@@ -568,8 +467,6 @@ update_tex_combine(struct gl_context *ctx, struct gl_texture_unit *texUnit)
       _mesa_problem(ctx, "invalid Alpha combine mode in update_texture_state");
       break;
    }
-
-   pack_tex_combine(texUnit);
 }
 
 static void
@@ -702,7 +599,7 @@ update_program_texture_state(struct gl_context *ctx, struct gl_program **prog,
    if (prog[MESA_SHADER_FRAGMENT]) {
       const GLuint coordMask = (1 << MAX_TEXTURE_COORD_UNITS) - 1;
       ctx->Texture._EnabledCoordUnits |=
-         (prog[MESA_SHADER_FRAGMENT]->info.inputs_read >> VARYING_SLOT_TEX0) &
+         (prog[MESA_SHADER_FRAGMENT]->InputsRead >> VARYING_SLOT_TEX0) &
          coordMask;
    }
 }
@@ -789,14 +686,13 @@ update_ff_texture_state(struct gl_context *ctx,
 /**
  * \note This routine refers to derived texture matrix values to
  * compute the ENABLE_TEXMAT flags, but is only called on
- * _NEW_TEXTURE_OBJECT/STATE.  On changes to _NEW_TEXTURE_MATRIX,
- * the ENABLE_TEXMAT flags are updated by _mesa_update_texture_matrices,
- * above.
+ * _NEW_TEXTURE.  On changes to _NEW_TEXTURE_MATRIX, the ENABLE_TEXMAT
+ * flags are updated by _mesa_update_texture_matrices, above.
  *
  * \param ctx GL context.
  */
-void
-_mesa_update_texture_state(struct gl_context *ctx)
+static void
+update_texture_state( struct gl_context *ctx )
 {
    struct gl_program *prog[MESA_SHADER_STAGES];
    int i;
@@ -804,19 +700,19 @@ _mesa_update_texture_state(struct gl_context *ctx)
    BITSET_DECLARE(enabled_texture_units, MAX_COMBINED_TEXTURE_IMAGE_UNITS);
 
    for (i = 0; i < MESA_SHADER_STAGES; i++) {
-      if (ctx->_Shader->CurrentProgram[i]) {
-         prog[i] = ctx->_Shader->CurrentProgram[i];
+      if (ctx->_Shader->CurrentProgram[i] &&
+          ctx->_Shader->CurrentProgram[i]->LinkStatus) {
+         prog[i] = ctx->_Shader->CurrentProgram[i]->_LinkedShaders[i]->Program;
       } else {
-         prog[i] = NULL;
+         if (i == MESA_SHADER_FRAGMENT && ctx->FragmentProgram._Enabled)
+            prog[i] = &ctx->FragmentProgram.Current->Base;
+         else
+            prog[i] = NULL;
       }
    }
 
-   if (prog[MESA_SHADER_FRAGMENT] == NULL && ctx->FragmentProgram._Enabled) {
-      prog[MESA_SHADER_FRAGMENT] = ctx->FragmentProgram.Current;
-   }
-
    /* TODO: only set this if there are actual changes */
-   ctx->NewState |= _NEW_TEXTURE_OBJECT | _NEW_TEXTURE_STATE;
+   ctx->NewState |= _NEW_TEXTURE;
 
    ctx->Texture._GenFlags = 0x0;
    ctx->Texture._TexMatEnabled = 0x0;
@@ -849,6 +745,20 @@ _mesa_update_texture_state(struct gl_context *ctx)
 
    if (!prog[MESA_SHADER_FRAGMENT] || !prog[MESA_SHADER_VERTEX])
       update_texgen(ctx);
+}
+
+
+/**
+ * Update texture-related derived state.
+ */
+void
+_mesa_update_texture( struct gl_context *ctx, GLuint new_state )
+{
+   if (new_state & _NEW_TEXTURE_MATRIX)
+      update_texture_matrices( ctx );
+
+   if (new_state & (_NEW_TEXTURE | _NEW_PROGRAM))
+      update_texture_state( ctx );
 }
 
 

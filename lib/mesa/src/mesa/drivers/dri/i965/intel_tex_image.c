@@ -29,22 +29,6 @@
 
 #define FILE_DEBUG_FLAG DEBUG_TEXTURE
 
-/* Make sure one doesn't end up shrinking base level zero unnecessarily.
- * Determining the base level dimension by shifting higher level dimension
- * ends up in off-by-one value in case base level has NPOT size (for example,
- * 293 != 146 << 1).
- * Choose the original base level dimension when shifted dimensions agree.
- * Otherwise assume real resize is intended and use the new shifted value.
- */
-static unsigned 
-get_base_dim(unsigned old_base_dim, unsigned new_level_dim, unsigned level)
-{
-   const unsigned old_level_dim = old_base_dim >> level;
-   const unsigned new_base_dim = new_level_dim << level;
-
-   return old_level_dim == new_level_dim ? old_base_dim : new_base_dim;
-}
-
 /* Work back from the specified level of the image to the baselevel and create a
  * miptree of that size.
  */
@@ -56,8 +40,6 @@ intel_miptree_create_for_teximage(struct brw_context *brw,
 {
    GLuint lastLevel;
    int width, height, depth;
-   const struct intel_mipmap_tree *old_mt = intelObj->mt;
-   const unsigned level = intelImage->base.Base.Level;
 
    intel_get_image_dims(&intelImage->base.Base, &width, &height, &depth);
 
@@ -69,23 +51,20 @@ intel_miptree_create_for_teximage(struct brw_context *brw,
    case GL_TEXTURE_2D_MULTISAMPLE_ARRAY:
    case GL_TEXTURE_RECTANGLE:
    case GL_TEXTURE_EXTERNAL_OES:
-      assert(level == 0);
+      assert(intelImage->base.Base.Level == 0);
       break;
    case GL_TEXTURE_3D:
-      depth = old_mt ? get_base_dim(old_mt->logical_depth0, depth, level) :
-                       depth << level;
+      depth <<= intelImage->base.Base.Level;
       /* Fall through */
    case GL_TEXTURE_2D:
    case GL_TEXTURE_2D_ARRAY:
    case GL_TEXTURE_CUBE_MAP:
    case GL_TEXTURE_CUBE_MAP_ARRAY:
-      height = old_mt ? get_base_dim(old_mt->logical_height0, height, level) :
-                        height << level;
+      height <<= intelImage->base.Base.Level;
       /* Fall through */
    case GL_TEXTURE_1D:
    case GL_TEXTURE_1D_ARRAY:
-      width = old_mt ? get_base_dim(old_mt->logical_width0, width, level) :
-                       width << level;
+      width <<= intelImage->base.Base.Level;
       break;
    default:
       unreachable("Unexpected target");
@@ -128,7 +107,7 @@ intelTexImage(struct gl_context * ctx,
    struct intel_texture_image *intelImage = intel_texture_image(texImage);
    bool ok;
 
-   bool tex_busy = intelImage->mt && brw_bo_busy(intelImage->mt->bo);
+   bool tex_busy = intelImage->mt && drm_intel_bo_busy(intelImage->mt->bo);
 
    DBG("%s mesa_format %s target %s format %s type %s level %d %dx%dx%d\n",
        __func__, _mesa_get_format_name(texImage->TexFormat),
@@ -467,7 +446,7 @@ intel_gettexsubimage_tiled_memcpy(struct gl_context *ctx,
    int dst_pitch;
 
    /* The miptree's buffer. */
-   struct brw_bo *bo;
+   drm_intel_bo *bo;
 
    int error = 0;
 
@@ -523,16 +502,16 @@ intel_gettexsubimage_tiled_memcpy(struct gl_context *ctx,
    /* Since we are going to write raw data to the miptree, we need to resolve
     * any pending fast color clears before we start.
     */
-   intel_miptree_all_slices_resolve_color(brw, image->mt, 0);
+   intel_miptree_resolve_color(brw, image->mt, 0);
 
    bo = image->mt->bo;
 
-   if (brw_batch_references(&brw->batch, bo)) {
+   if (drm_intel_bo_references(brw->batch.bo, bo)) {
       perf_debug("Flushing before mapping a referenced bo.\n");
       intel_batchbuffer_flush(brw);
    }
 
-   error = brw_bo_map(brw, bo, false /* write enable */);
+   error = brw_bo_map(brw, bo, false /* write enable */, "miptree");
    if (error) {
       DBG("%s: failed to map bo\n", __func__);
       return false;
@@ -565,7 +544,7 @@ intel_gettexsubimage_tiled_memcpy(struct gl_context *ctx,
       mem_copy
    );
 
-   brw_bo_unmap(bo);
+   drm_intel_bo_unmap(bo);
    return true;
 }
 

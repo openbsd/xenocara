@@ -238,7 +238,7 @@ nv30_query_result(struct pipe_context *pipe, struct pipe_query *pq,
 static void
 nv40_query_render_condition(struct pipe_context *pipe,
                             struct pipe_query *pq,
-                            boolean condition, enum pipe_render_cond_flag mode)
+                            boolean condition, uint mode)
 {
    struct nv30_context *nv30 = nv30_context(pipe);
    struct nv30_query *q = nv30_query(pq);

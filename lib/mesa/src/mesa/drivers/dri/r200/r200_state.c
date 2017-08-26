@@ -61,7 +61,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "r200_swtcl.h"
 #include "r200_vertprog.h"
 
-#include "util/simple_list.h"
 
 /* =============================================================
  * Alpha blending
@@ -2279,17 +2278,12 @@ GLboolean r200ValidateState( struct gl_context *ctx )
 
 static void r200InvalidateState( struct gl_context *ctx, GLuint new_state )
 {
-   r200ContextPtr rmesa = R200_CONTEXT(ctx);
-
    _swrast_InvalidateState( ctx, new_state );
    _swsetup_InvalidateState( ctx, new_state );
    _vbo_InvalidateState( ctx, new_state );
    _tnl_InvalidateState( ctx, new_state );
    _ae_invalidate_state( ctx, new_state );
    R200_CONTEXT(ctx)->radeon.NewGLState |= new_state;
-
-   if (new_state & _NEW_PROGRAM)
-      rmesa->curr_vp_hw = NULL;
 }
 
 /* A hack.  The r200 can actually cope just fine with materials

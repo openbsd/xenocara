@@ -50,7 +50,7 @@
  */
 static int gsensors_temp_count = 0;
 static struct list_head gsensors_temp_list;
-static mtx_t gsensor_temp_mutex = _MTX_INITIALIZER_NP;
+pipe_static_mutex(gsensor_temp_mutex);
 
 struct sensors_temp_info
 {
@@ -324,15 +324,15 @@ int
 hud_get_num_sensors(bool displayhelp)
 {
    /* Return the number of sensors detected. */
-   mtx_lock(&gsensor_temp_mutex);
+   pipe_mutex_lock(gsensor_temp_mutex);
    if (gsensors_temp_count) {
-      mtx_unlock(&gsensor_temp_mutex);
+      pipe_mutex_unlock(gsensor_temp_mutex);
       return gsensors_temp_count;
    }
 
    int ret = sensors_init(NULL);
    if (ret) {
-      mtx_unlock(&gsensor_temp_mutex);
+      pipe_mutex_unlock(gsensor_temp_mutex);
       return 0;
    }
 
@@ -368,7 +368,7 @@ hud_get_num_sensors(bool displayhelp)
       }
    }
 
-   mtx_unlock(&gsensor_temp_mutex);
+   pipe_mutex_unlock(gsensor_temp_mutex);
    return gsensors_temp_count;
 }
 

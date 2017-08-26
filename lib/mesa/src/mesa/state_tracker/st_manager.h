@@ -34,6 +34,9 @@
 
 struct st_context;
 
+struct pipe_surface *
+st_manager_get_egl_image_surface(struct st_context *st, void *eglimg);
+
 void
 st_manager_flush_frontbuffer(struct st_context *st);
 

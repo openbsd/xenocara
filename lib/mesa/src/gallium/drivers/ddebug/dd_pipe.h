@@ -62,7 +62,6 @@ enum call_type
    CALL_FLUSH_RESOURCE,
    CALL_CLEAR,
    CALL_CLEAR_BUFFER,
-   CALL_CLEAR_TEXTURE,
    CALL_CLEAR_RENDER_TARGET,
    CALL_CLEAR_DEPTH_STENCIL,
    CALL_GENERATE_MIPMAP,
@@ -235,8 +234,8 @@ struct dd_context
     * their fences. Records with signalled fences are freed. On fence timeout,
     * the thread dumps the record of the oldest unsignalled fence.
     */
-   thrd_t thread;
-   mtx_t mutex;
+   pipe_thread thread;
+   pipe_mutex mutex;
    int kill_thread;
    struct pipe_resource *fence;
    struct pipe_transfer *fence_transfer;
@@ -252,8 +251,7 @@ dd_context_create(struct dd_screen *dscreen, struct pipe_context *pipe);
 
 void
 dd_init_draw_functions(struct dd_context *dctx);
-int
-dd_thread_pipelined_hang_detect(void *input);
+PIPE_THREAD_ROUTINE(dd_thread_pipelined_hang_detect, input);
 
 
 static inline struct dd_context *

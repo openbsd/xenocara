@@ -45,7 +45,7 @@ struct svga_constbuf
 
 
 static void svga_set_constant_buffer(struct pipe_context *pipe,
-                                     enum pipe_shader_type shader, uint index,
+                                     uint shader, uint index,
                                      const struct pipe_constant_buffer *cb)
 {
    struct svga_screen *svgascreen = svga_screen(pipe->screen);

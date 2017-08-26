@@ -295,7 +295,7 @@ psprite_emit_vertex_inst(struct tgsi_transform_context *ctx,
    tgsi_transform_op2_swz_inst(ctx, TGSI_OPCODE_MUL,
                   TGSI_FILE_TEMPORARY, ts->point_scale_tmp, TGSI_WRITEMASK_X,
                   TGSI_FILE_TEMPORARY, ts->point_size_tmp, TGSI_SWIZZLE_X,
-                  TGSI_FILE_TEMPORARY, ts->point_pos_tmp, TGSI_SWIZZLE_W, false);
+                  TGSI_FILE_TEMPORARY, ts->point_pos_tmp, TGSI_SWIZZLE_W);
 
    /* MUL point_scale.xy, point_scale.xx, inverseViewport.xy */
    inst = tgsi_default_full_instruction();
@@ -323,15 +323,15 @@ psprite_emit_vertex_inst(struct tgsi_transform_context *ctx,
                                   TGSI_FILE_IMMEDIATE, ts->point_imm,
                                   TGSI_SWIZZLE_Y,
                                   TGSI_FILE_TEMPORARY, ts->point_size_tmp,
-                                  TGSI_SWIZZLE_X, false);
+                                  TGSI_SWIZZLE_X);
 
-      tgsi_transform_op2_swz_inst(ctx, TGSI_OPCODE_ADD,
+      tgsi_transform_op2_swz_inst(ctx, TGSI_OPCODE_SUB,
                                   TGSI_FILE_TEMPORARY, ts->point_coord_k,
                                   TGSI_WRITEMASK_X,
                                   TGSI_FILE_IMMEDIATE, ts->point_imm,
                                   TGSI_SWIZZLE_Z,
                                   TGSI_FILE_TEMPORARY, ts->point_coord_k,
-                                  TGSI_SWIZZLE_X, true);
+                                  TGSI_SWIZZLE_X);
    }
 
 
@@ -442,13 +442,13 @@ psprite_inst(struct tgsi_transform_context *ctx,
       tgsi_transform_op2_swz_inst(ctx, TGSI_OPCODE_MAX,
                  TGSI_FILE_TEMPORARY, ts->point_size_tmp, TGSI_WRITEMASK_X,
                  TGSI_FILE_TEMPORARY, ts->point_size_tmp, TGSI_SWIZZLE_X,
-                 TGSI_FILE_IMMEDIATE, ts->point_imm, TGSI_SWIZZLE_Y, false);
+                 TGSI_FILE_IMMEDIATE, ts->point_imm, TGSI_SWIZZLE_Y);
 
       /* MIN point_size_tmp.x, point_size_tmp.x, point_ivp.w */
       tgsi_transform_op2_swz_inst(ctx, TGSI_OPCODE_MIN,
                  TGSI_FILE_TEMPORARY, ts->point_size_tmp, TGSI_WRITEMASK_X,
                  TGSI_FILE_TEMPORARY, ts->point_size_tmp, TGSI_SWIZZLE_X,
-                 TGSI_FILE_CONSTANT, ts->point_ivp, TGSI_SWIZZLE_W, false);
+                 TGSI_FILE_CONSTANT, ts->point_ivp, TGSI_SWIZZLE_W);
    }
    else if (inst->Dst[0].Register.File == TGSI_FILE_OUTPUT &&
             inst->Dst[0].Register.Index == ts->point_pos_out) {

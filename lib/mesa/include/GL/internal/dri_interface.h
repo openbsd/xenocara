@@ -340,18 +340,11 @@ struct __DRI2throttleExtensionRec {
  */
 
 #define __DRI2_FENCE "DRI2_Fence"
-#define __DRI2_FENCE_VERSION 2
+#define __DRI2_FENCE_VERSION 1
 
 #define __DRI2_FENCE_TIMEOUT_INFINITE     0xffffffffffffffffllu
 
 #define __DRI2_FENCE_FLAG_FLUSH_COMMANDS  (1 << 0)
-
-/**
- * \name Capabilities that might be returned by __DRI2fenceExtensionRec::get_capabilities
- */
-/*@{*/
-#define __DRI_FENCE_CAP_NATIVE_FD 1
-/*@}*/
 
 struct __DRI2fenceExtensionRec {
    __DRIextension base;
@@ -397,41 +390,6 @@ struct __DRI2fenceExtensionRec {
     *                sense with this function (right now there are none)
     */
    void (*server_wait_sync)(__DRIcontext *ctx, void *fence, unsigned flags);
-
-   /**
-    * Query for general capabilities of the driver that concern fences.
-    * Returns a bitmask of __DRI_FENCE_CAP_x
-    *
-    * \since 2
-    */
-   unsigned (*get_capabilities)(__DRIscreen *screen);
-
-   /**
-    * Create an fd (file descriptor) associated fence.  If the fence fd
-    * is -1, this behaves similarly to create_fence() except that when
-    * rendering is flushed the driver creates a fence fd.  Otherwise,
-    * the driver wraps an existing fence fd.
-    *
-    * This is used to implement the EGL_ANDROID_native_fence_sync extension.
-    *
-    * \since 2
-    *
-    * \param ctx     the context associated with the fence
-    * \param fd      the fence fd or -1
-    */
-   void *(*create_fence_fd)(__DRIcontext *ctx, int fd);
-
-   /**
-    * For fences created with create_fence_fd(), after rendering is flushed,
-    * this retrieves the native fence fd.  Caller takes ownership of the
-    * fd and will close() it when it is no longer needed.
-    *
-    * \since 2
-    *
-    * \param screen  the screen associated with the fence
-    * \param fence   the fence
-    */
-   int (*get_fence_fd)(__DRIscreen *screen, void *fence);
 };
 
 
@@ -1136,7 +1094,7 @@ struct __DRIdri2ExtensionRec {
  * extensions.
  */
 #define __DRI_IMAGE "DRI_IMAGE"
-#define __DRI_IMAGE_VERSION 14
+#define __DRI_IMAGE_VERSION 13
 
 /**
  * These formats correspond to the similarly named MESA_FORMAT_*
@@ -1164,8 +1122,6 @@ struct __DRIdri2ExtensionRec {
 #define __DRI_IMAGE_FORMAT_ARGB2101010  0x100a
 #define __DRI_IMAGE_FORMAT_SARGB8       0x100b
 #define __DRI_IMAGE_FORMAT_ARGB1555     0x100c
-#define __DRI_IMAGE_FORMAT_R16          0x100d
-#define __DRI_IMAGE_FORMAT_GR1616       0x100e
 
 #define __DRI_IMAGE_USE_SHARE		0x0001
 #define __DRI_IMAGE_USE_SCANOUT		0x0002
@@ -1194,8 +1150,6 @@ struct __DRIdri2ExtensionRec {
 #define __DRI_IMAGE_FOURCC_R8		0x20203852
 #define __DRI_IMAGE_FOURCC_GR88		0x38385247
 #define __DRI_IMAGE_FOURCC_ARGB1555	0x35315241
-#define __DRI_IMAGE_FOURCC_R16		0x20363152
-#define __DRI_IMAGE_FOURCC_GR1616	0x32335247
 #define __DRI_IMAGE_FOURCC_RGB565	0x36314752
 #define __DRI_IMAGE_FOURCC_ARGB8888	0x34325241
 #define __DRI_IMAGE_FOURCC_XRGB8888	0x34325258
@@ -1257,8 +1211,6 @@ struct __DRIdri2ExtensionRec {
 #define __DRI_IMAGE_ATTRIB_NUM_PLANES   0x2009 /* available in versions 11 */
 
 #define __DRI_IMAGE_ATTRIB_OFFSET 0x200A /* available in versions 13 */
-#define __DRI_IMAGE_ATTRIB_MODIFIER_LOWER 0x200B /* available in versions 14 */
-#define __DRI_IMAGE_ATTRIB_MODIFIER_UPPER 0x200C /* available in versions 14 */
 
 enum __DRIYUVColorSpace {
    __DRI_YUV_COLOR_SPACE_UNDEFINED = 0,
@@ -1470,29 +1422,6 @@ struct __DRIimageExtensionRec {
     */
    void (*unmapImage)(__DRIcontext *context, __DRIimage *image, void *data);
 
-
-   /**
-    * Creates an image with implementation's favorite modifiers.
-    *
-    * This acts like createImage except there is a list of modifiers passed in
-    * which the implementation may selectively use to create the DRIimage. The
-    * result should be the implementation selects one modifier (perhaps it would
-    * hold on to a few and later pick).
-    *
-    * The created image should be destroyed with destroyImage().
-    *
-    * Returns the new DRIimage. The chosen modifier can be obtained later on
-    * and passed back to things like the kernel's AddFB2 interface.
-    *
-    * \sa __DRIimageRec::createImage
-    *
-    * \since 14
-    */
-   __DRIimage *(*createImageWithModifiers)(__DRIscreen *screen,
-                                           int width, int height, int format,
-                                           const uint64_t *modifiers,
-                                           const unsigned int modifier_count,
-                                           void *loaderPrivate);
 };
 
 
@@ -1681,45 +1610,6 @@ struct __DRIimageDriverExtensionRec {
    __DRIcreateNewDrawableFunc           createNewDrawable;
    __DRIcreateContextAttribsFunc        createContextAttribs;
    __DRIgetAPIMaskFunc                  getAPIMask;
-};
-
-/**
- * Background callable loader extension.
- *
- * Loaders expose this extension to indicate to drivers that they are capable
- * of handling callbacks from the driver's background drawing threads.
- */
-#define __DRI_BACKGROUND_CALLABLE "DRI_BackgroundCallable"
-#define __DRI_BACKGROUND_CALLABLE_VERSION 1
-
-typedef struct __DRIbackgroundCallableExtensionRec __DRIbackgroundCallableExtension;
-struct __DRIbackgroundCallableExtensionRec {
-   __DRIextension base;
-
-   /**
-    * Indicate that this thread is being used by the driver as a background
-    * drawing thread which may make callbacks to the loader.
-    *
-    * \param loaderPrivate is the value that was passed to to the driver when
-    * the context was created.  This can be used by the loader to identify
-    * which context any callbacks are associated with.
-    *
-    * If this function is called more than once from any given thread, each
-    * subsequent call overrides the loaderPrivate data that was passed in the
-    * previous call.  The driver can take advantage of this to re-use a
-    * background thread to perform drawing on behalf of multiple contexts.
-    *
-    * It is permissible for the driver to call this function from a
-    * non-background thread (i.e. a thread that has already been bound to a
-    * context using __DRIcoreExtensionRec::bindContext()); when this happens,
-    * the \c loaderPrivate pointer must be equal to the pointer that was
-    * passed to the driver when the currently bound context was created.
-    *
-    * This call should execute quickly enough that the driver can call it with
-    * impunity whenever a background thread starts performing drawing
-    * operations (e.g. it should just set a thread-local variable).
-    */
-   void (*setBackgroundContext)(void *loaderPrivate);
 };
 
 #endif

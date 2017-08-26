@@ -175,7 +175,6 @@ enum operation
 #define NV50_IR_SUBOP_LDC_IS       2
 #define NV50_IR_SUBOP_LDC_ISL      3
 #define NV50_IR_SUBOP_SHIFT_WRAP   1
-#define NV50_IR_SUBOP_SHIFT_HIGH   2
 #define NV50_IR_SUBOP_EMU_PRERET   1
 #define NV50_IR_SUBOP_TEXBAR(n)    n
 #define NV50_IR_SUBOP_MOV_FINAL    1
@@ -251,10 +250,6 @@ enum operation
 #define NV50_IR_SUBOP_VOTE_ALL 0
 #define NV50_IR_SUBOP_VOTE_ANY 1
 #define NV50_IR_SUBOP_VOTE_UNI 2
-
-#define NV50_IR_SUBOP_MINMAX_LOW  1
-#define NV50_IR_SUBOP_MINMAX_MED  2
-#define NV50_IR_SUBOP_MINMAX_HIGH 3
 
 enum DataType
 {
@@ -470,11 +465,6 @@ enum SVSemantic
    SV_BASEINSTANCE,
    SV_DRAWID,
    SV_WORK_DIM,
-   SV_LANEMASK_EQ,
-   SV_LANEMASK_LT,
-   SV_LANEMASK_LE,
-   SV_LANEMASK_GT,
-   SV_LANEMASK_GE,
    SV_UNDEFINED,
    SV_LAST
 };
@@ -601,6 +591,7 @@ public:
 public:
    Modifier mod;
    int8_t indirect[2]; // >= 0 if relative to lvalue in insn->src(indirect[i])
+   uint8_t swizzle;
 
    bool usedAsPtr; // for printing
 
@@ -666,7 +657,7 @@ public:
    inline const Symbol *asSym() const;
    inline const ImmediateValue *asImm() const;
 
-   inline bool inFile(DataFile f) const { return reg.file == f; }
+   inline bool inFile(DataFile f) { return reg.file == f; }
 
    static inline Value *get(Iterator&);
 

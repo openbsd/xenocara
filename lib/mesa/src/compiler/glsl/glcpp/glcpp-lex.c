@@ -9,244 +9,88 @@
 #define FLEX_SCANNER
 #define YY_FLEX_MAJOR_VERSION 2
 #define YY_FLEX_MINOR_VERSION 6
-#define YY_FLEX_SUBMINOR_VERSION 4
+#define YY_FLEX_SUBMINOR_VERSION 3
 #if YY_FLEX_SUBMINOR_VERSION > 0
 #define FLEX_BETA
 #endif
 
-#ifdef yy_create_buffer
-#define glcpp__create_buffer_ALREADY_DEFINED
-#else
-#define yy_create_buffer glcpp__create_buffer
-#endif
+    #define yy_create_buffer glcpp__create_buffer
 
-#ifdef yy_delete_buffer
-#define glcpp__delete_buffer_ALREADY_DEFINED
-#else
-#define yy_delete_buffer glcpp__delete_buffer
-#endif
+    #define yy_delete_buffer glcpp__delete_buffer
 
-#ifdef yy_scan_buffer
-#define glcpp__scan_buffer_ALREADY_DEFINED
-#else
-#define yy_scan_buffer glcpp__scan_buffer
-#endif
+    #define yy_scan_buffer glcpp__scan_buffer
 
-#ifdef yy_scan_string
-#define glcpp__scan_string_ALREADY_DEFINED
-#else
-#define yy_scan_string glcpp__scan_string
-#endif
+    #define yy_scan_string glcpp__scan_string
 
-#ifdef yy_scan_bytes
-#define glcpp__scan_bytes_ALREADY_DEFINED
-#else
-#define yy_scan_bytes glcpp__scan_bytes
-#endif
+    #define yy_scan_bytes glcpp__scan_bytes
 
-#ifdef yy_init_buffer
-#define glcpp__init_buffer_ALREADY_DEFINED
-#else
-#define yy_init_buffer glcpp__init_buffer
-#endif
+    #define yy_init_buffer glcpp__init_buffer
 
-#ifdef yy_flush_buffer
-#define glcpp__flush_buffer_ALREADY_DEFINED
-#else
-#define yy_flush_buffer glcpp__flush_buffer
-#endif
+    #define yy_flush_buffer glcpp__flush_buffer
 
-#ifdef yy_load_buffer_state
-#define glcpp__load_buffer_state_ALREADY_DEFINED
-#else
-#define yy_load_buffer_state glcpp__load_buffer_state
-#endif
+    #define yy_load_buffer_state glcpp__load_buffer_state
 
-#ifdef yy_switch_to_buffer
-#define glcpp__switch_to_buffer_ALREADY_DEFINED
-#else
-#define yy_switch_to_buffer glcpp__switch_to_buffer
-#endif
+    #define yy_switch_to_buffer glcpp__switch_to_buffer
 
-#ifdef yypush_buffer_state
-#define glcpp_push_buffer_state_ALREADY_DEFINED
-#else
-#define yypush_buffer_state glcpp_push_buffer_state
-#endif
+    #define yypush_buffer_state glcpp_push_buffer_state
 
-#ifdef yypop_buffer_state
-#define glcpp_pop_buffer_state_ALREADY_DEFINED
-#else
-#define yypop_buffer_state glcpp_pop_buffer_state
-#endif
+    #define yypop_buffer_state glcpp_pop_buffer_state
 
-#ifdef yyensure_buffer_stack
-#define glcpp_ensure_buffer_stack_ALREADY_DEFINED
-#else
-#define yyensure_buffer_stack glcpp_ensure_buffer_stack
-#endif
+    #define yyensure_buffer_stack glcpp_ensure_buffer_stack
 
-#ifdef yylex
-#define glcpp_lex_ALREADY_DEFINED
-#else
-#define yylex glcpp_lex
-#endif
+    #define yylex glcpp_lex
 
-#ifdef yyrestart
-#define glcpp_restart_ALREADY_DEFINED
-#else
-#define yyrestart glcpp_restart
-#endif
+    #define yyrestart glcpp_restart
 
-#ifdef yylex_init
-#define glcpp_lex_init_ALREADY_DEFINED
-#else
-#define yylex_init glcpp_lex_init
-#endif
+    #define yylex_init glcpp_lex_init
 
-#ifdef yylex_init_extra
-#define glcpp_lex_init_extra_ALREADY_DEFINED
-#else
-#define yylex_init_extra glcpp_lex_init_extra
-#endif
+    #define yylex_init_extra glcpp_lex_init_extra
 
-#ifdef yylex_destroy
-#define glcpp_lex_destroy_ALREADY_DEFINED
-#else
-#define yylex_destroy glcpp_lex_destroy
-#endif
+    #define yylex_destroy glcpp_lex_destroy
 
-#ifdef yyget_debug
-#define glcpp_get_debug_ALREADY_DEFINED
-#else
-#define yyget_debug glcpp_get_debug
-#endif
+    #define yyget_debug glcpp_get_debug
 
-#ifdef yyset_debug
-#define glcpp_set_debug_ALREADY_DEFINED
-#else
-#define yyset_debug glcpp_set_debug
-#endif
+    #define yyset_debug glcpp_set_debug
 
-#ifdef yyget_extra
-#define glcpp_get_extra_ALREADY_DEFINED
-#else
-#define yyget_extra glcpp_get_extra
-#endif
+    #define yyget_extra glcpp_get_extra
 
-#ifdef yyset_extra
-#define glcpp_set_extra_ALREADY_DEFINED
-#else
-#define yyset_extra glcpp_set_extra
-#endif
+    #define yyset_extra glcpp_set_extra
 
-#ifdef yyget_in
-#define glcpp_get_in_ALREADY_DEFINED
-#else
-#define yyget_in glcpp_get_in
-#endif
+    #define yyget_in glcpp_get_in
 
-#ifdef yyset_in
-#define glcpp_set_in_ALREADY_DEFINED
-#else
-#define yyset_in glcpp_set_in
-#endif
+    #define yyset_in glcpp_set_in
 
-#ifdef yyget_out
-#define glcpp_get_out_ALREADY_DEFINED
-#else
-#define yyget_out glcpp_get_out
-#endif
+    #define yyget_out glcpp_get_out
 
-#ifdef yyset_out
-#define glcpp_set_out_ALREADY_DEFINED
-#else
-#define yyset_out glcpp_set_out
-#endif
+    #define yyset_out glcpp_set_out
 
-#ifdef yyget_leng
-#define glcpp_get_leng_ALREADY_DEFINED
-#else
-#define yyget_leng glcpp_get_leng
-#endif
+    #define yyget_leng glcpp_get_leng
 
-#ifdef yyget_text
-#define glcpp_get_text_ALREADY_DEFINED
-#else
-#define yyget_text glcpp_get_text
-#endif
+    #define yyget_text glcpp_get_text
 
-#ifdef yyget_lineno
-#define glcpp_get_lineno_ALREADY_DEFINED
-#else
-#define yyget_lineno glcpp_get_lineno
-#endif
+    #define yyget_lineno glcpp_get_lineno
 
-#ifdef yyset_lineno
-#define glcpp_set_lineno_ALREADY_DEFINED
-#else
-#define yyset_lineno glcpp_set_lineno
-#endif
+    #define yyset_lineno glcpp_set_lineno
 
-#ifdef yyget_column
-#define glcpp_get_column_ALREADY_DEFINED
-#else
-#define yyget_column glcpp_get_column
-#endif
+        #define yyget_column glcpp_get_column
 
-#ifdef yyset_column
-#define glcpp_set_column_ALREADY_DEFINED
-#else
-#define yyset_column glcpp_set_column
-#endif
+        #define yyset_column glcpp_set_column
 
-#ifdef yywrap
-#define glcpp_wrap_ALREADY_DEFINED
-#else
-#define yywrap glcpp_wrap
-#endif
+    #define yywrap glcpp_wrap
 
-#ifdef yyget_lval
-#define glcpp_get_lval_ALREADY_DEFINED
-#else
-#define yyget_lval glcpp_get_lval
-#endif
+    #define yyget_lval glcpp_get_lval
 
-#ifdef yyset_lval
-#define glcpp_set_lval_ALREADY_DEFINED
-#else
-#define yyset_lval glcpp_set_lval
-#endif
+    #define yyset_lval glcpp_set_lval
 
-#ifdef yyget_lloc
-#define glcpp_get_lloc_ALREADY_DEFINED
-#else
-#define yyget_lloc glcpp_get_lloc
-#endif
+    #define yyget_lloc glcpp_get_lloc
 
-#ifdef yyset_lloc
-#define glcpp_set_lloc_ALREADY_DEFINED
-#else
-#define yyset_lloc glcpp_set_lloc
-#endif
+    #define yyset_lloc glcpp_set_lloc
 
-#ifdef yyalloc
-#define glcpp_alloc_ALREADY_DEFINED
-#else
-#define yyalloc glcpp_alloc
-#endif
+    #define yyalloc glcpp_alloc
 
-#ifdef yyrealloc
-#define glcpp_realloc_ALREADY_DEFINED
-#else
-#define yyrealloc glcpp_realloc
-#endif
+    #define yyrealloc glcpp_realloc
 
-#ifdef yyfree
-#define glcpp_free_ALREADY_DEFINED
-#else
-#define yyfree glcpp_free
-#endif
+    #define yyfree glcpp_free
 
 /* First, we deal with  platform-specific or compiler-specific issues. */
 
@@ -318,15 +162,9 @@ typedef unsigned int flex_uint32_t;
 #define UINT32_MAX             (4294967295U)
 #endif
 
-#ifndef SIZE_MAX
-#define SIZE_MAX               (~(size_t)0)
-#endif
-
 #endif /* ! C99 */
 
 #endif /* ! FLEXINT_H */
-
-/* begin standard C++ headers. */
 
 /* TODO: this is always defined, so inline it */
 #define yyconst const
@@ -376,7 +214,7 @@ typedef void* yyscan_t;
 /* Action number for EOF rule of a given start state. */
 #define YY_STATE_EOF(state) (YY_END_OF_BUFFER + state + 1)
 /* Special action meaning "start processing a new file". */
-#define YY_NEW_FILE yyrestart( yyin , yyscanner )
+#define YY_NEW_FILE glcpp_restart(yyin ,yyscanner )
 #define YY_END_OF_BUFFER_CHAR 0
 
 /* Size of default input buffer. */
@@ -485,7 +323,7 @@ struct yy_buffer_state
 	 * possible backing-up.
 	 *
 	 * When we actually see the EOF, we change the status to "new"
-	 * (via yyrestart()), so that the user can continue scanning by
+	 * (via glcpp_restart()), so that the user can continue scanning by
 	 * just pointing yyin at a new input file.
 	 */
 #define YY_BUFFER_EOF_PENDING 2
@@ -507,43 +345,43 @@ struct yy_buffer_state
  */
 #define YY_CURRENT_BUFFER_LVALUE yyg->yy_buffer_stack[yyg->yy_buffer_stack_top]
 
-void yyrestart ( FILE *input_file , yyscan_t yyscanner );
-void yy_switch_to_buffer ( YY_BUFFER_STATE new_buffer , yyscan_t yyscanner );
-YY_BUFFER_STATE yy_create_buffer ( FILE *file, int size , yyscan_t yyscanner );
-void yy_delete_buffer ( YY_BUFFER_STATE b , yyscan_t yyscanner );
-void yy_flush_buffer ( YY_BUFFER_STATE b , yyscan_t yyscanner );
-void yypush_buffer_state ( YY_BUFFER_STATE new_buffer , yyscan_t yyscanner );
-void yypop_buffer_state ( yyscan_t yyscanner );
+void glcpp_restart ( FILE *input_file , yyscan_t yyscanner );
+void glcpp__switch_to_buffer ( YY_BUFFER_STATE new_buffer , yyscan_t yyscanner );
+YY_BUFFER_STATE glcpp__create_buffer ( FILE *file, int size , yyscan_t yyscanner );
+void glcpp__delete_buffer ( YY_BUFFER_STATE b , yyscan_t yyscanner );
+void glcpp__flush_buffer ( YY_BUFFER_STATE b , yyscan_t yyscanner );
+void glcpp_push_buffer_state ( YY_BUFFER_STATE new_buffer , yyscan_t yyscanner );
+void glcpp_pop_buffer_state ( yyscan_t yyscanner );
 
-static void yyensure_buffer_stack ( yyscan_t yyscanner );
-static void yy_load_buffer_state ( yyscan_t yyscanner );
-static void yy_init_buffer ( YY_BUFFER_STATE b, FILE *file , yyscan_t yyscanner );
-#define YY_FLUSH_BUFFER yy_flush_buffer( YY_CURRENT_BUFFER , yyscanner)
+static void glcpp_ensure_buffer_stack ( yyscan_t yyscanner );
+static void glcpp__load_buffer_state ( yyscan_t yyscanner );
+static void glcpp__init_buffer ( YY_BUFFER_STATE b, FILE *file , yyscan_t yyscanner );
+#define YY_FLUSH_BUFFER glcpp__flush_buffer(YY_CURRENT_BUFFER ,yyscanner)
 
-YY_BUFFER_STATE yy_scan_buffer ( char *base, yy_size_t size , yyscan_t yyscanner );
-YY_BUFFER_STATE yy_scan_string ( const char *yy_str , yyscan_t yyscanner );
-YY_BUFFER_STATE yy_scan_bytes ( const char *bytes, int len , yyscan_t yyscanner );
+YY_BUFFER_STATE glcpp__scan_buffer ( char *base, yy_size_t size , yyscan_t yyscanner );
+YY_BUFFER_STATE glcpp__scan_string ( const char *yy_str , yyscan_t yyscanner );
+YY_BUFFER_STATE glcpp__scan_bytes ( const char *bytes, int len , yyscan_t yyscanner );
 
-void *yyalloc ( yy_size_t , yyscan_t yyscanner );
-void *yyrealloc ( void *, yy_size_t , yyscan_t yyscanner );
-void yyfree ( void * , yyscan_t yyscanner );
+void *glcpp_alloc ( yy_size_t , yyscan_t yyscanner );
+void *glcpp_realloc ( void *, yy_size_t , yyscan_t yyscanner );
+void glcpp_free ( void * , yyscan_t yyscanner );
 
-#define yy_new_buffer yy_create_buffer
+#define yy_new_buffer glcpp__create_buffer
 #define yy_set_interactive(is_interactive) \
 	{ \
 	if ( ! YY_CURRENT_BUFFER ){ \
-        yyensure_buffer_stack (yyscanner); \
+        glcpp_ensure_buffer_stack (yyscanner); \
 		YY_CURRENT_BUFFER_LVALUE =    \
-            yy_create_buffer( yyin, YY_BUF_SIZE , yyscanner); \
+            glcpp__create_buffer(yyin,YY_BUF_SIZE ,yyscanner); \
 	} \
 	YY_CURRENT_BUFFER_LVALUE->yy_is_interactive = is_interactive; \
 	}
 #define yy_set_bol(at_bol) \
 	{ \
 	if ( ! YY_CURRENT_BUFFER ){\
-        yyensure_buffer_stack (yyscanner); \
+        glcpp_ensure_buffer_stack (yyscanner); \
 		YY_CURRENT_BUFFER_LVALUE =    \
-            yy_create_buffer( yyin, YY_BUF_SIZE , yyscanner); \
+            glcpp__create_buffer(yyin,YY_BUF_SIZE ,yyscanner); \
 	} \
 	YY_CURRENT_BUFFER_LVALUE->yy_at_bol = at_bol; \
 	}
@@ -585,10 +423,10 @@ struct yy_trans_info
 static const flex_int16_t yy_accept[174] =
     {   0,
         0,    0,    3,    3,    0,    0,    0,    0,    0,    0,
-        0,    0,    0,    0,   53,   48,   49,   50,   50,   47,
-        8,   47,   47,   47,   47,   47,   47,   31,   30,   47,
-       47,   47,   45,   45,   47,    3,    4,    4,    5,   29,
-       27,   51,   26,   51,   24,   23,   13,   13,   24,   24,
+        0,    0,    0,    0,   53,   48,   49,   50,   51,   50,
+       47,    8,   47,   47,   47,   47,   47,   47,   31,   30,
+       47,   47,   47,   45,   45,   47,    3,    4,    4,    5,
+       29,   27,   51,   26,   24,   23,   13,   13,   24,   24,
        24,   24,   24,   24,   24,   24,   48,   50,   38,   43,
        39,   41,   42,   46,    2,    1,   46,   31,   46,   31,
        46,   30,   30,   33,   35,   37,   36,   34,   45,   45,
@@ -608,19 +446,19 @@ static const flex_int16_t yy_accept[174] =
 static const YY_CHAR yy_ec[256] =
     {   0,
         1,    1,    1,    1,    1,    1,    1,    1,    2,    3,
-        2,    2,    4,    1,    1,    1,    1,    1,    1,    1,
+        4,    4,    5,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    2,    5,    1,    6,    1,    7,    8,    1,    9,
-        7,   10,   11,    7,   12,   13,   14,   15,   16,   16,
-       16,   16,   16,   16,   16,   17,   17,    1,    7,   18,
-       19,   20,    1,    1,   21,   21,   21,   21,   22,   21,
-       23,   23,   23,   23,   23,   23,   23,   23,   23,   24,
-       23,   23,   23,   23,   25,   23,   23,   26,   23,   23,
-        7,    1,    7,    7,   23,    1,   27,   21,   21,   28,
+        1,    2,    6,    1,    7,    1,    8,    9,    1,   10,
+        8,   11,   12,    8,   13,   14,   15,   16,   17,   17,
+       17,   17,   17,   17,   17,   18,   18,    1,    8,   19,
+       20,   21,    1,    1,   22,   22,   22,   22,   23,   22,
+       24,   24,   24,   24,   24,   24,   24,   24,   24,   25,
+       24,   24,   24,   24,   26,   24,   24,   27,   24,   24,
+        8,    1,    8,    8,   24,    1,   28,   22,   22,   29,
 
-       29,   30,   31,   23,   32,   23,   23,   33,   34,   35,
-       36,   37,   23,   38,   39,   40,   41,   42,   23,   43,
-       23,   23,    7,   44,    7,    7,    1,    1,    1,    1,
+       30,   31,   32,   24,   33,   24,   24,   34,   35,   36,
+       37,   38,   24,   39,   40,   41,   42,   43,   24,   44,
+       24,   24,    8,   45,    8,    8,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
@@ -637,49 +475,49 @@ static const YY_CHAR yy_ec[256] =
         1,    1,    1,    1,    1
     } ;
 
-static const YY_CHAR yy_meta[45] =
+static const YY_CHAR yy_meta[46] =
     {   0,
-        1,    2,    3,    3,    1,    1,    1,    1,    4,    5,
-        1,    1,    6,    1,    7,    7,    7,    1,    1,    1,
-        7,    7,    7,    7,    7,    7,    7,    8,    7,    7,
-        7,    7,    7,    7,    8,    7,    7,    7,    7,    7,
-        7,    7,    7,    1
+        1,    2,    3,    2,    3,    1,    1,    1,    1,    4,
+        5,    1,    1,    6,    1,    7,    7,    7,    1,    1,
+        1,    7,    7,    7,    7,    7,    7,    7,    8,    7,
+        7,    7,    7,    7,    7,    8,    7,    7,    7,    7,
+        7,    7,    7,    7,    1
     } ;
 
 static const flex_int16_t yy_base[191] =
     {   0,
-        0,    0,   42,   44,   54,    0,   46,   96,   99,  140,
-      101,  103,  105,  107,  429,  427,  430,  423,  423,  406,
-      418,  430,  415,  411,  409,   99,  107,  168,  197,  100,
-      401,  103,    0,  390,  374,  121,  413,  413,  135,    0,
-      413,  116,  405,  430,  430,  411,  408,  408,  119,  381,
-      113,  379,  376,  369,  371,  376,  403,  430,  430,  430,
-      430,  430,  430,  128,  430,    0,  137,  163,  196,  123,
-      228,    0,  151,  430,  430,  430,  430,  430,    0,  373,
-      430,  167,  398,  398,  430,  192,  396,  396,  213,  430,
-        0,  396,    0,  395,  430,  374,  371,  430,  331,  121,
+        0,    0,   43,   44,   55,    0,   47,   48,   99,  141,
+      102,  103,  106,  107,  435,  433,  436,  428,  436,  429,
+      411,  423,  436,  420,  416,  414,   99,  107,  169,  198,
+      100,  406,  103,    0,  395,  379,  122,  418,  419,  144,
+        0,  419,  115,  410,  436,  417,  413,  414,  120,  386,
+      114,  384,  381,  374,  376,  381,  409,  436,  436,  436,
+      436,  436,  436,  138,  436,    0,  139,  164,  197,  126,
+      229,    0,  139,  436,  436,  436,  436,  436,    0,  378,
+      436,  131,  403,  404,  436,  186,  401,  402,  197,  436,
+        0,  402,    0,  163,  436,  393,  400,  436,  370,  133,
 
-      325,  314,  305,  163,  305,  312,  296,  285,    0,  160,
-      235,  278,  430,  430,    0,  273,  242,  243,  243,  239,
-      234,  240,  430,  239,  239,  237,  234,  235,  224,  164,
-      227,  226,    0,  430,  229,  216,  218,  222,  222,  246,
-      208,  211,  200,  202,  195,  430,  430,    0,  176,  430,
-      180,  201,  162,  430,  131,  136,  156,    0,  123,  430,
-      226,  112,    0,  135,   84,  183,  233,  430,  110,   18,
-       49,  196,  430,  276,  284,  292,  295,  297,  305,  313,
-      321,  329,  334,  342,  350,  358,  366,  374,  380,  388
+      371,  360,  357,  169,  361,  368,  366,  355,    0,  146,
+      191,  360,  436,  436,    0,  227,  359,  360,  360,  356,
+      351,  357,  436,  356,  356,  341,  329,  319,  301,  206,
+      304,  297,    0,  436,  297,  288,  276,  280,  268,  261,
+      220,  219,  216,  218,  214,  436,  436,    0,  203,  436,
+      207,  232,  198,  436,  188,  164,  185,    0,  145,  436,
+      251,  124,    0,  155,  117,  227,  259,  436,  138,   85,
+      111,  234,  436,  264,  272,  280,  283,  285,  293,  301,
+      309,  317,  322,  330,  338,  346,  354,  362,  368,  376
     } ;
 
 static const flex_int16_t yy_def[191] =
     {   0,
       173,    1,  174,  174,  173,    5,  175,  175,  176,  176,
       175,  175,  175,  175,  173,  173,  173,  173,  173,  173,
-      173,  173,  173,  173,  173,  173,  173,  177,  177,  173,
-      173,  173,  178,  178,  173,  179,  173,  173,  180,  181,
-      173,  182,  183,  173,  173,  173,  173,  173,  173,  173,
+      173,  173,  173,  173,  173,  173,  173,  173,  177,  177,
+      173,  173,  173,  178,  178,  173,  179,  173,  173,  180,
+      181,  173,  182,  183,  173,  173,  173,  173,  173,  173,
       173,  173,  173,  173,  173,  173,  173,  173,  173,  173,
-      173,  173,  173,  177,  173,  184,  177,   29,  177,   69,
-       69,   29,   69,  173,  173,  173,  173,  173,  178,  178,
+      173,  173,  173,  177,  173,  184,  177,   30,  177,   69,
+       69,   30,   69,  173,  173,  173,  173,  173,  178,  178,
       173,  179,  173,  173,  173,  180,  173,  173,  180,  173,
       181,  173,  185,  186,  173,  183,  173,  173,  173,  173,
 
@@ -694,116 +532,118 @@ static const flex_int16_t yy_def[191] =
       173,  173,  173,  173,  173,  173,  173,  173,  173,  173
     } ;
 
-static const flex_int16_t yy_nxt[475] =
+static const flex_int16_t yy_nxt[482] =
     {   0,
-       16,   17,   18,   19,   20,   21,   22,   23,   22,   22,
-       24,   25,   26,   27,   28,   29,   29,   30,   31,   32,
-       33,   33,   33,   33,   33,   33,   33,   34,   33,   33,
-       33,   33,   33,   33,   33,   33,   33,   33,   33,   33,
-       33,   33,   33,   35,   37,   38,   37,   38,   18,   19,
-      171,   39,  172,   39,   40,   41,   18,   19,   40,   40,
-       40,   40,   40,   40,   40,   40,   40,   42,   40,   40,
-       40,   40,   40,   40,   43,   43,   43,   43,   43,   43,
-       43,   43,   43,   43,   43,   43,   43,   43,   43,   43,
-       43,   43,   43,   43,   43,   43,   43,   40,   18,   19,
+       16,   17,   18,   19,   20,   21,   22,   23,   24,   23,
+       23,   25,   26,   27,   28,   29,   30,   30,   31,   32,
+       33,   34,   34,   34,   34,   34,   34,   34,   35,   34,
+       34,   34,   34,   34,   34,   34,   34,   34,   34,   34,
+       34,   34,   34,   34,   36,   38,   38,   39,   39,   18,
+       18,   20,   20,   40,   40,   41,   42,   18,   19,   20,
+       41,   41,   41,   41,   41,   41,   41,   41,   41,   43,
+       41,   41,   41,   41,   41,   41,   44,   44,   44,   44,
+       44,   44,   44,   44,   44,   44,   44,   44,   44,   44,
+       44,   44,   44,   44,   44,   44,   44,   44,   44,   41,
 
-       46,   47,   48,   18,   19,   18,   19,   18,   19,   18,
-       19,  171,   49,   64,   64,   64,   65,   74,   75,  170,
-       66,   77,   78,   83,   84,   65,   50,   51,   65,   94,
-       52,   53,   66,  173,  173,   54,  164,   87,   88,   55,
-       56,   46,   47,   48,   89,  100,  169,  101,   90,   69,
-      102,   69,  118,   49,  165,  103,   69,  164,   69,  119,
-       69,  173,  173,  163,   69,   69,  162,   50,   51,   83,
-       84,   52,   53,   69,  173,  173,   54,   68,   68,   67,
-       55,   56,   68,   68,  130,  173,  173,   70,  161,   69,
-      124,   69,   70,   71,   87,   88,   69,  125,  173,  173,
+       46,   47,   19,   48,   18,   18,   20,   20,   18,   18,
+       20,   20,  171,   49,   64,   64,   64,   65,   74,   75,
+      172,   66,   77,   78,   83,   65,   84,   50,   51,   94,
+       65,   52,   53,   83,   66,   84,   54,  173,  173,  171,
+       55,   56,   46,   47,   19,   48,   87,  100,   88,  101,
+      173,  173,  102,  170,   89,   49,  164,  103,   90,  169,
+       69,   69,   69,   69,  109,  118,  109,   69,   69,   50,
+       51,  130,  119,   52,   53,   69,   69,  165,   54,   68,
+       68,   67,   55,   56,   68,   68,  164,  130,   87,   70,
+       88,   69,  163,   69,   70,   71,  173,  124,   69,   87,
 
-      130,  173,  152,   70,   69,  173,   67,   67,   70,  160,
-       71,   72,   72,   72,  159,   87,   88,   69,   69,   69,
-       69,   73,   89,  157,   69,   69,   90,  167,  168,  168,
-      156,  155,   69,   69,  167,  168,  168,   73,  173,  173,
-      154,  153,  110,  110,  110,   67,   67,  152,  110,  111,
-      151,  150,  149,  148,  110,  110,  111,  110,  147,  130,
-      145,  144,  143,  142,  141,  140,  139,  138,  137,  136,
-      135,  134,  133,  132,  109,  130,   36,   36,   36,   36,
-       36,   36,   36,   36,   44,   44,   44,   44,   44,   44,
-       44,   44,   45,   45,   45,   45,   45,   45,   45,   45,
+      173,   88,   67,   67,  125,   70,   69,   89,   67,   67,
+       70,   90,   71,   72,   72,   72,  130,  173,  173,   69,
+       69,   69,   69,   73,  162,  161,   69,   69,  109,  173,
+      109,  173,  130,  152,   69,   69,  173,  160,  173,   73,
+      173,  173,  159,  157,  110,  110,  110,  156,  155,  154,
+      110,  111,  167,  168,  153,  168,  110,  110,  111,  110,
+      167,  168,  152,  168,   37,   37,   37,   37,   37,   37,
+       37,   37,   19,   19,   19,   19,   19,   19,   19,   19,
+       45,   45,   45,   45,   45,   45,   45,   45,   67,   67,
+       67,   79,   79,   82,   82,   82,   82,  151,   82,   82,
 
-       67,   67,   67,   79,   79,   82,   82,   82,   82,  131,
-       82,   82,   82,   86,   86,   86,   86,   86,   86,   86,
-       86,   91,  129,  128,   91,   91,   91,   91,   91,   93,
-       93,   93,   93,   93,   93,   93,   93,   96,  127,  126,
-       96,   96,  109,  109,  122,  109,  109,  109,  109,  109,
-      115,  121,  120,  115,  115,  115,  115,  115,  116,  116,
-      117,  116,  116,  116,  116,  116,  123,  123,  123,  123,
-      123,  123,   97,  123,  146,  146,  146,  146,  146,  146,
-      158,  158,   95,  158,  158,  158,  158,  158,  166,  166,
-      166,  166,  166,  166,  166,  166,  109,   92,  114,  114,
+       82,   86,   86,   86,   86,   86,   86,   86,   86,   91,
+      150,  149,   91,   91,   91,   91,   91,   93,   93,   93,
+       93,   93,   93,   93,   93,   96,  148,  147,   96,   96,
+      109,  109,  145,  109,  109,  109,  109,  109,  115,  144,
+      143,  115,  115,  115,  115,  115,  116,  116,  142,  116,
+      116,  116,  116,  116,  123,  123,  123,  123,  123,  123,
+      141,  123,  146,  146,  146,  146,  146,  146,  158,  158,
+      140,  158,  158,  158,  158,  158,  166,  166,  166,  166,
+      166,  166,  166,  166,  139,  138,  137,  136,  135,  134,
+      133,  132,  131,  129,  128,  127,  126,  122,  121,  120,
 
-      113,  113,  112,   57,  108,  107,  106,  105,  104,   99,
-       98,   98,   97,   95,   92,   85,   85,   81,   80,   76,
-       63,   62,   61,   60,   59,   58,   58,   57,  173,   15,
+      117,   97,   95,   92,  114,  114,  113,  113,  112,   57,
+      108,  107,  106,  105,  104,   99,   98,   98,   97,   95,
+       92,   85,   85,   81,   80,   76,   63,   62,   61,   60,
+       59,   58,   58,   57,  173,   15,  173,  173,  173,  173,
       173,  173,  173,  173,  173,  173,  173,  173,  173,  173,
       173,  173,  173,  173,  173,  173,  173,  173,  173,  173,
       173,  173,  173,  173,  173,  173,  173,  173,  173,  173,
       173,  173,  173,  173,  173,  173,  173,  173,  173,  173,
-      173,  173,  173,  173
+      173
     } ;
 
-static const flex_int16_t yy_chk[475] =
+static const flex_int16_t yy_chk[482] =
     {   0,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    3,    3,    4,    4,    7,    7,
-      171,    3,  170,    4,    5,    5,    5,    5,    5,    5,
+        1,    1,    1,    1,    1,    3,    4,    3,    4,    7,
+        8,    7,    8,    3,    4,    5,    5,    5,    5,    5,
         5,    5,    5,    5,    5,    5,    5,    5,    5,    5,
         5,    5,    5,    5,    5,    5,    5,    5,    5,    5,
         5,    5,    5,    5,    5,    5,    5,    5,    5,    5,
-        5,    5,    5,    5,    5,    5,    5,    5,    8,    8,
+        5,    5,    5,    5,    5,    5,    5,    5,    5,    5,
 
-        9,    9,    9,   11,   11,   12,   12,   13,   13,   14,
-       14,  169,    9,   26,   26,   26,   27,   30,   30,  165,
-       27,   32,   32,   36,   36,   42,    9,    9,   49,   42,
-        9,    9,   49,   70,   70,    9,  164,   39,   39,    9,
-        9,   10,   10,   10,   39,   51,  162,   51,   39,   64,
-       51,   64,  100,   10,  159,   51,   64,  157,   67,  100,
-       67,   73,   73,  156,   64,   67,  155,   10,   10,   82,
-       82,   10,   10,   67,  130,  130,   10,   68,   68,   68,
-       10,   10,   28,   28,  110,  166,  166,   68,  153,   28,
-      104,   28,   28,   28,   86,   86,   28,  104,  172,  172,
+        9,    9,    9,    9,   11,   12,   11,   12,   13,   14,
+       13,   14,  171,    9,   27,   27,   27,   28,   31,   31,
+      170,   28,   33,   33,   37,   43,   37,    9,    9,   43,
+       49,    9,    9,   82,   49,   82,    9,   70,   70,  169,
+        9,    9,   10,   10,   10,   10,   40,   51,   40,   51,
+       73,   73,   51,  165,   40,   10,  164,   51,   40,  162,
+       64,   67,   64,   67,   94,  100,   94,   64,   67,   10,
+       10,  110,  100,   10,   10,   64,   67,  159,   10,   68,
+       68,   68,   10,   10,   29,   29,  157,  110,   86,   68,
+       86,   29,  156,   29,   29,   29,   86,  104,   29,   89,
 
-      110,   86,  152,   68,   28,   86,   69,   69,   28,  151,
-       28,   29,   29,   29,  149,   89,   89,   69,   29,   69,
-       29,   29,   89,  145,   69,   29,   89,  161,  161,  161,
-      144,  143,   69,   29,  167,  167,  167,   29,   71,   71,
-      142,  141,   71,   71,   71,  111,  111,  140,   71,   71,
-      139,  138,  137,  136,   71,   71,   71,   71,  135,  111,
-      132,  131,  129,  128,  127,  126,  125,  124,  122,  121,
-      120,  119,  118,  117,  116,  111,  174,  174,  174,  174,
-      174,  174,  174,  174,  175,  175,  175,  175,  175,  175,
-      175,  175,  176,  176,  176,  176,  176,  176,  176,  176,
+       86,   89,  111,  111,  104,   68,   29,   89,   69,   69,
+       29,   89,   29,   30,   30,   30,  111,  130,  130,   69,
+       30,   69,   30,   30,  155,  153,   69,   30,  116,  166,
+      116,  166,  111,  152,   69,   30,  172,  151,  172,   30,
+       71,   71,  149,  145,   71,   71,   71,  144,  143,  142,
+       71,   71,  161,  161,  141,  161,   71,   71,   71,   71,
+      167,  167,  140,  167,  174,  174,  174,  174,  174,  174,
+      174,  174,  175,  175,  175,  175,  175,  175,  175,  175,
+      176,  176,  176,  176,  176,  176,  176,  176,  177,  177,
+      177,  178,  178,  179,  179,  179,  179,  139,  179,  179,
 
-      177,  177,  177,  178,  178,  179,  179,  179,  179,  112,
-      179,  179,  179,  180,  180,  180,  180,  180,  180,  180,
-      180,  181,  108,  107,  181,  181,  181,  181,  181,  182,
-      182,  182,  182,  182,  182,  182,  182,  183,  106,  105,
-      183,  183,  184,  184,  103,  184,  184,  184,  184,  184,
-      185,  102,  101,  185,  185,  185,  185,  185,  186,  186,
-       99,  186,  186,  186,  186,  186,  187,  187,  187,  187,
-      187,  187,   97,  187,  188,  188,  188,  188,  188,  188,
-      189,  189,   96,  189,  189,  189,  189,  189,  190,  190,
-      190,  190,  190,  190,  190,  190,   94,   92,   88,   87,
+      179,  180,  180,  180,  180,  180,  180,  180,  180,  181,
+      138,  137,  181,  181,  181,  181,  181,  182,  182,  182,
+      182,  182,  182,  182,  182,  183,  136,  135,  183,  183,
+      184,  184,  132,  184,  184,  184,  184,  184,  185,  131,
+      129,  185,  185,  185,  185,  185,  186,  186,  128,  186,
+      186,  186,  186,  186,  187,  187,  187,  187,  187,  187,
+      127,  187,  188,  188,  188,  188,  188,  188,  189,  189,
+      126,  189,  189,  189,  189,  189,  190,  190,  190,  190,
+      190,  190,  190,  190,  125,  124,  122,  121,  120,  119,
+      118,  117,  112,  108,  107,  106,  105,  103,  102,  101,
 
-       84,   83,   80,   57,   56,   55,   54,   53,   52,   50,
-       48,   47,   46,   43,   41,   38,   37,   35,   34,   31,
-       25,   24,   23,   21,   20,   19,   18,   16,   15,  173,
+       99,   97,   96,   92,   88,   87,   84,   83,   80,   57,
+       56,   55,   54,   53,   52,   50,   48,   47,   46,   44,
+       42,   39,   38,   36,   35,   32,   26,   25,   24,   22,
+       21,   20,   18,   16,   15,  173,  173,  173,  173,  173,
       173,  173,  173,  173,  173,  173,  173,  173,  173,  173,
       173,  173,  173,  173,  173,  173,  173,  173,  173,  173,
       173,  173,  173,  173,  173,  173,  173,  173,  173,  173,
       173,  173,  173,  173,  173,  173,  173,  173,  173,  173,
-      173,  173,  173,  173
+      173
     } ;
 
 /* The intent behind this definition is that it'll catch
@@ -917,7 +757,7 @@ void glcpp_set_column (int  column_no , yyscan_t yyscanner);
 #define RETURN_STRING_TOKEN(token)					\
 	do {								\
 		if (! parser->skipping) {				\
-			yylval->str = linear_strdup(yyextra->linalloc, yytext);	\
+			yylval->str = ralloc_strdup (yyextra, yytext);	\
 			RETURN_TOKEN_NEVER_SKIP (token);		\
 		}							\
 	} while(0)
@@ -974,7 +814,7 @@ glcpp_lex_update_state_per_token (glcpp_parser_t *parser, int token)
 }
 
 
-#line 977 "glsl/glcpp/glcpp-lex.c"
+#line 817 "glsl/glcpp/glcpp-lex.c"
 #line 171 "./glsl/glcpp/glcpp-lex.l"
 	/* Note: When adding any start conditions to this list, you must also
 	 * update the "Internal compiler error" catch-all rule near the end of
@@ -986,7 +826,7 @@ match longer strings take priority over those matching shorter
 strings, we have to be careful to avoid OTHER matching and hiding
 something that CPP does care about. So we simply exclude all
 characters that appear in any other expressions. */
-#line 989 "glsl/glcpp/glcpp-lex.c"
+#line 829 "glsl/glcpp/glcpp-lex.c"
 
 #define INITIAL 0
 #define COMMENT 1
@@ -1052,50 +892,50 @@ static int yy_init_globals ( yyscan_t yyscanner );
     
     #    define yylloc yyg->yylloc_r
     
-int yylex_init (yyscan_t* scanner);
+int glcpp_lex_init (yyscan_t* scanner);
 
-int yylex_init_extra ( YY_EXTRA_TYPE user_defined, yyscan_t* scanner);
+int glcpp_lex_init_extra ( YY_EXTRA_TYPE user_defined, yyscan_t* scanner);
 
 /* Accessor methods to globals.
    These are made visible to non-reentrant scanners for convenience. */
 
-int yylex_destroy ( yyscan_t yyscanner );
+int glcpp_lex_destroy ( yyscan_t yyscanner );
 
-int yyget_debug ( yyscan_t yyscanner );
+int glcpp_get_debug ( yyscan_t yyscanner );
 
-void yyset_debug ( int debug_flag , yyscan_t yyscanner );
+void glcpp_set_debug ( int debug_flag , yyscan_t yyscanner );
 
-YY_EXTRA_TYPE yyget_extra ( yyscan_t yyscanner );
+YY_EXTRA_TYPE glcpp_get_extra ( yyscan_t yyscanner );
 
-void yyset_extra ( YY_EXTRA_TYPE user_defined , yyscan_t yyscanner );
+void glcpp_set_extra ( YY_EXTRA_TYPE user_defined , yyscan_t yyscanner );
 
-FILE *yyget_in ( yyscan_t yyscanner );
+FILE *glcpp_get_in ( yyscan_t yyscanner );
 
-void yyset_in  ( FILE * _in_str , yyscan_t yyscanner );
+void glcpp_set_in  ( FILE * _in_str , yyscan_t yyscanner );
 
-FILE *yyget_out ( yyscan_t yyscanner );
+FILE *glcpp_get_out ( yyscan_t yyscanner );
 
-void yyset_out  ( FILE * _out_str , yyscan_t yyscanner );
+void glcpp_set_out  ( FILE * _out_str , yyscan_t yyscanner );
 
-			int yyget_leng ( yyscan_t yyscanner );
+			int glcpp_get_leng ( yyscan_t yyscanner );
 
-char *yyget_text ( yyscan_t yyscanner );
+char *glcpp_get_text ( yyscan_t yyscanner );
 
-int yyget_lineno ( yyscan_t yyscanner );
+int glcpp_get_lineno ( yyscan_t yyscanner );
 
-void yyset_lineno ( int _line_number , yyscan_t yyscanner );
+void glcpp_set_lineno ( int _line_number , yyscan_t yyscanner );
 
-int yyget_column  ( yyscan_t yyscanner );
+int glcpp_get_column  ( yyscan_t yyscanner );
 
-void yyset_column ( int _column_no , yyscan_t yyscanner );
+void glcpp_set_column ( int _column_no , yyscan_t yyscanner );
 
-YYSTYPE * yyget_lval ( yyscan_t yyscanner );
+YYSTYPE * glcpp_get_lval ( yyscan_t yyscanner );
 
-void yyset_lval ( YYSTYPE * yylval_param , yyscan_t yyscanner );
+void glcpp_set_lval ( YYSTYPE * yylval_param , yyscan_t yyscanner );
 
-       YYLTYPE *yyget_lloc ( yyscan_t yyscanner );
+       YYLTYPE *glcpp_get_lloc ( yyscan_t yyscanner );
     
-        void yyset_lloc ( YYLTYPE * yylloc_param , yyscan_t yyscanner );
+        void glcpp_set_lloc ( YYLTYPE * yylloc_param , yyscan_t yyscanner );
     
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -1103,9 +943,9 @@ void yyset_lval ( YYSTYPE * yylval_param , yyscan_t yyscanner );
 
 #ifndef YY_SKIP_YYWRAP
 #ifdef __cplusplus
-extern "C" int yywrap ( yyscan_t yyscanner );
+extern "C" int glcpp_wrap ( yyscan_t yyscanner );
 #else
-extern int yywrap ( yyscan_t yyscanner );
+extern int glcpp_wrap ( yyscan_t yyscanner );
 #endif
 #endif
 
@@ -1218,10 +1058,10 @@ static int input ( yyscan_t yyscanner );
 #ifndef YY_DECL
 #define YY_DECL_IS_OURS 1
 
-extern int yylex \
+extern int glcpp_lex \
                (YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner);
 
-#define YY_DECL int yylex \
+#define YY_DECL int glcpp_lex \
                (YYSTYPE * yylval_param, YYLTYPE * yylloc_param , yyscan_t yyscanner)
 #endif /* !YY_DECL */
 
@@ -1271,12 +1111,12 @@ YY_DECL
 			yyout = stdout;
 
 		if ( ! YY_CURRENT_BUFFER ) {
-			yyensure_buffer_stack (yyscanner);
+			glcpp_ensure_buffer_stack (yyscanner);
 			YY_CURRENT_BUFFER_LVALUE =
-				yy_create_buffer( yyin, YY_BUF_SIZE , yyscanner);
+				glcpp__create_buffer(yyin,YY_BUF_SIZE ,yyscanner);
 		}
 
-		yy_load_buffer_state( yyscanner );
+		glcpp__load_buffer_state(yyscanner );
 		}
 
 	{
@@ -1341,7 +1181,7 @@ YY_DECL
 	}
 
 	/* Single-line comments */
-#line 1344 "glsl/glcpp/glcpp-lex.c"
+#line 1184 "glsl/glcpp/glcpp-lex.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -1907,7 +1747,7 @@ YY_RULE_SETUP
 #line 583 "./glsl/glcpp/glcpp-lex.l"
 YY_FATAL_ERROR( "flex scanner jammed" );
 	YY_BREAK
-#line 1910 "glsl/glcpp/glcpp-lex.c"
+#line 1750 "glsl/glcpp/glcpp-lex.c"
 case YY_STATE_EOF(DONE):
 case YY_STATE_EOF(NEWLINE_CATCHUP):
 case YY_STATE_EOF(UNREACHABLE):
@@ -1927,7 +1767,7 @@ case YY_STATE_EOF(UNREACHABLE):
 			/* We're scanning a new file or input source.  It's
 			 * possible that this happened because the user
 			 * just pointed yyin at a new source and called
-			 * yylex().  If so, then we have to assure
+			 * glcpp_lex().  If so, then we have to assure
 			 * consistency between YY_CURRENT_BUFFER and our
 			 * globals.  Here is the right place to do so, because
 			 * this is the first action (other than possibly a
@@ -1988,7 +1828,7 @@ case YY_STATE_EOF(UNREACHABLE):
 				{
 				yyg->yy_did_buffer_switch_on_eof = 0;
 
-				if ( yywrap( yyscanner ) )
+				if ( glcpp_wrap(yyscanner ) )
 					{
 					/* Note: because we've taken care in
 					 * yy_get_next_buffer() to have set up
@@ -2042,7 +1882,7 @@ case YY_STATE_EOF(UNREACHABLE):
 	} /* end of action switch */
 		} /* end of scanning one token */
 	} /* end of user's declarations */
-} /* end of yylex */
+} /* end of glcpp_lex */
 
 /* yy_get_next_buffer - try to read in a new buffer
  *
@@ -2121,8 +1961,7 @@ static int yy_get_next_buffer (yyscan_t yyscanner)
 
 				b->yy_ch_buf = (char *)
 					/* Include room in for 2 EOB chars. */
-					yyrealloc( (void *) b->yy_ch_buf,
-							 (yy_size_t) (b->yy_buf_size + 2) , yyscanner );
+					glcpp_realloc((void *) b->yy_ch_buf,(yy_size_t) (b->yy_buf_size + 2) ,yyscanner );
 				}
 			else
 				/* Can't grow it, we don't own it. */
@@ -2154,7 +1993,7 @@ static int yy_get_next_buffer (yyscan_t yyscanner)
 		if ( number_to_move == YY_MORE_ADJ )
 			{
 			ret_val = EOB_ACT_END_OF_FILE;
-			yyrestart( yyin  , yyscanner);
+			glcpp_restart(yyin  ,yyscanner);
 			}
 
 		else
@@ -2171,12 +2010,9 @@ static int yy_get_next_buffer (yyscan_t yyscanner)
 	if ((yyg->yy_n_chars + number_to_move) > YY_CURRENT_BUFFER_LVALUE->yy_buf_size) {
 		/* Extend the array by 50%, plus the number we really need. */
 		int new_size = yyg->yy_n_chars + number_to_move + (yyg->yy_n_chars >> 1);
-		YY_CURRENT_BUFFER_LVALUE->yy_ch_buf = (char *) yyrealloc(
-			(void *) YY_CURRENT_BUFFER_LVALUE->yy_ch_buf, (yy_size_t) new_size , yyscanner );
+		YY_CURRENT_BUFFER_LVALUE->yy_ch_buf = (char *) glcpp_realloc((void *) YY_CURRENT_BUFFER_LVALUE->yy_ch_buf,(yy_size_t) new_size ,yyscanner );
 		if ( ! YY_CURRENT_BUFFER_LVALUE->yy_ch_buf )
 			YY_FATAL_ERROR( "out of dynamic memory in yy_get_next_buffer()" );
-		/* "- 2" to take care of EOB's */
-		YY_CURRENT_BUFFER_LVALUE->yy_buf_size = (int) (new_size - 2);
 	}
 
 	yyg->yy_n_chars += number_to_move;
@@ -2332,13 +2168,13 @@ static int yy_get_next_buffer (yyscan_t yyscanner)
 					 */
 
 					/* Reset buffer status. */
-					yyrestart( yyin , yyscanner);
+					glcpp_restart(yyin ,yyscanner);
 
 					/*FALLTHROUGH*/
 
 				case EOB_ACT_END_OF_FILE:
 					{
-					if ( yywrap( yyscanner ) )
+					if ( glcpp_wrap(yyscanner ) )
 						return 0;
 
 					if ( ! yyg->yy_did_buffer_switch_on_eof )
@@ -2370,34 +2206,34 @@ static int yy_get_next_buffer (yyscan_t yyscanner)
  * @param yyscanner The scanner object.
  * @note This function does not reset the start condition to @c INITIAL .
  */
-    void yyrestart  (FILE * input_file , yyscan_t yyscanner)
+    void glcpp_restart  (FILE * input_file , yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
 
 	if ( ! YY_CURRENT_BUFFER ){
-        yyensure_buffer_stack (yyscanner);
+        glcpp_ensure_buffer_stack (yyscanner);
 		YY_CURRENT_BUFFER_LVALUE =
-            yy_create_buffer( yyin, YY_BUF_SIZE , yyscanner);
+            glcpp__create_buffer(yyin,YY_BUF_SIZE ,yyscanner);
 	}
 
-	yy_init_buffer( YY_CURRENT_BUFFER, input_file , yyscanner);
-	yy_load_buffer_state( yyscanner );
+	glcpp__init_buffer(YY_CURRENT_BUFFER,input_file ,yyscanner);
+	glcpp__load_buffer_state(yyscanner );
 }
 
 /** Switch to a different input buffer.
  * @param new_buffer The new input buffer.
  * @param yyscanner The scanner object.
  */
-    void yy_switch_to_buffer  (YY_BUFFER_STATE  new_buffer , yyscan_t yyscanner)
+    void glcpp__switch_to_buffer  (YY_BUFFER_STATE  new_buffer , yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
 
 	/* TODO. We should be able to replace this entire function body
 	 * with
-	 *		yypop_buffer_state();
-	 *		yypush_buffer_state(new_buffer);
+	 *		glcpp_pop_buffer_state();
+	 *		glcpp_push_buffer_state(new_buffer);
      */
-	yyensure_buffer_stack (yyscanner);
+	glcpp_ensure_buffer_stack (yyscanner);
 	if ( YY_CURRENT_BUFFER == new_buffer )
 		return;
 
@@ -2410,17 +2246,17 @@ static int yy_get_next_buffer (yyscan_t yyscanner)
 		}
 
 	YY_CURRENT_BUFFER_LVALUE = new_buffer;
-	yy_load_buffer_state( yyscanner );
+	glcpp__load_buffer_state(yyscanner );
 
 	/* We don't actually know whether we did this switch during
-	 * EOF (yywrap()) processing, but the only time this flag
-	 * is looked at is after yywrap() is called, so it's safe
+	 * EOF (glcpp_wrap()) processing, but the only time this flag
+	 * is looked at is after glcpp_wrap() is called, so it's safe
 	 * to go ahead and always set it.
 	 */
 	yyg->yy_did_buffer_switch_on_eof = 1;
 }
 
-static void yy_load_buffer_state  (yyscan_t yyscanner)
+static void glcpp__load_buffer_state  (yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
 	yyg->yy_n_chars = YY_CURRENT_BUFFER_LVALUE->yy_n_chars;
@@ -2435,35 +2271,35 @@ static void yy_load_buffer_state  (yyscan_t yyscanner)
  * @param yyscanner The scanner object.
  * @return the allocated buffer state.
  */
-    YY_BUFFER_STATE yy_create_buffer  (FILE * file, int  size , yyscan_t yyscanner)
+    YY_BUFFER_STATE glcpp__create_buffer  (FILE * file, int  size , yyscan_t yyscanner)
 {
 	YY_BUFFER_STATE b;
     
-	b = (YY_BUFFER_STATE) yyalloc( sizeof( struct yy_buffer_state ) , yyscanner );
+	b = (YY_BUFFER_STATE) glcpp_alloc(sizeof( struct yy_buffer_state ) ,yyscanner );
 	if ( ! b )
-		YY_FATAL_ERROR( "out of dynamic memory in yy_create_buffer()" );
+		YY_FATAL_ERROR( "out of dynamic memory in glcpp__create_buffer()" );
 
 	b->yy_buf_size = size;
 
 	/* yy_ch_buf has to be 2 characters longer than the size given because
 	 * we need to put in 2 end-of-buffer characters.
 	 */
-	b->yy_ch_buf = (char *) yyalloc( (yy_size_t) (b->yy_buf_size + 2) , yyscanner );
+	b->yy_ch_buf = (char *) glcpp_alloc((yy_size_t) (b->yy_buf_size + 2) ,yyscanner );
 	if ( ! b->yy_ch_buf )
-		YY_FATAL_ERROR( "out of dynamic memory in yy_create_buffer()" );
+		YY_FATAL_ERROR( "out of dynamic memory in glcpp__create_buffer()" );
 
 	b->yy_is_our_buffer = 1;
 
-	yy_init_buffer( b, file , yyscanner);
+	glcpp__init_buffer(b,file ,yyscanner);
 
 	return b;
 }
 
 /** Destroy the buffer.
- * @param b a buffer created with yy_create_buffer()
+ * @param b a buffer created with glcpp__create_buffer()
  * @param yyscanner The scanner object.
  */
-    void yy_delete_buffer (YY_BUFFER_STATE  b , yyscan_t yyscanner)
+    void glcpp__delete_buffer (YY_BUFFER_STATE  b , yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
 
@@ -2474,28 +2310,28 @@ static void yy_load_buffer_state  (yyscan_t yyscanner)
 		YY_CURRENT_BUFFER_LVALUE = (YY_BUFFER_STATE) 0;
 
 	if ( b->yy_is_our_buffer )
-		yyfree( (void *) b->yy_ch_buf , yyscanner );
+		glcpp_free((void *) b->yy_ch_buf ,yyscanner );
 
-	yyfree( (void *) b , yyscanner );
+	glcpp_free((void *) b ,yyscanner );
 }
 
 /* Initializes or reinitializes a buffer.
  * This function is sometimes called more than once on the same buffer,
- * such as during a yyrestart() or at EOF.
+ * such as during a glcpp_restart() or at EOF.
  */
-    static void yy_init_buffer  (YY_BUFFER_STATE  b, FILE * file , yyscan_t yyscanner)
+    static void glcpp__init_buffer  (YY_BUFFER_STATE  b, FILE * file , yyscan_t yyscanner)
 
 {
 	int oerrno = errno;
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
 
-	yy_flush_buffer( b , yyscanner);
+	glcpp__flush_buffer(b ,yyscanner);
 
 	b->yy_input_file = file;
 	b->yy_fill_buffer = 1;
 
-    /* If b is the current buffer, then yy_init_buffer was _probably_
-     * called from yyrestart() or through yy_get_next_buffer.
+    /* If b is the current buffer, then glcpp__init_buffer was _probably_
+     * called from glcpp_restart() or through yy_get_next_buffer.
      * In that case, we don't want to reset the lineno or column.
      */
     if (b != YY_CURRENT_BUFFER){
@@ -2512,7 +2348,7 @@ static void yy_load_buffer_state  (yyscan_t yyscanner)
  * @param b the buffer state to be flushed, usually @c YY_CURRENT_BUFFER.
  * @param yyscanner The scanner object.
  */
-    void yy_flush_buffer (YY_BUFFER_STATE  b , yyscan_t yyscanner)
+    void glcpp__flush_buffer (YY_BUFFER_STATE  b , yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
 	if ( ! b )
@@ -2533,7 +2369,7 @@ static void yy_load_buffer_state  (yyscan_t yyscanner)
 	b->yy_buffer_status = YY_BUFFER_NEW;
 
 	if ( b == YY_CURRENT_BUFFER )
-		yy_load_buffer_state( yyscanner );
+		glcpp__load_buffer_state(yyscanner );
 }
 
 /** Pushes the new state onto the stack. The new state becomes
@@ -2542,15 +2378,15 @@ static void yy_load_buffer_state  (yyscan_t yyscanner)
  *  @param new_buffer The new state.
  *  @param yyscanner The scanner object.
  */
-void yypush_buffer_state (YY_BUFFER_STATE new_buffer , yyscan_t yyscanner)
+void glcpp_push_buffer_state (YY_BUFFER_STATE new_buffer , yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
 	if (new_buffer == NULL)
 		return;
 
-	yyensure_buffer_stack(yyscanner);
+	glcpp_ensure_buffer_stack(yyscanner);
 
-	/* This block is copied from yy_switch_to_buffer. */
+	/* This block is copied from glcpp__switch_to_buffer. */
 	if ( YY_CURRENT_BUFFER )
 		{
 		/* Flush out information for old buffer. */
@@ -2564,8 +2400,8 @@ void yypush_buffer_state (YY_BUFFER_STATE new_buffer , yyscan_t yyscanner)
 		yyg->yy_buffer_stack_top++;
 	YY_CURRENT_BUFFER_LVALUE = new_buffer;
 
-	/* copied from yy_switch_to_buffer. */
-	yy_load_buffer_state( yyscanner );
+	/* copied from glcpp__switch_to_buffer. */
+	glcpp__load_buffer_state(yyscanner );
 	yyg->yy_did_buffer_switch_on_eof = 1;
 }
 
@@ -2573,19 +2409,19 @@ void yypush_buffer_state (YY_BUFFER_STATE new_buffer , yyscan_t yyscanner)
  *  The next element becomes the new top.
  *  @param yyscanner The scanner object.
  */
-void yypop_buffer_state (yyscan_t yyscanner)
+void glcpp_pop_buffer_state (yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
 	if (!YY_CURRENT_BUFFER)
 		return;
 
-	yy_delete_buffer(YY_CURRENT_BUFFER , yyscanner);
+	glcpp__delete_buffer(YY_CURRENT_BUFFER ,yyscanner);
 	YY_CURRENT_BUFFER_LVALUE = NULL;
 	if (yyg->yy_buffer_stack_top > 0)
 		--yyg->yy_buffer_stack_top;
 
 	if (YY_CURRENT_BUFFER) {
-		yy_load_buffer_state( yyscanner );
+		glcpp__load_buffer_state(yyscanner );
 		yyg->yy_did_buffer_switch_on_eof = 1;
 	}
 }
@@ -2593,7 +2429,7 @@ void yypop_buffer_state (yyscan_t yyscanner)
 /* Allocates the stack if it does not exist.
  *  Guarantees space for at least one push.
  */
-static void yyensure_buffer_stack (yyscan_t yyscanner)
+static void glcpp_ensure_buffer_stack (yyscan_t yyscanner)
 {
 	yy_size_t num_to_alloc;
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
@@ -2605,11 +2441,11 @@ static void yyensure_buffer_stack (yyscan_t yyscanner)
 		 * immediate realloc on the next call.
          */
       num_to_alloc = 1; /* After all that talk, this was set to 1 anyways... */
-		yyg->yy_buffer_stack = (struct yy_buffer_state**)yyalloc
+		yyg->yy_buffer_stack = (struct yy_buffer_state**)glcpp_alloc
 								(num_to_alloc * sizeof(struct yy_buffer_state*)
 								, yyscanner);
 		if ( ! yyg->yy_buffer_stack )
-			YY_FATAL_ERROR( "out of dynamic memory in yyensure_buffer_stack()" );
+			YY_FATAL_ERROR( "out of dynamic memory in glcpp_ensure_buffer_stack()" );
 
 		memset(yyg->yy_buffer_stack, 0, num_to_alloc * sizeof(struct yy_buffer_state*));
 
@@ -2624,12 +2460,12 @@ static void yyensure_buffer_stack (yyscan_t yyscanner)
 		yy_size_t grow_size = 8 /* arbitrary grow size */;
 
 		num_to_alloc = yyg->yy_buffer_stack_max + grow_size;
-		yyg->yy_buffer_stack = (struct yy_buffer_state**)yyrealloc
+		yyg->yy_buffer_stack = (struct yy_buffer_state**)glcpp_realloc
 								(yyg->yy_buffer_stack,
 								num_to_alloc * sizeof(struct yy_buffer_state*)
 								, yyscanner);
 		if ( ! yyg->yy_buffer_stack )
-			YY_FATAL_ERROR( "out of dynamic memory in yyensure_buffer_stack()" );
+			YY_FATAL_ERROR( "out of dynamic memory in glcpp_ensure_buffer_stack()" );
 
 		/* zero only the new slots.*/
 		memset(yyg->yy_buffer_stack + yyg->yy_buffer_stack_max, 0, grow_size * sizeof(struct yy_buffer_state*));
@@ -2643,7 +2479,7 @@ static void yyensure_buffer_stack (yyscan_t yyscanner)
  * @param yyscanner The scanner object.
  * @return the newly allocated buffer state object.
  */
-YY_BUFFER_STATE yy_scan_buffer  (char * base, yy_size_t  size , yyscan_t yyscanner)
+YY_BUFFER_STATE glcpp__scan_buffer  (char * base, yy_size_t  size , yyscan_t yyscanner)
 {
 	YY_BUFFER_STATE b;
     
@@ -2653,9 +2489,9 @@ YY_BUFFER_STATE yy_scan_buffer  (char * base, yy_size_t  size , yyscan_t yyscann
 		/* They forgot to leave room for the EOB's. */
 		return NULL;
 
-	b = (YY_BUFFER_STATE) yyalloc( sizeof( struct yy_buffer_state ) , yyscanner );
+	b = (YY_BUFFER_STATE) glcpp_alloc(sizeof( struct yy_buffer_state ) ,yyscanner );
 	if ( ! b )
-		YY_FATAL_ERROR( "out of dynamic memory in yy_scan_buffer()" );
+		YY_FATAL_ERROR( "out of dynamic memory in glcpp__scan_buffer()" );
 
 	b->yy_buf_size = (int) (size - 2);	/* "- 2" to take care of EOB's */
 	b->yy_buf_pos = b->yy_ch_buf = base;
@@ -2667,33 +2503,33 @@ YY_BUFFER_STATE yy_scan_buffer  (char * base, yy_size_t  size , yyscan_t yyscann
 	b->yy_fill_buffer = 0;
 	b->yy_buffer_status = YY_BUFFER_NEW;
 
-	yy_switch_to_buffer( b , yyscanner );
+	glcpp__switch_to_buffer(b ,yyscanner );
 
 	return b;
 }
 
-/** Setup the input buffer state to scan a string. The next call to yylex() will
+/** Setup the input buffer state to scan a string. The next call to glcpp_lex() will
  * scan from a @e copy of @a str.
  * @param yystr a NUL-terminated string to scan
  * @param yyscanner The scanner object.
  * @return the newly allocated buffer state object.
  * @note If you want to scan bytes that may contain NUL values, then use
- *       yy_scan_bytes() instead.
+ *       glcpp__scan_bytes() instead.
  */
-YY_BUFFER_STATE yy_scan_string (const char * yystr , yyscan_t yyscanner)
+YY_BUFFER_STATE glcpp__scan_string (const char * yystr , yyscan_t yyscanner)
 {
     
-	return yy_scan_bytes( yystr, (int) strlen(yystr) , yyscanner);
+	return glcpp__scan_bytes(yystr,(int) strlen(yystr) ,yyscanner);
 }
 
-/** Setup the input buffer state to scan the given bytes. The next call to yylex() will
+/** Setup the input buffer state to scan the given bytes. The next call to glcpp_lex() will
  * scan from a @e copy of @a bytes.
  * @param yybytes the byte buffer to scan
  * @param _yybytes_len the number of bytes in the buffer pointed to by @a bytes.
  * @param yyscanner The scanner object.
  * @return the newly allocated buffer state object.
  */
-YY_BUFFER_STATE yy_scan_bytes  (const char * yybytes, int  _yybytes_len , yyscan_t yyscanner)
+YY_BUFFER_STATE glcpp__scan_bytes  (const char * yybytes, int  _yybytes_len , yyscan_t yyscanner)
 {
 	YY_BUFFER_STATE b;
 	char *buf;
@@ -2702,18 +2538,18 @@ YY_BUFFER_STATE yy_scan_bytes  (const char * yybytes, int  _yybytes_len , yyscan
     
 	/* Get memory for full buffer, including space for trailing EOB's. */
 	n = (yy_size_t) (_yybytes_len + 2);
-	buf = (char *) yyalloc( n , yyscanner );
+	buf = (char *) glcpp_alloc(n ,yyscanner );
 	if ( ! buf )
-		YY_FATAL_ERROR( "out of dynamic memory in yy_scan_bytes()" );
+		YY_FATAL_ERROR( "out of dynamic memory in glcpp__scan_bytes()" );
 
 	for ( i = 0; i < _yybytes_len; ++i )
 		buf[i] = yybytes[i];
 
 	buf[_yybytes_len] = buf[_yybytes_len+1] = YY_END_OF_BUFFER_CHAR;
 
-	b = yy_scan_buffer( buf, n , yyscanner);
+	b = glcpp__scan_buffer(buf,n ,yyscanner);
 	if ( ! b )
-		YY_FATAL_ERROR( "bad buffer in yy_scan_bytes()" );
+		YY_FATAL_ERROR( "bad buffer in glcpp__scan_bytes()" );
 
 	/* It's okay to grow etc. this buffer, and we should throw it
 	 * away when we're done.
@@ -2734,11 +2570,10 @@ YY_BUFFER_STATE yy_scan_bytes  (const char * yybytes, int  _yybytes_len , yyscan
 		new_size = (yy_size_t) yyg->yy_start_stack_depth * sizeof( int );
 
 		if ( ! yyg->yy_start_stack )
-			yyg->yy_start_stack = (int *) yyalloc( new_size , yyscanner );
+			yyg->yy_start_stack = (int *) glcpp_alloc(new_size ,yyscanner );
 
 		else
-			yyg->yy_start_stack = (int *) yyrealloc(
-					(void *) yyg->yy_start_stack, new_size , yyscanner );
+			yyg->yy_start_stack = (int *) glcpp_realloc((void *) yyg->yy_start_stack,new_size ,yyscanner );
 
 		if ( ! yyg->yy_start_stack )
 			YY_FATAL_ERROR( "out of memory expanding start-condition stack" );
@@ -2772,7 +2607,7 @@ static void yynoreturn yy_fatal_error (const char* msg , yyscan_t yyscanner)
 {
 	struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
 	(void)yyg;
-	fprintf( stderr, "%s\n", msg );
+	(void) fprintf( stderr, "%s\n", msg );
 	exit( YY_EXIT_FAILURE );
 }
 
@@ -2798,7 +2633,7 @@ static void yynoreturn yy_fatal_error (const char* msg , yyscan_t yyscanner)
 /** Get the user-defined data for this scanner.
  * @param yyscanner The scanner object.
  */
-YY_EXTRA_TYPE yyget_extra  (yyscan_t yyscanner)
+YY_EXTRA_TYPE glcpp_get_extra  (yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
     return yyextra;
@@ -2807,7 +2642,7 @@ YY_EXTRA_TYPE yyget_extra  (yyscan_t yyscanner)
 /** Get the current line number.
  * @param yyscanner The scanner object.
  */
-int yyget_lineno  (yyscan_t yyscanner)
+int glcpp_get_lineno  (yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
 
@@ -2820,7 +2655,7 @@ int yyget_lineno  (yyscan_t yyscanner)
 /** Get the current column number.
  * @param yyscanner The scanner object.
  */
-int yyget_column  (yyscan_t yyscanner)
+int glcpp_get_column  (yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
 
@@ -2833,7 +2668,7 @@ int yyget_column  (yyscan_t yyscanner)
 /** Get the input stream.
  * @param yyscanner The scanner object.
  */
-FILE *yyget_in  (yyscan_t yyscanner)
+FILE *glcpp_get_in  (yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
     return yyin;
@@ -2842,7 +2677,7 @@ FILE *yyget_in  (yyscan_t yyscanner)
 /** Get the output stream.
  * @param yyscanner The scanner object.
  */
-FILE *yyget_out  (yyscan_t yyscanner)
+FILE *glcpp_get_out  (yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
     return yyout;
@@ -2851,7 +2686,7 @@ FILE *yyget_out  (yyscan_t yyscanner)
 /** Get the length of the current token.
  * @param yyscanner The scanner object.
  */
-int yyget_leng  (yyscan_t yyscanner)
+int glcpp_get_leng  (yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
     return yyleng;
@@ -2861,7 +2696,7 @@ int yyget_leng  (yyscan_t yyscanner)
  * @param yyscanner The scanner object.
  */
 
-char *yyget_text  (yyscan_t yyscanner)
+char *glcpp_get_text  (yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
     return yytext;
@@ -2871,7 +2706,7 @@ char *yyget_text  (yyscan_t yyscanner)
  * @param user_defined The data to be associated with this scanner.
  * @param yyscanner The scanner object.
  */
-void yyset_extra (YY_EXTRA_TYPE  user_defined , yyscan_t yyscanner)
+void glcpp_set_extra (YY_EXTRA_TYPE  user_defined , yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
     yyextra = user_defined ;
@@ -2881,13 +2716,13 @@ void yyset_extra (YY_EXTRA_TYPE  user_defined , yyscan_t yyscanner)
  * @param _line_number line number
  * @param yyscanner The scanner object.
  */
-void yyset_lineno (int  _line_number , yyscan_t yyscanner)
+void glcpp_set_lineno (int  _line_number , yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
 
         /* lineno is only valid if an input buffer exists. */
         if (! YY_CURRENT_BUFFER )
-           YY_FATAL_ERROR( "yyset_lineno called with no buffer" );
+           YY_FATAL_ERROR( "glcpp_set_lineno called with no buffer" );
     
     yylineno = _line_number;
 }
@@ -2896,13 +2731,13 @@ void yyset_lineno (int  _line_number , yyscan_t yyscanner)
  * @param _column_no column number
  * @param yyscanner The scanner object.
  */
-void yyset_column (int  _column_no , yyscan_t yyscanner)
+void glcpp_set_column (int  _column_no , yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
 
         /* column is only valid if an input buffer exists. */
         if (! YY_CURRENT_BUFFER )
-           YY_FATAL_ERROR( "yyset_column called with no buffer" );
+           YY_FATAL_ERROR( "glcpp_set_column called with no buffer" );
     
     yycolumn = _column_no;
 }
@@ -2911,27 +2746,27 @@ void yyset_column (int  _column_no , yyscan_t yyscanner)
  * input buffer.
  * @param _in_str A readable stream.
  * @param yyscanner The scanner object.
- * @see yy_switch_to_buffer
+ * @see glcpp__switch_to_buffer
  */
-void yyset_in (FILE *  _in_str , yyscan_t yyscanner)
+void glcpp_set_in (FILE *  _in_str , yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
     yyin = _in_str ;
 }
 
-void yyset_out (FILE *  _out_str , yyscan_t yyscanner)
+void glcpp_set_out (FILE *  _out_str , yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
     yyout = _out_str ;
 }
 
-int yyget_debug  (yyscan_t yyscanner)
+int glcpp_get_debug  (yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
     return yy_flex_debug;
 }
 
-void yyset_debug (int  _bdebug , yyscan_t yyscanner)
+void glcpp_set_debug (int  _bdebug , yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
     yy_flex_debug = _bdebug ;
@@ -2939,25 +2774,25 @@ void yyset_debug (int  _bdebug , yyscan_t yyscanner)
 
 /* Accessor methods for yylval and yylloc */
 
-YYSTYPE * yyget_lval  (yyscan_t yyscanner)
+YYSTYPE * glcpp_get_lval  (yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
     return yylval;
 }
 
-void yyset_lval (YYSTYPE *  yylval_param , yyscan_t yyscanner)
+void glcpp_set_lval (YYSTYPE *  yylval_param , yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
     yylval = yylval_param;
 }
 
-YYLTYPE *yyget_lloc  (yyscan_t yyscanner)
+YYLTYPE *glcpp_get_lloc  (yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
     return yylloc;
 }
     
-void yyset_lloc (YYLTYPE *  yylloc_param , yyscan_t yyscanner)
+void glcpp_set_lloc (YYLTYPE *  yylloc_param , yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
     yylloc = yylloc_param;
@@ -2965,18 +2800,18 @@ void yyset_lloc (YYLTYPE *  yylloc_param , yyscan_t yyscanner)
     
 /* User-visible API */
 
-/* yylex_init is special because it creates the scanner itself, so it is
+/* glcpp_lex_init is special because it creates the scanner itself, so it is
  * the ONLY reentrant function that doesn't take the scanner as the last argument.
  * That's why we explicitly handle the declaration, instead of using our macros.
  */
-int yylex_init(yyscan_t* ptr_yy_globals)
+int glcpp_lex_init(yyscan_t* ptr_yy_globals)
 {
     if (ptr_yy_globals == NULL){
         errno = EINVAL;
         return 1;
     }
 
-    *ptr_yy_globals = (yyscan_t) yyalloc ( sizeof( struct yyguts_t ), NULL );
+    *ptr_yy_globals = (yyscan_t) glcpp_alloc ( sizeof( struct yyguts_t ), NULL );
 
     if (*ptr_yy_globals == NULL){
         errno = ENOMEM;
@@ -2989,25 +2824,25 @@ int yylex_init(yyscan_t* ptr_yy_globals)
     return yy_init_globals ( *ptr_yy_globals );
 }
 
-/* yylex_init_extra has the same functionality as yylex_init, but follows the
+/* glcpp_lex_init_extra has the same functionality as glcpp_lex_init, but follows the
  * convention of taking the scanner as the last argument. Note however, that
  * this is a *pointer* to a scanner, as it will be allocated by this call (and
  * is the reason, too, why this function also must handle its own declaration).
- * The user defined value in the first argument will be available to yyalloc in
+ * The user defined value in the first argument will be available to glcpp_alloc in
  * the yyextra field.
  */
-int yylex_init_extra( YY_EXTRA_TYPE yy_user_defined, yyscan_t* ptr_yy_globals )
+int glcpp_lex_init_extra(YY_EXTRA_TYPE yy_user_defined,yyscan_t* ptr_yy_globals )
 {
     struct yyguts_t dummy_yyguts;
 
-    yyset_extra (yy_user_defined, &dummy_yyguts);
+    glcpp_set_extra (yy_user_defined, &dummy_yyguts);
 
     if (ptr_yy_globals == NULL){
         errno = EINVAL;
         return 1;
     }
 
-    *ptr_yy_globals = (yyscan_t) yyalloc ( sizeof( struct yyguts_t ), &dummy_yyguts );
+    *ptr_yy_globals = (yyscan_t) glcpp_alloc ( sizeof( struct yyguts_t ), &dummy_yyguts );
 
     if (*ptr_yy_globals == NULL){
         errno = ENOMEM;
@@ -3018,7 +2853,7 @@ int yylex_init_extra( YY_EXTRA_TYPE yy_user_defined, yyscan_t* ptr_yy_globals )
     yy_init_globals. Leave at 0x00 for releases. */
     memset(*ptr_yy_globals,0x00,sizeof(struct yyguts_t));
 
-    yyset_extra (yy_user_defined, *ptr_yy_globals);
+    glcpp_set_extra (yy_user_defined, *ptr_yy_globals);
 
     return yy_init_globals ( *ptr_yy_globals );
 }
@@ -3027,7 +2862,7 @@ static int yy_init_globals (yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
     /* Initialization is the same as for the non-reentrant scanner.
-     * This function is called from yylex_destroy(), so don't allocate here.
+     * This function is called from glcpp_lex_destroy(), so don't allocate here.
      */
 
     yyg->yy_buffer_stack = NULL;
@@ -3051,37 +2886,37 @@ static int yy_init_globals (yyscan_t yyscanner)
 #endif
 
     /* For future reference: Set errno on error, since we are called by
-     * yylex_init()
+     * glcpp_lex_init()
      */
     return 0;
 }
 
-/* yylex_destroy is for both reentrant and non-reentrant scanners. */
-int yylex_destroy  (yyscan_t yyscanner)
+/* glcpp_lex_destroy is for both reentrant and non-reentrant scanners. */
+int glcpp_lex_destroy  (yyscan_t yyscanner)
 {
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
 
     /* Pop the buffer stack, destroying each element. */
 	while(YY_CURRENT_BUFFER){
-		yy_delete_buffer( YY_CURRENT_BUFFER , yyscanner );
+		glcpp__delete_buffer(YY_CURRENT_BUFFER ,yyscanner );
 		YY_CURRENT_BUFFER_LVALUE = NULL;
-		yypop_buffer_state(yyscanner);
+		glcpp_pop_buffer_state(yyscanner);
 	}
 
 	/* Destroy the stack itself. */
-	yyfree(yyg->yy_buffer_stack , yyscanner);
+	glcpp_free(yyg->yy_buffer_stack ,yyscanner);
 	yyg->yy_buffer_stack = NULL;
 
     /* Destroy the start condition stack. */
-        yyfree( yyg->yy_start_stack , yyscanner );
+        glcpp_free(yyg->yy_start_stack ,yyscanner );
         yyg->yy_start_stack = NULL;
 
     /* Reset the globals. This is important in a non-reentrant scanner so the next time
-     * yylex() is called, initialization will occur. */
+     * glcpp_lex() is called, initialization will occur. */
     yy_init_globals( yyscanner);
 
     /* Destroy the main struct (reentrant only). */
-    yyfree ( yyscanner , yyscanner );
+    glcpp_free ( yyscanner , yyscanner );
     yyscanner = NULL;
     return 0;
 }
@@ -3113,14 +2948,14 @@ static int yy_flex_strlen (const char * s , yyscan_t yyscanner)
 }
 #endif
 
-void *yyalloc (yy_size_t  size , yyscan_t yyscanner)
+void *glcpp_alloc (yy_size_t  size , yyscan_t yyscanner)
 {
 	struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
 	(void)yyg;
 	return malloc(size);
 }
 
-void *yyrealloc  (void * ptr, yy_size_t  size , yyscan_t yyscanner)
+void *glcpp_realloc  (void * ptr, yy_size_t  size , yyscan_t yyscanner)
 {
 	struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
 	(void)yyg;
@@ -3135,11 +2970,11 @@ void *yyrealloc  (void * ptr, yy_size_t  size , yyscan_t yyscanner)
 	return realloc(ptr, size);
 }
 
-void yyfree (void * ptr , yyscan_t yyscanner)
+void glcpp_free (void * ptr , yyscan_t yyscanner)
 {
 	struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
 	(void)yyg;
-	free( (char *) ptr );	/* see yyrealloc() for (char *) cast */
+	free( (char *) ptr );	/* see glcpp_realloc() for (char *) cast */
 }
 
 #define YYTABLES_NAME "yytables"

@@ -48,13 +48,13 @@ brw_color_buffer_write_enabled(struct brw_context *brw)
 {
    struct gl_context *ctx = &brw->ctx;
    /* BRW_NEW_FRAGMENT_PROGRAM */
-   const struct gl_program *fp = brw->fragment_program;
+   const struct gl_fragment_program *fp = brw->fragment_program;
    unsigned i;
 
    /* _NEW_BUFFERS */
    for (i = 0; i < ctx->DrawBuffer->_NumColorDrawBuffers; i++) {
       struct gl_renderbuffer *rb = ctx->DrawBuffer->_ColorDrawBuffers[i];
-      uint64_t outputs_written = fp->info.outputs_written;
+      uint64_t outputs_written = fp->Base.nir->info.outputs_written;
 
       /* _NEW_COLOR */
       if (rb && (outputs_written & BITFIELD64_BIT(FRAG_RESULT_COLOR) ||
@@ -79,13 +79,14 @@ brw_upload_wm_unit(struct brw_context *brw)
    const struct gen_device_info *devinfo = &brw->screen->devinfo;
    struct gl_context *ctx = &brw->ctx;
    /* BRW_NEW_FRAGMENT_PROGRAM */
-   const struct gl_program *fp = brw->fragment_program;
+   const struct gl_fragment_program *fp = brw->fragment_program;
    /* BRW_NEW_FS_PROG_DATA */
    const struct brw_wm_prog_data *prog_data =
       brw_wm_prog_data(brw->wm.base.prog_data);
    struct brw_wm_unit_state *wm;
 
-   wm = brw_state_batch(brw, sizeof(*wm), 32, &brw->wm.base.state_offset);
+   wm = brw_state_batch(brw, AUB_TRACE_WM_STATE,
+			sizeof(*wm), 32, &brw->wm.base.state_offset);
    memset(wm, 0, sizeof(*wm));
 
    if (prog_data->dispatch_8 && prog_data->dispatch_16) {
@@ -167,7 +168,7 @@ brw_upload_wm_unit(struct brw_context *brw)
 
    /* BRW_NEW_FRAGMENT_PROGRAM */
    wm->wm5.program_uses_depth = prog_data->uses_src_depth;
-   wm->wm5.program_computes_depth = (fp->info.outputs_written &
+   wm->wm5.program_computes_depth = (fp->Base.nir->info.outputs_written &
 				     BITFIELD64_BIT(FRAG_RESULT_DEPTH)) != 0;
    /* _NEW_BUFFERS
     * Override for NULL depthbuffer case, required by the Pixel Shader Computed
@@ -222,23 +223,23 @@ brw_upload_wm_unit(struct brw_context *brw)
 
    /* Emit scratch space relocation */
    if (prog_data->base.total_scratch != 0) {
-      brw_emit_reloc(&brw->batch,
-                     brw->wm.base.state_offset +
-                     offsetof(struct brw_wm_unit_state, thread2),
-                     brw->wm.base.scratch_bo,
-                     wm->thread2.per_thread_scratch_space,
-                     I915_GEM_DOMAIN_RENDER, I915_GEM_DOMAIN_RENDER);
+      drm_intel_bo_emit_reloc(brw->batch.bo,
+			      brw->wm.base.state_offset +
+			      offsetof(struct brw_wm_unit_state, thread2),
+			      brw->wm.base.scratch_bo,
+			      wm->thread2.per_thread_scratch_space,
+			      I915_GEM_DOMAIN_RENDER, I915_GEM_DOMAIN_RENDER);
    }
 
    /* Emit sampler state relocation */
    if (brw->wm.base.sampler_count != 0) {
-      brw_emit_reloc(&brw->batch,
-                     brw->wm.base.state_offset +
-                     offsetof(struct brw_wm_unit_state, wm4),
-                     brw->batch.bo,
-                     brw->wm.base.sampler_offset | wm->wm4.stats_enable |
-                     (wm->wm4.sampler_count << 2),
-                     I915_GEM_DOMAIN_INSTRUCTION, 0);
+      drm_intel_bo_emit_reloc(brw->batch.bo,
+			      brw->wm.base.state_offset +
+			      offsetof(struct brw_wm_unit_state, wm4),
+			      brw->batch.bo, (brw->wm.base.sampler_offset |
+                                              wm->wm4.stats_enable |
+                                              (wm->wm4.sampler_count << 2)),
+			      I915_GEM_DOMAIN_INSTRUCTION, 0);
    }
 
    brw->ctx.NewDriverState |= BRW_NEW_GEN4_UNIT_STATE;

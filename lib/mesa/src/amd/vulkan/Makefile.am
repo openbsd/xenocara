@@ -21,7 +21,9 @@
 
 include Makefile.sources
 
-noinst_HEADERS = \
+vulkan_includedir = $(includedir)/vulkan
+
+vulkan_include_HEADERS = \
 	$(top_srcdir)/include/vulkan/vk_platform.h \
 	$(top_srcdir)/include/vulkan/vulkan.h
 
@@ -34,8 +36,6 @@ AM_CPPFLAGS = \
 	-I$(top_builddir)/src \
 	-I$(top_srcdir)/src \
 	-I$(top_srcdir)/src/vulkan/wsi \
-	-I$(top_builddir)/src/vulkan/util \
-	-I$(top_srcdir)/src/vulkan/util \
 	-I$(top_srcdir)/src/amd \
 	-I$(top_srcdir)/src/amd/common \
 	-I$(top_builddir)/src/compiler \
@@ -59,10 +59,42 @@ VULKAN_SOURCES = \
 	$(VULKAN_GENERATED_FILES) \
 	$(VULKAN_FILES)
 
-VULKAN_LIB_DEPS = \
+VULKAN_LIB_DEPS =
+
+
+if HAVE_PLATFORM_X11
+AM_CPPFLAGS += \
+	$(XCB_DRI3_CFLAGS) \
+	-DVK_USE_PLATFORM_XCB_KHR \
+	-DVK_USE_PLATFORM_XLIB_KHR
+
+VULKAN_SOURCES += $(VULKAN_WSI_X11_FILES)
+
+# FIXME: Use pkg-config for X11-xcb ldflags.
+VULKAN_LIB_DEPS += $(XCB_DRI3_LIBS) -lX11-xcb
+endif
+
+
+if HAVE_PLATFORM_WAYLAND
+AM_CPPFLAGS += \
+	-I$(top_builddir)/src/egl/wayland/wayland-drm \
+	-I$(top_srcdir)/src/egl/wayland/wayland-drm \
+	$(WAYLAND_CFLAGS) \
+	-DVK_USE_PLATFORM_WAYLAND_KHR
+
+VULKAN_SOURCES += $(VULKAN_WSI_WAYLAND_FILES)
+
+VULKAN_LIB_DEPS += \
+	$(top_builddir)/src/egl/wayland/wayland-drm/libwayland-drm.la \
+	$(WAYLAND_LIBS)
+endif
+
+noinst_LTLIBRARIES = libvulkan_common.la
+libvulkan_common_la_SOURCES = $(VULKAN_SOURCES)
+
+VULKAN_LIB_DEPS += \
 	libvulkan_common.la \
-	$(top_builddir)/src/vulkan/libvulkan_util.la \
-	$(top_builddir)/src/vulkan/libvulkan_wsi.la \
+	$(top_builddir)/src/vulkan/wsi/libvulkan_wsi.la \
 	$(top_builddir)/src/amd/common/libamd_common.la \
 	$(top_builddir)/src/amd/addrlib/libamdgpu_addrlib.la \
 	$(top_builddir)/src/compiler/nir/libnir.la \
@@ -76,44 +108,22 @@ VULKAN_LIB_DEPS = \
 	$(DLOPEN_LIBS) \
 	-lm
 
-if HAVE_PLATFORM_X11
-AM_CPPFLAGS += \
-	$(XCB_DRI3_CFLAGS) \
-	-DVK_USE_PLATFORM_XCB_KHR \
-	-DVK_USE_PLATFORM_XLIB_KHR
-
-VULKAN_SOURCES += $(VULKAN_WSI_X11_FILES)
-
-VULKAN_LIB_DEPS += $(XCB_DRI3_LIBS)
-endif
-
-
-if HAVE_PLATFORM_WAYLAND
-AM_CPPFLAGS += \
-	$(WAYLAND_CFLAGS) \
-	-DVK_USE_PLATFORM_WAYLAND_KHR
-
-VULKAN_SOURCES += $(VULKAN_WSI_WAYLAND_FILES)
-
-VULKAN_LIB_DEPS += \
-	$(WAYLAND_LIBS)
-endif
-
-noinst_LTLIBRARIES = libvulkan_common.la
-libvulkan_common_la_SOURCES = $(VULKAN_SOURCES)
-
 nodist_EXTRA_libvulkan_radeon_la_SOURCES = dummy.cpp
 libvulkan_radeon_la_SOURCES = $(VULKAN_GEM_FILES)
 
-vulkan_api_xml = $(top_srcdir)/src/vulkan/registry/vk.xml
-
-radv_entrypoints.h : radv_entrypoints_gen.py $(vulkan_api_xml)
-	$(AM_V_GEN) cat $(vulkan_api_xml) |\
+radv_entrypoints.h : radv_entrypoints_gen.py $(vulkan_include_HEADERS)
+	$(AM_V_GEN) cat $(vulkan_include_HEADERS) |\
 	$(PYTHON2) $(srcdir)/radv_entrypoints_gen.py header > $@
 
-radv_entrypoints.c : radv_entrypoints_gen.py $(vulkan_api_xml)
-	$(AM_V_GEN) cat $(vulkan_api_xml) |\
+radv_entrypoints.c : radv_entrypoints_gen.py $(vulkan_include_HEADERS)
+	$(AM_V_GEN) cat $(vulkan_include_HEADERS) |\
 	$(PYTHON2) $(srcdir)/radv_entrypoints_gen.py code > $@
+
+.PHONY: radv_timestamp.h
+
+radv_timestamp.h:
+	@echo "Updating radv_timestamp.h"
+	$(AM_V_GEN) echo "#define RADV_TIMESTAMP \"$(TIMESTAMP_CMD)\"" > $@
 
 vk_format_table.c: vk_format_table.py \
 		   vk_format_parse.py \

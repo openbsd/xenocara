@@ -83,7 +83,7 @@ ir_invariance_propagation_visitor::visit_enter(ir_assignment *ir)
 }
 
 ir_visitor_status
-ir_invariance_propagation_visitor::visit_leave(ir_assignment *)
+ir_invariance_propagation_visitor::visit_leave(ir_assignment *ir)
 {
    this->dst_var = NULL;
 

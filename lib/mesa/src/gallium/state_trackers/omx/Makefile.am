@@ -27,7 +27,6 @@ AM_CFLAGS = \
 	$(GALLIUM_CFLAGS) \
 	$(VISIBILITY_CFLAGS) \
 	$(VL_CFLAGS) \
-	$(XCB_DRI3_CFLAGS) \
 	$(OMX_CFLAGS)
 
 noinst_LTLIBRARIES = libomxtracker.la

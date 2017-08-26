@@ -38,14 +38,10 @@
 #include "radv_radeon_winsys.h"
 #include "radv_amdgpu_winsys.h"
 
-enum {
-	MAX_RINGS_PER_TYPE = 8
-};
-
 struct radv_amdgpu_ctx {
 	struct radv_amdgpu_winsys *ws;
 	amdgpu_context_handle ctx;
-	struct amdgpu_cs_fence last_submission[AMDGPU_HW_IP_DMA + 1][MAX_RINGS_PER_TYPE];
+	uint64_t last_seq_no;
 };
 
 static inline struct radv_amdgpu_ctx *

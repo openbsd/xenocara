@@ -374,8 +374,7 @@ vc4_vertex_state_bind(struct pipe_context *pctx, void *hwcso)
 }
 
 static void
-vc4_set_constant_buffer(struct pipe_context *pctx,
-                        enum pipe_shader_type shader, uint index,
+vc4_set_constant_buffer(struct pipe_context *pctx, uint shader, uint index,
                         const struct pipe_constant_buffer *cb)
 {
         struct vc4_context *vc4 = vc4_context(pctx);
@@ -615,9 +614,6 @@ vc4_create_sampler_view(struct pipe_context *pctx, struct pipe_resource *prsc,
                 (VC4_SET_FIELD(rsc->vc4_format >> 4, VC4_TEX_P1_TYPE4) |
                  VC4_SET_FIELD(prsc->height0 & 2047, VC4_TEX_P1_HEIGHT) |
                  VC4_SET_FIELD(prsc->width0 & 2047, VC4_TEX_P1_WIDTH));
-
-        if (prsc->format == PIPE_FORMAT_ETC1_RGB8)
-                so->texture_p1 |= VC4_TEX_P1_ETCFLIP_MASK;
 
         return &so->base;
 }

@@ -115,147 +115,6 @@ NVC0LegalizeSSA::handleFTZ(Instruction *i)
    i->ftz = true;
 }
 
-void
-NVC0LegalizeSSA::handleTEXLOD(TexInstruction *i)
-{
-   if (i->tex.levelZero)
-      return;
-
-   ImmediateValue lod;
-
-   // The LOD argument comes right after the coordinates (before depth bias,
-   // offsets, etc).
-   int arg = i->tex.target.getArgCount();
-
-   // SM30+ stores the indirect handle as a separate arg, which comes before
-   // the LOD.
-   if (prog->getTarget()->getChipset() >= NVISA_GK104_CHIPSET &&
-       i->tex.rIndirectSrc >= 0)
-      arg++;
-   // SM20 stores indirect handle combined with array coordinate
-   if (prog->getTarget()->getChipset() < NVISA_GK104_CHIPSET &&
-       !i->tex.target.isArray() &&
-       i->tex.rIndirectSrc >= 0)
-      arg++;
-
-   if (!i->src(arg).getImmediate(lod) || !lod.isInteger(0))
-      return;
-
-   if (i->op == OP_TXL)
-      i->op = OP_TEX;
-   i->tex.levelZero = true;
-   i->moveSources(arg + 1, -1);
-}
-
-void
-NVC0LegalizeSSA::handleShift(Instruction *lo)
-{
-   Value *shift = lo->getSrc(1);
-   Value *dst64 = lo->getDef(0);
-   Value *src[2], *dst[2];
-   operation op = lo->op;
-
-   bld.setPosition(lo, false);
-
-   bld.mkSplit(src, 4, lo->getSrc(0));
-
-   // SM30 and prior don't have the fancy new SHF.L/R ops. So the logic has to
-   // be completely emulated. For SM35+, we can use the more directed SHF
-   // operations.
-   if (prog->getTarget()->getChipset() < NVISA_GK20A_CHIPSET) {
-      // The strategy here is to handle shifts >= 32 and less than 32 as
-      // separate parts.
-      //
-      // For SHL:
-      // If the shift is <= 32, then
-      //   (HI,LO) << x = (HI << x | (LO >> (32 - x)), LO << x)
-      // If the shift is > 32, then
-      //   (HI,LO) << x = (LO << (x - 32), 0)
-      //
-      // For SHR:
-      // If the shift is <= 32, then
-      //   (HI,LO) >> x = (HI >> x, (HI << (32 - x)) | LO >> x)
-      // If the shift is > 32, then
-      //   (HI,LO) >> x = (0, HI >> (x - 32))
-      //
-      // Note that on NVIDIA hardware, a shift > 32 yields a 0 value, which we
-      // can use to our advantage. Also note the structural similarities
-      // between the right/left cases. The main difference is swapping hi/lo
-      // on input and output.
-
-      Value *x32_minus_shift, *pred, *hi1, *hi2;
-      DataType type = isSignedIntType(lo->dType) ? TYPE_S32 : TYPE_U32;
-      operation antiop = op == OP_SHR ? OP_SHL : OP_SHR;
-      if (op == OP_SHR)
-         std::swap(src[0], src[1]);
-      bld.mkOp2(OP_ADD, TYPE_U32, (x32_minus_shift = bld.getSSA()), shift, bld.mkImm(0x20))
-         ->src(0).mod = Modifier(NV50_IR_MOD_NEG);
-      bld.mkCmp(OP_SET, CC_LE, TYPE_U8, (pred = bld.getSSA(1, FILE_PREDICATE)),
-                TYPE_U32, shift, bld.mkImm(32));
-      // Compute HI (shift <= 32)
-      bld.mkOp2(OP_OR, TYPE_U32, (hi1 = bld.getSSA()),
-                bld.mkOp2v(op, TYPE_U32, bld.getSSA(), src[1], shift),
-                bld.mkOp2v(antiop, TYPE_U32, bld.getSSA(), src[0], x32_minus_shift))
-         ->setPredicate(CC_P, pred);
-      // Compute LO (all shift values)
-      bld.mkOp2(op, type, (dst[0] = bld.getSSA()), src[0], shift);
-      // Compute HI (shift > 32)
-      bld.mkOp2(op, type, (hi2 = bld.getSSA()), src[1],
-                bld.mkOp1v(OP_NEG, TYPE_S32, bld.getSSA(), x32_minus_shift))
-         ->setPredicate(CC_NOT_P, pred);
-      bld.mkOp2(OP_UNION, TYPE_U32, (dst[1] = bld.getSSA()), hi1, hi2);
-      if (op == OP_SHR)
-         std::swap(dst[0], dst[1]);
-      bld.mkOp2(OP_MERGE, TYPE_U64, dst64, dst[0], dst[1]);
-      delete_Instruction(prog, lo);
-      return;
-   }
-
-   Instruction *hi = new_Instruction(func, op, TYPE_U32);
-   lo->bb->insertAfter(lo, hi);
-
-   hi->sType = lo->sType;
-   lo->dType = TYPE_U32;
-
-   hi->setDef(0, (dst[1] = bld.getSSA()));
-   if (lo->op == OP_SHR)
-      hi->subOp |= NV50_IR_SUBOP_SHIFT_HIGH;
-   lo->setDef(0, (dst[0] = bld.getSSA()));
-
-   bld.setPosition(hi, true);
-
-   if (lo->op == OP_SHL)
-      std::swap(hi, lo);
-
-   hi->setSrc(0, new_ImmediateValue(prog, 0u));
-   hi->setSrc(1, shift);
-   hi->setSrc(2, lo->op == OP_SHL ? src[0] : src[1]);
-
-   lo->setSrc(0, src[0]);
-   lo->setSrc(1, shift);
-   lo->setSrc(2, src[1]);
-
-   bld.mkOp2(OP_MERGE, TYPE_U64, dst64, dst[0], dst[1]);
-}
-
-void
-NVC0LegalizeSSA::handleSET(CmpInstruction *cmp)
-{
-   DataType hTy = cmp->sType == TYPE_S64 ? TYPE_S32 : TYPE_U32;
-   Value *carry;
-   Value *src0[2], *src1[2];
-   bld.setPosition(cmp, false);
-
-   bld.mkSplit(src0, 4, cmp->getSrc(0));
-   bld.mkSplit(src1, 4, cmp->getSrc(1));
-   bld.mkOp2(OP_SUB, hTy, NULL, src0[0], src1[0])
-      ->setFlagsDef(0, (carry = bld.getSSA(1, FILE_FLAGS)));
-   cmp->setFlagsSrc(cmp->srcCount(), carry);
-   cmp->setSrc(0, src0[1]);
-   cmp->setSrc(1, src1[1]);
-   cmp->sType = hTy;
-}
-
 bool
 NVC0LegalizeSSA::visit(Function *fn)
 {
@@ -269,36 +128,20 @@ NVC0LegalizeSSA::visit(BasicBlock *bb)
    Instruction *next;
    for (Instruction *i = bb->getEntry(); i; i = next) {
       next = i->next;
-
-      if (i->sType == TYPE_F32 && prog->getType() != Program::TYPE_COMPUTE)
-         handleFTZ(i);
-
+      if (i->sType == TYPE_F32) {
+         if (prog->getType() != Program::TYPE_COMPUTE)
+            handleFTZ(i);
+         continue;
+      }
       switch (i->op) {
       case OP_DIV:
       case OP_MOD:
-         if (i->sType != TYPE_F32)
-            handleDIV(i);
+         handleDIV(i);
          break;
       case OP_RCP:
       case OP_RSQ:
          if (i->dType == TYPE_F64)
             handleRCPRSQ(i);
-         break;
-      case OP_TXL:
-      case OP_TXF:
-         handleTEXLOD(i->asTex());
-         break;
-      case OP_SHR:
-      case OP_SHL:
-         if (typeSizeof(i->sType) == 8)
-            handleShift(i);
-         break;
-      case OP_SET:
-      case OP_SET_AND:
-      case OP_SET_OR:
-      case OP_SET_XOR:
-         if (typeSizeof(i->sType) == 8 && i->sType != TYPE_F64)
-            handleSET(i->asCmp());
          break;
       default:
          break;
@@ -311,8 +154,7 @@ NVC0LegalizePostRA::NVC0LegalizePostRA(const Program *prog)
    : rZero(NULL),
      carry(NULL),
      pOne(NULL),
-     needTexBar(prog->getTarget()->getChipset() >= 0xe0 &&
-                prog->getTarget()->getChipset() < 0x110)
+     needTexBar(prog->getTarget()->getChipset() >= 0xe0)
 {
 }
 
@@ -642,8 +484,6 @@ NVC0LegalizePostRA::replaceZero(Instruction *i)
    for (int s = 0; i->srcExists(s); ++s) {
       if (s == 2 && i->op == OP_SUCLAMP)
          continue;
-      if (s == 1 && i->op == OP_SHLADD)
-         continue;
       ImmediateValue *imm = i->getSrc(s)->asImm();
       if (imm) {
          if (i->op == OP_SELP && s == 2) {
@@ -735,7 +575,7 @@ NVC0LegalizePostRA::visit(BasicBlock *bb)
       } else {
          // TODO: Move this to before register allocation for operations that
          // need the $c register !
-         if (typeSizeof(i->sType) == 8 || typeSizeof(i->dType) == 8) {
+         if (typeSizeof(i->dType) == 8) {
             Instruction *hi;
             hi = BuildUtil::split64BitOpPostRA(func, i, rZero, carry);
             if (hi)
@@ -758,6 +598,7 @@ NVC0LegalizePostRA::visit(BasicBlock *bb)
 NVC0LoweringPass::NVC0LoweringPass(Program *prog) : targ(prog->getTarget())
 {
    bld.setProgram(prog);
+   gMemBase = NULL;
 }
 
 bool
@@ -872,10 +713,7 @@ NVC0LoweringPass::handleTEX(TexInstruction *i)
          i->setIndirectR(hnd);
          i->setIndirectS(NULL);
       } else if (i->tex.r == i->tex.s || i->op == OP_TXF) {
-         if (i->tex.r == 0xffff)
-            i->tex.r = prog->driver->io.fbtexBindBase / 4;
-         else
-            i->tex.r += prog->driver->io.texBindBase / 4;
+         i->tex.r += prog->driver->io.texBindBase / 4;
          i->tex.s  = 0; // only a single cX[] value possible here
       } else {
          Value *hnd = bld.getScratch();
@@ -930,11 +768,6 @@ NVC0LoweringPass::handleTEX(TexInstruction *i)
 
       Value *ticRel = i->getIndirectR();
       Value *tscRel = i->getIndirectS();
-
-      if (i->tex.r == 0xffff) {
-         i->tex.r = 0x20;
-         i->tex.s = 0x10;
-      }
 
       if (ticRel) {
          i->setSrc(i->tex.rIndirectSrc, NULL);
@@ -2132,14 +1965,23 @@ NVC0LoweringPass::handleSurfaceOpNVE4(TexInstruction *su)
       convertSurfaceFormat(su);
 
    if (su->op == OP_SUREDB || su->op == OP_SUREDP) {
-      assert(su->getPredicate());
-      Value *pred =
-         bld.mkOp2v(OP_OR, TYPE_U8, bld.getScratch(1, FILE_PREDICATE),
-                    su->getPredicate(), su->getSrc(2));
-
+      Value *pred = su->getSrc(2);
+      CondCode cc = CC_NOT_P;
+      if (su->getPredicate()) {
+         pred = bld.getScratch(1, FILE_PREDICATE);
+         cc = su->cc;
+         if (cc == CC_NOT_P) {
+            bld.mkOp2(OP_OR, TYPE_U8, pred, su->getPredicate(), su->getSrc(2));
+         } else {
+            bld.mkOp2(OP_AND, TYPE_U8, pred, su->getPredicate(), su->getSrc(2));
+            pred->getInsn()->src(1).mod = Modifier(NV50_IR_MOD_NOT);
+         }
+      }
       Instruction *red = bld.mkOp(OP_ATOM, su->dType, bld.getSSA());
       red->subOp = su->subOp;
-      red->setSrc(0, bld.mkSymbol(FILE_MEMORY_GLOBAL, 0, TYPE_U32, 0));
+      if (!gMemBase)
+         gMemBase = bld.mkSymbol(FILE_MEMORY_GLOBAL, 0, TYPE_U32, 0);
+      red->setSrc(0, gMemBase);
       red->setSrc(1, su->getSrc(3));
       if (su->subOp == NV50_IR_SUBOP_ATOM_CAS)
          red->setSrc(2, su->getSrc(4));
@@ -2149,8 +1991,8 @@ NVC0LoweringPass::handleSurfaceOpNVE4(TexInstruction *su)
       // performed
       Instruction *mov = bld.mkMov(bld.getSSA(), bld.loadImm(NULL, 0));
 
-      assert(su->cc == CC_NOT_P);
-      red->setPredicate(su->cc, pred);
+      assert(cc == CC_NOT_P);
+      red->setPredicate(cc, pred);
       mov->setPredicate(CC_P, pred);
 
       bld.mkOp2(OP_UNION, TYPE_U32, su->getDef(0),
@@ -2637,13 +2479,9 @@ NVC0LoweringPass::handleRDSV(Instruction *i)
    default:
       if (prog->getType() == Program::TYPE_TESSELLATION_EVAL && !i->perPatch)
          vtx = bld.mkOp1v(OP_PFETCH, TYPE_U32, bld.getSSA(), bld.mkImm(0));
-      if (prog->getType() == Program::TYPE_FRAGMENT) {
-         bld.mkInterp(NV50_IR_INTERP_FLAT, i->getDef(0), addr, NULL);
-      } else {
-         ld = bld.mkFetch(i->getDef(0), i->dType,
-                          FILE_SHADER_INPUT, addr, i->getIndirect(0, 0), vtx);
-         ld->perPatch = i->perPatch;
-      }
+      ld = bld.mkFetch(i->getDef(0), i->dType,
+                       FILE_SHADER_INPUT, addr, i->getIndirect(0, 0), vtx);
+      ld->perPatch = i->perPatch;
       break;
    }
    bld.getBB()->remove(i);

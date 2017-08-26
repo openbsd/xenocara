@@ -28,7 +28,6 @@
 #include "brw_context.h"
 #include "brw_state.h"
 #include "brw_defines.h"
-#include "compiler/brw_eu_defines.h"
 #include "brw_util.h"
 #include "brw_wm.h"
 #include "program/program.h"
@@ -43,13 +42,15 @@ gen6_upload_wm_push_constants(struct brw_context *brw)
 {
    struct brw_stage_state *stage_state = &brw->wm.base;
    /* BRW_NEW_FRAGMENT_PROGRAM */
-   const struct brw_program *fp = brw_program_const(brw->fragment_program);
+   const struct brw_fragment_program *fp =
+      brw_fragment_program_const(brw->fragment_program);
    /* BRW_NEW_FS_PROG_DATA */
    const struct brw_stage_prog_data *prog_data = brw->wm.base.prog_data;
 
    _mesa_shader_write_subroutine_indices(&brw->ctx, MESA_SHADER_FRAGMENT);
 
-   gen6_upload_push_constants(brw, &fp->program, prog_data, stage_state);
+   gen6_upload_push_constants(brw, &fp->program.Base, prog_data,
+                              stage_state, AUB_TRACE_WM_CONSTANTS);
 
    if (brw->gen >= 7) {
       gen7_upload_constant_state(brw, &brw->wm.base, true,
@@ -251,10 +252,9 @@ upload_wm_state(struct brw_context *brw)
                                       (ctx->Color.BlendEnabled & 1) &&
                                       ctx->Color.Blend[0]._UsesDualSrc;
 
-   /* _NEW_COLOR, _NEW_MULTISAMPLE _NEW_BUFFERS */
-   const bool kill_enable = prog_data->uses_kill ||
-                            _mesa_is_alpha_test_enabled(ctx) ||
-                            _mesa_is_alpha_to_coverage_enabled(ctx) ||
+   /* _NEW_COLOR, _NEW_MULTISAMPLE */
+   const bool kill_enable = prog_data->uses_kill || ctx->Color.AlphaEnabled ||
+                            ctx->Multisample.SampleAlphaToCoverage ||
                             prog_data->uses_omask;
 
    /* Rendering against the gl-context is always taken into account. */

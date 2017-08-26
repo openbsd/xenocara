@@ -38,12 +38,12 @@
 #include "intel_mipmap_tree.h"
 
 static GLenum
-intel_buffer_purgeable(struct brw_bo *buffer)
+intel_buffer_purgeable(drm_intel_bo *buffer)
 {
    int retained = 0;
 
    if (buffer != NULL)
-      retained = brw_bo_madvise(buffer, I915_MADV_DONTNEED);
+      retained = drm_intel_bo_madvise(buffer, I915_MADV_DONTNEED);
 
    return retained ? GL_VOLATILE_APPLE : GL_RELEASED_APPLE;
 }
@@ -100,16 +100,16 @@ intel_render_object_purgeable(struct gl_context * ctx,
    return intel_buffer_purgeable(intel->mt->bo);
 }
 
-static int
-intel_bo_unpurgeable(struct brw_bo *buffer)
+static GLenum
+intel_buffer_unpurgeable(drm_intel_bo *buffer)
 {
    int retained;
 
    retained = 0;
    if (buffer != NULL)
-      retained = brw_bo_madvise(buffer, I915_MADV_WILLNEED);
+      retained = drm_intel_bo_madvise(buffer, I915_MADV_WILLNEED);
 
-   return retained;
+   return retained ? GL_RETAINED_APPLE : GL_UNDEFINED_APPLE;
 }
 
 static GLenum
@@ -117,20 +117,10 @@ intel_buffer_object_unpurgeable(struct gl_context * ctx,
                                 struct gl_buffer_object *obj,
                                 GLenum option)
 {
-   struct intel_buffer_object *intel = intel_buffer_object(obj);
-
    (void) ctx;
+   (void) option;
 
-   if (!intel->buffer)
-      return GL_UNDEFINED_APPLE;
-
-   if (option == GL_UNDEFINED_APPLE || !intel_bo_unpurgeable(intel->buffer)) {
-      brw_bo_unreference(intel->buffer);
-      intel->buffer = NULL;
-      return GL_UNDEFINED_APPLE;
-   }
-
-   return GL_RETAINED_APPLE;
+   return intel_buffer_unpurgeable(intel_buffer_object(obj)->buffer);
 }
 
 static GLenum
@@ -141,17 +131,13 @@ intel_texture_object_unpurgeable(struct gl_context * ctx,
    struct intel_texture_object *intel;
 
    (void) ctx;
+   (void) option;
 
    intel = intel_texture_object(obj);
    if (intel->mt == NULL || intel->mt->bo == NULL)
       return GL_UNDEFINED_APPLE;
 
-   if (option == GL_UNDEFINED_APPLE || !intel_bo_unpurgeable(intel->mt->bo)) {
-      intel_miptree_release(&intel->mt);
-      return GL_UNDEFINED_APPLE;
-   }
-
-   return GL_RETAINED_APPLE;
+   return intel_buffer_unpurgeable(intel->mt->bo);
 }
 
 static GLenum
@@ -162,17 +148,13 @@ intel_render_object_unpurgeable(struct gl_context * ctx,
    struct intel_renderbuffer *intel;
 
    (void) ctx;
+   (void) option;
 
    intel = intel_renderbuffer(obj);
    if (intel->mt == NULL)
       return GL_UNDEFINED_APPLE;
 
-   if (option == GL_UNDEFINED_APPLE || !intel_bo_unpurgeable(intel->mt->bo)) {
-      intel_miptree_release(&intel->mt);
-      return GL_UNDEFINED_APPLE;
-   }
-
-   return GL_RETAINED_APPLE;
+   return intel_buffer_unpurgeable(intel->mt->bo);
 }
 
 void

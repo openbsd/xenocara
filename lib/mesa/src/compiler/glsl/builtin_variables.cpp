@@ -30,7 +30,6 @@
 #include "main/uniforms.h"
 #include "program/prog_statevars.h"
 #include "program/prog_instruction.h"
-#include "builtin_functions.h"
 
 using namespace ir_builder;
 
@@ -353,7 +352,6 @@ per_vertex_accumulator::construct_interface_instance() const
 {
    return glsl_type::get_interface_instance(this->fields, this->num_fields,
                                             GLSL_INTERFACE_PACKING_STD140,
-                                            false,
                                             "gl_PerVertex");
 }
 
@@ -365,7 +363,6 @@ public:
                               struct _mesa_glsl_parse_state *state);
    void generate_constants();
    void generate_uniforms();
-   void generate_special_vars();
    void generate_vs_special_vars();
    void generate_tcs_special_vars();
    void generate_tes_special_vars();
@@ -429,7 +426,6 @@ private:
    const glsl_type * const bool_t;
    const glsl_type * const int_t;
    const glsl_type * const uint_t;
-   const glsl_type * const uint64_t;
    const glsl_type * const float_t;
    const glsl_type * const vec2_t;
    const glsl_type * const vec3_t;
@@ -446,10 +442,9 @@ private:
 builtin_variable_generator::builtin_variable_generator(
    exec_list *instructions, struct _mesa_glsl_parse_state *state)
    : instructions(instructions), state(state), symtab(state->symbols),
-     compatibility(state->compat_shader || !state->is_version(140, 100)),
+     compatibility(!state->is_version(140, 100)),
      bool_t(glsl_type::bool_type), int_t(glsl_type::int_type),
      uint_t(glsl_type::uint_type),
-     uint64_t(glsl_type::uint64_t_type),
      float_t(glsl_type::float_type), vec2_t(glsl_type::vec2_type),
      vec3_t(glsl_type::vec3_type), vec4_t(glsl_type::vec4_type),
      uvec3_t(glsl_type::uvec3_type),
@@ -631,16 +626,8 @@ builtin_variable_generator::generate_constants()
    add_const("gl_MaxDrawBuffers", state->Const.MaxDrawBuffers);
 
    /* Max uniforms/varyings: GLSL ES counts these in units of vectors; desktop
-    * GL counts them in units of "components" or "floats" and also in units
-    * of vectors since GL 4.1
+    * GL counts them in units of "components" or "floats".
     */
-   if (!state->es_shader) {
-      add_const("gl_MaxFragmentUniformComponents",
-                state->Const.MaxFragmentUniformComponents);
-      add_const("gl_MaxVertexUniformComponents",
-                state->Const.MaxVertexUniformComponents);
-   }
-
    if (state->is_version(410, 100)) {
       add_const("gl_MaxVertexUniformVectors",
                 state->Const.MaxVertexUniformComponents / 4);
@@ -668,10 +655,16 @@ builtin_variable_generator::generate_constants()
                    state->Const.MaxDualSourceDrawBuffers);
       }
    } else {
+      add_const("gl_MaxVertexUniformComponents",
+                state->Const.MaxVertexUniformComponents);
+
       /* Note: gl_MaxVaryingFloats was deprecated in GLSL 1.30+, but not
        * removed
        */
       add_const("gl_MaxVaryingFloats", state->ctx->Const.MaxVarying * 4);
+
+      add_const("gl_MaxFragmentUniformComponents",
+                state->Const.MaxFragmentUniformComponents);
    }
 
    /* Texel offsets were introduced in ARB_shading_language_420pack (which
@@ -845,7 +838,8 @@ builtin_variable_generator::generate_constants()
                 state->Const.MaxTransformFeedbackInterleavedComponents);
    }
 
-   if (state->has_shader_image_load_store()) {
+   if (state->is_version(420, 310) ||
+       state->ARB_shader_image_load_store_enable) {
       add_const("gl_MaxImageUnits",
                 state->Const.MaxImageUnits);
       add_const("gl_MaxVertexImageUniforms",
@@ -989,24 +983,6 @@ builtin_variable_generator::generate_uniforms()
 
 
 /**
- * Generate special variables which exist in all shaders.
- */
-void
-builtin_variable_generator::generate_special_vars()
-{
-   if (state->ARB_shader_ballot_enable) {
-      add_system_value(SYSTEM_VALUE_SUBGROUP_SIZE, uint_t, "gl_SubGroupSizeARB");
-      add_system_value(SYSTEM_VALUE_SUBGROUP_INVOCATION, uint_t, "gl_SubGroupInvocationARB");
-      add_system_value(SYSTEM_VALUE_SUBGROUP_EQ_MASK, uint64_t, "gl_SubGroupEqMaskARB");
-      add_system_value(SYSTEM_VALUE_SUBGROUP_GE_MASK, uint64_t, "gl_SubGroupGeMaskARB");
-      add_system_value(SYSTEM_VALUE_SUBGROUP_GT_MASK, uint64_t, "gl_SubGroupGtMaskARB");
-      add_system_value(SYSTEM_VALUE_SUBGROUP_LE_MASK, uint64_t, "gl_SubGroupLeMaskARB");
-      add_system_value(SYSTEM_VALUE_SUBGROUP_LT_MASK, uint64_t, "gl_SubGroupLtMaskARB");
-   }
-}
-
-
-/**
  * Generate variables which only exist in vertex shaders.
  */
 void
@@ -1098,17 +1074,10 @@ builtin_variable_generator::generate_tes_special_vars()
    add_system_value(SYSTEM_VALUE_PRIMITIVE_ID, int_t, "gl_PrimitiveID");
    add_system_value(SYSTEM_VALUE_VERTICES_IN, int_t, "gl_PatchVerticesIn");
    add_system_value(SYSTEM_VALUE_TESS_COORD, vec3_t, "gl_TessCoord");
-   if (this->state->ctx->Const.GLSLTessLevelsAsInputs) {
-      add_input(VARYING_SLOT_TESS_LEVEL_OUTER, array(float_t, 4),
-                "gl_TessLevelOuter")->data.patch = 1;
-      add_input(VARYING_SLOT_TESS_LEVEL_INNER, array(float_t, 2),
-                "gl_TessLevelInner")->data.patch = 1;
-   } else {
-      add_system_value(SYSTEM_VALUE_TESS_LEVEL_OUTER, array(float_t, 4),
-                       "gl_TessLevelOuter");
-      add_system_value(SYSTEM_VALUE_TESS_LEVEL_INNER, array(float_t, 2),
-                       "gl_TessLevelInner");
-   }
+   add_system_value(SYSTEM_VALUE_TESS_LEVEL_OUTER, array(float_t, 4),
+                    "gl_TessLevelOuter");
+   add_system_value(SYSTEM_VALUE_TESS_LEVEL_INNER, array(float_t, 2),
+                    "gl_TessLevelInner");
    if (state->ARB_shader_viewport_layer_array_enable) {
       var = add_output(VARYING_SLOT_LAYER, int_t, "gl_Layer");
       var->data.interpolation = INTERP_MODE_FLAT;
@@ -1214,9 +1183,6 @@ builtin_variable_generator::generate_fs_special_vars()
     */
    if (state->is_version(110, 300))
       add_output(FRAG_RESULT_DEPTH, float_t, "gl_FragDepth");
-
-   if (state->EXT_frag_depth_enable)
-      add_output(FRAG_RESULT_DEPTH, float_t, "gl_FragDepthEXT");
 
    if (state->ARB_shader_stencil_export_enable) {
       ir_variable *const var =
@@ -1439,7 +1405,6 @@ _mesa_glsl_initialize_variables(exec_list *instructions,
 
    gen.generate_constants();
    gen.generate_uniforms();
-   gen.generate_special_vars();
 
    gen.generate_varyings();
 

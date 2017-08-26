@@ -369,8 +369,6 @@ void r600_begin_new_cs(struct r600_context *ctx)
 	/* Re-emit the draw state. */
 	ctx->last_primitive_type = -1;
 	ctx->last_start_instance = -1;
-	ctx->last_rast_prim      = -1;
-	ctx->current_rast_prim   = -1;
 
 	assert(!ctx->b.gfx.cs->prev_dw);
 	ctx->b.initial_gfx_cs_size = ctx->b.gfx.cs->current.cdw;
@@ -557,4 +555,5 @@ void r600_dma_copy_buffer(struct r600_context *rctx,
 		src_offset += csize << 2;
 		size -= csize;
 	}
+	r600_dma_emit_wait_idle(&rctx->b);
 }

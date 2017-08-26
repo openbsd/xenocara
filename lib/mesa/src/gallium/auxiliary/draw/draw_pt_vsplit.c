@@ -33,7 +33,7 @@
 #define SEGMENT_SIZE 1024
 #define MAP_SIZE     256
 
-/* The largest possible index within an index buffer */
+/* The largest possible index withing an index buffer */
 #define MAX_ELT_IDX 0xffffffff
 
 struct vsplit_frontend {
@@ -85,7 +85,7 @@ vsplit_flush_cache(struct vsplit_frontend *vsplit, unsigned flags)
  * Add a fetch element and add it to the draw elements.
  */
 static inline void
-vsplit_add_cache(struct vsplit_frontend *vsplit, unsigned fetch)
+vsplit_add_cache(struct vsplit_frontend *vsplit, unsigned fetch, unsigned ofbias)
 {
    unsigned hash;
 
@@ -93,7 +93,7 @@ vsplit_add_cache(struct vsplit_frontend *vsplit, unsigned fetch)
 
    /* If the value isn't in the cache or it's an overflow due to the
     * element bias */
-   if (vsplit->cache.fetches[hash] != fetch) {
+   if (vsplit->cache.fetches[hash] != fetch || ofbias) {
       /* update cache */
       vsplit->cache.fetches[hash] = fetch;
       vsplit->cache.draws[hash] = vsplit->cache.num_fetch_elts;
@@ -108,22 +108,67 @@ vsplit_add_cache(struct vsplit_frontend *vsplit, unsigned fetch)
 
 /**
  * Returns the base index to the elements array.
- * The value is checked for integer overflow (not sure it can happen?).
+ * The value is checked for overflows (both integer overflows
+ * and the elements array overflow).
  */
 static inline unsigned
-vsplit_get_base_idx(unsigned start, unsigned fetch)
+vsplit_get_base_idx(struct vsplit_frontend *vsplit,
+                    unsigned start, unsigned fetch, unsigned *ofbit)
 {
-   return draw_overflow_uadd(start, fetch, MAX_ELT_IDX);
+   struct draw_context *draw = vsplit->draw;
+   unsigned elt_idx = draw_overflow_uadd(start, fetch, MAX_ELT_IDX);
+   if (ofbit)
+      *ofbit = 0;
+
+   /* Overflown indices need to wrap to the first element
+    * in the index buffer */
+   if (elt_idx >= draw->pt.user.eltMax) {
+      if (ofbit)
+         *ofbit = 1;
+      elt_idx = 0;
+   }
+
+   return elt_idx;
 }
 
-/*
- * The final element index is just element index plus element bias.
+/**
+ * Returns the element index adjust for the element bias.
+ * The final element index is created from the actual element
+ * index, plus the element bias, clamped to maximum elememt
+ * index if that addition overflows.
  */
+static inline unsigned
+vsplit_get_bias_idx(struct vsplit_frontend *vsplit,
+                    int idx, int bias, unsigned *ofbias)
+{
+   int res = idx + bias;
+
+   if (ofbias)
+      *ofbias = 0;
+
+   if (idx > 0 && bias > 0) {
+      if (res < idx || res < bias) {
+         res = DRAW_MAX_FETCH_IDX;
+         if (ofbias)
+            *ofbias = 1;
+      }
+   } else if (idx < 0 && bias < 0) {
+      if (res > idx || res > bias) {
+         res = DRAW_MAX_FETCH_IDX;
+         if (ofbias)
+            *ofbias = 1;
+      }
+   }
+
+   return res;
+}
+
 #define VSPLIT_CREATE_IDX(elts, start, fetch, elt_bias)    \
    unsigned elt_idx;                                       \
-   elt_idx = vsplit_get_base_idx(start, fetch);            \
-   elt_idx = (unsigned)((int)(DRAW_GET_IDX(elts, elt_idx)) + (int)elt_bias);
-
+   unsigned ofbit;                                         \
+   unsigned ofbias;                                        \
+   elt_idx = vsplit_get_base_idx(vsplit, start, fetch, &ofbit);          \
+   elt_idx = vsplit_get_bias_idx(vsplit, ofbit ? 0 : DRAW_GET_IDX(elts, elt_idx), elt_bias, &ofbias)
 
 static inline void
 vsplit_add_cache_ubyte(struct vsplit_frontend *vsplit, const ubyte *elts,
@@ -131,13 +176,7 @@ vsplit_add_cache_ubyte(struct vsplit_frontend *vsplit, const ubyte *elts,
 {
    struct draw_context *draw = vsplit->draw;
    VSPLIT_CREATE_IDX(elts, start, fetch, elt_bias);
-   /* unlike the uint case this can only happen with elt_bias */
-   if (elt_bias && elt_idx == DRAW_MAX_FETCH_IDX && !vsplit->cache.has_max_fetch) {
-      unsigned hash = fetch % MAP_SIZE;
-      vsplit->cache.fetches[hash] = 0;
-      vsplit->cache.has_max_fetch = TRUE;
-   }
-   vsplit_add_cache(vsplit, elt_idx);
+   vsplit_add_cache(vsplit, elt_idx, ofbias);
 }
 
 static inline void
@@ -146,13 +185,7 @@ vsplit_add_cache_ushort(struct vsplit_frontend *vsplit, const ushort *elts,
 {
    struct draw_context *draw = vsplit->draw;
    VSPLIT_CREATE_IDX(elts, start, fetch, elt_bias);
-   /* unlike the uint case this can only happen with elt_bias */
-   if (elt_bias && elt_idx == DRAW_MAX_FETCH_IDX && !vsplit->cache.has_max_fetch) {
-      unsigned hash = fetch % MAP_SIZE;
-      vsplit->cache.fetches[hash] = 0;
-      vsplit->cache.has_max_fetch = TRUE;
-   }
-   vsplit_add_cache(vsplit, elt_idx);
+   vsplit_add_cache(vsplit, elt_idx, ofbias);
 }
 
 
@@ -165,15 +198,17 @@ vsplit_add_cache_uint(struct vsplit_frontend *vsplit, const uint *elts,
                       unsigned start, unsigned fetch, int elt_bias)
 {
    struct draw_context *draw = vsplit->draw;
+   unsigned raw_elem_idx = start + fetch + elt_bias;
    VSPLIT_CREATE_IDX(elts, start, fetch, elt_bias);
-   /* Take care for DRAW_MAX_FETCH_IDX (since cache is initialized to -1). */
-   if (elt_idx == DRAW_MAX_FETCH_IDX && !vsplit->cache.has_max_fetch) {
+
+   /* special care for DRAW_MAX_FETCH_IDX */
+   if (raw_elem_idx == DRAW_MAX_FETCH_IDX && !vsplit->cache.has_max_fetch) {
       unsigned hash = fetch % MAP_SIZE;
-      /* force update - any value will do except DRAW_MAX_FETCH_IDX */
-      vsplit->cache.fetches[hash] = 0;
+      vsplit->cache.fetches[hash] = raw_elem_idx - 1; /* force update */
       vsplit->cache.has_max_fetch = TRUE;
    }
-   vsplit_add_cache(vsplit, elt_idx);
+
+   vsplit_add_cache(vsplit, elt_idx, ofbias);
 }
 
 

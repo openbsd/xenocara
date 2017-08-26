@@ -21,6 +21,16 @@
  * IN THE SOFTWARE.
  ***************************************************************************/
 
+#include "util/u_memory.h"
+#include "util/u_inlines.h"
+#include "util/u_format.h"
+#include "util/u_atomic.h"
+
+extern "C" {
+#include "util/u_transfer.h"
+#include "util/u_surface.h"
+}
+
 #include "swr_context.h"
 #include "swr_memory.h"
 #include "swr_screen.h"
@@ -28,14 +38,6 @@
 #include "swr_scratch.h"
 #include "swr_query.h"
 #include "swr_fence.h"
-
-#include "util/u_memory.h"
-#include "util/u_inlines.h"
-#include "util/u_format.h"
-#include "util/u_atomic.h"
-#include "util/u_upload_mgr.h"
-#include "util/u_transfer.h"
-#include "util/u_surface.h"
 
 #include "api.h"
 #include "backend.h"
@@ -60,6 +62,10 @@ swr_create_surface(struct pipe_context *pipe,
          ps->u.tex.level = surf_tmpl->u.tex.level;
          ps->u.tex.first_layer = surf_tmpl->u.tex.first_layer;
          ps->u.tex.last_layer = surf_tmpl->u.tex.last_layer;
+         if (ps->u.tex.first_layer != ps->u.tex.last_layer) {
+            debug_printf("creating surface with multiple layers, rendering "
+                         "to first layer only\n");
+         }
       } else {
          /* setting width as number of elements should get us correct
           * renderbuffer width */
@@ -133,41 +139,26 @@ swr_transfer_map(struct pipe_context *pipe,
    if (!pt)
       return NULL;
    pipe_resource_reference(&pt->resource, resource);
-   pt->usage = (pipe_transfer_usage)usage;
    pt->level = level;
    pt->box = *box;
-   pt->stride = spr->swr.pitch;
-   pt->layer_stride = spr->swr.qpitch * spr->swr.pitch;
+   pt->stride = spr->row_stride[level];
+   pt->layer_stride = spr->img_stride[level];
 
-   /* if we're mapping the depth/stencil, copy in stencil for the section
-    * being read in
-    */
-   if (usage & PIPE_TRANSFER_READ && spr->has_depth && spr->has_stencil) {
-      size_t zbase, sbase;
-      for (int z = box->z; z < box->z + box->depth; z++) {
-         zbase = (z * spr->swr.qpitch + box->y) * spr->swr.pitch +
-            spr->mip_offsets[level];
-         sbase = (z * spr->secondary.qpitch + box->y) * spr->secondary.pitch +
-            spr->secondary_mip_offsets[level];
-         for (int y = box->y; y < box->y + box->height; y++) {
-            if (spr->base.format == PIPE_FORMAT_Z24_UNORM_S8_UINT) {
-               for (int x = box->x; x < box->x + box->width; x++)
-                  spr->swr.pBaseAddress[zbase + 4 * x + 3] =
-                     spr->secondary.pBaseAddress[sbase + x];
-            } else if (spr->base.format == PIPE_FORMAT_Z32_FLOAT_S8X24_UINT) {
-               for (int x = box->x; x < box->x + box->width; x++)
-                  spr->swr.pBaseAddress[zbase + 8 * x + 4] =
-                     spr->secondary.pBaseAddress[sbase + x];
-            }
-            zbase += spr->swr.pitch;
-            sbase += spr->secondary.pitch;
-         }
+   /* if we're mapping the depth/stencil, copy in stencil */
+   if (spr->base.format == PIPE_FORMAT_Z24_UNORM_S8_UINT
+       && spr->has_stencil) {
+      for (unsigned i = 0; i < spr->alignedWidth * spr->alignedHeight; i++) {
+         spr->swr.pBaseAddress[4 * i + 3] = spr->secondary.pBaseAddress[i];
+      }
+   } else if (spr->base.format == PIPE_FORMAT_Z32_FLOAT_S8X24_UINT
+              && spr->has_stencil) {
+      for (unsigned i = 0; i < spr->alignedWidth * spr->alignedHeight; i++) {
+         spr->swr.pBaseAddress[8 * i + 4] = spr->secondary.pBaseAddress[i];
       }
    }
 
-   unsigned offset = box->z * pt->layer_stride +
-      util_format_get_nblocksy(format, box->y) * pt->stride +
-      util_format_get_stride(format, box->x);
+   unsigned offset = box->z * pt->layer_stride + box->y * pt->stride
+      + box->x * util_format_get_blocksize(format);
 
    *transfer = pt;
 
@@ -175,59 +166,22 @@ swr_transfer_map(struct pipe_context *pipe,
 }
 
 static void
-swr_transfer_flush_region(struct pipe_context *pipe,
-                          struct pipe_transfer *transfer,
-                          const struct pipe_box *flush_box)
-{
-   assert(transfer->resource);
-   assert(transfer->usage & PIPE_TRANSFER_WRITE);
-
-   struct swr_resource *spr = swr_resource(transfer->resource);
-   if (!spr->has_depth || !spr->has_stencil)
-      return;
-
-   size_t zbase, sbase;
-   struct pipe_box box = *flush_box;
-   box.x += transfer->box.x;
-   box.y += transfer->box.y;
-   box.z += transfer->box.z;
-   for (int z = box.z; z < box.z + box.depth; z++) {
-      zbase = (z * spr->swr.qpitch + box.y) * spr->swr.pitch +
-         spr->mip_offsets[transfer->level];
-      sbase = (z * spr->secondary.qpitch + box.y) * spr->secondary.pitch +
-         spr->secondary_mip_offsets[transfer->level];
-      for (int y = box.y; y < box.y + box.height; y++) {
-         if (spr->base.format == PIPE_FORMAT_Z24_UNORM_S8_UINT) {
-            for (int x = box.x; x < box.x + box.width; x++)
-               spr->secondary.pBaseAddress[sbase + x] =
-                  spr->swr.pBaseAddress[zbase + 4 * x + 3];
-         } else if (spr->base.format == PIPE_FORMAT_Z32_FLOAT_S8X24_UINT) {
-            for (int x = box.x; x < box.x + box.width; x++)
-               spr->secondary.pBaseAddress[sbase + x] =
-                  spr->swr.pBaseAddress[zbase + 8 * x + 4];
-         }
-         zbase += spr->swr.pitch;
-         sbase += spr->secondary.pitch;
-      }
-   }
-}
-
-static void
 swr_transfer_unmap(struct pipe_context *pipe, struct pipe_transfer *transfer)
 {
    assert(transfer->resource);
 
-   struct swr_resource *spr = swr_resource(transfer->resource);
-   /* if we're mapping the depth/stencil, copy in stencil for the section
-    * being written out
-    */
-   if (transfer->usage & PIPE_TRANSFER_WRITE &&
-       !(transfer->usage & PIPE_TRANSFER_FLUSH_EXPLICIT) &&
-       spr->has_depth && spr->has_stencil) {
-      struct pipe_box box;
-      u_box_3d(0, 0, 0, transfer->box.width, transfer->box.height,
-               transfer->box.depth, &box);
-      swr_transfer_flush_region(pipe, transfer, &box);
+   struct swr_resource *res = swr_resource(transfer->resource);
+   /* if we're mapping the depth/stencil, copy out stencil */
+   if (res->base.format == PIPE_FORMAT_Z24_UNORM_S8_UINT
+       && res->has_stencil) {
+      for (unsigned i = 0; i < res->alignedWidth * res->alignedHeight; i++) {
+         res->secondary.pBaseAddress[i] = res->swr.pBaseAddress[4 * i + 3];
+      }
+   } else if (res->base.format == PIPE_FORMAT_Z32_FLOAT_S8X24_UINT
+              && res->has_stencil) {
+      for (unsigned i = 0; i < res->alignedWidth * res->alignedHeight; i++) {
+         res->secondary.pBaseAddress[i] = res->swr.pBaseAddress[8 * i + 4];
+      }
    }
 
    pipe_resource_reference(&transfer->resource, NULL);
@@ -271,27 +225,16 @@ static void
 swr_blit(struct pipe_context *pipe, const struct pipe_blit_info *blit_info)
 {
    struct swr_context *ctx = swr_context(pipe);
-   /* Make a copy of the const blit_info, so we can modify it */
    struct pipe_blit_info info = *blit_info;
 
-   if (info.render_condition_enable && !swr_check_render_cond(pipe))
+   if (blit_info->render_condition_enable && !swr_check_render_cond(pipe))
       return;
 
    if (info.src.resource->nr_samples > 1 && info.dst.resource->nr_samples <= 1
        && !util_format_is_depth_or_stencil(info.src.resource->format)
        && !util_format_is_pure_integer(info.src.resource->format)) {
-      debug_printf("swr_blit: color resolve : %d -> %d\n",
-            info.src.resource->nr_samples, info.dst.resource->nr_samples);
-
-      /* Resolve is done as part of the surface store. */
-      swr_store_dirty_resource(pipe, info.src.resource, SWR_TILE_RESOLVED);
-
-      struct pipe_resource *src_resource = info.src.resource;
-      struct pipe_resource *resolve_target =
-         swr_resource(src_resource)->resolve_target;
-
-      /* The resolve target becomes the new source for the blit. */
-      info.src.resource = resolve_target;
+      debug_printf("swr: color resolve unimplemented\n");
+      return;
    }
 
    if (util_try_blit_via_copy_region(pipe, &info)) {
@@ -310,15 +253,12 @@ swr_blit(struct pipe_context *pipe, const struct pipe_blit_info *blit_info)
       return;
    }
 
-   if (ctx->active_queries) {
-      SwrEnableStatsFE(ctx->swrContext, FALSE);
-      SwrEnableStatsBE(ctx->swrContext, FALSE);
-   }
+   /* XXX turn off occlusion and streamout queries */
 
    util_blitter_save_vertex_buffer_slot(ctx->blitter, ctx->vertex_buffer);
    util_blitter_save_vertex_elements(ctx->blitter, (void *)ctx->velems);
    util_blitter_save_vertex_shader(ctx->blitter, (void *)ctx->vs);
-   util_blitter_save_geometry_shader(ctx->blitter, (void*)ctx->gs);
+   /*util_blitter_save_geometry_shader(ctx->blitter, (void*)ctx->gs);*/
    util_blitter_save_so_targets(
       ctx->blitter,
       ctx->num_so_targets,
@@ -347,11 +287,6 @@ swr_blit(struct pipe_context *pipe, const struct pipe_blit_info *blit_info)
                                       ctx->render_cond_mode);
 
    util_blitter_blit(ctx->blitter, &info);
-
-   if (ctx->active_queries) {
-      SwrEnableStatsFE(ctx->swrContext, TRUE);
-      SwrEnableStatsBE(ctx->swrContext, TRUE);
-   }
 }
 
 
@@ -363,6 +298,9 @@ swr_destroy(struct pipe_context *pipe)
 
    if (ctx->blitter)
       util_blitter_destroy(ctx->blitter);
+
+   /* Idle core before deleting context */
+   SwrWaitForIdle(ctx->swrContext);
 
    for (unsigned i = 0; i < PIPE_MAX_COLOR_BUFS; i++) {
       pipe_surface_reference(&ctx->framebuffer.cbufs[i], NULL);
@@ -378,13 +316,6 @@ swr_destroy(struct pipe_context *pipe)
       pipe_sampler_view_reference(&ctx->sampler_views[PIPE_SHADER_VERTEX][i], NULL);
    }
 
-   if (ctx->pipe.stream_uploader)
-      u_upload_destroy(ctx->pipe.stream_uploader);
-
-   /* Idle core after destroying buffer resources, but before deleting
-    * context.  Destroying resources has potentially called StoreTiles.*/
-   SwrWaitForIdle(ctx->swrContext);
-
    if (ctx->swrContext)
       SwrDestroyContext(ctx->swrContext);
 
@@ -397,7 +328,7 @@ swr_destroy(struct pipe_context *pipe)
    if (screen->pipe == pipe)
       screen->pipe = NULL;
 
-   AlignedFree(ctx);
+   FREE(ctx);
 }
 
 
@@ -405,7 +336,7 @@ static void
 swr_render_condition(struct pipe_context *pipe,
                      struct pipe_query *query,
                      boolean condition,
-                     enum pipe_render_cond_flag mode)
+                     uint mode)
 {
    struct swr_context *ctx = swr_context(pipe);
 
@@ -463,15 +394,13 @@ swr_UpdateStatsFE(HANDLE hPrivateContext, const SWR_STATS_FE *pStats)
 struct pipe_context *
 swr_create_context(struct pipe_screen *p_screen, void *priv, unsigned flags)
 {
-   struct swr_context *ctx = (struct swr_context *)
-      AlignedMalloc(sizeof(struct swr_context), KNOB_SIMD_BYTES);
-   memset(ctx, 0, sizeof(struct swr_context));
-
+   struct swr_context *ctx = CALLOC_STRUCT(swr_context);
    ctx->blendJIT =
       new std::unordered_map<BLEND_COMPILE_STATE, PFN_BLEND_JIT_FUNC>;
 
    SWR_CREATECONTEXT_INFO createInfo;
    memset(&createInfo, 0, sizeof(createInfo));
+   createInfo.driver = GL;
    createInfo.privateStateSize = sizeof(swr_draw_context);
    createInfo.pfnLoadTile = swr_LoadHotTile;
    createInfo.pfnStoreTile = swr_StoreHotTile;
@@ -495,12 +424,11 @@ swr_create_context(struct pipe_screen *p_screen, void *priv, unsigned flags)
    ctx->pipe.surface_destroy = swr_surface_destroy;
    ctx->pipe.transfer_map = swr_transfer_map;
    ctx->pipe.transfer_unmap = swr_transfer_unmap;
-   ctx->pipe.transfer_flush_region = swr_transfer_flush_region;
 
+   ctx->pipe.transfer_flush_region = u_default_transfer_flush_region;
    ctx->pipe.buffer_subdata = u_default_buffer_subdata;
    ctx->pipe.texture_subdata = u_default_texture_subdata;
 
-   ctx->pipe.clear_texture = util_clear_texture;
    ctx->pipe.resource_copy_region = swr_resource_copy;
    ctx->pipe.render_condition = swr_render_condition;
 
@@ -508,11 +436,6 @@ swr_create_context(struct pipe_screen *p_screen, void *priv, unsigned flags)
    swr_clear_init(&ctx->pipe);
    swr_draw_init(&ctx->pipe);
    swr_query_init(&ctx->pipe);
-
-   ctx->pipe.stream_uploader = u_upload_create_default(&ctx->pipe);
-   if (!ctx->pipe.stream_uploader)
-      goto fail;
-   ctx->pipe.const_uploader = ctx->pipe.stream_uploader;
 
    ctx->pipe.blit = swr_blit;
    ctx->blitter = util_blitter_create(&ctx->pipe);

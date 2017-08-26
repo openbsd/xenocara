@@ -26,7 +26,6 @@
 
 #include <stdio.h>
 #include <errno.h>
-#include "ac_binary.h"
 #include "pipe/p_defines.h"
 #include "pipe/p_state.h"
 #include "pipe/p_context.h"
@@ -47,6 +46,7 @@
 #include "evergreen_compute_internal.h"
 #include "compute_memory_pool.h"
 #include "sb/sb_public.h"
+#include "radeon/radeon_elf_util.h"
 #include <inttypes.h>
 
 /**
@@ -87,7 +87,9 @@ struct r600_resource *r600_compute_buffer_alloc_vram(struct r600_screen *screen,
 	assert(size);
 
 	buffer = pipe_buffer_create((struct pipe_screen*) screen,
-				    0, PIPE_USAGE_IMMUTABLE, size);
+				    PIPE_BIND_CUSTOM,
+				    PIPE_USAGE_IMMUTABLE,
+				    size);
 
 	return (struct r600_resource *)buffer;
 }
@@ -180,14 +182,14 @@ static void evergreen_cs_set_constant_buffer(struct r600_context *rctx,
 
 #ifdef HAVE_OPENCL
 
-static void r600_shader_binary_read_config(const struct ac_shader_binary *binary,
+static void r600_shader_binary_read_config(const struct radeon_shader_binary *binary,
 					   struct r600_bytecode *bc,
 					   uint64_t symbol_offset,
 					   boolean *use_kill)
 {
        unsigned i;
        const unsigned char *config =
-               ac_shader_binary_config_start(binary, symbol_offset);
+               radeon_shader_binary_config_start(binary, symbol_offset);
 
        for (i = 0; i < binary->config_size_per_symbol; i+= 8) {
                unsigned reg =
@@ -216,7 +218,7 @@ static void r600_shader_binary_read_config(const struct ac_shader_binary *binary
 }
 
 static unsigned r600_create_shader(struct r600_bytecode *bc,
-				   const struct ac_shader_binary *binary,
+				   const struct radeon_shader_binary *binary,
 				   boolean *use_kill)
 
 {
@@ -251,7 +253,7 @@ static void *evergreen_create_compute_state(struct pipe_context *ctx,
 	header = cso->prog;
 	code = cso->prog + sizeof(struct pipe_llvm_program_header);
 	radeon_shader_binary_init(&shader->binary);
-	ac_elf_read(code, header->num_bytes, &shader->binary);
+	radeon_elf_read(code, header->num_bytes, &shader->binary);
 	r600_create_shader(&shader->bc, &shader->binary, &use_kill);
 
 	/* Upload code + ROdata */
@@ -333,7 +335,7 @@ static void evergreen_compute_upload_input(struct pipe_context *ctx,
 	if (!shader->kernel_param) {
 		/* Add space for the grid dimensions */
 		shader->kernel_param = (struct r600_resource *)
-			pipe_buffer_create(ctx->screen, 0,
+			pipe_buffer_create(ctx->screen, PIPE_BIND_CUSTOM,
 					PIPE_USAGE_IMMUTABLE, input_size);
 	}
 

@@ -25,29 +25,24 @@
  */
 
 /**
-****************************************************************************************************
+***************************************************************************************************
 * @file  siaddrlib.h
-* @brief Contains the R800Lib class definition.
-****************************************************************************************************
+* @brief Contains the R800AddrLib class definition.
+***************************************************************************************************
 */
 
 #ifndef __SI_ADDR_LIB_H__
 #define __SI_ADDR_LIB_H__
 
-#include "addrlib1.h"
+#include "addrlib.h"
 #include "egbaddrlib.h"
 
-namespace Addr
-{
-namespace V1
-{
-
 /**
-****************************************************************************************************
+***************************************************************************************************
 * @brief Describes the information in tile mode table
-****************************************************************************************************
+***************************************************************************************************
 */
-struct TileConfig
+struct ADDR_TILECONFIG
 {
     AddrTileMode  mode;
     AddrTileType  type;
@@ -55,9 +50,9 @@ struct TileConfig
 };
 
 /**
-****************************************************************************************************
+***************************************************************************************************
 * @brief SI specific settings structure.
-****************************************************************************************************
+***************************************************************************************************
 */
 struct SIChipSettings
 {
@@ -74,26 +69,25 @@ struct SIChipSettings
 };
 
 /**
-****************************************************************************************************
+***************************************************************************************************
 * @brief This class is the SI specific address library
 *        function set.
-****************************************************************************************************
+***************************************************************************************************
 */
-class SiLib : public EgBasedLib
+class SIAddrLib : public EgBasedAddrLib
 {
 public:
-    /// Creates SiLib object
-    static Addr::Lib* CreateObj(const Client* pClient)
+    /// Creates SIAddrLib object
+    static AddrLib* CreateObj(const AddrClient* pClient)
     {
-        VOID* pMem = Object::ClientAlloc(sizeof(SiLib), pClient);
-        return (pMem != NULL) ? new (pMem) SiLib(pClient) : NULL;
+        return new(pClient) SIAddrLib(pClient);
     }
 
 protected:
-    SiLib(const Client* pClient);
-    virtual ~SiLib();
+    SIAddrLib(const AddrClient* pClient);
+    virtual ~SIAddrLib();
 
-    // Hwl interface - defined in AddrLib1
+    // Hwl interface - defined in AddrLib
     virtual ADDR_E_RETURNCODE HwlComputeSurfaceInfo(
         const ADDR_COMPUTE_SURFACE_INFO_INPUT* pIn,
         ADDR_COMPUTE_SURFACE_INFO_OUTPUT* pOut) const;
@@ -119,14 +113,14 @@ protected:
     virtual BOOL_32 HwlComputeMipLevel(
         ADDR_COMPUTE_SURFACE_INFO_INPUT* pIn) const;
 
-    virtual ChipFamily HwlConvertChipFamily(
+    virtual AddrChipFamily HwlConvertChipFamily(
         UINT_32 uChipFamily, UINT_32 uChipRevision);
 
     virtual BOOL_32 HwlInitGlobalParams(
         const ADDR_CREATE_INPUT* pCreateIn);
 
     virtual ADDR_E_RETURNCODE HwlSetupTileCfg(
-        UINT_32 bpp, INT_32 index, INT_32 macroModeIndex,
+        INT_32 index, INT_32 macroModeIndex,
         ADDR_TILEINFO* pInfo, AddrTileMode* pMode = 0, AddrTileType* pType = 0) const;
 
     virtual VOID HwlComputeTileDataWidthAndHeightLinear(
@@ -136,14 +130,6 @@ protected:
     virtual UINT_64 HwlComputeHtileBytes(
         UINT_32 pitch, UINT_32 height, UINT_32 bpp,
         BOOL_32 isLinear, UINT_32 numSlices, UINT_64* pSliceBytes, UINT_32 baseAlign) const;
-
-    virtual ADDR_E_RETURNCODE ComputeBankEquation(
-        UINT_32 log2BytesPP, UINT_32 threshX, UINT_32 threshY,
-        ADDR_TILEINFO* pTileInfo, ADDR_EQUATION* pEquation) const;
-
-    virtual ADDR_E_RETURNCODE ComputePipeEquation(
-        UINT_32 log2BytesPP, UINT_32 threshX, UINT_32 threshY,
-        ADDR_TILEINFO* pTileInfo, ADDR_EQUATION* pEquation) const;
 
     virtual UINT_32 ComputePipeFromCoord(
         UINT_32 x, UINT_32 y, UINT_32 slice,
@@ -163,7 +149,7 @@ protected:
     virtual UINT_32 HwlComputeXmaskCoordYFrom8Pipe(
         UINT_32 pipe, UINT_32 x) const;
 
-    // Sub-hwl interface - defined in EgBasedLib
+    // Sub-hwl interface - defined in EgBasedAddrLib
     virtual VOID HwlSetupTileInfo(
         AddrTileMode tileMode, ADDR_SURFACE_FLAGS flags,
         UINT_32 bpp, UINT_32 pitch, UINT_32 height, UINT_32 numSamples,
@@ -187,14 +173,10 @@ protected:
     virtual AddrTileMode HwlDegradeThickTileMode(
         AddrTileMode baseTileMode, UINT_32 numSlices, UINT_32* pBytesPerTile) const;
 
-    virtual VOID HwlOverrideTileMode(ADDR_COMPUTE_SURFACE_INFO_INPUT* pInOut) const;
-
-    virtual VOID HwlOptimizeTileMode(ADDR_COMPUTE_SURFACE_INFO_INPUT* pInOut) const;
-
-    virtual VOID HwlSelectTileMode(ADDR_COMPUTE_SURFACE_INFO_INPUT* pInOut) const;
-
-    /// Overwrite tile setting to PRT
-    virtual VOID HwlSetPrtTileMode(ADDR_COMPUTE_SURFACE_INFO_INPUT* pInOut) const;
+    virtual BOOL_32 HwlOverrideTileMode(
+        const ADDR_COMPUTE_SURFACE_INFO_INPUT* pIn,
+        AddrTileMode* pTileMode,
+        AddrTileType* pTileType) const;
 
     virtual BOOL_32 HwlSanityCheckMacroTiled(
         ADDR_TILEINFO* pTileInfo) const
@@ -223,13 +205,13 @@ protected:
         const ADDR_TILEINFO* pInfo, AddrTileMode mode, AddrTileType type,
         INT curIndex = TileIndexInvalid) const;
 
-    virtual VOID HwlFmaskPreThunkSurfInfo(
+    virtual VOID   HwlFmaskPreThunkSurfInfo(
         const ADDR_COMPUTE_FMASK_INFO_INPUT* pFmaskIn,
         const ADDR_COMPUTE_FMASK_INFO_OUTPUT* pFmaskOut,
         ADDR_COMPUTE_SURFACE_INFO_INPUT* pSurfIn,
         ADDR_COMPUTE_SURFACE_INFO_OUTPUT* pSurfOut) const;
 
-    virtual VOID HwlFmaskPostThunkSurfInfo(
+    virtual VOID   HwlFmaskPostThunkSurfInfo(
         const ADDR_COMPUTE_SURFACE_INFO_OUTPUT* pSurfOut,
         ADDR_COMPUTE_FMASK_INFO_OUTPUT* pFmaskOut) const;
 
@@ -245,24 +227,6 @@ protected:
         return TRUE;
     }
 
-    virtual ADDR_E_RETURNCODE HwlGetMaxAlignments(ADDR_GET_MAX_ALINGMENTS_OUTPUT* pOut) const;
-
-    virtual VOID HwlComputeSurfaceAlignmentsMacroTiled(
-        AddrTileMode tileMode, UINT_32 bpp, ADDR_SURFACE_FLAGS flags,
-        UINT_32 mipLevel, UINT_32 numSamples, ADDR_COMPUTE_SURFACE_INFO_OUTPUT* pOut) const;
-
-    // Get equation table pointer and number of equations
-    virtual UINT_32 HwlGetEquationTableInfo(const ADDR_EQUATION** ppEquationTable) const
-    {
-        *ppEquationTable = m_equationTable;
-
-        return m_numEquations;
-    }
-
-    // Check if it is supported for given bpp and tile config to generate an equation
-    BOOL_32 IsEquationSupported(
-        UINT_32 bpp, TileConfig tileConfig, INT_32 tileIndex, UINT_32 elementBytesLog2) const;
-
     // Protected non-virtual functions
     VOID ComputeTileCoordFromPipeAndElemIdx(
         UINT_32 elemIdx, UINT_32 pipe, AddrPipeCfg pipeCfg, UINT_32 pitchInMacroTile,
@@ -275,53 +239,24 @@ protected:
     BOOL_32 DecodeGbRegs(
         const ADDR_REGISTER_VALUE* pRegValue);
 
-    const TileConfig* GetTileSetting(
+    const ADDR_TILECONFIG* GetTileSetting(
         UINT_32 index) const;
 
-    // Initialize equation table
-    VOID InitEquationTable();
-
-    UINT_32 GetPipePerSurf(AddrPipeCfg pipeConfig) const;
-
     static const UINT_32    TileTableSize = 32;
-    TileConfig              m_tileTable[TileTableSize];
+    ADDR_TILECONFIG         m_tileTable[TileTableSize];
     UINT_32                 m_noOfEntries;
-
-    // Max number of bpp (8bpp/16bpp/32bpp/64bpp/128bpp)
-    static const UINT_32    MaxNumElementBytes  = 5;
-
-    static const BOOL_32    m_EquationSupport[TileTableSize][MaxNumElementBytes];
-
-    // Prt tile mode index mask
-    static const UINT_32    SiPrtTileIndexMask = ((1 << 3)  | (1 << 5)  | (1 << 6)  | (1 << 7)  |
-                                                  (1 << 21) | (1 << 22) | (1 << 23) | (1 << 24) |
-                                                  (1 << 25) | (1 << 30));
-
-    // More than half slots in tile mode table can't support equation
-    static const UINT_32    EquationTableSize   = (MaxNumElementBytes * TileTableSize) / 2;
-    // Equation table
-    ADDR_EQUATION           m_equationTable[EquationTableSize];
-    UINT_32                 m_numMacroBits[EquationTableSize];
-    UINT_32                 m_blockWidth[EquationTableSize];
-    UINT_32                 m_blockHeight[EquationTableSize];
-    UINT_32                 m_blockSlices[EquationTableSize];
-    // Number of equation entries in the table
-    UINT_32                 m_numEquations;
-    // Equation lookup table according to bpp and tile index
-    UINT_32                 m_equationLookupTable[MaxNumElementBytes][TileTableSize];
-
-    UINT_32                 m_uncompressDepthEqIndex;
 
 private:
 
-    VOID ReadGbTileMode(UINT_32 regValue, TileConfig* pCfg) const;
-    BOOL_32 InitTileSettingTable(const UINT_32 *pSetting, UINT_32 noOfEntries);
+    UINT_32 GetPipePerSurf(AddrPipeCfg pipeConfig) const;
+
+    VOID ReadGbTileMode(
+        UINT_32 regValue, ADDR_TILECONFIG* pCfg) const;
+    BOOL_32 InitTileSettingTable(
+        const UINT_32 *pSetting, UINT_32 noOfEntries);
 
     SIChipSettings          m_settings;
 };
-
-} // V1
-} // Addr
 
 #endif
 

@@ -35,9 +35,6 @@ private:
    void handleDIV(Instruction *); // integer division, modulus
    void handleRCPRSQ(Instruction *); // double precision float recip/rsqrt
    void handleFTZ(Instruction *);
-   void handleSET(CmpInstruction *);
-   void handleTEXLOD(TexInstruction *);
-   void handleShift(Instruction *);
 
 protected:
    BuildUtil bld;

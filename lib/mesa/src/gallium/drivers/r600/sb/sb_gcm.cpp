@@ -200,27 +200,27 @@ void gcm::td_release_val(value *v) {
 	);
 
 	for (uselist::iterator I = v->uses.begin(), E = v->uses.end(); I != E; ++I) {
-		node *op = *I;
-		if (op->parent != &pending) {
+		use_info *u = *I;
+		if (u->op->parent != &pending) {
 			continue;
 		}
 
 		GCM_DUMP(
 			sblog << "td    used in ";
-			dump::dump_op(op);
+			dump::dump_op(u->op);
 			sblog << "\n";
 		);
 
-		assert(uses[op] > 0);
-		if (--uses[op] == 0) {
+		assert(uses[u->op] > 0);
+		if (--uses[u->op] == 0) {
 			GCM_DUMP(
 				sblog << "td        released : ";
-				dump::dump_op(op);
+				dump::dump_op(u->op);
 				sblog << "\n";
 			);
 
-			pending.remove_node(op);
-			ready.push_back(op);
+			pending.remove_node(u->op);
+			ready.push_back(u->op);
 		}
 	}
 

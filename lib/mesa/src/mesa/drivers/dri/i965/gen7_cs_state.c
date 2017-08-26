@@ -23,9 +23,10 @@
 
 #include "util/ralloc.h"
 #include "brw_context.h"
-#include "brw_defines.h"
 #include "brw_cs.h"
+#include "brw_eu.h"
 #include "brw_wm.h"
+#include "brw_shader.h"
 #include "intel_mipmap_tree.h"
 #include "intel_batchbuffer.h"
 #include "brw_state.h"
@@ -40,7 +41,8 @@ brw_upload_cs_state(struct brw_context *brw)
       return;
 
    uint32_t offset;
-   uint32_t *desc = (uint32_t*) brw_state_batch(brw, 8 * 4, 64, &offset);
+   uint32_t *desc = (uint32_t*) brw_state_batch(brw, AUB_TRACE_SURFACE_STATE,
+                                                8 * 4, 64, &offset);
    struct brw_stage_state *stage_state = &brw->cs.base;
    struct brw_stage_prog_data *prog_data = stage_state->prog_data;
    struct brw_cs_prog_data *cs_prog_data = brw_cs_prog_data(prog_data);
@@ -50,12 +52,13 @@ brw_upload_cs_state(struct brw_context *brw)
       brw_emit_buffer_surface_state(
          brw, &stage_state->surf_offset[
                  prog_data->binding_table.shader_time_start],
-         brw->shader_time.bo, 0, ISL_FORMAT_RAW,
+         brw->shader_time.bo, 0, BRW_SURFACEFORMAT_RAW,
          brw->shader_time.bo->size, 1, true);
    }
 
-   uint32_t *bind = brw_state_batch(brw, prog_data->binding_table.size_bytes,
-                                    32, &stage_state->bind_bo_offset);
+   uint32_t *bind = (uint32_t*) brw_state_batch(brw, AUB_TRACE_BINDING_TABLE,
+                                            prog_data->binding_table.size_bytes,
+                                            32, &stage_state->bind_bo_offset);
 
    uint32_t dwords = brw->gen < 8 ? 8 : 9;
    BEGIN_BATCH(dwords);
@@ -209,7 +212,8 @@ static void
 brw_upload_cs_push_constants(struct brw_context *brw,
                              const struct gl_program *prog,
                              const struct brw_cs_prog_data *cs_prog_data,
-                             struct brw_stage_state *stage_state)
+                             struct brw_stage_state *stage_state,
+                             enum aub_state_struct_type type)
 {
    struct gl_context *ctx = &brw->ctx;
    const struct brw_stage_prog_data *prog_data =
@@ -228,7 +232,7 @@ brw_upload_cs_push_constants(struct brw_context *brw,
 
 
    gl_constant_value *param = (gl_constant_value*)
-      brw_state_batch(brw, ALIGN(cs_prog_data->push.total.size, 64),
+      brw_state_batch(brw, type, ALIGN(cs_prog_data->push.total.size, 64),
                       64, &stage_state->push_const_offset);
    assert(param);
 
@@ -276,7 +280,8 @@ gen7_upload_cs_push_constants(struct brw_context *brw)
    struct brw_stage_state *stage_state = &brw->cs.base;
 
    /* BRW_NEW_COMPUTE_PROGRAM */
-   const struct brw_program *cp = (struct brw_program *) brw->compute_program;
+   const struct brw_compute_program *cp =
+      (struct brw_compute_program *) brw->compute_program;
 
    if (cp) {
       /* BRW_NEW_CS_PROG_DATA */
@@ -284,8 +289,8 @@ gen7_upload_cs_push_constants(struct brw_context *brw)
          brw_cs_prog_data(brw->cs.base.prog_data);
 
       _mesa_shader_write_subroutine_indices(&brw->ctx, MESA_SHADER_COMPUTE);
-      brw_upload_cs_push_constants(brw, &cp->program, cs_prog_data,
-                                   stage_state);
+      brw_upload_cs_push_constants(brw, &cp->program.Base, cs_prog_data,
+                                   stage_state, AUB_TRACE_WM_CONSTANTS);
    }
 }
 
@@ -311,14 +316,15 @@ brw_upload_cs_pull_constants(struct brw_context *brw)
    struct brw_stage_state *stage_state = &brw->cs.base;
 
    /* BRW_NEW_COMPUTE_PROGRAM */
-   struct brw_program *cp = (struct brw_program *) brw->compute_program;
+   struct brw_compute_program *cp =
+      (struct brw_compute_program *) brw->compute_program;
 
    /* BRW_NEW_CS_PROG_DATA */
    const struct brw_stage_prog_data *prog_data = brw->cs.base.prog_data;
 
    _mesa_shader_write_subroutine_indices(&brw->ctx, MESA_SHADER_COMPUTE);
    /* _NEW_PROGRAM_CONSTANTS */
-   brw_upload_pull_constants(brw, BRW_NEW_SURFACES, &cp->program,
+   brw_upload_pull_constants(brw, BRW_NEW_SURFACES, &cp->program.Base,
                              stage_state, prog_data);
 }
 

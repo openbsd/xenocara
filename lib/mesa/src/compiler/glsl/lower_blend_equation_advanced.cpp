@@ -28,7 +28,6 @@
 #include "program/prog_instruction.h"
 #include "program/prog_statevars.h"
 #include "util/bitscan.h"
-#include "builtin_functions.h"
 
 using namespace ir_builder;
 
@@ -464,7 +463,7 @@ get_main(gl_linked_shader *sh)
 bool
 lower_blend_equation_advanced(struct gl_linked_shader *sh)
 {
-   if (sh->Program->sh.fs.BlendSupport == 0)
+   if (sh->info.BlendSupport == 0)
       return false;
 
    /* Lower early returns in main() so there's a single exit point
@@ -548,8 +547,7 @@ lower_blend_equation_advanced(struct gl_linked_shader *sh)
    ir_factory f(&main->body, mem_ctx);
 
    ir_variable *result_dest =
-      calc_blend_result(f, mode, fb, blend_source,
-                        sh->Program->sh.fs.BlendSupport);
+      calc_blend_result(f, mode, fb, blend_source, sh->info.BlendSupport);
 
    /* Copy the result back to the original values.  It would be simpler
     * to demote the program's output variables, and create a new vec4

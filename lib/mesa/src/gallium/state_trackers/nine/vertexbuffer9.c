@@ -63,9 +63,9 @@ NineVertexBuffer9_dtor( struct NineVertexBuffer9 *This )
 }
 
 struct pipe_resource *
-NineVertexBuffer9_GetResource( struct NineVertexBuffer9 *This, unsigned *offset )
+NineVertexBuffer9_GetResource( struct NineVertexBuffer9 *This )
 {
-    return NineBuffer9_GetResource(&This->base, offset);
+    return NineBuffer9_GetResource(&This->base);
 }
 
 HRESULT NINE_WINAPI

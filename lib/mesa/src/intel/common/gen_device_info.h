@@ -41,7 +41,6 @@ struct gen_device_info
    bool is_haswell;
    bool is_cherryview;
    bool is_broxton;
-   bool is_kabylake;
 
    bool has_hiz_and_separate_stencil;
    bool must_use_separate_stencil;
@@ -96,7 +95,6 @@ struct gen_device_info
     * to change, so we program @max_cs_threads as the lower maximum.
     */
    unsigned num_slices;
-   unsigned l3_banks;
    unsigned max_vs_threads;   /**< Maximum Vertex Shader threads */
    unsigned max_tcs_threads;  /**< Maximum Hull Shader threads */
    unsigned max_tes_threads;  /**< Maximum Domain Shader threads */
@@ -137,41 +135,13 @@ struct gen_device_info
        * urb.size = URB Size (kbytes) / slice count
        */
       unsigned size;
-
-      /**
-       * The minimum number of URB entries.  See the 3DSTATE_URB_<XS> docs.
-       */
-      unsigned min_entries[4];
-
-      /**
-       * The maximum number of URB entries.  See the 3DSTATE_URB_<XS> docs.
-       */
-      unsigned max_entries[4];
+      unsigned min_vs_entries;
+      unsigned max_vs_entries;
+      unsigned max_tcs_entries;
+      unsigned min_ds_entries;
+      unsigned max_tes_entries;
+      unsigned max_gs_entries;
    } urb;
-
-   /**
-    * For the longest time the timestamp frequency for Gen's timestamp counter
-    * could be assumed to be 12.5MHz, where the least significant bit neatly
-    * corresponded to 80 nanoseconds.
-    *
-    * Since Gen9 the numbers aren't so round, with a a frequency of 12MHz for
-    * SKL (or scale factor of 83.33333333) and a frequency of 19200123Hz for
-    * BXT.
-    *
-    * For simplicty to fit with the current code scaling by a single constant
-    * to map from raw timestamps to nanoseconds we now do the conversion in
-    * floating point instead of integer arithmetic.
-    *
-    * In general it's probably worth noting that the documented constants we
-    * have for the per-platform timestamp frequencies aren't perfect and
-    * shouldn't be trusted for scaling and comparing timestamps with a large
-    * delta.
-    *
-    * E.g. with crude testing on my system using the 'correct' scale factor I'm
-    * seeing a drift of ~2 milliseconds per second.
-    */
-   double timebase_scale;
-
    /** @} */
 };
 

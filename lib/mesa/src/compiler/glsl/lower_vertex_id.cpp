@@ -37,7 +37,6 @@
 #include "ir_builder.h"
 #include "linker.h"
 #include "program/prog_statevars.h"
-#include "builtin_functions.h"
 
 namespace {
 

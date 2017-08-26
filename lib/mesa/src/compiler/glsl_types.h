@@ -22,6 +22,7 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#pragma once
 #ifndef GLSL_TYPES_H
 #define GLSL_TYPES_H
 
@@ -53,8 +54,6 @@ enum glsl_base_type {
    GLSL_TYPE_INT,
    GLSL_TYPE_FLOAT,
    GLSL_TYPE_DOUBLE,
-   GLSL_TYPE_UINT64,
-   GLSL_TYPE_INT64,
    GLSL_TYPE_BOOL,
    GLSL_TYPE_SAMPLER,
    GLSL_TYPE_IMAGE,
@@ -70,9 +69,7 @@ enum glsl_base_type {
 
 static inline bool glsl_base_type_is_64bit(enum glsl_base_type type)
 {
-   return type == GLSL_TYPE_DOUBLE ||
-          type == GLSL_TYPE_UINT64 ||
-          type == GLSL_TYPE_INT64;
+   return type == GLSL_TYPE_DOUBLE;
 }
 
 enum glsl_sampler_dim {
@@ -85,7 +82,6 @@ enum glsl_sampler_dim {
    GLSL_SAMPLER_DIM_EXTERNAL,
    GLSL_SAMPLER_DIM_MS,
    GLSL_SAMPLER_DIM_SUBPASS, /* for vulkan input attachments */
-   GLSL_SAMPLER_DIM_SUBPASS_MS, /* for multisampled vulkan input attachments */
 };
 
 enum glsl_interface_packing {
@@ -141,7 +137,6 @@ struct glsl_type {
 				* and \c GLSL_TYPE_UINT are valid.
 				*/
    unsigned interface_packing:2;
-   unsigned interface_row_major:1;
 
    /* Callers of this ralloc-based new need not call delete. It's
     * easier to just ralloc_free 'mem_ctx' (or any of its ancestors). */
@@ -228,8 +223,6 @@ struct glsl_type {
    static const glsl_type *ivec(unsigned components);
    static const glsl_type *uvec(unsigned components);
    static const glsl_type *bvec(unsigned components);
-   static const glsl_type *i64vec(unsigned components);
-   static const glsl_type *u64vec(unsigned components);
    /**@}*/
 
    /**
@@ -289,7 +282,6 @@ struct glsl_type {
    static const glsl_type *get_interface_instance(const glsl_struct_field *fields,
 						  unsigned num_fields,
 						  enum glsl_interface_packing packing,
-						  bool row_major,
 						  const char *block_name);
 
    /**
@@ -467,7 +459,7 @@ struct glsl_type {
     */
    bool is_numeric() const
    {
-      return (base_type >= GLSL_TYPE_UINT) && (base_type <= GLSL_TYPE_INT64);
+      return (base_type >= GLSL_TYPE_UINT) && (base_type <= GLSL_TYPE_DOUBLE);
    }
 
    /**
@@ -479,23 +471,14 @@ struct glsl_type {
    }
 
    /**
-    * Query whether or not a type is a 32-bit or 64-bit integer
-    */
-   bool is_integer_32_64() const
-   {
-      return (base_type == GLSL_TYPE_UINT) || (base_type == GLSL_TYPE_INT) ||
-             (base_type == GLSL_TYPE_UINT64) || (base_type == GLSL_TYPE_INT64);
-   }
-
-   /**
     * Query whether or not type is an integral type, or for struct and array
     * types, contains an integral type.
     */
    bool contains_integer() const;
 
    /**
-    * Query whether or not type is a double type, or for struct, interface and
-    * array types, contains a double type.
+    * Query whether or not type is a double type, or for struct and array
+    * types, contains a double type.
     */
    bool contains_double() const;
 
@@ -548,8 +531,8 @@ struct glsl_type {
    }
 
    /**
-    * Query whether or not type is a sampler, or for struct, interface and
-    * array types, contains a sampler.
+    * Query whether or not type is a sampler, or for struct and array
+    * types, contains a sampler.
     */
    bool contains_sampler() const;
 
@@ -559,8 +542,8 @@ struct glsl_type {
    gl_texture_index sampler_index() const;
 
    /**
-    * Query whether or not type is an image, or for struct, interface and
-    * array types, contains an image.
+    * Query whether or not type is an image, or for struct and array
+    * types, contains an image.
     */
    bool contains_image() const;
 
@@ -766,7 +749,7 @@ struct glsl_type {
     *
     * Note that this is often different than actual coordinate type used in
     * a texturing built-in function, since those pack additional values (such
-    * as the shadow comparator or projector) into the coordinate type.
+    * as the shadow comparitor or projector) into the coordinate type.
     */
    int coordinate_components() const;
 
@@ -785,14 +768,6 @@ struct glsl_type {
    enum glsl_interface_packing get_interface_packing() const
    {
       return (enum glsl_interface_packing)interface_packing;
-   }
-
-   /**
-    * Check if the type interface is row major
-    */
-   bool get_interface_row_major() const
-   {
-      return (bool) interface_row_major;
    }
 
 private:
@@ -824,8 +799,7 @@ private:
 
    /** Constructor for interface types */
    glsl_type(const glsl_struct_field *fields, unsigned num_fields,
-	     enum glsl_interface_packing packing,
-	     bool row_major, const char *name);
+	     enum glsl_interface_packing packing, const char *name);
 
    /** Constructor for interface types */
    glsl_type(const glsl_type *return_type,
@@ -970,12 +944,10 @@ struct glsl_struct_field {
    unsigned implicit_sized_array:1;
 #ifdef __cplusplus
    glsl_struct_field(const struct glsl_type *_type, const char *_name)
-      : type(_type), name(_name), location(-1), offset(0), xfb_buffer(0),
-        xfb_stride(0), interpolation(0), centroid(0),
+      : type(_type), name(_name), location(-1), interpolation(0), centroid(0),
         sample(0), matrix_layout(GLSL_MATRIX_LAYOUT_INHERITED), patch(0),
         precision(GLSL_PRECISION_NONE), image_read_only(0), image_write_only(0),
-        image_coherent(0), image_volatile(0), image_restrict(0),
-        explicit_xfb_buffer(0), implicit_sized_array(0)
+        image_coherent(0), image_volatile(0), image_restrict(0)
    {
       /* empty */
    }

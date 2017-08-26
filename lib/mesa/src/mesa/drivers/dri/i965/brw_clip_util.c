@@ -38,6 +38,7 @@
 
 #include "brw_defines.h"
 #include "brw_context.h"
+#include "brw_eu.h"
 #include "brw_clip.h"
 
 
@@ -156,7 +157,7 @@ void brw_clip_interp_vertex( struct brw_clip_compile *c,
     */
 
    /* Take a copy of the v0 NDC coordinates, in case dest == v0. */
-   if (c->key.contains_noperspective_varying) {
+   if (c->has_noperspective_shading) {
       GLuint offset = brw_varying_to_offset(&c->vue_map,
                                                  BRW_VARYING_SLOT_NDC);
       v0_ndc_copy = get_tmp(c);
@@ -182,7 +183,7 @@ void brw_clip_interp_vertex( struct brw_clip_compile *c,
    /* If we have noperspective attributes,
     * we need to compute the screen-space t
     */
-   if (c->key.contains_noperspective_varying) {
+   if (c->has_noperspective_shading) {
       GLuint delta = brw_varying_to_offset(&c->vue_map,
                                                 BRW_VARYING_SLOT_NDC);
       struct brw_reg tmp = get_tmp(c);
@@ -271,7 +272,7 @@ void brw_clip_interp_vertex( struct brw_clip_compile *c,
           * Unless the attribute is flat shaded -- in which case just copy
           * from one of the sources (doesn't matter which; already copied from pv)
 	  */
-         GLuint interp = c->key.interp_mode[slot];
+         GLuint interp = c->key.interpolation_mode.mode[slot];
 
          if (interp != INTERP_MODE_FLAT) {
             struct brw_reg tmp = get_tmp(c);
@@ -309,7 +310,7 @@ void brw_clip_interp_vertex( struct brw_clip_compile *c,
       brw_MOV(p, deref_4f(dest_ptr, delta), brw_imm_f(0));
    }
 
-   if (c->key.contains_noperspective_varying)
+   if (c->has_noperspective_shading)
       release_tmp(c, t_nopersp);
 }
 
@@ -405,7 +406,7 @@ void brw_clip_copy_flatshaded_attributes( struct brw_clip_compile *c,
    struct brw_codegen *p = &c->func;
 
    for (int i = 0; i < c->vue_map.num_slots; i++) {
-      if (c->key.interp_mode[i] == INTERP_MODE_FLAT) {
+      if (c->key.interpolation_mode.mode[i] == INTERP_MODE_FLAT) {
          brw_MOV(p,
                  byte_offset(c->reg.vertex[to], brw_vue_slot_to_offset(i)),
                  byte_offset(c->reg.vertex[from], brw_vue_slot_to_offset(i)));

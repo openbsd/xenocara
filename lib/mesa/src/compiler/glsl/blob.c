@@ -24,6 +24,7 @@
 #include <string.h>
 
 #include "main/macros.h"
+#include "util/ralloc.h"
 #include "blob.h"
 
 #define BLOB_INITIAL_SIZE 4096
@@ -48,7 +49,7 @@ grow_to_fit(struct blob *blob, size_t additional)
 
    to_allocate = MAX2(to_allocate, blob->allocated + additional);
 
-   new_data = realloc(blob->data, to_allocate);
+   new_data = reralloc_size(blob, blob->data, to_allocate);
    if (new_data == NULL)
       return false;
 
@@ -69,13 +70,10 @@ align_blob(struct blob *blob, size_t alignment)
 {
    const size_t new_size = ALIGN(blob->size, alignment);
 
-   if (blob->size < new_size) {
-      if (!grow_to_fit(blob, new_size - blob->size))
-         return false;
+   if (! grow_to_fit (blob, new_size - blob->size))
+      return false;
 
-      memset(blob->data + blob->size, 0, new_size - blob->size);
-      blob->size = new_size;
-   }
+   blob->size = new_size;
 
    return true;
 }
@@ -87,9 +85,11 @@ align_blob_reader(struct blob_reader *blob, size_t alignment)
 }
 
 struct blob *
-blob_create()
+blob_create(void *mem_ctx)
 {
-   struct blob *blob = (struct blob *) malloc(sizeof(struct blob));
+   struct blob *blob;
+
+   blob = ralloc(mem_ctx, struct blob);
    if (blob == NULL)
       return NULL;
 

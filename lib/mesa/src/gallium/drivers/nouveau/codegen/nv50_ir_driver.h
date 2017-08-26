@@ -146,13 +146,12 @@ struct nv50_ir_prog_info
          bool usesDiscard;
          bool persampleInvocation;
          bool usesSampleMaskIn;
-         bool readsFramebuffer;
       } fp;
       struct {
          uint32_t inputOffset; /* base address for user args */
          uint32_t sharedOffset; /* reserved space in s[] */
          uint32_t gridInfoBase;  /* base address for NTID,NCTAID */
-         uint16_t numThreads[3]; /* max number of threads */
+         uint32_t numThreads; /* max number of threads */
       } cp;
    } prop;
 
@@ -177,10 +176,8 @@ struct nv50_ir_prog_info
       uint8_t backFaceColor[2];  /* input/output indices of back face colour */
       uint8_t globalAccess;      /* 1 for read, 2 for wr, 3 for rw */
       bool fp64;                 /* program uses fp64 math */
-      bool mul_zero_wins;        /* program wants for x*0 = 0 */
       bool nv50styleSurfaces;    /* generate gX[] access for raw buffers */
       uint16_t texBindBase;      /* base address for tex handles (nve4) */
-      uint16_t fbtexBindBase;    /* base address for fbtex handle (nve4) */
       uint16_t suInfoBase;       /* base address for surface info (nve4) */
       uint16_t bufInfoBase;      /* base address for buffer info */
       uint16_t sampleInfoBase;   /* base address for sample positions */

@@ -28,7 +28,6 @@
 #include "brw_context.h"
 #include "brw_state.h"
 #include "brw_defines.h"
-#include "compiler/brw_eu_defines.h"
 #include "brw_wm.h"
 #include "main/framebuffer.h"
 
@@ -94,10 +93,10 @@ emit_depth_packets(struct brw_context *brw,
       assert(depth_mt);
       BEGIN_BATCH(5);
       OUT_BATCH(GEN7_3DSTATE_HIER_DEPTH_BUFFER << 16 | (5 - 2));
-      OUT_BATCH((depth_mt->hiz_buf->aux_base.pitch - 1) | mocs_wb << 25);
-      OUT_RELOC64(depth_mt->hiz_buf->aux_base.bo,
+      OUT_BATCH((depth_mt->hiz_buf->pitch - 1) | mocs_wb << 25);
+      OUT_RELOC64(depth_mt->hiz_buf->bo,
                   I915_GEM_DOMAIN_RENDER, I915_GEM_DOMAIN_RENDER, 0);
-      OUT_BATCH(depth_mt->hiz_buf->aux_base.qpitch >> 2);
+      OUT_BATCH(depth_mt->hiz_buf->qpitch >> 2);
       ADVANCE_BATCH();
    }
 
@@ -219,7 +218,7 @@ gen8_emit_depth_stencil_hiz(struct brw_context *brw,
    }
 
    emit_depth_packets(brw, depth_mt, brw_depthbuffer_format(brw), surftype,
-                      brw_depth_writes_enabled(brw),
+                      ctx->Depth.Mask != 0,
                       stencil_mt, ctx->Stencil._WriteEnabled,
                       hiz, width, height, depth, lod, min_array_element);
 }
@@ -281,7 +280,7 @@ pma_fix_enable(const struct brw_context *brw)
     * 3DSTATE_WM_DEPTH_STENCIL::DepthWriteEnable &&
     * 3DSTATE_DEPTH_BUFFER::DEPTH_WRITE_ENABLE.
     */
-   const bool depth_writes_enabled = brw_depth_writes_enabled(brw);
+   const bool depth_writes_enabled = ctx->Depth.Mask;
 
    /* _NEW_STENCIL:
     * !DEPTH_STENCIL_STATE::Stencil Buffer Write Enable ||
@@ -294,12 +293,10 @@ pma_fix_enable(const struct brw_context *brw)
    const bool ps_computes_depth =
       wm_prog_data->computed_depth_mode != BRW_PSCDEPTH_OFF;
 
-   /* BRW_NEW_FS_PROG_DATA:     3DSTATE_PS_EXTRA::PixelShaderKillsPixels
-    * BRW_NEW_FS_PROG_DATA:     3DSTATE_PS_EXTRA::oMask Present to RenderTarget
+   /* BRW_NEW_FS_PROG_DATA:        3DSTATE_PS_EXTRA::PixelShaderKillsPixels
+    * BRW_NEW_FS_PROG_DATA:        3DSTATE_PS_EXTRA::oMask Present to RenderTarget
     * _NEW_MULTISAMPLE:         3DSTATE_PS_BLEND::AlphaToCoverageEnable
     * _NEW_COLOR:               3DSTATE_PS_BLEND::AlphaTestEnable
-    * _NEW_BUFFERS:             3DSTATE_PS_BLEND::AlphaTestEnable
-    *                           3DSTATE_PS_BLEND::AlphaToCoverageEnable
     *
     * 3DSTATE_WM_CHROMAKEY::ChromaKeyKillEnable is always false.
     * 3DSTATE_WM::ForceKillPix != ForceOff is always true.
@@ -307,8 +304,8 @@ pma_fix_enable(const struct brw_context *brw)
    const bool kill_pixel =
       wm_prog_data->uses_kill ||
       wm_prog_data->uses_omask ||
-      _mesa_is_alpha_test_enabled(ctx) ||
-      _mesa_is_alpha_to_coverage_enabled(ctx);
+      (_mesa_is_multisample_enabled(ctx) && ctx->Multisample.SampleAlphaToCoverage) ||
+      ctx->Color.AlphaEnabled;
 
    /* The big formula in CACHE_MODE_1::NP PMA FIX ENABLE. */
    return !wm_force_thread_dispatch &&
@@ -513,7 +510,7 @@ gen8_hiz_exec(struct brw_context *brw, struct intel_mipmap_tree *mt,
     */
    brw_emit_pipe_control_write(brw,
                                PIPE_CONTROL_WRITE_IMMEDIATE,
-                               brw->workaround_bo, 0, 0);
+                               brw->workaround_bo, 0, 0, 0);
 
    /* Emit 3DSTATE_WM_HZ_OP again to disable the state overrides. */
    BEGIN_BATCH(5);

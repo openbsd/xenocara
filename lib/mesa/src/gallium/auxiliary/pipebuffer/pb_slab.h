@@ -110,7 +110,7 @@ typedef bool (slab_can_reclaim_fn)(void *priv, struct pb_slab_entry *);
  */
 struct pb_slabs
 {
-   mtx_t mutex;
+   pipe_mutex mutex;
 
    unsigned min_order;
    unsigned num_orders;

@@ -70,9 +70,11 @@ _mesa_alloc_shared_state(struct gl_context *ctx)
    shared->Programs = _mesa_NewHashTable();
 
    shared->DefaultVertexProgram =
-      ctx->Driver.NewProgram(ctx, GL_VERTEX_PROGRAM_ARB, 0, true);
+      gl_vertex_program(ctx->Driver.NewProgram(ctx,
+                                               GL_VERTEX_PROGRAM_ARB, 0));
    shared->DefaultFragmentProgram =
-      ctx->Driver.NewProgram(ctx, GL_FRAGMENT_PROGRAM_ARB, 0, true);
+      gl_fragment_program(ctx->Driver.NewProgram(ctx,
+                                                 GL_FRAGMENT_PROGRAM_ARB, 0));
 
    shared->ATIShaders = _mesa_NewHashTable();
    shared->DefaultFragmentShader = _mesa_new_ati_fragment_shader(ctx, 0);
@@ -330,8 +332,8 @@ free_shared_state(struct gl_context *ctx, struct gl_shared_state *shared)
    _mesa_HashDeleteAll(shared->Programs, delete_program_cb, ctx);
    _mesa_DeleteHashTable(shared->Programs);
 
-   _mesa_reference_program(ctx, &shared->DefaultVertexProgram, NULL);
-   _mesa_reference_program(ctx, &shared->DefaultFragmentProgram, NULL);
+   _mesa_reference_vertprog(ctx, &shared->DefaultVertexProgram, NULL);
+   _mesa_reference_fragprog(ctx, &shared->DefaultFragmentProgram, NULL);
 
    _mesa_HashDeleteAll(shared->ATIShaders, delete_fragshader_cb, ctx);
    _mesa_DeleteHashTable(shared->ATIShaders);

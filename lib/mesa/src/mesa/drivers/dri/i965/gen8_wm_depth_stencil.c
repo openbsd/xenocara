@@ -90,7 +90,7 @@ gen8_upload_wm_depth_stencil(struct brw_context *brw)
          GEN8_WM_DS_DEPTH_TEST_ENABLE |
          FUNC(ctx->Depth.Func) << GEN8_WM_DS_DEPTH_FUNC_SHIFT;
 
-      if (brw_depth_writes_enabled(brw))
+      if (ctx->Depth.Mask)
          dw1 |= GEN8_WM_DS_DEPTH_BUFFER_WRITE_ENABLE;
    }
 

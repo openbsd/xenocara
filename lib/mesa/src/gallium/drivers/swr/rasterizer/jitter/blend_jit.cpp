@@ -27,10 +27,10 @@
 * Notes:
 *
 ******************************************************************************/
-#include "builder.h"
 #include "jit_api.h"
 #include "blend_jit.h"
-#include "gen_state_llvm.h"
+#include "builder.h"
+#include "state_llvm.h"
 
 #include <sstream>
 
@@ -137,7 +137,7 @@ struct BlendJit : public Builder
             out[0] = out[1] = out[2] = out[3] = FSUB(VIMMED1(1.0f), src1[3]);
             break;
         default:
-            SWR_INVALID("Unsupported blend factor: %d", factor);
+            SWR_ASSERT(false, "Unsupported blend factor: %d", factor);
             out[0] = out[1] = out[2] = out[3] = VIMMED1(0.0f);
             break;
         }
@@ -162,7 +162,7 @@ struct BlendJit : public Builder
 
         switch (type)
         {
-        default:
+        case SWR_TYPE_FLOAT:
             break;
 
         case SWR_TYPE_UNORM:
@@ -179,7 +179,7 @@ struct BlendJit : public Builder
             src[3] = VMINPS(VMAXPS(src[3], VIMMED1(-1.0f)), VIMMED1(1.0f));
             break;
 
-        case SWR_TYPE_UNKNOWN: SWR_INVALID("Unsupport format type: %d", type);
+        default: SWR_ASSERT(false, "Unsupport format type: %d", type);
         }
     }
 
@@ -220,7 +220,7 @@ struct BlendJit : public Builder
         const SWR_FORMAT_INFO& info = GetFormatInfo(format);
         for (uint32_t c = 0; c < info.numComps; ++c)
         {
-            if (info.bpc[c] <= QUANTIZE_THRESHOLD && info.type[c] != SWR_TYPE_UNUSED)
+            if (info.bpc[c] <= QUANTIZE_THRESHOLD)
             {
                 uint32_t swizComp = info.swizzle[c];
                 float factor = (float)((1 << info.bpc[c]) - 1);
@@ -231,7 +231,7 @@ struct BlendJit : public Builder
                     src[swizComp] = VROUND(src[swizComp], C(_MM_FROUND_TO_ZERO));
                     src[swizComp] = FMUL(src[swizComp], VIMMED1(1.0f /factor));
                     break;
-                default: SWR_INVALID("Unsupported format type: %d", info.type[c]);
+                default: SWR_ASSERT(false, "Unsupported format type: %d", info.type[c]);
                 }
             }
         }
@@ -287,7 +287,7 @@ struct BlendJit : public Builder
             break;
 
         default:
-            SWR_INVALID("Unsupported blend operation: %d", blendOp);
+            SWR_ASSERT(false, "Unsupported blend operation: %d", blendOp);
             out[0] = out[1] = out[2] = out[3] = VIMMED1(0.0f);
             break;
         }
@@ -437,19 +437,16 @@ struct BlendJit : public Builder
             break;
 
         default:
-            SWR_INVALID("Unsupported logic operation: %d", logicOp);
+            SWR_ASSERT(false, "Unsupported logic operation: %d", logicOp);
             result[0] = result[1] = result[2] = result[3] = VIMMED1(0.0f);
             break;
         }
     }
 
-    void AlphaTest(const BLEND_COMPILE_STATE& state, Value* pBlendState, Value* ppAlpha, Value* ppMask)
+    void AlphaTest(const BLEND_COMPILE_STATE& state, Value* pBlendState, Value* pAlpha, Value* ppMask)
     {
         // load uint32_t reference
         Value* pRef = VBROADCAST(LOAD(pBlendState, { 0, SWR_BLEND_STATE_alphaTestReference }));
-        
-        // load alpha
-        Value* pAlpha = LOAD(ppAlpha);
 
         Value* pTest = nullptr;
         if (state.alphaTestFormat == ALPHA_TEST_UNORM8)
@@ -470,7 +467,7 @@ struct BlendJit : public Builder
             case ZFUNC_NE:      pTest = ICMP_NE(pAlphaU8, pRef); break;
             case ZFUNC_GE:      pTest = ICMP_UGE(pAlphaU8, pRef); break;
             default:
-                SWR_INVALID("Invalid alpha test function");
+                SWR_ASSERT(false, "Invalid alpha test function");
                 break;
             }
         }
@@ -491,7 +488,7 @@ struct BlendJit : public Builder
             case ZFUNC_NE:      pTest = FCMP_ONE(pAlpha, pRef); break;
             case ZFUNC_GE:      pTest = FCMP_OGE(pAlpha, pRef); break;
             default:
-                SWR_INVALID("Invalid alpha test function");
+                SWR_ASSERT(false, "Invalid alpha test function");
                 break;
             }
         }
@@ -526,7 +523,6 @@ struct BlendJit : public Builder
             PointerType::get(Gen_SWR_BLEND_STATE(JM()), 0), // SWR_BLEND_STATE*
             PointerType::get(mSimdFP32Ty, 0),               // simdvector& src
             PointerType::get(mSimdFP32Ty, 0),               // simdvector& src1
-            PointerType::get(mSimdFP32Ty, 0),               // src0alpha
             Type::getInt32Ty(JM()->mContext),               // sampleNum
             PointerType::get(mSimdFP32Ty, 0),               // uint8_t* pDst
             PointerType::get(mSimdFP32Ty, 0),               // simdvector& result
@@ -542,15 +538,13 @@ struct BlendJit : public Builder
         IRB()->SetInsertPoint(entry);
 
         // arguments
-        auto argitr = blendFunc->arg_begin();
+        auto argitr = blendFunc->getArgumentList().begin();
         Value* pBlendState = &*argitr++;
         pBlendState->setName("pBlendState");
         Value* pSrc = &*argitr++;
         pSrc->setName("src");
         Value* pSrc1 = &*argitr++;
         pSrc1->setName("src1");
-        Value* pSrc0Alpha = &*argitr++;
-        pSrc0Alpha->setName("src0alpha");
         Value* sampleNum = &*argitr++;
         sampleNum->setName("sampleNum");
         Value* pDst = &*argitr++;
@@ -594,7 +588,7 @@ struct BlendJit : public Builder
         // alpha test
         if (state.desc.alphaTestEnable)
         {
-            AlphaTest(state, pBlendState, pSrc0Alpha, ppMask);
+            AlphaTest(state, pBlendState, src[3], ppMask);
         }
 
         // color blend
@@ -655,68 +649,29 @@ struct BlendJit : public Builder
         if(state.blendState.logicOpEnable)
         {
             const SWR_FORMAT_INFO& info = GetFormatInfo(state.format);
+            SWR_ASSERT(info.type[0] == SWR_TYPE_UINT);
             Value* vMask[4];
-            float scale[4];
-
-            if (!state.blendState.blendEnable)
-            {
-                Clamp(state.format, src);
-                Clamp(state.format, dst);
-            }
-
             for(uint32_t i = 0; i < 4; i++)
             {
-                if (info.type[i] == SWR_TYPE_UNUSED)
+                switch(info.bpc[i])
                 {
-                    continue;
-                }
-
-                if (info.bpc[i] >= 32)
-                {
-                    vMask[i] = VIMMED1(0xFFFFFFFF);
-                    scale[i] = 0xFFFFFFFF;
-                }
-                else
-                {
-                    vMask[i] = VIMMED1((1 << info.bpc[i]) - 1);
-                    if (info.type[i] == SWR_TYPE_SNORM)
-                        scale[i] = (1 << (info.bpc[i] - 1)) - 1;
-                    else
-                        scale[i] = (1 << info.bpc[i]) - 1;
-                }
-
-                switch (info.type[i])
-                {
+                case 0: vMask[i] = VIMMED1(0x00000000); break;
+                case 2: vMask[i] = VIMMED1(0x00000003); break;
+                case 5: vMask[i] = VIMMED1(0x0000001F); break;
+                case 6: vMask[i] = VIMMED1(0x0000003F); break;
+                case 8: vMask[i] = VIMMED1(0x000000FF); break;
+                case 10: vMask[i] = VIMMED1(0x000003FF); break;
+                case 11: vMask[i] = VIMMED1(0x000007FF); break;
+                case 16: vMask[i] = VIMMED1(0x0000FFFF); break;
+                case 24: vMask[i] = VIMMED1(0x00FFFFFF); break;
+                case 32: vMask[i] = VIMMED1(0xFFFFFFFF); break;
                 default:
-                    SWR_INVALID("Unsupported type for logic op: %d", info.type[i]);
-                    break;
-
-                case SWR_TYPE_UNKNOWN:
-                case SWR_TYPE_UNUSED:
-                    // fallthrough
-
-                case SWR_TYPE_UINT:
-                case SWR_TYPE_SINT:
-                    src[i] = BITCAST(src[i], mSimdInt32Ty);
-                    dst[i] = BITCAST(dst[i], mSimdInt32Ty);
-                    break;
-                case SWR_TYPE_SNORM:
-                    src[i] = FP_TO_SI(
-                        FMUL(src[i], VIMMED1(scale[i])),
-                        mSimdInt32Ty);
-                    dst[i] = FP_TO_SI(
-                        FMUL(dst[i], VIMMED1(scale[i])),
-                        mSimdInt32Ty);
-                    break;
-                case SWR_TYPE_UNORM:
-                    src[i] = FP_TO_UI(
-                        FMUL(src[i], VIMMED1(scale[i])),
-                        mSimdInt32Ty);
-                    dst[i] = FP_TO_UI(
-                        FMUL(dst[i], VIMMED1(scale[i])),
-                        mSimdInt32Ty);
+                    vMask[i] = VIMMED1(0x0);
+                    SWR_ASSERT(0, "Unsupported bpc for logic op\n");
                     break;
                 }
+                src[i] = BITCAST(src[i], mSimdInt32Ty);//, vMask[i]);
+                dst[i] = BITCAST(dst[i], mSimdInt32Ty);
             }
 
             LogicOpFunc(state.blendState.logicOpFunc, src, dst, result);
@@ -724,41 +679,10 @@ struct BlendJit : public Builder
             // store results out
             for(uint32_t i = 0; i < 4; ++i)
             {
-                if (info.type[i] == SWR_TYPE_UNUSED)
-                {
-                    continue;
-                }
-
                 // clear upper bits from PS output not in RT format after doing logic op
                 result[i] = AND(result[i], vMask[i]);
 
-                switch (info.type[i])
-                {
-                default:
-                    SWR_INVALID("Unsupported type for logic op: %d", info.type[i]);
-                    break;
-
-                case SWR_TYPE_UNKNOWN:
-                case SWR_TYPE_UNUSED:
-                    // fallthrough
-
-                case SWR_TYPE_UINT:
-                case SWR_TYPE_SINT:
-                    result[i] = BITCAST(result[i], mSimdFP32Ty);
-                    break;
-                case SWR_TYPE_SNORM:
-                    result[i] = SHL(result[i], C(32 - info.bpc[i]));
-                    result[i] = ASHR(result[i], C(32 - info.bpc[i]));
-                    result[i] = FMUL(SI_TO_FP(result[i], mSimdFP32Ty),
-                                     VIMMED1(1.0f / scale[i]));
-                    break;
-                case SWR_TYPE_UNORM:
-                    result[i] = FMUL(UI_TO_FP(result[i], mSimdFP32Ty),
-                                     VIMMED1(1.0f / scale[i]));
-                    break;
-                }
-
-                STORE(result[i], pResult, {i});
+                STORE(BITCAST(result[i], mSimdFP32Ty), pResult, {i});
             }
         }
 
@@ -791,9 +715,9 @@ struct BlendJit : public Builder
         if(state.desc.sampleMaskEnable || state.desc.alphaToCoverageEnable ||
            state.desc.oMaskEnable)
         {
-            // load coverage mask
+            // load current mask
             Value* pMask = LOAD(ppMask);
-            currentMask = S_EXT(ICMP_UGT(currentMask, VBROADCAST(C(0))), mSimdInt32Ty);
+            currentMask = S_EXT(ICMP_SGT(currentMask, VBROADCAST(C(0))), mSimdInt32Ty);
             Value* outputMask = AND(pMask, currentMask);
             // store new mask
             STORE(outputMask, GEP(ppMask, C(0)));

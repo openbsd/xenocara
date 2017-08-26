@@ -172,7 +172,6 @@ struct __DRIscreenRec {
 	const __DRIdri2LoaderExtension *loader;
 	const __DRIimageLookupExtension *image;
 	const __DRIuseInvalidateExtension *useInvalidate;
-        const __DRIbackgroundCallableExtension *backgroundCallable;
     } dri2;
 
     struct {

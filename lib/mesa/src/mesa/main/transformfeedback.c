@@ -45,7 +45,7 @@
 
 struct using_program_tuple
 {
-   struct gl_program *prog;
+   struct gl_shader_program *shProg;
    bool found;
 };
 
@@ -54,7 +54,7 @@ active_xfb_object_references_program(GLuint key, void *data, void *user_data)
 {
    struct using_program_tuple *callback_data = user_data;
    struct gl_transform_feedback_object *obj = data;
-   if (obj->Active && obj->program == callback_data->prog)
+   if (obj->Active && obj->shader_program == callback_data->shProg)
       callback_data->found = true;
 }
 
@@ -65,12 +65,9 @@ bool
 _mesa_transform_feedback_is_using_program(struct gl_context *ctx,
                                           struct gl_shader_program *shProg)
 {
-   if (!shProg->last_vert_prog)
-      return false;
-
    struct using_program_tuple callback_data;
+   callback_data.shProg = shProg;
    callback_data.found = false;
-   callback_data.prog = shProg->last_vert_prog;
 
    _mesa_HashWalk(ctx->TransformFeedback.Objects,
                   active_xfb_object_references_program, &callback_data);
@@ -382,12 +379,12 @@ _mesa_compute_max_transform_feedback_vertices(struct gl_context *ctx,
 
 /**
  * Figure out which stage of the pipeline is the source of transform feedback
- * data given the current context state, and return its gl_program.
+ * data given the current context state, and return its gl_shader_program.
  *
  * If no active program can generate transform feedback data (i.e. no vertex
  * shader is active), returns NULL.
  */
-static struct gl_program *
+static struct gl_shader_program *
 get_xfb_source(struct gl_context *ctx)
 {
    int i;
@@ -404,6 +401,7 @@ _mesa_BeginTransformFeedback(GLenum mode)
 {
    struct gl_transform_feedback_object *obj;
    struct gl_transform_feedback_info *info = NULL;
+   struct gl_shader_program *source;
    GLuint i;
    unsigned vertices_per_prim;
    GET_CURRENT_CONTEXT(ctx);
@@ -413,14 +411,14 @@ _mesa_BeginTransformFeedback(GLenum mode)
    /* Figure out what pipeline stage is the source of data for transform
     * feedback.
     */
-   struct gl_program *source = get_xfb_source(ctx);
+   source = get_xfb_source(ctx);
    if (source == NULL) {
       _mesa_error(ctx, GL_INVALID_OPERATION,
                   "glBeginTransformFeedback(no program active)");
       return;
    }
 
-   info = source->sh.LinkedTransformFeedback;
+   info = &source->LinkedTransformFeedback;
 
    if (info->NumOutputs == 0) {
       _mesa_error(ctx, GL_INVALID_OPERATION,
@@ -480,9 +478,9 @@ _mesa_BeginTransformFeedback(GLenum mode)
       obj->GlesRemainingPrims = max_vertices / vertices_per_prim;
    }
 
-   if (obj->program != source) {
+   if (obj->shader_program != source) {
       ctx->NewDriverState |= ctx->DriverFlags.NewTransformFeedbackProg;
-      obj->program = source;
+      obj->shader_program = source;
    }
 
    assert(ctx->Driver.BeginTransformFeedback);
@@ -1201,7 +1199,7 @@ _mesa_ResumeTransformFeedback(void)
     *  the program object being used by the current transform feedback object
     *  is not active."
     */
-   if (obj->program != get_xfb_source(ctx)) {
+   if (obj->shader_program != get_xfb_source(ctx)) {
       _mesa_error(ctx, GL_INVALID_OPERATION,
                   "glResumeTransformFeedback(wrong program bound)");
       return;

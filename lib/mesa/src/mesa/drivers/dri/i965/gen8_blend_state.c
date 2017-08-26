@@ -50,8 +50,8 @@ gen8_upload_blend_state(struct brw_context *brw)
       nr_draw_buffers = 1;
 
    int size = 4 + 8 * nr_draw_buffers;
-   uint32_t *blend =
-      brw_state_batch(brw, size, 64, &brw->cc.blend_state_offset);
+   uint32_t *blend = brw_state_batch(brw, AUB_TRACE_BLEND_STATE,
+                                     size, 64, &brw->cc.blend_state_offset);
    memset(blend, 0, size);
 
    /* OpenGL specification 3.3 (page 196), section 4.1.3 says:
@@ -59,7 +59,11 @@ gen8_upload_blend_state(struct brw_context *brw)
     * integer format, the SAMPLE_ALPHA_TO_COVERAGE and SAMPLE_ALPHA_TO_ONE
     * operations are skipped."
     */
-   if (!(ctx->DrawBuffer->_IntegerBuffers & 0x1)) {
+   struct gl_renderbuffer *rb0 = ctx->DrawBuffer->_ColorDrawBuffers[0];
+   GLenum rb_zero_type =
+      rb0 ? _mesa_get_format_datatype(rb0->Format) : GL_UNSIGNED_NORMALIZED;
+
+   if (rb_zero_type != GL_INT && rb_zero_type != GL_UNSIGNED_INT) {
       /* _NEW_MULTISAMPLE */
       if (_mesa_is_multisample_enabled(ctx)) {
          if (ctx->Multisample.SampleAlphaToCoverage) {
@@ -86,6 +90,8 @@ gen8_upload_blend_state(struct brw_context *brw)
    for (int i = 0; i < nr_draw_buffers; i++) {
       /* _NEW_BUFFERS */
       struct gl_renderbuffer *rb = ctx->DrawBuffer->_ColorDrawBuffers[i];
+      GLenum rb_type =
+         rb ? _mesa_get_format_datatype(rb->Format) : GL_UNSIGNED_NORMALIZED;
 
       /* Used for implementing the following bit of GL_EXT_texture_integer:
        * "Per-fragment operations that require floating-point color
@@ -93,7 +99,7 @@ gen8_upload_blend_state(struct brw_context *brw)
        *  blending, and dithering, have no effect when the corresponding
        *  colors are written to an integer color buffer."
       */
-      bool integer = ctx->DrawBuffer->_IntegerBuffers & (0x1 << i);
+      bool integer = rb_type == GL_INT || rb_type == GL_UNSIGNED_INT;
 
       /* _NEW_COLOR */
       if (ctx->Color.ColorLogicOpEnabled) {
@@ -212,22 +218,18 @@ gen8_upload_ps_blend(struct brw_context *brw)
 
    /* _NEW_BUFFERS */
    struct gl_renderbuffer *rb = ctx->DrawBuffer->_ColorDrawBuffers[0];
-   const bool buffer0_is_integer = ctx->DrawBuffer->_IntegerBuffers & 0x1;
 
    /* BRW_NEW_FRAGMENT_PROGRAM | _NEW_BUFFERS | _NEW_COLOR */
    if (brw_color_buffer_write_enabled(brw))
       dw1 |= GEN8_PS_BLEND_HAS_WRITEABLE_RT;
 
-   if (!buffer0_is_integer) {
-      /* _NEW_COLOR */
-      if (ctx->Color.AlphaEnabled)
-         dw1 |= GEN8_PS_BLEND_ALPHA_TEST_ENABLE;
+   /* _NEW_COLOR */
+   if (ctx->Color.AlphaEnabled)
+      dw1 |= GEN8_PS_BLEND_ALPHA_TEST_ENABLE;
 
-      /* _NEW_MULTISAMPLE */
-      if (_mesa_is_multisample_enabled(ctx) &&
-          ctx->Multisample.SampleAlphaToCoverage)
-         dw1 |= GEN8_PS_BLEND_ALPHA_TO_COVERAGE_ENABLE;
-   }
+   /* _NEW_MULTISAMPLE */
+   if (_mesa_is_multisample_enabled(ctx) && ctx->Multisample.SampleAlphaToCoverage)
+      dw1 |= GEN8_PS_BLEND_ALPHA_TO_COVERAGE_ENABLE;
 
    /* Used for implementing the following bit of GL_EXT_texture_integer:
     * "Per-fragment operations that require floating-point color
@@ -240,7 +242,11 @@ gen8_upload_ps_blend(struct brw_context *brw)
     *  integer format, the SAMPLE_ALPHA_TO_COVERAGE and SAMPLE_ALPHA_TO_ONE
     *  operations are skipped."
     */
-   if (rb && !buffer0_is_integer && (ctx->Color.BlendEnabled & 1)) {
+   GLenum rb_type =
+      rb ? _mesa_get_format_datatype(rb->Format) : GL_UNSIGNED_NORMALIZED;
+
+   if (rb && rb_type != GL_INT && rb_type != GL_UNSIGNED_INT &&
+       (ctx->Color.BlendEnabled & 1)) {
       GLenum eqRGB = ctx->Color.Blend[0].EquationRGB;
       GLenum eqA = ctx->Color.Blend[0].EquationA;
       GLenum srcRGB = ctx->Color.Blend[0].SrcRGB;

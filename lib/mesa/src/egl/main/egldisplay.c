@@ -36,7 +36,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "c11/threads.h"
-#include "util/u_atomic.h"
 
 #include "eglcontext.h"
 #include "eglcurrent.h"
@@ -62,7 +61,7 @@
 
 
 /**
- * Map --with-platforms names to platform types.
+ * Map --with-egl-platforms names to platform types.
  */
 static const struct {
    _EGLPlatformType platform;
@@ -181,31 +180,24 @@ _eglNativePlatformDetectNativeDisplay(void *nativeDisplay)
 _EGLPlatformType
 _eglGetNativePlatform(void *nativeDisplay)
 {
-   static _EGLPlatformType native_platform = _EGL_INVALID_PLATFORM;
-   _EGLPlatformType detected_platform = native_platform;
+   static _EGLPlatformType native_platform;
+   char *detection_method;
 
-   if (detected_platform == _EGL_INVALID_PLATFORM) {
-      const char *detection_method;
+   native_platform = _eglGetNativePlatformFromEnv();
+   detection_method = "environment overwrite";
 
-      detected_platform = _eglGetNativePlatformFromEnv();
-      detection_method = "environment overwrite";
-
-      if (detected_platform == _EGL_INVALID_PLATFORM) {
-         detected_platform = _eglNativePlatformDetectNativeDisplay(nativeDisplay);
-         detection_method = "autodetected";
-      }
-
-      if (detected_platform == _EGL_INVALID_PLATFORM) {
-         detected_platform = _EGL_NATIVE_PLATFORM;
-         detection_method = "build-time configuration";
-      }
-
-      _eglLog(_EGL_DEBUG, "Native platform type: %s (%s)",
-              egl_platforms[detected_platform].name, detection_method);
-
-      p_atomic_cmpxchg(&native_platform, _EGL_INVALID_PLATFORM,
-                       detected_platform);
+   if (native_platform == _EGL_INVALID_PLATFORM) {
+      native_platform = _eglNativePlatformDetectNativeDisplay(nativeDisplay);
+      detection_method = "autodetected";
    }
+
+   if (native_platform == _EGL_INVALID_PLATFORM) {
+      native_platform = _EGL_NATIVE_PLATFORM;
+      detection_method = "build-time configuration";
+   }
+
+   _eglLog(_EGL_DEBUG, "Native platform type: %s (%s)",
+           egl_platforms[native_platform].name, detection_method);
 
    return native_platform;
 }

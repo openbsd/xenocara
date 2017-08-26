@@ -23,7 +23,6 @@
 #ifndef _NINE_BASETEXTURE9_H_
 #define _NINE_BASETEXTURE9_H_
 
-#include "device9.h"
 #include "resource9.h"
 #include "util/u_inlines.h"
 #include "util/list.h"
@@ -35,6 +34,7 @@ struct NineBaseTexture9
     struct list_head list2; /* for managed_textures */
 
     /* g3d */
+    struct pipe_context *pipe;
     struct pipe_sampler_view *view[2]; /* linear and sRGB */
 
     D3DFORMAT format;
@@ -131,25 +131,6 @@ NineBaseTexture9_GetSamplerView( struct NineBaseTexture9 *This, const int sRGB )
     return This->view[sRGB];
 }
 
-static void inline
-NineBindTextureToDevice( struct NineDevice9 *device,
-                         struct NineBaseTexture9 **slot,
-                         struct NineBaseTexture9 *tex )
-{
-    struct NineBaseTexture9 *old = *slot;
-
-    if (tex) {
-        if ((tex->managed.dirty | tex->dirty_mip) && LIST_IS_EMPTY(&tex->list))
-            list_add(&tex->list, &device->update_textures);
-
-        tex->bind_count++;
-    }
-    if (old)
-        old->bind_count--;
-
-    nine_bind(slot, tex);
-}
-
 #ifdef DEBUG
 void
 NineBaseTexture9_Dump( struct NineBaseTexture9 *This );
@@ -159,7 +140,7 @@ NineBaseTexture9_Dump( struct NineBaseTexture9 *This ) { }
 #endif
 
 #define BASETEX_REGISTER_UPDATE(t) do { \
-    if (((t)->managed.dirty | ((t)->dirty_mip)) && (t)->bind_count) \
+    if (((t)->managed.dirty | ((t)->dirty_mip)) && (t)->base.base.bind) \
         if (LIST_IS_EMPTY(&(t)->list)) \
             list_add(&(t)->list, &(t)->base.base.device->update_textures); \
     } while(0)

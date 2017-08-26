@@ -23,3 +23,6 @@ C_SOURCES := \
 	si_state_shaders.c \
 	si_state.h \
 	si_uvd.c
+
+GENERATED_SOURCES := \
+	sid_tables.h

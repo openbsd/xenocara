@@ -29,6 +29,9 @@
 ******************************************************************************/
 #pragma once
 
+#include "common/os.h"
+#include "common/isa.hpp"
+
 #if defined(_WIN32)
 #pragma warning(disable : 4146 4244 4267 4800 4996)
 #endif
@@ -61,9 +64,15 @@
 
 #include "llvm/Analysis/Passes.h"
 
+#if HAVE_LLVM == 0x306
+#include "llvm/PassManager.h"
+using FunctionPassManager = llvm::FunctionPassManager;
+using PassManager = llvm::PassManager;
+#else
 #include "llvm/IR/LegacyPassManager.h"
 using FunctionPassManager = llvm::legacy::FunctionPassManager;
 using PassManager = llvm::legacy::PassManager;
+#endif
 
 #include "llvm/CodeGen/Passes.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
@@ -74,9 +83,6 @@ using PassManager = llvm::legacy::PassManager;
 #include "llvm/Support/Host.h"
 #include "llvm/Support/DynamicLibrary.h"
 
-
-#include "common/os.h"
-#include "common/isa.hpp"
 
 #pragma pop_macro("DEBUG")
 
@@ -158,6 +164,8 @@ struct JitManager
     llvm::Type*                mInt32Ty;
     llvm::Type*                mInt64Ty;
     llvm::Type*                mFP32Ty;
+    llvm::StructType*          mV4FP32Ty;
+    llvm::StructType*          mV4Int32Ty;
 
     llvm::Type* mSimtFP32Ty;
     llvm::Type* mSimtInt32Ty;
@@ -172,6 +180,7 @@ struct JitManager
     std::string mCore;
 
     void SetupNewModule();
+    bool SetupModuleFromIR(const uint8_t *pIR);
 
     void DumpAsm(llvm::Function* pFunction, const char* fileName);
     static void DumpToFile(llvm::Function *f, const char *fileName);

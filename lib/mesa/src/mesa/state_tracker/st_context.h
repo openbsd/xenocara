@@ -68,6 +68,8 @@ struct st_context
 
    struct pipe_context *pipe;
 
+   struct u_upload_mgr *uploader, *indexbuf_uploader, *constbuf_uploader;
+
    struct draw_context *draw;  /**< For selection/feedback/rastpos only */
    struct draw_stage *feedback_stage;  /**< For GL_FEEDBACK rendermode */
    struct draw_stage *selection_stage;  /**< For GL_SELECT rendermode */
@@ -84,7 +86,6 @@ struct st_context
    boolean has_shareable_shaders;
    boolean has_half_float_packing;
    boolean has_multi_draw_indirect;
-   boolean has_user_constbuf;
 
    /**
     * If a shader can be created when we get its source.
@@ -223,8 +224,8 @@ struct st_context
       struct pipe_blend_state upload_blend;
       void *vs;
       void *gs;
-      void *upload_fs[3];
-      void *download_fs[3][PIPE_MAX_TEXTURE_TYPES];
+      void *upload_fs;
+      void *download_fs[PIPE_MAX_TEXTURE_TYPES];
       bool upload_enabled;
       bool download_enabled;
       bool rgba_only;

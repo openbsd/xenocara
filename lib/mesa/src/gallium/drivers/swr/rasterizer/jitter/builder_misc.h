@@ -59,6 +59,9 @@ Value *VUNDEF_F();
 Value *VUNDEF_I();
 Value *VUNDEF(Type* ty, uint32_t size);
 Value *VUNDEF_IPTR();
+#if HAVE_LLVM == 0x306
+Value *VINSERT(Value *vec, Value *val, uint64_t index);
+#endif
 Value *VBROADCAST(Value *src);
 Value *VRCP(Value *va);
 Value *VPLANEPS(Value* vA, Value* vB, Value* vC, Value* &vX, Value* &vY);
@@ -69,10 +72,12 @@ int32_t S_IMMED(Value* i);
 Value *GEP(Value* ptr, const std::initializer_list<Value*> &indexList);
 Value *GEP(Value* ptr, const std::initializer_list<uint32_t> &indexList);
 CallInst *CALL(Value *Callee, const std::initializer_list<Value*> &args);
+#if HAVE_LLVM > 0x306
 CallInst *CALL(Value *Callee) { return CALLA(Callee); }
 CallInst *CALL(Value *Callee, Value* arg);
 CallInst *CALL2(Value *Callee, Value* arg1, Value* arg2);
 CallInst *CALL3(Value *Callee, Value* arg1, Value* arg2, Value* arg3);
+#endif
 
 LoadInst *LOAD(Value *BasePtr, const std::initializer_list<uint32_t> &offset, const llvm::Twine& name = "");
 LoadInst *LOADV(Value *BasePtr, const std::initializer_list<Value*> &offset, const llvm::Twine& name = "");
@@ -107,8 +112,6 @@ void GATHER4PS(const SWR_FORMAT_INFO &info, Value* pSrcBase, Value* byteOffsets,
 Value *GATHERDD(Value* src, Value* pBase, Value* indices, Value* mask, Value* scale);
 void GATHER4DD(const SWR_FORMAT_INFO &info, Value* pSrcBase, Value* byteOffsets,
                Value* mask, Value* vGatherComponents[], bool bPackedOutput);
-
-Value *GATHERPD(Value* src, Value* pBase, Value* indices, Value* mask, Value* scale);
 
 void SCATTERPS(Value* pDst, Value* vSrc, Value* vOffsets, Value* vMask);
 
@@ -147,8 +150,7 @@ void STACKRESTORE(Value* pSaved);
 
 Value* POPCNT(Value* a);
 
-Value* DEBUGTRAP();
-Value* INT3() { return DEBUGTRAP(); }
+Value* INT3() { return INTERRUPT(C((uint8_t)3)); }
 
 
 Value *VEXTRACTI128(Value* a, Constant* imm8);

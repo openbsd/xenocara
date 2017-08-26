@@ -172,7 +172,6 @@ const char *gl_vert_attrib_name(gl_vert_attrib attrib);
    BITFIELD64_RANGE(VERT_ATTRIB_GENERIC(0), VERT_ATTRIB_GENERIC_MAX)
 /*@}*/
 
-#define MAX_VARYING 32 /**< number of float[4] vectors */
 
 /**
  * Indexes for vertex shader outputs, geometry shader inputs/outputs, and
@@ -317,65 +316,6 @@ const char *gl_varying_slot_name(gl_varying_slot slot);
  */
 typedef enum
 {
-   /**
-    * \name System values applicable to all shaders
-    */
-   /*@{*/
-
-   /**
-    * Builtin variables added by GL_ARB_shader_ballot.
-    */
-   /*@{*/
-
-   /**
-    * From the GL_ARB_shader-ballot spec:
-    *
-    *    "A sub-group is a collection of invocations which execute in lockstep.
-    *     The variable <gl_SubGroupSizeARB> is the maximum number of
-    *     invocations in a sub-group. The maximum <gl_SubGroupSizeARB>
-    *     supported in this extension is 64."
-    *
-    * The spec defines this as a uniform. However, it's highly unlikely that
-    * implementations actually treat it as a uniform (which is loaded from a
-    * constant buffer). Most likely, this is an implementation-wide constant,
-    * or perhaps something that depends on the shader stage.
-    */
-   SYSTEM_VALUE_SUBGROUP_SIZE,
-
-   /**
-    * From the GL_ARB_shader_ballot spec:
-    *
-    *    "The variable <gl_SubGroupInvocationARB> holds the index of the
-    *     invocation within sub-group. This variable is in the range 0 to
-    *     <gl_SubGroupSizeARB>-1, where <gl_SubGroupSizeARB> is the total
-    *     number of invocations in a sub-group."
-    */
-   SYSTEM_VALUE_SUBGROUP_INVOCATION,
-
-   /**
-    * From the GL_ARB_shader_ballot spec:
-    *
-    *    "The <gl_SubGroup??MaskARB> variables provide a bitmask for all
-    *     invocations, with one bit per invocation starting with the least
-    *     significant bit, according to the following table,
-    *
-    *       variable               equation for bit values
-    *       --------------------   ------------------------------------
-    *       gl_SubGroupEqMaskARB   bit index == gl_SubGroupInvocationARB
-    *       gl_SubGroupGeMaskARB   bit index >= gl_SubGroupInvocationARB
-    *       gl_SubGroupGtMaskARB   bit index >  gl_SubGroupInvocationARB
-    *       gl_SubGroupLeMaskARB   bit index <= gl_SubGroupInvocationARB
-    *       gl_SubGroupLtMaskARB   bit index <  gl_SubGroupInvocationARB
-    */
-   SYSTEM_VALUE_SUBGROUP_EQ_MASK,
-   SYSTEM_VALUE_SUBGROUP_GE_MASK,
-   SYSTEM_VALUE_SUBGROUP_GT_MASK,
-   SYSTEM_VALUE_SUBGROUP_LE_MASK,
-   SYSTEM_VALUE_SUBGROUP_LT_MASK,
-   /*@}*/
-
-   /*@}*/
-
    /**
     * \name Vertex shader system values
     */
@@ -551,7 +491,7 @@ const char *gl_system_value_name(gl_system_value sysval);
  * shader input in GLSL.
  *
  * Note: INTERP_MODE_NONE must be 0 so that memsetting the
- * ir_variable data structure to 0 causes the default behavior.
+ * gl_fragment_program data structure to 0 causes the default behavior.
  */
 enum glsl_interp_mode
 {
@@ -648,14 +588,6 @@ enum gl_advanced_blend_mode
    BLEND_HSL_LUMINOSITY = 0x4000,
 
    BLEND_ALL            = 0x7fff,
-};
-
-enum gl_tess_spacing
-{
-   TESS_SPACING_UNSPECIFIED,
-   TESS_SPACING_EQUAL,
-   TESS_SPACING_FRACTIONAL_ODD,
-   TESS_SPACING_FRACTIONAL_EVEN,
 };
 
 #ifdef __cplusplus

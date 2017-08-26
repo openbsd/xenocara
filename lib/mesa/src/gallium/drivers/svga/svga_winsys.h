@@ -392,13 +392,6 @@ struct svga_winsys_context
                     boolean *rebind);
 
    /**
-    * Invalidate the content of this surface
-    */
-   enum pipe_error
-   (*surface_invalidate)(struct svga_winsys_context *swc,
-                         struct svga_winsys_surface *surface);
-
-   /**
     * Create and define a DX GB shader that resides in the device COTable.
     * Caller of this function will issue the DXDefineShader command.
     */
@@ -561,6 +554,14 @@ struct svga_winsys_screen
                          SVGA3dSize size,
                          uint32 numLayers,
                          uint32 numMipLevels);
+
+   /**
+    * Invalidate the content of this surface
+    */
+   void
+   (*surface_invalidate)(struct svga_winsys_screen *sws,
+                         struct svga_winsys_surface *surface);
+
 
    /**
     * Buffer management. Buffer attributes are mostly fixed over its lifetime.

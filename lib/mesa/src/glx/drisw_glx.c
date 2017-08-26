@@ -219,6 +219,7 @@ static const __DRIswrastLoaderExtension swrastLoaderExtension = {
 };
 
 static const __DRIextension *loader_extensions[] = {
+   &systemTimeExtension.base,
    &swrastLoaderExtension.base,
    NULL
 };

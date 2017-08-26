@@ -32,6 +32,7 @@ AM_CFLAGS = \
 	-I$(top_srcdir)/src/gallium/auxiliary \
 	-I$(top_builddir)/src/mesa/drivers/dri/common \
 	-I$(top_srcdir)/src/mesa/drivers/dri/common \
+	-I$(top_srcdir)/src/mesa/drivers/dri/intel/server \
 	$(DEFINES) \
 	$(VISIBILITY_CFLAGS) \
 	$(INTEL_CFLAGS)

@@ -19,8 +19,7 @@ main_test_LDADD = \
 	$(top_builddir)/src/mesa/libmesa.la \
 	$(top_builddir)/src/gtest/libgtest.la \
 	$(PTHREAD_LIBS) \
-	$(DLOPEN_LIBS) \
-	$(CLOCK_LIB)
+	$(DLOPEN_LIBS)
 
 if HAVE_SHARED_GLAPI
 AM_CPPFLAGS += -DHAVE_SHARED_GLAPI

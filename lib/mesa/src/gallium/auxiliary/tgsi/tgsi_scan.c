@@ -54,16 +54,6 @@ is_memory_file(unsigned file)
 }
 
 
-static bool
-is_mem_query_inst(unsigned opcode)
-{
-   return opcode == TGSI_OPCODE_RESQ ||
-          opcode == TGSI_OPCODE_TXQ ||
-          opcode == TGSI_OPCODE_TXQS ||
-          opcode == TGSI_OPCODE_TXQ_LZ ||
-          opcode == TGSI_OPCODE_LODQ;
-}
-
 /**
  * Is the opcode a "true" texture instruction which samples from a
  * texture map?
@@ -71,7 +61,10 @@ is_mem_query_inst(unsigned opcode)
 static bool
 is_texture_inst(unsigned opcode)
 {
-   return (!is_mem_query_inst(opcode) &&
+   return (opcode != TGSI_OPCODE_TXQ &&
+           opcode != TGSI_OPCODE_TXQS &&
+           opcode != TGSI_OPCODE_TXQ_LZ &&
+           opcode != TGSI_OPCODE_LODQ &&
            tgsi_get_opcode_info(opcode)->is_tex);
 }
 
@@ -87,8 +80,6 @@ computes_derivative(unsigned opcode)
       return opcode != TGSI_OPCODE_TG4 &&
              opcode != TGSI_OPCODE_TXD &&
              opcode != TGSI_OPCODE_TXF &&
-             opcode != TGSI_OPCODE_TXF_LZ &&
-             opcode != TGSI_OPCODE_TEX_LZ &&
              opcode != TGSI_OPCODE_TXL &&
              opcode != TGSI_OPCODE_TXL2 &&
              opcode != TGSI_OPCODE_TXQ &&
@@ -101,213 +92,6 @@ computes_derivative(unsigned opcode)
           opcode == TGSI_OPCODE_SAMPLE ||
           opcode == TGSI_OPCODE_SAMPLE_B ||
           opcode == TGSI_OPCODE_SAMPLE_C;
-}
-
-
-static void
-scan_src_operand(struct tgsi_shader_info *info,
-                 const struct tgsi_full_instruction *fullinst,
-                 const struct tgsi_full_src_register *src,
-                 unsigned src_index,
-                 unsigned usage_mask,
-                 bool is_interp_instruction,
-                 bool *is_mem_inst)
-{
-   int ind = src->Register.Index;
-
-   /* Mark which inputs are effectively used */
-   if (src->Register.File == TGSI_FILE_INPUT) {
-      if (src->Register.Indirect) {
-         for (ind = 0; ind < info->num_inputs; ++ind) {
-            info->input_usage_mask[ind] |= usage_mask;
-         }
-      } else {
-         assert(ind >= 0);
-         assert(ind < PIPE_MAX_SHADER_INPUTS);
-         info->input_usage_mask[ind] |= usage_mask;
-      }
-
-      if (info->processor == PIPE_SHADER_FRAGMENT) {
-         unsigned name, index, input;
-
-         if (src->Register.Indirect && src->Indirect.ArrayID)
-            input = info->input_array_first[src->Indirect.ArrayID];
-         else
-            input = src->Register.Index;
-
-         name = info->input_semantic_name[input];
-         index = info->input_semantic_index[input];
-
-         if (name == TGSI_SEMANTIC_POSITION &&
-             (src->Register.SwizzleX == TGSI_SWIZZLE_Z ||
-              src->Register.SwizzleY == TGSI_SWIZZLE_Z ||
-              src->Register.SwizzleZ == TGSI_SWIZZLE_Z ||
-              src->Register.SwizzleW == TGSI_SWIZZLE_Z))
-            info->reads_z = TRUE;
-
-         if (name == TGSI_SEMANTIC_COLOR) {
-            unsigned mask =
-               (1 << src->Register.SwizzleX) |
-               (1 << src->Register.SwizzleY) |
-               (1 << src->Register.SwizzleZ) |
-               (1 << src->Register.SwizzleW);
-
-            info->colors_read |= mask << (index * 4);
-         }
-
-         /* Process only interpolated varyings. Don't include POSITION.
-          * Don't include integer varyings, because they are not
-          * interpolated. Don't process inputs interpolated by INTERP
-          * opcodes. Those are tracked separately.
-          */
-         if ((!is_interp_instruction || src_index != 0) &&
-             (name == TGSI_SEMANTIC_GENERIC ||
-              name == TGSI_SEMANTIC_TEXCOORD ||
-              name == TGSI_SEMANTIC_COLOR ||
-              name == TGSI_SEMANTIC_BCOLOR ||
-              name == TGSI_SEMANTIC_FOG ||
-              name == TGSI_SEMANTIC_CLIPDIST)) {
-            switch (info->input_interpolate[input]) {
-            case TGSI_INTERPOLATE_COLOR:
-            case TGSI_INTERPOLATE_PERSPECTIVE:
-               switch (info->input_interpolate_loc[input]) {
-               case TGSI_INTERPOLATE_LOC_CENTER:
-                  info->uses_persp_center = TRUE;
-                  break;
-               case TGSI_INTERPOLATE_LOC_CENTROID:
-                  info->uses_persp_centroid = TRUE;
-                  break;
-               case TGSI_INTERPOLATE_LOC_SAMPLE:
-                  info->uses_persp_sample = TRUE;
-                  break;
-               }
-               break;
-            case TGSI_INTERPOLATE_LINEAR:
-               switch (info->input_interpolate_loc[input]) {
-               case TGSI_INTERPOLATE_LOC_CENTER:
-                  info->uses_linear_center = TRUE;
-                  break;
-               case TGSI_INTERPOLATE_LOC_CENTROID:
-                  info->uses_linear_centroid = TRUE;
-                  break;
-               case TGSI_INTERPOLATE_LOC_SAMPLE:
-                  info->uses_linear_sample = TRUE;
-                  break;
-               }
-               break;
-               /* TGSI_INTERPOLATE_CONSTANT doesn't do any interpolation. */
-            }
-         }
-      }
-   }
-
-   if (info->processor == PIPE_SHADER_TESS_CTRL &&
-       src->Register.File == TGSI_FILE_OUTPUT) {
-      unsigned input;
-
-      if (src->Register.Indirect && src->Indirect.ArrayID)
-         input = info->output_array_first[src->Indirect.ArrayID];
-      else
-         input = src->Register.Index;
-
-      switch (info->output_semantic_name[input]) {
-      case TGSI_SEMANTIC_PATCH:
-         info->reads_perpatch_outputs = true;
-         break;
-      case TGSI_SEMANTIC_TESSINNER:
-      case TGSI_SEMANTIC_TESSOUTER:
-         info->reads_tessfactor_outputs = true;
-         break;
-      default:
-         info->reads_pervertex_outputs = true;
-      }
-   }
-
-   /* check for indirect register reads */
-   if (src->Register.Indirect) {
-      info->indirect_files |= (1 << src->Register.File);
-      info->indirect_files_read |= (1 << src->Register.File);
-
-      /* record indirect constant buffer indexing */
-      if (src->Register.File == TGSI_FILE_CONSTANT) {
-         if (src->Register.Dimension) {
-            if (src->Dimension.Indirect)
-               info->const_buffers_indirect = info->const_buffers_declared;
-            else
-               info->const_buffers_indirect |= 1u << src->Dimension.Index;
-         } else {
-            info->const_buffers_indirect |= 1;
-         }
-      }
-   }
-
-   if (src->Register.Dimension && src->Dimension.Indirect)
-      info->dim_indirect_files |= 1u << src->Register.File;
-
-   /* Texture samplers */
-   if (src->Register.File == TGSI_FILE_SAMPLER) {
-      const unsigned index = src->Register.Index;
-
-      assert(fullinst->Instruction.Texture);
-      assert(index < ARRAY_SIZE(info->is_msaa_sampler));
-      assert(index < PIPE_MAX_SAMPLERS);
-
-      if (is_texture_inst(fullinst->Instruction.Opcode)) {
-         const unsigned target = fullinst->Texture.Texture;
-         assert(target < TGSI_TEXTURE_UNKNOWN);
-         /* for texture instructions, check that the texture instruction
-          * target matches the previous sampler view declaration (if there
-          * was one.)
-          */
-         if (info->sampler_targets[index] == TGSI_TEXTURE_UNKNOWN) {
-            /* probably no sampler view declaration */
-            info->sampler_targets[index] = target;
-         } else {
-            /* Make sure the texture instruction's sampler/target info
-             * agrees with the sampler view declaration.
-             */
-            assert(info->sampler_targets[index] == target);
-         }
-         /* MSAA samplers */
-         if (target == TGSI_TEXTURE_2D_MSAA ||
-             target == TGSI_TEXTURE_2D_ARRAY_MSAA) {
-            info->is_msaa_sampler[src->Register.Index] = TRUE;
-         }
-      }
-   }
-
-   if (is_memory_file(src->Register.File) &&
-       !is_mem_query_inst(fullinst->Instruction.Opcode)) {
-      *is_mem_inst = true;
-
-      if (tgsi_get_opcode_info(fullinst->Instruction.Opcode)->is_store) {
-         info->writes_memory = TRUE;
-
-         if (src->Register.File == TGSI_FILE_IMAGE) {
-            if (src->Register.Indirect)
-               info->images_atomic = info->images_declared;
-            else
-               info->images_atomic |= 1 << src->Register.Index;
-         } else if (src->Register.File == TGSI_FILE_BUFFER) {
-            if (src->Register.Indirect)
-               info->shader_buffers_atomic = info->shader_buffers_declared;
-            else
-               info->shader_buffers_atomic |= 1 << src->Register.Index;
-         }
-      } else {
-         if (src->Register.File == TGSI_FILE_IMAGE) {
-            if (src->Register.Indirect)
-               info->images_load = info->images_declared;
-            else
-               info->images_load |= 1 << src->Register.Index;
-         } else if (src->Register.File == TGSI_FILE_BUFFER) {
-            if (src->Register.Indirect)
-               info->shader_buffers_load = info->shader_buffers_declared;
-            else
-               info->shader_buffers_load |= 1 << src->Register.Index;
-         }
-      }
-   }
 }
 
 
@@ -392,24 +176,145 @@ scan_instruction(struct tgsi_shader_info *info,
       info->uses_doubles = TRUE;
 
    for (i = 0; i < fullinst->Instruction.NumSrcRegs; i++) {
-      scan_src_operand(info, fullinst, &fullinst->Src[i], i,
-                       tgsi_util_get_inst_usage_mask(fullinst, i),
-                       is_interp_instruction, &is_mem_inst);
-   }
+      const struct tgsi_full_src_register *src = &fullinst->Src[i];
+      int ind = src->Register.Index;
 
-   if (fullinst->Instruction.Texture) {
-      for (i = 0; i < fullinst->Texture.NumOffsets; i++) {
-         struct tgsi_full_src_register src = {{0}};
+      /* Mark which inputs are effectively used */
+      if (src->Register.File == TGSI_FILE_INPUT) {
+         unsigned usage_mask;
+         usage_mask = tgsi_util_get_inst_usage_mask(fullinst, i);
+         if (src->Register.Indirect) {
+            for (ind = 0; ind < info->num_inputs; ++ind) {
+               info->input_usage_mask[ind] |= usage_mask;
+            }
+         } else {
+            assert(ind >= 0);
+            assert(ind < PIPE_MAX_SHADER_INPUTS);
+            info->input_usage_mask[ind] |= usage_mask;
+         }
 
-         src.Register.File = fullinst->TexOffsets[i].File;
-         src.Register.Index = fullinst->TexOffsets[i].Index;
-         src.Register.SwizzleX = fullinst->TexOffsets[i].SwizzleX;
-         src.Register.SwizzleY = fullinst->TexOffsets[i].SwizzleY;
-         src.Register.SwizzleZ = fullinst->TexOffsets[i].SwizzleZ;
+         if (info->processor == PIPE_SHADER_FRAGMENT) {
+            unsigned name, index, input;
 
-         /* The usage mask is suboptimal but should be safe. */
-         scan_src_operand(info, fullinst, &src, 0, TGSI_WRITEMASK_XYZ,
-                          false, &is_mem_inst);
+            if (src->Register.Indirect && src->Indirect.ArrayID)
+               input = info->input_array_first[src->Indirect.ArrayID];
+            else
+               input = src->Register.Index;
+
+            name = info->input_semantic_name[input];
+            index = info->input_semantic_index[input];
+
+            if (name == TGSI_SEMANTIC_POSITION &&
+                (src->Register.SwizzleX == TGSI_SWIZZLE_Z ||
+                 src->Register.SwizzleY == TGSI_SWIZZLE_Z ||
+                 src->Register.SwizzleZ == TGSI_SWIZZLE_Z ||
+                 src->Register.SwizzleW == TGSI_SWIZZLE_Z))
+               info->reads_z = TRUE;
+
+            if (name == TGSI_SEMANTIC_COLOR) {
+               unsigned mask =
+                  (1 << src->Register.SwizzleX) |
+                  (1 << src->Register.SwizzleY) |
+                  (1 << src->Register.SwizzleZ) |
+                  (1 << src->Register.SwizzleW);
+
+               info->colors_read |= mask << (index * 4);
+            }
+
+            /* Process only interpolated varyings. Don't include POSITION.
+             * Don't include integer varyings, because they are not
+             * interpolated. Don't process inputs interpolated by INTERP
+             * opcodes. Those are tracked separately.
+             */
+            if ((!is_interp_instruction || i != 0) &&
+                (name == TGSI_SEMANTIC_GENERIC ||
+                 name == TGSI_SEMANTIC_TEXCOORD ||
+                 name == TGSI_SEMANTIC_COLOR ||
+                 name == TGSI_SEMANTIC_BCOLOR ||
+                 name == TGSI_SEMANTIC_FOG ||
+                 name == TGSI_SEMANTIC_CLIPDIST)) {
+               switch (info->input_interpolate[input]) {
+               case TGSI_INTERPOLATE_COLOR:
+               case TGSI_INTERPOLATE_PERSPECTIVE:
+                  switch (info->input_interpolate_loc[input]) {
+                  case TGSI_INTERPOLATE_LOC_CENTER:
+                     info->uses_persp_center = TRUE;
+                     break;
+                  case TGSI_INTERPOLATE_LOC_CENTROID:
+                     info->uses_persp_centroid = TRUE;
+                     break;
+                  case TGSI_INTERPOLATE_LOC_SAMPLE:
+                     info->uses_persp_sample = TRUE;
+                     break;
+                  }
+                  break;
+               case TGSI_INTERPOLATE_LINEAR:
+                  switch (info->input_interpolate_loc[input]) {
+                  case TGSI_INTERPOLATE_LOC_CENTER:
+                     info->uses_linear_center = TRUE;
+                     break;
+                  case TGSI_INTERPOLATE_LOC_CENTROID:
+                     info->uses_linear_centroid = TRUE;
+                     break;
+                  case TGSI_INTERPOLATE_LOC_SAMPLE:
+                     info->uses_linear_sample = TRUE;
+                     break;
+                  }
+                  break;
+                  /* TGSI_INTERPOLATE_CONSTANT doesn't do any interpolation. */
+               }
+            }
+         }
+      }
+
+      /* check for indirect register reads */
+      if (src->Register.Indirect) {
+         info->indirect_files |= (1 << src->Register.File);
+         info->indirect_files_read |= (1 << src->Register.File);
+      }
+
+      /* Texture samplers */
+      if (src->Register.File == TGSI_FILE_SAMPLER) {
+         const unsigned index = src->Register.Index;
+
+         assert(fullinst->Instruction.Texture);
+         assert(index < ARRAY_SIZE(info->is_msaa_sampler));
+         assert(index < PIPE_MAX_SAMPLERS);
+
+         if (is_texture_inst(fullinst->Instruction.Opcode)) {
+            const unsigned target = fullinst->Texture.Texture;
+            assert(target < TGSI_TEXTURE_UNKNOWN);
+            /* for texture instructions, check that the texture instruction
+             * target matches the previous sampler view declaration (if there
+             * was one.)
+             */
+            if (info->sampler_targets[index] == TGSI_TEXTURE_UNKNOWN) {
+               /* probably no sampler view declaration */
+               info->sampler_targets[index] = target;
+            } else {
+               /* Make sure the texture instruction's sampler/target info
+                * agrees with the sampler view declaration.
+                */
+               assert(info->sampler_targets[index] == target);
+            }
+            /* MSAA samplers */
+            if (target == TGSI_TEXTURE_2D_MSAA ||
+                target == TGSI_TEXTURE_2D_ARRAY_MSAA) {
+               info->is_msaa_sampler[src->Register.Index] = TRUE;
+            }
+         }
+      }
+
+      if (is_memory_file(src->Register.File)) {
+         is_mem_inst = true;
+
+         if (tgsi_get_opcode_info(fullinst->Instruction.Opcode)->is_store) {
+            info->writes_memory = TRUE;
+
+            if (src->Register.File == TGSI_FILE_IMAGE &&
+                !src->Register.Indirect)
+               info->images_writemask |= 1 << src->Register.Index;
+         }
       }
    }
 
@@ -421,26 +326,15 @@ scan_instruction(struct tgsi_shader_info *info,
          info->indirect_files_written |= (1 << dst->Register.File);
       }
 
-      if (dst->Register.Dimension && dst->Dimension.Indirect)
-         info->dim_indirect_files |= 1u << dst->Register.File;
-
       if (is_memory_file(dst->Register.File)) {
          assert(fullinst->Instruction.Opcode == TGSI_OPCODE_STORE);
 
          is_mem_inst = true;
          info->writes_memory = TRUE;
 
-         if (dst->Register.File == TGSI_FILE_IMAGE) {
-            if (dst->Register.Indirect)
-               info->images_store = info->images_declared;
-            else
-               info->images_store |= 1 << dst->Register.Index;
-         } else if (dst->Register.File == TGSI_FILE_BUFFER) {
-            if (dst->Register.Indirect)
-               info->shader_buffers_store = info->shader_buffers_declared;
-            else
-               info->shader_buffers_store |= 1 << dst->Register.Index;
-         }
+         if (dst->Register.File == TGSI_FILE_IMAGE &&
+             !dst->Register.Indirect)
+            info->images_writemask |= 1 << dst->Register.Index;
       }
    }
 
@@ -484,37 +378,22 @@ scan_declaration(struct tgsi_shader_info *info,
       unsigned semName = fulldecl->Semantic.Name;
       unsigned semIndex = fulldecl->Semantic.Index +
          (reg - fulldecl->Range.First);
-      int buffer;
-      unsigned index, target, type;
 
       /* only first 32 regs will appear in this bitfield */
       info->file_mask[file] |= (1 << reg);
       info->file_count[file]++;
       info->file_max[file] = MAX2(info->file_max[file], (int)reg);
 
-      switch (file) {
-      case TGSI_FILE_CONSTANT:
-         buffer = 0;
+      if (file == TGSI_FILE_CONSTANT) {
+         int buffer = 0;
 
          if (fulldecl->Declaration.Dimension)
             buffer = fulldecl->Dim.Index2D;
 
          info->const_file_max[buffer] =
             MAX2(info->const_file_max[buffer], (int)reg);
-         info->const_buffers_declared |= 1u << buffer;
-         break;
-
-      case TGSI_FILE_IMAGE:
-         info->images_declared |= 1u << reg;
-         if (fulldecl->Image.Resource == TGSI_TEXTURE_BUFFER)
-            info->images_buffers |= 1 << reg;
-         break;
-
-      case TGSI_FILE_BUFFER:
-         info->shader_buffers_declared |= 1u << reg;
-         break;
-
-      case TGSI_FILE_INPUT:
+      }
+      else if (file == TGSI_FILE_INPUT) {
          info->input_semantic_name[reg] = (ubyte) semName;
          info->input_semantic_index[reg] = (ubyte) semIndex;
          info->input_interpolate[reg] = (ubyte)fulldecl->Interp.Interpolate;
@@ -532,10 +411,9 @@ scan_declaration(struct tgsi_shader_info *info,
             else if (semName == TGSI_SEMANTIC_FACE)
                info->uses_frontface = TRUE;
          }
-         break;
-
-      case TGSI_FILE_SYSTEM_VALUE:
-         index = fulldecl->Range.First;
+      }
+      else if (file == TGSI_FILE_SYSTEM_VALUE) {
+         unsigned index = fulldecl->Range.First;
 
          info->system_value_semantic_name[index] = semName;
          info->num_system_values = MAX2(info->num_system_values, index + 1);
@@ -568,81 +446,61 @@ scan_declaration(struct tgsi_shader_info *info,
          case TGSI_SEMANTIC_SAMPLEMASK:
             info->reads_samplemask = TRUE;
             break;
-         case TGSI_SEMANTIC_TESSINNER:
-         case TGSI_SEMANTIC_TESSOUTER:
-            info->reads_tess_factors = true;
-            break;
          }
-         break;
-
-      case TGSI_FILE_OUTPUT:
+      }
+      else if (file == TGSI_FILE_OUTPUT) {
          info->output_semantic_name[reg] = (ubyte) semName;
          info->output_semantic_index[reg] = (ubyte) semIndex;
-         info->output_usagemask[reg] |= fulldecl->Declaration.UsageMask;
          info->num_outputs = MAX2(info->num_outputs, reg + 1);
 
-         if (fulldecl->Declaration.UsageMask & TGSI_WRITEMASK_X) {
-            info->output_streams[reg] |= (ubyte)fulldecl->Semantic.StreamX;
-            info->num_stream_output_components[fulldecl->Semantic.StreamX]++;
-         }
-         if (fulldecl->Declaration.UsageMask & TGSI_WRITEMASK_Y) {
-            info->output_streams[reg] |= (ubyte)fulldecl->Semantic.StreamY << 2;
-            info->num_stream_output_components[fulldecl->Semantic.StreamY]++;
-         }
-         if (fulldecl->Declaration.UsageMask & TGSI_WRITEMASK_Z) {
-            info->output_streams[reg] |= (ubyte)fulldecl->Semantic.StreamZ << 4;
-            info->num_stream_output_components[fulldecl->Semantic.StreamZ]++;
-         }
-         if (fulldecl->Declaration.UsageMask & TGSI_WRITEMASK_W) {
-            info->output_streams[reg] |= (ubyte)fulldecl->Semantic.StreamW << 6;
-            info->num_stream_output_components[fulldecl->Semantic.StreamW]++;
-         }
-
-         switch (semName) {
-         case TGSI_SEMANTIC_PRIMID:
-            info->writes_primid = true;
-            break;
-         case TGSI_SEMANTIC_VIEWPORT_INDEX:
-            info->writes_viewport_index = true;
-            break;
-         case TGSI_SEMANTIC_LAYER:
-            info->writes_layer = true;
-            break;
-         case TGSI_SEMANTIC_PSIZE:
-            info->writes_psize = true;
-            break;
-         case TGSI_SEMANTIC_CLIPVERTEX:
-            info->writes_clipvertex = true;
-            break;
-         case TGSI_SEMANTIC_COLOR:
+         if (semName == TGSI_SEMANTIC_COLOR)
             info->colors_written |= 1 << semIndex;
-            break;
-         case TGSI_SEMANTIC_STENCIL:
-            info->writes_stencil = true;
-            break;
-         case TGSI_SEMANTIC_SAMPLEMASK:
-            info->writes_samplemask = true;
-            break;
-         case TGSI_SEMANTIC_EDGEFLAG:
-            info->writes_edgeflag = true;
-            break;
-         case TGSI_SEMANTIC_POSITION:
-            if (procType == PIPE_SHADER_FRAGMENT)
-               info->writes_z = true;
-            else
-               info->writes_position = true;
-            break;
-         }
-         break;
 
-      case TGSI_FILE_SAMPLER:
+         if (procType == PIPE_SHADER_VERTEX ||
+             procType == PIPE_SHADER_GEOMETRY ||
+             procType == PIPE_SHADER_TESS_CTRL ||
+             procType == PIPE_SHADER_TESS_EVAL) {
+            switch (semName) {
+            case TGSI_SEMANTIC_VIEWPORT_INDEX:
+               info->writes_viewport_index = TRUE;
+               break;
+            case TGSI_SEMANTIC_LAYER:
+               info->writes_layer = TRUE;
+               break;
+            case TGSI_SEMANTIC_PSIZE:
+               info->writes_psize = TRUE;
+               break;
+            case TGSI_SEMANTIC_CLIPVERTEX:
+               info->writes_clipvertex = TRUE;
+               break;
+            }
+         }
+
+         if (procType == PIPE_SHADER_FRAGMENT) {
+            switch (semName) {
+            case TGSI_SEMANTIC_POSITION:
+               info->writes_z = TRUE;
+               break;
+            case TGSI_SEMANTIC_STENCIL:
+               info->writes_stencil = TRUE;
+               break;
+            case TGSI_SEMANTIC_SAMPLEMASK:
+               info->writes_samplemask = TRUE;
+               break;
+            }
+         }
+
+         if (procType == PIPE_SHADER_VERTEX) {
+            if (semName == TGSI_SEMANTIC_EDGEFLAG) {
+               info->writes_edgeflag = TRUE;
+            }
+         }
+      } else if (file == TGSI_FILE_SAMPLER) {
          STATIC_ASSERT(sizeof(info->samplers_declared) * 8 >= PIPE_MAX_SAMPLERS);
          info->samplers_declared |= 1u << reg;
-         break;
-
-      case TGSI_FILE_SAMPLER_VIEW:
-         target = fulldecl->SamplerView.Resource;
-         type = fulldecl->SamplerView.ReturnTypeX;
+      } else if (file == TGSI_FILE_SAMPLER_VIEW) {
+         unsigned target = fulldecl->SamplerView.Resource;
+         unsigned type = fulldecl->SamplerView.ReturnTypeX;
 
          assert(target < TGSI_TEXTURE_UNKNOWN);
          if (info->sampler_targets[reg] == TGSI_TEXTURE_UNKNOWN) {
@@ -654,7 +512,9 @@ scan_declaration(struct tgsi_shader_info *info,
             assert(info->sampler_targets[reg] == target);
             assert(info->sampler_type[reg] == type);
          }
-         break;
+      } else if (file == TGSI_FILE_IMAGE) {
+         if (fulldecl->Image.Resource == TGSI_TEXTURE_BUFFER)
+            info->images_buffers |= 1 << reg;
       }
    }
 }

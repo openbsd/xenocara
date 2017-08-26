@@ -82,7 +82,7 @@ intel_readpixels_tiled_memcpy(struct gl_context * ctx,
    int dst_pitch;
 
    /* The miptree's buffer. */
-   struct brw_bo *bo;
+   drm_intel_bo *bo;
 
    int error = 0;
 
@@ -138,16 +138,16 @@ intel_readpixels_tiled_memcpy(struct gl_context * ctx,
    /* Since we are going to read raw data to the miptree, we need to resolve
     * any pending fast color clears before we start.
     */
-   intel_miptree_all_slices_resolve_color(brw, irb->mt, 0);
+   intel_miptree_resolve_color(brw, irb->mt, 0);
 
    bo = irb->mt->bo;
 
-   if (brw_batch_references(&brw->batch, bo)) {
+   if (drm_intel_bo_references(brw->batch.bo, bo)) {
       perf_debug("Flushing before mapping a referenced bo.\n");
       intel_batchbuffer_flush(brw);
    }
 
-   error = brw_bo_map(brw, bo, false /* write enable */);
+   error = brw_bo_map(brw, bo, false /* write enable */, "miptree");
    if (error) {
       DBG("%s: failed to map bo\n", __func__);
       return false;
@@ -195,7 +195,7 @@ intel_readpixels_tiled_memcpy(struct gl_context * ctx,
       mem_copy
    );
 
-   brw_bo_unmap(bo);
+   drm_intel_bo_unmap(bo);
    return true;
 }
 
@@ -242,16 +242,16 @@ intelReadPixels(struct gl_context * ctx,
       perf_debug("%s: fallback to CPU mapping in PBO case\n", __func__);
    }
 
-   /* Reading pixels wont dirty the front buffer, so reset the dirty
-    * flag after calling intel_prepare_render(). */
-   dirty = brw->front_buffer_dirty;
-   intel_prepare_render(brw);
-   brw->front_buffer_dirty = dirty;
-
    ok = intel_readpixels_tiled_memcpy(ctx, x, y, width, height,
                                       format, type, pixels, pack);
    if(ok)
       return;
+
+   /* glReadPixels() wont dirty the front buffer, so reset the dirty
+    * flag after calling intel_prepare_render(). */
+   dirty = brw->front_buffer_dirty;
+   intel_prepare_render(brw);
+   brw->front_buffer_dirty = dirty;
 
    /* Update Mesa state before calling _mesa_readpixels().
     * XXX this may not be needed since ReadPixels no longer uses the

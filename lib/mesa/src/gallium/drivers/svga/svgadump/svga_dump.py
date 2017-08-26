@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Generates dumper for the SVGA 3D command stream using pygccxml.
 

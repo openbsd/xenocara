@@ -29,8 +29,6 @@
 
 
 #include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <assert.h>
 #include "c11/threads.h"
 
@@ -52,13 +50,9 @@ struct _egl_global _eglGlobal =
       _eglFiniDisplay
    },
 
-   /* ClientOnlyExtensionString */
+   /* ClientExtensionString */
    "EGL_EXT_client_extensions"
    " EGL_EXT_platform_base"
-   " EGL_KHR_client_get_all_proc_addresses"
-   " EGL_KHR_debug",
-
-   /* PlatformExtensionString */
 #ifdef HAVE_WAYLAND_PLATFORM
    " EGL_EXT_platform_wayland"
 #endif
@@ -71,9 +65,8 @@ struct _egl_global _eglGlobal =
 #ifdef HAVE_SURFACELESS_PLATFORM
    " EGL_MESA_platform_surfaceless"
 #endif
-   "",
-
-   NULL, /* ClientExtensionsString */
+   " EGL_KHR_client_get_all_proc_addresses"
+   " EGL_KHR_debug",
 
    NULL, /* debugCallback */
    _EGL_DEBUG_BIT_CRITICAL | _EGL_DEBUG_BIT_ERROR, /* debugTypesEnabled */
@@ -107,38 +100,4 @@ _eglAddAtExitCall(void (*func)(void))
 
       mtx_unlock(_eglGlobal.Mutex);
    }
-}
-
-const char *
-_eglGetClientExtensionString(void)
-{
-   const char *ret;
-
-   mtx_lock(_eglGlobal.Mutex);
-
-   if (_eglGlobal.ClientExtensionString == NULL) {
-      size_t clientLen = strlen(_eglGlobal.ClientOnlyExtensionString);
-      size_t platformLen = strlen(_eglGlobal.PlatformExtensionString);
-
-      _eglGlobal.ClientExtensionString = (char *) malloc(clientLen + platformLen + 1);
-      if (_eglGlobal.ClientExtensionString != NULL) {
-         char *ptr = _eglGlobal.ClientExtensionString;
-
-         memcpy(ptr, _eglGlobal.ClientOnlyExtensionString, clientLen);
-         ptr += clientLen;
-
-         if (platformLen > 0) {
-            // Note that if PlatformExtensionString is not empty, then it will
-            // already have a leading space.
-            assert(_eglGlobal.PlatformExtensionString[0] == ' ');
-            memcpy(ptr, _eglGlobal.PlatformExtensionString, platformLen);
-            ptr += platformLen;
-         }
-         *ptr = '\0';
-      }
-   }
-   ret = _eglGlobal.ClientExtensionString;
-
-   mtx_unlock(_eglGlobal.Mutex);
-   return ret;
 }

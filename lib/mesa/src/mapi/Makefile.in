@@ -98,10 +98,9 @@ TESTS = $(am__EXEEXT_1) $(am__EXEEXT_2) $(am__append_13) \
 check_PROGRAMS = $(am__EXEEXT_1) $(am__EXEEXT_2)
 DIST_COMMON = $(am__GLES2_include_HEADERS_DIST) \
 	$(am__GLES3_include_HEADERS_DIST) \
-	$(am__GLES_include_HEADERS_DIST) $(am__khr_HEADERS_DIST) \
-	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(srcdir)/Makefile.sources $(top_srcdir)/bin/depcomp \
-	$(top_srcdir)/install-lib-links.mk
+	$(am__GLES_include_HEADERS_DIST) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in $(srcdir)/Makefile.sources \
+	$(top_srcdir)/bin/depcomp $(top_srcdir)/install-lib-links.mk
 @HAVE_SHARED_GLAPI_TRUE@am__append_1 = shared-glapi/glapi_mapi_tmp.h
 @HAVE_SHARED_GLAPI_TRUE@am__append_2 = shared-glapi/libglapi.la
 @HAVE_SHARED_GLAPI_TRUE@am__append_3 = shared-glapi-test
@@ -185,8 +184,7 @@ am__uninstall_files_from_dir = { \
   }
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgconfigdir)" \
 	"$(DESTDIR)$(GLES2_includedir)" \
-	"$(DESTDIR)$(GLES3_includedir)" "$(DESTDIR)$(GLES_includedir)" \
-	"$(DESTDIR)$(khrdir)"
+	"$(DESTDIR)$(GLES3_includedir)" "$(DESTDIR)$(GLES_includedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES) $(noinst_LTLIBRARIES)
 am__DEPENDENCIES_1 =
 @HAVE_OPENGL_ES1_TRUE@es1api_libGLESv1_CM_la_DEPENDENCIES =  \
@@ -381,9 +379,8 @@ am__GLES_include_HEADERS_DIST = $(top_srcdir)/include/GLES/egl.h \
 	$(top_srcdir)/include/GLES/gl.h \
 	$(top_srcdir)/include/GLES/glext.h \
 	$(top_srcdir)/include/GLES/glplatform.h
-am__khr_HEADERS_DIST = $(top_srcdir)/include/KHR/khrplatform.h
 HEADERS = $(GLES2_include_HEADERS) $(GLES3_include_HEADERS) \
-	$(GLES_include_HEADERS) $(khr_HEADERS)
+	$(GLES_include_HEADERS)
 RECURSIVE_CLEAN_TARGETS = mostlyclean-recursive clean-recursive	\
   distclean-recursive maintainer-clean-recursive
 AM_RECURSIVE_TARGETS = $(RECURSIVE_TARGETS:-recursive=) \
@@ -427,8 +424,6 @@ AMDGPU_CFLAGS = @AMDGPU_CFLAGS@
 AMDGPU_LIBS = @AMDGPU_LIBS@
 AMTAR = @AMTAR@
 AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
-ANDROID_CFLAGS = @ANDROID_CFLAGS@
-ANDROID_LIBS = @ANDROID_LIBS@
 AR = @AR@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
@@ -459,6 +454,8 @@ DLLTOOL = @DLLTOOL@
 DLOPEN_LIBS = @DLOPEN_LIBS@
 DRI2PROTO_CFLAGS = @DRI2PROTO_CFLAGS@
 DRI2PROTO_LIBS = @DRI2PROTO_LIBS@
+DRI3PROTO_CFLAGS = @DRI3PROTO_CFLAGS@
+DRI3PROTO_LIBS = @DRI3PROTO_LIBS@
 DRIGL_CFLAGS = @DRIGL_CFLAGS@
 DRIGL_LIBS = @DRIGL_LIBS@
 DRI_DRIVER_INSTALL_DIR = @DRI_DRIVER_INSTALL_DIR@
@@ -471,11 +468,10 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGL_CFLAGS = @EGL_CFLAGS@
+EGL_CLIENT_APIS = @EGL_CLIENT_APIS@
 EGL_LIB_DEPS = @EGL_LIB_DEPS@
 EGL_NATIVE_PLATFORM = @EGL_NATIVE_PLATFORM@
 EGREP = @EGREP@
-ETNAVIV_CFLAGS = @ETNAVIV_CFLAGS@
-ETNAVIV_LIBS = @ETNAVIV_LIBS@
 EXEEXT = @EXEEXT@
 EXPAT_CFLAGS = @EXPAT_CFLAGS@
 EXPAT_LIBS = @EXPAT_LIBS@
@@ -523,27 +519,31 @@ LIBDRM_CFLAGS = @LIBDRM_CFLAGS@
 LIBDRM_LIBS = @LIBDRM_LIBS@
 LIBELF_CFLAGS = @LIBELF_CFLAGS@
 LIBELF_LIBS = @LIBELF_LIBS@
-LIBGLVND_DATADIR = @LIBGLVND_DATADIR@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
-LIBSENSORS_LIBS = @LIBSENSORS_LIBS@
+LIBSENSORS_LDFLAGS = @LIBSENSORS_LDFLAGS@
+LIBSHA1_CFLAGS = @LIBSHA1_CFLAGS@
+LIBSHA1_LIBS = @LIBSHA1_LIBS@
 LIBTOOL = @LIBTOOL@
-LIBUNWIND_CFLAGS = @LIBUNWIND_CFLAGS@
-LIBUNWIND_LIBS = @LIBUNWIND_LIBS@
 LIB_DIR = @LIB_DIR@
 LIB_EXT = @LIB_EXT@
 LIPO = @LIPO@
+LLVM_BINDIR = @LLVM_BINDIR@
 LLVM_CFLAGS = @LLVM_CFLAGS@
 LLVM_CONFIG = @LLVM_CONFIG@
+LLVM_CPPFLAGS = @LLVM_CPPFLAGS@
 LLVM_CXXFLAGS = @LLVM_CXXFLAGS@
 LLVM_INCLUDEDIR = @LLVM_INCLUDEDIR@
 LLVM_LDFLAGS = @LLVM_LDFLAGS@
+LLVM_LIBDIR = @LLVM_LIBDIR@
 LLVM_LIBS = @LLVM_LIBS@
+LLVM_VERSION = @LLVM_VERSION@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
+MESA_LLVM = @MESA_LLVM@
 MKDIR_P = @MKDIR_P@
 MSVC2013_COMPAT_CFLAGS = @MSVC2013_COMPAT_CFLAGS@
 MSVC2013_COMPAT_CXXFLAGS = @MSVC2013_COMPAT_CXXFLAGS@
@@ -564,6 +564,8 @@ OMX_LIBS = @OMX_LIBS@
 OMX_LIB_INSTALL_DIR = @OMX_LIB_INSTALL_DIR@
 OPENCL_LIBNAME = @OPENCL_LIBNAME@
 OPENCL_VERSION = @OPENCL_VERSION@
+OPENSSL_CFLAGS = @OPENSSL_CFLAGS@
+OPENSSL_LIBS = @OPENSSL_LIBS@
 OSMESA_LIB = @OSMESA_LIB@
 OSMESA_LIB_DEPS = @OSMESA_LIB_DEPS@
 OSMESA_PC_LIB_PRIV = @OSMESA_PC_LIB_PRIV@
@@ -583,6 +585,8 @@ PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 POSIX_SHELL = @POSIX_SHELL@
+PRESENTPROTO_CFLAGS = @PRESENTPROTO_CFLAGS@
+PRESENTPROTO_LIBS = @PRESENTPROTO_LIBS@
 PTHREADSTUBS_CFLAGS = @PTHREADSTUBS_CFLAGS@
 PTHREADSTUBS_LIBS = @PTHREADSTUBS_LIBS@
 PTHREAD_CC = @PTHREAD_CC@
@@ -598,6 +602,8 @@ SED = @SED@
 SELINUX_CFLAGS = @SELINUX_CFLAGS@
 SELINUX_LIBS = @SELINUX_LIBS@
 SET_MAKE = @SET_MAKE@
+SHA1_CFLAGS = @SHA1_CFLAGS@
+SHA1_LIBS = @SHA1_LIBS@
 SHELL = @SHELL@
 SIMPENROSE_CFLAGS = @SIMPENROSE_CFLAGS@
 SIMPENROSE_LIBS = @SIMPENROSE_LIBS@
@@ -606,6 +612,7 @@ STRIP = @STRIP@
 SWR_AVX2_CXXFLAGS = @SWR_AVX2_CXXFLAGS@
 SWR_AVX_CXXFLAGS = @SWR_AVX_CXXFLAGS@
 SWR_CXX11_CXXFLAGS = @SWR_CXX11_CXXFLAGS@
+TIMESTAMP_CMD = @TIMESTAMP_CMD@
 VALGRIND_CFLAGS = @VALGRIND_CFLAGS@
 VALGRIND_LIBS = @VALGRIND_LIBS@
 VA_CFLAGS = @VA_CFLAGS@
@@ -621,6 +628,7 @@ VDPAU_LIB_INSTALL_DIR = @VDPAU_LIB_INSTALL_DIR@
 VDPAU_MAJOR = @VDPAU_MAJOR@
 VDPAU_MINOR = @VDPAU_MINOR@
 VERSION = @VERSION@
+VG_LIB_DEPS = @VG_LIB_DEPS@
 VISIBILITY_CFLAGS = @VISIBILITY_CFLAGS@
 VISIBILITY_CXXFLAGS = @VISIBILITY_CXXFLAGS@
 VL_CFLAGS = @VL_CFLAGS@
@@ -649,10 +657,9 @@ XVMC_LIBS = @XVMC_LIBS@
 XVMC_LIB_INSTALL_DIR = @XVMC_LIB_INSTALL_DIR@
 XVMC_MAJOR = @XVMC_MAJOR@
 XVMC_MINOR = @XVMC_MINOR@
+XXD = @XXD@
 YACC = @YACC@
 YFLAGS = @YFLAGS@
-ZLIB_CFLAGS = @ZLIB_CFLAGS@
-ZLIB_LIBS = @ZLIB_LIBS@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
@@ -755,6 +762,8 @@ MAPI_BRIDGE_FILES = \
 
 MAPI_FILES = \
 	entry.c \
+	mapi.c \
+	mapi.h \
 	stub.c \
 	stub.h \
 	table.c \
@@ -882,8 +891,6 @@ glapi_gen_mapi_deps := \
 @HAVE_OPENGL_ES2_TRUE@	$(GC_SECTIONS) \
 @HAVE_OPENGL_ES2_TRUE@	$(LD_NO_UNDEFINED)
 
-@NEED_KHRPLATFORM_TRUE@khrdir = $(includedir)/KHR
-@NEED_KHRPLATFORM_TRUE@khr_HEADERS = $(top_srcdir)/include/KHR/khrplatform.h
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
@@ -1406,27 +1413,6 @@ uninstall-GLES_includeHEADERS:
 	@list='$(GLES_include_HEADERS)'; test -n "$(GLES_includedir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
 	dir='$(DESTDIR)$(GLES_includedir)'; $(am__uninstall_files_from_dir)
-install-khrHEADERS: $(khr_HEADERS)
-	@$(NORMAL_INSTALL)
-	@list='$(khr_HEADERS)'; test -n "$(khrdir)" || list=; \
-	if test -n "$$list"; then \
-	  echo " $(MKDIR_P) '$(DESTDIR)$(khrdir)'"; \
-	  $(MKDIR_P) "$(DESTDIR)$(khrdir)" || exit 1; \
-	fi; \
-	for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  echo "$$d$$p"; \
-	done | $(am__base_list) | \
-	while read files; do \
-	  echo " $(INSTALL_HEADER) $$files '$(DESTDIR)$(khrdir)'"; \
-	  $(INSTALL_HEADER) $$files "$(DESTDIR)$(khrdir)" || exit $$?; \
-	done
-
-uninstall-khrHEADERS:
-	@$(NORMAL_UNINSTALL)
-	@list='$(khr_HEADERS)'; test -n "$(khrdir)" || list=; \
-	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
-	dir='$(DESTDIR)$(khrdir)'; $(am__uninstall_files_from_dir)
 
 # This directory's subdirectories are mostly independent; you can cd
 # into them and run 'make' without going through this Makefile.
@@ -1712,7 +1698,7 @@ check: $(BUILT_SOURCES)
 all-am: Makefile $(LTLIBRARIES) $(DATA) $(HEADERS) all-local
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgconfigdir)" "$(DESTDIR)$(GLES2_includedir)" "$(DESTDIR)$(GLES3_includedir)" "$(DESTDIR)$(GLES_includedir)" "$(DESTDIR)$(khrdir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgconfigdir)" "$(DESTDIR)$(GLES2_includedir)" "$(DESTDIR)$(GLES3_includedir)" "$(DESTDIR)$(GLES_includedir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: $(BUILT_SOURCES)
@@ -1785,7 +1771,7 @@ info-am:
 
 install-data-am: install-GLES2_includeHEADERS \
 	install-GLES3_includeHEADERS install-GLES_includeHEADERS \
-	install-khrHEADERS install-pkgconfigDATA
+	install-pkgconfigDATA
 
 install-dvi: install-dvi-recursive
 
@@ -1833,8 +1819,7 @@ ps-am:
 
 uninstall-am: uninstall-GLES2_includeHEADERS \
 	uninstall-GLES3_includeHEADERS uninstall-GLES_includeHEADERS \
-	uninstall-khrHEADERS uninstall-libLTLIBRARIES \
-	uninstall-pkgconfigDATA
+	uninstall-libLTLIBRARIES uninstall-pkgconfigDATA
 
 .MAKE: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) all check \
 	check-am cscopelist-recursive ctags-recursive install \
@@ -1852,16 +1837,15 @@ uninstall-am: uninstall-GLES2_includeHEADERS \
 	install-am install-data install-data-am install-dvi \
 	install-dvi-am install-exec install-exec-am install-html \
 	install-html-am install-info install-info-am \
-	install-khrHEADERS install-libLTLIBRARIES install-man \
-	install-pdf install-pdf-am install-pkgconfigDATA install-ps \
-	install-ps-am install-strip installcheck installcheck-am \
-	installdirs installdirs-am maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags tags-recursive uninstall uninstall-GLES2_includeHEADERS \
-	uninstall-GLES3_includeHEADERS uninstall-GLES_includeHEADERS \
-	uninstall-am uninstall-khrHEADERS uninstall-libLTLIBRARIES \
-	uninstall-pkgconfigDATA
+	install-libLTLIBRARIES install-man install-pdf install-pdf-am \
+	install-pkgconfigDATA install-ps install-ps-am install-strip \
+	installcheck installcheck-am installdirs installdirs-am \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
+	pdf pdf-am ps ps-am tags tags-recursive uninstall \
+	uninstall-GLES2_includeHEADERS uninstall-GLES3_includeHEADERS \
+	uninstall-GLES_includeHEADERS uninstall-am \
+	uninstall-libLTLIBRARIES uninstall-pkgconfigDATA
 
 
 @REGEN_SOURCES_TRUE@shared-glapi/glapi_mapi_tmp.h : glapi/gen/gl_and_es_API.xml $(glapi_gen_mapi_deps)

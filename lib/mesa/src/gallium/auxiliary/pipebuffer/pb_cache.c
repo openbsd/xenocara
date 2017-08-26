@@ -89,7 +89,7 @@ pb_cache_add_buffer(struct pb_cache_entry *entry)
    struct pb_buffer *buf = entry->buffer;
    unsigned i;
 
-   mtx_lock(&mgr->mutex);
+   pipe_mutex_lock(mgr->mutex);
    assert(!pipe_is_referenced(&buf->reference));
 
    for (i = 0; i < ARRAY_SIZE(mgr->buckets); i++)
@@ -98,7 +98,7 @@ pb_cache_add_buffer(struct pb_cache_entry *entry)
    /* Directly release any buffer that exceeds the limit. */
    if (mgr->cache_size + buf->size > mgr->max_cache_size) {
       mgr->destroy_buffer(buf);
-      mtx_unlock(&mgr->mutex);
+      pipe_mutex_unlock(mgr->mutex);
       return;
    }
 
@@ -107,7 +107,7 @@ pb_cache_add_buffer(struct pb_cache_entry *entry)
    LIST_ADDTAIL(&entry->head, cache);
    ++mgr->num_buffers;
    mgr->cache_size += buf->size;
-   mtx_unlock(&mgr->mutex);
+   pipe_mutex_unlock(mgr->mutex);
 }
 
 /**
@@ -155,7 +155,7 @@ pb_cache_reclaim_buffer(struct pb_cache *mgr, pb_size size,
    int ret = 0;
    struct list_head *cache = &mgr->buckets[bucket_index];
 
-   mtx_lock(&mgr->mutex);
+   pipe_mutex_lock(mgr->mutex);
 
    entry = NULL;
    cur = cache->next;
@@ -208,13 +208,13 @@ pb_cache_reclaim_buffer(struct pb_cache *mgr, pb_size size,
       mgr->cache_size -= buf->size;
       LIST_DEL(&entry->head);
       --mgr->num_buffers;
-      mtx_unlock(&mgr->mutex);
+      pipe_mutex_unlock(mgr->mutex);
       /* Increase refcount */
       pipe_reference_init(&buf->reference, 1);
       return buf;
    }
 
-   mtx_unlock(&mgr->mutex);
+   pipe_mutex_unlock(mgr->mutex);
    return NULL;
 }
 
@@ -228,7 +228,7 @@ pb_cache_release_all_buffers(struct pb_cache *mgr)
    struct pb_cache_entry *buf;
    unsigned i;
 
-   mtx_lock(&mgr->mutex);
+   pipe_mutex_lock(mgr->mutex);
    for (i = 0; i < ARRAY_SIZE(mgr->buckets); i++) {
       struct list_head *cache = &mgr->buckets[i];
 
@@ -241,7 +241,7 @@ pb_cache_release_all_buffers(struct pb_cache *mgr)
          next = curr->next;
       }
    }
-   mtx_unlock(&mgr->mutex);
+   pipe_mutex_unlock(mgr->mutex);
 }
 
 void
@@ -280,7 +280,7 @@ pb_cache_init(struct pb_cache *mgr, uint usecs, float size_factor,
    for (i = 0; i < ARRAY_SIZE(mgr->buckets); i++)
       LIST_INITHEAD(&mgr->buckets[i]);
 
-   (void) mtx_init(&mgr->mutex, mtx_plain);
+   pipe_mutex_init(mgr->mutex);
    mgr->cache_size = 0;
    mgr->max_cache_size = maximum_cache_size;
    mgr->usecs = usecs;
@@ -298,5 +298,5 @@ void
 pb_cache_deinit(struct pb_cache *mgr)
 {
    pb_cache_release_all_buffers(mgr);
-   mtx_destroy(&mgr->mutex);
+   pipe_mutex_destroy(mgr->mutex);
 }

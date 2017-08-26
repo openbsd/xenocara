@@ -184,14 +184,6 @@ clGetDeviceInfo(cl_device_id d_dev, cl_device_info param,
       buf.as_scalar<size_t>() = 1 << dev.max_image_levels_3d();
       break;
 
-   case CL_DEVICE_IMAGE_MAX_BUFFER_SIZE:
-      buf.as_scalar<size_t>() = dev.max_image_buffer_size();
-      break;
-
-   case CL_DEVICE_IMAGE_MAX_ARRAY_SIZE:
-      buf.as_scalar<size_t>() = dev.max_image_array_number();
-      break;
-
    case CL_DEVICE_IMAGE_SUPPORT:
       buf.as_scalar<cl_bool>() = dev.image_support();
       break;
@@ -281,7 +273,6 @@ clGetDeviceInfo(cl_device_id d_dev, cl_device_info param,
 
    case CL_DEVICE_AVAILABLE:
    case CL_DEVICE_COMPILER_AVAILABLE:
-   case CL_DEVICE_LINKER_AVAILABLE:
       buf.as_scalar<cl_bool>() = CL_TRUE;
       break;
 
@@ -291,10 +282,6 @@ clGetDeviceInfo(cl_device_id d_dev, cl_device_info param,
 
    case CL_DEVICE_QUEUE_PROPERTIES:
       buf.as_scalar<cl_command_queue_properties>() = CL_QUEUE_PROFILING_ENABLE;
-      break;
-
-   case CL_DEVICE_BUILT_IN_KERNELS:
-      buf.as_string() = "";
       break;
 
    case CL_DEVICE_NAME:
@@ -369,16 +356,6 @@ clGetDeviceInfo(cl_device_id d_dev, cl_device_info param,
 
    case CL_DEVICE_OPENCL_C_VERSION:
       buf.as_string() = "OpenCL C 1.1 ";
-      break;
-
-   case CL_DEVICE_PRINTF_BUFFER_SIZE:
-      // Per the spec, the minimum value for the FULL profile is 1 MB.
-      // However, clover is not ready yet to support it
-      buf.as_scalar<size_t>() = 0 /* 1024 */;
-      break;
-
-   case CL_DEVICE_PREFERRED_INTEROP_USER_SYNC:
-      buf.as_scalar<cl_bool>() = CL_TRUE;
       break;
 
    case CL_DEVICE_PARENT_DEVICE:

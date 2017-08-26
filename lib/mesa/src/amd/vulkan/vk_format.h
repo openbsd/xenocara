@@ -24,13 +24,15 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef VK_FORMAT_H
-#define VK_FORMAT_H
+#pragma once
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <assert.h>
 #include <vulkan/vulkan.h>
 #include <util/macros.h>
-
 enum vk_format_layout {
 	/**
 	 * Formats with vk_format_block::width == vk_format_block::height == 1
@@ -444,5 +446,6 @@ vk_format_get_component_bits(VkFormat format,
 		return 0;
 	}
 }
-
-#endif /* VK_FORMAT_H */
+#ifdef __cplusplus
+} // extern "C" {
+#endif

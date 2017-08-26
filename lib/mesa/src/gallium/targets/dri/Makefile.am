@@ -1,7 +1,9 @@
 include $(top_srcdir)/src/gallium/Automake.inc
 
+if HAVE_ANDROID
 if HAVE_SHARED_GLAPI
 SHARED_GLAPI_LIB = $(top_builddir)/src/mapi/shared-glapi/libglapi.la
+endif
 endif
 
 AM_CFLAGS = \
@@ -29,10 +31,8 @@ gallium_dri_la_LDFLAGS = \
 	-shared \
 	-shrext .so \
 	-module \
-	-no-undefined \
 	-avoid-version \
-	$(GC_SECTIONS) \
-	$(LD_NO_UNDEFINED)
+	$(GC_SECTIONS)
 
 if HAVE_LD_VERSION_SCRIPT
 gallium_dri_la_LDFLAGS += \
@@ -75,6 +75,8 @@ TARGET_LIB_DEPS =
 
 include $(top_srcdir)/src/gallium/drivers/i915/Automake.inc
 
+include $(top_srcdir)/src/gallium/drivers/ilo/Automake.inc
+
 include $(top_srcdir)/src/gallium/drivers/nouveau/Automake.inc
 
 include $(top_srcdir)/src/gallium/drivers/r300/Automake.inc
@@ -88,9 +90,6 @@ include $(top_srcdir)/src/gallium/drivers/freedreno/Automake.inc
 include $(top_srcdir)/src/gallium/drivers/vc4/Automake.inc
 
 include $(top_srcdir)/src/gallium/drivers/virgl/Automake.inc
-
-include $(top_srcdir)/src/gallium/drivers/etnaviv/Automake.inc
-include $(top_srcdir)/src/gallium/drivers/imx/Automake.inc
 
 include $(top_srcdir)/src/gallium/drivers/softpipe/Automake.inc
 include $(top_srcdir)/src/gallium/drivers/llvmpipe/Automake.inc
@@ -113,7 +112,7 @@ gallium_dri_la_LIBADD += \
 
 endif # HAVE_GALLIUM_STATIC_TARGETS
 
-if HAVE_GALLIUM_LLVM
+if HAVE_MESA_LLVM
 gallium_dri_la_LIBADD += $(LLVM_LIBS)
 gallium_dri_la_LDFLAGS += $(LLVM_LDFLAGS)
 endif
@@ -142,8 +141,7 @@ install-data-hook:
 		ln -f $(DESTDIR)$(dridir)/gallium_dri.so                \
 		      $(DESTDIR)$(dridir)/$${i}_dri.so;                 \
 	done;                                                           \
-	$(RM) $(DESTDIR)$(dridir)/gallium_dri.*;                        \
-	$(RM) -d $(DESTDIR)$(dridir) &>/dev/null || true
+	$(RM) $(DESTDIR)$(dridir)/gallium_dri.*
 
 uninstall-hook:
 	for i in $(TARGET_DRIVERS); do                                  \

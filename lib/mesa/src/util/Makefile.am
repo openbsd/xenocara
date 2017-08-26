@@ -36,15 +36,15 @@ libmesautil_la_CPPFLAGS = \
 	-I$(top_srcdir)/src/mesa \
 	-I$(top_srcdir)/src/gallium/include \
 	-I$(top_srcdir)/src/gallium/auxiliary \
+	$(SHA1_CFLAGS) \
 	$(VISIBILITY_CFLAGS) \
-	$(MSVC2013_COMPAT_CFLAGS) \
-	$(ZLIB_CFLAGS)
+	$(MSVC2013_COMPAT_CFLAGS)
 
 libmesautil_la_SOURCES = \
 	$(MESA_UTIL_FILES) \
 	$(MESA_UTIL_GENERATED_FILES)
 
-libmesautil_la_LIBADD = $(ZLIB_LIBS)
+libmesautil_la_LIBADD = $(SHA1_LIBS)
 
 roundeven_test_LDADD = -lm
 
@@ -53,10 +53,7 @@ TESTS = $(check_PROGRAMS)
 
 BUILT_SOURCES = $(MESA_UTIL_GENERATED_FILES)
 CLEANFILES = $(BUILT_SOURCES)
-EXTRA_DIST = \
-	format_srgb.py \
-	SConscript \
-	sha1/README
+EXTRA_DIST = format_srgb.py SConscript
 
 if REGEN_SOURCES
 PYTHON_GEN = $(AM_V_GEN)$(PYTHON2) $(PYTHON_FLAGS)

@@ -233,21 +233,21 @@ set_swizzle_component(GLuint *swizzle, GLuint comp, GLuint swz)
 static inline void
 flush(struct gl_context *ctx)
 {
-   FLUSH_VERTICES(ctx, _NEW_TEXTURE_OBJECT);
+   FLUSH_VERTICES(ctx, _NEW_TEXTURE);
 }
 
 
 /**
  * This is called just prior to changing any texture object state which
  * could affect texture completeness (texture base level, max level).
- * Any pending rendering will be flushed out, we'll set the _NEW_TEXTURE_OBJECT
+ * Any pending rendering will be flushed out, we'll set the _NEW_TEXTURE
  * state flag and then mark the texture object as 'incomplete' so that any
  * per-texture derived state gets recomputed.
  */
 static inline void
 incomplete(struct gl_context *ctx, struct gl_texture_object *texObj)
 {
-   FLUSH_VERTICES(ctx, _NEW_TEXTURE_OBJECT);
+   FLUSH_VERTICES(ctx, _NEW_TEXTURE);
    _mesa_dirty_texobj(ctx, texObj);
 }
 
@@ -934,10 +934,6 @@ _mesa_texture_parameteriv(struct gl_context *ctx,
    switch (pname) {
    case GL_TEXTURE_BORDER_COLOR:
       {
-         if (!_mesa_target_allows_setting_sampler_parameters(texObj->Target)) {
-            _mesa_error(ctx, GL_INVALID_ENUM, "glTextureParameteriv(texture)");
-            return;
-         }
          /* convert int params to float */
          GLfloat fparams[4];
          fparams[0] = INT_TO_FLOAT(params[0]);
@@ -978,11 +974,7 @@ _mesa_texture_parameterIiv(struct gl_context *ctx,
 {
    switch (pname) {
    case GL_TEXTURE_BORDER_COLOR:
-      if (!_mesa_target_allows_setting_sampler_parameters(texObj->Target)) {
-         _mesa_error(ctx, GL_INVALID_ENUM, "glTextureParameterIiv(texture)");
-         return;
-      }
-      FLUSH_VERTICES(ctx, _NEW_TEXTURE_OBJECT);
+      FLUSH_VERTICES(ctx, _NEW_TEXTURE);
       /* set the integer-valued border color */
       COPY_4V(texObj->Sampler.BorderColor.i, params);
       break;
@@ -1000,11 +992,7 @@ _mesa_texture_parameterIuiv(struct gl_context *ctx,
 {
    switch (pname) {
    case GL_TEXTURE_BORDER_COLOR:
-      if (!_mesa_target_allows_setting_sampler_parameters(texObj->Target)) {
-         _mesa_error(ctx, GL_INVALID_ENUM, "glTextureParameterIuiv(texture)");
-         return;
-      }
-      FLUSH_VERTICES(ctx, _NEW_TEXTURE_OBJECT);
+      FLUSH_VERTICES(ctx, _NEW_TEXTURE);
       /* set the unsigned integer-valued border color */
       COPY_4V(texObj->Sampler.BorderColor.ui, params);
       break;

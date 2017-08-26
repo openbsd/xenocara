@@ -36,7 +36,7 @@
 
 #include "program/program.h"
 #include "brw_context.h"
-#include "compiler/brw_eu.h"
+#include "brw_eu.h"
 
 
 #define SF_POINTS    0
@@ -46,8 +46,7 @@
 
 struct brw_sf_prog_key {
    GLbitfield64 attrs;
-   bool contains_flat_varying;
-   const unsigned char *interp_mode;
+   struct interpolation_mode_map interpolation_mode;
    uint8_t point_sprite_coord_replace;
    GLuint primitive:2;
    GLuint do_twoside_color:1;
@@ -99,6 +98,7 @@ struct brw_sf_compile {
    unsigned flag_value;
 
    struct brw_vue_map vue_map;
+   bool has_flat_shading;
 };
 
 

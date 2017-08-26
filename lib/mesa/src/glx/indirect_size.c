@@ -43,7 +43,10 @@
 #endif
 
 
-#ifdef HAVE_FUNC_ATTRIBUTE_ALIAS
+#if defined(__CYGWIN__) || defined(__MINGW32__) || defined(GLX_USE_APPLEGL)
+#undef HAVE_ALIAS
+#endif
+#ifdef HAVE_ALIAS
 #define ALIAS2(from,to) \
     _X_INTERNAL PURE FASTCALL GLint __gl ## from ## _size( GLenum e ) \
         __attribute__ ((alias( # to )));

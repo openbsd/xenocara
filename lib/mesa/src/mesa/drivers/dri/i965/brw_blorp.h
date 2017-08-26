@@ -21,8 +21,7 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef BRW_BLORP_H
-#define BRW_BLORP_H
+#pragma once
 
 #include "blorp/blorp.h"
 #include "intel_mipmap_tree.h"
@@ -65,13 +64,11 @@ brw_blorp_clear_color(struct brw_context *brw, struct gl_framebuffer *fb,
 
 void
 brw_blorp_resolve_color(struct brw_context *brw,
-                        struct intel_mipmap_tree *mt,
-                        unsigned level, unsigned layer);
+                        struct intel_mipmap_tree *mt);
 
 void
 intel_hiz_exec(struct brw_context *brw, struct intel_mipmap_tree *mt,
-               unsigned int level, unsigned int start_layer,
-               unsigned int num_layers, enum blorp_hiz_op op);
+	       unsigned int level, unsigned int layer, enum blorp_hiz_op op);
 
 void gen6_blorp_exec(struct blorp_batch *batch,
                      const struct blorp_params *params);
@@ -87,5 +84,3 @@ void gen9_blorp_exec(struct blorp_batch *batch,
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
-
-#endif /* BRW_BLORP_H */

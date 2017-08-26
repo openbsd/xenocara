@@ -21,6 +21,7 @@
  * IN THE SOFTWARE.
  */
 
+#pragma once
 #ifndef PROG_TO_NIR_H
 #define PROG_TO_NIR_H
 

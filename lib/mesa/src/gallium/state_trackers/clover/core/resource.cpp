@@ -25,7 +25,6 @@
 #include "pipe/p_screen.h"
 #include "util/u_sampler.h"
 #include "util/u_format.h"
-#include "util/u_inlines.h"
 
 using namespace clover;
 
@@ -33,9 +32,9 @@ namespace {
    class box {
    public:
       box(const resource::vector &origin, const resource::vector &size) :
-        pipe({ (int)origin[0], (int16_t)origin[1],
-               (int16_t)origin[2], (int)size[0],
-               (int16_t)size[1], (int16_t)size[2] }) {
+         pipe({ (int)origin[0], (int)origin[1],
+                (int)origin[2], (int)size[0],
+                (int)size[1], (int)size[2] }) {
       }
 
       operator const pipe_box *() {
@@ -177,7 +176,7 @@ root_resource::root_resource(clover::device &dev, memory_obj &obj,
 }
 
 root_resource::~root_resource() {
-   pipe_resource_reference(&this->pipe, NULL);
+   device().pipe->resource_destroy(device().pipe, pipe);
 }
 
 sub_resource::sub_resource(resource &r, const vector &offset) :
@@ -190,7 +189,7 @@ mapping::mapping(command_queue &q, resource &r,
                  cl_map_flags flags, bool blocking,
                  const resource::vector &origin,
                  const resource::vector &region) :
-   pctx(q.pipe), pres(NULL) {
+   pctx(q.pipe) {
    unsigned usage = ((flags & CL_MAP_WRITE ? PIPE_TRANSFER_WRITE : 0 ) |
                      (flags & CL_MAP_READ ? PIPE_TRANSFER_READ : 0 ) |
                      (flags & CL_MAP_WRITE_INVALIDATE_REGION ?
@@ -203,14 +202,12 @@ mapping::mapping(command_queue &q, resource &r,
       pxfer = NULL;
       throw error(CL_OUT_OF_RESOURCES);
    }
-   pipe_resource_reference(&pres, r.pipe);
 }
 
 mapping::mapping(mapping &&m) :
-   pctx(m.pctx), pxfer(m.pxfer), pres(m.pres), p(m.p) {
+   pctx(m.pctx), pxfer(m.pxfer), p(m.p) {
    m.pctx = NULL;
    m.pxfer = NULL;
-   m.pres = NULL;
    m.p = NULL;
 }
 
@@ -218,14 +215,12 @@ mapping::~mapping() {
    if (pxfer) {
       pctx->transfer_unmap(pctx, pxfer);
    }
-   pipe_resource_reference(&pres, NULL);
 }
 
 mapping &
 mapping::operator=(mapping m) {
    std::swap(pctx, m.pctx);
    std::swap(pxfer, m.pxfer);
-   std::swap(pres, m.pres);
    std::swap(p, m.p);
    return *this;
 }

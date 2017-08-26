@@ -35,7 +35,6 @@ libvdpau_gallium_la_LIBADD = \
 	$(top_builddir)/src/gallium/auxiliary/libgallium.la \
 	$(top_builddir)/src/util/libmesautil.la \
 	$(VL_LIBS) \
-	$(XCB_DRI3_LIBS) \
 	$(LIBDRM_LIBS) \
 	$(GALLIUM_COMMON_LIB_DEPS)
 
@@ -73,7 +72,7 @@ libvdpau_gallium_la_LIBADD += \
 
 endif # HAVE_GALLIUM_STATIC_TARGETS
 
-if HAVE_GALLIUM_LLVM
+if HAVE_MESA_LLVM
 libvdpau_gallium_la_LIBADD += $(LLVM_LIBS)
 libvdpau_gallium_la_LDFLAGS += $(LLVM_LDFLAGS)
 endif
@@ -121,8 +120,7 @@ install-data-hook:
 		ln -sf $${l}						\
 		       $${dest_dir}/$${k};				\
 	done;								\
-	$(RM) $${dest_dir}/libvdpau_gallium.*;				\
-	$(RM) -d $${dest_dir} &>/dev/null || true
+	$(RM) $${dest_dir}/libvdpau_gallium.*
 
 uninstall-hook:
 	for i in $(TARGET_DRIVERS); do					\

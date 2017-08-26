@@ -40,13 +40,13 @@
  */
 void * ir3_alloc(struct ir3 *shader, int sz)
 {
-	return rzalloc_size(shader, sz); /* TODO: don't use rzalloc */
+	return ralloc_size(shader, sz);
 }
 
 struct ir3 * ir3_create(struct ir3_compiler *compiler,
 		unsigned nin, unsigned nout)
 {
-	struct ir3 *shader = rzalloc(compiler, struct ir3);
+	struct ir3 *shader = ralloc(compiler, struct ir3);
 
 	shader->compiler = compiler;
 	shader->ninputs = nin;
@@ -63,6 +63,12 @@ struct ir3 * ir3_create(struct ir3_compiler *compiler,
 
 void ir3_destroy(struct ir3 *shader)
 {
+	/* TODO convert the dynamic array to ralloc too: */
+	free(shader->indirects);
+	free(shader->predicates);
+	free(shader->baryfs);
+	free(shader->keeps);
+	free(shader->astc_srgb);
 	ralloc_free(shader);
 }
 
@@ -123,9 +129,7 @@ static int emit_cat0(struct ir3_instruction *instr, void *ptr,
 {
 	instr_cat0_t *cat0 = ptr;
 
-	if (info->gpu_id >= 500) {
-		cat0->a5xx.immed = instr->cat0.immed;
-	} else if (info->gpu_id >= 400) {
+	if (info->gpu_id >= 400) {
 		cat0->a4xx.immed = instr->cat0.immed;
 	} else {
 		cat0->a3xx.immed = instr->cat0.immed;
@@ -620,7 +624,7 @@ static void insert_instr(struct ir3_block *block,
 	list_addtail(&instr->node, &block->instr_list);
 
 	if (is_input(instr))
-		array_insert(shader, shader->baryfs, instr);
+		array_insert(shader->baryfs, instr);
 }
 
 struct ir3_block * ir3_block_create(struct ir3 *shader)
@@ -723,7 +727,7 @@ ir3_instr_set_address(struct ir3_instruction *instr,
 	if (instr->address != addr) {
 		struct ir3 *ir = instr->block->shader;
 		instr->address = addr;
-		array_insert(ir, ir->indirects, instr);
+		array_insert(ir->indirects, instr);
 	}
 }
 
