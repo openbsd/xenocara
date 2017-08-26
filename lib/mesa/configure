@@ -1131,6 +1131,7 @@ enable_fast_install
 with_gnu_ld
 with_sysroot
 enable_libtool_lock
+enable_regen_sources
 enable_pwr8
 enable_debug
 enable_profile
@@ -1909,6 +1910,8 @@ Optional Features:
   --enable-fast-install[=PKGS]
                           optimize for fast installation [default=yes]
   --disable-libtool-lock  avoid locking (might break parallel builds)
+  --disable-regen-sources disable regenerating source with python and yacc
+                          [default=enabled]
   --disable-pwr8-inst     disable POWER8-specific instructions
   --enable-debug          use debug compiler flags and macros
                           [default=disabled]
@@ -18017,7 +18020,15 @@ else
     fi
 fi
 
- if test -n "$PYTHON2"; then
+# Check whether --enable-regen-sources was given.
+if test "${enable_regen_sources+set}" = set; then :
+  enableval=$enable_regen_sources; regen_sources="$enableval"
+else
+  regen_sources=yes
+fi
+
+
+ if test "x$regen_sources" = xyes; then
   REGEN_SOURCES_TRUE=
   REGEN_SOURCES_FALSE='#'
 else

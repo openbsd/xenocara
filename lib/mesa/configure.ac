@@ -159,7 +159,14 @@ else
     fi
 fi
 
-AM_CONDITIONAL(REGEN_SOURCES, test -n "$PYTHON2")
+dnl Avoid attempting to rebuild files with python and yacc
+AC_ARG_ENABLE([regen-sources],
+   [AS_HELP_STRING([--disable-regen-sources],
+       [disable regenerating source with python and yacc @<:@default=enabled@:>@])],
+   [regen_sources="$enableval"],
+   [regen_sources=yes])
+
+AM_CONDITIONAL(REGEN_SOURCES, test "x$regen_sources" = xyes)
 
 AC_PROG_INSTALL
 
