@@ -657,7 +657,7 @@ set_environment(void)
     int ret;
 
     ret = snprintf(displayEnv, sizeof(displayEnv), "unix%s", displayNum);
-    if (ret < 0 || ret > sizeof(displayEnv))
+    if (ret < 0 || ret >= sizeof(displayEnv))
         Fatalx("unable to set DISPLAY");
 
     if (setenv("DISPLAY", displayEnv, TRUE) == -1)
