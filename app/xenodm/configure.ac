@@ -207,12 +207,12 @@ AC_SUBST(XENODM_LIBS)
 # Defaults for X session - should probably be configure --with-* flags
 # Currently just trying to mirror what defaults were set in Imake
 
-# -DDEF_SERVER_LINE=":0 local $(DEF_SERVER) :0"
+# -DDEF_SERVER_LINE="unix:0 local $(DEF_SERVER) :0"
 if test -z "$DEF_SERVER" ; then
 	DEF_SERVER="${bindir}/X"
 fi
 if test -z "$DEF_SERVER_LINE" ; then
-	DEF_SERVER_LINE=":0 local ${DEF_SERVER} :0"
+	DEF_SERVER_LINE="unix:0 local ${DEF_SERVER} :0"
 fi
 AX_DEFINE_DIR(DEF_SERVER_LINE, DEF_SERVER_LINE,
 	[Define to default Xserver file entry for local X server])
