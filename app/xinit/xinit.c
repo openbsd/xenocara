@@ -653,14 +653,7 @@ shutdown(void)
 static void
 set_environment(void)
 {
-    char displayEnv[128];
-    int ret;
-
-    ret = snprintf(displayEnv, sizeof(displayEnv), "unix%s", displayNum);
-    if (ret < 0 || ret >= sizeof(displayEnv))
-        Fatalx("unable to set DISPLAY");
-
-    if (setenv("DISPLAY", displayEnv, TRUE) == -1)
+    if (setenv("DISPLAY", displayNum, TRUE) == -1)
         Fatal("unable to set DISPLAY");
 }
 

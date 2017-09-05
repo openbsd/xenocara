@@ -1,4 +1,4 @@
-! $OpenBSD: xenodm-config.in,v 1.3 2017/08/30 07:59:00 dcoppa Exp $
+! $OpenBSD: xenodm-config.in,v 1.4 2017/09/05 17:48:07 deraadt Exp $
 !
 DisplayManager.authDir:	@XENODMXAUTHDIR@
 DisplayManager.errorLogFile:	@XENODMLOGDIR@/xenodm.log
@@ -14,9 +14,9 @@ DisplayManager*startup:		@XENODMSCRIPTDIR@/Xstartup
 DisplayManager*session:		@XENODMSCRIPTDIR@/Xsession
 DisplayManager*reset:		@XENODMSCRIPTDIR@/Xreset
 DisplayManager*authComplain:	true
-! The following three resources set up display unix:0 as the console.
-DisplayManager.unix_0.setup:	@XENODMSCRIPTDIR@/Xsetup_0
-DisplayManager.unix_0.startup:	@XENODMSCRIPTDIR@/GiveConsole
-DisplayManager.unix_0.reset:	@XENODMSCRIPTDIR@/TakeConsole
+! The following three resources set up display :0 as the console.
+DisplayManager._0.setup:	@XENODMSCRIPTDIR@/Xsetup_0
+DisplayManager._0.startup:	@XENODMSCRIPTDIR@/GiveConsole
+DisplayManager._0.reset:	@XENODMSCRIPTDIR@/TakeConsole
 
 DisplayManager.*.authName:	MIT-MAGIC-COOKIE-1
