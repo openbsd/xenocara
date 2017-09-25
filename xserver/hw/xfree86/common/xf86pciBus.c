@@ -1190,6 +1190,8 @@ xf86VideoPtrToDriverList(struct pci_device *dev,
 		case 0x29d2:
 		case 0xa001:
 		case 0xa011:
+		case 0x0042: /* XXX Ironlake is unstable with modesetting */
+		case 0x0046:
 			/* Use intel driver on 2nd and 3rd generation */
 			driverList[0] = "intel";
 			break;
