@@ -1,8 +1,0 @@
-#!/bin/sh
-# $OpenBSD: Xsetup_0,v 1.3 2010/03/28 09:33:02 matthieu Exp $
-if [ "$DISPLAY" = ":0" -o "$DISPLAY" = ":0.0" ]
-then
-	xconsole -geometry 480x130-0-0 -daemon -notify -verbose -fn fixed -exitOnFail
-fi
-
-#sxpm OpenBSD.xpm &
