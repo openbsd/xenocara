@@ -21,7 +21,7 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libXfont2], [2.0.1],
+AC_INIT([libXfont2], [2.0.2],
 	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXfont2])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -217,6 +217,23 @@ case $host_os in
         OS_CFLAGS=
         ;;
 esac
+
+save_CFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS -fvisibility=hidden"
+CFLAGS_VISIBILITY=
+AC_COMPILE_IFELSE(
+  [AC_LANG_SOURCE([[
+    #if defined(__CYGWIN__) || defined(__MINGW32__)
+    #error No visibility support
+    #endif
+    extern __attribute__((__visibility__("default"))) int x;
+  ]])],
+  [CFLAGS_VISIBILITY=-fvisibility=hidden],
+  []
+)
+CFLAGS="$save_CFLAGS"
+OS_CFLAGS="$OS_CFLAGS $CFLAGS_VISIBILITY"
+
 AC_SUBST([OS_CFLAGS])
 
 AC_CONFIG_FILES([Makefile
