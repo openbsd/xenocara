@@ -233,7 +233,7 @@
 ./usr/X11R6/lib/libX11.so.16.1
 ./usr/X11R6/lib/libXRes.a
 ./usr/X11R6/lib/libXRes.la
-./usr/X11R6/lib/libXRes.so.5.0
+./usr/X11R6/lib/libXRes.so.5.1
 ./usr/X11R6/lib/libXau.a
 ./usr/X11R6/lib/libXau.la
 ./usr/X11R6/lib/libXau.so.10.0
