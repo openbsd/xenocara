@@ -29,14 +29,13 @@ AC_PREREQ([2.60])
 # digit in the version number to track changes which don't affect the
 # protocol, so XRes version l.n.m corresponds to protocol version l.n
 #
-AC_INIT([libXres], [1.0.7],
+AC_INIT([libXres], [1.2.0],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXres])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
 
 # Initialize libtool
 AC_PROG_LIBTOOL
@@ -48,18 +47,8 @@ XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 XORG_CHECK_MALLOC_ZERO
 
-# Check xres configuration, strip extra digits from package version to
-# find the required protocol version
-RES_VERSION=[`echo $VERSION | sed 's/^\([0-9][0-9]*\.[0-9][0-9]*\).*$/\1/'`]
-
 # Obtain compiler/linker options for depedencies
-PKG_CHECK_MODULES(XRES, x11 xext xextproto [resourceproto >= $RES_VERSION])
-
-# Check for _XEatDataWords function that may be patched into older Xlib release
-SAVE_LIBS="$LIBS"
-LIBS="$XRES_LIBS"
-AC_CHECK_FUNCS([_XEatDataWords])
-LIBS="$SAVE_LIBS"
+PKG_CHECK_MODULES(XRES, [x11 >= 1.6] xext xextproto [resourceproto >= 1.2.0])
 
 AC_CONFIG_FILES([Makefile
 		src/Makefile

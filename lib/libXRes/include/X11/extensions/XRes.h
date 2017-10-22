@@ -7,6 +7,8 @@
 
 #include <X11/Xfuncproto.h>
 
+/* v1.0 */
+
 typedef struct {
   XID resource_base;
   XID resource_mask;
@@ -17,8 +19,51 @@ typedef struct {
   unsigned int count;
 } XResType;
 
+/* v1.2 */
+
+typedef enum {
+  XRES_CLIENT_ID_XID,
+  XRES_CLIENT_ID_PID,
+  XRES_CLIENT_ID_NR
+} XResClientIdType;
+
+typedef enum {
+  XRES_CLIENT_ID_XID_MASK = 1 << XRES_CLIENT_ID_XID,
+  XRES_CLIENT_ID_PID_MASK = 1 << XRES_CLIENT_ID_PID
+} XResClientIdMask;
+
+typedef struct {
+  XID           client;
+  unsigned int  mask;
+} XResClientIdSpec;
+
+typedef struct {
+  XResClientIdSpec spec;
+  long          length;
+  void         *value;
+} XResClientIdValue;
+
+typedef struct {
+  XID           resource;
+  Atom          type;
+} XResResourceIdSpec;
+
+typedef struct {
+  XResResourceIdSpec spec;
+  long          bytes;
+  long          ref_count;
+  long          use_count;
+} XResResourceSizeSpec;
+
+typedef struct {
+  XResResourceSizeSpec  size;
+  long                  num_cross_references;
+  XResResourceSizeSpec *cross_references;
+} XResResourceSizeValue;
+
 _XFUNCPROTOBEGIN
 
+/* v1.0 */
 
 Bool XResQueryExtension (
    Display *dpy,
@@ -49,6 +94,40 @@ Status XResQueryClientPixmapBytes (
    Display *dpy,
    XID xid,
    unsigned long *bytes
+);
+
+/* v1.2 */
+
+Status XResQueryClientIds (
+   Display            *dpy,
+   long                num_specs,
+   XResClientIdSpec   *client_specs,   /* in */
+   long               *num_ids,        /* out */
+   XResClientIdValue **client_ids      /* out */
+);
+
+XResClientIdType XResGetClientIdType(XResClientIdValue* value);
+
+/* return -1 if no pid associated to the value */
+pid_t XResGetClientPid(XResClientIdValue* value);
+
+void XResClientIdsDestroy (
+   long                num_ids,
+   XResClientIdValue  *client_ids
+);
+
+Status XResQueryResourceBytes (
+   Display            *dpy,
+   XID                 client,
+   long                num_specs,
+   XResResourceIdSpec *resource_specs, /* in */
+   long               *num_sizes,      /* out */
+   XResResourceSizeValue **sizes       /* out */
+);
+
+void XResResourceSizeValuesDestroy (
+   long                num_sizes,
+   XResResourceSizeValue *sizes
 );
 
 _XFUNCPROTOEND

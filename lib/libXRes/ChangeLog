@@ -1,12 +1,76 @@
-commit b51a7b0ccf0d5ccb53fbd5d34ed8fe57603d2604
-Author: Alan Coopersmith <alan.coopersmith@oracle.com>
-Date:   Thu May 30 17:51:12 2013 -0700
+commit 84b9156c7833dfd91c65d33542420ff4fe226948
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Oct 11 11:11:01 2017 -0400
 
-    libXres 1.0.7
+    libXRes 1.2.0
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 1bc34457619c0d9b94ebd1cadac53366da20fbe3
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 13:52:49 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit e5fbb99729d460eda477bf6e299728bc47542ccb
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 16b2d184302d259a8481693285976045386fcc01
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit ae0ddaa9c960aee1b7845da01270b00177f95f3d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 22 23:22:36 2013 -0800
+
+    Remove fallback for _XEatDataWords, require libX11 1.6 for it
+    
+    _XEatDataWords was orignally introduced with the May 2013 security
+    patches, and in order to ease the process of delivering those,
+    fallback versions of _XEatDataWords were included in the X extension
+    library patches so they could be applied to older versions that didn't
+    have libX11 1.6 yet.   Now that we're past that hurdle, we can drop
+    the fallbacks and just require libX11 1.6 for building new versions
+    of the extension libraries.
     
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
-commit ad156a716a324ee60362c8ba66a5ed8c835c219b
+commit 0f5cfdc3136dd8ef43800bda64f9d39e6b23b2e9
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun Jun 30 20:09:49 2013 +0200
+
+    Compute number of bytes correctly in XResQueryClientPixmapBytes
+    
+    64-bit servers send the upper 32-bit in bytes_overflow.  We were
+    multiplying by 2^32 - 1 instead of 2^32 when putting things back
+    together.
+    
+    Debian bug#621702
+    
+    Reported-by: Kevin Ryde <user42@zip.com.au>
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f468184963e53feda848853c4aefd0197b2cc116
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Apr 12 23:36:13 2013 -0700
 
@@ -19,7 +83,7 @@ Date:   Fri Apr 12 23:36:13 2013 -0700
     Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
-commit 3ec2db9eeb9ba8fb561802b0c4b8bf79e321b7a2
+commit b053d215b80e721f9afdc5794e4f3f4f2aee0141
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Apr 12 23:36:13 2013 -0700
 
@@ -32,7 +96,7 @@ Date:   Fri Apr 12 23:36:13 2013 -0700
     Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
-commit 95b352b0f4a1ab1bc254e78adbc73cd65223ded4
+commit 69457711050ac3a53859ef11790a7ac815cd7d94
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Apr 13 10:34:22 2013 -0700
 
@@ -42,7 +106,7 @@ Date:   Sat Apr 13 10:34:22 2013 -0700
     
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
-commit d54acff47096cf52a9b8e018a26f7165e1092eb5
+commit 83e7693515369d57dcd11c2bb1f03563f51bc500
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Jan 18 23:06:20 2013 -0800
 
@@ -58,7 +122,61 @@ Date:   Fri Jan 18 23:06:20 2013 -0800
     the current minimum level required to build X.
     
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
-    (cherry picked from commit 83e7693515369d57dcd11c2bb1f03563f51bc500)
+
+commit d9324b7d07294bb18e4902596a1b8ee387188364
+Author: Colin Walters <walters@verbum.org>
+Date:   Wed Jan 4 17:37:06 2012 -0500
+
+    autogen.sh: Implement GNOME Build API
+    
+    http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 6d1f115422cde2bfca4b69caa395345f3ac454e7
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jan 15 14:28:48 2013 -0500
+
+    configure: Remove AM_MAINTAINER_MODE
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit f44f4e265ec3ab7ef87d6d7009ec079ba4c49336
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Apr 23 18:57:48 2012 -0700
+
+    Bump version to 1.1.99.0 to reflect addition of 1.2 API
+    
+    As noted in configure.ac comment, we try to keep library version
+    based on the protocol version number, so since the protocol skipped
+    to 1.2, we'll do that with the library as well for simplicity's sake.
+    
+    Sets resourceproto requirement to version 1.2.0 since there were no
+    intermediate/snapshot versions between 1.1.2 & 1.2.0.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 01fc6f81f0a2935741dd1114aa3fa267d8be9095
+Author: Erkki Seppälä <erkki.seppala@vincit.fi>
+Date:   Wed Dec 15 13:48:09 2010 +0200
+
+    Implemented second part of XResource extension v1.2: XResQueryResourceBytes
+    
+    Signed-off-by: Erkki Seppälä <erkki.seppala@vincit.fi>
+    Reviewed-by: Rami Ylimäki <rami.ylimaki@vincit.fi>
+    Reviewed-by: Tiago Vignatti <tiago.vignatti@nokia.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0f38938a27df1f865dcdda35f4d2ef191092ba42
+Author: Erkki Seppälä <erkki.seppala@vincit.fi>
+Date:   Mon Nov 29 12:43:51 2010 +0200
+
+    Implemented first part of XResource extension v1.2: XResQueryClientIds
+    
+    Signed-off-by: Erkki Seppälä <erkki.seppala@vincit.fi>
+    Reviewed-by: Rami Ylimäki <rami.ylimaki@vincit.fi>
+    Reviewed-by: Tiago Vignatti <tiago.vignatti@nokia.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit e6e0e02e4bf764fa58798540793bdeb44a60cc7f
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
