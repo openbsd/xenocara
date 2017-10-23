@@ -334,8 +334,6 @@
 ./usr/X11R6/lib/libpixman-1.a
 ./usr/X11R6/lib/libpixman-1.la
 ./usr/X11R6/lib/libpixman-1.so.32.6
-./usr/X11R6/lib/libpthread-stubs.a
-./usr/X11R6/lib/libpthread-stubs.so.2.0
 ./usr/X11R6/lib/libxcb-composite.a
 ./usr/X11R6/lib/libxcb-composite.so.1.0
 ./usr/X11R6/lib/libxcb-cursor.a
@@ -420,7 +418,6 @@
 ./usr/X11R6/lib/locate/xorg.db
 ./usr/X11R6/lib/pkgconfig/pixman-1.pc
 ./usr/X11R6/lib/pkgconfig/presentproto.pc
-./usr/X11R6/lib/pkgconfig/pthread-stubs.pc
 ./usr/X11R6/lib/pkgconfig/x11-xcb.pc
 ./usr/X11R6/lib/pkgconfig/xcb-atom.pc
 ./usr/X11R6/lib/pkgconfig/xcb-aux.pc
