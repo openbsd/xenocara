@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.9 2017/06/18 21:09:07 espie Exp $
+#	$OpenBSD: Makefile,v 1.10 2017/10/23 16:50:28 matthieu Exp $
 
 .include <bsd.xconf.mk>
 
@@ -39,7 +39,7 @@ CFLAGS +=	-DFC_CACHEDIR='"$(FC_CACHEDIR)"' \
 		-DFONTCONFIG_PATH='"$(BASECONFIGDIR)"' \
 		-I.
 
-LDADD =	-L${X11BASE}/lib -lfreetype -lexpat -lz -lpthread-stubs
+LDADD =	-L${X11BASE}/lib -lfreetype -lexpat -lz
 
 PUBLIC_FILES = \
 	$(FONTCONFIG)/fontconfig/fontconfig.h \

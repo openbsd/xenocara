@@ -1004,7 +1004,6 @@ support_for_pthreads=no
 
 AC_MSG_CHECKING(for pthreads)
 
-PIXMAN_CHECK_PTHREAD([CFLAGS=""; LIBS="-L/usr/X11R6/lib -lpthread-stubs"])
 PIXMAN_CHECK_PTHREAD([CFLAGS="-pthread"; LDFLAGS="-pthread"])
 PIXMAN_CHECK_PTHREAD([CFLAGS="-D_REENTRANT"; LIBS="-lpthread"])
 PIXMAN_CHECK_PTHREAD([CFLAGS="-D_REENTRANT"; LDFLAGS="-lroot"])

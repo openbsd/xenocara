@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.7 2016/09/02 10:09:43 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.8 2017/10/23 16:50:28 matthieu Exp $
 
 LIB=		xcb
 
@@ -26,7 +26,7 @@ SRCS= \
 
 PKGCONFIG=	xcb.pc
 
-NEEDED=		pthread-stubs xau >= 0.99.2 xdmcp
+NEEDED=		xau >= 0.99.2 xdmcp
 
 CFLAGS+=	--std=c99
 
