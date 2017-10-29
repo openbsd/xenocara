@@ -173,8 +173,8 @@ install_signal_handler(void)
     sigemptyset(&set);
     act.sa_handler = signal_handler;
     act.sa_mask = set;
-#ifdef SA_ONESHOT
-    act.sa_flags = SA_ONESHOT;
+#ifdef SA_RESETHAND
+    act.sa_flags = SA_RESETHAND;
 #else
     act.sa_flags = 0;
 #endif
