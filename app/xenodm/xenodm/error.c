@@ -65,7 +65,7 @@ LogVWrite(const char *fmt, va_list args)
     } while(0)
 
 #define LogHeader(type)		\
-    LogAppend("xdm %s (pid %ld): ", type, (long)getpid())
+    LogAppend("xenodm %s (pid %ld): ", type, (long)getpid())
 
 /* Append more text to the log without a new header, right after
    having called LogInfo or LogError */
@@ -100,7 +100,7 @@ LogPanic (const char * fmt, ...)
 void
 LogOutOfMem (const char *function)
 {
-    fputs("xdm: out of memory in routine ", stderr);
+    fputs("xenodm: out of memory in routine ", stderr);
     fputs(function, stderr);
     fputc('\n', stderr);
     fflush (stderr);

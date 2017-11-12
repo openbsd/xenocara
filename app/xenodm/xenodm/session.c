@@ -100,7 +100,7 @@ AbortClient (pid_t pid)
 	if (killpg (pid, sig) == -1) {
 	    switch (errno) {
 	    case EPERM:
-		LogError ("xdm can't kill client\n");
+		LogError ("xenodm can't kill client\n");
 	    case EINVAL:
 	    case ESRCH:
 		goto done;
