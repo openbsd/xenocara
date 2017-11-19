@@ -252,7 +252,9 @@ typedef struct intel_screen_private {
 
 	int colorKey;
 	XF86VideoAdaptorPtr adaptor;
+#if! HAVE_NOTIFY_FD
 	ScreenBlockHandlerProcPtr BlockHandler;
+#endif
 	Bool overlayOn;
 
 	struct {

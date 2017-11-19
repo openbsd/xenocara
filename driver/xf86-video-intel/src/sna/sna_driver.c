@@ -729,6 +729,7 @@ cleanup:
 	return FALSE;
 }
 
+#if !HAVE_NOTIFY_FD
 static bool has_shadow(struct sna *sna)
 {
 	if (!sna->mode.shadow_damage)
@@ -756,7 +757,7 @@ sna_block_handler(BLOCKHANDLER_ARGS_DECL)
 	sna->BlockHandler(BLOCKHANDLER_ARGS);
 
 	if (*tv == NULL || ((*tv)->tv_usec | (*tv)->tv_sec) || has_shadow(sna))
-		sna_accel_block_handler(sna, tv);
+		sna_accel_block(sna, tv);
 }
 
 static void
@@ -778,11 +779,34 @@ sna_wakeup_handler(WAKEUPHANDLER_ARGS_DECL)
 
 	sna->WakeupHandler(WAKEUPHANDLER_ARGS);
 
-	sna_accel_wakeup_handler(sna);
-
 	if (FD_ISSET(sna->kgem.fd, (fd_set*)read_mask))
 		sna_mode_wakeup(sna);
 }
+#else
+static void
+sna_block_handler(void *data, void *_timeout)
+{
+	struct sna *sna = data;
+	int *timeout = _timeout;
+	struct timeval tv, *tvp;
+	
+	DBG(("%s (timeout=%d)\n", __FUNCTION__, *timeout));
+	if (*timeout == 0)
+		return;
+	
+	if (*timeout < 0) {
+		tvp = NULL;
+	} else {
+		tv.tv_sec = *timeout / 1000;
+		tv.tv_usec = (*timeout % 1000) * 1000;
+		tvp = &tv;
+	}
+	
+	sna_accel_block(sna, &tvp);
+	if (tvp)
+		*timeout = tvp->tv_sec * 1000 + tvp->tv_usec / 1000;
+}
+#endif
 
 #if HAVE_UDEV
 static void
@@ -1132,13 +1156,17 @@ sna_screen_init(SCREEN_INIT_ARGS_DECL)
 	/* Must force it before EnterVT, so we are in control of VT and
 	 * later memory should be bound when allocating, e.g rotate_mem */
 	scrn->vtSema = TRUE;
-
+#if !HAVE_NOTIFY_FD
 	sna->BlockHandler = screen->BlockHandler;
 	screen->BlockHandler = sna_block_handler;
 
 	sna->WakeupHandler = screen->WakeupHandler;
 	screen->WakeupHandler = sna_wakeup_handler;
-
+#else
+	RegisterBlockAndWakeupHandlers(sna_block_handler,
+				       (ServerWakeupHandlerProcPtr)NoopDDA,
+				       sna);
+#endif
 	screen->SaveScreen = sna_save_screen;
 	screen->CreateScreenResources = sna_create_screen_resources;
 

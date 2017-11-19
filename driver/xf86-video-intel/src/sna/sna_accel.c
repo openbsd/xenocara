@@ -112,6 +112,11 @@
 #define MAKE_COW_OWNER(ptr) ((void*)((uintptr_t)(ptr) | 1))
 #define COW(ptr) (void *)((uintptr_t)(ptr) & ~1)
 
+#if XFONT2_CLIENT_FUNCS_VERSION >= 1
+#define AllocateFontPrivateIndex() xfont2_allocate_font_private_index()
+#define FontSetPrivate(font, idx, data) xfont2_font_set_private(font, idx, data)
+#endif
+
 #if 0
 static void __sna_fallback_flush(DrawablePtr d)
 {
@@ -17676,6 +17681,13 @@ static bool sna_option_accel_blt(struct sna *sna)
 	return strcasecmp(s, "blt") == 0;
 }
 
+#if HAVE_NOTIFY_FD
+static void sna_accel_notify(int fd, int ready, void *data)
+{
+       sna_mode_wakeup(data);
+}
+#endif
+
 bool sna_accel_init(ScreenPtr screen, struct sna *sna)
 {
 	const char *backend;
@@ -17687,7 +17699,7 @@ bool sna_accel_init(ScreenPtr screen, struct sna *sna)
 	list_init(&sna->flush_pixmaps);
 	list_init(&sna->active_pixmaps);
 
-	AddGeneralSocket(sna->kgem.fd);
+	SetNotifyFd(sna->kgem.fd, sna_accel_notify, X_NOTIFY_READ, sna);
 
 #ifdef DEBUG_MEMORY
 	sna->timer_expire[DEBUG_MEMORY_TIMER] = GetTimeInMillis()+ 10 * 1000;
@@ -17862,12 +17874,12 @@ void sna_accel_close(struct sna *sna)
 	sna_pixmap_expire(sna);
 
 	DeleteCallback(&FlushCallback, sna_accel_flush_callback, sna);
-	RemoveGeneralSocket(sna->kgem.fd);
+	RemoveNotifyFd(sna->kgem.fd);
 
 	kgem_cleanup_cache(&sna->kgem);
 }
 
-void sna_accel_block_handler(struct sna *sna, struct timeval **tv)
+void sna_accel_block(struct sna *sna, struct timeval **tv)
 {
 	sigtrap_assert_inactive();
 
@@ -17942,22 +17954,6 @@ set_tv:
 		kgem_submit(&sna->kgem);
 		sna->kgem.wedged = !sna->kgem.wedged;
 	}
-}
-
-void sna_accel_wakeup_handler(struct sna *sna)
-{
-	DBG(("%s: nbatch=%d, need_retire=%d, need_purge=%d\n", __FUNCTION__,
-	     sna->kgem.nbatch, sna->kgem.need_retire, sna->kgem.need_purge));
-
-	if (!sna->kgem.nbatch)
-		return;
-
-	if (kgem_is_idle(&sna->kgem)) {
-		DBG(("%s: GPU idle, flushing\n", __FUNCTION__));
-		_kgem_submit(&sna->kgem);
-	}
-
-	sigtrap_assert_inactive();
 }
 
 void sna_accel_free(struct sna *sna)

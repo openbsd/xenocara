@@ -30,6 +30,7 @@
 
 #include <xorg-server.h>
 #include <xorgVersion.h>
+#include <xf86Module.h>
 
 #include <picturestr.h>
 #ifndef GLYPH_HAS_GLYPH_PICTURE_ACCESSOR
@@ -40,6 +41,10 @@
 #ifndef XF86_HAS_SCRN_CONV
 #define xf86ScreenToScrn(s) xf86Screens[(s)->myNum]
 #define xf86ScrnToScreen(s) screenInfo.screens[(s)->scrnIndex]
+#endif
+
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) >= 22
+#define HAVE_NOTIFY_FD 1
 #endif
 
 #ifndef XF86_SCRN_INTERFACE
@@ -227,4 +232,14 @@ static inline void FreePixmap(PixmapPtr pixmap)
 
 #if HAS_DIRTYTRACKING_ROTATION
 #define PixmapSyncDirtyHelper(d, dd) PixmapSyncDirtyHelper(d)
+#endif
+
+#if ABI_VIDEODRV_VERSION >= SET_ABI_VERSION(22, 0)
+#define OsBlockSIGIO()
+#define OsReleaseSIGIO()
+#endif
+
+#if !HAVE_NOTIFY_FD
+#define SetNotifyFd(fd, cb, mode, data) AddGeneralSocket(fd);
+#define RemoveNotifyFd(fd) RemoveGeneralSocket(fd)
 #endif
