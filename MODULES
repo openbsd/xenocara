@@ -1,10 +1,10 @@
-# $OpenBSD: MODULES,v 1.371 2017/10/23 17:13:17 matthieu Exp $
+# $OpenBSD: MODULES,v 1.372 2017/11/26 18:23:34 matthieu Exp $
 #
 # X.Org maintained modules
 #
 
 app/appres		1.0.4
-app/bdftopcf		1.0.5	7.7+
+app/bdftopcf		1.1.0	7.7+	needs-update
 app/beforelight		1.0.5
 app/bitmap		1.0.8
 app/editres		1.0.6
