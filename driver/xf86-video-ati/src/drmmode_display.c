@@ -647,7 +647,7 @@ drmmode_can_use_hw_cursor(xf86CrtcPtr crtc)
 	if (crtc->transformPresent)
 		return FALSE;
 
-#if XF86_CRTC_VERSION >= 4
+#if XF86_CRTC_VERSION >= 4 && XF86_CRTC_VERSION < 7
 	/* Xorg doesn't correctly handle cursor position transform in the
 	 * rotation case
 	 */
@@ -670,11 +670,19 @@ drmmode_can_use_hw_cursor(xf86CrtcPtr crtc)
 static Bool
 drmmode_handle_transform(xf86CrtcPtr crtc)
 {
-	RADEONInfoPtr info = RADEONPTR(crtc->scrn);
 	Bool ret;
+
+#if XF86_CRTC_VERSION >= 7
+	if (!crtc->transformPresent && crtc->rotation != RR_Rotate_0)
+	    crtc->driverIsPerformingTransform = XF86DriverTransformOutput;
+	else
+	    crtc->driverIsPerformingTransform = XF86DriverTransformNone;
+#else
+	RADEONInfoPtr info = RADEONPTR(crtc->scrn);
 
 	crtc->driverIsPerformingTransform = info->tear_free &&
 		!crtc->transformPresent && crtc->rotation != RR_Rotate_0;
+#endif
 
 	ret = xf86CrtcRotate(crtc);
 
@@ -925,7 +933,7 @@ drmmode_set_cursor_position (xf86CrtcPtr crtc, int x, int y)
 	drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
 	drmmode_ptr drmmode = drmmode_crtc->drmmode;
 
-#if XF86_CRTC_VERSION >= 4
+#if XF86_CRTC_VERSION >= 4 && XF86_CRTC_VERSION < 7
 	if (crtc->driverIsPerformingTransform) {
 		x += crtc->x;
 		y += crtc->y;
@@ -936,7 +944,7 @@ drmmode_set_cursor_position (xf86CrtcPtr crtc, int x, int y)
 	drmModeMoveCursor(drmmode->fd, drmmode_crtc->mode_crtc->crtc_id, x, y);
 }
 
-#if XF86_CRTC_VERSION >= 4
+#if XF86_CRTC_VERSION >= 4 && XF86_CRTC_VERSION < 7
 
 static int
 drmmode_cursor_src_offset(Rotation rotation, int width, int height,
@@ -982,7 +990,7 @@ drmmode_load_cursor_argb (xf86CrtcPtr crtc, CARD32 *image)
 	/* cursor should be mapped already */
 	ptr = (uint32_t *)(drmmode_crtc->cursor_bo->ptr);
 
-#if XF86_CRTC_VERSION >= 4
+#if XF86_CRTC_VERSION >= 4 && XF86_CRTC_VERSION < 7
 	if (crtc->driverIsPerformingTransform) {
 		uint32_t cursor_w = info->cursor_w, cursor_h = info->cursor_h;
 		int dstx, dsty;
