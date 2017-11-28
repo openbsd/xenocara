@@ -1,3 +1,113 @@
+commit 4828abe494df8fb4aa00dcaa22a03446ba418d01
+Author: Matthieu Herrb <matthieu@herrb.eu>
+Date:   Sat Nov 25 11:59:31 2017 +0100
+
+    libXcursor 1.1.15
+    
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+
+commit 4794b5dd34688158fb51a2943032569d3780c4b8
+Author: Tobias Stoeckmann <tobias@stoeckmann.org>
+Date:   Sat Oct 21 23:47:52 2017 +0200
+
+    Fix heap overflows when parsing malicious files. (CVE-2017-16612)
+    
+    It is possible to trigger heap overflows due to an integer overflow
+    while parsing images and a signedness issue while parsing comments.
+    
+    The integer overflow occurs because the chosen limit 0x10000 for
+    dimensions is too large for 32 bit systems, because each pixel takes
+    4 bytes. Properly chosen values allow an overflow which in turn will
+    lead to less allocated memory than needed for subsequent reads.
+    
+    The signedness bug is triggered by reading the length of a comment
+    as unsigned int, but casting it to int when calling the function
+    XcursorCommentCreate. Turning length into a negative value allows the
+    check against XCURSOR_COMMENT_MAX_LEN to pass, and the following
+    addition of sizeof (XcursorComment) + 1 makes it possible to allocate
+    less memory than needed for subsequent reads.
+    
+    Signed-off-by: Tobias Stoeckmann <tobias@stoeckmann.org>
+    Reviewed-by: Matthieu Herrb <matthieu@herrb.eu>
+
+commit 75b10c972d15c036a692ef4590a81a6c54d384f6
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 13:52:49 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 721901fec3d829426d7c8df82a14beb11905c7a8
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 860bda4cb1f126f42cfc255c958aa3c7be17f3c6
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 897213f36baf6926daf6d192c709cf627aa5fd05
+Author: shubham shrivastav <shubham.sh@samsung.com>
+Date:   Fri Jun 5 13:36:22 2015 -0700
+
+    Insufficient memory for terminating null of string in _XcursorThemeInherits
+    
+    Fix does one byte of memory allocation for null termination of string.
+    https://bugs.freedesktop.org/show_bug.cgi?id=90857
+    
+    Reviewed-by: Keith Packard <keithp@keithp.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit edf52212a09bd80b52dc9932b5ca19e20dfcaa2b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 18 10:52:49 2014 -0700
+
+    Fix some clang integer sign/size mismatch warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bbf3c582c97af3abfaf81e3ca63646d59fe6e28a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 18 10:24:13 2014 -0700
+
+    Use strdup() instead of malloc(strlen())+strcpy()
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2e6bda49d062d5064efe66a066558f7d1eec7e78
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:39:32 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b1df53701f40959ac66c26ca2e5263bb521d0ebb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:38:41 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit f92f118047ee8cea7dbbc734d476225f033ba0b7
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed May 29 23:22:29 2013 -0700

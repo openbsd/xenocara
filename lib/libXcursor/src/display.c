@@ -216,17 +216,8 @@ _XcursorGetDisplayInfo (Display *dpy)
 	v = XGetDefault (dpy, "Xcursor", "theme");
     if (v)
     {
-	int len;
-
-	len = strlen (v) + 1;
-
-	info->theme = malloc (len);
-	if (info->theme)
-	    strcpy (info->theme, v);
-
-	info->theme_from_config = malloc (len);
-	if (info->theme_from_config)
-	    strcpy (info->theme_from_config, v);
+	info->theme = strdup (v);
+	info->theme_from_config = strdup (v);
     }
 
     /*
@@ -342,10 +333,9 @@ XcursorSetTheme (Display *dpy, const char *theme)
 
     if (theme)
     {
-	copy = malloc (strlen (theme) + 1);
+	copy = strdup (theme);
 	if (!copy)
 	    return XcursorFalse;
-	strcpy (copy, theme);
     }
     else
 	copy = NULL;

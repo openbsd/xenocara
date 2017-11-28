@@ -226,7 +226,7 @@ static Bool
 _XcursorHeckbertMedianCut (const XcursorImage *image, XcursorCoreCursor *core)
 {
     XImage	    *src_image = core->src_image, *msk_image = core->msk_image;
-    int		    npixels = image->width * image->height;
+    unsigned int    npixels = image->width * image->height;
     int		    ncolors;
     int		    n;
     XcursorPixel    *po, *pn, *pc;
@@ -395,7 +395,7 @@ _XcursorFloydSteinberg (const XcursorImage *image, XcursorCoreCursor *core)
     int		    *aPicture, *iPicture, *aP, *iP;
     XcursorPixel    *pixel, p;
     int		    aR, iR, aA, iA;
-    int		    npixels = image->width * image->height;
+    unsigned int    npixels = image->width * image->height;
     int		    n;
     int		    right = 1;
     int		    belowLeft = image->width - 1;
