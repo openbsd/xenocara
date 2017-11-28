@@ -1,3 +1,56 @@
+commit 7d246751628bb877e04da762ec1a2e41ffa62154
+Author: Matthieu Herrb <matthieu@herrb.eu>
+Date:   Tue Nov 28 15:33:15 2017 +0100
+
+    libXfont 1.5.4
+
+commit 5ed8ac0e4f063825b8ecda48e9a111d3ce92e825
+Author: Michal Srb <msrb@suse.com>
+Date:   Thu Oct 26 09:48:13 2017 +0200
+
+    Open files with O_NOFOLLOW. (CVE-2017-16611)
+    
+    A non-privileged X client can instruct X server running under root to open any
+    file by creating own directory with "fonts.dir", "fonts.alias" or any font file
+    being a symbolic link to any other file in the system. X server will then open
+    it. This can be issue with special files such as /dev/watchdog.
+    
+    Reviewed-by: Matthieu Herrb <matthieu@herrb.eu>
+
+commit f581c2346d025d5b15926db9e58f254173fb58dc
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Thu Oct 19 13:45:58 2017 -0700
+
+    libXfont 1.5.3
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 3b08934dca75e4c559db7d83797bc3d365c2a50a
+Author: Michal Srb <msrb@suse.com>
+Date:   Thu Jul 20 17:05:23 2017 +0200
+
+    pcfGetProperties: Check string boundaries (CVE-2017-13722)
+    
+    Without the checks a malformed PCF file can cause the library to make
+    atom from random heap memory that was behind the `strings` buffer.
+    This may crash the process or leak information.
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+    (cherry picked from commit 672bb944311392e2415b39c0d63b1e1902905bcd)
+
+commit a2a5fa591762b430037e33f1df55b460550ab406
+Author: Michal Srb <msrb@suse.com>
+Date:   Thu Jul 20 13:38:53 2017 +0200
+
+    Check for end of string in PatternMatch (CVE-2017-13720)
+    
+    If a pattern contains '?' character, any character in the string is skipped,
+    even if it is '\0'. The rest of the matching then reads invalid memory.
+    
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+    (cherry picked from commit d1e670a4a8704b8708e493ab6155589bcd570608)
+
 commit 8cce9834b2e74dccad94ca0adf79ae5585e37d48
 Author: Adam Jackson <ajax@redhat.com>
 Date:   Wed Aug 31 16:19:11 2016 -0400
