@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.149 2017/07/14 18:01:46 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.150 2017/11/30 18:18:51 okan Exp $
  */
 
 #include <sys/types.h>
@@ -168,7 +168,7 @@ kbfunc_client_move_mb(void *ctx, struct cargs *cargs)
 	menu_windraw(sc, cc->win, "%4d, %-4d", cc->geom.x, cc->geom.y);
 
 	while (move) {
-		XWindowEvent(X_Dpy, cc->win, MOUSEMASK, &ev);
+		XMaskEvent(X_Dpy, MOUSEMASK, &ev);
 		switch (ev.type) {
 		case MotionNotify:
 			/* not more than 60 times / second */
@@ -256,7 +256,7 @@ kbfunc_client_resize_mb(void *ctx, struct cargs *cargs)
 
 	menu_windraw(sc, cc->win, "%4d x %-4d", cc->dim.w, cc->dim.h);
 	while (resize) {
-		XWindowEvent(X_Dpy, cc->win, MOUSEMASK, &ev);
+		XMaskEvent(X_Dpy, MOUSEMASK, &ev);
 		switch (ev.type) {
 		case MotionNotify:
 			/* not more than 60 times / second */
