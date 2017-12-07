@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.151 2017/12/07 15:39:47 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.152 2017/12/07 16:03:10 okan Exp $
  */
 
 #include <sys/types.h>
@@ -460,14 +460,13 @@ kbfunc_menu_cmd(void *ctx, struct cargs *cargs)
 		if ((strcmp(cmd->name, "lock") == 0) ||
 		    (strcmp(cmd->name, "term") == 0))
 			continue;
-		/* search_match_text() needs mi->text */
-		menuq_add(&menuq, cmd, "%s", cmd->name);
+		menuq_add(&menuq, cmd, NULL);
 	}
 
 	if ((mi = menu_filter(sc, &menuq,
 	    (m) ? NULL : "application", NULL,
 	    ((m) ? CWM_MENU_LIST : 0),
-	    search_match_text, search_print_cmd)) != NULL) {
+	    search_match_cmd, search_print_cmd)) != NULL) {
 		cmd = (struct cmd_ctx *)mi->ctx;
 		u_spawn(cmd->path);
 	}
@@ -488,12 +487,12 @@ kbfunc_menu_group(void *ctx, struct cargs *cargs)
 	TAILQ_FOREACH(gc, &sc->groupq, entry) {
 		if (group_holds_only_sticky(gc))
 			continue;
-		menuq_add(&menuq, gc, "%d %s", gc->num, gc->name);
+		menuq_add(&menuq, gc, NULL);
 	}
 
 	if ((mi = menu_filter(sc, &menuq,
 	    (m) ? NULL : "group", NULL, (CWM_MENU_LIST),
-	    search_match_text, search_print_group)) != NULL) {
+	    search_match_group, search_print_group)) != NULL) {
 		gc = (struct group_ctx *)mi->ctx;
 		(group_holds_only_hidden(gc)) ?
 		    group_show(gc) : group_hide(gc);

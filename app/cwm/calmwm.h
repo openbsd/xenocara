@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.342 2017/12/07 15:47:14 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.343 2017/12/07 16:03:10 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -443,6 +443,10 @@ void			 search_match_exec(struct menu_q *, struct menu_q *,
 void			 search_match_path(struct menu_q *, struct menu_q *,
 			     char *);
 void			 search_match_text(struct menu_q *, struct menu_q *,
+			     char *);
+void			 search_match_cmd(struct menu_q *, struct menu_q *,
+			     char *);
+void			 search_match_group(struct menu_q *, struct menu_q *,
 			     char *);
 void			 search_print_client(struct menu *, int);
 void			 search_print_cmd(struct menu *, int);
