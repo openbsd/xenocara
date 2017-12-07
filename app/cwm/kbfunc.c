@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.152 2017/12/07 16:03:10 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.153 2017/12/07 16:25:33 okan Exp $
  */
 
 #include <sys/types.h>
@@ -284,6 +284,42 @@ kbfunc_client_resize_mb(void *ctx, struct cargs *cargs)
 
 	/* Make sure the pointer stays within the window. */
 	client_ptr_inbound(cc, 0);
+}
+
+void
+kbfunc_client_snap(void *ctx, struct cargs *cargs)
+{
+	struct client_ctx	*cc = ctx;
+	struct screen_ctx	*sc = cc->sc;
+	struct geom		 area;
+	int			 flags;
+
+	area = screen_area(sc,
+	    cc->geom.x + cc->geom.w / 2,
+	    cc->geom.y + cc->geom.h / 2, CWM_GAP);
+
+	flags = cargs->flag;
+	while (flags) {
+		if (flags & CWM_UP) {
+			cc->geom.y = area.y;
+			flags &= ~CWM_UP;
+		}
+		if (flags & CWM_LEFT) {
+			cc->geom.x = area.x;
+			flags &= ~CWM_LEFT;
+		}
+		if (flags & CWM_RIGHT) {
+			cc->geom.x = area.x + area.w - cc->geom.w -
+			    (cc->bwidth * 2);
+			flags &= ~CWM_RIGHT;
+		}
+		if (flags & CWM_DOWN) {
+			cc->geom.y = area.y + area.h - cc->geom.h -
+			    (cc->bwidth * 2);
+			flags &= ~CWM_DOWN;
+		}
+	}
+	client_move(cc);
 }
 
 void

@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.234 2017/12/07 15:47:14 okan Exp $
+ * $OpenBSD: conf.c,v 1.235 2017/12/07 16:25:33 okan Exp $
  */
 
 #include <sys/types.h>
@@ -91,6 +91,24 @@ static const struct {
 	{ "window-movetogroup-7", kbfunc_client_movetogroup, CWM_CONTEXT_CC, 7 },
 	{ "window-movetogroup-8", kbfunc_client_movetogroup, CWM_CONTEXT_CC, 8 },
 	{ "window-movetogroup-9", kbfunc_client_movetogroup, CWM_CONTEXT_CC, 9 },
+
+	{ "window-snap-up", kbfunc_client_snap, CWM_CONTEXT_CC,
+	    (CWM_UP) },
+	{ "window-snap-down", kbfunc_client_snap, CWM_CONTEXT_CC,
+	    (CWM_DOWN) },
+	{ "window-snap-left", kbfunc_client_snap, CWM_CONTEXT_CC,
+	    (CWM_LEFT) },
+	{ "window-snap-right", kbfunc_client_snap, CWM_CONTEXT_CC,
+	    (CWM_RIGHT) },
+
+	{ "window-snap-up-right", kbfunc_client_snap, CWM_CONTEXT_CC,
+	    (CWM_UP|CWM_RIGHT) },
+	{ "window-snap-up-left", kbfunc_client_snap, CWM_CONTEXT_CC,
+	    (CWM_UP|CWM_LEFT) },
+	{ "window-snap-down-right", kbfunc_client_snap, CWM_CONTEXT_CC,
+	    (CWM_DOWN|CWM_RIGHT) },
+	{ "window-snap-down-left", kbfunc_client_snap, CWM_CONTEXT_CC,
+	    (CWM_DOWN|CWM_LEFT) },
 
 	{ "window-move", kbfunc_client_move, CWM_CONTEXT_CC, 0 },
 	{ "window-move-up", kbfunc_client_move, CWM_CONTEXT_CC,

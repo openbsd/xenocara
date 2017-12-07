@@ -1,4 +1,4 @@
-.\"	$OpenBSD: cwmrc.5,v 1.68 2017/07/06 17:09:17 okan Exp $
+.\"	$OpenBSD: cwmrc.5,v 1.69 2017/12/07 16:25:33 okan Exp $
 .\"
 .\" Copyright (c) 2004,2005 Marius Aamodt Eriksen <marius@monkey.org>
 .\"
@@ -14,7 +14,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: July 6 2017 $
+.Dd $Mdocdate: December 7 2017 $
 .Dt CWMRC 5
 .Os
 .Sh NAME
@@ -398,6 +398,22 @@ pixels right.
 Resize window 10 times
 .Ar moveamount
 pixels left.
+.It window-snap-up
+Snap window to top edge.
+.It window-snap-down
+Snap window to bottom edge.
+.It window-snap-right
+Snap window to right edge.
+.It window-snap-left
+Snap window to left edge.
+.It window-snap-up-right
+Snap window to top-right corner.
+.It window-snap-up-left
+Snap window to top-left corner.
+.It window-snap-down-right
+Snap window to bottom-right corner.
+.It window-snap-down-left
+Snap window to bottom-left corner.
 .It pointer-move-up
 Move pointer
 .Ar moveamount
