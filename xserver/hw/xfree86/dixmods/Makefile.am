@@ -1,4 +1,4 @@
-noinst_LTLIBRARIES = libdixmods.la libxorgxkb.la
+noinst_LTLIBRARIES = libdixmods.la
 
 if GLX
 GLXMODS = libglx.la
@@ -29,7 +29,7 @@ libwfb_la_CFLAGS = $(AM_CFLAGS) -DFB_ACCESS_WRAPPER
 
 libglx_la_LDFLAGS = -module -avoid-version $(LD_NO_UNDEFINED_FLAG)
 libglx_la_LIBADD = $(top_builddir)/glx/libglx.la $(GLX_SYS_LIBS)
-if AIGLX_DRI_LOADER
+if DRI2
 libglx_la_LIBADD += $(top_builddir)/glx/libglxdri.la
 if NO_UNDEFINED
 libglx_la_LIBADD += $(LIBDRM_LIBS) $(PIXMAN_LIBS)
@@ -46,5 +46,3 @@ libshadow_la_SOURCES = shmodule.c
 
 libdixmods_la_SOURCES = $(top_srcdir)/mi/miinitext.c
 libdixmods_la_CFLAGS = $(AM_CFLAGS)
-
-libxorgxkb_la_SOURCES = xkbVT.c xkbPrivate.c xkbKillSrv.c

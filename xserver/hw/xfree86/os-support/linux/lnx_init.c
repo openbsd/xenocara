@@ -38,6 +38,9 @@
 #include "xf86_OSlib.h"
 
 #include <sys/stat.h>
+#ifdef HAVE_SYS_SYSMACROS_H
+#include <sys/sysmacros.h>
+#endif
 
 #ifndef K_OFF
 #define K_OFF 0x4
@@ -239,7 +242,7 @@ xf86OpenConsole(void)
                 FatalError("xf86OpenConsole: VT_GETMODE failed %s\n",
                            strerror(errno));
 
-            signal(SIGUSR1, xf86VTRequest);
+            OsSignal(SIGUSR1, xf86VTRequest);
 
             VT.mode = VT_PROCESS;
             VT.relsig = SIGUSR1;

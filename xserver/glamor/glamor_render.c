@@ -533,16 +533,8 @@ glamor_set_composite_texture(glamor_screen_private *glamor_priv, int unit,
     repeat_type = picture->repeatType;
     switch (picture->repeatType) {
     case RepeatNone:
-        if (glamor_priv->gl_flavor != GLAMOR_GL_ES2) {
-            /* XXX  GLES2 doesn't support GL_CLAMP_TO_BORDER. */
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
-                            GL_CLAMP_TO_BORDER);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
-                            GL_CLAMP_TO_BORDER);
-        } else {
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        }
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
         break;
     case RepeatNormal:
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -573,12 +565,12 @@ glamor_set_composite_texture(glamor_screen_private *glamor_priv, int unit,
         break;
     }
 
-    /*
-     *  GLES2 doesn't support RepeatNone. We need to fix it anyway.
-     *
-     **/
+    /* Handle RepeatNone in the shader when the source is missing the
+     * alpha channel, as GL will return an alpha for 1 if the texture
+     * is RGB (no alpha), which we use for 16bpp textures.
+     */
     if (glamor_pixmap_priv_is_large(pixmap_priv) ||
-        ((!PICT_FORMAT_A(picture->format) || glamor_priv->gl_flavor == GLAMOR_GL_ES2) &&
+        (!PICT_FORMAT_A(picture->format) &&
          repeat_type == RepeatNone && picture->transform)) {
         glamor_pixmap_fbo_fix_wh_ratio(wh, pixmap, pixmap_priv);
         glUniform4fv(wh_location, 1, wh);
@@ -809,8 +801,8 @@ glamor_composite_choose_shader(CARD8 op,
 {
     ScreenPtr screen = dest->pDrawable->pScreen;
     glamor_screen_private *glamor_priv = glamor_get_screen_private(screen);
-    enum glamor_pixmap_status source_status = GLAMOR_NONE;
-    enum glamor_pixmap_status mask_status = GLAMOR_NONE;
+    Bool source_needs_upload = FALSE;
+    Bool mask_needs_upload = FALSE;
     PictFormatShort saved_source_format = 0;
     struct shader_key key;
     GLfloat source_solid_color[4];
@@ -868,7 +860,10 @@ glamor_composite_choose_shader(CARD8 op,
                 goto fail;
         }
         else {
-            key.mask = SHADER_MASK_TEXTURE_ALPHA;
+            if (PICT_FORMAT_A(mask->format))
+                key.mask = SHADER_MASK_TEXTURE_ALPHA;
+            else
+                key.mask = SHADER_MASK_TEXTURE;
         }
 
         if (!mask->componentAlpha) {
@@ -921,7 +916,7 @@ glamor_composite_choose_shader(CARD8 op,
         }
         if (source_pixmap_priv->gl_fbo == GLAMOR_FBO_UNATTACHED) {
 #ifdef GLAMOR_PIXMAP_DYNAMIC_UPLOAD
-            source_status = GLAMOR_UPLOAD_PENDING;
+            source_needs_upload = TRUE;
 #else
             glamor_fallback("no texture in source\n");
             goto fail;
@@ -937,7 +932,7 @@ glamor_composite_choose_shader(CARD8 op,
         }
         if (mask_pixmap_priv->gl_fbo == GLAMOR_FBO_UNATTACHED) {
 #ifdef GLAMOR_PIXMAP_DYNAMIC_UPLOAD
-            mask_status = GLAMOR_UPLOAD_PENDING;
+            mask_needs_upload = TRUE;
 #else
             glamor_fallback("no texture in mask\n");
             goto fail;
@@ -946,8 +941,7 @@ glamor_composite_choose_shader(CARD8 op,
     }
 
 #ifdef GLAMOR_PIXMAP_DYNAMIC_UPLOAD
-    if (source_status == GLAMOR_UPLOAD_PENDING
-        && mask_status == GLAMOR_UPLOAD_PENDING
+    if (source_needs_upload && mask_needs_upload
         && source_pixmap == mask_pixmap) {
 
         if (source->format != mask->format) {
@@ -983,33 +977,29 @@ glamor_composite_choose_shader(CARD8 op,
             if (!PICT_FORMAT_A(mask->format)
                 && PICT_FORMAT_A(saved_source_format))
                 key.mask = SHADER_MASK_TEXTURE;
-
-            mask_status = GLAMOR_NONE;
         }
 
-        source_status = glamor_upload_picture_to_texture(source);
-        if (source_status != GLAMOR_UPLOAD_DONE) {
+        if (!glamor_upload_picture_to_texture(source)) {
             glamor_fallback("Failed to upload source texture.\n");
             goto fail;
         }
+        mask_needs_upload = FALSE;
     }
     else {
-        if (source_status == GLAMOR_UPLOAD_PENDING) {
-            source_status = glamor_upload_picture_to_texture(source);
-            if (source_status != GLAMOR_UPLOAD_DONE) {
+        if (source_needs_upload) {
+            if (!glamor_upload_picture_to_texture(source)) {
                 glamor_fallback("Failed to upload source texture.\n");
                 goto fail;
             }
         } else {
-            if (!glamor_render_format_is_supported(source->format)) {
+            if (source && !glamor_render_format_is_supported(source->format)) {
                 glamor_fallback("Unsupported source picture format.\n");
                 goto fail;
             }
         }
 
-        if (mask_status == GLAMOR_UPLOAD_PENDING) {
-            mask_status = glamor_upload_picture_to_texture(mask);
-            if (mask_status != GLAMOR_UPLOAD_DONE) {
+        if (mask_needs_upload) {
+            if (!glamor_upload_picture_to_texture(mask)) {
                 glamor_fallback("Failed to upload mask texture.\n");
                 goto fail;
             }
@@ -1156,7 +1146,7 @@ glamor_composite_with_shader(CARD8 op,
                                         &key, &shader, &op_info,
                                         &saved_source_format, ca_state)) {
         glamor_fallback("glamor_composite_choose_shader failed\n");
-        return ret;
+        goto fail;
     }
     if (ca_state == CA_TWO_PASS) {
         if (!glamor_composite_choose_shader(PictOpAdd, source, mask, dest,
@@ -1166,7 +1156,7 @@ glamor_composite_with_shader(CARD8 op,
                                             &key_ca, &shader_ca, &op_info_ca,
                                             &saved_source_format, ca_state)) {
             glamor_fallback("glamor_composite_choose_shader failed\n");
-            return ret;
+            goto fail;
         }
     }
 
@@ -1298,6 +1288,13 @@ glamor_composite_with_shader(CARD8 op,
         source->format = saved_source_format;
 
     ret = TRUE;
+
+fail:
+    if (mask_pixmap && glamor_pixmap_is_memory(mask_pixmap))
+        glamor_pixmap_destroy_fbo(mask_pixmap);
+    if (source_pixmap && glamor_pixmap_is_memory(source_pixmap))
+        glamor_pixmap_destroy_fbo(source_pixmap);
+
     return ret;
 }
 
@@ -1337,11 +1334,6 @@ glamor_convert_gradient_picture(ScreenPtr screen,
         }
 
         if (dst) {
-#if 0                           /* Debug to compare it to pixman, Enable it if needed. */
-            glamor_compare_pictures(screen, source,
-                                    dst, x_source, y_source, width, height,
-                                    0, 3);
-#endif
             return dst;
         }
     }
@@ -1419,8 +1411,11 @@ glamor_composite_clipped_region(CARD8 op,
            x_source, y_source, x_mask, y_mask, x_dest, y_dest, width, height);
 
     /* Is the composite operation equivalent to a copy? */
-    if (!mask && !source->alphaMap && !dest->alphaMap
+    if (source &&
+        !mask && !source->alphaMap && !dest->alphaMap
         && source->pDrawable && !source->transform
+        /* CopyArea is only defined with matching depths. */
+        && dest->pDrawable->depth == source->pDrawable->depth
         && ((op == PictOpSrc
              && (source->format == dest->format
                  || (PICT_FORMAT_COLOR(dest->format)
@@ -1479,7 +1474,7 @@ glamor_composite_clipped_region(CARD8 op,
              && (mask_pixmap->drawable.width != width
                  || mask_pixmap->drawable.height != height)))) {
         /* XXX if mask->pDrawable is the same as source->pDrawable, we have an opportunity
-         * to do reduce one convertion. */
+         * to do reduce one conversion. */
         temp_mask =
             glamor_convert_gradient_picture(screen, mask,
                                             extent->x1 + x_mask - x_dest - dest->pDrawable->x,
@@ -1500,6 +1495,10 @@ glamor_composite_clipped_region(CARD8 op,
             ca_state = CA_DUAL_BLEND;
         } else {
             if (op == PictOpOver) {
+                if (glamor_pixmap_is_memory(mask_pixmap)) {
+                    glamor_fallback("two pass not supported on memory pximaps\n");
+                    goto out;
+                }
                 ca_state = CA_TWO_PASS;
                 op = PictOpOutReverse;
             }
@@ -1710,12 +1709,12 @@ glamor_composite(CARD8 op,
          source, source->pDrawable,
          source->pDrawable ? source->pDrawable->width : 0,
          source->pDrawable ? source->pDrawable->height : 0, mask,
-         (!mask) ? NULL : mask->pDrawable, (!mask
-                                            || !mask->pDrawable) ? 0 :
-         mask->pDrawable->width, (!mask
-                                  || !mask->pDrawable) ? 0 : mask->
-         pDrawable->height, glamor_get_picture_location(source),
-         glamor_get_picture_location(mask), dest, dest->pDrawable,
+         (!mask) ? NULL : mask->pDrawable,
+         (!mask || !mask->pDrawable) ? 0 : mask->pDrawable->width,
+         (!mask || !mask->pDrawable) ? 0 : mask->pDrawable->height,
+         glamor_get_picture_location(source),
+         glamor_get_picture_location(mask),
+         dest, dest->pDrawable,
          dest->pDrawable->width, dest->pDrawable->height,
          glamor_get_picture_location(dest));
 

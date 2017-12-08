@@ -106,13 +106,13 @@ SOFTWARE.
 #include <pwd.h>
 #endif
 
-#if defined(TCPCONN) || defined(STREAMSCONN)
+#if defined(TCPCONN)
 #include <netinet/in.h>
 #endif                          /* TCPCONN || STREAMSCONN */
 
 #ifdef HAVE_GETPEERUCRED
 #include <ucred.h>
-#ifdef sun
+#ifdef __sun
 #include <zone.h>
 #endif
 #endif
@@ -162,7 +162,7 @@ SOFTWARE.
  * Test for Solaris commented out  --  TSI @ UQV  2003.06.13
  */
 #ifdef SIOCGLIFCONF
-/* #if defined(sun) */
+/* #if defined(__sun) */
 #define USE_SIOCGLIFCONF
 /* #endif */
 #endif
@@ -387,7 +387,7 @@ AccessUsingXdmcp(void)
     LocalHostEnabled = FALSE;
 }
 
-#if  defined(SVR4) && !defined(sun)  && defined(SIOCGIFCONF) && !defined(USE_SIOCGLIFCONF)
+#if  defined(SVR4) && !defined(__sun)  && defined(SIOCGIFCONF) && !defined(USE_SIOCGLIFCONF)
 
 /* Deal with different SIOCGIFCONF ioctl semantics on these OSs */
 
@@ -430,7 +430,7 @@ ifioctl(int fd, int cmd, char *arg)
 void
 DefineSelf(int fd)
 {
-#if !defined(TCPCONN) && !defined(STREAMSCONN) && !defined(UNIXCONN)
+#if !defined(TCPCONN) && !defined(UNIXCONN)
     return;
 #else
     register int n;
@@ -938,11 +938,10 @@ ResetHosts(const char *display)
     char *ptr;
     int i, hostlen;
 
-#if (defined(TCPCONN) || defined(STREAMSCONN) ) && \
-     (!defined(IPv6) || !defined(AF_INET6))
+#if defined(TCPCONN) &&  (!defined(IPv6) || !defined(AF_INET6))
     union {
         struct sockaddr sa;
-#if defined(TCPCONN) || defined(STREAMSCONN)
+#if defined(TCPCONN)
         struct sockaddr_in in;
 #endif                          /* TCPCONN || STREAMSCONN */
     } saddr;
@@ -988,7 +987,7 @@ ResetHosts(const char *display)
                 NewHost(family, "", 0, FALSE);
                 LocalHostRequested = TRUE;      /* Fix for XFree86 bug #156 */
             }
-#if defined(TCPCONN) || defined(STREAMSCONN)
+#if defined(TCPCONN)
             else if (!strncmp("inet:", lhostname, 5)) {
                 family = FamilyInternet;
                 hostname = ohostname + 5;
@@ -1027,7 +1026,7 @@ ResetHosts(const char *display)
             }
             else
 #endif                          /* SECURE_RPC */
-#if defined(TCPCONN) || defined(STREAMSCONN)
+#if defined(TCPCONN)
             {
 #if defined(IPv6) && defined(AF_INET6)
                 if ((family == FamilyInternet) || (family == FamilyInternet6) ||
@@ -1183,7 +1182,7 @@ GetLocalClientCreds(ClientPtr client, LocalClientCredRec ** lccp)
     if (client == NULL)
         return -1;
     ci = ((OsCommPtr) client->osPrivate)->trans_conn;
-#if !(defined(sun) && defined(HAVE_GETPEERUCRED))
+#if !(defined(__sun) && defined(HAVE_GETPEERUCRED))
     /* Most implementations can only determine peer credentials for Unix
      * domain sockets - Solaris getpeerucred can work with a bit more, so
      * we just let it tell us if the connection type is supported or not
@@ -1479,7 +1478,7 @@ CheckAddr(int family, const void *pAddr, unsigned length)
     int len;
 
     switch (family) {
-#if defined(TCPCONN) || defined(STREAMSCONN)
+#if defined(TCPCONN)
     case FamilyInternet:
         if (length == sizeof(struct in_addr))
             len = length;
@@ -1562,7 +1561,7 @@ ConvertAddr(register struct sockaddr *saddr, int *len, void **addr)
     case AF_UNIX:
 #endif
         return FamilyLocal;
-#if defined(TCPCONN) || defined(STREAMSCONN)
+#if defined(TCPCONN)
     case AF_INET:
 #ifdef WIN32
         if (16777343 == *(long *) &((struct sockaddr_in *) saddr)->sin_addr)

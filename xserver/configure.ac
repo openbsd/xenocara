@@ -26,9 +26,9 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ(2.60)
-AC_INIT([xorg-server], 1.18.4, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xorg-server)
-RELEASE_DATE="2016-07-19"
-RELEASE_NAME="Skordalia"
+AC_INIT([xorg-server], 1.19.5, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xorg-server)
+RELEASE_DATE="2017-10-12"
+RELEASE_NAME="Shahi Paneer"
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
@@ -134,7 +134,7 @@ AM_CONDITIONAL(SPECIAL_DTRACE_OBJECTS, [test "x$SPECIAL_DTRACE_OBJECTS" = "xyes"
 AC_HEADER_DIRENT
 AC_HEADER_STDC
 AC_CHECK_HEADERS([fcntl.h stdlib.h string.h unistd.h dlfcn.h stropts.h \
- fnmatch.h sys/mkdev.h sys/utsname.h])
+ fnmatch.h sys/mkdev.h sys/sysmacros.h sys/utsname.h])
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -219,9 +219,12 @@ dnl Checks for library functions.
 AC_CHECK_FUNCS([backtrace ffs geteuid getuid issetugid getresuid \
 	getdtablesize getifaddrs getpeereid getpeerucred getprogname getzoneid \
 	mmap posix_fallocate seteuid shmctl64 strncasecmp vasprintf vsnprintf \
-	walkcontext])
-AC_REPLACE_FUNCS([reallocarray strcasecmp strcasestr strlcat strlcpy strndup \
+	walkcontext setitimer poll epoll_create1])
+AC_CONFIG_LIBOBJ_DIR([os])
+AC_REPLACE_FUNCS([reallocarray strcasecmp strcasestr strlcat strlcpy strndup\
 	timingsafe_memcmp])
+AM_CONDITIONAL(POLL, [test "x$ac_cv_func_poll" = "xyes"])
+
 AC_CHECK_LIB([bsd], [arc4random_buf])
 AC_CHECK_FUNCS([arc4random_buf])
 
@@ -407,7 +410,6 @@ AM_CONDITIONAL(SGI_VIDEO, [test "x$SGI_VIDEO" = xyes])
 AM_CONDITIONAL(SPARC64_VIDEO, [test "x$SPARC64_VIDEO" = xyes])
 
 DRI=no
-USE_SIGIO_BY_DEFAULT="yes"
 dnl it would be nice to autodetect these *CONS_SUPPORTs
 case $host_os in
   *freebsd* | *dragonfly*)
@@ -439,10 +441,7 @@ case $host_os in
 	DRI=yes
 	;;
   *solaris*)
-	PKG_CHECK_EXISTS(libdrm, DRI=yes, DRI=no)
-	# Disable use of SIGIO by default until some system bugs are
-	# fixed - see Sun/OpenSolaris bug id 6879897
-	USE_SIGIO_BY_DEFAULT="no"
+	DRI=yes
 	;;
   darwin*)
 	AC_DEFINE(CSRG_BASED, 1, [System is BSD-like])
@@ -475,9 +474,6 @@ AC_ARG_ENABLE(werror,        AS_HELP_STRING([--enable-werror],
 AC_ARG_ENABLE(debug,         AS_HELP_STRING([--enable-debug],
 				  [Enable debugging (default: disabled)]),
 			        [DEBUGGING=$enableval], [DEBUGGING=no])
-AC_ARG_ENABLE(use-sigio-by-default, AS_HELP_STRING([--enable-use-sigio-by-default]
-  [Enable SIGIO input handlers by default (default: $USE_SIGIO_BY_DEFAULT)]),
-                                [USE_SIGIO_BY_DEFAULT=$enableval], [])
 AC_ARG_WITH(int10,           AS_HELP_STRING([--with-int10=BACKEND], [int10 backend: vm86, x86emu or stub]),
 				[INT10="$withval"],
 				[INT10="$DEFAULT_INT10"])
@@ -521,6 +517,25 @@ AC_ARG_ENABLE(listen-unix,   AS_HELP_STRING([--disable-listen-unix],
 AC_ARG_ENABLE(listen-local,  AS_HELP_STRING([--disable-listen-local],
                                             [Listen on local by default (default:enabled)]),
                                 [LISTEN_LOCAL=$enableval], [LISTEN_LOCAL=yes])
+
+case $host_os in
+    linux*)
+        FALLBACK_INPUT_DRIVER="libinput"
+        ;;
+    *)
+        FALLBACK_INPUT_DRIVER=""
+        ;;
+esac
+AC_ARG_WITH(fallback-input-driver,
+            AC_HELP_STRING([--with-fallback-input-driver=$FALLBACK_INPUT_DRIVER],
+                           [Input driver fallback if the requested driver for a device is unavailable]),
+                           [ FALLBACK_INPUT_DRIVER=$withval ], [])
+if test "x$FALLBACK_INPUT_DRIVER" = "xno"; then
+    FALLBACK_INPUT_DRIVER=""
+fi
+AC_MSG_CHECKING([for fallback input driver])
+AC_MSG_RESULT([$FALLBACK_INPUT_DRIVER])
+AC_DEFINE_UNQUOTED(FALLBACK_INPUT_DRIVER, ["$FALLBACK_INPUT_DRIVER"], [ Fallback input driver ])
 
 dnl Determine font path
 XORG_FONTROOTDIR
@@ -610,10 +625,6 @@ AC_ARG_ENABLE(visibility,     AS_HELP_STRING([--enable-visibility], [Enable symb
 				[SYMBOL_VISIBILITY=auto])
 
 dnl GLX build options
-AC_ARG_ENABLE(aiglx,          AS_HELP_STRING([--enable-aiglx], [Build accelerated indirect GLX (default: enabled)]),
-                                [AIGLX=$enableval],
-                                [AIGLX=yes])
-
 AC_ARG_WITH(khronos-spec-dir, AS_HELP_STRING([--with-khronos-spec-dir=PATH], [Path to Khronos OpenGL registry database files (default: auto)]),
 				[KHRONOS_SPEC_DIR="${withval}"],
 				[KHRONOS_SPEC_DIR=auto])
@@ -662,6 +673,7 @@ AC_ARG_ENABLE(vgahw,          AS_HELP_STRING([--enable-vgahw], [Build Xorg with 
 AC_ARG_ENABLE(vbe,            AS_HELP_STRING([--enable-vbe], [Build Xorg with VBE module (default: enabled)]), [VBE=$enableval], [VBE=yes])
 AC_ARG_ENABLE(int10-module,     AS_HELP_STRING([--enable-int10-module], [Build Xorg with int10 module (default: enabled)]), [INT10MODULE=$enableval], [INT10MODULE=yes])
 AC_ARG_ENABLE(windowswm,      AS_HELP_STRING([--enable-windowswm], [Build XWin with WindowsWM extension (default: no)]), [WINDOWSWM=$enableval], [WINDOWSWM=no])
+AC_ARG_ENABLE(windowsdri,     AS_HELP_STRING([--enable-windowsdri], [Build XWin with WindowsDRI extension (default: auto)]), [WINDOWSDRI=$enableval], [WINDOWSDRI=auto])
 AC_ARG_ENABLE(libdrm,         AS_HELP_STRING([--enable-libdrm], [Build Xorg with libdrm support (default: enabled)]), [DRM=$enableval],[DRM=yes])
 AC_ARG_ENABLE(clientids,      AS_HELP_STRING([--disable-clientids], [Build Xorg with client ID tracking (default: enabled)]), [CLIENTIDS=$enableval], [CLIENTIDS=yes])
 AC_ARG_ENABLE(pciaccess, AS_HELP_STRING([--enable-pciaccess], [Build Xorg with pciaccess library (default: enabled)]), [PCI=$enableval], [PCI=yes])
@@ -679,7 +691,7 @@ AC_ARG_ENABLE(xquartz,        AS_HELP_STRING([--enable-xquartz], [Build Xquartz 
 AC_ARG_ENABLE(xwayland,       AS_HELP_STRING([--enable-xwayland], [Build Xwayland server (default: auto)]), [XWAYLAND=$enableval], [XWAYLAND=auto])
 AC_ARG_ENABLE(standalone-xpbproxy, AS_HELP_STRING([--enable-standalone-xpbproxy], [Build a standalone xpbproxy (in addition to the one integrated into Xquartz as a separate thread) (default: no)]), [STANDALONE_XPBPROXY=$enableval], [STANDALONE_XPBPROXY=no])
 AC_ARG_ENABLE(xwin,    	      AS_HELP_STRING([--enable-xwin], [Build XWin server (default: auto)]), [XWIN=$enableval], [XWIN=auto])
-AC_ARG_ENABLE(glamor,         AS_HELP_STRING([--enable-glamor], [Build glamor dix module (default: no)]), [GLAMOR=$enableval], [GLAMOR=no])
+AC_ARG_ENABLE(glamor,         AS_HELP_STRING([--enable-glamor], [Build glamor dix module (default: auto)]), [GLAMOR=$enableval], [GLAMOR=auto])
 dnl kdrive and its subsystems
 AC_ARG_ENABLE(kdrive,         AS_HELP_STRING([--enable-kdrive], [Build kdrive servers (default: no)]), [KDRIVE=$enableval], [KDRIVE=no])
 AC_ARG_ENABLE(xephyr,         AS_HELP_STRING([--enable-xephyr], [Build the kdrive Xephyr server (default: auto)]), [XEPHYR=$enableval], [XEPHYR=auto])
@@ -836,7 +848,7 @@ APPLEWMPROTO="applewmproto >= 1.4"
 LIBXSHMFENCE="xshmfence >= 1.1"
 
 dnl Required modules
-XPROTO="xproto >= 7.0.28"
+XPROTO="xproto >= 7.0.31"
 RANDRPROTO="randrproto >= 1.5.0"
 RENDERPROTO="renderproto >= 0.11"
 XEXTPROTO="xextproto >= 7.2.99.901"
@@ -854,12 +866,12 @@ dnl List of libraries that require a specific version
 LIBAPPLEWM="applewm >= 1.4"
 LIBDMX="dmx >= 1.0.99.1"
 LIBDRI="dri >= 7.8.0"
-LIBDRM="libdrm >= 2.3.0"
+LIBDRM="libdrm >= 2.3.1"
 LIBEGL="egl"
 LIBGBM="gbm >= 10.2.0"
 LIBGL="gl >= 7.1.0"
 LIBXEXT="xext >= 1.0.99.4"
-LIBXFONT="xfont >= 1.4.2"
+LIBXFONT="xfont2 >= 2.0.0"
 LIBXI="xi >= 1.2.99.1"
 LIBXTST="xtst >= 1.0.99.2"
 LIBPCIACCESS="pciaccess >= 0.12.901"
@@ -877,6 +889,45 @@ dnl Core modules for most extensions, et al.
 SDK_REQUIRED_MODULES="$XPROTO $RANDRPROTO $RENDERPROTO $XEXTPROTO $INPUTPROTO $KBPROTO $FONTSPROTO $LIBPIXMAN"
 # Make SDK_REQUIRED_MODULES available for inclusion in xorg-server.pc
 AC_SUBST(SDK_REQUIRED_MODULES)
+
+AC_CHECK_DECL([PTHREAD_MUTEX_RECURSIVE], [HAVE_RECURSIVE_MUTEX=yes], [HAVE_RECURSIVE_MUTEX=no], [[#include <pthread.h>]])
+
+THREAD_DEFAULT=no
+
+if test "x$HAVE_RECURSIVE_MUTEX" = "xyes" ; then
+	THREAD_DEFAULT=yes
+fi
+
+AC_ARG_ENABLE(input-thread, AS_HELP_STRING([--enable-input-thread],
+	     [Enable input threads]),
+	     [INPUTTHREAD=$enableval], [INPUTTHREAD=$THREAD_DEFAULT])
+
+if test "x$INPUTTHREAD" = "xyes" ; then
+    AX_PTHREAD(,AC_MSG_ERROR([threaded input requested but no pthread support has been found]))
+    SYS_LIBS="$SYS_LIBS $PTHREAD_LIBS"
+    CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+    AC_DEFINE(INPUTTHREAD, 1, [Use a separate input thread])
+
+    save_LIBS="$LIBS"
+    LIBS="$LIBS $SYS_LIBS"
+    dnl MacOS X 10.6 & higher
+    AC_MSG_CHECKING(for pthread_setname_np(const char*))
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([#include <pthread.h>],
+	                            [pthread_setname_np("example")])],
+                   [AC_MSG_RESULT(yes)
+		    AC_DEFINE(HAVE_PTHREAD_SETNAME_NP_WITHOUT_TID,1,
+		              [Have function pthread_setname_np(const char*)])],
+                   [AC_MSG_RESULT(no)])
+    dnl GNU libc 2.12 & higher, Solaris 11.3 & higher
+    AC_MSG_CHECKING(for pthread_setname_np(pthread_t, const char*))
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([#include <pthread.h>],
+                             [pthread_setname_np(pthread_self(), "example")])],
+                   [AC_MSG_RESULT(yes)
+		    AC_DEFINE(HAVE_PTHREAD_SETNAME_NP_WITH_TID,1,
+	                      [Have function pthread_setname_np(pthread_t, const char*)])],
+		   [AC_MSG_RESULT(no)])
+    LIBS="$save_LIBS"
+fi
 
 REQUIRED_MODULES="$FIXESPROTO $DAMAGEPROTO $XCMISCPROTO $XTRANS $BIGREQSPROTO $SDK_REQUIRED_MODULES"
 
@@ -1006,13 +1057,6 @@ if test "x$CONFIG_WSCONS" = xyes; then
 	AC_DEFINE(CONFIG_WSCONS, 1, [Use wscons for input auto configuration])
 fi
 
-if test "x$USE_SIGIO_BY_DEFAULT" = xyes; then
-	USE_SIGIO_BY_DEFAULT_VALUE=TRUE
-else
-	USE_SIGIO_BY_DEFAULT_VALUE=FALSE
-fi
-AC_DEFINE_UNQUOTED([USE_SIGIO_BY_DEFAULT], [$USE_SIGIO_BY_DEFAULT_VALUE],
-		   [Use SIGIO handlers for input device events by default])
 
 AC_MSG_CHECKING([for glibc...])
 AC_PREPROC_IFELSE([AC_LANG_SOURCE([
@@ -1223,7 +1267,7 @@ AC_ARG_ENABLE(xtrans-send-fds,	AS_HELP_STRING([--disable-xtrans-send-fds], [Use 
 case "x$XTRANS_SEND_FDS" in
 xauto)
 	case "$host_os" in
-	linux*|openbsd*|solaris*)
+	linux*|solaris*|freebsd*|dragonfly*|openbsd*)
 		XTRANS_SEND_FDS=yes
 		;;
 	*)
@@ -1340,27 +1384,6 @@ if test "x$DRI" = xyes || test "x$DRI2" = xyes || test "x$DRI3" = xyes || test "
 	fi
 fi
 
-if test "x$DRI2" = xyes; then
-	save_CFLAGS=$CFLAGS
-	CFLAGS="$CFLAGS $GL_CFLAGS $LIBDRM_CFLAGS"
-	AC_COMPILE_IFELSE([AC_LANG_SOURCE([[#include <GL/gl.h>
-#include <GL/internal/dri_interface.h>
-#ifndef __DRI_DRI2
-#error DRI2 extension not available.
-#endif]])],
-			  [HAVE_DRI2EXTENSION=yes],
-			  [HAVE_DRI2EXTENSION=no])
-	CFLAGS=$save_CFLAGS
-	if test "x$HAVE_DRI2EXTENSION" = xyes; then
-		AC_DEFINE(DRI2_AIGLX, 1, [Build DRI2 AIGLX loader])
-		DRI2_AIGLX=yes
-	else
-		AC_MSG_NOTICE([DRI2 AIGLX disabled, __DRI_DRI2 not defined in dri_interface.h.])
-		DRI2_AIGLX=no
-	fi
-fi
-AM_CONDITIONAL(DRI2_AIGLX, test "x$DRI2_AIGLX" = xyes)
-
 if test "x$GLX" = xyes; then
 	PKG_CHECK_MODULES([XLIB], [x11])
 	PKG_CHECK_MODULES([GL], $GLPROTO $LIBGL)
@@ -1372,15 +1395,6 @@ else
         GLX=no
 fi
 AM_CONDITIONAL(GLX, test "x$GLX" = xyes)
-
-if test "x$GLX" = xno; then
-        AIGLX=no
-fi
-
-if test "x$AIGLX" = xyes -a \( "x$DRI2" = xyes \); then
-	AC_DEFINE(AIGLX, 1, [Build AIGLX loader])
-fi
-AM_CONDITIONAL(AIGLX_DRI_LOADER, { test "x$DRI2" = xyes; } && test "x$AIGLX" = xyes)
 
 AC_SUBST([GLX_DEFINES])
 AC_SUBST([GLX_SYS_LIBS])
@@ -1891,7 +1905,7 @@ if test "x$XNEST" = xyes; then
 	if test "x$have_xnest" = xno; then
 		AC_MSG_ERROR([Xnest build explicitly requested, but required modules not found.])
 	fi
-	XNEST_LIBS="$FB_LIB $FIXES_LIB $MI_LIB $XEXT_LIB $DBE_LIB $RECORD_LIB $GLX_LIBS $RANDR_LIB $RENDER_LIB $DAMAGE_LIB  $DRI3_LIB $PRESENT_LIB $MIEXT_SYNC_LIB $MIEXT_DAMAGE_LIB $MIEXT_SHADOW_LIB $XI_LIB $XKB_LIB $XKB_STUB_LIB $COMPOSITE_LIB $MAIN_LIB $DIX_LIB $OS_LIB"
+	XNEST_LIBS="$FB_LIB $FIXES_LIB $MI_LIB $XEXT_LIB $DBE_LIB $RECORD_LIB $GLX_LIBS $RANDR_LIB $DAMAGE_LIB  $DRI3_LIB $PRESENT_LIB $MIEXT_SYNC_LIB $MIEXT_DAMAGE_LIB $RENDER_LIB $MIEXT_SHADOW_LIB $XI_LIB $XKB_LIB $XKB_STUB_LIB $COMPOSITE_LIB $MAIN_LIB $DIX_LIB $OS_LIB"
 	XNEST_SYS_LIBS="$XNESTMODULES_LIBS $GLX_SYS_LIBS"
 	AC_SUBST([XNEST_LIBS])
 	AC_SUBST([XNEST_SYS_LIBS])
@@ -2191,7 +2205,17 @@ AM_CONDITIONAL([XORG_BUS_PLATFORM], [test "x$CONFIG_UDEV_KMS" = xyes])
 AM_CONDITIONAL([XORG_DRIVER_MODESETTING], [test "x$XORG_DRIVER_MODESETTING" = xyes])
 
 dnl glamor
+if test "x$GLAMOR" = xauto; then
+	if test "x$XORG" = xyes; then
+		GLAMOR=yes
+	fi
+	if test "x$XEPHYR" = xyes; then
+		GLAMOR=yes
+	fi
+fi
+
 AM_CONDITIONAL([GLAMOR], [test "x$GLAMOR" = xyes])
+
 if test "x$GLAMOR" = xyes; then
 	AC_DEFINE(GLAMOR, 1, [Build glamor])
 	PKG_CHECK_MODULES([GLAMOR], [epoxy])
@@ -2204,8 +2228,11 @@ if test "x$GLAMOR" = xyes; then
 			[AC_DEFINE(GLAMOR_HAS_GBM_LINEAR, 1, [Have GBM_BO_USE_LINEAR])], [],
 			[#include <stdlib.h>
 			 #include <gbm.h>])
+	else
+		if test "x$XORG" = xyes; then
+			AC_MSG_ERROR([Glamor for Xorg requires $LIBGBM])
+		fi
 	fi
-
 fi
 AM_CONDITIONAL([GLAMOR_EGL], [test "x$GBM" = xyes])
 
@@ -2227,7 +2254,7 @@ if test "x$XWIN" = xyes; then
 	AC_DEFINE_UNQUOTED(__VENDORDWEBSUPPORT__, ["$VENDOR_WEB"], [Vendor web address for support])
 	AC_CHECK_TOOL(WINDRES, windres)
 
-	PKG_CHECK_MODULES([XWINMODULES],[x11 xdmcp xau xfixes])
+	PKG_CHECK_MODULES([XWINMODULES],[x11 xdmcp xau xfixes x11-xcb xcb-aux xcb-image xcb-ewmh xcb-icccm])
 
 	if test "x$WINDOWSWM" = xauto; then
 		PKG_CHECK_EXISTS($WINDOWSWMPROTO, [WINDOWSWM=yes], [WINDOWSWM=no])
@@ -2236,6 +2263,13 @@ if test "x$XWIN" = xyes; then
 		PKG_CHECK_MODULES(WINDOWSWM, $WINDOWSWMPROTO)
 		XWINMODULES_CFLAGS="$XWINMODULES_CFLAGS $WINDOWSWM_CFLAGS"
 		AC_DEFINE(ROOTLESS,1,[Build Rootless code])
+	fi
+
+	if test "x$WINDOWSDRI" = xauto; then
+		PKG_CHECK_EXISTS([windowsdriproto], [WINDOWSDRI=yes], [WINDOWSDRI=no])
+	fi
+	if test "x$WINDOWSDRI" = xyes ; then
+		PKG_CHECK_MODULES(WINDOWSDRI, [windowsdriproto])
 	fi
 
 	case $host_os in
@@ -2266,8 +2300,8 @@ if test "x$XWIN" = xyes; then
 	AC_DEFINE(DDXOSVERRORF, 1, [Use OsVendorVErrorF])
 	AC_DEFINE(DDXBEFORERESET, 1, [Use ddxBeforeReset ])
 
-dnl XWin with AIGLX requires OpenGL spec files in order to generate wrapper code for native GL functions
-	if [test "x$XWIN" = xyes && test "x$AIGLX" = xyes] ; then
+dnl XWin requires OpenGL spec files in order to generate wrapper code for native GL functions
+	if [test "x$XWIN" = xyes && test "x$GLX" = xyes] ; then
            AC_CHECK_PROG(PYTHON3, python3, python3)
            if test -z "$PYTHON3"; then
                 AC_MSG_ERROR([python3 not found])
@@ -2290,7 +2324,8 @@ AM_CONDITIONAL(XWIN, [test "x$XWIN" = xyes])
 AM_CONDITIONAL(XWIN_MULTIWINDOW, [test "x$XWIN" = xyes])
 AM_CONDITIONAL(XWIN_MULTIWINDOWEXTWM, [test "x$XWIN" = xyes && test "x$WINDOWSWM" = xyes])
 AM_CONDITIONAL(XWIN_CLIPBOARD, [test "x$XWIN" = xyes])
-AM_CONDITIONAL(XWIN_GLX_WINDOWS, [test "x$XWIN" = xyes && test "x$AIGLX" = xyes])
+AM_CONDITIONAL(XWIN_GLX_WINDOWS, [test "x$XWIN" = xyes && test "x$GLX" = xyes])
+AM_CONDITIONAL(XWIN_WINDOWS_DRI, [test "x$XWIN" = xyes && test "x$WINDOWSDRI" = xyes])
 AM_CONDITIONAL(XWIN_RANDR, [test "x$XWIN" = xyes])
 AM_CONDITIONAL(XWIN_XV, [test "x$XWIN" = xyes && test "x$XV" = xyes])
 
@@ -2363,7 +2398,7 @@ if test "x$DMX" = xyes; then
 	fi
 	DMX_INCLUDES="$XEXT_INC $RENDER_INC $RECORD_INC"
 	XDMX_CFLAGS="$DMXMODULES_CFLAGS"
-	XDMX_LIBS="$FB_LIB $MI_LIB $XEXT_LIB $RENDER_LIB $RECORD_LIB $XI_LIB $XKB_LIB $XKB_STUB_LIB $DRI3_LIB $PRESENT_LIB $MIEXT_SYNC_LIB $MIEXT_SHADOW_LIB $MIEXT_DAMAGE_LIB $COMPOSITE_LIB $DAMAGE_LIB $MAIN_LIB $DIX_LIB $RANDR_LIB $CONFIG_LIB $OS_LIB $FIXES_LIB"
+	XDMX_LIBS="$FB_LIB $MI_LIB $XEXT_LIB $PRESENT_LIB $RANDR_LIB $RENDER_LIB $RECORD_LIB $XI_LIB $XKB_LIB $XKB_STUB_LIB $DRI3_LIB $MIEXT_SYNC_LIB $MIEXT_SHADOW_LIB $MIEXT_DAMAGE_LIB $COMPOSITE_LIB $DAMAGE_LIB $MAIN_LIB $DIX_LIB $CONFIG_LIB $OS_LIB $FIXES_LIB"
 	XDMX_SYS_LIBS="$DMXMODULES_LIBS"
 	AC_SUBST([XDMX_CFLAGS])
 	AC_SUBST([XDMX_LIBS])
@@ -2473,12 +2508,12 @@ if test "$KDRIVE" = yes; then
        AC_DEFINE(KDRIVE_MOUSE, 1, [Enable KDrive mouse driver])
     fi
 
-    XEPHYR_REQUIRED_LIBS="xau xdmcp xcb xcb-shape xcb-render xcb-renderutil xcb-aux xcb-image xcb-icccm xcb-shm xcb-keysyms xcb-randr"
+    XEPHYR_REQUIRED_LIBS="xau xdmcp xcb xcb-shape xcb-render xcb-renderutil xcb-aux xcb-image xcb-icccm xcb-shm xcb-keysyms xcb-randr xcb-xkb"
     if test "x$XV" = xyes; then
         XEPHYR_REQUIRED_LIBS="$XEPHYR_REQUIRED_LIBS xcb-xv"
     fi
     if test "x$DRI" = xyes && test "x$GLX" = xyes; then
-        XEPHYR_REQUIRED_LIBS="$XEPHYR_REQUIRED_LIBS libdrm xcb-glx xcb-xf86dri > 1.6"
+        XEPHYR_REQUIRED_LIBS="$XEPHYR_REQUIRED_LIBS $LIBDRM xcb-glx xcb-xf86dri > 1.6"
     fi
     if test "x$GLAMOR" = xyes; then
         XEPHYR_REQUIRED_LIBS="$XEPHYR_REQUIRED_LIBS x11-xcb"
@@ -2532,7 +2567,7 @@ AM_CONDITIONAL(XFAKESERVER, [test "x$KDRIVE" = xyes && test "x$XFAKE" = xyes])
 
 dnl Xwayland DDX
 
-XWAYLANDMODULES="wayland-client >= 1.3.0 libdrm epoxy"
+XWAYLANDMODULES="wayland-client >= 1.3.0 wayland-protocols >= 1.1 $LIBDRM epoxy"
 if test "x$XF86VIDMODE" = xyes; then
 	XWAYLANDMODULES="$XWAYLANDMODULES $VIDMODEPROTO"
 fi
@@ -2554,9 +2589,15 @@ if test "x$XWAYLAND" = xyes; then
 	AC_SUBST([XWAYLAND_LIBS])
 	AC_SUBST([XWAYLAND_SYS_LIBS])
 
+	if test "x$MONOTONIC_CLOCK" != xyes; then
+		AC_MSG_ERROR([Xwayland requires CLOCK_MONOTONIC support.])
+	fi
+
 	WAYLAND_PREFIX=`$PKG_CONFIG --variable=prefix wayland-client`
 	AC_PATH_PROG([WAYLAND_SCANNER], [wayland-scanner],,
 		     [${WAYLAND_PREFIX}/bin$PATH_SEPARATOR$PATH])
+
+	AC_SUBST(WAYLAND_PROTOCOLS_DATADIR, `$PKG_CONFIG --variable=pkgdatadir wayland-protocols`)
 fi
 
 
@@ -2670,6 +2711,7 @@ hw/xfree86/shadowfb/Makefile
 hw/xfree86/vbe/Makefile
 hw/xfree86/vgahw/Makefile
 hw/xfree86/x86emu/Makefile
+hw/xfree86/xkb/Makefile
 hw/xfree86/utils/Makefile
 hw/xfree86/utils/man/Makefile
 hw/xfree86/utils/cvt/Makefile
@@ -2689,6 +2731,7 @@ hw/vfb/man/Makefile
 hw/xnest/Makefile
 hw/xnest/man/Makefile
 hw/xwin/Makefile
+hw/xwin/dri/Makefile
 hw/xwin/glx/Makefile
 hw/xwin/man/Makefile
 hw/xwin/winclipboard/Makefile

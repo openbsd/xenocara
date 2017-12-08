@@ -240,6 +240,10 @@ device_added(struct udev_device *udev_device)
         }
         else if (!strcmp(key, "ID_INPUT_KEY")) {
             LOG_PROPERTY(path, key, value);
+            attrs.flags |= ATTR_KEY;
+        }
+        else if (!strcmp(key, "ID_INPUT_KEYBOARD")) {
+            LOG_PROPERTY(path, key, value);
             attrs.flags |= ATTR_KEYBOARD;
         }
         else if (!strcmp(key, "ID_INPUT_MOUSE")) {
@@ -253,6 +257,10 @@ device_added(struct udev_device *udev_device)
         else if (!strcmp(key, "ID_INPUT_TABLET")) {
             LOG_PROPERTY(path, key, value);
             attrs.flags |= ATTR_TABLET;
+        }
+        else if (!strcmp(key, "ID_INPUT_TABLET_PAD")) {
+            LOG_PROPERTY(path, key, value);
+            attrs.flags |= ATTR_TABLET_PAD;
         }
         else if (!strcmp(key, "ID_INPUT_TOUCHPAD")) {
             LOG_PROPERTY(path, key, value);
@@ -332,41 +340,34 @@ device_removed(struct udev_device *device)
 }
 
 static void
-wakeup_handler(void *data, int err, void *read_mask)
+socket_handler(int fd, int ready, void *data)
 {
-    int udev_fd = udev_monitor_get_fd(udev_monitor);
     struct udev_device *udev_device;
     const char *action;
 
-    if (err < 0)
+    input_lock();
+    udev_device = udev_monitor_receive_device(udev_monitor);
+    if (!udev_device) {
+        input_unlock();
         return;
-
-    if (FD_ISSET(udev_fd, (fd_set *) read_mask)) {
-        udev_device = udev_monitor_receive_device(udev_monitor);
-        if (!udev_device)
-            return;
-        action = udev_device_get_action(udev_device);
-        if (action) {
-            if (!strcmp(action, "add")) {
+    }
+    action = udev_device_get_action(udev_device);
+    if (action) {
+        if (!strcmp(action, "add")) {
+            device_removed(udev_device);
+            device_added(udev_device);
+        } else if (!strcmp(action, "change")) {
+            /* ignore change for the drm devices */
+            if (strcmp(udev_device_get_subsystem(udev_device), "drm")) {
                 device_removed(udev_device);
                 device_added(udev_device);
-            } else if (!strcmp(action, "change")) {
-                /* ignore change for the drm devices */
-                if (strcmp(udev_device_get_subsystem(udev_device), "drm")) {
-                    device_removed(udev_device);
-                    device_added(udev_device);
-                }
             }
-            else if (!strcmp(action, "remove"))
-                device_removed(udev_device);
         }
-        udev_device_unref(udev_device);
+        else if (!strcmp(action, "remove"))
+            device_removed(udev_device);
     }
-}
-
-static void
-block_handler(void *data, struct timeval **tv, void *read_mask)
-{
+    udev_device_unref(udev_device);
+    input_unlock();
 }
 
 int
@@ -441,8 +442,7 @@ config_udev_init(void)
     }
     udev_enumerate_unref(enumerate);
 
-    RegisterBlockAndWakeupHandlers(block_handler, wakeup_handler, NULL);
-    AddGeneralSocket(udev_monitor_get_fd(udev_monitor));
+    SetNotifyFd(udev_monitor_get_fd(udev_monitor), socket_handler, X_NOTIFY_READ, NULL);
 
     return 1;
 }
@@ -457,8 +457,7 @@ config_udev_fini(void)
 
     udev = udev_monitor_get_udev(udev_monitor);
 
-    RemoveGeneralSocket(udev_monitor_get_fd(udev_monitor));
-    RemoveBlockAndWakeupHandlers(block_handler, wakeup_handler, NULL);
+    RemoveNotifyFd(udev_monitor_get_fd(udev_monitor));
     udev_monitor_unref(udev_monitor);
     udev_monitor = NULL;
     udev_unref(udev);

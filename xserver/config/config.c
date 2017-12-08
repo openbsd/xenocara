@@ -86,10 +86,10 @@ remove_device(const char *backend, DeviceIntPtr dev)
 
     /* Call PIE here so we don't try to dereference a device that's
      * already been removed. */
-    OsBlockSignals();
+    input_lock();
     ProcessInputEvents();
     DeleteInputDeviceRequest(dev);
-    OsReleaseSignals();
+    input_unlock();
 }
 
 void
@@ -107,6 +107,8 @@ remove_devices(const char *backend, const char *config_info)
         if (dev->config_info && strcmp(dev->config_info, config_info) == 0)
             remove_device(backend, dev);
     }
+
+    RemoveInputDeviceTraces(config_info);
 }
 
 BOOL

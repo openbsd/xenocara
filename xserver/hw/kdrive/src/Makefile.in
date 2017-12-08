@@ -55,9 +55,10 @@ DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/depcomp
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_dir.m4 \
-	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
-	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
-	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/configure.ac
+	$(top_srcdir)/m4/ax_pthread.m4 $(top_srcdir)/m4/libtool.m4 \
+	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
+	$(top_srcdir)/m4/ltversion.m4 $(top_srcdir)/m4/lt~obsolete.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -72,7 +73,9 @@ CONFIG_HEADER = $(top_builddir)/include/do-not-use-config.h \
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
-libkdrive_la_LIBADD =
+@CONFIG_HAL_TRUE@@CONFIG_UDEV_FALSE@libkdrive_la_DEPENDENCIES = $(top_builddir)/config/libconfig.la
+@CONFIG_UDEV_TRUE@libkdrive_la_DEPENDENCIES =  \
+@CONFIG_UDEV_TRUE@	$(top_builddir)/config/libconfig.la
 am__libkdrive_la_SOURCES_DIST = fourcc.h kcmap.c kdrive.c kdrive.h \
 	kinfo.c kinput.c kmode.c kshadow.c kxv.c kxv.h \
 	$(top_srcdir)/mi/miinitext.c
@@ -303,6 +306,9 @@ PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 PROJECTROOT = @PROJECTROOT@
+PTHREAD_CC = @PTHREAD_CC@
+PTHREAD_CFLAGS = @PTHREAD_CFLAGS@
+PTHREAD_LIBS = @PTHREAD_LIBS@
 PYTHON3 = @PYTHON3@
 RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
@@ -333,7 +339,10 @@ UDEV_LIBS = @UDEV_LIBS@
 UTILS_SYS_LIBS = @UTILS_SYS_LIBS@
 VENDOR_NAME_SHORT = @VENDOR_NAME_SHORT@
 VERSION = @VERSION@
+WAYLAND_PROTOCOLS_DATADIR = @WAYLAND_PROTOCOLS_DATADIR@
 WAYLAND_SCANNER = @WAYLAND_SCANNER@
+WINDOWSDRI_CFLAGS = @WINDOWSDRI_CFLAGS@
+WINDOWSDRI_LIBS = @WINDOWSDRI_LIBS@
 WINDOWSWM_CFLAGS = @WINDOWSWM_CFLAGS@
 WINDOWSWM_LIBS = @WINDOWSWM_LIBS@
 WINDRES = @WINDRES@
@@ -428,6 +437,7 @@ am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
 am__tar = @am__tar@
 am__untar = @am__untar@
+ax_pthread_config = @ax_pthread_config@
 bindir = @bindir@
 build = @build@
 build_alias = @build_alias@
@@ -497,6 +507,8 @@ libkdrive_la_SOURCES = \
 	$(KDRIVE_XV_SOURCES) \
         $(top_srcdir)/mi/miinitext.c
 
+@CONFIG_HAL_TRUE@@CONFIG_UDEV_FALSE@libkdrive_la_LIBADD = $(top_builddir)/config/libconfig.la
+@CONFIG_UDEV_TRUE@libkdrive_la_LIBADD = $(top_builddir)/config/libconfig.la
 all: all-am
 
 .SUFFIXES:

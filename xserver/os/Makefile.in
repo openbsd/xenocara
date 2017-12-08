@@ -52,11 +52,12 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 @SECURE_RPC_TRUE@am__append_1 = $(SECURERPC_SRCS)
-@XDMCP_TRUE@am__append_2 = $(XDMCP_SRCS)
-@HAVE_LIBUNWIND_TRUE@am__append_3 = $(LIBUNWIND_CFLAGS)
-@HAVE_LIBUNWIND_TRUE@am__append_4 = $(LIBUNWIND_LIBS)
-@BUSFAULT_TRUE@am__append_5 = $(BUSFAULT_SRCS)
-@X_PRIVSEP_TRUE@am__append_6 = $(PRIVSEP_SRCS)
+@POLL_FALSE@am__append_2 = $(XSERVER_POLL_SRCS)
+@XDMCP_TRUE@am__append_3 = $(XDMCP_SRCS)
+@HAVE_LIBUNWIND_TRUE@am__append_4 = $(LIBUNWIND_CFLAGS)
+@HAVE_LIBUNWIND_TRUE@am__append_5 = $(LIBUNWIND_LIBS)
+@BUSFAULT_TRUE@am__append_6 = $(BUSFAULT_SRCS)
+@X_PRIVSEP_TRUE@am__append_7 = $(PRIVSEP_SRCS)
 @SPECIAL_DTRACE_OBJECTS_TRUE@noinst_PROGRAMS = os.O$(EXEEXT)
 subdir = os
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
@@ -64,9 +65,10 @@ DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	strlcat.c strlcpy.c strndup.c timingsafe_memcmp.c
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_dir.m4 \
-	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
-	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
-	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/configure.ac
+	$(top_srcdir)/m4/ax_pthread.m4 $(top_srcdir)/m4/libtool.m4 \
+	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
+	$(top_srcdir)/m4/ltversion.m4 $(top_srcdir)/m4/lt~obsolete.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -86,23 +88,27 @@ am__DEPENDENCIES_1 =
 libos_la_DEPENDENCIES = $(am__DEPENDENCIES_1) $(LTLIBOBJS) \
 	$(am__DEPENDENCIES_2)
 am__libos_la_SOURCES_DIST = WaitFor.c access.c auth.c backtrace.c \
-	client.c connection.c io.c mitauth.c oscolor.c osdep.h \
-	osinit.c utils.c xdmauth.c xsha1.c xstrans.c xprintf.c log.c \
-	rpcauth.c xdmcp.c busfault.c privsep.c
+	client.c connection.c inputthread.c io.c mitauth.c oscolor.c \
+	osdep.h osinit.c ospoll.c ospoll.h utils.c xdmauth.c xsha1.c \
+	xstrans.c xprintf.c log.c rpcauth.c xserver_poll.c xdmcp.c \
+	busfault.c privsep.c
 am__objects_1 = log.lo
 am__objects_2 = rpcauth.lo
 @SECURE_RPC_TRUE@am__objects_3 = $(am__objects_2)
-am__objects_4 = xdmcp.lo
-@XDMCP_TRUE@am__objects_5 = $(am__objects_4)
-am__objects_6 = busfault.lo
-@BUSFAULT_TRUE@am__objects_7 = $(am__objects_6)
-am__objects_8 = privsep.lo
-@X_PRIVSEP_TRUE@am__objects_9 = $(am__objects_8)
+am__objects_4 = xserver_poll.lo
+@POLL_FALSE@am__objects_5 = $(am__objects_4)
+am__objects_6 = xdmcp.lo
+@XDMCP_TRUE@am__objects_7 = $(am__objects_6)
+am__objects_8 = busfault.lo
+@BUSFAULT_TRUE@am__objects_9 = $(am__objects_8)
+am__objects_10 = privsep.lo
+@X_PRIVSEP_TRUE@am__objects_11 = $(am__objects_10)
 am_libos_la_OBJECTS = WaitFor.lo access.lo auth.lo backtrace.lo \
-	client.lo connection.lo io.lo mitauth.lo oscolor.lo osinit.lo \
-	utils.lo xdmauth.lo xsha1.lo xstrans.lo xprintf.lo \
-	$(am__objects_1) $(am__objects_3) $(am__objects_5) \
-	$(am__objects_7) $(am__objects_9)
+	client.lo connection.lo inputthread.lo io.lo mitauth.lo \
+	oscolor.lo osinit.lo ospoll.lo utils.lo xdmauth.lo xsha1.lo \
+	xstrans.lo xprintf.lo $(am__objects_1) $(am__objects_3) \
+	$(am__objects_5) $(am__objects_7) $(am__objects_9) \
+	$(am__objects_11)
 libos_la_OBJECTS = $(am_libos_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -331,6 +337,9 @@ PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 PROJECTROOT = @PROJECTROOT@
+PTHREAD_CC = @PTHREAD_CC@
+PTHREAD_CFLAGS = @PTHREAD_CFLAGS@
+PTHREAD_LIBS = @PTHREAD_LIBS@
 PYTHON3 = @PYTHON3@
 RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
@@ -361,7 +370,10 @@ UDEV_LIBS = @UDEV_LIBS@
 UTILS_SYS_LIBS = @UTILS_SYS_LIBS@
 VENDOR_NAME_SHORT = @VENDOR_NAME_SHORT@
 VERSION = @VERSION@
+WAYLAND_PROTOCOLS_DATADIR = @WAYLAND_PROTOCOLS_DATADIR@
 WAYLAND_SCANNER = @WAYLAND_SCANNER@
+WINDOWSDRI_CFLAGS = @WINDOWSDRI_CFLAGS@
+WINDOWSDRI_LIBS = @WINDOWSDRI_LIBS@
 WINDOWSWM_CFLAGS = @WINDOWSWM_CFLAGS@
 WINDOWSWM_LIBS = @WINDOWSWM_LIBS@
 WINDRES = @WINDRES@
@@ -456,6 +468,7 @@ am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
 am__tar = @am__tar@
 am__untar = @am__untar@
+ax_pthread_config = @ax_pthread_config@
 bindir = @bindir@
 build = @build@
 build_alias = @build_alias@
@@ -504,19 +517,20 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 noinst_LTLIBRARIES = libos.la
-AM_CFLAGS = $(DIX_CFLAGS) $(SHA1_CFLAGS) $(am__append_3)
+AM_CFLAGS = $(DIX_CFLAGS) $(SHA1_CFLAGS) $(am__append_4)
 SECURERPC_SRCS = rpcauth.c
 XDMCP_SRCS = xdmcp.c
 PRIVSEP_SRCS = privsep.c
 XORG_SRCS = log.c
 BUSFAULT_SRCS = busfault.c
+XSERVER_POLL_SRCS = xserver_poll.c
 libos_la_SOURCES = WaitFor.c access.c auth.c backtrace.c client.c \
-	connection.c io.c mitauth.c oscolor.c osdep.h osinit.c utils.c \
-	xdmauth.c xsha1.c xstrans.c xprintf.c $(XORG_SRCS) \
-	$(am__append_1) $(am__append_2) $(am__append_5) \
-	$(am__append_6)
+	connection.c inputthread.c io.c mitauth.c oscolor.c osdep.h \
+	osinit.c ospoll.c ospoll.h utils.c xdmauth.c xsha1.c xstrans.c \
+	xprintf.c $(XORG_SRCS) $(am__append_1) $(am__append_2) \
+	$(am__append_3) $(am__append_6) $(am__append_7)
 libos_la_LIBADD = @SHA1_LIBS@ $(DLOPEN_LIBS) $(LTLIBOBJS) \
-	$(am__append_4)
+	$(am__append_5)
 EXTRA_DIST = $(SECURERPC_SRCS) $(XDMCP_SRCS)
 @SPECIAL_DTRACE_OBJECTS_TRUE@os_O_SOURCES = 
 all: all-am
@@ -599,17 +613,20 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/busfault.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/client.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/connection.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/inputthread.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/io.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/log.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mitauth.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/oscolor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/osinit.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ospoll.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/privsep.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rpcauth.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/utils.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xdmauth.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xdmcp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xprintf.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xserver_poll.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xsha1.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xstrans.Plo@am__quote@
 
@@ -859,9 +876,9 @@ uninstall-am:
 
 
 # Generate dtrace object code for probes in libos & libdix
-@SPECIAL_DTRACE_OBJECTS_TRUE@dtrace.o: $(top_srcdir)/dix/Xserver.d $(am_libos_la_OBJECTS)
+@SPECIAL_DTRACE_OBJECTS_TRUE@dtrace.o: $(top_srcdir)/dix/Xserver.d libos.la
 @SPECIAL_DTRACE_OBJECTS_TRUE@	$(AM_V_GEN)$(DTRACE) -G -C -o $@ -s $(top_srcdir)/dix/Xserver.d .libs/*.o ../dix/.libs/*.o
-@SPECIAL_DTRACE_OBJECTS_TRUE@os.O: dtrace.o $(am_libos_la_OBJECTS)
+@SPECIAL_DTRACE_OBJECTS_TRUE@os.O: dtrace.o libos.la
 @SPECIAL_DTRACE_OBJECTS_TRUE@	$(AM_V_GEN)ld -r -o $@ dtrace.o .libs/*.o
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

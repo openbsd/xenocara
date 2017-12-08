@@ -96,7 +96,7 @@ Equipment Corporation.
 #include "selection.h"
 #include <X11/fonts/font.h>
 #include <X11/fonts/fontstruct.h>
-#include <X11/fonts/fontutil.h>
+#include <X11/fonts/libxfont2.h>
 #include "opaque.h"
 #include "servermd.h"
 #include "hotplug.h"
@@ -120,14 +120,7 @@ Equipment Corporation.
 
 extern void Dispatch(void);
 
-#ifdef XQUARTZ
-#include <pthread.h>
-
-BOOL serverRunning = FALSE;
-pthread_mutex_t serverRunningMutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t serverRunningCond = PTHREAD_COND_INITIALIZER;
-
-#endif
+CallbackListPtr RootWindowFinalizeCallback = NULL;
 
 int
 dix_main(int argc, char *argv[], char *envp[])
@@ -197,9 +190,9 @@ dix_main(int argc, char *argv[], char *envp[])
 
         InitAtoms();
         InitEvents();
-        InitGlyphCaching();
+        xfont2_init_glyph_caching();
         dixResetRegistry();
-        ResetFontPrivateIndex();
+        InitFonts();
         InitCallbackManager();
         InitOutput(&screenInfo, argc, argv);
 
@@ -230,9 +223,9 @@ dix_main(int argc, char *argv[], char *envp[])
                 FatalError("failed to create default stipple");
             if (!CreateRootWindow(pScreen))
                 FatalError("failed to create root window");
+            CallCallbacks(&RootWindowFinalizeCallback, pScreen);
         }
 
-        InitFonts();
         if (SetDefaultFontPath(defaultFontPath) != Success) {
             ErrorF("[dix] failed to set default font path '%s'",
                    defaultFontPath);
@@ -287,24 +280,11 @@ dix_main(int argc, char *argv[], char *envp[])
             }
         }
 
-#ifdef XQUARTZ
-        /* Let the other threads know the server is done with its init */
-        pthread_mutex_lock(&serverRunningMutex);
-        serverRunning = TRUE;
-        pthread_cond_broadcast(&serverRunningCond);
-        pthread_mutex_unlock(&serverRunningMutex);
-#endif
-
         NotifyParentProcess();
 
-        Dispatch();
+        InputThreadInit();
 
-#ifdef XQUARTZ
-        /* Let the other threads know the server is no longer running */
-        pthread_mutex_lock(&serverRunningMutex);
-        serverRunning = FALSE;
-        pthread_mutex_unlock(&serverRunningMutex);
-#endif
+        Dispatch();
 
         UndisplayDevices();
         DisableAllDevices();
@@ -328,6 +308,8 @@ dix_main(int argc, char *argv[], char *envp[])
 #endif
 
         CloseInput();
+
+        InputThreadFini();
 
         for (i = 0; i < screenInfo.numScreens; i++)
             screenInfo.screens[i]->root = NullWindow;

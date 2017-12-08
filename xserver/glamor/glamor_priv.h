@@ -184,16 +184,7 @@ struct glamor_saved_procs {
     ScreenBlockHandlerProcPtr block_handler;
 };
 
-#define CACHE_FORMAT_COUNT 3
-
-#define CACHE_BUCKET_WCOUNT 4
-#define CACHE_BUCKET_HCOUNT 4
-
-#define GLAMOR_TICK_AFTER(t0, t1) 	\
-	(((int)(t1) - (int)(t0)) < 0)
-
 typedef struct glamor_screen_private {
-    unsigned int tick;
     enum glamor_gl_flavor gl_flavor;
     int glsl_version;
     Bool has_pack_invert;
@@ -208,14 +199,12 @@ typedef struct glamor_screen_private {
     Bool use_quads;
     Bool has_vertex_array_object;
     Bool has_dual_blend;
+    Bool has_texture_swizzle;
     Bool is_core_profile;
+    Bool can_copyplane;
     int max_fbo_size;
 
     GLuint one_channel_format;
-
-    struct xorg_list
-        fbo_cache[CACHE_FORMAT_COUNT][CACHE_BUCKET_WCOUNT][CACHE_BUCKET_HCOUNT];
-    unsigned long fbo_cache_watermark;
 
     /* glamor point shader */
     glamor_program point_prog;
@@ -286,11 +275,6 @@ typedef struct glamor_screen_private {
         [glamor_program_alpha_count]
         [SHADER_DEST_SWIZZLE_COUNT];
 
-    /* shaders to restore a texture to another texture. */
-    GLint finish_access_prog[2];
-    GLint finish_access_revert[2];
-    GLint finish_access_swap_rb[2];
-
     /* glamor gradient, 0 for small nstops, 1 for
        large nstops and 2 for dynamic generate. */
     GLint gradient_prog[SHADER_GRADIENT_COUNT][3];
@@ -330,21 +314,10 @@ enum glamor_fbo_state {
 };
 
 typedef struct glamor_pixmap_fbo {
-    struct xorg_list list; /**< linked list pointers when in the fbo cache */
-    /** glamor_priv->tick number when this FBO will be expired from the cache. */
-    unsigned int expire;
     GLuint tex; /**< GL texture name */
     GLuint fb; /**< GL FBO name */
     int width; /**< width in pixels */
     int height; /**< height in pixels */
-    /**
-     * Flag for when texture contents might be shared with a
-     * non-glamor user.
-     *
-     * This is used to avoid putting textures used by other clients
-     * into the FBO cache.
-     */
-    Bool external;
     GLenum format; /**< GL format used to create the texture. */
     GLenum type; /**< GL type used to create the texture. */
 } glamor_pixmap_fbo;
@@ -514,22 +487,6 @@ glamor_pixmap_hcnt(glamor_pixmap_private *priv)
     for (box_index = 0; box_index < glamor_pixmap_hcnt(priv) *         \
              glamor_pixmap_wcnt(priv); box_index++)                    \
 
-/**
- * Pixmap upload status, used by glamor_render.c's support for
- * temporarily uploading pixmaps to GL textures to get a Composite
- * operation done.
- */
-typedef enum glamor_pixmap_status {
-    /** initial status, don't need to do anything. */
-    GLAMOR_NONE,
-    /** marked as need to be uploaded to gl texture. */
-    GLAMOR_UPLOAD_PENDING,
-    /** the pixmap has been uploaded successfully. */
-    GLAMOR_UPLOAD_DONE,
-    /** fail to upload the pixmap. */
-    GLAMOR_UPLOAD_FAILED
-} glamor_pixmap_status_t;
-
 /* GC private structure. Currently holds only any computed dash pixmap */
 
 typedef struct {
@@ -588,10 +545,7 @@ glamor_pixmap_fbo *glamor_create_fbo(glamor_screen_private *glamor_priv, int w,
 void glamor_destroy_fbo(glamor_screen_private *glamor_priv,
                         glamor_pixmap_fbo *fbo);
 void glamor_pixmap_destroy_fbo(PixmapPtr pixmap);
-void glamor_init_pixmap_fbo(ScreenPtr screen);
-void glamor_fini_pixmap_fbo(ScreenPtr screen);
 Bool glamor_pixmap_fbo_fixup(ScreenPtr screen, PixmapPtr pixmap);
-void glamor_fbo_expire(glamor_screen_private *glamor_priv);
 
 /* Return whether 'picture' is alpha-only */
 static inline Bool glamor_picture_is_alpha(PicturePtr picture)
@@ -630,8 +584,6 @@ void glamor_gldrawarrays_quads_using_indices(glamor_screen_private *glamor_priv,
                                              unsigned count);
 
 /* glamor_core.c */
-void glamor_init_finish_access_shaders(ScreenPtr screen);
-
 Bool glamor_get_drawable_location(const DrawablePtr drawable);
 void glamor_get_drawable_deltas(DrawablePtr drawable, PixmapPtr pixmap,
                                 int *x, int *y);
@@ -767,7 +719,7 @@ Bool glamor_composite_largepixmap_region(CARD8 op,
  * Upload a picture to gl texture. Similar to the
  * glamor_upload_pixmap_to_texture. Used in rendering.
  **/
-enum glamor_pixmap_status glamor_upload_picture_to_texture(PicturePtr picture);
+Bool glamor_upload_picture_to_texture(PicturePtr picture);
 
 void glamor_add_traps(PicturePtr pPicture,
                       INT16 x_off, INT16 y_off, int ntrap, xTrap *traps);
@@ -970,7 +922,6 @@ void glamor_xv_render(glamor_port_private *port_priv);
 #define GLAMOR_PIXMAP_DYNAMIC_UPLOAD
 #define GLAMOR_GRADIENT_SHADER
 #define GLAMOR_TEXTURED_LARGE_PIXMAP 1
-#define WALKAROUND_LARGE_TEXTURE_MAP
 #if 0
 #define MAX_FBO_SIZE 32         /* For test purpose only. */
 #endif

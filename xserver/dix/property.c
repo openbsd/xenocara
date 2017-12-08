@@ -108,11 +108,13 @@ dixLookupProperty(PropertyPtr *result, WindowPtr pWin, Atom propertyName,
 static void
 deliverPropertyNotifyEvent(WindowPtr pWin, int state, Atom atom)
 {
-    xEvent event = {
+    xEvent event;
+    UpdateCurrentTimeIf();
+    event = (xEvent) {
         .u.property.window = pWin->drawable.id,
         .u.property.state = state,
         .u.property.atom = atom,
-        .u.property.time = currentTime.milliseconds
+        .u.property.time = currentTime.milliseconds,
     };
     event.u.u.type = PropertyNotify;
     DeliverEvents(pWin, &event, 1, (WindowPtr) NULL);
@@ -352,14 +354,6 @@ dixChangeWindowProperty(ClientPtr pClient, WindowPtr pWin, Atom property,
         deliverPropertyNotifyEvent(pWin, PropertyNewValue, pProp->propertyName);
 
     return Success;
-}
-
-int
-ChangeWindowProperty(WindowPtr pWin, Atom property, Atom type, int format,
-                     int mode, unsigned long len, void *value, Bool sendevent)
-{
-    return dixChangeWindowProperty(serverClient, pWin, property, type, format,
-                                   mode, len, value, sendevent);
 }
 
 int

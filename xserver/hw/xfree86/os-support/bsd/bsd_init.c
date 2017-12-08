@@ -285,7 +285,7 @@ acquire_vt:
                     xf86Msg(X_WARNING, "xf86OpenConsole: VT_WAITACTIVE failed\n");
                 }
 
-                signal(SIGUSR2, xf86VTRequest);
+                OsSignal(SIGUSR2, xf86VTRequest);
 
                 vtmode.mode = VT_PROCESS;
                 vtmode.relsig = SIGUSR2;

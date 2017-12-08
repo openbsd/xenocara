@@ -53,9 +53,9 @@ void
 xf86OSInitVidMem(VidMemInfoPtr pVidMem)
 {
     xf86OpenConsole();
-    
+
     pVidMem->initialised = TRUE;
-    
+
     pci_system_init_dev_mem(xf86Info.consoleFd);
     xf86EnableIO();
 }

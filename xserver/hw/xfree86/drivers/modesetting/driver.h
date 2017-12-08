@@ -52,6 +52,7 @@ typedef enum {
     OPTION_ACCEL_METHOD,
     OPTION_PAGEFLIP,
     OPTION_ZAPHOD_HEADS,
+    OPTION_DOUBLE_SHADOW,
 } modesettingOpts;
 
 typedef struct
@@ -97,7 +98,7 @@ typedef struct _modesettingRec {
 
     Bool noAccel;
     CloseScreenProcPtr CloseScreen;
-
+    CreateWindowProcPtr CreateWindow;
     unsigned int SaveGeneration;
 
     CreateScreenResourcesProcPtr createScreenResources;
@@ -136,8 +137,6 @@ void ms_drm_abort_seq(ScrnInfoPtr scrn, uint32_t seq);
 Bool ms_crtc_on(xf86CrtcPtr crtc);
 
 xf86CrtcPtr ms_dri2_crtc_covering_drawable(DrawablePtr pDraw);
-xf86CrtcPtr ms_covering_crtc(ScrnInfoPtr scrn, BoxPtr box,
-                             xf86CrtcPtr desired, BoxPtr crtc_box_ret);
 
 int ms_get_crtc_ust_msc(xf86CrtcPtr crtc, CARD64 *ust, CARD64 *msc);
 
@@ -152,3 +151,24 @@ Bool ms_vblank_screen_init(ScreenPtr screen);
 void ms_vblank_close_screen(ScreenPtr screen);
 
 Bool ms_present_screen_init(ScreenPtr screen);
+
+#ifdef GLAMOR
+
+typedef void (*ms_pageflip_handler_proc)(modesettingPtr ms,
+                                         uint64_t frame,
+                                         uint64_t usec,
+                                         void *data);
+
+typedef void (*ms_pageflip_abort_proc)(modesettingPtr ms, void *data);
+
+Bool ms_do_pageflip(ScreenPtr screen,
+                    PixmapPtr new_front,
+                    void *event,
+                    int ref_crtc_vblank_pipe,
+                    Bool async,
+                    ms_pageflip_handler_proc pageflip_handler,
+                    ms_pageflip_abort_proc pageflip_abort);
+
+#endif
+
+int ms_flush_drm_events(ScreenPtr screen);

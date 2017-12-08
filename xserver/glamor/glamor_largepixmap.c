@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdint.h> /* For INT16_MAX */
 
 #include "glamor_priv.h"
 
@@ -722,11 +723,11 @@ glamor_compute_transform_clipped_regions(PixmapPtr pixmap,
         temp_box.x2 = MIN(temp_box.x2, pixmap->drawable.width);
         temp_box.y2 = MIN(temp_box.y2, pixmap->drawable.height);
     }
-    /* Now copy back the box32 to a box16 box. */
-    short_box.x1 = temp_box.x1;
-    short_box.y1 = temp_box.y1;
-    short_box.x2 = temp_box.x2;
-    short_box.y2 = temp_box.y2;
+    /* Now copy back the box32 to a box16 box, avoiding overflow. */
+    short_box.x1 = MIN(temp_box.x1, INT16_MAX);
+    short_box.y1 = MIN(temp_box.y1, INT16_MAX);
+    short_box.x2 = MIN(temp_box.x2, INT16_MAX);
+    short_box.y2 = MIN(temp_box.y2, INT16_MAX);
     RegionInitBoxes(temp_region, &short_box, 1);
     DEBUGF("copy to temp source region \n");
     DEBUGRegionPrint(temp_region);
@@ -1259,7 +1260,7 @@ glamor_composite_largepixmap_region(CARD8 op,
                         is_normal_mask_fbo = 1;
                     }
                     else {
-                        /* This mask region has transform or repeatpad, we need clip it agains the previous
+                        /* This mask region has transform or repeatpad, we need clip it against the previous
                          * valid region rather than the mask region. */
                         if (!is_normal_source_fbo)
                             clipped_mask_regions =

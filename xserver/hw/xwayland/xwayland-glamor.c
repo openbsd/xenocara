@@ -31,13 +31,14 @@
 
 #define MESA_EGL_NO_X11_HEADERS
 #include <gbm.h>
-#include <epoxy/egl.h>
-#include <epoxy/gl.h>
+#include <glamor_egl.h>
 
 #include <glamor.h>
 #include <glamor_context.h>
 #include <dri3.h>
 #include "drm-client-protocol.h"
+
+static DevPrivateKeyRec xwl_auth_state_private_key;
 
 struct xwl_pixmap {
     struct wl_buffer *buffer;
@@ -292,9 +293,10 @@ xwl_drm_init_egl(struct xwl_screen *xwl_screen)
         return;
     }
 
-    xwl_screen->egl_display = eglGetDisplay(xwl_screen->gbm);
+    xwl_screen->egl_display = glamor_egl_get_display(EGL_PLATFORM_GBM_MESA,
+                                                     xwl_screen->gbm);
     if (xwl_screen->egl_display == EGL_NO_DISPLAY) {
-        ErrorF("eglGetDisplay() failed\n");
+        ErrorF("glamor_egl_get_display() failed\n");
         return;
     }
 
@@ -347,7 +349,7 @@ xwl_drm_handle_device(void *data, struct wl_drm *drm, const char *device)
    xwl_screen->drm_fd = open(xwl_screen->device_name, O_RDWR | O_CLOEXEC);
    if (xwl_screen->drm_fd == -1) {
        ErrorF("wayland-egl: could not open %s (%s)\n",
-	      xwl_screen->device_name, strerror(errno));
+              xwl_screen->device_name, strerror(errno));
        return;
    }
 
@@ -417,11 +419,6 @@ xwl_screen_init_glamor(struct xwl_screen *xwl_screen,
     return TRUE;
 }
 
-void
-glamor_egl_destroy_pixmap_image(PixmapPtr pixmap)
-{
-}
-
 int
 glamor_egl_dri3_fd_name_from_tex(ScreenPtr screen,
                                  PixmapPtr pixmap,
@@ -434,17 +431,49 @@ glamor_egl_dri3_fd_name_from_tex(ScreenPtr screen,
 struct xwl_auth_state {
     int fd;
     ClientPtr client;
+    struct wl_callback *callback;
 };
+
+static void
+free_xwl_auth_state(ClientPtr pClient, struct xwl_auth_state *state)
+{
+    dixSetPrivate(&pClient->devPrivates, &xwl_auth_state_private_key, NULL);
+    if (state) {
+        wl_callback_destroy(state->callback);
+        free(state);
+    }
+}
+
+static void
+xwl_auth_state_client_callback(CallbackListPtr *pcbl, void *unused, void *data)
+{
+    NewClientInfoRec *clientinfo = (NewClientInfoRec *) data;
+    ClientPtr pClient = clientinfo->client;
+    struct xwl_auth_state *state;
+
+    switch (pClient->clientState) {
+    case ClientStateGone:
+    case ClientStateRetained:
+        state = dixLookupPrivate(&pClient->devPrivates, &xwl_auth_state_private_key);
+        free_xwl_auth_state(pClient, state);
+        break;
+    default:
+        break;
+    }
+}
 
 static void
 sync_callback(void *data, struct wl_callback *callback, uint32_t serial)
 {
     struct xwl_auth_state *state = data;
+    ClientPtr client = state->client;
 
-    dri3_send_open_reply(state->client, state->fd);
-    AttendClient(state->client);
-    free(state);
-    wl_callback_destroy(callback);
+    /* if the client is gone, the callback is cancelled so it's safe to
+     * assume the client is still in ClientStateRunning at this point...
+     */
+    dri3_send_open_reply(client, state->fd);
+    AttendClient(client);
+    free_xwl_auth_state(client, state);
 }
 
 static const struct wl_callback_listener sync_listener = {
@@ -459,7 +488,6 @@ xwl_dri3_open_client(ClientPtr client,
 {
     struct xwl_screen *xwl_screen = xwl_screen_get(screen);
     struct xwl_auth_state *state;
-    struct wl_callback *callback;
     drm_magic_t magic;
     int fd;
 
@@ -487,8 +515,9 @@ xwl_dri3_open_client(ClientPtr client,
     }
 
     wl_drm_authenticate(xwl_screen->drm, magic);
-    callback = wl_display_sync(xwl_screen->display);
-    wl_callback_add_listener(callback, &sync_listener, state);
+    state->callback = wl_display_sync(xwl_screen->display);
+    wl_callback_add_listener(state->callback, &sync_listener, state);
+    dixSetPrivate(&client->devPrivates, &xwl_auth_state_private_key, state);
 
     IgnoreClient(client);
 
@@ -567,6 +596,16 @@ xwl_glamor_init(struct xwl_screen *xwl_screen)
 
     if (!dri3_screen_init(xwl_screen->screen, &xwl_dri3_info)) {
         ErrorF("Failed to initialize dri3\n");
+        return FALSE;
+    }
+
+    if (!dixRegisterPrivateKey(&xwl_auth_state_private_key, PRIVATE_CLIENT, 0)) {
+        ErrorF("Failed to register private key\n");
+        return FALSE;
+    }
+
+    if (!AddCallback(&ClientStateCallback, xwl_auth_state_client_callback, NULL)) {
+        ErrorF("Failed to add client state callback\n");
         return FALSE;
     }
 

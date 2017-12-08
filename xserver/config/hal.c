@@ -170,13 +170,15 @@ device_added(LibHalContext * hal_ctx, const char *udi)
     free(hal_tags);
 
     if (libhal_device_query_capability(hal_ctx, udi, "input.keys", NULL))
-        attrs.flags |= ATTR_KEYBOARD;
+        attrs.flags |= ATTR_KEY | ATTR_KEYBOARD;
     if (libhal_device_query_capability(hal_ctx, udi, "input.mouse", NULL))
         attrs.flags |= ATTR_POINTER;
     if (libhal_device_query_capability(hal_ctx, udi, "input.joystick", NULL))
         attrs.flags |= ATTR_JOYSTICK;
     if (libhal_device_query_capability(hal_ctx, udi, "input.tablet", NULL))
         attrs.flags |= ATTR_TABLET;
+    if (libhal_device_query_capability(hal_ctx, udi, "input.tablet_pad", NULL))
+        attrs.flags |= ATTR_TABLET_PAD;
     if (libhal_device_query_capability(hal_ctx, udi, "input.touchpad", NULL))
         attrs.flags |= ATTR_TOUCHPAD;
     if (libhal_device_query_capability(hal_ctx, udi, "input.touchscreen", NULL))

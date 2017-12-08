@@ -130,7 +130,6 @@ winInitializeScreenDefaults(void)
     defaultScreenInfo.fDecoration = TRUE;
 #ifdef XWIN_MULTIWINDOWEXTWM
     defaultScreenInfo.fMWExtWM = FALSE;
-    defaultScreenInfo.fInternalWM = FALSE;
 #endif
     defaultScreenInfo.fRootless = FALSE;
 #ifdef XWIN_MULTIWINDOW
@@ -141,7 +140,7 @@ winInitializeScreenDefaults(void)
 #endif
     defaultScreenInfo.fMultipleMonitors = FALSE;
     defaultScreenInfo.fLessPointer = FALSE;
-    defaultScreenInfo.iResizeMode = resizeWithRandr;
+    defaultScreenInfo.iResizeMode = resizeDefault;
     defaultScreenInfo.fNoTrayIcon = FALSE;
     defaultScreenInfo.iE3BTimeout = WIN_E3B_DEFAULT;
     defaultScreenInfo.fUseWinKillKey = WIN_DEFAULT_WIN_KILL;
@@ -247,7 +246,7 @@ ddxProcessArgument(int argc, char *argv[], int i)
              * OsVendorInit () gets called, otherwise we will overwrite
              * settings changed by parameters such as -fullscreen, etc.
              */
-            winErrorFVerb(2, "ddxProcessArgument - Initializing default "
+            winErrorFVerb(3, "ddxProcessArgument - Initializing default "
                           "screens\n");
             winInitializeScreenDefaults();
         }
@@ -577,11 +576,8 @@ ddxProcessArgument(int argc, char *argv[], int i)
      * Look for the '-internalwm' argument
      */
     if (IS_OPTION("-internalwm")) {
-        if (!screenInfoPtr->fMultiMonitorOverride)
-            screenInfoPtr->fMultipleMonitors = TRUE;
-        screenInfoPtr->fMWExtWM = TRUE;
-        screenInfoPtr->fInternalWM = TRUE;
-
+        ErrorF("Ignoring obsolete -internalwm option\n");
+        /* Ignored, but we still accept the arg for backwards compatibility */
         /* Indicate that we have processed this argument */
         return 1;
     }
@@ -666,7 +662,7 @@ ddxProcessArgument(int argc, char *argv[], int i)
         if (IS_OPTION("-resize"))
             mode = resizeWithRandr;
         else if (IS_OPTION("-noresize"))
-            mode = notAllowed;
+            mode = resizeNotAllowed;
         else if (strncmp(argv[i], "-resize=", strlen("-resize=")) == 0) {
             char *option = argv[i] + strlen("-resize=");
 
@@ -675,7 +671,7 @@ ddxProcessArgument(int argc, char *argv[], int i)
             else if (strcmp(option, "scrollbars") == 0)
                 mode = resizeWithScrollbars;
             else if (strcmp(option, "none") == 0)
-                mode = notAllowed;
+                mode = resizeNotAllowed;
             else {
                 ErrorF("ddxProcessArgument - resize - Invalid resize mode %s\n",
                        option);
@@ -1075,11 +1071,6 @@ ddxProcessArgument(int argc, char *argv[], int i)
 
     if (IS_OPTION("-swcursor")) {
         g_fSoftwareCursor = TRUE;
-        return 1;
-    }
-
-    if (IS_OPTION("-silent-dup-error")) {
-        g_fSilentDupError = TRUE;
         return 1;
     }
 

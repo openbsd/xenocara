@@ -57,9 +57,10 @@ DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/Xorg.sh.in $(top_srcdir)/depcomp
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_dir.m4 \
-	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
-	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
-	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/configure.ac
+	$(top_srcdir)/m4/ax_pthread.m4 $(top_srcdir)/m4/libtool.m4 \
+	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
+	$(top_srcdir)/m4/ltversion.m4 $(top_srcdir)/m4/lt~obsolete.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -83,8 +84,8 @@ am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	os-support/libxorgos.la parser/libxf86config.la \
 	dixmods/libdixmods.la modes/libxf86modes.la \
 	ramdac/libramdac.la ddc/libddc.la i2c/libi2c.la \
-	$(am__DEPENDENCIES_1) dixmods/libxorgxkb.la $(DRI_LIB) \
-	$(DRI2_LIB) $(DRI3_LIB) $(top_builddir)/miext/sync/libsync.la \
+	$(am__DEPENDENCIES_1) xkb/libxorgxkb.la $(DRI_LIB) $(DRI2_LIB) \
+	$(DRI3_LIB) $(top_builddir)/miext/sync/libsync.la \
 	$(top_builddir)/mi/libmi.la $(top_builddir)/os/libos.la \
 	$(top_builddir)/Xext/libXvidmode.la
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -354,6 +355,9 @@ PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 PROJECTROOT = @PROJECTROOT@
+PTHREAD_CC = @PTHREAD_CC@
+PTHREAD_CFLAGS = @PTHREAD_CFLAGS@
+PTHREAD_LIBS = @PTHREAD_LIBS@
 PYTHON3 = @PYTHON3@
 RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
@@ -384,7 +388,10 @@ UDEV_LIBS = @UDEV_LIBS@
 UTILS_SYS_LIBS = @UTILS_SYS_LIBS@
 VENDOR_NAME_SHORT = @VENDOR_NAME_SHORT@
 VERSION = @VERSION@
+WAYLAND_PROTOCOLS_DATADIR = @WAYLAND_PROTOCOLS_DATADIR@
 WAYLAND_SCANNER = @WAYLAND_SCANNER@
+WINDOWSDRI_CFLAGS = @WINDOWSDRI_CFLAGS@
+WINDOWSDRI_LIBS = @WINDOWSDRI_LIBS@
 WINDOWSWM_CFLAGS = @WINDOWSWM_CFLAGS@
 WINDOWSWM_LIBS = @WINDOWSWM_LIBS@
 WINDRES = @WINDRES@
@@ -479,6 +486,7 @@ am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
 am__tar = @am__tar@
 am__untar = @am__untar@
+ax_pthread_config = @ax_pthread_config@
 bindir = @bindir@
 build = @build@
 build_alias = @build_alias@
@@ -539,13 +547,13 @@ top_srcdir = @top_srcdir@
 @INT10MODULE_TRUE@INT10_SUBDIR = int10
 SUBDIRS = common ddc x86emu $(INT10_SUBDIR) os-support parser \
 	  ramdac $(VGAHW_SUBDIR) loader modes $(DRI_SUBDIR) \
-	  $(DRI2_SUBDIR) . $(VBE_SUBDIR) i2c dixmods \
+	  $(DRI2_SUBDIR) . $(VBE_SUBDIR) i2c dixmods xkb \
 	  fbdevhw shadowfb exa $(XF86UTILS_SUBDIR) doc man \
 	  $(GLAMOR_EGL_SUBDIR) drivers
 
 DIST_SUBDIRS = common ddc i2c x86emu int10 fbdevhw os-support \
                parser ramdac shadowfb vbe vgahw \
-               loader dixmods dri dri2 exa modes \
+               loader dixmods xkb dri dri2 exa modes \
 	       utils doc man glamor_egl drivers
 
 nodist_Xorg_SOURCES = sdksyms.c
@@ -567,7 +575,7 @@ LOCAL_LIBS = \
             ddc/libddc.la \
             i2c/libi2c.la \
             $(XORG_LIBS) \
-            dixmods/libxorgxkb.la \
+            xkb/libxorgxkb.la \
             $(DRI_LIB) \
             $(DRI2_LIB) \
 	    $(DRI3_LIB) \
@@ -1127,8 +1135,8 @@ i2c/libi2c.la:
 dixmods/libdixmods.la:
 	$(AM_V_at)cd dixmods && $(MAKE) libdixmods.la
 
-dixmods/libxorgxkb.la:
-	$(AM_V_at)cd dixmods && $(MAKE) libxorgxkb.la
+xkb/libxorgxkb.la:
+	$(AM_V_at)cd xkb && $(MAKE) libxorgxkb.la
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

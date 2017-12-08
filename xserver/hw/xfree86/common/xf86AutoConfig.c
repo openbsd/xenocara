@@ -45,7 +45,7 @@
 #include "xf86sbusBus.h"
 #endif
 
-#ifdef sun
+#ifdef __sun
 #include <sys/visual_io.h>
 #include <ctype.h>
 #endif
@@ -149,6 +149,15 @@ xf86AutoConfig(void)
     char buf[1024];
     ConfigStatus ret;
 
+    /* Make sure config rec is there */
+    if (xf86allocateConfig() != NULL) {
+        ret = CONFIG_OK;    /* OK so far */
+    }
+    else {
+        xf86Msg(X_ERROR, "Couldn't allocate Config record.\n");
+        return FALSE;
+    }
+
     listPossibleVideoDrivers(deviceList, 20);
 
     for (p = deviceList; *p; p++) {
@@ -247,7 +256,7 @@ listPossibleVideoDrivers(char *matches[], int nmatches)
 #ifdef XSERVER_PLATFORM_BUS
     i = xf86PlatformMatchDriver(matches, nmatches);
 #endif
-#ifdef sun
+#ifdef __sun
     /* Check for driver type based on /dev/fb type and if valid, use
        it instead of PCI bus probe results */
     if (xf86Info.consoleFd >= 0 && (i < (nmatches - 1))) {
@@ -316,7 +325,7 @@ listPossibleVideoDrivers(char *matches[], int nmatches)
     matches[i++] = xnfstrdup("modesetting");
 #endif
 
-#if !defined(sun)
+#if !defined(__sun)
     /* Fallback to platform default frame buffer driver */
     if (i < (nmatches - 1)) {
 #if defined(__OpenBSD__)
@@ -331,7 +340,7 @@ listPossibleVideoDrivers(char *matches[], int nmatches)
         matches[i++] = xnfstrdup("fbdev");
 #endif
     }
-#endif                          /* !sun */
+#endif                          /* !__sun */
 
     /* Fallback to platform default hardware */
     if (i < (nmatches - 1)) {

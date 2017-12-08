@@ -1,4 +1,4 @@
-/*	$OpenBSD: reallocarray.c,v 1.1 2016/05/29 12:02:40 matthieu Exp $	*/
+/*	$OpenBSD: reallocarray.c,v 1.2 2017/12/08 15:02:02 matthieu Exp $	*/
 /*
  * Copyright (c) 2008 Otto Moerbeek <otto@drijf.net>
  *

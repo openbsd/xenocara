@@ -1,5 +1,3 @@
-#if !defined(_WINWINDOW_H_)
-#define _WINWINDOW_H_
 /*
  *Copyright (C) 1994-2000 The XFree86 Project, Inc. All Rights Reserved.
  *Copyright (C) Colin Harrison 2005-2009
@@ -31,6 +29,8 @@
  * Authors:	Kensuke Matsuzaki
  *              Colin Harrison
  */
+#if !defined(_WINWINDOW_H_)
+#define _WINWINDOW_H_
 
 #ifndef NO
 #define NO			0
@@ -102,7 +102,6 @@ typedef struct _winWMMessageRec {
 #define		WM_WM_SIZE		(WM_USER + 2)
 #define		WM_WM_RAISE		(WM_USER + 3)
 #define		WM_WM_LOWER		(WM_USER + 4)
-#define		WM_WM_MAP		(WM_USER + 5)
 #define		WM_WM_UNMAP		(WM_USER + 6)
 #define		WM_WM_KILL		(WM_USER + 7)
 #define		WM_WM_ACTIVATE		(WM_USER + 8)
@@ -112,8 +111,6 @@ typedef struct _winWMMessageRec {
 #define		WM_WM_MAP2		(WM_USER + 12)
 #define		WM_WM_MAP3		(WM_USER + 13)
 #define		WM_WM_HINTS_EVENT	(WM_USER + 14)
-#define		WM_MANAGE		(WM_USER + 100)
-#define		WM_UNMANAGE		(WM_USER + 102)
 
 #define		MwmHintsDecorations	(1L << 1)
 
@@ -125,10 +122,16 @@ typedef struct _winWMMessageRec {
 #define		MwmDecorMinimize	(1L << 5)
 #define		MwmDecorMaximize	(1L << 6)
 
-/* This structure only contains 3 elements... the Motif 2.0 structure
-contains 5... we only need the first 3... so that is all we will define */
+/*
+  This structure only contains 3 elements.  The Motif 2.0 structure contains 5,
+  but we only need the first 3, so that is all we will define
+
+  This structure represents xcb_get_property()'s view of the property as a
+  sequence of ints, rather than XGetWindowProperty()'s view of the property as a
+  sequence of arch-dependent longs.
+*/
 typedef struct MwmHints {
-    unsigned long flags, functions, decorations;
+    unsigned int flags, functions, decorations;
 } MwmHints;
 
 #define		PropMwmHintsElements	3
@@ -142,13 +145,10 @@ winInitWM(void **ppWMInfo,
           pthread_t * ptWMProc,
           pthread_t * ptXMsgProc,
           pthread_mutex_t * ppmServerStarted,
-          int dwScreen, HWND hwndScreen, BOOL allowOtherWM);
+          int dwScreen, HWND hwndScreen);
 
 void
  winDeinitMultiWindowWM(void);
-
-void
- winMinimizeWindow(Window id);
 
 void
  winPropertyStoreInit(void);
@@ -160,7 +160,7 @@ void
  winSetAppUserModelID(HWND hWnd, const char *AppID);
 
 void
- winShowWindowOnTaskbar(HWND hWnd, BOOL show);
+ winShowWindowOnTaskbar(HWND hWnd, Bool show);
 
 #endif                          /* XWIN_MULTIWINDOW */
 #endif

@@ -136,6 +136,12 @@ typedef HWEventQueueType *HWEventQueuePtr;
 
 extern _X_EXPORT HWEventQueuePtr checkForInput[2];
 
+static inline _X_NOTSAN Bool
+InputCheckPending(void)
+{
+    return (*checkForInput[0] != *checkForInput[1]);
+}
+
 typedef struct _TimeStamp {
     CARD32 months;              /* really ~49.7 days */
     CARD32 milliseconds;
@@ -208,28 +214,28 @@ extern _X_EXPORT int AlterSaveSetForClient(ClientPtr /*client */ ,
 
 extern _X_EXPORT void DeleteWindowFromAnySaveSet(WindowPtr /*pWin */ );
 
-extern _X_EXPORT void BlockHandler(void *pTimeout,
-                                   void *pReadmask);
+extern _X_EXPORT void BlockHandler(void *timeout);
 
-extern _X_EXPORT void WakeupHandler(int result,
-                                    void *pReadmask);
+extern _X_EXPORT void WakeupHandler(int result);
 
 void
- EnableLimitedSchedulingLatency(void);
+EnableLimitedSchedulingLatency(void);
 
 void
- DisableLimitedSchedulingLatency(void);
+DisableLimitedSchedulingLatency(void);
 
-typedef void (*WakeupHandlerProcPtr) (void *blockData,
-                                      int result,
-                                      void *pReadmask);
+typedef void (*ServerBlockHandlerProcPtr) (void *blockData,
+                                           void *timeout);
 
-extern _X_EXPORT Bool RegisterBlockAndWakeupHandlers(BlockHandlerProcPtr blockHandler,
-                                                     WakeupHandlerProcPtr wakeupHandler,
+typedef void (*ServerWakeupHandlerProcPtr) (void *blockData,
+                                            int result);
+
+extern _X_EXPORT Bool RegisterBlockAndWakeupHandlers(ServerBlockHandlerProcPtr blockHandler,
+                                                     ServerWakeupHandlerProcPtr wakeupHandler,
                                                      void *blockData);
 
-extern _X_EXPORT void RemoveBlockAndWakeupHandlers(BlockHandlerProcPtr blockHandler,
-                                                   WakeupHandlerProcPtr wakeupHandler,
+extern _X_EXPORT void RemoveBlockAndWakeupHandlers(ServerBlockHandlerProcPtr blockHandler,
+                                                   ServerWakeupHandlerProcPtr wakeupHandler,
                                                    void *blockData);
 
 extern _X_EXPORT void InitBlockAndWakeupHandlers(void);
@@ -593,6 +599,8 @@ typedef struct {
     InternalEvent *event;
     DeviceIntPtr device;
 } DeviceEventInfoRec;
+
+extern _X_EXPORT CallbackListPtr RootWindowFinalizeCallback;
 
 extern int
 XItoCoreType(int xi_type);

@@ -38,9 +38,6 @@
 /* Video Memory Mapping section                                            */
 /***************************************************************************/
 
-static void *sparc64MapVidMem(int, unsigned long, unsigned long, int);
-static void sparc64UnmapVidMem(int, void *, unsigned long);
-
 void
 xf86OSInitVidMem(VidMemInfoPtr pVidMem)
 {

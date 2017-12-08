@@ -219,17 +219,6 @@ typedef struct _RenderClient {
 
 #define GetRenderClient(pClient) ((RenderClientPtr)dixLookupPrivate(&(pClient)->devPrivates, RenderClientPrivateKey))
 
-static void
-RenderClientCallback(CallbackListPtr *list, void *closure, void *data)
-{
-    NewClientInfoRec *clientinfo = (NewClientInfoRec *) data;
-    ClientPtr pClient = clientinfo->client;
-    RenderClientPtr pRenderClient = GetRenderClient(pClient);
-
-    pRenderClient->major_version = 0;
-    pRenderClient->minor_version = 0;
-}
-
 #ifdef PANORAMIX
 RESTYPE XRT_PICTURE;
 #endif
@@ -245,8 +234,6 @@ RenderExtensionInit(void)
         return;
     if (!dixRegisterPrivateKey
         (&RenderClientPrivateKeyRec, PRIVATE_CLIENT, sizeof(RenderClientRec)))
-        return;
-    if (!AddCallback(&ClientStateCallback, RenderClientCallback, 0))
         return;
 
     extEntry = AddExtension(RENDER_NAME, 0, RenderNumberErrors,
@@ -1924,6 +1911,8 @@ ProcRenderCreateRadialGradient(ClientPtr client)
     LEGAL_NEW_RESOURCE(stuff->pid, client);
 
     len = (client->req_len << 2) - sizeof(xRenderCreateRadialGradientReq);
+    if (stuff->nStops > UINT32_MAX / (sizeof(xFixed) + sizeof(xRenderColor)))
+        return BadLength;
     if (len != stuff->nStops * (sizeof(xFixed) + sizeof(xRenderColor)))
         return BadLength;
 
@@ -1962,6 +1951,8 @@ ProcRenderCreateConicalGradient(ClientPtr client)
     LEGAL_NEW_RESOURCE(stuff->pid, client);
 
     len = (client->req_len << 2) - sizeof(xRenderCreateConicalGradientReq);
+    if (stuff->nStops > UINT32_MAX / (sizeof(xFixed) + sizeof(xRenderColor)))
+        return BadLength;
     if (len != stuff->nStops * (sizeof(xFixed) + sizeof(xRenderColor)))
         return BadLength;
 

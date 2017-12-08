@@ -226,6 +226,11 @@ ephyrInitVideo(ScreenPtr pScreen)
         return FALSE;
     }
 
+    if (!hostx_has_extension(&xcb_xv_id)) {
+        EPHYR_LOG_ERROR("Host has no XVideo extension\n");
+        return FALSE;
+    }
+
     if (!xv_priv) {
         xv_priv = ephyrXVPrivNew();
     }
@@ -462,7 +467,7 @@ ephyrXVPrivQueryHostAdaptors(EphyrXVPriv * a_this)
 
     if (a_this->host_adaptors)
         a_this->num_adaptors = a_this->host_adaptors->num_adaptors;
-    if (a_this->num_adaptors < 0) {
+    if (a_this->num_adaptors <= 0) {
         EPHYR_LOG_ERROR("failed to get number of host adaptors\n");
         goto out;
     }

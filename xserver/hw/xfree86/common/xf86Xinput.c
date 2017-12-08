@@ -84,6 +84,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#ifdef HAVE_SYS_SYSMACROS_H
+#include <sys/sysmacros.h>
+#endif
 #ifdef HAVE_SYS_MKDEV_H
 #include <sys/mkdev.h>          /* for major() & minor() on Solaris */
 #endif
@@ -110,8 +113,16 @@
 static int
  xf86InputDevicePostInit(DeviceIntPtr dev);
 
-static InputInfoPtr *new_input_devices;
-static int new_input_devices_count;
+typedef struct {
+    struct xorg_list node;
+    InputInfoPtr pInfo;
+} PausedInputDeviceRec;
+typedef PausedInputDeviceRec *PausedInputDevicePtr;
+
+static struct xorg_list new_input_devices_list = {
+    .next = &new_input_devices_list,
+    .prev = &new_input_devices_list,
+};
 
 /**
  * Eval config and modify DeviceVelocityRec accordingly
@@ -130,7 +141,7 @@ ProcessVelocityConfiguration(DeviceIntPtr pDev, const char *devname, void *list,
 
     /* common settings (available via device properties) */
     tempf = xf86SetRealOption(list, "ConstantDeceleration", 1.0);
-    if (tempf > 1.0) {
+    if (tempf != 1.0) {
         xf86Msg(X_CONFIG, "%s: (accel) constant deceleration by %.1f\n",
                 devname, tempf);
         prop = XIGetKnownProperty(ACCEL_PROP_CONSTANT_DECELERATION);
@@ -540,21 +551,24 @@ MatchAttrToken(const char *attr, struct xorg_list *patterns,
     if (xorg_list_is_empty(patterns))
         return TRUE;
 
-    /* If there are patterns but no attribute, reject the match */
-    if (!attr)
-        return FALSE;
-
     /*
-     * Otherwise, iterate the list of patterns ensuring each entry has a
+     * Iterate the list of patterns ensuring each entry has a
      * match. Each list entry is a separate Match line of the same type.
      */
     xorg_list_for_each_entry(group, patterns, entry) {
         char *const *cur;
-        Bool match = FALSE;
+        Bool is_negated = group->is_negated;
+        Bool match = is_negated;
+
+        /* If there's a pattern but no attribute, we reject the match for a
+         * MatchFoo directive, and accept it for a NoMatchFoo directive
+         */
+        if (!attr)
+            return is_negated;
 
         for (cur = group->values; *cur; cur++)
             if ((*compare) (attr, *cur) == 0) {
-                match = TRUE;
+                match = !is_negated;
                 break;
             }
         if (!match)
@@ -632,7 +646,7 @@ InputClassMatches(const XF86ConfInputClassPtr iclass, const InputInfoPtr idev,
 
     /* MatchIs* booleans */
     if (iclass->is_keyboard.set &&
-        iclass->is_keyboard.val != ! !(attrs->flags & ATTR_KEYBOARD))
+        iclass->is_keyboard.val != ! !(attrs->flags & (ATTR_KEY|ATTR_KEYBOARD)))
         return FALSE;
     if (iclass->is_pointer.set &&
         iclass->is_pointer.val != ! !(attrs->flags & ATTR_POINTER))
@@ -642,6 +656,9 @@ InputClassMatches(const XF86ConfInputClassPtr iclass, const InputInfoPtr idev,
         return FALSE;
     if (iclass->is_tablet.set &&
         iclass->is_tablet.val != ! !(attrs->flags & ATTR_TABLET))
+        return FALSE;
+    if (iclass->is_tablet_pad.set &&
+        iclass->is_tablet_pad.val != ! !(attrs->flags & ATTR_TABLET_PAD))
         return FALSE;
     if (iclass->is_touchpad.set &&
         iclass->is_touchpad.val != ! !(attrs->flags & ATTR_TOUCHPAD))
@@ -819,6 +836,22 @@ xf86stat(const char *path, int *maj, int *min)
     *min = minor(st.st_rdev);
 }
 
+static inline InputDriverPtr
+xf86LoadInputDriver(const char *driver_name)
+{
+    InputDriverPtr drv = NULL;
+
+    /* Memory leak for every attached device if we don't
+     * test if the module is already loaded first */
+    drv = xf86LookupInputDriver(driver_name);
+    if (!drv) {
+        if (xf86LoadOneModule(driver_name, NULL))
+            drv = xf86LookupInputDriver(driver_name);
+    }
+
+    return drv;
+}
+
 /**
  * Create a new input device, activate and enable it.
  *
@@ -845,15 +878,33 @@ xf86NewInputDevice(InputInfoPtr pInfo, DeviceIntPtr *pdev, BOOL enable)
     int rval;
     char *path = NULL;
 
-    /* Memory leak for every attached device if we don't
-     * test if the module is already loaded first */
-    drv = xf86LookupInputDriver(pInfo->driver);
-    if (!drv)
-        if (xf86LoadOneModule(pInfo->driver, NULL))
-            drv = xf86LookupInputDriver(pInfo->driver);
+    drv = xf86LoadInputDriver(pInfo->driver);
     if (!drv) {
         xf86Msg(X_ERROR, "No input driver matching `%s'\n", pInfo->driver);
-        rval = BadName;
+
+        if (strlen(FALLBACK_INPUT_DRIVER) > 0) {
+            xf86Msg(X_INFO, "Falling back to input driver `%s'\n",
+                    FALLBACK_INPUT_DRIVER);
+            drv = xf86LoadInputDriver(FALLBACK_INPUT_DRIVER);
+            if (drv) {
+                free(pInfo->driver);
+                pInfo->driver = strdup(FALLBACK_INPUT_DRIVER);
+            }
+        }
+        if (!drv) {
+            rval = BadName;
+            goto unwind;
+        }
+    }
+
+    xf86Msg(X_INFO, "Using input driver '%s' for '%s'\n", drv->driverName,
+            pInfo->name);
+
+    if (!drv->PreInit) {
+        xf86Msg(X_ERROR,
+                "Input driver `%s' has no PreInit function (ignoring)\n",
+                drv->driverName);
+        rval = BadImplementation;
         goto unwind;
     }
 
@@ -867,11 +918,10 @@ xf86NewInputDevice(InputInfoPtr pInfo, DeviceIntPtr *pdev, BOOL enable)
         if (fd != -1) {
             if (paused) {
                 /* Put on new_input_devices list for delayed probe */
-                new_input_devices = xnfreallocarray(new_input_devices,
-                                                    new_input_devices_count + 1,
-                                                    sizeof(pInfo));
-                new_input_devices[new_input_devices_count] = pInfo;
-                new_input_devices_count++;
+                PausedInputDevicePtr new_device = xnfalloc(sizeof *new_device);
+                new_device->pInfo = pInfo;
+
+                xorg_list_append(&new_device->node, &new_input_devices_list);
                 systemd_logind_release_fd(pInfo->major, pInfo->minor, fd);
                 free(path);
                 return BadMatch;
@@ -884,20 +934,11 @@ xf86NewInputDevice(InputInfoPtr pInfo, DeviceIntPtr *pdev, BOOL enable)
 
     free(path);
 
-    xf86Msg(X_INFO, "Using input driver '%s' for '%s'\n", drv->driverName,
-            pInfo->name);
-
-    if (!drv->PreInit) {
-        xf86Msg(X_ERROR,
-                "Input driver `%s' has no PreInit function (ignoring)\n",
-                drv->driverName);
-        rval = BadImplementation;
-        goto unwind;
-    }
-
     xf86AddInput(drv, pInfo);
 
+    input_lock();
     rval = drv->PreInit(drv, pInfo, 0);
+    input_unlock();
 
     if (rval != Success) {
         xf86Msg(X_ERROR, "PreInit returned %d for \"%s\"\n", rval, pInfo->name);
@@ -925,18 +966,18 @@ xf86NewInputDevice(InputInfoPtr pInfo, DeviceIntPtr *pdev, BOOL enable)
 
     /* Enable it if it's properly initialised and we're currently in the VT */
     if (enable && dev->inited && dev->startup && xf86VTOwner()) {
-        OsBlockSignals();
+        input_lock();
         EnableDevice(dev, TRUE);
         if (!dev->enabled) {
-            OsReleaseSignals();
             xf86Msg(X_ERROR, "Couldn't init device \"%s\"\n", pInfo->name);
             RemoveDevice(dev, TRUE);
             rval = BadMatch;
+            input_unlock();
             goto unwind;
         }
         /* send enter/leave event, update sprite window */
         CheckMotion(NULL, dev);
-        OsReleaseSignals();
+        input_unlock();
     }
 
     *pdev = dev;
@@ -1069,7 +1110,7 @@ DeleteInputDeviceRequest(DeviceIntPtr pDev)
     if (pInfo)                  /* need to get these before RemoveDevice */
         drv = pInfo->drv;
 
-    OsBlockSignals();
+    input_lock();
     RemoveDevice(pDev, TRUE);
 
     if (!isMaster && pInfo != NULL) {
@@ -1078,7 +1119,22 @@ DeleteInputDeviceRequest(DeviceIntPtr pDev)
         else
             xf86DeleteInput(pInfo, 0);
     }
-    OsReleaseSignals();
+    input_unlock();
+}
+
+void
+RemoveInputDeviceTraces(const char *config_info)
+{
+    PausedInputDevicePtr d, tmp;
+
+    xorg_list_for_each_entry_safe(d, tmp, &new_input_devices_list, node) {
+        const char *ci = xf86findOptionValue(d->pInfo->options, "config_info");
+        if (!ci || strcmp(ci, config_info) != 0)
+            continue;
+
+        xorg_list_del(&d->node);
+        free(d);
+    }
 }
 
 /*
@@ -1509,29 +1565,27 @@ xf86PostTouchEvent(DeviceIntPtr dev, uint32_t touchid, uint16_t type,
 void
 xf86InputEnableVTProbe(void)
 {
-    int i, is_auto = 0;
-    InputOption *option = NULL;
+    int is_auto = 0;
     DeviceIntPtr pdev;
+    PausedInputDevicePtr d, tmp;
 
-    for (i = 0; i < new_input_devices_count; i++) {
-        InputInfoPtr pInfo = new_input_devices[i];
+    xorg_list_for_each_entry_safe(d, tmp, &new_input_devices_list, node) {
+        InputInfoPtr pInfo = d->pInfo;
+        const char *value = xf86findOptionValue(pInfo->options, "_source");
 
         is_auto = 0;
-        nt_list_for_each_entry(option, pInfo->options, list.next) {
-            const char *key = input_option_get_key(option);
-            const char *value = input_option_get_value(option);
+        if (value &&
+            (strcmp(value, "server/hal") == 0 ||
+             strcmp(value, "server/udev") == 0 ||
+             strcmp(value, "server/wscons") == 0))
+            is_auto = 1;
 
-            if (strcmp(key, "_source") == 0 &&
-                (strcmp(value, "server/hal") == 0 ||
-                 strcmp(value, "server/udev") == 0 ||
-                 strcmp(value, "server/wscons") == 0))
-                is_auto = 1;
-        }
         xf86NewInputDevice(pInfo, &pdev,
                                   (!is_auto ||
                                    (is_auto && xf86Info.autoEnableDevices)));
+        xorg_list_del(&d->node);
+        free(d);
     }
-    new_input_devices_count = 0;
 }
 
 /* end of xf86Xinput.c */

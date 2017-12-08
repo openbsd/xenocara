@@ -78,9 +78,10 @@ DIST_COMMON = README $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/depcomp
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_dir.m4 \
-	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
-	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
-	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/configure.ac
+	$(top_srcdir)/m4/ax_pthread.m4 $(top_srcdir)/m4/libtool.m4 \
+	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
+	$(top_srcdir)/m4/ltversion.m4 $(top_srcdir)/m4/lt~obsolete.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -98,18 +99,14 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am__Xephyr_SOURCES_DIST = ephyr.c ephyr.h ephyrlog.h ephyr_draw.c os.c \
 	ephyrinit.c ephyrcursor.c hostx.c hostx.h ephyrvideo.c \
-	ephyrdriext.c ephyrdriext.h ephyrdri.c ephyrdri.h \
-	ephyrglxext.c ephyrglxext.h ephyrhostglx.c ephyrhostglx.h \
 	ephyr_glamor_glx.c ephyr_glamor_glx.h ephyr_glamor_xv.c
 @XV_TRUE@am__objects_1 = ephyrvideo.$(OBJEXT)
-@DRI_TRUE@am__objects_2 = ephyrdriext.$(OBJEXT) ephyrdri.$(OBJEXT) \
-@DRI_TRUE@	ephyrglxext.$(OBJEXT) ephyrhostglx.$(OBJEXT)
-@GLAMOR_TRUE@@XV_TRUE@am__objects_3 = ephyr_glamor_xv.$(OBJEXT)
-@GLAMOR_TRUE@am__objects_4 = ephyr_glamor_glx.$(OBJEXT) \
-@GLAMOR_TRUE@	$(am__objects_3)
+@GLAMOR_TRUE@@XV_TRUE@am__objects_2 = ephyr_glamor_xv.$(OBJEXT)
+@GLAMOR_TRUE@am__objects_3 = ephyr_glamor_glx.$(OBJEXT) \
+@GLAMOR_TRUE@	$(am__objects_2)
 am_Xephyr_OBJECTS = ephyr.$(OBJEXT) ephyr_draw.$(OBJEXT) os.$(OBJEXT) \
 	ephyrinit.$(OBJEXT) ephyrcursor.$(OBJEXT) hostx.$(OBJEXT) \
-	$(am__objects_1) $(am__objects_2) $(am__objects_4)
+	$(am__objects_1) $(am__objects_3)
 Xephyr_OBJECTS = $(am_Xephyr_OBJECTS)
 @GLAMOR_TRUE@am__DEPENDENCIES_1 = $(top_builddir)/glamor/libglamor.la \
 @GLAMOR_TRUE@	$(top_builddir)/glamor/libglamor_egl_stubs.la
@@ -377,6 +374,9 @@ PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 PROJECTROOT = @PROJECTROOT@
+PTHREAD_CC = @PTHREAD_CC@
+PTHREAD_CFLAGS = @PTHREAD_CFLAGS@
+PTHREAD_LIBS = @PTHREAD_LIBS@
 PYTHON3 = @PYTHON3@
 RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
@@ -407,7 +407,10 @@ UDEV_LIBS = @UDEV_LIBS@
 UTILS_SYS_LIBS = @UTILS_SYS_LIBS@
 VENDOR_NAME_SHORT = @VENDOR_NAME_SHORT@
 VERSION = @VERSION@
+WAYLAND_PROTOCOLS_DATADIR = @WAYLAND_PROTOCOLS_DATADIR@
 WAYLAND_SCANNER = @WAYLAND_SCANNER@
+WINDOWSDRI_CFLAGS = @WINDOWSDRI_CFLAGS@
+WINDOWSDRI_LIBS = @WINDOWSDRI_LIBS@
 WINDOWSWM_CFLAGS = @WINDOWSWM_CFLAGS@
 WINDOWSWM_LIBS = @WINDOWSWM_LIBS@
 WINDRES = @WINDRES@
@@ -502,6 +505,7 @@ am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
 am__tar = @am__tar@
 am__untar = @am__untar@
+ax_pthread_config = @ax_pthread_config@
 bindir = @bindir@
 build = @build@
 build_alias = @build_alias@
@@ -561,17 +565,6 @@ AM_CPPFLAGS = @KDRIVE_INCS@ @KDRIVE_CFLAGS@ @XEPHYR_INCS@ \
 @GLAMOR_TRUE@	$(GLAMOR_XV_SRCS)  \
 @GLAMOR_TRUE@	$()
 
-@DRI_TRUE@DRI_SRCS = \
-@DRI_TRUE@	ephyrdriext.c		\
-@DRI_TRUE@	ephyrdriext.h		\
-@DRI_TRUE@	ephyrdri.c		\
-@DRI_TRUE@	ephyrdri.h		\
-@DRI_TRUE@	ephyrglxext.c		\
-@DRI_TRUE@	ephyrglxext.h		\
-@DRI_TRUE@	ephyrhostglx.c		\
-@DRI_TRUE@	ephyrhostglx.h		\
-@DRI_TRUE@	$()
-
 Xephyr_SOURCES = \
 	ephyr.c \
 	ephyr.h \
@@ -583,7 +576,6 @@ Xephyr_SOURCES = \
 	hostx.c \
 	hostx.h \
 	$(XV_SRCS) \
-	$(DRI_SRCS) \
 	$(GLAMOR_SRCS) \
 	$()
 
@@ -695,10 +687,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyr_glamor_glx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyr_glamor_xv.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyrcursor.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyrdri.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyrdriext.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyrglxext.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyrhostglx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyrinit.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyrvideo.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hostx.Po@am__quote@

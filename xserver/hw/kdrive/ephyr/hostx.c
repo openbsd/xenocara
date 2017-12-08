@@ -52,10 +52,7 @@
 #include <xcb/shape.h>
 #include <xcb/xcb_keysyms.h>
 #include <xcb/randr.h>
-#ifdef XF86DRI
-#include <xcb/xf86dri.h>
-#include <xcb/glx.h>
-#endif /* XF86DRI */
+#include <xcb/xkb.h>
 #ifdef GLAMOR
 #include <epoxy/gl.h>
 #include "glamor.h"
@@ -73,6 +70,7 @@ struct EphyrHostXVars {
     xcb_gcontext_t  gc;
     xcb_render_pictformat_t argb_format;
     xcb_cursor_t empty_cursor;
+    xcb_generic_event_t *saved_event;
     int depth;
     Bool use_sw_cursor;
     Bool use_fullscreen;
@@ -82,6 +80,7 @@ struct EphyrHostXVars {
     KdScreenInfo **screens;
 
     long damage_debug_msec;
+    Bool size_set_from_configure;
 };
 
 /* memset ( missing> ) instead of below  */
@@ -90,14 +89,13 @@ static EphyrHostXVars HostX;
 
 static int HostXWantDamageDebug = 0;
 
-extern EphyrKeySyms ephyrKeySyms;
-
 extern Bool EphyrWantResize;
 
 char *ephyrResName = NULL;
 int ephyrResNameFromCmd = 0;
 char *ephyrTitle = NULL;
 Bool ephyr_glamor = FALSE;
+extern Bool ephyr_glamor_skip_present;
 
 Bool
 hostx_has_extension(xcb_extension_t *extension)
@@ -883,6 +881,7 @@ hostx_screen_init(KdScreenInfo *screen,
             xallocarray(scrpriv->ximg->stride, buffer_height);
     }
 
+    if (!HostX.size_set_from_configure)
     {
         uint32_t mask = XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT;
         uint32_t values[2] = {width, height};
@@ -900,7 +899,10 @@ hostx_screen_init(KdScreenInfo *screen,
                                       &size_hints);
     }
 
-    xcb_map_window(HostX.conn, scrpriv->win);
+#ifdef GLAMOR
+    if (!ephyr_glamor_skip_present)
+#endif
+        xcb_map_window(HostX.conn, scrpriv->win);
 
     /* Set explicit window position if it was informed in
      * -screen option (WxH+X or WxH+X+Y). Otherwise, accept the
@@ -925,7 +927,6 @@ hostx_screen_init(KdScreenInfo *screen,
 #ifdef GLAMOR
     if (ephyr_glamor) {
         *bytes_per_line = 0;
-        *bits_per_pixel = 0;
         ephyr_glamor_set_window_size(scrpriv->glamor,
                                      scrpriv->win_width, scrpriv->win_height);
         return NULL;
@@ -1086,18 +1087,142 @@ hostx_paint_debug_rect(KdScreenInfo *screen,
     nanosleep(&tspec, NULL);
 }
 
-void
-hostx_load_keymap(void)
+Bool
+hostx_load_keymap(KeySymsPtr keySyms, CARD8 *modmap, XkbControlsPtr controls)
 {
     int min_keycode, max_keycode;
+    int map_width;
+    size_t i, j;
+    int keymap_len;
+    xcb_keysym_t *keymap;
+    xcb_keycode_t *modifier_map;
+    xcb_get_keyboard_mapping_cookie_t mapping_c;
+    xcb_get_keyboard_mapping_reply_t *mapping_r;
+    xcb_get_modifier_mapping_cookie_t modifier_c;
+    xcb_get_modifier_mapping_reply_t *modifier_r;
+    xcb_xkb_use_extension_cookie_t use_c;
+    xcb_xkb_use_extension_reply_t *use_r;
+    xcb_xkb_get_controls_cookie_t controls_c;
+    xcb_xkb_get_controls_reply_t *controls_r;
 
+    /* First of all, collect host X server's
+     * min_keycode and max_keycode, which are
+     * independent from XKB support. */
     min_keycode = xcb_get_setup(HostX.conn)->min_keycode;
     max_keycode = xcb_get_setup(HostX.conn)->max_keycode;
 
     EPHYR_DBG("min: %d, max: %d", min_keycode, max_keycode);
 
-    ephyrKeySyms.minKeyCode = min_keycode;
-    ephyrKeySyms.maxKeyCode = max_keycode;
+    keySyms->minKeyCode = min_keycode;
+    keySyms->maxKeyCode = max_keycode;
+
+    /* Check for XKB availability in host X server */
+    if (!hostx_has_extension(&xcb_xkb_id)) {
+        EPHYR_LOG_ERROR("XKB extension is not supported in host X server.");
+        return FALSE;
+    }
+
+    use_c = xcb_xkb_use_extension(HostX.conn,
+                                  XCB_XKB_MAJOR_VERSION,
+                                  XCB_XKB_MINOR_VERSION);
+    use_r = xcb_xkb_use_extension_reply(HostX.conn, use_c, NULL);
+
+    if (!use_r) {
+        EPHYR_LOG_ERROR("Couldn't use XKB extension.");
+        return FALSE;
+    } else if (!use_r->supported) {
+        EPHYR_LOG_ERROR("XKB extension is not supported in host X server.");
+        free(use_r);
+        return FALSE;
+    }
+
+    free(use_r);
+
+    /* Send all needed XCB requests at once,
+     * and process the replies as needed. */
+    mapping_c = xcb_get_keyboard_mapping(HostX.conn,
+                                         min_keycode,
+                                         max_keycode - min_keycode + 1);
+    modifier_c = xcb_get_modifier_mapping(HostX.conn);
+    controls_c = xcb_xkb_get_controls(HostX.conn,
+                                      XCB_XKB_ID_USE_CORE_KBD);
+
+    mapping_r = xcb_get_keyboard_mapping_reply(HostX.conn,
+                                               mapping_c,
+                                               NULL);
+
+    if (!mapping_r) {
+        EPHYR_LOG_ERROR("xcb_get_keyboard_mapping_reply() failed.");
+        return FALSE;
+    }
+
+    map_width = mapping_r->keysyms_per_keycode;
+    keymap = xcb_get_keyboard_mapping_keysyms(mapping_r);
+    keymap_len = xcb_get_keyboard_mapping_keysyms_length(mapping_r);
+
+    keySyms->mapWidth = map_width;
+    keySyms->map = calloc(keymap_len, sizeof(KeySym));
+
+    if (!keySyms->map) {
+        EPHYR_LOG_ERROR("Failed to allocate KeySym map.");
+        free(mapping_r);
+        return FALSE;
+    }
+
+    for (i = 0; i < keymap_len; i++) {
+        keySyms->map[i] = keymap[i];
+    }
+
+    free(mapping_r);
+
+    modifier_r = xcb_get_modifier_mapping_reply(HostX.conn,
+                                                modifier_c,
+                                                NULL);
+
+    if (!modifier_r) {
+        EPHYR_LOG_ERROR("xcb_get_modifier_mapping_reply() failed.");
+        return FALSE;
+    }
+
+    modifier_map = xcb_get_modifier_mapping_keycodes(modifier_r);
+    memset(modmap, 0, sizeof(CARD8) * MAP_LENGTH);
+
+    for (j = 0; j < 8; j++) {
+        for (i = 0; i < modifier_r->keycodes_per_modifier; i++) {
+            CARD8 keycode;
+
+            if ((keycode = modifier_map[j * modifier_r->keycodes_per_modifier + i])) {
+                modmap[keycode] |= 1 << j;
+            }
+        }
+    }
+
+    free(modifier_r);
+
+    controls_r = xcb_xkb_get_controls_reply(HostX.conn,
+                                            controls_c,
+                                            NULL);
+
+    if (!controls_r) {
+        EPHYR_LOG_ERROR("xcb_xkb_get_controls_reply() failed.");
+        return FALSE;
+    }
+
+    controls->enabled_ctrls = controls_r->enabledControls;
+
+    for (i = 0; i < XkbPerKeyBitArraySize; i++) {
+        controls->per_key_repeat[i] = controls_r->perKeyRepeat[i];
+    }
+
+    free(controls_r);
+
+    return TRUE;
+}
+
+void
+hostx_size_set_from_configure(Bool ss)
+{
+    HostX.size_set_from_configure = ss;
 }
 
 xcb_connection_t *
@@ -1106,10 +1231,41 @@ hostx_get_xcbconn(void)
     return HostX.conn;
 }
 
+xcb_generic_event_t *
+hostx_get_event(Bool queued_only)
+{
+    xcb_generic_event_t *xev;
+
+    if (HostX.saved_event) {
+        xev = HostX.saved_event;
+        HostX.saved_event = NULL;
+    } else {
+        if (queued_only)
+            xev = xcb_poll_for_queued_event(HostX.conn);
+        else
+            xev = xcb_poll_for_event(HostX.conn);
+    }
+    return xev;
+}
+
+Bool
+hostx_has_queued_event(void)
+{
+    if (!HostX.saved_event)
+        HostX.saved_event = xcb_poll_for_queued_event(HostX.conn);
+    return HostX.saved_event != NULL;
+}
+
 int
 hostx_get_screen(void)
 {
     return HostX.screen;
+}
+
+int
+hostx_get_fd(void)
+{
+    return xcb_get_file_descriptor(HostX.conn);
 }
 
 int
@@ -1339,80 +1495,6 @@ out:
     return is_ok;
 }
 
-#ifdef XF86DRI
-typedef struct {
-    int is_valid;
-    int local_id;
-    int remote_id;
-} ResourcePair;
-
-#define RESOURCE_PEERS_SIZE 1024*10
-static ResourcePair resource_peers[RESOURCE_PEERS_SIZE];
-
-int
-hostx_allocate_resource_id_peer(int a_local_resource_id,
-                                int *a_remote_resource_id)
-{
-    int i = 0;
-    ResourcePair *peer = NULL;
-
-    /*
-     * first make sure a resource peer
-     * does not exist already for
-     * a_local_resource_id
-     */
-    for (i = 0; i < RESOURCE_PEERS_SIZE; i++) {
-        if (resource_peers[i].is_valid
-            && resource_peers[i].local_id == a_local_resource_id) {
-            peer = &resource_peers[i];
-            break;
-        }
-    }
-    /*
-     * find one free peer entry, an feed it with
-     */
-    if (!peer) {
-        for (i = 0; i < RESOURCE_PEERS_SIZE; i++) {
-            if (!resource_peers[i].is_valid) {
-                peer = &resource_peers[i];
-                break;
-            }
-        }
-        if (peer) {
-            peer->remote_id = xcb_generate_id(HostX.conn);
-            peer->local_id = a_local_resource_id;
-            peer->is_valid = TRUE;
-        }
-    }
-    if (peer) {
-        *a_remote_resource_id = peer->remote_id;
-        return TRUE;
-    }
-    return FALSE;
-}
-
-int
-hostx_get_resource_id_peer(int a_local_resource_id, int *a_remote_resource_id)
-{
-    int i = 0;
-    ResourcePair *peer = NULL;
-
-    for (i = 0; i < RESOURCE_PEERS_SIZE; i++) {
-        if (resource_peers[i].is_valid
-            && resource_peers[i].local_id == a_local_resource_id) {
-            peer = &resource_peers[i];
-            break;
-        }
-    }
-    if (peer) {
-        *a_remote_resource_id = peer->remote_id;
-        return TRUE;
-    }
-    return FALSE;
-}
-
-#endif                          /* XF86DRI */
-
 #ifdef GLAMOR
 Bool
 ephyr_glamor_init(ScreenPtr screen)
@@ -1433,13 +1515,25 @@ ephyr_glamor_init(ScreenPtr screen)
     return TRUE;
 }
 
+static int
+ephyrSetPixmapVisitWindow(WindowPtr window, void *data)
+{
+    ScreenPtr screen = window->drawable.pScreen;
+
+    if (screen->GetWindowPixmap(window) == data) {
+        screen->SetWindowPixmap(window, screen->GetScreenPixmap(screen));
+        return WT_WALKCHILDREN;
+    }
+    return WT_DONTWALKCHILDREN;
+}
+
 Bool
 ephyr_glamor_create_screen_resources(ScreenPtr pScreen)
 {
     KdScreenPriv(pScreen);
     KdScreenInfo *kd_screen = pScreenPriv->screen;
     EphyrScrPriv *scrpriv = kd_screen->driver;
-    PixmapPtr screen_pixmap;
+    PixmapPtr old_screen_pixmap, screen_pixmap;
     uint32_t tex;
 
     if (!ephyr_glamor)
@@ -1456,19 +1550,26 @@ ephyr_glamor_create_screen_resources(ScreenPtr pScreen)
      *
      * Thus, delete the current screen pixmap, and put a fresh one in.
      */
-    screen_pixmap = pScreen->GetScreenPixmap(pScreen);
-    pScreen->DestroyPixmap(screen_pixmap);
+    old_screen_pixmap = pScreen->GetScreenPixmap(pScreen);
+    pScreen->DestroyPixmap(old_screen_pixmap);
 
     screen_pixmap = pScreen->CreatePixmap(pScreen,
                                           pScreen->width,
                                           pScreen->height,
                                           pScreen->rootDepth,
                                           GLAMOR_CREATE_NO_LARGE);
+    if (!screen_pixmap)
+        return FALSE;
 
     pScreen->SetScreenPixmap(screen_pixmap);
+    if (pScreen->root && pScreen->SetWindowPixmap)
+        TraverseTree(pScreen->root, ephyrSetPixmapVisitWindow, old_screen_pixmap);
 
     /* Tell the GLX code what to GL texture to read from. */
     tex = glamor_get_pixmap_texture(screen_pixmap);
+    if (!tex)
+        return FALSE;
+
     ephyr_glamor_set_texture(scrpriv->glamor, tex);
 
     return TRUE;

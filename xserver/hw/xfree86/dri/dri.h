@@ -263,18 +263,13 @@ extern _X_EXPORT void DRIDestroyInfoRec(DRIInfoPtr DRIInfo);
 
 extern _X_EXPORT Bool DRIFinishScreenInit(ScreenPtr pScreen);
 
-extern _X_EXPORT void DRIWakeupHandler(void *wakeupData,
-                                       int result, void *pReadmask);
+extern _X_EXPORT void DRIWakeupHandler(void *wakeupData, int result);
 
-extern _X_EXPORT void DRIBlockHandler(void *blockData,
-                                      OSTimePtr pTimeout, void *pReadmask);
+extern _X_EXPORT void DRIBlockHandler(void *blockData, void *timeout);
 
-extern _X_EXPORT void DRIDoWakeupHandler(ScreenPtr pScreen,
-                                         unsigned long result,
-                                         void *pReadmask);
+extern _X_EXPORT void DRIDoWakeupHandler(ScreenPtr pScreen, int result);
 
-extern _X_EXPORT void DRIDoBlockHandler(ScreenPtr pScreen,
-                                        void *pTimeout, void *pReadmask);
+extern _X_EXPORT void DRIDoBlockHandler(ScreenPtr pScreen, void *timeout);
 
 extern _X_EXPORT void DRISwapContext(int drmFD, void *oldctx, void *newctx);
 
@@ -332,11 +327,6 @@ extern _X_EXPORT void DRIMoveBuffersHelper(ScreenPtr pScreen,
 
 extern _X_EXPORT char *DRICreatePCIBusID(const struct pci_device *PciInfo);
 
-#if 0
-extern _X_EXPORT int drmInstallSIGIOHandler(int fd,
-                                            void (*f) (int, void *, void *));
-extern _X_EXPORT int drmRemoveSIGIOHandler(int fd);
-#endif
 extern _X_EXPORT int DRIMasterFD(ScrnInfoPtr pScrn);
 
 extern _X_EXPORT void *DRIMasterSareaPointer(ScrnInfoPtr pScrn);

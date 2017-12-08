@@ -42,12 +42,14 @@
 #include <randrstr.h>
 #include <exevents.h>
 
+#include "relative-pointer-unstable-v1-client-protocol.h"
+#include "pointer-constraints-unstable-v1-client-protocol.h"
+
 struct xwl_screen {
     int width;
     int height;
     int depth;
     ScreenPtr screen;
-    WindowPtr pointer_limbo_window;
     int expecting_event;
     enum RootClipMode root_clip_mode;
 
@@ -63,6 +65,7 @@ struct xwl_screen {
     DestroyWindowProcPtr DestroyWindow;
     RealizeWindowProcPtr RealizeWindow;
     UnrealizeWindowProcPtr UnrealizeWindow;
+    XYToWindowProcPtr XYToWindow;
 
     struct xorg_list output_list;
     struct xorg_list seat_list;
@@ -75,6 +78,8 @@ struct xwl_screen {
     struct wl_compositor *compositor;
     struct wl_shm *shm;
     struct wl_shell *shell;
+    struct zwp_relative_pointer_manager_v1 *relative_pointer_manager;
+    struct zwp_pointer_constraints_v1 *pointer_constraints;
 
     uint32_t serial;
 
@@ -83,6 +88,7 @@ struct xwl_screen {
 #define XWL_FORMAT_RGB565   (1 << 2)
 
     int prepare_read;
+    int wait_flush;
 
     char *device_name;
     int drm_fd;
@@ -114,13 +120,21 @@ struct xwl_touch {
     struct xorg_list link_touch;
 };
 
+struct xwl_pointer_warp_emulator {
+    struct xwl_seat *xwl_seat;
+    struct xwl_window *locked_window;
+    struct zwp_locked_pointer_v1 *locked_pointer;
+};
+
 struct xwl_seat {
     DeviceIntPtr pointer;
+    DeviceIntPtr relative_pointer;
     DeviceIntPtr keyboard;
     DeviceIntPtr touch;
     struct xwl_screen *xwl_screen;
     struct wl_seat *seat;
     struct wl_pointer *wl_pointer;
+    struct zwp_relative_pointer_v1 *wp_relative_pointer;
     struct wl_keyboard *wl_keyboard;
     struct wl_touch *wl_touch;
     struct wl_array keys;
@@ -132,12 +146,32 @@ struct xwl_seat {
     struct wl_surface *cursor;
     struct wl_callback *cursor_frame_cb;
     Bool cursor_needs_update;
+    WindowPtr last_xwindow;
 
     struct xorg_list touches;
 
     size_t keymap_size;
     char *keymap;
     struct wl_surface *keyboard_focus;
+
+    struct xorg_list sync_pending;
+
+    struct xwl_pointer_warp_emulator *pointer_warp_emulator;
+
+    struct xwl_window *cursor_confinement_window;
+    struct zwp_confined_pointer_v1 *confined_pointer;
+
+    struct {
+        Bool has_absolute;
+        wl_fixed_t x;
+        wl_fixed_t y;
+
+        Bool has_relative;
+        double dx;
+        double dy;
+        double dx_unaccel;
+        double dy_unaccel;
+    } pending_pointer_event;
 };
 
 struct xwl_output {
@@ -153,6 +187,8 @@ struct xwl_output {
 
 struct xwl_pixmap;
 
+void xwl_sync_events (struct xwl_screen *xwl_screen);
+
 Bool xwl_screen_init_cursor(struct xwl_screen *xwl_screen);
 
 struct xwl_screen *xwl_screen_get(ScreenPtr screen);
@@ -163,12 +199,27 @@ void xwl_seat_destroy(struct xwl_seat *xwl_seat);
 
 void xwl_seat_clear_touch(struct xwl_seat *xwl_seat, WindowPtr window);
 
+void xwl_seat_emulate_pointer_warp(struct xwl_seat *xwl_seat,
+                                   struct xwl_window *xwl_window,
+                                   SpritePtr sprite,
+                                   int x, int y);
+
+void xwl_seat_destroy_pointer_warp_emulator(struct xwl_seat *xwl_seat);
+
+void xwl_seat_cursor_visibility_changed(struct xwl_seat *xwl_seat);
+
+void xwl_seat_confine_pointer(struct xwl_seat *xwl_seat,
+                              struct xwl_window *xwl_window);
+void xwl_seat_unconfine_pointer(struct xwl_seat *xwl_seat);
+
 Bool xwl_screen_init_output(struct xwl_screen *xwl_screen);
 
 struct xwl_output *xwl_output_create(struct xwl_screen *xwl_screen,
                                      uint32_t id);
 
 void xwl_output_destroy(struct xwl_output *xwl_output);
+
+void xwl_output_remove(struct xwl_output *xwl_output);
 
 RRModePtr xwayland_cvt(int HDisplay, int VDisplay,
                        float VRefresh, Bool Reduced, Bool Interlaced);

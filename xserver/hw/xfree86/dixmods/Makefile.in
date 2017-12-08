@@ -50,17 +50,18 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@AIGLX_DRI_LOADER_TRUE@am__append_1 = $(top_builddir)/glx/libglxdri.la
-@AIGLX_DRI_LOADER_TRUE@@NO_UNDEFINED_TRUE@am__append_2 = $(LIBDRM_LIBS) $(PIXMAN_LIBS)
+@DRI2_TRUE@am__append_1 = $(top_builddir)/glx/libglxdri.la
+@DRI2_TRUE@@NO_UNDEFINED_TRUE@am__append_2 = $(LIBDRM_LIBS) $(PIXMAN_LIBS)
 @NO_UNDEFINED_TRUE@am__append_3 = libfb.la
 subdir = hw/xfree86/dixmods
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/depcomp
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_dir.m4 \
-	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
-	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
-	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/configure.ac
+	$(top_srcdir)/m4/ax_pthread.m4 $(top_srcdir)/m4/libtool.m4 \
+	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
+	$(top_srcdir)/m4/ltversion.m4 $(top_srcdir)/m4/lt~obsolete.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -122,8 +123,9 @@ libfb_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(libfb_la_CFLAGS) \
 	$(CFLAGS) $(libfb_la_LDFLAGS) $(LDFLAGS) -o $@
 am__DEPENDENCIES_1 =
-@AIGLX_DRI_LOADER_TRUE@@NO_UNDEFINED_TRUE@am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1) \
-@AIGLX_DRI_LOADER_TRUE@@NO_UNDEFINED_TRUE@	$(am__DEPENDENCIES_1)
+@DRI2_TRUE@@NO_UNDEFINED_TRUE@am__DEPENDENCIES_2 =  \
+@DRI2_TRUE@@NO_UNDEFINED_TRUE@	$(am__DEPENDENCIES_1) \
+@DRI2_TRUE@@NO_UNDEFINED_TRUE@	$(am__DEPENDENCIES_1)
 libglx_la_DEPENDENCIES = $(top_builddir)/glx/libglx.la \
 	$(am__DEPENDENCIES_1) $(am__append_1) $(am__DEPENDENCIES_2)
 am_libglx_la_OBJECTS = glxmodule.lo
@@ -145,9 +147,6 @@ libwfb_la_OBJECTS = $(am_libwfb_la_OBJECTS)
 libwfb_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(libwfb_la_CFLAGS) \
 	$(CFLAGS) $(libwfb_la_LDFLAGS) $(LDFLAGS) -o $@
-libxorgxkb_la_LIBADD =
-am_libxorgxkb_la_OBJECTS = xkbVT.lo xkbPrivate.lo xkbKillSrv.lo
-libxorgxkb_la_OBJECTS = $(am_libxorgxkb_la_OBJECTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -184,10 +183,10 @@ am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = $(libdixmods_la_SOURCES) $(libfb_la_SOURCES) \
 	$(libglx_la_SOURCES) $(libshadow_la_SOURCES) \
-	$(libwfb_la_SOURCES) $(libxorgxkb_la_SOURCES)
+	$(libwfb_la_SOURCES)
 DIST_SOURCES = $(libdixmods_la_SOURCES) $(libfb_la_SOURCES) \
 	$(libglx_la_SOURCES) $(libshadow_la_SOURCES) \
-	$(libwfb_la_SOURCES) $(libxorgxkb_la_SOURCES)
+	$(libwfb_la_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -371,6 +370,9 @@ PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 PROJECTROOT = @PROJECTROOT@
+PTHREAD_CC = @PTHREAD_CC@
+PTHREAD_CFLAGS = @PTHREAD_CFLAGS@
+PTHREAD_LIBS = @PTHREAD_LIBS@
 PYTHON3 = @PYTHON3@
 RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
@@ -401,7 +403,10 @@ UDEV_LIBS = @UDEV_LIBS@
 UTILS_SYS_LIBS = @UTILS_SYS_LIBS@
 VENDOR_NAME_SHORT = @VENDOR_NAME_SHORT@
 VERSION = @VERSION@
+WAYLAND_PROTOCOLS_DATADIR = @WAYLAND_PROTOCOLS_DATADIR@
 WAYLAND_SCANNER = @WAYLAND_SCANNER@
+WINDOWSDRI_CFLAGS = @WINDOWSDRI_CFLAGS@
+WINDOWSDRI_LIBS = @WINDOWSDRI_LIBS@
 WINDOWSWM_CFLAGS = @WINDOWSWM_CFLAGS@
 WINDOWSWM_LIBS = @WINDOWSWM_LIBS@
 WINDRES = @WINDRES@
@@ -496,6 +501,7 @@ am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
 am__tar = @am__tar@
 am__untar = @am__untar@
+ax_pthread_config = @ax_pthread_config@
 bindir = @bindir@
 build = @build@
 build_alias = @build_alias@
@@ -543,7 +549,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-noinst_LTLIBRARIES = libdixmods.la libxorgxkb.la
+noinst_LTLIBRARIES = libdixmods.la
 @GLX_TRUE@GLXMODS = libglx.la
 module_LTLIBRARIES = libfb.la \
                      libwfb.la \
@@ -575,7 +581,6 @@ libshadow_la_LIBADD = $(top_builddir)/miext/shadow/libshadow.la \
 libshadow_la_SOURCES = shmodule.c
 libdixmods_la_SOURCES = $(top_srcdir)/mi/miinitext.c
 libdixmods_la_CFLAGS = $(AM_CFLAGS)
-libxorgxkb_la_SOURCES = xkbVT.c xkbPrivate.c xkbKillSrv.c
 all: all-am
 
 .SUFFIXES:
@@ -699,8 +704,6 @@ libshadow.la: $(libshadow_la_OBJECTS) $(libshadow_la_DEPENDENCIES) $(EXTRA_libsh
 	$(AM_V_CCLD)$(libshadow_la_LINK) -rpath $(moduledir) $(libshadow_la_OBJECTS) $(libshadow_la_LIBADD) $(LIBS)
 libwfb.la: $(libwfb_la_OBJECTS) $(libwfb_la_DEPENDENCIES) $(EXTRA_libwfb_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(libwfb_la_LINK) -rpath $(moduledir) $(libwfb_la_OBJECTS) $(libwfb_la_LIBADD) $(LIBS)
-libxorgxkb.la: $(libxorgxkb_la_OBJECTS) $(libxorgxkb_la_DEPENDENCIES) $(EXTRA_libxorgxkb_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(LINK)  $(libxorgxkb_la_OBJECTS) $(libxorgxkb_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -713,9 +716,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbmodule.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fbmodule.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/shmodule.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xkbKillSrv.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xkbPrivate.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xkbVT.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

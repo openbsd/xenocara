@@ -99,13 +99,13 @@ dmxSyncCallback(OsTimerPtr timer, CARD32 time, void *arg)
 }
 
 static void
-dmxSyncBlockHandler(void *blockData, OSTimePtr pTimeout, void *pReadMask)
+dmxSyncBlockHandler(void *blockData, void *timeout)
 {
     TimerForce(dmxSyncTimer);
 }
 
 static void
-dmxSyncWakeupHandler(void *blockData, int result, void *pReadMask)
+dmxSyncWakeupHandler(void *blockData, int result)
 {
 }
 
@@ -182,7 +182,7 @@ dmxSync(DMXScreenInfo * dmxScreen, Bool now)
 
         /* Do sync or set time for later */
         if (now || !dmxScreen) {
-            if (!TimerForce(dmxSyncTimer))
+            if (dmxSyncTimer == NULL || !TimerForce(dmxSyncTimer))
                 dmxSyncCallback(NULL, 0, NULL);
             /* At this point, dmxSyncPending == 0 because
              * dmxSyncCallback must have been called. */

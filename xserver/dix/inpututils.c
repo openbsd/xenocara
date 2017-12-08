@@ -636,6 +636,19 @@ valuator_mask_drop_unaccelerated(ValuatorMask *mask)
     mask->has_unaccelerated = FALSE;
 }
 
+void
+valuator_mask_set_absolute_unaccelerated(ValuatorMask *mask,
+                                         int valuator,
+                                         int absolute,
+                                         double unaccel)
+{
+    BUG_WARN_MSG(mask->last_bit != -1 && !mask->has_unaccelerated,
+                 "Do not mix valuator types, zero mask first\n");
+    _valuator_mask_set_double(mask, valuator, absolute);
+    mask->has_unaccelerated = TRUE;
+    mask->unaccelerated[valuator] = unaccel;
+}
+
 /**
  * Set both accelerated and unaccelerated value for this mask.
  */
@@ -727,7 +740,8 @@ verify_internal_event(const InternalEvent *ev)
  * device.
  */
 void
-init_device_event(DeviceEvent *event, DeviceIntPtr dev, Time ms)
+init_device_event(DeviceEvent *event, DeviceIntPtr dev, Time ms,
+                  enum DeviceEventSource source_type)
 {
     memset(event, 0, sizeof(DeviceEvent));
     event->header = ET_Internal;
@@ -735,6 +749,7 @@ init_device_event(DeviceEvent *event, DeviceIntPtr dev, Time ms)
     event->time = ms;
     event->deviceid = dev->id;
     event->sourceid = dev->id;
+    event->source_type = source_type;
 }
 
 int

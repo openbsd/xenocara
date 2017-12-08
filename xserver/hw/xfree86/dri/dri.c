@@ -158,9 +158,6 @@ DRIOpenDRMMaster(ScrnInfoPtr pScrn,
     Bool drmWasAvailable;
     DRIEntPrivPtr pDRIEntPriv;
     DRIEntPrivRec tmp;
-    drmVersionPtr drmlibv;
-    int drmlibmajor, drmlibminor;
-    const char *openBusID;
     int count;
     int err;
 
@@ -176,23 +173,6 @@ DRIOpenDRMMaster(ScrnInfoPtr pScrn,
 
     memset(&tmp, 0, sizeof(tmp));
 
-    /* Check the DRM lib version.
-     */
-
-    drmlibmajor = 1;
-    drmlibminor = 0;
-    drmlibv = drmGetLibVersion(-1);
-    if (drmlibv != NULL) {
-        drmlibmajor = drmlibv->version_major;
-        drmlibminor = drmlibv->version_minor;
-        drmFreeVersion(drmlibv);
-    }
-
-    /* Check if the libdrm can handle falling back to loading based on name
-     * if a busid string is passed.
-     */
-    openBusID = (drmlibmajor == 1 && drmlibminor >= 2) ? busID : NULL;
-
     tmp.drmFD = -1;
     sv.drm_di_major = 1;
     sv.drm_di_minor = 1;
@@ -201,7 +181,7 @@ DRIOpenDRMMaster(ScrnInfoPtr pScrn,
     saveSv = sv;
     count = 10;
     while (count--) {
-        tmp.drmFD = drmOpen(drmDriverName, openBusID);
+        tmp.drmFD = drmOpen(drmDriverName, busID);
 
         if (tmp.drmFD < 0) {
             DRIDrvMsg(-1, X_ERROR, "[drm] drmOpen failed.\n");
@@ -308,6 +288,68 @@ dri_crtc_notify(ScreenPtr pScreen)
     xf86_crtc_notify(pScreen);
     pDRIPriv->xf86_crtc_notify =
         xf86_wrap_crtc_notify(pScreen, dri_crtc_notify);
+}
+
+static void
+drmSIGIOHandler(int interrupt, void *closure)
+{
+    unsigned long key;
+    void *value;
+    ssize_t count;
+    drm_ctx_t ctx;
+    typedef void (*_drmCallback) (int, void *, void *);
+    char buf[256];
+    drm_context_t old;
+    drm_context_t new;
+    void *oldctx;
+    void *newctx;
+    char *pt;
+    drmHashEntry *entry;
+    void *hash_table;
+
+    hash_table = drmGetHashTable();
+
+    if (!hash_table)
+        return;
+    if (drmHashFirst(hash_table, &key, &value)) {
+        entry = value;
+        do {
+            if ((count = read(entry->fd, buf, sizeof(buf) - 1)) > 0) {
+                buf[count] = '\0';
+
+                for (pt = buf; *pt != ' '; ++pt);       /* Find first space */
+                ++pt;
+                old = strtol(pt, &pt, 0);
+                new = strtol(pt, NULL, 0);
+                oldctx = drmGetContextTag(entry->fd, old);
+                newctx = drmGetContextTag(entry->fd, new);
+                ((_drmCallback) entry->f) (entry->fd, oldctx, newctx);
+                ctx.handle = new;
+                ioctl(entry->fd, DRM_IOCTL_NEW_CTX, &ctx);
+            }
+        } while (drmHashNext(hash_table, &key, &value));
+    }
+}
+
+static int
+drmInstallSIGIOHandler(int fd, void (*f) (int, void *, void *))
+{
+    drmHashEntry *entry;
+
+    entry = drmGetEntry(fd);
+    entry->f = f;
+
+    return xf86InstallSIGIOHandler(fd, drmSIGIOHandler, 0);
+}
+
+static int
+drmRemoveSIGIOHandler(int fd)
+{
+    drmHashEntry *entry = drmGetEntry(fd);
+
+    entry->f = NULL;
+
+    return xf86RemoveSIGIOHandler(fd);
 }
 
 Bool
@@ -1580,7 +1622,7 @@ DRIDestroyInfoRec(DRIInfoPtr DRIInfo)
 }
 
 void
-DRIWakeupHandler(void *wakeupData, int result, void *pReadmask)
+DRIWakeupHandler(void *wakeupData, int result)
 {
     int i;
 
@@ -1589,13 +1631,12 @@ DRIWakeupHandler(void *wakeupData, int result, void *pReadmask)
         DRIScreenPrivPtr pDRIPriv = DRI_SCREEN_PRIV(pScreen);
 
         if (pDRIPriv && pDRIPriv->pDriverInfo->wrap.WakeupHandler)
-            (*pDRIPriv->pDriverInfo->wrap.WakeupHandler) (pScreen,
-                                                          result, pReadmask);
+            (*pDRIPriv->pDriverInfo->wrap.WakeupHandler) (pScreen, result);
     }
 }
 
 void
-DRIBlockHandler(void *blockData, OSTimePtr pTimeout, void *pReadmask)
+DRIBlockHandler(void *blockData, void *pTimeout)
 {
     int i;
 
@@ -1604,14 +1645,12 @@ DRIBlockHandler(void *blockData, OSTimePtr pTimeout, void *pReadmask)
         DRIScreenPrivPtr pDRIPriv = DRI_SCREEN_PRIV(pScreen);
 
         if (pDRIPriv && pDRIPriv->pDriverInfo->wrap.BlockHandler)
-            (*pDRIPriv->pDriverInfo->wrap.BlockHandler) (pScreen,
-                                                         pTimeout, pReadmask);
+            (*pDRIPriv->pDriverInfo->wrap.BlockHandler) (pScreen, pTimeout);
     }
 }
 
 void
-DRIDoWakeupHandler(ScreenPtr pScreen,
-                   unsigned long result, void *pReadmask)
+DRIDoWakeupHandler(ScreenPtr pScreen, int result)
 {
     DRIScreenPrivPtr pDRIPriv = DRI_SCREEN_PRIV(pScreen);
 
@@ -1628,8 +1667,7 @@ DRIDoWakeupHandler(ScreenPtr pScreen,
 }
 
 void
-DRIDoBlockHandler(ScreenPtr pScreen,
-                  void *pTimeout, void *pReadmask)
+DRIDoBlockHandler(ScreenPtr pScreen, void *timeout)
 {
     DRIScreenPrivPtr pDRIPriv = DRI_SCREEN_PRIV(pScreen);
 

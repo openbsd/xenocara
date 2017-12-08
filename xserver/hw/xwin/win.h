@@ -162,7 +162,6 @@
 #include "mipointer.h"
 #include "X11/keysym.h"
 #include "micoord.h"
-#include "dix.h"
 #include "miline.h"
 #include "shadow.h"
 #include "fb.h"
@@ -287,24 +286,11 @@ typedef Bool (*winCreateColormapProcPtr) (ColormapPtr pColormap);
 
 typedef Bool (*winDestroyColormapProcPtr) (ColormapPtr pColormap);
 
-typedef Bool (*winHotKeyAltTabProcPtr) (ScreenPtr);
-
 typedef Bool (*winCreatePrimarySurfaceProcPtr) (ScreenPtr);
 
 typedef Bool (*winReleasePrimarySurfaceProcPtr) (ScreenPtr);
 
-typedef Bool (*winFinishCreateWindowsWindowProcPtr) (WindowPtr pWin);
-
 typedef Bool (*winCreateScreenResourcesProc) (ScreenPtr);
-
-/*
- * GC (graphics context) privates
- */
-
-typedef struct {
-    HDC hdc;
-    HDC hdcMem;
-} winPrivGCRec, *winPrivGCPtr;
 
 /*
  * Pixmap privates
@@ -329,6 +315,7 @@ typedef struct {
     PALETTEENTRY peColors[WIN_NUM_PALETTE_ENTRIES];
 } winPrivCmapRec, *winPrivCmapPtr;
 
+
 /*
  * Windows Cursor handling.
  */
@@ -348,7 +335,8 @@ typedef struct {
  * Resize modes
  */
 typedef enum {
-    notAllowed,
+    resizeDefault = -1,
+    resizeNotAllowed,
     resizeWithScrollbars,
     resizeWithRandr
 } winResizeMode;
@@ -404,8 +392,6 @@ typedef struct {
     Bool fDecoration;
 #ifdef XWIN_MULTIWINDOWEXTWM
     Bool fMWExtWM;
-    Bool fInternalWM;
-    Bool fAnotherWMRunning;
 #endif
     Bool fRootless;
 #ifdef XWIN_MULTIWINDOW
@@ -524,16 +510,9 @@ typedef struct _winPrivScreenRec {
     winStoreColorsProcPtr pwinStoreColors;
     winCreateColormapProcPtr pwinCreateColormap;
     winDestroyColormapProcPtr pwinDestroyColormap;
-    winHotKeyAltTabProcPtr pwinHotKeyAltTab;
     winCreatePrimarySurfaceProcPtr pwinCreatePrimarySurface;
     winReleasePrimarySurfaceProcPtr pwinReleasePrimarySurface;
-
     winCreateScreenResourcesProc pwinCreateScreenResources;
-
-#ifdef XWIN_MULTIWINDOW
-    /* Window Procedures for MultiWindow mode */
-    winFinishCreateWindowsWindowProcPtr pwinFinishCreateWindowsWindow;
-#endif
 
     /* Window Procedures for Rootless mode */
     CreateWindowProcPtr CreateWindow;
@@ -554,6 +533,8 @@ typedef struct _winPrivScreenRec {
     SetShapeProcPtr SetShape;
 
     winCursorRec cursor;
+
+    Bool fNativeGlActive;
 } winPrivScreenRec;
 
 #ifdef XWIN_MULTIWINDOWEXTWM
@@ -738,8 +719,7 @@ void winSetAuthorization(void);
 
 void
 
-winBlockHandler(ScreenPtr pScreen,
-                void *pTimeout, void *pReadMask);
+winBlockHandler(ScreenPtr pScreen, void *pTimeout);
 
 #ifdef XWIN_CLIPBOARD
 /*
@@ -923,9 +903,7 @@ Bool
  */
 
 void
-
-winWakeupHandler(ScreenPtr pScreen,
-                 unsigned long ulResult, void *pReadmask);
+winWakeupHandler(ScreenPtr pScreen, int iResult);
 
 /*
  * winwindow.c
@@ -1136,9 +1114,6 @@ winMWExtWMUpdateWindowDecoration(win32RootlessWindowPtr pRLWinPriv,
                                  winScreenInfoPtr pScreenInfo);
 
 wBOOL CALLBACK winMWExtWMDecorateWindow(HWND hwnd, LPARAM lParam);
-
-Bool
- winIsInternalWMRunning(winScreenInfoPtr pScreenInfo);
 
 void
  winMWExtWMRestackWindows(ScreenPtr pScreen);

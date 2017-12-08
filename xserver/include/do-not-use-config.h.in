@@ -3,9 +3,6 @@
 /* Define if building universal (internal helper macro) */
 #undef AC_APPLE_UNIVERSAL_BUILD
 
-/* Build AIGLX loader */
-#undef AIGLX
-
 /* Default base font path */
 #undef BASE_FONT_PATH
 
@@ -102,14 +99,14 @@
 /* Build DRI2 extension */
 #undef DRI2
 
-/* Build DRI2 AIGLX loader */
-#undef DRI2_AIGLX
-
 /* Build DRI3 extension */
 #undef DRI3
 
 /* Default DRI driver path */
 #undef DRI_DRIVER_PATH
+
+/* Fallback input driver */
+#undef FALLBACK_INPUT_DRIVER
 
 /* Build glamor */
 #undef GLAMOR
@@ -175,6 +172,9 @@
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
+
+/* Define to 1 if you have the `epoll_create1' function. */
+#undef HAVE_EPOLL_CREATE1
 
 /* Have execinfo.h */
 #undef HAVE_EXECINFO_H
@@ -266,8 +266,23 @@
 /* Define to 1 if you have the <ndir.h> header file, and it defines `DIR'. */
 #undef HAVE_NDIR_H
 
+/* Define to 1 if you have the `poll' function. */
+#undef HAVE_POLL
+
 /* Define to 1 if you have the `posix_fallocate' function. */
 #undef HAVE_POSIX_FALLOCATE
+
+/* Define if you have POSIX threads libraries and header files. */
+#undef HAVE_PTHREAD
+
+/* Have PTHREAD_PRIO_INHERIT. */
+#undef HAVE_PTHREAD_PRIO_INHERIT
+
+/* Have function pthread_setname_np(const char*) */
+#undef HAVE_PTHREAD_SETNAME_NP_WITHOUT_TID
+
+/* Have function pthread_setname_np(pthread_t, const char*) */
+#undef HAVE_PTHREAD_SETNAME_NP_WITH_TID
 
 /* Define to 1 if you have the `reallocarray' function. */
 #undef HAVE_REALLOCARRAY
@@ -277,6 +292,9 @@
 
 /* Define to 1 if you have the `seteuid' function. */
 #undef HAVE_SETEUID
+
+/* Define to 1 if you have the `setitimer' function. */
+#undef HAVE_SETITIMER
 
 /* Use CommonCrypto SHA1 functions */
 #undef HAVE_SHA1_IN_COMMONCRYPTO
@@ -373,6 +391,9 @@
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #undef HAVE_SYS_STAT_H
 
+/* Define to 1 if you have the <sys/sysmacros.h> header file. */
+#undef HAVE_SYS_SYSMACROS_H
+
 /* Define to 1 if you have the <sys/types.h> header file. */
 #undef HAVE_SYS_TYPES_H
 
@@ -409,6 +430,9 @@
 
 /* Have xshmfence support */
 #undef HAVE_XSHMFENCE
+
+/* Use a separate input thread */
+#undef INPUTTHREAD
 
 /* Support IPv6 for TCP connections */
 #undef IPv6
@@ -519,6 +543,10 @@
 /* Overall prefix */
 #undef PROJECTROOT
 
+/* Define to necessary symbol if this constant uses a non-standard name on
+   your system. */
+#undef PTHREAD_CREATE_JOINABLE
+
 /* Support RANDR extension */
 #undef RANDR
 
@@ -593,9 +621,6 @@
 
 /* BSD i386 iopl */
 #undef USE_I386_IOPL
-
-/* Use SIGIO handlers for input device events by default */
-#undef USE_SIGIO_BY_DEFAULT
 
 /* Enable extensions on AIX 3, Interix.  */
 #ifndef _ALL_SOURCE

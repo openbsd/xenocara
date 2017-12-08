@@ -882,6 +882,8 @@ ConfineCursorToWindow(DeviceIntPtr pDev, WindowPtr pWin, Bool generateEvents,
         SyntheticMotion(pDev, pSprite->hot.x, pSprite->hot.y);
     }
     else {
+        ScreenPtr pScreen = pWin->drawable.pScreen;
+
 #ifdef PANORAMIX
         if (!noPanoramiXExtension) {
             XineramaConfineCursorToWindow(pDev, pWin, generateEvents);
@@ -893,6 +895,9 @@ ConfineCursorToWindow(DeviceIntPtr pDev, WindowPtr pWin, Bool generateEvents,
             : NullRegion;
         CheckPhysLimits(pDev, pSprite->current, generateEvents,
                         confineToScreen, pWin->drawable.pScreen);
+
+        if (*pScreen->CursorConfinedTo)
+            (*pScreen->CursorConfinedTo) (pDev, pScreen, pWin);
     }
 }
 
@@ -1822,6 +1827,7 @@ ProcAllowEvents(ClientPtr client)
     REQUEST(xAllowEventsReq);
 
     REQUEST_SIZE_MATCH(xAllowEventsReq);
+    UpdateCurrentTime();
     time = ClientTimeToServerTime(stuff->time);
 
     mouse = PickPointer(client);
@@ -2891,7 +2897,7 @@ ActivateFocusInGrab(DeviceIntPtr dev, WindowPtr old, WindowPtr win)
 
     if (dev->deviceGrab.grab) {
         if (!dev->deviceGrab.fromPassiveGrab ||
-            dev->deviceGrab.grab->type != XI_Enter ||
+            dev->deviceGrab.grab->type != XI_FocusIn ||
             dev->deviceGrab.grab->window == win ||
             IsParent(dev->deviceGrab.grab->window, win))
             return FALSE;
@@ -2914,7 +2920,7 @@ ActivateFocusInGrab(DeviceIntPtr dev, WindowPtr old, WindowPtr win)
     rc = (CheckPassiveGrabsOnWindow(win, dev, (InternalEvent *) &event, FALSE,
                                     TRUE) != NULL);
     if (rc)
-        DoEnterLeaveEvents(dev, dev->id, old, win, XINotifyPassiveUngrab);
+        DoEnterLeaveEvents(dev, dev->id, old, win, XINotifyPassiveGrab);
     return rc;
 }
 
@@ -3608,6 +3614,9 @@ ProcWarpPointer(ClientPtr client)
     else if (!PointerConfinedToScreen(dev)) {
         NewCurrentScreen(dev, newScreen, x, y);
     }
+    if (*newScreen->CursorWarpedTo)
+        (*newScreen->CursorWarpedTo) (dev, newScreen, client,
+                                      dest, pSprite, x, y);
     return Success;
 }
 
@@ -4952,6 +4961,7 @@ ProcChangeActivePointerGrab(ClientPtr client)
         return Success;
     if (!SameClient(grab, client))
         return Success;
+    UpdateCurrentTime();
     time = ClientTimeToServerTime(stuff->time);
     if ((CompareTimeStamps(time, currentTime) == LATER) ||
         (CompareTimeStamps(time, device->deviceGrab.grabTime) == EARLIER))
@@ -5132,6 +5142,7 @@ ProcGrabKeyboard(ClientPtr client)
     GrabMask mask;
 
     REQUEST_SIZE_MATCH(xGrabKeyboardReq);
+    UpdateCurrentTime();
 
     mask.core = KeyPressMask | KeyReleaseMask;
 
@@ -5550,6 +5561,7 @@ ProcGrabButton(ClientPtr client)
     int rc;
 
     REQUEST_SIZE_MATCH(xGrabButtonReq);
+    UpdateCurrentTime();
     if ((stuff->pointerMode != GrabModeSync) &&
         (stuff->pointerMode != GrabModeAsync)) {
         client->errorValue = stuff->pointerMode;
@@ -5638,6 +5650,7 @@ ProcUngrabButton(ClientPtr client)
     DeviceIntPtr ptr;
 
     REQUEST_SIZE_MATCH(xUngrabButtonReq);
+    UpdateCurrentTime();
     if ((stuff->modifiers != AnyModifier) &&
         (stuff->modifiers & ~AllModifiersMask)) {
         client->errorValue = stuff->modifiers;

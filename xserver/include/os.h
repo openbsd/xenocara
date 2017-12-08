@@ -51,6 +51,9 @@ SOFTWARE.
 #include <stdarg.h>
 #include <stdint.h>
 #include <string.h>
+#ifdef MONOTONIC_CLOCK
+#include <time.h>
+#endif
 
 #define SCREEN_SAVER_ON   0
 #define SCREEN_SAVER_OFF  1
@@ -93,8 +96,7 @@ extern _X_EXPORT void (*OsVendorVErrorFProc) (const char *,
 _X_ATTRIBUTE_PRINTF(1, 0);
 #endif
 
-extern _X_EXPORT int WaitForSomething(int *     /*pClientsReady */
-    );
+extern _X_EXPORT Bool WaitForSomething(Bool clients_are_ready);
 
 extern _X_EXPORT int ReadRequestFromClient(ClientPtr /*client */ );
 
@@ -139,20 +141,21 @@ extern _X_EXPORT const char *ClientAuthorized(ClientPtr /*client */ ,
                                               unsigned int /*string_n */ ,
                                               char * /*auth_string */ );
 
-extern _X_EXPORT Bool EstablishNewConnections(ClientPtr clientUnused,
-                                              void *closure);
-
-extern _X_EXPORT void CheckConnections(void);
-
 extern _X_EXPORT void CloseDownConnection(ClientPtr /*client */ );
 
-extern _X_EXPORT void AddGeneralSocket(int /*fd */ );
+typedef void (*NotifyFdProcPtr)(int fd, int ready, void *data);
 
-extern _X_EXPORT void RemoveGeneralSocket(int /*fd */ );
+#define X_NOTIFY_NONE   0x0
+#define X_NOTIFY_READ   0x1
+#define X_NOTIFY_WRITE  0x2
+#define X_NOTIFY_ERROR  0x4     /* don't need to select for, always reported */
 
-extern _X_EXPORT void AddEnabledDevice(int /*fd */ );
+extern _X_EXPORT Bool SetNotifyFd(int fd, NotifyFdProcPtr notify_fd, int mask, void *data);
 
-extern _X_EXPORT void RemoveEnabledDevice(int /*fd */ );
+static inline void RemoveNotifyFd(int fd)
+{
+    (void) SetNotifyFd(fd, NULL, X_NOTIFY_NONE, NULL);
+}
 
 extern _X_EXPORT int OnlyListenToOneClient(ClientPtr /*client */ );
 
@@ -170,11 +173,14 @@ extern _X_EXPORT void ListenOnOpenFD(int /* fd */ , int /* noxauth */ );
 
 extern _X_EXPORT Bool AddClientOnOpenFD(int /* fd */ );
 
+#ifdef MONOTONIC_CLOCK
+extern void ForceClockId(clockid_t /* forced_clockid */);
+#endif
+
 extern _X_EXPORT CARD32 GetTimeInMillis(void);
 extern _X_EXPORT CARD64 GetTimeInMicros(void);
 
-extern _X_EXPORT void AdjustWaitForDelay(void *waitTime,
-                                         unsigned long newdelay);
+extern _X_EXPORT void AdjustWaitForDelay(void *waitTime, int newdelay);
 
 typedef struct _OsTimerRec *OsTimerPtr;
 
@@ -332,12 +338,6 @@ OsBlockSignals(void);
 
 extern _X_EXPORT void
 OsReleaseSignals(void);
-
-extern _X_EXPORT int
-OsBlockSIGIO(void);
-
-extern _X_EXPORT void
-OsReleaseSIGIO(void);
 
 extern void
 OsResetSignals(void);
@@ -713,5 +713,10 @@ xorg_backtrace(void);
 
 extern _X_EXPORT int
 os_move_fd(int fd);
+
+#include <signal.h>
+
+extern _X_EXPORT int
+xthread_sigmask(int how, const sigset_t *set, sigset_t *oldest);
 
 #endif                          /* OS_H */

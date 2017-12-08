@@ -1,19 +1,46 @@
 if ENABLE_UNIT_TESTS
 SUBDIRS= .
-noinst_PROGRAMS = list string
+TEST_PROGS = list string
 if XORG
 # Tests that require at least some DDX functions in order to fully link
 # For now, requires xf86 ddx, could be adjusted to use another
 SUBDIRS += xi1 xi2
-noinst_PROGRAMS += xkb input xtest misc fixes xfree86 os signal-logging touch
+TEST_PROGS += xkb input xtest misc fixes xfree86 signal-logging touch
 if RES
-noinst_PROGRAMS += hashtabletest
+TEST_PROGS += hashtabletest
 endif
 endif
 check_LTLIBRARIES = libxservertest.la
 
-TESTS=$(noinst_PROGRAMS)
-TESTS_ENVIRONMENT = $(XORG_MALLOC_DEBUG_ENV)
+noinst_PROGRAMS = \
+	simple-xinit \
+	$(TEST_PROGS) \
+	$(NULL)
+
+if XVFB
+XVFB_TESTS = scripts/xvfb-piglit.sh
+if XEPHYR
+if GLAMOR
+XEPHYR_GLAMOR_TESTS = scripts/xephyr-glamor-piglit.sh
+endif
+endif
+endif
+
+SCRIPT_TESTS = \
+	$(XVFB_TESTS) \
+	$(XEPHYR_GLAMOR_TESTS) \
+	$(NULL)
+
+TESTS = \
+	$(TEST_PROGS) \
+	$(SCRIPT_TESTS) \
+	$(NULL)
+
+TESTS_ENVIRONMENT = \
+	XSERVER_DIR=$(abs_top_srcdir) \
+	XSERVER_BUILDDIR=$(abs_top_builddir) \
+	$(XORG_MALLOC_DEBUG_ENV) \
+	$(NULL)
 
 AM_CFLAGS = $(DIX_CFLAGS) @XORG_CFLAGS@
 AM_CPPFLAGS = $(XORG_INCS)
@@ -39,7 +66,6 @@ xfree86_LDADD=$(TEST_LDADD)
 touch_LDADD=$(TEST_LDADD)
 signal_logging_LDADD=$(TEST_LDADD)
 hashtabletest_LDADD=$(TEST_LDADD)
-os_LDADD=$(TEST_LDADD)
 
 libxservertest_la_LIBADD = $(XSERVER_LIBS)
 if XORG
@@ -55,7 +81,7 @@ libxservertest_la_LIBADD += \
             $(top_builddir)/hw/xfree86/ramdac/libramdac.la \
             $(top_builddir)/hw/xfree86/ddc/libddc.la \
             $(top_builddir)/hw/xfree86/i2c/libi2c.la \
-            $(top_builddir)/hw/xfree86/dixmods/libxorgxkb.la \
+            $(top_builddir)/hw/xfree86/xkb/libxorgxkb.la \
             $(top_builddir)/Xext/libXvidmode.la \
             @XORG_LIBS@
 
@@ -139,5 +165,11 @@ endif
 libxservertest_la_DEPENDENCIES = $(libxservertest_la_LIBADD)
 endif
 
-EXTRA_DIST = ddxstubs.c
+EXTRA_DIST = \
+	scripts/xvfb-piglit.sh \
+	scripts/xephyr-glamor-piglit.sh \
+	scripts/xinit-piglit-session.sh \
+	scripts/run-piglit.sh \
+	ddxstubs.c \
+	$(NULL)
 

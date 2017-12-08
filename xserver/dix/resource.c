@@ -156,7 +156,7 @@ static void RebuildTable(int    /*client */
 
 #define INITBUCKETS 64
 #define INITHASHSIZE 6
-#define MAXHASHSIZE 11
+#define MAXHASHSIZE 16
 
 typedef struct _Resource {
     struct _Resource *next;
@@ -668,29 +668,14 @@ InitClientResources(ClientPtr client)
 int
 HashResourceID(XID id, int numBits)
 {
-    id &= RESOURCE_ID_MASK;
-    switch (numBits)
-    {
-        case 6:
-            return ((int)(0x03F & (id ^ (id>>6) ^ (id>>12))));
-        case 7:
-            return ((int)(0x07F & (id ^ (id>>7) ^ (id>>13))));
-        case 8:
-            return ((int)(0x0FF & (id ^ (id>>8) ^ (id>>16))));
-        case 9:
-            return ((int)(0x1FF & (id ^ (id>>9))));
-        case 10:
-            return ((int)(0x3FF & (id ^ (id>>10))));
-        case 11:
-            return ((int)(0x7FF & (id ^ (id>>11))));
-    }
-    if (numBits >= 11)
-        return ((int)(0x7FF & (id ^ (id>>11))));
-    else
-    {
-        assert(numBits >= 0);
-        return id & ~((~0) << numBits);
-    }
+    static XID mask;
+
+    if (!mask)
+        mask = RESOURCE_ID_MASK;
+    id &= mask;
+    if (numBits < 9)
+        return (id ^ (id >> numBits) ^ (id >> (numBits<<1))) & ~((~0) << numBits);
+    return (id ^ (id >> numBits)) & ~((~0) << numBits);
 }
 
 static XID
@@ -1220,11 +1205,13 @@ dixLookupResourceByType(void **result, XID id, RESTYPE rtype,
             if (res->id == id && res->type == rtype)
                 break;
     }
+    if (client) {
+        client->errorValue = id;
+    }
     if (!res)
         return resourceTypes[rtype & TypeMask].errorValue;
 
     if (client) {
-        client->errorValue = id;
         cid = XaceHook(XACE_RESOURCE_ACCESS, client, id, res->type,
                        res->value, RT_NONE, NULL, mode);
         if (cid == BadValue)
@@ -1253,11 +1240,13 @@ dixLookupResourceByClass(void **result, XID id, RESTYPE rclass,
             if (res->id == id && (res->type & rclass))
                 break;
     }
+    if (client) {
+        client->errorValue = id;
+    }
     if (!res)
         return BadValue;
 
     if (client) {
-        client->errorValue = id;
         cid = XaceHook(XACE_RESOURCE_ACCESS, client, id, res->type,
                        res->value, RT_NONE, NULL, mode);
         if (cid != Success)

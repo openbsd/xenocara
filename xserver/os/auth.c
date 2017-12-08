@@ -305,14 +305,14 @@ GenerateAuthorization(unsigned name_length,
 void
 GenerateRandomData(int len, char *buf)
 {
-#ifndef HAVE_ARC4RANDOM_BUF
+#ifdef HAVE_ARC4RANDOM_BUF
+    arc4random_buf(buf, len);
+#else
     int fd;
 
     fd = open("/dev/urandom", O_RDONLY);
     read(fd, buf, len);
     close(fd);
-#else
-    arc4random_buf(buf, len);
 #endif
 }
 

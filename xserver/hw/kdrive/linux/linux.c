@@ -25,7 +25,6 @@
 #endif
 #include "kdrive.h"
 #include <errno.h>
-#include <signal.h>
 #include <linux/vt.h>
 #include <linux/kd.h>
 #include <sys/stat.h>
@@ -169,52 +168,43 @@ LinuxSetSwitchMode(int mode)
     }
 }
 
-static void
-LinuxApmBlock(void *blockData, OSTimePtr pTimeout, void *pReadmask)
-{
-}
-
 static Bool LinuxApmRunning;
 
 static void
-LinuxApmWakeup(void *blockData, int result, void *pReadmask)
+LinuxApmNotify(int fd, int mask, void *blockData)
 {
-    fd_set *readmask = (fd_set *) pReadmask;
+    apm_event_t event;
+    Bool running = LinuxApmRunning;
+    int cmd = APM_IOC_SUSPEND;
 
-    if (result > 0 && LinuxApmFd >= 0 && FD_ISSET(LinuxApmFd, readmask)) {
-        apm_event_t event;
-        Bool running = LinuxApmRunning;
-        int cmd = APM_IOC_SUSPEND;
-
-        while (read(LinuxApmFd, &event, sizeof(event)) == sizeof(event)) {
-            switch (event) {
-            case APM_SYS_STANDBY:
-            case APM_USER_STANDBY:
-                running = FALSE;
-                cmd = APM_IOC_STANDBY;
-                break;
-            case APM_SYS_SUSPEND:
-            case APM_USER_SUSPEND:
-            case APM_CRITICAL_SUSPEND:
-                running = FALSE;
-                cmd = APM_IOC_SUSPEND;
-                break;
-            case APM_NORMAL_RESUME:
-            case APM_CRITICAL_RESUME:
-            case APM_STANDBY_RESUME:
-                running = TRUE;
-                break;
-            }
+    while (read(fd, &event, sizeof(event)) == sizeof(event)) {
+        switch (event) {
+        case APM_SYS_STANDBY:
+        case APM_USER_STANDBY:
+            running = FALSE;
+            cmd = APM_IOC_STANDBY;
+            break;
+        case APM_SYS_SUSPEND:
+        case APM_USER_SUSPEND:
+        case APM_CRITICAL_SUSPEND:
+            running = FALSE;
+            cmd = APM_IOC_SUSPEND;
+            break;
+        case APM_NORMAL_RESUME:
+        case APM_CRITICAL_RESUME:
+        case APM_STANDBY_RESUME:
+            running = TRUE;
+            break;
         }
-        if (running && !LinuxApmRunning) {
-            KdResume();
-            LinuxApmRunning = TRUE;
-        }
-        else if (!running && LinuxApmRunning) {
-            KdSuspend();
-            LinuxApmRunning = FALSE;
-            ioctl(LinuxApmFd, cmd, 0);
-        }
+    }
+    if (running && !LinuxApmRunning) {
+        KdResume();
+        LinuxApmRunning = TRUE;
+    }
+    else if (!running && LinuxApmRunning) {
+        KdSuspend();
+        LinuxApmRunning = FALSE;
+        ioctl(fd, cmd, 0);
     }
 }
 
@@ -242,8 +232,7 @@ LinuxEnable(void)
     if (LinuxApmFd >= 0) {
         LinuxApmRunning = TRUE;
         fcntl(LinuxApmFd, F_SETFL, fcntl(LinuxApmFd, F_GETFL) | NOBLOCK);
-        RegisterBlockAndWakeupHandlers(LinuxApmBlock, LinuxApmWakeup, 0);
-        AddEnabledDevice(LinuxApmFd);
+        SetNotifyFd(LinuxApmFd, LinuxApmNotify, X_NOTIFY_READ, NULL);
     }
 
     /*
@@ -273,8 +262,7 @@ LinuxDisable(void)
     }
     enabled = FALSE;
     if (LinuxApmFd >= 0) {
-        RemoveBlockAndWakeupHandlers(LinuxApmBlock, LinuxApmWakeup, 0);
-        RemoveEnabledDevice(LinuxApmFd);
+        RemoveNotifyFd(LinuxApmFd);
         close(LinuxApmFd);
         LinuxApmFd = -1;
     }

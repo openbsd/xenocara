@@ -1,4 +1,4 @@
-if AIGLX_DRI_LOADER
+if DRI2
 GLXDRI_LIBRARY = libglxdri.la
 endif
 
@@ -20,12 +20,9 @@ AM_CPPFLAGS = \
 	-I$(top_srcdir)/hw/xfree86/os-support/bus \
 	-I$(top_srcdir)/hw/xfree86/common \
 	-I$(top_srcdir)/hw/xfree86/dri \
+	-I$(top_srcdir)/hw/xfree86/dri2 \
 	-I$(top_srcdir)/mi \
 	-I$(top_srcdir)/present
-
-if DRI2_AIGLX
-AM_CPPFLAGS += -I$(top_srcdir)/hw/xfree86/dri2
-endif
 
 indirect_sources =				\
 	indirect_dispatch.c			\
@@ -39,8 +36,7 @@ indirect_sources =				\
 	indirect_table.c
 
 libglxdri_la_SOURCES =
-
-if DRI2_AIGLX
+if DRI2
 libglxdri_la_SOURCES += glxdri2.c
 endif
 

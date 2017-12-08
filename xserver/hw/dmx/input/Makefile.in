@@ -55,9 +55,10 @@ DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/depcomp
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_dir.m4 \
-	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
-	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
-	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/configure.ac
+	$(top_srcdir)/m4/ax_pthread.m4 $(top_srcdir)/m4/libtool.m4 \
+	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
+	$(top_srcdir)/m4/ltversion.m4 $(top_srcdir)/m4/lt~obsolete.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -85,9 +86,9 @@ am__libdmxinput_a_SOURCES_DIST = ChkNotMaskEv.c ChkNotMaskEv.h \
 	usb-mouse.h usb-other.c usb-other.h usb-common.c usb-common.h \
 	usb-private.h dmxdummy.c dmxdummy.h dmxbackend.c dmxbackend.h \
 	dmxconsole.c dmxconsole.h dmxcommon.c dmxcommon.h \
-	dmxinputinit.c dmxinputinit.h dmxarg.c dmxarg.h dmxsigio.c \
-	dmxsigio.h dmxevents.c dmxevents.h dmxxinput.c dmxmotion.c \
-	dmxmotion.h dmxmap.c dmxmap.h
+	dmxinputinit.c dmxinputinit.h dmxarg.c dmxarg.h dmxevents.c \
+	dmxevents.h dmxxinput.c dmxmotion.c dmxmotion.h dmxmap.c \
+	dmxmap.h
 @DMX_BUILD_LNX_TRUE@am__objects_1 = lnx-keyboard.$(OBJEXT) \
 @DMX_BUILD_LNX_TRUE@	lnx-ms.$(OBJEXT) lnx-ps2.$(OBJEXT)
 @DMX_BUILD_USB_TRUE@am__objects_2 = usb-keyboard.$(OBJEXT) \
@@ -96,8 +97,8 @@ am__libdmxinput_a_SOURCES_DIST = ChkNotMaskEv.c ChkNotMaskEv.h \
 am__objects_3 = dmxdummy.$(OBJEXT) dmxbackend.$(OBJEXT) \
 	dmxconsole.$(OBJEXT) dmxcommon.$(OBJEXT)
 am__objects_4 = dmxinputinit.$(OBJEXT) dmxarg.$(OBJEXT) \
-	dmxsigio.$(OBJEXT) dmxevents.$(OBJEXT) dmxxinput.$(OBJEXT) \
-	dmxmotion.$(OBJEXT) dmxmap.$(OBJEXT)
+	dmxevents.$(OBJEXT) dmxxinput.$(OBJEXT) dmxmotion.$(OBJEXT) \
+	dmxmap.$(OBJEXT)
 am_libdmxinput_a_OBJECTS = ChkNotMaskEv.$(OBJEXT) $(am__objects_1) \
 	$(am__objects_2) $(am__objects_3) $(am__objects_4)
 libdmxinput_a_OBJECTS = $(am_libdmxinput_a_OBJECTS)
@@ -324,6 +325,9 @@ PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 PROJECTROOT = @PROJECTROOT@
+PTHREAD_CC = @PTHREAD_CC@
+PTHREAD_CFLAGS = @PTHREAD_CFLAGS@
+PTHREAD_LIBS = @PTHREAD_LIBS@
 PYTHON3 = @PYTHON3@
 RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
@@ -354,7 +358,10 @@ UDEV_LIBS = @UDEV_LIBS@
 UTILS_SYS_LIBS = @UTILS_SYS_LIBS@
 VENDOR_NAME_SHORT = @VENDOR_NAME_SHORT@
 VERSION = @VERSION@
+WAYLAND_PROTOCOLS_DATADIR = @WAYLAND_PROTOCOLS_DATADIR@
 WAYLAND_SCANNER = @WAYLAND_SCANNER@
+WINDOWSDRI_CFLAGS = @WINDOWSDRI_CFLAGS@
+WINDOWSDRI_LIBS = @WINDOWSDRI_LIBS@
 WINDOWSWM_CFLAGS = @WINDOWSWM_CFLAGS@
 WINDOWSWM_LIBS = @WINDOWSWM_LIBS@
 WINDRES = @WINDRES@
@@ -449,6 +456,7 @@ am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
 am__tar = @am__tar@
 am__untar = @am__untar@
+ax_pthread_config = @ax_pthread_config@
 bindir = @bindir@
 build = @build@
 build_alias = @build_alias@
@@ -527,8 +535,6 @@ DMXSRCS = dmxinputinit.c \
           dmxinputinit.h \
           dmxarg.c \
           dmxarg.h \
-          dmxsigio.c \
-          dmxsigio.h \
           dmxevents.c \
           dmxevents.h \
 	  dmxxinput.c \
@@ -612,7 +618,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxinputinit.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxmap.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxmotion.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxsigio.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxxinput.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lnx-keyboard.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lnx-ms.Po@am__quote@

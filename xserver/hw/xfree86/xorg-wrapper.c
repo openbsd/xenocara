@@ -35,6 +35,9 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
+#ifdef HAVE_SYS_SYSMACROS_H
+#include <sys/sysmacros.h>
+#endif
 #include <sys/types.h>
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 #include <sys/consio.h>
@@ -240,7 +243,7 @@ int main(int argc, char *argv[])
 
             memset(&res, 0, sizeof(struct drm_mode_card_res));
             r = ioctl(fd, DRM_IOCTL_MODE_GETRESOURCES, &res);
-            if (r == 0 && res.count_connectors > 0)
+            if (r == 0)
                 kms_cards++;
 
             close(fd);

@@ -32,6 +32,8 @@
 #include <misyncshm.h>
 #include <compositeext.h>
 #include <glx_extinit.h>
+#include <os.h>
+#include <xserver_poll.h>
 
 #ifdef XF86VIDMODE
 #include <X11/extensions/xf86vmproto.h>
@@ -52,6 +54,8 @@ AbortDDX(enum ExitCode error)
 void
 OsVendorInit(void)
 {
+    if (serverGeneration == 1)
+        ForceClockId(CLOCK_MONOTONIC);
 }
 
 void
@@ -99,6 +103,12 @@ static DevPrivateKeyRec xwl_window_private_key;
 static DevPrivateKeyRec xwl_screen_private_key;
 static DevPrivateKeyRec xwl_pixmap_private_key;
 
+static struct xwl_window *
+xwl_window_get(WindowPtr window)
+{
+    return dixLookupPrivate(&window->devPrivates, &xwl_window_private_key);
+}
+
 struct xwl_screen *
 xwl_screen_get(ScreenPtr screen)
 {
@@ -120,12 +130,113 @@ xwl_close_screen(ScreenPtr screen)
                                   &xwl_screen->seat_list, link)
         xwl_seat_destroy(xwl_seat);
 
+    RemoveNotifyFd(xwl_screen->wayland_fd);
+
     wl_display_disconnect(xwl_screen->display);
 
     screen->CloseScreen = xwl_screen->CloseScreen;
     free(xwl_screen);
 
     return screen->CloseScreen(screen);
+}
+
+static struct xwl_window *
+xwl_window_from_window(WindowPtr window)
+{
+    struct xwl_window *xwl_window;
+
+    while (window) {
+        xwl_window = xwl_window_get(window);
+        if (xwl_window)
+            return xwl_window;
+
+        window = window->parent;
+    }
+
+    return NULL;
+}
+
+static struct xwl_seat *
+xwl_screen_get_default_seat(struct xwl_screen *xwl_screen)
+{
+    return container_of(xwl_screen->seat_list.prev,
+                        struct xwl_seat,
+                        link);
+}
+
+static void
+xwl_cursor_warped_to(DeviceIntPtr device,
+                     ScreenPtr screen,
+                     ClientPtr client,
+                     WindowPtr window,
+                     SpritePtr sprite,
+                     int x, int y)
+{
+    struct xwl_screen *xwl_screen = xwl_screen_get(screen);
+    struct xwl_seat *xwl_seat = device->public.devicePrivate;
+    struct xwl_window *xwl_window;
+    WindowPtr focus;
+
+    if (!xwl_seat)
+        xwl_seat = xwl_screen_get_default_seat(xwl_screen);
+
+    xwl_window = xwl_window_from_window(window);
+    if (!xwl_window && xwl_seat->focus_window) {
+        focus = xwl_seat->focus_window->window;
+
+        /* Warps on non wl_surface backed Windows are only allowed
+         * as long as the pointer stays within the focus window.
+         */
+        if (x >= focus->drawable.x &&
+            y >= focus->drawable.y &&
+            x < focus->drawable.x + focus->drawable.width &&
+            y < focus->drawable.y + focus->drawable.height) {
+            if (!window) {
+                DebugF("Warp relative to pointer, assuming pointer focus\n");
+                xwl_window = xwl_seat->focus_window;
+            } else if (window == screen->root) {
+                DebugF("Warp on root window, assuming pointer focus\n");
+                xwl_window = xwl_seat->focus_window;
+            }
+        }
+    }
+    if (!xwl_window)
+        return;
+
+    xwl_seat_emulate_pointer_warp(xwl_seat, xwl_window, sprite, x, y);
+}
+
+static void
+xwl_cursor_confined_to(DeviceIntPtr device,
+                       ScreenPtr screen,
+                       WindowPtr window)
+{
+    struct xwl_screen *xwl_screen = xwl_screen_get(screen);
+    struct xwl_seat *xwl_seat = device->public.devicePrivate;
+    struct xwl_window *xwl_window;
+
+    if (!xwl_seat)
+        xwl_seat = xwl_screen_get_default_seat(xwl_screen);
+
+    if (window == screen->root) {
+        xwl_seat_unconfine_pointer(xwl_seat);
+        return;
+    }
+
+    xwl_window = xwl_window_from_window(window);
+    if (!xwl_window && xwl_seat->focus_window) {
+        /* Allow confining on InputOnly windows, but only if the geometry
+         * is the same than the focus window.
+         */
+        if (window->drawable.class == InputOnly) {
+            DebugF("Confine on InputOnly window, assuming pointer focus\n");
+            xwl_window = xwl_seat->focus_window;
+        }
+    }
+    if (!xwl_window)
+        return;
+
+    xwl_seat_confine_pointer(xwl_seat, xwl_window);
 }
 
 static void
@@ -223,9 +334,11 @@ xwl_realize_window(WindowPtr window)
     screen->RealizeWindow = xwl_realize_window;
 
     if (xwl_screen->rootless && !window->parent) {
+        BoxRec box = { 0, 0, xwl_screen->width, xwl_screen->height };
+
+        RegionReset(&window->winSize, &box);
         RegionNull(&window->clipList);
         RegionNull(&window->borderClip);
-        RegionNull(&window->winSize);
     }
 
     if (xwl_screen->rootless) {
@@ -319,7 +432,15 @@ xwl_unrealize_window(WindowPtr window)
     xorg_list_for_each_entry(xwl_seat, &xwl_screen->seat_list, link) {
         if (xwl_seat->focus_window && xwl_seat->focus_window->window == window)
             xwl_seat->focus_window = NULL;
-
+        if (xwl_seat->last_xwindow == window)
+            xwl_seat->last_xwindow = NullWindow;
+        if (xwl_seat->cursor_confinement_window &&
+            xwl_seat->cursor_confinement_window->window == window)
+            xwl_seat_unconfine_pointer(xwl_seat);
+        if (xwl_seat->pointer_warp_emulator &&
+            xwl_seat->pointer_warp_emulator->locked_window &&
+            xwl_seat->pointer_warp_emulator->locked_window->window == window)
+            xwl_seat_destroy_pointer_warp_emulator(xwl_seat);
         xwl_seat_clear_touch(xwl_seat, window);
     }
 
@@ -328,8 +449,7 @@ xwl_unrealize_window(WindowPtr window)
     xwl_screen->UnrealizeWindow = screen->UnrealizeWindow;
     screen->UnrealizeWindow = xwl_unrealize_window;
 
-    xwl_window =
-        dixLookupPrivate(&window->devPrivates, &xwl_window_private_key);
+    xwl_window = xwl_window_get(window);
     if (!xwl_window)
         return ret;
 
@@ -359,6 +479,8 @@ frame_callback(void *data,
                uint32_t time)
 {
     struct xwl_window *xwl_window = data;
+
+    wl_callback_destroy (xwl_window->frame_callback);
     xwl_window->frame_callback = NULL;
 }
 
@@ -446,7 +568,7 @@ global_remove(void *data, struct wl_registry *registry, uint32_t name)
     xorg_list_for_each_entry_safe(xwl_output, tmp_xwl_output,
                                   &xwl_screen->output_list, link) {
         if (xwl_output->server_output_id == name) {
-            xwl_output_destroy(xwl_output);
+            xwl_output_remove(xwl_output);
             break;
         }
     }
@@ -458,20 +580,16 @@ static const struct wl_registry_listener registry_listener = {
 };
 
 static void
-wakeup_handler(void *data, int err, void *read_mask)
+xwl_read_events (struct xwl_screen *xwl_screen)
 {
-    struct xwl_screen *xwl_screen = data;
     int ret;
 
-    if (err < 0)
-        return;
-
-    if (!FD_ISSET(xwl_screen->wayland_fd, (fd_set *) read_mask))
+    if (xwl_screen->wait_flush)
         return;
 
     ret = wl_display_read_events(xwl_screen->display);
     if (ret == -1)
-        FatalError("failed to dispatch Wayland events: %s\n", strerror(errno));
+        FatalError("failed to read Wayland events: %s\n", strerror(errno));
 
     xwl_screen->prepare_read = 0;
 
@@ -480,13 +598,25 @@ wakeup_handler(void *data, int err, void *read_mask)
         FatalError("failed to dispatch Wayland events: %s\n", strerror(errno));
 }
 
-static void
-block_handler(void *data, struct timeval **tv, void *read_mask)
+static int
+xwl_display_pollout (struct xwl_screen *xwl_screen, int timeout)
 {
-    struct xwl_screen *xwl_screen = data;
-    int ret;
+    struct pollfd poll_fd;
 
-    xwl_screen_post_damage(xwl_screen);
+    poll_fd.fd = wl_display_get_fd(xwl_screen->display);
+    poll_fd.events = POLLOUT;
+
+    return xserver_poll(&poll_fd, 1, timeout);
+}
+
+static void
+xwl_dispatch_events (struct xwl_screen *xwl_screen)
+{
+    int ret = 0;
+    int ready;
+
+    if (xwl_screen->wait_flush)
+        goto pollout;
 
     while (xwl_screen->prepare_read == 0 &&
            wl_display_prepare_read(xwl_screen->display) == -1) {
@@ -498,9 +628,47 @@ block_handler(void *data, struct timeval **tv, void *read_mask)
 
     xwl_screen->prepare_read = 1;
 
-    ret = wl_display_flush(xwl_screen->display);
-    if (ret == -1)
+pollout:
+    ready = xwl_display_pollout(xwl_screen, 5);
+    if (ready == -1 && errno != EINTR)
+        FatalError("error polling on XWayland fd: %s\n", strerror(errno));
+
+    if (ready > 0)
+        ret = wl_display_flush(xwl_screen->display);
+
+    if (ret == -1 && errno != EAGAIN)
         FatalError("failed to write to XWayland fd: %s\n", strerror(errno));
+
+    xwl_screen->wait_flush = (ready == 0 || ready == -1 || ret == -1);
+}
+
+static void
+socket_handler(int fd, int ready, void *data)
+{
+    struct xwl_screen *xwl_screen = data;
+
+    xwl_read_events (xwl_screen);
+}
+
+static void
+wakeup_handler(void *data, int err)
+{
+}
+
+static void
+block_handler(void *data, void *timeout)
+{
+    struct xwl_screen *xwl_screen = data;
+
+    xwl_screen_post_damage(xwl_screen);
+    xwl_dispatch_events (xwl_screen);
+}
+
+void
+xwl_sync_events (struct xwl_screen *xwl_screen)
+{
+    xwl_dispatch_events (xwl_screen);
+    xwl_read_events (xwl_screen);
 }
 
 static CARD32
@@ -663,7 +831,7 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
 #endif
 
     xwl_screen->wayland_fd = wl_display_get_fd(xwl_screen->display);
-    AddGeneralSocket(xwl_screen->wayland_fd);
+    SetNotifyFd(xwl_screen->wayland_fd, socket_handler, X_NOTIFY_READ, xwl_screen);
     RegisterBlockAndWakeupHandlers(block_handler, wakeup_handler, xwl_screen);
 
     pScreen->SaveScreen = xwl_save_screen;
@@ -698,6 +866,9 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
 
     xwl_screen->CloseScreen = pScreen->CloseScreen;
     pScreen->CloseScreen = xwl_close_screen;
+
+    pScreen->CursorWarpedTo = xwl_cursor_warped_to;
+    pScreen->CursorConfinedTo = xwl_cursor_confined_to;
 
     return ret;
 }
@@ -740,8 +911,9 @@ InitOutput(ScreenInfo * screen_info, int argc, char **argv)
     screen_info->bitmapBitOrder = BITMAP_BIT_ORDER;
     screen_info->numPixmapFormats = ARRAY_SIZE(depths);
 
-    LoadExtensionList(xwayland_extensions,
-                      ARRAY_SIZE(xwayland_extensions), FALSE);
+    if (serverGeneration == 1)
+        LoadExtensionList(xwayland_extensions,
+                          ARRAY_SIZE(xwayland_extensions), FALSE);
 
     /* Cast away warning from missing printf annotation for
      * wl_log_func_t.  Wayland 1.5 will have the annotation, so we can

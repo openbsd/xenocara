@@ -50,14 +50,14 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@ENABLE_UNIT_TESTS_TRUE@noinst_PROGRAMS = list$(EXEEXT) \
-@ENABLE_UNIT_TESTS_TRUE@	string$(EXEEXT) $(am__EXEEXT_1) \
-@ENABLE_UNIT_TESTS_TRUE@	$(am__EXEEXT_2)
 # Tests that require at least some DDX functions in order to fully link
 # For now, requires xf86 ddx, could be adjusted to use another
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__append_1 = xi1 xi2
-@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__append_2 = xkb input xtest misc fixes xfree86 os signal-logging touch
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__append_2 = xkb input xtest misc fixes xfree86 signal-logging touch
 @ENABLE_UNIT_TESTS_TRUE@@RES_TRUE@@XORG_TRUE@am__append_3 = hashtabletest
+@ENABLE_UNIT_TESTS_TRUE@noinst_PROGRAMS = simple-xinit$(EXEEXT) \
+@ENABLE_UNIT_TESTS_TRUE@	$(am__EXEEXT_3)
+@ENABLE_UNIT_TESTS_TRUE@TESTS = $(am__EXEEXT_3) $(am__EXEEXT_4)
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__append_4 = -I$(top_srcdir)/hw/xfree86/parser \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	-I$(top_srcdir)/hw/xfree86/ddc \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	-I$(top_srcdir)/hw/xfree86/i2c -I$(top_srcdir)/hw/xfree86/modes \
@@ -75,7 +75,7 @@ host_triplet = @host@
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            $(top_builddir)/hw/xfree86/ramdac/libramdac.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            $(top_builddir)/hw/xfree86/ddc/libddc.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            $(top_builddir)/hw/xfree86/i2c/libi2c.la \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            $(top_builddir)/hw/xfree86/dixmods/libxorgxkb.la \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            $(top_builddir)/hw/xfree86/xkb/libxorgxkb.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            $(top_builddir)/Xext/libXvidmode.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            @XORG_LIBS@
 
@@ -126,9 +126,10 @@ DIST_COMMON = README $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/depcomp
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_dir.m4 \
-	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
-	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
-	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/configure.ac
+	$(top_srcdir)/m4/ax_pthread.m4 $(top_srcdir)/m4/libtool.m4 \
+	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
+	$(top_srcdir)/m4/ltversion.m4 $(top_srcdir)/m4/lt~obsolete.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -152,7 +153,7 @@ am__DEPENDENCIES_1 =
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	$(top_builddir)/hw/xfree86/ramdac/libramdac.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	$(top_builddir)/hw/xfree86/ddc/libddc.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	$(top_builddir)/hw/xfree86/i2c/libi2c.la \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	$(top_builddir)/hw/xfree86/dixmods/libxorgxkb.la \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	$(top_builddir)/hw/xfree86/xkb/libxorgxkb.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	$(top_builddir)/Xext/libXvidmode.la
 @ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@nodist_libxservertest_la_OBJECTS =  \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@	ddxstubs.lo miinitext.lo
@@ -170,10 +171,11 @@ am__v_lt_1 =
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	misc$(EXEEXT) \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	fixes$(EXEEXT) \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	xfree86$(EXEEXT) \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	os$(EXEEXT) \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	signal-logging$(EXEEXT) \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	touch$(EXEEXT)
 @ENABLE_UNIT_TESTS_TRUE@@RES_TRUE@@XORG_TRUE@am__EXEEXT_2 = hashtabletest$(EXEEXT)
+@ENABLE_UNIT_TESTS_TRUE@am__EXEEXT_3 = list$(EXEEXT) string$(EXEEXT) \
+@ENABLE_UNIT_TESTS_TRUE@	$(am__EXEEXT_1) $(am__EXEEXT_2)
 PROGRAMS = $(noinst_PROGRAMS)
 fixes_SOURCES = fixes.c
 fixes_OBJECTS = fixes.$(OBJEXT)
@@ -199,13 +201,13 @@ list_LDADD = $(LDADD)
 misc_SOURCES = misc.c
 misc_OBJECTS = misc.$(OBJEXT)
 @ENABLE_UNIT_TESTS_TRUE@misc_DEPENDENCIES = $(am__DEPENDENCIES_4)
-os_SOURCES = os.c
-os_OBJECTS = os.$(OBJEXT)
-@ENABLE_UNIT_TESTS_TRUE@os_DEPENDENCIES = $(am__DEPENDENCIES_4)
 signal_logging_SOURCES = signal-logging.c
 signal_logging_OBJECTS = signal-logging.$(OBJEXT)
 @ENABLE_UNIT_TESTS_TRUE@signal_logging_DEPENDENCIES =  \
 @ENABLE_UNIT_TESTS_TRUE@	$(am__DEPENDENCIES_4)
+simple_xinit_SOURCES = simple-xinit.c
+simple_xinit_OBJECTS = simple-xinit.$(OBJEXT)
+simple_xinit_LDADD = $(LDADD)
 string_SOURCES = string.c
 string_OBJECTS = string.$(OBJEXT)
 string_LDADD = $(LDADD)
@@ -256,10 +258,11 @@ am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = $(nodist_libxservertest_la_SOURCES) fixes.c hashtabletest.c \
-	input.c list.c misc.c os.c signal-logging.c string.c touch.c \
-	xfree86.c xkb.c xtest.c
-DIST_SOURCES = fixes.c hashtabletest.c input.c list.c misc.c os.c \
-	signal-logging.c string.c touch.c xfree86.c xkb.c xtest.c
+	input.c list.c misc.c signal-logging.c simple-xinit.c string.c \
+	touch.c xfree86.c xkb.c xtest.c
+DIST_SOURCES = fixes.c hashtabletest.c input.c list.c misc.c \
+	signal-logging.c simple-xinit.c string.c touch.c xfree86.c \
+	xkb.c xtest.c
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	html-recursive info-recursive install-data-recursive \
 	install-dvi-recursive install-exec-recursive \
@@ -283,6 +286,8 @@ am__tty_colors_dummy = \
   mgn= red= grn= lgn= blu= brg= std=; \
   am__color_tests=no
 am__tty_colors = $(am__tty_colors_dummy)
+@ENABLE_UNIT_TESTS_TRUE@am__EXEEXT_4 = $(XVFB_TESTS) \
+@ENABLE_UNIT_TESTS_TRUE@	$(XEPHYR_GLAMOR_TESTS)
 DIST_SUBDIRS = . xi1 xi2
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 am__relativize = \
@@ -485,6 +490,9 @@ PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 PROJECTROOT = @PROJECTROOT@
+PTHREAD_CC = @PTHREAD_CC@
+PTHREAD_CFLAGS = @PTHREAD_CFLAGS@
+PTHREAD_LIBS = @PTHREAD_LIBS@
 PYTHON3 = @PYTHON3@
 RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
@@ -515,7 +523,10 @@ UDEV_LIBS = @UDEV_LIBS@
 UTILS_SYS_LIBS = @UTILS_SYS_LIBS@
 VENDOR_NAME_SHORT = @VENDOR_NAME_SHORT@
 VERSION = @VERSION@
+WAYLAND_PROTOCOLS_DATADIR = @WAYLAND_PROTOCOLS_DATADIR@
 WAYLAND_SCANNER = @WAYLAND_SCANNER@
+WINDOWSDRI_CFLAGS = @WINDOWSDRI_CFLAGS@
+WINDOWSDRI_LIBS = @WINDOWSDRI_LIBS@
 WINDOWSWM_CFLAGS = @WINDOWSWM_CFLAGS@
 WINDOWSWM_LIBS = @WINDOWSWM_LIBS@
 WINDRES = @WINDRES@
@@ -610,6 +621,7 @@ am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
 am__tar = @am__tar@
 am__untar = @am__untar@
+ax_pthread_config = @ax_pthread_config@
 bindir = @bindir@
 build = @build@
 build_alias = @build_alias@
@@ -658,9 +670,22 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 @ENABLE_UNIT_TESTS_TRUE@SUBDIRS = . $(am__append_1)
+@ENABLE_UNIT_TESTS_TRUE@TEST_PROGS = list string $(am__append_2) \
+@ENABLE_UNIT_TESTS_TRUE@	$(am__append_3)
 @ENABLE_UNIT_TESTS_TRUE@check_LTLIBRARIES = libxservertest.la
-@ENABLE_UNIT_TESTS_TRUE@TESTS = $(noinst_PROGRAMS)
-@ENABLE_UNIT_TESTS_TRUE@TESTS_ENVIRONMENT = $(XORG_MALLOC_DEBUG_ENV)
+@ENABLE_UNIT_TESTS_TRUE@@XVFB_TRUE@XVFB_TESTS = scripts/xvfb-piglit.sh
+@ENABLE_UNIT_TESTS_TRUE@@GLAMOR_TRUE@@XEPHYR_TRUE@@XVFB_TRUE@XEPHYR_GLAMOR_TESTS = scripts/xephyr-glamor-piglit.sh
+@ENABLE_UNIT_TESTS_TRUE@SCRIPT_TESTS = \
+@ENABLE_UNIT_TESTS_TRUE@	$(XVFB_TESTS) \
+@ENABLE_UNIT_TESTS_TRUE@	$(XEPHYR_GLAMOR_TESTS) \
+@ENABLE_UNIT_TESTS_TRUE@	$(NULL)
+
+@ENABLE_UNIT_TESTS_TRUE@TESTS_ENVIRONMENT = \
+@ENABLE_UNIT_TESTS_TRUE@	XSERVER_DIR=$(abs_top_srcdir) \
+@ENABLE_UNIT_TESTS_TRUE@	XSERVER_BUILDDIR=$(abs_top_builddir) \
+@ENABLE_UNIT_TESTS_TRUE@	$(XORG_MALLOC_DEBUG_ENV) \
+@ENABLE_UNIT_TESTS_TRUE@	$(NULL)
+
 @ENABLE_UNIT_TESTS_TRUE@AM_CFLAGS = $(DIX_CFLAGS) @XORG_CFLAGS@
 @ENABLE_UNIT_TESTS_TRUE@AM_CPPFLAGS = $(XORG_INCS) $(am__append_4)
 @ENABLE_UNIT_TESTS_TRUE@TEST_LDADD = libxservertest.la \
@@ -676,7 +701,6 @@ top_srcdir = @top_srcdir@
 @ENABLE_UNIT_TESTS_TRUE@touch_LDADD = $(TEST_LDADD)
 @ENABLE_UNIT_TESTS_TRUE@signal_logging_LDADD = $(TEST_LDADD)
 @ENABLE_UNIT_TESTS_TRUE@hashtabletest_LDADD = $(TEST_LDADD)
-@ENABLE_UNIT_TESTS_TRUE@os_LDADD = $(TEST_LDADD)
 @ENABLE_UNIT_TESTS_TRUE@libxservertest_la_LIBADD = $(XSERVER_LIBS) \
 @ENABLE_UNIT_TESTS_TRUE@	$(am__append_6) $(am__append_7) \
 @ENABLE_UNIT_TESTS_TRUE@	$(am__append_8) $(am__append_9) \
@@ -692,7 +716,14 @@ top_srcdir = @top_srcdir@
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@BUILT_SOURCES = sdksyms.c
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@CLEANFILES = sdksyms.c
 @ENABLE_UNIT_TESTS_TRUE@libxservertest_la_DEPENDENCIES = $(libxservertest_la_LIBADD)
-EXTRA_DIST = ddxstubs.c
+EXTRA_DIST = \
+	scripts/xvfb-piglit.sh \
+	scripts/xephyr-glamor-piglit.sh \
+	scripts/xinit-piglit-session.sh \
+	scripts/run-piglit.sh \
+	ddxstubs.c \
+	$(NULL)
+
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
@@ -765,12 +796,12 @@ list$(EXEEXT): $(list_OBJECTS) $(list_DEPENDENCIES) $(EXTRA_list_DEPENDENCIES)
 misc$(EXEEXT): $(misc_OBJECTS) $(misc_DEPENDENCIES) $(EXTRA_misc_DEPENDENCIES) 
 	@rm -f misc$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(misc_OBJECTS) $(misc_LDADD) $(LIBS)
-os$(EXEEXT): $(os_OBJECTS) $(os_DEPENDENCIES) $(EXTRA_os_DEPENDENCIES) 
-	@rm -f os$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(os_OBJECTS) $(os_LDADD) $(LIBS)
 signal-logging$(EXEEXT): $(signal_logging_OBJECTS) $(signal_logging_DEPENDENCIES) $(EXTRA_signal_logging_DEPENDENCIES) 
 	@rm -f signal-logging$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(signal_logging_OBJECTS) $(signal_logging_LDADD) $(LIBS)
+simple-xinit$(EXEEXT): $(simple_xinit_OBJECTS) $(simple_xinit_DEPENDENCIES) $(EXTRA_simple_xinit_DEPENDENCIES) 
+	@rm -f simple-xinit$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(simple_xinit_OBJECTS) $(simple_xinit_LDADD) $(LIBS)
 string$(EXEEXT): $(string_OBJECTS) $(string_DEPENDENCIES) $(EXTRA_string_DEPENDENCIES) 
 	@rm -f string$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(string_OBJECTS) $(string_LDADD) $(LIBS)
@@ -800,9 +831,9 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/list.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/miinitext.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/misc.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/os.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sdksyms.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/signal-logging.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/simple-xinit.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/string.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/touch.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xfree86.Po@am__quote@

@@ -32,7 +32,6 @@
 #include <unistd.h>
 #include <xf86.h>
 #include <xf86Crtc.h>
-#include <poll.h>
 #include "driver.h"
 #include "drmmode_display.h"
 
@@ -93,46 +92,68 @@ ms_crtc_on(xf86CrtcPtr crtc)
 
 /*
  * Return the crtc covering 'box'. If two crtcs cover a portion of
- * 'box', then prefer 'desired'. If 'desired' is NULL, then prefer the crtc
- * with greater coverage
+ * 'box', then prefer the crtc with greater coverage.
  */
 
-xf86CrtcPtr
-ms_covering_crtc(ScrnInfoPtr scrn,
-                 BoxPtr box, xf86CrtcPtr desired, BoxPtr crtc_box_ret)
+static xf86CrtcPtr
+ms_covering_crtc(ScreenPtr pScreen, BoxPtr box, Bool screen_is_ms)
 {
+    ScrnInfoPtr scrn = xf86ScreenToScrn(pScreen);
     xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(scrn);
     xf86CrtcPtr crtc, best_crtc;
     int coverage, best_coverage;
     int c;
     BoxRec crtc_box, cover_box;
+    Bool crtc_on;
 
     best_crtc = NULL;
     best_coverage = 0;
-    crtc_box_ret->x1 = 0;
-    crtc_box_ret->x2 = 0;
-    crtc_box_ret->y1 = 0;
-    crtc_box_ret->y2 = 0;
     for (c = 0; c < xf86_config->num_crtc; c++) {
         crtc = xf86_config->crtc[c];
 
+        if (screen_is_ms)
+            crtc_on = ms_crtc_on(crtc);
+        else
+            crtc_on = crtc->enabled;
+
         /* If the CRTC is off, treat it as not covering */
-        if (!ms_crtc_on(crtc))
+        if (!crtc_on)
             continue;
 
         ms_crtc_box(crtc, &crtc_box);
         ms_box_intersect(&cover_box, &crtc_box, box);
         coverage = ms_box_area(&cover_box);
-        if (coverage && crtc == desired) {
-            *crtc_box_ret = crtc_box;
-            return crtc;
-        }
         if (coverage > best_coverage) {
-            *crtc_box_ret = crtc_box;
             best_crtc = crtc;
             best_coverage = coverage;
         }
     }
+
+    /* Fallback to primary crtc for drawable's on slave outputs */
+    if (best_crtc == NULL && !pScreen->isGPU) {
+        RROutputPtr primary_output = NULL;
+        ScreenPtr slave;
+
+        if (dixPrivateKeyRegistered(rrPrivKey))
+            primary_output = RRFirstOutput(scrn->pScreen);
+        if (!primary_output || !primary_output->crtc)
+            return NULL;
+
+        crtc = primary_output->crtc->devPrivate;
+        if (!ms_crtc_on(crtc))
+            return NULL;
+
+        xorg_list_for_each_entry(slave, &pScreen->slave_list, slave_head) {
+            if (!slave->is_output_slave)
+                continue;
+
+            if (ms_covering_crtc(slave, box, FALSE)) {
+                /* The drawable is on a slave output, return primary crtc */
+                return crtc;
+            }
+        }
+    }
+
     return best_crtc;
 }
 
@@ -140,15 +161,14 @@ xf86CrtcPtr
 ms_dri2_crtc_covering_drawable(DrawablePtr pDraw)
 {
     ScreenPtr pScreen = pDraw->pScreen;
-    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
-    BoxRec box, crtcbox;
+    BoxRec box;
 
     box.x1 = pDraw->x;
     box.y1 = pDraw->y;
     box.x2 = box.x1 + pDraw->width;
     box.y2 = box.y1 + pDraw->height;
 
-    return ms_covering_crtc(pScrn, &box, NULL, &crtcbox);
+    return ms_covering_crtc(pScreen, &box, TRUE);
 }
 
 static Bool
@@ -244,18 +264,16 @@ ms_crtc_msc_to_kernel_msc(xf86CrtcPtr crtc, uint64_t expect)
  * Check for pending DRM events and process them.
  */
 static void
-ms_drm_wakeup_handler(void *data, int err, void *mask)
+ms_drm_socket_handler(int fd, int ready, void *data)
 {
     ScreenPtr screen = data;
     ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
     modesettingPtr ms = modesettingPTR(scrn);
-    fd_set *read_mask = mask;
 
-    if (data == NULL || err < 0)
+    if (data == NULL)
         return;
 
-    if (FD_ISSET(ms->fd, read_mask))
-        drmHandleEvent(ms->fd, &ms->event_context);
+    drmHandleEvent(fd, &ms->event_context);
 }
 
 /*
@@ -384,7 +402,7 @@ ms_vblank_screen_init(ScreenPtr screen)
     modesettingEntPtr ms_ent = ms_ent_priv(scrn);
     xorg_list_init(&ms_drm_queue);
 
-    ms->event_context.version = DRM_EVENT_CONTEXT_VERSION;
+    ms->event_context.version = 2;
     ms->event_context.vblank_handler = ms_drm_handler;
     ms->event_context.page_flip_handler = ms_drm_handler;
 
@@ -393,9 +411,7 @@ ms_vblank_screen_init(ScreenPtr screen)
      * registration within ScreenInit and not PreInit.
      */
     if (ms_ent->fd_wakeup_registered != serverGeneration) {
-        AddGeneralSocket(ms->fd);
-        RegisterBlockAndWakeupHandlers((BlockHandlerProcPtr)NoopDDA,
-                                       ms_drm_wakeup_handler, screen);
+        SetNotifyFd(ms->fd, ms_drm_socket_handler, X_NOTIFY_READ, screen);
         ms_ent->fd_wakeup_registered = serverGeneration;
         ms_ent->fd_wakeup_ref = 1;
     } else
@@ -415,8 +431,6 @@ ms_vblank_close_screen(ScreenPtr screen)
 
     if (ms_ent->fd_wakeup_registered == serverGeneration &&
         !--ms_ent->fd_wakeup_ref) {
-        RemoveBlockAndWakeupHandlers((BlockHandlerProcPtr)NoopDDA,
-                                     ms_drm_wakeup_handler, screen);
-        RemoveGeneralSocket(ms->fd);
+        RemoveNotifyFd(ms->fd);
     }
 }

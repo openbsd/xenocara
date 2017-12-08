@@ -40,6 +40,8 @@
 #endif
 
 struct glamor_context;
+struct gbm_bo;
+struct gbm_device;
 
 /*
  * glamor_pixmap_type : glamor pixmap's type.
@@ -114,7 +116,6 @@ extern _X_EXPORT void glamor_set_pixmap_texture(PixmapPtr pixmap,
 
 extern _X_EXPORT void glamor_set_pixmap_type(PixmapPtr pixmap,
                                              glamor_pixmap_type_t type);
-extern _X_EXPORT void glamor_destroy_textured_pixmap(PixmapPtr pixmap);
 extern _X_EXPORT void glamor_block_handler(ScreenPtr screen);
 
 extern _X_EXPORT PixmapPtr glamor_create_pixmap(ScreenPtr screen, int w, int h,
@@ -143,18 +144,11 @@ extern _X_EXPORT void glamor_pixmap_exchange_fbos(PixmapPtr front,
 
 /* The DDX is not supposed to call these three functions */
 extern _X_EXPORT void glamor_enable_dri3(ScreenPtr screen);
-extern _X_EXPORT unsigned int glamor_egl_create_argb8888_based_texture(ScreenPtr
-                                                                       screen,
-                                                                       int w,
-                                                                       int h,
-                                                                       Bool linear);
 extern _X_EXPORT int glamor_egl_dri3_fd_name_from_tex(ScreenPtr, PixmapPtr,
                                                       unsigned int, Bool,
                                                       CARD16 *, CARD32 *);
 
-extern void glamor_egl_destroy_pixmap_image(PixmapPtr pixmap);
-
-extern _X_EXPORT void *glamor_egl_get_gbm_device(ScreenPtr screen);
+extern _X_EXPORT struct gbm_device *glamor_egl_get_gbm_device(ScreenPtr screen);
 
 /* @glamor_supports_pixmap_import_export: Returns whether
  * glamor_fd_from_pixmap(), glamor_name_from_pixmap(), and
@@ -187,6 +181,26 @@ extern _X_EXPORT int glamor_fd_from_pixmap(ScreenPtr screen,
                                            PixmapPtr pixmap,
                                            CARD16 *stride, CARD32 *size);
 
+/* @glamor_shareable_fd_from_pixmap: Get a dma-buf fd suitable for sharing
+ *				     with other GPUs from a pixmap.
+ *
+ * @screen: Current screen pointer.
+ * @pixmap: The pixmap from which we want the fd.
+ * @stride, @size: Pointers to fill the stride and size of the
+ * 		   buffer associated to the fd.
+ *
+ * The returned fd will point to a buffer which is suitable for sharing
+ * across GPUs (not using GPU specific tiling).
+ * The pixmap and the buffer associated by the fd will share the same
+ * content.
+ * The pixmap's stride may be modified by this function.
+ * Returns the fd on success, -1 on error.
+ * */
+extern _X_EXPORT int glamor_shareable_fd_from_pixmap(ScreenPtr screen,
+                                                     PixmapPtr pixmap,
+                                                     CARD16 *stride,
+                                                     CARD32 *size);
+
 /**
  * @glamor_name_from_pixmap: Gets a gem name from a pixmap.
  *
@@ -214,8 +228,8 @@ extern _X_EXPORT int glamor_name_from_pixmap(PixmapPtr pixmap,
  *
  * Returns the gbm_bo on success, NULL on error.
  * */
-extern _X_EXPORT void *glamor_gbm_bo_from_pixmap(ScreenPtr screen,
-                                                 PixmapPtr pixmap);
+extern _X_EXPORT struct gbm_bo *glamor_gbm_bo_from_pixmap(ScreenPtr screen,
+                                                          PixmapPtr pixmap);
 
 /* @glamor_pixmap_from_fd: Creates a pixmap to wrap a dma-buf fd.
  *
@@ -322,13 +336,13 @@ extern _X_EXPORT Bool glamor_egl_create_textured_pixmap(PixmapPtr pixmap,
  * This function is similar to glamor_egl_create_textured_pixmap.
  */
 extern _X_EXPORT Bool
- glamor_egl_create_textured_pixmap_from_gbm_bo(PixmapPtr pixmap, void *bo);
+ glamor_egl_create_textured_pixmap_from_gbm_bo(PixmapPtr pixmap,
+                                               struct gbm_bo *bo);
 
 #endif
 
 extern _X_EXPORT void glamor_egl_screen_init(ScreenPtr screen,
                                              struct glamor_context *glamor_ctx);
-extern _X_EXPORT void glamor_egl_destroy_textured_pixmap(PixmapPtr pixmap);
 
 extern _X_EXPORT int glamor_create_gc(GCPtr gc);
 

@@ -35,9 +35,11 @@
 #ifdef HAVE_XWIN_CONFIG_H
 #include <xwin-config.h>
 #endif
+
 #include "win.h"
 #include "dixevents.h"
 #include "winmultiwindowclass.h"
+#include "winmultiwindowicons.h"
 
 /*
  * Prototypes for local functions
@@ -485,7 +487,6 @@ winCreateWindowsWindow(WindowPtr pWin)
     HWND hFore = NULL;
 
     winWindowPriv(pWin);
-    winPrivScreenPtr pScreenPriv = pWinPriv->pScreenPriv;
     WinXSizeHints hints;
     Window daddyId;
     DWORD dwStyle, dwExStyle;
@@ -606,9 +607,6 @@ winCreateWindowsWindow(WindowPtr pWin)
 
     /* Flag that this Windows window handles its own activation */
     SetProp(hWnd, WIN_NEEDMANAGE_PROP, (HANDLE) 0);
-
-    /* Call engine-specific create window procedure */
-    (*pScreenPriv->pwinFinishCreateWindowsWindow) (pWin);
 }
 
 Bool winInDestroyWindowsWindow = FALSE;
@@ -799,56 +797,6 @@ winReorderWindowsMultiWindow(void)
     }
 
     fRestacking = FALSE;
-}
-
-/*
- * winMinimizeWindow - Minimize in response to WM_CHANGE_STATE
- */
-
-void
-winMinimizeWindow(Window id)
-{
-    WindowPtr pWin;
-    winPrivWinPtr pWinPriv;
-
-#ifdef XWIN_MULTIWINDOWEXTWM
-    win32RootlessWindowPtr pRLWinPriv;
-#endif
-    HWND hWnd;
-    ScreenPtr pScreen = NULL;
-    winPrivScreenPtr pScreenPriv = NULL;
-
-#if CYGWINDOWING_DEBUG
-    ErrorF("winMinimizeWindow\n");
-#endif
-
-    dixLookupResourceByType((void *) &pWin, id, RT_WINDOW, NullClient,
-                            DixUnknownAccess);
-    if (!pWin) {
-        ErrorF("%s: NULL pWin. Leaving\n", __FUNCTION__);
-        return;
-    }
-
-    pScreen = pWin->drawable.pScreen;
-    if (pScreen)
-        pScreenPriv = winGetScreenPriv(pScreen);
-
-#ifdef XWIN_MULTIWINDOWEXTWM
-    if (pScreenPriv && pScreenPriv->pScreenInfo->fInternalWM) {
-        pRLWinPriv =
-            (win32RootlessWindowPtr) RootlessFrameForWindow(pWin, FALSE);
-        hWnd = pRLWinPriv->hWnd;
-    }
-    else
-#else
-    if (pScreenPriv)
-#endif
-    {
-        pWinPriv = winGetWindowPriv(pWin);
-        hWnd = pWinPriv->hWnd;
-    }
-
-    ShowWindow(hWnd, SW_MINIMIZE);
 }
 
 /*

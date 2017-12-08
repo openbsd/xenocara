@@ -66,29 +66,23 @@ typedef struct {
 
     Bool glamor;
     Bool shadow_enable;
+    Bool shadow_enable2;
     /** Is Option "PageFlip" enabled? */
     Bool pageflip;
     Bool force_24_32;
     void *shadow_fb;
-
-    /**
-     * A screen-sized pixmap when we're doing triple-buffered DRI2
-     * pageflipping.
-     *
-     * One is shared between all drawables that flip to the front
-     * buffer, and it only gets reallocated when root pixmap size
-     * changes.
-     */
-    PixmapPtr triple_buffer_pixmap;
-
-    /** The GEM name for triple_buffer_pixmap */
-    uint32_t triple_buffer_name;
+    void *shadow_fb2;
 
     DevPrivateKeyRec pixmapPrivateKeyRec;
 
     Bool reverse_prime_offload_mode;
 
     Bool is_secondary;
+
+    PixmapPtr fbcon_pixmap;
+
+    Bool dri2_flipping;
+    Bool present_flipping;
 } drmmode_rec, *drmmode_ptr;
 
 typedef struct {
@@ -98,12 +92,17 @@ typedef struct {
     int dpms_mode;
     struct dumb_bo *cursor_bo;
     Bool cursor_up;
+    Bool set_cursor2_failed;
+    Bool first_cursor_load_done;
     uint16_t lut_r[256], lut_g[256], lut_b[256];
-    DamagePtr slave_damage;
 
     drmmode_bo rotate_bo;
     unsigned rotate_fb_id;
+
+    PixmapPtr prime_pixmap;
+    PixmapPtr prime_pixmap_back;
     unsigned prime_pixmap_x;
+
     /**
      * @{ MSC (vblank count) handling for the PRESENT extension.
      *
@@ -117,6 +116,9 @@ typedef struct {
     /** @} */
 
     Bool need_modeset;
+
+    Bool enable_flipping;
+    Bool flipping_active;
 } drmmode_crtc_private_rec, *drmmode_crtc_private_ptr;
 
 typedef struct {
@@ -143,6 +145,18 @@ typedef struct {
 typedef struct _msPixmapPriv {
     uint32_t fb_id;
     struct dumb_bo *backing_bo; /* if this pixmap is backed by a dumb bo */
+
+    DamagePtr slave_damage;
+
+    /** Sink fields for flipping shared pixmaps */
+    int flip_seq; /* seq of current page flip event handler */
+    Bool wait_for_damage; /* if we have requested damage notification from source */
+
+    /** Source fields for flipping shared pixmaps */
+    Bool defer_dirty_update; /* if we want to manually update */
+    PixmapDirtyUpdatePtr dirty; /* cached dirty ent to avoid searching list */
+    PixmapPtr slave_src; /* if we exported shared pixmap, dirty tracking src */
+    Bool notify_on_damage; /* if sink has requested damage notification */
 } msPixmapPrivRec, *msPixmapPrivPtr;
 
 extern DevPrivateKeyRec msPixmapPrivateKeyRec;
@@ -151,7 +165,6 @@ extern DevPrivateKeyRec msPixmapPrivateKeyRec;
 
 #define msGetPixmapPriv(drmmode, p) ((msPixmapPrivPtr)dixGetPrivateAddr(&(p)->devPrivates, &(drmmode)->pixmapPrivateKeyRec))
 
-Bool drmmode_bo_for_pixmap(drmmode_ptr drmmode, drmmode_bo *bo, PixmapPtr pixmap);
 int drmmode_bo_destroy(drmmode_ptr drmmode, drmmode_bo *bo);
 uint32_t drmmode_bo_get_pitch(drmmode_bo *bo);
 uint32_t drmmode_bo_get_handle(drmmode_bo *bo);
@@ -161,9 +174,17 @@ Bool drmmode_SetSlaveBO(PixmapPtr ppix,
                         drmmode_ptr drmmode,
                         int fd_handle, int pitch, int size);
 
+Bool drmmode_EnableSharedPixmapFlipping(xf86CrtcPtr crtc, drmmode_ptr drmmode,
+                                        PixmapPtr front, PixmapPtr back);
+Bool drmmode_SharedPixmapPresentOnVBlank(PixmapPtr frontTarget, xf86CrtcPtr crtc,
+                                         drmmode_ptr drmmode);
+Bool drmmode_SharedPixmapFlip(PixmapPtr frontTarget, xf86CrtcPtr crtc,
+                              drmmode_ptr drmmode);
+void drmmode_DisableSharedPixmapFlipping(xf86CrtcPtr crtc, drmmode_ptr drmmode);
+
 extern Bool drmmode_pre_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int cpp);
 void drmmode_adjust_frame(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int x, int y);
-extern Bool drmmode_set_desired_modes(ScrnInfoPtr pScrn, drmmode_ptr drmmode);
+extern Bool drmmode_set_desired_modes(ScrnInfoPtr pScrn, drmmode_ptr drmmode, Bool set_hw);
 extern Bool drmmode_setup_colormap(ScreenPtr pScreen, ScrnInfoPtr pScrn);
 
 extern void drmmode_uevent_init(ScrnInfoPtr scrn, drmmode_ptr drmmode);
@@ -176,7 +197,7 @@ void drmmode_free_bos(ScrnInfoPtr pScrn, drmmode_ptr drmmode);
 void drmmode_get_default_bpp(ScrnInfoPtr pScrn, drmmode_ptr drmmmode,
                              int *depth, int *bpp);
 
-
+void drmmode_copy_fb(ScrnInfoPtr pScrn, drmmode_ptr drmmode);
 #ifndef DRM_CAP_DUMB_PREFERRED_DEPTH
 #define DRM_CAP_DUMB_PREFERRED_DEPTH 3
 #endif

@@ -511,15 +511,6 @@ core file.
 In general you never want to use this option unless you are debugging an Xorg
 server problem and know how to deal with the consequences.
 .TP 7
-.BI "Option \*qUseSIGIO\*q  \*q" boolean \*q
-This controls whether the Xorg server requests that events from
-input devices be reported via a SIGIO signal handler (also known as SIGPOLL
-on some platforms), or only reported via the standard select(3) loop.
-The default behaviour is platform specific.   In general you do not want to
-use this option unless you are debugging the Xorg server, or
-working around a specific bug until it is fixed, and understand the
-consequences.
-.TP 7
 .BI "Option \*qDontVTSwitch\*q  \*q" boolean \*q
 This disallows the use of the
 .BI Ctrl+Alt+F n
@@ -640,9 +631,6 @@ Default: PM enabled on platforms that support it.
 .BI "Option \*qXinerama\*q  \*q" boolean \*q
 enable or disable XINERAMA extension.
 Default is disabled.
-.TP 7
-.BI "Option \*qAIGLX\*q \*q" boolean \*q
-enable or disable AIGLX. AIGLX is enabled by default.
 .TP 7
 .BI "Option \*qIndirectGLX\*q \*q" boolean \*q
 enable or disable indirect GLX contexts. Indirect GLX contexts are disabled by
@@ -1096,6 +1084,7 @@ attribute. For example:
 .B  "    # either gizmo or gadget
 .B  "    MatchProduct \*qexample\*q
 .B  "    MatchProduct \*qgizmo|gadget\*q
+.B  "    NoMatchDriver \*qdrivername\*q
 .I  "    ..."
 .B  "EndSection"
 .fi
@@ -1164,6 +1153,20 @@ if no named
 .B ServerLayout
 sections have been found.
 .PP
+The above directives have equivalents for negative matching with the
+.B NoMatchProduct,
+.B NoMatchVendor,
+.B NoMatchDevicePath,
+.B NoMatchOS,
+.B NoMatchPnPID,
+.B NoMatchUSBID,
+.B NoMatchDriver,
+.B NoMatchTag,
+and
+.B NoMatchLayout
+directives. These NoMatch directives match if the subsequent match is not
+met by the device.
+.PP
 The second type of entry is used to match device types. These entries take a
 boolean argument similar to
 .B Option
@@ -1176,6 +1179,8 @@ entries.
 .BI "MatchIsJoystick     \*q" bool \*q
 .TP 7
 .BI "MatchIsTablet       \*q" bool \*q
+.TP 7
+.BI "MatchIsTabletPad    \*q" bool \*q
 .TP 7
 .BI "MatchIsTouchpad     \*q" bool \*q
 .TP 7
@@ -2027,6 +2032,12 @@ below.
 Note that disabling an operation will have no effect if the operation is
 not accelerated (whether due to lack of support in the hardware or in the
 driver).
+.TP 7
+.BI "Option \*qGlxVendorLibrary\*q \*q" string \*q
+This option specifies a space-separated list of OpenGL vendor libraries to
+use for the screen. This may be used to select an alternate implementation
+for development, debugging, or alternate feature sets.
+Default: mesa.
 .TP 7
 .BI "Option \*qInitPrimary\*q \*q" boolean \*q
 Use the Int10 module to initialize the primary graphics card.

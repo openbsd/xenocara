@@ -194,10 +194,6 @@ winMWExtWMUpdateWindowDecoration(win32RootlessWindowPtr pRLWinPriv,
     /* Get current window placement */
     GetWindowPlacement(pRLWinPriv->hWnd, &wndPlace);
 
-    if (winIsInternalWMRunning(pScreenInfo)) {
-        if (!pRLWinPriv->pFrame->win->overrideRedirect)
-            fDecorate = TRUE;
-    }
 #if 0
     if (wndPlace.showCmd == SW_HIDE)
         return;                 //showCmd = SWP_HIDEWINDOW;
@@ -345,15 +341,6 @@ winMWExtWMUpdateWindowDecoration(win32RootlessWindowPtr pRLWinPriv,
 }
 
 /*
- * winIsInternalWMRunning (winScreenInfoPtr pScreenInfo)
- */
-Bool
-winIsInternalWMRunning(winScreenInfoPtr pScreenInfo)
-{
-    return pScreenInfo->fInternalWM && !pScreenInfo->fAnotherWMRunning;
-}
-
-/*
  * winMWExtWMRestackWindows
  */
 
@@ -402,7 +389,7 @@ winMWExtWMRestackWindows(ScreenPtr pScreen)
 
 #if CYGMULTIWINDOW_DEBUG
                 winDebug
-                    ("winMWExtWMRestackWindows - DeferWindowPos (%08x, %08x)\n",
+                    ("winMWExtWMRestackWindows - DeferWindowPos (%p, %p)\n",
                      pRLWin->hWnd, pRLWinPrev ? pRLWinPrev->hWnd : HWND_TOP);
 #endif
                 hWinPosInfo = DeferWindowPos(hWinPosInfo, pRLWin->hWnd,

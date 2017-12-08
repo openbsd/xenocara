@@ -132,6 +132,13 @@ FreePixmap(PixmapPtr pPixmap)
     free(pPixmap);
 }
 
+void PixmapUnshareSlavePixmap(PixmapPtr slave_pixmap)
+{
+     int ihandle = -1;
+     ScreenPtr pScreen = slave_pixmap->drawable.pScreen;
+     pScreen->SetSharedPixmapBacking(slave_pixmap, ((void *)(long)ihandle));
+}
+
 PixmapPtr PixmapShareToSlave(PixmapPtr pixmap, ScreenPtr slave)
 {
     PixmapPtr spix;
@@ -165,6 +172,14 @@ PixmapPtr PixmapShareToSlave(PixmapPtr pixmap, ScreenPtr slave)
     return spix;
 }
 
+static void
+PixmapDirtyDamageDestroy(DamagePtr damage, void *closure)
+{
+    PixmapDirtyUpdatePtr dirty = closure;
+
+    dirty->damage = NULL;
+}
+
 Bool
 PixmapStartDirtyTracking(PixmapPtr src,
                          PixmapPtr slave_dst,
@@ -188,10 +203,10 @@ PixmapStartDirtyTracking(PixmapPtr src,
     dirty_update->dst_x = dst_x;
     dirty_update->dst_y = dst_y;
     dirty_update->rotation = rotation;
-    dirty_update->damage = DamageCreate(NULL, NULL,
+    dirty_update->damage = DamageCreate(NULL, PixmapDirtyDamageDestroy,
                                         DamageReportNone,
                                         TRUE, src->drawable.pScreen,
-                                        src->drawable.pScreen);
+                                        dirty_update);
 
     if (rotation != RR_Rotate_0) {
         RRTransformCompute(x, y,
@@ -239,7 +254,8 @@ PixmapStopDirtyTracking(PixmapPtr src, PixmapPtr slave_dst)
 
     xorg_list_for_each_entry_safe(ent, safe, &screen->pixmap_dirty_list, ent) {
         if (ent->src == src && ent->slave_dst == slave_dst) {
-            DamageDestroy(ent->damage);
+            if (ent->damage)
+                DamageDestroy(ent->damage);
             xorg_list_del(&ent->ent);
             free(ent);
         }
