@@ -263,6 +263,9 @@
 ./usr/X11R6/lib/libXfont.a
 ./usr/X11R6/lib/libXfont.la
 ./usr/X11R6/lib/libXfont.so.13.0
+./usr/X11R6/lib/libXfont2.a
+./usr/X11R6/lib/libXfont2.la
+./usr/X11R6/lib/libXfont2.so.0.0
 ./usr/X11R6/lib/libXfontcache.a
 ./usr/X11R6/lib/libXfontcache.la
 ./usr/X11R6/lib/libXfontcache.so.5.0

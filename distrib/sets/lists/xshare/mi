@@ -449,6 +449,7 @@
 ./usr/X11R6/include/X11/fonts/fsmasks.h
 ./usr/X11R6/include/X11/fonts/ft.h
 ./usr/X11R6/include/X11/fonts/ftfuncs.h
+./usr/X11R6/include/X11/fonts/libxfont2.h
 ./usr/X11R6/include/X11/fonts/pcf.h
 ./usr/X11R6/include/X11/keysym.h
 ./usr/X11R6/include/X11/keysymdef.h
@@ -762,6 +763,7 @@
 ./usr/X11R6/lib/pkgconfig/xf86vidmodeproto.pc
 ./usr/X11R6/lib/pkgconfig/xfixes.pc
 ./usr/X11R6/lib/pkgconfig/xfont.pc
+./usr/X11R6/lib/pkgconfig/xfont2.pc
 ./usr/X11R6/lib/pkgconfig/xfontcache.pc
 ./usr/X11R6/lib/pkgconfig/xft.pc
 ./usr/X11R6/lib/pkgconfig/xi.pc
