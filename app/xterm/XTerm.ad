@@ -267,6 +267,10 @@
 ! that's safer and more usable than the upstream default of "medium".
 *locale: UTF-8
 
+! Normalization by default violates the principle of least surprise
+! and also breaks cut and paste of filenames, so disable it.
+*precompose: false
+
 ! ScrollBar by default
 *scrollBar: true
 
