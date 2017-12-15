@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.345 2017/12/11 20:58:18 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.346 2017/12/15 13:13:17 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -44,8 +44,8 @@
 
 #define BUTTONMASK	(ButtonPressMask | ButtonReleaseMask)
 #define MOUSEMASK	(BUTTONMASK | PointerMotionMask)
-#define MENUMASK 	(MOUSEMASK | ButtonMotionMask | ExposureMask | \
-			 KeyPressMask | ExposureMask)
+#define MENUMASK 	(MOUSEMASK | ButtonMotionMask | KeyPressMask | \
+			 ExposureMask)
 #define MENUGRABMASK	(MOUSEMASK | ButtonMotionMask | StructureNotifyMask)
 #define IGNOREMODMASK	(LockMask | Mod2Mask | 0x2000)
 
