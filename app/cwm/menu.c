@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: menu.c,v 1.104 2017/12/12 15:37:16 okan Exp $
+ * $OpenBSD: menu.c,v 1.105 2017/12/19 19:38:43 okan Exp $
  */
 
 #include <sys/types.h>
@@ -179,13 +179,14 @@ menu_complete_path(struct menu_ctx *mc)
 	struct screen_ctx	*sc = mc->sc;
 	struct menu		*mi, *mr;
 	struct menu_q		 menuq;
+	int			 mflags = (CWM_MENU_DUMMY);
 
 	mr = xcalloc(1, sizeof(*mr));
 
 	TAILQ_INIT(&menuq);
 
-	if ((mi = menu_filter(sc, &menuq, mc->searchstr, NULL,
-	    (CWM_MENU_DUMMY), search_match_path, search_print_text)) != NULL) {
+	if ((mi = menu_filter(sc, &menuq, mc->searchstr, NULL, mflags,
+	    search_match_path, search_print_text)) != NULL) {
 		mr->abort = mi->abort;
 		mr->dummy = mi->dummy;
 		if (mi->text[0] != '\0')
