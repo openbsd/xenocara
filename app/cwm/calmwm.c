@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.c,v 1.102 2017/12/22 21:27:45 okan Exp $
+ * $OpenBSD: calmwm.c,v 1.103 2017/12/22 21:30:01 okan Exp $
  */
 
 #include <sys/types.h>
@@ -143,7 +143,7 @@ x_init(const char *dpyname)
 
 	for (i = 0; i < ScreenCount(X_Dpy); i++)
 		screen_init(i);
-	
+
 	return ConnectionNumber(X_Dpy);
 }
 
