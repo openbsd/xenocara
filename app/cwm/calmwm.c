@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.c,v 1.100 2017/12/07 15:47:14 okan Exp $
+ * $OpenBSD: calmwm.c,v 1.101 2017/12/22 21:21:44 okan Exp $
  */
 
 #include <sys/types.h>
@@ -81,7 +81,8 @@ main(int argc, char **argv)
 	if (signal(SIGCHLD, sighdlr) == SIG_ERR)
 		err(1, "signal");
 
-	if ((Conf.homedir = getenv("HOME")) == NULL || Conf.homedir[0] == '\0') {
+	Conf.homedir = getenv("HOME");
+	if ((Conf.homedir == NULL) || (Conf.homedir[0] == '\0')) {
 		pw = getpwuid(getuid());
 		if (pw != NULL && pw->pw_dir != NULL && *pw->pw_dir != '\0')
 			Conf.homedir = pw->pw_dir;
