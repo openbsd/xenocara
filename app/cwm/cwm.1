@@ -1,4 +1,4 @@
-.\"	$OpenBSD: cwm.1,v 1.58 2017/07/21 15:55:37 okan Exp $
+.\"	$OpenBSD: cwm.1,v 1.59 2017/12/27 18:46:18 okan Exp $
 .\"
 .\" Copyright (c) 2004,2005 Marius Aamodt Eriksen <marius@monkey.org>
 .\"
@@ -14,7 +14,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: July 21 2017 $
+.Dd $Mdocdate: December 27 2017 $
 .Dt CWM 1
 .Os
 .Sh NAME
@@ -184,6 +184,14 @@ List all available items.
 .It Ic [Esc]
 Cancel.
 .El
+.Pp
+.Nm
+rereads its configuration file when it receives a hangup signal,
+.Dv SIGHUP ,
+by executing itself with the name and arguments with which it was started.
+This is equivilant to the
+.Ar restart
+function.
 .Sh SEARCH
 .Nm
 features the ability to search for windows by their current title,

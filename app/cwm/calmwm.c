@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.c,v 1.104 2017/12/27 17:04:35 okan Exp $
+ * $OpenBSD: calmwm.c,v 1.105 2017/12/27 18:46:18 okan Exp $
  */
 
 #include <sys/types.h>
@@ -81,6 +81,8 @@ main(int argc, char **argv)
 	argv += optind;
 
 	if (signal(SIGCHLD, sighdlr) == SIG_ERR)
+		err(1, "signal");
+	if (signal(SIGHUP, sighdlr) == SIG_ERR)
 		err(1, "signal");
 
 	Conf.homedir = getenv("HOME");
@@ -220,6 +222,9 @@ sighdlr(int sig)
 		while ((pid = waitpid(WAIT_ANY, &status, WNOHANG)) > 0 ||
 		    (pid < 0 && errno == EINTR))
 			;
+		break;
+	case SIGHUP:
+		cwm_status = CWM_EXEC_WM;
 		break;
 	}
 
