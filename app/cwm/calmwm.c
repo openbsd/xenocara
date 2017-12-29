@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.c,v 1.105 2017/12/27 18:46:18 okan Exp $
+ * $OpenBSD: calmwm.c,v 1.106 2017/12/29 20:09:19 okan Exp $
  */
 
 #include <sys/types.h>
@@ -56,6 +56,7 @@ main(int argc, char **argv)
 {
 	const char	*conf_file = NULL;
 	char		*conf_path, *display_name = NULL;
+	char		*fallback;
 	int		 ch, xfd;
 	struct pollfd	 pfd[1];
 	struct passwd	*pw;
@@ -64,6 +65,7 @@ main(int argc, char **argv)
 		warnx("no locale support");
 	mbtowc(NULL, NULL, MB_CUR_MAX);
 
+	fallback = u_argv(argv);
 	Conf.wm_argv = u_argv(argv);
 	while ((ch = getopt(argc, argv, "c:d:")) != -1) {
 		switch (ch) {
@@ -131,6 +133,9 @@ main(int argc, char **argv)
 	x_teardown();
 	if (cwm_status == CWM_EXEC_WM)
 		u_exec(Conf.wm_argv);
+
+	warnx("'%s' failed to start, restarting fallback", Conf.wm_argv);
+	u_exec(fallback);
 
 	return(0);
 }

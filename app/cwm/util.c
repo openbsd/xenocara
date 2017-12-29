@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: util.c,v 1.18 2015/09/16 17:58:25 okan Exp $
+ * $OpenBSD: util.c,v 1.19 2017/12/29 20:09:19 okan Exp $
  */
 
 #include <sys/types.h>
@@ -78,7 +78,7 @@ u_exec(char *argstr)
 
 	(void)setsid();
 	(void)execvp(args[0], args);
-	err(1, "%s", s);
+	warn("%s", s);
 }
 
 char *
