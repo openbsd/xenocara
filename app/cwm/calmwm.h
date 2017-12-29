@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.348 2017/12/29 12:54:54 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.349 2017/12/29 16:55:50 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -442,8 +442,7 @@ void			 group_movetogroup(struct client_ctx *, int);
 void			 group_only(struct screen_ctx *, int);
 int			 group_restore(struct client_ctx *);
 void			 group_show(struct group_ctx *);
-void			 group_toggle_membership_enter(struct client_ctx *);
-void			 group_toggle_membership_leave(struct client_ctx *);
+void			 group_toggle_membership(struct client_ctx *);
 void			 group_update_names(struct screen_ctx *);
 
 void			 search_match_client(struct menu_q *, struct menu_q *,
