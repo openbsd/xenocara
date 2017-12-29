@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: search.c,v 1.66 2017/12/13 15:10:17 okan Exp $
+ * $OpenBSD: search.c,v 1.67 2017/12/29 20:03:46 okan Exp $
  */
 
 #include <sys/types.h>
@@ -228,6 +228,21 @@ search_match_text(struct menu_q *menuq, struct menu_q *resultq, char *search)
 }
 
 void
+search_match_wm(struct menu_q *menuq, struct menu_q *resultq, char *search)
+{
+	struct menu		*mi;
+	struct cmd_ctx		*wm;
+
+	TAILQ_INIT(resultq);
+	TAILQ_FOREACH(mi, menuq, entry) {
+		wm = (struct cmd_ctx *)mi->ctx;
+		if ((match_substr(search, wm->name, 0)) ||
+		    (match_substr(search, wm->path, 0)))
+			TAILQ_INSERT_TAIL(resultq, mi, resultentry);
+	}
+}
+
+void
 search_print_client(struct menu *mi, int listing)
 {
 	struct client_ctx	*cc = (struct client_ctx *)mi->ctx;
@@ -265,4 +280,13 @@ void
 search_print_text(struct menu *mi, int listing)
 {
 	(void)snprintf(mi->print, sizeof(mi->print), "%s", mi->text);
+}
+
+void
+search_print_wm(struct menu *mi, int listing)
+{
+	struct cmd_ctx		*wm = (struct cmd_ctx *)mi->ctx;
+
+	(void)snprintf(mi->print, sizeof(mi->print), "%s [%s]",
+	    wm->name, wm->path);
 }

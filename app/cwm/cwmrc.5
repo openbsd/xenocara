@@ -1,4 +1,4 @@
-.\"	$OpenBSD: cwmrc.5,v 1.69 2017/12/07 16:25:33 okan Exp $
+.\"	$OpenBSD: cwmrc.5,v 1.70 2017/12/29 20:03:46 okan Exp $
 .\"
 .\" Copyright (c) 2004,2005 Marius Aamodt Eriksen <marius@monkey.org>
 .\"
@@ -14,7 +14,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: December 7 2017 $
+.Dd $Mdocdate: December 29 2017 $
 .Dt CWMRC 5
 .Os
 .Sh NAME
@@ -245,6 +245,12 @@ A special
 keyword
 .Dq all
 can be used to unbind all buttons.
+.It Ic wm Ar name path
+Every
+.Ar name
+entry is shown in the wm menu.
+When selected, the window manager is replaced by
+.Ar path .
 .El
 .Sh BIND FUNCTION LIST
 .Bl -tag -width 23n -compact
