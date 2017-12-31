@@ -87,6 +87,8 @@ typedef struct WSDevice {
 		Time timeout;
 	} emulateWheel;
 
+	OsTimerPtr	remove_timer;	/* Callback for removal on EIO */
+
 	struct wscons_event	events[NWSEVENTS];
 	size_t			events_count;
 	size_t			events_pos;

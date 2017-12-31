@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.62 2015/08/29 08:48:29 shadchin Exp $ */
+/* $OpenBSD: ws.c,v 1.63 2017/12/31 23:31:41 guenther Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -427,6 +427,11 @@ wsDeviceOn(DeviceIntPtr pWS)
 			}
 		}
 	}
+	if (priv->remove_timer == NULL) {
+		/* allocate here where it's safe */
+		priv->remove_timer = TimerSet(priv->remove_timer,
+					      0, 0, NULL, NULL);
+	}
 	xf86AddEnabledDevice(pInfo);
 	wsmbEmuOn(pInfo);
 	pWS->public.on = TRUE;
@@ -457,6 +462,20 @@ wsDeviceOff(DeviceIntPtr pWS)
 	pWS->public.on = FALSE;
 }
 
+/*
+ * Called as an OsTimer() callback to remove the device while xf86Wakeup()
+ * isn't playing with the list.
+ */
+static CARD32
+wsRemoveMouse(OsTimerPtr timer, CARD32 now, pointer arg)
+{
+	InputInfoPtr pInfo = (InputInfoPtr) arg;
+
+	xf86DisableDevice(pInfo->dev, TRUE);
+
+	return 0;	/* don't set to run again */
+}
+
 static size_t
 wsReadEvents(InputInfoPtr pInfo)
 {
@@ -466,7 +485,14 @@ wsReadEvents(InputInfoPtr pInfo)
 	priv->events_count = priv->events_pos = 0;
 	len = read(pInfo->fd, priv->events, sizeof(priv->events));
 	if (len < 0) {
-		if (errno != EAGAIN)
+		if (errno == EIO) {
+			xf86IDrvMsg(pInfo, X_ERROR,
+			    "device no longer present - removing: %s\n",
+			    strerror(errno));
+			xf86RemoveEnabledDevice(pInfo);
+			priv->remove_timer = TimerSet(priv->remove_timer, 0, 1,
+						      wsRemoveMouse, pInfo);
+		} else if (errno != EAGAIN)
 			xf86IDrvMsg(pInfo, X_ERROR, "read error %s\n",
 			    strerror(errno));
 	} else if (len % sizeof(struct wscons_event)) {
@@ -680,6 +706,12 @@ wsOpen(InputInfoPtr pInfo)
 static void
 wsClose(InputInfoPtr pInfo)
 {
+	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
+
+	if (priv->remove_timer != NULL) {
+		TimerFree(priv->remove_timer);
+		priv->remove_timer = NULL;
+	}
 	xf86CloseSerial(pInfo->fd);
 	pInfo->fd = -1;
 }
