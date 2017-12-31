@@ -820,7 +820,7 @@ glXSwapBuffers(Display * dpy, GLXDrawable drawable)
 {
 #ifdef GLX_USE_APPLEGL
    struct glx_context * gc = __glXGetCurrentContext();
-   if(gc != &DummyContext && apple_glx_is_current_drawable(dpy, gc->driContext, drawable)) {
+   if(gc != &dummyContext && apple_glx_is_current_drawable(dpy, gc->driContext, drawable)) {
       apple_glx_swap_buffers(gc->driContext);
    } else {
       __glXSendError(dpy, GLXBadCurrentWindow, 0, X_GLXSwapBuffers, false);
@@ -1014,6 +1014,7 @@ fbconfigs_compatible(const struct glx_config * const a,
 
    MATCH_MASK(drawableType);
    MATCH_MASK(renderType);
+   MATCH_DONT_CARE(sRGBCapable);
 
    /* There is a bug in a few of the XFree86 DDX drivers.  They contain
     * visuals with a "transparent type" of 0 when they really mean GLX_NONE.
@@ -2651,7 +2652,7 @@ _GLX_PUBLIC void (*glXGetProcAddressARB(const GLubyte * procName)) (void)
    f = (gl_function) get_glx_proc_address((const char *) procName);
    if ((f == NULL) && (procName[0] == 'g') && (procName[1] == 'l')
        && (procName[2] != 'X')) {
-#ifdef GLX_SHARED_GLAPI
+#ifdef GLX_INDIRECT_RENDERING
       f = (gl_function) __indirect_get_proc_address((const char *) procName);
 #endif
       if (!f)
@@ -2675,19 +2676,10 @@ _GLX_PUBLIC void (*glXGetProcAddressARB(const GLubyte * procName)) (void)
  *
  * \sa glXGetProcAddressARB
  */
-_GLX_PUBLIC void (*glXGetProcAddress(const GLubyte * procName)) (void)
-#if defined(__GNUC__) && !defined(GLX_ALIAS_UNSUPPORTED)
-# if defined(USE_MGL_NAMESPACE)
-   __attribute__ ((alias("mglXGetProcAddressARB")));
-# else
-   __attribute__ ((alias("glXGetProcAddressARB")));
-# endif
-#else
-{
-   return glXGetProcAddressARB(procName);
-}
-#endif /* __GNUC__ */
-
+_GLX_PUBLIC
+GLX_ALIAS(__GLXextFuncPtr, glXGetProcAddress,
+          (const GLubyte * procName),
+          (procName), glXGetProcAddressARB)
 
 #if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
 /**

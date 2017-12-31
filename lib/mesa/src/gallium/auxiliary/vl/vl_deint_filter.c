@@ -173,21 +173,21 @@ create_deint_frag_shader(struct vl_deint_filter *filter, unsigned field,
       // cur vs prev2
       ureg_TEX(shader, t_a, TGSI_TEXTURE_2D_ARRAY, ureg_src(t_comp_bot), sampler_cur);
       ureg_TEX(shader, t_b, TGSI_TEXTURE_2D_ARRAY, ureg_src(t_comp_bot), sampler_prevprev);
-      ureg_SUB(shader, ureg_writemask(t_diff, TGSI_WRITEMASK_X), ureg_src(t_a), ureg_src(t_b));
+      ureg_ADD(shader, ureg_writemask(t_diff, TGSI_WRITEMASK_X), ureg_src(t_a), ureg_negate(ureg_src(t_b)));
       // prev vs next
       ureg_TEX(shader, t_a, TGSI_TEXTURE_2D_ARRAY, ureg_src(t_comp_top), sampler_prev);
       ureg_TEX(shader, t_b, TGSI_TEXTURE_2D_ARRAY, ureg_src(t_comp_top), sampler_next);
-      ureg_SUB(shader, ureg_writemask(t_diff, TGSI_WRITEMASK_Y), ureg_src(t_a), ureg_src(t_b));
+      ureg_ADD(shader, ureg_writemask(t_diff, TGSI_WRITEMASK_Y), ureg_src(t_a), ureg_negate(ureg_src(t_b)));
    } else {
       /* interpolating bottom field -> current field is a top field */
       // cur vs prev2
       ureg_TEX(shader, t_a, TGSI_TEXTURE_2D_ARRAY, ureg_src(t_comp_top), sampler_cur);
       ureg_TEX(shader, t_b, TGSI_TEXTURE_2D_ARRAY, ureg_src(t_comp_top), sampler_prevprev);
-      ureg_SUB(shader, ureg_writemask(t_diff, TGSI_WRITEMASK_X), ureg_src(t_a), ureg_src(t_b));
+      ureg_ADD(shader, ureg_writemask(t_diff, TGSI_WRITEMASK_X), ureg_src(t_a), ureg_negate(ureg_src(t_b)));
       // prev vs next
       ureg_TEX(shader, t_a, TGSI_TEXTURE_2D_ARRAY, ureg_src(t_comp_bot), sampler_prev);
       ureg_TEX(shader, t_b, TGSI_TEXTURE_2D_ARRAY, ureg_src(t_comp_bot), sampler_next);
-      ureg_SUB(shader, ureg_writemask(t_diff, TGSI_WRITEMASK_Y), ureg_src(t_a), ureg_src(t_b));
+      ureg_ADD(shader, ureg_writemask(t_diff, TGSI_WRITEMASK_Y), ureg_src(t_a), ureg_negate(ureg_src(t_b)));
    }
 
    // absolute maximum of differences
@@ -308,7 +308,7 @@ vl_deint_filter_init(struct vl_deint_filter *filter, struct pipe_context *pipe,
       goto error_sampler;
 
    filter->quad = vl_vb_upload_quads(pipe);
-   if(!filter->quad.buffer)
+   if(!filter->quad.buffer.resource)
       goto error_quad;
 
    memset(&ve, 0, sizeof(ve));
@@ -361,7 +361,7 @@ error_vs:
    pipe->delete_vertex_elements_state(pipe, filter->ves);
 
 error_ves:
-   pipe_resource_reference(&filter->quad.buffer, NULL);
+   pipe_resource_reference(&filter->quad.buffer.resource, NULL);
 
 error_quad:
    pipe->delete_sampler_state(pipe, filter->sampler);
@@ -396,7 +396,7 @@ vl_deint_filter_cleanup(struct vl_deint_filter *filter)
    filter->pipe->delete_blend_state(filter->pipe, filter->blend[2]);
    filter->pipe->delete_rasterizer_state(filter->pipe, filter->rs_state);
    filter->pipe->delete_vertex_elements_state(filter->pipe, filter->ves);
-   pipe_resource_reference(&filter->quad.buffer, NULL);
+   pipe_resource_reference(&filter->quad.buffer.resource, NULL);
 
    filter->pipe->delete_vs_state(filter->pipe, filter->vs);
    filter->pipe->delete_fs_state(filter->pipe, filter->fs_copy_top);

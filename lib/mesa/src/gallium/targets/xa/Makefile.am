@@ -64,8 +64,6 @@ TARGET_LIB_DEPS =
 
 include $(top_srcdir)/src/gallium/drivers/i915/Automake.inc
 
-include $(top_srcdir)/src/gallium/drivers/ilo/Automake.inc
-
 include $(top_srcdir)/src/gallium/drivers/nouveau/Automake.inc
 
 include $(top_srcdir)/src/gallium/drivers/svga/Automake.inc
@@ -86,7 +84,7 @@ libxatracker_la_LIBADD += \
 
 endif # HAVE_GALLIUM_STATIC_TARGETS
 
-if HAVE_MESA_LLVM
+if HAVE_GALLIUM_LLVM
 libxatracker_la_LIBADD += $(LLVM_LIBS)
 libxatracker_la_LDFLAGS += $(LLVM_LDFLAGS)
 endif

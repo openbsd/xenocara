@@ -91,12 +91,12 @@ static void init_prog(struct program *p)
 	assert(ret);
 
 	/* init a pipe screen */
-	p->screen = pipe_loader_create_screen(p->dev);
+	p->screen = pipe_loader_create_screen(p->dev, 0);
 	assert(p->screen);
 
 	/* create the pipe driver context and cso context */
 	p->pipe = p->screen->context_create(p->screen, NULL, 0);
-	p->cso = cso_create_context(p->pipe);
+	p->cso = cso_create_context(p->pipe, 0);
 
 	/* set clear color */
 	p->clear_color.f[0] = 0.3;

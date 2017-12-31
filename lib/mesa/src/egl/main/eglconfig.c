@@ -37,8 +37,8 @@
 #include <string.h>
 #include <assert.h>
 #include "c99_compat.h"
+#include "util/macros.h"
 
-#include "eglcompiler.h"
 #include "eglconfig.h"
 #include "egldisplay.h"
 #include "eglcurrent.h"
@@ -728,7 +728,7 @@ _eglFilterConfigArray(_EGLArray *array, EGLConfig *configs,
    EGLint i, count;
 
    if (!num_configs)
-      return _eglError(EGL_BAD_PARAMETER, "eglChooseConfigs");
+      return _eglError(EGL_BAD_PARAMETER, "eglChooseConfig");
 
    /* get the number of matched configs */
    count = _eglFilterArray(array, NULL, 0,

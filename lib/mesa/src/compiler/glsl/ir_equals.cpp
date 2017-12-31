@@ -58,7 +58,7 @@ ir_constant::equals(const ir_instruction *ir, enum ir_node_type) const
       return false;
 
    for (unsigned i = 0; i < type->components(); i++) {
-      if (type->base_type == GLSL_TYPE_DOUBLE) {
+      if (type->is_double()) {
          if (value.d[i] != other->value.d[i])
             return false;
       } else {
@@ -143,7 +143,7 @@ ir_texture::equals(const ir_instruction *ir, enum ir_node_type ignore) const
    if (!possibly_null_equals(projector, other->projector, ignore))
       return false;
 
-   if (!possibly_null_equals(shadow_comparitor, other->shadow_comparitor, ignore))
+   if (!possibly_null_equals(shadow_comparator, other->shadow_comparator, ignore))
       return false;
 
    if (!possibly_null_equals(offset, other->offset, ignore))

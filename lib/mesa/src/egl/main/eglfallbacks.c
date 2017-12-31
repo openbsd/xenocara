@@ -77,6 +77,7 @@ _eglInitDriverFallbacks(_EGLDriver *drv)
    drv->API.ReleaseTexImage = (void*) _eglReturnFalse;
    drv->API.CopyBuffers = (void*) _eglReturnFalse;
    drv->API.SwapBuffers = (void*) _eglReturnFalse;
+   drv->API.SetDamageRegion = (void*) _eglReturnFalse;
    drv->API.SwapInterval = _eglSwapInterval;
 
    drv->API.WaitClient = (void*) _eglReturnFalse;
@@ -92,6 +93,7 @@ _eglInitDriverFallbacks(_EGLDriver *drv)
    drv->API.WaitSyncKHR = NULL;
    drv->API.SignalSyncKHR = NULL;
    drv->API.GetSyncAttrib = _eglGetSyncAttrib;
+   drv->API.DupNativeFenceFDANDROID = NULL;
 
    drv->API.CreateDRMImageMESA = NULL;
    drv->API.ExportDRMImageMESA = NULL;

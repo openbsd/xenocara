@@ -315,7 +315,7 @@ static int is_alu_any_unit_inst(struct r600_bytecode *bc, struct r600_bytecode_a
 static int is_nop_inst(struct r600_bytecode *bc, struct r600_bytecode_alu *alu)
 {
 	return alu->op == ALU_OP0_NOP;
-}		
+}
 
 static int assign_alu_units(struct r600_bytecode *bc, struct r600_bytecode_alu *alu_first,
 			    struct r600_bytecode_alu *assignment[5])
@@ -1332,11 +1332,13 @@ static unsigned r600_bytecode_num_tex_and_vtx_instructions(const struct r600_byt
 static inline boolean last_inst_was_not_vtx_fetch(struct r600_bytecode *bc)
 {
 	return !((r600_isa_cf(bc->cf_last->op)->flags & CF_FETCH) &&
-			(bc->chip_class == CAYMAN ||
-			bc->cf_last->op != CF_OP_TEX));
+		 bc->cf_last->op != CF_OP_GDS &&
+		 (bc->chip_class == CAYMAN ||
+		  bc->cf_last->op != CF_OP_TEX));
 }
 
-int r600_bytecode_add_vtx(struct r600_bytecode *bc, const struct r600_bytecode_vtx *vtx)
+static int r600_bytecode_add_vtx_internal(struct r600_bytecode *bc, const struct r600_bytecode_vtx *vtx,
+					  bool use_tc)
 {
 	struct r600_bytecode_vtx *nvtx = r600_bytecode_vtx();
 	int r;
@@ -1348,7 +1350,7 @@ int r600_bytecode_add_vtx(struct r600_bytecode *bc, const struct r600_bytecode_v
 	/* Load index register if required */
 	if (bc->chip_class >= EVERGREEN) {
 		if (vtx->buffer_index_mode)
-			egcm_load_index_reg(bc, 0, false);
+			egcm_load_index_reg(bc, vtx->buffer_index_mode - 1, false);
 	}
 
 	/* cf can contains only alu or only vtx or only tex */
@@ -1363,8 +1365,13 @@ int r600_bytecode_add_vtx(struct r600_bytecode *bc, const struct r600_bytecode_v
 		switch (bc->chip_class) {
 		case R600:
 		case R700:
-		case EVERGREEN:
 			bc->cf_last->op = CF_OP_VTX;
+			break;
+		case EVERGREEN:
+			if (use_tc)
+				bc->cf_last->op = CF_OP_TEX;
+			else
+				bc->cf_last->op = CF_OP_VTX;
 			break;
 		case CAYMAN:
 			bc->cf_last->op = CF_OP_TEX;
@@ -1386,6 +1393,16 @@ int r600_bytecode_add_vtx(struct r600_bytecode *bc, const struct r600_bytecode_v
 	bc->ngpr = MAX2(bc->ngpr, vtx->dst_gpr + 1);
 
 	return 0;
+}
+
+int r600_bytecode_add_vtx(struct r600_bytecode *bc, const struct r600_bytecode_vtx *vtx)
+{
+	return r600_bytecode_add_vtx_internal(bc, vtx, false);
+}
+
+int r600_bytecode_add_vtx_tc(struct r600_bytecode *bc, const struct r600_bytecode_vtx *vtx)
+{
+	return r600_bytecode_add_vtx_internal(bc, vtx, true);
 }
 
 int r600_bytecode_add_tex(struct r600_bytecode *bc, const struct r600_bytecode_tex *tex)
@@ -1452,6 +1469,11 @@ int r600_bytecode_add_gds(struct r600_bytecode *bc, const struct r600_bytecode_g
 	if (ngds == NULL)
 		return -ENOMEM;
 	memcpy(ngds, gds, sizeof(struct r600_bytecode_gds));
+
+	if (bc->chip_class >= EVERGREEN) {
+		if (gds->uav_index_mode)
+			egcm_load_index_reg(bc, gds->uav_index_mode - 1, false);
+	}
 
 	if (bc->cf_last == NULL ||
 	    bc->cf_last->op != CF_OP_GDS ||
@@ -1607,7 +1629,8 @@ static void r600_bytecode_cf_vtx_build(uint32_t *bytecode, const struct r600_byt
 	*bytecode++ = S_SQ_CF_WORD0_ADDR(cf->addr >> 1);
 	*bytecode++ = S_SQ_CF_WORD1_CF_INST(r600_isa_cf_opcode(ISA_CC_R600, cf->op)) |
 			S_SQ_CF_WORD1_BARRIER(1) |
-			S_SQ_CF_WORD1_COUNT((cf->ndw / 4) - 1);
+			S_SQ_CF_WORD1_COUNT((cf->ndw / 4) - 1)|
+			S_SQ_CF_WORD1_END_OF_PROGRAM(cf->end_of_program);
 }
 
 /* common for r600/r700 - eg in eg_asm.c */
@@ -1688,11 +1711,13 @@ int r600_bytecode_build(struct r600_bytecode *bc)
 	unsigned addr;
 	int i, r;
 
-	if (!bc->nstack) // If not 0, Stack_size already provided by llvm
-		bc->nstack = bc->stack.max_entries;
-
-	if ((bc->type == PIPE_SHADER_VERTEX || bc->type == PIPE_SHADER_TESS_EVAL || bc->type == PIPE_SHADER_TESS_CTRL) && !bc->nstack) {
-		bc->nstack = 1;
+	if (!bc->nstack) { // If not 0, Stack_size already provided by llvm
+		if (bc->stack.max_entries)
+			bc->nstack = bc->stack.max_entries;
+		else if (bc->type == PIPE_SHADER_VERTEX ||
+			 bc->type == PIPE_SHADER_TESS_EVAL ||
+			 bc->type == PIPE_SHADER_TESS_CTRL)
+			bc->nstack = 1;
 	}
 
 	/* first path compute addr of each CF block */
@@ -2068,6 +2093,8 @@ void r600_bytecode_disasm(struct r600_bytecode *bc)
 						bc->bytecode[id + 1], cfop->name);
 				fprintf(stderr, "%d @%d ", cf->ndw / 4, cf->addr);
 				fprintf(stderr, "\n");
+				if (cf->end_of_program)
+					fprintf(stderr, "EOP ");
 			} else if (cfop->flags & CF_EXP) {
 				int o = 0;
 				const char *exp_type[] = {"PIXEL", "POS  ", "PARAM"};
@@ -2127,7 +2154,8 @@ void r600_bytecode_disasm(struct r600_bytecode *bc)
 						o += print_swizzle(7);
 				}
 
-				if (cf->output.type == V_SQ_CF_ALLOC_EXPORT_WORD0_SQ_EXPORT_WRITE_IND)
+				if (cf->output.type == V_SQ_CF_ALLOC_EXPORT_WORD0_SQ_EXPORT_WRITE_IND ||
+				    cf->output.type == V_SQ_CF_ALLOC_EXPORT_WORD0_SQ_EXPORT_READ_IND)
 					o += fprintf(stderr, " R%d", cf->output.index_gpr);
 
 				o += print_indent(o, 67);
@@ -2317,6 +2345,11 @@ void r600_bytecode_disasm(struct r600_bytecode *bc)
 
 			if (gds->op != FETCH_OP_TF_WRITE) {
 				o += fprintf(stderr, ", R%d.", gds->src_gpr2);
+			}
+			if (gds->alloc_consume) {
+				o += fprintf(stderr, " UAV: %d", gds->uav_id);
+				if (gds->uav_index_mode)
+					o += fprintf(stderr, "[%s]", index_mode[gds->uav_index_mode]);
 			}
 			fprintf(stderr, "\n");
 			id += 4;

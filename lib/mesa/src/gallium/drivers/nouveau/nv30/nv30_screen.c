@@ -91,12 +91,12 @@ nv30_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
    case PIPE_CAP_TGSI_FS_COORD_PIXEL_CENTER_INTEGER:
    case PIPE_CAP_TGSI_TEXCOORD:
    case PIPE_CAP_USER_CONSTANT_BUFFERS:
-   case PIPE_CAP_USER_INDEX_BUFFERS:
    case PIPE_CAP_BUFFER_MAP_PERSISTENT_COHERENT:
    case PIPE_CAP_VERTEX_BUFFER_OFFSET_4BYTE_ALIGNED_ONLY:
    case PIPE_CAP_VERTEX_BUFFER_STRIDE_4BYTE_ALIGNED_ONLY:
    case PIPE_CAP_VERTEX_ELEMENT_SRC_OFFSET_4BYTE_ALIGNED_ONLY:
    case PIPE_CAP_PREFER_BLIT_BASED_TEXTURE_TRANSFER:
+   case PIPE_CAP_ALLOW_MAPPED_BUFFERS_DURING_EXECUTION:
       return 1;
    /* nv35 capabilities */
    case PIPE_CAP_DEPTH_BOUNDS_TEST:
@@ -119,6 +119,7 @@ nv30_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
    case PIPE_CAP_VERTEX_ELEMENT_INSTANCE_DIVISOR: /* XXX: yes? */
    case PIPE_CAP_MAX_STREAM_OUTPUT_BUFFERS:
    case PIPE_CAP_STREAM_OUTPUT_PAUSE_RESUME:
+   case PIPE_CAP_STREAM_OUTPUT_INTERLEAVE_BUFFERS:
    case PIPE_CAP_MIN_TEXEL_OFFSET:
    case PIPE_CAP_MAX_TEXEL_OFFSET:
    case PIPE_CAP_MIN_TEXTURE_GATHER_OFFSET:
@@ -202,6 +203,23 @@ nv30_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
    case PIPE_CAP_VIEWPORT_SUBPIXEL_BITS:
    case PIPE_CAP_MIXED_COLOR_DEPTH_BITS:
    case PIPE_CAP_TGSI_ARRAY_COMPONENTS:
+   case PIPE_CAP_TGSI_CAN_READ_OUTPUTS:
+   case PIPE_CAP_NATIVE_FENCE_FD:
+   case PIPE_CAP_GLSL_OPTIMIZE_CONSERVATIVELY:
+   case PIPE_CAP_TGSI_FS_FBFETCH:
+   case PIPE_CAP_TGSI_MUL_ZERO_WINS:
+   case PIPE_CAP_DOUBLES:
+   case PIPE_CAP_INT64:
+   case PIPE_CAP_INT64_DIVMOD:
+   case PIPE_CAP_TGSI_TEX_TXF_LZ:
+   case PIPE_CAP_TGSI_CLOCK:
+   case PIPE_CAP_POLYGON_MODE_FILL_RECTANGLE:
+   case PIPE_CAP_SPARSE_BUFFER_PAGE_SIZE:
+   case PIPE_CAP_TGSI_BALLOT:
+   case PIPE_CAP_TGSI_TES_LAYER_VIEWPORT:
+   case PIPE_CAP_CAN_BIND_CONST_BUFFER_AS_VERTEX:
+   case PIPE_CAP_POST_DEPTH_COVERAGE:
+   case PIPE_CAP_BINDLESS_TEXTURE:
       return 0;
 
    case PIPE_CAP_VENDOR_ID:
@@ -250,7 +268,8 @@ nv30_screen_get_paramf(struct pipe_screen *pscreen, enum pipe_capf param)
 }
 
 static int
-nv30_screen_get_shader_param(struct pipe_screen *pscreen, unsigned shader,
+nv30_screen_get_shader_param(struct pipe_screen *pscreen,
+                             enum pipe_shader_type shader,
                              enum pipe_shader_cap param)
 {
    struct nv30_screen *screen = nv30_screen(pscreen);
@@ -283,7 +302,6 @@ nv30_screen_get_shader_param(struct pipe_screen *pscreen, unsigned shader,
       case PIPE_SHADER_CAP_MAX_TEXTURE_SAMPLERS:
       case PIPE_SHADER_CAP_MAX_SAMPLER_VIEWS:
          return 0;
-      case PIPE_SHADER_CAP_MAX_PREDS:
       case PIPE_SHADER_CAP_TGSI_CONT_SUPPORTED:
       case PIPE_SHADER_CAP_TGSI_SQRT_SUPPORTED:
       case PIPE_SHADER_CAP_INDIRECT_INPUT_ADDR:
@@ -292,13 +310,14 @@ nv30_screen_get_shader_param(struct pipe_screen *pscreen, unsigned shader,
       case PIPE_SHADER_CAP_INDIRECT_CONST_ADDR:
       case PIPE_SHADER_CAP_SUBROUTINES:
       case PIPE_SHADER_CAP_INTEGERS:
-      case PIPE_SHADER_CAP_DOUBLES:
       case PIPE_SHADER_CAP_TGSI_DROUND_SUPPORTED:
       case PIPE_SHADER_CAP_TGSI_DFRACEXP_DLDEXP_SUPPORTED:
       case PIPE_SHADER_CAP_TGSI_FMA_SUPPORTED:
       case PIPE_SHADER_CAP_TGSI_ANY_INOUT_DECL_RANGE:
       case PIPE_SHADER_CAP_MAX_SHADER_BUFFERS:
       case PIPE_SHADER_CAP_MAX_SHADER_IMAGES:
+      case PIPE_SHADER_CAP_LOWER_IF_THRESHOLD:
+      case PIPE_SHADER_CAP_TGSI_SKIP_MERGE_REGISTERS:
          return 0;
       default:
          debug_printf("unknown vertex shader param %d\n", param);
@@ -331,7 +350,6 @@ nv30_screen_get_shader_param(struct pipe_screen *pscreen, unsigned shader,
          return 32;
       case PIPE_SHADER_CAP_PREFERRED_IR:
          return PIPE_SHADER_IR_TGSI;
-      case PIPE_SHADER_CAP_MAX_PREDS:
       case PIPE_SHADER_CAP_TGSI_CONT_SUPPORTED:
       case PIPE_SHADER_CAP_TGSI_SQRT_SUPPORTED:
       case PIPE_SHADER_CAP_INDIRECT_INPUT_ADDR:
@@ -340,13 +358,14 @@ nv30_screen_get_shader_param(struct pipe_screen *pscreen, unsigned shader,
       case PIPE_SHADER_CAP_INDIRECT_CONST_ADDR:
       case PIPE_SHADER_CAP_SUBROUTINES:
       case PIPE_SHADER_CAP_INTEGERS:
-      case PIPE_SHADER_CAP_DOUBLES:
       case PIPE_SHADER_CAP_TGSI_DROUND_SUPPORTED:
       case PIPE_SHADER_CAP_TGSI_DFRACEXP_DLDEXP_SUPPORTED:
       case PIPE_SHADER_CAP_TGSI_FMA_SUPPORTED:
       case PIPE_SHADER_CAP_TGSI_ANY_INOUT_DECL_RANGE:
       case PIPE_SHADER_CAP_MAX_SHADER_BUFFERS:
       case PIPE_SHADER_CAP_MAX_SHADER_IMAGES:
+      case PIPE_SHADER_CAP_LOWER_IF_THRESHOLD:
+      case PIPE_SHADER_CAP_TGSI_SKIP_MERGE_REGISTERS:
          return 0;
       default:
          debug_printf("unknown fragment shader param %d\n", param);
@@ -728,6 +747,6 @@ nv30_screen_create(struct nouveau_device *dev)
 
    nouveau_pushbuf_kick(push, push->channel);
 
-   nouveau_fence_new(&screen->base, &screen->base.fence.current, false);
+   nouveau_fence_new(&screen->base, &screen->base.fence.current);
    return &screen->base;
 }

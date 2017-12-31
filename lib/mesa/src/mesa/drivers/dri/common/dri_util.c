@@ -75,6 +75,8 @@ setupLoaderExtensions(__DRIscreen *psp,
 	    psp->dri2.image = (__DRIimageLookupExtension *) extensions[i];
 	if (strcmp(extensions[i]->name, __DRI_USE_INVALIDATE) == 0)
 	    psp->dri2.useInvalidate = (__DRIuseInvalidateExtension *) extensions[i];
+        if (strcmp(extensions[i]->name, __DRI_BACKGROUND_CALLABLE) == 0)
+            psp->dri2.backgroundCallable = (__DRIbackgroundCallableExtension *) extensions[i];
 	if (strcmp(extensions[i]->name, __DRI_SWRAST_LOADER) == 0)
 	    psp->swrast_loader = (__DRIswrastLoaderExtension *) extensions[i];
         if (strcmp(extensions[i]->name, __DRI_IMAGE_LOADER) == 0)
@@ -401,7 +403,8 @@ driCreateContextAttribs(__DRIscreen *screen, int api,
     if (mesa_api != API_OPENGL_COMPAT
         && mesa_api != API_OPENGL_CORE
         && (flags & ~(__DRI_CTX_FLAG_DEBUG |
-	              __DRI_CTX_FLAG_ROBUST_BUFFER_ACCESS))) {
+	              __DRI_CTX_FLAG_ROBUST_BUFFER_ACCESS |
+	              __DRI_CTX_FLAG_NO_ERROR))) {
 	*error = __DRI_CTX_ERROR_BAD_FLAG;
 	return NULL;
     }
@@ -423,7 +426,8 @@ driCreateContextAttribs(__DRIscreen *screen, int api,
 
     const uint32_t allowed_flags = (__DRI_CTX_FLAG_DEBUG
                                     | __DRI_CTX_FLAG_FORWARD_COMPATIBLE
-                                    | __DRI_CTX_FLAG_ROBUST_BUFFER_ACCESS);
+                                    | __DRI_CTX_FLAG_ROBUST_BUFFER_ACCESS
+                                    | __DRI_CTX_FLAG_NO_ERROR);
     if (flags & ~allowed_flags) {
 	*error = __DRI_CTX_ERROR_UNKNOWN_FLAG;
 	return NULL;
@@ -465,6 +469,8 @@ driContextSetFlags(struct gl_context *ctx, uint32_t flags)
        _mesa_set_debug_state_int(ctx, GL_DEBUG_OUTPUT, GL_TRUE);
         ctx->Const.ContextFlags |= GL_CONTEXT_FLAG_DEBUG_BIT;
     }
+    if ((flags & __DRI_CTX_FLAG_NO_ERROR) != 0)
+        ctx->Const.ContextFlags |= GL_CONTEXT_FLAG_NO_ERROR_BIT_KHR;
 }
 
 static __DRIcontext *
@@ -856,8 +862,10 @@ driGLFormatToImageFormat(mesa_format format)
       return __DRI_IMAGE_FORMAT_ABGR8888;
    case MESA_FORMAT_R8G8B8X8_UNORM:
       return __DRI_IMAGE_FORMAT_XBGR8888;
+   case MESA_FORMAT_L_UNORM8:
    case MESA_FORMAT_R_UNORM8:
       return __DRI_IMAGE_FORMAT_R8;
+   case MESA_FORMAT_L8A8_UNORM:
    case MESA_FORMAT_R8G8_UNORM:
       return __DRI_IMAGE_FORMAT_GR88;
    case MESA_FORMAT_NONE:
@@ -891,8 +899,12 @@ driImageFormatToGLFormat(uint32_t image_format)
       return MESA_FORMAT_R8G8B8X8_UNORM;
    case __DRI_IMAGE_FORMAT_R8:
       return MESA_FORMAT_R_UNORM8;
+   case __DRI_IMAGE_FORMAT_R16:
+      return MESA_FORMAT_R_UNORM16;
    case __DRI_IMAGE_FORMAT_GR88:
       return MESA_FORMAT_R8G8_UNORM;
+   case __DRI_IMAGE_FORMAT_GR1616:
+      return MESA_FORMAT_R16G16_UNORM;
    case __DRI_IMAGE_FORMAT_SARGB8:
       return MESA_FORMAT_B8G8R8A8_SRGB;
    case __DRI_IMAGE_FORMAT_NONE:
@@ -926,4 +938,8 @@ const __DRIcopySubBufferExtension driCopySubBufferExtension = {
    .base = { __DRI_COPY_SUB_BUFFER, 1 },
 
    .copySubBuffer               = driCopySubBuffer,
+};
+
+const __DRInoErrorExtension dri2NoErrorExtension = {
+   .base = { __DRI2_NO_ERROR, 1 },
 };

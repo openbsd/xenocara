@@ -546,6 +546,7 @@ _mesa_bytes_per_vertex_attrib(GLint comps, GLenum type)
    case GL_FLOAT:
       return comps * sizeof(GLfloat);
    case GL_HALF_FLOAT_ARB:
+   case GL_HALF_FLOAT_OES:
       return comps * sizeof(GLhalfARB);
    case GL_DOUBLE:
       return comps * sizeof(GLdouble);
@@ -3629,6 +3630,21 @@ _mesa_format_from_format_and_type(GLenum format, GLenum type)
     * format in that case.
     */
    unreachable("Unsupported format");
+}
+
+uint32_t
+_mesa_tex_format_from_format_and_type(const struct gl_context *ctx,
+                                      GLenum gl_format, GLenum type)
+{
+   mesa_format format = _mesa_format_from_format_and_type(gl_format, type);
+
+   if (_mesa_format_is_mesa_array_format(format))
+      format = _mesa_format_from_array_format(format);
+      
+   if (format == MESA_FORMAT_NONE || !ctx->TextureFormatSupported[format])
+      return MESA_FORMAT_NONE;
+
+   return format;
 }
 
 /**

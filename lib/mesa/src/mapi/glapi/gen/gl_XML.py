@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 
 # (C) Copyright IBM Corporation 2004, 2005
 # All Rights Reserved.
@@ -607,6 +606,7 @@ class gl_function( gl_item ):
         self.exec_flavor = 'mesa'
         self.desktop = True
         self.deprecated = None
+        self.has_no_error_variant = False
 
         # self.entry_point_api_map[name][api] is a decimal value
         # indicating the earliest version of the given API in which
@@ -676,6 +676,11 @@ class gl_function( gl_item ):
 
         if not is_attr_true(element, 'desktop', 'true'):
             self.desktop = False
+
+        if self.has_no_error_variant or is_attr_true(element, 'no_error'):
+            self.has_no_error_variant = True
+        else:
+            self.has_no_error_variant = False
 
         if alias:
             true_name = alias

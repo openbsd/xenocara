@@ -38,10 +38,6 @@
 
 struct fd_ringbuffer;
 
-void fd3_emit_const(struct fd_ringbuffer *ring, enum shader_t type,
-		uint32_t regid, uint32_t offset, uint32_t sizedwords,
-		const uint32_t *dwords, struct pipe_resource *prsc);
-
 void fd3_emit_gmem_restore_tex(struct fd_ringbuffer *ring,
 		struct pipe_surface **psurf, int bufs);
 
@@ -52,7 +48,7 @@ struct fd3_emit {
 	const struct fd_program_stateobj *prog;
 	const struct pipe_draw_info *info;
 	struct ir3_shader_key key;
-	uint32_t dirty;
+	enum fd_dirty_3d_state dirty;
 
 	uint32_t sprite_coord_enable;
 	bool sprite_coord_mode;

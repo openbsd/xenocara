@@ -37,11 +37,9 @@ namespace nv50_ir {
 #if __cplusplus >= 201103L
 using std::hash;
 using std::unordered_map;
-#elif !defined(ANDROID)
+#else
 using std::tr1::hash;
 using std::tr1::unordered_map;
-#else
-#error Android release before Lollipop is not supported!
 #endif
 
 #define MAX_REGISTER_FILE_SIZE 256
@@ -1471,7 +1469,7 @@ GCRA::allocateRegisters(ArrayList& insns)
          if (lval->inFile(FILE_GPR) && lval->getInsn() != NULL &&
              prog->getTarget()->getChipset() < 0xc0) {
             Instruction *insn = lval->getInsn();
-            if (insn->op == OP_MAD || insn->op == OP_SAD)
+            if (insn->op == OP_MAD || insn->op == OP_FMA || insn->op == OP_SAD)
                // Short encoding only possible if they're all GPRs, no need to
                // affect them otherwise.
                if (insn->flagsDef < 0 &&

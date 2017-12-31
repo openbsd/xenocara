@@ -4,9 +4,8 @@ pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = main/gbm.pc
 
 AM_CFLAGS = \
-	-D_OS_UNIX=1 \
-	-DMODULEDIR='"$(libdir)/gbm"' \
 	-I$(top_srcdir)/include \
+	-I$(top_srcdir)/src \
 	-I$(top_srcdir)/src/loader \
 	-I$(top_srcdir)/src/gbm/main \
 	$(DLOPEN_CFLAGS) \
@@ -30,7 +29,6 @@ libgbm_la_LIBADD = \
 	$(DLOPEN_LIBS)
 
 if HAVE_PLATFORM_WAYLAND
-AM_CPPFLAGS = -DHAVE_WAYLAND_PLATFORM
 AM_CFLAGS += $(WAYLAND_CFLAGS)
 libgbm_la_LIBADD += $(top_builddir)/src/egl/wayland/wayland-drm/libwayland-drm.la $(WAYLAND_LIBS)
 endif

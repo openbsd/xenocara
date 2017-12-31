@@ -48,8 +48,12 @@
 #  define USE_MCJIT 1
 #elif defined(PIPE_ARCH_PPC_64) || defined(PIPE_ARCH_S390) || defined(PIPE_ARCH_ARM) || defined(PIPE_ARCH_AARCH64)
 #  define USE_MCJIT 1
+#endif
+
+#if defined(USE_MCJIT)
+static const bool use_mcjit = USE_MCJIT;
 #else
-static bool USE_MCJIT = 0;
+static bool use_mcjit = FALSE;
 #endif
 
 
@@ -121,19 +125,6 @@ create_pass_manager(struct gallivm_state *gallivm)
    LLVMAddTargetData(gallivm->target, gallivm->passmgr);
 #endif
 
-   /* Setting the module's DataLayout to an empty string will cause the
-    * ExecutionEngine to copy to the DataLayout string from its target
-    * machine to the module.  As of LLVM 3.8 the module and the execution
-    * engine are required to have the same DataLayout.
-    *
-    * TODO: This is just a temporary work-around.  The correct solution is
-    * for gallivm_init_state() to create a TargetMachine and pull the
-    * DataLayout from there.  Currently, the TargetMachine used by llvmpipe
-    * is being implicitly created by the EngineBuilder in
-    * lp_build_create_jit_compiler_for_module()
-    */
-
-#if HAVE_LLVM < 0x0308
    {
       char *td_str;
       // New ones from the Module.
@@ -141,9 +132,6 @@ create_pass_manager(struct gallivm_state *gallivm)
       LLVMSetDataLayout(gallivm->module, td_str);
       free(td_str);
    }
-#else
-   LLVMSetDataLayout(gallivm->module, "");
-#endif
 
    if ((gallivm_debug & GALLIVM_DEBUG_NO_OPT) == 0) {
       /* These are the passes currently listed in llvm-c/Transforms/Scalar.h,
@@ -190,7 +178,7 @@ gallivm_free_ir(struct gallivm_state *gallivm)
 
    FREE(gallivm->module_name);
 
-   if (!USE_MCJIT) {
+   if (!use_mcjit) {
       /* Don't free the TargetData, it's owned by the exec engine */
    } else {
       if (gallivm->target) {
@@ -248,7 +236,7 @@ init_gallivm_engine(struct gallivm_state *gallivm)
                                                     gallivm->module,
                                                     gallivm->memorymgr,
                                                     (unsigned) optlevel,
-                                                    USE_MCJIT,
+                                                    use_mcjit,
                                                     &error);
       if (ret) {
          _debug_printf("%s\n", error);
@@ -257,7 +245,7 @@ init_gallivm_engine(struct gallivm_state *gallivm)
       }
    }
 
-   if (!USE_MCJIT) {
+   if (!use_mcjit) {
       gallivm->target = LLVMGetExecutionEngineTargetData(gallivm->engine);
       if (!gallivm->target)
          goto fail;
@@ -336,7 +324,7 @@ init_gallivm_state(struct gallivm_state *gallivm, const char *name,
     * complete when MC-JIT is created. So defer the MC-JIT engine creation for
     * now.
     */
-   if (!USE_MCJIT) {
+   if (!use_mcjit) {
       if (!init_gallivm_engine(gallivm)) {
          goto fail;
       }
@@ -395,10 +383,21 @@ lp_build_init(void)
    if (gallivm_initialized)
       return TRUE;
 
-   LLVMLinkInMCJIT();
-#if !defined(USE_MCJIT)
-   USE_MCJIT = debug_get_bool_option("GALLIVM_MCJIT", 0);
+
+   /* LLVMLinkIn* are no-ops at runtime.  They just ensure the respective
+    * component is linked at buildtime, which is sufficient for its static
+    * constructors to be called at load time.
+    */
+#if defined(USE_MCJIT)
+#  if USE_MCJIT
+      LLVMLinkInMCJIT();
+#  else
+      LLVMLinkInJIT();
+#  endif
+#else
+   use_mcjit = debug_get_bool_option("GALLIVM_MCJIT", FALSE);
    LLVMLinkInJIT();
+   LLVMLinkInMCJIT();
 #endif
 
 #ifdef DEBUG
@@ -457,7 +456,7 @@ lp_build_init(void)
       util_cpu_caps.has_f16c = 0;
       util_cpu_caps.has_fma = 0;
    }
-   if (HAVE_LLVM < 0x0304 || !USE_MCJIT) {
+   if (HAVE_LLVM < 0x0304 || !use_mcjit) {
       /* AVX2 support has only been tested with LLVM 3.4, and it requires
        * MCJIT. */
       util_cpu_caps.has_avx2 = 0;
@@ -607,12 +606,30 @@ gallivm_compile_module(struct gallivm_state *gallivm)
       LLVMWriteBitcodeToFile(gallivm->module, filename);
       debug_printf("%s written\n", filename);
       debug_printf("Invoke as \"llc %s%s -o - %s\"\n",
-                   (HAVE_LLVM >= 0x0305) ? "[-mcpu=<-mcpu option] " : "",
+                   (HAVE_LLVM >= 0x0305) ? "[-mcpu=<-mcpu option>] " : "",
                    "[-mattr=<-mattr option(s)>]",
                    filename);
    }
 
-   if (USE_MCJIT) {
+   if (use_mcjit) {
+      /* Setting the module's DataLayout to an empty string will cause the
+       * ExecutionEngine to copy to the DataLayout string from its target
+       * machine to the module.  As of LLVM 3.8 the module and the execution
+       * engine are required to have the same DataLayout.
+       *
+       * We must make sure we do this after running the optimization passes,
+       * because those passes need a correct datalayout string.  For example,
+       * if those optimization passes see an empty datalayout, they will assume
+       * this is a little endian target and will do optimizations that break big
+       * endian machines.
+       *
+       * TODO: This is just a temporary work-around.  The correct solution is
+       * for gallivm_init_state() to create a TargetMachine and pull the
+       * DataLayout from there.  Currently, the TargetMachine used by llvmpipe
+       * is being implicitly created by the EngineBuilder in
+       * lp_build_create_jit_compiler_for_module()
+       */
+      LLVMSetDataLayout(gallivm->module, "");
       assert(!gallivm->engine);
       if (!init_gallivm_engine(gallivm)) {
          assert(0);

@@ -32,11 +32,10 @@ AM_CFLAGS = \
 	-I$(top_srcdir)/src/gallium/auxiliary \
 	-I$(top_builddir)/src/mesa/drivers/dri/common \
 	-I$(top_srcdir)/src/mesa/drivers/dri/common \
-	-I$(top_srcdir)/src/mesa/drivers/dri/intel/server \
 	$(DEFINES) \
 	$(VISIBILITY_CFLAGS) \
-	$(INTEL_CFLAGS)
+	$(I915_CFLAGS)
 
 noinst_LTLIBRARIES = libi915_dri.la
 libi915_dri_la_SOURCES = $(i915_FILES)
-libi915_dri_la_LIBADD = $(INTEL_LIBS)
+libi915_dri_la_LIBADD = $(I915_LIBS)

@@ -212,21 +212,20 @@ void value_table::get_values(vvec& v) {
 	}
 }
 
-void value::add_use(node* n, use_kind kind, int arg) {
+void value::add_use(node* n) {
 	if (0) {
 	sblog << "add_use ";
 	dump::dump_val(this);
 	sblog << "   =>  ";
 	dump::dump_op(n);
-	sblog << "     kind " << kind << "    arg " << arg << "\n";
 	}
-	uses.push_back(new use_info(n, kind, arg));
+	uses.push_back(n);
 }
 
 struct use_node_comp {
 	explicit use_node_comp(const node *n) : n(n) {}
-	bool operator() (const use_info *u) {
-		return u->op->hash() == n->hash();
+	bool operator() (const node *o) {
+		return o->hash() == n->hash();
 	}
 
 	private:
@@ -239,9 +238,7 @@ void value::remove_use(const node *n) {
 
 	if (it != uses.end())
 	{
-		// TODO assert((*it)->kind == kind) ?
-		// TODO assert((*it)->arg == arg) ?
-		delete *it;
+		// We only ever had a pointer, so don't delete it here
 		uses.erase(it);
 	}
 }
@@ -291,12 +288,8 @@ bool value::is_prealloc() {
 }
 
 void value::delete_uses() {
-	for (uselist::iterator it = uses.begin(); it != uses.end(); ++it)
-	{
-		delete *it;
-	}
-
-	uses.clear();
+	// We only ever had pointers, so don't delete them here
+	uses.erase(uses.begin(), uses.end());
 }
 
 void ra_constraint::update_values() {

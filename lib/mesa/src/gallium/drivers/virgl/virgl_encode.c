@@ -21,6 +21,8 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include <stdint.h>
+#include <assert.h>
+#include <string.h>
 
 #include "util/u_format.h"
 #include "util/u_memory.h"
@@ -315,12 +317,16 @@ int virgl_encode_clear(struct virgl_context *ctx,
                       double depth, unsigned stencil)
 {
    int i;
+   uint64_t qword;
+
+   STATIC_ASSERT(sizeof(qword) == sizeof(depth));
+   memcpy(&qword, &depth, sizeof(qword));
 
    virgl_encoder_write_cmd_dword(ctx, VIRGL_CMD0(VIRGL_CCMD_CLEAR, 0, VIRGL_OBJ_CLEAR_SIZE));
    virgl_encoder_write_dword(ctx->cbuf, buffers);
    for (i = 0; i < 4; i++)
       virgl_encoder_write_dword(ctx->cbuf, color->ui[i]);
-   virgl_encoder_write_qword(ctx->cbuf, *(uint64_t *)&depth);
+   virgl_encoder_write_qword(ctx->cbuf, qword);
    virgl_encoder_write_dword(ctx->cbuf, stencil);
    return 0;
 }
@@ -383,7 +389,7 @@ int virgl_encoder_set_vertex_buffers(struct virgl_context *ctx,
    int i;
    virgl_encoder_write_cmd_dword(ctx, VIRGL_CMD0(VIRGL_CCMD_SET_VERTEX_BUFFERS, 0, VIRGL_SET_VERTEX_BUFFERS_SIZE(num_buffers)));
    for (i = 0; i < num_buffers; i++) {
-      struct virgl_resource *res = virgl_resource(buffers[i].buffer);
+      struct virgl_resource *res = virgl_resource(buffers[i].buffer.resource);
       virgl_encoder_write_dword(ctx->cbuf, buffers[i].stride);
       virgl_encoder_write_dword(ctx->cbuf, buffers[i].buffer_offset);
       virgl_encoder_write_res(ctx, res);
@@ -392,7 +398,7 @@ int virgl_encoder_set_vertex_buffers(struct virgl_context *ctx,
 }
 
 int virgl_encoder_set_index_buffer(struct virgl_context *ctx,
-                                  const struct pipe_index_buffer *ib)
+                                  const struct virgl_indexbuf *ib)
 {
    int length = VIRGL_SET_INDEX_BUFFER_SIZE(ib);
    struct virgl_resource *res = NULL;
@@ -415,7 +421,7 @@ int virgl_encoder_draw_vbo(struct virgl_context *ctx,
    virgl_encoder_write_dword(ctx->cbuf, info->start);
    virgl_encoder_write_dword(ctx->cbuf, info->count);
    virgl_encoder_write_dword(ctx->cbuf, info->mode);
-   virgl_encoder_write_dword(ctx->cbuf, info->indexed);
+   virgl_encoder_write_dword(ctx->cbuf, !!info->index_size);
    virgl_encoder_write_dword(ctx->cbuf, info->instance_count);
    virgl_encoder_write_dword(ctx->cbuf, info->index_bias);
    virgl_encoder_write_dword(ctx->cbuf, info->start_instance);
@@ -815,7 +821,7 @@ int virgl_encoder_get_query_result(struct virgl_context *ctx,
 
 int virgl_encoder_render_condition(struct virgl_context *ctx,
                                   uint32_t handle, boolean condition,
-                                  uint mode)
+                                  enum pipe_render_cond_flag mode)
 {
    virgl_encoder_write_cmd_dword(ctx, VIRGL_CMD0(VIRGL_CCMD_SET_RENDER_CONDITION, 0, VIRGL_RENDER_CONDITION_SIZE));
    virgl_encoder_write_dword(ctx->cbuf, handle);

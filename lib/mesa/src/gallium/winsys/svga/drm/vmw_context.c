@@ -179,11 +179,36 @@ vmw_swc_flush(struct svga_winsys_context *swc,
               struct pipe_fence_handle **pfence)
 {
    struct vmw_svga_winsys_context *vswc = vmw_svga_winsys_context(swc);
+   struct vmw_winsys_screen *vws = vswc->vws;
    struct pipe_fence_handle *fence = NULL;
    unsigned i;
    enum pipe_error ret;
 
+   /*
+    * If we hit a retry, lock the mutex and retry immediately.
+    * If we then still hit a retry, sleep until another thread
+    * wakes us up after it has released its buffers from the
+    * validate list.
+    *
+    * If we hit another error condition, we still need to broadcast since
+    * pb_validate_validate releases validated buffers in its error path.
+    */
+
    ret = pb_validate_validate(vswc->validate);
+   if (ret != PIPE_OK) {
+      mtx_lock(&vws->cs_mutex);
+      while (ret == PIPE_ERROR_RETRY) {
+         ret = pb_validate_validate(vswc->validate);
+         if (ret == PIPE_ERROR_RETRY) {
+            cnd_wait(&vws->cs_cond, &vws->cs_mutex);
+         }
+      }
+      if (ret != PIPE_OK) {
+         cnd_broadcast(&vws->cs_cond);
+      }
+      mtx_unlock(&vws->cs_mutex);
+   }
+
    assert(ret == PIPE_OK);
    if(ret == PIPE_OK) {
    
@@ -210,14 +235,19 @@ vmw_swc_flush(struct svga_winsys_context *swc,
       }
 
       if (vswc->command.used || pfence != NULL)
-         vmw_ioctl_command(vswc->vws,
-			   vswc->base.cid,
-			   0,
+         vmw_ioctl_command(vws,
+                           vswc->base.cid,
+                           0,
                            vswc->command.buffer,
                            vswc->command.used,
-                           &fence);
+                           &fence,
+                           vswc->base.imported_fence_fd,
+                           vswc->base.hints);
 
       pb_validate_fence(vswc->validate, fence);
+      mtx_lock(&vws->cs_mutex);
+      cnd_broadcast(&vws->cs_cond);
+      mtx_unlock(&vws->cs_mutex);
    }
 
    vswc->command.used = 0;
@@ -252,10 +282,16 @@ vmw_swc_flush(struct svga_winsys_context *swc,
    debug_flush_flush(vswc->fctx);
 #endif
    swc->hints &= ~SVGA_HINT_FLAG_CAN_PRE_FLUSH;
+   swc->hints &= ~SVGA_HINT_FLAG_EXPORT_FENCE_FD;
    vswc->preemptive_flush = FALSE;
    vswc->seen_surfaces = 0;
    vswc->seen_regions = 0;
    vswc->seen_mobs = 0;
+
+   if (vswc->base.imported_fence_fd != -1) {
+      close(vswc->base.imported_fence_fd);
+      vswc->base.imported_fence_fd = -1;
+   }
 
    if(pfence)
       vmw_fence_reference(vswc->vws, pfence, fence);
@@ -528,12 +564,12 @@ vmw_swc_surface_relocation(struct svga_winsys_context *swc,
        * Make sure backup buffer ends up fenced.
        */
 
-      pipe_mutex_lock(vsurf->mutex);
+      mtx_lock(&vsurf->mutex);
       assert(vsurf->buf != NULL);
       
       vmw_swc_mob_relocation(swc, mobid, NULL, (struct svga_winsys_buffer *)
                              vsurf->buf, 0, flags);
-      pipe_mutex_unlock(vsurf->mutex);
+      mtx_unlock(&vsurf->mutex);
    }
 }
 
@@ -780,11 +816,12 @@ vmw_svga_winsys_context_create(struct svga_winsys_screen *sws)
    vswc->base.flush = vmw_swc_flush;
    vswc->base.surface_map = vmw_svga_winsys_surface_map;
    vswc->base.surface_unmap = vmw_svga_winsys_surface_unmap;
+   vswc->base.surface_invalidate = vmw_svga_winsys_surface_invalidate;
 
-  vswc->base.shader_create = vmw_svga_winsys_vgpu10_shader_create;
-  vswc->base.shader_destroy = vmw_svga_winsys_vgpu10_shader_destroy;
+   vswc->base.shader_create = vmw_svga_winsys_vgpu10_shader_create;
+   vswc->base.shader_destroy = vmw_svga_winsys_vgpu10_shader_destroy;
 
-  vswc->base.resource_rebind = vmw_svga_winsys_resource_rebind;
+   vswc->base.resource_rebind = vmw_svga_winsys_resource_rebind;
 
    if (sws->have_vgpu10)
       vswc->base.cid = vmw_ioctl_extended_context_create(vws, sws->have_vgpu10);
@@ -793,6 +830,8 @@ vmw_svga_winsys_context_create(struct svga_winsys_screen *sws)
 
    if (vswc->base.cid == -1)
       goto out_no_context;
+
+   vswc->base.imported_fence_fd = -1;
 
    vswc->base.have_gb_objects = sws->have_gb_objects;
 

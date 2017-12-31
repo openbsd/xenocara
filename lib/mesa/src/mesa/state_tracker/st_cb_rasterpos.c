@@ -44,6 +44,7 @@
 #include "st_context.h"
 #include "st_atom.h"
 #include "st_draw.h"
+#include "st_program.h"
 #include "st_cb_rasterpos.h"
 #include "draw/draw_context.h"
 #include "draw/draw_pipe.h"
@@ -59,8 +60,8 @@ struct rastpos_stage
    struct gl_context *ctx;            /**< Rendering context */
 
    /* vertex attrib info we can setup once and re-use */
-   struct gl_client_array array[VERT_ATTRIB_MAX];
-   const struct gl_client_array *arrays[VERT_ATTRIB_MAX];
+   struct gl_vertex_array array[VERT_ATTRIB_MAX];
+   const struct gl_vertex_array *arrays[VERT_ATTRIB_MAX];
    struct _mesa_prim prim;
 };
 
@@ -109,7 +110,7 @@ rastpos_destroy(struct draw_stage *stage)
  * else copy the current attrib.
  */
 static void
-update_attrib(struct gl_context *ctx, const GLuint *outputMapping,
+update_attrib(struct gl_context *ctx, const ubyte *outputMapping,
               const struct vertex_header *vert,
               GLfloat *dest,
               GLuint result, GLuint defaultAttrib)
@@ -134,7 +135,7 @@ rastpos_point(struct draw_stage *stage, struct prim_header *prim)
    struct gl_context *ctx = rs->ctx;
    struct st_context *st = st_context(ctx);
    const GLfloat height = (GLfloat) ctx->DrawBuffer->Height;
-   const GLuint *outputMapping = st->vertex_result_to_slot;
+   const ubyte *outputMapping = st->vp->result_to_output;
    const GLfloat *pos;
    GLuint i;
 
@@ -221,7 +222,7 @@ st_RasterPos(struct gl_context *ctx, const GLfloat v[4])
    struct st_context *st = st_context(ctx);
    struct draw_context *draw = st_get_draw_context(st);
    struct rastpos_stage *rs;
-   const struct gl_client_array **saved_arrays = ctx->Array._DrawArrays;
+   const struct gl_vertex_array **saved_arrays = ctx->Array._DrawArrays;
 
    if (!st->draw)
       return;

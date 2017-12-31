@@ -76,10 +76,13 @@ target_triplet = @target@
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/Makefile.sources $(top_srcdir)/bin/depcomp \
 	$(top_srcdir)/src/gallium/Automake.inc
-@HAVE_DRISW_TRUE@am__append_1 = \
+@HAVE_LIBDRM_TRUE@am__append_1 = \
+@HAVE_LIBDRM_TRUE@	$(LIBDRM_LIBS)
+
+@HAVE_DRISW_TRUE@am__append_2 = \
 @HAVE_DRISW_TRUE@	$(top_builddir)/src/gallium/winsys/sw/dri/libswdri.la
 
-@HAVE_DRISW_KMS_TRUE@am__append_2 = \
+@HAVE_DRISW_KMS_TRUE@am__append_3 = \
 @HAVE_DRISW_KMS_TRUE@	$(top_builddir)/src/gallium/winsys/sw/kms-dri/libswkmsdri.la \
 @HAVE_DRISW_KMS_TRUE@	$(LIBDRM_LIBS)
 
@@ -105,10 +108,10 @@ libradeonsi_la_LIBADD =
 am__objects_1 = cik_sdma.lo si_blit.lo si_compute.lo si_cp_dma.lo \
 	si_debug.lo si_descriptors.lo si_dma.lo si_hw_context.lo \
 	si_pipe.lo si_pm4.lo si_perfcounter.lo si_shader.lo \
-	si_shader_tgsi_alu.lo si_shader_tgsi_setup.lo si_state.lo \
-	si_state_draw.lo si_state_shaders.lo si_uvd.lo
-am__objects_2 =
-am_libradeonsi_la_OBJECTS = $(am__objects_1) $(am__objects_2)
+	si_shader_tgsi_alu.lo si_shader_tgsi_mem.lo \
+	si_shader_tgsi_setup.lo si_state.lo si_state_draw.lo \
+	si_state_shaders.lo si_uvd.lo
+am_libradeonsi_la_OBJECTS = $(am__objects_1)
 libradeonsi_la_OBJECTS = $(am_libradeonsi_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -163,6 +166,8 @@ AMDGPU_CFLAGS = @AMDGPU_CFLAGS@
 AMDGPU_LIBS = @AMDGPU_LIBS@
 AMTAR = @AMTAR@
 AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
+ANDROID_CFLAGS = @ANDROID_CFLAGS@
+ANDROID_LIBS = @ANDROID_LIBS@
 AR = @AR@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
@@ -193,8 +198,6 @@ DLLTOOL = @DLLTOOL@
 DLOPEN_LIBS = @DLOPEN_LIBS@
 DRI2PROTO_CFLAGS = @DRI2PROTO_CFLAGS@
 DRI2PROTO_LIBS = @DRI2PROTO_LIBS@
-DRI3PROTO_CFLAGS = @DRI3PROTO_CFLAGS@
-DRI3PROTO_LIBS = @DRI3PROTO_LIBS@
 DRIGL_CFLAGS = @DRIGL_CFLAGS@
 DRIGL_LIBS = @DRIGL_LIBS@
 DRI_DRIVER_INSTALL_DIR = @DRI_DRIVER_INSTALL_DIR@
@@ -207,10 +210,11 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGL_CFLAGS = @EGL_CFLAGS@
-EGL_CLIENT_APIS = @EGL_CLIENT_APIS@
 EGL_LIB_DEPS = @EGL_LIB_DEPS@
 EGL_NATIVE_PLATFORM = @EGL_NATIVE_PLATFORM@
 EGREP = @EGREP@
+ETNAVIV_CFLAGS = @ETNAVIV_CFLAGS@
+ETNAVIV_LIBS = @ETNAVIV_LIBS@
 EXEEXT = @EXEEXT@
 EXPAT_CFLAGS = @EXPAT_CFLAGS@
 EXPAT_LIBS = @EXPAT_LIBS@
@@ -237,6 +241,8 @@ GL_PC_LIB_PRIV = @GL_PC_LIB_PRIV@
 GL_PC_REQ_PRIV = @GL_PC_REQ_PRIV@
 GREP = @GREP@
 HAVE_XF86VIDMODE = @HAVE_XF86VIDMODE@
+I915_CFLAGS = @I915_CFLAGS@
+I915_LIBS = @I915_LIBS@
 INDENT = @INDENT@
 INDENT_FLAGS = @INDENT_FLAGS@
 INSTALL = @INSTALL@
@@ -244,45 +250,40 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
-INTEL_CFLAGS = @INTEL_CFLAGS@
-INTEL_LIBS = @INTEL_LIBS@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
 LD_NO_UNDEFINED = @LD_NO_UNDEFINED@
 LEX = @LEX@
 LEXLIB = @LEXLIB@
 LEX_OUTPUT_ROOT = @LEX_OUTPUT_ROOT@
+LIBATOMIC_LIBS = @LIBATOMIC_LIBS@
 LIBCLC_INCLUDEDIR = @LIBCLC_INCLUDEDIR@
 LIBCLC_LIBEXECDIR = @LIBCLC_LIBEXECDIR@
 LIBDRM_CFLAGS = @LIBDRM_CFLAGS@
 LIBDRM_LIBS = @LIBDRM_LIBS@
 LIBELF_CFLAGS = @LIBELF_CFLAGS@
 LIBELF_LIBS = @LIBELF_LIBS@
+LIBGLVND_DATADIR = @LIBGLVND_DATADIR@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
-LIBSENSORS_LDFLAGS = @LIBSENSORS_LDFLAGS@
-LIBSHA1_CFLAGS = @LIBSHA1_CFLAGS@
-LIBSHA1_LIBS = @LIBSHA1_LIBS@
+LIBSENSORS_LIBS = @LIBSENSORS_LIBS@
 LIBTOOL = @LIBTOOL@
+LIBUNWIND_CFLAGS = @LIBUNWIND_CFLAGS@
+LIBUNWIND_LIBS = @LIBUNWIND_LIBS@
 LIB_DIR = @LIB_DIR@
 LIB_EXT = @LIB_EXT@
 LIPO = @LIPO@
-LLVM_BINDIR = @LLVM_BINDIR@
 LLVM_CFLAGS = @LLVM_CFLAGS@
 LLVM_CONFIG = @LLVM_CONFIG@
-LLVM_CPPFLAGS = @LLVM_CPPFLAGS@
 LLVM_CXXFLAGS = @LLVM_CXXFLAGS@
 LLVM_INCLUDEDIR = @LLVM_INCLUDEDIR@
 LLVM_LDFLAGS = @LLVM_LDFLAGS@
-LLVM_LIBDIR = @LLVM_LIBDIR@
 LLVM_LIBS = @LLVM_LIBS@
-LLVM_VERSION = @LLVM_VERSION@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
-MESA_LLVM = @MESA_LLVM@
 MKDIR_P = @MKDIR_P@
 MSVC2013_COMPAT_CFLAGS = @MSVC2013_COMPAT_CFLAGS@
 MSVC2013_COMPAT_CXXFLAGS = @MSVC2013_COMPAT_CXXFLAGS@
@@ -303,8 +304,6 @@ OMX_LIBS = @OMX_LIBS@
 OMX_LIB_INSTALL_DIR = @OMX_LIB_INSTALL_DIR@
 OPENCL_LIBNAME = @OPENCL_LIBNAME@
 OPENCL_VERSION = @OPENCL_VERSION@
-OPENSSL_CFLAGS = @OPENSSL_CFLAGS@
-OPENSSL_LIBS = @OPENSSL_LIBS@
 OSMESA_LIB = @OSMESA_LIB@
 OSMESA_LIB_DEPS = @OSMESA_LIB_DEPS@
 OSMESA_PC_LIB_PRIV = @OSMESA_PC_LIB_PRIV@
@@ -324,8 +323,6 @@ PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 POSIX_SHELL = @POSIX_SHELL@
-PRESENTPROTO_CFLAGS = @PRESENTPROTO_CFLAGS@
-PRESENTPROTO_LIBS = @PRESENTPROTO_LIBS@
 PTHREADSTUBS_CFLAGS = @PTHREADSTUBS_CFLAGS@
 PTHREADSTUBS_LIBS = @PTHREADSTUBS_LIBS@
 PTHREAD_CC = @PTHREAD_CC@
@@ -341,8 +338,6 @@ SED = @SED@
 SELINUX_CFLAGS = @SELINUX_CFLAGS@
 SELINUX_LIBS = @SELINUX_LIBS@
 SET_MAKE = @SET_MAKE@
-SHA1_CFLAGS = @SHA1_CFLAGS@
-SHA1_LIBS = @SHA1_LIBS@
 SHELL = @SHELL@
 SIMPENROSE_CFLAGS = @SIMPENROSE_CFLAGS@
 SIMPENROSE_LIBS = @SIMPENROSE_LIBS@
@@ -351,7 +346,8 @@ STRIP = @STRIP@
 SWR_AVX2_CXXFLAGS = @SWR_AVX2_CXXFLAGS@
 SWR_AVX_CXXFLAGS = @SWR_AVX_CXXFLAGS@
 SWR_CXX11_CXXFLAGS = @SWR_CXX11_CXXFLAGS@
-TIMESTAMP_CMD = @TIMESTAMP_CMD@
+SWR_KNL_CXXFLAGS = @SWR_KNL_CXXFLAGS@
+SWR_SKX_CXXFLAGS = @SWR_SKX_CXXFLAGS@
 VALGRIND_CFLAGS = @VALGRIND_CFLAGS@
 VALGRIND_LIBS = @VALGRIND_LIBS@
 VA_CFLAGS = @VA_CFLAGS@
@@ -359,15 +355,12 @@ VA_LIBS = @VA_LIBS@
 VA_LIB_INSTALL_DIR = @VA_LIB_INSTALL_DIR@
 VA_MAJOR = @VA_MAJOR@
 VA_MINOR = @VA_MINOR@
-VC4_CFLAGS = @VC4_CFLAGS@
-VC4_LIBS = @VC4_LIBS@
 VDPAU_CFLAGS = @VDPAU_CFLAGS@
 VDPAU_LIBS = @VDPAU_LIBS@
 VDPAU_LIB_INSTALL_DIR = @VDPAU_LIB_INSTALL_DIR@
 VDPAU_MAJOR = @VDPAU_MAJOR@
 VDPAU_MINOR = @VDPAU_MINOR@
 VERSION = @VERSION@
-VG_LIB_DEPS = @VG_LIB_DEPS@
 VISIBILITY_CFLAGS = @VISIBILITY_CFLAGS@
 VISIBILITY_CXXFLAGS = @VISIBILITY_CXXFLAGS@
 VL_CFLAGS = @VL_CFLAGS@
@@ -375,6 +368,7 @@ VL_LIBS = @VL_LIBS@
 VULKAN_ICD_INSTALL_DIR = @VULKAN_ICD_INSTALL_DIR@
 WAYLAND_CFLAGS = @WAYLAND_CFLAGS@
 WAYLAND_LIBS = @WAYLAND_LIBS@
+WAYLAND_PROTOCOLS_DATADIR = @WAYLAND_PROTOCOLS_DATADIR@
 WAYLAND_SCANNER = @WAYLAND_SCANNER@
 WAYLAND_SCANNER_CFLAGS = @WAYLAND_SCANNER_CFLAGS@
 WAYLAND_SCANNER_LIBS = @WAYLAND_SCANNER_LIBS@
@@ -396,9 +390,10 @@ XVMC_LIBS = @XVMC_LIBS@
 XVMC_LIB_INSTALL_DIR = @XVMC_LIB_INSTALL_DIR@
 XVMC_MAJOR = @XVMC_MAJOR@
 XVMC_MINOR = @XVMC_MINOR@
-XXD = @XXD@
 YACC = @YACC@
 YFLAGS = @YFLAGS@
+ZLIB_CFLAGS = @ZLIB_CFLAGS@
+ZLIB_LIBS = @ZLIB_LIBS@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
@@ -463,6 +458,7 @@ C_SOURCES := \
 	cik_sdma.c \
 	si_blit.c \
 	si_compute.c \
+	si_compute.h \
 	si_cp_dma.c \
 	si_debug.c \
 	si_descriptors.c \
@@ -478,15 +474,13 @@ C_SOURCES := \
 	si_shader.h \
 	si_shader_internal.h \
 	si_shader_tgsi_alu.c \
+	si_shader_tgsi_mem.c \
 	si_shader_tgsi_setup.c \
 	si_state.c \
 	si_state_draw.c \
 	si_state_shaders.c \
 	si_state.h \
 	si_uvd.c
-
-GENERATED_SOURCES := \
-	sid_tables.h
 
 GALLIUM_CFLAGS = \
 	-I$(top_srcdir)/include \
@@ -535,12 +529,8 @@ GALLIUM_TARGET_CFLAGS = \
 	$(LIBDRM_CFLAGS) \
 	$(VISIBILITY_CFLAGS)
 
-GALLIUM_COMMON_LIB_DEPS = \
-	-lm \
-	$(CLOCK_LIB) \
-	$(PTHREAD_LIBS) \
-	$(DLOPEN_LIBS)
-
+GALLIUM_COMMON_LIB_DEPS = -lm $(LIBUNWIND_LIBS) $(LIBSENSORS_LIBS) \
+	$(CLOCK_LIB) $(PTHREAD_LIBS) $(DLOPEN_LIBS) $(am__append_1)
 GALLIUM_WINSYS_CFLAGS = \
 	-I$(top_srcdir)/src \
 	-I$(top_srcdir)/include \
@@ -552,23 +542,17 @@ GALLIUM_WINSYS_CFLAGS = \
 GALLIUM_PIPE_LOADER_WINSYS_LIBS =  \
 	$(top_builddir)/src/gallium/winsys/sw/null/libws_null.la \
 	$(top_builddir)/src/gallium/winsys/sw/wrapper/libwsw.la \
-	$(am__append_1) $(am__append_2)
+	$(am__append_2) $(am__append_3)
 AM_CFLAGS = \
 	$(GALLIUM_DRIVER_CFLAGS) \
+	-I$(top_builddir)/src/amd/common \
 	-I$(top_srcdir)/src/amd/common \
 	$(RADEON_CFLAGS) \
 	$(LLVM_CFLAGS)
 
 noinst_LTLIBRARIES = libradeonsi.la
-libradeonsi_la_SOURCES = $(C_SOURCES) $(GENERATED_SOURCES)
-EXTRA_DIST = \
-	sid_tables.py
-
-BUILT_SOURCES = \
-	sid_tables.h
-
-all: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) all-am
+libradeonsi_la_SOURCES = $(C_SOURCES)
+all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .c .lo .o .obj
@@ -636,6 +620,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/si_pm4.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/si_shader.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/si_shader_tgsi_alu.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/si_shader_tgsi_mem.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/si_shader_tgsi_setup.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/si_state.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/si_state_draw.Plo@am__quote@
@@ -769,12 +754,10 @@ distdir: $(DISTFILES)
 	  fi; \
 	done
 check-am: all-am
-check: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) check-am
+check: check-am
 all-am: Makefile $(LTLIBRARIES)
 installdirs:
-install: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) install-am
+install: install-am
 install-exec: install-exec-am
 install-data: install-data-am
 uninstall: uninstall-am
@@ -804,7 +787,6 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 clean: clean-am
 
 clean-am: clean-generic clean-libtool clean-noinstLTLIBRARIES \
@@ -876,7 +858,7 @@ ps-am:
 
 uninstall-am:
 
-.MAKE: all check install install-am install-strip
+.MAKE: install-am install-strip
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
 	clean-libtool clean-noinstLTLIBRARIES cscopelist ctags \
@@ -892,9 +874,6 @@ uninstall-am:
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	tags uninstall uninstall-am
 
-
-@REGEN_SOURCES_TRUE@sid_tables.h: $(srcdir)/sid_tables.py $(top_srcdir)/src/amd/common/sid.h
-@REGEN_SOURCES_TRUE@	$(AM_V_GEN) $(PYTHON2) $(srcdir)/sid_tables.py $(top_srcdir)/src/amd/common/sid.h > $@
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

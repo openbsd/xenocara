@@ -37,7 +37,7 @@ static void si_dma_copy_buffer(struct si_context *ctx,
 				uint64_t size)
 {
 	struct radeon_winsys_cs *cs = ctx->b.dma.cs;
-	unsigned i, ncopy, csize, max_csize, sub_cmd, shift;
+	unsigned i, ncopy, count, max_size, sub_cmd, shift;
 	struct r600_resource *rdst = (struct r600_resource*)dst;
 	struct r600_resource *rsrc = (struct r600_resource*)src;
 
@@ -50,33 +50,72 @@ static void si_dma_copy_buffer(struct si_context *ctx,
 	dst_offset += rdst->gpu_address;
 	src_offset += rsrc->gpu_address;
 
-	/* see if we use dword or byte copy */
+	/* see whether we should use the dword-aligned or byte-aligned copy */
 	if (!(dst_offset % 4) && !(src_offset % 4) && !(size % 4)) {
-		size >>= 2;
 		sub_cmd = SI_DMA_COPY_DWORD_ALIGNED;
 		shift = 2;
-		max_csize = SI_DMA_COPY_MAX_SIZE_DW;
+		max_size = SI_DMA_COPY_MAX_DWORD_ALIGNED_SIZE;
 	} else {
 		sub_cmd = SI_DMA_COPY_BYTE_ALIGNED;
 		shift = 0;
-		max_csize = SI_DMA_COPY_MAX_SIZE;
+		max_size = SI_DMA_COPY_MAX_BYTE_ALIGNED_SIZE;
 	}
-	ncopy = (size / max_csize) + !!(size % max_csize);
 
+	ncopy = DIV_ROUND_UP(size, max_size);
 	r600_need_dma_space(&ctx->b, ncopy * 5, rdst, rsrc);
 
 	for (i = 0; i < ncopy; i++) {
-		csize = size < max_csize ? size : max_csize;
-		radeon_emit(cs, SI_DMA_PACKET(SI_DMA_PACKET_COPY, sub_cmd, csize));
+		count = MIN2(size, max_size);
+		radeon_emit(cs, SI_DMA_PACKET(SI_DMA_PACKET_COPY, sub_cmd,
+					      count >> shift));
 		radeon_emit(cs, dst_offset);
 		radeon_emit(cs, src_offset);
 		radeon_emit(cs, (dst_offset >> 32UL) & 0xff);
 		radeon_emit(cs, (src_offset >> 32UL) & 0xff);
-		dst_offset += csize << shift;
-		src_offset += csize << shift;
+		dst_offset += count;
+		src_offset += count;
+		size -= count;
+	}
+}
+
+static void si_dma_clear_buffer(struct pipe_context *ctx,
+				struct pipe_resource *dst,
+				uint64_t offset,
+				uint64_t size,
+				unsigned clear_value)
+{
+	struct si_context *sctx = (struct si_context *)ctx;
+	struct radeon_winsys_cs *cs = sctx->b.dma.cs;
+	unsigned i, ncopy, csize;
+	struct r600_resource *rdst = r600_resource(dst);
+
+	if (!cs || offset % 4 != 0 || size % 4 != 0 ||
+	    dst->flags & PIPE_RESOURCE_FLAG_SPARSE) {
+		ctx->clear_buffer(ctx, dst, offset, size, &clear_value, 4);
+		return;
+	}
+
+	/* Mark the buffer range of destination as valid (initialized),
+	 * so that transfer_map knows it should wait for the GPU when mapping
+	 * that range. */
+	util_range_add(&rdst->valid_buffer_range, offset, offset + size);
+
+	offset += rdst->gpu_address;
+
+	/* the same maximum size as for copying */
+	ncopy = DIV_ROUND_UP(size, SI_DMA_COPY_MAX_DWORD_ALIGNED_SIZE);
+	r600_need_dma_space(&sctx->b, ncopy * 4, rdst, NULL);
+
+	for (i = 0; i < ncopy; i++) {
+		csize = MIN2(size, SI_DMA_COPY_MAX_DWORD_ALIGNED_SIZE);
+		radeon_emit(cs, SI_DMA_PACKET(SI_DMA_PACKET_CONSTANT_FILL, 0,
+					      csize / 4));
+		radeon_emit(cs, offset);
+		radeon_emit(cs, clear_value);
+		radeon_emit(cs, (offset >> 32) << 16);
+		offset += csize;
 		size -= csize;
 	}
-	r600_dma_emit_wait_idle(&ctx->b);
 }
 
 static void si_dma_copy_tile(struct si_context *ctx,
@@ -97,15 +136,14 @@ static void si_dma_copy_tile(struct si_context *ctx,
 	struct radeon_winsys_cs *cs = ctx->b.dma.cs;
 	struct r600_texture *rsrc = (struct r600_texture*)src;
 	struct r600_texture *rdst = (struct r600_texture*)dst;
-	unsigned dst_mode = rdst->surface.level[dst_level].mode;
-	unsigned src_mode = rsrc->surface.level[src_level].mode;
+	unsigned dst_mode = rdst->surface.u.legacy.level[dst_level].mode;
 	bool detile = dst_mode == RADEON_SURF_MODE_LINEAR_ALIGNED;
 	struct r600_texture *rlinear = detile ? rdst : rsrc;
 	struct r600_texture *rtiled = detile ? rsrc : rdst;
 	unsigned linear_lvl = detile ? dst_level : src_level;
 	unsigned tiled_lvl = detile ? src_level : dst_level;
 	struct radeon_info *info = &ctx->screen->b.info;
-	unsigned index = rtiled->surface.tiling_index[tiled_lvl];
+	unsigned index = rtiled->surface.u.legacy.tiling_index[tiled_lvl];
 	unsigned tile_mode = info->si_tile_mode_array[index];
 	unsigned array_mode, lbpp, pitch_tile_max, slice_tile_max, size;
 	unsigned ncopy, height, cheight, i;
@@ -114,7 +152,7 @@ static void si_dma_copy_tile(struct si_context *ctx,
 	uint64_t base, addr;
 	unsigned pipe_config;
 
-	assert(dst_mode != src_mode);
+	assert(dst_mode != rsrc->surface.u.legacy.level[src_level].mode);
 
 	sub_cmd = SI_DMA_COPY_TILED;
 	lbpp = util_logbase2(bpp);
@@ -130,40 +168,40 @@ static void si_dma_copy_tile(struct si_context *ctx,
 	assert(!util_format_is_depth_and_stencil(rtiled->resource.b.b.format));
 
 	array_mode = G_009910_ARRAY_MODE(tile_mode);
-	slice_tile_max = (rtiled->surface.level[tiled_lvl].nblk_x *
-			  rtiled->surface.level[tiled_lvl].nblk_y) / (8*8) - 1;
+	slice_tile_max = (rtiled->surface.u.legacy.level[tiled_lvl].nblk_x *
+			  rtiled->surface.u.legacy.level[tiled_lvl].nblk_y) / (8*8) - 1;
 	/* linear height must be the same as the slice tile max height, it's ok even
 	 * if the linear destination/source have smaller heigh as the size of the
 	 * dma packet will be using the copy_height which is always smaller or equal
 	 * to the linear height
 	 */
-	height = rtiled->surface.level[tiled_lvl].nblk_y;
-	base = rtiled->surface.level[tiled_lvl].offset;
-	addr = rlinear->surface.level[linear_lvl].offset;
-	addr += rlinear->surface.level[linear_lvl].slice_size * linear_z;
+	height = rtiled->surface.u.legacy.level[tiled_lvl].nblk_y;
+	base = rtiled->surface.u.legacy.level[tiled_lvl].offset;
+	addr = rlinear->surface.u.legacy.level[linear_lvl].offset;
+	addr += rlinear->surface.u.legacy.level[linear_lvl].slice_size * linear_z;
 	addr += linear_y * pitch + linear_x * bpp;
 	bank_h = G_009910_BANK_HEIGHT(tile_mode);
 	bank_w = G_009910_BANK_WIDTH(tile_mode);
 	mt_aspect = G_009910_MACRO_TILE_ASPECT(tile_mode);
 	/* Non-depth modes don't have TILE_SPLIT set. */
-	tile_split = util_logbase2(rtiled->surface.tile_split >> 6);
+	tile_split = util_logbase2(rtiled->surface.u.legacy.tile_split >> 6);
 	nbanks = G_009910_NUM_BANKS(tile_mode);
 	base += rtiled->resource.gpu_address;
 	addr += rlinear->resource.gpu_address;
 
 	pipe_config = G_009910_PIPE_CONFIG(tile_mode);
 	mt = G_009910_MICRO_TILE_MODE(tile_mode);
-	size = (copy_height * pitch) / 4;
-	ncopy = (size / SI_DMA_COPY_MAX_SIZE_DW) + !!(size % SI_DMA_COPY_MAX_SIZE_DW);
+	size = copy_height * pitch;
+	ncopy = DIV_ROUND_UP(size, SI_DMA_COPY_MAX_DWORD_ALIGNED_SIZE);
 	r600_need_dma_space(&ctx->b, ncopy * 9, &rdst->resource, &rsrc->resource);
 
 	for (i = 0; i < ncopy; i++) {
 		cheight = copy_height;
-		if (((cheight * pitch) / 4) > SI_DMA_COPY_MAX_SIZE_DW) {
-			cheight = (SI_DMA_COPY_MAX_SIZE_DW * 4) / pitch;
+		if (cheight * pitch > SI_DMA_COPY_MAX_DWORD_ALIGNED_SIZE) {
+			cheight = SI_DMA_COPY_MAX_DWORD_ALIGNED_SIZE / pitch;
 		}
-		size = (cheight * pitch) / 4;
-		radeon_emit(cs, SI_DMA_PACKET(SI_DMA_PACKET_COPY, sub_cmd, size));
+		size = cheight * pitch;
+		radeon_emit(cs, SI_DMA_PACKET(SI_DMA_PACKET_COPY, sub_cmd, size / 4));
 		radeon_emit(cs, base >> 8);
 		radeon_emit(cs, (detile << 31) | (array_mode << 27) |
 				(lbpp << 24) | (bank_h << 21) |
@@ -178,7 +216,6 @@ static void si_dma_copy_tile(struct si_context *ctx,
 		addr += cheight * pitch;
 		tiled_y += cheight;
 	}
-	r600_dma_emit_wait_idle(&ctx->b);
 }
 
 static void si_dma_copy(struct pipe_context *ctx,
@@ -197,7 +234,9 @@ static void si_dma_copy(struct pipe_context *ctx,
 	unsigned src_x, src_y;
 	unsigned dst_x = dstx, dst_y = dsty, dst_z = dstz;
 
-	if (sctx->b.dma.cs == NULL) {
+	if (sctx->b.dma.cs == NULL ||
+	    src->flags & PIPE_RESOURCE_FLAG_SPARSE ||
+	    dst->flags & PIPE_RESOURCE_FLAG_SPARSE) {
 		goto fallback;
 	}
 
@@ -232,20 +271,20 @@ static void si_dma_copy(struct pipe_context *ctx,
 	dst_y = util_format_get_nblocksy(src->format, dst_y);
 
 	bpp = rdst->surface.bpe;
-	dst_pitch = rdst->surface.level[dst_level].pitch_bytes;
-	src_pitch = rsrc->surface.level[src_level].pitch_bytes;
-	src_w = rsrc->surface.level[src_level].npix_x;
-	dst_w = rdst->surface.level[dst_level].npix_x;
+	dst_pitch = rdst->surface.u.legacy.level[dst_level].nblk_x * rdst->surface.bpe;
+	src_pitch = rsrc->surface.u.legacy.level[src_level].nblk_x * rsrc->surface.bpe;
+	src_w = u_minify(rsrc->resource.b.b.width0, src_level);
+	dst_w = u_minify(rdst->resource.b.b.width0, dst_level);
 
-	dst_mode = rdst->surface.level[dst_level].mode;
-	src_mode = rsrc->surface.level[src_level].mode;
+	dst_mode = rdst->surface.u.legacy.level[dst_level].mode;
+	src_mode = rsrc->surface.u.legacy.level[src_level].mode;
 
 	if (src_pitch != dst_pitch || src_box->x || dst_x || src_w != dst_w ||
 	    src_box->width != src_w ||
-	    src_box->height != rsrc->surface.level[src_level].npix_y ||
-	    src_box->height != rdst->surface.level[dst_level].npix_y ||
-	    rsrc->surface.level[src_level].nblk_y !=
-	    rdst->surface.level[dst_level].nblk_y) {
+	    src_box->height != u_minify(rsrc->resource.b.b.height0, src_level) ||
+	    src_box->height != u_minify(rdst->resource.b.b.height0, dst_level) ||
+	    rsrc->surface.u.legacy.level[src_level].nblk_y !=
+	    rdst->surface.u.legacy.level[dst_level].nblk_y) {
 		/* FIXME si can do partial blit */
 		goto fallback;
 	}
@@ -264,14 +303,14 @@ static void si_dma_copy(struct pipe_context *ctx,
 		 *   dst_x/y == 0
 		 *   dst_pitch == src_pitch
 		 */
-		src_offset= rsrc->surface.level[src_level].offset;
-		src_offset += rsrc->surface.level[src_level].slice_size * src_box->z;
+		src_offset= rsrc->surface.u.legacy.level[src_level].offset;
+		src_offset += rsrc->surface.u.legacy.level[src_level].slice_size * src_box->z;
 		src_offset += src_y * src_pitch + src_x * bpp;
-		dst_offset = rdst->surface.level[dst_level].offset;
-		dst_offset += rdst->surface.level[dst_level].slice_size * dst_z;
+		dst_offset = rdst->surface.u.legacy.level[dst_level].offset;
+		dst_offset += rdst->surface.u.legacy.level[dst_level].slice_size * dst_z;
 		dst_offset += dst_y * dst_pitch + dst_x * bpp;
 		si_dma_copy_buffer(sctx, dst, src, dst_offset, src_offset,
-				   rsrc->surface.level[src_level].slice_size);
+				   rsrc->surface.u.legacy.level[src_level].slice_size);
 	} else {
 		si_dma_copy_tile(sctx, dst, dst_level, dst_x, dst_y, dst_z,
 				 src, src_level, src_x, src_y, src_box->z,
@@ -288,4 +327,5 @@ fallback:
 void si_init_dma_functions(struct si_context *sctx)
 {
 	sctx->b.dma_copy = si_dma_copy;
+	sctx->b.dma_clear_buffer = si_dma_clear_buffer;
 }

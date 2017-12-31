@@ -41,10 +41,6 @@
 #include "main/mtypes.h"
 #include "intel_bufmgr.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 struct intel_context;
 struct intel_screen;
 struct intel_buffer_object;
@@ -105,12 +101,11 @@ void intel_recreate_static_regions(struct intel_context *intel);
 
 void
 intel_region_get_tile_masks(struct intel_region *region,
-                            uint32_t *mask_x, uint32_t *mask_y,
-                            bool map_stencil_as_y_tiled);
+                            uint32_t *mask_x, uint32_t *mask_y);
 
 uint32_t
 intel_region_get_aligned_offset(struct intel_region *region, uint32_t x,
-                                uint32_t y, bool map_stencil_as_y_tiled);
+                                uint32_t y);
 
 /**
  * Used with images created with image_from_names
@@ -152,9 +147,5 @@ struct __DRIimageRec {
 
    void *data;
 };
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

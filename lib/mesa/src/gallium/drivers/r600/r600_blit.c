@@ -444,7 +444,7 @@ static void r600_clear(struct pipe_context *ctx, unsigned buffers,
 		 * disable fast clear for texture array.
 		 */
 		/* Only use htile for first level */
-		if (rtex->htile_buffer && !level &&
+		if (rtex->htile_offset && !level &&
                    fb->zsbuf->u.tex.first_layer == 0 &&
                    fb->zsbuf->u.tex.last_layer == util_max_layer(&rtex->resource.b.b, level)) {
 			if (rtex->depth_clear_value != depth) {
@@ -647,7 +647,7 @@ void r600_resource_copy_region(struct pipe_context *ctx,
         src_heightFL = u_minify(src->height0, src_level);
 
 	util_blitter_default_dst_texture(&dst_templ, dst, dst_level, dstz);
-	util_blitter_default_src_texture(&src_templ, src, src_level);
+	util_blitter_default_src_texture(rctx->blitter, &src_templ, src, src_level);
 
 	if (util_format_is_compressed(src->format) ||
 	    util_format_is_compressed(dst->format)) {
@@ -726,7 +726,10 @@ void r600_resource_copy_region(struct pipe_context *ctx,
 		}
 	}
 
-	dst_view = r600_create_surface_custom(ctx, dst, &dst_templ, dst_width, dst_height);
+	dst_view = r600_create_surface_custom(ctx, dst, &dst_templ,
+					      /* we don't care about these two for r600g */
+					      dst->width0, dst->height0,
+					      dst_width, dst_height);
 
 	if (rctx->b.chip_class >= EVERGREEN) {
 		src_view = evergreen_create_sampler_view_custom(ctx, src, &src_templ,
@@ -792,7 +795,7 @@ static bool do_hardware_msaa_resolve(struct pipe_context *ctx,
 	    info->src.box.width == dst_width &&
 	    info->src.box.height == dst_height &&
 	    info->src.box.depth == 1 &&
-	    dst->surface.level[info->dst.level].mode >= RADEON_SURF_MODE_1D &&
+	    dst->surface.u.legacy.level[info->dst.level].mode >= RADEON_SURF_MODE_1D &&
 	    (!dst->cmask.size || !dst->dirty_level_mask) /* dst cannot be fast-cleared */) {
 		r600_blitter_begin(ctx, R600_COLOR_RESOLVE |
 				   (info->render_condition_enable ? 0 : R600_DISABLE_RENDER_COND));
@@ -862,7 +865,7 @@ static void r600_blit(struct pipe_context *ctx,
 	 * resource_copy_region can't do this yet, because dma_copy calls it
 	 * on failure (recursion).
 	 */
-	if (rdst->surface.level[info->dst.level].mode ==
+	if (rdst->surface.u.legacy.level[info->dst.level].mode ==
 	    RADEON_SURF_MODE_LINEAR_ALIGNED &&
 	    rctx->b.dma_copy &&
 	    util_can_blit_via_copy_region(info, false)) {

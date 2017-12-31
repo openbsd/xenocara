@@ -172,6 +172,7 @@ struct __DRIscreenRec {
 	const __DRIdri2LoaderExtension *loader;
 	const __DRIimageLookupExtension *image;
 	const __DRIuseInvalidateExtension *useInvalidate;
+        const __DRIbackgroundCallableExtension *backgroundCallable;
     } dri2;
 
     struct {
@@ -291,5 +292,7 @@ extern void
 driContextSetFlags(struct gl_context *ctx, uint32_t flags);
 
 extern const __DRIimageDriverExtension driImageDriverExtension;
+
+extern const __DRInoErrorExtension dri2NoErrorExtension;
 
 #endif /* _DRI_UTIL_H_ */

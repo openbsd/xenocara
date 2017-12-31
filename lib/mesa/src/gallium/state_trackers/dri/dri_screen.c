@@ -33,6 +33,7 @@
 #include "xmlpool.h"
 
 #include "dri_screen.h"
+#include "dri_context.h"
 
 #include "util/u_inlines.h"
 #include "pipe/p_screen.h"
@@ -53,6 +54,13 @@ const __DRIconfigOptionsExtension gallium_config_options = {
    .xml =
 
    DRI_CONF_BEGIN
+      DRI_CONF_SECTION_PERFORMANCE
+         DRI_CONF_MESA_GLTHREAD("false")
+         DRI_CONF_MESA_NO_ERROR("false")
+         DRI_CONF_DISABLE_EXT_BUFFER_AGE("false")
+         DRI_CONF_DISABLE_OML_SYNC_CONTROL("false")
+      DRI_CONF_SECTION_END
+
       DRI_CONF_SECTION_QUALITY
          DRI_CONF_FORCE_S3TC_ENABLE("false")
          DRI_CONF_PP_CELSHADE(0)
@@ -70,6 +78,10 @@ const __DRIconfigOptionsExtension gallium_config_options = {
          DRI_CONF_DISABLE_SHADER_BIT_ENCODING("false")
          DRI_CONF_FORCE_GLSL_VERSION(0)
          DRI_CONF_ALLOW_GLSL_EXTENSION_DIRECTIVE_MIDSHADER("false")
+         DRI_CONF_ALLOW_GLSL_BUILTIN_VARIABLE_REDECLARATION("false")
+         DRI_CONF_ALLOW_HIGHER_COMPAT_VERSION("false")
+         DRI_CONF_FORCE_GLSL_ABS_SQRT("false")
+         DRI_CONF_GLSL_CORRECT_DERIVATIVES_AFTER_DISCARD("false")
       DRI_CONF_SECTION_END
 
       DRI_CONF_SECTION_MISCELLANEOUS
@@ -82,9 +94,11 @@ const __DRIconfigOptionsExtension gallium_config_options = {
 #define false 0
 
 static void
-dri_fill_st_options(struct st_config_options *options,
-                    const struct driOptionCache * optionCache)
+dri_fill_st_options(struct dri_screen *screen)
 {
+   struct st_config_options *options = &screen->options;
+   const struct driOptionCache *optionCache = &screen->optionCache;
+
    options->disable_blend_func_extended =
       driQueryOptionb(optionCache, "disable_blend_func_extended");
    options->disable_glsl_line_continuations =
@@ -99,7 +113,15 @@ dri_fill_st_options(struct st_config_options *options,
       driQueryOptionb(optionCache, "force_s3tc_enable");
    options->allow_glsl_extension_directive_midshader =
       driQueryOptionb(optionCache, "allow_glsl_extension_directive_midshader");
+   options->allow_glsl_builtin_variable_redeclaration =
+      driQueryOptionb(optionCache, "allow_glsl_builtin_variable_redeclaration");
+   options->allow_higher_compat_version =
+      driQueryOptionb(optionCache, "allow_higher_compat_version");
    options->glsl_zero_init = driQueryOptionb(optionCache, "glsl_zero_init");
+   options->force_glsl_abs_sqrt =
+      driQueryOptionb(optionCache, "force_glsl_abs_sqrt");
+
+   driComputeOptionsSha1(optionCache, options->config_options_sha1);
 }
 
 static const __DRIconfig **
@@ -111,6 +133,33 @@ dri_fill_in_modes(struct dri_screen *screen)
       MESA_FORMAT_B8G8R8A8_SRGB,
       MESA_FORMAT_B8G8R8X8_SRGB,
       MESA_FORMAT_B5G6R5_UNORM,
+#ifdef ANDROID
+      /*
+       * To reduce the risk of breaking non-Android users in stable release
+       * let's keep these for Android alone until this is handled properly.
+       */
+
+      /* The 32-bit RGBA format must not precede the 32-bit BGRA format.
+       * Likewise for RGBX and BGRX.  Otherwise, the GLX client and the GLX
+       * server may disagree on which format the GLXFBConfig represents,
+       * resulting in swapped color channels.
+       *
+       * The problem, as of 2017-05-30:
+       * When matching a GLXFBConfig to a __DRIconfig, GLX ignores the channel
+       * order and chooses the first __DRIconfig with the expected channel
+       * sizes. Specifically, GLX compares the GLXFBConfig's and __DRIconfig's
+       * __DRI_ATTRIB_{CHANNEL}_SIZE but ignores __DRI_ATTRIB_{CHANNEL}_MASK.
+       *
+       * EGL does not suffer from this problem. It correctly compares the
+       * channel masks when matching EGLConfig to __DRIconfig.
+       */
+
+      /* Required by Android, for HAL_PIXEL_FORMAT_RGBA_8888. */
+      MESA_FORMAT_R8G8B8A8_UNORM,
+
+      /* Required by Android, for HAL_PIXEL_FORMAT_RGBX_8888. */
+      MESA_FORMAT_R8G8B8X8_UNORM,
+#endif
    };
    static const enum pipe_format pipe_formats[] = {
       PIPE_FORMAT_BGRA8888_UNORM,
@@ -118,6 +167,14 @@ dri_fill_in_modes(struct dri_screen *screen)
       PIPE_FORMAT_BGRA8888_SRGB,
       PIPE_FORMAT_BGRX8888_SRGB,
       PIPE_FORMAT_B5G6R5_UNORM,
+#ifdef ANDROID
+      /*
+       * To reduce the risk of breaking non-Android users in stable release
+       * let's keep these for Android alone until this is handled properly.
+       */
+      PIPE_FORMAT_RGBA8888_UNORM,
+      PIPE_FORMAT_RGBX8888_UNORM,
+#endif
    };
    mesa_format format;
    __DRIconfig **configs = NULL;
@@ -143,7 +200,7 @@ dri_fill_in_modes(struct dri_screen *screen)
       stencil_bits_array[0] = 0;
       depth_buffer_factor = 1;
    }
- 
+
    msaa_samples_max = (screen->st_api->feature_mask & ST_API_FEATURE_MS_VISUALS_MASK)
       ? MSAA_VISUAL_MAX_SAMPLES : 1;
 
@@ -254,19 +311,41 @@ dri_fill_st_visual(struct st_visual *stvis, struct dri_screen *screen,
    if (!mode)
       return;
 
-   if (mode->redBits == 8) {
-      if (mode->alphaBits == 8)
-         if (mode->sRGBCapable)
-            stvis->color_format = PIPE_FORMAT_BGRA8888_SRGB;
-         else
-            stvis->color_format = PIPE_FORMAT_BGRA8888_UNORM;
-      else
-         if (mode->sRGBCapable)
-            stvis->color_format = PIPE_FORMAT_BGRX8888_SRGB;
-         else
-            stvis->color_format = PIPE_FORMAT_BGRX8888_UNORM;
-   } else {
+   /* Deduce the color format. */
+   switch (mode->redMask) {
+   case 0x00FF0000:
+      if (mode->alphaMask) {
+         assert(mode->alphaMask == 0xFF000000);
+         stvis->color_format = mode->sRGBCapable ?
+                                  PIPE_FORMAT_BGRA8888_SRGB :
+                                  PIPE_FORMAT_BGRA8888_UNORM;
+      } else {
+         stvis->color_format = mode->sRGBCapable ?
+                                  PIPE_FORMAT_BGRX8888_SRGB :
+                                  PIPE_FORMAT_BGRX8888_UNORM;
+      }
+      break;
+
+   case 0x000000FF:
+      if (mode->alphaMask) {
+         assert(mode->alphaMask == 0xFF000000);
+         stvis->color_format = mode->sRGBCapable ?
+                                  PIPE_FORMAT_RGBA8888_SRGB :
+                                  PIPE_FORMAT_RGBA8888_UNORM;
+      } else {
+         stvis->color_format = mode->sRGBCapable ?
+                                  PIPE_FORMAT_RGBX8888_SRGB :
+                                  PIPE_FORMAT_RGBX8888_UNORM;
+      }
+      break;
+
+   case 0x0000F800:
       stvis->color_format = PIPE_FORMAT_B5G6R5_UNORM;
+      break;
+
+   default:
+      assert(!"unsupported visual: invalid red mask");
+      return;
    }
 
    if (mode->sampleBuffers) {
@@ -390,6 +469,9 @@ dri_destroy_option_cache(struct dri_screen * screen)
 void
 dri_destroy_screen_helper(struct dri_screen * screen)
 {
+   if (screen->base.destroy)
+      screen->base.destroy(&screen->base);
+
    if (screen->st_api && screen->st_api->destroy)
       screen->st_api->destroy(screen->st_api);
 
@@ -397,7 +479,7 @@ dri_destroy_screen_helper(struct dri_screen * screen)
       screen->base.screen->destroy(screen->base.screen);
 
    dri_destroy_option_cache(screen);
-   pipe_mutex_destroy(screen->opencl_func_mutex);
+   mtx_destroy(&screen->opencl_func_mutex);
 }
 
 void
@@ -425,14 +507,53 @@ dri_postprocessing_init(struct dri_screen *screen)
    }
 }
 
+static void
+dri_set_background_context(struct st_context_iface *st,
+                           struct util_queue_monitoring *queue_info)
+{
+   struct dri_context *ctx = (struct dri_context *)st->st_manager_private;
+   const __DRIbackgroundCallableExtension *backgroundCallable =
+      ctx->sPriv->dri2.backgroundCallable;
+
+   /* Note: Mesa will only call this function if GL multithreading is enabled
+    * We only do that if the loader exposed the __DRI_BACKGROUND_CALLABLE
+    * extension. So we know that backgroundCallable is not NULL.
+    */
+   assert(backgroundCallable);
+   backgroundCallable->setBackgroundContext(ctx->cPriv->loaderPrivate);
+
+   if (ctx->hud)
+      hud_add_queue_for_monitoring(ctx->hud, queue_info);
+}
+
+unsigned
+dri_init_options_get_screen_flags(struct dri_screen *screen,
+                                  const char* driver_name)
+{
+   unsigned flags = 0;
+
+   driParseOptionInfo(&screen->optionCacheDefaults, gallium_config_options.xml);
+   driParseConfigFiles(&screen->optionCache,
+                       &screen->optionCacheDefaults,
+                       screen->sPriv->myNum,
+                       driver_name);
+   dri_fill_st_options(screen);
+
+   if (driQueryOptionb(&screen->optionCache,
+                       "glsl_correct_derivatives_after_discard"))
+      flags |= PIPE_SCREEN_ENABLE_CORRECT_TGSI_DERIVATIVES_AFTER_KILL;
+
+   return flags;
+}
+
 const __DRIconfig **
 dri_init_screen_helper(struct dri_screen *screen,
-                       struct pipe_screen *pscreen,
-                       const char* driver_name)
+                       struct pipe_screen *pscreen)
 {
    screen->base.screen = pscreen;
    screen->base.get_egl_image = dri_get_egl_image;
    screen->base.get_param = dri_get_param;
+   screen->base.set_background_context = dri_set_background_context;
 
    screen->st_api = st_gl_api_create();
    if (!screen->st_api)
@@ -442,15 +563,6 @@ dri_init_screen_helper(struct dri_screen *screen,
       screen->target = PIPE_TEXTURE_2D;
    else
       screen->target = PIPE_TEXTURE_RECT;
-
-   driParseOptionInfo(&screen->optionCacheDefaults, gallium_config_options.xml);
-
-   driParseConfigFiles(&screen->optionCache,
-                       &screen->optionCacheDefaults,
-                       screen->sPriv->myNum,
-                       driver_name);
-
-   dri_fill_st_options(&screen->options, &screen->optionCache);
 
    /* Handle force_s3tc_enable. */
    if (!util_format_s3tc_enabled && screen->options.force_s3tc_enable) {

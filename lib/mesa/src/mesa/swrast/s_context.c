@@ -29,6 +29,8 @@
 #include "main/bufferobj.h"
 #include "main/mtypes.h"
 #include "main/samplerobj.h"
+#include "main/state.h"
+#include "main/stencil.h"
 #include "main/teximage.h"
 #include "program/prog_parameter.h"
 #include "program/prog_statevars.h"
@@ -61,7 +63,7 @@ _swrast_update_rasterflags( struct gl_context *ctx )
    if (ctx->Depth.Test)                   rasterMask |= DEPTH_BIT;
    if (swrast->_FogEnabled)               rasterMask |= FOG_BIT;
    if (ctx->Scissor.EnableFlags)          rasterMask |= CLIP_BIT;
-   if (ctx->Stencil._Enabled)             rasterMask |= STENCIL_BIT;
+   if (_mesa_stencil_is_enabled(ctx))     rasterMask |= STENCIL_BIT;
    for (i = 0; i < ctx->Const.MaxDrawBuffers; i++) {
       if (!ctx->Color.ColorMask[i][0] ||
           !ctx->Color.ColorMask[i][1] ||
@@ -108,7 +110,7 @@ _swrast_update_rasterflags( struct gl_context *ctx )
       rasterMask |= FRAGPROG_BIT;
    }
 
-   if (ctx->ATIFragmentShader._Enabled) {
+   if (_mesa_ati_fragment_shader_enabled(ctx)) {
       rasterMask |= ATIFRAGSHADER_BIT;
    }
 
@@ -220,13 +222,13 @@ _swrast_update_deferred_texture(struct gl_context *ctx)
    }
    else {
       GLboolean use_fprog = _swrast_use_fragment_program(ctx);
-      const struct gl_fragment_program *fprog
-         = ctx->FragmentProgram._Current;
-      if (use_fprog && (fprog->Base.OutputsWritten & (1 << FRAG_RESULT_DEPTH))) {
+      const struct gl_program *fprog = ctx->FragmentProgram._Current;
+      if (use_fprog &&
+          (fprog->info.outputs_written & (1 << FRAG_RESULT_DEPTH))) {
          /* Z comes from fragment program/shader */
          swrast->_DeferredTexture = GL_FALSE;
       }
-      else if (use_fprog && fprog->UsesKill) {
+      else if (use_fprog && fprog->info.fs.uses_discard) {
          swrast->_DeferredTexture = GL_FALSE;
       }
       else if (ctx->Query.CurrentOcclusionObject) {
@@ -247,9 +249,9 @@ static void
 _swrast_update_fog_state( struct gl_context *ctx )
 {
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
-   const struct gl_fragment_program *fp = ctx->FragmentProgram._Current;
+   const struct gl_program *fp = ctx->FragmentProgram._Current;
 
-   assert(fp == NULL || fp->Base.Target == GL_FRAGMENT_PROGRAM_ARB);
+   assert(fp == NULL || fp->Target == GL_FRAGMENT_PROGRAM_ARB);
    (void) fp; /* silence unused var warning */
 
    /* determine if fog is needed, and if so, which fog mode */
@@ -269,7 +271,7 @@ _swrast_update_fragment_program(struct gl_context *ctx, GLbitfield newState)
       return;
 
    _mesa_load_state_parameters(ctx,
-                               ctx->FragmentProgram._Current->Base.Parameters);
+                               ctx->FragmentProgram._Current->Parameters);
 }
 
 
@@ -288,7 +290,7 @@ _swrast_update_specular_vertex_add(struct gl_context *ctx)
    swrast->SpecularVertexAdd = (separateSpecular
                                 && ctx->Texture._MaxEnabledTexImageUnit == -1
                                 && !_swrast_use_fragment_program(ctx)
-                                && !ctx->ATIFragmentShader._Enabled);
+                                && !_mesa_ati_fragment_shader_enabled(ctx));
 }
 
 
@@ -500,10 +502,10 @@ _swrast_update_active_attribs(struct gl_context *ctx)
     */
    if (_swrast_use_fragment_program(ctx)) {
       /* fragment program/shader */
-      attribsMask = ctx->FragmentProgram._Current->Base.InputsRead;
+      attribsMask = ctx->FragmentProgram._Current->info.inputs_read;
       attribsMask &= ~VARYING_BIT_POS; /* WPOS is always handled specially */
    }
-   else if (ctx->ATIFragmentShader._Enabled) {
+   else if (_mesa_ati_fragment_shader_enabled(ctx)) {
       attribsMask = VARYING_BIT_COL0 | VARYING_BIT_COL1 |
                     VARYING_BIT_FOGC | VARYING_BITS_TEX_ANY;
    }

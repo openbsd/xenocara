@@ -25,7 +25,6 @@ GL_MINOR = 5
 GL_TINY = $(MESA_MAJOR)$(MESA_MINOR)0$(MESA_TINY)
 
 if HAVE_SHARED_GLAPI
-SHARED_GLAPI_CFLAGS = -DGLX_SHARED_GLAPI
 SHARED_GLAPI_LIB = $(top_builddir)/src/mapi/shared-glapi/libglapi.la
 endif
 
@@ -40,7 +39,6 @@ AM_CPPFLAGS = \
 	-I$(top_srcdir)/src/gallium/state_trackers/glx/xlib \
 	-I$(top_srcdir)/src/gallium/auxiliary \
 	-I$(top_srcdir)/src/gallium/winsys \
-	$(SHARED_GLAPI_CFLAGS) \
 	-DGALLIUM_SOFTPIPE \
 	-DGALLIUM_RBUG \
 	-DGALLIUM_TRACE
@@ -54,6 +52,7 @@ lib@GL_LIB@_la_SOURCES = xlib.c
 lib@GL_LIB@_la_LDFLAGS = \
 	-no-undefined \
 	-version-number $(GL_MAJOR):$(GL_MINOR):$(GL_TINY) \
+	$(BSYMBOLIC) \
 	$(GC_SECTIONS) \
 	$(LD_NO_UNDEFINED)
 
@@ -73,9 +72,10 @@ lib@GL_LIB@_la_LIBADD = \
 	$(top_builddir)/src/gallium/auxiliary/libgallium.la \
 	$(SHARED_GLAPI_LIB) \
 	$(GL_LIB_DEPS) \
-	$(CLOCK_LIB)
+	$(CLOCK_LIB) \
+	$(LIBUNWIND_LIBS)
 
-if HAVE_MESA_LLVM
+if HAVE_GALLIUM_LLVM
 lib@GL_LIB@_la_LIBADD += $(top_builddir)/src/gallium/drivers/llvmpipe/libllvmpipe.la $(LLVM_LIBS)
 AM_CPPFLAGS += -DGALLIUM_LLVMPIPE
 lib@GL_LIB@_la_LDFLAGS += $(LLVM_LDFLAGS)

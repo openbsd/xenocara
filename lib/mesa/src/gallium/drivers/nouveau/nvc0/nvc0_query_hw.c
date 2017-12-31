@@ -346,6 +346,7 @@ nvc0_hw_get_query_result(struct nvc0_context *nvc0, struct nvc0_query *q,
    case PIPE_QUERY_PIPELINE_STATISTICS:
       for (i = 0; i < 10; ++i)
          res64[i] = data64[i * 2] - data64[24 + i * 2];
+      result->pipeline_statistics.cs_invocations = 0;
       break;
    case NVC0_HW_QUERY_TFB_BUFFER_OFFSET:
       res32[0] = hq->data[1];
@@ -406,10 +407,7 @@ nvc0_hw_get_query_result_resource(struct nvc0_context *nvc0,
    nouveau_pushbuf_space(push, 32, 2, 0);
    PUSH_REFN (push, hq->bo, NOUVEAU_BO_GART | NOUVEAU_BO_RD);
    PUSH_REFN (push, buf->bo, buf->domain | NOUVEAU_BO_WR);
-   BEGIN_NVC0(push, NVC0_3D(QUERY_ADDRESS_HIGH), 2);
-   PUSH_DATAh(push, buf->address + offset);
-   PUSH_DATA (push, buf->address + offset);
-   BEGIN_1IC0(push, NVC0_3D(MACRO_QUERY_BUFFER_WRITE), 7);
+   BEGIN_1IC0(push, NVC0_3D(MACRO_QUERY_BUFFER_WRITE), 9);
    if (q->type == PIPE_QUERY_OCCLUSION_PREDICATE) /* XXX what if 64-bit? */
       PUSH_DATA(push, 0x00000001);
    else if (result_type == PIPE_QUERY_TYPE_I32)
@@ -468,6 +466,8 @@ nvc0_hw_get_query_result_resource(struct nvc0_context *nvc0,
       nouveau_pushbuf_data(push, hq->bo, hq->offset,
                            4 | NVC0_IB_ENTRY_1_NO_PREFETCH);
    }
+   PUSH_DATAh(push, buf->address + offset);
+   PUSH_DATA (push, buf->address + offset);
 
    if (buf->mm) {
       nouveau_fence_ref(nvc0->screen->base.fence.current, &buf->fence);

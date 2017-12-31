@@ -71,7 +71,7 @@ AM_LDFLAGS += \
 	-Wl,--version-script=$(top_srcdir)/src/gallium/targets/pipe-loader/pipe.sym
 endif
 
-if HAVE_MESA_LLVM
+if HAVE_GALLIUM_LLVM
 PIPE_LIBS += $(LLVM_LIBS)
 AM_LDFLAGS += $(LLVM_LDFLAGS)
 endif
@@ -86,21 +86,7 @@ pipe_i915_la_LIBADD = \
 	$(top_builddir)/src/gallium/winsys/i915/drm/libi915drm.la \
 	$(top_builddir)/src/gallium/drivers/i915/libi915.la \
 	$(LIBDRM_LIBS) \
-	$(INTEL_LIBS)
-
-endif
-
-if HAVE_GALLIUM_ILO
-pipe_LTLIBRARIES += pipe_i965.la
-
-pipe_i965_la_SOURCES = pipe_i965.c
-nodist_EXTRA_pipe_i965_la_SOURCES = dummy.cpp
-pipe_i965_la_LIBADD = \
-	$(PIPE_LIBS) \
-	$(top_builddir)/src/gallium/winsys/intel/drm/libintelwinsys.la \
-	$(top_builddir)/src/gallium/drivers/ilo/libilo.la \
-	$(LIBDRM_LIBS) \
-	$(INTEL_LIBS)
+	$(I915_LIBS)
 
 endif
 
@@ -143,8 +129,8 @@ pipe_r600_la_LIBADD = \
 	$(top_builddir)/src/gallium/drivers/radeon/libradeon.la \
 	$(top_builddir)/src/gallium/drivers/r600/libr600.la \
 	$(LIBDRM_LIBS) \
-	$(RADEON_LIBS)
-
+	$(RADEON_LIBS) \
+	$(LIBELF_LIBS)
 endif
 
 if HAVE_GALLIUM_RADEONSI
@@ -158,6 +144,7 @@ pipe_radeonsi_la_LIBADD = \
 	$(top_builddir)/src/gallium/winsys/amdgpu/drm/libamdgpuwinsys.la \
 	$(top_builddir)/src/gallium/drivers/radeon/libradeon.la \
 	$(top_builddir)/src/gallium/drivers/radeonsi/libradeonsi.la \
+	$(top_builddir)/src/amd/common/libamd_common.la \
 	$(LIBDRM_LIBS) \
 	$(RADEON_LIBS) \
 	$(AMDGPU_LIBS)

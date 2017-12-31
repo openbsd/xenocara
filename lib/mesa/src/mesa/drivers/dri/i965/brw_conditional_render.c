@@ -48,13 +48,38 @@ set_predicate_enable(struct brw_context *brw,
 }
 
 static void
-set_predicate_for_result(struct brw_context *brw,
-                         struct brw_query_object *query,
-                         bool inverted)
+set_predicate_for_overflow_query(struct brw_context *brw,
+                                 struct brw_query_object *query,
+                                 int stream_start, int count)
 {
-   int load_op;
+   if (!can_do_mi_math_and_lrr(brw->screen)) {
+      brw->predicate.state = BRW_PREDICATE_STATE_STALL_FOR_QUERY;
+      return;
+   }
 
-   assert(query->bo != NULL);
+   brw->predicate.state = BRW_PREDICATE_STATE_USE_BIT;
+
+   /* Needed to ensure the memory is coherent for the MI_LOAD_REGISTER_MEM
+    * command when loading the values into the predicate source registers for
+    * conditional rendering.
+    */
+   brw_emit_pipe_control_flush(brw, PIPE_CONTROL_FLUSH_ENABLE);
+
+   hsw_overflow_result_to_gpr0(brw, query, count);
+   brw_load_register_reg64(brw, HSW_CS_GPR(0), MI_PREDICATE_SRC0);
+   brw_load_register_imm64(brw, MI_PREDICATE_SRC1, 0ull);
+}
+
+static void
+set_predicate_for_occlusion_query(struct brw_context *brw,
+                                  struct brw_query_object *query)
+{
+   if (!brw->predicate.supported) {
+      brw->predicate.state = BRW_PREDICATE_STATE_STALL_FOR_QUERY;
+      return;
+   }
+
+   brw->predicate.state = BRW_PREDICATE_STATE_USE_BIT;
 
    /* Needed to ensure the memory is coherent for the MI_LOAD_REGISTER_MEM
     * command when loading the values into the predicate source registers for
@@ -74,20 +99,41 @@ set_predicate_for_result(struct brw_context *brw,
                            I915_GEM_DOMAIN_INSTRUCTION,
                            0, /* write domain */
                            8 /* offset */);
+}
 
-   if (inverted)
-      load_op = MI_PREDICATE_LOADOP_LOAD;
-   else
-      load_op = MI_PREDICATE_LOADOP_LOADINV;
+static void
+set_predicate_for_result(struct brw_context *brw,
+                         struct brw_query_object *query,
+                         bool inverted)
+{
+   int load_op;
 
-   BEGIN_BATCH(1);
-   OUT_BATCH(GEN7_MI_PREDICATE |
-             load_op |
-             MI_PREDICATE_COMBINEOP_SET |
-             MI_PREDICATE_COMPAREOP_SRCS_EQUAL);
-   ADVANCE_BATCH();
+   assert(query->bo != NULL);
 
-   brw->predicate.state = BRW_PREDICATE_STATE_USE_BIT;
+   switch (query->Base.Target) {
+   case GL_TRANSFORM_FEEDBACK_STREAM_OVERFLOW_ARB:
+      set_predicate_for_overflow_query(brw, query, 0, 1);
+      break;
+   case GL_TRANSFORM_FEEDBACK_OVERFLOW_ARB:
+      set_predicate_for_overflow_query(brw, query, 0, MAX_VERTEX_STREAMS);
+      break;
+   default:
+      set_predicate_for_occlusion_query(brw, query);
+   }
+
+   if (brw->predicate.state == BRW_PREDICATE_STATE_USE_BIT) {
+      if (inverted)
+         load_op = MI_PREDICATE_LOADOP_LOAD;
+      else
+         load_op = MI_PREDICATE_LOADOP_LOADINV;
+
+      BEGIN_BATCH(1);
+      OUT_BATCH(GEN7_MI_PREDICATE |
+                load_op |
+                MI_PREDICATE_COMBINEOP_SET |
+                MI_PREDICATE_COMPAREOP_SRCS_EQUAL);
+      ADVANCE_BATCH();
+   }
 }
 
 static void
@@ -98,9 +144,6 @@ brw_begin_conditional_render(struct gl_context *ctx,
    struct brw_context *brw = brw_context(ctx);
    struct brw_query_object *query = (struct brw_query_object *) q;
    bool inverted;
-
-   if (!brw->predicate.supported)
-      return;
 
    switch (mode) {
    case GL_QUERY_WAIT:
@@ -151,17 +194,11 @@ brw_init_conditional_render_functions(struct dd_function_table *functions)
 bool
 brw_check_conditional_render(struct brw_context *brw)
 {
-   if (brw->predicate.supported) {
-      /* In some cases it is possible to determine that the primitives should
-       * be skipped without needing the predicate enable bit and still without
-       * stalling.
-       */
-      return brw->predicate.state != BRW_PREDICATE_STATE_DONT_RENDER;
-   } else if (brw->ctx.Query.CondRenderQuery) {
+   if (brw->predicate.state == BRW_PREDICATE_STATE_STALL_FOR_QUERY) {
       perf_debug("Conditional rendering is implemented in software and may "
                  "stall.\n");
       return _mesa_check_conditional_render(&brw->ctx);
-   } else {
-      return true;
    }
+
+   return brw->predicate.state != BRW_PREDICATE_STATE_DONT_RENDER;
 }

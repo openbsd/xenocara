@@ -26,6 +26,7 @@
  **************************************************************************/
 
 #include "util/u_handle_table.h"
+#include "util/u_memory.h"
 
 #include "vl/vl_defines.h"
 #include "vl/vl_video_buffer.h"
@@ -34,7 +35,7 @@
 #include "va_private.h"
 
 static const VARectangle *
-vlVaRegionDefault(const VARectangle *region, struct pipe_video_buffer *buf,
+vlVaRegionDefault(const VARectangle *region, vlVaSurface *surf,
 		  VARectangle *def)
 {
    if (region)
@@ -42,8 +43,8 @@ vlVaRegionDefault(const VARectangle *region, struct pipe_video_buffer *buf,
 
    def->x = 0;
    def->y = 0;
-   def->width = buf->width;
-   def->height = buf->height;
+   def->width = surf->templat.width;
+   def->height = surf->templat.height;
 
    return def;
 }
@@ -80,6 +81,7 @@ vlVaPostProcCompositor(vlVaDriver *drv, vlVaContext *context,
    vl_compositor_set_layer_dst_area(&drv->cstate, 0, &dst_rect);
    vl_compositor_render(&drv->cstate, &drv->compositor, surfaces[0], NULL, false);
 
+   drv->pipe->flush(drv->pipe, NULL, 0);
    return VA_STATUS_SUCCESS;
 }
 
@@ -183,13 +185,13 @@ vlVaApplyDeint(vlVaDriver *drv, vlVaContext *context,
 {
    vlVaSurface *prevprev, *prev, *next;
 
-   if (param->num_forward_references < 1 ||
-       param->num_backward_references < 2)
+   if (param->num_forward_references < 2 ||
+       param->num_backward_references < 1)
       return current;
 
-   prevprev = handle_table_get(drv->htab, param->backward_references[1]);
-   prev = handle_table_get(drv->htab, param->backward_references[0]);
-   next = handle_table_get(drv->htab, param->forward_references[0]);
+   prevprev = handle_table_get(drv->htab, param->forward_references[1]);
+   prev = handle_table_get(drv->htab, param->forward_references[0]);
+   next = handle_table_get(drv->htab, param->backward_references[0]);
 
    if (!prevprev || !prev || !next)
       return current;
@@ -228,7 +230,7 @@ vlVaHandleVAProcPipelineParameterBufferType(vlVaDriver *drv, vlVaContext *contex
    const VARectangle *src_region, *dst_region;
    VAProcPipelineParameterBuffer *param;
    struct pipe_video_buffer *src;
-   vlVaSurface *src_surface;
+   vlVaSurface *src_surface, *dst_surface;
    unsigned i;
 
    if (!drv || !context)
@@ -243,6 +245,8 @@ vlVaHandleVAProcPipelineParameterBufferType(vlVaDriver *drv, vlVaContext *contex
    param = buf->data;
 
    src_surface = handle_table_get(drv->htab, param->surface);
+   dst_surface = handle_table_get(drv->htab, context->target_id);
+
    if (!src_surface || !src_surface->buffer)
       return VA_STATUS_ERROR_INVALID_SURFACE;
 
@@ -288,10 +292,11 @@ vlVaHandleVAProcPipelineParameterBufferType(vlVaDriver *drv, vlVaContext *contex
       }
    }
 
-   src_region = vlVaRegionDefault(param->surface_region, src_surface->buffer, &def_src_region);
-   dst_region = vlVaRegionDefault(param->output_region, context->target, &def_dst_region);
+   src_region = vlVaRegionDefault(param->surface_region, src_surface, &def_src_region);
+   dst_region = vlVaRegionDefault(param->output_region, dst_surface, &def_dst_region);
 
-   if (context->target->buffer_format != PIPE_FORMAT_NV12)
+   if (context->target->buffer_format != PIPE_FORMAT_NV12 &&
+       context->target->buffer_format != PIPE_FORMAT_P016)
       return vlVaPostProcCompositor(drv, context, src_region, dst_region,
                                     src, context->target, deinterlace);
    else

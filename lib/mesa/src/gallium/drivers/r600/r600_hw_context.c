@@ -274,23 +274,63 @@ void r600_context_gfx_flush(void *context, unsigned flags,
 
 	r600_flush_emit(ctx);
 
+	if (ctx->trace_buf)
+		eg_trace_emit(ctx);
 	/* old kernels and userspace don't set SX_MISC, so we must reset it to 0 here */
 	if (ctx->b.chip_class == R600) {
 		radeon_set_context_reg(cs, R_028350_SX_MISC, 0);
 	}
 
+	if (ctx->is_debug) {
+		/* Save the IB for debug contexts. */
+		radeon_clear_saved_cs(&ctx->last_gfx);
+		radeon_save_cs(ws, cs, &ctx->last_gfx);
+		r600_resource_reference(&ctx->last_trace_buf, ctx->trace_buf);
+		r600_resource_reference(&ctx->trace_buf, NULL);
+	}
 	/* Flush the CS. */
 	ws->cs_flush(cs, flags, &ctx->b.last_gfx_fence);
 	if (fence)
 		ws->fence_reference(fence, ctx->b.last_gfx_fence);
 	ctx->b.num_gfx_cs_flushes++;
 
+	if (ctx->is_debug) {
+		if (!ws->fence_wait(ws, ctx->b.last_gfx_fence, 10000000)) {
+			const char *fname = getenv("R600_TRACE");
+			if (!fname)
+				exit(-1);
+			FILE *fl = fopen(fname, "w+");
+			if (fl) {
+				eg_dump_debug_state(&ctx->b.b, fl, 0);
+				fclose(fl);
+			} else
+				perror(fname);
+			exit(-1);
+		}
+	}
 	r600_begin_new_cs(ctx);
 }
 
 void r600_begin_new_cs(struct r600_context *ctx)
 {
 	unsigned shader;
+
+	if (ctx->is_debug) {
+		uint32_t zero = 0;
+
+		/* Create a buffer used for writing trace IDs and initialize it to 0. */
+		assert(!ctx->trace_buf);
+		ctx->trace_buf = (struct r600_resource*)
+			pipe_buffer_create(ctx->b.b.screen, 0,
+					   PIPE_USAGE_STAGING, 4);
+		if (ctx->trace_buf)
+			pipe_buffer_write_nooverlap(&ctx->b.b, &ctx->trace_buf->b.b,
+						    0, sizeof(zero), &zero);
+		ctx->trace_id = 0;
+	}
+
+	if (ctx->trace_buf)
+		eg_trace_emit(ctx);
 
 	ctx->b.flags = 0;
 	ctx->b.gtt = 0;
@@ -369,6 +409,8 @@ void r600_begin_new_cs(struct r600_context *ctx)
 	/* Re-emit the draw state. */
 	ctx->last_primitive_type = -1;
 	ctx->last_start_instance = -1;
+	ctx->last_rast_prim      = -1;
+	ctx->current_rast_prim   = -1;
 
 	assert(!ctx->b.gfx.cs->prev_dw);
 	ctx->b.initial_gfx_cs_size = ctx->b.gfx.cs->current.cdw;
@@ -555,5 +597,4 @@ void r600_dma_copy_buffer(struct r600_context *rctx,
 		src_offset += csize << 2;
 		size -= csize;
 	}
-	r600_dma_emit_wait_idle(&rctx->b);
 }

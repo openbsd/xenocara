@@ -35,7 +35,6 @@
 #include "main/errors.h"
 #include "main/shaderapi.h"
 #include "main/uniforms.h"
-#include "util/string_to_uint_map.h"
 
 #include "st_context.h"
 #include "st_program.h"
@@ -45,6 +44,7 @@
 #include "compiler/glsl_types.h"
 #include "compiler/glsl/glsl_to_nir.h"
 #include "compiler/glsl/ir.h"
+#include "compiler/glsl/string_to_uint_map.h"
 
 
 /* Depending on PIPE_CAP_TGSI_TEXCOORD (st->needs_texcoord_semantic) we
@@ -80,10 +80,10 @@ st_nir_assign_vs_in_locations(struct gl_program *prog, nir_shader *nir)
 
    /* TODO de-duplicate w/ similar code in st_translate_vertex_program()? */
    for (attr = 0; attr < VERT_ATTRIB_MAX; attr++) {
-      if ((prog->InputsRead & BITFIELD64_BIT(attr)) != 0) {
+      if ((prog->info.inputs_read & BITFIELD64_BIT(attr)) != 0) {
          input_to_index[attr] = num_inputs;
          num_inputs++;
-         if ((prog->DoubleInputsRead & BITFIELD64_BIT(attr)) != 0) {
+         if ((prog->info.double_inputs_read & BITFIELD64_BIT(attr)) != 0) {
             /* add placeholder for second part of a double attribute */
             num_inputs++;
          }
@@ -91,6 +91,9 @@ st_nir_assign_vs_in_locations(struct gl_program *prog, nir_shader *nir)
          input_to_index[attr] = ~0;
       }
    }
+
+   /* bit of a hack, mirroring st_translate_vertex_program */
+   input_to_index[VERT_ATTRIB_EDGEFLAG] = num_inputs;
 
    nir->num_inputs = 0;
    nir_foreach_variable_safe(var, &nir->inputs) {
@@ -181,10 +184,11 @@ st_nir_assign_uniform_locations(struct gl_program *prog,
          continue;
 
       if (uniform->type->is_sampler()) {
-         unsigned val;
+         unsigned val = 0;
          bool found = shader_program->UniformHash->get(val, uniform->name);
          loc = shaderidx++;
          assert(found);
+         (void) found; /* silence unused var warning */
          /* this ensure that nir_lower_samplers looks at the correct
           * shader_program->UniformStorage[location]:
           */
@@ -241,13 +245,14 @@ st_glsl_to_nir(struct st_context *st, struct gl_program *prog,
    NIR_PASS_V(nir, nir_split_var_copies);
    NIR_PASS_V(nir, nir_lower_var_copies);
    NIR_PASS_V(nir, st_nir_lower_builtin);
+   NIR_PASS_V(nir, nir_lower_atomics, shader_program);
 
    /* fragment shaders may need : */
    if (stage == MESA_SHADER_FRAGMENT) {
       static const gl_state_index wposTransformState[STATE_LENGTH] = {
          STATE_INTERNAL, STATE_FB_WPOS_Y_TRANSFORM
       };
-      nir_lower_wpos_ytransform_options wpos_options = {0};
+      nir_lower_wpos_ytransform_options wpos_options = { { 0 } };
       struct pipe_screen *pscreen = st->pipe->screen;
 
       memcpy(wpos_options.state_tokens, wposTransformState,
@@ -324,20 +329,19 @@ st_finalize_nir(struct st_context *st, struct gl_program *prog, nir_shader *nir)
       sort_varyings(&nir->outputs);
       nir_assign_var_locations(&nir->outputs,
                                &nir->num_outputs,
-                               VARYING_SLOT_VAR0,
                                st_glsl_type_size);
       st_nir_fixup_varying_slots(st, &nir->outputs);
    } else if (nir->stage == MESA_SHADER_FRAGMENT) {
       sort_varyings(&nir->inputs);
       nir_assign_var_locations(&nir->inputs,
                                &nir->num_inputs,
-                               VARYING_SLOT_VAR0,
                                st_glsl_type_size);
       st_nir_fixup_varying_slots(st, &nir->inputs);
       nir_assign_var_locations(&nir->outputs,
                                &nir->num_outputs,
-                               FRAG_RESULT_DATA0,
                                st_glsl_type_size);
+   } else if (nir->stage == MESA_SHADER_COMPUTE) {
+       /* TODO? */
    } else {
       unreachable("invalid shader type for tgsi bypass\n");
    }
@@ -350,10 +354,16 @@ st_finalize_nir(struct st_context *st, struct gl_program *prog, nir_shader *nir)
    case MESA_SHADER_FRAGMENT:
       shader_program = ((struct st_fragment_program *)prog)->shader_program;
       break;
+   case MESA_SHADER_COMPUTE:
+      shader_program = ((struct st_compute_program *)prog)->shader_program;
+      break;
    default:
       assert(!"should not be reached");
       return;
    }
+
+   NIR_PASS_V(nir, nir_lower_atomics_to_ssbo,
+         st->ctx->Const.Program[nir->stage].MaxAtomicBuffers);
 
    st_nir_assign_uniform_locations(prog, shader_program,
                                    &nir->uniforms, &nir->num_uniforms);
@@ -370,17 +380,16 @@ st_nir_get_mesa_program(struct gl_context *ctx,
                         struct gl_linked_shader *shader)
 {
    struct gl_program *prog;
-   GLenum target = _mesa_shader_stage_to_program(shader->Stage);
 
    validate_ir_tree(shader->ir);
 
-   prog = ctx->Driver.NewProgram(ctx, target, shader_program->Name);
-   if (!prog)
-      return NULL;
+   prog = shader->Program;
 
    prog->Parameters = _mesa_new_parameter_list();
 
-   _mesa_copy_linked_program_data(shader->Stage, shader_program, prog);
+   do_set_program_inouts(shader->ir, prog, shader->Stage);
+
+   _mesa_copy_linked_program_data(shader_program, shader);
    _mesa_generate_parameters_list_for_uniforms(shader_program, shader,
                                                prog->Parameters);
 
@@ -416,17 +425,9 @@ st_nir_get_mesa_program(struct gl_context *ctx,
       _mesa_log("\n\n");
    }
 
-   prog->Instructions = NULL;
-   prog->NumInstructions = 0;
-
-   do_set_program_inouts(shader->ir, prog, shader->Stage);
-
-   prog->SamplersUsed = shader->active_samplers;
    prog->ShadowSamplers = shader->shadow_samplers;
-   prog->ExternalSamplersUsed = gl_external_samplers(shader);
+   prog->ExternalSamplersUsed = gl_external_samplers(prog);
    _mesa_update_shader_textures_used(shader_program, prog);
-
-   _mesa_reference_program(ctx, &shader->Program, prog);
 
    /* Avoid reallocation of the program parameter list, because the uniform
     * storage is only associated with the original parameter list.
@@ -438,10 +439,11 @@ st_nir_get_mesa_program(struct gl_context *ctx,
     * prog->ParameterValues to get reallocated (e.g., anything that adds a
     * program constant) has to happen before creating this linkage.
     */
-   _mesa_associate_uniform_storage(ctx, shader_program, prog->Parameters);
+   _mesa_associate_uniform_storage(ctx, shader_program, prog, true);
 
    struct st_vertex_program *stvp;
    struct st_fragment_program *stfp;
+   struct st_compute_program *stcp;
 
    switch (shader->Stage) {
    case MESA_SHADER_VERTEX:
@@ -451,6 +453,10 @@ st_nir_get_mesa_program(struct gl_context *ctx,
    case MESA_SHADER_FRAGMENT:
       stfp = (struct st_fragment_program *)prog;
       stfp->shader_program = shader_program;
+      break;
+   case MESA_SHADER_COMPUTE:
+      stcp = (struct st_compute_program *)prog;
+      stcp->shader_program = shader_program;
       break;
    default:
       assert(!"should not be reached");

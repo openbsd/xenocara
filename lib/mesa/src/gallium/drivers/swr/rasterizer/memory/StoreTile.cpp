@@ -58,7 +58,7 @@ static std::vector<int32_t> sBuckets(NUM_SWR_FORMATS, -1);
 /// @param renderTargetIndex - Index to destination render target
 /// @param x, y - Coordinates to raster tile.
 /// @param pSrcHotTile - Pointer to Hot Tile
-void StoreHotTileToSurface(
+void SwrStoreHotTileToSurface(
     SWR_SURFACE_STATE *pDstSurface,
     SWR_FORMAT srcFormat,
     SWR_RENDERTARGET_ATTACHMENT renderTargetIndex,
@@ -93,7 +93,7 @@ void StoreHotTileToSurface(
 
     if(nullptr == pfnStoreTiles)
     {
-        SWR_ASSERT(false, "Invalid pixel format / tile mode for store tiles");
+        SWR_INVALID("Invalid pixel format / tile mode for store tiles");
         return;
     }
 

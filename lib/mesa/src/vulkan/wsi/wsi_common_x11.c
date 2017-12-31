@@ -33,16 +33,18 @@
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
-
+#include <fcntl.h>
 #include <poll.h>
+#include <xf86drm.h>
 #include "util/hash_table.h"
 
+#include "vk_util.h"
 #include "wsi_common.h"
 #include "wsi_common_x11.h"
 #include "wsi_common_queue.h"
 
 #define typed_memcpy(dest, src, count) ({ \
-   static_assert(sizeof(*src) == sizeof(*dest), ""); \
+   STATIC_ASSERT(sizeof(*src) == sizeof(*dest)); \
    memcpy((dest), (src), (count) * sizeof(*(src))); \
 })
 
@@ -59,6 +61,66 @@ struct wsi_x11 {
    /* Hash table of xcb_connection -> wsi_x11_connection mappings */
    struct hash_table *connections;
 };
+
+
+/** wsi_dri3_open
+ *
+ * Wrapper around xcb_dri3_open
+ */
+static int
+wsi_dri3_open(xcb_connection_t *conn,
+	      xcb_window_t root,
+	      uint32_t provider)
+{
+   xcb_dri3_open_cookie_t       cookie;
+   xcb_dri3_open_reply_t        *reply;
+   int                          fd;
+
+   cookie = xcb_dri3_open(conn,
+                          root,
+                          provider);
+
+   reply = xcb_dri3_open_reply(conn, cookie, NULL);
+   if (!reply)
+      return -1;
+
+   if (reply->nfd != 1) {
+      free(reply);
+      return -1;
+   }
+
+   fd = xcb_dri3_open_reply_fds(conn, reply)[0];
+   free(reply);
+   fcntl(fd, F_SETFD, fcntl(fd, F_GETFD) | FD_CLOEXEC);
+
+   return fd;
+}
+
+static bool
+wsi_x11_check_dri3_compatible(xcb_connection_t *conn, int local_fd)
+{
+   xcb_screen_iterator_t screen_iter =
+      xcb_setup_roots_iterator(xcb_get_setup(conn));
+   xcb_screen_t *screen = screen_iter.data;
+
+   int dri3_fd = wsi_dri3_open(conn, screen->root, None);
+   if (dri3_fd != -1) {
+      char *local_dev = drmGetRenderDeviceNameFromFd(local_fd);
+      char *dri3_dev = drmGetRenderDeviceNameFromFd(dri3_fd);
+      int ret;
+
+      close(dri3_fd);
+
+      ret = strcmp(local_dev, dri3_dev);
+
+      free(local_dev);
+      free(dri3_dev);
+
+      if (ret != 0)
+         return false;
+   }
+   return true;
+}
 
 static struct wsi_x11_connection *
 wsi_x11_connection_create(const VkAllocationCallbacks *alloc,
@@ -174,9 +236,9 @@ wsi_x11_get_connection(struct wsi_device *wsi_dev,
    return entry->data;
 }
 
-static const VkSurfaceFormatKHR formats[] = {
-   { .format = VK_FORMAT_B8G8R8A8_SRGB, },
-   { .format = VK_FORMAT_B8G8R8A8_UNORM, },
+static const VkFormat formats[] = {
+   VK_FORMAT_B8G8R8A8_SRGB,
+   VK_FORMAT_B8G8R8A8_UNORM,
 };
 
 static const VkPresentModeKHR present_modes[] = {
@@ -291,6 +353,8 @@ VkBool32 wsi_get_physical_device_xcb_presentation_support(
     struct wsi_device *wsi_device,
     VkAllocationCallbacks *alloc,
     uint32_t                                    queueFamilyIndex,
+    int fd,
+    bool can_handle_different_gpu,
     xcb_connection_t*                           connection,
     xcb_visualid_t                              visual_id)
 {
@@ -302,6 +366,10 @@ VkBool32 wsi_get_physical_device_xcb_presentation_support(
 
    if (!wsi_x11_check_for_dri3(wsi_conn))
       return false;
+
+   if (!can_handle_different_gpu)
+      if (!wsi_x11_check_dri3_compatible(connection, fd))
+         return false;
 
    unsigned visual_depth;
    if (!connection_get_visualtype(connection, visual_id, &visual_depth))
@@ -336,6 +404,8 @@ x11_surface_get_support(VkIcdSurfaceBase *icd_surface,
                         struct wsi_device *wsi_device,
                         const VkAllocationCallbacks *alloc,
                         uint32_t queueFamilyIndex,
+                        int local_fd,
+                        bool can_handle_different_gpu,
                         VkBool32* pSupported)
 {
    xcb_connection_t *conn = x11_surface_get_connection(icd_surface);
@@ -350,6 +420,10 @@ x11_surface_get_support(VkIcdSurfaceBase *icd_surface,
       *pSupported = false;
       return VK_SUCCESS;
    }
+
+   if (!can_handle_different_gpu)
+      if (!wsi_x11_check_dri3_compatible(conn, local_fd))
+         return false;
 
    unsigned visual_depth;
    if (!get_visualtype_for_window(conn, window, &visual_depth)) {
@@ -438,21 +512,51 @@ x11_surface_get_capabilities(VkIcdSurfaceBase *icd_surface,
 }
 
 static VkResult
+x11_surface_get_capabilities2(VkIcdSurfaceBase *icd_surface,
+                              const void *info_next,
+                              VkSurfaceCapabilities2KHR *caps)
+{
+   assert(caps->sType == VK_STRUCTURE_TYPE_SURFACE_CAPABILITIES_2_KHR);
+
+   return x11_surface_get_capabilities(icd_surface, &caps->surfaceCapabilities);
+}
+
+static VkResult
 x11_surface_get_formats(VkIcdSurfaceBase *surface,
                         struct wsi_device *wsi_device,
                         uint32_t *pSurfaceFormatCount,
                         VkSurfaceFormatKHR *pSurfaceFormats)
 {
-   if (pSurfaceFormats == NULL) {
-      *pSurfaceFormatCount = ARRAY_SIZE(formats);
-      return VK_SUCCESS;
+   VK_OUTARRAY_MAKE(out, pSurfaceFormats, pSurfaceFormatCount);
+
+   for (unsigned i = 0; i < ARRAY_SIZE(formats); i++) {
+      vk_outarray_append(&out, f) {
+         f->format = formats[i];
+         f->colorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
+      }
    }
 
-   *pSurfaceFormatCount = MIN2(*pSurfaceFormatCount, ARRAY_SIZE(formats));
-   typed_memcpy(pSurfaceFormats, formats, *pSurfaceFormatCount);
+   return vk_outarray_status(&out);
+}
 
-   return *pSurfaceFormatCount < ARRAY_SIZE(formats) ?
-      VK_INCOMPLETE : VK_SUCCESS;
+static VkResult
+x11_surface_get_formats2(VkIcdSurfaceBase *surface,
+                        struct wsi_device *wsi_device,
+                        const void *info_next,
+                        uint32_t *pSurfaceFormatCount,
+                        VkSurfaceFormat2KHR *pSurfaceFormats)
+{
+   VK_OUTARRAY_MAKE(out, pSurfaceFormats, pSurfaceFormatCount);
+
+   for (unsigned i = 0; i < ARRAY_SIZE(formats); i++) {
+      vk_outarray_append(&out, f) {
+         assert(f->sType == VK_STRUCTURE_TYPE_SURFACE_FORMAT_2_KHR);
+         f->surfaceFormat.format = formats[i];
+         f->surfaceFormat.colorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
+      }
+   }
+
+   return vk_outarray_status(&out);
 }
 
 static VkResult
@@ -512,7 +616,9 @@ VkResult wsi_create_xlib_surface(const VkAllocationCallbacks *pAllocator,
 
 struct x11_image {
    VkImage image;
+   VkImage linear_image; // for prime
    VkDeviceMemory memory;
+   VkDeviceMemory linear_memory; // for prime
    xcb_pixmap_t                              pixmap;
    bool                                      busy;
    struct xshmfence *                        shm_fence;
@@ -527,7 +633,6 @@ struct x11_swapchain {
    xcb_gc_t                                     gc;
    uint32_t                                     depth;
    VkExtent2D                                   extent;
-   uint32_t                                     image_count;
 
    xcb_present_event_t                          event_id;
    xcb_special_event_t *                        special_event;
@@ -553,13 +658,13 @@ x11_get_images(struct wsi_swapchain *anv_chain,
    VkResult result;
 
    if (pSwapchainImages == NULL) {
-      *pCount = chain->image_count;
+      *pCount = chain->base.image_count;
       return VK_SUCCESS;
    }
 
    result = VK_SUCCESS;
-   ret_count = chain->image_count;
-   if (chain->image_count > *pCount) {
+   ret_count = chain->base.image_count;
+   if (chain->base.image_count > *pCount) {
      ret_count = *pCount;
      result = VK_INCOMPLETE;
    }
@@ -568,6 +673,15 @@ x11_get_images(struct wsi_swapchain *anv_chain,
       pSwapchainImages[i] = chain->images[i].image;
 
    return result;
+}
+
+static void
+x11_get_image_and_linear(struct wsi_swapchain *drv_chain,
+                         int imageIndex, VkImage *image, VkImage *linear_image)
+{
+   struct x11_swapchain *chain = (struct x11_swapchain *)drv_chain;
+   *image = chain->images[imageIndex].image;
+   *linear_image = chain->images[imageIndex].linear_image;
 }
 
 static VkResult
@@ -588,7 +702,7 @@ x11_handle_dri3_present_event(struct x11_swapchain *chain,
    case XCB_PRESENT_EVENT_IDLE_NOTIFY: {
       xcb_present_idle_notify_event_t *idle = (void *) event;
 
-      for (unsigned i = 0; i < chain->image_count; i++) {
+      for (unsigned i = 0; i < chain->base.image_count; i++) {
          if (chain->images[i].pixmap == idle->pixmap) {
             chain->images[i].busy = false;
             if (chain->threaded)
@@ -642,7 +756,7 @@ x11_acquire_next_image_poll_x11(struct x11_swapchain *chain,
    struct pollfd pfds;
    uint64_t atimeout;
    while (1) {
-      for (uint32_t i = 0; i < chain->image_count; i++) {
+      for (uint32_t i = 0; i < chain->base.image_count; i++) {
          if (!chain->images[i].busy) {
             /* We found a non-busy image */
             xshmfence_await(chain->images[i].shm_fence);
@@ -709,7 +823,7 @@ x11_acquire_next_image_from_queue(struct x11_swapchain *chain,
       return chain->status;
    }
 
-   assert(image_index < chain->image_count);
+   assert(image_index < chain->base.image_count);
    xshmfence_await(chain->images[image_index].shm_fence);
 
    *image_index_out = image_index;
@@ -723,7 +837,7 @@ x11_present_to_x11(struct x11_swapchain *chain, uint32_t image_index,
 {
    struct x11_image *image = &chain->images[image_index];
 
-   assert(image_index < chain->image_count);
+   assert(image_index < chain->base.image_count);
 
    uint32_t options = XCB_PRESENT_OPTION_NONE;
 
@@ -777,7 +891,8 @@ x11_acquire_next_image(struct wsi_swapchain *anv_chain,
 
 static VkResult
 x11_queue_present(struct wsi_swapchain *anv_chain,
-                  uint32_t image_index)
+                  uint32_t image_index,
+                  const VkPresentRegionKHR *damage)
 {
    struct x11_swapchain *chain = (struct x11_swapchain *)anv_chain;
 
@@ -824,6 +939,7 @@ x11_manage_fifo_queues(void *state)
             goto fail;
 
          result = x11_handle_dri3_present_event(chain, (void *)event);
+         free(event);
          if (result != VK_SUCCESS)
             goto fail;
       }
@@ -853,6 +969,8 @@ x11_image_init(VkDevice device_h, struct x11_swapchain *chain,
    result = chain->base.image_fns->create_wsi_image(device_h,
                                                     pCreateInfo,
                                                     pAllocator,
+                                                    chain->base.needs_linear_copy,
+                                                    false,
                                                     &image->image,
                                                     &image->memory,
                                                     &size,
@@ -861,6 +979,25 @@ x11_image_init(VkDevice device_h, struct x11_swapchain *chain,
                                                     &fd);
    if (result != VK_SUCCESS)
       return result;
+
+   if (chain->base.needs_linear_copy) {
+      result = chain->base.image_fns->create_wsi_image(device_h,
+                                                       pCreateInfo,
+                                                       pAllocator,
+                                                       chain->base.needs_linear_copy,
+                                                       true,
+                                                       &image->linear_image,
+                                                       &image->linear_memory,
+                                                       &size,
+                                                       &offset,
+                                                       &row_pitch,
+                                                       &fd);
+      if (result != VK_SUCCESS) {
+         chain->base.image_fns->free_wsi_image(device_h, pAllocator,
+                                               image->image, image->memory);
+         return result;
+      }
+   }
 
    image->pixmap = xcb_generate_id(chain->conn);
 
@@ -902,8 +1039,12 @@ fail_pixmap:
    cookie = xcb_free_pixmap(chain->conn, image->pixmap);
    xcb_discard_reply(chain->conn, cookie.sequence);
 
+   if (chain->base.needs_linear_copy) {
+      chain->base.image_fns->free_wsi_image(device_h, pAllocator,
+                                            image->linear_image, image->linear_memory);
+   }
    chain->base.image_fns->free_wsi_image(device_h, pAllocator,
-                                        image->image, image->memory);
+                                         image->image, image->memory);
 
    return result;
 }
@@ -922,6 +1063,10 @@ x11_image_finish(struct x11_swapchain *chain,
    cookie = xcb_free_pixmap(chain->conn, image->pixmap);
    xcb_discard_reply(chain->conn, cookie.sequence);
 
+   if (chain->base.needs_linear_copy) {
+      chain->base.image_fns->free_wsi_image(chain->base.device, pAllocator,
+                                            image->linear_image, image->linear_memory);
+   }
    chain->base.image_fns->free_wsi_image(chain->base.device, pAllocator,
                                         image->image, image->memory);
 }
@@ -931,7 +1076,9 @@ x11_swapchain_destroy(struct wsi_swapchain *anv_chain,
                       const VkAllocationCallbacks *pAllocator)
 {
    struct x11_swapchain *chain = (struct x11_swapchain *)anv_chain;
-   for (uint32_t i = 0; i < chain->image_count; i++)
+   xcb_void_cookie_t cookie;
+
+   for (uint32_t i = 0; i < chain->base.image_count; i++)
       x11_image_finish(chain, pAllocator, &chain->images[i]);
 
    if (chain->threaded) {
@@ -944,6 +1091,10 @@ x11_swapchain_destroy(struct wsi_swapchain *anv_chain,
    }
 
    xcb_unregister_for_special_event(chain->conn, chain->special_event);
+   cookie = xcb_present_select_input_checked(chain->conn, chain->event_id,
+                                             chain->window,
+                                             XCB_PRESENT_EVENT_MASK_NO_EVENT);
+   xcb_discard_reply(chain->conn, cookie.sequence);
 
    vk_free(pAllocator, chain);
 
@@ -954,6 +1105,7 @@ static VkResult
 x11_surface_create_swapchain(VkIcdSurfaceBase *icd_surface,
                              VkDevice device,
                              struct wsi_device *wsi_device,
+                             int local_fd,
                              const VkSwapchainCreateInfoKHR *pCreateInfo,
                              const VkAllocationCallbacks* pAllocator,
                              const struct wsi_image_fns *image_fns,
@@ -984,21 +1136,26 @@ x11_surface_create_swapchain(VkIcdSurfaceBase *icd_surface,
    chain->base.device = device;
    chain->base.destroy = x11_swapchain_destroy;
    chain->base.get_images = x11_get_images;
+   chain->base.get_image_and_linear = x11_get_image_and_linear;
    chain->base.acquire_next_image = x11_acquire_next_image;
    chain->base.queue_present = x11_queue_present;
    chain->base.image_fns = image_fns;
    chain->base.present_mode = pCreateInfo->presentMode;
+   chain->base.image_count = num_images;
    chain->conn = conn;
    chain->window = window;
    chain->depth = geometry->depth;
    chain->extent = pCreateInfo->imageExtent;
-   chain->image_count = num_images;
    chain->send_sbc = 0;
    chain->last_present_msc = 0;
    chain->threaded = false;
    chain->status = VK_SUCCESS;
 
    free(geometry);
+
+   chain->base.needs_linear_copy = false;
+   if (!wsi_x11_check_dri3_compatible(conn, local_fd))
+       chain->base.needs_linear_copy = true;
 
    chain->event_id = xcb_generate_id(chain->conn);
    xcb_present_select_input(chain->conn, chain->event_id, chain->window,
@@ -1028,7 +1185,7 @@ x11_surface_create_swapchain(VkIcdSurfaceBase *icd_surface,
    xcb_discard_reply(chain->conn, cookie.sequence);
 
    uint32_t image = 0;
-   for (; image < chain->image_count; image++) {
+   for (; image < chain->base.image_count; image++) {
       result = x11_image_init(device, chain, pCreateInfo, pAllocator,
                               &chain->images[image]);
       if (result != VK_SUCCESS)
@@ -1038,23 +1195,23 @@ x11_surface_create_swapchain(VkIcdSurfaceBase *icd_surface,
    if (chain->base.present_mode == VK_PRESENT_MODE_FIFO_KHR) {
       chain->threaded = true;
 
-      /* Initialize our queues.  We make them image_count + 1 because we will
+      /* Initialize our queues.  We make them base.image_count + 1 because we will
        * occasionally use UINT32_MAX to signal the other thread that an error
        * has occurred and we don't want an overflow.
        */
       int ret;
-      ret = wsi_queue_init(&chain->acquire_queue, chain->image_count + 1);
+      ret = wsi_queue_init(&chain->acquire_queue, chain->base.image_count + 1);
       if (ret) {
          goto fail_init_images;
       }
 
-      ret = wsi_queue_init(&chain->present_queue, chain->image_count + 1);
+      ret = wsi_queue_init(&chain->present_queue, chain->base.image_count + 1);
       if (ret) {
          wsi_queue_destroy(&chain->acquire_queue);
          goto fail_init_images;
       }
 
-      for (unsigned i = 0; i < chain->image_count; i++)
+      for (unsigned i = 0; i < chain->base.image_count; i++)
          wsi_queue_push(&chain->acquire_queue, i);
 
       ret = pthread_create(&chain->queue_manager, NULL,
@@ -1117,7 +1274,9 @@ wsi_x11_init_wsi(struct wsi_device *wsi_device,
 
    wsi->base.get_support = x11_surface_get_support;
    wsi->base.get_capabilities = x11_surface_get_capabilities;
+   wsi->base.get_capabilities2 = x11_surface_get_capabilities2;
    wsi->base.get_formats = x11_surface_get_formats;
+   wsi->base.get_formats2 = x11_surface_get_formats2;
    wsi->base.get_present_modes = x11_surface_get_present_modes;
    wsi->base.create_swapchain = x11_surface_create_swapchain;
 

@@ -205,7 +205,7 @@ qir_setup_def_use(struct vc4_compile *c)
                 _mesa_hash_table_clear(partial_update_ht, NULL);
 
                 qir_for_each_inst(inst, block) {
-                        for (int i = 0; i < qir_get_op_nsrc(inst->op); i++)
+                        for (int i = 0; i < qir_get_nsrc(inst); i++)
                                 qir_setup_use(c, block, ip, inst->src[i]);
 
                         qir_setup_def(c, block, ip, partial_update_ht, inst);
@@ -301,8 +301,13 @@ qir_calculate_live_intervals(struct vc4_compile *c)
 {
         int bitset_words = BITSET_WORDS(c->num_temps);
 
-        c->temp_start = reralloc(c, c->temp_start, int, c->num_temps);
-        c->temp_end = reralloc(c, c->temp_end, int, c->num_temps);
+        /* If we called this function more than once, then we should be
+         * freeing the previous arrays.
+         */
+        assert(!c->temp_start);
+
+        c->temp_start = rzalloc_array(c, int, c->num_temps);
+        c->temp_end = rzalloc_array(c, int, c->num_temps);
 
         for (int i = 0; i < c->num_temps; i++) {
                 c->temp_start[i] = MAX_INSTRUCTION;
@@ -310,10 +315,10 @@ qir_calculate_live_intervals(struct vc4_compile *c)
         }
 
         qir_for_each_block(block, c) {
-                block->def = reralloc(c, block->def, BITSET_WORD, bitset_words);
-                block->use = reralloc(c, block->use, BITSET_WORD, bitset_words);
-                block->live_in = reralloc(c, block->live_in, BITSET_WORD, bitset_words);
-                block->live_out = reralloc(c, block->live_out, BITSET_WORD, bitset_words);
+                block->def = rzalloc_array(c, BITSET_WORD, bitset_words);
+                block->use = rzalloc_array(c, BITSET_WORD, bitset_words);
+                block->live_in = rzalloc_array(c, BITSET_WORD, bitset_words);
+                block->live_out = rzalloc_array(c, BITSET_WORD, bitset_words);
         }
 
         qir_setup_def_use(c);
@@ -322,4 +327,27 @@ qir_calculate_live_intervals(struct vc4_compile *c)
                 ;
 
         qir_compute_start_end(c, c->num_temps);
+
+        if (vc4_debug & VC4_DEBUG_SHADERDB) {
+                int last_ip = 0;
+                for (int i = 0; i < c->num_temps; i++)
+                        last_ip = MAX2(last_ip, c->temp_end[i]);
+
+                int reg_pressure = 0;
+                int max_reg_pressure = 0;
+                for (int i = 0; i < last_ip; i++) {
+                        for (int j = 0; j < c->num_temps; j++) {
+                                if (c->temp_start[j] == i)
+                                        reg_pressure++;
+                                if (c->temp_end[j] == i)
+                                        reg_pressure--;
+                        }
+                        max_reg_pressure = MAX2(max_reg_pressure, reg_pressure);
+                }
+
+                fprintf(stderr, "SHADER-DB: %s prog %d/%d: %d max temps\n",
+                        qir_get_stage_name(c->stage),
+                        c->program_id, c->variant_id,
+                        max_reg_pressure);
+        }
 }

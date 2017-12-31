@@ -39,7 +39,7 @@
 
 struct _mesa_index_buffer;
 struct _mesa_prim;
-struct gl_client_array;
+struct gl_vertex_array;
 struct gl_context;
 struct st_context;
 
@@ -48,18 +48,6 @@ void st_init_draw( struct st_context *st );
 void st_destroy_draw( struct st_context *st );
 
 struct draw_context *st_get_draw_context(struct st_context *st);
-
-extern void
-st_draw_vbo(struct gl_context *ctx,
-            const struct _mesa_prim *prims,
-            GLuint nr_prims,
-            const struct _mesa_index_buffer *ib,
-	    GLboolean index_bounds_valid,
-            GLuint min_index,
-            GLuint max_index,
-            struct gl_transform_feedback_object *tfb_vertcount,
-            unsigned stream,
-            struct gl_buffer_object *indirect);
 
 extern void
 st_feedback_draw_vbo(struct gl_context *ctx,

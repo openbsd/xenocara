@@ -25,7 +25,7 @@
 #include "ir.h"
 #include "linker.h"
 #include "ir_uniform.h"
-#include "util/string_to_uint_map.h"
+#include "string_to_uint_map.h"
 
 /* These functions are put in a "private" namespace instead of being marked
  * static so that the unit tests can access them.  See
@@ -38,7 +38,7 @@ get_storage(struct gl_shader_program *prog, const char *name)
 {
    unsigned id;
    if (prog->UniformHash->get(id, name))
-      return &prog->UniformStorage[id];
+      return &prog->data->UniformStorage[id];
 
    assert(!"No uniform storage found!");
    return NULL;
@@ -64,6 +64,8 @@ copy_constant_to_storage(union gl_constant_value *storage,
          storage[i].f = val->value.f[i];
          break;
       case GLSL_TYPE_DOUBLE:
+      case GLSL_TYPE_UINT64:
+      case GLSL_TYPE_INT64:
          /* XXX need to check on big-endian */
          memcpy(&storage[i * 2].u, &val->value.d[i], sizeof(double));
          break;
@@ -95,7 +97,8 @@ copy_constant_to_storage(union gl_constant_value *storage,
  */
 void
 set_opaque_binding(void *mem_ctx, gl_shader_program *prog,
-                   const glsl_type *type, const char *name, int *binding)
+                   const ir_variable *var, const glsl_type *type,
+                   const char *name, int *binding)
 {
 
    if (type->is_array() && type->fields.array->is_array()) {
@@ -104,7 +107,7 @@ set_opaque_binding(void *mem_ctx, gl_shader_program *prog,
       for (unsigned int i = 0; i < type->length; i++) {
          const char *element_name = ralloc_asprintf(mem_ctx, "%s[%d]", name, i);
 
-         set_opaque_binding(mem_ctx, prog, element_type,
+         set_opaque_binding(mem_ctx, prog, var, element_type,
                             element_name, binding);
       }
    } else {
@@ -115,7 +118,7 @@ set_opaque_binding(void *mem_ctx, gl_shader_program *prog,
 
       const unsigned elements = MAX2(storage->array_elements, 1);
 
-      /* Section 4.4.4 (Opaque-Uniform Layout Qualifiers) of the GLSL 4.20 spec
+      /* Section 4.4.6 (Opaque-Uniform Layout Qualifiers) of the GLSL 4.50 spec
        * says:
        *
        *     "If the binding identifier is used with an array, the first element
@@ -127,23 +130,48 @@ set_opaque_binding(void *mem_ctx, gl_shader_program *prog,
       }
 
       for (int sh = 0; sh < MESA_SHADER_STAGES; sh++) {
-        gl_linked_shader *shader = prog->_LinkedShaders[sh];
+         gl_linked_shader *shader = prog->_LinkedShaders[sh];
 
-         if (shader) {
-            if (storage->type->base_type == GLSL_TYPE_SAMPLER &&
-                storage->opaque[sh].active) {
-               for (unsigned i = 0; i < elements; i++) {
-                  const unsigned index = storage->opaque[sh].index + i;
-                  shader->SamplerUnits[index] = storage->storage[i].i;
-               }
+         if (!shader)
+            continue;
+         if (!storage->opaque[sh].active)
+            continue;
 
-            } else if (storage->type->base_type == GLSL_TYPE_IMAGE &&
-                    storage->opaque[sh].active) {
-               for (unsigned i = 0; i < elements; i++) {
-                  const unsigned index = storage->opaque[sh].index + i;
-                  if (index >= ARRAY_SIZE(shader->ImageUnits))
+         if (storage->type->is_sampler()) {
+            for (unsigned i = 0; i < elements; i++) {
+               const unsigned index = storage->opaque[sh].index + i;
+
+               if (var->data.bindless) {
+                  if (index >= shader->Program->sh.NumBindlessSamplers)
                      break;
-                  shader->ImageUnits[index] = storage->storage[i].i;
+                  shader->Program->sh.BindlessSamplers[index].unit =
+                     storage->storage[i].i;
+                  shader->Program->sh.BindlessSamplers[index].bound = true;
+                  shader->Program->sh.HasBoundBindlessSampler = true;
+               } else {
+                  if (index >= ARRAY_SIZE(shader->Program->SamplerUnits))
+                     break;
+                  shader->Program->SamplerUnits[index] =
+                     storage->storage[i].i;
+               }
+            }
+         } else if (storage->type->is_image()) {
+            for (unsigned i = 0; i < elements; i++) {
+               const unsigned index = storage->opaque[sh].index + i;
+
+
+               if (var->data.bindless) {
+                  if (index >= shader->Program->sh.NumBindlessImages)
+                     break;
+                  shader->Program->sh.BindlessImages[index].unit =
+                     storage->storage[i].i;
+                  shader->Program->sh.BindlessImages[index].bound = true;
+                  shader->Program->sh.HasBoundBindlessImage = true;
+               } else {
+                  if (index >= ARRAY_SIZE(shader->Program->sh.ImageUnits))
+                     break;
+                  shader->Program->sh.ImageUnits[index] =
+                     storage->storage[i].i;
                }
             }
          }
@@ -155,10 +183,11 @@ void
 set_block_binding(gl_shader_program *prog, const char *block_name,
                   unsigned mode, int binding)
 {
-   unsigned num_blocks = mode == ir_var_uniform ? prog->NumUniformBlocks :
-      prog->NumShaderStorageBlocks;
+   unsigned num_blocks = mode == ir_var_uniform ?
+      prog->data->NumUniformBlocks :
+      prog->data->NumShaderStorageBlocks;
    struct gl_uniform_block *blks = mode == ir_var_uniform ?
-      prog->UniformBlocks : prog->ShaderStorageBlocks;
+      prog->data->UniformBlocks : prog->data->ShaderStorageBlocks;
 
    for (unsigned i = 0; i < num_blocks; i++) {
       if (!strcmp(blks[i].Name, block_name)) {
@@ -240,7 +269,7 @@ set_uniform_initializer(void *mem_ctx, gl_shader_program *prog,
             if (shader && storage->opaque[sh].active) {
                unsigned index = storage->opaque[sh].index;
 
-               shader->SamplerUnits[index] = storage->storage[0].i;
+               shader->Program->SamplerUnits[index] = storage->storage[0].i;
             }
          }
       }
@@ -276,7 +305,7 @@ link_set_uniform_initializers(struct gl_shader_program *prog,
             if (type->without_array()->is_sampler() ||
                 type->without_array()->is_image()) {
                int binding = var->data.binding;
-               linker::set_opaque_binding(mem_ctx, prog, var->type,
+               linker::set_opaque_binding(mem_ctx, prog, var, var->type,
                                           var->name, &binding);
             } else if (var->is_in_buffer_block()) {
                const glsl_type *const iface_type = var->get_interface_type();

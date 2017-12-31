@@ -38,10 +38,23 @@
 #include "radv_radeon_winsys.h"
 #include "radv_amdgpu_winsys.h"
 
+enum {
+	MAX_RINGS_PER_TYPE = 8
+};
+
+
+struct radv_amdgpu_fence {
+	struct amdgpu_cs_fence fence;
+	volatile uint64_t *user_ptr;
+};
+
 struct radv_amdgpu_ctx {
 	struct radv_amdgpu_winsys *ws;
 	amdgpu_context_handle ctx;
-	uint64_t last_seq_no;
+	struct radv_amdgpu_fence last_submission[AMDGPU_HW_IP_DMA + 1][MAX_RINGS_PER_TYPE];
+
+	struct radeon_winsys_bo *fence_bo;
+	uint64_t *fence_map;
 };
 
 static inline struct radv_amdgpu_ctx *

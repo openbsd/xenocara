@@ -50,6 +50,7 @@ struct gl_shader_program;
 struct gl_texture_image;
 struct gl_texture_object;
 struct gl_memory_info;
+struct util_queue_monitoring;
 
 /* GL_ARB_vertex_buffer_object */
 /* Modifies GL_MAP_UNSYNCHRONIZED_BIT to allow driver to fail (return
@@ -93,7 +94,7 @@ struct dd_function_table {
     * This is in addition to any state change callbacks Mesa may already have
     * made.
     */
-   void (*UpdateState)( struct gl_context *ctx, GLbitfield new_state );
+   void (*UpdateState)(struct gl_context *ctx);
 
    /**
     * This is called whenever glFinish() is called.
@@ -469,12 +470,9 @@ struct dd_function_table {
     * \name Vertex/fragment program functions
     */
    /*@{*/
-   /** Bind a vertex/fragment program */
-   void (*BindProgram)(struct gl_context *ctx, GLenum target,
-                       struct gl_program *prog);
    /** Allocate a new program */
    struct gl_program * (*NewProgram)(struct gl_context *ctx, GLenum target,
-                                     GLuint id);
+                                     GLuint id, bool is_arb_asm);
    /** Delete a program */
    void (*DeleteProgram)(struct gl_context *ctx, struct gl_program *prog);   
    /**
@@ -780,11 +778,45 @@ struct dd_function_table {
    /*@}*/
 
    /**
-    * \name GLSL-related functions (ARB extensions and OpenGL 2.x)
+    * \name Performance Query objects
     */
    /*@{*/
-   struct gl_linked_shader *(*NewShader)(gl_shader_stage stage);
+   unsigned (*InitPerfQueryInfo)(struct gl_context *ctx);
+   void (*GetPerfQueryInfo)(struct gl_context *ctx,
+                            unsigned queryIndex,
+                            const char **name,
+                            GLuint *dataSize,
+                            GLuint *numCounters,
+                            GLuint *numActive);
+   void (*GetPerfCounterInfo)(struct gl_context *ctx,
+                              unsigned queryIndex,
+                              unsigned counterIndex,
+                              const char **name,
+                              const char **desc,
+                              GLuint *offset,
+                              GLuint *data_size,
+                              GLuint *type_enum,
+                              GLuint *data_type_enum,
+                              GLuint64 *raw_max);
+   struct gl_perf_query_object * (*NewPerfQueryObject)(struct gl_context *ctx,
+                                                       unsigned queryIndex);
+   void (*DeletePerfQuery)(struct gl_context *ctx,
+                           struct gl_perf_query_object *obj);
+   bool (*BeginPerfQuery)(struct gl_context *ctx,
+                          struct gl_perf_query_object *obj);
+   void (*EndPerfQuery)(struct gl_context *ctx,
+                        struct gl_perf_query_object *obj);
+   void (*WaitPerfQuery)(struct gl_context *ctx,
+                         struct gl_perf_query_object *obj);
+   bool (*IsPerfQueryReady)(struct gl_context *ctx,
+                            struct gl_perf_query_object *obj);
+   void (*GetPerfQueryData)(struct gl_context *ctx,
+                            struct gl_perf_query_object *obj,
+                            GLsizei dataSize,
+                            GLuint *data,
+                            GLuint *bytesWritten);
    /*@}*/
+
 
    /**
     * \name GREMEDY debug/marker functions
@@ -991,6 +1023,52 @@ struct dd_function_table {
     */
    void (*QueryMemoryInfo)(struct gl_context *ctx,
                            struct gl_memory_info *info);
+
+   /**
+    * Indicate that this thread is being used by Mesa as a background drawing
+    * thread for the given GL context.
+    *
+    * If this function is called more than once from any given thread, each
+    * subsequent call overrides the context that was passed in the previous
+    * call.  Mesa takes advantage of this to re-use a background thread to
+    * perform drawing on behalf of multiple contexts.
+    *
+    * Mesa may sometimes call this function from a non-background thread
+    * (i.e. a thread that has already been bound to a context using
+    * __DriverAPIRec::MakeCurrent()); when this happens, ctx will be equal to
+    * the context that is bound to this thread.
+    *
+    * Mesa will only call this function if GL multithreading is enabled.
+    */
+   void (*SetBackgroundContext)(struct gl_context *ctx,
+                                struct util_queue_monitoring *queue_info);
+
+   /**
+    * \name GL_ARB_sparse_buffer interface
+    */
+   /*@{*/
+   void (*BufferPageCommitment)(struct gl_context *ctx,
+                                struct gl_buffer_object *bufferObj,
+                                GLintptr offset, GLsizeiptr size,
+                                GLboolean commit);
+   /*@}*/
+
+   /**
+    * \name GL_ARB_bindless_texture interface
+    */
+   /*@{*/
+   GLuint64 (*NewTextureHandle)(struct gl_context *ctx,
+                                struct gl_texture_object *texObj,
+                                struct gl_sampler_object *sampObj);
+   void (*DeleteTextureHandle)(struct gl_context *ctx, GLuint64 handle);
+   void (*MakeTextureHandleResident)(struct gl_context *ctx, GLuint64 handle,
+                                     bool resident);
+   GLuint64 (*NewImageHandle)(struct gl_context *ctx,
+                              struct gl_image_unit *imgObj);
+   void (*DeleteImageHandle)(struct gl_context *ctx, GLuint64 handle);
+   void (*MakeImageHandleResident)(struct gl_context *ctx, GLuint64 handle,
+                                   GLenum access, bool resident);
+   /*@}*/
 };
 
 
@@ -1166,6 +1244,8 @@ typedef struct {
    void (GLAPIENTRYP VertexAttribL3dv)( GLuint index, const GLdouble *v);
    void (GLAPIENTRYP VertexAttribL4dv)( GLuint index, const GLdouble *v);
 
+   void (GLAPIENTRYP VertexAttribL1ui64ARB)( GLuint index, GLuint64EXT x);
+   void (GLAPIENTRYP VertexAttribL1ui64vARB)( GLuint index, const GLuint64EXT *v);
 } GLvertexformat;
 
 

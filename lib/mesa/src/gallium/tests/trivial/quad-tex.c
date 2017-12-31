@@ -96,12 +96,12 @@ static void init_prog(struct program *p)
 	assert(ret);
 
 	/* init a pipe screen */
-	p->screen = pipe_loader_create_screen(p->dev);
+	p->screen = pipe_loader_create_screen(p->dev, 0);
 	assert(p->screen);
 
 	/* create the pipe driver context and cso context */
 	p->pipe = p->screen->context_create(p->screen, NULL, 0);
-	p->cso = cso_create_context(p->pipe);
+	p->cso = cso_create_context(p->pipe, 0);
 
 	/* set clear color */
 	p->clear_color.f[0] = 0.3;
@@ -272,7 +272,9 @@ static void init_prog(struct program *p)
 	/* fragment shader */
 	p->fs = util_make_fragment_tex_shader(p->pipe, TGSI_TEXTURE_2D,
 	                                      TGSI_INTERPOLATE_LINEAR,
-	                                      TGSI_RETURN_TYPE_FLOAT);
+	                                      TGSI_RETURN_TYPE_FLOAT,
+	                                      TGSI_RETURN_TYPE_FLOAT, false,
+                                              false);
 }
 
 static void close_prog(struct program *p)

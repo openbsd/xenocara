@@ -34,8 +34,6 @@
 #ifndef OMX_VID_DEC_H
 #define OMX_VID_DEC_H
 
-#include <X11/Xlib.h>
-
 #include <string.h>
 
 #include <OMX_Types.h>
@@ -47,7 +45,6 @@
 #include <bellagio/omx_base_video_port.h>
 
 #include "pipe/p_video_state.h"
-#include "state_tracker/drm_driver.h"
 #include "os/os_thread.h"
 #include "util/list.h"
 

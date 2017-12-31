@@ -24,6 +24,7 @@
  */
 
 #include "draw/draw_context.h"
+#include "util/u_upload_mgr.h"
 
 #include "nv_object.xml.h"
 #include "nv30/nv30-40_3d.xml.h"
@@ -114,19 +115,12 @@ nv30_invalidate_resource_storage(struct nouveau_context *nv,
 
    if (res->bind & PIPE_BIND_VERTEX_BUFFER) {
       for (i = 0; i < nv30->num_vtxbufs; ++i) {
-         if (nv30->vtxbuf[i].buffer == res) {
+         if (nv30->vtxbuf[i].buffer.resource == res) {
             nv30->dirty |= NV30_NEW_ARRAYS;
             nouveau_bufctx_reset(nv30->bufctx, BUFCTX_VTXBUF);
             if (!--ref)
                return ref;
          }
-      }
-   }
-   if (res->bind & PIPE_BIND_INDEX_BUFFER) {
-      if (nv30->idxbuf.buffer == res) {
-         nouveau_bufctx_reset(nv30->bufctx, BUFCTX_IDXBUF);
-         if (!--ref)
-            return ref;
       }
    }
 
@@ -164,6 +158,9 @@ nv30_context_destroy(struct pipe_context *pipe)
 
    if (nv30->draw)
       draw_destroy(nv30->draw);
+
+   if (nv30->base.pipe.stream_uploader)
+      u_upload_destroy(nv30->base.pipe.stream_uploader);
 
    if (nv30->blit_vp)
       nouveau_heap_free(&nv30->blit_vp);
@@ -210,6 +207,13 @@ nv30_context_create(struct pipe_screen *pscreen, void *priv, unsigned ctxflags)
    pipe->priv = priv;
    pipe->destroy = nv30_context_destroy;
    pipe->flush = nv30_context_flush;
+
+   nv30->base.pipe.stream_uploader = u_upload_create_default(&nv30->base.pipe);
+   if (!nv30->base.pipe.stream_uploader) {
+      nv30_context_destroy(pipe);
+      return NULL;
+   }
+   nv30->base.pipe.const_uploader = nv30->base.pipe.stream_uploader;
 
    /*XXX: *cough* per-context client */
    nv30->base.client = screen->base.client;

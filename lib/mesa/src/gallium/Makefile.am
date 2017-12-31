@@ -27,11 +27,6 @@ if HAVE_GALLIUM_I915
 SUBDIRS += drivers/i915 winsys/i915/drm
 endif
 
-## ilo/i965
-if HAVE_GALLIUM_ILO
-SUBDIRS += drivers/ilo winsys/intel/drm
-endif
-
 ## nouveau
 if HAVE_GALLIUM_NOUVEAU
 SUBDIRS += drivers/nouveau winsys/nouveau/drm
@@ -66,6 +61,18 @@ endif
 ## the radeon winsys - linked in by r300, r600 and radeonsi
 if NEED_RADEON_DRM_WINSYS
 SUBDIRS += winsys/radeon/drm
+endif
+
+if HAVE_GALLIUM_ETNAVIV
+SUBDIRS += drivers/etnaviv winsys/etnaviv/drm
+endif
+
+if HAVE_GALLIUM_IMX
+SUBDIRS += drivers/imx winsys/imx/drm
+endif
+
+if HAVE_GALLIUM_PL111
+SUBDIRS += drivers/pl111 winsys/pl111/drm
 endif
 
 ## swrast/softpipe

@@ -37,8 +37,18 @@
 #include "pipe/p_screen.h"
 #include "cso_cache/cso_context.h"
 #include "tgsi/tgsi_ureg.h"
+#include "util/u_format.h"
 #include "util/u_inlines.h"
 #include "util/u_upload_mgr.h"
+
+/* Conversion to apply in the fragment shader. */
+enum st_pbo_conversion {
+   ST_PBO_CONVERT_NONE = 0,
+   ST_PBO_CONVERT_UINT_TO_SINT,
+   ST_PBO_CONVERT_SINT_TO_UINT,
+
+   ST_NUM_PBO_CONVERSIONS
+};
 
 /* Final setup of buffer addressing information.
  *
@@ -205,7 +215,7 @@ st_pbo_draw(struct st_context *st, const struct st_pbo_addresses *addr,
 
    /* Upload vertices */
    {
-      struct pipe_vertex_buffer vbo;
+      struct pipe_vertex_buffer vbo = {0};
       struct pipe_vertex_element velem;
 
       float x0 = (float) addr->xoffset / surface_width * 2.0f - 1.0f;
@@ -215,12 +225,10 @@ st_pbo_draw(struct st_context *st, const struct st_pbo_addresses *addr,
 
       float *verts = NULL;
 
-      vbo.user_buffer = NULL;
-      vbo.buffer = NULL;
       vbo.stride = 2 * sizeof(float);
 
-      u_upload_alloc(st->uploader, 0, 8 * sizeof(float), 4,
-                     &vbo.buffer_offset, &vbo.buffer, (void **) &verts);
+      u_upload_alloc(st->pipe->stream_uploader, 0, 8 * sizeof(float), 4,
+                     &vbo.buffer_offset, &vbo.buffer.resource, (void **) &verts);
       if (!verts)
          return false;
 
@@ -233,7 +241,7 @@ st_pbo_draw(struct st_context *st, const struct st_pbo_addresses *addr,
       verts[6] = x1;
       verts[7] = y1;
 
-      u_upload_unmap(st->uploader);
+      u_upload_unmap(st->pipe->stream_uploader);
 
       velem.src_offset = 0;
       velem.instance_divisor = 0;
@@ -244,23 +252,23 @@ st_pbo_draw(struct st_context *st, const struct st_pbo_addresses *addr,
 
       cso_set_vertex_buffers(cso, velem.vertex_buffer_index, 1, &vbo);
 
-      pipe_resource_reference(&vbo.buffer, NULL);
+      pipe_resource_reference(&vbo.buffer.resource, NULL);
    }
 
    /* Upload constants */
    {
       struct pipe_constant_buffer cb;
 
-      if (st->constbuf_uploader) {
+      if (!st->has_user_constbuf) {
          cb.buffer = NULL;
          cb.user_buffer = NULL;
-         u_upload_data(st->constbuf_uploader, 0, sizeof(addr->constants),
+         u_upload_data(st->pipe->const_uploader, 0, sizeof(addr->constants),
                        st->ctx->Const.UniformBufferOffsetAlignment,
                        &addr->constants, &cb.buffer_offset, &cb.buffer);
          if (!cb.buffer)
             return false;
 
-         u_upload_unmap(st->constbuf_uploader);
+         u_upload_unmap(st->pipe->const_uploader);
       } else {
          cb.buffer = NULL;
          cb.user_buffer = &addr->constants;
@@ -323,7 +331,8 @@ st_pbo_create_vs(struct st_context *st)
                         ureg_scalar(in_instanceid, TGSI_SWIZZLE_X));
       } else {
          /* out_layer = gl_InstanceID */
-         ureg_MOV(ureg, out_layer, in_instanceid);
+         ureg_MOV(ureg, ureg_writemask(out_layer, TGSI_WRITEMASK_X),
+                        ureg_scalar(in_instanceid, TGSI_SWIZZLE_X));
       }
    }
 
@@ -376,8 +385,26 @@ st_pbo_create_gs(struct st_context *st)
    return ureg_create_shader_and_destroy(ureg, st->pipe);
 }
 
+static void
+build_conversion(struct ureg_program *ureg, const struct ureg_dst *temp,
+                 enum st_pbo_conversion conversion)
+{
+   switch (conversion) {
+   case ST_PBO_CONVERT_SINT_TO_UINT:
+      ureg_IMAX(ureg, *temp, ureg_src(*temp), ureg_imm1i(ureg, 0));
+      break;
+   case ST_PBO_CONVERT_UINT_TO_SINT:
+      ureg_UMIN(ureg, *temp, ureg_src(*temp), ureg_imm1u(ureg, (1u << 31) - 1));
+      break;
+   default:
+      /* no-op */
+      break;
+   }
+}
+
 static void *
-create_fs(struct st_context *st, bool download, enum pipe_texture_target target)
+create_fs(struct st_context *st, bool download, enum pipe_texture_target target,
+          enum st_pbo_conversion conversion)
 {
    struct pipe_context *pipe = st->pipe;
    struct pipe_screen *screen = pipe->screen;
@@ -495,6 +522,8 @@ create_fs(struct st_context *st, bool download, enum pipe_texture_target target)
       ureg_TXF(ureg, temp1, util_pipe_tex_to_tgsi_tex(target, 1),
                      ureg_src(temp1), sampler);
 
+      build_conversion(ureg, &temp1, conversion);
+
       /* store(out, temp0, temp1) */
       op[0] = ureg_src(temp0);
       op[1] = ureg_src(temp1);
@@ -504,7 +533,11 @@ create_fs(struct st_context *st, bool download, enum pipe_texture_target target)
       ureg_release_temporary(ureg, temp1);
    } else {
       /* out = txf(sampler, temp0.x) */
-      ureg_TXF(ureg, out, TGSI_TEXTURE_BUFFER, ureg_src(temp0), sampler);
+      ureg_TXF(ureg, temp0, TGSI_TEXTURE_BUFFER, ureg_src(temp0), sampler);
+
+      build_conversion(ureg, &temp0, conversion);
+
+      ureg_MOV(ureg, out, ureg_src(temp0));
    }
 
    ureg_release_temporary(ureg, temp0);
@@ -514,21 +547,49 @@ create_fs(struct st_context *st, bool download, enum pipe_texture_target target)
    return ureg_create_shader_and_destroy(ureg, pipe);
 }
 
-void *
-st_pbo_create_upload_fs(struct st_context *st)
+static enum st_pbo_conversion
+get_pbo_conversion(enum pipe_format src_format, enum pipe_format dst_format)
 {
-   return create_fs(st, false, 0);
+   if (util_format_is_pure_uint(src_format)) {
+      if (util_format_is_pure_sint(dst_format))
+         return ST_PBO_CONVERT_UINT_TO_SINT;
+   } else if (util_format_is_pure_sint(src_format)) {
+      if (util_format_is_pure_uint(dst_format))
+         return ST_PBO_CONVERT_SINT_TO_UINT;
+   }
+
+   return ST_PBO_CONVERT_NONE;
 }
 
 void *
-st_pbo_get_download_fs(struct st_context *st, enum pipe_texture_target target)
+st_pbo_get_upload_fs(struct st_context *st,
+                     enum pipe_format src_format,
+                     enum pipe_format dst_format)
 {
+   STATIC_ASSERT(ARRAY_SIZE(st->pbo.upload_fs) == ST_NUM_PBO_CONVERSIONS);
+
+   enum st_pbo_conversion conversion = get_pbo_conversion(src_format, dst_format);
+
+   if (!st->pbo.upload_fs[conversion])
+      st->pbo.upload_fs[conversion] = create_fs(st, false, 0, conversion);
+
+   return st->pbo.upload_fs[conversion];
+}
+
+void *
+st_pbo_get_download_fs(struct st_context *st, enum pipe_texture_target target,
+                       enum pipe_format src_format,
+                       enum pipe_format dst_format)
+{
+   STATIC_ASSERT(ARRAY_SIZE(st->pbo.download_fs) == ST_NUM_PBO_CONVERSIONS);
    assert(target < PIPE_MAX_TEXTURE_TYPES);
 
-   if (!st->pbo.download_fs[target])
-      st->pbo.download_fs[target] = create_fs(st, true, target);
+   enum st_pbo_conversion conversion = get_pbo_conversion(src_format, dst_format);
 
-   return st->pbo.download_fs[target];
+   if (!st->pbo.download_fs[conversion][target])
+      st->pbo.download_fs[conversion][target] = create_fs(st, true, target, conversion);
+
+   return st->pbo.download_fs[conversion][target];
 }
 
 void
@@ -577,15 +638,19 @@ st_destroy_pbo_helpers(struct st_context *st)
 {
    unsigned i;
 
-   if (st->pbo.upload_fs) {
-      cso_delete_fragment_shader(st->cso_context, st->pbo.upload_fs);
-      st->pbo.upload_fs = NULL;
+   for (i = 0; i < ARRAY_SIZE(st->pbo.upload_fs); ++i) {
+      if (st->pbo.upload_fs[i]) {
+         cso_delete_fragment_shader(st->cso_context, st->pbo.upload_fs[i]);
+         st->pbo.upload_fs[i] = NULL;
+      }
    }
 
    for (i = 0; i < ARRAY_SIZE(st->pbo.download_fs); ++i) {
-      if (st->pbo.download_fs[i]) {
-         cso_delete_fragment_shader(st->cso_context, st->pbo.download_fs[i]);
-         st->pbo.download_fs[i] = NULL;
+      for (unsigned j = 0; j < ARRAY_SIZE(st->pbo.download_fs[0]); ++j) {
+         if (st->pbo.download_fs[i][j]) {
+            cso_delete_fragment_shader(st->cso_context, st->pbo.download_fs[i][j]);
+            st->pbo.download_fs[i][j] = NULL;
+         }
       }
    }
 

@@ -54,12 +54,6 @@ _mesa_lookup_texture(struct gl_context *ctx, GLuint id);
 extern struct gl_texture_object *
 _mesa_lookup_texture_err(struct gl_context *ctx, GLuint id, const char* func);
 
-extern void
-_mesa_begin_texture_lookups(struct gl_context *ctx);
-
-extern void
-_mesa_end_texture_lookups(struct gl_context *ctx);
-
 extern struct gl_texture_object *
 _mesa_lookup_texture_locked(struct gl_context *ctx, GLuint id);
 
@@ -125,25 +119,18 @@ static inline GLboolean
 _mesa_is_texture_complete(const struct gl_texture_object *texObj,
                           const struct gl_sampler_object *sampler)
 {
-   if (texObj->_IsIntegerFormat &&
+   /*
+    * According to ARB_stencil_texturing, NEAREST_MIPMAP_NEAREST would
+    * be forbidden, however it is allowed per GL 4.5 rules, allow it
+    * even without GL 4.5 since it was a spec mistake.
+    */
+   if ((texObj->_IsIntegerFormat ||
+        (texObj->StencilSampling &&
+         texObj->Image[0][texObj->BaseLevel]->_BaseFormat == GL_DEPTH_STENCIL)) &&
        (sampler->MagFilter != GL_NEAREST ||
         (sampler->MinFilter != GL_NEAREST &&
          sampler->MinFilter != GL_NEAREST_MIPMAP_NEAREST))) {
       /* If the format is integer, only nearest filtering is allowed */
-      return GL_FALSE;
-   }
-
-   /* From the ARB_stencil_texturing specification:
-    * "Add a new bullet point for the conditions that cause the texture
-    *  to not be complete:
-    *
-    *  * The internal format of the texture is DEPTH_STENCIL, the
-    *    DEPTH_STENCIL_TEXTURE_MODE for the texture is STENCIL_INDEX and either
-    *    the magnification filter or the minification filter is not NEAREST."
-    */
-   if (texObj->StencilSampling &&
-       texObj->Image[0][texObj->BaseLevel]->_BaseFormat == GL_DEPTH_STENCIL &&
-       (sampler->MagFilter != GL_NEAREST || sampler->MinFilter != GL_NEAREST)) {
       return GL_FALSE;
    }
 
@@ -183,11 +170,6 @@ _mesa_unlock_context_textures( struct gl_context *ctx );
 extern void
 _mesa_lock_context_textures( struct gl_context *ctx );
 
-extern void
-_mesa_delete_nameless_texture(struct gl_context *ctx,
-                              struct gl_texture_object *texObj);
-
-
 /*@}*/
 
 /**
@@ -195,8 +177,14 @@ _mesa_delete_nameless_texture(struct gl_context *ctx,
  */
 /*@{*/
 
+void GLAPIENTRY
+_mesa_GenTextures_no_error(GLsizei n, GLuint *textures);
+
 extern void GLAPIENTRY
 _mesa_GenTextures(GLsizei n, GLuint *textures);
+
+void GLAPIENTRY
+_mesa_CreateTextures_no_error(GLenum target, GLsizei n, GLuint *textures);
 
 extern void GLAPIENTRY
 _mesa_CreateTextures(GLenum target, GLsizei n, GLuint *textures);
@@ -207,6 +195,9 @@ _mesa_DeleteTextures( GLsizei n, const GLuint *textures );
 
 extern void GLAPIENTRY
 _mesa_BindTexture( GLenum target, GLuint texture );
+
+void GLAPIENTRY
+_mesa_BindTextureUnit_no_error(GLuint unit, GLuint texture);
 
 extern void GLAPIENTRY
 _mesa_BindTextureUnit(GLuint unit, GLuint texture);

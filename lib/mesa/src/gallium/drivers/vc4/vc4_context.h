@@ -30,6 +30,7 @@
 #include "pipe/p_context.h"
 #include "pipe/p_state.h"
 #include "util/slab.h"
+#include "xf86drm.h"
 
 #define __user
 #include "vc4_drm.h"
@@ -37,6 +38,13 @@
 #include "vc4_resource.h"
 #include "vc4_cl.h"
 #include "vc4_qir.h"
+
+#ifndef DRM_VC4_PARAM_SUPPORTS_ETC1
+#define DRM_VC4_PARAM_SUPPORTS_ETC1		4
+#endif
+#ifndef DRM_VC4_PARAM_SUPPORTS_THREADED_FS
+#define DRM_VC4_PARAM_SUPPORTS_THREADED_FS	5
+#endif
 
 #ifdef USE_VC4_SIMULATOR
 #define using_vc4_simulator true
@@ -59,7 +67,7 @@
 #define VC4_DIRTY_CONSTBUF      (1 << 13)
 #define VC4_DIRTY_VTXSTATE      (1 << 14)
 #define VC4_DIRTY_VTXBUF        (1 << 15)
-#define VC4_DIRTY_INDEXBUF      (1 << 16)
+
 #define VC4_DIRTY_SCISSOR       (1 << 17)
 #define VC4_DIRTY_FLAT_SHADE_FLAGS (1 << 18)
 #define VC4_DIRTY_PRIM_MODE     (1 << 19)
@@ -76,6 +84,13 @@ struct vc4_sampler_view {
         uint32_t texture_p0;
         uint32_t texture_p1;
         bool force_first_level;
+        /**
+         * Resource containing the actual texture that will be sampled.
+         *
+         * We may need to rebase the .base.texture resource to work around the
+         * lack of GL_TEXTURE_BASE_LEVEL, or to upload the texture as tiled.
+         */
+        struct pipe_resource *texture;
 };
 
 struct vc4_sampler_state {
@@ -162,6 +177,8 @@ struct vc4_compiled_shader {
          */
         bool failed;
 
+        bool fs_threaded;
+
         uint8_t num_inputs;
 
         /* Byte offsets for the start of the vertex attributes 0-7, and the
@@ -218,6 +235,13 @@ struct vc4_job {
         struct vc4_cl bo_handles;
         struct vc4_cl bo_pointers;
         uint32_t shader_rec_count;
+        /**
+         * Amount of memory used by the BOs in bo_pointers.
+         *
+         * Used for checking when we should flush the job early so we don't
+         * OOM.
+         */
+        uint32_t bo_space;
 
         /** @{ Surfaces to submit rendering for. */
         struct pipe_surface *color_read;
@@ -317,11 +341,12 @@ struct vc4_context {
         uint64_t next_compiled_program_id;
 
         struct ra_regs *regs;
-        unsigned int reg_class_any;
-        unsigned int reg_class_a_or_b_or_acc;
+        unsigned int reg_class_any[2];
+        unsigned int reg_class_a_or_b[2];
+        unsigned int reg_class_a_or_b_or_acc[2];
         unsigned int reg_class_r0_r3;
-        unsigned int reg_class_r4_or_a;
-        unsigned int reg_class_a;
+        unsigned int reg_class_r4_or_a[2];
+        unsigned int reg_class_a[2];
 
         uint8_t prim_mode;
 
@@ -359,7 +384,6 @@ struct vc4_context {
         struct pipe_viewport_state viewport;
         struct vc4_constbuf_stateobj constbuf[PIPE_SHADER_TYPES];
         struct vc4_vertexbuf_stateobj vertexbuf;
-        struct pipe_index_buffer indexbuf;
         /** @} */
 };
 
@@ -367,27 +391,20 @@ struct vc4_rasterizer_state {
         struct pipe_rasterizer_state base;
 
         /* VC4_CONFIGURATION_BITS */
-        uint8_t config_bits[3];
+        uint8_t config_bits[V3D21_CONFIGURATION_BITS_length];
 
-        float point_size;
-
-        /**
-         * Half-float (1/8/7 bits) value of polygon offset units for
-         * VC4_PACKET_DEPTH_OFFSET
-         */
-        uint16_t offset_units;
-        /**
-         * Half-float (1/8/7 bits) value of polygon offset scale for
-         * VC4_PACKET_DEPTH_OFFSET
-         */
-        uint16_t offset_factor;
+        struct PACKED {
+                uint8_t depth_offset[V3D21_DEPTH_OFFSET_length];
+                uint8_t point_size[V3D21_POINT_SIZE_length];
+                uint8_t line_width[V3D21_LINE_WIDTH_length];
+        } packed;
 };
 
 struct vc4_depth_stencil_alpha_state {
         struct pipe_depth_stencil_alpha_state base;
 
         /* VC4_CONFIGURATION_BITS */
-        uint8_t config_bits[3];
+        uint8_t config_bits[V3D21_CONFIGURATION_BITS_length];
 
         /** Uniforms for stencil state.
          *
@@ -433,6 +450,18 @@ void vc4_simulator_destroy(struct vc4_screen *screen);
 int vc4_simulator_flush(struct vc4_context *vc4,
                         struct drm_vc4_submit_cl *args,
                         struct vc4_job *job);
+int vc4_simulator_ioctl(int fd, unsigned long request, void *arg);
+void vc4_simulator_open_from_handle(int fd, uint32_t winsys_stride,
+                                    int handle, uint32_t size);
+
+static inline int
+vc4_ioctl(int fd, unsigned long request, void *arg)
+{
+        if (using_vc4_simulator)
+                return vc4_simulator_ioctl(fd, request, arg);
+        else
+                return drmIoctl(fd, request, arg);
+}
 
 void vc4_set_shader_uniform_dirty_flags(struct vc4_compiled_shader *shader);
 void vc4_write_uniforms(struct vc4_context *vc4,

@@ -45,8 +45,8 @@ struct st_translate {
    struct ureg_src inputs[PIPE_MAX_SHADER_INPUTS];
    struct ureg_src samplers[PIPE_MAX_SAMPLERS];
 
-   const GLuint *inputMapping;
-   const GLuint *outputMapping;
+   const ubyte *inputMapping;
+   const ubyte *outputMapping;
 
    unsigned current_pass;
 
@@ -66,7 +66,7 @@ static const struct instruction_desc inst_desc[] = {
    {TGSI_OPCODE_NOP, "UND", 0}, /* unused */
    {TGSI_OPCODE_ADD, "ADD", 2},
    {TGSI_OPCODE_MUL, "MUL", 2},
-   {TGSI_OPCODE_SUB, "SUB", 2},
+   {TGSI_OPCODE_NOP, "SUB", 2},
    {TGSI_OPCODE_DP3, "DOT3", 2},
    {TGSI_OPCODE_DP4, "DOT4", 2},
    {TGSI_OPCODE_MAD, "MAD", 3},
@@ -105,18 +105,18 @@ apply_swizzle(struct st_translate *t,
       imm[0] = src;
       imm[1] = ureg_imm4f(t->ureg, 1.0f, 1.0f, 0.0f, 0.0f);
       imm[2] = ureg_imm4f(t->ureg, 0.0f, 0.0f, 1.0f, 1.0f);
-      ureg_insn(t->ureg, TGSI_OPCODE_MAD, &tmp[0], 1, imm, 3);
+      ureg_insn(t->ureg, TGSI_OPCODE_MAD, &tmp[0], 1, imm, 3, 0);
 
       if (swizzle == GL_SWIZZLE_STR_DR_ATI) {
          imm[0] = ureg_scalar(src, TGSI_SWIZZLE_Z);
       } else {
          imm[0] = ureg_scalar(src, TGSI_SWIZZLE_W);
       }
-      ureg_insn(t->ureg, TGSI_OPCODE_RCP, &tmp[1], 1, &imm[0], 1);
+      ureg_insn(t->ureg, TGSI_OPCODE_RCP, &tmp[1], 1, &imm[0], 1, 0);
 
       imm[0] = ureg_src(tmp[0]);
       imm[1] = ureg_src(tmp[1]);
-      ureg_insn(t->ureg, TGSI_OPCODE_MUL, &tmp[0], 1, imm, 2);
+      ureg_insn(t->ureg, TGSI_OPCODE_MUL, &tmp[0], 1, imm, 2, 0);
 
       return ureg_src(tmp[0]);
    }
@@ -170,35 +170,35 @@ prepare_argument(struct st_translate *t, const unsigned argId,
       src = ureg_scalar(src, TGSI_SWIZZLE_W);
       break;
    }
-   ureg_insn(t->ureg, TGSI_OPCODE_MOV, &arg, 1, &src, 1);
+   ureg_insn(t->ureg, TGSI_OPCODE_MOV, &arg, 1, &src, 1, 0);
 
    if (srcReg->argMod & GL_COMP_BIT_ATI) {
       struct ureg_src modsrc[2];
       modsrc[0] = ureg_imm1f(t->ureg, 1.0f);
-      modsrc[1] = ureg_src(arg);
+      modsrc[1] = ureg_negate(ureg_src(arg));
 
-      ureg_insn(t->ureg, TGSI_OPCODE_SUB, &arg, 1, modsrc, 2);
+      ureg_insn(t->ureg, TGSI_OPCODE_ADD, &arg, 1, modsrc, 2, 0);
    }
    if (srcReg->argMod & GL_BIAS_BIT_ATI) {
       struct ureg_src modsrc[2];
       modsrc[0] = ureg_src(arg);
-      modsrc[1] = ureg_imm1f(t->ureg, 0.5f);
+      modsrc[1] = ureg_imm1f(t->ureg, -0.5f);
 
-      ureg_insn(t->ureg, TGSI_OPCODE_SUB, &arg, 1, modsrc, 2);
+      ureg_insn(t->ureg, TGSI_OPCODE_ADD, &arg, 1, modsrc, 2, 0);
    }
    if (srcReg->argMod & GL_2X_BIT_ATI) {
       struct ureg_src modsrc[2];
       modsrc[0] = ureg_src(arg);
       modsrc[1] = ureg_src(arg);
 
-      ureg_insn(t->ureg, TGSI_OPCODE_ADD, &arg, 1, modsrc, 2);
+      ureg_insn(t->ureg, TGSI_OPCODE_ADD, &arg, 1, modsrc, 2, 0);
    }
    if (srcReg->argMod & GL_NEGATE_BIT_ATI) {
       struct ureg_src modsrc[2];
       modsrc[0] = ureg_src(arg);
       modsrc[1] = ureg_imm1f(t->ureg, -1.0f);
 
-      ureg_insn(t->ureg, TGSI_OPCODE_MUL, &arg, 1, modsrc, 2);
+      ureg_insn(t->ureg, TGSI_OPCODE_MUL, &arg, 1, modsrc, 2, 0);
    }
    return  ureg_src(arg);
 }
@@ -211,29 +211,31 @@ emit_special_inst(struct st_translate *t, const struct instruction_desc *desc,
    struct ureg_dst tmp[1];
    struct ureg_src src[3];
 
-   if (!strcmp(desc->name, "CND")) {
+   if (!strcmp(desc->name, "SUB")) {
+      ureg_ADD(t->ureg, *dst, args[0], ureg_negate(args[1]));
+   } else if (!strcmp(desc->name, "CND")) {
       tmp[0] = get_temp(t, MAX_NUM_FRAGMENT_REGISTERS_ATI + 2); /* re-purpose a3 */
       src[0] = ureg_imm1f(t->ureg, 0.5f);
-      src[1] = args[2];
-      ureg_insn(t->ureg, TGSI_OPCODE_SUB, tmp, 1, src, 2);
+      src[1] = ureg_negate(args[2]);
+      ureg_insn(t->ureg, TGSI_OPCODE_ADD, tmp, 1, src, 2, 0);
       src[0] = ureg_src(tmp[0]);
       src[1] = args[0];
       src[2] = args[1];
-      ureg_insn(t->ureg, TGSI_OPCODE_CMP, dst, 1, src, 3);
+      ureg_insn(t->ureg, TGSI_OPCODE_CMP, dst, 1, src, 3, 0);
    } else if (!strcmp(desc->name, "CND0")) {
       src[0] = args[2];
       src[1] = args[1];
       src[2] = args[0];
-      ureg_insn(t->ureg, TGSI_OPCODE_CMP, dst, 1, src, 3);
+      ureg_insn(t->ureg, TGSI_OPCODE_CMP, dst, 1, src, 3, 0);
    } else if (!strcmp(desc->name, "DOT2_ADD")) {
       /* note: DP2A is not implemented in most pipe drivers */
       tmp[0] = get_temp(t, MAX_NUM_FRAGMENT_REGISTERS_ATI); /* re-purpose a1 */
       src[0] = args[0];
       src[1] = args[1];
-      ureg_insn(t->ureg, TGSI_OPCODE_DP2, tmp, 1, src, 2);
+      ureg_insn(t->ureg, TGSI_OPCODE_DP2, tmp, 1, src, 2, 0);
       src[0] = ureg_src(tmp[0]);
       src[1] = ureg_scalar(args[2], TGSI_SWIZZLE_Z);
-      ureg_insn(t->ureg, TGSI_OPCODE_ADD, dst, 1, src, 2);
+      ureg_insn(t->ureg, TGSI_OPCODE_ADD, dst, 1, src, 2, 0);
    }
 }
 
@@ -243,10 +245,11 @@ emit_arith_inst(struct st_translate *t,
                 struct ureg_dst *dst, struct ureg_src *args, unsigned argcount)
 {
    if (desc->TGSI_opcode == TGSI_OPCODE_NOP) {
-      return emit_special_inst(t, desc, dst, args, argcount);
+      emit_special_inst(t, desc, dst, args, argcount);
+      return;
    }
 
-   ureg_insn(t->ureg, desc->TGSI_opcode, dst, 1, args, argcount);
+   ureg_insn(t->ureg, desc->TGSI_opcode, dst, 1, args, argcount, 0);
 }
 
 static void
@@ -289,7 +292,7 @@ emit_dstmod(struct st_translate *t,
    if (dstMod & GL_SATURATE_BIT_ATI) {
       dst = ureg_saturate(dst);
    }
-   ureg_insn(t->ureg, TGSI_OPCODE_MUL, &dst, 1, src, 2);
+   ureg_insn(t->ureg, TGSI_OPCODE_MUL, &dst, 1, src, 2, 0);
 }
 
 /**
@@ -331,9 +334,9 @@ compile_setupinst(struct st_translate *t,
       src[1] = t->samplers[r];
       /* the texture target is still unknown, it will be fixed in the draw call */
       ureg_tex_insn(t->ureg, TGSI_OPCODE_TEX, dst, 1, TGSI_TEXTURE_2D,
-                    NULL, 0, src, 2);
+                    TGSI_RETURN_TYPE_FLOAT, NULL, 0, src, 2);
    } else if (texinst->Opcode == ATI_FRAGMENT_SHADER_PASS_OP) {
-      ureg_insn(t->ureg, TGSI_OPCODE_MOV, dst, 1, src, 1);
+      ureg_insn(t->ureg, TGSI_OPCODE_MOV, dst, 1, src, 1, 0);
    }
 
    t->regs_written[t->current_pass][r] = true;
@@ -405,11 +408,11 @@ finalize_shader(struct st_translate *t, unsigned numPasses)
       /* copy the result into the OUT slot */
       dst[0] = t->outputs[t->outputMapping[FRAG_RESULT_COLOR]];
       src[0] = ureg_src(t->temps[0]);
-      ureg_insn(t->ureg, TGSI_OPCODE_MOV, dst, 1, src, 1);
+      ureg_insn(t->ureg, TGSI_OPCODE_MOV, dst, 1, src, 1, 0);
    }
 
    /* signal the end of the program */
-   ureg_insn(t->ureg, TGSI_OPCODE_END, dst, 0, src, 0);
+   ureg_insn(t->ureg, TGSI_OPCODE_END, dst, 0, src, 0, 0);
 }
 
 /**
@@ -422,12 +425,12 @@ st_translate_atifs_program(
    struct ati_fragment_shader *atifs,
    struct gl_program *program,
    GLuint numInputs,
-   const GLuint inputMapping[],
+   const ubyte inputMapping[],
    const ubyte inputSemanticName[],
    const ubyte inputSemanticIndex[],
-   const GLuint interpMode[],
+   const ubyte interpMode[],
    GLuint numOutputs,
-   const GLuint outputMapping[],
+   const ubyte outputMapping[],
    const ubyte outputSemanticName[],
    const ubyte outputSemanticIndex[])
 {
@@ -547,12 +550,12 @@ st_init_atifs_prog(struct gl_context *ctx, struct gl_program *prog)
    static const gl_state_index fog_color[STATE_LENGTH] =
       {STATE_FOG_COLOR, 0, 0, 0, 0};
 
-   prog->InputsRead = 0;
-   prog->OutputsWritten = BITFIELD64_BIT(FRAG_RESULT_COLOR);
+   prog->info.inputs_read = 0;
+   prog->info.outputs_written = BITFIELD64_BIT(FRAG_RESULT_COLOR);
    prog->SamplersUsed = 0;
    prog->Parameters = _mesa_new_parameter_list();
 
-   /* fill in InputsRead, SamplersUsed, TexturesUsed */
+   /* fill in inputs_read, SamplersUsed, TexturesUsed */
    for (pass = 0; pass < atifs->NumPasses; pass++) {
       for (r = 0; r < MAX_NUM_FRAGMENT_REGISTERS_ATI; r++) {
          struct atifs_setupinst *texinst = &atifs->SetupInst[pass][r];
@@ -560,14 +563,14 @@ st_init_atifs_prog(struct gl_context *ctx, struct gl_program *prog)
 
          if (texinst->Opcode == ATI_FRAGMENT_SHADER_SAMPLE_OP) {
             /* mark which texcoords are used */
-            prog->InputsRead |= BITFIELD64_BIT(VARYING_SLOT_TEX0 + pass_tex - GL_TEXTURE0_ARB);
+            prog->info.inputs_read |= BITFIELD64_BIT(VARYING_SLOT_TEX0 + pass_tex - GL_TEXTURE0_ARB);
             /* by default there is 1:1 mapping between samplers and textures */
             prog->SamplersUsed |= (1 << r);
             /* the target is unknown here, it will be fixed in the draw call */
             prog->TexturesUsed[r] = TEXTURE_2D_BIT;
          } else if (texinst->Opcode == ATI_FRAGMENT_SHADER_PASS_OP) {
             if (pass_tex >= GL_TEXTURE0_ARB && pass_tex <= GL_TEXTURE7_ARB) {
-               prog->InputsRead |= BITFIELD64_BIT(VARYING_SLOT_TEX0 + pass_tex - GL_TEXTURE0_ARB);
+               prog->info.inputs_read |= BITFIELD64_BIT(VARYING_SLOT_TEX0 + pass_tex - GL_TEXTURE0_ARB);
             }
          }
       }
@@ -581,12 +584,12 @@ st_init_atifs_prog(struct gl_context *ctx, struct gl_program *prog)
                for (arg = 0; arg < inst->ArgCount[optype]; arg++) {
                   GLint index = inst->SrcReg[optype][arg].Index;
                   if (index == GL_PRIMARY_COLOR_EXT) {
-                     prog->InputsRead |= BITFIELD64_BIT(VARYING_SLOT_COL0);
+                     prog->info.inputs_read |= BITFIELD64_BIT(VARYING_SLOT_COL0);
                   } else if (index == GL_SECONDARY_INTERPOLATOR_ATI) {
                      /* note: ATI_fragment_shader.txt never specifies what
                       * GL_SECONDARY_INTERPOLATOR_ATI is, swrast uses
                       * VARYING_SLOT_COL1 for this input */
-                     prog->InputsRead |= BITFIELD64_BIT(VARYING_SLOT_COL1);
+                     prog->info.inputs_read |= BITFIELD64_BIT(VARYING_SLOT_COL1);
                   }
                }
             }
@@ -594,7 +597,7 @@ st_init_atifs_prog(struct gl_context *ctx, struct gl_program *prog)
       }
    }
    /* we may need fog */
-   prog->InputsRead |= BITFIELD64_BIT(VARYING_SLOT_FOGC);
+   prog->info.inputs_read |= BITFIELD64_BIT(VARYING_SLOT_FOGC);
 
    /* we always have the ATI_fs constants, and the fog params */
    for (i = 0; i < MAX_NUM_FRAGMENT_CONSTANTS_ATI; i++) {
@@ -604,9 +607,9 @@ st_init_atifs_prog(struct gl_context *ctx, struct gl_program *prog)
    _mesa_add_state_reference(prog->Parameters, fog_params_state);
    _mesa_add_state_reference(prog->Parameters, fog_color);
 
-   prog->NumInstructions = 0;
-   prog->NumTemporaries = MAX_NUM_FRAGMENT_REGISTERS_ATI + 3; /* 3 input temps for arith ops */
-   prog->NumParameters = MAX_NUM_FRAGMENT_CONSTANTS_ATI + 2; /* 2 state variables for fog */
+   prog->arb.NumInstructions = 0;
+   prog->arb.NumTemporaries = MAX_NUM_FRAGMENT_REGISTERS_ATI + 3; /* 3 input temps for arith ops */
+   prog->arb.NumParameters = MAX_NUM_FRAGMENT_CONSTANTS_ATI + 2; /* 2 state variables for fog */
 }
 
 
@@ -616,7 +619,6 @@ struct tgsi_atifs_transform {
    const struct st_fp_variant_key *key;
    bool first_instruction_emitted;
    unsigned fog_factor_temp;
-   unsigned fog_clamp_imm;
 };
 
 static inline struct tgsi_atifs_transform *
@@ -673,10 +675,6 @@ transform_instr(struct tgsi_transform_context *tctx,
       /* add a new temp for the fog factor */
       ctx->fog_factor_temp = ctx->info.file_max[TGSI_FILE_TEMPORARY] + 1;
       tgsi_transform_temp_decl(tctx, ctx->fog_factor_temp);
-
-      /* add immediates for clamp */
-      ctx->fog_clamp_imm = ctx->info.immediate_count;
-      tgsi_transform_immediate_decl(tctx, 1.0f, 0.0f, 0.0f, 0.0f);
    }
 
 transform_inst:
@@ -707,7 +705,7 @@ transform_inst:
       }
 
       /* compute the 1 component fog factor f */
-      if (ctx->key->fog == 1) {
+      if (ctx->key->fog == FOG_LINEAR) {
          /* LINEAR formula: f = (end - z) / (end - start)
           * with optimized parameters:
           *    f = MAD(fogcoord, oparams.x, oparams.y)
@@ -723,7 +721,7 @@ transform_inst:
          SET_SRC(&inst, 1, TGSI_FILE_CONSTANT, MAX_NUM_FRAGMENT_CONSTANTS_ATI, X, X, X, X);
          SET_SRC(&inst, 2, TGSI_FILE_CONSTANT, MAX_NUM_FRAGMENT_CONSTANTS_ATI, Y, Y, Y, Y);
          tctx->emit_instruction(tctx, &inst);
-      } else if (ctx->key->fog == 2) {
+      } else if (ctx->key->fog == FOG_EXP) {
          /* EXP formula: f = exp(-dens * z)
           * with optimized parameters:
           *    f = MUL(fogcoord, oparams.z); f= EX2(-f)
@@ -749,7 +747,7 @@ transform_inst:
          SET_SRC(&inst, 0, TGSI_FILE_TEMPORARY, ctx->fog_factor_temp, X, Y, Z, W);
          inst.Src[0].Register.Negate = 1;
          tctx->emit_instruction(tctx, &inst);
-      } else if (ctx->key->fog == 3) {
+      } else if (ctx->key->fog == FOG_EXP2) {
          /* EXP2 formula: f = exp(-(dens * z)^2)
           * with optimized parameters:
           *    f = MUL(fogcoord, oparams.w); f=MUL(f, f); f= EX2(-f)
@@ -787,17 +785,16 @@ transform_inst:
          inst.Src[0].Register.Negate ^= 1;
          tctx->emit_instruction(tctx, &inst);
       }
-      /* f = CLAMP(f, 0.0, 1.0) */
+      /* f = saturate(f) */
       inst = tgsi_default_full_instruction();
-      inst.Instruction.Opcode = TGSI_OPCODE_CLAMP;
+      inst.Instruction.Opcode = TGSI_OPCODE_MOV;
       inst.Instruction.NumDstRegs = 1;
+      inst.Instruction.Saturate = 1;
       inst.Dst[0].Register.File  = TGSI_FILE_TEMPORARY;
       inst.Dst[0].Register.Index = ctx->fog_factor_temp;
       inst.Dst[0].Register.WriteMask = TGSI_WRITEMASK_XYZW;
-      inst.Instruction.NumSrcRegs = 3;
+      inst.Instruction.NumSrcRegs = 1;
       SET_SRC(&inst, 0, TGSI_FILE_TEMPORARY, ctx->fog_factor_temp, X, Y, Z, W);
-      SET_SRC(&inst, 1, TGSI_FILE_IMMEDIATE, ctx->fog_clamp_imm, Y, Y, Y, Y); // 0.0
-      SET_SRC(&inst, 2, TGSI_FILE_IMMEDIATE, ctx->fog_clamp_imm, X, X, X, X); // 1.0
       tctx->emit_instruction(tctx, &inst);
 
       /* REG0 = LRP(f, REG0, fogcolor) */

@@ -55,6 +55,7 @@ struct nvc0_graph_state {
    uint32_t uniform_buffer_bound[6];
    struct nvc0_transform_feedback_state *tfb;
    bool seamless_cube_map;
+   bool post_depth_coverage;
 };
 
 struct nvc0_screen {
@@ -79,6 +80,8 @@ struct nvc0_screen {
    struct nouveau_heap *lib_code; /* allocated from text_heap */
 
    struct nvc0_blitter *blitter;
+
+   struct nv50_tsc_entry *default_tsc;
 
    struct {
       void **entries;

@@ -72,7 +72,7 @@ void
 _mesa_print_state( const char *msg, GLuint state )
 {
    _mesa_debug(NULL,
-	   "%s: (0x%x) %s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n",
+	   "%s: (0x%x) %s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n",
 	   msg,
 	   state,
 	   (state & _NEW_MODELVIEW)       ? "ctx->ModelView, " : "",
@@ -91,9 +91,10 @@ _mesa_print_state( const char *msg, GLuint state )
 	   (state & _NEW_POLYGONSTIPPLE)  ? "ctx->PolygonStipple, " : "",
 	   (state & _NEW_SCISSOR)         ? "ctx->Scissor, " : "",
 	   (state & _NEW_STENCIL)         ? "ctx->Stencil, " : "",
-	   (state & _NEW_TEXTURE)         ? "ctx->Texture, " : "",
+	   (state & _NEW_TEXTURE_OBJECT)  ? "ctx->Texture(Object), " : "",
 	   (state & _NEW_TRANSFORM)       ? "ctx->Transform, " : "",
 	   (state & _NEW_VIEWPORT)        ? "ctx->Viewport, " : "",
+           (state & _NEW_TEXTURE_STATE)   ? "ctx->Texture(State), " : "",
 	   (state & _NEW_ARRAY)           ? "ctx->Array, " : "",
 	   (state & _NEW_RENDERMODE)      ? "ctx->RenderMode, " : "",
 	   (state & _NEW_BUFFERS)         ? "ctx->Visual, ctx->DrawBuffer,, " : "");
@@ -189,7 +190,8 @@ set_debug_flags(const char *str)
       { "silent", DEBUG_SILENT }, /* turn off debug messages */
       { "flush", DEBUG_ALWAYS_FLUSH }, /* flush after each drawing command */
       { "incomplete_tex", DEBUG_INCOMPLETE_TEXTURE },
-      { "incomplete_fbo", DEBUG_INCOMPLETE_FBO }
+      { "incomplete_fbo", DEBUG_INCOMPLETE_FBO },
+      { "context", DEBUG_CONTEXT } /* force set GL_CONTEXT_FLAG_DEBUG_BIT flag */
    };
    GLuint i;
 
@@ -233,6 +235,11 @@ write_ppm(const char *filename, const GLubyte *buffer, int width, int height,
       fprintf(f,"255\n");
       fclose(f);
       f = fopen( filename, "ab" );  /* reopen in binary append mode */
+      if (!f) {
+         fprintf(stderr, "Error while reopening %s in write_ppm()\n",
+                 filename);
+         return;
+      }
       for (y=0; y < height; y++) {
          for (x = 0; x < width; x++) {
             int yy = invert ? (height - 1 - y) : y;

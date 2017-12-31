@@ -28,8 +28,8 @@ endif
 
 AM_CFLAGS = \
 	-I$(top_builddir)/src/compiler/nir \
+	-I$(top_srcdir)/include/drm-uapi \
 	$(LIBDRM_CFLAGS) \
-	$(VC4_CFLAGS) \
 	$(GALLIUM_DRIVER_CFLAGS) \
 	$(SIM_CFLAGS) \
 	$(VALGRIND_CFLAGS) \
@@ -38,5 +38,15 @@ AM_CFLAGS = \
 noinst_LTLIBRARIES = libvc4.la
 
 libvc4_la_SOURCES = $(C_SOURCES)
-libvc4_la_LIBADD = $(SIM_LIB) $(VC4_LIBS)
+libvc4_la_LIBADD = $(SIM_LIB)
+
+if HAVE_ARM_ASM
+noinst_LTLIBRARIES += libvc4_neon.la
+libvc4_la_LIBADD += libvc4_neon.la
+libvc4_neon_la_SOURCES = $(NEON_C_SOURCES)
+libvc4_neon_la_CFLAGS = $(AM_CFLAGS) -mfpu=neon
+endif
+
 libvc4_la_LDFLAGS = $(SIM_LDFLAGS)
+
+EXTRA_DIST = kernel/README

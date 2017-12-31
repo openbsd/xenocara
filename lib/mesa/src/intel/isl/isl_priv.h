@@ -33,7 +33,13 @@
 #include "isl.h"
 
 #define isl_finishme(format, ...) \
-   __isl_finishme(__FILE__, __LINE__, format, ##__VA_ARGS__)
+   do { \
+      static bool reported = false; \
+      if (!reported) { \
+         __isl_finishme(__FILE__, __LINE__, format, ##__VA_ARGS__); \
+         reported = true; \
+      } \
+   } while (0)
 
 void PRINTFLIKE(3, 4) UNUSED
 __isl_finishme(const char *file, int line, const char *fmt, ...);
@@ -72,6 +78,13 @@ isl_align_npot(uintmax_t n, uintmax_t a)
 {
    assert(a > 0);
    return ((n + a - 1) / a) * a;
+}
+
+static inline uintmax_t
+isl_assert_div(uintmax_t n, uintmax_t a)
+{
+   assert(n % a == 0);
+   return n / a;
 }
 
 /**
@@ -172,6 +185,10 @@ isl_gen9_surf_fill_state_s(const struct isl_device *dev, void *state,
                            const struct isl_surf_fill_state_info *restrict info);
 
 void
+isl_gen10_surf_fill_state_s(const struct isl_device *dev, void *state,
+                            const struct isl_surf_fill_state_info *restrict info);
+
+void
 isl_gen4_buffer_fill_state_s(void *state,
                              const struct isl_buffer_fill_state_info *restrict info);
 
@@ -198,5 +215,41 @@ isl_gen8_buffer_fill_state_s(void *state,
 void
 isl_gen9_buffer_fill_state_s(void *state,
                              const struct isl_buffer_fill_state_info *restrict info);
+
+void
+isl_gen10_buffer_fill_state_s(void *state,
+                              const struct isl_buffer_fill_state_info *restrict info);
+
+void
+isl_gen4_emit_depth_stencil_hiz_s(const struct isl_device *dev, void *batch,
+                                  const struct isl_depth_stencil_hiz_emit_info *restrict info);
+
+void
+isl_gen5_emit_depth_stencil_hiz_s(const struct isl_device *dev, void *batch,
+                                  const struct isl_depth_stencil_hiz_emit_info *restrict info);
+
+void
+isl_gen6_emit_depth_stencil_hiz_s(const struct isl_device *dev, void *batch,
+                                  const struct isl_depth_stencil_hiz_emit_info *restrict info);
+
+void
+isl_gen7_emit_depth_stencil_hiz_s(const struct isl_device *dev, void *batch,
+                                  const struct isl_depth_stencil_hiz_emit_info *restrict info);
+
+void
+isl_gen75_emit_depth_stencil_hiz_s(const struct isl_device *dev, void *batch,
+                                   const struct isl_depth_stencil_hiz_emit_info *restrict info);
+
+void
+isl_gen8_emit_depth_stencil_hiz_s(const struct isl_device *dev, void *batch,
+                                  const struct isl_depth_stencil_hiz_emit_info *restrict info);
+
+void
+isl_gen9_emit_depth_stencil_hiz_s(const struct isl_device *dev, void *batch,
+                                  const struct isl_depth_stencil_hiz_emit_info *restrict info);
+
+void
+isl_gen10_emit_depth_stencil_hiz_s(const struct isl_device *dev, void *batch,
+                                   const struct isl_depth_stencil_hiz_emit_info *restrict info);
 
 #endif /* ISL_PRIV_H */

@@ -32,6 +32,7 @@
  
 #include "main/macros.h"
 #include "main/framebuffer.h"
+#include "main/state.h"
 #include "st_context.h"
 #include "st_atom.h"
 #include "st_debug.h"
@@ -50,6 +51,8 @@ static GLuint translate_fill( GLenum mode )
       return PIPE_POLYGON_MODE_LINE;
    case GL_FILL:
       return PIPE_POLYGON_MODE_FILL;
+   case GL_FILL_RECTANGLE_NV:
+      return PIPE_POLYGON_MODE_FILL_RECTANGLE;
    default:
       assert(0);
       return 0;
@@ -58,12 +61,12 @@ static GLuint translate_fill( GLenum mode )
 
 
 
-static void update_raster_state( struct st_context *st )
+void st_update_rasterizer( struct st_context *st )
 {
    struct gl_context *ctx = st->ctx;
    struct pipe_rasterizer_state *raster = &st->state.rasterizer;
-   const struct gl_vertex_program *vertProg = ctx->VertexProgram._Current;
-   const struct gl_fragment_program *fragProg = ctx->FragmentProgram._Current;
+   const struct gl_program *vertProg = ctx->VertexProgram._Current;
+   const struct gl_program *fragProg = ctx->FragmentProgram._Current;
 
    memset(raster, 0, sizeof(*raster));
 
@@ -83,7 +86,7 @@ static void update_raster_state( struct st_context *st )
        * must match OpenGL conventions so FBOs use Y=0=BOTTOM.  In that
        * case, we must invert Y and flip the notion of front vs. back.
        */
-      if (st_fb_orientation(ctx->DrawBuffer) == Y_0_BOTTOM) {
+      if (st->state.fb_orientation == Y_0_BOTTOM) {
          /* Drawing to an FBO.  The viewport will be inverted. */
          raster->front_ccw ^= 1;
       }
@@ -97,7 +100,7 @@ static void update_raster_state( struct st_context *st )
                              GL_FIRST_VERTEX_CONVENTION_EXT;
 
    /* _NEW_LIGHT | _NEW_PROGRAM */
-   raster->light_twoside = ctx->VertexProgram._TwoSideEnabled;
+   raster->light_twoside = _mesa_vertex_program_two_side_enabled(ctx);
 
    /*_NEW_LIGHT | _NEW_BUFFERS */
    raster->clamp_vertex_color = !st->clamp_vert_color_in_shader &&
@@ -171,7 +174,7 @@ static void update_raster_state( struct st_context *st )
    if (ctx->Point.PointSprite) {
       /* origin */
       if ((ctx->Point.SpriteOrigin == GL_UPPER_LEFT) ^
-          (st_fb_orientation(ctx->DrawBuffer) == Y_0_BOTTOM))
+          (st->state.fb_orientation == Y_0_BOTTOM))
          raster->sprite_coord_mode = PIPE_SPRITE_COORD_UPPER_LEFT;
       else 
          raster->sprite_coord_mode = PIPE_SPRITE_COORD_LOWER_LEFT;
@@ -183,7 +186,7 @@ static void update_raster_state( struct st_context *st )
       raster->sprite_coord_enable = ctx->Point.CoordReplace &
          ((1u << MAX_TEXTURE_COORD_UNITS) - 1);
       if (!st->needs_texcoord_semantic &&
-          fragProg->Base.InputsRead & VARYING_BIT_PNTC) {
+          fragProg->info.inputs_read & VARYING_BIT_PNTC) {
          raster->sprite_coord_enable |=
             1 << st_get_generic_varying_index(st, VARYING_SLOT_PNTC);
       }
@@ -194,8 +197,9 @@ static void update_raster_state( struct st_context *st )
    /* ST_NEW_VERTEX_PROGRAM
     */
    if (vertProg) {
-      if (vertProg->Base.Id == 0) {
-         if (vertProg->Base.OutputsWritten & BITFIELD64_BIT(VARYING_SLOT_PSIZ)) {
+      if (vertProg->Id == 0) {
+         if (vertProg->info.outputs_written &
+             BITFIELD64_BIT(VARYING_SLOT_PSIZ)) {
             /* generated program which emits point size */
             raster->point_size_per_vertex = TRUE;
          }
@@ -209,14 +213,15 @@ static void update_raster_state( struct st_context *st )
          /* We have to check the last bound stage and see if it writes psize */
          struct gl_program *last = NULL;
          if (ctx->GeometryProgram._Current)
-            last = &ctx->GeometryProgram._Current->Base;
+            last = ctx->GeometryProgram._Current;
          else if (ctx->TessEvalProgram._Current)
-            last = &ctx->TessEvalProgram._Current->Base;
+            last = ctx->TessEvalProgram._Current;
          else if (ctx->VertexProgram._Current)
-            last = &ctx->VertexProgram._Current->Base;
+            last = ctx->VertexProgram._Current;
          if (last)
             raster->point_size_per_vertex =
-               !!(last->OutputsWritten & BITFIELD64_BIT(VARYING_SLOT_PSIZ));
+               !!(last->info.outputs_written &
+                  BITFIELD64_BIT(VARYING_SLOT_PSIZ));
       }
    }
    if (!raster->point_size_per_vertex) {
@@ -251,20 +256,20 @@ static void update_raster_state( struct st_context *st )
    /* _NEW_MULTISAMPLE | _NEW_BUFFERS */
    raster->force_persample_interp =
          !st->force_persample_in_shader &&
-         _mesa_is_multisample_enabled(ctx) &&
+         raster->multisample &&
          ctx->Multisample.SampleShading &&
          ctx->Multisample.MinSampleShadingValue *
          _mesa_geometric_samples(ctx->DrawBuffer) > 1;
 
    /* _NEW_SCISSOR */
-   raster->scissor = ctx->Scissor.EnableFlags;
+   raster->scissor = !!ctx->Scissor.EnableFlags;
 
    /* _NEW_FRAG_CLAMP */
    raster->clamp_fragment_color = !st->clamp_frag_color_in_shader &&
                                   ctx->Color._ClampFragmentColor;
 
    raster->half_pixel_center = 1;
-   if (st_fb_orientation(ctx->DrawBuffer) == Y_0_TOP)
+   if (st->state.fb_orientation == Y_0_TOP)
       raster->bottom_edge_rule = 1;
    /* _NEW_TRANSFORM */
    if (ctx->Transform.ClipOrigin == GL_UPPER_LEFT)
@@ -288,7 +293,3 @@ static void update_raster_state( struct st_context *st )
 
    cso_set_rasterizer(st->cso_context, raster);
 }
-
-const struct st_tracked_state st_update_rasterizer = {
-   update_raster_state     /* update function */
-};

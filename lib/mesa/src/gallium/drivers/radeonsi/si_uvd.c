@@ -35,6 +35,7 @@
 #include "radeon/radeon_video.h"
 #include "radeon/radeon_uvd.h"
 #include "radeon/radeon_vce.h"
+#include "radeon/radeon_vcn_dec.h"
 
 /**
  * creates an video buffer with an UVD compatible memory layout
@@ -97,7 +98,7 @@ struct pipe_video_buffer *si_video_buffer_create(struct pipe_context *pipe,
 		pbs[i] = &resources[i]->resource.buf;
 	}
 
-	rvid_join_surfaces(ctx->b.ws, pbs, surfaces);
+	rvid_join_surfaces(&ctx->b, pbs, surfaces);
 
 	for (i = 0; i < VL_NUM_COMPONENTS; ++i) {
 		if (!resources[i])
@@ -121,12 +122,16 @@ error:
 /* set the decoding target buffer offsets */
 static struct pb_buffer* si_uvd_set_dtb(struct ruvd_msg *msg, struct vl_video_buffer *buf)
 {
+	struct si_screen *sscreen = (struct si_screen*)buf->base.context->screen;
 	struct r600_texture *luma = (struct r600_texture *)buf->resources[0];
 	struct r600_texture *chroma = (struct r600_texture *)buf->resources[1];
+	enum ruvd_surface_type type =  (sscreen->b.chip_class >= GFX9) ?
+					RUVD_SURFACE_TYPE_GFX9 :
+					RUVD_SURFACE_TYPE_LEGACY;
 
 	msg->body.decode.dt_field_mode = buf->base.interlaced;
 
-	ruvd_set_dt_surfaces(msg, &luma->surface, &chroma->surface);
+	ruvd_set_dt_surfaces(msg, &luma->surface, &chroma->surface, type);
 
 	return luma->resource.buf;
 }
@@ -152,9 +157,11 @@ struct pipe_video_codec *si_uvd_create_decoder(struct pipe_context *context,
 					       const struct pipe_video_codec *templ)
 {
 	struct si_context *ctx = (struct si_context *)context;
+	bool vcn = (ctx->b.family == CHIP_RAVEN) ? true : false;
 
         if (templ->entrypoint == PIPE_VIDEO_ENTRYPOINT_ENCODE)
                 return rvce_create_encoder(context, templ, ctx->b.ws, si_vce_get_buffer);
 
-	return ruvd_create_decoder(context, templ, si_uvd_set_dtb);
+	return (vcn) ? 	radeon_create_decoder(context, templ) :
+		ruvd_create_decoder(context, templ, si_uvd_set_dtb);
 }

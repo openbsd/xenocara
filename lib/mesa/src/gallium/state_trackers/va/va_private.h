@@ -49,13 +49,28 @@
 #define VL_VA_DRIVER(ctx) ((vlVaDriver *)ctx->pDriverData)
 #define VL_VA_PSCREEN(ctx) (VL_VA_DRIVER(ctx)->vscreen->pscreen)
 
-#define VL_VA_MAX_IMAGE_FORMATS 9
+#define VL_VA_MAX_IMAGE_FORMATS 11
+#define VL_VA_ENC_GOP_COEFF 16
+
+#define UINT_TO_PTR(x) ((void*)(uintptr_t)(x))
+#define PTR_TO_UINT(x) ((unsigned)((intptr_t)(x)))
+
+static inline unsigned handle_hash(void *key)
+{
+    return PTR_TO_UINT(key);
+}
+
+static inline int handle_compare(void *key1, void *key2)
+{
+    return PTR_TO_UINT(key1) != PTR_TO_UINT(key2);
+}
 
 static inline enum pipe_video_chroma_format
 ChromaToPipe(int format)
 {
    switch (format) {
    case VA_RT_FORMAT_YUV420:
+   case VA_RT_FORMAT_YUV420_10BPP:
       return PIPE_VIDEO_CHROMA_FORMAT_420;
    case VA_RT_FORMAT_YUV422:
       return PIPE_VIDEO_CHROMA_FORMAT_422;
@@ -72,6 +87,9 @@ VaFourccToPipeFormat(unsigned format)
    switch(format) {
    case VA_FOURCC('N','V','1','2'):
       return PIPE_FORMAT_NV12;
+   case VA_FOURCC('P','0','1','0'):
+   case VA_FOURCC('P','0','1','6'):
+      return PIPE_FORMAT_P016;
    case VA_FOURCC('I','4','2','0'):
       return PIPE_FORMAT_IYUV;
    case VA_FOURCC('Y','V','1','2'):
@@ -100,6 +118,8 @@ PipeFormatToVaFourcc(enum pipe_format p_format)
    switch (p_format) {
    case PIPE_FORMAT_NV12:
       return VA_FOURCC('N','V','1','2');
+   case PIPE_FORMAT_P016:
+      return VA_FOURCC('P','0','1','6');
    case PIPE_FORMAT_IYUV:
       return VA_FOURCC('I','4','2','0');
    case PIPE_FORMAT_YV12:
@@ -154,6 +174,7 @@ PipeToProfile(enum pipe_video_profile profile)
    case PIPE_VIDEO_PROFILE_MPEG4_AVC_HIGH10:
    case PIPE_VIDEO_PROFILE_MPEG4_AVC_HIGH422:
    case PIPE_VIDEO_PROFILE_MPEG4_AVC_HIGH444:
+   case PIPE_VIDEO_PROFILE_MPEG4_AVC_CONSTRAINED_BASELINE:
    case PIPE_VIDEO_PROFILE_HEVC_MAIN_12:
    case PIPE_VIDEO_PROFILE_HEVC_MAIN_STILL:
    case PIPE_VIDEO_PROFILE_HEVC_MAIN_444:
@@ -207,7 +228,7 @@ typedef struct {
    struct vl_compositor compositor;
    struct vl_compositor_state cstate;
    vl_csc_matrix csc;
-   pipe_mutex mutex;
+   mtx_t mutex;
 } vlVaDriver;
 
 typedef struct {
@@ -218,6 +239,20 @@ typedef struct {
 
    struct pipe_sampler_view *sampler;
 } vlVaSubpicture;
+
+typedef struct {
+   VABufferType type;
+   unsigned int size;
+   unsigned int num_elements;
+   void *data;
+   struct {
+      struct pipe_resource *resource;
+      struct pipe_transfer *transfer;
+   } derived_surface;
+   unsigned int export_refcount;
+   VABufferInfo export_state;
+   unsigned int coded_size;
+} vlVaBuffer;
 
 typedef struct {
    struct pipe_video_codec templat, *decoder;
@@ -242,8 +277,10 @@ typedef struct {
    } mpeg4;
 
    struct vl_deint_filter *deint;
-   struct vlVaBuffer *coded_buf;
+   vlVaBuffer *coded_buf;
    int target_id;
+   bool first_single_submitted;
+   int gop_coeff;
    bool needs_begin_frame;
 } vlVaContext;
 
@@ -255,26 +292,13 @@ typedef struct {
 } vlVaConfig;
 
 typedef struct {
-   VABufferType type;
-   unsigned int size;
-   unsigned int num_elements;
-   void *data;
-   struct {
-      struct pipe_resource *resource;
-      struct pipe_transfer *transfer;
-   } derived_surface;
-   unsigned int export_refcount;
-   VABufferInfo export_state;
-   unsigned int coded_size;
-} vlVaBuffer;
-
-typedef struct {
    struct pipe_video_buffer templat, *buffer;
    struct util_dynarray subpics; /* vlVaSubpicture */
    VAContextID ctx;
    vlVaBuffer *coded_buf;
    void *feedback;
    unsigned int frame_num_cnt;
+   bool force_flushed;
 } vlVaSurface;
 
 // Public functions:

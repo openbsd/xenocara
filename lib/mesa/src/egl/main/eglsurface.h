@@ -56,6 +56,11 @@ struct _egl_surface
 
    EGLint Type; /* one of EGL_WINDOW_BIT, EGL_PIXMAP_BIT or EGL_PBUFFER_BIT */
 
+   /* The native surface is lost. The EGL spec requires certain functions
+    * to generate EGL_BAD_NATIVE_WINDOW when given this surface.
+    */
+   EGLBoolean Lost;
+
    /* attributes set by attribute list */
    EGLint Width, Height;
    EGLenum TextureFormat;
@@ -76,6 +81,18 @@ struct _egl_surface
    EGLint AspectRatio;
 
    EGLint SwapInterval;
+
+   /* EGL_KHR_partial_update
+    * True if the damage region is already set
+    * between frame boundaries.
+    */
+   EGLBoolean SetDamageRegionCalled;
+
+   /* EGL_KHR_partial_update
+    * True if the buffer age is read by the client
+    * between frame boundaries.
+    */
+   EGLBoolean BufferAgeRead;
 
    /* True if the surface is bound to an OpenGL ES texture */
    EGLBoolean BoundToTexture;

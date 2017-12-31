@@ -41,6 +41,8 @@ namespace nv50_ir {
    ((QOP_##q << 6) | (QOP_##r << 4) |           \
     (QOP_##s << 2) | (QOP_##t << 0))
 
+#define SHFL_BOUND_QUAD 0x1c03
+
 void
 GM107LegalizeSSA::handlePFETCH(Instruction *i)
 {
@@ -61,12 +63,28 @@ GM107LegalizeSSA::handlePFETCH(Instruction *i)
    i->setSrc(1, NULL);
 }
 
+void
+GM107LegalizeSSA::handleLOAD(Instruction *i)
+{
+   if (i->src(0).getFile() != FILE_MEMORY_CONST)
+      return;
+   if (i->src(0).isIndirect(0))
+      return;
+   if (typeSizeof(i->dType) != 4)
+      return;
+
+   i->op = OP_MOV;
+}
+
 bool
 GM107LegalizeSSA::visit(Instruction *i)
 {
    switch (i->op) {
    case OP_PFETCH:
       handlePFETCH(i);
+      break;
+   case OP_LOAD:
+      handleLOAD(i);
       break;
    default:
       break;
@@ -104,7 +122,8 @@ GM107LoweringPass::handleManualTXD(TexInstruction *i)
       // mov coordinates from lane l to all lanes
       bld.mkOp(OP_QUADON, TYPE_NONE, NULL);
       for (c = 0; c < dim; ++c) {
-         bld.mkOp2(OP_SHFL, TYPE_F32, crd[c], i->getSrc(c + array), bld.mkImm(l));
+         bld.mkOp3(OP_SHFL, TYPE_F32, crd[c], i->getSrc(c + array),
+                   bld.mkImm(l), bld.mkImm(SHFL_BOUND_QUAD));
          add = bld.mkOp2(OP_QUADOP, TYPE_F32, crd[c], crd[c], zero);
          add->subOp = 0x00;
          add->lanes = 1; /* abused for .ndv */
@@ -112,7 +131,8 @@ GM107LoweringPass::handleManualTXD(TexInstruction *i)
 
       // add dPdx from lane l to lanes dx
       for (c = 0; c < dim; ++c) {
-         bld.mkOp2(OP_SHFL, TYPE_F32, tmp, i->dPdx[c].get(), bld.mkImm(l));
+         bld.mkOp3(OP_SHFL, TYPE_F32, tmp, i->dPdx[c].get(), bld.mkImm(l),
+                   bld.mkImm(SHFL_BOUND_QUAD));
          add = bld.mkOp2(OP_QUADOP, TYPE_F32, crd[c], tmp, crd[c]);
          add->subOp = qOps[l][0];
          add->lanes = 1; /* abused for .ndv */
@@ -120,7 +140,8 @@ GM107LoweringPass::handleManualTXD(TexInstruction *i)
 
       // add dPdy from lane l to lanes dy
       for (c = 0; c < dim; ++c) {
-         bld.mkOp2(OP_SHFL, TYPE_F32, tmp, i->dPdy[c].get(), bld.mkImm(l));
+         bld.mkOp3(OP_SHFL, TYPE_F32, tmp, i->dPdy[c].get(), bld.mkImm(l),
+                   bld.mkImm(SHFL_BOUND_QUAD));
          add = bld.mkOp2(OP_QUADOP, TYPE_F32, crd[c], tmp, crd[c]);
          add->subOp = qOps[l][1];
          add->lanes = 1; /* abused for .ndv */
@@ -187,8 +208,8 @@ GM107LoweringPass::handleDFDX(Instruction *insn)
       break;
    }
 
-   shfl = bld.mkOp2(OP_SHFL, TYPE_F32, bld.getScratch(),
-                    insn->getSrc(0), bld.mkImm(xid));
+   shfl = bld.mkOp3(OP_SHFL, TYPE_F32, bld.getScratch(), insn->getSrc(0),
+                    bld.mkImm(xid), bld.mkImm(SHFL_BOUND_QUAD));
    shfl->subOp = NV50_IR_SUBOP_SHFL_BFLY;
    insn->op = OP_QUADOP;
    insn->subOp = qop;

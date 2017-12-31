@@ -40,7 +40,6 @@
  * exec_list or any structure in which an \c exec_list is embedded.
  */
 
-#pragma once
 #ifndef LIST_CONTAINER_H
 #define LIST_CONTAINER_H
 
@@ -56,7 +55,7 @@ struct exec_node {
    struct exec_node *prev;
 
 #ifdef __cplusplus
-   DECLARE_RALLOC_CXX_OPERATORS(exec_node)
+   DECLARE_RZALLOC_CXX_OPERATORS(exec_node)
 
    exec_node() : next(NULL), prev(NULL)
    {
@@ -697,6 +696,11 @@ inline void exec_node::insert_before(exec_list *before)
    for (__type * __node =						\
          exec_node_data(__type, (__list)->head_sentinel.next, __field); \
 	(__node)->__field.next != NULL; 				\
+	(__node) = exec_node_data(__type, (__node)->__field.next, __field))
+
+#define foreach_list_typed_from(__type, __node, __field, __list, __start)  \
+   for (__type * __node = exec_node_data(__type, (__start), __field);      \
+	(__node)->__field.next != NULL;                                    \
 	(__node) = exec_node_data(__type, (__node)->__field.next, __field))
 
 #define foreach_list_typed_reverse(__type, __node, __field, __list)        \

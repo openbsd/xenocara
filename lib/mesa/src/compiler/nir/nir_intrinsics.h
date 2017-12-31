@@ -91,7 +91,20 @@ BARRIER(memory_barrier)
  * The latter can be used as code motion barrier, which is currently not
  * feasible with NIR.
  */
-INTRINSIC(shader_clock, 0, ARR(0), true, 1, 0, 0, xx, xx, xx, NIR_INTRINSIC_CAN_ELIMINATE)
+INTRINSIC(shader_clock, 0, ARR(0), true, 2, 0, 0, xx, xx, xx, NIR_INTRINSIC_CAN_ELIMINATE)
+
+/*
+ * Shader ballot intrinsics with semantics analogous to the
+ *
+ *    ballotARB()
+ *    readInvocationARB()
+ *    readFirstInvocationARB()
+ *
+ * GLSL functions from ARB_shader_ballot.
+ */
+INTRINSIC(ballot, 1, ARR(1), true, 1, 0, 0, xx, xx, xx, NIR_INTRINSIC_CAN_ELIMINATE)
+INTRINSIC(read_invocation, 2, ARR(0, 1), true, 0, 0, 0, xx, xx, xx, NIR_INTRINSIC_CAN_ELIMINATE)
+INTRINSIC(read_first_invocation, 1, ARR(0), true, 0, 0, 0, xx, xx, xx, NIR_INTRINSIC_CAN_ELIMINATE)
 
 /*
  * Memory barrier with semantics analogous to the compute shader
@@ -106,6 +119,11 @@ BARRIER(memory_barrier_shared)
 
 /** A conditional discard, with a single boolean source. */
 INTRINSIC(discard_if, 1, ARR(1), false, 0, 0, 0, xx, xx, xx, 0)
+
+/** ARB_shader_group_vote intrinsics */
+INTRINSIC(vote_any, 1, ARR(1), true, 1, 0, 0, xx, xx, xx, NIR_INTRINSIC_CAN_ELIMINATE)
+INTRINSIC(vote_all, 1, ARR(1), true, 1, 0, 0, xx, xx, xx, NIR_INTRINSIC_CAN_ELIMINATE)
+INTRINSIC(vote_eq,  1, ARR(1), true, 1, 0, 0, xx, xx, xx, NIR_INTRINSIC_CAN_ELIMINATE)
 
 /**
  * Basic Geometry Shader intrinsics.
@@ -186,7 +204,7 @@ INTRINSIC(image_atomic_or, 3, ARR(4, 1, 1), true, 1, 1, 0, xx, xx, xx, 0)
 INTRINSIC(image_atomic_xor, 3, ARR(4, 1, 1), true, 1, 1, 0, xx, xx, xx, 0)
 INTRINSIC(image_atomic_exchange, 3, ARR(4, 1, 1), true, 1, 1, 0, xx, xx, xx, 0)
 INTRINSIC(image_atomic_comp_swap, 4, ARR(4, 1, 1, 1), true, 1, 1, 0, xx, xx, xx, 0)
-INTRINSIC(image_size, 0, ARR(0), true, 4, 1, 0, xx, xx, xx,
+INTRINSIC(image_size, 0, ARR(0), true, 0, 1, 0, xx, xx, xx,
           NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER)
 INTRINSIC(image_samples, 0, ARR(0), true, 1, 1, 0, xx, xx, xx,
           NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER)
@@ -326,8 +344,16 @@ SYSTEM_VALUE(work_group_id, 3, 0, xx, xx, xx)
 SYSTEM_VALUE(user_clip_plane, 4, 1, UCP_ID, xx, xx)
 SYSTEM_VALUE(num_work_groups, 3, 0, xx, xx, xx)
 SYSTEM_VALUE(helper_invocation, 1, 0, xx, xx, xx)
-SYSTEM_VALUE(channel_num, 1, 0, xx, xx, xx)
 SYSTEM_VALUE(alpha_ref_float, 1, 0, xx, xx, xx)
+SYSTEM_VALUE(layer_id, 1, 0, xx, xx, xx)
+SYSTEM_VALUE(view_index, 1, 0, xx, xx, xx)
+SYSTEM_VALUE(subgroup_size, 1, 0, xx, xx, xx)
+SYSTEM_VALUE(subgroup_invocation, 1, 0, xx, xx, xx)
+SYSTEM_VALUE(subgroup_eq_mask, 1, 0, xx, xx, xx)
+SYSTEM_VALUE(subgroup_ge_mask, 1, 0, xx, xx, xx)
+SYSTEM_VALUE(subgroup_gt_mask, 1, 0, xx, xx, xx)
+SYSTEM_VALUE(subgroup_le_mask, 1, 0, xx, xx, xx)
+SYSTEM_VALUE(subgroup_lt_mask, 1, 0, xx, xx, xx)
 
 /* Blend constant color values.  Float values are clamped. */
 SYSTEM_VALUE(blend_const_color_r_float, 1, 0, xx, xx, xx)
@@ -400,12 +426,14 @@ LOAD(input, 1, 2, BASE, COMPONENT, xx, NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINS
 /* src[] = { vertex, offset }. const_index[] = { base, component } */
 LOAD(per_vertex_input, 2, 2, BASE, COMPONENT, xx, NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER)
 /* src[] = { barycoord, offset }. const_index[] = { base, component } */
-LOAD(interpolated_input, 2, 2, BASE, COMPONENT, xx, NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER)
+INTRINSIC(load_interpolated_input, 2, ARR(2, 1), true, 0, 0,
+          2, BASE, COMPONENT, xx,
+          NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER)
 
 /* src[] = { buffer_index, offset }. No const_index */
 LOAD(ssbo, 2, 0, xx, xx, xx, NIR_INTRINSIC_CAN_ELIMINATE)
 /* src[] = { offset }. const_index[] = { base, component } */
-LOAD(output, 1, 1, BASE, COMPONENT, xx, NIR_INTRINSIC_CAN_ELIMINATE)
+LOAD(output, 1, 2, BASE, COMPONENT, xx, NIR_INTRINSIC_CAN_ELIMINATE)
 /* src[] = { vertex, offset }. const_index[] = { base, component } */
 LOAD(per_vertex_output, 2, 1, BASE, COMPONENT, xx, NIR_INTRINSIC_CAN_ELIMINATE)
 /* src[] = { offset }. const_index[] = { base } */

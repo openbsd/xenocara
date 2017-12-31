@@ -772,7 +772,7 @@ struct nvc0_blitter
 
    struct nv50_tsc_entry sampler[2]; /* nearest, bilinear */
 
-   pipe_mutex mutex;
+   mtx_t mutex;
 
    struct nvc0_screen *screen;
 };
@@ -836,12 +836,20 @@ nvc0_blitter_make_vp(struct nvc0_blitter *blit)
    };
    static const uint32_t code_gm107[] =
    {
-      0xfc0007e0, 0x001f8000, /* sched (st 0x0) (st 0x0) (st 0x0) */
-      0x0807ff04, 0xefd8ff80, /* ld b64 $r4 a[0x80] 0x0 */
-      0x0907ff00, 0xefd97f80, /* ld b96 $r0 a[0x90] 0x0 */
-      0x0707ff04, 0xeff0ff80, /* st b64 a[0x70] $r4 0x0 */
-      0xfc0007e0, 0x00000000, /* sched (st 0x0) (st 0x0) (st 0x0) */
-      0x0807ff00, 0xeff17f80, /* st b96 a[0x80] $r0 0x0 */
+      0xe4200701, 0x001d0400, /* sched (st 0x1 wr 0x0) (st 0x1 wr 0x1) (st 0x1 wr 0x2) */
+      0x0807ff00, 0xefd87f80, /* ld b32 $r0 a[0x80] 0x0 */
+      0x0847ff01, 0xefd87f80, /* ld b32 $r1 a[0x84] 0x0 */
+      0x0907ff02, 0xefd87f80, /* ld b32 $r2 a[0x90] 0x0 */
+      0xf0200761, 0x003f8400, /* sched (st 0x1 wr 0x3) (st 0x1 wr 0x4) (st 0x1 wt 0x1) */
+      0x0947ff03, 0xefd87f80, /* ld b32 $r3 a[0x94] 0x0 */
+      0x0987ff04, 0xefd87f80, /* ld b32 $r4 a[0x98] 0x0 */
+      0x0707ff00, 0xeff07f80, /* st b32 a[0x70] $r0 0x0 */
+      0xfc2017e1, 0x011f8404, /* sched (st 0x1 wt 0x2) (st 0x1 wt 0x4) (st 0x1 wt 0x8) */
+      0x0747ff01, 0xeff07f80, /* st b32 a[0x74] $r1 0x0 */
+      0x0807ff02, 0xeff07f80, /* st b32 a[0x80] $r2 0x0 */
+      0x0847ff03, 0xeff07f80, /* st b32 a[0x84] $r3 0x0 */
+      0xfde087e1, 0x001f8000, /* sched (st 0x1 wt 0x10) (st 0xf) (st 0x0) */
+      0x0887ff04, 0xeff07f80, /* st b32 a[0x88] $r4 0x0 */
       0x0007000f, 0xe3000000, /* exit */
    };
 
@@ -910,11 +918,11 @@ nvc0_blit_select_fp(struct nvc0_blitctx *ctx, const struct pipe_blit_info *info)
    const unsigned mode = ctx->mode;
 
    if (!blitter->fp[targ][mode]) {
-      pipe_mutex_lock(blitter->mutex);
+      mtx_lock(&blitter->mutex);
       if (!blitter->fp[targ][mode])
          blitter->fp[targ][mode] =
             nv50_blitter_make_fp(&ctx->nvc0->base.pipe, mode, ptarg);
-      pipe_mutex_unlock(blitter->mutex);
+      mtx_unlock(&blitter->mutex);
    }
    ctx->fp = blitter->fp[targ][mode];
 }
@@ -1656,7 +1664,7 @@ nvc0_blitter_create(struct nvc0_screen *screen)
    }
    screen->blitter->screen = screen;
 
-   pipe_mutex_init(screen->blitter->mutex);
+   (void) mtx_init(&screen->blitter->mutex, mtx_plain);
 
    nvc0_blitter_make_vp(screen->blitter);
    nvc0_blitter_make_sampler(screen->blitter);
@@ -1681,7 +1689,7 @@ nvc0_blitter_destroy(struct nvc0_screen *screen)
       }
    }
 
-   pipe_mutex_destroy(blitter->mutex);
+   mtx_destroy(&blitter->mutex);
    FREE(blitter);
 }
 

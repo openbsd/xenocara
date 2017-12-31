@@ -43,13 +43,10 @@ struct st_context;
  */
 enum st_pipeline {
    ST_PIPELINE_RENDER,
+   ST_PIPELINE_CLEAR,
+   ST_PIPELINE_UPDATE_FRAMEBUFFER,
    ST_PIPELINE_COMPUTE,
 };
-
-struct st_tracked_state {
-   void (*update)( struct st_context *st );
-};
-
 
 void st_init_atoms( struct st_context *st );
 void st_destroy_atoms( struct st_context *st );
@@ -71,17 +68,21 @@ enum {
 /* Define ST_NEW_xxx values as static const uint64_t values.
  * We can't use an enum type because MSVC doesn't allow 64-bit enum values.
  */
-#define ST_STATE(FLAG, st_update) static const uint64_t FLAG = 1llu << FLAG##_INDEX;
+#define ST_STATE(FLAG, st_update) static const uint64_t FLAG = 1ull << FLAG##_INDEX;
 #include "st_atom_list.h"
 #undef ST_STATE
 
-/* Add extern struct declarations. */
-#define ST_STATE(FLAG, st_update) extern const struct st_tracked_state st_update;
+/* Declare function prototypes. */
+#define ST_STATE(FLAG, st_update) void st_update(struct st_context *st);
 #include "st_atom_list.h"
 #undef ST_STATE
 
 /* Combined state flags. */
-#define ST_NEW_SAMPLERS         (ST_NEW_RENDER_SAMPLERS | \
+#define ST_NEW_SAMPLERS         (ST_NEW_VS_SAMPLERS | \
+                                 ST_NEW_TCS_SAMPLERS | \
+                                 ST_NEW_TES_SAMPLERS | \
+                                 ST_NEW_GS_SAMPLERS | \
+                                 ST_NEW_FS_SAMPLERS | \
                                  ST_NEW_CS_SAMPLERS)
 
 #define ST_NEW_FRAMEBUFFER      (ST_NEW_FB_STATE | \
@@ -144,7 +145,12 @@ enum {
 
 /* All state flags within each group: */
 #define ST_PIPELINE_RENDER_STATE_MASK  (ST_NEW_CS_STATE - 1)
-#define ST_PIPELINE_COMPUTE_STATE_MASK (0xffllu << ST_NEW_CS_STATE_INDEX)
+#define ST_PIPELINE_COMPUTE_STATE_MASK (0xffull << ST_NEW_CS_STATE_INDEX)
+#define ST_PIPELINE_CLEAR_STATE_MASK (ST_NEW_FB_STATE | \
+                                      ST_NEW_SCISSOR | \
+                                      ST_NEW_WINDOW_RECTANGLES)
+/* For ReadPixels, ReadBuffer, GetSamplePosition: */
+#define ST_PIPELINE_UPDATE_FB_STATE_MASK (ST_NEW_FB_STATE)
 
 #define ST_ALL_STATES_MASK (ST_PIPELINE_RENDER_STATE_MASK | \
                             ST_PIPELINE_COMPUTE_STATE_MASK)

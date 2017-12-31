@@ -64,13 +64,13 @@ static const struct pipe_loader_ops pipe_loader_drm_ops;
 
 #ifdef GALLIUM_STATIC_TARGETS
 static const struct drm_conf_ret throttle_ret = {
-   DRM_CONF_INT,
-   {2},
+   .type = DRM_CONF_INT,
+   .val.val_int = 2,
 };
 
 static const struct drm_conf_ret share_fd_ret = {
-   DRM_CONF_BOOL,
-   {true},
+   .type = DRM_CONF_BOOL,
+   .val.val_bool = true,
 };
 
 static inline const struct drm_conf_ret *
@@ -91,22 +91,6 @@ static const struct drm_driver_descriptor driver_descriptors[] = {
     {
         .driver_name = "i915",
         .create_screen = pipe_i915_create_screen,
-        .configuration = configuration_query,
-    },
-#ifdef USE_VC4_SIMULATOR
-    /* VC4 simulator and ILO (i965) are mutually exclusive (error at
-     * configure). As the latter is unconditionally added, keep this one above
-     * it.
-     */
-    {
-        .driver_name = "i965",
-        .create_screen = pipe_vc4_create_screen,
-        .configuration = configuration_query,
-    },
-#endif
-    {
-        .driver_name = "i965",
-        .create_screen = pipe_ilo_create_screen,
         .configuration = configuration_query,
     },
     {
@@ -145,6 +129,11 @@ static const struct drm_driver_descriptor driver_descriptors[] = {
         .configuration = configuration_query,
     },
     {
+       .driver_name = "pl111",
+        .create_screen = pipe_pl111_create_screen,
+        .configuration = configuration_query,
+    },
+    {
         .driver_name = "virtio_gpu",
         .create_screen = pipe_virgl_create_screen,
         .configuration = configuration_query,
@@ -154,6 +143,16 @@ static const struct drm_driver_descriptor driver_descriptors[] = {
         .create_screen = pipe_vc4_create_screen,
         .configuration = configuration_query,
     },
+    {
+        .driver_name = "etnaviv",
+        .create_screen = pipe_etna_create_screen,
+        .configuration = configuration_query,
+    },
+    {
+        .driver_name = "imx-drm",
+        .create_screen = pipe_imx_drm_create_screen,
+        .configuration = configuration_query,
+    }
 };
 #endif
 
@@ -282,11 +281,11 @@ pipe_loader_drm_configuration(struct pipe_loader_device *dev,
 }
 
 static struct pipe_screen *
-pipe_loader_drm_create_screen(struct pipe_loader_device *dev)
+pipe_loader_drm_create_screen(struct pipe_loader_device *dev, unsigned flags)
 {
    struct pipe_loader_drm_device *ddev = pipe_loader_drm_device(dev);
 
-   return ddev->dd->create_screen(ddev->fd);
+   return ddev->dd->create_screen(ddev->fd, flags);
 }
 
 static const struct pipe_loader_ops pipe_loader_drm_ops = {

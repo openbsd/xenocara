@@ -40,7 +40,7 @@
 
 #include "svga_winsys.h"
 #include "pipebuffer/pb_buffer_fenced.h"
-
+#include <os/os_thread.h>
 
 #define VMW_GMR_POOL_SIZE (16*1024*1024)
 #define VMW_QUERY_POOL_SIZE (8192)
@@ -99,6 +99,9 @@ struct vmw_winsys_screen
     */
    dev_t device;
    int open_count;
+
+   cnd_t cs_cond;
+   mtx_t cs_mutex;
 };
 
 
@@ -159,11 +162,13 @@ vmw_ioctl_surface_destroy(struct vmw_winsys_screen *vws,
 
 void
 vmw_ioctl_command(struct vmw_winsys_screen *vws,
-		  int32_t cid,
-		  uint32_t throttle_us,
-		  void *commands,
-		  uint32_t size,
-		  struct pipe_fence_handle **fence);
+                  int32_t cid,
+                  uint32_t throttle_us,
+                  void *commands,
+                  uint32_t size,
+                  struct pipe_fence_handle **fence,
+                  int32_t imported_fence_fd,
+                  uint32_t flags);
 
 struct vmw_region *
 vmw_ioctl_region_create(struct vmw_winsys_screen *vws, uint32_t size);

@@ -29,6 +29,7 @@
 #include "radeon/r600_pipe_common.h"
 #include "radeon/r600_cs.h"
 #include "r600_public.h"
+#include "pipe/p_defines.h"
 
 #include "util/u_suballoc.h"
 #include "util/list.h"
@@ -187,6 +188,8 @@ struct r600_framebuffer {
 	bool export_16bpc;
 	bool cb0_is_integer;
 	bool is_msaa_resolve;
+	bool dual_src_blend;
+	bool do_update_surf_dirtiness;
 };
 
 struct r600_sample_mask {
@@ -277,6 +280,7 @@ struct r600_rasterizer_state {
 	bool				scissor_enable;
 	bool				multisample_enable;
 	bool				clip_halfz;
+	bool				rasterizer_discard;
 };
 
 struct r600_poly_offset_state {
@@ -317,13 +321,12 @@ struct r600_pipe_shader_selector {
 
 	unsigned	num_shaders;
 
-	/* PIPE_SHADER_[VERTEX|FRAGMENT|...] */
-	unsigned	type;
+	enum pipe_shader_type	type;
 
 	/* geometry shader properties */
-	unsigned	gs_output_prim;
-	unsigned	gs_max_out_vertices;
-	unsigned	gs_num_invocations;
+	enum pipe_prim_type	gs_output_prim;
+	unsigned		gs_max_out_vertices;
+	unsigned		gs_num_invocations;
 
 	/* TCS/VS */
 	uint64_t        lds_patch_outputs_written_mask;
@@ -506,12 +509,11 @@ struct r600_context {
 	 * the GPU addresses are updated. */
 	struct list_head		texture_buffers;
 
-	/* Index buffer. */
-	struct pipe_index_buffer	index_buffer;
-
 	/* Last draw state (-1 = unset). */
-	int				last_primitive_type; /* Last primitive type used in draw_vbo. */
-	int				last_start_instance;
+	enum pipe_prim_type		last_primitive_type; /* Last primitive type used in draw_vbo. */
+	enum pipe_prim_type		current_rast_prim; /* primitive type after TES, GS */
+	enum pipe_prim_type		last_rast_prim;
+	unsigned			last_start_instance;
 
 	void				*sb_context;
 	struct r600_isa		*isa;
@@ -522,6 +524,13 @@ struct r600_context {
 	struct r600_pipe_shader_selector *last_tcs;
 	unsigned last_num_tcs_input_cp;
 	unsigned lds_alloc;
+
+	/* Debug state. */
+	bool			is_debug;
+	struct radeon_saved_cs	last_gfx;
+	struct r600_resource	*last_trace_buf;
+	struct r600_resource	*trace_buf;
+	unsigned		trace_id;
 };
 
 static inline void r600_emit_command_buffer(struct radeon_winsys_cs *cs,
@@ -736,10 +745,6 @@ unsigned r600_tex_wrap(unsigned wrap);
 unsigned r600_tex_mipfilter(unsigned filter);
 unsigned r600_tex_compare(unsigned compare);
 bool sampler_state_needs_border_color(const struct pipe_sampler_state *state);
-struct pipe_surface *r600_create_surface_custom(struct pipe_context *pipe,
-						struct pipe_resource *texture,
-						const struct pipe_surface *templ,
-						unsigned width, unsigned height);
 unsigned r600_get_swizzle_combined(const unsigned char *swizzle_format,
 				   const unsigned char *swizzle_view,
 				   boolean vtx);
@@ -920,10 +925,6 @@ static inline void radeon_set_ctl_const(struct radeon_winsys_cs *cs, unsigned re
 /*
  * common helpers
  */
-static inline uint32_t S_FIXED(float value, uint32_t frac_bits)
-{
-	return value * (1 << frac_bits);
-}
 
 /* 12.4 fixed-point */
 static inline unsigned r600_pack_float_12p4(float x)
@@ -954,4 +955,8 @@ static inline unsigned r600_get_flush_flags(enum r600_coherency coher)
 #define     V_028A6C_OUTPRIM_TYPE_TRISTRIP             2
 
 unsigned r600_conv_prim_to_gs_out(unsigned mode);
+
+void eg_trace_emit(struct r600_context *rctx);
+void eg_dump_debug_state(struct pipe_context *ctx, FILE *f,
+			 unsigned flags);
 #endif

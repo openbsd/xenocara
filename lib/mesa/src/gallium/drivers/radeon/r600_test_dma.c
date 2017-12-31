@@ -26,25 +26,9 @@
 
 #include "r600_pipe_common.h"
 #include "util/u_surface.h"
+#include "util/rand_xor.h"
 
 static uint64_t seed_xorshift128plus[2];
-
-/* Super fast random number generator.
- *
- * This rand_xorshift128plus function by Sebastiano Vigna belongs
- * to the public domain.
- */
-static uint64_t rand_xorshift128plus(void)
-{
-	uint64_t *s = seed_xorshift128plus;
-
-	uint64_t s1 = s[0];
-	const uint64_t s0 = s[1];
-	s[0] = s0;
-	s1 ^= s1 << 23;
-	s[1] = s1 ^ s0 ^ (s1 >> 18) ^ (s0 >> 5);
-	return s[1] + s0;
-}
 
 #define RAND_NUM_SIZE 8
 
@@ -91,8 +75,10 @@ static void set_random_pixels(struct pipe_context *ctx,
 			assert(t->stride % RAND_NUM_SIZE == 0);
 			assert(cpu->stride % RAND_NUM_SIZE == 0);
 
-			for (x = 0; x < size; x++)
-				*ptr++ = *ptr_cpu++ = rand_xorshift128plus();
+			for (x = 0; x < size; x++) {
+				*ptr++ = *ptr_cpu++ =
+					rand_xorshift128plus(seed_xorshift128plus);
+			}
 		}
 	}
 
@@ -149,18 +135,24 @@ static enum pipe_format get_format_from_bpp(int bpp)
 	}
 }
 
-static const char *array_mode_to_string(unsigned mode)
+static const char *array_mode_to_string(struct r600_common_screen *rscreen,
+					struct radeon_surf *surf)
 {
-	switch (mode) {
-	case RADEON_SURF_MODE_LINEAR_ALIGNED:
-		return "LINEAR_ALIGNED";
-	case RADEON_SURF_MODE_1D:
-		return "1D_TILED_THIN1";
-	case RADEON_SURF_MODE_2D:
-		return "2D_TILED_THIN1";
-	default:
-		assert(0);
+	if (rscreen->chip_class >= GFX9) {
+		/* TODO */
 		return "       UNKNOWN";
+	} else {
+		switch (surf->u.legacy.level[0].mode) {
+		case RADEON_SURF_MODE_LINEAR_ALIGNED:
+			return "LINEAR_ALIGNED";
+		case RADEON_SURF_MODE_1D:
+			return "1D_TILED_THIN1";
+		case RADEON_SURF_MODE_2D:
+			return "2D_TILED_THIN1";
+		default:
+			assert(0);
+			return "       UNKNOWN";
+		}
 	}
 }
 
@@ -197,8 +189,7 @@ void r600_test_dma(struct r600_common_screen *rscreen)
 	/* the seed for random test parameters */
 	srand(0x9b47d95b);
 	/* the seed for random pixel data */
-	seed_xorshift128plus[0] = 0x3bffb83978e24f88;
-	seed_xorshift128plus[1] = 0x9238d5d56c71cd35;
+	s_rand_xorshift128plus(seed_xorshift128plus, false);
 
 	iterations = 1000000000; /* just kill it when you are bored */
 	num_partial_copies = 30;
@@ -292,16 +283,16 @@ void r600_test_dma(struct r600_common_screen *rscreen)
 		printf("%4u: dst = (%5u x %5u x %u, %s), "
 		       " src = (%5u x %5u x %u, %s), bpp = %2u, ",
 		       i, tdst.width0, tdst.height0, tdst.array_size,
-		       array_mode_to_string(rdst->surface.level[0].mode),
+		       array_mode_to_string(rscreen, &rdst->surface),
 		       tsrc.width0, tsrc.height0, tsrc.array_size,
-		       array_mode_to_string(rsrc->surface.level[0].mode), bpp);
+		       array_mode_to_string(rscreen, &rsrc->surface), bpp);
 		fflush(stdout);
 
 		/* set src pixels */
 		set_random_pixels(ctx, src, &src_cpu);
 
 		/* clear dst pixels */
-		rctx->clear_buffer(ctx, dst, 0, rdst->surface.bo_size, 0, true);
+		rctx->clear_buffer(ctx, dst, 0, rdst->surface.surf_size, 0, true);
 		memset(dst_cpu.ptr, 0, dst_cpu.layer_stride * tdst.array_size);
 
 		/* preparation */
@@ -331,8 +322,8 @@ void r600_test_dma(struct r600_common_screen *rscreen)
 				dstz = rand() % (tdst.array_size - depth + 1);
 
 				/* special code path to hit the tiled partial copies */
-				if (rsrc->surface.level[0].mode >= RADEON_SURF_MODE_1D &&
-				    rdst->surface.level[0].mode >= RADEON_SURF_MODE_1D &&
+				if (!rsrc->surface.is_linear &&
+				    !rdst->surface.is_linear &&
 				    rand() & 1) {
 					if (max_width < 8 || max_height < 8)
 						continue;
@@ -359,8 +350,8 @@ void r600_test_dma(struct r600_common_screen *rscreen)
 				}
 
 				/* special code path to hit out-of-bounds reads in L2T */
-				if (rsrc->surface.level[0].mode == RADEON_SURF_MODE_LINEAR_ALIGNED &&
-				    rdst->surface.level[0].mode >= RADEON_SURF_MODE_1D &&
+				if (rsrc->surface.is_linear &&
+				    !rdst->surface.is_linear &&
 				    rand() % 4 == 0) {
 					srcx = 0;
 					srcy = 0;

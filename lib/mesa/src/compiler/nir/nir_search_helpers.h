@@ -41,7 +41,7 @@ is_pos_power_of_two(nir_alu_instr *instr, unsigned src, unsigned num_components,
 {
    nir_const_value *val = nir_src_as_const_value(instr->src[src].src);
 
-   /* only constant src's: */
+   /* only constant srcs: */
    if (!val)
       return false;
 
@@ -71,7 +71,7 @@ is_neg_power_of_two(nir_alu_instr *instr, unsigned src, unsigned num_components,
 {
    nir_const_value *val = nir_src_as_const_value(instr->src[src].src);
 
-   /* only constant src's: */
+   /* only constant srcs: */
    if (!val)
       return false;
 
@@ -86,6 +86,100 @@ is_neg_power_of_two(nir_alu_instr *instr, unsigned src, unsigned num_components,
       default:
          return false;
       }
+   }
+
+   return true;
+}
+
+static inline bool
+is_zero_to_one(nir_alu_instr *instr, unsigned src, unsigned num_components,
+               const uint8_t *swizzle)
+{
+   nir_const_value *val = nir_src_as_const_value(instr->src[src].src);
+
+   if (!val)
+      return false;
+
+   for (unsigned i = 0; i < num_components; i++) {
+      switch (nir_op_infos[instr->op].input_types[src]) {
+      case nir_type_float:
+         if (val->f32[swizzle[i]] < 0.0f || val->f32[swizzle[i]] > 1.0f)
+            return false;
+         break;
+      default:
+         return false;
+      }
+   }
+
+   return true;
+}
+
+static inline bool
+is_not_const(nir_alu_instr *instr, unsigned src, unsigned num_components,
+             const uint8_t *swizzle)
+{
+   nir_const_value *val = nir_src_as_const_value(instr->src[src].src);
+
+   if (val)
+      return false;
+
+   return true;
+}
+
+static inline bool
+is_used_more_than_once(nir_alu_instr *instr)
+{
+   bool zero_if_use = list_empty(&instr->dest.dest.ssa.if_uses);
+   bool zero_use = list_empty(&instr->dest.dest.ssa.uses);
+
+   if (zero_use && zero_if_use)
+      return false;
+   else if (zero_use && list_is_singular(&instr->dest.dest.ssa.if_uses))
+      return false;
+   else if (zero_if_use && list_is_singular(&instr->dest.dest.ssa.uses))
+      return false;
+
+   return true;
+}
+
+static inline bool
+is_used_once(nir_alu_instr *instr)
+{
+   bool zero_if_use = list_empty(&instr->dest.dest.ssa.if_uses);
+   bool zero_use = list_empty(&instr->dest.dest.ssa.uses);
+
+   if (zero_if_use && zero_use)
+      return false;
+
+   if (!zero_if_use && list_is_singular(&instr->dest.dest.ssa.uses))
+     return false;
+
+   if (!zero_use && list_is_singular(&instr->dest.dest.ssa.if_uses))
+     return false;
+
+   if (!list_is_singular(&instr->dest.dest.ssa.if_uses) &&
+       !list_is_singular(&instr->dest.dest.ssa.uses))
+      return false;
+
+   return true;
+}
+
+static inline bool
+is_not_used_by_if(nir_alu_instr *instr)
+{
+   return list_empty(&instr->dest.dest.ssa.if_uses);
+}
+
+static inline bool
+is_not_used_by_conditional(nir_alu_instr *instr)
+{
+   if (!is_not_used_by_if(instr))
+      return false;
+
+   nir_foreach_use(use, &instr->dest.dest.ssa) {
+      if (use->parent_instr->type == nir_instr_type_alu &&
+          nir_instr_as_alu(use->parent_instr)->op == nir_op_bcsel)
+         return false;
    }
 
    return true;

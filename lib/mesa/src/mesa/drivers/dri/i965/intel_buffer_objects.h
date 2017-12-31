@@ -38,9 +38,9 @@ struct gl_buffer_object;
 struct intel_buffer_object
 {
    struct gl_buffer_object Base;
-   drm_intel_bo *buffer;     /* the low-level buffer manager's buffer handle */
+   struct brw_bo *buffer;     /* the low-level buffer manager's buffer handle */
 
-   drm_intel_bo *range_map_bo[MAP_COUNT];
+   struct brw_bo *range_map_bo[MAP_COUNT];
 
    /**
     * Alignment offset from the range_map_bo temporary mapping to the returned
@@ -70,6 +70,17 @@ struct intel_buffer_object
    uint32_t gpu_active_start;
    uint32_t gpu_active_end;
 
+   /** @{
+    * Tracking for what range of the BO may contain valid data.
+    *
+    * Users may create a large buffer object and only fill part of it
+    * with valid data.  This is a conservative estimate of what part
+    * of the buffer contains valid data that we have to preserve.
+    */
+   uint32_t valid_data_start;
+   uint32_t valid_data_end;
+   /** @} */
+
    /**
     * If we've avoided stalls/blits using the active tracking, flag the buffer
     * for (occasional) stalling in the future to avoid getting stuck in a
@@ -82,22 +93,23 @@ struct intel_buffer_object
 
 /* Get the bm buffer associated with a GL bufferobject:
  */
-drm_intel_bo *intel_bufferobj_buffer(struct brw_context *brw,
-                                     struct intel_buffer_object *obj,
-                                     uint32_t offset,
-                                     uint32_t size);
+struct brw_bo *intel_bufferobj_buffer(struct brw_context *brw,
+                                      struct intel_buffer_object *obj,
+                                      uint32_t offset,
+                                      uint32_t size,
+                                      bool write);
 
 void intel_upload_data(struct brw_context *brw,
                        const void *data,
                        uint32_t size,
                        uint32_t alignment,
-                       drm_intel_bo **out_bo,
+                       struct brw_bo **out_bo,
                        uint32_t *out_offset);
 
 void *intel_upload_space(struct brw_context *brw,
                          uint32_t size,
                          uint32_t alignment,
-                         drm_intel_bo **out_bo,
+                         struct brw_bo **out_bo,
                          uint32_t *out_offset);
 
 void intel_upload_finish(struct brw_context *brw);

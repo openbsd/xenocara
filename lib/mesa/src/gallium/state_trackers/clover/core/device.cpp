@@ -42,7 +42,7 @@ namespace {
 
 device::device(clover::platform &platform, pipe_loader_device *ldev) :
    platform(platform), ldev(ldev) {
-   pipe = pipe_loader_create_screen(ldev);
+   pipe = pipe_loader_create_screen(ldev, 0);
    if (!pipe || !pipe->get_param(pipe, PIPE_CAP_COMPUTE)) {
       if (pipe)
          pipe->destroy(pipe);
@@ -98,6 +98,11 @@ device::max_images_write() const {
    return PIPE_MAX_SHADER_IMAGES;
 }
 
+size_t
+device::max_image_buffer_size() const {
+   return pipe->get_param(pipe, PIPE_CAP_MAX_TEXTURE_BUFFER_SIZE);
+}
+
 cl_uint
 device::max_image_levels_2d() const {
    return pipe->get_param(pipe, PIPE_CAP_MAX_TEXTURE_2D_LEVELS);
@@ -106,6 +111,11 @@ device::max_image_levels_2d() const {
 cl_uint
 device::max_image_levels_3d() const {
    return pipe->get_param(pipe, PIPE_CAP_MAX_TEXTURE_3D_LEVELS);
+}
+
+size_t
+device::max_image_array_number() const {
+   return pipe->get_param(pipe, PIPE_CAP_MAX_TEXTURE_ARRAY_LAYERS);
 }
 
 cl_uint
@@ -176,8 +186,12 @@ device::image_support() const {
 
 bool
 device::has_doubles() const {
-   return pipe->get_shader_param(pipe, PIPE_SHADER_COMPUTE,
-                                 PIPE_SHADER_CAP_DOUBLES);
+   return pipe->get_param(pipe, PIPE_CAP_DOUBLES);
+}
+
+bool
+device::has_unified_memory() const {
+   return pipe->get_param(pipe, PIPE_CAP_UMA);
 }
 
 std::vector<size_t>

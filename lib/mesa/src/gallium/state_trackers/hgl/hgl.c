@@ -66,7 +66,7 @@ hgl_st_framebuffer_flush_front(struct st_context_iface *stctxi,
 
 	#if 0
 	struct stw_st_framebuffer *stwfb = stw_st_framebuffer(stfb);
-	pipe_mutex_lock(stwfb->fb->mutex);
+	mtx_lock(&stwfb->fb->mutex);
 
 	struct pipe_resource* resource = textures[statt];
 	if (resource)
@@ -193,10 +193,8 @@ hgl_st_framebuffer_validate(struct st_context_iface *stctxi,
 		//}
 	}
 
-	for (i = 0; i < count; i++) {
-		out[i] = NULL;
+	for (i = 0; i < count; i++)
 		pipe_resource_reference(&out[i], buffer->textures[statts[i]]);
-	}
 
 	return TRUE;
 }

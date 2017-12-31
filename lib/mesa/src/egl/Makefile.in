@@ -77,11 +77,10 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-DIST_COMMON = $(egl_HEADERS) $(khr_HEADERS) $(srcdir)/Makefile.am \
+DIST_COMMON = $(egl_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/Makefile.sources \
 	$(top_srcdir)/bin/depcomp $(top_srcdir)/install-lib-links.mk
-@HAVE_PLATFORM_X11_TRUE@am__append_1 = -DHAVE_X11_PLATFORM \
-@HAVE_PLATFORM_X11_TRUE@	$(XCB_DRI2_CFLAGS)
+@HAVE_PLATFORM_X11_TRUE@am__append_1 = $(XCB_DRI2_CFLAGS)
 @HAVE_PLATFORM_X11_TRUE@am__append_2 = $(XCB_DRI2_LIBS)
 @HAVE_PLATFORM_X11_TRUE@am__append_3 = drivers/dri2/platform_x11.c
 @HAVE_DRI3_TRUE@@HAVE_PLATFORM_X11_TRUE@am__append_4 = \
@@ -89,37 +88,25 @@ DIST_COMMON = $(egl_HEADERS) $(khr_HEADERS) $(srcdir)/Makefile.am \
 @HAVE_DRI3_TRUE@@HAVE_PLATFORM_X11_TRUE@	drivers/dri2/platform_x11_dri3.h
 
 @HAVE_DRI3_TRUE@@HAVE_PLATFORM_X11_TRUE@am__append_5 = $(top_builddir)/src/loader/libloader_dri3_helper.la
-@HAVE_PLATFORM_WAYLAND_TRUE@am__append_6 = -DHAVE_WAYLAND_PLATFORM \
-@HAVE_PLATFORM_WAYLAND_TRUE@	$(WAYLAND_CFLAGS)
+@HAVE_PLATFORM_WAYLAND_TRUE@am__append_6 = $(WAYLAND_CFLAGS)
 @HAVE_PLATFORM_WAYLAND_TRUE@am__append_7 = $(WAYLAND_LIBS) \
 @HAVE_PLATFORM_WAYLAND_TRUE@	$(LIBDRM_LIBS) \
-@HAVE_PLATFORM_WAYLAND_TRUE@	$(top_builddir)/src/egl/wayland/wayland-drm/libwayland-drm.la
-@HAVE_PLATFORM_WAYLAND_TRUE@am__append_8 = drivers/dri2/platform_wayland.c
-@HAVE_EGL_PLATFORM_DRM_TRUE@am__append_9 = -DHAVE_DRM_PLATFORM
-@HAVE_EGL_PLATFORM_DRM_TRUE@am__append_10 = $(top_builddir)/src/gbm/libgbm.la
-@HAVE_EGL_PLATFORM_DRM_TRUE@am__append_11 = drivers/dri2/platform_drm.c
-@HAVE_EGL_PLATFORM_SURFACELESS_TRUE@am__append_12 = -DHAVE_SURFACELESS_PLATFORM
-@HAVE_EGL_PLATFORM_SURFACELESS_TRUE@am__append_13 = drivers/dri2/platform_surfaceless.c
-@HAVE_EGL_PLATFORM_ANDROID_TRUE@am__append_14 = -DHAVE_ANDROID_PLATFORM
-@HAVE_EGL_PLATFORM_ANDROID_TRUE@am__append_15 = drivers/dri2/platform_android.c
-@HAVE_EGL_DRIVER_DRI2_TRUE@am__append_16 = \
-@HAVE_EGL_DRIVER_DRI2_TRUE@	-I$(top_srcdir)/src/loader \
-@HAVE_EGL_DRIVER_DRI2_TRUE@	-I$(top_srcdir)/src/egl/drivers/dri2 \
-@HAVE_EGL_DRIVER_DRI2_TRUE@	-I$(top_srcdir)/src/gbm/backends/dri \
-@HAVE_EGL_DRIVER_DRI2_TRUE@	-I$(top_srcdir)/src/egl/wayland/wayland-egl \
-@HAVE_EGL_DRIVER_DRI2_TRUE@	-I$(top_builddir)/src/egl/wayland/wayland-drm \
-@HAVE_EGL_DRIVER_DRI2_TRUE@	-I$(top_srcdir)/src/egl/wayland/wayland-drm \
-@HAVE_EGL_DRIVER_DRI2_TRUE@	-DDEFAULT_DRIVER_DIR=\"$(DRI_DRIVER_SEARCH_DIR)\" \
-@HAVE_EGL_DRIVER_DRI2_TRUE@	-D_EGL_BUILT_IN_DRIVER_DRI2
+@HAVE_PLATFORM_WAYLAND_TRUE@	$(top_builddir)/src/egl/wayland/wayland-drm/libwayland-drm.la \
+@HAVE_PLATFORM_WAYLAND_TRUE@	$(top_builddir)/src/util/libmesautil.la
+@HAVE_PLATFORM_WAYLAND_TRUE@am__append_8 = \
+@HAVE_PLATFORM_WAYLAND_TRUE@	drivers/dri2/platform_wayland.c	\
+@HAVE_PLATFORM_WAYLAND_TRUE@	drivers/dri2/linux-dmabuf-unstable-v1-protocol.c \
+@HAVE_PLATFORM_WAYLAND_TRUE@	drivers/dri2/linux-dmabuf-unstable-v1-client-protocol.h
 
-@HAVE_EGL_DRIVER_DRI2_TRUE@am__append_17 = \
-@HAVE_EGL_DRIVER_DRI2_TRUE@	$(dri2_backend_core_FILES) \
-@HAVE_EGL_DRIVER_DRI2_TRUE@	$(dri2_backend_FILES) \
-@HAVE_EGL_DRIVER_DRI2_TRUE@	$(dri3_backend_FILES)
+@HAVE_PLATFORM_DRM_TRUE@am__append_9 = $(top_builddir)/src/gbm/libgbm.la
+@HAVE_PLATFORM_DRM_TRUE@am__append_10 = drivers/dri2/platform_drm.c
+@HAVE_PLATFORM_SURFACELESS_TRUE@am__append_11 = drivers/dri2/platform_surfaceless.c
+@HAVE_PLATFORM_ANDROID_TRUE@am__append_12 = $(ANDROID_CFLAGS)
+@HAVE_PLATFORM_ANDROID_TRUE@am__append_13 = $(ANDROID_LIBS)
+@HAVE_PLATFORM_ANDROID_TRUE@am__append_14 = drivers/dri2/platform_android.c
+@USE_LIBGLVND_TRUE@am__append_15 = \
+@USE_LIBGLVND_TRUE@	$(GLVND_CFLAGS)
 
-@HAVE_EGL_DRIVER_DRI2_TRUE@am__append_18 = $(top_builddir)/src/loader/libloader.la \
-@HAVE_EGL_DRIVER_DRI2_TRUE@	$(DLOPEN_LIBS) $(LIBDRM_LIBS) \
-@HAVE_EGL_DRIVER_DRI2_TRUE@	$(CLOCK_LIB)
 subdir = src/egl
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_gnu_make.m4 \
@@ -165,33 +152,48 @@ am__uninstall_files_from_dir = { \
          $(am__cd) "$$dir" && rm -f $$files; }; \
   }
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgconfigdir)" \
-	"$(DESTDIR)$(egldir)" "$(DESTDIR)$(khrdir)"
-LTLIBRARIES = $(lib_LTLIBRARIES)
+	"$(DESTDIR)$(vendorjsondir)" "$(DESTDIR)$(egldir)"
+LTLIBRARIES = $(lib_LTLIBRARIES) $(noinst_LTLIBRARIES)
+@USE_LIBGLVND_FALSE@libEGL_la_DEPENDENCIES = libEGL_common.la
+am_libEGL_la_OBJECTS =
+libEGL_la_OBJECTS = $(am_libEGL_la_OBJECTS)
+AM_V_lt = $(am__v_lt_@AM_V@)
+am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
+am__v_lt_0 = --silent
+am__v_lt_1 = 
+libEGL_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(libEGL_la_LDFLAGS) $(LDFLAGS) -o $@
+@USE_LIBGLVND_FALSE@am_libEGL_la_rpath = -rpath $(libdir)
 am__DEPENDENCIES_1 =
 @HAVE_PLATFORM_X11_TRUE@am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
 @HAVE_PLATFORM_WAYLAND_TRUE@am__DEPENDENCIES_3 =  \
 @HAVE_PLATFORM_WAYLAND_TRUE@	$(am__DEPENDENCIES_1) \
 @HAVE_PLATFORM_WAYLAND_TRUE@	$(am__DEPENDENCIES_1) \
-@HAVE_PLATFORM_WAYLAND_TRUE@	$(top_builddir)/src/egl/wayland/wayland-drm/libwayland-drm.la
-@HAVE_EGL_DRIVER_DRI2_TRUE@am__DEPENDENCIES_4 = $(top_builddir)/src/loader/libloader.la \
-@HAVE_EGL_DRIVER_DRI2_TRUE@	$(am__DEPENDENCIES_1) \
-@HAVE_EGL_DRIVER_DRI2_TRUE@	$(am__DEPENDENCIES_1) \
-@HAVE_EGL_DRIVER_DRI2_TRUE@	$(am__DEPENDENCIES_1)
-libEGL_la_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_2) \
-	$(am__append_5) $(am__DEPENDENCIES_3) $(am__append_10) \
-	$(am__DEPENDENCIES_4)
-am__libEGL_la_SOURCES_DIST = main/eglapi.c main/eglapi.h \
-	main/eglarray.c main/eglarray.h main/eglcompiler.h \
-	main/eglconfig.c main/eglconfig.h main/eglcontext.c \
-	main/eglcontext.h main/eglcurrent.c main/eglcurrent.h \
-	main/egldefines.h main/egldisplay.c main/egldisplay.h \
-	main/egldriver.c main/egldriver.h main/eglfallbacks.c \
-	main/eglglobals.c main/eglglobals.h main/eglimage.c \
-	main/eglimage.h main/egllog.c main/egllog.h main/eglsurface.c \
+@HAVE_PLATFORM_WAYLAND_TRUE@	$(top_builddir)/src/egl/wayland/wayland-drm/libwayland-drm.la \
+@HAVE_PLATFORM_WAYLAND_TRUE@	$(top_builddir)/src/util/libmesautil.la
+@HAVE_PLATFORM_ANDROID_TRUE@am__DEPENDENCIES_4 =  \
+@HAVE_PLATFORM_ANDROID_TRUE@	$(am__DEPENDENCIES_1)
+libEGL_common_la_DEPENDENCIES = $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2) $(am__append_5) $(am__DEPENDENCIES_3) \
+	$(am__append_9) $(am__DEPENDENCIES_4) \
+	$(top_builddir)/src/loader/libloader.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+am__libEGL_common_la_SOURCES_DIST = main/eglapi.c main/eglapi.h \
+	main/eglarray.c main/eglarray.h main/eglconfig.c \
+	main/eglconfig.h main/eglcontext.c main/eglcontext.h \
+	main/eglcurrent.c main/eglcurrent.h main/egldefines.h \
+	main/egldisplay.c main/egldisplay.h main/egldriver.c \
+	main/egldriver.h main/eglfallbacks.c main/eglglobals.c \
+	main/eglglobals.h main/eglimage.c main/eglimage.h \
+	main/egllog.c main/egllog.h main/eglsurface.c \
 	main/eglsurface.h main/eglsync.c main/eglsync.h \
-	main/egltypedefs.h drivers/dri2/egl_dri2.c \
-	drivers/dri2/egl_dri2.h drivers/dri2/egl_dri2_fallbacks.h \
-	drivers/dri2/platform_x11.c drivers/dri2/platform_wayland.c \
+	main/eglentrypoint.h main/egltypedefs.h \
+	drivers/dri2/egl_dri2.c drivers/dri2/egl_dri2.h \
+	drivers/dri2/egl_dri2_fallbacks.h drivers/dri2/platform_x11.c \
+	drivers/dri2/platform_wayland.c \
+	drivers/dri2/linux-dmabuf-unstable-v1-protocol.c \
+	drivers/dri2/linux-dmabuf-unstable-v1-client-protocol.h \
 	drivers/dri2/platform_drm.c \
 	drivers/dri2/platform_surfaceless.c \
 	drivers/dri2/platform_android.c \
@@ -206,26 +208,32 @@ am__objects_1 = main/eglapi.lo main/eglarray.lo main/eglconfig.lo \
 am__objects_2 = drivers/dri2/egl_dri2.lo
 @HAVE_PLATFORM_X11_TRUE@am__objects_3 = drivers/dri2/platform_x11.lo
 @HAVE_PLATFORM_WAYLAND_TRUE@am__objects_4 =  \
-@HAVE_PLATFORM_WAYLAND_TRUE@	drivers/dri2/platform_wayland.lo
-@HAVE_EGL_PLATFORM_DRM_TRUE@am__objects_5 =  \
-@HAVE_EGL_PLATFORM_DRM_TRUE@	drivers/dri2/platform_drm.lo
-@HAVE_EGL_PLATFORM_SURFACELESS_TRUE@am__objects_6 = drivers/dri2/platform_surfaceless.lo
-@HAVE_EGL_PLATFORM_ANDROID_TRUE@am__objects_7 = drivers/dri2/platform_android.lo
+@HAVE_PLATFORM_WAYLAND_TRUE@	drivers/dri2/platform_wayland.lo \
+@HAVE_PLATFORM_WAYLAND_TRUE@	drivers/dri2/linux-dmabuf-unstable-v1-protocol.lo
+@HAVE_PLATFORM_DRM_TRUE@am__objects_5 = drivers/dri2/platform_drm.lo
+@HAVE_PLATFORM_SURFACELESS_TRUE@am__objects_6 = drivers/dri2/platform_surfaceless.lo
+@HAVE_PLATFORM_ANDROID_TRUE@am__objects_7 =  \
+@HAVE_PLATFORM_ANDROID_TRUE@	drivers/dri2/platform_android.lo
 am__objects_8 = $(am__objects_3) $(am__objects_4) $(am__objects_5) \
 	$(am__objects_6) $(am__objects_7)
 @HAVE_DRI3_TRUE@@HAVE_PLATFORM_X11_TRUE@am__objects_9 = drivers/dri2/platform_x11_dri3.lo
 am__objects_10 = $(am__objects_9)
-@HAVE_EGL_DRIVER_DRI2_TRUE@am__objects_11 = $(am__objects_2) \
-@HAVE_EGL_DRIVER_DRI2_TRUE@	$(am__objects_8) $(am__objects_10)
-am_libEGL_la_OBJECTS = $(am__objects_1) $(am__objects_11)
-libEGL_la_OBJECTS = $(am_libEGL_la_OBJECTS)
-AM_V_lt = $(am__v_lt_@AM_V@)
-am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
-am__v_lt_0 = --silent
-am__v_lt_1 = 
-libEGL_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(libEGL_la_LDFLAGS) $(LDFLAGS) -o $@
+am_libEGL_common_la_OBJECTS = $(am__objects_1) $(am__objects_2) \
+	$(am__objects_8) $(am__objects_10)
+libEGL_common_la_OBJECTS = $(am_libEGL_common_la_OBJECTS)
+@USE_LIBGLVND_TRUE@libEGL_mesa_la_DEPENDENCIES = libEGL_common.la
+am__libEGL_mesa_la_SOURCES_DIST = main/eglglvnd.c \
+	main/egldispatchstubs.h main/egldispatchstubs.c \
+	g_egldispatchstubs.c g_egldispatchstubs.h
+@USE_LIBGLVND_TRUE@am_libEGL_mesa_la_OBJECTS = main/eglglvnd.lo \
+@USE_LIBGLVND_TRUE@	main/egldispatchstubs.lo \
+@USE_LIBGLVND_TRUE@	g_egldispatchstubs.lo
+libEGL_mesa_la_OBJECTS = $(am_libEGL_mesa_la_OBJECTS)
+libEGL_mesa_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(AM_CFLAGS) $(CFLAGS) $(libEGL_mesa_la_LDFLAGS) $(LDFLAGS) -o \
+	$@
+@USE_LIBGLVND_TRUE@am_libEGL_mesa_la_rpath = -rpath $(libdir)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -260,15 +268,18 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(libEGL_la_SOURCES)
-DIST_SOURCES = $(am__libEGL_la_SOURCES_DIST)
+SOURCES = $(libEGL_la_SOURCES) $(libEGL_common_la_SOURCES) \
+	$(libEGL_mesa_la_SOURCES)
+DIST_SOURCES = $(libEGL_la_SOURCES) \
+	$(am__libEGL_common_la_SOURCES_DIST) \
+	$(am__libEGL_mesa_la_SOURCES_DIST)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
-DATA = $(pkgconfig_DATA)
-HEADERS = $(egl_HEADERS) $(khr_HEADERS)
+DATA = $(pkgconfig_DATA) $(vendorjson_DATA)
+HEADERS = $(egl_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 am__tty_colors_dummy = \
@@ -281,6 +292,8 @@ AMDGPU_CFLAGS = @AMDGPU_CFLAGS@
 AMDGPU_LIBS = @AMDGPU_LIBS@
 AMTAR = @AMTAR@
 AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
+ANDROID_CFLAGS = @ANDROID_CFLAGS@
+ANDROID_LIBS = @ANDROID_LIBS@
 AR = @AR@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
@@ -311,8 +324,6 @@ DLLTOOL = @DLLTOOL@
 DLOPEN_LIBS = @DLOPEN_LIBS@
 DRI2PROTO_CFLAGS = @DRI2PROTO_CFLAGS@
 DRI2PROTO_LIBS = @DRI2PROTO_LIBS@
-DRI3PROTO_CFLAGS = @DRI3PROTO_CFLAGS@
-DRI3PROTO_LIBS = @DRI3PROTO_LIBS@
 DRIGL_CFLAGS = @DRIGL_CFLAGS@
 DRIGL_LIBS = @DRIGL_LIBS@
 DRI_DRIVER_INSTALL_DIR = @DRI_DRIVER_INSTALL_DIR@
@@ -325,10 +336,11 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGL_CFLAGS = @EGL_CFLAGS@
-EGL_CLIENT_APIS = @EGL_CLIENT_APIS@
 EGL_LIB_DEPS = @EGL_LIB_DEPS@
 EGL_NATIVE_PLATFORM = @EGL_NATIVE_PLATFORM@
 EGREP = @EGREP@
+ETNAVIV_CFLAGS = @ETNAVIV_CFLAGS@
+ETNAVIV_LIBS = @ETNAVIV_LIBS@
 EXEEXT = @EXEEXT@
 EXPAT_CFLAGS = @EXPAT_CFLAGS@
 EXPAT_LIBS = @EXPAT_LIBS@
@@ -355,6 +367,8 @@ GL_PC_LIB_PRIV = @GL_PC_LIB_PRIV@
 GL_PC_REQ_PRIV = @GL_PC_REQ_PRIV@
 GREP = @GREP@
 HAVE_XF86VIDMODE = @HAVE_XF86VIDMODE@
+I915_CFLAGS = @I915_CFLAGS@
+I915_LIBS = @I915_LIBS@
 INDENT = @INDENT@
 INDENT_FLAGS = @INDENT_FLAGS@
 INSTALL = @INSTALL@
@@ -362,45 +376,40 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
-INTEL_CFLAGS = @INTEL_CFLAGS@
-INTEL_LIBS = @INTEL_LIBS@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
 LD_NO_UNDEFINED = @LD_NO_UNDEFINED@
 LEX = @LEX@
 LEXLIB = @LEXLIB@
 LEX_OUTPUT_ROOT = @LEX_OUTPUT_ROOT@
+LIBATOMIC_LIBS = @LIBATOMIC_LIBS@
 LIBCLC_INCLUDEDIR = @LIBCLC_INCLUDEDIR@
 LIBCLC_LIBEXECDIR = @LIBCLC_LIBEXECDIR@
 LIBDRM_CFLAGS = @LIBDRM_CFLAGS@
 LIBDRM_LIBS = @LIBDRM_LIBS@
 LIBELF_CFLAGS = @LIBELF_CFLAGS@
 LIBELF_LIBS = @LIBELF_LIBS@
+LIBGLVND_DATADIR = @LIBGLVND_DATADIR@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
-LIBSENSORS_LDFLAGS = @LIBSENSORS_LDFLAGS@
-LIBSHA1_CFLAGS = @LIBSHA1_CFLAGS@
-LIBSHA1_LIBS = @LIBSHA1_LIBS@
+LIBSENSORS_LIBS = @LIBSENSORS_LIBS@
 LIBTOOL = @LIBTOOL@
+LIBUNWIND_CFLAGS = @LIBUNWIND_CFLAGS@
+LIBUNWIND_LIBS = @LIBUNWIND_LIBS@
 LIB_DIR = @LIB_DIR@
 LIB_EXT = @LIB_EXT@
 LIPO = @LIPO@
-LLVM_BINDIR = @LLVM_BINDIR@
 LLVM_CFLAGS = @LLVM_CFLAGS@
 LLVM_CONFIG = @LLVM_CONFIG@
-LLVM_CPPFLAGS = @LLVM_CPPFLAGS@
 LLVM_CXXFLAGS = @LLVM_CXXFLAGS@
 LLVM_INCLUDEDIR = @LLVM_INCLUDEDIR@
 LLVM_LDFLAGS = @LLVM_LDFLAGS@
-LLVM_LIBDIR = @LLVM_LIBDIR@
 LLVM_LIBS = @LLVM_LIBS@
-LLVM_VERSION = @LLVM_VERSION@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
-MESA_LLVM = @MESA_LLVM@
 MKDIR_P = @MKDIR_P@
 MSVC2013_COMPAT_CFLAGS = @MSVC2013_COMPAT_CFLAGS@
 MSVC2013_COMPAT_CXXFLAGS = @MSVC2013_COMPAT_CXXFLAGS@
@@ -421,8 +430,6 @@ OMX_LIBS = @OMX_LIBS@
 OMX_LIB_INSTALL_DIR = @OMX_LIB_INSTALL_DIR@
 OPENCL_LIBNAME = @OPENCL_LIBNAME@
 OPENCL_VERSION = @OPENCL_VERSION@
-OPENSSL_CFLAGS = @OPENSSL_CFLAGS@
-OPENSSL_LIBS = @OPENSSL_LIBS@
 OSMESA_LIB = @OSMESA_LIB@
 OSMESA_LIB_DEPS = @OSMESA_LIB_DEPS@
 OSMESA_PC_LIB_PRIV = @OSMESA_PC_LIB_PRIV@
@@ -442,8 +449,6 @@ PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 POSIX_SHELL = @POSIX_SHELL@
-PRESENTPROTO_CFLAGS = @PRESENTPROTO_CFLAGS@
-PRESENTPROTO_LIBS = @PRESENTPROTO_LIBS@
 PTHREADSTUBS_CFLAGS = @PTHREADSTUBS_CFLAGS@
 PTHREADSTUBS_LIBS = @PTHREADSTUBS_LIBS@
 PTHREAD_CC = @PTHREAD_CC@
@@ -459,8 +464,6 @@ SED = @SED@
 SELINUX_CFLAGS = @SELINUX_CFLAGS@
 SELINUX_LIBS = @SELINUX_LIBS@
 SET_MAKE = @SET_MAKE@
-SHA1_CFLAGS = @SHA1_CFLAGS@
-SHA1_LIBS = @SHA1_LIBS@
 SHELL = @SHELL@
 SIMPENROSE_CFLAGS = @SIMPENROSE_CFLAGS@
 SIMPENROSE_LIBS = @SIMPENROSE_LIBS@
@@ -469,7 +472,8 @@ STRIP = @STRIP@
 SWR_AVX2_CXXFLAGS = @SWR_AVX2_CXXFLAGS@
 SWR_AVX_CXXFLAGS = @SWR_AVX_CXXFLAGS@
 SWR_CXX11_CXXFLAGS = @SWR_CXX11_CXXFLAGS@
-TIMESTAMP_CMD = @TIMESTAMP_CMD@
+SWR_KNL_CXXFLAGS = @SWR_KNL_CXXFLAGS@
+SWR_SKX_CXXFLAGS = @SWR_SKX_CXXFLAGS@
 VALGRIND_CFLAGS = @VALGRIND_CFLAGS@
 VALGRIND_LIBS = @VALGRIND_LIBS@
 VA_CFLAGS = @VA_CFLAGS@
@@ -477,15 +481,12 @@ VA_LIBS = @VA_LIBS@
 VA_LIB_INSTALL_DIR = @VA_LIB_INSTALL_DIR@
 VA_MAJOR = @VA_MAJOR@
 VA_MINOR = @VA_MINOR@
-VC4_CFLAGS = @VC4_CFLAGS@
-VC4_LIBS = @VC4_LIBS@
 VDPAU_CFLAGS = @VDPAU_CFLAGS@
 VDPAU_LIBS = @VDPAU_LIBS@
 VDPAU_LIB_INSTALL_DIR = @VDPAU_LIB_INSTALL_DIR@
 VDPAU_MAJOR = @VDPAU_MAJOR@
 VDPAU_MINOR = @VDPAU_MINOR@
 VERSION = @VERSION@
-VG_LIB_DEPS = @VG_LIB_DEPS@
 VISIBILITY_CFLAGS = @VISIBILITY_CFLAGS@
 VISIBILITY_CXXFLAGS = @VISIBILITY_CXXFLAGS@
 VL_CFLAGS = @VL_CFLAGS@
@@ -493,6 +494,7 @@ VL_LIBS = @VL_LIBS@
 VULKAN_ICD_INSTALL_DIR = @VULKAN_ICD_INSTALL_DIR@
 WAYLAND_CFLAGS = @WAYLAND_CFLAGS@
 WAYLAND_LIBS = @WAYLAND_LIBS@
+WAYLAND_PROTOCOLS_DATADIR = @WAYLAND_PROTOCOLS_DATADIR@
 WAYLAND_SCANNER = @WAYLAND_SCANNER@
 WAYLAND_SCANNER_CFLAGS = @WAYLAND_SCANNER_CFLAGS@
 WAYLAND_SCANNER_LIBS = @WAYLAND_SCANNER_LIBS@
@@ -514,9 +516,10 @@ XVMC_LIBS = @XVMC_LIBS@
 XVMC_LIB_INSTALL_DIR = @XVMC_LIB_INSTALL_DIR@
 XVMC_MAJOR = @XVMC_MAJOR@
 XVMC_MINOR = @XVMC_MINOR@
-XXD = @XXD@
 YACC = @YACC@
 YFLAGS = @YFLAGS@
+ZLIB_CFLAGS = @ZLIB_CFLAGS@
+ZLIB_LIBS = @ZLIB_LIBS@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
@@ -582,7 +585,6 @@ LIBEGL_C_FILES := \
 	main/eglapi.h \
 	main/eglarray.c \
 	main/eglarray.h \
-	main/eglcompiler.h \
 	main/eglconfig.c \
 	main/eglconfig.h \
 	main/eglcontext.c \
@@ -605,6 +607,7 @@ LIBEGL_C_FILES := \
 	main/eglsurface.h \
 	main/eglsync.c \
 	main/eglsync.h \
+	main/eglentrypoint.h \
 	main/egltypedefs.h
 
 dri2_backend_core_FILES := \
@@ -612,30 +615,74 @@ dri2_backend_core_FILES := \
 	drivers/dri2/egl_dri2.h \
 	drivers/dri2/egl_dri2_fallbacks.h
 
+MKDIR_GEN = $(AM_V_at)$(MKDIR_P) $(@D)
+BUILT_SOURCES = g_egldispatchstubs.c g_egldispatchstubs.h
 AM_CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/src/egl/main \
 	-I$(top_srcdir)/src/gbm/main -I$(top_srcdir)/src $(DEFINES) \
 	$(VISIBILITY_CFLAGS) $(LIBDRM_CFLAGS) $(EGL_CFLAGS) \
 	-D_EGL_NATIVE_PLATFORM=$(EGL_NATIVE_PLATFORM) $(am__append_1) \
-	$(am__append_6) $(am__append_9) $(am__append_12) \
-	$(am__append_14) $(am__append_16)
-lib_LTLIBRARIES = libEGL.la
-libEGL_la_SOURCES = $(LIBEGL_C_FILES) $(am__append_17)
-libEGL_la_LIBADD = $(EGL_LIB_DEPS) $(am__append_2) $(am__append_5) \
-	$(am__append_7) $(am__append_10) $(am__append_18)
-libEGL_la_LDFLAGS = \
-	-no-undefined \
-	-version-number 1:0 \
-	$(BSYMBOLIC) \
-	$(GC_SECTIONS) \
-	$(LD_NO_UNDEFINED)
+	$(am__append_6) $(am__append_12) -I$(top_srcdir)/src/loader \
+	-I$(top_builddir)/src/egl/drivers/dri2 \
+	-I$(top_srcdir)/src/egl/drivers/dri2 \
+	-I$(top_srcdir)/src/gbm/backends/dri \
+	-I$(top_srcdir)/src/egl/wayland/wayland-egl \
+	-I$(top_builddir)/src/egl/wayland/wayland-drm \
+	-I$(top_srcdir)/src/egl/wayland/wayland-drm \
+	-DDEFAULT_DRIVER_DIR=\"$(DRI_DRIVER_SEARCH_DIR)\" \
+	-D_EGL_BUILT_IN_DRIVER_DRI2 $(am__append_15)
 
-dri2_backend_FILES = $(am__append_3) $(am__append_8) $(am__append_11) \
-	$(am__append_13) $(am__append_15)
+# Depending on whether libglvnd is enabled, we'll build the EGL library as
+# either libEGL.so.1 or libEGL_mesa.so.0. Using an automake substitution
+# in the variable names breaks "make dist" target, so use a conenience library
+# instead.
+noinst_LTLIBRARIES = libEGL_common.la
+libEGL_common_la_SOURCES = $(LIBEGL_C_FILES) \
+	$(dri2_backend_core_FILES) $(dri2_backend_FILES) \
+	$(dri3_backend_FILES)
+libEGL_common_la_LIBADD = $(EGL_LIB_DEPS) $(am__append_2) \
+	$(am__append_5) $(am__append_7) $(am__append_9) \
+	$(am__append_13) $(top_builddir)/src/loader/libloader.la \
+	$(DLOPEN_LIBS) $(LIBDRM_LIBS) $(CLOCK_LIB)
+dri2_backend_FILES = $(am__append_3) $(am__append_8) $(am__append_10) \
+	$(am__append_11) $(am__append_14)
 dri3_backend_FILES = $(am__append_4)
+WL_DMABUF_XML = $(WAYLAND_PROTOCOLS_DATADIR)/unstable/linux-dmabuf/linux-dmabuf-unstable-v1.xml
+GLVND_GEN_DEPS = generate/gen_egl_dispatch.py \
+	generate/egl.xml generate/eglFunctionList.py generate/genCommon.py \
+	generate/egl_other.xml
+
+PYTHON_GEN = $(AM_V_GEN)$(PYTHON2) $(PYTHON_FLAGS)
+CLEANFILES = $(BUILT_SOURCES)
+@USE_LIBGLVND_TRUE@vendorjsondir = @LIBGLVND_DATADIR@/glvnd/egl_vendor.d
+@USE_LIBGLVND_TRUE@vendorjson_DATA = main/50_mesa.json
+@USE_LIBGLVND_FALSE@lib_LTLIBRARIES = libEGL.la
+@USE_LIBGLVND_TRUE@lib_LTLIBRARIES = libEGL_mesa.la
+@USE_LIBGLVND_TRUE@libEGL_mesa_la_SOURCES = \
+@USE_LIBGLVND_TRUE@	main/eglglvnd.c \
+@USE_LIBGLVND_TRUE@	main/egldispatchstubs.h \
+@USE_LIBGLVND_TRUE@	main/egldispatchstubs.c \
+@USE_LIBGLVND_TRUE@	g_egldispatchstubs.c \
+@USE_LIBGLVND_TRUE@	g_egldispatchstubs.h
+
+@USE_LIBGLVND_TRUE@libEGL_mesa_la_LIBADD = libEGL_common.la
+@USE_LIBGLVND_TRUE@libEGL_mesa_la_LDFLAGS = \
+@USE_LIBGLVND_TRUE@	-no-undefined \
+@USE_LIBGLVND_TRUE@	-version-number 0 \
+@USE_LIBGLVND_TRUE@	$(BSYMBOLIC) \
+@USE_LIBGLVND_TRUE@	$(GC_SECTIONS) \
+@USE_LIBGLVND_TRUE@	$(LD_NO_UNDEFINED)
+
+@USE_LIBGLVND_FALSE@libEGL_la_SOURCES = 
+@USE_LIBGLVND_FALSE@libEGL_la_LIBADD = libEGL_common.la
+@USE_LIBGLVND_FALSE@libEGL_la_LDFLAGS = \
+@USE_LIBGLVND_FALSE@	-no-undefined \
+@USE_LIBGLVND_FALSE@	-version-number 1:0 \
+@USE_LIBGLVND_FALSE@	$(BSYMBOLIC) \
+@USE_LIBGLVND_FALSE@	$(GC_SECTIONS) \
+@USE_LIBGLVND_FALSE@	$(LD_NO_UNDEFINED)
+
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = main/egl.pc
-khrdir = $(includedir)/KHR
-khr_HEADERS = $(top_srcdir)/include/KHR/khrplatform.h
 egldir = $(includedir)/EGL
 egl_HEADERS = \
 	$(top_srcdir)/include/EGL/eglext.h \
@@ -644,15 +691,20 @@ egl_HEADERS = \
 	$(top_srcdir)/include/EGL/eglmesaext.h \
 	$(top_srcdir)/include/EGL/eglplatform.h
 
-TESTS = egl-symbols-check
+TESTS = egl-symbols-check \
+	egl-entrypoint-check
+
 EXTRA_DIST = \
-	egl-symbols-check \
+	$(TESTS) \
 	SConscript \
 	drivers/haiku \
 	main/egl.def \
-	main/README.txt
+	main/README.txt \
+	$(GLVND_GEN_DEPS) \
+	main/50_mesa.json
 
-all: all-am
+all: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) all-am
 
 .SUFFIXES:
 .SUFFIXES: .c .lo .o .obj
@@ -721,6 +773,19 @@ clean-libLTLIBRARIES:
 	  echo rm -f $${locs}; \
 	  rm -f $${locs}; \
 	}
+
+clean-noinstLTLIBRARIES:
+	-test -z "$(noinst_LTLIBRARIES)" || rm -f $(noinst_LTLIBRARIES)
+	@list='$(noinst_LTLIBRARIES)'; \
+	locs=`for p in $$list; do echo $$p; done | \
+	      sed 's|^[^/]*$$|.|; s|/[^/]*$$||; s|$$|/so_locations|' | \
+	      sort -u`; \
+	test -z "$$locs" || { \
+	  echo rm -f $${locs}; \
+	  rm -f $${locs}; \
+	}
+libEGL.la: $(libEGL_la_OBJECTS) $(libEGL_la_DEPENDENCIES) $(EXTRA_libEGL_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(libEGL_la_LINK) $(am_libEGL_la_rpath) $(libEGL_la_OBJECTS) $(libEGL_la_LIBADD) $(LIBS)
 main/$(am__dirstamp):
 	@$(MKDIR_P) main
 	@: > main/$(am__dirstamp)
@@ -758,6 +823,9 @@ drivers/dri2/platform_x11.lo: drivers/dri2/$(am__dirstamp) \
 	drivers/dri2/$(DEPDIR)/$(am__dirstamp)
 drivers/dri2/platform_wayland.lo: drivers/dri2/$(am__dirstamp) \
 	drivers/dri2/$(DEPDIR)/$(am__dirstamp)
+drivers/dri2/linux-dmabuf-unstable-v1-protocol.lo:  \
+	drivers/dri2/$(am__dirstamp) \
+	drivers/dri2/$(DEPDIR)/$(am__dirstamp)
 drivers/dri2/platform_drm.lo: drivers/dri2/$(am__dirstamp) \
 	drivers/dri2/$(DEPDIR)/$(am__dirstamp)
 drivers/dri2/platform_surfaceless.lo: drivers/dri2/$(am__dirstamp) \
@@ -766,8 +834,13 @@ drivers/dri2/platform_android.lo: drivers/dri2/$(am__dirstamp) \
 	drivers/dri2/$(DEPDIR)/$(am__dirstamp)
 drivers/dri2/platform_x11_dri3.lo: drivers/dri2/$(am__dirstamp) \
 	drivers/dri2/$(DEPDIR)/$(am__dirstamp)
-libEGL.la: $(libEGL_la_OBJECTS) $(libEGL_la_DEPENDENCIES) $(EXTRA_libEGL_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(libEGL_la_LINK) -rpath $(libdir) $(libEGL_la_OBJECTS) $(libEGL_la_LIBADD) $(LIBS)
+libEGL_common.la: $(libEGL_common_la_OBJECTS) $(libEGL_common_la_DEPENDENCIES) $(EXTRA_libEGL_common_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(LINK)  $(libEGL_common_la_OBJECTS) $(libEGL_common_la_LIBADD) $(LIBS)
+main/eglglvnd.lo: main/$(am__dirstamp) main/$(DEPDIR)/$(am__dirstamp)
+main/egldispatchstubs.lo: main/$(am__dirstamp) \
+	main/$(DEPDIR)/$(am__dirstamp)
+libEGL_mesa.la: $(libEGL_mesa_la_OBJECTS) $(libEGL_mesa_la_DEPENDENCIES) $(EXTRA_libEGL_mesa_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(libEGL_mesa_la_LINK) $(am_libEGL_mesa_la_rpath) $(libEGL_mesa_la_OBJECTS) $(libEGL_mesa_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -779,7 +852,9 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/g_egldispatchstubs.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@drivers/dri2/$(DEPDIR)/egl_dri2.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@drivers/dri2/$(DEPDIR)/linux-dmabuf-unstable-v1-protocol.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@drivers/dri2/$(DEPDIR)/platform_android.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@drivers/dri2/$(DEPDIR)/platform_drm.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@drivers/dri2/$(DEPDIR)/platform_surfaceless.Plo@am__quote@
@@ -791,10 +866,12 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@main/$(DEPDIR)/eglconfig.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@main/$(DEPDIR)/eglcontext.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@main/$(DEPDIR)/eglcurrent.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@main/$(DEPDIR)/egldispatchstubs.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@main/$(DEPDIR)/egldisplay.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@main/$(DEPDIR)/egldriver.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@main/$(DEPDIR)/eglfallbacks.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@main/$(DEPDIR)/eglglobals.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@main/$(DEPDIR)/eglglvnd.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@main/$(DEPDIR)/eglimage.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@main/$(DEPDIR)/egllog.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@main/$(DEPDIR)/eglsurface.Plo@am__quote@
@@ -852,6 +929,27 @@ uninstall-pkgconfigDATA:
 	@list='$(pkgconfig_DATA)'; test -n "$(pkgconfigdir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
 	dir='$(DESTDIR)$(pkgconfigdir)'; $(am__uninstall_files_from_dir)
+install-vendorjsonDATA: $(vendorjson_DATA)
+	@$(NORMAL_INSTALL)
+	@list='$(vendorjson_DATA)'; test -n "$(vendorjsondir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(vendorjsondir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(vendorjsondir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(vendorjsondir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(vendorjsondir)" || exit $$?; \
+	done
+
+uninstall-vendorjsonDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(vendorjson_DATA)'; test -n "$(vendorjsondir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	dir='$(DESTDIR)$(vendorjsondir)'; $(am__uninstall_files_from_dir)
 install-eglHEADERS: $(egl_HEADERS)
 	@$(NORMAL_INSTALL)
 	@list='$(egl_HEADERS)'; test -n "$(egldir)" || list=; \
@@ -873,27 +971,6 @@ uninstall-eglHEADERS:
 	@list='$(egl_HEADERS)'; test -n "$(egldir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
 	dir='$(DESTDIR)$(egldir)'; $(am__uninstall_files_from_dir)
-install-khrHEADERS: $(khr_HEADERS)
-	@$(NORMAL_INSTALL)
-	@list='$(khr_HEADERS)'; test -n "$(khrdir)" || list=; \
-	if test -n "$$list"; then \
-	  echo " $(MKDIR_P) '$(DESTDIR)$(khrdir)'"; \
-	  $(MKDIR_P) "$(DESTDIR)$(khrdir)" || exit 1; \
-	fi; \
-	for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  echo "$$d$$p"; \
-	done | $(am__base_list) | \
-	while read files; do \
-	  echo " $(INSTALL_HEADER) $$files '$(DESTDIR)$(khrdir)'"; \
-	  $(INSTALL_HEADER) $$files "$(DESTDIR)$(khrdir)" || exit $$?; \
-	done
-
-uninstall-khrHEADERS:
-	@$(NORMAL_UNINSTALL)
-	@list='$(khr_HEADERS)'; test -n "$(khrdir)" || list=; \
-	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
-	dir='$(DESTDIR)$(khrdir)'; $(am__uninstall_files_from_dir)
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -1086,15 +1163,17 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 	$(MAKE) $(AM_MAKEFLAGS) check-TESTS
-check: check-am
+check: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) check-am
 @BUILD_SHARED_FALSE@all-local:
 @HAVE_COMPAT_SYMLINKS_FALSE@all-local:
 all-am: Makefile $(LTLIBRARIES) $(DATA) $(HEADERS) all-local
 installdirs:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgconfigdir)" "$(DESTDIR)$(egldir)" "$(DESTDIR)$(khrdir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgconfigdir)" "$(DESTDIR)$(vendorjsondir)" "$(DESTDIR)$(egldir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
-install: install-am
+install: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) install-am
 install-exec: install-exec-am
 install-data: install-data-am
 uninstall: uninstall-am
@@ -1116,6 +1195,7 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
@@ -1128,15 +1208,16 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 @BUILD_SHARED_FALSE@clean-local:
 @HAVE_COMPAT_SYMLINKS_FALSE@clean-local:
 clean: clean-am
 
 clean-am: clean-generic clean-libLTLIBRARIES clean-libtool clean-local \
-	mostlyclean-am
+	clean-noinstLTLIBRARIES mostlyclean-am
 
 distclean: distclean-am
-	-rm -rf drivers/dri2/$(DEPDIR) main/$(DEPDIR)
+	-rm -rf ./$(DEPDIR) drivers/dri2/$(DEPDIR) main/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -1153,8 +1234,8 @@ info: info-am
 
 info-am:
 
-install-data-am: install-eglHEADERS install-khrHEADERS \
-	install-pkgconfigDATA
+install-data-am: install-eglHEADERS install-pkgconfigDATA \
+	install-vendorjsonDATA
 
 install-dvi: install-dvi-am
 
@@ -1183,7 +1264,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-	-rm -rf drivers/dri2/$(DEPDIR) main/$(DEPDIR)
+	-rm -rf ./$(DEPDIR) drivers/dri2/$(DEPDIR) main/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
@@ -1200,28 +1281,50 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-eglHEADERS uninstall-khrHEADERS \
-	uninstall-libLTLIBRARIES uninstall-pkgconfigDATA
+uninstall-am: uninstall-eglHEADERS uninstall-libLTLIBRARIES \
+	uninstall-pkgconfigDATA uninstall-vendorjsonDATA
 
-.MAKE: check-am install-am install-strip
+.MAKE: all check check-am install install-am install-strip
 
 .PHONY: CTAGS GTAGS all all-am all-local check check-TESTS check-am \
 	clean clean-generic clean-libLTLIBRARIES clean-libtool \
-	clean-local cscopelist ctags distclean distclean-compile \
-	distclean-generic distclean-libtool distclean-tags distdir dvi \
-	dvi-am html html-am info info-am install install-am \
-	install-data install-data-am install-dvi install-dvi-am \
-	install-eglHEADERS install-exec install-exec-am install-html \
-	install-html-am install-info install-info-am \
-	install-khrHEADERS install-libLTLIBRARIES install-man \
-	install-pdf install-pdf-am install-pkgconfigDATA install-ps \
-	install-ps-am install-strip installcheck installcheck-am \
+	clean-local clean-noinstLTLIBRARIES cscopelist ctags distclean \
+	distclean-compile distclean-generic distclean-libtool \
+	distclean-tags distdir dvi dvi-am html html-am info info-am \
+	install install-am install-data install-data-am install-dvi \
+	install-dvi-am install-eglHEADERS install-exec install-exec-am \
+	install-html install-html-am install-info install-info-am \
+	install-libLTLIBRARIES install-man install-pdf install-pdf-am \
+	install-pkgconfigDATA install-ps install-ps-am install-strip \
+	install-vendorjsonDATA installcheck installcheck-am \
 	installdirs maintainer-clean maintainer-clean-generic \
 	mostlyclean mostlyclean-compile mostlyclean-generic \
 	mostlyclean-libtool pdf pdf-am ps ps-am tags uninstall \
-	uninstall-am uninstall-eglHEADERS uninstall-khrHEADERS \
-	uninstall-libLTLIBRARIES uninstall-pkgconfigDATA
+	uninstall-am uninstall-eglHEADERS uninstall-libLTLIBRARIES \
+	uninstall-pkgconfigDATA uninstall-vendorjsonDATA
 
+
+drivers/dri2/linux-dmabuf-unstable-v1-protocol.c: $(WL_DMABUF_XML)
+	$(MKDIR_GEN)
+	$(AM_V_GEN)$(WAYLAND_SCANNER) code < $< > $@
+
+drivers/dri2/linux-dmabuf-unstable-v1-client-protocol.h: $(WL_DMABUF_XML)
+	$(MKDIR_GEN)
+	$(AM_V_GEN)$(WAYLAND_SCANNER) client-header < $< > $@
+
+@HAVE_PLATFORM_WAYLAND_TRUE@drivers/dri2/linux-dmabuf-unstable-v1-protocol.lo: drivers/dri2/linux-dmabuf-unstable-v1-client-protocol.h
+@HAVE_PLATFORM_WAYLAND_TRUE@drivers/dri2/egl_dri2.lo: drivers/dri2/linux-dmabuf-unstable-v1-client-protocol.h
+@REGEN_SOURCES_TRUE@g_egldispatchstubs.c: $(GLVND_GEN_DEPS)
+@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) $(top_srcdir)/src/egl/generate/gen_egl_dispatch.py source \
+@REGEN_SOURCES_TRUE@		$(top_srcdir)/src/egl/generate/eglFunctionList.py \
+@REGEN_SOURCES_TRUE@		$(top_srcdir)/src/egl/generate/egl.xml \
+@REGEN_SOURCES_TRUE@		$(top_srcdir)/src/egl/generate/egl_other.xml > $@
+
+@REGEN_SOURCES_TRUE@g_egldispatchstubs.h: $(GLVND_GEN_DEPS)
+@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) $(top_srcdir)/src/egl/generate/gen_egl_dispatch.py header \
+@REGEN_SOURCES_TRUE@		$(top_srcdir)/src/egl/generate/eglFunctionList.py \
+@REGEN_SOURCES_TRUE@		$(top_srcdir)/src/egl/generate/egl.xml \
+@REGEN_SOURCES_TRUE@		$(top_srcdir)/src/egl/generate/egl_other.xml > $@
 
 @BUILD_SHARED_TRUE@@HAVE_COMPAT_SYMLINKS_TRUE@all-local : .install-mesa-links
 

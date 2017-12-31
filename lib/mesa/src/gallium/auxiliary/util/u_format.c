@@ -238,6 +238,10 @@ util_format_is_subsampled_422(enum pipe_format format)
 boolean
 util_format_is_supported(enum pipe_format format, unsigned bind)
 {
+   if (format >= PIPE_FORMAT_COUNT) {
+      return FALSE;
+   }
+
    if (util_format_is_s3tc(format) && !util_format_s3tc_enabled) {
       return FALSE;
    }
@@ -558,6 +562,11 @@ util_format_fits_8unorm(const struct util_format_description *format_desc)
       return TRUE;
    case UTIL_FORMAT_LAYOUT_BPTC:
       if (format_desc->format == PIPE_FORMAT_BPTC_RGBA_UNORM)
+         return TRUE;
+      return FALSE;
+
+   case UTIL_FORMAT_LAYOUT_ETC:
+      if (format_desc->format == PIPE_FORMAT_ETC1_RGB8)
          return TRUE;
       return FALSE;
 

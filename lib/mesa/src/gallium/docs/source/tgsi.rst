@@ -26,11 +26,19 @@ each of the components of *dst*. When this happens, the result is said to be
 Modifiers
 ^^^^^^^^^^^^^^^
 
-TGSI supports modifiers on inputs (as well as saturate modifier on instructions).
+TGSI supports modifiers on inputs (as well as saturate and precise modifier
+on instructions).
 
-For inputs which have a floating point type, both absolute value and negation
-modifiers are supported (with absolute value being applied first).
-TGSI_OPCODE_MOV is considered to have float input type for applying modifiers.
+For arithmetic instruction having a precise modifier certain optimizations
+which may alter the result are disallowed. Example: *add(mul(a,b),c)* can't be
+optimized to TGSI_OPCODE_MAD, because some hardware only supports the fused
+MAD instruction.
+
+For inputs which have a floating point type, both absolute value and
+negation modifiers are supported (with absolute value being applied
+first).  The only source of TGSI_OPCODE_MOV and the second and third
+sources of TGSI_OPCODE_UCMP are considered to have float type for
+applying modifiers.
 
 For inputs which have signed or unsigned type only the negate modifier is
 supported.
@@ -235,6 +243,9 @@ This instruction replicates its result.
 
 .. opcode:: MAD - Multiply And Add
 
+Perform a * b + c. The implementation is free to decide whether there is an
+intermediate rounding step or not.
+
 .. math::
 
   dst.x = src0.x \times src1.x + src2.x
@@ -244,19 +255,6 @@ This instruction replicates its result.
   dst.z = src0.z \times src1.z + src2.z
 
   dst.w = src0.w \times src1.w + src2.w
-
-
-.. opcode:: SUB - Subtract
-
-.. math::
-
-  dst.x = src0.x - src1.x
-
-  dst.y = src0.y - src1.y
-
-  dst.z = src0.z - src1.z
-
-  dst.w = src0.w - src1.w
 
 
 .. opcode:: LRP - Linear Interpolate
@@ -311,19 +309,6 @@ Perform a * b + c with no intermediate rounding step.
   dst.z = src.z - \lfloor src.z\rfloor
 
   dst.w = src.w - \lfloor src.w\rfloor
-
-
-.. opcode:: CLAMP - Clamp
-
-.. math::
-
-  dst.x = clamp(src0.x, src1.x, src2.x)
-
-  dst.y = clamp(src0.y, src1.y, src2.y)
-
-  dst.z = clamp(src0.z, src1.z, src2.z)
-
-  dst.w = clamp(src0.w, src1.w, src2.w)
 
 
 .. opcode:: FLR - Floor
@@ -389,19 +374,6 @@ This instruction replicates its result.
   dst.z = src0.x \times src1.y - src1.x \times src0.y
 
   dst.w = 1
-
-
-.. opcode:: ABS - Absolute
-
-.. math::
-
-  dst.x = |src.x|
-
-  dst.y = |src.y|
-
-  dst.z = |src.z|
-
-  dst.w = |src.w|
 
 
 .. opcode:: DPH - Homogeneous Dot Product
@@ -794,6 +766,29 @@ This instruction replicates its result.
   dst = src0.x \times src1.x + src0.y \times src1.y
 
 
+.. opcode:: TEX_LZ - Texture Lookup With LOD = 0
+
+  This is the same as TXL with LOD = 0. Like every texture opcode, it obeys
+  pipe_sampler_view::u.tex.first_level and pipe_sampler_state::min_lod.
+  There is no way to override those two in shaders.
+
+.. math::
+
+  coord.x = src0.x
+
+  coord.y = src0.y
+
+  coord.z = src0.z
+
+  coord.w = none
+
+  lod = 0
+
+  unit = src1
+
+  dst = texture\_sample(unit, coord, lod)
+
+
 .. opcode:: TXL - Texture Lookup With explicit LOD
 
   for cube map array textures, the explicit lod value
@@ -953,12 +948,21 @@ XXX doesn't look like most of the opcodes really belong here.
 .. opcode:: TXF - Texel Fetch
 
   As per NV_gpu_shader4, extract a single texel from a specified texture
-  image. The source sampler may not be a CUBE or SHADOW.  src 0 is a
+  image or PIPE_BUFFER resource. The source sampler may not be a CUBE or
+  SHADOW.  src 0 is a
   four-component signed integer vector used to identify the single texel
   accessed. 3 components + level.  Just like texture instructions, an optional
   offset vector is provided, which is subject to various driver restrictions
-  (regarding range, source of offsets).
+  (regarding range, source of offsets). This instruction ignores the sampler
+  state.
+
   TXF(uint_vec coord, int_vec offset).
+
+
+.. opcode:: TXF_LZ - Texel Fetch
+
+  This is the same as TXF with level = 0. Like TXF, it obeys
+  pipe_sampler_view::u.tex.first_level.
 
 
 .. opcode:: TXQ - Texture Size Query
@@ -988,7 +992,9 @@ XXX doesn't look like most of the opcodes really belong here.
 .. opcode:: TXQS - Texture Samples Query
 
   This retrieves the number of samples in the texture, and stores it
-  into the x component. The other components are undefined.
+  into the x component as an unsigned integer. The other components are
+  undefined.  If the texture is not multisampled, this function returns
+  (1, undef, undef, undef).
 
 .. math::
 
@@ -1043,6 +1049,20 @@ XXX doesn't look like most of the opcodes really belong here.
    coord = src0
 
    dst.xy = lodq(uint, coord);
+
+.. opcode:: CLOCK - retrieve the current shader time
+
+   Invoking this instruction multiple times in the same shader should
+   cause monotonically increasing values to be returned. The values
+   are implicitly 64-bit, so if fewer than 64 bits of precision are
+   available, to provide expected wraparound semantics, the value
+   should be shifted up so that the most significant bit of the time
+   is the most significant bit of the 64-bit value.
+
+.. math::
+
+   dst.xy = clock()
+
 
 Integer ISA
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1196,13 +1216,13 @@ Support for these opcodes indicated by PIPE_SHADER_CAP_INTEGERS (all of them?)
 
 .. math::
 
-  dst.x = src0.x \ src1.x
+  dst.x = \frac{src0.x}{src1.x}
 
-  dst.y = src0.y \ src1.y
+  dst.y = \frac{src0.y}{src1.y}
 
-  dst.z = src0.z \ src1.z
+  dst.z = \frac{src0.z}{src1.z}
 
-  dst.w = src0.w \ src1.w
+  dst.w = \frac{src0.w}{src1.w}
 
 
 .. opcode:: UDIV - Unsigned Integer Division
@@ -1211,13 +1231,13 @@ Support for these opcodes indicated by PIPE_SHADER_CAP_INTEGERS (all of them?)
 
 .. math::
 
-  dst.x = src0.x \ src1.x
+  dst.x = \frac{src0.x}{src1.x}
 
-  dst.y = src0.y \ src1.y
+  dst.y = \frac{src0.y}{src1.y}
 
-  dst.z = src0.z \ src1.z
+  dst.z = \frac{src0.z}{src1.z}
 
-  dst.w = src0.w \ src1.w
+  dst.w = \frac{src0.w}{src1.w}
 
 
 .. opcode:: UMOD - Unsigned Integer Remainder
@@ -1226,13 +1246,13 @@ Support for these opcodes indicated by PIPE_SHADER_CAP_INTEGERS (all of them?)
 
 .. math::
 
-  dst.x = src0.x \ src1.x
+  dst.x = src0.x \bmod src1.x
 
-  dst.y = src0.y \ src1.y
+  dst.y = src0.y \bmod src1.y
 
-  dst.z = src0.z \ src1.z
+  dst.z = src0.z \bmod src1.z
 
-  dst.w = src0.w \ src1.w
+  dst.w = src0.w \bmod src1.w
 
 
 .. opcode:: NOT - Bitwise Not
@@ -1583,48 +1603,43 @@ These opcodes are used for bit-level manipulation of integers.
 
 .. opcode:: IBFE - Signed Bitfield Extract
 
-  See SM5 instruction of the same name. Extracts a set of bits from the input,
-  and sign-extends them if the high bit of the extracted window is set.
+  Like GLSL bitfieldExtract. Extracts a set of bits from the input, and
+  sign-extends them if the high bit of the extracted window is set.
 
   Pseudocode::
 
     def ibfe(value, offset, bits):
-      offset = offset & 0x1f
-      bits = bits & 0x1f
+      if offset < 0 or bits < 0 or offset + bits > 32:
+        return undefined
       if bits == 0: return 0
       # Note: >> sign-extends
-      if width + offset < 32:
-        return (value << (32 - offset - bits)) >> (32 - bits)
-      else:
-        return value >> offset
+      return (value << (32 - offset - bits)) >> (32 - bits)
 
 .. opcode:: UBFE - Unsigned Bitfield Extract
 
-  See SM5 instruction of the same name. Extracts a set of bits from the input,
-  without any sign-extension.
+  Like GLSL bitfieldExtract. Extracts a set of bits from the input, without
+  any sign-extension.
 
   Pseudocode::
 
     def ubfe(value, offset, bits):
-      offset = offset & 0x1f
-      bits = bits & 0x1f
+      if offset < 0 or bits < 0 or offset + bits > 32:
+        return undefined
       if bits == 0: return 0
       # Note: >> does not sign-extend
-      if width + offset < 32:
-        return (value << (32 - offset - bits)) >> (32 - bits)
-      else:
-        return value >> offset
+      return (value << (32 - offset - bits)) >> (32 - bits)
 
 .. opcode:: BFI - Bitfield Insert
 
-  See SM5 instruction of the same name. Replaces a bit region of 'base' with
-  the low bits of 'insert'.
+  Like GLSL bitfieldInsert. Replaces a bit region of 'base' with the low bits
+  of 'insert'.
 
   Pseudocode::
 
     def bfi(base, insert, offset, bits):
-      offset = offset & 0x1f
-      bits = bits & 0x1f
+      if offset < 0 or bits < 0 or offset + bits > 32:
+        return undefined
+      # << defined such that mask == ~0 when bits == 32, offset == 0
       mask = ((1 << bits) - 1) << offset
       return ((insert << offset) & mask) | (base & ~mask)
 
@@ -1847,7 +1862,10 @@ two-component vectors with doubled precision in each component.
 
 .. opcode:: DABS - Absolute
 
+.. math::
+
   dst.xy = |src0.xy|
+
   dst.zw = |src0.zw|
 
 .. opcode:: DADD - Add
@@ -2010,6 +2028,15 @@ Perform a * b + c with no intermediate rounding step.
   dst.zw = src0.zw \times src1.zw + src2.zw
 
 
+.. opcode:: DDIV - Divide
+
+.. math::
+
+  dst.xy = \frac{src0.xy}{src1.xy}
+
+  dst.zw = \frac{src0.zw}{src1.zw}
+
+
 .. opcode:: DRCP - Reciprocal
 
 .. math::
@@ -2090,7 +2117,10 @@ two-component vectors with 64-bits in each component.
 
 .. opcode:: I64ABS - 64-bit Integer Absolute Value
 
+.. math::
+
   dst.xy = |src0.xy|
+
   dst.zw = |src0.zw|
 
 .. opcode:: I64NEG - 64-bit Integer Negate
@@ -2100,6 +2130,7 @@ two-component vectors with 64-bits in each component.
 .. math::
 
   dst.xy = -src.xy
+
   dst.zw = -src.zw
 
 .. opcode:: I64SSG - 64-bit Integer Set Sign
@@ -2107,6 +2138,7 @@ two-component vectors with 64-bits in each component.
 .. math::
 
   dst.xy = (src0.xy < 0) ? -1 : (src0.xy > 0) ? 1 : 0
+
   dst.zw = (src0.zw < 0) ? -1 : (src0.zw > 0) ? 1 : 0
 
 .. opcode:: U64ADD - 64-bit Integer Add
@@ -2114,6 +2146,7 @@ two-component vectors with 64-bits in each component.
 .. math::
 
   dst.xy = src0.xy + src1.xy
+
   dst.zw = src0.zw + src1.zw
 
 .. opcode:: U64MUL - 64-bit Integer Multiply
@@ -2121,6 +2154,7 @@ two-component vectors with 64-bits in each component.
 .. math::
 
   dst.xy = src0.xy * src1.xy
+
   dst.zw = src0.zw * src1.zw
 
 .. opcode:: U64SEQ - 64-bit Integer Set on Equal
@@ -2128,6 +2162,7 @@ two-component vectors with 64-bits in each component.
 .. math::
 
   dst.x = src0.xy == src1.xy ? \sim 0 : 0
+
   dst.z = src0.zw == src1.zw ? \sim 0 : 0
 
 .. opcode:: U64SNE - 64-bit Integer Set on Not Equal
@@ -2135,6 +2170,7 @@ two-component vectors with 64-bits in each component.
 .. math::
 
   dst.x = src0.xy != src1.xy ? \sim 0 : 0
+
   dst.z = src0.zw != src1.zw ? \sim 0 : 0
 
 .. opcode:: U64SLT - 64-bit Unsigned Integer Set on Less Than
@@ -2142,6 +2178,7 @@ two-component vectors with 64-bits in each component.
 .. math::
 
   dst.x = src0.xy < src1.xy ? \sim 0 : 0
+
   dst.z = src0.zw < src1.zw ? \sim 0 : 0
 
 .. opcode:: U64SGE - 64-bit Unsigned Integer Set on Greater Equal
@@ -2149,6 +2186,7 @@ two-component vectors with 64-bits in each component.
 .. math::
 
   dst.x = src0.xy >= src1.xy ? \sim 0 : 0
+
   dst.z = src0.zw >= src1.zw ? \sim 0 : 0
 
 .. opcode:: I64SLT - 64-bit Signed Integer Set on Less Than
@@ -2156,6 +2194,7 @@ two-component vectors with 64-bits in each component.
 .. math::
 
   dst.x = src0.xy < src1.xy ? \sim 0 : 0
+
   dst.z = src0.zw < src1.zw ? \sim 0 : 0
 
 .. opcode:: I64SGE - 64-bit Signed Integer Set on Greater Equal
@@ -2163,6 +2202,7 @@ two-component vectors with 64-bits in each component.
 .. math::
 
   dst.x = src0.xy >= src1.xy ? \sim 0 : 0
+
   dst.z = src0.zw >= src1.zw ? \sim 0 : 0
 
 .. opcode:: I64MIN - Minimum of 64-bit Signed Integers
@@ -2170,6 +2210,7 @@ two-component vectors with 64-bits in each component.
 .. math::
 
   dst.xy = min(src0.xy, src1.xy)
+
   dst.zw = min(src0.zw, src1.zw)
 
 .. opcode:: U64MIN - Minimum of 64-bit Unsigned Integers
@@ -2177,6 +2218,7 @@ two-component vectors with 64-bits in each component.
 .. math::
 
   dst.xy = min(src0.xy, src1.xy)
+
   dst.zw = min(src0.zw, src1.zw)
 
 .. opcode:: I64MAX - Maximum of 64-bit Signed Integers
@@ -2184,6 +2226,7 @@ two-component vectors with 64-bits in each component.
 .. math::
 
   dst.xy = max(src0.xy, src1.xy)
+
   dst.zw = max(src0.zw, src1.zw)
 
 .. opcode:: U64MAX - Maximum of 64-bit Unsigned Integers
@@ -2191,6 +2234,7 @@ two-component vectors with 64-bits in each component.
 .. math::
 
   dst.xy = max(src0.xy, src1.xy)
+
   dst.zw = max(src0.zw, src1.zw)
 
 .. opcode:: U64SHL - Shift Left 64-bit Unsigned Integer
@@ -2200,6 +2244,7 @@ two-component vectors with 64-bits in each component.
 .. math::
 
   dst.xy = src0.xy << (0x3f \& src1.x)
+
   dst.zw = src0.zw << (0x3f \& src1.y)
 
 .. opcode:: I64SHR - Arithmetic Shift Right (of 64-bit Signed Integer)
@@ -2209,6 +2254,7 @@ two-component vectors with 64-bits in each component.
 .. math::
 
   dst.xy = src0.xy >> (0x3f \& src1.x)
+
   dst.zw = src0.zw >> (0x3f \& src1.y)
 
 .. opcode:: U64SHR - Logical Shift Right (of 64-bit Unsigned Integer)
@@ -2218,27 +2264,31 @@ two-component vectors with 64-bits in each component.
 .. math::
 
   dst.xy = src0.xy >> (unsigned) (0x3f \& src1.x)
+
   dst.zw = src0.zw >> (unsigned) (0x3f \& src1.y)
 
 .. opcode:: I64DIV - 64-bit Signed Integer Division
 
 .. math::
 
-  dst.xy = src0.xy \ src1.xy
-  dst.zw = src0.zw \ src1.zw
+  dst.xy = \frac{src0.xy}{src1.xy}
+
+  dst.zw = \frac{src0.zw}{src1.zw}
 
 .. opcode:: U64DIV - 64-bit Unsigned Integer Division
 
 .. math::
 
-  dst.xy = src0.xy \ src1.xy
-  dst.zw = src0.zw \ src1.zw
+  dst.xy = \frac{src0.xy}{src1.xy}
+
+  dst.zw = \frac{src0.zw}{src1.zw}
 
 .. opcode:: U64MOD - 64-bit Unsigned Integer Remainder
 
 .. math::
 
   dst.xy = src0.xy \bmod src1.xy
+
   dst.zw = src0.zw \bmod src1.zw
 
 .. opcode:: I64MOD - 64-bit Signed Integer Remainder
@@ -2246,6 +2296,7 @@ two-component vectors with 64-bits in each component.
 .. math::
 
   dst.xy = src0.xy \bmod src1.xy
+
   dst.zw = src0.zw \bmod src1.zw
 
 .. opcode:: F2U64 - Float to 64-bit Unsigned Int
@@ -2253,6 +2304,7 @@ two-component vectors with 64-bits in each component.
 .. math::
 
    dst.xy = (uint64_t) src0.x
+
    dst.zw = (uint64_t) src0.y
 
 .. opcode:: F2I64 - Float to 64-bit Int
@@ -2260,6 +2312,7 @@ two-component vectors with 64-bits in each component.
 .. math::
 
    dst.xy = (int64_t) src0.x
+
    dst.zw = (int64_t) src0.y
 
 .. opcode:: U2I64 - Unsigned Integer to 64-bit Integer
@@ -2269,6 +2322,7 @@ two-component vectors with 64-bits in each component.
 .. math::
 
    dst.xy = (uint64_t) src0.x
+
    dst.zw = (uint64_t) src0.y
 
 .. opcode:: I2I64 - Signed Integer to 64-bit Integer
@@ -2278,6 +2332,7 @@ two-component vectors with 64-bits in each component.
 .. math::
 
    dst.xy = (int64_t) src0.x
+
    dst.zw = (int64_t) src0.y
 
 .. opcode:: D2U64 - Double to 64-bit Unsigned Int
@@ -2285,6 +2340,7 @@ two-component vectors with 64-bits in each component.
 .. math::
 
    dst.xy = (uint64_t) src0.xy
+
    dst.zw = (uint64_t) src0.zw
 
 .. opcode:: D2I64 - Double to 64-bit Int
@@ -2292,6 +2348,7 @@ two-component vectors with 64-bits in each component.
 .. math::
 
    dst.xy = (int64_t) src0.xy
+
    dst.zw = (int64_t) src0.zw
 
 .. opcode:: U642F - 64-bit unsigned integer to float
@@ -2299,6 +2356,7 @@ two-component vectors with 64-bits in each component.
 .. math::
 
    dst.x = (float) src0.xy
+
    dst.y = (float) src0.zw
 
 .. opcode:: I642F - 64-bit Int to Float
@@ -2306,6 +2364,7 @@ two-component vectors with 64-bits in each component.
 .. math::
 
    dst.x = (float) src0.xy
+
    dst.y = (float) src0.zw
 
 .. opcode:: U642D - 64-bit unsigned integer to double
@@ -2313,6 +2372,7 @@ two-component vectors with 64-bits in each component.
 .. math::
 
    dst.xy = (double) src0.xy
+
    dst.zw = (double) src0.zw
 
 .. opcode:: I642D - 64-bit Int to double
@@ -2320,6 +2380,7 @@ two-component vectors with 64-bits in each component.
 .. math::
 
    dst.xy = (double) src0.xy
+
    dst.zw = (double) src0.zw
 
 .. _samplingopcodes:
@@ -2489,20 +2550,53 @@ after lookup.
 
 .. opcode:: SAMPLE_POS
 
-  Query the position of a given sample.  dst receives float4 (x, y, 0, 0)
-  indicated where the sample is located. If the resource is not a multi-sample
-  resource and not a render target, the result is 0.
+  Query the position of a sample in the given resource or render target
+  when per-sample fragment shading is in effect.
+
+  Syntax: ``SAMPLE_POS dst, source, sample_index``
+
+  dst receives float4 (x, y, undef, undef) indicated where the sample is
+  located. Sample locations are in the range [0, 1] where 0.5 is the center
+  of the fragment.
+
+  source is either a sampler view (to indicate a shader resource) or temp
+  register (to indicate the render target).  The source register may have
+  an optional swizzle to apply to the returned result
+
+  sample_index is an integer scalar indicating which sample position is to
+  be queried.
+
+  If per-sample shading is not in effect or the source resource or render
+  target is not multisampled, the result is (0.5, 0.5, undef, undef).
+
+  NOTE: no driver has implemented this opcode yet (and no state tracker
+  emits it).  This information is subject to change.
 
 .. opcode:: SAMPLE_INFO
 
-  dst receives number of samples in x.  If the resource is not a multi-sample
-  resource and not a render target, the result is 0.
+  Query the number of samples in a multisampled resource or render target.
 
+  Syntax: ``SAMPLE_INFO dst, source``
+
+  dst receives int4 (n, 0, 0, 0) where n is the number of samples in a
+  resource or the render target.
+
+  source is either a sampler view (to indicate a shader resource) or temp
+  register (to indicate the render target).  The source register may have
+  an optional swizzle to apply to the returned result
+
+  If per-sample shading is not in effect or the source resource or render
+  target is not multisampled, the result is (1, 0, 0, 0).
+
+  NOTE: no driver has implemented this opcode yet (and no state tracker
+  emits it).  This information is subject to change.
 
 .. _resourceopcodes:
 
 Resource Access Opcodes
 ^^^^^^^^^^^^^^^^^^^^^^^
+
+For these opcodes, the resource can be a BUFFER, IMAGE, or MEMORY.
 
 .. opcode:: LOAD - Fetch data from a shader buffer or image
 
@@ -2565,6 +2659,19 @@ Resource Access Opcodes
   image resources, .xyz will contain the width/height/layers of the
   image, while .w will contain the number of samples for multi-sampled
   images.
+
+.. opcode:: FBFETCH - Load data from framebuffer
+
+  Syntax: ``FBFETCH dst, output``
+
+  Example: ``FBFETCH TEMP[0], OUT[0]``
+
+  This is only valid on ``COLOR`` semantic outputs. Returns the color
+  of the current position in the framebuffer from before this fragment
+  shader invocation. May return the same value from multiple calls for
+  a particular output within a single invocation. Note that result may
+  be undefined if a fragment is drawn multiple times without a blend
+  barrier in between.
 
 
 .. _threadsyncopcodes:
@@ -2642,8 +2749,8 @@ These opcodes provide atomic variants of some common arithmetic and
 logical operations.  In this context atomicity means that another
 concurrent memory access operation that affects the same memory
 location is guaranteed to be performed strictly before or after the
-entire execution of the atomic operation. The resource may be a buffer
-or an image. In the case of an image, the offset works the same as for
+entire execution of the atomic operation. The resource may be a BUFFER,
+IMAGE, or MEMORY.  In the case of an image, the offset works the same as for
 ``LOAD`` and ``STORE``, specified above. These atomic operations may
 only be used with 32-bit integer image formats.
 
@@ -2797,22 +2904,68 @@ only be used with 32-bit integer image formats.
   resource[offset] = (dst_x > src_x ? dst_x : src_x)
 
 
-.. _voteopcodes:
+.. _interlaneopcodes:
 
-Vote opcodes
-^^^^^^^^^^^^
+Inter-lane opcodes
+^^^^^^^^^^^^^^^^^^
 
-These opcodes compare the given value across the shader invocations
-running in the current SIMD group. The details of exactly which
-invocations get compared are implementation-defined, and it would be a
-correct implementation to only ever consider the current thread's
-value. (i.e. SIMD group of 1). The argument is treated as a boolean.
+These opcodes reduce the given value across the shader invocations
+running in the current SIMD group. Every thread in the subgroup will receive
+the same result. The BALLOT operations accept a single-channel argument that
+is treated as a boolean and produce a 64-bit value.
 
-.. opcode:: VOTE_ANY - Value is set in any of the current invocations
+.. opcode:: VOTE_ANY - Value is set in any of the active invocations
 
-.. opcode:: VOTE_ALL - Value is set in all of the current invocations
+  Syntax: ``VOTE_ANY dst, value``
 
-.. opcode:: VOTE_EQ - Value is the same in all of the current invocations
+  Example: ``VOTE_ANY TEMP[0].x, TEMP[1].x``
+
+
+.. opcode:: VOTE_ALL - Value is set in all of the active invocations
+
+  Syntax: ``VOTE_ALL dst, value``
+
+  Example: ``VOTE_ALL TEMP[0].x, TEMP[1].x``
+
+
+.. opcode:: VOTE_EQ - Value is the same in all of the active invocations
+
+  Syntax: ``VOTE_EQ dst, value``
+
+  Example: ``VOTE_EQ TEMP[0].x, TEMP[1].x``
+
+
+.. opcode:: BALLOT - Lanemask of whether the value is set in each active
+            invocation
+
+  Syntax: ``BALLOT dst, value``
+
+  Example: ``BALLOT TEMP[0].xy, TEMP[1].x``
+
+  When the argument is a constant true, this produces a bitmask of active
+  invocations. In fragment shaders, this can include helper invocations
+  (invocations whose outputs and writes to memory are discarded, but which
+  are used to compute derivatives).
+
+
+.. opcode:: READ_FIRST - Broadcast the value from the first active
+            invocation to all active lanes
+
+  Syntax: ``READ_FIRST dst, value``
+
+  Example: ``READ_FIRST TEMP[0], TEMP[1]``
+
+
+.. opcode:: READ_INVOC - Retrieve the value from the given invocation
+            (need not be uniform)
+
+  Syntax: ``READ_INVOC dst, value, invocation``
+
+  Example: ``READ_INVOC TEMP[0].xy, TEMP[1].xy, TEMP[2].x``
+
+  invocation.x controls the invocation number to read from for all channels.
+  The invocation number must be the same across all active invocations in a
+  sub-group; otherwise, the results are undefined.
 
 
 Explanation of symbols used
@@ -3102,6 +3255,11 @@ For geometry shaders, this semantic label indicates that an output
 contains the index of the viewport (and scissor) to use.
 This is an integer value, and only the X component is used.
 
+If PIPE_CAP_TGSI_VS_LAYER_VIEWPORT or PIPE_CAP_TGSI_TES_LAYER_VIEWPORT is
+supported, then this semantic label can also be used in vertex or
+tessellation evaluation shaders, respectively. Only the value written in the
+last vertex processing stage is used.
+
 
 TGSI_SEMANTIC_LAYER
 """""""""""""""""""
@@ -3110,6 +3268,11 @@ For geometry shaders, this semantic label indicates that an output
 contains the layer value to use for the color and depth/stencil surfaces.
 This is an integer value, and only the X component is used.
 (Also known as rendertarget array index.)
+
+If PIPE_CAP_TGSI_VS_LAYER_VIEWPORT or PIPE_CAP_TGSI_TES_LAYER_VIEWPORT is
+supported, then this semantic label can also be used in vertex or
+tessellation evaluation shaders, respectively. Only the value written in the
+last vertex processing stage is used.
 
 
 TGSI_SEMANTIC_CULLDIST
@@ -3164,22 +3327,33 @@ TGSI_SEMANTIC_SAMPLEID
 """"""""""""""""""""""
 
 For fragment shaders, this semantic label indicates that a system value
-contains the current sample id (i.e. gl_SampleID).
-This is an integer value, and only the X component is used.
+contains the current sample id (i.e. gl_SampleID) as an unsigned int.
+Only the X component is used.  If per-sample shading is not enabled,
+the result is (0, undef, undef, undef).
 
 TGSI_SEMANTIC_SAMPLEPOS
 """""""""""""""""""""""
 
-For fragment shaders, this semantic label indicates that a system value
-contains the current sample's position (i.e. gl_SamplePosition). Only the X
-and Y values are used.
+For fragment shaders, this semantic label indicates that a system
+value contains the current sample's position as float4(x, y, undef, undef)
+in the render target (i.e.  gl_SamplePosition) when per-fragment shading
+is in effect.  Position values are in the range [0, 1] where 0.5 is
+the center of the fragment.
 
 TGSI_SEMANTIC_SAMPLEMASK
 """"""""""""""""""""""""
 
-For fragment shaders, this semantic label indicates that an output contains
-the sample mask used to disable further sample processing
-(i.e. gl_SampleMask). Only the X value is used, up to 32x MS.
+For fragment shaders, this semantic label can be applied to either a
+shader system value input or output.
+
+For a system value, the sample mask indicates the set of samples covered by
+the current primitive.  If MSAA is not enabled, the value is (1, 0, 0, 0).
+
+For an output, the sample mask is used to disable further sample processing.
+
+For both, the register type is uint[4] but only the X component is used
+(i.e. gl_SampleMask[0]). Each bit corresponds to one sample position (up
+to 32x MSAA is supported).
 
 TGSI_SEMANTIC_INVOCATIONID
 """"""""""""""""""""""""""
@@ -3320,6 +3494,57 @@ TGSI_SEMANTIC_THREAD_ID
 
 For compute shaders, this semantic indicates the (x, y, z) coordinates of the
 current thread inside of the block.
+
+
+TGSI_SEMANTIC_SUBGROUP_SIZE
+"""""""""""""""""""""""""""
+
+This semantic indicates the subgroup size for the current invocation. This is
+an integer of at most 64, as it indicates the width of lanemasks. It does not
+depend on the number of invocations that are active.
+
+
+TGSI_SEMANTIC_SUBGROUP_INVOCATION
+"""""""""""""""""""""""""""""""""
+
+The index of the current invocation within its subgroup.
+
+
+TGSI_SEMANTIC_SUBGROUP_EQ_MASK
+""""""""""""""""""""""""""""""
+
+A bit mask of ``bit index == TGSI_SEMANTIC_SUBGROUP_INVOCATION``, i.e.
+``1 << subgroup_invocation`` in arbitrary precision arithmetic.
+
+
+TGSI_SEMANTIC_SUBGROUP_GE_MASK
+""""""""""""""""""""""""""""""
+
+A bit mask of ``bit index >= TGSI_SEMANTIC_SUBGROUP_INVOCATION``, i.e.
+``((1 << (subgroup_size - subgroup_invocation)) - 1) << subgroup_invocation``
+in arbitrary precision arithmetic.
+
+
+TGSI_SEMANTIC_SUBGROUP_GT_MASK
+""""""""""""""""""""""""""""""
+
+A bit mask of ``bit index > TGSI_SEMANTIC_SUBGROUP_INVOCATION``, i.e.
+``((1 << (subgroup_size - subgroup_invocation - 1)) - 1) << (subgroup_invocation + 1)``
+in arbitrary precision arithmetic.
+
+
+TGSI_SEMANTIC_SUBGROUP_LE_MASK
+""""""""""""""""""""""""""""""
+
+A bit mask of ``bit index <= TGSI_SEMANTIC_SUBGROUP_INVOCATION``, i.e.
+``(1 << (subgroup_invocation + 1)) - 1`` in arbitrary precision arithmetic.
+
+
+TGSI_SEMANTIC_SUBGROUP_LT_MASK
+""""""""""""""""""""""""""""""
+
+A bit mask of ``bit index > TGSI_SEMANTIC_SUBGROUP_INVOCATION``, i.e.
+``(1 << subgroup_invocation) - 1`` in arbitrary precision arithmetic.
 
 
 Declaration Interpolate
@@ -3507,12 +3732,12 @@ If set to a non-zero value, this turns on point mode for the tessellator,
 which means that points will be generated instead of primitives.
 
 NUM_CLIPDIST_ENABLED
-""""""""""""""""
+""""""""""""""""""""
 
 How many clip distance scalar outputs are enabled.
 
 NUM_CULLDIST_ENABLED
-""""""""""""""""
+""""""""""""""""""""
 
 How many cull distance scalar outputs are enabled.
 
@@ -3530,12 +3755,32 @@ Which shader stage will MOST LIKELY follow after this shader when the shader
 is bound. This is only a hint to the driver and doesn't have to be precise.
 Only set for VS and TES.
 
-TGSI_PROPERTY_CS_FIXED_BLOCK_WIDTH / HEIGHT / DEPTH
-"""""""""""""""""""""""""""""""""""""""""""""""""""
+CS_FIXED_BLOCK_WIDTH / HEIGHT / DEPTH
+"""""""""""""""""""""""""""""""""""""
 
 Threads per block in each dimension, if known at compile time. If the block size
 is known all three should be at least 1. If it is unknown they should all be set
 to 0 or not set.
+
+MUL_ZERO_WINS
+"""""""""""""
+
+The MUL TGSI operation (FP32 multiplication) will return 0 if either
+of the operands are equal to 0. That means that 0 * Inf = 0. This
+should be set the same way for an entire pipeline. Note that this
+applies not only to the literal MUL TGSI opcode, but all FP32
+multiplications implied by other operations, such as MAD, FMA, DP2,
+DP3, DP4, DPH, DST, LOG, LRP, XPD, and possibly others. If there is a
+mismatch between shaders, then it is unspecified whether this behavior
+will be enabled.
+
+FS_POST_DEPTH_COVERAGE
+""""""""""""""""""""""
+
+When enabled, the input for TGSI_SEMANTIC_SAMPLEMASK will exclude samples
+that have failed the depth/stencil tests. This is only valid when
+FS_EARLY_DEPTH_STENCIL is also specified.
+
 
 Texture Sampling and Texture Formats
 ------------------------------------

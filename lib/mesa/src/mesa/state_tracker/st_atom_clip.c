@@ -41,7 +41,7 @@
 
 /* Second state atom for user clip planes:
  */
-static void update_clip( struct st_context *st )
+void st_update_clip( struct st_context *st )
 {
    struct pipe_clip_state clip;
    const struct gl_context *ctx = st->ctx;
@@ -51,10 +51,8 @@ static void update_clip( struct st_context *st )
 
    /* if we have a vertex shader that writes clip vertex we need to pass
       the pre-projection transformed coordinates into the driver. */
-   if (st->vp) {
-      if (ctx->_Shader->CurrentProgram[MESA_SHADER_VERTEX])
-         use_eye = TRUE;
-   }
+   if (ctx->_Shader->CurrentProgram[MESA_SHADER_VERTEX])
+      use_eye = TRUE;
 
    /* _ClipUserPlane = _NEW_TRANSFORM | _NEW_PROJECTION
     * EyeUserPlane = _NEW_TRANSFORM
@@ -68,8 +66,3 @@ static void update_clip( struct st_context *st )
       st->pipe->set_clip_state(st->pipe, &clip);
    }
 }
-
-
-const struct st_tracked_state st_update_clip = {
-   update_clip						/* update */
-};

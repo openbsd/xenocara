@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 
 # (C) Copyright IBM Corporation 2004, 2005
 # All Rights Reserved.
@@ -120,7 +119,7 @@ class PrintGenericStubs(gl_XML.gl_print_base):
         print '\tJMP(GL_OFFSET(off))'
         print '#endif'
         print ''
-        print '#ifdef HAVE_ALIAS'
+        print '#ifdef HAVE_FUNC_ATTRIBUTE_ALIAS'
         print '#  define GL_STUB_ALIAS(fn,off,fn_alt,alias,alias_alt)\t\\'
         print '\t.globl\tGL_PREFIX(fn, fn_alt) ;\t\t\t\\'
         print '\t.set\tGL_PREFIX(fn, fn_alt), GL_PREFIX(alias, alias_alt)'
