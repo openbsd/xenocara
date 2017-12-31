@@ -186,8 +186,7 @@ _mesa_light(struct gl_context *ctx, GLuint lnum, GLenum pname, const GLfloat *pa
       light->QuadraticAttenuation = params[0];
       break;
    default:
-      _mesa_problem(ctx, "Unexpected pname in _mesa_light()");
-      return;
+      unreachable("Unexpected pname in _mesa_light()");
    }
 
    if (ctx->Driver.Lightfv)
@@ -1033,6 +1032,7 @@ static void
 update_modelview_scale( struct gl_context *ctx )
 {
    ctx->_ModelViewInvScale = 1.0F;
+   ctx->_ModelViewInvScaleEyespace = 1.0F;
    if (!_math_matrix_is_length_preserving(ctx->ModelviewMatrixStack.Top)) {
       const GLfloat *m = ctx->ModelviewMatrixStack.Top->inv;
       GLfloat f = m[2] * m[2] + m[6] * m[6] + m[10] * m[10];
@@ -1041,6 +1041,7 @@ update_modelview_scale( struct gl_context *ctx )
 	 ctx->_ModelViewInvScale = 1.0f / sqrtf(f);
       else
 	 ctx->_ModelViewInvScale = sqrtf(f);
+      ctx->_ModelViewInvScaleEyespace = 1.0f / sqrtf(f);
    }
 }
 
@@ -1217,4 +1218,5 @@ _mesa_init_lighting( struct gl_context *ctx )
    ctx->_NeedEyeCoords = GL_FALSE;
    ctx->_ForceEyeCoords = GL_FALSE;
    ctx->_ModelViewInvScale = 1.0;
+   ctx->_ModelViewInvScaleEyespace = 1.0;
 }

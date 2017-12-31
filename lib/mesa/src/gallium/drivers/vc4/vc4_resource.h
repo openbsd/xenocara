@@ -52,8 +52,9 @@ struct vc4_surface {
 };
 
 struct vc4_resource {
-        struct u_resource base;
+        struct pipe_resource base;
         struct vc4_bo *bo;
+        struct renderonly_scanout *scanout;
         struct vc4_resource_slice slices[VC4_MAX_MIP_LEVELS];
         uint32_t cube_map_stride;
         int cpp;
@@ -80,20 +81,6 @@ struct vc4_resource {
          * buffer) may get marked.
          */
         uint32_t initialized_buffers;
-
-        /**
-         * Resource containing the non-GL_TEXTURE_BASE_LEVEL-rebased texture
-         * contents, or the 4-byte index buffer.
-         *
-         * If the parent is set for an texture, then this resource is actually
-         * the texture contents just starting from the sampler_view's
-         * first_level.
-         *
-         * If the parent is set for an index index buffer, then this resource
-         * is actually a shadow containing a 2-byte index buffer starting from
-         * the ib's offset.
-         */
-        struct pipe_resource *shadow_parent;
 };
 
 static inline struct vc4_resource *
@@ -121,9 +108,10 @@ struct pipe_resource *vc4_resource_create(struct pipe_screen *pscreen,
 void vc4_update_shadow_baselevel_texture(struct pipe_context *pctx,
                                          struct pipe_sampler_view *view);
 struct pipe_resource *vc4_get_shadow_index_buffer(struct pipe_context *pctx,
-                                                  const struct pipe_index_buffer *ib,
+                                                  const struct pipe_draw_info *info,
+                                                  uint32_t offset,
                                                   uint32_t count,
-                                                  uint32_t *offset);
+                                                  uint32_t *shadow_offset);
 void vc4_dump_surface(struct pipe_surface *psurf);
 
 #endif /* VC4_RESOURCE_H */
