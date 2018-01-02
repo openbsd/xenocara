@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.c,v 1.106 2017/12/29 20:09:19 okan Exp $
+ * $OpenBSD: calmwm.c,v 1.107 2018/01/02 14:04:58 okan Exp $
  */
 
 #include <sys/types.h>
@@ -131,11 +131,11 @@ main(int argc, char **argv)
 		}
 	}
 	x_teardown();
-	if (cwm_status == CWM_EXEC_WM)
+	if (cwm_status == CWM_EXEC_WM) {
 		u_exec(Conf.wm_argv);
-
-	warnx("'%s' failed to start, restarting fallback", Conf.wm_argv);
-	u_exec(fallback);
+		warnx("'%s' failed to start, restarting fallback", Conf.wm_argv);
+		u_exec(fallback);
+	}
 
 	return(0);
 }
