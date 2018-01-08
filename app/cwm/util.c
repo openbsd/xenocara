@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: util.c,v 1.19 2017/12/29 20:09:19 okan Exp $
+ * $OpenBSD: util.c,v 1.20 2018/01/08 16:21:54 okan Exp $
  */
 
 #include <sys/types.h>
@@ -37,7 +37,7 @@ u_spawn(char *argstr)
 	switch (fork()) {
 	case 0:
 		u_exec(argstr);
-		break;
+		exit(1);
 	case -1:
 		warn("fork");
 	default:
