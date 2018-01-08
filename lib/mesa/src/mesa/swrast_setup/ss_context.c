@@ -28,7 +28,6 @@
 #include "main/glheader.h"
 #include "main/imports.h"
 #include "main/macros.h"
-#include "main/state.h"
 #include "tnl/tnl.h"
 #include "tnl/t_context.h"
 #include "tnl/t_pipeline.h"
@@ -114,7 +113,7 @@ setup_vertex_format(struct gl_context *ctx)
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    SScontext *swsetup = SWSETUP_CONTEXT(ctx);
    GLboolean intColors = !ctx->FragmentProgram._Current
-                      && !_mesa_ati_fragment_shader_enabled(ctx)
+                      && !ctx->ATIFragmentShader._Enabled
                       && ctx->RenderMode == GL_RENDER
                       && CHAN_TYPE != GL_FLOAT;
 

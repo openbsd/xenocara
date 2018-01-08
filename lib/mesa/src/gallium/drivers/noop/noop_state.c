@@ -76,10 +76,7 @@ static struct pipe_sampler_view *noop_create_sampler_view(struct pipe_context *c
 
    if (!sampler_view)
       return NULL;
-
    /* initialize base object */
-   *sampler_view = *state;
-   sampler_view->texture = NULL;
    pipe_resource_reference(&sampler_view->texture, texture);
    pipe_reference_init(&sampler_view->reference, 1);
    sampler_view->context = ctx;
@@ -161,7 +158,7 @@ static void noop_set_framebuffer_state(struct pipe_context *ctx,
 }
 
 static void noop_set_constant_buffer(struct pipe_context *ctx,
-                                     enum pipe_shader_type shader, uint index,
+                                     uint shader, uint index,
                                      const struct pipe_constant_buffer *cb)
 {
 }
@@ -189,6 +186,11 @@ static void noop_bind_state(struct pipe_context *ctx, void *state)
 static void noop_delete_state(struct pipe_context *ctx, void *state)
 {
    FREE(state);
+}
+
+static void noop_set_index_buffer(struct pipe_context *ctx,
+                                  const struct pipe_index_buffer *ib)
+{
 }
 
 static void noop_set_vertex_buffers(struct pipe_context *ctx,
@@ -296,6 +298,7 @@ void noop_init_state_functions(struct pipe_context *ctx)
    ctx->set_scissor_states = noop_set_scissor_states;
    ctx->set_stencil_ref = noop_set_stencil_ref;
    ctx->set_vertex_buffers = noop_set_vertex_buffers;
+   ctx->set_index_buffer = noop_set_index_buffer;
    ctx->set_viewport_states = noop_set_viewport_states;
    ctx->sampler_view_destroy = noop_sampler_view_destroy;
    ctx->surface_destroy = noop_surface_destroy;

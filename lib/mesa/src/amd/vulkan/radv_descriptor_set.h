@@ -26,44 +26,40 @@
 
 #include <vulkan/vulkan.h>
 
-#define MAX_SETS         32
+#define MAX_SETS         8
 
 struct radv_descriptor_set_binding_layout {
    VkDescriptorType type;
 
    /* Number of array elements in this binding */
-   uint32_t array_size;
+   uint16_t array_size;
 
-   uint32_t offset;
-   uint32_t buffer_offset;
+   uint16_t offset;
+   uint16_t buffer_offset;
    uint16_t dynamic_offset_offset;
 
-   uint16_t dynamic_offset_count;
    /* redundant with the type, each for a single array element */
-   uint32_t size;
+   uint16_t size;
+   uint16_t buffer_count;
+   uint16_t dynamic_offset_count;
 
-   /* Offset in the radv_descriptor_set_layout of the immutable samplers, or 0
-    * if there are no immutable samplers. */
-   uint32_t immutable_samplers_offset;
-   bool immutable_samplers_equal;
+   /* Immutable samplers (or NULL if no immutable samplers) */
+   struct radv_sampler **immutable_samplers;
 };
 
 struct radv_descriptor_set_layout {
-   /* The create flags for this descriptor set layout */
-   VkDescriptorSetLayoutCreateFlags flags;
-
    /* Number of bindings in this descriptor set */
-   uint32_t binding_count;
+   uint16_t binding_count;
 
    /* Total size of the descriptor set with room for all array entries */
-   uint32_t size;
+   uint16_t size;
 
    /* Shader stages affected by this descriptor set */
    uint16_t shader_stages;
    uint16_t dynamic_shader_stages;
 
    /* Number of buffers in this descriptor set */
-   uint32_t buffer_count;
+   uint16_t buffer_count;
 
    /* Number of dynamic offsets used by this descriptor set */
    uint16_t dynamic_offset_count;
@@ -86,9 +82,4 @@ struct radv_pipeline_layout {
    unsigned char sha1[20];
 };
 
-static inline const uint32_t *
-radv_immutable_samplers(const struct radv_descriptor_set_layout *set,
-                        const struct radv_descriptor_set_binding_layout *binding) {
-	return (const uint32_t*)((const char*)set + binding->immutable_samplers_offset);
-}
 #endif /* RADV_DESCRIPTOR_SET_H */

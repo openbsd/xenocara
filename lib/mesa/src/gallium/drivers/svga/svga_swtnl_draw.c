@@ -38,9 +38,7 @@
 
 enum pipe_error
 svga_swtnl_draw_vbo(struct svga_context *svga,
-                    const struct pipe_draw_info *info,
-                    struct pipe_resource *indexbuf,
-                    unsigned index_offset)
+                    const struct pipe_draw_info *info)
 {
    struct pipe_transfer *vb_transfer[PIPE_MAX_ATTRIBS] = { 0 };
    struct pipe_transfer *ib_transfer = NULL;
@@ -72,9 +70,9 @@ svga_swtnl_draw_vbo(struct svga_context *svga,
     * Map vertex buffers
     */
    for (i = 0; i < svga->curr.num_vertex_buffers; i++) {
-      if (svga->curr.vb[i].buffer.resource) {
+      if (svga->curr.vb[i].buffer) {
          map = pipe_buffer_map(&svga->pipe,
-                               svga->curr.vb[i].buffer.resource,
+                               svga->curr.vb[i].buffer,
                                PIPE_TRANSFER_READ,
                                &vb_transfer[i]);
 
@@ -85,14 +83,13 @@ svga_swtnl_draw_vbo(struct svga_context *svga,
 
    /* Map index buffer, if present */
    map = NULL;
-   if (info->index_size && indexbuf) {
-      map = pipe_buffer_map(&svga->pipe, indexbuf,
+   if (info->indexed && svga->curr.ib.buffer) {
+      map = pipe_buffer_map(&svga->pipe, svga->curr.ib.buffer,
                             PIPE_TRANSFER_READ,
                             &ib_transfer);
-      map = (ubyte *) map + index_offset;
       draw_set_indexes(draw,
-                       (const ubyte *) map,
-                       info->index_size, ~0);
+                       (const ubyte *) map + svga->curr.ib.offset,
+                       svga->curr.ib.index_size, ~0);
    }
 
    /* Map constant buffers */
@@ -123,7 +120,7 @@ svga_swtnl_draw_vbo(struct svga_context *svga,
     * unmap vertex/index buffers
     */
    for (i = 0; i < svga->curr.num_vertex_buffers; i++) {
-      if (svga->curr.vb[i].buffer.resource) {
+      if (svga->curr.vb[i].buffer) {
          pipe_buffer_unmap(&svga->pipe, vb_transfer[i]);
          draw_set_mapped_vertex_buffer(draw, i, NULL, 0);
       }
@@ -149,8 +146,9 @@ svga_swtnl_draw_vbo(struct svga_context *svga,
 }
 
 
-boolean
-svga_init_swtnl(struct svga_context *svga)
+
+
+boolean svga_init_swtnl( struct svga_context *svga )
 {
    struct svga_screen *screen = svga_screen(svga->pipe.screen);
 
@@ -166,8 +164,8 @@ svga_init_swtnl(struct svga_context *svga)
       goto fail;
 
 
-   draw_set_rasterize_stage(svga->swtnl.draw,
-                 draw_vbuf_stage(svga->swtnl.draw, svga->swtnl.backend));
+   draw_set_rasterize_stage(svga->swtnl.draw, 
+                            draw_vbuf_stage( svga->swtnl.draw, svga->swtnl.backend ));
 
    draw_set_render(svga->swtnl.draw, svga->swtnl.backend);
 
@@ -203,17 +201,16 @@ fail:
       util_blitter_destroy(svga->blitter);
 
    if (svga->swtnl.backend)
-      svga->swtnl.backend->destroy(svga->swtnl.backend);
+      svga->swtnl.backend->destroy( svga->swtnl.backend );
 
    if (svga->swtnl.draw)
-      draw_destroy(svga->swtnl.draw);
+      draw_destroy( svga->swtnl.draw );
 
    return FALSE;
 }
 
 
-void
-svga_destroy_swtnl(struct svga_context *svga)
+void svga_destroy_swtnl( struct svga_context *svga )
 {
-   draw_destroy(svga->swtnl.draw);
+   draw_destroy( svga->swtnl.draw );
 }

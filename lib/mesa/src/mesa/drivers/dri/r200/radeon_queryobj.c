@@ -29,6 +29,7 @@
 #include "radeon_debug.h"
 
 #include "main/imports.h"
+#include "util/simple_list.h"
 
 #include <inttypes.h>
 
@@ -206,7 +207,7 @@ void radeon_emit_queryobj(struct gl_context *ctx, struct radeon_state_atom *atom
 	BATCH_LOCALS(radeon);
 	int dwords;
 
-	dwords = atom->check(ctx, atom);
+	dwords = (*atom->check) (ctx, atom);
 
 	BEGIN_BATCH(dwords);
 	OUT_BATCH_TABLE(atom->cmd, dwords);

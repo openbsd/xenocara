@@ -26,12 +26,8 @@
 
 enum shader_t {
 	SHADER_VERTEX,
-	SHADER_TCS,
-	SHADER_TES,
-	SHADER_GEOM,
 	SHADER_FRAGMENT,
 	SHADER_COMPUTE,
-	SHADER_MAX,
 };
 
 /* bitmask of debug flags */

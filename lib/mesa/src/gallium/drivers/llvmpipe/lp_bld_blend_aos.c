@@ -74,7 +74,6 @@ struct lp_build_blend_aos_context
    LLVMValueRef dst;
    LLVMValueRef const_;
    LLVMValueRef const_alpha;
-   boolean has_dst_alpha;
 
    LLVMValueRef inv_src;
    LLVMValueRef inv_src_alpha;
@@ -116,10 +115,10 @@ lp_build_blend_factor_unswizzled(struct lp_build_blend_aos_context *bld,
          return bld->base.one;
       else {
          /*
-          * If there's no dst alpha the complement is zero but for unclamped
-          * float inputs min can be non-zero (negative).
+          * if there's separate src_alpha there's no dst alpha hence the complement
+          * is zero but for unclamped float inputs min can be non-zero (negative).
           */
-         if (!bld->has_dst_alpha) {
+         if (bld->src_alpha) {
             if (!bld->saturate)
                bld->saturate = lp_build_min(&bld->base, src_alpha, bld->base.zero);
          }
@@ -265,8 +264,7 @@ lp_build_blend_factor(struct lp_build_blend_aos_context *bld,
    if (alpha_swizzle != PIPE_SWIZZLE_NONE) {
       rgb_swizzle   = lp_build_blend_factor_swizzle(rgb_factor);
       alpha_factor_ = lp_build_blend_factor_unswizzled(bld, alpha_factor, TRUE);
-      return lp_build_blend_swizzle(bld, rgb_factor_, alpha_factor_, rgb_swizzle,
-                                    alpha_swizzle, num_channels);
+      return lp_build_blend_swizzle(bld, rgb_factor_, alpha_factor_, rgb_swizzle, alpha_swizzle, num_channels);
    } else {
       return rgb_factor_;
    }
@@ -329,7 +327,6 @@ lp_build_blend_aos(struct gallivm_state *gallivm,
    bld.src_alpha = src_alpha;
    bld.src1_alpha = src1_alpha;
    bld.const_alpha = const_alpha;
-   bld.has_dst_alpha = FALSE;
 
    /* Find the alpha channel if not provided seperately */
    if (!src_alpha) {
@@ -338,14 +335,6 @@ lp_build_blend_aos(struct gallivm_state *gallivm,
             alpha_swizzle = i;
          }
       }
-      /*
-       * Note that we may get src_alpha included from source (and 4 channels)
-       * even if the destination doesn't have an alpha channel (for rgbx
-       * formats). Generally this shouldn't make much of a difference (we're
-       * relying on blend factors being sanitized already if there's no
-       * dst alpha).
-       */
-      bld.has_dst_alpha = desc->swizzle[3] <= PIPE_SWIZZLE_W;
    }
 
    if (blend->logicop_enable) {
@@ -358,9 +347,7 @@ lp_build_blend_aos(struct gallivm_state *gallivm,
    } else if (!state->blend_enable) {
       result = src;
    } else {
-      boolean rgb_alpha_same = (state->rgb_src_factor == state->rgb_dst_factor &&
-                                state->alpha_src_factor == state->alpha_dst_factor) ||
-                               nr_channels == 1;
+      boolean rgb_alpha_same = (state->rgb_src_factor == state->rgb_dst_factor && state->alpha_src_factor == state->alpha_dst_factor) || nr_channels == 1;
 
       src_factor = lp_build_blend_factor(&bld, state->rgb_src_factor,
                                          state->alpha_src_factor,
@@ -383,8 +370,7 @@ lp_build_blend_aos(struct gallivm_state *gallivm,
                               rgb_alpha_same,
                               false);
 
-      if(state->rgb_func != state->alpha_func && nr_channels > 1 &&
-                            alpha_swizzle != PIPE_SWIZZLE_NONE) {
+      if(state->rgb_func != state->alpha_func && nr_channels > 1 && alpha_swizzle != PIPE_SWIZZLE_NONE) {
          LLVMValueRef alpha;
 
          alpha = lp_build_blend(&bld.base,
@@ -411,8 +397,7 @@ lp_build_blend_aos(struct gallivm_state *gallivm,
    if (!util_format_colormask_full(desc, state->colormask)) {
       LLVMValueRef color_mask;
 
-      color_mask = lp_build_const_mask_aos_swizzled(gallivm, bld.base.type,
-                                                    state->colormask, nr_channels, swizzle);
+      color_mask = lp_build_const_mask_aos_swizzled(gallivm, bld.base.type, state->colormask, nr_channels, swizzle);
       lp_build_name(color_mask, "color_mask");
 
       /* Combine with input mask if necessary */

@@ -312,26 +312,6 @@ _eglParseContextAttribList(_EGLContext *ctx, _EGLDisplay *dpy,
             ctx->Flags |= EGL_CONTEXT_OPENGL_FORWARD_COMPATIBLE_BIT_KHR;
          break;
 
-      case EGL_CONTEXT_OPENGL_NO_ERROR_KHR:
-         if (dpy->Version < 14 ||
-             !dpy->Extensions.KHR_create_context_no_error) {
-            err = EGL_BAD_ATTRIBUTE;
-            break;
-         }
-
-         /* The KHR_no_error spec only applies against OpenGL 2.0+ and
-          * OpenGL ES 2.0+
-          */
-         if ((api != EGL_OPENGL_API && api != EGL_OPENGL_ES_API) ||
-             ctx->ClientMajorVersion < 2) {
-            err = EGL_BAD_ATTRIBUTE;
-            break;
-         }
-
-         /* Canonicalize value to EGL_TRUE/EGL_FALSE definitions */
-         ctx->NoError = !!val;
-         break;
-
       default:
          err = EGL_BAD_ATTRIBUTE;
          break;
@@ -478,16 +458,6 @@ _eglParseContextAttribList(_EGLContext *ctx, _EGLDisplay *dpy,
       break;
    }
 
-   /* The EGL_KHR_create_context_no_error spec says:
-    *
-    *    "BAD_MATCH is generated if the EGL_CONTEXT_OPENGL_NO_ERROR_KHR is TRUE at
-    *    the same time as a debug or robustness context is specified."
-    */
-   if (ctx->NoError && (ctx->Flags & EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR ||
-                        ctx->Flags & EGL_CONTEXT_OPENGL_ROBUST_ACCESS_BIT_KHR)) {
-      err = EGL_BAD_MATCH;
-   }
-
    if ((ctx->Flags & ~(EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR
                       | EGL_CONTEXT_OPENGL_FORWARD_COMPATIBLE_BIT_KHR
                       | EGL_CONTEXT_OPENGL_ROBUST_ACCESS_BIT_KHR)) != 0) {
@@ -519,8 +489,10 @@ _eglInitContext(_EGLContext *ctx, _EGLDisplay *dpy, _EGLConfig *conf,
    const EGLenum api = eglQueryAPI();
    EGLint err;
 
-   if (api == EGL_NONE)
-      return _eglError(EGL_BAD_MATCH, "eglCreateContext(no client API)");
+   if (api == EGL_NONE) {
+      _eglError(EGL_BAD_MATCH, "eglCreateContext(no client API)");
+      return EGL_FALSE;
+   }
 
    _eglInitResource(&ctx->Resource, sizeof(*ctx), dpy);
    ctx->ClientAPI = api;
@@ -611,7 +583,7 @@ _eglQueryContext(_EGLDriver *drv, _EGLDisplay *dpy, _EGLContext *c,
  *
  * Note that the context may be NULL.
  */
-_EGLContext *
+static _EGLContext *
 _eglBindContextToThread(_EGLContext *ctx, _EGLThreadInfo *t)
 {
    _EGLContext *oldCtx;

@@ -24,8 +24,6 @@
 #include "main/core.h" /* for MAX2 */
 #include "ir.h"
 #include "compiler/glsl_types.h"
-#include "glsl_parser_extras.h"
-
 
 ir_rvalue::ir_rvalue(enum ir_node_type t)
    : ir_instruction(t)
@@ -263,8 +261,6 @@ ir_expression::ir_expression(int op, ir_rvalue *op0)
    case ir_unop_find_msb:
    case ir_unop_find_lsb:
    case ir_unop_subroutine_to_int:
-   case ir_unop_i642i:
-   case ir_unop_u642i:
       this->type = glsl_type::get_instance(GLSL_TYPE_INT,
 					   op0->type->vector_elements, 1);
       break;
@@ -275,8 +271,6 @@ ir_expression::ir_expression(int op, ir_rvalue *op0)
    case ir_unop_d2f:
    case ir_unop_bitcast_i2f:
    case ir_unop_bitcast_u2f:
-   case ir_unop_i642f:
-   case ir_unop_u642f:
       this->type = glsl_type::get_instance(GLSL_TYPE_FLOAT,
 					   op0->type->vector_elements, 1);
       break;
@@ -284,7 +278,6 @@ ir_expression::ir_expression(int op, ir_rvalue *op0)
    case ir_unop_f2b:
    case ir_unop_i2b:
    case ir_unop_d2b:
-   case ir_unop_i642b:
       this->type = glsl_type::get_instance(GLSL_TYPE_BOOL,
 					   op0->type->vector_elements, 1);
       break;
@@ -292,8 +285,6 @@ ir_expression::ir_expression(int op, ir_rvalue *op0)
    case ir_unop_f2d:
    case ir_unop_i2d:
    case ir_unop_u2d:
-   case ir_unop_i642d:
-   case ir_unop_u642d:
       this->type = glsl_type::get_instance(GLSL_TYPE_DOUBLE,
 					   op0->type->vector_elements, 1);
       break;
@@ -302,41 +293,16 @@ ir_expression::ir_expression(int op, ir_rvalue *op0)
    case ir_unop_f2u:
    case ir_unop_d2u:
    case ir_unop_bitcast_f2u:
-   case ir_unop_i642u:
-   case ir_unop_u642u:
       this->type = glsl_type::get_instance(GLSL_TYPE_UINT,
 					   op0->type->vector_elements, 1);
       break;
 
-   case ir_unop_i2i64:
-   case ir_unop_u2i64:
-   case ir_unop_b2i64:
-   case ir_unop_f2i64:
-   case ir_unop_d2i64:
-   case ir_unop_u642i64:
-      this->type = glsl_type::get_instance(GLSL_TYPE_INT64,
-					   op0->type->vector_elements, 1);
-      break;
-
-   case ir_unop_i2u64:
-   case ir_unop_u2u64:
-   case ir_unop_f2u64:
-   case ir_unop_d2u64:
-   case ir_unop_i642u64:
-      this->type = glsl_type::get_instance(GLSL_TYPE_UINT64,
-					   op0->type->vector_elements, 1);
-      break;
    case ir_unop_noise:
       this->type = glsl_type::float_type;
       break;
 
    case ir_unop_unpack_double_2x32:
-   case ir_unop_unpack_uint_2x32:
       this->type = glsl_type::uvec2_type;
-      break;
-
-   case ir_unop_unpack_int_2x32:
-      this->type = glsl_type::ivec2_type;
       break;
 
    case ir_unop_pack_snorm_2x16:
@@ -351,14 +317,6 @@ ir_expression::ir_expression(int op, ir_rvalue *op0)
       this->type = glsl_type::double_type;
       break;
 
-   case ir_unop_pack_int_2x32:
-      this->type = glsl_type::int64_t_type;
-      break;
-
-   case ir_unop_pack_uint_2x32:
-      this->type = glsl_type::uint64_t_type;
-      break;
-
    case ir_unop_unpack_snorm_2x16:
    case ir_unop_unpack_unorm_2x16:
    case ir_unop_unpack_half_2x16:
@@ -368,16 +326,6 @@ ir_expression::ir_expression(int op, ir_rvalue *op0)
    case ir_unop_unpack_snorm_4x8:
    case ir_unop_unpack_unorm_4x8:
       this->type = glsl_type::vec4_type;
-      break;
-
-   case ir_unop_unpack_sampler_2x32:
-   case ir_unop_unpack_image_2x32:
-      this->type = glsl_type::uvec2_type;
-      break;
-
-   case ir_unop_pack_sampler_2x32:
-   case ir_unop_pack_image_2x32:
-      this->type = op0->type;
       break;
 
    case ir_unop_frexp_sig:
@@ -393,19 +341,10 @@ ir_expression::ir_expression(int op, ir_rvalue *op0)
       this->type = glsl_type::int_type;
       break;
 
-   case ir_unop_bitcast_i642d:
-   case ir_unop_bitcast_u642d:
-      this->type = glsl_type::get_instance(GLSL_TYPE_DOUBLE,
-                                           op0->type->vector_elements, 1);
-      break;
-
-   case ir_unop_bitcast_d2i64:
-      this->type = glsl_type::get_instance(GLSL_TYPE_INT64,
-                                           op0->type->vector_elements, 1);
-      break;
-   case ir_unop_bitcast_d2u64:
-      this->type = glsl_type::get_instance(GLSL_TYPE_UINT64,
-                                           op0->type->vector_elements, 1);
+   case ir_unop_vote_any:
+   case ir_unop_vote_all:
+   case ir_unop_vote_eq:
+      this->type = glsl_type::bool_type;
       break;
 
    default:
@@ -616,7 +555,7 @@ ir_constant::ir_constant(const struct glsl_type *type,
    this->array_elements = NULL;
 
    assert((type->base_type >= GLSL_TYPE_UINT)
-	  && (type->base_type <= GLSL_TYPE_IMAGE));
+	  && (type->base_type <= GLSL_TYPE_BOOL));
 
    this->type = type;
    memcpy(& this->value, data, sizeof(this->value));
@@ -671,32 +610,6 @@ ir_constant::ir_constant(int integer, unsigned vector_elements)
    }
    for (unsigned i = vector_elements; i < 16; i++) {
       this->value.i[i] = 0;
-   }
-}
-
-ir_constant::ir_constant(uint64_t u64, unsigned vector_elements)
-   : ir_rvalue(ir_type_constant)
-{
-   assert(vector_elements <= 4);
-   this->type = glsl_type::get_instance(GLSL_TYPE_UINT64, vector_elements, 1);
-   for (unsigned i = 0; i < vector_elements; i++) {
-      this->value.u64[i] = u64;
-   }
-   for (unsigned i = vector_elements; i < 16; i++) {
-      this->value.u64[i] = 0;
-   }
-}
-
-ir_constant::ir_constant(int64_t int64, unsigned vector_elements)
-   : ir_rvalue(ir_type_constant)
-{
-   assert(vector_elements <= 4);
-   this->type = glsl_type::get_instance(GLSL_TYPE_INT64, vector_elements, 1);
-   for (unsigned i = 0; i < vector_elements; i++) {
-      this->value.i64[i] = int64;
-   }
-   for (unsigned i = vector_elements; i < 16; i++) {
-      this->value.i64[i] = 0;
    }
 }
 
@@ -777,9 +690,10 @@ ir_constant::ir_constant(const struct glsl_type *type, exec_list *value_list)
    if (value->type->is_scalar() && value->next->is_tail_sentinel()) {
       if (type->is_matrix()) {
 	 /* Matrix - fill diagonal (rest is already set to 0) */
-         assert(type->is_float() || type->is_double());
+         assert(type->base_type == GLSL_TYPE_FLOAT ||
+                type->base_type == GLSL_TYPE_DOUBLE);
          for (unsigned i = 0; i < type->matrix_columns; i++) {
-            if (type->is_float())
+            if (type->base_type == GLSL_TYPE_FLOAT)
                this->value.f[i * type->vector_elements + i] =
                   value->value.f[0];
             else
@@ -801,11 +715,6 @@ ir_constant::ir_constant(const struct glsl_type *type, exec_list *value_list)
 	 case GLSL_TYPE_DOUBLE:
 	    for (unsigned i = 0; i < type->components(); i++)
 	       this->value.d[i] = value->value.d[0];
-	    break;
-	 case GLSL_TYPE_UINT64:
-	 case GLSL_TYPE_INT64:
-	    for (unsigned i = 0; i < type->components(); i++)
-	       this->value.u64[i] = value->value.u64[0];
 	    break;
 	 case GLSL_TYPE_BOOL:
 	    for (unsigned i = 0; i < type->components(); i++)
@@ -869,12 +778,6 @@ ir_constant::ir_constant(const struct glsl_type *type, exec_list *value_list)
 	 case GLSL_TYPE_DOUBLE:
 	    this->value.d[i] = value->get_double_component(j);
 	    break;
-         case GLSL_TYPE_UINT64:
-	    this->value.u64[i] = value->get_uint64_component(j);
-	    break;
-	 case GLSL_TYPE_INT64:
-	    this->value.i64[i] = value->get_int64_component(j);
-	    break;
 	 default:
 	    /* FINISHME: What to do?  Exceptions are not the answer.
 	     */
@@ -928,8 +831,6 @@ ir_constant::get_bool_component(unsigned i) const
    case GLSL_TYPE_FLOAT: return ((int)this->value.f[i]) != 0;
    case GLSL_TYPE_BOOL:  return this->value.b[i];
    case GLSL_TYPE_DOUBLE: return this->value.d[i] != 0.0;
-   case GLSL_TYPE_UINT64: return this->value.u64[i] != 0;
-   case GLSL_TYPE_INT64:  return this->value.i64[i] != 0;
    default:              assert(!"Should not get here."); break;
    }
 
@@ -948,8 +849,6 @@ ir_constant::get_float_component(unsigned i) const
    case GLSL_TYPE_FLOAT: return this->value.f[i];
    case GLSL_TYPE_BOOL:  return this->value.b[i] ? 1.0f : 0.0f;
    case GLSL_TYPE_DOUBLE: return (float) this->value.d[i];
-   case GLSL_TYPE_UINT64: return (float) this->value.u64[i];
-   case GLSL_TYPE_INT64:  return (float) this->value.i64[i];
    default:              assert(!"Should not get here."); break;
    }
 
@@ -968,8 +867,6 @@ ir_constant::get_double_component(unsigned i) const
    case GLSL_TYPE_FLOAT: return (double) this->value.f[i];
    case GLSL_TYPE_BOOL:  return this->value.b[i] ? 1.0 : 0.0;
    case GLSL_TYPE_DOUBLE: return this->value.d[i];
-   case GLSL_TYPE_UINT64: return (double) this->value.u64[i];
-   case GLSL_TYPE_INT64:  return (double) this->value.i64[i];
    default:              assert(!"Should not get here."); break;
    }
 
@@ -988,8 +885,6 @@ ir_constant::get_int_component(unsigned i) const
    case GLSL_TYPE_FLOAT: return (int) this->value.f[i];
    case GLSL_TYPE_BOOL:  return this->value.b[i] ? 1 : 0;
    case GLSL_TYPE_DOUBLE: return (int) this->value.d[i];
-   case GLSL_TYPE_UINT64: return (int) this->value.u64[i];
-   case GLSL_TYPE_INT64:  return (int) this->value.i64[i];
    default:              assert(!"Should not get here."); break;
    }
 
@@ -1008,48 +903,6 @@ ir_constant::get_uint_component(unsigned i) const
    case GLSL_TYPE_FLOAT: return (unsigned) this->value.f[i];
    case GLSL_TYPE_BOOL:  return this->value.b[i] ? 1 : 0;
    case GLSL_TYPE_DOUBLE: return (unsigned) this->value.d[i];
-   case GLSL_TYPE_UINT64: return (unsigned) this->value.u64[i];
-   case GLSL_TYPE_INT64:  return (unsigned) this->value.i64[i];
-   default:              assert(!"Should not get here."); break;
-   }
-
-   /* Must return something to make the compiler happy.  This is clearly an
-    * error case.
-    */
-   return 0;
-}
-
-int64_t
-ir_constant::get_int64_component(unsigned i) const
-{
-   switch (this->type->base_type) {
-   case GLSL_TYPE_UINT:  return this->value.u[i];
-   case GLSL_TYPE_INT:   return this->value.i[i];
-   case GLSL_TYPE_FLOAT: return (int64_t) this->value.f[i];
-   case GLSL_TYPE_BOOL:  return this->value.b[i] ? 1 : 0;
-   case GLSL_TYPE_DOUBLE: return (int64_t) this->value.d[i];
-   case GLSL_TYPE_UINT64: return (int64_t) this->value.u64[i];
-   case GLSL_TYPE_INT64:  return this->value.i64[i];
-   default:              assert(!"Should not get here."); break;
-   }
-
-   /* Must return something to make the compiler happy.  This is clearly an
-    * error case.
-    */
-   return 0;
-}
-
-uint64_t
-ir_constant::get_uint64_component(unsigned i) const
-{
-   switch (this->type->base_type) {
-   case GLSL_TYPE_UINT:  return this->value.u[i];
-   case GLSL_TYPE_INT:   return this->value.i[i];
-   case GLSL_TYPE_FLOAT: return (uint64_t) this->value.f[i];
-   case GLSL_TYPE_BOOL:  return this->value.b[i] ? 1 : 0;
-   case GLSL_TYPE_DOUBLE: return (uint64_t) this->value.d[i];
-   case GLSL_TYPE_UINT64: return this->value.u64[i];
-   case GLSL_TYPE_INT64:  return (uint64_t) this->value.i64[i];
    default:              assert(!"Should not get here."); break;
    }
 
@@ -1115,8 +968,6 @@ ir_constant::copy_offset(ir_constant *src, int offset)
    case GLSL_TYPE_INT:
    case GLSL_TYPE_FLOAT:
    case GLSL_TYPE_DOUBLE:
-   case GLSL_TYPE_UINT64:
-   case GLSL_TYPE_INT64:
    case GLSL_TYPE_BOOL: {
       unsigned int size = src->type->components();
       assert (size <= this->type->components() - offset);
@@ -1136,12 +987,6 @@ ir_constant::copy_offset(ir_constant *src, int offset)
 	    break;
 	 case GLSL_TYPE_DOUBLE:
 	    value.d[i+offset] = src->get_double_component(i);
-	    break;
-         case GLSL_TYPE_UINT64:
-	    value.u64[i+offset] = src->get_uint64_component(i);
-	    break;
-	 case GLSL_TYPE_INT64:
-	    value.i64[i+offset] = src->get_int64_component(i);
 	    break;
 	 default: // Shut up the compiler
 	    break;
@@ -1202,12 +1047,6 @@ ir_constant::copy_masked_offset(ir_constant *src, int offset, unsigned int mask)
 	 case GLSL_TYPE_DOUBLE:
 	    value.d[i+offset] = src->get_double_component(id++);
 	    break;
-         case GLSL_TYPE_UINT64:
-	    value.u64[i+offset] = src->get_uint64_component(id++);
-	    break;
-	 case GLSL_TYPE_INT64:
-	    value.i64[i+offset] = src->get_int64_component(id++);
-	    break;
 	 default:
 	    assert(!"Should not get here.");
 	    return;
@@ -1230,7 +1069,7 @@ ir_constant::has_value(const ir_constant *c) const
       return true;
    }
 
-   if (this->type->is_record()) {
+   if (this->type->base_type == GLSL_TYPE_STRUCT) {
       const exec_node *a_node = this->components.get_head_raw();
       const exec_node *b_node = c->components.get_head_raw();
 
@@ -1272,14 +1111,6 @@ ir_constant::has_value(const ir_constant *c) const
 	 if (this->value.d[i] != c->value.d[i])
 	    return false;
 	 break;
-      case GLSL_TYPE_UINT64:
-	 if (this->value.u64[i] != c->value.u64[i])
-	    return false;
-	 break;
-      case GLSL_TYPE_INT64:
-	 if (this->value.i64[i] != c->value.i64[i])
-	    return false;
-	 break;
       default:
 	 assert(!"Should not get here.");
 	 return false;
@@ -1319,14 +1150,6 @@ ir_constant::is_value(float f, int i) const
 	 break;
       case GLSL_TYPE_DOUBLE:
 	 if (this->value.d[c] != double(f))
-	    return false;
-	 break;
-      case GLSL_TYPE_UINT64:
-	 if (this->value.u64[c] != uint64_t(i))
-	    return false;
-	 break;
-      case GLSL_TYPE_INT64:
-	 if (this->value.i64[c] != i)
 	    return false;
 	 break;
       default:
@@ -1448,7 +1271,7 @@ ir_dereference_record::ir_dereference_record(ir_variable *var,
 }
 
 bool
-ir_dereference::is_lvalue(const struct _mesa_glsl_parse_state *state) const
+ir_dereference::is_lvalue() const
 {
    ir_variable *var = this->variable_referenced();
 
@@ -1456,20 +1279,6 @@ ir_dereference::is_lvalue(const struct _mesa_glsl_parse_state *state) const
     */
    if ((var == NULL) || var->data.read_only)
       return false;
-
-   /* From section 4.1.7 of the ARB_bindless_texture spec:
-    *
-    * "Samplers can be used as l-values, so can be assigned into and used as
-    *  "out" and "inout" function parameters."
-    *
-    * From section 4.1.X of the ARB_bindless_texture spec:
-    *
-    * "Images can be used as l-values, so can be assigned into and used as
-    *  "out" and "inout" function parameters."
-    */
-   if ((!state || state->has_bindless()) &&
-       (this->type->contains_sampler() || this->type->contains_image()))
-      return true;
 
    /* From section 4.1.7 of the GLSL 4.40 spec:
     *
@@ -1517,10 +1326,10 @@ ir_texture::set_sampler(ir_dereference *sampler, const glsl_type *type)
       assert(type->base_type == GLSL_TYPE_INT);
    } else if (this->op == ir_lod) {
       assert(type->vector_elements == 2);
-      assert(type->is_float());
+      assert(type->base_type == GLSL_TYPE_FLOAT);
    } else if (this->op == ir_samples_identical) {
       assert(type == glsl_type::bool_type);
-      assert(sampler->type->is_sampler());
+      assert(sampler->type->base_type == GLSL_TYPE_SAMPLER);
       assert(sampler->type->sampler_dimensionality == GLSL_SAMPLER_DIM_MS);
    } else {
       assert(sampler->type->sampled_type == (int) type->base_type);
@@ -1590,8 +1399,10 @@ ir_swizzle::ir_swizzle(ir_rvalue *val, const unsigned *comp,
 }
 
 ir_swizzle::ir_swizzle(ir_rvalue *val, ir_swizzle_mask mask)
-   : ir_rvalue(ir_type_swizzle), val(val), mask(mask)
+   : ir_rvalue(ir_type_swizzle)
 {
+   this->val = val;
+   this->mask = mask;
    this->type = glsl_type::get_instance(val->type->base_type,
 					mask.num_components, 1);
 }
@@ -1712,10 +1523,6 @@ ir_variable::ir_variable(const struct glsl_type *type, const char *name,
    if (mode == ir_var_temporary
        && (name == NULL || name == ir_variable::tmp_name)) {
       this->name = ir_variable::tmp_name;
-   } else if (name == NULL ||
-              strlen(name) < ARRAY_SIZE(this->name_storage)) {
-      strcpy(this->name_storage, name ? name : "");
-      this->name = this->name_storage;
    } else {
       this->name = ralloc_strdup(this, name);
    }
@@ -1746,17 +1553,18 @@ ir_variable::ir_variable(const struct glsl_type *type, const char *name,
    this->data.max_array_access = -1;
    this->data.offset = 0;
    this->data.precision = GLSL_PRECISION_NONE;
-   this->data.memory_read_only = false;
-   this->data.memory_write_only = false;
-   this->data.memory_coherent = false;
-   this->data.memory_volatile = false;
-   this->data.memory_restrict = false;
+   this->data.image_read_only = false;
+   this->data.image_write_only = false;
+   this->data.image_coherent = false;
+   this->data.image_volatile = false;
+   this->data.image_restrict = false;
    this->data.from_ssbo_unsized_array = false;
    this->data.fb_fetch_output = false;
-   this->data.bindless = false;
-   this->data.bound = false;
 
    if (type != NULL) {
+      if (type->base_type == GLSL_TYPE_SAMPLER)
+         this->data.read_only = true;
+
       if (type->is_interface())
          this->init_interface_type(type);
       else if (type->without_array()->is_interface())
@@ -1869,11 +1677,11 @@ ir_function_signature::qualifiers_match(exec_list *params)
 	  a->data.centroid != b->data.centroid ||
           a->data.sample != b->data.sample ||
           a->data.patch != b->data.patch ||
-          a->data.memory_read_only != b->data.memory_read_only ||
-          a->data.memory_write_only != b->data.memory_write_only ||
-          a->data.memory_coherent != b->data.memory_coherent ||
-          a->data.memory_volatile != b->data.memory_volatile ||
-          a->data.memory_restrict != b->data.memory_restrict) {
+          a->data.image_read_only != b->data.image_read_only ||
+          a->data.image_write_only != b->data.image_write_only ||
+          a->data.image_coherent != b->data.image_coherent ||
+          a->data.image_volatile != b->data.image_volatile ||
+          a->data.image_restrict != b->data.image_restrict) {
 
 	 /* parameter a's qualifiers don't match */
 	 return a->name;

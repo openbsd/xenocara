@@ -85,6 +85,8 @@ TARGET_LIB_DEPS =
 
 include $(top_srcdir)/src/gallium/drivers/i915/Automake.inc
 
+include $(top_srcdir)/src/gallium/drivers/ilo/Automake.inc
+
 include $(top_srcdir)/src/gallium/drivers/nouveau/Automake.inc
 
 include $(top_srcdir)/src/gallium/drivers/r300/Automake.inc
@@ -112,7 +114,7 @@ d3dadapter9_la_LIBADD += \
 
 endif # HAVE_GALLIUM_STATIC_TARGETS
 
-if HAVE_GALLIUM_LLVM
+if HAVE_MESA_LLVM
 nodist_EXTRA_d3dadapter9_la_SOURCES = dummy.cpp
 d3dadapter9_la_LDFLAGS += $(LLVM_LDFLAGS)
 d3dadapter9_la_LIBADD += $(LLVM_LIBS)

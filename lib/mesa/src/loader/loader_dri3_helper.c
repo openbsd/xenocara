@@ -95,9 +95,9 @@ dri3_free_render_buffer(struct loader_dri3_drawable *draw,
       xcb_free_pixmap(draw->conn, buffer->pixmap);
    xcb_sync_destroy_fence(draw->conn, buffer->sync_fence);
    xshmfence_unmap_shm(buffer->shm_fence);
-   draw->ext->image->destroyImage(buffer->image);
+   (draw->ext->image->destroyImage)(buffer->image);
    if (buffer->linear_buffer)
-      draw->ext->image->destroyImage(buffer->linear_buffer);
+      (draw->ext->image->destroyImage)(buffer->linear_buffer);
    free(buffer);
 }
 
@@ -106,7 +106,7 @@ loader_dri3_drawable_fini(struct loader_dri3_drawable *draw)
 {
    int i;
 
-   draw->ext->core->destroyDrawable(draw->dri_drawable);
+   (draw->ext->core->destroyDrawable)(draw->dri_drawable);
 
    for (i = 0; i < LOADER_DRI3_NUM_BUFFERS; i++) {
       if (draw->buffers[i])
@@ -171,9 +171,9 @@ loader_dri3_drawable_init(xcb_connection_t *conn,
 
    /* Create a new drawable */
    draw->dri_drawable =
-      draw->ext->image_driver->createNewDrawable(dri_screen,
-                                                 dri_config,
-                                                 draw);
+      (draw->ext->image_driver->createNewDrawable)(dri_screen,
+                                                   dri_config,
+                                                   draw);
 
    if (!draw->dri_drawable)
       return 1;
@@ -504,7 +504,6 @@ loader_dri3_copy_sub_buffer(struct loader_dri3_drawable *draw,
                                      x, y, width, height, __BLIT_FLAG_FLUSH);
    }
 
-   loader_dri3_swapbuffer_barrier(draw);
    dri3_fence_reset(draw->conn, back);
    dri3_copy_area(draw->conn,
                   dri3_back_buffer(draw)->pixmap,
@@ -596,7 +595,6 @@ loader_dri3_wait_gl(struct loader_dri3_drawable *draw)
                                   front->height,
                                   0, 0, front->width,
                                   front->height, __BLIT_FLAG_FLUSH);
-   loader_dri3_swapbuffer_barrier(draw);
    loader_dri3_copy_drawable(draw, draw->drawable, front->pixmap);
 }
 
@@ -642,7 +640,7 @@ loader_dri3_swap_buffers_msc(struct loader_dri3_drawable *draw,
 
    draw->vtable->flush_drawable(draw, flush_flags);
 
-   back = draw->buffers[dri3_find_back(draw)];
+   back = draw->buffers[LOADER_DRI3_BACK_ID(draw->cur_back)];
    if (draw->is_different_gpu && back) {
       /* Update the linear buffer before presenting the pixmap */
       draw->ext->image->blitImage(dri_context,
@@ -742,7 +740,7 @@ loader_dri3_swap_buffers_msc(struct loader_dri3_drawable *draw,
          ++(*draw->stamp);
    }
 
-   draw->ext->flush->invalidate(draw->dri_drawable);
+   (draw->ext->flush->invalidate)(draw->dri_drawable);
 
    return ret;
 }
@@ -858,34 +856,34 @@ dri3_alloc_render_buffer(struct loader_dri3_drawable *draw, unsigned int format,
       goto no_image;
 
    if (!draw->is_different_gpu) {
-      buffer->image = draw->ext->image->createImage(draw->dri_screen,
-                                                    width, height,
-                                                    format,
-                                                    __DRI_IMAGE_USE_SHARE |
-                                                    __DRI_IMAGE_USE_SCANOUT |
-                                                    __DRI_IMAGE_USE_BACKBUFFER,
-                                                    buffer);
+      buffer->image = (draw->ext->image->createImage)(draw->dri_screen,
+                                                      width, height,
+                                                      format,
+                                                      __DRI_IMAGE_USE_SHARE |
+                                                      __DRI_IMAGE_USE_SCANOUT |
+                                                      __DRI_IMAGE_USE_BACKBUFFER,
+                                                      buffer);
       pixmap_buffer = buffer->image;
 
       if (!buffer->image)
          goto no_image;
    } else {
-      buffer->image = draw->ext->image->createImage(draw->dri_screen,
-                                                    width, height,
-                                                    format,
-                                                    0,
-                                                    buffer);
+      buffer->image = (draw->ext->image->createImage)(draw->dri_screen,
+                                                      width, height,
+                                                      format,
+                                                      0,
+                                                      buffer);
 
       if (!buffer->image)
          goto no_image;
 
       buffer->linear_buffer =
-        draw->ext->image->createImage(draw->dri_screen,
-                                      width, height, format,
-                                      __DRI_IMAGE_USE_SHARE |
-                                      __DRI_IMAGE_USE_LINEAR |
-                                      __DRI_IMAGE_USE_BACKBUFFER,
-                                      buffer);
+        (draw->ext->image->createImage)(draw->dri_screen,
+                                        width, height, format,
+                                        __DRI_IMAGE_USE_SHARE |
+                                        __DRI_IMAGE_USE_LINEAR |
+                                        __DRI_IMAGE_USE_BACKBUFFER,
+                                        buffer);
       pixmap_buffer = buffer->linear_buffer;
 
       if (!buffer->linear_buffer)
@@ -894,14 +892,14 @@ dri3_alloc_render_buffer(struct loader_dri3_drawable *draw, unsigned int format,
 
    /* X wants the stride, so ask the image for it
     */
-   if (!draw->ext->image->queryImage(pixmap_buffer, __DRI_IMAGE_ATTRIB_STRIDE,
-                                     &stride))
+   if (!(draw->ext->image->queryImage)(pixmap_buffer, __DRI_IMAGE_ATTRIB_STRIDE,
+                                       &stride))
       goto no_buffer_attrib;
 
    buffer->pitch = stride;
 
-   if (!draw->ext->image->queryImage(pixmap_buffer, __DRI_IMAGE_ATTRIB_FD,
-                                     &buffer_fd))
+   if (!(draw->ext->image->queryImage)(pixmap_buffer, __DRI_IMAGE_ATTRIB_FD,
+                                       &buffer_fd))
       goto no_buffer_attrib;
 
    xcb_dri3_pixmap_from_buffer(draw->conn,
@@ -932,10 +930,10 @@ dri3_alloc_render_buffer(struct loader_dri3_drawable *draw, unsigned int format,
    return buffer;
 
 no_buffer_attrib:
-   draw->ext->image->destroyImage(pixmap_buffer);
+   (draw->ext->image->destroyImage)(pixmap_buffer);
 no_linear_buffer:
    if (draw->is_different_gpu)
-      draw->ext->image->destroyImage(buffer->image);
+      (draw->ext->image->destroyImage)(buffer->image);
 no_image:
    free(buffer);
 no_buffer:
@@ -1084,19 +1082,19 @@ loader_dri3_create_image(xcb_connection_t *c,
     * we've gotten the planar wrapper, pull the single plane out of it and
     * discard the wrapper.
     */
-   image_planar = image->createImageFromFds(dri_screen,
-                                            bp_reply->width,
-                                            bp_reply->height,
-                                            image_format_to_fourcc(format),
-                                            fds, 1,
-                                            &stride, &offset, loaderPrivate);
+   image_planar = (image->createImageFromFds)(dri_screen,
+                                              bp_reply->width,
+                                              bp_reply->height,
+                                              image_format_to_fourcc(format),
+                                              fds, 1,
+                                              &stride, &offset, loaderPrivate);
    close(fds[0]);
    if (!image_planar)
       return NULL;
 
-   ret = image->fromPlanar(image_planar, 0, loaderPrivate);
+   ret = (image->fromPlanar)(image_planar, 0, loaderPrivate);
 
-   image->destroyImage(image_planar);
+   (image->destroyImage)(image_planar);
 
    return ret;
 }
@@ -1260,7 +1258,6 @@ dri3_get_buffer(__DRIdrawable *driDrawable,
          }
          break;
       case loader_dri3_buffer_front:
-         loader_dri3_swapbuffer_barrier(draw);
          dri3_fence_reset(draw->conn, new_buffer);
          dri3_copy_area(draw->conn,
                         draw->drawable,
@@ -1433,19 +1430,4 @@ loader_dri3_update_drawable_geometry(struct loader_dri3_drawable *draw)
 
       free(geom_reply);
    }
-}
-
-
-/**
- * Make sure the server has flushed all pending swap buffers to hardware
- * for this drawable. Ideally we'd want to send an X protocol request to
- * have the server block our connection until the swaps are complete. That
- * would avoid the potential round-trip here.
- */
-void
-loader_dri3_swapbuffer_barrier(struct loader_dri3_drawable *draw)
-{
-   int64_t ust, msc, sbc;
-
-   (void) loader_dri3_wait_for_sbc(draw, 0, &ust, &msc, &sbc);
 }

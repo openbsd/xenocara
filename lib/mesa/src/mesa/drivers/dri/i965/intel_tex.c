@@ -94,9 +94,7 @@ intel_alloc_texture_image_buffer(struct gl_context *ctx,
    } else {
       intel_image->mt = intel_miptree_create_for_teximage(brw, intel_texobj,
                                                           intel_image,
-                                                          MIPTREE_CREATE_DEFAULT);
-      if (!intel_image->mt)
-         return false;
+                                                          0);
 
       /* Even if the object currently has a mipmap tree associated
        * with it, this one is a more likely candidate to represent the
@@ -149,8 +147,8 @@ intel_alloc_texture_storage(struct gl_context *ctx,
                                               first_image->TexFormat,
                                               0, levels - 1,
                                               width, height, depth,
-                                              MAX2(num_samples, 1),
-                                              MIPTREE_CREATE_DEFAULT);
+                                              num_samples,
+                                              MIPTREE_LAYOUT_TILING_ANY);
 
       if (intel_texobj->mt == NULL) {
          return false;
@@ -327,7 +325,7 @@ intel_set_texture_storage_for_buffer_object(struct gl_context *ctx,
          return false;
       }
 
-      if (!brw->mesa_format_supports_render[image->TexFormat]) {
+      if (!brw->format_supported_as_render_target[image->TexFormat]) {
          perf_debug("Non-renderable PBO format; fallback to CPU mapping\n");
          return false;
       }
@@ -335,17 +333,16 @@ intel_set_texture_storage_for_buffer_object(struct gl_context *ctx,
 
    assert(intel_texobj->mt == NULL);
 
-   struct brw_bo *bo = intel_bufferobj_buffer(brw, intel_buffer_obj,
+   drm_intel_bo *bo = intel_bufferobj_buffer(brw, intel_buffer_obj,
                                              buffer_offset,
-                                             row_stride * image->Height,
-                                             !read_only);
+                                             row_stride * image->Height);
    intel_texobj->mt =
       intel_miptree_create_for_bo(brw, bo,
                                   image->TexFormat,
                                   buffer_offset,
                                   image->Width, image->Height, image->Depth,
                                   row_stride,
-                                  MIPTREE_CREATE_DEFAULT);
+                                  0);
    if (!intel_texobj->mt)
       return false;
 

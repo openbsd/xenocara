@@ -208,8 +208,6 @@ static const __DRI2rendererQueryExtension swrast_query_renderer_extension = {
 static const __DRIextension *dri_screen_extensions[] = {
     &swrastTexBufferExtension.base,
     &swrast_query_renderer_extension.base,
-    &dri2ConfigQueryExtension.base,
-    &dri2NoErrorExtension.base,
     NULL
 };
 
@@ -571,12 +569,12 @@ dri_create_buffer(__DRIscreen * sPriv,
 
     /* add front renderbuffer */
     frontrb = swrast_new_renderbuffer(visual, dPriv, GL_TRUE);
-    _mesa_attach_and_own_rb(fb, BUFFER_FRONT_LEFT, &frontrb->Base.Base);
+    _mesa_add_renderbuffer(fb, BUFFER_FRONT_LEFT, &frontrb->Base.Base);
 
     /* add back renderbuffer */
     if (visual->doubleBufferMode) {
 	backrb = swrast_new_renderbuffer(visual, dPriv, GL_FALSE);
-        _mesa_attach_and_own_rb(fb, BUFFER_BACK_LEFT, &backrb->Base.Base);
+	_mesa_add_renderbuffer(fb, BUFFER_BACK_LEFT, &backrb->Base.Base);
     }
 
     /* add software renderbuffers */
@@ -699,16 +697,12 @@ get_string(struct gl_context *ctx, GLenum pname)
 }
 
 static void
-update_state(struct gl_context *ctx)
+update_state( struct gl_context *ctx, GLuint new_state )
 {
-    GLuint new_state = ctx->NewState;
-
-    if (new_state & (_NEW_SCISSOR | _NEW_BUFFERS | _NEW_VIEWPORT))
-      _mesa_update_draw_buffer_bounds(ctx, ctx->DrawBuffer);
-
     /* not much to do here - pass it on */
     _swrast_InvalidateState( ctx, new_state );
     _swsetup_InvalidateState( ctx, new_state );
+    _vbo_InvalidateState( ctx, new_state );
     _tnl_InvalidateState( ctx, new_state );
 }
 
@@ -966,6 +960,7 @@ static const __DRIextension *swrast_driver_extensions[] = {
     &driCoreExtension.base,
     &driSWRastExtension.base,
     &driCopySubBufferExtension.base,
+    &dri2ConfigQueryExtension.base,
     &swrast_vtable.base,
     NULL
 };

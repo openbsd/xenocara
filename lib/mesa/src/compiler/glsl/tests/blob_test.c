@@ -23,7 +23,6 @@
 
 /* A collection of unit tests for blob.c */
 
-#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -50,10 +49,7 @@ static void
 expect_equal(uint64_t expected, uint64_t actual, const char *test)
 {
    if (actual != expected) {
-      fprintf(stderr,
-              "Error: Test '%s' failed: "
-              "Expected=%" PRIu64 ", "
-              "Actual=%" PRIu64 "\n",
+      fprintf (stderr, "Error: Test '%s' failed: Expected=%ld, Actual=%ld\n",
                test, expected, actual);
       error = true;
    }
@@ -63,9 +59,7 @@ static void
 expect_unequal(uint64_t expected, uint64_t actual, const char *test)
 {
    if (actual == expected) {
-      fprintf(stderr,
-              "Error: Test '%s' failed: Result=%" PRIu64 ", "
-              "but expected something different.\n",
+      fprintf (stderr, "Error: Test '%s' failed: Result=%ld, but expected something different.\n",
                test, actual);
       error = true;
    }
@@ -118,13 +112,14 @@ expect_equal_bytes(uint8_t *expected, uint8_t *actual,
 static void
 test_write_and_read_functions (void)
 {
+   void *ctx = ralloc_context(NULL);
    struct blob *blob;
    struct blob_reader reader;
    uint8_t *reserved;
    size_t str_offset, uint_offset;
    uint8_t reserve_buf[sizeof(reserve_test_str)];
 
-   blob = blob_create();
+   blob = blob_create(ctx);
 
    /*** Test blob by writing one of every possible kind of value. */
 
@@ -184,19 +179,20 @@ test_write_and_read_functions (void)
                 "read_consumes_all_bytes");
    expect_equal(false, reader.overrun, "read_does_not_overrun");
 
-   blob_destroy(blob);
+   ralloc_free(ctx);
 }
 
 /* Test that data values are written and read with proper alignment. */
 static void
 test_alignment(void)
 {
+   void *ctx = ralloc_context(NULL);
    struct blob *blob;
    struct blob_reader reader;
    uint8_t bytes[] = "ABCDEFGHIJKLMNOP";
    size_t delta, last, num_bytes;
 
-   blob = blob_create();
+   blob = blob_create(ctx);
 
    /* First, write an intptr value to the blob and capture that size. This is
     * the expected offset between any pair of intptr values (if written with
@@ -242,18 +238,19 @@ test_alignment(void)
                    "aligned read of intptr_t");
    }
 
-   blob_destroy(blob);
+   ralloc_free(ctx);
 }
 
 /* Test that we detect overrun. */
 static void
 test_overrun(void)
 {
+   void *ctx =ralloc_context(NULL);
    struct blob *blob;
    struct blob_reader reader;
    uint32_t value = 0xdeadbeef;
 
-   blob = blob_create();
+   blob = blob_create(ctx);
 
    blob_write_uint32(blob, value);
 
@@ -264,7 +261,7 @@ test_overrun(void)
    expect_equal(0, blob_read_uint32(&reader), "read at overrun");
    expect_equal(true, reader.overrun, "overrun flag set");
 
-   blob_destroy(blob);
+   ralloc_free(ctx);
 }
 
 /* Test that we can read and write some large objects, (exercising the code in
@@ -281,7 +278,7 @@ test_big_objects(void)
    size_t i;
    char *buf;
 
-   blob = blob_create();
+   blob = blob_create(ctx);
 
    /* Initialize our buffer. */
    buf = ralloc_size(ctx, size);
@@ -308,7 +305,6 @@ test_big_objects(void)
    expect_equal(false, reader.overrun,
                 "overrun flag not set reading large objects");
 
-   blob_destroy(blob);
    ralloc_free(ctx);
 }
 

@@ -21,9 +21,6 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef BRW_MULTISAMPLE_STATE_H
-#define BRW_MULTISAMPLE_STATE_H
-
 #include <stdint.h>
 
 /**
@@ -107,5 +104,3 @@ static const uint32_t
 brw_multisample_positions_16x[] = {
    0xc75a7599, 0xb3dbad36, 0x2c42816e, 0x10eff408
 };
-
-#endif /* BRW_MULTISAMPLE_STATE_H */

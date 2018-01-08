@@ -258,7 +258,7 @@ _mesa_add_parameter(struct gl_program_parameter_list *paramList,
 
    for (i = 0; i < sz4; i++) {
       struct gl_program_parameter *p = paramList->Parameters + oldNum + i;
-      p->Name = strdup(name ? name : "");
+      p->Name = name ? strdup(name) : NULL;
       p->Type = type;
       p->Size = size;
       p->DataType = datatype;
@@ -267,8 +267,9 @@ _mesa_add_parameter(struct gl_program_parameter_list *paramList,
             COPY_4V(paramList->ParameterValues[oldNum + i], values);
          } else {
             /* copy 1, 2 or 3 values */
-            assert(size < 4);
-            for (j = 0; j < size; j++) {
+            GLuint remaining = size % 4;
+            assert(remaining < 4);
+            for (j = 0; j < remaining; j++) {
                paramList->ParameterValues[oldNum + i][j].f = values[j].f;
             }
             /* fill in remaining positions with zeros */
@@ -277,6 +278,7 @@ _mesa_add_parameter(struct gl_program_parameter_list *paramList,
             }
          }
          values += 4;
+         p->Initialized = GL_TRUE;
       } else {
          /* silence valgrind */
          for (j = 0; j < 4; j++)

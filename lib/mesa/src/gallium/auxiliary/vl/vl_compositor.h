@@ -99,6 +99,7 @@ struct vl_compositor_state
 struct vl_compositor
 {
    struct pipe_context *pipe;
+   struct u_upload_mgr *upload;
 
    struct pipe_framebuffer_state fb_state;
    struct pipe_vertex_buffer vertex_buf;
@@ -141,7 +142,7 @@ vl_compositor_init_state(struct vl_compositor_state *state, struct pipe_context 
 /**
  * set yuv -> rgba conversion matrix
  */
-bool
+void
 vl_compositor_set_csc_matrix(struct vl_compositor_state *settings,
                              const vl_csc_matrix *matrix,
                              float luma_min, float luma_max);

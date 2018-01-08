@@ -109,7 +109,7 @@ pb_slab_alloc(struct pb_slabs *slabs, unsigned size, unsigned heap)
    group_index = heap * slabs->num_orders + (order - slabs->min_order);
    group = &slabs->groups[group_index];
 
-   mtx_lock(&slabs->mutex);
+   pipe_mutex_lock(slabs->mutex);
 
    /* If there is no candidate slab at all, or the first slab has no free
     * entries, try reclaiming entries.
@@ -135,11 +135,11 @@ pb_slab_alloc(struct pb_slabs *slabs, unsigned size, unsigned heap)
        * There's a chance that racing threads will end up allocating multiple
        * slabs for the same group, but that doesn't hurt correctness.
        */
-      mtx_unlock(&slabs->mutex);
+      pipe_mutex_unlock(slabs->mutex);
       slab = slabs->slab_alloc(slabs->priv, heap, 1 << order, group_index);
       if (!slab)
          return NULL;
-      mtx_lock(&slabs->mutex);
+      pipe_mutex_lock(slabs->mutex);
 
       LIST_ADD(&slab->head, &group->slabs);
    }
@@ -148,7 +148,7 @@ pb_slab_alloc(struct pb_slabs *slabs, unsigned size, unsigned heap)
    LIST_DEL(&entry->head);
    slab->num_free--;
 
-   mtx_unlock(&slabs->mutex);
+   pipe_mutex_unlock(slabs->mutex);
 
    return entry;
 }
@@ -162,9 +162,9 @@ pb_slab_alloc(struct pb_slabs *slabs, unsigned size, unsigned heap)
 void
 pb_slab_free(struct pb_slabs* slabs, struct pb_slab_entry *entry)
 {
-   mtx_lock(&slabs->mutex);
+   pipe_mutex_lock(slabs->mutex);
    LIST_ADDTAIL(&entry->head, &slabs->reclaim);
-   mtx_unlock(&slabs->mutex);
+   pipe_mutex_unlock(slabs->mutex);
 }
 
 /* Check if any of the entries handed to pb_slab_free are ready to be re-used.
@@ -176,9 +176,9 @@ pb_slab_free(struct pb_slabs* slabs, struct pb_slab_entry *entry)
 void
 pb_slabs_reclaim(struct pb_slabs *slabs)
 {
-   mtx_lock(&slabs->mutex);
+   pipe_mutex_lock(slabs->mutex);
    pb_slabs_reclaim_locked(slabs);
-   mtx_unlock(&slabs->mutex);
+   pipe_mutex_unlock(slabs->mutex);
 }
 
 /* Initialize the slabs manager.
@@ -224,7 +224,7 @@ pb_slabs_init(struct pb_slabs *slabs,
       LIST_INITHEAD(&group->slabs);
    }
 
-   (void) mtx_init(&slabs->mutex, mtx_plain);
+   pipe_mutex_init(slabs->mutex);
 
    return true;
 }
@@ -248,5 +248,5 @@ pb_slabs_deinit(struct pb_slabs *slabs)
    }
 
    FREE(slabs->groups);
-   mtx_destroy(&slabs->mutex);
+   pipe_mutex_destroy(slabs->mutex);
 }

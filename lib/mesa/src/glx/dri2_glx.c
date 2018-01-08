@@ -74,7 +74,7 @@ struct dri2_display
 
    __glxHashTable *dri2Hash;
 
-   const __DRIextension *loader_extensions[5];
+   const __DRIextension *loader_extensions[4];
 };
 
 struct dri2_drawable
@@ -946,25 +946,6 @@ dri2GetSwapInterval(__GLXDRIdrawable *pdraw)
   return priv->swap_interval;
 }
 
-static void
-driSetBackgroundContext(void *loaderPrivate)
-{
-   struct dri2_context *pcp = (struct dri2_context *) loaderPrivate;
-   __glXSetCurrentContext(&pcp->base);
-}
-
-static GLboolean
-driIsThreadSafe(void *loaderPrivate)
-{
-   struct dri2_context *pcp = (struct dri2_context *) loaderPrivate;
-   /* Check Xlib is running in thread safe mode
-    *
-    * 'lock_fns' is the XLockDisplay function pointer of the X11 display 'dpy'.
-    * It wll be NULL if XInitThreads wasn't called.
-    */
-   return pcp->base.psc->dpy->lock_fns != NULL;
-}
-
 static const __DRIdri2LoaderExtension dri2LoaderExtension = {
    .base = { __DRI_DRI2_LOADER, 3 },
 
@@ -983,13 +964,6 @@ static const __DRIdri2LoaderExtension dri2LoaderExtension_old = {
 
 static const __DRIuseInvalidateExtension dri2UseInvalidate = {
    .base = { __DRI_USE_INVALIDATE, 1 }
-};
-
-static const __DRIbackgroundCallableExtension driBackgroundCallable = {
-   .base = { __DRI_BACKGROUND_CALLABLE, 2 },
-
-   .setBackgroundContext    = driSetBackgroundContext,
-   .isThreadSafe            = driIsThreadSafe,
 };
 
 _X_HIDDEN void
@@ -1311,17 +1285,12 @@ dri2CreateScreen(int screen, struct glx_display * priv)
    psp->getBufferAge = NULL;
 
    if (pdp->driMinor >= 2) {
-      unsigned char disable;
-
       psp->getDrawableMSC = dri2DrawableGetMSC;
       psp->waitForMSC = dri2WaitForMSC;
       psp->waitForSBC = dri2WaitForSBC;
       psp->setSwapInterval = dri2SetSwapInterval;
       psp->getSwapInterval = dri2GetSwapInterval;
-      if (psc->config->configQueryb(psc->driScreen,
-                                    "glx_disable_oml_sync_control",
-                                    &disable) || !disable)
-         __glXEnableDirectExtension(&psc->base, "GLX_OML_sync_control");
+      __glXEnableDirectExtension(&psc->base, "GLX_OML_sync_control");
    }
 
    /* DRI2 supports SubBuffer through DRI2CopyRegion, so it's always
@@ -1424,9 +1393,9 @@ dri2CreateDisplay(Display * dpy)
    else
       pdp->loader_extensions[i++] = &dri2LoaderExtension.base;
    
-   pdp->loader_extensions[i++] = &dri2UseInvalidate.base;
+   pdp->loader_extensions[i++] = &systemTimeExtension.base;
 
-   pdp->loader_extensions[i++] = &driBackgroundCallable.base;
+   pdp->loader_extensions[i++] = &dri2UseInvalidate.base;
 
    pdp->loader_extensions[i++] = NULL;
 

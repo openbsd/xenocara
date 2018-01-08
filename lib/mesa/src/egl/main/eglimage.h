@@ -46,8 +46,6 @@ struct _egl_image_attrib_int
    EGLBoolean IsPresent;
 };
 
-#define DMA_BUF_MAX_PLANES 4
-
 struct _egl_image_attribs
 {
    /* EGL_KHR_image_base */
@@ -67,14 +65,11 @@ struct _egl_image_attribs
    /* EGL_WL_bind_wayland_display */
    EGLint PlaneWL;
 
-   /* EGL_EXT_image_dma_buf_import and
-    * EGL_EXT_image_dma_buf_import_modifiers */
+   /* EGL_EXT_image_dma_buf_import */
    struct _egl_image_attrib_int DMABufFourCC;
-   struct _egl_image_attrib_int DMABufPlaneFds[DMA_BUF_MAX_PLANES];
-   struct _egl_image_attrib_int DMABufPlaneOffsets[DMA_BUF_MAX_PLANES];
-   struct _egl_image_attrib_int DMABufPlanePitches[DMA_BUF_MAX_PLANES];
-   struct _egl_image_attrib_int DMABufPlaneModifiersLo[DMA_BUF_MAX_PLANES];
-   struct _egl_image_attrib_int DMABufPlaneModifiersHi[DMA_BUF_MAX_PLANES];
+   struct _egl_image_attrib_int DMABufPlaneFds[3];
+   struct _egl_image_attrib_int DMABufPlaneOffsets[3];
+   struct _egl_image_attrib_int DMABufPlanePitches[3];
    struct _egl_image_attrib_int DMABufYuvColorSpaceHint;
    struct _egl_image_attrib_int DMABufSampleRangeHint;
    struct _egl_image_attrib_int DMABufChromaHorizontalSiting;
@@ -91,16 +86,13 @@ struct _egl_image
 };
 
 
-EGLBoolean
+extern EGLint
 _eglParseImageAttribList(_EGLImageAttribs *attrs, _EGLDisplay *dpy,
                          const EGLint *attrib_list);
 
 
-static inline void
-_eglInitImage(_EGLImage *img, _EGLDisplay *dpy)
-{
-   _eglInitResource(&img->Resource, sizeof(*img), dpy);
-}
+extern EGLBoolean
+_eglInitImage(_EGLImage *img, _EGLDisplay *dpy);
 
 
 /**

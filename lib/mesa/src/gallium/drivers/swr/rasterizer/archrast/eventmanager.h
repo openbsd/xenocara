@@ -29,8 +29,8 @@
 
 #include "common/os.h"
 
-#include "gen_ar_event.hpp"
-#include "gen_ar_eventhandler.hpp"
+#include "gen_ar_event.h"
+#include "gen_ar_eventhandler.h"
 
 #include <vector>
 
@@ -43,44 +43,24 @@ namespace ArchRast
     class EventManager
     {
     public:
-        EventManager() {}
-
-        ~EventManager()
-        {
-            // Event manager owns destroying handler objects once attached.
-            ///@note See comment for Detach.
-            for (auto pHandler : mHandlers)
-            {
-                delete pHandler;
-            }
-        }
-
-        void Attach(EventHandler* pHandler)
+        void attach(EventHandler* pHandler)
         {
             mHandlers.push_back(pHandler);
         }
 
-        void Dispatch(const Event& event)
+        void dispatch(Event& event)
         {
             ///@todo Add event filter check here.
 
             for (auto pHandler : mHandlers)
             {
-                event.Accept(pHandler);
-            }
-        }
-
-        void FlushDraw(uint32_t drawId)
-        {
-            for (auto pHandler : mHandlers)
-            {
-                pHandler->FlushDraw(drawId);
+                event.accept(pHandler);
             }
         }
     private:
 
         // Handlers stay registered for life
-        void Detach(EventHandler* pHandler) { SWR_INVALID("Should not be called"); }
+        void detach(EventHandler* pHandler) { SWR_ASSERT(0); }
 
         std::vector<EventHandler*> mHandlers;
     };

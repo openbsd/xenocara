@@ -99,13 +99,6 @@ wglGetCurrentDC( VOID )
    return stw_get_current_dc();
 }
 
-WINGDIAPI HDC APIENTRY
-wglGetCurrentReadDCARB( VOID )
-{
-   return stw_get_current_read_dc();
-}
-
-
 WINGDIAPI BOOL APIENTRY
 wglMakeCurrent(
    HDC hdc,
@@ -214,7 +207,14 @@ wglUseFontBitmapsA(
    DWORD count,
    DWORD listBase )
 {
-   return wglUseFontBitmapsW(hdc, first, count, listBase);
+   (void) hdc;
+   (void) first;
+   (void) count;
+   (void) listBase;
+
+   assert( 0 );
+
+   return FALSE;
 }
 
 WINGDIAPI BOOL APIENTRY
@@ -233,54 +233,14 @@ wglUseFontBitmapsW(
    DWORD count,
    DWORD listBase )
 {
-   GLYPHMETRICS gm;
-   MAT2 tra;
-   FIXED one, minus_one, zero;
-   void *buffer = NULL;
-   BOOL result = TRUE;
+   (void) hdc;
+   (void) first;
+   (void) count;
+   (void) listBase;
 
-   one.value = 1;
-   one.fract = 0;
-   minus_one.value = -1;
-   minus_one.fract = 0;
-   zero.value = 0;
-   zero.fract = 0;
+   assert( 0 );
 
-   tra.eM11 = one;
-   tra.eM22 = minus_one;
-   tra.eM12 = tra.eM21 = zero;
-
-   for (int i = 0; i < count; i++) {
-      DWORD size = GetGlyphOutline(hdc, first + i, GGO_BITMAP, &gm, 0,
-                                   NULL, &tra);
-
-      glNewList(listBase + i, GL_COMPILE);
-
-      if (size != GDI_ERROR) {
-         if (size == 0) {
-            glBitmap(0, 0, -gm.gmptGlyphOrigin.x, gm.gmptGlyphOrigin.y,
-                     gm.gmCellIncX, gm.gmCellIncY, NULL);
-         }
-         else {
-            buffer = realloc(buffer, size);
-            size = GetGlyphOutline(hdc, first + i, GGO_BITMAP, &gm,
-                                   size, buffer, &tra);
-
-            glBitmap(gm.gmBlackBoxX, gm.gmBlackBoxY,
-                     -gm.gmptGlyphOrigin.x, gm.gmptGlyphOrigin.y,
-                     gm.gmCellIncX, gm.gmCellIncY, buffer);
-         }
-      }
-      else {
-         result = FALSE;
-      }
-
-      glEndList();
-   }
-
-   free(buffer);
-
-   return result;
+   return FALSE;
 }
 
 WINGDIAPI BOOL APIENTRY

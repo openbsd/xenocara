@@ -38,9 +38,8 @@
 // AVX512 Support
 ///////////////////////////////////////////////////////////////////////////////
 
-#define ENABLE_AVX512_SIMD16    1
-#define USE_8x2_TILE_BACKEND    1
-#define USE_SIMD16_FRONTEND     0
+#define ENABLE_AVX512_SIMD16    0
+#define USE_8x2_TILE_BACKEND    0
 
 ///////////////////////////////////////////////////////////////////////////////
 // Architecture validation
@@ -97,6 +96,9 @@
 // Maximum supported number of active vertex buffer streams
 #define KNOB_NUM_STREAMS                    32
 
+// Maximum supported number of attributes per vertex
+#define KNOB_NUM_ATTRIBUTES                 39
+
 // Maximum supported active viewports and scissors
 #define KNOB_NUM_VIEWPORTS_SCISSORS         16
 
@@ -139,6 +141,8 @@
 
 #if KNOB_SIMD_WIDTH==8 && KNOB_TILE_X_DIM < 4
 #error "incompatible width/tile dimensions"
+#elif KNOB_SIMD_WIDTH==16 && KNOB_TILE_X_DIM < 4
+#error "incompatible width/tile dimensions"
 #endif
 
 #if ENABLE_AVX512_SIMD16
@@ -150,6 +154,9 @@
 #if KNOB_SIMD_WIDTH == 8
 #define SIMD_TILE_X_DIM 4
 #define SIMD_TILE_Y_DIM 2
+#elif KNOB_SIMD_WIDTH == 16
+#define SIMD_TILE_X_DIM 4
+#define SIMD_TILE_Y_DIM 4
 #else
 #error "Invalid simd width"
 #endif

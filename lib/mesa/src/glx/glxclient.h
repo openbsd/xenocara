@@ -56,7 +56,7 @@
 
 #include "glxextensions.h"
 
-#if defined(USE_LIBGLVND)
+#if defined(USE_LIBGLVND_GLX)
 #define _GLX_PUBLIC _X_HIDDEN
 #else
 #define _GLX_PUBLIC _X_EXPORT

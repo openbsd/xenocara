@@ -21,8 +21,7 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef NIR_INSTR_SET_H
-#define NIR_INSTR_SET_H
+#pragma once
 
 #include "nir.h"
 
@@ -61,4 +60,3 @@ void nir_instr_set_remove(struct set *instr_set, nir_instr *instr);
 
 /*@}*/
 
-#endif /* NIR_INSTR_SET_H */

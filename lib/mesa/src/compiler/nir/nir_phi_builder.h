@@ -21,8 +21,7 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef NIR_PHI_BUILDER_H
-#define NIR_PHI_BUILDER_H
+#pragma once
 
 #include "nir.h"
 
@@ -115,5 +114,3 @@ nir_phi_builder_value_get_block_def(struct nir_phi_builder_value *val,
  * adds the phi nodes to the program.
  */
 void nir_phi_builder_finish(struct nir_phi_builder *pb);
-
-#endif /* NIR_PHI_BUILDER_H */

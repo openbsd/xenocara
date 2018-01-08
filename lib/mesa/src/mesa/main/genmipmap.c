@@ -107,10 +107,10 @@ _mesa_is_valid_generate_texture_mipmap_internalformat(struct gl_context *ctx,
  * Implements glGenerateMipmap and glGenerateTextureMipmap.
  * Generates all the mipmap levels below the base level.
  */
-static void
-generate_texture_mipmap(struct gl_context *ctx,
-                        struct gl_texture_object *texObj, GLenum target,
-                        bool dsa)
+void
+_mesa_generate_texture_mipmap(struct gl_context *ctx,
+                              struct gl_texture_object *texObj, GLenum target,
+                              bool dsa)
 {
    struct gl_texture_image *srcImage;
    const char *suffix = dsa ? "Texture" : "";
@@ -187,7 +187,7 @@ _mesa_GenerateMipmap(GLenum target)
    if (!texObj)
       return;
 
-   generate_texture_mipmap(ctx, texObj, target, false);
+   _mesa_generate_texture_mipmap(ctx, texObj, target, false);
 }
 
 /**
@@ -209,5 +209,5 @@ _mesa_GenerateTextureMipmap(GLuint texture)
       return;
    }
 
-   generate_texture_mipmap(ctx, texObj, texObj->Target, true);
+   _mesa_generate_texture_mipmap(ctx, texObj, texObj->Target, true);
 }

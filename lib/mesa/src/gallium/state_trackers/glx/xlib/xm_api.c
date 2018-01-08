@@ -181,9 +181,6 @@ xmesa_close_display(Display *display)
     *    xmdpy->screen->destroy(xmdpy->screen);
     * }
     */
-
-   if (xmdpy->smapi->destroy)
-      xmdpy->smapi->destroy(xmdpy->smapi);
    free(xmdpy->smapi);
 
    XFree((char *) info);
@@ -192,7 +189,7 @@ xmesa_close_display(Display *display)
 static XMesaDisplay
 xmesa_init_display( Display *display )
 {
-   static mtx_t init_mutex = _MTX_INITIALIZER_NP;
+   pipe_static_mutex(init_mutex);
    XMesaDisplay xmdpy;
    XMesaExtDisplayInfo *info;
 
@@ -200,14 +197,14 @@ xmesa_init_display( Display *display )
       return NULL;
    }
 
-   mtx_lock(&init_mutex);
+   pipe_mutex_lock(init_mutex);
 
    /* Look for XMesaDisplay which corresponds to this display */
    info = MesaExtInfo.head;
    while(info) {
       if (info->display == display) {
          /* Found it */
-         mtx_unlock(&init_mutex);
+         pipe_mutex_unlock(init_mutex);
          return  &info->mesaDisplay;
       }
       info = info->next;
@@ -219,7 +216,7 @@ xmesa_init_display( Display *display )
    /* allocate mesa display info */
    info = (XMesaExtDisplayInfo *) Xmalloc(sizeof(XMesaExtDisplayInfo));
    if (info == NULL) {
-      mtx_unlock(&init_mutex);
+      pipe_mutex_unlock(init_mutex);
       return NULL;
    }
    info->display = display;
@@ -245,7 +242,7 @@ xmesa_init_display( Display *display )
    }
 
    if (xmdpy->screen && xmdpy->smapi) {
-      (void) mtx_init(&xmdpy->mutex, mtx_plain);
+      pipe_mutex_init(xmdpy->mutex);
    }
    else {
       if (xmdpy->screen) {
@@ -258,7 +255,7 @@ xmesa_init_display( Display *display )
       xmdpy->display = NULL;
    }
 
-   mtx_unlock(&init_mutex);
+   pipe_mutex_unlock(init_mutex);
 
    return xmdpy;
 }
@@ -375,9 +372,9 @@ xmesa_get_window_size(Display *dpy, XMesaBuffer b,
    XMesaDisplay xmdpy = xmesa_init_display(dpy);
    Status stat;
 
-   mtx_lock(&xmdpy->mutex);
+   pipe_mutex_lock(xmdpy->mutex);
    stat = get_drawable_size(dpy, b->ws.drawable, width, height);
-   mtx_unlock(&xmdpy->mutex);
+   pipe_mutex_unlock(xmdpy->mutex);
 
    if (!stat) {
       /* probably querying a window that's recently been destroyed */
@@ -456,11 +453,11 @@ choose_pixel_format(XMesaVisual v)
  * stencil sizes.
  */
 static enum pipe_format
-choose_depth_stencil_format(XMesaDisplay xmdpy, int depth, int stencil,
-                            int sample_count)
+choose_depth_stencil_format(XMesaDisplay xmdpy, int depth, int stencil)
 {
    const enum pipe_texture_target target = PIPE_TEXTURE_2D;
    const unsigned tex_usage = PIPE_BIND_DEPTH_STENCIL;
+   const unsigned sample_count = 0;
    enum pipe_format formats[8], fmt;
    int count, i;
 
@@ -597,11 +594,6 @@ xmesa_free_buffer(XMesaBuffer buffer)
           * want to dereference this pointer in the future.
           */
          b->ws.drawable = 0;
-
-         /* Notify the st manager that the associated framebuffer interface
-          * object is no longer valid.
-          */
-         stapi->destroy_drawable(stapi, buffer->stfb);
 
          /* XXX we should move the buffer to a delete-pending list and destroy
           * the buffer until it is no longer current.
@@ -869,8 +861,8 @@ XMesaVisual XMesaCreateVisual( Display *display,
 
       vis->numAuxBuffers = 0;
       vis->level = 0;
-      vis->sampleBuffers = num_samples > 1;
-      vis->samples = num_samples;
+      vis->sampleBuffers = 0;
+      vis->samples = 0;
    }
 
    v->stvis.buffer_mask = ST_ATTACHMENT_FRONT_LEFT_MASK;
@@ -883,14 +875,6 @@ XMesaVisual XMesaCreateVisual( Display *display,
    }
 
    v->stvis.color_format = choose_pixel_format(v);
-
-   /* Check format support at requested num_samples (for multisample) */
-   if (!xmdpy->screen->is_format_supported(xmdpy->screen,
-                                           v->stvis.color_format,
-                                           PIPE_TEXTURE_2D, num_samples,
-                                           PIPE_BIND_RENDER_TARGET))
-      v->stvis.color_format = PIPE_FORMAT_NONE;
-
    if (v->stvis.color_format == PIPE_FORMAT_NONE) {
       free(v->visinfo);
       free(v);
@@ -898,8 +882,7 @@ XMesaVisual XMesaCreateVisual( Display *display,
    }
 
    v->stvis.depth_stencil_format =
-      choose_depth_stencil_format(xmdpy, depth_size, stencil_size,
-                                  num_samples);
+      choose_depth_stencil_format(xmdpy, depth_size, stencil_size);
 
    v->stvis.accum_format = (accum_red_size +
          accum_green_size + accum_blue_size + accum_alpha_size) ?

@@ -79,7 +79,7 @@ vlVdpBitmapSurfaceCreate(VdpDevice device,
    res_tmpl.bind = PIPE_BIND_SAMPLER_VIEW | PIPE_BIND_RENDER_TARGET;
    res_tmpl.usage = frequently_accessed ? PIPE_USAGE_DYNAMIC : PIPE_USAGE_DEFAULT;
 
-   mtx_lock(&dev->mutex);
+   pipe_mutex_lock(dev->mutex);
 
    if (!CheckSurfaceParams(pipe->screen, &res_tmpl)) {
       ret = VDP_STATUS_RESOURCES;
@@ -102,11 +102,11 @@ vlVdpBitmapSurfaceCreate(VdpDevice device,
       goto err_unlock;
    }
 
-   mtx_unlock(&dev->mutex);
+   pipe_mutex_unlock(dev->mutex);
 
    *surface = vlAddDataHTAB(vlsurface);
    if (*surface == 0) {
-      mtx_lock(&dev->mutex);
+      pipe_mutex_lock(dev->mutex);
       ret = VDP_STATUS_ERROR;
       goto err_sampler;
    }
@@ -116,7 +116,7 @@ vlVdpBitmapSurfaceCreate(VdpDevice device,
 err_sampler:
    pipe_sampler_view_reference(&vlsurface->sampler_view, NULL);
 err_unlock:
-   mtx_unlock(&dev->mutex);
+   pipe_mutex_unlock(dev->mutex);
    DeviceReference(&vlsurface->device, NULL);
    FREE(vlsurface);
    return ret;
@@ -134,9 +134,9 @@ vlVdpBitmapSurfaceDestroy(VdpBitmapSurface surface)
    if (!vlsurface)
       return VDP_STATUS_INVALID_HANDLE;
 
-   mtx_lock(&vlsurface->device->mutex);
+   pipe_mutex_lock(vlsurface->device->mutex);
    pipe_sampler_view_reference(&vlsurface->sampler_view, NULL);
-   mtx_unlock(&vlsurface->device->mutex);
+   pipe_mutex_unlock(vlsurface->device->mutex);
 
    vlRemoveDataHTAB(surface);
    DeviceReference(&vlsurface->device, NULL);
@@ -196,14 +196,16 @@ vlVdpBitmapSurfacePutBitsNative(VdpBitmapSurface surface,
 
    pipe = vlsurface->device->context;
 
-   mtx_lock(&vlsurface->device->mutex);
+   pipe_mutex_lock(vlsurface->device->mutex);
+
+   vlVdpResolveDelayedRendering(vlsurface->device, NULL, NULL);
 
    dst_box = RectToPipeBox(destination_rect, vlsurface->sampler_view->texture);
    pipe->texture_subdata(pipe, vlsurface->sampler_view->texture, 0,
                          PIPE_TRANSFER_WRITE, &dst_box, *source_data,
                          *source_pitches, 0);
 
-   mtx_unlock(&vlsurface->device->mutex);
+   pipe_mutex_unlock(vlsurface->device->mutex);
 
    return VDP_STATUS_OK;
 }

@@ -67,15 +67,15 @@ util_draw_arrays(struct pipe_context *pipe,
 }
 
 static inline void
-util_draw_elements(struct pipe_context *pipe, unsigned index_size,
-                   int index_bias, enum pipe_prim_type mode,
+util_draw_elements(struct pipe_context *pipe, int index_bias,
+                   enum pipe_prim_type mode,
                    uint start,
                    uint count)
 {
    struct pipe_draw_info info;
 
    util_draw_init_info(&info);
-   info.index_size = index_size;
+   info.indexed = TRUE;
    info.mode = mode;
    info.start = start;
    info.count = count;
@@ -108,7 +108,6 @@ util_draw_arrays_instanced(struct pipe_context *pipe,
 
 static inline void
 util_draw_elements_instanced(struct pipe_context *pipe,
-                             unsigned index_size,
                              int index_bias,
                              enum pipe_prim_type mode,
                              uint start,
@@ -119,13 +118,36 @@ util_draw_elements_instanced(struct pipe_context *pipe,
    struct pipe_draw_info info;
 
    util_draw_init_info(&info);
-   info.index_size = index_size;
+   info.indexed = TRUE;
    info.mode = mode;
    info.start = start;
    info.count = count;
    info.index_bias = index_bias;
    info.start_instance = start_instance;
    info.instance_count = instance_count;
+
+   pipe->draw_vbo(pipe, &info);
+}
+
+static inline void
+util_draw_range_elements(struct pipe_context *pipe,
+                         int index_bias,
+                         uint min_index,
+                         uint max_index,
+                         enum pipe_prim_type mode,
+                         uint start,
+                         uint count)
+{
+   struct pipe_draw_info info;
+
+   util_draw_init_info(&info);
+   info.indexed = TRUE;
+   info.mode = mode;
+   info.start = start;
+   info.count = count;
+   info.index_bias = index_bias;
+   info.min_index = min_index;
+   info.max_index = max_index;
 
    pipe->draw_vbo(pipe, &info);
 }

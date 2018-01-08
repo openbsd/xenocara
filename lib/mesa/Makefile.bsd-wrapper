@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.15 2017/12/31 07:12:12 jsg Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.16 2018/01/08 05:41:20 jsg Exp $
 
 .include <bsd.own.mk>
 
@@ -22,15 +22,15 @@ GALLIUM_DRIVERS=swrast,r300,r600
 CONFIGURE_ARGS=		--with-dri-drivers=${DRI_DRIVERS} \
 			--with-gallium-drivers=${GALLIUM_DRIVERS} \
 			--disable-silent-rules \
-			--disable-llvm \
-			--disable-glx-tls \
+			--disable-gallium-llvm \
+			--disable-llvm-shared-libs \
 			--disable-regen-sources \
 			--enable-gles1 --enable-gles2 \
 			--enable-shared-glapi \
 			--enable-osmesa \
 			--enable-gbm \
 			--enable-texture-float \
-			--with-platforms="x11,drm" \
+			--with-egl-platforms="x11,drm" \
 			--prefix=${X11BASE} \
 			--with-dri-driverdir=${X11BASE}/lib/modules/dri \
 			--with-dri-searchpath=${X11BASE}/lib/modules/dri
@@ -43,10 +43,10 @@ CONFIGURE_ARGS+=	PTHREADSTUBS_CFLAGS=' ' PTHREADSTUBS_LIBS=' '
 CONFIGURE_ARGS+=	USER_CFLAGS="-march=i586" USER_CXXFLAGS="-march=i586"
 .endif
 
-# -O2 gives "cc1: out of memory allocating 488 bytes"
-# on src/mesa/main/marshal_generated.c
-.if ${MACHINE} == sparc64
-CONFIGURE_ARGS+=       USER_CFLAGS="-fno-tree-pre"
+# powerpc lacks the __sync_add_and_fetch8 gcc atomic builtin
+# which is used by the shader cache implementation
+.if ${MACHINE_ARCH} == powerpc
+CONFIGURE_ARGS+=	--disable-shader-cache
 .endif
 
 .if ${MACHINE} == alpha

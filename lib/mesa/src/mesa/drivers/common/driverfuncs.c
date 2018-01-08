@@ -113,6 +113,7 @@ _mesa_init_driver_functions(struct dd_function_table *driver)
    driver->DrawTex = _mesa_meta_DrawTex;
 
    /* Vertex/fragment programs */
+   driver->BindProgram = NULL;
    driver->NewProgram = _mesa_new_program;
    driver->DeleteProgram = _mesa_delete_program;
 
@@ -200,9 +201,6 @@ _mesa_init_driver_functions(struct dd_function_table *driver)
 
    /* GL_ARB_texture_multisample */
    driver->GetSamplePosition = NULL;
-
-   /* Multithreading */
-   driver->SetBackgroundContext = NULL;
 }
 
 
@@ -250,7 +248,7 @@ _mesa_init_driver_state(struct gl_context *ctx)
    ctx->Driver.Enable(ctx, GL_LINE_SMOOTH, ctx->Line.SmoothFlag);
    ctx->Driver.Enable(ctx, GL_POLYGON_STIPPLE, ctx->Polygon.StippleFlag);
    ctx->Driver.Enable(ctx, GL_SCISSOR_TEST, ctx->Scissor.EnableFlags);
-   ctx->Driver.Enable(ctx, GL_STENCIL_TEST, ctx->Stencil.Enabled);
+   ctx->Driver.Enable(ctx, GL_STENCIL_TEST, ctx->Stencil._Enabled);
    ctx->Driver.Enable(ctx, GL_TEXTURE_1D, GL_FALSE);
    ctx->Driver.Enable(ctx, GL_TEXTURE_2D, GL_FALSE);
    ctx->Driver.Enable(ctx, GL_TEXTURE_RECTANGLE_NV, GL_FALSE);

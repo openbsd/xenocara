@@ -35,7 +35,9 @@ struct gl_program_parameter_list;
 struct st_context;
 
 
-void st_upload_constants(struct st_context *st, struct gl_program *prog);
+void st_upload_constants( struct st_context *st,
+                          struct gl_program_parameter_list *params,
+                          gl_shader_stage stage);
 
 
 #endif /* ST_ATOM_CONSTBUF_H */

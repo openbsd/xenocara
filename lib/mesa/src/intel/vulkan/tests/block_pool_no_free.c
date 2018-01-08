@@ -41,18 +41,16 @@ struct job {
 static void *alloc_blocks(void *_job)
 {
    struct job *job = _job;
-   uint32_t job_id = job - jobs;
-   uint32_t block_size = 16 * ((job_id % 4) + 1);
    int32_t block, *data;
 
    for (unsigned i = 0; i < BLOCKS_PER_THREAD; i++) {
-      block = anv_block_pool_alloc(job->pool, block_size);
+      block = anv_block_pool_alloc(job->pool);
       data = job->pool->map + block;
       *data = block;
       assert(block >= 0);
       job->blocks[i] = block;
 
-      block = anv_block_pool_alloc_back(job->pool, block_size);
+      block = anv_block_pool_alloc_back(job->pool);
       data = job->pool->map + block;
       *data = block;
       assert(block < 0);
@@ -109,14 +107,11 @@ static void validate_monotonic(uint32_t **blocks)
 
 static void run_test()
 {
-   struct anv_instance instance;
-   struct anv_device device = {
-      .instance = &instance,
-   };
+   struct anv_device device;
    struct anv_block_pool pool;
 
    pthread_mutex_init(&device.mutex, NULL);
-   anv_block_pool_init(&pool, &device, 4096);
+   anv_block_pool_init(&pool, &device, 16);
 
    for (unsigned i = 0; i < NUM_THREADS; i++) {
       jobs[i].pool = &pool;

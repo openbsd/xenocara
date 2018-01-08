@@ -26,7 +26,6 @@
  **************************************************************************/
 
 
-#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -158,15 +157,25 @@ _eglFilterArray(_EGLArray *array, void **data, EGLint size,
    if (!array)
       return 0;
 
-   assert(filter);
-   for (i = 0; i < array->Size; i++) {
-      if (filter(array->Elements[i], filter_data)) {
-         if (data && count < size)
-            data[count] = array->Elements[i];
-         count++;
+   if (filter) {
+      for (i = 0; i < array->Size; i++) {
+         if (filter(array->Elements[i], filter_data)) {
+            if (data && count < size)
+               data[count] = array->Elements[i];
+            count++;
+         }
+         if (data && count >= size)
+            break;
       }
-      if (data && count >= size)
-         break;
+   }
+   else {
+      if (data) {
+         count = (size < array->Size) ? size : array->Size;
+         memcpy(data, array->Elements, count * sizeof(array->Elements[0]));
+      }
+      else {
+         count = array->Size;
+      }
    }
 
    return count;

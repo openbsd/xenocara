@@ -27,7 +27,7 @@
 /* Ubyte indices. */
 
 void util_shorten_ubyte_elts_to_userptr(struct pipe_context *context,
-					const struct pipe_draw_info *info,
+					struct pipe_index_buffer *ib,
                                         unsigned add_transfer_flags,
 					int index_bias,
 					unsigned start,
@@ -39,10 +39,10 @@ void util_shorten_ubyte_elts_to_userptr(struct pipe_context *context,
     unsigned short *out_map = out;
     unsigned i;
 
-    if (info->has_user_indices) {
-       in_map = info->index.user;
+    if (ib->user_buffer) {
+       in_map = ib->user_buffer;
     } else {
-       in_map = pipe_buffer_map(context, info->index.resource,
+       in_map = pipe_buffer_map(context, ib->buffer,
                                 PIPE_TRANSFER_READ |
                                 add_transfer_flags,
                                 &src_transfer);
@@ -62,7 +62,7 @@ void util_shorten_ubyte_elts_to_userptr(struct pipe_context *context,
 /* Ushort indices. */
 
 void util_rebuild_ushort_elts_to_userptr(struct pipe_context *context,
-					 const struct pipe_draw_info *info,
+					 struct pipe_index_buffer *ib,
                                          unsigned add_transfer_flags,
 					 int index_bias,
 					 unsigned start, unsigned count,
@@ -73,10 +73,10 @@ void util_rebuild_ushort_elts_to_userptr(struct pipe_context *context,
     unsigned short *out_map = out;
     unsigned i;
 
-    if (info->has_user_indices) {
-       in_map = info->index.user;
+    if (ib->user_buffer) {
+       in_map = ib->user_buffer;
     } else {
-       in_map = pipe_buffer_map(context, info->index.resource,
+       in_map = pipe_buffer_map(context, ib->buffer,
                                 PIPE_TRANSFER_READ |
                                 add_transfer_flags,
                                 &in_transfer);
@@ -96,7 +96,7 @@ void util_rebuild_ushort_elts_to_userptr(struct pipe_context *context,
 /* Uint indices. */
 
 void util_rebuild_uint_elts_to_userptr(struct pipe_context *context,
-				       const struct pipe_draw_info *info,
+				       struct pipe_index_buffer *ib,
                                        unsigned add_transfer_flags,
 				       int index_bias,
 				       unsigned start, unsigned count,
@@ -107,10 +107,10 @@ void util_rebuild_uint_elts_to_userptr(struct pipe_context *context,
     unsigned int *out_map = out;
     unsigned i;
 
-    if (info->has_user_indices) {
-       in_map = info->index.user;
+    if (ib->user_buffer) {
+       in_map = ib->user_buffer;
     } else {
-       in_map = pipe_buffer_map(context, info->index.resource,
+       in_map = pipe_buffer_map(context, ib->buffer,
                                 PIPE_TRANSFER_READ |
                                 add_transfer_flags,
                                 &in_transfer);

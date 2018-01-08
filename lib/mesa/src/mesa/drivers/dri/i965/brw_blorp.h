@@ -21,8 +21,7 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef BRW_BLORP_H
-#define BRW_BLORP_H
+#pragma once
 
 #include "blorp/blorp.h"
 #include "intel_mipmap_tree.h"
@@ -59,36 +58,18 @@ brw_blorp_copy_miptrees(struct brw_context *brw,
                         unsigned dst_x, unsigned dst_y,
                         unsigned src_width, unsigned src_height);
 
-void
+bool
 brw_blorp_clear_color(struct brw_context *brw, struct gl_framebuffer *fb,
                       GLbitfield mask, bool partial_clear, bool encode_srgb);
-void
-brw_blorp_clear_depth_stencil(struct brw_context *brw,
-                              struct gl_framebuffer *fb,
-                              GLbitfield mask, bool partial_clear);
 
 void
 brw_blorp_resolve_color(struct brw_context *brw,
-                        struct intel_mipmap_tree *mt,
-                        unsigned level, unsigned layer,
-                        enum blorp_fast_clear_op resolve_op);
-
-void
-brw_blorp_mcs_partial_resolve(struct brw_context *brw,
-                              struct intel_mipmap_tree *mt,
-                              uint32_t start_layer, uint32_t num_layers);
+                        struct intel_mipmap_tree *mt);
 
 void
 intel_hiz_exec(struct brw_context *brw, struct intel_mipmap_tree *mt,
-               unsigned int level, unsigned int start_layer,
-               unsigned int num_layers, enum blorp_hiz_op op);
+	       unsigned int level, unsigned int layer, enum blorp_hiz_op op);
 
-void gen4_blorp_exec(struct blorp_batch *batch,
-                     const struct blorp_params *params);
-void gen45_blorp_exec(struct blorp_batch *batch,
-                      const struct blorp_params *params);
-void gen5_blorp_exec(struct blorp_batch *batch,
-                     const struct blorp_params *params);
 void gen6_blorp_exec(struct blorp_batch *batch,
                      const struct blorp_params *params);
 void gen7_blorp_exec(struct blorp_batch *batch,
@@ -99,11 +80,7 @@ void gen8_blorp_exec(struct blorp_batch *batch,
                      const struct blorp_params *params);
 void gen9_blorp_exec(struct blorp_batch *batch,
                      const struct blorp_params *params);
-void gen10_blorp_exec(struct blorp_batch *batch,
-                      const struct blorp_params *params);
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
-
-#endif /* BRW_BLORP_H */

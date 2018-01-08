@@ -174,7 +174,7 @@ struct lp_scene {
    unsigned tiles_x, tiles_y;
 
    int curr_x, curr_y;  /**< for iterating over bins */
-   mtx_t mutex;
+   pipe_mutex mutex;
 
    struct cmd_bin tile[TILES_X][TILES_Y];
    struct data_block_list data;

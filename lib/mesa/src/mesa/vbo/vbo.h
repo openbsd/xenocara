@@ -39,7 +39,7 @@
 extern "C" {
 #endif
 
-struct gl_vertex_array;
+struct gl_client_array;
 struct gl_context;
 struct gl_transform_feedback_object;
 
@@ -69,7 +69,7 @@ struct _mesa_prim {
  */
 struct _mesa_index_buffer {
    GLuint count;
-   unsigned index_size;
+   GLenum type;
    struct gl_buffer_object *obj;
    const void *ptr;
 };
@@ -78,6 +78,7 @@ struct _mesa_index_buffer {
 
 GLboolean _vbo_CreateContext( struct gl_context *ctx );
 void _vbo_DestroyContext( struct gl_context *ctx );
+void _vbo_InvalidateState( struct gl_context *ctx, GLbitfield new_state );
 
 
 void
@@ -90,7 +91,7 @@ vbo_initialize_save_dispatch(const struct gl_context *ctx,
 
 void vbo_exec_FlushVertices(struct gl_context *ctx, GLuint flags);
 void vbo_save_SaveFlushVertices(struct gl_context *ctx);
-void vbo_save_NotifyBegin(struct gl_context *ctx, GLenum mode);
+GLboolean vbo_save_NotifyBegin(struct gl_context *ctx, GLenum mode);
 void vbo_save_NewList(struct gl_context *ctx, GLuint list, GLenum mode);
 void vbo_save_EndList(struct gl_context *ctx);
 void vbo_save_BeginCallList(struct gl_context *ctx, struct gl_display_list *list);
@@ -138,7 +139,7 @@ struct split_limits {
 
 
 void vbo_split_prims( struct gl_context *ctx,
-		      const struct gl_vertex_array *arrays[],
+		      const struct gl_client_array *arrays[],
 		      const struct _mesa_prim *prim,
 		      GLuint nr_prims,
 		      const struct _mesa_index_buffer *ib,
@@ -150,11 +151,11 @@ void vbo_split_prims( struct gl_context *ctx,
 
 /* Helpers for dealing translating away non-zero min_index.
  */
-GLboolean vbo_all_varyings_in_vbos( const struct gl_vertex_array *arrays[] );
-GLboolean vbo_any_varyings_in_vbos( const struct gl_vertex_array *arrays[] );
+GLboolean vbo_all_varyings_in_vbos( const struct gl_client_array *arrays[] );
+GLboolean vbo_any_varyings_in_vbos( const struct gl_client_array *arrays[] );
 
 void vbo_rebase_prims( struct gl_context *ctx,
-		       const struct gl_vertex_array *arrays[],
+		       const struct gl_client_array *arrays[],
 		       const struct _mesa_prim *prim,
 		       GLuint nr_prims,
 		       const struct _mesa_index_buffer *ib,

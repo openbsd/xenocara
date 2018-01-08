@@ -14,11 +14,7 @@ libwayland_egl_la_LDFLAGS = \
 	$(GC_SECTIONS) \
 	$(LD_NO_UNDEFINED)
 
-TESTS = wayland-egl-symbols-check \
-        wayland-egl-abi-check
-
+TESTS = wayland-egl-symbols-check
 EXTRA_DIST = wayland-egl-symbols-check
-
-check_PROGRAMS = wayland-egl-abi-check
 
 include $(top_srcdir)/install-lib-links.mk

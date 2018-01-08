@@ -53,7 +53,6 @@
 
 #if defined(__GNUC__)
 #define PIPE_CC_GCC
-#define PIPE_CC_GCC_VERSION (__GNUC__ * 100 + __GNUC_MINOR__)
 #endif
 
 /*

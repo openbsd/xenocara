@@ -109,7 +109,7 @@ static void parse_relocs(Elf *elf, Elf_Data *relocs, Elf_Data *symbols,
 	}
 }
 
-bool ac_elf_read(const char *elf_data, unsigned elf_size,
+void ac_elf_read(const char *elf_data, unsigned elf_size,
 		 struct ac_shader_binary *binary)
 {
 	char *elf_buffer;
@@ -118,7 +118,6 @@ bool ac_elf_read(const char *elf_data, unsigned elf_size,
 	Elf_Data *symbols = NULL, *relocs = NULL;
 	size_t section_str_index;
 	unsigned symbol_sh_link = 0;
-	bool success = true;
 
 	/* One of the libelf implementations
 	 * (http://www.mr511.de/software/english.htm) requires calling
@@ -138,8 +137,7 @@ bool ac_elf_read(const char *elf_data, unsigned elf_size,
 		GElf_Shdr section_header;
 		if (gelf_getshdr(section, &section_header) != &section_header) {
 			fprintf(stderr, "Failed to read ELF section header\n");
-			success = false;
-			break;
+			return;
 		}
 		name = elf_strptr(elf, section_str_index, section_header.sh_name);
 		if (!strcmp(name, ".text")) {
@@ -150,11 +148,6 @@ bool ac_elf_read(const char *elf_data, unsigned elf_size,
 		} else if (!strcmp(name, ".AMDGPU.config")) {
 			section_data = elf_getdata(section, section_data);
 			binary->config_size = section_data->d_size;
-			if (!binary->config_size) {
-				fprintf(stderr, ".AMDGPU.config is empty!\n");
-				success = false;
-				break;
-			}
 			binary->config = MALLOC(binary->config_size * sizeof(unsigned char));
 			memcpy(binary->config, section_data->d_buf, binary->config_size);
 		} else if (!strcmp(name, ".AMDGPU.disasm")) {
@@ -193,9 +186,9 @@ bool ac_elf_read(const char *elf_data, unsigned elf_size,
 		binary->global_symbol_count = 1;
 		binary->config_size_per_symbol = binary->config_size;
 	}
-	return success;
 }
 
+static
 const unsigned char *ac_shader_binary_config_start(
 	const struct ac_shader_binary *binary,
 	uint64_t symbol_offset)
@@ -219,28 +212,23 @@ static const char *scratch_rsrc_dword1_symbol =
 
 void ac_shader_binary_read_config(struct ac_shader_binary *binary,
 				  struct ac_shader_config *conf,
-				  unsigned symbol_offset,
-				  bool supports_spill)
+				  unsigned symbol_offset)
 {
 	unsigned i;
 	const unsigned char *config =
 		ac_shader_binary_config_start(binary, symbol_offset);
 	bool really_needs_scratch = false;
-	uint32_t wavesize = 0;
+
 	/* LLVM adds SGPR spills to the scratch size.
 	 * Find out if we really need the scratch buffer.
 	 */
-	if (supports_spill) {
-		really_needs_scratch = true;
-	} else {
-		for (i = 0; i < binary->reloc_count; i++) {
-			const struct ac_shader_reloc *reloc = &binary->relocs[i];
+	for (i = 0; i < binary->reloc_count; i++) {
+		const struct ac_shader_reloc *reloc = &binary->relocs[i];
 
-			if (!strcmp(scratch_rsrc_dword0_symbol, reloc->name) ||
-			    !strcmp(scratch_rsrc_dword1_symbol, reloc->name)) {
-				really_needs_scratch = true;
-				break;
-			}
+		if (!strcmp(scratch_rsrc_dword0_symbol, reloc->name) ||
+		    !strcmp(scratch_rsrc_dword1_symbol, reloc->name)) {
+			really_needs_scratch = true;
+			break;
 		}
 	}
 
@@ -271,7 +259,9 @@ void ac_shader_binary_read_config(struct ac_shader_binary *binary,
 		case R_0286E8_SPI_TMPRING_SIZE:
 		case R_00B860_COMPUTE_TMPRING_SIZE:
 			/* WAVESIZE is in units of 256 dwords. */
-			wavesize = value;
+			if (really_needs_scratch)
+				conf->scratch_bytes_per_wave =
+					G_00B860_WAVESIZE(value) * 256 * 4;
 			break;
 		case SPILLED_SGPRS:
 			conf->spilled_sgprs = value;
@@ -294,10 +284,5 @@ void ac_shader_binary_read_config(struct ac_shader_binary *binary,
 
 		if (!conf->spi_ps_input_addr)
 			conf->spi_ps_input_addr = conf->spi_ps_input_ena;
-	}
-
-	if (really_needs_scratch) {
-		/* sgprs spills aren't spilling */
-	        conf->scratch_bytes_per_wave = G_00B860_WAVESIZE(wavesize) * 256 * 4;
 	}
 }

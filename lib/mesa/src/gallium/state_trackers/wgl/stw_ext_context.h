@@ -22,8 +22,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef STW_EXT_CONTEXT_H
-#define STW_EXT_CONTEXT_H
+#pragma once
 
 #include <windows.h>
 #include <GL/gl.h>
@@ -35,4 +34,3 @@ typedef BOOL (WINAPI *wglDeleteContext_t)(HGLRC hglrc);
 extern wglCreateContext_t wglCreateContext_func;
 extern wglDeleteContext_t wglDeleteContext_func;
 
-#endif /* STW_EXT_CONTEXT_H */

@@ -1,8 +1,8 @@
 /**************************************************************************
- *
+ * 
  * Copyright 2007 VMware, Inc.
  * All Rights Reserved.
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -10,11 +10,11 @@
  * distribute, sub license, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice (including the
  * next paragraph) shall be included in all copies or substantial portions
  * of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
@@ -22,7 +22,7 @@
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
+ * 
  **************************************************************************/
 
 
@@ -112,9 +112,11 @@ st_renderbuffer_alloc_storage(struct gl_context * ctx,
                               GLuint width, GLuint height)
 {
    struct st_context *st = st_context(ctx);
+   struct pipe_context *pipe = st->pipe;
    struct pipe_screen *screen = st->pipe->screen;
    struct st_renderbuffer *strb = st_renderbuffer(rb);
    enum pipe_format format = PIPE_FORMAT_NONE;
+   struct pipe_surface surf_tmpl;
    struct pipe_resource templ;
 
    /* init renderbuffer fields */
@@ -130,10 +132,8 @@ st_renderbuffer_alloc_storage(struct gl_context * ctx,
 
    /* Free the old surface and texture
     */
-   pipe_surface_reference(&strb->surface_srgb, NULL);
-   pipe_surface_reference(&strb->surface_linear, NULL);
-   strb->surface = NULL;
-   pipe_resource_reference(&strb->texture, NULL);
+   pipe_surface_reference( &strb->surface, NULL );
+   pipe_resource_reference( &strb->texture, NULL );
 
    /* If an sRGB framebuffer is unsupported, sRGB formats behave like linear
     * formats.
@@ -215,7 +215,17 @@ st_renderbuffer_alloc_storage(struct gl_context * ctx,
    if (!strb->texture)
       return FALSE;
 
-   st_update_renderbuffer_surface(st, strb);
+   u_surface_default_template(&surf_tmpl, strb->texture);
+   strb->surface = pipe->create_surface(pipe,
+                                        strb->texture,
+                                        &surf_tmpl);
+   if (strb->surface) {
+      assert(strb->surface->texture);
+      assert(strb->surface->format);
+      assert(strb->surface->width == width);
+      assert(strb->surface->height == height);
+   }
+
    return strb->surface != NULL;
 }
 
@@ -229,9 +239,7 @@ st_renderbuffer_delete(struct gl_context *ctx, struct gl_renderbuffer *rb)
    struct st_renderbuffer *strb = st_renderbuffer(rb);
    if (ctx) {
       struct st_context *st = st_context(ctx);
-      pipe_surface_release(st->pipe, &strb->surface_srgb);
-      pipe_surface_release(st->pipe, &strb->surface_linear);
-      strb->surface = NULL;
+      pipe_surface_release(st->pipe, &strb->surface);
    }
    pipe_resource_reference(&strb->texture, NULL);
    free(strb->data);
@@ -353,7 +361,7 @@ st_new_renderbuffer_fb(enum pipe_format format, int samples, boolean sw)
       break;
    default:
       _mesa_problem(NULL,
-                    "Unexpected format %s in st_new_renderbuffer_fb",
+		    "Unexpected format %s in st_new_renderbuffer_fb",
                     util_format_name(format));
       free(strb);
       return NULL;
@@ -380,19 +388,18 @@ st_update_renderbuffer_surface(struct st_context *st,
 {
    struct pipe_context *pipe = st->pipe;
    struct pipe_resource *resource = strb->texture;
-   const struct st_texture_object *stTexObj = NULL;
+   struct st_texture_object *stTexObj = NULL;
    unsigned rtt_width = strb->Base.Width;
    unsigned rtt_height = strb->Base.Height;
    unsigned rtt_depth = strb->Base.Depth;
-
    /*
     * For winsys fbo, it is possible that the renderbuffer is sRGB-capable but
     * the format of strb->texture is linear (because we have no control over
     * the format).  Check strb->Base.Format instead of strb->texture->format
     * to determine if the rb is sRGB-capable.
     */
-   boolean enable_srgb = st->ctx->Color.sRGBEnabled &&
-      _mesa_get_format_color_encoding(strb->Base.Format) == GL_SRGB;
+   boolean enable_srgb = (st->ctx->Color.sRGBEnabled &&
+         _mesa_get_format_color_encoding(strb->Base.Format) == GL_SRGB);
    enum pipe_format format = resource->format;
 
    if (strb->is_rtt) {
@@ -401,7 +408,11 @@ st_update_renderbuffer_surface(struct st_context *st,
          format = stTexObj->surface_format;
    }
 
-   format = enable_srgb ? util_format_srgb(format) : util_format_linear(format);
+   format = (enable_srgb) ?
+      util_format_srgb(format) :
+      util_format_linear(format);
+
+   unsigned first_layer, last_layer, level;
 
    if (resource->target == PIPE_TEXTURE_1D_ARRAY) {
       rtt_depth = rtt_height;
@@ -409,7 +420,6 @@ st_update_renderbuffer_surface(struct st_context *st,
    }
 
    /* find matching mipmap level size */
-   unsigned level;
    for (level = 0; level <= resource->last_level; level++) {
       if (u_minify(resource->width0, level) == rtt_width &&
           u_minify(resource->height0, level) == rtt_height &&
@@ -421,7 +431,6 @@ st_update_renderbuffer_surface(struct st_context *st,
    assert(level <= resource->last_level);
 
    /* determine the layer bounds */
-   unsigned first_layer, last_layer;
    if (strb->rtt_layered) {
       first_layer = 0;
       last_layer = util_max_layer(strb->texture, level);
@@ -434,7 +443,7 @@ st_update_renderbuffer_surface(struct st_context *st,
    /* Adjust for texture views */
    if (strb->is_rtt && resource->array_size > 1 &&
        stTexObj->base.Immutable) {
-      const struct gl_texture_object *tex = &stTexObj->base;
+      struct gl_texture_object *tex = &stTexObj->base;
       first_layer += tex->MinLayer;
       if (!strb->rtt_layered)
          last_layer += tex->MinLayer;
@@ -442,19 +451,15 @@ st_update_renderbuffer_surface(struct st_context *st,
          last_layer = MIN2(first_layer + tex->NumLayers - 1, last_layer);
    }
 
-   struct pipe_surface **psurf =
-      enable_srgb ? &strb->surface_srgb : &strb->surface_linear;
-   struct pipe_surface *surf = *psurf;
-
-   if (!surf ||
-       surf->texture->nr_samples != strb->Base.NumSamples ||
-       surf->format != format ||
-       surf->texture != resource ||
-       surf->width != rtt_width ||
-       surf->height != rtt_height ||
-       surf->u.tex.level != level ||
-       surf->u.tex.first_layer != first_layer ||
-       surf->u.tex.last_layer != last_layer) {
+   if (!strb->surface ||
+       strb->surface->texture->nr_samples != strb->Base.NumSamples ||
+       strb->surface->format != format ||
+       strb->surface->texture != resource ||
+       strb->surface->width != rtt_width ||
+       strb->surface->height != rtt_height ||
+       strb->surface->u.tex.level != level ||
+       strb->surface->u.tex.first_layer != first_layer ||
+       strb->surface->u.tex.last_layer != last_layer) {
       /* create a new pipe_surface */
       struct pipe_surface surf_tmpl;
       memset(&surf_tmpl, 0, sizeof(surf_tmpl));
@@ -463,27 +468,11 @@ st_update_renderbuffer_surface(struct st_context *st,
       surf_tmpl.u.tex.first_layer = first_layer;
       surf_tmpl.u.tex.last_layer = last_layer;
 
-      pipe_surface_release(pipe, psurf);
+      pipe_surface_release(pipe, &strb->surface);
 
-      *psurf = pipe->create_surface(pipe, resource, &surf_tmpl);
+      strb->surface = pipe->create_surface(pipe, resource, &surf_tmpl);
    }
-   strb->surface = *psurf;
 }
-
-
-/**
- * Return the pipe_resource which stores a particular texture image.
- */
-static struct pipe_resource *
-get_teximage_resource(struct gl_texture_object *texObj,
-                      unsigned face, unsigned level)
-{
-   struct st_texture_image *stImg =
-      st_texture_image(texObj->Image[face][level]);
-
-   return stImg->pt;
-}
-
 
 /**
  * Called by ctx->Driver.RenderTexture
@@ -499,12 +488,10 @@ st_render_texture(struct gl_context *ctx,
    struct st_renderbuffer *strb = st_renderbuffer(rb);
    struct pipe_resource *pt;
 
-   if (!st_finalize_texture(ctx, pipe, att->Texture, att->CubeMapFace))
+   if (!st_finalize_texture(ctx, pipe, att->Texture))
       return;
 
-   pt = get_teximage_resource(att->Texture,
-                              att->CubeMapFace,
-                              att->TextureLevel);
+   pt = st_get_texobj_resource(att->Texture);
    assert(pt);
 
    /* point renderbuffer at texobject */
@@ -521,7 +508,7 @@ st_render_texture(struct gl_context *ctx,
     * That's where the new renderbuffer (which we just created) gets
     * passed to the pipe as a (color/depth) render target.
     */
-   st_invalidate_buffers(st);
+   st_invalidate_state(ctx, _NEW_BUFFERS);
 
 
    /* Need to trigger a call to update_framebuffer() since we just
@@ -537,7 +524,6 @@ st_render_texture(struct gl_context *ctx,
 static void
 st_finish_render_texture(struct gl_context *ctx, struct gl_renderbuffer *rb)
 {
-   struct st_context *st = st_context(ctx);
    struct st_renderbuffer *strb = st_renderbuffer(rb);
 
    if (!strb)
@@ -546,7 +532,7 @@ st_finish_render_texture(struct gl_context *ctx, struct gl_renderbuffer *rb)
    strb->is_rtt = FALSE;
 
    /* restore previous framebuffer state */
-   st_invalidate_buffers(st);
+   st_invalidate_state(ctx, _NEW_BUFFERS);
 }
 
 
@@ -565,9 +551,9 @@ st_fbo_invalid(const char *reason)
  */
 static GLboolean
 st_validate_attachment(struct gl_context *ctx,
-                       struct pipe_screen *screen,
-                       const struct gl_renderbuffer_attachment *att,
-                       unsigned bindings)
+		       struct pipe_screen *screen,
+		       const struct gl_renderbuffer_attachment *att,
+		       unsigned bindings)
 {
    const struct st_texture_object *stObj = st_texture_object(att->Texture);
    enum pipe_format format;
@@ -611,7 +597,7 @@ st_validate_attachment(struct gl_context *ctx,
 
    return valid;
 }
-
+ 
 
 /**
  * Check that the framebuffer configuration is valid in terms of what
@@ -653,12 +639,18 @@ st_validate_framebuffer(struct gl_context *ctx, struct gl_framebuffer *fb)
       return;
    }
 
-   if (!st_validate_attachment(ctx, screen, depth, PIPE_BIND_DEPTH_STENCIL)) {
+   if (!st_validate_attachment(ctx,
+                               screen,
+                               depth,
+			       PIPE_BIND_DEPTH_STENCIL)) {
       fb->_Status = GL_FRAMEBUFFER_UNSUPPORTED_EXT;
       st_fbo_invalid("Invalid depth attachment");
       return;
    }
-   if (!st_validate_attachment(ctx, screen, stencil, PIPE_BIND_DEPTH_STENCIL)) {
+   if (!st_validate_attachment(ctx,
+                               screen,
+                               stencil,
+			       PIPE_BIND_DEPTH_STENCIL)) {
       fb->_Status = GL_FRAMEBUFFER_UNSUPPORTED_EXT;
       st_fbo_invalid("Invalid stencil attachment");
       return;
@@ -668,10 +660,13 @@ st_validate_framebuffer(struct gl_context *ctx, struct gl_framebuffer *fb)
             &fb->Attachment[BUFFER_COLOR0 + i];
       enum pipe_format format;
 
-      if (!st_validate_attachment(ctx, screen, att, PIPE_BIND_RENDER_TARGET)) {
-         fb->_Status = GL_FRAMEBUFFER_UNSUPPORTED_EXT;
-         st_fbo_invalid("Invalid color attachment");
-         return;
+      if (!st_validate_attachment(ctx,
+                                  screen,
+				  att,
+				  PIPE_BIND_RENDER_TARGET)) {
+	 fb->_Status = GL_FRAMEBUFFER_UNSUPPORTED_EXT;
+	 st_fbo_invalid("Invalid color attachment");
+	 return;
       }
 
       if (!mixed_formats) {
@@ -695,39 +690,31 @@ st_validate_framebuffer(struct gl_context *ctx, struct gl_framebuffer *fb)
 
 
 /**
- * Called via glDrawBuffer.  We only provide this driver function so that we
- * can check if we need to allocate a new renderbuffer.  Specifically, we
- * don't usually allocate a front color buffer when using a double-buffered
- * visual.  But if the app calls glDrawBuffer(GL_FRONT) we need to allocate
- * that buffer.  Note, this is only for window system buffers, not user-
- * created FBOs.
+ * Called via glDrawBuffer.
  */
 static void
 st_DrawBuffers(struct gl_context *ctx, GLsizei count, const GLenum *buffers)
 {
    struct st_context *st = st_context(ctx);
    struct gl_framebuffer *fb = ctx->DrawBuffer;
+   GLuint i;
 
    (void) count;
    (void) buffers;
 
-   if (_mesa_is_winsys_fbo(fb)) {
-      GLuint i;
-      /* add the renderbuffers on demand */
-      for (i = 0; i < fb->_NumColorDrawBuffers; i++) {
-         GLint idx = fb->_ColorDrawBufferIndexes[i];
+   /* add the renderbuffers on demand */
+   for (i = 0; i < fb->_NumColorDrawBuffers; i++) {
+      GLint idx = fb->_ColorDrawBufferIndexes[i];
 
-         if (idx >= 0) {
-            st_manager_add_color_renderbuffer(st, fb, idx);
-         }
+      if (idx >= 0) {
+         st_manager_add_color_renderbuffer(st, fb, idx);
       }
    }
 }
 
 
 /**
- * Called via glReadBuffer.  As with st_DrawBuffers, we use this function
- * to check if we need to allocate a renderbuffer on demand.
+ * Called via glReadBuffer.
  */
 static void
 st_ReadBuffer(struct gl_context *ctx, GLenum buffer)
@@ -744,11 +731,10 @@ st_ReadBuffer(struct gl_context *ctx, GLenum buffer)
    if ((fb->_ColorReadBufferIndex == BUFFER_FRONT_LEFT ||
         fb->_ColorReadBufferIndex == BUFFER_FRONT_RIGHT) &&
        fb->Attachment[fb->_ColorReadBufferIndex].Type == GL_NONE) {
-      assert(_mesa_is_winsys_fbo(fb));
       /* add the buffer */
       st_manager_add_color_renderbuffer(st, fb, fb->_ColorReadBufferIndex);
       _mesa_update_state(ctx);
-      st_validate_state(st, ST_PIPELINE_UPDATE_FRAMEBUFFER);
+      st_validate_state(st, ST_PIPELINE_RENDER);
    }
 }
 
@@ -849,8 +835,7 @@ st_UnmapRenderbuffer(struct gl_context *ctx,
 
 
 
-void
-st_init_fbo_functions(struct dd_function_table *functions)
+void st_init_fbo_functions(struct dd_function_table *functions)
 {
    functions->NewFramebuffer = _mesa_new_framebuffer;
    functions->NewRenderbuffer = st_new_renderbuffer;
@@ -865,3 +850,5 @@ st_init_fbo_functions(struct dd_function_table *functions)
    functions->MapRenderbuffer = st_MapRenderbuffer;
    functions->UnmapRenderbuffer = st_UnmapRenderbuffer;
 }
+
+

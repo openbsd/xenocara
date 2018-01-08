@@ -23,12 +23,9 @@
 
 #include "util/u_memory.h"
 #include "swr_context.h"
-#include "swr_screen.h"
 #include "swr_scratch.h"
-#include "swr_fence_work.h"
 #include "api.h"
 
-#define SCRATCH_SINGLE_ALLOCATION_LIMIT 2048
 
 void *
 swr_copy_to_scratch_space(struct swr_context *ctx,
@@ -38,29 +35,30 @@ swr_copy_to_scratch_space(struct swr_context *ctx,
 {
    void *ptr;
    assert(space);
+   assert(user_buffer);
    assert(size);
 
-   if (size >= SCRATCH_SINGLE_ALLOCATION_LIMIT) {
+   if (size >= 2048) { /* XXX TODO create KNOB_ for this */
       /* Use per draw SwrAllocDrawContextMemory for larger copies */
-      ptr = ctx->api.pfnSwrAllocDrawContextMemory(ctx->swrContext, size, 4);
+      ptr = SwrAllocDrawContextMemory(ctx->swrContext, size, 4);
    } else {
       /* Allocate enough so that MAX_DRAWS_IN_FLIGHT sets fit. */
       unsigned int max_size_in_flight = size * KNOB_MAX_DRAWS_IN_FLIGHT;
 
       /* Need to grow space */
       if (max_size_in_flight > space->current_size) {
+         /* Must idle the pipeline, this is infrequent */
+         SwrWaitForIdle(ctx->swrContext);
+
          space->current_size = max_size_in_flight;
 
          if (space->base) {
-            /* defer delete, use aligned-free */
-            struct swr_screen *screen = swr_screen(ctx->pipe.screen);
-            swr_fence_work_free(screen->flush_fence, space->base, true);
+            align_free(space->base);
             space->base = NULL;
          }
 
          if (!space->base) {
-            space->base = (uint8_t *)AlignedMalloc(space->current_size, 
-                                                   sizeof(void *));
+            space->base = (uint8_t *)align_malloc(space->current_size, 4);
             space->head = (void *)space->base;
          }
       }
@@ -68,6 +66,14 @@ swr_copy_to_scratch_space(struct swr_context *ctx,
       /* Wrap */
       if (((uint8_t *)space->head + size)
           >= ((uint8_t *)space->base + space->current_size)) {
+         /*
+          * TODO XXX: Should add a fence on wrap.  Assumption is that
+          * current_space >> size, and there are at least MAX_DRAWS_IN_FLIGHT
+          * draws in scratch.  So fence would always be met on wrap.  A fence
+          * would ensure that first frame in buffer is done before wrapping.
+          * If fence ever needs to be waited on, can increase buffer size.
+          * So far in testing, this hasn't been necessary.
+          */
          space->head = space->base;
       }
 
@@ -76,8 +82,7 @@ swr_copy_to_scratch_space(struct swr_context *ctx,
    }
 
    /* Copy user_buffer to scratch */
-   if (user_buffer)
-      memcpy(ptr, user_buffer, size);
+   memcpy(ptr, user_buffer, size);
 
    return ptr;
 }
@@ -98,11 +103,14 @@ swr_destroy_scratch_buffers(struct swr_context *ctx)
    struct swr_scratch_buffers *scratch = ctx->scratch;
 
    if (scratch) {
-      AlignedFree(scratch->vs_constants.base);
-      AlignedFree(scratch->fs_constants.base);
-      AlignedFree(scratch->gs_constants.base);
-      AlignedFree(scratch->vertex_buffer.base);
-      AlignedFree(scratch->index_buffer.base);
+      if (scratch->vs_constants.base)
+         align_free(scratch->vs_constants.base);
+      if (scratch->fs_constants.base)
+         align_free(scratch->fs_constants.base);
+      if (scratch->vertex_buffer.base)
+         align_free(scratch->vertex_buffer.base);
+      if (scratch->index_buffer.base)
+         align_free(scratch->index_buffer.base);
       FREE(scratch);
    }
 }

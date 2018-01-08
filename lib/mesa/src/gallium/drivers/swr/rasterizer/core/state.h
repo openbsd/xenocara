@@ -28,9 +28,19 @@
 #pragma once
 
 #include "common/formats.h"
-#include "common/intrin.h"
-#include <functional>
-#include <algorithm>
+#include "common/simdintrin.h"
+
+// clear flags
+#define SWR_CLEAR_NONE        0
+#define SWR_CLEAR_COLOR      (1 << 0)
+#define SWR_CLEAR_DEPTH      (1 << 1)
+#define SWR_CLEAR_STENCIL    (1 << 2)
+
+enum DRIVER_TYPE
+{
+    DX,
+    GL
+};
 
 //////////////////////////////////////////////////////////////////////////
 /// PRIMITIVE_TOPOLOGY.
@@ -175,36 +185,25 @@ enum SWR_OUTER_TESSFACTOR_ID
 /////////////////////////////////////////////////////////////////////////
 /// simdvertex
 /// @brief Defines a vertex element that holds all the data for SIMD vertices.
-///        Contains space for position, SGV, and 32 generic attributes
+///        Contains position in clip space, hardcoded to attribute 0,
+///        space for up to 32 attributes, as well as any SGV values generated
+///        by the pipeline
 /////////////////////////////////////////////////////////////////////////
-enum SWR_VTX_SLOTS
-{
-    VERTEX_SGV_SLOT                 = 0,
-        VERTEX_SGV_RTAI_COMP        = 0,
-        VERTEX_SGV_VAI_COMP         = 1,
-        VERTEX_SGV_POINT_SIZE_COMP  = 2,
-    VERTEX_POSITION_SLOT            = 1,
-    VERTEX_POSITION_END_SLOT        = 1,
-    VERTEX_CLIPCULL_DIST_LO_SLOT    = (1 + VERTEX_POSITION_END_SLOT), // VS writes lower 4 clip/cull dist
-    VERTEX_CLIPCULL_DIST_HI_SLOT    = (2 + VERTEX_POSITION_END_SLOT), // VS writes upper 4 clip/cull dist
-    VERTEX_ATTRIB_START_SLOT        = (3 + VERTEX_POSITION_END_SLOT),
-    VERTEX_ATTRIB_END_SLOT          = (34 + VERTEX_POSITION_END_SLOT),
-    SWR_VTX_NUM_SLOTS               = (1 + VERTEX_ATTRIB_END_SLOT)
-};
-
+#define VERTEX_POSITION_SLOT 0
+#define VERTEX_ATTRIB_START_SLOT 1
+#define VERTEX_ATTRIB_END_SLOT 32
+#define VERTEX_RTAI_SLOT 33         // GS writes RenderTargetArrayIndex here
+#define VERTEX_PRIMID_SLOT 34       // GS writes PrimId here
+#define VERTEX_CLIPCULL_DIST_LO_SLOT 35 // VS writes lower 4 clip/cull dist
+#define VERTEX_CLIPCULL_DIST_HI_SLOT 36 // VS writes upper 4 clip/cull dist
+#define VERTEX_POINT_SIZE_SLOT 37       // VS writes point size here
+#define VERTEX_VIEWPORT_ARRAY_INDEX_SLOT 38
 // SoAoSoA
 struct simdvertex
 {
-    simdvector      attrib[SWR_VTX_NUM_SLOTS];
+    simdvector    attrib[KNOB_NUM_ATTRIBUTES];
 };
 
-#if ENABLE_AVX512_SIMD16
-struct simd16vertex
-{
-    simd16vector    attrib[SWR_VTX_NUM_SLOTS];
-};
-
-#endif
 //////////////////////////////////////////////////////////////////////////
 /// SWR_VS_CONTEXT
 /// @brief Input to vertex shader
@@ -214,12 +213,9 @@ struct SWR_VS_CONTEXT
     simdvertex* pVin;           // IN: SIMD input vertex data store
     simdvertex* pVout;          // OUT: SIMD output vertex data store
 
-    uint32_t InstanceID;        // IN: Instance ID, constant across all verts of the SIMD
-    simdscalari VertexID;       // IN: Vertex ID
-    simdscalari mask;           // IN: Active mask for shader
-#if USE_SIMD16_FRONTEND
-    uint32_t AlternateOffset;   // IN: amount to offset for interleaving even/odd simd8 in simd16vertex output
-#endif
+    uint32_t InstanceID;    // IN: Instance ID, constant across all verts of the SIMD
+    simdscalari VertexID;   // IN: Vertex ID
+    simdscalari mask;       // IN: Active mask for shader
 };
 
 /////////////////////////////////////////////////////////////////////////
@@ -237,7 +233,7 @@ struct ScalarAttrib
 
 struct ScalarCPoint
 {
-    ScalarAttrib attrib[SWR_VTX_NUM_SLOTS];
+    ScalarAttrib attrib[KNOB_NUM_ATTRIBUTES];
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -340,12 +336,12 @@ struct SWR_PS_CONTEXT
     simdvector shaded[SWR_NUM_RENDERTARGETS];
                                 // OUT: result color per rendertarget
 
-    uint32_t frontFace;                 // IN: front- 1, back- 0
-    uint32_t sampleIndex;               // IN: sampleIndex
-    uint32_t renderTargetArrayIndex;    // IN: render target array index from GS
-    uint32_t rasterizerSampleCount;     // IN: sample count used by the rasterizer
+    uint32_t frontFace;         // IN: front- 1, back- 0
+    uint32_t primID;            // IN: primitive ID
+    uint32_t sampleIndex;       // IN: sampleIndex
 
-    uint8_t* pColorBuffer[SWR_NUM_RENDERTARGETS]; // IN: Pointers to render target hottiles
+    uint32_t rasterizerSampleCount; // IN: sample count used by the rasterizer
+
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -382,11 +378,6 @@ struct SWR_CS_CONTEXT
     uint8_t* pTGSM;  // Thread Group Shared Memory pointer.
 
     uint8_t* pSpillFillBuffer;  // Spill/fill buffer for barrier support
-
-    uint8_t* pScratchSpace;     // Pointer to scratch space buffer used by the shader, shader is responsible
-                                // for subdividing scratch space per instance/simd
-
-    uint32_t scratchSpacePerSimd; // Scratch space per work item x SIMD_WIDTH
 };
 
 // enums
@@ -489,21 +480,6 @@ enum SWR_LOGIC_OP
     LOGICOP_SET,
 };
 
-//////////////////////////////////////////////////////////////////////////
-/// SWR_AUX_MODE
-/// @brief Specifies how the auxiliary buffer is used by the driver.
-//////////////////////////////////////////////////////////////////////////
-enum SWR_AUX_MODE
-{
-    AUX_MODE_NONE,
-    AUX_MODE_COLOR,
-    AUX_MODE_UAV,
-    AUX_MODE_DEPTH,
-};
-
-//////////////////////////////////////////////////////////////////////////
-/// SWR_SURFACE_STATE
-//////////////////////////////////////////////////////////////////////////
 struct SWR_SURFACE_STATE
 {
     uint8_t *pBaseAddress;
@@ -530,8 +506,6 @@ struct SWR_SURFACE_STATE
     uint32_t lodOffsets[2][15]; // lod offsets for sampled surfaces
 
     uint8_t *pAuxBaseAddress;   // Used for compression, append/consume counter, etc.
-    SWR_AUX_MODE auxMode;      // @llvm_enum
-
 
     bool bInterleavedSamples;   // are MSAA samples stored interleaved or planar
 };
@@ -546,7 +520,6 @@ struct SWR_VERTEX_BUFFER_STATE
     const uint8_t *pData;
     uint32_t size;
     uint32_t numaNode;
-    uint32_t minVertex;             // min vertex (for bounds checking)
     uint32_t maxVertex;             // size / pitch.  precalculated value used by fetch shader for OOB checks
     uint32_t partialInboundsSize;   // size % pitch.  precalculated value used by fetch shader for partially OOB vertices
 };
@@ -673,9 +646,6 @@ struct SWR_STREAMOUT_STATE
     // Number of attributes, including position, per vertex that are streamed out.
     // This should match number of bits in stream mask.
     uint32_t streamNumEntries[MAX_SO_STREAMS];
-
-    // Offset to the start of the attributes of the input vertices, in simdvector units
-    uint32_t vertexAttribOffset[MAX_SO_STREAMS];
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -713,6 +683,15 @@ struct SWR_GS_STATE
     // instance count
     uint32_t instanceCount;
 
+    // geometry shader emits renderTargetArrayIndex
+    bool emitsRenderTargetArrayIndex;
+
+    // geometry shader emits PrimitiveID
+    bool emitsPrimitiveID;
+
+    // geometry shader emits ViewportArrayIndex
+    bool emitsViewportArrayIndex;
+
     // if true, geometry shader emits a single stream, with separate cut buffer.
     // if false, geometry shader emits vertices for multiple streams to the stream buffer, with a separate StreamID buffer
     // to map vertices to streams
@@ -721,9 +700,6 @@ struct SWR_GS_STATE
     // when single stream is enabled, singleStreamID dictates which stream is being output.
     // field ignored if isSingleStream is false
     uint32_t singleStreamID;
-
-    // Offset to the start of the attributes of the input vertices, in simdvector units
-    uint32_t vertexAttribOffset;
 };
 
 
@@ -779,9 +755,6 @@ struct SWR_TS_STATE
     uint32_t                numHsInputAttribs;
     uint32_t                numHsOutputAttribs;
     uint32_t                numDsOutputAttribs;
-
-    // Offset to the start of the attributes of the input vertices, in simdvector units
-    uint32_t vertexAttribOffset;
 };
 
 // output merger state
@@ -803,13 +776,6 @@ enum SWR_MULTISAMPLE_COUNT
     SWR_MULTISAMPLE_16X,
     SWR_MULTISAMPLE_TYPE_COUNT
 };
-
-INLINE uint32_t GetNumSamples(SWR_MULTISAMPLE_COUNT sampleCount) // @llvm_func_start
-{
-    static const uint32_t sampleCountLUT[SWR_MULTISAMPLE_TYPE_COUNT] {1, 2, 4, 8, 16};
-    assert(sampleCount < SWR_MULTISAMPLE_TYPE_COUNT);
-    return sampleCountLUT[sampleCount];
-} // @llvm_func_end
 
 struct SWR_BLEND_STATE
 {
@@ -839,12 +805,8 @@ typedef void(__cdecl *PFN_CS_FUNC)(HANDLE hPrivateData, SWR_CS_CONTEXT* pCsConte
 typedef void(__cdecl *PFN_SO_FUNC)(SWR_STREAMOUT_CONTEXT& soContext);
 typedef void(__cdecl *PFN_PIXEL_KERNEL)(HANDLE hPrivateData, SWR_PS_CONTEXT *pContext);
 typedef void(__cdecl *PFN_CPIXEL_KERNEL)(HANDLE hPrivateData, SWR_PS_CONTEXT *pContext);
-typedef void(__cdecl *PFN_BLEND_JIT_FUNC)(const SWR_BLEND_STATE*, 
-    simdvector& vSrc, simdvector& vSrc1, simdscalar& vSrc0Alpha, uint32_t sample, 
-    uint8_t* pDst, simdvector& vResult, simdscalari* vOMask, simdscalari* vCoverageMask);
+typedef void(__cdecl *PFN_BLEND_JIT_FUNC)(const SWR_BLEND_STATE*, simdvector&, simdvector&, uint32_t, uint8_t*, simdvector&, simdscalari*, simdscalari*);
 typedef simdscalar(*PFN_QUANTIZE_DEPTH)(simdscalar);
-
-
 
 //////////////////////////////////////////////////////////////////////////
 /// FRONTEND_STATE
@@ -866,10 +828,6 @@ struct SWR_FRONTEND_STATE
         uint32_t bits;
     } provokingVertex;
     uint32_t topologyProvokingVertex; // provoking vertex for the draw topology
-
-    // Size of a vertex in simdvector units. Should be sized to the 
-    // maximum of the input/output of the vertex shader.
-    uint32_t vsVertexSize;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -936,6 +894,13 @@ enum SWR_FRONTWINDING
 };
 
 
+enum SWR_MSAA_SAMPLE_PATTERN
+{
+    SWR_MSAA_CENTER_PATTERN,
+    SWR_MSAA_STANDARD_PATTERN,
+    SWR_MSAA_SAMPLE_PATTERN_COUNT
+};
+
 enum SWR_PIXEL_LOCATION
 {
     SWR_PIXEL_LOCATION_CENTER,
@@ -945,45 +910,16 @@ enum SWR_PIXEL_LOCATION
 // fixed point screen space sample locations within a pixel
 struct SWR_MULTISAMPLE_POS
 {
-public:
-    INLINE void SetXi(uint32_t sampleNum, uint32_t val) { _xi[sampleNum] = val; }; // @llvm_func
-    INLINE void SetYi(uint32_t sampleNum, uint32_t val) { _yi[sampleNum] = val; }; // @llvm_func
-    INLINE uint32_t Xi(uint32_t sampleNum) const { return _xi[sampleNum]; }; // @llvm_func
-    INLINE uint32_t Yi(uint32_t sampleNum) const { return _yi[sampleNum]; }; // @llvm_func
-    INLINE void SetX(uint32_t sampleNum, float val) { _x[sampleNum] = val; }; // @llvm_func
-    INLINE void SetY(uint32_t sampleNum, float val) { _y[sampleNum] = val; }; // @llvm_func
-    INLINE float X(uint32_t sampleNum) const { return _x[sampleNum]; }; // @llvm_func
-    INLINE float Y(uint32_t sampleNum) const { return _y[sampleNum]; }; // @llvm_func
-    typedef const float(&sampleArrayT)[SWR_MAX_NUM_MULTISAMPLES]; //@llvm_typedef
-    INLINE sampleArrayT X() const { return _x; }; // @llvm_func
-    INLINE sampleArrayT Y() const { return _y; }; // @llvm_func
-    INLINE const __m128i& vXi(uint32_t sampleNum) const { return _vXi[sampleNum]; }; // @llvm_func
-    INLINE const __m128i& vYi(uint32_t sampleNum) const { return _vYi[sampleNum]; }; // @llvm_func
-    INLINE const simdscalar& vX(uint32_t sampleNum) const { return _vX[sampleNum]; }; // @llvm_func
-    INLINE const simdscalar& vY(uint32_t sampleNum) const { return _vY[sampleNum]; }; // @llvm_func
-    INLINE const __m128i& TileSampleOffsetsX() const { return tileSampleOffsetsX; }; // @llvm_func
-    INLINE const __m128i& TileSampleOffsetsY() const { return tileSampleOffsetsY; }; // @llvm_func
-    
-    INLINE void PrecalcSampleData(int numSamples); //@llvm_func
+    uint32_t x;
+    uint32_t y;
+};
 
-private:
-    template <typename MaskT>
-    INLINE __m128i expandThenBlend4(uint32_t* min, uint32_t* max); // @llvm_func
-    INLINE void CalcTileSampleOffsets(int numSamples);   // @llvm_func
-
-    // scalar sample values
-    uint32_t _xi[SWR_MAX_NUM_MULTISAMPLES];
-    uint32_t _yi[SWR_MAX_NUM_MULTISAMPLES];
-    float _x[SWR_MAX_NUM_MULTISAMPLES];
-    float _y[SWR_MAX_NUM_MULTISAMPLES];
-
-    // precalc'd / vectorized samples
-    __m128i _vXi[SWR_MAX_NUM_MULTISAMPLES];
-    __m128i _vYi[SWR_MAX_NUM_MULTISAMPLES];
-    simdscalar _vX[SWR_MAX_NUM_MULTISAMPLES];
-    simdscalar _vY[SWR_MAX_NUM_MULTISAMPLES];
-    __m128i tileSampleOffsetsX;
-    __m128i tileSampleOffsetsY;
+enum SWR_MSAA_RASTMODE
+{
+    SWR_MSAA_RASTMODE_OFF_PIXEL,
+    SWR_MSAA_RASTMODE_OFF_PATTERN,
+    SWR_MSAA_RASTMODE_ON_PIXEL,
+    SWR_MSAA_RASTMODE_ON_PATTERN
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -996,10 +932,10 @@ struct SWR_RASTSTATE
     uint32_t frontWinding           : 1;
     uint32_t scissorEnable          : 1;
     uint32_t depthClipEnable        : 1;
-    uint32_t clipHalfZ              : 1;
     uint32_t pointParam             : 1;
     uint32_t pointSpriteEnable      : 1;
     uint32_t pointSpriteTopOrigin   : 1;
+    uint32_t msaaRastEnable         : 1;
     uint32_t forcedSampleCount      : 1;
     uint32_t pixelOffset            : 1;
     uint32_t depthBiasPreAdjusted   : 1;    ///< depth bias constant is in float units, not per-format Z units
@@ -1013,17 +949,20 @@ struct SWR_RASTSTATE
     float depthBiasClamp;
     SWR_FORMAT depthFormat;     // @llvm_enum
 
+    ///@todo: MSAA lines
+    // multisample state for MSAA lines
+    SWR_MSAA_RASTMODE rastMode;    // @llvm_enum
+
     // sample count the rasterizer is running at
     SWR_MULTISAMPLE_COUNT sampleCount;  // @llvm_enum
     uint32_t pixelLocation;     // UL or Center
-    SWR_MULTISAMPLE_POS samplePositions;    // @llvm_struct
-    bool bIsCenterPattern;   // @llvm_enum
+    SWR_MULTISAMPLE_POS iSamplePos[SWR_MAX_NUM_MULTISAMPLES];   
+    SWR_MSAA_SAMPLE_PATTERN samplePattern;   // @llvm_enum
 
     // user clip/cull distance enables
     uint8_t cullDistanceMask;
     uint8_t clipDistanceMask;
 };
-
 
 enum SWR_CONSTANT_SOURCE
 {
@@ -1053,12 +992,6 @@ struct SWR_BACKEND_STATE
                                         // setting up attributes for the backend, otherwise
                                         // all attributes up to numAttributes will be sent
     SWR_ATTRIB_SWIZZLE swizzleMap[32];
-
-    bool readRenderTargetArrayIndex;    // Forward render target array index from last FE stage to the backend
-    bool readViewportArrayIndex;        // Read viewport array index from last FE stage during binning
-    
-	// Offset to the start of the attributes of the input vertices, in simdvector units
-    uint32_t vertexAttribOffset;
 };
 
 
@@ -1134,17 +1067,17 @@ struct SWR_PS_STATE
     PFN_PIXEL_KERNEL pfnPixelShader;  // @llvm_pfn
 
     // dword 2
-    uint32_t killsPixel             : 1;    // pixel shader can kill pixels
-    uint32_t inputCoverage          : 2;    // ps uses input coverage
-    uint32_t writesODepth           : 1;    // pixel shader writes to depth
-    uint32_t usesSourceDepth        : 1;    // pixel shader reads depth
-    uint32_t shadingRate            : 2;    // shading per pixel / sample / coarse pixel
-    uint32_t posOffset              : 2;    // type of offset (none, sample, centroid) to add to pixel position
-    uint32_t barycentricsMask       : 3;    // which type(s) of barycentric coords does the PS interpolate attributes with
-    uint32_t usesUAV                : 1;    // pixel shader accesses UAV 
-    uint32_t forceEarlyZ            : 1;    // force execution of early depth/stencil test
+    uint32_t killsPixel         : 1;    // pixel shader can kill pixels
+    uint32_t inputCoverage      : 2;    // ps uses input coverage
+    uint32_t writesODepth       : 1;    // pixel shader writes to depth
+    uint32_t usesSourceDepth    : 1;    // pixel shader reads depth
+    uint32_t shadingRate        : 2;    // shading per pixel / sample / coarse pixel
+    uint32_t numRenderTargets   : 4;    // number of render target outputs in use (0-8)
+    uint32_t posOffset          : 2;    // type of offset (none, sample, centroid) to add to pixel position
+    uint32_t barycentricsMask   : 3;    // which type(s) of barycentric coords does the PS interpolate attributes with
+    uint32_t usesUAV            : 1;    // pixel shader accesses UAV 
+    uint32_t forceEarlyZ        : 1;    // force execution of early depth/stencil test
 
-    uint8_t renderTargetMask;               // Mask of render targets written
 };
 
 // depth bounds state

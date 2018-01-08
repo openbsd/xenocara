@@ -781,8 +781,7 @@ lp_rast_finish( struct lp_rasterizer *rast )
  *   2. do work
  *   3. signal that we're done
  */
-static int
-thread_function(void *init_data)
+static PIPE_THREAD_ROUTINE( thread_function, init_data )
 {
    struct lp_rasterizer_task *task = (struct lp_rasterizer_task *) init_data;
    struct lp_rasterizer *rast = task->rast;
@@ -791,7 +790,7 @@ thread_function(void *init_data)
    unsigned fpstate;
 
    util_snprintf(thread_name, sizeof thread_name, "llvmpipe-%u", task->thread_index);
-   u_thread_setname(thread_name);
+   pipe_thread_setname(thread_name);
 
    /* Make sure that denorms are treated like zeros. This is 
     * the behavior required by D3D10. OpenGL doesn't care.
@@ -865,7 +864,7 @@ create_rast_threads(struct lp_rasterizer *rast)
    for (i = 0; i < rast->num_threads; i++) {
       pipe_semaphore_init(&rast->tasks[i].work_ready, 0);
       pipe_semaphore_init(&rast->tasks[i].work_done, 0);
-      rast->threads[i] = u_thread_create(thread_function,
+      rast->threads[i] = pipe_thread_create(thread_function,
                                             (void *) &rast->tasks[i]);
    }
 }
@@ -956,7 +955,7 @@ void lp_rast_destroy( struct lp_rasterizer *rast )
 #ifdef _WIN32
       pipe_semaphore_wait(&rast->tasks[i].work_done);
 #else
-      thrd_join(rast->threads[i], NULL);
+      pipe_thread_wait(rast->threads[i]);
 #endif
    }
 

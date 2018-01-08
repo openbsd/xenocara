@@ -35,13 +35,13 @@
         <param name="samplers" type="const GLuint *"/>
     </function>
 
-    <function name="BindImageTextures" no_error="true">
+    <function name="BindImageTextures">
         <param name="first" type="GLuint"/>
         <param name="count" type="GLsizei"/>
         <param name="textures" type="const GLuint *"/>
     </function>
 
-    <function name="BindVertexBuffers" no_error="true">
+    <function name="BindVertexBuffers">
         <param name="first" type="GLuint"/>
         <param name="count" type="GLsizei"/>
         <param name="buffers" type="const GLuint *"/>

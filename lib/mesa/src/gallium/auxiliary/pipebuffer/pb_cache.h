@@ -52,7 +52,7 @@ struct pb_cache
     */
    struct list_head buckets[4];
 
-   mtx_t mutex;
+   pipe_mutex mutex;
    uint64_t cache_size;
    uint64_t max_cache_size;
    unsigned usecs;

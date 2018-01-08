@@ -182,6 +182,10 @@ tgsi_parse_token(
       memset(inst, 0, sizeof *inst);
       copy_token(&inst->Instruction, &token);
 
+      if (inst->Instruction.Predicate) {
+         next_token(ctx, &inst->Predicate);
+      }
+
       if (inst->Instruction.Label) {
          next_token( ctx, &inst->Label);
       }

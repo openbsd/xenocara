@@ -54,6 +54,11 @@ struct nv50_ir_varying
    ubyte si; /* TGSI semantic index */
 };
 
+#define NV50_PROGRAM_IR_TGSI 0
+#define NV50_PROGRAM_IR_SM4  1
+#define NV50_PROGRAM_IR_GLSL 2
+#define NV50_PROGRAM_IR_LLVM 3
+
 #ifdef DEBUG
 # define NV50_IR_DEBUG_BASIC     (1 << 0)
 # define NV50_IR_DEBUG_VERBOSE   (2 << 0)
@@ -90,7 +95,7 @@ struct nv50_ir_prog_info
       uint32_t *code;
       uint32_t codeSize;
       uint32_t instructions;
-      uint8_t sourceRep;  /* PIPE_SHADER_IR_* */
+      uint8_t sourceRep;  /* NV50_PROGRAM_IR */
       const void *source;
       void *relocData;
       void *fixupData;
@@ -137,18 +142,16 @@ struct nv50_ir_prog_info
          unsigned numColourResults;
          bool writesDepth;
          bool earlyFragTests;
-         bool postDepthCoverage;
          bool separateFragData;
          bool usesDiscard;
          bool persampleInvocation;
          bool usesSampleMaskIn;
-         bool readsFramebuffer;
       } fp;
       struct {
          uint32_t inputOffset; /* base address for user args */
          uint32_t sharedOffset; /* reserved space in s[] */
          uint32_t gridInfoBase;  /* base address for NTID,NCTAID */
-         uint16_t numThreads[3]; /* max number of threads */
+         uint32_t numThreads; /* max number of threads */
       } cp;
    } prop;
 
@@ -173,10 +176,8 @@ struct nv50_ir_prog_info
       uint8_t backFaceColor[2];  /* input/output indices of back face colour */
       uint8_t globalAccess;      /* 1 for read, 2 for wr, 3 for rw */
       bool fp64;                 /* program uses fp64 math */
-      bool mul_zero_wins;        /* program wants for x*0 = 0 */
       bool nv50styleSurfaces;    /* generate gX[] access for raw buffers */
       uint16_t texBindBase;      /* base address for tex handles (nve4) */
-      uint16_t fbtexBindBase;    /* base address for fbtex handle (nve4) */
       uint16_t suInfoBase;       /* base address for surface info (nve4) */
       uint16_t bufInfoBase;      /* base address for buffer info */
       uint16_t sampleInfoBase;   /* base address for sample positions */

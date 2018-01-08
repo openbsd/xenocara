@@ -21,7 +21,18 @@
 
 .PHONY: git_sha1.h.tmp
 git_sha1.h.tmp:
-	@sh $(top_srcdir)/bin/git_sha1_gen.sh > $@
+	@# Don't assume that $(top_srcdir)/.git is a directory. It may be
+	@# a gitlink file if $(top_srcdir) is a submodule checkout or a linked
+	@# worktree.
+	@# If we are building from a release tarball copy the bundled header.
+	@touch git_sha1.h.tmp
+	@if test -e $(top_srcdir)/.git; then \
+		if which git > /dev/null; then \
+		    git --git-dir=$(top_srcdir)/.git log -n 1 --oneline | \
+			sed 's/^\([^ ]*\) .*/#define MESA_GIT_SHA1 "git-\1"/' \
+			> git_sha1.h.tmp ; \
+		fi \
+	fi
 
 git_sha1.h: git_sha1.h.tmp
 	@echo "updating git_sha1.h"
@@ -33,7 +44,6 @@ git_sha1.h: git_sha1.h.tmp
 
 BUILT_SOURCES = git_sha1.h
 CLEANFILES = $(BUILT_SOURCES)
-EXTRA_DIST =
 
 SUBDIRS = . gtest util mapi/glapi/gen mapi
 
@@ -64,26 +74,12 @@ endif
 # include only conditionally ?
 SUBDIRS += compiler
 
-## Optionally required by GBM, EGL and Vulkan
-if HAVE_PLATFORM_WAYLAND
-SUBDIRS += egl/wayland/wayland-drm
-endif
-
-if HAVE_VULKAN_COMMON
-SUBDIRS += vulkan
-endif
-EXTRA_DIST += vulkan/registry/vk.xml
-
 if HAVE_AMD_DRIVERS
 SUBDIRS += amd
 endif
 
 if HAVE_INTEL_DRIVERS
 SUBDIRS += intel
-endif
-
-if HAVE_GALLIUM_VC4
-SUBDIRS += broadcom
 endif
 
 if NEED_OPENGL_COMMON
@@ -94,6 +90,11 @@ SUBDIRS += loader
 
 if HAVE_DRI_GLX
 SUBDIRS += glx
+endif
+
+## Optionally required by GBM and EGL
+if HAVE_PLATFORM_WAYLAND
+SUBDIRS += egl/wayland/wayland-drm
 endif
 
 ## Optionally required by EGL (aka PLATFORM_GBM)
@@ -110,8 +111,22 @@ if HAVE_EGL
 SUBDIRS += egl
 endif
 
+if HAVE_INTEL_DRIVERS
+SUBDIRS += intel/tools
+endif
+
+if HAVE_VULKAN_COMMON
+SUBDIRS += vulkan/wsi
+endif
+
+## Requires the i965 compiler (part of mesa) and wayland-drm
+if HAVE_INTEL_VULKAN
+SUBDIRS += intel/vulkan
+endif
+
 # Requires wayland-drm
 if HAVE_RADEON_VULKAN
+SUBDIRS += amd/common
 SUBDIRS += amd/vulkan
 endif
 
@@ -119,7 +134,7 @@ if HAVE_GALLIUM
 SUBDIRS += gallium
 endif
 
-EXTRA_DIST += \
+EXTRA_DIST = \
 	getopt hgl SConscript \
 	$(top_srcdir)/include/GL/mesa_glinterop.h
 

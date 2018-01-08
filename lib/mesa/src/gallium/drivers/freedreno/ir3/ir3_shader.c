@@ -223,6 +223,7 @@ ir3_shader_variant(struct ir3_shader *shader, struct ir3_shader_key key,
 	 */
 	switch (shader->type) {
 	case SHADER_FRAGMENT:
+	case SHADER_COMPUTE:
 		key.binning_pass = false;
 		if (key.has_per_samp) {
 			key.vsaturate_s = 0;
@@ -241,9 +242,6 @@ ir3_shader_variant(struct ir3_shader *shader, struct ir3_shader_key key,
 			key.fsaturate_r = 0;
 			key.fastc_srgb = 0;
 		}
-		break;
-	default:
-		/* TODO */
 		break;
 	}
 
@@ -291,7 +289,6 @@ ir3_shader_create(struct ir3_compiler *compiler,
 		/* we take ownership of the reference: */
 		nir = cso->ir.nir;
 	} else {
-		debug_assert(cso->type == PIPE_SHADER_IR_TGSI);
 		if (fd_mesa_debug & FD_DBG_DISASM) {
 			DBG("dump tgsi: type=%d", shader->type);
 			tgsi_dump(cso->tokens, 0);
@@ -315,43 +312,6 @@ ir3_shader_create(struct ir3_compiler *compiler,
 		memset(&key, 0, sizeof(key));
 		ir3_shader_variant(shader, key, debug);
 	}
-	return shader;
-}
-
-/* a bit annoying that compute-shader and normal shader state objects
- * aren't a bit more aligned.
- */
-struct ir3_shader *
-ir3_shader_create_compute(struct ir3_compiler *compiler,
-		const struct pipe_compute_state *cso,
-		struct pipe_debug_callback *debug)
-{
-	struct ir3_shader *shader = CALLOC_STRUCT(ir3_shader);
-
-	shader->compiler = compiler;
-	shader->id = ++shader->compiler->shader_count;
-	shader->type = SHADER_COMPUTE;
-
-	nir_shader *nir;
-	if (cso->ir_type == PIPE_SHADER_IR_NIR) {
-		/* we take ownership of the reference: */
-		nir = (nir_shader *)cso->prog;
-	} else {
-		debug_assert(cso->ir_type == PIPE_SHADER_IR_TGSI);
-		if (fd_mesa_debug & FD_DBG_DISASM) {
-			DBG("dump tgsi: type=%d", shader->type);
-			tgsi_dump(cso->prog, 0);
-		}
-		nir = ir3_tgsi_to_nir(cso->prog);
-	}
-
-	/* do first pass optimization, ignoring the key: */
-	shader->nir = ir3_optimize_nir(shader, nir, NULL);
-	if (fd_mesa_debug & FD_DBG_DISASM) {
-		DBG("dump nir%d: type=%d", shader->id, shader->type);
-		nir_print_shader(shader->nir, stdout);
-	}
-
 	return shader;
 }
 
@@ -406,7 +366,7 @@ ir3_shader_disasm(struct ir3_shader_variant *so, uint32_t *bin)
 	}
 
 	for (i = 0; i < so->immediates_count; i++) {
-		debug_printf("@const(c%d.x)\t", so->constbase.immediate + i);
+		debug_printf("@const(c%d.x)\t", so->first_immediate + i);
 		debug_printf("0x%08x, 0x%08x, 0x%08x, 0x%08x\n",
 				so->immediates[i].val[0],
 				so->immediates[i].val[1],
@@ -458,8 +418,7 @@ ir3_shader_disasm(struct ir3_shader_variant *so, uint32_t *bin)
 		}
 		debug_printf("\n");
 		break;
-	default:
-		/* TODO */
+	case SHADER_COMPUTE:
 		break;
 	}
 
@@ -503,8 +462,7 @@ ir3_shader_disasm(struct ir3_shader_variant *so, uint32_t *bin)
 		if (so->frag_face)
 			debug_printf("; fragface: hr0.x\n");
 		break;
-	default:
-		/* TODO */
+	case SHADER_COMPUTE:
 		break;
 	}
 
@@ -545,7 +503,7 @@ emit_user_consts(struct fd_context *ctx, const struct ir3_shader_variant *v,
 		 * the user consts early to avoid HLSQ lockup caused by
 		 * writing too many consts
 		 */
-		uint32_t max_const = MIN2(v->num_uniforms, v->constlen);
+		uint32_t max_const = MIN2(v->first_driver_param, v->constlen);
 
 		// I expect that size should be a multiple of vec4's:
 		assert(size == align(size, 4));
@@ -569,9 +527,9 @@ static void
 emit_ubos(struct fd_context *ctx, const struct ir3_shader_variant *v,
 		struct fd_ringbuffer *ring, struct fd_constbuf_stateobj *constbuf)
 {
-	uint32_t offset = v->constbase.ubo;
+	uint32_t offset = v->first_driver_param + IR3_UBOS_OFF;
 	if (v->constlen > offset) {
-		uint32_t params = v->num_ubos;
+		uint32_t params = MIN2(4, v->constlen - offset) * 4;
 		uint32_t offsets[params];
 		struct pipe_resource *prscs[params];
 
@@ -599,7 +557,7 @@ emit_immediates(struct fd_context *ctx, const struct ir3_shader_variant *v,
 		struct fd_ringbuffer *ring)
 {
 	int size = v->immediates_count;
-	uint32_t base = v->constbase.immediate;
+	uint32_t base = v->first_immediate;
 
 	/* truncate size to avoid writing constants that shader
 	 * does not use:
@@ -623,7 +581,7 @@ emit_tfbos(struct fd_context *ctx, const struct ir3_shader_variant *v,
 		struct fd_ringbuffer *ring)
 {
 	/* streamout addresses after driver-params: */
-	uint32_t offset = v->constbase.tfbo;
+	uint32_t offset = v->first_driver_param + IR3_TFBOS_OFF;
 	if (v->constlen > offset) {
 		struct fd_streamout_stateobj *so = &ctx->streamout;
 		struct pipe_stream_output_info *info = &v->shader->stream_output;
@@ -656,8 +614,6 @@ max_tf_vtx(struct fd_context *ctx, const struct ir3_shader_variant *v)
 	struct pipe_stream_output_info *info = &v->shader->stream_output;
 	uint32_t maxvtxcnt = 0x7fffffff;
 
-	if (ctx->screen->gpu_id >= 500)
-		return 0;
 	if (v->key.binning_pass)
 		return 0;
 	if (v->shader->stream_output.num_outputs == 0)
@@ -697,19 +653,23 @@ max_tf_vtx(struct fd_context *ctx, const struct ir3_shader_variant *v)
 }
 
 void
-ir3_emit_vs_consts(const struct ir3_shader_variant *v, struct fd_ringbuffer *ring,
-		struct fd_context *ctx, const struct pipe_draw_info *info)
+ir3_emit_consts(const struct ir3_shader_variant *v, struct fd_ringbuffer *ring,
+		struct fd_context *ctx, const struct pipe_draw_info *info, uint32_t dirty)
 {
-	enum fd_dirty_shader_state dirty = ctx->dirty_shader[PIPE_SHADER_VERTEX];
-
-	debug_assert(v->type == SHADER_VERTEX);
-
-	if (dirty & (FD_DIRTY_SHADER_PROG | FD_DIRTY_SHADER_CONST)) {
+	if (dirty & (FD_DIRTY_PROG | FD_DIRTY_CONSTBUF)) {
 		struct fd_constbuf_stateobj *constbuf;
 		bool shader_dirty;
 
-		constbuf = &ctx->constbuf[PIPE_SHADER_VERTEX];
-		shader_dirty = !!(dirty & FD_DIRTY_SHADER_PROG);
+		if (v->type == SHADER_VERTEX) {
+			constbuf = &ctx->constbuf[PIPE_SHADER_VERTEX];
+			shader_dirty = !!(dirty & FD_SHADER_DIRTY_VP);
+		} else if (v->type == SHADER_FRAGMENT) {
+			constbuf = &ctx->constbuf[PIPE_SHADER_FRAGMENT];
+			shader_dirty = !!(dirty & FD_SHADER_DIRTY_FP);
+		} else {
+			unreachable("bad shader type");
+			return;
+		}
 
 		emit_user_consts(ctx, v, ring, constbuf);
 		emit_ubos(ctx, v, ring, constbuf);
@@ -719,11 +679,11 @@ ir3_emit_vs_consts(const struct ir3_shader_variant *v, struct fd_ringbuffer *rin
 
 	/* emit driver params every time: */
 	/* TODO skip emit if shader doesn't use driver params to avoid WFI.. */
-	if (info) {
-		uint32_t offset = v->constbase.driver_param;
-		if (v->constlen > offset) {
-			uint32_t vertex_params[IR3_DP_VS_COUNT] = {
-				[IR3_DP_VTXID_BASE] = info->index_size ?
+	if (info && (v->type == SHADER_VERTEX)) {
+		uint32_t offset = v->first_driver_param + IR3_DRIVER_PARAM_OFF;
+		if (v->constlen >= offset) {
+			uint32_t vertex_params[IR3_DP_COUNT] = {
+				[IR3_DP_VTXID_BASE] = info->indexed ?
 						info->index_bias : info->start,
 				[IR3_DP_VTXCNT_MAX] = max_tf_vtx(ctx, v),
 			};
@@ -753,63 +713,5 @@ ir3_emit_vs_consts(const struct ir3_shader_variant *v, struct fd_ringbuffer *rin
 				emit_tfbos(ctx, v, ring);
 			}
 		}
-	}
-}
-
-void
-ir3_emit_fs_consts(const struct ir3_shader_variant *v, struct fd_ringbuffer *ring,
-		struct fd_context *ctx)
-{
-	enum fd_dirty_shader_state dirty = ctx->dirty_shader[PIPE_SHADER_FRAGMENT];
-
-	debug_assert(v->type == SHADER_FRAGMENT);
-
-	if (dirty & (FD_DIRTY_SHADER_PROG | FD_DIRTY_SHADER_CONST)) {
-		struct fd_constbuf_stateobj *constbuf;
-		bool shader_dirty;
-
-		constbuf = &ctx->constbuf[PIPE_SHADER_FRAGMENT];
-		shader_dirty = !!(dirty & FD_DIRTY_SHADER_PROG);
-
-		emit_user_consts(ctx, v, ring, constbuf);
-		emit_ubos(ctx, v, ring, constbuf);
-		if (shader_dirty)
-			emit_immediates(ctx, v, ring);
-	}
-}
-
-/* emit compute-shader consts: */
-void
-ir3_emit_cs_consts(const struct ir3_shader_variant *v, struct fd_ringbuffer *ring,
-		struct fd_context *ctx, const struct pipe_grid_info *info)
-{
-	enum fd_dirty_shader_state dirty = ctx->dirty_shader[PIPE_SHADER_COMPUTE];
-
-	if (dirty & (FD_DIRTY_SHADER_PROG | FD_DIRTY_SHADER_CONST)) {
-		struct fd_constbuf_stateobj *constbuf;
-		bool shader_dirty;
-
-		constbuf = &ctx->constbuf[PIPE_SHADER_COMPUTE];
-		shader_dirty = !!(dirty & FD_DIRTY_SHADER_PROG);
-
-		emit_user_consts(ctx, v, ring, constbuf);
-		emit_ubos(ctx, v, ring, constbuf);
-		if (shader_dirty)
-			emit_immediates(ctx, v, ring);
-	}
-
-	/* emit compute-shader driver-params: */
-	uint32_t offset = v->constbase.driver_param;
-	if (v->constlen > offset) {
-		uint32_t compute_params[IR3_DP_CS_COUNT] = {
-			[IR3_DP_NUM_WORK_GROUPS_X] = info->grid[0],
-			[IR3_DP_NUM_WORK_GROUPS_Y] = info->grid[1],
-			[IR3_DP_NUM_WORK_GROUPS_Z] = info->grid[2],
-			/* do we need work-group-size? */
-		};
-
-		fd_wfi(ctx->batch, ring);
-		ctx->emit_const(ring, SHADER_COMPUTE, offset * 4, 0,
-				ARRAY_SIZE(compute_params), compute_params, NULL);
 	}
 }

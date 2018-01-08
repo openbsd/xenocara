@@ -24,13 +24,16 @@
 /**
  * \file ir_set_program_inouts.cpp
  *
- * Sets the inputs_read and outputs_written of Mesa programs.
+ * Sets the InputsRead and OutputsWritten of Mesa programs.
+ *
+ * Additionally, for fragment shaders, sets the InterpQualifier array, and the
+ * IsCentroid and IsSample bitfields.
  *
  * Mesa programs (gl_program, not gl_shader_program) have a set of
  * flags indicating which varyings are read and written.  Computing
  * which are actually read from some sort of backend code can be
  * tricky when variable array indexing involved.  So this pass
- * provides support for setting inputs_read and outputs_written right
+ * provides support for setting InputsRead and OutputsWritten right
  * from the GLSL IR.
  */
 
@@ -83,10 +86,10 @@ mark(struct gl_program *prog, ir_variable *var, int offset, int len,
 {
    /* As of GLSL 1.20, varyings can only be floats, floating-point
     * vectors or matrices, or arrays of them.  For Mesa programs using
-    * inputs_read/outputs_written, everything but matrices uses one
+    * InputsRead/OutputsWritten, everything but matrices uses one
     * slot, while matrices use a slot per column.  Presumably
     * something doing a more clever packing would use something other
-    * than inputs_read/outputs_written.
+    * than InputsRead/OutputsWritten.
     */
 
    for (int i = 0; i < len; i++) {
@@ -111,32 +114,38 @@ mark(struct gl_program *prog, ir_variable *var, int offset, int len,
 
       if (var->data.mode == ir_var_shader_in) {
          if (is_patch_generic)
-            prog->info.patch_inputs_read |= bitfield;
+            prog->PatchInputsRead |= bitfield;
          else
-            prog->info.inputs_read |= bitfield;
+            prog->InputsRead |= bitfield;
 
          /* double inputs read is only for vertex inputs */
          if (stage == MESA_SHADER_VERTEX &&
              var->type->without_array()->is_dual_slot())
-            prog->info.double_inputs_read |= bitfield;
+            prog->DoubleInputsRead |= bitfield;
 
          if (stage == MESA_SHADER_FRAGMENT) {
-            prog->info.fs.uses_sample_qualifier |= var->data.sample;
+            gl_fragment_program *fprog = (gl_fragment_program *) prog;
+            fprog->InterpQualifier[idx] =
+               (glsl_interp_mode) var->data.interpolation;
+            if (var->data.centroid)
+               fprog->IsCentroid |= bitfield;
+            if (var->data.sample)
+               fprog->IsSample |= bitfield;
          }
       } else if (var->data.mode == ir_var_system_value) {
-         prog->info.system_values_read |= bitfield;
+         prog->SystemValuesRead |= bitfield;
       } else {
          assert(var->data.mode == ir_var_shader_out);
          if (is_patch_generic) {
-            prog->info.patch_outputs_written |= bitfield;
+            prog->PatchOutputsWritten |= bitfield;
          } else if (!var->data.read_only) {
-            prog->info.outputs_written |= bitfield;
+            prog->OutputsWritten |= bitfield;
             if (var->data.index > 0)
                prog->SecondaryOutputsWritten |= bitfield;
          }
 
          if (var->data.fb_fetch_output)
-            prog->info.outputs_read |= bitfield;
+            prog->OutputsRead |= bitfield;
       }
    }
 }
@@ -407,7 +416,8 @@ ir_set_program_inouts_visitor::visit_enter(ir_discard *)
    /* discards are only allowed in fragment shaders. */
    assert(this->shader_stage == MESA_SHADER_FRAGMENT);
 
-   prog->info.fs.uses_discard = true;
+   gl_fragment_program *fprog = (gl_fragment_program *) prog;
+   fprog->UsesKill = true;
 
    return visit_continue;
 }
@@ -416,7 +426,7 @@ ir_visitor_status
 ir_set_program_inouts_visitor::visit_enter(ir_texture *ir)
 {
    if (ir->op == ir_tg4)
-      prog->info.uses_texture_gather = true;
+      prog->UsesGather = true;
    return visit_continue;
 }
 
@@ -426,16 +436,19 @@ do_set_program_inouts(exec_list *instructions, struct gl_program *prog,
 {
    ir_set_program_inouts_visitor v(prog, shader_stage);
 
-   prog->info.inputs_read = 0;
-   prog->info.outputs_written = 0;
+   prog->InputsRead = 0;
+   prog->OutputsWritten = 0;
    prog->SecondaryOutputsWritten = 0;
-   prog->info.outputs_read = 0;
-   prog->info.patch_inputs_read = 0;
-   prog->info.patch_outputs_written = 0;
-   prog->info.system_values_read = 0;
+   prog->OutputsRead = 0;
+   prog->PatchInputsRead = 0;
+   prog->PatchOutputsWritten = 0;
+   prog->SystemValuesRead = 0;
    if (shader_stage == MESA_SHADER_FRAGMENT) {
-      prog->info.fs.uses_sample_qualifier = false;
-      prog->info.fs.uses_discard = false;
+      gl_fragment_program *fprog = (gl_fragment_program *) prog;
+      memset(fprog->InterpQualifier, 0, sizeof(fprog->InterpQualifier));
+      fprog->IsCentroid = 0;
+      fprog->IsSample = 0;
+      fprog->UsesKill = false;
    }
    visit_list_elements(&v, instructions);
 }

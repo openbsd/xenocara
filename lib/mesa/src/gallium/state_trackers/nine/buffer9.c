@@ -23,7 +23,6 @@
 
 #include "buffer9.h"
 #include "device9.h"
-#include "nine_buffer_upload.h"
 #include "nine_helpers.h"
 #include "nine_pipe.h"
 
@@ -33,7 +32,6 @@
 #include "pipe/p_defines.h"
 #include "pipe/p_format.h"
 #include "util/u_box.h"
-#include "util/u_inlines.h"
 
 #define DBG_CHANNEL (DBG_INDEXBUFFER|DBG_VERTEXBUFFER)
 
@@ -52,12 +50,14 @@ NineBuffer9_ctor( struct NineBuffer9 *This,
 
     user_assert(Pool != D3DPOOL_SCRATCH, D3DERR_INVALIDCALL);
 
-    This->maps = MALLOC(sizeof(struct NineTransfer));
+    This->maps = MALLOC(sizeof(struct pipe_transfer *));
     if (!This->maps)
         return E_OUTOFMEMORY;
     This->nmaps = 0;
     This->maxmaps = 1;
     This->size = Size;
+
+    This->pipe = pParams->device->pipe;
 
     info->screen = pParams->device->screen;
     info->target = PIPE_BUFFER;
@@ -101,10 +101,6 @@ NineBuffer9_ctor( struct NineBuffer9 *This,
     else
         info->usage = PIPE_USAGE_DYNAMIC;
 
-    /* When Writeonly is not set, we don't want to enable the
-     * optimizations */
-    This->discard_nooverwrite_only = !!(Usage & D3DUSAGE_WRITEONLY) &&
-                                     pParams->device->buffer_upload;
     /* if (pDesc->Usage & D3DUSAGE_DONOTCLIP) { } */
     /* if (pDesc->Usage & D3DUSAGE_NONSECURE) { } */
     /* if (pDesc->Usage & D3DUSAGE_NPATCHES) { } */
@@ -129,7 +125,7 @@ NineBuffer9_ctor( struct NineBuffer9 *This,
         return hr;
 
     if (Pool == D3DPOOL_MANAGED) {
-        This->managed.data = align_calloc(
+        This->managed.data = align_malloc(
             nine_format_get_level_alloc_size(This->base.info.format,
                                              Size, 1, 0), 32);
         if (!This->managed.data)
@@ -139,6 +135,7 @@ NineBuffer9_ctor( struct NineBuffer9 *This,
         u_box_1d(0, Size, &This->managed.dirty_box);
         list_inithead(&This->managed.list);
         list_inithead(&This->managed.list2);
+        list_add(&This->managed.list, &pParams->device->update_buffers);
         list_add(&This->managed.list2, &pParams->device->managed_buffers);
     }
 
@@ -166,38 +163,13 @@ NineBuffer9_dtor( struct NineBuffer9 *This )
             list_del(&This->managed.list2);
     }
 
-    if (This->buf)
-        nine_upload_release_buffer(This->base.base.device->buffer_upload, This->buf);
-
     NineResource9_dtor(&This->base);
 }
 
 struct pipe_resource *
-NineBuffer9_GetResource( struct NineBuffer9 *This, unsigned *offset )
+NineBuffer9_GetResource( struct NineBuffer9 *This )
 {
-    if (This->buf)
-        return nine_upload_buffer_resource_and_offset(This->buf, offset);
-    *offset = 0;
     return NineResource9_GetResource(&This->base);
-}
-
-static void
-NineBuffer9_RebindIfRequired( struct NineBuffer9 *This,
-                              struct NineDevice9 *device )
-{
-    int i;
-
-    if (!This->bind_count)
-        return;
-    for (i = 0; i < device->caps.MaxStreams; i++) {
-        if (device->state.stream[i] == (struct NineVertexBuffer9 *)This)
-            nine_context_set_stream_source(device, i,
-                                           (struct NineVertexBuffer9 *)This,
-                                           device->state.vtxbuf[i].buffer_offset,
-                                           device->state.vtxbuf[i].stride);
-    }
-    if (device->state.idxbuf == (struct NineIndexBuffer9 *)This)
-        nine_context_set_indices(device, (struct NineIndexBuffer9 *)This);
 }
 
 HRESULT NINE_WINAPI
@@ -207,9 +179,7 @@ NineBuffer9_Lock( struct NineBuffer9 *This,
                         void **ppbData,
                         DWORD Flags )
 {
-    struct NineDevice9 *device = This->base.base.device;
     struct pipe_box box;
-    struct pipe_context *pipe;
     void *data;
     unsigned usage;
 
@@ -234,19 +204,17 @@ NineBuffer9_Lock( struct NineBuffer9 *This,
 
     if (This->base.pool == D3DPOOL_MANAGED) {
         /* READONLY doesn't dirty the buffer */
-        /* Tests on Win: READONLY doesn't wait for the upload */
         if (!(Flags & D3DLOCK_READONLY)) {
             if (!This->managed.dirty) {
                 assert(LIST_IS_EMPTY(&This->managed.list));
                 This->managed.dirty = TRUE;
                 This->managed.dirty_box = box;
-                if (p_atomic_read(&This->managed.pending_upload))
-                    nine_csmt_process(This->base.base.device);
-            } else
+            } else {
                 u_box_union_2d(&This->managed.dirty_box, &This->managed.dirty_box, &box);
-            /* Tests trying to draw while the buffer is locked show that
-             * MANAGED buffers are made dirty at Lock time */
-            BASEBUF_REGISTER_UPDATE(This);
+                /* Do not upload while we are locking, we'll add it back later */
+                if (!LIST_IS_EMPTY(&This->managed.list))
+                    list_delinit(&This->managed.list);
+            }
         }
         *ppbData = (char *)This->managed.data + OffsetToLock;
         DBG("returning pointer %p\n", *ppbData);
@@ -263,11 +231,7 @@ NineBuffer9_Lock( struct NineBuffer9 *This,
      * D3DERR_WASSTILLDRAWING if the resource is in use, except for DYNAMIC.
      * Our tests: some apps do use both DISCARD and NOOVERWRITE at the same
      * time. On windows it seems to return different pointer, thus indicating
-     * DISCARD is taken into account.
-     * Our tests: SYSTEMMEM doesn't DISCARD */
-
-    if (This->base.pool == D3DPOOL_SYSTEMMEM)
-        Flags &= ~D3DLOCK_DISCARD;
+     * DISCARD is taken into account. */
 
     if (Flags & D3DLOCK_DISCARD)
         usage = PIPE_TRANSFER_WRITE | PIPE_TRANSFER_DISCARD_WHOLE_RESOURCE;
@@ -278,12 +242,10 @@ NineBuffer9_Lock( struct NineBuffer9 *This,
     if (Flags & D3DLOCK_DONOTWAIT && !(This->base.usage & D3DUSAGE_DYNAMIC))
         usage |= PIPE_TRANSFER_DONTBLOCK;
 
-    This->discard_nooverwrite_only &= !!(Flags & (D3DLOCK_DISCARD | D3DLOCK_NOOVERWRITE));
-
     if (This->nmaps == This->maxmaps) {
-        struct NineTransfer *newmaps =
-            REALLOC(This->maps, sizeof(struct NineTransfer)*This->maxmaps,
-                    sizeof(struct NineTransfer)*(This->maxmaps << 1));
+        struct pipe_transfer **newmaps =
+            REALLOC(This->maps, sizeof(struct pipe_transfer *)*This->maxmaps,
+                    sizeof(struct pipe_transfer *)*(This->maxmaps << 1));
         if (newmaps == NULL)
             return E_OUTOFMEMORY;
 
@@ -291,88 +253,8 @@ NineBuffer9_Lock( struct NineBuffer9 *This,
         This->maps = newmaps;
     }
 
-    if (This->buf && !This->discard_nooverwrite_only) {
-        struct pipe_box src_box;
-        unsigned offset;
-        struct pipe_resource *src_res;
-        DBG("Disabling nine_subbuffer for a buffer having"
-            "used a nine_subbuffer buffer\n");
-        /* Copy buffer content to the buffer resource, which
-         * we will now use.
-         * Note: The behaviour may be different from what is expected
-         * with double lock. However applications can't really make expectations
-         * about double locks, and don't really use them, so that's ok. */
-        src_res = nine_upload_buffer_resource_and_offset(This->buf, &offset);
-        u_box_1d(offset, This->size, &src_box);
-
-        pipe = NineDevice9_GetPipe(device);
-        pipe->resource_copy_region(pipe, This->base.resource, 0, 0, 0, 0,
-                                   src_res, 0, &src_box);
-        /* Release previous resource */
-        if (This->nmaps >= 1)
-            This->maps[This->nmaps-1].should_destroy_buf = true;
-        else
-            nine_upload_release_buffer(device->buffer_upload, This->buf);
-        This->buf = NULL;
-        /* Rebind buffer */
-        NineBuffer9_RebindIfRequired(This, device);
-    }
-
-    This->maps[This->nmaps].transfer = NULL;
-    This->maps[This->nmaps].is_pipe_secondary = false;
-    This->maps[This->nmaps].buf = NULL;
-    This->maps[This->nmaps].should_destroy_buf = false;
-
-    if (This->discard_nooverwrite_only) {
-        if (This->buf && (Flags & D3DLOCK_DISCARD)) {
-            /* Release previous buffer */
-            if (This->nmaps >= 1)
-                This->maps[This->nmaps-1].should_destroy_buf = true;
-            else
-                nine_upload_release_buffer(device->buffer_upload, This->buf);
-            This->buf = NULL;
-        }
-
-        if (!This->buf) {
-            This->buf = nine_upload_create_buffer(device->buffer_upload, This->base.info.width0);
-            NineBuffer9_RebindIfRequired(This, device);
-        }
-
-        if (This->buf) {
-            This->maps[This->nmaps].buf = This->buf;
-            This->nmaps++;
-            *ppbData = nine_upload_buffer_get_map(This->buf) + OffsetToLock;
-            return D3D_OK;
-        } else {
-            /* Fallback to normal path, and don't try again */
-            This->discard_nooverwrite_only = false;
-        }
-    }
-
-    /* When csmt is active, we want to avoid stalls as much as possible,
-     * and thus we want to create a new resource on discard and map it
-     * with the secondary pipe, instead of waiting on the main pipe. */
-    if (Flags & D3DLOCK_DISCARD && device->csmt_active) {
-        struct pipe_screen *screen = NineDevice9_GetScreen(device);
-        struct pipe_resource *new_res = screen->resource_create(screen, &This->base.info);
-        if (new_res) {
-            /* Use the new resource */
-            pipe_resource_reference(&This->base.resource, new_res);
-            pipe_resource_reference(&new_res, NULL);
-            usage = PIPE_TRANSFER_WRITE | PIPE_TRANSFER_UNSYNCHRONIZED;
-            NineBuffer9_RebindIfRequired(This, device);
-            This->maps[This->nmaps].is_pipe_secondary = TRUE;
-        }
-    } else if (Flags & D3DLOCK_NOOVERWRITE && device->csmt_active)
-        This->maps[This->nmaps].is_pipe_secondary = TRUE;
-
-    if (This->maps[This->nmaps].is_pipe_secondary)
-        pipe = device->pipe_secondary;
-    else
-        pipe = NineDevice9_GetPipe(device);
-
-    data = pipe->transfer_map(pipe, This->base.resource, 0,
-                              usage, &box, &This->maps[This->nmaps].transfer);
+    data = This->pipe->transfer_map(This->pipe, This->base.resource, 0,
+                                    usage, &box, &This->maps[This->nmaps]);
 
     if (!data) {
         DBG("pipe::transfer_map failed\n"
@@ -396,25 +278,17 @@ NineBuffer9_Lock( struct NineBuffer9 *This,
 HRESULT NINE_WINAPI
 NineBuffer9_Unlock( struct NineBuffer9 *This )
 {
-    struct NineDevice9 *device = This->base.base.device;
-    struct pipe_context *pipe;
     DBG("This=%p\n", This);
 
     user_assert(This->nmaps > 0, D3DERR_INVALIDCALL);
-    This->nmaps--;
-    if (This->base.pool != D3DPOOL_MANAGED) {
-        if (!This->maps[This->nmaps].buf) {
-            pipe = This->maps[This->nmaps].is_pipe_secondary ?
-                device->pipe_secondary :
-                nine_context_get_pipe_acquire(device);
-            pipe->transfer_unmap(pipe, This->maps[This->nmaps].transfer);
-            /* We need to flush in case the driver does implicit copies */
-            if (This->maps[This->nmaps].is_pipe_secondary)
-                pipe->flush(pipe, NULL, 0);
-            else
-                nine_context_get_pipe_release(device);
-        } else if (This->maps[This->nmaps].should_destroy_buf)
-            nine_upload_release_buffer(device->buffer_upload, This->maps[This->nmaps].buf);
+    if (This->base.pool != D3DPOOL_MANAGED)
+        This->pipe->transfer_unmap(This->pipe, This->maps[--(This->nmaps)]);
+    else {
+        This->nmaps--;
+        /* TODO: Fix this to upload at the first draw call needing the data,
+         * instead of at the next draw call */
+        if (!This->nmaps && This->managed.dirty && LIST_IS_EMPTY(&This->managed.list))
+            list_add(&This->managed.list, &This->base.base.device->update_buffers);
     }
     return D3D_OK;
 }
@@ -424,7 +298,10 @@ NineBuffer9_SetDirty( struct NineBuffer9 *This )
 {
     assert(This->base.pool == D3DPOOL_MANAGED);
 
-    This->managed.dirty = TRUE;
+    if (!This->managed.dirty) {
+        assert(LIST_IS_EMPTY(&This->managed.list));
+        list_add(&This->managed.list, &This->base.base.device->update_buffers);
+        This->managed.dirty = TRUE;
+    }
     u_box_1d(0, This->size, &This->managed.dirty_box);
-    BASEBUF_REGISTER_UPDATE(This);
 }

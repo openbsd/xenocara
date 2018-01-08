@@ -502,13 +502,9 @@ thrd_current(void)
     HANDLE hCurrentThread;
     BOOL bRet;
 
-    /* GetCurrentThread() returns a pseudo-handle, which we need
-     * to pass to DuplicateHandle(). Only the resulting handle can be used
-     * from other threads.
-     *
-     * Note that neither handle can be compared to the one by thread_create.
-     * Only the thread IDs - as returned by GetThreadId() and GetCurrentThreadId()
-     * can be compared directly.
+    /* GetCurrentThread() returns a pseudo-handle, which is useless.  We need
+     * to call DuplicateHandle to get a real handle.  However the handle value
+     * will not match the one returned by thread_create.
      *
      * Other potential solutions would be:
      * - define thrd_t as a thread Ids, but this would mean we'd need to OpenThread for many operations

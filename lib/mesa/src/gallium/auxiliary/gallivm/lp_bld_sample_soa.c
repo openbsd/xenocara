@@ -60,7 +60,6 @@
 #include "lp_bld_struct.h"
 #include "lp_bld_quad.h"
 #include "lp_bld_pack.h"
-#include "lp_bld_intr.h"
 
 
 /**
@@ -159,7 +158,7 @@ lp_build_sample_texel_soa(struct lp_build_sample_context *bld,
 
    lp_build_fetch_rgba_soa(bld->gallivm,
                            bld->format_desc,
-                           bld->texel_type, TRUE,
+                           bld->texel_type,
                            data_ptr, offset,
                            i, j,
                            bld->cache,
@@ -2406,7 +2405,7 @@ lp_build_fetch_texel(struct lp_build_sample_context *bld,
 
    lp_build_fetch_rgba_soa(bld->gallivm,
                            bld->format_desc,
-                           bld->texel_type, TRUE,
+                           bld->texel_type,
                            bld->base_ptr, offset,
                            i, j,
                            bld->cache,
@@ -3317,8 +3316,7 @@ lp_build_sample_soa_func(struct gallivm_state *gallivm,
 
       for (i = 0; i < num_param; ++i) {
          if(LLVMGetTypeKind(arg_types[i]) == LLVMPointerTypeKind) {
-
-            lp_add_function_attr(function, i + 1, LP_FUNC_ATTR_NOALIAS);
+            LLVMAddAttribute(LLVMGetParam(function, i), LLVMNoAliasAttribute);
          }
       }
 
@@ -3462,7 +3460,7 @@ lp_build_size_query_soa(struct gallivm_state *gallivm,
                         struct lp_sampler_dynamic_state *dynamic_state,
                         const struct lp_sampler_size_query_params *params)
 {
-   LLVMValueRef lod, level = 0, size;
+   LLVMValueRef lod, level, size;
    LLVMValueRef first_level = NULL;
    int dims, i;
    boolean has_array;

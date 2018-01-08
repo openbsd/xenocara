@@ -108,8 +108,6 @@ struct nv50_program {
       unsigned num_syms;
    } cp;
 
-   bool mul_zero_wins;
-
    void *fixups; /* relocation records */
    void *interps; /* interpolation records */
 

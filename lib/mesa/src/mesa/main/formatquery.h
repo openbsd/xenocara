@@ -21,6 +21,7 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#pragma once
 #ifndef FORMATQUERY_H
 #define FORMATQUERY_H
 

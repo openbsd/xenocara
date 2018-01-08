@@ -28,6 +28,7 @@
  * \author Ian Romanick <ian.d.romanick@intel.com>
  */
 
+#pragma once
 
 #ifndef PROG_PARAMETER_LAYOUT_H
 #define PROG_PARAMETER_LAYOUT_H

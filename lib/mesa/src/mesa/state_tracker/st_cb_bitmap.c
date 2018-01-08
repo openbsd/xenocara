@@ -83,6 +83,27 @@ static GLboolean UseBitmapCache = GL_TRUE;
 #define BITMAP_CACHE_WIDTH  512
 #define BITMAP_CACHE_HEIGHT 32
 
+struct bitmap_cache
+{
+   /** Window pos to render the cached image */
+   GLint xpos, ypos;
+   /** Bounds of region used in window coords */
+   GLint xmin, ymin, xmax, ymax;
+
+   GLfloat color[4];
+
+   /** Bitmap's Z position */
+   GLfloat zpos;
+
+   struct pipe_resource *texture;
+   struct pipe_transfer *trans;
+
+   GLboolean empty;
+
+   /** An I8 texture image: */
+   ubyte *buffer;
+};
+
 
 /** Epsilon for Z comparisons */
 #define Z_EPSILON 1e-06
@@ -191,7 +212,8 @@ setup_render_state(struct gl_context *ctx,
       GLfloat colorSave[4];
       COPY_4V(colorSave, ctx->Current.Attrib[VERT_ATTRIB_COLOR0]);
       COPY_4V(ctx->Current.Attrib[VERT_ATTRIB_COLOR0], color);
-      st_upload_constants(st, &st->fp->Base);
+      st_upload_constants(st, st->fp->Base.Base.Parameters,
+                          MESA_SHADER_FRAGMENT);
       COPY_4V(ctx->Current.Attrib[VERT_ATTRIB_COLOR0], colorSave);
    }
 
@@ -249,8 +271,8 @@ setup_render_state(struct gl_context *ctx,
    }
 
    /* viewport state: viewport matching window dims */
-   cso_set_viewport_dims(cso, st->state.fb_width,
-                         st->state.fb_height,
+   cso_set_viewport_dims(cso, st->state.framebuffer.width,
+                         st->state.framebuffer.height,
                          st->state.fb_orientation == Y_0_TOP);
 
    cso_set_vertex_elements(cso, 3, st->util_velems);
@@ -283,8 +305,8 @@ draw_bitmap_quad(struct gl_context *ctx, GLint x, GLint y, GLfloat z,
 {
    struct st_context *st = st_context(ctx);
    struct pipe_context *pipe = st->pipe;
-   const float fb_width = (float) st->state.fb_width;
-   const float fb_height = (float) st->state.fb_height;
+   const float fb_width = (float) st->state.framebuffer.width;
+   const float fb_height = (float) st->state.framebuffer.height;
    const float x0 = (float) x;
    const float x1 = (float) (x + width);
    const float y0 = (float) y;
@@ -333,7 +355,7 @@ draw_bitmap_quad(struct gl_context *ctx, GLint x, GLint y, GLfloat z,
 static void
 reset_cache(struct st_context *st)
 {
-   struct st_bitmap_cache *cache = &st->bitmap.cache;
+   struct bitmap_cache *cache = st->bitmap.cache;
 
    /*memset(cache->buffer, 0xff, sizeof(cache->buffer));*/
    cache->empty = GL_TRUE;
@@ -356,7 +378,7 @@ reset_cache(struct st_context *st)
 
 /** Print bitmap image to stdout (debug) */
 static void
-print_cache(const struct st_bitmap_cache *cache)
+print_cache(const struct bitmap_cache *cache)
 {
    int i, j, k;
 
@@ -381,7 +403,7 @@ static void
 create_cache_trans(struct st_context *st)
 {
    struct pipe_context *pipe = st->pipe;
-   struct st_bitmap_cache *cache = &st->bitmap.cache;
+   struct bitmap_cache *cache = st->bitmap.cache;
 
    if (cache->trans)
       return;
@@ -405,9 +427,9 @@ create_cache_trans(struct st_context *st)
 void
 st_flush_bitmap_cache(struct st_context *st)
 {
-   struct st_bitmap_cache *cache = &st->bitmap.cache;
+   struct bitmap_cache *cache = st->bitmap.cache;
 
-   if (!cache->empty) {
+   if (cache && !cache->empty) {
       struct pipe_context *pipe = st->pipe;
       struct pipe_sampler_view *sv;
 
@@ -462,7 +484,7 @@ accum_bitmap(struct gl_context *ctx,
              const GLubyte *bitmap )
 {
    struct st_context *st = ctx->st;
-   struct st_bitmap_cache *cache = &st->bitmap.cache;
+   struct bitmap_cache *cache = st->bitmap.cache;
    int px = -999, py = -999;
    const GLfloat z = ctx->Current.RasterPos[2];
 
@@ -536,10 +558,13 @@ init_bitmap_state(struct st_context *st)
    struct pipe_screen *screen = pipe->screen;
 
    /* This function should only be called once */
-   assert(st->bitmap.vs == NULL);
+   assert(st->bitmap.cache == NULL);
 
    assert(st->internal_target == PIPE_TEXTURE_2D ||
           st->internal_target == PIPE_TEXTURE_RECT);
+
+   /* alloc bitmap cache object */
+   st->bitmap.cache = ST_CALLOC_STRUCT(bitmap_cache);
 
    /* init sampler state once */
    memset(&st->bitmap.sampler, 0, sizeof(st->bitmap.sampler));
@@ -614,7 +639,7 @@ st_Bitmap(struct gl_context *ctx, GLint x, GLint y,
 
    st_invalidate_readpix_cache(st);
 
-   if (!st->bitmap.vs) {
+   if (!st->bitmap.cache) {
       init_bitmap_state(st);
    }
 
@@ -666,15 +691,15 @@ st_DrawAtlasBitmaps(struct gl_context *ctx,
    /* convert Z from [0,1] to [-1,-1] to match viewport Z scale/bias */
    const float z = ctx->Current.RasterPos[2] * 2.0f - 1.0f;
    const float *color = ctx->Current.RasterColor;
-   const float clip_x_scale = 2.0f / st->state.fb_width;
-   const float clip_y_scale = 2.0f / st->state.fb_height;
+   const float clip_x_scale = 2.0f / st->state.framebuffer.width;
+   const float clip_y_scale = 2.0f / st->state.framebuffer.height;
    const unsigned num_verts = count * 4;
    const unsigned num_vert_bytes = num_verts * sizeof(struct st_util_vertex);
    struct st_util_vertex *verts;
    struct pipe_vertex_buffer vb = {0};
    unsigned i;
 
-   if (!st->bitmap.vs) {
+   if (!st->bitmap.cache) {
       init_bitmap_state(st);
    }
 
@@ -693,13 +718,8 @@ st_DrawAtlasBitmaps(struct gl_context *ctx,
 
    vb.stride = sizeof(struct st_util_vertex);
 
-   u_upload_alloc(pipe->stream_uploader, 0, num_vert_bytes, 4,
-                  &vb.buffer_offset, &vb.buffer.resource, (void **) &verts);
-
-   if (unlikely(!verts)) {
-      _mesa_error(ctx, GL_OUT_OF_MEMORY, "glCallLists(bitmap text)");
-      goto out;
-   }
+   u_upload_alloc(st->uploader, 0, num_vert_bytes, 4,
+                  &vb.buffer_offset, &vb.buffer, (void **) &verts);
 
    /* build quads vertex data */
    for (i = 0; i < count; i++) {
@@ -770,7 +790,7 @@ st_DrawAtlasBitmaps(struct gl_context *ctx,
       ctx->Current.RasterPos[1] += ymove;
    }
 
-   u_upload_unmap(pipe->stream_uploader);
+   u_upload_unmap(st->uploader);
 
    cso_set_vertex_buffers(st->cso_context,
                           cso_get_aux_vertex_buffer_slot(st->cso_context),
@@ -778,10 +798,9 @@ st_DrawAtlasBitmaps(struct gl_context *ctx,
 
    cso_draw_arrays(st->cso_context, PIPE_PRIM_QUADS, 0, num_verts);
 
-out:
    restore_render_state(ctx);
 
-   pipe_resource_reference(&vb.buffer.resource, NULL);
+   pipe_resource_reference(&vb.buffer, NULL);
 
    pipe_sampler_view_reference(&sv, NULL);
 
@@ -805,15 +824,19 @@ void
 st_destroy_bitmap(struct st_context *st)
 {
    struct pipe_context *pipe = st->pipe;
-   struct st_bitmap_cache *cache = &st->bitmap.cache;
+   struct bitmap_cache *cache = st->bitmap.cache;
 
    if (st->bitmap.vs) {
       cso_delete_vertex_shader(st->cso_context, st->bitmap.vs);
       st->bitmap.vs = NULL;
    }
 
-   if (cache->trans && cache->buffer) {
-      pipe_transfer_unmap(pipe, cache->trans);
+   if (cache) {
+      if (cache->trans && cache->buffer) {
+         pipe_transfer_unmap(pipe, cache->trans);
+      }
+      pipe_resource_reference(&st->bitmap.cache->texture, NULL);
+      free(st->bitmap.cache);
+      st->bitmap.cache = NULL;
    }
-   pipe_resource_reference(&st->bitmap.cache.texture, NULL);
 }

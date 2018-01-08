@@ -57,6 +57,10 @@ st_create_texture_sampler_view(struct pipe_context *pipe,
 }
 
 
+extern struct pipe_sampler_view **
+st_texture_get_sampler_view(struct st_context *st,
+                            struct st_texture_object *stObj);
+
 extern void
 st_texture_release_sampler_view(struct st_context *st,
                                 struct st_texture_object *stObj);
@@ -73,10 +77,7 @@ struct pipe_sampler_view *
 st_get_texture_sampler_view_from_stobj(struct st_context *st,
                                        struct st_texture_object *stObj,
                                        const struct gl_sampler_object *samp,
-                                       bool glsl130_or_later);
+                                       unsigned glsl_version);
 
-struct pipe_sampler_view *
-st_get_buffer_sampler_view_from_stobj(struct st_context *st,
-                                      struct st_texture_object *stObj);
 
 #endif /* ST_SAMPLER_VIEW_H */

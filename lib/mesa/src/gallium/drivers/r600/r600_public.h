@@ -25,6 +25,6 @@
 
 struct radeon_winsys;
 
-struct pipe_screen *r600_screen_create(struct radeon_winsys *ws, unsigned flags);
+struct pipe_screen *r600_screen_create(struct radeon_winsys *ws);
 
 #endif

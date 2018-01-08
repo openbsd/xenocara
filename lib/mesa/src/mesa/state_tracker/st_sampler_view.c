@@ -38,7 +38,6 @@
 #include "st_sampler_view.h"
 #include "st_texture.h"
 #include "st_format.h"
-#include "st_cb_bufferobjects.h"
 #include "st_cb_texture.h"
 
 
@@ -47,7 +46,7 @@
  * If none is found an empty slot is initialized with a
  * template and returned instead.
  */
-static struct pipe_sampler_view **
+struct pipe_sampler_view **
 st_texture_get_sampler_view(struct st_context *st,
                             struct st_texture_object *stObj)
 {
@@ -189,27 +188,49 @@ swizzle_swizzle(unsigned swizzle1, unsigned swizzle2)
  */
 static unsigned
 compute_texture_format_swizzle(GLenum baseFormat, GLenum depthMode,
-                               bool glsl130_or_later)
+                               enum pipe_format actualFormat,
+                               unsigned glsl_version)
 {
    switch (baseFormat) {
    case GL_RGBA:
       return SWIZZLE_XYZW;
    case GL_RGB:
-      return MAKE_SWIZZLE4(SWIZZLE_X, SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_ONE);
+      if (util_format_has_alpha(actualFormat))
+         return MAKE_SWIZZLE4(SWIZZLE_X, SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_ONE);
+      else
+         return SWIZZLE_XYZW;
    case GL_RG:
-      return MAKE_SWIZZLE4(SWIZZLE_X, SWIZZLE_Y, SWIZZLE_ZERO, SWIZZLE_ONE);
+      if (util_format_get_nr_components(actualFormat) > 2)
+         return MAKE_SWIZZLE4(SWIZZLE_X, SWIZZLE_Y, SWIZZLE_ZERO, SWIZZLE_ONE);
+      else
+         return SWIZZLE_XYZW;
    case GL_RED:
-      return MAKE_SWIZZLE4(SWIZZLE_X, SWIZZLE_ZERO,
-                           SWIZZLE_ZERO, SWIZZLE_ONE);
+      if (util_format_get_nr_components(actualFormat) > 1)
+         return MAKE_SWIZZLE4(SWIZZLE_X, SWIZZLE_ZERO,
+                              SWIZZLE_ZERO, SWIZZLE_ONE);
+      else
+         return SWIZZLE_XYZW;
    case GL_ALPHA:
-      return MAKE_SWIZZLE4(SWIZZLE_ZERO, SWIZZLE_ZERO,
-                           SWIZZLE_ZERO, SWIZZLE_W);
+      if (util_format_get_nr_components(actualFormat) > 1)
+         return MAKE_SWIZZLE4(SWIZZLE_ZERO, SWIZZLE_ZERO,
+                              SWIZZLE_ZERO, SWIZZLE_W);
+      else
+         return SWIZZLE_XYZW;
    case GL_LUMINANCE:
-      return MAKE_SWIZZLE4(SWIZZLE_X, SWIZZLE_X, SWIZZLE_X, SWIZZLE_ONE);
+      if (util_format_get_nr_components(actualFormat) > 1)
+         return MAKE_SWIZZLE4(SWIZZLE_X, SWIZZLE_X, SWIZZLE_X, SWIZZLE_ONE);
+      else
+         return SWIZZLE_XYZW;
    case GL_LUMINANCE_ALPHA:
-      return MAKE_SWIZZLE4(SWIZZLE_X, SWIZZLE_X, SWIZZLE_X, SWIZZLE_W);
+      if (util_format_get_nr_components(actualFormat) > 2)
+         return MAKE_SWIZZLE4(SWIZZLE_X, SWIZZLE_X, SWIZZLE_X, SWIZZLE_W);
+      else
+         return SWIZZLE_XYZW;
    case GL_INTENSITY:
-      return SWIZZLE_XXXX;
+      if (util_format_get_nr_components(actualFormat) > 1)
+         return SWIZZLE_XXXX;
+      else
+         return SWIZZLE_XYZW;
    case GL_STENCIL_INDEX:
    case GL_DEPTH_STENCIL:
    case GL_DEPTH_COMPONENT:
@@ -235,7 +256,7 @@ compute_texture_format_swizzle(GLenum baseFormat, GLenum depthMode,
           * BTW, it's required that sampler views are updated when
           * shaders change (check_sampler_swizzle takes care of that).
           */
-         if (glsl130_or_later)
+         if (glsl_version && glsl_version >= 130)
             return SWIZZLE_XXXX;
          else
             return MAKE_SWIZZLE4(SWIZZLE_ZERO, SWIZZLE_ZERO,
@@ -257,29 +278,33 @@ compute_texture_format_swizzle(GLenum baseFormat, GLenum depthMode,
 static unsigned
 get_texture_format_swizzle(const struct st_context *st,
                            const struct st_texture_object *stObj,
-                           bool glsl130_or_later)
+                           unsigned glsl_version)
 {
-   GLenum baseFormat = _mesa_base_tex_image(&stObj->base)->_BaseFormat;
+   GLenum baseFormat = _mesa_texture_base_format(&stObj->base);
    unsigned tex_swizzle;
-   GLenum depth_mode = stObj->base.DepthMode;
 
-   /* In ES 3.0, DEPTH_TEXTURE_MODE is expected to be GL_RED for textures
-    * with depth component data specified with a sized internal format.
-    */
-   if (_mesa_is_gles3(st->ctx) &&
-       (baseFormat == GL_DEPTH_COMPONENT ||
-        baseFormat == GL_DEPTH_STENCIL ||
-        baseFormat == GL_STENCIL_INDEX)) {
-      const struct gl_texture_image *firstImage =
-         _mesa_base_tex_image(&stObj->base);
-      if (firstImage->InternalFormat != GL_DEPTH_COMPONENT &&
-          firstImage->InternalFormat != GL_DEPTH_STENCIL &&
-          firstImage->InternalFormat != GL_STENCIL_INDEX)
-         depth_mode = GL_RED;
+   if (baseFormat != GL_NONE) {
+      GLenum depth_mode = stObj->base.DepthMode;
+      /* In ES 3.0, DEPTH_TEXTURE_MODE is expected to be GL_RED for textures
+       * with depth component data specified with a sized internal format.
+       */
+      if (_mesa_is_gles3(st->ctx) &&
+          util_format_is_depth_or_stencil(stObj->pt->format)) {
+         const struct gl_texture_image *firstImage =
+            _mesa_base_tex_image(&stObj->base);
+         if (firstImage->InternalFormat != GL_DEPTH_COMPONENT &&
+             firstImage->InternalFormat != GL_DEPTH_STENCIL &&
+             firstImage->InternalFormat != GL_STENCIL_INDEX)
+            depth_mode = GL_RED;
+      }
+      tex_swizzle = compute_texture_format_swizzle(baseFormat,
+                                                   depth_mode,
+                                                   stObj->pt->format,
+                                                   glsl_version);
    }
-   tex_swizzle = compute_texture_format_swizzle(baseFormat,
-                                                depth_mode,
-                                                glsl130_or_later);
+   else {
+      tex_swizzle = SWIZZLE_XYZW;
+   }
 
    /* Combine the texture format swizzle with user's swizzle */
    return swizzle_swizzle(stObj->base._Swizzle, tex_swizzle);
@@ -292,13 +317,12 @@ get_texture_format_swizzle(const struct st_context *st,
  *
  * \param stObj  the st texture object,
  */
-MAYBE_UNUSED static boolean
+static boolean
 check_sampler_swizzle(const struct st_context *st,
                       const struct st_texture_object *stObj,
-                      const struct pipe_sampler_view *sv,
-                      bool glsl130_or_later)
+		      const struct pipe_sampler_view *sv, unsigned glsl_version)
 {
-   unsigned swizzle = get_texture_format_swizzle(st, stObj, glsl130_or_later);
+   unsigned swizzle = get_texture_format_swizzle(st, stObj, glsl_version);
 
    return ((sv->swizzle_r != GET_SWZ(swizzle, 0)) ||
            (sv->swizzle_g != GET_SWZ(swizzle, 1)) ||
@@ -338,31 +362,43 @@ get_sampler_view_format(struct st_context *st,
 {
    enum pipe_format format;
 
-   GLenum baseFormat = _mesa_base_tex_image(&stObj->base)->_BaseFormat;
-   format = stObj->surface_based ? stObj->surface_format : stObj->pt->format;
+   if (stObj->base.Target == GL_TEXTURE_BUFFER) {
+      format =
+         st_mesa_format_to_pipe_format(st, stObj->base._BufferObjectFormat);
+   }
+   else {
+      format =
+         stObj->surface_based ? stObj->surface_format : stObj->pt->format;
 
-   if (baseFormat == GL_DEPTH_COMPONENT ||
-       baseFormat == GL_DEPTH_STENCIL ||
-       baseFormat == GL_STENCIL_INDEX) {
-      if (stObj->base.StencilSampling || baseFormat == GL_STENCIL_INDEX)
-         format = util_format_stencil_only(format);
+      if (util_format_is_depth_and_stencil(format)) {
+         if (stObj->base.StencilSampling) {
+            format = util_format_stencil_only(format);
+         }
+         else {
+            GLenum baseFormat = _mesa_texture_base_format(&stObj->base);
+            if (baseFormat == GL_STENCIL_INDEX) {
+               format = util_format_stencil_only(format);
+            }
+         }
+      }
+      else {
+         /* If sRGB decoding is off, use the linear format */
+         if (samp->sRGBDecode == GL_SKIP_DECODE_EXT) {
+            format = util_format_linear(format);
+         }
 
-      return format;
+         /* Use R8_UNORM for video formats */
+         switch (format) {
+         case PIPE_FORMAT_NV12:
+         case PIPE_FORMAT_IYUV:
+            format = PIPE_FORMAT_R8_UNORM;
+            break;
+         default:
+            break;
+         }
+      }
    }
 
-   /* If sRGB decoding is off, use the linear format */
-   if (samp->sRGBDecode == GL_SKIP_DECODE_EXT)
-      format = util_format_linear(format);
-
-   /* Use R8_UNORM for video formats */
-   switch (format) {
-   case PIPE_FORMAT_NV12:
-   case PIPE_FORMAT_IYUV:
-      format = PIPE_FORMAT_R8_UNORM;
-      break;
-   default:
-      break;
-   }
    return format;
 }
 
@@ -371,25 +407,38 @@ static struct pipe_sampler_view *
 st_create_texture_sampler_view_from_stobj(struct st_context *st,
 					  struct st_texture_object *stObj,
 					  enum pipe_format format,
-                                          bool glsl130_or_later)
+                                          unsigned glsl_version)
 {
-   /* There is no need to clear this structure (consider CPU overhead). */
    struct pipe_sampler_view templ;
-   unsigned swizzle = get_texture_format_swizzle(st, stObj, glsl130_or_later);
+   unsigned swizzle = get_texture_format_swizzle(st, stObj, glsl_version);
 
-   templ.format = format;
+   u_sampler_view_default_template(&templ, stObj->pt, format);
 
-   templ.u.tex.first_level = stObj->base.MinLevel + stObj->base.BaseLevel;
-   templ.u.tex.last_level = last_level(stObj);
-   assert(templ.u.tex.first_level <= templ.u.tex.last_level);
-   if (stObj->layer_override) {
-      templ.u.tex.first_layer = templ.u.tex.last_layer = stObj->layer_override;
+   if (stObj->pt->target == PIPE_BUFFER) {
+      unsigned base, size;
+
+      base = stObj->base.BufferOffset;
+      if (base >= stObj->pt->width0)
+         return NULL;
+      size = MIN2(stObj->pt->width0 - base, (unsigned)stObj->base.BufferSize);
+      if (!size)
+         return NULL;
+
+      templ.u.buf.offset = base;
+      templ.u.buf.size = size;
    } else {
-      templ.u.tex.first_layer = stObj->base.MinLayer;
-      templ.u.tex.last_layer = last_layer(stObj);
+      templ.u.tex.first_level = stObj->base.MinLevel + stObj->base.BaseLevel;
+      templ.u.tex.last_level = last_level(stObj);
+      assert(templ.u.tex.first_level <= templ.u.tex.last_level);
+      if (stObj->layer_override) {
+         templ.u.tex.first_layer = templ.u.tex.last_layer = stObj->layer_override;
+      } else {
+         templ.u.tex.first_layer = stObj->base.MinLayer;
+         templ.u.tex.last_layer = last_layer(stObj);
+      }
+      assert(templ.u.tex.first_layer <= templ.u.tex.last_layer);
+      templ.target = gl_target_to_pipe(stObj->base.Target);
    }
-   assert(templ.u.tex.first_layer <= templ.u.tex.last_layer);
-   templ.target = gl_target_to_pipe(stObj->base.Target);
 
    templ.swizzle_r = GET_SWZ(swizzle, 0);
    templ.swizzle_g = GET_SWZ(swizzle, 1);
@@ -404,9 +453,13 @@ struct pipe_sampler_view *
 st_get_texture_sampler_view_from_stobj(struct st_context *st,
                                        struct st_texture_object *stObj,
                                        const struct gl_sampler_object *samp,
-                                       bool glsl130_or_later)
+                                       unsigned glsl_version)
 {
    struct pipe_sampler_view **sv;
+
+   if (!stObj || !stObj->pt) {
+      return NULL;
+   }
 
    sv = st_texture_get_sampler_view(st, stObj);
 
@@ -415,88 +468,35 @@ st_get_texture_sampler_view_from_stobj(struct st_context *st,
        * what they're supposed to be.
        */
       MAYBE_UNUSED struct pipe_sampler_view *view = *sv;
-      assert(stObj->pt == view->texture);
-      assert(!check_sampler_swizzle(st, stObj, view, glsl130_or_later));
+      assert(!check_sampler_swizzle(st, stObj, view, glsl_version));
       assert(get_sampler_view_format(st, stObj, samp) == view->format);
       assert(gl_target_to_pipe(stObj->base.Target) == view->target);
-      assert(stObj->base.MinLevel + stObj->base.BaseLevel ==
-             view->u.tex.first_level);
-      assert(last_level(stObj) == view->u.tex.last_level);
-      assert(stObj->layer_override || stObj->base.MinLayer == view->u.tex.first_layer);
-      assert(stObj->layer_override || last_layer(stObj) == view->u.tex.last_layer);
-      assert(!stObj->layer_override ||
-             (stObj->layer_override == view->u.tex.first_layer &&
-              stObj->layer_override == view->u.tex.last_layer));
+      if (stObj->base.Target == GL_TEXTURE_BUFFER) {
+         unsigned base = stObj->base.BufferOffset;
+         unsigned size = MIN2(stObj->pt->width0 - base,
+                              (unsigned) stObj->base.BufferSize);
+         assert(view->u.buf.offset == base);
+         assert(view->u.buf.size == size);
+      }
+      else {
+         assert(stObj->base.MinLevel + stObj->base.BaseLevel ==
+                view->u.tex.first_level);
+         assert(last_level(stObj) == view->u.tex.last_level);
+         assert(stObj->layer_override || stObj->base.MinLayer == view->u.tex.first_layer);
+         assert(stObj->layer_override || last_layer(stObj) == view->u.tex.last_layer);
+         assert(!stObj->layer_override ||
+                (stObj->layer_override == view->u.tex.first_layer &&
+                 stObj->layer_override == view->u.tex.last_layer));
+      }
    }
    else {
       /* create new sampler view */
       enum pipe_format format = get_sampler_view_format(st, stObj, samp);
 
       *sv = st_create_texture_sampler_view_from_stobj(st, stObj,
-                                                      format, glsl130_or_later);
+                                                      format, glsl_version);
 
    }
 
-   return *sv;
-}
-
-
-struct pipe_sampler_view *
-st_get_buffer_sampler_view_from_stobj(struct st_context *st,
-                                      struct st_texture_object *stObj)
-{
-   struct pipe_sampler_view **sv;
-   struct st_buffer_object *stBuf =
-      st_buffer_object(stObj->base.BufferObject);
-
-   if (!stBuf || !stBuf->buffer)
-      return NULL;
-
-   sv = st_texture_get_sampler_view(st, stObj);
-
-   struct pipe_resource *buf = stBuf->buffer;
-   struct pipe_sampler_view *view = *sv;
-
-   if (view && view->texture == buf) {
-      /* Debug check: make sure that the sampler view's parameters are
-       * what they're supposed to be.
-       */
-      assert(st_mesa_format_to_pipe_format(st, stObj->base._BufferObjectFormat)
-             == view->format);
-      assert(view->target == PIPE_BUFFER);
-      unsigned base = stObj->base.BufferOffset;
-      MAYBE_UNUSED unsigned size = MIN2(buf->width0 - base,
-                           (unsigned) stObj->base.BufferSize);
-      assert(view->u.buf.offset == base);
-      assert(view->u.buf.size == size);
-   } else {
-      unsigned base = stObj->base.BufferOffset;
-
-      if (base >= buf->width0)
-         return NULL;
-
-      unsigned size = buf->width0 - base;
-      size = MIN2(size, (unsigned)stObj->base.BufferSize);
-      if (!size)
-         return NULL;
-
-      /* Create a new sampler view. There is no need to clear the entire
-       * structure (consider CPU overhead).
-       */
-      struct pipe_sampler_view templ;
-
-      templ.format =
-         st_mesa_format_to_pipe_format(st, stObj->base._BufferObjectFormat);
-      templ.target = PIPE_BUFFER;
-      templ.swizzle_r = PIPE_SWIZZLE_X;
-      templ.swizzle_g = PIPE_SWIZZLE_Y;
-      templ.swizzle_b = PIPE_SWIZZLE_Z;
-      templ.swizzle_a = PIPE_SWIZZLE_W;
-      templ.u.buf.offset = base;
-      templ.u.buf.size = size;
-
-      pipe_sampler_view_reference(sv, NULL);
-      *sv = st->pipe->create_sampler_view(st->pipe, buf, &templ);
-   }
    return *sv;
 }

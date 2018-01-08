@@ -31,6 +31,13 @@
  */
 /*@{*/
 
+extern void
+_mesa_texture_storage(struct gl_context *ctx, GLuint dims,
+                      struct gl_texture_object *texObj,
+                      GLenum target, GLsizei levels,
+                      GLenum internalformat, GLsizei width,
+                      GLsizei height, GLsizei depth, bool dsa);
+
 /**
  * Texture width, height and depth check shared with the
  * multisample variants of TexStorage functions.

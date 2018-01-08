@@ -20,40 +20,47 @@
 Primary Mesa download site:
 <a href="ftp://ftp.freedesktop.org/pub/mesa/">ftp.freedesktop.org</a> (FTP)
 or <a href="https://mesa.freedesktop.org/archive/">mesa.freedesktop.org</a>
-(HTTPS).
-</p>
-
-<p>
-Starting with the first release of 2017, Mesa's version scheme is
-year-based. Filenames are in the form <tt>mesa-Y.N.P.tar.gz</tt>, where
-<tt>Y</tt> is the year (two digits), <tt>N</tt> is an incremental number
-(starting at 0) and <tt>P</tt> is the patch number (0 for the first
-release, 1 for the first patch after that).
+(HTTP).
 </p>
 
 <p>
 When a new release is coming, release candidates (betas) may be found
-in the same directory, and are recognisable by the
-<tt>mesa-Y.N.P-<b>rc</b>X.tar.gz</tt> filename.
+<a href="ftp://ftp.freedesktop.org/pub/mesa/beta/">here</a>.
 </p>
 
 
 <h1>Unpacking</h1>
 
 <p>
-Mesa releases are available in two formats: <tt>.tar.xz</tt> and <tt>.tar.gz</tt>.
+Mesa releases are available in three formats: .tar.bz2, .tar.gz, and .zip
 </p>
 
 <p>
-To unpack the tarball:
+To unpack .tar.gz files:
+</p>
 <pre>
-	tar xf mesa-Y.N.P.tar.xz
+	tar zxf MesaLib-x.y.z.tar.gz
 </pre>
 or
 <pre>
-	tar xf mesa-Y.N.P.tar.gz
+	gzcat MesaLib-x.y.z.tar.gz | tar xf -
 </pre>
+or
+<pre>
+	gunzip MesaLib-x.y.z.tar.gz ; tar xf MesaLib-x.y.z.tar
+</pre>
+<p>
+To unpack .tar.bz2 files:
 </p>
+<pre>
+	bunzip2 -c MesaLib-x.y.z.tar.gz | tar xf -
+</pre>
+<p>
+To unpack .zip files:
+</p>
+<pre>
+	unzip MesaLib-x.y.z.zip
+</pre>
 
 
 <h1>Contents</h1>
@@ -62,8 +69,8 @@ or
 After unpacking you'll have these files and directories (among others):
 </p>
 <pre>
-autogen.sh	- Autoconf script for *nix systems
-scons/		- SCons script for Windows builds
+Makefile	- top-level Makefile for most systems
+configs/	- makefile parameter files for various systems
 include/	- GL header (include) files
 bin/		- shell scripts for making shared libraries, etc
 docs/		- documentation
@@ -102,9 +109,9 @@ In the past, GLUT, GLU and the Mesa demos were released in conjunction with
 Mesa releases.  But since GLUT, GLU and the demos change infrequently, they
 were split off into their own git repositories:
 
-<a href="https://cgit.freedesktop.org/mesa/glut/">GLUT</a>,
-<a href="https://cgit.freedesktop.org/mesa/glu/">GLU</a> and
-<a href="https://cgit.freedesktop.org/mesa/demos/">Demos</a>,
+<a href="http://cgit.freedesktop.org/mesa/glut/">GLUT</a>,
+<a href="http://cgit.freedesktop.org/mesa/glu/">GLU</a> and
+<a href="http://cgit.freedesktop.org/mesa/demos/">Demos</a>,
 </p>
 
 </div>

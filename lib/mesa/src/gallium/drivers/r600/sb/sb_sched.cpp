@@ -711,24 +711,22 @@ void alu_group_tracker::update_flags(alu_node* n) {
 }
 
 int post_scheduler::run() {
-	return run_on(sh.root) ? 0 : 1;
+	run_on(sh.root);
+	return 0;
 }
 
-bool post_scheduler::run_on(container_node* n) {
-	int r = true;
+void post_scheduler::run_on(container_node* n) {
+
 	for (node_riterator I = n->rbegin(), E = n->rend(); I != E; ++I) {
 		if (I->is_container()) {
 			if (I->subtype == NST_BB) {
 				bb_node* bb = static_cast<bb_node*>(*I);
-				r = schedule_bb(bb);
+				schedule_bb(bb);
 			} else {
-				r = run_on(static_cast<container_node*>(*I));
+				run_on(static_cast<container_node*>(*I));
 			}
-			if (!r)
-				break;
 		}
 	}
-	return r;
 }
 
 void post_scheduler::init_uc_val(container_node *c, value *v) {
@@ -760,7 +758,7 @@ unsigned post_scheduler::init_ucm(container_node *c, node *n) {
 	return F == ucm.end() ? 0 : F->second;
 }
 
-bool post_scheduler::schedule_bb(bb_node* bb) {
+void post_scheduler::schedule_bb(bb_node* bb) {
 	PSC_DUMP(
 		sblog << "scheduling BB " << bb->id << "\n";
 		if (!pending.empty())
@@ -793,10 +791,8 @@ bool post_scheduler::schedule_bb(bb_node* bb) {
 
 		if (n->is_alu_clause()) {
 			n->remove();
-			bool r = process_alu(static_cast<container_node*>(n));
-			if (r)
-				continue;
-			return false;
+			process_alu(static_cast<container_node*>(n));
+			continue;
 		}
 
 		n->remove();
@@ -804,7 +800,6 @@ bool post_scheduler::schedule_bb(bb_node* bb) {
 	}
 
 	this->cur_bb = NULL;
-	return true;
 }
 
 void post_scheduler::init_regmap() {
@@ -938,10 +933,10 @@ void post_scheduler::process_fetch(container_node *c) {
 	cur_bb->push_front(c);
 }
 
-bool post_scheduler::process_alu(container_node *c) {
+void post_scheduler::process_alu(container_node *c) {
 
 	if (c->empty())
-		return true;
+		return;
 
 	ucm.clear();
 	alu.reset();
@@ -978,7 +973,7 @@ bool post_scheduler::process_alu(container_node *c) {
 		}
 	}
 
-	return schedule_alu(c);
+	schedule_alu(c);
 }
 
 void post_scheduler::update_local_interferences() {
@@ -1140,20 +1135,15 @@ void post_scheduler::emit_clause() {
 	emit_index_registers();
 }
 
-bool post_scheduler::schedule_alu(container_node *c) {
+void post_scheduler::schedule_alu(container_node *c) {
 
 	assert(!ready.empty() || !ready_copies.empty());
 
-	bool improving = true;
-	int last_pending = pending.count();
-	while (improving) {
+	while (1) {
+
 		prev_regmap = regmap;
+
 		if (!prepare_alu_group()) {
-
-			int new_pending = pending.count();
-			improving = (new_pending < last_pending) || (last_pending == 0);
-			last_pending = new_pending;
-
 			if (alu.current_idx[0] || alu.current_idx[1]) {
 				regmap = prev_regmap;
 				emit_clause();
@@ -1196,7 +1186,6 @@ bool post_scheduler::schedule_alu(container_node *c) {
 		dump::dump_op_list(&pending);
 		assert(!"unscheduled pending instructions");
 	}
-	return improving;
 }
 
 void post_scheduler::add_interferences(value *v, sb_bitset &rb, val_set &vs) {

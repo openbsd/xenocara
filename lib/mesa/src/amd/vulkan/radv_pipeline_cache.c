@@ -23,7 +23,6 @@
 
 #include "util/mesa-sha1.h"
 #include "util/debug.h"
-#include "util/u_atomic.h"
 #include "radv_private.h"
 
 #include "ac_nir_to_llvm.h"
@@ -58,7 +57,7 @@ radv_pipeline_cache_init(struct radv_pipeline_cache *cache,
 	/* We don't consider allocation failure fatal, we just start with a 0-sized
 	 * cache. */
 	if (cache->hash_table == NULL ||
-	    (device->debug_flags & RADV_DEBUG_NO_CACHE))
+	    !env_var_as_boolean("RADV_ENABLE_PIPELINE_CACHE", true))
 		cache->table_size = 0;
 	else
 		memset(cache->hash_table, 0, byte_size);
@@ -89,25 +88,23 @@ radv_hash_shader(unsigned char *hash, struct radv_shader_module *module,
 		 const char *entrypoint,
 		 const VkSpecializationInfo *spec_info,
 		 const struct radv_pipeline_layout *layout,
-		 const union ac_shader_variant_key *key,
-		 uint32_t is_geom_copy_shader)
+		 const union ac_shader_variant_key *key)
 {
-	struct mesa_sha1 ctx;
+	struct mesa_sha1 *ctx;
 
-	_mesa_sha1_init(&ctx);
+	ctx = _mesa_sha1_init();
 	if (key)
-		_mesa_sha1_update(&ctx, key, sizeof(*key));
-	_mesa_sha1_update(&ctx, module->sha1, sizeof(module->sha1));
-	_mesa_sha1_update(&ctx, entrypoint, strlen(entrypoint));
+		_mesa_sha1_update(ctx, key, sizeof(*key));
+	_mesa_sha1_update(ctx, module->sha1, sizeof(module->sha1));
+	_mesa_sha1_update(ctx, entrypoint, strlen(entrypoint));
 	if (layout)
-		_mesa_sha1_update(&ctx, layout->sha1, sizeof(layout->sha1));
+		_mesa_sha1_update(ctx, layout->sha1, sizeof(layout->sha1));
 	if (spec_info) {
-		_mesa_sha1_update(&ctx, spec_info->pMapEntries,
+		_mesa_sha1_update(ctx, spec_info->pMapEntries,
 				  spec_info->mapEntryCount * sizeof spec_info->pMapEntries[0]);
-		_mesa_sha1_update(&ctx, spec_info->pData, spec_info->dataSize);
+		_mesa_sha1_update(ctx, spec_info->pData, spec_info->dataSize);
 	}
-	_mesa_sha1_update(&ctx, &is_geom_copy_shader, 4);
-	_mesa_sha1_final(&ctx, hash);
+	_mesa_sha1_final(ctx, hash);
 }
 
 
@@ -117,9 +114,6 @@ radv_pipeline_cache_search_unlocked(struct radv_pipeline_cache *cache,
 {
 	const uint32_t mask = cache->table_size - 1;
 	const uint32_t start = (*(uint32_t *) sha1);
-
-	if (cache->table_size == 0)
-		return NULL;
 
 	for (uint32_t i = 0; i < cache->table_size; i++) {
 		const uint32_t index = (start + i) & mask;
@@ -156,10 +150,7 @@ radv_create_shader_variant_from_pipeline_cache(struct radv_device *device,
 					       struct radv_pipeline_cache *cache,
 					       const unsigned char *sha1)
 {
-	struct cache_entry *entry = NULL;
-
-	if (cache)
-		entry = radv_pipeline_cache_search(cache, sha1);
+	struct cache_entry *entry = radv_pipeline_cache_search(cache, sha1);
 
 	if (!entry)
 		return NULL;
@@ -175,11 +166,10 @@ radv_create_shader_variant_from_pipeline_cache(struct radv_device *device,
 		variant->info = entry->variant_info;
 		variant->rsrc1 = entry->rsrc1;
 		variant->rsrc2 = entry->rsrc2;
-		variant->code_size = entry->code_size;
 		variant->ref_count = 1;
 
 		variant->bo = device->ws->buffer_create(device->ws, entry->code_size, 256,
-						RADEON_DOMAIN_VRAM, RADEON_FLAG_CPU_ACCESS);
+						RADEON_DOMAIN_GTT, RADEON_FLAG_CPU_ACCESS);
 
 		void *ptr = device->ws->buffer_map(variant->bo);
 		memcpy(ptr, entry->code, entry->code_size);
@@ -188,7 +178,7 @@ radv_create_shader_variant_from_pipeline_cache(struct radv_device *device,
 		entry->variant = variant;
 	}
 
-	p_atomic_inc(&entry->variant->ref_count);
+	__sync_fetch_and_add(&entry->variant->ref_count, 1);
 	return entry->variant;
 }
 
@@ -268,9 +258,6 @@ radv_pipeline_cache_insert_shader(struct radv_pipeline_cache *cache,
 				  struct radv_shader_variant *variant,
 				  const void *code, unsigned code_size)
 {
-	if (!cache)
-		return variant;
-
 	pthread_mutex_lock(&cache->mutex);
 	struct cache_entry *entry = radv_pipeline_cache_search_unlocked(cache, sha1);
 	if (entry) {
@@ -280,7 +267,7 @@ radv_pipeline_cache_insert_shader(struct radv_pipeline_cache *cache,
 		} else {
 			entry->variant = variant;
 		}
-		p_atomic_inc(&variant->ref_count);
+		__sync_fetch_and_add(&variant->ref_count, 1);
 		pthread_mutex_unlock(&cache->mutex);
 		return variant;
 	}
@@ -300,7 +287,7 @@ radv_pipeline_cache_insert_shader(struct radv_pipeline_cache *cache,
 	entry->rsrc2 = variant->rsrc2;
 	entry->code_size = code_size;
 	entry->variant = variant;
-	p_atomic_inc(&variant->ref_count);
+	__sync_fetch_and_add(&variant->ref_count, 1);
 
 	radv_pipeline_cache_add_entry(cache, entry);
 
@@ -316,13 +303,13 @@ struct cache_header {
 	uint32_t device_id;
 	uint8_t  uuid[VK_UUID_SIZE];
 };
-
 void
 radv_pipeline_cache_load(struct radv_pipeline_cache *cache,
 			 const void *data, size_t size)
 {
 	struct radv_device *device = cache->device;
 	struct cache_header header;
+	uint8_t uuid[VK_UUID_SIZE];
 
 	if (size < sizeof(header))
 		return;
@@ -333,9 +320,10 @@ radv_pipeline_cache_load(struct radv_pipeline_cache *cache,
 		return;
 	if (header.vendor_id != 0x1002)
 		return;
-	if (header.device_id != device->physical_device->rad_info.pci_id)
+	if (header.device_id != device->instance->physicalDevice.rad_info.pci_id)
 		return;
-	if (memcmp(header.uuid, device->physical_device->uuid, VK_UUID_SIZE) != 0)
+	radv_device_get_cache_uuid(uuid);
+	if (memcmp(header.uuid, uuid, VK_UUID_SIZE) != 0)
 		return;
 
 	char *end = (void *) data + size;
@@ -433,8 +421,8 @@ VkResult radv_GetPipelineCacheData(
 	header->header_size = sizeof(*header);
 	header->header_version = VK_PIPELINE_CACHE_HEADER_VERSION_ONE;
 	header->vendor_id = 0x1002;
-	header->device_id = device->physical_device->rad_info.pci_id;
-	memcpy(header->uuid, device->physical_device->uuid, VK_UUID_SIZE);
+	header->device_id = device->instance->physicalDevice.rad_info.pci_id;
+	radv_device_get_cache_uuid(header->uuid);
 	p += header->header_size;
 
 	struct cache_entry *entry;

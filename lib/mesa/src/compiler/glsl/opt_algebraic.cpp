@@ -144,7 +144,7 @@ is_valid_vec_const(ir_constant *ir)
 static inline bool
 is_less_than_one(ir_constant *ir)
 {
-   assert(ir->type->is_float());
+   assert(ir->type->base_type == GLSL_TYPE_FLOAT);
 
    if (!is_valid_vec_const(ir))
       return false;
@@ -161,7 +161,7 @@ is_less_than_one(ir_constant *ir)
 static inline bool
 is_greater_than_zero(ir_constant *ir)
 {
-   assert(ir->type->is_float());
+   assert(ir->type->base_type == GLSL_TYPE_FLOAT);
 
    if (!is_valid_vec_const(ir))
       return false;
@@ -246,7 +246,7 @@ ir_algebraic_visitor::reassociate_operands(ir_expression *ir1,
 /**
  * Reassociates a constant down a tree of adds or multiplies.
  *
- * Consider (2 * (a * (b * 0.5))).  We want to end up with a * b.
+ * Consider (2 * (a * (b * 0.5))).  We want to send up with a * b.
  */
 bool
 ir_algebraic_visitor::reassociate_constant(ir_expression *ir1, int const_index,
@@ -313,6 +313,7 @@ ir_algebraic_visitor::handle_expression(ir_expression *ir)
 {
    ir_constant *op_const[4] = {NULL, NULL, NULL, NULL};
    ir_expression *op_expr[4] = {NULL, NULL, NULL, NULL};
+   unsigned int i;
 
    if (ir->operation == ir_binop_mul &&
        ir->operands[0]->type->is_matrix() &&
@@ -329,7 +330,7 @@ ir_algebraic_visitor::handle_expression(ir_expression *ir)
    }
 
    assert(ir->get_num_operands() <= 4);
-   for (unsigned i = 0; i < ir->get_num_operands(); i++) {
+   for (i = 0; i < ir->get_num_operands(); i++) {
       if (ir->operands[i]->type->is_matrix())
 	 return ir;
 
@@ -470,34 +471,6 @@ ir_algebraic_visitor::handle_expression(ir_expression *ir)
          }
       }
       break;
-
-      /* This macro CANNOT use the do { } while(true) mechanism because
-       * then the breaks apply to the loop instead of the switch!
-       */
-#define HANDLE_PACK_UNPACK_INVERSE(inverse_operation)                   \
-      {                                                                 \
-         ir_expression *const op = ir->operands[0]->as_expression();    \
-         if (op == NULL)                                                \
-            break;                                                      \
-         if (op->operation == (inverse_operation))                      \
-            return op->operands[0];                                     \
-         break;                                                         \
-      }
-
-   case ir_unop_unpack_uint_2x32:
-      HANDLE_PACK_UNPACK_INVERSE(ir_unop_pack_uint_2x32);
-   case ir_unop_pack_uint_2x32:
-      HANDLE_PACK_UNPACK_INVERSE(ir_unop_unpack_uint_2x32);
-   case ir_unop_unpack_int_2x32:
-      HANDLE_PACK_UNPACK_INVERSE(ir_unop_pack_int_2x32);
-   case ir_unop_pack_int_2x32:
-      HANDLE_PACK_UNPACK_INVERSE(ir_unop_unpack_int_2x32);
-   case ir_unop_unpack_double_2x32:
-      HANDLE_PACK_UNPACK_INVERSE(ir_unop_pack_double_2x32);
-   case ir_unop_pack_double_2x32:
-      HANDLE_PACK_UNPACK_INVERSE(ir_unop_unpack_double_2x32);
-
-#undef HANDLE_PACK_UNPACK_INVERSE
 
    case ir_binop_add:
       if (is_vec_zero(op_const[0]))
@@ -648,7 +621,8 @@ ir_algebraic_visitor::handle_expression(ir_expression *ir)
 
    case ir_binop_div:
       if (is_vec_one(op_const[0]) && (
-                ir->type->is_float() || ir->type->is_double())) {
+                ir->type->base_type == GLSL_TYPE_FLOAT ||
+                ir->type->base_type == GLSL_TYPE_DOUBLE)) {
 	 return new(mem_ctx) ir_expression(ir_unop_rcp,
 					   ir->operands[1]->type,
 					   ir->operands[1],
@@ -843,7 +817,7 @@ ir_algebraic_visitor::handle_expression(ir_expression *ir)
 
    case ir_binop_min:
    case ir_binop_max:
-      if (!ir->type->is_float() || options->EmitNoSat)
+      if (ir->type->base_type != GLSL_TYPE_FLOAT || options->EmitNoSat)
          break;
 
       /* Replace min(max) operations and its commutative combinations with

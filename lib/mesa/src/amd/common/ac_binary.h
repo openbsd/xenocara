@@ -24,11 +24,9 @@
  *
  */
 
-#ifndef AC_BINARY_H
-#define AC_BINARY_H
+#pragma once
 
 #include <stdint.h>
-#include <stdbool.h>
 
 struct ac_shader_reloc {
 	char name[32];
@@ -64,7 +62,6 @@ struct ac_shader_binary {
 
 	/** Disassembled shader in a string. */
 	char *disasm_string;
-	char *llvm_ir_string;
 };
 
 struct ac_shader_config {
@@ -83,20 +80,9 @@ struct ac_shader_config {
  * Parse the elf binary stored in \p elf_data and create a
  * ac_shader_binary object.
  */
-bool ac_elf_read(const char *elf_data, unsigned elf_size,
+void ac_elf_read(const char *elf_data, unsigned elf_size,
 		 struct ac_shader_binary *binary);
-
-/**
- * @returns A pointer to the start of the configuration information for
- * the function starting at \p symbol_offset of the binary.
- */
-const unsigned char *ac_shader_binary_config_start(
-	const struct ac_shader_binary *binary,
-	uint64_t symbol_offset);
 
 void ac_shader_binary_read_config(struct ac_shader_binary *binary,
 				  struct ac_shader_config *conf,
-				  unsigned symbol_offset,
-				  bool supports_spill);
-
-#endif /* AC_BINARY_H */
+				  unsigned symbol_offset);

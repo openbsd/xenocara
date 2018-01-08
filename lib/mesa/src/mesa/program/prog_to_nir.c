@@ -159,8 +159,7 @@ ptn_get_src(struct ptn_compile *c, const struct prog_src_register *prog_src)
 
       switch (file) {
       case PROGRAM_CONSTANT:
-         if ((c->prog->arb.IndirectRegisterFiles &
-              (1 << PROGRAM_CONSTANT)) == 0) {
+         if ((c->prog->IndirectRegisterFiles & (1 << PROGRAM_CONSTANT)) == 0) {
             float *v = (float *) plist->ParameterValues[prog_src->Index];
             src.src = nir_src_for_ssa(nir_imm_vec4(b, v[0], v[1], v[2], v[3]));
             break;
@@ -306,7 +305,7 @@ ptn_move_dest(nir_builder *b, nir_alu_dest dest, nir_ssa_def *def)
 static void
 ptn_arl(nir_builder *b, nir_alu_dest dest, nir_ssa_def **src)
 {
-   ptn_move_dest(b, dest, nir_f2i32(b, nir_ffloor(b, src[0])));
+   ptn_move_dest(b, dest, nir_f2i(b, nir_ffloor(b, src[0])));
 }
 
 /* EXP - Approximate Exponential Base 2
@@ -598,7 +597,6 @@ ptn_tex(nir_builder *b, nir_alu_dest dest, nir_ssa_def **src,
       instr->coord_components = 3;
       break;
    case GLSL_SAMPLER_DIM_SUBPASS:
-   case GLSL_SAMPLER_DIM_SUBPASS_MS:
       unreachable("can't reach");
    }
 
@@ -634,7 +632,7 @@ ptn_tex(nir_builder *b, nir_alu_dest dest, nir_ssa_def **src,
       else
          instr->src[src_number].src = nir_src_for_ssa(ptn_channel(b, src[0], W));
 
-      instr->src[src_number].src_type = nir_tex_src_comparator;
+      instr->src[src_number].src_type = nir_tex_src_comparitor;
       src_number++;
    }
 
@@ -891,9 +889,9 @@ setup_registers_and_variables(struct ptn_compile *c)
    struct nir_shader *shader = b->shader;
 
    /* Create input variables. */
-   const int num_inputs = util_last_bit64(c->prog->info.inputs_read);
+   const int num_inputs = util_last_bit64(c->prog->InputsRead);
    for (int i = 0; i < num_inputs; i++) {
-      if (!(c->prog->info.inputs_read & BITFIELD64_BIT(i)))
+      if (!(c->prog->InputsRead & BITFIELD64_BIT(i)))
          continue;
 
       nir_variable *var =
@@ -903,9 +901,14 @@ setup_registers_and_variables(struct ptn_compile *c)
       var->data.index = 0;
 
       if (c->prog->Target == GL_FRAGMENT_PROGRAM_ARB) {
+         struct gl_fragment_program *fp =
+            (struct gl_fragment_program *) c->prog;
+
+         var->data.interpolation = fp->InterpQualifier[i];
+
          if (i == VARYING_SLOT_POS) {
-            var->data.origin_upper_left = c->prog->OriginUpperLeft;
-            var->data.pixel_center_integer = c->prog->PixelCenterInteger;
+            var->data.origin_upper_left = fp->OriginUpperLeft;
+            var->data.pixel_center_integer = fp->PixelCenterInteger;
          } else if (i == VARYING_SLOT_FOGC) {
             /* fogcoord is defined as <f, 0.0, 0.0, 1.0>.  Make the actual
              * input variable a float, and create a local containing the
@@ -947,11 +950,11 @@ setup_registers_and_variables(struct ptn_compile *c)
    }
 
    /* Create output registers and variables. */
-   int max_outputs = util_last_bit(c->prog->info.outputs_written);
+   int max_outputs = util_last_bit(c->prog->OutputsWritten);
    c->output_regs = rzalloc_array(c, nir_register *, max_outputs);
 
    for (int i = 0; i < max_outputs; i++) {
-      if (!(c->prog->info.outputs_written & BITFIELD64_BIT(i)))
+      if (!(c->prog->OutputsWritten & BITFIELD64_BIT(i)))
          continue;
 
       /* Since we can't load from outputs in the IR, we make temporaries
@@ -979,11 +982,10 @@ setup_registers_and_variables(struct ptn_compile *c)
    }
 
    /* Create temporary registers. */
-   c->temp_regs = rzalloc_array(c, nir_register *,
-                                c->prog->arb.NumTemporaries);
+   c->temp_regs = rzalloc_array(c, nir_register *, c->prog->NumTemporaries);
 
    nir_register *reg;
-   for (unsigned i = 0; i < c->prog->arb.NumTemporaries; i++) {
+   for (unsigned i = 0; i < c->prog->NumTemporaries; i++) {
       reg = nir_local_reg_create(b->impl);
       if (!reg) {
          c->error = true;
@@ -1017,10 +1019,6 @@ prog_to_nir(const struct gl_program *prog,
    c->prog = prog;
 
    nir_builder_init_simple_shader(&c->build, NULL, stage, options);
-
-   /* Copy the shader_info from the gl_program */
-   c->build.shader->info = prog->info;
-
    s = c->build.shader;
 
    if (prog->Parameters->NumParameters > 0) {
@@ -1037,8 +1035,8 @@ prog_to_nir(const struct gl_program *prog,
    if (unlikely(c->error))
       goto fail;
 
-   for (unsigned int i = 0; i < prog->arb.NumInstructions; i++) {
-      ptn_emit_instruction(c, &prog->arb.Instructions[i]);
+   for (unsigned int i = 0; i < prog->NumInstructions; i++) {
+      ptn_emit_instruction(c, &prog->Instructions[i]);
 
       if (unlikely(c->error))
          break;
@@ -1052,10 +1050,18 @@ prog_to_nir(const struct gl_program *prog,
    s->info.num_abos = 0;
    s->info.num_ssbos = 0;
    s->info.num_images = 0;
+   s->info.inputs_read = prog->InputsRead;
+   s->info.outputs_written = prog->OutputsWritten;
+   s->info.system_values_read = prog->SystemValuesRead;
    s->info.uses_texture_gather = false;
-   s->info.clip_distance_array_size = 0;
-   s->info.cull_distance_array_size = 0;
+   s->info.uses_clip_distance_out = false;
    s->info.separate_shader = false;
+
+   if (stage == MESA_SHADER_FRAGMENT) {
+      struct gl_fragment_program *fp = (struct gl_fragment_program *)prog;
+
+      s->info.fs.uses_discard = fp->UsesKill;
+   }
 
 fail:
    if (c->error) {

@@ -36,12 +36,11 @@
 #include "st_program.h"
 #include "st_manager.h"
 
-typedef void (*update_func_t)(struct st_context *st);
 
 /* The list state update functions. */
-static const update_func_t update_functions[] =
+static const struct st_tracked_state *atoms[] =
 {
-#define ST_STATE(FLAG, st_update) st_update,
+#define ST_STATE(FLAG, st_update) &st_update,
 #include "st_atom_list.h"
 #undef ST_STATE
 };
@@ -49,7 +48,7 @@ static const update_func_t update_functions[] =
 
 void st_init_atoms( struct st_context *st )
 {
-   STATIC_ASSERT(ARRAY_SIZE(update_functions) <= 64);
+   STATIC_ASSERT(ARRAY_SIZE(atoms) <= 64);
 }
 
 
@@ -65,18 +64,17 @@ static void check_program_state( struct st_context *st )
 {
    struct gl_context *ctx = st->ctx;
    struct st_vertex_program *old_vp = st->vp;
-   struct st_common_program *old_tcp = st->tcp;
-   struct st_common_program *old_tep = st->tep;
-   struct st_common_program *old_gp = st->gp;
+   struct st_tessctrl_program *old_tcp = st->tcp;
+   struct st_tesseval_program *old_tep = st->tep;
+   struct st_geometry_program *old_gp = st->gp;
    struct st_fragment_program *old_fp = st->fp;
 
-   struct gl_program *new_vp = ctx->VertexProgram._Current;
-   struct gl_program *new_tcp = ctx->TessCtrlProgram._Current;
-   struct gl_program *new_tep = ctx->TessEvalProgram._Current;
-   struct gl_program *new_gp = ctx->GeometryProgram._Current;
-   struct gl_program *new_fp = ctx->FragmentProgram._Current;
+   struct gl_vertex_program *new_vp = ctx->VertexProgram._Current;
+   struct gl_tess_ctrl_program *new_tcp = ctx->TessCtrlProgram._Current;
+   struct gl_tess_eval_program *new_tep = ctx->TessEvalProgram._Current;
+   struct gl_geometry_program *new_gp = ctx->GeometryProgram._Current;
+   struct gl_fragment_program *new_fp = ctx->FragmentProgram._Current;
    uint64_t dirty = 0;
-   unsigned num_viewports = 1;
 
    /* Flag states used by both new and old shaders to unbind shader resources
     * properly when transitioning to shaders that don't use them.
@@ -92,21 +90,21 @@ static void check_program_state( struct st_context *st )
       if (old_tcp)
          dirty |= old_tcp->affected_states;
       if (new_tcp)
-         dirty |= st_common_program(new_tcp)->affected_states;
+         dirty |= st_tessctrl_program(new_tcp)->affected_states;
    }
 
    if (unlikely(new_tep != &old_tep->Base)) {
       if (old_tep)
          dirty |= old_tep->affected_states;
       if (new_tep)
-         dirty |= st_common_program(new_tep)->affected_states;
+         dirty |= st_tesseval_program(new_tep)->affected_states;
    }
 
    if (unlikely(new_gp != &old_gp->Base)) {
       if (old_gp)
          dirty |= old_gp->affected_states;
       if (new_gp)
-         dirty |= st_common_program(new_gp)->affected_states;
+         dirty |= st_geometry_program(new_gp)->affected_states;
    }
 
    if (unlikely(new_fp != &old_fp->Base)) {
@@ -116,31 +114,15 @@ static void check_program_state( struct st_context *st )
          dirty |= st_fragment_program(new_fp)->affected_states;
    }
 
-   /* Find out the number of viewports. This determines how many scissors
-    * and viewport states we need to update.
-    */
-   struct gl_program *last_prim_shader = new_gp ? new_gp :
-                                         new_tep ? new_tep : new_vp;
-   if (last_prim_shader &&
-       last_prim_shader->info.outputs_written & VARYING_BIT_VIEWPORT)
-      num_viewports = ctx->Const.MaxViewports;
-
-   if (st->state.num_viewports != num_viewports) {
-      st->state.num_viewports = num_viewports;
-      dirty |= ST_NEW_VIEWPORT;
-
-      if (ctx->Scissor.EnableFlags & u_bit_consecutive(0, num_viewports))
-         dirty |= ST_NEW_SCISSOR;
-   }
-
    st->dirty |= dirty;
+   st->gfx_shaders_may_be_dirty = false;
 }
 
 static void check_attrib_edgeflag(struct st_context *st)
 {
-   const struct gl_vertex_array **arrays = st->ctx->Array._DrawArrays;
+   const struct gl_client_array **arrays = st->ctx->Array._DrawArrays;
    GLboolean vertdata_edgeflags, edgeflag_culls_prims, edgeflags_enabled;
-   struct gl_program *vp = st->ctx->VertexProgram._Current;
+   struct gl_vertex_program *vp = st->ctx->VertexProgram._Current;
 
    if (!arrays)
       return;
@@ -188,29 +170,15 @@ void st_validate_state( struct st_context *st, enum st_pipeline pipeline )
       if (st->ctx->API == API_OPENGL_COMPAT)
          check_attrib_edgeflag(st);
 
-      if (st->gfx_shaders_may_be_dirty) {
-         check_program_state(st);
-         st->gfx_shaders_may_be_dirty = false;
-      }
-
+      check_program_state(st);
       st_manager_validate_framebuffers(st);
 
       pipeline_mask = ST_PIPELINE_RENDER_STATE_MASK;
       break;
 
-   case ST_PIPELINE_CLEAR:
-      st_manager_validate_framebuffers(st);
-      pipeline_mask = ST_PIPELINE_CLEAR_STATE_MASK;
-      break;
-
-   case ST_PIPELINE_UPDATE_FRAMEBUFFER:
-      st_manager_validate_framebuffers(st);
-      pipeline_mask = ST_PIPELINE_UPDATE_FB_STATE_MASK;
-      break;
-
    case ST_PIPELINE_COMPUTE: {
       struct st_compute_program *old_cp = st->cp;
-      struct gl_program *new_cp = ctx->ComputeProgram._Current;
+      struct gl_compute_program *new_cp = ctx->ComputeProgram._Current;
 
       if (new_cp != &old_cp->Base) {
          if (old_cp)
@@ -248,9 +216,9 @@ void st_validate_state( struct st_context *st, enum st_pipeline pipeline )
     * Don't use u_bit_scan64, it may be slower on 32-bit.
     */
    while (dirty_lo)
-      update_functions[u_bit_scan(&dirty_lo)](st);
+      atoms[u_bit_scan(&dirty_lo)]->update(st);
    while (dirty_hi)
-      update_functions[32 + u_bit_scan(&dirty_hi)](st);
+      atoms[32 + u_bit_scan(&dirty_hi)]->update(st);
 
    /* Clear the render or compute state bits. */
    st->dirty &= ~pipeline_mask;

@@ -77,12 +77,6 @@ enum gbm_bo_format {
    GBM_BO_FORMAT_ARGB8888
 };
 
-
-/**
- * The FourCC format codes are taken from the drm_fourcc.h definition, and
- * re-namespaced. New GBM formats must not be added, unless they are
- * identical ports from drm_fourcc.
- */
 #define __gbm_fourcc_code(a,b,c,d) ((uint32_t)(a) | ((uint32_t)(b) << 8) | \
 			      ((uint32_t)(c) << 16) | ((uint32_t)(d) << 24))
 
@@ -249,16 +243,9 @@ gbm_bo_create(struct gbm_device *gbm,
               uint32_t width, uint32_t height,
               uint32_t format, uint32_t flags);
 
-struct gbm_bo *
-gbm_bo_create_with_modifiers(struct gbm_device *gbm,
-                             uint32_t width, uint32_t height,
-                             uint32_t format,
-                             const uint64_t *modifiers,
-                             const unsigned int count);
 #define GBM_BO_IMPORT_WL_BUFFER         0x5501
 #define GBM_BO_IMPORT_EGL_IMAGE         0x5502
 #define GBM_BO_IMPORT_FD                0x5503
-#define GBM_BO_IMPORT_FD_MODIFIER       0x5504
 
 struct gbm_import_fd_data {
    int fd;
@@ -266,17 +253,6 @@ struct gbm_import_fd_data {
    uint32_t height;
    uint32_t stride;
    uint32_t format;
-};
-
-struct gbm_import_fd_modifier_data {
-   uint32_t width;
-   uint32_t height;
-   uint32_t format;
-   uint32_t num_fds;
-   int fds[4];
-   int strides[4];
-   int offsets[4];
-   uint64_t modifier;
 };
 
 struct gbm_bo *
@@ -328,13 +304,7 @@ uint32_t
 gbm_bo_get_stride(struct gbm_bo *bo);
 
 uint32_t
-gbm_bo_get_stride_for_plane(struct gbm_bo *bo, int plane);
-
-uint32_t
 gbm_bo_get_format(struct gbm_bo *bo);
-
-uint32_t
-gbm_bo_get_offset(struct gbm_bo *bo, int plane);
 
 struct gbm_device *
 gbm_bo_get_device(struct gbm_bo *bo);
@@ -344,15 +314,6 @@ gbm_bo_get_handle(struct gbm_bo *bo);
 
 int
 gbm_bo_get_fd(struct gbm_bo *bo);
-
-uint64_t
-gbm_bo_get_modifier(struct gbm_bo *bo);
-
-int
-gbm_bo_get_plane_count(struct gbm_bo *bo);
-
-union gbm_bo_handle
-gbm_bo_get_handle_for_plane(struct gbm_bo *bo, int plane);
 
 int
 gbm_bo_write(struct gbm_bo *bo, const void *buf, size_t count);
@@ -372,12 +333,6 @@ gbm_surface_create(struct gbm_device *gbm,
                    uint32_t width, uint32_t height,
 		   uint32_t format, uint32_t flags);
 
-struct gbm_surface *
-gbm_surface_create_with_modifiers(struct gbm_device *gbm,
-                                  uint32_t width, uint32_t height,
-                                  uint32_t format,
-                                  const uint64_t *modifiers,
-                                  const unsigned int count);
 int
 gbm_surface_needs_lock_front_buffer(struct gbm_surface *surface);
 

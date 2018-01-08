@@ -5,7 +5,7 @@
 #include "i915/i915_public.h"
 
 static struct pipe_screen *
-create_screen(int fd, unsigned flags)
+create_screen(int fd)
 {
    struct i915_winsys *iws;
    struct pipe_screen *screen;
@@ -30,7 +30,7 @@ static const struct drm_conf_ret throttle_ret = {
 
 static const struct drm_conf_ret share_fd_ret = {
    .type = DRM_CONF_BOOL,
-   .val.val_bool = true,
+   .val.val_int = true,
 };
 
 static const struct drm_conf_ret *drm_configuration(enum drm_conf conf)

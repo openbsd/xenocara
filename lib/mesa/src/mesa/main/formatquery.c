@@ -718,8 +718,8 @@ _mesa_query_internal_format_default(struct gl_context *ctx, GLenum target,
  * arb_internalformat_query2 spec.
  */
 static GLenum
-_equivalent_size_pname(GLenum target,
-                       GLenum pname)
+equivalentSizePname(GLenum target,
+                    GLenum pname)
 {
    switch (target) {
    case GL_TEXTURE_1D:
@@ -763,7 +763,7 @@ _equivalent_size_pname(GLenum target,
  * per-se, so we can't just call _mesa_get_texture_dimension directly.
  */
 static GLint
-_get_target_dimensions(GLenum target)
+get_target_dimensions(GLenum target)
 {
    switch(target) {
    case GL_TEXTURE_BUFFER:
@@ -788,7 +788,7 @@ _get_target_dimensions(GLenum target)
  *  <skip>."
  */
 static GLint
-_get_min_dimensions(GLenum pname)
+get_min_dimensions(GLenum pname)
 {
    switch(pname) {
    case GL_MAX_WIDTH:
@@ -807,7 +807,7 @@ _get_min_dimensions(GLenum pname)
  * dimensions.
  */
 static bool
-_is_multisample_target(GLenum target)
+is_multisample_target(GLenum target)
 {
    switch(target) {
    case GL_TEXTURE_2D_MULTISAMPLE:
@@ -1016,12 +1016,12 @@ _mesa_GetInternalformativ(GLenum target, GLenum internalformat, GLenum pname,
        * "If the resource does not have at least two dimensions, or if the
        * resource is unsupported, zero is returned."
        */
-      dimensions = _get_target_dimensions(target);
-      min_dimensions = _get_min_dimensions(pname);
+      dimensions = get_target_dimensions(target);
+      min_dimensions = get_min_dimensions(pname);
       if (dimensions < min_dimensions)
          goto end;
 
-      get_pname = _equivalent_size_pname(target, pname);
+      get_pname = equivalentSizePname(target, pname);
       if (get_pname == 0)
          goto end;
 
@@ -1055,7 +1055,7 @@ _mesa_GetInternalformativ(GLenum target, GLenum internalformat, GLenum pname,
        * returned as MAX_HEIGHT or MAX_DEPTH */
       for (i = 0; i < 4; i++) {
          if (max_dimensions_pnames[i] == GL_SAMPLES &&
-             !_is_multisample_target(target))
+             !is_multisample_target(target))
             continue;
 
          _mesa_GetInternalformativ(target, internalformat,
@@ -1564,8 +1564,7 @@ _mesa_GetInternalformati64v(GLenum target, GLenum internalformat,
     * no pname can return a negative value, we fill params32 with negative
     * values as reference values, that can be used to know what copy-back to
     * params */
-   for (i = 0; i < realSize; i++)
-      params32[i] = -1;
+   memset(params32, -1, 16);
 
    /* For GL_MAX_COMBINED_DIMENSIONS we need to get back 2 32-bit integers,
     * and at the same time we only need 2. So for that pname, we call the

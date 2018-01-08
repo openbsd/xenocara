@@ -23,6 +23,5 @@ include Makefile.sources
 
 noinst_LTLIBRARIES =
 
-EXTRA_DIST = $(COMMON_HEADER_FILES) common/sid_tables.py
+EXTRA_DIST = $(COMMON_HEADER_FILES)
 include Makefile.addrlib.am
-include Makefile.common.am

@@ -140,9 +140,6 @@ void slab_create_child(struct slab_child_pool *pool,
  */
 void slab_destroy_child(struct slab_child_pool *pool)
 {
-   if (!pool->parent)
-      return; /* the slab probably wasn't even created */
-
    mtx_lock(&pool->parent->mutex);
 
    while (pool->pages) {

@@ -54,28 +54,11 @@ _mesa_warning(struct gl_context *ctx, const char *fmt, ...)
 }
 
 void
-_mesa_reference_shader_program_data(struct gl_context *ctx,
-                                    struct gl_shader_program_data **ptr,
-                                    struct gl_shader_program_data *data)
-{
-   (void) ctx;
-   *ptr = data;
-}
-
-void
 _mesa_reference_shader(struct gl_context *ctx, struct gl_shader **ptr,
                        struct gl_shader *sh)
 {
    (void) ctx;
    *ptr = sh;
-}
-
-void
-_mesa_reference_program_(struct gl_context *ctx, struct gl_program **ptr,
-                         struct gl_program *prog)
-{
-   (void) ctx;
-   *ptr = prog;
 }
 
 void
@@ -95,6 +78,19 @@ _mesa_new_shader(GLuint name, gl_shader_stage stage)
       shader->Stage = stage;
       shader->Name = name;
       shader->RefCount = 1;
+   }
+   return shader;
+}
+
+struct gl_linked_shader *
+_mesa_new_linked_shader(gl_shader_stage stage)
+{
+   struct gl_linked_shader *shader;
+
+   assert(stage == MESA_SHADER_FRAGMENT || stage == MESA_SHADER_VERTEX);
+   shader = rzalloc(NULL, struct gl_linked_shader);
+   if (shader) {
+      shader->Stage = stage;
    }
    return shader;
 }
@@ -137,26 +133,26 @@ _mesa_clear_shader_program_data(struct gl_context *ctx,
       }
    }
 
-   shProg->data->NumUniformStorage = 0;
-   shProg->data->UniformStorage = NULL;
+   shProg->NumUniformStorage = 0;
+   shProg->UniformStorage = NULL;
    shProg->NumUniformRemapTable = 0;
    shProg->UniformRemapTable = NULL;
    shProg->UniformHash = NULL;
 
-   ralloc_free(shProg->data->InfoLog);
-   shProg->data->InfoLog = ralloc_strdup(shProg->data, "");
+   ralloc_free(shProg->InfoLog);
+   shProg->InfoLog = ralloc_strdup(shProg, "");
 
-   ralloc_free(shProg->data->UniformBlocks);
-   shProg->data->UniformBlocks = NULL;
-   shProg->data->NumUniformBlocks = 0;
+   ralloc_free(shProg->UniformBlocks);
+   shProg->UniformBlocks = NULL;
+   shProg->NumUniformBlocks = 0;
 
-   ralloc_free(shProg->data->ShaderStorageBlocks);
-   shProg->data->ShaderStorageBlocks = NULL;
-   shProg->data->NumShaderStorageBlocks = 0;
+   ralloc_free(shProg->ShaderStorageBlocks);
+   shProg->ShaderStorageBlocks = NULL;
+   shProg->NumShaderStorageBlocks = 0;
 
-   ralloc_free(shProg->data->AtomicBuffers);
-   shProg->data->AtomicBuffers = NULL;
-   shProg->data->NumAtomicBuffers = 0;
+   ralloc_free(shProg->AtomicBuffers);
+   shProg->AtomicBuffers = NULL;
+   shProg->NumAtomicBuffers = 0;
 }
 
 void initialize_context_to_defaults(struct gl_context *ctx, gl_api api)
@@ -178,11 +174,11 @@ void initialize_context_to_defaults(struct gl_context *ctx, gl_api api)
    ctx->Extensions.ARB_fragment_layer_viewport = true;
    ctx->Extensions.ARB_gpu_shader5 = true;
    ctx->Extensions.ARB_gpu_shader_fp64 = true;
-   ctx->Extensions.ARB_gpu_shader_int64 = true;
    ctx->Extensions.ARB_sample_shading = true;
    ctx->Extensions.ARB_shader_bit_encoding = true;
    ctx->Extensions.ARB_shader_draw_parameters = true;
    ctx->Extensions.ARB_shader_stencil_export = true;
+   ctx->Extensions.ARB_shader_subroutine = true;
    ctx->Extensions.ARB_shader_texture_lod = true;
    ctx->Extensions.ARB_shading_language_420pack = true;
    ctx->Extensions.ARB_shading_language_packing = true;
@@ -195,7 +191,6 @@ void initialize_context_to_defaults(struct gl_context *ctx, gl_api api)
    ctx->Extensions.ARB_uniform_buffer_object = true;
    ctx->Extensions.ARB_viewport_array = true;
    ctx->Extensions.ARB_cull_distance = true;
-   ctx->Extensions.ARB_bindless_texture = true;
 
    ctx->Extensions.OES_EGL_image_external = true;
    ctx->Extensions.OES_standard_derivatives = true;

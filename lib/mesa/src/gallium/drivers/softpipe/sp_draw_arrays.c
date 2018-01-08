@@ -82,31 +82,34 @@ softpipe_draw_vbo(struct pipe_context *pipe,
 
    /* Map vertex buffers */
    for (i = 0; i < sp->num_vertex_buffers; i++) {
-      const void *buf = sp->vertex_buffer[i].is_user_buffer ?
-                           sp->vertex_buffer[i].buffer.user : NULL;
+      const void *buf = sp->vertex_buffer[i].user_buffer;
       size_t size = ~0;
       if (!buf) {
-         if (!sp->vertex_buffer[i].buffer.resource) {
+         if (!sp->vertex_buffer[i].buffer) {
             continue;
          }
-         buf = softpipe_resource_data(sp->vertex_buffer[i].buffer.resource);
-         size = sp->vertex_buffer[i].buffer.resource->width0;
+         buf = softpipe_resource_data(sp->vertex_buffer[i].buffer);
+         size = sp->vertex_buffer[i].buffer->width0;
       }
       draw_set_mapped_vertex_buffer(draw, i, buf, size);
    }
 
    /* Map index buffer, if present */
-   if (info->index_size) {
+   if (info->indexed) {
       unsigned available_space = ~0;
-      mapped_indices = info->has_user_indices ? info->index.user : NULL;
+      mapped_indices = sp->index_buffer.user_buffer;
       if (!mapped_indices) {
-         mapped_indices = softpipe_resource_data(info->index.resource);
-         available_space = info->index.resource->width0;
+         mapped_indices = softpipe_resource_data(sp->index_buffer.buffer);
+         if (sp->index_buffer.buffer->width0 > sp->index_buffer.offset)
+            available_space =
+               (sp->index_buffer.buffer->width0 - sp->index_buffer.offset);
+         else
+            available_space = 0;
       }
 
       draw_set_indexes(draw,
-                       (ubyte *) mapped_indices,
-                       info->index_size, available_space);
+                       (ubyte *) mapped_indices + sp->index_buffer.offset,
+                       sp->index_buffer.index_size, available_space);
    }
 
 

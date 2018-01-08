@@ -82,7 +82,9 @@ intel_readpixels_tiled_memcpy(struct gl_context * ctx,
    int dst_pitch;
 
    /* The miptree's buffer. */
-   struct brw_bo *bo;
+   drm_intel_bo *bo;
+
+   int error = 0;
 
    uint32_t cpp;
    mem_copy_fn mem_copy = NULL;
@@ -127,46 +129,32 @@ intel_readpixels_tiled_memcpy(struct gl_context * ctx,
       return false;
 
    if (!irb->mt ||
-       (irb->mt->surf.tiling != ISL_TILING_X &&
-        irb->mt->surf.tiling != ISL_TILING_Y0)) {
+       (irb->mt->tiling != I915_TILING_X &&
+       irb->mt->tiling != I915_TILING_Y)) {
       /* The algorithm is written only for X- or Y-tiled memory. */
       return false;
    }
 
-   /* tiled_to_linear() assumes that if the object is swizzled, it is using
-    * I915_BIT6_SWIZZLE_9_10 for X and I915_BIT6_SWIZZLE_9 for Y.  This is only
-    * true on gen5 and above.
-    *
-    * The killer on top is that some gen4 have an L-shaped swizzle mode, where
-    * parts of the memory aren't swizzled at all. Userspace just can't handle
-    * that.
-    */
-   if (brw->gen < 5 && brw->has_swizzling)
-      return false;
-
    /* Since we are going to read raw data to the miptree, we need to resolve
     * any pending fast color clears before we start.
     */
-   intel_miptree_access_raw(brw, irb->mt, irb->mt_level, irb->mt_layer, false);
+   intel_miptree_resolve_color(brw, irb->mt, 0);
 
    bo = irb->mt->bo;
 
-   if (brw_batch_references(&brw->batch, bo)) {
+   if (drm_intel_bo_references(brw->batch.bo, bo)) {
       perf_debug("Flushing before mapping a referenced bo.\n");
       intel_batchbuffer_flush(brw);
    }
 
-   void *map = brw_bo_map(brw, bo, MAP_READ | MAP_RAW);
-   if (map == NULL) {
+   error = brw_bo_map(brw, bo, false /* write enable */, "miptree");
+   if (error) {
       DBG("%s: failed to map bo\n", __func__);
       return false;
    }
 
-   unsigned slice_offset_x, slice_offset_y;
-   intel_miptree_get_image_offset(irb->mt, irb->mt_level, irb->mt_layer,
-                                  &slice_offset_x, &slice_offset_y);
-   xoffset += slice_offset_x;
-   yoffset += slice_offset_y;
+   xoffset += irb->mt->level[irb->mt_level].slice[irb->mt_layer].x_offset;
+   yoffset += irb->mt->level[irb->mt_level].slice[irb->mt_layer].y_offset;
 
    dst_pitch = _mesa_image_row_stride(pack, width, format, type);
 
@@ -192,7 +180,7 @@ intel_readpixels_tiled_memcpy(struct gl_context * ctx,
        "mesa_format=0x%x tiling=%d "
        "pack=(alignment=%d row_length=%d skip_pixels=%d skip_rows=%d)\n",
        __func__, xoffset, yoffset, width, height,
-       format, type, rb->Format, irb->mt->surf.tiling,
+       format, type, rb->Format, irb->mt->tiling,
        pack->Alignment, pack->RowLength, pack->SkipPixels,
        pack->SkipRows);
 
@@ -200,14 +188,14 @@ intel_readpixels_tiled_memcpy(struct gl_context * ctx,
       xoffset * cpp, (xoffset + width) * cpp,
       yoffset, yoffset + height,
       pixels - (ptrdiff_t) yoffset * dst_pitch - (ptrdiff_t) xoffset * cpp,
-      map + irb->mt->offset,
-      dst_pitch, irb->mt->surf.row_pitch,
+      bo->virtual + irb->mt->offset,
+      dst_pitch, irb->mt->pitch,
       brw->has_swizzling,
-      irb->mt->surf.tiling,
+      irb->mt->tiling,
       mem_copy
    );
 
-   brw_bo_unmap(bo);
+   drm_intel_bo_unmap(bo);
    return true;
 }
 
@@ -254,16 +242,16 @@ intelReadPixels(struct gl_context * ctx,
       perf_debug("%s: fallback to CPU mapping in PBO case\n", __func__);
    }
 
-   /* Reading pixels wont dirty the front buffer, so reset the dirty
-    * flag after calling intel_prepare_render(). */
-   dirty = brw->front_buffer_dirty;
-   intel_prepare_render(brw);
-   brw->front_buffer_dirty = dirty;
-
    ok = intel_readpixels_tiled_memcpy(ctx, x, y, width, height,
                                       format, type, pixels, pack);
    if(ok)
       return;
+
+   /* glReadPixels() wont dirty the front buffer, so reset the dirty
+    * flag after calling intel_prepare_render(). */
+   dirty = brw->front_buffer_dirty;
+   intel_prepare_render(brw);
+   brw->front_buffer_dirty = dirty;
 
    /* Update Mesa state before calling _mesa_readpixels().
     * XXX this may not be needed since ReadPixels no longer uses the

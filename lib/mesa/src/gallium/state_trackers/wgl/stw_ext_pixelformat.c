@@ -27,9 +27,9 @@
 
 /**
  * @file
- *
+ * 
  * WGL_ARB_pixel_format extension implementation.
- *
+ * 
  * @sa http://www.opengl.org/registry/specs/ARB/wgl_pixel_format.txt
  */
 
@@ -49,7 +49,11 @@
 
 
 static boolean
-stw_query_attrib(int iPixelFormat, int iLayerPlane, int attrib, int *pvalue)
+stw_query_attrib(
+   int iPixelFormat,
+   int iLayerPlane,
+   int attrib,
+   int *pvalue )
 {
    uint count;
    const struct stw_pixelformat_info *pfi;
@@ -61,7 +65,7 @@ stw_query_attrib(int iPixelFormat, int iLayerPlane, int attrib, int *pvalue)
       return TRUE;
    }
 
-   pfi = stw_pixelformat_get_info(iPixelFormat);
+   pfi = stw_pixelformat_get_info( iPixelFormat );
    if (!pfi) {
       return FALSE;
    }
@@ -282,6 +286,7 @@ struct attrib_match_info
 };
 
 static const struct attrib_match_info attrib_match[] = {
+
    /* WGL_ARB_pixel_format */
    { WGL_DRAW_TO_WINDOW_ARB,      0, TRUE },
    { WGL_DRAW_TO_BITMAP_ARB,      0, TRUE },
@@ -329,12 +334,12 @@ struct stw_pixelformat_score
    uint index;
 };
 
-
 static BOOL
-score_pixelformats(struct stw_pixelformat_score *scores,
-                   uint count,
-                   int attribute,
-                   int expected_value)
+score_pixelformats(
+   struct stw_pixelformat_score *scores,
+   uint count,
+   int attribute,
+   int expected_value )
 {
    uint i;
    const struct attrib_match_info *ami = NULL;
@@ -342,7 +347,7 @@ score_pixelformats(struct stw_pixelformat_score *scores,
 
    /* Find out if a given attribute should be considered for score calculation.
     */
-   for (i = 0; i < ARRAY_SIZE(attrib_match); i++) {
+   for (i = 0; i < sizeof( attrib_match ) / sizeof( attrib_match[0] ); i++) {
       if (attrib_match[i].attribute == attribute) {
          ami = &attrib_match[i];
          break;
@@ -357,40 +362,41 @@ score_pixelformats(struct stw_pixelformat_score *scores,
    for (index = 0; index < count; index++) {
       int actual_value;
 
-      if (!stw_query_attrib(index + 1, 0, attribute, &actual_value))
+      if (!stw_query_attrib( index + 1, 0, attribute, &actual_value ))
          return FALSE;
 
       if (ami->exact) {
-         /* For an exact match criteria, if the actual and expected values
-          * differ, the score is set to 0 points, effectively removing the
-          * pixelformat from a list of matching pixelformats.
+         /* For an exact match criteria, if the actual and expected values differ,
+          * the score is set to 0 points, effectively removing the pixelformat
+          * from a list of matching pixelformats.
           */
          if (actual_value != expected_value)
             scores[index].points = 0;
       }
       else {
-         /* For a minimum match criteria, if the actual value is smaller than
-          * the expected value, the pixelformat is rejected (score set to
-          * 0). However, if the actual value is bigger, the pixelformat is
-          * given a penalty to favour pixelformats that more closely match the
-          * expected values.
+         /* For a minimum match criteria, if the actual value is smaller than the expected
+          * value, the pixelformat is rejected (score set to 0). However, if the actual
+          * value is bigger, the pixelformat is given a penalty to favour pixelformats that
+          * more closely match the expected values.
           */
          if (actual_value < expected_value)
             scores[index].points = 0;
          else if (actual_value > expected_value)
-            scores[index].points -= (actual_value - expected_value)
-               * ami->weight;
+            scores[index].points -= (actual_value - expected_value) * ami->weight;
       }
    }
 
    return TRUE;
 }
 
-
 WINGDIAPI BOOL APIENTRY
-wglChoosePixelFormatARB(HDC hdc, const int *piAttribIList,
-                        const FLOAT *pfAttribFList, UINT nMaxFormats,
-                        int *piFormats, UINT *nNumFormats)
+wglChoosePixelFormatARB(
+   HDC hdc,
+   const int *piAttribIList,
+   const FLOAT *pfAttribFList,
+   UINT nMaxFormats,
+   int *piFormats,
+   UINT *nNumFormats )
 {
    uint count;
    struct stw_pixelformat_score *scores;
@@ -404,8 +410,7 @@ wglChoosePixelFormatARB(HDC hdc, const int *piAttribIList,
     * Set a score to 0 if there is a mismatch for an exact match criteria.
     */
    count = stw_pixelformat_get_extended_count();
-   scores = (struct stw_pixelformat_score *)
-      MALLOC(count * sizeof(struct stw_pixelformat_score));
+   scores = (struct stw_pixelformat_score *) MALLOC( count * sizeof( struct stw_pixelformat_score ) );
    if (scores == NULL)
       return FALSE;
    for (i = 0; i < count; i++) {
@@ -417,9 +422,8 @@ wglChoosePixelFormatARB(HDC hdc, const int *piAttribIList,
     */
    if (piAttribIList != NULL) {
       while (*piAttribIList != 0) {
-         if (!score_pixelformats(scores, count, piAttribIList[0],
-                                 piAttribIList[1])) {
-            FREE(scores);
+         if (!score_pixelformats( scores, count, piAttribIList[0], piAttribIList[1] )) {
+            FREE( scores );
             return FALSE;
          }
          piAttribIList += 2;
@@ -427,17 +431,16 @@ wglChoosePixelFormatARB(HDC hdc, const int *piAttribIList,
    }
    if (pfAttribFList != NULL) {
       while (*pfAttribFList != 0) {
-         if (!score_pixelformats(scores, count, (int) pfAttribFList[0],
-                                 (int) pfAttribFList[1])) {
-            FREE(scores);
+         if (!score_pixelformats( scores, count, (int) pfAttribFList[0], (int) pfAttribFList[1] )) {
+            FREE( scores );
             return FALSE;
          }
          pfAttribFList += 2;
       }
    }
 
-   /* Bubble-sort the resulting scores. Pixelformats with higher scores go
-    * first.  TODO: Find out if there are any patent issues with it.
+   /* Bubble-sort the resulting scores. Pixelformats with higher scores go first.
+    * TODO: Find out if there are any patent issues with it.
     */
    if (count > 1) {
       uint n = count;
@@ -464,23 +467,26 @@ wglChoosePixelFormatARB(HDC hdc, const int *piAttribIList,
     */
    for (i = 0; i < count; i++) {
       if (scores[i].points > 0) {
-         piFormats[*nNumFormats] = scores[i].index + 1;
+	 piFormats[*nNumFormats] = scores[i].index + 1;
          (*nNumFormats)++;
-         if (*nNumFormats >= nMaxFormats) {
-            break;
-         }
+	 if (*nNumFormats >= nMaxFormats) {
+	    break;
+	 }
       }
    }
 
-   FREE(scores);
+   FREE( scores );
    return TRUE;
 }
 
-
 WINGDIAPI BOOL APIENTRY
-wglGetPixelFormatAttribfvARB(HDC hdc, int iPixelFormat, int iLayerPlane,
-                             UINT nAttributes, const int *piAttributes,
-                             FLOAT *pfValues)
+wglGetPixelFormatAttribfvARB(
+   HDC hdc,
+   int iPixelFormat,
+   int iLayerPlane,
+   UINT nAttributes,
+   const int *piAttributes,
+   FLOAT *pfValues )
 {
    UINT i;
 
@@ -489,8 +495,7 @@ wglGetPixelFormatAttribfvARB(HDC hdc, int iPixelFormat, int iLayerPlane,
    for (i = 0; i < nAttributes; i++) {
       int value;
 
-      if (!stw_query_attrib(iPixelFormat, iLayerPlane,
-                             piAttributes[i], &value))
+      if (!stw_query_attrib( iPixelFormat, iLayerPlane, piAttributes[i], &value ))
          return FALSE;
       pfValues[i] = (FLOAT) value;
    }
@@ -498,19 +503,21 @@ wglGetPixelFormatAttribfvARB(HDC hdc, int iPixelFormat, int iLayerPlane,
    return TRUE;
 }
 
-
 WINGDIAPI BOOL APIENTRY
-wglGetPixelFormatAttribivARB(HDC hdc, int iPixelFormat, int iLayerPlane,
-                             UINT nAttributes, const int *piAttributes,
-                             int *piValues)
+wglGetPixelFormatAttribivARB(
+   HDC hdc,
+   int iPixelFormat,
+   int iLayerPlane,
+   UINT nAttributes,
+   const int *piAttributes,
+   int *piValues )
 {
    UINT i;
 
    (void) hdc;
 
    for (i = 0; i < nAttributes; i++) {
-      if (!stw_query_attrib(iPixelFormat, iLayerPlane,
-                            piAttributes[i], &piValues[i]))
+      if (!stw_query_attrib( iPixelFormat, iLayerPlane, piAttributes[i], &piValues[i] ))
          return FALSE;
    }
 

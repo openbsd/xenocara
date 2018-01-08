@@ -42,13 +42,15 @@ enum pipe_error st_translate_program(
    struct glsl_to_tgsi_visitor *program,
    const struct gl_program *proginfo,
    GLuint numInputs,
-   const ubyte inputMapping[],
-   const ubyte inputSlotToAttr[],
+   const GLuint inputMapping[],
+   const GLuint inputSlotToAttr[],
    const ubyte inputSemanticName[],
    const ubyte inputSemanticIndex[],
-   const ubyte interpMode[],
+   const GLuint interpMode[],
+   const GLuint interpLocation[],
    GLuint numOutputs,
-   const ubyte outputMapping[],
+   const GLuint outputMapping[],
+   const GLuint outputSlotToAttr[],
    const ubyte outputSemanticName[],
    const ubyte outputSemanticIndex[]);
 
@@ -58,12 +60,12 @@ GLboolean st_link_shader(struct gl_context *ctx, struct gl_shader_program *prog)
 
 void
 st_translate_stream_output_info(struct glsl_to_tgsi_visitor *glsl_to_tgsi,
-                                const ubyte outputMapping[],
+                                const GLuint outputMapping[],
                                 struct pipe_stream_output_info *so);
 
 void
 st_translate_stream_output_info2(struct gl_transform_feedback_info *info,
-                                const ubyte outputMapping[],
+                                const GLuint outputMapping[],
                                 struct pipe_stream_output_info *so);
 
 unsigned

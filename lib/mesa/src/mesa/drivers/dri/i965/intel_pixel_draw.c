@@ -57,7 +57,7 @@ do_blit_drawpixels(struct gl_context * ctx,
    struct brw_context *brw = brw_context(ctx);
    struct intel_buffer_object *src = intel_buffer_object(unpack->BufferObj);
    GLuint src_offset;
-   struct brw_bo *src_buffer;
+   drm_intel_bo *src_buffer;
 
    DBG("%s\n", __func__);
 
@@ -109,7 +109,7 @@ do_blit_drawpixels(struct gl_context * ctx,
 				    format, type, 0, 0, 0);
 
    src_buffer = intel_bufferobj_buffer(brw, src, src_offset,
-                                       height * src_stride, false);
+                                       height * src_stride);
 
    struct intel_mipmap_tree *pbo_mt =
       intel_miptree_create_for_bo(brw,
@@ -118,7 +118,7 @@ do_blit_drawpixels(struct gl_context * ctx,
                                   src_offset,
                                   width, height, 1,
                                   src_stride,
-                                  MIPTREE_CREATE_DEFAULT);
+                                  0);
    if (!pbo_mt)
       return false;
 

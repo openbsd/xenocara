@@ -72,8 +72,7 @@ create_texture_for_pbo(struct gl_context *ctx,
                        const struct gl_pixelstore_attrib *packing,
                        struct gl_buffer_object **tmp_pbo, GLuint *tmp_tex)
 {
-   const mesa_format pbo_format =
-      _mesa_tex_format_from_format_and_type(ctx, format, type);
+   uint32_t pbo_format;
    GLenum internal_format;
    unsigned row_stride;
    struct gl_buffer_object *buffer_obj;
@@ -86,7 +85,11 @@ create_texture_for_pbo(struct gl_context *ctx,
        packing->Invert)
       return NULL;
 
-   if (pbo_format == MESA_FORMAT_NONE)
+   pbo_format = _mesa_format_from_format_and_type(format, type);
+   if (_mesa_format_is_mesa_array_format(pbo_format))
+      pbo_format = _mesa_format_from_array_format(pbo_format);
+
+   if (!pbo_format || !ctx->TextureFormatSupported[pbo_format])
       return NULL;
 
    /* Account for SKIP_PIXELS, SKIP_ROWS, ALIGNMENT, and SKIP_IMAGES */
@@ -136,7 +139,6 @@ create_texture_for_pbo(struct gl_context *ctx,
    _mesa_initialize_texture_object(ctx, tex_obj, *tmp_tex, GL_TEXTURE_2D);
    /* This must be set after _mesa_initialize_texture_object, not before. */
    tex_obj->Immutable = GL_TRUE;
-   tex_obj->ImmutableLevels = 1;
    /* This is required for interactions with ARB_texture_view. */
    tex_obj->NumLayers = 1;
 

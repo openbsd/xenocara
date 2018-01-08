@@ -43,7 +43,7 @@ struct radeon_bo {
             struct pb_cache_entry cache_entry;
 
             void *ptr;
-            mtx_t map_mutex;
+            pipe_mutex map_mutex;
             unsigned map_count;
             bool use_reusable_pool;
         } real;

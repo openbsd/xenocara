@@ -25,27 +25,24 @@
  */
 
 /**
-****************************************************************************************************
+***************************************************************************************************
 * @file  addrobject.cpp
-* @brief Contains the Object base class implementation.
-****************************************************************************************************
+* @brief Contains the AddrObject base class implementation.
+***************************************************************************************************
 */
 
 #include "addrinterface.h"
 #include "addrobject.h"
 
-namespace Addr
-{
-
 /**
-****************************************************************************************************
-*   Object::Object
+***************************************************************************************************
+*   AddrObject::AddrObject
 *
 *   @brief
-*       Constructor for the Object class.
-****************************************************************************************************
+*       Constructor for the AddrObject class.
+***************************************************************************************************
 */
-Object::Object()
+AddrObject::AddrObject()
 {
     m_client.handle = NULL;
     m_client.callbacks.allocSysMem = NULL;
@@ -54,41 +51,41 @@ Object::Object()
 }
 
 /**
-****************************************************************************************************
-*   Object::Object
+***************************************************************************************************
+*   AddrObject::AddrObject
 *
 *   @brief
-*       Constructor for the Object class.
-****************************************************************************************************
+*       Constructor for the AddrObject class.
+***************************************************************************************************
 */
-Object::Object(const Client* pClient)
+AddrObject::AddrObject(const AddrClient* pClient)
 {
     m_client = *pClient;
 }
 
 /**
-****************************************************************************************************
-*   Object::~Object
+***************************************************************************************************
+*   AddrObject::~AddrObject
 *
 *   @brief
-*       Destructor for the Object class.
-****************************************************************************************************
+*       Destructor for the AddrObject class.
+***************************************************************************************************
 */
-Object::~Object()
+AddrObject::~AddrObject()
 {
 }
 
 /**
-****************************************************************************************************
-*   Object::ClientAlloc
+***************************************************************************************************
+*   AddrObject::ClientAlloc
 *
 *   @brief
-*       Calls instanced allocSysMem inside Client
-****************************************************************************************************
+*       Calls instanced allocSysMem inside AddrClient
+***************************************************************************************************
 */
-VOID* Object::ClientAlloc(
-    size_t         objSize,    ///< [in] Size to allocate
-    const Client*  pClient)    ///< [in] Client pointer
+VOID* AddrObject::ClientAlloc(
+    size_t             objSize,    ///< [in] Size to allocate
+    const AddrClient*  pClient)    ///< [in] Client pointer
 {
     VOID* pObjMem = NULL;
 
@@ -108,31 +105,30 @@ VOID* Object::ClientAlloc(
 }
 
 /**
-****************************************************************************************************
-*   Object::Alloc
+***************************************************************************************************
+*   AddrObject::AddrMalloc
 *
 *   @brief
 *       A wrapper of ClientAlloc
-****************************************************************************************************
+***************************************************************************************************
 */
-VOID* Object::Alloc(
-    size_t objSize      ///< [in] Size to allocate
-    ) const
+VOID* AddrObject::AddrMalloc(
+    size_t objSize) const   ///< [in] Size to allocate
 {
     return ClientAlloc(objSize, &m_client);
 }
 
 /**
-****************************************************************************************************
-*   Object::ClientFree
+***************************************************************************************************
+*   AddrObject::ClientFree
 *
 *   @brief
-*       Calls freeSysMem inside Client
-****************************************************************************************************
+*       Calls freeSysMem inside AddrClient
+***************************************************************************************************
 */
-VOID Object::ClientFree(
-    VOID*          pObjMem,    ///< [in] User virtual address to free.
-    const Client*  pClient)    ///< [in] Client pointer
+VOID AddrObject::ClientFree(
+    VOID*              pObjMem,    ///< [in] User virtual address to free.
+    const AddrClient*  pClient)    ///< [in] Client pointer
 {
     if (pClient->callbacks.freeSysMem != NULL)
     {
@@ -150,84 +146,101 @@ VOID Object::ClientFree(
 }
 
 /**
-****************************************************************************************************
-*   Object::Free
+***************************************************************************************************
+*   AddrObject::AddrFree
 *
 *   @brief
 *       A wrapper of ClientFree
-****************************************************************************************************
+***************************************************************************************************
 */
-VOID Object::Free(
-    VOID* pObjMem       ///< [in] User virtual address to free.
-    ) const
+VOID AddrObject::AddrFree(
+    VOID* pObjMem) const                 ///< [in] User virtual address to free.
 {
     ClientFree(pObjMem, &m_client);
 }
 
 /**
-****************************************************************************************************
-*   Object::operator new
+***************************************************************************************************
+*   AddrObject::operator new
 *
 *   @brief
-*       Placement new operator. (with pre-allocated memory pointer)
+*       Allocates memory needed for AddrObject object. (with ADDR_CLIENT_HANDLE)
 *
 *   @return
-*       Returns pre-allocated memory pointer.
-****************************************************************************************************
+*       Returns NULL if unsuccessful.
+***************************************************************************************************
 */
-VOID* Object::operator new(
-    size_t objSize,     ///< [in] Size to allocate
-    VOID*  pMem)        ///< [in] Pre-allocated pointer
+VOID* AddrObject::operator new(
+    size_t             objSize,    ///< [in] Size to allocate
+    const AddrClient*  pClient)    ///< [in] Client pointer
 {
-    return pMem;
+    return ClientAlloc(objSize, pClient);
+}
+
+
+/**
+***************************************************************************************************
+*   AddrObject::operator delete
+*
+*   @brief
+*       Frees AddrObject object memory.
+***************************************************************************************************
+*/
+VOID AddrObject::operator delete(
+    VOID* pObjMem,              ///< [in] User virtual address to free.
+    const AddrClient* pClient)  ///< [in] Client handle
+{
+    ClientFree(pObjMem, pClient);
 }
 
 /**
-****************************************************************************************************
-*   Object::operator delete
+***************************************************************************************************
+*   AddrObject::operator delete
 *
 *   @brief
-*       Frees Object object memory.
-****************************************************************************************************
+*       Frees AddrObject object memory.
+***************************************************************************************************
 */
-VOID Object::operator delete(
-    VOID* pObjMem)      ///< [in] User virtual address to free.
+VOID AddrObject::operator delete(
+    VOID* pObjMem)                  ///< [in] User virtual address to free.
 {
-    Object* pObj = static_cast<Object*>(pObjMem);
+    AddrObject* pObj = static_cast<AddrObject*>(pObjMem);
     ClientFree(pObjMem, &pObj->m_client);
 }
 
 /**
-****************************************************************************************************
-*   Object::DebugPrint
+***************************************************************************************************
+*   AddrObject::DebugPrint
 *
 *   @brief
 *       Print debug message
 *
 *   @return
 *       N/A
-****************************************************************************************************
+***************************************************************************************************
 */
-VOID Object::DebugPrint(
+VOID AddrObject::DebugPrint(
     const CHAR* pDebugString,     ///< [in] Debug string
-    ...
-    ) const
+    ...) const
 {
 #if DEBUG
     if (m_client.callbacks.debugPrint != NULL)
     {
+        va_list ap;
+
+        va_start(ap, pDebugString);
+
         ADDR_DEBUGPRINT_INPUT debugPrintInput = {0};
 
         debugPrintInput.size         = sizeof(ADDR_DEBUGPRINT_INPUT);
         debugPrintInput.pDebugString = const_cast<CHAR*>(pDebugString);
         debugPrintInput.hClient      = m_client.handle;
-        va_start(debugPrintInput.ap, pDebugString);
+        va_copy(debugPrintInput.ap, ap);
 
         m_client.callbacks.debugPrint(&debugPrintInput);
 
-        va_end(debugPrintInput.ap);
+        va_end(ap);
     }
 #endif
 }
 
-} // Addr

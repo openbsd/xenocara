@@ -29,6 +29,7 @@
 
 #include "anv_private.h"
 
+#include "genxml/gen7_pack.h"
 #include "genxml/gen8_pack.h"
 
 #include "util/debug.h"
@@ -140,7 +141,7 @@ anv_reloc_list_grow(struct anv_reloc_list *list,
    return VK_SUCCESS;
 }
 
-VkResult
+uint64_t
 anv_reloc_list_add(struct anv_reloc_list *list,
                    const VkAllocationCallbacks *alloc,
                    uint32_t offset, struct anv_bo *target_bo, uint32_t delta)
@@ -148,9 +149,11 @@ anv_reloc_list_add(struct anv_reloc_list *list,
    struct drm_i915_gem_relocation_entry *entry;
    int index;
 
-   VkResult result = anv_reloc_list_grow(list, alloc, 1);
-   if (result != VK_SUCCESS)
-      return result;
+   const uint32_t domain =
+      target_bo->is_winsys_bo ? I915_GEM_DOMAIN_RENDER : 0;
+
+   anv_reloc_list_grow(list, alloc, 1);
+   /* TODO: Handle failure */
 
    /* XXX: Can we use I915_EXEC_HANDLE_LUT? */
    index = list->num_relocs++;
@@ -160,21 +163,20 @@ anv_reloc_list_add(struct anv_reloc_list *list,
    entry->delta = delta;
    entry->offset = offset;
    entry->presumed_offset = target_bo->offset;
-   entry->read_domains = 0;
-   entry->write_domain = 0;
+   entry->read_domains = domain;
+   entry->write_domain = domain;
    VG(VALGRIND_CHECK_MEM_IS_DEFINED(entry, sizeof(*entry)));
 
-   return VK_SUCCESS;
+   return target_bo->offset + delta;
 }
 
-static VkResult
+static void
 anv_reloc_list_append(struct anv_reloc_list *list,
                       const VkAllocationCallbacks *alloc,
                       struct anv_reloc_list *other, uint32_t offset)
 {
-   VkResult result = anv_reloc_list_grow(list, alloc, other->num_relocs);
-   if (result != VK_SUCCESS)
-      return result;
+   anv_reloc_list_grow(list, alloc, other->num_relocs);
+   /* TODO: Handle failure */
 
    memcpy(&list->relocs[list->num_relocs], &other->relocs[0],
           other->num_relocs * sizeof(other->relocs[0]));
@@ -185,7 +187,6 @@ anv_reloc_list_append(struct anv_reloc_list *list,
       list->relocs[i + list->num_relocs].offset += offset;
 
    list->num_relocs += other->num_relocs;
-   return VK_SUCCESS;
 }
 
 /*-----------------------------------------------------------------------*
@@ -195,13 +196,8 @@ anv_reloc_list_append(struct anv_reloc_list *list,
 void *
 anv_batch_emit_dwords(struct anv_batch *batch, int num_dwords)
 {
-   if (batch->next + num_dwords * 4 > batch->end) {
-      VkResult result = batch->extend_cb(batch, batch->user_data);
-      if (result != VK_SUCCESS) {
-         anv_batch_set_error(batch, result);
-         return NULL;
-      }
-   }
+   if (batch->next + num_dwords * 4 > batch->end)
+      batch->extend_cb(batch, batch->user_data);
 
    void *p = batch->next;
 
@@ -215,14 +211,8 @@ uint64_t
 anv_batch_emit_reloc(struct anv_batch *batch,
                      void *location, struct anv_bo *bo, uint32_t delta)
 {
-   VkResult result = anv_reloc_list_add(batch->relocs, batch->alloc,
-                                        location - batch->start, bo, delta);
-   if (result != VK_SUCCESS) {
-      anv_batch_set_error(batch, result);
-      return 0;
-   }
-
-   return bo->offset + delta;
+   return anv_reloc_list_add(batch->relocs, batch->alloc,
+                             location - batch->start, bo, delta);
 }
 
 void
@@ -233,13 +223,8 @@ anv_batch_emit_batch(struct anv_batch *batch, struct anv_batch *other)
    size = other->next - other->start;
    assert(size % 4 == 0);
 
-   if (batch->next + size > batch->end) {
-      VkResult result = batch->extend_cb(batch, batch->user_data);
-      if (result != VK_SUCCESS) {
-         anv_batch_set_error(batch, result);
-         return;
-      }
-   }
+   if (batch->next + size > batch->end)
+      batch->extend_cb(batch, batch->user_data);
 
    assert(batch->next + size <= batch->end);
 
@@ -247,12 +232,8 @@ anv_batch_emit_batch(struct anv_batch *batch, struct anv_batch *other)
    memcpy(batch->next, other->start, size);
 
    offset = batch->next - batch->start;
-   VkResult result = anv_reloc_list_append(batch->relocs, batch->alloc,
-                                           other->relocs, offset);
-   if (result != VK_SUCCESS) {
-      anv_batch_set_error(batch, result);
-      return;
-   }
+   anv_reloc_list_append(batch->relocs, batch->alloc,
+                         other->relocs, offset);
 
    batch->next += size;
 }
@@ -450,10 +431,9 @@ anv_cmd_buffer_current_batch_bo(struct anv_cmd_buffer *cmd_buffer)
 struct anv_address
 anv_cmd_buffer_surface_base_address(struct anv_cmd_buffer *cmd_buffer)
 {
-   struct anv_state *bt_block = u_vector_head(&cmd_buffer->bt_block_states);
    return (struct anv_address) {
-      .bo = &cmd_buffer->device->surface_state_pool.block_pool.bo,
-      .offset = bt_block->offset,
+      .bo = &cmd_buffer->device->surface_state_block_pool.bo,
+      .offset = *(int32_t *)u_vector_head(&cmd_buffer->bt_blocks),
    };
 }
 
@@ -468,9 +448,6 @@ emit_batch_buffer_start(struct anv_cmd_buffer *cmd_buffer,
     * and all the padding and adjustment we do in this file works for all
     * gens.
     */
-
-#define GEN7_MI_BATCH_BUFFER_START_length      2
-#define GEN7_MI_BATCH_BUFFER_START_length_bias      2
 
    const uint32_t gen7_length =
       GEN7_MI_BATCH_BUFFER_START_length - GEN7_MI_BATCH_BUFFER_START_length_bias;
@@ -544,97 +521,27 @@ anv_cmd_buffer_grow_batch(struct anv_batch *batch, void *_data)
    return VK_SUCCESS;
 }
 
-/** Allocate a binding table
- *
- * This function allocates a binding table.  This is a bit more complicated
- * than one would think due to a combination of Vulkan driver design and some
- * unfortunate hardware restrictions.
- *
- * The 3DSTATE_BINDING_TABLE_POINTERS_* packets only have a 16-bit field for
- * the binding table pointer which means that all binding tables need to live
- * in the bottom 64k of surface state base address.  The way the GL driver has
- * classically dealt with this restriction is to emit all surface states
- * on-the-fly into the batch and have a batch buffer smaller than 64k.  This
- * isn't really an option in Vulkan for a couple of reasons:
- *
- *  1) In Vulkan, we have growing (or chaining) batches so surface states have
- *     to live in their own buffer and we have to be able to re-emit
- *     STATE_BASE_ADDRESS as needed which requires a full pipeline stall.  In
- *     order to avoid emitting STATE_BASE_ADDRESS any more often than needed
- *     (it's not that hard to hit 64k of just binding tables), we allocate
- *     surface state objects up-front when VkImageView is created.  In order
- *     for this to work, surface state objects need to be allocated from a
- *     global buffer.
- *
- *  2) We tried to design the surface state system in such a way that it's
- *     already ready for bindless texturing.  The way bindless texturing works
- *     on our hardware is that you have a big pool of surface state objects
- *     (with its own state base address) and the bindless handles are simply
- *     offsets into that pool.  With the architecture we chose, we already
- *     have that pool and it's exactly the same pool that we use for regular
- *     surface states so we should already be ready for bindless.
- *
- *  3) For render targets, we need to be able to fill out the surface states
- *     later in vkBeginRenderPass so that we can assign clear colors
- *     correctly.  One way to do this would be to just create the surface
- *     state data and then repeatedly copy it into the surface state BO every
- *     time we have to re-emit STATE_BASE_ADDRESS.  While this works, it's
- *     rather annoying and just being able to allocate them up-front and
- *     re-use them for the entire render pass.
- *
- * While none of these are technically blockers for emitting state on the fly
- * like we do in GL, the ability to have a single surface state pool is
- * simplifies things greatly.  Unfortunately, it comes at a cost...
- *
- * Because of the 64k limitation of 3DSTATE_BINDING_TABLE_POINTERS_*, we can't
- * place the binding tables just anywhere in surface state base address.
- * Because 64k isn't a whole lot of space, we can't simply restrict the
- * surface state buffer to 64k, we have to be more clever.  The solution we've
- * chosen is to have a block pool with a maximum size of 2G that starts at
- * zero and grows in both directions.  All surface states are allocated from
- * the top of the pool (positive offsets) and we allocate blocks (< 64k) of
- * binding tables from the bottom of the pool (negative offsets).  Every time
- * we allocate a new binding table block, we set surface state base address to
- * point to the bottom of the binding table block.  This way all of the
- * binding tables in the block are in the bottom 64k of surface state base
- * address.  When we fill out the binding table, we add the distance between
- * the bottom of our binding table block and zero of the block pool to the
- * surface state offsets so that they are correct relative to out new surface
- * state base address at the bottom of the binding table block.
- *
- * \see adjust_relocations_from_block_pool()
- * \see adjust_relocations_too_block_pool()
- *
- * \param[in]  entries        The number of surface state entries the binding
- *                            table should be able to hold.
- *
- * \param[out] state_offset   The offset surface surface state base address
- *                            where the surface states live.  This must be
- *                            added to the surface state offset when it is
- *                            written into the binding table entry.
- *
- * \return                    An anv_state representing the binding table
- */
 struct anv_state
 anv_cmd_buffer_alloc_binding_table(struct anv_cmd_buffer *cmd_buffer,
                                    uint32_t entries, uint32_t *state_offset)
 {
-   struct anv_state_pool *state_pool = &cmd_buffer->device->surface_state_pool;
-   struct anv_state *bt_block = u_vector_head(&cmd_buffer->bt_block_states);
+   struct anv_block_pool *block_pool =
+       &cmd_buffer->device->surface_state_block_pool;
+   int32_t *bt_block = u_vector_head(&cmd_buffer->bt_blocks);
    struct anv_state state;
 
    state.alloc_size = align_u32(entries * 4, 32);
 
-   if (cmd_buffer->bt_next + state.alloc_size > state_pool->block_size)
+   if (cmd_buffer->bt_next + state.alloc_size > block_pool->block_size)
       return (struct anv_state) { 0 };
 
    state.offset = cmd_buffer->bt_next;
-   state.map = state_pool->block_pool.map + bt_block->offset + state.offset;
+   state.map = block_pool->map + *bt_block + state.offset;
 
    cmd_buffer->bt_next += state.alloc_size;
 
-   assert(bt_block->offset < 0);
-   *state_offset = -bt_block->offset;
+   assert(*bt_block < 0);
+   *state_offset = -(*bt_block);
 
    return state;
 }
@@ -642,9 +549,7 @@ anv_cmd_buffer_alloc_binding_table(struct anv_cmd_buffer *cmd_buffer,
 struct anv_state
 anv_cmd_buffer_alloc_surface_state(struct anv_cmd_buffer *cmd_buffer)
 {
-   struct isl_device *isl_dev = &cmd_buffer->device->isl_dev;
-   return anv_state_stream_alloc(&cmd_buffer->surface_state_stream,
-                                 isl_dev->ss.size, isl_dev->ss.align);
+   return anv_state_stream_alloc(&cmd_buffer->surface_state_stream, 64, 64);
 }
 
 struct anv_state
@@ -658,15 +563,14 @@ anv_cmd_buffer_alloc_dynamic_state(struct anv_cmd_buffer *cmd_buffer,
 VkResult
 anv_cmd_buffer_new_binding_table_block(struct anv_cmd_buffer *cmd_buffer)
 {
-   struct anv_state_pool *state_pool = &cmd_buffer->device->surface_state_pool;
+   struct anv_block_pool *block_pool =
+       &cmd_buffer->device->surface_state_block_pool;
 
-   struct anv_state *bt_block = u_vector_add(&cmd_buffer->bt_block_states);
-   if (bt_block == NULL) {
-      anv_batch_set_error(&cmd_buffer->batch, VK_ERROR_OUT_OF_HOST_MEMORY);
+   int32_t *offset = u_vector_add(&cmd_buffer->bt_blocks);
+   if (offset == NULL)
       return vk_error(VK_ERROR_OUT_OF_HOST_MEMORY);
-   }
 
-   *bt_block = anv_state_pool_alloc_back(state_pool);
+   *offset = anv_block_pool_alloc_back(block_pool);
    cmd_buffer->bt_next = 0;
 
    return VK_SUCCESS;
@@ -706,10 +610,8 @@ anv_cmd_buffer_init_batch_bo_chain(struct anv_cmd_buffer *cmd_buffer)
 
    *(struct anv_batch_bo **)u_vector_add(&cmd_buffer->seen_bbos) = batch_bo;
 
-   /* u_vector requires power-of-two size elements */
-   unsigned pow2_state_size = util_next_power_of_two(sizeof(struct anv_state));
-   success = u_vector_init(&cmd_buffer->bt_block_states,
-                           pow2_state_size, 8 * pow2_state_size);
+   success = u_vector_init(&cmd_buffer->bt_blocks, sizeof(int32_t),
+                             8 * sizeof(int32_t));
    if (!success)
       goto fail_seen_bbos;
 
@@ -719,14 +621,12 @@ anv_cmd_buffer_init_batch_bo_chain(struct anv_cmd_buffer *cmd_buffer)
       goto fail_bt_blocks;
    cmd_buffer->last_ss_pool_center = 0;
 
-   result = anv_cmd_buffer_new_binding_table_block(cmd_buffer);
-   if (result != VK_SUCCESS)
-      goto fail_bt_blocks;
+   anv_cmd_buffer_new_binding_table_block(cmd_buffer);
 
    return VK_SUCCESS;
 
  fail_bt_blocks:
-   u_vector_finish(&cmd_buffer->bt_block_states);
+   u_vector_finish(&cmd_buffer->bt_blocks);
  fail_seen_bbos:
    u_vector_finish(&cmd_buffer->seen_bbos);
  fail_batch_bo:
@@ -738,10 +638,12 @@ anv_cmd_buffer_init_batch_bo_chain(struct anv_cmd_buffer *cmd_buffer)
 void
 anv_cmd_buffer_fini_batch_bo_chain(struct anv_cmd_buffer *cmd_buffer)
 {
-   struct anv_state *bt_block;
-   u_vector_foreach(bt_block, &cmd_buffer->bt_block_states)
-      anv_state_pool_free(&cmd_buffer->device->surface_state_pool, *bt_block);
-   u_vector_finish(&cmd_buffer->bt_block_states);
+   int32_t *bt_block;
+   u_vector_foreach(bt_block, &cmd_buffer->bt_blocks) {
+      anv_block_pool_free(&cmd_buffer->device->surface_state_block_pool,
+                          *bt_block);
+   }
+   u_vector_finish(&cmd_buffer->bt_blocks);
 
    anv_reloc_list_finish(&cmd_buffer->surface_relocs, &cmd_buffer->pool->alloc);
 
@@ -770,11 +672,12 @@ anv_cmd_buffer_reset_batch_bo_chain(struct anv_cmd_buffer *cmd_buffer)
                       &cmd_buffer->batch,
                       GEN8_MI_BATCH_BUFFER_START_length * 4);
 
-   while (u_vector_length(&cmd_buffer->bt_block_states) > 1) {
-      struct anv_state *bt_block = u_vector_remove(&cmd_buffer->bt_block_states);
-      anv_state_pool_free(&cmd_buffer->device->surface_state_pool, *bt_block);
+   while (u_vector_length(&cmd_buffer->bt_blocks) > 1) {
+      int32_t *bt_block = u_vector_remove(&cmd_buffer->bt_blocks);
+      anv_block_pool_free(&cmd_buffer->device->surface_state_block_pool,
+                          *bt_block);
    }
-   assert(u_vector_length(&cmd_buffer->bt_block_states) == 1);
+   assert(u_vector_length(&cmd_buffer->bt_blocks) == 1);
    cmd_buffer->bt_next = 0;
 
    cmd_buffer->surface_relocs.num_relocs = 0;
@@ -803,11 +706,11 @@ anv_cmd_buffer_end_batch_buffer(struct anv_cmd_buffer *cmd_buffer)
       cmd_buffer->batch.end += GEN8_MI_BATCH_BUFFER_START_length * 4;
       assert(cmd_buffer->batch.end == batch_bo->bo.map + batch_bo->bo.size);
 
-      anv_batch_emit(&cmd_buffer->batch, GEN8_MI_BATCH_BUFFER_END, bbe);
+      anv_batch_emit(&cmd_buffer->batch, GEN7_MI_BATCH_BUFFER_END, bbe);
 
       /* Round batch up to an even number of dwords. */
       if ((cmd_buffer->batch.next - cmd_buffer->batch.start) & 4)
-         anv_batch_emit(&cmd_buffer->batch, GEN8_MI_NOOP, noop);
+         anv_batch_emit(&cmd_buffer->batch, GEN7_MI_NOOP, noop);
 
       cmd_buffer->exec_mode = ANV_CMD_BUFFER_EXEC_MODE_PRIMARY;
    }
@@ -977,7 +880,6 @@ static VkResult
 anv_execbuf_add_bo(struct anv_execbuf *exec,
                    struct anv_bo *bo,
                    struct anv_reloc_list *relocs,
-                   uint32_t extra_flags,
                    const VkAllocationCallbacks *alloc)
 {
    struct drm_i915_gem_exec_object2 *obj = NULL;
@@ -1032,7 +934,7 @@ anv_execbuf_add_bo(struct anv_execbuf *exec,
       obj->relocs_ptr = 0;
       obj->alignment = 0;
       obj->offset = bo->offset;
-      obj->flags = bo->flags | extra_flags;
+      obj->flags = bo->is_winsys_bo ? EXEC_OBJECT_WRITE : 0;
       obj->rsvd1 = 0;
       obj->rsvd2 = 0;
    }
@@ -1046,15 +948,9 @@ anv_execbuf_add_bo(struct anv_execbuf *exec,
       obj->relocs_ptr = (uintptr_t) relocs->relocs;
 
       for (size_t i = 0; i < relocs->num_relocs; i++) {
-         VkResult result;
-
          /* A quick sanity check on relocations */
          assert(relocs->relocs[i].offset < bo->size);
-         result = anv_execbuf_add_bo(exec, relocs->reloc_bos[i], NULL,
-                                     extra_flags, alloc);
-
-         if (result != VK_SUCCESS)
-            return result;
+         anv_execbuf_add_bo(exec, relocs->reloc_bos[i], NULL, alloc);
       }
    }
 
@@ -1092,16 +988,16 @@ write_reloc(const struct anv_device *device, void *p, uint64_t v, bool flush)
    }
 
    if (flush && !device->info.has_llc)
-      gen_flush_range(p, reloc_size);
+      anv_clflush_range(p, reloc_size);
 }
 
 static void
-adjust_relocations_from_state_pool(struct anv_state_pool *pool,
+adjust_relocations_from_state_pool(struct anv_block_pool *pool,
                                    struct anv_reloc_list *relocs,
                                    uint32_t last_pool_center_bo_offset)
 {
-   assert(last_pool_center_bo_offset <= pool->block_pool.center_bo_offset);
-   uint32_t delta = pool->block_pool.center_bo_offset - last_pool_center_bo_offset;
+   assert(last_pool_center_bo_offset <= pool->center_bo_offset);
+   uint32_t delta = pool->center_bo_offset - last_pool_center_bo_offset;
 
    for (size_t i = 0; i < relocs->num_relocs; i++) {
       /* All of the relocations from this block pool to other BO's should
@@ -1114,13 +1010,13 @@ adjust_relocations_from_state_pool(struct anv_state_pool *pool,
 }
 
 static void
-adjust_relocations_to_state_pool(struct anv_state_pool *pool,
+adjust_relocations_to_state_pool(struct anv_block_pool *pool,
                                  struct anv_bo *from_bo,
                                  struct anv_reloc_list *relocs,
                                  uint32_t last_pool_center_bo_offset)
 {
-   assert(last_pool_center_bo_offset <= pool->block_pool.center_bo_offset);
-   uint32_t delta = pool->block_pool.center_bo_offset - last_pool_center_bo_offset;
+   assert(last_pool_center_bo_offset <= pool->center_bo_offset);
+   uint32_t delta = pool->center_bo_offset - last_pool_center_bo_offset;
 
    /* When we initially emit relocations into a block pool, we don't
     * actually know what the final center_bo_offset will be so we just emit
@@ -1129,7 +1025,7 @@ adjust_relocations_to_state_pool(struct anv_state_pool *pool,
     * relocations that point to the pool bo with the correct offset.
     */
    for (size_t i = 0; i < relocs->num_relocs; i++) {
-      if (relocs->reloc_bos[i] == &pool->block_pool.bo) {
+      if (relocs->reloc_bos[i] == &pool->bo) {
          /* Adjust the delta value in the relocation to correctly
           * correspond to the new delta.  Initially, this value may have
           * been negative (if treated as unsigned), but we trust in
@@ -1143,8 +1039,7 @@ adjust_relocations_to_state_pool(struct anv_state_pool *pool,
           * use by the GPU at the moment.
           */
          assert(relocs->relocs[i].offset < from_bo->size);
-         write_reloc(pool->block_pool.device,
-                     from_bo->map + relocs->relocs[i].offset,
+         write_reloc(pool->device, from_bo->map + relocs->relocs[i].offset,
                      relocs->relocs[i].presumed_offset +
                      relocs->relocs[i].delta, false);
       }
@@ -1234,7 +1129,7 @@ relocate_cmd_buffer(struct anv_cmd_buffer *cmd_buffer,
     * given time.  The only option is to always relocate them.
     */
    anv_reloc_list_apply(cmd_buffer->device, &cmd_buffer->surface_relocs,
-                        &cmd_buffer->device->surface_state_pool.block_pool.bo,
+                        &cmd_buffer->device->surface_state_block_pool.bo,
                         true /* always relocate surface states */);
 
    /* Since we own all of the batch buffers, we know what values are stored
@@ -1253,21 +1148,21 @@ relocate_cmd_buffer(struct anv_cmd_buffer *cmd_buffer,
    return true;
 }
 
-static VkResult
-setup_execbuf_for_cmd_buffer(struct anv_execbuf *execbuf,
-                             struct anv_cmd_buffer *cmd_buffer)
+VkResult
+anv_cmd_buffer_execbuf(struct anv_device *device,
+                       struct anv_cmd_buffer *cmd_buffer)
 {
    struct anv_batch *batch = &cmd_buffer->batch;
-   struct anv_state_pool *ss_pool =
-      &cmd_buffer->device->surface_state_pool;
+   struct anv_block_pool *ss_pool =
+      &cmd_buffer->device->surface_state_block_pool;
+
+   struct anv_execbuf execbuf;
+   anv_execbuf_init(&execbuf);
 
    adjust_relocations_from_state_pool(ss_pool, &cmd_buffer->surface_relocs,
                                       cmd_buffer->last_ss_pool_center);
-   VkResult result = anv_execbuf_add_bo(execbuf, &ss_pool->block_pool.bo,
-                                        &cmd_buffer->surface_relocs, 0,
-                                        &cmd_buffer->device->alloc);
-   if (result != VK_SUCCESS)
-      return result;
+   anv_execbuf_add_bo(&execbuf, &ss_pool->bo, &cmd_buffer->surface_relocs,
+                      &cmd_buffer->pool->alloc);
 
    /* First, we walk over all of the bos we've seen and add them and their
     * relocations to the validate list.
@@ -1277,17 +1172,15 @@ setup_execbuf_for_cmd_buffer(struct anv_execbuf *execbuf,
       adjust_relocations_to_state_pool(ss_pool, &(*bbo)->bo, &(*bbo)->relocs,
                                        cmd_buffer->last_ss_pool_center);
 
-      result = anv_execbuf_add_bo(execbuf, &(*bbo)->bo, &(*bbo)->relocs, 0,
-                                  &cmd_buffer->device->alloc);
-      if (result != VK_SUCCESS)
-         return result;
+      anv_execbuf_add_bo(&execbuf, &(*bbo)->bo, &(*bbo)->relocs,
+                         &cmd_buffer->pool->alloc);
    }
 
    /* Now that we've adjusted all of the surface state relocations, we need to
     * record the surface state pool center so future executions of the command
     * buffer can adjust correctly.
     */
-   cmd_buffer->last_ss_pool_center = ss_pool->block_pool.center_bo_offset;
+   cmd_buffer->last_ss_pool_center = ss_pool->center_bo_offset;
 
    struct anv_batch_bo *first_batch_bo =
       list_first_entry(&cmd_buffer->batch_bos, struct anv_batch_bo, link);
@@ -1297,19 +1190,19 @@ setup_execbuf_for_cmd_buffer(struct anv_execbuf *execbuf,
     * corresponding to the first batch_bo in the chain with the last
     * element in the list.
     */
-   if (first_batch_bo->bo.index != execbuf->bo_count - 1) {
+   if (first_batch_bo->bo.index != execbuf.bo_count - 1) {
       uint32_t idx = first_batch_bo->bo.index;
-      uint32_t last_idx = execbuf->bo_count - 1;
+      uint32_t last_idx = execbuf.bo_count - 1;
 
-      struct drm_i915_gem_exec_object2 tmp_obj = execbuf->objects[idx];
-      assert(execbuf->bos[idx] == &first_batch_bo->bo);
+      struct drm_i915_gem_exec_object2 tmp_obj = execbuf.objects[idx];
+      assert(execbuf.bos[idx] == &first_batch_bo->bo);
 
-      execbuf->objects[idx] = execbuf->objects[last_idx];
-      execbuf->bos[idx] = execbuf->bos[last_idx];
-      execbuf->bos[idx]->index = idx;
+      execbuf.objects[idx] = execbuf.objects[last_idx];
+      execbuf.bos[idx] = execbuf.bos[last_idx];
+      execbuf.bos[idx]->index = idx;
 
-      execbuf->objects[last_idx] = tmp_obj;
-      execbuf->bos[last_idx] = &first_batch_bo->bo;
+      execbuf.objects[last_idx] = tmp_obj;
+      execbuf.bos[last_idx] = &first_batch_bo->bo;
       first_batch_bo->bo.index = last_idx;
    }
 
@@ -1330,9 +1223,9 @@ setup_execbuf_for_cmd_buffer(struct anv_execbuf *execbuf,
       }
    }
 
-   execbuf->execbuf = (struct drm_i915_gem_execbuffer2) {
-      .buffers_ptr = (uintptr_t) execbuf->objects,
-      .buffer_count = execbuf->bo_count,
+   execbuf.execbuf = (struct drm_i915_gem_execbuffer2) {
+      .buffers_ptr = (uintptr_t) execbuf.objects,
+      .buffer_count = execbuf.bo_count,
       .batch_start_offset = 0,
       .batch_len = batch->next - batch->start,
       .cliprects_ptr = 0,
@@ -1345,7 +1238,7 @@ setup_execbuf_for_cmd_buffer(struct anv_execbuf *execbuf,
       .rsvd2 = 0,
    };
 
-   if (relocate_cmd_buffer(cmd_buffer, execbuf)) {
+   if (relocate_cmd_buffer(cmd_buffer, &execbuf)) {
       /* If we were able to successfully relocate everything, tell the kernel
        * that it can skip doing relocations. The requirement for using
        * NO_RELOC is:
@@ -1370,7 +1263,7 @@ setup_execbuf_for_cmd_buffer(struct anv_execbuf *execbuf,
        * the RENDER_SURFACE_STATE matches presumed_offset, so it should be
        * safe for the kernel to relocate them as needed.
        */
-      execbuf->execbuf.flags |= I915_EXEC_NO_RELOC;
+      execbuf.execbuf.flags |= I915_EXEC_NO_RELOC;
    } else {
       /* In the case where we fall back to doing kernel relocations, we need
        * to ensure that the relocation list is valid.  All relocations on the
@@ -1385,62 +1278,9 @@ setup_execbuf_for_cmd_buffer(struct anv_execbuf *execbuf,
          cmd_buffer->surface_relocs.relocs[i].presumed_offset = -1;
    }
 
-   return VK_SUCCESS;
-}
+   VkResult result = anv_device_execbuf(device, &execbuf.execbuf, execbuf.bos);
 
-VkResult
-anv_cmd_buffer_execbuf(struct anv_device *device,
-                       struct anv_cmd_buffer *cmd_buffer,
-                       const VkSemaphore *in_semaphores,
-                       uint32_t num_in_semaphores,
-                       const VkSemaphore *out_semaphores,
-                       uint32_t num_out_semaphores)
-{
-   struct anv_execbuf execbuf;
-   anv_execbuf_init(&execbuf);
-
-   VkResult result = VK_SUCCESS;
-   for (uint32_t i = 0; i < num_in_semaphores; i++) {
-      ANV_FROM_HANDLE(anv_semaphore, semaphore, in_semaphores[i]);
-      assert(semaphore->temporary.type == ANV_SEMAPHORE_TYPE_NONE);
-      struct anv_semaphore_impl *impl = &semaphore->permanent;
-
-      switch (impl->type) {
-      case ANV_SEMAPHORE_TYPE_BO:
-         result = anv_execbuf_add_bo(&execbuf, impl->bo, NULL,
-                                     0, &device->alloc);
-         if (result != VK_SUCCESS)
-            return result;
-         break;
-      default:
-         break;
-      }
-   }
-
-   for (uint32_t i = 0; i < num_out_semaphores; i++) {
-      ANV_FROM_HANDLE(anv_semaphore, semaphore, out_semaphores[i]);
-      assert(semaphore->temporary.type == ANV_SEMAPHORE_TYPE_NONE);
-      struct anv_semaphore_impl *impl = &semaphore->permanent;
-
-      switch (impl->type) {
-      case ANV_SEMAPHORE_TYPE_BO:
-         result = anv_execbuf_add_bo(&execbuf, impl->bo, NULL,
-                                     EXEC_OBJECT_WRITE, &device->alloc);
-         if (result != VK_SUCCESS)
-            return result;
-         break;
-      default:
-         break;
-      }
-   }
-
-   result = setup_execbuf_for_cmd_buffer(&execbuf, cmd_buffer);
-   if (result != VK_SUCCESS)
-      return result;
-
-   result = anv_device_execbuf(device, &execbuf.execbuf, execbuf.bos);
-
-   anv_execbuf_finish(&execbuf, &device->alloc);
+   anv_execbuf_finish(&execbuf, &cmd_buffer->pool->alloc);
 
    return result;
 }

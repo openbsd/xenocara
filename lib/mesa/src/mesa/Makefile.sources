@@ -94,7 +94,6 @@ MAIN_FILES = \
 	main/ffvertex_prog.h \
 	main/fog.c \
 	main/fog.h \
-	main/format_fallback.c \
 	main/format_info.h \
 	main/format_pack.h \
 	main/format_pack.c \
@@ -116,8 +115,6 @@ MAIN_FILES = \
 	main/getstring.c \
 	main/glformats.c \
 	main/glformats.h \
-	main/glthread.c \
-	main/glthread.h \
 	main/glheader.h \
 	main/hash.c \
 	main/hash.h \
@@ -134,10 +131,6 @@ MAIN_FILES = \
 	main/lines.c \
 	main/lines.h \
 	main/macros.h \
-	main/marshal.c \
-	main/marshal.h \
-	main/marshal_generated.c \
-	main/marshal_generated.h \
 	main/matrix.c \
 	main/matrix.h \
 	main/mipmap.c \
@@ -157,8 +150,6 @@ MAIN_FILES = \
 	main/pbo.h \
 	main/performance_monitor.c \
 	main/performance_monitor.h \
-	main/performance_query.c \
-	main/performance_query.h \
 	main/pipelineobj.c \
 	main/pipelineobj.h \
 	main/pixel.c \
@@ -241,8 +232,6 @@ MAIN_FILES = \
 	main/texstorage.h \
 	main/texstore.c \
 	main/texstore.h \
-	main/texturebindless.c \
-	main/texturebindless.h \
 	main/textureview.c \
 	main/textureview.h \
 	main/transformfeedback.c \
@@ -525,8 +514,6 @@ STATETRACKER_FILES = \
 	state_tracker/st_sampler_view.h \
 	state_tracker/st_scissor.c \
 	state_tracker/st_scissor.h \
-	state_tracker/st_shader_cache.c \
-	state_tracker/st_shader_cache.h \
 	state_tracker/st_texture.c \
 	state_tracker/st_texture.h \
 	state_tracker/st_tgsi_lower_yuv.c \
@@ -634,6 +621,7 @@ COMMON_DRIVER_FILES =			\
 	drivers/common/driverfuncs.c	\
 	drivers/common/driverfuncs.h	\
 	drivers/common/meta_blit.c	\
+	drivers/common/meta_copy_image.c	\
 	drivers/common/meta_generate_mipmap.c	\
 	drivers/common/meta_tex_subimage.c	\
 	drivers/common/meta.c \

@@ -654,7 +654,7 @@ get_tex_memcpy(struct gl_context *ctx,
 
       if (src) {
          if (bytesPerRow == dstRowStride && bytesPerRow == srcRowStride) {
-            memcpy(dst, src, bytesPerRow * height);
+            memcpy(dst, src, bytesPerRow * texImage->Height);
          }
          else {
             GLuint row;
@@ -1429,11 +1429,6 @@ _mesa_GetTextureImage(GLuint texture, GLint level, GLenum format, GLenum type,
       return;
    }
 
-   if (!legal_getteximage_target(ctx, texObj->Target, true)) {
-      _mesa_error(ctx, GL_INVALID_ENUM, "%s", caller);
-      return;
-   }
-
    get_texture_image_dims(texObj, texObj->Target, level,
                           &width, &height, &depth);
 
@@ -1462,12 +1457,6 @@ _mesa_GetTextureSubImage(GLuint texture, GLint level,
       _mesa_lookup_texture_err(ctx, texture, caller);
 
    if (!texObj) {
-      return;
-   }
-
-   if (!legal_getteximage_target(ctx, texObj->Target, true)) {
-      _mesa_error(ctx, GL_INVALID_OPERATION,
-                  "%s(buffer/multisample texture)", caller);
       return;
    }
 
@@ -1773,7 +1762,7 @@ _mesa_GetCompressedTextureSubImage(GLuint texture, GLint level,
 {
    GET_CURRENT_CONTEXT(ctx);
    static const char *caller = "glGetCompressedTextureImage";
-   struct gl_texture_object *texObj = NULL;
+   struct gl_texture_object *texObj;
 
    texObj = _mesa_lookup_texture_err(ctx, texture, caller);
    if (!texObj) {

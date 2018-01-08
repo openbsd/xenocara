@@ -85,7 +85,7 @@ u_index_translator(unsigned hw_mask,
 {
    unsigned in_idx;
    unsigned out_idx;
-   enum indices_mode ret = U_TRANSLATE_NORMAL;
+   int ret = U_TRANSLATE_NORMAL;
 
    assert(in_index_size == 1 ||
           in_index_size == 2 ||

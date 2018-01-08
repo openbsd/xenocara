@@ -282,7 +282,7 @@ compute_cliprect(struct softpipe_context *sp)
 
 static void
 set_shader_sampler(struct softpipe_context *softpipe,
-                   enum pipe_shader_type shader,
+                   unsigned shader,
                    int max_sampler)
 {
    int i;

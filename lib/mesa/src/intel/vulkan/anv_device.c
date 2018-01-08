@@ -25,19 +25,17 @@
 #include <stdbool.h>
 #include <string.h>
 #include <sys/mman.h>
-#include <sys/sysinfo.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <xf86drm.h>
 
 #include "anv_private.h"
+#include "anv_timestamp.h"
 #include "util/strtod.h"
 #include "util/debug.h"
-#include "util/build_id.h"
-#include "util/mesa-sha1.h"
-#include "vk_util.h"
 
 #include "genxml/gen7_pack.h"
+
+struct anv_dispatch_table dtable;
 
 static void
 compiler_debug_log(void *data, const char *fmt, ...)
@@ -53,208 +51,6 @@ compiler_perf_log(void *data, const char *fmt, ...)
       vfprintf(stderr, fmt, args);
 
    va_end(args);
-}
-
-static VkResult
-anv_compute_heap_size(int fd, uint64_t *heap_size)
-{
-   uint64_t gtt_size;
-   if (anv_gem_get_context_param(fd, 0, I915_CONTEXT_PARAM_GTT_SIZE,
-                                 &gtt_size) == -1) {
-      /* If, for whatever reason, we can't actually get the GTT size from the
-       * kernel (too old?) fall back to the aperture size.
-       */
-      anv_perf_warn("Failed to get I915_CONTEXT_PARAM_GTT_SIZE: %m");
-
-      if (anv_gem_get_aperture(fd, &gtt_size) == -1) {
-         return vk_errorf(VK_ERROR_INITIALIZATION_FAILED,
-                          "failed to get aperture size: %m");
-      }
-   }
-
-   /* Query the total ram from the system */
-   struct sysinfo info;
-   sysinfo(&info);
-
-   uint64_t total_ram = (uint64_t)info.totalram * (uint64_t)info.mem_unit;
-
-   /* We don't want to burn too much ram with the GPU.  If the user has 4GiB
-    * or less, we use at most half.  If they have more than 4GiB, we use 3/4.
-    */
-   uint64_t available_ram;
-   if (total_ram <= 4ull * 1024ull * 1024ull * 1024ull)
-      available_ram = total_ram / 2;
-   else
-      available_ram = total_ram * 3 / 4;
-
-   /* We also want to leave some padding for things we allocate in the driver,
-    * so don't go over 3/4 of the GTT either.
-    */
-   uint64_t available_gtt = gtt_size * 3 / 4;
-
-   *heap_size = MIN2(available_ram, available_gtt);
-
-   return VK_SUCCESS;
-}
-
-static VkResult
-anv_physical_device_init_heaps(struct anv_physical_device *device, int fd)
-{
-   /* The kernel query only tells us whether or not the kernel supports the
-    * EXEC_OBJECT_SUPPORTS_48B_ADDRESS flag and not whether or not the
-    * hardware has actual 48bit address support.
-    */
-   device->supports_48bit_addresses =
-      (device->info.gen >= 8) && anv_gem_supports_48b_addresses(fd);
-
-   uint64_t heap_size;
-   VkResult result = anv_compute_heap_size(fd, &heap_size);
-   if (result != VK_SUCCESS)
-      return result;
-
-   if (heap_size <= 3ull * (1ull << 30)) {
-      /* In this case, everything fits nicely into the 32-bit address space,
-       * so there's no need for supporting 48bit addresses on client-allocated
-       * memory objects.
-       */
-      device->memory.heap_count = 1;
-      device->memory.heaps[0] = (struct anv_memory_heap) {
-         .size = heap_size,
-         .flags = VK_MEMORY_HEAP_DEVICE_LOCAL_BIT,
-         .supports_48bit_addresses = false,
-      };
-   } else {
-      /* Not everything will fit nicely into a 32-bit address space.  In this
-       * case we need a 64-bit heap.  Advertise a small 32-bit heap and a
-       * larger 48-bit heap.  If we're in this case, then we have a total heap
-       * size larger than 3GiB which most likely means they have 8 GiB of
-       * video memory and so carving off 1 GiB for the 32-bit heap should be
-       * reasonable.
-       */
-      const uint64_t heap_size_32bit = 1ull << 30;
-      const uint64_t heap_size_48bit = heap_size - heap_size_32bit;
-
-      assert(device->supports_48bit_addresses);
-
-      device->memory.heap_count = 2;
-      device->memory.heaps[0] = (struct anv_memory_heap) {
-         .size = heap_size_48bit,
-         .flags = VK_MEMORY_HEAP_DEVICE_LOCAL_BIT,
-         .supports_48bit_addresses = true,
-      };
-      device->memory.heaps[1] = (struct anv_memory_heap) {
-         .size = heap_size_32bit,
-         .flags = VK_MEMORY_HEAP_DEVICE_LOCAL_BIT,
-         .supports_48bit_addresses = false,
-      };
-   }
-
-   uint32_t type_count = 0;
-   for (uint32_t heap = 0; heap < device->memory.heap_count; heap++) {
-      uint32_t valid_buffer_usage = ~0;
-
-      /* There appears to be a hardware issue in the VF cache where it only
-       * considers the bottom 32 bits of memory addresses.  If you happen to
-       * have two vertex buffers which get placed exactly 4 GiB apart and use
-       * them in back-to-back draw calls, you can get collisions.  In order to
-       * solve this problem, we require vertex and index buffers be bound to
-       * memory allocated out of the 32-bit heap.
-       */
-      if (device->memory.heaps[heap].supports_48bit_addresses) {
-         valid_buffer_usage &= ~(VK_BUFFER_USAGE_INDEX_BUFFER_BIT |
-                                 VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
-      }
-
-      if (device->info.has_llc) {
-         /* Big core GPUs share LLC with the CPU and thus one memory type can be
-          * both cached and coherent at the same time.
-          */
-         device->memory.types[type_count++] = (struct anv_memory_type) {
-            .propertyFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT |
-                             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                             VK_MEMORY_PROPERTY_HOST_COHERENT_BIT |
-                             VK_MEMORY_PROPERTY_HOST_CACHED_BIT,
-            .heapIndex = heap,
-            .valid_buffer_usage = valid_buffer_usage,
-         };
-      } else {
-         /* The spec requires that we expose a host-visible, coherent memory
-          * type, but Atom GPUs don't share LLC. Thus we offer two memory types
-          * to give the application a choice between cached, but not coherent and
-          * coherent but uncached (WC though).
-          */
-         device->memory.types[type_count++] = (struct anv_memory_type) {
-            .propertyFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT |
-                             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                             VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-            .heapIndex = heap,
-            .valid_buffer_usage = valid_buffer_usage,
-         };
-         device->memory.types[type_count++] = (struct anv_memory_type) {
-            .propertyFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT |
-                             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                             VK_MEMORY_PROPERTY_HOST_CACHED_BIT,
-            .heapIndex = heap,
-            .valid_buffer_usage = valid_buffer_usage,
-         };
-      }
-   }
-   device->memory.type_count = type_count;
-
-   return VK_SUCCESS;
-}
-
-static VkResult
-anv_physical_device_init_uuids(struct anv_physical_device *device)
-{
-   const struct build_id_note *note = build_id_find_nhdr("libvulkan_intel.so");
-   if (!note) {
-      return vk_errorf(VK_ERROR_INITIALIZATION_FAILED,
-                       "Failed to find build-id");
-   }
-
-   unsigned build_id_len = build_id_length(note);
-   if (build_id_len < 20) {
-      return vk_errorf(VK_ERROR_INITIALIZATION_FAILED,
-                       "build-id too short.  It needs to be a SHA");
-   }
-
-   struct mesa_sha1 sha1_ctx;
-   uint8_t sha1[20];
-   STATIC_ASSERT(VK_UUID_SIZE <= sizeof(sha1));
-
-   /* The pipeline cache UUID is used for determining when a pipeline cache is
-    * invalid.  It needs both a driver build and the PCI ID of the device.
-    */
-   _mesa_sha1_init(&sha1_ctx);
-   _mesa_sha1_update(&sha1_ctx, build_id_data(note), build_id_len);
-   _mesa_sha1_update(&sha1_ctx, &device->chipset_id,
-                     sizeof(device->chipset_id));
-   _mesa_sha1_final(&sha1_ctx, sha1);
-   memcpy(device->pipeline_cache_uuid, sha1, VK_UUID_SIZE);
-
-   /* The driver UUID is used for determining sharability of images and memory
-    * between two Vulkan instances in separate processes.  People who want to
-    * share memory need to also check the device UUID (below) so all this
-    * needs to be is the build-id.
-    */
-   memcpy(device->driver_uuid, build_id_data(note), VK_UUID_SIZE);
-
-   /* The device UUID uniquely identifies the given device within the machine.
-    * Since we never have more than one device, this doesn't need to be a real
-    * UUID.  However, on the off-chance that someone tries to use this to
-    * cache pre-tiled images or something of the like, we use the PCI ID and
-    * some bits of ISL info to ensure that this is safe.
-    */
-   _mesa_sha1_init(&sha1_ctx);
-   _mesa_sha1_update(&sha1_ctx, &device->chipset_id,
-                     sizeof(device->chipset_id));
-   _mesa_sha1_update(&sha1_ctx, &device->isl_dev.has_bit6_swizzling,
-                     sizeof(device->isl_dev.has_bit6_swizzling));
-   _mesa_sha1_final(&sha1_ctx, sha1);
-   memcpy(device->device_uuid, sha1, VK_UUID_SIZE);
-
-   return VK_SUCCESS;
 }
 
 static VkResult
@@ -293,7 +89,7 @@ anv_physical_device_init(struct anv_physical_device *device,
       fprintf(stderr, "WARNING: Ivy Bridge Vulkan support is incomplete\n");
    } else if (device->info.gen == 7 && device->info.is_baytrail) {
       fprintf(stderr, "WARNING: Bay Trail Vulkan support is incomplete\n");
-   } else if (device->info.gen >= 8 && device->info.gen <= 9) {
+   } else if (device->info.gen >= 8) {
       /* Broadwell, Cherryview, Skylake, Broxton, Kabylake is as fully
        * supported as anything */
    } else {
@@ -311,6 +107,12 @@ anv_physical_device_init(struct anv_physical_device *device,
                             "failed to get command parser version");
          goto fail;
       }
+   }
+
+   if (anv_gem_get_aperture(fd, &device->aperture_size) == -1) {
+      result = vk_errorf(VK_ERROR_INITIALIZATION_FAILED,
+                         "failed to get aperture size: %m");
+      goto fail;
    }
 
    if (!anv_gem_get_param(fd, I915_PARAM_HAS_WAIT_TIMEOUT)) {
@@ -331,12 +133,6 @@ anv_physical_device_init(struct anv_physical_device *device,
                          "kernel missing wc mmap");
       goto fail;
    }
-
-   result = anv_physical_device_init_heaps(device, fd);
-   if (result != VK_SUCCESS)
-      goto fail;
-
-   device->has_exec_async = anv_gem_get_param(fd, I915_PARAM_HAS_EXEC_ASYNC);
 
    bool swizzled = anv_gem_get_bit6_swizzle(fd, I915_TILING_X);
 
@@ -359,9 +155,8 @@ anv_physical_device_init(struct anv_physical_device *device,
 
    if (device->info.is_cherryview &&
        device->subslice_total > 0 && device->eu_total > 0) {
-      /* Logical CS threads = EUs per subslice * num threads per EU */
-      uint32_t max_cs_threads =
-         device->eu_total / device->subslice_total * device->info.num_thread_per_eu;
+      /* Logical CS threads = EUs per subslice * 7 threads per EU */
+      uint32_t max_cs_threads = device->eu_total / device->subslice_total * 7;
 
       /* Fuse configurations may give more threads than expected, never less. */
       if (max_cs_threads > device->info.max_cs_threads)
@@ -378,19 +173,16 @@ anv_physical_device_init(struct anv_physical_device *device,
    device->compiler->shader_debug_log = compiler_debug_log;
    device->compiler->shader_perf_log = compiler_perf_log;
 
-   isl_device_init(&device->isl_dev, &device->info, swizzled);
-
-   result = anv_physical_device_init_uuids(device);
-   if (result != VK_SUCCESS)
-      goto fail;
-
    result = anv_init_wsi(device);
    if (result != VK_SUCCESS) {
       ralloc_free(device->compiler);
       goto fail;
    }
 
-   device->local_fd = fd;
+   /* XXX: Actually detect bit6 swizzling */
+   isl_device_init(&device->isl_dev, &device->info, swizzled);
+
+   close(fd);
    return VK_SUCCESS;
 
 fail:
@@ -403,32 +195,13 @@ anv_physical_device_finish(struct anv_physical_device *device)
 {
    anv_finish_wsi(device);
    ralloc_free(device->compiler);
-   close(device->local_fd);
 }
 
 static const VkExtensionProperties global_extensions[] = {
    {
-      .extensionName = VK_KHR_EXTERNAL_MEMORY_CAPABILITIES_EXTENSION_NAME,
-      .specVersion = 1,
-   },
-   {
-      .extensionName = VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
-      .specVersion = 1,
-   },
-   {
-      .extensionName = VK_KHR_GET_SURFACE_CAPABILITIES_2_EXTENSION_NAME,
-      .specVersion = 1,
-   },
-   {
       .extensionName = VK_KHR_SURFACE_EXTENSION_NAME,
       .specVersion = 25,
    },
-#ifdef VK_USE_PLATFORM_WAYLAND_KHR
-   {
-      .extensionName = VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME,
-      .specVersion = 6,
-   },
-#endif
 #ifdef VK_USE_PLATFORM_XCB_KHR
    {
       .extensionName = VK_KHR_XCB_SURFACE_EXTENSION_NAME,
@@ -441,60 +214,18 @@ static const VkExtensionProperties global_extensions[] = {
       .specVersion = 6,
    },
 #endif
+#ifdef VK_USE_PLATFORM_WAYLAND_KHR
+   {
+      .extensionName = VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME,
+      .specVersion = 5,
+   },
+#endif
 };
 
 static const VkExtensionProperties device_extensions[] = {
    {
-      .extensionName = VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME,
-      .specVersion = 1,
-   },
-   {
-      .extensionName = VK_KHR_DESCRIPTOR_UPDATE_TEMPLATE_EXTENSION_NAME,
-      .specVersion = 1,
-   },
-   {
-      .extensionName = VK_KHR_EXTERNAL_MEMORY_EXTENSION_NAME,
-      .specVersion = 1,
-   },
-   {
-      .extensionName = VK_KHR_EXTERNAL_MEMORY_FD_EXTENSION_NAME,
-      .specVersion = 1,
-   },
-   {
-      .extensionName = VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME,
-      .specVersion = 1,
-   },
-   {
-      .extensionName = VK_KHR_INCREMENTAL_PRESENT_EXTENSION_NAME,
-      .specVersion = 1,
-   },
-   {
-      .extensionName = VK_KHR_MAINTENANCE1_EXTENSION_NAME,
-      .specVersion = 1,
-   },
-   {
-      .extensionName = VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME,
-      .specVersion = 1,
-   },
-   {
-      .extensionName = VK_KHR_SAMPLER_MIRROR_CLAMP_TO_EDGE_EXTENSION_NAME,
-      .specVersion = 1,
-   },
-   {
-      .extensionName = VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME,
-      .specVersion = 1,
-   },
-   {
-      .extensionName = VK_KHR_STORAGE_BUFFER_STORAGE_CLASS_EXTENSION_NAME,
-      .specVersion = 1,
-   },
-   {
       .extensionName = VK_KHR_SWAPCHAIN_EXTENSION_NAME,
       .specVersion = 68,
-   },
-   {
-      .extensionName = VK_KHR_VARIABLE_POINTERS_EXTENSION_NAME,
-      .specVersion = 1,
    },
 };
 
@@ -610,65 +341,62 @@ void anv_DestroyInstance(
    vk_free(&instance->alloc, instance);
 }
 
-static VkResult
-anv_enumerate_devices(struct anv_instance *instance)
-{
-   /* TODO: Check for more devices ? */
-   drmDevicePtr devices[8];
-   VkResult result = VK_ERROR_INCOMPATIBLE_DRIVER;
-   int max_devices;
-
-   instance->physicalDeviceCount = 0;
-
-   max_devices = drmGetDevices2(0, devices, ARRAY_SIZE(devices));
-   if (max_devices < 1)
-      return VK_ERROR_INCOMPATIBLE_DRIVER;
-
-   for (unsigned i = 0; i < (unsigned)max_devices; i++) {
-      if (devices[i]->available_nodes & 1 << DRM_NODE_RENDER &&
-          devices[i]->bustype == DRM_BUS_PCI &&
-          devices[i]->deviceinfo.pci->vendor_id == 0x8086) {
-
-         result = anv_physical_device_init(&instance->physicalDevice,
-                        instance,
-                        devices[i]->nodes[DRM_NODE_RENDER]);
-         if (result != VK_ERROR_INCOMPATIBLE_DRIVER)
-            break;
-      }
-   }
-   drmFreeDevices(devices, max_devices);
-
-   if (result == VK_SUCCESS)
-      instance->physicalDeviceCount = 1;
-
-   return result;
-}
-
-
 VkResult anv_EnumeratePhysicalDevices(
     VkInstance                                  _instance,
     uint32_t*                                   pPhysicalDeviceCount,
     VkPhysicalDevice*                           pPhysicalDevices)
 {
    ANV_FROM_HANDLE(anv_instance, instance, _instance);
-   VK_OUTARRAY_MAKE(out, pPhysicalDevices, pPhysicalDeviceCount);
    VkResult result;
 
    if (instance->physicalDeviceCount < 0) {
-      result = anv_enumerate_devices(instance);
-      if (result != VK_SUCCESS &&
-          result != VK_ERROR_INCOMPATIBLE_DRIVER)
-         return result;
-   }
+      char path[20];
+      for (unsigned i = 0; i < 8; i++) {
+         snprintf(path, sizeof(path), "/dev/dri/renderD%d", 128 + i);
+         result = anv_physical_device_init(&instance->physicalDevice,
+                                           instance, path);
+         if (result != VK_ERROR_INCOMPATIBLE_DRIVER)
+            break;
+      }
 
-   if (instance->physicalDeviceCount > 0) {
-      assert(instance->physicalDeviceCount == 1);
-      vk_outarray_append(&out, i) {
-         *i = anv_physical_device_to_handle(&instance->physicalDevice);
+      if (result == VK_ERROR_INCOMPATIBLE_DRIVER) {
+         instance->physicalDeviceCount = 0;
+      } else if (result == VK_SUCCESS) {
+         instance->physicalDeviceCount = 1;
+      } else {
+         return result;
       }
    }
 
-   return vk_outarray_status(&out);
+   /* pPhysicalDeviceCount is an out parameter if pPhysicalDevices is NULL;
+    * otherwise it's an inout parameter.
+    *
+    * The Vulkan spec (git aaed022) says:
+    *
+    *    pPhysicalDeviceCount is a pointer to an unsigned integer variable
+    *    that is initialized with the number of devices the application is
+    *    prepared to receive handles to. pname:pPhysicalDevices is pointer to
+    *    an array of at least this many VkPhysicalDevice handles [...].
+    *
+    *    Upon success, if pPhysicalDevices is NULL, vkEnumeratePhysicalDevices
+    *    overwrites the contents of the variable pointed to by
+    *    pPhysicalDeviceCount with the number of physical devices in in the
+    *    instance; otherwise, vkEnumeratePhysicalDevices overwrites
+    *    pPhysicalDeviceCount with the number of physical handles written to
+    *    pPhysicalDevices.
+    */
+   if (!pPhysicalDevices) {
+      *pPhysicalDeviceCount = instance->physicalDeviceCount;
+   } else if (*pPhysicalDeviceCount >= 1) {
+      pPhysicalDevices[0] = anv_physical_device_to_handle(&instance->physicalDevice);
+      *pPhysicalDeviceCount = 1;
+   } else if (*pPhysicalDeviceCount < instance->physicalDeviceCount) {
+      return VK_INCOMPLETE;
+   } else {
+      *pPhysicalDeviceCount = 0;
+   }
+
+   return VK_SUCCESS;
 }
 
 void anv_GetPhysicalDeviceFeatures(
@@ -680,17 +408,17 @@ void anv_GetPhysicalDeviceFeatures(
    *pFeatures = (VkPhysicalDeviceFeatures) {
       .robustBufferAccess                       = true,
       .fullDrawIndexUint32                      = true,
-      .imageCubeArray                           = true,
+      .imageCubeArray                           = false,
       .independentBlend                         = true,
       .geometryShader                           = true,
-      .tessellationShader                       = true,
+      .tessellationShader                       = false,
       .sampleRateShading                        = true,
       .dualSrcBlend                             = true,
       .logicOp                                  = true,
-      .multiDrawIndirect                        = true,
-      .drawIndirectFirstInstance                = true,
+      .multiDrawIndirect                        = false,
+      .drawIndirectFirstInstance                = false,
       .depthClamp                               = true,
-      .depthBiasClamp                           = true,
+      .depthBiasClamp                           = false,
       .fillModeNonSolid                         = true,
       .depthBounds                              = false,
       .wideLines                                = true,
@@ -703,26 +431,26 @@ void anv_GetPhysicalDeviceFeatures(
       .textureCompressionASTC_LDR               = pdevice->info.gen >= 9, /* FINISHME CHV */
       .textureCompressionBC                     = true,
       .occlusionQueryPrecise                    = true,
-      .pipelineStatisticsQuery                  = true,
+      .pipelineStatisticsQuery                  = false,
       .fragmentStoresAndAtomics                 = true,
       .shaderTessellationAndGeometryPointSize   = true,
-      .shaderImageGatherExtended                = true,
-      .shaderStorageImageExtendedFormats        = true,
+      .shaderImageGatherExtended                = false,
+      .shaderStorageImageExtendedFormats        = false,
       .shaderStorageImageMultisample            = false,
-      .shaderStorageImageReadWithoutFormat      = false,
-      .shaderStorageImageWriteWithoutFormat     = true,
       .shaderUniformBufferArrayDynamicIndexing  = true,
       .shaderSampledImageArrayDynamicIndexing   = true,
       .shaderStorageBufferArrayDynamicIndexing  = true,
       .shaderStorageImageArrayDynamicIndexing   = true,
-      .shaderClipDistance                       = true,
-      .shaderCullDistance                       = true,
-      .shaderFloat64                            = pdevice->info.gen >= 8,
-      .shaderInt64                              = pdevice->info.gen >= 8,
+      .shaderStorageImageReadWithoutFormat      = false,
+      .shaderStorageImageWriteWithoutFormat     = true,
+      .shaderClipDistance                       = false,
+      .shaderCullDistance                       = false,
+      .shaderFloat64                            = false,
+      .shaderInt64                              = false,
       .shaderInt16                              = false,
-      .shaderResourceMinLod                     = false,
+      .alphaToOne                               = true,
       .variableMultisampleRate                  = false,
-      .inheritedQueries                         = true,
+      .inheritedQueries                         = false,
    };
 
    /* We can't do image stores in vec4 shaders */
@@ -731,35 +459,11 @@ void anv_GetPhysicalDeviceFeatures(
       pdevice->compiler->scalar_stage[MESA_SHADER_GEOMETRY];
 }
 
-void anv_GetPhysicalDeviceFeatures2KHR(
-    VkPhysicalDevice                            physicalDevice,
-    VkPhysicalDeviceFeatures2KHR*               pFeatures)
+void
+anv_device_get_cache_uuid(void *uuid)
 {
-   anv_GetPhysicalDeviceFeatures(physicalDevice, &pFeatures->features);
-
-   vk_foreach_struct(ext, pFeatures->pNext) {
-      switch (ext->sType) {
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES_KHX: {
-         VkPhysicalDeviceMultiviewFeaturesKHX *features =
-            (VkPhysicalDeviceMultiviewFeaturesKHX *)ext;
-         features->multiview = true;
-         features->multiviewGeometryShader = true;
-         features->multiviewTessellationShader = true;
-         break;
-      }
-
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VARIABLE_POINTER_FEATURES_KHR: {
-         VkPhysicalDeviceVariablePointerFeaturesKHR *features = (void *)ext;
-         features->variablePointersStorageBuffer = true;
-         features->variablePointers = false;
-         break;
-      }
-
-      default:
-         anv_debug_ignored_stype(ext->sType);
-         break;
-      }
-   }
+   memset(uuid, 0, VK_UUID_SIZE);
+   snprintf(uuid, VK_UUID_SIZE, "anv-%s", ANV_TIMESTAMP);
 }
 
 void anv_GetPhysicalDeviceProperties(
@@ -769,12 +473,11 @@ void anv_GetPhysicalDeviceProperties(
    ANV_FROM_HANDLE(anv_physical_device, pdevice, physicalDevice);
    const struct gen_device_info *devinfo = &pdevice->info;
 
+   const float time_stamp_base = devinfo->gen >= 9 ? 83.333 : 80.0;
+
    /* See assertions made when programming the buffer surface state. */
    const uint32_t max_raw_buffer_sz = devinfo->gen >= 7 ?
                                       (1ul << 30) : (1ul << 27);
-
-   const uint32_t max_samplers = (devinfo->gen >= 8 || devinfo->is_haswell) ?
-                                 128 : 16;
 
    VkSampleCountFlags sample_counts =
       isl_device_get_sample_counts(&pdevice->isl_dev);
@@ -794,13 +497,13 @@ void anv_GetPhysicalDeviceProperties(
       .bufferImageGranularity                   = 64, /* A cache line */
       .sparseAddressSpaceSize                   = 0,
       .maxBoundDescriptorSets                   = MAX_SETS,
-      .maxPerStageDescriptorSamplers            = max_samplers,
+      .maxPerStageDescriptorSamplers            = 64,
       .maxPerStageDescriptorUniformBuffers      = 64,
       .maxPerStageDescriptorStorageBuffers      = 64,
-      .maxPerStageDescriptorSampledImages       = max_samplers,
+      .maxPerStageDescriptorSampledImages       = 64,
       .maxPerStageDescriptorStorageImages       = 64,
       .maxPerStageDescriptorInputAttachments    = 64,
-      .maxPerStageResources                     = 250,
+      .maxPerStageResources                     = 128,
       .maxDescriptorSetSamplers                 = 256,
       .maxDescriptorSetUniformBuffers           = 256,
       .maxDescriptorSetUniformBuffersDynamic    = MAX_DYNAMIC_BUFFERS / 2,
@@ -809,19 +512,19 @@ void anv_GetPhysicalDeviceProperties(
       .maxDescriptorSetSampledImages            = 256,
       .maxDescriptorSetStorageImages            = 256,
       .maxDescriptorSetInputAttachments         = 256,
-      .maxVertexInputAttributes                 = MAX_VBS,
-      .maxVertexInputBindings                   = MAX_VBS,
+      .maxVertexInputAttributes                 = 32,
+      .maxVertexInputBindings                   = 32,
       .maxVertexInputAttributeOffset            = 2047,
       .maxVertexInputBindingStride              = 2048,
       .maxVertexOutputComponents                = 128,
-      .maxTessellationGenerationLevel           = 64,
-      .maxTessellationPatchSize                 = 32,
-      .maxTessellationControlPerVertexInputComponents = 128,
-      .maxTessellationControlPerVertexOutputComponents = 128,
-      .maxTessellationControlPerPatchOutputComponents = 128,
-      .maxTessellationControlTotalOutputComponents = 2048,
-      .maxTessellationEvaluationInputComponents = 128,
-      .maxTessellationEvaluationOutputComponents = 128,
+      .maxTessellationGenerationLevel           = 0,
+      .maxTessellationPatchSize                 = 0,
+      .maxTessellationControlPerVertexInputComponents = 0,
+      .maxTessellationControlPerVertexOutputComponents = 0,
+      .maxTessellationControlPerPatchOutputComponents = 0,
+      .maxTessellationControlTotalOutputComponents = 0,
+      .maxTessellationEvaluationInputComponents = 0,
+      .maxTessellationEvaluationOutputComponents = 0,
       .maxGeometryShaderInvocations             = 32,
       .maxGeometryInputComponents               = 64,
       .maxGeometryOutputComponents              = 128,
@@ -856,14 +559,14 @@ void anv_GetPhysicalDeviceProperties(
       .minStorageBufferOffsetAlignment          = 4,
       .minTexelOffset                           = -8,
       .maxTexelOffset                           = 7,
-      .minTexelGatherOffset                     = -32,
-      .maxTexelGatherOffset                     = 31,
+      .minTexelGatherOffset                     = -8,
+      .maxTexelGatherOffset                     = 7,
       .minInterpolationOffset                   = -0.5,
       .maxInterpolationOffset                   = 0.4375,
       .subPixelInterpolationOffsetBits          = 4,
       .maxFramebufferWidth                      = (1 << 14),
       .maxFramebufferHeight                     = (1 << 14),
-      .maxFramebufferLayers                     = (1 << 11),
+      .maxFramebufferLayers                     = (1 << 10),
       .framebufferColorSampleCounts             = sample_counts,
       .framebufferDepthSampleCounts             = sample_counts,
       .framebufferStencilSampleCounts           = sample_counts,
@@ -876,10 +579,10 @@ void anv_GetPhysicalDeviceProperties(
       .storageImageSampleCounts                 = VK_SAMPLE_COUNT_1_BIT,
       .maxSampleMaskWords                       = 1,
       .timestampComputeAndGraphics              = false,
-      .timestampPeriod                          = 1000000000.0 / devinfo->timestamp_frequency,
-      .maxClipDistances                         = 8,
-      .maxCullDistances                         = 8,
-      .maxCombinedClipAndCullDistances          = 8,
+      .timestampPeriod                          = time_stamp_base,
+      .maxClipDistances                         = 0 /* FIXME */,
+      .maxCullDistances                         = 0 /* FIXME */,
+      .maxCombinedClipAndCullDistances          = 0 /* FIXME */,
       .discreteQueuePriorities                  = 1,
       .pointSizeRange                           = { 0.125, 255.875 },
       .lineWidthRange                           = { 0.0, 7.9921875 },
@@ -893,8 +596,8 @@ void anv_GetPhysicalDeviceProperties(
    };
 
    *pProperties = (VkPhysicalDeviceProperties) {
-      .apiVersion = VK_MAKE_VERSION(1, 0, 54),
-      .driverVersion = vk_get_driver_version(),
+      .apiVersion = VK_MAKE_VERSION(1, 0, 5),
+      .driverVersion = 1,
       .vendorID = 0x8086,
       .deviceID = pdevice->chipset_id,
       .deviceType = VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU,
@@ -902,93 +605,39 @@ void anv_GetPhysicalDeviceProperties(
       .sparseProperties = {0}, /* Broadwell doesn't do sparse. */
    };
 
-   snprintf(pProperties->deviceName, sizeof(pProperties->deviceName),
-            "%s", pdevice->name);
-   memcpy(pProperties->pipelineCacheUUID,
-          pdevice->pipeline_cache_uuid, VK_UUID_SIZE);
+   strcpy(pProperties->deviceName, pdevice->name);
+   anv_device_get_cache_uuid(pProperties->pipelineCacheUUID);
 }
-
-void anv_GetPhysicalDeviceProperties2KHR(
-    VkPhysicalDevice                            physicalDevice,
-    VkPhysicalDeviceProperties2KHR*             pProperties)
-{
-   ANV_FROM_HANDLE(anv_physical_device, pdevice, physicalDevice);
-
-   anv_GetPhysicalDeviceProperties(physicalDevice, &pProperties->properties);
-
-   vk_foreach_struct(ext, pProperties->pNext) {
-      switch (ext->sType) {
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PUSH_DESCRIPTOR_PROPERTIES_KHR: {
-         VkPhysicalDevicePushDescriptorPropertiesKHR *properties =
-            (VkPhysicalDevicePushDescriptorPropertiesKHR *) ext;
-
-         properties->maxPushDescriptors = MAX_PUSH_DESCRIPTORS;
-         break;
-      }
-
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ID_PROPERTIES_KHR: {
-         VkPhysicalDeviceIDPropertiesKHR *id_props =
-            (VkPhysicalDeviceIDPropertiesKHR *)ext;
-         memcpy(id_props->deviceUUID, pdevice->device_uuid, VK_UUID_SIZE);
-         memcpy(id_props->driverUUID, pdevice->driver_uuid, VK_UUID_SIZE);
-         /* The LUID is for Windows. */
-         id_props->deviceLUIDValid = false;
-         break;
-      }
-
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_PROPERTIES_KHX: {
-         VkPhysicalDeviceMultiviewPropertiesKHX *properties =
-            (VkPhysicalDeviceMultiviewPropertiesKHX *)ext;
-         properties->maxMultiviewViewCount = 16;
-         properties->maxMultiviewInstanceIndex = UINT32_MAX / 16;
-         break;
-      }
-
-      default:
-         anv_debug_ignored_stype(ext->sType);
-         break;
-      }
-   }
-}
-
-/* We support exactly one queue family. */
-static const VkQueueFamilyProperties
-anv_queue_family_properties = {
-   .queueFlags = VK_QUEUE_GRAPHICS_BIT |
-                 VK_QUEUE_COMPUTE_BIT |
-                 VK_QUEUE_TRANSFER_BIT,
-   .queueCount = 1,
-   .timestampValidBits = 36, /* XXX: Real value here */
-   .minImageTransferGranularity = { 1, 1, 1 },
-};
 
 void anv_GetPhysicalDeviceQueueFamilyProperties(
     VkPhysicalDevice                            physicalDevice,
     uint32_t*                                   pCount,
     VkQueueFamilyProperties*                    pQueueFamilyProperties)
 {
-   VK_OUTARRAY_MAKE(out, pQueueFamilyProperties, pCount);
-
-   vk_outarray_append(&out, p) {
-      *p = anv_queue_family_properties;
+   if (pQueueFamilyProperties == NULL) {
+      *pCount = 1;
+      return;
    }
-}
 
-void anv_GetPhysicalDeviceQueueFamilyProperties2KHR(
-    VkPhysicalDevice                            physicalDevice,
-    uint32_t*                                   pQueueFamilyPropertyCount,
-    VkQueueFamilyProperties2KHR*                pQueueFamilyProperties)
-{
+   /* The spec implicitly allows the incoming count to be 0. From the Vulkan
+    * 1.0.38 spec, Section 4.1 Physical Devices:
+    *
+    *     If the value referenced by pQueueFamilyPropertyCount is not 0 [then
+    *     do stuff].
+    */
+   if (*pCount == 0)
+      return;
 
-   VK_OUTARRAY_MAKE(out, pQueueFamilyProperties, pQueueFamilyPropertyCount);
+   *pQueueFamilyProperties = (VkQueueFamilyProperties) {
+      .queueFlags = VK_QUEUE_GRAPHICS_BIT |
+                    VK_QUEUE_COMPUTE_BIT |
+                    VK_QUEUE_TRANSFER_BIT,
+      .queueCount = 1,
+      .timestampValidBits = 36, /* XXX: Real value here */
+      .minImageTransferGranularity = (VkExtent3D) { 1, 1, 1 },
+   };
 
-   vk_outarray_append(&out, p) {
-      p->queueFamilyProperties = anv_queue_family_properties;
-
-      vk_foreach_struct(s, p->pNext) {
-         anv_debug_ignored_stype(s->sType);
-      }
-   }
+   *pCount = 1;
 }
 
 void anv_GetPhysicalDeviceMemoryProperties(
@@ -996,38 +645,51 @@ void anv_GetPhysicalDeviceMemoryProperties(
     VkPhysicalDeviceMemoryProperties*           pMemoryProperties)
 {
    ANV_FROM_HANDLE(anv_physical_device, physical_device, physicalDevice);
+   VkDeviceSize heap_size;
 
-   pMemoryProperties->memoryTypeCount = physical_device->memory.type_count;
-   for (uint32_t i = 0; i < physical_device->memory.type_count; i++) {
-      pMemoryProperties->memoryTypes[i] = (VkMemoryType) {
-         .propertyFlags = physical_device->memory.types[i].propertyFlags,
-         .heapIndex     = physical_device->memory.types[i].heapIndex,
+   /* Reserve some wiggle room for the driver by exposing only 75% of the
+    * aperture to the heap.
+    */
+   heap_size = 3 * physical_device->aperture_size / 4;
+
+   if (physical_device->info.has_llc) {
+      /* Big core GPUs share LLC with the CPU and thus one memory type can be
+       * both cached and coherent at the same time.
+       */
+      pMemoryProperties->memoryTypeCount = 1;
+      pMemoryProperties->memoryTypes[0] = (VkMemoryType) {
+         .propertyFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT |
+                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                          VK_MEMORY_PROPERTY_HOST_COHERENT_BIT |
+                          VK_MEMORY_PROPERTY_HOST_CACHED_BIT,
+         .heapIndex = 0,
+      };
+   } else {
+      /* The spec requires that we expose a host-visible, coherent memory
+       * type, but Atom GPUs don't share LLC. Thus we offer two memory types
+       * to give the application a choice between cached, but not coherent and
+       * coherent but uncached (WC though).
+       */
+      pMemoryProperties->memoryTypeCount = 2;
+      pMemoryProperties->memoryTypes[0] = (VkMemoryType) {
+         .propertyFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT |
+                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                          VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+         .heapIndex = 0,
+      };
+      pMemoryProperties->memoryTypes[1] = (VkMemoryType) {
+         .propertyFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT |
+                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                          VK_MEMORY_PROPERTY_HOST_CACHED_BIT,
+         .heapIndex = 0,
       };
    }
 
-   pMemoryProperties->memoryHeapCount = physical_device->memory.heap_count;
-   for (uint32_t i = 0; i < physical_device->memory.heap_count; i++) {
-      pMemoryProperties->memoryHeaps[i] = (VkMemoryHeap) {
-         .size    = physical_device->memory.heaps[i].size,
-         .flags   = physical_device->memory.heaps[i].flags,
-      };
-   }
-}
-
-void anv_GetPhysicalDeviceMemoryProperties2KHR(
-    VkPhysicalDevice                            physicalDevice,
-    VkPhysicalDeviceMemoryProperties2KHR*       pMemoryProperties)
-{
-   anv_GetPhysicalDeviceMemoryProperties(physicalDevice,
-                                         &pMemoryProperties->memoryProperties);
-
-   vk_foreach_struct(ext, pMemoryProperties->pNext) {
-      switch (ext->sType) {
-      default:
-         anv_debug_ignored_stype(ext->sType);
-         break;
-      }
-   }
+   pMemoryProperties->memoryHeapCount = 1;
+   pMemoryProperties->memoryHeaps[0] = (VkMemoryHeap) {
+      .size = heap_size,
+      .flags = VK_MEMORY_HEAP_DEVICE_LOCAL_BIT,
+   };
 }
 
 PFN_vkVoidFunction anv_GetInstanceProcAddr(
@@ -1061,12 +723,14 @@ PFN_vkVoidFunction anv_GetDeviceProcAddr(
    return anv_lookup_entrypoint(&device->info, pName);
 }
 
-static void
+static VkResult
 anv_queue_init(struct anv_device *device, struct anv_queue *queue)
 {
    queue->_loader_data.loaderMagic = ICD_LOADER_MAGIC;
    queue->device = device;
    queue->pool = &device->surface_state_pool;
+
+   return VK_SUCCESS;
 }
 
 static void
@@ -1082,7 +746,8 @@ anv_state_pool_emit_data(struct anv_state_pool *pool, size_t size, size_t align,
    state = anv_state_pool_alloc(pool, size, align);
    memcpy(state.map, p, size);
 
-   anv_state_flush(pool->block_pool.device, state);
+   if (!pool->block_pool->device->info.has_llc)
+      anv_state_clflush(state);
 
    return state;
 }
@@ -1113,6 +778,70 @@ anv_device_init_border_colors(struct anv_device *device)
                                                     border_colors);
 }
 
+VkResult
+anv_device_submit_simple_batch(struct anv_device *device,
+                               struct anv_batch *batch)
+{
+   struct drm_i915_gem_execbuffer2 execbuf;
+   struct drm_i915_gem_exec_object2 exec2_objects[1];
+   struct anv_bo bo, *exec_bos[1];
+   VkResult result = VK_SUCCESS;
+   uint32_t size;
+   int64_t timeout;
+   int ret;
+
+   /* Kernel driver requires 8 byte aligned batch length */
+   size = align_u32(batch->next - batch->start, 8);
+   result = anv_bo_pool_alloc(&device->batch_bo_pool, &bo, size);
+   if (result != VK_SUCCESS)
+      return result;
+
+   memcpy(bo.map, batch->start, size);
+   if (!device->info.has_llc)
+      anv_clflush_range(bo.map, size);
+
+   exec_bos[0] = &bo;
+   exec2_objects[0].handle = bo.gem_handle;
+   exec2_objects[0].relocation_count = 0;
+   exec2_objects[0].relocs_ptr = 0;
+   exec2_objects[0].alignment = 0;
+   exec2_objects[0].offset = bo.offset;
+   exec2_objects[0].flags = 0;
+   exec2_objects[0].rsvd1 = 0;
+   exec2_objects[0].rsvd2 = 0;
+
+   execbuf.buffers_ptr = (uintptr_t) exec2_objects;
+   execbuf.buffer_count = 1;
+   execbuf.batch_start_offset = 0;
+   execbuf.batch_len = size;
+   execbuf.cliprects_ptr = 0;
+   execbuf.num_cliprects = 0;
+   execbuf.DR1 = 0;
+   execbuf.DR4 = 0;
+
+   execbuf.flags =
+      I915_EXEC_HANDLE_LUT | I915_EXEC_NO_RELOC | I915_EXEC_RENDER;
+   execbuf.rsvd1 = device->context_id;
+   execbuf.rsvd2 = 0;
+
+   result = anv_device_execbuf(device, &execbuf, exec_bos);
+   if (result != VK_SUCCESS)
+      goto fail;
+
+   timeout = INT64_MAX;
+   ret = anv_gem_wait(device, bo.gem_handle, &timeout);
+   if (ret != 0) {
+      /* We don't know the real error. */
+      result = vk_errorf(VK_ERROR_DEVICE_LOST, "execbuf2 failed: %m");
+      goto fail;
+   }
+
+ fail:
+   anv_bo_pool_free(&device->batch_bo_pool, &bo);
+
+   return result;
+}
+
 VkResult anv_CreateDevice(
     VkPhysicalDevice                            physicalDevice,
     const VkDeviceCreateInfo*                   pCreateInfo,
@@ -1138,19 +867,6 @@ VkResult anv_CreateDevice(
          return vk_error(VK_ERROR_EXTENSION_NOT_PRESENT);
    }
 
-   /* Check enabled features */
-   if (pCreateInfo->pEnabledFeatures) {
-      VkPhysicalDeviceFeatures supported_features;
-      anv_GetPhysicalDeviceFeatures(physicalDevice, &supported_features);
-      VkBool32 *supported_feature = (VkBool32 *)&supported_features;
-      VkBool32 *enabled_feature = (VkBool32 *)pCreateInfo->pEnabledFeatures;
-      unsigned num_features = sizeof(VkPhysicalDeviceFeatures) / sizeof(VkBool32);
-      for (uint32_t i = 0; i < num_features; i++) {
-         if (enabled_feature[i] && !supported_feature[i])
-            return vk_error(VK_ERROR_FEATURE_NOT_PRESENT);
-      }
-   }
-
    device = vk_alloc2(&physical_device->instance->alloc, pAllocator,
                        sizeof(*device), 8,
                        VK_SYSTEM_ALLOCATION_SCOPE_DEVICE);
@@ -1160,7 +876,6 @@ VkResult anv_CreateDevice(
    device->_loader_data.loaderMagic = ICD_LOADER_MAGIC;
    device->instance = physical_device->instance;
    device->chipset_id = physical_device->chipset_id;
-   device->lost = false;
 
    if (pAllocator)
       device->alloc = *pAllocator;
@@ -1193,49 +908,31 @@ VkResult anv_CreateDevice(
    device->robust_buffer_access = pCreateInfo->pEnabledFeatures &&
       pCreateInfo->pEnabledFeatures->robustBufferAccess;
 
-   if (pthread_mutex_init(&device->mutex, NULL) != 0) {
-      result = vk_error(VK_ERROR_INITIALIZATION_FAILED);
-      goto fail_context_id;
-   }
+   pthread_mutex_init(&device->mutex, NULL);
 
    pthread_condattr_t condattr;
-   if (pthread_condattr_init(&condattr) != 0) {
-      result = vk_error(VK_ERROR_INITIALIZATION_FAILED);
-      goto fail_mutex;
-   }
-   if (pthread_condattr_setclock(&condattr, CLOCK_MONOTONIC) != 0) {
-      pthread_condattr_destroy(&condattr);
-      result = vk_error(VK_ERROR_INITIALIZATION_FAILED);
-      goto fail_mutex;
-   }
-   if (pthread_cond_init(&device->queue_submit, NULL) != 0) {
-      pthread_condattr_destroy(&condattr);
-      result = vk_error(VK_ERROR_INITIALIZATION_FAILED);
-      goto fail_mutex;
-   }
+   pthread_condattr_init(&condattr);
+   pthread_condattr_setclock(&condattr, CLOCK_MONOTONIC);
+   pthread_cond_init(&device->queue_submit, NULL);
    pthread_condattr_destroy(&condattr);
 
    anv_bo_pool_init(&device->batch_bo_pool, device);
 
-   result = anv_bo_cache_init(&device->bo_cache);
-   if (result != VK_SUCCESS)
-      goto fail_batch_bo_pool;
+   anv_block_pool_init(&device->dynamic_state_block_pool, device, 16384);
 
-   result = anv_state_pool_init(&device->dynamic_state_pool, device, 16384);
-   if (result != VK_SUCCESS)
-      goto fail_bo_cache;
+   anv_state_pool_init(&device->dynamic_state_pool,
+                       &device->dynamic_state_block_pool);
 
-   result = anv_state_pool_init(&device->instruction_state_pool, device, 16384);
-   if (result != VK_SUCCESS)
-      goto fail_dynamic_state_pool;
+   anv_block_pool_init(&device->instruction_block_pool, device, 128 * 1024);
+   anv_state_pool_init(&device->instruction_state_pool,
+                       &device->instruction_block_pool);
 
-   result = anv_state_pool_init(&device->surface_state_pool, device, 4096);
-   if (result != VK_SUCCESS)
-      goto fail_instruction_state_pool;
+   anv_block_pool_init(&device->surface_state_block_pool, device, 4096);
 
-   result = anv_bo_init_new(&device->workaround_bo, device, 1024);
-   if (result != VK_SUCCESS)
-      goto fail_surface_state_pool;
+   anv_state_pool_init(&device->surface_state_pool,
+                       &device->surface_state_block_pool);
+
+   anv_bo_init_new(&device->workaround_bo, device, 1024);
 
    anv_scratch_pool_init(device, &device->scratch_pool);
 
@@ -1254,16 +951,13 @@ VkResult anv_CreateDevice(
    case 9:
       result = gen9_init_device_state(device);
       break;
-   case 10:
-      result = gen10_init_device_state(device);
-      break;
    default:
       /* Shouldn't get here as we don't create physical devices for any other
        * gens. */
       unreachable("unhandled gen");
    }
    if (result != VK_SUCCESS)
-      goto fail_workaround_bo;
+      goto fail_fd;
 
    anv_device_init_blorp(device);
 
@@ -1273,26 +967,6 @@ VkResult anv_CreateDevice(
 
    return VK_SUCCESS;
 
- fail_workaround_bo:
-   anv_queue_finish(&device->queue);
-   anv_scratch_pool_finish(device, &device->scratch_pool);
-   anv_gem_munmap(device->workaround_bo.map, device->workaround_bo.size);
-   anv_gem_close(device, device->workaround_bo.gem_handle);
- fail_surface_state_pool:
-   anv_state_pool_finish(&device->surface_state_pool);
- fail_instruction_state_pool:
-   anv_state_pool_finish(&device->instruction_state_pool);
- fail_dynamic_state_pool:
-   anv_state_pool_finish(&device->dynamic_state_pool);
- fail_bo_cache:
-   anv_bo_cache_finish(&device->bo_cache);
- fail_batch_bo_pool:
-   anv_bo_pool_finish(&device->batch_bo_pool);
-   pthread_cond_destroy(&device->queue_submit);
- fail_mutex:
-   pthread_mutex_destroy(&device->mutex);
- fail_context_id:
-   anv_gem_destroy_context(device, device->context_id);
  fail_fd:
    close(device->fd);
  fail_device:
@@ -1327,10 +1001,11 @@ void anv_DestroyDevice(
    anv_gem_close(device, device->workaround_bo.gem_handle);
 
    anv_state_pool_finish(&device->surface_state_pool);
+   anv_block_pool_finish(&device->surface_state_block_pool);
    anv_state_pool_finish(&device->instruction_state_pool);
+   anv_block_pool_finish(&device->instruction_block_pool);
    anv_state_pool_finish(&device->dynamic_state_pool);
-
-   anv_bo_cache_finish(&device->bo_cache);
+   anv_block_pool_finish(&device->dynamic_state_block_pool);
 
    anv_bo_pool_finish(&device->batch_bo_pool);
 
@@ -1424,89 +1099,103 @@ void anv_GetDeviceQueue(
 }
 
 VkResult
-anv_device_query_status(struct anv_device *device)
+anv_device_execbuf(struct anv_device *device,
+                   struct drm_i915_gem_execbuffer2 *execbuf,
+                   struct anv_bo **execbuf_bos)
 {
-   /* This isn't likely as most of the callers of this function already check
-    * for it.  However, it doesn't hurt to check and it potentially lets us
-    * avoid an ioctl.
-    */
-   if (unlikely(device->lost))
-      return VK_ERROR_DEVICE_LOST;
-
-   uint32_t active, pending;
-   int ret = anv_gem_gpu_get_reset_stats(device, &active, &pending);
-   if (ret == -1) {
+   int ret = anv_gem_execbuffer(device, execbuf);
+   if (ret != 0) {
       /* We don't know the real error. */
-      device->lost = true;
-      return vk_errorf(VK_ERROR_DEVICE_LOST, "get_reset_stats failed: %m");
+      return vk_errorf(VK_ERROR_DEVICE_LOST, "execbuf2 failed: %m");
    }
 
-   if (active) {
-      device->lost = true;
-      return vk_errorf(VK_ERROR_DEVICE_LOST,
-                       "GPU hung on one of our command buffers");
-   } else if (pending) {
-      device->lost = true;
-      return vk_errorf(VK_ERROR_DEVICE_LOST,
-                       "GPU hung with commands in-flight");
-   }
+   struct drm_i915_gem_exec_object2 *objects = (void *)execbuf->buffers_ptr;
+   for (uint32_t k = 0; k < execbuf->buffer_count; k++)
+      execbuf_bos[k]->offset = objects[k].offset;
 
    return VK_SUCCESS;
 }
 
-VkResult
-anv_device_bo_busy(struct anv_device *device, struct anv_bo *bo)
+VkResult anv_QueueSubmit(
+    VkQueue                                     _queue,
+    uint32_t                                    submitCount,
+    const VkSubmitInfo*                         pSubmits,
+    VkFence                                     _fence)
 {
-   /* Note:  This only returns whether or not the BO is in use by an i915 GPU.
-    * Other usages of the BO (such as on different hardware) will not be
-    * flagged as "busy" by this ioctl.  Use with care.
+   ANV_FROM_HANDLE(anv_queue, queue, _queue);
+   ANV_FROM_HANDLE(anv_fence, fence, _fence);
+   struct anv_device *device = queue->device;
+   VkResult result = VK_SUCCESS;
+
+   /* We lock around QueueSubmit for three main reasons:
+    *
+    *  1) When a block pool is resized, we create a new gem handle with a
+    *     different size and, in the case of surface states, possibly a
+    *     different center offset but we re-use the same anv_bo struct when
+    *     we do so.  If this happens in the middle of setting up an execbuf,
+    *     we could end up with our list of BOs out of sync with our list of
+    *     gem handles.
+    *
+    *  2) The algorithm we use for building the list of unique buffers isn't
+    *     thread-safe.  While the client is supposed to syncronize around
+    *     QueueSubmit, this would be extremely difficult to debug if it ever
+    *     came up in the wild due to a broken app.  It's better to play it
+    *     safe and just lock around QueueSubmit.
+    *
+    *  3)  The anv_cmd_buffer_execbuf function may perform relocations in
+    *      userspace.  Due to the fact that the surface state buffer is shared
+    *      between batches, we can't afford to have that happen from multiple
+    *      threads at the same time.  Even though the user is supposed to
+    *      ensure this doesn't happen, we play it safe as in (2) above.
+    *
+    * Since the only other things that ever take the device lock such as block
+    * pool resize only rarely happen, this will almost never be contended so
+    * taking a lock isn't really an expensive operation in this case.
     */
-   int ret = anv_gem_busy(device, bo->gem_handle);
-   if (ret == 1) {
-      return VK_NOT_READY;
-   } else if (ret == -1) {
-      /* We don't know the real error. */
-      device->lost = true;
-      return vk_errorf(VK_ERROR_DEVICE_LOST, "gem wait failed: %m");
+   pthread_mutex_lock(&device->mutex);
+
+   for (uint32_t i = 0; i < submitCount; i++) {
+      for (uint32_t j = 0; j < pSubmits[i].commandBufferCount; j++) {
+         ANV_FROM_HANDLE(anv_cmd_buffer, cmd_buffer,
+                         pSubmits[i].pCommandBuffers[j]);
+         assert(cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+
+         result = anv_cmd_buffer_execbuf(device, cmd_buffer);
+         if (result != VK_SUCCESS)
+            goto out;
+      }
    }
 
-   /* Query for device status after the busy call.  If the BO we're checking
-    * got caught in a GPU hang we don't want to return VK_SUCCESS to the
-    * client because it clearly doesn't have valid data.  Yes, this most
-    * likely means an ioctl, but we just did an ioctl to query the busy status
-    * so it's no great loss.
-    */
-   return anv_device_query_status(device);
+   if (fence) {
+      struct anv_bo *fence_bo = &fence->bo;
+      result = anv_device_execbuf(device, &fence->execbuf, &fence_bo);
+      if (result != VK_SUCCESS)
+         goto out;
+
+      /* Update the fence and wake up any waiters */
+      assert(fence->state == ANV_FENCE_STATE_RESET);
+      fence->state = ANV_FENCE_STATE_SUBMITTED;
+      pthread_cond_broadcast(&device->queue_submit);
+   }
+
+out:
+   pthread_mutex_unlock(&device->mutex);
+
+   return result;
 }
 
-VkResult
-anv_device_wait(struct anv_device *device, struct anv_bo *bo,
-                int64_t timeout)
+VkResult anv_QueueWaitIdle(
+    VkQueue                                     _queue)
 {
-   int ret = anv_gem_wait(device, bo->gem_handle, &timeout);
-   if (ret == -1 && errno == ETIME) {
-      return VK_TIMEOUT;
-   } else if (ret == -1) {
-      /* We don't know the real error. */
-      device->lost = true;
-      return vk_errorf(VK_ERROR_DEVICE_LOST, "gem wait failed: %m");
-   }
+   ANV_FROM_HANDLE(anv_queue, queue, _queue);
 
-   /* Query for device status after the wait.  If the BO we're waiting on got
-    * caught in a GPU hang we don't want to return VK_SUCCESS to the client
-    * because it clearly doesn't have valid data.  Yes, this most likely means
-    * an ioctl, but we just did an ioctl to wait so it's no great loss.
-    */
-   return anv_device_query_status(device);
+   return anv_DeviceWaitIdle(anv_device_to_handle(queue->device));
 }
 
 VkResult anv_DeviceWaitIdle(
     VkDevice                                    _device)
 {
    ANV_FROM_HANDLE(anv_device, device, _device);
-   if (unlikely(device->lost))
-      return VK_ERROR_DEVICE_LOST;
-
    struct anv_batch batch;
 
    uint32_t cmds[8];
@@ -1538,34 +1227,20 @@ VkResult anv_AllocateMemory(
     VkDeviceMemory*                             pMem)
 {
    ANV_FROM_HANDLE(anv_device, device, _device);
-   struct anv_physical_device *pdevice = &device->instance->physicalDevice;
    struct anv_device_memory *mem;
-   VkResult result = VK_SUCCESS;
+   VkResult result;
 
    assert(pAllocateInfo->sType == VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO);
 
-   /* The Vulkan 1.0.33 spec says "allocationSize must be greater than 0". */
-   assert(pAllocateInfo->allocationSize > 0);
+   if (pAllocateInfo->allocationSize == 0) {
+      /* Apparently, this is allowed */
+      *pMem = VK_NULL_HANDLE;
+      return VK_SUCCESS;
+   }
 
-   /* The kernel relocation API has a limitation of a 32-bit delta value
-    * applied to the address before it is written which, in spite of it being
-    * unsigned, is treated as signed .  Because of the way that this maps to
-    * the Vulkan API, we cannot handle an offset into a buffer that does not
-    * fit into a signed 32 bits.  The only mechanism we have for dealing with
-    * this at the moment is to limit all VkDeviceMemory objects to a maximum
-    * of 2GB each.  The Vulkan spec allows us to do this:
-    *
-    *    "Some platforms may have a limit on the maximum size of a single
-    *    allocation. For example, certain systems may fail to create
-    *    allocations with a size greater than or equal to 4GB. Such a limit is
-    *    implementation-dependent, and if such a failure occurs then the error
-    *    VK_ERROR_OUT_OF_DEVICE_MEMORY should be returned."
-    *
-    * We don't use vk_error here because it's not an error so much as an
-    * indication to the application that the allocation is too large.
-    */
-   if (pAllocateInfo->allocationSize > (1ull << 31))
-      return VK_ERROR_OUT_OF_DEVICE_MEMORY;
+   /* We support exactly one memory heap. */
+   assert(pAllocateInfo->memoryTypeIndex == 0 ||
+          (!device->info.has_llc && pAllocateInfo->memoryTypeIndex < 2));
 
    /* FINISHME: Fail if allocation request exceeds heap size. */
 
@@ -1574,43 +1249,17 @@ VkResult anv_AllocateMemory(
    if (mem == NULL)
       return vk_error(VK_ERROR_OUT_OF_HOST_MEMORY);
 
-   assert(pAllocateInfo->memoryTypeIndex < pdevice->memory.type_count);
-   mem->type = &pdevice->memory.types[pAllocateInfo->memoryTypeIndex];
+   /* The kernel is going to give us whole pages anyway */
+   uint64_t alloc_size = align_u64(pAllocateInfo->allocationSize, 4096);
+
+   result = anv_bo_init_new(&mem->bo, device, alloc_size);
+   if (result != VK_SUCCESS)
+      goto fail;
+
+   mem->type_index = pAllocateInfo->memoryTypeIndex;
+
    mem->map = NULL;
    mem->map_size = 0;
-
-   const VkImportMemoryFdInfoKHR *fd_info =
-      vk_find_struct_const(pAllocateInfo->pNext, IMPORT_MEMORY_FD_INFO_KHR);
-
-   /* The Vulkan spec permits handleType to be 0, in which case the struct is
-    * ignored.
-    */
-   if (fd_info && fd_info->handleType) {
-      /* At the moment, we only support the OPAQUE_FD memory type which is
-       * just a GEM buffer.
-       */
-      assert(fd_info->handleType ==
-             VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD_BIT_KHR);
-
-      result = anv_bo_cache_import(device, &device->bo_cache,
-                                   fd_info->fd, pAllocateInfo->allocationSize,
-                                   &mem->bo);
-      if (result != VK_SUCCESS)
-         goto fail;
-   } else {
-      result = anv_bo_cache_alloc(device, &device->bo_cache,
-                                  pAllocateInfo->allocationSize,
-                                  &mem->bo);
-      if (result != VK_SUCCESS)
-         goto fail;
-   }
-
-   assert(mem->type->heapIndex < pdevice->memory.heap_count);
-   if (pdevice->memory.heaps[mem->type->heapIndex].supports_48bit_addresses)
-      mem->bo->flags |= EXEC_OBJECT_SUPPORTS_48B_ADDRESS;
-
-   if (pdevice->has_exec_async)
-      mem->bo->flags |= EXEC_OBJECT_ASYNC;
 
    *pMem = anv_device_memory_to_handle(mem);
 
@@ -1620,38 +1269,6 @@ VkResult anv_AllocateMemory(
    vk_free2(&device->alloc, pAllocator, mem);
 
    return result;
-}
-
-VkResult anv_GetMemoryFdKHR(
-    VkDevice                                    device_h,
-    const VkMemoryGetFdInfoKHR*                 pGetFdInfo,
-    int*                                        pFd)
-{
-   ANV_FROM_HANDLE(anv_device, dev, device_h);
-   ANV_FROM_HANDLE(anv_device_memory, mem, pGetFdInfo->memory);
-
-   assert(pGetFdInfo->sType == VK_STRUCTURE_TYPE_MEMORY_GET_FD_INFO_KHR);
-
-   /* We support only one handle type. */
-   assert(pGetFdInfo->handleType ==
-          VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD_BIT_KHR);
-
-   return anv_bo_cache_export(dev, &dev->bo_cache, mem->bo, pFd);
-}
-
-VkResult anv_GetMemoryFdPropertiesKHR(
-    VkDevice                                    device_h,
-    VkExternalMemoryHandleTypeFlagBitsKHR       handleType,
-    int                                         fd,
-    VkMemoryFdPropertiesKHR*                    pMemoryFdProperties)
-{
-   /* The valid usage section for this function says:
-    *
-    *    "handleType must not be one of the handle types defined as opaque."
-    *
-    * Since we only handle opaque handles for now, there are no FD properties.
-    */
-   return VK_ERROR_INVALID_EXTERNAL_HANDLE_KHR;
 }
 
 void anv_FreeMemory(
@@ -1668,7 +1285,11 @@ void anv_FreeMemory(
    if (mem->map)
       anv_UnmapMemory(_device, _mem);
 
-   anv_bo_cache_release(device, &device->bo_cache, mem->bo);
+   if (mem->bo.map)
+      anv_gem_munmap(mem->bo.map, mem->bo.size);
+
+   if (mem->bo.gem_handle != 0)
+      anv_gem_close(device, mem->bo.gem_handle);
 
    vk_free2(&device->alloc, pAllocator, mem);
 }
@@ -1690,17 +1311,7 @@ VkResult anv_MapMemory(
    }
 
    if (size == VK_WHOLE_SIZE)
-      size = mem->bo->size - offset;
-
-   /* From the Vulkan spec version 1.0.32 docs for MapMemory:
-    *
-    *  * If size is not equal to VK_WHOLE_SIZE, size must be greater than 0
-    *    assert(size != 0);
-    *  * If size is not equal to VK_WHOLE_SIZE, size must be less than or
-    *    equal to the size of the memory minus offset
-    */
-   assert(size > 0);
-   assert(offset + size <= mem->bo->size);
+      size = mem->bo.size - offset;
 
    /* FIXME: Is this supposed to be thread safe? Since vkUnmapMemory() only
     * takes a VkDeviceMemory pointer, it seems like only one map of the memory
@@ -1709,9 +1320,7 @@ VkResult anv_MapMemory(
     * userspace. */
 
    uint32_t gem_flags = 0;
-
-   if (!device->info.has_llc &&
-       (mem->type->propertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
+   if (!device->info.has_llc && mem->type_index == 0)
       gem_flags |= I915_MMAP_WC;
 
    /* GEM will fail to map if the offset isn't 4k-aligned.  Round down. */
@@ -1722,7 +1331,7 @@ VkResult anv_MapMemory(
    /* Let's map whole pages */
    map_size = align_u64(map_size, 4096);
 
-   void *map = anv_gem_mmap(device, mem->bo->gem_handle,
+   void *map = anv_gem_mmap(device, mem->bo.gem_handle,
                             map_offset, map_size, gem_flags);
    if (map == MAP_FAILED)
       return vk_error(VK_ERROR_MEMORY_MAP_FAILED);
@@ -1757,11 +1366,18 @@ clflush_mapped_ranges(struct anv_device         *device,
 {
    for (uint32_t i = 0; i < count; i++) {
       ANV_FROM_HANDLE(anv_device_memory, mem, ranges[i].memory);
-      if (ranges[i].offset >= mem->map_size)
-         continue;
+      void *p = mem->map + (ranges[i].offset & ~CACHELINE_MASK);
+      void *end;
 
-      gen_clflush_range(mem->map + ranges[i].offset,
-                        MIN2(ranges[i].size, mem->map_size - ranges[i].offset));
+      if (ranges[i].offset + ranges[i].size > mem->map_size)
+         end = mem->map + mem->map_size;
+      else
+         end = mem->map + ranges[i].offset + ranges[i].size;
+
+      while (p < end) {
+         __builtin_ia32_clflush(p);
+         p += CACHELINE_SIZE;
+      }
    }
 }
 
@@ -1808,7 +1424,6 @@ void anv_GetBufferMemoryRequirements(
 {
    ANV_FROM_HANDLE(anv_buffer, buffer, _buffer);
    ANV_FROM_HANDLE(anv_device, device, _device);
-   struct anv_physical_device *pdevice = &device->instance->physicalDevice;
 
    /* The Vulkan spec (git aaed022) says:
     *
@@ -1816,41 +1431,13 @@ void anv_GetBufferMemoryRequirements(
     *    supported memory type for the resource. The bit `1<<i` is set if and
     *    only if the memory type `i` in the VkPhysicalDeviceMemoryProperties
     *    structure for the physical device is supported.
+    *
+    * We support exactly one memory type on LLC, two on non-LLC.
     */
-   uint32_t memory_types = 0;
-   for (uint32_t i = 0; i < pdevice->memory.type_count; i++) {
-      uint32_t valid_usage = pdevice->memory.types[i].valid_buffer_usage;
-      if ((valid_usage & buffer->usage) == buffer->usage)
-         memory_types |= (1u << i);
-   }
+   pMemoryRequirements->memoryTypeBits = device->info.has_llc ? 1 : 3;
 
    pMemoryRequirements->size = buffer->size;
    pMemoryRequirements->alignment = 16;
-   pMemoryRequirements->memoryTypeBits = memory_types;
-}
-
-void anv_GetBufferMemoryRequirements2KHR(
-    VkDevice                                    _device,
-    const VkBufferMemoryRequirementsInfo2KHR*   pInfo,
-    VkMemoryRequirements2KHR*                   pMemoryRequirements)
-{
-   anv_GetBufferMemoryRequirements(_device, pInfo->buffer,
-                                   &pMemoryRequirements->memoryRequirements);
-
-   vk_foreach_struct(ext, pMemoryRequirements->pNext) {
-      switch (ext->sType) {
-      case VK_STRUCTURE_TYPE_MEMORY_DEDICATED_REQUIREMENTS_KHR: {
-         VkMemoryDedicatedRequirementsKHR *requirements = (void *)ext;
-         requirements->prefersDedicatedAllocation = VK_FALSE;
-         requirements->requiresDedicatedAllocation = VK_FALSE;
-         break;
-      }
-
-      default:
-         anv_debug_ignored_stype(ext->sType);
-         break;
-      }
-   }
 }
 
 void anv_GetImageMemoryRequirements(
@@ -1860,7 +1447,6 @@ void anv_GetImageMemoryRequirements(
 {
    ANV_FROM_HANDLE(anv_image, image, _image);
    ANV_FROM_HANDLE(anv_device, device, _device);
-   struct anv_physical_device *pdevice = &device->instance->physicalDevice;
 
    /* The Vulkan spec (git aaed022) says:
     *
@@ -1869,37 +1455,12 @@ void anv_GetImageMemoryRequirements(
     *    only if the memory type `i` in the VkPhysicalDeviceMemoryProperties
     *    structure for the physical device is supported.
     *
-    * All types are currently supported for images.
+    * We support exactly one memory type on LLC, two on non-LLC.
     */
-   uint32_t memory_types = (1ull << pdevice->memory.type_count) - 1;
+   pMemoryRequirements->memoryTypeBits = device->info.has_llc ? 1 : 3;
 
    pMemoryRequirements->size = image->size;
    pMemoryRequirements->alignment = image->alignment;
-   pMemoryRequirements->memoryTypeBits = memory_types;
-}
-
-void anv_GetImageMemoryRequirements2KHR(
-    VkDevice                                    _device,
-    const VkImageMemoryRequirementsInfo2KHR*    pInfo,
-    VkMemoryRequirements2KHR*                   pMemoryRequirements)
-{
-   anv_GetImageMemoryRequirements(_device, pInfo->image,
-                                  &pMemoryRequirements->memoryRequirements);
-
-   vk_foreach_struct(ext, pMemoryRequirements->pNext) {
-      switch (ext->sType) {
-      case VK_STRUCTURE_TYPE_MEMORY_DEDICATED_REQUIREMENTS_KHR: {
-         VkMemoryDedicatedRequirementsKHR *requirements = (void *)ext;
-         requirements->prefersDedicatedAllocation = VK_FALSE;
-         requirements->requiresDedicatedAllocation = VK_FALSE;
-         break;
-      }
-
-      default:
-         anv_debug_ignored_stype(ext->sType);
-         break;
-      }
-   }
 }
 
 void anv_GetImageSparseMemoryRequirements(
@@ -1908,16 +1469,7 @@ void anv_GetImageSparseMemoryRequirements(
     uint32_t*                                   pSparseMemoryRequirementCount,
     VkSparseImageMemoryRequirements*            pSparseMemoryRequirements)
 {
-   *pSparseMemoryRequirementCount = 0;
-}
-
-void anv_GetImageSparseMemoryRequirements2KHR(
-    VkDevice                                    device,
-    const VkImageSparseMemoryRequirementsInfo2KHR* pInfo,
-    uint32_t*                                   pSparseMemoryRequirementCount,
-    VkSparseImageMemoryRequirements2KHR*        pSparseMemoryRequirements)
-{
-   *pSparseMemoryRequirementCount = 0;
+   stub();
 }
 
 void anv_GetDeviceMemoryCommitment(
@@ -1938,8 +1490,7 @@ VkResult anv_BindBufferMemory(
    ANV_FROM_HANDLE(anv_buffer, buffer, _buffer);
 
    if (mem) {
-      assert((buffer->usage & mem->type->valid_buffer_usage) == buffer->usage);
-      buffer->bo = mem->bo;
+      buffer->bo = &mem->bo;
       buffer->offset = memoryOffset;
    } else {
       buffer->bo = NULL;
@@ -1950,16 +1501,293 @@ VkResult anv_BindBufferMemory(
 }
 
 VkResult anv_QueueBindSparse(
-    VkQueue                                     _queue,
+    VkQueue                                     queue,
     uint32_t                                    bindInfoCount,
     const VkBindSparseInfo*                     pBindInfo,
     VkFence                                     fence)
 {
-   ANV_FROM_HANDLE(anv_queue, queue, _queue);
-   if (unlikely(queue->device->lost))
-      return VK_ERROR_DEVICE_LOST;
+   stub_return(VK_ERROR_INCOMPATIBLE_DRIVER);
+}
 
-   return vk_error(VK_ERROR_FEATURE_NOT_PRESENT);
+VkResult anv_CreateFence(
+    VkDevice                                    _device,
+    const VkFenceCreateInfo*                    pCreateInfo,
+    const VkAllocationCallbacks*                pAllocator,
+    VkFence*                                    pFence)
+{
+   ANV_FROM_HANDLE(anv_device, device, _device);
+   struct anv_bo fence_bo;
+   struct anv_fence *fence;
+   struct anv_batch batch;
+   VkResult result;
+
+   assert(pCreateInfo->sType == VK_STRUCTURE_TYPE_FENCE_CREATE_INFO);
+
+   result = anv_bo_pool_alloc(&device->batch_bo_pool, &fence_bo, 4096);
+   if (result != VK_SUCCESS)
+      return result;
+
+   /* Fences are small.  Just store the CPU data structure in the BO. */
+   fence = fence_bo.map;
+   fence->bo = fence_bo;
+
+   /* Place the batch after the CPU data but on its own cache line. */
+   const uint32_t batch_offset = align_u32(sizeof(*fence), CACHELINE_SIZE);
+   batch.next = batch.start = fence->bo.map + batch_offset;
+   batch.end = fence->bo.map + fence->bo.size;
+   anv_batch_emit(&batch, GEN7_MI_BATCH_BUFFER_END, bbe);
+   anv_batch_emit(&batch, GEN7_MI_NOOP, noop);
+
+   if (!device->info.has_llc) {
+      assert(((uintptr_t) batch.start & CACHELINE_MASK) == 0);
+      assert(batch.next - batch.start <= CACHELINE_SIZE);
+      __builtin_ia32_mfence();
+      __builtin_ia32_clflush(batch.start);
+   }
+
+   fence->exec2_objects[0].handle = fence->bo.gem_handle;
+   fence->exec2_objects[0].relocation_count = 0;
+   fence->exec2_objects[0].relocs_ptr = 0;
+   fence->exec2_objects[0].alignment = 0;
+   fence->exec2_objects[0].offset = fence->bo.offset;
+   fence->exec2_objects[0].flags = 0;
+   fence->exec2_objects[0].rsvd1 = 0;
+   fence->exec2_objects[0].rsvd2 = 0;
+
+   fence->execbuf.buffers_ptr = (uintptr_t) fence->exec2_objects;
+   fence->execbuf.buffer_count = 1;
+   fence->execbuf.batch_start_offset = batch.start - fence->bo.map;
+   fence->execbuf.batch_len = batch.next - batch.start;
+   fence->execbuf.cliprects_ptr = 0;
+   fence->execbuf.num_cliprects = 0;
+   fence->execbuf.DR1 = 0;
+   fence->execbuf.DR4 = 0;
+
+   fence->execbuf.flags =
+      I915_EXEC_HANDLE_LUT | I915_EXEC_NO_RELOC | I915_EXEC_RENDER;
+   fence->execbuf.rsvd1 = device->context_id;
+   fence->execbuf.rsvd2 = 0;
+
+   if (pCreateInfo->flags & VK_FENCE_CREATE_SIGNALED_BIT) {
+      fence->state = ANV_FENCE_STATE_SIGNALED;
+   } else {
+      fence->state = ANV_FENCE_STATE_RESET;
+   }
+
+   *pFence = anv_fence_to_handle(fence);
+
+   return VK_SUCCESS;
+}
+
+void anv_DestroyFence(
+    VkDevice                                    _device,
+    VkFence                                     _fence,
+    const VkAllocationCallbacks*                pAllocator)
+{
+   ANV_FROM_HANDLE(anv_device, device, _device);
+   ANV_FROM_HANDLE(anv_fence, fence, _fence);
+
+   if (!fence)
+      return;
+
+   assert(fence->bo.map == fence);
+   anv_bo_pool_free(&device->batch_bo_pool, &fence->bo);
+}
+
+VkResult anv_ResetFences(
+    VkDevice                                    _device,
+    uint32_t                                    fenceCount,
+    const VkFence*                              pFences)
+{
+   for (uint32_t i = 0; i < fenceCount; i++) {
+      ANV_FROM_HANDLE(anv_fence, fence, pFences[i]);
+      fence->state = ANV_FENCE_STATE_RESET;
+   }
+
+   return VK_SUCCESS;
+}
+
+VkResult anv_GetFenceStatus(
+    VkDevice                                    _device,
+    VkFence                                     _fence)
+{
+   ANV_FROM_HANDLE(anv_device, device, _device);
+   ANV_FROM_HANDLE(anv_fence, fence, _fence);
+   int64_t t = 0;
+   int ret;
+
+   switch (fence->state) {
+   case ANV_FENCE_STATE_RESET:
+      /* If it hasn't even been sent off to the GPU yet, it's not ready */
+      return VK_NOT_READY;
+
+   case ANV_FENCE_STATE_SIGNALED:
+      /* It's been signaled, return success */
+      return VK_SUCCESS;
+
+   case ANV_FENCE_STATE_SUBMITTED:
+      /* It's been submitted to the GPU but we don't know if it's done yet. */
+      ret = anv_gem_wait(device, fence->bo.gem_handle, &t);
+      if (ret == 0) {
+         fence->state = ANV_FENCE_STATE_SIGNALED;
+         return VK_SUCCESS;
+      } else {
+         return VK_NOT_READY;
+      }
+   default:
+      unreachable("Invalid fence status");
+   }
+}
+
+#define NSEC_PER_SEC 1000000000
+#define INT_TYPE_MAX(type) ((1ull << (sizeof(type) * 8 - 1)) - 1)
+
+VkResult anv_WaitForFences(
+    VkDevice                                    _device,
+    uint32_t                                    fenceCount,
+    const VkFence*                              pFences,
+    VkBool32                                    waitAll,
+    uint64_t                                    _timeout)
+{
+   ANV_FROM_HANDLE(anv_device, device, _device);
+   int ret;
+
+   /* DRM_IOCTL_I915_GEM_WAIT uses a signed 64 bit timeout and is supposed
+    * to block indefinitely timeouts <= 0.  Unfortunately, this was broken
+    * for a couple of kernel releases.  Since there's no way to know
+    * whether or not the kernel we're using is one of the broken ones, the
+    * best we can do is to clamp the timeout to INT64_MAX.  This limits the
+    * maximum timeout from 584 years to 292 years - likely not a big deal.
+    */
+   int64_t timeout = MIN2(_timeout, INT64_MAX);
+
+   uint32_t pending_fences = fenceCount;
+   while (pending_fences) {
+      pending_fences = 0;
+      bool signaled_fences = false;
+      for (uint32_t i = 0; i < fenceCount; i++) {
+         ANV_FROM_HANDLE(anv_fence, fence, pFences[i]);
+         switch (fence->state) {
+         case ANV_FENCE_STATE_RESET:
+            /* This fence hasn't been submitted yet, we'll catch it the next
+             * time around.  Yes, this may mean we dead-loop but, short of
+             * lots of locking and a condition variable, there's not much that
+             * we can do about that.
+             */
+            pending_fences++;
+            continue;
+
+         case ANV_FENCE_STATE_SIGNALED:
+            /* This fence is not pending.  If waitAll isn't set, we can return
+             * early.  Otherwise, we have to keep going.
+             */
+            if (!waitAll)
+               return VK_SUCCESS;
+            continue;
+
+         case ANV_FENCE_STATE_SUBMITTED:
+            /* These are the fences we really care about.  Go ahead and wait
+             * on it until we hit a timeout.
+             */
+            ret = anv_gem_wait(device, fence->bo.gem_handle, &timeout);
+            if (ret == -1 && errno == ETIME) {
+               return VK_TIMEOUT;
+            } else if (ret == -1) {
+               /* We don't know the real error. */
+               return vk_errorf(VK_ERROR_DEVICE_LOST, "gem wait failed: %m");
+            } else {
+               fence->state = ANV_FENCE_STATE_SIGNALED;
+               signaled_fences = true;
+               if (!waitAll)
+                  return VK_SUCCESS;
+               continue;
+            }
+         }
+      }
+
+      if (pending_fences && !signaled_fences) {
+         /* If we've hit this then someone decided to vkWaitForFences before
+          * they've actually submitted any of them to a queue.  This is a
+          * fairly pessimal case, so it's ok to lock here and use a standard
+          * pthreads condition variable.
+          */
+         pthread_mutex_lock(&device->mutex);
+
+         /* It's possible that some of the fences have changed state since the
+          * last time we checked.  Now that we have the lock, check for
+          * pending fences again and don't wait if it's changed.
+          */
+         uint32_t now_pending_fences = 0;
+         for (uint32_t i = 0; i < fenceCount; i++) {
+            ANV_FROM_HANDLE(anv_fence, fence, pFences[i]);
+            if (fence->state == ANV_FENCE_STATE_RESET)
+               now_pending_fences++;
+         }
+         assert(now_pending_fences <= pending_fences);
+
+         if (now_pending_fences == pending_fences) {
+            struct timespec before;
+            clock_gettime(CLOCK_MONOTONIC, &before);
+
+            uint32_t abs_nsec = before.tv_nsec + timeout % NSEC_PER_SEC;
+            uint64_t abs_sec = before.tv_sec + (abs_nsec / NSEC_PER_SEC) +
+                               (timeout / NSEC_PER_SEC);
+            abs_nsec %= NSEC_PER_SEC;
+
+            /* Avoid roll-over in tv_sec on 32-bit systems if the user
+             * provided timeout is UINT64_MAX
+             */
+            struct timespec abstime;
+            abstime.tv_nsec = abs_nsec;
+            abstime.tv_sec = MIN2(abs_sec, INT_TYPE_MAX(abstime.tv_sec));
+
+            ret = pthread_cond_timedwait(&device->queue_submit,
+                                         &device->mutex, &abstime);
+            assert(ret != EINVAL);
+
+            struct timespec after;
+            clock_gettime(CLOCK_MONOTONIC, &after);
+            uint64_t time_elapsed =
+               ((uint64_t)after.tv_sec * NSEC_PER_SEC + after.tv_nsec) -
+               ((uint64_t)before.tv_sec * NSEC_PER_SEC + before.tv_nsec);
+
+            if (time_elapsed >= timeout) {
+               pthread_mutex_unlock(&device->mutex);
+               return VK_TIMEOUT;
+            }
+
+            timeout -= time_elapsed;
+         }
+
+         pthread_mutex_unlock(&device->mutex);
+      }
+   }
+
+   return VK_SUCCESS;
+}
+
+// Queue semaphore functions
+
+VkResult anv_CreateSemaphore(
+    VkDevice                                    device,
+    const VkSemaphoreCreateInfo*                pCreateInfo,
+    const VkAllocationCallbacks*                pAllocator,
+    VkSemaphore*                                pSemaphore)
+{
+   /* The DRM execbuffer ioctl always execute in-oder, even between different
+    * rings. As such, there's nothing to do for the user space semaphore.
+    */
+
+   *pSemaphore = (VkSemaphore)1;
+
+   return VK_SUCCESS;
+}
+
+void anv_DestroySemaphore(
+    VkDevice                                    device,
+    VkSemaphore                                 semaphore,
+    const VkAllocationCallbacks*                pAllocator)
+{
 }
 
 // Event functions
@@ -2013,9 +1841,6 @@ VkResult anv_GetEventStatus(
 {
    ANV_FROM_HANDLE(anv_device, device, _device);
    ANV_FROM_HANDLE(anv_event, event, _event);
-
-   if (unlikely(device->lost))
-      return VK_ERROR_DEVICE_LOST;
 
    if (!device->info.has_llc) {
       /* Invalidate read cache before reading event written by GPU. */
@@ -2117,7 +1942,8 @@ anv_fill_buffer_surface_state(struct anv_device *device, struct anv_state state,
                          .format = format,
                          .stride = stride);
 
-   anv_state_flush(device, state);
+   if (!device->info.has_llc)
+      anv_state_clflush(state);
 }
 
 void anv_DestroySampler(

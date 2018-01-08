@@ -25,6 +25,7 @@
  *
  */
 
+#pragma once
 
 #ifndef _NIR_WORKLIST_
 #define _NIR_WORKLIST_

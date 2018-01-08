@@ -27,7 +27,6 @@
 #include "pipe/p_screen.h"
 #include "pipe/p_state.h"
 
-#include "util/u_cpu_detect.h"
 #include "util/u_debug.h"
 #include "util/u_memory.h"
 #include "util/u_format.h"
@@ -35,7 +34,6 @@
 #include "util/ralloc.h"
 
 #include <xf86drm.h>
-#include "drm_fourcc.h"
 #include "vc4_drm.h"
 #include "vc4_screen.h"
 #include "vc4_context.h"
@@ -44,8 +42,6 @@
 static const struct debug_named_value debug_options[] = {
         { "cl",       VC4_DEBUG_CL,
           "Dump command list during creation" },
-        { "surf",       VC4_DEBUG_SURFACE,
-          "Dump surface layouts" },
         { "qpu",      VC4_DEBUG_QPU,
           "Dump generated QPU instructions" },
         { "qir",      VC4_DEBUG_QIR,
@@ -103,7 +99,6 @@ vc4_screen_destroy(struct pipe_screen *pscreen)
         util_hash_table_destroy(screen->bo_handles);
         vc4_bufmgr_destroy(pscreen);
         slab_destroy_parent(&screen->transfer_pool);
-        free(screen->ro);
 
 #if USE_VC4_SIMULATOR
         vc4_simulator_destroy(screen);
@@ -128,10 +123,9 @@ vc4_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
         case PIPE_CAP_TEXTURE_SHADOW_MAP:
         case PIPE_CAP_BLEND_EQUATION_SEPARATE:
         case PIPE_CAP_TWO_SIDED_STENCIL:
+        case PIPE_CAP_USER_INDEX_BUFFERS:
         case PIPE_CAP_TEXTURE_MULTISAMPLE:
         case PIPE_CAP_TEXTURE_SWIZZLE:
-        case PIPE_CAP_GLSL_OPTIMIZE_CONSERVATIVELY:
-        case PIPE_CAP_ALLOW_MAPPED_BUFFERS_DURING_EXECUTION:
                 return 1;
 
                 /* lying for GL 2.0 */
@@ -231,8 +225,8 @@ vc4_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
         case PIPE_CAP_STRING_MARKER:
         case PIPE_CAP_SURFACE_REINTERPRET_BLOCKS:
         case PIPE_CAP_QUERY_BUFFER_OBJECT:
-        case PIPE_CAP_QUERY_MEMORY_INFO:
-        case PIPE_CAP_PCI_GROUP:
+	case PIPE_CAP_QUERY_MEMORY_INFO:
+	case PIPE_CAP_PCI_GROUP:
         case PIPE_CAP_PCI_BUS:
         case PIPE_CAP_PCI_DEVICE:
         case PIPE_CAP_PCI_FUNCTION:
@@ -245,28 +239,11 @@ vc4_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
         case PIPE_CAP_POLYGON_OFFSET_UNITS_UNSCALED:
         case PIPE_CAP_VIEWPORT_SUBPIXEL_BITS:
         case PIPE_CAP_TGSI_ARRAY_COMPONENTS:
-        case PIPE_CAP_TGSI_CAN_READ_OUTPUTS:
-        case PIPE_CAP_NATIVE_FENCE_FD:
-        case PIPE_CAP_TGSI_FS_FBFETCH:
-        case PIPE_CAP_TGSI_MUL_ZERO_WINS:
-        case PIPE_CAP_DOUBLES:
-        case PIPE_CAP_INT64:
-        case PIPE_CAP_INT64_DIVMOD:
-        case PIPE_CAP_TGSI_TEX_TXF_LZ:
-        case PIPE_CAP_TGSI_CLOCK:
-        case PIPE_CAP_POLYGON_MODE_FILL_RECTANGLE:
-        case PIPE_CAP_SPARSE_BUFFER_PAGE_SIZE:
-        case PIPE_CAP_TGSI_BALLOT:
-        case PIPE_CAP_TGSI_TES_LAYER_VIEWPORT:
-	case PIPE_CAP_CAN_BIND_CONST_BUFFER_AS_VERTEX:
-        case PIPE_CAP_POST_DEPTH_COVERAGE:
-        case PIPE_CAP_BINDLESS_TEXTURE:
                 return 0;
 
                 /* Stream output. */
         case PIPE_CAP_MAX_STREAM_OUTPUT_BUFFERS:
         case PIPE_CAP_STREAM_OUTPUT_PAUSE_RESUME:
-        case PIPE_CAP_STREAM_OUTPUT_INTERLEAVE_BUFFERS:
         case PIPE_CAP_MAX_STREAM_OUTPUT_SEPARATE_COMPONENTS:
         case PIPE_CAP_MAX_STREAM_OUTPUT_INTERLEAVED_COMPONENTS:
                 return 0;
@@ -359,9 +336,8 @@ vc4_screen_get_paramf(struct pipe_screen *pscreen, enum pipe_capf param)
 }
 
 static int
-vc4_screen_get_shader_param(struct pipe_screen *pscreen,
-                            enum pipe_shader_type shader,
-                            enum pipe_shader_cap param)
+vc4_screen_get_shader_param(struct pipe_screen *pscreen, unsigned shader,
+                           enum pipe_shader_cap param)
 {
         if (shader != PIPE_SHADER_VERTEX &&
             shader != PIPE_SHADER_FRAGMENT) {
@@ -380,7 +356,10 @@ vc4_screen_get_shader_param(struct pipe_screen *pscreen,
                 return vc4_screen(pscreen)->has_control_flow;
 
         case PIPE_SHADER_CAP_MAX_INPUTS:
-                return 8;
+                if (shader == PIPE_SHADER_FRAGMENT)
+                        return 8;
+                else
+                        return 16;
         case PIPE_SHADER_CAP_MAX_OUTPUTS:
                 return shader == PIPE_SHADER_FRAGMENT ? 1 : 8;
         case PIPE_SHADER_CAP_MAX_TEMPS:
@@ -389,6 +368,8 @@ vc4_screen_get_shader_param(struct pipe_screen *pscreen,
                 return 16 * 1024 * sizeof(float);
         case PIPE_SHADER_CAP_MAX_CONST_BUFFERS:
                 return 1;
+        case PIPE_SHADER_CAP_MAX_PREDS:
+                return 0; /* nothing uses this */
         case PIPE_SHADER_CAP_TGSI_CONT_SUPPORTED:
                 return 0;
         case PIPE_SHADER_CAP_INDIRECT_INPUT_ADDR:
@@ -403,6 +384,7 @@ vc4_screen_get_shader_param(struct pipe_screen *pscreen,
                 return 0;
         case PIPE_SHADER_CAP_INTEGERS:
                 return 1;
+        case PIPE_SHADER_CAP_DOUBLES:
         case PIPE_SHADER_CAP_TGSI_DROUND_SUPPORTED:
         case PIPE_SHADER_CAP_TGSI_DFRACEXP_DLDEXP_SUPPORTED:
         case PIPE_SHADER_CAP_TGSI_FMA_SUPPORTED:
@@ -419,8 +401,6 @@ vc4_screen_get_shader_param(struct pipe_screen *pscreen,
 		return 32;
         case PIPE_SHADER_CAP_MAX_SHADER_BUFFERS:
         case PIPE_SHADER_CAP_MAX_SHADER_IMAGES:
-	case PIPE_SHADER_CAP_LOWER_IF_THRESHOLD:
-        case PIPE_SHADER_CAP_TGSI_SKIP_MERGE_REGISTERS:
                 return 0;
         default:
                 fprintf(stderr, "unknown shader param %d\n", param);
@@ -436,7 +416,6 @@ vc4_screen_is_format_supported(struct pipe_screen *pscreen,
                                unsigned sample_count,
                                unsigned usage)
 {
-        struct vc4_screen *screen = vc4_screen(pscreen);
         unsigned retval = 0;
 
         if (sample_count > 1 && sample_count != VC4_MAX_SAMPLES)
@@ -506,8 +485,7 @@ vc4_screen_is_format_supported(struct pipe_screen *pscreen,
         }
 
         if ((usage & PIPE_BIND_SAMPLER_VIEW) &&
-            vc4_tex_format_supported(format) &&
-            (format != PIPE_FORMAT_ETC1_RGB8 || screen->has_etc1)) {
+            vc4_tex_format_supported(format)) {
                 retval |= PIPE_BIND_SAMPLER_VIEW;
         }
 
@@ -535,34 +513,6 @@ vc4_screen_is_format_supported(struct pipe_screen *pscreen,
         return retval == usage;
 }
 
-static void
-vc4_screen_query_dmabuf_modifiers(struct pipe_screen *pscreen,
-                                  enum pipe_format format, int max,
-                                  uint64_t *modifiers,
-                                  unsigned int *external_only,
-                                  int *count)
-{
-        if (!modifiers) {
-                *count = 2;
-                return;
-        }
-
-        *count = MIN2(max, 2);
-
-        /* We support both modifiers (tiled and linear) for all sampler
-         * formats.
-         */
-        modifiers[0] = DRM_FORMAT_MOD_BROADCOM_VC4_T_TILED;
-        if (external_only)
-                external_only[0] = false;
-        if (max < 2)
-                return;
-
-        modifiers[1] = DRM_FORMAT_MOD_LINEAR;
-        if (external_only)
-                external_only[1] = false;
-}
-
 #define PTR_TO_UINT(x) ((unsigned)((intptr_t)(x)))
 
 static unsigned handle_hash(void *key)
@@ -576,12 +526,16 @@ static int handle_compare(void *key1, void *key2)
 }
 
 static bool
-vc4_has_feature(struct vc4_screen *screen, uint32_t feature)
+vc4_supports_branches(struct vc4_screen *screen)
 {
+#if USE_VC4_SIMULATOR
+        return true;
+#endif
+
         struct drm_vc4_get_param p = {
-                .param = feature,
+                .param = DRM_VC4_PARAM_SUPPORTS_BRANCHES,
         };
-        int ret = vc4_ioctl(screen->fd, DRM_IOCTL_VC4_GET_PARAM, &p);
+        int ret = drmIoctl(screen->fd, DRM_IOCTL_VC4_GET_PARAM, &p);
 
         if (ret != 0)
                 return false;
@@ -592,6 +546,11 @@ vc4_has_feature(struct vc4_screen *screen, uint32_t feature)
 static bool
 vc4_get_chip_info(struct vc4_screen *screen)
 {
+#if USE_VC4_SIMULATOR
+        screen->v3d_ver = 21;
+        return true;
+#endif
+
         struct drm_vc4_get_param ident0 = {
                 .param = DRM_VC4_PARAM_V3D_IDENT0,
         };
@@ -600,7 +559,7 @@ vc4_get_chip_info(struct vc4_screen *screen)
         };
         int ret;
 
-        ret = vc4_ioctl(screen->fd, DRM_IOCTL_VC4_GET_PARAM, &ident0);
+        ret = drmIoctl(screen->fd, DRM_IOCTL_VC4_GET_PARAM, &ident0);
         if (ret != 0) {
                 if (errno == EINVAL) {
                         /* Backwards compatibility with 2835 kernels which
@@ -614,7 +573,7 @@ vc4_get_chip_info(struct vc4_screen *screen)
                         return false;
                 }
         }
-        ret = vc4_ioctl(screen->fd, DRM_IOCTL_VC4_GET_PARAM, &ident1);
+        ret = drmIoctl(screen->fd, DRM_IOCTL_VC4_GET_PARAM, &ident1);
         if (ret != 0) {
                 fprintf(stderr, "Couldn't get V3D IDENT1: %s\n",
                         strerror(errno));
@@ -625,7 +584,7 @@ vc4_get_chip_info(struct vc4_screen *screen)
         uint32_t minor = (ident1.value >> 0) & 0xf;
         screen->v3d_ver = major * 10 + minor;
 
-        if (screen->v3d_ver != 21 && screen->v3d_ver != 26) {
+        if (screen->v3d_ver != 21) {
                 fprintf(stderr,
                         "V3D %d.%d not supported by this version of Mesa.\n",
                         screen->v3d_ver / 10,
@@ -637,7 +596,7 @@ vc4_get_chip_info(struct vc4_screen *screen)
 }
 
 struct pipe_screen *
-vc4_screen_create(int fd, struct renderonly *ro)
+vc4_screen_create(int fd)
 {
         struct vc4_screen *screen = rzalloc(NULL, struct vc4_screen);
         struct pipe_screen *pscreen;
@@ -652,30 +611,15 @@ vc4_screen_create(int fd, struct renderonly *ro)
         pscreen->is_format_supported = vc4_screen_is_format_supported;
 
         screen->fd = fd;
-        if (ro) {
-                screen->ro = renderonly_dup(ro);
-                if (!screen->ro) {
-                        fprintf(stderr, "Failed to dup renderonly object\n");
-                        ralloc_free(screen);
-                        return NULL;
-                }
-        }
-
         list_inithead(&screen->bo_cache.time_list);
-        (void) mtx_init(&screen->bo_handles_mutex, mtx_plain);
+        pipe_mutex_init(screen->bo_handles_mutex);
         screen->bo_handles = util_hash_table_create(handle_hash, handle_compare);
 
-        screen->has_control_flow =
-                vc4_has_feature(screen, DRM_VC4_PARAM_SUPPORTS_BRANCHES);
-        screen->has_etc1 =
-                vc4_has_feature(screen, DRM_VC4_PARAM_SUPPORTS_ETC1);
-        screen->has_threaded_fs =
-                vc4_has_feature(screen, DRM_VC4_PARAM_SUPPORTS_THREADED_FS);
+        if (vc4_supports_branches(screen))
+                screen->has_control_flow = true;
 
         if (!vc4_get_chip_info(screen))
                 goto fail;
-
-        util_cpu_detect();
 
         slab_create_parent(&screen->transfer_pool, sizeof(struct vc4_transfer), 16);
 
@@ -695,7 +639,6 @@ vc4_screen_create(int fd, struct renderonly *ro)
         pscreen->get_vendor = vc4_screen_get_vendor;
         pscreen->get_device_vendor = vc4_screen_get_vendor;
         pscreen->get_compiler_options = vc4_screen_get_compiler_options;
-        pscreen->query_dmabuf_modifiers = vc4_screen_query_dmabuf_modifiers;
 
         return pscreen;
 
@@ -703,4 +646,58 @@ fail:
         close(fd);
         ralloc_free(pscreen);
         return NULL;
+}
+
+boolean
+vc4_screen_bo_get_handle(struct pipe_screen *pscreen,
+                         struct vc4_bo *bo,
+                         unsigned stride,
+                         struct winsys_handle *whandle)
+{
+        whandle->stride = stride;
+
+        /* If we're passing some reference to our BO out to some other part of
+         * the system, then we can't do any optimizations about only us being
+         * the ones seeing it (like BO caching or shadow update avoidance).
+         */
+        bo->private = false;
+
+        switch (whandle->type) {
+        case DRM_API_HANDLE_TYPE_SHARED:
+                return vc4_bo_flink(bo, &whandle->handle);
+        case DRM_API_HANDLE_TYPE_KMS:
+                whandle->handle = bo->handle;
+                return TRUE;
+        case DRM_API_HANDLE_TYPE_FD:
+                whandle->handle = vc4_bo_get_dmabuf(bo);
+                return whandle->handle != -1;
+        }
+
+        return FALSE;
+}
+
+struct vc4_bo *
+vc4_screen_bo_from_handle(struct pipe_screen *pscreen,
+                          struct winsys_handle *whandle)
+{
+        struct vc4_screen *screen = vc4_screen(pscreen);
+
+        if (whandle->offset != 0) {
+                fprintf(stderr,
+                        "Attempt to import unsupported winsys offset %u\n",
+                        whandle->offset);
+                return NULL;
+        }
+
+        switch (whandle->type) {
+        case DRM_API_HANDLE_TYPE_SHARED:
+                return vc4_bo_open_name(screen, whandle->handle, whandle->stride);
+        case DRM_API_HANDLE_TYPE_FD:
+                return vc4_bo_open_dmabuf(screen, whandle->handle, whandle->stride);
+        default:
+                fprintf(stderr,
+                        "Attempt to import unsupported handle type %d\n",
+                        whandle->type);
+                return NULL;
+        }
 }

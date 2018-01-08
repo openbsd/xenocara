@@ -23,10 +23,6 @@
 #ifndef MESA_SYMBOL_TABLE_H
 #define MESA_SYMBOL_TABLE_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 struct _mesa_symbol_table;
 
 extern void _mesa_symbol_table_push_scope(struct _mesa_symbol_table *table);
@@ -54,9 +50,5 @@ extern void *_mesa_symbol_table_find_symbol(struct _mesa_symbol_table *symtab,
 extern struct _mesa_symbol_table *_mesa_symbol_table_ctor(void);
 
 extern void _mesa_symbol_table_dtor(struct _mesa_symbol_table *);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* MESA_SYMBOL_TABLE_H */

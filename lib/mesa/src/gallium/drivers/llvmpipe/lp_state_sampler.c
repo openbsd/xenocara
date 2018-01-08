@@ -241,7 +241,7 @@ prepare_shader_sampling(
    struct llvmpipe_context *lp,
    unsigned num,
    struct pipe_sampler_view **views,
-   enum pipe_shader_type shader_type)
+   unsigned shader_type)
 {
 
    unsigned i;

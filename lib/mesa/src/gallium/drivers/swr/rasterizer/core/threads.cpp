@@ -56,7 +56,6 @@ struct Core
 
 struct NumaNode
 {
-    uint32_t          numaId;
     std::vector<Core> cores;
 };
 
@@ -118,7 +117,7 @@ void CalculateProcessorTopology(CPUNumaNodes& out_nodes, uint32_t& out_numThread
                     // have seen more than 32 HW threads for this procGroup
                     // Don't use it
 #if defined(_WIN64)
-                    SWR_INVALID("Shouldn't get here in 64-bit mode");
+                    SWR_ASSERT(false, "Shouldn't get here in 64-bit mode");
 #endif
                     continue;
                 }
@@ -135,12 +134,8 @@ void CalculateProcessorTopology(CPUNumaNodes& out_nodes, uint32_t& out_numThread
                 SWR_ASSERT(ret);
 
                 // Store data
-                if (out_nodes.size() <= numaId)
-                {
-                    out_nodes.resize(numaId + 1);
-                }
+                if (out_nodes.size() <= numaId) out_nodes.resize(numaId + 1);
                 auto& numaNode = out_nodes[numaId];
-                numaNode.numaId = numaId;
 
                 uint32_t coreId = 0;
 
@@ -180,18 +175,11 @@ void CalculateProcessorTopology(CPUNumaNodes& out_nodes, uint32_t& out_numThread
             if (threadId != uint32_t(-1))
             {
                 // Save information.
-                if (out_nodes.size() <= numaId)
-                {
-                    out_nodes.resize(numaId + 1);
-                }
-
+                if (out_nodes.size() <= numaId) out_nodes.resize(numaId + 1);
                 auto& numaNode = out_nodes[numaId];
-                if (numaNode.cores.size() <= coreId)
-                {
-                    numaNode.cores.resize(coreId + 1);
-                }
-
+                if (numaNode.cores.size() <= coreId) numaNode.cores.resize(coreId + 1);
                 auto& core = numaNode.cores[coreId];
+
                 core.procGroup = coreId;
                 core.threadIds.push_back(threadId);
 
@@ -219,16 +207,9 @@ void CalculateProcessorTopology(CPUNumaNodes& out_nodes, uint32_t& out_numThread
     if (threadId != uint32_t(-1))
     {
         // Save information.
-        if (out_nodes.size() <= numaId)
-        {
-            out_nodes.resize(numaId + 1);
-        }
+        if (out_nodes.size() <= numaId) out_nodes.resize(numaId + 1);
         auto& numaNode = out_nodes[numaId];
-        numaNode.numaId = numaId;
-        if (numaNode.cores.size() <= coreId)
-        {
-            numaNode.cores.resize(coreId + 1);
-        }
+        if (numaNode.cores.size() <= coreId) numaNode.cores.resize(coreId + 1);
         auto& core = numaNode.cores[coreId];
 
         core.procGroup = coreId;
@@ -236,45 +217,38 @@ void CalculateProcessorTopology(CPUNumaNodes& out_nodes, uint32_t& out_numThread
         out_numThreadsPerProcGroup++;
     }
 
+    /* Prune empty numa nodes */
+    for (auto it = out_nodes.begin(); it != out_nodes.end(); ) {
+       if ((*it).cores.size() == 0)
+          it = out_nodes.erase(it);
+       else
+          ++it;
+    }
+
+    /* Prune empty core nodes */
+    for (uint32_t node = 0; node < out_nodes.size(); node++) {
+        auto& numaNode = out_nodes[node];
+        auto it = numaNode.cores.begin();
+        for ( ; it != numaNode.cores.end(); ) {
+            if (it->threadIds.size() == 0)
+                numaNode.cores.erase(it);
+            else
+                ++it;
+        }
+    }
+
 #else
 
 #error Unsupported platform
 
 #endif
-
-    // Prune empty cores and numa nodes
-    for (auto node_it = out_nodes.begin(); node_it != out_nodes.end(); )
-    {
-        // Erase empty cores (first)
-        for (auto core_it = node_it->cores.begin(); core_it != node_it->cores.end(); )
-        {
-            if (core_it->threadIds.size() == 0)
-            {
-                core_it = node_it->cores.erase(core_it);
-            }
-            else
-            {
-                ++core_it;
-            }
-        }
-
-        // Erase empty numa nodes (second)
-        if (node_it->cores.size() == 0)
-        {
-            node_it = out_nodes.erase(node_it);
-        }
-        else
-        {
-            ++node_it;
-        }
-    }
 }
 
 
 void bindThread(SWR_CONTEXT* pContext, uint32_t threadId, uint32_t procGroupId = 0, bool bindProcGroup=false)
 {
     // Only bind threads when MAX_WORKER_THREADS isn't set.
-    if (pContext->threadInfo.SINGLE_THREADED || (pContext->threadInfo.MAX_WORKER_THREADS && bindProcGroup == false))
+    if (pContext->threadInfo.MAX_WORKER_THREADS && bindProcGroup == false)
     {
         return;
     }
@@ -288,7 +262,7 @@ void bindThread(SWR_CONTEXT* pContext, uint32_t threadId, uint32_t procGroupId =
     if (threadId >= 32)
     {
         // Hopefully we don't get here.  Logic in CreateThreadPool should prevent this.
-        SWR_INVALID("Shouldn't get here");
+        SWR_REL_ASSERT(false, "Shouldn't get here");
 
         // In a 32-bit process on Windows it is impossible to bind
         // to logical processors 32-63 within a processor group.
@@ -348,22 +322,17 @@ bool CheckDependency(SWR_CONTEXT *pContext, DRAW_CONTEXT *pDC, uint32_t lastReti
     return pDC->dependent && IDComparesLess(lastRetiredDraw, pDC->drawId - 1);
 }
 
-bool CheckDependencyFE(SWR_CONTEXT *pContext, DRAW_CONTEXT *pDC, uint32_t lastRetiredDraw)
-{
-    return pDC->dependentFE && IDComparesLess(lastRetiredDraw, pDC->drawId - 1);
-}
-
 //////////////////////////////////////////////////////////////////////////
 /// @brief Update client stats.
 INLINE void UpdateClientStats(SWR_CONTEXT* pContext, uint32_t workerId, DRAW_CONTEXT* pDC)
 {
-    if ((pContext->pfnUpdateStats == nullptr) || (GetApiState(pDC).enableStatsBE == false))
+    if ((pContext->pfnUpdateStats == nullptr) || (GetApiState(pDC).enableStats == false))
     {
         return;
     }
 
     DRAW_DYNAMIC_STATE& dynState = pDC->dynState;
-    OSALIGNLINE(SWR_STATS) stats{ 0 };
+    SWR_STATS stats{ 0 };
 
     // Sum up stats across all workers before sending to client.
     for (uint32_t i = 0; i < pContext->NumWorkerThreads; ++i)
@@ -393,10 +362,8 @@ INLINE void ExecuteCallbacks(SWR_CONTEXT* pContext, uint32_t workerId, DRAW_CONT
 // inlined-only version
 INLINE int32_t CompleteDrawContextInl(SWR_CONTEXT* pContext, uint32_t workerId, DRAW_CONTEXT* pDC)
 {
-    int32_t result = static_cast<int32_t>(InterlockedDecrement(&pDC->threadsDone));
+    int32_t result = InterlockedDecrement((volatile LONG*)&pDC->threadsDone);
     SWR_ASSERT(result >= 0);
-
-    AR_FLUSH(pDC->drawId);
 
     if (result == 0)
     {
@@ -608,7 +575,7 @@ bool WorkOnFifoBE(
 /// @brief Called when FE work is complete for this DC.
 INLINE void CompleteDrawFE(SWR_CONTEXT* pContext, uint32_t workerId, DRAW_CONTEXT* pDC)
 {
-    if (pContext->pfnUpdateStatsFE && GetApiState(pDC).enableStatsFE)
+    if (pContext->pfnUpdateStatsFE && GetApiState(pDC).enableStats)
     {
         SWR_STATS_FE& stats = pDC->dynState.statsFE;
 
@@ -618,7 +585,6 @@ INLINE void CompleteDrawFE(SWR_CONTEXT* pContext, uint32_t workerId, DRAW_CONTEX
             stats.SoPrimStorageNeeded[0], stats.SoPrimStorageNeeded[1], stats.SoPrimStorageNeeded[2], stats.SoPrimStorageNeeded[3],
             stats.SoNumPrimsWritten[0], stats.SoNumPrimsWritten[1], stats.SoNumPrimsWritten[2], stats.SoNumPrimsWritten[3]
         ));
-		AR_EVENT(FrontendDrawEndEvent(pDC->drawId));
 
         pContext->pfnUpdateStatsFE(GetPrivateState(pDC), &stats);
     }
@@ -638,8 +604,7 @@ INLINE void CompleteDrawFE(SWR_CONTEXT* pContext, uint32_t workerId, DRAW_CONTEX
     // Ensure all streaming writes are globally visible before marking this FE done
     _mm_mfence();
     pDC->doneFE = true;
-
-    InterlockedDecrement(&pContext->drawsOutstandingFE);
+    InterlockedDecrement((volatile LONG*)&pContext->drawsOutstandingFE);
 }
 
 void WorkOnFifoFE(SWR_CONTEXT *pContext, uint32_t workerId, uint32_t &curDrawFE)
@@ -650,7 +615,7 @@ void WorkOnFifoFE(SWR_CONTEXT *pContext, uint32_t workerId, uint32_t &curDrawFE)
     {
         uint32_t dcSlot = curDrawFE % KNOB_MAX_DRAWS_IN_FLIGHT;
         DRAW_CONTEXT *pDC = &pContext->dcRing[dcSlot];
-        if (pDC->isCompute || pDC->doneFE)
+        if (pDC->isCompute || pDC->doneFE || pDC->FeLock)
         {
             CompleteDrawContextInl(pContext, workerId, pDC);
             curDrawFE++;
@@ -661,7 +626,6 @@ void WorkOnFifoFE(SWR_CONTEXT *pContext, uint32_t workerId, uint32_t &curDrawFE)
         }
     }
 
-    uint32_t lastRetiredFE = curDrawFE - 1;
     uint32_t curDraw = curDrawFE;
     while (IDComparesLess(curDraw, drawEnqueued))
     {
@@ -670,11 +634,6 @@ void WorkOnFifoFE(SWR_CONTEXT *pContext, uint32_t workerId, uint32_t &curDrawFE)
 
         if (!pDC->isCompute && !pDC->FeLock)
         {
-            if (CheckDependencyFE(pContext, pDC, lastRetiredFE))
-            {
-                return;
-            }
-
             uint32_t initial = InterlockedCompareExchange((volatile uint32_t*)&pDC->FeLock, 1, 0);
             if (initial == 0)
             {
@@ -726,11 +685,10 @@ void WorkOnCompute(
         if (queue.getNumQueued() > 0)
         {
             void* pSpillFillBuffer = nullptr;
-            void* pScratchSpace = nullptr;
             uint32_t threadGroupId = 0;
             while (queue.getWork(threadGroupId))
             {
-                queue.dispatch(pDC, workerId, threadGroupId, pSpillFillBuffer, pScratchSpace);
+                queue.dispatch(pDC, workerId, threadGroupId, pSpillFillBuffer);
                 queue.finishedWork();
             }
 
@@ -748,20 +706,7 @@ DWORD workerThreadMain(LPVOID pData)
     uint32_t threadId = pThreadData->threadId;
     uint32_t workerId = pThreadData->workerId;
 
-    bindThread(pContext, threadId, pThreadData->procGroupId, pThreadData->forceBindProcGroup);
-
-    {
-        char threadName[64];
-        sprintf_s(threadName,
-#if defined(_WIN32)
-                  "SWRWorker_%02d_NUMA%d_Core%02d_T%d",
-#else
-                  // linux pthread name limited to 16 chars (including \0)
-                  "w%03d-n%d-c%03d-t%d",
-#endif
-            workerId, pThreadData->numaId, pThreadData->coreId, pThreadData->htId);
-        SetCurrentThreadName(threadName);
-    }
+    bindThread(pContext, threadId, pThreadData->procGroupId, pThreadData->forceBindProcGroup); 
 
     RDTSC_INIT(threadId);
 
@@ -986,7 +931,7 @@ void CreateThreadPool(SWR_CONTEXT* pContext, THREAD_POOL* pPool)
     // Initialize DRAW_CONTEXT's per-thread stats
     for (uint32_t dc = 0; dc < KNOB_MAX_DRAWS_IN_FLIGHT; ++dc)
     {
-        pContext->dcRing[dc].dynState.pStats = (SWR_STATS*)AlignedMalloc(sizeof(SWR_STATS) * numThreads, 64);
+        pContext->dcRing[dc].dynState.pStats = new SWR_STATS[numThreads];
         memset(pContext->dcRing[dc].dynState.pStats, 0, sizeof(SWR_STATS) * numThreads);
     }
 
@@ -1064,7 +1009,7 @@ void CreateThreadPool(SWR_CONTEXT* pContext, THREAD_POOL* pPool)
                     pPool->pThreadData[workerId].workerId = workerId;
                     pPool->pThreadData[workerId].procGroupId = core.procGroup;
                     pPool->pThreadData[workerId].threadId = core.threadIds[t];
-                    pPool->pThreadData[workerId].numaId = node.numaId;
+                    pPool->pThreadData[workerId].numaId = n;
                     pPool->pThreadData[workerId].coreId = c;
                     pPool->pThreadData[workerId].htId = t;
                     pPool->pThreadData[workerId].pContext = pContext;

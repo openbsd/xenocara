@@ -247,6 +247,15 @@ void ralloc_adopt(const void *new_ctx, void *old_ctx);
 void *ralloc_parent(const void *ptr);
 
 /**
+ * Return a context whose memory will be automatically freed at program exit.
+ *
+ * The first call to this function creates a context and registers a handler
+ * to free it using \c atexit.  This may cause trouble if used in a library
+ * loaded with \c dlopen.
+ */
+void *ralloc_autofree_context(void);
+
+/**
  * Set a callback to occur just before an object is freed.
  */
 void ralloc_set_destructor(const void *ptr, void(*destructor)(void *));
@@ -398,6 +407,10 @@ bool ralloc_asprintf_append (char **str, const char *fmt, ...)
 bool ralloc_vasprintf_append(char **str, const char *fmt, va_list args);
 /// @}
 
+#ifdef __cplusplus
+} /* end of extern "C" */
+#endif
+
 /**
  * Declare C++ new and delete operators which use ralloc.
  *
@@ -408,7 +421,7 @@ bool ralloc_vasprintf_append(char **str, const char *fmt, va_list args);
  *
  * which is more idiomatic in C++ than calling ralloc.
  */
-#define DECLARE_ALLOC_CXX_OPERATORS_TEMPLATE(TYPE, ALLOC_FUNC, USE_DESTRUCTOR) \
+#define DECLARE_RALLOC_CXX_OPERATORS(TYPE)                               \
 private:                                                                 \
    static void _ralloc_destructor(void *p)                               \
    {                                                                     \
@@ -417,9 +430,9 @@ private:                                                                 \
 public:                                                                  \
    static void* operator new(size_t size, void *mem_ctx)                 \
    {                                                                     \
-      void *p = ALLOC_FUNC(mem_ctx, size);                               \
+      void *p = ralloc_size(mem_ctx, size);                              \
       assert(p != NULL);                                                 \
-      if (USE_DESTRUCTOR && !HAS_TRIVIAL_DESTRUCTOR(TYPE))               \
+      if (!HAS_TRIVIAL_DESTRUCTOR(TYPE))                                 \
          ralloc_set_destructor(p, _ralloc_destructor);                   \
       return p;                                                          \
    }                                                                     \
@@ -435,90 +448,5 @@ public:                                                                  \
       ralloc_free(p);                                                    \
    }
 
-#define DECLARE_RALLOC_CXX_OPERATORS(type) \
-   DECLARE_ALLOC_CXX_OPERATORS_TEMPLATE(type, ralloc_size, true)
-
-#define DECLARE_RZALLOC_CXX_OPERATORS(type) \
-   DECLARE_ALLOC_CXX_OPERATORS_TEMPLATE(type, rzalloc_size, true)
-
-#define DECLARE_LINEAR_ALLOC_CXX_OPERATORS(type) \
-   DECLARE_ALLOC_CXX_OPERATORS_TEMPLATE(type, linear_alloc_child, false)
-
-#define DECLARE_LINEAR_ZALLOC_CXX_OPERATORS(type) \
-   DECLARE_ALLOC_CXX_OPERATORS_TEMPLATE(type, linear_zalloc_child, false)
-
-
-/**
- * Do a fast allocation from the linear buffer, also known as the child node
- * from the allocator's point of view. It can't be freed directly. You have
- * to free the parent or the ralloc parent.
- *
- * \param parent   parent node of the linear allocator
- * \param size     size to allocate (max 32 bits)
- */
-void *linear_alloc_child(void *parent, unsigned size);
-
-/**
- * Allocate a parent node that will hold linear buffers. The returned
- * allocation is actually the first child node, but it's also the handle
- * of the parent node. Use it for all child node allocations.
- *
- * \param ralloc_ctx  ralloc context, must not be NULL
- * \param size        size to allocate (max 32 bits)
- */
-void *linear_alloc_parent(void *ralloc_ctx, unsigned size);
-
-/**
- * Same as linear_alloc_child, but also clears memory.
- */
-void *linear_zalloc_child(void *parent, unsigned size);
-
-/**
- * Same as linear_alloc_parent, but also clears memory.
- */
-void *linear_zalloc_parent(void *ralloc_ctx, unsigned size);
-
-/**
- * Free the linear parent node. This will free all child nodes too.
- * Freeing the ralloc parent will also free this.
- */
-void linear_free_parent(void *ptr);
-
-/**
- * Same as ralloc_steal, but steals the linear parent node.
- */
-void ralloc_steal_linear_parent(void *new_ralloc_ctx, void *ptr);
-
-/**
- * Return the ralloc parent of the linear parent node.
- */
-void *ralloc_parent_of_linear_parent(void *ptr);
-
-/**
- * Same as realloc except that the linear allocator doesn't free child nodes,
- * so it's reduced to memory duplication. It's used in places where
- * reallocation is required. Don't use it often. It's much slower than
- * realloc.
- */
-void *linear_realloc(void *parent, void *old, unsigned new_size);
-
-/* The functions below have the same semantics as their ralloc counterparts,
- * except that they always allocate a linear child node.
- */
-char *linear_strdup(void *parent, const char *str);
-char *linear_asprintf(void *parent, const char *fmt, ...);
-char *linear_vasprintf(void *parent, const char *fmt, va_list args);
-bool linear_asprintf_append(void *parent, char **str, const char *fmt, ...);
-bool linear_vasprintf_append(void *parent, char **str, const char *fmt,
-                             va_list args);
-bool linear_asprintf_rewrite_tail(void *parent, char **str, size_t *start,
-                                  const char *fmt, ...);
-bool linear_vasprintf_rewrite_tail(void *parent, char **str, size_t *start,
-                                   const char *fmt, va_list args);
-bool linear_strcat(void *parent, char **dest, const char *str);
-
-#ifdef __cplusplus
-} /* end of extern "C" */
-#endif
 
 #endif

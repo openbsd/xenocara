@@ -39,6 +39,11 @@ struct vc4_bo {
         uint32_t handle;
         uint32_t size;
 
+#ifdef USE_VC4_SIMULATOR
+        void *simulator_winsys_map;
+        uint32_t simulator_winsys_stride;
+#endif
+
         /** Entry in the linked list of buffers freed, by age. */
         struct list_head time_list;
         /** Entry in the per-page-count linked list of buffers freed (by age). */
@@ -93,7 +98,7 @@ vc4_bo_unreference(struct vc4_bo **bo)
                         vc4_bo_last_unreference(*bo);
         } else {
                 screen = (*bo)->screen;
-                mtx_lock(&screen->bo_handles_mutex);
+                pipe_mutex_lock(screen->bo_handles_mutex);
 
                 if (pipe_reference(&(*bo)->reference, NULL)) {
                         util_hash_table_remove(screen->bo_handles,
@@ -101,7 +106,7 @@ vc4_bo_unreference(struct vc4_bo **bo)
                         vc4_bo_last_unreference(*bo);
                 }
 
-                mtx_unlock(&screen->bo_handles_mutex);
+                pipe_mutex_unlock(screen->bo_handles_mutex);
         }
 
         *bo = NULL;

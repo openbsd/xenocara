@@ -113,14 +113,12 @@ get_surftype(enum isl_surf_dim dim, isl_surf_usage_flags_t usage)
       assert(!(usage & ISL_SURF_USAGE_CUBE_BIT));
       return SURFTYPE_1D;
    case ISL_SURF_DIM_2D:
-      if ((usage & ISL_SURF_USAGE_CUBE_BIT) &&
-          (usage & ISL_SURF_USAGE_TEXTURE_BIT)) {
-         /* We need SURFTYPE_CUBE to make cube sampling work */
+      if (usage & ISL_SURF_USAGE_STORAGE_BIT) {
+         /* Storage images are always plain 2-D, not cube */
+         return SURFTYPE_2D;
+      } else if (usage & ISL_SURF_USAGE_CUBE_BIT) {
          return SURFTYPE_CUBE;
       } else {
-         /* Everything else (render and storage) treat cubes as plain
-          * 2D array textures
-          */
          return SURFTYPE_2D;
       }
    case ISL_SURF_DIM_3D:
@@ -254,31 +252,7 @@ isl_genX(surf_fill_state_s)(const struct isl_device *dev, void *state,
    if (info->surf->dim == ISL_SURF_DIM_1D)
       assert(!isl_format_is_compressed(info->view->format));
 
-   if (isl_format_is_compressed(info->surf->format)) {
-      /* You're not allowed to make a view of a compressed format with any
-       * format other than the surface format.  None of the userspace APIs
-       * allow for this directly and doing so would mess up a number of
-       * surface parameters such as Width, Height, and alignments.  Ideally,
-       * we'd like to assert that the two formats match.  However, we have an
-       * S3TC workaround that requires us to do reinterpretation.  So assert
-       * that they're at least the same bpb and block size.
-       */
-      MAYBE_UNUSED const struct isl_format_layout *surf_fmtl =
-         isl_format_get_layout(info->surf->format);
-      MAYBE_UNUSED const struct isl_format_layout *view_fmtl =
-         isl_format_get_layout(info->surf->format);
-      assert(surf_fmtl->bpb == view_fmtl->bpb);
-      assert(surf_fmtl->bw == view_fmtl->bw);
-      assert(surf_fmtl->bh == view_fmtl->bh);
-   }
-
    s.SurfaceFormat = info->view->format;
-
-#if GEN_GEN <= 5
-   s.ColorBufferComponentWriteDisables = info->write_disables;
-#else
-   assert(info->write_disables == 0);
-#endif
 
 #if GEN_IS_HASWELL
    s.IntegerSurfaceFormat = isl_format_has_int_channel(s.SurfaceFormat);
@@ -477,38 +451,6 @@ isl_genX(surf_fill_state_s)(const struct isl_device *dev, void *state,
 #endif
 
 #if (GEN_GEN >= 8 || GEN_IS_HASWELL)
-   if (info->view->usage & ISL_SURF_USAGE_RENDER_TARGET_BIT) {
-      /* From the Sky Lake PRM Vol. 2d,
-       * RENDER_SURFACE_STATE::Shader Channel Select Red
-       *
-       *    "For Render Target, Red, Green and Blue Shader Channel Selects
-       *    MUST be such that only valid components can be swapped i.e. only
-       *    change the order of components in the pixel. Any other values for
-       *    these Shader Channel Select fields are not valid for Render
-       *    Targets. This also means that there MUST not be multiple shader
-       *    channels mapped to the same RT channel."
-       */
-      assert(info->view->swizzle.r == ISL_CHANNEL_SELECT_RED ||
-             info->view->swizzle.r == ISL_CHANNEL_SELECT_GREEN ||
-             info->view->swizzle.r == ISL_CHANNEL_SELECT_BLUE);
-      assert(info->view->swizzle.g == ISL_CHANNEL_SELECT_RED ||
-             info->view->swizzle.g == ISL_CHANNEL_SELECT_GREEN ||
-             info->view->swizzle.g == ISL_CHANNEL_SELECT_BLUE);
-      assert(info->view->swizzle.b == ISL_CHANNEL_SELECT_RED ||
-             info->view->swizzle.b == ISL_CHANNEL_SELECT_GREEN ||
-             info->view->swizzle.b == ISL_CHANNEL_SELECT_BLUE);
-      assert(info->view->swizzle.r != info->view->swizzle.g);
-      assert(info->view->swizzle.r != info->view->swizzle.b);
-      assert(info->view->swizzle.g != info->view->swizzle.b);
-
-      /* From the Sky Lake PRM Vol. 2d,
-       * RENDER_SURFACE_STATE::Shader Channel Select Alpha
-       *
-       *    "For Render Target, this field MUST be programmed to
-       *    value = SCS_ALPHA."
-       */
-      assert(info->view->swizzle.a == ISL_CHANNEL_SELECT_ALPHA);
-   }
    s.ShaderChannelSelectRed = info->view->swizzle.r;
    s.ShaderChannelSelectGreen = info->view->swizzle.g;
    s.ShaderChannelSelectBlue = info->view->swizzle.b;
@@ -561,52 +503,27 @@ isl_genX(surf_fill_state_s)(const struct isl_device *dev, void *state,
 
 #if GEN_GEN >= 7
    if (info->aux_surf && info->aux_usage != ISL_AUX_USAGE_NONE) {
-      /* The docs don't appear to say anything whatsoever about compression
-       * and the data port.  Testing seems to indicate that the data port
-       * completely ignores the AuxiliarySurfaceMode field.
-       */
-      assert(!(info->view->usage & ISL_SURF_USAGE_STORAGE_BIT));
-
       struct isl_tile_info tile_info;
-      isl_surf_get_tile_info(info->aux_surf, &tile_info);
+      isl_surf_get_tile_info(dev, info->aux_surf, &tile_info);
       uint32_t pitch_in_tiles =
          info->aux_surf->row_pitch / tile_info.phys_extent_B.width;
 
-      s.AuxiliarySurfaceBaseAddress = info->aux_address;
-      s.AuxiliarySurfacePitch = pitch_in_tiles - 1;
-
 #if GEN_GEN >= 8
       assert(GEN_GEN >= 9 || info->aux_usage != ISL_AUX_USAGE_CCS_E);
+      s.AuxiliarySurfacePitch = pitch_in_tiles - 1;
       /* Auxiliary surfaces in ISL have compressed formats but the hardware
        * doesn't expect our definition of the compression, it expects qpitch
        * in units of samples on the main surface.
        */
       s.AuxiliarySurfaceQPitch =
          isl_surf_get_array_pitch_sa_rows(info->aux_surf) >> 2;
-
-      if (info->aux_usage == ISL_AUX_USAGE_HIZ) {
-         /* The number of samples must be 1 */
-         assert(info->surf->samples == 1);
-
-         /* The dimension must not be 3D */
-         assert(info->surf->dim != ISL_SURF_DIM_3D);
-
-         /* The format must be one of the following: */
-         switch (info->view->format) {
-         case ISL_FORMAT_R32_FLOAT:
-         case ISL_FORMAT_R24_UNORM_X8_TYPELESS:
-         case ISL_FORMAT_R16_UNORM:
-            break;
-         default:
-            assert(!"Incompatible HiZ Sampling format");
-            break;
-         }
-      }
-
+      s.AuxiliarySurfaceBaseAddress = info->aux_address;
       s.AuxiliarySurfaceMode = isl_to_gen_aux_mode[info->aux_usage];
 #else
       assert(info->aux_usage == ISL_AUX_USAGE_MCS ||
              info->aux_usage == ISL_AUX_USAGE_CCS_D);
+      s.MCSBaseAddress = info->aux_address,
+      s.MCSSurfacePitch = pitch_in_tiles - 1;
       s.MCSEnable = true;
 #endif
    }
@@ -629,15 +546,6 @@ isl_genX(surf_fill_state_s)(const struct isl_device *dev, void *state,
          s.SamplerL2BypassModeDisable = true;
          break;
       default:
-         /* From the SKL PRM, Programming Note under Sampler Output Channel
-          * Mapping:
-          *
-          *    If a surface has an associated HiZ Auxilliary surface, the
-          *    Sampler L2 Bypass Mode Disable field in the RENDER_SURFACE_STATE
-          *    must be set.
-          */
-         if (GEN_GEN >= 9 && info->aux_usage == ISL_AUX_USAGE_HIZ)
-            s.SamplerL2BypassModeDisable = true;
          break;
       }
    }
@@ -694,7 +602,7 @@ isl_genX(buffer_fill_state_s)(void *state,
        */
       if (info->format == ISL_FORMAT_RAW) {
          assert(num_elements <= (1ull << 30));
-         assert(num_elements > 0);
+         assert((num_elements & 3) == 0);
       } else {
          assert(num_elements <= (1ull << 27));
       }

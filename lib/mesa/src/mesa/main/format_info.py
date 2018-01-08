@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #
 # Copyright 2014 Intel Corporation
 #
@@ -165,37 +166,34 @@ print '''
   * manually or commit it into version control.
   */
 
-static const struct gl_format_info format_info[MESA_FORMAT_COUNT] =
+static struct gl_format_info format_info[MESA_FORMAT_COUNT] =
 {
 '''
 
-def format_channel_bits(fmat, tuple_list):
-   return ['.%s = %s' % (field, str(get_channel_bits(fmat, name))) for (field, name) in tuple_list]
-
-
 for fmat in formats:
    print '   {'
-   print '      .Name = {0},'.format(fmat.name)
-   print '      .StrName = "{0}",'.format(fmat.name)
-   print '      .Layout = {0},'.format('MESA_FORMAT_LAYOUT_' + fmat.layout.upper())
-   print '      .BaseFormat = {0},'.format(get_gl_base_format(fmat))
-   print '      .DataType = {0},'.format(get_gl_data_type(fmat))
+   print '      {0},'.format(fmat.name)
+   print '      "{0}",'.format(fmat.name)
+   print '      {0},'.format('MESA_FORMAT_LAYOUT_' + fmat.layout.upper())
+   print '      {0},'.format(get_gl_base_format(fmat))
+   print '      {0},'.format(get_gl_data_type(fmat))
 
-   bits = [('RedBits', 'r'), ('GreenBits', 'g'), ('BlueBits', 'b'), ('AlphaBits', 'a')]
-   print '      {0},'.format(', '.join(format_channel_bits(fmat, bits)))
-   bits = [('LuminanceBits', 'l'), ('IntensityBits', 'i'), ('DepthBits', 'z'), ('StencilBits', 's')]
-   print '      {0},'.format(', '.join(format_channel_bits(fmat, bits)))
+   bits = [ get_channel_bits(fmat, name) for name in ['r', 'g', 'b', 'a']]
+   print '      {0},'.format(', '.join(map(str, bits)))
+   bits = [ get_channel_bits(fmat, name) for name in ['l', 'i', 'z', 's']]
+   print '      {0},'.format(', '.join(map(str, bits)))
 
-   print '      .IsSRGBFormat = {0:d},'.format(fmat.colorspace == 'srgb')
+   print '      {0:d},'.format(fmat.colorspace == 'srgb')
 
-   print '      .BlockWidth = {0}, .BlockHeight = {1}, .BlockDepth = {2},'.format(fmat.block_width, fmat.block_height, fmat.block_depth)
-   print '      .BytesPerBlock = {0},'.format(int(fmat.block_size() / 8))
+   print '      {0}, {1}, {2}, {3},'.format(fmat.block_width, fmat.block_height,
+                                            fmat.block_depth,
+                                            int(fmat.block_size() / 8))
 
-   print '      .Swizzle = {{ {0} }},'.format(', '.join(map(str, fmat.swizzle)))
+   print '      {{ {0} }},'.format(', '.join(map(str, fmat.swizzle)))
    if fmat.is_array():
       chan = fmat.array_element()
       norm = chan.norm or chan.type == parser.FLOAT
-      print '      .ArrayFormat = MESA_ARRAY_FORMAT({0}),'.format(', '.join([
+      print '      MESA_ARRAY_FORMAT({0}),'.format(', '.join([
          str(chan.size / 8),
          str(int(chan.sign)),
          str(int(chan.type == parser.FLOAT)),
@@ -207,7 +205,7 @@ for fmat in formats:
          str(fmat.swizzle[3]),
       ]))
    else:
-      print '      .ArrayFormat = 0,'
+      print '      0,'
    print '   },'
 
 print '};'

@@ -51,8 +51,7 @@ _mesa_copy_string(GLchar *dst, GLsizei maxLength,
                   GLsizei *length, const GLchar *src);
 
 extern void
-_mesa_use_shader_program(struct gl_context *ctx,
-                         struct gl_shader_program *shProg);
+_mesa_use_program(struct gl_context *ctx, struct gl_shader_program *shProg);
 
 extern void
 _mesa_active_program(struct gl_context *ctx, struct gl_shader_program *shProg,
@@ -73,10 +72,6 @@ _mesa_longest_attribute_name_length(struct gl_shader_program *shProg);
 extern void
 _mesa_shader_write_subroutine_indices(struct gl_context *ctx,
                                       gl_shader_stage stage);
-
-void GLAPIENTRY
-_mesa_AttachObjectARB_no_error(GLhandleARB, GLhandleARB);
-
 extern void GLAPIENTRY
 _mesa_AttachObjectARB(GLhandleARB, GLhandleARB);
 
@@ -85,9 +80,6 @@ _mesa_CompileShader(GLuint);
 
 extern GLhandleARB GLAPIENTRY
 _mesa_CreateProgramObjectARB(void);
-
-GLhandleARB GLAPIENTRY
-_mesa_CreateShaderObjectARB_no_error(GLenum type);
 
 extern GLhandleARB GLAPIENTRY
 _mesa_CreateShaderObjectARB(GLenum type);
@@ -134,17 +126,12 @@ _mesa_LinkProgram(GLuint programObj);
 extern void GLAPIENTRY
 _mesa_ShaderSource(GLuint, GLsizei, const GLchar* const *, const GLint *);
 
-void GLAPIENTRY
-_mesa_UseProgram_no_error(GLuint);
 extern void GLAPIENTRY
 _mesa_UseProgram(GLuint);
 
 extern void GLAPIENTRY
 _mesa_ValidateProgram(GLuint);
 
-
-void GLAPIENTRY
-_mesa_BindAttribLocation_no_error(GLuint program, GLuint, const GLchar *);
 
 extern void GLAPIENTRY
 _mesa_BindAttribLocation(GLuint program, GLuint, const GLchar *);
@@ -158,28 +145,16 @@ _mesa_BindFragDataLocationIndexed(GLuint program, GLuint colorNumber,
                                   GLuint index, const GLchar *name);
 
 extern void GLAPIENTRY
-_mesa_BindFragDataLocation_no_error(GLuint program, GLuint colorNumber,
-                                    const GLchar *name);
-
-extern void GLAPIENTRY
-_mesa_BindFragDataLocationIndexed_no_error(GLuint program, GLuint colorNumber,
-                                           GLuint index, const GLchar *name);
-
-extern void GLAPIENTRY
 _mesa_GetActiveAttrib(GLuint, GLuint, GLsizei, GLsizei *, GLint *,
                          GLenum *, GLchar *);
 
 extern GLint GLAPIENTRY
 _mesa_GetAttribLocation(GLuint, const GLchar *);
 
-void GLAPIENTRY
-_mesa_AttachShader_no_error(GLuint program, GLuint shader);
+
 
 extern void GLAPIENTRY
 _mesa_AttachShader(GLuint program, GLuint shader);
-
-GLuint GLAPIENTRY
-_mesa_CreateShader_no_error(GLenum);
 
 extern GLuint GLAPIENTRY
 _mesa_CreateShader(GLenum);
@@ -238,13 +213,14 @@ extern void GLAPIENTRY
 _mesa_ProgramParameteri(GLuint program, GLenum pname, GLint value);
 
 void
-_mesa_use_program(struct gl_context *ctx, gl_shader_stage stage,
-                  struct gl_shader_program *shProg, struct gl_program *prog,
-                  struct gl_pipeline_object *shTarget);
+_mesa_use_shader_program(struct gl_context *ctx, GLenum type,
+                         struct gl_shader_program *shProg,
+                         struct gl_pipeline_object *shTarget);
 
 extern void
-_mesa_copy_linked_program_data(const struct gl_shader_program *src,
-                               struct gl_linked_shader *dst_sh);
+_mesa_copy_linked_program_data(gl_shader_stage type,
+                               const struct gl_shader_program *src,
+                               struct gl_program *dst);
 
 extern bool
 _mesa_validate_shader_target(const struct gl_context *ctx, GLenum type);
@@ -313,8 +289,8 @@ _mesa_PatchParameterfv(GLenum pname, const GLfloat *values);
 
 /* GL_ARB_shader_subroutine */
 void
-_mesa_program_init_subroutine_defaults(struct gl_context *ctx,
-                                       struct gl_program *prog);
+_mesa_shader_program_init_subroutine_defaults(struct gl_context *ctx,
+                                              struct gl_shader_program *shProg);
 
 extern GLint GLAPIENTRY
 _mesa_GetSubroutineUniformLocation(GLuint program, GLenum shadertype,

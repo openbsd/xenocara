@@ -21,6 +21,7 @@
  * IN THE SOFTWARE.
  */
 
+#include "util/mesa-sha1.h"
 #include "util/hash_table.h"
 #include "util/debug.h"
 #include "anv_private.h"
@@ -197,6 +198,32 @@ anv_pipeline_cache_finish(struct anv_pipeline_cache *cache)
    }
 }
 
+void
+anv_hash_shader(unsigned char *hash, const void *key, size_t key_size,
+                struct anv_shader_module *module,
+                const char *entrypoint,
+                const struct anv_pipeline_layout *pipeline_layout,
+                const VkSpecializationInfo *spec_info)
+{
+   struct mesa_sha1 *ctx;
+
+   ctx = _mesa_sha1_init();
+   _mesa_sha1_update(ctx, key, key_size);
+   _mesa_sha1_update(ctx, module->sha1, sizeof(module->sha1));
+   _mesa_sha1_update(ctx, entrypoint, strlen(entrypoint));
+   if (pipeline_layout) {
+      _mesa_sha1_update(ctx, pipeline_layout->sha1,
+                        sizeof(pipeline_layout->sha1));
+   }
+   /* hash in shader stage, pipeline layout? */
+   if (spec_info) {
+      _mesa_sha1_update(ctx, spec_info->pMapEntries,
+                        spec_info->mapEntryCount * sizeof spec_info->pMapEntries[0]);
+      _mesa_sha1_update(ctx, spec_info->pData, spec_info->dataSize);
+   }
+   _mesa_sha1_final(ctx, hash);
+}
+
 static struct anv_shader_bin *
 anv_pipeline_cache_search_locked(struct anv_pipeline_cache *cache,
                                  const void *key_data, uint32_t key_size)
@@ -281,8 +308,7 @@ anv_pipeline_cache_upload_kernel(struct anv_pipeline_cache *cache,
       pthread_mutex_unlock(&cache->mutex);
 
       /* We increment refcount before handing it to the caller */
-      if (bin)
-         anv_shader_bin_ref(bin);
+      anv_shader_bin_ref(bin);
 
       return bin;
    } else {
@@ -307,8 +333,8 @@ anv_pipeline_cache_load(struct anv_pipeline_cache *cache,
                         const void *data, size_t size)
 {
    struct anv_device *device = cache->device;
-   struct anv_physical_device *pdevice = &device->instance->physicalDevice;
    struct cache_header header;
+   uint8_t uuid[VK_UUID_SIZE];
 
    if (cache->cache == NULL)
       return;
@@ -324,7 +350,8 @@ anv_pipeline_cache_load(struct anv_pipeline_cache *cache,
       return;
    if (header.device_id != device->chipset_id)
       return;
-   if (memcmp(header.uuid, pdevice->pipeline_cache_uuid, VK_UUID_SIZE) != 0)
+   anv_device_get_cache_uuid(uuid);
+   if (memcmp(header.uuid, uuid, VK_UUID_SIZE) != 0)
       return;
 
    const void *end = data + size;
@@ -443,7 +470,6 @@ VkResult anv_GetPipelineCacheData(
 {
    ANV_FROM_HANDLE(anv_device, device, _device);
    ANV_FROM_HANDLE(anv_pipeline_cache, cache, _cache);
-   struct anv_physical_device *pdevice = &device->instance->physicalDevice;
    struct cache_header *header;
 
    if (pData == NULL) {
@@ -471,7 +497,7 @@ VkResult anv_GetPipelineCacheData(
    header->header_version = VK_PIPELINE_CACHE_HEADER_VERSION_ONE;
    header->vendor_id = 0x8086;
    header->device_id = device->chipset_id;
-   memcpy(header->uuid, pdevice->pipeline_cache_uuid, VK_UUID_SIZE);
+   anv_device_get_cache_uuid(header->uuid);
    p += align_u32(header->header_size, 8);
 
    uint32_t *count = p;
@@ -520,8 +546,6 @@ VkResult anv_MergePipelineCaches(
       struct hash_entry *entry;
       hash_table_foreach(src->cache, entry) {
          struct anv_shader_bin *bin = entry->data;
-         assert(bin);
-
          if (_mesa_hash_table_search(dst->cache, bin->key))
             continue;
 

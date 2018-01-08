@@ -147,8 +147,6 @@ C_SOURCES := \
 	tgsi/tgsi_exec.h \
 	tgsi/tgsi_emulate.c \
 	tgsi/tgsi_emulate.h \
-	tgsi/tgsi_from_mesa.c \
-	tgsi/tgsi_from_mesa.h \
 	tgsi/tgsi_info.c \
 	tgsi/tgsi_info.h \
 	tgsi/tgsi_iterate.c \
@@ -194,6 +192,8 @@ C_SOURCES := \
 	util/u_box.h \
 	util/u_cache.c \
 	util/u_cache.h \
+	util/u_caps.c \
+	util/u_caps.h \
 	util/u_cpu_detect.c \
 	util/u_cpu_detect.h \
 	util/u_debug.c \
@@ -223,6 +223,7 @@ C_SOURCES := \
 	util/u_dump_defines.c \
 	util/u_dump.h \
 	util/u_dump_state.c \
+	util/u_dynarray.h \
 	util/u_fifo.h \
 	util/u_format.c \
 	util/u_format.h \
@@ -249,6 +250,8 @@ C_SOURCES := \
 	util/u_half.h \
 	util/u_handle_table.c \
 	util/u_handle_table.h \
+	util/u_hash.c \
+	util/u_hash.h \
 	util/u_hash_table.c \
 	util/u_hash_table.h \
 	util/u_helpers.c \
@@ -275,6 +278,8 @@ C_SOURCES := \
 	util/u_pstipple.c \
 	util/u_pstipple.h \
 	util/u_pwr8.h \
+	util/u_queue.c \
+	util/u_queue.h \
 	util/u_range.h \
 	util/u_rect.h \
 	util/u_resource.c \
@@ -287,6 +292,7 @@ C_SOURCES := \
 	util/u_simple_shaders.h \
 	util/u_split_prim.h \
 	util/u_sse.h \
+	util/u_string.h \
 	util/u_suballoc.c \
 	util/u_suballoc.h \
 	util/u_surface.c \
@@ -302,9 +308,6 @@ C_SOURCES := \
 	util/u_time.h \
 	util/u_transfer.c \
 	util/u_transfer.h \
-	util/u_threaded_context.c \
-	util/u_threaded_context.h \
-	util/u_threaded_context_calls.h \
 	util/u_upload_mgr.c \
 	util/u_upload_mgr.h \
 	util/u_vbuf.c \
@@ -347,21 +350,17 @@ VL_SOURCES := \
 	vl/vl_video_buffer.c \
 	vl/vl_video_buffer.h \
 	vl/vl_vlc.h \
+	vl/vl_winsys.h \
 	vl/vl_zscan.c \
 	vl/vl_zscan.h
 
 # XXX: Nuke this as our dri targets no longer depend on VL.
 VL_WINSYS_SOURCES := \
-	vl/vl_winsys.h
-
-VL_WINSYS_DRI2_SOURCES := \
-	vl/vl_winsys_dri.c
+	vl/vl_winsys_dri.c \
+	vl/vl_winsys_drm.c
 
 VL_WINSYS_DRI3_SOURCES := \
 	vl/vl_winsys_dri3.c
-
-VL_WINSYS_DRM_SOURCES := \
-	vl/vl_winsys_drm.c
 
 VL_STUB_SOURCES := \
 	vl/vl_stubs.c
@@ -438,7 +437,3 @@ GALLIVM_SOURCES := \
 	draw/draw_llvm_sample.c \
 	draw/draw_pt_fetch_shade_pipeline_llvm.c \
 	draw/draw_vs_llvm.c
-
-RENDERONLY_SOURCES := \
-	renderonly/renderonly.c \
-	renderonly/renderonly.h

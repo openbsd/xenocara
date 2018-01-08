@@ -54,17 +54,6 @@
 #define PKT3_WAIT_REG_MEM                      0x3C
 #define		WAIT_REG_MEM_EQUAL		3
 #define         WAIT_REG_MEM_MEM_SPACE(x)       (((unsigned)(x) & 0x3) << 4)
-#define PKT3_COPY_DATA			       0x40
-#define		COPY_DATA_SRC_SEL(x)		((x) & 0xf)
-#define			COPY_DATA_REG		0
-#define			COPY_DATA_MEM		1
-#define                 COPY_DATA_PERF          4
-#define                 COPY_DATA_IMM           5
-#define                 COPY_DATA_TIMESTAMP     9
-#define		COPY_DATA_DST_SEL(x)		(((unsigned)(x) & 0xf) << 8)
-#define                 COPY_DATA_MEM_ASYNC     5
-#define		COPY_DATA_COUNT_SEL		(1 << 16)
-#define		COPY_DATA_WR_CONFIRM		(1 << 20)
 #define PKT3_EVENT_WRITE                       0x46
 #define PKT3_EVENT_WRITE_EOP                   0x47
 #define         EOP_DATA_SEL(x)                         ((x) << 29)
@@ -74,7 +63,6 @@
 		 * 3 - send 64bit GPU counter value
 		 * 4 - send 64bit sys counter value
 		 */
-#define PKT3_RELEASE_MEM                       0x49 /* GFX9+ */
 #define PKT3_SET_CONFIG_REG		       0x68
 #define PKT3_SET_CONTEXT_REG		       0x69
 #define PKT3_STRMOUT_BASE_UPDATE	       0x72 /* r700 only */
@@ -196,42 +184,18 @@
 #define   EG_S_028A4C_FORCE_EOV_REZ_ENABLE(x)           (((unsigned)(x) & 0x1) << 26)
 
 #define CM_R_028804_DB_EQAA                          0x00028804
-#define   S_028804_MAX_ANCHOR_SAMPLES(x)                (((unsigned)(x) & 0x07) << 0)
-#define   G_028804_MAX_ANCHOR_SAMPLES(x)                (((x) >> 0) & 0x07)
-#define   C_028804_MAX_ANCHOR_SAMPLES                   0xFFFFFFF8
-#define   S_028804_PS_ITER_SAMPLES(x)                   (((unsigned)(x) & 0x07) << 4)
-#define   G_028804_PS_ITER_SAMPLES(x)                   (((x) >> 4) & 0x07)
-#define   C_028804_PS_ITER_SAMPLES                      0xFFFFFF8F
-#define   S_028804_MASK_EXPORT_NUM_SAMPLES(x)           (((unsigned)(x) & 0x07) << 8)
-#define   G_028804_MASK_EXPORT_NUM_SAMPLES(x)           (((x) >> 8) & 0x07)
-#define   C_028804_MASK_EXPORT_NUM_SAMPLES              0xFFFFF8FF
-#define   S_028804_ALPHA_TO_MASK_NUM_SAMPLES(x)         (((unsigned)(x) & 0x07) << 12)
-#define   G_028804_ALPHA_TO_MASK_NUM_SAMPLES(x)         (((x) >> 12) & 0x07)
-#define   C_028804_ALPHA_TO_MASK_NUM_SAMPLES            0xFFFF8FFF
-#define   S_028804_HIGH_QUALITY_INTERSECTIONS(x)        (((unsigned)(x) & 0x1) << 16)
-#define   G_028804_HIGH_QUALITY_INTERSECTIONS(x)        (((x) >> 16) & 0x1)
-#define   C_028804_HIGH_QUALITY_INTERSECTIONS           0xFFFEFFFF
-#define   S_028804_INCOHERENT_EQAA_READS(x)             (((unsigned)(x) & 0x1) << 17)
-#define   G_028804_INCOHERENT_EQAA_READS(x)             (((x) >> 17) & 0x1)
-#define   C_028804_INCOHERENT_EQAA_READS                0xFFFDFFFF
-#define   S_028804_INTERPOLATE_COMP_Z(x)                (((unsigned)(x) & 0x1) << 18)
-#define   G_028804_INTERPOLATE_COMP_Z(x)                (((x) >> 18) & 0x1)
-#define   C_028804_INTERPOLATE_COMP_Z                   0xFFFBFFFF
-#define   S_028804_INTERPOLATE_SRC_Z(x)                 (((unsigned)(x) & 0x1) << 19)
-#define   G_028804_INTERPOLATE_SRC_Z(x)                 (((x) >> 19) & 0x1)
-#define   C_028804_INTERPOLATE_SRC_Z                    0xFFF7FFFF
-#define   S_028804_STATIC_ANCHOR_ASSOCIATIONS(x)        (((unsigned)(x) & 0x1) << 20)
-#define   G_028804_STATIC_ANCHOR_ASSOCIATIONS(x)        (((x) >> 20) & 0x1)
-#define   C_028804_STATIC_ANCHOR_ASSOCIATIONS           0xFFEFFFFF
-#define   S_028804_ALPHA_TO_MASK_EQAA_DISABLE(x)        (((unsigned)(x) & 0x1) << 21)
-#define   G_028804_ALPHA_TO_MASK_EQAA_DISABLE(x)        (((x) >> 21) & 0x1)
-#define   C_028804_ALPHA_TO_MASK_EQAA_DISABLE           0xFFDFFFFF
-#define   S_028804_OVERRASTERIZATION_AMOUNT(x)          (((unsigned)(x) & 0x07) << 24)
-#define   G_028804_OVERRASTERIZATION_AMOUNT(x)          (((x) >> 24) & 0x07)
-#define   C_028804_OVERRASTERIZATION_AMOUNT             0xF8FFFFFF
-#define   S_028804_ENABLE_POSTZ_OVERRASTERIZATION(x)    (((unsigned)(x) & 0x1) << 27)
-#define   G_028804_ENABLE_POSTZ_OVERRASTERIZATION(x)    (((x) >> 27) & 0x1)
-#define   C_028804_ENABLE_POSTZ_OVERRASTERIZATION       0xF7FFFFFF
+#define   S_028804_MAX_ANCHOR_SAMPLES(x)		(((unsigned)(x) & 0x7) << 0)
+#define   S_028804_PS_ITER_SAMPLES(x)			(((unsigned)(x) & 0x7) << 4)
+#define   S_028804_MASK_EXPORT_NUM_SAMPLES(x)		(((unsigned)(x) & 0x7) << 8)
+#define   S_028804_ALPHA_TO_MASK_NUM_SAMPLES(x)		(((unsigned)(x) & 0x7) << 12)
+#define   S_028804_HIGH_QUALITY_INTERSECTIONS(x)	(((unsigned)(x) & 0x1) << 16)
+#define   S_028804_INCOHERENT_EQAA_READS(x)		(((unsigned)(x) & 0x1) << 17)
+#define   S_028804_INTERPOLATE_COMP_Z(x)		(((unsigned)(x) & 0x1) << 18)
+#define   S_028804_INTERPOLATE_SRC_Z(x)			(((unsigned)(x) & 0x1) << 19)
+#define   S_028804_STATIC_ANCHOR_ASSOCIATIONS(x)	(((unsigned)(x) & 0x1) << 20)
+#define   S_028804_ALPHA_TO_MASK_EQAA_DISABLE(x)	(((unsigned)(x) & 0x1) << 21)
+#define   S_028804_OVERRASTERIZATION_AMOUNT(x)		(((unsigned)(x) & 0x07) << 24)
+#define   S_028804_ENABLE_POSTZ_OVERRASTERIZATION(x)	(((unsigned)(x) & 0x1) << 27)
 #define CM_R_028BDC_PA_SC_LINE_CNTL                  0x28bdc
 #define   S_028BDC_EXPAND_LINE_WIDTH(x)                (((unsigned)(x) & 0x1) << 9)
 #define   G_028BDC_EXPAND_LINE_WIDTH(x)                (((x) >> 9) & 0x1)
@@ -246,21 +210,11 @@
 #define   G_028BDC_DX10_DIAMOND_TEST_ENA(x)            (((x) >> 12) & 0x1)
 #define   C_028BDC_DX10_DIAMOND_TEST_ENA               0xFFFFEFFF
 #define CM_R_028BE0_PA_SC_AA_CONFIG                  0x28be0
-#define   S_028BE0_MSAA_NUM_SAMPLES(x)                 (((unsigned)(x) & 0x07) << 0)
-#define   G_028BE0_MSAA_NUM_SAMPLES(x)                 (((x) >> 0) & 0x07)
-#define   C_028BE0_MSAA_NUM_SAMPLES                    0xFFFFFFF8
-#define   S_028BE0_AA_MASK_CENTROID_DTMN(x)            (((unsigned)(x) & 0x1) << 4)
-#define   G_028BE0_AA_MASK_CENTROID_DTMN(x)            (((x) >> 4) & 0x1)
-#define   C_028BE0_AA_MASK_CENTROID_DTMN               0xFFFFFFEF
-#define   S_028BE0_MAX_SAMPLE_DIST(x)                  (((unsigned)(x) & 0x0F) << 13)
-#define   G_028BE0_MAX_SAMPLE_DIST(x)                  (((x) >> 13) & 0x0F)
-#define   C_028BE0_MAX_SAMPLE_DIST                     0xFFFE1FFF
-#define   S_028BE0_MSAA_EXPOSED_SAMPLES(x)             (((unsigned)(x) & 0x07) << 20)
-#define   G_028BE0_MSAA_EXPOSED_SAMPLES(x)             (((x) >> 20) & 0x07)
-#define   C_028BE0_MSAA_EXPOSED_SAMPLES                0xFF8FFFFF
-#define   S_028BE0_DETAIL_TO_EXPOSED_MODE(x)           (((unsigned)(x) & 0x03) << 24)
-#define   G_028BE0_DETAIL_TO_EXPOSED_MODE(x)           (((x) >> 24) & 0x03)
-#define   C_028BE0_DETAIL_TO_EXPOSED_MODE              0xFCFFFFFF
+#define   S_028BE0_MSAA_NUM_SAMPLES(x)                  (((unsigned)(x) & 0x7) << 0)
+#define   S_028BE0_AA_MASK_CENTROID_DTMN(x)		(((unsigned)(x) & 0x1) << 4)
+#define   S_028BE0_MAX_SAMPLE_DIST(x)			(((unsigned)(x) & 0xf) << 13)
+#define   S_028BE0_MSAA_EXPOSED_SAMPLES(x)		(((unsigned)(x) & 0x7) << 20)
+#define   S_028BE0_DETAIL_TO_EXPOSED_MODE(x)		(((unsigned)(x) & 0x3) << 24)
 #define CM_R_028BF8_PA_SC_AA_SAMPLE_LOCS_PIXEL_X0Y0_0 0x28bf8
 #define CM_R_028C08_PA_SC_AA_SAMPLE_LOCS_PIXEL_X1Y0_0 0x28c08
 #define CM_R_028C18_PA_SC_AA_SAMPLE_LOCS_PIXEL_X0Y1_0 0x28c18

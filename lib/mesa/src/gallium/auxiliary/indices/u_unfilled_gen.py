@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 copyright = '''
 /*
  * Copyright 2009 VMware, Inc.

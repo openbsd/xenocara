@@ -481,10 +481,4 @@ void GLAPIENTRY
 _mesa_VertexAttribL3dv(GLuint index, const GLdouble *v);
 void GLAPIENTRY
 _mesa_VertexAttribL4dv(GLuint index, const GLdouble *v);
-
-void GLAPIENTRY
-_mesa_VertexAttribL1ui64ARB(GLuint index, GLuint64EXT x);
-void GLAPIENTRY
-_mesa_VertexAttribL1ui64vARB(GLuint index, const GLuint64EXT *v);
-
 #endif /* API_LOOPBACK_H */

@@ -25,15 +25,10 @@
 #define VC4_SCREEN_H
 
 #include "pipe/p_screen.h"
-#include "renderonly/renderonly.h"
 #include "os/os_thread.h"
 #include "state_tracker/drm_driver.h"
 #include "util/list.h"
 #include "util/slab.h"
-
-#ifndef DRM_VC4_PARAM_SUPPORTS_ETC1
-#define DRM_VC4_PARAM_SUPPORTS_ETC1		4
-#endif
 
 struct vc4_bo;
 
@@ -48,22 +43,20 @@ struct vc4_bo;
 #define VC4_DEBUG_ALWAYS_SYNC  0x0100
 #define VC4_DEBUG_NIR       0x0200
 #define VC4_DEBUG_DUMP      0x0400
-#define VC4_DEBUG_SURFACE   0x0800
 
 #define VC4_MAX_MIP_LEVELS 12
 #define VC4_MAX_TEXTURE_SAMPLERS 16
 
-struct vc4_simulator_file;
-
 struct vc4_screen {
         struct pipe_screen base;
-        struct renderonly *ro;
-
         int fd;
 
         int v3d_ver;
 
         const char *name;
+
+        void *simulator_mem_base;
+        uint32_t simulator_mem_size;
 
         /** The last seqno we've completed a wait for.
          *
@@ -81,23 +74,18 @@ struct vc4_screen {
                 struct list_head *size_list;
                 uint32_t size_list_size;
 
-                mtx_t lock;
+                pipe_mutex lock;
 
                 uint32_t bo_size;
                 uint32_t bo_count;
         } bo_cache;
 
         struct util_hash_table *bo_handles;
-        mtx_t bo_handles_mutex;
+        pipe_mutex bo_handles_mutex;
 
         uint32_t bo_size;
         uint32_t bo_count;
         bool has_control_flow;
-        bool has_etc1;
-        bool has_threaded_fs;
-        bool has_tiling_ioctl;
-
-        struct vc4_simulator_file *sim_file;
 };
 
 static inline struct vc4_screen *
@@ -106,12 +94,18 @@ vc4_screen(struct pipe_screen *screen)
         return (struct vc4_screen *)screen;
 }
 
-struct pipe_screen *vc4_screen_create(int fd, struct renderonly *ro);
+struct pipe_screen *vc4_screen_create(int fd);
+boolean vc4_screen_bo_get_handle(struct pipe_screen *pscreen,
+                                 struct vc4_bo *bo,
+                                 unsigned stride,
+                                 struct winsys_handle *whandle);
+struct vc4_bo *
+vc4_screen_bo_from_handle(struct pipe_screen *pscreen,
+                          struct winsys_handle *whandle);
 
 const void *
 vc4_screen_get_compiler_options(struct pipe_screen *pscreen,
-                                enum pipe_shader_ir ir,
-                                enum pipe_shader_type shader);
+                                enum pipe_shader_ir ir, unsigned shader);
 
 extern uint32_t vc4_debug;
 

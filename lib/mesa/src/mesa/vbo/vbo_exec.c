@@ -26,6 +26,7 @@
  */
 
 
+#include "main/api_arrayelt.h"
 #include "main/glheader.h"
 #include "main/mtypes.h"
 #include "main/vtxfmt.h"
@@ -33,26 +34,24 @@
 
 
 
-void
-vbo_exec_init(struct gl_context *ctx)
+void vbo_exec_init( struct gl_context *ctx )
 {
    struct vbo_exec_context *exec = &vbo_context(ctx)->exec;
 
    exec->ctx = ctx;
 
-   /* aelt_context should have been created by the caller */
-   assert(ctx->aelt_context);
+   /* Initialize the arrayelt helper
+    */
+   if (!ctx->aelt_context &&
+       !_ae_create_context( ctx )) 
+      return;
 
-   vbo_exec_vtx_init(exec);
+   vbo_exec_vtx_init( exec );
 
    ctx->Driver.NeedFlush = 0;
    ctx->Driver.CurrentExecPrimitive = PRIM_OUTSIDE_BEGIN_END;
 
-   /* The aelt_context state should still be dirty from its creation */
-   assert(_ae_is_state_dirty(ctx));
-
-   exec->array.recalculate_inputs = GL_TRUE;
-   exec->eval.recalculate_maps = GL_TRUE;
+   vbo_exec_invalidate_state( ctx, ~0 );
 }
 
 
@@ -66,6 +65,27 @@ void vbo_exec_destroy( struct gl_context *ctx )
    }
 
    vbo_exec_vtx_destroy( exec );
+}
+
+
+/**
+ * Really want to install these callbacks to a central facility to be
+ * invoked according to the state flags.  That will have to wait for a
+ * mesa rework:
+ */ 
+void vbo_exec_invalidate_state( struct gl_context *ctx, GLbitfield new_state )
+{
+   struct vbo_context *vbo = vbo_context(ctx);
+   struct vbo_exec_context *exec = &vbo->exec;
+
+   if (!exec->validating && new_state & (_NEW_PROGRAM|_NEW_ARRAY)) {
+      exec->array.recalculate_inputs = GL_TRUE;
+   }
+
+   if (new_state & _NEW_EVAL)
+      exec->eval.recalculate_maps = GL_TRUE;
+
+   _ae_invalidate_state(ctx, new_state);
 }
 
 

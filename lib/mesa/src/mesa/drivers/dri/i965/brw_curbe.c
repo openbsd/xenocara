@@ -41,7 +41,7 @@
  * quickly at thread setup time.  Each individual fixed function unit's state
  * (brw_vs_state.c for example) tells the hardware which subset of the CURBE
  * it wants in its register space, and we calculate those areas here under the
- * BRW_NEW_PUSH_CONSTANT_ALLOCATION state flag.  The brw_urb.c allocation will control
+ * BRW_NEW_CURBE_OFFSETS state flag.  The brw_urb.c allocation will control
  * how many CURBEs can be loaded into the hardware at once before a pipeline
  * stall occurs at CMD_CONST_BUFFER time.
  *
@@ -135,7 +135,7 @@ static void calculate_curbe_offsets( struct brw_context *brw )
                  brw->curbe.vs_start,
                  brw->curbe.vs_size );
 
-      brw->ctx.NewDriverState |= BRW_NEW_PUSH_CONSTANT_ALLOCATION;
+      brw->ctx.NewDriverState |= BRW_NEW_CURBE_OFFSETS;
    }
 }
 
@@ -196,7 +196,7 @@ static void
 brw_upload_constant_buffer(struct brw_context *brw)
 {
    struct gl_context *ctx = &brw->ctx;
-   /* BRW_NEW_PUSH_CONSTANT_ALLOCATION */
+   /* BRW_NEW_CURBE_OFFSETS */
    const GLuint sz = brw->curbe.total_size;
    const GLuint bufsz = sz * 16 * sizeof(GLfloat);
    gl_constant_value *buf;
@@ -214,9 +214,9 @@ brw_upload_constant_buffer(struct brw_context *brw)
 
    /* fragment shader constants */
    if (brw->curbe.wm_size) {
-      _mesa_load_state_parameters(ctx, brw->fragment_program->Parameters);
+      _mesa_load_state_parameters(ctx, brw->fragment_program->Base.Parameters);
 
-      /* BRW_NEW_PUSH_CONSTANT_ALLOCATION */
+      /* BRW_NEW_CURBE_OFFSETS */
       GLuint offset = brw->curbe.wm_start * 16;
 
       /* BRW_NEW_FS_PROG_DATA | _NEW_PROGRAM_CONSTANTS: copy uniform values */
@@ -256,7 +256,7 @@ brw_upload_constant_buffer(struct brw_context *brw)
 
    /* vertex shader constants */
    if (brw->curbe.vs_size) {
-      _mesa_load_state_parameters(ctx, brw->vertex_program->Parameters);
+      _mesa_load_state_parameters(ctx, brw->vertex_program->Base.Parameters);
 
       GLuint offset = brw->curbe.vs_start * 16;
 
@@ -325,7 +325,8 @@ emit:
     * BRW_NEW_FRAGMENT_PROGRAM
     */
    if (brw->gen == 4 && !brw->is_g4x &&
-       (brw->fragment_program->info.inputs_read & (1 << VARYING_SLOT_POS))) {
+       (brw->fragment_program->Base.nir->info.inputs_read &
+        (1 << VARYING_SLOT_POS))) {
       BEGIN_BATCH(2);
       OUT_BATCH(_3DSTATE_GLOBAL_DEPTH_OFFSET_CLAMP << 16 | (2 - 2));
       OUT_BATCH(0);
@@ -338,7 +339,7 @@ const struct brw_tracked_state brw_constant_buffer = {
       .mesa = _NEW_PROGRAM_CONSTANTS,
       .brw  = BRW_NEW_BATCH |
               BRW_NEW_BLORP |
-              BRW_NEW_PUSH_CONSTANT_ALLOCATION |
+              BRW_NEW_CURBE_OFFSETS |
               BRW_NEW_FRAGMENT_PROGRAM |
               BRW_NEW_FS_PROG_DATA |
               BRW_NEW_PSP | /* Implicit - hardware requires this, not used above */

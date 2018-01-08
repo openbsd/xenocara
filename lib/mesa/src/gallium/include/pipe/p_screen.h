@@ -58,7 +58,6 @@ struct pipe_surface;
 struct pipe_transfer;
 struct pipe_box;
 struct pipe_memory_info;
-struct disk_cache;
 
 
 /**
@@ -97,8 +96,7 @@ struct pipe_screen {
     * Query a per-shader-stage integer-valued capability/parameter/limit
     * \param param  one of PIPE_CAP_x
     */
-   int (*get_shader_param)( struct pipe_screen *, enum pipe_shader_type shader,
-                            enum pipe_shader_cap param );
+   int (*get_shader_param)( struct pipe_screen *, unsigned shader, enum pipe_shader_cap param );
 
    /**
     * Query an integer-valued capability/parameter/limit for a codec/profile
@@ -226,14 +224,6 @@ struct pipe_screen {
 				  struct winsys_handle *handle,
 				  unsigned usage);
 
-   /**
-    * Mark the resource as changed so derived internal resources will be
-    * recreated on next use.
-    *
-    * This is necessary when reimporting external images that can't be directly
-    * used as texture sampler source, to avoid sampling from old copies.
-    */
-   void (*resource_changed)(struct pipe_screen *, struct pipe_resource *pt);
 
    void (*resource_destroy)(struct pipe_screen *,
 			    struct pipe_resource *pt);
@@ -275,16 +265,6 @@ struct pipe_screen {
                            uint64_t timeout);
 
    /**
-    * For fences created with PIPE_FLUSH_FENCE_FD (exported fd) or
-    * by create_fence_fd() (imported fd), return the native fence fd
-    * associated with the fence.  This may return -1 for fences
-    * created with PIPE_FLUSH_DEFERRED if the fence command has not
-    * been flushed yet.
-    */
-   int (*fence_get_fd)(struct pipe_screen *screen,
-                       struct pipe_fence_handle *fence);
-
-   /**
     * Returns a driver-specific query.
     *
     * If \p info is NULL, the number of available queries is returned.
@@ -319,44 +299,7 @@ struct pipe_screen {
     */
    const void *(*get_compiler_options)(struct pipe_screen *screen,
                                       enum pipe_shader_ir ir,
-                                      enum pipe_shader_type shader);
-
-   /**
-    * Returns a pointer to a driver-specific on-disk shader cache. If the
-    * driver failed to create the cache or does not support an on-disk shader
-    * cache NULL is returned. The callback itself may also be NULL if the
-    * driver doesn't support an on-disk shader cache.
-    */
-   struct disk_cache *(*get_disk_shader_cache)(struct pipe_screen *screen);
-
-   /**
-    * Create a new texture object from the given template info, taking
-    * format modifiers into account. \p modifiers specifies a list of format
-    * modifier tokens, as defined in drm_fourcc.h. The driver then picks the
-    * best modifier among these and creates the resource. \p count must
-    * contain the size of \p modifiers array.
-    *
-    * Returns NULL if an entry in \p modifiers is unsupported by the driver,
-    * or if only DRM_FORMAT_MOD_INVALID is provided.
-    */
-   struct pipe_resource * (*resource_create_with_modifiers)(
-                           struct pipe_screen *,
-                           const struct pipe_resource *templat,
-                           const uint64_t *modifiers, int count);
-
-   /**
-    * Get supported modifiers for a format.
-    * If \p max is 0, the total number of supported modifiers for the supplied
-    * format is returned in \p count, with no modification to \p modifiers.
-    * Otherwise, \p modifiers is filled with upto \p max supported modifier
-    * codes, and \p count with the number of modifiers copied.
-    * The \p external_only array is used to return whether the format and
-    * modifier combination can only be used with an external texture target.
-    */
-   void (*query_dmabuf_modifiers)(struct pipe_screen *screen,
-                                  enum pipe_format format, int max,
-                                  uint64_t *modifiers,
-                                  unsigned int *external_only, int *count);
+                                      unsigned shader);
 };
 
 

@@ -38,17 +38,20 @@ extern "C" {
 
 struct pipe_context;
 struct pipe_draw_info;
-union pipe_index_binding;
+struct pipe_index_buffer;
 struct pipe_resource;
 
 
 enum pipe_error
 util_translate_prim_restart_ib(struct pipe_context *context,
-                               const struct pipe_draw_info *info,
-                               struct pipe_resource **dst_buffer);
+                               struct pipe_index_buffer *src_buffer,
+                               struct pipe_resource **dst_buffer,
+                               unsigned num_indexes,
+                               unsigned restart_index);
 
 enum pipe_error
 util_draw_vbo_without_prim_restart(struct pipe_context *context,
+                                   const struct pipe_index_buffer *ib,
                                    const struct pipe_draw_info *info);
 
 

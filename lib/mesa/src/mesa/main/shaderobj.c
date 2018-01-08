@@ -30,7 +30,6 @@
  */
 
 
-#include "compiler/glsl/string_to_uint_map.h"
 #include "main/glheader.h"
 #include "main/context.h"
 #include "main/hash.h"
@@ -40,8 +39,9 @@
 #include "main/uniforms.h"
 #include "program/program.h"
 #include "program/prog_parameter.h"
-#include "util/ralloc.h"
 #include "util/u_atomic.h"
+#include "util/ralloc.h"
+#include "util/string_to_uint_map.h"
 
 /**********************************************************************/
 /*** Shader object functions                                        ***/
@@ -106,10 +106,23 @@ _mesa_new_shader(GLuint name, gl_shader_stage stage)
    if (shader) {
       shader->Stage = stage;
       shader->Name = name;
-#ifdef DEBUG
-      shader->SourceChecksum = 0xa110c; /* alloc */
-#endif
       _mesa_init_shader(shader);
+   }
+   return shader;
+}
+
+
+/**
+ * Allocate a new gl_linked_shader object.
+ * Called via ctx->Driver.NewShader()
+ */
+struct gl_linked_shader *
+_mesa_new_linked_shader(gl_shader_stage stage)
+{
+   struct gl_linked_shader *shader;
+   shader = rzalloc(NULL, struct gl_linked_shader);
+   if (shader) {
+      shader->Stage = stage;
    }
    return shader;
 }
@@ -122,7 +135,6 @@ void
 _mesa_delete_shader(struct gl_context *ctx, struct gl_shader *sh)
 {
    free((void *)sh->Source);
-   free((void *)sh->FallbackSource);
    free(sh->Label);
    ralloc_free(sh);
 }
@@ -193,38 +205,6 @@ _mesa_lookup_shader_err(struct gl_context *ctx, GLuint name, const char *caller)
 /*** Shader Program object functions                                ***/
 /**********************************************************************/
 
-void
-_mesa_reference_shader_program_data(struct gl_context *ctx,
-                                    struct gl_shader_program_data **ptr,
-                                    struct gl_shader_program_data *data)
-{
-   if (*ptr == data)
-      return;
-
-   if (*ptr) {
-      struct gl_shader_program_data *oldData = *ptr;
-
-      assert(oldData->RefCount > 0);
-
-      if (p_atomic_dec_zero(&oldData->RefCount)) {
-         assert(ctx);
-         assert(oldData->NumUniformStorage == 0 ||
-                oldData->UniformStorage);
-
-         for (unsigned i = 0; i < oldData->NumUniformStorage; ++i)
-            _mesa_uniform_detach_all_driver_storage(&oldData->UniformStorage[i]);
-
-         ralloc_free(oldData);
-      }
-
-      *ptr = NULL;
-   }
-
-   if (data)
-      p_atomic_inc(&data->RefCount);
-
-   *ptr = data;
-}
 
 /**
  * Set ptr to point to shProg.
@@ -264,19 +244,6 @@ _mesa_reference_shader_program_(struct gl_context *ctx,
    }
 }
 
-struct gl_shader_program_data *
-_mesa_create_shader_program_data()
-{
-   struct gl_shader_program_data *data;
-   data = rzalloc(NULL, struct gl_shader_program_data);
-   if (data) {
-      data->RefCount = 1;
-      data->InfoLog = ralloc_strdup(data, "");
-   }
-
-   return data;
-}
-
 static void
 init_shader_program(struct gl_shader_program *prog)
 {
@@ -290,9 +257,13 @@ init_shader_program(struct gl_shader_program *prog)
    prog->Geom.UsesEndPrimitive = false;
    prog->Geom.UsesStreams = false;
 
+   prog->Comp.LocalSizeVariable = false;
+
    prog->TransformFeedback.BufferMode = GL_INTERLEAVED_ATTRIBS;
 
    exec_list_make_empty(&prog->EmptyUniformLocations);
+
+   prog->InfoLog = ralloc_strdup(prog, "");
 }
 
 /**
@@ -305,11 +276,6 @@ _mesa_new_shader_program(GLuint name)
    shProg = rzalloc(NULL, struct gl_shader_program);
    if (shProg) {
       shProg->Name = name;
-      shProg->data = _mesa_create_shader_program_data();
-      if (!shProg->data) {
-         ralloc_free(shProg);
-         return NULL;
-      }
       init_shader_program(shProg);
    }
    return shProg;
@@ -330,6 +296,14 @@ _mesa_clear_shader_program_data(struct gl_context *ctx,
       }
    }
 
+   if (shProg->UniformStorage) {
+      for (unsigned i = 0; i < shProg->NumUniformStorage; ++i)
+         _mesa_uniform_detach_all_driver_storage(&shProg->UniformStorage[i]);
+      ralloc_free(shProg->UniformStorage);
+      shProg->NumUniformStorage = 0;
+      shProg->UniformStorage = NULL;
+   }
+
    if (shProg->UniformRemapTable) {
       ralloc_free(shProg->UniformRemapTable);
       shProg->NumUniformRemapTable = 0;
@@ -341,7 +315,27 @@ _mesa_clear_shader_program_data(struct gl_context *ctx,
       shProg->UniformHash = NULL;
    }
 
-   _mesa_reference_shader_program_data(ctx, &shProg->data, NULL);
+   assert(shProg->InfoLog != NULL);
+   ralloc_free(shProg->InfoLog);
+   shProg->InfoLog = ralloc_strdup(shProg, "");
+
+   ralloc_free(shProg->UniformBlocks);
+   shProg->UniformBlocks = NULL;
+   shProg->NumUniformBlocks = 0;
+
+   ralloc_free(shProg->ShaderStorageBlocks);
+   shProg->ShaderStorageBlocks = NULL;
+   shProg->NumShaderStorageBlocks = 0;
+
+   ralloc_free(shProg->AtomicBuffers);
+   shProg->AtomicBuffers = NULL;
+   shProg->NumAtomicBuffers = 0;
+
+   if (shProg->ProgramResourceList) {
+      ralloc_free(shProg->ProgramResourceList);
+      shProg->ProgramResourceList = NULL;
+      shProg->NumProgramResourceList = 0;
+   }
 }
 
 
@@ -404,6 +398,7 @@ _mesa_delete_shader_program(struct gl_context *ctx,
                             struct gl_shader_program *shProg)
 {
    _mesa_free_shader_program_data(ctx, shProg);
+
    ralloc_free(shProg);
 }
 
@@ -461,5 +456,6 @@ _mesa_lookup_shader_program_err(struct gl_context *ctx, GLuint name,
 void
 _mesa_init_shader_object_functions(struct dd_function_table *driver)
 {
+   driver->NewShader = _mesa_new_linked_shader;
    driver->LinkShader = _mesa_ir_link_shader;
 }

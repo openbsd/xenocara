@@ -26,7 +26,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "vk_alloc.h"
+#include "util/vk_alloc.h"
 #include <vulkan/vulkan.h>
 #include <vulkan/vk_icd.h>
 
@@ -35,8 +35,6 @@ struct wsi_image_fns {
    VkResult (*create_wsi_image)(VkDevice device_h,
                                 const VkSwapchainCreateInfoKHR *pCreateInfo,
                                 const VkAllocationCallbacks *pAllocator,
-                                bool needs_linear_copy,
-                                bool linear,
                                 VkImage *image_p,
                                 VkDeviceMemory *memory_p,
                                 uint32_t *size_p,
@@ -55,11 +53,7 @@ struct wsi_swapchain {
    VkAllocationCallbacks alloc;
    const struct wsi_image_fns *image_fns;
    VkFence fences[3];
-   VkCommandBuffer *cmd_buffers;
-   VkCommandPool cmd_pools[3];
    VkPresentModeKHR present_mode;
-   uint32_t image_count;
-   bool needs_linear_copy;
 
    VkResult (*destroy)(struct wsi_swapchain *swapchain,
                        const VkAllocationCallbacks *pAllocator);
@@ -69,12 +63,7 @@ struct wsi_swapchain {
                                   uint64_t timeout, VkSemaphore semaphore,
                                   uint32_t *image_index);
    VkResult (*queue_present)(struct wsi_swapchain *swap_chain,
-                             uint32_t image_index,
-                             const VkPresentRegionKHR *damage);
-   void (*get_image_and_linear)(struct wsi_swapchain *swapchain,
-                                int imageIndex,
-                                VkImage *image,
-                                VkImage *linear_image);
+                             uint32_t image_index);
 };
 
 struct wsi_interface {
@@ -82,30 +71,19 @@ struct wsi_interface {
                            struct wsi_device *wsi_device,
                            const VkAllocationCallbacks *alloc,
                            uint32_t queueFamilyIndex,
-                           int local_fd,
-                           bool can_handle_different_gpu,
                            VkBool32* pSupported);
    VkResult (*get_capabilities)(VkIcdSurfaceBase *surface,
                                 VkSurfaceCapabilitiesKHR* pSurfaceCapabilities);
-   VkResult (*get_capabilities2)(VkIcdSurfaceBase *surface,
-                                 const void *info_next,
-                                 VkSurfaceCapabilities2KHR* pSurfaceCapabilities);
    VkResult (*get_formats)(VkIcdSurfaceBase *surface,
                            struct wsi_device *wsi_device,
                            uint32_t* pSurfaceFormatCount,
                            VkSurfaceFormatKHR* pSurfaceFormats);
-   VkResult (*get_formats2)(VkIcdSurfaceBase *surface,
-                            struct wsi_device *wsi_device,
-                            const void *info_next,
-                            uint32_t* pSurfaceFormatCount,
-                            VkSurfaceFormat2KHR* pSurfaceFormats);
    VkResult (*get_present_modes)(VkIcdSurfaceBase *surface,
                                  uint32_t* pPresentModeCount,
                                  VkPresentModeKHR* pPresentModes);
    VkResult (*create_swapchain)(VkIcdSurfaceBase *surface,
                                 VkDevice device,
                                 struct wsi_device *wsi_device,
-                                int local_fd,
                                 const VkSwapchainCreateInfoKHR* pCreateInfo,
                                 const VkAllocationCallbacks* pAllocator,
                                 const struct wsi_image_fns *image_fns,

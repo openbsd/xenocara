@@ -33,7 +33,7 @@
 #include "memory/tilingtraits.h"
 #include "memory/Convert.h"
 
-typedef void(*PFN_STORE_TILES_CLEAR)(const float*, SWR_SURFACE_STATE*, UINT, UINT, uint32_t);
+typedef void(*PFN_STORE_TILES_CLEAR)(const float*, SWR_SURFACE_STATE*, UINT, UINT);
 
 //////////////////////////////////////////////////////////////////////////
 /// Clear Raster Tile Function Tables.
@@ -57,29 +57,18 @@ struct StoreRasterTileClear
         const uint8_t* dstFormattedColor,
         UINT dstBytesPerPixel,
         SWR_SURFACE_STATE* pDstSurface,
-        UINT x, UINT y, // (x, y) pixel coordinate to start of raster tile.
-        uint32_t renderTargetArrayIndex)
+        UINT x, UINT y) // (x, y) pixel coordinate to start of raster tile.
     {
-        // If we're outside of the surface, stop.
-        uint32_t lodWidth = std::max<uint32_t>(pDstSurface->width >> pDstSurface->lod, 1U);
-        uint32_t lodHeight = std::max<uint32_t>(pDstSurface->height >> pDstSurface->lod, 1U);
-        if (x >= lodWidth || y >= lodHeight)
-            return;
-
         // Compute destination address for raster tile.
-        uint8_t* pDstTile = (uint8_t*)ComputeSurfaceAddress<false, false>(
-                x, y, pDstSurface->arrayIndex + renderTargetArrayIndex,
-                pDstSurface->arrayIndex + renderTargetArrayIndex,
-                0, // sampleNum
-                pDstSurface->lod,
-                pDstSurface);
+        uint8_t* pDstTile = (uint8_t*)pDstSurface->pBaseAddress +
+            (y * pDstSurface->pitch) + (x * dstBytesPerPixel);
 
         // start of first row
         uint8_t* pDst = pDstTile;
         UINT dstBytesPerRow = 0;
 
         // For each raster tile pixel in row 0 (rx, 0)
-        for (UINT rx = 0; (rx < KNOB_TILE_X_DIM) && ((x + rx) < lodWidth); ++rx)
+        for (UINT rx = 0; (rx < KNOB_TILE_X_DIM) && ((x + rx) < pDstSurface->width); ++rx)
         {
             memcpy(pDst, dstFormattedColor, dstBytesPerPixel);
 
@@ -92,7 +81,7 @@ struct StoreRasterTileClear
         pDst = pDstTile + pDstSurface->pitch;
 
         // For each remaining row in the rest of the raster tile
-        for (UINT ry = 1; (ry < KNOB_TILE_Y_DIM) && ((y + ry) < lodHeight); ++ry)
+        for (UINT ry = 1; (ry < KNOB_TILE_Y_DIM) && ((y + ry) < pDstSurface->height); ++ry)
         {
             // copy row
             memcpy(pDst, pDstTile, dstBytesPerRow);
@@ -117,7 +106,7 @@ struct StoreMacroTileClear
     static void StoreClear(
         const float *pColor,
         SWR_SURFACE_STATE* pDstSurface,
-        UINT x, UINT y, uint32_t renderTargetArrayIndex)
+        UINT x, UINT y)
     {
         UINT dstBytesPerPixel = (FormatTraits<DstFormat>::bpp / 8);
 
@@ -140,7 +129,7 @@ struct StoreMacroTileClear
         {
             for (UINT col = 0; col < KNOB_MACROTILE_X_DIM; col += KNOB_TILE_X_DIM)
             {
-                StoreRasterTileClear<SrcFormat, DstFormat>::StoreClear(dstFormattedColor, dstBytesPerPixel, pDstSurface, (x + col), (y + row), renderTargetArrayIndex);
+                StoreRasterTileClear<SrcFormat, DstFormat>::StoreClear(dstFormattedColor, dstBytesPerPixel, pDstSurface, (x + col), (y + row));
             }
         }
     }
@@ -152,28 +141,24 @@ struct StoreMacroTileClear
 /// @param renderTargetIndex - Index to destination render target
 /// @param x, y - Coordinates to raster tile.
 /// @param pClearColor - Pointer to clear color
-void SwrStoreHotTileClear(
+void StoreHotTileClear(
     SWR_SURFACE_STATE *pDstSurface,
     SWR_RENDERTARGET_ATTACHMENT renderTargetIndex,
     UINT x,
     UINT y,
-    uint32_t renderTargetArrayIndex,
     const float* pClearColor)
 {
     PFN_STORE_TILES_CLEAR pfnStoreTilesClear = NULL;
 
-    if (renderTargetIndex == SWR_ATTACHMENT_STENCIL)
+    SWR_ASSERT(renderTargetIndex != SWR_ATTACHMENT_STENCIL);  ///@todo Not supported yet.
+
+    if (renderTargetIndex != SWR_ATTACHMENT_DEPTH)
     {
-        SWR_ASSERT(pDstSurface->format == R8_UINT);
-        pfnStoreTilesClear = StoreMacroTileClear<R8_UINT, R8_UINT>::StoreClear;
-    }
-    else if (renderTargetIndex == SWR_ATTACHMENT_DEPTH)
-    {
-        pfnStoreTilesClear = sStoreTilesClearDepthTable[pDstSurface->format];
+        pfnStoreTilesClear = sStoreTilesClearColorTable[pDstSurface->format];
     }
     else
     {
-        pfnStoreTilesClear = sStoreTilesClearColorTable[pDstSurface->format];
+        pfnStoreTilesClear = sStoreTilesClearDepthTable[pDstSurface->format];
     }
 
     SWR_ASSERT(pfnStoreTilesClear != NULL);
@@ -182,7 +167,7 @@ void SwrStoreHotTileClear(
     /// @todo Once all formats are supported then if check can go away. This is to help us near term to make progress.
     if (pfnStoreTilesClear != NULL)
     {
-        pfnStoreTilesClear(pClearColor, pDstSurface, x, y, renderTargetArrayIndex);
+        pfnStoreTilesClear(pClearColor, pDstSurface, x, y);
     }
 }
 
@@ -283,7 +268,7 @@ void SwrStoreHotTileClear(
     sStoreTilesClearColorTable[B10G10R10A2_UINT]      = StoreMacroTileClear<R32G32B32A32_FLOAT, B10G10R10A2_UINT>::StoreClear; \
     sStoreTilesClearColorTable[B10G10R10A2_SINT]      = StoreMacroTileClear<R32G32B32A32_FLOAT, B10G10R10A2_SINT>::StoreClear; \
     sStoreTilesClearColorTable[R8G8B8_UINT]      = StoreMacroTileClear<R32G32B32A32_FLOAT, R8G8B8_UINT>::StoreClear; \
-    sStoreTilesClearColorTable[R8G8B8_SINT]      = StoreMacroTileClear<R32G32B32A32_FLOAT, R8G8B8_SINT>::StoreClear;
+    sStoreTilesClearColorTable[R8G8B8_SINT]      = StoreMacroTileClear<R32G32B32A32_FLOAT, R8G8B8_SINT>::StoreClear; \
 
 //////////////////////////////////////////////////////////////////////////
 /// INIT_STORE_TILES_TABLE - Helper macro for setting up the tables.
@@ -291,9 +276,7 @@ void SwrStoreHotTileClear(
     memset(sStoreTilesClearDepthTable, 0, sizeof(sStoreTilesClearDepthTable)); \
     \
     sStoreTilesClearDepthTable[R32_FLOAT] = StoreMacroTileClear<R32_FLOAT, R32_FLOAT>::StoreClear; \
-    sStoreTilesClearDepthTable[R32_FLOAT_X8X24_TYPELESS] = StoreMacroTileClear<R32_FLOAT, R32_FLOAT_X8X24_TYPELESS>::StoreClear; \
     sStoreTilesClearDepthTable[R24_UNORM_X8_TYPELESS] = StoreMacroTileClear<R32_FLOAT, R24_UNORM_X8_TYPELESS>::StoreClear; \
-    sStoreTilesClearDepthTable[R16_UNORM] = StoreMacroTileClear<R32_FLOAT, R16_UNORM>::StoreClear;
 
 //////////////////////////////////////////////////////////////////////////
 /// @brief Sets up tables for ClearTile

@@ -10,7 +10,7 @@
 #include "i915/i915_public.h"
 
 struct pipe_screen *
-pipe_i915_create_screen(int fd, unsigned flags)
+pipe_i915_create_screen(int fd)
 {
    struct i915_winsys *iws;
    struct pipe_screen *screen;
@@ -26,9 +26,38 @@ pipe_i915_create_screen(int fd, unsigned flags)
 #else
 
 struct pipe_screen *
-pipe_i915_create_screen(int fd, unsigned flags)
+pipe_i915_create_screen(int fd)
 {
    fprintf(stderr, "i915g: driver missing\n");
+   return NULL;
+}
+
+#endif
+
+#ifdef GALLIUM_ILO
+#include "intel/drm/intel_drm_public.h"
+#include "ilo/ilo_public.h"
+
+struct pipe_screen *
+pipe_ilo_create_screen(int fd)
+{
+   struct intel_winsys *iws;
+   struct pipe_screen *screen;
+
+   iws = intel_winsys_create_for_fd(fd);
+   if (!iws)
+      return NULL;
+
+   screen = ilo_screen_create(iws);
+   return screen ? debug_screen_wrap(screen) : NULL;
+}
+
+#else
+
+struct pipe_screen *
+pipe_ilo_create_screen(int fd)
+{
+   fprintf(stderr, "ilo: driver missing\n");
    return NULL;
 }
 
@@ -38,7 +67,7 @@ pipe_i915_create_screen(int fd, unsigned flags)
 #include "nouveau/drm/nouveau_drm_public.h"
 
 struct pipe_screen *
-pipe_nouveau_create_screen(int fd, unsigned flags)
+pipe_nouveau_create_screen(int fd)
 {
    struct pipe_screen *screen;
 
@@ -49,32 +78,9 @@ pipe_nouveau_create_screen(int fd, unsigned flags)
 #else
 
 struct pipe_screen *
-pipe_nouveau_create_screen(int fd, unsigned flags)
+pipe_nouveau_create_screen(int fd)
 {
    fprintf(stderr, "nouveau: driver missing\n");
-   return NULL;
-}
-
-#endif
-
-#ifdef GALLIUM_PL111
-#include "pl111/drm/pl111_drm_public.h"
-
-struct pipe_screen *
-pipe_pl111_create_screen(int fd, unsigned flags)
-{
-   struct pipe_screen *screen;
-
-   screen = pl111_drm_screen_create(fd);
-   return screen ? debug_screen_wrap(screen) : NULL;
-}
-
-#else
-
-struct pipe_screen *
-pipe_pl111_create_screen(int fd, unsigned flags)
-{
-   fprintf(stderr, "pl111: driver missing\n");
    return NULL;
 }
 
@@ -86,18 +92,18 @@ pipe_pl111_create_screen(int fd, unsigned flags)
 #include "r300/r300_public.h"
 
 struct pipe_screen *
-pipe_r300_create_screen(int fd, unsigned flags)
+pipe_r300_create_screen(int fd)
 {
    struct radeon_winsys *rw;
 
-   rw = radeon_drm_winsys_create(fd, flags, r300_screen_create);
+   rw = radeon_drm_winsys_create(fd, r300_screen_create);
    return rw ? debug_screen_wrap(rw->screen) : NULL;
 }
 
 #else
 
 struct pipe_screen *
-pipe_r300_create_screen(int fd, unsigned flags)
+pipe_r300_create_screen(int fd)
 {
    fprintf(stderr, "r300: driver missing\n");
    return NULL;
@@ -111,18 +117,18 @@ pipe_r300_create_screen(int fd, unsigned flags)
 #include "r600/r600_public.h"
 
 struct pipe_screen *
-pipe_r600_create_screen(int fd, unsigned flags)
+pipe_r600_create_screen(int fd)
 {
    struct radeon_winsys *rw;
 
-   rw = radeon_drm_winsys_create(fd, flags, r600_screen_create);
+   rw = radeon_drm_winsys_create(fd, r600_screen_create);
    return rw ? debug_screen_wrap(rw->screen) : NULL;
 }
 
 #else
 
 struct pipe_screen *
-pipe_r600_create_screen(int fd, unsigned flags)
+pipe_r600_create_screen(int fd)
 {
    fprintf(stderr, "r600: driver missing\n");
    return NULL;
@@ -137,15 +143,15 @@ pipe_r600_create_screen(int fd, unsigned flags)
 #include "radeonsi/si_public.h"
 
 struct pipe_screen *
-pipe_radeonsi_create_screen(int fd, unsigned flags)
+pipe_radeonsi_create_screen(int fd)
 {
    struct radeon_winsys *rw;
 
    /* First, try amdgpu. */
-   rw = amdgpu_winsys_create(fd, flags, radeonsi_screen_create);
+   rw = amdgpu_winsys_create(fd, radeonsi_screen_create);
 
    if (!rw)
-      rw = radeon_drm_winsys_create(fd, flags, radeonsi_screen_create);
+      rw = radeon_drm_winsys_create(fd, radeonsi_screen_create);
 
    return rw ? debug_screen_wrap(rw->screen) : NULL;
 }
@@ -153,7 +159,7 @@ pipe_radeonsi_create_screen(int fd, unsigned flags)
 #else
 
 struct pipe_screen *
-pipe_radeonsi_create_screen(int fd, unsigned flags)
+pipe_radeonsi_create_screen(int fd)
 {
    fprintf(stderr, "radeonsi: driver missing\n");
    return NULL;
@@ -166,7 +172,7 @@ pipe_radeonsi_create_screen(int fd, unsigned flags)
 #include "svga/svga_public.h"
 
 struct pipe_screen *
-pipe_vmwgfx_create_screen(int fd, unsigned flags)
+pipe_vmwgfx_create_screen(int fd)
 {
    struct svga_winsys_screen *sws;
    struct pipe_screen *screen;
@@ -182,7 +188,7 @@ pipe_vmwgfx_create_screen(int fd, unsigned flags)
 #else
 
 struct pipe_screen *
-pipe_vmwgfx_create_screen(int fd, unsigned flags)
+pipe_vmwgfx_create_screen(int fd)
 {
    fprintf(stderr, "svga: driver missing\n");
    return NULL;
@@ -194,7 +200,7 @@ pipe_vmwgfx_create_screen(int fd, unsigned flags)
 #include "freedreno/drm/freedreno_drm_public.h"
 
 struct pipe_screen *
-pipe_freedreno_create_screen(int fd, unsigned flags)
+pipe_freedreno_create_screen(int fd)
 {
    struct pipe_screen *screen;
 
@@ -205,7 +211,7 @@ pipe_freedreno_create_screen(int fd, unsigned flags)
 #else
 
 struct pipe_screen *
-pipe_freedreno_create_screen(int fd, unsigned flags)
+pipe_freedreno_create_screen(int fd)
 {
    fprintf(stderr, "freedreno: driver missing\n");
    return NULL;
@@ -218,7 +224,7 @@ pipe_freedreno_create_screen(int fd, unsigned flags)
 #include "virgl/virgl_public.h"
 
 struct pipe_screen *
-pipe_virgl_create_screen(int fd, unsigned flags)
+pipe_virgl_create_screen(int fd)
 {
    struct pipe_screen *screen;
 
@@ -229,7 +235,7 @@ pipe_virgl_create_screen(int fd, unsigned flags)
 #else
 
 struct pipe_screen *
-pipe_virgl_create_screen(int fd, unsigned flags)
+pipe_virgl_create_screen(int fd)
 {
    fprintf(stderr, "virgl: driver missing\n");
    return NULL;
@@ -241,7 +247,7 @@ pipe_virgl_create_screen(int fd, unsigned flags)
 #include "vc4/drm/vc4_drm_public.h"
 
 struct pipe_screen *
-pipe_vc4_create_screen(int fd, unsigned flags)
+pipe_vc4_create_screen(int fd)
 {
    struct pipe_screen *screen;
 
@@ -252,55 +258,9 @@ pipe_vc4_create_screen(int fd, unsigned flags)
 #else
 
 struct pipe_screen *
-pipe_vc4_create_screen(int fd, unsigned flags)
+pipe_vc4_create_screen(int fd)
 {
    fprintf(stderr, "vc4: driver missing\n");
-   return NULL;
-}
-
-#endif
-
-#ifdef GALLIUM_ETNAVIV
-#include "etnaviv/drm/etnaviv_drm_public.h"
-
-struct pipe_screen *
-pipe_etna_create_screen(int fd, unsigned flags)
-{
-   struct pipe_screen *screen;
-
-   screen = etna_drm_screen_create(fd);
-   return screen ? debug_screen_wrap(screen) : NULL;
-}
-
-#else
-
-struct pipe_screen *
-pipe_etna_create_screen(int fd, unsigned flags)
-{
-   fprintf(stderr, "etnaviv: driver missing\n");
-   return NULL;
-}
-
-#endif
-
-#ifdef GALLIUM_IMX
-#include "imx/drm/imx_drm_public.h"
-
-struct pipe_screen *
-pipe_imx_drm_create_screen(int fd, unsigned flags)
-{
-   struct pipe_screen *screen;
-
-   screen = imx_drm_screen_create(fd);
-   return screen ? debug_screen_wrap(screen) : NULL;
-}
-
-#else
-
-struct pipe_screen *
-pipe_imx_drm_create_screen(int fd, unsigned flags)
-{
-   fprintf(stderr, "imx-drm: driver missing\n");
    return NULL;
 }
 

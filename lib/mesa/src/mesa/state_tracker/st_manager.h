@@ -33,8 +33,9 @@
 #include "pipe/p_compiler.h"
 
 struct st_context;
-struct st_framebuffer;
-struct st_framebuffer_interface;
+
+struct pipe_surface *
+st_manager_get_egl_image_surface(struct st_context *st, void *eglimg);
 
 void
 st_manager_flush_frontbuffer(struct st_context *st);
@@ -45,12 +46,5 @@ st_manager_validate_framebuffers(struct st_context *st);
 boolean
 st_manager_add_color_renderbuffer(struct st_context *st, struct gl_framebuffer *fb,
                                   gl_buffer_index idx);
-
-void
-st_framebuffer_reference(struct st_framebuffer **ptr,
-                         struct st_framebuffer *stfb);
-
-void
-st_framebuffer_interface_destroy(struct st_framebuffer_interface *stfbi);
 
 #endif /* ST_MANAGER_H */

@@ -24,15 +24,8 @@
 #include <string.h>
 
 #include "main/macros.h"
+#include "util/ralloc.h"
 #include "blob.h"
-
-#ifdef HAVE_VALGRIND
-#include <valgrind.h>
-#include <memcheck.h>
-#define VG(x) x
-#else
-#define VG(x)
-#endif
 
 #define BLOB_INITIAL_SIZE 4096
 
@@ -46,9 +39,6 @@ grow_to_fit(struct blob *blob, size_t additional)
    size_t to_allocate;
    uint8_t *new_data;
 
-   if (blob->out_of_memory)
-      return false;
-
    if (blob->size + additional <= blob->allocated)
       return true;
 
@@ -59,11 +49,9 @@ grow_to_fit(struct blob *blob, size_t additional)
 
    to_allocate = MAX2(to_allocate, blob->allocated + additional);
 
-   new_data = realloc(blob->data, to_allocate);
-   if (new_data == NULL) {
-      blob->out_of_memory = true;
+   new_data = reralloc_size(blob, blob->data, to_allocate);
+   if (new_data == NULL)
       return false;
-   }
 
    blob->data = new_data;
    blob->allocated = to_allocate;
@@ -82,13 +70,10 @@ align_blob(struct blob *blob, size_t alignment)
 {
    const size_t new_size = ALIGN(blob->size, alignment);
 
-   if (blob->size < new_size) {
-      if (!grow_to_fit(blob, new_size - blob->size))
-         return false;
+   if (! grow_to_fit (blob, new_size - blob->size))
+      return false;
 
-      memset(blob->data + blob->size, 0, new_size - blob->size);
-      blob->size = new_size;
-   }
+   blob->size = new_size;
 
    return true;
 }
@@ -100,16 +85,17 @@ align_blob_reader(struct blob_reader *blob, size_t alignment)
 }
 
 struct blob *
-blob_create()
+blob_create(void *mem_ctx)
 {
-   struct blob *blob = (struct blob *) malloc(sizeof(struct blob));
+   struct blob *blob;
+
+   blob = ralloc(mem_ctx, struct blob);
    if (blob == NULL)
       return NULL;
 
    blob->data = NULL;
    blob->allocated = 0;
    blob->size = 0;
-   blob->out_of_memory = false;
 
    return blob;
 }
@@ -121,10 +107,8 @@ blob_overwrite_bytes(struct blob *blob,
                      size_t to_write)
 {
    /* Detect an attempt to overwrite data out of bounds. */
-   if (blob->size < offset + to_write)
+   if (offset < 0 || blob->size - offset < to_write)
       return false;
-
-   VG(VALGRIND_CHECK_MEM_IS_DEFINED(bytes, to_write));
 
    memcpy(blob->data + offset, bytes, to_write);
 
@@ -136,8 +120,6 @@ blob_write_bytes(struct blob *blob, const void *bytes, size_t to_write)
 {
    if (! grow_to_fit(blob, to_write))
        return false;
-
-   VG(VALGRIND_CHECK_MEM_IS_DEFINED(bytes, to_write));
 
    memcpy(blob->data + blob->size, bytes, to_write);
    blob->size += to_write;
@@ -213,9 +195,6 @@ blob_reader_init(struct blob_reader *blob, uint8_t *data, size_t size)
 static bool
 ensure_can_read(struct blob_reader *blob, size_t size)
 {
-   if (blob->overrun)
-      return false;
-
    if (blob->current < blob->end && blob->end - blob->current >= size)
       return true;
 

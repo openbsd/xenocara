@@ -43,7 +43,6 @@ struct u_suballocator {
    unsigned size;          /* Size of the whole buffer, in bytes. */
    unsigned bind;          /* Bitmask of PIPE_BIND_* flags. */
    enum pipe_resource_usage usage;
-   unsigned flags;         /* bitmask of PIPE_RESOURCE_FLAG_x */
    boolean zero_buffer_memory; /* If the buffer contents should be zeroed. */
 
    struct pipe_resource *buffer;   /* The buffer we suballocate from. */
@@ -54,14 +53,12 @@ struct u_suballocator {
 /**
  * Create a suballocator.
  *
- * \param flags               bitmask of PIPE_RESOURCE_FLAG_x
- * \param zero_buffer_memory  determines whether the buffer contents should be
- *                            cleared to 0 after the allocation.
- *
+ * \p zero_buffer_memory determines whether the buffer contents should be
+ * cleared to 0 after the allocation.
  */
 struct u_suballocator *
 u_suballocator_create(struct pipe_context *pipe, unsigned size, unsigned bind,
-                      enum pipe_resource_usage usage, unsigned flags,
+                      enum pipe_resource_usage usage,
 		      boolean zero_buffer_memory)
 {
    struct u_suballocator *allocator = CALLOC_STRUCT(u_suballocator);
@@ -72,7 +69,6 @@ u_suballocator_create(struct pipe_context *pipe, unsigned size, unsigned bind,
    allocator->size = size;
    allocator->bind = bind;
    allocator->usage = usage;
-   allocator->flags = flags;
    allocator->zero_buffer_memory = zero_buffer_memory;
    return allocator;
 }
@@ -101,40 +97,21 @@ u_suballocator_alloc(struct u_suballocator *allocator, unsigned size,
       /* Allocate a new buffer. */
       pipe_resource_reference(&allocator->buffer, NULL);
       allocator->offset = 0;
-
-      struct pipe_resource templ;
-      memset(&templ, 0, sizeof(templ));
-      templ.target = PIPE_BUFFER;
-      templ.format = PIPE_FORMAT_R8_UNORM;
-      templ.bind = allocator->bind;
-      templ.usage = allocator->usage;
-      templ.flags = allocator->flags;
-      templ.width0 = allocator->size;
-      templ.height0 = 1;
-      templ.depth0 = 1;
-      templ.array_size = 1;
-
-      struct pipe_screen *screen = allocator->pipe->screen;
-      allocator->buffer = screen->resource_create(screen, &templ);
+      allocator->buffer =
+         pipe_buffer_create(allocator->pipe->screen, allocator->bind,
+                            allocator->usage, allocator->size);
       if (!allocator->buffer)
          goto fail;
 
       /* Clear the memory if needed. */
       if (allocator->zero_buffer_memory) {
-         struct pipe_context *pipe = allocator->pipe;
+         struct pipe_transfer *transfer = NULL;
+         void *ptr;
 
-         if (pipe->clear_buffer) {
-            unsigned clear_value = 0;
-
-            pipe->clear_buffer(pipe, allocator->buffer, 0, allocator->size,
-                               &clear_value, 4);
-         } else {
-            struct pipe_transfer *transfer = NULL;
-            void *ptr = pipe_buffer_map(pipe, allocator->buffer,
-                                        PIPE_TRANSFER_WRITE, &transfer);
-            memset(ptr, 0, allocator->size);
-            pipe_buffer_unmap(pipe, transfer);
-         }
+         ptr = pipe_buffer_map(allocator->pipe, allocator->buffer,
+			       PIPE_TRANSFER_WRITE, &transfer);
+         memset(ptr, 0, allocator->size);
+         pipe_buffer_unmap(allocator->pipe, transfer);
       }
    }
 

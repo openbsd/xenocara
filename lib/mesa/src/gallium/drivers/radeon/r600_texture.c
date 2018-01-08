@@ -37,9 +37,8 @@
 
 static void r600_texture_discard_cmask(struct r600_common_screen *rscreen,
 				       struct r600_texture *rtex);
-static enum radeon_surf_mode
-r600_choose_tiling(struct r600_common_screen *rscreen,
-		   const struct pipe_resource *templ);
+static unsigned r600_choose_tiling(struct r600_common_screen *rscreen,
+				   const struct pipe_resource *templ);
 
 
 bool r600_prepare_for_dma_blit(struct r600_common_context *rctx,
@@ -53,7 +52,8 @@ bool r600_prepare_for_dma_blit(struct r600_common_context *rctx,
 	if (!rctx->dma.cs)
 		return false;
 
-	if (rdst->surface.bpe != rsrc->surface.bpe)
+	if (util_format_get_blocksizebits(rdst->resource.b.b.format) !=
+	    util_format_get_blocksizebits(rsrc->resource.b.b.format))
 		return false;
 
 	/* MSAA: Blits don't exist in the real world. */
@@ -72,8 +72,8 @@ bool r600_prepare_for_dma_blit(struct r600_common_context *rctx,
 	 *   src: Use the 3D path. DCC decompression is expensive.
 	 *   dst: Use the 3D path to compress the pixels with DCC.
 	 */
-	if (vi_dcc_enabled(rsrc, src_level) ||
-	    vi_dcc_enabled(rdst, dst_level))
+	if ((rsrc->dcc_offset && rsrc->surface.level[src_level].dcc_enabled) ||
+	    (rdst->dcc_offset && rdst->surface.level[dst_level].dcc_enabled))
 		return false;
 
 	/* CMASK as:
@@ -177,167 +177,179 @@ static void r600_copy_from_staging_texture(struct pipe_context *ctx, struct r600
 		       src, 0, &sbox);
 }
 
-static unsigned r600_texture_get_offset(struct r600_common_screen *rscreen,
-					struct r600_texture *rtex, unsigned level,
-					const struct pipe_box *box,
-					unsigned *stride,
-					unsigned *layer_stride)
+static unsigned r600_texture_get_offset(struct r600_texture *rtex, unsigned level,
+					const struct pipe_box *box)
 {
-	if (rscreen->chip_class >= GFX9) {
-		*stride = rtex->surface.u.gfx9.surf_pitch * rtex->surface.bpe;
-		*layer_stride = rtex->surface.u.gfx9.surf_slice_size;
+	enum pipe_format format = rtex->resource.b.b.format;
 
-		if (!box)
-			return 0;
-
-		/* Each texture is an array of slices. Each slice is an array
-		 * of mipmap levels. */
-		return box->z * rtex->surface.u.gfx9.surf_slice_size +
-		       rtex->surface.u.gfx9.offset[level] +
-		       (box->y / rtex->surface.blk_h *
-			rtex->surface.u.gfx9.surf_pitch +
-			box->x / rtex->surface.blk_w) * rtex->surface.bpe;
-	} else {
-		*stride = rtex->surface.u.legacy.level[level].nblk_x *
-			  rtex->surface.bpe;
-		*layer_stride = rtex->surface.u.legacy.level[level].slice_size;
-
-		if (!box)
-			return rtex->surface.u.legacy.level[level].offset;
-
-		/* Each texture is an array of mipmap levels. Each level is
-		 * an array of slices. */
-		return rtex->surface.u.legacy.level[level].offset +
-		       box->z * rtex->surface.u.legacy.level[level].slice_size +
-		       (box->y / rtex->surface.blk_h *
-		        rtex->surface.u.legacy.level[level].nblk_x +
-		        box->x / rtex->surface.blk_w) * rtex->surface.bpe;
-	}
+	return rtex->surface.level[level].offset +
+	       box->z * rtex->surface.level[level].slice_size +
+	       box->y / util_format_get_blockheight(format) * rtex->surface.level[level].pitch_bytes +
+	       box->x / util_format_get_blockwidth(format) * util_format_get_blocksize(format);
 }
 
 static int r600_init_surface(struct r600_common_screen *rscreen,
 			     struct radeon_surf *surface,
 			     const struct pipe_resource *ptex,
-			     enum radeon_surf_mode array_mode,
-			     unsigned pitch_in_bytes_override,
-			     unsigned offset,
-			     bool is_imported,
-			     bool is_scanout,
+			     unsigned array_mode,
 			     bool is_flushed_depth,
 			     bool tc_compatible_htile)
 {
 	const struct util_format_description *desc =
 		util_format_description(ptex->format);
 	bool is_depth, is_stencil;
-	int r;
-	unsigned i, bpe, flags = 0;
 
 	is_depth = util_format_has_depth(desc);
 	is_stencil = util_format_has_stencil(desc);
 
+	surface->npix_x = ptex->width0;
+	surface->npix_y = ptex->height0;
+	surface->npix_z = ptex->depth0;
+	surface->blk_w = util_format_get_blockwidth(ptex->format);
+	surface->blk_h = util_format_get_blockheight(ptex->format);
+	surface->blk_d = 1;
+	surface->array_size = 1;
+	surface->last_level = ptex->last_level;
+
 	if (rscreen->chip_class >= EVERGREEN && !is_flushed_depth &&
 	    ptex->format == PIPE_FORMAT_Z32_FLOAT_S8X24_UINT) {
-		bpe = 4; /* stencil is allocated separately on evergreen */
+		surface->bpe = 4; /* stencil is allocated separately on evergreen */
 	} else {
-		bpe = util_format_get_blocksize(ptex->format);
-		assert(util_is_power_of_two(bpe));
+		surface->bpe = util_format_get_blocksize(ptex->format);
+		/* align byte per element on dword */
+		if (surface->bpe == 3) {
+			surface->bpe = 4;
+		}
+	}
+
+	surface->nsamples = ptex->nr_samples ? ptex->nr_samples : 1;
+	surface->flags = RADEON_SURF_SET(array_mode, MODE);
+
+	switch (ptex->target) {
+	case PIPE_TEXTURE_1D:
+		surface->flags |= RADEON_SURF_SET(RADEON_SURF_TYPE_1D, TYPE);
+		break;
+	case PIPE_TEXTURE_RECT:
+	case PIPE_TEXTURE_2D:
+		surface->flags |= RADEON_SURF_SET(RADEON_SURF_TYPE_2D, TYPE);
+		break;
+	case PIPE_TEXTURE_3D:
+		surface->flags |= RADEON_SURF_SET(RADEON_SURF_TYPE_3D, TYPE);
+		break;
+	case PIPE_TEXTURE_1D_ARRAY:
+		surface->flags |= RADEON_SURF_SET(RADEON_SURF_TYPE_1D_ARRAY, TYPE);
+		surface->array_size = ptex->array_size;
+		break;
+	case PIPE_TEXTURE_CUBE_ARRAY: /* cube array layout like 2d array */
+		assert(ptex->array_size % 6 == 0);
+	case PIPE_TEXTURE_2D_ARRAY:
+		surface->flags |= RADEON_SURF_SET(RADEON_SURF_TYPE_2D_ARRAY, TYPE);
+		surface->array_size = ptex->array_size;
+		break;
+	case PIPE_TEXTURE_CUBE:
+		surface->flags |= RADEON_SURF_SET(RADEON_SURF_TYPE_CUBEMAP, TYPE);
+		break;
+	case PIPE_BUFFER:
+	default:
+		return -EINVAL;
 	}
 
 	if (!is_flushed_depth && is_depth) {
-		flags |= RADEON_SURF_ZBUFFER;
+		surface->flags |= RADEON_SURF_ZBUFFER;
 
 		if (tc_compatible_htile &&
-		    (rscreen->chip_class >= GFX9 ||
-		     array_mode == RADEON_SURF_MODE_2D)) {
+		    array_mode == RADEON_SURF_MODE_2D) {
 			/* TC-compatible HTILE only supports Z32_FLOAT.
-			 * GFX9 also supports Z16_UNORM.
-			 * On VI, promote Z16 to Z32. DB->CB copies will convert
+			 * Promote Z16 to Z32. DB->CB copies will convert
 			 * the format for transfers.
 			 */
-			if (rscreen->chip_class == VI)
-				bpe = 4;
-
-			flags |= RADEON_SURF_TC_COMPATIBLE_HTILE;
+			surface->bpe = 4;
+			surface->flags |= RADEON_SURF_TC_COMPATIBLE_HTILE;
 		}
 
-		if (is_stencil)
-			flags |= RADEON_SURF_SBUFFER;
+		if (is_stencil) {
+			surface->flags |= RADEON_SURF_SBUFFER |
+					  RADEON_SURF_HAS_SBUFFER_MIPTREE;
+		}
+	}
+
+	if (rscreen->chip_class >= SI) {
+		surface->flags |= RADEON_SURF_HAS_TILE_MODE_INDEX;
 	}
 
 	if (rscreen->chip_class >= VI &&
 	    (ptex->flags & R600_RESOURCE_FLAG_DISABLE_DCC ||
 	     ptex->format == PIPE_FORMAT_R9G9B9E5_FLOAT))
-		flags |= RADEON_SURF_DISABLE_DCC;
+		surface->flags |= RADEON_SURF_DISABLE_DCC;
 
-	if (ptex->bind & PIPE_BIND_SCANOUT || is_scanout) {
+	if (ptex->bind & PIPE_BIND_SCANOUT) {
 		/* This should catch bugs in gallium users setting incorrect flags. */
-		assert(ptex->nr_samples <= 1 &&
-		       ptex->array_size == 1 &&
-		       ptex->depth0 == 1 &&
-		       ptex->last_level == 0 &&
-		       !(flags & RADEON_SURF_Z_OR_SBUFFER));
+		assert(surface->nsamples == 1 &&
+		       surface->array_size == 1 &&
+		       surface->npix_z == 1 &&
+		       surface->last_level == 0 &&
+		       !(surface->flags & RADEON_SURF_Z_OR_SBUFFER));
 
-		flags |= RADEON_SURF_SCANOUT;
-	}
-
-	if (is_imported)
-		flags |= RADEON_SURF_IMPORTED;
-	if (!(ptex->flags & R600_RESOURCE_FLAG_FORCE_TILING))
-		flags |= RADEON_SURF_OPTIMIZE_FOR_SPACE;
-
-	r = rscreen->ws->surface_init(rscreen->ws, ptex, flags, bpe,
-				      array_mode, surface);
-	if (r) {
-		return r;
-	}
-
-	if (rscreen->chip_class >= GFX9) {
-		assert(!pitch_in_bytes_override ||
-		       pitch_in_bytes_override == surface->u.gfx9.surf_pitch * bpe);
-		surface->u.gfx9.surf_offset = offset;
-	} else {
-		if (pitch_in_bytes_override &&
-		    pitch_in_bytes_override != surface->u.legacy.level[0].nblk_x * bpe) {
-			/* old ddx on evergreen over estimate alignment for 1d, only 1 level
-			 * for those
-			 */
-			surface->u.legacy.level[0].nblk_x = pitch_in_bytes_override / bpe;
-			surface->u.legacy.level[0].slice_size = pitch_in_bytes_override *
-								surface->u.legacy.level[0].nblk_y;
-		}
-
-		if (offset) {
-			for (i = 0; i < ARRAY_SIZE(surface->u.legacy.level); ++i)
-				surface->u.legacy.level[i].offset += offset;
-		}
+		surface->flags |= RADEON_SURF_SCANOUT;
 	}
 	return 0;
 }
 
-static void r600_texture_init_metadata(struct r600_common_screen *rscreen,
-				       struct r600_texture *rtex,
+static int r600_setup_surface(struct pipe_screen *screen,
+			      struct r600_texture *rtex,
+			      unsigned pitch_in_bytes_override,
+			      unsigned offset)
+{
+	struct r600_common_screen *rscreen = (struct r600_common_screen*)screen;
+	unsigned i;
+	int r;
+
+	r = rscreen->ws->surface_init(rscreen->ws, &rtex->surface);
+	if (r) {
+		return r;
+	}
+
+	rtex->size = rtex->surface.bo_size;
+
+	if (pitch_in_bytes_override && pitch_in_bytes_override != rtex->surface.level[0].pitch_bytes) {
+		/* old ddx on evergreen over estimate alignment for 1d, only 1 level
+		 * for those
+		 */
+		rtex->surface.level[0].nblk_x = pitch_in_bytes_override / rtex->surface.bpe;
+		rtex->surface.level[0].pitch_bytes = pitch_in_bytes_override;
+		rtex->surface.level[0].slice_size = pitch_in_bytes_override * rtex->surface.level[0].nblk_y;
+	}
+
+	if (offset) {
+		for (i = 0; i < ARRAY_SIZE(rtex->surface.level); ++i)
+			rtex->surface.level[i].offset += offset;
+	}
+	return 0;
+}
+
+static void r600_texture_init_metadata(struct r600_texture *rtex,
 				       struct radeon_bo_metadata *metadata)
 {
 	struct radeon_surf *surface = &rtex->surface;
 
 	memset(metadata, 0, sizeof(*metadata));
+	metadata->microtile = surface->level[0].mode >= RADEON_SURF_MODE_1D ?
+				   RADEON_LAYOUT_TILED : RADEON_LAYOUT_LINEAR;
+	metadata->macrotile = surface->level[0].mode >= RADEON_SURF_MODE_2D ?
+				   RADEON_LAYOUT_TILED : RADEON_LAYOUT_LINEAR;
+	metadata->pipe_config = surface->pipe_config;
+	metadata->bankw = surface->bankw;
+	metadata->bankh = surface->bankh;
+	metadata->tile_split = surface->tile_split;
+	metadata->mtilea = surface->mtilea;
+	metadata->num_banks = surface->num_banks;
+	metadata->stride = surface->level[0].pitch_bytes;
+	metadata->scanout = (surface->flags & RADEON_SURF_SCANOUT) != 0;
+}
 
-	if (rscreen->chip_class >= GFX9) {
-		metadata->u.gfx9.swizzle_mode = surface->u.gfx9.surf.swizzle_mode;
-	} else {
-		metadata->u.legacy.microtile = surface->u.legacy.level[0].mode >= RADEON_SURF_MODE_1D ?
-					   RADEON_LAYOUT_TILED : RADEON_LAYOUT_LINEAR;
-		metadata->u.legacy.macrotile = surface->u.legacy.level[0].mode >= RADEON_SURF_MODE_2D ?
-					   RADEON_LAYOUT_TILED : RADEON_LAYOUT_LINEAR;
-		metadata->u.legacy.pipe_config = surface->u.legacy.pipe_config;
-		metadata->u.legacy.bankw = surface->u.legacy.bankw;
-		metadata->u.legacy.bankh = surface->u.legacy.bankh;
-		metadata->u.legacy.tile_split = surface->u.legacy.tile_split;
-		metadata->u.legacy.mtilea = surface->u.legacy.mtilea;
-		metadata->u.legacy.num_banks = surface->u.legacy.num_banks;
-		metadata->u.legacy.stride = surface->u.legacy.level[0].nblk_x * surface->bpe;
-		metadata->u.legacy.scanout = (surface->flags & RADEON_SURF_SCANOUT) != 0;
-	}
+static void r600_dirty_all_framebuffer_states(struct r600_common_screen *rscreen)
+{
+	p_atomic_inc(&rscreen->dirty_fb_counter);
 }
 
 static void r600_eliminate_fast_color_clear(struct r600_common_context *rctx,
@@ -347,13 +359,13 @@ static void r600_eliminate_fast_color_clear(struct r600_common_context *rctx,
 	struct pipe_context *ctx = &rctx->b;
 
 	if (ctx == rscreen->aux_context)
-		mtx_lock(&rscreen->aux_context_lock);
+		pipe_mutex_lock(rscreen->aux_context_lock);
 
 	ctx->flush_resource(ctx, &rtex->resource.b.b);
 	ctx->flush(ctx, NULL, 0);
 
 	if (ctx == rscreen->aux_context)
-		mtx_unlock(&rscreen->aux_context_lock);
+		pipe_mutex_unlock(rscreen->aux_context_lock);
 }
 
 static void r600_texture_discard_cmask(struct r600_common_screen *rscreen,
@@ -378,7 +390,7 @@ static void r600_texture_discard_cmask(struct r600_common_screen *rscreen,
 	    r600_resource_reference(&rtex->cmask_buffer, NULL);
 
 	/* Notify all contexts about the change. */
-	p_atomic_inc(&rscreen->dirty_tex_counter);
+	r600_dirty_all_framebuffer_states(rscreen);
 	p_atomic_inc(&rscreen->compressed_colortex_counter);
 }
 
@@ -386,7 +398,7 @@ static bool r600_can_disable_dcc(struct r600_texture *rtex)
 {
 	/* We can't disable DCC if it can be written by another process. */
 	return rtex->dcc_offset &&
-	       (!rtex->resource.b.is_shared ||
+	       (!rtex->resource.is_shared ||
 		!(rtex->resource.external_usage & PIPE_HANDLE_USAGE_WRITE));
 }
 
@@ -402,7 +414,7 @@ static bool r600_texture_discard_dcc(struct r600_common_screen *rscreen,
 	rtex->dcc_offset = 0;
 
 	/* Notify all contexts about the change. */
-	p_atomic_inc(&rscreen->dirty_tex_counter);
+	r600_dirty_all_framebuffer_states(rscreen);
 	return true;
 }
 
@@ -436,46 +448,41 @@ bool r600_texture_disable_dcc(struct r600_common_context *rctx,
 		return false;
 
 	if (&rctx->b == rscreen->aux_context)
-		mtx_lock(&rscreen->aux_context_lock);
+		pipe_mutex_lock(rscreen->aux_context_lock);
 
 	/* Decompress DCC. */
 	rctx->decompress_dcc(&rctx->b, rtex);
 	rctx->b.flush(&rctx->b, NULL, 0);
 
 	if (&rctx->b == rscreen->aux_context)
-		mtx_unlock(&rscreen->aux_context_lock);
+		pipe_mutex_unlock(rscreen->aux_context_lock);
 
 	return r600_texture_discard_dcc(rscreen, rtex);
 }
 
-static void r600_reallocate_texture_inplace(struct r600_common_context *rctx,
-					    struct r600_texture *rtex,
-					    unsigned new_bind_flag,
-					    bool invalidate_storage)
+static void r600_degrade_tile_mode_to_linear(struct r600_common_context *rctx,
+					     struct r600_texture *rtex,
+					     bool invalidate_storage)
 {
 	struct pipe_screen *screen = rctx->b.screen;
 	struct r600_texture *new_tex;
 	struct pipe_resource templ = rtex->resource.b.b;
 	unsigned i;
 
-	templ.bind |= new_bind_flag;
+	templ.bind |= PIPE_BIND_LINEAR;
 
 	/* r600g doesn't react to dirty_tex_descriptor_counter */
 	if (rctx->chip_class < SI)
 		return;
 
-	if (rtex->resource.b.is_shared)
+	if (rtex->resource.is_shared ||
+	    rtex->surface.level[0].mode == RADEON_SURF_MODE_LINEAR_ALIGNED)
 		return;
 
-	if (new_bind_flag == PIPE_BIND_LINEAR) {
-		if (rtex->surface.is_linear)
-			return;
-
-		/* This fails with MSAA, depth, and compressed textures. */
-		if (r600_choose_tiling(rctx->screen, &templ) !=
-		    RADEON_SURF_MODE_LINEAR_ALIGNED)
-			return;
-	}
+	/* This fails with MSAA, depth, and compressed textures. */
+	if (r600_choose_tiling(rctx->screen, &templ) !=
+	    RADEON_SURF_MODE_LINEAR_ALIGNED)
+		return;
 
 	new_tex = (struct r600_texture*)screen->resource_create(screen, &templ);
 	if (!new_tex)
@@ -495,10 +502,8 @@ static void r600_reallocate_texture_inplace(struct r600_common_context *rctx,
 		}
 	}
 
-	if (new_bind_flag == PIPE_BIND_LINEAR) {
-		r600_texture_discard_cmask(rctx->screen, rtex);
-		r600_texture_discard_dcc(rctx->screen, rtex);
-	}
+	r600_texture_discard_cmask(rctx->screen, rtex);
+	r600_texture_discard_dcc(rctx->screen, rtex);
 
 	/* Replace the structure fields of rtex. */
 	rtex->resource.b.b.bind = templ.bind;
@@ -511,34 +516,21 @@ static void r600_reallocate_texture_inplace(struct r600_common_context *rctx,
 	rtex->resource.domains = new_tex->resource.domains;
 	rtex->resource.flags = new_tex->resource.flags;
 	rtex->size = new_tex->size;
-	rtex->db_render_format = new_tex->db_render_format;
-	rtex->db_compatible = new_tex->db_compatible;
-	rtex->can_sample_z = new_tex->can_sample_z;
-	rtex->can_sample_s = new_tex->can_sample_s;
 	rtex->surface = new_tex->surface;
-	rtex->fmask = new_tex->fmask;
-	rtex->cmask = new_tex->cmask;
-	rtex->cb_color_info = new_tex->cb_color_info;
-	rtex->last_msaa_resolve_target_micro_mode = new_tex->last_msaa_resolve_target_micro_mode;
-	rtex->htile_offset = new_tex->htile_offset;
-	rtex->tc_compatible_htile = new_tex->tc_compatible_htile;
-	rtex->depth_cleared = new_tex->depth_cleared;
-	rtex->stencil_cleared = new_tex->stencil_cleared;
 	rtex->non_disp_tiling = new_tex->non_disp_tiling;
-	rtex->dcc_gather_statistics = new_tex->dcc_gather_statistics;
-	rtex->framebuffers_bound = new_tex->framebuffers_bound;
+	rtex->cb_color_info = new_tex->cb_color_info;
+	rtex->cmask = new_tex->cmask; /* needed even without CMASK */
 
-	if (new_bind_flag == PIPE_BIND_LINEAR) {
-		assert(!rtex->htile_offset);
-		assert(!rtex->cmask.size);
-		assert(!rtex->fmask.size);
-		assert(!rtex->dcc_offset);
-		assert(!rtex->is_depth);
-	}
+	assert(!rtex->htile_buffer);
+	assert(!rtex->cmask.size);
+	assert(!rtex->fmask.size);
+	assert(!rtex->dcc_offset);
+	assert(!rtex->is_depth);
 
 	r600_texture_reference(&new_tex, NULL);
 
-	p_atomic_inc(&rctx->screen->dirty_tex_counter);
+	r600_dirty_all_framebuffer_states(rctx->screen);
+	p_atomic_inc(&rctx->screen->dirty_tex_descriptor_counter);
 }
 
 static boolean r600_texture_get_handle(struct pipe_screen* screen,
@@ -548,52 +540,34 @@ static boolean r600_texture_get_handle(struct pipe_screen* screen,
                                        unsigned usage)
 {
 	struct r600_common_screen *rscreen = (struct r600_common_screen*)screen;
-	struct r600_common_context *rctx;
+	struct r600_common_context *rctx = (struct r600_common_context*)
+					   (ctx ? ctx : rscreen->aux_context);
 	struct r600_resource *res = (struct r600_resource*)resource;
 	struct r600_texture *rtex = (struct r600_texture*)resource;
 	struct radeon_bo_metadata metadata;
 	bool update_metadata = false;
-	unsigned stride, offset, slice_size;
-	bool flush = false;
 
-	ctx = threaded_context_unwrap_sync(ctx);
-	rctx = (struct r600_common_context*)(ctx ? ctx : rscreen->aux_context);
+	/* This is not supported now, but it might be required for OpenCL
+	 * interop in the future.
+	 */
+	if (resource->target != PIPE_BUFFER &&
+	    (resource->nr_samples > 1 || rtex->is_depth))
+		return false;
 
 	if (resource->target != PIPE_BUFFER) {
-		/* This is not supported now, but it might be required for OpenCL
-		 * interop in the future.
-		 */
-		if (resource->nr_samples > 1 || rtex->is_depth)
-			return false;
-
-		/* Move a suballocated texture into a non-suballocated allocation. */
-		if (rscreen->ws->buffer_is_suballocated(res->buf)) {
-			assert(!res->b.is_shared);
-			r600_reallocate_texture_inplace(rctx, rtex,
-							PIPE_BIND_SHARED, false);
-			flush = true;
-			assert(res->b.b.bind & PIPE_BIND_SHARED);
-			assert(res->flags & RADEON_FLAG_NO_SUBALLOC);
-		}
-
 		/* Since shader image stores don't support DCC on VI,
 		 * disable it for external clients that want write
 		 * access.
 		 */
 		if (usage & PIPE_HANDLE_USAGE_WRITE && rtex->dcc_offset) {
-			if (r600_texture_disable_dcc(rctx, rtex)) {
+			if (r600_texture_disable_dcc(rctx, rtex))
 				update_metadata = true;
-				/* si_texture_disable_dcc flushes the context */
-				flush = false;
-			}
 		}
 
 		if (!(usage & PIPE_HANDLE_USAGE_EXPLICIT_FLUSH) &&
 		    (rtex->cmask.size || rtex->dcc_offset)) {
 			/* Eliminate fast clear (both CMASK and DCC) */
 			r600_eliminate_fast_color_clear(rctx, rtex);
-			/* eliminate_fast_color_clear flushes the context */
-			flush = false;
 
 			/* Disable CMASK if flush_resource isn't going
 			 * to be called.
@@ -603,64 +577,17 @@ static boolean r600_texture_get_handle(struct pipe_screen* screen,
 		}
 
 		/* Set metadata. */
-		if (!res->b.is_shared || update_metadata) {
-			r600_texture_init_metadata(rscreen, rtex, &metadata);
+		if (!res->is_shared || update_metadata) {
+			r600_texture_init_metadata(rtex, &metadata);
 			if (rscreen->query_opaque_metadata)
 				rscreen->query_opaque_metadata(rscreen, rtex,
 							       &metadata);
 
 			rscreen->ws->buffer_set_metadata(res->buf, &metadata);
 		}
-
-		if (rscreen->chip_class >= GFX9) {
-			offset = rtex->surface.u.gfx9.surf_offset;
-			stride = rtex->surface.u.gfx9.surf_pitch *
-				 rtex->surface.bpe;
-			slice_size = rtex->surface.u.gfx9.surf_slice_size;
-		} else {
-			offset = rtex->surface.u.legacy.level[0].offset;
-			stride = rtex->surface.u.legacy.level[0].nblk_x *
-				 rtex->surface.bpe;
-			slice_size = rtex->surface.u.legacy.level[0].slice_size;
-		}
-	} else {
-		/* Move a suballocated buffer into a non-suballocated allocation. */
-		if (rscreen->ws->buffer_is_suballocated(res->buf)) {
-			assert(!res->b.is_shared);
-
-			/* Allocate a new buffer with PIPE_BIND_SHARED. */
-			struct pipe_resource templ = res->b.b;
-			templ.bind |= PIPE_BIND_SHARED;
-
-			struct pipe_resource *newb =
-				screen->resource_create(screen, &templ);
-			if (!newb)
-				return false;
-
-			/* Copy the old buffer contents to the new one. */
-			struct pipe_box box;
-			u_box_1d(0, newb->width0, &box);
-			rctx->b.resource_copy_region(&rctx->b, newb, 0, 0, 0, 0,
-						     &res->b.b, 0, &box);
-			flush = true;
-			/* Move the new buffer storage to the old pipe_resource. */
-			r600_replace_buffer_storage(&rctx->b, &res->b.b, newb);
-			pipe_resource_reference(&newb, NULL);
-
-			assert(res->b.b.bind & PIPE_BIND_SHARED);
-			assert(res->flags & RADEON_FLAG_NO_SUBALLOC);
-		}
-
-		/* Buffers */
-		offset = 0;
-		stride = 0;
-		slice_size = 0;
 	}
 
-	if (flush)
-		rctx->b.flush(&rctx->b, NULL, 0);
-
-	if (res->b.is_shared) {
+	if (res->is_shared) {
 		/* USAGE_EXPLICIT_FLUSH must be cleared if at least one user
 		 * doesn't set it.
 		 */
@@ -668,12 +595,15 @@ static boolean r600_texture_get_handle(struct pipe_screen* screen,
 		if (!(usage & PIPE_HANDLE_USAGE_EXPLICIT_FLUSH))
 			res->external_usage &= ~PIPE_HANDLE_USAGE_EXPLICIT_FLUSH;
 	} else {
-		res->b.is_shared = true;
+		res->is_shared = true;
 		res->external_usage = usage;
 	}
 
-	return rscreen->ws->buffer_get_handle(res->buf, stride, offset,
-					      slice_size, whandle);
+	return rscreen->ws->buffer_get_handle(res->buf,
+					      rtex->surface.level[0].pitch_bytes,
+					      rtex->surface.level[0].offset,
+					      rtex->surface.level[0].slice_size,
+					      whandle);
 }
 
 static void r600_texture_destroy(struct pipe_screen *screen,
@@ -684,6 +614,7 @@ static void r600_texture_destroy(struct pipe_screen *screen,
 
 	r600_texture_reference(&rtex->flushed_depth_texture, NULL);
 
+	r600_resource_reference(&rtex->htile_buffer, NULL);
 	if (rtex->cmask_buffer != &rtex->resource) {
 	    r600_resource_reference(&rtex->cmask_buffer, NULL);
 	}
@@ -702,39 +633,35 @@ void r600_texture_get_fmask_info(struct r600_common_screen *rscreen,
 				 struct r600_fmask_info *out)
 {
 	/* FMASK is allocated like an ordinary texture. */
-	struct pipe_resource templ = rtex->resource.b.b;
-	struct radeon_surf fmask = {};
-	unsigned flags, bpe;
+	struct radeon_surf fmask = rtex->surface;
 
 	memset(out, 0, sizeof(*out));
 
-	if (rscreen->chip_class >= GFX9) {
-		out->alignment = rtex->surface.u.gfx9.fmask_alignment;
-		out->size = rtex->surface.u.gfx9.fmask_size;
-		return;
-	}
+	fmask.bo_alignment = 0;
+	fmask.bo_size = 0;
+	fmask.nsamples = 1;
+	fmask.flags |= RADEON_SURF_FMASK;
 
-	templ.nr_samples = 1;
-	flags = rtex->surface.flags | RADEON_SURF_FMASK;
+	/* Force 2D tiling if it wasn't set. This may occur when creating
+	 * FMASK for MSAA resolve on R6xx. On R6xx, the single-sample
+	 * destination buffer must have an FMASK too. */
+	fmask.flags = RADEON_SURF_CLR(fmask.flags, MODE);
+	fmask.flags |= RADEON_SURF_SET(RADEON_SURF_MODE_2D, MODE);
 
-	if (rscreen->chip_class <= CAYMAN) {
-		/* Use the same parameters and tile mode. */
-		fmask.u.legacy.bankw = rtex->surface.u.legacy.bankw;
-		fmask.u.legacy.bankh = rtex->surface.u.legacy.bankh;
-		fmask.u.legacy.mtilea = rtex->surface.u.legacy.mtilea;
-		fmask.u.legacy.tile_split = rtex->surface.u.legacy.tile_split;
-
-		if (nr_samples <= 4)
-			fmask.u.legacy.bankh = 4;
+	if (rscreen->chip_class >= SI) {
+		fmask.flags |= RADEON_SURF_HAS_TILE_MODE_INDEX;
 	}
 
 	switch (nr_samples) {
 	case 2:
 	case 4:
-		bpe = 1;
+		fmask.bpe = 1;
+		if (rscreen->chip_class <= CAYMAN) {
+			fmask.bankh = 4;
+		}
 		break;
 	case 8:
-		bpe = 4;
+		fmask.bpe = 4;
 		break;
 	default:
 		R600_ERR("Invalid sample count for FMASK allocation.\n");
@@ -745,26 +672,25 @@ void r600_texture_get_fmask_info(struct r600_common_screen *rscreen,
 	 * This can be fixed by writing a separate FMASK allocator specifically
 	 * for R600-R700 asics. */
 	if (rscreen->chip_class <= R700) {
-		bpe *= 2;
+		fmask.bpe *= 2;
 	}
 
-	if (rscreen->ws->surface_init(rscreen->ws, &templ, flags, bpe,
-				      RADEON_SURF_MODE_2D, &fmask)) {
+	if (rscreen->ws->surface_init(rscreen->ws, &fmask)) {
 		R600_ERR("Got error in surface_init while allocating FMASK.\n");
 		return;
 	}
 
-	assert(fmask.u.legacy.level[0].mode == RADEON_SURF_MODE_2D);
+	assert(fmask.level[0].mode == RADEON_SURF_MODE_2D);
 
-	out->slice_tile_max = (fmask.u.legacy.level[0].nblk_x * fmask.u.legacy.level[0].nblk_y) / 64;
+	out->slice_tile_max = (fmask.level[0].nblk_x * fmask.level[0].nblk_y) / 64;
 	if (out->slice_tile_max)
 		out->slice_tile_max -= 1;
 
-	out->tile_mode_index = fmask.u.legacy.tiling_index[0];
-	out->pitch_in_pixels = fmask.u.legacy.level[0].nblk_x;
-	out->bank_height = fmask.u.legacy.bankh;
-	out->alignment = MAX2(256, fmask.surf_alignment);
-	out->size = fmask.surf_size;
+	out->tile_mode_index = fmask.tiling_index[0];
+	out->pitch_in_pixels = fmask.level[0].nblk_x;
+	out->bank_height = fmask.bankh;
+	out->alignment = MAX2(256, fmask.bo_alignment);
+	out->size = fmask.bo_size;
 }
 
 static void r600_texture_allocate_fmask(struct r600_common_screen *rscreen,
@@ -795,8 +721,8 @@ void r600_texture_get_cmask_info(struct r600_common_screen *rscreen,
 	unsigned macro_tile_width = util_next_power_of_two(sqrt_pixels_per_macro_tile);
 	unsigned macro_tile_height = pixels_per_macro_tile / macro_tile_width;
 
-	unsigned pitch_elements = align(rtex->resource.b.b.width0, macro_tile_width);
-	unsigned height = align(rtex->resource.b.b.height0, macro_tile_height);
+	unsigned pitch_elements = align(rtex->surface.npix_x, macro_tile_width);
+	unsigned height = align(rtex->surface.npix_y, macro_tile_height);
 
 	unsigned base_align = num_pipes * pipe_interleave_bytes;
 	unsigned slice_bytes =
@@ -805,6 +731,10 @@ void r600_texture_get_cmask_info(struct r600_common_screen *rscreen,
 	assert(macro_tile_width % 128 == 0);
 	assert(macro_tile_height % 128 == 0);
 
+	out->pitch = pitch_elements;
+	out->height = height;
+	out->xalign = macro_tile_width;
+	out->yalign = macro_tile_height;
 	out->slice_tile_max = ((pitch_elements * height) / (128*128)) - 1;
 	out->alignment = MAX2(256, base_align);
 	out->size = (util_max_layer(&rtex->resource.b.b, 0) + 1) *
@@ -818,12 +748,6 @@ static void si_texture_get_cmask_info(struct r600_common_screen *rscreen,
 	unsigned pipe_interleave_bytes = rscreen->info.pipe_interleave_bytes;
 	unsigned num_pipes = rscreen->info.num_tile_pipes;
 	unsigned cl_width, cl_height;
-
-	if (rscreen->chip_class >= GFX9) {
-		out->alignment = rtex->surface.u.gfx9.cmask_alignment;
-		out->size = rtex->surface.u.gfx9.cmask_size;
-		return;
-	}
 
 	switch (num_pipes) {
 	case 2:
@@ -849,13 +773,17 @@ static void si_texture_get_cmask_info(struct r600_common_screen *rscreen,
 
 	unsigned base_align = num_pipes * pipe_interleave_bytes;
 
-	unsigned width = align(rtex->resource.b.b.width0, cl_width*8);
-	unsigned height = align(rtex->resource.b.b.height0, cl_height*8);
+	unsigned width = align(rtex->surface.npix_x, cl_width*8);
+	unsigned height = align(rtex->surface.npix_y, cl_height*8);
 	unsigned slice_elements = (width * height) / (8*8);
 
 	/* Each element of CMASK is a nibble. */
 	unsigned slice_bytes = slice_elements / 2;
 
+	out->pitch = width;
+	out->height = height;
+	out->xalign = cl_width * 8;
+	out->yalign = cl_height * 8;
 	out->slice_tile_max = (width * height) / (128*128);
 	if (out->slice_tile_max)
 		out->slice_tile_max -= 1;
@@ -898,9 +826,7 @@ static void r600_texture_alloc_cmask_separate(struct r600_common_screen *rscreen
 	}
 
 	rtex->cmask_buffer = (struct r600_resource *)
-		r600_aligned_buffer_create(&rscreen->b,
-					   R600_RESOURCE_FLAG_UNMAPPABLE,
-					   PIPE_USAGE_DEFAULT,
+		r600_aligned_buffer_create(&rscreen->b, 0, PIPE_USAGE_DEFAULT,
 					   rtex->cmask.size,
 					   rtex->cmask.alignment);
 	if (rtex->cmask_buffer == NULL) {
@@ -919,32 +845,28 @@ static void r600_texture_alloc_cmask_separate(struct r600_common_screen *rscreen
 	p_atomic_inc(&rscreen->compressed_colortex_counter);
 }
 
-static void r600_texture_get_htile_size(struct r600_common_screen *rscreen,
-					struct r600_texture *rtex)
+static unsigned r600_texture_get_htile_size(struct r600_common_screen *rscreen,
+					    struct r600_texture *rtex)
 {
 	unsigned cl_width, cl_height, width, height;
 	unsigned slice_elements, slice_bytes, pipe_interleave_bytes, base_align;
 	unsigned num_pipes = rscreen->info.num_tile_pipes;
 
-	assert(rscreen->chip_class <= VI);
-
-	rtex->surface.htile_size = 0;
-
 	if (rscreen->chip_class <= EVERGREEN &&
 	    rscreen->info.drm_major == 2 && rscreen->info.drm_minor < 26)
-		return;
+		return 0;
 
 	/* HW bug on R6xx. */
 	if (rscreen->chip_class == R600 &&
-	    (rtex->resource.b.b.width0 > 7680 ||
-	     rtex->resource.b.b.height0 > 7680))
-		return;
+	    (rtex->surface.level[0].npix_x > 7680 ||
+	     rtex->surface.level[0].npix_y > 7680))
+		return 0;
 
 	/* HTILE is broken with 1D tiling on old kernels and CIK. */
 	if (rscreen->chip_class >= CIK &&
-	    rtex->surface.u.legacy.level[0].mode == RADEON_SURF_MODE_1D &&
+	    rtex->surface.level[0].mode == RADEON_SURF_MODE_1D &&
 	    rscreen->info.drm_major == 2 && rscreen->info.drm_minor < 38)
-		return;
+		return 0;
 
 	/* Overalign HTILE on P2 configs to work around GPU hangs in
 	 * piglit/depthstencil-render-miplevels 585.
@@ -979,11 +901,11 @@ static void r600_texture_get_htile_size(struct r600_common_screen *rscreen,
 		break;
 	default:
 		assert(0);
-		return;
+		return 0;
 	}
 
-	width = align(rtex->resource.b.b.width0, cl_width * 8);
-	height = align(rtex->resource.b.b.height0, cl_height * 8);
+	width = align(rtex->surface.npix_x, cl_width * 8);
+	height = align(rtex->surface.npix_y, cl_height * 8);
 
 	slice_elements = (width * height) / (8 * 8);
 	slice_bytes = slice_elements * 4;
@@ -991,104 +913,69 @@ static void r600_texture_get_htile_size(struct r600_common_screen *rscreen,
 	pipe_interleave_bytes = rscreen->info.pipe_interleave_bytes;
 	base_align = num_pipes * pipe_interleave_bytes;
 
-	rtex->surface.htile_alignment = base_align;
-	rtex->surface.htile_size =
-		(util_max_layer(&rtex->resource.b.b, 0) + 1) *
+	rtex->htile.pitch = width;
+	rtex->htile.height = height;
+	rtex->htile.xalign = cl_width * 8;
+	rtex->htile.yalign = cl_height * 8;
+	rtex->htile.alignment = base_align;
+
+	return (util_max_layer(&rtex->resource.b.b, 0) + 1) *
 		align(slice_bytes, base_align);
 }
 
 static void r600_texture_allocate_htile(struct r600_common_screen *rscreen,
 					struct r600_texture *rtex)
 {
-	if (rscreen->chip_class <= VI && !rtex->tc_compatible_htile)
-		r600_texture_get_htile_size(rscreen, rtex);
+	uint64_t htile_size, alignment;
+	uint32_t clear_value;
 
-	if (!rtex->surface.htile_size)
+	if (rtex->tc_compatible_htile) {
+		htile_size = rtex->surface.htile_size;
+		alignment = rtex->surface.htile_alignment;
+		clear_value = 0x0000030F;
+	} else {
+		htile_size = r600_texture_get_htile_size(rscreen, rtex);
+		alignment = rtex->htile.alignment;
+		clear_value = 0;
+	}
+
+	if (!htile_size)
 		return;
 
-	rtex->htile_offset = align(rtex->size, rtex->surface.htile_alignment);
-	rtex->size = rtex->htile_offset + rtex->surface.htile_size;
+	rtex->htile_buffer = (struct r600_resource*)
+			     r600_aligned_buffer_create(&rscreen->b, PIPE_BIND_CUSTOM,
+							PIPE_USAGE_DEFAULT,
+							htile_size, alignment);
+	if (rtex->htile_buffer == NULL) {
+		/* this is not a fatal error as we can still keep rendering
+		 * without htile buffer */
+		R600_ERR("Failed to create buffer object for htile buffer.\n");
+	} else {
+		r600_screen_clear_buffer(rscreen, &rtex->htile_buffer->b.b,
+					 0, htile_size, clear_value,
+					 R600_COHERENCY_NONE);
+	}
 }
 
-void r600_print_texture_info(struct r600_common_screen *rscreen,
-			     struct r600_texture *rtex, FILE *f)
+void r600_print_texture_info(struct r600_texture *rtex, FILE *f)
 {
 	int i;
 
-	/* Common parameters. */
 	fprintf(f, "  Info: npix_x=%u, npix_y=%u, npix_z=%u, blk_w=%u, "
-		"blk_h=%u, array_size=%u, last_level=%u, "
+		"blk_h=%u, blk_d=%u, array_size=%u, last_level=%u, "
 		"bpe=%u, nsamples=%u, flags=0x%x, %s\n",
-		rtex->resource.b.b.width0, rtex->resource.b.b.height0,
-		rtex->resource.b.b.depth0, rtex->surface.blk_w,
-		rtex->surface.blk_h,
-		rtex->resource.b.b.array_size, rtex->resource.b.b.last_level,
-		rtex->surface.bpe, rtex->resource.b.b.nr_samples,
+		rtex->surface.npix_x, rtex->surface.npix_y,
+		rtex->surface.npix_z, rtex->surface.blk_w,
+		rtex->surface.blk_h, rtex->surface.blk_d,
+		rtex->surface.array_size, rtex->surface.last_level,
+		rtex->surface.bpe, rtex->surface.nsamples,
 		rtex->surface.flags, util_format_short_name(rtex->resource.b.b.format));
 
-	if (rscreen->chip_class >= GFX9) {
-		fprintf(f, "  Surf: size=%"PRIu64", slice_size=%"PRIu64", "
-			"alignment=%u, swmode=%u, epitch=%u, pitch=%u\n",
-			rtex->surface.surf_size,
-			rtex->surface.u.gfx9.surf_slice_size,
-			rtex->surface.surf_alignment,
-			rtex->surface.u.gfx9.surf.swizzle_mode,
-			rtex->surface.u.gfx9.surf.epitch,
-			rtex->surface.u.gfx9.surf_pitch);
-
-		if (rtex->fmask.size) {
-			fprintf(f, "  FMASK: offset=%"PRIu64", size=%"PRIu64", "
-				"alignment=%u, swmode=%u, epitch=%u\n",
-				rtex->fmask.offset,
-				rtex->surface.u.gfx9.fmask_size,
-				rtex->surface.u.gfx9.fmask_alignment,
-				rtex->surface.u.gfx9.fmask.swizzle_mode,
-				rtex->surface.u.gfx9.fmask.epitch);
-		}
-
-		if (rtex->cmask.size) {
-			fprintf(f, "  CMask: offset=%"PRIu64", size=%"PRIu64", "
-				"alignment=%u, rb_aligned=%u, pipe_aligned=%u\n",
-				rtex->cmask.offset,
-				rtex->surface.u.gfx9.cmask_size,
-				rtex->surface.u.gfx9.cmask_alignment,
-				rtex->surface.u.gfx9.cmask.rb_aligned,
-				rtex->surface.u.gfx9.cmask.pipe_aligned);
-		}
-
-		if (rtex->htile_offset) {
-			fprintf(f, "  HTile: offset=%"PRIu64", size=%"PRIu64", alignment=%u, "
-				"rb_aligned=%u, pipe_aligned=%u\n",
-				rtex->htile_offset,
-				rtex->surface.htile_size,
-				rtex->surface.htile_alignment,
-				rtex->surface.u.gfx9.htile.rb_aligned,
-				rtex->surface.u.gfx9.htile.pipe_aligned);
-		}
-
-		if (rtex->dcc_offset) {
-			fprintf(f, "  DCC: offset=%"PRIu64", size=%"PRIu64", "
-				"alignment=%u, pitch_max=%u, num_dcc_levels=%u\n",
-				rtex->dcc_offset, rtex->surface.dcc_size,
-				rtex->surface.dcc_alignment,
-				rtex->surface.u.gfx9.dcc_pitch_max,
-				rtex->surface.num_dcc_levels);
-		}
-
-		if (rtex->surface.u.gfx9.stencil_offset) {
-			fprintf(f, "  Stencil: offset=%"PRIu64", swmode=%u, epitch=%u\n",
-				rtex->surface.u.gfx9.stencil_offset,
-				rtex->surface.u.gfx9.stencil.swizzle_mode,
-				rtex->surface.u.gfx9.stencil.epitch);
-		}
-		return;
-	}
-
-	fprintf(f, "  Layout: size=%"PRIu64", alignment=%u, bankw=%u, "
+	fprintf(f, "  Layout: size=%"PRIu64", alignment=%"PRIu64", bankw=%u, "
 		"bankh=%u, nbanks=%u, mtilea=%u, tilesplit=%u, pipeconfig=%u, scanout=%u\n",
-		rtex->surface.surf_size, rtex->surface.surf_alignment, rtex->surface.u.legacy.bankw,
-		rtex->surface.u.legacy.bankh, rtex->surface.u.legacy.num_banks, rtex->surface.u.legacy.mtilea,
-		rtex->surface.u.legacy.tile_split, rtex->surface.u.legacy.pipe_config,
+		rtex->surface.bo_size, rtex->surface.bo_alignment, rtex->surface.bankw,
+		rtex->surface.bankh, rtex->surface.num_banks, rtex->surface.mtilea,
+		rtex->surface.tile_split, rtex->surface.pipe_config,
 		(rtex->surface.flags & RADEON_SURF_SCANOUT) != 0);
 
 	if (rtex->fmask.size)
@@ -1099,61 +986,65 @@ void r600_print_texture_info(struct r600_common_screen *rscreen,
 			rtex->fmask.slice_tile_max, rtex->fmask.tile_mode_index);
 
 	if (rtex->cmask.size)
-		fprintf(f, "  CMask: offset=%"PRIu64", size=%"PRIu64", alignment=%u, "
-			"slice_tile_max=%u\n",
+		fprintf(f, "  CMask: offset=%"PRIu64", size=%"PRIu64", alignment=%u, pitch=%u, "
+			"height=%u, xalign=%u, yalign=%u, slice_tile_max=%u\n",
 			rtex->cmask.offset, rtex->cmask.size, rtex->cmask.alignment,
-			rtex->cmask.slice_tile_max);
+			rtex->cmask.pitch, rtex->cmask.height, rtex->cmask.xalign,
+			rtex->cmask.yalign, rtex->cmask.slice_tile_max);
 
-	if (rtex->htile_offset)
-		fprintf(f, "  HTile: offset=%"PRIu64", size=%"PRIu64", "
-			"alignment=%u, TC_compatible = %u\n",
-			rtex->htile_offset, rtex->surface.htile_size,
-			rtex->surface.htile_alignment,
+	if (rtex->htile_buffer)
+		fprintf(f, "  HTile: size=%u, alignment=%u, pitch=%u, height=%u, "
+			"xalign=%u, yalign=%u, TC_compatible = %u\n",
+			rtex->htile_buffer->b.b.width0,
+			rtex->htile_buffer->buf->alignment, rtex->htile.pitch,
+			rtex->htile.height, rtex->htile.xalign, rtex->htile.yalign,
 			rtex->tc_compatible_htile);
 
 	if (rtex->dcc_offset) {
-		fprintf(f, "  DCC: offset=%"PRIu64", size=%"PRIu64", alignment=%u\n",
+		fprintf(f, "  DCC: offset=%"PRIu64", size=%"PRIu64", alignment=%"PRIu64"\n",
 			rtex->dcc_offset, rtex->surface.dcc_size,
 			rtex->surface.dcc_alignment);
-		for (i = 0; i <= rtex->resource.b.b.last_level; i++)
+		for (i = 0; i <= rtex->surface.last_level; i++)
 			fprintf(f, "  DCCLevel[%i]: enabled=%u, offset=%"PRIu64", "
 				"fast_clear_size=%"PRIu64"\n",
-				i, i < rtex->surface.num_dcc_levels,
-				rtex->surface.u.legacy.level[i].dcc_offset,
-				rtex->surface.u.legacy.level[i].dcc_fast_clear_size);
+				i, rtex->surface.level[i].dcc_enabled,
+				rtex->surface.level[i].dcc_offset,
+				rtex->surface.level[i].dcc_fast_clear_size);
 	}
 
-	for (i = 0; i <= rtex->resource.b.b.last_level; i++)
+	for (i = 0; i <= rtex->surface.last_level; i++)
 		fprintf(f, "  Level[%i]: offset=%"PRIu64", slice_size=%"PRIu64", "
 			"npix_x=%u, npix_y=%u, npix_z=%u, nblk_x=%u, nblk_y=%u, "
-			"mode=%u, tiling_index = %u\n",
-			i, rtex->surface.u.legacy.level[i].offset,
-			rtex->surface.u.legacy.level[i].slice_size,
+			"nblk_z=%u, pitch_bytes=%u, mode=%u\n",
+			i, rtex->surface.level[i].offset,
+			rtex->surface.level[i].slice_size,
 			u_minify(rtex->resource.b.b.width0, i),
 			u_minify(rtex->resource.b.b.height0, i),
 			u_minify(rtex->resource.b.b.depth0, i),
-			rtex->surface.u.legacy.level[i].nblk_x,
-			rtex->surface.u.legacy.level[i].nblk_y,
-			rtex->surface.u.legacy.level[i].mode,
-			rtex->surface.u.legacy.tiling_index[i]);
+			rtex->surface.level[i].nblk_x,
+			rtex->surface.level[i].nblk_y,
+			rtex->surface.level[i].nblk_z,
+			rtex->surface.level[i].pitch_bytes,
+			rtex->surface.level[i].mode);
 
 	if (rtex->surface.flags & RADEON_SURF_SBUFFER) {
 		fprintf(f, "  StencilLayout: tilesplit=%u\n",
-			rtex->surface.u.legacy.stencil_tile_split);
-		for (i = 0; i <= rtex->resource.b.b.last_level; i++) {
+			rtex->surface.stencil_tile_split);
+		for (i = 0; i <= rtex->surface.last_level; i++) {
 			fprintf(f, "  StencilLevel[%i]: offset=%"PRIu64", "
 				"slice_size=%"PRIu64", npix_x=%u, "
 				"npix_y=%u, npix_z=%u, nblk_x=%u, nblk_y=%u, "
-				"mode=%u, tiling_index = %u\n",
-				i, rtex->surface.u.legacy.stencil_level[i].offset,
-				rtex->surface.u.legacy.stencil_level[i].slice_size,
+				"nblk_z=%u, pitch_bytes=%u, mode=%u\n",
+				i, rtex->surface.stencil_level[i].offset,
+				rtex->surface.stencil_level[i].slice_size,
 				u_minify(rtex->resource.b.b.width0, i),
 				u_minify(rtex->resource.b.b.height0, i),
 				u_minify(rtex->resource.b.b.depth0, i),
-				rtex->surface.u.legacy.stencil_level[i].nblk_x,
-				rtex->surface.u.legacy.stencil_level[i].nblk_y,
-				rtex->surface.u.legacy.stencil_level[i].mode,
-				rtex->surface.u.legacy.stencil_tiling_index[i]);
+				rtex->surface.stencil_level[i].nblk_x,
+				rtex->surface.stencil_level[i].nblk_y,
+				rtex->surface.stencil_level[i].nblk_z,
+				rtex->surface.stencil_level[i].pitch_bytes,
+				rtex->surface.stencil_level[i].mode);
 		}
 	}
 }
@@ -1162,6 +1053,8 @@ void r600_print_texture_info(struct r600_common_screen *rscreen,
 static struct r600_texture *
 r600_texture_create_object(struct pipe_screen *screen,
 			   const struct pipe_resource *base,
+			   unsigned pitch_in_bytes_override,
+			   unsigned offset,
 			   struct pb_buffer *buf,
 			   struct radeon_surf *surface)
 {
@@ -1184,32 +1077,25 @@ r600_texture_create_object(struct pipe_screen *screen,
 	rtex->is_depth = util_format_has_depth(util_format_description(rtex->resource.b.b.format));
 
 	rtex->surface = *surface;
-	rtex->size = rtex->surface.surf_size;
-
-	rtex->tc_compatible_htile = rtex->surface.htile_size != 0 &&
-				    (rtex->surface.flags &
-				     RADEON_SURF_TC_COMPATIBLE_HTILE);
-
-	/* TC-compatible HTILE:
-	 * - VI only supports Z32_FLOAT.
-	 * - GFX9 only supports Z32_FLOAT and Z16_UNORM. */
-	if (rtex->tc_compatible_htile) {
-		if (rscreen->chip_class >= GFX9 &&
-		    base->format == PIPE_FORMAT_Z16_UNORM)
-			rtex->db_render_format = base->format;
-		else {
-			rtex->db_render_format = PIPE_FORMAT_Z32_FLOAT;
-			rtex->upgraded_depth = base->format != PIPE_FORMAT_Z32_FLOAT &&
-					       base->format != PIPE_FORMAT_Z32_FLOAT_S8X24_UINT;
-		}
-	} else {
-		rtex->db_render_format = base->format;
+	if (r600_setup_surface(screen, rtex, pitch_in_bytes_override, offset)) {
+		FREE(rtex);
+		return NULL;
 	}
+
+	rtex->tc_compatible_htile = rtex->surface.htile_size != 0;
+	assert(!!(rtex->surface.flags & RADEON_SURF_TC_COMPATIBLE_HTILE) ==
+	       rtex->tc_compatible_htile);
+
+	/* TC-compatible HTILE only supports Z32_FLOAT. */
+	if (rtex->tc_compatible_htile)
+		rtex->db_render_format = PIPE_FORMAT_Z32_FLOAT;
+	else
+		rtex->db_render_format = base->format;
 
 	/* Tiled depth textures utilize the non-displayable tile order.
 	 * This must be done after r600_setup_surface.
 	 * Applies to R600-Cayman. */
-	rtex->non_disp_tiling = rtex->is_depth && rtex->surface.u.legacy.level[0].mode >= RADEON_SURF_MODE_1D;
+	rtex->non_disp_tiling = rtex->is_depth && rtex->surface.level[0].mode >= RADEON_SURF_MODE_1D;
 	/* Applies to GCN. */
 	rtex->last_msaa_resolve_target_micro_mode = rtex->surface.micro_tile_mode;
 
@@ -1223,13 +1109,8 @@ r600_texture_create_object(struct pipe_screen *screen,
 		if (base->flags & (R600_RESOURCE_FLAG_TRANSFER |
 				   R600_RESOURCE_FLAG_FLUSHED_DEPTH) ||
 		    rscreen->chip_class >= EVERGREEN) {
-			if (rscreen->chip_class >= GFX9) {
-				rtex->can_sample_z = true;
-				rtex->can_sample_s = true;
-			} else {
-				rtex->can_sample_z = !rtex->surface.u.legacy.depth_adjusted;
-				rtex->can_sample_s = !rtex->surface.u.legacy.stencil_adjusted;
-			}
+			rtex->can_sample_z = !rtex->surface.depth_adjusted;
+			rtex->can_sample_s = !rtex->surface.stencil_adjusted;
 		} else {
 			if (rtex->resource.b.b.nr_samples <= 1 &&
 			    (rtex->resource.b.b.format == PIPE_FORMAT_Z16_UNORM ||
@@ -1273,11 +1154,9 @@ r600_texture_create_object(struct pipe_screen *screen,
 	/* Now create the backing buffer. */
 	if (!buf) {
 		r600_init_resource_fields(rscreen, resource, rtex->size,
-					  rtex->surface.surf_alignment);
+					  rtex->surface.bo_alignment);
 
-		/* Displayable surfaces are not suballocated. */
-		if (resource->b.b.bind & PIPE_BIND_SCANOUT)
-			resource->flags |= RADEON_FLAG_NO_SUBALLOC;
+		resource->flags |= RADEON_FLAG_HANDLE;
 
 		if (!r600_alloc_resource(rscreen, resource)) {
 			FREE(rtex);
@@ -1299,18 +1178,7 @@ r600_texture_create_object(struct pipe_screen *screen,
 		/* Initialize the cmask to 0xCC (= compressed state). */
 		r600_screen_clear_buffer(rscreen, &rtex->cmask_buffer->b.b,
 					 rtex->cmask.offset, rtex->cmask.size,
-					 0xCCCCCCCC);
-	}
-	if (rtex->htile_offset) {
-		uint32_t clear_value = 0;
-
-		if (rscreen->chip_class >= GFX9 || rtex->tc_compatible_htile)
-			clear_value = 0x0000030F;
-
-		r600_screen_clear_buffer(rscreen, &rtex->resource.b.b,
-					 rtex->htile_offset,
-					 rtex->surface.htile_size,
-					 clear_value);
+					 0xCCCCCCCC, R600_COHERENCY_NONE);
 	}
 
 	/* Initialize DCC only if the texture is not being imported. */
@@ -1318,7 +1186,7 @@ r600_texture_create_object(struct pipe_screen *screen,
 		r600_screen_clear_buffer(rscreen, &rtex->resource.b.b,
 					 rtex->dcc_offset,
 					 rtex->surface.dcc_size,
-					 0xFFFFFFFF);
+					 0xFFFFFFFF, R600_COHERENCY_NONE);
 	}
 
 	/* Initialize the CMASK base register value. */
@@ -1335,21 +1203,18 @@ r600_texture_create_object(struct pipe_screen *screen,
 
 	if (rscreen->debug_flags & DBG_TEX) {
 		puts("Texture:");
-		r600_print_texture_info(rscreen, rtex, stdout);
+		r600_print_texture_info(rtex, stdout);
 		fflush(stdout);
 	}
 
 	return rtex;
 }
 
-static enum radeon_surf_mode
-r600_choose_tiling(struct r600_common_screen *rscreen,
-		   const struct pipe_resource *templ)
+static unsigned r600_choose_tiling(struct r600_common_screen *rscreen,
+				   const struct pipe_resource *templ)
 {
 	const struct util_format_description *desc = util_format_description(templ->format);
 	bool force_tiling = templ->flags & R600_RESOURCE_FLAG_FORCE_TILING;
-	bool is_depth_stencil = util_format_is_depth_or_stencil(templ->format) &&
-				!(templ->flags & R600_RESOURCE_FLAG_FLUSHED_DEPTH);
 
 	/* MSAA resources must be 2D tiled. */
 	if (templ->nr_samples > 1)
@@ -1358,14 +1223,6 @@ r600_choose_tiling(struct r600_common_screen *rscreen,
 	/* Transfer resources should be linear. */
 	if (templ->flags & R600_RESOURCE_FLAG_TRANSFER)
 		return RADEON_SURF_MODE_LINEAR_ALIGNED;
-
-	/* Avoid Z/S decompress blits by forcing TC-compatible HTILE on VI,
-	 * which requires 2D tiling.
-	 */
-	if (rscreen->chip_class == VI &&
-	    is_depth_stencil &&
-	    (templ->flags & PIPE_RESOURCE_FLAG_TEXTURING_MORE_LIKELY))
-		return RADEON_SURF_MODE_2D;
 
 	/* r600g: force tiling on TEXTURE_2D and TEXTURE_3D compute resources. */
 	if (rscreen->chip_class >= R600 && rscreen->chip_class <= CAYMAN &&
@@ -1377,9 +1234,9 @@ r600_choose_tiling(struct r600_common_screen *rscreen,
 	/* Handle common candidates for the linear mode.
 	 * Compressed textures and DB surfaces must always be tiled.
 	 */
-	if (!force_tiling &&
-	    !is_depth_stencil &&
-	    !util_format_is_compressed(templ->format)) {
+	if (!force_tiling && !util_format_is_compressed(templ->format) &&
+	    (!util_format_is_depth_or_stencil(templ->format) ||
+	     templ->flags & R600_RESOURCE_FLAG_FLUSHED_DEPTH)) {
 		if (rscreen->debug_flags & DBG_NO_TILING)
 			return RADEON_SURF_MODE_LINEAR_ALIGNED;
 
@@ -1399,9 +1256,7 @@ r600_choose_tiling(struct r600_common_screen *rscreen,
 		/* Textures with a very small height are recommended to be linear. */
 		if (templ->target == PIPE_TEXTURE_1D ||
 		    templ->target == PIPE_TEXTURE_1D_ARRAY ||
-		    /* Only very thin and long 2D textures should benefit from
-		     * linear_aligned. */
-		    (templ->width0 > 8 && templ->height0 <= 2))
+		    templ->height0 <= 4)
 			return RADEON_SURF_MODE_LINEAR_ALIGNED;
 
 		/* Textures likely to be mapped often. */
@@ -1436,15 +1291,17 @@ struct pipe_resource *r600_texture_create(struct pipe_screen *screen,
 	int r;
 
 	r = r600_init_surface(rscreen, &surface, templ,
-			      r600_choose_tiling(rscreen, templ), 0, 0,
-			      false, false, is_flushed_depth,
-			      tc_compatible_htile);
+			      r600_choose_tiling(rscreen, templ),
+			      is_flushed_depth, tc_compatible_htile);
 	if (r) {
 		return NULL;
 	}
-
-	return (struct pipe_resource *)
-	       r600_texture_create_object(screen, templ, NULL, &surface);
+	r = rscreen->ws->surface_best(rscreen->ws, &surface);
+	if (r) {
+		return NULL;
+	}
+	return (struct pipe_resource *)r600_texture_create_object(screen, templ, 0,
+								  0, NULL, &surface);
 }
 
 static struct pipe_resource *r600_texture_from_handle(struct pipe_screen *screen,
@@ -1460,7 +1317,6 @@ static struct pipe_resource *r600_texture_from_handle(struct pipe_screen *screen
 	int r;
 	struct radeon_bo_metadata metadata = {};
 	struct r600_texture *rtex;
-	bool is_scanout;
 
 	/* Support only 2D textures without mipmaps */
 	if ((templ->target != PIPE_TEXTURE_2D && templ->target != PIPE_TEXTURE_RECT) ||
@@ -1473,45 +1329,35 @@ static struct pipe_resource *r600_texture_from_handle(struct pipe_screen *screen
 
 	rscreen->ws->buffer_get_metadata(buf, &metadata);
 
-	if (rscreen->chip_class >= GFX9) {
-		if (metadata.u.gfx9.swizzle_mode > 0)
-			array_mode = RADEON_SURF_MODE_2D;
-		else
-			array_mode = RADEON_SURF_MODE_LINEAR_ALIGNED;
+	surface.pipe_config = metadata.pipe_config;
+	surface.bankw = metadata.bankw;
+	surface.bankh = metadata.bankh;
+	surface.tile_split = metadata.tile_split;
+	surface.mtilea = metadata.mtilea;
+	surface.num_banks = metadata.num_banks;
 
-		is_scanout = metadata.u.gfx9.swizzle_mode == 0 ||
-			      metadata.u.gfx9.swizzle_mode % 4 == 2;
+	if (metadata.macrotile == RADEON_LAYOUT_TILED)
+		array_mode = RADEON_SURF_MODE_2D;
+	else if (metadata.microtile == RADEON_LAYOUT_TILED)
+		array_mode = RADEON_SURF_MODE_1D;
+	else
+		array_mode = RADEON_SURF_MODE_LINEAR_ALIGNED;
 
-		surface.u.gfx9.surf.swizzle_mode = metadata.u.gfx9.swizzle_mode;
-	} else {
-		surface.u.legacy.pipe_config = metadata.u.legacy.pipe_config;
-		surface.u.legacy.bankw = metadata.u.legacy.bankw;
-		surface.u.legacy.bankh = metadata.u.legacy.bankh;
-		surface.u.legacy.tile_split = metadata.u.legacy.tile_split;
-		surface.u.legacy.mtilea = metadata.u.legacy.mtilea;
-		surface.u.legacy.num_banks = metadata.u.legacy.num_banks;
-
-		if (metadata.u.legacy.macrotile == RADEON_LAYOUT_TILED)
-			array_mode = RADEON_SURF_MODE_2D;
-		else if (metadata.u.legacy.microtile == RADEON_LAYOUT_TILED)
-			array_mode = RADEON_SURF_MODE_1D;
-		else
-			array_mode = RADEON_SURF_MODE_LINEAR_ALIGNED;
-
-		is_scanout = metadata.u.legacy.scanout;
-	}
-
-	r = r600_init_surface(rscreen, &surface, templ, array_mode, stride,
-			      offset, true, is_scanout, false, false);
+	r = r600_init_surface(rscreen, &surface, templ, array_mode,
+			      false, false);
 	if (r) {
 		return NULL;
 	}
 
-	rtex = r600_texture_create_object(screen, templ, buf, &surface);
+	if (metadata.scanout)
+		surface.flags |= RADEON_SURF_SCANOUT;
+
+	rtex = r600_texture_create_object(screen, templ, stride,
+					  offset, buf, &surface);
 	if (!rtex)
 		return NULL;
 
-	rtex->resource.b.is_shared = true;
+	rtex->resource.is_shared = true;
 	rtex->resource.external_usage = usage;
 
 	if (rscreen->apply_opaque_metadata)
@@ -1624,7 +1470,7 @@ static bool r600_can_invalidate_texture(struct r600_common_screen *rscreen,
 {
 	/* r600g doesn't react to dirty_tex_descriptor_counter */
 	return rscreen->chip_class >= SI &&
-		!rtex->resource.b.is_shared &&
+		!rtex->resource.is_shared &&
 		!(transfer_usage & PIPE_TRANSFER_READ) &&
 		rtex->resource.b.b.last_level == 0 &&
 		util_texrange_covers_whole_level(&rtex->resource.b.b, 0,
@@ -1640,7 +1486,7 @@ static void r600_texture_invalidate_storage(struct r600_common_context *rctx,
 
 	/* There is no point in discarding depth and tiled buffers. */
 	assert(!rtex->is_depth);
-	assert(rtex->surface.is_linear);
+	assert(rtex->surface.level[0].mode == RADEON_SURF_MODE_LINEAR_ALIGNED);
 
 	/* Reallocate the buffer in the same pipe_resource. */
 	r600_alloc_resource(rscreen, &rtex->resource);
@@ -1649,7 +1495,8 @@ static void r600_texture_invalidate_storage(struct r600_common_context *rctx,
 	rtex->cmask.base_address_reg =
 		(rtex->resource.gpu_address + rtex->cmask.offset) >> 8;
 
-	p_atomic_inc(&rscreen->dirty_tex_counter);
+	r600_dirty_all_framebuffer_states(rscreen);
+	p_atomic_inc(&rscreen->dirty_tex_descriptor_counter);
 
 	rctx->num_alloc_tex_transfer_bytes += rtex->size;
 }
@@ -1670,7 +1517,6 @@ static void *r600_texture_transfer_map(struct pipe_context *ctx,
 	bool use_staging_texture = false;
 
 	assert(!(texture->flags & R600_RESOURCE_FLAG_TRANSFER));
-	assert(box->width && box->height && box->depth);
 
 	/* Depth textures use staging unconditionally. */
 	if (!rtex->is_depth) {
@@ -1686,26 +1532,24 @@ static void *r600_texture_transfer_map(struct pipe_context *ctx,
 				r600_can_invalidate_texture(rctx->screen, rtex,
 							    usage, box);
 
-			r600_reallocate_texture_inplace(rctx, rtex,
-							PIPE_BIND_LINEAR,
-							can_invalidate);
+			r600_degrade_tile_mode_to_linear(rctx, rtex,
+							 can_invalidate);
 		}
 
 		/* Tiled textures need to be converted into a linear texture for CPU
 		 * access. The staging texture is always linear and is placed in GART.
 		 *
-		 * Reading from VRAM or GTT WC is slow, always use the staging
-		 * texture in this case.
+		 * Reading from VRAM is slow, always use the staging texture in
+		 * this case.
 		 *
 		 * Use the staging texture for uploads if the underlying BO
 		 * is busy.
 		 */
-		if (!rtex->surface.is_linear)
+		if (rtex->surface.level[0].mode >= RADEON_SURF_MODE_1D)
 			use_staging_texture = true;
 		else if (usage & PIPE_TRANSFER_READ)
-			use_staging_texture =
-				rtex->resource.domains & RADEON_DOMAIN_VRAM ||
-				rtex->resource.flags & RADEON_FLAG_GTT_WC;
+			use_staging_texture = (rtex->resource.domains &
+					       RADEON_DOMAIN_VRAM) != 0;
 		/* Write & linear only: */
 		else if (r600_rings_is_buffer_referenced(rctx, rtex->resource.buf,
 							 RADEON_USAGE_READWRITE) ||
@@ -1723,10 +1567,10 @@ static void *r600_texture_transfer_map(struct pipe_context *ctx,
 	trans = CALLOC_STRUCT(r600_transfer);
 	if (!trans)
 		return NULL;
-	pipe_resource_reference(&trans->b.b.resource, texture);
-	trans->b.b.level = level;
-	trans->b.b.usage = usage;
-	trans->b.b.box = *box;
+	trans->transfer.resource = texture;
+	trans->transfer.level = level;
+	trans->transfer.usage = usage;
+	trans->transfer.box = *box;
 
 	if (rtex->is_depth) {
 		struct r600_texture *staging_depth;
@@ -1765,12 +1609,8 @@ static void *r600_texture_transfer_map(struct pipe_context *ctx,
 							    0, 0, 0, box->depth, 0, 0);
 				pipe_resource_reference(&temp, NULL);
 			}
-
-			/* Just get the strides. */
-			r600_texture_get_offset(rctx->screen, staging_depth, level, NULL,
-						&trans->b.b.stride,
-						&trans->b.b.layer_stride);
-		} else {
+		}
+		else {
 			/* XXX: only readback the rectangle which is being mapped? */
 			/* XXX: when discard is true, no need to read back from depth texture */
 			if (!r600_init_flushed_depth_texture(ctx, texture, &staging_depth)) {
@@ -1784,12 +1624,11 @@ static void *r600_texture_transfer_map(struct pipe_context *ctx,
 						    box->z, box->z + box->depth - 1,
 						    0, 0);
 
-			offset = r600_texture_get_offset(rctx->screen, staging_depth,
-							 level, box,
-							 &trans->b.b.stride,
-							 &trans->b.b.layer_stride);
+			offset = r600_texture_get_offset(staging_depth, level, box);
 		}
 
+		trans->transfer.stride = staging_depth->surface.level[level].pitch_bytes;
+		trans->transfer.layer_stride = staging_depth->surface.level[level].slice_size;
 		trans->staging = (struct r600_resource*)staging_depth;
 		buf = trans->staging;
 	} else if (use_staging_texture) {
@@ -1809,11 +1648,8 @@ static void *r600_texture_transfer_map(struct pipe_context *ctx,
 			return NULL;
 		}
 		trans->staging = &staging->resource;
-
-		/* Just get the strides. */
-		r600_texture_get_offset(rctx->screen, staging, 0, NULL,
-					&trans->b.b.stride,
-					&trans->b.b.layer_stride);
+		trans->transfer.stride = staging->surface.level[0].pitch_bytes;
+		trans->transfer.layer_stride = staging->surface.level[0].slice_size;
 
 		if (usage & PIPE_TRANSFER_READ)
 			r600_copy_to_staging_texture(ctx, trans);
@@ -1823,9 +1659,9 @@ static void *r600_texture_transfer_map(struct pipe_context *ctx,
 		buf = trans->staging;
 	} else {
 		/* the resource is mapped directly */
-		offset = r600_texture_get_offset(rctx->screen, rtex, level, box,
-						 &trans->b.b.stride,
-						 &trans->b.b.layer_stride);
+		trans->transfer.stride = rtex->surface.level[level].pitch_bytes;
+		trans->transfer.layer_stride = rtex->surface.level[level].slice_size;
+		offset = r600_texture_get_offset(rtex, level, box);
 		buf = &rtex->resource;
 	}
 
@@ -1835,7 +1671,7 @@ static void *r600_texture_transfer_map(struct pipe_context *ctx,
 		return NULL;
 	}
 
-	*ptransfer = &trans->b.b;
+	*ptransfer = &trans->transfer;
 	return map + offset;
 }
 
@@ -1881,7 +1717,6 @@ static void r600_texture_transfer_unmap(struct pipe_context *ctx,
 		rctx->num_alloc_tex_transfer_bytes = 0;
 	}
 
-	pipe_resource_reference(&transfer->resource, NULL);
 	FREE(transfer);
 }
 
@@ -1978,26 +1813,15 @@ bool vi_dcc_formats_compatible(enum pipe_format format1,
 	       type1 == type2;
 }
 
-bool vi_dcc_formats_are_incompatible(struct pipe_resource *tex,
-				     unsigned level,
-				     enum pipe_format view_format)
-{
-	struct r600_texture *rtex = (struct r600_texture *)tex;
-
-	return vi_dcc_enabled(rtex, level) &&
-	       !vi_dcc_formats_compatible(tex->format, view_format);
-}
-
-/* This can't be merged with the above function, because
- * vi_dcc_formats_compatible should be called only when DCC is enabled. */
-void vi_disable_dcc_if_incompatible_format(struct r600_common_context *rctx,
+void vi_dcc_disable_if_incompatible_format(struct r600_common_context *rctx,
 					   struct pipe_resource *tex,
 					   unsigned level,
 					   enum pipe_format view_format)
 {
 	struct r600_texture *rtex = (struct r600_texture *)tex;
 
-	if (vi_dcc_enabled(rtex, level) &&
+	if (rtex->dcc_offset &&
+	    rtex->surface.level[level].dcc_enabled &&
 	    !vi_dcc_formats_compatible(tex->format, view_format))
 		if (!r600_texture_disable_dcc(rctx, (struct r600_texture*)tex))
 			rctx->decompress_dcc(&rctx->b, rtex);
@@ -2006,9 +1830,10 @@ void vi_disable_dcc_if_incompatible_format(struct r600_common_context *rctx,
 struct pipe_surface *r600_create_surface_custom(struct pipe_context *pipe,
 						struct pipe_resource *texture,
 						const struct pipe_surface *templ,
-						unsigned width0, unsigned height0,
 						unsigned width, unsigned height)
 {
+	struct r600_common_context *rctx = (struct r600_common_context*)pipe;
+	struct r600_texture *rtex = (struct r600_texture*)texture;
 	struct r600_surface *surface = CALLOC_STRUCT(r600_surface);
 
 	if (!surface)
@@ -2024,14 +1849,13 @@ struct pipe_surface *r600_create_surface_custom(struct pipe_context *pipe,
 	surface->base.width = width;
 	surface->base.height = height;
 	surface->base.u = templ->u;
+	surface->level_info = &rtex->surface.level[templ->u.tex.level];
 
-	surface->width0 = width0;
-	surface->height0 = height0;
+	if (texture->target != PIPE_BUFFER)
+		vi_dcc_disable_if_incompatible_format(rctx, texture,
+						      templ->u.tex.level,
+						      templ->format);
 
-	surface->dcc_incompatible =
-		texture->target != PIPE_BUFFER &&
-		vi_dcc_formats_are_incompatible(texture, templ->u.tex.level,
-						templ->format);
 	return &surface->base;
 }
 
@@ -2042,8 +1866,6 @@ static struct pipe_surface *r600_create_surface(struct pipe_context *pipe,
 	unsigned level = templ->u.tex.level;
 	unsigned width = u_minify(tex->width0, level);
 	unsigned height = u_minify(tex->height0, level);
-	unsigned width0 = tex->width0;
-	unsigned height0 = tex->height0;
 
 	if (tex->target != PIPE_BUFFER && templ->format != tex->format) {
 		const struct util_format_description *tex_desc
@@ -2062,15 +1884,10 @@ static struct pipe_surface *r600_create_surface(struct pipe_context *pipe,
 
 			width = nblks_x * templ_desc->block.width;
 			height = nblks_y * templ_desc->block.height;
-
-			width0 = util_format_get_nblocksx(tex->format, width0);
-			height0 = util_format_get_nblocksy(tex->format, height0);
 		}
 	}
 
-	return r600_create_surface_custom(pipe, tex, templ,
-					  width0, height0,
-					  width, height);
+	return r600_create_surface_custom(pipe, tex, templ, width, height);
 }
 
 static void r600_surface_destroy(struct pipe_context *pipe,
@@ -2337,10 +2154,10 @@ static void vi_separate_dcc_try_enable(struct r600_common_context *rctx,
 	/* The intent is to use this with shared displayable back buffers,
 	 * but it's not strictly limited only to them.
 	 */
-	if (!tex->resource.b.is_shared ||
+	if (!tex->resource.is_shared ||
 	    !(tex->resource.external_usage & PIPE_HANDLE_USAGE_EXPLICIT_FLUSH) ||
 	    tex->resource.b.b.target != PIPE_TEXTURE_2D ||
-	    tex->resource.b.b.last_level > 0 ||
+	    tex->surface.last_level > 0 ||
 	    !tex->surface.dcc_size)
 		return;
 
@@ -2356,7 +2173,7 @@ static void vi_separate_dcc_try_enable(struct r600_common_context *rctx,
 	if (!vi_should_enable_separate_dcc(tex))
 		return; /* stats show that DCC decompression is too expensive */
 
-	assert(tex->surface.num_dcc_levels);
+	assert(tex->surface.level[0].dcc_enabled);
 	assert(!tex->dcc_separate_buffer);
 
 	r600_texture_discard_cmask(rctx->screen, tex);
@@ -2369,8 +2186,7 @@ static void vi_separate_dcc_try_enable(struct r600_common_context *rctx,
 		tex->last_dcc_separate_buffer = NULL;
 	} else {
 		tex->dcc_separate_buffer = (struct r600_resource*)
-			r600_aligned_buffer_create(rctx->b.screen,
-						   R600_RESOURCE_FLAG_UNMAPPABLE,
+			r600_aligned_buffer_create(rctx->b.screen, 0,
 						   PIPE_USAGE_DEFAULT,
 						   tex->surface.dcc_size,
 						   tex->surface.dcc_alignment);
@@ -2456,7 +2272,7 @@ static void evergreen_set_clear_color(struct r600_texture *rtex,
 
 	memset(&uc, 0, sizeof(uc));
 
-	if (rtex->surface.bpe == 16) {
+	if (util_format_get_blocksizebits(surface_format) == 128) {
 		/* DCC fast clear only:
 		 *   CLEAR_WORD0 = R = G = B
 		 *   CLEAR_WORD1 = A
@@ -2486,14 +2302,6 @@ static bool vi_get_fast_clear_parameters(enum pipe_format surface_format,
 	bool main_value = false;
 	bool extra_value = false;
 	int extra_channel;
-
-	/* This is needed to get the correct DCC clear value for luminance formats.
-	 * 1) Get the linear format (because the next step can't handle L8_SRGB).
-	 * 2) Convert luminance to red. (the real hw format for luminance)
-	 */
-	surface_format = util_format_linear(surface_format);
-	surface_format = util_format_luminance_to_red(surface_format);
-
 	const struct util_format_description *desc = util_format_description(surface_format);
 
 	if (desc->block.bits == 128 &&
@@ -2512,8 +2320,7 @@ static bool vi_get_fast_clear_parameters(enum pipe_format surface_format,
 
 	if (surface_format == PIPE_FORMAT_R11G11B10_FLOAT ||
 	    surface_format == PIPE_FORMAT_B5G6R5_UNORM ||
-	    surface_format == PIPE_FORMAT_B5G6R5_SRGB ||
-	    util_format_is_alpha(surface_format)) {
+	    surface_format == PIPE_FORMAT_B5G6R5_SRGB) {
 		extra_channel = -1;
 	} else if (desc->layout == UTIL_FORMAT_LAYOUT_PLAIN) {
 		if(r600_translate_colorswap(surface_format, false) <= 1)
@@ -2579,9 +2386,9 @@ void vi_dcc_clear_level(struct r600_common_context *rctx,
 			unsigned level, unsigned clear_value)
 {
 	struct pipe_resource *dcc_buffer;
-	uint64_t dcc_offset, clear_size;
+	uint64_t dcc_offset;
 
-	assert(vi_dcc_enabled(rtex, level));
+	assert(rtex->dcc_offset && rtex->surface.level[level].dcc_enabled);
 
 	if (rtex->dcc_separate_buffer) {
 		dcc_buffer = &rtex->dcc_separate_buffer->b.b;
@@ -2591,21 +2398,10 @@ void vi_dcc_clear_level(struct r600_common_context *rctx,
 		dcc_offset = rtex->dcc_offset;
 	}
 
-	if (rctx->chip_class >= GFX9) {
-		/* Mipmap level clears aren't implemented. */
-		assert(rtex->resource.b.b.last_level == 0);
-		/* MSAA needs a different clear size. */
-		assert(rtex->resource.b.b.nr_samples <= 1);
-		clear_size = rtex->surface.dcc_size;
-	} else {
-		unsigned num_layers = util_max_layer(&rtex->resource.b.b, level) + 1;
+	dcc_offset += rtex->surface.level[level].dcc_offset;
 
-		dcc_offset += rtex->surface.u.legacy.level[level].dcc_offset;
-		clear_size = rtex->surface.u.legacy.level[level].dcc_fast_clear_size *
-			     num_layers;
-	}
-
-	rctx->clear_buffer(&rctx->b, dcc_buffer, dcc_offset, clear_size,
+	rctx->clear_buffer(&rctx->b, dcc_buffer, dcc_offset,
+			   rtex->surface.level[level].dcc_fast_clear_size,
 			   clear_value, R600_COHERENCY_CB_META);
 }
 
@@ -2616,60 +2412,28 @@ void vi_dcc_clear_level(struct r600_common_context *rctx,
 static void si_set_optimal_micro_tile_mode(struct r600_common_screen *rscreen,
 					   struct r600_texture *rtex)
 {
-	if (rtex->resource.b.is_shared ||
-	    rtex->resource.b.b.nr_samples <= 1 ||
+	if (rtex->resource.is_shared ||
+	    rtex->surface.nsamples <= 1 ||
 	    rtex->surface.micro_tile_mode == rtex->last_msaa_resolve_target_micro_mode)
 		return;
 
-	assert(rscreen->chip_class >= GFX9 ||
-	       rtex->surface.u.legacy.level[0].mode == RADEON_SURF_MODE_2D);
-	assert(rtex->resource.b.b.last_level == 0);
+	assert(rtex->surface.level[0].mode == RADEON_SURF_MODE_2D);
+	assert(rtex->surface.last_level == 0);
 
-	if (rscreen->chip_class >= GFX9) {
-		/* 4K or larger tiles only. 0 is linear. 1-3 are 256B tiles. */
-		assert(rtex->surface.u.gfx9.surf.swizzle_mode >= 4);
-
-		/* If you do swizzle_mode % 4, you'll get:
-		 *   0 = Depth
-		 *   1 = Standard,
-		 *   2 = Displayable
-		 *   3 = Rotated
-		 *
-		 * Depth-sample order isn't allowed:
-		 */
-		assert(rtex->surface.u.gfx9.surf.swizzle_mode % 4 != 0);
-
+	/* These magic numbers were copied from addrlib. It doesn't use any
+	 * definitions for them either. They are all 2D_TILED_THIN1 modes with
+	 * different bpp and micro tile mode.
+	 */
+	if (rscreen->chip_class >= CIK) {
 		switch (rtex->last_msaa_resolve_target_micro_mode) {
-		case RADEON_MICRO_MODE_DISPLAY:
-			rtex->surface.u.gfx9.surf.swizzle_mode &= ~0x3;
-			rtex->surface.u.gfx9.surf.swizzle_mode += 2; /* D */
+		case 0: /* displayable */
+			rtex->surface.tiling_index[0] = 10;
 			break;
-		case RADEON_MICRO_MODE_THIN:
-			rtex->surface.u.gfx9.surf.swizzle_mode &= ~0x3;
-			rtex->surface.u.gfx9.surf.swizzle_mode += 1; /* S */
+		case 1: /* thin */
+			rtex->surface.tiling_index[0] = 14;
 			break;
-		case RADEON_MICRO_MODE_ROTATED:
-			rtex->surface.u.gfx9.surf.swizzle_mode &= ~0x3;
-			rtex->surface.u.gfx9.surf.swizzle_mode += 3; /* R */
-			break;
-		default: /* depth */
-			assert(!"unexpected micro mode");
-			return;
-		}
-	} else if (rscreen->chip_class >= CIK) {
-		/* These magic numbers were copied from addrlib. It doesn't use
-		 * any definitions for them either. They are all 2D_TILED_THIN1
-		 * modes with different bpp and micro tile mode.
-		 */
-		switch (rtex->last_msaa_resolve_target_micro_mode) {
-		case RADEON_MICRO_MODE_DISPLAY:
-			rtex->surface.u.legacy.tiling_index[0] = 10;
-			break;
-		case RADEON_MICRO_MODE_THIN:
-			rtex->surface.u.legacy.tiling_index[0] = 14;
-			break;
-		case RADEON_MICRO_MODE_ROTATED:
-			rtex->surface.u.legacy.tiling_index[0] = 28;
+		case 3: /* rotated */
+			rtex->surface.tiling_index[0] = 28;
 			break;
 		default: /* depth, thick */
 			assert(!"unexpected micro mode");
@@ -2677,32 +2441,32 @@ static void si_set_optimal_micro_tile_mode(struct r600_common_screen *rscreen,
 		}
 	} else { /* SI */
 		switch (rtex->last_msaa_resolve_target_micro_mode) {
-		case RADEON_MICRO_MODE_DISPLAY:
+		case 0: /* displayable */
 			switch (rtex->surface.bpe) {
 			case 1:
-                            rtex->surface.u.legacy.tiling_index[0] = 10;
+                            rtex->surface.tiling_index[0] = 10;
                             break;
 			case 2:
-                            rtex->surface.u.legacy.tiling_index[0] = 11;
+                            rtex->surface.tiling_index[0] = 11;
                             break;
 			default: /* 4, 8 */
-                            rtex->surface.u.legacy.tiling_index[0] = 12;
+                            rtex->surface.tiling_index[0] = 12;
                             break;
 			}
 			break;
-		case RADEON_MICRO_MODE_THIN:
+		case 1: /* thin */
 			switch (rtex->surface.bpe) {
 			case 1:
-                                rtex->surface.u.legacy.tiling_index[0] = 14;
+                                rtex->surface.tiling_index[0] = 14;
                                 break;
 			case 2:
-                                rtex->surface.u.legacy.tiling_index[0] = 15;
+                                rtex->surface.tiling_index[0] = 15;
                                 break;
 			case 4:
-                                rtex->surface.u.legacy.tiling_index[0] = 16;
+                                rtex->surface.tiling_index[0] = 16;
                                 break;
 			default: /* 8, 16 */
-                                rtex->surface.u.legacy.tiling_index[0] = 17;
+                                rtex->surface.tiling_index[0] = 17;
                                 break;
 			}
 			break;
@@ -2714,13 +2478,14 @@ static void si_set_optimal_micro_tile_mode(struct r600_common_screen *rscreen,
 
 	rtex->surface.micro_tile_mode = rtex->last_msaa_resolve_target_micro_mode;
 
-	p_atomic_inc(&rscreen->dirty_tex_counter);
+	p_atomic_inc(&rscreen->dirty_fb_counter);
+	p_atomic_inc(&rscreen->dirty_tex_descriptor_counter);
 }
 
 void evergreen_do_fast_color_clear(struct r600_common_context *rctx,
 				   struct pipe_framebuffer_state *fb,
 				   struct r600_atom *fb_state,
-				   unsigned *buffers, ubyte *dirty_cbufs,
+				   unsigned *buffers, unsigned *dirty_cbufs,
 				   const union pipe_color_union *color)
 {
 	int i;
@@ -2758,7 +2523,7 @@ void evergreen_do_fast_color_clear(struct r600_common_context *rctx,
 		}
 
 		/* only supported on tiled surfaces */
-		if (tex->surface.is_linear) {
+		if (tex->surface.level[0].mode < RADEON_SURF_MODE_1D) {
 			continue;
 		}
 
@@ -2766,13 +2531,13 @@ void evergreen_do_fast_color_clear(struct r600_common_context *rctx,
 		 * because there is no way to communicate the clear color among
 		 * all clients
 		 */
-		if (tex->resource.b.is_shared &&
+		if (tex->resource.is_shared &&
 		    !(tex->resource.external_usage & PIPE_HANDLE_USAGE_EXPLICIT_FLUSH))
 			continue;
 
 		/* fast color clear with 1D tiling doesn't work on old kernels and CIK */
-		if (rctx->chip_class == CIK &&
-		    tex->surface.u.legacy.level[0].mode == RADEON_SURF_MODE_1D &&
+		if (tex->surface.level[0].mode == RADEON_SURF_MODE_1D &&
+		    rctx->chip_class >= CIK &&
 		    rctx->screen->info.drm_major == 2 &&
 		    rctx->screen->info.drm_minor < 38) {
 			continue;
@@ -2785,10 +2550,9 @@ void evergreen_do_fast_color_clear(struct r600_common_context *rctx,
 		    !(rctx->screen->debug_flags & DBG_NO_DCC_FB)) {
 			vi_separate_dcc_try_enable(rctx, tex);
 
-			/* RB+ isn't supported with a CMASK clear only on Stoney,
-			 * so all clears are considered to be hypothetically slow
-			 * clears, which is weighed when determining whether to
-			 * enable separate DCC.
+			/* Stoney can't do a CMASK-based clear, so all clears are
+			 * considered to be hypothetically slow clears, which
+			 * is weighed when determining to enable separate DCC.
 			 */
 			if (tex->dcc_gather_statistics &&
 			    rctx->family == CHIP_STONEY)
@@ -2796,7 +2560,7 @@ void evergreen_do_fast_color_clear(struct r600_common_context *rctx,
 		}
 
 		/* Try to clear DCC first, otherwise try CMASK. */
-		if (vi_dcc_enabled(tex, 0)) {
+		if (tex->dcc_offset && tex->surface.level[0].dcc_enabled) {
 			uint32_t reset_value;
 			bool clear_words_needed;
 
@@ -2810,23 +2574,16 @@ void evergreen_do_fast_color_clear(struct r600_common_context *rctx,
 
 			vi_dcc_clear_level(rctx, tex, 0, reset_value);
 
-			unsigned level_bit = 1 << fb->cbufs[i]->u.tex.level;
-			if (clear_words_needed) {
-				bool need_compressed_update = !tex->dirty_level_mask;
-
-				tex->dirty_level_mask |= level_bit;
-
-				if (need_compressed_update)
-					p_atomic_inc(&rctx->screen->compressed_colortex_counter);
-			}
+			if (clear_words_needed)
+				tex->dirty_level_mask |= 1 << fb->cbufs[i]->u.tex.level;
 			tex->separate_dcc_dirty = true;
 		} else {
 			/* 128-bit formats are unusupported */
-			if (tex->surface.bpe > 8) {
+			if (util_format_get_blocksizebits(fb->cbufs[i]->format) > 64) {
 				continue;
 			}
 
-			/* RB+ doesn't work with CMASK fast clear on Stoney. */
+			/* Stoney/RB+ doesn't work with CMASK fast clear. */
 			if (rctx->family == CHIP_STONEY)
 				continue;
 
@@ -2841,12 +2598,7 @@ void evergreen_do_fast_color_clear(struct r600_common_context *rctx,
 					   tex->cmask.offset, tex->cmask.size, 0,
 					   R600_COHERENCY_CB_META);
 
-			bool need_compressed_update = !tex->dirty_level_mask;
-
 			tex->dirty_level_mask |= 1 << fb->cbufs[i]->u.tex.level;
-
-			if (need_compressed_update)
-				p_atomic_inc(&rctx->screen->compressed_colortex_counter);
 		}
 
 		/* We can change the micro tile mode before a full clear. */

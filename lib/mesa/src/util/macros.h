@@ -136,17 +136,6 @@ do {                       \
 #define MALLOCLIKE
 #endif
 
-/* Forced function inlining */
-#ifndef ALWAYS_INLINE
-#  if defined(__GNUC__) || defined(__clang__)
-#    define ALWAYS_INLINE inline __attribute__((always_inline))
-#  elif defined(_MSC_VER)
-#    define ALWAYS_INLINE __forceinline
-#  else
-#    define ALWAYS_INLINE inline
-#  endif
-#endif
-
 /* Used to optionally mark structures with misaligned elements or size as
  * packed, to trade off performance for space.
  */
@@ -184,10 +173,6 @@ do {                       \
 #      endif
 #   elif defined(__GNUC__)
 #      if ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 3)))
-#         define HAS_TRIVIAL_DESTRUCTOR(T) __has_trivial_destructor(T)
-#      endif
-#   elif defined(_MSC_VER) && !defined(__INTEL_COMPILER)
-#      if _MSC_VER >= 1800
 #         define HAS_TRIVIAL_DESTRUCTOR(T) __has_trivial_destructor(T)
 #      endif
 #   endif
@@ -244,8 +229,8 @@ do {                       \
 /** Compute ceiling of integer quotient of A divided by B. */
 #define DIV_ROUND_UP( A, B )  ( (A) % (B) == 0 ? (A)/(B) : (A)/(B)+1 )
 
-/** Clamp X to [MIN,MAX].  Turn NaN into MIN, arbitrarily. */
-#define CLAMP( X, MIN, MAX )  ( (X)>(MIN) ? ((X)>(MAX) ? (MAX) : (X)) : (MIN) )
+/** Clamp X to [MIN,MAX] */
+#define CLAMP( X, MIN, MAX )  ( (X)<(MIN) ? (MIN) : ((X)>(MAX) ? (MAX) : (X)) )
 
 /** Minimum of two values: */
 #define MIN2( A, B )   ( (A)<(B) ? (A) : (B) )

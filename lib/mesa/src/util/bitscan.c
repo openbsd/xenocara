@@ -32,7 +32,7 @@
 #elif defined(_MSC_VER) && (_M_IX86 || _M_ARM || _M_AMD64 || _M_IA64)
 #else
 int
-ffs(int i)
+ffs(unsigned i)
 {
    int bit = 0;
    if (!i)
@@ -63,7 +63,7 @@ ffs(int i)
 #elif defined(_MSC_VER) && (_M_AMD64 || _M_ARM || _M_IA64)
 #else
 int
-ffsll(long long int val)
+ffsll(uint64_t val)
 {
    int bit;
 

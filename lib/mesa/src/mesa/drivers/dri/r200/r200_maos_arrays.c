@@ -36,7 +36,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "main/mtypes.h"
 #include "main/imports.h"
 #include "main/macros.h"
-#include "main/state.h"
 
 #include "swrast_setup/swrast_setup.h"
 #include "math/m_translate.h"
@@ -115,7 +114,7 @@ void r200EmitArrays( struct gl_context *ctx, GLubyte *vimap_rev )
 	    /* special handling to fix up fog. Will get us into trouble with vbos...*/
 	    assert(attrib == VERT_ATTRIB_FOG);
 	    if (!rmesa->radeon.tcl.aos[i].bo) {
-	       if (_mesa_arb_vertex_program_enabled(ctx))
+	       if (ctx->VertexProgram._Enabled)
 		  rcommon_emit_vector( ctx,
 				       &(rmesa->radeon.tcl.aos[nr]),
 				       (char *)VB->AttribPtr[attrib]->data,

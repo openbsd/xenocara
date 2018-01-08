@@ -39,7 +39,6 @@
 #include "pipe/p_defines.h"
 #include "cso_cache/cso_context.h"
 
-#include "framebuffer.h"
 #include "main/macros.h"
 
 /**
@@ -187,8 +186,8 @@ blend_per_rt(const struct gl_context *ctx)
    return GL_FALSE;
 }
 
-void
-st_update_blend( struct st_context *st )
+static void 
+update_blend( struct st_context *st )
 {
    struct pipe_blend_state *blend = &st->state.blend;
    const struct gl_context *ctx = st->ctx;
@@ -206,7 +205,7 @@ st_update_blend( struct st_context *st )
       blend->logicop_enable = 1;
       blend->logicop_func = translate_logicop(ctx->Color.LogicOp);
    }
-   else if (ctx->Color.BlendEnabled && !ctx->Color._AdvancedBlendMode) {
+   else if (ctx->Color.BlendEnabled) {
       /* blending enabled */
       for (i = 0, j = 0; i < num_state; i++) {
 
@@ -266,7 +265,8 @@ st_update_blend( struct st_context *st )
 
    blend->dither = ctx->Color.DitherFlag;
 
-   if (_mesa_is_multisample_enabled(ctx) &&
+   if (ctx->Multisample.Enabled &&
+       ctx->DrawBuffer->Visual.sampleBuffers > 0 &&
        !(ctx->DrawBuffer->_IntegerBuffers & 0x1)) {
       /* Unlike in gallium/d3d10 these operations are only performed
        * if both msaa is enabled and we have a multisample buffer.
@@ -276,13 +276,15 @@ st_update_blend( struct st_context *st )
    }
 
    cso_set_blend(st->cso_context, blend);
+
+   {
+      struct pipe_blend_color bc;
+      COPY_4FV(bc.color, ctx->Color.BlendColorUnclamped);
+      cso_set_blend_color(st->cso_context, &bc);
+   }
 }
 
-void
-st_update_blend_color(struct st_context *st)
-{
-   struct pipe_blend_color bc;
 
-   COPY_4FV(bc.color, st->ctx->Color.BlendColorUnclamped);
-   cso_set_blend_color(st->cso_context, &bc);
-}
+const struct st_tracked_state st_update_blend = {
+   update_blend,					/* update */
+};

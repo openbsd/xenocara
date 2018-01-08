@@ -26,20 +26,64 @@
 
 #include "radv_meta.h"
 #include "radv_private.h"
+#include "nir/nir_builder.h"
 #include "sid.h"
+/**
+ * Vertex attributes used by all pipelines.
+ */
+struct vertex_attrs {
+	float position[2]; /**< 3DPRIM_RECTLIST */
+};
+
+/* passthrough vertex shader */
+static nir_shader *
+build_nir_vs(void)
+{
+	const struct glsl_type *vec4 = glsl_vec4_type();
+
+	nir_builder b;
+	nir_variable *a_position;
+	nir_variable *v_position;
+
+	nir_builder_init_simple_shader(&b, NULL, MESA_SHADER_VERTEX, NULL);
+	b.shader->info.name = ralloc_strdup(b.shader, "meta_depth_decomp_vs");
+
+	a_position = nir_variable_create(b.shader, nir_var_shader_in, vec4,
+					 "a_position");
+	a_position->data.location = VERT_ATTRIB_GENERIC0;
+
+	v_position = nir_variable_create(b.shader, nir_var_shader_out, vec4,
+					 "gl_Position");
+	v_position->data.location = VARYING_SLOT_POS;
+
+	nir_copy_var(&b, v_position, a_position);
+
+	return b.shader;
+}
+
+/* simple passthrough shader */
+static nir_shader *
+build_nir_fs(void)
+{
+	nir_builder b;
+
+	nir_builder_init_simple_shader(&b, NULL, MESA_SHADER_FRAGMENT, NULL);
+	b.shader->info.name = ralloc_asprintf(b.shader,
+					      "meta_depth_decomp_noop_fs");
+
+	return b.shader;
+}
 
 static VkResult
-create_pass(struct radv_device *device,
-	    uint32_t samples,
-	    VkRenderPass *pass)
+create_pass(struct radv_device *device)
 {
 	VkResult result;
 	VkDevice device_h = radv_device_to_handle(device);
 	const VkAllocationCallbacks *alloc = &device->meta_state.alloc;
 	VkAttachmentDescription attachment;
 
-	attachment.format = VK_FORMAT_D32_SFLOAT_S8_UINT;
-	attachment.samples = samples;
+	attachment.format = VK_FORMAT_UNDEFINED;
+	attachment.samples = 1;
 	attachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
 	attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 	attachment.initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
@@ -67,24 +111,20 @@ create_pass(struct radv_device *device,
 								.dependencyCount = 0,
 								   },
 				       alloc,
-				       pass);
+				       &device->meta_state.depth_decomp.pass);
 
 	return result;
 }
 
 static VkResult
 create_pipeline(struct radv_device *device,
-                VkShaderModule vs_module_h,
-		uint32_t samples,
-		VkRenderPass pass,
-		VkPipeline *decompress_pipeline,
-		VkPipeline *resummarize_pipeline)
+                VkShaderModule vs_module_h)
 {
 	VkResult result;
 	VkDevice device_h = radv_device_to_handle(device);
 
 	struct radv_shader_module fs_module = {
-		.nir = radv_meta_build_nir_fs_noop(),
+		.nir = build_nir_fs(),
 	};
 
 	if (!fs_module.nir) {
@@ -112,8 +152,24 @@ create_pipeline(struct radv_device *device,
 		},
 		.pVertexInputState = &(VkPipelineVertexInputStateCreateInfo) {
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-			.vertexBindingDescriptionCount = 0,
-			.vertexAttributeDescriptionCount = 0,
+			.vertexBindingDescriptionCount = 1,
+			.pVertexBindingDescriptions = (VkVertexInputBindingDescription[]) {
+				{
+					.binding = 0,
+					.stride = sizeof(struct vertex_attrs),
+					.inputRate = VK_VERTEX_INPUT_RATE_VERTEX
+				},
+			},
+			.vertexAttributeDescriptionCount = 1,
+			.pVertexAttributeDescriptions = (VkVertexInputAttributeDescription[]) {
+				{
+					/* Position */
+					.location = 0,
+					.binding = 0,
+					.format = VK_FORMAT_R32G32_SFLOAT,
+					.offset = offsetof(struct vertex_attrs, position),
+				},
+			},
 		},
 		.pInputAssemblyState = &(VkPipelineInputAssemblyStateCreateInfo) {
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
@@ -122,8 +178,8 @@ create_pipeline(struct radv_device *device,
 		},
 		.pViewportState = &(VkPipelineViewportStateCreateInfo) {
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
-			.viewportCount = 1,
-			.scissorCount = 1,
+			.viewportCount = 0,
+			.scissorCount = 0,
 		},
 		.pRasterizationState = &(VkPipelineRasterizationStateCreateInfo) {
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
@@ -135,7 +191,7 @@ create_pipeline(struct radv_device *device,
 		},
 		.pMultisampleState = &(VkPipelineMultisampleStateCreateInfo) {
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
-			.rasterizationSamples = samples,
+			.rasterizationSamples = 1,
 			.sampleShadingEnable = false,
 			.pSampleMask = NULL,
 			.alphaToCoverageEnable = false,
@@ -154,15 +210,8 @@ create_pipeline(struct radv_device *device,
 			.depthBoundsTestEnable = false,
 			.stencilTestEnable = false,
 		},
-		.pDynamicState = &(VkPipelineDynamicStateCreateInfo) {
-			.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
-			.dynamicStateCount = 2,
-			.pDynamicStates = (VkDynamicState[]) {
-				VK_DYNAMIC_STATE_VIEWPORT,
-				VK_DYNAMIC_STATE_SCISSOR,
-			},
-		},
-		.renderPass = pass,
+		.pDynamicState = NULL,
+		.renderPass = device->meta_state.depth_decomp.pass,
 		.subpass = 0,
 	};
 
@@ -175,7 +224,7 @@ create_pipeline(struct radv_device *device,
 							.db_flush_stencil_inplace = true,
 					       },
 					       &device->meta_state.alloc,
-					       decompress_pipeline);
+					       &device->meta_state.depth_decomp.decompress_pipeline);
 	if (result != VK_SUCCESS)
 		goto cleanup;
 
@@ -189,7 +238,7 @@ create_pipeline(struct radv_device *device,
 							.db_resummarize = true,
 					       },
 					       &device->meta_state.alloc,
-					       resummarize_pipeline);
+					       &device->meta_state.depth_decomp.resummarize_pipeline);
 	if (result != VK_SUCCESS)
 		goto cleanup;
 
@@ -205,55 +254,45 @@ radv_device_finish_meta_depth_decomp_state(struct radv_device *device)
 {
 	struct radv_meta_state *state = &device->meta_state;
 	VkDevice device_h = radv_device_to_handle(device);
+	VkRenderPass pass_h = device->meta_state.depth_decomp.pass;
 	const VkAllocationCallbacks *alloc = &device->meta_state.alloc;
 
-	for (uint32_t i = 0; i < ARRAY_SIZE(state->depth_decomp); ++i) {
-		VkRenderPass pass_h = state->depth_decomp[i].pass;
-		if (pass_h) {
-			radv_DestroyRenderPass(device_h, pass_h, alloc);
-		}
-		VkPipeline pipeline_h = state->depth_decomp[i].decompress_pipeline;
-		if (pipeline_h) {
-			radv_DestroyPipeline(device_h, pipeline_h, alloc);
-		}
-		pipeline_h = state->depth_decomp[i].resummarize_pipeline;
-		if (pipeline_h) {
-			radv_DestroyPipeline(device_h, pipeline_h, alloc);
-		}
+	if (pass_h)
+		radv_DestroyRenderPass(device_h, pass_h,
+					     &device->meta_state.alloc);
+
+	VkPipeline pipeline_h = state->depth_decomp.decompress_pipeline;
+	if (pipeline_h) {
+		radv_DestroyPipeline(device_h, pipeline_h, alloc);
+	}
+	pipeline_h = state->depth_decomp.resummarize_pipeline;
+	if (pipeline_h) {
+		radv_DestroyPipeline(device_h, pipeline_h, alloc);
 	}
 }
 
 VkResult
 radv_device_init_meta_depth_decomp_state(struct radv_device *device)
 {
-	struct radv_meta_state *state = &device->meta_state;
 	VkResult res = VK_SUCCESS;
 
-	zero(state->depth_decomp);
+	zero(device->meta_state.depth_decomp);
 
-	struct radv_shader_module vs_module = { .nir = radv_meta_build_nir_vs_generate_vertices() };
+	struct radv_shader_module vs_module = { .nir = build_nir_vs() };
 	if (!vs_module.nir) {
 		/* XXX: Need more accurate error */
 		res = VK_ERROR_OUT_OF_HOST_MEMORY;
 		goto fail;
 	}
 
+	res = create_pass(device);
+	if (res != VK_SUCCESS)
+		goto fail;
+
 	VkShaderModule vs_module_h = radv_shader_module_to_handle(&vs_module);
-
-	for (uint32_t i = 0; i < ARRAY_SIZE(state->depth_decomp); ++i) {
-		uint32_t samples = 1 << i;
-
-		res = create_pass(device, samples, &state->depth_decomp[i].pass);
-		if (res != VK_SUCCESS)
-			goto fail;
-
-		res = create_pipeline(device, vs_module_h, samples,
-				      state->depth_decomp[i].pass,
-				      &state->depth_decomp[i].decompress_pipeline,
-				      &state->depth_decomp[i].resummarize_pipeline);
-		if (res != VK_SUCCESS)
-			goto fail;
-	}
+	res = create_pipeline(device, vs_module_h);
+	if (res != VK_SUCCESS)
+		goto fail;
 
 	goto cleanup;
 
@@ -272,7 +311,45 @@ emit_depth_decomp(struct radv_cmd_buffer *cmd_buffer,
 		  const VkExtent2D *depth_decomp_extent,
 		  VkPipeline pipeline_h)
 {
+	struct radv_device *device = cmd_buffer->device;
 	VkCommandBuffer cmd_buffer_h = radv_cmd_buffer_to_handle(cmd_buffer);
+	uint32_t offset;
+	const struct vertex_attrs vertex_data[3] = {
+		{
+			.position = {
+				dest_offset->x,
+				dest_offset->y,
+			},
+		},
+		{
+			.position = {
+				dest_offset->x,
+				dest_offset->y + depth_decomp_extent->height,
+			},
+		},
+		{
+			.position = {
+				dest_offset->x + depth_decomp_extent->width,
+				dest_offset->y,
+			},
+		},
+	};
+
+	radv_cmd_buffer_upload_data(cmd_buffer, sizeof(vertex_data), 16, vertex_data, &offset);
+	struct radv_buffer vertex_buffer = {
+		.device = device,
+		.size = sizeof(vertex_data),
+		.bo = cmd_buffer->upload.upload_bo,
+		.offset = offset,
+	};
+
+	VkBuffer vertex_buffer_h = radv_buffer_to_handle(&vertex_buffer);
+
+	radv_CmdBindVertexBuffers(cmd_buffer_h,
+				  /*firstBinding*/ 0,
+				  /*bindingCount*/ 1,
+				  (VkBuffer[]) { vertex_buffer_h },
+				  (VkDeviceSize[]) { 0 });
 
 	RADV_FROM_HANDLE(radv_pipeline, pipeline, pipeline_h);
 
@@ -281,53 +358,31 @@ emit_depth_decomp(struct radv_cmd_buffer *cmd_buffer,
 				     pipeline_h);
 	}
 
-	radv_CmdSetViewport(radv_cmd_buffer_to_handle(cmd_buffer), 0, 1, &(VkViewport) {
-		.x = dest_offset->x,
-		.y = dest_offset->y,
-		.width = depth_decomp_extent->width,
-		.height = depth_decomp_extent->height,
-		.minDepth = 0.0f,
-		.maxDepth = 1.0f
-	});
-
-	radv_CmdSetScissor(radv_cmd_buffer_to_handle(cmd_buffer), 0, 1, &(VkRect2D) {
-		.offset = *dest_offset,
-		.extent = *depth_decomp_extent,
-	});
-
 	radv_CmdDraw(cmd_buffer_h, 3, 1, 0, 0);
 }
 
 
-enum radv_depth_op {
-	DEPTH_DECOMPRESS,
-	DEPTH_RESUMMARIZE,
-};
-
 static void radv_process_depth_image_inplace(struct radv_cmd_buffer *cmd_buffer,
 					     struct radv_image *image,
 					     VkImageSubresourceRange *subresourceRange,
-					     enum radv_depth_op op)
+					     VkPipeline pipeline_h)
 {
 	struct radv_meta_saved_state saved_state;
 	struct radv_meta_saved_pass_state saved_pass_state;
 	VkDevice device_h = radv_device_to_handle(cmd_buffer->device);
 	VkCommandBuffer cmd_buffer_h = radv_cmd_buffer_to_handle(cmd_buffer);
-	uint32_t width = radv_minify(image->info.width,
+	uint32_t width = radv_minify(image->extent.width,
 				     subresourceRange->baseMipLevel);
-	uint32_t height = radv_minify(image->info.height,
+	uint32_t height = radv_minify(image->extent.height,
 				     subresourceRange->baseMipLevel);
-	uint32_t samples = image->info.samples;
-	uint32_t samples_log2 = ffs(samples) - 1;
-	struct radv_meta_state *meta_state = &cmd_buffer->device->meta_state;
 
-	if (!image->surface.htile_size)
+	if (!image->htile.size)
 		return;
 	radv_meta_save_pass(&saved_pass_state, cmd_buffer);
 
-	radv_meta_save_graphics_reset_vport_scissor_novertex(&saved_state, cmd_buffer);
+	radv_meta_save_graphics_reset_vport_scissor(&saved_state, cmd_buffer);
 
-	for (uint32_t layer = 0; layer < radv_get_layerCount(image, subresourceRange); layer++) {
+	for (uint32_t layer = 0; layer < subresourceRange->layerCount; layer++) {
 		struct radv_image_view iview;
 
 		radv_image_view_init(&iview, cmd_buffer->device,
@@ -342,7 +397,8 @@ static void radv_process_depth_image_inplace(struct radv_cmd_buffer *cmd_buffer,
 						     .baseArrayLayer = subresourceRange->baseArrayLayer + layer,
 						     .layerCount = 1,
 					     },
-				     });
+				     },
+				     cmd_buffer, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
 
 
 		VkFramebuffer fb_h;
@@ -363,7 +419,7 @@ static void radv_process_depth_image_inplace(struct radv_cmd_buffer *cmd_buffer,
 		radv_CmdBeginRenderPass(cmd_buffer_h,
 					      &(VkRenderPassBeginInfo) {
 						      .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-							      .renderPass = meta_state->depth_decomp[samples_log2].pass,
+							      .renderPass = cmd_buffer->device->meta_state.depth_decomp.pass,
 							      .framebuffer = fb_h,
 							      .renderArea = {
 							      .offset = {
@@ -380,18 +436,6 @@ static void radv_process_depth_image_inplace(struct radv_cmd_buffer *cmd_buffer,
 					   },
 					   VK_SUBPASS_CONTENTS_INLINE);
 
-		VkPipeline pipeline_h;
-		switch (op) {
-		case DEPTH_DECOMPRESS:
-			pipeline_h = meta_state->depth_decomp[samples_log2].decompress_pipeline;
-			break;
-		case DEPTH_RESUMMARIZE:
-			pipeline_h = meta_state->depth_decomp[samples_log2].resummarize_pipeline;
-			break;
-		default:
-			unreachable("unknown operation");
-		}
-
 		emit_depth_decomp(cmd_buffer, &(VkOffset2D){0, 0 }, &(VkExtent2D){width, height}, pipeline_h);
 		radv_CmdEndRenderPass(cmd_buffer_h);
 
@@ -406,14 +450,14 @@ void radv_decompress_depth_image_inplace(struct radv_cmd_buffer *cmd_buffer,
 					 struct radv_image *image,
 					 VkImageSubresourceRange *subresourceRange)
 {
-	assert(cmd_buffer->queue_family_index == RADV_QUEUE_GENERAL);
-	radv_process_depth_image_inplace(cmd_buffer, image, subresourceRange, DEPTH_DECOMPRESS);
+	radv_process_depth_image_inplace(cmd_buffer, image, subresourceRange,
+					 cmd_buffer->device->meta_state.depth_decomp.decompress_pipeline);
 }
 
 void radv_resummarize_depth_image_inplace(struct radv_cmd_buffer *cmd_buffer,
 					 struct radv_image *image,
 					 VkImageSubresourceRange *subresourceRange)
 {
-	assert(cmd_buffer->queue_family_index == RADV_QUEUE_GENERAL);
-	radv_process_depth_image_inplace(cmd_buffer, image, subresourceRange, DEPTH_RESUMMARIZE);
+	radv_process_depth_image_inplace(cmd_buffer, image, subresourceRange,
+					 cmd_buffer->device->meta_state.depth_decomp.resummarize_pipeline);
 }

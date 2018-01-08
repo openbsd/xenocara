@@ -36,7 +36,6 @@
 #include "main/glheader.h"
 #include "main/accum.h"
 #include "main/formats.h"
-#include "main/framebuffer.h"
 #include "main/macros.h"
 #include "main/glformats.h"
 #include "program/prog_instruction.h"
@@ -54,6 +53,7 @@
 #include "pipe/p_state.h"
 #include "pipe/p_defines.h"
 #include "util/u_format.h"
+#include "util/u_framebuffer.h"
 #include "util/u_inlines.h"
 #include "util/u_simple_shaders.h"
 
@@ -180,14 +180,12 @@ clear_with_quad(struct gl_context *ctx, unsigned clear_buffers)
    const struct gl_framebuffer *fb = ctx->DrawBuffer;
    const GLfloat fb_width = (GLfloat) fb->Width;
    const GLfloat fb_height = (GLfloat) fb->Height;
-
-   _mesa_update_draw_buffer_bounds(ctx, ctx->DrawBuffer);
-
    const GLfloat x0 = (GLfloat) ctx->DrawBuffer->_Xmin / fb_width * 2.0f - 1.0f;
    const GLfloat x1 = (GLfloat) ctx->DrawBuffer->_Xmax / fb_width * 2.0f - 1.0f;
    const GLfloat y0 = (GLfloat) ctx->DrawBuffer->_Ymin / fb_height * 2.0f - 1.0f;
    const GLfloat y1 = (GLfloat) ctx->DrawBuffer->_Ymax / fb_height * 2.0f - 1.0f;
-   unsigned num_layers = st->state.fb_num_layers;
+   unsigned num_layers =
+      util_framebuffer_get_num_layers(&st->state.framebuffer);
 
    /*
    printf("%s %s%s%s %f,%f %f,%f\n", __func__,
@@ -408,7 +406,7 @@ st_Clear(struct gl_context *ctx, GLbitfield mask)
    st_invalidate_readpix_cache(st);
 
    /* This makes sure the pipe has the latest scissor, etc values */
-   st_validate_state(st, ST_PIPELINE_CLEAR);
+   st_validate_state( st, ST_PIPELINE_RENDER );
 
    if (mask & BUFFER_BITS_COLOR) {
       for (i = 0; i < ctx->DrawBuffer->_NumColorDrawBuffers; i++) {

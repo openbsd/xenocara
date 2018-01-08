@@ -8,7 +8,7 @@
 
 <category name="GL_ARB_blend_func_extended" number="78">
 
-    <function name="BindFragDataLocationIndexed" no_error="true">
+    <function name="BindFragDataLocationIndexed">
         <param name="program" type="GLuint"/>
         <param name="colorNumber" type="GLuint"/>
         <param name="index" type="GLuint"/>

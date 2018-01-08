@@ -29,6 +29,8 @@
 #include "si_pipe.h"
 #include "sid.h"
 
+#define NUMBER_OF_STATES (sizeof(union si_state) / sizeof(struct si_pm4_state *))
+
 void si_pm4_cmd_begin(struct si_pm4_state *state, unsigned opcode)
 {
 	state->last_opcode = opcode;
@@ -45,7 +47,8 @@ void si_pm4_cmd_end(struct si_pm4_state *state, bool predicate)
 	unsigned count;
 	count = state->ndw - state->last_pm4 - 2;
 	state->pm4[state->last_pm4] =
-		PKT3(state->last_opcode, count, predicate);
+		PKT3(state->last_opcode, count, predicate)
+		   | PKT3_SHADER_TYPE_S(state->compute_pkt);
 
 	assert(state->ndw <= SI_PM4_MAX_DW);
 }
@@ -109,6 +112,12 @@ void si_pm4_clear_state(struct si_pm4_state *state)
 	state->ndw = 0;
 }
 
+void si_pm4_free_state_simple(struct si_pm4_state *state)
+{
+	si_pm4_clear_state(state);
+	FREE(state);
+}
+
 void si_pm4_free_state(struct si_context *sctx,
 		       struct si_pm4_state *state,
 		       unsigned idx)
@@ -120,8 +129,7 @@ void si_pm4_free_state(struct si_context *sctx,
 		sctx->emitted.array[idx] = NULL;
 	}
 
-	si_pm4_clear_state(state);
-	FREE(state);
+	si_pm4_free_state_simple(state);
 }
 
 void si_pm4_emit(struct si_context *sctx, struct si_pm4_state *state)
@@ -144,15 +152,27 @@ void si_pm4_emit(struct si_context *sctx, struct si_pm4_state *state)
 
 		radeon_emit(cs, PKT3(PKT3_INDIRECT_BUFFER_CIK, 2, 0));
 		radeon_emit(cs, ib->gpu_address);
-		radeon_emit(cs, ib->gpu_address >> 32);
+		radeon_emit(cs, (ib->gpu_address >> 32) & 0xffff);
 		radeon_emit(cs, (ib->b.b.width0 >> 2) & 0xfffff);
+	}
+}
+
+void si_pm4_emit_dirty(struct si_context *sctx)
+{
+	for (int i = 0; i < NUMBER_OF_STATES; ++i) {
+		struct si_pm4_state *state = sctx->queued.array[i];
+
+		if (!state || sctx->emitted.array[i] == state)
+			continue;
+
+		si_pm4_emit(sctx, state);
+		sctx->emitted.array[i] = state;
 	}
 }
 
 void si_pm4_reset_emitted(struct si_context *sctx)
 {
 	memset(&sctx->emitted, 0, sizeof(sctx->emitted));
-	sctx->dirty_states |= u_bit_consecutive(0, SI_NUM_STATES);
 }
 
 void si_pm4_upload_indirect_buffer(struct si_context *sctx,
@@ -170,7 +190,7 @@ void si_pm4_upload_indirect_buffer(struct si_context *sctx,
 
 	r600_resource_reference(&state->indirect_buffer, NULL);
 	state->indirect_buffer = (struct r600_resource*)
-		pipe_buffer_create(screen, 0,
+		pipe_buffer_create(screen, PIPE_BIND_CUSTOM,
 				   PIPE_USAGE_DEFAULT, aligned_ndw * 4);
 	if (!state->indirect_buffer)
 		return;

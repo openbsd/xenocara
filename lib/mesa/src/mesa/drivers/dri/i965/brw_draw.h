@@ -27,14 +27,14 @@
 #define BRW_DRAW_H
 
 #include "main/mtypes.h"		/* for struct gl_context... */
-#include "brw_bufmgr.h"
+#include "intel_bufmgr.h"
 
 struct brw_context;
 
 uint32_t *
 brw_emit_vertex_buffer_state(struct brw_context *brw,
                              unsigned buffer_nr,
-                             struct brw_bo *bo,
+                             drm_intel_bo *bo,
                              unsigned start_offset,
                              unsigned end_offset,
                              unsigned stride,

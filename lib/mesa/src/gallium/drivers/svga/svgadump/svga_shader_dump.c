@@ -30,9 +30,6 @@
  * @author Michal Krol <michal@vmware.com>
  */
 
-#include <assert.h>
-#include <string.h>
-
 #include "svga_shader.h"
 #include "svga_shader_dump.h"
 #include "svga_shader_op.h"
@@ -416,11 +413,6 @@ dump_dstreg(struct sh_dstreg dstreg,
 
 static void dump_srcreg( struct sh_srcreg srcreg, struct sh_srcreg *indreg, const struct dump_info *di )
 {
-   struct sh_reg srcreg_sh = {0};
-   /* bit-fields carefully aligned, ensure they stay that way. */
-   STATIC_ASSERT(sizeof(struct sh_reg) == sizeof(struct sh_srcreg));
-   memcpy(&srcreg_sh, &srcreg, sizeof(srcreg_sh));
-
    switch (srcreg.modifier) {
    case SVGA3DSRCMOD_NEG:
    case SVGA3DSRCMOD_BIASNEG:
@@ -435,7 +427,7 @@ static void dump_srcreg( struct sh_srcreg srcreg, struct sh_srcreg *indreg, cons
    case SVGA3DSRCMOD_NOT:
       _debug_printf( "!" );
    }
-   dump_reg(srcreg_sh, indreg, di );
+   dump_reg( *(struct sh_reg *) &srcreg, indreg, di );
    switch (srcreg.modifier) {
    case SVGA3DSRCMOD_NONE:
    case SVGA3DSRCMOD_NEG:

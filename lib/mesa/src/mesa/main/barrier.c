@@ -114,8 +114,7 @@ _mesa_BlendBarrier(void)
 {
    GET_CURRENT_CONTEXT(ctx);
 
-   if (!ctx->Extensions.MESA_shader_framebuffer_fetch_non_coherent &&
-       !ctx->Extensions.KHR_blend_equation_advanced) {
+   if (!ctx->Extensions.MESA_shader_framebuffer_fetch_non_coherent) {
       _mesa_error(ctx, GL_INVALID_OPERATION,
                   "glBlendBarrier(not supported)");
       return;

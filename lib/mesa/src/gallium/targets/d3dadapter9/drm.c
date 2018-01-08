@@ -56,9 +56,6 @@ DRI_CONF_BEGIN
         DRI_CONF_NINE_OVERRIDEVENDOR(-1)
         DRI_CONF_NINE_THROTTLE(-2)
         DRI_CONF_NINE_THREADSUBMIT("false")
-        DRI_CONF_NINE_ALLOWDISCARDDELAYEDRELEASE("true")
-        DRI_CONF_NINE_TEARFREEDISCARD("false")
-        DRI_CONF_NINE_CSMT(-1)
     DRI_CONF_SECTION_END
 DRI_CONF_END;
 
@@ -204,7 +201,7 @@ drm_create_adapter( int fd,
 {
     struct d3dadapter9drm_context *ctx = CALLOC_STRUCT(d3dadapter9drm_context);
     HRESULT hr;
-    bool different_device;
+    int different_device;
     const struct drm_conf_ret *throttle_ret = NULL;
     const struct drm_conf_ret *dmabuf_ret = NULL;
     driOptionCache defaultInitOptions;
@@ -220,7 +217,7 @@ drm_create_adapter( int fd,
      * takes ownership of it. */
     fd = loader_get_user_preferred_fd(fd, &different_device);
     ctx->fd = fd;
-    ctx->base.linear_framebuffer = different_device;
+    ctx->base.linear_framebuffer = !!different_device;
 
     if (!pipe_loader_drm_probe_fd(&ctx->dev, fd)) {
         ERR("Failed to probe drm fd %d.\n", fd);
@@ -229,7 +226,7 @@ drm_create_adapter( int fd,
         return D3DERR_DRIVERINTERNALERROR;
     }
 
-    ctx->base.hal = pipe_loader_create_screen(ctx->dev, 0);
+    ctx->base.hal = pipe_loader_create_screen(ctx->dev);
     if (!ctx->base.hal) {
         ERR("Unable to load requested driver.\n");
         drm_destroy(&ctx->base);
@@ -271,7 +268,7 @@ drm_create_adapter( int fd,
     if (driCheckOption(&userInitOptions, "thread_submit", DRI_BOOL))
         ctx->base.thread_submit = driQueryOptionb(&userInitOptions, "thread_submit");
     else
-        ctx->base.thread_submit = different_device;
+        ctx->base.thread_submit = !!different_device;
 
     if (ctx->base.thread_submit && (throttling_value_user == -2 || throttling_value_user == 0)) {
         ctx->base.throttling_value = 0;
@@ -287,32 +284,12 @@ drm_create_adapter( int fd,
         override_vendorid = driQueryOptioni(&userInitOptions, "override_vendorid");
     }
 
-    if (driCheckOption(&userInitOptions, "discard_delayed_release", DRI_BOOL))
-        ctx->base.discard_delayed_release = driQueryOptionb(&userInitOptions, "discard_delayed_release");
-    else
-        ctx->base.discard_delayed_release = TRUE;
-
-    if (driCheckOption(&userInitOptions, "tearfree_discard", DRI_BOOL))
-        ctx->base.tearfree_discard = driQueryOptionb(&userInitOptions, "tearfree_discard");
-    else
-        ctx->base.tearfree_discard = FALSE;
-
-    if (ctx->base.tearfree_discard && !ctx->base.discard_delayed_release) {
-        ERR("tearfree_discard requires discard_delayed_release\n");
-        ctx->base.tearfree_discard = FALSE;
-    }
-
-    if (driCheckOption(&userInitOptions, "csmt_force", DRI_INT))
-        ctx->base.csmt_force = driQueryOptioni(&userInitOptions, "csmt_force");
-    else
-        ctx->base.csmt_force = -1;
-
     driDestroyOptionCache(&userInitOptions);
     driDestroyOptionInfo(&defaultInitOptions);
 
     /* wrap it to create a software screen that can share resources */
     if (pipe_loader_sw_probe_wrapped(&ctx->swdev, ctx->base.hal))
-        ctx->base.ref = pipe_loader_create_screen(ctx->swdev, 0);
+        ctx->base.ref = pipe_loader_create_screen(ctx->swdev);
 
     if (!ctx->base.ref) {
         ERR("Couldn't wrap drm screen to swrast screen. Software devices "

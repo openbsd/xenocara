@@ -288,9 +288,7 @@ try_setup_line( struct lp_setup_context *setup,
    struct lp_rast_plane *plane;
    struct lp_line_info info;
    float width = MAX2(1.0, setup->line_width);
-   const struct u_rect *scissor;
-   struct u_rect bbox, bboxpos;
-   boolean s_planes[4];
+   struct u_rect bbox;
    unsigned tri_bytes;
    int x[4]; 
    int y[4];
@@ -581,12 +579,10 @@ try_setup_line( struct lp_setup_context *setup,
       return TRUE;
    }
 
-   bboxpos = bbox;
-
    /* Can safely discard negative regions:
     */
-   bboxpos.x0 = MAX2(bboxpos.x0, 0);
-   bboxpos.y0 = MAX2(bboxpos.y0, 0);
+   bbox.x0 = MAX2(bbox.x0, 0);
+   bbox.y0 = MAX2(bbox.y0, 0);
 
    nr_planes = 4;
    /*
@@ -595,8 +591,8 @@ try_setup_line( struct lp_setup_context *setup,
     */
    if (setup->scissor_test) {
       /* why not just use draw_regions */
-      scissor = &setup->scissors[viewport_index];
-      scissor_planes_needed(s_planes, &bboxpos, scissor);
+      boolean s_planes[4];
+      scissor_planes_needed(s_planes, &bbox, &setup->scissors[viewport_index]);
       nr_planes += s_planes[0] + s_planes[1] + s_planes[2] + s_planes[3];
    }
 
@@ -722,7 +718,11 @@ try_setup_line( struct lp_setup_context *setup,
     * (easier to evaluate) to ordinary planes.)
     */
    if (nr_planes > 4) {
+      /* why not just use draw_regions */
+      const struct u_rect *scissor = &setup->scissors[viewport_index];
       struct lp_rast_plane *plane_s = &plane[4];
+      boolean s_planes[4];
+      scissor_planes_needed(s_planes, &bbox, scissor);
 
       if (s_planes[0]) {
          plane_s->dcdx = -1 << 8;
@@ -755,7 +755,7 @@ try_setup_line( struct lp_setup_context *setup,
       assert(plane_s == &plane[nr_planes]);
    }
 
-   return lp_setup_bin_triangle(setup, line, &bbox, &bboxpos, nr_planes, viewport_index);
+   return lp_setup_bin_triangle(setup, line, &bbox, nr_planes, viewport_index);
 }
 
 

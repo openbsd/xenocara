@@ -79,7 +79,7 @@ REBASE(GLuint)
 REBASE(GLushort)
 REBASE(GLubyte)
 
-GLboolean vbo_all_varyings_in_vbos( const struct gl_vertex_array *arrays[] )
+GLboolean vbo_all_varyings_in_vbos( const struct gl_client_array *arrays[] )
 {
    GLuint i;
    
@@ -91,7 +91,7 @@ GLboolean vbo_all_varyings_in_vbos( const struct gl_vertex_array *arrays[] )
    return GL_TRUE;
 }
 
-GLboolean vbo_any_varyings_in_vbos( const struct gl_vertex_array *arrays[] )
+GLboolean vbo_any_varyings_in_vbos( const struct gl_client_array *arrays[] )
 {
    GLuint i;
 
@@ -122,7 +122,7 @@ GLboolean vbo_any_varyings_in_vbos( const struct gl_vertex_array *arrays[] )
  *      all or nothing.
  */
 void vbo_rebase_prims( struct gl_context *ctx,
-		       const struct gl_vertex_array *arrays[],
+		       const struct gl_client_array *arrays[],
 		       const struct _mesa_prim *prim,
 		       GLuint nr_prims,
 		       const struct _mesa_index_buffer *ib,
@@ -130,12 +130,12 @@ void vbo_rebase_prims( struct gl_context *ctx,
 		       GLuint max_index,
 		       vbo_draw_func draw )
 {
-   struct gl_vertex_array tmp_arrays[VERT_ATTRIB_MAX];
-   const struct gl_vertex_array *tmp_array_pointers[VERT_ATTRIB_MAX];
+   struct gl_client_array tmp_arrays[VERT_ATTRIB_MAX];
+   const struct gl_client_array *tmp_array_pointers[VERT_ATTRIB_MAX];
 
    struct _mesa_index_buffer tmp_ib;
    struct _mesa_prim *tmp_prims = NULL;
-   const struct gl_vertex_array **saved_arrays = ctx->Array._DrawArrays;
+   const struct gl_client_array **saved_arrays = ctx->Array._DrawArrays;
    void *tmp_indices = NULL;
    GLuint i;
 
@@ -182,14 +182,14 @@ void vbo_rebase_prims( struct gl_context *ctx,
       /* Some users might prefer it if we translated elements to
        * GLuints here.  Others wouldn't...
        */
-      switch (ib->index_size) {
-      case 4:
+      switch (ib->type) {
+      case GL_UNSIGNED_INT: 
 	 tmp_indices = rebase_GLuint( ptr, ib->count, min_index );
 	 break;
-      case 2:
+      case GL_UNSIGNED_SHORT: 
 	 tmp_indices = rebase_GLushort( ptr, ib->count, min_index );
 	 break;
-      case 1:
+      case GL_UNSIGNED_BYTE: 
 	 tmp_indices = rebase_GLubyte( ptr, ib->count, min_index );
 	 break;
       }      
@@ -204,7 +204,7 @@ void vbo_rebase_prims( struct gl_context *ctx,
       tmp_ib.obj = ctx->Shared->NullBufferObj;
       tmp_ib.ptr = tmp_indices;
       tmp_ib.count = ib->count;
-      tmp_ib.index_size = ib->index_size;
+      tmp_ib.type = ib->type;
 
       ib = &tmp_ib;
    }

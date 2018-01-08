@@ -37,7 +37,6 @@
 #include "util/u_math.h"
 #include "util/u_memory.h"
 #include "util/u_transfer.h"
-#include "util/u_surface.h"
 
 #include "sp_context.h"
 #include "sp_flush.h"
@@ -521,7 +520,6 @@ softpipe_init_texture_funcs(struct pipe_context *pipe)
 
    pipe->create_surface = softpipe_create_surface;
    pipe->surface_destroy = softpipe_surface_destroy;
-   pipe->clear_texture = util_clear_texture;
 }
 
 

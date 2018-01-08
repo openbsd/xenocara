@@ -78,7 +78,8 @@ typedef uint16_t u16;
 typedef uint32_t u32;
 
 struct drm_device {
-        struct vc4_screen *screen;
+        struct vc4_context *vc4;
+        uint32_t simulator_mem_next;
 };
 
 struct drm_gem_object {

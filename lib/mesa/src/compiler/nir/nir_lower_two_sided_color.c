@@ -46,8 +46,7 @@ typedef struct {
  */
 
 static nir_variable *
-create_input(nir_shader *shader, unsigned drvloc, gl_varying_slot slot,
-             enum glsl_interp_mode interpolation)
+create_input(nir_shader *shader, unsigned drvloc, gl_varying_slot slot)
 {
    nir_variable *var = rzalloc(shader, nir_variable);
 
@@ -57,7 +56,6 @@ create_input(nir_shader *shader, unsigned drvloc, gl_varying_slot slot,
    var->name = ralloc_asprintf(var, "in_%d", drvloc);
    var->data.index = 0;
    var->data.location = slot;
-   var->data.interpolation = interpolation;
 
    exec_list_push_tail(&shader->inputs, &var->node);
 
@@ -118,9 +116,7 @@ setup_inputs(lower_2side_state *state)
       else
          slot = VARYING_SLOT_BFC1;
 
-      state->colors[i].back = create_input(
-            state->shader, ++maxloc, slot,
-            state->colors[i].front->data.interpolation);
+      state->colors[i].back = create_input(state->shader, ++maxloc, slot);
    }
 
    return 0;

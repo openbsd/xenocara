@@ -69,8 +69,8 @@ emit_vertexbufs(struct fd_context *ctx)
 		struct pipe_vertex_buffer *vb =
 				&vertexbuf->vb[elem->vertex_buffer_index];
 		bufs[i].offset = vb->buffer_offset;
-		bufs[i].size = fd_bo_size(fd_resource(vb->buffer.resource)->bo);
-		bufs[i].prsc = vb->buffer.resource;
+		bufs[i].size = fd_bo_size(fd_resource(vb->buffer)->bo);
+		bufs[i].prsc = vb->buffer;
 	}
 
 	// NOTE I believe the 0x78 (or 0x9c in solid_vp) relates to the
@@ -80,8 +80,7 @@ emit_vertexbufs(struct fd_context *ctx)
 }
 
 static bool
-fd2_draw_vbo(struct fd_context *ctx, const struct pipe_draw_info *info,
-             unsigned index_offset)
+fd2_draw_vbo(struct fd_context *ctx, const struct pipe_draw_info *info)
 {
 	struct fd_ringbuffer *ring = ctx->batch->draw;
 
@@ -109,7 +108,7 @@ fd2_draw_vbo(struct fd_context *ctx, const struct pipe_draw_info *info,
 	OUT_RING(ring, info->min_index);        /* VGT_MIN_VTX_INDX */
 
 	fd_draw_emit(ctx->batch, ring, ctx->primtypes[info->mode],
-				 IGNORE_VISIBILITY, info, index_offset);
+				 IGNORE_VISIBILITY, info);
 
 	OUT_PKT3(ring, CP_SET_CONSTANT, 2);
 	OUT_RING(ring, CP_REG(REG_A2XX_UNKNOWN_2010));
@@ -117,13 +116,11 @@ fd2_draw_vbo(struct fd_context *ctx, const struct pipe_draw_info *info,
 
 	emit_cacheflush(ring);
 
-	fd_context_all_clean(ctx);
-
 	return true;
 }
 
 
-static bool
+static void
 fd2_clear(struct fd_context *ctx, unsigned buffers,
 		const union pipe_color_union *color, double depth, unsigned stencil)
 {
@@ -279,20 +276,6 @@ fd2_clear(struct fd_context *ctx, unsigned buffers,
 	OUT_PKT3(ring, CP_SET_CONSTANT, 2);
 	OUT_RING(ring, CP_REG(REG_A2XX_RB_COPY_CONTROL));
 	OUT_RING(ring, 0x00000000);
-
-	ctx->dirty |= FD_DIRTY_ZSA |
-			FD_DIRTY_VIEWPORT |
-			FD_DIRTY_RASTERIZER |
-			FD_DIRTY_SAMPLE_MASK |
-			FD_DIRTY_PROG |
-			FD_DIRTY_CONST |
-			FD_DIRTY_BLEND |
-			FD_DIRTY_FRAMEBUFFER;
-
-	ctx->dirty_shader[PIPE_SHADER_VERTEX]   |= FD_DIRTY_SHADER_PROG;
-	ctx->dirty_shader[PIPE_SHADER_FRAGMENT] |= FD_DIRTY_SHADER_PROG | FD_DIRTY_SHADER_CONST;
-
-	return true;
 }
 
 void

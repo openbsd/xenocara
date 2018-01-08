@@ -51,18 +51,9 @@ extern "C" {
 #endif
 
 
-struct cso_node {
-   struct cso_node *next;
-   unsigned key;
-   void *value;
-};
+struct cso_hash;
+struct cso_node;
 
-struct cso_hash {
-   union {
-      struct cso_hash_data *d;
-      struct cso_node      *e;
-   } data;
-};
 
 struct cso_hash_iter {
    struct cso_hash *hash;
@@ -111,7 +102,9 @@ struct cso_hash_iter cso_hash_find(struct cso_hash *hash, unsigned key);
 boolean   cso_hash_contains(struct cso_hash *hash, unsigned key);
 
 
+int       cso_hash_iter_is_null(struct cso_hash_iter iter);
 unsigned  cso_hash_iter_key(struct cso_hash_iter iter);
+void     *cso_hash_iter_data(struct cso_hash_iter iter);
 
 
 struct cso_hash_iter cso_hash_iter_next(struct cso_hash_iter iter);
@@ -128,21 +121,6 @@ void *cso_hash_find_data_from_template( struct cso_hash *hash,
 				        void *templ,
 				        int size );
 
-static inline int
-cso_hash_iter_is_null(struct cso_hash_iter iter)
-{
-   if (!iter.node || iter.node == iter.hash->data.e)
-      return 1;
-   return 0;
-}
-
-static inline void *
-cso_hash_iter_data(struct cso_hash_iter iter)
-{
-   if (!iter.node || iter.hash->data.e == iter.node)
-      return 0;
-   return iter.node->value;
-}
 
 #ifdef	__cplusplus
 }

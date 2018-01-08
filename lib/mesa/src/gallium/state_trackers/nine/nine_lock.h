@@ -48,7 +48,4 @@ extern IDirect3DVolumeTexture9Vtbl LockVolumeTexture9_vtable;
 extern IDirect3DVolumeTexture9Vtbl LockVolumeTexture9_vtable;
 extern ID3DAdapter9Vtbl LockAdapter9_vtable;
 
-void NineLockGlobalMutex(void);
-void NineUnlockGlobalMutex(void);
-
 #endif /* _NINE_LOCK_H_ */

@@ -29,8 +29,6 @@
 #include "main/glheader.h"
 #include "main/macros.h"
 #include "main/mtypes.h"
-#include "main/stencil.h"
-#include "main/state.h"
 
 #include "tnl/t_context.h"
 
@@ -257,7 +255,7 @@ void _swsetup_choose_trifuncs( struct gl_context *ctx )
     */
    if (ctx->Polygon.FrontMode != GL_FILL ||
        ctx->Polygon.BackMode != GL_FILL ||
-       (ctx->Stencil.Enabled && _mesa_stencil_is_two_sided(ctx)))
+       (ctx->Stencil.Enabled && ctx->Stencil._TestTwoSide))
       ind |= SS_UNFILLED_BIT;
 
    tnl->Driver.Render.Triangle = tri_tab[ind];

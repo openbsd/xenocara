@@ -55,7 +55,7 @@ GalliumContext::GalliumContext(ulong options)
 
 	CreateScreen();
 
-	(void) mtx_init(&fMutex, mtx_plain);
+	pipe_mutex_init(fMutex);
 }
 
 
@@ -69,7 +69,7 @@ GalliumContext::~GalliumContext()
 		DestroyContext(i);
 	Unlock();
 
-	mtx_destroy(&fMutex);
+	pipe_mutex_destroy(fMutex);
 
 	// TODO: Destroy fScreen
 }
@@ -406,7 +406,7 @@ void
 GalliumContext::Lock()
 {
 	CALLED();
-	mtx_lock(&fMutex);
+	pipe_mutex_lock(fMutex);
 }
 
 
@@ -414,6 +414,6 @@ void
 GalliumContext::Unlock()
 {
 	CALLED();
-	mtx_unlock(&fMutex);
+	pipe_mutex_unlock(fMutex);
 }
 /* vim: set tabstop=4: */

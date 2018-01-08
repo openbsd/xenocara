@@ -41,16 +41,11 @@ _mesa_SampleCoverage(GLclampf value, GLboolean invert)
 {
    GET_CURRENT_CONTEXT(ctx);
 
-   value = CLAMP(value, 0.0f, 1.0f);
+   FLUSH_VERTICES(ctx, 0);
 
-   if (ctx->Multisample.SampleCoverageInvert == invert &&
-       ctx->Multisample.SampleCoverageValue == value)
-      return;
-
-   FLUSH_VERTICES(ctx, ctx->DriverFlags.NewSampleMask ? 0 : _NEW_MULTISAMPLE);
-   ctx->NewDriverState |= ctx->DriverFlags.NewSampleMask;
-   ctx->Multisample.SampleCoverageValue = value;
+   ctx->Multisample.SampleCoverageValue = CLAMP(value, 0.0f, 1.0f);
    ctx->Multisample.SampleCoverageInvert = invert;
+   ctx->NewState |= _NEW_MULTISAMPLE;
 }
 
 
@@ -120,11 +115,7 @@ _mesa_SampleMaski(GLuint index, GLbitfield mask)
       return;
    }
 
-   if (ctx->Multisample.SampleMaskValue == mask)
-      return;
-
-   FLUSH_VERTICES(ctx, ctx->DriverFlags.NewSampleMask ? 0 : _NEW_MULTISAMPLE);
-   ctx->NewDriverState |= ctx->DriverFlags.NewSampleMask;
+   FLUSH_VERTICES(ctx, _NEW_MULTISAMPLE);
    ctx->Multisample.SampleMaskValue = mask;
 }
 
@@ -142,15 +133,10 @@ _mesa_MinSampleShading(GLclampf value)
       return;
    }
 
-   value = CLAMP(value, 0.0f, 1.0f);
+   FLUSH_VERTICES(ctx, 0);
 
-   if (ctx->Multisample.MinSampleShadingValue == value)
-      return;
-
-   FLUSH_VERTICES(ctx,
-                  ctx->DriverFlags.NewSampleShading ? 0 : _NEW_MULTISAMPLE);
-   ctx->NewDriverState |= ctx->DriverFlags.NewSampleShading;
-   ctx->Multisample.MinSampleShadingValue = value;
+   ctx->Multisample.MinSampleShadingValue = CLAMP(value, 0.0f, 1.0f);
+   ctx->NewState |= _NEW_MULTISAMPLE;
 }
 
 /**

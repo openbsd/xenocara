@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 
 # (C) Copyright IBM Corporation 2004, 2005
 # (C) Copyright Apple Inc. 2011

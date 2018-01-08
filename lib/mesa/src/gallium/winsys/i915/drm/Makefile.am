@@ -26,7 +26,7 @@ include $(top_srcdir)/src/gallium/Automake.inc
 AM_CFLAGS = \
 	-I$(top_srcdir)/src/gallium/drivers \
 	$(GALLIUM_WINSYS_CFLAGS) \
-	$(I915_CFLAGS)
+	$(INTEL_CFLAGS)
 
 noinst_LTLIBRARIES = libi915drm.la
 

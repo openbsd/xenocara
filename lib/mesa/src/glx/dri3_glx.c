@@ -235,11 +235,6 @@ dri3_bind_context(struct glx_context *context, struct glx_context *old,
    if (!(*psc->core->bindContext) (pcp->driContext, dri_draw, dri_read))
       return GLXBadContext;
 
-   if (dri_draw)
-      (*psc->f->invalidate)(dri_draw);
-   if (dri_read && dri_read != dri_draw)
-      (*psc->f->invalidate)(dri_read);
-
    return Success;
 }
 
@@ -353,10 +348,9 @@ dri3_create_context(struct glx_screen *base,
                     struct glx_context *shareList, int renderType)
 {
    unsigned int error;
-   uint32_t attribs[2] = { GLX_RENDER_TYPE, renderType };
 
    return dri3_create_context_attribs(base, config_base, shareList,
-                                      1, attribs, &error);
+                                      0, NULL, &error);
 }
 
 static void
@@ -499,24 +493,7 @@ dri3_flush_front_buffer(__DRIdrawable *driDrawable, void *loaderPrivate)
 
    loader_dri3_flush(draw, __DRI2_FLUSH_DRAWABLE, __DRI2_THROTTLE_FLUSHFRONT);
 
-   (*psc->f->invalidate)(driDrawable);
    loader_dri3_wait_gl(draw);
-}
-
-static void
-dri_set_background_context(void *loaderPrivate)
-{
-   struct dri3_context *pcp = (struct dri3_context *)loaderPrivate;
-   __glXSetCurrentContext(&pcp->base);
-}
-
-static GLboolean
-dri_is_thread_safe(void *loaderPrivate)
-{
-   /* Unlike DRI2, DRI3 doesn't call GetBuffers/GetBuffersWithFormat
-    * during draw so we're safe here.
-    */
-   return true;
 }
 
 /* The image loader extension record for DRI3
@@ -532,17 +509,10 @@ const __DRIuseInvalidateExtension dri3UseInvalidate = {
    .base = { __DRI_USE_INVALIDATE, 1 }
 };
 
-static const __DRIbackgroundCallableExtension driBackgroundCallable = {
-   .base = { __DRI_BACKGROUND_CALLABLE, 2 },
-
-   .setBackgroundContext = dri_set_background_context,
-   .isThreadSafe         = dri_is_thread_safe,
-};
-
 static const __DRIextension *loader_extensions[] = {
    &imageLoaderExtension.base,
+   &systemTimeExtension.base,
    &dri3UseInvalidate.base,
-   &driBackgroundCallable.base,
    NULL
 };
 
@@ -795,9 +765,8 @@ dri3_create_screen(int screen, struct glx_display * priv)
    struct dri3_screen *psc;
    __GLXDRIscreen *psp;
    struct glx_config *configs = NULL, *visuals = NULL;
-   char *driverName, *tmp;
+   char *driverName, *deviceName, *tmp;
    int i;
-   unsigned char disable;
 
    psc = calloc(1, sizeof *psc);
    if (psc == NULL)
@@ -825,6 +794,7 @@ dri3_create_screen(int screen, struct glx_display * priv)
    }
 
    psc->fd = loader_get_user_preferred_fd(psc->fd, &psc->is_different_gpu);
+   deviceName = NULL;
 
    driverName = loader_get_driver_for_fd(psc->fd);
    if (!driverName) {
@@ -935,21 +905,16 @@ dri3_create_screen(int screen, struct glx_display * priv)
    psp->waitForSBC = dri3_wait_for_sbc;
    psp->setSwapInterval = dri3_set_swap_interval;
    psp->getSwapInterval = dri3_get_swap_interval;
-   if (psc->config->configQueryb(psc->driScreen,
-                                 "glx_disable_oml_sync_control",
-                                 &disable) || !disable)
-      __glXEnableDirectExtension(&psc->base, "GLX_OML_sync_control");
+   __glXEnableDirectExtension(&psc->base, "GLX_OML_sync_control");
 
    psp->copySubBuffer = dri3_copy_sub_buffer;
    __glXEnableDirectExtension(&psc->base, "GLX_MESA_copy_sub_buffer");
 
    psp->getBufferAge = dri3_get_buffer_age;
-   if (psc->config->configQueryb(psc->driScreen,
-                                 "glx_disable_ext_buffer_age",
-                                 &disable) || !disable)
-      __glXEnableDirectExtension(&psc->base, "GLX_EXT_buffer_age");
+   __glXEnableDirectExtension(&psc->base, "GLX_EXT_buffer_age");
 
    free(driverName);
+   free(deviceName);
 
    tmp = getenv("LIBGL_SHOW_FPS");
    psc->show_fps_interval = tmp ? atoi(tmp) : 0;
@@ -976,6 +941,7 @@ handle_error:
       dlclose(psc->driver);
 
    free(driverName);
+   free(deviceName);
    glx_screen_cleanup(&psc->base);
    free(psc);
 

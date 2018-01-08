@@ -27,7 +27,6 @@
 #include "ir.h"
 #include "main/core.h" /* for MIN2 */
 #include "main/shaderobj.h"
-#include "builtin_functions.h"
 
 static ir_rvalue *
 convert_component(ir_rvalue *src, const glsl_type *desired_type);
@@ -107,35 +106,35 @@ verify_image_parameter(YYLTYPE *loc, _mesa_glsl_parse_state *state,
     *  qualifiers. [...] It is legal to have additional qualifiers
     *  on a formal parameter, but not to have fewer."
     */
-   if (actual->data.memory_coherent && !formal->data.memory_coherent) {
+   if (actual->data.image_coherent && !formal->data.image_coherent) {
       _mesa_glsl_error(loc, state,
                        "function call parameter `%s' drops "
                        "`coherent' qualifier", formal->name);
       return false;
    }
 
-   if (actual->data.memory_volatile && !formal->data.memory_volatile) {
+   if (actual->data.image_volatile && !formal->data.image_volatile) {
       _mesa_glsl_error(loc, state,
                        "function call parameter `%s' drops "
                        "`volatile' qualifier", formal->name);
       return false;
    }
 
-   if (actual->data.memory_restrict && !formal->data.memory_restrict) {
+   if (actual->data.image_restrict && !formal->data.image_restrict) {
       _mesa_glsl_error(loc, state,
                        "function call parameter `%s' drops "
                        "`restrict' qualifier", formal->name);
       return false;
    }
 
-   if (actual->data.memory_read_only && !formal->data.memory_read_only) {
+   if (actual->data.image_read_only && !formal->data.image_read_only) {
       _mesa_glsl_error(loc, state,
                        "function call parameter `%s' drops "
                        "`readonly' qualifier", formal->name);
       return false;
    }
 
-   if (actual->data.memory_write_only && !formal->data.memory_write_only) {
+   if (actual->data.image_write_only && !formal->data.image_write_only) {
       _mesa_glsl_error(loc, state,
                        "function call parameter `%s' drops "
                        "`writeonly' qualifier", formal->name);
@@ -224,28 +223,17 @@ verify_parameter_modes(_mesa_glsl_parse_state *state,
             val = ((ir_swizzle *)val)->val;
          }
 
-         for (;;) {
-            if (val->ir_type == ir_type_dereference_array) {
-               val = ((ir_dereference_array *)val)->array;
-            } else if (val->ir_type == ir_type_dereference_record &&
-                       !state->es_shader) {
-               val = ((ir_dereference_record *)val)->record;
-            } else
-               break;
+         while (val->ir_type == ir_type_dereference_array) {
+            val = ((ir_dereference_array *)val)->array;
          }
 
-         ir_variable *var = NULL;
-         if (const ir_dereference_variable *deref_var = val->as_dereference_variable())
-            var = deref_var->variable_referenced();
-
-         if (!var || var->data.mode != ir_var_shader_in) {
+         if (!val->as_dereference_variable() ||
+             val->variable_referenced()->data.mode != ir_var_shader_in) {
             _mesa_glsl_error(&loc, state,
                              "parameter `%s` must be a shader input",
                              formal->name);
             return false;
          }
-
-         var->data.must_be_shader_input = 1;
       }
 
       /* Verify that 'out' and 'inout' actual parameters are lvalues. */
@@ -292,7 +280,7 @@ verify_parameter_modes(_mesa_glsl_parse_state *state,
                              mode, formal->name,
                              actual->variable_referenced()->name);
             return false;
-         } else if (!actual->is_lvalue(state)) {
+         } else if (!actual->is_lvalue()) {
             _mesa_glsl_error(&loc, state,
                              "function parameter '%s %s' is not an lvalue",
                              mode, formal->name);
@@ -672,13 +660,8 @@ generate_array_index(void *mem_ctx, exec_list *instructions,
       ir_variable *sub_var = NULL;
       *function_name = array->primary_expression.identifier;
 
-      if (!match_subroutine_by_name(*function_name, actual_parameters,
-                                    state, &sub_var)) {
-         _mesa_glsl_error(&loc, state, "Unknown subroutine `%s'",
-                          *function_name);
-         *function_name = NULL; /* indicate error condition to caller */
-         return NULL;
-      }
+      match_subroutine_by_name(*function_name, actual_parameters,
+                               state, &sub_var);
 
       ir_rvalue *outer_array_idx = idx->hir(instructions, state);
       return new(mem_ctx) ir_dereference_array(sub_var, outer_array_idx);
@@ -754,8 +737,8 @@ convert_component(ir_rvalue *src, const glsl_type *desired_type)
    if (src->type->is_error())
       return src;
 
-   assert(a <= GLSL_TYPE_IMAGE);
-   assert(b <= GLSL_TYPE_IMAGE);
+   assert(a <= GLSL_TYPE_BOOL);
+   assert(b <= GLSL_TYPE_BOOL);
 
    if (a == b)
       return src;
@@ -777,18 +760,6 @@ convert_component(ir_rvalue *src, const glsl_type *desired_type)
       case GLSL_TYPE_DOUBLE:
          result = new(ctx) ir_expression(ir_unop_d2u, src);
          break;
-      case GLSL_TYPE_UINT64:
-         result = new(ctx) ir_expression(ir_unop_u642u, src);
-         break;
-      case GLSL_TYPE_INT64:
-         result = new(ctx) ir_expression(ir_unop_i642u, src);
-         break;
-      case GLSL_TYPE_SAMPLER:
-         result = new(ctx) ir_expression(ir_unop_unpack_sampler_2x32, src);
-         break;
-      case GLSL_TYPE_IMAGE:
-         result = new(ctx) ir_expression(ir_unop_unpack_image_2x32, src);
-         break;
       }
       break;
    case GLSL_TYPE_INT:
@@ -805,12 +776,6 @@ convert_component(ir_rvalue *src, const glsl_type *desired_type)
       case GLSL_TYPE_DOUBLE:
          result = new(ctx) ir_expression(ir_unop_d2i, src);
          break;
-      case GLSL_TYPE_UINT64:
-         result = new(ctx) ir_expression(ir_unop_u642i, src);
-         break;
-      case GLSL_TYPE_INT64:
-         result = new(ctx) ir_expression(ir_unop_i642i, src);
-         break;
       }
       break;
    case GLSL_TYPE_FLOAT:
@@ -826,12 +791,6 @@ convert_component(ir_rvalue *src, const glsl_type *desired_type)
          break;
       case GLSL_TYPE_DOUBLE:
          result = new(ctx) ir_expression(ir_unop_d2f, desired_type, src, NULL);
-         break;
-      case GLSL_TYPE_UINT64:
-         result = new(ctx) ir_expression(ir_unop_u642f, desired_type, src, NULL);
-         break;
-      case GLSL_TYPE_INT64:
-         result = new(ctx) ir_expression(ir_unop_i642f, desired_type, src, NULL);
          break;
       }
       break;
@@ -851,14 +810,6 @@ convert_component(ir_rvalue *src, const glsl_type *desired_type)
       case GLSL_TYPE_DOUBLE:
          result = new(ctx) ir_expression(ir_unop_d2b, desired_type, src, NULL);
          break;
-      case GLSL_TYPE_UINT64:
-         result = new(ctx) ir_expression(ir_unop_i642b,
-                                         new(ctx) ir_expression(ir_unop_u642i64,
-                                                                src));
-         break;
-      case GLSL_TYPE_INT64:
-         result = new(ctx) ir_expression(ir_unop_i642b, desired_type, src, NULL);
-         break;
       }
       break;
    case GLSL_TYPE_DOUBLE:
@@ -877,76 +828,7 @@ convert_component(ir_rvalue *src, const glsl_type *desired_type)
       case GLSL_TYPE_FLOAT:
          result = new(ctx) ir_expression(ir_unop_f2d, desired_type, src, NULL);
          break;
-      case GLSL_TYPE_UINT64:
-         result = new(ctx) ir_expression(ir_unop_u642d, desired_type, src, NULL);
-         break;
-      case GLSL_TYPE_INT64:
-         result = new(ctx) ir_expression(ir_unop_i642d, desired_type, src, NULL);
-         break;
       }
-      break;
-   case GLSL_TYPE_UINT64:
-      switch (b) {
-      case GLSL_TYPE_INT:
-         result = new(ctx) ir_expression(ir_unop_i2u64, src);
-         break;
-      case GLSL_TYPE_UINT:
-         result = new(ctx) ir_expression(ir_unop_u2u64, src);
-         break;
-      case GLSL_TYPE_BOOL:
-         result = new(ctx) ir_expression(ir_unop_i642u64,
-                                         new(ctx) ir_expression(ir_unop_b2i64,
-                                                                src));
-         break;
-      case GLSL_TYPE_FLOAT:
-         result = new(ctx) ir_expression(ir_unop_f2u64, src);
-         break;
-      case GLSL_TYPE_DOUBLE:
-         result = new(ctx) ir_expression(ir_unop_d2u64, src);
-         break;
-      case GLSL_TYPE_INT64:
-         result = new(ctx) ir_expression(ir_unop_i642u64, src);
-         break;
-      }
-      break;
-   case GLSL_TYPE_INT64:
-      switch (b) {
-      case GLSL_TYPE_INT:
-         result = new(ctx) ir_expression(ir_unop_i2i64, src);
-         break;
-      case GLSL_TYPE_UINT:
-         result = new(ctx) ir_expression(ir_unop_u2i64, src);
-         break;
-      case GLSL_TYPE_BOOL:
-         result = new(ctx) ir_expression(ir_unop_b2i64, src);
-         break;
-      case GLSL_TYPE_FLOAT:
-         result = new(ctx) ir_expression(ir_unop_f2i64, src);
-         break;
-      case GLSL_TYPE_DOUBLE:
-         result = new(ctx) ir_expression(ir_unop_d2i64, src);
-         break;
-      case GLSL_TYPE_UINT64:
-         result = new(ctx) ir_expression(ir_unop_u642i64, src);
-         break;
-      }
-      break;
-   case GLSL_TYPE_SAMPLER:
-      switch (b) {
-      case GLSL_TYPE_UINT:
-         result = new(ctx)
-            ir_expression(ir_unop_pack_sampler_2x32, desired_type, src);
-         break;
-      }
-      break;
-   case GLSL_TYPE_IMAGE:
-      switch (b) {
-      case GLSL_TYPE_UINT:
-         result = new(ctx)
-            ir_expression(ir_unop_pack_image_2x32, desired_type, src);
-         break;
-      }
-      break;
    }
 
    assert(result != NULL);
@@ -1378,12 +1260,6 @@ emit_inline_vector_constructor(const glsl_type *type,
                case GLSL_TYPE_BOOL:
                   data.b[i + base_component] = c->get_bool_component(i);
                   break;
-               case GLSL_TYPE_UINT64:
-                  data.u64[i + base_component] = c->get_uint64_component(i);
-                  break;
-               case GLSL_TYPE_INT64:
-                  data.i64[i + base_component] = c->get_int64_component(i);
-                  break;
                default:
                   assert(!"Should not get here.");
                   break;
@@ -1391,7 +1267,8 @@ emit_inline_vector_constructor(const glsl_type *type,
             }
 
             /* Mask of fields to be written in the assignment. */
-            constant_mask |= ((1U << rhs_components) - 1) << base_lhs_component;
+            constant_mask |=
+               ((1U << rhs_components) - 1) << base_lhs_component;
             constant_components += rhs_components;
 
             base_component += rhs_components;
@@ -1542,7 +1419,8 @@ emit_inline_matrix_constructor(const glsl_type *type,
        * components with zero.
        */
       glsl_base_type param_base_type = first_param->type->base_type;
-      assert(first_param->type->is_float() || first_param->type->is_double());
+      assert(param_base_type == GLSL_TYPE_FLOAT ||
+             param_base_type == GLSL_TYPE_DOUBLE);
       ir_variable *rhs_var =
          new(ctx) ir_variable(glsl_type::get_instance(param_base_type, 4, 1),
                               "mat_ctor_vec",
@@ -1551,7 +1429,7 @@ emit_inline_matrix_constructor(const glsl_type *type,
 
       ir_constant_data zero;
       for (unsigned i = 0; i < 4; i++)
-         if (first_param->type->is_float())
+         if (param_base_type == GLSL_TYPE_FLOAT)
             zero.f[i] = 0.0;
          else
             zero.d[i] = 0.0;
@@ -1966,13 +1844,6 @@ ast_function_expression::handle_method(exec_list *instructions,
    return ir_rvalue::error_value(ctx);
 }
 
-static inline bool is_valid_constructor(const glsl_type *type,
-                                        struct _mesa_glsl_parse_state *state)
-{
-   return type->is_numeric() || type->is_boolean() ||
-          (state->has_bindless() && (type->is_sampler() || type->is_image()));
-}
-
 ir_rvalue *
 ast_function_expression::hir(exec_list *instructions,
                              struct _mesa_glsl_parse_state *state)
@@ -2005,21 +1876,9 @@ ast_function_expression::hir(exec_list *instructions,
 
 
       /* Constructors for opaque types are illegal.
-       *
-       * From section 4.1.7 of the ARB_bindless_texture spec:
-       *
-       * "Samplers are represented using 64-bit integer handles, and may be "
-       *  converted to and from 64-bit integers using constructors."
-       *
-       * From section 4.1.X of the ARB_bindless_texture spec:
-       *
-       * "Images are represented using 64-bit integer handles, and may be
-       *  converted to and from 64-bit integers using constructors."
        */
-      if (constructor_type->contains_atomic() ||
-          (!state->has_bindless() && constructor_type->contains_opaque())) {
-         _mesa_glsl_error(& loc, state, "cannot construct %s type `%s'",
-                          state->has_bindless() ? "atomic" : "opaque",
+      if (constructor_type->contains_opaque()) {
+         _mesa_glsl_error(& loc, state, "cannot construct opaque type `%s'",
                           constructor_type->name);
          return ir_rvalue::error_value(ctx);
       }
@@ -2062,7 +1921,7 @@ ast_function_expression::hir(exec_list *instructions,
                                            state);
       }
 
-      if (!is_valid_constructor(constructor_type, state))
+      if (!constructor_type->is_numeric() && !constructor_type->is_boolean())
          return ir_rvalue::error_value(ctx);
 
       /* Total number of components of the type being constructed. */
@@ -2092,7 +1951,7 @@ ast_function_expression::hir(exec_list *instructions,
             return ir_rvalue::error_value(ctx);
          }
 
-         if (!is_valid_constructor(result->type, state)) {
+         if (!result->type->is_numeric() && !result->type->is_boolean()) {
             _mesa_glsl_error(& loc, state, "cannot construct `%s' from a "
                              "non-numeric data type",
                              constructor_type->name);
@@ -2184,51 +2043,10 @@ ast_function_expression::hir(exec_list *instructions,
 
       /* Type cast each parameter and, if possible, fold constants.*/
       foreach_in_list_safe(ir_rvalue, ir, &actual_parameters) {
-         const glsl_type *desired_type;
-
-         /* From section 5.4.1 of the ARB_bindless_texture spec:
-          *
-          * "In the following four constructors, the low 32 bits of the sampler
-          *  type correspond to the .x component of the uvec2 and the high 32
-          *  bits correspond to the .y component."
-          *
-          *  uvec2(any sampler type)     // Converts a sampler type to a
-          *                              //   pair of 32-bit unsigned integers
-          *  any sampler type(uvec2)     // Converts a pair of 32-bit unsigned integers to
-          *                              //   a sampler type
-          *  uvec2(any image type)       // Converts an image type to a
-          *                              //   pair of 32-bit unsigned integers
-          *  any image type(uvec2)       // Converts a pair of 32-bit unsigned integers to
-          *                              //   an image type
-          */
-         if (ir->type->is_sampler() || ir->type->is_image()) {
-            /* Convert a sampler/image type to a pair of 32-bit unsigned
-             * integers as defined by ARB_bindless_texture.
-             */
-            if (constructor_type != glsl_type::uvec2_type) {
-               _mesa_glsl_error(&loc, state, "sampler and image types can only "
-                                "be converted to a pair of 32-bit unsigned "
-                                "integers");
-            }
-            desired_type = glsl_type::uvec2_type;
-         } else if (constructor_type->is_sampler() ||
-                    constructor_type->is_image()) {
-            /* Convert a pair of 32-bit unsigned integers to a sampler or image
-             * type as defined by ARB_bindless_texture.
-             */
-            if (ir->type != glsl_type::uvec2_type) {
-               _mesa_glsl_error(&loc, state, "sampler and image types can only "
-                                "be converted from a pair of 32-bit unsigned "
-                                "integers");
-            }
-            desired_type = constructor_type;
-         } else {
-            desired_type =
-               glsl_type::get_instance(constructor_type->base_type,
-                                       ir->type->vector_elements,
-                                       ir->type->matrix_columns);
-         }
-
+         const glsl_type *desired_type =
+            glsl_type::get_instance(constructor_type->base_type,
+                                    ir->type->vector_elements,
+                                    ir->type->matrix_columns);
          ir_rvalue *result = convert_component(ir, desired_type);
 
          /* Attempt to convert the parameter to a constant valued expression.
@@ -2272,7 +2090,7 @@ ast_function_expression::hir(exec_list *instructions,
       return handle_method(instructions, state);
    } else {
       const ast_expression *id = subexpressions[0];
-      const char *func_name = NULL;
+      const char *func_name;
       YYLTYPE loc = get_location();
       exec_list actual_parameters;
       ir_variable *sub_var = NULL;
@@ -2286,10 +2104,8 @@ ast_function_expression::hir(exec_list *instructions,
                                           id->subexpressions[0],
                                           id->subexpressions[1], &func_name,
                                           &actual_parameters);
-      } else if (id->oper == ast_identifier) {
-         func_name = id->primary_expression.identifier;
       } else {
-         _mesa_glsl_error(&loc, state, "function name is not an identifier");
+         func_name = id->primary_expression.identifier;
       }
 
       /* an error was emitted earlier */

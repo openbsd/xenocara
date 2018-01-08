@@ -52,7 +52,7 @@ static FILE *stream;
 /* TODO: maybe move this serial machinery to a stand-alone module and
  * expose it?
  */
-static mtx_t serials_mutex = _MTX_INITIALIZER_NP;
+pipe_static_mutex(serials_mutex);
 
 static struct util_hash_table *serials_hash;
 static unsigned serials_last;
@@ -89,12 +89,12 @@ debug_serial(void *p, unsigned *pserial)
    static boolean first = TRUE;
 
    if (first) {
-      (void) mtx_init(&serials_mutex, mtx_plain);
+      pipe_mutex_init(serials_mutex);
       first = FALSE;
    }
 #endif
 
-   mtx_lock(&serials_mutex);
+   pipe_mutex_lock(serials_mutex);
    if (!serials_hash)
       serials_hash = util_hash_table_create(hash_ptr, compare_ptr);
 
@@ -112,7 +112,7 @@ debug_serial(void *p, unsigned *pserial)
       util_hash_table_set(serials_hash, p, (void *) (uintptr_t) serial);
       found = FALSE;
    }
-   mtx_unlock(&serials_mutex);
+   pipe_mutex_unlock(serials_mutex);
 
    *pserial = serial;
 
@@ -126,13 +126,25 @@ debug_serial(void *p, unsigned *pserial)
 static void
 debug_serial_delete(void *p)
 {
-   mtx_lock(&serials_mutex);
+   pipe_mutex_lock(serials_mutex);
    util_hash_table_remove(serials_hash, p);
-   mtx_unlock(&serials_mutex);
+   pipe_mutex_unlock(serials_mutex);
 }
 
 
 #define STACK_LEN 64
+
+static void
+dump_stack(const char *symbols[STACK_LEN])
+{
+   unsigned i;
+   for (i = 0; i < STACK_LEN; ++i) {
+      if (symbols[i])
+         fprintf(stream, "%s\n", symbols[i]);
+   }
+   fprintf(stream, "\n");
+}
+
 
 /**
  * Log a reference count change to the log file (if enabled).
@@ -168,6 +180,7 @@ debug_reference_slowpath(const struct pipe_reference *p,
 
    if (debug_refcnt_state > 0) {
       struct debug_stack_frame frames[STACK_LEN];
+      const char *symbols[STACK_LEN];
       char buf[1024];
       unsigned i;
       unsigned refcnt = p->count;
@@ -175,12 +188,18 @@ debug_reference_slowpath(const struct pipe_reference *p,
       boolean existing = debug_serial((void *) p, &serial);
 
       debug_backtrace_capture(frames, 1, STACK_LEN);
+      for (i = 0; i < STACK_LEN; ++i) {
+         if (frames[i].function)
+            symbols[i] = debug_symbol_name_cached(frames[i].function);
+         else
+            symbols[i] = 0;
+      }
 
       get_desc(buf, p);
 
       if (!existing) {
          fprintf(stream, "<%s> %p %u Create\n", buf, (void *) p, serial);
-         debug_backtrace_print(stream, frames, STACK_LEN);
+         dump_stack(symbols);
 
          /* this is here to provide a gradual change even if we don't see
           * the initialization
@@ -188,20 +207,20 @@ debug_reference_slowpath(const struct pipe_reference *p,
          for (i = 1; i <= refcnt - change; ++i) {
             fprintf(stream, "<%s> %p %u AddRef %u\n", buf, (void *) p,
                     serial, i);
-            debug_backtrace_print(stream, frames, STACK_LEN);
+            dump_stack(symbols);
          }
       }
 
       if (change) {
          fprintf(stream, "<%s> %p %u %s %u\n", buf, (void *) p, serial,
                  change > 0 ? "AddRef" : "Release", refcnt);
-         debug_backtrace_print(stream, frames, STACK_LEN);
+         dump_stack(symbols);
       }
 
       if (!refcnt) {
          debug_serial_delete((void *) p);
          fprintf(stream, "<%s> %p %u Destroy\n", buf, (void *) p, serial);
-         debug_backtrace_print(stream, frames, STACK_LEN);
+         dump_stack(symbols);
       }
 
       fflush(stream);

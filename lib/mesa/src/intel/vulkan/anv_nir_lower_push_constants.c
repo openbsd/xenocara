@@ -42,6 +42,7 @@ anv_nir_lower_push_constants(nir_shader *shader)
                continue;
 
             assert(intrin->const_index[0] % 4 == 0);
+            assert(intrin->const_index[1] == 128);
 
             /* We just turn them into uniform loads */
             intrin->intrinsic = nir_intrinsic_load_uniform;

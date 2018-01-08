@@ -100,7 +100,7 @@ HOTTILE* HotTileMgr::GetHotTile(SWR_CONTEXT* pContext, DRAW_CONTEXT* pDC, uint32
         {
             uint32_t size = numSamples * mHotTileSize[attachment];
             uint32_t numaNode = ((x ^ y) & pContext->threadPool.numaMask);
-            hotTile.pBuffer = (uint8_t*)AllocHotTileMem(size, 64, numaNode);
+            hotTile.pBuffer = (uint8_t*)AllocHotTileMem(size, KNOB_SIMD_WIDTH * 4, numaNode);
             hotTile.state = HOTTILE_INVALID;
             hotTile.numSamples = numSamples;
             hotTile.renderTargetArrayIndex = renderTargetArrayIndex;
@@ -124,7 +124,7 @@ HOTTILE* HotTileMgr::GetHotTile(SWR_CONTEXT* pContext, DRAW_CONTEXT* pDC, uint32
 
             uint32_t size = numSamples * mHotTileSize[attachment];
             uint32_t numaNode = ((x ^ y) & pContext->threadPool.numaMask);
-            hotTile.pBuffer = (uint8_t*)AllocHotTileMem(size, 64, numaNode);
+            hotTile.pBuffer = (uint8_t*)AllocHotTileMem(size, KNOB_SIMD_WIDTH * 4, numaNode);
             hotTile.state = HOTTILE_INVALID;
             hotTile.numSamples = numSamples;
         }
@@ -146,19 +146,7 @@ HOTTILE* HotTileMgr::GetHotTile(SWR_CONTEXT* pContext, DRAW_CONTEXT* pDC, uint32
             case SWR_ATTACHMENT_COLOR7: format = KNOB_COLOR_HOT_TILE_FORMAT; break;
             case SWR_ATTACHMENT_DEPTH: format = KNOB_DEPTH_HOT_TILE_FORMAT; break;
             case SWR_ATTACHMENT_STENCIL: format = KNOB_STENCIL_HOT_TILE_FORMAT; break;
-            default: SWR_INVALID("Unknown attachment: %d", attachment); format = KNOB_COLOR_HOT_TILE_FORMAT; break;
-            }
-
-            if (hotTile.state == HOTTILE_CLEAR)
-            {
-                if (attachment == SWR_ATTACHMENT_STENCIL)
-                    ClearStencilHotTile(&hotTile);
-                else if (attachment == SWR_ATTACHMENT_DEPTH)
-                    ClearDepthHotTile(&hotTile);
-                else
-                    ClearColorHotTile(&hotTile);
-
-                hotTile.state = HOTTILE_DIRTY;
+            default: SWR_ASSERT(false, "Unknown attachment: %d", attachment); format = KNOB_COLOR_HOT_TILE_FORMAT; break;
             }
 
             if (hotTile.state == HOTTILE_DIRTY)
@@ -194,7 +182,7 @@ HOTTILE* HotTileMgr::GetHotTileNoLoad(
         if (create)
         {
             uint32_t size = numSamples * mHotTileSize[attachment];
-            hotTile.pBuffer = (uint8_t*)AlignedMalloc(size, 64);
+            hotTile.pBuffer = (uint8_t*)AlignedMalloc(size, KNOB_SIMD_WIDTH * 4);
             hotTile.state = HOTTILE_INVALID;
             hotTile.numSamples = numSamples;
             hotTile.renderTargetArrayIndex = 0;

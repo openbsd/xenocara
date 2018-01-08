@@ -6,7 +6,7 @@ extern "C" {
 #endif
 
 /*
-** Copyright (c) 2013-2017 The Khronos Group Inc.
+** Copyright (c) 2013-2016 The Khronos Group Inc.
 **
 ** Permission is hereby granted, free of charge, to any person obtaining a
 ** copy of this software and/or associated documentation files (the
@@ -31,10 +31,12 @@ extern "C" {
 ** This header is generated from the Khronos OpenGL / OpenGL ES XML
 ** API Registry. The current version of the Registry, generator scripts
 ** used to make the header, and the header can be found at
-**   https://github.com/KhronosGroup/OpenGL-Registry
+**   http://www.opengl.org/registry/
+**
+** Khronos $Revision: 1.10 $ on $Date: 2018/01/08 05:41:21 $
 */
 
-#define GLX_GLXEXT_VERSION 20170606
+#define GLX_GLXEXT_VERSION 20160531
 
 /* Generated C header for:
  * API: glx
@@ -175,11 +177,6 @@ typedef GLXContext ( *PFNGLXCREATECONTEXTATTRIBSARBPROC) (Display *dpy, GLXFBCon
 GLXContext glXCreateContextAttribsARB (Display *dpy, GLXFBConfig config, GLXContext share_context, Bool direct, const int *attrib_list);
 #endif
 #endif /* GLX_ARB_create_context */
-
-#ifndef GLX_ARB_create_context_no_error
-#define GLX_ARB_create_context_no_error 1
-#define GLX_CONTEXT_OPENGL_NO_ERROR_ARB   0x31B3
-#endif /* GLX_ARB_create_context_no_error */
 
 #ifndef GLX_ARB_create_context_profile
 #define GLX_ARB_create_context_profile 1

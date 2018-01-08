@@ -111,21 +111,18 @@ static void twoside_first_tri( struct draw_stage *stage,
    twoside->attrib_back0 = -1;
    twoside->attrib_back1 = -1;
 
-   /*
-    * Find which vertex shader outputs are front/back colors
-    * (only first two can be front or back).
-    */
+   /* Find which vertex shader outputs are front/back colors */
    for (i = 0; i < vs->info.num_outputs; i++) {
       if (vs->info.output_semantic_name[i] == TGSI_SEMANTIC_COLOR) {
          if (vs->info.output_semantic_index[i] == 0)
             twoside->attrib_front0 = i;
-         else if (vs->info.output_semantic_index[i] == 1)
+         else
             twoside->attrib_front1 = i;
       }
       if (vs->info.output_semantic_name[i] == TGSI_SEMANTIC_BCOLOR) {
          if (vs->info.output_semantic_index[i] == 0)
             twoside->attrib_back0 = i;
-         else if (vs->info.output_semantic_index[i] == 1)
+         else
             twoside->attrib_back1 = i;
       }
    }

@@ -59,16 +59,10 @@
 
 #if defined(PIPE_OS_LINUX)
 #include <signal.h>
-#include <fcntl.h>
-#include <elf.h>
 #endif
 
 #ifdef PIPE_OS_UNIX
 #include <unistd.h>
-#endif
-
-#if defined(HAS_ANDROID_CPUFEATURES)
-#include <cpu-features.h>
 #endif
 
 #if defined(PIPE_OS_WINDOWS)
@@ -132,32 +126,16 @@ check_os_altivec_support(void)
    if (setjmp(__lv_powerpc_jmpbuf)) {
       signal(SIGILL, SIG_DFL);
    } else {
-      boolean enable_altivec = TRUE;    /* Default: enable  if available, and if not overridden */
-#ifdef DEBUG
-      /* Disabling Altivec code generation is not the same as disabling VSX code generation,
-       * which can be done simply by passing -mattr=-vsx to the LLVM compiler; cf.
-       * lp_build_create_jit_compiler_for_module().
-       * If you want to disable Altivec code generation, the best place to do it is here.
-       */
-      char *env_control = getenv("GALLIVM_ALTIVEC");    /* 1=enable (default); 0=disable */
-      if (env_control && env_control[0] == '0') {
-         enable_altivec = FALSE;
-      }
-#endif
-      if (enable_altivec) {
-         __lv_powerpc_canjump = 1;
+      __lv_powerpc_canjump = 1;
 
-         __asm __volatile
-            ("mtspr 256, %0\n\t"
-             "vand %%v0, %%v0, %%v0"
-             :
-             : "r" (-1));
+      __asm __volatile
+         ("mtspr 256, %0\n\t"
+          "vand %%v0, %%v0, %%v0"
+          :
+          : "r" (-1));
 
-         signal(SIGILL, SIG_DFL);
-         util_cpu_caps.has_altivec = 1;
-      } else {
-         util_cpu_caps.has_altivec = 0;
-      }
+      signal(SIGILL, SIG_DFL);
+      util_cpu_caps.has_altivec = 1;
    }
 #endif /* !PIPE_OS_APPLE */
 }
@@ -316,45 +294,6 @@ PIPE_ALIGN_STACK static inline boolean sse2_has_daz(void)
 
 #endif /* X86 or X86_64 */
 
-#if defined(PIPE_ARCH_ARM)
-static void
-check_os_arm_support(void)
-{
-   /*
-    * On Android, the cpufeatures library is preferred way of checking
-    * CPU capabilities. However, it is not available for standalone Mesa
-    * builds, i.e. when Android build system (Android.mk-based) is not
-    * used. Because of this we cannot use PIPE_OS_ANDROID here, but rather
-    * have a separate macro that only gets enabled from respective Android.mk.
-    */
-#if defined(HAS_ANDROID_CPUFEATURES)
-   AndroidCpuFamily cpu_family = android_getCpuFamily();
-   uint64_t cpu_features = android_getCpuFeatures();
-
-   if (cpu_family == ANDROID_CPU_FAMILY_ARM) {
-      if (cpu_features & ANDROID_CPU_ARM_FEATURE_NEON)
-         util_cpu_caps.has_neon = 1;
-   }
-#elif defined(PIPE_OS_LINUX)
-    Elf32_auxv_t aux;
-    int fd;
-
-    fd = open("/proc/self/auxv", O_RDONLY | O_CLOEXEC);
-    if (fd >= 0) {
-       while (read(fd, &aux, sizeof(Elf32_auxv_t)) == sizeof(Elf32_auxv_t)) {
-          if (aux.a_type == AT_HWCAP) {
-             uint32_t hwcap = aux.a_un.a_val;
-
-             util_cpu_caps.has_neon = (hwcap >> 12) & 1;
-             break;
-          }
-       }
-       close (fd);
-    }
-#endif /* PIPE_OS_LINUX */
-}
-#endif /* PIPE_ARCH_ARM */
-
 void
 util_cpu_detect(void)
 {
@@ -449,23 +388,6 @@ util_cpu_detect(void)
          util_cpu_caps.has_avx2 = (regs7[1] >> 5) & 1;
       }
 
-      // check for avx512
-      if (((regs2[2] >> 27) & 1) && // OSXSAVE
-          (xgetbv() & (0x7 << 5)) && // OPMASK: upper-256 enabled by OS
-          ((xgetbv() & 6) == 6)) { // XMM/YMM enabled by OS
-         uint32_t regs3[4];
-         cpuid_count(0x00000007, 0x00000000, regs3);
-         util_cpu_caps.has_avx512f    = (regs3[1] >> 16) & 1;
-         util_cpu_caps.has_avx512dq   = (regs3[1] >> 17) & 1;
-         util_cpu_caps.has_avx512ifma = (regs3[1] >> 21) & 1;
-         util_cpu_caps.has_avx512pf   = (regs3[1] >> 26) & 1;
-         util_cpu_caps.has_avx512er   = (regs3[1] >> 27) & 1;
-         util_cpu_caps.has_avx512cd   = (regs3[1] >> 28) & 1;
-         util_cpu_caps.has_avx512bw   = (regs3[1] >> 30) & 1;
-         util_cpu_caps.has_avx512vl   = (regs3[1] >> 31) & 1;
-         util_cpu_caps.has_avx512vbmi = (regs3[2] >>  1) & 1;
-      }
-
       if (regs[1] == 0x756e6547 && regs[2] == 0x6c65746e && regs[3] == 0x49656e69) {
          /* GenuineIntel */
          util_cpu_caps.has_intel = 1;
@@ -504,10 +426,6 @@ util_cpu_detect(void)
    }
 #endif /* PIPE_ARCH_X86 || PIPE_ARCH_X86_64 */
 
-#if defined(PIPE_ARCH_ARM)
-   check_os_arm_support();
-#endif
-
 #if defined(PIPE_ARCH_PPC)
    check_os_altivec_support();
 #endif /* PIPE_ARCH_PPC */
@@ -536,17 +454,7 @@ util_cpu_detect(void)
       debug_printf("util_cpu_caps.has_3dnow_ext = %u\n", util_cpu_caps.has_3dnow_ext);
       debug_printf("util_cpu_caps.has_xop = %u\n", util_cpu_caps.has_xop);
       debug_printf("util_cpu_caps.has_altivec = %u\n", util_cpu_caps.has_altivec);
-      debug_printf("util_cpu_caps.has_neon = %u\n", util_cpu_caps.has_neon);
       debug_printf("util_cpu_caps.has_daz = %u\n", util_cpu_caps.has_daz);
-      debug_printf("util_cpu_caps.has_avx512f = %u\n", util_cpu_caps.has_avx512f);
-      debug_printf("util_cpu_caps.has_avx512dq = %u\n", util_cpu_caps.has_avx512dq);
-      debug_printf("util_cpu_caps.has_avx512ifma = %u\n", util_cpu_caps.has_avx512ifma);
-      debug_printf("util_cpu_caps.has_avx512pf = %u\n", util_cpu_caps.has_avx512pf);
-      debug_printf("util_cpu_caps.has_avx512er = %u\n", util_cpu_caps.has_avx512er);
-      debug_printf("util_cpu_caps.has_avx512cd = %u\n", util_cpu_caps.has_avx512cd);
-      debug_printf("util_cpu_caps.has_avx512bw = %u\n", util_cpu_caps.has_avx512bw);
-      debug_printf("util_cpu_caps.has_avx512vl = %u\n", util_cpu_caps.has_avx512vl);
-      debug_printf("util_cpu_caps.has_avx512vbmi = %u\n", util_cpu_caps.has_avx512vbmi);
    }
 #endif
 

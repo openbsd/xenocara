@@ -32,17 +32,54 @@
 #include "util/u_prim.h"
 
 /*
+ * Convert mesa PIPE_PRIM_X to SWR enum PRIMITIVE_TOPOLOGY
+ */
+static INLINE enum PRIMITIVE_TOPOLOGY
+swr_convert_prim_topology(const unsigned mode)
+{
+   switch (mode) {
+   case PIPE_PRIM_POINTS:
+      return TOP_POINT_LIST;
+   case PIPE_PRIM_LINES:
+      return TOP_LINE_LIST;
+   case PIPE_PRIM_LINE_LOOP:
+      return TOP_LINE_LOOP;
+   case PIPE_PRIM_LINE_STRIP:
+      return TOP_LINE_STRIP;
+   case PIPE_PRIM_TRIANGLES:
+      return TOP_TRIANGLE_LIST;
+   case PIPE_PRIM_TRIANGLE_STRIP:
+      return TOP_TRIANGLE_STRIP;
+   case PIPE_PRIM_TRIANGLE_FAN:
+      return TOP_TRIANGLE_FAN;
+   case PIPE_PRIM_QUADS:
+      return TOP_QUAD_LIST;
+   case PIPE_PRIM_QUAD_STRIP:
+      return TOP_QUAD_STRIP;
+   case PIPE_PRIM_POLYGON:
+      return TOP_TRIANGLE_FAN; /* XXX TOP_POLYGON; */
+   case PIPE_PRIM_LINES_ADJACENCY:
+      return TOP_LINE_LIST_ADJ;
+   case PIPE_PRIM_LINE_STRIP_ADJACENCY:
+      return TOP_LISTSTRIP_ADJ;
+   case PIPE_PRIM_TRIANGLES_ADJACENCY:
+      return TOP_TRI_LIST_ADJ;
+   case PIPE_PRIM_TRIANGLE_STRIP_ADJACENCY:
+      return TOP_TRI_STRIP_ADJ;
+   default:
+      assert(0 && "Unknown topology");
+      return TOP_UNKNOWN;
+   }
+};
+
+
+/*
  * Draw vertex arrays, with optional indexing, optional instancing.
  */
 static void
 swr_draw_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info)
 {
    struct swr_context *ctx = swr_context(pipe);
-
-   if (!info->count_from_stream_output && !info->indirect &&
-       !info->primitive_restart &&
-       !u_trim_pipe_prim(info->mode, (unsigned*)&info->count))
-      return;
 
    if (!swr_check_render_cond(pipe))
       return;
@@ -53,7 +90,8 @@ swr_draw_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info)
    }
 
    /* Update derived state, pass draw info to update function */
-   swr_update_derived(pipe, info);
+   if (ctx->dirty)
+      swr_update_derived(pipe, info);
 
    swr_update_draw_context(ctx);
 
@@ -81,11 +119,8 @@ swr_draw_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info)
                offsets[output_buffer] = so->output[i].dst_offset;
             }
 
-            unsigned attrib_slot = so->output[i].register_index;
-            attrib_slot = swr_so_adjust_attrib(attrib_slot, ctx->vs);
-
             state.stream.decl[num].bufferIndex = output_buffer;
-            state.stream.decl[num].attribSlot = attrib_slot;
+            state.stream.decl[num].attribSlot = so->output[i].register_index - 1;
             state.stream.decl[num].componentMask =
                ((1 << so->output[i].num_components) - 1)
                << so->output[i].start_component;
@@ -103,79 +138,37 @@ swr_draw_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info)
          assert(ctx->vs->soFunc[info->mode] && "Error: SoShader = NULL");
       }
 
-      ctx->api.pfnSwrSetSoFunc(ctx->swrContext, ctx->vs->soFunc[info->mode], 0);
+      SwrSetSoFunc(ctx->swrContext, ctx->vs->soFunc[info->mode], 0);
    }
 
    struct swr_vertex_element_state *velems = ctx->velems;
-   velems->fsState.cutIndex = info->restart_index;
-   velems->fsState.bEnableCutIndex = info->primitive_restart;
-   velems->fsState.bPartialVertexBuffer = (info->min_index > 0);
+   if (!velems->fsFunc
+       || (velems->fsState.cutIndex != info->restart_index)
+       || (velems->fsState.bEnableCutIndex != info->primitive_restart)) {
 
-   swr_jit_fetch_key key;
-   swr_generate_fetch_key(key, velems);
-   auto search = velems->map.find(key);
-   if (search != velems->map.end()) {
-      velems->fsFunc = search->second;
-   } else {
+      velems->fsState.cutIndex = info->restart_index;
+      velems->fsState.bEnableCutIndex = info->primitive_restart;
+
+      /* Create Fetch Shader */
       HANDLE hJitMgr = swr_screen(ctx->pipe.screen)->hJitMgr;
       velems->fsFunc = JitCompileFetch(hJitMgr, velems->fsState);
 
       debug_printf("fetch shader %p\n", velems->fsFunc);
       assert(velems->fsFunc && "Error: FetchShader = NULL");
-
-      velems->map.insert(std::make_pair(key, velems->fsFunc));
    }
 
-   ctx->api.pfnSwrSetFetchFunc(ctx->swrContext, velems->fsFunc);
+   SwrSetFetchFunc(ctx->swrContext, velems->fsFunc);
 
    /* Set up frontend state
     * XXX setup provokingVertex & topologyProvokingVertex */
    SWR_FRONTEND_STATE feState = {0};
-
-   // feState.vsVertexSize seeds the PA size that is used as an interface
-   // between all the shader stages, so it has to be large enough to
-   // incorporate all interfaces between stages
-
-   // max of gs and vs num_outputs
-   feState.vsVertexSize = ctx->vs->info.base.num_outputs;
-   if (ctx->gs &&
-       ctx->gs->info.base.num_outputs > feState.vsVertexSize) {
-      feState.vsVertexSize = ctx->gs->info.base.num_outputs;
-   }
-
-   if (ctx->vs->info.base.num_outputs) {
-      // gs does not adjust for position in SGV slot at input from vs
-      if (!ctx->gs)
-         feState.vsVertexSize--;
-   }
-
-   // other (non-SGV) slots start at VERTEX_ATTRIB_START_SLOT
-   feState.vsVertexSize += VERTEX_ATTRIB_START_SLOT;
-
-   // The PA in the clipper does not handle BE vertex sizes
-   // different from FE. Increase vertexsize only for the cases that needed it
-
-   // primid needs a slot
-   if (ctx->fs->info.base.uses_primid)
-      feState.vsVertexSize++;
-   // sprite coord enable
-   if (ctx->rasterizer->sprite_coord_enable)
-      feState.vsVertexSize++;
-
-
    if (ctx->rasterizer->flatshade_first) {
       feState.provokingVertex = {1, 0, 0};
    } else {
       feState.provokingVertex = {2, 1, 2};
    }
 
-   enum pipe_prim_type topology;
-   if (ctx->gs)
-      topology = (pipe_prim_type)ctx->gs->info.base.properties[TGSI_PROPERTY_GS_OUTPUT_PRIM];
-   else
-      topology = info->mode;
-
-   switch (topology) {
+   switch (info->mode) {
    case PIPE_PRIM_TRIANGLE_FAN:
       feState.topologyProvokingVertex = feState.provokingVertex.triFan;
       break;
@@ -200,32 +193,23 @@ swr_draw_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info)
    }
 
    feState.bEnableCutIndex = info->primitive_restart;
-   ctx->api.pfnSwrSetFrontendState(ctx->swrContext, &feState);
+   SwrSetFrontendState(ctx->swrContext, &feState);
 
-   if (info->index_size)
-      ctx->api.pfnSwrDrawIndexedInstanced(ctx->swrContext,
-                                          swr_convert_prim_topology(info->mode),
-                                          info->count,
-                                          info->instance_count,
-                                          info->start,
-                                          info->index_bias,
-                                          info->start_instance);
+   if (info->indexed)
+      SwrDrawIndexedInstanced(ctx->swrContext,
+                              swr_convert_prim_topology(info->mode),
+                              info->count,
+                              info->instance_count,
+                              info->start,
+                              info->index_bias,
+                              info->start_instance);
    else
-      ctx->api.pfnSwrDrawInstanced(ctx->swrContext,
-                                   swr_convert_prim_topology(info->mode),
-                                   info->count,
-                                   info->instance_count,
-                                   info->start,
-                                   info->start_instance);
-
-   /* On large client-buffer draw, we used client buffer directly, without
-    * copy.  Block until draw is finished.
-    * VMD is an example application that benefits from this. */
-   if (ctx->dirty & SWR_LARGE_CLIENT_DRAW) {
-      struct swr_screen *screen = swr_screen(pipe->screen);
-      swr_fence_submit(ctx, screen->flush_fence);
-      swr_fence_finish(pipe->screen, NULL, screen->flush_fence, 0);
-   }
+      SwrDrawInstanced(ctx->swrContext,
+                       swr_convert_prim_topology(info->mode),
+                       info->count,
+                       info->instance_count,
+                       info->start,
+                       info->start_instance);
 }
 
 
@@ -236,17 +220,14 @@ swr_flush(struct pipe_context *pipe,
 {
    struct swr_context *ctx = swr_context(pipe);
    struct swr_screen *screen = swr_screen(pipe->screen);
+   struct pipe_surface *cb = ctx->framebuffer.cbufs[0];
 
-   for (int i=0; i < ctx->framebuffer.nr_cbufs; i++) {
-      struct pipe_surface *cb = ctx->framebuffer.cbufs[i];
-      if (cb) {
-         swr_store_dirty_resource(pipe, cb->texture, SWR_TILE_RESOLVED);
-      }
-   }
-   if (ctx->framebuffer.zsbuf) {
-      swr_store_dirty_resource(pipe, ctx->framebuffer.zsbuf->texture,
-                               SWR_TILE_RESOLVED);
-   }
+   /* If the current renderTarget is the display surface, store tiles back to
+    * the surface, in preparation for present (swr_flush_frontbuffer).
+    * Other renderTargets get stored back when attachment changes or
+    * swr_surface_destroy */
+   if (cb && swr_resource(cb->texture)->display_target)
+      swr_store_dirty_resource(pipe, cb->texture, SWR_TILE_RESOLVED);
 
    if (fence)
       swr_fence_reference(pipe->screen, fence, screen->flush_fence);
@@ -260,25 +241,6 @@ swr_finish(struct pipe_context *pipe)
    swr_flush(pipe, &fence, 0);
    swr_fence_finish(pipe->screen, NULL, fence, 0);
    swr_fence_reference(pipe->screen, &fence, NULL);
-}
-
-/*
- * Invalidate tiles so they can be reloaded back when needed
- */
-void
-swr_invalidate_render_target(struct pipe_context *pipe,
-                             uint32_t attachment,
-                             uint16_t width, uint16_t height)
-{
-   struct swr_context *ctx = swr_context(pipe);
-
-   /* grab the rect from the passed in arguments */
-   swr_update_draw_context(ctx);
-   SWR_RECT full_rect =
-      {0, 0, (int32_t)width, (int32_t)height};
-   ctx->api.pfnSwrInvalidateTiles(ctx->swrContext,
-                                  1 << attachment,
-                                  full_rect);
 }
 
 
@@ -298,13 +260,11 @@ swr_store_render_target(struct pipe_context *pipe,
    if (renderTarget->pBaseAddress) {
       swr_update_draw_context(ctx);
       SWR_RECT full_rect =
-         {0, 0,
-          (int32_t)u_minify(renderTarget->width, renderTarget->lod),
-          (int32_t)u_minify(renderTarget->height, renderTarget->lod)};
-      ctx->api.pfnSwrStoreTiles(ctx->swrContext,
-                                1 << attachment,
-                                post_tile_state,
-                                full_rect);
+         {0, 0, (int32_t)renderTarget->width, (int32_t)renderTarget->height};
+      SwrStoreTiles(ctx->swrContext,
+                    1 << attachment,
+                    post_tile_state,
+                    full_rect);
    }
 }
 
@@ -322,9 +282,7 @@ swr_store_dirty_resource(struct pipe_context *pipe,
       swr_draw_context *pDC = &ctx->swrDC;
       SWR_SURFACE_STATE *renderTargets = pDC->renderTargets;
       for (uint32_t i = 0; i < SWR_NUM_ATTACHMENTS; i++)
-         if (renderTargets[i].pBaseAddress == spr->swr.pBaseAddress ||
-             (spr->secondary.pBaseAddress &&
-              renderTargets[i].pBaseAddress == spr->secondary.pBaseAddress)) {
+         if (renderTargets[i].pBaseAddress == spr->swr.pBaseAddress) {
             swr_store_render_target(pipe, i, post_tile_state);
 
             /* Mesa thinks depth/stencil are fused, so we'll never get an

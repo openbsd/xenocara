@@ -12,9 +12,8 @@ AM_CPPFLAGS = \
 	$(LIBDRM_CFLAGS) \
 	$(X11_INCLUDES)
 
-TESTS = glx-test dispatch-index-check
+TESTS = glx-test
 check_PROGRAMS = glx-test
-EXTRA_DIST = dispatch-index-check
 
 glx_test_SOURCES =			\
 	clientinfo_unittest.cpp		\

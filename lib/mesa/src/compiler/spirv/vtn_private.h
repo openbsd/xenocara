@@ -25,12 +25,9 @@
  *
  */
 
-#ifndef _VTN_PRIVATE_H_
-#define _VTN_PRIVATE_H_
-
 #include "nir/nir.h"
 #include "nir/nir_builder.h"
-#include "util/u_dynarray.h"
+#include "nir/nir_array.h"
 #include "nir_spirv.h"
 #include "spirv.h"
 
@@ -44,7 +41,7 @@ enum vtn_value_type {
    vtn_value_type_decoration_group,
    vtn_value_type_type,
    vtn_value_type_constant,
-   vtn_value_type_pointer,
+   vtn_value_type_access_chain,
    vtn_value_type_function,
    vtn_value_type_block,
    vtn_value_type_ssa,
@@ -115,7 +112,7 @@ struct vtn_case {
    struct vtn_case *fallthrough;
 
    /* The uint32_t values that map to this case */
-   struct util_dynarray values;
+   nir_array values;
 
    /* True if this is the default case */
    bool is_default;
@@ -196,101 +193,48 @@ struct vtn_ssa_value {
    const struct glsl_type *type;
 };
 
-enum vtn_base_type {
-   vtn_base_type_void,
-   vtn_base_type_scalar,
-   vtn_base_type_vector,
-   vtn_base_type_matrix,
-   vtn_base_type_array,
-   vtn_base_type_struct,
-   vtn_base_type_pointer,
-   vtn_base_type_image,
-   vtn_base_type_sampler,
-   vtn_base_type_function,
-};
-
 struct vtn_type {
-   enum vtn_base_type base_type;
-
    const struct glsl_type *type;
 
    /* The value that declares this type.  Used for finding decorations */
    struct vtn_value *val;
 
-   /* Specifies the length of complex types. */
-   unsigned length;
+   /* for matrices, whether the matrix is stored row-major */
+   bool row_major;
 
-   /* for arrays, matrices and pointers, the array stride */
+   /* for structs, the offset of each member */
+   unsigned *offsets;
+
+   /* for structs, whether it was decorated as a "non-SSBO-like" block */
+   bool block;
+
+   /* for structs, whether it was decorated as an "SSBO-like" block */
+   bool buffer_block;
+
+   /* for structs with block == true, whether this is a builtin block (i.e. a
+    * block that contains only builtins).
+    */
+   bool builtin_block;
+
+   /* Image format for image_load_store type images */
+   unsigned image_format;
+
+   /* Access qualifier for storage images */
+   SpvAccessQualifier access_qualifier;
+
+   /* for arrays and matrices, the array stride */
    unsigned stride;
 
-   union {
-      /* Members for scalar, vector, and array-like types */
-      struct {
-         /* for arrays, the vtn_type for the elements of the array */
-         struct vtn_type *array_element;
+   /* for arrays, the vtn_type for the elements of the array */
+   struct vtn_type *array_element;
 
-         /* for matrices, whether the matrix is stored row-major */
-         bool row_major:1;
+   /* for structures, the vtn_type for each member */
+   struct vtn_type **members;
 
-         /* Whether this type, or a parent type, has been decorated as a
-          * builtin
-          */
-         bool is_builtin:1;
+   /* Whether this type, or a parent type, has been decorated as a builtin */
+   bool is_builtin;
 
-         /* Which built-in to use */
-         SpvBuiltIn builtin;
-      };
-
-      /* Members for struct types */
-      struct {
-         /* for structures, the vtn_type for each member */
-         struct vtn_type **members;
-
-         /* for structs, the offset of each member */
-         unsigned *offsets;
-
-         /* for structs, whether it was decorated as a "non-SSBO-like" block */
-         bool block:1;
-
-         /* for structs, whether it was decorated as an "SSBO-like" block */
-         bool buffer_block:1;
-
-         /* for structs with block == true, whether this is a builtin block
-          * (i.e. a block that contains only builtins).
-          */
-         bool builtin_block:1;
-      };
-
-      /* Members for pointer types */
-      struct {
-         /* For pointers, the vtn_type for dereferenced type */
-         struct vtn_type *deref;
-
-         /* Storage class for pointers */
-         SpvStorageClass storage_class;
-      };
-
-      /* Members for image types */
-      struct {
-         /* For images, indicates whether it's sampled or storage */
-         bool sampled;
-
-         /* Image format for image_load_store type images */
-         unsigned image_format;
-
-         /* Access qualifier for storage images */
-         SpvAccessQualifier access_qualifier;
-      };
-
-      /* Members for function types */
-      struct {
-         /* For functions, the vtn_type for each parameter */
-         struct vtn_type **params;
-
-         /* Return type for functions */
-         struct vtn_type *return_type;
-      };
-   };
+   SpvBuiltIn builtin;
 };
 
 struct vtn_variable;
@@ -306,19 +250,12 @@ struct vtn_access_link {
 };
 
 struct vtn_access_chain {
+   struct vtn_variable *var;
+
    uint32_t length;
 
-   /** Whether or not to treat the base pointer as an array.  This is only
-    * true if this access chain came from an OpPtrAccessChain.
-    */
-   bool ptr_as_array;
-
-   /** Struct elements and array offsets.
-    *
-    * This is an array of 1 so that it can conveniently be created on the
-    * stack but the real length is given by the length field.
-    */
-   struct vtn_access_link link[1];
+   /* Struct elements and array offsets */
+   struct vtn_access_link link[0];
 };
 
 enum vtn_variable_mode {
@@ -335,47 +272,6 @@ enum vtn_variable_mode {
    vtn_variable_mode_output,
 };
 
-struct vtn_pointer {
-   /** The variable mode for the referenced data */
-   enum vtn_variable_mode mode;
-
-   /** The dereferenced type of this pointer */
-   struct vtn_type *type;
-
-   /** The pointer type of this pointer
-    *
-    * This may be NULL for some temporary pointers constructed as part of a
-    * large load, store, or copy.  It MUST be valid for all pointers which are
-    * stored as SPIR-V SSA values.
-    */
-   struct vtn_type *ptr_type;
-
-   /** The referenced variable, if known
-    *
-    * This field may be NULL if the pointer uses a (block_index, offset) pair
-    * instead of an access chain.
-    */
-   struct vtn_variable *var;
-
-   /** An access chain describing how to get from var to the referenced data
-    *
-    * This field may be NULL if the pointer references the entire variable or
-    * if a (block_index, offset) pair is used instead of an access chain.
-    */
-   struct vtn_access_chain *chain;
-
-   /** A (block_index, offset) pair representing a UBO or SSBO position. */
-   struct nir_ssa_def *block_index;
-   struct nir_ssa_def *offset;
-};
-
-static inline bool
-vtn_pointer_uses_ssa_offset(struct vtn_pointer *ptr)
-{
-   return ptr->mode == vtn_variable_mode_ubo ||
-          ptr->mode == vtn_variable_mode_ssbo;
-}
-
 struct vtn_variable {
    enum vtn_variable_mode mode;
 
@@ -383,37 +279,22 @@ struct vtn_variable {
 
    unsigned descriptor_set;
    unsigned binding;
-   unsigned input_attachment_index;
-   bool patch;
 
    nir_variable *var;
    nir_variable **members;
 
-   /**
-    * In some early released versions of GLSLang, it implemented all function
-    * calls by making copies of all parameters into temporary variables and
-    * passing those variables into the function.  It even did so for samplers
-    * and images which violates the SPIR-V spec.  Unfortunately, two games
-    * (Talos Principle and Doom) shipped with this old version of GLSLang and
-    * also happen to pass samplers into functions.  Talos Principle received
-    * an update fairly shortly after release with an updated GLSLang.  Doom,
-    * on the other hand, has never received an update so we need to work
-    * around this GLSLang issue in SPIR-V -> NIR.  Hopefully, we can drop this
-    * hack at some point in the future.
-    */
-   struct vtn_pointer *copy_prop_sampler;
+   struct vtn_access_chain chain;
 };
 
 struct vtn_image_pointer {
-   struct vtn_pointer *image;
+   struct vtn_access_chain *image;
    nir_ssa_def *coord;
    nir_ssa_def *sample;
 };
 
 struct vtn_sampled_image {
-   struct vtn_type *type;
-   struct vtn_pointer *image; /* Image or array of images */
-   struct vtn_pointer *sampler; /* Sampler */
+   struct vtn_access_chain *image; /* Image or array of images */
+   struct vtn_access_chain *sampler; /* Sampler */
 };
 
 struct vtn_value {
@@ -428,7 +309,7 @@ struct vtn_value {
          nir_constant *constant;
          const struct glsl_type *const_type;
       };
-      struct vtn_pointer *pointer;
+      struct vtn_access_chain *access_chain;
       struct vtn_image_pointer *image;
       struct vtn_sampled_image *sampled_image;
       struct vtn_function *func;
@@ -465,7 +346,6 @@ struct vtn_builder {
 
    nir_shader *shader;
    nir_function_impl *impl;
-   const struct nir_spirv_supported_extensions *ext;
    struct vtn_block *block;
 
    /* Current file, line, and column.  Useful for debugging.  Set
@@ -509,12 +389,6 @@ struct vtn_builder {
    bool has_loop_continue;
 };
 
-nir_ssa_def *
-vtn_pointer_to_ssa(struct vtn_builder *b, struct vtn_pointer *ptr);
-struct vtn_pointer *
-vtn_pointer_from_ssa(struct vtn_builder *b, nir_ssa_def *ssa,
-                     struct vtn_type *ptr_type);
-
 static inline struct vtn_value *
 vtn_push_value(struct vtn_builder *b, uint32_t value_id,
                enum vtn_value_type value_type)
@@ -525,21 +399,6 @@ vtn_push_value(struct vtn_builder *b, uint32_t value_id,
    b->values[value_id].value_type = value_type;
 
    return &b->values[value_id];
-}
-
-static inline struct vtn_value *
-vtn_push_ssa(struct vtn_builder *b, uint32_t value_id,
-             struct vtn_type *type, struct vtn_ssa_value *ssa)
-{
-   struct vtn_value *val;
-   if (type->base_type == vtn_base_type_pointer) {
-      val = vtn_push_value(b, value_id, vtn_value_type_pointer);
-      val->pointer = vtn_pointer_from_ssa(b, ssa->def, type);
-   } else {
-      val = vtn_push_value(b, value_id, vtn_value_type_ssa);
-      val->ssa = ssa;
-   }
-   return val;
 }
 
 static inline struct vtn_value *
@@ -580,15 +439,13 @@ nir_ssa_def *vtn_vector_insert_dynamic(struct vtn_builder *b, nir_ssa_def *src,
 
 nir_deref_var *vtn_nir_deref(struct vtn_builder *b, uint32_t id);
 
-struct vtn_pointer *vtn_pointer_for_variable(struct vtn_builder *b,
-                                             struct vtn_variable *var,
-                                             struct vtn_type *ptr_type);
-
-nir_deref_var *vtn_pointer_to_deref(struct vtn_builder *b,
-                                    struct vtn_pointer *ptr);
+nir_deref_var *vtn_access_chain_to_deref(struct vtn_builder *b,
+                                         struct vtn_access_chain *chain);
 nir_ssa_def *
-vtn_pointer_to_offset(struct vtn_builder *b, struct vtn_pointer *ptr,
-                      nir_ssa_def **index_out, unsigned *end_idx_out);
+vtn_access_chain_to_offset(struct vtn_builder *b,
+                           struct vtn_access_chain *chain,
+                           nir_ssa_def **index_out, struct vtn_type **type_out,
+                           unsigned *end_idx_out, bool stop_at_matrix);
 
 struct vtn_ssa_value *vtn_local_load(struct vtn_builder *b, nir_deref_var *src);
 
@@ -596,10 +453,10 @@ void vtn_local_store(struct vtn_builder *b, struct vtn_ssa_value *src,
                      nir_deref_var *dest);
 
 struct vtn_ssa_value *
-vtn_variable_load(struct vtn_builder *b, struct vtn_pointer *src);
+vtn_variable_load(struct vtn_builder *b, struct vtn_access_chain *src);
 
 void vtn_variable_store(struct vtn_builder *b, struct vtn_ssa_value *src,
-                        struct vtn_pointer *dest);
+                        struct vtn_access_chain *dest);
 
 void vtn_handle_variables(struct vtn_builder *b, SpvOp opcode,
                           const uint32_t *w, unsigned count);
@@ -622,19 +479,10 @@ typedef void (*vtn_execution_mode_foreach_cb)(struct vtn_builder *,
 void vtn_foreach_execution_mode(struct vtn_builder *b, struct vtn_value *value,
                                 vtn_execution_mode_foreach_cb cb, void *data);
 
-nir_op vtn_nir_alu_op_for_spirv_opcode(SpvOp opcode, bool *swap,
-                                       nir_alu_type src, nir_alu_type dst);
+nir_op vtn_nir_alu_op_for_spirv_opcode(SpvOp opcode, bool *swap);
 
 void vtn_handle_alu(struct vtn_builder *b, SpvOp opcode,
                     const uint32_t *w, unsigned count);
 
 bool vtn_handle_glsl450_instruction(struct vtn_builder *b, uint32_t ext_opcode,
                                     const uint32_t *words, unsigned count);
-
-static inline uint64_t
-vtn_u64_literal(const uint32_t *w)
-{
-   return (uint64_t)w[1] << 32 | w[0];
-}
-
-#endif /* _VTN_PRIVATE_H_ */

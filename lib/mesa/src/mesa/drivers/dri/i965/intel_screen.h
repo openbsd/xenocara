@@ -31,18 +31,11 @@
 
 #include <GL/internal/dri_interface.h>
 
-#include "isl/isl.h"
 #include "dri_util.h"
-#include "brw_bufmgr.h"
+#include "intel_bufmgr.h"
 #include "common/gen_device_info.h"
 #include "i915_drm.h"
 #include "xmlconfig.h"
-
-#include "isl/isl.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 struct intel_screen
 {
@@ -53,35 +46,29 @@ struct intel_screen
 
    uint64_t max_gtt_map_object_size;
 
-   /** Bytes of aperture usage beyond which execbuf is likely to fail. */
-   uint64_t aperture_threshold;
-
    bool no_hw;
+
    bool hw_has_swizzling;
-   bool has_exec_fence; /**< I915_PARAM_HAS_EXEC_FENCE */
 
    int hw_has_timestamp;
 
-   struct isl_device isl_dev;
+   /**
+    * Does the kernel support resource streamer?
+    */
+   bool has_resource_streamer;
+
+   /**
+    * Does the current hardware and kernel support MI_MATH and
+    * MI_LOAD_REGISTER_REG?
+    */
+   bool has_mi_math_and_lrr;
 
    /**
     * Does the kernel support context reset notifications?
     */
    bool has_context_reset_notification;
 
-   /**
-    * Does the kernel support features such as pipelined register access to
-    * specific registers?
-    */
-   unsigned kernel_features;
-#define KERNEL_ALLOWS_SOL_OFFSET_WRITES             (1<<0)
-#define KERNEL_ALLOWS_PREDICATE_WRITES              (1<<1)
-#define KERNEL_ALLOWS_MI_MATH_AND_LRR               (1<<2)
-#define KERNEL_ALLOWS_HSW_SCRATCH1_AND_ROW_CHICKEN3 (1<<3)
-#define KERNEL_ALLOWS_COMPUTE_DISPATCH              (1<<4)
-#define KERNEL_ALLOWS_EXEC_CAPTURE                  (1<<5)
-
-   struct brw_bufmgr *bufmgr;
+   dri_bufmgr *bufmgr;
 
    /**
     * A unique ID for shader programs.
@@ -112,10 +99,6 @@ struct intel_screen
     * Number of EUs reported by the I915_PARAM_EU_TOTAL parameter
     */
    int eu_total;
-
-   bool mesa_format_supports_texture[MESA_FORMAT_COUNT];
-   bool mesa_format_supports_render[MESA_FORMAT_COUNT];
-   enum isl_format mesa_to_isl_render_format[MESA_FORMAT_COUNT];
 };
 
 extern void intelDestroyContext(__DRIcontext * driContextPriv);
@@ -131,48 +114,9 @@ intelMakeCurrent(__DRIcontext * driContextPriv,
                  __DRIdrawable * driReadPriv);
 
 double get_time(void);
+void aub_dump_bmp(struct gl_context *ctx);
 
 const int*
 intel_supported_msaa_modes(const struct intel_screen  *screen);
-
-static inline bool
-can_do_pipelined_register_writes(const struct intel_screen *screen)
-{
-   return screen->kernel_features & KERNEL_ALLOWS_SOL_OFFSET_WRITES;
-}
-
-static inline bool
-can_do_hsw_l3_atomics(const struct intel_screen *screen)
-{
-   return screen->kernel_features & KERNEL_ALLOWS_HSW_SCRATCH1_AND_ROW_CHICKEN3;
-}
-
-static inline bool
-can_do_mi_math_and_lrr(const struct intel_screen *screen)
-{
-   return screen->kernel_features & KERNEL_ALLOWS_MI_MATH_AND_LRR;
-}
-
-static inline bool
-can_do_compute_dispatch(const struct intel_screen *screen)
-{
-   return screen->kernel_features & KERNEL_ALLOWS_COMPUTE_DISPATCH;
-}
-
-static inline bool
-can_do_predicate_writes(const struct intel_screen *screen)
-{
-   return screen->kernel_features & KERNEL_ALLOWS_PREDICATE_WRITES;
-}
-
-static inline bool
-can_do_exec_capture(const struct intel_screen *screen)
-{
-   return screen->kernel_features & KERNEL_ALLOWS_EXEC_CAPTURE;
-}
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

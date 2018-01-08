@@ -69,17 +69,10 @@ os_time_get_nano(void)
 
    static LARGE_INTEGER frequency;
    LARGE_INTEGER counter;
-   int64_t secs, nanosecs;
    if(!frequency.QuadPart)
       QueryPerformanceFrequency(&frequency);
    QueryPerformanceCounter(&counter);
-   /* Compute seconds and nanoseconds parts separately to
-    * reduce severity of precision loss.
-    */
-   secs = counter.QuadPart / frequency.QuadPart;
-   nanosecs = (counter.QuadPart % frequency.QuadPart) * INT64_C(1000000000)
-      / frequency.QuadPart;
-   return secs*INT64_C(1000000000) + nanosecs;
+   return counter.QuadPart*INT64_C(1000000000)/frequency.QuadPart;
 
 #else
 

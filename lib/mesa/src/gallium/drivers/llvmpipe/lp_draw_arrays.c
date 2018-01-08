@@ -73,30 +73,33 @@ llvmpipe_draw_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info)
     * Map vertex buffers
     */
    for (i = 0; i < lp->num_vertex_buffers; i++) {
-      const void *buf = lp->vertex_buffer[i].is_user_buffer ?
-                           lp->vertex_buffer[i].buffer.user : NULL;
+      const void *buf = lp->vertex_buffer[i].user_buffer;
       size_t size = ~0;
       if (!buf) {
-         if (!lp->vertex_buffer[i].buffer.resource) {
+         if (!lp->vertex_buffer[i].buffer) {
             continue;
          }
-         buf = llvmpipe_resource_data(lp->vertex_buffer[i].buffer.resource);
-         size = lp->vertex_buffer[i].buffer.resource->width0;
+         buf = llvmpipe_resource_data(lp->vertex_buffer[i].buffer);
+         size = lp->vertex_buffer[i].buffer->width0;
       }
       draw_set_mapped_vertex_buffer(draw, i, buf, size);
    }
 
    /* Map index buffer, if present */
-   if (info->index_size) {
+   if (info->indexed) {
       unsigned available_space = ~0;
-      mapped_indices = info->has_user_indices ? info->index.user : NULL;
+      mapped_indices = lp->index_buffer.user_buffer;
       if (!mapped_indices) {
-         mapped_indices = llvmpipe_resource_data(info->index.resource);
-         available_space = info->index.resource->width0;
+         mapped_indices = llvmpipe_resource_data(lp->index_buffer.buffer);
+         if (lp->index_buffer.buffer->width0 > lp->index_buffer.offset)
+            available_space =
+               (lp->index_buffer.buffer->width0 - lp->index_buffer.offset);
+         else
+            available_space = 0;
       }
       draw_set_indexes(draw,
-                       (ubyte *) mapped_indices,
-                       info->index_size, available_space);
+                       (ubyte *) mapped_indices + lp->index_buffer.offset,
+                       lp->index_buffer.index_size, available_space);
    }
 
    for (i = 0; i < lp->num_so_targets; i++) {

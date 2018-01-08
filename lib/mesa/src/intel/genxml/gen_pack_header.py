@@ -1,14 +1,13 @@
+#!/usr/bin/env python2
 #encoding=utf-8
 
 from __future__ import (
     absolute_import, division, print_function, unicode_literals
 )
-import ast
 import xml.parsers.expat
 import re
 import sys
 import copy
-import textwrap
 
 license =  """/*
  * Copyright (C) 2016 Intel Corporation
@@ -268,20 +267,18 @@ class Field(object):
             type = 'uint32_t'
         elif self.type in self.parser.structs:
             type = 'struct ' + self.parser.gen_prefix(safe_name(self.type))
-        elif self.type in self.parser.enums:
-            type = 'enum ' + self.parser.gen_prefix(safe_name(self.type))
         elif self.type == 'mbo':
             return
         else:
             print("#error unhandled type: %s" % self.type)
-            return
 
         print("   %-36s %s%s;" % (type, self.name, dim))
 
-        prefix = ""
         if len(self.values) > 0 and self.default == None:
             if self.prefix:
                 prefix = self.prefix + "_"
+            else:
+                prefix = ""
 
         for value in self.values:
             print("#define %-40s %d" % (prefix + value.name, value.value))
@@ -348,7 +345,7 @@ class Group(object):
                 dwords[index + 1] = dwords[index]
                 index = index + 1
 
-    def collect_dwords_and_length(self):
+    def emit_pack_function(self, start):
         dwords = {}
         self.collect_dwords(dwords, 0, "")
 
@@ -358,14 +355,9 @@ class Group(object):
         # index we've seen plus one.
         if self.size > 0:
             length = self.size // 32
-        elif dwords:
-            length = max(dwords.keys()) + 1
         else:
-            length = 0
+            length = max(dwords.keys()) + 1
 
-        return (dwords, length)
-
-    def emit_pack_function(self, dwords, length):
         for index in range(length):
             # Handle MBZ dwords
             if not index in dwords:
@@ -422,59 +414,58 @@ class Group(object):
                 v = "0"
 
             field_index = 0
-            non_address_fields = []
             for field in dw.fields:
                 if field.type != "mbo":
                     name = field.name + field.dim
 
                 if field.type == "mbo":
-                    non_address_fields.append("__gen_mbo(%d, %d)" % \
-                        (field.start - dword_start, field.end - dword_start))
+                    s = "__gen_mbo(%d, %d)" % \
+                        (field.start - dword_start, field.end - dword_start)
                 elif field.type == "address":
-                    pass
+                    s = None
                 elif field.type == "uint":
-                    non_address_fields.append("__gen_uint(values->%s, %d, %d)" % \
-                        (name, field.start - dword_start, field.end - dword_start))
-                elif field.type in self.parser.enums:
-                    non_address_fields.append("__gen_uint(values->%s, %d, %d)" % \
-                        (name, field.start - dword_start, field.end - dword_start))
+                    s = "__gen_uint(values->%s, %d, %d)" % \
+                        (name, field.start - dword_start, field.end - dword_start)
                 elif field.type == "int":
-                    non_address_fields.append("__gen_sint(values->%s, %d, %d)" % \
-                        (name, field.start - dword_start, field.end - dword_start))
+                    s = "__gen_sint(values->%s, %d, %d)" % \
+                        (name, field.start - dword_start, field.end - dword_start)
                 elif field.type == "bool":
-                    non_address_fields.append("__gen_uint(values->%s, %d, %d)" % \
-                        (name, field.start - dword_start, field.end - dword_start))
+                    s = "__gen_uint(values->%s, %d, %d)" % \
+                        (name, field.start - dword_start, field.end - dword_start)
                 elif field.type == "float":
-                    non_address_fields.append("__gen_float(values->%s)" % name)
+                    s = "__gen_float(values->%s)" % name
                 elif field.type == "offset":
-                    non_address_fields.append("__gen_offset(values->%s, %d, %d)" % \
-                        (name, field.start - dword_start, field.end - dword_start))
+                    s = "__gen_offset(values->%s, %d, %d)" % \
+                        (name, field.start - dword_start, field.end - dword_start)
                 elif field.type == 'ufixed':
-                    non_address_fields.append("__gen_ufixed(values->%s, %d, %d, %d)" % \
-                        (name, field.start - dword_start, field.end - dword_start, field.fractional_size))
+                    s = "__gen_ufixed(values->%s, %d, %d, %d)" % \
+                        (name, field.start - dword_start, field.end - dword_start, field.fractional_size)
                 elif field.type == 'sfixed':
-                    non_address_fields.append("__gen_sfixed(values->%s, %d, %d, %d)" % \
-                        (name, field.start - dword_start, field.end - dword_start, field.fractional_size))
+                    s = "__gen_sfixed(values->%s, %d, %d, %d)" % \
+                        (name, field.start - dword_start, field.end - dword_start, field.fractional_size)
                 elif field.type in self.parser.structs:
-                    non_address_fields.append("__gen_uint(v%d_%d, %d, %d)" % \
-                        (index, field_index, field.start - dword_start, field.end - dword_start))
+                    s = "__gen_uint(v%d_%d, %d, %d)" % \
+                        (index, field_index, field.start - dword_start, field.end - dword_start)
                     field_index = field_index + 1
                 else:
-                    non_address_fields.append("/* unhandled field %s, type %s */\n" % \
-                                              (name, field.type))
+                    print("/* unhandled field %s, type %s */\n" % (name, field.type))
+                    s = None
 
-            if len(non_address_fields) > 0:
-                print(" |\n".join("      " + f for f in non_address_fields) + ";")
+                if not s == None:
+                    if field == dw.fields[-1]:
+                        print("      %s;" % s)
+                    else:
+                        print("      %s |" % s)
 
             if dw.size == 32:
                 if dw.address:
-                    print("   dw[%d] = __gen_combine_address(data, &dw[%d], values->%s, %s);" % (index, index, dw.address.name + field.dim, v))
+                    print("   dw[%d] = __gen_combine_address(data, &dw[%d], values->%s, %s);" % (index, index, dw.address.name, v))
                 continue
 
             if dw.address:
                 v_address = "v%d_address" % index
                 print("   const uint64_t %s =\n      __gen_combine_address(data, &dw[%d], values->%s, %s);" %
-                      (v_address, index, dw.address.name + field.dim, v))
+                      (v_address, index, dw.address.name, v))
                 v = v_address
 
             print("   dw[%d] = %s;" % (index, v))
@@ -483,7 +474,7 @@ class Group(object):
 class Value(object):
     def __init__(self, attrs):
         self.name = safe_name(attrs["name"])
-        self.value = ast.literal_eval(attrs["value"])
+        self.value = int(attrs["value"])
 
 class Parser(object):
     def __init__(self):
@@ -493,7 +484,6 @@ class Parser(object):
 
         self.instruction = None
         self.structs = {}
-        self.enums = {}
         self.registers = {}
 
     def gen_prefix(self, name):
@@ -540,7 +530,6 @@ class Parser(object):
         elif name == "enum":
             self.values = []
             self.enum = safe_name(attrs["name"])
-            self.enums[attrs["name"]] = 1
             if "prefix" in attrs:
                 self.prefix = safe_name(attrs["prefix"])
             else:
@@ -579,19 +568,13 @@ class Parser(object):
 
     def emit_pack_function(self, name, group):
         name = self.gen_prefix(name)
-        print(textwrap.dedent("""\
-            static inline void
-            %s_pack(__attribute__((unused)) __gen_user_data *data,
-                  %s__attribute__((unused)) void * restrict dst,
-                  %s__attribute__((unused)) const struct %s * restrict values)
-            {""") % (name, ' ' * len(name), ' ' * len(name), name))
+        print("static inline void\n%s_pack(__gen_user_data *data, void * restrict dst,\n%sconst struct %s * restrict values)\n{" %
+              (name, ' ' * (len(name) + 6), name))
 
-        (dwords, length) = group.collect_dwords_and_length()
-        if length:
-            # Cast dst to make header C++ friendly
-            print("   uint32_t * restrict dw = (uint32_t * restrict) dst;")
+        # Cast dst to make header C++ friendly
+        print("   uint32_t * restrict dw = (uint32_t * restrict) dst;")
 
-            group.emit_pack_function(dwords, length)
+        group.emit_pack_function(0)
 
         print("}\n")
 
@@ -643,14 +626,14 @@ class Parser(object):
         self.emit_pack_function(self.struct, self.group)
 
     def emit_enum(self):
-        print('enum %s {' % self.gen_prefix(self.enum))
+        print('/* enum %s */' % self.gen_prefix(self.enum))
         for value in self.values:
             if self.prefix:
                 name = self.prefix + "_" + value.name
             else:
                 name = value.name
-            print('   %-36s = %6d,' % (name.upper(), value.value))
-        print('};\n')
+            print('#define %-36s %6d' % (name.upper(), value.value))
+        print('')
 
     def parse(self, filename):
         file = open(filename, "rb")

@@ -70,9 +70,6 @@ public:
 class acp_entry : public exec_node
 {
 public:
-   /* override operator new from exec_node */
-   DECLARE_LINEAR_ZALLOC_CXX_OPERATORS(acp_entry)
-
    acp_entry(ir_variable *lhs, ir_variable *rhs, int write_mask, int swizzle[4])
       : rhs_node(this)
    {
@@ -93,9 +90,6 @@ public:
 class kill_entry : public exec_node
 {
 public:
-   /* override operator new from exec_node */
-   DECLARE_LINEAR_ZALLOC_CXX_OPERATORS(kill_entry)
-
    kill_entry(ir_variable *var, int write_mask)
    {
       this->var = var;
@@ -113,7 +107,6 @@ public:
       this->progress = false;
       this->killed_all = false;
       this->mem_ctx = ralloc_context(NULL);
-      this->lin_ctx = linear_alloc_parent(this->mem_ctx, 0);
       this->shader_mem_ctx = NULL;
       this->kills = new(mem_ctx) exec_list;
 
@@ -181,7 +174,6 @@ public:
 
    /* Context for our local data structures. */
    void *mem_ctx;
-   void *lin_ctx;
    /* Context for allocating new shader nodes. */
    void *shader_mem_ctx;
 };
@@ -231,9 +223,9 @@ ir_copy_propagation_elements_visitor::visit_leave(ir_assignment *ir)
       kill_entry *k;
 
       if (lhs)
-	 k = new(this->lin_ctx) kill_entry(var, ir->write_mask);
+	 k = new(this->kills) kill_entry(var, ir->write_mask);
       else
-	 k = new(this->lin_ctx) kill_entry(var, ~0);
+	 k = new(this->kills) kill_entry(var, ~0);
 
       kill(k);
    }
@@ -532,6 +524,7 @@ ir_copy_propagation_elements_visitor::kill(kill_entry *k)
    if (k->next)
       k->remove();
 
+   ralloc_steal(this->kills, k);
    this->kills->push_tail(k);
 }
 
@@ -595,7 +588,7 @@ ir_copy_propagation_elements_visitor::add_copy(ir_assignment *ir)
    if (lhs->var->data.precise != rhs->var->data.precise)
       return;
 
-   entry = new(this->lin_ctx) acp_entry(lhs->var, rhs->var, write_mask,
+   entry = new(this->mem_ctx) acp_entry(lhs->var, rhs->var, write_mask,
 					swizzle);
 
    /* lhs hash, hash of lhs -> acp_entry lists */

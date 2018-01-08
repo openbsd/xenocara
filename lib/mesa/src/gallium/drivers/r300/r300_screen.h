@@ -48,7 +48,7 @@ struct r300_screen {
 
     /* The MSAA texture with CMASK access; */
     struct pipe_resource *cmask_resource;
-    mtx_t cmask_mutex;
+    pipe_mutex cmask_mutex;
 };
 
 

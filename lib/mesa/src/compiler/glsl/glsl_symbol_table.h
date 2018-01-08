@@ -22,12 +22,15 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#pragma once
 #ifndef GLSL_SYMBOL_TABLE
 #define GLSL_SYMBOL_TABLE
 
 #include <new>
 
+extern "C" {
 #include "program/symbol_table.h"
+}
 #include "ir.h"
 
 class symbol_table_entry;
@@ -107,7 +110,6 @@ private:
 
    struct _mesa_symbol_table *table;
    void *mem_ctx;
-   void *linalloc;
 };
 
 #endif /* GLSL_SYMBOL_TABLE */

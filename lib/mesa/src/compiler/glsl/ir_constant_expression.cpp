@@ -88,42 +88,6 @@ bitcast_f2u(float f)
    return u;
 }
 
-static double
-bitcast_u642d(uint64_t u)
-{
-   assert(sizeof(double) == sizeof(uint64_t));
-   double d;
-   memcpy(&d, &u, sizeof(d));
-   return d;
-}
-
-static double
-bitcast_i642d(int64_t i)
-{
-   assert(sizeof(double) == sizeof(int64_t));
-   double d;
-   memcpy(&d, &i, sizeof(d));
-   return d;
-}
-
-static double
-bitcast_d2u64(double d)
-{
-   assert(sizeof(double) == sizeof(uint64_t));
-   uint64_t u;
-   memcpy(&u, &d, sizeof(d));
-   return u;
-}
-
-static double
-bitcast_d2i64(double d)
-{
-   assert(sizeof(double) == sizeof(int64_t));
-   int64_t i;
-   memcpy(&i, &d, sizeof(d));
-   return i;
-}
-
 /**
  * Evaluate one component of a floating-point 4x8 unpacking function.
  */
@@ -725,8 +689,6 @@ ir_swizzle::constant_expression_value(struct hash_table *variable_context)
          case GLSL_TYPE_FLOAT: data.f[i] = v->value.f[swiz_idx[i]]; break;
          case GLSL_TYPE_BOOL:  data.b[i] = v->value.b[swiz_idx[i]]; break;
          case GLSL_TYPE_DOUBLE:data.d[i] = v->value.d[swiz_idx[i]]; break;
-         case GLSL_TYPE_UINT64:data.u64[i] = v->value.u64[swiz_idx[i]]; break;
-         case GLSL_TYPE_INT64: data.i64[i] = v->value.i64[swiz_idx[i]]; break;
          default:              assert(!"Should not get here."); break;
          }
       }

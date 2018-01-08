@@ -52,92 +52,93 @@
 #include "cso_cache/cso_context.h"
 
 
-/**
- * Get a pipe_sampler_view object from a texture unit.
- */
-void
-st_update_single_texture(struct st_context *st,
-                         struct pipe_sampler_view **sampler_view,
-                         GLuint texUnit, bool glsl130_or_later)
+static GLboolean
+update_single_texture(struct st_context *st,
+                      struct pipe_sampler_view **sampler_view,
+		      GLuint texUnit, unsigned glsl_version)
 {
    struct gl_context *ctx = st->ctx;
    const struct gl_sampler_object *samp;
    struct gl_texture_object *texObj;
    struct st_texture_object *stObj;
+   GLboolean retval;
 
    samp = _mesa_get_samplerobj(ctx, texUnit);
 
    texObj = ctx->Texture.Unit[texUnit]._Current;
-   assert(texObj);
 
+   if (!texObj) {
+      texObj = _mesa_get_fallback_texture(ctx, TEXTURE_2D_INDEX);
+      samp = &texObj->Sampler;
+   }
    stObj = st_texture_object(texObj);
 
-   if (unlikely(texObj->Target == GL_TEXTURE_BUFFER)) {
-      *sampler_view = st_get_buffer_sampler_view_from_stobj(st, stObj);
-      return;
-   }
-
-   if (!st_finalize_texture(ctx, st->pipe, texObj, 0) ||
-       !stObj->pt) {
+   retval = st_finalize_texture(ctx, st->pipe, texObj);
+   if (!retval) {
       /* out of mem */
-      *sampler_view = NULL;
-      return;
+      return GL_FALSE;
    }
 
    /* Check a few pieces of state outside the texture object to see if we
     * need to force revalidation.
     */
-   if (stObj->prev_glsl130_or_later != glsl130_or_later ||
+   if (stObj->prev_glsl_version != glsl_version ||
        stObj->prev_sRGBDecode != samp->sRGBDecode) {
 
       st_texture_release_all_sampler_views(st, stObj);
 
-      stObj->prev_glsl130_or_later = glsl130_or_later;
+      stObj->prev_glsl_version = glsl_version;
       stObj->prev_sRGBDecode = samp->sRGBDecode;
    }
 
-   if (texObj->TargetIndex == TEXTURE_EXTERNAL_INDEX &&
-       stObj->pt->screen->resource_changed)
-         stObj->pt->screen->resource_changed(stObj->pt->screen, stObj->pt);
-
    *sampler_view =
-      st_get_texture_sampler_view_from_stobj(st, stObj, samp,
-                                             glsl130_or_later);
+      st_get_texture_sampler_view_from_stobj(st, stObj, samp, glsl_version);
+   return GL_TRUE;
 }
 
 
 
 static void
 update_textures(struct st_context *st,
-                enum pipe_shader_type shader_stage,
+                gl_shader_stage mesa_shader,
                 const struct gl_program *prog,
+                unsigned max_units,
                 struct pipe_sampler_view **sampler_views,
-                unsigned *out_num_textures)
+                unsigned *num_textures)
 {
-   const GLuint old_max = *out_num_textures;
+   const GLuint old_max = *num_textures;
    GLbitfield samplers_used = prog->SamplersUsed;
    GLbitfield free_slots = ~prog->SamplersUsed;
    GLbitfield external_samplers_used = prog->ExternalSamplersUsed;
    GLuint unit;
+   struct gl_shader_program *shader =
+      st->ctx->_Shader->CurrentProgram[mesa_shader];
+   unsigned glsl_version = shader ? shader->Version : 0;
+   enum pipe_shader_type shader_stage = st_shader_stage_to_ptarget(mesa_shader);
 
    if (samplers_used == 0x0 && old_max == 0)
       return;
 
-   unsigned num_textures = 0;
-
-   /* prog->sh.data is NULL if it's ARB_fragment_program */
-   bool glsl130 = (prog->sh.data ? prog->sh.data->Version : 0) >= 130;
+   *num_textures = 0;
 
    /* loop over sampler units (aka tex image units) */
-   for (unit = 0; samplers_used || unit < old_max;
-        unit++, samplers_used >>= 1) {
+   for (unit = 0; unit < max_units; unit++, samplers_used >>= 1) {
       struct pipe_sampler_view *sampler_view = NULL;
 
       if (samplers_used & 1) {
          const GLuint texUnit = prog->SamplerUnits[unit];
+         GLboolean retval;
 
-         st_update_single_texture(st, &sampler_view, texUnit, glsl130);
-         num_textures = unit + 1;
+         retval = update_single_texture(st, &sampler_view, texUnit,
+                                        glsl_version);
+         if (retval == GL_FALSE)
+            continue;
+
+         *num_textures = unit + 1;
+      }
+      else if (samplers_used == 0 && unit >= old_max) {
+         /* if we've reset all the old views and we have no more new ones */
+         break;
       }
 
       pipe_sampler_view_reference(&(sampler_views[unit]), sampler_view);
@@ -187,101 +188,136 @@ update_textures(struct st_context *st,
          break;
       }
 
-      num_textures = MAX2(num_textures, extra + 1);
+      *num_textures = MAX2(*num_textures, extra + 1);
    }
 
    cso_set_sampler_views(st->cso_context,
                          shader_stage,
-                         num_textures,
+                         *num_textures,
                          sampler_views);
-   *out_num_textures = num_textures;
 }
 
 
 
-void
-st_update_vertex_textures(struct st_context *st)
+static void
+update_vertex_textures(struct st_context *st)
 {
    const struct gl_context *ctx = st->ctx;
 
    if (ctx->Const.Program[MESA_SHADER_VERTEX].MaxTextureImageUnits > 0) {
       update_textures(st,
-                      PIPE_SHADER_VERTEX,
-                      ctx->VertexProgram._Current,
+                      MESA_SHADER_VERTEX,
+                      &ctx->VertexProgram._Current->Base,
+                      ctx->Const.Program[MESA_SHADER_VERTEX].MaxTextureImageUnits,
                       st->state.sampler_views[PIPE_SHADER_VERTEX],
                       &st->state.num_sampler_views[PIPE_SHADER_VERTEX]);
    }
 }
 
 
-void
-st_update_fragment_textures(struct st_context *st)
+static void
+update_fragment_textures(struct st_context *st)
 {
    const struct gl_context *ctx = st->ctx;
 
    update_textures(st,
-                   PIPE_SHADER_FRAGMENT,
-                   ctx->FragmentProgram._Current,
+                   MESA_SHADER_FRAGMENT,
+                   &ctx->FragmentProgram._Current->Base,
+                   ctx->Const.Program[MESA_SHADER_FRAGMENT].MaxTextureImageUnits,
                    st->state.sampler_views[PIPE_SHADER_FRAGMENT],
                    &st->state.num_sampler_views[PIPE_SHADER_FRAGMENT]);
 }
 
 
-void
-st_update_geometry_textures(struct st_context *st)
+static void
+update_geometry_textures(struct st_context *st)
 {
    const struct gl_context *ctx = st->ctx;
 
    if (ctx->GeometryProgram._Current) {
       update_textures(st,
-                      PIPE_SHADER_GEOMETRY,
-                      ctx->GeometryProgram._Current,
+                      MESA_SHADER_GEOMETRY,
+                      &ctx->GeometryProgram._Current->Base,
+                      ctx->Const.Program[MESA_SHADER_GEOMETRY].MaxTextureImageUnits,
                       st->state.sampler_views[PIPE_SHADER_GEOMETRY],
                       &st->state.num_sampler_views[PIPE_SHADER_GEOMETRY]);
    }
 }
 
 
-void
-st_update_tessctrl_textures(struct st_context *st)
+static void
+update_tessctrl_textures(struct st_context *st)
 {
    const struct gl_context *ctx = st->ctx;
 
    if (ctx->TessCtrlProgram._Current) {
       update_textures(st,
-                      PIPE_SHADER_TESS_CTRL,
-                      ctx->TessCtrlProgram._Current,
+                      MESA_SHADER_TESS_CTRL,
+                      &ctx->TessCtrlProgram._Current->Base,
+                      ctx->Const.Program[MESA_SHADER_TESS_CTRL].MaxTextureImageUnits,
                       st->state.sampler_views[PIPE_SHADER_TESS_CTRL],
                       &st->state.num_sampler_views[PIPE_SHADER_TESS_CTRL]);
    }
 }
 
 
-void
-st_update_tesseval_textures(struct st_context *st)
+static void
+update_tesseval_textures(struct st_context *st)
 {
    const struct gl_context *ctx = st->ctx;
 
    if (ctx->TessEvalProgram._Current) {
       update_textures(st,
-                      PIPE_SHADER_TESS_EVAL,
-                      ctx->TessEvalProgram._Current,
+                      MESA_SHADER_TESS_EVAL,
+                      &ctx->TessEvalProgram._Current->Base,
+                      ctx->Const.Program[MESA_SHADER_TESS_EVAL].MaxTextureImageUnits,
                       st->state.sampler_views[PIPE_SHADER_TESS_EVAL],
                       &st->state.num_sampler_views[PIPE_SHADER_TESS_EVAL]);
    }
 }
 
 
-void
-st_update_compute_textures(struct st_context *st)
+static void
+update_compute_textures(struct st_context *st)
 {
    const struct gl_context *ctx = st->ctx;
 
    if (ctx->ComputeProgram._Current) {
       update_textures(st,
-                      PIPE_SHADER_COMPUTE,
-                      ctx->ComputeProgram._Current,
+                      MESA_SHADER_COMPUTE,
+                      &ctx->ComputeProgram._Current->Base,
+                      ctx->Const.Program[MESA_SHADER_COMPUTE].MaxTextureImageUnits,
                       st->state.sampler_views[PIPE_SHADER_COMPUTE],
                       &st->state.num_sampler_views[PIPE_SHADER_COMPUTE]);
    }
 }
+
+
+const struct st_tracked_state st_update_fragment_texture = {
+   update_fragment_textures				/* update */
+};
+
+
+const struct st_tracked_state st_update_vertex_texture = {
+   update_vertex_textures				/* update */
+};
+
+
+const struct st_tracked_state st_update_geometry_texture = {
+   update_geometry_textures				/* update */
+};
+
+
+const struct st_tracked_state st_update_tessctrl_texture = {
+   update_tessctrl_textures				/* update */
+};
+
+
+const struct st_tracked_state st_update_tesseval_texture = {
+   update_tesseval_textures				/* update */
+};
+
+
+const struct st_tracked_state st_update_compute_texture = {
+   update_compute_textures				/* update */
+};

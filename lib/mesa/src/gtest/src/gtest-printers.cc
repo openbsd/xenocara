@@ -45,7 +45,6 @@
 #include "gtest/gtest-printers.h"
 #include <ctype.h>
 #include <stdio.h>
-#include <cwchar>
 #include <ostream>  // NOLINT
 #include <string>
 #include "gtest/internal/gtest-port.h"
@@ -57,9 +56,6 @@ namespace {
 using ::std::ostream;
 
 // Prints a segment of bytes in the given object.
-GTEST_ATTRIBUTE_NO_SANITIZE_MEMORY_
-GTEST_ATTRIBUTE_NO_SANITIZE_ADDRESS_
-GTEST_ATTRIBUTE_NO_SANITIZE_THREAD_
 void PrintByteSegmentInObjectTo(const unsigned char* obj_bytes, size_t start,
                                 size_t count, ostream* os) {
   char text[5] = "";
@@ -256,9 +252,6 @@ void PrintTo(wchar_t wc, ostream* os) {
 // The array starts at begin, the length is len, it may include '\0' characters
 // and may not be NUL-terminated.
 template <typename CharType>
-GTEST_ATTRIBUTE_NO_SANITIZE_MEMORY_
-GTEST_ATTRIBUTE_NO_SANITIZE_ADDRESS_
-GTEST_ATTRIBUTE_NO_SANITIZE_THREAD_
 static void PrintCharsAsStringTo(
     const CharType* begin, size_t len, ostream* os) {
   const char* const kQuoteBegin = sizeof(CharType) == 1 ? "\"" : "L\"";
@@ -280,9 +273,6 @@ static void PrintCharsAsStringTo(
 // Prints a (const) char/wchar_t array of 'len' elements, starting at address
 // 'begin'.  CharType must be either char or wchar_t.
 template <typename CharType>
-GTEST_ATTRIBUTE_NO_SANITIZE_MEMORY_
-GTEST_ATTRIBUTE_NO_SANITIZE_ADDRESS_
-GTEST_ATTRIBUTE_NO_SANITIZE_THREAD_
 static void UniversalPrintCharArray(
     const CharType* begin, size_t len, ostream* os) {
   // The code
@@ -339,7 +329,7 @@ void PrintTo(const wchar_t* s, ostream* os) {
     *os << "NULL";
   } else {
     *os << ImplicitCast_<const void*>(s) << " pointing to ";
-    PrintCharsAsStringTo(s, std::wcslen(s), os);
+    PrintCharsAsStringTo(s, wcslen(s), os);
   }
 }
 #endif  // wchar_t is native

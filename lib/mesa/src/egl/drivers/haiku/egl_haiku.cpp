@@ -150,8 +150,10 @@ haiku_add_configs_for_visuals(_EGLDisplay *dpy)
 
 	struct haiku_egl_config* conf;
 	conf = (struct haiku_egl_config*) calloc(1, sizeof (*conf));
-	if (!conf)
-		return _eglError(EGL_BAD_ALLOC, "haiku_add_configs_for_visuals");
+	if (!conf) {
+		_eglError(EGL_BAD_ALLOC, "haiku_add_configs_for_visuals");
+		return EGL_FALSE;
+	}
 
 	_eglInitConfig(&conf->base, dpy, 1);
 	TRACE("Config inited\n");

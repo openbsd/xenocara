@@ -21,26 +21,20 @@
  * IN THE SOFTWARE.
  */
 
-#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "gen_device_info.h"
-#include "compiler/shader_enums.h"
-#include "util/macros.h"
 
 static const struct gen_device_info gen_device_info_i965 = {
    .gen = 4,
    .has_negative_rhw_bug = true,
    .num_slices = 1,
-   .num_subslices = { 1, },
-   .num_thread_per_eu = 4,
    .max_vs_threads = 16,
    .max_gs_threads = 2,
    .max_wm_threads = 8 * 4,
    .urb = {
       .size = 256,
    },
-   .timestamp_frequency = 12500000,
 };
 
 static const struct gen_device_info gen_device_info_g4x = {
@@ -50,15 +44,12 @@ static const struct gen_device_info gen_device_info_g4x = {
    .has_surface_tile_offset = true,
    .is_g4x = true,
    .num_slices = 1,
-   .num_subslices = { 1, },
-   .num_thread_per_eu = 5,
    .max_vs_threads = 32,
    .max_gs_threads = 2,
    .max_wm_threads = 10 * 5,
    .urb = {
       .size = 384,
    },
-   .timestamp_frequency = 12500000,
 };
 
 static const struct gen_device_info gen_device_info_ilk = {
@@ -67,15 +58,12 @@ static const struct gen_device_info gen_device_info_ilk = {
    .has_compr4 = true,
    .has_surface_tile_offset = true,
    .num_slices = 1,
-   .num_subslices = { 1, },
-   .num_thread_per_eu = 6,
    .max_vs_threads = 72,
    .max_gs_threads = 32,
    .max_wm_threads = 12 * 6,
    .urb = {
       .size = 1024,
    },
-   .timestamp_frequency = 12500000,
 };
 
 static const struct gen_device_info gen_device_info_snb_gt1 = {
@@ -87,22 +75,15 @@ static const struct gen_device_info gen_device_info_snb_gt1 = {
    .has_surface_tile_offset = true,
    .needs_unlit_centroid_workaround = true,
    .num_slices = 1,
-   .num_subslices = { 1, },
-   .num_thread_per_eu = 6, /* Not confirmed */
    .max_vs_threads = 24,
    .max_gs_threads = 21, /* conservative; 24 if rendering disabled. */
    .max_wm_threads = 40,
    .urb = {
       .size = 32,
-      .min_entries = {
-         [MESA_SHADER_VERTEX]   = 24,
-      },
-      .max_entries = {
-         [MESA_SHADER_VERTEX]   = 256,
-         [MESA_SHADER_GEOMETRY] = 256,
-      },
+      .min_vs_entries = 24,
+      .max_vs_entries = 256,
+      .max_gs_entries = 256,
    },
-   .timestamp_frequency = 12500000,
 };
 
 static const struct gen_device_info gen_device_info_snb_gt2 = {
@@ -114,22 +95,15 @@ static const struct gen_device_info gen_device_info_snb_gt2 = {
    .has_surface_tile_offset = true,
    .needs_unlit_centroid_workaround = true,
    .num_slices = 1,
-   .num_subslices = { 1, },
-   .num_thread_per_eu = 6, /* Not confirmed */
    .max_vs_threads = 60,
    .max_gs_threads = 60,
    .max_wm_threads = 80,
    .urb = {
       .size = 64,
-      .min_entries = {
-         [MESA_SHADER_VERTEX]   = 24,
-      },
-      .max_entries = {
-         [MESA_SHADER_VERTEX]   = 256,
-         [MESA_SHADER_GEOMETRY] = 256,
-      },
+      .min_vs_entries = 24,
+      .max_vs_entries = 256,
+      .max_gs_entries = 256,
    },
-   .timestamp_frequency = 12500000,
 };
 
 #define GEN7_FEATURES                               \
@@ -138,15 +112,11 @@ static const struct gen_device_info gen_device_info_snb_gt2 = {
    .must_use_separate_stencil = true,               \
    .has_llc = true,                                 \
    .has_pln = true,                                 \
-   .has_surface_tile_offset = true,                 \
-   .timestamp_frequency = 12500000
+   .has_surface_tile_offset = true
 
 static const struct gen_device_info gen_device_info_ivb_gt1 = {
    GEN7_FEATURES, .is_ivybridge = true, .gt = 1,
    .num_slices = 1,
-   .num_subslices = { 1, },
-   .num_thread_per_eu = 6,
-   .l3_banks = 2,
    .max_vs_threads = 36,
    .max_tcs_threads = 36,
    .max_tes_threads = 36,
@@ -155,26 +125,18 @@ static const struct gen_device_info gen_device_info_ivb_gt1 = {
    .max_cs_threads = 36,
    .urb = {
       .size = 128,
-      .min_entries = {
-         [MESA_SHADER_VERTEX]    = 32,
-         [MESA_SHADER_TESS_EVAL] = 10,
-      },
-      .max_entries = {
-         [MESA_SHADER_VERTEX]    = 512,
-         [MESA_SHADER_TESS_CTRL] = 32,
-         [MESA_SHADER_TESS_EVAL] = 288,
-         [MESA_SHADER_GEOMETRY]  = 192,
-      },
+      .min_vs_entries = 32,
+      .max_vs_entries = 512,
+      .max_tcs_entries = 32,
+      .min_ds_entries = 10,
+      .max_tes_entries = 288,
+      .max_gs_entries = 192,
    },
 };
 
 static const struct gen_device_info gen_device_info_ivb_gt2 = {
    GEN7_FEATURES, .is_ivybridge = true, .gt = 2,
    .num_slices = 1,
-   .num_subslices = { 1, },
-   .num_thread_per_eu = 8, /* Not sure why this isn't a multiple of
-                            * @max_wm_threads ... */
-   .l3_banks = 4,
    .max_vs_threads = 128,
    .max_tcs_threads = 128,
    .max_tes_threads = 128,
@@ -183,25 +145,18 @@ static const struct gen_device_info gen_device_info_ivb_gt2 = {
    .max_cs_threads = 64,
    .urb = {
       .size = 256,
-      .min_entries = {
-         [MESA_SHADER_VERTEX]    = 32,
-         [MESA_SHADER_TESS_EVAL] = 10,
-      },
-      .max_entries = {
-         [MESA_SHADER_VERTEX]    = 704,
-         [MESA_SHADER_TESS_CTRL] = 64,
-         [MESA_SHADER_TESS_EVAL] = 448,
-         [MESA_SHADER_GEOMETRY]  = 320,
-      },
+      .min_vs_entries = 32,
+      .max_vs_entries = 704,
+      .max_tcs_entries = 64,
+      .min_ds_entries = 10,
+      .max_tes_entries = 448,
+      .max_gs_entries = 320,
    },
 };
 
 static const struct gen_device_info gen_device_info_byt = {
    GEN7_FEATURES, .is_baytrail = true, .gt = 1,
    .num_slices = 1,
-   .num_subslices = { 1, },
-   .num_thread_per_eu = 8,
-   .l3_banks = 1,
    .has_llc = false,
    .max_vs_threads = 36,
    .max_tcs_threads = 36,
@@ -211,16 +166,12 @@ static const struct gen_device_info gen_device_info_byt = {
    .max_cs_threads = 32,
    .urb = {
       .size = 128,
-      .min_entries = {
-         [MESA_SHADER_VERTEX]    = 32,
-         [MESA_SHADER_TESS_EVAL] = 10,
-      },
-      .max_entries = {
-         [MESA_SHADER_VERTEX]    = 512,
-         [MESA_SHADER_TESS_CTRL] = 32,
-         [MESA_SHADER_TESS_EVAL] = 288,
-         [MESA_SHADER_GEOMETRY]  = 192,
-      },
+      .min_vs_entries = 32,
+      .max_vs_entries = 512,
+      .max_tcs_entries = 32,
+      .min_ds_entries = 10,
+      .max_tes_entries = 288,
+      .max_gs_entries = 192,
    },
 };
 
@@ -233,9 +184,6 @@ static const struct gen_device_info gen_device_info_byt = {
 static const struct gen_device_info gen_device_info_hsw_gt1 = {
    HSW_FEATURES, .gt = 1,
    .num_slices = 1,
-   .num_subslices = { 1, },
-   .num_thread_per_eu = 7,
-   .l3_banks = 2,
    .max_vs_threads = 70,
    .max_tcs_threads = 70,
    .max_tes_threads = 70,
@@ -244,25 +192,18 @@ static const struct gen_device_info gen_device_info_hsw_gt1 = {
    .max_cs_threads = 70,
    .urb = {
       .size = 128,
-      .min_entries = {
-         [MESA_SHADER_VERTEX]    = 32,
-         [MESA_SHADER_TESS_EVAL] = 10,
-      },
-      .max_entries = {
-         [MESA_SHADER_VERTEX]    = 640,
-         [MESA_SHADER_TESS_CTRL] = 64,
-         [MESA_SHADER_TESS_EVAL] = 384,
-         [MESA_SHADER_GEOMETRY]  = 256,
-      },
+      .min_vs_entries = 32,
+      .max_vs_entries = 640,
+      .max_tcs_entries = 64,
+      .min_ds_entries = 10,
+      .max_tes_entries = 384,
+      .max_gs_entries = 256,
    },
 };
 
 static const struct gen_device_info gen_device_info_hsw_gt2 = {
    HSW_FEATURES, .gt = 2,
    .num_slices = 1,
-   .num_subslices = { 2, },
-   .num_thread_per_eu = 7,
-   .l3_banks = 4,
    .max_vs_threads = 280,
    .max_tcs_threads = 256,
    .max_tes_threads = 280,
@@ -271,25 +212,18 @@ static const struct gen_device_info gen_device_info_hsw_gt2 = {
    .max_cs_threads = 70,
    .urb = {
       .size = 256,
-      .min_entries = {
-         [MESA_SHADER_VERTEX]    = 64,
-         [MESA_SHADER_TESS_EVAL] = 10,
-      },
-      .max_entries = {
-         [MESA_SHADER_VERTEX]    = 1664,
-         [MESA_SHADER_TESS_CTRL] = 128,
-         [MESA_SHADER_TESS_EVAL] = 960,
-         [MESA_SHADER_GEOMETRY]  = 640,
-      },
+      .min_vs_entries = 64,
+      .max_vs_entries = 1664,
+      .max_tcs_entries = 128,
+      .min_ds_entries = 10,
+      .max_tes_entries = 960,
+      .max_gs_entries = 640,
    },
 };
 
 static const struct gen_device_info gen_device_info_hsw_gt3 = {
    HSW_FEATURES, .gt = 3,
    .num_slices = 2,
-   .num_subslices = { 2, },
-   .num_thread_per_eu = 7,
-   .l3_banks = 8,
    .max_vs_threads = 280,
    .max_tcs_threads = 256,
    .max_tes_threads = 280,
@@ -298,16 +232,12 @@ static const struct gen_device_info gen_device_info_hsw_gt3 = {
    .max_cs_threads = 70,
    .urb = {
       .size = 512,
-      .min_entries = {
-         [MESA_SHADER_VERTEX]    = 64,
-         [MESA_SHADER_TESS_EVAL] = 10,
-      },
-      .max_entries = {
-         [MESA_SHADER_VERTEX]    = 1664,
-         [MESA_SHADER_TESS_CTRL] = 128,
-         [MESA_SHADER_TESS_EVAL] = 960,
-         [MESA_SHADER_GEOMETRY]  = 640,
-      },
+      .min_vs_entries = 64,
+      .max_vs_entries = 1664,
+      .max_tcs_entries = 128,
+      .min_ds_entries = 10,
+      .max_tes_entries = 960,
+      .max_gs_entries = 640,
    },
 };
 
@@ -324,75 +254,50 @@ static const struct gen_device_info gen_device_info_hsw_gt3 = {
    .max_tcs_threads = 504,                          \
    .max_tes_threads = 504,                          \
    .max_gs_threads = 504,                           \
-   .max_wm_threads = 384,                           \
-   .timestamp_frequency = 12500000
+   .max_wm_threads = 384
 
 static const struct gen_device_info gen_device_info_bdw_gt1 = {
    GEN8_FEATURES, .gt = 1,
-   .is_broadwell = true,
    .num_slices = 1,
-   .num_subslices = { 2, },
-   .num_thread_per_eu = 7,
-   .l3_banks = 2,
    .max_cs_threads = 42,
    .urb = {
       .size = 192,
-      .min_entries = {
-         [MESA_SHADER_VERTEX]    = 64,
-         [MESA_SHADER_TESS_EVAL] = 34,
-      },
-      .max_entries = {
-         [MESA_SHADER_VERTEX]    = 2560,
-         [MESA_SHADER_TESS_CTRL] = 504,
-         [MESA_SHADER_TESS_EVAL] = 1536,
-         [MESA_SHADER_GEOMETRY]  = 960,
-      },
+      .min_vs_entries = 64,
+      .max_vs_entries = 2560,
+      .max_tcs_entries = 504,
+      .min_ds_entries = 34,
+      .max_tes_entries = 1536,
+      .max_gs_entries = 960,
    }
 };
 
 static const struct gen_device_info gen_device_info_bdw_gt2 = {
    GEN8_FEATURES, .gt = 2,
-   .is_broadwell = true,
    .num_slices = 1,
-   .num_subslices = { 3, },
-   .num_thread_per_eu = 7,
-   .l3_banks = 4,
    .max_cs_threads = 56,
    .urb = {
       .size = 384,
-      .min_entries = {
-         [MESA_SHADER_VERTEX]    = 64,
-         [MESA_SHADER_TESS_EVAL] = 34,
-      },
-      .max_entries = {
-         [MESA_SHADER_VERTEX]    = 2560,
-         [MESA_SHADER_TESS_CTRL] = 504,
-         [MESA_SHADER_TESS_EVAL] = 1536,
-         [MESA_SHADER_GEOMETRY]  = 960,
-      },
+      .min_vs_entries = 64,
+      .max_vs_entries = 2560,
+      .max_tcs_entries = 504,
+      .min_ds_entries = 34,
+      .max_tes_entries = 1536,
+      .max_gs_entries = 960,
    }
 };
 
 static const struct gen_device_info gen_device_info_bdw_gt3 = {
    GEN8_FEATURES, .gt = 3,
-   .is_broadwell = true,
    .num_slices = 2,
-   .num_subslices = { 3, 3, },
-   .num_thread_per_eu = 7,
-   .l3_banks = 8,
    .max_cs_threads = 56,
    .urb = {
       .size = 384,
-      .min_entries = {
-         [MESA_SHADER_VERTEX]    = 64,
-         [MESA_SHADER_TESS_EVAL] = 34,
-      },
-      .max_entries = {
-         [MESA_SHADER_VERTEX]    = 2560,
-         [MESA_SHADER_TESS_CTRL] = 504,
-         [MESA_SHADER_TESS_EVAL] = 1536,
-         [MESA_SHADER_GEOMETRY]  = 960,
-      },
+      .min_vs_entries = 64,
+      .max_vs_entries = 2560,
+      .max_tcs_entries = 504,
+      .min_ds_entries = 34,
+      .max_tes_entries = 1536,
+      .max_gs_entries = 960,
    }
 };
 
@@ -400,9 +305,6 @@ static const struct gen_device_info gen_device_info_chv = {
    GEN8_FEATURES, .is_cherryview = 1, .gt = 1,
    .has_llc = false,
    .num_slices = 1,
-   .num_subslices = { 2, },
-   .num_thread_per_eu = 7,
-   .l3_banks = 2,
    .max_vs_threads = 80,
    .max_tcs_threads = 80,
    .max_tes_threads = 80,
@@ -411,130 +313,58 @@ static const struct gen_device_info gen_device_info_chv = {
    .max_cs_threads = 6 * 7,
    .urb = {
       .size = 192,
-      .min_entries = {
-         [MESA_SHADER_VERTEX]    = 34,
-         [MESA_SHADER_TESS_EVAL] = 34,
-      },
-      .max_entries = {
-         [MESA_SHADER_VERTEX]    = 640,
-         [MESA_SHADER_TESS_CTRL] = 80,
-         [MESA_SHADER_TESS_EVAL] = 384,
-         [MESA_SHADER_GEOMETRY]  = 256,
-      },
+      .min_vs_entries = 34,
+      .max_vs_entries = 640,
+      .max_tcs_entries = 80,
+      .min_ds_entries = 34,
+      .max_tes_entries = 384,
+      .max_gs_entries = 256,
    }
 };
 
-#define GEN9_HW_INFO                                \
+#define GEN9_FEATURES                               \
    .gen = 9,                                        \
+   .has_hiz_and_separate_stencil = true,            \
+   .has_resource_streamer = true,                   \
+   .must_use_separate_stencil = true,               \
+   .has_llc = true,                                 \
+   .has_pln = true,                                 \
+   .supports_simd16_3src = true,                    \
+   .has_surface_tile_offset = true,                 \
    .max_vs_threads = 336,                           \
    .max_gs_threads = 336,                           \
    .max_tcs_threads = 336,                          \
    .max_tes_threads = 336,                          \
    .max_cs_threads = 56,                            \
-   .timestamp_frequency = 12000000,                 \
    .urb = {                                         \
       .size = 384,                                  \
-      .min_entries = {                              \
-         [MESA_SHADER_VERTEX]    = 64,              \
-         [MESA_SHADER_TESS_EVAL] = 34,              \
-      },                                            \
-      .max_entries = {                              \
-         [MESA_SHADER_VERTEX]    = 1856,            \
-         [MESA_SHADER_TESS_CTRL] = 672,             \
-         [MESA_SHADER_TESS_EVAL] = 1120,            \
-         [MESA_SHADER_GEOMETRY]  = 640,             \
-      },                                            \
+      .min_vs_entries = 64,                         \
+      .max_vs_entries = 1856,                       \
+      .max_tcs_entries = 672,                       \
+      .min_ds_entries = 34,                         \
+      .max_tes_entries = 1120,                      \
+      .max_gs_entries = 640,                        \
    }
-
-#define GEN9_LP_FEATURES                           \
-   GEN8_FEATURES,                                  \
-   GEN9_HW_INFO,                                   \
-   .gt = 1,                                        \
-   .has_llc = false,                               \
-   .num_slices = 1,                                \
-   .num_thread_per_eu = 6,                         \
-   .max_vs_threads = 112,                          \
-   .max_tcs_threads = 112,                         \
-   .max_tes_threads = 112,                         \
-   .max_gs_threads = 112,                          \
-   .max_cs_threads = 6 * 6,                        \
-   .timestamp_frequency = 19200000,                \
-   .urb = {                                        \
-      .size = 192,                                 \
-      .min_entries = {                             \
-         [MESA_SHADER_VERTEX]    = 34,             \
-         [MESA_SHADER_TESS_EVAL] = 34,             \
-      },                                           \
-      .max_entries = {                             \
-         [MESA_SHADER_VERTEX]    = 704,            \
-         [MESA_SHADER_TESS_CTRL] = 256,            \
-         [MESA_SHADER_TESS_EVAL] = 416,            \
-         [MESA_SHADER_GEOMETRY]  = 256,            \
-      },                                           \
-   }
-
-#define GEN9_LP_FEATURES_3X6                       \
-   GEN9_LP_FEATURES,                               \
-   .num_subslices = { 3, }
-
-#define GEN9_LP_FEATURES_2X6                       \
-   GEN9_LP_FEATURES,                               \
-   .num_subslices = { 2, },                        \
-   .max_vs_threads = 56,                           \
-   .max_tcs_threads = 56,                          \
-   .max_tes_threads = 56,                          \
-   .max_gs_threads = 56,                           \
-   .max_cs_threads = 6 * 6,                        \
-   .urb = {                                        \
-      .size = 128,                                 \
-      .min_entries = {                             \
-         [MESA_SHADER_VERTEX]    = 34,             \
-         [MESA_SHADER_TESS_EVAL] = 34,             \
-      },                                           \
-      .max_entries = {                             \
-         [MESA_SHADER_VERTEX]    = 352,            \
-         [MESA_SHADER_TESS_CTRL] = 128,            \
-         [MESA_SHADER_TESS_EVAL] = 208,            \
-         [MESA_SHADER_GEOMETRY]  = 128,            \
-      },                                           \
-   }
-
-#define GEN9_FEATURES                               \
-   GEN8_FEATURES,                                   \
-   GEN9_HW_INFO,                                    \
-   .num_thread_per_eu = 7
 
 static const struct gen_device_info gen_device_info_skl_gt1 = {
    GEN9_FEATURES, .gt = 1,
-   .is_skylake = true,
    .num_slices = 1,
-   .num_subslices = { 2, },
-   .l3_banks = 2,
    .urb.size = 192,
 };
 
 static const struct gen_device_info gen_device_info_skl_gt2 = {
    GEN9_FEATURES, .gt = 2,
-   .is_skylake = true,
    .num_slices = 1,
-   .num_subslices = { 3, },
-   .l3_banks = 4,
 };
 
 static const struct gen_device_info gen_device_info_skl_gt3 = {
    GEN9_FEATURES, .gt = 3,
-   .is_skylake = true,
    .num_slices = 2,
-   .num_subslices = { 3, 3, },
-   .l3_banks = 8,
 };
 
 static const struct gen_device_info gen_device_info_skl_gt4 = {
    GEN9_FEATURES, .gt = 4,
-   .is_skylake = true,
    .num_slices = 3,
-   .num_subslices = { 3, 3, 3, },
-   .l3_banks = 12,
    /* From the "L3 Allocation and Programming" documentation:
     *
     * "URB is limited to 1008KB due to programming restrictions.  This is not a
@@ -547,15 +377,49 @@ static const struct gen_device_info gen_device_info_skl_gt4 = {
 };
 
 static const struct gen_device_info gen_device_info_bxt = {
-   GEN9_LP_FEATURES_3X6,
-   .is_broxton = true,
-   .l3_banks = 2,
+   GEN9_FEATURES,
+   .is_broxton = 1,
+   .gt = 1,
+   .has_llc = false,
+
+   .num_slices = 1,
+   .max_vs_threads = 112,
+   .max_tcs_threads = 112,
+   .max_tes_threads = 112,
+   .max_gs_threads = 112,
+   .max_cs_threads = 6 * 6,
+   .urb = {
+      .size = 192,
+      .min_vs_entries = 34,
+      .min_ds_entries = 34,
+      .max_vs_entries = 704,
+      .max_tcs_entries = 256,
+      .max_tes_entries = 416,
+      .max_gs_entries = 256,
+   }
 };
 
 static const struct gen_device_info gen_device_info_bxt_2x6 = {
-   GEN9_LP_FEATURES_2X6,
-   .is_broxton = true,
-   .l3_banks = 1,
+   GEN9_FEATURES,
+   .is_broxton = 1,
+   .gt = 1,
+   .has_llc = false,
+
+   .num_slices = 1,
+   .max_vs_threads = 56, /* XXX: guess */
+   .max_tcs_threads = 56, /* XXX: guess */
+   .max_tes_threads = 56,
+   .max_gs_threads = 56,
+   .max_cs_threads = 6 * 6,
+   .urb = {
+      .size = 128,
+      .min_vs_entries = 34,
+      .min_ds_entries = 34,
+      .max_vs_entries = 352,
+      .max_tcs_entries = 128,
+      .max_tes_entries = 208,
+      .max_gs_entries = 128,
+   }
 };
 /*
  * Note: for all KBL SKUs, the PRM says SKL for GS entries, not SKL+.
@@ -564,50 +428,37 @@ static const struct gen_device_info gen_device_info_bxt_2x6 = {
 
 static const struct gen_device_info gen_device_info_kbl_gt1 = {
    GEN9_FEATURES,
-   .is_kabylake = true,
    .gt = 1,
 
    .max_cs_threads = 7 * 6,
    .urb.size = 192,
    .num_slices = 1,
-   .num_subslices = { 2, },
-   .l3_banks = 2,
 };
 
 static const struct gen_device_info gen_device_info_kbl_gt1_5 = {
    GEN9_FEATURES,
-   .is_kabylake = true,
    .gt = 1,
 
    .max_cs_threads = 7 * 6,
    .num_slices = 1,
-   .num_subslices = { 3, },
-   .l3_banks = 4,
 };
 
 static const struct gen_device_info gen_device_info_kbl_gt2 = {
    GEN9_FEATURES,
-   .is_kabylake = true,
    .gt = 2,
 
    .num_slices = 1,
-   .num_subslices = { 3, },
-   .l3_banks = 4,
 };
 
 static const struct gen_device_info gen_device_info_kbl_gt3 = {
    GEN9_FEATURES,
-   .is_kabylake = true,
    .gt = 3,
 
    .num_slices = 2,
-   .num_subslices = { 3, 3, },
-   .l3_banks = 8,
 };
 
 static const struct gen_device_info gen_device_info_kbl_gt4 = {
    GEN9_FEATURES,
-   .is_kabylake = true,
    .gt = 4,
 
    /*
@@ -622,106 +473,52 @@ static const struct gen_device_info gen_device_info_kbl_gt4 = {
     */
    .urb.size = 1008 / 3,
    .num_slices = 3,
-   .num_subslices = { 3, 3, 3, },
-   .l3_banks = 12,
 };
 
 static const struct gen_device_info gen_device_info_glk = {
-   GEN9_LP_FEATURES_3X6,
-   .is_geminilake = true,
-   .l3_banks = 2,
-};
-
-/*TODO: Initialize l3_banks when we know the number. */
-static const struct gen_device_info gen_device_info_glk_2x6 = {
-   GEN9_LP_FEATURES_2X6,
-   .is_geminilake = true,
-};
-
-static const struct gen_device_info gen_device_info_cfl_gt1 = {
    GEN9_FEATURES,
-   .is_coffeelake = true,
+   .is_broxton = 1,
    .gt = 1,
+   .has_llc = false,
 
    .num_slices = 1,
-   .num_subslices = { 2, },
-   .l3_banks = 2,
-};
-static const struct gen_device_info gen_device_info_cfl_gt2 = {
-   GEN9_FEATURES,
-   .is_coffeelake = true,
-   .gt = 2,
-
-   .num_slices = 1,
-   .num_subslices = { 3, },
-   .l3_banks = 4,
-};
-
-static const struct gen_device_info gen_device_info_cfl_gt3 = {
-   GEN9_FEATURES,
-   .is_coffeelake = true,
-   .gt = 3,
-
-   .num_slices = 2,
-   .num_subslices = { 3, 3, },
-   .l3_banks = 8,
-};
-
-#define GEN10_HW_INFO                               \
-   .gen = 10,                                       \
-   .num_thread_per_eu = 7,                          \
-   .max_vs_threads = 728,                           \
-   .max_gs_threads = 432,                           \
-   .max_tcs_threads = 432,                          \
-   .max_tes_threads = 624,                          \
-   .max_cs_threads = 56,                            \
-   .timestamp_frequency = 19200000,                 \
-   .urb = {                                         \
-      .size = 256,                                  \
-      .min_entries = {                              \
-         [MESA_SHADER_VERTEX]    = 64,              \
-         [MESA_SHADER_TESS_EVAL] = 34,              \
-      },                                            \
-      .max_entries = {                              \
-      [MESA_SHADER_VERTEX]       = 3936,            \
-      [MESA_SHADER_TESS_CTRL]    = 896,             \
-      [MESA_SHADER_TESS_EVAL]    = 2064,            \
-      [MESA_SHADER_GEOMETRY]     = 832,             \
-      },                                            \
+   .max_vs_threads = 112,
+   .max_tcs_threads = 112,
+   .max_tes_threads = 112,
+   .max_gs_threads = 112,
+   .max_cs_threads = 6 * 6,
+   .urb = {
+      .size = 192,
+      .min_vs_entries = 34,
+      .min_ds_entries = 34,
+      .max_vs_entries = 704,
+      .max_tcs_entries = 256,
+      .max_tes_entries = 416,
+      .max_gs_entries = 256,
    }
-
-#define subslices(args...) { args, }
-
-#define GEN10_FEATURES(_gt, _slices, _subslices, _l3) \
-   GEN8_FEATURES,                                   \
-   GEN10_HW_INFO,                                   \
-   .gt = _gt,                                       \
-   .num_slices = _slices,                           \
-   .num_subslices = _subslices,                     \
-   .l3_banks = _l3
-
-static const struct gen_device_info gen_device_info_cnl_2x8 = {
-   /* GT0.5 */
-   GEN10_FEATURES(1, 1, subslices(2), 2),
-   .is_cannonlake = true,
 };
 
-static const struct gen_device_info gen_device_info_cnl_3x8 = {
-   /* GT1 */
-   GEN10_FEATURES(1, 1, subslices(3), 3),
-   .is_cannonlake = true,
-};
+static const struct gen_device_info gen_device_info_glk_2x6 = {
+   GEN9_FEATURES,
+   .is_broxton = 1,
+   .gt = 1,
+   .has_llc = false,
 
-static const struct gen_device_info gen_device_info_cnl_4x8 = {
-   /* GT 1.5 */
-   GEN10_FEATURES(1, 2, subslices(2, 2), 6),
-   .is_cannonlake = true,
-};
-
-static const struct gen_device_info gen_device_info_cnl_5x8 = {
-   /* GT2 */
-   GEN10_FEATURES(2, 2, subslices(3, 2), 6),
-   .is_cannonlake = true,
+   .num_slices = 1,
+   .max_vs_threads = 56, /* XXX: guess */
+   .max_tcs_threads = 56, /* XXX: guess */
+   .max_tes_threads = 56,
+   .max_gs_threads = 56,
+   .max_cs_threads = 6 * 6,
+   .urb = {
+      .size = 128,
+      .min_vs_entries = 34,
+      .min_ds_entries = 34,
+      .max_vs_entries = 352,
+      .max_tcs_entries = 128,
+      .max_tes_entries = 208,
+      .max_gs_entries = 128,
+   }
 };
 
 bool
@@ -755,8 +552,6 @@ gen_get_device_info(int devid, struct gen_device_info *devinfo)
                               * devinfo->num_slices
                               * 4; /* effective subslices per slice */
    }
-
-   assert(devinfo->num_slices <= ARRAY_SIZE(devinfo->num_subslices));
 
    return true;
 }

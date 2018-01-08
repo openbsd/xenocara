@@ -62,7 +62,6 @@ struct _egl_context
    EGLint Flags;
    EGLint Profile;
    EGLint ResetNotificationStrategy;
-   EGLBoolean NoError;
 
    /* The real render buffer when a window surface is bound */
    EGLint WindowRenderBuffer;
@@ -82,9 +81,6 @@ extern EGLBoolean
 _eglBindContext(_EGLContext *ctx, _EGLSurface *draw, _EGLSurface *read,
                 _EGLContext **old_ctx,
                 _EGLSurface **old_draw, _EGLSurface **old_read);
-
-extern _EGLContext *
-_eglBindContextToThread(_EGLContext *ctx, _EGLThreadInfo *t);
 
 
 /**

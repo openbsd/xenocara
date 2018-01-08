@@ -244,7 +244,7 @@ nv50_push_vbo(struct nv50_context *nv50, const struct pipe_draw_info *info)
    unsigned i, index_size;
    unsigned inst_count = info->instance_count;
    unsigned vert_count = info->count;
-   bool apply_bias = info->index_size && info->index_bias;
+   bool apply_bias = info->indexed && info->index_bias;
 
    ctx.push = nv50->base.pushbuf;
    ctx.translate = nv50->vertex->translate;
@@ -264,11 +264,11 @@ nv50_push_vbo(struct nv50_context *nv50, const struct pipe_draw_info *info)
       const struct pipe_vertex_buffer *vb = &nv50->vtxbuf[i];
       const uint8_t *data;
 
-      if (unlikely(!vb->is_user_buffer))
+      if (unlikely(vb->buffer))
          data = nouveau_resource_map_offset(&nv50->base,
-            nv04_resource(vb->buffer.resource), vb->buffer_offset, NOUVEAU_BO_RD);
+            nv04_resource(vb->buffer), vb->buffer_offset, NOUVEAU_BO_RD);
       else
-         data = vb->buffer.user;
+         data = vb->user_buffer;
 
       if (apply_bias && likely(!(nv50->vertex->instance_bufs & (1 << i))))
          data += (ptrdiff_t)info->index_bias * vb->stride;
@@ -276,16 +276,17 @@ nv50_push_vbo(struct nv50_context *nv50, const struct pipe_draw_info *info)
       ctx.translate->set_buffer(ctx.translate, i, data, vb->stride, ~0);
    }
 
-   if (info->index_size) {
-      if (!info->has_user_indices) {
+   if (info->indexed) {
+      if (nv50->idxbuf.buffer) {
          ctx.idxbuf = nouveau_resource_map_offset(&nv50->base,
-            nv04_resource(info->index.resource), 0, NOUVEAU_BO_RD);
+            nv04_resource(nv50->idxbuf.buffer), nv50->idxbuf.offset,
+            NOUVEAU_BO_RD);
       } else {
-         ctx.idxbuf = info->index.user;
+         ctx.idxbuf = nv50->idxbuf.user_buffer;
       }
       if (!ctx.idxbuf)
          return;
-      index_size = info->index_size;
+      index_size = nv50->idxbuf.index_size;
       ctx.primitive_restart = info->primitive_restart;
       ctx.restart_index = info->restart_index;
    } else {

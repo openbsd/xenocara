@@ -55,24 +55,6 @@ dd_screen_get_device_vendor(struct pipe_screen *_screen)
    return screen->get_device_vendor(screen);
 }
 
-static const void *
-dd_screen_get_compiler_options(struct pipe_screen *_screen,
-                               enum pipe_shader_ir ir,
-                               enum pipe_shader_type shader)
-{
-   struct pipe_screen *screen = dd_screen(_screen)->screen;
-
-   return screen->get_compiler_options(screen, ir, shader);
-}
-
-static struct disk_cache *
-dd_screen_get_disk_shader_cache(struct pipe_screen *_screen)
-{
-   struct pipe_screen *screen = dd_screen(_screen)->screen;
-
-   return screen->get_disk_shader_cache(screen);
-}
-
 static int
 dd_screen_get_param(struct pipe_screen *_screen,
                     enum pipe_cap param)
@@ -103,8 +85,7 @@ dd_screen_get_compute_param(struct pipe_screen *_screen,
 }
 
 static int
-dd_screen_get_shader_param(struct pipe_screen *_screen,
-                           enum pipe_shader_type shader,
+dd_screen_get_shader_param(struct pipe_screen *_screen, unsigned shader,
                            enum pipe_shader_cap param)
 {
    struct pipe_screen *screen = dd_screen(_screen)->screen;
@@ -246,15 +227,6 @@ dd_screen_resource_from_user_memory(struct pipe_screen *_screen,
 }
 
 static void
-dd_screen_resource_changed(struct pipe_screen *_screen,
-                           struct pipe_resource *res)
-{
-   struct pipe_screen *screen = dd_screen(_screen)->screen;
-
-   screen->resource_changed(screen, res);
-}
-
-static void
 dd_screen_resource_destroy(struct pipe_screen *_screen,
                            struct pipe_resource *res)
 {
@@ -374,7 +346,7 @@ ddebug_screen_create(struct pipe_screen *screen)
 
       if (sscanf(option+8, "%u", &apitrace_dump_call) != 1)
          return screen;
-   } else if (!strncmp(option, "pipelined", 9)) {
+   } else if (!strncmp(option, "pipelined", 8)) {
       mode = DD_DETECT_HANGS_PIPELINED;
 
       if (sscanf(option+10, "%u", &timeout) != 1)
@@ -397,7 +369,6 @@ ddebug_screen_create(struct pipe_screen *screen)
    dscreen->base.get_name = dd_screen_get_name;
    dscreen->base.get_vendor = dd_screen_get_vendor;
    dscreen->base.get_device_vendor = dd_screen_get_device_vendor;
-   SCR_INIT(get_disk_shader_cache);
    dscreen->base.get_param = dd_screen_get_param;
    dscreen->base.get_paramf = dd_screen_get_paramf;
    dscreen->base.get_compute_param = dd_screen_get_compute_param;
@@ -414,14 +385,12 @@ ddebug_screen_create(struct pipe_screen *screen)
    dscreen->base.resource_from_handle = dd_screen_resource_from_handle;
    SCR_INIT(resource_from_user_memory);
    dscreen->base.resource_get_handle = dd_screen_resource_get_handle;
-   SCR_INIT(resource_changed);
    dscreen->base.resource_destroy = dd_screen_resource_destroy;
    SCR_INIT(flush_frontbuffer);
    SCR_INIT(fence_reference);
    SCR_INIT(fence_finish);
    SCR_INIT(get_driver_query_info);
    SCR_INIT(get_driver_query_group_info);
-   SCR_INIT(get_compiler_options);
 
 #undef SCR_INIT
 

@@ -34,7 +34,7 @@
 #include <assert.h>
 #include <algorithm>
 
-#include "common/intrin.h"
+#include "common/simdintrin.h"
 #include "common/formats.h"
 #include "core/state.h"
 
@@ -137,11 +137,10 @@ typedef void(SWR_API *PFN_STORE_TILE)(HANDLE hPrivateContext, SWR_FORMAT srcForm
 /// @param renderTargetIndex - render target to store, can be color, depth or stencil
 /// @param x - destination x coordinate
 /// @param y - destination y coordinate
-/// @param renderTargetArrayIndex - render target array offset from arrayIndex
 /// @param pClearColor - pointer to the hot tile's clear value
 typedef void(SWR_API *PFN_CLEAR_TILE)(HANDLE hPrivateContext,
     SWR_RENDERTARGET_ATTACHMENT rtIndex,
-    uint32_t x, uint32_t y, uint32_t renderTargetArrayIndex, const float* pClearColor);
+    uint32_t x, uint32_t y, const float* pClearColor);
 
 //////////////////////////////////////////////////////////////////////////
 /// @brief Callback to allow driver to update their copy of streamout write offset.
@@ -193,6 +192,8 @@ struct SWR_THREADING_INFO
 /////////////////////////////////////////////////////////////////////////
 struct SWR_CREATECONTEXT_INFO
 {
+    DRIVER_TYPE driver;
+
     // External functions (e.g. sampler) need per draw context state.
     // Use SwrGetPrivateContextState() to access private state.
     uint32_t privateStateSize;
@@ -204,7 +205,6 @@ struct SWR_CREATECONTEXT_INFO
     PFN_UPDATE_SO_WRITE_OFFSET  pfnUpdateSoWriteOffset;
     PFN_UPDATE_STATS            pfnUpdateStats;
     PFN_UPDATE_STATS_FE         pfnUpdateStatsFE;
-
 
     // Pointer to rdtsc buckets mgr returned to the caller.
     // Only populated when KNOB_ENABLE_RDTSC is set
@@ -220,13 +220,13 @@ struct SWR_CREATECONTEXT_INFO
 //////////////////////////////////////////////////////////////////////////
 /// @brief Create SWR Context.
 /// @param pCreateInfo - pointer to creation info.
-SWR_FUNC(HANDLE, SwrCreateContext,
+HANDLE SWR_API SwrCreateContext(
     SWR_CREATECONTEXT_INFO* pCreateInfo);
 
 //////////////////////////////////////////////////////////////////////////
 /// @brief Destroys SWR Context.
 /// @param hContext - Handle passed back from SwrCreateContext
-SWR_FUNC(void, SwrDestroyContext,
+void SWR_API SwrDestroyContext(
     HANDLE hContext);
 
 //////////////////////////////////////////////////////////////////////////
@@ -234,7 +234,7 @@ SWR_FUNC(void, SwrDestroyContext,
 /// @param hContext - Handle passed back from SwrCreateContext
 /// @param pOutputStateBlock - Memory block to receive API state data
 /// @param memSize - Size of memory pointed to by pOutputStateBlock
-SWR_FUNC(void, SwrSaveState,
+void SWR_API SwrSaveState(
     HANDLE hContext,
     void* pOutputStateBlock,
     size_t memSize);
@@ -244,7 +244,7 @@ SWR_FUNC(void, SwrSaveState,
 /// @param hContext - Handle passed back from SwrCreateContext
 /// @param pStateBlock - Memory block to read API state data from
 /// @param memSize - Size of memory pointed to by pStateBlock
-SWR_FUNC(void, SwrRestoreState,
+void SWR_API SwrRestoreState(
     HANDLE hContext,
     const void* pStateBlock,
     size_t memSize);
@@ -255,23 +255,23 @@ SWR_FUNC(void, SwrRestoreState,
 /// @param hContext - Handle passed back from SwrCreateContext
 /// @param pfnFunc - pointer to callback function,
 /// @param userData - user data to pass back 
-SWR_FUNC(void, SwrSync,
+void SWR_API SwrSync(
     HANDLE hContext,
     PFN_CALLBACK_FUNC pfnFunc,
     uint64_t userData,
     uint64_t userData2,
-    uint64_t userData3);
+    uint64_t userData3 = 0);
 
 //////////////////////////////////////////////////////////////////////////
 /// @brief Blocks until all rendering has been completed.
 /// @param hContext - Handle passed back from SwrCreateContext
-SWR_FUNC(void, SwrWaitForIdle,
+void SWR_API SwrWaitForIdle(
     HANDLE hContext);
 
 //////////////////////////////////////////////////////////////////////////
 /// @brief Blocks until all FE rendering has been completed.
 /// @param hContext - Handle passed back from SwrCreateContext
-SWR_FUNC(void, SwrWaitForIdleFE,
+void SWR_API SwrWaitForIdleFE(
     HANDLE hContext);
 
 //////////////////////////////////////////////////////////////////////////
@@ -279,7 +279,7 @@ SWR_FUNC(void, SwrWaitForIdleFE,
 /// @param hContext - Handle passed back from SwrCreateContext
 /// @param numBuffers - Number of vertex buffer state descriptors.
 /// @param pVertexBuffers - Array of vertex buffer state descriptors.
-SWR_FUNC(void, SwrSetVertexBuffers,
+void SWR_API SwrSetVertexBuffers(
     HANDLE hContext,
     uint32_t numBuffers,
     const SWR_VERTEX_BUFFER_STATE* pVertexBuffers);
@@ -288,7 +288,7 @@ SWR_FUNC(void, SwrSetVertexBuffers,
 /// @brief Set index buffer
 /// @param hContext - Handle passed back from SwrCreateContext
 /// @param pIndexBuffer - Index buffer.
-SWR_FUNC(void, SwrSetIndexBuffer,
+void SWR_API SwrSetIndexBuffer(
     HANDLE hContext,
     const SWR_INDEX_BUFFER_STATE* pIndexBuffer);
 
@@ -296,7 +296,7 @@ SWR_FUNC(void, SwrSetIndexBuffer,
 /// @brief Set fetch shader pointer.
 /// @param hContext - Handle passed back from SwrCreateContext
 /// @param pfnFetchFunc - Pointer to shader.
-SWR_FUNC(void, SwrSetFetchFunc,
+void SWR_API SwrSetFetchFunc(
     HANDLE hContext,
     PFN_FETCH_FUNC    pfnFetchFunc);
 
@@ -305,7 +305,7 @@ SWR_FUNC(void, SwrSetFetchFunc,
 /// @param hContext - Handle passed back from SwrCreateContext
 /// @param pfnSoFunc - Pointer to shader.
 /// @param streamIndex - specifies stream
-SWR_FUNC(void, SwrSetSoFunc,
+void SWR_API SwrSetSoFunc(
     HANDLE hContext,
     PFN_SO_FUNC    pfnSoFunc,
     uint32_t streamIndex);
@@ -314,7 +314,7 @@ SWR_FUNC(void, SwrSetSoFunc,
 /// @brief Set streamout state
 /// @param hContext - Handle passed back from SwrCreateContext
 /// @param pSoState - Pointer to streamout state.
-SWR_FUNC(void, SwrSetSoState,
+void SWR_API SwrSetSoState(
     HANDLE hContext,
     SWR_STREAMOUT_STATE* pSoState);
 
@@ -323,7 +323,7 @@ SWR_FUNC(void, SwrSetSoState,
 /// @param hContext - Handle passed back from SwrCreateContext
 /// @param pSoBuffer - Pointer to streamout buffer.
 /// @param slot - Slot to bind SO buffer to.
-SWR_FUNC(void, SwrSetSoBuffers,
+void SWR_API SwrSetSoBuffers(
     HANDLE hContext,
     SWR_STREAMOUT_BUFFER* pSoBuffer,
     uint32_t slot);
@@ -332,7 +332,7 @@ SWR_FUNC(void, SwrSetSoBuffers,
 /// @brief Set vertex shader pointer.
 /// @param hContext - Handle passed back from SwrCreateContext
 /// @param pfnVertexFunc - Pointer to shader.
-SWR_FUNC(void, SwrSetVertexFunc,
+void SWR_API SwrSetVertexFunc(
     HANDLE hContext,
     PFN_VERTEX_FUNC pfnVertexFunc);
 
@@ -340,7 +340,7 @@ SWR_FUNC(void, SwrSetVertexFunc,
 /// @brief Set frontend state.
 /// @param hContext - Handle passed back from SwrCreateContext
 /// @param pState - Pointer to state
-SWR_FUNC(void, SwrSetFrontendState,
+void SWR_API SwrSetFrontendState(
     HANDLE hContext,
     SWR_FRONTEND_STATE *pState);
 
@@ -348,7 +348,7 @@ SWR_FUNC(void, SwrSetFrontendState,
 /// @brief Set geometry shader state.
 /// @param hContext - Handle passed back from SwrCreateContext
 /// @param pState - Pointer to state
-SWR_FUNC(void, SwrSetGsState,
+void SWR_API SwrSetGsState(
     HANDLE hContext,
     SWR_GS_STATE *pState);
 
@@ -356,7 +356,7 @@ SWR_FUNC(void, SwrSetGsState,
 /// @brief Set geometry shader
 /// @param hContext - Handle passed back from SwrCreateContext
 /// @param pState - Pointer to geometry shader function
-SWR_FUNC(void, SwrSetGsFunc,
+void SWR_API SwrSetGsFunc(
     HANDLE hContext,
     PFN_GS_FUNC pfnGsFunc);
 
@@ -366,22 +366,17 @@ SWR_FUNC(void, SwrSetGsFunc,
 /// @param pfnCsFunc - Pointer to compute shader function
 /// @param totalThreadsInGroup - product of thread group dimensions.
 /// @param totalSpillFillSize - size in bytes needed for spill/fill.
-/// @param scratchSpaceSizePerInstance - size of the scratch space needed per simd instance
-/// @param numInstances - number of simd instances that are run per execution of the shader
-SWR_FUNC(void, SwrSetCsFunc,
+void SWR_API SwrSetCsFunc(
     HANDLE hContext,
     PFN_CS_FUNC pfnCsFunc,
     uint32_t totalThreadsInGroup,
-    uint32_t totalSpillFillSize,
-    uint32_t scratchSpaceSizePerInstance,
-    uint32_t numInstances
-    );
+    uint32_t totalSpillFillSize);
 
 //////////////////////////////////////////////////////////////////////////
 /// @brief Set tessellation state.
 /// @param hContext - Handle passed back from SwrCreateContext
 /// @param pState - Pointer to state
-SWR_FUNC(void, SwrSetTsState,
+void SWR_API SwrSetTsState(
     HANDLE hContext,
     SWR_TS_STATE *pState);
 
@@ -389,7 +384,7 @@ SWR_FUNC(void, SwrSetTsState,
 /// @brief Set hull shader
 /// @param hContext - Handle passed back from SwrCreateContext
 /// @param pfnFunc - Pointer to shader function
-SWR_FUNC(void, SwrSetHsFunc,
+void SWR_API SwrSetHsFunc(
     HANDLE hContext,
     PFN_HS_FUNC pfnFunc);
 
@@ -397,7 +392,7 @@ SWR_FUNC(void, SwrSetHsFunc,
 /// @brief Set domain shader
 /// @param hContext - Handle passed back from SwrCreateContext
 /// @param pfnFunc - Pointer to shader function
-SWR_FUNC(void, SwrSetDsFunc,
+void SWR_API SwrSetDsFunc(
     HANDLE hContext,
     PFN_DS_FUNC pfnFunc);
 
@@ -405,7 +400,7 @@ SWR_FUNC(void, SwrSetDsFunc,
 /// @brief Set depth stencil state
 /// @param hContext - Handle passed back from SwrCreateContext
 /// @param pState - Pointer to state.
-SWR_FUNC(void, SwrSetDepthStencilState,
+void SWR_API SwrSetDepthStencilState(
     HANDLE hContext,
     SWR_DEPTH_STENCIL_STATE *pState);
 
@@ -413,7 +408,7 @@ SWR_FUNC(void, SwrSetDepthStencilState,
 /// @brief Set backend state
 /// @param hContext - Handle passed back from SwrCreateContext
 /// @param pState - Pointer to state.
-SWR_FUNC(void, SwrSetBackendState,
+void SWR_API SwrSetBackendState(
     HANDLE hContext,
     SWR_BACKEND_STATE *pState);
 
@@ -421,7 +416,7 @@ SWR_FUNC(void, SwrSetBackendState,
 /// @brief Set depth bounds state
 /// @param hContext - Handle passed back from SwrCreateContext
 /// @param pState - Pointer to state.
-SWR_FUNC(void, SwrSetDepthBoundsState,
+void SWR_API SwrSetDepthBoundsState(
     HANDLE hContext,
     SWR_DEPTH_BOUNDS_STATE *pState);
 
@@ -429,7 +424,7 @@ SWR_FUNC(void, SwrSetDepthBoundsState,
 /// @brief Set pixel shader state
 /// @param hContext - Handle passed back from SwrCreateContext
 /// @param pState - Pointer to state.
-SWR_FUNC(void, SwrSetPixelShaderState,
+void SWR_API SwrSetPixelShaderState(
     HANDLE hContext,
     SWR_PS_STATE *pState);
 
@@ -437,7 +432,7 @@ SWR_FUNC(void, SwrSetPixelShaderState,
 /// @brief Set blend state
 /// @param hContext - Handle passed back from SwrCreateContext
 /// @param pState - Pointer to state.
-SWR_FUNC(void, SwrSetBlendState,
+void SWR_API SwrSetBlendState(
     HANDLE hContext,
     SWR_BLEND_STATE *pState);
 
@@ -446,7 +441,7 @@ SWR_FUNC(void, SwrSetBlendState,
 /// @param hContext - Handle passed back from SwrCreateContext
 /// @param renderTarget - render target index
 /// @param pfnBlendFunc - function pointer
-SWR_FUNC(void, SwrSetBlendFunc,
+void SWR_API SwrSetBlendFunc(
     HANDLE hContext,
     uint32_t renderTarget,
     PFN_BLEND_JIT_FUNC pfnBlendFunc);
@@ -457,7 +452,7 @@ SWR_FUNC(void, SwrSetBlendFunc,
 /// @param topology - Specifies topology for draw.
 /// @param startVertex - Specifies start vertex in vertex buffer for draw.
 /// @param primCount - Number of vertices.
-SWR_FUNC(void, SwrDraw,
+void SWR_API SwrDraw(
     HANDLE hContext,
     PRIMITIVE_TOPOLOGY topology,
     uint32_t startVertex,
@@ -471,7 +466,7 @@ SWR_FUNC(void, SwrDraw,
 /// @param numInstances - How many instances to render.
 /// @param startVertex - Specifies start vertex for draw. (vertex data)
 /// @param startInstance - Which instance to start sequentially fetching from in each buffer (instanced data)
-SWR_FUNC(void, SwrDrawInstanced,
+void SWR_API SwrDrawInstanced(
     HANDLE hContext,
     PRIMITIVE_TOPOLOGY topology,
     uint32_t numVertsPerInstance,
@@ -486,7 +481,7 @@ SWR_FUNC(void, SwrDrawInstanced,
 /// @param numIndices - Number of indices to read sequentially from index buffer.
 /// @param indexOffset - Starting index into index buffer.
 /// @param baseVertex - Vertex in vertex buffer to consider as index "0". Note value is signed.
-SWR_FUNC(void, SwrDrawIndexed,
+void SWR_API SwrDrawIndexed(
     HANDLE hContext,
     PRIMITIVE_TOPOLOGY topology,
     uint32_t numIndices,
@@ -502,7 +497,7 @@ SWR_FUNC(void, SwrDrawIndexed,
 /// @param indexOffset - Starting index into index buffer.
 /// @param baseVertex - Vertex in vertex buffer to consider as index "0". Note value is signed.
 /// @param startInstance - Which instance to start sequentially fetching from in each buffer (instanced data)
-SWR_FUNC(void, SwrDrawIndexedInstanced,
+void SWR_API SwrDrawIndexedInstanced(
     HANDLE hContext,
     PRIMITIVE_TOPOLOGY topology,
     uint32_t numIndices,
@@ -517,7 +512,7 @@ SWR_FUNC(void, SwrDrawIndexedInstanced,
 /// @param attachmentMask - The mask specifies which surfaces attached to the hottiles to invalidate.
 /// @param invalidateRect - The pixel-coordinate rectangle to invalidate.  This will be expanded to
 ///                         be hottile size-aligned.
-SWR_FUNC(void, SwrInvalidateTiles,
+void SWR_API SwrInvalidateTiles(
     HANDLE hContext,
     uint32_t attachmentMask,
     const SWR_RECT& invalidateRect);
@@ -528,7 +523,7 @@ SWR_FUNC(void, SwrInvalidateTiles,
 /// @param attachmentMask - The mask specifies which surfaces attached to the hottiles to discard.
 /// @param rect - The pixel-coordinate rectangle to discard.  Only fully-covered hottiles will be
 ///               discarded.
-SWR_FUNC(void, SwrDiscardRect,
+void SWR_API SwrDiscardRect(
     HANDLE hContext,
     uint32_t attachmentMask,
     const SWR_RECT& rect);
@@ -539,7 +534,7 @@ SWR_FUNC(void, SwrDiscardRect,
 /// @param threadGroupCountX - Number of thread groups dispatched in X direction
 /// @param threadGroupCountY - Number of thread groups dispatched in Y direction
 /// @param threadGroupCountZ - Number of thread groups dispatched in Z direction
-SWR_FUNC(void, SwrDispatch,
+void SWR_API SwrDispatch(
     HANDLE hContext,
     uint32_t threadGroupCountX,
     uint32_t threadGroupCountY,
@@ -554,7 +549,7 @@ enum SWR_TILE_STATE
 };
 
 /// @todo Add a good description for what attachments are and when and why you would use the different SWR_TILE_STATEs.
-SWR_FUNC(void, SwrStoreTiles,
+void SWR_API SwrStoreTiles(
     HANDLE hContext,
     uint32_t attachmentMask,
     SWR_TILE_STATE postStoreTileState,
@@ -564,16 +559,14 @@ SWR_FUNC(void, SwrStoreTiles,
 //////////////////////////////////////////////////////////////////////////
 /// @brief SwrClearRenderTarget - Clear attached render targets / depth / stencil
 /// @param hContext - Handle passed back from SwrCreateContext
-/// @param attachmentMask - combination of SWR_ATTACHMENT_*_BIT attachments to clear
-/// @param renderTargetArrayIndex - the RT array index to clear
+/// @param clearMask - combination of SWR_CLEAR_COLOR / SWR_CLEAR_DEPTH / SWR_CLEAR_STENCIL flags (or SWR_CLEAR_NONE)
 /// @param clearColor - color use for clearing render targets
 /// @param z - depth value use for clearing depth buffer
 /// @param stencil - stencil value used for clearing stencil buffer
 /// @param clearRect - The pixel-coordinate rectangle to clear in all cleared buffers
-SWR_FUNC(void, SwrClearRenderTarget,
+void SWR_API SwrClearRenderTarget(
     HANDLE hContext,
-    uint32_t attachmentMask,
-    uint32_t renderTargetArrayIndex,
+    uint32_t clearMask,
     const float clearColor[4],
     float z,
     uint8_t stencil,
@@ -583,7 +576,7 @@ SWR_FUNC(void, SwrClearRenderTarget,
 /// @brief SwrSetRastState
 /// @param hContext - Handle passed back from SwrCreateContext
 /// @param pRastState - New SWR_RASTSTATE used for SwrDraw* commands
-SWR_FUNC(void, SwrSetRastState,
+void SWR_API SwrSetRastState(
     HANDLE hContext,
     const SWR_RASTSTATE *pRastState);
 
@@ -593,7 +586,7 @@ SWR_FUNC(void, SwrSetRastState,
 /// @param numViewports - number of viewports passed in
 /// @param pViewports - Specifies extents of viewport.
 /// @param pMatrices - If not specified then SWR computes a default one.
-SWR_FUNC(void, SwrSetViewports,
+void SWR_API SwrSetViewports(
     HANDLE hContext,
     uint32_t numViewports,
     const SWR_VIEWPORT* pViewports,
@@ -604,7 +597,7 @@ SWR_FUNC(void, SwrSetViewports,
 /// @param hContext - Handle passed back from SwrCreateContext
 /// @param numScissors - number of scissors passed in
 /// @param pScissors - array of scissors
-SWR_FUNC(void, SwrSetScissorRects,
+void SWR_API SwrSetScissorRects(
     HANDLE hContext,
     uint32_t numScissors,
     const SWR_RECT* pScissors);
@@ -617,7 +610,7 @@ SWR_FUNC(void, SwrSetScissorRects,
 /// @note  Client needs to resend private state prior to each draw call.
 ///        Also, SWR is responsible for the private state memory.
 /// @param hContext - Handle passed back from SwrCreateContext
-SWR_FUNC(void*, SwrGetPrivateContextState,
+VOID* SWR_API SwrGetPrivateContextState(
     HANDLE hContext);
 
 //////////////////////////////////////////////////////////////////////////
@@ -628,7 +621,7 @@ SWR_FUNC(void*, SwrGetPrivateContextState,
 /// @param hContext - Handle passed back from SwrCreateContext
 /// @param size - Size of allocation
 /// @param align - Alignment needed for allocation.
-SWR_FUNC(void*, SwrAllocDrawContextMemory,
+VOID* SWR_API SwrAllocDrawContextMemory(
     HANDLE hContext,
     uint32_t size,
     uint32_t align);
@@ -637,126 +630,14 @@ SWR_FUNC(void*, SwrAllocDrawContextMemory,
 /// @brief Enables stats counting
 /// @param hContext - Handle passed back from SwrCreateContext
 /// @param enable - If true then counts are incremented.
-SWR_FUNC(void, SwrEnableStatsFE,
-    HANDLE hContext,
-    bool enable);
-
-//////////////////////////////////////////////////////////////////////////
-/// @brief Enables stats counting
-/// @param hContext - Handle passed back from SwrCreateContext
-/// @param enable - If true then counts are incremented.
-SWR_FUNC(void, SwrEnableStatsBE,
+void SWR_API SwrEnableStats(
     HANDLE hContext,
     bool enable);
 
 //////////////////////////////////////////////////////////////////////////
 /// @brief Mark end of frame - used for performance profiling
 /// @param hContext - Handle passed back from SwrCreateContext
-SWR_FUNC(void, SwrEndFrame,
+void SWR_API SwrEndFrame(
     HANDLE hContext);
 
-//////////////////////////////////////////////////////////////////////////
-/// @brief Initialize swr backend and memory internal tables
-SWR_FUNC(void, SwrInit);
-
-
-//////////////////////////////////////////////////////////////////////////
-/// @brief Loads a full hottile from a render surface
-/// @param hPrivateContext - Handle to private DC
-/// @param dstFormat - Format for hot tile.
-/// @param renderTargetIndex - Index to src render target
-/// @param x, y - Coordinates to raster tile.
-/// @param pDstHotTile - Pointer to Hot Tile
-SWR_FUNC(void, SwrLoadHotTile,
-    const SWR_SURFACE_STATE *pSrcSurface,
-    SWR_FORMAT dstFormat,
-    SWR_RENDERTARGET_ATTACHMENT renderTargetIndex,
-    uint32_t x, uint32_t y, uint32_t renderTargetArrayIndex,
-    uint8_t *pDstHotTile);
-
-//////////////////////////////////////////////////////////////////////////
-/// @brief Deswizzles and stores a full hottile to a render surface
-/// @param hPrivateContext - Handle to private DC
-/// @param srcFormat - Format for hot tile.
-/// @param renderTargetIndex - Index to destination render target
-/// @param x, y - Coordinates to raster tile.
-/// @param pSrcHotTile - Pointer to Hot Tile
-SWR_FUNC(void, SwrStoreHotTileToSurface,
-    SWR_SURFACE_STATE *pDstSurface,
-    SWR_FORMAT srcFormat,
-    SWR_RENDERTARGET_ATTACHMENT renderTargetIndex,
-    uint32_t x, uint32_t y, uint32_t renderTargetArrayIndex,
-    uint8_t *pSrcHotTile);
-
-//////////////////////////////////////////////////////////////////////////
-/// @brief Writes clear color to every pixel of a render surface
-/// @param hPrivateContext - Handle to private DC
-/// @param renderTargetIndex - Index to destination render target
-/// @param x, y - Coordinates to raster tile.
-/// @param pClearColor - Pointer to clear color
-SWR_FUNC(void, SwrStoreHotTileClear,
-         SWR_SURFACE_STATE *pDstSurface,
-         SWR_RENDERTARGET_ATTACHMENT renderTargetIndex,
-         UINT x,
-         UINT y,
-         uint32_t renderTargetArrayIndex,
-         const float* pClearColor);
-
-struct SWR_INTERFACE
-{
-    PFNSwrCreateContext pfnSwrCreateContext;
-    PFNSwrDestroyContext pfnSwrDestroyContext;
-    PFNSwrSaveState pfnSwrSaveState;
-    PFNSwrRestoreState pfnSwrRestoreState;
-    PFNSwrSync pfnSwrSync;
-    PFNSwrWaitForIdle pfnSwrWaitForIdle;
-    PFNSwrWaitForIdleFE pfnSwrWaitForIdleFE;
-    PFNSwrSetVertexBuffers pfnSwrSetVertexBuffers;
-    PFNSwrSetIndexBuffer pfnSwrSetIndexBuffer;
-    PFNSwrSetFetchFunc pfnSwrSetFetchFunc;
-    PFNSwrSetSoFunc pfnSwrSetSoFunc;
-    PFNSwrSetSoState pfnSwrSetSoState;
-    PFNSwrSetSoBuffers pfnSwrSetSoBuffers;
-    PFNSwrSetVertexFunc pfnSwrSetVertexFunc;
-    PFNSwrSetFrontendState pfnSwrSetFrontendState;
-    PFNSwrSetGsState pfnSwrSetGsState;
-    PFNSwrSetGsFunc pfnSwrSetGsFunc;
-    PFNSwrSetCsFunc pfnSwrSetCsFunc;
-    PFNSwrSetTsState pfnSwrSetTsState;
-    PFNSwrSetHsFunc pfnSwrSetHsFunc;
-    PFNSwrSetDsFunc pfnSwrSetDsFunc;
-    PFNSwrSetDepthStencilState pfnSwrSetDepthStencilState;
-    PFNSwrSetBackendState pfnSwrSetBackendState;
-    PFNSwrSetDepthBoundsState pfnSwrSetDepthBoundsState;
-    PFNSwrSetPixelShaderState pfnSwrSetPixelShaderState;
-    PFNSwrSetBlendState pfnSwrSetBlendState;
-    PFNSwrSetBlendFunc pfnSwrSetBlendFunc;
-    PFNSwrDraw pfnSwrDraw;
-    PFNSwrDrawInstanced pfnSwrDrawInstanced;
-    PFNSwrDrawIndexed pfnSwrDrawIndexed;
-    PFNSwrDrawIndexedInstanced pfnSwrDrawIndexedInstanced;
-    PFNSwrInvalidateTiles pfnSwrInvalidateTiles;
-    PFNSwrDiscardRect pfnSwrDiscardRect;
-    PFNSwrDispatch pfnSwrDispatch;
-    PFNSwrStoreTiles pfnSwrStoreTiles;
-    PFNSwrClearRenderTarget pfnSwrClearRenderTarget;
-    PFNSwrSetRastState pfnSwrSetRastState;
-    PFNSwrSetViewports pfnSwrSetViewports;
-    PFNSwrSetScissorRects pfnSwrSetScissorRects;
-    PFNSwrGetPrivateContextState pfnSwrGetPrivateContextState;
-    PFNSwrAllocDrawContextMemory pfnSwrAllocDrawContextMemory;
-    PFNSwrEnableStatsFE pfnSwrEnableStatsFE;
-    PFNSwrEnableStatsBE pfnSwrEnableStatsBE;
-    PFNSwrEndFrame pfnSwrEndFrame;
-    PFNSwrInit pfnSwrInit;
-    PFNSwrLoadHotTile pfnSwrLoadHotTile;
-    PFNSwrStoreHotTileToSurface pfnSwrStoreHotTileToSurface;
-    PFNSwrStoreHotTileClear pfnSwrStoreHotTileClear;
-};
-
-extern "C" {
-typedef void (SWR_API * PFNSwrGetInterface)(SWR_INTERFACE &out_funcs);
-SWR_VISIBLE void SWR_API SwrGetInterface(SWR_INTERFACE &out_funcs);
-}
-
-#endif
+#endif//__SWR_API_H__

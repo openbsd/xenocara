@@ -107,11 +107,6 @@ create_frag_shader(struct vl_median_filter *filter,
 
    i_vtex = ureg_DECL_fs_input(shader, TGSI_SEMANTIC_GENERIC, VS_O_VTEX, TGSI_INTERPOLATE_LINEAR);
    sampler = ureg_DECL_sampler(shader, 0);
-   ureg_DECL_sampler_view(shader, 0, TGSI_TEXTURE_2D,
-                          TGSI_RETURN_TYPE_FLOAT,
-                          TGSI_RETURN_TYPE_FLOAT,
-                          TGSI_RETURN_TYPE_FLOAT,
-                          TGSI_RETURN_TYPE_FLOAT);
 
    for (i = 0; i < num_offsets; ++i)
       t_array[i] = ureg_DECL_temporary(shader);
@@ -295,7 +290,7 @@ vl_median_filter_init(struct vl_median_filter *filter, struct pipe_context *pipe
       goto error_sampler;
 
    filter->quad = vl_vb_upload_quads(pipe);
-   if(!filter->quad.buffer.resource)
+   if(!filter->quad.buffer)
       goto error_quad;
 
    memset(&ve, 0, sizeof(ve));
@@ -337,7 +332,7 @@ error_offsets:
    pipe->delete_vertex_elements_state(pipe, filter->ves);
 
 error_ves:
-   pipe_resource_reference(&filter->quad.buffer.resource, NULL);
+   pipe_resource_reference(&filter->quad.buffer, NULL);
 
 error_quad:
    pipe->delete_sampler_state(pipe, filter->sampler);
@@ -361,7 +356,7 @@ vl_median_filter_cleanup(struct vl_median_filter *filter)
    filter->pipe->delete_blend_state(filter->pipe, filter->blend);
    filter->pipe->delete_rasterizer_state(filter->pipe, filter->rs_state);
    filter->pipe->delete_vertex_elements_state(filter->pipe, filter->ves);
-   pipe_resource_reference(&filter->quad.buffer.resource, NULL);
+   pipe_resource_reference(&filter->quad.buffer, NULL);
 
    filter->pipe->delete_vs_state(filter->pipe, filter->vs);
    filter->pipe->delete_fs_state(filter->pipe, filter->fs);

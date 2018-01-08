@@ -25,6 +25,8 @@
  *
  */
 
+#pragma once
+
 #ifndef _NIR_SPIRV_H_
 #define _NIR_SPIRV_H_
 
@@ -36,29 +38,13 @@ extern "C" {
 
 struct nir_spirv_specialization {
    uint32_t id;
-   union {
-      uint32_t data32;
-      uint64_t data64;
-   };
-};
-
-struct nir_spirv_supported_extensions {
-   bool float64;
-   bool image_ms_array;
-   bool tessellation;
-   bool draw_parameters;
-   bool image_read_without_format;
-   bool image_write_without_format;
-   bool int64;
-   bool multiview;
-   bool variable_pointers;
+   uint32_t data;
 };
 
 nir_function *spirv_to_nir(const uint32_t *words, size_t word_count,
                            struct nir_spirv_specialization *specializations,
                            unsigned num_specializations,
                            gl_shader_stage stage, const char *entry_point_name,
-                           const struct nir_spirv_supported_extensions *ext,
                            const nir_shader_compiler_options *options);
 
 #ifdef __cplusplus

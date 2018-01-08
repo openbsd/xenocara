@@ -37,7 +37,6 @@
 #include "freedreno_query.h"
 #include "freedreno_query_hw.h"
 #include "freedreno_util.h"
-#include "util/u_upload_mgr.h"
 
 static void
 fd_context_flush(struct pipe_context *pctx, struct pipe_fence_handle **fence,
@@ -45,26 +44,14 @@ fd_context_flush(struct pipe_context *pctx, struct pipe_fence_handle **fence,
 {
 	struct fd_context *ctx = fd_context(pctx);
 
-	if (flags & PIPE_FLUSH_FENCE_FD)
-		ctx->batch->needs_out_fence_fd = true;
-
 	if (!ctx->screen->reorder) {
 		fd_batch_flush(ctx->batch, true);
 	} else {
 		fd_bc_flush(&ctx->screen->batch_cache, ctx);
 	}
 
-	if (fence) {
-		/* if there hasn't been any rendering submitted yet, we might not
-		 * have actually created a fence
-		 */
-		if (!ctx->last_fence || ctx->batch->needs_out_fence_fd) {
-			ctx->batch->needs_flush = true;
-			fd_gmem_render_noop(ctx->batch);
-			fd_batch_reset(ctx->batch);
-		}
+	if (fence)
 		fd_fence_ref(pctx->screen, fence, ctx->last_fence);
-	}
 }
 
 /**
@@ -86,10 +73,7 @@ fd_emit_string_marker(struct pipe_context *pctx, const char *string, int len)
 	/* max packet size is 0x3fff dwords: */
 	len = MIN2(len, 0x3fff * 4);
 
-	if (ctx->screen->gpu_id >= 500)
-		OUT_PKT7(ring, CP_NOP, align(len, 4) / 4);
-	else
-		OUT_PKT3(ring, CP_NOP, align(len, 4) / 4);
+	OUT_PKT3(ring, CP_NOP, align(len, 4) / 4);
 	while (len >= 4) {
 		OUT_RING(ring, *buf);
 		buf++;
@@ -112,7 +96,7 @@ fd_context_destroy(struct pipe_context *pctx)
 
 	DBG("");
 
-	if (ctx->screen->reorder && util_queue_is_initialized(&ctx->flush_queue))
+	if (ctx->screen->reorder)
 		util_queue_destroy(&ctx->flush_queue);
 
 	fd_batch_reference(&ctx->batch, NULL);  /* unref current batch */
@@ -121,12 +105,10 @@ fd_context_destroy(struct pipe_context *pctx)
 	fd_fence_ref(pctx->screen, &ctx->last_fence, NULL);
 
 	fd_prog_fini(pctx);
+	fd_hw_query_fini(pctx);
 
 	if (ctx->blitter)
 		util_blitter_destroy(ctx->blitter);
-
-	if (pctx->stream_uploader)
-		u_upload_destroy(pctx->stream_uploader);
 
 	if (ctx->clear_rs_state)
 		pctx->delete_rasterizer_state(pctx, ctx->clear_rs_state);
@@ -210,7 +192,7 @@ fd_context_setup_common_vbos(struct fd_context *ctx)
 			}});
 	ctx->solid_vbuf_state.vertexbuf.count = 1;
 	ctx->solid_vbuf_state.vertexbuf.vb[0].stride = 12;
-	ctx->solid_vbuf_state.vertexbuf.vb[0].buffer.resource = ctx->solid_vbuf;
+	ctx->solid_vbuf_state.vertexbuf.vb[0].buffer = ctx->solid_vbuf;
 
 	/* setup blit_vbuf_state: */
 	ctx->blit_vbuf_state.vtx = pctx->create_vertex_elements_state(
@@ -225,9 +207,9 @@ fd_context_setup_common_vbos(struct fd_context *ctx)
 			}});
 	ctx->blit_vbuf_state.vertexbuf.count = 2;
 	ctx->blit_vbuf_state.vertexbuf.vb[0].stride = 8;
-	ctx->blit_vbuf_state.vertexbuf.vb[0].buffer.resource = ctx->blit_texcoord_vbuf;
+	ctx->blit_vbuf_state.vertexbuf.vb[0].buffer = ctx->blit_texcoord_vbuf;
 	ctx->blit_vbuf_state.vertexbuf.vb[1].stride = 12;
-	ctx->blit_vbuf_state.vertexbuf.vb[1].buffer.resource = ctx->solid_vbuf;
+	ctx->blit_vbuf_state.vertexbuf.vb[1].buffer = ctx->solid_vbuf;
 }
 
 void
@@ -269,15 +251,14 @@ fd_context_init(struct fd_context *ctx, struct pipe_screen *pscreen,
 	pctx->flush = fd_context_flush;
 	pctx->emit_string_marker = fd_emit_string_marker;
 	pctx->set_debug_callback = fd_set_debug_callback;
-	pctx->create_fence_fd = fd_create_fence_fd;
-	pctx->fence_server_sync = fd_fence_server_sync;
 
-	pctx->stream_uploader = u_upload_create_default(pctx);
-	if (!pctx->stream_uploader)
-		goto fail;
-	pctx->const_uploader = pctx->stream_uploader;
-
-	ctx->batch = fd_bc_alloc_batch(&screen->batch_cache, ctx);
+	/* TODO what about compute?  Ideally it creates it's own independent
+	 * batches per compute job (since it isn't using tiling, so no point
+	 * in getting involved with the re-ordering madness)..
+	 */
+	if (!screen->reorder) {
+		ctx->batch = fd_bc_alloc_batch(&screen->batch_cache, ctx);
+	}
 
 	slab_create_child(&ctx->transfer_pool, &screen->transfer_pool);
 
@@ -286,6 +267,7 @@ fd_context_init(struct fd_context *ctx, struct pipe_screen *pscreen,
 	fd_query_context_init(pctx);
 	fd_texture_init(pctx);
 	fd_state_init(pctx);
+	fd_hw_query_init(pctx);
 
 	ctx->blitter = util_blitter_create(pctx);
 	if (!ctx->blitter)
@@ -294,9 +276,6 @@ fd_context_init(struct fd_context *ctx, struct pipe_screen *pscreen,
 	ctx->primconvert = util_primconvert_create(pctx, ctx->primtype_mask);
 	if (!ctx->primconvert)
 		goto fail;
-
-	list_inithead(&ctx->hw_active_queries);
-	list_inithead(&ctx->acc_active_queries);
 
 	return pctx;
 
