@@ -36,6 +36,9 @@
 /* Use the HAL hotplug API */
 #undef CONFIG_HAL
 
+/* Use kevent for kms enumeration */
+#undef CONFIG_KEVENT_KMS
+
 /* Use libudev for input hotplug */
 #undef CONFIG_UDEV
 

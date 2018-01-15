@@ -1382,6 +1382,7 @@ enable_xf86bigfont
 enable_dpms
 enable_config_udev
 enable_config_udev_kms
+enable_config_kevent_kms
 enable_config_hal
 enable_config_wscons
 enable_xfree86_utils
@@ -2211,6 +2212,8 @@ Optional Features:
   --enable-config-udev    Build udev support (default: auto)
   --enable-config-udev-kms
                           Build udev kms support (default: auto)
+  --enable-config-kevent-kms
+                          Build kevent kms support (default: auto)
   --disable-config-hal    Build HAL support (default: auto)
   --enable-config-wscons  Build wscons config support (default: auto)
   --enable-xfree86-utils  Build xfree86 DDX utilities (default: enabled)
@@ -23406,6 +23409,13 @@ else
   CONFIG_UDEV_KMS=auto
 fi
 
+# Check whether --enable-config-kevent-kms was given.
+if test "${enable_config_kevent_kms+set}" = set; then :
+  enableval=$enable_config_kevent_kms; CONFIG_KEVENT_KMS=$enableval
+else
+  CONFIG_KEVENT_KMS=auto
+fi
+
 # Check whether --enable-config-hal was given.
 if test "${enable_config_hal+set}" = set; then :
   enableval=$enable_config_hal; CONFIG_HAL=$enableval
@@ -25147,6 +25157,16 @@ else
   HAVE_SYSTEMD_DAEMON_FALSE=
 fi
 
+
+if test "x$CONFIG_KEVENT_KMS" != xno; then
+	ac_fn_c_check_func "$LINENO" "kevent" "ac_cv_func_kevent"
+if test "x$ac_cv_func_kevent" = xyes; then :
+
+$as_echo "#define CONFIG_KEVENT_KMS 1" >>confdefs.h
+
+fi
+
+fi
 
 if test "x$CONFIG_UDEV" = xyes && test "x$CONFIG_HAL" = xyes; then
 	as_fn_error $? "Hotplugging through both libudev and hal not allowed" "$LINENO" 5

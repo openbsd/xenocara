@@ -439,6 +439,9 @@
 /* Use libudev for kms enumeration */
 #undef CONFIG_UDEV_KMS
 
+/* Use kevent for kms enumeration */
+#undef CONFIG_KEVENT_KMS
+
 /* Use udev_monitor_filter_add_match_tag() */
 #undef HAVE_UDEV_MONITOR_FILTER_ADD_MATCH_TAG
 

@@ -32,6 +32,9 @@
 #include <errno.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
+#if defined(CONFIG_KEVENT_KMS)
+#include <sys/event.h>
+#endif
 #include <unistd.h>
 #include "dumb_bo.h"
 #include "xf86str.h"
@@ -2308,7 +2311,7 @@ drmmode_setup_colormap(ScreenPtr pScreen, ScrnInfoPtr pScrn)
     return TRUE;
 }
 
-#ifdef CONFIG_UDEV_KMS
+#if defined(CONFIG_UDEV_KMS) || defined(CONFIG_KEVENT_KMS)
 
 #define DRM_MODE_LINK_STATUS_GOOD       0
 #define DRM_MODE_LINK_STATUS_BAD        1
@@ -2318,17 +2321,26 @@ drmmode_handle_uevents(int fd, void *closure)
 {
     drmmode_ptr drmmode = closure;
     ScrnInfoPtr scrn = drmmode->scrn;
+#ifdef CONFIG_UDEV_KMS
     struct udev_device *dev;
+#endif
     drmModeResPtr mode_res;
     xf86CrtcConfigPtr  config = XF86_CRTC_CONFIG_PTR(scrn);
     int i, j;
     Bool found = FALSE;
     Bool changed = FALSE;
 
+#ifdef CONFIG_UDEV_KMS
     while ((dev = udev_monitor_receive_device(drmmode->uevent_monitor))) {
         udev_device_unref(dev);
         found = TRUE;
     }
+#else
+    struct kevent ev;
+    if ((kevent(fd, NULL, 0, &ev, 1, NULL)) && ev.fflags & NOTE_CHANGE)
+        found = TRUE;
+#endif
+
     if (!found)
         return;
 
@@ -2478,6 +2490,23 @@ drmmode_uevent_init(ScrnInfoPtr scrn, drmmode_ptr drmmode)
                               drmmode_handle_uevents, drmmode);
 
     drmmode->uevent_monitor = mon;
+#elif CONFIG_KEVENT_KMS 
+    int kq;
+    struct kevent ev;
+
+    if (drmmode->kevent_handler)
+        return;
+
+    if ((kq = kqueue()) <= 0)
+        return;
+
+    EV_SET(&ev, drmmode->fd, EVFILT_DEVICE, EV_ADD | EV_ENABLE | EV_CLEAR,
+        NOTE_CHANGE, 0, NULL);
+    if (kevent(kq, &ev, 1, NULL, 0, NULL) < 0)
+        return;
+
+    drmmode->kevent_handler = xf86AddGeneralHandler(kq,
+                          drmmode_handle_uevents, drmmode);
 #endif
 }
 
@@ -2492,6 +2521,14 @@ drmmode_uevent_fini(ScrnInfoPtr scrn, drmmode_ptr drmmode)
 
         udev_monitor_unref(drmmode->uevent_monitor);
         udev_unref(u);
+    }
+#elif CONFIG_KEVENT_KMS
+    int kq;
+
+    if (drmmode->kevent_handler) {
+        kq = xf86RemoveGeneralHandler(drmmode->kevent_handler);
+        close(kq);
+        drmmode->kevent_handler = NULL;
     }
 #endif
 }

@@ -666,6 +666,7 @@ AC_ARG_ENABLE(xf86bigfont,    AS_HELP_STRING([--enable-xf86bigfont], [Build XF86
 AC_ARG_ENABLE(dpms,           AS_HELP_STRING([--disable-dpms], [Build DPMS extension (default: enabled)]), [DPMSExtension=$enableval], [DPMSExtension=yes])
 AC_ARG_ENABLE(config-udev,    AS_HELP_STRING([--enable-config-udev], [Build udev support (default: auto)]), [CONFIG_UDEV=$enableval], [CONFIG_UDEV=auto])
 AC_ARG_ENABLE(config-udev-kms,    AS_HELP_STRING([--enable-config-udev-kms], [Build udev kms support (default: auto)]), [CONFIG_UDEV_KMS=$enableval], [CONFIG_UDEV_KMS=auto])
+AC_ARG_ENABLE(config-kevent-kms,  AS_HELP_STRING([--enable-config-kevent-kms], [Build kevent kms support (default: auto)]), [CONFIG_KEVENT_KMS=$enableval], [CONFIG_KEVENT_KMS=auto]) 
 AC_ARG_ENABLE(config-hal,     AS_HELP_STRING([--disable-config-hal], [Build HAL support (default: auto)]), [CONFIG_HAL=$enableval], [CONFIG_HAL=auto])
 AC_ARG_ENABLE(config-wscons,  AS_HELP_STRING([--enable-config-wscons], [Build wscons config support (default: auto)]), [CONFIG_WSCONS=$enableval], [CONFIG_WSCONS=auto])
 AC_ARG_ENABLE(xfree86-utils,     AS_HELP_STRING([--enable-xfree86-utils], [Build xfree86 DDX utilities (default: enabled)]), [XF86UTILS=$enableval], [XF86UTILS=yes])
@@ -955,6 +956,10 @@ if test "x$WITH_SYSTEMD_DAEMON" = "xyes" -o "x$WITH_SYSTEMD_DAEMON" = "xauto" ; 
 	fi
 fi
 AM_CONDITIONAL([HAVE_SYSTEMD_DAEMON], [test "x$HAVE_SYSTEMD_DAEMON" = "xyes"])
+
+if test "x$CONFIG_KEVENT_KMS" != xno; then
+	AC_CHECK_FUNC([kevent], [AC_DEFINE(CONFIG_KEVENT_KMS, 1, [Use kevent for kms enumeration])])
+fi
 
 if test "x$CONFIG_UDEV" = xyes && test "x$CONFIG_HAL" = xyes; then
 	AC_MSG_ERROR([Hotplugging through both libudev and hal not allowed])

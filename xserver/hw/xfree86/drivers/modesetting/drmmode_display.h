@@ -53,9 +53,12 @@ typedef struct {
 
     struct gbm_device *gbm;
 
-#ifdef CONFIG_UDEV_KMS
+#if defined(CONFIG_UDEV_KMS)
     struct udev_monitor *uevent_monitor;
     InputHandlerProc uevent_handler;
+#endif
+#if defined(CONFIG_KEVENT_KMS)
+    InputHandlerProc kevent_handler;
 #endif
     drmEventContext event_context;
     drmmode_bo front_bo;
