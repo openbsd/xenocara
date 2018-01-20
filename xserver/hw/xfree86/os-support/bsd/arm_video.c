@@ -1,5 +1,5 @@
 /* $XFree86: xc/programs/Xserver/hw/xfree86/os-support/bsd/ppc_video.c,v 1.6 2003/10/07 23:14:55 herrb Exp $ */
-/* $OpenBSD: arm_video.c,v 1.14 2015/09/28 07:14:00 matthieu Exp $ */
+/* $OpenBSD: arm_video.c,v 1.15 2018/01/20 12:25:26 matthieu Exp $ */
 /*
  * Copyright 1992 by Rich Murphey <Rich@Rice.edu>
  * Copyright 1993 by David Wexelblat <dwex@goblin.org>
@@ -87,66 +87,3 @@ xf86PrivilegedInit(void)
 {
     xf86OpenConsole();
 }
-
-#ifdef __VFP_FP__
-/*
- * force softfloat functions into binary,
- * yes the protos/ret are all bogus.
- */
-arm_softfloat()
-{
-void __adddf3();
-void __addsf3();
-void __eqdf2();
-void __eqsf2();
-void __extendsfdf2();
-void __fixdfsi();
-void __fixsfsi();
-void __fixunsdfsi();
-void __fixunssfsi();
-void __floatsidf();
-void __floatsisf();
-void __gedf2();
-void __gesf2();
-void __gtdf2();
-void __gtsf2();
-void __ledf2();
-void __lesf2();
-void __ltdf2();
-void __ltsf2();
-void __nedf2();
-void __negdf2();
-void __negsf2();
-void __nesf2();
-void __subdf3();
-void __subsf3();
-void __truncdfsf2();
-
-__adddf3();
-__addsf3();
-__eqdf2();
-__eqsf2();
-__extendsfdf2();
-__fixdfsi();
-__fixsfsi();
-__fixunsdfsi();
-__fixunssfsi();
-__floatsidf();
-__floatsisf();
-__gedf2();
-__gesf2();
-__gtdf2();
-__gtsf2();
-__ledf2();
-__lesf2();
-__ltdf2();
-__ltsf2();
-__nedf2();
-__negdf2();
-__negsf2();
-__nesf2();
-__subdf3();
-__subsf3();
-__truncdfsf2();
-}
-#endif /* __VFP_FP__ */
