@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: group.c,v 1.127 2017/12/29 16:55:50 okan Exp $
+ * $OpenBSD: group.c,v 1.128 2018/01/23 13:48:49 okan Exp $
  */
 
 #include <sys/types.h>
@@ -155,7 +155,7 @@ group_movetogroup(struct client_ctx *cc, int idx)
 	struct group_ctx	*gc;
 
 	if (idx < 0 || idx >= Conf.ngroups)
-		errx(1, "%s: index out of range (%d)", __func__, idx);
+		return;
 
 	TAILQ_FOREACH(gc, &sc->groupq, entry) {
 		if (gc->num == idx)
@@ -216,7 +216,7 @@ group_hidetoggle(struct screen_ctx *sc, int idx)
 	struct group_ctx	*gc;
 
 	if (idx < 0 || idx >= Conf.ngroups)
-		errx(1, "%s: index out of range (%d)", __func__, idx);
+		return;
 
 	TAILQ_FOREACH(gc, &sc->groupq, entry) {
 		if (gc->num == idx)
@@ -239,7 +239,7 @@ group_only(struct screen_ctx *sc, int idx)
 	struct group_ctx	*gc;
 
 	if (idx < 0 || idx >= Conf.ngroups)
-		errx(1, "%s: index out of range (%d)", __func__, idx);
+		return;
 
 	TAILQ_FOREACH(gc, &sc->groupq, entry) {
 		if (gc->num == idx)
