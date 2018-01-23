@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: screen.c,v 1.84 2016/10/24 17:39:38 okan Exp $
+ * $OpenBSD: screen.c,v 1.85 2018/01/23 16:18:59 okan Exp $
  */
 
 #include <sys/types.h>
@@ -37,7 +37,8 @@ screen_init(int which)
 	struct screen_ctx	*sc;
 	Window			*wins, w0, w1, active = None;
 	XSetWindowAttributes	 rootattr;
-	unsigned int		 nwins, i;
+	unsigned int		 nwins, w;
+	int			 i;
 
 	sc = xmalloc(sizeof(*sc));
 
@@ -77,8 +78,8 @@ screen_init(int which)
 
 	/* Deal with existing clients. */
 	if (XQueryTree(X_Dpy, sc->rootwin, &w0, &w1, &wins, &nwins)) {
-		for (i = 0; i < nwins; i++)
-			(void)client_init(wins[i], sc, (active == wins[i]));
+		for (w = 0; w < nwins; w++)
+			(void)client_init(wins[w], sc, (active == wins[w]));
 
 		XFree(wins);
 	}
