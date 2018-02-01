@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.352 2018/01/23 16:00:21 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.353 2018/02/01 15:17:51 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -518,12 +518,15 @@ void			 kbfunc_exec_lock(void *, struct cargs *);
 void			 kbfunc_exec_term(void *, struct cargs *);
 
 void			 menu_windraw(struct screen_ctx *, Window,
-			     const char *, ...);
+			     const char *, ...)
+			    __attribute__((__format__ (printf, 3, 4)))
+			    __attribute__((__nonnull__ (3)));
 struct menu  		*menu_filter(struct screen_ctx *, struct menu_q *,
 			     const char *, const char *, int,
 			     void (*)(struct menu_q *, struct menu_q *, char *),
 			     void (*)(struct menu *, int));
-void			 menuq_add(struct menu_q *, void *, const char *, ...);
+void			 menuq_add(struct menu_q *, void *, const char *, ...)
+			    __attribute__((__format__ (printf, 3, 4)));
 void			 menuq_clear(struct menu_q *);
 
 int			 parse_config(const char *, struct conf *);
