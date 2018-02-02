@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: search.c,v 1.68 2018/01/23 13:51:39 okan Exp $
+ * $OpenBSD: search.c,v 1.69 2018/02/02 13:27:25 okan Exp $
  */
 
 #include <sys/types.h>
@@ -162,12 +162,11 @@ static void
 match_path_type(struct menu_q *resultq, char *search, int flag)
 {
 	struct menu     *mi;
-	char 		 pattern[PATH_MAX];
+	char 		*pattern;
 	glob_t		 g;
 	int		 i;
 
-	(void)strlcpy(pattern, search, sizeof(pattern));
-	(void)strlcat(pattern, "*", sizeof(pattern));
+	xasprintf(&pattern, "%s*", search);
 	if (glob(pattern, GLOB_MARK, NULL, &g) != 0)
 		return;
 	for (i = 0; i < g.gl_pathc; i++) {
@@ -178,6 +177,7 @@ match_path_type(struct menu_q *resultq, char *search, int flag)
 		TAILQ_INSERT_TAIL(resultq, mi, resultentry);
 	}
 	globfree(&g);
+	free(pattern);
 }
 
 void
