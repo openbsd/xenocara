@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: util.c,v 1.20 2018/01/08 16:21:54 okan Exp $
+ * $OpenBSD: util.c,v 1.21 2018/02/02 13:40:55 okan Exp $
  */
 
 #include <sys/types.h>
@@ -30,6 +30,8 @@
 #include <unistd.h>
 
 #include "calmwm.h"
+
+static void	 log_msg(const char *, va_list);
 
 void
 u_spawn(char *argstr)
@@ -103,4 +105,32 @@ u_argv(char * const *argv)
 		strlcat(p, argv[i], siz);
 	}
 	return(p);
+}
+
+static void
+log_msg(const char *msg, va_list ap)
+{
+	char	*fmt;
+
+	if (asprintf(&fmt, "%s\n", msg) == -1) {
+		vfprintf(stderr, msg, ap);
+		fprintf(stderr, "\n");
+	} else {
+		vfprintf(stderr, fmt, ap);
+		free(fmt);
+	}
+	fflush(stderr);
+}
+
+void
+log_debug(const char *func, const char *msg, ...)
+{
+	char	*fmt;
+	va_list	 ap;
+
+	va_start(ap, msg);
+	if (asprintf(&fmt, "%s: %s", func, msg) == -1)
+		exit(1);
+	log_msg(fmt, ap);
+	va_end(ap);
 }
