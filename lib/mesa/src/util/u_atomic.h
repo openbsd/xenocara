@@ -23,7 +23,7 @@
 #define PIPE_ATOMIC_OS_SOLARIS
 #elif defined(_MSC_VER)
 #define PIPE_ATOMIC_MSVC_INTRINSIC
-#elif defined(__arm__) || defined(__hppa__) || defined(__sh__)
+#elif defined(__hppa__) || defined(__sh__)
 #define PIPE_ATOMIC_UNLOCKED
 #elif defined(__GNUC__)
 #define PIPE_ATOMIC_GCC_INTRINSIC
