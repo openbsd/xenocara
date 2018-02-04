@@ -1,4 +1,4 @@
-.\"	$OpenBSD: cwm.1,v 1.61 2017/12/30 22:25:09 okan Exp $
+.\"	$OpenBSD: cwm.1,v 1.62 2018/02/04 22:56:26 okan Exp $
 .\"
 .\" Copyright (c) 2004,2005 Marius Aamodt Eriksen <marius@monkey.org>
 .\"
@@ -14,7 +14,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: December 30 2017 $
+.Dd $Mdocdate: February 4 2018 $
 .Dt CWM 1
 .Os
 .Sh NAME
@@ -23,6 +23,7 @@
 .Sh SYNOPSIS
 .\" For a program:  program [-abc] file ...
 .Nm cwm
+.Op Fl v
 .Op Fl c Ar file
 .Op Fl d Ar display
 .Sh DESCRIPTION
@@ -47,6 +48,11 @@ however,
 will continue to process the rest of the configuration file.
 .It Fl d Ar display
 Specify the display to use.
+.It Fl v
+Verbose mode.
+Multiple
+.Fl v
+options increase the verbosity.
 .El
 .Pp
 .Nm

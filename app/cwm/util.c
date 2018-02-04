@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: util.c,v 1.21 2018/02/02 13:40:55 okan Exp $
+ * $OpenBSD: util.c,v 1.22 2018/02/04 22:56:26 okan Exp $
  */
 
 #include <sys/types.h>
@@ -123,14 +123,16 @@ log_msg(const char *msg, va_list ap)
 }
 
 void
-log_debug(const char *func, const char *msg, ...)
+log_debug(int level, const char *func, const char *msg, ...)
 {
 	char	*fmt;
 	va_list	 ap;
 
+	if (Conf.debug < level)
+		return;
+
 	va_start(ap, msg);
-	if (asprintf(&fmt, "%s: %s", func, msg) == -1)
-		exit(1);
+	xasprintf(&fmt, "debug%d: %s: %s", level, func, msg);
 	log_msg(fmt, ap);
 	va_end(ap);
 }
