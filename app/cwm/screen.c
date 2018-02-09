@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: screen.c,v 1.85 2018/01/23 16:18:59 okan Exp $
+ * $OpenBSD: screen.c,v 1.86 2018/02/09 20:08:07 okan Exp $
  */
 
 #include <sys/types.h>
@@ -30,6 +30,8 @@
 #include <unistd.h>
 
 #include "calmwm.h"
+
+static struct geom screen_apply_gap(struct screen_ctx *, struct geom);
 
 void
 screen_init(int which)
@@ -220,7 +222,7 @@ screen_update_geometry(struct screen_ctx *sc)
 	xu_ewmh_net_workarea(sc);
 }
 
-struct geom
+static struct geom
 screen_apply_gap(struct screen_ctx *sc, struct geom geom)
 {
 	geom.x += sc->gap.left;
