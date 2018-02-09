@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.356 2018/02/04 22:56:26 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.357 2018/02/09 19:54:54 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -44,8 +44,6 @@
 #ifndef nitems
 #define nitems(_a) (sizeof((_a)) / sizeof((_a)[0]))
 #endif
-
-#define	CONFFILE	".cwmrc"
 
 #define BUTTONMASK	(ButtonPressMask | ButtonReleaseMask)
 #define MOUSEMASK	(BUTTONMASK | PointerMotionMask)
@@ -308,10 +306,10 @@ struct conf {
 	Cursor			 cursor[CF_NITEMS];
 	int			 xrandr;
 	int			 xrandr_event_base;
-	char			*homedir;
+	char			*conf_file;
 	char			*known_hosts;
 	char			*wm_argv;
-	u_int32_t		 debug;
+	int			 debug;
 };
 
 /* MWM hints */
