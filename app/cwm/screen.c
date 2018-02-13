@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: screen.c,v 1.86 2018/02/09 20:08:07 okan Exp $
+ * $OpenBSD: screen.c,v 1.87 2018/02/13 15:06:22 okan Exp $
  */
 
 #include <sys/types.h>
@@ -146,12 +146,12 @@ struct geom
 screen_area(struct screen_ctx *sc, int x, int y, enum apply_gap apply_gap)
 {
 	struct region_ctx	*rc;
-	struct geom		 area = sc->work;
+	struct geom		 area = sc->view;
 
 	TAILQ_FOREACH(rc, &sc->regionq, entry) {
-		if ((x >= rc->area.x) && (x < (rc->area.x + rc->area.w)) &&
-		    (y >= rc->area.y) && (y < (rc->area.y + rc->area.h))) {
-			area = rc->area;
+		if ((x >= rc->view.x) && (x < (rc->view.x + rc->view.w)) &&
+		    (y >= rc->view.y) && (y < (rc->view.y + rc->view.h))) {
+			area = rc->view;
 			break;
 		}
 	}
@@ -193,10 +193,6 @@ screen_update_geometry(struct screen_ctx *sc)
 
 			rc = xmalloc(sizeof(*rc));
 			rc->num = i;
-			rc->area.x = ci->x;
-			rc->area.y = ci->y;
-			rc->area.w = ci->width;
-			rc->area.h = ci->height;
 			rc->view.x = ci->x;
 			rc->view.y = ci->y;
 			rc->view.w = ci->width;
