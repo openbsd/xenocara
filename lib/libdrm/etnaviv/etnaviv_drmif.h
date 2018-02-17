@@ -35,6 +35,9 @@ struct etna_pipe;
 struct etna_gpu;
 struct etna_device;
 struct etna_cmd_stream;
+struct etna_perfmon;
+struct etna_perfmon_domain;
+struct etna_perfmon_signal;
 
 enum etna_pipe_id {
 	ETNA_PIPE_3D = 0,
@@ -189,5 +192,25 @@ struct etna_reloc {
 };
 
 void etna_cmd_stream_reloc(struct etna_cmd_stream *stream, const struct etna_reloc *r);
+
+/* performance monitoring functions:
+ */
+
+struct etna_perfmon *etna_perfmon_create(struct etna_pipe *pipe);
+void etna_perfmon_del(struct etna_perfmon *perfmon);
+struct etna_perfmon_domain *etna_perfmon_get_dom_by_name(struct etna_perfmon *pm, const char *name);
+struct etna_perfmon_signal *etna_perfmon_get_sig_by_name(struct etna_perfmon_domain *dom, const char *name);
+
+struct etna_perf {
+#define ETNA_PM_PROCESS_PRE             0x0001
+#define ETNA_PM_PROCESS_POST            0x0002
+	uint32_t flags;
+	uint32_t sequence;
+	struct etna_perfmon_signal *signal;
+	struct etna_bo *bo;
+	uint32_t offset;
+};
+
+void etna_cmd_stream_perf(struct etna_cmd_stream *stream, const struct etna_perf *p);
 
 #endif /* ETNAVIV_DRMIF_H_ */

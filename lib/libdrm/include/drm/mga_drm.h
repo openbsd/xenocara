@@ -37,6 +37,10 @@
 
 #include "drm.h"
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 /* WARNING: If you change any of these defines, make sure to change the
  * defines in the Xserver file (mga_sarea.h)
  */
@@ -107,7 +111,7 @@
  */
 #define MGA_NR_SAREA_CLIPRECTS	8
 
-/* 2 heaps (1 for card, 1 for agp), each divided into upto 128
+/* 2 heaps (1 for card, 1 for agp), each divided into up to 128
  * regions, subject to a minimum region size of (1<<16) == 64k.
  *
  * Clients may subdivide regions internally, but when sharing between
@@ -248,7 +252,7 @@ typedef struct _drm_mga_sarea {
 #define DRM_MGA_DMA_BOOTSTRAP  0x0c
 
 #define DRM_IOCTL_MGA_INIT     DRM_IOW( DRM_COMMAND_BASE + DRM_MGA_INIT, drm_mga_init_t)
-#define DRM_IOCTL_MGA_FLUSH    DRM_IOW( DRM_COMMAND_BASE + DRM_MGA_FLUSH, drm_lock_t)
+#define DRM_IOCTL_MGA_FLUSH    DRM_IOW( DRM_COMMAND_BASE + DRM_MGA_FLUSH, struct drm_lock)
 #define DRM_IOCTL_MGA_RESET    DRM_IO(  DRM_COMMAND_BASE + DRM_MGA_RESET)
 #define DRM_IOCTL_MGA_SWAP     DRM_IO(  DRM_COMMAND_BASE + DRM_MGA_SWAP)
 #define DRM_IOCTL_MGA_CLEAR    DRM_IOW( DRM_COMMAND_BASE + DRM_MGA_CLEAR, drm_mga_clear_t)
@@ -415,5 +419,9 @@ typedef struct drm_mga_getparam {
 	int param;
 	void *value;
 } drm_mga_getparam_t;
+
+#if defined(__cplusplus)
+}
+#endif
 
 #endif

@@ -85,6 +85,11 @@ int suite_cs_tests_init();
 int suite_cs_tests_clean();
 
 /**
+ * Decide if the suite is enabled by default or not.
+ */
+CU_BOOL suite_cs_tests_enable(void);
+
+/**
  * Tests in cs test suite
  */
 extern CU_TestInfo cs_tests[];
@@ -98,6 +103,11 @@ int suite_vce_tests_init();
  * Deinitialize vce test suite
  */
 int suite_vce_tests_clean();
+
+/**
+ * Decide if the suite is enabled by default or not.
+ */
+CU_BOOL suite_vce_tests_enable(void);
 
 /**
  * Tests in vce test suite
@@ -115,9 +125,69 @@ int suite_vcn_tests_init();
 int suite_vcn_tests_clean();
 
 /**
+ * Decide if the suite is enabled by default or not.
+ */
+CU_BOOL suite_vcn_tests_enable(void);
+
+/**
 + * Tests in vcn test suite
 + */
 extern CU_TestInfo vcn_tests[];
+
+/**
+ * Initialize uvd enc test suite
+ */
+int suite_uvd_enc_tests_init();
+
+/**
+ * Deinitialize uvd enc test suite
+ */
+int suite_uvd_enc_tests_clean();
+
+/**
+ * Decide if the suite is enabled by default or not.
+ */
+CU_BOOL suite_uvd_enc_tests_enable(void);
+
+/**
+ * Tests in uvd enc test suite
+ */
+extern CU_TestInfo uvd_enc_tests[];
+
+/**
+ * Initialize deadlock test suite
+ */
+int suite_deadlock_tests_init();
+
+/**
+ * Deinitialize deadlock test suite
+ */
+int suite_deadlock_tests_clean();
+
+/**
+ * Decide if the suite is enabled by default or not.
+ */
+CU_BOOL suite_deadlock_tests_enable(void);
+
+/**
+ * Tests in uvd enc test suite
+ */
+extern CU_TestInfo deadlock_tests[];
+
+/**
+ * Initialize vm test suite
+ */
+int suite_vm_tests_init();
+
+/**
+ * Deinitialize deadlock test suite
+ */
+int suite_vm_tests_clean();
+
+/**
+ * Tests in vm test suite
+ */
+extern CU_TestInfo vm_tests[];
 
 /**
  * Helper functions
@@ -249,6 +319,37 @@ amdgpu_get_bo_list(amdgpu_device_handle dev, amdgpu_bo_handle bo1,
 	amdgpu_bo_handle resources[] = {bo1, bo2};
 
 	return amdgpu_bo_list_create(dev, bo2 ? 2 : 1, resources, NULL, list);
+}
+
+
+static inline CU_ErrorCode amdgpu_set_suite_active(const char *suit_name,
+							  CU_BOOL active)
+{
+	CU_ErrorCode r = CU_set_suite_active(CU_get_suite(suit_name), active);
+
+	if (r != CUE_SUCCESS)
+		fprintf(stderr, "Failed to obtain suite %s\n", suit_name);
+
+	return r;
+}
+
+static inline CU_ErrorCode amdgpu_set_test_active(const char *suit_name,
+				  const char *test_name, CU_BOOL active)
+{
+	CU_ErrorCode r;
+	CU_pSuite pSuite = CU_get_suite(suit_name);
+
+	if (!pSuite) {
+		fprintf(stderr, "Failed to obtain suite %s\n",
+				suit_name);
+		return CUE_NOSUITE;
+	}
+
+	r = CU_set_test_active(CU_get_test(pSuite, test_name), active);
+	if (r != CUE_SUCCESS)
+		fprintf(stderr, "Failed to obtain test %s\n", test_name);
+
+	return r;
 }
 
 #endif  /* #ifdef _AMDGPU_TEST_H_ */

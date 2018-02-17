@@ -46,13 +46,14 @@ static int amdgpu_cs_reset_sem(amdgpu_semaphore_handle sem);
 /**
  * Create command submission context
  *
- * \param   dev - \c [in] amdgpu device handle
- * \param   context - \c [out] amdgpu context handle
+ * \param   dev      - \c [in] Device handle. See #amdgpu_device_initialize()
+ * \param   priority - \c [in] Context creation flags. See AMDGPU_CTX_PRIORITY_*
+ * \param   context  - \c [out] GPU Context handle
  *
  * \return  0 on success otherwise POSIX Error code
 */
-int amdgpu_cs_ctx_create(amdgpu_device_handle dev,
-			 amdgpu_context_handle *context)
+int amdgpu_cs_ctx_create2(amdgpu_device_handle dev, uint32_t priority,
+							amdgpu_context_handle *context)
 {
 	struct amdgpu_context *gpu_context;
 	union drm_amdgpu_ctx args;
@@ -75,6 +76,8 @@ int amdgpu_cs_ctx_create(amdgpu_device_handle dev,
 	/* Create the context */
 	memset(&args, 0, sizeof(args));
 	args.in.op = AMDGPU_CTX_OP_ALLOC_CTX;
+	args.in.priority = priority;
+
 	r = drmCommandWriteRead(dev->fd, DRM_AMDGPU_CTX, &args, sizeof(args));
 	if (r)
 		goto error;
@@ -92,6 +95,12 @@ error:
 	pthread_mutex_destroy(&gpu_context->sequence_mutex);
 	free(gpu_context);
 	return r;
+}
+
+int amdgpu_cs_ctx_create(amdgpu_device_handle dev,
+			 amdgpu_context_handle *context)
+{
+	return amdgpu_cs_ctx_create2(dev, AMDGPU_CTX_PRIORITY_NORMAL, context);
 }
 
 /**
@@ -597,6 +606,16 @@ int amdgpu_cs_destroy_semaphore(amdgpu_semaphore_handle sem)
 	return amdgpu_cs_unreference_sem(sem);
 }
 
+int amdgpu_cs_create_syncobj2(amdgpu_device_handle dev,
+			      uint32_t  flags,
+			      uint32_t *handle)
+{
+	if (NULL == dev)
+		return -EINVAL;
+
+	return drmSyncobjCreate(dev->fd, flags, handle);
+}
+
 int amdgpu_cs_create_syncobj(amdgpu_device_handle dev,
 			     uint32_t *handle)
 {
@@ -613,6 +632,36 @@ int amdgpu_cs_destroy_syncobj(amdgpu_device_handle dev,
 		return -EINVAL;
 
 	return drmSyncobjDestroy(dev->fd, handle);
+}
+
+int amdgpu_cs_syncobj_reset(amdgpu_device_handle dev,
+			    const uint32_t *syncobjs, uint32_t syncobj_count)
+{
+	if (NULL == dev)
+		return -EINVAL;
+
+	return drmSyncobjReset(dev->fd, syncobjs, syncobj_count);
+}
+
+int amdgpu_cs_syncobj_signal(amdgpu_device_handle dev,
+			     const uint32_t *syncobjs, uint32_t syncobj_count)
+{
+	if (NULL == dev)
+		return -EINVAL;
+
+	return drmSyncobjSignal(dev->fd, syncobjs, syncobj_count);
+}
+
+int amdgpu_cs_syncobj_wait(amdgpu_device_handle dev,
+			   uint32_t *handles, unsigned num_handles,
+			   int64_t timeout_nsec, unsigned flags,
+			   uint32_t *first_signaled)
+{
+	if (NULL == dev)
+		return -EINVAL;
+
+	return drmSyncobjWait(dev->fd, handles, num_handles, timeout_nsec,
+			      flags, first_signaled);
 }
 
 int amdgpu_cs_export_syncobj(amdgpu_device_handle dev,
@@ -633,6 +682,26 @@ int amdgpu_cs_import_syncobj(amdgpu_device_handle dev,
 		return -EINVAL;
 
 	return drmSyncobjFDToHandle(dev->fd, shared_fd, handle);
+}
+
+int amdgpu_cs_syncobj_export_sync_file(amdgpu_device_handle dev,
+				       uint32_t syncobj,
+				       int *sync_file_fd)
+{
+	if (NULL == dev)
+		return -EINVAL;
+
+	return drmSyncobjExportSyncFile(dev->fd, syncobj, sync_file_fd);
+}
+
+int amdgpu_cs_syncobj_import_sync_file(amdgpu_device_handle dev,
+				       uint32_t syncobj,
+				       int sync_file_fd)
+{
+	if (NULL == dev)
+		return -EINVAL;
+
+	return drmSyncobjImportSyncFile(dev->fd, syncobj, sync_file_fd);
 }
 
 int amdgpu_cs_submit_raw(amdgpu_device_handle dev,
@@ -680,4 +749,26 @@ void amdgpu_cs_chunk_fence_to_dep(struct amdgpu_cs_fence *fence,
 	dep->ring = fence->ring;
 	dep->ctx_id = fence->context->id;
 	dep->handle = fence->fence;
+}
+
+int amdgpu_cs_fence_to_handle(amdgpu_device_handle dev,
+			      struct amdgpu_cs_fence *fence,
+			      uint32_t what,
+			      uint32_t *out_handle)
+{
+	union drm_amdgpu_fence_to_handle fth = {0};
+	int r;
+
+	fth.in.fence.ctx_id = fence->context->id;
+	fth.in.fence.ip_type = fence->ip_type;
+	fth.in.fence.ip_instance = fence->ip_instance;
+	fth.in.fence.ring = fence->ring;
+	fth.in.fence.seq_no = fence->fence;
+	fth.in.what = what;
+
+	r = drmCommandWriteRead(dev->fd, DRM_AMDGPU_FENCE_TO_HANDLE,
+				&fth, sizeof(fth));
+	if (r == 0)
+		*out_handle = fth.out.handle;
+	return r;
 }

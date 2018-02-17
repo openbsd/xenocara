@@ -66,6 +66,26 @@ CU_TestInfo cs_tests[] = {
 	CU_TEST_INFO_NULL,
 };
 
+CU_BOOL suite_cs_tests_enable(void)
+{
+	if (amdgpu_device_initialize(drm_amdgpu[0], &major_version,
+					     &minor_version, &device_handle))
+		return CU_FALSE;
+
+	family_id = device_handle->info.family_id;
+
+	if (amdgpu_device_deinitialize(device_handle))
+		return CU_FALSE;
+
+
+	if (family_id >= AMDGPU_FAMILY_RV || family_id == AMDGPU_FAMILY_SI) {
+		printf("\n\nThe ASIC NOT support UVD, suite disabled\n");
+		return CU_FALSE;
+	}
+
+	return CU_TRUE;
+}
+
 int suite_cs_tests_init(void)
 {
 	amdgpu_bo_handle ib_result_handle;

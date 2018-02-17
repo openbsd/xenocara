@@ -173,7 +173,7 @@ struct etna_bo *etna_bo_from_name(struct etna_device *dev, uint32_t name)
 	pthread_mutex_lock(&table_lock);
 
 	/* check name table first, to see if bo is already open: */
-	bo = lookup_bo(dev->name_table, req.handle);
+	bo = lookup_bo(dev->name_table, name);
 	if (bo)
 		goto out_unlock;
 
@@ -206,10 +206,15 @@ struct etna_bo *etna_bo_from_dmabuf(struct etna_device *dev, int fd)
 	int ret, size;
 	uint32_t handle;
 
+	/* take the lock before calling drmPrimeFDToHandle to avoid
+	 * racing against etna_bo_del, which might invalidate the
+	 * returned handle.
+	 */
 	pthread_mutex_lock(&table_lock);
 
 	ret = drmPrimeFDToHandle(dev->fd, fd, &handle);
 	if (ret) {
+		pthread_mutex_unlock(&table_lock);
 		return NULL;
 	}
 

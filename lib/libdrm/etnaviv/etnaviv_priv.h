@@ -140,6 +140,10 @@ struct etna_cmd_stream_priv {
 		/* reloc's table: */
 		struct drm_etnaviv_gem_submit_reloc *relocs;
 		uint32_t nr_relocs, max_relocs;
+
+		/* perf's table: */
+		struct drm_etnaviv_gem_submit_pmr *pmrs;
+		uint32_t nr_pmrs, max_pmrs;
 	} submit;
 
 	/* should have matching entries in submit.bos: */
@@ -149,6 +153,27 @@ struct etna_cmd_stream_priv {
 	/* notify callback if buffer reset happend */
 	void (*reset_notify)(struct etna_cmd_stream *stream, void *priv);
 	void *reset_notify_priv;
+};
+
+struct etna_perfmon {
+	struct list_head domains;
+	struct etna_pipe *pipe;
+};
+
+struct etna_perfmon_domain
+{
+	struct list_head head;
+	struct list_head signals;
+	uint8_t id;
+	char name[64];
+};
+
+struct etna_perfmon_signal
+{
+	struct list_head head;
+	struct etna_perfmon_domain *domain;
+	uint8_t signal;
+	char name[64];
 };
 
 #define ALIGN(v,a) (((v) + (a) - 1) & ~((a) - 1))

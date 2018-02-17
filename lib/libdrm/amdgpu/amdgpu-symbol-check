@@ -29,17 +29,25 @@ amdgpu_cs_chunk_fence_info_to_data
 amdgpu_cs_chunk_fence_to_dep
 amdgpu_cs_create_semaphore
 amdgpu_cs_create_syncobj
+amdgpu_cs_create_syncobj2
 amdgpu_cs_ctx_create
+amdgpu_cs_ctx_create2
 amdgpu_cs_ctx_free
 amdgpu_cs_destroy_semaphore
 amdgpu_cs_destroy_syncobj
 amdgpu_cs_export_syncobj
+amdgpu_cs_fence_to_handle
 amdgpu_cs_import_syncobj
 amdgpu_cs_query_fence_status
 amdgpu_cs_query_reset_state
 amdgpu_cs_signal_semaphore
 amdgpu_cs_submit
 amdgpu_cs_submit_raw
+amdgpu_cs_syncobj_export_sync_file
+amdgpu_cs_syncobj_import_sync_file
+amdgpu_cs_syncobj_reset
+amdgpu_cs_syncobj_signal
+amdgpu_cs_syncobj_wait
 amdgpu_cs_wait_fences
 amdgpu_cs_wait_semaphore
 amdgpu_device_deinitialize
@@ -59,6 +67,8 @@ amdgpu_read_mm_registers
 amdgpu_va_range_alloc
 amdgpu_va_range_free
 amdgpu_va_range_query
+amdgpu_vm_reserve_vmid
+amdgpu_vm_unreserve_vmid
 EOF
 done)
 

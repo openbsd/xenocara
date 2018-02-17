@@ -38,70 +38,69 @@
 #include "amdgpu_drm.h"
 #include "amdgpu_internal.h"
 
-static int parse_one_line(const char *line, struct amdgpu_asic_id *id)
+static int parse_one_line(struct amdgpu_device *dev, const char *line)
 {
 	char *buf, *saveptr;
 	char *s_did;
+	uint32_t did;
 	char *s_rid;
+	uint32_t rid;
 	char *s_name;
 	char *endptr;
-	int r = 0;
+	int r = -EINVAL;
+
+	/* ignore empty line and commented line */
+	if (strlen(line) == 0 || line[0] == '#')
+		return -EAGAIN;
 
 	buf = strdup(line);
 	if (!buf)
 		return -ENOMEM;
 
-	/* ignore empty line and commented line */
-	if (strlen(line) == 0 || line[0] == '#') {
-		r = -EAGAIN;
-		goto out;
-	}
-
 	/* device id */
 	s_did = strtok_r(buf, ",", &saveptr);
-	if (!s_did) {
-		r = -EINVAL;
+	if (!s_did)
 		goto out;
-	}
 
-	id->did = strtol(s_did, &endptr, 16);
-	if (*endptr) {
-		r = -EINVAL;
+	did = strtol(s_did, &endptr, 16);
+	if (*endptr)
+		goto out;
+
+	if (did != dev->info.asic_id) {
+		r = -EAGAIN;
 		goto out;
 	}
 
 	/* revision id */
 	s_rid = strtok_r(NULL, ",", &saveptr);
-	if (!s_rid) {
-		r = -EINVAL;
+	if (!s_rid)
 		goto out;
-	}
 
-	id->rid = strtol(s_rid, &endptr, 16);
-	if (*endptr) {
-		r = -EINVAL;
+	rid = strtol(s_rid, &endptr, 16);
+	if (*endptr)
+		goto out;
+
+	if (rid != dev->info.pci_rev_id) {
+		r = -EAGAIN;
 		goto out;
 	}
 
 	/* marketing name */
 	s_name = strtok_r(NULL, ",", &saveptr);
-	if (!s_name) {
-		r = -EINVAL;
+	if (!s_name)
 		goto out;
-	}
+
 	/* trim leading whitespaces or tabs */
 	while (isblank(*s_name))
 		s_name++;
-	if (strlen(s_name) == 0) {
-		r = -EINVAL;
+	if (strlen(s_name) == 0)
 		goto out;
-	}
 
-	id->marketing_name = strdup(s_name);
-	if (id->marketing_name == NULL) {
-		r = -EINVAL;
-		goto out;
-	}
+	dev->marketing_name = strdup(s_name);
+	if (dev->marketing_name)
+		r = 0;
+	else
+		r = -ENOMEM;
 
 out:
 	free(buf);
@@ -109,31 +108,20 @@ out:
 	return r;
 }
 
-int amdgpu_parse_asic_ids(struct amdgpu_asic_id **p_asic_id_table)
+void amdgpu_parse_asic_ids(struct amdgpu_device *dev)
 {
-	struct amdgpu_asic_id *asic_id_table;
-	struct amdgpu_asic_id *id;
 	FILE *fp;
 	char *line = NULL;
 	size_t len = 0;
 	ssize_t n;
 	int line_num = 1;
-	size_t table_size = 0;
-	size_t table_max_size = AMDGPU_ASIC_ID_TABLE_NUM_ENTRIES;
 	int r = 0;
 
 	fp = fopen(AMDGPU_ASIC_ID_TABLE, "r");
 	if (!fp) {
 		fprintf(stderr, "%s: %s\n", AMDGPU_ASIC_ID_TABLE,
 			strerror(errno));
-		return -EINVAL;
-	}
-
-	asic_id_table = calloc(table_max_size + 1,
-			       sizeof(struct amdgpu_asic_id));
-	if (!asic_id_table) {
-		r = -ENOMEM;
-		goto close;
+		return;
 	}
 
 	/* 1st valid line is file version */
@@ -153,67 +141,25 @@ int amdgpu_parse_asic_ids(struct amdgpu_asic_id **p_asic_id_table)
 	}
 
 	while ((n = getline(&line, &len, fp)) != -1) {
-		if (table_size > table_max_size) {
-			/* double table size */
-			table_max_size *= 2;
-			id = realloc(asic_id_table, (table_max_size + 1) *
-				     sizeof(struct amdgpu_asic_id));
-			if (!id) {
-				r = -ENOMEM;
-				goto free;
-			}
-                        asic_id_table = id;
-		}
-
-		id = asic_id_table + table_size;
-
 		/* trim trailing newline */
 		if (line[n - 1] == '\n')
 			line[n - 1] = '\0';
 
-		r = parse_one_line(line, id);
-		if (r) {
-			if (r == -EAGAIN) {
-				line_num++;
-				continue;
-			}
-			fprintf(stderr, "Invalid format: %s: line %d: %s\n",
-				AMDGPU_ASIC_ID_TABLE, line_num, line);
-			goto free;
-		}
+		r = parse_one_line(dev, line);
+		if (r != -EAGAIN)
+			break;
 
 		line_num++;
-		table_size++;
 	}
 
-	/* end of table */
-	id = asic_id_table + table_size;
-	memset(id, 0, sizeof(struct amdgpu_asic_id));
+	if (r == -EINVAL) {
+		fprintf(stderr, "Invalid format: %s: line %d: %s\n",
+			AMDGPU_ASIC_ID_TABLE, line_num, line);
+	} else if (r) {
+		fprintf(stderr, "%s: Cannot parse ASIC IDs: %s\n",
+			__func__, strerror(-r));
+	}
 
-	if (table_size != table_max_size) {
-		id = realloc(asic_id_table, (table_size + 1) *
-			     sizeof(struct amdgpu_asic_id));
-		if (!id)
-			r = -ENOMEM;
-		else
-			asic_id_table = id;
-        }
-
-free:
 	free(line);
-
-	if (r && asic_id_table) {
-		while (table_size--) {
-			id = asic_id_table + table_size;
-			free(id->marketing_name);
-		}
-		free(asic_id_table);
-		asic_id_table = NULL;
-	}
-close:
 	fclose(fp);
-
-	*p_asic_id_table = asic_id_table;
-
-	return r;
 }

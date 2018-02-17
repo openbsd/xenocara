@@ -798,13 +798,26 @@ int amdgpu_bo_list_update(amdgpu_bo_list_handle handle,
  * context will always be executed in order (first come, first serve).
  *
  *
- * \param   dev	    - \c [in] Device handle. See #amdgpu_device_initialize()
- * \param   context - \c [out] GPU Context handle
+ * \param   dev      - \c [in] Device handle. See #amdgpu_device_initialize()
+ * \param   priority - \c [in] Context creation flags. See AMDGPU_CTX_PRIORITY_*
+ * \param   context  - \c [out] GPU Context handle
  *
  * \return   0 on success\n
  *          <0 - Negative POSIX Error code
  *
  * \sa amdgpu_cs_ctx_free()
+ *
+*/
+int amdgpu_cs_ctx_create2(amdgpu_device_handle dev,
+			 uint32_t priority,
+			 amdgpu_context_handle *context);
+/**
+ * Create GPU execution Context
+ *
+ * Refer to amdgpu_cs_ctx_create2 for full documentation. This call
+ * is missing the priority parameter.
+ *
+ * \sa amdgpu_cs_ctx_create2()
  *
 */
 int amdgpu_cs_ctx_create(amdgpu_device_handle dev,
@@ -1331,6 +1344,21 @@ const char *amdgpu_get_marketing_name(amdgpu_device_handle dev);
 /**
  *  Create kernel sync object
  *
+ * \param   dev         - \c [in]  device handle
+ * \param   flags       - \c [in]  flags that affect creation
+ * \param   syncobj     - \c [out] sync object handle
+ *
+ * \return   0 on success\n
+ *          <0 - Negative POSIX Error code
+ *
+*/
+int amdgpu_cs_create_syncobj2(amdgpu_device_handle dev,
+			      uint32_t  flags,
+			      uint32_t *syncobj);
+
+/**
+ *  Create kernel sync object
+ *
  * \param   dev	      - \c [in]  device handle
  * \param   syncobj   - \c [out] sync object handle
  *
@@ -1352,6 +1380,54 @@ int amdgpu_cs_create_syncobj(amdgpu_device_handle dev,
 */
 int amdgpu_cs_destroy_syncobj(amdgpu_device_handle dev,
 			      uint32_t syncobj);
+
+/**
+ * Reset kernel sync objects to unsignalled state.
+ *
+ * \param dev           - \c [in] device handle
+ * \param syncobjs      - \c [in] array of sync object handles
+ * \param syncobj_count - \c [in] number of handles in syncobjs
+ *
+ * \return   0 on success\n
+ *          <0 - Negative POSIX Error code
+ *
+*/
+int amdgpu_cs_syncobj_reset(amdgpu_device_handle dev,
+			    const uint32_t *syncobjs, uint32_t syncobj_count);
+
+/**
+ * Signal kernel sync objects.
+ *
+ * \param dev           - \c [in] device handle
+ * \param syncobjs      - \c [in] array of sync object handles
+ * \param syncobj_count - \c [in] number of handles in syncobjs
+ *
+ * \return   0 on success\n
+ *          <0 - Negative POSIX Error code
+ *
+*/
+int amdgpu_cs_syncobj_signal(amdgpu_device_handle dev,
+			     const uint32_t *syncobjs, uint32_t syncobj_count);
+
+/**
+ *  Wait for one or all sync objects to signal.
+ *
+ * \param   dev	    - \c [in] self-explanatory
+ * \param   handles - \c [in] array of sync object handles
+ * \param   num_handles - \c [in] self-explanatory
+ * \param   timeout_nsec - \c [in] self-explanatory
+ * \param   flags   - \c [in] a bitmask of DRM_SYNCOBJ_WAIT_FLAGS_*
+ * \param   first_signaled - \c [in] self-explanatory
+ *
+ * \return   0 on success\n
+ *          -ETIME - Timeout
+ *          <0 - Negative POSIX Error code
+ *
+ */
+int amdgpu_cs_syncobj_wait(amdgpu_device_handle dev,
+			   uint32_t *handles, unsigned num_handles,
+			   int64_t timeout_nsec, unsigned flags,
+			   uint32_t *first_signaled);
 
 /**
  *  Export kernel sync object to shareable fd.
@@ -1383,6 +1459,50 @@ int amdgpu_cs_import_syncobj(amdgpu_device_handle dev,
 			     uint32_t *syncobj);
 
 /**
+ *  Export kernel sync object to a sync_file.
+ *
+ * \param   dev	       - \c [in] device handle
+ * \param   syncobj    - \c [in] sync object handle
+ * \param   sync_file_fd - \c [out] sync_file file descriptor.
+ *
+ * \return   0 on success\n
+ *          <0 - Negative POSIX Error code
+ *
+ */
+int amdgpu_cs_syncobj_export_sync_file(amdgpu_device_handle dev,
+				       uint32_t syncobj,
+				       int *sync_file_fd);
+
+/**
+ *  Import kernel sync object from a sync_file.
+ *
+ * \param   dev	       - \c [in] device handle
+ * \param   syncobj    - \c [in] sync object handle
+ * \param   sync_file_fd - \c [in] sync_file file descriptor.
+ *
+ * \return   0 on success\n
+ *          <0 - Negative POSIX Error code
+ *
+ */
+int amdgpu_cs_syncobj_import_sync_file(amdgpu_device_handle dev,
+				       uint32_t syncobj,
+				       int sync_file_fd);
+
+/**
+ * Export an amdgpu fence as a handle (syncobj or fd).
+ *
+ * \param what		AMDGPU_FENCE_TO_HANDLE_GET_{SYNCOBJ, FD}
+ * \param out_handle	returned handle
+ *
+ * \return   0 on success\n
+ *          <0 - Negative POSIX Error code
+ */
+int amdgpu_cs_fence_to_handle(amdgpu_device_handle dev,
+			      struct amdgpu_cs_fence *fence,
+			      uint32_t what,
+			      uint32_t *out_handle);
+
+/**
  *  Submit raw command submission to kernel
  *
  * \param   dev	       - \c [in] device handle
@@ -1411,6 +1531,24 @@ void amdgpu_cs_chunk_fence_to_dep(struct amdgpu_cs_fence *fence,
 				  struct drm_amdgpu_cs_chunk_dep *dep);
 void amdgpu_cs_chunk_fence_info_to_data(struct amdgpu_cs_fence_info *fence_info,
 					struct drm_amdgpu_cs_chunk_data *data);
+
+/**
+ * Reserve VMID
+ * \param   context - \c [in]  GPU Context
+ * \param   flags - \c [in]  TBD
+ *
+ * \return  0 on success otherwise POSIX Error code
+*/
+int amdgpu_vm_reserve_vmid(amdgpu_device_handle dev, uint32_t flags);
+
+/**
+ * Free reserved VMID
+ * \param   context - \c [in]  GPU Context
+ * \param   flags - \c [in]  TBD
+ *
+ * \return  0 on success otherwise POSIX Error code
+*/
+int amdgpu_vm_unreserve_vmid(amdgpu_device_handle dev, uint32_t flags);
 
 #ifdef __cplusplus
 }
