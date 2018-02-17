@@ -1720,6 +1720,43 @@ int drmUpdateDrawableInfo(int fd, drm_drawable_t handle,
     return 0;
 }
 
+int drmCrtcGetSequence(int fd, uint32_t crtcId, uint64_t *sequence, uint64_t *ns)
+{
+    struct drm_crtc_get_sequence get_seq;
+    int ret;
+
+    memclear(get_seq);
+    get_seq.crtc_id = crtcId;
+    ret = drmIoctl(fd, DRM_IOCTL_CRTC_GET_SEQUENCE, &get_seq);
+    if (ret)
+        return ret;
+
+    if (sequence)
+        *sequence = get_seq.sequence;
+    if (ns)
+        *ns = get_seq.sequence_ns;
+    return 0;
+}
+
+int drmCrtcQueueSequence(int fd, uint32_t crtcId, uint32_t flags, uint64_t sequence,
+                         uint64_t *sequence_queued, uint64_t user_data)
+{
+    struct drm_crtc_queue_sequence queue_seq;
+    int ret;
+
+    memclear(queue_seq);
+    queue_seq.crtc_id = crtcId;
+    queue_seq.flags = flags;
+    queue_seq.sequence = sequence;
+    queue_seq.user_data = user_data;
+
+    ret = drmIoctl(fd, DRM_IOCTL_CRTC_QUEUE_SEQUENCE, &queue_seq);
+    if (ret == 0 && sequence_queued)
+        *sequence_queued = queue_seq.sequence;
+
+    return ret;
+}
+
 /**
  * Acquire the AGP device.
  *
@@ -4014,7 +4051,7 @@ int drmGetDevices2(uint32_t flags, drmDevicePtr devices[], int max_devices)
             ret = drmProcessUsbDevice(&device, node, node_type, maj, min,
                                       devices != NULL, flags);
             if (ret)
-                goto free_devices;
+                continue;
 
             break;
 
@@ -4022,7 +4059,7 @@ int drmGetDevices2(uint32_t flags, drmDevicePtr devices[], int max_devices)
             ret = drmProcessPlatformDevice(&device, node, node_type, maj, min,
                                            devices != NULL, flags);
             if (ret)
-                goto free_devices;
+                continue;
 
             break;
 
@@ -4030,7 +4067,7 @@ int drmGetDevices2(uint32_t flags, drmDevicePtr devices[], int max_devices)
             ret = drmProcessHost1xDevice(&device, node, node_type, maj, min,
                                          devices != NULL, flags);
             if (ret)
-                goto free_devices;
+                continue;
 
             break;
 
@@ -4180,7 +4217,7 @@ int drmSyncobjCreate(int fd, uint32_t flags, uint32_t *handle)
     args.handle = 0;
     ret = drmIoctl(fd, DRM_IOCTL_SYNCOBJ_CREATE, &args);
     if (ret)
-	return ret;
+        return ret;
     *handle = args.handle;
     return 0;
 }
@@ -4204,7 +4241,7 @@ int drmSyncobjHandleToFD(int fd, uint32_t handle, int *obj_fd)
     args.handle = handle;
     ret = drmIoctl(fd, DRM_IOCTL_SYNCOBJ_HANDLE_TO_FD, &args);
     if (ret)
-	return ret;
+        return ret;
     *obj_fd = args.fd;
     return 0;
 }
@@ -4219,7 +4256,7 @@ int drmSyncobjFDToHandle(int fd, int obj_fd, uint32_t *handle)
     args.handle = 0;
     ret = drmIoctl(fd, DRM_IOCTL_SYNCOBJ_FD_TO_HANDLE, &args);
     if (ret)
-	return ret;
+        return ret;
     *handle = args.handle;
     return 0;
 }
@@ -4246,7 +4283,55 @@ int drmSyncobjExportSyncFile(int fd, uint32_t handle, int *sync_file_fd)
     args.flags = DRM_SYNCOBJ_HANDLE_TO_FD_FLAGS_EXPORT_SYNC_FILE;
     ret = drmIoctl(fd, DRM_IOCTL_SYNCOBJ_HANDLE_TO_FD, &args);
     if (ret)
-	return ret;
+        return ret;
     *sync_file_fd = args.fd;
     return 0;
+}
+
+int drmSyncobjWait(int fd, uint32_t *handles, unsigned num_handles,
+                   int64_t timeout_nsec, unsigned flags,
+                   uint32_t *first_signaled)
+{
+    struct drm_syncobj_wait args;
+    int ret;
+
+    memclear(args);
+    args.handles = (intptr_t)handles;
+    args.timeout_nsec = timeout_nsec;
+    args.count_handles = num_handles;
+    args.flags = flags;
+
+    ret = drmIoctl(fd, DRM_IOCTL_SYNCOBJ_WAIT, &args);
+    if (ret < 0)
+        return ret;
+
+    if (first_signaled)
+        *first_signaled = args.first_signaled;
+    return ret;
+}
+
+int drmSyncobjReset(int fd, const uint32_t *handles, uint32_t handle_count)
+{
+    struct drm_syncobj_array args;
+    int ret;
+
+    memclear(args);
+    args.handles = (uintptr_t)handles;
+    args.count_handles = handle_count;
+
+    ret = drmIoctl(fd, DRM_IOCTL_SYNCOBJ_RESET, &args);
+    return ret;
+}
+
+int drmSyncobjSignal(int fd, const uint32_t *handles, uint32_t handle_count)
+{
+    struct drm_syncobj_array args;
+    int ret;
+
+    memclear(args);
+    args.handles = (uintptr_t)handles;
+    args.count_handles = handle_count;
+
+    ret = drmIoctl(fd, DRM_IOCTL_SYNCOBJ_SIGNAL, &args);
+    return ret;
 }

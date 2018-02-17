@@ -72,7 +72,10 @@ am_amdgpu_test_OBJECTS = amdgpu_test-amdgpu_test.$(OBJEXT) \
 	amdgpu_test-basic_tests.$(OBJEXT) \
 	amdgpu_test-bo_tests.$(OBJEXT) amdgpu_test-cs_tests.$(OBJEXT) \
 	amdgpu_test-vce_tests.$(OBJEXT) \
-	amdgpu_test-vcn_tests.$(OBJEXT)
+	amdgpu_test-uvd_enc_tests.$(OBJEXT) \
+	amdgpu_test-vcn_tests.$(OBJEXT) \
+	amdgpu_test-deadlock_tests.$(OBJEXT) \
+	amdgpu_test-vm_tests.$(OBJEXT)
 amdgpu_test_OBJECTS = $(am_amdgpu_test_OBJECTS)
 amdgpu_test_LDADD = $(LDADD)
 am__DEPENDENCIES_1 =
@@ -279,7 +282,8 @@ top_srcdir = @top_srcdir@
 AM_CFLAGS = \
 	-I $(top_srcdir)/include/drm \
 	-I $(top_srcdir)/amdgpu \
-	-I $(top_srcdir)
+	-I $(top_srcdir) \
+	-pthread
 
 LDADD = $(top_builddir)/libdrm.la \
 	$(top_builddir)/amdgpu/libdrm_amdgpu.la \
@@ -296,7 +300,11 @@ amdgpu_test_SOURCES = \
 	vce_tests.c \
 	vce_ib.h \
 	frame.h \
-	vcn_tests.c
+	uvd_enc_tests.c \
+	vcn_tests.c \
+	uve_ib.h \
+	deadlock_tests.c \
+	vm_tests.c
 
 all: all-am
 
@@ -401,8 +409,11 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/amdgpu_test-basic_tests.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/amdgpu_test-bo_tests.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/amdgpu_test-cs_tests.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/amdgpu_test-deadlock_tests.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/amdgpu_test-uvd_enc_tests.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/amdgpu_test-vce_tests.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/amdgpu_test-vcn_tests.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/amdgpu_test-vm_tests.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -495,6 +506,20 @@ amdgpu_test-vce_tests.obj: vce_tests.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(amdgpu_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o amdgpu_test-vce_tests.obj `if test -f 'vce_tests.c'; then $(CYGPATH_W) 'vce_tests.c'; else $(CYGPATH_W) '$(srcdir)/vce_tests.c'; fi`
 
+amdgpu_test-uvd_enc_tests.o: uvd_enc_tests.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(amdgpu_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT amdgpu_test-uvd_enc_tests.o -MD -MP -MF $(DEPDIR)/amdgpu_test-uvd_enc_tests.Tpo -c -o amdgpu_test-uvd_enc_tests.o `test -f 'uvd_enc_tests.c' || echo '$(srcdir)/'`uvd_enc_tests.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/amdgpu_test-uvd_enc_tests.Tpo $(DEPDIR)/amdgpu_test-uvd_enc_tests.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='uvd_enc_tests.c' object='amdgpu_test-uvd_enc_tests.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(amdgpu_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o amdgpu_test-uvd_enc_tests.o `test -f 'uvd_enc_tests.c' || echo '$(srcdir)/'`uvd_enc_tests.c
+
+amdgpu_test-uvd_enc_tests.obj: uvd_enc_tests.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(amdgpu_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT amdgpu_test-uvd_enc_tests.obj -MD -MP -MF $(DEPDIR)/amdgpu_test-uvd_enc_tests.Tpo -c -o amdgpu_test-uvd_enc_tests.obj `if test -f 'uvd_enc_tests.c'; then $(CYGPATH_W) 'uvd_enc_tests.c'; else $(CYGPATH_W) '$(srcdir)/uvd_enc_tests.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/amdgpu_test-uvd_enc_tests.Tpo $(DEPDIR)/amdgpu_test-uvd_enc_tests.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='uvd_enc_tests.c' object='amdgpu_test-uvd_enc_tests.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(amdgpu_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o amdgpu_test-uvd_enc_tests.obj `if test -f 'uvd_enc_tests.c'; then $(CYGPATH_W) 'uvd_enc_tests.c'; else $(CYGPATH_W) '$(srcdir)/uvd_enc_tests.c'; fi`
+
 amdgpu_test-vcn_tests.o: vcn_tests.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(amdgpu_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT amdgpu_test-vcn_tests.o -MD -MP -MF $(DEPDIR)/amdgpu_test-vcn_tests.Tpo -c -o amdgpu_test-vcn_tests.o `test -f 'vcn_tests.c' || echo '$(srcdir)/'`vcn_tests.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/amdgpu_test-vcn_tests.Tpo $(DEPDIR)/amdgpu_test-vcn_tests.Po
@@ -508,6 +533,34 @@ amdgpu_test-vcn_tests.obj: vcn_tests.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='vcn_tests.c' object='amdgpu_test-vcn_tests.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(amdgpu_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o amdgpu_test-vcn_tests.obj `if test -f 'vcn_tests.c'; then $(CYGPATH_W) 'vcn_tests.c'; else $(CYGPATH_W) '$(srcdir)/vcn_tests.c'; fi`
+
+amdgpu_test-deadlock_tests.o: deadlock_tests.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(amdgpu_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT amdgpu_test-deadlock_tests.o -MD -MP -MF $(DEPDIR)/amdgpu_test-deadlock_tests.Tpo -c -o amdgpu_test-deadlock_tests.o `test -f 'deadlock_tests.c' || echo '$(srcdir)/'`deadlock_tests.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/amdgpu_test-deadlock_tests.Tpo $(DEPDIR)/amdgpu_test-deadlock_tests.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='deadlock_tests.c' object='amdgpu_test-deadlock_tests.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(amdgpu_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o amdgpu_test-deadlock_tests.o `test -f 'deadlock_tests.c' || echo '$(srcdir)/'`deadlock_tests.c
+
+amdgpu_test-deadlock_tests.obj: deadlock_tests.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(amdgpu_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT amdgpu_test-deadlock_tests.obj -MD -MP -MF $(DEPDIR)/amdgpu_test-deadlock_tests.Tpo -c -o amdgpu_test-deadlock_tests.obj `if test -f 'deadlock_tests.c'; then $(CYGPATH_W) 'deadlock_tests.c'; else $(CYGPATH_W) '$(srcdir)/deadlock_tests.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/amdgpu_test-deadlock_tests.Tpo $(DEPDIR)/amdgpu_test-deadlock_tests.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='deadlock_tests.c' object='amdgpu_test-deadlock_tests.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(amdgpu_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o amdgpu_test-deadlock_tests.obj `if test -f 'deadlock_tests.c'; then $(CYGPATH_W) 'deadlock_tests.c'; else $(CYGPATH_W) '$(srcdir)/deadlock_tests.c'; fi`
+
+amdgpu_test-vm_tests.o: vm_tests.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(amdgpu_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT amdgpu_test-vm_tests.o -MD -MP -MF $(DEPDIR)/amdgpu_test-vm_tests.Tpo -c -o amdgpu_test-vm_tests.o `test -f 'vm_tests.c' || echo '$(srcdir)/'`vm_tests.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/amdgpu_test-vm_tests.Tpo $(DEPDIR)/amdgpu_test-vm_tests.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='vm_tests.c' object='amdgpu_test-vm_tests.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(amdgpu_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o amdgpu_test-vm_tests.o `test -f 'vm_tests.c' || echo '$(srcdir)/'`vm_tests.c
+
+amdgpu_test-vm_tests.obj: vm_tests.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(amdgpu_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT amdgpu_test-vm_tests.obj -MD -MP -MF $(DEPDIR)/amdgpu_test-vm_tests.Tpo -c -o amdgpu_test-vm_tests.obj `if test -f 'vm_tests.c'; then $(CYGPATH_W) 'vm_tests.c'; else $(CYGPATH_W) '$(srcdir)/vm_tests.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/amdgpu_test-vm_tests.Tpo $(DEPDIR)/amdgpu_test-vm_tests.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='vm_tests.c' object='amdgpu_test-vm_tests.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(amdgpu_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o amdgpu_test-vm_tests.obj `if test -f 'vm_tests.c'; then $(CYGPATH_W) 'vm_tests.c'; else $(CYGPATH_W) '$(srcdir)/vm_tests.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo

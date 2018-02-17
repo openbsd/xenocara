@@ -100,7 +100,8 @@ am__installdirs = "$(DESTDIR)$(libdrm_etnaviv_ladir)" \
 LTLIBRARIES = $(libdrm_etnaviv_la_LTLIBRARIES)
 libdrm_etnaviv_la_DEPENDENCIES = ../libdrm.la
 am__objects_1 = etnaviv_device.lo etnaviv_gpu.lo etnaviv_bo.lo \
-	etnaviv_bo_cache.lo etnaviv_pipe.lo etnaviv_cmd_stream.lo
+	etnaviv_bo_cache.lo etnaviv_perfmon.lo etnaviv_pipe.lo \
+	etnaviv_cmd_stream.lo
 am_libdrm_etnaviv_la_OBJECTS = $(am__objects_1)
 libdrm_etnaviv_la_OBJECTS = $(am_libdrm_etnaviv_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -316,6 +317,7 @@ LIBDRM_ETNAVIV_FILES := \
 	etnaviv_gpu.c \
 	etnaviv_bo.c \
 	etnaviv_bo_cache.c \
+	etnaviv_perfmon.c \
 	etnaviv_pipe.c \
 	etnaviv_cmd_stream.c \
 	etnaviv_drm.h \
@@ -429,6 +431,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/etnaviv_cmd_stream.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/etnaviv_device.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/etnaviv_gpu.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/etnaviv_perfmon.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/etnaviv_pipe.Plo@am__quote@
 
 .c.o:

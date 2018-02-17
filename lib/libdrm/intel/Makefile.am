@@ -68,7 +68,6 @@ EXTRA_DIST = \
 	tests/test-batch.sh \
 	$(TESTS)
 
-test_decode_LDADD = libdrm_intel.la ../libdrm.la \
-	-lpthread
+test_decode_LDADD = libdrm_intel.la ../libdrm.la
 
 pkgconfig_DATA = libdrm_intel.pc
