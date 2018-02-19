@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.70 2018/02/02 13:27:25 okan Exp $ */
+/*	$OpenBSD: parse.y,v 1.71 2018/02/19 19:29:42 anton Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -43,7 +43,7 @@ static struct file {
 	int			 lineno;
 	int			 errors;
 } *file, *topfile;
-struct file	*pushfile(const char *);
+struct file	*pushfile(const char *, FILE *);
 int		 popfile(void);
 int		 yyparse(void);
 int		 yylex(void);
@@ -557,19 +557,13 @@ nodigits:
 }
 
 struct file *
-pushfile(const char *name)
+pushfile(const char *name, FILE *stream)
 {
 	struct file	*nfile;
 
 	nfile = xcalloc(1, sizeof(struct file));
 	nfile->name = xstrdup(name);
-
-	if ((nfile->stream = fopen(nfile->name, "r")) == NULL) {
-		warn("%s", nfile->name);
-		free(nfile->name);
-		free(nfile);
-		return (NULL);
-	}
+	nfile->stream = stream;
 	nfile->lineno = 1;
 	TAILQ_INSERT_TAIL(&files, nfile, entry);
 	return (nfile);
@@ -594,13 +588,19 @@ popfile(void)
 int
 parse_config(const char *filename, struct conf *xconf)
 {
+	FILE		*stream;
 	int		 errors = 0;
 
 	conf = xconf;
 
-	if ((file = pushfile(filename)) == NULL) {
+	stream = fopen(filename, "r");
+	if (stream == NULL) {
+		if (errno == ENOENT)
+			return (0);
+		warn("%s", filename);
 		return (-1);
 	}
+	file = pushfile(filename, stream);
 	topfile = file;
 
 	yyparse();
