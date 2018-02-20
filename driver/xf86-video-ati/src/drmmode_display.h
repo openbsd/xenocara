@@ -40,10 +40,6 @@
 #endif
 
 typedef struct {
-  int fd;
-  unsigned fb_id;
-  drmModeFBPtr mode_fb;
-  int cpp;
   struct radeon_bo_manager *bufmgr;
   ScrnInfoPtr scrn;
 #ifdef HAVE_LIBUDEV
@@ -60,9 +56,9 @@ typedef struct {
 } drmmode_rec, *drmmode_ptr;
 
 typedef struct {
-  unsigned old_fb_id;
-  int flip_count;
+  struct drmmode_fb *fb;
   void *event_data;
+  int flip_count;
   unsigned int fe_frame;
   uint64_t fe_usec;
   xf86CrtcPtr fe_crtc;
@@ -70,11 +66,14 @@ typedef struct {
   radeon_drm_abort_proc abort;
 } drmmode_flipdata_rec, *drmmode_flipdata_ptr;
 
+struct drmmode_fb {
+	int refcnt;
+	uint32_t handle;
+};
+
 struct drmmode_scanout {
     struct radeon_bo *bo;
     PixmapPtr pixmap;
-    DamagePtr damage;
-    unsigned fb_id;
     int width, height;
 };
 
@@ -85,24 +84,37 @@ typedef struct {
     struct radeon_bo *cursor_bo;
     struct drmmode_scanout rotate;
     struct drmmode_scanout scanout[2];
+    DamagePtr scanout_damage;
+    Bool ignore_damage;
+    RegionRec scanout_last_region;
     unsigned scanout_id;
     Bool scanout_update_pending;
+    Bool tear_free;
+
+    PixmapPtr prime_scanout_pixmap;
+
     int dpms_mode;
-    /* For when a flip is pending when DPMS off requested */
-    int pending_dpms_mode;
     CARD64 dpms_last_ust;
     uint32_t dpms_last_seq;
     int dpms_last_fps;
     uint32_t interpolated_vblanks;
-    uint16_t lut_r[256], lut_g[256], lut_b[256];
-    int prime_pixmap_x;
 
     /* Modeset needed (for DPMS on or after a page flip crossing with a
      * modeset)
      */
     Bool need_modeset;
-    /* A flip is pending for this CRTC */
-    Bool flip_pending;
+    /* A flip to this FB is pending for this CRTC */
+    struct drmmode_fb *flip_pending;
+    /* The FB currently being scanned out by this CRTC, if any */
+    struct drmmode_fb *fb;
+
+#ifdef HAVE_PRESENT_H
+    /* Deferred processing of Present vblank event */
+    uint64_t present_vblank_event_id;
+    uint64_t present_vblank_usec;
+    unsigned present_vblank_msc;
+    Bool present_flip_expected;
+#endif
 } drmmode_crtc_private_rec, *drmmode_crtc_private_ptr;
 
 typedef struct {
@@ -124,9 +136,72 @@ typedef struct {
     drmmode_prop_ptr props;
     int enc_mask;
     int enc_clone_mask;
+    int tear_free;
 } drmmode_output_private_rec, *drmmode_output_private_ptr;
 
 
+enum drmmode_flip_sync {
+    FLIP_VSYNC,
+    FLIP_ASYNC,
+};
+
+
+/* Can the page flip ioctl be used for this CRTC? */
+static inline Bool
+drmmode_crtc_can_flip(xf86CrtcPtr crtc)
+{
+    drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
+
+    return crtc->enabled &&
+	drmmode_crtc->dpms_mode == DPMSModeOn &&
+	!drmmode_crtc->rotate.bo &&
+	(drmmode_crtc->tear_free ||
+	 !drmmode_crtc->scanout[drmmode_crtc->scanout_id].bo);
+}
+
+
+static inline void
+drmmode_fb_reference_loc(int drm_fd, struct drmmode_fb **old, struct drmmode_fb *new,
+			 const char *caller, unsigned line)
+{
+    if (new) {
+	if (new->refcnt <= 0) {
+	    FatalError("New FB's refcnt was %d at %s:%u",
+		       new->refcnt, caller, line);
+	}
+
+	new->refcnt++;
+    }
+
+    if (*old) {
+	if ((*old)->refcnt <= 0) {
+	    FatalError("Old FB's refcnt was %d at %s:%u",
+		       (*old)->refcnt, caller, line);
+	}
+
+	if (--(*old)->refcnt == 0) {
+	    drmModeRmFB(drm_fd, (*old)->handle);
+	    free(*old);
+	}
+    }
+
+    *old = new;
+}
+
+#define drmmode_fb_reference(fd, old, new) \
+    drmmode_fb_reference_loc(fd, old, new, __func__, __LINE__)
+
+
+extern int drmmode_page_flip_target_absolute(RADEONEntPtr pRADEONEnt,
+					     drmmode_crtc_private_ptr drmmode_crtc,
+					     int fb_id, uint32_t flags,
+					     uintptr_t drm_queue_seq,
+					     uint32_t target_msc);
+extern int drmmode_page_flip_target_relative(RADEONEntPtr pRADEONEnt,
+					     drmmode_crtc_private_ptr drmmode_crtc,
+					     int fb_id, uint32_t flags,
+					     uintptr_t drm_queue_seq,
+					     uint32_t target_msc);
 extern Bool drmmode_pre_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int cpp);
 extern void drmmode_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode);
 extern void drmmode_fini(ScrnInfoPtr pScrn, drmmode_ptr drmmode);
@@ -135,28 +210,40 @@ extern void drmmode_set_cursor(ScrnInfoPtr scrn, drmmode_ptr drmmode, int id, st
 void drmmode_adjust_frame(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int x, int y);
 extern Bool drmmode_set_desired_modes(ScrnInfoPtr pScrn, drmmode_ptr drmmode,
 				      Bool set_hw);
-#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) >= 10
 extern void drmmode_copy_fb(ScrnInfoPtr pScrn, drmmode_ptr drmmode);
-#endif
 extern Bool drmmode_setup_colormap(ScreenPtr pScreen, ScrnInfoPtr pScrn);
 
-extern void drmmode_scanout_free(ScrnInfoPtr scrn);
+extern void drmmode_crtc_scanout_destroy(drmmode_ptr drmmode,
+					 struct drmmode_scanout *scanout);
+void drmmode_crtc_scanout_free(drmmode_crtc_private_ptr drmmode_crtc);
+PixmapPtr drmmode_crtc_scanout_create(xf86CrtcPtr crtc,
+				      struct drmmode_scanout *scanout,
+				      int width, int height);
 
 extern void drmmode_uevent_init(ScrnInfoPtr scrn, drmmode_ptr drmmode);
 extern void drmmode_uevent_fini(ScrnInfoPtr scrn, drmmode_ptr drmmode);
+
+Bool drmmode_set_mode(xf86CrtcPtr crtc, struct drmmode_fb *fb,
+		      DisplayModePtr mode, int x, int y);
 
 extern int drmmode_get_crtc_id(xf86CrtcPtr crtc);
 extern int drmmode_get_height_align(ScrnInfoPtr scrn, uint32_t tiling);
 extern int drmmode_get_pitch_align(ScrnInfoPtr scrn, int bpe, uint32_t tiling);
 extern int drmmode_get_base_align(ScrnInfoPtr scrn, int bpe, uint32_t tiling);
-extern void drmmode_clear_pending_flip(xf86CrtcPtr crtc);
 
 Bool radeon_do_pageflip(ScrnInfoPtr scrn, ClientPtr client,
-			uint32_t new_front_handle, uint64_t id, void *data,
-			int ref_crtc_hw_id, radeon_drm_handler_proc handler,
-			radeon_drm_abort_proc abort);
+			PixmapPtr new_front, uint64_t id, void *data,
+			xf86CrtcPtr ref_crtc, radeon_drm_handler_proc handler,
+			radeon_drm_abort_proc abort,
+			enum drmmode_flip_sync flip_sync,
+			uint32_t target_msc);
 int drmmode_crtc_get_ust_msc(xf86CrtcPtr crtc, CARD64 *ust, CARD64 *msc);
 int drmmode_get_current_ust(int drm_fd, CARD64 *ust);
+
+Bool drmmode_wait_vblank(xf86CrtcPtr crtc, drmVBlankSeqType type,
+			 uint32_t target_seq, unsigned long signal,
+			 uint64_t *ust, uint32_t *result_seq);
+
 
 #endif
 

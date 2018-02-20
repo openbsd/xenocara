@@ -889,7 +889,7 @@ radeon_glamor_triangles(CARD8 op, PicturePtr src, PicturePtr dst,
  * down our screen private, before calling down to the next CloseScreen.
  */
 static Bool
-radeon_glamor_close_screen(CLOSE_SCREEN_ARGS_DECL)
+radeon_glamor_close_screen(ScreenPtr pScreen)
 {
 	RADEONInfoPtr info = RADEONPTR(xf86ScreenToScrn(pScreen));
 #ifdef RENDER
@@ -917,7 +917,7 @@ radeon_glamor_close_screen(CLOSE_SCREEN_ARGS_DECL)
 	}
 #endif
 
-	return (*pScreen->CloseScreen) (CLOSE_SCREEN_ARGS);
+	return pScreen->CloseScreen(pScreen);
 }
 
 /**

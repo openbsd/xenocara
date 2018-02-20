@@ -300,6 +300,7 @@ void *RADEONEXACreatePixmap2(ScreenPtr pScreen, int width, int height,
 
 void RADEONEXADestroyPixmap(ScreenPtr pScreen, void *driverPriv)
 {
+    RADEONEntPtr pRADEONEnt = RADEONEntPriv(xf86ScreenToScrn(pScreen));
     struct radeon_exa_pixmap_priv *driver_priv = driverPriv;
 
     if (!driverPriv)
@@ -307,10 +308,10 @@ void RADEONEXADestroyPixmap(ScreenPtr pScreen, void *driverPriv)
 
     if (driver_priv->bo)
 	radeon_bo_unref(driver_priv->bo);
+    drmmode_fb_reference(pRADEONEnt->fd, &driver_priv->fb, NULL);
     free(driverPriv);
 }
 
-#ifdef RADEON_PIXMAP_SHARING
 Bool RADEONEXASharePixmapBacking(PixmapPtr ppix, ScreenPtr slave, void **fd_handle)
 {
     struct radeon_exa_pixmap_priv *driver_priv = exaGetPixmapDriverPrivate(ppix);
@@ -332,7 +333,6 @@ Bool RADEONEXASetSharedPixmapBacking(PixmapPtr ppix, void *fd_handle)
     driver_priv->shared = TRUE;
     return TRUE;
 }
-#endif
 
 uint32_t radeon_get_pixmap_tiling(PixmapPtr pPix)
 {

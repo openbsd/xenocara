@@ -31,10 +31,11 @@
 #endif
 
 #include <xorg-server.h>
+#include <X11/Xdefs.h>
+#include <list.h>
 
 #include "radeon.h"
 #include "radeon_drm_queue.h"
-#include "radeon_list.h"
 
 
 struct radeon_drm_queue_entry {
@@ -92,10 +93,11 @@ radeon_drm_queue_alloc(xf86CrtcPtr crtc, ClientPtr client,
 
     e = calloc(1, sizeof(struct radeon_drm_queue_entry));
     if (!e)
-	return NULL;
+	return RADEON_DRM_QUEUE_ERROR;
 
-    if (!radeon_drm_queue_seq)
-	radeon_drm_queue_seq = 1;
+    if (_X_UNLIKELY(radeon_drm_queue_seq == RADEON_DRM_QUEUE_ERROR))
+	radeon_drm_queue_seq++;
+
     e->seq = radeon_drm_queue_seq++;
     e->client = client;
     e->crtc = crtc;
@@ -104,7 +106,7 @@ radeon_drm_queue_alloc(xf86CrtcPtr crtc, ClientPtr client,
     e->handler = handler;
     e->abort = abort;
 
-    xorg_list_add(&e->list, &radeon_drm_queue);
+    xorg_list_append(&e->list, &radeon_drm_queue);
 
     return e->seq;
 }

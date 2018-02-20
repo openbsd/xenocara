@@ -31,7 +31,6 @@
 
 struct radeon_dri2 {
     drmVersionPtr     pKernelDRMVersion;
-    int         drm_fd;
     Bool        available;
     Bool        enabled;
     char	*device_name;

@@ -266,6 +266,8 @@ r600_wait_3d_idle(ScrnInfoPtr pScrn);
 void
 r600_start_3d(ScrnInfoPtr pScrn);
 void
+r600_set_blend_color(ScrnInfoPtr pScrn, float *color);
+void
 r600_set_render_target(ScrnInfoPtr pScrn, cb_config_t *cb_conf, uint32_t domain);
 void
 r600_cp_wait_vline_sync(ScrnInfoPtr pScrn, PixmapPtr pPix, xf86CrtcPtr crtc, int start, int stop);

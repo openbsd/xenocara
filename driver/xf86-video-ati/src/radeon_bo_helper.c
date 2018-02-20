@@ -26,10 +26,7 @@
 
 #include "radeon.h"
 #include "radeon_glamor.h"
-
-#ifdef RADEON_PIXMAP_SHARING
 #include "radeon_bo_gem.h"
-#endif
 
 static const unsigned MicroBlockTable[5][3][2] = {
     /*linear  tiled   square-tiled */
@@ -89,11 +86,8 @@ radeon_alloc_pixmap_bo(ScrnInfoPtr pScrn, int width, int height, int depth,
 		tiling |= RADEON_TILING_MACRO | RADEON_TILING_MICRO;
 
 	if ((usage_hint == CREATE_PIXMAP_USAGE_BACKING_PIXMAP &&
-	     info->shadow_primary)
-#ifdef CREATE_PIXMAP_USAGE_SHARED
-	    || (usage_hint & 0xffff) == CREATE_PIXMAP_USAGE_SHARED
-#endif
-	    ) {
+	     info->shadow_primary) ||
+	    (usage_hint & 0xffff) == CREATE_PIXMAP_USAGE_SHARED) {
 		tiling = 0;
 		domain = RADEON_GEM_DOMAIN_GTT;
 	}
@@ -195,13 +189,36 @@ radeon_alloc_pixmap_bo(ScrnInfoPtr pScrn, int width, int height, int depth,
     return bo;
 }
 
+/* Clear the pixmap contents to black */
+void
+radeon_pixmap_clear(PixmapPtr pixmap)
+{
+    ScreenPtr screen = pixmap->drawable.pScreen;
+    RADEONInfoPtr info = RADEONPTR(xf86ScreenToScrn(screen));
+    GCPtr gc = GetScratchGC(pixmap->drawable.depth, screen);
+    Bool force = info->accel_state->force;
+    xRectangle rect;
+
+    info->accel_state->force = TRUE;
+    ValidateGC(&pixmap->drawable, gc);
+    rect.x = 0;
+    rect.y = 0;
+    rect.width = pixmap->drawable.width;
+    rect.height = pixmap->drawable.height;
+    gc->ops->PolyFillRect(&pixmap->drawable, gc, 1, &rect);
+    FreeScratchGC(gc);
+    info->accel_state->force = force;
+}
+
 /* Get GEM handle for the pixmap */
 Bool radeon_get_pixmap_handle(PixmapPtr pixmap, uint32_t *handle)
 {
     struct radeon_bo *bo = radeon_get_pixmap_bo(pixmap);
 #ifdef USE_GLAMOR
     ScreenPtr screen = pixmap->drawable.pScreen;
-    RADEONInfoPtr info = RADEONPTR(xf86ScreenToScrn(screen));
+    ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
+    RADEONEntPtr pRADEONEnt = RADEONEntPriv(scrn);
+    RADEONInfoPtr info = RADEONPTR(scrn);
 #endif
 
     if (bo) {
@@ -230,7 +247,7 @@ Bool radeon_get_pixmap_handle(PixmapPtr pixmap, uint32_t *handle)
 	if (fd < 0)
 	    return FALSE;
 
-	r = drmPrimeFDToHandle(info->dri2.drm_fd, fd, &priv->handle);
+	r = drmPrimeFDToHandle(pRADEONEnt->fd, fd, &priv->handle);
 	close(fd);
 	if (r == 0) {
 	    struct drm_radeon_gem_set_tiling args = { .handle = priv->handle };
@@ -238,7 +255,7 @@ Bool radeon_get_pixmap_handle(PixmapPtr pixmap, uint32_t *handle)
 	    priv->handle_valid = TRUE;
 	    *handle = priv->handle;
 
-	    if (drmCommandWriteRead(info->dri2.drm_fd,
+	    if (drmCommandWriteRead(pRADEONEnt->fd,
 				    DRM_RADEON_GEM_GET_TILING, &args,
 				    sizeof(args)) == 0)
 		priv->tiling_flags = args.tiling_flags;
@@ -276,7 +293,6 @@ uint32_t radeon_get_pixmap_tiling_flags(PixmapPtr pPix)
     }
 }
 
-#ifdef RADEON_PIXMAP_SHARING
 
 Bool radeon_share_pixmap_backing(struct radeon_bo *bo, void **handle_p)
 {
@@ -312,14 +328,17 @@ Bool radeon_set_shared_pixmap_backing(PixmapPtr ppix, void *fd_handle,
     struct radeon_bo *bo;
     int ihandle = (int)(long)fd_handle;
     uint32_t size = ppix->devKind * ppix->drawable.height;
+    Bool ret = FALSE;
 
     bo = radeon_gem_bo_open_prime(info->bufmgr, ihandle, size);
     if (!bo)
-        return FALSE;
+        goto error;
 
     memset(surface, 0, sizeof(struct radeon_surface));
 
-    radeon_set_pixmap_bo(ppix, bo);
+    ret = radeon_set_pixmap_bo(ppix, bo);
+    if (!ret)
+	goto error;
 
     if (info->ChipFamily >= CHIP_FAMILY_R600 && info->surf_man) {
 	uint32_t tiling_flags;
@@ -360,10 +379,12 @@ Bool radeon_set_shared_pixmap_backing(PixmapPtr ppix, void *fd_handle,
 	surface->stencil_tile_split = (tiling_flags >> RADEON_TILING_EG_STENCIL_TILE_SPLIT_SHIFT) & RADEON_TILING_EG_STENCIL_TILE_SPLIT_MASK;
 	surface->mtilea = (tiling_flags >> RADEON_TILING_EG_MACRO_TILE_ASPECT_SHIFT) & RADEON_TILING_EG_MACRO_TILE_ASPECT_MASK;
 	if (radeon_surface_best(info->surf_man, surface)) {
-	    return FALSE;
+	    ret = FALSE;
+	    goto error;
 	}
 	if (radeon_surface_init(info->surf_man, surface)) {
-	    return FALSE;
+	    ret = FALSE;
+	    goto error;
 	}
 	/* we have to post hack the surface to reflect the actual size
 	   of the shared pixmap */
@@ -371,11 +392,10 @@ Bool radeon_set_shared_pixmap_backing(PixmapPtr ppix, void *fd_handle,
 	surface->level[0].nblk_x = ppix->devKind / surface->bpe;
     }
 
+ error:
     close(ihandle);
     /* we have a reference from the alloc and one from set pixmap bo,
        drop one */
     radeon_bo_unref(bo);
-    return TRUE;
+    return ret;
 }
-
-#endif /* RADEON_PIXMAP_SHARING */

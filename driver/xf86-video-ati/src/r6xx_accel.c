@@ -174,6 +174,20 @@ r600_sq_setup(ScrnInfoPtr pScrn, sq_config_t *sq_conf)
     END_BATCH();
 }
 
+void r600_set_blend_color(ScrnInfoPtr pScrn, float *color)
+{
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+
+    BEGIN_BATCH(2 + 4);
+    PACK0(CB_BLEND_RED, 4);
+    EFLOAT(color[0]); /* R */
+    EFLOAT(color[1]); /* G */
+    EFLOAT(color[2]); /* B */
+    EFLOAT(color[3]); /* A */
+    END_BATCH();
+}
+
+
 void
 r600_set_render_target(ScrnInfoPtr pScrn, cb_config_t *cb_conf, uint32_t domain)
 {

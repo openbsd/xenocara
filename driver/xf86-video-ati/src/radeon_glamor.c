@@ -61,11 +61,10 @@ radeon_glamor_create_screen_resources(ScreenPtr screen)
 		return FALSE;
 #endif
 
-	if (!glamor_egl_create_textured_screen_ext(screen,
-						   info->front_bo->handle,
-						   scrn->displayWidth *
-						   info->pixel_bytes,
-						   NULL))
+	if (!glamor_egl_create_textured_screen(screen,
+					       info->front_bo->handle,
+					       scrn->displayWidth *
+					       info->pixel_bytes))
 		return FALSE;
 
 	return TRUE;
@@ -75,6 +74,7 @@ radeon_glamor_create_screen_resources(ScreenPtr screen)
 Bool
 radeon_glamor_pre_init(ScrnInfoPtr scrn)
 {
+	RADEONEntPtr pRADEONEnt = RADEONEntPriv(scrn);
 	RADEONInfoPtr info = RADEONPTR(scrn);
 	pointer glamor_module;
 	CARD32 version;
@@ -84,8 +84,15 @@ radeon_glamor_pre_init(ScrnInfoPtr scrn)
 		return FALSE;
 
 	s = xf86GetOptValString(info->Options, OPTION_ACCELMETHOD);
-	if (s == NULL && info->ChipFamily < CHIP_FAMILY_TAHITI)
-		return FALSE;
+	if (!s) {
+		if (xorgGetVersion() >= XORG_VERSION_NUMERIC(1,18,3,0,0)) {
+			if (info->ChipFamily < CHIP_FAMILY_R600)
+				return FALSE;
+		} else {
+			if (info->ChipFamily < CHIP_FAMILY_TAHITI)
+				return FALSE;
+		}
+	}
 
 	if (s && strcasecmp(s, "glamor") != 0) {
 		if (info->ChipFamily >= CHIP_FAMILY_TAHITI)
@@ -129,7 +136,7 @@ radeon_glamor_pre_init(ScrnInfoPtr scrn)
 			"Incompatible glamor version, required >= 0.3.0.\n");
 			return FALSE;
 		} else {
-			if (glamor_egl_init(scrn, info->dri2.drm_fd)) {
+			if (glamor_egl_init(scrn, pRADEONEnt->fd)) {
 				xf86DrvMsg(scrn->scrnIndex, X_INFO,
 					   "glamor detected, initialising EGL layer.\n");
 			} else {
@@ -314,10 +321,9 @@ radeon_glamor_set_pixmap_bo(DrawablePtr drawable, PixmapPtr pixmap)
 		FreeScratchGC(gc);
 	}
 
-	radeon_set_pixmap_private(pixmap, NULL);
-
 	/* And redirect the pixmap to the new bo (for 3D). */
 	glamor_egl_exchange_buffers(old, pixmap);
+	radeon_set_pixmap_private(pixmap, radeon_get_pixmap_private(old));
 	radeon_set_pixmap_private(old, priv);
 
 	screen->ModifyPixmapHeader(old,
@@ -331,7 +337,6 @@ radeon_glamor_set_pixmap_bo(DrawablePtr drawable, PixmapPtr pixmap)
 	return old;
 }
 
-#ifdef RADEON_PIXMAP_SHARING
 
 static Bool
 radeon_glamor_share_pixmap_backing(PixmapPtr pixmap, ScreenPtr slave,
@@ -398,7 +403,6 @@ radeon_glamor_set_shared_pixmap_backing(PixmapPtr pixmap, void *handle)
 	return TRUE;
 }
 
-#endif /* RADEON_PIXMAP_SHARING */
 
 Bool
 radeon_glamor_init(ScreenPtr screen)
@@ -457,12 +461,10 @@ radeon_glamor_init(ScreenPtr screen)
 	screen->CreatePixmap = radeon_glamor_create_pixmap;
 	info->glamor.SavedDestroyPixmap = screen->DestroyPixmap;
 	screen->DestroyPixmap = radeon_glamor_destroy_pixmap;
-#ifdef RADEON_PIXMAP_SHARING
 	info->glamor.SavedSharePixmapBacking = screen->SharePixmapBacking;
 	screen->SharePixmapBacking = radeon_glamor_share_pixmap_backing;
 	info->glamor.SavedSetSharedPixmapBacking = screen->SetSharedPixmapBacking;
 	screen->SetSharedPixmapBacking = radeon_glamor_set_shared_pixmap_backing;
-#endif
 
 	xf86DrvMsg(scrn->scrnIndex, X_INFO,
 		   "Use GLAMOR acceleration.\n");
@@ -479,10 +481,8 @@ radeon_glamor_fini(ScreenPtr screen)
 
 	screen->CreatePixmap = info->glamor.SavedCreatePixmap;
 	screen->DestroyPixmap = info->glamor.SavedDestroyPixmap;
-#ifdef RADEON_PIXMAP_SHARING
 	screen->SharePixmapBacking = info->glamor.SavedSharePixmapBacking;
 	screen->SetSharedPixmapBacking = info->glamor.SavedSetSharedPixmapBacking;
-#endif
 }
 
 XF86VideoAdaptorPtr radeon_glamor_xv_init(ScreenPtr pScreen, int num_adapt)

@@ -94,11 +94,11 @@
 
 static int RADEONDRMGetNumPipes(ScrnInfoPtr pScrn, int *num_pipes)
 {
-    RADEONInfoPtr info = RADEONPTR(pScrn);
+    RADEONEntPtr pRADEONEnt = RADEONEntPriv(pScrn);
     struct drm_radeon_info np2;
     np2.value = (unsigned long)num_pipes;
     np2.request = RADEON_INFO_NUM_GB_PIPES;
-    return drmCommandWriteRead(info->dri2.drm_fd, DRM_RADEON_INFO, &np2, sizeof(np2));
+    return drmCommandWriteRead(pRADEONEnt->fd, DRM_RADEON_INFO, &np2, sizeof(np2));
 }
 
 /* Initialize the acceleration hardware */

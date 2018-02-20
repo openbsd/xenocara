@@ -23,8 +23,8 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-ati],
-        [7.7.1],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
+        [7.10.0],
+        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=Driver/Radeon],
         [xf86-video-ati])
 
 AC_CONFIG_SRCDIR([Makefile.am])
@@ -35,8 +35,6 @@ AC_CONFIG_AUX_DIR(.)
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AC_SYS_LARGEFILE
-
-AM_MAINTAINER_MODE
 
 # Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
@@ -71,15 +69,29 @@ XORG_DRIVER_CHECK_EXT(XV, videoproto)
 XORG_DRIVER_CHECK_EXT(DPMSExtension, xextproto)
 
 # Checks for libraries.
-PKG_CHECK_MODULES(LIBDRM, [libdrm >= 2.4.58])
+PKG_CHECK_MODULES(LIBDRM, [libdrm >= 2.4.78])
 PKG_CHECK_MODULES(LIBDRM_RADEON, [libdrm_radeon])
 
 # Obtain compiler/linker options for the driver dependencies
-PKG_CHECK_MODULES(XORG, [xorg-server >= 1.9 xproto fontsproto xf86driproto $REQUIRED_MODULES])
+PKG_CHECK_MODULES(XORG, [xorg-server >= 1.13 xproto fontsproto xf86driproto $REQUIRED_MODULES])
 PKG_CHECK_MODULES(XEXT, [xextproto >= 7.0.99.1],
                   HAVE_XEXTPROTO_71="yes"; AC_DEFINE(HAVE_XEXTPROTO_71, 1, [xextproto 7.1 available]),
                   HAVE_XEXTPROTO_71="no")
 AM_CONDITIONAL(HAVE_XEXTPROTO_71, [ test "$HAVE_XEXTPROTO_71" = "yes" ])
+
+# Section "OutputClass" is only supported as of xserver 1.16
+PKG_CHECK_EXISTS([xorg-server >= 1.16],
+		 [sysconfigdir=`$PKG_CONFIG --variable=sysconfigdir xorg-server`],
+		 [sysconfigdir=""])
+AM_CONDITIONAL(HAS_XORG_CONF_DIR, [test "x$sysconfigdir" != "x"])
+
+# Define a configure option for an alternate X Server configuration directory
+AC_ARG_WITH(xorg-conf-dir,
+            AS_HELP_STRING([--with-xorg-conf-dir=DIR],
+                           [Default xorg.conf.d directory [[default=${prefix}/share/X11/xorg.conf.d]]]),
+            [configdir="$withval"],
+            [configdir='${prefix}/share/X11/xorg.conf.d'])
+AC_SUBST(configdir)
 
 AC_ARG_ENABLE([udev],
 		AS_HELP_STRING([--disable-udev], [Disable libudev support [default=auto]]),
@@ -137,6 +149,12 @@ else
 fi
 AM_CONDITIONAL(GLAMOR, test x$GLAMOR != xno)
 
+AC_CHECK_DECL(RegionDuplicate,
+	      [AC_DEFINE(HAVE_REGIONDUPLICATE, 1,
+	      [Have RegionDuplicate API])], [],
+	      [#include <xorg-server.h>
+	       #include <regionstr.h>])
+
 AC_CHECK_DECL(fbGlyphs,
 	      [AC_DEFINE(HAVE_FBGLYPHS, 1, [Have fbGlyphs API])], [],
 	      [#include <X11/Xmd.h>
@@ -152,12 +170,6 @@ AC_CHECK_DECL(xf86CursorResetCursor,
 	      [Have xf86CursorResetCursor API])], [],
 	      [#include <xorg-server.h>
 	       #include <xf86Cursor.h>])
-
-AC_CHECK_DECL(xorg_list_init,
-	      [AC_DEFINE(HAVE_XORG_LIST, 1, [Have xorg_list API])], [],
-	      [#include <X11/Xdefs.h>
-	      #include "xorg-server.h"
-	      #include "list.h"])
 
 AC_CHECK_HEADERS([misyncshm.h], [], [],
                  [#include <X11/Xdefs.h>
@@ -261,6 +273,7 @@ AC_CONFIG_FILES([
                 Makefile
                 src/Makefile
                 man/Makefile
+                conf/Makefile
 ])
 AC_OUTPUT
 
@@ -272,6 +285,7 @@ echo "        prefix:              $prefix"
 echo "        exec_prefix:         $exec_prefix"
 echo "        libdir:              $libdir"
 echo "        includedir:          $includedir"
+echo "        configdir:           $configdir"
 
 echo ""
 echo "        CFLAGS:              $CFLAGS"

@@ -58,6 +58,7 @@
 #endif
 
 #include <pciaccess.h>
+#include <xf86drm.h>
 #include "atipcirename.h"
 
 #include "ati.h"
@@ -68,6 +69,7 @@
 #define MACH64_DRIVER_NAME  "mach64"
 #define R128_DRIVER_NAME    "r128"
 #define RADEON_DRIVER_NAME  "radeon"
+#define AMDGPU_DRIVER_NAME  "amdgpu"
 
 enum
 {
@@ -140,9 +142,9 @@ ati_device_get_indexed(int index)
 void
 ati_gdev_subdriver(pointer options)
 {
-    int      nATIGDev, nMach64GDev, nR128GDev, nRadeonGDev;
+    int      nATIGDev, nMach64GDev, nR128GDev, nRadeonGDev, nAmdgpuGDev;
     GDevPtr *ATIGDevs;
-    Bool     load_mach64 = FALSE, load_r128 = FALSE, load_radeon = FALSE;
+    Bool     load_mach64 = FALSE, load_r128 = FALSE, load_radeon = FALSE, load_amdgpu = FALSE;
     int      i;
 
     /* let the subdrivers configure for themselves */
@@ -154,6 +156,7 @@ ati_gdev_subdriver(pointer options)
     nMach64GDev = xf86MatchDevice(MACH64_DRIVER_NAME, NULL);
     nR128GDev = xf86MatchDevice(R128_DRIVER_NAME, NULL);
     nRadeonGDev = xf86MatchDevice(RADEON_DRIVER_NAME, NULL);
+    nAmdgpuGDev = xf86MatchDevice(AMDGPU_DRIVER_NAME, NULL);
 
     for (i = 0; i < nATIGDev; i++) {
         GDevPtr     ati_gdev = ATIGDevs[i];
@@ -200,8 +203,34 @@ ati_gdev_subdriver(pointer options)
         }
 
         if (chip_family == ATI_CHIP_FAMILY_Radeon) {
-            ati_gdev->driver = RADEON_DRIVER_NAME;
-            load_radeon = TRUE;
+            char *busid;
+
+            XNFasprintf(&busid, "pci:%04x:%02x:%02x.%d",
+                        device->domain, device->bus, device->dev,
+                        device->func);
+
+            if (busid) {
+                int fd = drmOpen(NULL, busid);
+
+                if (fd >= 0) {
+                    drmVersionPtr version = drmGetVersion(fd);
+
+                    if (version->version_major == 3) {
+                        ati_gdev->driver = AMDGPU_DRIVER_NAME;
+                        load_amdgpu = TRUE;
+                    }
+
+                    free(version);
+                    drmClose(fd);
+                }
+
+                free(busid);
+            }
+
+            if (strcmp(ati_gdev->driver, AMDGPU_DRIVER_NAME) != 0) {
+                ati_gdev->driver = RADEON_DRIVER_NAME;
+                load_radeon = TRUE;
+            }
         }
     }
 
@@ -219,6 +248,9 @@ ati_gdev_subdriver(pointer options)
 
     if (load_radeon && (nRadeonGDev == 0))
          xf86LoadOneModule(RADEON_DRIVER_NAME, options);
+
+    if (load_amdgpu && (nAmdgpuGDev == 0))
+         xf86LoadOneModule(AMDGPU_DRIVER_NAME, options);
 }
 
 /*

@@ -133,27 +133,31 @@ typedef struct {
 typedef struct
 {
     Bool              HasCRTC2;         /* All cards except original Radeon  */
+    Bool has_page_flip_target;
 
     int fd;                             /* for sharing across zaphod heads   */
     int fd_ref;
     unsigned long     fd_wakeup_registered; /* server generation for which fd has been registered for wakeup handling */
     int fd_wakeup_ref;
     unsigned int assigned_crtcs;
+    ScrnInfoPtr primary_scrn;
+    ScrnInfoPtr secondary_scrn;
 #ifdef XSERVER_PLATFORM_BUS
     struct xf86_platform_device *platform_dev;
 #endif
+    char *render_node;
 } RADEONEntRec, *RADEONEntPtr;
 
 extern const OptionInfoRec *RADEONOptionsWeak(void);
 
 extern Bool                 RADEONPreInit_KMS(ScrnInfoPtr, int);
-extern Bool                 RADEONScreenInit_KMS(SCREEN_INIT_ARGS_DECL);
-extern Bool                 RADEONSwitchMode_KMS(SWITCH_MODE_ARGS_DECL);
-extern void                 RADEONAdjustFrame_KMS(ADJUST_FRAME_ARGS_DECL);
-extern Bool                 RADEONEnterVT_KMS(VT_FUNC_ARGS_DECL);
-extern void                 RADEONLeaveVT_KMS(VT_FUNC_ARGS_DECL);
-extern void RADEONFreeScreen_KMS(FREE_SCREEN_ARGS_DECL);
+extern Bool                 RADEONScreenInit_KMS(ScreenPtr pScreen, int argc, char **argv);
+extern Bool                 RADEONSwitchMode_KMS(ScrnInfoPtr pScrn, DisplayModePtr mode);
+extern void                 RADEONAdjustFrame_KMS(ScrnInfoPtr pScrn, int x, int y);
+extern Bool                 RADEONEnterVT_KMS(ScrnInfoPtr pScrn);
+extern void                 RADEONLeaveVT_KMS(ScrnInfoPtr pScrn);
+extern void                 RADEONFreeScreen_KMS(ScrnInfoPtr pScrn);
 
-extern ModeStatus RADEONValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode,
-			   Bool verbose, int flag);
+extern ModeStatus           RADEONValidMode(ScrnInfoPtr pScrn, DisplayModePtr mode,
+					    Bool verbose, int flag);
 #endif /* _RADEON_PROBE_H_ */

@@ -14,28 +14,25 @@
 
 @SET_MAKE@
 
+#  Copyright 2017 Advanced Micro Devices, Inc.
 #
-# Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
+#  Permission is hereby granted, free of charge, to any person obtaining a
+#  copy of this software and associated documentation files (the "Software"),
+#  to deal in the Software without restriction, including without limitation
+#  on the rights to use, copy, modify, merge, publish, distribute, sub
+#  license, and/or sell copies of the Software, and to permit persons to whom
+#  the Software is furnished to do so, subject to the following conditions:
 #
-# Permission is hereby granted, free of charge, to any person obtaining a
-# copy of this software and associated documentation files (the "Software"),
-# to deal in the Software without restriction, including without limitation
-# the rights to use, copy, modify, merge, publish, distribute, sublicense,
-# and/or sell copies of the Software, and to permit persons to whom the
-# Software is furnished to do so, subject to the following conditions:
+#  The above copyright notice and this permission notice (including the next
+#  paragraph) shall be included in all copies or substantial portions of the
+#  Software.
 #
-# The above copyright notice and this permission notice (including the next
-# paragraph) shall be included in all copies or substantial portions of the
-# Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
-# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-# DEALINGS IN THE SOFTWARE.
-# 
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.  IN NO EVENT SHALL
+#  ADAM JACKSON BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+#  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+#  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 VPATH = @srcdir@
 am__make_dryrun = \
@@ -73,8 +70,9 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-subdir = man
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
+subdir = conf
+DIST_COMMON = $(am__dist_config_DATA_DIST) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
 	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
@@ -105,6 +103,7 @@ am__can_run_installinfo = \
     n|no|NO) false;; \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
+am__dist_config_DATA_DIST = 10-radeon.conf
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
@@ -132,8 +131,8 @@ am__uninstall_files_from_dir = { \
     || { echo " ( cd '$$dir' && rm -f" $$files ")"; \
          $(am__cd) "$$dir" && rm -f $$files; }; \
   }
-am__installdirs = "$(DESTDIR)$(drivermandir)"
-DATA = $(driverman_DATA)
+am__installdirs = "$(DESTDIR)$(configdir)"
+DATA = $(dist_config_DATA)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
@@ -291,18 +290,10 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-drivermandir = $(DRIVER_MAN_DIR)
-driverman_PRE = @DRIVER_NAME@.man radeon.man
-driverman_DATA = $(driverman_PRE:man=@DRIVER_MAN_SUFFIX@)
-EXTRA_DIST = @DRIVER_NAME@.man radeon.man
-CLEANFILES = $(driverman_DATA)
-
-# String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
-SUFFIXES = .$(DRIVER_MAN_SUFFIX) .man
+@HAS_XORG_CONF_DIR_TRUE@dist_config_DATA = 10-radeon.conf
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .$(DRIVER_MAN_SUFFIX) .man
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -312,9 +303,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign man/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign conf/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign man/Makefile
+	  $(AUTOMAKE) --foreign conf/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -339,27 +330,27 @@ mostlyclean-libtool:
 
 clean-libtool:
 	-rm -rf .libs _libs
-install-drivermanDATA: $(driverman_DATA)
+install-dist_configDATA: $(dist_config_DATA)
 	@$(NORMAL_INSTALL)
-	@list='$(driverman_DATA)'; test -n "$(drivermandir)" || list=; \
+	@list='$(dist_config_DATA)'; test -n "$(configdir)" || list=; \
 	if test -n "$$list"; then \
-	  echo " $(MKDIR_P) '$(DESTDIR)$(drivermandir)'"; \
-	  $(MKDIR_P) "$(DESTDIR)$(drivermandir)" || exit 1; \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(configdir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(configdir)" || exit 1; \
 	fi; \
 	for p in $$list; do \
 	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
 	  echo "$$d$$p"; \
 	done | $(am__base_list) | \
 	while read files; do \
-	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(drivermandir)'"; \
-	  $(INSTALL_DATA) $$files "$(DESTDIR)$(drivermandir)" || exit $$?; \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(configdir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(configdir)" || exit $$?; \
 	done
 
-uninstall-drivermanDATA:
+uninstall-dist_configDATA:
 	@$(NORMAL_UNINSTALL)
-	@list='$(driverman_DATA)'; test -n "$(drivermandir)" || list=; \
+	@list='$(dist_config_DATA)'; test -n "$(configdir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
-	dir='$(DESTDIR)$(drivermandir)'; $(am__uninstall_files_from_dir)
+	dir='$(DESTDIR)$(configdir)'; $(am__uninstall_files_from_dir)
 tags: TAGS
 TAGS:
 
@@ -403,7 +394,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(drivermandir)"; do \
+	for dir in "$(DESTDIR)$(configdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -428,7 +419,6 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
-	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
@@ -457,7 +447,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-drivermanDATA
+install-data-am: install-dist_configDATA
 
 install-dvi: install-dvi-am
 
@@ -501,25 +491,22 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-drivermanDATA
+uninstall-am: uninstall-dist_configDATA
 
 .MAKE: install-am install-strip
 
 .PHONY: all all-am check check-am clean clean-generic clean-libtool \
 	distclean distclean-generic distclean-libtool distdir dvi \
 	dvi-am html html-am info info-am install install-am \
-	install-data install-data-am install-drivermanDATA install-dvi \
-	install-dvi-am install-exec install-exec-am install-html \
-	install-html-am install-info install-info-am install-man \
-	install-pdf install-pdf-am install-ps install-ps-am \
-	install-strip installcheck installcheck-am installdirs \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	uninstall uninstall-am uninstall-drivermanDATA
+	install-data install-data-am install-dist_configDATA \
+	install-dvi install-dvi-am install-exec install-exec-am \
+	install-html install-html-am install-info install-info-am \
+	install-man install-pdf install-pdf-am install-ps \
+	install-ps-am install-strip installcheck installcheck-am \
+	installdirs maintainer-clean maintainer-clean-generic \
+	mostlyclean mostlyclean-generic mostlyclean-libtool pdf pdf-am \
+	ps ps-am uninstall uninstall-am uninstall-dist_configDATA
 
-
-.man.$(DRIVER_MAN_SUFFIX):
-	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

@@ -766,6 +766,14 @@ static uint32_t R600GetBlendCntl(int op, PicturePtr pMask, uint32_t dst_format)
 	} else if (dblend == (BLEND_ONE_MINUS_SRC_ALPHA << COLOR_DESTBLEND_shift)) {
 	    dblend = (BLEND_ONE_MINUS_SRC_COLOR << COLOR_DESTBLEND_shift);
 	}
+
+	/* With some tricks, we can still accelerate PictOpOver with solid src.
+	 * This is commonly used for text rendering, so it's worth the extra
+	 * effort.
+	 */
+	if (sblend == (BLEND_ONE << COLOR_SRCBLEND_shift)) {
+	    sblend = (BLEND_CONSTANT_COLOR << COLOR_SRCBLEND_shift);
+	}
     }
 
     return sblend | dblend;
@@ -1143,12 +1151,17 @@ static Bool R600CheckComposite(int op, PicturePtr pSrcPicture, PicturePtr pMaskP
 		/* Check if it's component alpha that relies on a source alpha and
 		 * on the source value.  We can only get one of those into the
 		 * single source value that we get to blend with.
+		 *
+		 * We can cheat a bit if the src is solid, though. PictOpOver
+		 * can use the constant blend color to sneak a second blend
+		 * source in.
 		 */
 		if (R600BlendOp[op].src_alpha &&
 		    (R600BlendOp[op].blend_cntl & COLOR_SRCBLEND_mask) !=
 		    (BLEND_ZERO << COLOR_SRCBLEND_shift)) {
-		    RADEON_FALLBACK(("Component alpha not supported with source "
-				     "alpha and source value blending.\n"));
+		    if (pSrcPicture->pDrawable || op != PictOpOver)
+			RADEON_FALLBACK(("Component alpha not supported with source "
+					 "alpha and source value blending.\n"));
 		}
 	    }
 
@@ -1165,6 +1178,139 @@ static Bool R600CheckComposite(int op, PicturePtr pSrcPicture, PicturePtr pMaskP
 
 }
 
+static void R600SetSolidConsts(ScrnInfoPtr pScrn, float *buf, int format, uint32_t fg, int unit)
+{
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    struct radeon_accel_state *accel_state = info->accel_state;
+    float pix_r = 0, pix_g = 0, pix_b = 0, pix_a = 0;
+
+    uint32_t w = (fg >> 24) & 0xff;
+    uint32_t z = (fg >> 16) & 0xff;
+    uint32_t y = (fg >> 8) & 0xff;
+    uint32_t x = (fg >> 0) & 0xff;
+    float xf = (float)x / 255; /* R */
+    float yf = (float)y / 255; /* G */
+    float zf = (float)z / 255; /* B */
+    float wf = (float)w / 255; /* A */
+
+    /* component swizzles */
+    switch (format) {
+	case PICT_a1r5g5b5:
+	case PICT_a8r8g8b8:
+	    pix_r = zf; /* R */
+	    pix_g = yf; /* G */
+	    pix_b = xf; /* B */
+	    pix_a = wf; /* A */
+	    break;
+	case PICT_a8b8g8r8:
+	    pix_r = xf; /* R */
+	    pix_g = yf; /* G */
+	    pix_b = zf; /* B */
+	    pix_a = wf; /* A */
+	    break;
+	case PICT_x8b8g8r8:
+	    pix_r = xf; /* R */
+	    pix_g = yf; /* G */
+	    pix_b = zf; /* B */
+	    pix_a = 1.0; /* A */
+	    break;
+	case PICT_b8g8r8a8:
+	    pix_r = yf; /* R */
+	    pix_g = zf; /* G */
+	    pix_b = wf; /* B */
+	    pix_a = xf; /* A */
+	    break;
+	case PICT_b8g8r8x8:
+	    pix_r = yf; /* R */
+	    pix_g = zf; /* G */
+	    pix_b = wf; /* B */
+	    pix_a = 1.0; /* A */
+	    break;
+	case PICT_x1r5g5b5:
+	case PICT_x8r8g8b8:
+	case PICT_r5g6b5:
+	    pix_r = zf; /* R */
+	    pix_g = yf; /* G */
+	    pix_b = xf; /* B */
+	    pix_a = 1.0; /* A */
+	    break;
+	case PICT_a8:
+	    pix_r = 0.0; /* R */
+	    pix_g = 0.0; /* G */
+	    pix_b = 0.0; /* B */
+	    pix_a = xf; /* A */
+	    break;
+	default:
+	    ErrorF("Bad format 0x%x\n", format);
+    }
+
+    if (unit == 0) {
+	if (!accel_state->msk_pic) {
+	    if (PICT_FORMAT_RGB(format) == 0) {
+		pix_r = 0.0;
+		pix_g = 0.0;
+		pix_b = 0.0;
+	    }
+
+	    if (PICT_FORMAT_A(format) == 0)
+		pix_a = 1.0;
+	} else {
+	    if (accel_state->component_alpha) {
+		if (accel_state->src_alpha) {
+		    /* required for PictOpOver */
+		    float cblend[4] = { pix_r / pix_a, pix_g / pix_a,
+					pix_b / pix_a, pix_a / pix_a };
+		    r600_set_blend_color(pScrn, cblend);
+
+		    if (PICT_FORMAT_A(format) == 0) {
+			pix_r = 1.0;
+			pix_g = 1.0;
+			pix_b = 1.0;
+			pix_a = 1.0;
+		    } else {
+			pix_r = pix_a;
+			pix_g = pix_a;
+			pix_b = pix_a;
+		    }
+		} else {
+		    if (PICT_FORMAT_A(format) == 0)
+			pix_a = 1.0;
+		}
+	    } else {
+		if (PICT_FORMAT_RGB(format) == 0) {
+		    pix_r = 0;
+		    pix_g = 0;
+		    pix_b = 0;
+		}
+
+		if (PICT_FORMAT_A(format) == 0)
+		    pix_a = 1.0;
+	    }
+	}
+    } else {
+	if (accel_state->component_alpha) {
+	    if (PICT_FORMAT_A(format) == 0)
+		pix_a = 1.0;
+	} else {
+	    if (PICT_FORMAT_A(format) == 0) {
+		pix_r = 1.0;
+		pix_g = 1.0;
+		pix_b = 1.0;
+		pix_a = 1.0;
+	    } else {
+		pix_r = pix_a;
+		pix_g = pix_a;
+		pix_b = pix_a;
+	    }
+	}
+    }
+
+    buf[0] = pix_r;
+    buf[1] = pix_g;
+    buf[2] = pix_b;
+    buf[3] = pix_a;
+}
+
 static Bool R600PrepareComposite(int op, PicturePtr pSrcPicture,
 				 PicturePtr pMaskPicture, PicturePtr pDstPicture,
 				 PixmapPtr pSrc, PixmapPtr pMask, PixmapPtr pDst)
@@ -1177,31 +1323,27 @@ static Bool R600PrepareComposite(int op, PicturePtr pSrcPicture,
     cb_config_t cb_conf;
     shader_config_t vs_conf, ps_conf;
     struct r600_accel_object src_obj, mask_obj, dst_obj;
+    uint32_t ps_bool_consts = 0;
+    float ps_alu_consts[8];
 
     if (pDst->drawable.bitsPerPixel < 8 || (pSrc && pSrc->drawable.bitsPerPixel < 8))
 	return FALSE;
 
-    if (!pSrc) {
-	pSrc = RADEONSolidPixmap(pScreen, pSrcPicture->pSourcePict->solidFill.color);
-	if (!pSrc)
-	    RADEON_FALLBACK(("Failed to create solid scratch pixmap\n"));
+    if (pSrc) {
+	src_obj.bo = radeon_get_pixmap_bo(pSrc);
+	src_obj.tiling_flags = radeon_get_pixmap_tiling(pSrc);
+	src_obj.surface = radeon_get_pixmap_surface(pSrc);
+	src_obj.pitch = exaGetPixmapPitch(pSrc) / (pSrc->drawable.bitsPerPixel / 8);
+	src_obj.width = pSrc->drawable.width;
+	src_obj.height = pSrc->drawable.height;
+	src_obj.bpp = pSrc->drawable.bitsPerPixel;
+	src_obj.domain = RADEON_GEM_DOMAIN_VRAM | RADEON_GEM_DOMAIN_GTT;
     }
 
     dst_obj.bo = radeon_get_pixmap_bo(pDst);
-    src_obj.bo = radeon_get_pixmap_bo(pSrc);
     dst_obj.tiling_flags = radeon_get_pixmap_tiling(pDst);
-    src_obj.tiling_flags = radeon_get_pixmap_tiling(pSrc);
     dst_obj.surface = radeon_get_pixmap_surface(pDst);
-    src_obj.surface = radeon_get_pixmap_surface(pSrc);
-
-    src_obj.pitch = exaGetPixmapPitch(pSrc) / (pSrc->drawable.bitsPerPixel / 8);
     dst_obj.pitch = exaGetPixmapPitch(pDst) / (pDst->drawable.bitsPerPixel / 8);
-
-    src_obj.width = pSrc->drawable.width;
-    src_obj.height = pSrc->drawable.height;
-    src_obj.bpp = pSrc->drawable.bitsPerPixel;
-    src_obj.domain = RADEON_GEM_DOMAIN_VRAM | RADEON_GEM_DOMAIN_GTT;
-
     dst_obj.width = pDst->drawable.width;
     dst_obj.height = pDst->drawable.height;
     dst_obj.bpp = pDst->drawable.bitsPerPixel;
@@ -1211,33 +1353,16 @@ static Bool R600PrepareComposite(int op, PicturePtr pSrcPicture,
 	dst_obj.domain = RADEON_GEM_DOMAIN_VRAM;
 
     if (pMaskPicture) {
-	if (!pMask) {
-	    pMask = RADEONSolidPixmap(pScreen, pMaskPicture->pSourcePict->solidFill.color);
-	    if (!pMask) {
-		if (!pSrcPicture->pDrawable)
-		    pScreen->DestroyPixmap(pSrc);
-		RADEON_FALLBACK(("Failed to create solid scratch pixmap\n"));
-	    }
+	if (pMask) {
+	    mask_obj.bo = radeon_get_pixmap_bo(pMask);
+	    mask_obj.tiling_flags = radeon_get_pixmap_tiling(pMask);
+	    mask_obj.surface = radeon_get_pixmap_surface(pMask);
+	    mask_obj.pitch = exaGetPixmapPitch(pMask) / (pMask->drawable.bitsPerPixel / 8);
+	    mask_obj.width = pMask->drawable.width;
+	    mask_obj.height = pMask->drawable.height;
+	    mask_obj.bpp = pMask->drawable.bitsPerPixel;
+	    mask_obj.domain = RADEON_GEM_DOMAIN_VRAM | RADEON_GEM_DOMAIN_GTT;
 	}
-
-	mask_obj.bo = radeon_get_pixmap_bo(pMask);
-	mask_obj.tiling_flags = radeon_get_pixmap_tiling(pMask);
-	mask_obj.surface = radeon_get_pixmap_surface(pMask);
-
-	mask_obj.pitch = exaGetPixmapPitch(pMask) / (pMask->drawable.bitsPerPixel / 8);
-
-	mask_obj.width = pMask->drawable.width;
-	mask_obj.height = pMask->drawable.height;
-	mask_obj.bpp = pMask->drawable.bitsPerPixel;
-	mask_obj.domain = RADEON_GEM_DOMAIN_VRAM | RADEON_GEM_DOMAIN_GTT;
-
-	if (!R600SetAccelState(pScrn,
-			       &src_obj,
-			       &mask_obj,
-			       &dst_obj,
-			       accel_state->comp_vs_offset, accel_state->comp_ps_offset,
-			       3, 0xffffffff))
-	    return FALSE;
 
 	accel_state->msk_pic = pMaskPicture;
 	if (pMaskPicture->componentAlpha) {
@@ -1251,18 +1376,18 @@ static Bool R600PrepareComposite(int op, PicturePtr pSrcPicture,
 	    accel_state->src_alpha = FALSE;
 	}
     } else {
-	if (!R600SetAccelState(pScrn,
-			       &src_obj,
-			       NULL,
-			       &dst_obj,
-			       accel_state->comp_vs_offset, accel_state->comp_ps_offset,
-			       3, 0xffffffff))
-	    return FALSE;
-
 	accel_state->msk_pic = NULL;
 	accel_state->component_alpha = FALSE;
 	accel_state->src_alpha = FALSE;
     }
+
+    if (!R600SetAccelState(pScrn,
+			   pSrc ? &src_obj : NULL,
+			   (pMaskPicture && pMask) ? &mask_obj : NULL,
+			   &dst_obj,
+			   accel_state->comp_vs_offset, accel_state->comp_ps_offset,
+			   3, 0xffffffff))
+	return FALSE;
 
     if (!R600GetDestFormat(pDstPicture, &dst_format))
 	return FALSE;
@@ -1284,10 +1409,13 @@ static Bool R600PrepareComposite(int op, PicturePtr pSrcPicture,
     r600_set_screen_scissor(pScrn, 0, 0, accel_state->dst_obj.width, accel_state->dst_obj.height);
     r600_set_window_scissor(pScrn, 0, 0, accel_state->dst_obj.width, accel_state->dst_obj.height);
 
-    if (!R600TextureSetup(pSrcPicture, pSrc, 0)) {
-        R600IBDiscard(pScrn);
-        return FALSE;
-    }
+    if (pSrc) {
+        if (!R600TextureSetup(pSrcPicture, pSrc, 0)) {
+            R600IBDiscard(pScrn);
+            return FALSE;
+        }
+    } else
+        accel_state->is_transform[0] = FALSE;
 
     if (pMask) {
         if (!R600TextureSetup(pMaskPicture, pMask, 1)) {
@@ -1297,12 +1425,16 @@ static Bool R600PrepareComposite(int op, PicturePtr pSrcPicture,
     } else
         accel_state->is_transform[1] = FALSE;
 
+    if (pSrc)
+	ps_bool_consts |= (1 << 0);
+    if (pMask)
+	ps_bool_consts |= (1 << 1);
+    r600_set_bool_consts(pScrn, SQ_BOOL_CONST_ps, ps_bool_consts);
+
     if (pMask) {
 	r600_set_bool_consts(pScrn, SQ_BOOL_CONST_vs, (1 << 0));
-	r600_set_bool_consts(pScrn, SQ_BOOL_CONST_ps, (1 << 0));
     } else {
 	r600_set_bool_consts(pScrn, SQ_BOOL_CONST_vs, (0 << 0));
-	r600_set_bool_consts(pScrn, SQ_BOOL_CONST_ps, (0 << 0));
     }
 
     /* Shader */
@@ -1315,7 +1447,7 @@ static Bool R600PrepareComposite(int op, PicturePtr pSrcPicture,
 
     ps_conf.shader_addr         = accel_state->ps_mc_addr;
     ps_conf.shader_size         = accel_state->ps_size;
-    ps_conf.num_gprs            = 3;
+    ps_conf.num_gprs            = 2;
     ps_conf.stack_size          = 1;
     ps_conf.uncached_first_inst = 1;
     ps_conf.clamp_consts        = 0;
@@ -1381,6 +1513,27 @@ static Bool R600PrepareComposite(int op, PicturePtr pSrcPicture,
     else
 	r600_set_spi(pScrn, (1 - 1), 1);
 
+    if (!pSrc) {
+	/* solid src color */
+	R600SetSolidConsts(pScrn, &ps_alu_consts[0], pSrcPicture->format,
+			   pSrcPicture->pSourcePict->solidFill.color, 0);
+    }
+
+    if (!pMaskPicture) {
+	/* use identity constant if there is no mask */
+	ps_alu_consts[4] = 1.0;
+	ps_alu_consts[5] = 1.0;
+	ps_alu_consts[6] = 1.0;
+	ps_alu_consts[7] = 1.0;
+    } else if (!pMask) {
+	/* solid mask color */
+	R600SetSolidConsts(pScrn, &ps_alu_consts[4], pMaskPicture->format,
+			   pMaskPicture->pSourcePict->solidFill.color, 1);
+    }
+
+    r600_set_alu_consts(pScrn, SQ_ALU_CONSTANT_ps,
+			sizeof(ps_alu_consts) / SQ_ALU_CONSTANT_offset, ps_alu_consts);
+
     if (accel_state->vsync)
 	RADEONVlineHelperClear(pScrn);
 
@@ -1405,7 +1558,7 @@ static void R600FinishComposite(ScrnInfoPtr pScrn, PixmapPtr pDst,
 			       accel_state->vline_y1,
 			       accel_state->vline_y2);
 
-    vtx_size = accel_state->msk_pic ? 24 : 16;
+    vtx_size = accel_state->msk_pix ? 24 : 16;
 
     r600_finish_op(pScrn, vtx_size);
 }
@@ -1418,12 +1571,6 @@ static void R600DoneComposite(PixmapPtr pDst)
     struct radeon_accel_state *accel_state = info->accel_state;
 
     R600FinishComposite(pScrn, pDst, accel_state);
-
-    if (!accel_state->src_pic->pDrawable)
-	pScreen->DestroyPixmap(accel_state->src_pix);
-
-    if (accel_state->msk_pic && !accel_state->msk_pic->pDrawable)
-	pScreen->DestroyPixmap(accel_state->msk_pix);
 }
 
 static void R600Composite(PixmapPtr pDst,
@@ -1455,7 +1602,7 @@ static void R600Composite(PixmapPtr pDst,
     if (accel_state->vsync)
 	RADEONVlineHelperSet(pScrn, dstX, dstY, dstX + w, dstY + h);
 
-    if (accel_state->msk_pic) {
+    if (accel_state->msk_pix) {
 
 	vb = radeon_vbo_space(pScrn, &accel_state->vbo, 24);
 
@@ -1887,10 +2034,8 @@ R600DrawInit(ScreenPtr pScreen)
     info->accel_state->exa->UploadToScreen = R600UploadToScreenCS;
     info->accel_state->exa->DownloadFromScreen = R600DownloadFromScreenCS;
     info->accel_state->exa->CreatePixmap2 = RADEONEXACreatePixmap2;
-#if (EXA_VERSION_MAJOR == 2 && EXA_VERSION_MINOR >= 6) 
     info->accel_state->exa->SharePixmapBacking = RADEONEXASharePixmapBacking; 
     info->accel_state->exa->SetSharedPixmapBacking = RADEONEXASetSharedPixmapBacking;
-#endif
     info->accel_state->exa->flags = EXA_OFFSCREEN_PIXMAPS | EXA_SUPPORTS_PREPARE_AUX |
 	EXA_HANDLES_PIXMAPS | EXA_MIXED_PIXMAPS;
     info->accel_state->exa->pixmapOffsetAlign = 256;

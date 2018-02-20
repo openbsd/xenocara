@@ -38,10 +38,6 @@ struct radeon_pixmap;
 
 #include "radeon_surface.h"
 
-#ifndef CREATE_PIXMAP_USAGE_SHARED
-#define CREATE_PIXMAP_USAGE_SHARED RADEON_CREATE_PIXMAP_DRI2
-#endif
-
 #define RADEON_CREATE_PIXMAP_SHARED(usage) \
 	(((usage) & ~RADEON_CREATE_PIXMAP_TILING_FLAGS) == RADEON_CREATE_PIXMAP_DRI2 || \
 	 (usage) == CREATE_PIXMAP_USAGE_SHARED)

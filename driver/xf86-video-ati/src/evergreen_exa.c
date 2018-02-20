@@ -2055,10 +2055,8 @@ EVERGREENDrawInit(ScreenPtr pScreen)
     info->accel_state->exa->UploadToScreen = EVERGREENUploadToScreen;
     info->accel_state->exa->DownloadFromScreen = EVERGREENDownloadFromScreen;
     info->accel_state->exa->CreatePixmap2 = RADEONEXACreatePixmap2;
-#if (EXA_VERSION_MAJOR == 2 && EXA_VERSION_MINOR >= 6) 
     info->accel_state->exa->SharePixmapBacking = RADEONEXASharePixmapBacking; 
     info->accel_state->exa->SetSharedPixmapBacking = RADEONEXASetSharedPixmapBacking;
-#endif
     info->accel_state->exa->flags = EXA_OFFSCREEN_PIXMAPS | EXA_SUPPORTS_PREPARE_AUX |
 	EXA_HANDLES_PIXMAPS | EXA_MIXED_PIXMAPS;
     info->accel_state->exa->pixmapOffsetAlign = 256;

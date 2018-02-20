@@ -270,7 +270,10 @@ Sea Islands.
 .BI "Option \*qDRI\*q \*q" integer \*q
 Define the maximum level of DRI to enable. Valid values are 2 for DRI2 or 3 for DRI3.
 The default is
-.B 2 for DRI2.
+.B 3 for DRI3
+if the Xorg version is >= 1.18.3 and glamor is enabled, otherwise
+.B 2 for DRI2. Note:
+DRI3 may not work correctly in all cases with EXA, enable at your own risk.
 .TP
 .BI "Option \*qEnablePageFlip\*q \*q" boolean \*q
 Enable DRI2 page flipping.  The default is
@@ -278,12 +281,15 @@ Enable DRI2 page flipping.  The default is
 Pageflipping is supported on all radeon hardware.
 .TP
 .BI "Option \*qTearFree\*q \*q" boolean \*q
-Enable tearing prevention using the hardware page flipping mechanism. This
-option currently doesn't have any effect for CRTCs using transforms other than
-rotation or reflection. It requires allocating two separate scanout buffers for
-each supported CRTC. Enabling this option currently disables Option
-\*qEnablePageFlip\*q. The default is
-.B off.
+Set the default value of the per-output 'TearFree' property, which controls
+tearing prevention using the hardware page flipping mechanism. TearFree is
+on for any CRTC associated with one or more outputs with TearFree on. Two
+separate scanout buffers need to be allocated for each CRTC with TearFree
+on. If this option is set, the default value of the property is 'on' or 'off'
+accordingly. If this option isn't set, the default value of the property is
+.B auto,
+which means that TearFree is on for outputs with rotation or other RandR
+transforms, and for RandR 1.4 slave outputs, otherwise off.
 .TP
 .BI "Option \*qAccelMethod\*q \*q" "string" \*q
 Chooses between available acceleration architectures.  Valid values are
@@ -292,7 +298,7 @@ Chooses between available acceleration architectures.  Valid values are
 .B glamor
 (for R300 or higher). The default is
 .B glamor
-as of TAHITI, otherwise
+with R600 or newer (with Xorg >= 1.18.3, otherwise with TAHITI or newer), otherwise
 .B EXA.
 
 .PP
@@ -384,17 +390,17 @@ __xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), Xserver(_
 .IP " 1." 4
 Wiki page:
 .RS 4
-http://www.x.org/wiki/radeon
+https://www.x.org/wiki/radeon
 .RE
 .IP " 2." 4
 Overview about radeon development code:
 .RS 4
-http://cgit.freedesktop.org/xorg/driver/xf86-video-ati/
+https://cgit.freedesktop.org/xorg/driver/xf86-video-ati/
 .RE
 .IP " 3." 4
 Mailing list:
 .RS 4
-http://lists.x.org/mailman/listinfo/xorg-driver-ati
+https://lists.freedesktop.org/mailman/listinfo/amd-gfx
 .RE
 .IP " 4." 4
 IRC channel:

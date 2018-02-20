@@ -40,11 +40,10 @@
 #include <errno.h>
 #include <libgen.h>
 
-
-static int
-radeon_dri3_open(ScreenPtr screen, RRProviderPtr provider, int *out)
+static int open_master_node(ScreenPtr screen, int *out)
 {
 	ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
+	RADEONEntPtr pRADEONEnt = RADEONEntPriv(scrn);
 	RADEONInfoPtr info = RADEONPTR(scrn);
 	drm_magic_t magic;
 	int fd;
@@ -78,13 +77,43 @@ radeon_dri3_open(ScreenPtr screen, RRProviderPtr provider, int *out)
 		}
 	}
 
-	if (drmAuthMagic(info->dri2.drm_fd, magic) < 0) {
+	if (drmAuthMagic(pRADEONEnt->fd, magic) < 0) {
 		close(fd);
 		return BadMatch;
 	}
 
 	*out = fd;
 	return Success;
+}
+
+static int open_render_node(ScreenPtr screen, int *out)
+{
+	ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
+	RADEONEntPtr pRADEONEnt = RADEONEntPriv(scrn);
+	int fd;
+
+	fd = open(pRADEONEnt->render_node, O_RDWR | O_CLOEXEC);
+	if (fd < 0)
+		return BadAlloc;
+
+	*out = fd;
+	return Success;
+}
+
+static int
+radeon_dri3_open(ScreenPtr screen, RRProviderPtr provider, int *out)
+{
+	ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
+	RADEONEntPtr pRADEONEnt = RADEONEntPriv(scrn);
+	int ret = BadAlloc;
+
+	if (pRADEONEnt->render_node)
+		ret = open_render_node(screen, out);
+
+	if (ret != Success)
+		ret = open_master_node(screen, out);
+
+	return ret;
 }
 
 #if DRI3_SCREEN_INFO_VERSION >= 1 && XORG_VERSION_CURRENT <= XORG_VERSION_NUMERIC(1,18,99,1,0)
@@ -144,6 +173,7 @@ static PixmapPtr radeon_dri3_pixmap_from_fd(ScreenPtr screen,
 			}
 
 			screen->DestroyPixmap(pixmap);
+			return NULL;
 		}
 	}
 #endif
@@ -227,6 +257,9 @@ Bool
 radeon_dri3_screen_init(ScreenPtr screen)
 {
 	ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
+	RADEONEntPtr pRADEONEnt = RADEONEntPriv(scrn);
+
+	pRADEONEnt->render_node = drmGetRenderDeviceNameFromFd(pRADEONEnt->fd);
 
 	if (!dri3_screen_init(screen, &radeon_dri3_screen_info)) {
 		xf86DrvMsg(scrn->scrnIndex, X_WARNING,

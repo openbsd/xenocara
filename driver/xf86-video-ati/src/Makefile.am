@@ -96,7 +96,6 @@ EXTRA_DIST = \
 	radeon_exa_shared.h \
 	radeon_glamor.h \
 	radeon.h \
-	radeon_list.h \
 	radeon_probe.h \
 	radeon_reg.h \
 	radeon_version.h \
