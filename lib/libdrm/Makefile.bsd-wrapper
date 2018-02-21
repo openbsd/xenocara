@@ -1,7 +1,5 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.14 2018/02/17 02:31:15 jsg Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.15 2018/02/21 06:01:53 jsg Exp $
 
-# cheat on configure - we don't need pthread-stubs anymore
-CONFIGURE_ARGS=	PTHREADSTUBS_CFLAGS=' ' PTHREADSTUBS_LIBS=' '
 SHARED_LIBS=	drm 7.6 drm_radeon 4.0 drm_intel 5.4 \
 		drm_amdgpu 1.5 drm_nouveau 3.0
 
