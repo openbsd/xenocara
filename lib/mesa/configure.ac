@@ -839,7 +839,7 @@ test -z "$PTHREAD_LIBS" && PTHREAD_LIBS="-lpthread"
 
 dnl pthread-stubs is mandatory on targets where it exists
 case "$host_os" in
-cygwin* )
+cygwin* | openbsd*)
     pthread_stubs_possible="no"
     ;;
 * )

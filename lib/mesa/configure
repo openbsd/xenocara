@@ -20900,7 +20900,7 @@ fi
 test -z "$PTHREAD_LIBS" && PTHREAD_LIBS="-lpthread"
 
 case "$host_os" in
-cygwin* )
+cygwin* | openbsd*)
     pthread_stubs_possible="no"
     ;;
 * )
