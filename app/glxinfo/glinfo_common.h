@@ -67,7 +67,8 @@ typedef enum
 {
    Normal,
    Wide,
-   Verbose
+   Verbose,
+   Brief
 } InfoMode;
 
 
@@ -85,6 +86,7 @@ struct options
 
 /** list of known OpenGL versions */
 static const struct { int major, minor; } gl_versions[] = {
+   {4, 6},
    {4, 5},
    {4, 4},
    {4, 3},
@@ -137,5 +139,7 @@ context_flags_string(int mask);
 void
 parse_args(int argc, char *argv[], struct options *options);
 
+void
+print_gpu_memory_info(const char *glExtensions);
 
 #endif /* GLINFO_COMMON_H */

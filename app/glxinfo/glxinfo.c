@@ -26,6 +26,7 @@
  *  -t                     print wide table
  *  -v                     print verbose information
  *  -display DisplayName   specify the X display to interogate
+ *  -B                     brief, print only the basics
  *  -b                     only print ID of "best" visual on screen 0
  *  -i                     use indirect rendering connection only
  *  -l                     print interesting OpenGL limits (added 5 Sep 2002)
@@ -390,9 +391,10 @@ query_renderer(void)
 
 
 static Bool
-print_screen_info(Display *dpy, int scrnum, Bool allowDirect,
+print_screen_info(Display *dpy, int scrnum,
+                  const struct options *opts,
                   Bool coreProfile, Bool es2Profile, Bool limits,
-                  Bool singleLine, Bool coreWorked)
+                  Bool coreWorked)
 {
    Window win;
    XSetWindowAttributes attr;
@@ -413,8 +415,9 @@ print_screen_info(Display *dpy, int scrnum, Bool allowDirect,
    fbconfigs = choose_fb_config(dpy, scrnum);
    if (fbconfigs) {
       ctx = create_context_with_config(dpy, fbconfigs[0],
-                                       coreProfile, es2Profile, allowDirect);
-      if (!ctx && allowDirect && !coreProfile) {
+                                       coreProfile, es2Profile,
+                                       opts->allowDirect);
+      if (!ctx && opts->allowDirect && !coreProfile) {
          /* try indirect */
          ctx = create_context_with_config(dpy, fbconfigs[0],
                                           coreProfile, es2Profile, False);
@@ -426,7 +429,7 @@ print_screen_info(Display *dpy, int scrnum, Bool allowDirect,
    else if (!coreProfile && !es2Profile) {
       visinfo = choose_xvisinfo(dpy, scrnum);
       if (visinfo)
-	 ctx = glXCreateContext(dpy, visinfo, NULL, allowDirect);
+	 ctx = glXCreateContext(dpy, visinfo, NULL, opts->allowDirect);
    } else
       visinfo = NULL;
 
@@ -465,9 +468,9 @@ print_screen_info(Display *dpy, int scrnum, Bool allowDirect,
       const char *glVendor = (const char *) glGetString(GL_VENDOR);
       const char *glRenderer = (const char *) glGetString(GL_RENDERER);
       const char *glVersion = (const char *) glGetString(GL_VERSION);
-      char *glExtensions;
-      int glxVersionMajor;
-      int glxVersionMinor;
+      char *glExtensions = NULL;
+      int glxVersionMajor = 0;
+      int glxVersionMinor = 0;
       char *displayName = NULL;
       char *colon = NULL, *period = NULL;
       struct ext_functions extfuncs;
@@ -482,20 +485,20 @@ print_screen_info(Display *dpy, int scrnum, Bool allowDirect,
       extfuncs.GetConvolutionParameteriv = (GETCONVOLUTIONPARAMETERIVPROC)
          glXGetProcAddressARB((GLubyte *) "glGetConvolutionParameteriv");
 
-      /* Get list of GL extensions */
-      if (coreProfile) {
-         glExtensions = build_core_profile_extension_list(&extfuncs);
+      if (!glXQueryVersion(dpy, & glxVersionMajor, & glxVersionMinor)) {
+         fprintf(stderr, "Error: glXQueryVersion failed\n");
+         exit(1);
       }
-      else {
+
+      /* Get list of GL extensions */
+      if (coreProfile && extfuncs.GetStringi)
+         glExtensions = build_core_profile_extension_list(&extfuncs);
+      if (!glExtensions) {
+         coreProfile = False;
          glExtensions = (char *) glGetString(GL_EXTENSIONS);
       }
 
       CheckError(__LINE__);
-
-      if (! glXQueryVersion( dpy, & glxVersionMajor, & glxVersionMinor )) {
-         fprintf(stderr, "Error: glXQueryVersion failed\n");
-         exit(1);
-      }
 
       if (!coreWorked) {
          /* Strip the screen number from the display name, if present. */
@@ -518,7 +521,7 @@ print_screen_info(Display *dpy, int scrnum, Bool allowDirect,
             printf("Yes\n");
          }
          else {
-            if (!allowDirect) {
+            if (!opts->allowDirect) {
                printf("No (-i specified)\n");
             }
             else if (getenv("LIBGL_ALWAYS_INDIRECT")) {
@@ -529,19 +532,22 @@ print_screen_info(Display *dpy, int scrnum, Bool allowDirect,
                       "LIBGL_DEBUG=verbose)\n");
             }
          }
-         printf("server glx vendor string: %s\n", serverVendor);
-         printf("server glx version string: %s\n", serverVersion);
-         printf("server glx extensions:\n");
-         print_extension_list(serverExtensions, singleLine);
-         printf("client glx vendor string: %s\n", clientVendor);
-         printf("client glx version string: %s\n", clientVersion);
-         printf("client glx extensions:\n");
-         print_extension_list(clientExtensions, singleLine);
-         printf("GLX version: %u.%u\n", glxVersionMajor, glxVersionMinor);
-         printf("GLX extensions:\n");
-         print_extension_list(glxExtensions, singleLine);
+         if (opts->mode != Brief) {
+            printf("server glx vendor string: %s\n", serverVendor);
+            printf("server glx version string: %s\n", serverVersion);
+            printf("server glx extensions:\n");
+            print_extension_list(serverExtensions, opts->singleLine);
+            printf("client glx vendor string: %s\n", clientVendor);
+            printf("client glx version string: %s\n", clientVersion);
+            printf("client glx extensions:\n");
+            print_extension_list(clientExtensions, opts->singleLine);
+            printf("GLX version: %u.%u\n", glxVersionMajor, glxVersionMinor);
+            printf("GLX extensions:\n");
+            print_extension_list(glxExtensions, opts->singleLine);
+         }
          if (strstr(glxExtensions, "GLX_MESA_query_renderer"))
 	    query_renderer();
+         print_gpu_memory_info(glExtensions);
          printf("OpenGL vendor string: %s\n", glVendor);
          printf("OpenGL renderer string: %s\n", glRenderer);
       } else
@@ -578,10 +584,10 @@ print_screen_info(Display *dpy, int scrnum, Bool allowDirect,
 
       CheckError(__LINE__);
 
-      printf("%s extensions:\n", oglstring);
-      print_extension_list(glExtensions, singleLine);
-
-      CheckError(__LINE__);
+      if (opts->mode != Brief) {
+         printf("%s extensions:\n", oglstring);
+         print_extension_list(glExtensions, opts->singleLine);
+      }
 
       if (limits) {
          print_limits(glExtensions, oglstring, version, &extfuncs);
@@ -1250,19 +1256,21 @@ main(int argc, char *argv[])
       print_display_info(dpy);
       for (scrnum = 0; scrnum < numScreens; scrnum++) {
          mesa_hack(dpy, scrnum);
-         coreWorked = print_screen_info(dpy, scrnum, opts.allowDirect,
-                                        True, False, opts.limits,
-                                        opts.singleLine, False);
-         print_screen_info(dpy, scrnum, opts.allowDirect, False, False,
-                           opts.limits, opts.singleLine, coreWorked);
-         print_screen_info(dpy, scrnum, opts.allowDirect, False, True, False,
-                           opts.singleLine, True);
+         coreWorked = print_screen_info(dpy, scrnum, &opts,
+                                        True, False, opts.limits, False);
+         print_screen_info(dpy, scrnum, &opts, False, False,
+                           opts.limits, coreWorked);
+         print_screen_info(dpy, scrnum, &opts, False, True, False, True);
 
          printf("\n");
-         print_visual_info(dpy, scrnum, opts.mode);
+
+         if (opts.mode != Brief) {
+            print_visual_info(dpy, scrnum, opts.mode);
 #ifdef GLX_VERSION_1_3
-         print_fbconfig_info(dpy, scrnum, opts.mode);
+            print_fbconfig_info(dpy, scrnum, opts.mode);
 #endif
+         }
+
          if (scrnum + 1 < numScreens)
             printf("\n\n");
       }

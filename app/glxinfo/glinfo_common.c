@@ -30,6 +30,18 @@
 #define snprintf _snprintf
 #endif
 
+#ifndef GL_CONTEXT_FLAG_FORWARD_COMPATIBLE_BIT
+#define GL_CONTEXT_FLAG_FORWARD_COMPATIBLE_BIT 0x00000001
+#endif
+#ifndef GL_CONTEXT_FLAG_DEBUG_BIT
+#define GL_CONTEXT_FLAG_DEBUG_BIT 0x00000002
+#endif
+#ifndef GL_CONTEXT_FLAG_ROBUST_ACCESS_BIT_ARB
+#define GL_CONTEXT_FLAG_ROBUST_ACCESS_BIT_ARB 0x00000004
+#endif
+#ifndef GL_CONTEXT_FLAG_NO_ERROR_BIT_KHR
+#define GL_CONTEXT_FLAG_NO_ERROR_BIT_KHR 0x00000008
+#endif
 
 /**
  * Return the GL enum name for a numeric value.
@@ -289,8 +301,12 @@ build_core_profile_extension_list(const struct ext_functions *extfuncs)
    totalLen = 0;
    for (i = 0; i < n; i++) {
       const char *ext = (const char *) extfuncs->GetStringi(GL_EXTENSIONS, i);
-      totalLen += strlen(ext) + 1; /* plus a space */
+      if (ext)
+          totalLen += strlen(ext) + 1; /* plus a space */
    }
+
+   if (!totalLen)
+     return NULL;
 
    buffer = malloc(totalLen + 1);
    if (buffer) {
@@ -594,12 +610,145 @@ print_limits(const char *extensions, const char *oglstring, int version,
       { 1, GL_MAX_VERTEX_ATTRIB_RELATIVE_OFFSET, "GL_MAX_VERTEX_ATTRIB_RELATIVE_OFFSET", "GL_ARB_vertex_attrib_binding" },
       { 1, GL_MAX_VERTEX_ATTRIB_BINDINGS, "GL_MAX_VERTEX_ATTRIB_BINDINGS", "GL_ARB_vertex_attrib_binding" },
 #endif
+#if defined(GL_ARB_tessellation_shader)
+      { 1, GL_MAX_TESS_GEN_LEVEL, "GL_MAX_TESS_GEN_LEVEL", "GL_ARB_tessellation_shader" },
+      { 1, GL_MAX_TESS_PATCH_COMPONENTS, "GL_MAX_TESS_PATCH_COMPONENTS", "GL_ARB_tessellation_shader" },
+      { 1, GL_MAX_TESS_CONTROL_UNIFORM_BLOCKS, "GL_MAX_TESS_CONTROL_UNIFORM_BLOCKS", "GL_ARB_tessellation_shader" },
+      { 1, GL_MAX_TESS_CONTROL_UNIFORM_COMPONENTS, "GL_MAX_TESS_CONTROL_UNIFORM_COMPONENTS", "GL_ARB_tessellation_shader" },
+      { 1, GL_MAX_TESS_CONTROL_TEXTURE_IMAGE_UNITS, "GL_MAX_TESS_CONTROL_TEXTURE_IMAGE_UNITS", "GL_ARB_tessellation_shader" },
+      { 1, GL_MAX_TESS_CONTROL_INPUT_COMPONENTS, "GL_MAX_TESS_CONTROL_INPUT_COMPONENTS", "GL_ARB_tessellation_shader" },
+      { 1, GL_MAX_TESS_CONTROL_OUTPUT_COMPONENTS, "GL_MAX_TESS_CONTROL_OUTPUT_COMPONENTS", "GL_ARB_tessellation_shader" },
+      { 1, GL_MAX_TESS_CONTROL_TOTAL_OUTPUT_COMPONENTS, "GL_MAX_TESS_CONTROL_TOTAL_OUTPUT_COMPONENTS", "GL_ARB_tessellation_shader" },
+      { 1, GL_MAX_COMBINED_TESS_CONTROL_UNIFORM_COMPONENTS, "GL_MAX_COMBINED_TESS_CONTROL_UNIFORM_COMPONENTS", "GL_ARB_tessellation_shader" },
+      { 1, GL_MAX_TESS_EVALUATION_UNIFORM_BLOCKS, "GL_MAX_TESS_EVALUATION_UNIFORM_BLOCKS", "GL_ARB_tessellation_shader" },
+      { 1, GL_MAX_TESS_EVALUATION_UNIFORM_COMPONENTS, "GL_MAX_TESS_EVALUATION_UNIFORM_COMPONENTS", "GL_ARB_tessellation_shader" },
+      { 1, GL_MAX_TESS_EVALUATION_TEXTURE_IMAGE_UNITS, "GL_MAX_TESS_EVALUATION_TEXTURE_IMAGE_UNITS", "GL_ARB_tessellation_shader" },
+      { 1, GL_MAX_TESS_EVALUATION_INPUT_COMPONENTS, "GL_MAX_TESS_EVALUATION_INPUT_COMPONENTS", "GL_ARB_tessellation_shader" },
+      { 1, GL_MAX_TESS_EVALUATION_OUTPUT_COMPONENTS, "GL_MAX_TESS_EVALUATION_OUTPUT_COMPONENTS", "GL_ARB_tessellation_shader" },
+      { 1, GL_MAX_COMBINED_TESS_EVALUATION_UNIFORM_COMPONENTS, "GL_MAX_COMBINED_TESS_EVALUATION_UNIFORM_COMPONENTS", "GL_ARB_tessellation_shader" },
+#endif
+
+#if defined(GL_VERSION_3_0)
+      { 1, GL_MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS, "GL_MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS", "3.0" },
+      { 1, GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS, "GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS", "3.0" },
+      { 1, GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS, "GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS", "3.0" },
+#endif
+#if defined(GL_VERSION_3_1)
+      { 1, GL_MAX_TEXTURE_BUFFER_SIZE, "GL_MAX_TEXTURE_BUFFER_SIZE", "3.1" },
+      { 1, GL_MAX_RECTANGLE_TEXTURE_SIZE, "GL_MAX_RECTANGLE_TEXTURE_SIZE", "3.1" },
+#endif
+#if defined(GL_VERSION_3_2)
+      { 1, GL_MAX_GEOMETRY_TEXTURE_IMAGE_UNITS, "GL_MAX_GEOMETRY_TEXTURE_IMAGE_UNITS", "3.2" },
+      { 1, GL_MAX_GEOMETRY_UNIFORM_COMPONENTS, "GL_MAX_GEOMETRY_UNIFORM_COMPONENTS", "3.2" },
+      { 1, GL_MAX_GEOMETRY_OUTPUT_VERTICES, "GL_MAX_GEOMETRY_OUTPUT_VERTICES", "3.2" },
+      { 1, GL_MAX_GEOMETRY_TOTAL_OUTPUT_COMPONENTS, "GL_MAX_GEOMETRY_TOTAL_OUTPUT_COMPONENTS", "3.2" },
+      { 1, GL_MAX_VERTEX_OUTPUT_COMPONENTS, "GL_MAX_VERTEX_OUTPUT_COMPONENTS", "3.2" },
+      { 1, GL_MAX_GEOMETRY_INPUT_COMPONENTS, "GL_MAX_GEOMETRY_INPUT_COMPONENTS", "3.2" },
+      { 1, GL_MAX_GEOMETRY_OUTPUT_COMPONENTS, "GL_MAX_GEOMETRY_OUTPUT_COMPONENTS", "3.2" },
+      { 1, GL_MAX_FRAGMENT_INPUT_COMPONENTS, "GL_MAX_FRAGMENT_INPUT_COMPONENTS", "3.2" },
+      { 1, GL_MAX_SERVER_WAIT_TIMEOUT, "GL_MAX_SERVER_WAIT_TIMEOUT", "3.2" },
+      { 1, GL_MAX_SAMPLE_MASK_WORDS, "GL_MAX_SAMPLE_MASK_WORDS", "3.2" },
+      { 1, GL_MAX_COLOR_TEXTURE_SAMPLES, "GL_MAX_COLOR_TEXTURE_SAMPLES", "3.2" },
+      { 1, GL_MAX_DEPTH_TEXTURE_SAMPLES, "GL_MAX_DEPTH_TEXTURE_SAMPLES", "3.2" },
+      { 1, GL_MAX_INTEGER_SAMPLES, "GL_MAX_INTEGER_SAMPLES", "3.2" },
+#endif
+#if defined(GL_VERSION_3_3)
+      { 1, GL_MAX_DUAL_SOURCE_DRAW_BUFFERS, "GL_MAX_DUAL_SOURCE_DRAW_BUFFERS", "3.3" },
+#endif
+#if defined(GL_VERSION_4_0)
+      { 1, GL_MAX_TRANSFORM_FEEDBACK_BUFFERS, "GL_MAX_TRANSFORM_FEEDBACK_BUFFERS", "4.0" },
+#endif
+#if defined(GL_VERSION_4_1)
+      { 1, GL_MAX_VERTEX_UNIFORM_VECTORS, "GL_MAX_VERTEX_UNIFORM_VECTORS", "4.1" },
+      { 1, GL_MAX_VARYING_VECTORS, "GL_MAX_VARYING_VECTORS", "4.1" },
+      { 1, GL_MAX_FRAGMENT_UNIFORM_VECTORS, "GL_MAX_FRAGMENT_UNIFORM_VECTORS", "4.1" },
+#endif
+#if defined(GL_VERSION_4_2)
+      { 1, GL_MAX_VERTEX_ATOMIC_COUNTER_BUFFERS, "GL_MAX_VERTEX_ATOMIC_COUNTER_BUFFERS", "4.2" },
+      { 1, GL_MAX_TESS_CONTROL_ATOMIC_COUNTER_BUFFERS, "GL_MAX_TESS_CONTROL_ATOMIC_COUNTER_BUFFERS", "4.2" },
+      { 1, GL_MAX_TESS_EVALUATION_ATOMIC_COUNTER_BUFFERS, "GL_MAX_TESS_EVALUATION_ATOMIC_COUNTER_BUFFERS", "4.2" },
+      { 1, GL_MAX_GEOMETRY_ATOMIC_COUNTER_BUFFERS, "GL_MAX_GEOMETRY_ATOMIC_COUNTER_BUFFERS", "4.2" },
+      { 1, GL_MAX_FRAGMENT_ATOMIC_COUNTER_BUFFERS, "GL_MAX_FRAGMENT_ATOMIC_COUNTER_BUFFERS", "4.2" },
+      { 1, GL_MAX_COMBINED_ATOMIC_COUNTER_BUFFERS, "GL_MAX_COMBINED_ATOMIC_COUNTER_BUFFERS", "4.2" },
+      { 1, GL_MAX_VERTEX_ATOMIC_COUNTERS, "GL_MAX_VERTEX_ATOMIC_COUNTERS", "4.2" },
+      { 1, GL_MAX_TESS_CONTROL_ATOMIC_COUNTERS, "GL_MAX_TESS_CONTROL_ATOMIC_COUNTERS", "4.2" },
+      { 1, GL_MAX_TESS_EVALUATION_ATOMIC_COUNTERS, "GL_MAX_TESS_EVALUATION_ATOMIC_COUNTERS", "4.2" },
+      { 1, GL_MAX_GEOMETRY_ATOMIC_COUNTERS, "GL_MAX_GEOMETRY_ATOMIC_COUNTERS", "4.2" },
+      { 1, GL_MAX_FRAGMENT_ATOMIC_COUNTERS, "GL_MAX_FRAGMENT_ATOMIC_COUNTERS", "4.2" },
+      { 1, GL_MAX_COMBINED_ATOMIC_COUNTERS, "GL_MAX_COMBINED_ATOMIC_COUNTERS", "4.2" },
+      { 1, GL_MAX_ATOMIC_COUNTER_BUFFER_SIZE, "GL_MAX_ATOMIC_COUNTER_BUFFER_SIZE", "4.2" },
+      { 1, GL_MAX_ATOMIC_COUNTER_BUFFER_BINDINGS, "GL_MAX_ATOMIC_COUNTER_BUFFER_BINDINGS", "4.2" },
+      { 1, GL_MAX_IMAGE_UNITS, "GL_MAX_IMAGE_UNITS", "4.2" },
+      { 1, GL_MAX_COMBINED_IMAGE_UNITS_AND_FRAGMENT_OUTPUTS, "GL_MAX_COMBINED_IMAGE_UNITS_AND_FRAGMENT_OUTPUTS", "4.2" },
+      { 1, GL_MAX_IMAGE_SAMPLES, "GL_MAX_IMAGE_SAMPLES", "4.2" },
+      { 1, GL_MAX_VERTEX_IMAGE_UNIFORMS , "GL_MAX_VERTEX_IMAGE_UNIFORMS", "4.2" },
+      { 1, GL_MAX_TESS_CONTROL_IMAGE_UNIFORMS, "GL_MAX_TESS_CONTROL_IMAGE_UNIFORMS", "4.2" },
+      { 1, GL_MAX_TESS_EVALUATION_IMAGE_UNIFORMS, "GL_MAX_TESS_EVALUATION_IMAGE_UNIFORMS", "4.2" },
+      { 1, GL_MAX_GEOMETRY_IMAGE_UNIFORMS, "GL_MAX_GEOMETRY_IMAGE_UNIFORMS", "4.2" },
+      { 1, GL_MAX_FRAGMENT_IMAGE_UNIFORMS, "GL_MAX_FRAGMENT_IMAGE_UNIFORMS", "4.2" },
+      { 1, GL_MAX_COMBINED_IMAGE_UNIFORMS, "GL_MAX_COMBINED_IMAGE_UNIFORMS", "4.2" },
+#endif
+#if defined(GL_VERSION_4_3)
+      { 1, GL_MAX_ELEMENT_INDEX, "GL_MAX_ELEMENT_INDEX", "4.3" },
+      { 1, GL_MAX_COMPUTE_UNIFORM_BLOCKS, "GL_MAX_COMPUTE_UNIFORM_BLOCKS", "4.3" },
+      { 1, GL_MAX_COMPUTE_TEXTURE_IMAGE_UNITS, "GL_MAX_COMPUTE_TEXTURE_IMAGE_UNITS", "4.3" },
+      { 1, GL_MAX_COMPUTE_IMAGE_UNIFORMS, "GL_MAX_COMPUTE_IMAGE_UNIFORMS", "4.3" },
+      { 1, GL_MAX_COMPUTE_SHARED_MEMORY_SIZE, "GL_MAX_COMPUTE_SHARED_MEMORY_SIZE", "4.3" },
+      { 1, GL_MAX_COMPUTE_UNIFORM_COMPONENTS, "GL_MAX_COMPUTE_UNIFORM_COMPONENTS", "4.3" },
+      { 1, GL_MAX_COMPUTE_ATOMIC_COUNTER_BUFFERS, "GL_MAX_COMPUTE_ATOMIC_COUNTER_BUFFERS", "4.3" },
+      { 1, GL_MAX_COMPUTE_ATOMIC_COUNTERS, "GL_MAX_COMPUTE_ATOMIC_COUNTERS", "4.3" },
+      { 1, GL_MAX_COMBINED_COMPUTE_UNIFORM_COMPONENTS, "GL_MAX_COMBINED_COMPUTE_UNIFORM_COMPONENTS", "4.3" },
+      { 1, GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, "GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS", "4.3" },
+      { 1, GL_MAX_COMPUTE_WORK_GROUP_COUNT, "GL_MAX_COMPUTE_WORK_GROUP_COUNT", "4.3" },
+      { 1, GL_MAX_COMPUTE_WORK_GROUP_SIZE, "GL_MAX_COMPUTE_WORK_GROUP_SIZE", "4.3" },
+      { 1, GL_MAX_DEBUG_MESSAGE_LENGTH, "GL_MAX_DEBUG_MESSAGE_LENGTH", "4.3" },
+      { 1, GL_MAX_DEBUG_LOGGED_MESSAGES, "GL_MAX_DEBUG_LOGGED_MESSAGES", "4.3" },
+      { 1, GL_MAX_DEBUG_GROUP_STACK_DEPTH, "GL_MAX_DEBUG_GROUP_STACK_DEPTH", "4.3" },
+      { 1, GL_MAX_LABEL_LENGTH, "GL_MAX_LABEL_LENGTH", "4.3" },
+      { 1, GL_MAX_UNIFORM_LOCATIONS, "GL_MAX_UNIFORM_LOCATIONS", "4.3" },
+      { 1, GL_MAX_FRAMEBUFFER_WIDTH, "GL_MAX_FRAMEBUFFER_WIDTH", "4.3" },
+      { 1, GL_MAX_FRAMEBUFFER_HEIGHT, "GL_MAX_FRAMEBUFFER_HEIGHT", "4.3" },
+      { 1, GL_MAX_FRAMEBUFFER_LAYERS, "GL_MAX_FRAMEBUFFER_LAYERS", "4.3" },
+      { 1, GL_MAX_FRAMEBUFFER_SAMPLES, "GL_MAX_FRAMEBUFFER_SAMPLES", "4.3" },
+      { 1, GL_MAX_WIDTH, "GL_MAX_WIDTH", "4.3" },
+      { 1, GL_MAX_HEIGHT, "GL_MAX_HEIGHT", "4.3" },
+      { 1, GL_MAX_DEPTH, "GL_MAX_DEPTH", "4.3" },
+      { 1, GL_MAX_LAYERS, "GL_MAX_LAYERS", "4.3" },
+      { 1, GL_MAX_COMBINED_DIMENSIONS, "GL_MAX_COMBINED_DIMENSIONS", "4.3" },
+      { 1, GL_MAX_NAME_LENGTH, "GL_MAX_NAME_LENGTH", "4.3" },
+      { 1, GL_MAX_NUM_ACTIVE_VARIABLES, "GL_MAX_NUM_ACTIVE_VARIABLES", "4.3" },
+      { 1, GL_MAX_NUM_COMPATIBLE_SUBROUTINES, "GL_MAX_NUM_COMPATIBLE_SUBROUTINES", "4.3" },
+      { 1, GL_MAX_VERTEX_SHADER_STORAGE_BLOCKS, "GL_MAX_VERTEX_SHADER_STORAGE_BLOCKS", "4.3" },
+      { 1, GL_MAX_GEOMETRY_SHADER_STORAGE_BLOCKS, "GL_MAX_GEOMETRY_SHADER_STORAGE_BLOCKS", "4.3" },
+      { 1, GL_MAX_TESS_CONTROL_SHADER_STORAGE_BLOCKS, "GL_MAX_TESS_CONTROL_SHADER_STORAGE_BLOCKS", "4.3" },
+      { 1, GL_MAX_TESS_EVALUATION_SHADER_STORAGE_BLOCKS, "GL_MAX_TESS_EVALUATION_SHADER_STORAGE_BLOCKS", "4.3" },
+      { 1, GL_MAX_FRAGMENT_SHADER_STORAGE_BLOCKS, "GL_MAX_FRAGMENT_SHADER_STORAGE_BLOCKS", "4.3" },
+      { 1, GL_MAX_COMPUTE_SHADER_STORAGE_BLOCKS, "GL_MAX_COMPUTE_SHADER_STORAGE_BLOCKS", "4.3" },
+      { 1, GL_MAX_COMBINED_SHADER_STORAGE_BLOCKS, "GL_MAX_COMBINED_SHADER_STORAGE_BLOCKS", "4.3" },
+      { 1, GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS, "GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS", "4.3" },
+      { 1, GL_MAX_SHADER_STORAGE_BLOCK_SIZE, "GL_MAX_SHADER_STORAGE_BLOCK_SIZE", "4.3" },
+      { 1, GL_MAX_COMBINED_SHADER_OUTPUT_RESOURCES, "GL_MAX_COMBINED_SHADER_OUTPUT_RESOURCES", "4.3" },
+      { 1, GL_MAX_VERTEX_ATTRIB_RELATIVE_OFFSET, "GL_MAX_VERTEX_ATTRIB_RELATIVE_OFFSET", "4.3" },
+      { 1, GL_MAX_VERTEX_ATTRIB_BINDINGS, "GL_MAX_VERTEX_ATTRIB_BINDINGS", "4.3" },
+#endif
 #if defined(GL_VERSION_4_4)
       { 1, GL_MAX_VERTEX_ATTRIB_STRIDE, "GL_MAX_VERTEX_ATTRIB_STRIDE", "4.4" },
+#endif
+#if defined(GL_VERSION_4_5)
+      { 1, GL_MAX_CULL_DISTANCES, "GL_MAX_CULL_DISTANCES", "4.5" },
+      { 1, GL_MAX_COMBINED_CLIP_AND_CULL_DISTANCES, "GL_MAX_COMBINED_CLIP_AND_CULL_DISTANCES", "4.5" },
+#endif
+#if defined(GL_VERSION_4_6)
+      { 1, GL_MAX_TEXTURE_MAX_ANISOTROPY, "GL_MAX_TEXTURE_MAX_ANISOTROPY", "4.6" },
+#endif
+#if defined(GL_ARB_transform_feedback3)
+      { 1, GL_MAX_TRANSFORM_FEEDBACK_BUFFERS, "GL_MAX_TRANSFORM_FEEDBACK_BUFFERS", "GL_ARB_transform_feedback3" },
+      { 1, GL_MAX_VERTEX_STREAMS, "GL_MAX_VERTEX_STREAMS", "GL_ARB_transform_feedback3" },
 #endif
       { 0, (GLenum) 0, NULL, NULL }
    };
    GLint i, max[2];
+   const char *prev_ext = "none";
 
    printf("%s limits:\n", oglstring);
    for (i = 0; limits[i].count; i++) {
@@ -608,10 +757,17 @@ print_limits(const char *extensions, const char *oglstring, int version,
           extension_supported(limits[i].extension, extensions)) {
          glGetIntegerv(limits[i].token, max);
          if (glGetError() == GL_NO_ERROR) {
-            if (limits[i].count == 1)
+            if (limits[i].extension && strcmp(limits[i].extension, prev_ext) != 0) {
+               printf("  %s:\n", limits[i].extension);
+               prev_ext = limits[i].extension;
+            }
+            if (limits[i].count == 1) {
                printf("    %s = %d\n", limits[i].name, max[0]);
-            else /* XXX fix if we ever query something with more than 2 values */
+            }
+            else {
+               assert(limits[i].count == 2);
                printf("    %s = %d, %d\n", limits[i].name, max[0], max[1]);
+            }
          }
       }
    }
@@ -622,21 +778,37 @@ print_limits(const char *extensions, const char *oglstring, int version,
                                           GL_MAX_CONVOLUTION_WIDTH, max);
       extfuncs->GetConvolutionParameteriv(GL_CONVOLUTION_2D,
                                           GL_MAX_CONVOLUTION_HEIGHT, max+1);
+      printf("  GL_ARB_imaging:\n");
       printf("    GL_MAX_CONVOLUTION_WIDTH/HEIGHT = %d, %d\n", max[0], max[1]);
    }
 
    if (extension_supported("GL_ARB_texture_compression", extensions)) {
       GLint i, n;
       GLint *formats;
+      printf("  GL_ARB_texture_compression:\n");
       glGetIntegerv(GL_NUM_COMPRESSED_TEXTURE_FORMATS, &n);
       printf("    GL_NUM_COMPRESSED_TEXTURE_FORMATS = %d\n", n);
       formats = (GLint *) malloc(n * sizeof(GLint));
       glGetIntegerv(GL_COMPRESSED_TEXTURE_FORMATS, formats);
       for (i = 0; i < n; i++) {
-         printf("        %s\n", enum_name(formats[i]));
+         printf("      %s\n", enum_name(formats[i]));
       }
       free(formats);
    }
+
+#if defined(GL_VERSION_4_3)
+   if (version >= 43) {
+      GLint i, n = 0;
+      printf("  4.3:\n");
+      glGetIntegerv(GL_NUM_SHADING_LANGUAGE_VERSIONS, &n);
+      printf("    GL_NUM_SHADING_LANGUAGE_VERSIONS = %d\n", n);
+      for (i = 0; i < n; i++) {
+         printf("      %s\n", (const char *)
+                extfuncs->GetStringi(GL_SHADING_LANGUAGE_VERSION, i));
+      }
+   }
+#endif
+
 #if defined(GL_ARB_vertex_program)
    if (extension_supported("GL_ARB_vertex_program", extensions)) {
       print_program_limits(GL_VERTEX_PROGRAM_ARB, extfuncs);
@@ -711,12 +883,10 @@ const char *
 context_flags_string(int mask)
 {
    const static struct bit_info bits[] = {
-#ifdef GL_CONTEXT_FLAG_FORWARD_COMPATIBLE_BIT
       { GL_CONTEXT_FLAG_FORWARD_COMPATIBLE_BIT, "forward-compatible" },
-#endif
-#ifdef GL_CONTEXT_FLAG_ROBUST_ACCESS_BIT_ARB
       { GL_CONTEXT_FLAG_ROBUST_ACCESS_BIT_ARB, "robust-access" },
-#endif
+      { GL_CONTEXT_FLAG_DEBUG_BIT, "debug" },
+      { GL_CONTEXT_FLAG_NO_ERROR_BIT_KHR, "no-error" },
    };
 
    return bitmask_to_string(bits, ELEMENTS(bits), mask);
@@ -733,14 +903,14 @@ usage(void)
    printf("\t-display <dname>: Print GLX visuals on specified server.\n");
    printf("\t-i: Force an indirect rendering context.\n");
 #endif
+   printf("\t-B: brief output, print only the basics.\n");
    printf("\t-v: Print visuals info in verbose form.\n");
-   printf("\t-t: Print verbose table.\n");
+   printf("\t-t: Print verbose visual information table.\n");
    printf("\t-h: This information.\n");
    printf("\t-b: Find the 'best' visual and print its number.\n");
    printf("\t-l: Print interesting OpenGL limits.\n");
    printf("\t-s: Print a single extension per line.\n");
 }
-
 
 void
 parse_args(int argc, char *argv[], struct options *options)
@@ -771,6 +941,9 @@ parse_args(int argc, char *argv[], struct options *options)
       else if (strcmp(argv[i], "-v") == 0) {
          options->mode = Verbose;
       }
+      else if (strcmp(argv[i], "-B") == 0) {
+         options->mode = Brief;
+      }
       else if (strcmp(argv[i], "-b") == 0) {
          options->findBest = GL_TRUE;
       }
@@ -790,4 +963,60 @@ parse_args(int argc, char *argv[], struct options *options)
          exit(0);
       }
    }
+}
+
+static void
+query_ATI_meminfo(void)
+{
+#ifdef GL_ATI_meminfo
+    int i[4];
+
+    printf("Memory info (GL_ATI_meminfo):\n");
+
+    glGetIntegerv(GL_VBO_FREE_MEMORY_ATI, i);
+    printf("    VBO free memory - total: %u MB, largest block: %u MB\n",
+           i[0] / 1024, i[1] / 1024);
+    printf("    VBO free aux. memory - total: %u MB, largest block: %u MB\n",
+           i[2] / 1024, i[3] / 1024);
+
+    glGetIntegerv(GL_TEXTURE_FREE_MEMORY_ATI, i);
+    printf("    Texture free memory - total: %u MB, largest block: %u MB\n",
+           i[0] / 1024, i[1] / 1024);
+    printf("    Texture free aux. memory - total: %u MB, largest block: %u MB\n",
+           i[2] / 1024, i[3] / 1024);
+
+    glGetIntegerv(GL_RENDERBUFFER_FREE_MEMORY_ATI, i);
+    printf("    Renderbuffer free memory - total: %u MB, largest block: %u MB\n",
+           i[0] / 1024, i[1] / 1024);
+    printf("    Renderbuffer free aux. memory - total: %u MB, largest block: %u MB\n",
+           i[2] / 1024, i[3] / 1024);
+#endif
+}
+
+static void
+query_NVX_gpu_memory_info(void)
+{
+#ifdef GL_NVX_gpu_memory_info
+    int i;
+
+    printf("Memory info (GL_NVX_gpu_memory_info):\n");
+
+    glGetIntegerv(GL_GPU_MEMORY_INFO_DEDICATED_VIDMEM_NVX, &i);
+    printf("    Dedicated video memory: %u MB\n", i / 1024);
+
+    glGetIntegerv(GL_GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX, &i);
+    printf("    Total available memory: %u MB\n", i / 1024);
+
+    glGetIntegerv(GL_GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX, &i);
+    printf("    Currently available dedicated video memory: %u MB\n", i / 1024);
+#endif
+}
+
+void
+print_gpu_memory_info(const char *glExtensions)
+{
+   if (strstr(glExtensions, "GL_ATI_meminfo"))
+      query_ATI_meminfo();
+   if (strstr(glExtensions, "GL_NVX_gpu_memory_info"))
+      query_NVX_gpu_memory_info();
 }
