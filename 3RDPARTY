@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.308 2018/02/20 04:56:00 jsg Exp $
+# $OpenBSD: 3RDPARTY,v 1.309 2018/03/07 21:24:33 matthieu Exp $
 #
 Package: 	Freetype
 Version:	2.8.0
@@ -14,13 +14,13 @@ Archive Site:	http://invisible-island.net/xterm/xterm.html
 
 Package:	Mesa
 Version		13.0.6
-Current Vers:	17.3.5
+Current Vers:	17.3.6
 Maintainer:	Brian Paul
 Archive Site:	http://www.mesa3d.org/
 
 Package:	libdrm
 Version:	2.4.89
-Current Vers:	2.4.90
+Current Vers:	2.4.91
 Maintainer:	Eric Anholt
 Archive Site:	http://dri.freedesktop.org/
 
@@ -32,7 +32,7 @@ Archive Site:	https://github.com/anholt/libepoxy/releases
 
 Package:	fontconfig
 Version:	2.12.4
-Current Vers:	2.12.5
+Current Vers:	2.13.0
 Maintainer:	Akira TAGOH
 Archive Site:	http://www.fontconfig.org/
 
