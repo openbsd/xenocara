@@ -1,14 +1,14 @@
-# $OpenBSD: 3RDPARTY,v 1.309 2018/03/07 21:24:33 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.310 2018/03/12 18:49:31 matthieu Exp $
 #
 Package: 	Freetype
-Version:	2.8.0
-Current Vers:	2.8.1
+Version:	2.8.1
+Current Vers:	2.9
 Maintainer:	Freetype.org
 Archive Site:	http://download.savannah.gnu.org/releases/freetype/
 
 Package:	xterm
 Version:	330
-Current Vers:	330
+Current Vers:	331
 Maintainer:	Thomas E. Dickey
 Archive Site:	http://invisible-island.net/xterm/xterm.html
 
@@ -40,11 +40,11 @@ Package:	DejaVu Fonts
 Version:	2.37
 Current Vers:	2.37
 Maintainer:	Freedesktop.org
-Archive Site:	http://dejavu-fonts.org/
+Archive Site:	https://dejavu-fonts.github.io/
 
 Package:	xlockmore
 Version:	5.22
-Current Vers:	5.50
+Current Vers:	5.55
 Maintainer:	David A. Bagley
 Archive Site:	http://sillycycle.com/xlock/
 
