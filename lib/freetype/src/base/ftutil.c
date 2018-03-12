@@ -146,6 +146,7 @@
       block = memory->alloc( memory, new_count * item_size );
       if ( block == NULL )
         error = FT_THROW( Out_Of_Memory );
+      FT_MEM_ZERO( block, new_count * item_size );
     }
     else
     {
