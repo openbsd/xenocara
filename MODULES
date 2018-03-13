@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.378 2018/03/12 18:49:31 matthieu Exp $
+# $OpenBSD: MODULES,v 1.379 2018/03/13 06:15:10 jsg Exp $
 #
 # X.Org maintained modules
 #
@@ -103,7 +103,7 @@ driver/xf86-video-amdgpu	18.0.0		needs-import
 driver/xf86-video-apm		1.2.5
 driver/xf86-video-ark		0.7.5	7.7+
 driver/xf86-video-ast		1.0.1	7.7+
-driver/xf86-video-ati		18.0.0	7.7+	needs-update
+driver/xf86-video-ati		18.0.0	7.7+
 driver/xf86-video-chips		1.2.7
 driver/xf86-video-cirrus	1.5.3	7.7+
 driver/xf86-video-dummy		0.3.8	7.7+
