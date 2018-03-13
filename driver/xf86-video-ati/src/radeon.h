@@ -192,23 +192,23 @@ radeon_master_screen(ScreenPtr screen)
 static inline ScreenPtr
 radeon_dirty_master(PixmapDirtyUpdatePtr dirty)
 {
-#ifdef HAS_DIRTYTRACKING_DRAWABLE_SRC
-    ScreenPtr screen = dirty->src->pScreen;
-#else
-    ScreenPtr screen = dirty->src->drawable.pScreen;
-#endif
+    return radeon_master_screen(dirty->slave_dst->drawable.pScreen);
+}
 
-    return radeon_master_screen(screen);
+static inline DrawablePtr
+radeon_dirty_src_drawable(PixmapDirtyUpdatePtr dirty)
+{
+#ifdef HAS_DIRTYTRACKING_DRAWABLE_SRC
+    return dirty->src;
+#else
+    return &dirty->src->drawable;
+#endif
 }
 
 static inline Bool
 radeon_dirty_src_equals(PixmapDirtyUpdatePtr dirty, PixmapPtr pixmap)
 {
-#ifdef HAS_DIRTYTRACKING_DRAWABLE_SRC
-    return dirty->src == &pixmap->drawable;
-#else
-    return dirty->src == pixmap;
-#endif
+    return radeon_dirty_src_drawable(dirty) == &pixmap->drawable;
 }
 
 
@@ -500,6 +500,13 @@ struct radeon_client_priv {
     uint_fast32_t     needs_flush;
 };
 
+struct radeon_device_priv {
+    CursorPtr cursor;
+    Bool sprite_visible;
+};
+
+extern DevScreenPrivateKeyRec radeon_device_private_key;
+
 typedef struct {
     EntityInfoPtr     pEnt;
     pciVideoPtr       PciInfo;
@@ -550,6 +557,12 @@ typedef struct {
     CreateScreenResourcesProcPtr CreateScreenResources;
     CreateWindowProcPtr CreateWindow;
     WindowExposuresProcPtr WindowExposures;
+    void (*SetCursor) (DeviceIntPtr pDev, ScreenPtr pScreen,
+		       CursorPtr pCursor, int x, int y);
+    void (*MoveCursor) (DeviceIntPtr pDev, ScreenPtr pScreen, int x, int y);
+
+    /* Number of SW cursors currently visible on this screen */
+    int sprites_visible;
 
     Bool              IsSecondary;
 
@@ -622,6 +635,8 @@ typedef struct {
 	SetSharedPixmapBackingProcPtr SavedSetSharedPixmapBacking;
     } glamor;
 #endif /* USE_GLAMOR */
+
+    xf86CrtcFuncsRec drmmode_crtc_funcs;
 } RADEONInfoRec, *RADEONInfoPtr;
 
 /* radeon_accel.c */
@@ -712,9 +727,9 @@ uint32_t radeon_get_pixmap_tiling(PixmapPtr pPix);
 
 static inline Bool radeon_set_pixmap_bo(PixmapPtr pPix, struct radeon_bo *bo)
 {
-#ifdef USE_GLAMOR
     ScrnInfoPtr scrn = xf86ScreenToScrn(pPix->drawable.pScreen);
     RADEONEntPtr pRADEONEnt = RADEONEntPriv(scrn);
+#ifdef USE_GLAMOR
     RADEONInfoPtr info = RADEONPTR(scrn);
 
     if (info->use_glamor) {
@@ -769,6 +784,8 @@ static inline Bool radeon_set_pixmap_bo(PixmapPtr pPix, struct radeon_bo *bo)
 	    if (driver_priv->bo)
 		radeon_bo_unref(driver_priv->bo);
 
+	    drmmode_fb_reference(pRADEONEnt->fd, &driver_priv->fb, NULL);
+
 	    radeon_bo_ref(bo);
 	    driver_priv->bo = bo;
 
@@ -819,8 +836,8 @@ static inline Bool radeon_get_pixmap_shared(PixmapPtr pPix)
 }
 
 static inline struct drmmode_fb*
-radeon_fb_create(int drm_fd, uint32_t width, uint32_t height, uint8_t depth,
-		 uint8_t bpp, uint32_t pitch, uint32_t handle)
+radeon_fb_create(ScrnInfoPtr scrn, int drm_fd, uint32_t width, uint32_t height,
+		 uint32_t pitch, uint32_t handle)
 {
     struct drmmode_fb *fb  = malloc(sizeof(*fb));
 
@@ -828,8 +845,8 @@ radeon_fb_create(int drm_fd, uint32_t width, uint32_t height, uint8_t depth,
 	return NULL;
 
     fb->refcnt = 1;
-    if (drmModeAddFB(drm_fd, width, height, depth, bpp, pitch, handle,
-		     &fb->handle) == 0)
+    if (drmModeAddFB(drm_fd, width, height, scrn->depth, scrn->bitsPerPixel,
+		     pitch, handle, &fb->handle) == 0)
 	return fb;
 
     free(fb);
@@ -881,9 +898,8 @@ radeon_pixmap_get_fb(PixmapPtr pix)
 	    ScrnInfoPtr scrn = xf86ScreenToScrn(pix->drawable.pScreen);
 	    RADEONEntPtr pRADEONEnt = RADEONEntPriv(scrn);
 
-	    *fb_ptr = radeon_fb_create(pRADEONEnt->fd, pix->drawable.width,
-				       pix->drawable.height, pix->drawable.depth,
-				       pix->drawable.bitsPerPixel, pix->devKind,
+	    *fb_ptr = radeon_fb_create(scrn, pRADEONEnt->fd, pix->drawable.width,
+				       pix->drawable.height, pix->devKind,
 				       handle);
 	}
     }

@@ -119,6 +119,14 @@ radeon_glamor_pre_init(ScrnInfoPtr scrn)
 		return FALSE;
 	}
 
+	if (scrn->depth == 30 &&
+	    xorgGetVersion() < XORG_VERSION_NUMERIC(1,19,99,1,0)) {
+		xf86DrvMsg(scrn->scrnIndex, X_WARNING,
+			   "Depth 30 is not supported by GLAMOR with Xorg < "
+			   "1.19.99.1\n");
+		return FALSE;
+	}
+
 #if XORG_VERSION_CURRENT < XORG_VERSION_NUMERIC(1,15,0,0,0)
 	if (!xf86LoaderCheckSymbol("glamor_egl_init")) {
 		xf86DrvMsg(scrn->scrnIndex, s ? X_ERROR : X_WARNING,

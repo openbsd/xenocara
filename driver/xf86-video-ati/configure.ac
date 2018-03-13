@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-ati],
-        [7.10.0],
+        [18.0.0],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=Driver/Radeon],
         [xf86-video-ati])
 
@@ -180,8 +180,8 @@ AC_CHECK_HEADERS([misyncshm.h], [], [],
 AC_CHECK_HEADERS([present.h], [], [],
 		 [#include <X11/Xmd.h>
 		 #include <X11/Xproto.h>
-		 #include <X11/X.h>
-		 #include "xorg-server.h"])
+		 #include "xorg-server.h"
+		 #include <X11/X.h>])
 
 AC_CHECK_HEADERS([dri3.h], [], [],
 		 [#include <X11/Xmd.h>

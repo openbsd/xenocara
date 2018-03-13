@@ -18,7 +18,8 @@ following features:
 .PD 0
 .TP 2
 \(bu
-Full support for 8-, 15-, 16- and 24-bit pixel depths;
+Full support for 8-, 15-, 16- and 24-bit pixel depths, and for 30-bit depth on Linux 3.16
+and later;
 .TP
 \(bu
 RandR 1.2 and RandR 1.3 support;
@@ -288,8 +289,8 @@ separate scanout buffers need to be allocated for each CRTC with TearFree
 on. If this option is set, the default value of the property is 'on' or 'off'
 accordingly. If this option isn't set, the default value of the property is
 .B auto,
-which means that TearFree is on for outputs with rotation or other RandR
-transforms, and for RandR 1.4 slave outputs, otherwise off.
+which means that TearFree is on for rotated outputs, outputs with RandR
+transforms applied and for RandR 1.4 slave outputs, otherwise off.
 .TP
 .BI "Option \*qAccelMethod\*q \*q" "string" \*q
 Chooses between available acceleration architectures.  Valid values are

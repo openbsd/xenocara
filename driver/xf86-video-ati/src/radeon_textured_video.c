@@ -499,11 +499,11 @@ static XF86VideoEncodingRec DummyEncodingEG[1] =
     }
 };
 
-#define NUM_FORMATS 3
+#define NUM_FORMATS 4
 
 static XF86VideoFormatRec Formats[NUM_FORMATS] =
 {
-    {15, TrueColor}, {16, TrueColor}, {24, TrueColor}
+    {15, TrueColor}, {16, TrueColor}, {24, TrueColor}, {30, TrueColor}
 };
 
 #define NUM_ATTRIBUTES 2
