@@ -90,7 +90,10 @@ void printSpline(FILE *fp, TwoJetVec v00, TwoJetVec v01,
     print_point(fp, v11, 1, 0, 0, 0, binary);
 
     if (binary) {
-      float sts[8] = {s0,t0, s1,t0, s0,t1, s1,t1};
+      float sts[8] = {(float) s0, (float) t0,
+		(float) s1, (float) t0,
+		(float) s0, (float) t1,
+		(float) s1, (float) t1};
       (void) fwrite(&sts, sizeof(float), 8, fp);
     } else {
       (void) fprintf(fp, "%g %g  %g %g  %g %g  %g %g\n\n",
