@@ -903,10 +903,10 @@ radeon_dirty_update(ScrnInfoPtr scrn)
 
 Bool
 radeon_scanout_do_update(xf86CrtcPtr xf86_crtc, int scanout_id,
-			 PixmapPtr src_pix, BoxPtr extents)
+			 PixmapPtr src_pix, BoxRec extents)
 {
     drmmode_crtc_private_ptr drmmode_crtc = xf86_crtc->driver_private;
-    RegionRec region = { .extents = *extents, .data = NULL };
+    RegionRec region = { .extents = extents, .data = NULL };
     ScrnInfoPtr scrn = xf86_crtc->scrn;
     ScreenPtr pScreen = scrn->pScreen;
     RADEONInfoPtr info = RADEONPTR(scrn);
@@ -915,11 +915,11 @@ radeon_scanout_do_update(xf86CrtcPtr xf86_crtc, int scanout_id,
 
     if (!xf86_crtc->enabled ||
 	!drmmode_crtc->scanout[scanout_id].pixmap ||
-	extents->x1 >= extents->x2 || extents->y1 >= extents->y2)
+	extents.x1 >= extents.x2 || extents.y1 >= extents.y2)
 	return FALSE;
 
     pDraw = &drmmode_crtc->scanout[scanout_id].pixmap->drawable;
-    if (!radeon_scanout_extents_intersect(xf86_crtc, extents))
+    if (!radeon_scanout_extents_intersect(xf86_crtc, &extents))
 	return FALSE;
 
     if (drmmode_crtc->tear_free) {
@@ -965,9 +965,9 @@ radeon_scanout_do_update(xf86CrtcPtr xf86_crtc, int scanout_id,
 	pScreen->SourceValidate = NULL;
 	CompositePicture(PictOpSrc,
 			 src, NULL, dst,
-			 extents->x1, extents->y1, 0, 0, extents->x1,
-			 extents->y1, extents->x2 - extents->x1,
-			 extents->y2 - extents->y1);
+			 extents.x1, extents.y1, 0, 0, extents.x1,
+			 extents.y1, extents.x2 - extents.x1,
+			 extents.y2 - extents.y1);
 	pScreen->SourceValidate = SourceValidate;
 
  free_dst:
@@ -981,9 +981,9 @@ radeon_scanout_do_update(xf86CrtcPtr xf86_crtc, int scanout_id,
 
 	ValidateGC(pDraw, gc);
 	(*gc->ops->CopyArea)(&src_pix->drawable, pDraw, gc,
-			     xf86_crtc->x + extents->x1, xf86_crtc->y + extents->y1,
-			     extents->x2 - extents->x1, extents->y2 - extents->y1,
-			     extents->x1, extents->y1);
+			     xf86_crtc->x + extents.x1, xf86_crtc->y + extents.y1,
+			     extents.x2 - extents.x1, extents.y2 - extents.y1,
+			     extents.x1, extents.y1);
 	FreeScratchGC(gc);
     }
 
@@ -1015,7 +1015,7 @@ radeon_scanout_update_handler(xf86CrtcPtr crtc, uint32_t frame, uint64_t usec,
 	drmmode_crtc->dpms_mode == DPMSModeOn) {
 	if (radeon_scanout_do_update(crtc, drmmode_crtc->scanout_id,
 				     screen->GetWindowPixmap(screen->root),
-				     &region->extents))
+				     region->extents))
 	    RegionEmpty(region);
     }
 
@@ -1096,7 +1096,7 @@ radeon_scanout_flip(ScreenPtr pScreen, RADEONInfoPtr info,
     scanout_id = drmmode_crtc->scanout_id ^ 1;
     if (!radeon_scanout_do_update(xf86_crtc, scanout_id,
 				  pScreen->GetWindowPixmap(pScreen->root),
-				  &region->extents))
+				  region->extents))
 	return;
     RegionEmpty(region);
 
@@ -2017,12 +2017,8 @@ static Bool RADEONCursorInit_KMS(ScreenPtr pScreen)
 	    return FALSE;
 	}
 
-	if (PointPriv->spriteFuncs->SetCursor != drmmode_sprite_set_cursor) {
-	    info->SetCursor = PointPriv->spriteFuncs->SetCursor;
-	    info->MoveCursor = PointPriv->spriteFuncs->MoveCursor;
-	    PointPriv->spriteFuncs->SetCursor = drmmode_sprite_set_cursor;
-	    PointPriv->spriteFuncs->MoveCursor = drmmode_sprite_move_cursor;
-	}
+	info->SpriteFuncs = PointPriv->spriteFuncs;
+	PointPriv->spriteFuncs = &drmmode_sprite_funcs;
     }
 
     if (xf86ReturnOptValBool(info->Options, OPTION_SW_CURSOR, FALSE))
@@ -2186,10 +2182,8 @@ static Bool RADEONCloseScreen_KMS(ScreenPtr pScreen)
 	miPointerScreenPtr PointPriv =
 	    dixLookupPrivate(&pScreen->devPrivates, miPointerScreenKey);
 
-	if (PointPriv->spriteFuncs->SetCursor == drmmode_sprite_set_cursor) {
-	    PointPriv->spriteFuncs->SetCursor = info->SetCursor;
-	    PointPriv->spriteFuncs->MoveCursor = info->MoveCursor;
-	}
+	if (PointPriv->spriteFuncs == &drmmode_sprite_funcs)
+	    PointPriv->spriteFuncs = info->SpriteFuncs;
     }
 
     pScreen->BlockHandler = info->BlockHandler;

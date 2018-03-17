@@ -37,6 +37,7 @@
 #include "inputstr.h"
 #include "list.h"
 #include "micmap.h"
+#include "mipointrst.h"
 #include "xf86cmap.h"
 #include "xf86Priv.h"
 #include "radeon.h"
@@ -816,7 +817,7 @@ drmmode_crtc_scanout_update(xf86CrtcPtr crtc, DisplayModePtr mode,
 
 		radeon_scanout_do_update(crtc, scanout_id,
 					 screen->GetWindowPixmap(screen->root),
-					 box);
+					 *box);
 		radeon_bo_wait(drmmode_crtc->scanout[scanout_id].bo);
 	}
 }
@@ -2750,8 +2751,8 @@ static void drmmode_sprite_do_set_cursor(struct radeon_device_priv *device_priv,
 	info->sprites_visible += device_priv->sprite_visible - sprite_visible;
 }
 
-void drmmode_sprite_set_cursor(DeviceIntPtr pDev, ScreenPtr pScreen,
-			       CursorPtr pCursor, int x, int y)
+static void drmmode_sprite_set_cursor(DeviceIntPtr pDev, ScreenPtr pScreen,
+				      CursorPtr pCursor, int x, int y)
 {
 	ScrnInfoPtr scrn = xf86ScreenToScrn(pScreen);
 	RADEONInfoPtr info = RADEONPTR(scrn);
@@ -2762,11 +2763,11 @@ void drmmode_sprite_set_cursor(DeviceIntPtr pDev, ScreenPtr pScreen,
 	device_priv->cursor = pCursor;
 	drmmode_sprite_do_set_cursor(device_priv, scrn, x, y);
 
-	info->SetCursor(pDev, pScreen, pCursor, x, y);
+	info->SpriteFuncs->SetCursor(pDev, pScreen, pCursor, x, y);
 }
 
-void drmmode_sprite_move_cursor(DeviceIntPtr pDev, ScreenPtr pScreen, int x,
-				int y)
+static void drmmode_sprite_move_cursor(DeviceIntPtr pDev, ScreenPtr pScreen,
+				       int x, int y)
 {
 	ScrnInfoPtr scrn = xf86ScreenToScrn(pScreen);
 	RADEONInfoPtr info = RADEONPTR(scrn);
@@ -2776,9 +2777,57 @@ void drmmode_sprite_move_cursor(DeviceIntPtr pDev, ScreenPtr pScreen, int x,
 
 	drmmode_sprite_do_set_cursor(device_priv, scrn, x, y);
 
-	info->MoveCursor(pDev, pScreen, x, y);
+	info->SpriteFuncs->MoveCursor(pDev, pScreen, x, y);
 }
 
+static Bool drmmode_sprite_realize_realize_cursor(DeviceIntPtr pDev,
+						  ScreenPtr pScreen,
+						  CursorPtr pCursor)
+{
+	ScrnInfoPtr scrn = xf86ScreenToScrn(pScreen);
+	RADEONInfoPtr info = RADEONPTR(scrn);
+
+	return info->SpriteFuncs->RealizeCursor(pDev, pScreen, pCursor);
+}
+
+static Bool drmmode_sprite_realize_unrealize_cursor(DeviceIntPtr pDev,
+						    ScreenPtr pScreen,
+						    CursorPtr pCursor)
+{
+	ScrnInfoPtr scrn = xf86ScreenToScrn(pScreen);
+	RADEONInfoPtr info = RADEONPTR(scrn);
+
+	return info->SpriteFuncs->UnrealizeCursor(pDev, pScreen, pCursor);
+}
+
+static Bool drmmode_sprite_device_cursor_initialize(DeviceIntPtr pDev,
+						    ScreenPtr pScreen)
+{
+	ScrnInfoPtr scrn = xf86ScreenToScrn(pScreen);
+	RADEONInfoPtr info = RADEONPTR(scrn);
+
+	return info->SpriteFuncs->DeviceCursorInitialize(pDev, pScreen);
+}
+
+static void drmmode_sprite_device_cursor_cleanup(DeviceIntPtr pDev,
+						 ScreenPtr pScreen)
+{
+	ScrnInfoPtr scrn = xf86ScreenToScrn(pScreen);
+	RADEONInfoPtr info = RADEONPTR(scrn);
+
+	info->SpriteFuncs->DeviceCursorCleanup(pDev, pScreen);
+}
+
+miPointerSpriteFuncRec drmmode_sprite_funcs = {
+	.RealizeCursor = drmmode_sprite_realize_realize_cursor,
+	.UnrealizeCursor = drmmode_sprite_realize_unrealize_cursor,
+	.SetCursor = drmmode_sprite_set_cursor,
+	.MoveCursor = drmmode_sprite_move_cursor,
+	.DeviceCursorInitialize = drmmode_sprite_device_cursor_initialize,
+	.DeviceCursorCleanup = drmmode_sprite_device_cursor_cleanup,
+};
+
+	
 void drmmode_set_cursor(ScrnInfoPtr scrn, drmmode_ptr drmmode, int id, struct radeon_bo *bo)
 {
 	xf86CrtcConfigPtr   xf86_config = XF86_CRTC_CONFIG_PTR(scrn);
@@ -3233,7 +3282,7 @@ Bool radeon_do_pageflip(ScrnInfoPtr scrn, ClientPtr client,
 			}
 
 			radeon_scanout_do_update(crtc, scanout_id, new_front,
-						 &extents);
+						 extents);
 
 			drmmode_crtc_wait_pending_event(drmmode_crtc, pRADEONEnt->fd,
 							drmmode_crtc->scanout_update_pending);
