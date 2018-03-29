@@ -89,9 +89,15 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_bdftopcf_OBJECTS = bdftopcf.$(OBJEXT)
+am_bdftopcf_OBJECTS = atom.$(OBJEXT) bdfread.$(OBJEXT) \
+	bdfutils.$(OBJEXT) bitmap.$(OBJEXT) bitmaputil.$(OBJEXT) \
+	bufio.$(OBJEXT) defaults.$(OBJEXT) fileio.$(OBJEXT) \
+	filewr.$(OBJEXT) fontaccel.$(OBJEXT) fontink.$(OBJEXT) \
+	pcfwrite.$(OBJEXT) private.$(OBJEXT) utilbitmap.$(OBJEXT) \
+	bdftopcf.$(OBJEXT)
 bdftopcf_OBJECTS = $(am_bdftopcf_OBJECTS)
-bdftopcf_DEPENDENCIES =
+am__DEPENDENCIES_1 =
+bdftopcf_DEPENDENCIES = $(am__DEPENDENCIES_1)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -309,9 +315,38 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = man
-AM_CFLAGS = $(CWARNFLAGS) @BDFTOPCF_CFLAGS@
-bdftopcf_LDADD = @BDFTOPCF_LIBS@
-bdftopcf_SOURCES = bdftopcf.c
+AM_CFLAGS = $(BDFTOPCF_CFLAGS) $(CWARNFLAGS)
+bdftopcf_LDADD = $(BDFTOPCF_LIBS)
+bdftopcf_SOURCES = \
+	atom.c \
+	bdfint.h \
+	bdfread.c \
+	bdfutils.c \
+	bitmap.c \
+	bitmap.h \
+	bitmaputil.c \
+	bufio.c \
+	bufio.h \
+	config.h \
+	defaults.c \
+	fileio.c \
+	filewr.c \
+	fntfil.h \
+	fntfilio.h \
+	fntfilst.h \
+	font.h \
+	fontaccel.c \
+	fontink.c \
+	fontmisc.h \
+	fontutil.h \
+	fontxlfd.h \
+	pcf.h \
+	pcfwrite.c \
+	private.c \
+	stubs.h \
+	utilbitmap.c \
+	bdftopcf.c
+
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 @LINT_TRUE@ALL_LINT_FLAGS = $(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 @LINT_TRUE@                $(AM_CPPFLAGS) $(CPPFLAGS) $(bdftopcf_CFLAGS)
@@ -420,7 +455,21 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atom.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bdfread.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bdftopcf.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bdfutils.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bitmap.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bitmaputil.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bufio.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/defaults.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fileio.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/filewr.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fontaccel.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fontink.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pcfwrite.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/private.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/utilbitmap.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

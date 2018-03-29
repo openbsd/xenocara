@@ -32,12 +32,12 @@ from The Open Group.
 
 #include <X11/X.h>
 #include <X11/Xproto.h>
-#include <X11/fonts/fontmisc.h>
+#include "fontmisc.h"
 #include <X11/fonts/fontstruct.h>
-#include <X11/fonts/fntfilio.h>
-#include <X11/fonts/fntfil.h>
-#include <X11/fonts/bdfint.h>
-#include <X11/fonts/pcf.h>
+#include "fntfilio.h"
+#include "fntfil.h"
+#include "bdfint.h"
+#include "pcf.h"
 #include <stdio.h>
 #include <X11/Xos.h>
 

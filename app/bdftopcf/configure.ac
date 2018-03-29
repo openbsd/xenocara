@@ -22,7 +22,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([bdftopcf], [1.0.5],
+AC_INIT([bdftopcf], [1.1],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [bdftopcf])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -36,10 +36,9 @@ m4_ifndef([XORG_MACROS_VERSION],
 XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 
-# Checks for pkg-config packages
-PKG_CHECK_MODULES(BDFTOPCF, xfont)
-
 XORG_WITH_LINT
+
+PKG_CHECK_MODULES(BDFTOPCF, [xproto fontsproto])
 
 AC_CONFIG_FILES([
 	Makefile

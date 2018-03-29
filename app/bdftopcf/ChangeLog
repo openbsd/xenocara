@@ -1,3 +1,68 @@
+commit c0b7d0b4a8436145f3fddc78d2452d7c720cce8b
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Nov 7 14:10:52 2017 -0500
+
+    bdftopcf 1.1
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 140f7f6e071a239329d700aa24191a664be2bea2
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Fri Nov 3 14:05:18 2017 -0400
+
+    Import more libXfont 1.x headers
+    
+    The previous commit would build if you had the old headers installed,
+    but building it in a fresh chroot would fail. Import some more junk and
+    fix up the includes appropriately.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 102696da8737fcb324034f673cd5815f28923311
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Oct 24 13:54:47 2017 -0400
+
+    Import libXfont's BDF-to-PCF code
+    
+    bdftopcf is the only consumer of libXfont 1.x's read/write support, and
+    we'd like 1.x to go away entirely. Copy in the BDF read and PCF write
+    support so there's one fewer consumer of 1.x.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+    Acked-by: Julien Cristau <jcristau@debian.org>
+
+commit e12c03d50a634a98e4560c7117a3bec3349561e9
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:20 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 96dd358a7f921b45c381c42f483e5564ee0b80a7
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit d43135887fce7709084f5d3df9bf1e4c992fbd65
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
 commit 211c077af0cf634aec54b91de7dde916da2da84b
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Dec 30 15:14:31 2014 -0800
