@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.524 2017/05/30 08:58:29 tom Exp $ */
+/* $XTermId: button.c,v 1.526 2017/12/01 00:47:35 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -79,11 +79,15 @@ button.c	Handles button events in the terminal emulator.
 #include <xstrings.h>
 
 #if OPT_SELECT_REGEX
+#ifdef HAVE_PCRE2POSIX_H
+#include <pcre2posix.h>
+#else
 #ifdef HAVE_PCREPOSIX_H
 #include <pcreposix.h>
 #else /* POSIX regex.h */
 #include <sys/types.h>
 #include <regex.h>
+#endif
 #endif
 #endif
 
@@ -5142,7 +5146,7 @@ formatVideoAttrs(XtermWidget xw, char *buffer, CELL *cell)
 	}
 #if OPT_ISO_COLORS
 	if (attribs & FG_COLOR) {
-	    unsigned fg = extract_fg(xw, ld->color[cell->col], attribs);
+	    Pixel fg = extract_fg(xw, ld->color[cell->col], attribs);
 	    if (fg < 8) {
 		fg += 30;
 	    } else if (fg < 16) {
@@ -5151,11 +5155,11 @@ formatVideoAttrs(XtermWidget xw, char *buffer, CELL *cell)
 		buffer += sprintf(buffer, "%s38;5", delim);
 		delim = ";";
 	    }
-	    buffer += sprintf(buffer, "%s%u", delim, fg);
+	    buffer += sprintf(buffer, "%s%lu", delim, fg);
 	    delim = ";";
 	}
 	if (attribs & BG_COLOR) {
-	    unsigned bg = extract_bg(xw, ld->color[cell->col], attribs);
+	    Pixel bg = extract_bg(xw, ld->color[cell->col], attribs);
 	    if (bg < 8) {
 		bg += 40;
 	    } else if (bg < 16) {
@@ -5164,7 +5168,7 @@ formatVideoAttrs(XtermWidget xw, char *buffer, CELL *cell)
 		buffer += sprintf(buffer, "%s48;5", delim);
 		delim = ";";
 	    }
-	    (void) sprintf(buffer, "%s%u", delim, bg);
+	    (void) sprintf(buffer, "%s%lu", delim, bg);
 	}
 #endif
     }

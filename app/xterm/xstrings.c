@@ -1,4 +1,4 @@
-/* $XTermId: xstrings.c,v 1.70 2017/06/11 21:20:37 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.71 2017/11/10 00:52:29 tom Exp $ */
 
 /*
  * Copyright 2000-2016,2017 by Thomas E. Dickey
@@ -195,7 +195,7 @@ login_alias(char *login_name, uid_t uid, struct passwd *in_out)
 char *
 x_getlogin(uid_t uid, struct passwd *in_out)
 {
-    char *login_name = NULL;
+    char *login_name;
 
     login_name = login_alias(x_getenv("LOGNAME"), uid, in_out);
     if (IsEmpty(login_name)) {

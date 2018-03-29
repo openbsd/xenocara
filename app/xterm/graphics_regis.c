@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.96 2017/06/21 01:15:19 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.101 2017/12/30 15:06:36 tom Exp $ */
 
 /*
  * Copyright 2014-2016,2017 by Ross Combs
@@ -41,8 +41,7 @@
 #include <X11/extensions/Xdbe.h>
 #endif
 
-#include <data.h>
-#include <VTparse.h>
+#include <fontutils.h>
 #include <ptyx.h>
 
 #include <assert.h>
@@ -1742,11 +1741,14 @@ get_xft_glyph_dimensions(Display *display, XftFont *font, unsigned *w,
  * maxw and maxh without overstepping either dimension.
  */
 static XftFont *
-find_best_xft_font_size(Display *display, Screen *screen, char const *fontname,
+find_best_xft_font_size(XtermWidget xw,
+			char const *fontname,
 			unsigned maxw, unsigned maxh, unsigned max_pixels,
 			unsigned *w, unsigned *h,
 			unsigned *xmin, unsigned *ymin)
 {
+    Display *display = XtDisplay(xw);
+    Screen *screen = XtScreen(xw);
     XftFont *font;
     unsigned targeth;
     unsigned ii, cacheindex;
@@ -1832,6 +1834,7 @@ find_best_xft_font_size(Display *display, Screen *screen, char const *fontname,
 					  XScreenNumberOfScreen(screen),
 					  pat, &status))) {
 		    font = XftFontOpenPattern(display, match);
+		    maybeXftCache(xw, font);
 		}
 	    }
 	}
@@ -1977,12 +1980,12 @@ get_xft_bitmap_of_character(RegisGraphicsContext const *context,
      * - resuse the font where possible
      */
 #ifdef XRENDERFONT
-    Display *display = XtDisplay(context->destination_graphic->xw);
-    Screen *screen = XtScreen(context->destination_graphic->xw);
+    XtermWidget xw = context->destination_graphic->xw;
+    Display *display = XtDisplay(xw);
     XftFont *font;
     unsigned xmin = 0U, ymin = 0U;
 
-    if (!(font = find_best_xft_font_size(display, screen, fontname, maxw, maxh,
+    if (!(font = find_best_xft_font_size(xw, fontname, maxw, maxh,
 					 max_pixels, w, h, &xmin, &ymin))) {
 	TRACE(("Unable to find suitable Xft font\n"));
 	return 0;
@@ -5644,13 +5647,16 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 			/* FIXME: verify no leading char or button sequence */
 			TRACE(("sending one-shot input report with %c at %d,%d\n",
 			       ch, x, y));
+#if 0				/* FIXME - dead code */
 			if (ch == '\r') {
 			    /* Return only reports the location. */
 			    sprintf(reply, "[%d,%d]\r", x, y);
 			} else if (ch == '\177') {
 			    /* DEL exits locator mode reporting nothing. */
 			    sprintf(reply, "\r");
-			} else {
+			} else
+#endif
+			{
 			    sprintf(reply, "%c[%d,%d]\r", ch, x, y);
 			}
 			unparseputs(context->display_graphic->xw, reply);
@@ -6587,7 +6593,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	    TRACE(("found begin unbounded position stack \"%s\"\n",
 		   fragment_to_tempstr(&optionarg)));
 	    skip_regis_whitespace(&optionarg);
-	    if (!(fragment_consumed(&optionarg) > 0U)) {
+	    if (!fragment_consumed(&optionarg)) {
 		TRACE(("DATA_ERROR: ignoring unexpected arguments to vector option '%c' arg \"%s\"\n",
 		       state->option, fragment_to_tempstr(&optionarg)));
 	    }
@@ -7182,7 +7188,6 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 		char temp[MAX_MACROGRAPH_LEN];
 		char name;
 		char prev = '\0';
-		char next;
 		int len = 0;
 
 		name = pop_fragment(input);
@@ -7195,7 +7200,7 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 		    return 1;
 		}
 		for (;;) {
-		    next = peek_fragment(input);
+		    char next = peek_fragment(input);
 		    if (prev == '@' && next == ';') {
 			/* FIXME: parse, handle  :<name><definition>; */
 			pop_fragment(input);

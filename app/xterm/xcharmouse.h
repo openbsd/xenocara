@@ -1,7 +1,8 @@
-/* $XTermId: xcharmouse.h,v 1.17 2012/09/26 00:39:14 tom Exp $ */
+/* $XTermId: xcharmouse.h,v 1.18 2012/09/26 00:39:14 tom Exp $ */
 
 /************************************************************
 
+Copyright 1997-2011,2012 by Thomas E. Dickey
 Copyright 1998 by Jason Bacon <acadix@execpc.com>
 
                         All Rights Reserved

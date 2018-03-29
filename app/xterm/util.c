@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.717 2017/06/19 08:11:47 tom Exp $ */
+/* $XTermId: util.c,v 1.728 2017/12/29 19:03:33 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -1023,7 +1023,7 @@ WriteText(XtermWidget xw, IChar *str, Cardinal len)
     TScreen *screen = TScreenOf(xw);
     CLineData *ld = 0;
     unsigned attr_flags = xw->flags;
-    CellColor fg_bg = makeColorPair(xw->cur_foreground, xw->cur_background);
+    CellColor fg_bg = xtermColorPair(xw);
     unsigned cells = visual_width(str, len);
     GC currentGC;
 
@@ -2163,7 +2163,7 @@ static void
 set_background(XtermWidget xw, int color GCC_UNUSED)
 {
     TScreen *screen = TScreenOf(xw);
-    Pixel c = getXtermBackground(xw, xw->flags, color);
+    Pixel c = getXtermBG(xw, xw->flags, color);
 
     TRACE(("set_background(%d) %#lx\n", color, c));
     XSetWindowBackground(screen->display, VShellWindow(xw), c);
@@ -3311,8 +3311,8 @@ fixupItalics(XtermWidget xw,
 }
 #endif
 
-#define SetMissing() \
-	TRACE(("%s@%d: missing %d\n", __FILE__, __LINE__, missing)); \
+#define SetMissing(tag) \
+	TRACE(("%s %s: missing %d\n", __FILE__, tag, missing)); \
 	missing = 1
 
 /*
@@ -3543,8 +3543,9 @@ drawXtermText(XtermWidget xw,
 		     * position.  Failing that, use our own box-characters.
 		     */
 		    if (screen->force_box_chars
+			|| screen->broken_box_chars
 			|| xtermXftMissing(xw, currFont, dec2ucs(ch))) {
-			SetMissing();
+			SetMissing("case 1");
 		    } else {
 			ch = dec2ucs(ch);
 			replace = True;
@@ -3559,9 +3560,10 @@ drawXtermText(XtermWidget xw,
 			unsigned part = ucs2dec(ch);
 			if (xtermIsDecGraphic(part)) {
 			    if (screen->force_box_chars
+				|| screen->broken_box_chars
 				|| xtermXftMissing(xw, currFont, ch)) {
 				ch = part;
-				SetMissing();
+				SetMissing("case 2");
 			    }
 			} else if (xtermXftMissing(xw, currFont, ch)) {
 			    XftFont *test = pickXftFont(needed, font0, wfont0);
@@ -3574,7 +3576,7 @@ drawXtermText(XtermWidget xw,
 				ch = part;
 				replace = True;
 			    } else if (ch != HIDDEN_CHAR) {
-				SetMissing();
+				SetMissing("case 3");
 			    }
 			}
 		    });
@@ -3590,7 +3592,7 @@ drawXtermText(XtermWidget xw,
 		     * box-characters.
 		     */
 		    if (xtermXftMissing(xw, currFont, ch)) {
-			SetMissing();
+			SetMissing("case 4");
 		    }
 		}
 #endif
@@ -3920,6 +3922,14 @@ drawXtermText(XtermWidget xw,
 	    if (ch == HIDDEN_CHAR)
 		continue;
 
+#if OPT_BOX_CHARS
+	    if ((screen->fnt_boxes == 1) && (ch >= 256)) {
+		unsigned part = ucs2dec(ch);
+		if (part < 32)
+		    ch = (IChar) part;
+	    }
+#endif
+
 	    if (!needWide
 		&& !IsIcon(screen)
 		&& ((on_wide || my_wcwidth((wchar_t) ch) > 1)
@@ -4243,15 +4253,16 @@ whichXtermCgs(XtermWidget xw, unsigned attr_flags, Bool hilite)
  * current screen foreground and background colors.
  */
 GC
-updatedXtermGC(XtermWidget xw, unsigned attr_flags, unsigned fg_bg, Bool hilite)
+updatedXtermGC(XtermWidget xw, unsigned attr_flags, CellColor fg_bg,
+	       Bool hilite)
 {
     TScreen *screen = TScreenOf(xw);
     VTwin *win = WhichVWin(screen);
     CgsEnum cgsId = whichXtermCgs(xw, attr_flags, hilite);
-    unsigned my_fg = extract_fg(xw, fg_bg, attr_flags);
-    unsigned my_bg = extract_bg(xw, fg_bg, attr_flags);
-    Pixel fg_pix = getXtermForeground(xw, attr_flags, (int) my_fg);
-    Pixel bg_pix = getXtermBackground(xw, attr_flags, (int) my_bg);
+    Pixel my_fg = extract_fg(xw, fg_bg, attr_flags);
+    Pixel my_bg = extract_bg(xw, fg_bg, attr_flags);
+    Pixel fg_pix = getXtermFG(xw, attr_flags, (int) my_fg);
+    Pixel bg_pix = getXtermBG(xw, attr_flags, (int) my_bg);
     Pixel xx_pix;
 #if OPT_HIGHLIGHT_COLOR
     Boolean reverse2 = ((attr_flags & INVERSE) && hilite);
@@ -4384,8 +4395,8 @@ resetXtermGC(XtermWidget xw, unsigned attr_flags, Bool hilite)
     TScreen *screen = TScreenOf(xw);
     VTwin *win = WhichVWin(screen);
     CgsEnum cgsId = whichXtermCgs(xw, attr_flags, hilite);
-    Pixel fg_pix = getXtermForeground(xw, attr_flags, xw->cur_foreground);
-    Pixel bg_pix = getXtermBackground(xw, attr_flags, xw->cur_background);
+    Pixel fg_pix = getXtermFG(xw, attr_flags, xw->cur_foreground);
+    Pixel bg_pix = getXtermBG(xw, attr_flags, xw->cur_background);
 
     checkVeryBoldColors(attr_flags, xw->cur_foreground);
 
@@ -4403,8 +4414,8 @@ resetXtermGC(XtermWidget xw, unsigned attr_flags, Bool hilite)
  * Extract the foreground-color index from a color pair.
  * If we've got BOLD or UNDERLINE color-mode active, those will be used.
  */
-unsigned
-extract_fg(XtermWidget xw, unsigned color, unsigned attr_flags)
+Pixel
+extract_fg(XtermWidget xw, CellColor color, unsigned attr_flags)
 {
     unsigned fg = ExtractForeground(color);
 
@@ -4419,8 +4430,8 @@ extract_fg(XtermWidget xw, unsigned color, unsigned attr_flags)
  * Extract the background-color index from a color pair.
  * If we've got INVERSE color-mode active, that will be used.
  */
-unsigned
-extract_bg(XtermWidget xw, unsigned color, unsigned attr_flags)
+Pixel
+extract_bg(XtermWidget xw, CellColor color, unsigned attr_flags)
 {
     unsigned bg = ExtractBackground(color);
 
@@ -4442,12 +4453,23 @@ extract_bg(XtermWidget xw, unsigned color, unsigned attr_flags)
  * attribute colors.
  */
 CellColor
-makeColorPair(int fg, int bg)
+makeColorPair(XtermWidget xw)
 {
-    unsigned my_bg = (bg >= 0) && (bg < NUM_ANSI_COLORS) ? (unsigned) bg : 0;
-    unsigned my_fg = (fg >= 0) && (fg < NUM_ANSI_COLORS) ? (unsigned) fg : my_bg;
+    CellColor result;
 
-    return (CellColor) (my_fg | (my_bg << COLOR_BITS));
+#if OPT_DIRECT_COLOR
+    result.fg = xw->cur_foreground;
+    result.bg = xw->cur_background;
+#else
+    int fg = xw->cur_foreground;
+    int bg = xw->cur_background;
+    unsigned my_bg = okIndexedColor(bg) ? (unsigned) bg : 0;
+    unsigned my_fg = okIndexedColor(fg) ? (unsigned) fg : my_bg;
+
+    result = (CellColor) (my_fg | (my_bg << COLOR_BITS));
+#endif
+
+    return result;
 }
 
 /*
@@ -4499,13 +4521,18 @@ getXtermBackground(XtermWidget xw, unsigned attr_flags, int color)
 {
     Pixel result = T_COLOR(TScreenOf(xw), TEXT_BG);
 
-    (void) attr_flags;
-    (void) color;
-
 #if OPT_ISO_COLORS
-    if ((attr_flags & BG_COLOR) && (color >= 0 && color < MAXCOLORS)) {
+    if_OPT_DIRECT_COLOR2(TScreenOf(xw), (attr_flags & ATR_DIRECT_BG), {
+	result = (Pixel) color;
+    } else
+    )
+	if ((attr_flags & BG_COLOR) &&
+	    (color >= 0 && color < MAXCOLORS)) {
 	result = GET_COLOR_RES(xw, TScreenOf(xw)->Acolors[color]);
     }
+#else
+    (void) attr_flags;
+    (void) color;
 #endif
     return result;
 }
@@ -4515,14 +4542,20 @@ getXtermForeground(XtermWidget xw, unsigned attr_flags, int color)
 {
     Pixel result = T_COLOR(TScreenOf(xw), TEXT_FG);
 
-    (void) attr_flags;
-    (void) color;
-
 #if OPT_ISO_COLORS
-    if ((attr_flags & FG_COLOR) && (color >= 0 && color < MAXCOLORS)) {
+    if_OPT_DIRECT_COLOR2(TScreenOf(xw), (attr_flags & ATR_DIRECT_FG), {
+	result = (Pixel) color;
+    } else
+    )
+	if ((attr_flags & FG_COLOR) &&
+	    (color >= 0 && color < MAXCOLORS)) {
 	result = GET_COLOR_RES(xw, TScreenOf(xw)->Acolors[color]);
     }
+#else
+    (void) attr_flags;
+    (void) color;
 #endif
+
 #if OPT_WIDE_ATTRS
 #define DIM_IT(n) work.n = (unsigned short) ((2 * (unsigned)work.n) / 3)
     if ((attr_flags & ATR_FAINT)) {
@@ -4828,7 +4861,7 @@ systemWcwidthOk(int samplesize, int samplepass)
 	if ((system_code < 0 && intern_code >= 1)
 	    || (system_code >= 0 && intern_code != system_code)) {
 	    TRACE((".. width(U+%04X) = %d, expected %d\n",
-		   n, system_code, intern_code));
+		   (unsigned) n, system_code, intern_code));
 	    if (++oops > samplepass)
 		break;
 	}

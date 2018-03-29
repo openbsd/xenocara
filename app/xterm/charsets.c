@@ -1,7 +1,7 @@
-/* $XTermId: charsets.c,v 1.67 2013/12/01 16:38:13 tom Exp $ */
+/* $XTermId: charsets.c,v 1.71 2017/11/08 01:39:21 tom Exp $ */
 
 /*
- * Copyright 1998-2011,2013 by Thomas E. Dickey
+ * Copyright 1998-2013,2017 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -212,40 +212,11 @@
  * argument to be made that these mappings "use" UTF-8, even though there is
  * a hidden step in the terminal emulator which relies upon UTF-8.
  */
-#define map_SCS_DEC_Supp(code,dft) \
-	switch (code) { \
-	    XXX(0x24, 0x2e2e); \
-	    XXX(0x26, 0x2e2e); \
-	    XXX(0x2c, 0x2e2e); \
-	    XXX(0x2d, 0x2e2e); \
-	    XXX(0x2e, 0x2e2e); \
-	    XXX(0x2f, 0x2e2e); \
-	    XXX(0x34, 0x2e2e); \
-	    XXX(0x38, 0x2e2e); \
-	    XXX(0x3e, 0x2e2e); \
-	    UNI(0x47, 0x2426); \
-	    MAP(0x48, 0xc7); \
-	    MAP(0x49, 0xc8); \
-	    MAP(0x4a, 0xc9); \
-	    MAP(0x4b, 0xca); \
-	    MAP(0x4c, 0xcb); \
-	    MAP(0x4d, 0xcc); \
-	    MAP(0x4e, 0xcd); \
-	    MAP(0x4f, 0xce); \
-	    XXX(0x50, 0x2e2e); \
-	    UNI(0x57, 0x0152); \
-	    XXX(0x5e, 0x2e2e); \
-	    XXX(0x70, 0x2e2e); \
-	    UNI(0x77, 0x0153); \
-	    MAP(0x7d, 0xff); \
-	    XXX(0x7e, 0x2e2e); \
-	    default: dft; break; \
-	}
-
 #define map_SCS_DEC_Supp_Graphic(code,dft) \
 	switch (code) { \
 	    XXX(0x24, 0x2e2e); \
 	    XXX(0x26, 0x2e2e); \
+	    MAP(0x28, 0xa4); \
 	    XXX(0x2c, 0x2e2e); \
 	    XXX(0x2d, 0x2e2e); \
 	    XXX(0x2e, 0x2e2e); \
@@ -255,6 +226,7 @@
 	    XXX(0x3e, 0x2e2e); \
 	    XXX(0x50, 0x2e2e); \
 	    UNI(0x57, 0x0152); \
+	    MAP(0x5d, 0x0178); \
 	    XXX(0x5e, 0x2e2e); \
 	    XXX(0x70, 0x2e2e); \
 	    UNI(0x77, 0x0153); \
@@ -278,10 +250,10 @@
 	    UNI(0x28, 0x23a3);	/* LEFT SQUARE BRACKET LOWER CORNER Joins vertically to 02/06, 02/07. Doesn't join to its right. */ \
 	    UNI(0x29, 0x23a4);	/* RIGHT SQUARE BRACKET UPPER CORNER Joins vertically to 026, 02a. Doesn't join to its left. */ \
 	    UNI(0x2a, 0x23a6);	/* RIGHT SQUARE BRACKET LOWER CORNER Joins vertically to 026, 029. Doesn't join to its left. */ \
-	    UNI(0x2b, 0x239b);	/* LEFT PARENTHESIS UPPER HOOK Joins vertically to 026, 02c, 02/15. Doesn't join to its right. */ \
-	    UNI(0x2c, 0x239d);	/* LEFT PARENTHESIS LOWER HOOK Joins vertically to 026, 02b, 02/15. Doesn't join to its right. */ \
-	    UNI(0x2d, 0x239e);	/* RIGHT PARENTHESIS UPPER HOOK Joins vertically to 026, 02e, 03/00. Doesn't join to its left. */ \
-	    UNI(0x2e, 0x23a0);	/* RIGHT PARENTHESIS LOWER HOOK Joins vertically to 026, 02d, 03/00. Doesn't join to its left. */ \
+	    UNI(0x2b, 0x23a7);	/* LEFT CURLY BRACKET UPPER HOOK Joins vertically to 026, 02c, 02/15. Doesn't join to its right. */ \
+	    UNI(0x2c, 0x23a9);	/* LEFT CURLY BRACKET LOWER HOOK Joins vertically to 026, 02b, 02/15. Doesn't join to its right. */ \
+	    UNI(0x2d, 0x23ab);	/* RIGHT CURLY BRACKET UPPER HOOK Joins vertically to 026, 02e, 03/00. Doesn't join to its left. */ \
+	    UNI(0x2e, 0x23ad);	/* RIGHT CURLY BRACKET LOWER HOOK Joins vertically to 026, 02d, 03/00. Doesn't join to its left. */ \
 	    UNI(0x2f, 0x23a8);	/* LEFT CURLY BRACKET MIDDLE PIECE Joins vertically to 026, 02b, 02c. */ \
 	    UNI(0x30, 0x23ac);	/* RIGHT CURLY BRACKET MIDDLE PIECE Joins vertically to 02/06, 02d, 02e. */ \
 	    XXX(0x31, 0x2426);	/* Top Left Sigma. Joins to right with 02/03, 03/05. Joins diagonally below right with 03/03, 03/07. */ \
@@ -303,7 +275,7 @@
 	    UNI(0x41, 0x221d);	/* PROPORTIONAL TO */ \
 	    UNI(0x42, 0x221e);	/* INFINITY */ \
 	    UNI(0x43, 0x00f7);	/* DIVISION SIGN */ \
-	    UNI(0x44, 0x039a);	/* GREEK CAPITAL DELTA */ \
+	    UNI(0x44, 0x0394);	/* GREEK CAPITAL DELTA */ \
 	    UNI(0x45, 0x2207);	/* NABLA */ \
 	    UNI(0x46, 0x03a6);	/* GREEK CAPITAL LETTER PHI */ \
 	    UNI(0x47, 0x0393);	/* GREEK CAPITAL LETTER GAMMA */ \
@@ -408,7 +380,7 @@ xtermCharSetIn(TScreen *screen, unsigned code, int charset)
 	break;
 
     case nrc_DEC_Supp:
-	map_SCS_DEC_Supp(code, code &= 0x7f);
+	map_SCS_DEC_Supp_Graphic(code, code &= 0x7f);
 	break;
 
     case nrc_DEC_Supp_Graphic:
@@ -587,7 +559,7 @@ xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, int leftset)
 	    break;
 
 	case nrc_DEC_Supp:
-	    map_SCS_DEC_Supp(chr = seven, chr |= 0x80);
+	    map_SCS_DEC_Supp_Graphic(chr = seven, chr |= 0x80);
 	    break;
 
 	case nrc_DEC_Supp_Graphic:

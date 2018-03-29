@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.213 2017/05/04 00:49:33 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.215 2017/11/08 02:27:49 tom Exp $ */
 
 /*
  * Copyright 1997-2016,2017 by Thomas E. Dickey
@@ -77,6 +77,7 @@
 #undef HAVE_LIBXPM		/* CF_WITH_XPM */
 #undef HAVE_LIB_NEXTAW		/* CF_X_ATHENA(--with-neXtaw) */
 #undef HAVE_LIB_PCRE		/* CF_WITH_PCRE */
+#undef HAVE_LIB_PCRE2		/* CF_WITH_PCRE2 */
 #undef HAVE_LIB_XAW		/* CF_X_ATHENA */
 #undef HAVE_LIB_XAW3D		/* CF_X_ATHENA(--with-Xaw3d) */
 #undef HAVE_LIB_XAW3DXFT	/* CF_X_ATHENA(--with-Xaw3dxft) */
@@ -87,6 +88,7 @@
 #undef HAVE_NCURSES_TERM_H	/* AC_CHECK_HEADERS(ncurses/term.h) */
 #undef HAVE_PATHS_H		/* CF_LASTLOG */
 #undef HAVE_PCREPOSIX_H		/* CF_WITH_PCRE */
+#undef HAVE_PCRE2POSIX_H	/* CF_WITH_PCRE2 */
 #undef HAVE_POSIX_OPENPT	/* CF_FUNC_GRANTPT */
 #undef HAVE_POSIX_SAVED_IDS	/* CF_POSIX_SAVED_IDS */
 #undef HAVE_PTSNAME		/* CF_FUNC_GRANTPT */
@@ -133,6 +135,7 @@
 #undef LUIT_PATH		/* CF_ARG_ENABLE(luit) */
 #undef NO_ACTIVE_ICON		/* CF_ARG_DISABLE(active-icon) */
 #undef NO_LEAKS			/* CF_ARG_DISABLE(leaks) */
+#undef OPT_DIRECT_COLOR		/* CF_ARG_ENABLE(direct-color) */
 #undef OPT_256_COLORS		/* CF_ARG_ENABLE(256-color) */
 #undef OPT_88_COLORS		/* CF_ARG_ENABLE(88-color) */
 #undef OPT_AIX_COLORS		/* CF_ARG_DISABLE(16-color) */

@@ -1,4 +1,4 @@
-/* $XTermId: trace.h,v 1.80 2017/01/20 22:36:24 tom Exp $ */
+/* $XTermId: trace.h,v 1.81 2017/11/07 00:12:24 tom Exp $ */
 
 /*
  * Copyright 1997-2016,2017 by Thomas E. Dickey
@@ -41,10 +41,16 @@
 
 #if OPT_TRACE
 
+#include <stdarg.h>
+
 extern	void	Trace ( const char *, ... ) GCC_PRINTFLIKE(1,2);
+extern	void	TraceVA ( const char *fmt, va_list ap );
 
 #undef  TRACE
 #define TRACE(p) Trace p
+
+#undef  TRACE_VA
+#define TRACE_VA(p) TraceVA p
 
 extern	void	TraceClose (void);
 

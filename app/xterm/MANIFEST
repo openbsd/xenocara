@@ -1,4 +1,4 @@
-MANIFEST for xterm-330, version xterm-330
+MANIFEST for xterm-331, version xterm-331
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -202,3 +202,4 @@ vttests/resize.pl               translated resize.sh to perl since it is easy to
 vttests/resize.sh               script to demonstrate resizing
 vttests/tcapquery.pl            script to test tcap-query option
 vttests/title.sh                test-script to show title of xterm in action
+vttests/true-color.pl		test script for true color

@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.757 2017/06/20 08:52:18 tom Exp $ */
+/* $XTermId: misc.c,v 1.785 2017/12/26 11:42:24 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -125,6 +125,9 @@
 		(event.type == Type && \
 		   (event.xcrossing.window == XtWindow(XtParent(xw))))
 #endif
+
+#define VB_DELAY    screen->visualBellDelay
+#define EVENT_DELAY TScreenOf(term)->nextEventDelay
 
 static Boolean xtermAllocColor(XtermWidget, XColor *, const char *);
 static Cursor make_hidden_cursor(XtermWidget);
@@ -562,7 +565,7 @@ xtermAppPending(void)
      * this case, to avoid max'ing the CPU.
      */
     if (hold_screen && caught_intr && !found) {
-	Sleep(10);
+	Sleep(EVENT_DELAY);
     }
     return result;
 }
@@ -613,7 +616,7 @@ xevents(void)
 	 * this function, e.g., those handled in in_put().
 	 */
 	if (screen->waitingForTrackInfo) {
-	    Sleep(10);
+	    Sleep(EVENT_DELAY);
 	    return;
 	}
 	XtAppNextEvent(app_con, &event);
@@ -1241,8 +1244,6 @@ Bell(XtermWidget xw, int which, int percent)
     }
 }
 
-#define VB_DELAY screen->visualBellDelay
-
 static void
 flashWindow(TScreen *screen, Window window, GC visualGC, unsigned width, unsigned height)
 {
@@ -1311,7 +1312,14 @@ xtermWarning(const char *fmt,...)
     va_list ap;
 
     fflush(stdout);
-    TRACE(("xtermWarning fmt='%s'\n", fmt));
+
+#if OPT_TRACE
+    va_start(ap, fmt);
+    Trace("xtermWarning: ");
+    TraceVA(fmt, ap);
+    va_end(ap);
+#endif
+
     fprintf(stderr, "%s: ", ProgramName);
     va_start(ap, fmt);
     vfprintf(stderr, fmt, ap);
@@ -1329,7 +1337,14 @@ xtermPerror(const char *fmt,...)
     va_list ap;
 
     fflush(stdout);
-    TRACE(("xtermPerror fmt='%s', msg='%s'\n", fmt, NonNull(msg)));
+
+#if OPT_TRACE
+    va_start(ap, fmt);
+    Trace("xtermPerror: ");
+    TraceVA(fmt, ap);
+    va_end(ap);
+#endif
+
     fprintf(stderr, "%s: ", ProgramName);
     va_start(ap, fmt);
     vfprintf(stderr, fmt, ap);
@@ -2195,6 +2210,19 @@ FlushLog(XtermWidget xw)
 
 /***====================================================================***/
 
+static unsigned
+maskToShift(unsigned long mask)
+{
+    unsigned result = 0;
+    if (mask != 0) {
+	while ((mask & 1) == 0) {
+	    mask >>= 1;
+	    ++result;
+	}
+    }
+    return result;
+}
+
 int
 getVisualInfo(XtermWidget xw)
 {
@@ -2224,10 +2252,25 @@ rgb masks (%04lx/%04lx/%04lx)\n"
 
 	if ((xw->visInfo != 0) && (xw->numVisuals > 0)) {
 	    XVisualInfo *vi = xw->visInfo;
+	    xw->rgb_shifts[0] = maskToShift(vi->red_mask);
+	    xw->rgb_shifts[1] = maskToShift(vi->green_mask);
+	    xw->rgb_shifts[2] = maskToShift(vi->blue_mask);
+
+	    xw->has_rgb = ((vi->red_mask != 0) &&
+			   (vi->green_mask != 0) &&
+			   (vi->blue_mask != 0) &&
+			   ((vi->red_mask & vi->green_mask) == 0) &&
+			   ((vi->green_mask & vi->blue_mask) == 0) &&
+			   ((vi->blue_mask & vi->red_mask) == 0));
+
 	    if (resource.reportColors) {
 		printf(MYFMT, MYARG);
 	    }
 	    TRACE((MYFMT, MYARG));
+	    TRACE(("...shifts %u/%u/%u\n",
+		   xw->rgb_shifts[0],
+		   xw->rgb_shifts[1],
+		   xw->rgb_shifts[2]));
 	}
     }
     return (xw->visInfo != 0) && (xw->numVisuals > 0);
@@ -2890,6 +2933,100 @@ xtermClosestColor(XtermWidget xw, int find_red, int find_green, int find_blue)
     (void) find_blue;
 #endif
     return result;
+}
+
+#if OPT_DIRECT_COLOR
+int
+getDirectColor(XtermWidget xw, int red, int green, int blue)
+{
+#define nRGB(name,shift) \
+	((unsigned long)(name << xw->rgb_shifts[shift]) \
+		         & xw->visInfo->name ##_mask)
+    MyPixel result = (MyPixel) (nRGB(red, 0) | nRGB(green, 1) | nRGB(blue, 2));
+    return (int) result;
+}
+
+static void
+formatDirectColor(char *target, XtermWidget xw, unsigned value)
+{
+#define fRGB(name, shift) \
+	(value & xw->visInfo->name ## _mask) >> xw->rgb_shifts[shift]
+    sprintf(target, "%lu:%lu:%lu", fRGB(red, 0), fRGB(green, 1), fRGB(blue, 2));
+}
+#endif /* OPT_DIRECT_COLOR */
+
+#define fg2SGR(n) \
+		(n) >= 8 ? 9 : 3, \
+		(n) >= 8 ? (n) - 8 : (n)
+#define bg2SGR(n) \
+		(n) >= 8 ? 10 : 4, \
+		(n) >= 8 ? (n) - 8 : (n)
+
+#define EndOf(s) (s) + strlen(s)
+
+char *
+xtermFormatSGR(XtermWidget xw, char *target, unsigned attr, int fg, int bg)
+{
+    TScreen *screen = TScreenOf(xw);
+    char *msg = target;
+
+    strcpy(target, "0");
+    if (attr & BOLD)
+	strcat(msg, ";1");
+    if (attr & UNDERLINE)
+	strcat(msg, ";4");
+    if (attr & BLINK)
+	strcat(msg, ";5");
+    if (attr & INVERSE)
+	strcat(msg, ";7");
+    if (attr & INVISIBLE)
+	strcat(msg, ";8");
+#if OPT_WIDE_ATTRS
+    if (attr & ATR_FAINT)
+	strcat(msg, ";2");
+    if (attr & ATR_ITALIC)
+	strcat(msg, ";3");
+    if (attr & ATR_STRIKEOUT)
+	strcat(msg, ";9");
+    if (attr & ATR_DBL_UNDER)
+	strcat(msg, ";21");
+#endif
+#if OPT_256_COLORS || OPT_88_COLORS
+    if_OPT_ISO_COLORS(screen, {
+	if (attr & FG_COLOR) {
+	    if_OPT_DIRECT_COLOR2(screen, hasDirectFG(attr), {
+		strcat(msg, ";38:2::");
+		formatDirectColor(EndOf(msg), xw, (unsigned) fg);
+	    } else
+	    )if (fg >= 16) {
+		sprintf(EndOf(msg), ";38:5:%d", fg);
+	    } else {
+		sprintf(EndOf(msg), ";%d%d", fg2SGR(fg));
+	    }
+	}
+	if (attr & BG_COLOR) {
+	    if_OPT_DIRECT_COLOR2(screen, hasDirectBG(attr), {
+		strcat(msg, ";48:2::");
+		formatDirectColor(EndOf(msg), xw, (unsigned) bg);
+	    } else
+	    )if (bg >= 16) {
+		sprintf(EndOf(msg), ";48:5:%d", bg);
+	    } else {
+		sprintf(EndOf(msg), ";%d%d", bg2SGR(bg));
+	    }
+	}
+    });
+#elif OPT_ISO_COLORS
+    if_OPT_ISO_COLORS(screen, {
+	if (attr & FG_COLOR) {
+	    sprintf(EndOf(msg), ";%d%d", fg2SGR(fg));
+	}
+	if (attr & BG_COLOR) {
+	    sprintf(EndOf(msg), ";%d%d", bg2SGR(bg));
+	}
+    });
+#endif
+    return target;
 }
 
 #if OPT_PASTE64
@@ -4079,6 +4216,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 	cp++;
 	if (*cp++ == 'q') {
 	    if (!strcmp(cp, "\"q")) {	/* DECSCA */
+		TRACE(("DECRQSS -> DECSCA\n"));
 		sprintf(reply, "%d%s",
 			(screen->protected_mode == DEC_PROTECT)
 			&& (xw->flags & PROTECTED) ? 1 : 0,
@@ -4088,6 +4226,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		    /* actually none of DECRQSS is valid for vt100's */
 		    break;
 		}
+		TRACE(("DECRQSS -> DECSCL\n"));
 		sprintf(reply, "%d%s%s",
 			(screen->vtXX_level ?
 			 screen->vtXX_level : 1) + 60,
@@ -4097,11 +4236,13 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 			: "",
 			cp);
 	    } else if (!strcmp(cp, "r")) {	/* DECSTBM */
+		TRACE(("DECRQSS -> DECSTBM\n"));
 		sprintf(reply, "%d;%dr",
 			screen->top_marg + 1,
 			screen->bot_marg + 1);
 	    } else if (!strcmp(cp, "s")) {	/* DECSLRM */
 		if (screen->vtXX_level >= 4) {	/* VT420 */
+		    TRACE(("DECRQSS -> DECSLRM\n"));
 		    sprintf(reply, "%d;%ds",
 			    screen->lft_marg + 1,
 			    screen->rgt_marg + 1);
@@ -4109,62 +4250,8 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		    okay = False;
 		}
 	    } else if (!strcmp(cp, "m")) {	/* SGR */
-		strcpy(reply, "0");
-		if (xw->flags & BOLD)
-		    strcat(reply, ";1");
-		if (xw->flags & UNDERLINE)
-		    strcat(reply, ";4");
-		if (xw->flags & BLINK)
-		    strcat(reply, ";5");
-		if (xw->flags & INVERSE)
-		    strcat(reply, ";7");
-		if (xw->flags & INVISIBLE)
-		    strcat(reply, ";8");
-#if OPT_256_COLORS || OPT_88_COLORS
-		if_OPT_ISO_COLORS(screen, {
-		    if (xw->flags & FG_COLOR) {
-			if (xw->cur_foreground >= 16)
-			    sprintf(reply + strlen(reply),
-				    ";38;5;%d", xw->cur_foreground);
-			else
-			    sprintf(reply + strlen(reply),
-				    ";%d%d",
-				    xw->cur_foreground >= 8 ? 9 : 3,
-				    xw->cur_foreground >= 8 ?
-				    xw->cur_foreground - 8 :
-				    xw->cur_foreground);
-		    }
-		    if (xw->flags & BG_COLOR) {
-			if (xw->cur_background >= 16)
-			    sprintf(reply + strlen(reply),
-				    ";48;5;%d", xw->cur_foreground);
-			else
-			    sprintf(reply + strlen(reply),
-				    ";%d%d",
-				    xw->cur_background >= 8 ? 10 : 4,
-				    xw->cur_background >= 8 ?
-				    xw->cur_background - 8 :
-				    xw->cur_background);
-		    }
-		});
-#elif OPT_ISO_COLORS
-		if_OPT_ISO_COLORS(screen, {
-		    if (xw->flags & FG_COLOR)
-			sprintf(reply + strlen(reply),
-				";%d%d",
-				xw->cur_foreground >= 8 ? 9 : 3,
-				xw->cur_foreground >= 8 ?
-				xw->cur_foreground - 8 :
-				xw->cur_foreground);
-		    if (xw->flags & BG_COLOR)
-			sprintf(reply + strlen(reply),
-				";%d%d",
-				xw->cur_background >= 8 ? 10 : 4,
-				xw->cur_background >= 8 ?
-				xw->cur_background - 8 :
-				xw->cur_background);
-		});
-#endif
+		TRACE(("DECRQSS -> SGR\n"));
+		xtermFormatSGR(xw, reply, xw->flags, xw->cur_foreground, xw->cur_background);
 		strcat(reply, "m");
 	    } else if (!strcmp(cp, " q")) {	/* DECSCUSR */
 		int code = STEADY_BLOCK;
@@ -4176,21 +4263,19 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		if (screen->cursor_blink_esc != 0)
 		    code -= 1;
 #endif
+		TRACE(("reply DECSCUSR\n"));
 		sprintf(reply, "%d%s", code, cp);
-	    } else
-		okay = False;
-
-	    if (okay) {
-		unparseputc1(xw, ANSI_DCS);
-		unparseputc(xw, '1');
-		unparseputc(xw, '$');
-		unparseputc(xw, 'r');
-		cp = reply;
-		unparseputs(xw, cp);
-		unparseputc1(xw, ANSI_ST);
 	    } else {
-		unparseputc(xw, ANSI_CAN);
+		okay = False;
 	    }
+
+	    unparseputc1(xw, ANSI_DCS);
+	    unparseputc(xw, okay ? '1' : '0');
+	    unparseputc(xw, '$');
+	    unparseputc(xw, 'r');
+	    cp = reply;
+	    unparseputs(xw, cp);
+	    unparseputc1(xw, ANSI_ST);
 	} else {
 	    unparseputc(xw, ANSI_CAN);
 	}
@@ -4337,17 +4422,18 @@ enum {
  * Only one mode can be reported at a time.
  */
 void
-do_rpm(XtermWidget xw, int nparams, int *params)
+do_ansi_rqm(XtermWidget xw, int nparams, int *params)
 {
     ANSI reply;
     int count = 0;
 
-    TRACE(("do_rpm %d:%d\n", nparams, params[0]));
+    TRACE(("do_ansi_rqm %d:%d\n", nparams, params[0]));
     memset(&reply, 0, sizeof(reply));
 
     if (nparams >= 1) {
-	int result = 0;
+	int result = mdUnknown;
 
+	/* DECRQM can only ask about one mode at a time */
 	switch (params[0]) {
 	case 1:		/* GATM */
 	    result = mdAlwaysReset;
@@ -4394,19 +4480,20 @@ do_rpm(XtermWidget xw, int nparams, int *params)
 }
 
 void
-do_decrpm(XtermWidget xw, int nparams, int *params)
+do_dec_rqm(XtermWidget xw, int nparams, int *params)
 {
     ANSI reply;
     int count = 0;
 
-    TRACE(("do_decrpm %d:%d\n", nparams, params[0]));
+    TRACE(("do_dec_rqm %d:%d\n", nparams, params[0]));
     memset(&reply, 0, sizeof(reply));
 
     if (nparams >= 1) {
 	TScreen *screen = TScreenOf(xw);
-	int result = 0;
+	int result = mdUnknown;
 
-	switch (params[0]) {
+	/* DECRQM can only ask about one mode at a time */
+	switch ((DECSET_codes) params[0]) {
 	case srm_DECCKM:
 	    result = MdFlag(xw->keyboard.flags, MODE_DECCKM);
 	    break;
@@ -4444,8 +4531,31 @@ do_decrpm(XtermWidget xw, int nparams, int *params)
 	    break;
 #endif
 #if OPT_BLINK_CURS
-	case srm_ATT610_BLINK:	/* att610: Start/stop blinking cursor */
-	    result = MdBool(screen->cursor_blink_res);
+	case srm_ATT610_BLINK:	/* AT&T 610: Start/stop blinking cursor */
+	    result = MdBool(screen->cursor_blink_esc);
+	    break;
+	case srm_CURSOR_BLINK_OPS:
+	    switch (screen->cursor_blink) {
+	    case cbTrue:
+		result = mdMaybeSet;
+		break;
+	    case cbFalse:
+		result = mdMaybeReset;
+		break;
+	    case cbAlways:
+		result = mdAlwaysSet;
+		break;
+	    case cbLAST:
+		/* FALLTHRU */
+	    case cbNever:
+		result = mdAlwaysReset;
+		break;
+	    }
+	    break;
+	case srm_XOR_CURSOR_BLINKS:
+	    result = (screen->cursor_blink_xor
+		      ? mdAlwaysSet
+		      : mdAlwaysReset);
 	    break;
 #endif
 	case srm_DECPFF:	/* print form feed */
@@ -4477,7 +4587,11 @@ do_decrpm(XtermWidget xw, int nparams, int *params)
 	    result = MdBool(screen->curses);
 	    break;
 	case srm_DECNRCM:	/* national charset (VT220) */
-	    result = MdFlag(xw->flags, NATIONAL);
+	    if (screen->vtXX_level >= 2) {
+		result = MdFlag(xw->flags, NATIONAL);
+	    } else {
+		result = 0;
+	    }
 	    break;
 	case srm_MARGIN_BELL:	/* margin bell                  */
 	    result = MdBool(screen->marginbell);
@@ -4506,7 +4620,11 @@ do_decrpm(XtermWidget xw, int nparams, int *params)
 	    result = MdFlag(xw->keyboard.flags, MODE_DECBKM);
 	    break;
 	case srm_DECLRMM:
-	    result = MdFlag(xw->flags, LEFT_RIGHT);
+	    if (screen->vtXX_level >= 4) {	/* VT420 */
+		result = MdFlag(xw->flags, LEFT_RIGHT);
+	    } else {
+		result = 0;
+	    }
 	    break;
 #if OPT_SIXEL_GRAPHICS
 	case srm_DECSDM:
@@ -4514,7 +4632,11 @@ do_decrpm(XtermWidget xw, int nparams, int *params)
 	    break;
 #endif
 	case srm_DECNCSM:
-	    result = MdFlag(xw->flags, NOCLEAR_COLM);
+	    if (screen->vtXX_level >= 5) {	/* VT510 */
+		result = MdFlag(xw->flags, NOCLEAR_COLM);
+	    } else {
+		result = 0;
+	    }
 	    break;
 	case srm_VT200_MOUSE:	/* xterm bogus sequence         */
 	    result = MdBool(screen->send_mouse_pos == VT200_MOUSE);
@@ -4580,7 +4702,13 @@ do_decrpm(XtermWidget xw, int nparams, int *params)
 	case srm_POP_ON_BELL:
 	    result = MdBool(screen->poponbell);
 	    break;
-	case srm_TITE_INHIBIT:
+	case srm_KEEP_CLIPBOARD:
+	    result = MdBool(screen->keepClipboard);
+	    break;
+	case srm_ALLOW_ALTBUF:
+	    result = MdBool(xw->misc.titeInhibit);
+	    break;
+	case srm_SAVE_CURSOR:
 	    result = MdBool(screen->sc[screen->whichBuf].saved);
 	    break;
 #if OPT_TCAP_FKEYS
@@ -4613,22 +4741,22 @@ do_decrpm(XtermWidget xw, int nparams, int *params)
 #endif
 #if OPT_READLINE
 	case srm_BUTTON1_MOVE_POINT:
-	    result = MdBool(screen->click1_moves);
+	    result = MdBool(SCREEN_FLAG(screen, click1_moves));
 	    break;
 	case srm_BUTTON2_MOVE_POINT:
-	    result = MdBool(screen->paste_moves);
+	    result = MdBool(SCREEN_FLAG(screen, paste_moves));
 	    break;
 	case srm_DBUTTON3_DELETE:
-	    result = MdBool(screen->dclick3_deletes);
+	    result = MdBool(SCREEN_FLAG(screen, dclick3_deletes));
 	    break;
 	case srm_PASTE_IN_BRACKET:
-	    result = MdBool(screen->paste_brackets);
+	    result = MdBool(SCREEN_FLAG(screen, paste_brackets));
 	    break;
 	case srm_PASTE_QUOTE:
-	    result = MdBool(screen->paste_quotes);
+	    result = MdBool(SCREEN_FLAG(screen, paste_quotes));
 	    break;
 	case srm_PASTE_LITERAL_NL:
-	    result = MdBool(screen->paste_literal_nl);
+	    result = MdBool(SCREEN_FLAG(screen, paste_literal_nl));
 	    break;
 #endif /* OPT_READLINE */
 #if OPT_SIXEL_GRAPHICS
@@ -5262,7 +5390,7 @@ NormalExit(void)
 	hold_screen = 2;
 	while (hold_screen) {
 	    xevents();
-	    Sleep(10);
+	    Sleep(EVENT_DELAY);
 	}
     }
 #if OPT_SESSION_MGT

@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.778 2017/05/29 23:19:51 tom Exp $ */
+/* $XTermId: xterm.h,v 1.789 2017/12/26 11:37:37 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -430,6 +430,7 @@ extern char **environ;
 #define XtNctrlFKeys		"ctrlFKeys"
 #define XtNcurses		"curses"
 #define XtNcursorBlink		"cursorBlink"
+#define XtNcursorBlinkXOR	"cursorBlinkXOR"
 #define XtNcursorColor		"cursorColor"
 #define XtNcursorOffTime	"cursorOffTime"
 #define XtNcursorOnTime		"cursorOnTime"
@@ -439,6 +440,7 @@ extern char **environ;
 #define XtNdecTerminalID	"decTerminalID"
 #define XtNdefaultString	"defaultString"
 #define XtNdeleteIsDEL		"deleteIsDEL"
+#define XtNdirectColor		"directColor"
 #define XtNdisallowedColorOps	"disallowedColorOps"
 #define XtNdisallowedFontOps	"disallowedFontOps"
 #define XtNdisallowedMouseOps	"disallowedMouseOps"
@@ -491,8 +493,8 @@ extern char **environ;
 #define XtNlogging		"logging"
 #define XtNloginShell		"loginShell"
 #define XtNmarginBell		"marginBell"
-#define XtNmaximized		"maximized"
 #define XtNmaxGraphicSize	"maxGraphicSize"
+#define XtNmaximized		"maximized"
 #define XtNmenuBar		"menuBar"	/* internal */
 #define XtNmenuHeight		"menuHeight"
 #define XtNmetaSendsEscape	"metaSendsEscape"
@@ -508,6 +510,7 @@ extern char **environ;
 #define XtNmultiClickTime	"multiClickTime"
 #define XtNmultiScroll		"multiScroll"
 #define XtNnMarginBell		"nMarginBell"
+#define XtNnextEventDelay	"nextEventDelay"
 #define XtNnumColorRegisters	"numColorRegisters"
 #define XtNnumLock		"numLock"
 #define XtNoldXtermFKeys	"oldXtermFKeys"
@@ -621,6 +624,7 @@ extern char **environ;
 #define XtCCtrlFKeys		"CtrlFKeys"
 #define XtCCurses		"Curses"
 #define XtCCursorBlink		"CursorBlink"
+#define XtCCursorBlinkXOR	"CursorBlinkXOR"
 #define XtCCursorOffTime	"CursorOffTime"
 #define XtCCursorOnTime		"CursorOnTime"
 #define XtCCursorUnderLine	"CursorUnderLine"
@@ -629,6 +633,7 @@ extern char **environ;
 #define XtCDecTerminalID	"DecTerminalID"
 #define XtCDefaultString	"DefaultString"
 #define XtCDeleteIsDEL		"DeleteIsDEL"
+#define XtCDirectColor		"DirectColor"
 #define XtCDisallowedColorOps	"DisallowedColorOps"
 #define XtCDisallowedFontOps	"DisallowedFontOps"
 #define XtCDisallowedMouseOps	"DisallowedMouseOps"
@@ -677,8 +682,8 @@ extern char **environ;
 #define XtCLogging		"Logging"
 #define XtCLoginShell		"LoginShell"
 #define XtCMarginBell		"MarginBell"
-#define XtCMaximized		"Maximized"
 #define XtCMaxGraphicSize	"MaxGraphicSize"
+#define XtCMaximized		"Maximized"
 #define XtCMenuBar		"MenuBar"	/* internal */
 #define XtCMenuHeight		"MenuHeight"
 #define XtCMetaSendsEscape	"MetaSendsEscape"
@@ -693,6 +698,7 @@ extern char **environ;
 #define XtCModifyStringKeys	"ModifyStringKeys"
 #define XtCMultiClickTime	"MultiClickTime"
 #define XtCMultiScroll		"MultiScroll"
+#define XtCNextEventDelay	"NextEventDelay"
 #define XtCNumColorRegisters	"NumColorRegisters"
 #define XtCNumLock		"NumLock"
 #define XtCOldXtermFKeys	"OldXtermFKeys"
@@ -1052,6 +1058,7 @@ extern XtermWidget getXtermWidget (Widget /* w */);
 extern char *udk_lookup (XtermWidget /* xw */, int /* keycode */, int * /* len */);
 extern char *xtermEnvEncoding (void);
 extern char *xtermFindShell (char * /* leaf */, Bool /* warning */);
+extern char *xtermFormatSGR (XtermWidget /* xw */, char * /* target */, unsigned /* attrs */, int /* fg */, int /* bg */);
 extern const char *SysErrorMsg (int /* n */);
 extern const char *SysReasonMsg (int /* n */);
 extern Boolean allocateBestRGB(XtermWidget /* xw */, XColor * /* def */);
@@ -1088,10 +1095,10 @@ extern void ReverseOldColors (XtermWidget /* xw */);
 extern void SysError (int /* i */) GCC_NORETURN;
 extern void VisualBell (void);
 extern void cleanup_colored_cursor (void);
+extern void do_ansi_rqm (XtermWidget /* xw */, int /* nparam */, int * /* params */);
 extern void do_dcs (XtermWidget /* xw */, Char * /* buf */, size_t /* len */);
-extern void do_decrpm (XtermWidget /* xw */, int /* nparam */, int * /* params */);
+extern void do_dec_rqm (XtermWidget /* xw */, int /* nparam */, int * /* params */);
 extern void do_osc (XtermWidget /* xw */, Char * /* buf */, size_t /* len */, int /* final */);
-extern void do_rpm (XtermWidget /* xw */, int /* nparam */, int * /* params */);
 extern void do_xevents (void);
 extern void end_tek_mode (void);
 extern void end_vt_mode (void);
@@ -1123,6 +1130,10 @@ extern void xtermWarning (const char * /*fmt*/,...) GCC_PRINTFLIKE(1,2);
 #if OPT_DABBREV
 extern void HandleDabbrevExpand        PROTO_XT_ACTIONS_ARGS;
 #endif
+
+#if OPT_DIRECT_COLOR
+extern int getDirectColor(XtermWidget /* xw */, int /* red */, int /* green */, int /* blue */);
+#endif /* OPT_DIRECT_COLOR */
 
 #if OPT_EXEC_XTERM
 extern char *ProcGetCWD(pid_t /* pid */);
@@ -1271,7 +1282,7 @@ extern void ScrnInsertCol (XtermWidget /* xw */, unsigned  /* n */);
 extern void ScrnInsertLine (XtermWidget /* xw */, ScrnBuf /* sb */, int  /* last */, int  /* where */, unsigned  /* n */);
 extern void ScrnRefresh (XtermWidget /* xw */, int  /* toprow */, int  /* leftcol */, int  /* nrows */, int  /* ncols */, Bool  /* force */);
 extern void ScrnUpdate (XtermWidget /* xw */, int  /* toprow */, int  /* leftcol */, int  /* nrows */, int  /* ncols */, Bool  /* force */);
-extern void ScrnWriteText (XtermWidget /* xw */, IChar * /* str */, unsigned  /* flags */, unsigned /* cur_fg_bg */, unsigned  /* length */);
+extern void ScrnWriteText (XtermWidget /* xw */, IChar * /* str */, unsigned  /* flags */, CellColor /* cur_fg_bg */, unsigned  /* length */);
 extern void ShowWrapMarks (XtermWidget /* xw */, int /* row */, CLineData * /* ld */);
 extern void setupLineData (TScreen * /* screen */, ScrnBuf /* base */, Char * /* data */, unsigned /* nrow */, unsigned /* ncol */);
 extern void xtermParseRect (XtermWidget /* xw */, int, int *, XTermRect *);
@@ -1349,6 +1360,7 @@ extern void deleteScrollback (TScreen * /* screen */);
 extern void DoResizeScreen (XtermWidget /* xw */);
 extern void HandleScrollBack           PROTO_XT_ACTIONS_ARGS;
 extern void HandleScrollForward        PROTO_XT_ACTIONS_ARGS;
+extern void HandleScrollTo             PROTO_XT_ACTIONS_ARGS;
 extern void ResizeScrollBar (XtermWidget  /* xw */);
 extern void ScrollBarDrawThumb (Widget  /* scrollWidget */);
 extern void ScrollBarOff (XtermWidget  /* xw */);
@@ -1375,7 +1387,7 @@ extern void TabZonk (Tabs  /* tabs */);
 extern Boolean isDefaultBackground(const char * /* name */);
 extern Boolean isDefaultForeground(const char * /* name */);
 extern CgsEnum whichXtermCgs(XtermWidget /* xw */, unsigned /* attr_flags */, Bool /* hilite */);
-extern GC updatedXtermGC (XtermWidget /* xw */, unsigned  /* flags */, unsigned /* fg_bg */, Bool  /* hilite */);
+extern GC updatedXtermGC (XtermWidget /* xw */, unsigned  /* flags */, CellColor /* fg_bg */, Bool  /* hilite */);  
 extern Pixel getXtermBackground(XtermWidget /* xw */, unsigned /* flags */, int /* color */);
 extern Pixel getXtermForeground(XtermWidget /* xw */, unsigned /* flags */, int /* color */);
 extern int ClearInLine (XtermWidget /* xw */, int /* row */, int /* col */, unsigned /* len */);
@@ -1430,12 +1442,12 @@ extern int XParseXineramaGeometry(Display * /* display */, char * /* parsestring
 
 #if OPT_ISO_COLORS
 
-extern unsigned extract_fg (XtermWidget /* xw */, unsigned  /* color */, unsigned  /* flags */);
-extern unsigned extract_bg (XtermWidget /* xw */, unsigned  /* color */, unsigned  /* flags */);
-extern CellColor makeColorPair (int  /* fg */, int  /* bg */);
+extern Pixel extract_fg (XtermWidget /* xw */, CellColor /* color */, unsigned  /* flags */);
+extern Pixel extract_bg (XtermWidget /* xw */, CellColor /* color */, unsigned  /* flags */);
+extern CellColor makeColorPair (XtermWidget /* xw */);
 extern void ClearCurBackground (XtermWidget /* xw */, int  /* top */, int  /* left */, unsigned  /* height */, unsigned  /* width */, unsigned /* fw */);
 
-#define xtermColorPair(xw) makeColorPair(xw->sgr_foreground, xw->sgr_background)
+#define xtermColorPair(xw) makeColorPair(xw)
 
 #if OPT_COLOR_RES
 #define GET_COLOR_RES(xw, res) xtermGetColorRes(xw, &(res))
@@ -1510,12 +1522,14 @@ extern Pixel xtermGetColorRes(XtermWidget /* xw */, ColorRes * /* res */);
 
 		/* FIXME: Reverse-Video? */
 #define T_COLOR(v,n) (v)->Tcolors[n]
-#define makeColorPair(fg, bg) 0
 #define xtermColorPair(xw) 0
 
 #define checkVeryBoldColors(flags, fg) /* nothing */
 
 #endif	/* OPT_ISO_COLORS */
+
+#define getXtermFG(xw, flags, color) getXtermForeground(xw, flags, color)
+#define getXtermBG(xw, flags, color) getXtermBackground(xw, flags, color)
 
 #if OPT_ZICONBEEP
 extern void initZIconBeep(void);

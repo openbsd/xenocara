@@ -1,11 +1,11 @@
-# $XTermId: termcap,v 1.83 2016/07/09 18:40:00 tom Exp $
+# $XTermId: termcap,v 1.88 2017/12/25 21:24:41 tom Exp $
 #
 # These are termcap entries that correspond to xterm's terminfo file.
 # The file is formatted using ncurses' "tic -CNx", but is not mechanically
 # derived from the terminfo.
 #
 #------------------------------------------------------------------------------
-# Copyright 1996-2012,2016 by Thomas E. Dickey
+# Copyright 1996-2016,2017 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -123,8 +123,12 @@ x2|xterm-88color|xterm alias:\
 	:Co#88:pa#7744:tc=xterm-256color:
 
 x3|xterm-256color|xterm alias:\
-	:Co#256:pa#32767:\
+	:Co#256:pa#65536:\
 	:AB=\E[48;5;%dm:AF=\E[38;5;%dm:tc=xterm-new:
+
+# Termcap cannot do direct-colors, but users may expect this name.
+x4|xterm-direct|xterm alias:\
+	:tc=xterm-256color:
 
 xi|xterm-nrc|xterm alias:\
 	:tc=xterm:
@@ -241,3 +245,4 @@ v0|xterm|X11 terminal emulator:\
 # should send.
 xterm+kbs|fragment for backspace key:\
 	:kb=^H:
+#	:kb=\177:

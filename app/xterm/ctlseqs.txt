@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2017)
-               updated for XTerm Patch #329 (2017/06/11)
+               updated for XTerm Patch #331 (2017/12/22)
 
 
 
@@ -50,48 +50,48 @@ occasional lapses to "characters" where the meaning cannot be mistaken.
 
 Controls (including the escape code 27) are processed once:
 
-o This means that a C1 control can be mistaken for badly-formed UTF-8
-  when the terminal runs in UTF-8 mode because C1 controls are valid
-  continuation bytes of a UTF-8 encoded (multibyte) value.
+o   This means that a C1 control can be mistaken for badly-formed UTF-8
+    when the terminal runs in UTF-8 mode because C1 controls are valid
+    continuation bytes of a UTF-8 encoded (multibyte) value.
 
-o It is not possible to use a C1 control obtained from decoding the
-  UTF-8 text, because that would require reprocessing the data.  Conse-
-  quently there is no ambiguity in the way this document uses the term
-  "character" to refer to bytes in a control sequence.
+o   It is not possible to use a C1 control obtained from decoding the
+    UTF-8 text, because that would require reprocessing the data.  Con-
+    sequently there is no ambiguity in the way this document uses the
+    term "character" to refer to bytes in a control sequence.
 
 The order of processing is a necessary consequence of the way ECMA-48 is
 designed:
 
-o Each byte sent to the terminal can be unambiguously determined to fall
-  into one of a few categories (C0, C1 and graphic characters).
+o   Each byte sent to the terminal can be unambiguously determined to
+    fall into one of a few categories (C0, C1 and graphic characters).
 
-o ECMA-48 is modal; once it starts processing a control sequence, the
-  terminal continues until the sequence is complete, or some byte is
-  found which is not allowed in the sequence.
+o   ECMA-48 is modal; once it starts processing a control sequence, the
+    terminal continues until the sequence is complete, or some byte is
+    found which is not allowed in the sequence.
 
-o Intermediate, parameter and final bytes may use the same codes as
-  graphic characters, but they are processed as part of a control
-  sequence and are not actually graphic characters.
+o   Intermediate, parameter and final bytes may use the same codes as
+    graphic characters, but they are processed as part of a control
+    sequence and are not actually graphic characters.
 
-o Eight-bit controls can have intermediate, etc., bytes in the range 160
-  to 255.  Those can be treated as their counterparts in the range 32 to
-  127.
+o   Eight-bit controls can have intermediate, etc., bytes in the range
+    160 to 255.  Those can be treated as their counterparts in the range
+    32 to 127.
 
-o Single-byte controls can be handled separately from multi-byte control
-  sequences because ECMA-48's rules are unambiguous.
+o   Single-byte controls can be handled separately from multi-byte con-
+    trol sequences because ECMA-48's rules are unambiguous.
 
-  As a special case, ECMA-48 (section 9) mentions that the control func-
-  tions shift-in and shift-out are allowed to occur within a 7-bit
-  multibyte control sequence because those cannot alter the meaning of
-  the control sequence.
+    As a special case, ECMA-48 (section 9) mentions that the control
+    functions shift-in and shift-out are allowed to occur within a 7-bit
+    multibyte control sequence because those cannot alter the meaning of
+    the control sequence.
 
-o Some controls (such as OSC ) introduce a string mode, which is ended
-  on a ST  (string terminator).
+o   Some controls (such as OSC ) introduce a string mode, which is ended
+    on a ST  (string terminator).
 
-  Again, the terminal should accept single-byte controls within the
-  string.  However, xterm has a resource setting brokenLinuxOSC to allow
-  recovery from applications which rely upon malformed palette sequences
-  used by the Linux console.
+    Again, the terminal should accept single-byte controls within the
+    string.  However, xterm has a resource setting brokenLinuxOSC to
+    allow recovery from applications which rely upon malformed palette
+    sequences used by the Linux console.
 
 C1 (8-Bit) Control Characters
 
@@ -357,17 +357,17 @@ CSI ? Pi; Pa; Pv S
           On success, Pv represents the value read or set.
 
           Notes:
-          o The current implementation allows reading the graphics
-            sizes, but disallows modifying those sizes because that is
-            done once, using resource-values.
-          o Graphics geometry is not necessarily the same as "window
-            size" (see the dtterm window manipulation extensions). For
-            example, xterm limits the maximum graphics geometry at com-
-            pile time (1000x1000 as of version 328) although the window
-            size can be larger.
-          o While resizing a window will always change the current
-            graphics geometry, the reverse is not true.  Setting graph-
-            ics geometry does not affect the window size.
+          o   The current implementation allows reading the graphics
+              sizes, but disallows modifying those sizes because that is
+              done once, using resource-values.
+          o   Graphics geometry is not necessarily the same as "window
+              size" (see the dtterm window manipulation extensions). For
+              example, xterm limits the maximum graphics geometry at
+              compile time (1000x1000 as of version 328) although the
+              window size can be larger.
+          o   While resizing a window will always change the current
+              graphics geometry, the reverse is not true.  Setting
+              graphics geometry does not affect the window size.
 CSI Ps T  Scroll down Ps lines (default = 1) (SD).
 CSI Ps ; Ps ; Ps ; Ps ; Ps T
           Initiate highlight mouse tracking.  Parameters are
@@ -465,7 +465,11 @@ CSI ? Pm h
             Ps = 9  -> Send Mouse X & Y on button press.  See the sec-
           tion Mouse Tracking.  This is the X10 xterm mouse protocol.
             Ps = 1 0  -> Show toolbar (rxvt).
-            Ps = 1 2  -> Start Blinking Cursor (att610).
+            Ps = 1 2  -> Start Blinking Cursor (AT&T 610).
+            Ps = 1 3  -> Start Blinking Cursor (set only via resource or
+          menu).
+            Ps = 1 4  -> Enable XOR of Blinking Cursor control sequence
+          and menu.
             Ps = 1 8  -> Print form feed (DECPFF).
             Ps = 1 9  -> Set print extent to full screen (DECPEX).
             Ps = 2 5  -> Show Cursor (DECTCEM).
@@ -473,7 +477,7 @@ CSI ? Pm h
             Ps = 3 5  -> Enable font-shifting functions (rxvt).
             Ps = 3 8  -> Enter Tektronix Mode (DECTEK).
             Ps = 4 0  -> Allow 80 -> 132 Mode.
-            Ps = 4 1  -> more(1) fix (see curses resource).
+            Ps = 4 1  -> more(1) fix (see curses(3) resource).
             Ps = 4 2  -> Enable National Replacement Character sets
           (DECNRCM).
             Ps = 4 4  -> Turn On Margin Bell.
@@ -523,6 +527,9 @@ CSI ? Pm h
           is received.  (enables the popOnBell resource).
             Ps = 1 0 4 4  -> Reuse the most recent data copied to CLIP-
           BOARD.  (This enables the keepClipboard resource).
+            Ps = 1 0 4 6  -> Enable switching to/from Alternate Screen
+          Buffer.  This works for terminfo-based systems, updating the
+          titeInhibit resource.
             Ps = 1 0 4 7  -> Use Alternate Screen Buffer.  (This may be
           disabled by the titeInhibit resource).
             Ps = 1 0 4 8  -> Save cursor as in DECSC.  (This may be dis-
@@ -536,7 +543,7 @@ CSI ? Pm h
             Ps = 1 0 5 1  -> Set Sun function-key mode.
             Ps = 1 0 5 2  -> Set HP function-key mode.
             Ps = 1 0 5 3  -> Set SCO function-key mode.
-            Ps = 1 0 6 0  -> Set legacy keyboard emulation (X11R6).
+            Ps = 1 0 6 0  -> Set legacy keyboard emulation (i.e, X11R6).
             Ps = 1 0 6 1  -> Set VT220 keyboard emulation.
             Ps = 2 0 0 4  -> Set bracketed paste mode.
 CSI Pm i  Media Copy (MC).
@@ -569,14 +576,18 @@ CSI ? Pm l
             Ps = 8  -> No Auto-repeat Keys (DECARM).
             Ps = 9  -> Don't send Mouse X & Y on button press.
             Ps = 1 0  -> Hide toolbar (rxvt).
-            Ps = 1 2  -> Stop Blinking Cursor (att610).
+            Ps = 1 2  -> Stop Blinking Cursor (AT&T 610).
+            Ps = 1 3  -> Disable Blinking Cursor (reset only via
+          resource or menu).
+            Ps = 1 4  -> Disable XOR of Blinking Cursor control sequence
+          and menu.
             Ps = 1 8  -> Don't print form feed (DECPFF).
             Ps = 1 9  -> Limit print to scrolling region (DECPEX).
             Ps = 2 5  -> Hide Cursor (DECTCEM).
             Ps = 3 0  -> Don't show scrollbar (rxvt).
             Ps = 3 5  -> Disable font-shifting functions (rxvt).
             Ps = 4 0  -> Disallow 80 -> 132 Mode.
-            Ps = 4 1  -> No more(1) fix (see curses resource).
+            Ps = 4 1  -> No more(1) fix (see curses(3) resource).
             Ps = 4 2  -> Disable National Replacement Character sets
           (DECNRCM).
             Ps = 4 4  -> Turn Off Margin Bell.
@@ -623,9 +634,13 @@ CSI ? Pm l
           resource).
             Ps = 1 0 4 3  -> Disable raising of the window when Control-
           G is received.  (This disables the popOnBell resource).
+            Ps = 1 0 4 6  -> Disable switching to/from Alternate Screen
+          Buffer.  This works for terminfo-based systems, updating the
+          titeInhibit resource.  If currently using the Alternate Screen
+          Buffer, xterm switches to the Normal Screen Buffer.
             Ps = 1 0 4 7  -> Use Normal Screen Buffer, clearing screen
-          first if in the Alternate Screen.  (This may be disabled by
-          the titeInhibit resource).
+          first if in the Alternate Screen Buffer.  (This may be dis-
+          abled by the titeInhibit resource).
             Ps = 1 0 4 8  -> Restore cursor as in DECRC.  (This may be
           disabled by the titeInhibit resource).
             Ps = 1 0 4 9  -> Use Normal Screen Buffer and restore cursor
@@ -637,7 +652,8 @@ CSI ? Pm l
             Ps = 1 0 5 1  -> Reset Sun function-key mode.
             Ps = 1 0 5 2  -> Reset HP function-key mode.
             Ps = 1 0 5 3  -> Reset SCO function-key mode.
-            Ps = 1 0 6 0  -> Reset legacy keyboard emulation (X11R6).
+            Ps = 1 0 6 0  -> Reset legacy keyboard emulation (i.e,
+          X11R6).
             Ps = 1 0 6 1  -> Reset keyboard emulation to Sun/PC style.
             Ps = 2 0 0 4  -> Reset bracketed paste mode.
 CSI Pm m  Character Attributes (SGR).
@@ -646,7 +662,7 @@ CSI Pm m  Character Attributes (SGR).
             Ps = 2  -> Faint, decreased intensity (ISO 6429).
             Ps = 3  -> Italicized (ISO 6429).
             Ps = 4  -> Underlined.
-            Ps = 5  -> Blink (appears as Bold).
+            Ps = 5  -> Blink (appears as Bold in X11R6 xterm).
             Ps = 7  -> Inverse.
             Ps = 8  -> Invisible, i.e., hidden (VT300).
             Ps = 9  -> Crossed-out characters (ISO 6429).
@@ -706,19 +722,34 @@ CSI Pm m  Character Attributes (SGR).
           Xterm maintains a color palette whose entries are identified
           by an index beginning with zero.  If 88- or 256-color support
           is compiled, the following apply:
-          o All parameters are decimal integers.
-          o RGB values range from zero (0) to 255.
-          o ISO-8613-3 can be interpreted in more than one way; xterm
-            allows the semicolons in this control to be replaced by
-            colons (but after the first colon, colons must be used).
+          o   All parameters are decimal integers.
+          o   RGB values range from zero (0) to 255.
+          o   ISO-8613-6 has been interpreted in more than one way;
+              xterm allows the semicolons separating the subparameters
+              in this control to be replaced by colons (but after the
+              first colon, colons must be used).
 
-          These ISO-8613-3 controls are supported:
+          These ISO-8613-6 controls are supported:
+            Pm = 3 8 ; 2 ; Pi; Pr; Pg; Pb -> Set foreground color to the
+          closest match in xterm's palette for the given RGB Pr/Pg/Pb.
+          The color space identifier Pi is ignored.
+            Pm = 3 8 ; 5 ; Ps -> Set foreground color to Ps.
+            Pm = 4 8 ; 2 ; Pi; Pr; Pg; Pb -> Set background color to the
+          closest match in xterm's palette for the given RGB Pr/Pg/Pb.
+          The color space identifier Pi is ignored.
+            Pm = 4 8 ; 5 ; Ps -> Set background color to Ps.
+
+          This variation on ISO-8613-6 is supported for compatibility
+          with KDE konsole:
             Pm = 3 8 ; 2 ; Pr; Pg; Pb -> Set foreground color to the
           closest match in xterm's palette for the given RGB Pr/Pg/Pb.
-            Pm = 3 8 ; 5 ; Ps -> Set foreground color to Ps.
             Pm = 4 8 ; 2 ; Pr; Pg; Pb -> Set background color to the
           closest match in xterm's palette for the given RGB Pr/Pg/Pb.
-            Pm = 4 8 ; 5 ; Ps -> Set background color to Ps.
+
+          If xterm is compiled with direct-color support, and the
+          resource directColor is true, then rather than choosing the
+          closest match, xterm asks the X server to directly render a
+          given color.
 
 CSI > Ps; Ps m
           Set or reset resource-values used by xterm to decide whether
@@ -784,7 +815,7 @@ CSI ? Ps n
           available, if compiled-in, or CSI ? 5 0 n  No Locator, if not.
             Ps = 5 6  -> Report Locator type as CSI ? 5 7 ; 1 n  Mouse,
           if compiled-in, or CSI ? 5 7 ; 0 n  Cannot identify, if not.
-            Ps = 6 2  -> Report macro space (DECMSR) as CSI Pn \* { .
+            Ps = 6 2  -> Report macro space (DECMSR) as CSI Pn *  { .
             Ps = 6 3  -> Report memory checksum (DECCKSR) as DCS Pt ! x
           x x x ST .
               Pt is the request id (from an optional parameter to the
@@ -819,7 +850,7 @@ CSI Ps ; Ps " p
 CSI Ps $ p
           Request ANSI mode (DECRQM).  For VT300 and up, reply is
             CSI Ps; Pm$ y
-          where Ps is the mode number as in RM, and Pm is the mode
+          where Ps is the mode number as in SM/RM, and Pm is the mode
           value:
             0 - not recognized
             1 - set
@@ -829,8 +860,12 @@ CSI Ps $ p
 CSI ? Ps$ p
           Request DEC private mode (DECRQM).  For VT300 and up, reply is
             CSI ? Ps; Pm$ y
-          where Ps is the mode number as in DECSET, Pm is the mode value
-          as in the ANSI DECRQM.
+          where Ps is the mode number as in DECSET/DECSET, Pm is the
+          mode value as in the ANSI DECRQM.
+          Two private modes are read-only (i.e., 1 3  and 1 4 ), pro-
+          vided only for reporting their values using this control
+          sequence.  They correspond to the resources cursorBlink and
+          cursorBlinkXOR.
 CSI Ps q  Load LEDs (DECLL).
             Ps = 0  -> Clear all LEDS (default).
             Ps = 1  -> Light Num Lock.
@@ -864,8 +899,8 @@ CSI Pt; Pl; Pb; Pr; Ps$ r
           Change Attributes in Rectangular Area (DECCARA), VT400 and up.
             Pt; Pl; Pb; Pr denotes the rectangle.
             Ps denotes the SGR attributes to change: 0, 1, 4, 5, 7.
-CSI s     Save cursor (ANSI.SYS), available only when DECLRMM is dis-
-          abled.
+CSI s     Save cursor, available only when DECLRMM is disabled (SCOSC,
+          also ANSI.SYS).
 CSI Pl; Pr s
           Set left and right margins (DECSLRM), available only when
           DECLRMM is enabled (VT420 and up).
@@ -943,7 +978,7 @@ CSI Pt; Pl; Pb; Pr; Ps$ t
           up.
             Pt; Pl; Pb; Pr denotes the rectangle.
             Ps denotes the attributes to reverse, i.e.,  1, 4, 5, 7.
-CSI u     Restore cursor (ANSI.SYS).
+CSI u     Restore cursor (SCORC, also ANSI.SYS).
 CSI Ps SP u
           Set margin-bell volume (DECSMBV, VT520).
             Ps = 1  -> off.
@@ -1526,11 +1561,11 @@ Similarly, xterm can be compiled to support HP keyboards.  See the
 xterm-hp terminfo entry for details.
 
 The Alternate Screen Buffer
-Xterm maintains two screen buffers.  The normal screen buffer allows you
+Xterm maintains two screen buffers.  The Normal Screen Buffer allows you
 to scroll back to view saved lines of output up to the maximum set by
-the saveLines resource.  The alternate screen buffer is exactly as large
-as the display, contains no additional saved lines.  When the alternate
-screen buffer is active, you cannot scroll back to view saved lines.
+the saveLines resource.  The Alternate Screen Buffer is exactly as large
+as the display, contains no additional saved lines.  When the Alternate
+Screen Buffer is active, you cannot scroll back to view saved lines.
 Xterm provides control sequences and menu entries for switching between
 the two.
 
@@ -1543,9 +1578,9 @@ built with terminfo libraries because terminfo does not provide the
 whole text of the termcap data in one piece.  It would not work for ter-
 minfo anyway, since terminfo data is not passed in environment vari-
 ables; setting an environment variable in this manner would have no
-effect on the application's ability to switch between normal and alter-
-nate screen buffers.  Instead, the newer private mode controls (such as
-1 0 4 9 ) for switching between normal and alternate screen buffers sim-
+effect on the application's ability to switch between Normal and Alter-
+nate Screen buffers.  Instead, the newer private mode controls (such as
+1 0 4 9 ) for switching between Normal and Alternate Screen buffers sim-
 ply disable the switching.  They add other features such as clearing the
 display for the same reason: to make the details of switching indepen-
 dent of the application that requests the switch.
@@ -1593,8 +1628,8 @@ tion on button presses.  These modes are typically used by editors and
 other full-screen applications that want to make use of the mouse.
 
 There are two sets of mutually exclusive modes:
-o mouse protocol
-o protocol encoding
+o   mouse protocol
+o   protocol encoding
 
 The mouse protocols include DEC Locator mode, enabled by the DECELR CSI
 Ps ; Ps  '  z control sequence, and is not described here (control
@@ -1629,32 +1664,33 @@ parameters in a single character as value+32.  For example, !  specifies
 the value 1.  The upper left character position on the terminal is
 denoted as 1,1.  This scheme dates back to X10, though the normal mouse-
 tracking (from X11) is more elaborate.
-X10 compatbility mode
+X10 compatibility mode
 
 X10 compatibility mode sends an escape sequence only on button press,
 encoding the location and the mouse button pressed.  It is enabled by
 specifying parameter 9 to DECSET.  On button press, xterm sends CSI M
 CbCxCy (6 characters).
-o Cb is button-1.
-o Cx and Cy are the x and y coordinates of the mouse when the button was
-  pressed.
+o   Cb is button-1.
+o   Cx and Cy are the x and y coordinates of the mouse when the button
+    was pressed.
 Normal tracking mode
 
 Normal tracking mode sends an escape sequence on both button press and
 release.  Modifier key (shift, ctrl, meta) information is also sent.  It
 is enabled by specifying parameter 1000 to DECSET.  On button press or
 release, xterm sends CSI M CbCxCy.
-o The low two bits of Cb encode button information: 0=MB1 pressed, 1=MB2
-  pressed, 2=MB3 pressed, 3=release.
-o The next three bits encode the modifiers which were down when the but-
-  ton was pressed and are added together:  4=Shift, 8=Meta, 16=Control.
-  Note however that the shift and control bits are normally unavailable
-  because xterm uses the control modifier with mouse for popup menus,
-  and the shift modifier is used in the default translations for button
-  events.  The Meta modifier recognized by xterm is the mod1 mask, and
-  is not necessarily the "Meta" key (see xmodmap).
-o Cx and Cy are the x and y coordinates of the mouse event, encoded as
-  in X10 mode.
+o   The low two bits of Cb encode button information: 0=MB1 pressed,
+    1=MB2 pressed, 2=MB3 pressed, 3=release.
+o   The next three bits encode the modifiers which were down when the
+    button was pressed and are added together:  4=Shift, 8=Meta, 16=Con-
+    trol.  Note however that the shift and control bits are normally
+    unavailable because xterm uses the control modifier with mouse for
+    popup menus, and the shift modifier is used in the default transla-
+    tions for button events.  The Meta modifier recognized by xterm is
+    the mod1 mask, and is not necessarily the "Meta" key (see
+    xmodmap(1)).
+o   Cx and Cy are the x and y coordinates of the mouse event, encoded as
+    in X10 mode.
 Wheel mice
 
 Wheel mice may return buttons 4 and 5.  Those buttons are represented by
@@ -1664,8 +1700,8 @@ reported.  By default, the wheel mouse events are translated to scroll-
 back and scroll-forw actions.  Those actions normally scroll the whole
 window, as if the scrollbar was used.  However if Alternate Scroll mode
 is set, then cursor up/down controls are sent when the terminal is dis-
-playing the alternate screen.  The initial state of Alternate Scroll
-mode is set using the alternateScroll resource.
+playing the Alternate Screen Buffer.  The initial state of Alternate
+Scroll mode is set using the alternateScroll resource.
 Highlight tracking
 
 Mouse highlight tracking notifies a program of a button press, receives
@@ -1689,15 +1725,15 @@ location tracks the mouse, but will never be above row firstrow and will
 always be above row lastrow.  (The top of the screen is row 1.)  When
 the button is released, xterm reports the ending position one of two
 ways:
-o if the start and end coordinates are the same locations:
-  CSI t CxCy.
-o otherwise:
-  CSI T CxCyCxCyCxCy.
-  The parameters are startx, starty, endx, endy, mousex, and mousey.
-  - startx, starty, endx, and endy give the starting and ending charac-
-    ter positions of the region.
-  - mousex and mousey give the location of the mouse at button up, which
-    may not be over a character.
+o   if the start and end coordinates are the same locations:
+    CSI t CxCy.
+o   otherwise:
+    CSI T CxCyCxCyCxCy.
+    The parameters are startx, starty, endx, endy, mousex, and mousey.
+    - startx, starty, endx, and endy give the starting and ending char-
+      acter positions of the region.
+    - mousex and mousey give the location of the mouse at button up,
+      which may not be over a character.
 Button-event tracking
 
 Button-event tracking is essentially the same as normal tracking, but
@@ -1705,13 +1741,14 @@ xterm also reports button-motion events.  Motion events are reported
 only if the mouse pointer has moved to a different character cell.  It
 is enabled by specifying parameter 1002 to DECSET.  On button press or
 release, xterm sends the same codes used by normal tracking mode.
-o On button-motion events, xterm adds 32 to the event code (the third
-  character, Cb).
-o The other bits of the event code specify button and modifier keys as
-  in normal mode.  For example, motion into cell x,y with button 1 down
-  is reported as CSI M @ CxCy.  ( @  = 32 + 0 (button 1) + 32 (motion
-  indicator) ).  Similarly, motion with button 3 down is reported as CSI
-  M B CxCy.  ( B  = 32 + 2 (button 3) + 32 (motion indicator) ).
+o   On button-motion events, xterm adds 32 to the event code (the third
+    character, Cb).
+o   The other bits of the event code specify button and modifier keys as
+    in normal mode.  For example, motion into cell x,y with button 1
+    down is reported as CSI M @ CxCy.  ( @  = 32 + 0 (button 1) + 32
+    (motion indicator) ).  Similarly, motion with button 3 down is
+    reported as CSI M B CxCy.  ( B  = 32 + 2 (button 3) + 32 (motion
+    indicator) ).
 Any-event tracking
 
 Any-event mode is the same as button-event mode, except that all motion
@@ -1749,13 +1786,14 @@ SGR (1006)
           semicolon-separated encoded button value, the Cx and Cy ordi-
           nates and a final character which is M  for button press and m
           for button release.
-          o The encoded button value in this case does not add 32 since
-            that was useful only in the X10 scheme for ensuring that the
-            byte containing the button value is a printable code.
-          o The modifiers are encoded in the same way.
-          o A different final character is used for button release to
-            resolve the X10 ambiguity regarding which button was
-            released.
+          o   The encoded button value in this case does not add 32
+              since that was useful only in the X10 scheme for ensuring
+              that the byte containing the button value is a printable
+              code.
+          o   The modifiers are encoded in the same way.
+          o   A different final character is used for button release to
+              resolve the X10 ambiguity regarding which button was
+              released.
           The highlight tracking responses are also modified to an SGR-
           like format, using the same SGR-style scheme and button-encod-
           ings.

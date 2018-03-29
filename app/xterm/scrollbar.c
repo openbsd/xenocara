@@ -1,7 +1,7 @@
-/* $XTermId: scrollbar.c,v 1.200 2016/05/22 16:43:12 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.202 2017/12/26 01:58:48 tom Exp $ */
 
 /*
- * Copyright 2000-2014,2016 by Thomas E. Dickey
+ * Copyright 2000-2016,2017 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -724,6 +724,36 @@ AlternateScroll(Widget w, long amount)
 	}
     } else {
 	ScrollTextUpDownBy(w, (XtPointer) 0, (XtPointer) amount);
+    }
+}
+
+/*ARGSUSED*/
+void
+HandleScrollTo(
+		  Widget w,
+		  XEvent *event GCC_UNUSED,
+		  String *params,
+		  Cardinal *nparams)
+{
+    XtermWidget xw;
+    TScreen *screen;
+
+    if ((xw = getXtermWidget(w)) != 0 &&
+	(screen = TScreenOf(xw)) != 0 &&
+	*nparams > 0) {
+	long amount;
+	int value;
+	int to_top = (screen->topline - screen->savedlines);
+	if (!x_strcasecmp(params[0], "begin")) {
+	    amount = to_top * FontHeight(screen);
+	} else if (!x_strcasecmp(params[0], "end")) {
+	    amount = -to_top * FontHeight(screen);
+	} else if ((value = atoi(params[0])) >= 0) {
+	    amount = (value + to_top) * FontHeight(screen);
+	} else {
+	    amount = 0;
+	}
+	AlternateScroll(w, amount);
     }
 }
 

@@ -1,7 +1,7 @@
-/* $XTermId: VTPrsTbl.c,v 1.81 2015/02/16 01:51:51 tom Exp $ */
+/* $XTermId: VTPrsTbl.c,v 1.82 2017/11/07 23:03:12 Thomas.Wolff Exp $ */
 
 /*
- * Copyright 1999-2014,2015 by Thomas E. Dickey
+ * Copyright 1999-2015,2017 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -6000,7 +6000,7 @@ CASE_GSETS,
 CASE_GSETS,
 /*	8		9		:		;	*/
 CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_GSETS,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*	<		=		>		?	*/
@@ -6056,7 +6056,7 @@ CASE_GROUND_STATE,
 /*	d		e		f		g	*/
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_GSETS,
 CASE_GROUND_STATE,
 /*	h		i		j		k	*/
 CASE_GROUND_STATE,
@@ -6160,7 +6160,7 @@ CASE_GSETS,
 CASE_GSETS,
 /*      cedilla         onesuperior     masculine       guillemotright  */
 CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_GSETS,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*      onequarter      onehalf         threequarters   questiondown    */
@@ -6216,7 +6216,7 @@ CASE_GROUND_STATE,
 /*      adiaeresis      aring           ae              ccedilla        */
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_GSETS,
 CASE_GROUND_STATE,
 /*      egrave          eacute          ecircumflex     ediaeresis      */
 CASE_GROUND_STATE,

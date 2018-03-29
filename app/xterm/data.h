@@ -1,4 +1,4 @@
-/* $XTermId: data.h,v 1.130 2017/05/31 01:13:01 tom Exp $ */
+/* $XTermId: data.h,v 1.131 2017/11/09 01:22:18 tom Exp $ */
 
 /*
  * Copyright 2002-2016,2017 by Thomas E. Dickey
@@ -128,6 +128,8 @@ extern char *ProgramName;
 extern Arg ourTopLevelShellArgs[];
 extern Cardinal number_ourTopLevelShellArgs;
 extern Atom wm_delete_window;
+
+extern CellColor initCColor;
 
 #if HANDLE_STRUCT_NOTIFY
 /* Flag icon name with "*** "  on window output when iconified.

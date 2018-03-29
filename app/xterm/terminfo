@@ -1,4 +1,4 @@
-# $XTermId: terminfo,v 1.165 2017/05/07 22:54:33 tom Exp $
+# $XTermId: terminfo,v 1.177 2017/12/25 21:08:55 tom Exp $
 #
 # Updates/notes/new entries (e.g., xterm-8bit, xterm-16color, xterm-256color)
 # - Thomas E. Dickey
@@ -31,6 +31,8 @@
 # holders shall not be used in advertising or otherwise to promote the
 # sale, use or other dealings in this Software without prior written
 # authorization.
+#------------------------------------------------------------------------------
+# format (ncurses 6.1): tic -W -1 -f -x terminfo
 #------------------------------------------------------------------------------
 #
 # Special Capabilities:
@@ -134,11 +136,22 @@ xterm-new|modern xterm terminal emulator,
 	kcbt=\E[Z,
 	kent=\EOM,
 	rin=\E[%p1%dT,
+	use=ansi+rep,
 	use=ecma+strikeout,
 	use=xterm+pcfkeys,
 	use=xterm+tmux,
 	use=xterm-basic,
-#
+
+# These "ansi+XXX" blocks were added in ncurses 5.0:
+ansi+rep,
+	rep=%p1%c\E[%p2%{1}%-%db,
+
+ansi+enq|ncurses extension for ANSI ENQ,
+	u6=\E[%i%d;%dR,
+	u7=\E[6n,
+	u8=\E[?%[;0123456789]c,
+	u9=\E[c,
+
 # Encode modifiers using parameters (see "Xterm Control Sequences" ctlseqs.ms).
 # Note that this is unrelated to PCTERM.
 #
@@ -211,11 +224,11 @@ xterm+pcfkeys|fragment for PC-style keys,
 # Ms modifies the selection/clipboard.  Its parameters are
 #	p1 = the storage unit (clipboard, selection or cut buffer)
 #	p2 = the base64-encoded clipboard content.
-# 
+#
 # Ss is used to set the cursor style as described by the DECSCUSR
 #	function to a block or underline.
 # Se resets the cursor style to the terminal power-on default.
-#  
+#
 # Cs and Ce set and reset the cursor colour.
 xterm+tmux|advanced xterm features used in tmux,
 	Cr=\E]112\007,
@@ -884,6 +897,7 @@ xterm+pce0|fragment with modifyCursorKeys:0,
 	kPRV7=\E[5;7~,
 	use=xterm+edit,
 
+# This is an ncurses extension
 ecma+strikeout|ECMA-48 strikeout/crossed-out,
 	rmxx=\E[29m,
 	smxx=\E[9m,
@@ -959,7 +973,6 @@ xterm-basic|modern xterm terminal emulator - common,
 	ritm=\E[23m,
 	rmacs=\E(B,
 	rmam=\E[?7l,
-	rmcup=\E[?1049l,
 	rmir=\E[4l,
 	rmkx=\E[?1l\E>,
 	rmm=\E[?1034l,
@@ -1041,19 +1054,16 @@ xterm-basic|modern xterm terminal emulator - common,
 	sitm=\E[3m,
 	smacs=\E(0,
 	smam=\E[?7h,
-	smcup=\E[?1049h,
 	smir=\E[4h,
 	smkx=\E[?1h\E=,
 	smm=\E[?1034h,
 	smso=\E[7m,
 	smul=\E[4m,
 	tbc=\E[3g,
-	u6=\E[%i%d;%dR,
-	u7=\E[6n,
-	u8=\E[?%[;0123456789]c,
-	u9=\E[c,
 	vpa=\E[%i%p1%dd,
 	E3=\E[3J,
+	use=ansi+enq,
+	use=xterm+alt+title,
 	use=xterm+kbs,
 #
 # The xterm-new description has all of the features, but is not completely
@@ -1450,6 +1460,21 @@ xterm+vt+edit|fragment for vt220-style editing keypad,
 	kfnd=\E[1~,
 	kslt=\E[4~,
 
+xterm+noalt|xterm without altscreen,
+	rmcup@,
+	smcup@,
+
+xterm+alt1049|xterm 90 feature,
+	rmcup=\E[?1049l,
+	smcup=\E[?1049h,
+
+xterm+titlestack|xterm 251 feature,
+	rmcup=\E[23;0;0t,
+	smcup=\E[22;0;0t,
+
+xterm+alt+title|xterm 90 and 251 features combined,
+	rmcup=\E[?1049l\E[23;0;0t,
+	smcup=\E[?1049h\E[22;0;0t,
 #
 # This should work for the commonly used "color xterm" variations (XFree86
 # xterm, color_xterm, nxterm, rxvt).  Note that it does not set 'bce', so for
@@ -1647,15 +1672,23 @@ xterm-16color|xterm with 16 colors,
 		m,
 	use=xterm+256color,
 	use=xterm-new,
+
+# "indexed color" is mentioned without definition in ISO 8613-6 (ITU T.416).
 #
-# This uses RGB values 0..1000
+# This implementation uses a 256-element color map where the first 16 entries
+# are shared with the aixterm-compatible colors (and in turn the first 8 are
+# shared with the ANSI colors).  The three levels (256, 16, 8) account for the
+# use of a conditional expression in setaf/setab which reduces the number of
+# characters sent to the screen for typical applications.
 #
-# 256 colors should give 65536 pairs, but terminfo stores numbers in a signed
-# short.  Most people will not notice problems with only 32767 pairs.
+# 256 colors should give 65536 pairs, but SVr4 (legacy) terminfo stores numbers
+# in a signed short.  Most people will not notice problems with only 32767
+# pairs.  With ncurses 6.1, numbers are stored in a signed integer (at least
+# 32-bits), and the inconsistency regarding pairs is eliminated.
 xterm+256color|xterm 256-color feature,
 	ccc,
 	colors#0x100,
-	pairs#0x7fff,
+	pairs#0x10000,
 	initc=\E]4;
 		%p1%d;rgb\:%p2%{255}%*%{1000}%/%2.2X/%p3%{255}%*%{1000}%/%2.2X/%p4%{255}%*%{1000}%/%2.2X\E\\,
 	oc=\E]104\007,
@@ -1691,6 +1724,46 @@ xterm-88color|xterm with 88 colors,
 	colors#88,
 	pairs#7744,
 	use=xterm-256color,
+
+# "direct color" is mentioned without definition in ISO 8613-6 (ITU T.416).
+#
+# This is a particular implementation which assume 8-bit values for red, green,
+# and blue.  Other encodings are possible; none are addressed by that standard.
+#
+# The "RGB" flag is an ncurses 6.1 extension which tells the library how to
+# quickly compute the color-content for a given color value.
+#
+# Like xterm+256color, this uses a conditional expression.  But it does that
+# for a different reason: to make it readily usable for applications which
+# print text but also use RGB colors, it uses a color map for the usual ANSI
+# colors (0-7) and RGB colors for the remaining range of the color value.
+xterm+direct|xterm with direct-color indexing,
+	RGB,
+	colors#0x1000000,
+	pairs#0x10000,
+	initc@,
+	op=\E[39;49m,
+	setab=\E[
+		%?
+			%p1%{8}%<
+			%t4%p1%d
+		%e48\:2\:\:
+			%p1%{65536}%/%d\:%p1%{256}%/%{255}%&%d\:%p1%{255}%&%d
+		%;
+		m,
+	setaf=\E[
+		%?
+			%p1%{8}%<
+			%t3%p1%d
+		%e38\:2\:\:
+			%p1%{65536}%/%d\:%p1%{256}%/%{255}%&%d\:%p1%{255}%&%d
+		%;
+		m,
+	setb@,
+	setf@,
+xterm-direct|xterm with direct-color indexing,
+	use=xterm+direct,
+	use=xterm,
 #
 # This is an 8-bit version of xterm, which emulates DEC vt220 with ANSI color.
 # To use it, your decTerminalID resource must be set to 200 or above, and the
@@ -2040,7 +2113,6 @@ xterm-xf86-v44|xterm terminal emulator (XFree86 4.4 Window System),
 	rin=\E[%p1%dT,
 	rmacs=^O,
 	rmam=\E[?7l,
-	rmcup=\E[?1049l,
 	rmir=\E[4l,
 	rmkx=\E[?1l\E>,
 	rmso=\E[27m,
@@ -2115,7 +2187,6 @@ xterm-xf86-v44|xterm terminal emulator (XFree86 4.4 Window System),
 	sgr0=\E[m\017,
 	smacs=^N,
 	smam=\E[?7h,
-	smcup=\E[?1049h,
 	smir=\E[4h,
 	smkx=\E[?1h\E=,
 	smso=\E[7m,
@@ -2130,6 +2201,7 @@ xterm-xf86-v44|xterm terminal emulator (XFree86 4.4 Window System),
 	kb1=\EOt,
 	kb3=\EOv,
 	kc2=\EOr,
+	use=xterm+alt1049,
 	use=xterm+kbs,
 xterm-xfree86|xterm terminal emulator (XFree86 4.4 Window System),
 	use=xterm-xf86-v44,

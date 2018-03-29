@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.854 2017/05/29 00:49:11 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.879 2017/12/30 14:42:05 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -80,7 +80,7 @@
 
 #include <stdio.h>
 
-#ifdef HAVE_STDINT_H
+#if defined(HAVE_STDINT_H) || !defined(HAVE_CONFIG_H)
 #include <stdint.h>
 #define DECONST(type,s) ((type *)(intptr_t)(const type *)(s))
 #else
@@ -615,6 +615,10 @@ typedef struct {
 #define OPT_ISO_COLORS  1 /* true if xterm is configured with ISO colors */
 #endif
 
+#ifndef OPT_DIRECT_COLOR
+#define OPT_DIRECT_COLOR  0 /* true if xterm is configured with direct-colors */
+#endif
+
 #ifndef OPT_256_COLORS
 #define OPT_256_COLORS  0 /* true if xterm is configured with 256 colors */
 #endif
@@ -1018,7 +1022,7 @@ typedef enum {
 
 /*
  * Use this enumerated type to check consistency among dpmodes(), savemodes()
- * restoremodes() and do_decrpm().
+ * restoremodes() and do_dec_rqm().
  */
 typedef enum {
     srm_DECCKM = 1
@@ -1035,6 +1039,8 @@ typedef enum {
 #endif
 #if OPT_BLINK_CURS
     ,srm_ATT610_BLINK = 12
+    ,srm_CURSOR_BLINK_OPS = 13
+    ,srm_XOR_CURSOR_BLINKS = 14
 #endif
     ,srm_DECPFF = 18
     ,srm_DECPEX = 19
@@ -1054,8 +1060,6 @@ typedef enum {
 #ifdef ALLOWLOGGING
     ,srm_ALLOWLOGGING = 46
 #endif
-    ,srm_OPT_ALTBUF_CURSOR = 1049
-    ,srm_OPT_ALTBUF = 1047
     ,srm_ALTBUF = 47
     ,srm_DECNKM = 66
     ,srm_DECBKM = 67
@@ -1091,7 +1095,10 @@ typedef enum {
     ,srm_BELL_IS_URGENT = 1042
     ,srm_POP_ON_BELL = 1043
     ,srm_KEEP_CLIPBOARD = 1044
-    ,srm_TITE_INHIBIT = 1048
+    ,srm_ALLOW_ALTBUF = 1046
+    ,srm_OPT_ALTBUF = 1047
+    ,srm_SAVE_CURSOR = 1048
+    ,srm_OPT_ALTBUF_CURSOR = 1049
 #if OPT_TCAP_FKEYS
     ,srm_TCAP_FKEYS = 1050
 #endif
@@ -1137,6 +1144,16 @@ typedef enum {
 #endif
     ,NSELECTUNITS
 } SelectUnit;
+
+#if OPT_BLINK_CURS
+typedef enum {
+    cbFalse = 0
+    , cbTrue
+    , cbAlways
+    , cbNever
+    , cbLAST
+} BlinkOps;
+#endif
 
 typedef enum {
     ecSetColor = 1
@@ -1261,6 +1278,8 @@ typedef enum {
 # define NUM_ANSI_COLORS MIN_ANSI_COLORS
 #endif
 
+#define okIndexedColor(n) ((n) >= 0 && (n) < NUM_ANSI_COLORS)
+
 #if NUM_ANSI_COLORS > MIN_ANSI_COLORS
 # define OPT_EXT_COLORS  1
 #else
@@ -1320,6 +1339,14 @@ typedef enum {
 # define if_OPT_ISO_COLORS(screen, code) if (screen->colorMode) code
 #else
 # define if_OPT_ISO_COLORS(screen, code) /* nothing */
+#endif
+
+#if OPT_DIRECT_COLOR
+# define if_OPT_DIRECT_COLOR(screen, code) if (screen->direct_color) code
+# define if_OPT_DIRECT_COLOR2(screen, test, code) if (screen->direct_color && (test)) code
+#else
+# define if_OPT_DIRECT_COLOR(screen, code) /* nothing */
+# define if_OPT_DIRECT_COLOR2(screen, test, code) /* nothing */
 #endif
 
 #define COLOR_RES_NAME(root) "color" root
@@ -1538,36 +1565,79 @@ typedef struct {
 
 /***====================================================================***/
 
+/*
+ * Pixel (and its components) are declared as unsigned long, but even for RGB
+ * we need no more than 32-bits.
+ */
+typedef uint32_t MyPixel;
+typedef int32_t MyColor;
+
 #if OPT_ISO_COLORS
-#if OPT_256_COLORS || OPT_88_COLORS
+#if OPT_DIRECT_COLOR
+typedef struct {
+    MyColor fg;
+    MyColor bg;
+} CellColor;
+
+#define isSameCColor(p,q) (!memcmp(&(p), &(q), sizeof(CellColor)))
+
+#elif OPT_256_COLORS || OPT_88_COLORS
+
 #define COLOR_BITS 8
 typedef unsigned short CellColor;
+
 #else
+
 #define COLOR_BITS 4
 typedef Char CellColor;
+
 #endif
 #else
 typedef unsigned CellColor;
 #endif
 
-#define BITS2MASK(b)          ((1 << b) - 1)
+#define NO_COLOR		((unsigned)-1)
 
-#define COLOR_MASK            BITS2MASK(COLOR_BITS)
+#ifndef isSameCColor
+#define isSameCColor(p,q)	((p) == (q))
+#endif
 
-#define GetCellColorFG(src)   ((src) & COLOR_MASK)
-#define GetCellColorBG(src)   (((src) >> COLOR_BITS) & COLOR_MASK)
+#define BITS2MASK(b)		((1 << b) - 1)
+
+#define COLOR_MASK		BITS2MASK(COLOR_BITS)
+
+#if OPT_DIRECT_COLOR
+#define clrDirectFG(flags)	UIntClr(flags, ATR_DIRECT_FG)
+#define clrDirectBG(flags)	UIntClr(flags, ATR_DIRECT_BG)
+#define GetCellColorFG(data)	((data).fg)
+#define GetCellColorBG(data)	((data).bg)
+#define hasDirectFG(flags)	((flags) & ATR_DIRECT_FG)
+#define hasDirectBG(flags)	((flags) & ATR_DIRECT_BG)
+#define setDirectFG(flags,test)	if (test) UIntSet(flags, ATR_DIRECT_FG); else UIntClr(flags, ATR_DIRECT_BG)
+#define setDirectBG(flags,test)	if (test) UIntSet(flags, ATR_DIRECT_BG); else UIntClr(flags, ATR_DIRECT_BG)
+#else
+#define clrDirectFG(flags)	/* nothing */
+#define clrDirectBG(flags)	/* nothing */
+#define GetCellColorFG(data)	((data) & COLOR_MASK)
+#define GetCellColorBG(data)	(((data) >> COLOR_BITS) & COLOR_MASK)
+#define hasDirectFG(flags)	0
+#define hasDirectBG(flags)	0
+#define setDirectFG(flags,test)	(void)(test)
+#define setDirectBG(flags,test)	(void)(test)
+#endif
+extern CellColor blank_cell_color;
 
 typedef Char RowData;		/* wrap/blink, and DEC single-double chars */
 
-#define LINEFLAG_BITS         4
-#define LINEFLAG_MASK         BITS2MASK(LINEFLAG_BITS)
+#define LINEFLAG_BITS		4
+#define LINEFLAG_MASK		BITS2MASK(LINEFLAG_BITS)
 
-#define GetLineFlags(ld)      ((ld)->bufHead & LINEFLAG_MASK)
+#define GetLineFlags(ld)	((ld)->bufHead & LINEFLAG_MASK)
 
 #if OPT_DEC_CHRSET
-#define SetLineFlags(ld,xx)   (ld)->bufHead = (RowData) ((ld->bufHead & (DBLCS_MASK << LINEFLAG_BITS)) | (xx & LINEFLAG_MASK))
+#define SetLineFlags(ld,xx)	(ld)->bufHead = (RowData) ((ld->bufHead & (DBLCS_MASK << LINEFLAG_BITS)) | (xx & LINEFLAG_MASK))
 #else
-#define SetLineFlags(ld,xx)   (ld)->bufHead = (RowData) (xx & LINEFLAG_MASK)
+#define SetLineFlags(ld,xx)	(ld)->bufHead = (RowData) (xx & LINEFLAG_MASK)
 #endif
 
 typedef IChar CharData;
@@ -1676,6 +1746,11 @@ typedef struct {
 	XftFont *	font;
 	FontMap		map;
 } XTermXftFonts;
+
+typedef	struct _ListXftFonts {
+	struct _ListXftFonts *next;
+	XftFont *	font;
+} ListXftFonts;
 #endif
 
 typedef struct {
@@ -1687,6 +1762,7 @@ typedef struct {
 
 	/* indices into save_modes[] */
 typedef enum {
+	DP_ALLOW_ALTBUF,
 	DP_ALTERNATE_SCROLL,
 	DP_ALT_SENDS_ESC,
 	DP_BELL_IS_URGENT,
@@ -1717,7 +1793,7 @@ typedef enum {
 	DP_RXVT_SCROLL_TTY_KEYPRESS,
 	DP_RXVT_SCROLL_TTY_OUTPUT,
 	DP_SELECT_TO_CLIPBOARD,
-	DP_X_ALTSCRN,
+	DP_X_ALTBUF,
 	DP_X_DECCOLM,
 	DP_X_EXT_MOUSE,
 	DP_X_LOGGING,
@@ -1831,11 +1907,10 @@ typedef struct {
 	int		gsets[4];
 	Boolean		wrap_flag;
 #if OPT_ISO_COLORS
-	int		cur_foreground; /* current foreground color	*/
-	int		cur_background; /* current background color	*/
-	int		sgr_foreground; /* current SGR foreground color */
-	int		sgr_background; /* current SGR background color */
-	Boolean		sgr_extended;	/* SGR set with extended codes? */
+	int		cur_foreground;  /* current foreground color	*/
+	int		cur_background;  /* current background color	*/
+	int		sgr_foreground;  /* current SGR foreground color */
+	int		sgr_background;  /* current SGR background color */
 #endif
 } SavedCursor;
 
@@ -1969,6 +2044,7 @@ typedef struct {
 	Display		*display;	/* X display for screen		*/
 	int		respond;	/* socket for responses
 					   (position report, etc.)	*/
+	int		nextEventDelay;	/* msecs to delay for x-events  */
 /* These parameters apply to VT100 window */
 	IChar		unparse_bfr[256];
 	unsigned	unparse_len;
@@ -2000,6 +2076,9 @@ typedef struct {
 	Boolean		colorAttrMode;	/* prefer colorUL/BD to SGR	*/
 #if OPT_WIDE_ATTRS
 	Boolean		colorITMode;	/* use color for italics?	*/
+#endif
+#if OPT_DIRECT_COLOR
+	Boolean		direct_color;	/* direct-color enabled?	*/
 #endif
 #endif
 #if OPT_DEC_CHRSET
@@ -2164,10 +2243,11 @@ typedef struct {
 #endif
 
 	Boolean		fnt_prop;	/* true if proportional fonts	*/
-	Boolean		fnt_boxes;	/* true if font has box-chars	*/
+	unsigned	fnt_boxes;	/* 0=no boxes, 1=old, 2=unicode */
 	Boolean		force_packed;	/* true to override proportional */
 #if OPT_BOX_CHARS
 	Boolean		force_box_chars;/* true if we assume no boxchars */
+	Boolean		broken_box_chars;/* true if broken boxchars	*/
 	Boolean		force_all_chars;/* true to outline missing chars */
 	Boolean		assume_all_chars;/* true to allow missing chars */
 	Boolean		allow_packing;	/* true to allow packed-fonts	*/
@@ -2195,9 +2275,10 @@ typedef struct {
 	Boolean		cursor_underline; /* true if cursor is in underline mode */
 	XtCursorShape	cursor_shape;
 #if OPT_BLINK_CURS
-	Boolean		cursor_blink;	/* cursor blink enable		*/
-	Boolean		cursor_blink_res; /* initial cursor blink value	*/
-	Boolean		cursor_blink_esc; /* cursor blink escape-state	*/
+	BlinkOps	cursor_blink;	/* cursor blink enable		*/
+	char *		cursor_blink_s;	/* ...resource cursorBlink	*/
+	int		cursor_blink_esc; /* cursor blink escape-state	*/
+	Boolean		cursor_blink_xor; /* how to merge menu/escapes	*/
 #endif
 #if OPT_BLINK_TEXT
 	Boolean		blink_as_bold;	/* text blink disable		*/
@@ -2237,6 +2318,7 @@ typedef struct {
 	 * Working variables for getLineData().
 	 */
 	size_t		lineExtra;	/* extra space for combining chars */
+	size_t		cellExtra;	/* extra space for combining chars */
 	/*
 	 * Pointer to the current visible buffer.
 	 */
@@ -2485,6 +2567,7 @@ typedef struct {
 	void *		icon_cgs_cache;
 #endif
 #if OPT_RENDERFONT
+	ListXftFonts	*list_xft_fonts;
 	XTermXftFonts	renderFontNorm[NMENUFONTS];
 	XTermXftFonts	renderFontBold[NMENUFONTS];
 	XTermXftFonts	renderFontItal[NMENUFONTS];
@@ -2806,6 +2889,7 @@ typedef struct _Work {
 #endif
     ScrnColors *oldColors;
     Boolean palette_changed;
+    Boolean broken_box_chars;
 } Work;
 
 typedef struct {int foo;} XtermClassPart, TekClassPart;
@@ -2853,6 +2937,8 @@ typedef struct _XtermWidgetRec {
     XSizeHints	hints;
     XVisualInfo *visInfo;
     int		numVisuals;
+    unsigned	rgb_shifts[3];
+    Bool	has_rgb;
     Bool	init_menu;
     TKeyboard	keyboard;	/* terminal keyboard		*/
     TScreen	screen;		/* terminal screen		*/
@@ -2866,7 +2952,6 @@ typedef struct _XtermWidgetRec {
 #if OPT_ISO_COLORS
     int		sgr_foreground; /* current SGR foreground color */
     int		sgr_background; /* current SGR background color */
-    Boolean	sgr_extended;	/* SGR set with extended codes? */
 #endif
     IFlags	initflags;	/* initial mode flags		*/
     Tabs	tabs;		/* tabstops of the terminal	*/
@@ -2918,7 +3003,9 @@ typedef struct _TekWidgetRec {
 #define ATR_ITALIC	AttrBIT(9)
 #define ATR_STRIKEOUT	AttrBIT(10)
 #define ATR_DBL_UNDER	AttrBIT(11)
-#define SGR_MASK2       (ATR_FAINT | ATR_ITALIC | ATR_STRIKEOUT | ATR_DBL_UNDER)
+#define ATR_DIRECT_FG	AttrBIT(12)
+#define ATR_DIRECT_BG	AttrBIT(13)
+#define SGR_MASK2       (ATR_FAINT | ATR_ITALIC | ATR_STRIKEOUT | ATR_DBL_UNDER | ATR_DIRECT_FG | ATR_DIRECT_BG)
 #else
 #define SGR_MASK2       0
 #endif
@@ -3051,7 +3138,7 @@ typedef struct _TekWidgetRec {
 #define WhichVWin(screen)	(&((screen)->fullVwin))
 #define WhichTWin(screen)	(&((screen)->fullTwin))
 
-#define WhichVFont(screen,name)	getNormalFont(screen, name)->fs
+#define WhichVFont(screen,name)	getNormalFont(screen, (int)(name))->fs
 #define FontAscent(screen)	WhichVWin(screen)->f_ascent
 #define FontDescent(screen)	WhichVWin(screen)->f_descent
 

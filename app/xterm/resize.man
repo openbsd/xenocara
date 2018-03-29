@@ -1,6 +1,6 @@
-.\" $XTermId: resize.man,v 1.32 2016/09/24 11:14:15 tom Exp $
+.\" $XTermId: resize.man,v 1.33 2017/11/13 00:58:17 tom Exp $
 .\"
-.\" Copyright 1998-2013,2016 by Thomas E. Dickey
+.\" Copyright 1998-2016,2017 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -35,7 +35,8 @@
 .\"
 .\" Bulleted paragraph
 .de bP
-.IP \(bu 4
+.ie n  .IP \(bu 4
+.el    .IP \(bu 2
 ..
 .\" Escape single quotes in literal strings from groff's Unicode transform.
 .ie \n(.g .ds AQ \(aq

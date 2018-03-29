@@ -1,7 +1,8 @@
-/* $XTermId: html.c,v 1.6 2017/05/30 09:14:55 tom Exp $ */
+/* $XTermId: html.c,v 1.11 2017/12/30 14:46:50 tom Exp $ */
 
 /*
- * Copyright 2015 Jens Schweikhardt
+ * Copyright 2015,2017	Jens Schweikhardt
+ * Copyright 2017	Thomas E. Dickey
  *
  * All Rights Reserved
  *
@@ -32,8 +33,13 @@
 #include <xterm.h>
 #include <version.h>
 
-#define NO_COLOR	((unsigned)-1)
-#define RGBPCT(c) c.red / 655.35, c.green / 655.35, c.blue / 655.35
+#define MakeDim(color) \
+	color = (unsigned short) ((2 * (unsigned) color) / 3)
+
+#define RGBPCT(c) \
+ 	((double)c.red   / 655.35), \
+	((double)c.green / 655.35), \
+	((double)c.blue  / 655.35)
 
 #define DUMP_PREFIX "xterm"
 #define DUMP_SUFFIX ".xhtml"
@@ -176,12 +182,22 @@ dumpHtmlLine(XtermWidget xw, int row, FILE *fp)
 	bgcolor.pixel = xw->old_background;
 #if OPT_ISO_COLORS
 	if (ld->attribs[col] & FG_COLOR) {
-	    unsigned fg = extract_fg(xw, ld->color[col], ld->attribs[col]);
-	    fgcolor.pixel = s->Acolors[fg].value;
+	    Pixel fg = extract_fg(xw, ld->color[col], ld->attribs[col]);
+#if OPT_DIRECT_COLOR
+	    if (ld->attribs[col] & ATR_DIRECT_FG)
+		fgcolor.pixel = fg;
+	    else
+#endif
+		fgcolor.pixel = s->Acolors[fg].value;
 	}
 	if (ld->attribs[col] & BG_COLOR) {
-	    unsigned bg = extract_bg(xw, ld->color[col], ld->attribs[col]);
-	    bgcolor.pixel = s->Acolors[bg].value;
+	    Pixel bg = extract_bg(xw, ld->color[col], ld->attribs[col]);
+#if OPT_DIRECT_COLOR
+	    if (ld->attribs[col] & ATR_DIRECT_BG)
+		bgcolor.pixel = bg;
+	    else
+#endif
+		bgcolor.pixel = s->Acolors[bg].value;
 	}
 #endif
 
@@ -195,9 +211,9 @@ dumpHtmlLine(XtermWidget xw, int row, FILE *fp)
 	}
 #if OPT_WIDE_ATTRS
 	if (ld->attribs[col] & ATR_FAINT) {
-	    fgcolor.red = (unsigned short) ((2 * fgcolor.red) / 3);
-	    fgcolor.green = (unsigned short) ((2 * fgcolor.green) / 3);
-	    fgcolor.blue = (unsigned short) ((2 * fgcolor.blue) / 3);
+	    MakeDim(fgcolor.red);
+	    MakeDim(fgcolor.green);
+	    MakeDim(fgcolor.blue);
 	}
 #endif
 	if (ld->attribs[col] & INVERSE) {

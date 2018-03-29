@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.171 2017/06/19 08:11:26 tom Exp $ */
+/* $XTermId: trace.c,v 1.172 2017/11/07 00:12:24 tom Exp $ */
 
 /*
  * Copyright 1997-2016,2017 by Thomas E. Dickey
@@ -48,7 +48,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdio.h>
-#include <stdarg.h>
 #include <assert.h>
 
 #include <X11/Xatom.h>
@@ -74,11 +73,10 @@ const char *trace_who = "parent";
 
 static FILE *trace_fp;
 
-void
-Trace(const char *fmt,...)
+static FILE *
+TraceOpen(void)
 {
     static const char *trace_out;
-    va_list ap;
 
     if (trace_fp != 0
 	&& trace_who != trace_out) {
@@ -129,11 +127,28 @@ Trace(const char *fmt,...)
 	}
 	(void) umask(oldmask);
     }
+    return trace_fp;
+}
+
+void
+Trace(const char *fmt,...)
+{
+    va_list ap;
+    FILE *fp = TraceOpen();
 
     va_start(ap, fmt);
-    vfprintf(trace_fp, fmt, ap);
-    (void) fflush(trace_fp);
+    vfprintf(fp, fmt, ap);
+    (void) fflush(fp);
     va_end(ap);
+}
+
+void
+TraceVA(const char *fmt, va_list ap)
+{
+    FILE *fp = TraceOpen();
+
+    vfprintf(fp, fmt, ap);
+    (void) fflush(fp);
 }
 
 void

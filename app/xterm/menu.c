@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.344 2017/01/02 23:46:03 tom Exp $ */
+/* $XTermId: menu.c,v 1.350 2017/12/29 20:54:09 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -476,15 +476,17 @@ typedef struct {
 } MenuHeader;
 
     /* This table is ordered to correspond with MenuIndex */
+#define DATA(name) { (char *)#name, name ## Entries, XtNumber(name ## Entries ) }
 static const MenuHeader menu_names[] = {
-    { "mainMenu", mainMenuEntries, XtNumber(mainMenuEntries) },
-    { "vtMenu",   vtMenuEntries,   XtNumber(vtMenuEntries)   },
-    { "fontMenu", fontMenuEntries, XtNumber(fontMenuEntries) },
+    DATA( mainMenu),
+    DATA( vtMenu),
+    DATA( fontMenu),
 #if OPT_TEK4014
-    { "tekMenu",  tekMenuEntries,  XtNumber(tekMenuEntries)  },
+    DATA( tekMenu),
 #endif
-    { 0,          0,               0 },
+    { NULL, 0, 0 },
 };
+#undef DATA
 /* *INDENT-ON* */
 
 /*
@@ -788,7 +790,7 @@ domenu(Widget w,
 	    update_keyboard_type();
 #ifdef OPT_PRINT_ON_EXIT
 	    screen->write_error = !IsEmpty(resource.printFileOnXError);
-	    SetItemSensitivity(mainMenuEntries[mainMenu_write_now].widget, False);
+	    SetItemSensitivity(mainMenuEntries[mainMenu_write_now].widget, True);
 	    SetItemSensitivity(mainMenuEntries[mainMenu_write_error].widget, screen->write_error);
 #endif
 	}
@@ -837,9 +839,6 @@ domenu(Widget w,
 	    update_menu_allowBoldFonts();
 #if OPT_BOX_CHARS
 	    update_font_boxchars();
-	    SetItemSensitivity(
-				  fontMenuEntries[fontMenu_font_boxchars].widget,
-				  True);
 	    update_font_packed();
 	    SetItemSensitivity(
 				  fontMenuEntries[fontMenu_font_packedfont].widget,
@@ -1600,8 +1599,7 @@ do_cursorblink(Widget gw GCC_UNUSED,
 	       XtPointer closure GCC_UNUSED,
 	       XtPointer data GCC_UNUSED)
 {
-    TScreen *screen = TScreenOf(term);
-    ToggleCursorBlink(screen);
+    ToggleCursorBlink(TScreenOf(term));
 }
 #endif
 
@@ -2603,7 +2601,6 @@ HandleCursorBlink(Widget w,
 		  String *params,
 		  Cardinal *param_count)
 {
-    /* eventually want to see if sensitive or not */
     handle_vt_toggle(do_cursorblink, TScreenOf(term)->cursor_blink,
 		     params, *param_count, w);
 }
@@ -3615,10 +3612,17 @@ update_marginbell(void)
 void
 update_cursorblink(void)
 {
+    BlinkOps check = TScreenOf(term)->cursor_blink;
+
+    if (check == cbAlways ||
+	check == cbNever) {
+	SetItemSensitivity(vtMenuEntries[vtMenu_cursorblink].widget, False);
+    }
     UpdateCheckbox("update_cursorblink",
 		   vtMenuEntries,
 		   vtMenu_cursorblink,
-		   TScreenOf(term)->cursor_blink);
+		   (check == cbTrue ||
+		    check == cbAlways));
 }
 #endif
 
@@ -3679,10 +3683,13 @@ update_font_doublesize(void)
 void
 update_font_boxchars(void)
 {
+    SetItemSensitivity(fontMenuEntries[fontMenu_font_boxchars].widget,
+		       !TScreenOf(term)->broken_box_chars);
     UpdateCheckbox("update_font_boxchars",
 		   fontMenuEntries,
 		   fontMenu_font_boxchars,
-		   TScreenOf(term)->force_box_chars);
+		   TScreenOf(term)->force_box_chars ||
+		   TScreenOf(term)->broken_box_chars);
 }
 
 void
@@ -3716,6 +3723,14 @@ update_font_renderfont(void)
 		   (term->work.render_font == True));
     SetItemSensitivity(fontMenuEntries[fontMenu_render_font].widget,
 		       !IsEmpty(CurrentXftFont(term)));
+
+    if (term->work.render_font) {
+	TScreenOf(term)->broken_box_chars = term->work.broken_box_chars;
+    } else {
+	TScreenOf(term)->broken_box_chars = False;
+    }
+    update_font_boxchars();
+
     update_fontmenu(term);
 }
 #endif

@@ -1,12 +1,12 @@
-dnl $XTermId: configure.in,v 1.345 2017/05/31 08:38:47 tom Exp $
+dnl $XTermId: configure.in,v 1.353 2017/12/25 12:36:41 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
 dnl
 dnl Copyright 1997-2016,2017 by Thomas E. Dickey
-dnl 
+dnl
 dnl                         All Rights Reserved
-dnl 
+dnl
 dnl Permission is hereby granted, free of charge, to any person obtaining a
 dnl copy of this software and associated documentation files (the
 dnl "Software"), to deal in the Software without restriction, including
@@ -14,10 +14,10 @@ dnl without limitation the rights to use, copy, modify, merge, publish,
 dnl distribute, sublicense, and/or sell copies of the Software, and to
 dnl permit persons to whom the Software is furnished to do so, subject to
 dnl the following conditions:
-dnl 
+dnl
 dnl The above copyright notice and this permission notice shall be included
 dnl in all copies or substantial portions of the Software.
-dnl 
+dnl
 dnl THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 dnl OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 dnl MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -25,7 +25,7 @@ dnl IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE LIABLE FOR ANY
 dnl CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 dnl TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 dnl SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-dnl 
+dnl
 dnl Except as contained in this notice, the name(s) of the above copyright
 dnl holders shall not be used in advertising or otherwise to promote the
 dnl sale, use or other dealings in this Software without prior written
@@ -439,27 +439,42 @@ if test "$enable_ansi_color" = yes ; then
 	test "$enable_16_color" = no && AC_DEFINE(OPT_AIX_COLORS,0,[Define to 0 to disable 16-color support])
 
 	AC_MSG_CHECKING(if you want 256 colors)
-	CF_ARG_ENABLE(256-color,
-		[  --enable-256-color      enable 256-color support],
-		[enable_256_color=yes],
-		[enable_256_color=no])
+	CF_ARG_DISABLE(256-color,
+		[  --disable-256-color     disable 256-color support],
+		[enable_256_color=no],
+		[enable_256_color=yes])
 	AC_MSG_RESULT($enable_256_color)
+
 	if test "$enable_256_color" = yes ; then
+
 		CHARPROC_DEPS="$CHARPROC_DEPS 256colres.h"
 		EXTRAHDRS="$EXTRAHDRS 256colres.h"
 		AC_DEFINE(OPT_256_COLORS,1,[Define to 1 to enable 256-color support])
+
+		AC_MSG_CHECKING(if you want direct-color support)
+		CF_ARG_DISABLE(direct-color,
+			[  --disable-direct-color  disable direct-color support],
+			[enable_direct_color=no],
+			[enable_direct_color=yes])
+		AC_MSG_RESULT($enable_direct_color)
+		if test "$enable_direct_color" = yes ; then
+			AC_DEFINE(OPT_DIRECT_COLOR,1,[Define to 1 to enable direct-color support])
+		fi
+
 	else
-	AC_MSG_CHECKING(if you want 88 colors)
-	CF_ARG_ENABLE(88-color,
-		[  --enable-88-color       enable 88-color support],
-		[enable_88_color=yes],
-		[enable_88_color=no])
-	AC_MSG_RESULT($enable_88_color)
-	if test "$enable_88_color" = yes ; then
-		CHARPROC_DEPS="$CHARPROC_DEPS 88colres.h"
-		EXTRAHDRS="$EXTRAHDRS 88colres.h"
-		AC_DEFINE(OPT_88_COLORS,1,[Define to 1 to enable 88-color support])
-	fi
+
+		AC_MSG_CHECKING(if you want 88 colors)
+		CF_ARG_DISABLE(88-color,
+			[  --disable-88-color      disable 88-color support],
+			[enable_88_color=no],
+			[enable_88_color=yes])
+		AC_MSG_RESULT($enable_88_color)
+		if test "$enable_88_color" = yes ; then
+			CHARPROC_DEPS="$CHARPROC_DEPS 88colres.h"
+			EXTRAHDRS="$EXTRAHDRS 88colres.h"
+			AC_DEFINE(OPT_88_COLORS,1,[Define to 1 to enable 88-color support])
+		fi
+
 	fi
 
 fi
@@ -596,7 +611,7 @@ if test "$enable_double_bfr" = yes ; then
 	(*Xext*)
 		;;
 	(*)
-		CF_X_EXT 
+		CF_X_EXT
 		;;
 	esac
 	AC_DEFINE(OPT_DOUBLE_BUFFER,1,[Define to 1 to enable double-buffering])
@@ -774,11 +789,14 @@ CF_ARG_DISABLE(regex,
 	[enable_regex=yes])
 AC_MSG_RESULT($enable_regex)
 if test "$enable_regex" = yes ; then
-	CF_WITH_PCRE
-	if test "$with_pcre" = no ; then
-		CF_REGEX
-		if test "X$cf_cv_regex_hdrs" != "Xregex.h" ; then
-			AC_MSG_ERROR(Only POSIX or PCRE regular expressions are supported)
+	CF_WITH_PCRE2
+	if test "$with_pcre2" = no ; then
+		CF_WITH_PCRE
+		if test "$with_pcre" = no ; then
+			CF_REGEX
+			if test "X$cf_cv_regex_hdrs" != "Xregex.h" ; then
+				AC_MSG_ERROR([Only POSIX, PCRE, or PCRE2 regular expressions are supported])
+			fi
 		fi
 	fi
 	AC_DEFINE(OPT_SELECT_REGEX,1,[Define to 1 to enable regular-expression selections])
@@ -873,6 +891,11 @@ CF_ARG_DISABLE(wide-attrs,
 	[enable_wattr=yes])
 AC_MSG_RESULT($enable_wattr)
 
+if test $enable_wattr = no && test $enable_direct_color = yes ; then
+	AC_MSG_WARN(overriding wide-attributes to support direct color)
+	enable_wattr=yes
+fi
+
 AC_MSG_CHECKING(if you want wide-character support)
 CF_ARG_DISABLE(wide-chars,
 	[  --disable-wide-chars    disable wide-character support],
@@ -943,10 +966,10 @@ if test "$enable_dec_locator" = yes ; then
 fi
 
 AC_MSG_CHECKING(if you want XHTML and SVG screen dump support)
-CF_ARG_ENABLE(screen-dumps,
-	[  --enable-screen-dumps   enable XHTML and SVG screen dumps],
-	[enable_screen_dumps=yes],
-	[enable_screen_dumps=no])
+CF_ARG_DISABLE(screen-dumps,
+	[  --disable-screen-dumps  disable XHTML and SVG screen dumps],
+	[enable_screen_dumps=no],
+	[enable_screen_dumps=yes])
 AC_MSG_RESULT($enable_screen_dumps)
 if test "$enable_screen_dumps" = yes ; then
 	AC_DEFINE(OPT_SCREEN_DUMPS,1,[Define to 1 to enable XHTML and SVG screen dump support])
@@ -1054,7 +1077,7 @@ AC_MSG_RESULT($with_warnings)
 if test "$with_warnings" = yes
 then
 	CF_GCC_ATTRIBUTES
-	CF_GCC_WARNINGS(Wdeclaration-after-statement Wextra Wno-unknown-pragmas Wswitch-enum)
+	CF_GCC_WARNINGS(Wdeclaration-after-statement Wextra Wno-unknown-pragmas Wswitch-enum Wno-cast-qual)
 fi
 fi
 

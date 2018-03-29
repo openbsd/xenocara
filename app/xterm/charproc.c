@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1492 2017/06/19 08:34:54 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1517 2017/12/28 18:43:58 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -168,12 +168,14 @@ static void restoremodes(XtermWidget /* xw */ );
 static void savemodes(XtermWidget /* xw */ );
 static void window_ops(XtermWidget /* xw */ );
 
-#define DoStartBlinking(s) ((s)->cursor_blink ^ (s)->cursor_blink_esc)
-
 #if OPT_BLINK_CURS || OPT_BLINK_TEXT
-#define UpdateCursorBlink(screen) SetCursorBlink(screen, screen->cursor_blink)
+#define SettableCursorBlink(screen) \
+	(((screen)->cursor_blink != cbAlways) && \
+	 ((screen)->cursor_blink != cbNever))
+#define UpdateCursorBlink(screen) \
+	 SetCursorBlink(screen, screen->cursor_blink)
 static void SetCursorBlink(TScreen * /* screen */ ,
-			   Bool /* enable */ );
+			   BlinkOps /* enable */ );
 static void HandleBlinking(XtPointer /* closure */ ,
 			   XtIntervalId * /* id */ );
 static void StartBlinking(TScreen * /* screen */ );
@@ -260,6 +262,7 @@ static XtActionsRec actionsList[] = {
     { "redraw",			HandleRedraw },
     { "scroll-back",		HandleScrollBack },
     { "scroll-forw",		HandleScrollForward },
+    { "scroll-to",		HandleScrollTo },
     { "secure",			HandleSecure },
     { "select-cursor-end",	HandleKeyboardSelectEnd },
     { "select-cursor-extend",   HandleKeyboardSelectExtend },
@@ -491,6 +494,7 @@ static XtResource xterm_resources[] =
     Ires(XtNprinterControlMode, XtCPrinterControlMode,
 	 SPS.printer_controlmode, 0),
     Ires(XtNtitleModes, XtCTitleModes, screen.title_modes, DEF_TITLE_MODES),
+    Ires(XtNnextEventDelay, XtCNextEventDelay, screen.nextEventDelay, 1),
     Ires(XtNvisualBellDelay, XtCVisualBellDelay, screen.visualBellDelay, 100),
     Ires(XtNsaveLines, XtCSaveLines, screen.savelines, SAVELINES),
     Ires(XtNscrollBarBorder, XtCScrollBarBorder, screen.scrollBarBorder, 1),
@@ -556,7 +560,8 @@ static XtResource xterm_resources[] =
 #endif				/* NO_ACTIVE_ICON */
 
 #if OPT_BLINK_CURS
-    Bres(XtNcursorBlink, XtCCursorBlink, screen.cursor_blink, False),
+    Bres(XtNcursorBlinkXOR, XtCCursorBlinkXOR, screen.cursor_blink_xor, True),
+    Sres(XtNcursorBlink, XtCCursorBlink, screen.cursor_blink_s, "false"),
 #endif
     Bres(XtNcursorUnderLine, XtCCursorUnderLine, screen.cursor_underline, False),
 
@@ -625,6 +630,9 @@ static XtResource xterm_resources[] =
     Bres(XtNitalicULMode, XtCColorAttrMode, screen.italicULMode, False),
 #if OPT_WIDE_ATTRS
     Bres(XtNcolorITMode, XtCColorAttrMode, screen.colorITMode, False),
+#endif
+#if OPT_DIRECT_COLOR
+    Bres(XtNdirectColor, XtCDirectColor, screen.direct_color, True),
 #endif
 
     COLOR_RES("0", screen.Acolors[COLOR_0], DFT_COLOR("black")),
@@ -889,6 +897,7 @@ xtermAddInput(Widget w)
 	{ "string",		    HandleStringEvent },
 	{ "scroll-back",	    HandleScrollBack },
 	{ "scroll-forw",	    HandleScrollForward },
+	{ "scroll-to",		    HandleScrollTo },
 	{ "select-cursor-end",	    HandleKeyboardSelectEnd },
 	{ "select-cursor-extend",   HandleKeyboardSelectExtend },
 	{ "select-cursor-start",    HandleKeyboardSelectStart },
@@ -990,7 +999,7 @@ SGR_Foreground(XtermWidget xw, int color)
     } else {
 	UIntClr(xw->flags, FG_COLOR);
     }
-    fg = getXtermForeground(xw, xw->flags, color);
+    fg = getXtermFG(xw, xw->flags, color);
     xw->cur_foreground = color;
 
     setCgsFore(xw, WhichVWin(screen), gcNorm, fg);
@@ -1035,7 +1044,7 @@ SGR_Background(XtermWidget xw, int color)
     } else {
 	UIntClr(xw->flags, BG_COLOR);
     }
-    bg = getXtermBackground(xw, xw->flags, color);
+    bg = getXtermBG(xw, xw->flags, color);
     xw->cur_background = color;
 
     setCgsBack(xw, WhichVWin(screen), gcNorm, bg);
@@ -1065,7 +1074,7 @@ setExtendedFG(XtermWidget xw)
      */
 #if OPT_PC_COLORS		/* XXXJTL should be settable at runtime (resource or OSC?) */
     if (TScreenOf(xw)->boldColors
-	&& (!xw->sgr_extended)
+	&& (!hasDirectFG(xw->flags))
 	&& (fg >= 0)
 	&& (fg < 8)
 	&& (xw->flags & BOLD))
@@ -1096,7 +1105,7 @@ static void
 reset_SGR_Foreground(XtermWidget xw)
 {
     xw->sgr_foreground = -1;
-    xw->sgr_extended = False;
+    clrDirectFG(xw->flags);
     setExtendedFG(xw);
 }
 
@@ -1104,6 +1113,7 @@ static void
 reset_SGR_Background(XtermWidget xw)
 {
     xw->sgr_background = -1;
+    clrDirectBG(xw->flags);
     setExtendedBG(xw);
 }
 
@@ -1657,7 +1667,7 @@ param_has_subparams(int item)
     if (parms.has_subparams) {
 	int n = subparam_index(item, 0);
 	if (n >= 0 && parms.is_sub[n]) {
-	    while (n++ < nparam && parms.is_sub[n - 1] < parms.is_sub[n]) {
+	    while (++n < nparam && parms.is_sub[n - 1] < parms.is_sub[n]) {
 		result++;
 	    }
 	}
@@ -1666,7 +1676,7 @@ param_has_subparams(int item)
     return result;
 }
 
-#if OPT_256_COLORS || OPT_88_COLORS || OPT_ISO_COLORS
+#if OPT_DIRECT_COLOR || OPT_256_COLORS || OPT_88_COLORS || OPT_ISO_COLORS
 /*
  * Given an index into the parameter array, return the corresponding parameter
  * number (starting from zero).
@@ -1731,13 +1741,28 @@ get_subparam(int p, int s)
  * This function accepts either format (per request by Paul Leonerd Evans).
  * It also accepts
  *	CSI 38 : 5 : 1 m
- * according to Lars' original assumption.
+ * according to Lars' original assumption.  While implementing that, I added
+ * support for Konsole's interpretation of "CSI 38 : 2" as a 24-bit RGB value.
+ * ISO-8613-6 documents that as "direct color".
  *
- * By the way - all of the parameters are decimal integers.
+ * At the time in 2012, no one noticed (or commented) regarding ISO-8613-6's
+ * quirk in the description of direct color:  it mentions a color space
+ * identifier parameter which should follow the "2" (as parameter 1).  In the
+ * same section, ISO-8613-6 mentions a parameter 6 which can be ignored, as
+ * well as parameters 7 and 8.  Like parameter 1, parameters 7 and 8 are not
+ * defined clearly in the standard, and a close reading indicates they are
+ * optional, saying they "may be used".  This implementation ignores parameters
+ * 6 (and above), and provides for the color space identifier by checking the
+ * number of parameters:
+ *	3 after "2" (no color space identifier)
+ *	4 or more after "2" (color space identifier)
+ *
+ * By the way - all of the parameters are decimal integers, and missing
+ * parameters represent a default value.  ISO-8613-6 is clear about that.
  */
 #define extended_colors_limit(n) ((n) == 5 ? 1 : ((n) == 2 ? 3 : 0))
 static Boolean
-parse_extended_colors(XtermWidget xw, int *colorp, int *itemp)
+parse_extended_colors(XtermWidget xw, int *colorp, int *itemp, Boolean *extended)
 {
     Boolean result = False;
     int item = *itemp;
@@ -1761,7 +1786,7 @@ parse_extended_colors(XtermWidget xw, int *colorp, int *itemp)
 	need = extended_colors_limit(code);
 	next = item + have;
 	for (n = 0; n < need && n < 3; ++n) {
-	    values[n] = get_subparam(base, 2 + n);
+	    values[n] = get_subparam(base, 2 + n + (have > 4));
 	}
     } else if (++item < nparam) {
 	++base;
@@ -1772,7 +1797,7 @@ parse_extended_colors(XtermWidget xw, int *colorp, int *itemp)
 	    need = extended_colors_limit(code);
 	    next = base + have;
 	    for (n = 0; n < need && n < 3; ++n) {
-		values[n] = get_subparam(base, 1 + n);
+		values[n] = get_subparam(base, 1 + n + (have > 3));
 	    }
 	} else {
 	    /* accept CSI 38 ; 5 ; 1 m */
@@ -1787,13 +1812,24 @@ parse_extended_colors(XtermWidget xw, int *colorp, int *itemp)
     }
     item = next;
 
+    *extended = False;
     switch (code) {
     case 2:
 	/* direct color in rgb space */
 	if ((values[0] >= 0 && values[0] < 256) &&
 	    (values[1] >= 0 && values[1] < 256) &&
 	    (values[2] >= 0 && values[2] < 256)) {
-	    *colorp = xtermClosestColor(xw, values[0], values[1], values[2]);
+#if OPT_DIRECT_COLOR
+	    if (TScreenOf(xw)->direct_color && xw->has_rgb) {
+		*colorp = getDirectColor(xw, values[0], values[1], values[2]);
+		result = True;
+		*extended = True;
+	    } else
+#endif
+	    {
+		*colorp = xtermClosestColor(xw, values[0], values[1], values[2]);
+		result = okIndexedColor(*colorp);
+	    }
 	} else {
 	    *colorp = -1;
 	}
@@ -1801,13 +1837,13 @@ parse_extended_colors(XtermWidget xw, int *colorp, int *itemp)
     case 5:
 	/* indexed color */
 	*colorp = values[0];
+	result = okIndexedColor(*colorp);
 	break;
     default:
 	*colorp = -1;
 	break;
     }
 
-    result = (*colorp >= 0 && *colorp < NUM_ANSI_COLORS);
     TRACE(("...resulting color %d/%d %s\n",
 	   *colorp, NUM_ANSI_COLORS,
 	   result ? "OK" : "ERR"));
@@ -1929,6 +1965,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
     int laststate;
     int thischar = -1;
     XTermRect myRect;
+    Boolean extended;
 
     do {
 #if OPT_WIDE_CHARS
@@ -3013,7 +3050,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		case 37:
 		    if_OPT_ISO_COLORS(screen, {
 			xw->sgr_foreground = (op - 30);
-			xw->sgr_extended = False;
+			clrDirectFG(xw->flags);
 			setExtendedFG(xw);
 		    });
 		    break;
@@ -3022,9 +3059,10 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		     * properly eat all the parameters for unsupported modes.
 		     */
 		    if_OPT_ISO_COLORS(screen, {
-			if (parse_extended_colors(xw, &value, &item)) {
+			if (parse_extended_colors(xw, &value, &item,
+						  &extended)) {
 			    xw->sgr_foreground = value;
-			    xw->sgr_extended = True;
+			    setDirectFG(xw->flags, extended);
 			    setExtendedFG(xw);
 			}
 		    });
@@ -3051,13 +3089,16 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		case 47:
 		    if_OPT_ISO_COLORS(screen, {
 			xw->sgr_background = (op - 40);
+			clrDirectBG(xw->flags);
 			setExtendedBG(xw);
 		    });
 		    break;
 		case 48:
 		    if_OPT_ISO_COLORS(screen, {
-			if (parse_extended_colors(xw, &value, &item)) {
+			if (parse_extended_colors(xw, &value, &item,
+						  &extended)) {
 			    xw->sgr_background = value;
+			    setDirectBG(xw->flags, extended);
 			    setExtendedBG(xw);
 			}
 		    });
@@ -3084,7 +3125,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		case 97:
 		    if_OPT_AIX_COLORS(screen, {
 			xw->sgr_foreground = (op - 90 + 8);
-			xw->sgr_extended = False;
+			clrDirectFG(xw->flags);
 			setExtendedFG(xw);
 		    });
 		    break;
@@ -3111,6 +3152,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		case 107:
 		    if_OPT_AIX_COLORS(screen, {
 			xw->sgr_background = (op - 100 + 8);
+			clrDirectBG(xw->flags);
 			setExtendedBG(xw);
 		    });
 		    break;
@@ -3438,7 +3480,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    TRACE(("CASE_DECSCUSR\n"));
 	    {
 		Boolean change = True;
-		Boolean blinks = screen->cursor_blink_esc;
+		int blinks = screen->cursor_blink_esc;
 
 		HideCursor();
 
@@ -4132,13 +4174,13 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_RQM:
 	    TRACE(("CASE_RQM\n"));
-	    do_rpm(xw, ParamPair(0));
+	    do_ansi_rqm(xw, ParamPair(0));
 	    ResetState(sp);
 	    break;
 
 	case CASE_DECRQM:
 	    TRACE(("CASE_DECRQM\n"));
-	    do_decrpm(xw, ParamPair(0));
+	    do_dec_rqm(xw, ParamPair(0));
 	    ResetState(sp);
 	    break;
 
@@ -4175,10 +4217,6 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_S8C1T:
 	    TRACE(("CASE_S8C1T\n"));
 	    if (screen->vtXX_level >= 2) {
-#if OPT_VT52_MODE
-		if (screen->vtXX_level <= 1)
-		    break;
-#endif
 		show_8bit_control(True);
 		ResetState(sp);
 	    }
@@ -5299,10 +5337,29 @@ HandleStructNotify(Widget w GCC_UNUSED,
 #endif /* HANDLE_STRUCT_NOTIFY */
 
 #if OPT_BLINK_CURS
-static void
-SetCursorBlink(TScreen *screen, Bool enable)
+static int
+DoStartBlinking(TScreen *screen)
 {
-    screen->cursor_blink = (Boolean) enable;
+    int actual = ((screen->cursor_blink == cbTrue ||
+		   screen->cursor_blink == cbAlways)
+		  ? 1
+		  : 0);
+    int wanted = screen->cursor_blink_esc ? 1 : 0;
+    int result;
+    if (screen->cursor_blink_xor) {
+	result = actual ^ wanted;
+    } else {
+	result = actual | wanted;
+    }
+    return result;
+}
+
+static void
+SetCursorBlink(TScreen *screen, BlinkOps enable)
+{
+    if (SettableCursorBlink(screen)) {
+	screen->cursor_blink = enable;
+    }
     if (DoStartBlinking(screen)) {
 	StartBlinking(screen);
     } else {
@@ -5319,7 +5376,11 @@ SetCursorBlink(TScreen *screen, Bool enable)
 void
 ToggleCursorBlink(TScreen *screen)
 {
-    SetCursorBlink(screen, (Bool) (!(screen->cursor_blink)));
+    if (screen->cursor_blink == cbTrue) {
+	SetCursorBlink(screen, cbFalse);
+    } else if (screen->cursor_blink == cbFalse) {
+	SetCursorBlink(screen, cbTrue);
+    }
 }
 #endif
 
@@ -5479,11 +5540,17 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    break;
 #endif
 #if OPT_BLINK_CURS
-	case srm_ATT610_BLINK:	/* att610: Start/stop blinking cursor */
-	    if (screen->cursor_blink_res) {
+	case srm_ATT610_BLINK:	/* AT&T 610: Start/stop blinking cursor */
+	    if (SettableCursorBlink(screen)) {
 		set_bool_mode(screen->cursor_blink_esc);
 		UpdateCursorBlink(screen);
 	    }
+	    break;
+	case srm_CURSOR_BLINK_OPS:
+	    /* intentionally ignored (this is user-preference) */
+	    break;
+	case srm_XOR_CURSOR_BLINKS:
+	    /* intentionally ignored (this is user-preference) */
 	    break;
 #endif
 	case srm_DECPFF:	/* print form feed */
@@ -5724,7 +5791,16 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    set_bool_mode(screen->keepClipboard);
 	    update_keepClipboard();
 	    break;
-	case srm_TITE_INHIBIT:
+	case srm_ALLOW_ALTBUF:
+	    if (IsSM()) {
+		xw->misc.titeInhibit = False;
+	    } else if (!xw->misc.titeInhibit) {
+		xw->misc.titeInhibit = True;
+		FromAlternate(xw);
+	    }
+	    update_titeInhibit();
+	    break;
+	case srm_SAVE_CURSOR:
 	    if (!xw->misc.titeInhibit) {
 		if (IsSM())
 		    CursorSave(xw);
@@ -5858,10 +5934,16 @@ savemodes(XtermWidget xw)
 	    break;
 #endif
 #if OPT_BLINK_CURS
-	case srm_ATT610_BLINK:	/* att610: Start/stop blinking cursor */
-	    if (screen->cursor_blink_res) {
+	case srm_ATT610_BLINK:	/* AT&T 610: Start/stop blinking cursor */
+	    if (SettableCursorBlink(screen)) {
 		DoSM(DP_CRS_BLINK, screen->cursor_blink_esc);
 	    }
+	    break;
+	case srm_CURSOR_BLINK_OPS:
+	    /* intentionally ignored (this is user-preference) */
+	    break;
+	case srm_XOR_CURSOR_BLINKS:
+	    /* intentionally ignored (this is user-preference) */
 	    break;
 #endif
 	case srm_DECPFF:	/* print form feed */
@@ -5913,7 +5995,7 @@ savemodes(XtermWidget xw)
 	case srm_OPT_ALTBUF:
 	    /* FALLTHRU */
 	case srm_ALTBUF:	/* alternate buffer             */
-	    DoSM(DP_X_ALTSCRN, screen->whichBuf);
+	    DoSM(DP_X_ALTBUF, screen->whichBuf);
 	    break;
 	case srm_DECNKM:
 	    DoSM(DP_DECKPAM, xw->keyboard.flags & MODE_DECKPAM);
@@ -6020,7 +6102,10 @@ savemodes(XtermWidget xw)
 	case srm_LEGACY_FKEYS:
 	    DoSM(DP_KEYBOARD_TYPE, xw->keyboard.type);
 	    break;
-	case srm_TITE_INHIBIT:
+	case srm_ALLOW_ALTBUF:
+	    DoSM(DP_ALLOW_ALTBUF, xw->misc.titeInhibit);
+	    break;
+	case srm_SAVE_CURSOR:
 	    if (!xw->misc.titeInhibit) {
 		CursorSave(xw);
 	    }
@@ -6143,10 +6228,16 @@ restoremodes(XtermWidget xw)
 #endif
 #if OPT_BLINK_CURS
 	case srm_ATT610_BLINK:	/* Start/stop blinking cursor */
-	    if (screen->cursor_blink_res) {
+	    if (SettableCursorBlink(screen)) {
 		DoRM(DP_CRS_BLINK, screen->cursor_blink_esc);
 		UpdateCursorBlink(screen);
 	    }
+	    break;
+	case srm_CURSOR_BLINK_OPS:
+	    /* intentionally ignored (this is user-preference) */
+	    break;
+	case srm_XOR_CURSOR_BLINKS:
+	    /* intentionally ignored (this is user-preference) */
 	    break;
 #endif
 	case srm_DECPFF:	/* print form feed */
@@ -6219,12 +6310,12 @@ restoremodes(XtermWidget xw)
 	    /* FALLTHRU */
 	case srm_ALTBUF:	/* alternate buffer */
 	    if (!xw->misc.titeInhibit) {
-		if (screen->save_modes[DP_X_ALTSCRN])
+		if (screen->save_modes[DP_X_ALTBUF])
 		    ToAlternate(xw, False);
 		else
 		    FromAlternate(xw);
 		/* update_altscreen done by ToAlt and FromAlt */
-	    } else if (screen->save_modes[DP_X_ALTSCRN]) {
+	    } else if (screen->save_modes[DP_X_ALTBUF]) {
 		do_ti_xtra_scroll(xw);
 	    }
 	    break;
@@ -6277,7 +6368,13 @@ restoremodes(XtermWidget xw)
 	case srm_URXVT_EXT_MODE_MOUSE:
 	    DoRM(DP_X_EXT_MOUSE, screen->extend_coords);
 	    break;
-	case srm_TITE_INHIBIT:
+	case srm_ALLOW_ALTBUF:
+	    DoRM(DP_ALLOW_ALTBUF, xw->misc.titeInhibit);
+	    if (xw->misc.titeInhibit)
+		FromAlternate(xw);
+	    update_titeInhibit();
+	    break;
+	case srm_SAVE_CURSOR:
 	    if (!xw->misc.titeInhibit) {
 		CursorRestore(xw);
 	    }
@@ -7708,6 +7805,18 @@ VTInitialize(Widget wrequest,
 #define DftBg(name) isDefaultBackground(Kolor(name))
 
 #define DATA_END   { NULL,  -1       }
+
+#if OPT_BLINK_CURS
+#define DATA(name) { #name, cb##name }
+    static const FlagList tblBlinkOps[] =
+    {
+	DATA(Always)
+	,DATA(Never)
+	,DATA_END
+    };
+#undef DATA
+#endif
+
 #define DATA(name) { #name, ec##name }
     static const FlagList tblColorOps[] =
     {
@@ -7946,18 +8055,21 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.move_sgr_ok);
 #endif
 #if OPT_BLINK_CURS
-    init_Bres(screen.cursor_blink);
+    init_Sres(screen.cursor_blink_s);
+    wnew->screen.cursor_blink =
+	extendedBoolean(wnew->screen.cursor_blink_s,
+			tblBlinkOps, cbLAST);
+    init_Bres(screen.cursor_blink_xor);
     init_Ires(screen.blink_on);
     init_Ires(screen.blink_off);
-    screen->cursor_blink_res = screen->cursor_blink;
 #endif
     init_Bres(screen.cursor_underline);
     /* resources allow for underline or block, not (yet) bar */
     InitCursorShape(screen, TScreenOf(request));
 #if OPT_BLINK_CURS
-    TRACE(("cursor_shape:%d blinks:%s\n",
+    TRACE(("cursor_shape:%d blinks:%d\n",
 	   screen->cursor_shape,
-	   BtoS(screen->cursor_blink)));
+	   screen->cursor_blink));
 #endif
 #if OPT_BLINK_TEXT
     init_Ires(screen.blink_as_bold);
@@ -8020,7 +8132,11 @@ VTInitialize(Widget wrequest,
     screen->vtXX_level = (screen->terminal_id / 100);
 
     init_Ires(screen.title_modes);
-    wnew->screen.title_modes0 = wnew->screen.title_modes;
+    screen->title_modes0 = screen->title_modes;
+
+    init_Ires(screen.nextEventDelay);
+    if (screen->nextEventDelay <= 0)
+	screen->nextEventDelay = 1;
 
     init_Bres(screen.visualbell);
     init_Bres(screen.flash_line);
@@ -8323,6 +8439,9 @@ VTInitialize(Widget wrequest,
 #if OPT_WIDE_ATTRS
     init_Bres(screen.colorITMode);
 #endif
+#if OPT_DIRECT_COLOR
+    init_Bres(screen.direct_color);
+#endif
 
 #if OPT_COLOR_RES2
     TRACE(("...will fake resources for color%d to color%d\n",
@@ -8399,7 +8518,8 @@ VTInitialize(Widget wrequest,
     }
     wnew->sgr_foreground = -1;
     wnew->sgr_background = -1;
-    wnew->sgr_extended = False;
+    clrDirectFG(wnew->flags);
+    clrDirectFG(wnew->flags);
 #endif /* OPT_ISO_COLORS */
 
     /*
@@ -8909,6 +9029,8 @@ cleanupInputMethod(XtermWidget xw)
 	TRACE(("freed screen->xim\n"));
     }
 }
+#else
+#define cleanupInputMethod(xw)	/* nothing */
 #endif
 
 static void
@@ -8937,7 +9059,9 @@ VTDestroy(Widget w GCC_UNUSED)
 	free(last->windowName);
 	free(last);
     }
+#ifndef NO_ACTIVE_ICON
     TRACE_FREE_LEAK(xw->misc.active_icon_s);
+#endif
 #if OPT_ISO_COLORS
     TRACE_FREE_LEAK(screen->cmap_data);
     for (n = 0; n < MAXCOLORS; n++) {
@@ -9024,6 +9148,13 @@ VTDestroy(Widget w GCC_UNUSED)
     }
     if (screen->renderDraw)
 	XftDrawDestroy(screen->renderDraw);
+    {
+	ListXftFonts *p;
+	while ((p = screen->list_xft_fonts) != 0) {
+	    screen->list_xft_fonts = p->next;
+	    free(p);
+	}
+    }
 #endif
 
     /* free things allocated via init_Sres or Init_Sres2 */
@@ -9066,7 +9197,9 @@ VTDestroy(Widget w GCC_UNUSED)
 
 #if OPT_RENDERFONT
     TRACE_FREE_LEAK(xw->misc.default_xft.f_n);
+#if OPT_WIDE_CHARS
     TRACE_FREE_LEAK(xw->misc.default_xft.f_w);
+#endif
     TRACE_FREE_LEAK(xw->misc.render_font_s);
 #endif
 
@@ -10100,6 +10233,7 @@ VTSetValues(Widget cur,
  * Given a font-slot and information about selection/reverse, find the
  * corresponding cached-GC slot.
  */
+#if OPT_WIDE_ATTRS
 static int
 reverseCgs(XtermWidget xw, unsigned attr_flags, Bool hilite, int font)
 {
@@ -10159,6 +10293,7 @@ reverseCgs(XtermWidget xw, unsigned attr_flags, Bool hilite, int font)
     }
     return result;
 }
+#endif
 
 #define setGC(code) set_at = __LINE__, currentCgs = code
 
@@ -10180,7 +10315,7 @@ ShowCursor(void)
     TScreen *screen = TScreenOf(xw);
     IChar base;
     unsigned flags;
-    CellColor fg_bg = 0;
+    CellColor fg_bg = initCColor;
     GC currentGC;
     GC outlineGC;
     CgsEnum currentCgs = gcMAX;
@@ -10284,8 +10419,8 @@ ShowCursor(void)
 	fg_bg = ld->color[cursor_col];
     });
 
-    fg_pix = getXtermForeground(xw, flags, (int) extract_fg(xw, fg_bg, flags));
-    bg_pix = getXtermBackground(xw, flags, (int) extract_bg(xw, fg_bg, flags));
+    fg_pix = getXtermFG(xw, flags, (int) extract_fg(xw, fg_bg, flags));
+    bg_pix = getXtermBG(xw, flags, (int) extract_bg(xw, fg_bg, flags));
 
     /*
      * If we happen to have the same foreground/background colors, choose
@@ -10570,7 +10705,7 @@ HideCursor(void)
     int x, y;
     IChar base;
     unsigned flags;
-    CellColor fg_bg = 0;
+    CellColor fg_bg;
     Bool in_selection;
 #if OPT_WIDE_CHARS
     int my_col = 0;
@@ -10640,7 +10775,7 @@ HideCursor(void)
 #endif
 #endif
 #if OPT_ISO_COLORS
-    fg_bg = 0;
+    fg_bg = initCColor;
 #endif
 
     /*
@@ -10922,9 +11057,9 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
     screen->cursor_set = ON;
     InitCursorShape(screen, screen);
 #if OPT_BLINK_CURS
-    TRACE(("cursor_shape:%d blinks:%s\n",
+    TRACE(("cursor_shape:%d blinks:%d\n",
 	   screen->cursor_shape,
-	   BtoS(screen->cursor_blink)));
+	   screen->cursor_blink));
 #endif
 
     /* reset scrolling region */

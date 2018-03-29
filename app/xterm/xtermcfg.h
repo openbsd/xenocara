@@ -60,7 +60,7 @@
 /* #undef DEF_ALT_SENDS_ESC */	/* CF_ARG_ENABLE(alt-sends-esc) */
 /* #undef DEF_BACKARO_BS */		/* CF_ARG_DISABLE(backarrow-key) */
 #define DEF_BACKARO_ERASE 1	/* CF_ARG_ENABLE(backarrow-is-erase) */
-/* #undef DEF_INITIAL_ERASE	/* CF_ARG_DISABLE(initial-erase) */
+/* #undef DEF_INITIAL_ERASE */	/* CF_ARG_DISABLE(initial-erase) */
 /* #undef DEF_META_SENDS_ESC */	/* CF_ARG_ENABLE(meta-sends-esc) */
 /* #undef DFT_COLORMODE */		/* AC_ARG_WITH(default-color-mode) */
 #define DFT_DECID "100"		/* AC_ARG_WITH(default-terminal-id) */
@@ -77,16 +77,18 @@
 #define HAVE_LIBXPM		/* CF_WITH_XPM */
 /* #undef HAVE_LIB_NEXTAW */		/* CF_X_ATHENA(--with-neXtaw) */
 /* #undef HAVE_LIB_PCRE */		/* CF_WITH_PCRE */
+/* #undef HAVE_LIB_PCRE2 */		/* CF_WITH_PCRE2 */
 #define HAVE_LIB_XAW 1		/* CF_X_ATHENA */
 /* #undef HAVE_LIB_XAW3D */		/* CF_X_ATHENA(--with-Xaw3d) */
 /* #undef HAVE_LIB_XAW3DXFT */	/* CF_X_ATHENA(--with-Xaw3dxft) */
 /* #undef HAVE_LIB_XAWPLUS */		/* CF_X_ATHENA(--with-XawPlus) */
 #define HAVE_LIB_XCURSOR 1	/* AC_CHECK_LIB(Xcursor) */
 #define HAVE_MKDTEMP 1		/* AC_CHECK_FUNCS(mkdtemp) */
-/* #undef HAVE_NCURSES_CURSES_H	/* AC_CHECK_HEADERS(ncurses/curses.h) */
+/* #undef HAVE_NCURSES_CURSES_H	*/	/* AC_CHECK_HEADERS(ncurses/curses.h) */
 /* #undef HAVE_NCURSES_TERM_H */	/* AC_CHECK_HEADERS(ncurses/term.h) */
 #define HAVE_PATHS_H 1		/* CF_LASTLOG */
 /* #undef HAVE_PCREPOSIX_H */		/* CF_WITH_PCRE */
+/* #undef HAVE_PCRE2POSIX_H */	/* CF_WITH_PCRE2 */
 /* #undef HAVE_POSIX_OPENPT */	/* CF_FUNC_GRANTPT */
 #define HAVE_POSIX_SAVED_IDS 1	/* CF_POSIX_SAVED_IDS */
 /* #undef HAVE_PTSNAME */		/* CF_FUNC_GRANTPT */
@@ -133,6 +135,7 @@
 #define LUIT_PATH "/usr/X11R6/bin/luit"		/* CF_ARG_ENABLE(luit) */
 /* #undef NO_ACTIVE_ICON */		/* CF_ARG_DISABLE(active-icon) */
 /* #undef NO_LEAKS */			/* CF_ARG_DISABLE(leaks) */
+#define OPT_DIRECT_COLOR 1		/* CF_ARG_ENABLE(direct-color) */
 #define OPT_256_COLORS 1		/* CF_ARG_ENABLE(256-color) */
 /* #undef OPT_88_COLORS */		/* CF_ARG_ENABLE(88-color) */
 /* #undef OPT_AIX_COLORS */		/* CF_ARG_DISABLE(16-color) */
@@ -169,12 +172,12 @@
 /* #undef OPT_READLINE */		/* CF_ARG_ENABLE(readline-mouse) */
 /* #undef OPT_SAME_NAME */		/* CF_ARG_DISABLE(samename) */
 /* #undef OPT_SCO_FUNC_KEYS */	/* CF_ARG_ENABLE(sco-fkeys) */
-/* #undef OPT_SELECTION_OPS	/* CF_ARG_DISABLE(selection-ops) */
+/* #undef OPT_SELECTION_OPS */	/* CF_ARG_DISABLE(selection-ops) */
 #define OPT_SELECT_REGEX 1		/* CF_ARG_DISABLE(regex) */
 /* #undef OPT_SESSION_MGT */		/* CF_ARG_DISABLE(session-mgt) */
-/* #undef OPT_REGIS_GRAPHICS	/* CF_ARG_ENABLE(regis-graphics) */
-/* #undef OPT_SIXEL_GRAPHICS	/* CF_ARG_ENABLE(sixel-graphics) */
-/* #undef OPT_GRAPHICS		/* CF_ARG_ENABLE(graphics) */
+/* #undef OPT_REGIS_GRAPHICS */	/* CF_ARG_ENABLE(regis-graphics) */
+/* #undef OPT_SIXEL_GRAPHICS */	/* CF_ARG_ENABLE(sixel-graphics) */
+/* #undef OPT_GRAPHICS */		/* CF_ARG_ENABLE(graphics) */
 /* #undef OPT_SUN_FUNC_KEYS */	/* CF_ARG_ENABLE(sun-fkeys) */
 /* #undef OPT_TCAP_FKEYS */		/* CF_ARG_ENABLE(tcap-fkeys) */
 /* #undef OPT_TCAP_QUERY */		/* CF_ARG_ENABLE(tcap-query) */
@@ -187,7 +190,7 @@
 /* #undef OPT_XMC_GLITCH */		/* CF_ARG_ENABLE(xmc-glitch) */
 /* #undef OPT_ZICONBEEP */		/* CF_ARG_DISABLE(ziconbeep) */
 /* #undef OWN_TERMINFO_DIR */		/* AC_ARG_WITH(own-terminfo) */
-/* +#undef OWN_TERMINFO_ENV		/* AC_ARG_ENABLE(env-terminfo) */
+/* #undef OWN_TERMINFO_ENV */		/* AC_ARG_ENABLE(env-terminfo) */
 /* #undef PROCFS_ROOT */		/* CF_ARG_ENABLE(exec-xterm) */
 #define SCROLLBAR_RIGHT 1		/* CF_ARG_ENABLE(rightbar) */
 #define SIG_ATOMIC_T volatile sig_atomic_t		/* CF_SIG_ATOMIC_T */
@@ -207,7 +210,7 @@
 #define USE_UTMP_SETGID 1		/* AC_ARG_WITH(utmp-setgid) */
 /* #undef UTMPX_FOR_UTMP */		/* CF_UTMP */
 #define XRENDERFONT 1		/* CF_X_FREETYPE */
-/* #undef cc_t                    /* CF_TYPE_CC_T */
+/* #undef cc_t */		/* CF_TYPE_CC_T */
 /* #undef gid_t */			/* AC_TYPE_UID_T */
 /* #undef mode_t */			/* AC_TYPE_MODE_T */
 /* #undef off_t */			/* AC_TYPE_OFF_T */
