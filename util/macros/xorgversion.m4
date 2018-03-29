@@ -56,9 +56,10 @@ AC_DEFUN([XORG_RELEASE_VERSION],[
 #
 #
 AC_DEFUN([XORG_CHANGELOG], [
-CHANGELOG_CMD="(GIT_DIR=\$(top_srcdir)/.git git log > \$(top_srcdir)/.changelog.tmp && \
+CHANGELOG_CMD="((GIT_DIR=\$(top_srcdir)/.git git log > \$(top_srcdir)/.changelog.tmp) 2>/dev/null && \
 mv \$(top_srcdir)/.changelog.tmp \$(top_srcdir)/ChangeLog) \
-|| (rm -f \$(top_srcdir)/.changelog.tmp; touch \$(top_srcdir)/ChangeLog; \
-echo 'git directory not found: installing possibly empty changelog.' >&2)"
+|| (rm -f \$(top_srcdir)/.changelog.tmp; test -e \$(top_srcdir)/ChangeLog || ( \
+touch \$(top_srcdir)/ChangeLog; \
+echo 'git failed to create ChangeLog: installing empty ChangeLog.' >&2))"
 AC_SUBST([CHANGELOG_CMD])
 ]) # XORG_CHANGELOG
