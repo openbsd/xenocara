@@ -44,21 +44,21 @@ significantly, and run through the most recent change date).
 Files: 88colres.pl
 License: MIT-X11
 
-Copyright 1999-2005,2007 by Thomas E. Dickey
+Copyright 1999-2016,2017 by Thomas E. Dickey
 Copyright 1999-2000 by Steve Wall
 
 -------------------------------------------------------------------------------
 Files: vttests/88colors2.pl
 License: MIT-X11
 
-Copyright 1999-2007,2009 by Thomas E. Dickey
+Copyright 1999-2014,2016 by Thomas E. Dickey
 Copyright 1999 by Steve Wall
 
 -------------------------------------------------------------------------------
 Files: vttests/256colors2.pl
 License: MIT-X11
 
-Copyright 1999-2007,2009 by Thomas E. Dickey
+Copyright 1999-2014,2016 by Thomas E. Dickey
 Copyright 2002 by Steve Wall
 Copyright 1999 by Todd Larason
 
@@ -195,8 +195,9 @@ for any purpose and without fee is hereby granted. The author
 disclaims all warranties with regard to this software.
 
 -------------------------------------------------------------------------------
-Files: wcwidth.*
+Files: wcwidth.c
 
+Copyright 2002-2016,2017 by Thomas E. Dickey
 Markus Kuhn -- 2007-05-25
 
 Permission to use, copy, modify, and distribute this software
@@ -205,17 +206,18 @@ disclaims all warranties with regard to this software.
 
 -------------------------------------------------------------------------------
 Files: config.guess config.sub
-License: GPL-2+
+License: GPL-3
 
-	Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-	2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
-	Free Software Foundation, Inc.
+	Copyright 1992-2017 Free Software Foundation, Inc.
+
+On Debian systems, see "/usr/share/common-licenses/GPL-3" for details.
 
 -------------------------------------------------------------------------------
 Files: configure
-License: GPL-2+
+License: GPL-2
 
-	Copyright 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001
-	Free Software Foundation, Inc.
+	Copyright 1992-2001 Free Software Foundation, Inc.
+
+On Debian systems, see "/usr/share/common-licenses/GPL-2" for details.
 
 -------------------------------------------------------------------------------

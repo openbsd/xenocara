@@ -1,16 +1,16 @@
-# $XTermId: xterm.spec,v 1.96 2017/06/12 21:34:51 tom Exp $
+# $XTermId: xterm.spec,v 1.99 2017/12/25 11:39:08 tom Exp $
 Summary: X terminal emulator (development version)
 %global my_middle xterm
 %global my_suffix -dev
 %global fullname %{my_middle}%{my_suffix}
 %global my_class XTermDev
 Name: %{fullname}
-Version: 330
+Version: 331
 Release: 1
 License: X11
 Group: User Interface/X
 Source: xterm-%{version}.tgz
-URL: ftp://invisible-island.net/xterm/
+URL: ftp://ftp.invisible-island.net/xterm/
 Provides: x-terminal-emulator
 
 # This part (the build-requires) would be useful if the various distributions
@@ -112,8 +112,6 @@ CPPFLAGS="-DMISC_EXP -DEXP_HTTP_HEADERS" \
 %endif
 	--with-app-class=%{my_class} \
 	--disable-imake \
-	--enable-256-color \
-	--enable-88-color \
 	--enable-dabbrev \
 	--enable-dec-locator \
 	--enable-exec-xterm \
@@ -125,7 +123,6 @@ CPPFLAGS="-DMISC_EXP -DEXP_HTTP_HEADERS" \
 	--enable-paste64 \
 	--enable-regis-graphics \
 	--enable-sco-fkeys \
-	--enable-screen-dumps \
 	--enable-sixel-graphics \
 	--enable-tcap-fkeys \
 	--enable-tcap-query \

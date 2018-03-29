@@ -64,8 +64,6 @@ configure-stamp:
 		--with-app-class=$(PKG_CLASS) \
 		--without-xterm-symlink \
 		--disable-imake \
-		--enable-256-color \
-		--enable-88-color \
 		--enable-dabbrev \
 		--enable-dec-locator \
 		--enable-exec-xterm \
@@ -77,7 +75,6 @@ configure-stamp:
 		--enable-paste64 \
 		--enable-regis-graphics \
 		--enable-sco-fkeys \
-		--enable-screen-dumps \
 		--enable-sixel-graphics \
 		--enable-tcap-fkeys \
 		--enable-tcap-query \

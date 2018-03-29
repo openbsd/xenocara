@@ -1,4 +1,4 @@
 version=3
 
-opts=passive ftp://invisible-island.net/xterm/current/xterm\.tar.gz \
+opts=passive ftp://ftp.invisible-island.net/xterm/current/xterm\.tar.gz \
  debian  uupdate
