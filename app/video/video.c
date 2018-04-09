@@ -1,4 +1,4 @@
-/*	$OpenBSD: video.c,v 1.24 2018/04/09 15:48:14 cheloha Exp $	*/
+/*	$OpenBSD: video.c,v 1.25 2018/04/09 18:16:44 cheloha Exp $	*/
 /*
  * Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
  *
@@ -1853,6 +1853,7 @@ main(int argc, char *argv[])
 	struct dev *d = &vid.dev;
 	struct xdsp *x = &vid.xdsp;
 	const char *errstr;
+	size_t len;
 	int ch, err = 0;
 
 	bzero(&vid, sizeof(struct video));
@@ -1882,7 +1883,11 @@ main(int argc, char *argv[])
 			}
 			break;
 		case 'f':
-			snprintf(d->path, sizeof(d->path), optarg);
+			len = strlcpy(d->path, optarg, sizeof(d->path));
+			if (len >= sizeof(d->path)) {
+				warnx("file path is too long: %s", optarg);
+				err++;
+			}
 			break;
 		case 'g':
 			vid.mmap_on = 0;
@@ -1894,8 +1899,13 @@ main(int argc, char *argv[])
 			} else {
 				vid.mode = (vid.mode & ~M_IN_DEV) | M_IN_FILE;
 				vid.mmap_on = 0; /* mmap mode does not work for files */
-				snprintf(vid.iofile, sizeof(vid.iofile),
-				    optarg);
+				len = strlcpy(vid.iofile, optarg,
+				    sizeof(vid.iofile));
+				if (len >= sizeof(vid.iofile)) {
+					warnx("input path is too long: %s",
+					    optarg);
+					err++;
+				}
 			}
 			break;
 		case 'o':
@@ -1907,8 +1917,13 @@ main(int argc, char *argv[])
 				vid.mode |= M_OUT_FILE;
 				if (ch != 'O')
 					vid.mode &= ~M_OUT_XV;
-				snprintf(vid.iofile, sizeof(vid.iofile),
-				    optarg);
+				len = strlcpy(vid.iofile, optarg,
+				    sizeof(vid.iofile));
+				if (len >= sizeof(vid.iofile)) {
+					warnx("output path is too long: %s",
+					    optarg);
+					err++;
+				}
 			}
 			break;
 		case 'q':
