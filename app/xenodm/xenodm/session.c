@@ -295,7 +295,7 @@ SessionExit (struct display *d, int status, int removeAuth)
 
 static Bool
 StartClient (
-    struct verify_info	*verify,
+    struct verify_info	*vinfo,
     struct display	*d,
     pid_t		*pidp,
     char		*name)
@@ -308,14 +308,14 @@ StartClient (
     if (pledge("stdio rpath wpath cpath fattr proc getpw id exec dns unix inet", NULL) != 0)
     	    exit(25);
 
-    if (verify->argv) {
-	Debug ("StartSession %s: ", verify->argv[0]);
-	for (f = verify->argv; *f; f++)
+    if (vinfo->argv) {
+	Debug ("StartSession %s: ", vinfo->argv[0]);
+	for (f = vinfo->argv; *f; f++)
 		Debug ("%s ", *f);
 	Debug ("; ");
     }
-    if (verify->userEnviron) {
-	for (f = verify->userEnviron; *f; f++)
+    if (vinfo->userEnviron) {
+	for (f = vinfo->userEnviron; *f; f++)
 		Debug ("%s ", *f);
 	Debug ("\n");
     }
@@ -346,29 +346,29 @@ StartClient (
 	}
 
 	if (d->windowPath)
-		verify->userEnviron = setEnv(verify->userEnviron, "WINDOWPATH", d->windowPath);
+		vinfo->userEnviron = setEnv(vinfo->userEnviron, "WINDOWPATH", d->windowPath);
 	else
 		Debug("No WINDOWPATH found\n");
 
-	SetUserAuthorization (d, verify);
-	home = getEnv (verify->userEnviron, "HOME");
+	SetUserAuthorization (d, vinfo);
+	home = getEnv (vinfo->userEnviron, "HOME");
 	if (home)
 	    if (chdir (home) == -1) {
 		LogError ("user \"%s\": cannot chdir to home \"%s\" (err %d), using \"/\"\n",
-			  getEnv (verify->userEnviron, "USER"), home, errno);
+			  getEnv (vinfo->userEnviron, "USER"), home, errno);
 		chdir ("/");
-		verify->userEnviron = setEnv(verify->userEnviron, "HOME", "/");
+		vinfo->userEnviron = setEnv(vinfo->userEnviron, "HOME", "/");
 	    }
-	if (verify->argv) {
-		LogInfo ("executing session %s\n", verify->argv[0]);
-		execute (verify->argv, verify->userEnviron);
-		LogError ("Session \"%s\" execution failed (err %d)\n", verify->argv[0], errno);
+	if (vinfo->argv) {
+		LogInfo ("executing session %s\n", vinfo->argv[0]);
+		execute (vinfo->argv, vinfo->userEnviron);
+		LogError ("Session \"%s\" execution failed (err %d)\n", vinfo->argv[0], errno);
 	} else {
 		LogError ("Session has no command/arguments\n");
 	}
 	failsafeArgv[0] = d->failsafeClient;
 	failsafeArgv[1] = NULL;
-	execute (failsafeArgv, verify->userEnviron);
+	execute (failsafeArgv, vinfo->userEnviron);
 	exit (1);
     case -1:
 	Debug ("StartSession, fork failed\n");
