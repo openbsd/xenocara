@@ -769,7 +769,6 @@ SetUserAuthorization (struct display *d, struct verify_info *verify)
     struct stat	statb;
     int		i;
     int		magicCookie;
-    int		data_len;
     int		fd;
 
     Debug ("SetUserAuthorization\n");

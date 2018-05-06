@@ -298,7 +298,6 @@ greet_user_rtn GreetUser(
     struct verify_info      *verify,
     struct greet_info       *greet)
 {
-    int i;
     Arg		arglist[2];
     Display    *dpy;
 
@@ -363,7 +362,6 @@ greet_user_rtn AutoLogin(
     struct verify_info      *verify,
     struct greet_info       *greet)
 {
-    int i;
 
     if (!autoLoginEnv(d, verify, greet)) {
         LogError("Autologin %s failed\n", d->autoLogin);
