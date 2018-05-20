@@ -3618,11 +3618,13 @@ update_cursorblink(void)
 	check == cbNever) {
 	SetItemSensitivity(vtMenuEntries[vtMenu_cursorblink].widget, False);
     }
+#if 0
     UpdateCheckbox("update_cursorblink",
 		   vtMenuEntries,
 		   vtMenu_cursorblink,
 		   (check == cbTrue ||
 		    check == cbAlways));
+#endif
 }
 #endif
 

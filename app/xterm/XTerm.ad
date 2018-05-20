@@ -92,7 +92,7 @@
 *vtMenu*visualbell*Label:  Enable Visual Bell
 *vtMenu*bellIsUrgent*Label:  Enable Bell Urgency
 *vtMenu*poponbell*Label:  Enable Pop on Bell
-*vtMenu*cursorblink*Label: Enable Blinking Cursor
+*vtMenu*cursorblink*Label: Toggle Cursor Blinking
 *vtMenu*titeInhibit*Label:  Enable Alternate Screen Switching
 *vtMenu*activeicon*Label: Enable Active Icon
 *vtMenu*softreset*Label:  Do Soft Reset
