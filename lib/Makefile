@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.34 2018/04/02 17:06:02 matthieu Exp $
+# $OpenBSD: Makefile,v 1.35 2018/05/20 09:40:53 matthieu Exp $
 
 .include <bsd.xconf.mk>
 
@@ -40,10 +40,10 @@ SUBDIR= freetype fontconfig libxtrans libXau libXdmcp ${XCB_LIBS}\
 	libX11  libXext  libXrender libXft libdmx libfontenc \
 	libFS libICE libSM libXt \
 	libXmu libXpm libXaw libXfixes libXcomposite \
-	libXdamage libXcursor libXfont2 libXfontcache \
+	libXdamage libXcursor libXfont2  \
 	libXi libXinerama libxkbfile libxkbui  \
 	libXrandr libXRes libXScrnSaver \
-	libXtst libXv libXvMC libXxf86dga libXxf86misc libXxf86vm \
+	libXtst libXv libXvMC libXxf86dga libXxf86vm \
 	libpciaccess pixman
 
 .if ${XENOCARA_BUILD_GL:L} == "yes"
