@@ -62,7 +62,7 @@ The following steps will build and install everything for the first time.
 
  cd /usr/xenocara
  doas make bootstrap
- make obj
+ doas make obj
  doas make build
 
 If you want to use another obj directory see below.
@@ -102,11 +102,10 @@ in a non-standard directory (the default is /usr/xenocara).
 
   Objdirs
 
-Xenocara supports objdirs (and it's even the recommended way to build
-things). Just run 'make obj' at any level before 'make build' to make
-sure that the object directories are created.
-XOBJDIR defines the obj directory that is used (defaults to /usr/xobj).
-It should be created before running 'make obj'.
+Xenocara requires objdirs. Just run 'make obj' as root at any level
+before 'make build' to make sure that the object directories are
+created.  XOBJDIR defines the obj directory that is used (defaults to
+/usr/xobj).  It should be created before running 'make obj'.
 
 o Regenerating configure scripts
   ------------------------------
@@ -193,4 +192,4 @@ The core dump will be in /var/crash.
 See also <http://xorg.freedesktop.org/wiki/Development/Documentation/ServerDebugging>
 
 -- 
-$OpenBSD: README,v 1.40 2017/08/19 09:12:13 matthieu Exp $
+$OpenBSD: README,v 1.41 2018/05/20 17:25:01 matthieu Exp $
