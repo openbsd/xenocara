@@ -8062,6 +8062,7 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.cursor_blink_xor);
     init_Ires(screen.blink_on);
     init_Ires(screen.blink_off);
+    screen->cursor_blink_i = screen->cursor_blink;
 #endif
     init_Bres(screen.cursor_underline);
     /* resources allow for underline or block, not (yet) bar */
@@ -11057,6 +11058,8 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
     screen->cursor_set = ON;
     InitCursorShape(screen, screen);
 #if OPT_BLINK_CURS
+    SetCursorBlink(screen, screen->cursor_blink_i);
+    screen->cursor_blink_esc = 0;
     TRACE(("cursor_shape:%d blinks:%d\n",
 	   screen->cursor_shape,
 	   screen->cursor_blink));

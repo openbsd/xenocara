@@ -2276,9 +2276,11 @@ typedef struct {
 	XtCursorShape	cursor_shape;
 #if OPT_BLINK_CURS
 	BlinkOps	cursor_blink;	/* cursor blink enable		*/
+	BlinkOps	cursor_blink_i;	/* save cursor blink enable	*/
 	char *		cursor_blink_s;	/* ...resource cursorBlink	*/
 	int		cursor_blink_esc; /* cursor blink escape-state	*/
 	Boolean		cursor_blink_xor; /* how to merge menu/escapes	*/
+	int		cursor_blink_esc_i; /* cursor blink escape-state*/
 #endif
 #if OPT_BLINK_TEXT
 	Boolean		blink_as_bold;	/* text blink disable		*/
