@@ -332,15 +332,6 @@
 ./usr/X11R6/man/man3/XDGASetViewport.3
 ./usr/X11R6/man/man3/XDGASync.3
 ./usr/X11R6/man/man3/XF86DGA.3
-./usr/X11R6/man/man3/XF86Misc.3
-./usr/X11R6/man/man3/XF86MiscGetKbdSettings.3
-./usr/X11R6/man/man3/XF86MiscGetMouseSettings.3
-./usr/X11R6/man/man3/XF86MiscGetSaver.3
-./usr/X11R6/man/man3/XF86MiscQueryExtension.3
-./usr/X11R6/man/man3/XF86MiscQueryVersion.3
-./usr/X11R6/man/man3/XF86MiscSetKbdSettings.3
-./usr/X11R6/man/man3/XF86MiscSetMouseSettings.3
-./usr/X11R6/man/man3/XF86MiscSetSaver.3
 ./usr/X11R6/man/man3/XF86VM.3
 ./usr/X11R6/man/man3/XF86VidModeDeleteModeLine.3
 ./usr/X11R6/man/man3/XF86VidModeGetAllModeLines.3

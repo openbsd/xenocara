@@ -361,9 +361,6 @@
 ./usr/X11R6/include/X11/extensions/dpmsconst.h
 ./usr/X11R6/include/X11/extensions/dpmsproto.h
 ./usr/X11R6/include/X11/extensions/extutil.h
-./usr/X11R6/include/X11/extensions/fontcache.h
-./usr/X11R6/include/X11/extensions/fontcacheP.h
-./usr/X11R6/include/X11/extensions/fontcachstr.h
 ./usr/X11R6/include/X11/extensions/ge.h
 ./usr/X11R6/include/X11/extensions/geproto.h
 ./usr/X11R6/include/X11/extensions/lbx.h
@@ -413,8 +410,6 @@
 ./usr/X11R6/include/X11/extensions/xf86dgaconst.h
 ./usr/X11R6/include/X11/extensions/xf86dgaproto.h
 ./usr/X11R6/include/X11/extensions/xf86dgastr.h
-./usr/X11R6/include/X11/extensions/xf86misc.h
-./usr/X11R6/include/X11/extensions/xf86mscstr.h
 ./usr/X11R6/include/X11/extensions/xf86vm.h
 ./usr/X11R6/include/X11/extensions/xf86vmode.h
 ./usr/X11R6/include/X11/extensions/xf86vmproto.h
@@ -712,7 +707,6 @@
 ./usr/X11R6/lib/pkgconfig/dmx.pc
 ./usr/X11R6/lib/pkgconfig/dmxproto.pc
 ./usr/X11R6/lib/pkgconfig/fixesproto.pc
-./usr/X11R6/lib/pkgconfig/fontcacheproto.pc
 ./usr/X11R6/lib/pkgconfig/fontconfig.pc
 ./usr/X11R6/lib/pkgconfig/fontenc.pc
 ./usr/X11R6/lib/pkgconfig/fontsproto.pc
@@ -744,11 +738,9 @@
 ./usr/X11R6/lib/pkgconfig/xextproto.pc
 ./usr/X11R6/lib/pkgconfig/xf86bigfontproto.pc
 ./usr/X11R6/lib/pkgconfig/xf86dgaproto.pc
-./usr/X11R6/lib/pkgconfig/xf86miscproto.pc
 ./usr/X11R6/lib/pkgconfig/xf86vidmodeproto.pc
 ./usr/X11R6/lib/pkgconfig/xfixes.pc
 ./usr/X11R6/lib/pkgconfig/xfont2.pc
-./usr/X11R6/lib/pkgconfig/xfontcache.pc
 ./usr/X11R6/lib/pkgconfig/xft.pc
 ./usr/X11R6/lib/pkgconfig/xi.pc
 ./usr/X11R6/lib/pkgconfig/xinerama.pc
@@ -773,7 +765,6 @@
 ./usr/X11R6/lib/pkgconfig/xv.pc
 ./usr/X11R6/lib/pkgconfig/xvmc.pc
 ./usr/X11R6/lib/pkgconfig/xxf86dga.pc
-./usr/X11R6/lib/pkgconfig/xxf86misc.pc
 ./usr/X11R6/lib/pkgconfig/xxf86vm.pc
 ./usr/X11R6/man/man1/FvwmAuto.1
 ./usr/X11R6/man/man1/FvwmBacker.1
@@ -1156,11 +1147,6 @@
 ./usr/X11R6/man/man3/FcValueSave.3
 ./usr/X11R6/man/man3/FcWeightFromOpenType.3
 ./usr/X11R6/man/man3/FcWeightToOpenType.3
-./usr/X11R6/man/man3/FontCacheChangeCacheSettings.3
-./usr/X11R6/man/man3/FontCacheGetCacheSettings.3
-./usr/X11R6/man/man3/FontCacheGetCacheStatistics.3
-./usr/X11R6/man/man3/FontCacheQueryExtension.3
-./usr/X11R6/man/man3/FontCacheQueryVersion.3
 ./usr/X11R6/man/man3/GLwCreateMDrawingArea.3
 ./usr/X11R6/man/man3/GLwDrawingArea.3
 ./usr/X11R6/man/man3/GLwDrawingAreaMakeCurrent.3
@@ -1900,7 +1886,6 @@
 ./usr/X11R6/man/man3/XeviQueryExtension.3
 ./usr/X11R6/man/man3/XeviQueryVersion.3
 ./usr/X11R6/man/man3/Xfixes.3
-./usr/X11R6/man/man3/Xfontcache.3
 ./usr/X11R6/man/man3/Xft.3
 ./usr/X11R6/man/man3/Xinerama.3
 ./usr/X11R6/man/man3/XineramaIsActive.3
