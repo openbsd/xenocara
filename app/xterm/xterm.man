@@ -7859,6 +7859,9 @@ resources have different default values:
 .B allowWindowOps: false
 Various, potentially dangerous, extended window control sequences are disabled.
 .TP 8
+.B cursorBlink: never
+Prevents cursor from blinking.
+.TP 8
 .B deleteIsDEL: true
 The Delete key generates \fB^?\fP. 
 .TP 8

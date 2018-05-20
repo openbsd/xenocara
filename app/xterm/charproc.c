@@ -561,7 +561,7 @@ static XtResource xterm_resources[] =
 
 #if OPT_BLINK_CURS
     Bres(XtNcursorBlinkXOR, XtCCursorBlinkXOR, screen.cursor_blink_xor, True),
-    Sres(XtNcursorBlink, XtCCursorBlink, screen.cursor_blink_s, "false"),
+    Sres(XtNcursorBlink, XtCCursorBlink, screen.cursor_blink_s, "never"),
 #endif
     Bres(XtNcursorUnderLine, XtCCursorUnderLine, screen.cursor_underline, False),
 
