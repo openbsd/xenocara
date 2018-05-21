@@ -1,3 +1,81 @@
+commit 61eebdfde170841ae933cf65ba27346fbf2f8018
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 9 22:36:07 2018 -0800
+
+    xbitmaps 1.1.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2efc8ad6dea6893bb39b05712a65e101f7dc4a70
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:20 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 0cd8200a547ee418be4d896d6a12807c16863f16
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 408ff5bd981ceebb4b8adde2123fb7e03ac364a7
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit bd2aa41aa2f28c056d1a89eff7aad86cb666cfcc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Apr 13 23:15:05 2016 -0700
+
+    Remove unused libdir setting from xbitmaps.pc
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 9ffec959fc25565409e38d43f919a847d15cb233
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:39:32 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 851f1dbf8ed2c7f13aefe9ebc343c1ca93564336
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:38:41 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c8f6712639bb2998013c1768d6f3fa8c907333b1
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Oct 26 08:13:32 2013 -0400
+
+    config: replace deprecated use of AC_OUTPUT with AC_CONFIG_FILES
+    
+    Fix Automake warning: AC_OUTPUT should be used without arguments.
+    www.gnu.org/software/autoconf/manual/autoconf.html#Configuration-Files
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit df1dfeaee913f6ce1f82189b90493c14cb011564
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Dec 8 22:25:45 2010 -0800
