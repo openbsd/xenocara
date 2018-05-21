@@ -1,3 +1,94 @@
+commit 919665db8ceb8e2c38a1a4ce4686eb224ddf5234
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 9 20:41:31 2018 -0800
+
+    xwininfo 1.1.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e3c764b14da65c5d3afcd19f920705b397aa765c
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 4edd69d5f9abd111e6b52f600696f84e023f6249
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 30488a8c7ef5f24ce445a268b168a9a5646b9f7d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 0c49f8f2bd56b1e77721e81030ea948386dcdf4e
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Tue Jan 6 11:57:33 2015 +0100
+
+    xwininfo: do not segfault on IO error
+    
+    If the connection to the X server is lost while waiting for
+    the user to select a window interactively, xwininfo segfaults.
+    
+    This is a regression introduced with the port to XCB, because
+    xcb_wait_for_event() can return NULL in case of an IO error and
+    xwininfo does not check for the actual returned value.
+    
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 017b3736489985999d8dcf4d9e473e1fd6dd3647
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 3 23:58:54 2014 -0700
+
+    Add -version option to print program version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d41d834d8b2be86eb56802de12c2399c7ff0919f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 3 23:56:08 2014 -0700
+
+    Print which option was in error along with usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d5417f2eb09e7061801f63ce77e3441d80e5e4a1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:39:32 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 301f9c7970548539a2679cc3e354680a60733a68
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:38:41 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit ba0d1b0da21d2dbdd81098ed5778f3792b472e13
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri May 17 21:04:26 2013 -0700
@@ -324,7 +415,7 @@ Date:   Mon Sep 27 14:56:14 2010 +0200
 
     Fix build error when building --with-xcb-icccm
     
-     	xwininfo.c:633:34: error: incompatible types when assigning to type xcb_get_property_cookie_t from type int
+            xwininfo.c:633:34: error: incompatible types when assigning to type xcb_get_property_cookie_t from type int
     
     Signed-off-by: Tomas Chvatal <scarabeus@gentoo.org>
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
@@ -441,8 +532,8 @@ Date:   Sun Jun 13 12:42:34 2010 -0700
     
     Over a local connection on the same machine:
     
-    Xlib:	0.00u 0.01s 0:00.05 20.0%
-    xcb:	0.00u 0.00s 0:00.02 0.0%
+    Xlib:   0.00u 0.01s 0:00.05 20.0%
+    xcb:    0.00u 0.00s 0:00.02 0.0%
     
     (i.e. barely measurable difference - I had more variation between
      repeated runs of the command)
@@ -450,8 +541,8 @@ Date:   Sun Jun 13 12:42:34 2010 -0700
     Introducing latency by running over ssh -X from California to Beijing
     and back:
     
-    Xlib:	0.03u 0.02s 8:19.12 0.0%
-    xcb:	0.00u 0.00s 0:45.26 0.0%
+    Xlib:   0.03u 0.02s 8:19.12 0.0%
+    xcb:    0.00u 0.00s 0:45.26 0.0%
     
     Memory size when exit() is called:
     
