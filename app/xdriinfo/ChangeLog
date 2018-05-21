@@ -1,3 +1,55 @@
+commit 3727e9dd2b964bed15083e79e55051132522a148
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Mar 6 23:22:03 2018 -0800
+
+    xdriinfo 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6273d9dacbf165331c21bcda5a8945c8931d87b8
+Author: Hans de Goede <hdegoede@redhat.com>
+Date:   Mon Mar 13 12:18:53 2017 +0100
+
+    Fix xdriinfo not working with glvnd
+    
+    For glx calls to work on libglvnd as glx provider we must first call
+    glXGetClientString. This also means that we can no longer take the
+    shortcut to not open the Display when a driver name is past to options.
+    
+    Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+
+commit 9f0b01c590d1bceb31657edbf52aa94680428038
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 9ff8d18d8a32872a805c50776afc06438c9bfa2a
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 63c9e54c080f4546c31014f5dc347000a7114602
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
 commit d3a33f66615cbf727866d3db5cf20475d4bb1f77
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Apr 16 23:04:02 2015 -0700

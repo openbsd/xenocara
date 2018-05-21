@@ -112,23 +112,9 @@ int main (int argc, char *argv[]) {
 	    return 1;
 	}
     }
-  /* if the argument to the options command is a driver name, we can handle
-   * it without opening an X connection */
-    if (func == OPTIONS && screenNum == -1) {
-	const char *options = (*GetDriverConfig) (funcArg);
-	if (!options) {
-	    fprintf (stderr,
-		     "Driver \"%s\" is not installed or does not support configuration.\n",
-		     funcArg);
-	    return 1;
-	}
-	printf ("%s", options);
-	if (isatty (STDOUT_FILENO))
-	    printf ("\n");
-	return 0;
-    } 
+
   /* driver command needs a valid screen number */
-    else if (func == DRIVER && screenNum == -1) {
+    if (func == DRIVER && screenNum == -1) {
 	fprintf (stderr, "Invalid screen number \"%s\".\n", funcArg);
 	return 1;
     }
@@ -145,6 +131,9 @@ int main (int argc, char *argv[]) {
 	fprintf (stderr, "Screen number \"%d\" out of range.\n", screenNum);
 	return 1;
     }
+
+   /* Call glXGetClientString to load vendor libs on glvnd enabled systems */
+    glXGetClientString (dpy, GLX_EXTENSIONS);
 
     switch (func) {
       case NSCREENS:
@@ -165,7 +154,13 @@ int main (int argc, char *argv[]) {
 	  break;
       }
       case OPTIONS: {
-	  const char *name = (*GetScreenDriver) (dpy, screenNum), *options;
+	  const char *name, *options;
+	  
+	  if (screenNum == -1) {
+	      name = funcArg;
+	  } else {
+	      name = (*GetScreenDriver) (dpy, screenNum);
+	  }
 	  if (!name) {
 	      fprintf (stderr, "Screen \"%d\" is not direct rendering capable.\n",
 		       screenNum);
