@@ -87,6 +87,7 @@ SOFTWARE.
 #include <X11/Xfuncs.h>
 #include <X11/keysym.h>
 #include <stdio.h>
+#include <stdarg.h>
 #ifdef MULTIBUFFER
 #include <X11/extensions/multibuf.h>
 #endif /* MULTIBUFFER */
@@ -179,37 +180,38 @@ static const char *Primaries[] = {
 };
 #define NumberPrimaries 6
 
-static const char *help_message[] = {
-"where options include:",
-"-display host:dpy           X server to use",
-"    -geometry geom          geometry of window to use",
-"    -size WxH               size of object to rotate",
-"    -delta +X+Y             amount by which to move object",
-"    -r                      draw in the root window",
-"    -d number               dashed line pattern for wire frames",
-"    -bg color               background color",
-"    -colors color ...       codes to use on sides",
-"    -p#                     use # (1 through 8) primary colors",
+static const char *help_message =
+"where options include:\n"
+"    -display host:dpy       X server to use\n"
+"    -geometry geom          geometry of window to use\n"
+"    -size WxH               size of object to rotate\n"
+"    -delta +X+Y             amount by which to move object\n"
+"    -r                      draw in the root window\n"
+"    -d number               dashed line pattern for wire frames\n"
+"    -bg color               background color\n"
+"    -colors color ...       codes to use on sides\n"
+"    -p#                     use # (1 through 8) primary colors\n"
 #ifdef MULTIBUFFER           
-"    -dbl                    use double buffering (extension if present)",
+"    -dbl                    use double buffering extension (if present)\n"
 #else                        
-"    -dbl                    use double buffering (software only)",
+"    -dbl                    use double buffering (software only)\n"
 #endif                       
-"    -softdbl                use software double buffering",
-"    -noedges                don't draw wire frame edges",
-"    -faces                  draw faces",
-"    -copy                   use multibuffer update action Copied",
-"    -untouched              use multibuffer update action Untouched",
-"    -undefined              use multibuffer update action Undefined",
-"    -lw number              line width to use",
-"    -i                      invert",
-"    -sleep number           seconds to sleep in between draws",
-"    -obj objname            type of polyhedral object to draw",
-"    -objhelp                list polyhedral objects available",
+"    -softdbl                use software double buffering\n"
+"    -noedges                don't draw wire frame edges\n"
+"    -faces                  draw faces\n"
+"    -copy                   use multibuffer update action Copied\n"
+"    -untouched              use multibuffer update action Untouched\n"
+"    -undefined              use multibuffer update action Undefined\n"
+"    -lw number              line width to use\n"
+"    -i                      invert\n"
+"    -sleep number           seconds to sleep in between draws\n"
+"    -obj objname            type of polyhedral object to draw\n"
+"    -objhelp                list polyhedral objects available\n"
 #ifdef MULTITHREAD           
-"    -threads number         number of windows, each its own thread",
+"    -threads number         number of windows, each its own thread\n"
 #endif
-NULL};
+"    -version                print program version\n"
+;
 
 static const char *ProgramName;	/* argv[0] */
 
@@ -255,13 +257,15 @@ static xcondition_rec count_cond;/* Xthreads doesn't define an equivalent to
  *****************************************************************************/
 
 
-static void icoFatal (const char *fmt, const char *a0) _X_NORETURN;
-
-static void
-icoFatal(const char *fmt, const char *a0)
+static void _X_NORETURN _X_ATTRIBUTE_PRINTF(1, 2)
+icoFatal(const char *fmt, ...)
 {
+	va_list args;
+
 	fprintf(stderr, "%s: ", ProgramName);
-	fprintf(stderr, fmt, a0);
+	va_start(args, fmt);
+	vfprintf(stderr, fmt, args);
+	va_end(args);
 	fprintf(stderr, "\n");
 	exit(1);
 }
@@ -467,7 +471,7 @@ icoClearArea(struct closure *closure, int x, int y, int w, int h)
 static void
 initPoly(struct closure *closure, Polyinfo *poly, int icoW, int icoH)
 {
-    Point3D *vertices = poly->v;
+    const Point3D *vertices = poly->v;
     int NV = poly->numverts;
     Transform3D r1;
     Transform3D r2;
@@ -476,7 +480,7 @@ initPoly(struct closure *closure, Polyinfo *poly, int icoW, int icoH)
     FormatRotateMat('y', 5 * 3.1416 / 180.0, r2);
     ConcatMat(r1, r2, closure->xform);
 
-    memcpy((char *)closure->xv[0], (char *)vertices, NV * sizeof(Point3D));
+    memcpy(closure->xv[0], vertices, NV * sizeof(Point3D));
     closure->xv_buffer = 0;
 
     closure->wo2 = icoW / 2.0;
@@ -563,7 +567,7 @@ static void
 drawPoly(struct closure *closure, Polyinfo *poly, GC gc,
 	 int icoX, int icoY, int icoW, int icoH, int prevX, int prevY)
 {
-	int *f = poly->f;
+	const int *f = poly->f;
 	int NV = poly->numverts;
 	int NF = poly->numfaces;
 
@@ -576,7 +580,7 @@ drawPoly(struct closure *closure, Polyinfo *poly, GC gc,
 	XSegment edges[MAXEDGES];
 	int i;
 	int j,k;
-	int *pf;
+	const int *pf;
 	int facecolor;
 
 	int pcount;
@@ -753,7 +757,7 @@ initDBufs(struct closure *closure, unsigned long fg, unsigned long bg,
 		    closure->plane_masks,closure->totalplanes, closure->pixels,1);
 			    /* allocate color planes */
 	    if (t==0) {
-		    icoFatal("can't allocate enough color planes", NULL);
+		    icoFatal("can't allocate enough color planes");
 	    }
 	}
 
@@ -846,7 +850,7 @@ do_ico_window(void *ptr)
 #endif
 	closure->cmap = XDefaultColormap(dpy,DefaultScreen(dpy));
 	if (!closure->cmap) {
-		icoFatal("no default colormap!", NULL);
+		icoFatal("no default colormap!");
 	}
 
 	fg = WhitePixel(dpy, DefaultScreen(dpy));
@@ -929,7 +933,7 @@ do_ico_window(void *ptr)
 		printf("thread %x got Expose\n", xthread_self());
 #endif
 		if (XGetWindowAttributes(dpy,closure->draw_window,&xwa)==0) {
-			icoFatal("cannot get window attributes (size)", NULL);
+			icoFatal("cannot get window attributes (size)");
 		}
 		closure->winW = xwa.width;
 		closure->winH = xwa.height;
@@ -966,7 +970,7 @@ do_ico_window(void *ptr)
 			   0, 0, closure->winW, closure->winH, 0, 0);
 		closure->win = closure->multibuffers[1];
 	    } else 
-	      icoFatal ("unable to obtain 2 buffers", NULL);
+	      icoFatal ("unable to obtain 2 buffers");
 	}
 #endif /* MULTIBUFFER */
 	if (closure->win == None) closure->win = closure->draw_window;
@@ -1127,7 +1131,7 @@ do_ico_window(void *ptr)
 static void
 giveObjHelp(void)
 {
-	int i;
+	unsigned int i;
 	Polyinfo *poly;
 
 	printf("%-16s%-12s  #Vert.  #Edges  #Faces  %-16s\n",
@@ -1144,7 +1148,7 @@ giveObjHelp(void)
 static Polyinfo *
 findpoly(const char *name)
 {
-	int i;
+	unsigned int i;
         Polyinfo *poly;
 
 	for (i=0; i<NumberPolygons; i++) {
@@ -1276,19 +1280,21 @@ int main(int argc, const char **argv)
 			giveObjHelp();
 			exit(1);
 		}
+		else if (strcmp(*argv, "-version") == 0) {
+			puts(PACKAGE_STRING);
+			exit(0);
+		}
 		else {	/* unknown arg */
-			const char **cpp;
-
-			fprintf (stderr, "usage:  %s [options]\n\n",
-			         ProgramName);
-			for (cpp = help_message; *cpp; cpp++)
-				fprintf (stderr, "%s\n", *cpp);
+			fprintf (stderr, "%s: unrecognized argument %s\n\n",
+				 ProgramName, *argv);
+			fprintf (stderr, "usage:  %s [options]\n\n%s",
+			         ProgramName, help_message);
 			exit (1);
 		}
 	}
 
 	if (!dofaces && !doedges)
-		icoFatal("nothing to draw", NULL);
+		icoFatal("nothing to draw");
 
 #ifdef MULTITHREAD
 	XInitThreads();

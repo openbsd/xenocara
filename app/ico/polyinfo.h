@@ -16,7 +16,7 @@ typedef struct {
 } Point3D;
 
 /* structure of the include files which define the polyhedra */
-typedef struct {
+struct polyinfo {
 	const char *longname;	/* long name of object */
 	const char *shortname;	/* short name of object */
 	const char *dual;	/* long name of dual */
@@ -25,6 +25,7 @@ typedef struct {
 	int numfaces;		/* number of faces */
 	Point3D v[MAXVERTS];	/* the vertices */
 	int f[MAXEDGES*2+MAXFACES];	/* the faces */
-} Polyinfo;
+};
+typedef const struct polyinfo Polyinfo;
 
 /* end */

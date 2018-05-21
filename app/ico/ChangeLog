@@ -1,3 +1,148 @@
+commit e2a3e08d7a93738a88fdc889517f85d17371b626
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 9 22:26:48 2018 -0800
+
+    ico 1.0.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 27bb9485b60408c7bad53abf67f69ca99ab8fa2e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Mar 6 22:50:37 2018 -0800
+
+    Fix more sign-compare warnings
+    
+    ico.c:1136:13: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+      for (i=0; i<NumberPolygons; i++) {
+                 ^
+    
+    ico.c:1151:13: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+      for (i=0; i<NumberPolygons; i++) {
+                 ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 16ae54507785927e95942690b130d6827d7fb296
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:20 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 00a77336cf2ecbe70b5be0e83b3729b76e92211d
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 3f7683aafa4b93b5c3bc416948e909826dc99a13
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 1d5e7d243e0f0df7afd6198f9e74bb392ddcea46
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 23 22:33:07 2015 -0700
+
+    Add -version to synopsis in man page
+    
+    List -version & -objhelp seperately to indicate they cannot be used
+    with any of the other options.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2aeef741088c391f0d55ed9a063e3988ffd6ee44
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 16 23:01:55 2015 -0800
+
+    Convert icoFatal() to be a varargs function
+    
+    Drops needless NULL arguments and enables printf format checking.
+    
+    Gets rid of gcc 4.8 warning:
+    ico.c: In function ‘icoFatal’:
+    ico.c:265:2: warning: format not a string literal, argument types not checked [-Wformat-nonliteral]
+      fprintf(stderr, fmt, a0);
+      ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit bbd4273f328e93d429a6edb8872a74f8fb82b259
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 25 14:18:42 2014 -0700
+
+    Make polygon info const - moves 22k from .data to .rodata
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9db7347730f3c8c9d77e5be4c9746f6d614ce470
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 23:58:50 2014 -0700
+
+    Add -version option to print program version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 30cb700ab15c963a5cbf16cfe6281d5841f59532
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 23:55:00 2014 -0700
+
+    Print which option was in error along with usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3db5ac8466abe367a0a37efe4289aa6c7886e621
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 23:52:26 2014 -0700
+
+    Combine usage message array into single string
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 30b454f820eef8759bc2cbc258bf619717279409
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 23:41:36 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fa3d6ddec9447be2d9a3a92b6b6a0dbe00fd1870
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 23:41:36 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 727503cc004342ee0b34126c5844da381bc0b622
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 23:38:40 2014 -0700
+
+    config: Add missing AC_CONFIG_SRCDIR
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 0c5f08dee87e0453e3263f8aa5ca545a0a03353e
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Jan 15 18:19:49 2013 -0800

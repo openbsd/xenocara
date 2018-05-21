@@ -5,7 +5,13 @@ ico \- animate an icosahedron or other polyhedron
 .B ico
 [-display display] [-geometry geometry]
 [-r] [-d pattern] [-i] [-dbl] [-faces] [-noedges]
-[-sleep n] [-obj object] [-objhelp] [-colors color-list]
+[-sleep n] [-obj object] [-colors color-list]
+.LP
+.B ico
+-objhelp
+.LP
+.B ico
+-version
 .SH DESCRIPTION
 .I Ico
 displays a wire-frame rotating polyhedron, with hidden lines removed,
@@ -54,6 +60,9 @@ about each object.
 .B -colors \fIcolor color ...\fP
 Specify what colors should be used to draw the filled faces of the object.
 If less colors than faces are given, the colors are reused.
+.TP
+.B -version
+Print program version information and exit.
 .SH PROGRAM TERMINATION
 .LP
 Pressing "q" will close a window. If compiled with threads support, the
