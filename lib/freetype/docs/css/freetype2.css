@@ -267,8 +267,15 @@ table {
   /* the next two lines center the table horizontally */
   margin-left: auto;
   margin-right: auto;
-  margin-top: 5ex;
-  margin-bottom: 5ex; }
+  margin-top: 0;
+  margin-bottom: 0; }
+table.vertical-space {
+  border-collapse: collapse;
+  /* the next two lines center the table horizontally */
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 4ex;
+  margin-bottom: 4ex; }
 td {
   padding-left: 0.8em;
   padding-right: 0.8em; }
@@ -282,7 +289,17 @@ th {
   padding-bottom: 1ex; }
 tbody tr:first-child td {
   /* some vertical space after the horizontal rule */
+  /* or at the beginning of the table */
   padding-top: 1ex; }
+tbody tr:last-child td {
+  /* some vertical space after the table */
+  padding-bottom: 1ex; }
+/* if we have paragraphs in a table, */
+/* suppress first and last vertical space */
+table tr:first-of-type p:first-of-type {
+  margin-top: 0; }
+table tr:last-of-type p:last-of-type {
+  margin-bottom: 0; }
 
 dl {
   margin-left: 1em; }
@@ -293,9 +310,9 @@ dt {
 /* if we have paragraphs in definition lists, */
 /* suppress the very first vertical space */
 dd > p:first-child {
-  margin-top: 0ex; }
+  margin-top: 0; }
 dd > p {
-  margin-bottom: 0ex; }
+  margin-bottom: 0; }
 
 /* indented text */
 div.quote {
@@ -326,6 +343,9 @@ div.updated {
   margin-top: 5ex;
   font-style: italic;
   font-size: 70%; }
+p {
+  margin-top: 1ex;
+  margin-bottom: 1ex; }
 p.warning {
   color: red; }
 p.large {

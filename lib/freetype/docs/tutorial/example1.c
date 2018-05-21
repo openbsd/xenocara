@@ -32,6 +32,9 @@ draw_bitmap( FT_Bitmap*  bitmap,
   FT_Int  y_max = y + bitmap->rows;
 
 
+  /* for simplicity, we assume that `bitmap->pixel_mode' */
+  /* is `FT_PIXEL_MODE_GRAY' (i.e., not a bitmap font)   */
+
   for ( i = x, p = 0; i < x_max; i++, p++ )
   {
     for ( j = y, q = 0; j < y_max; j++, q++ )
@@ -105,6 +108,9 @@ main( int     argc,
   error = FT_Set_Char_Size( face, 50 * 64, 0,
                             100, 0 );                /* set character size */
   /* error handling omitted */
+
+  /* cmap selection omitted;                                        */
+  /* for simplicity we assume that the font contains a Unicode cmap */
 
   slot = face->glyph;
 
