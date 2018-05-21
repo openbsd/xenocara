@@ -1,4 +1,3 @@
-/* $XConsortium: xpr.c,v 1.59 94/10/14 21:22:08 kaleb Exp $ */
 /*
 
 Copyright (c) 1985  X Consortium
@@ -72,6 +71,10 @@ from the X Consortium.
  *
  */
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #include <X11/Xos.h>
 #include <X11/Xfuncs.h>
 #include <X11/Xlib.h>
@@ -135,17 +138,18 @@ int debug = 0;
 static const char *infilename = NULL;
 const char *progname   = NULL;
 
-typedef struct _grayRec {
+struct _grayRec {
     int level;
     int sizeX, sizeY;		/* 2x2, 3x3, 4x4 */
-    unsigned long *grayscales;	/* pointer to the encoded pixels */
-} GrayRec, *GrayPtr;
+    const unsigned long *grayscales;	/* pointer to the encoded pixels */
+};
+typedef const struct _grayRec GrayRec, *GrayPtr;
 
-static unsigned long grayscale2x2[] =
+static const unsigned long grayscale2x2[] =
 	{0, 1, 9, 11, 15};
-static unsigned long grayscale3x3[] =
+static const unsigned long grayscale3x3[] =
 	{0, 16, 68, 81, 325, 341, 349, 381, 383, 511};
-static unsigned long grayscale4x4[] =
+static const unsigned long grayscale4x4[] =
 	{0, 64, 4160, 4161, 20545, 21057, 23105,
 	 23113, 23145, 24169, 24171, 56939, 55275, 55279,
 	 57327, 65519, 65535};
@@ -360,7 +364,7 @@ int main(int argc, char **argv)
 	_swaplong((char *) &win, (long)sizeof(win));
 
     if (win.file_version != XWD_FILE_VERSION) {
-	fprintf(stderr,"xpr: file format version missmatch.\n");
+	fprintf(stderr,"xpr: file format version mismatch.\n");
 	exit(1);
     }
     if (win.header_size < sizeof(win)) {
@@ -466,30 +470,54 @@ int main(int argc, char **argv)
     exit(EXIT_SUCCESS);
 }
 
-static
-void usage(void)
+static void _X_NORETURN _X_COLD
+invalid_arg_value(const char *arg, const char *value)
 {
-    fprintf(stderr, "usage: %s [options] [file]\n", progname);
-    fprintf(stderr, "    -append <file>  -noff  -output <file>\n");
-    fprintf(stderr, "    -compact\n");
-    fprintf(stderr, "    -device {ln03 | la100 | ps | lw | pp | ljet | pjet | pjetxl}\n");
-    fprintf(stderr, "    -dump\n");
-    fprintf(stderr, "    -gamma <correction>\n");
-    fprintf(stderr, "    -gray {2 | 3 | 4}\n");
-    fprintf(stderr, "    -height <inches>  -width <inches>\n");
-    fprintf(stderr, "    -header <string>  -trailer <string>\n");
-    fprintf(stderr, "    -landscape  -portrait\n");
-    fprintf(stderr, "    -left <inches>  -top <inches>\n");
-    fprintf(stderr, "    -noposition\n");
-    fprintf(stderr, "    -nosixopt\n");
-    fprintf(stderr, "    -plane <n>\n");
-    fprintf(stderr, "    -psfig\n");
-    fprintf(stderr, "    -render <type>\n");
-    fprintf(stderr, "    -report\n");
-    fprintf(stderr, "    -rv\n");
-    fprintf(stderr, "    -scale <scale>\n");
-    fprintf(stderr, "    -slide\n");
-    fprintf(stderr, "    -split <n-pages>\n");
+    fprintf (stderr, "%s: %s is not a valid value for %s\n\n",
+	     progname, value, arg);
+    usage();
+}
+
+static void _X_NORETURN _X_COLD
+missing_arg(const char *arg)
+{
+    fprintf (stderr, "%s: %s requires an argument\n\n", progname, arg);
+    usage();
+}
+
+static void _X_NORETURN _X_COLD
+unknown_arg(const char *arg)
+{
+    fprintf (stderr, "%s: unrecognized argument %s\n\n", progname, arg);
+    usage();
+}
+
+static void _X_NORETURN _X_COLD
+usage(void)
+{
+    fprintf(stderr, "usage: %s [options] [file]\n%s", progname,
+	    "    -append <file>  -noff  -output <file>\n"
+	    "    -compact\n"
+	    "    -device {ln03 | la100 | ps | lw | pp | ljet | pjet | pjetxl}\n"
+	    "    -dump\n"
+	    "    -gamma <correction>\n"
+	    "    -gray {2 | 3 | 4}\n"
+	    "    -height <inches>  -width <inches>\n"
+	    "    -header <string>  -trailer <string>\n"
+	    "    -landscape  -portrait\n"
+	    "    -left <inches>  -top <inches>\n"
+	    "    -noposition\n"
+	    "    -nosixopt\n"
+	    "    -plane <n>\n"
+	    "    -psfig\n"
+	    "    -render <type>\n"
+	    "    -report\n"
+	    "    -rv\n"
+	    "    -scale <scale>\n"
+	    "    -slide\n"
+	    "    -split <n-pages>\n"
+	    "    -version\n"
+	);
     exit(EXIT_FAILURE);
 }
 
@@ -516,7 +544,6 @@ void parse_args(
 {
     register char *output_filename;
     register int f;
-    register int len;
     register int pos;
 
     output_filename = NULL;
@@ -538,230 +565,138 @@ void parse_args(
     *render = 0;
 
     for (argc--, argv++; argc > 0; argc--, argv++) {
+	const char *arg = argv[0];
 	if (argv[0][0] != '-') {
 	    infilename = *argv;
 	    continue;
 	}
-	len = strlen(*argv);
-	switch (argv[0][1]) {
-	case 'a':		/* -append <filename> */
-	    if (!bcmp(*argv, "-append", len)) {
-		argc--; argv++;
-		if (argc == 0) usage();
-		output_filename = *argv;
-		*flags |= F_APPEND;
+	if (!strcmp(*argv, "-append")) {
+	    argc--; argv++;
+	    if (argc == 0) missing_arg(arg);
+	    output_filename = *argv;
+	    *flags |= F_APPEND;
+	} else if (!strcmp(*argv, "-compact")) {
+	    *flags |= F_COMPACT;
+	} else if (!strcmp(*argv, "-cutoff")) {
+	    argc--; argv++;
+	    if (argc == 0) missing_arg(arg);
+	    *cutoff = min((atof(*argv) / 100.0 * 0xFFFF), 0xFFFF);
+	} else if (!strcmp(*argv, "-dump")) {
+	    *flags |= F_DUMP;
+	} else if (!strcmp(*argv, "-density")) {
+	    argc--; argv++;
+	    if (argc == 0) missing_arg(arg);
+	    *density = atoi(*argv);
+	} else if (!strcmp(*argv, "-device")) {
+	    argc--; argv++;
+	    if (argc == 0) missing_arg(arg);
+	    if (!strcmp(*argv, "ln03")) {
+		*device = LN03;
+	    } else if (!strcmp(*argv, "la100")) {
+		*device = LA100;
+	    } else if (!strcmp(*argv, "ps")) {
+		*device = PS;
+	    } else if (!strcmp(*argv, "lw")) {
+		*device = PS;
+	    } else if (!strcmp(*argv, "pp")) {
+		*device = PP;
+	    } else if (!strcmp(*argv, "ljet")) {
+		*device = LJET;
+	    } else if (!strcmp(*argv, "pjet")) {
+		*device = PJET;
+	    } else if (!strcmp(*argv, "pjetxl")) {
+		*device = PJETXL;
 	    } else
-		usage();
-	    break;
-
-	case 'c':		/* -compact | -cutoff <intensity> */
-	    if (len <= 2 )
-		usage();
-	    if (!bcmp(*argv, "-compact", len)) {
-		*flags |= F_COMPACT;
-	    } else if (!bcmp(*argv, "-cutoff", len)) {
-		argc--; argv++;
-		if (argc == 0) usage();
-		*cutoff = min((atof(*argv) / 100.0 * 0xFFFF), 0xFFFF);
-	    } else
-		usage();
-	    break;
-
-	case 'd':	/* -density <num> | -device <dev> | -dump */
-	    if (len <= 2)
-		usage();
-	    if (!bcmp(*argv, "-dump", len)) {
-		*flags |= F_DUMP;
-	    } else if (len <= 3) {
-		usage();
-	    } else if (!bcmp(*argv, "-density", len)) {
-		argc--; argv++;
-		if (argc == 0) usage();
-		*density = atoi(*argv);
-	    } else if (!bcmp(*argv, "-device", len)) {
-		argc--; argv++;
-		if (argc == 0) usage();
-		len = strlen(*argv);
-		if (len < 2)
-		    usage();
-		if (!bcmp(*argv, "ln03", len)) {
-		    *device = LN03;
-		} else if (!bcmp(*argv, "la100", len)) {
-		    *device = LA100;
-		} else if (!bcmp(*argv, "ps", len)) {
-		    *device = PS;
-		} else if (!bcmp(*argv, "lw", len)) {
-		    *device = PS;
-		} else if (!bcmp(*argv, "pp", len)) {
-		    *device = PP;
-		} else if (!bcmp(*argv, "ljet", len)) {
-		    *device = LJET;
-		} else if (!bcmp(*argv, "pjet", len)) {
-		    *device = PJET;
-		} else if (!bcmp(*argv, "pjetxl", len)) {
-		    *device = PJETXL;
-		} else
-		    usage();
-	    } else
-		usage();
-	    break;
-
-	case 'g':		/* -gamma <float> | -gray <num> */
-	    if (len <= 2)
-		usage();
-	    if (!bcmp(*argv, "-gamma", len)) {
-		argc--; argv++;
-		if (argc == 0) usage();
-		*gamma = atof(*argv);
-	    } else if (!bcmp(*argv, "-gray", len) ||
-		!bcmp(*argv, "-grey", len)) {
-		argc--; argv++;
-		if (argc == 0) usage();
-		switch (atoi(*argv)) {
-		case 2:
-		    *gray = &gray2x2;
-		    break;
-		case 3:
-		    *gray = &gray3x3;
-		    break;
-		case 4:
-		    *gray = &gray4x4;
-		    break;
-		default:
-		    usage();
-		}
-		*flags |= F_GRAY;
-	    } else
-		usage();
-	    break;
-
-	case 'h':		/* -height <inches> | -header <string> */
-	    if (len <= 3)
-		usage();
-	    if (!bcmp(*argv, "-height", len)) {
-		argc--; argv++;
-		if (argc == 0) usage();
-		*height = (int)(300.0 * atof(*argv));
-	    } else if (!bcmp(*argv, "-header", len)) {
-		argc--; argv++;
-		if (argc == 0) usage();
-		*header = *argv;
-	    } else
-		usage();
-	    break;
-
-	case 'l':		/* -landscape | -left <inches> */
-	    if (len <= 2)
-		usage();
-	    if (!bcmp(*argv, "-landscape", len)) {
-		*flags |= F_LANDSCAPE;
-	    } else if (!bcmp(*argv, "-left", len)) {
-		argc--; argv++;
-		if (argc == 0) usage();
-		*left = (int)(300.0 * atof(*argv));
-	    } else
-		usage();
-	    break;
-
-	case 'n':		/* -nosixopt | -noff | -noposition */
-	    if (len <= 3)
-		usage();
-	    if (!bcmp(*argv, "-nosixopt", len)) {
-		*flags |= F_NOSIXOPT;
-	    } else if (!bcmp(*argv, "-noff", len)) {
-		*flags |= F_NOFF;
-	    } else if (!bcmp(*argv, "-noposition", len)) {
-		*flags |= F_NPOSITION;
-	    } else
-		usage();
-	    break;
-
-	case 'o':		/* -output <filename> */
-	    if (!bcmp(*argv, "-output", len)) {
-		argc--; argv++;
-		if (argc == 0) usage();
-		output_filename = *argv;
-	    } else
-		usage();
-	    break;
-
-	case 'p':		/* -portrait | -plane <n> */
-	    if (len <= 2)
-		usage();
-	    if (!bcmp(*argv, "-portrait", len)) {
-		*flags |= F_PORTRAIT;
-	    } else if (!bcmp(*argv, "-plane", len)) {
-		argc--; argv++;
-		if (argc == 0) usage();
-		*plane = atoi(*argv);
-	    } else if (!bcmp(*argv, "-psfig", len)) {
-		*flags |= F_NPOSITION;
-	    } else
-		usage();
-	    break;
-
-	case 'r':		/* -render <type> | -report | -rv */
-	    if (len <= 2)
-		usage();
-	    if (!bcmp(*argv, "-rv", len)) {
-		*flags |= F_INVERT;
-	    } else if (len <= 3) {
-		usage();
-	    } else if (!bcmp(*argv, "-render", len)) {
-		argc--; argv++;
-		if (argc == 0) usage();
-		*render = atoi(*argv);
-	    } else if (!bcmp(*argv, "-report", len)) {
-		*flags |= F_REPORT;
-	    } else
-		usage();
-	    break;
-
-	case 's':	/* -scale <scale> | -slide | -split <n-pages> */
-	    if (len <= 2)
-		usage();
-	    if (!bcmp(*argv, "-scale", len)) {
-		argc--; argv++;
-		if (argc == 0) usage();
-		*scale = atoi(*argv);
-	    } else if (!bcmp(*argv, "-slide", len)) {
-		*flags |= F_SLIDE;
-	    } else if (!bcmp(*argv, "-split", len)) {
-		argc--; argv++;
-		if (argc == 0) usage();
-		*split = atoi(*argv);
-	    } else
-		usage();
-	    break;
-
-	case 't':		/* -top <inches> | -trailer <string> */
-	    if (len <= 2)
-		usage();
-	    if (!bcmp(*argv, "-top", len)) {
-		argc--; argv++;
-		if (argc == 0) usage();
-		*top = (int)(300.0 * atof(*argv));
-	    } else if (!bcmp(*argv, "-trailer", len)) {
-		argc--; argv++;
-		if (argc == 0) usage();
-		*trailer = *argv;
-	    } else
-		usage();
-	    break;
-
-	case 'w':		/* -width <inches> */
-	    if (!bcmp(*argv, "-width", len)) {
-		argc--; argv++;
-		if (argc == 0) usage();
-		*width = (int)(300.0 * atof(*argv));
-	    } else
-		usage();
-	    break;
-
-	default:
-	    usage();
-	    break;
-	}
+		invalid_arg_value(arg, argv[0]);
+	} else if (!strcmp(*argv, "-gamma")) {
+	    argc--; argv++;
+	    if (argc == 0) missing_arg(arg);
+	    *gamma = atof(*argv);
+	} else if (!strcmp(*argv, "-gray") ||
+		   !strcmp(*argv, "-grey")) {
+	    argc--; argv++;
+	    if (argc == 0) missing_arg(arg);
+	    switch (atoi(*argv)) {
+	      case 2:
+		*gray = &gray2x2;
+		break;
+	      case 3:
+		*gray = &gray3x3;
+		break;
+	      case 4:
+		*gray = &gray4x4;
+		break;
+	      default:
+		invalid_arg_value(arg, argv[0]);
+	    }
+	    *flags |= F_GRAY;
+	} else if (!strcmp(*argv, "-height")) {
+	    argc--; argv++;
+	    if (argc == 0) missing_arg(arg);
+	    *height = (int)(300.0 * atof(*argv));
+	} else if (!strcmp(*argv, "-header")) {
+	    argc--; argv++;
+	    if (argc == 0) missing_arg(arg);
+	    *header = *argv;
+	} else if (!strcmp(*argv, "-landscape")) {
+	    *flags |= F_LANDSCAPE;
+	} else if (!strcmp(*argv, "-left")) {
+	    argc--; argv++;
+	    if (argc == 0) missing_arg(arg);
+	    *left = (int)(300.0 * atof(*argv));
+	} else if (!strcmp(*argv, "-nosixopt")) {
+	    *flags |= F_NOSIXOPT;
+	} else if (!strcmp(*argv, "-noff")) {
+	    *flags |= F_NOFF;
+	} else if (!strcmp(*argv, "-noposition")) {
+	    *flags |= F_NPOSITION;
+	} else if (!strcmp(*argv, "-output")) {
+	    argc--; argv++;
+	    if (argc == 0) missing_arg(arg);
+	    output_filename = *argv;
+	} else if (!strcmp(*argv, "-portrait")) {
+	    *flags |= F_PORTRAIT;
+	} else if (!strcmp(*argv, "-plane")) {
+	    argc--; argv++;
+	    if (argc == 0) missing_arg(arg);
+	    *plane = atoi(*argv);
+	} else if (!strcmp(*argv, "-psfig")) {
+	    *flags |= F_NPOSITION;
+	} else if (!strcmp(*argv, "-rv")) {
+	    *flags |= F_INVERT;
+	} else if (!strcmp(*argv, "-render")) {
+	    argc--; argv++;
+	    if (argc == 0) missing_arg(arg);
+	    *render = atoi(*argv);
+	} else if (!strcmp(*argv, "-report")) {
+	    *flags |= F_REPORT;
+	} else if (!strcmp(*argv, "-scale")) {
+	    argc--; argv++;
+	    if (argc == 0) missing_arg(arg);
+	    *scale = atoi(*argv);
+	} else if (!strcmp(*argv, "-slide")) {
+	    *flags |= F_SLIDE;
+	} else if (!strcmp(*argv, "-split")) {
+	    argc--; argv++;
+	    if (argc == 0) missing_arg(arg);
+	    *split = atoi(*argv);
+	} else if (!strcmp(*argv, "-top")) {
+	    argc--; argv++;
+	    if (argc == 0) missing_arg(arg);
+	    *top = (int)(300.0 * atof(*argv));
+	} else if (!strcmp(*argv, "-trailer")) {
+	    argc--; argv++;
+	    if (argc == 0) missing_arg(arg);
+	    *trailer = *argv;
+	} else if (strcmp(*argv, "-version") == 0) {
+	    puts(PACKAGE_STRING);
+	    exit(0);
+	} else if (!strcmp(*argv, "-width")) {
+	    argc--; argv++;
+	    if (argc == 0) missing_arg(arg);
+	    *width = (int)(300.0 * atof(*argv));
+	} else
+	    unknown_arg(arg);
     }
 
     if (infilename) {
@@ -1276,7 +1211,7 @@ void dump_prolog(int flags)
 /* postscript "programs" to unpack and print the bitmaps being sent */
 
 static const
-char *ps_prolog_compact[] = {
+char * const ps_prolog_compact[] = {
     "%%Pages: 1",
     "%%EndProlog",
     "%%Page: 1 1",
@@ -1350,7 +1285,7 @@ char *ps_prolog_compact[] = {
 };
 
 static const
-char *ps_prolog[] = {
+char * const ps_prolog[] = {
     "%%Pages: 1",
     "%%EndProlog",
     "%%Page: 1 1",
@@ -1383,7 +1318,8 @@ char *ps_prolog[] = {
 
 static
 void dump_prolog(int flags) {
-    const char **p = (flags & F_COMPACT) ? ps_prolog_compact : ps_prolog;
+    const char * const *p =
+        (flags & F_COMPACT) ? ps_prolog_compact : ps_prolog;
     while (*p)
         printf("%s\n", *p++);
 }
@@ -1536,7 +1472,7 @@ void ps_setup(
 }
 
 static const
-char *ps_epilog[] = {
+char * const ps_epilog[] = {
 	"",
 	"showpage",
 	"%%Trailer",
@@ -1546,7 +1482,7 @@ char *ps_epilog[] = {
 static
 void ps_finish(void)
 {
-	char **p = (char **)ps_epilog;
+	const char * const *p = ps_epilog;
 
 	while (*p) printf("%s\n",*p++);
 }

@@ -1,7 +1,3 @@
-/*
- *	$XConsortium: pmp.h,v 1.5 91/02/19 22:13:33 converse Exp $
- */
-
 /* Written by Jose' J. Capo' */
 /* (jjc@comet.lcs.mit.edu), June 1987 */
 

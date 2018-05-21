@@ -22,7 +22,7 @@
 bin_PROGRAMS = xpr
 
 AM_CFLAGS = $(CWARNFLAGS) $(XPR_CFLAGS) -DNOINLINE
-xpr_LDADD = $(XPR_LIBS) -lm
+xpr_LDADD = $(XPR_LIBS)
 
 xpr_SOURCES =	\
         lncmd.h \

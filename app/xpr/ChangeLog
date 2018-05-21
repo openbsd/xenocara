@@ -1,3 +1,148 @@
+commit 0b852ef27abda922ae18b8042acd18104b25d596
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 9 18:17:12 2018 -0800
+
+    xpr 1.0.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit db63d2a499ad1e4a9cc650d3ffb6795dea7d290e
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 8aa5668fb698ee43fccf1d71efab88895001d669
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit ef05b01918be35e5837f620d337e69a9279c2a13
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 31d433e78ea47f308119ab38f3e514303f239ab9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 5 16:36:37 2015 -0800
+
+    Fix man page references to X(1) to use __miscmansuffix__
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a4680cc6ffde72504b1cea750c164eb0f9852c4d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 24 16:46:04 2014 -0700
+
+    More constification
+    
+    Shrinks .data from 1320 bytes to 72 bytes
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit eae93f9edbbcf5494500fcc6527eccabe4e29553
+Author: Matthieu Herrb <matthieu@herrb.eu>
+Date:   Fri Aug 8 16:23:46 2014 +0200
+
+    Use strcmp() to compare strings and simplify options parser.
+    
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5f369174777783fb9544b81cfdfab255d7e990a8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 21:00:47 2014 -0700
+
+    Add -version option to print program version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 007a72af45ea48e3ed5e750b4b39e034b102d2c0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 20:54:22 2014 -0700
+
+    Print which option was in error along with usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e31a646861007e4014d38d6a53a672d63e4f11fa
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 19:40:53 2014 -0700
+
+    Fix "missmatch" typo in error message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 45922f222d8d91a6faff778f5ceaa34ec8728501
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 19:37:27 2014 -0700
+
+    Combine strings in usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f85404c8f41a14c907d707933ee5643876bdde4d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 19:21:51 2014 -0700
+
+    Remove old CVS id tags
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6ac064621493c27c6e31b15e3faf8192638262fa
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 00:30:48 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 756f9df2639ef9a58cba414d8c98394173bfbed9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 00:30:48 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7045be285a72316388814350d3b6bcf7675a2dbd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 00:30:41 2014 -0700
+
+    This is not a GNU project, so declare it foreign.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 235b6b1ac77b6f01a3cad60fe7e1b3cbc259879f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 15 23:04:10 2013 -0800
+
+    Remove unneeded uses of <math.h> & -lm
+    
+    Can't see why they were ever needed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 699aa034b8368a4052aa0318d4bca74dd688a7c2
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Mar 31 16:57:47 2012 -0700

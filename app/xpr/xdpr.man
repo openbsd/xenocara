@@ -1,4 +1,3 @@
-.\" $XConsortium: xdpr.man,v 1.15 94/04/17 20:44:04 gildea Exp $
 .TH XDPR 1 "Release 6" "X Version 11"
 .SH NAME
 xdpr \- dump an X window directly to a printer
@@ -116,7 +115,7 @@ commands as appropriate for each.
 .IR lpr (1),
 .IR lp (1),
 .IR xwud (1),
-.IR X (1)
+.IR X (__miscmansuffix__)
 .SH ENVIRONMENT
 .TP 10
 DISPLAY
@@ -127,7 +126,7 @@ which printer to use by default.
 .SH COPYRIGHT
 Copyright X Consortium
 .br
-See \fIX(1)\fP for a full statement of rights and permissions.
+See \fIX(__miscmansuffix__)\fP for a full statement of rights and permissions.
 .SH AUTHORS
 Paul Boutin, MIT Project Athena
 .br
