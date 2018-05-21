@@ -1,6 +1,6 @@
 /*
  * (C) Copyright IBM Corporation 2006
- * Copyright (c) 2007, 2009, 2011, 2012, 2013 Oracle and/or its affiliates.
+ * Copyright (c) 2007, 2009, 2011, 2012, 2016 Oracle and/or its affiliates.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -25,6 +25,9 @@
 /*
  * Solaris devfs interfaces
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <stdlib.h>
 #include <strings.h>
@@ -59,11 +62,10 @@ typedef struct i_devnode {
 } i_devnode_t;
 
 typedef struct nexus {
-    int fd;
     int first_bus;
     int last_bus;
     int domain;
-    char *path;			/* for errors/debugging; fd is all we need */
+    char *path;			/* for open */
     char *dev_path;
     struct nexus *next;
 } nexus_t;
@@ -143,7 +145,6 @@ pci_system_solx_devfs_destroy( void )
 
     for (nexus = nexus_list ; nexus != NULL ; nexus = next) {
 	next = nexus->next;
-	close(nexus->fd);
 	free(nexus->path);
 	free(nexus->dev_path);
 	free(nexus);
@@ -211,6 +212,11 @@ probe_device_node(di_node_t node, void *arg)
     pci_base->bus = PCI_REG_BUS_G(retbuf[0]);
     pci_base->dev = PCI_REG_DEV_G(retbuf[0]);
     pci_base->func  = PCI_REG_FUNC_G(retbuf[0]);
+
+    if (nexus->domain > 0xffff)
+	pci_base->domain_16 = 0xffff;
+    else
+	pci_base->domain_16 = nexus->domain;
 
     /* Get property values */
     for (i = 0; i < NUM_PROPERTIES; i++) {
@@ -296,13 +302,11 @@ probe_nexus_node(di_node_t di_node, di_minor_t minor, void *arg)
     int pci_node = 0;
     int first_bus = 0, last_bus = PCI_REG_BUS_G(PCI_REG_BUS_M);
     int domain = 0;
-    di_node_t rnode =  DI_NODE_NIL;
 #ifdef __sparc
     int bus_range_found = 0;
     int device_type_found = 0;
     di_prom_prop_t prom_prop;
 #endif
-
 
 #ifdef DEBUG
     nexus_name = di_devfs_minor_path(minor);
@@ -418,33 +422,24 @@ probe_nexus_node(di_node_t di_node, di_minor_t minor, void *arg)
     if ((fd = open(nexus_path, O_RDWR | O_CLOEXEC)) >= 0) {
 	probe_args_t args;
 
-	nexus->fd = fd;
 	nexus->path = strdup(nexus_path);
 	nexus_dev_path = di_devfs_path(di_node);
 	nexus->dev_path = strdup(nexus_dev_path);
 	di_devfs_path_free(nexus_dev_path);
-
-	if ((rnode = di_init(nexus->dev_path, DINFOCPYALL)) == DI_NODE_NIL) {
-	    (void) fprintf(stderr, "di_init failed: %s\n", strerror(errno));
-	    close(nexus->fd);
-	    free(nexus->path);
-	    free(nexus->dev_path);
-	    free(nexus);
-	    return (DI_WALK_TERMINATE);
-	}
 
 	/* Walk through devices under the rnode */
 	args.pinfo = pinfo;
 	args.nexus = nexus;
 	args.ret = 0;
 
-	(void) di_walk_node(rnode, DI_WALK_CLDFIRST, (void *)&args, probe_device_node);
+	(void) di_walk_node(di_node, DI_WALK_CLDFIRST, (void *)&args, probe_device_node);
+
+	close(fd);
+
 	if (args.ret) {
-	    close(nexus->fd);
 	    free(nexus->path);
 	    free(nexus->dev_path);
 	    free(nexus);
-	    di_fini(rnode);
 	    return (DI_WALK_TERMINATE);
 	}
 
@@ -454,10 +449,6 @@ probe_nexus_node(di_node_t di_node, di_minor_t minor, void *arg)
 	(void) fprintf(stderr, "Error opening %s: %s\n",
 		       nexus_path, strerror(errno));
 	free(nexus);
-    }
-
-    if (rnode != DI_NODE_NIL) {
-	di_fini(rnode);
     }
 
     return DI_WALK_CONTINUE;
@@ -552,7 +543,7 @@ pci_device_solx_devfs_probe( struct pci_device * dev )
      * starting to find if it is MEM/MEM64/IO
      * using libdevinfo
      */
-    if ((rnode = di_init(nexus->dev_path, DINFOCPYALL)) == DI_NODE_NIL) {
+    if ((rnode = di_init(nexus->dev_path, DINFOCACHE)) == DI_NODE_NIL) {
 	err = errno;
 	(void) fprintf(stderr, "di_init failed: %s\n", strerror(errno));
     } else {
@@ -787,6 +778,7 @@ pci_device_solx_devfs_read( struct pci_device * dev, void * data,
     int err = 0;
     unsigned int i = 0;
     nexus_t *nexus;
+    int fd;
 
     nexus = find_nexus_for_bus(dev->domain, dev->bus);
 
@@ -804,11 +796,14 @@ pci_device_solx_devfs_read( struct pci_device * dev, void * data,
     cfg_prg.barnum = 0;
     cfg_prg.user_version = PCITOOL_USER_VERSION;
 
+    if ((fd = open(nexus->path, O_RDWR | O_CLOEXEC)) < 0)
+	return ENOENT;
+
     for (i = 0; i < size; i += PCITOOL_ACC_ATTR_SIZE(PCITOOL_ACC_ATTR_SIZE_1))
     {
 	cfg_prg.offset = offset + i;
 
-	if ((err = ioctl(nexus->fd, PCITOOL_DEVICE_GET_REG, &cfg_prg)) != 0) {
+	if ((err = ioctl(fd, PCITOOL_DEVICE_GET_REG, &cfg_prg)) != 0) {
 	    fprintf(stderr, "read bdf<%s,%x,%x,%x,%llx> config space failure\n",
 		    nexus->path,
 		    cfg_prg.bus_no,
@@ -826,6 +821,8 @@ pci_device_solx_devfs_read( struct pci_device * dev, void * data,
     }
     *bytes_read = i;
 
+    close(fd);
+
     return (err);
 }
 
@@ -841,6 +838,7 @@ pci_device_solx_devfs_write( struct pci_device * dev, const void * data,
     int err = 0;
     int cmd;
     nexus_t *nexus;
+    int fd;
 
     nexus = find_nexus_for_bus(dev->domain, dev->bus);
 
@@ -888,10 +886,16 @@ pci_device_solx_devfs_write( struct pci_device * dev, const void * data,
      */
     cmd = PCITOOL_DEVICE_SET_REG;
 
-    if ((err = ioctl(nexus->fd, cmd, &cfg_prg)) != 0) {
+    if ((fd = open(nexus->path, O_RDWR | O_CLOEXEC)) < 0)
+	return ENOENT;
+
+    if ((err = ioctl(fd, cmd, &cfg_prg)) != 0) {
+	close(fd);
 	return (err);
     }
     *bytes_written = size;
+
+    close(fd);
 
     return (err);
 }
@@ -1071,7 +1075,7 @@ pci_system_solx_devfs_create( void )
 	return 0;
     }
 
-    if ((di_node = di_init("/", DINFOCPYALL)) == DI_NODE_NIL) {
+    if ((di_node = di_init("/", DINFOCACHE)) == DI_NODE_NIL) {
 	err = errno;
 	(void) fprintf(stderr, "di_init() failed: %s\n",
 		       strerror(errno));

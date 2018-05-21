@@ -311,6 +311,10 @@ struct pci_mem_region {
  * PCI device.
  *
  * Contains all of the information about a particular PCI device.
+ *
+ * This structure - like everything else in libpciaccess - is allocated
+ * by the library itself. Do not embed this structure in other structs,
+ * or otherwise allocate them yourself.
  */
 struct pci_device {
     /**
@@ -319,9 +323,12 @@ struct pci_device {
      * Complete bus identification, including domain, of the device.  On
      * platforms that do not support PCI domains (e.g., 32-bit x86 hardware),
      * the domain will always be zero.
+     *
+     * The domain_16 field is provided for binary compatibility with older
+     * libpciaccess.
      */
     /*@{*/
-    uint16_t    domain;
+    uint16_t    domain_16;
     uint8_t     bus;
     uint8_t     dev;
     uint8_t     func;
@@ -385,6 +392,12 @@ struct pci_device {
       * Used by the VGA arbiter. Type of resource decoded by the device and
       * the file descriptor (/dev/vga_arbiter). */
     int vgaarb_rsrc;
+
+
+    /**
+     * PCI domain value (full 32 bits)
+     */
+    uint32_t    domain;
 };
 
 

@@ -31,6 +31,9 @@
  *
  * \author Ian Romanick <idr@us.ibm.com>
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <stdlib.h>
 #include <stdio.h>

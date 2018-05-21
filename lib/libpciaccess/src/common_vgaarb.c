@@ -126,7 +126,7 @@ int
 pci_device_vgaarb_init(void)
 {
     struct pci_slot_match match;
-    char buf[BUFSIZE];
+    char buf[BUFSIZE + 1]; /* reading BUFSIZE characters, + 1 for NULL */
     int ret, rsrc;
 
     if (!pci_sys)
@@ -139,6 +139,8 @@ pci_device_vgaarb_init(void)
     ret = read(pci_sys->vgaarb_fd, buf, BUFSIZE);
     if (ret <= 0)
         return -1;
+
+    buf[ret] = 0; /* ret will never be greater than BUFSIZE */
 
     memset(&match, 0xff, sizeof(match));
     /* need to find the device to go back to and what it was decoding */
@@ -226,7 +228,7 @@ int
 pci_device_vgaarb_set_target(struct pci_device *dev)
 {
     int len;
-    char buf[BUFSIZE];
+    char buf[BUFSIZE + 1]; /* reading BUFSIZE characters, + 1 for NULL */
     int ret;
 
     if (!dev)
@@ -245,6 +247,8 @@ pci_device_vgaarb_set_target(struct pci_device *dev)
     if (ret <= 0)
         return -1;
 
+    buf[ret] = 0; /* ret will never be greater than BUFSIZE */
+
     dev->vgaarb_rsrc = parse_string_to_decodes_rsrc(buf, &pci_sys->vga_count, NULL);
     pci_sys->vga_target = dev;
     return 0;
@@ -254,7 +258,7 @@ int
 pci_device_vgaarb_decodes(int new_vgaarb_rsrc)
 {
     int len;
-    char buf[BUFSIZE];
+    char buf[BUFSIZE + 1]; /* reading BUFSIZE characters, + 1 for NULL */
     int ret;
     struct pci_device *dev = pci_sys->vga_target;
 
@@ -271,6 +275,8 @@ pci_device_vgaarb_decodes(int new_vgaarb_rsrc)
     ret = read(pci_sys->vgaarb_fd, buf, BUFSIZE);
     if (ret <= 0)
         return -1;
+
+    buf[ret] = 0; /* ret will never be greater than BUFSIZE */
 
     parse_string_to_decodes_rsrc(buf, &pci_sys->vga_count, NULL);
 

@@ -22,6 +22,9 @@
  * Author:
  *	Adam Jackson <ajax@redhat.com>
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <stdlib.h>
 #include <string.h>

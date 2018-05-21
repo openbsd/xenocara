@@ -18,8 +18,10 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
-#define _GNU_SOURCE
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -913,7 +915,7 @@ pci_system_x86_create(void)
 		if (PCI_VENDOR(reg) == PCI_VENDOR_INVALID ||
 		    PCI_VENDOR(reg) == 0)
 		    continue;
-		device->base.domain = 0;
+		device->base.domain = device->base.domain_16 = 0;
 		device->base.bus = bus;
 		device->base.dev = dev;
 		device->base.func = func;

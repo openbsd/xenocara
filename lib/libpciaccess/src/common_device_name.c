@@ -154,6 +154,10 @@ insert( uint16_t vendor )
 
     if ( tree == NULL ) {
 	tree = calloc( 1, sizeof( struct pci_id_node ) );
+
+	if ( tree == NULL )
+	    return NULL;
+
 	tree->bits = 4;
     }
 
@@ -175,6 +179,9 @@ insert( uint16_t vendor )
 		struct pci_id_node * child =
 		    calloc( 1, sizeof( struct pci_id_node ) );
 
+		if ( tree == NULL )
+		    return NULL;
+
 		child->bits = 4;
 
 		n->children[ idx ] = child;
@@ -182,6 +189,9 @@ insert( uint16_t vendor )
 	    else {
 		struct pci_id_leaf * leaf =
 		    calloc( 1, sizeof( struct pci_id_leaf ) );
+
+		if ( tree == NULL )
+		    return NULL;
 
 		leaf->vendor = vendor;
 

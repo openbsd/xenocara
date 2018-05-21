@@ -1,3 +1,300 @@
+commit 13854f603f720c45caf51d785a874d3c7e8c5f58
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Oct 23 11:44:32 2017 -0400
+
+    libpciaccess 0.14
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit a167bd6474522a709ff3cbb00476c0e4309cb66f
+Author: Stephen Hemminger <stephen@networkplumber.org>
+Date:   Mon Sep 18 13:17:23 2017 -0400
+
+    linux: support 32 bit PCI domains (v3)
+    
+    The PCI domain may be larger than 16 bits on Microsoft Azure and other
+    virtual environments. PCI busses reported by ACPI are limited to 16
+    bits, but in Azure the domain value for pass through devices is
+    intentionally larger than 16 bits to avoid clashing with local devices.
+    This is needed to support pass through of GPU devices.
+    
+    v3: (ajax)
+    Update FreeBSD and Solaris backends to preserve the full 32-bit domain
+    number, since on those OSes it stands a chance of working already.
+    Update NetBSD and OpenBSD backends to initialize domain_16 compatibly
+    with older libpciaccess; neither backend appears to support more than a
+    handful of domains to begin with though. Trivially update the generic
+    x86 backend for source compatibility, though it still only supports one
+    domain and will never be better.
+    
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=101744
+    Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
+    Reviewed-by: Eric Anholt <eric@anholt.net>
+
+commit 4f1ac52e828eed1c410ee66304fcb7a17f25da40
+Author: Emil Velikov <emil.velikov@collabora.com>
+Date:   Tue Apr 4 14:40:41 2017 +0100
+
+    libpciaccess 0.13.5
+    
+    Signed-off-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 9b9d26ce7646713e148c7ee0f461c2bcccdd5201
+Author: Emil Velikov <emil.velikov@collabora.com>
+Date:   Tue Apr 4 13:48:46 2017 +0100
+
+    configure.ac: set AC_CONFIG_AUX_DIR
+    
+    If not set, libtool will search directories up to ../.. for an install-sh and
+    then dump the aux files there. This caused a couple of problems with the xorg
+    release.sh script that now uses worktrees but is generally bad behaviour
+    because we can't guarantee that we're not inside some other repository.
+    
+    Set AC_CONFIG_AUX_DIR to avoid this behavior.
+    
+    See https://lists.freedesktop.org/archives/xorg-devel/2017-March/053006.html
+    
+    Note: the commit and above message are shamelessly copied from libinput.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 504a65a732ea070dce907fce827a15d6b61e0c4d
+Author: Emil Velikov <emil.velikov@collabora.com>
+Date:   Tue Apr 4 13:33:29 2017 +0100
+
+    configure.ac: remove AC_CONFIG_SRCDIR macro
+    
+    It is used to guide people who incorrectly set configure --srcdir.
+    
+    To be actually useful the macro should point to a rather unique file -
+    which in our current case is a false premise. We have five Makefile.am
+    in-tree and chances are that $libpciaccess/.. may also contain such a
+    file.
+    
+    Let's not pretend that its useful and leave the user to what they're
+    asking for.
+    
+    Signed-off-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit fe556c48dad96717b0ba71d489575c6b90b46448
+Author: Henry Zhao <henry.zhao@oracle.com>
+Date:   Wed May 25 14:06:49 2016 -0700
+
+    use cached devinfo snapshots, remove unnecessary di_init()
+    
+    Use cached devinfo (DINFOCACHE) in di_init().
+    Remove unnecessary di_init() on nexus nodes.
+    
+    Signed-off-by: Henry Zhao <henry.zhao@oracle.com>
+    Signed-off-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 0bd248f852f1f2a37396c98519eee6f50c434848
+Author: Henry Zhao <henry.zhao@oracle.com>
+Date:   Wed May 25 14:04:40 2016 -0700
+
+    probe should not hold pci nexus drivers open
+    
+    Probe should not hold pci nexus drivers open - close after use.
+    
+    Signed-off-by: Henry Zhao <henry.zhao@oracle.com>
+    Signed-off-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 85a484b94d5cdcad31c3caf8b0fa52e6f50dec96
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Thu Dec 1 18:14:40 2016 +0000
+
+    Revert "linux_sysfs: include <limits.h> for PATH_MAX"
+    
+    This reverts commit 8ea3af620a2d4ad5648917b4a0ef2b23ff566774.
+    
+    The include was added with 6bd2f7f92eae713663f4e13f6e2cb23526607b8c
+    
+    Cc: Adam Jackson <ajax@redhat.com>
+
+commit e787ec28e433a24195f37012dad23bce468b330a
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 13:52:49 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit cdb2bfc9668895431e73335fc0490c4cbfa3023a
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Thu Jan 26 12:04:14 2017 +1000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit f46a7a83e42fcd0601b21e361ea7fbf056d11fce
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jan 26 12:03:12 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 73db249c4b1eb91e0df27a1045bea344371dd2ca
+Author: Emil Velikov <emil.velikov@collabora.com>
+Date:   Thu Dec 1 18:17:35 2016 +0000
+
+    linux sysfs: retrieve vendor, device... info via separate sysfs files
+    
+    Currently the kernel does not expose the revision file. With that about
+    to change (due in 4.10) we can read all the information required from
+    separate files and avoid opening the config one.
+    
+    The latter has the [negative] side effect of waking up the device, which
+    in some cases can be quite costly.
+    
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+    Signed-off-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 099489b7917da44de57f3214425ea9b4a8f36482
+Author: Keith Busch <keith.busch@intel.com>
+Date:   Wed Aug 10 17:05:23 2016 -0600
+
+    Ignore 32-bit domains
+    
+    A pci "domain" need not be limited to the 16-bits. The Linux kernel
+    currently supports 32-bit domains which cause startx to segfault. Updating
+    libpciaccess to support 32-bit domains breaks the library's ABI, and
+    domains requiring 32-bits are not necessary for startx anyway, so this
+    patch ignores them.
+    
+    Reported-by: Pawel Baldysiak <pawel.baldysiak@intel.com>
+    Signed-off-by: Keith Busch <keith.busch@intel.com>
+    Reviewed-by: Eric Anholt <eric@anholt.net>
+
+commit 201d1a7623c83f611761f67d4411c3c266f8f37a
+Author: arsharma <ankitprasad.r.sharma@intel.com>
+Date:   Mon Feb 23 21:31:07 2015 +0000
+
+    device-name: handle calloc failure in insert()
+    
+    Issue was spotted by Klocwork, and fixed by arsharma as part of
+    Android-ia.
+    
+    Just bail out if memory allocation fails. All the callers of insert()
+    already handle the case.
+    
+    [Emil Velikov: Split from larger patch, write commit message]
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+
+commit af2fdf1bdc4532410f49fc0854ae4c0f9086cce9
+Author: arsharma <ankitprasad.r.sharma@intel.com>
+Date:   Mon Feb 23 21:31:06 2015 +0000
+
+    vgaarb: add a the trailing NULL character on read(vgaarb_fd)
+    
+    Issue was spotted by Klocwork, and fixed by arsharma as part of
+    Android-ia. Not 100% sure if the data read from /dev/vga_arbiter is not
+    already null terminated, but making sure won't hurt either.
+    
+    [Emil Velikov: Split from larger patch, write commit message]
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+
+commit c1de5dc0541e58372dcddc5120e1e68e03f4f619
+Author: Chuck Tuffli <chuck@tuffli.net>
+Date:   Thu Feb 6 18:09:35 2014 -0800
+
+    libpciaccess: Fix incorrect format specification
+    
+    Building libpciaccess generates a warning on versions of Linux in which
+    the definition of the struct mtrr_sentry has changed to __u64.
+    
+    Since sentry.base is assigned from a pciaddr_t, always cast sentry.base
+    to be type pciaddr_t and modify the formatting string to use PRIx64
+    instead of %08lx
+    
+    Verified on Ubuntu 10.04 and 14.04
+    
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=74643
+    
+    Signed-off-by: Chuck Tuffli <chuck@tuffli.net>
+
+commit 8ea3af620a2d4ad5648917b4a0ef2b23ff566774
+Author: Felix Janda <felix.janda@posteo.de>
+Date:   Thu Dec 4 23:52:22 2014 +0100
+
+    linux_sysfs: include <limits.h> for PATH_MAX
+    
+    Signed-off-by: Felix Janda <felix.janda@posteo.de>
+    Tested-by: Bernd Kuhls <bernd.kuhls@t-online.de>
+
+commit 42240dcbbce8ec744401d4a464f71c3fbd3fca1b
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 11:57:40 2015 +0000
+
+    autogen.sh: pass --force to autoreconf, quote string variables
+    
+    By passing --force autoreconf will update all the aux files, which would
+    otherwise be ignored if one updates autoconf/automake.
+    
+    Quote the $srcdir, $ORIGDIR and $0 variables to prevent fall-outs, when
+    it contains space.
+    
+    v2: Also handle $srcdir and $0.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+
+commit e99c005d623a74287bbfafffc0c7040c31cdb01f
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Sep 22 08:38:56 2015 -0400
+
+    chmod a-x README.cygwin
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 6bd2f7f92eae713663f4e13f6e2cb23526607b8c
+Author: Felix Janda <felix.janda@posteo.de>
+Date:   Fri May 1 16:36:50 2015 +0200
+
+    linux_sysfs.c: Include <limits.h> for PATH_MAX
+    
+    Fixes compilation with musl libc.
+    
+    Tested-by: Bernd Kuhls <bernd.kuhls@t-online.de>
+    Signed-off-by: Felix Janda <felix.janda@posteo.de>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 765e0a38cb8c40f8865af5cb356ffe6039ffb08f
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Sun Mar 22 21:38:23 2015 +0100
+
+    Fix quoting issue.
+    
+    m4 has '[]' as quoting characters, so if we want '[]' to
+    end up in the configure script, we need to quote them again.
+    
+    Reported by Greg Troxel <gdt@ir.bbn.com>.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b14696a55796e739624bbda4f772427032efff2a
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun Apr 26 15:20:57 2015 +0200
+
+    Include config.h before anything else in *.c
+    
+    Debian bug#749008 <https://bugs.debian.org/749008>
+    
+    Reported-by: Michael Tautschnig <mt@debian.org>
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit bbd1acdd1d25b9a68f4b7913a4094af20d7cf78f
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Apr 30 21:44:41 2015 -0700
@@ -1774,11 +2071,11 @@ Date:   Fri Feb 27 00:34:28 2009 -0600
 
     FreeBSD: Incorporate several fixes that have accumulated.
     
-    	-Don't frob the BARs while they are enabled
-    	-Find proper pci bios address / length
-    	-Use the new PCIOCGETBAR ioctl if it exists
-    	  rather than frob the BARs ourself
-    	-Write must also be a power of two
+            -Don't frob the BARs while they are enabled
+            -Find proper pci bios address / length
+            -Use the new PCIOCGETBAR ioctl if it exists
+              rather than frob the BARs ourself
+            -Write must also be a power of two
 
 commit 5855cf5a2cc7ee920b42052372ab734003799d00
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
@@ -2520,7 +2817,7 @@ Date:   Tue Nov 14 14:37:46 2006 -0800
     
     Conflicts:
     
-    	src/Makefile.am
+            src/Makefile.am
 
 commit 07b09d930ed2b7eae299ae036ec30099374b95aa
 Author: Eric Anholt <anholt@FreeBSD.org>

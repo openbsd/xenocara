@@ -23,10 +23,10 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libpciaccess],[0.13.4],
+AC_INIT([libpciaccess],[0.14],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=libpciaccess],[libpciaccess])
-AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_AUX_DIR([.])
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
@@ -76,7 +76,7 @@ case $host_os in
 		;;
 	*netbsd*)
 		case $host in
-		*i[3-9]86*)
+		*i[[3-9]]86*)
 			PCIACCESS_LIBS="$PCIACCESS_LIBS -li386"
 			;;
 		*x86_64*|*amd64*)

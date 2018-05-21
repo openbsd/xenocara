@@ -959,6 +959,10 @@ pci_system_netbsd_create(void)
 					continue;
 
 				device->base.domain = domain;
+				if (domain > 0xffff)
+				    device->base.domain_16 = 0xffff;
+				else
+				    device->base.domain_16 = domain & 0xffff;
 				device->base.bus = bus;
 				device->base.dev = dev;
 				device->base.func = func;
