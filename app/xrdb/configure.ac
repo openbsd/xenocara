@@ -22,7 +22,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xrdb], [1.1.0],
+AC_INIT([xrdb], [1.1.1],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xrdb])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -38,7 +38,7 @@ m4_ifndef([XORG_MACROS_VERSION],
 XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 
-AC_CHECK_FUNCS([mkstemp asprintf])
+AC_CHECK_FUNCS([mkstemp asprintf reallocarray])
 
 # Find MAXHOSTNAMELEN definition
 # Common hidey holes:
@@ -53,15 +53,15 @@ if test x$FOUND_MAXHOSTNAMELEN != xyes ; then
 	FOUND_MAXHOSTNAMELEN='not found'
 
 	AC_COMPILE_IFELSE(
-	    AC_LANG_PROGRAM([#include <sys/param.h>],
-			    [int h = MAXHOSTNAMELEN;]),
+	    [AC_LANG_PROGRAM([#include <sys/param.h>],
+			    [int h = MAXHOSTNAMELEN;])],
 	    [FOUND_MAXHOSTNAMELEN='sys/param.h'
 	     AC_DEFINE(NEED_SYS_PARAM_H,1,
 	       [Define to 1 if you need <sys/param.h> to define MAXHOSTNAMELEN])])
 
 	AC_COMPILE_IFELSE(
-	    AC_LANG_PROGRAM([#include <netdb.h>],
-			    [int h = MAXHOSTNAMELEN;]),
+	    [AC_LANG_PROGRAM([#include <netdb.h>],
+			    [int h = MAXHOSTNAMELEN;])],
 	    [FOUND_MAXHOSTNAMELEN='netdb.h'
 	     AC_DEFINE(NEED_NETDB_H,1,
 	       [Define to 1 if you need <netdb.h> to define MAXHOSTNAMELEN])])
@@ -83,7 +83,7 @@ CPP_PATH=`echo ${CPP_PATH} | sed 's/,/\\",\\"/g'`
 AC_DEFINE_UNQUOTED([CPP], "$CPP_PATH", [Path to CPP program])
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XRDB, [xmuu x11 xproto >= 7.0.17])
+PKG_CHECK_MODULES(XRDB, [xmuu x11 xproto >= 7.0.25])
 
 AC_CONFIG_FILES([
 	Makefile

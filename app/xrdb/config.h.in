@@ -15,6 +15,9 @@
 /* Define to 1 if you have the `mkstemp' function. */
 #undef HAVE_MKSTEMP
 
+/* Define to 1 if you have the `reallocarray' function. */
+#undef HAVE_REALLOCARRAY
+
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
 

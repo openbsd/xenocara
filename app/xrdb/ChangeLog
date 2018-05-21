@@ -1,3 +1,158 @@
+commit 74e8f61bd2f6857b8f242ffd34b3fe0ba1a04aa9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 9 18:28:18 2018 -0800
+
+    xrdb 1.1.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ae86081a92522653ff1523c92524ff892f75d496
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit b8909fc97335fae5bffa43914379787b27171b17
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit d65dc2a5fe6566b13c4b4a55f7d6977365ad1865
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 3ae3e2f9d2b86fc3808a4631f79b6087bd1a81a4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Apr 24 00:25:04 2015 -0700
+
+    Use reallocarray() for array allocations & resizing
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu@herrb.eu>
+
+commit b21b44b214e9f4728665fcfd13da6e43ee93069a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Apr 24 00:11:47 2015 -0700
+
+    Fix "editting" typo in comment
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 843b15fc3c3be5effef78fe6b5abaa11788f0908
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Apr 24 00:09:18 2015 -0700
+
+    Reformat code to X.Org standard coding style
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8b8d03f970115df28232c588b585d3751f1780fb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 8 09:24:04 2014 -0800
+
+    Use SEEK_* names instead of raw numbers for fseek whence argument
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ae495ec8de483ab99fe51bb36b95af4f50973387
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 3 22:45:20 2014 -0700
+
+    Print which option was in error along with usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 01a023d7078f3325f626e8d499307b0d92eef64d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 3 22:28:54 2014 -0700
+
+    unifdef -U__UNIXOS2__
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8a051c45632ee88a4ca0ca492fe8c5cae4b71299
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 3 22:27:10 2014 -0700
+
+    Stop casting free() arguments to (char *)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7a464b04727516775c0a23325a2c69ba1357b00d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 3 22:24:40 2014 -0700
+
+    Clean up sign/size conversion warnings from clang
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 074f6439a8606d9d191280ccffb37daa3c15e868
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 3 20:16:28 2014 -0700
+
+    Remove unused macro RESOURCE_PROPERTY_NAME
+    
+    Flagged by clang:
+    xrdb.c:92:9: warning: macro is not used [-Wunused-macros]
+            ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 118f7d099b99432d7f7013ae51de85b9561ee413
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 3 20:13:28 2014 -0700
+
+    configure: add more m4 quoting to quiet autoconf complaints
+    
+    Gets rid of these warnings:
+    configure.ac:54: warning: AC_LANG_CONFTEST: no AC_LANG_SOURCE call detected in body
+    ../../lib/autoconf/lang.m4:194: AC_LANG_CONFTEST is expanded from...
+    ../../lib/autoconf/general.m4:2591: _AC_COMPILE_IFELSE is expanded from...
+    ../../lib/autoconf/general.m4:2607: AC_COMPILE_IFELSE is expanded from...
+    configure.ac:54: the top level
+    configure.ac:61: warning: AC_LANG_CONFTEST: no AC_LANG_SOURCE call detected in body
+    ../../lib/autoconf/lang.m4:194: AC_LANG_CONFTEST is expanded from...
+    ../../lib/autoconf/general.m4:2591: _AC_COMPILE_IFELSE is expanded from...
+    ../../lib/autoconf/general.m4:2607: AC_COMPILE_IFELSE is expanded from...
+    configure.ac:61: the top level
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6699bfcb0bcc148a4659c5c2434594a6e7fbe757
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 3 18:47:31 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1b1793b6bc469415b152918204dbc9e999e9815e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 3 18:47:31 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 17eda976c8dca736ef63fc45ff7de8c73c0e2936
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Sep 8 10:16:42 2013 -0700
