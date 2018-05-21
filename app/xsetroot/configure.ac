@@ -23,7 +23,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xsetroot], [1.1.1],
+AC_INIT([xsetroot], [1.1.2],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xsetroot])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -39,7 +39,7 @@ XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XSETROOT, [xmuu x11 xbitmaps xcursor xproto >= 7.0.17])
+PKG_CHECK_MODULES(XSETROOT, [xmuu x11 xbitmaps xcursor xproto >= 7.0.25])
 
 XORG_WITH_LINT
 

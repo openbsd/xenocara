@@ -1,3 +1,111 @@
+commit 04dbb108170ada979cce80e92053236c4b702e94
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 9 20:20:44 2018 -0800
+
+    xsetroot 1.1.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8c926a2a2d3f1ed06e24259657e27800f2e0ff8c
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit c91cec09e0da17ccb7d1a7d2a120f9969e516622
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit beb935ffaa34fcc7e72ee53d471473533647e9fb
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit ff223d5595c292f0ccee9f4690f11b29157ef3ab
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 31 11:35:47 2014 -0800
+
+    Only use results from GetWindowProperty if it returned success
+    
+    Since Xlib prior to 1.6 didn't always clear values on failure, don't
+    assume they're safe to use unless we succeeded.
+    
+    Reported by Oracle Parfait 1.5.1:
+    Error: Uninitialised memory (CWE 456)
+       Possible access to uninitialised memory '&after'
+            at line 328 of xsetroot.c in function 'FixupState'.
+              &after allocated at line 317.
+       Possible access to uninitialised memory '&data'
+            at line 330 of xsetroot.c in function 'FixupState'.
+              &data allocated at line 318.
+       Possible access to uninitialised memory '&format'
+            at line 328 of xsetroot.c in function 'FixupState'.
+              &format allocated at line 316.
+       Possible access to uninitialised memory '&length'
+            at line 328 of xsetroot.c in function 'FixupState'.
+              &length allocated at line 317.
+       Possible access to uninitialised memory '&type'
+            at line 328 of xsetroot.c in function 'FixupState'.
+              &type allocated at line 315.
+            at line 331 of xsetroot.c in function 'FixupState'.
+              &type allocated at line 315.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+
+commit cd298a5f8e345791c1889bdd781fddc01c94fc1d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 3 23:22:14 2014 -0700
+
+    Print which option was in error along with usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e7d7181b7e7eafc3019f4eb806a0aeb8e38806fa
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 3 23:04:08 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ed899cfe8675cca8875156ce35b9d2b4553f9cca
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 3 23:04:08 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6ce1479493af8ade3ce7e41276e0e64c878461e2
+Author: Stéphane Aulery <lkppo@free.fr>
+Date:   Sun Jul 7 23:23:52 2013 +0200
+
+    Improve manpage and -help option.
+    
+    Signed-off-by: Stéphane Aulery <lkppo@free.fr>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit a33c612c5ff84ba2d6004d99e96ec6919bb8e859
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Jan 22 23:02:52 2013 -0800

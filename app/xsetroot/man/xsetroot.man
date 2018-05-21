@@ -27,13 +27,23 @@
 xsetroot \- root window parameter setting utility for X
 .SH SYNOPSIS
 .B xsetroot
-[-help] [-version] [-def] [-display \fIdisplay\fP]
+[-help]
+[-version]
+[-def]
+[-display \fIdisplay\fP]
 [-cursor \fIcursorfile maskfile\fP]
-[-cursor_name \fIcursorname\fP]
+[-cursor_name \fIcursorfontname\fP]
 [-xcf \fIcursorfile\fP \fIcursorsize\fP]
-[-bitmap \fIfilename\fP]
-[-mod \fIx y\fP] [-gray] [-grey] [-fg \fIcolor\fP] [-bg \fIcolor\fP] [-rv]
-[-solid \fIcolor\fP] [-name \fIstring\fP]
+[-bitmap \fIfilename\fP
+| -mod \fIx y\fP
+| -gray
+| -grey
+| -solid \fIcolor\fP]
+[-bg \fIcolor\fP]
+[-fg \fIcolor\fP]
+[-rv]
+[-name \fIstring\fP]
+[-d \fIdisplay\fP]
 .SH DESCRIPTION
 The
 .I xsetroot
@@ -56,11 +66,11 @@ Only one of the background color/tiling changing options
 .SH OPTIONS
 .PP
 The various options are as follows:
-.IP \fB-help\fP
+.IP "\fB-help\fP"
 Print a usage message and exit.
-.IP \fB-verson\fP
+.IP "\fB-version\fP"
 Print a version message and exit.
-.IP \fB-def\fP
+.IP "\fB-def, -default\fP"
 Reset unspecified attributes to the default values.  (Restores the background
 to the familiar gray mesh and the cursor to the hollow x shape.)
 .IP "\fB-cursor\fP \fIcursorfile\fP \fImaskfile\fP"
@@ -70,7 +80,7 @@ Cursor and mask files are bitmaps (little pictures), and can be made with the
 .I bitmap(__appmansuffix__)
 program.  You probably want the mask file to be all black until you
 get used to the way masks work.
-.IP "\fB-cursor_name\fP \fIcursorname\fP
+.IP "\fB-cursor_name\fP \fIcursorfontname\fP"
 This lets you change the pointer cursor to one of the standard
 cursors from the cursor font.  Refer to appendix B of the X protocol for
 the names (except that the XC_ prefix is elided for this option).
@@ -87,16 +97,14 @@ the bitmap.
 This is used if you want a plaid-like grid pattern on your screen.
 x and y are integers ranging from 1 to 16.  Try the different combinations.
 Zero and negative numbers are taken as 1.
-.IP \fB-gray\fP
-Make the entire background gray.  (Easier on the eyes.)
-.IP \fB-grey\fP
-Make the entire background grey.
-.IP "\fB-fg\fP \fIcolor\fP"
+.IP "\fB-gray, -grey\fP"
+Make the entire background gray (Easier on the eyes).
+.IP "\fB-bg, -background\fP \fIcolor\fP"
+Use ``color'' as the background color.
+.IP "\fB-fg, -foreground\fP \fIcolor\fP"
 Use ``color'' as the foreground color.  Foreground and background colors
 are meaningful only in combination with -cursor, -bitmap, or -mod.
-.IP "\fB-bg\fP \fIcolor\fP"
-Use ``color'' as the background color.
-.IP \fB-rv\fP
+.IP "\fB-rv, -reverse\fP"
 This exchanges the foreground and background colors.  Normally the foreground
 color is black and the background color is white.
 .IP "\fB-solid\fP \fIcolor\fP"
@@ -107,7 +115,7 @@ Set the name of the root window to ``string''.  There is no default value.
 Usually a name is assigned to a window so that the
 window manager can use a text representation when the window is iconified.
 This option is unused since you can't iconify the background.
-.IP "\fB-display\fP \fIdisplay\fP"
+.IP "\fB-d, -display\fP \fIdisplay\fP"
 Specifies the server to connect to; see \fIX(__miscmansuffix__)\fP.
 .SH "SEE ALSO"
 X(__miscmansuffix__), xset(__appmansuffix__), xrdb(__appmansuffix__), Xcursor(__libmansuffix__)
