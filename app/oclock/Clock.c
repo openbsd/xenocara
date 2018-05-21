@@ -473,12 +473,11 @@ paint_jewel (ClockWidget w, Drawable d, GC gc)
 int
 check_jewel_poly (ClockWidget w, TPoint poly[POLY_SIZE])
 {
-    double	a2, b2, c2, d2;
-    double	x, y, size;
-    int	i;
-
     if (JEWEL_SIZE(w) > 0.0)
     {
+	double	x, y, size;
+	int	i;
+
 	x = JEWEL_X(w);
 	y = JEWEL_Y(w);
 	size = JEWEL_SIZE(w);
@@ -488,6 +487,8 @@ check_jewel_poly (ClockWidget w, TPoint poly[POLY_SIZE])
 	 * circular jewel is less than the radius.
 	 */
 	for (i = 0; i < POLY_SIZE-1; i++) {
+		double	a2, b2, c2, d2;
+
 		a2 = sqr (poly[i].x - x) + sqr (poly[i].y - y);
 		b2 = sqr (poly[i+1].x - x) + sqr (poly[i+1].y - y);
 		c2 = sqr (poly[i].x - poly[i+1].x) + sqr (poly[i].y - poly[i+1].y);

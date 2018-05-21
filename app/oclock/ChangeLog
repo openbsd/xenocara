@@ -1,3 +1,92 @@
+commit 2d1d5f1b86db9010b807fcf625d2c6fa1d9b5493
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Mar 6 23:03:29 2018 -0800
+
+    oclock 1.0.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a0878f4ffd97c34832926a826cc7d5ac8062f293
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:20 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 0388f4d98e5988e298247ef8cf6e3b59a3bce421
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit bb145fce37b2a6bb85834473e8f847a2787d5d1c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit d03b6fc7acb5f08de3a55d165f82d0253b9f4219
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 21:01:43 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 766bb4ceaa163d44849542fb7b9040b3c8b54759
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 21:01:42 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3918c6f05c23d20599b45261fed2486f95543024
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 21:01:35 2014 -0700
+
+    config: Add missing AC_CONFIG_SRCDIR
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fe5b68c75697eaba0af7240f0ccf5f0f1ac1063f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 10 22:21:38 2013 -0800
+
+    Reduce scope of variables in check_jewel_poly
+    
+    Suggested by cppcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4e3d140c4859124ae4cd87789d009c4a973d62c3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 10 22:09:24 2013 -0800
+
+    Remove unused function TDrawArc
+    
+    Suggested by cppcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 0563142cc89b04d1bca3208751b186df9649dbda
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Feb 10 21:25:41 2012 -0800

@@ -56,9 +56,6 @@ typedef struct _TRectangle {
 
 extern void TFillPolygon ( Display *dpy, Drawable d, GC gc, Transform *t,
 			   TPoint *points, int n_points, int shape, int mode );
-extern void TDrawArc ( Display *dpy, Drawable d, GC gc, Transform *t,
-		       double x, double y, double width, double height,
-		       int angle1, int angle2 );
 extern void TFillArc ( Display *dpy, Drawable d, GC gc, Transform *t,
 		       double x, double y, double width, double height,
 		       int angle1, int angle2 );
