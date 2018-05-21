@@ -1,3 +1,99 @@
+commit a98ec351f665d12b0f0aa26dddeaf7a33423ffd1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 9 17:30:13 2018 -0800
+
+    xfontsel 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 693cff8fc6a63b51fb059d175af5f602d5771648
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 32813ab5133d18e230c37ba562275735bda35ec7
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 0a1e1adb405c005d5382eca48f5e2f811ec4b1e9
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 8e4343b9a13a15a8d210ac9454670680f60b3cc6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Sep 27 18:51:10 2015 -0700
+
+    Get rid of some extraneous ; at the end of C source lines
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3b4d735abfadabe120d4d3fb62a5fb5483a9aa0e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 22:34:36 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e41d309cfa1812d3d617dfc21e310361c741a8af
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 22:34:36 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5ded8c9f5eeefba1a13a73f39f03db155faa5a8c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 22:34:30 2014 -0700
+
+    config: Add missing AC_CONFIG_SRCDIR
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4cc04b8ba83f64aa142fdedf632f55fbe429d763
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 6 00:07:23 2013 -0700
+
+    Replace TXT16 with XChar2b inline
+    
+    No longer need #define to substitute it now that we no longer set
+    it to a different type on CRAY systems.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b655a65ff7915b0c55a214b3a23b7f0fa1a39f44
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 6 00:04:41 2013 -0700
+
+    Drop CRAY/WORD64 support (unifdef -UCRAY -UWORD64)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit f8aaa4ffae00fd97a393d2589f9c9579b5bac5ad
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri May 17 18:00:41 2013 -0700
