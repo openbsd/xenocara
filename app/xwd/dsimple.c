@@ -76,7 +76,7 @@ char *Get_Display_Name(
 	char *arg = argv[i];
 
 	if (!strcmp (arg, "-display") || !strcmp (arg, "-d")) {
-	    if (++i >= argc) usage ();
+	    if (++i >= argc) usage ("-display requires an argument");
 
 	    displayname = argv[i];
 	    *pargc -= 2;
@@ -180,7 +180,7 @@ Window Select_Window_Args(
 	nargv = argv+1; argc = ARGC;
 #define OPTION argv[0]
 #define NXTOPTP ++argv, --argc>0
-#define NXTOPT if (++argv, --argc==0) usage()
+#define NXTOPT(arg) if (++argv, --argc==0) usage(arg " requires an argument")
 #define COPYOPT nargv++[0]=OPTION, nargc++
 
 	while (NXTOPTP) {
@@ -195,7 +195,7 @@ Window Select_Window_Args(
 			continue;
 		}
 		if (!strcmp(OPTION, "-name")) {
-			NXTOPT;
+			NXTOPT("-name");
 			w = Window_With_Name(dpy, RootWindow(dpy, screen),
 					     OPTION);
 			if (!w)
@@ -203,7 +203,7 @@ Window Select_Window_Args(
 			continue;
 		}
 		if (!strcmp(OPTION, "-id")) {
-			NXTOPT;
+			NXTOPT("-id");
 			w=0;
 			sscanf(OPTION, "0x%lx", &w);
 			if (!w)

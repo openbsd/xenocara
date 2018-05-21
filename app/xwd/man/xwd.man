@@ -29,7 +29,7 @@ xwd - dump an image of an X window
 .B "xwd"
 [-debug] [-help] [-nobdrs] [-out \fIfile\fP] [-xy] [-frame] [-add \fIvalue\fP]
 [-root | -id \fIid\fP | -name \fIname\fP ] [-icmap] [-screen] [-silent]
-[-display \fIdisplay\fP]
+[-display \fIdisplay\fP] [-version]
 .SH DESCRIPTION
 .PP
 .I Xwd
@@ -70,7 +70,7 @@ instead of the default `Z' format.
 .PP
 .TP 8
 .B "-add \fIvalue\fP"
-This option specifies an signed value to be added to every pixel.
+This option specifies a signed value to be added to every pixel.
 .PP
 .TP 8
 .B "-frame"
@@ -112,6 +112,12 @@ popups that are independent windows but appear over the specified window.
 .B "-silent"
 Operate silently, i.e. don't ring any bells before and after dumping
 the window.
+.PP
+.TP 8
+.B "-version"
+This option indicates that
+.I xwd
+should print its version information and exit.
 .SH ENVIRONMENT
 .PP
 .TP 8

@@ -163,9 +163,9 @@ main(int argc, char **argv)
 	    continue;
 	}
 	if (!strcmp(argv[i], "-help"))
-	  usage();
+	  usage(NULL);
 	if (!strcmp(argv[i], "-out")) {
-	    if (++i >= argc) usage();
+	    if (++i >= argc) usage("-out requires an argument");
 	    if (!(out_file = fopen(argv[i], "wb")))
 	      Fatal_Error("Can't open output file as specified.");
 	    standard_out = False;
@@ -184,7 +184,7 @@ main(int argc, char **argv)
 	    continue;
 	}
 	if (!strcmp(argv[i], "-add")) {
-	    if (++i >= argc) usage();
+	    if (++i >= argc) usage("-add requires an argument");
 	    add_pixel_value = parse_long (argv[i]);
 	    continue;
 	}
@@ -196,7 +196,13 @@ main(int argc, char **argv)
 	    silent = True;
 	    continue;
 	}
-	usage();
+	if (!strcmp(argv[i], "-version")) {
+	    puts(PACKAGE_STRING);
+	    exit(0);
+	}
+	fprintf (stderr, "%s: unrecognized argument '%s'\n",
+		 program_name, argv[i]);
+	usage(NULL);
     }
 #ifdef WIN32
     if (standard_out)
@@ -518,12 +524,15 @@ Window_Dump(Window window, FILE *out)
  * Report the syntax for calling xwd.
  */
 void
-usage(void)
+usage(const char *errmsg)
 {
+    if (errmsg != NULL)
+        fprintf (stderr, "%s: %s\n", program_name, errmsg);
+
     fprintf (stderr,
 "usage: %s [-display host:dpy] [-debug] [-help] %s [-nobdrs] [-out <file>]",
 	   program_name, "[{-root|-id <id>|-name <name>}]");
-    fprintf (stderr, " [-xy] [-add value] [-frame]\n");
+    fprintf (stderr, " [-xy] [-add value] [-frame] [-version]\n");
     exit(1);
 }
 
