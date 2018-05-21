@@ -1,3 +1,87 @@
+commit 50c1949e9984fa6210636b131fed978dd3c31550
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 9 20:43:49 2018 -0800
+
+    xwud 1.0.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 596e9557ce690fb21979b585718e2f8df93f4da1
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 55c32bebda9028028533ad0fbd0344055840d101
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit f4c1349654b710a719448c560a794056c8d72541
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 21180fe24c4386d41067725bcf0a8f48d1741393
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jun 4 16:24:18 2014 -0700
+
+    Add -version option to print program version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9a9e7cb288419ab56935f5a99577e323a0e60b9b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jun 4 16:09:46 2014 -0700
+
+    Print which option was in error along with usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e91e08d1533cc048789468885a0fb8ae214bf575
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jun 4 16:04:31 2014 -0700
+
+    Mark Error() argument as const char *
+    
+    Fixes many gcc warnings about discarding const from literal arguments
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a5fc9bd6084500c64d916a657a2ea70a8a39c569
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 3 23:59:32 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1862a8242ad1bff0cb47df353e919d5bbd7e30ad
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 3 23:59:32 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 86d36843f3f087a6c1f3eb5a21385a116ae9e46a
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Mar 31 17:04:56 2012 -0700

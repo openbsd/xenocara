@@ -30,7 +30,7 @@ xwud - image displayer for X
 [\-in \fIfile\fP] [\-noclick] [\-geometry \fIgeom\fP] [\-display \fIdisplay\fP]
 [\-new] [\-std <maptype>] [\-raw] [\-vis <vis-type-or-id>] [\-scale]
 [\-help] [\-rv] [\-plane \fInumber\fP] [\-fg \fIcolor\fP] [\-bg \fIcolor\fP]
-[\-dumpheader]
+[\-dumpheader] [\-version]
 .SH DESCRIPTION
 .PP
 .I Xwud
@@ -120,6 +120,12 @@ Standard Colormap.  The property name is obtained by converting the
 type to upper case, prepending "RGB_", and appending "_MAP".
 Typical types are "best", "default", and "gray".  See \fIxstdcmap(__appmansuffix__)\fP
 for one way of creating Standard Colormaps.
+.PP
+.TP 8
+.B "\-version"
+This option causes
+.I xwd
+to print its version information and exit.
 .PP
 .TP 8
 .B "\-vis \fIvis-type-or-id\fP"
