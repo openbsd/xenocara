@@ -22,7 +22,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xprop], [1.2.2],
+AC_INIT([xprop], [1.2.3],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xprop])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -40,7 +40,7 @@ XORG_DEFAULT_OPTIONS
 AC_CHECK_HEADERS([wchar.h wctype.h langinfo.h])
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XPROP, [x11 xproto >= 7.0.17])
+PKG_CHECK_MODULES(XPROP, [x11 xproto >= 7.0.25])
 
 XORG_WITH_LINT
 

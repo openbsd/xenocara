@@ -1,3 +1,109 @@
+commit ded6efa3da1ce611e4668d7766e934a239f6120c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 9 18:21:47 2018 -0800
+
+    xprop 1.2.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 331ab01ac2ccb7aea7084c4907a47291ae549e1d
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 78e28685ad86facdbf94de607050f3b2f1752d12
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 44f2605cfecbf5b30677b6414389d8987c9dc59d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit fa732adbbf5e29f4bb230e9b7c0c91ccb4b5af7e
+Author: Eirik Byrkjeflot Anonsen <eirik@eirikba.org>
+Date:   Fri May 22 11:10:05 2015 +0200
+
+    Free the data returned by Format_Icons()
+    
+    Signed-off-by: Eirik Byrkjeflot Anonsen <eirik@eirikba.org>
+
+commit 52c9aa32c8f1b787de7b68d9bb843fa7270cbaaf
+Author: Eirik Byrkjeflot Anonsen <eirik@eirikba.org>
+Date:   Fri May 22 11:10:03 2015 +0200
+
+    Free the data returned by XGetWindowProperty()
+    
+    Signed-off-by: Eirik Byrkjeflot Anonsen <eirik@eirikba.org>
+
+commit dee1d0c1316b1c62c6c62d6f0f4b13685e8e6630
+Author: Eirik Byrkjeflot Anonsen <eirik@eirikba.org>
+Date:   Fri May 22 11:10:04 2015 +0200
+
+    Free the data returned by XListProperties()
+    
+    Signed-off-by: Eirik Byrkjeflot Anonsen <eirik@eirikba.org>
+
+commit 4f748e3d2b1368ec0590a413ba5f7addc5e3344f
+Author: Eirik Byrkjeflot Anonsen <eirik@eirikba.org>
+Date:   Fri May 22 11:10:02 2015 +0200
+
+    Free the thunks used by Show_Prop
+    
+    Signed-off-by: Eirik Byrkjeflot Anonsen <eirik@eirikba.org>
+
+commit b0ae4b903067017ec7dc19f27d3916d2153410af
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 3 18:29:44 2014 -0700
+
+    Add -version option to print program version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit faa4fa7785addc2170d4de7bf13d377324597e99
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 3 18:26:19 2014 -0700
+
+    Print which option was in error along with usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5d4c35a6ad0823f9c921058fa6efb972b29da2d8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 3 17:47:13 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 678692d91e1b03aa27f8d924744be8a04adf5b41
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 3 17:47:13 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 9e0f57f6a271313d1b49b5019753b4410f407cc5
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Aug 8 20:04:00 2013 -0700

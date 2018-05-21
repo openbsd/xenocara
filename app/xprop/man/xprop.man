@@ -36,6 +36,7 @@ xprop - property displayer for X
 [-remove \fIproperty-name\fP]
 [-set \fIproperty-name\fP \fIvalue\fP]
 [-spy]
+[-version]
 [-f \fIatom\fP \fIformat\fP [\fIdformat\fP]]*
 [\fIformat\fP [\fIdformat\fP] \fIatom\fP]*
 .SH SUMMARY
@@ -119,6 +120,10 @@ indicated window.
 .TP 8
 .B "-spy"
 Examine window properties forever, looking for property change events.
+.PP
+.TP 8
+.B "-verson"
+Print program version information and exit.
 .PP
 .TP 8
 .B "-f \fIname\fP \fIformat\fP [\fIdformat\fP]"

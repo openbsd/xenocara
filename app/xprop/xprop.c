@@ -95,14 +95,6 @@ Create_Thunk_List (void)
     return tptr;
 }
 
-#ifdef notused
-static void
-Free_Thunk_List (thunk *list)
-{
-    free(list);
-}
-#endif
-
 static thunk *
 Add_Thunk (thunk *list, thunk t)
 {
@@ -758,9 +750,13 @@ is_utf8_locale (void)
 static const char *
 Format_Icons (const unsigned long *icon, int len)
 {
-    char *result = NULL, *tail = NULL;
+    static char *result = NULL;
+    char *tail = NULL;
     int alloced;
     const unsigned long *end = icon + len / sizeof (unsigned long);
+
+    free(result);
+    result = NULL;
 
     alloced = 0;
 
@@ -1431,9 +1427,15 @@ Get_Window_Property_Data_And_Type (Atom atom,
     unsigned long nitems;
     unsigned long nbytes;
     unsigned long bytes_after;
-    unsigned char *prop;
+    static unsigned char *prop = NULL;
     int status;
-	
+
+    if (prop)
+    {
+	XFree(prop);
+	prop = NULL;
+    }
+
     status = XGetWindowProperty(dpy, target_win, atom, 0, (max_len+3)/4,
 				False, AnyPropertyType, &actual_type,
 				&actual_format, &nitems, &bytes_after,
@@ -1506,8 +1508,8 @@ Show_Prop (const char *format, const char *dformat, const char *prop)
     }
 
     thunks = Break_Down_Property(data, (int)length, type, format, size);
-
     Display_Property(thunks, dformat, format);
+    free(thunks);
 }
 
 static void
@@ -1523,6 +1525,7 @@ Show_All_Props (void)
 	    name = Format_Atom(atoms[i]);
 	    Show_Prop(NULL, NULL, name);
 	}
+	XFree(atoms);
     } else
 	for (i = 0; i < font->n_properties; i++) {
 	    atom = font->properties[i].name;
@@ -1552,11 +1555,11 @@ Handle_Prop_Requests (int argc, char **argv)
 	/* Get overriding formats, if any */
 	if (Is_A_Format(argv[0])) {
 	    format = argv++[0]; argc--;
-	    if (!argc) usage();
+	    if (!argc) usage("format specified without atom");
 	}
 	if (Is_A_DFormat(argv[0])) {
 	    dformat = argv++[0]; argc--;
-	    if (!argc) usage();
+	    if (!argc) usage("dformat specified without atom");
 	}
 
 	/* Get property name */
@@ -1768,9 +1771,9 @@ Set_Property (Display *dpy, Window w, const char *propname, const char *value)
  */
 
 void
-usage (void)
+usage (const char *errmsg)
 {
-    static const char help_message[] = 
+    static const char *help_message =
 "where options include:\n"
 "    -grammar                       print out full grammar for command line\n"
 "    -display host:dpy              the X server to contact\n"
@@ -1785,10 +1788,15 @@ usage (void)
 "    -fs filename                   where to look for formats for properties\n"
 "    -frame                         don't ignore window manager frames\n"
 "    -f propname format [dformat]   formats to use for property of given name\n"
-"    -spy                           examine window properties forever\n";
+"    -spy                           examine window properties forever\n"
+"    -version                       print program version\n";
 
 
     fflush (stdout);
+
+    if (errmsg != NULL)
+	fprintf (stderr, "%s: %s\n\n", program_name, errmsg);
+
     fprintf (stderr,
 	     "usage:  %s [-options ...] [[format [dformat]] atom] ...\n\n", 
 	     program_name);
@@ -1826,7 +1834,7 @@ Parse_Format_Mapping (int *argc, char ***argv)
 #define ARGC (*argc)
 #define ARGV (*argv)
 #define OPTION ARGV[0]
-#define NXTOPT if (++ARGV, --ARGC==0) usage()
+#define NXTOPT if (++ARGV, --ARGC==0) usage("insufficent arguments for -format")
     char *type_name, *format, *dformat;
   
     NXTOPT; type_name = OPTION;
@@ -1922,12 +1930,12 @@ main (int argc, char **argv)
 	    continue;
 	}
 	if (!strcmp(argv[0], "-len")) {
-	    if (++argv, --argc == 0) usage();
+	    if (++argv, --argc == 0) usage("-len requires an argument");
 	    max_len = atoi(argv[0]);
 	    continue;
 	}
 	if (!strcmp(argv[0], "-formats") || !strcmp(argv[0], "-fs")) {
-	    if (++argv, --argc == 0) usage();
+	    if (++argv, --argc == 0) usage("-fs requires an argument");
 	    if (!(stream = fopen(argv[0], "r")))
 		Fatal_Error("unable to open file %s for reading.", argv[0]);
 	    Read_Mappings(stream);
@@ -1935,14 +1943,14 @@ main (int argc, char **argv)
 	    continue;
 	}
 	if (!strcmp(argv[0], "-font")) {
-	    if (++argv, --argc == 0) usage();
+	    if (++argv, --argc == 0) usage("-font requires an argument");
 	    font = Open_Font(argv[0]);
 	    target_win = -1;
 	    continue;
 	}
 	if (!strcmp(argv[0], "-remove")) {
 	    thunk t = {0};
-	    if (++argv, --argc == 0) usage();
+	    if (++argv, --argc == 0) usage("-remove requires an argument");
 	    t.propname = argv[0];
 	    if (remove_props == NULL) remove_props = Create_Thunk_List();
 	    remove_props = Add_Thunk(remove_props, t);
@@ -1950,7 +1958,7 @@ main (int argc, char **argv)
 	}
 	if (!strcmp(argv[0], "-set")) {
 	    thunk t = {0};
-	    if (argc < 3) usage();
+	    if (argc < 3) usage("insufficent arguments for -set");
 	    t.propname = argv[1];
 	    t.extra_value = argv[2];
 	    argv += 3; argc -= 3;
@@ -1966,11 +1974,20 @@ main (int argc, char **argv)
 	    Parse_Format_Mapping(&argc, &argv);
 	    continue;
 	}
-	usage();
+	if (!strcmp(argv[0], "-version")) {
+	    puts(PACKAGE_STRING);
+	    exit(0);
+	}
+	fprintf (stderr, "%s: unrecognized argument %s\n\n",
+		 program_name, argv[0]);
+	usage(NULL);
     }
 
-    if ((remove_props != NULL || set_props != NULL) && argc > 0)
-	usage();
+    if ((remove_props != NULL || set_props != NULL) && argc > 0) {
+	fprintf (stderr, "%s: unrecognized argument %s\n\n",
+		 program_name, argv[0]);
+	usage(NULL);
+    }
 
     if (target_win == None)
 	target_win = Select_Window(dpy, !frame_only);
