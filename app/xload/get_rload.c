@@ -9,7 +9,7 @@
 /* Not all OS supports get_rload
    steal the STUB idea from get_load
  */
-#if defined(QNX4) || defined(__CYGWIN__)
+#if defined(QNX4) || defined(__CYGWIN__) || defined(_WIN32)
 #define RLOADSTUB
 #endif
 

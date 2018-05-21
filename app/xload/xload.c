@@ -178,6 +178,8 @@ main(int argc, char **argv)
     /* For security reasons, we reset our uid/gid after doing the necessary
        system initialization and before calling any X routines. */
     InitLoadPoint();
+
+#if !defined(_WIN32) || defined(__CYGWIN__)
     /* reset gid first while still (maybe) root */
     if (setgid(getgid()) == -1) {
 	    fprintf(stderr, gettext("%s: setgid failed: %s\n"),
@@ -189,6 +191,7 @@ main(int argc, char **argv)
 		ProgramName, strerror(errno));
 	    exit(1);
     }
+#endif
 
     XtSetLanguageProc(NULL, (XtLanguageProc) NULL, NULL);
 

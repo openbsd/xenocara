@@ -1,3 +1,115 @@
+commit 57adc3d88856d96975479ba6a386ca1af1bc3cb8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 9 17:51:02 2018 -0800
+
+    xload 1.1.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 09e23fa098ab44c5861afa0ad30032cede22e1a7
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit dafec869b1040ba26aa9b7411576293cbeaef227
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit f137e5de4b21d253f5c0a475b347645145513a69
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 57e2f649e76cba9e9959ca072ba10285cd17a060
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Tue Apr 21 13:10:48 2015 +0100
+
+    Don't try to use [gs]et[ug]id on Win32
+    
+    Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: David Macek <david.macek.0@gmail.com>
+
+commit 3d5d39cc98b4c5cbecbc1f10db1f6c01963efa94
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Tue Apr 21 13:10:37 2015 +0100
+
+    Use Windows load interface for Win32 build, as well as Cygwin
+    
+    Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: David Macek <david.macek.0@gmail.com>
+
+commit 5c74908c5abe5f91651e78b291ef7e1d02cca25a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 22:14:29 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9d036c3cb4c1e777ed65dfb9c59db6ec9229e6f5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 22:14:29 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 23f4a318f3df9823aa2076616a7a06b3972e8d6b
+Author: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+Date:   Wed Dec 18 18:07:47 2013 +0000
+
+    Use wrapped windows header to fix compilation for Cygwin
+    
+    xload uses a windows-specific interface to obtain the load average, as
+    getloadavg() is not implemented for Cygwin.
+    
+    Including some versions of windows.h after including X11 headers can lead to
+    compilation errors as 'Status' is used as a type name in Xlib.h, but a parameter
+    or memeber name in Windows headers.
+    
+    Include X11/Xwindows.h rather than windows.h directly, which wraps it in a such
+    way to avoid any conflict with X11 headers.
+    
+    In file included from /usr/include/w32api/minwindef.h:146:0,
+                     from /usr/include/w32api/windef.h:8,
+                     from /usr/include/w32api/windows.h:69,
+                     from /jhbuild/checkout/xorg/app/xload/get_load.c:53:
+    /usr/include/w32api/winnt.h:4951:15: error: two or more data types in declaration specifiers
+           DWORD64 Status;
+                   ^
+    In file included from /usr/include/w32api/minwindef.h:146:0,
+                     from /usr/include/w32api/windef.h:8,
+                     from /usr/include/w32api/windows.h:69,
+                     from /jhbuild/checkout/xorg/app/xload/get_load.c:53:
+    /usr/include/w32api/winnt.h:5090:13: error: two or more data types in declaration specifiers
+           DWORD Status;
+                 ^
+    
+    Signed-off-by: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+    Reviewed-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+
 commit 0705cf954e2d92b379493accd1f0f984d87ec575
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Aug 3 21:42:59 2013 -0700

@@ -48,9 +48,9 @@ from the X Consortium.
 #include <stdlib.h>
 #include "xload.h"
 
-#if defined(__CYGWIN__)
+#if defined(__CYGWIN__) || defined(_WIN32)
 # define WIN32_LEAN_AND_MEAN
-# include <windows.h>
+# include <X11/Xwindows.h>
 typedef struct {
   DWORD stat;
   union {
