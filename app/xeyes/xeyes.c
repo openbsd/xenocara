@@ -43,7 +43,7 @@ from the X Consortium.
 
 /* Exit with message describing command line format */
 
-static void
+static void _X_NORETURN
 usage(void)
 {
     fprintf(stderr,
