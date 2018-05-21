@@ -98,6 +98,8 @@ GetSessionNames(int *count_ret, String **short_names_ret,
     if ((dir = opendir (path)) == NULL)
 	return 0;
 
+    fcntl(dirfd(dir), F_SETFD, FD_CLOEXEC);
+
     count = 0;
 
     while ((entry = readdir (dir)) != NULL)

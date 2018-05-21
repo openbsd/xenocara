@@ -72,6 +72,7 @@ ReadSave(const char *session_name, char **sm_id)
 	*sm_id = NULL;
 	return 0;
     }
+    fcntl(fileno(f), F_SETFD, FD_CLOEXEC);
     if (verbose)
 	printf("Reading session save file...\n");
 
@@ -319,6 +320,7 @@ WriteSave(const char *sm_id)
     }
     else
     {
+	fcntl(fileno(f), F_SETFD, FD_CLOEXEC);
 	fprintf (f, "%d\n", SAVEFILE_VERSION);
 	fprintf (f, "%s\n", sm_id);
 
@@ -431,6 +433,7 @@ DeleteSession(const char *session_name)
     if(!f) {
 	return (0);
     }
+    fcntl(fileno(f), F_SETFD, FD_CLOEXEC);
 
     buf = NULL;
     buflen = 0;

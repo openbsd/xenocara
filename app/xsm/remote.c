@@ -111,7 +111,8 @@ remote_start(const char *restart_protocol, const char *restart_machine,
 	default:		/* parent */
 
 	    close (pipefd[0]);
-	    fp = (FILE *) fdopen (pipefd[1], "w");
+	    fcntl(pipefd[1], F_SETFD, FD_CLOEXEC);
+	    fp = fdopen (pipefd[1], "w");
 
 	    fprintf (fp, "CONTEXT X\n");
 	    fprintf (fp, "DIR %s\n", cwd);

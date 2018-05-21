@@ -74,12 +74,6 @@ in this Software without prior written authorization from The Open Group.
 #include "list.h"
 #include "save.h"
 
-#if defined(X_NOT_POSIX) && defined(SIGNALRETURNSINT)
-#define SIGVAL int
-#else
-#define SIGVAL void
-#endif
-
 #ifndef X_NOT_POSIX
 #define USE_POSIX_WAIT
 #endif
@@ -103,8 +97,8 @@ in this Software without prior written authorization from The Open Group.
 int checkpoint_from_signal = 0;
 
 
-static SIGVAL
-Signal(int sig, SIGVAL (*handler)(int))
+static void
+Signal(int sig, void (*handler)(int))
 {
 #ifndef X_NOT_POSIX
     struct sigaction sigact, osigact;
@@ -112,13 +106,7 @@ Signal(int sig, SIGVAL (*handler)(int))
     sigemptyset(&sigact.sa_mask);
     sigact.sa_flags = 0;
     sigaction(sig, &sigact, &osigact);
-#  if defined(SIGNALRETURNSINT)
-    return osigact.sa_handler;
-#  endif
 #else
-#  if defined(SIGNALRETURNSINT)
-    return
-#  endif
     signal(sig, handler);
 #endif
 }
@@ -130,8 +118,7 @@ sig_child_handler (int sig)
 {
     int pid, olderrno = errno;
 
-#if !defined(USE_POSIX_WAIT) && (defined(USE_SYSV_SIGNALS) && \
-    (defined(CRAY) || !defined(SIGTSTP)))
+#if !defined(USE_POSIX_WAIT) && defined(USE_SYSV_SIGNALS) && !defined(SIGTSTP)
     wait (NULL);
 #endif
 
@@ -151,7 +138,7 @@ sig_child_handler (int sig)
 #ifdef USE_POSIX_WAIT
 	pid = waitpid (-1, NULL, WNOHANG);
 #else
-#if defined(USE_SYSV_SIGNALS) && (defined(CRAY) || !defined(SIGTSTP))
+#if defined(USE_SYSV_SIGNALS) && !defined(SIGTSTP)
 	/* cannot do non-blocking wait */
 	pid = 0;
 #else
@@ -260,7 +247,7 @@ execute_system_command (char *s)
 
     Signal (SIGCHLD, sig_child_handler);
 
-#if !(defined(USE_SYSV_SIGNALS) && (defined(CRAY) || !defined(SIGTSTP)))
+#if !(defined(USE_SYSV_SIGNALS) && !defined(SIGTSTP))
     do
     {
 	union wait status;

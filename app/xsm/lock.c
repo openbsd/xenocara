@@ -121,6 +121,7 @@ GetLockId(const char *session_name)
     {
 	return (NULL);
     }
+    fcntl(fileno(fp), F_SETFD, FD_CLOEXEC);
 
     buf[0] = '\0';
     fscanf (fp, "%255s\n", buf);

@@ -31,7 +31,7 @@
 xsm \- X Session Manager
 .SH SYNOPSIS
 .B xsm
-[-display display] [-session sessionName] [-verbose]
+[-display \fIdisplay\fP] [-session \fIsessionName\fP] [-verbose]
 .SH DESCRIPTION
 .PP
 \fIxsm\fP is a session manager.  A session is a group of applications, each
@@ -113,8 +113,8 @@ When \fIxsm\fP starts up, it first checks to see if the user previously
 saved any sessions.  If no saved sessions exist, \fIxsm\fP starts up a set
 of default applications (as described above in the section titled
 \fIDefault Startup Applications\fP).  If at least one session exists, a
-session menu is presented.  The \fB[-session sessionName]\fR option forces the
-specified session to be loaded, bypassing the session menu.
+session menu is presented.  The \fB-session\fR option forces the
+specified \fIsessionName\fP session to be loaded, bypassing the session menu.
 .SS The session menu
 The session menu presents the user with a list of sessions to choose from.
 The user can change the currently selected session with the mouse, or by

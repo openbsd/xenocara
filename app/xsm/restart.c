@@ -543,6 +543,7 @@ StartDefaultApps (void)
 	    exit (1);
 	}
     }
+    fcntl(fileno(f), F_SETFD, FD_CLOEXEC);
 
     buf = NULL;
     buflen = 0;

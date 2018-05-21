@@ -1,3 +1,109 @@
+commit cae8e0a4db186da3556bdab944b61eb540e6685c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 9 20:24:29 2018 -0800
+
+    xsm 1.0.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 52016a5efdf549ffb2a3fb54ce0d0e4e110957f2
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 730ae572b17c0d54798033375a7a6b1999ca7ef5
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 2eb104d487546dac7c257f0f359d5f050fc1cdcc
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 6c335e1c315a68283b1303afb06a3d5a34adab83
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Wed Feb 25 22:22:50 2015 +0100
+
+    Close file descriptors on exec.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+
+commit 0caed2fbce401e48d55ebfeda968e9ea8012f01d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 3 23:28:38 2014 -0700
+
+    Print which option was in error along with usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cf3acd85392869ff35dc4869d66455363890e05d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 3 23:23:34 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 23ed6c7d6d0f13788a30ed6fe13c0cb2e15d9124
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 3 23:23:34 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ab1fd5041b784747bec58f4c8ccf069c8920402b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Dec 17 11:08:50 2013 -0500
+
+    Remove obsolete Imake SIGNALRETURNSINT
+    
+    Assume signal handlers return void, as C89 requires
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 9f4bee64da58ed95923ceee4abfe56d5125974f6
+Author: Stéphane Aulery <lkppo@free.fr>
+Date:   Thu Jul 4 00:53:43 2013 +0200
+
+    Improve help messages & man page
+    
+    Signed-off-by: Stéphane Aulery <lkppo@free.fr>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9a7429ed7734531ca313d8c1f724bcb07c33ff54
+Author: Stéphane Aulery <lkppo@free.fr>
+Date:   Sat Jul 6 15:40:56 2013 +0200
+
+    Drop CRAY support
+    
+    Signed-off-by: Stéphane Aulery <lkppo@free.fr>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 5eaa2f649cf594f55bae32a46ae6e65a68656bf8
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Feb 10 15:55:57 2013 -0800
