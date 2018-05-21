@@ -156,8 +156,11 @@ main (int argc, char *argv[])
 	    printf("%s\n", PACKAGE_STRING);
 	    exit(0);
 	}
-	else if (argv[i][0] == '-')
+	else if (argv[i][0] == '-') {
+	    fprintf(stderr, "%s: unrecognized option '%s'\n",
+		    ProgramName, argv[i]);
 	    usage();
+	}
 	else if (!cname)
 	    cname = argv[i];
 	else if (!iname)
