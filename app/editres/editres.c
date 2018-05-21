@@ -27,7 +27,7 @@ in this Software without prior written authorization from The Open Group.
 #include <stdlib.h>
 #include <X11/Intrinsic.h>
 #include <X11/StringDefs.h>
-#include <X11/Xaw/Cardinals.h>	
+#include <X11/Xaw/Cardinals.h>
 
 #define THIS_IS_MAIN		/* Don't get extern definitions of global
 				   variables. */
@@ -35,7 +35,7 @@ in this Software without prior written authorization from The Open Group.
 #include "editresP.h"
 
 /*
- * Global variables. 
+ * Global variables.
  */
 
 /* array of toolkit dependent labels taken from the resource file */
@@ -61,9 +61,9 @@ Widget global_toplevel;
 AppResources global_resources;
 
 
-static void Syntax ( XtAppContext app_con, char *call );
+static void Syntax ( XtAppContext app_con, char *call ) _X_NORETURN;
 
-static String fallback_resources[] = { 
+static String fallback_resources[] = {
     NULL,
 };
 
@@ -73,9 +73,9 @@ static XtResource editres_resources[] = {
   {"debug", "Debug", XtRBoolean, sizeof(Boolean),
      Offset(debug), XtRImmediate, (XtPointer) FALSE},
   {"numFlashes", "NumFlashes", XtRInt, sizeof(int),
-     Offset(num_flashes), XtRImmediate, (XtPointer) NUM_FLASHES},       
+     Offset(num_flashes), XtRImmediate, (XtPointer) NUM_FLASHES},
   {"flashTime", "FlashTime", XtRInt, sizeof(int),
-     Offset(flash_time), XtRImmediate, (XtPointer) FLASH_TIME},       
+     Offset(flash_time), XtRImmediate, (XtPointer) FLASH_TIME},
   {"flashColor", XtCForeground, XtRPixel, sizeof(Pixel),
      Offset(flash_color), XtRImmediate, (XtPointer) XtDefaultForeground},
   {"saveResourceFile", "SaveResourcesFile", XtRString, sizeof(String),
@@ -93,23 +93,23 @@ main(int argc, char **argv)
 			       &argc, argv, fallback_resources,
 			       NULL, ZERO);
 
-    if (argc != 1)		
+    if (argc != 1)
 	Syntax(app_con, argv[0]);
 
     SetApplicationActions(app_con);
-    XtGetApplicationResources(global_toplevel, (XtPointer) &global_resources, 
+    XtGetApplicationResources(global_toplevel, (XtPointer) &global_resources,
 			      editres_resources, XtNumber(editres_resources),
 			      NULL, (Cardinal) 0);
     global_resources.allocated_save_resources_file = FALSE;
 
     XtOverrideTranslations
-      (global_toplevel, 
-       XtParseTranslationTable ("<Message>WM_PROTOCOLS: quit()"));  
+      (global_toplevel,
+       XtParseTranslationTable ("<Message>WM_PROTOCOLS: quit()"));
 
     /* build tree for Xt intrinsics */
-    BuildWidgetTree(global_toplevel); 
+    BuildWidgetTree(global_toplevel);
 
-    SetMessage(global_screen_data.info_label, 
+    SetMessage(global_screen_data.info_label,
 	       res_labels[13]);
 
     global_screen_data.set_values_popup = NULL;
@@ -118,10 +118,10 @@ main(int argc, char **argv)
 
     XtRealizeWidget(global_toplevel);
 
-    wm_delete_window = 
+    wm_delete_window =
       XInternAtom(XtDisplay(global_toplevel), "WM_DELETE_WINDOW",
 				   False);
-    (void) XSetWMProtocols (XtDisplay(global_toplevel), 
+    (void) XSetWMProtocols (XtDisplay(global_toplevel),
 			    XtWindow(global_toplevel),
                             &wm_delete_window, 1);
     XtAppMainLoop(app_con);
@@ -135,7 +135,7 @@ main(int argc, char **argv)
  *	Returns: none - exits tho.
  */
 
-static void 
+static void
 Syntax(XtAppContext app_con, char *call)
 {
     XtDestroyApplicationContext(app_con);

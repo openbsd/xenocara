@@ -1,3 +1,220 @@
+commit 9644bfe7f56eb8c1cc795b724a6fc95ae4172d43
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 4 18:43:17 2018 -0800
+
+    editres 1.0.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 476ad1ea6588e277d59ae6d0fc64a17bc1b5df5a
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:20 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit e03471032c584669d06ca4fe47f52cafd9013493
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 931b91c5ff7b2dedb149f0a89010b64407baabf3
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 3f4d7d388dce6c9783c30bcc006f73d799845c0e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 1 11:02:42 2016 -0800
+
+    Add intro to editres to README
+    
+    Mostly copied from editres man page
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a415214bf282dcc8385f2101e6f8c018e188fa41
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 9 13:13:32 2015 -0700
+
+    Fix -Wmissing-noreturn warnings
+    
+    editres.c:140:1: warning: function 'Syntax' could be declared with
+     attribute 'noreturn' [-Wmissing-noreturn]
+    handler.c:65:1: warning: function 'Quit' could be declared with
+     attribute 'noreturn' [-Wmissing-noreturn]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a6733f76dad52644bd45a8674bf0ea97c6e424ac
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 9 12:47:23 2015 -0700
+
+    Strip trailing whitespace
+    
+    'git diff -w' shows no changes for this commit
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c33a44612947eb91579b24f98848812018dd8c16
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 9 11:38:18 2015 -0700
+
+    Fix -Wsign-compare warnings
+    
+    actions.c:291:21: warning: comparison of integers of different signs: 'int' and 'Cardinal' (aka 'unsigned int') [-Wsign-compare]
+        for ( i = 0 ; i < num_table; i++ )
+                      ~ ^ ~~~~~~~~~
+    actions.c:299:19: warning: comparison of integers of different signs: 'int' and 'Cardinal' (aka 'unsigned int') [-Wsign-compare]
+        for (i = 0; i < num_table; ) {
+                    ~ ^ ~~~~~~~~~
+    actions.c:302:8: warning: comparison of integers of different signs: 'int' and 'unsigned int' [-Wsign-compare]
+            if (i == (num_table - 1))
+                ~ ^   ~~~~~~~~~~~~~
+    actions.c:304:13: warning: comparison of integers of different signs: 'int' and 'Cardinal' (aka 'unsigned int') [-Wsign-compare]
+            else if (i < num_table)
+                     ~ ^ ~~~~~~~~~
+    
+    geometry.c:150:19: warning: comparison of integers of different signs: 'int' and 'Cardinal' (aka 'unsigned int') [-Wsign-compare]
+        for (i = 0; i < tree_info->num_nodes; i++)
+                    ~ ^ ~~~~~~~~~~~~~~~~~~~~
+    geometry.c:380:19: warning: comparison of integers of different signs: 'int' and 'Cardinal' (aka 'unsigned int') [-Wsign-compare]
+        for (i = 0; i < tree_info->num_flash_widgets; i++) {
+                    ~ ^ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    geometry.c:401:19: warning: comparison of integers of different signs: 'int' and 'Cardinal' (aka 'unsigned int') [-Wsign-compare]
+        for (i = 0; i < tree_info->num_flash_widgets; i++)
+                    ~ ^ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    geometry.c:423:19: warning: comparison of integers of different signs: 'int' and 'Cardinal' (aka 'unsigned int') [-Wsign-compare]
+        for (i = 0; i < tree_info->num_flash_widgets; i++)
+                    ~ ^ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    geometry.c:428:19: warning: comparison of integers of different signs: 'int' and 'Cardinal' (aka 'unsigned int') [-Wsign-compare]
+        for (i = 0; i < tree_info->num_flash_widgets; i++)
+                    ~ ^ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    handler.c:475:13: warning: comparison of integers of different signs: 'int' and 'Cardinal' (aka 'unsigned int') [-Wsign-compare]
+        if (len > malloc_size) {
+            ~~~ ^ ~~~~~~~~~~~
+    handler.c:476:58: warning: implicit conversion changes signedness: 'int' to 'unsigned long' [-Wsign-conversion]
+            malloc_string = XtRealloc(malloc_string, sizeof(char) * len);
+                                                                  ~ ^~~
+    handler.c:477:16: warning: implicit conversion changes signedness: 'int' to 'Cardinal' (aka 'unsigned int') [-Wsign-conversion]
+            malloc_size = len;
+                        ~ ^~~
+    
+    utils.c:167:37: warning: comparison of integers of different signs: 'int' and 'Cardinal' (aka 'unsigned int') [-Wsign-compare]
+        for (node = top_node, i = 1 ; i < number; i++) {
+                                      ~ ^ ~~~~~~
+    utils.c:170:16: warning: comparison of integers of different signs: 'int' and 'Cardinal' (aka 'unsigned int') [-Wsign-compare]
+            for (j = 0; j < node->num_children; j++) {
+                        ~ ^ ~~~~~~~~~~~~~~~~~~
+    utils.c:215:19: warning: comparison of integers of different signs: 'int' and 'Cardinal' (aka 'unsigned int') [-Wsign-compare]
+        for (i = 0; i < node->num_children; i++) {
+                    ~ ^ ~~~~~~~~~~~~~~~~~~
+    utils.c:787:19: warning: comparison of integers of different signs: 'int' and 'Cardinal' (aka 'unsigned int') [-Wsign-compare]
+        for (i = 0; i < top_node->num_children; i++)
+                    ~ ^ ~~~~~~~~~~~~~~~~~~~~~~
+    
+    wtree.c:129:19: warning: comparison of integers of different signs: 'int' and 'Cardinal' (aka 'unsigned int') [-Wsign-compare]
+        for (i = 0; i < top->num_children; i++)
+                    ~ ^ ~~~~~~~~~~~~~~~~~
+    wtree.c:194:19: warning: comparison of integers of different signs: 'int' and 'Cardinal' (aka 'unsigned int') [-Wsign-compare]
+        for (i = 0; i < info->num_nodes; i++) {
+                    ~ ^ ~~~~~~~~~~~~~~~
+    wtree.c:216:19: warning: comparison of integers of different signs: 'int' and 'Cardinal' (aka 'unsigned int') [-Wsign-compare]
+        for (i = 0; i < info->num_nodes; i++)
+                    ~ ^ ~~~~~~~~~~~~~~~
+    wtree.c:270:19: warning: comparison of integers of different signs: 'int' and 'Cardinal' (aka 'unsigned int') [-Wsign-compare]
+        for (i = 0; i < top->num_children; i++)
+                    ~ ^ ~~~~~~~~~~~~~~~~~
+    wtree.c:339:19: warning: comparison of integers of different signs: 'int' and 'Cardinal' (aka 'unsigned int') [-Wsign-compare]
+        for (i = 0; i < num_active_nodes; i++)
+                    ~ ^ ~~~~~~~~~~~~~~~~
+    wtree.c:386:19: warning: comparison of integers of different signs: 'int' and 'Cardinal' (aka 'unsigned int') [-Wsign-compare]
+        for (i = 0; i < node->num_children; i++)
+                    ~ ^ ~~~~~~~~~~~~~~~~~~
+    wtree.c:446:19: warning: comparison of integers of different signs: 'int' and 'Cardinal' (aka 'unsigned int') [-Wsign-compare]
+        for (i = 0; i < node->num_children; i++)
+                    ~ ^ ~~~~~~~~~~~~~~~~~~
+    wtree.c:478:16: warning: comparison of integers of different signs: 'int' and 'Cardinal' (aka 'unsigned int') [-Wsign-compare]
+            for (i = 0; i < node->num_children; i++) {
+                        ~ ^ ~~~~~~~~~~~~~~~~~~
+    wtree.c:607:19: warning: comparison of integers of different signs: 'int' and 'Cardinal' (aka 'unsigned int') [-Wsign-compare]
+        for (i = 0; i < tree_info->num_nodes; i++)
+                    ~ ^ ~~~~~~~~~~~~~~~~~~~~
+    wtree.c:686:19: warning: comparison of integers of different signs: 'int' and 'Cardinal' (aka 'unsigned int') [-Wsign-compare]
+        for (i = 0; i < node->num_children; i++)
+                    ~ ^ ~~~~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit af90a105ec97c6d856d2e8a80e8822c3e192d1e9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 9 11:19:33 2015 -0700
+
+    Replace remaining sprintf calls with snprintf
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9ffefd5b3d38e9ed2b5ed59bc50e8a7da761fb77
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 9 11:17:38 2015 -0700
+
+    Replace XtMalloc+sprintf pair with XtAsprintf call
+    
+    Raises required version of libXt to >= 1.0.99.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 15f9d88e13bda2617c05c278a1ca9f6ce26df479
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 21:06:47 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit eed2fbbfc5292b5cf02d4c4b9f10266d8a41b787
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 21:06:47 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 57e1f1c4aa60136ab22e3faf75832c728beee4aa
+Author: Eric S. Raymond <esr@thyrsus.com>
+Date:   Thu Jun 6 15:50:08 2013 -0400
+
+    Avoid a spurious  warning during XML upconversion.
+
+commit 703edaa26044cfa0a607fa7b93396095fdfdfbaa
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 19 09:21:50 2013 -0800
+
+    config: Add missing AC_CONFIG_SRCDIR
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit c256f5a1e82ed874d8bd068901dd9b138adb6f89
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Jan 12 16:05:16 2013 -0800

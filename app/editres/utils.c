@@ -39,11 +39,11 @@ in this Software without prior written authorization from The Open Group.
 #include "editresP.h"
 
 static WNode * FindWidgetFromWindowGivenNode ( WNode * node, Window win );
-static WidgetResources * ParseResources ( GetResourcesInfo * info, 
+static WidgetResources * ParseResources ( GetResourcesInfo * info,
 					  char **error );
-static int CompareResourceEntries ( const void *e1, 
+static int CompareResourceEntries ( const void *e1,
 				    const void *e2 );
-static void AddResource ( ResourceInfo * res_info, 
+static void AddResource ( ResourceInfo * res_info,
 			  WidgetResourceInfo * resource );
 static void FreeResources ( WidgetResources * resources );
 
@@ -144,7 +144,7 @@ AddString(char ** str, char *add)
     ptr = *str + len_str;
     strcpy(ptr, add);
 }
- 
+
 /*	Function Name: FindNode
  *	Description: Finds a node give the top node, and a node id number.
  *	Arguments: top_node - the top node.
@@ -155,7 +155,7 @@ AddString(char ** str, char *add)
 WNode *
 FindNode(WNode *top_node, unsigned long *ids, Cardinal number)
 {
-    int i, j;
+    Cardinal i, j;
     WNode *node;
 
     if (top_node == NULL)
@@ -176,7 +176,7 @@ FindNode(WNode *top_node, unsigned long *ids, Cardinal number)
 	}
 	if (!found_it)
 	    return(NULL);
-    }	    
+    }
     return(node);
 }
 
@@ -187,7 +187,7 @@ FindNode(WNode *top_node, unsigned long *ids, Cardinal number)
  *	Returns: node - the node corrosponding to this widget.
  */
 
-WNode * 
+WNode *
 FindWidgetFromWindow(TreeInfo *tree_info, Window win)
 {
     if (tree_info == NULL)
@@ -206,7 +206,7 @@ FindWidgetFromWindow(TreeInfo *tree_info, Window win)
 static WNode *
 FindWidgetFromWindowGivenNode(WNode *node, Window win)
 {
-    int i;
+    Cardinal i;
     WNode * ret_node;
 
     if (node->window == win)
@@ -237,7 +237,7 @@ HandleXErrors(Display *display, XErrorEvent *error)
     }
 
     if (error->error_code == BadWindow)
-	global_error_code = NO_WINDOW;    
+	global_error_code = NO_WINDOW;
     else {
 	if (XmuPrintDefaultErrorMessage(display, error, stderr) != 0)
 	    exit(1);
@@ -260,7 +260,7 @@ void
 _DumpTreeToFile(Widget w, XtPointer tree_ptr, XtPointer filename)
 {
     TreeInfo * tree_info = (TreeInfo *) tree_ptr;
-    FILE * fp; 
+    FILE * fp;
 
     if (tree_info == NULL) {
 	SetMessage(global_screen_data.info_label,
@@ -271,7 +271,7 @@ _DumpTreeToFile(Widget w, XtPointer tree_ptr, XtPointer filename)
     if ( (fp = fopen((char *)filename, "w")) == NULL ) {
 	char buf[BUFSIZ];
 
-	sprintf(buf, res_labels[24], (char *)filename);
+	snprintf(buf, sizeof(buf), res_labels[24], (char *)filename);
 	SetMessage(global_screen_data.info_label, buf);
 	return;
     }
@@ -281,7 +281,7 @@ _DumpTreeToFile(Widget w, XtPointer tree_ptr, XtPointer filename)
 }
 
 /************************************************************
- * 
+ *
  * The file dialog boxes are handled with this code.
  *
  * It automatically calls the function specified when the
@@ -325,7 +325,7 @@ _PopupFileDialog(Widget w, String str, String default_value,
     num_args = 0;
     XtSetArg(args[num_args], XtNlabel, str); num_args++;
     XtSetArg(args[num_args], XtNvalue, default_value); num_args++;
-    dialog = XtCreateManagedWidget("dialog", dialogWidgetClass, 
+    dialog = XtCreateManagedWidget("dialog", dialogWidgetClass,
 				   shell, args, num_args);
 
     file_info = XtNew(FileDialogInfo);
@@ -333,7 +333,7 @@ _PopupFileDialog(Widget w, String str, String default_value,
     file_info->func = func;
     file_info->data = data;
 
-    if  (XSaveContext(XtDisplay(dialog), (Window) dialog, file_dialog_context, 
+    if  (XSaveContext(XtDisplay(dialog), (Window) dialog, file_dialog_context,
 		      (XPointer) file_info) != 0) {
 	SetMessage(global_screen_data.info_label,
 	    "Error while trying to save Context\nAborting file dialog popup.");
@@ -391,7 +391,7 @@ PopupCentered(XEvent *event, Widget w, XtGrabKind mode)
 	Window root, child;
 	int win_x, win_y;
 	unsigned int mask;
-	
+
 	XQueryPointer(XtDisplay(w), XtWindow(w),
 		      &root, &child, &x, &y, &win_x, &win_y, &mask);
     }
@@ -406,17 +406,17 @@ PopupCentered(XEvent *event, Widget w, XtGrabKind mode)
     height += 2 * b_width;
 
     x -= ((int) width/2);
-    if (x < 0) 
+    if (x < 0)
 	x = 0;
     if ( x > (max_x = (int) (XtScreen(w)->width - width)) )
 	x = max_x;
 
     y -= ( (Position) height/2 );
-    if (y < 0) 
+    if (y < 0)
 	y = 0;
     if ( y > (max_y = (int) (XtScreen(w)->height - height)) )
 	y = max_y;
-  
+
     num_args = 0;
     XtSetArg(args[num_args], XtNx, x); num_args++;
     XtSetArg(args[num_args], XtNy, y); num_args++;
@@ -435,7 +435,7 @@ PopupCentered(XEvent *event, Widget w, XtGrabKind mode)
 
 /* ARGSUSED */
 
-void 
+void
 _PopdownFileDialog(Widget w, XtPointer client_data, XtPointer junk)
 {
     Widget dialog = XtParent(w);
@@ -444,11 +444,11 @@ _PopdownFileDialog(Widget w, XtPointer client_data, XtPointer junk)
 
     if (XFindContext(XtDisplay(dialog), (Window) dialog, file_dialog_context,
 		     &file_info_ptr) == XCNOENT) {
-	SetMessage(global_screen_data.info_label,	
-		   "Error while trying to find Context\nAborting...");	
+	SetMessage(global_screen_data.info_label,
+		   "Error while trying to find Context\nAborting...");
     }
 
-    (void) XDeleteContext(XtDisplay(dialog), (Window)dialog, 
+    (void) XDeleteContext(XtDisplay(dialog), (Window)dialog,
 			  file_dialog_context);
 
     file_info = (FileDialogInfo *) file_info_ptr;
@@ -514,16 +514,16 @@ HandleGetResources(Event *event)
 
     for (i = 0; i < (int)get_event->num_entries; i++) {
 	node = FindNode(global_tree_info->top_node,
-			get_event->info[i].widgets.ids, 
+			get_event->info[i].widgets.ids,
 			get_event->info[i].widgets.num_widgets);
 
 	if (node == NULL) {
-	    sprintf(buf, res_labels[16]);
-	    AddString(&errors, buf); 
-	    continue;	
+	    snprintf(buf, sizeof(buf), res_labels[16]);
+	    AddString(&errors, buf);
+	    continue;
 	}
 
-	if (node->resources != NULL) 
+	if (node->resources != NULL)
 	    FreeResources(node->resources);
 
 	if (!get_event->info[i].error) {
@@ -563,7 +563,7 @@ CreateResourceBox(WNode *node, char **errors)
     if (resources->num_normal > 0) {
 	names = (char **) XtMalloc(sizeof(char *) *
 				   (resources->num_normal + 1));
-	for (i = 0 ; i < resources->num_normal ; i++) 
+	for (i = 0 ; i < resources->num_normal ; i++)
 	    names[i] = resources->normal[i].name;
 	names[i] = NULL;
     }
@@ -573,8 +573,8 @@ CreateResourceBox(WNode *node, char **errors)
     if (resources->num_constraint > 0) {
 	cons_names = (char **) XtMalloc(sizeof(char *) *
 					(resources->num_constraint + 1));
-	
-	for (i = 0 ; i < resources->num_constraint ; i++) 
+
+	for (i = 0 ; i < resources->num_constraint ; i++)
 	    cons_names[i] = resources->constraint[i].name;
 	cons_names[i] = NULL;
     }
@@ -592,15 +592,15 @@ CreateResourceBox(WNode *node, char **errors)
  *	Returns: The resource information.
  */
 
-static WidgetResources * 
+static WidgetResources *
 ParseResources(GetResourcesInfo *info, char **error)
 {
     WidgetResources * resources;
     WidgetResourceInfo * normal;
     int i;
 
-    resources = (WidgetResources *) XtMalloc(sizeof(WidgetResources)); 
-    
+    resources = (WidgetResources *) XtMalloc(sizeof(WidgetResources));
+
     /*
      * Allocate enough space for both the normal and constraint resources,
      * then add the normal resources from the top, and the constraint resources
@@ -608,7 +608,7 @@ ParseResources(GetResourcesInfo *info, char **error)
      * that there is no overlap.
      */
 
-    resources->normal = (WidgetResourceInfo *) 
+    resources->normal = (WidgetResourceInfo *)
 	            XtMalloc(sizeof(WidgetResourceInfo) * info->num_resources);
 
     normal = resources->normal;
@@ -620,7 +620,7 @@ ParseResources(GetResourcesInfo *info, char **error)
 	switch((int) info->res_info[i].res_type) {
 	case NormalResource:
 	    resources->num_normal++;
-	    AddResource(info->res_info + i, normal++);	    
+	    AddResource(info->res_info + i, normal++);
 	    break;
 	case ConstraintResource:
 	    resources->num_constraint++;
@@ -629,8 +629,8 @@ ParseResources(GetResourcesInfo *info, char **error)
 	default:
 	    {
 		char buf[BUFSIZ];
-		sprintf(buf, "Unknown resource type %d\n", 
-			info->res_info[i].res_type);
+		snprintf(buf, sizeof(buf), "Unknown resource type %d\n",
+                         info->res_info[i].res_type);
 		AddString(error, buf);
 	    }
 	    break;
@@ -638,7 +638,7 @@ ParseResources(GetResourcesInfo *info, char **error)
     }
 
     /*
-     * Sort the resources alphabetically. 
+     * Sort the resources alphabetically.
      */
 
     qsort(resources->normal, resources->num_normal,
@@ -661,10 +661,10 @@ ParseResources(GetResourcesInfo *info, char **error)
  *	Returns: an integer >, < or = 0.
  */
 
-static int 
+static int
 CompareResourceEntries(const void *e1, const void *e2)
 {
-    return (strcmp(((WidgetResourceInfo *)e1)->name, 
+    return (strcmp(((WidgetResourceInfo *)e1)->name,
 		   ((WidgetResourceInfo *)e2)->name));
 }
 
@@ -719,7 +719,7 @@ FreeResources(WidgetResources *resources)
 
     XFree((char *)resources);
 }
-	
+
 
 /*	Function Name: CheckDatabase
  *	Description: Checks to see if the node is in the database.
@@ -758,12 +758,12 @@ Quarkify(char **list, char *ptr)
 
     quarks = (XrmQuarkList) XtMalloc(sizeof(XrmQuark) * i);
 
-    for (tlist = list, tquarks = quarks; *tlist != NULL; tlist++, tquarks++) 
+    for (tlist = list, tquarks = quarks; *tlist != NULL; tlist++, tquarks++)
 	*tquarks = XrmStringToQuark(*tlist);
 
-    if (ptr != NULL) 
+    if (ptr != NULL)
 	*tquarks++ = XrmStringToQuark(ptr);
-	
+
     *tquarks = NULLQUARK;
     return(quarks);
 }
@@ -780,11 +780,11 @@ void
 ExecuteOverAllNodes(WNode *top_node, void (*func)(WNode *, XtPointer),
 		    XtPointer data)
 {
-    int i;
+    Cardinal i;
 
     (*func)(top_node, data);
 
-    for (i = 0; i < top_node->num_children; i++) 
+    for (i = 0; i < top_node->num_children; i++)
 	ExecuteOverAllNodes(top_node->children[i], func, data);
 }
 
@@ -806,7 +806,7 @@ InsertWidgetFromNode(ProtocolStream *stream, WNode *node)
     for (temp = node, i = 0; temp != NULL; temp = temp->parent, i++) {}
 
     num_widgets = i;
-    widget_list = (unsigned long *) 
+    widget_list = (unsigned long *)
 	          XtMalloc(sizeof(unsigned long) * num_widgets);
 
     /*
@@ -814,13 +814,13 @@ InsertWidgetFromNode(ProtocolStream *stream, WNode *node)
      * Make sure that they are inserted in the list from parent -> child.
      */
 
-    for (i--, temp = node; temp != NULL; temp = temp->parent, i--) 
+    for (i--, temp = node; temp != NULL; temp = temp->parent, i--)
 	widget_list[i] = temp->id;
-	
+
     _XEditResPut16(stream, num_widgets);	/* insert number of widgets. */
     for (i = 0; i < num_widgets; i++) 	/* insert Widgets themselves. */
 	_XEditResPut32(stream, widget_list[i]);
-    
+
     XtFree((char *)widget_list);
 }
 
@@ -830,12 +830,12 @@ InsertWidgetFromNode(ProtocolStream *stream, WNode *node)
  *	Returns: message to show.
  */
 
-char * 
+char *
 GetFailureMessage(ProtocolStream *stream)
 {
     char * return_str;
 
-    if (_XEditResGetString8(stream, &return_str)) 
+    if (_XEditResGetString8(stream, &return_str))
 	return(return_str);
 
     return(XtNewString(res_labels[35]));
@@ -848,23 +848,23 @@ GetFailureMessage(ProtocolStream *stream)
  *	Returns: message to show.
  */
 
-char * 
+char *
 ProtocolFailure(ProtocolStream *stream)
 {
     char buf[BUFSIZ];
     unsigned char version;
     char* old_version_string;
 
-    if (!_XEditResGet8(stream, &version)) 
+    if (!_XEditResGet8(stream, &version))
 	return(XtNewString(res_labels[35]));
 
     switch ((int)version) {
     case PROTOCOL_VERSION_ONE_POINT_ZERO: old_version_string = "1.0"; break;
     default: old_version_string = "1.0";
     }
-    
-    sprintf(buf, res_labels[36], 
-	    CURRENT_PROTOCOL_VERSION_STRING, old_version_string);
+
+    snprintf(buf, sizeof(buf), res_labels[36],
+             CURRENT_PROTOCOL_VERSION_STRING, old_version_string);
     return(XtNewString(buf));
 }
-	
+

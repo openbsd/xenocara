@@ -39,13 +39,13 @@ in this Software without prior written authorization from The Open Group.
 
 #include "editresP.h"
 
-/* 
+/*
  * Local function definitions.
  */
 static char * GetResourceName ( ResourceBoxInfo * res_box );
-static void _AppendResourceString ( Widget w, XtPointer res_box_ptr, 
+static void _AppendResourceString ( Widget w, XtPointer res_box_ptr,
 				    XtPointer filename_ptr );
-static void _SetResourcesFile ( Widget w, XtPointer junk, 
+static void _SetResourcesFile ( Widget w, XtPointer junk,
 				XtPointer filename_ptr );
 static void ObtainResource ( XtPointer node_ptr );
 static void CreateSetValuesCommand ( WNode * node, XtPointer info_ptr );
@@ -89,8 +89,8 @@ SendTree(Widget w, XtPointer value, XtPointer call_data)
 	w = XtParent(w);
 
     _XEditResResetStream(&(global_client.stream)); /* an empty message. */
-    
-    SetCommand(w, LocalSendWidgetTree, NULL); 
+
+    SetCommand(w, LocalSendWidgetTree, NULL);
 }
 
 /*	Function Name: FindWidget
@@ -171,13 +171,13 @@ TreeRelabel(Widget w, XtPointer client_data, XtPointer call_data)
  */
 
 /* ARGSUSED */
-void 
+void
 PannerCallback(Widget w, XtPointer closure, XtPointer report_ptr)
 {
     Arg args[2];
     XawPannerReport *report = (XawPannerReport *) report_ptr;
 
-    if (global_tree_info == NULL) 
+    if (global_tree_info == NULL)
 	return;
 
     XtSetArg (args[0], XtNx, -report->slider_x);
@@ -188,7 +188,7 @@ PannerCallback(Widget w, XtPointer closure, XtPointer report_ptr)
 
 /*	Function Name: PortholeCallback
  *	Description: called when the porthole or its child has
- *                   changed 
+ *                   changed
  *	Arguments: porthole - the porthole widget.
  *                 panner_ptr - the panner widget.
  *                 report_ptr - the porthole record.
@@ -196,7 +196,7 @@ PannerCallback(Widget w, XtPointer closure, XtPointer report_ptr)
  */
 
 /* ARGSUSED */
-void 
+void
 PortholeCallback(Widget w, XtPointer panner_ptr, XtPointer report_ptr)
 {
     Arg args[10];
@@ -222,7 +222,7 @@ PortholeCallback(Widget w, XtPointer panner_ptr, XtPointer report_ptr)
  */
 
 /* ARGSUSED */
-void 
+void
 FlashActiveWidgets(Widget w, XtPointer junk, XtPointer garbage)
 {
     _FlashActiveWidgets(global_tree_info);
@@ -268,7 +268,7 @@ GetResourceList(Widget w, XtPointer junk, XtPointer garbage)
      * No resoruces, fetch them from the client.
      */
 
-    _XEditResResetStream(stream); 
+    _XEditResResetStream(stream);
     _XEditResPut16(stream, (unsigned short) 1);
     InsertWidgetFromNode(stream, node);
     SetCommand(global_tree_info->tree_widget, LocalGetResources, NULL);
@@ -282,7 +282,7 @@ GetResourceList(Widget w, XtPointer junk, XtPointer garbage)
  */
 
 /* ARGSUSED */
-void 
+void
 DumpTreeToFile(Widget w, XtPointer junk, XtPointer garbage)
 {
     _PopupFileDialog(XtParent(w), "Enter the filename:", "",
@@ -290,24 +290,24 @@ DumpTreeToFile(Widget w, XtPointer junk, XtPointer garbage)
 }
 
 /************************************************************
- * 
+ *
  * Callbacks for the Resource Box.
  *
  ************************************************************/
 
 
 /*	Function Name: AnyChosen
- *	Description: Callback that is called when the "any" widget 
+ *	Description: Callback that is called when the "any" widget
  *                   is activated.
  *	Arguments: w - the "any" widget that activated this callback.
- *                 any_info_ptr - pointer to struct containing 
+ *                 any_info_ptr - pointer to struct containing
  *                                dot and star widgets to lock.
  *                 state_ptr - state of the any toggle.
  *	Returns: none.
  */
 
 /* ARGSUSED */
-void 
+void
 AnyChosen(Widget w, XtPointer any_info_ptr, XtPointer state_ptr)
 {
     AnyInfo * any_info = (AnyInfo *) any_info_ptr;
@@ -337,9 +337,9 @@ AnyChosen(Widget w, XtPointer any_info_ptr, XtPointer state_ptr)
 	    (*any_info->right_count)++;
     }
     else {			/* state == 0 */
-	if (any_info->left_count > 0) 
+	if (any_info->left_count > 0)
 	    any_info->left_count--;
-	if ((any_info->right_count != NULL)&&(*any_info->right_count > 0)) 
+	if ((any_info->right_count != NULL)&&(*any_info->right_count > 0))
 	    (*any_info->right_count)--;
 
 	if (any_info->left_count == 0) {
@@ -374,17 +374,17 @@ GetResourceName(ResourceBoxInfo *res_box)
 {
     XawListReturnStruct * list_info;
     char * result;
-    
+
     list_info = XawListShowCurrent(res_box->norm_list);
-    if ((list_info->list_index == XAW_LIST_NONE) && 
+    if ((list_info->list_index == XAW_LIST_NONE) &&
 	(res_box->cons_list != NULL)) {
 	list_info = XawListShowCurrent(res_box->cons_list);
     }
 
-    if (list_info->list_index == XAW_LIST_NONE) 
+    if (list_info->list_index == XAW_LIST_NONE)
 	result = "unknown";
     else
-	result = list_info->string;    
+	result = list_info->string;
 
     return(result);
 }
@@ -431,12 +431,12 @@ SetResourceString(Widget w, XtPointer node_ptr, XtPointer junk)
     char * temp, buf[BUFSIZ * 10];	/* here's hoping it's big enough. */
     NameInfo * name_node = res_box->name_info;
     Arg args[1];
-    int len;
+    Cardinal len;
 
     if ((w != NULL) && XtIsSubclass(w, toggleWidgetClass)) {
 	/*
 	 * Only set resources when toggles are activated, not when they are
-	 * deactivated. 
+	 * deactivated.
 	 */
 	if (!((Boolean)(long) junk))
 	    return;
@@ -456,13 +456,13 @@ SetResourceString(Widget w, XtPointer node_ptr, XtPointer junk)
 	if ( (temp != NULL) && !streq(temp, ANY_RADIO_DATA) ) {
 	    strcat(buf, temp);
 	    temp = (char *) XawToggleGetCurrent(name_node->next->sep_leader);
-	    if (temp == NULL) 
+	    if (temp == NULL)
 		strcat(buf, "!");
 	    else
 		strcat(buf, temp);
 	}
     }
-		
+
     strcat(buf, GetResourceName(res_box));
     len = strlen(buf) + 2; /* Leave space for ':' and '\0' */
 
@@ -476,7 +476,7 @@ SetResourceString(Widget w, XtPointer node_ptr, XtPointer junk)
 	malloc_string = XtRealloc(malloc_string, sizeof(char) * len);
 	malloc_size = len;
     }
-    
+
     strcpy(malloc_string, buf);
     strcat(malloc_string, ":");
 #ifdef notdef
@@ -486,9 +486,9 @@ SetResourceString(Widget w, XtPointer node_ptr, XtPointer junk)
     XtSetArg(args[0], XtNlabel, malloc_string);
     XtSetValues(res_box->res_label, args, ONE);
 }
-    
+
 /*	Function Name: ResourceListCallback
- *	Description: Callback functions for the resource lists.  This 
+ *	Description: Callback functions for the resource lists.  This
  *                   routine is essentialy called by the list widgets
  *                   Notify action.  If action EnableGetVal has been
  *                   invoked,  ResourceListCallback will perform a
@@ -508,7 +508,7 @@ ResourceListCallback(Widget list, XtPointer node_ptr, XtPointer junk)
     WNode * node = (WNode *) node_ptr;
     ResourceBoxInfo * res_box = node->resources->res_box;
 
-    if (list == res_box->norm_list) 
+    if (list == res_box->norm_list)
 	o_list = res_box->cons_list;
     else
 	o_list = res_box->norm_list;
@@ -555,17 +555,18 @@ _AppendResourceString(Widget w, XtPointer res_box_ptr, XtPointer filename_ptr)
     char *value_ptr;
 
     if (filename != NULL) {
-	if (global_resources.allocated_save_resources_file) 
+	if (global_resources.allocated_save_resources_file)
 	    XtFree(global_resources.save_resources_file);
 	else
 	    global_resources.allocated_save_resources_file = TRUE;
-	
+
 	global_resources.save_resources_file = XtNewString(filename);
     }
 
     if ((fp = fopen(global_resources.save_resources_file, "a+")) == NULL) {
-	sprintf(buf, "Unable to open this file for writing, would %s",
-		"you like To try again?");
+	snprintf(buf, sizeof(buf), "%s",
+                 "Unable to open this file for writing, would "
+                 "you like To try again?");
 	_PopupFileDialog(global_toplevel ,buf,
 			global_resources.save_resources_file,
 			_AppendResourceString, res_box_ptr);
@@ -595,7 +596,7 @@ _AppendResourceString(Widget w, XtPointer res_box_ptr, XtPointer filename_ptr)
 void
 SaveResource(Widget w, XtPointer res_box_ptr, XtPointer junk)
 {
-    /* 
+    /*
      * If there is no filename the ask for one, otherwise just save to
      * current file.
      */
@@ -622,7 +623,7 @@ _SetResourcesFile(Widget w, XtPointer junk, XtPointer filename_ptr)
 {
     char *filename = (char *) filename_ptr;
 
-    if (global_resources.allocated_save_resources_file) 
+    if (global_resources.allocated_save_resources_file)
 	XtFree(global_resources.save_resources_file);
     else
 	global_resources.allocated_save_resources_file = TRUE;
@@ -642,7 +643,7 @@ _SetResourcesFile(Widget w, XtPointer junk, XtPointer filename_ptr)
 void
 SetFile(Widget w, XtPointer junk, XtPointer garbage)
 {
-    /* 
+    /*
      * If there is no filename the ask for one, otherwise just save to
      * current file.
      */
@@ -655,7 +656,7 @@ SetFile(Widget w, XtPointer junk, XtPointer garbage)
 /*	Function Name: ApplyResource
  *	Description: Apply the current resource to the running application.
  *	Arguments: w - any widget in the application.
- *                 node_ptr - a pointer to the node containing 
+ *                 node_ptr - a pointer to the node containing
  *                            the current resouce box.
  *                 junk - UNUSED.
  *	Returns: none
@@ -667,7 +668,7 @@ ApplyResource(Widget w, XtPointer node_ptr, XtPointer junk)
 {
     ProtocolStream * stream = &(global_client.stream);
     ApplyResourcesInfo info;
-    WNode * node = (WNode *) node_ptr;	       
+    WNode * node = (WNode *) node_ptr;
     char * value;
     unsigned short size, i;
     long len;
@@ -694,37 +695,37 @@ ApplyResource(Widget w, XtPointer node_ptr, XtPointer junk)
      */
 
     value = GetResourceValueForSetValues(node, &size);
-    _XEditResPut16(stream, size);    
-    for (i = 0; i < size; i++) 
+    _XEditResPut16(stream, size);
+    for (i = 0; i < size; i++)
 	_XEditResPut8(stream, value[i]);
     XtFree(value);
     len = stream->current - stream->top;
 
-    /* 
-     * Insert the widget count, overriden later. 
+    /*
+     * Insert the widget count, overriden later.
      */
 
-    _XEditResPut16(stream, 0); 
+    _XEditResPut16(stream, 0);
 
     ExecuteOverAllNodes(node->tree_info->top_node,
 			CreateSetValuesCommand, (XtPointer) &info);
-    
+
     if (info.count > 0) {
 	*(stream->top + len++) = info.count >> XER_NBBY; /* Set the correct */
 	*(stream->top + len) = info.count;               /* count. */
 
 	SetCommand(node->tree_info->tree_widget, LocalSetValues, NULL);
     }
-    else 
+    else
 	SetMessage(global_screen_data.info_label,
 		   res_labels[20]);
-	
+
     XrmDestroyDatabase(info.database);
 }
 
 /*	Function Name: ObtainResource
  *	Description: Obtain the current resource from the running application.
- *	Arguments: node_ptr - a pointer to the node containing 
+ *	Arguments: node_ptr - a pointer to the node containing
  *                            the current resouce box.
  *	Returns: none
  */
@@ -735,7 +736,7 @@ ObtainResource(XtPointer node_ptr)
 {
     ProtocolStream * stream = &(global_client.stream);
     ObtainResourcesInfo info;
-    WNode * node = (WNode *) node_ptr;	       
+    WNode * node = (WNode *) node_ptr;
     char * value;
     Arg args[1];
 
@@ -753,11 +754,11 @@ ObtainResource(XtPointer node_ptr)
     _XEditResResetStream(stream);
     _XEditResPutString8(stream, info.name); /* insert name */
 
-    /* 
+    /*
      * Insert the widget count, always 1
      */
 
-    _XEditResPut16(stream, 1); 
+    _XEditResPut16(stream, 1);
 
     /*CreateGetValuesCommand(node, (XtPointer)&info);  Inserts widget */
 
@@ -836,7 +837,7 @@ CreateGetValuesCommand(WNode *node, XtPointer info_ptr)
  *	Description: Activates all widgets that match this resource.
  *	Arguments: w - UNUSED.
  *                 node_ptr - the node that owns this resource box.
- *                 junk - UNUSED. 
+ *                 junk - UNUSED.
  *	Returns: none.
  */
 
@@ -844,7 +845,7 @@ CreateGetValuesCommand(WNode *node, XtPointer info_ptr)
 void
 ActivateResourceWidgets(Widget w, XtPointer node_ptr, XtPointer junk)
 {
-    WNode * node = (WNode *) node_ptr;	       
+    WNode * node = (WNode *) node_ptr;
     ApplyResourcesInfo info;
     char * line;
     Arg args[1];
@@ -852,7 +853,7 @@ ActivateResourceWidgets(Widget w, XtPointer node_ptr, XtPointer junk)
     info.name = GetResourceName(node->resources->res_box);
     info.class = "IGNORE_ME";	/* Not currently used.  */
 
-    /* 
+    /*
      * Unused fields.
      */
 
@@ -868,7 +869,7 @@ ActivateResourceWidgets(Widget w, XtPointer node_ptr, XtPointer junk)
 
     ExecuteOverAllNodes(node->tree_info->top_node,
 			SetOnlyMatchingWidgets, (XtPointer) &info);
-    
+
     XrmDestroyDatabase(info.database);
 }
 

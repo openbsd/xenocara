@@ -128,7 +128,7 @@ Editres.Geometry:			500x568
 
 ! For the Filename popup dialog.
 
-*fileDialog*value:		
+*fileDialog*value:
 *fileDialog*allowShellResize:		True
 *fileDialog*Text.baseTranslations:	#override \n\
 	<Key>Return:		PopdownFileDialog(okay)
@@ -185,7 +185,7 @@ Editres.Geometry:			500x568
 
 *namesAndClasses*Toggle.baseTranslations: #override \n\
 	<Btn1Down>,<Btn1Up>:   set() notify()
-    
+
 
 *commandBox.skipAdjust:				True
 
@@ -208,7 +208,7 @@ Editres.Geometry:			500x568
 	:<Key>N:		Relabel(name) \n\
 	:<Key>C:		Relabel(class) \n\
 	:<Key>I:		Relabel(id) \n\
-	:<Key>W:		Relabel(window) 
+	:<Key>W:		Relabel(window)
 
 *Tree.Toggle.baseTranslations:	#override \n\
 	:<Key>space:		Select(nothing) \n\

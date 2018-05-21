@@ -28,7 +28,7 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Intrinsic.h>
 #include <X11/Xutil.h>
 
-#include <X11/Xaw/Cardinals.h>	
+#include <X11/Xaw/Cardinals.h>
 #include <X11/Xmu/CharSet.h>
 
 #include "editresP.h"
@@ -61,20 +61,20 @@ static struct  ActionValues label_values[] = {
     { "toggle", (int) ToggleLabel }
 };
 
-static void EnableGetVal ( Widget w, XEvent *event, 
+static void EnableGetVal ( Widget w, XEvent *event,
 			   String *params, Cardinal * num_params );
-static void SelectAction ( Widget w, XEvent *event, 
+static void SelectAction ( Widget w, XEvent *event,
 			   String *params, Cardinal *num_params );
-static void RelabelAction ( Widget w, XEvent *event, 
+static void RelabelAction ( Widget w, XEvent *event,
 			    String *params, Cardinal *num_params );
-static void PopdownFileDialogAction ( Widget w, XEvent *event, 
+static void PopdownFileDialogAction ( Widget w, XEvent *event,
 				      String *params, Cardinal *num_params );
-static void ActionQuit ( Widget w, XEvent *event, 
+static void ActionQuit ( Widget w, XEvent *event,
 			 String *params, Cardinal *num_params );
 static WNode * FindTreeNodeFromWidget ( Widget w );
-static Boolean CheckAndFindEntry ( String action_name, 
-				   String * params, Cardinal num_params, 
-				   struct ActionValues * table, 
+static Boolean CheckAndFindEntry ( String action_name,
+				   String * params, Cardinal num_params,
+				   struct ActionValues * table,
 				   Cardinal num_table, int * type );
 
 /*	Function Name: EnableGetVal
@@ -83,7 +83,7 @@ static Boolean CheckAndFindEntry ( String action_name,
  *      Arguments: w - any widget in the widget tree.
  *                 event - NOT USED.
  *                 params, num_params - the parameters paseed to the action
- *                                      routine. 
+ *                                      routine.
  *
  */
 
@@ -97,11 +97,11 @@ EnableGetVal(Widget w, XEvent *event, String *params, Cardinal *num_params)
 }
 
 /*	Function Name: SelectAction
- *	Description: 
+ *	Description:
  *      Arguments: w - any widget in the widget tree.
  *                 event - NOT USED.
  *                 params, num_params - the parameters paseed to the action
- *                                      routine. 
+ *                                      routine.
  *
  * params[0] - One of "nothing", "parent", "children", "ancestors",
  *                    "descendants", "invert", "all"
@@ -115,7 +115,7 @@ SelectAction(Widget w, XEvent *event, String *params, Cardinal *num_params)
     WNode * node;
     int type;
 
-    if (!CheckAndFindEntry("Select", params, *num_params, 
+    if (!CheckAndFindEntry("Select", params, *num_params,
 			   select_values, XtNumber(select_values), &type))
 	return;
 
@@ -131,7 +131,7 @@ SelectAction(Widget w, XEvent *event, String *params, Cardinal *num_params)
     default:
 	node = FindTreeNodeFromWidget(w);
 	if (node)
-	    _TreeActivateNode(node, (SelectTypes)type);	
+	    _TreeActivateNode(node, (SelectTypes)type);
 	else
 	    _TreeSelect(global_tree_info, (SelectTypes)type);
 	break;
@@ -139,11 +139,11 @@ SelectAction(Widget w, XEvent *event, String *params, Cardinal *num_params)
 }
 
 /*	Function Name: RelabelAction
- *	Description: 
+ *	Description:
  *      Arguments: w - any widget in the widget tree.
  *                 event - NOT USED.
  *                 params, num_params - the parameters paseed to the action
- *                                      routine. 
+ *                                      routine.
  *
  * params[0] - One of "name", "class", "id"
  * num_params - must be one.
@@ -156,16 +156,16 @@ RelabelAction(Widget w, XEvent *event, String *params, Cardinal *num_params)
     WNode * node;
     int type;
 
-    if (!CheckAndFindEntry("Relabel", params, *num_params, 
+    if (!CheckAndFindEntry("Relabel", params, *num_params,
 			   label_values, XtNumber(label_values), &type))
 	return;
 
-    if ((node = FindTreeNodeFromWidget(w)) == NULL) 
+    if ((node = FindTreeNodeFromWidget(w)) == NULL)
 	_TreeRelabel(global_tree_info, (LabelTypes)type);
     else {
-	PrepareToLayoutTree(global_tree_info->tree_widget); 
+	PrepareToLayoutTree(global_tree_info->tree_widget);
 	_TreeRelabelNode(node, (LabelTypes)type, FALSE);
-	LayoutTree(global_tree_info->tree_widget); 
+	LayoutTree(global_tree_info->tree_widget);
     }
 }
 
@@ -188,8 +188,7 @@ PopdownFileDialogAction(Widget w, XEvent *event,
     Boolean val;
 
     if (*num_params != 1) {
-	sprintf(buf, res_labels[2], 
-		"PopdownFileDialog");
+	snprintf(buf, sizeof(buf), res_labels[2], "PopdownFileDialog");
 
 	SetMessage(global_screen_data.info_label, buf);
 	return;
@@ -202,8 +201,7 @@ PopdownFileDialogAction(Widget w, XEvent *event,
     else if (streq(buf, "okay"))
 	val = TRUE;
     else {
-	sprintf(buf, res_labels[1],
-		"PopdownFileDialog");
+	snprintf(buf, sizeof(buf), res_labels[1], "PopdownFileDialog");
 
 	SetMessage(global_screen_data.info_label, buf);
 	return;
@@ -246,7 +244,7 @@ static XtActionsRec actions[] = {
   {"EnableGetVal",      EnableGetVal},
   {"Select",            SelectAction},
   {"SVActiveEntry",     ModifySVEntry},
-  {"Relabel",      	RelabelAction}, 
+  {"Relabel",      	RelabelAction},
   {"PopdownFileDialog", PopdownFileDialogAction},
   {"quit",              ActionQuit}
 };
@@ -255,13 +253,13 @@ void
 SetApplicationActions(XtAppContext app_con)
 {
     XtAppAddActions(app_con, actions, XtNumber(actions));
-    
+
 }
 
 
 /************************************************************
  *
- * Private functions	
+ * Private functions
  *
  ************************************************************/
 
@@ -281,34 +279,32 @@ CheckAndFindEntry(String action_name, String *params, Cardinal num_params,
 		  struct ActionValues *table, Cardinal num_table, int *type)
 {
     char buf[BUFSIZ];
-    int i;
+    Cardinal i;
 
     if (num_params != 1) {
-	sprintf(buf, res_labels[2], 
-		action_name);
+	snprintf(buf, sizeof(buf), res_labels[2], action_name);
 	SetMessage(global_screen_data.info_label, buf);
 	return(FALSE);
     }
-	
+
     XmuCopyISOLatin1Lowered(buf, params[0]);
-    for ( i = 0 ; i < num_table; i++ ) 
+    for ( i = 0 ; i < num_table; i++ )
 	if (streq(buf, table[i].name)) {
 	    *type = table[i].type;
 	    return(TRUE);
 	}
-    
-    sprintf(buf,res_labels[3], 
-	    action_name);
+
+    snprintf(buf, sizeof(buf), res_labels[3], action_name);
 
     for (i = 0; i < num_table; ) {
 	strcat(buf, table[i++].name);
-	
+
 	if (i == (num_table - 1))
 	    strcat(buf, ", or ");
 	else if (i < num_table)
 	    strcat(buf, ", ");
     }
-    
+
     SetMessage(global_screen_data.info_label, buf);
     return(FALSE);
 }
@@ -331,7 +327,7 @@ FindTreeNodeFromWidget(Widget w)
 
     ret_val = XFindContext(XtDisplay(w), (Window) w, NODE_INFO, &data_return);
 
-    if (ret_val == 0) 
+    if (ret_val == 0)
 	return((WNode *) data_return);
     return(NULL);
 }

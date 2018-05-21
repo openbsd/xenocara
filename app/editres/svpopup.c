@@ -32,10 +32,10 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Shell.h>
 
 #include <X11/Xaw/AsciiText.h>
-#include <X11/Xaw/Cardinals.h>	
-#include <X11/Xaw/Command.h>	
+#include <X11/Xaw/Cardinals.h>
+#include <X11/Xaw/Command.h>
 #include <X11/Xaw/Form.h>
-#include <X11/Xaw/Label.h>	
+#include <X11/Xaw/Label.h>
 
 #include <stdio.h>
 
@@ -69,7 +69,7 @@ PopupSetValues(Widget parent, XEvent *event)
 	return;
     }
 
-/* 
+/*
  * Check and possibly create the popup.
  */
 
@@ -94,27 +94,27 @@ PopupSetValues(Widget parent, XEvent *event)
 }
 
 /*	Function Name: ModifySVEntry
- *	Description: Action routine that can be bound to the set values 
- *                   dialog box's Text Widget that will send input to the 
+ *	Description: Action routine that can be bound to the set values
+ *                   dialog box's Text Widget that will send input to the
  *                   field specified.
- *	Arguments:   (Standard Action Routine args) 
+ *	Arguments:   (Standard Action Routine args)
  *	Returns:     none.
  */
 
 /* ARGSUSED */
-void 
+void
 ModifySVEntry(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     Widget new, old;
     char msg[BUFSIZ];
-    
+
     if (*num_params != 1) {
-	strcpy(msg, 
+	strcpy(msg,
 	       res_labels[21]);
 	SetMessage(global_screen_data.info_label, msg);
 	return;
     }
-    
+
     switch (params[0][0]) {
     case 'r':
     case 'R':
@@ -127,11 +127,11 @@ ModifySVEntry(Widget w, XEvent *event, String *params, Cardinal *num_params)
 	old = global_screen_data.res_text;
 	break;
     default:
-	sprintf(msg, res_labels[22]);
+	snprintf(msg, sizeof(msg), res_labels[22]);
 	SetMessage(global_screen_data.info_label, msg);
 	return;
     }
-    
+
     _SetField(new, old);
 }
 
@@ -152,26 +152,26 @@ _SetField(Widget new, Widget old)
 {
     Arg args[2];
     Pixel new_border, old_border, old_bg;
-    
+
     if (!XtIsSensitive(new)) {
 #ifdef XKB
 	/* Don't set field to an inactive Widget. */
-	XkbStdBell(XtDisplay(old), XtWindow(new), 0, XkbBI_InvalidLocation); 
+	XkbStdBell(XtDisplay(old), XtWindow(new), 0, XkbBI_InvalidLocation);
 #else
 	XBell(XtDisplay(old), 0); /* Don't set field to an inactive Widget. */
 #endif
 	return;
     }
-    
-    XtSetKeyboardFocus(XtParent(new), new); 
-    
+
+    XtSetKeyboardFocus(XtParent(new), new);
+
     XtSetArg(args[0], XtNborderColor, &old_border);
     XtSetArg(args[1], XtNbackground, &old_bg);
     XtGetValues(new, args, TWO);
-    
+
     XtSetArg(args[0], XtNborderColor, &new_border);
     XtGetValues(old, args, ONE);
-    
+
     if (old_border != old_bg)	/* Colors are already correct, return. */
 	return;
 
@@ -196,12 +196,12 @@ CreateSetValuesPopup(Widget parent, ScreenData *scr_data)
     Widget res_label;
     Arg args[10];
     Cardinal num_args;
-    
-    scr_data->set_values_popup = XtCreatePopupShell("setValuesPopup", 
-						    transientShellWidgetClass, 
+
+    scr_data->set_values_popup = XtCreatePopupShell("setValuesPopup",
+						    transientShellWidgetClass,
 						    parent, NULL, ZERO);
 
-    form = XtCreateManagedWidget("form", formWidgetClass, 
+    form = XtCreateManagedWidget("form", formWidgetClass,
 				 scr_data->set_values_popup, NULL, ZERO);
 
     num_args = 0;
@@ -217,7 +217,7 @@ CreateSetValuesPopup(Widget parent, ScreenData *scr_data)
     num_args = 0;
     XtSetArg(args[num_args], XtNfromVert, label); num_args++;
     XtSetArg(args[num_args], XtNfromHoriz, res_label); num_args++;
-    scr_data->res_text = XtCreateManagedWidget("resourceText", 
+    scr_data->res_text = XtCreateManagedWidget("resourceText",
 						  asciiTextWidgetClass,
 						  form, args, num_args);
 
@@ -229,13 +229,13 @@ CreateSetValuesPopup(Widget parent, ScreenData *scr_data)
     num_args = 0;
     XtSetArg(args[num_args], XtNfromHoriz, res_label); num_args++;
     XtSetArg(args[num_args], XtNfromVert, scr_data->res_text); num_args++;
-    scr_data->val_text = XtCreateManagedWidget("valueText", 
+    scr_data->val_text = XtCreateManagedWidget("valueText",
 						  asciiTextWidgetClass,
 						  form, args, num_args);
-  
+
     num_args = 0;
     XtSetArg(args[num_args], XtNfromVert, scr_data->val_text); num_args++;
-    do_it = XtCreateManagedWidget("setValues", commandWidgetClass, 
+    do_it = XtCreateManagedWidget("setValues", commandWidgetClass,
 					  form, args, num_args);
 
     num_args = 0;
@@ -287,20 +287,20 @@ DoSetValues(Widget w, XtPointer junk, XtPointer garbage)
 		   res_labels[23]);
 	return;
     }
-		
+
     XtSetArg(args[0], XtNstring, &res_name);
     XtGetValues(global_screen_data.res_text, args, ONE);
 
     XtSetArg(args[0], XtNstring, &res_value);
     XtGetValues(global_screen_data.val_text, args, ONE);
-    
+
     _XEditResResetStream(stream);
     _XEditResPutString8(stream, res_name);
     _XEditResPutString8(stream, XtRString);
     _XEditResPutString8(stream, res_value);
     _XEditResPut16(stream, global_tree_info->num_nodes);
 
-    for (i = 0; i < global_tree_info->num_nodes; i++) 
+    for (i = 0; i < global_tree_info->num_nodes; i++)
 	InsertWidgetFromNode(stream, global_tree_info->active_nodes[i]);
 
     SetCommand(w, LocalSetValues, NULL);
@@ -317,5 +317,5 @@ DoSetValues(Widget w, XtPointer junk, XtPointer garbage)
 static void
 CancelSetValues(Widget w, XtPointer junk, XtPointer garbage)
 {
-    XtPopdown(XtParent(XtParent(w))); 
+    XtPopdown(XtParent(XtParent(w)));
 }

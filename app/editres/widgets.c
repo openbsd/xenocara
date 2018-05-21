@@ -32,20 +32,20 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/StringDefs.h>	/* Get standard string definations. */
 
 #include <X11/Xaw/AsciiText.h>
-#include <X11/Xaw/Box.h>	
-#include <X11/Xaw/Cardinals.h>	
-#include <X11/Xaw/Label.h>	
-#include <X11/Xaw/List.h>	
-#include <X11/Xaw/MenuButton.h>	
-#include <X11/Xaw/Paned.h>	
-#include <X11/Xaw/Panner.h>	
-#include <X11/Xaw/Porthole.h>	
-#include <X11/Xaw/SmeBSB.h>	
-#include <X11/Xaw/SmeLine.h>	
-#include <X11/Xaw/SimpleMenu.h>	
-#include <X11/Xaw/Toggle.h>	
+#include <X11/Xaw/Box.h>
+#include <X11/Xaw/Cardinals.h>
+#include <X11/Xaw/Label.h>
+#include <X11/Xaw/List.h>
+#include <X11/Xaw/MenuButton.h>
+#include <X11/Xaw/Paned.h>
+#include <X11/Xaw/Panner.h>
+#include <X11/Xaw/Porthole.h>
+#include <X11/Xaw/SmeBSB.h>
+#include <X11/Xaw/SmeLine.h>
+#include <X11/Xaw/SimpleMenu.h>
+#include <X11/Xaw/Toggle.h>
 #include <X11/Xaw/Tree.h>
-#include <X11/Xaw/Viewport.h>	
+#include <X11/Xaw/Viewport.h>
 
 #include "editresP.h"
 
@@ -60,10 +60,10 @@ static void CreateCommandMenu ( Widget parent, String toolkit );
 static void CreateTreeCommandMenu ( Widget parent, String toolkit );
 static void CreateResourceNameForm ( Widget parent, WNode * node );
 static void SetToggleGroupLeaders ( WNode * node );
-static void MakeBoxLookNice ( Widget dot, Widget star, Widget any, 
-			      Widget single, Widget name, Widget class, 
+static void MakeBoxLookNice ( Widget dot, Widget star, Widget any,
+			      Widget single, Widget name, Widget class,
 			      int endbox );
-static void CreateLists ( Widget parent, WNode * node, char **names, 
+static void CreateLists ( Widget parent, WNode * node, char **names,
 			  char **cons_names );
 static void CreateValueWidget ( Widget parent, WNode * node );
 static void PopupOnNode ( WNode * node, Widget shell );
@@ -133,21 +133,21 @@ static XtResource resources[] = {
 
 #undef Offset
 
-void 
+void
 RebuildMenusAndLabel(String toolkit)
 {
   if (strcmp(global_effective_toolkit, toolkit)) {
     CreateCommandMenu(box, toolkit);
     CreateTreeCommandMenu(box, toolkit);
     XtDestroyWidget(global_screen_data.info_label);
-    global_screen_data.info_label = XtCreateManagedWidget(toolkit, 
+    global_screen_data.info_label = XtCreateManagedWidget(toolkit,
 							  labelWidgetClass,
 							  hPane, NULL, ZERO);
     /* get the new toolkit label application resources for info_label */
     XtGetApplicationResources(global_screen_data.info_label,
 			      res_labels, resources,
 			      XtNumber(resources), NULL, 0);
-				  
+
     global_effective_toolkit = toolkit;
   }
 }
@@ -160,7 +160,7 @@ RebuildMenusAndLabel(String toolkit)
  *      Returns: none.
  */
 
-void 
+void
 BuildWidgetTree(Widget parent)
 {
     Widget paned, porthole, panner;
@@ -177,9 +177,9 @@ BuildWidgetTree(Widget parent)
  * Allow the panner and porthole to talk to each other.
  */
 
-    XtAddCallback(porthole, 
+    XtAddCallback(porthole,
                   XtNreportCallback, PortholeCallback, (XtPointer) panner);
-    XtAddCallback(panner, 
+    XtAddCallback(panner,
                   XtNreportCallback, PannerCallback, (XtPointer) porthole);
 
     global_tree_parent = porthole;
@@ -191,7 +191,7 @@ BuildWidgetTree(Widget parent)
 /*	Function Name: CreateTopArea
  *	Description: Creates the top part of the display
  *	Arguments: parent - widget to put this menu bar into.
- *	Returns: none. 
+ *	Returns: none.
  */
 
 
@@ -208,10 +208,10 @@ CreateTopArea(Widget parent)
     hPane = XtCreateManagedWidget("hPane",panedWidgetClass, parent, NULL,ZERO);
 
     {
-	panner = XtCreateManagedWidget("panner", pannerWidgetClass, 
+	panner = XtCreateManagedWidget("panner", pannerWidgetClass,
 				       hPane, NULL, ZERO);
 
-	global_screen_data.info_label = XtCreateManagedWidget("xt", 
+	global_screen_data.info_label = XtCreateManagedWidget("xt",
 							     labelWidgetClass,
 							     hPane, NULL,ZERO);
 
@@ -219,7 +219,7 @@ CreateTopArea(Widget parent)
 	XtGetApplicationResources(global_screen_data.info_label,
 				  res_labels, resources,
 				  XtNumber(resources), NULL, 0);
-				  
+
     }
 
     return(panner);
@@ -237,7 +237,7 @@ CreateTopArea(Widget parent)
 void
 SetEntriesSensitive(Widget *entries, int num, Boolean sensitive)
 {
-int i; for (i=0; i<num; i++) XtSetSensitive(entries[i], sensitive); 
+int i; for (i=0; i<num; i++) XtSetSensitive(entries[i], sensitive);
 }
 
 
@@ -260,7 +260,7 @@ CreateCommandMenu(Widget parent, String toolkit)
     Arg args[1];
 
     if (cmenu) { XtDestroyWidget(cmenu); CM_set_insensitive = False; }
-    else 
+    else
       cbutton = XtCreateManagedWidget("commands", menuButtonWidgetClass,
 				      parent, NULL, ZERO);
 
@@ -270,7 +270,7 @@ CreateCommandMenu(Widget parent, String toolkit)
 
     cmenu = XtCreatePopupShell(toolkit, simpleMenuWidgetClass, cbutton,
 			       NULL, ZERO);
-    
+
     CM_entries[0] = XtCreateManagedWidget("sendTree", smeBSBObjectClass,cmenu,
 					   NULL, ZERO);
     XtAddCallback(CM_entries[0], XtNcallback, SendTree, (XtPointer) TRUE);
@@ -279,19 +279,19 @@ CreateCommandMenu(Widget parent, String toolkit)
 					 NULL, ZERO);
     XtAddCallback(CM_entries[1], XtNcallback, SendTree, (XtPointer) FALSE);
 
-    CM_entries[2] = XtCreateManagedWidget("dumpTreeToFile", 
+    CM_entries[2] = XtCreateManagedWidget("dumpTreeToFile",
 					   smeBSBObjectClass,cmenu,
 					   NULL, ZERO);
     XtAddCallback(CM_entries[2], XtNcallback, DumpTreeToFile, NULL);
 
     CM_entries[3] = XtCreateManagedWidget("line", smeLineObjectClass, cmenu,
 				  NULL, ZERO);
-    CM_entries[4]= XtCreateManagedWidget("getResourceList", 
+    CM_entries[4]= XtCreateManagedWidget("getResourceList",
 					  smeBSBObjectClass,cmenu,
 					  NULL, ZERO);
     XtAddCallback(CM_entries[4], XtNcallback, GetResourceList, NULL);
 
-    CM_entries[5] = XtCreateManagedWidget("setValues", smeBSBObjectClass, 
+    CM_entries[5] = XtCreateManagedWidget("setValues", smeBSBObjectClass,
 					   cmenu,
 					   NULL, ZERO);
     XtAddCallback(CM_entries[5], XtNcallback, InitSetValues, NULL);
@@ -303,7 +303,7 @@ CreateCommandMenu(Widget parent, String toolkit)
 					   NULL, ZERO);
     XtAddCallback(CM_entries[7], XtNcallback, Quit, NULL);
 
-    if (CM_set_insensitive) 
+    if (CM_set_insensitive)
       SetEntriesSensitive(&CM_entries[CM_OFFSET], CM_NUM, False);
 }
 
@@ -395,7 +395,7 @@ CreateTreeCommandMenu(Widget parent, String toolkit)
 
 	TM_entries[i] = XtCreateManagedWidget(tree_menu[i].name, class, tmenu,
 				      NULL, ZERO);
-	if (func != NULL) 
+	if (func != NULL)
 	    XtAddCallback(TM_entries[i], XtNcallback, func,tree_menu[i].data);
     }
     if (TM_set_insensitive) SetEntriesSensitive(&TM_entries[TM_OFFSET],
@@ -438,9 +438,9 @@ void
 LayoutTree(Widget tree)
 {
     Arg args[1];
-    
+
     XawTreeForceLayout(tree);
-    XtMapWidget(tree); 
+    XtMapWidget(tree);
 
     XtSetArg(args[0], XtNbackgroundPixmap, old_pixmap);
     XtSetValues(XtParent(tree), args, ONE);
@@ -458,8 +458,8 @@ LayoutTree(Widget tree)
  *	Description: Creates the widgets that make up the resource box.
  *	Arguments: node - the widget node.
  *                 names - the list of names that make up the normal resources.
- *                 cons_names - the list of names that make up 
- *                              the constraint resources. 
+ *                 cons_names - the list of names that make up
+ *                              the constraint resources.
  *	Returns: none.
  */
 
@@ -483,16 +483,16 @@ CreateResourceBoxWidgets(WNode *node, char **names, char **cons_names)
     XtAddCallback(res_box->shell, XtNdestroyCallback,
 		  FreeResBox, (XtPointer) node);
 
-    pane = XtCreateManagedWidget("pane", panedWidgetClass, 
+    pane = XtCreateManagedWidget("pane", panedWidgetClass,
 				 res_box->shell, NULL, ZERO);
 
     viewport = XtCreateManagedWidget("mainViewport", viewportWidgetClass,
 				     pane, NULL, 0);
-    pane_child = XtCreateManagedWidget("pane", panedWidgetClass, 
+    pane_child = XtCreateManagedWidget("pane", panedWidgetClass,
 				       viewport, NULL, ZERO);
 
-    res_box->res_label = XtCreateManagedWidget("resourceLabel", 
-					       labelWidgetClass, 
+    res_box->res_label = XtCreateManagedWidget("resourceLabel",
+					       labelWidgetClass,
 					       pane_child, NULL, ZERO);
 
     CreateResourceNameForm(pane_child, node);
@@ -565,9 +565,9 @@ CreateResourceNameForm(Widget parent, WNode *node)
 	num_args = 0;
 	XtSetArg(args[num_args], XtNfromHoriz, name); num_args++;
 	XtSetArg(args[num_args], XtNradioData, "."); num_args++;
-	dot = XtCreateManagedWidget("dot", toggleWidgetClass, 
+	dot = XtCreateManagedWidget("dot", toggleWidgetClass,
 				    form, args, num_args);
-	XtAddCallback(dot, XtNcallback, 
+	XtAddCallback(dot, XtNcallback,
 		      ActivateWidgetsAndSetResourceString,(XtPointer) node);
 
 	num_args = 0;
@@ -575,9 +575,9 @@ CreateResourceNameForm(Widget parent, WNode *node)
 	XtSetArg(args[num_args], XtNfromVert, dot); num_args++;
 	XtSetArg(args[num_args], XtNradioGroup, dot); num_args++;
 	XtSetArg(args[num_args], XtNradioData, "*"); num_args++;
-	star = XtCreateManagedWidget("star", toggleWidgetClass, 
+	star = XtCreateManagedWidget("star", toggleWidgetClass,
 				     form, args, num_args);
-	XtAddCallback(star,XtNcallback, 
+	XtAddCallback(star,XtNcallback,
 		      ActivateWidgetsAndSetResourceString, (XtPointer) node);
 
 	if (name_info != NULL) {
@@ -585,7 +585,7 @@ CreateResourceNameForm(Widget parent, WNode *node)
 	    name_info = name_info->next;
 	}
 	else
-	    res_box->name_info = 
+	    res_box->name_info =
 		     name_info = (NameInfo *) XtMalloc(sizeof(NameInfo));
 
 	name_info->sep_leader = dot;
@@ -597,10 +597,10 @@ CreateResourceNameForm(Widget parent, WNode *node)
 	    new_info->left_dot = dot;
 	    new_info->left_star = star;
 	    new_info->left_count = 0;
-	    if (old_info != NULL) 
+	    if (old_info != NULL)
 		old_info->right_count = &(new_info->left_count);
 	}
-	else if (old_info != NULL) 
+	else if (old_info != NULL)
 	    old_info->right_count = NULL;
 
 	if (old_info != NULL) {
@@ -608,7 +608,7 @@ CreateResourceNameForm(Widget parent, WNode *node)
 	    old_info->right_star = star;
 
 	    XtAddCallback(any, XtNcallback, AnyChosen, (XtPointer) old_info);
-	    XtAddCallback(any, XtNdestroyCallback, 
+	    XtAddCallback(any, XtNdestroyCallback,
 			  FreeClientData, (XtPointer) old_info);
 	}
 
@@ -621,7 +621,7 @@ CreateResourceNameForm(Widget parent, WNode *node)
 	XtSetArg(args[num_args], XtNfromHoriz, dot); num_args++;
 	XtSetArg(args[num_args], XtNlabel, names[i]); num_args++;
 	XtSetArg(args[num_args], XtNradioData, names[i]); num_args++;
-	name = XtCreateManagedWidget("name", toggleWidgetClass, 
+	name = XtCreateManagedWidget("name", toggleWidgetClass,
 				     form, args, num_args);
 	XtAddCallback(name,XtNcallback,
 		      ActivateWidgetsAndSetResourceString,(XtPointer) node);
@@ -632,7 +632,7 @@ CreateResourceNameForm(Widget parent, WNode *node)
 	XtSetArg(args[num_args], XtNlabel, classes[i]); num_args++;
 	XtSetArg(args[num_args], XtNradioGroup, name); num_args++;
 	XtSetArg(args[num_args], XtNradioData, classes[i]); num_args++;
-	class = XtCreateManagedWidget("class", toggleWidgetClass, 
+	class = XtCreateManagedWidget("class", toggleWidgetClass,
 				      form,args,num_args);
 	XtAddCallback(class, XtNcallback,
 		      ActivateWidgetsAndSetResourceString,(XtPointer) node);
@@ -642,7 +642,7 @@ CreateResourceNameForm(Widget parent, WNode *node)
 	XtSetArg(args[num_args], XtNfromVert, class); num_args++;
 	XtSetArg(args[num_args], XtNradioData, "?"); num_args++;
 	XtSetArg(args[num_args], XtNradioGroup, name); num_args++;
-	single = XtCreateManagedWidget("single", toggleWidgetClass, 
+	single = XtCreateManagedWidget("single", toggleWidgetClass,
 				       form, args, num_args);
 	XtAddCallback(single,XtNcallback,
 		      ActivateWidgetsAndSetResourceString,(XtPointer) node);
@@ -652,7 +652,7 @@ CreateResourceNameForm(Widget parent, WNode *node)
 	XtSetArg(args[num_args], XtNfromVert, single); num_args++;
 	XtSetArg(args[num_args], XtNradioGroup, name); num_args++;
 	XtSetArg(args[num_args], XtNradioData, ANY_RADIO_DATA); num_args++;
-	any = XtCreateManagedWidget("any", toggleWidgetClass, 
+	any = XtCreateManagedWidget("any", toggleWidgetClass,
 				    form, args, num_args);
 
 	name_info->name_leader = name;
@@ -703,7 +703,7 @@ SetToggleGroupLeaders(WNode *node)
  *                                     name and class of this object.
  *	Returns: none.
  */
- 
+
 static void
 MakeBoxLookNice(Widget dot, Widget star, Widget any, Widget single,
 		Widget name, Widget class, int endbox)
@@ -736,7 +736,7 @@ MakeBoxLookNice(Widget dot, Widget star, Widget any, Widget single,
     XtSetArg(args[num_args], XtNhorizDistance, &(h_dist[2])); num_args++;
     XtSetArg(args[num_args], XtNwidth, &any_width); num_args++;
     XtGetValues(any, args, num_args);
-    
+
     dot_star_width = (width_1 > width_2) ? width_1 : width_2;
     for (i = 1 ; i < MAX_HDIST; i++) {
 	if (h_dist[i] > h_dist[0]) h_dist[0] = h_dist[i];
@@ -745,11 +745,11 @@ MakeBoxLookNice(Widget dot, Widget star, Widget any, Widget single,
     num_args = 0;
     XtSetArg(args[num_args], XtNhorizDistance, h_dist[0]); num_args++;
     XtSetValues(any, args, num_args);
-    
+
     /*
      * Add a new arg, and continue...
      */
-    XtSetArg(args[num_args], XtNwidth, dot_star_width); num_args++; 
+    XtSetArg(args[num_args], XtNwidth, dot_star_width); num_args++;
     XtSetValues(star, args, num_args);
     XtSetValues(dot, args, num_args);
 
@@ -793,20 +793,20 @@ MakeBoxLookNice(Widget dot, Widget star, Widget any, Widget single,
     }
 
     XtSetArg(args[num_args], XtNwidth, any_width); num_args++;
-    XtSetValues(any, args, num_args);	
+    XtSetValues(any, args, num_args);
 
     num_args = 0;
     XtSetArg(args[num_args], XtNwidth, name_class_width); num_args++;
     XtSetArg(args[num_args], XtNhorizDistance, h_dist[0]); num_args++;
-    XtSetValues(name, args, num_args);	
-    XtSetValues(class, args, num_args);	
-    XtSetValues(single, args, num_args);	
+    XtSetValues(name, args, num_args);
+    XtSetValues(class, args, num_args);
+    XtSetValues(single, args, num_args);
 }
 
 
 
 /*	Function Name: CreateLists
- *	Description: Creates the list widgets for the normal and constraint 
+ *	Description: Creates the list widgets for the normal and constraint
  *                   resources
  *	Arguments: parent - parent of the lists.
  *                 node - The widget node containing this res box.
@@ -824,9 +824,9 @@ CreateLists(Widget parent, WNode *node, char **names, char **cons_names)
     ResourceBoxInfo * res_box = node->resources->res_box;
     Arg args[3];
 
-    (void) XtCreateManagedWidget("namesLabel", labelWidgetClass, 
+    (void) XtCreateManagedWidget("namesLabel", labelWidgetClass,
 				 parent, NULL, ZERO);
-    
+
     num_args = 0;
     /* if the first list item is the widget name we want an empty
      * list.
@@ -839,30 +839,30 @@ CreateLists(Widget parent, WNode *node, char **names, char **cons_names)
     else { XtSetArg(args[num_args], XtNlist, names); num_args++; }
     viewport = XtCreateManagedWidget("normalViewport", viewportWidgetClass,
 				     parent, NULL, 0);
-    res_box->norm_list = XtCreateManagedWidget("namesList", listWidgetClass, 
+    res_box->norm_list = XtCreateManagedWidget("namesList", listWidgetClass,
 				      viewport, args, num_args);
-    XtAddCallback(res_box->norm_list, XtNcallback, 
+    XtAddCallback(res_box->norm_list, XtNcallback,
 		  ResourceListCallback, (XtPointer) node);
-    XtAddCallback(res_box->norm_list, XtNdestroyCallback, 
+    XtAddCallback(res_box->norm_list, XtNdestroyCallback,
 		  FreeClientData, (XtPointer) names);
 
     if (cons_names != NULL) {
-	(void) XtCreateManagedWidget("constraintLabel", labelWidgetClass, 
+	(void) XtCreateManagedWidget("constraintLabel", labelWidgetClass,
 				     parent, NULL, ZERO);
-	
+
 	num_args = 0;
-	XtSetArg(args[num_args], XtNlist, cons_names); num_args++;	
+	XtSetArg(args[num_args], XtNlist, cons_names); num_args++;
 	viewport = XtCreateManagedWidget("constraintViewport", viewportWidgetClass,
 					 parent, NULL, 0);
-	res_box->cons_list = XtCreateManagedWidget("constraintList", 
-						   listWidgetClass, 
+	res_box->cons_list = XtCreateManagedWidget("constraintList",
+						   listWidgetClass,
 						   viewport, args, num_args);
-	XtAddCallback(res_box->cons_list, XtNcallback, 
+	XtAddCallback(res_box->cons_list, XtNcallback,
 		      ResourceListCallback, (XtPointer) node);
-	XtAddCallback(res_box->cons_list, XtNdestroyCallback, 
+	XtAddCallback(res_box->cons_list, XtNdestroyCallback,
 		      FreeClientData, (XtPointer) cons_names);
     }
-    else 
+    else
 	res_box->cons_list = NULL;
 }
 
@@ -880,7 +880,7 @@ CreateValueWidget(Widget parent, WNode *node)
     Cardinal num_args;
     Arg args[10];
     ResourceBoxInfo * res_box = node->resources->res_box;
-    
+
     form = XtCreateManagedWidget("valueForm", formWidgetClass,
 				 parent, NULL, ZERO);
 
@@ -889,7 +889,7 @@ CreateValueWidget(Widget parent, WNode *node)
     XtSetArg(args[num_args], XtNright, XawChainLeft); num_args++;
     XtSetArg(args[num_args], XtNtop, XawChainTop); num_args++;
     XtSetArg(args[num_args], XtNbottom, XawChainBottom); num_args++;
-    label = XtCreateManagedWidget("valueLabel", labelWidgetClass, 
+    label = XtCreateManagedWidget("valueLabel", labelWidgetClass,
 				 form, args, num_args);
 
     num_args = 0;
@@ -898,8 +898,8 @@ CreateValueWidget(Widget parent, WNode *node)
     XtSetArg(args[num_args], XtNright, XawChainRight); num_args++;
     XtSetArg(args[num_args], XtNtop, XawChainTop); num_args++;
     XtSetArg(args[num_args], XtNbottom, XawChainBottom); num_args++;
-    res_box->value_wid = XtCreateManagedWidget("valueText", 
-					       asciiTextWidgetClass, 
+    res_box->value_wid = XtCreateManagedWidget("valueText",
+					       asciiTextWidgetClass,
 					       form, args, num_args);
 #ifdef notdef
     XtAddCallback(XawTextGetSource(res_box->value_wid), XtNcallback,
@@ -929,10 +929,10 @@ PopupOnNode(WNode *node, Widget shell)
     XtSetArg(args[num_args], XtNheight, &height); num_args++;
     XtSetArg(args[num_args], XtNborderWidth, &bw); num_args++;
     XtGetValues(node->widget, args, num_args);
-    XtTranslateCoords(node->widget, 
+    XtTranslateCoords(node->widget,
 		      (Position) (width/2 + bw), (Position) (height/2 + bw),
 		      &x, &y);
-    
+
     XtOverrideTranslations
       (shell, XtParseTranslationTable ("<Message>WM_PROTOCOLS: quit()"));
     XtRealizeWidget(shell);
@@ -954,7 +954,7 @@ PopupOnNode(WNode *node, Widget shell)
     max_loc = HeightOfScreen(XtScreen(shell)) - (Position) (height + 2 * bw);
     if (y > max_loc)
 	y = max_loc;
-    if (y < 0) 
+    if (y < 0)
 	y = 0;
 
     num_args = 0;
@@ -1000,7 +1000,7 @@ FreeResBox(Widget w, XtPointer ptr, XtPointer junk)
     NameInfo *old_name, *name = node->resources->res_box->name_info;
 
     global_resource_box_up = FALSE;
-    
+
     XtFree((XtPointer) node->resources->res_box);
     node->resources->res_box = NULL;
 
@@ -1008,8 +1008,8 @@ FreeResBox(Widget w, XtPointer ptr, XtPointer junk)
 	old_name = name;
 	name = name->next;
 	XtFree((XtPointer) old_name);
-    } 
+    }
 }
 
 
-    
+

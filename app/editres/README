@@ -1,6 +1,14 @@
+Editres is a tool that allows users and application developers to view
+the full widget hierarchy of any Xt Toolkit application that speaks the
+Editres protocol.  In addition, editres will help the user construct
+resource specifications, allow the user to apply the resource to
+the application and view the results dynamically.  Once the user is
+happy with a resource specification editres will append the resource
+string to the user's X Resources file.
 
-		  Instructions for building Editres.
+For more information on editres usage, see:
 
+	http://www.rahul.net/kenton/editres.html
 
 Editres depends on the _EresInsert<something> and
 _EresRetrieve<something> routines that are are implemented and used by

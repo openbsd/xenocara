@@ -325,6 +325,8 @@ the widgets which compose \fIeditres\fP.  In the notation below,
 indentation indicates hierarchical structure.  The widget class name
 is given first, followed by the widget instance name.
 .sp
+.\" Default tab stops will work for this display,
+.\" which allows us to avoid spurious a warning duriing XML upconversion.
 .nf
 .TA .5i 1.0i 1.5i 2.0i
 .ta .5i 1.0i 1.5i 2.0i

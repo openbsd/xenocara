@@ -30,19 +30,19 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Shell.h>
 #include <stdio.h>
 
-#include <X11/Xaw/Cardinals.h>	
+#include <X11/Xaw/Cardinals.h>
 
 #include "editresP.h"
 
 /*
- * Local function definitions 
+ * Local function definitions
  */
-static void AddToFlashList ( TreeInfo * tree_info, GetGeomInfo * geom_info, 
+static void AddToFlashList ( TreeInfo * tree_info, GetGeomInfo * geom_info,
 			     char ** errors );
-static void _AddToFlashList ( TreeInfo * tree_info, char ** errors, 
-			      WNode * node, int x, int y, unsigned int width, 
+static void _AddToFlashList ( TreeInfo * tree_info, char ** errors,
+			      WNode * node, int x, int y, unsigned int width,
 			      unsigned int height );
-static void CreateFlashWidget ( TreeInfo * tree_info, int x, int y, 
+static void CreateFlashWidget ( TreeInfo * tree_info, int x, int y,
 				unsigned int width, unsigned int height );
 static void FlashWidgets ( TreeInfo * tree_info );
 static void FlashWidgetsOn ( XtPointer info_ptr, XtIntervalId * id );
@@ -55,7 +55,7 @@ static void FlashWidgetsCleanup ( XtPointer info_ptr, XtIntervalId * id );
  *	Returns: none.
  */
 
-void 
+void
 _FindWidget(Widget w)
 {
     char msg[BUFSIZ];
@@ -63,15 +63,15 @@ _FindWidget(Widget w)
     Window win;
     int x, y;			/* location of event in root coordinates. */
 
-    sprintf(msg, res_labels[14]);
+    snprintf(msg, sizeof(msg), res_labels[14]);
 
     SetMessage(global_screen_data.info_label, msg);
 
     if ( (win = GetClientWindow(w, &x, &y)) != None) {
 	node = FindWidgetFromWindow(global_tree_info, win);
 	if (node != NULL) {
-	    ProtocolStream * stream = &(global_client.stream);	    
-	    
+	    ProtocolStream * stream = &(global_client.stream);
+
 	    _XEditResResetStream(stream);
 	    InsertWidgetFromNode(stream, node);
 	    _XEditResPut16(stream, (short) x);
@@ -81,7 +81,7 @@ _FindWidget(Widget w)
 	}
     }
 
-    SetMessage(global_screen_data.info_label, 
+    SetMessage(global_screen_data.info_label,
       res_labels[15]);
 }
 
@@ -103,16 +103,16 @@ DisplayChild(Event *event)
 		    find_event->widgets.num_widgets);
 
     if (node == NULL) {
-	sprintf(msg, res_labels[13]);
+	snprintf(msg, sizeof(msg), res_labels[13]);
 	SetMessage(global_screen_data.info_label, msg);
-	return;	
+	return;
     }
 
     SetAndCenterTreeNode(node);
 
     node = node->tree_info->top_node;
 
-    sprintf(msg, res_labels[12], node->name, node->class);
+    snprintf(msg, sizeof(msg), res_labels[12], node->name, node->class);
     SetMessage(global_screen_data.info_label, msg);
 
     _FlashActiveWidgets(global_tree_info);
@@ -127,7 +127,7 @@ DisplayChild(Event *event)
 void
 _FlashActiveWidgets(TreeInfo *tree_info)
 {
-    int i;
+    Cardinal i;
     ProtocolStream * stream = &(global_client.stream);
 
     if (tree_info == NULL) {
@@ -140,14 +140,14 @@ _FlashActiveWidgets(TreeInfo *tree_info)
 	SetMessage(global_screen_data.info_label,res_labels[18]);
 	return;
     }
-	
-    _XEditResResetStream(stream); 
+
+    _XEditResResetStream(stream);
     /*
-     * Insert the number of widgets. 
+     * Insert the number of widgets.
      */
     _XEditResPut16(stream, (unsigned short) tree_info->num_nodes);
 
-    for (i = 0; i < tree_info->num_nodes; i++) 
+    for (i = 0; i < tree_info->num_nodes; i++)
 	InsertWidgetFromNode(stream, global_tree_info->active_nodes[i]);
 
     SetCommand(tree_info->tree_widget, LocalFlashWidget, NULL);
@@ -167,7 +167,7 @@ HandleFlashWidget(Event *event)
     char * errors = NULL;
     int i;
 
-    for (i = 0; i < (int)geom_event->num_entries; i++) 
+    for (i = 0; i < (int)geom_event->num_entries; i++)
 	AddToFlashList(global_tree_info, geom_event->info + i, &errors);
 
     FlashWidgets(global_tree_info);
@@ -189,30 +189,31 @@ AddToFlashList(TreeInfo *tree_info, GetGeomInfo *geom_info, char **errors)
     WNode * node;
     char buf[BUFSIZ];
 
-    node = FindNode(tree_info->top_node, 
+    node = FindNode(tree_info->top_node,
 		    geom_info->widgets.ids, geom_info->widgets.num_widgets);
 
     if (node == NULL) {
-	sprintf(buf, "Editres Internal Error: Unable to FindNode.\n");
-	AddString(errors, buf); 
-	return;	
-    }
-
-    if (geom_info->error) {
-	AddString(errors, geom_info->message); 
-	return;	
-    }
-
-    if (!geom_info->visable) {
-	sprintf(buf, "%s(0x%lx) - This widget is not mapped\n",
-		node->name, node->id);
-	AddString(errors, buf); 
+	snprintf(buf, sizeof(buf),
+                 "Editres Internal Error: Unable to FindNode.\n");
+	AddString(errors, buf);
 	return;
     }
 
-    _AddToFlashList(tree_info, errors, node, 
-		    geom_info->x, geom_info->y, 
-		    geom_info->width + geom_info->border_width, 
+    if (geom_info->error) {
+	AddString(errors, geom_info->message);
+	return;
+    }
+
+    if (!geom_info->visable) {
+	snprintf(buf, sizeof(buf), "%s(0x%lx) - This widget is not mapped\n",
+		node->name, node->id);
+	AddString(errors, buf);
+	return;
+    }
+
+    _AddToFlashList(tree_info, errors, node,
+		    geom_info->x, geom_info->y,
+		    geom_info->width + geom_info->border_width,
 		    geom_info->height + geom_info->border_width);
 }
 
@@ -239,14 +240,16 @@ _AddToFlashList(TreeInfo *tree_info, char **errors, WNode *node,
     if (window == EDITRES_IS_UNREALIZED) {
 	char buf[BUFSIZ];
 
-	if (node->window == EDITRES_IS_OBJECT) 
-	    sprintf(buf, "%s(0x%lx) - This object's parent is unrealized\n", 
-		    node->name, node->id);	    
+	if (node->window == EDITRES_IS_OBJECT)
+	    snprintf(buf, sizeof(buf),
+                     "%s(0x%lx) - This object's parent is unrealized\n",
+                     node->name, node->id);
 	else
-	    sprintf(buf, "%s(0x%lx) - This widget is unrealized\n", 
-		    node->name, node->id);
+	    snprintf(buf, sizeof(buf),
+                     "%s(0x%lx) - This widget is unrealized\n",
+                     node->name, node->id);
 
-	AddString(errors, buf); 
+	AddString(errors, buf);
 	return;
     }
 
@@ -261,20 +264,21 @@ _AddToFlashList(TreeInfo *tree_info, char **errors, WNode *node,
     if (global_error_code == NO_WINDOW) {
 	char buf[BUFSIZ];
 
-	sprintf(buf, "%s(0x%lx) - This widget's window no longer exists.\n", 
-		node->name, node->id);
-	AddString(errors, buf); 
+	snprintf(buf, sizeof(buf),
+                 "%s(0x%lx) - This widget's window no longer exists.\n",
+                 node->name, node->id);
+	AddString(errors, buf);
 	return;
-    }   
+    }
 
     if (attrs.map_state != IsViewable) {
 	char buf[BUFSIZ];
 
-	sprintf(buf, "%s(0x%lx) - This widget is not mapped.\n",
-		node->name, node->id);
-	AddString(errors, buf); 
+	snprintf(buf, sizeof(buf), "%s(0x%lx) - This widget is not mapped.\n",
+                 node->name, node->id);
+	AddString(errors, buf);
 	return;
-    }   
+    }
 
     CreateFlashWidget(tree_info, x, y, width, height);
 }
@@ -287,7 +291,7 @@ _AddToFlashList(TreeInfo *tree_info, char **errors, WNode *node,
  *                 x,y,width, height - size and location of the flash widget.
  *	Returns: none.
  */
-    
+
 #define MORE_FLASH_WIDGETS 5
 
 static void
@@ -303,20 +307,20 @@ CreateFlashWidget(TreeInfo *tree_info, int x, int y,
     XtSetArg(args[num], XtNy, y); num++;
     XtSetArg(args[num], XtNbackground, global_resources.flash_color); num++;
 
-    shell = XtCreatePopupShell("flash", overrideShellWidgetClass, 
+    shell = XtCreatePopupShell("flash", overrideShellWidgetClass,
 			       tree_info->tree_widget, args, num);
 
     num = 0;
     XtSetArg(args[num], XtNborderWidth, &bw); num++;
     XtGetValues(shell, args, num);
-    
+
     bw *= 2;
 
     num = 0;
     XtSetArg(args[num], XtNwidth, (width - bw)); num++;
     XtSetArg(args[num], XtNheight, (height - bw)); num++;
-    XtSetValues(shell, args, num);    
-    
+    XtSetValues(shell, args, num);
+
     if (tree_info->num_flash_widgets + 1 > tree_info->alloc_flash_widgets) {
 	tree_info->alloc_flash_widgets += MORE_FLASH_WIDGETS;
 	tree_info->flash_widgets =
@@ -357,7 +361,7 @@ FlashWidgets(TreeInfo *tree_info)
 
     FlashWidgetsOn((XtPointer) tree_info, (XtIntervalId *) NULL);
 }
-    
+
 /*	Function Name: FlashWidgetsOn
  *	Description: Turns on all the Flash Widgets.
  *	Arguments: info_ptr - pointer to the tree info.
@@ -370,9 +374,9 @@ static void
 FlashWidgetsOn(XtPointer info_ptr, XtIntervalId *id)
 {
 
-    int i;
+    Cardinal i;
     TreeInfo * tree_info = (TreeInfo *) info_ptr;
-    
+
     for (i = 0; i < tree_info->num_flash_widgets; i++) {
 	XtRealizeWidget(tree_info->flash_widgets[i]);
 	XMapRaised(XtDisplay(tree_info->flash_widgets[i]),
@@ -391,9 +395,9 @@ FlashWidgetsOn(XtPointer info_ptr, XtIntervalId *id)
 static void
 FlashWidgetsOff(XtPointer info_ptr, XtIntervalId *id)
 {
-    int i;
+    Cardinal i;
     TreeInfo * tree_info = (TreeInfo *) info_ptr;
-    
+
     for (i = 0; i < tree_info->num_flash_widgets; i++)
 	XtUnmapWidget(tree_info->flash_widgets[i]);
 }
@@ -409,19 +413,19 @@ FlashWidgetsOff(XtPointer info_ptr, XtIntervalId *id)
 static void
 FlashWidgetsCleanup(XtPointer info_ptr, XtIntervalId *id)
 {
-    int i;
+    Cardinal i;
     TreeInfo * tree_info = (TreeInfo *) info_ptr;
 
 /*
  * Unmap 'em first for consistency.
  */
-    
+
     for (i = 0; i < tree_info->num_flash_widgets; i++)
 	XtUnmapWidget(tree_info->flash_widgets[i]);
 
     XFlush(XtDisplay(tree_info->tree_widget));
 
-    for (i = 0; i < tree_info->num_flash_widgets; i++) 
+    for (i = 0; i < tree_info->num_flash_widgets; i++)
 	XtDestroyWidget(tree_info->flash_widgets[i]);
 
     XtFree((char *)tree_info->flash_widgets);

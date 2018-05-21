@@ -30,7 +30,7 @@ in this Software without prior written authorization from The Open Group.
 
 #include <X11/Xaw/Cardinals.h>
 #include <X11/Xaw/Toggle.h>
-#include <X11/Xaw/Viewport.h>	
+#include <X11/Xaw/Viewport.h>
 #include <X11/Xaw/Tree.h>
 
 #include "editresP.h"
@@ -38,9 +38,9 @@ in this Software without prior written authorization from The Open Group.
 static void AddNodeToActiveList ( WNode * node );
 static void RemoveNodeFromActiveList ( WNode * node );
 static Boolean IsActiveNode ( WNode * node );
-static void AddNode ( WNode ** top_node, WidgetTreeInfo * info, 
+static void AddNode ( WNode ** top_node, WidgetTreeInfo * info,
 		      TreeInfo * tree_info );
-static void FillNode ( WidgetTreeInfo * info, WNode * node, 
+static void FillNode ( WidgetTreeInfo * info, WNode * node,
 		       TreeInfo * tree_info );
 static void AddChild ( WNode * parent, WNode * child );
 static WNode ** CopyActiveNodes ( TreeInfo * tree_info );
@@ -84,7 +84,7 @@ BuildVisualTree(Widget tree_parent, Event *event)
 
     XtManageChild(global_tree_info->tree_widget);
 
-    sprintf(msg, res_labels[11], top->name, top->class);
+    snprintf(msg, sizeof(msg), res_labels[11], top->name, top->class);
     SetMessage(global_screen_data.info_label, msg);
 }
 
@@ -100,15 +100,15 @@ BuildVisualTree(Widget tree_parent, Event *event)
 void
 AddTreeNode(Widget tree, WNode *top)
 {
-    int i;
+    Cardinal i;
     Arg args[1];
     Cardinal num_args = 0;
     char msg[BUFSIZ];
 
     if (top->parent != NULL) {
 	if (top->parent->widget == NULL) {
-	    sprintf( msg, res_labels[28],
-		    top->name, top->parent->name, "not been created yet");
+	    snprintf(msg, sizeof(msg), res_labels[28],
+                     top->name, top->parent->name, "not been created yet");
 	    SetMessage(global_screen_data.info_label, msg);
 	}
 	XtSetArg(args[num_args], XtNtreeParent, top->parent->widget);
@@ -118,15 +118,15 @@ AddTreeNode(Widget tree, WNode *top)
     top->widget = XtCreateManagedWidget(top->name, toggleWidgetClass, tree,
 					args, num_args);
 
-    if (XSaveContext(XtDisplay(top->widget), (Window) top->widget, 
+    if (XSaveContext(XtDisplay(top->widget), (Window) top->widget,
 		     NODE_INFO, (XPointer) top) != 0) {
-	sprintf( msg, res_labels[29], top->name);
+	snprintf(msg, sizeof(msg), res_labels[29], top->name);
 	SetMessage(global_screen_data.info_label, msg);
-    }	
+    }
 
     XtAddCallback(top->widget, XtNcallback, TreeToggle, (XtPointer) top);
 
-    for (i = 0; i < top->num_children; i++) 
+    for (i = 0; i < top->num_children; i++)
 	AddTreeNode(tree, top->children[i]);
 }
 
@@ -145,7 +145,7 @@ TreeToggle(Widget w, XtPointer node_ptr, XtPointer state_ptr)
     Boolean state = (Boolean)(long) state_ptr;
     WNode * node = (WNode *) node_ptr;
 
-    if (state) 
+    if (state)
 	AddNodeToActiveList(node);
     else
 	RemoveNodeFromActiveList(node);
@@ -168,7 +168,7 @@ AddNodeToActiveList(WNode *node)
     if (info->num_nodes >= info->alloc_nodes) {
 	info->alloc_nodes += NUM_INC;
 	info->active_nodes =(WNode **)XtRealloc((XtPointer) info->active_nodes,
-						sizeof(WNode *) * 
+						sizeof(WNode *) *
 						     info->alloc_nodes);
     }
 
@@ -186,7 +186,7 @@ RemoveNodeFromActiveList(WNode *node)
 {
     TreeInfo * info = node->tree_info;
     Boolean found_node = FALSE;
-    int i;
+    Cardinal i;
 
     if (!IsActiveNode(node))	/* This node is not active. */
 	return;
@@ -194,7 +194,7 @@ RemoveNodeFromActiveList(WNode *node)
     for (i = 0; i < info->num_nodes; i++) {
 	if (found_node)
 	    info->active_nodes[i - 1] = info->active_nodes[i];
-	else if (info->active_nodes[i] == node) 
+	else if (info->active_nodes[i] == node)
 	    found_node = TRUE;
     }
 
@@ -211,26 +211,26 @@ static Boolean
 IsActiveNode(WNode *node)
 {
     TreeInfo * info = node->tree_info;
-    int i;
+    Cardinal i;
 
-    for (i = 0; i < info->num_nodes; i++) 
+    for (i = 0; i < info->num_nodes; i++)
 	if (info->active_nodes[i] == node)
 	    return(TRUE);
 
     return(FALSE);
 }
-    
+
 /*	Function Name: CreateTree
  *	Description: Creates a widget tree give a list of names and classes.
  *	Arguments: event - the information from the client.
  *	Returns: The tree_info about this new tree.
  */
-    
+
 TreeInfo *
 CreateTree(Event *event)
 {
     SendWidgetTreeEvent * send_event = (SendWidgetTreeEvent *) event;
-    int i;
+    unsigned short i;
 
     TreeInfo * tree_info;
 
@@ -243,7 +243,7 @@ CreateTree(Event *event)
     tree_info->flash_widgets = NULL;
     tree_info->num_flash_widgets = tree_info->alloc_flash_widgets = 0;
 
-    for ( i = 0; i < (int)send_event->num_entries; i++)
+    for ( i = 0; i < send_event->num_entries; i++)
 	AddNode(&(tree_info->top_node), (send_event->info + i), tree_info);
 
     return(tree_info);
@@ -258,16 +258,16 @@ CreateTree(Event *event)
 void
 PrintNodes(WNode *top)
 {
-    int i;
+    Cardinal i;
 
-    if (top->parent == NULL) 
-	printf("Top of Tree, Name: %10s, ID: %10ld, Class: %10s\n", 
+    if (top->parent == NULL)
+	printf("Top of Tree, Name: %10s, ID: %10ld, Class: %10s\n",
 	       top->name, top->id, top->class);
     else
-	printf("Parent %10s, Name: %10s, ID: %10ld, Class: %10s\n", 
+	printf("Parent %10s, Name: %10s, ID: %10ld, Class: %10s\n",
 	       top->parent->name, top->name, top->id, top->class);
 
-    for (i = 0; i < top->num_children; i++) 
+    for (i = 0; i < top->num_children; i++)
 	PrintNodes(top->children[i]);
 }
 
@@ -291,9 +291,9 @@ _TreeRelabel(TreeInfo *tree_info, LabelTypes type)
 
     top = tree_info->top_node;
 
-    PrepareToLayoutTree(tree_info->tree_widget); 
+    PrepareToLayoutTree(tree_info->tree_widget);
     _TreeRelabelNode(top, type, TRUE);
-    LayoutTree(tree_info->tree_widget); 
+    LayoutTree(tree_info->tree_widget);
 }
 
 /*	Function Name: _TreeSelect
@@ -309,7 +309,7 @@ _TreeSelect(TreeInfo *tree_info, SelectTypes type)
 {
     WNode ** active_nodes;
     Cardinal num_active_nodes;
-    int i;
+    Cardinal i;
 
     if (tree_info == NULL) {
 	SetMessage(global_screen_data.info_label,
@@ -353,7 +353,7 @@ _TreeSelect(TreeInfo *tree_info, SelectTypes type)
 void
 _TreeSelectNode(WNode *node, SelectTypes type, Boolean recurse)
 {
-    int i;
+    Cardinal i;
     Arg args[1];
     Boolean state;
 
@@ -367,7 +367,7 @@ _TreeSelectNode(WNode *node, SelectTypes type, Boolean recurse)
     case SelectInvert:
 	XtSetArg(args[0], XtNstate, &state);
 	XtGetValues(node->widget, args, ONE);
-	
+
 	state = !state;
 	break;
     default:
@@ -383,7 +383,7 @@ _TreeSelectNode(WNode *node, SelectTypes type, Boolean recurse)
     if (!recurse)
 	return;
 
-    for (i = 0; i < node->num_children; i++) 
+    for (i = 0; i < node->num_children; i++)
 	_TreeSelectNode(node->children[i], type, recurse);
 }
 
@@ -398,7 +398,7 @@ _TreeSelectNode(WNode *node, SelectTypes type, Boolean recurse)
 void
 _TreeRelabelNode(WNode *node, LabelTypes type, Boolean recurse)
 {
-    int i;
+    Cardinal i;
     Arg args[1];
     char buf[30];
     char *label;
@@ -411,17 +411,17 @@ _TreeRelabelNode(WNode *node, LabelTypes type, Boolean recurse)
 	XtSetArg(args[0], XtNlabel, node->name);
 	break;
     case IDLabel:
-	sprintf(buf, "id: 0x%lx", node->id);
+	snprintf(buf, sizeof(buf), "id: 0x%lx", node->id);
 	XtSetArg(args[0], XtNlabel, buf);
 	break;
     case WindowLabel:
-	if (node->window == EDITRES_IS_UNREALIZED) 
+	if (node->window == EDITRES_IS_UNREALIZED)
 	    strcpy(buf, "unrealized widget");
-	else if (node->window == EDITRES_IS_OBJECT) 
-	    strcpy(buf, "non windowed object");	    
+	else if (node->window == EDITRES_IS_OBJECT)
+	    strcpy(buf, "non windowed object");
 	else
-	    sprintf(buf, "win: 0x%lx", node->window);
-	    
+	    snprintf(buf, sizeof(buf), "win: 0x%lx", node->window);
+
 	XtSetArg(args[0], XtNlabel, buf);
 	break;
     case ToggleLabel:
@@ -443,7 +443,7 @@ _TreeRelabelNode(WNode *node, LabelTypes type, Boolean recurse)
     if (!recurse)
 	return;
 
-    for (i = 0; i < node->num_children; i++) 
+    for (i = 0; i < node->num_children; i++)
 	_TreeRelabelNode(node->children[i], type, recurse);
 }
 
@@ -459,7 +459,7 @@ void
 _TreeActivateNode(WNode* node, SelectTypes type)
 {
     Arg args[1];
-    int i;
+    Cardinal i;
 
     XtSetArg(args[0], XtNstate, TRUE);
 
@@ -468,13 +468,13 @@ _TreeActivateNode(WNode* node, SelectTypes type)
 	if (node == NULL)
 	    return;
 
-	XtSetValues(node->widget, args, ONE);	
+	XtSetValues(node->widget, args, ONE);
 	AddNodeToActiveList(node);
 
 	if (type == SelectAncestors)
-	    _TreeActivateNode(node, type);	
+	    _TreeActivateNode(node, type);
     }
-    else if ((type == SelectChildren) || (type == SelectDescendants)) 
+    else if ((type == SelectChildren) || (type == SelectDescendants))
 	for (i = 0; i < node->num_children; i++) {
 	    AddNodeToActiveList(node->children[i]);
 	    XtSetValues(node->children[i]->widget, args, ONE);
@@ -483,12 +483,12 @@ _TreeActivateNode(WNode* node, SelectTypes type)
 	}
     else
 	SetMessage(global_screen_data.info_label,
-		   res_labels[33]);	
+		   res_labels[33]);
 }
 
 /************************************************************
  *
- * Non - Exported Functions. 
+ * Non - Exported Functions.
  *
  ************************************************************/
 
@@ -525,7 +525,7 @@ AddNode(WNode **top_node, WidgetTreeInfo *info, TreeInfo *tree_info)
 
 	    AddChild(parent, node);
 
-	    if (early_break) 
+	    if (early_break)
 		break;
 	}
 
@@ -571,7 +571,7 @@ AddChild(WNode *parent, WNode *child)
 {
     if (parent->num_children >= parent->alloc_children) {
 	parent->alloc_children += NUM_INC;
-	parent->children = (WNode **) XtRealloc((char *)parent->children, 
+	parent->children = (WNode **) XtRealloc((char *)parent->children,
 				     sizeof(WNode *) * parent->alloc_children);
     }
 
@@ -584,20 +584,20 @@ AddChild(WNode *parent, WNode *child)
 /************************************************************
  *
  *  Functions that operate of the current tree.
- * 
+ *
  ************************************************************/
-    
+
 /*	Function Name: CopyActiveNodes
  *	Description: returns a copy of the currently selected nodes.
  *	Arguments: tree_info - the tree info struct.
  *	Returns: a copy of the selected nodes.
  */
 
-static WNode ** 
+static WNode **
 CopyActiveNodes(TreeInfo *tree_info)
 {
     WNode ** list;
-    int i;
+    Cardinal i;
 
     if ( (tree_info == NULL) || (tree_info->num_nodes == 0))
 	return(NULL);
@@ -654,19 +654,19 @@ SetAndCenterTreeNode(WNode *node)
      * reset the node x and y location to be the new x and y location of
      * the tree relative to the porthole.
      */
- 
+
     node_x = port_width/2 - (node_x + node_width/2 + node_bw);
     node_y = port_height/2 - (node_y + node_height/2 + node_bw);
 
     num_args = 0;
     XtSetArg(args[num_args], XtNx, node_x); num_args++;
     XtSetArg(args[num_args], XtNy, node_y); num_args++;
-    XtSetValues(node->tree_info->tree_widget, args, num_args);    
+    XtSetValues(node->tree_info->tree_widget, args, num_args);
 }
 
 /*	Function Name: PerformTreeToFileDump
  *	Description: Dumps the contents of the current widget tree to
- *                   the file specified. 
+ *                   the file specified.
  *	Arguments: node - node to dump.
  *                 num_tabs - number of spaces to indent.
  *                 fp - pointer to the file to write to.
@@ -674,11 +674,11 @@ SetAndCenterTreeNode(WNode *node)
  */
 
 void
-PerformTreeToFileDump(WNode *node, int num_tabs, FILE *fp)
+PerformTreeToFileDump(WNode *node, Cardinal num_tabs, FILE *fp)
 {
-    int i;
+    Cardinal i;
 
-    for (i = 0; i < num_tabs; i++) 
+    for (i = 0; i < num_tabs; i++)
 	fprintf(fp, "\t");
     fprintf(fp, "%s  %s\n", node->class, node->name);
 
