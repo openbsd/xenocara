@@ -1,3 +1,84 @@
+commit 4b1d7d3af1c1bc1586b2e9a780aea0dee7df5a14
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Mar 6 22:57:01 2018 -0800
+
+    mkfontscale 1.1.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 27295c6c9b40b5cee0d1f45dfdc742a12613cb58
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:20 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 3258ad61892298d07236a857e1668171de5e8880
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit e8e4bdca31c006e2600ba25ef753fe77b20d6aca
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 07b761b0862bcea65b83052b9d960c4459af0466
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Sun Sep 18 16:25:22 2016 -0700
+
+    mkfontscale: Avoid a buffer underrun
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=96905
+    
+    =================================================================
+    ==3068==ERROR: AddressSanitizer: heap-buffer-overflow on address 0x60300000de6f at pc 0x000109df79d1 bp 0x7fff55e37d90 sp 0x7fff55e37550
+    READ of size 1 at 0x60300000de6f thread T0
+        #0 0x109df79d0 in wrap_strcmp (libclang_rt.asan_osx_dynamic.dylib+0xe9d0)
+        #1 0x109dc8ef7 in fontFileOpen (mkfontscale+0x100001ef7)
+        #2 0x109dc8e0b in bitmapIdentify (mkfontscale+0x100001e0b)
+        #3 0x109dcc874 in doDirectory (mkfontscale+0x100005874)
+        #4 0x109dcbc78 in main (mkfontscale+0x100004c78)
+        #5 0x7fff9083f5ac in start (libdyld.dylib+0x35ac)
+        #6 0x3  (<unknown module>)
+    
+    0x60300000de6f is located 1 bytes to the left of 20-byte region [0x60300000de70,0x60300000de84)
+    allocated by thread T0 here:
+        #0 0x109e34570 in wrap_malloc (libclang_rt.asan_osx_dynamic.dylib+0x4b570)
+        #1 0x109dca92a in dsprintf (mkfontscale+0x10000392a)
+        #2 0x109dcc788 in doDirectory (mkfontscale+0x100005788)
+        #3 0x109dcbc78 in main (mkfontscale+0x100004c78)
+        #4 0x7fff9083f5ac in start (libdyld.dylib+0x35ac)
+        #5 0x3  (<unknown module>)
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit ecb248d8865df376a97a795c2e4f58a3bf64c3f1
+Author: Stefan Dirsch <sndirsch@suse.de>
+Date:   Thu Apr 21 16:52:15 2016 +0200
+
+    fix handling of Type1 fonts without /FamilyName and/or /FullName
+    
+    https://bugzilla.opensuse.org/show_bug.cgi?id=918466
+    
+    Signed-off-by: Stefan Dirsch <sndirsch@suse.de>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
 commit 87d628f8eec170ec13bb9feefb1ce05aed07d1d6
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Jan 16 23:40:40 2015 -0800
