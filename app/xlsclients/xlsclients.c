@@ -65,8 +65,11 @@ typedef int Bool;
 #define True (!False)
 
 static void 
-usage(void)
+usage(const char *errmsg)
 {
+    if (errmsg != NULL)
+	fprintf (stderr, "%s: %s\n\n", ProgramName, errmsg);
+
     fprintf (stderr,
 	     "usage:  %s  [-display dpy] [-m len] [-[a][l]] [-version]\n",
 	     ProgramName);
@@ -162,11 +165,11 @@ main(int argc, char *argv[])
 
 	    switch (arg[1]) {
 	      case 'd':			/* -display dpyname */
-		if (++i >= argc) usage ();
+		if (++i >= argc) usage ("-display requires an argument");
 		displayname = argv[i];
 		continue;
 	      case 'm':			/* -max maxcmdlen */
-		if (++i >= argc) usage ();
+		if (++i >= argc) usage ("-max requires an argument");
 		maxcmdlen = atoi (argv[i]);
 		continue;
 	      case 'v':			/* -version */
@@ -183,11 +186,15 @@ main(int argc, char *argv[])
 		    verbose = True;
 		    continue;
 		  default:
-		    usage ();
+		    fprintf (stderr, "%s: unrecognized argument -%s\n\n",
+			     ProgramName, cp);
+		    usage (NULL);
 		}
 	    }
 	} else {
-	    usage ();
+	    fprintf (stderr, "%s: unrecognized argument %s\n\n",
+		     ProgramName, arg);
+	    usage (NULL);
 	}
     }
 
