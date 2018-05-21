@@ -1,9 +1,9 @@
-#	$OpenBSD: Makefile,v 1.50 2017/12/15 19:29:11 dcoppa Exp $
+#	$OpenBSD: Makefile,v 1.51 2018/05/21 11:52:24 dcoppa Exp $
 
 FREETYPESRC=	${.CURDIR}/src
 
 # Get it from builds/unix/configure.ac
-FT_VERSION_INFO= 21.0.15
+FT_VERSION_INFO= 22.1.16
 
 INSTALL_PROGRAM = ${INSTALL} ${INSTALL_COPY} -m 755 -o $(BINOWN) -g $(BINGRP)
 
@@ -16,13 +16,12 @@ DEBUG?=
 LIB=	freetype
 
 SRCS=   ftbase.c ftbbox.c ftbdf.c ftbitmap.c ftdebug.c ftcache.c \
-	ftcid.c ftfstype.c ftgasp.c ftglyph.c \
-	ftgxval.c ftlcdfil.c ftotval.c ftpatent.c \
-        ftinit.c ftlzw.c ftmm.c ftpfr.c ftstroke.c ftsynth.c ftsystem.c \
-        fttype1.c ftwinfnt.c ftfntfmt.c autofit.c bdf.c cff.c \
-        ftgzip.c pcf.c pfr.c psaux.c pshinter.c psnames.c \
-        raster.c sfnt.c smooth.c truetype.c type1.c type1cid.c type42.c \
-	winfnt.c
+	ftcid.c ftfstype.c ftgasp.c ftglyph.c ftgxval.c ftotval.c \
+	ftpatent.c ftinit.c ftlzw.c ftmm.c ftpfr.c ftstroke.c \
+	ftsynth.c ftsystem.c fttype1.c ftwinfnt.c autofit.c bdf.c \
+	cff.c ftgzip.c pcf.c pfr.c psaux.c pshinter.c psnames.c \
+	raster.c sfnt.c smooth.c truetype.c type1.c type1cid.c \
+	type42.c winfnt.c
 
 CPPFLAGS+= -I${.CURDIR}/include -I${.CURDIR}/builds/unix -I${.CURDIR}/src/lzw -DFT2_BUILD_LIBRARY
 
