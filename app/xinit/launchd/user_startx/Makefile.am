@@ -21,9 +21,7 @@
 
 include $(top_srcdir)/cpprules.in
 
-xinitrcdir = $(XINITDIR)
-
-xinitrc_PROGRAMS = launchd_startx
+libexec_PROGRAMS = launchd_startx
 
 AM_CPPFLAGS = -I$(srcdir)/.. -DXINITDIR=\"$(xinitrcdir)\" -DBINDIR=\"$(bindir)\"
 
@@ -32,6 +30,7 @@ dist_launchd_startx_SOURCES = \
 	launchd_startx.c
 
 CPP_FILES_FLAGS = \
+	-D__libexecdir__="$(libexecdir)" \
 	-D__xinitrcdir__="$(xinitrcdir)" \
 	-D__bindir__="$(bindir)" \
 	-DBUNDLE_ID_PREFIX="$(bundleidprefix)"

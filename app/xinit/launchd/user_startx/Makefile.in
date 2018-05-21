@@ -81,7 +81,7 @@ build_triplet = @build@
 host_triplet = @host@
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/cpprules.in $(top_srcdir)/depcomp
-xinitrc_PROGRAMS = launchd_startx$(EXEEXT)
+libexec_PROGRAMS = launchd_startx$(EXEEXT)
 @LAUNCHAGENT_XSERVER_TRUE@am__append_1 = -DLAUNCHAGENT_XSERVER_PATH="$(launchagentxserver)"
 subdir = launchd/user_startx
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -92,9 +92,9 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-am__installdirs = "$(DESTDIR)$(xinitrcdir)" \
+am__installdirs = "$(DESTDIR)$(libexecdir)" \
 	"$(DESTDIR)$(launchagentsdir)"
-PROGRAMS = $(xinitrc_PROGRAMS)
+PROGRAMS = $(libexec_PROGRAMS)
 dist_launchd_startx_OBJECTS = console_redirect.$(OBJEXT) \
 	launchd_startx.$(OBJEXT)
 launchd_startx_OBJECTS = $(dist_launchd_startx_OBJECTS)
@@ -236,7 +236,6 @@ PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
-SCOMAN = @SCOMAN@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -325,14 +324,13 @@ CPP_SED_MAGIC = $(SED) -e '/^\#  *[0-9][0-9]*  *.*$$/d' \
                        -e '/\@\@$$/s/\@\@$$/\\/'
 
 SUFFIXES = .cpp
-xinitrcdir = $(XINITDIR)
 AM_CPPFLAGS = -I$(srcdir)/.. -DXINITDIR=\"$(xinitrcdir)\" -DBINDIR=\"$(bindir)\"
 dist_launchd_startx_SOURCES = \
 	$(srcdir)/../console_redirect.c \
 	launchd_startx.c
 
-CPP_FILES_FLAGS = -D__xinitrcdir__="$(xinitrcdir)" \
-	-D__bindir__="$(bindir)" \
+CPP_FILES_FLAGS = -D__libexecdir__="$(libexecdir)" \
+	-D__xinitrcdir__="$(xinitrcdir)" -D__bindir__="$(bindir)" \
 	-DBUNDLE_ID_PREFIX="$(bundleidprefix)" $(am__append_1)
 launchagents_PRE = $(bundleidprefix).startx.plist.cpp
 launchagents_DATA = $(launchagents_PRE:plist.cpp=plist)
@@ -376,12 +374,12 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
-install-xinitrcPROGRAMS: $(xinitrc_PROGRAMS)
+install-libexecPROGRAMS: $(libexec_PROGRAMS)
 	@$(NORMAL_INSTALL)
-	@list='$(xinitrc_PROGRAMS)'; test -n "$(xinitrcdir)" || list=; \
+	@list='$(libexec_PROGRAMS)'; test -n "$(libexecdir)" || list=; \
 	if test -n "$$list"; then \
-	  echo " $(MKDIR_P) '$(DESTDIR)$(xinitrcdir)'"; \
-	  $(MKDIR_P) "$(DESTDIR)$(xinitrcdir)" || exit 1; \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(libexecdir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(libexecdir)" || exit 1; \
 	fi; \
 	for p in $$list; do echo "$$p $$p"; done | \
 	sed 's/$(EXEEXT)$$//' | \
@@ -399,23 +397,23 @@ install-xinitrcPROGRAMS: $(xinitrc_PROGRAMS)
 	while read type dir files; do \
 	    if test "$$dir" = .; then dir=; else dir=/$$dir; fi; \
 	    test -z "$$files" || { \
-	      echo " $(INSTALL_PROGRAM_ENV) $(INSTALL_PROGRAM) $$files '$(DESTDIR)$(xinitrcdir)$$dir'"; \
-	      $(INSTALL_PROGRAM_ENV) $(INSTALL_PROGRAM) $$files "$(DESTDIR)$(xinitrcdir)$$dir" || exit $$?; \
+	      echo " $(INSTALL_PROGRAM_ENV) $(INSTALL_PROGRAM) $$files '$(DESTDIR)$(libexecdir)$$dir'"; \
+	      $(INSTALL_PROGRAM_ENV) $(INSTALL_PROGRAM) $$files "$(DESTDIR)$(libexecdir)$$dir" || exit $$?; \
 	    } \
 	; done
 
-uninstall-xinitrcPROGRAMS:
+uninstall-libexecPROGRAMS:
 	@$(NORMAL_UNINSTALL)
-	@list='$(xinitrc_PROGRAMS)'; test -n "$(xinitrcdir)" || list=; \
+	@list='$(libexec_PROGRAMS)'; test -n "$(libexecdir)" || list=; \
 	files=`for p in $$list; do echo "$$p"; done | \
 	  sed -e 'h;s,^.*/,,;s/$(EXEEXT)$$//;$(transform)' \
 	      -e 's/$$/$(EXEEXT)/' `; \
 	test -n "$$list" || exit 0; \
-	echo " ( cd '$(DESTDIR)$(xinitrcdir)' && rm -f" $$files ")"; \
-	cd "$(DESTDIR)$(xinitrcdir)" && rm -f $$files
+	echo " ( cd '$(DESTDIR)$(libexecdir)' && rm -f" $$files ")"; \
+	cd "$(DESTDIR)$(libexecdir)" && rm -f $$files
 
-clean-xinitrcPROGRAMS:
-	-test -z "$(xinitrc_PROGRAMS)" || rm -f $(xinitrc_PROGRAMS)
+clean-libexecPROGRAMS:
+	-test -z "$(libexec_PROGRAMS)" || rm -f $(libexec_PROGRAMS)
 launchd_startx$(EXEEXT): $(launchd_startx_OBJECTS) $(launchd_startx_DEPENDENCIES) $(EXTRA_launchd_startx_DEPENDENCIES) 
 	@rm -f launchd_startx$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(launchd_startx_OBJECTS) $(launchd_startx_LDADD) $(LIBS)
@@ -578,7 +576,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(PROGRAMS) $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(xinitrcdir)" "$(DESTDIR)$(launchagentsdir)"; do \
+	for dir in "$(DESTDIR)$(libexecdir)" "$(DESTDIR)$(launchagentsdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -614,7 +612,7 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic clean-xinitrcPROGRAMS mostlyclean-am
+clean-am: clean-generic clean-libexecPROGRAMS mostlyclean-am
 
 distclean: distclean-am
 	-rm -rf ./$(DEPDIR)
@@ -634,13 +632,13 @@ info: info-am
 
 info-am:
 
-install-data-am: install-launchagentsDATA install-xinitrcPROGRAMS
+install-data-am: install-launchagentsDATA
 
 install-dvi: install-dvi-am
 
 install-dvi-am:
 
-install-exec-am:
+install-exec-am: install-libexecPROGRAMS
 
 install-html: install-html-am
 
@@ -679,24 +677,24 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-launchagentsDATA uninstall-xinitrcPROGRAMS
+uninstall-am: uninstall-launchagentsDATA uninstall-libexecPROGRAMS
 
 .MAKE: install-am install-strip
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
-	clean-xinitrcPROGRAMS cscopelist ctags distclean \
+	clean-libexecPROGRAMS cscopelist ctags distclean \
 	distclean-compile distclean-generic distclean-tags distdir dvi \
 	dvi-am html html-am info info-am install install-am \
 	install-data install-data-am install-dvi install-dvi-am \
 	install-exec install-exec-am install-html install-html-am \
 	install-info install-info-am install-launchagentsDATA \
-	install-man install-pdf install-pdf-am install-ps \
-	install-ps-am install-strip install-xinitrcPROGRAMS \
-	installcheck installcheck-am installdirs maintainer-clean \
+	install-libexecPROGRAMS install-man install-pdf install-pdf-am \
+	install-ps install-ps-am install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic pdf pdf-am ps ps-am tags uninstall \
 	uninstall-am uninstall-launchagentsDATA \
-	uninstall-xinitrcPROGRAMS
+	uninstall-libexecPROGRAMS
 
 
 .cpp:

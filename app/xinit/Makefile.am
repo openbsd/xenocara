@@ -60,7 +60,7 @@ CPP_FILES_FLAGS = \
 xinitrc_DATA = xinitrc
 
 MAINTAINERCLEANFILES = ChangeLog INSTALL
-CLEANFILES = xinitrc startx $(launchagents_DATA)
+CLEANFILES = xinitrc startx
 
 EXTRA_DIST = xinitrc.cpp startx.cpp \
 		autogen.sh

@@ -27,14 +27,14 @@
 
 include $(top_srcdir)/cpprules.in
 
-xinitrcdir = $(libdir)/X11/xinit
+xinitrcdir = $(XINITDIR)
 privstartxdir = $(xinitrcdir)/privileged_startx.d
 
-xinitrc_PROGRAMS = privileged_startx
+libexec_PROGRAMS = privileged_startx
 privstartx_SCRIPTS = 10-tmpdirs 20-font_cache
 
 AM_CPPFLAGS = -I$(srcdir)/.. -DXINITDIR=\"$(xinitrcdir)\" -DSCRIPTDIR=\"$(privstartxdir)\" -DBINDIR=\"$(bindir)\"
-CPP_FILES_FLAGS = -DXINITDIR="$(xinitrcdir)" -DSCRIPTDIR="$(privstartxdir)" -DBINDIR="$(bindir)" -DBUNDLE_ID_PREFIX="$(bundleidprefix)"
+CPP_FILES_FLAGS = -D__libexecdir__="$(libexecdir)" -DXINITDIR="$(xinitrcdir)" -DSCRIPTDIR="$(privstartxdir)" -DBINDIR="$(bindir)" -DBUNDLE_ID_PREFIX="$(bundleidprefix)"
 
 if TIGER_LAUNCHD
 CPP_FILES_FLAGS += -DTIGER_LAUNCHD

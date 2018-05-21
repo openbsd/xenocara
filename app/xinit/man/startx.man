@@ -74,7 +74,6 @@ startx -- -dpi 100
 .PP
 startx -- -layout Multihead
 .RE
-.if '__SCOMAN__'' .ig
 .PP
 To determine the client to run,
 .B startx
@@ -90,20 +89,6 @@ looks for the following files, in order:
 .I __xinitdir__/xinitrc
 .RE
 .PP
-..
-.if !'x.__SCOMAN__'x.' .ig
-.PP
-To determine the client to run,
-.B startx
-first looks for a file called
-.I .xinitrc
-in the user's home directory.  If that is not found, it uses
-the file
-.I xinitrc
-in the
-.I xinit
-library directory.
-..
 If command line client options are given, they override this
 behavior and revert to the
 .BR xinit (__appmansuffix__)
@@ -187,17 +172,6 @@ and
 .IR Xsecurity (__miscmansuffix__)
 manual pages for more information on X client/server authentication.
 .SH FILES
-.if '__SCOMAN__'' .ig
-.TP 25
-.I $(HOME)/.startxrc
-Client to run.  Typically a shell script which runs many programs in
-the background.
-.TP 25
-.I __libdir__/sys.startxrc
-Client to use if the user has no
-.I .startxrc
-file.
-..
 .TP 25
 .I $(HOME)/.xinitrc
 Client to run.  Typically a shell script which runs many programs in

@@ -6,7 +6,7 @@
 		<string>BUNDLE_ID_PREFIX.privileged_startx</string>
 	<key>ProgramArguments</key>
 		<array>
-			<string>XINITDIR/privileged_startx</string>
+			<string>__libexecdir__/privileged_startx</string>
 			<string>-d</string>
 			<string>SCRIPTDIR</string>
 		</array>

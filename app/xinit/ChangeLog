@@ -1,3 +1,205 @@
+commit 2df7937c6d57a4f44288d13fc50218fe088c4185
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 9 17:44:47 2018 -0800
+
+    xinit 1.4.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2effad417dabccd0b41ac32dc8108c99c73801d2
+Author: Tobias Stoeckmann <tobias@stoeckmann.org>
+Date:   Mon Jan 30 21:35:37 2017 +0100
+
+    xinit: check for correct fork error code
+    
+    Even though this code is only active on __sun machines, the fork return
+    value should be checked for -1, not 1, to detect an error situation.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 710ea2cec2b36831a3b6b5bdae223d18edbea933
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 4345a602d48fbdf68e57db54e08f6a78d1679993
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 762c1a8db1257246e23e0f9dfd876f97cb73e528
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 4525e14fcfeaaf526227e3addec67d0ce4632270
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Sat May 28 14:00:58 2016 -0700
+
+    startx: Add support for enabling IGLX for XQuartz
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=96260
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit 208a47e0d8f62e7c77fa42137511de890feea7fe
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Sat May 28 13:47:01 2016 -0700
+
+    startx: Add -listen tcp if nolisten_tcp is disabled for XQuartz
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=95379
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit 72160c42bea2073bf95c01aca59a12f0ca7ab707
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Tue Dec 29 17:03:43 2015 -0800
+
+    launchd: Install binaries into libexecdir
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit 281b314f38564537279c94e605bee74ff41b0245
+Author: Ingo Schwarze <schwarze@usta.de>
+Date:   Sun Aug 30 15:13:07 2015 +0200
+
+    remove bogus \/ escapes
+    
+    some X manuals use then escape sequence \/ when they want to render
+    a slash.  That's bad because \/ is not a slash but an italic
+    correction, never producing any output, having no effect at all in
+    terminal output, and only changing spacing in a minor way in typeset
+    output.
+    
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+    Reviewed-by: Mark Kettenis <kettenis@openbsd.org>
+
+commit c5e40f503420bd61c7a33e082db755c03c070c81
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Mar 25 11:04:13 2015 +1000
+
+    startx: don't init defaultdisplay to :0
+    
+    This is misleading - it is always overwritten after looping through the lock
+    files.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+
+commit e07fa99039c0f63ed8f0b142e546ef102321fca0
+Author: Hans de Goede <hdegoede@redhat.com>
+Date:   Fri Mar 20 14:25:44 2015 +0100
+
+    startx: Fix startx picking an already used display number when -nolock is used
+    
+    Currently startx relies on /tmp/.X?-lock being present for automatically
+    picking a free display number. This does not work if -nolock is used when
+    starting the server, or if the server is started with -displayfd as -displayfd
+    implies -nolock.
+    
+    This is becoming a problem now that -displayfd is getting used by
+    display-managers (e.g. gdm), this fixes this by also checking for
+    /tmp/.X11-unix/X?
+    
+    Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a3a34a393b9aeacc0b41dc9b4608ad2be25564cf
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Mar 25 11:08:45 2015 +1000
+
+    startx: fix comment typo
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 27488975a61858bbaf72047838074389566e2136
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Feb 13 21:43:37 2015 -0500
+
+    Remove left over $(launchagents_DATA) in CLEANFILES
+    
+    This was left over when reorganizing layout of launchd sources
+    in commit 567f59d3f8189b92bc46e2af1260f9340f462bdb
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1be5f1ae5df1d9b3f29fafe3eb29ea890a628b54
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Feb 13 20:21:51 2015 -0500
+
+    Remove support for ancient A/UX 3.0 support
+    
+    This was Apple Computer’s implementation of the Unix operating system
+    for some of their Macintosh computers. From 1988 to 1995.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5268936259c598ea1e51370df33011a48ec9f3d4
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Feb 13 19:37:16 2015 -0500
+
+    Remove SCO support for SHELL_CMD and startx man page.
+    
+    SCO support was removed from startx.cpp and xinitrc.cpp earlier.
+    
+        Remove unixware / sco support
+        http://cgit.freedesktop.org/xorg/app/xinit/commit/
+        ?id=fdf03cd2fdfd9cd5635334c5e4dc2bb23e92e37a
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e3bab0cc706880c22f2b205e7abad9d8c0227071
+Author: Mark Kettenis <kettenis@openbsd.org>
+Date:   Thu Jan 29 11:23:01 2015 +0100
+
+    startx: Don't use GNU expr extensions
+    
+    Use the ':' operator instead of "match" and avoid the use of "\+".  Both
+    constructions aren't specified by POSIX and not supported in BSD expr.
+    Also drop the '^' from the regular expressions as it is implicit and
+    POSIX leaves its behaviour undefined.
+    
+    Signed-off-by: Mark Kettenis <kettenis@openbsd.org>
+    Acked-by: Hans de Goede <hdegoede@redhat.com>
+    Reviewed-by: Matthieu Herrb <matthieu@herrb.eu>
+
+commit bd6cacdd36615e9b8136aeb86c3924a404785977
+Author: Hans de Goede <hdegoede@redhat.com>
+Date:   Tue Jan 20 16:18:34 2015 +0100
+
+    startx: Pass -keeptty when telling the server to start on the current tty
+    
+    Detaching from the tty causes systemd-logind to refuse service to the xserver,
+    the xserver already tries to detect that it is being asked to run on the
+    current tty and then automatically enables -keeptty, but this code fails if
+    all of stdin, stdout and stderr are redirected to a file. So explicitly tell
+    the xserver to not detach when we're telling it to run on the current tty.
+    
+    BugLink: https://bugzilla.redhat.com/show_bug.cgi?id=1177513
+    Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit 6f6747d500439782476cf5c029a7fc45fc954c86
 Author: Hans de Goede <hdegoede@redhat.com>
 Date:   Thu Sep 11 16:29:06 2014 +0200

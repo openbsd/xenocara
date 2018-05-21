@@ -6,7 +6,7 @@
 		<string>BUNDLE_ID_PREFIX.startx</string>
 	<key>ProgramArguments</key>
 		<array>
-			<string>__xinitrcdir__/launchd_startx</string>
+			<string>__libexecdir__/launchd_startx</string>
 			<string>__bindir__/startx</string>
 #ifdef LAUNCHAGENT_XSERVER_PATH
 			<string>--</string>

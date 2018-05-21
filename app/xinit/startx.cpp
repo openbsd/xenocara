@@ -56,7 +56,7 @@ defaultclient=XTERM
 defaultserver=XSERVER
 defaultclientargs=""
 defaultserverargs=""
-defaultdisplay=":0"
+defaultdisplay=""
 clientargs=""
 serverargs=""
 vtarg=""
@@ -80,6 +80,10 @@ if ! defaults read $X11_PREFS_DOMAIN nolisten_tcp > /dev/null 2>&1 ; then
     defaults write $X11_PREFS_DOMAIN nolisten_tcp -bool true
 fi
 
+if ! defaults read $X11_PREFS_DOMAIN enable_iglx > /dev/null 2>&1 ; then
+    defaults write $X11_PREFS_DOMAIN enable_iglx -bool false
+fi
+
 XCOMM First, start caching fonts
 if [ x`defaults read $X11_PREFS_DOMAIN cache_fonts` = x1 ] ; then
     if [ -x $bindir/font_cache ] ; then
@@ -91,10 +95,10 @@ if [ x`defaults read $X11_PREFS_DOMAIN cache_fonts` = x1 ] ; then
     fi
 fi
 
-if [ -x XINITDIR/privileged_startx ] ; then
+if [ -x __libexecdir__/privileged_startx ] ; then
 	# Don't push this into the background becasue it can cause
 	# a race to create /tmp/.X11-unix
-	XINITDIR/privileged_startx
+	__libexecdir__/privileged_startx
 fi
 
 if [ x`defaults read $X11_PREFS_DOMAIN no_auth` = x0 ] ; then
@@ -105,6 +109,14 @@ fi
 
 if [ x`defaults read $X11_PREFS_DOMAIN nolisten_tcp` = x1 ] ; then
     defaultserverargs="$defaultserverargs -nolisten tcp"
+else
+    defaultserverargs="$defaultserverargs -listen tcp"
+fi
+
+if [ x`defaults read $X11_PREFS_DOMAIN enable_iglx` = x1 ] ; then
+    defaultserverargs="$defaultserverargs +iglx"
+else
+    defaultserverargs="$defaultserverargs -iglx"
 fi
 
 XCOMM The second check is the real one.  The first is to hopefully avoid
@@ -120,7 +132,7 @@ enable_xauth=1
 XCOMM Automatically determine an unused $DISPLAY
 d=0
 while true ; do
-    [ -e /tmp/.X$d-lock ] || break
+    [ -e "/tmp/.X$d-lock" -o -S "/tmp/.X11-unix/X$d" ] || break
     d=$(($d + 1))
 done
 defaultdisplay=":$d"
@@ -195,7 +207,7 @@ if [ x"$server" = x ]; then
     tty=$(tty)
     if expr "$tty" : '/dev/tty[0-9][0-9]*$' > /dev/null; then
         tty_num=$(echo "$tty" | grep -oE '[0-9]+$')
-        vtarg="vt$tty_num"
+        vtarg="vt$tty_num -keeptty"
     fi
 #endif
 
@@ -283,7 +295,7 @@ EOF
 
     XCOMM now add the same credentials to the client authority file
     XCOMM if '$displayname' already exists do not overwrite it as another
-    XCOMM server man need it. Add them to the '$xserverauthfile' instead.
+    XCOMM server may need it. Add them to the '$xserverauthfile' instead.
     for displayname in $authdisplay $hostname$authdisplay; do
         authcookie=`XAUTH list "$displayname" @@
         | sed -n "s/.*$displayname[[:space:]*].*[[:space:]*]//p"` 2>/dev/null;
@@ -324,11 +336,6 @@ fi
 if command -v deallocvt > /dev/null 2>&1; then
     deallocvt
 fi
-#endif
-
-#ifdef macII
-Xrepair
-screenrestore
 #endif
 
 #if defined(sun)

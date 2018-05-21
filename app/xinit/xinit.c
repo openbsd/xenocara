@@ -638,7 +638,7 @@ shutdown(void)
             Fatal("Unable to run program \"%s\"", "kbd_mode");
             break;
 
-        case 1:
+        case -1:
             Error("fork failed");
             break;
 

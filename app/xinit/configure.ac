@@ -22,7 +22,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xinit], [1.3.4],
+AC_INIT([xinit], [1.4.0],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xinit])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -203,13 +203,8 @@ case $host_os in
     *solaris*)
 	SHELL_CMD="/bin/ksh"
 	;;
-    *sco*)
-	SHELL_CMD="/bin/ksh"
-	SCOMAN=1
-	;;
 esac
 AC_SUBST(SHELL_CMD)
-AC_SUBST(SCOMAN)
 AC_SUBST(XSERVERNAME)
 AC_SUBST(XCONFIGFILE)
 AC_SUBST(XCONFIGFILEMAN)

@@ -294,7 +294,6 @@ PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
-SCOMAN = @SCOMAN@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -413,7 +412,7 @@ CPP_FILES_FLAGS = \
 
 xinitrc_DATA = xinitrc
 MAINTAINERCLEANFILES = ChangeLog INSTALL
-CLEANFILES = xinitrc startx $(launchagents_DATA)
+CLEANFILES = xinitrc startx
 EXTRA_DIST = xinitrc.cpp startx.cpp \
 		autogen.sh
 
