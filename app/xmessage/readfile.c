@@ -104,9 +104,11 @@ get_data_from_stdin (int *len_return)
 	count += n;
 	/* Here count <= allocated. Prepare for next round. */
 	if (count + BUFSIZ > allocated) {
+	    char *oldp = cp;
 	    allocated = 2 * allocated;
 	    cp = realloc (cp, allocated + 1);
 	    if (!cp) {
+		free(oldp);
 		fprintf(stderr, "cannot get memory for message file\n");
 		return NULL;
 	    }

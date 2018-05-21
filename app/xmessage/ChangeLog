@@ -1,3 +1,75 @@
+commit f1e22dc070daa73857ff2fd951424b9d1ef31a54
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 9 18:00:17 2018 -0800
+
+    xmessage 1.0.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5112040e247e6d9003e8f5d5dc8533f2eda5ced9
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit a6730b5c7a824f87accb2f339a0599c4d799dc3f
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 5800c62b510bf001d294bb39454551f54283f371
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 2ded8964acfeb140de6341b2411ec140515b1107
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 23:36:28 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit df6964a99d6508f5cc374f49f3ffff8e1bd45152
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 23:36:28 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fa46fad55550e100c50a3f4208aa953a29cfc3df
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 9 21:28:33 2013 -0800
+
+    Stop leaking temporary buffer when realloc fails to enlarge it
+    
+    Fixes cppcheck error:
+    [readfile.c:108]: (error) Common realloc mistake: 'cp' nulled
+     but not freed upon failure
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: wharms <wharms@bfs.de>
+
 commit 2cc2b4bf7f370c5c804f4e75228677b2c58f1d7f
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Jan 12 22:21:57 2013 -0800
