@@ -5,7 +5,7 @@ xlsfonts \- server font list displayer for X
 .SH SYNOPSIS
 .ad l
 \fBxlsfonts\fR
-[\fB\-display \fBhost:dpy\fR\fR] [\fB\-l\fR] [\fB\-ll\fR] [\fB\-lll\fR] [\fB\-m\fR] [\fB\-C\fR] [\fB\-1\fR] [\fB\-w \fBwidth\fR\fR] [\fB\-n \fBcolumns\fR\fR] [\fB\-u\fR] [\fB\-o\fR] [\fB\-fn \fBpattern\fR\fR]
+[\fB\-display \fBhost:dpy\fR\fR] [\fB\-l\fR] [\fB\-ll\fR] [\fB\-lll\fR] [\fB\-m\fR] [\fB\-C\fR] [\fB\-1\fR] [\fB\-w \fBwidth\fR\fR] [\fB\-n \fBcolumns\fR\fR] [\fB\-u\fR] [\fB\-o\fR] [\fB\-fn \fBpattern\fR\fR] [\fB\-v\fR]
 .SH DESCRIPTION
 xlsfonts lists the fonts that match the given pattern.
 The wildcard character "*" may be used to match any sequence of characters
