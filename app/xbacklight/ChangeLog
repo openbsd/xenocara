@@ -1,3 +1,113 @@
+commit 8709d1efd4b8131ddc0a04229bc148a6f473d6f0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 9 17:35:30 2018 -0800
+
+    xbacklight 1.2.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 67f8af194622507beeba0699ed13c9376303d293
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:20 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit d4ba66408b6498414bb019a248bad39a1b8b7795
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit f74c4af2b723523d94519d81fa45d5aa825195ec
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 25f2612062e733b1f7eb4bc2ccedf653ec6f052a
+Author: Nils Schneider <nils@nilsschneider.net>
+Date:   Wed Nov 4 18:03:25 2015 +0100
+
+    Use current output configuration
+    
+    Do not trigger re-enumerating output devices when changing or querying
+    the backlight.
+    
+    Re-enumerating output devices may stall Xorg at least on Intel GPUs when
+    EDID is unresponsive or contains bogus data (due to retries). When
+    working with the backlight it is safe to assume that a monitor capable
+    of setting its backlight is currently connected.
+    
+    Signed-off-by: Nils Schneider <nils@nilsschneider.net>
+    Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+    Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+
+commit f6277d4bf39de12c43a5dfb6db0de8e137ea7071
+Author: Nils Schneider <nils@nilsschneider.net>
+Date:   Mon Sep 28 15:20:30 2015 +0200
+
+    Use double instead of int for value
+    
+    Modern displays allow for fine grained brightness settings. For example,
+    my laptop allows for 852 brightness steps. In some situations I find it
+    useful to set the brightness below 1 percent (the minimum possible when
+    using integers).
+    
+    This patch makes xbacklight use a double instead so lower brightness
+    values like 0.12 are possible.
+    
+    Signed-off-by: Nils Schneider <nils@nilsschneider.net>
+    Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+    Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+
+commit 7db4876cdeaa5d25cb857bead7153ef503e993d6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 22:09:32 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit af78be654ec08e7e651ac6c06de4fbc6dc89fc27
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 22:09:32 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b2a08484343f0ae9b50309d3f69eeb0931223f14
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 25 22:40:43 2013 -0800
+
+    Add -version option to print program version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4080fb788adba0a851aff29b4dc4f5c71bf4b279
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 25 22:37:45 2013 -0800
+
+    Print which option was in error along with usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 8e0f47c1971f17ac37c89fb49a8f1807d25923a5
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Mon Oct 7 20:43:34 2013 -0700

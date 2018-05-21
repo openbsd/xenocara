@@ -19,6 +19,11 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
  * OF THIS SOFTWARE.
  */
+
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -38,19 +43,27 @@ static char *program_name;
 static xcb_atom_t backlight, backlight_new, backlight_legacy;
 
 static void
-usage (void)
+usage (int exitcode)
 {
     fprintf(stderr, "usage: %s [options]\n%s", program_name,
             "  where options are:\n"
             "  -display <display> or -d <display>\n"
             "  -help\n"
+            "  -version\n"
             "  -set <percentage> or = <percentage>\n"
             "  -inc <percentage> or + <percentage>\n"
             "  -dec <percentage> or - <percentage>\n"
             "  -get\n"
             "  -time <fade time in milliseconds>\n"
             "  -steps <number of steps in fade>\n");
-    exit (1);
+    exit (exitcode);
+}
+
+static void
+missing_arg (const char *option)
+{
+    fprintf(stderr, "%s: %s requires an argument\n", program_name, option);
+    usage(1);
 }
 
 static long
@@ -107,7 +120,7 @@ main (int argc, char **argv)
 {
     char    *dpy_name = NULL;
     op_t    op = Get;
-    int	    value = 0;
+    double  value = 0;
     int	    i;
     int	    total_time = 200;	/* ms */
     int	    steps = 20;
@@ -129,47 +142,47 @@ main (int argc, char **argv)
     {
 	if (!strcmp (argv[i], "-display") || !strcmp ("-d", argv[i]))
 	{
-	    if (++i >= argc) usage();
+	    if (++i >= argc) missing_arg (argv[i-1]);
 	    dpy_name = argv[i];
 	    continue;
 	}
 	if (!strcmp (argv[i], "-set") || !strcmp (argv[i], "="))
 	{
-	    if (++i >= argc) usage();
+	    if (++i >= argc) missing_arg (argv[i-1]);
 	    op = Set;
-	    value = atoi (argv[i]);
+	    value = atof (argv[i]);
 	    continue;
 	}
 	if (argv[i][0] == '=' && isdigit (argv[i][1]))
 	{
 	    op = Set;
-	    value = atoi (argv[i] + 1);
+	    value = atof (argv[i] + 1);
 	    continue;
 	}
 	if (!strcmp (argv[i], "-inc") || !strcmp (argv[i], "+"))
 	{
-	    if (++i >= argc) usage();
+	    if (++i >= argc) missing_arg (argv[i-1]);
 	    op = Inc;
-	    value = atoi (argv[i]);
+	    value = atof (argv[i]);
 	    continue;
 	}
 	if (argv[i][0] == '+' && isdigit (argv[i][1]))
 	{
 	    op = Inc;
-	    value = atoi (argv[i] + 1);
+	    value = atof (argv[i] + 1);
 	    continue;
 	}
 	if (!strcmp (argv[i], "-dec") || !strcmp (argv[i], "-"))
 	{
-	    if (++i >= argc) usage();
+	    if (++i >= argc) missing_arg (argv[i-1]);
 	    op = Dec;
-	    value = atoi (argv[i]);
+	    value = atof (argv[i]);
 	    continue;
 	}
 	if (argv[i][0] == '-' && isdigit (argv[i][1]))
 	{
 	    op = Dec;
-	    value = atoi (argv[i] + 1);
+	    value = atof (argv[i] + 1);
 	    continue;
 	}
 	if (!strcmp (argv[i], "-get") || !strcmp (argv[i], "-g"))
@@ -179,21 +192,28 @@ main (int argc, char **argv)
 	}
 	if (!strcmp (argv[i], "-time"))
 	{
-	    if (++i >= argc) usage();
+	    if (++i >= argc) missing_arg (argv[i-1]);
 	    total_time = atoi (argv[i]);
 	    continue;
 	}
 	if (!strcmp (argv[i], "-steps"))
 	{
-	    if (++i >= argc) usage();
+	    if (++i >= argc) missing_arg (argv[i-1]);
 	    steps = atoi (argv[i]);
 	    continue;
 	}
 	if (!strcmp (argv[i], "-help") || !strcmp (argv[i], "-?"))
 	{
-	    usage ();
+	    usage (0);
 	}
-	usage ();
+	if (!strcmp (argv[i], "-version"))
+	{
+	    puts (PACKAGE_STRING);
+	    exit (0);
+	}
+	fprintf(stderr, "%s: unrecognized argument '%s'\n",
+		program_name, argv[i]);
+	usage (1);
     }
     conn = xcb_connect (dpy_name, NULL);
     ver_cookie = xcb_randr_query_version (conn, 1, 2);
@@ -245,18 +265,18 @@ main (int argc, char **argv)
 	xcb_window_t root = screen->root;
 	xcb_randr_output_t *outputs;
 
-	xcb_randr_get_screen_resources_cookie_t resources_cookie;
-	xcb_randr_get_screen_resources_reply_t *resources_reply;
+	xcb_randr_get_screen_resources_current_cookie_t resources_cookie;
+	xcb_randr_get_screen_resources_current_reply_t *resources_reply;
 
-	resources_cookie = xcb_randr_get_screen_resources (conn, root);
-	resources_reply = xcb_randr_get_screen_resources_reply (conn, resources_cookie, &error);
+	resources_cookie = xcb_randr_get_screen_resources_current (conn, root);
+	resources_reply = xcb_randr_get_screen_resources_current_reply (conn, resources_cookie, &error);
 	if (error != NULL || resources_reply == NULL) {
 	    int ec = error ? error->error_code : -1;
 	    fprintf (stderr, "RANDR Get Screen Resources returned error %d\n", ec);
 	    continue;
 	}
 
-	outputs = xcb_randr_get_screen_resources_outputs (resources_reply);
+	outputs = xcb_randr_get_screen_resources_current_outputs (resources_reply);
 	for (int o = 0; o < resources_reply->num_outputs; o++)
 	{
 	    xcb_randr_output_t output = outputs[o];

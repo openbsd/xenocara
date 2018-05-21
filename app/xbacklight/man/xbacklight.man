@@ -46,6 +46,8 @@ Increases brightness by the specified amount.
 Decreases brightness by the specified amount.
 .IP \-help
 Print out a summary of the usage and exit.
+.IP \-version
+Print out the program version and exit.
 .IP "\-time \fImilliseconds\fP"
 Length of time to spend fading the backlight between old and new value.
 Default is 200.
