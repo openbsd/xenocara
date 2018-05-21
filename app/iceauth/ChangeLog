@@ -1,3 +1,53 @@
+commit e994aca370f6148f692a4ab9794daa8a522e37db
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 4 19:42:54 2018 -0800
+
+    iceauth 1.0.8
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bfaf0fb4cc18adf377753eb9c47953b0ca30b3b7
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:20 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 20a14cffe1d64a61ab0208fc3e94232d2f1361ac
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit f9d9da776b7a5ca4510c2865adcefd39430ae2ea
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 60749d4162ae4c3cafe0ae6bc4ed24631f457e65
+Author: Niveditha Rau <niveditha.rau@oracle.com>
+Date:   Fri Apr 24 11:13:14 2015 -0700
+
+    Add -u & -V options to synopsis in man page
+    
+    Signed-off-by: Niveditha Rau <niveditha.rau@oracle.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit fba114e03845a4cfab966f0545e809fdba9e9365
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Jan 16 22:12:11 2015 -0800
