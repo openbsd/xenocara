@@ -1,3 +1,78 @@
+commit a2fdd07e3688e658d3af31dc3780983432de31e4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 9 17:48:32 2018 -0800
+
+    xkill 1.0.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b3538a31ba88b865b1c5aafe4b8e798f6f04e26d
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 19c1509c183215dc10b3682d4a68b2e25cb12c47
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit e0dae86d008315d637770008c3a3ac1e11292f14
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 7942cfdb5fad5c6fe9d2d9c622f080b4c52b0c97
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 23 22:53:54 2015 -0700
+
+    Use strcasecmp instead of a tolower loop & strcmp
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu@herrb.eu>
+
+commit 3115919a3bbb230b541b5ad8ccd2e363b8a4e4ab
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 22:11:39 2014 -0700
+
+    Print which option was in error along with usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b0970c3a99f8aeefe2f9890e87dabc6a1dd16cf6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 22:02:51 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f1147dcdc3d78fd91ef84cb538abc8aa28301de0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 22:02:42 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 3d990ebfd1dde829f9fda86c556aa51a0308188b
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Sep 8 09:51:15 2013 -0700

@@ -55,7 +55,7 @@ static char *ProgramName;
 #define SelectButtonAny (-1)
 #define SelectButtonFirst (-2)
 
-static int parse_button ( char *s, int *buttonp );
+static int parse_button ( const char *s, int *buttonp );
 static XID get_window_id ( Display *dpy, int screen, int button, const char *msg );
 static int catch_window_errors ( Display *dpy, XErrorEvent *ev );
 static int kill_all_windows ( Display *dpy, int screenno, Bool top );
@@ -73,7 +73,7 @@ Exit(int code, Display *dpy)
 }
 
 static void _X_NORETURN
-usage(void)
+usage(const char *errmsg)
 {
     const char *options =
 "where options include:\n"
@@ -84,6 +84,9 @@ usage(void)
 "    -all                    kill all clients with top level windows\n"
 "    -version                print version and exit\n"
 "\n";
+
+    if (errmsg != NULL)
+        fprintf (stderr, "%s: %s\n\n", ProgramName, errmsg);
 
     fprintf (stderr, "usage:  %s [-option ...]\n%s",
 	     ProgramName, options);
@@ -112,11 +115,11 @@ main(int argc, char *argv[])
 	if (arg[0] == '-') {
 	    switch (arg[1]) {
 	      case 'd':			/* -display displayname */
-		if (++i >= argc) usage ();
+		if (++i >= argc) usage ("-display requires an argument");
 		displayname = argv[i];
 		continue;
 	      case 'i':			/* -id resourceid */
-		if (++i >= argc) usage ();
+		if (++i >= argc) usage ("-id requires an argument");
 		id = strtoul (argv[i], NULL, 0);
 		if (id == 0 || id >= 0xFFFFFFFFU) {
 		    fprintf (stderr, "%s:  invalid id \"%s\"\n",
@@ -125,7 +128,7 @@ main(int argc, char *argv[])
 		}
 		continue;
 	      case 'b':			/* -button number */
-		if (++i >= argc) usage ();
+		if (++i >= argc) usage ("-button requires an argument");
 		button_name = argv[i];
 		continue;
 	      case 'f':			/* -frame */
@@ -138,10 +141,14 @@ main(int argc, char *argv[])
                 puts(PACKAGE_STRING);
                 exit(0);
 	      default:
-		usage ();
+                fprintf(stderr, "%s: unrecognized argument %s\n\n",
+                        ProgramName, arg);
+		usage (NULL);
 	    }
 	} else {
-	    usage ();
+            fprintf(stderr, "%s: unrecognized argument %s\n\n",
+                    ProgramName, arg);
+            usage (NULL);
 	}
     }					/* end for */
 
@@ -233,22 +240,11 @@ main(int argc, char *argv[])
 }
 
 static int 
-parse_button(char *s, int *buttonp)
+parse_button(const char *s, int *buttonp)
 {
-    register char *cp;
+    const char *cp;
 
-    /* lower case name */
-    for (cp = s; *cp; cp++) {
-	if (isascii (*cp) && isupper (*cp)) {
-#ifdef _tolower
-	    *cp = (char) _tolower (*cp);
-#else
-	    *cp = (char) tolower (*cp);
-#endif /* _tolower */
-	}
-    }
-
-    if (strcmp (s, "any") == 0) {
+    if (strcasecmp (s, "any") == 0) {
 	*buttonp = SelectButtonAny;
 	return (1);
     }
