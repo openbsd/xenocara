@@ -22,7 +22,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([twm], [1.0.9],
+AC_INIT([twm], [1.0.10],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [twm])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -30,6 +30,7 @@ AC_USE_SYSTEM_EXTENSIONS
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
+AM_MAINTAINER_MODE
 
 # Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],

@@ -1,3 +1,75 @@
+commit ca032d147824861b2451c5b0ff715429f055cfe1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Mar 6 23:09:04 2018 -0800
+
+    twm 1.0.10
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9703527df12caf896963a0f39db79e58f2ab2bfa
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:20 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit d58f4564f5621ec6c0e7ea6ee9d647845ac11352
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit ca0c7a4eee66c96e6d449a58742d749c20aa494d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit c5abcb619eb0b01f074fd9acb9128f19af774834
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Wed Sep 23 20:53:24 2015 +0200
+
+    Adapt callers to ExpandFilename change.
+    
+    It now always allocates memory, so remove some unnecessary checks.
+    While here, improve handling of an error case.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cb5dc44303e8496450a649a97540e55887e1fe22
+Author: Christos Zoulas <christos@NetBSD.org>
+Date:   Wed Sep 23 10:57:44 2015 +0200
+
+    Add some const.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c644db2c3a1b6c9e5e99da130493a978a7d08010
+Author: Michael van Elst <mlelstv@NetBSD.org>
+Date:   Sun Jul 19 12:04:52 2015 +0200
+
+    Do not try to extend the font-pattern with a wild-card.
+    
+    This will almost always select the wrong fontset and use wrong metrics.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit b52e4041054b580bace70d9db5e7e3d90b33ad6d
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Apr 16 22:36:31 2015 -0700

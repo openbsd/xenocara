@@ -2020,7 +2020,7 @@ ExecuteFunction(int func, const char *action, Window w, TwmWindow *tmp_win,
 				 "%s:  unable to open cut file \"%s\"\n",
 				 ProgramName, tmp);
 		    }
-		    if (ptr != tmp) free (ptr);
+		    free (ptr);
 		}
 	    } else {
 		XFree(ptr);
@@ -2171,21 +2171,25 @@ ExecuteFunction(int func, const char *action, Window w, TwmWindow *tmp_win,
 
     case F_FILE:
 	ptr = ExpandFilename(action);
-	fd = open(ptr, O_RDONLY);
-	if (fd >= 0)
-	{
-	    count = read(fd, buff, MAX_FILE_SIZE - 1);
-	    if (count > 0)
-		XStoreBytes(dpy, buff, count);
+	if (ptr) {
+	    fd = open(ptr, O_RDONLY);
+	    if (fd >= 0)
+	    {
+		count = read(fd, buff, MAX_FILE_SIZE - 1);
+		if (count > 0)
+		    XStoreBytes(dpy, buff, count);
 
-	    close(fd);
+		close(fd);
+	    }
+	    else
+	    {
+		fprintf (stderr, "%s:  unable to open file \"%s\"\n",
+			 ProgramName, ptr);
+	    }
+	    free(ptr);
+	} else {
+	    fprintf (stderr, "%s: error expanding filename\n", ProgramName);
 	}
-	else
-	{
-	    fprintf (stderr, "%s:  unable to open file \"%s\"\n",
-		     ProgramName, ptr);
-	}
-	if (ptr != action) free(ptr);
 	break;
 
     case F_REFRESH:

@@ -64,7 +64,7 @@ in this Software without prior written authorization from The Open Group.
 extern void MoveOutline ( Window root, int x, int y, int width, int height,
 			  int bw, int th );
 extern void Zoom ( Window wf, Window wt );
-extern char * ExpandFilename ( char *name );
+extern char * ExpandFilename ( const char *name );
 extern void GetUnknownIcon ( const char *name );
 extern Pixmap FindBitmap ( const char *name, unsigned int *widthp,
 			   unsigned int *heightp );
