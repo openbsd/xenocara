@@ -74,6 +74,10 @@ Specifies the portion of the screen to be repainted; see \fIX(__miscmansuffix__)
 .B \-display \fIdisplay\fP
 This  argument  allows  you  to  specify the server and screen to
 refresh; see \fIX(__miscmansuffix__)\fP.
+.PP
+.TP 10
+.B \-version
+This argument prints the program version and exits.
 .SH X DEFAULTS
 The
 .I xrefresh
