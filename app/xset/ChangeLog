@@ -1,3 +1,80 @@
+commit 12dbac38f29c3db7b74a1c04e73bfd436ab66626
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 9 20:16:22 2018 -0800
+
+    xset 1.2.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 41b3ad04db4f9fdcf2705445a28c9cceecf6d980
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 9ba4eb9dac7301d88c0ba5c0652043408f2df797
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit dcca06a7a73a395441f04acb5a4728699127acf6
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit e435972e97a209144e49ec45731edef45265a03f
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Tue Apr 21 13:23:54 2015 +0100
+
+    Include unistd.h for usleep() if HAVE_USLEEP
+    
+    Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: David Macek <david.macek.0@gmail.com>
+
+commit 217c8ad8ee7690c24a9345941071c6befe6c68fb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:39:32 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit efef90e6611f16e311b5440fa5cfa0190407f2f4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:38:41 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c3ce2c28deac121db0de50af63c902e5883fe140
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sat Aug 17 18:25:49 2013 +0200
+
+    Fix one last warning about usage() format string.
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit bee5b8e13837a02b5f2ac09e0c2b90fa5616e0fb
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Aug 8 20:43:18 2013 -0700
