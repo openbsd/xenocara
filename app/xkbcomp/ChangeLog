@@ -1,3 +1,129 @@
+commit 34842845b191082fd1cfff3b7038332cdcadb825
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Mar 1 11:15:18 2018 -0500
+
+    xkbcomp 1.4.1
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 993d4916a92b56b5043cf0b90f550568c817ad2b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Feb 13 13:48:46 2018 +1000
+
+    pkgconfig: add the exec_prefix substitution
+    
+    bindir gets replaced with:
+        bindir=${exec_prefix}/bin
+    but exec_prefix isn't set so we end up with an invalid bindir.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jon Turney <jon.turney@dronecode.org.uk>
+
+commit 3e2a6ad4edfbf21c3f76f8319f0039b7f589944f
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Nov 6 12:54:41 2017 -0500
+
+    pkgconfig: Add our bindir to xkbcomp.pc
+    
+    Reviewed-by: Daniel Stone <daniels@collabora.com>
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 3fcd5f4490adee266eb4c0110d058c7f4e515e36
+Author: Daniel Stone <daniels@collabora.com>
+Date:   Mon May 1 15:59:28 2017 +0100
+
+    xkbcomp 1.4.0
+    
+    Signed-off-by: Daniel Stone <daniels@collabora.com>
+
+commit 7fdfabd753a39dbdcfcfa65ec33d0192448119d8
+Author: Daniel Stone <daniels@collabora.com>
+Date:   Thu Apr 6 15:52:10 2017 +0100
+
+    keycodes: Ignore high keycodes
+    
+    Rather than throwing a fatal error when a keycode definition exceeds the
+    declared maximum (i.e. 255), just ignore the definition and continue.
+    
+    This allows xkeyboard-config to start shipping datasets including high
+    keycodes, which will work in xkbcommon as it ignores explicit range
+    declarations.
+    
+    Signed-off-by: Daniel Stone <daniels@collabora.com>
+    Reviewed-by: Ran Benita <ran234@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reported-by: Christian Kellner <gicmo@gnome.org>
+
+commit 9f1e3e8c8914b349b9b52501bb4acadedb31081d
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 6f16a2e38667bea33e0cb566734a87c2b92c9391
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit bbc55549ee44830747eccfadd61df3ed38a99202
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 8995ac58e15595de9158c2d8df9e02b0c925e8f4
+Author: Ran Benita <ran234@gmail.com>
+Date:   Wed Jan 6 21:32:52 2016 +0100
+
+    When a file contains several maps, look for a default map
+    
+    Rather than always taking the first one in the file. This is exactly the
+    intended use of the 'default' flag.
+    
+    Note that pretty much the same code is duplicated in xkbcomp.c when
+    compiling a single file from the command line, but there it is
+    implemented correctly (look for XkbLC_Default).
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=69950
+    
+    Signed-off-by: Ran Benita <ran234@gmail.com>
+    Tested-by: Benno Schulenberg <bensberg@justemail.net>
+    Acked-by: Sergey Udaltsov <sergey.udaltsov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit bf4d7d059daf5c6f81d70f8d3e5e2a87265381b7
+Author: Benno Schulenberg <bensberg@justemail.net>
+Date:   Thu Sep 11 22:04:21 2014 +0200
+
+    When overriding a key, adjust also its number of levels (#57242).
+    
+    Specifying an explicit key type when overriding a key should adjust
+    the number of levels to that of the specified type. This gets rid of
+    the age-old warning of the right Alt key being ONE_LEVEL but having
+    two symbols assigned.
+    
+    Fixes bug #57242 <http://bugs.freedesktop.org/show_bug.cgi?id=57242>.
+    
+    Signed-off-by: Benno Schulenberg <bensberg@justemail.net>
+    Reviewed-by: Ran Benita <ran234@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit f909259b1da70bc145f19e5ce595c8e945a2a808
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Thu Nov 5 12:19:22 2015 +1000
