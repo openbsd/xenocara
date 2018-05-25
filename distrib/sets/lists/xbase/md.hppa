@@ -39,6 +39,7 @@
 ./usr/X11R6/include/X11/dri/xf86dristr.h
 ./usr/X11R6/include/X11/extensions/dri2proto.h
 ./usr/X11R6/include/X11/extensions/dri2tokens.h
+./usr/X11R6/include/epoxy/common.h
 ./usr/X11R6/include/epoxy/egl.h
 ./usr/X11R6/include/epoxy/egl_generated.h
 ./usr/X11R6/include/epoxy/gl.h
@@ -246,7 +247,7 @@
 ./usr/X11R6/lib/libdrm.la
 ./usr/X11R6/lib/libdrm.so.7.6
 ./usr/X11R6/lib/libepoxy.a
-./usr/X11R6/lib/libepoxy.so.2.0
+./usr/X11R6/lib/libepoxy.so.3.0
 ./usr/X11R6/lib/libgbm.la
 ./usr/X11R6/lib/libgbm.so.0.2
 ./usr/X11R6/lib/libglapi.la
