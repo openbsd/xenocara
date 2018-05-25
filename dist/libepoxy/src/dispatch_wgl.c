@@ -46,16 +46,16 @@ epoxy_conservative_has_wgl_extension(const char *ext)
     return epoxy_has_wgl_extension(hdc, ext);
 }
 
-PUBLIC bool
+bool
 epoxy_has_wgl_extension(HDC hdc, const char *ext)
  {
      PFNWGLGETEXTENSIONSSTRINGARBPROC getext;
 
      getext = (void *)wglGetProcAddress("wglGetExtensionsStringARB");
      if (!getext) {
-         fprintf(stderr,
-                 "Implementation unexpectedly missing "
-                 "WGL_ARB_extensions_string.  Probably a libepoxy bug.\n");
+         fputs("Implementation unexpectedly missing "
+               "WGL_ARB_extensions_string.  Probably a libepoxy bug.\n",
+               stderr);
          return false;
      }
 
@@ -72,7 +72,7 @@ epoxy_has_wgl_extension(HDC hdc, const char *ext)
  * table per context and reuse it when the context is made current
  * again.
  */
-PUBLIC void
+void
 epoxy_handle_external_wglMakeCurrent(void)
 {
     if (!first_context_current) {
@@ -190,7 +190,7 @@ WRAPPER(epoxy_wglMakeAssociatedContextCurrentAMD)(HGLRC hglrc)
     return ret;
 }
 
-PUBLIC PFNWGLMAKECURRENTPROC epoxy_wglMakeCurrent = epoxy_wglMakeCurrent_wrapped;
-PUBLIC PFNWGLMAKECONTEXTCURRENTEXTPROC epoxy_wglMakeContextCurrentEXT = epoxy_wglMakeContextCurrentEXT_wrapped;
-PUBLIC PFNWGLMAKECONTEXTCURRENTARBPROC epoxy_wglMakeContextCurrentARB = epoxy_wglMakeContextCurrentARB_wrapped;
-PUBLIC PFNWGLMAKEASSOCIATEDCONTEXTCURRENTAMDPROC epoxy_wglMakeAssociatedContextCurrentEXT = epoxy_wglMakeAssociatedContextCurrentAMD_wrapped;
+PFNWGLMAKECURRENTPROC epoxy_wglMakeCurrent = epoxy_wglMakeCurrent_wrapped;
+PFNWGLMAKECONTEXTCURRENTEXTPROC epoxy_wglMakeContextCurrentEXT = epoxy_wglMakeContextCurrentEXT_wrapped;
+PFNWGLMAKECONTEXTCURRENTARBPROC epoxy_wglMakeContextCurrentARB = epoxy_wglMakeContextCurrentARB_wrapped;
+PFNWGLMAKEASSOCIATEDCONTEXTCURRENTAMDPROC epoxy_wglMakeAssociatedContextCurrentEXT = epoxy_wglMakeAssociatedContextCurrentAMD_wrapped;

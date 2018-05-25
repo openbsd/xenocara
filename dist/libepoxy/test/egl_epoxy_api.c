@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Intel Corporation
+ * Copyright 2018  Emmanuele Bassi
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -22,26 +22,20 @@
  */
 
 /**
- * @file egl_gl.c
+ * @file epoxy_api.c
  *
- * Tests that epoxy works with EGL using desktop OpenGL.
+ * Tests the Epoxy API using EGL.
  */
-
-#define _GNU_SOURCE
 
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <err.h>
-#include <dlfcn.h>
 #include "epoxy/gl.h"
 #include "epoxy/egl.h"
-#include "epoxy/glx.h"
 
 #include "egl_common.h"
-#include "glx_common.h"
-#include "dlwrap.h"
 
 static bool
 make_egl_current_and_test(EGLDisplay *dpy, EGLContext ctx)
@@ -63,8 +57,17 @@ make_egl_current_and_test(EGLDisplay *dpy, EGLContext ctx)
         pass = false;
     }
 
+    if (epoxy_glsl_version() < 100) {
+        fprintf(stderr, "Claimed to have GLSL version %d\n",
+                epoxy_glsl_version());
+        pass = false;
+    }
+
     string = (const char *)glGetString(GL_VERSION);
-    printf("GL version: %s\n", string);
+    printf("GL version: %s - Epoxy: %d\n", string, epoxy_gl_version());
+
+    string = (const char *)glGetString(GL_SHADING_LANGUAGE_VERSION);
+    printf("GLSL version: %s - Epoxy: %d\n", string, epoxy_glsl_version());
 
     shader = glCreateShader(GL_FRAGMENT_SHADER);
     pass = glIsShader(shader);
@@ -73,9 +76,8 @@ make_egl_current_and_test(EGLDisplay *dpy, EGLContext ctx)
 }
 
 static void
-init_egl(EGLDisplay **out_dpy, EGLContext *out_ctx)
+init_egl(EGLDisplay *dpy, EGLContext *out_ctx)
 {
-    EGLDisplay *dpy = get_egl_display_or_skip();
     static const EGLint config_attribs[] = {
 	EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
 	EGL_RED_SIZE, 1,
@@ -105,7 +107,6 @@ init_egl(EGLDisplay **out_dpy, EGLContext *out_ctx)
     if (!ctx)
         errx(77, "Couldn't create a GL context\n");
 
-    *out_dpy = dpy;
     *out_ctx = ctx;
 }
 
@@ -113,18 +114,30 @@ int
 main(int argc, char **argv)
 {
     bool pass = true;
-    EGLDisplay *egl_dpy;
+
     EGLContext egl_ctx;
+    EGLDisplay *dpy = get_egl_display_or_skip();
+    const char *extensions = eglQueryString(dpy, EGL_EXTENSIONS);
+    char *first_space;
+    char *an_extension;
 
-    /* Force epoxy to have loaded both EGL and GLX libs already -- we
-     * can't assume anything about symbol resolution based on having
-     * EGL or GLX loaded.
+    /* We don't have any extensions guaranteed by the ABI, so for the
+     * touch test we just check if the first one is reported to be there.
      */
-    (void)glXGetCurrentContext();
-    (void)eglGetCurrentContext();
+    first_space = strstr(extensions, " ");
+    if (first_space) {
+        an_extension = strndup(extensions, first_space - extensions);
+    } else {
+        an_extension = strdup(extensions);
+    }
 
-    init_egl(&egl_dpy, &egl_ctx);
-    pass = make_egl_current_and_test(egl_dpy, egl_ctx) && pass;
+    if (!epoxy_extension_in_string(extensions, an_extension))
+        errx(1, "Implementation reported absence of %s", an_extension);
+
+    free(an_extension);
+
+    init_egl(dpy, &egl_ctx);
+    pass = make_egl_current_and_test(dpy, egl_ctx);
 
     return pass != true;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Intel Corporation
+ * Copyright 2017  Emmanuele Bassi 
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -21,50 +21,43 @@
  * IN THE SOFTWARE.
  */
 
-/**
- * @file glx_static.c
+/** @file common.h
  *
- * Simple touch-test of using epoxy when linked statically.  On Linux,
- * the ifunc support we'd like to use has some significant behavior
- * changes depending on whether it's a static build or shared library
- * build.
- *
- * Note that if configured without --enable-static, this test will end
- * up dynamically linked anyway, defeating the test.
+ * A common header file, used to define macros and shared symbols.
  */
 
-#include <stdio.h>
-#include <assert.h>
-#include "epoxy/gl.h"
-#include "epoxy/glx.h"
-#include <X11/Xlib.h>
-#include <dlfcn.h>
+#ifndef EPOXY_COMMON_H
+#define EPOXY_COMMON_H
 
-#include "glx_common.h"
-
-int
-main(int argc, char **argv)
-{
-    bool pass = true;
-    int val;
-
-#if NEEDS_TO_BE_STATIC
-    if (dlsym(NULL, "epoxy_glCompileShader")) {
-        fputs("glx_static requires epoxy built with --enable-static\n", stderr);
-        return 77;
-    }
+#ifdef __cplusplus
+# define EPOXY_BEGIN_DECLS      extern "C" {
+# define EPOXY_END_DECLS        }
+#else
+# define EPOXY_BEGIN_DECLS
+# define EPOXY_END_DECLS
 #endif
 
-    Display *dpy = get_display_or_skip();
-    make_glx_context_current_or_skip(dpy);
+#ifndef EPOXY_PUBLIC
+# if defined(_MSC_VER)
+#  define EPOXY_PUBLIC __declspec(dllimport) extern
+# else
+#  define EPOXY_PUBLIC extern
+# endif
+#endif
 
-    glEnable(GL_LIGHTING);
-    val = 0;
-    glGetIntegerv(GL_LIGHTING, &val);
-    if (!val) {
-        fputs("Enabling GL_LIGHTING didn't stick.\n", stderr);
-        pass = false;
-    }
+#if defined(_MSC_VER) && !defined(__bool_true_false_are_defined) && (_MSC_VER < 1800)
+typedef unsigned char bool;
+# define false 0
+# define true 1
+#else
+# include <stdbool.h>
+#endif
 
-    return pass != true;
-}
+EPOXY_BEGIN_DECLS
+
+EPOXY_PUBLIC bool epoxy_extension_in_string(const char *extension_list,
+                                            const char *ext);
+
+EPOXY_END_DECLS
+
+#endif /* EPOXY_COMMON_H */

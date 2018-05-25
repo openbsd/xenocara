@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.1 2015/04/15 07:58:58 jsg Exp $
+# $OpenBSD: Makefile,v 1.2 2018/05/25 06:24:59 matthieu Exp $
 
 EPOXY=	${.CURDIR}/../../../dist/libepoxy
 
@@ -23,15 +23,18 @@ clean distclean:
 
 src/gl_generated_dispatch.c: registry/gl.xml
 	$(PYTHON) $(PYTHON_FLAGS) ${EPOXY}/src/gen_dispatch.py \
-	    --dir ${.CURDIR} ${EPOXY}/registry/gl.xml
+	    --srcdir ${.CURDIR}/src --includedir ${.CURDIR}/include/epoxy \
+	    ${EPOXY}/registry/gl.xml
 
 src/glx_generated_dispatch.c: registry/glx.xml
 	$(PYTHON) $(PYTHON_FLAGS) ${EPOXY}/src/gen_dispatch.py \
-	    --dir ${.CURDIR} ${EPOXY}/registry/glx.xml
+	    --srcdir ${.CURDIR}/src --includedir ${.CURDIR}/include/epoxy \
+	    ${EPOXY}/registry/glx.xml
 
 src/egl_generated_dispatch.c: registry/egl.xml
 	$(PYTHON) $(PYTHON_FLAGS) ${EPOXY}/src/gen_dispatch.py \
-	    --dir ${.CURDIR} ${EPOXY}/registry/egl.xml
+	    --srcdir ${.CURDIR}/src --includedir ${.CURDIR}/include/epoxy \
+	    ${EPOXY}/registry/egl.xml
 
 .SUFFIXES: .py .xml
 

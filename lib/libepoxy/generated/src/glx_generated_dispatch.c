@@ -1,6 +1,23 @@
 /* GL dispatch code.
  * This is code-generated from the GL API XML files from Khronos.
+ * 
+ * Copyright (c) 2013-2017 The Khronos Group Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
  */
+
+#include "config.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -83,6 +100,7 @@ struct dispatch_table {
     PFNGLXGETPROCADDRESSARBPROC epoxy_glXGetProcAddressARB;
     PFNGLXGETSELECTEDEVENTPROC epoxy_glXGetSelectedEvent;
     PFNGLXGETSELECTEDEVENTSGIXPROC epoxy_glXGetSelectedEventSGIX;
+    PFNGLXGETSWAPINTERVALMESAPROC epoxy_glXGetSwapIntervalMESA;
     PFNGLXGETSYNCVALUESOMLPROC epoxy_glXGetSyncValuesOML;
     PFNGLXGETTRANSPARENTINDEXSUNPROC epoxy_glXGetTransparentIndexSUN;
     PFNGLXGETVIDEODEVICENVPROC epoxy_glXGetVideoDeviceNV;
@@ -138,6 +156,7 @@ struct dispatch_table {
     PFNGLXSWAPBUFFERSPROC epoxy_glXSwapBuffers;
     PFNGLXSWAPBUFFERSMSCOMLPROC epoxy_glXSwapBuffersMscOML;
     PFNGLXSWAPINTERVALEXTPROC epoxy_glXSwapIntervalEXT;
+    PFNGLXSWAPINTERVALMESAPROC epoxy_glXSwapIntervalMESA;
     PFNGLXSWAPINTERVALSGIPROC epoxy_glXSwapIntervalSGI;
     PFNGLXUSEXFONTPROC epoxy_glXUseXFont;
     PFNGLXWAITFORMSCOMLPROC epoxy_glXWaitForMscOML;
@@ -152,6 +171,7 @@ static inline struct dispatch_table *
 get_dispatch_table(void);
 
 #endif
+
 enum glx_provider {
     glx_provider_terminator = 0,
     GLX_10,
@@ -170,6 +190,7 @@ enum glx_provider {
     GLX_extension_GLX_MESA_query_renderer,
     GLX_extension_GLX_MESA_release_buffers,
     GLX_extension_GLX_MESA_set_3dfx_mode,
+    GLX_extension_GLX_MESA_swap_control,
     GLX_extension_GLX_NV_copy_buffer,
     GLX_extension_GLX_NV_copy_image,
     GLX_extension_GLX_NV_delay_before_swap,
@@ -192,6 +213,7 @@ enum glx_provider {
     GLX_extension_GLX_SUN_get_transparent_index,
     always_present,
 } PACKED;
+ENDPACKED
 
 static const char *enum_string =
     "GLX 10\0"
@@ -210,6 +232,7 @@ static const char *enum_string =
     "GLX extension \"GLX_MESA_query_renderer\"\0"
     "GLX extension \"GLX_MESA_release_buffers\"\0"
     "GLX extension \"GLX_MESA_set_3dfx_mode\"\0"
+    "GLX extension \"GLX_MESA_swap_control\"\0"
     "GLX extension \"GLX_NV_copy_buffer\"\0"
     "GLX extension \"GLX_NV_copy_image\"\0"
     "GLX extension \"GLX_NV_delay_before_swap\"\0"
@@ -234,181 +257,2982 @@ static const char *enum_string =
      ;
 
 static const uint16_t enum_string_offsets[] = {
-    [GLX_10] = 0,
-    [GLX_11] = 7,
-    [GLX_12] = 14,
-    [GLX_13] = 21,
-    [GLX_extension_GLX_AMD_gpu_association] = 28,
-    [GLX_extension_GLX_ARB_create_context] = 68,
-    [GLX_extension_GLX_ARB_get_proc_address] = 107,
-    [GLX_extension_GLX_EXT_import_context] = 148,
-    [GLX_extension_GLX_EXT_swap_control] = 187,
-    [GLX_extension_GLX_EXT_texture_from_pixmap] = 224,
-    [GLX_extension_GLX_MESA_agp_offset] = 268,
-    [GLX_extension_GLX_MESA_copy_sub_buffer] = 304,
-    [GLX_extension_GLX_MESA_pixmap_colormap] = 345,
-    [GLX_extension_GLX_MESA_query_renderer] = 386,
-    [GLX_extension_GLX_MESA_release_buffers] = 426,
-    [GLX_extension_GLX_MESA_set_3dfx_mode] = 467,
-    [GLX_extension_GLX_NV_copy_buffer] = 506,
-    [GLX_extension_GLX_NV_copy_image] = 541,
-    [GLX_extension_GLX_NV_delay_before_swap] = 575,
-    [GLX_extension_GLX_NV_present_video] = 616,
-    [GLX_extension_GLX_NV_swap_group] = 653,
-    [GLX_extension_GLX_NV_video_capture] = 687,
-    [GLX_extension_GLX_NV_video_out] = 724,
-    [GLX_extension_GLX_OML_sync_control] = 757,
-    [GLX_extension_GLX_SGIX_fbconfig] = 794,
-    [GLX_extension_GLX_SGIX_hyperpipe] = 828,
-    [GLX_extension_GLX_SGIX_pbuffer] = 863,
-    [GLX_extension_GLX_SGIX_swap_barrier] = 896,
-    [GLX_extension_GLX_SGIX_swap_group] = 934,
-    [GLX_extension_GLX_SGIX_video_resize] = 970,
-    [GLX_extension_GLX_SGIX_video_source] = 1008,
-    [GLX_extension_GLX_SGI_cushion] = 1046,
-    [GLX_extension_GLX_SGI_make_current_read] = 1078,
-    [GLX_extension_GLX_SGI_swap_control] = 1120,
-    [GLX_extension_GLX_SGI_video_sync] = 1157,
-    [GLX_extension_GLX_SUN_get_transparent_index] = 1192,
-    [always_present] = 1238,
+    -1, /* glx_provider_terminator, unused */
+    0, /* GLX_10 */
+    7, /* GLX_11 */
+    14, /* GLX_12 */
+    21, /* GLX_13 */
+    28, /* GLX_extension_GLX_AMD_gpu_association */
+    68, /* GLX_extension_GLX_ARB_create_context */
+    107, /* GLX_extension_GLX_ARB_get_proc_address */
+    148, /* GLX_extension_GLX_EXT_import_context */
+    187, /* GLX_extension_GLX_EXT_swap_control */
+    224, /* GLX_extension_GLX_EXT_texture_from_pixmap */
+    268, /* GLX_extension_GLX_MESA_agp_offset */
+    304, /* GLX_extension_GLX_MESA_copy_sub_buffer */
+    345, /* GLX_extension_GLX_MESA_pixmap_colormap */
+    386, /* GLX_extension_GLX_MESA_query_renderer */
+    426, /* GLX_extension_GLX_MESA_release_buffers */
+    467, /* GLX_extension_GLX_MESA_set_3dfx_mode */
+    506, /* GLX_extension_GLX_MESA_swap_control */
+    544, /* GLX_extension_GLX_NV_copy_buffer */
+    579, /* GLX_extension_GLX_NV_copy_image */
+    613, /* GLX_extension_GLX_NV_delay_before_swap */
+    654, /* GLX_extension_GLX_NV_present_video */
+    691, /* GLX_extension_GLX_NV_swap_group */
+    725, /* GLX_extension_GLX_NV_video_capture */
+    762, /* GLX_extension_GLX_NV_video_out */
+    795, /* GLX_extension_GLX_OML_sync_control */
+    832, /* GLX_extension_GLX_SGIX_fbconfig */
+    866, /* GLX_extension_GLX_SGIX_hyperpipe */
+    901, /* GLX_extension_GLX_SGIX_pbuffer */
+    934, /* GLX_extension_GLX_SGIX_swap_barrier */
+    972, /* GLX_extension_GLX_SGIX_swap_group */
+    1008, /* GLX_extension_GLX_SGIX_video_resize */
+    1046, /* GLX_extension_GLX_SGIX_video_source */
+    1084, /* GLX_extension_GLX_SGI_cushion */
+    1116, /* GLX_extension_GLX_SGI_make_current_read */
+    1158, /* GLX_extension_GLX_SGI_swap_control */
+    1195, /* GLX_extension_GLX_SGI_video_sync */
+    1230, /* GLX_extension_GLX_SUN_get_transparent_index */
+    1276, /* always_present */
 };
 
-static const char entrypoint_strings[] = 
-   "glXBindChannelToWindowSGIX\0"
-   "glXBindHyperpipeSGIX\0"
-   "glXBindSwapBarrierNV\0"
-   "glXBindSwapBarrierSGIX\0"
-   "glXBindTexImageEXT\0"
-   "glXBindVideoCaptureDeviceNV\0"
-   "glXBindVideoDeviceNV\0"
-   "glXBindVideoImageNV\0"
-   "glXBlitContextFramebufferAMD\0"
-   "glXChannelRectSGIX\0"
-   "glXChannelRectSyncSGIX\0"
-   "glXChooseFBConfig\0"
-   "glXChooseFBConfigSGIX\0"
-   "glXChooseVisual\0"
-   "glXCopyBufferSubDataNV\0"
-   "glXCopyContext\0"
-   "glXCopyImageSubDataNV\0"
-   "glXCopySubBufferMESA\0"
-   "glXCreateAssociatedContextAMD\0"
-   "glXCreateAssociatedContextAttribsAMD\0"
-   "glXCreateContext\0"
-   "glXCreateContextAttribsARB\0"
-   "glXCreateContextWithConfigSGIX\0"
-   "glXCreateGLXPbufferSGIX\0"
-   "glXCreateGLXPixmap\0"
-   "glXCreateGLXPixmapMESA\0"
-   "glXCreateGLXPixmapWithConfigSGIX\0"
-   "glXCreateNewContext\0"
-   "glXCreatePbuffer\0"
-   "glXCreatePixmap\0"
-   "glXCreateWindow\0"
-   "glXCushionSGI\0"
-   "glXDelayBeforeSwapNV\0"
-   "glXDeleteAssociatedContextAMD\0"
-   "glXDestroyContext\0"
-   "glXDestroyGLXPbufferSGIX\0"
-   "glXDestroyGLXPixmap\0"
-   "glXDestroyGLXVideoSourceSGIX\0"
-   "glXDestroyHyperpipeConfigSGIX\0"
-   "glXDestroyPbuffer\0"
-   "glXDestroyPixmap\0"
-   "glXDestroyWindow\0"
-   "glXEnumerateVideoCaptureDevicesNV\0"
-   "glXEnumerateVideoDevicesNV\0"
-   "glXFreeContextEXT\0"
-   "glXGetAGPOffsetMESA\0"
-   "glXGetClientString\0"
-   "glXGetConfig\0"
-   "glXGetContextGPUIDAMD\0"
-   "glXGetContextIDEXT\0"
-   "glXGetCurrentAssociatedContextAMD\0"
-   "glXGetCurrentContext\0"
-   "glXGetCurrentDisplay\0"
-   "glXGetCurrentDisplayEXT\0"
-   "glXGetCurrentDrawable\0"
-   "glXGetCurrentReadDrawable\0"
-   "glXGetCurrentReadDrawableSGI\0"
-   "glXGetFBConfigAttrib\0"
-   "glXGetFBConfigAttribSGIX\0"
-   "glXGetFBConfigFromVisualSGIX\0"
-   "glXGetFBConfigs\0"
-   "glXGetGPUIDsAMD\0"
-   "glXGetGPUInfoAMD\0"
-   "glXGetMscRateOML\0"
-   "glXGetProcAddress\0"
-   "glXGetProcAddressARB\0"
-   "glXGetSelectedEvent\0"
-   "glXGetSelectedEventSGIX\0"
-   "glXGetSyncValuesOML\0"
-   "glXGetTransparentIndexSUN\0"
-   "glXGetVideoDeviceNV\0"
-   "glXGetVideoInfoNV\0"
-   "glXGetVideoSyncSGI\0"
-   "glXGetVisualFromFBConfig\0"
-   "glXGetVisualFromFBConfigSGIX\0"
-   "glXHyperpipeAttribSGIX\0"
-   "glXHyperpipeConfigSGIX\0"
-   "glXImportContextEXT\0"
-   "glXIsDirect\0"
-   "glXJoinSwapGroupNV\0"
-   "glXJoinSwapGroupSGIX\0"
-   "glXLockVideoCaptureDeviceNV\0"
-   "glXMakeAssociatedContextCurrentAMD\0"
-   "glXMakeContextCurrent\0"
-   "glXMakeCurrent\0"
-   "glXMakeCurrentReadSGI\0"
-   "glXNamedCopyBufferSubDataNV\0"
-   "glXQueryChannelDeltasSGIX\0"
-   "glXQueryChannelRectSGIX\0"
-   "glXQueryContext\0"
-   "glXQueryContextInfoEXT\0"
-   "glXQueryCurrentRendererIntegerMESA\0"
-   "glXQueryCurrentRendererStringMESA\0"
-   "glXQueryDrawable\0"
-   "glXQueryExtension\0"
-   "glXQueryExtensionsString\0"
-   "glXQueryFrameCountNV\0"
-   "glXQueryGLXPbufferSGIX\0"
-   "glXQueryHyperpipeAttribSGIX\0"
-   "glXQueryHyperpipeBestAttribSGIX\0"
-   "glXQueryHyperpipeConfigSGIX\0"
-   "glXQueryHyperpipeNetworkSGIX\0"
-   "glXQueryMaxSwapBarriersSGIX\0"
-   "glXQueryMaxSwapGroupsNV\0"
-   "glXQueryRendererIntegerMESA\0"
-   "glXQueryRendererStringMESA\0"
-   "glXQueryServerString\0"
-   "glXQuerySwapGroupNV\0"
-   "glXQueryVersion\0"
-   "glXQueryVideoCaptureDeviceNV\0"
-   "glXReleaseBuffersMESA\0"
-   "glXReleaseTexImageEXT\0"
-   "glXReleaseVideoCaptureDeviceNV\0"
-   "glXReleaseVideoDeviceNV\0"
-   "glXReleaseVideoImageNV\0"
-   "glXResetFrameCountNV\0"
-   "glXSelectEvent\0"
-   "glXSelectEventSGIX\0"
-   "glXSendPbufferToVideoNV\0"
-   "glXSet3DfxModeMESA\0"
-   "glXSwapBuffers\0"
-   "glXSwapBuffersMscOML\0"
-   "glXSwapIntervalEXT\0"
-   "glXSwapIntervalSGI\0"
-   "glXUseXFont\0"
-   "glXWaitForMscOML\0"
-   "glXWaitForSbcOML\0"
-   "glXWaitGL\0"
-   "glXWaitVideoSyncSGI\0"
-   "glXWaitX\0"
-    ;
+static const char entrypoint_strings[] = {
+   'g',
+   'l',
+   'X',
+   'B',
+   'i',
+   'n',
+   'd',
+   'C',
+   'h',
+   'a',
+   'n',
+   'n',
+   'e',
+   'l',
+   'T',
+   'o',
+   'W',
+   'i',
+   'n',
+   'd',
+   'o',
+   'w',
+   'S',
+   'G',
+   'I',
+   'X',
+   0, // glXBindChannelToWindowSGIX
+   'g',
+   'l',
+   'X',
+   'B',
+   'i',
+   'n',
+   'd',
+   'H',
+   'y',
+   'p',
+   'e',
+   'r',
+   'p',
+   'i',
+   'p',
+   'e',
+   'S',
+   'G',
+   'I',
+   'X',
+   0, // glXBindHyperpipeSGIX
+   'g',
+   'l',
+   'X',
+   'B',
+   'i',
+   'n',
+   'd',
+   'S',
+   'w',
+   'a',
+   'p',
+   'B',
+   'a',
+   'r',
+   'r',
+   'i',
+   'e',
+   'r',
+   'N',
+   'V',
+   0, // glXBindSwapBarrierNV
+   'g',
+   'l',
+   'X',
+   'B',
+   'i',
+   'n',
+   'd',
+   'S',
+   'w',
+   'a',
+   'p',
+   'B',
+   'a',
+   'r',
+   'r',
+   'i',
+   'e',
+   'r',
+   'S',
+   'G',
+   'I',
+   'X',
+   0, // glXBindSwapBarrierSGIX
+   'g',
+   'l',
+   'X',
+   'B',
+   'i',
+   'n',
+   'd',
+   'T',
+   'e',
+   'x',
+   'I',
+   'm',
+   'a',
+   'g',
+   'e',
+   'E',
+   'X',
+   'T',
+   0, // glXBindTexImageEXT
+   'g',
+   'l',
+   'X',
+   'B',
+   'i',
+   'n',
+   'd',
+   'V',
+   'i',
+   'd',
+   'e',
+   'o',
+   'C',
+   'a',
+   'p',
+   't',
+   'u',
+   'r',
+   'e',
+   'D',
+   'e',
+   'v',
+   'i',
+   'c',
+   'e',
+   'N',
+   'V',
+   0, // glXBindVideoCaptureDeviceNV
+   'g',
+   'l',
+   'X',
+   'B',
+   'i',
+   'n',
+   'd',
+   'V',
+   'i',
+   'd',
+   'e',
+   'o',
+   'D',
+   'e',
+   'v',
+   'i',
+   'c',
+   'e',
+   'N',
+   'V',
+   0, // glXBindVideoDeviceNV
+   'g',
+   'l',
+   'X',
+   'B',
+   'i',
+   'n',
+   'd',
+   'V',
+   'i',
+   'd',
+   'e',
+   'o',
+   'I',
+   'm',
+   'a',
+   'g',
+   'e',
+   'N',
+   'V',
+   0, // glXBindVideoImageNV
+   'g',
+   'l',
+   'X',
+   'B',
+   'l',
+   'i',
+   't',
+   'C',
+   'o',
+   'n',
+   't',
+   'e',
+   'x',
+   't',
+   'F',
+   'r',
+   'a',
+   'm',
+   'e',
+   'b',
+   'u',
+   'f',
+   'f',
+   'e',
+   'r',
+   'A',
+   'M',
+   'D',
+   0, // glXBlitContextFramebufferAMD
+   'g',
+   'l',
+   'X',
+   'C',
+   'h',
+   'a',
+   'n',
+   'n',
+   'e',
+   'l',
+   'R',
+   'e',
+   'c',
+   't',
+   'S',
+   'G',
+   'I',
+   'X',
+   0, // glXChannelRectSGIX
+   'g',
+   'l',
+   'X',
+   'C',
+   'h',
+   'a',
+   'n',
+   'n',
+   'e',
+   'l',
+   'R',
+   'e',
+   'c',
+   't',
+   'S',
+   'y',
+   'n',
+   'c',
+   'S',
+   'G',
+   'I',
+   'X',
+   0, // glXChannelRectSyncSGIX
+   'g',
+   'l',
+   'X',
+   'C',
+   'h',
+   'o',
+   'o',
+   's',
+   'e',
+   'F',
+   'B',
+   'C',
+   'o',
+   'n',
+   'f',
+   'i',
+   'g',
+   0, // glXChooseFBConfig
+   'g',
+   'l',
+   'X',
+   'C',
+   'h',
+   'o',
+   'o',
+   's',
+   'e',
+   'F',
+   'B',
+   'C',
+   'o',
+   'n',
+   'f',
+   'i',
+   'g',
+   'S',
+   'G',
+   'I',
+   'X',
+   0, // glXChooseFBConfigSGIX
+   'g',
+   'l',
+   'X',
+   'C',
+   'h',
+   'o',
+   'o',
+   's',
+   'e',
+   'V',
+   'i',
+   's',
+   'u',
+   'a',
+   'l',
+   0, // glXChooseVisual
+   'g',
+   'l',
+   'X',
+   'C',
+   'o',
+   'p',
+   'y',
+   'B',
+   'u',
+   'f',
+   'f',
+   'e',
+   'r',
+   'S',
+   'u',
+   'b',
+   'D',
+   'a',
+   't',
+   'a',
+   'N',
+   'V',
+   0, // glXCopyBufferSubDataNV
+   'g',
+   'l',
+   'X',
+   'C',
+   'o',
+   'p',
+   'y',
+   'C',
+   'o',
+   'n',
+   't',
+   'e',
+   'x',
+   't',
+   0, // glXCopyContext
+   'g',
+   'l',
+   'X',
+   'C',
+   'o',
+   'p',
+   'y',
+   'I',
+   'm',
+   'a',
+   'g',
+   'e',
+   'S',
+   'u',
+   'b',
+   'D',
+   'a',
+   't',
+   'a',
+   'N',
+   'V',
+   0, // glXCopyImageSubDataNV
+   'g',
+   'l',
+   'X',
+   'C',
+   'o',
+   'p',
+   'y',
+   'S',
+   'u',
+   'b',
+   'B',
+   'u',
+   'f',
+   'f',
+   'e',
+   'r',
+   'M',
+   'E',
+   'S',
+   'A',
+   0, // glXCopySubBufferMESA
+   'g',
+   'l',
+   'X',
+   'C',
+   'r',
+   'e',
+   'a',
+   't',
+   'e',
+   'A',
+   's',
+   's',
+   'o',
+   'c',
+   'i',
+   'a',
+   't',
+   'e',
+   'd',
+   'C',
+   'o',
+   'n',
+   't',
+   'e',
+   'x',
+   't',
+   'A',
+   'M',
+   'D',
+   0, // glXCreateAssociatedContextAMD
+   'g',
+   'l',
+   'X',
+   'C',
+   'r',
+   'e',
+   'a',
+   't',
+   'e',
+   'A',
+   's',
+   's',
+   'o',
+   'c',
+   'i',
+   'a',
+   't',
+   'e',
+   'd',
+   'C',
+   'o',
+   'n',
+   't',
+   'e',
+   'x',
+   't',
+   'A',
+   't',
+   't',
+   'r',
+   'i',
+   'b',
+   's',
+   'A',
+   'M',
+   'D',
+   0, // glXCreateAssociatedContextAttribsAMD
+   'g',
+   'l',
+   'X',
+   'C',
+   'r',
+   'e',
+   'a',
+   't',
+   'e',
+   'C',
+   'o',
+   'n',
+   't',
+   'e',
+   'x',
+   't',
+   0, // glXCreateContext
+   'g',
+   'l',
+   'X',
+   'C',
+   'r',
+   'e',
+   'a',
+   't',
+   'e',
+   'C',
+   'o',
+   'n',
+   't',
+   'e',
+   'x',
+   't',
+   'A',
+   't',
+   't',
+   'r',
+   'i',
+   'b',
+   's',
+   'A',
+   'R',
+   'B',
+   0, // glXCreateContextAttribsARB
+   'g',
+   'l',
+   'X',
+   'C',
+   'r',
+   'e',
+   'a',
+   't',
+   'e',
+   'C',
+   'o',
+   'n',
+   't',
+   'e',
+   'x',
+   't',
+   'W',
+   'i',
+   't',
+   'h',
+   'C',
+   'o',
+   'n',
+   'f',
+   'i',
+   'g',
+   'S',
+   'G',
+   'I',
+   'X',
+   0, // glXCreateContextWithConfigSGIX
+   'g',
+   'l',
+   'X',
+   'C',
+   'r',
+   'e',
+   'a',
+   't',
+   'e',
+   'G',
+   'L',
+   'X',
+   'P',
+   'b',
+   'u',
+   'f',
+   'f',
+   'e',
+   'r',
+   'S',
+   'G',
+   'I',
+   'X',
+   0, // glXCreateGLXPbufferSGIX
+   'g',
+   'l',
+   'X',
+   'C',
+   'r',
+   'e',
+   'a',
+   't',
+   'e',
+   'G',
+   'L',
+   'X',
+   'P',
+   'i',
+   'x',
+   'm',
+   'a',
+   'p',
+   0, // glXCreateGLXPixmap
+   'g',
+   'l',
+   'X',
+   'C',
+   'r',
+   'e',
+   'a',
+   't',
+   'e',
+   'G',
+   'L',
+   'X',
+   'P',
+   'i',
+   'x',
+   'm',
+   'a',
+   'p',
+   'M',
+   'E',
+   'S',
+   'A',
+   0, // glXCreateGLXPixmapMESA
+   'g',
+   'l',
+   'X',
+   'C',
+   'r',
+   'e',
+   'a',
+   't',
+   'e',
+   'G',
+   'L',
+   'X',
+   'P',
+   'i',
+   'x',
+   'm',
+   'a',
+   'p',
+   'W',
+   'i',
+   't',
+   'h',
+   'C',
+   'o',
+   'n',
+   'f',
+   'i',
+   'g',
+   'S',
+   'G',
+   'I',
+   'X',
+   0, // glXCreateGLXPixmapWithConfigSGIX
+   'g',
+   'l',
+   'X',
+   'C',
+   'r',
+   'e',
+   'a',
+   't',
+   'e',
+   'N',
+   'e',
+   'w',
+   'C',
+   'o',
+   'n',
+   't',
+   'e',
+   'x',
+   't',
+   0, // glXCreateNewContext
+   'g',
+   'l',
+   'X',
+   'C',
+   'r',
+   'e',
+   'a',
+   't',
+   'e',
+   'P',
+   'b',
+   'u',
+   'f',
+   'f',
+   'e',
+   'r',
+   0, // glXCreatePbuffer
+   'g',
+   'l',
+   'X',
+   'C',
+   'r',
+   'e',
+   'a',
+   't',
+   'e',
+   'P',
+   'i',
+   'x',
+   'm',
+   'a',
+   'p',
+   0, // glXCreatePixmap
+   'g',
+   'l',
+   'X',
+   'C',
+   'r',
+   'e',
+   'a',
+   't',
+   'e',
+   'W',
+   'i',
+   'n',
+   'd',
+   'o',
+   'w',
+   0, // glXCreateWindow
+   'g',
+   'l',
+   'X',
+   'C',
+   'u',
+   's',
+   'h',
+   'i',
+   'o',
+   'n',
+   'S',
+   'G',
+   'I',
+   0, // glXCushionSGI
+   'g',
+   'l',
+   'X',
+   'D',
+   'e',
+   'l',
+   'a',
+   'y',
+   'B',
+   'e',
+   'f',
+   'o',
+   'r',
+   'e',
+   'S',
+   'w',
+   'a',
+   'p',
+   'N',
+   'V',
+   0, // glXDelayBeforeSwapNV
+   'g',
+   'l',
+   'X',
+   'D',
+   'e',
+   'l',
+   'e',
+   't',
+   'e',
+   'A',
+   's',
+   's',
+   'o',
+   'c',
+   'i',
+   'a',
+   't',
+   'e',
+   'd',
+   'C',
+   'o',
+   'n',
+   't',
+   'e',
+   'x',
+   't',
+   'A',
+   'M',
+   'D',
+   0, // glXDeleteAssociatedContextAMD
+   'g',
+   'l',
+   'X',
+   'D',
+   'e',
+   's',
+   't',
+   'r',
+   'o',
+   'y',
+   'C',
+   'o',
+   'n',
+   't',
+   'e',
+   'x',
+   't',
+   0, // glXDestroyContext
+   'g',
+   'l',
+   'X',
+   'D',
+   'e',
+   's',
+   't',
+   'r',
+   'o',
+   'y',
+   'G',
+   'L',
+   'X',
+   'P',
+   'b',
+   'u',
+   'f',
+   'f',
+   'e',
+   'r',
+   'S',
+   'G',
+   'I',
+   'X',
+   0, // glXDestroyGLXPbufferSGIX
+   'g',
+   'l',
+   'X',
+   'D',
+   'e',
+   's',
+   't',
+   'r',
+   'o',
+   'y',
+   'G',
+   'L',
+   'X',
+   'P',
+   'i',
+   'x',
+   'm',
+   'a',
+   'p',
+   0, // glXDestroyGLXPixmap
+   'g',
+   'l',
+   'X',
+   'D',
+   'e',
+   's',
+   't',
+   'r',
+   'o',
+   'y',
+   'G',
+   'L',
+   'X',
+   'V',
+   'i',
+   'd',
+   'e',
+   'o',
+   'S',
+   'o',
+   'u',
+   'r',
+   'c',
+   'e',
+   'S',
+   'G',
+   'I',
+   'X',
+   0, // glXDestroyGLXVideoSourceSGIX
+   'g',
+   'l',
+   'X',
+   'D',
+   'e',
+   's',
+   't',
+   'r',
+   'o',
+   'y',
+   'H',
+   'y',
+   'p',
+   'e',
+   'r',
+   'p',
+   'i',
+   'p',
+   'e',
+   'C',
+   'o',
+   'n',
+   'f',
+   'i',
+   'g',
+   'S',
+   'G',
+   'I',
+   'X',
+   0, // glXDestroyHyperpipeConfigSGIX
+   'g',
+   'l',
+   'X',
+   'D',
+   'e',
+   's',
+   't',
+   'r',
+   'o',
+   'y',
+   'P',
+   'b',
+   'u',
+   'f',
+   'f',
+   'e',
+   'r',
+   0, // glXDestroyPbuffer
+   'g',
+   'l',
+   'X',
+   'D',
+   'e',
+   's',
+   't',
+   'r',
+   'o',
+   'y',
+   'P',
+   'i',
+   'x',
+   'm',
+   'a',
+   'p',
+   0, // glXDestroyPixmap
+   'g',
+   'l',
+   'X',
+   'D',
+   'e',
+   's',
+   't',
+   'r',
+   'o',
+   'y',
+   'W',
+   'i',
+   'n',
+   'd',
+   'o',
+   'w',
+   0, // glXDestroyWindow
+   'g',
+   'l',
+   'X',
+   'E',
+   'n',
+   'u',
+   'm',
+   'e',
+   'r',
+   'a',
+   't',
+   'e',
+   'V',
+   'i',
+   'd',
+   'e',
+   'o',
+   'C',
+   'a',
+   'p',
+   't',
+   'u',
+   'r',
+   'e',
+   'D',
+   'e',
+   'v',
+   'i',
+   'c',
+   'e',
+   's',
+   'N',
+   'V',
+   0, // glXEnumerateVideoCaptureDevicesNV
+   'g',
+   'l',
+   'X',
+   'E',
+   'n',
+   'u',
+   'm',
+   'e',
+   'r',
+   'a',
+   't',
+   'e',
+   'V',
+   'i',
+   'd',
+   'e',
+   'o',
+   'D',
+   'e',
+   'v',
+   'i',
+   'c',
+   'e',
+   's',
+   'N',
+   'V',
+   0, // glXEnumerateVideoDevicesNV
+   'g',
+   'l',
+   'X',
+   'F',
+   'r',
+   'e',
+   'e',
+   'C',
+   'o',
+   'n',
+   't',
+   'e',
+   'x',
+   't',
+   'E',
+   'X',
+   'T',
+   0, // glXFreeContextEXT
+   'g',
+   'l',
+   'X',
+   'G',
+   'e',
+   't',
+   'A',
+   'G',
+   'P',
+   'O',
+   'f',
+   'f',
+   's',
+   'e',
+   't',
+   'M',
+   'E',
+   'S',
+   'A',
+   0, // glXGetAGPOffsetMESA
+   'g',
+   'l',
+   'X',
+   'G',
+   'e',
+   't',
+   'C',
+   'l',
+   'i',
+   'e',
+   'n',
+   't',
+   'S',
+   't',
+   'r',
+   'i',
+   'n',
+   'g',
+   0, // glXGetClientString
+   'g',
+   'l',
+   'X',
+   'G',
+   'e',
+   't',
+   'C',
+   'o',
+   'n',
+   'f',
+   'i',
+   'g',
+   0, // glXGetConfig
+   'g',
+   'l',
+   'X',
+   'G',
+   'e',
+   't',
+   'C',
+   'o',
+   'n',
+   't',
+   'e',
+   'x',
+   't',
+   'G',
+   'P',
+   'U',
+   'I',
+   'D',
+   'A',
+   'M',
+   'D',
+   0, // glXGetContextGPUIDAMD
+   'g',
+   'l',
+   'X',
+   'G',
+   'e',
+   't',
+   'C',
+   'o',
+   'n',
+   't',
+   'e',
+   'x',
+   't',
+   'I',
+   'D',
+   'E',
+   'X',
+   'T',
+   0, // glXGetContextIDEXT
+   'g',
+   'l',
+   'X',
+   'G',
+   'e',
+   't',
+   'C',
+   'u',
+   'r',
+   'r',
+   'e',
+   'n',
+   't',
+   'A',
+   's',
+   's',
+   'o',
+   'c',
+   'i',
+   'a',
+   't',
+   'e',
+   'd',
+   'C',
+   'o',
+   'n',
+   't',
+   'e',
+   'x',
+   't',
+   'A',
+   'M',
+   'D',
+   0, // glXGetCurrentAssociatedContextAMD
+   'g',
+   'l',
+   'X',
+   'G',
+   'e',
+   't',
+   'C',
+   'u',
+   'r',
+   'r',
+   'e',
+   'n',
+   't',
+   'C',
+   'o',
+   'n',
+   't',
+   'e',
+   'x',
+   't',
+   0, // glXGetCurrentContext
+   'g',
+   'l',
+   'X',
+   'G',
+   'e',
+   't',
+   'C',
+   'u',
+   'r',
+   'r',
+   'e',
+   'n',
+   't',
+   'D',
+   'i',
+   's',
+   'p',
+   'l',
+   'a',
+   'y',
+   0, // glXGetCurrentDisplay
+   'g',
+   'l',
+   'X',
+   'G',
+   'e',
+   't',
+   'C',
+   'u',
+   'r',
+   'r',
+   'e',
+   'n',
+   't',
+   'D',
+   'i',
+   's',
+   'p',
+   'l',
+   'a',
+   'y',
+   'E',
+   'X',
+   'T',
+   0, // glXGetCurrentDisplayEXT
+   'g',
+   'l',
+   'X',
+   'G',
+   'e',
+   't',
+   'C',
+   'u',
+   'r',
+   'r',
+   'e',
+   'n',
+   't',
+   'D',
+   'r',
+   'a',
+   'w',
+   'a',
+   'b',
+   'l',
+   'e',
+   0, // glXGetCurrentDrawable
+   'g',
+   'l',
+   'X',
+   'G',
+   'e',
+   't',
+   'C',
+   'u',
+   'r',
+   'r',
+   'e',
+   'n',
+   't',
+   'R',
+   'e',
+   'a',
+   'd',
+   'D',
+   'r',
+   'a',
+   'w',
+   'a',
+   'b',
+   'l',
+   'e',
+   0, // glXGetCurrentReadDrawable
+   'g',
+   'l',
+   'X',
+   'G',
+   'e',
+   't',
+   'C',
+   'u',
+   'r',
+   'r',
+   'e',
+   'n',
+   't',
+   'R',
+   'e',
+   'a',
+   'd',
+   'D',
+   'r',
+   'a',
+   'w',
+   'a',
+   'b',
+   'l',
+   'e',
+   'S',
+   'G',
+   'I',
+   0, // glXGetCurrentReadDrawableSGI
+   'g',
+   'l',
+   'X',
+   'G',
+   'e',
+   't',
+   'F',
+   'B',
+   'C',
+   'o',
+   'n',
+   'f',
+   'i',
+   'g',
+   'A',
+   't',
+   't',
+   'r',
+   'i',
+   'b',
+   0, // glXGetFBConfigAttrib
+   'g',
+   'l',
+   'X',
+   'G',
+   'e',
+   't',
+   'F',
+   'B',
+   'C',
+   'o',
+   'n',
+   'f',
+   'i',
+   'g',
+   'A',
+   't',
+   't',
+   'r',
+   'i',
+   'b',
+   'S',
+   'G',
+   'I',
+   'X',
+   0, // glXGetFBConfigAttribSGIX
+   'g',
+   'l',
+   'X',
+   'G',
+   'e',
+   't',
+   'F',
+   'B',
+   'C',
+   'o',
+   'n',
+   'f',
+   'i',
+   'g',
+   'F',
+   'r',
+   'o',
+   'm',
+   'V',
+   'i',
+   's',
+   'u',
+   'a',
+   'l',
+   'S',
+   'G',
+   'I',
+   'X',
+   0, // glXGetFBConfigFromVisualSGIX
+   'g',
+   'l',
+   'X',
+   'G',
+   'e',
+   't',
+   'F',
+   'B',
+   'C',
+   'o',
+   'n',
+   'f',
+   'i',
+   'g',
+   's',
+   0, // glXGetFBConfigs
+   'g',
+   'l',
+   'X',
+   'G',
+   'e',
+   't',
+   'G',
+   'P',
+   'U',
+   'I',
+   'D',
+   's',
+   'A',
+   'M',
+   'D',
+   0, // glXGetGPUIDsAMD
+   'g',
+   'l',
+   'X',
+   'G',
+   'e',
+   't',
+   'G',
+   'P',
+   'U',
+   'I',
+   'n',
+   'f',
+   'o',
+   'A',
+   'M',
+   'D',
+   0, // glXGetGPUInfoAMD
+   'g',
+   'l',
+   'X',
+   'G',
+   'e',
+   't',
+   'M',
+   's',
+   'c',
+   'R',
+   'a',
+   't',
+   'e',
+   'O',
+   'M',
+   'L',
+   0, // glXGetMscRateOML
+   'g',
+   'l',
+   'X',
+   'G',
+   'e',
+   't',
+   'P',
+   'r',
+   'o',
+   'c',
+   'A',
+   'd',
+   'd',
+   'r',
+   'e',
+   's',
+   's',
+   0, // glXGetProcAddress
+   'g',
+   'l',
+   'X',
+   'G',
+   'e',
+   't',
+   'P',
+   'r',
+   'o',
+   'c',
+   'A',
+   'd',
+   'd',
+   'r',
+   'e',
+   's',
+   's',
+   'A',
+   'R',
+   'B',
+   0, // glXGetProcAddressARB
+   'g',
+   'l',
+   'X',
+   'G',
+   'e',
+   't',
+   'S',
+   'e',
+   'l',
+   'e',
+   'c',
+   't',
+   'e',
+   'd',
+   'E',
+   'v',
+   'e',
+   'n',
+   't',
+   0, // glXGetSelectedEvent
+   'g',
+   'l',
+   'X',
+   'G',
+   'e',
+   't',
+   'S',
+   'e',
+   'l',
+   'e',
+   'c',
+   't',
+   'e',
+   'd',
+   'E',
+   'v',
+   'e',
+   'n',
+   't',
+   'S',
+   'G',
+   'I',
+   'X',
+   0, // glXGetSelectedEventSGIX
+   'g',
+   'l',
+   'X',
+   'G',
+   'e',
+   't',
+   'S',
+   'w',
+   'a',
+   'p',
+   'I',
+   'n',
+   't',
+   'e',
+   'r',
+   'v',
+   'a',
+   'l',
+   'M',
+   'E',
+   'S',
+   'A',
+   0, // glXGetSwapIntervalMESA
+   'g',
+   'l',
+   'X',
+   'G',
+   'e',
+   't',
+   'S',
+   'y',
+   'n',
+   'c',
+   'V',
+   'a',
+   'l',
+   'u',
+   'e',
+   's',
+   'O',
+   'M',
+   'L',
+   0, // glXGetSyncValuesOML
+   'g',
+   'l',
+   'X',
+   'G',
+   'e',
+   't',
+   'T',
+   'r',
+   'a',
+   'n',
+   's',
+   'p',
+   'a',
+   'r',
+   'e',
+   'n',
+   't',
+   'I',
+   'n',
+   'd',
+   'e',
+   'x',
+   'S',
+   'U',
+   'N',
+   0, // glXGetTransparentIndexSUN
+   'g',
+   'l',
+   'X',
+   'G',
+   'e',
+   't',
+   'V',
+   'i',
+   'd',
+   'e',
+   'o',
+   'D',
+   'e',
+   'v',
+   'i',
+   'c',
+   'e',
+   'N',
+   'V',
+   0, // glXGetVideoDeviceNV
+   'g',
+   'l',
+   'X',
+   'G',
+   'e',
+   't',
+   'V',
+   'i',
+   'd',
+   'e',
+   'o',
+   'I',
+   'n',
+   'f',
+   'o',
+   'N',
+   'V',
+   0, // glXGetVideoInfoNV
+   'g',
+   'l',
+   'X',
+   'G',
+   'e',
+   't',
+   'V',
+   'i',
+   'd',
+   'e',
+   'o',
+   'S',
+   'y',
+   'n',
+   'c',
+   'S',
+   'G',
+   'I',
+   0, // glXGetVideoSyncSGI
+   'g',
+   'l',
+   'X',
+   'G',
+   'e',
+   't',
+   'V',
+   'i',
+   's',
+   'u',
+   'a',
+   'l',
+   'F',
+   'r',
+   'o',
+   'm',
+   'F',
+   'B',
+   'C',
+   'o',
+   'n',
+   'f',
+   'i',
+   'g',
+   0, // glXGetVisualFromFBConfig
+   'g',
+   'l',
+   'X',
+   'G',
+   'e',
+   't',
+   'V',
+   'i',
+   's',
+   'u',
+   'a',
+   'l',
+   'F',
+   'r',
+   'o',
+   'm',
+   'F',
+   'B',
+   'C',
+   'o',
+   'n',
+   'f',
+   'i',
+   'g',
+   'S',
+   'G',
+   'I',
+   'X',
+   0, // glXGetVisualFromFBConfigSGIX
+   'g',
+   'l',
+   'X',
+   'H',
+   'y',
+   'p',
+   'e',
+   'r',
+   'p',
+   'i',
+   'p',
+   'e',
+   'A',
+   't',
+   't',
+   'r',
+   'i',
+   'b',
+   'S',
+   'G',
+   'I',
+   'X',
+   0, // glXHyperpipeAttribSGIX
+   'g',
+   'l',
+   'X',
+   'H',
+   'y',
+   'p',
+   'e',
+   'r',
+   'p',
+   'i',
+   'p',
+   'e',
+   'C',
+   'o',
+   'n',
+   'f',
+   'i',
+   'g',
+   'S',
+   'G',
+   'I',
+   'X',
+   0, // glXHyperpipeConfigSGIX
+   'g',
+   'l',
+   'X',
+   'I',
+   'm',
+   'p',
+   'o',
+   'r',
+   't',
+   'C',
+   'o',
+   'n',
+   't',
+   'e',
+   'x',
+   't',
+   'E',
+   'X',
+   'T',
+   0, // glXImportContextEXT
+   'g',
+   'l',
+   'X',
+   'I',
+   's',
+   'D',
+   'i',
+   'r',
+   'e',
+   'c',
+   't',
+   0, // glXIsDirect
+   'g',
+   'l',
+   'X',
+   'J',
+   'o',
+   'i',
+   'n',
+   'S',
+   'w',
+   'a',
+   'p',
+   'G',
+   'r',
+   'o',
+   'u',
+   'p',
+   'N',
+   'V',
+   0, // glXJoinSwapGroupNV
+   'g',
+   'l',
+   'X',
+   'J',
+   'o',
+   'i',
+   'n',
+   'S',
+   'w',
+   'a',
+   'p',
+   'G',
+   'r',
+   'o',
+   'u',
+   'p',
+   'S',
+   'G',
+   'I',
+   'X',
+   0, // glXJoinSwapGroupSGIX
+   'g',
+   'l',
+   'X',
+   'L',
+   'o',
+   'c',
+   'k',
+   'V',
+   'i',
+   'd',
+   'e',
+   'o',
+   'C',
+   'a',
+   'p',
+   't',
+   'u',
+   'r',
+   'e',
+   'D',
+   'e',
+   'v',
+   'i',
+   'c',
+   'e',
+   'N',
+   'V',
+   0, // glXLockVideoCaptureDeviceNV
+   'g',
+   'l',
+   'X',
+   'M',
+   'a',
+   'k',
+   'e',
+   'A',
+   's',
+   's',
+   'o',
+   'c',
+   'i',
+   'a',
+   't',
+   'e',
+   'd',
+   'C',
+   'o',
+   'n',
+   't',
+   'e',
+   'x',
+   't',
+   'C',
+   'u',
+   'r',
+   'r',
+   'e',
+   'n',
+   't',
+   'A',
+   'M',
+   'D',
+   0, // glXMakeAssociatedContextCurrentAMD
+   'g',
+   'l',
+   'X',
+   'M',
+   'a',
+   'k',
+   'e',
+   'C',
+   'o',
+   'n',
+   't',
+   'e',
+   'x',
+   't',
+   'C',
+   'u',
+   'r',
+   'r',
+   'e',
+   'n',
+   't',
+   0, // glXMakeContextCurrent
+   'g',
+   'l',
+   'X',
+   'M',
+   'a',
+   'k',
+   'e',
+   'C',
+   'u',
+   'r',
+   'r',
+   'e',
+   'n',
+   't',
+   0, // glXMakeCurrent
+   'g',
+   'l',
+   'X',
+   'M',
+   'a',
+   'k',
+   'e',
+   'C',
+   'u',
+   'r',
+   'r',
+   'e',
+   'n',
+   't',
+   'R',
+   'e',
+   'a',
+   'd',
+   'S',
+   'G',
+   'I',
+   0, // glXMakeCurrentReadSGI
+   'g',
+   'l',
+   'X',
+   'N',
+   'a',
+   'm',
+   'e',
+   'd',
+   'C',
+   'o',
+   'p',
+   'y',
+   'B',
+   'u',
+   'f',
+   'f',
+   'e',
+   'r',
+   'S',
+   'u',
+   'b',
+   'D',
+   'a',
+   't',
+   'a',
+   'N',
+   'V',
+   0, // glXNamedCopyBufferSubDataNV
+   'g',
+   'l',
+   'X',
+   'Q',
+   'u',
+   'e',
+   'r',
+   'y',
+   'C',
+   'h',
+   'a',
+   'n',
+   'n',
+   'e',
+   'l',
+   'D',
+   'e',
+   'l',
+   't',
+   'a',
+   's',
+   'S',
+   'G',
+   'I',
+   'X',
+   0, // glXQueryChannelDeltasSGIX
+   'g',
+   'l',
+   'X',
+   'Q',
+   'u',
+   'e',
+   'r',
+   'y',
+   'C',
+   'h',
+   'a',
+   'n',
+   'n',
+   'e',
+   'l',
+   'R',
+   'e',
+   'c',
+   't',
+   'S',
+   'G',
+   'I',
+   'X',
+   0, // glXQueryChannelRectSGIX
+   'g',
+   'l',
+   'X',
+   'Q',
+   'u',
+   'e',
+   'r',
+   'y',
+   'C',
+   'o',
+   'n',
+   't',
+   'e',
+   'x',
+   't',
+   0, // glXQueryContext
+   'g',
+   'l',
+   'X',
+   'Q',
+   'u',
+   'e',
+   'r',
+   'y',
+   'C',
+   'o',
+   'n',
+   't',
+   'e',
+   'x',
+   't',
+   'I',
+   'n',
+   'f',
+   'o',
+   'E',
+   'X',
+   'T',
+   0, // glXQueryContextInfoEXT
+   'g',
+   'l',
+   'X',
+   'Q',
+   'u',
+   'e',
+   'r',
+   'y',
+   'C',
+   'u',
+   'r',
+   'r',
+   'e',
+   'n',
+   't',
+   'R',
+   'e',
+   'n',
+   'd',
+   'e',
+   'r',
+   'e',
+   'r',
+   'I',
+   'n',
+   't',
+   'e',
+   'g',
+   'e',
+   'r',
+   'M',
+   'E',
+   'S',
+   'A',
+   0, // glXQueryCurrentRendererIntegerMESA
+   'g',
+   'l',
+   'X',
+   'Q',
+   'u',
+   'e',
+   'r',
+   'y',
+   'C',
+   'u',
+   'r',
+   'r',
+   'e',
+   'n',
+   't',
+   'R',
+   'e',
+   'n',
+   'd',
+   'e',
+   'r',
+   'e',
+   'r',
+   'S',
+   't',
+   'r',
+   'i',
+   'n',
+   'g',
+   'M',
+   'E',
+   'S',
+   'A',
+   0, // glXQueryCurrentRendererStringMESA
+   'g',
+   'l',
+   'X',
+   'Q',
+   'u',
+   'e',
+   'r',
+   'y',
+   'D',
+   'r',
+   'a',
+   'w',
+   'a',
+   'b',
+   'l',
+   'e',
+   0, // glXQueryDrawable
+   'g',
+   'l',
+   'X',
+   'Q',
+   'u',
+   'e',
+   'r',
+   'y',
+   'E',
+   'x',
+   't',
+   'e',
+   'n',
+   's',
+   'i',
+   'o',
+   'n',
+   0, // glXQueryExtension
+   'g',
+   'l',
+   'X',
+   'Q',
+   'u',
+   'e',
+   'r',
+   'y',
+   'E',
+   'x',
+   't',
+   'e',
+   'n',
+   's',
+   'i',
+   'o',
+   'n',
+   's',
+   'S',
+   't',
+   'r',
+   'i',
+   'n',
+   'g',
+   0, // glXQueryExtensionsString
+   'g',
+   'l',
+   'X',
+   'Q',
+   'u',
+   'e',
+   'r',
+   'y',
+   'F',
+   'r',
+   'a',
+   'm',
+   'e',
+   'C',
+   'o',
+   'u',
+   'n',
+   't',
+   'N',
+   'V',
+   0, // glXQueryFrameCountNV
+   'g',
+   'l',
+   'X',
+   'Q',
+   'u',
+   'e',
+   'r',
+   'y',
+   'G',
+   'L',
+   'X',
+   'P',
+   'b',
+   'u',
+   'f',
+   'f',
+   'e',
+   'r',
+   'S',
+   'G',
+   'I',
+   'X',
+   0, // glXQueryGLXPbufferSGIX
+   'g',
+   'l',
+   'X',
+   'Q',
+   'u',
+   'e',
+   'r',
+   'y',
+   'H',
+   'y',
+   'p',
+   'e',
+   'r',
+   'p',
+   'i',
+   'p',
+   'e',
+   'A',
+   't',
+   't',
+   'r',
+   'i',
+   'b',
+   'S',
+   'G',
+   'I',
+   'X',
+   0, // glXQueryHyperpipeAttribSGIX
+   'g',
+   'l',
+   'X',
+   'Q',
+   'u',
+   'e',
+   'r',
+   'y',
+   'H',
+   'y',
+   'p',
+   'e',
+   'r',
+   'p',
+   'i',
+   'p',
+   'e',
+   'B',
+   'e',
+   's',
+   't',
+   'A',
+   't',
+   't',
+   'r',
+   'i',
+   'b',
+   'S',
+   'G',
+   'I',
+   'X',
+   0, // glXQueryHyperpipeBestAttribSGIX
+   'g',
+   'l',
+   'X',
+   'Q',
+   'u',
+   'e',
+   'r',
+   'y',
+   'H',
+   'y',
+   'p',
+   'e',
+   'r',
+   'p',
+   'i',
+   'p',
+   'e',
+   'C',
+   'o',
+   'n',
+   'f',
+   'i',
+   'g',
+   'S',
+   'G',
+   'I',
+   'X',
+   0, // glXQueryHyperpipeConfigSGIX
+   'g',
+   'l',
+   'X',
+   'Q',
+   'u',
+   'e',
+   'r',
+   'y',
+   'H',
+   'y',
+   'p',
+   'e',
+   'r',
+   'p',
+   'i',
+   'p',
+   'e',
+   'N',
+   'e',
+   't',
+   'w',
+   'o',
+   'r',
+   'k',
+   'S',
+   'G',
+   'I',
+   'X',
+   0, // glXQueryHyperpipeNetworkSGIX
+   'g',
+   'l',
+   'X',
+   'Q',
+   'u',
+   'e',
+   'r',
+   'y',
+   'M',
+   'a',
+   'x',
+   'S',
+   'w',
+   'a',
+   'p',
+   'B',
+   'a',
+   'r',
+   'r',
+   'i',
+   'e',
+   'r',
+   's',
+   'S',
+   'G',
+   'I',
+   'X',
+   0, // glXQueryMaxSwapBarriersSGIX
+   'g',
+   'l',
+   'X',
+   'Q',
+   'u',
+   'e',
+   'r',
+   'y',
+   'M',
+   'a',
+   'x',
+   'S',
+   'w',
+   'a',
+   'p',
+   'G',
+   'r',
+   'o',
+   'u',
+   'p',
+   's',
+   'N',
+   'V',
+   0, // glXQueryMaxSwapGroupsNV
+   'g',
+   'l',
+   'X',
+   'Q',
+   'u',
+   'e',
+   'r',
+   'y',
+   'R',
+   'e',
+   'n',
+   'd',
+   'e',
+   'r',
+   'e',
+   'r',
+   'I',
+   'n',
+   't',
+   'e',
+   'g',
+   'e',
+   'r',
+   'M',
+   'E',
+   'S',
+   'A',
+   0, // glXQueryRendererIntegerMESA
+   'g',
+   'l',
+   'X',
+   'Q',
+   'u',
+   'e',
+   'r',
+   'y',
+   'R',
+   'e',
+   'n',
+   'd',
+   'e',
+   'r',
+   'e',
+   'r',
+   'S',
+   't',
+   'r',
+   'i',
+   'n',
+   'g',
+   'M',
+   'E',
+   'S',
+   'A',
+   0, // glXQueryRendererStringMESA
+   'g',
+   'l',
+   'X',
+   'Q',
+   'u',
+   'e',
+   'r',
+   'y',
+   'S',
+   'e',
+   'r',
+   'v',
+   'e',
+   'r',
+   'S',
+   't',
+   'r',
+   'i',
+   'n',
+   'g',
+   0, // glXQueryServerString
+   'g',
+   'l',
+   'X',
+   'Q',
+   'u',
+   'e',
+   'r',
+   'y',
+   'S',
+   'w',
+   'a',
+   'p',
+   'G',
+   'r',
+   'o',
+   'u',
+   'p',
+   'N',
+   'V',
+   0, // glXQuerySwapGroupNV
+   'g',
+   'l',
+   'X',
+   'Q',
+   'u',
+   'e',
+   'r',
+   'y',
+   'V',
+   'e',
+   'r',
+   's',
+   'i',
+   'o',
+   'n',
+   0, // glXQueryVersion
+   'g',
+   'l',
+   'X',
+   'Q',
+   'u',
+   'e',
+   'r',
+   'y',
+   'V',
+   'i',
+   'd',
+   'e',
+   'o',
+   'C',
+   'a',
+   'p',
+   't',
+   'u',
+   'r',
+   'e',
+   'D',
+   'e',
+   'v',
+   'i',
+   'c',
+   'e',
+   'N',
+   'V',
+   0, // glXQueryVideoCaptureDeviceNV
+   'g',
+   'l',
+   'X',
+   'R',
+   'e',
+   'l',
+   'e',
+   'a',
+   's',
+   'e',
+   'B',
+   'u',
+   'f',
+   'f',
+   'e',
+   'r',
+   's',
+   'M',
+   'E',
+   'S',
+   'A',
+   0, // glXReleaseBuffersMESA
+   'g',
+   'l',
+   'X',
+   'R',
+   'e',
+   'l',
+   'e',
+   'a',
+   's',
+   'e',
+   'T',
+   'e',
+   'x',
+   'I',
+   'm',
+   'a',
+   'g',
+   'e',
+   'E',
+   'X',
+   'T',
+   0, // glXReleaseTexImageEXT
+   'g',
+   'l',
+   'X',
+   'R',
+   'e',
+   'l',
+   'e',
+   'a',
+   's',
+   'e',
+   'V',
+   'i',
+   'd',
+   'e',
+   'o',
+   'C',
+   'a',
+   'p',
+   't',
+   'u',
+   'r',
+   'e',
+   'D',
+   'e',
+   'v',
+   'i',
+   'c',
+   'e',
+   'N',
+   'V',
+   0, // glXReleaseVideoCaptureDeviceNV
+   'g',
+   'l',
+   'X',
+   'R',
+   'e',
+   'l',
+   'e',
+   'a',
+   's',
+   'e',
+   'V',
+   'i',
+   'd',
+   'e',
+   'o',
+   'D',
+   'e',
+   'v',
+   'i',
+   'c',
+   'e',
+   'N',
+   'V',
+   0, // glXReleaseVideoDeviceNV
+   'g',
+   'l',
+   'X',
+   'R',
+   'e',
+   'l',
+   'e',
+   'a',
+   's',
+   'e',
+   'V',
+   'i',
+   'd',
+   'e',
+   'o',
+   'I',
+   'm',
+   'a',
+   'g',
+   'e',
+   'N',
+   'V',
+   0, // glXReleaseVideoImageNV
+   'g',
+   'l',
+   'X',
+   'R',
+   'e',
+   's',
+   'e',
+   't',
+   'F',
+   'r',
+   'a',
+   'm',
+   'e',
+   'C',
+   'o',
+   'u',
+   'n',
+   't',
+   'N',
+   'V',
+   0, // glXResetFrameCountNV
+   'g',
+   'l',
+   'X',
+   'S',
+   'e',
+   'l',
+   'e',
+   'c',
+   't',
+   'E',
+   'v',
+   'e',
+   'n',
+   't',
+   0, // glXSelectEvent
+   'g',
+   'l',
+   'X',
+   'S',
+   'e',
+   'l',
+   'e',
+   'c',
+   't',
+   'E',
+   'v',
+   'e',
+   'n',
+   't',
+   'S',
+   'G',
+   'I',
+   'X',
+   0, // glXSelectEventSGIX
+   'g',
+   'l',
+   'X',
+   'S',
+   'e',
+   'n',
+   'd',
+   'P',
+   'b',
+   'u',
+   'f',
+   'f',
+   'e',
+   'r',
+   'T',
+   'o',
+   'V',
+   'i',
+   'd',
+   'e',
+   'o',
+   'N',
+   'V',
+   0, // glXSendPbufferToVideoNV
+   'g',
+   'l',
+   'X',
+   'S',
+   'e',
+   't',
+   '3',
+   'D',
+   'f',
+   'x',
+   'M',
+   'o',
+   'd',
+   'e',
+   'M',
+   'E',
+   'S',
+   'A',
+   0, // glXSet3DfxModeMESA
+   'g',
+   'l',
+   'X',
+   'S',
+   'w',
+   'a',
+   'p',
+   'B',
+   'u',
+   'f',
+   'f',
+   'e',
+   'r',
+   's',
+   0, // glXSwapBuffers
+   'g',
+   'l',
+   'X',
+   'S',
+   'w',
+   'a',
+   'p',
+   'B',
+   'u',
+   'f',
+   'f',
+   'e',
+   'r',
+   's',
+   'M',
+   's',
+   'c',
+   'O',
+   'M',
+   'L',
+   0, // glXSwapBuffersMscOML
+   'g',
+   'l',
+   'X',
+   'S',
+   'w',
+   'a',
+   'p',
+   'I',
+   'n',
+   't',
+   'e',
+   'r',
+   'v',
+   'a',
+   'l',
+   'E',
+   'X',
+   'T',
+   0, // glXSwapIntervalEXT
+   'g',
+   'l',
+   'X',
+   'S',
+   'w',
+   'a',
+   'p',
+   'I',
+   'n',
+   't',
+   'e',
+   'r',
+   'v',
+   'a',
+   'l',
+   'M',
+   'E',
+   'S',
+   'A',
+   0, // glXSwapIntervalMESA
+   'g',
+   'l',
+   'X',
+   'S',
+   'w',
+   'a',
+   'p',
+   'I',
+   'n',
+   't',
+   'e',
+   'r',
+   'v',
+   'a',
+   'l',
+   'S',
+   'G',
+   'I',
+   0, // glXSwapIntervalSGI
+   'g',
+   'l',
+   'X',
+   'U',
+   's',
+   'e',
+   'X',
+   'F',
+   'o',
+   'n',
+   't',
+   0, // glXUseXFont
+   'g',
+   'l',
+   'X',
+   'W',
+   'a',
+   'i',
+   't',
+   'F',
+   'o',
+   'r',
+   'M',
+   's',
+   'c',
+   'O',
+   'M',
+   'L',
+   0, // glXWaitForMscOML
+   'g',
+   'l',
+   'X',
+   'W',
+   'a',
+   'i',
+   't',
+   'F',
+   'o',
+   'r',
+   'S',
+   'b',
+   'c',
+   'O',
+   'M',
+   'L',
+   0, // glXWaitForSbcOML
+   'g',
+   'l',
+   'X',
+   'W',
+   'a',
+   'i',
+   't',
+   'G',
+   'L',
+   0, // glXWaitGL
+   'g',
+   'l',
+   'X',
+   'W',
+   'a',
+   'i',
+   't',
+   'V',
+   'i',
+   'd',
+   'e',
+   'o',
+   'S',
+   'y',
+   'n',
+   'c',
+   'S',
+   'G',
+   'I',
+   0, // glXWaitVideoSyncSGI
+   'g',
+   'l',
+   'X',
+   'W',
+   'a',
+   'i',
+   't',
+   'X',
+   0, // glXWaitX
+    0 };
 
 static void *glx_provider_resolver(const char *name,
                                    const enum glx_provider *providers,
-                                   const uint16_t *entrypoints)
+                                   const uint32_t *entrypoints)
 {
     int i;
     for (i = 0; providers[i] != glx_provider_terminator; i++) {
@@ -475,6 +3299,10 @@ static void *glx_provider_resolver(const char *name,
             break;
         case GLX_extension_GLX_MESA_set_3dfx_mode:
             if (epoxy_conservative_has_glx_extension("GLX_MESA_set_3dfx_mode"))
+                return glXGetProcAddress((const GLubyte *)entrypoint_strings + entrypoints[i]);
+            break;
+        case GLX_extension_GLX_MESA_swap_control:
+            if (epoxy_conservative_has_glx_extension("GLX_MESA_swap_control"))
                 return glXGetProcAddress((const GLubyte *)entrypoint_strings + entrypoints[i]);
             break;
         case GLX_extension_GLX_NV_copy_buffer:
@@ -566,6 +3394,9 @@ static void *glx_provider_resolver(const char *name,
         }
     }
 
+    if (epoxy_resolver_failure_handler)
+        return epoxy_resolver_failure_handler(name);
+
     fprintf(stderr, "No provider of %s found.  Requires one of:\n", name);
     for (i = 0; providers[i] != glx_provider_terminator; i++) {
         fprintf(stderr, "    %s\n", enum_string + enum_string_offsets[providers[i]]);
@@ -578,10 +3409,10 @@ static void *glx_provider_resolver(const char *name,
 }
 
 EPOXY_NOINLINE static void *
-glx_single_resolver(enum glx_provider provider, uint16_t entrypoint_offset);
+glx_single_resolver(enum glx_provider provider, uint32_t entrypoint_offset);
 
 static void *
-glx_single_resolver(enum glx_provider provider, uint16_t entrypoint_offset)
+glx_single_resolver(enum glx_provider provider, uint32_t entrypoint_offset)
 {
     enum glx_provider providers[] = {
         provider,
@@ -999,376 +3830,388 @@ epoxy_glXGetSelectedEventSGIX_resolver(void)
     return glx_single_resolver(GLX_extension_GLX_SGIX_pbuffer, 1486 /* glXGetSelectedEventSGIX */);
 }
 
+static PFNGLXGETSWAPINTERVALMESAPROC
+epoxy_glXGetSwapIntervalMESA_resolver(void)
+{
+    return glx_single_resolver(GLX_extension_GLX_MESA_swap_control, 1510 /* glXGetSwapIntervalMESA */);
+}
+
 static PFNGLXGETSYNCVALUESOMLPROC
 epoxy_glXGetSyncValuesOML_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_OML_sync_control, 1510 /* glXGetSyncValuesOML */);
+    return glx_single_resolver(GLX_extension_GLX_OML_sync_control, 1533 /* glXGetSyncValuesOML */);
 }
 
 static PFNGLXGETTRANSPARENTINDEXSUNPROC
 epoxy_glXGetTransparentIndexSUN_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_SUN_get_transparent_index, 1530 /* glXGetTransparentIndexSUN */);
+    return glx_single_resolver(GLX_extension_GLX_SUN_get_transparent_index, 1553 /* glXGetTransparentIndexSUN */);
 }
 
 static PFNGLXGETVIDEODEVICENVPROC
 epoxy_glXGetVideoDeviceNV_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_NV_video_out, 1556 /* glXGetVideoDeviceNV */);
+    return glx_single_resolver(GLX_extension_GLX_NV_video_out, 1579 /* glXGetVideoDeviceNV */);
 }
 
 static PFNGLXGETVIDEOINFONVPROC
 epoxy_glXGetVideoInfoNV_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_NV_video_out, 1576 /* glXGetVideoInfoNV */);
+    return glx_single_resolver(GLX_extension_GLX_NV_video_out, 1599 /* glXGetVideoInfoNV */);
 }
 
 static PFNGLXGETVIDEOSYNCSGIPROC
 epoxy_glXGetVideoSyncSGI_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_SGI_video_sync, 1594 /* glXGetVideoSyncSGI */);
+    return glx_single_resolver(GLX_extension_GLX_SGI_video_sync, 1617 /* glXGetVideoSyncSGI */);
 }
 
 static PFNGLXGETVISUALFROMFBCONFIGPROC
 epoxy_glXGetVisualFromFBConfig_resolver(void)
 {
-    return glx_single_resolver(GLX_13, 1613 /* glXGetVisualFromFBConfig */);
+    return glx_single_resolver(GLX_13, 1636 /* glXGetVisualFromFBConfig */);
 }
 
 static PFNGLXGETVISUALFROMFBCONFIGSGIXPROC
 epoxy_glXGetVisualFromFBConfigSGIX_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_SGIX_fbconfig, 1638 /* glXGetVisualFromFBConfigSGIX */);
+    return glx_single_resolver(GLX_extension_GLX_SGIX_fbconfig, 1661 /* glXGetVisualFromFBConfigSGIX */);
 }
 
 static PFNGLXHYPERPIPEATTRIBSGIXPROC
 epoxy_glXHyperpipeAttribSGIX_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_SGIX_hyperpipe, 1667 /* glXHyperpipeAttribSGIX */);
+    return glx_single_resolver(GLX_extension_GLX_SGIX_hyperpipe, 1690 /* glXHyperpipeAttribSGIX */);
 }
 
 static PFNGLXHYPERPIPECONFIGSGIXPROC
 epoxy_glXHyperpipeConfigSGIX_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_SGIX_hyperpipe, 1690 /* glXHyperpipeConfigSGIX */);
+    return glx_single_resolver(GLX_extension_GLX_SGIX_hyperpipe, 1713 /* glXHyperpipeConfigSGIX */);
 }
 
 static PFNGLXIMPORTCONTEXTEXTPROC
 epoxy_glXImportContextEXT_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_EXT_import_context, 1713 /* glXImportContextEXT */);
+    return glx_single_resolver(GLX_extension_GLX_EXT_import_context, 1736 /* glXImportContextEXT */);
 }
 
 static PFNGLXISDIRECTPROC
 epoxy_glXIsDirect_resolver(void)
 {
-    return glx_single_resolver(GLX_10, 1733 /* glXIsDirect */);
+    return glx_single_resolver(GLX_10, 1756 /* glXIsDirect */);
 }
 
 static PFNGLXJOINSWAPGROUPNVPROC
 epoxy_glXJoinSwapGroupNV_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_NV_swap_group, 1745 /* glXJoinSwapGroupNV */);
+    return glx_single_resolver(GLX_extension_GLX_NV_swap_group, 1768 /* glXJoinSwapGroupNV */);
 }
 
 static PFNGLXJOINSWAPGROUPSGIXPROC
 epoxy_glXJoinSwapGroupSGIX_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_SGIX_swap_group, 1764 /* glXJoinSwapGroupSGIX */);
+    return glx_single_resolver(GLX_extension_GLX_SGIX_swap_group, 1787 /* glXJoinSwapGroupSGIX */);
 }
 
 static PFNGLXLOCKVIDEOCAPTUREDEVICENVPROC
 epoxy_glXLockVideoCaptureDeviceNV_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_NV_video_capture, 1785 /* glXLockVideoCaptureDeviceNV */);
+    return glx_single_resolver(GLX_extension_GLX_NV_video_capture, 1808 /* glXLockVideoCaptureDeviceNV */);
 }
 
 static PFNGLXMAKEASSOCIATEDCONTEXTCURRENTAMDPROC
 epoxy_glXMakeAssociatedContextCurrentAMD_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_AMD_gpu_association, 1813 /* glXMakeAssociatedContextCurrentAMD */);
+    return glx_single_resolver(GLX_extension_GLX_AMD_gpu_association, 1836 /* glXMakeAssociatedContextCurrentAMD */);
 }
 
 static PFNGLXMAKECONTEXTCURRENTPROC
 epoxy_glXMakeContextCurrent_resolver(void)
 {
-    return glx_single_resolver(GLX_13, 1848 /* glXMakeContextCurrent */);
+    return glx_single_resolver(GLX_13, 1871 /* glXMakeContextCurrent */);
 }
 
 static PFNGLXMAKECURRENTPROC
 epoxy_glXMakeCurrent_resolver(void)
 {
-    return glx_single_resolver(GLX_10, 1870 /* glXMakeCurrent */);
+    return glx_single_resolver(GLX_10, 1893 /* glXMakeCurrent */);
 }
 
 static PFNGLXMAKECURRENTREADSGIPROC
 epoxy_glXMakeCurrentReadSGI_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_SGI_make_current_read, 1885 /* glXMakeCurrentReadSGI */);
+    return glx_single_resolver(GLX_extension_GLX_SGI_make_current_read, 1908 /* glXMakeCurrentReadSGI */);
 }
 
 static PFNGLXNAMEDCOPYBUFFERSUBDATANVPROC
 epoxy_glXNamedCopyBufferSubDataNV_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_NV_copy_buffer, 1907 /* glXNamedCopyBufferSubDataNV */);
+    return glx_single_resolver(GLX_extension_GLX_NV_copy_buffer, 1930 /* glXNamedCopyBufferSubDataNV */);
 }
 
 static PFNGLXQUERYCHANNELDELTASSGIXPROC
 epoxy_glXQueryChannelDeltasSGIX_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_SGIX_video_resize, 1935 /* glXQueryChannelDeltasSGIX */);
+    return glx_single_resolver(GLX_extension_GLX_SGIX_video_resize, 1958 /* glXQueryChannelDeltasSGIX */);
 }
 
 static PFNGLXQUERYCHANNELRECTSGIXPROC
 epoxy_glXQueryChannelRectSGIX_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_SGIX_video_resize, 1961 /* glXQueryChannelRectSGIX */);
+    return glx_single_resolver(GLX_extension_GLX_SGIX_video_resize, 1984 /* glXQueryChannelRectSGIX */);
 }
 
 static PFNGLXQUERYCONTEXTPROC
 epoxy_glXQueryContext_resolver(void)
 {
-    return glx_single_resolver(GLX_13, 1985 /* glXQueryContext */);
+    return glx_single_resolver(GLX_13, 2008 /* glXQueryContext */);
 }
 
 static PFNGLXQUERYCONTEXTINFOEXTPROC
 epoxy_glXQueryContextInfoEXT_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_EXT_import_context, 2001 /* glXQueryContextInfoEXT */);
+    return glx_single_resolver(GLX_extension_GLX_EXT_import_context, 2024 /* glXQueryContextInfoEXT */);
 }
 
 static PFNGLXQUERYCURRENTRENDERERINTEGERMESAPROC
 epoxy_glXQueryCurrentRendererIntegerMESA_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_MESA_query_renderer, 2024 /* glXQueryCurrentRendererIntegerMESA */);
+    return glx_single_resolver(GLX_extension_GLX_MESA_query_renderer, 2047 /* glXQueryCurrentRendererIntegerMESA */);
 }
 
 static PFNGLXQUERYCURRENTRENDERERSTRINGMESAPROC
 epoxy_glXQueryCurrentRendererStringMESA_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_MESA_query_renderer, 2059 /* glXQueryCurrentRendererStringMESA */);
+    return glx_single_resolver(GLX_extension_GLX_MESA_query_renderer, 2082 /* glXQueryCurrentRendererStringMESA */);
 }
 
 static PFNGLXQUERYDRAWABLEPROC
 epoxy_glXQueryDrawable_resolver(void)
 {
-    return glx_single_resolver(GLX_13, 2093 /* glXQueryDrawable */);
+    return glx_single_resolver(GLX_13, 2116 /* glXQueryDrawable */);
 }
 
 static PFNGLXQUERYEXTENSIONPROC
 epoxy_glXQueryExtension_resolver(void)
 {
-    return glx_single_resolver(GLX_10, 2110 /* glXQueryExtension */);
+    return glx_single_resolver(GLX_10, 2133 /* glXQueryExtension */);
 }
 
 static PFNGLXQUERYEXTENSIONSSTRINGPROC
 epoxy_glXQueryExtensionsString_resolver(void)
 {
-    return glx_single_resolver(GLX_11, 2128 /* glXQueryExtensionsString */);
+    return glx_single_resolver(GLX_11, 2151 /* glXQueryExtensionsString */);
 }
 
 static PFNGLXQUERYFRAMECOUNTNVPROC
 epoxy_glXQueryFrameCountNV_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_NV_swap_group, 2153 /* glXQueryFrameCountNV */);
+    return glx_single_resolver(GLX_extension_GLX_NV_swap_group, 2176 /* glXQueryFrameCountNV */);
 }
 
 static PFNGLXQUERYGLXPBUFFERSGIXPROC
 epoxy_glXQueryGLXPbufferSGIX_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_SGIX_pbuffer, 2174 /* glXQueryGLXPbufferSGIX */);
+    return glx_single_resolver(GLX_extension_GLX_SGIX_pbuffer, 2197 /* glXQueryGLXPbufferSGIX */);
 }
 
 static PFNGLXQUERYHYPERPIPEATTRIBSGIXPROC
 epoxy_glXQueryHyperpipeAttribSGIX_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_SGIX_hyperpipe, 2197 /* glXQueryHyperpipeAttribSGIX */);
+    return glx_single_resolver(GLX_extension_GLX_SGIX_hyperpipe, 2220 /* glXQueryHyperpipeAttribSGIX */);
 }
 
 static PFNGLXQUERYHYPERPIPEBESTATTRIBSGIXPROC
 epoxy_glXQueryHyperpipeBestAttribSGIX_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_SGIX_hyperpipe, 2225 /* glXQueryHyperpipeBestAttribSGIX */);
+    return glx_single_resolver(GLX_extension_GLX_SGIX_hyperpipe, 2248 /* glXQueryHyperpipeBestAttribSGIX */);
 }
 
 static PFNGLXQUERYHYPERPIPECONFIGSGIXPROC
 epoxy_glXQueryHyperpipeConfigSGIX_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_SGIX_hyperpipe, 2257 /* glXQueryHyperpipeConfigSGIX */);
+    return glx_single_resolver(GLX_extension_GLX_SGIX_hyperpipe, 2280 /* glXQueryHyperpipeConfigSGIX */);
 }
 
 static PFNGLXQUERYHYPERPIPENETWORKSGIXPROC
 epoxy_glXQueryHyperpipeNetworkSGIX_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_SGIX_hyperpipe, 2285 /* glXQueryHyperpipeNetworkSGIX */);
+    return glx_single_resolver(GLX_extension_GLX_SGIX_hyperpipe, 2308 /* glXQueryHyperpipeNetworkSGIX */);
 }
 
 static PFNGLXQUERYMAXSWAPBARRIERSSGIXPROC
 epoxy_glXQueryMaxSwapBarriersSGIX_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_SGIX_swap_barrier, 2314 /* glXQueryMaxSwapBarriersSGIX */);
+    return glx_single_resolver(GLX_extension_GLX_SGIX_swap_barrier, 2337 /* glXQueryMaxSwapBarriersSGIX */);
 }
 
 static PFNGLXQUERYMAXSWAPGROUPSNVPROC
 epoxy_glXQueryMaxSwapGroupsNV_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_NV_swap_group, 2342 /* glXQueryMaxSwapGroupsNV */);
+    return glx_single_resolver(GLX_extension_GLX_NV_swap_group, 2365 /* glXQueryMaxSwapGroupsNV */);
 }
 
 static PFNGLXQUERYRENDERERINTEGERMESAPROC
 epoxy_glXQueryRendererIntegerMESA_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_MESA_query_renderer, 2366 /* glXQueryRendererIntegerMESA */);
+    return glx_single_resolver(GLX_extension_GLX_MESA_query_renderer, 2389 /* glXQueryRendererIntegerMESA */);
 }
 
 static PFNGLXQUERYRENDERERSTRINGMESAPROC
 epoxy_glXQueryRendererStringMESA_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_MESA_query_renderer, 2394 /* glXQueryRendererStringMESA */);
+    return glx_single_resolver(GLX_extension_GLX_MESA_query_renderer, 2417 /* glXQueryRendererStringMESA */);
 }
 
 static PFNGLXQUERYSERVERSTRINGPROC
 epoxy_glXQueryServerString_resolver(void)
 {
-    return glx_single_resolver(GLX_11, 2421 /* glXQueryServerString */);
+    return glx_single_resolver(GLX_11, 2444 /* glXQueryServerString */);
 }
 
 static PFNGLXQUERYSWAPGROUPNVPROC
 epoxy_glXQuerySwapGroupNV_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_NV_swap_group, 2442 /* glXQuerySwapGroupNV */);
+    return glx_single_resolver(GLX_extension_GLX_NV_swap_group, 2465 /* glXQuerySwapGroupNV */);
 }
 
 static PFNGLXQUERYVERSIONPROC
 epoxy_glXQueryVersion_resolver(void)
 {
-    return glx_single_resolver(GLX_10, 2462 /* glXQueryVersion */);
+    return glx_single_resolver(GLX_10, 2485 /* glXQueryVersion */);
 }
 
 static PFNGLXQUERYVIDEOCAPTUREDEVICENVPROC
 epoxy_glXQueryVideoCaptureDeviceNV_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_NV_video_capture, 2478 /* glXQueryVideoCaptureDeviceNV */);
+    return glx_single_resolver(GLX_extension_GLX_NV_video_capture, 2501 /* glXQueryVideoCaptureDeviceNV */);
 }
 
 static PFNGLXRELEASEBUFFERSMESAPROC
 epoxy_glXReleaseBuffersMESA_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_MESA_release_buffers, 2507 /* glXReleaseBuffersMESA */);
+    return glx_single_resolver(GLX_extension_GLX_MESA_release_buffers, 2530 /* glXReleaseBuffersMESA */);
 }
 
 static PFNGLXRELEASETEXIMAGEEXTPROC
 epoxy_glXReleaseTexImageEXT_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_EXT_texture_from_pixmap, 2529 /* glXReleaseTexImageEXT */);
+    return glx_single_resolver(GLX_extension_GLX_EXT_texture_from_pixmap, 2552 /* glXReleaseTexImageEXT */);
 }
 
 static PFNGLXRELEASEVIDEOCAPTUREDEVICENVPROC
 epoxy_glXReleaseVideoCaptureDeviceNV_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_NV_video_capture, 2551 /* glXReleaseVideoCaptureDeviceNV */);
+    return glx_single_resolver(GLX_extension_GLX_NV_video_capture, 2574 /* glXReleaseVideoCaptureDeviceNV */);
 }
 
 static PFNGLXRELEASEVIDEODEVICENVPROC
 epoxy_glXReleaseVideoDeviceNV_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_NV_video_out, 2582 /* glXReleaseVideoDeviceNV */);
+    return glx_single_resolver(GLX_extension_GLX_NV_video_out, 2605 /* glXReleaseVideoDeviceNV */);
 }
 
 static PFNGLXRELEASEVIDEOIMAGENVPROC
 epoxy_glXReleaseVideoImageNV_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_NV_video_out, 2606 /* glXReleaseVideoImageNV */);
+    return glx_single_resolver(GLX_extension_GLX_NV_video_out, 2629 /* glXReleaseVideoImageNV */);
 }
 
 static PFNGLXRESETFRAMECOUNTNVPROC
 epoxy_glXResetFrameCountNV_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_NV_swap_group, 2629 /* glXResetFrameCountNV */);
+    return glx_single_resolver(GLX_extension_GLX_NV_swap_group, 2652 /* glXResetFrameCountNV */);
 }
 
 static PFNGLXSELECTEVENTPROC
 epoxy_glXSelectEvent_resolver(void)
 {
-    return glx_single_resolver(GLX_13, 2650 /* glXSelectEvent */);
+    return glx_single_resolver(GLX_13, 2673 /* glXSelectEvent */);
 }
 
 static PFNGLXSELECTEVENTSGIXPROC
 epoxy_glXSelectEventSGIX_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_SGIX_pbuffer, 2665 /* glXSelectEventSGIX */);
+    return glx_single_resolver(GLX_extension_GLX_SGIX_pbuffer, 2688 /* glXSelectEventSGIX */);
 }
 
 static PFNGLXSENDPBUFFERTOVIDEONVPROC
 epoxy_glXSendPbufferToVideoNV_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_NV_video_out, 2684 /* glXSendPbufferToVideoNV */);
+    return glx_single_resolver(GLX_extension_GLX_NV_video_out, 2707 /* glXSendPbufferToVideoNV */);
 }
 
 static PFNGLXSET3DFXMODEMESAPROC
 epoxy_glXSet3DfxModeMESA_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_MESA_set_3dfx_mode, 2708 /* glXSet3DfxModeMESA */);
+    return glx_single_resolver(GLX_extension_GLX_MESA_set_3dfx_mode, 2731 /* glXSet3DfxModeMESA */);
 }
 
 static PFNGLXSWAPBUFFERSPROC
 epoxy_glXSwapBuffers_resolver(void)
 {
-    return glx_single_resolver(GLX_10, 2727 /* glXSwapBuffers */);
+    return glx_single_resolver(GLX_10, 2750 /* glXSwapBuffers */);
 }
 
 static PFNGLXSWAPBUFFERSMSCOMLPROC
 epoxy_glXSwapBuffersMscOML_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_OML_sync_control, 2742 /* glXSwapBuffersMscOML */);
+    return glx_single_resolver(GLX_extension_GLX_OML_sync_control, 2765 /* glXSwapBuffersMscOML */);
 }
 
 static PFNGLXSWAPINTERVALEXTPROC
 epoxy_glXSwapIntervalEXT_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_EXT_swap_control, 2763 /* glXSwapIntervalEXT */);
+    return glx_single_resolver(GLX_extension_GLX_EXT_swap_control, 2786 /* glXSwapIntervalEXT */);
+}
+
+static PFNGLXSWAPINTERVALMESAPROC
+epoxy_glXSwapIntervalMESA_resolver(void)
+{
+    return glx_single_resolver(GLX_extension_GLX_MESA_swap_control, 2805 /* glXSwapIntervalMESA */);
 }
 
 static PFNGLXSWAPINTERVALSGIPROC
 epoxy_glXSwapIntervalSGI_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_SGI_swap_control, 2782 /* glXSwapIntervalSGI */);
+    return glx_single_resolver(GLX_extension_GLX_SGI_swap_control, 2825 /* glXSwapIntervalSGI */);
 }
 
 static PFNGLXUSEXFONTPROC
 epoxy_glXUseXFont_resolver(void)
 {
-    return glx_single_resolver(GLX_10, 2801 /* glXUseXFont */);
+    return glx_single_resolver(GLX_10, 2844 /* glXUseXFont */);
 }
 
 static PFNGLXWAITFORMSCOMLPROC
 epoxy_glXWaitForMscOML_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_OML_sync_control, 2813 /* glXWaitForMscOML */);
+    return glx_single_resolver(GLX_extension_GLX_OML_sync_control, 2856 /* glXWaitForMscOML */);
 }
 
 static PFNGLXWAITFORSBCOMLPROC
 epoxy_glXWaitForSbcOML_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_OML_sync_control, 2830 /* glXWaitForSbcOML */);
+    return glx_single_resolver(GLX_extension_GLX_OML_sync_control, 2873 /* glXWaitForSbcOML */);
 }
 
 static PFNGLXWAITGLPROC
 epoxy_glXWaitGL_resolver(void)
 {
-    return glx_single_resolver(GLX_10, 2847 /* glXWaitGL */);
+    return glx_single_resolver(GLX_10, 2890 /* glXWaitGL */);
 }
 
 static PFNGLXWAITVIDEOSYNCSGIPROC
 epoxy_glXWaitVideoSyncSGI_resolver(void)
 {
-    return glx_single_resolver(GLX_extension_GLX_SGI_video_sync, 2857 /* glXWaitVideoSyncSGI */);
+    return glx_single_resolver(GLX_extension_GLX_SGI_video_sync, 2900 /* glXWaitVideoSyncSGI */);
 }
 
 static PFNGLXWAITXPROC
 epoxy_glXWaitX_resolver(void)
 {
-    return glx_single_resolver(GLX_10, 2877 /* glXWaitX */);
+    return glx_single_resolver(GLX_10, 2920 /* glXWaitX */);
 }
 
 GEN_THUNKS_RET(int, glXBindChannelToWindowSGIX, (Display * display, int screen, int channel, Window window), (display, screen, channel, window))
@@ -1439,6 +4282,7 @@ GEN_THUNKS_RET(__GLXextFuncPtr, glXGetProcAddress, (const GLubyte * procName), (
 GEN_THUNKS_RET(__GLXextFuncPtr, glXGetProcAddressARB, (const GLubyte * procName), (procName))
 GEN_THUNKS(glXGetSelectedEvent, (Display * dpy, GLXDrawable draw, unsigned long * event_mask), (dpy, draw, event_mask))
 GEN_THUNKS(glXGetSelectedEventSGIX, (Display * dpy, GLXDrawable drawable, unsigned long * mask), (dpy, drawable, mask))
+GEN_THUNKS_RET(int, glXGetSwapIntervalMESA, (void), ())
 GEN_THUNKS_RET(Bool, glXGetSyncValuesOML, (Display * dpy, GLXDrawable drawable, int64_t * ust, int64_t * msc, int64_t * sbc), (dpy, drawable, ust, msc, sbc))
 GEN_THUNKS_RET(Status, glXGetTransparentIndexSUN, (Display * dpy, Window overlay, Window underlay, long * pTransparentIndex), (dpy, overlay, underlay, pTransparentIndex))
 GEN_THUNKS_RET(int, glXGetVideoDeviceNV, (Display * dpy, int screen, int numVideoDevices, GLXVideoDeviceNV * pVideoDevice), (dpy, screen, numVideoDevices, pVideoDevice))
@@ -1494,6 +4338,7 @@ GEN_THUNKS_RET(Bool, glXSet3DfxModeMESA, (int mode), (mode))
 GEN_THUNKS(glXSwapBuffers, (Display * dpy, GLXDrawable drawable), (dpy, drawable))
 GEN_THUNKS_RET(int64_t, glXSwapBuffersMscOML, (Display * dpy, GLXDrawable drawable, int64_t target_msc, int64_t divisor, int64_t remainder), (dpy, drawable, target_msc, divisor, remainder))
 GEN_THUNKS(glXSwapIntervalEXT, (Display * dpy, GLXDrawable drawable, int interval), (dpy, drawable, interval))
+GEN_THUNKS_RET(int, glXSwapIntervalMESA, (unsigned int interval), (interval))
 GEN_THUNKS_RET(int, glXSwapIntervalSGI, (int interval), (interval))
 GEN_THUNKS(glXUseXFont, (Font font, int first, int count, int list), (font, first, count, list))
 GEN_THUNKS_RET(Bool, glXWaitForMscOML, (Display * dpy, GLXDrawable drawable, int64_t target_msc, int64_t divisor, int64_t remainder, int64_t * ust, int64_t * msc, int64_t * sbc), (dpy, drawable, target_msc, divisor, remainder, ust, msc, sbc))
@@ -1504,136 +4349,138 @@ GEN_THUNKS(glXWaitX, (void), ())
 
 #if USING_DISPATCH_TABLE
 static struct dispatch_table resolver_table = {
-    .glXBindChannelToWindowSGIX = epoxy_glXBindChannelToWindowSGIX_dispatch_table_rewrite_ptr,
-    .glXBindHyperpipeSGIX = epoxy_glXBindHyperpipeSGIX_dispatch_table_rewrite_ptr,
-    .glXBindSwapBarrierNV = epoxy_glXBindSwapBarrierNV_dispatch_table_rewrite_ptr,
-    .glXBindSwapBarrierSGIX = epoxy_glXBindSwapBarrierSGIX_dispatch_table_rewrite_ptr,
-    .glXBindTexImageEXT = epoxy_glXBindTexImageEXT_dispatch_table_rewrite_ptr,
-    .glXBindVideoCaptureDeviceNV = epoxy_glXBindVideoCaptureDeviceNV_dispatch_table_rewrite_ptr,
-    .glXBindVideoDeviceNV = epoxy_glXBindVideoDeviceNV_dispatch_table_rewrite_ptr,
-    .glXBindVideoImageNV = epoxy_glXBindVideoImageNV_dispatch_table_rewrite_ptr,
-    .glXBlitContextFramebufferAMD = epoxy_glXBlitContextFramebufferAMD_dispatch_table_rewrite_ptr,
-    .glXChannelRectSGIX = epoxy_glXChannelRectSGIX_dispatch_table_rewrite_ptr,
-    .glXChannelRectSyncSGIX = epoxy_glXChannelRectSyncSGIX_dispatch_table_rewrite_ptr,
-    .glXChooseFBConfig = epoxy_glXChooseFBConfig_dispatch_table_rewrite_ptr,
-    .glXChooseFBConfigSGIX = epoxy_glXChooseFBConfigSGIX_dispatch_table_rewrite_ptr,
-    .glXChooseVisual = epoxy_glXChooseVisual_dispatch_table_rewrite_ptr,
-    .glXCopyBufferSubDataNV = epoxy_glXCopyBufferSubDataNV_dispatch_table_rewrite_ptr,
-    .glXCopyContext = epoxy_glXCopyContext_dispatch_table_rewrite_ptr,
-    .glXCopyImageSubDataNV = epoxy_glXCopyImageSubDataNV_dispatch_table_rewrite_ptr,
-    .glXCopySubBufferMESA = epoxy_glXCopySubBufferMESA_dispatch_table_rewrite_ptr,
-    .glXCreateAssociatedContextAMD = epoxy_glXCreateAssociatedContextAMD_dispatch_table_rewrite_ptr,
-    .glXCreateAssociatedContextAttribsAMD = epoxy_glXCreateAssociatedContextAttribsAMD_dispatch_table_rewrite_ptr,
-    .glXCreateContext = epoxy_glXCreateContext_dispatch_table_rewrite_ptr,
-    .glXCreateContextAttribsARB = epoxy_glXCreateContextAttribsARB_dispatch_table_rewrite_ptr,
-    .glXCreateContextWithConfigSGIX = epoxy_glXCreateContextWithConfigSGIX_dispatch_table_rewrite_ptr,
-    .glXCreateGLXPbufferSGIX = epoxy_glXCreateGLXPbufferSGIX_dispatch_table_rewrite_ptr,
-    .glXCreateGLXPixmap = epoxy_glXCreateGLXPixmap_dispatch_table_rewrite_ptr,
-    .glXCreateGLXPixmapMESA = epoxy_glXCreateGLXPixmapMESA_dispatch_table_rewrite_ptr,
-    .glXCreateGLXPixmapWithConfigSGIX = epoxy_glXCreateGLXPixmapWithConfigSGIX_dispatch_table_rewrite_ptr,
-    .glXCreateNewContext = epoxy_glXCreateNewContext_dispatch_table_rewrite_ptr,
-    .glXCreatePbuffer = epoxy_glXCreatePbuffer_dispatch_table_rewrite_ptr,
-    .glXCreatePixmap = epoxy_glXCreatePixmap_dispatch_table_rewrite_ptr,
-    .glXCreateWindow = epoxy_glXCreateWindow_dispatch_table_rewrite_ptr,
-    .glXCushionSGI = epoxy_glXCushionSGI_dispatch_table_rewrite_ptr,
-    .glXDelayBeforeSwapNV = epoxy_glXDelayBeforeSwapNV_dispatch_table_rewrite_ptr,
-    .glXDeleteAssociatedContextAMD = epoxy_glXDeleteAssociatedContextAMD_dispatch_table_rewrite_ptr,
-    .glXDestroyContext = epoxy_glXDestroyContext_dispatch_table_rewrite_ptr,
-    .glXDestroyGLXPbufferSGIX = epoxy_glXDestroyGLXPbufferSGIX_dispatch_table_rewrite_ptr,
-    .glXDestroyGLXPixmap = epoxy_glXDestroyGLXPixmap_dispatch_table_rewrite_ptr,
-    .glXDestroyGLXVideoSourceSGIX = epoxy_glXDestroyGLXVideoSourceSGIX_dispatch_table_rewrite_ptr,
-    .glXDestroyHyperpipeConfigSGIX = epoxy_glXDestroyHyperpipeConfigSGIX_dispatch_table_rewrite_ptr,
-    .glXDestroyPbuffer = epoxy_glXDestroyPbuffer_dispatch_table_rewrite_ptr,
-    .glXDestroyPixmap = epoxy_glXDestroyPixmap_dispatch_table_rewrite_ptr,
-    .glXDestroyWindow = epoxy_glXDestroyWindow_dispatch_table_rewrite_ptr,
-    .glXEnumerateVideoCaptureDevicesNV = epoxy_glXEnumerateVideoCaptureDevicesNV_dispatch_table_rewrite_ptr,
-    .glXEnumerateVideoDevicesNV = epoxy_glXEnumerateVideoDevicesNV_dispatch_table_rewrite_ptr,
-    .glXFreeContextEXT = epoxy_glXFreeContextEXT_dispatch_table_rewrite_ptr,
-    .glXGetAGPOffsetMESA = epoxy_glXGetAGPOffsetMESA_dispatch_table_rewrite_ptr,
-    .glXGetClientString = epoxy_glXGetClientString_dispatch_table_rewrite_ptr,
-    .glXGetConfig = epoxy_glXGetConfig_dispatch_table_rewrite_ptr,
-    .glXGetContextGPUIDAMD = epoxy_glXGetContextGPUIDAMD_dispatch_table_rewrite_ptr,
-    .glXGetContextIDEXT = epoxy_glXGetContextIDEXT_dispatch_table_rewrite_ptr,
-    .glXGetCurrentAssociatedContextAMD = epoxy_glXGetCurrentAssociatedContextAMD_dispatch_table_rewrite_ptr,
-    .glXGetCurrentContext = epoxy_glXGetCurrentContext_dispatch_table_rewrite_ptr,
-    .glXGetCurrentDisplay = epoxy_glXGetCurrentDisplay_dispatch_table_rewrite_ptr,
-    .glXGetCurrentDisplayEXT = epoxy_glXGetCurrentDisplayEXT_dispatch_table_rewrite_ptr,
-    .glXGetCurrentDrawable = epoxy_glXGetCurrentDrawable_dispatch_table_rewrite_ptr,
-    .glXGetCurrentReadDrawable = epoxy_glXGetCurrentReadDrawable_dispatch_table_rewrite_ptr,
-    .glXGetCurrentReadDrawableSGI = epoxy_glXGetCurrentReadDrawableSGI_dispatch_table_rewrite_ptr,
-    .glXGetFBConfigAttrib = epoxy_glXGetFBConfigAttrib_dispatch_table_rewrite_ptr,
-    .glXGetFBConfigAttribSGIX = epoxy_glXGetFBConfigAttribSGIX_dispatch_table_rewrite_ptr,
-    .glXGetFBConfigFromVisualSGIX = epoxy_glXGetFBConfigFromVisualSGIX_dispatch_table_rewrite_ptr,
-    .glXGetFBConfigs = epoxy_glXGetFBConfigs_dispatch_table_rewrite_ptr,
-    .glXGetGPUIDsAMD = epoxy_glXGetGPUIDsAMD_dispatch_table_rewrite_ptr,
-    .glXGetGPUInfoAMD = epoxy_glXGetGPUInfoAMD_dispatch_table_rewrite_ptr,
-    .glXGetMscRateOML = epoxy_glXGetMscRateOML_dispatch_table_rewrite_ptr,
-    .glXGetProcAddress = epoxy_glXGetProcAddress_dispatch_table_rewrite_ptr,
-    .glXGetProcAddressARB = epoxy_glXGetProcAddressARB_dispatch_table_rewrite_ptr,
-    .glXGetSelectedEvent = epoxy_glXGetSelectedEvent_dispatch_table_rewrite_ptr,
-    .glXGetSelectedEventSGIX = epoxy_glXGetSelectedEventSGIX_dispatch_table_rewrite_ptr,
-    .glXGetSyncValuesOML = epoxy_glXGetSyncValuesOML_dispatch_table_rewrite_ptr,
-    .glXGetTransparentIndexSUN = epoxy_glXGetTransparentIndexSUN_dispatch_table_rewrite_ptr,
-    .glXGetVideoDeviceNV = epoxy_glXGetVideoDeviceNV_dispatch_table_rewrite_ptr,
-    .glXGetVideoInfoNV = epoxy_glXGetVideoInfoNV_dispatch_table_rewrite_ptr,
-    .glXGetVideoSyncSGI = epoxy_glXGetVideoSyncSGI_dispatch_table_rewrite_ptr,
-    .glXGetVisualFromFBConfig = epoxy_glXGetVisualFromFBConfig_dispatch_table_rewrite_ptr,
-    .glXGetVisualFromFBConfigSGIX = epoxy_glXGetVisualFromFBConfigSGIX_dispatch_table_rewrite_ptr,
-    .glXHyperpipeAttribSGIX = epoxy_glXHyperpipeAttribSGIX_dispatch_table_rewrite_ptr,
-    .glXHyperpipeConfigSGIX = epoxy_glXHyperpipeConfigSGIX_dispatch_table_rewrite_ptr,
-    .glXImportContextEXT = epoxy_glXImportContextEXT_dispatch_table_rewrite_ptr,
-    .glXIsDirect = epoxy_glXIsDirect_dispatch_table_rewrite_ptr,
-    .glXJoinSwapGroupNV = epoxy_glXJoinSwapGroupNV_dispatch_table_rewrite_ptr,
-    .glXJoinSwapGroupSGIX = epoxy_glXJoinSwapGroupSGIX_dispatch_table_rewrite_ptr,
-    .glXLockVideoCaptureDeviceNV = epoxy_glXLockVideoCaptureDeviceNV_dispatch_table_rewrite_ptr,
-    .glXMakeAssociatedContextCurrentAMD = epoxy_glXMakeAssociatedContextCurrentAMD_dispatch_table_rewrite_ptr,
-    .glXMakeContextCurrent = epoxy_glXMakeContextCurrent_dispatch_table_rewrite_ptr,
-    .glXMakeCurrent = epoxy_glXMakeCurrent_dispatch_table_rewrite_ptr,
-    .glXMakeCurrentReadSGI = epoxy_glXMakeCurrentReadSGI_dispatch_table_rewrite_ptr,
-    .glXNamedCopyBufferSubDataNV = epoxy_glXNamedCopyBufferSubDataNV_dispatch_table_rewrite_ptr,
-    .glXQueryChannelDeltasSGIX = epoxy_glXQueryChannelDeltasSGIX_dispatch_table_rewrite_ptr,
-    .glXQueryChannelRectSGIX = epoxy_glXQueryChannelRectSGIX_dispatch_table_rewrite_ptr,
-    .glXQueryContext = epoxy_glXQueryContext_dispatch_table_rewrite_ptr,
-    .glXQueryContextInfoEXT = epoxy_glXQueryContextInfoEXT_dispatch_table_rewrite_ptr,
-    .glXQueryCurrentRendererIntegerMESA = epoxy_glXQueryCurrentRendererIntegerMESA_dispatch_table_rewrite_ptr,
-    .glXQueryCurrentRendererStringMESA = epoxy_glXQueryCurrentRendererStringMESA_dispatch_table_rewrite_ptr,
-    .glXQueryDrawable = epoxy_glXQueryDrawable_dispatch_table_rewrite_ptr,
-    .glXQueryExtension = epoxy_glXQueryExtension_dispatch_table_rewrite_ptr,
-    .glXQueryExtensionsString = epoxy_glXQueryExtensionsString_dispatch_table_rewrite_ptr,
-    .glXQueryFrameCountNV = epoxy_glXQueryFrameCountNV_dispatch_table_rewrite_ptr,
-    .glXQueryGLXPbufferSGIX = epoxy_glXQueryGLXPbufferSGIX_dispatch_table_rewrite_ptr,
-    .glXQueryHyperpipeAttribSGIX = epoxy_glXQueryHyperpipeAttribSGIX_dispatch_table_rewrite_ptr,
-    .glXQueryHyperpipeBestAttribSGIX = epoxy_glXQueryHyperpipeBestAttribSGIX_dispatch_table_rewrite_ptr,
-    .glXQueryHyperpipeConfigSGIX = epoxy_glXQueryHyperpipeConfigSGIX_dispatch_table_rewrite_ptr,
-    .glXQueryHyperpipeNetworkSGIX = epoxy_glXQueryHyperpipeNetworkSGIX_dispatch_table_rewrite_ptr,
-    .glXQueryMaxSwapBarriersSGIX = epoxy_glXQueryMaxSwapBarriersSGIX_dispatch_table_rewrite_ptr,
-    .glXQueryMaxSwapGroupsNV = epoxy_glXQueryMaxSwapGroupsNV_dispatch_table_rewrite_ptr,
-    .glXQueryRendererIntegerMESA = epoxy_glXQueryRendererIntegerMESA_dispatch_table_rewrite_ptr,
-    .glXQueryRendererStringMESA = epoxy_glXQueryRendererStringMESA_dispatch_table_rewrite_ptr,
-    .glXQueryServerString = epoxy_glXQueryServerString_dispatch_table_rewrite_ptr,
-    .glXQuerySwapGroupNV = epoxy_glXQuerySwapGroupNV_dispatch_table_rewrite_ptr,
-    .glXQueryVersion = epoxy_glXQueryVersion_dispatch_table_rewrite_ptr,
-    .glXQueryVideoCaptureDeviceNV = epoxy_glXQueryVideoCaptureDeviceNV_dispatch_table_rewrite_ptr,
-    .glXReleaseBuffersMESA = epoxy_glXReleaseBuffersMESA_dispatch_table_rewrite_ptr,
-    .glXReleaseTexImageEXT = epoxy_glXReleaseTexImageEXT_dispatch_table_rewrite_ptr,
-    .glXReleaseVideoCaptureDeviceNV = epoxy_glXReleaseVideoCaptureDeviceNV_dispatch_table_rewrite_ptr,
-    .glXReleaseVideoDeviceNV = epoxy_glXReleaseVideoDeviceNV_dispatch_table_rewrite_ptr,
-    .glXReleaseVideoImageNV = epoxy_glXReleaseVideoImageNV_dispatch_table_rewrite_ptr,
-    .glXResetFrameCountNV = epoxy_glXResetFrameCountNV_dispatch_table_rewrite_ptr,
-    .glXSelectEvent = epoxy_glXSelectEvent_dispatch_table_rewrite_ptr,
-    .glXSelectEventSGIX = epoxy_glXSelectEventSGIX_dispatch_table_rewrite_ptr,
-    .glXSendPbufferToVideoNV = epoxy_glXSendPbufferToVideoNV_dispatch_table_rewrite_ptr,
-    .glXSet3DfxModeMESA = epoxy_glXSet3DfxModeMESA_dispatch_table_rewrite_ptr,
-    .glXSwapBuffers = epoxy_glXSwapBuffers_dispatch_table_rewrite_ptr,
-    .glXSwapBuffersMscOML = epoxy_glXSwapBuffersMscOML_dispatch_table_rewrite_ptr,
-    .glXSwapIntervalEXT = epoxy_glXSwapIntervalEXT_dispatch_table_rewrite_ptr,
-    .glXSwapIntervalSGI = epoxy_glXSwapIntervalSGI_dispatch_table_rewrite_ptr,
-    .glXUseXFont = epoxy_glXUseXFont_dispatch_table_rewrite_ptr,
-    .glXWaitForMscOML = epoxy_glXWaitForMscOML_dispatch_table_rewrite_ptr,
-    .glXWaitForSbcOML = epoxy_glXWaitForSbcOML_dispatch_table_rewrite_ptr,
-    .glXWaitGL = epoxy_glXWaitGL_dispatch_table_rewrite_ptr,
-    .glXWaitVideoSyncSGI = epoxy_glXWaitVideoSyncSGI_dispatch_table_rewrite_ptr,
-    .glXWaitX = epoxy_glXWaitX_dispatch_table_rewrite_ptr,
+    epoxy_glXBindChannelToWindowSGIX_dispatch_table_rewrite_ptr, /* glXBindChannelToWindowSGIX */
+    epoxy_glXBindHyperpipeSGIX_dispatch_table_rewrite_ptr, /* glXBindHyperpipeSGIX */
+    epoxy_glXBindSwapBarrierNV_dispatch_table_rewrite_ptr, /* glXBindSwapBarrierNV */
+    epoxy_glXBindSwapBarrierSGIX_dispatch_table_rewrite_ptr, /* glXBindSwapBarrierSGIX */
+    epoxy_glXBindTexImageEXT_dispatch_table_rewrite_ptr, /* glXBindTexImageEXT */
+    epoxy_glXBindVideoCaptureDeviceNV_dispatch_table_rewrite_ptr, /* glXBindVideoCaptureDeviceNV */
+    epoxy_glXBindVideoDeviceNV_dispatch_table_rewrite_ptr, /* glXBindVideoDeviceNV */
+    epoxy_glXBindVideoImageNV_dispatch_table_rewrite_ptr, /* glXBindVideoImageNV */
+    epoxy_glXBlitContextFramebufferAMD_dispatch_table_rewrite_ptr, /* glXBlitContextFramebufferAMD */
+    epoxy_glXChannelRectSGIX_dispatch_table_rewrite_ptr, /* glXChannelRectSGIX */
+    epoxy_glXChannelRectSyncSGIX_dispatch_table_rewrite_ptr, /* glXChannelRectSyncSGIX */
+    epoxy_glXChooseFBConfig_dispatch_table_rewrite_ptr, /* glXChooseFBConfig */
+    epoxy_glXChooseFBConfigSGIX_dispatch_table_rewrite_ptr, /* glXChooseFBConfigSGIX */
+    epoxy_glXChooseVisual_dispatch_table_rewrite_ptr, /* glXChooseVisual */
+    epoxy_glXCopyBufferSubDataNV_dispatch_table_rewrite_ptr, /* glXCopyBufferSubDataNV */
+    epoxy_glXCopyContext_dispatch_table_rewrite_ptr, /* glXCopyContext */
+    epoxy_glXCopyImageSubDataNV_dispatch_table_rewrite_ptr, /* glXCopyImageSubDataNV */
+    epoxy_glXCopySubBufferMESA_dispatch_table_rewrite_ptr, /* glXCopySubBufferMESA */
+    epoxy_glXCreateAssociatedContextAMD_dispatch_table_rewrite_ptr, /* glXCreateAssociatedContextAMD */
+    epoxy_glXCreateAssociatedContextAttribsAMD_dispatch_table_rewrite_ptr, /* glXCreateAssociatedContextAttribsAMD */
+    epoxy_glXCreateContext_dispatch_table_rewrite_ptr, /* glXCreateContext */
+    epoxy_glXCreateContextAttribsARB_dispatch_table_rewrite_ptr, /* glXCreateContextAttribsARB */
+    epoxy_glXCreateContextWithConfigSGIX_dispatch_table_rewrite_ptr, /* glXCreateContextWithConfigSGIX */
+    epoxy_glXCreateGLXPbufferSGIX_dispatch_table_rewrite_ptr, /* glXCreateGLXPbufferSGIX */
+    epoxy_glXCreateGLXPixmap_dispatch_table_rewrite_ptr, /* glXCreateGLXPixmap */
+    epoxy_glXCreateGLXPixmapMESA_dispatch_table_rewrite_ptr, /* glXCreateGLXPixmapMESA */
+    epoxy_glXCreateGLXPixmapWithConfigSGIX_dispatch_table_rewrite_ptr, /* glXCreateGLXPixmapWithConfigSGIX */
+    epoxy_glXCreateNewContext_dispatch_table_rewrite_ptr, /* glXCreateNewContext */
+    epoxy_glXCreatePbuffer_dispatch_table_rewrite_ptr, /* glXCreatePbuffer */
+    epoxy_glXCreatePixmap_dispatch_table_rewrite_ptr, /* glXCreatePixmap */
+    epoxy_glXCreateWindow_dispatch_table_rewrite_ptr, /* glXCreateWindow */
+    epoxy_glXCushionSGI_dispatch_table_rewrite_ptr, /* glXCushionSGI */
+    epoxy_glXDelayBeforeSwapNV_dispatch_table_rewrite_ptr, /* glXDelayBeforeSwapNV */
+    epoxy_glXDeleteAssociatedContextAMD_dispatch_table_rewrite_ptr, /* glXDeleteAssociatedContextAMD */
+    epoxy_glXDestroyContext_dispatch_table_rewrite_ptr, /* glXDestroyContext */
+    epoxy_glXDestroyGLXPbufferSGIX_dispatch_table_rewrite_ptr, /* glXDestroyGLXPbufferSGIX */
+    epoxy_glXDestroyGLXPixmap_dispatch_table_rewrite_ptr, /* glXDestroyGLXPixmap */
+    epoxy_glXDestroyGLXVideoSourceSGIX_dispatch_table_rewrite_ptr, /* glXDestroyGLXVideoSourceSGIX */
+    epoxy_glXDestroyHyperpipeConfigSGIX_dispatch_table_rewrite_ptr, /* glXDestroyHyperpipeConfigSGIX */
+    epoxy_glXDestroyPbuffer_dispatch_table_rewrite_ptr, /* glXDestroyPbuffer */
+    epoxy_glXDestroyPixmap_dispatch_table_rewrite_ptr, /* glXDestroyPixmap */
+    epoxy_glXDestroyWindow_dispatch_table_rewrite_ptr, /* glXDestroyWindow */
+    epoxy_glXEnumerateVideoCaptureDevicesNV_dispatch_table_rewrite_ptr, /* glXEnumerateVideoCaptureDevicesNV */
+    epoxy_glXEnumerateVideoDevicesNV_dispatch_table_rewrite_ptr, /* glXEnumerateVideoDevicesNV */
+    epoxy_glXFreeContextEXT_dispatch_table_rewrite_ptr, /* glXFreeContextEXT */
+    epoxy_glXGetAGPOffsetMESA_dispatch_table_rewrite_ptr, /* glXGetAGPOffsetMESA */
+    epoxy_glXGetClientString_dispatch_table_rewrite_ptr, /* glXGetClientString */
+    epoxy_glXGetConfig_dispatch_table_rewrite_ptr, /* glXGetConfig */
+    epoxy_glXGetContextGPUIDAMD_dispatch_table_rewrite_ptr, /* glXGetContextGPUIDAMD */
+    epoxy_glXGetContextIDEXT_dispatch_table_rewrite_ptr, /* glXGetContextIDEXT */
+    epoxy_glXGetCurrentAssociatedContextAMD_dispatch_table_rewrite_ptr, /* glXGetCurrentAssociatedContextAMD */
+    epoxy_glXGetCurrentContext_dispatch_table_rewrite_ptr, /* glXGetCurrentContext */
+    epoxy_glXGetCurrentDisplay_dispatch_table_rewrite_ptr, /* glXGetCurrentDisplay */
+    epoxy_glXGetCurrentDisplayEXT_dispatch_table_rewrite_ptr, /* glXGetCurrentDisplayEXT */
+    epoxy_glXGetCurrentDrawable_dispatch_table_rewrite_ptr, /* glXGetCurrentDrawable */
+    epoxy_glXGetCurrentReadDrawable_dispatch_table_rewrite_ptr, /* glXGetCurrentReadDrawable */
+    epoxy_glXGetCurrentReadDrawableSGI_dispatch_table_rewrite_ptr, /* glXGetCurrentReadDrawableSGI */
+    epoxy_glXGetFBConfigAttrib_dispatch_table_rewrite_ptr, /* glXGetFBConfigAttrib */
+    epoxy_glXGetFBConfigAttribSGIX_dispatch_table_rewrite_ptr, /* glXGetFBConfigAttribSGIX */
+    epoxy_glXGetFBConfigFromVisualSGIX_dispatch_table_rewrite_ptr, /* glXGetFBConfigFromVisualSGIX */
+    epoxy_glXGetFBConfigs_dispatch_table_rewrite_ptr, /* glXGetFBConfigs */
+    epoxy_glXGetGPUIDsAMD_dispatch_table_rewrite_ptr, /* glXGetGPUIDsAMD */
+    epoxy_glXGetGPUInfoAMD_dispatch_table_rewrite_ptr, /* glXGetGPUInfoAMD */
+    epoxy_glXGetMscRateOML_dispatch_table_rewrite_ptr, /* glXGetMscRateOML */
+    epoxy_glXGetProcAddress_dispatch_table_rewrite_ptr, /* glXGetProcAddress */
+    epoxy_glXGetProcAddressARB_dispatch_table_rewrite_ptr, /* glXGetProcAddressARB */
+    epoxy_glXGetSelectedEvent_dispatch_table_rewrite_ptr, /* glXGetSelectedEvent */
+    epoxy_glXGetSelectedEventSGIX_dispatch_table_rewrite_ptr, /* glXGetSelectedEventSGIX */
+    epoxy_glXGetSwapIntervalMESA_dispatch_table_rewrite_ptr, /* glXGetSwapIntervalMESA */
+    epoxy_glXGetSyncValuesOML_dispatch_table_rewrite_ptr, /* glXGetSyncValuesOML */
+    epoxy_glXGetTransparentIndexSUN_dispatch_table_rewrite_ptr, /* glXGetTransparentIndexSUN */
+    epoxy_glXGetVideoDeviceNV_dispatch_table_rewrite_ptr, /* glXGetVideoDeviceNV */
+    epoxy_glXGetVideoInfoNV_dispatch_table_rewrite_ptr, /* glXGetVideoInfoNV */
+    epoxy_glXGetVideoSyncSGI_dispatch_table_rewrite_ptr, /* glXGetVideoSyncSGI */
+    epoxy_glXGetVisualFromFBConfig_dispatch_table_rewrite_ptr, /* glXGetVisualFromFBConfig */
+    epoxy_glXGetVisualFromFBConfigSGIX_dispatch_table_rewrite_ptr, /* glXGetVisualFromFBConfigSGIX */
+    epoxy_glXHyperpipeAttribSGIX_dispatch_table_rewrite_ptr, /* glXHyperpipeAttribSGIX */
+    epoxy_glXHyperpipeConfigSGIX_dispatch_table_rewrite_ptr, /* glXHyperpipeConfigSGIX */
+    epoxy_glXImportContextEXT_dispatch_table_rewrite_ptr, /* glXImportContextEXT */
+    epoxy_glXIsDirect_dispatch_table_rewrite_ptr, /* glXIsDirect */
+    epoxy_glXJoinSwapGroupNV_dispatch_table_rewrite_ptr, /* glXJoinSwapGroupNV */
+    epoxy_glXJoinSwapGroupSGIX_dispatch_table_rewrite_ptr, /* glXJoinSwapGroupSGIX */
+    epoxy_glXLockVideoCaptureDeviceNV_dispatch_table_rewrite_ptr, /* glXLockVideoCaptureDeviceNV */
+    epoxy_glXMakeAssociatedContextCurrentAMD_dispatch_table_rewrite_ptr, /* glXMakeAssociatedContextCurrentAMD */
+    epoxy_glXMakeContextCurrent_dispatch_table_rewrite_ptr, /* glXMakeContextCurrent */
+    epoxy_glXMakeCurrent_dispatch_table_rewrite_ptr, /* glXMakeCurrent */
+    epoxy_glXMakeCurrentReadSGI_dispatch_table_rewrite_ptr, /* glXMakeCurrentReadSGI */
+    epoxy_glXNamedCopyBufferSubDataNV_dispatch_table_rewrite_ptr, /* glXNamedCopyBufferSubDataNV */
+    epoxy_glXQueryChannelDeltasSGIX_dispatch_table_rewrite_ptr, /* glXQueryChannelDeltasSGIX */
+    epoxy_glXQueryChannelRectSGIX_dispatch_table_rewrite_ptr, /* glXQueryChannelRectSGIX */
+    epoxy_glXQueryContext_dispatch_table_rewrite_ptr, /* glXQueryContext */
+    epoxy_glXQueryContextInfoEXT_dispatch_table_rewrite_ptr, /* glXQueryContextInfoEXT */
+    epoxy_glXQueryCurrentRendererIntegerMESA_dispatch_table_rewrite_ptr, /* glXQueryCurrentRendererIntegerMESA */
+    epoxy_glXQueryCurrentRendererStringMESA_dispatch_table_rewrite_ptr, /* glXQueryCurrentRendererStringMESA */
+    epoxy_glXQueryDrawable_dispatch_table_rewrite_ptr, /* glXQueryDrawable */
+    epoxy_glXQueryExtension_dispatch_table_rewrite_ptr, /* glXQueryExtension */
+    epoxy_glXQueryExtensionsString_dispatch_table_rewrite_ptr, /* glXQueryExtensionsString */
+    epoxy_glXQueryFrameCountNV_dispatch_table_rewrite_ptr, /* glXQueryFrameCountNV */
+    epoxy_glXQueryGLXPbufferSGIX_dispatch_table_rewrite_ptr, /* glXQueryGLXPbufferSGIX */
+    epoxy_glXQueryHyperpipeAttribSGIX_dispatch_table_rewrite_ptr, /* glXQueryHyperpipeAttribSGIX */
+    epoxy_glXQueryHyperpipeBestAttribSGIX_dispatch_table_rewrite_ptr, /* glXQueryHyperpipeBestAttribSGIX */
+    epoxy_glXQueryHyperpipeConfigSGIX_dispatch_table_rewrite_ptr, /* glXQueryHyperpipeConfigSGIX */
+    epoxy_glXQueryHyperpipeNetworkSGIX_dispatch_table_rewrite_ptr, /* glXQueryHyperpipeNetworkSGIX */
+    epoxy_glXQueryMaxSwapBarriersSGIX_dispatch_table_rewrite_ptr, /* glXQueryMaxSwapBarriersSGIX */
+    epoxy_glXQueryMaxSwapGroupsNV_dispatch_table_rewrite_ptr, /* glXQueryMaxSwapGroupsNV */
+    epoxy_glXQueryRendererIntegerMESA_dispatch_table_rewrite_ptr, /* glXQueryRendererIntegerMESA */
+    epoxy_glXQueryRendererStringMESA_dispatch_table_rewrite_ptr, /* glXQueryRendererStringMESA */
+    epoxy_glXQueryServerString_dispatch_table_rewrite_ptr, /* glXQueryServerString */
+    epoxy_glXQuerySwapGroupNV_dispatch_table_rewrite_ptr, /* glXQuerySwapGroupNV */
+    epoxy_glXQueryVersion_dispatch_table_rewrite_ptr, /* glXQueryVersion */
+    epoxy_glXQueryVideoCaptureDeviceNV_dispatch_table_rewrite_ptr, /* glXQueryVideoCaptureDeviceNV */
+    epoxy_glXReleaseBuffersMESA_dispatch_table_rewrite_ptr, /* glXReleaseBuffersMESA */
+    epoxy_glXReleaseTexImageEXT_dispatch_table_rewrite_ptr, /* glXReleaseTexImageEXT */
+    epoxy_glXReleaseVideoCaptureDeviceNV_dispatch_table_rewrite_ptr, /* glXReleaseVideoCaptureDeviceNV */
+    epoxy_glXReleaseVideoDeviceNV_dispatch_table_rewrite_ptr, /* glXReleaseVideoDeviceNV */
+    epoxy_glXReleaseVideoImageNV_dispatch_table_rewrite_ptr, /* glXReleaseVideoImageNV */
+    epoxy_glXResetFrameCountNV_dispatch_table_rewrite_ptr, /* glXResetFrameCountNV */
+    epoxy_glXSelectEvent_dispatch_table_rewrite_ptr, /* glXSelectEvent */
+    epoxy_glXSelectEventSGIX_dispatch_table_rewrite_ptr, /* glXSelectEventSGIX */
+    epoxy_glXSendPbufferToVideoNV_dispatch_table_rewrite_ptr, /* glXSendPbufferToVideoNV */
+    epoxy_glXSet3DfxModeMESA_dispatch_table_rewrite_ptr, /* glXSet3DfxModeMESA */
+    epoxy_glXSwapBuffers_dispatch_table_rewrite_ptr, /* glXSwapBuffers */
+    epoxy_glXSwapBuffersMscOML_dispatch_table_rewrite_ptr, /* glXSwapBuffersMscOML */
+    epoxy_glXSwapIntervalEXT_dispatch_table_rewrite_ptr, /* glXSwapIntervalEXT */
+    epoxy_glXSwapIntervalMESA_dispatch_table_rewrite_ptr, /* glXSwapIntervalMESA */
+    epoxy_glXSwapIntervalSGI_dispatch_table_rewrite_ptr, /* glXSwapIntervalSGI */
+    epoxy_glXUseXFont_dispatch_table_rewrite_ptr, /* glXUseXFont */
+    epoxy_glXWaitForMscOML_dispatch_table_rewrite_ptr, /* glXWaitForMscOML */
+    epoxy_glXWaitForSbcOML_dispatch_table_rewrite_ptr, /* glXWaitForSbcOML */
+    epoxy_glXWaitGL_dispatch_table_rewrite_ptr, /* glXWaitGL */
+    epoxy_glXWaitVideoSyncSGI_dispatch_table_rewrite_ptr, /* glXWaitVideoSyncSGI */
+    epoxy_glXWaitX_dispatch_table_rewrite_ptr, /* glXWaitX */
 };
 
 uint32_t glx_tls_index;
@@ -1723,6 +4570,7 @@ glx_switch_to_dispatch_table(void)
     epoxy_glXGetProcAddressARB = epoxy_glXGetProcAddressARB_dispatch_table_thunk;
     epoxy_glXGetSelectedEvent = epoxy_glXGetSelectedEvent_dispatch_table_thunk;
     epoxy_glXGetSelectedEventSGIX = epoxy_glXGetSelectedEventSGIX_dispatch_table_thunk;
+    epoxy_glXGetSwapIntervalMESA = epoxy_glXGetSwapIntervalMESA_dispatch_table_thunk;
     epoxy_glXGetSyncValuesOML = epoxy_glXGetSyncValuesOML_dispatch_table_thunk;
     epoxy_glXGetTransparentIndexSUN = epoxy_glXGetTransparentIndexSUN_dispatch_table_thunk;
     epoxy_glXGetVideoDeviceNV = epoxy_glXGetVideoDeviceNV_dispatch_table_thunk;
@@ -1778,6 +4626,7 @@ glx_switch_to_dispatch_table(void)
     epoxy_glXSwapBuffers = epoxy_glXSwapBuffers_dispatch_table_thunk;
     epoxy_glXSwapBuffersMscOML = epoxy_glXSwapBuffersMscOML_dispatch_table_thunk;
     epoxy_glXSwapIntervalEXT = epoxy_glXSwapIntervalEXT_dispatch_table_thunk;
+    epoxy_glXSwapIntervalMESA = epoxy_glXSwapIntervalMESA_dispatch_table_thunk;
     epoxy_glXSwapIntervalSGI = epoxy_glXSwapIntervalSGI_dispatch_table_thunk;
     epoxy_glXUseXFont = epoxy_glXUseXFont_dispatch_table_thunk;
     epoxy_glXWaitForMscOML = epoxy_glXWaitForMscOML_dispatch_table_thunk;
@@ -1788,263 +4637,267 @@ glx_switch_to_dispatch_table(void)
 }
 
 #endif /* !USING_DISPATCH_TABLE */
-PUBLIC PFNGLXBINDCHANNELTOWINDOWSGIXPROC epoxy_glXBindChannelToWindowSGIX = epoxy_glXBindChannelToWindowSGIX_global_rewrite_ptr;
+PFNGLXBINDCHANNELTOWINDOWSGIXPROC epoxy_glXBindChannelToWindowSGIX = epoxy_glXBindChannelToWindowSGIX_global_rewrite_ptr;
 
-PUBLIC PFNGLXBINDHYPERPIPESGIXPROC epoxy_glXBindHyperpipeSGIX = epoxy_glXBindHyperpipeSGIX_global_rewrite_ptr;
+PFNGLXBINDHYPERPIPESGIXPROC epoxy_glXBindHyperpipeSGIX = epoxy_glXBindHyperpipeSGIX_global_rewrite_ptr;
 
-PUBLIC PFNGLXBINDSWAPBARRIERNVPROC epoxy_glXBindSwapBarrierNV = epoxy_glXBindSwapBarrierNV_global_rewrite_ptr;
+PFNGLXBINDSWAPBARRIERNVPROC epoxy_glXBindSwapBarrierNV = epoxy_glXBindSwapBarrierNV_global_rewrite_ptr;
 
-PUBLIC PFNGLXBINDSWAPBARRIERSGIXPROC epoxy_glXBindSwapBarrierSGIX = epoxy_glXBindSwapBarrierSGIX_global_rewrite_ptr;
+PFNGLXBINDSWAPBARRIERSGIXPROC epoxy_glXBindSwapBarrierSGIX = epoxy_glXBindSwapBarrierSGIX_global_rewrite_ptr;
 
-PUBLIC PFNGLXBINDTEXIMAGEEXTPROC epoxy_glXBindTexImageEXT = epoxy_glXBindTexImageEXT_global_rewrite_ptr;
+PFNGLXBINDTEXIMAGEEXTPROC epoxy_glXBindTexImageEXT = epoxy_glXBindTexImageEXT_global_rewrite_ptr;
 
-PUBLIC PFNGLXBINDVIDEOCAPTUREDEVICENVPROC epoxy_glXBindVideoCaptureDeviceNV = epoxy_glXBindVideoCaptureDeviceNV_global_rewrite_ptr;
+PFNGLXBINDVIDEOCAPTUREDEVICENVPROC epoxy_glXBindVideoCaptureDeviceNV = epoxy_glXBindVideoCaptureDeviceNV_global_rewrite_ptr;
 
-PUBLIC PFNGLXBINDVIDEODEVICENVPROC epoxy_glXBindVideoDeviceNV = epoxy_glXBindVideoDeviceNV_global_rewrite_ptr;
+PFNGLXBINDVIDEODEVICENVPROC epoxy_glXBindVideoDeviceNV = epoxy_glXBindVideoDeviceNV_global_rewrite_ptr;
 
-PUBLIC PFNGLXBINDVIDEOIMAGENVPROC epoxy_glXBindVideoImageNV = epoxy_glXBindVideoImageNV_global_rewrite_ptr;
+PFNGLXBINDVIDEOIMAGENVPROC epoxy_glXBindVideoImageNV = epoxy_glXBindVideoImageNV_global_rewrite_ptr;
 
-PUBLIC PFNGLXBLITCONTEXTFRAMEBUFFERAMDPROC epoxy_glXBlitContextFramebufferAMD = epoxy_glXBlitContextFramebufferAMD_global_rewrite_ptr;
+PFNGLXBLITCONTEXTFRAMEBUFFERAMDPROC epoxy_glXBlitContextFramebufferAMD = epoxy_glXBlitContextFramebufferAMD_global_rewrite_ptr;
 
-PUBLIC PFNGLXCHANNELRECTSGIXPROC epoxy_glXChannelRectSGIX = epoxy_glXChannelRectSGIX_global_rewrite_ptr;
+PFNGLXCHANNELRECTSGIXPROC epoxy_glXChannelRectSGIX = epoxy_glXChannelRectSGIX_global_rewrite_ptr;
 
-PUBLIC PFNGLXCHANNELRECTSYNCSGIXPROC epoxy_glXChannelRectSyncSGIX = epoxy_glXChannelRectSyncSGIX_global_rewrite_ptr;
+PFNGLXCHANNELRECTSYNCSGIXPROC epoxy_glXChannelRectSyncSGIX = epoxy_glXChannelRectSyncSGIX_global_rewrite_ptr;
 
-PUBLIC PFNGLXCHOOSEFBCONFIGPROC epoxy_glXChooseFBConfig = epoxy_glXChooseFBConfig_global_rewrite_ptr;
+PFNGLXCHOOSEFBCONFIGPROC epoxy_glXChooseFBConfig = epoxy_glXChooseFBConfig_global_rewrite_ptr;
 
-PUBLIC PFNGLXCHOOSEFBCONFIGSGIXPROC epoxy_glXChooseFBConfigSGIX = epoxy_glXChooseFBConfigSGIX_global_rewrite_ptr;
+PFNGLXCHOOSEFBCONFIGSGIXPROC epoxy_glXChooseFBConfigSGIX = epoxy_glXChooseFBConfigSGIX_global_rewrite_ptr;
 
-PUBLIC PFNGLXCHOOSEVISUALPROC epoxy_glXChooseVisual = epoxy_glXChooseVisual_global_rewrite_ptr;
+PFNGLXCHOOSEVISUALPROC epoxy_glXChooseVisual = epoxy_glXChooseVisual_global_rewrite_ptr;
 
-PUBLIC PFNGLXCOPYBUFFERSUBDATANVPROC epoxy_glXCopyBufferSubDataNV = epoxy_glXCopyBufferSubDataNV_global_rewrite_ptr;
+PFNGLXCOPYBUFFERSUBDATANVPROC epoxy_glXCopyBufferSubDataNV = epoxy_glXCopyBufferSubDataNV_global_rewrite_ptr;
 
-PUBLIC PFNGLXCOPYCONTEXTPROC epoxy_glXCopyContext = epoxy_glXCopyContext_global_rewrite_ptr;
+PFNGLXCOPYCONTEXTPROC epoxy_glXCopyContext = epoxy_glXCopyContext_global_rewrite_ptr;
 
-PUBLIC PFNGLXCOPYIMAGESUBDATANVPROC epoxy_glXCopyImageSubDataNV = epoxy_glXCopyImageSubDataNV_global_rewrite_ptr;
+PFNGLXCOPYIMAGESUBDATANVPROC epoxy_glXCopyImageSubDataNV = epoxy_glXCopyImageSubDataNV_global_rewrite_ptr;
 
-PUBLIC PFNGLXCOPYSUBBUFFERMESAPROC epoxy_glXCopySubBufferMESA = epoxy_glXCopySubBufferMESA_global_rewrite_ptr;
+PFNGLXCOPYSUBBUFFERMESAPROC epoxy_glXCopySubBufferMESA = epoxy_glXCopySubBufferMESA_global_rewrite_ptr;
 
-PUBLIC PFNGLXCREATEASSOCIATEDCONTEXTAMDPROC epoxy_glXCreateAssociatedContextAMD = epoxy_glXCreateAssociatedContextAMD_global_rewrite_ptr;
+PFNGLXCREATEASSOCIATEDCONTEXTAMDPROC epoxy_glXCreateAssociatedContextAMD = epoxy_glXCreateAssociatedContextAMD_global_rewrite_ptr;
 
-PUBLIC PFNGLXCREATEASSOCIATEDCONTEXTATTRIBSAMDPROC epoxy_glXCreateAssociatedContextAttribsAMD = epoxy_glXCreateAssociatedContextAttribsAMD_global_rewrite_ptr;
+PFNGLXCREATEASSOCIATEDCONTEXTATTRIBSAMDPROC epoxy_glXCreateAssociatedContextAttribsAMD = epoxy_glXCreateAssociatedContextAttribsAMD_global_rewrite_ptr;
 
-PUBLIC PFNGLXCREATECONTEXTPROC epoxy_glXCreateContext = epoxy_glXCreateContext_global_rewrite_ptr;
+PFNGLXCREATECONTEXTPROC epoxy_glXCreateContext = epoxy_glXCreateContext_global_rewrite_ptr;
 
-PUBLIC PFNGLXCREATECONTEXTATTRIBSARBPROC epoxy_glXCreateContextAttribsARB = epoxy_glXCreateContextAttribsARB_global_rewrite_ptr;
+PFNGLXCREATECONTEXTATTRIBSARBPROC epoxy_glXCreateContextAttribsARB = epoxy_glXCreateContextAttribsARB_global_rewrite_ptr;
 
-PUBLIC PFNGLXCREATECONTEXTWITHCONFIGSGIXPROC epoxy_glXCreateContextWithConfigSGIX = epoxy_glXCreateContextWithConfigSGIX_global_rewrite_ptr;
+PFNGLXCREATECONTEXTWITHCONFIGSGIXPROC epoxy_glXCreateContextWithConfigSGIX = epoxy_glXCreateContextWithConfigSGIX_global_rewrite_ptr;
 
-PUBLIC PFNGLXCREATEGLXPBUFFERSGIXPROC epoxy_glXCreateGLXPbufferSGIX = epoxy_glXCreateGLXPbufferSGIX_global_rewrite_ptr;
+PFNGLXCREATEGLXPBUFFERSGIXPROC epoxy_glXCreateGLXPbufferSGIX = epoxy_glXCreateGLXPbufferSGIX_global_rewrite_ptr;
 
-PUBLIC PFNGLXCREATEGLXPIXMAPPROC epoxy_glXCreateGLXPixmap = epoxy_glXCreateGLXPixmap_global_rewrite_ptr;
+PFNGLXCREATEGLXPIXMAPPROC epoxy_glXCreateGLXPixmap = epoxy_glXCreateGLXPixmap_global_rewrite_ptr;
 
-PUBLIC PFNGLXCREATEGLXPIXMAPMESAPROC epoxy_glXCreateGLXPixmapMESA = epoxy_glXCreateGLXPixmapMESA_global_rewrite_ptr;
+PFNGLXCREATEGLXPIXMAPMESAPROC epoxy_glXCreateGLXPixmapMESA = epoxy_glXCreateGLXPixmapMESA_global_rewrite_ptr;
 
-PUBLIC PFNGLXCREATEGLXPIXMAPWITHCONFIGSGIXPROC epoxy_glXCreateGLXPixmapWithConfigSGIX = epoxy_glXCreateGLXPixmapWithConfigSGIX_global_rewrite_ptr;
+PFNGLXCREATEGLXPIXMAPWITHCONFIGSGIXPROC epoxy_glXCreateGLXPixmapWithConfigSGIX = epoxy_glXCreateGLXPixmapWithConfigSGIX_global_rewrite_ptr;
 
-PUBLIC PFNGLXCREATENEWCONTEXTPROC epoxy_glXCreateNewContext = epoxy_glXCreateNewContext_global_rewrite_ptr;
+PFNGLXCREATENEWCONTEXTPROC epoxy_glXCreateNewContext = epoxy_glXCreateNewContext_global_rewrite_ptr;
 
-PUBLIC PFNGLXCREATEPBUFFERPROC epoxy_glXCreatePbuffer = epoxy_glXCreatePbuffer_global_rewrite_ptr;
+PFNGLXCREATEPBUFFERPROC epoxy_glXCreatePbuffer = epoxy_glXCreatePbuffer_global_rewrite_ptr;
 
-PUBLIC PFNGLXCREATEPIXMAPPROC epoxy_glXCreatePixmap = epoxy_glXCreatePixmap_global_rewrite_ptr;
+PFNGLXCREATEPIXMAPPROC epoxy_glXCreatePixmap = epoxy_glXCreatePixmap_global_rewrite_ptr;
 
-PUBLIC PFNGLXCREATEWINDOWPROC epoxy_glXCreateWindow = epoxy_glXCreateWindow_global_rewrite_ptr;
+PFNGLXCREATEWINDOWPROC epoxy_glXCreateWindow = epoxy_glXCreateWindow_global_rewrite_ptr;
 
-PUBLIC PFNGLXCUSHIONSGIPROC epoxy_glXCushionSGI = epoxy_glXCushionSGI_global_rewrite_ptr;
+PFNGLXCUSHIONSGIPROC epoxy_glXCushionSGI = epoxy_glXCushionSGI_global_rewrite_ptr;
 
-PUBLIC PFNGLXDELAYBEFORESWAPNVPROC epoxy_glXDelayBeforeSwapNV = epoxy_glXDelayBeforeSwapNV_global_rewrite_ptr;
+PFNGLXDELAYBEFORESWAPNVPROC epoxy_glXDelayBeforeSwapNV = epoxy_glXDelayBeforeSwapNV_global_rewrite_ptr;
 
-PUBLIC PFNGLXDELETEASSOCIATEDCONTEXTAMDPROC epoxy_glXDeleteAssociatedContextAMD = epoxy_glXDeleteAssociatedContextAMD_global_rewrite_ptr;
+PFNGLXDELETEASSOCIATEDCONTEXTAMDPROC epoxy_glXDeleteAssociatedContextAMD = epoxy_glXDeleteAssociatedContextAMD_global_rewrite_ptr;
 
-PUBLIC PFNGLXDESTROYCONTEXTPROC epoxy_glXDestroyContext = epoxy_glXDestroyContext_global_rewrite_ptr;
+PFNGLXDESTROYCONTEXTPROC epoxy_glXDestroyContext = epoxy_glXDestroyContext_global_rewrite_ptr;
 
-PUBLIC PFNGLXDESTROYGLXPBUFFERSGIXPROC epoxy_glXDestroyGLXPbufferSGIX = epoxy_glXDestroyGLXPbufferSGIX_global_rewrite_ptr;
+PFNGLXDESTROYGLXPBUFFERSGIXPROC epoxy_glXDestroyGLXPbufferSGIX = epoxy_glXDestroyGLXPbufferSGIX_global_rewrite_ptr;
 
-PUBLIC PFNGLXDESTROYGLXPIXMAPPROC epoxy_glXDestroyGLXPixmap = epoxy_glXDestroyGLXPixmap_global_rewrite_ptr;
+PFNGLXDESTROYGLXPIXMAPPROC epoxy_glXDestroyGLXPixmap = epoxy_glXDestroyGLXPixmap_global_rewrite_ptr;
 
-PUBLIC PFNGLXDESTROYGLXVIDEOSOURCESGIXPROC epoxy_glXDestroyGLXVideoSourceSGIX = epoxy_glXDestroyGLXVideoSourceSGIX_global_rewrite_ptr;
+PFNGLXDESTROYGLXVIDEOSOURCESGIXPROC epoxy_glXDestroyGLXVideoSourceSGIX = epoxy_glXDestroyGLXVideoSourceSGIX_global_rewrite_ptr;
 
-PUBLIC PFNGLXDESTROYHYPERPIPECONFIGSGIXPROC epoxy_glXDestroyHyperpipeConfigSGIX = epoxy_glXDestroyHyperpipeConfigSGIX_global_rewrite_ptr;
+PFNGLXDESTROYHYPERPIPECONFIGSGIXPROC epoxy_glXDestroyHyperpipeConfigSGIX = epoxy_glXDestroyHyperpipeConfigSGIX_global_rewrite_ptr;
 
-PUBLIC PFNGLXDESTROYPBUFFERPROC epoxy_glXDestroyPbuffer = epoxy_glXDestroyPbuffer_global_rewrite_ptr;
+PFNGLXDESTROYPBUFFERPROC epoxy_glXDestroyPbuffer = epoxy_glXDestroyPbuffer_global_rewrite_ptr;
 
-PUBLIC PFNGLXDESTROYPIXMAPPROC epoxy_glXDestroyPixmap = epoxy_glXDestroyPixmap_global_rewrite_ptr;
+PFNGLXDESTROYPIXMAPPROC epoxy_glXDestroyPixmap = epoxy_glXDestroyPixmap_global_rewrite_ptr;
 
-PUBLIC PFNGLXDESTROYWINDOWPROC epoxy_glXDestroyWindow = epoxy_glXDestroyWindow_global_rewrite_ptr;
+PFNGLXDESTROYWINDOWPROC epoxy_glXDestroyWindow = epoxy_glXDestroyWindow_global_rewrite_ptr;
 
-PUBLIC PFNGLXENUMERATEVIDEOCAPTUREDEVICESNVPROC epoxy_glXEnumerateVideoCaptureDevicesNV = epoxy_glXEnumerateVideoCaptureDevicesNV_global_rewrite_ptr;
+PFNGLXENUMERATEVIDEOCAPTUREDEVICESNVPROC epoxy_glXEnumerateVideoCaptureDevicesNV = epoxy_glXEnumerateVideoCaptureDevicesNV_global_rewrite_ptr;
 
-PUBLIC PFNGLXENUMERATEVIDEODEVICESNVPROC epoxy_glXEnumerateVideoDevicesNV = epoxy_glXEnumerateVideoDevicesNV_global_rewrite_ptr;
+PFNGLXENUMERATEVIDEODEVICESNVPROC epoxy_glXEnumerateVideoDevicesNV = epoxy_glXEnumerateVideoDevicesNV_global_rewrite_ptr;
 
-PUBLIC PFNGLXFREECONTEXTEXTPROC epoxy_glXFreeContextEXT = epoxy_glXFreeContextEXT_global_rewrite_ptr;
+PFNGLXFREECONTEXTEXTPROC epoxy_glXFreeContextEXT = epoxy_glXFreeContextEXT_global_rewrite_ptr;
 
-PUBLIC PFNGLXGETAGPOFFSETMESAPROC epoxy_glXGetAGPOffsetMESA = epoxy_glXGetAGPOffsetMESA_global_rewrite_ptr;
+PFNGLXGETAGPOFFSETMESAPROC epoxy_glXGetAGPOffsetMESA = epoxy_glXGetAGPOffsetMESA_global_rewrite_ptr;
 
-PUBLIC PFNGLXGETCLIENTSTRINGPROC epoxy_glXGetClientString = epoxy_glXGetClientString_global_rewrite_ptr;
+PFNGLXGETCLIENTSTRINGPROC epoxy_glXGetClientString = epoxy_glXGetClientString_global_rewrite_ptr;
 
-PUBLIC PFNGLXGETCONFIGPROC epoxy_glXGetConfig = epoxy_glXGetConfig_global_rewrite_ptr;
+PFNGLXGETCONFIGPROC epoxy_glXGetConfig = epoxy_glXGetConfig_global_rewrite_ptr;
 
-PUBLIC PFNGLXGETCONTEXTGPUIDAMDPROC epoxy_glXGetContextGPUIDAMD = epoxy_glXGetContextGPUIDAMD_global_rewrite_ptr;
+PFNGLXGETCONTEXTGPUIDAMDPROC epoxy_glXGetContextGPUIDAMD = epoxy_glXGetContextGPUIDAMD_global_rewrite_ptr;
 
-PUBLIC PFNGLXGETCONTEXTIDEXTPROC epoxy_glXGetContextIDEXT = epoxy_glXGetContextIDEXT_global_rewrite_ptr;
+PFNGLXGETCONTEXTIDEXTPROC epoxy_glXGetContextIDEXT = epoxy_glXGetContextIDEXT_global_rewrite_ptr;
 
-PUBLIC PFNGLXGETCURRENTASSOCIATEDCONTEXTAMDPROC epoxy_glXGetCurrentAssociatedContextAMD = epoxy_glXGetCurrentAssociatedContextAMD_global_rewrite_ptr;
+PFNGLXGETCURRENTASSOCIATEDCONTEXTAMDPROC epoxy_glXGetCurrentAssociatedContextAMD = epoxy_glXGetCurrentAssociatedContextAMD_global_rewrite_ptr;
 
-PUBLIC PFNGLXGETCURRENTCONTEXTPROC epoxy_glXGetCurrentContext = epoxy_glXGetCurrentContext_global_rewrite_ptr;
+PFNGLXGETCURRENTCONTEXTPROC epoxy_glXGetCurrentContext = epoxy_glXGetCurrentContext_global_rewrite_ptr;
 
-PUBLIC PFNGLXGETCURRENTDISPLAYPROC epoxy_glXGetCurrentDisplay = epoxy_glXGetCurrentDisplay_global_rewrite_ptr;
+PFNGLXGETCURRENTDISPLAYPROC epoxy_glXGetCurrentDisplay = epoxy_glXGetCurrentDisplay_global_rewrite_ptr;
 
-PUBLIC PFNGLXGETCURRENTDISPLAYEXTPROC epoxy_glXGetCurrentDisplayEXT = epoxy_glXGetCurrentDisplayEXT_global_rewrite_ptr;
+PFNGLXGETCURRENTDISPLAYEXTPROC epoxy_glXGetCurrentDisplayEXT = epoxy_glXGetCurrentDisplayEXT_global_rewrite_ptr;
 
-PUBLIC PFNGLXGETCURRENTDRAWABLEPROC epoxy_glXGetCurrentDrawable = epoxy_glXGetCurrentDrawable_global_rewrite_ptr;
+PFNGLXGETCURRENTDRAWABLEPROC epoxy_glXGetCurrentDrawable = epoxy_glXGetCurrentDrawable_global_rewrite_ptr;
 
-PUBLIC PFNGLXGETCURRENTREADDRAWABLEPROC epoxy_glXGetCurrentReadDrawable = epoxy_glXGetCurrentReadDrawable_global_rewrite_ptr;
+PFNGLXGETCURRENTREADDRAWABLEPROC epoxy_glXGetCurrentReadDrawable = epoxy_glXGetCurrentReadDrawable_global_rewrite_ptr;
 
-PUBLIC PFNGLXGETCURRENTREADDRAWABLESGIPROC epoxy_glXGetCurrentReadDrawableSGI = epoxy_glXGetCurrentReadDrawableSGI_global_rewrite_ptr;
+PFNGLXGETCURRENTREADDRAWABLESGIPROC epoxy_glXGetCurrentReadDrawableSGI = epoxy_glXGetCurrentReadDrawableSGI_global_rewrite_ptr;
 
-PUBLIC PFNGLXGETFBCONFIGATTRIBPROC epoxy_glXGetFBConfigAttrib = epoxy_glXGetFBConfigAttrib_global_rewrite_ptr;
+PFNGLXGETFBCONFIGATTRIBPROC epoxy_glXGetFBConfigAttrib = epoxy_glXGetFBConfigAttrib_global_rewrite_ptr;
 
-PUBLIC PFNGLXGETFBCONFIGATTRIBSGIXPROC epoxy_glXGetFBConfigAttribSGIX = epoxy_glXGetFBConfigAttribSGIX_global_rewrite_ptr;
+PFNGLXGETFBCONFIGATTRIBSGIXPROC epoxy_glXGetFBConfigAttribSGIX = epoxy_glXGetFBConfigAttribSGIX_global_rewrite_ptr;
 
-PUBLIC PFNGLXGETFBCONFIGFROMVISUALSGIXPROC epoxy_glXGetFBConfigFromVisualSGIX = epoxy_glXGetFBConfigFromVisualSGIX_global_rewrite_ptr;
+PFNGLXGETFBCONFIGFROMVISUALSGIXPROC epoxy_glXGetFBConfigFromVisualSGIX = epoxy_glXGetFBConfigFromVisualSGIX_global_rewrite_ptr;
 
-PUBLIC PFNGLXGETFBCONFIGSPROC epoxy_glXGetFBConfigs = epoxy_glXGetFBConfigs_global_rewrite_ptr;
+PFNGLXGETFBCONFIGSPROC epoxy_glXGetFBConfigs = epoxy_glXGetFBConfigs_global_rewrite_ptr;
 
-PUBLIC PFNGLXGETGPUIDSAMDPROC epoxy_glXGetGPUIDsAMD = epoxy_glXGetGPUIDsAMD_global_rewrite_ptr;
+PFNGLXGETGPUIDSAMDPROC epoxy_glXGetGPUIDsAMD = epoxy_glXGetGPUIDsAMD_global_rewrite_ptr;
 
-PUBLIC PFNGLXGETGPUINFOAMDPROC epoxy_glXGetGPUInfoAMD = epoxy_glXGetGPUInfoAMD_global_rewrite_ptr;
+PFNGLXGETGPUINFOAMDPROC epoxy_glXGetGPUInfoAMD = epoxy_glXGetGPUInfoAMD_global_rewrite_ptr;
 
-PUBLIC PFNGLXGETMSCRATEOMLPROC epoxy_glXGetMscRateOML = epoxy_glXGetMscRateOML_global_rewrite_ptr;
+PFNGLXGETMSCRATEOMLPROC epoxy_glXGetMscRateOML = epoxy_glXGetMscRateOML_global_rewrite_ptr;
 
-PUBLIC PFNGLXGETPROCADDRESSPROC epoxy_glXGetProcAddress = epoxy_glXGetProcAddress_global_rewrite_ptr;
+PFNGLXGETPROCADDRESSPROC epoxy_glXGetProcAddress = epoxy_glXGetProcAddress_global_rewrite_ptr;
 
-PUBLIC PFNGLXGETPROCADDRESSARBPROC epoxy_glXGetProcAddressARB = epoxy_glXGetProcAddressARB_global_rewrite_ptr;
+PFNGLXGETPROCADDRESSARBPROC epoxy_glXGetProcAddressARB = epoxy_glXGetProcAddressARB_global_rewrite_ptr;
 
-PUBLIC PFNGLXGETSELECTEDEVENTPROC epoxy_glXGetSelectedEvent = epoxy_glXGetSelectedEvent_global_rewrite_ptr;
+PFNGLXGETSELECTEDEVENTPROC epoxy_glXGetSelectedEvent = epoxy_glXGetSelectedEvent_global_rewrite_ptr;
 
-PUBLIC PFNGLXGETSELECTEDEVENTSGIXPROC epoxy_glXGetSelectedEventSGIX = epoxy_glXGetSelectedEventSGIX_global_rewrite_ptr;
+PFNGLXGETSELECTEDEVENTSGIXPROC epoxy_glXGetSelectedEventSGIX = epoxy_glXGetSelectedEventSGIX_global_rewrite_ptr;
 
-PUBLIC PFNGLXGETSYNCVALUESOMLPROC epoxy_glXGetSyncValuesOML = epoxy_glXGetSyncValuesOML_global_rewrite_ptr;
+PFNGLXGETSWAPINTERVALMESAPROC epoxy_glXGetSwapIntervalMESA = epoxy_glXGetSwapIntervalMESA_global_rewrite_ptr;
 
-PUBLIC PFNGLXGETTRANSPARENTINDEXSUNPROC epoxy_glXGetTransparentIndexSUN = epoxy_glXGetTransparentIndexSUN_global_rewrite_ptr;
+PFNGLXGETSYNCVALUESOMLPROC epoxy_glXGetSyncValuesOML = epoxy_glXGetSyncValuesOML_global_rewrite_ptr;
 
-PUBLIC PFNGLXGETVIDEODEVICENVPROC epoxy_glXGetVideoDeviceNV = epoxy_glXGetVideoDeviceNV_global_rewrite_ptr;
+PFNGLXGETTRANSPARENTINDEXSUNPROC epoxy_glXGetTransparentIndexSUN = epoxy_glXGetTransparentIndexSUN_global_rewrite_ptr;
 
-PUBLIC PFNGLXGETVIDEOINFONVPROC epoxy_glXGetVideoInfoNV = epoxy_glXGetVideoInfoNV_global_rewrite_ptr;
+PFNGLXGETVIDEODEVICENVPROC epoxy_glXGetVideoDeviceNV = epoxy_glXGetVideoDeviceNV_global_rewrite_ptr;
 
-PUBLIC PFNGLXGETVIDEOSYNCSGIPROC epoxy_glXGetVideoSyncSGI = epoxy_glXGetVideoSyncSGI_global_rewrite_ptr;
+PFNGLXGETVIDEOINFONVPROC epoxy_glXGetVideoInfoNV = epoxy_glXGetVideoInfoNV_global_rewrite_ptr;
 
-PUBLIC PFNGLXGETVISUALFROMFBCONFIGPROC epoxy_glXGetVisualFromFBConfig = epoxy_glXGetVisualFromFBConfig_global_rewrite_ptr;
+PFNGLXGETVIDEOSYNCSGIPROC epoxy_glXGetVideoSyncSGI = epoxy_glXGetVideoSyncSGI_global_rewrite_ptr;
 
-PUBLIC PFNGLXGETVISUALFROMFBCONFIGSGIXPROC epoxy_glXGetVisualFromFBConfigSGIX = epoxy_glXGetVisualFromFBConfigSGIX_global_rewrite_ptr;
+PFNGLXGETVISUALFROMFBCONFIGPROC epoxy_glXGetVisualFromFBConfig = epoxy_glXGetVisualFromFBConfig_global_rewrite_ptr;
 
-PUBLIC PFNGLXHYPERPIPEATTRIBSGIXPROC epoxy_glXHyperpipeAttribSGIX = epoxy_glXHyperpipeAttribSGIX_global_rewrite_ptr;
+PFNGLXGETVISUALFROMFBCONFIGSGIXPROC epoxy_glXGetVisualFromFBConfigSGIX = epoxy_glXGetVisualFromFBConfigSGIX_global_rewrite_ptr;
 
-PUBLIC PFNGLXHYPERPIPECONFIGSGIXPROC epoxy_glXHyperpipeConfigSGIX = epoxy_glXHyperpipeConfigSGIX_global_rewrite_ptr;
+PFNGLXHYPERPIPEATTRIBSGIXPROC epoxy_glXHyperpipeAttribSGIX = epoxy_glXHyperpipeAttribSGIX_global_rewrite_ptr;
 
-PUBLIC PFNGLXIMPORTCONTEXTEXTPROC epoxy_glXImportContextEXT = epoxy_glXImportContextEXT_global_rewrite_ptr;
+PFNGLXHYPERPIPECONFIGSGIXPROC epoxy_glXHyperpipeConfigSGIX = epoxy_glXHyperpipeConfigSGIX_global_rewrite_ptr;
 
-PUBLIC PFNGLXISDIRECTPROC epoxy_glXIsDirect = epoxy_glXIsDirect_global_rewrite_ptr;
+PFNGLXIMPORTCONTEXTEXTPROC epoxy_glXImportContextEXT = epoxy_glXImportContextEXT_global_rewrite_ptr;
 
-PUBLIC PFNGLXJOINSWAPGROUPNVPROC epoxy_glXJoinSwapGroupNV = epoxy_glXJoinSwapGroupNV_global_rewrite_ptr;
+PFNGLXISDIRECTPROC epoxy_glXIsDirect = epoxy_glXIsDirect_global_rewrite_ptr;
 
-PUBLIC PFNGLXJOINSWAPGROUPSGIXPROC epoxy_glXJoinSwapGroupSGIX = epoxy_glXJoinSwapGroupSGIX_global_rewrite_ptr;
+PFNGLXJOINSWAPGROUPNVPROC epoxy_glXJoinSwapGroupNV = epoxy_glXJoinSwapGroupNV_global_rewrite_ptr;
 
-PUBLIC PFNGLXLOCKVIDEOCAPTUREDEVICENVPROC epoxy_glXLockVideoCaptureDeviceNV = epoxy_glXLockVideoCaptureDeviceNV_global_rewrite_ptr;
+PFNGLXJOINSWAPGROUPSGIXPROC epoxy_glXJoinSwapGroupSGIX = epoxy_glXJoinSwapGroupSGIX_global_rewrite_ptr;
 
-PUBLIC PFNGLXMAKEASSOCIATEDCONTEXTCURRENTAMDPROC epoxy_glXMakeAssociatedContextCurrentAMD = epoxy_glXMakeAssociatedContextCurrentAMD_global_rewrite_ptr;
+PFNGLXLOCKVIDEOCAPTUREDEVICENVPROC epoxy_glXLockVideoCaptureDeviceNV = epoxy_glXLockVideoCaptureDeviceNV_global_rewrite_ptr;
 
-PUBLIC PFNGLXMAKECONTEXTCURRENTPROC epoxy_glXMakeContextCurrent = epoxy_glXMakeContextCurrent_global_rewrite_ptr;
+PFNGLXMAKEASSOCIATEDCONTEXTCURRENTAMDPROC epoxy_glXMakeAssociatedContextCurrentAMD = epoxy_glXMakeAssociatedContextCurrentAMD_global_rewrite_ptr;
 
-PUBLIC PFNGLXMAKECURRENTPROC epoxy_glXMakeCurrent = epoxy_glXMakeCurrent_global_rewrite_ptr;
+PFNGLXMAKECONTEXTCURRENTPROC epoxy_glXMakeContextCurrent = epoxy_glXMakeContextCurrent_global_rewrite_ptr;
 
-PUBLIC PFNGLXMAKECURRENTREADSGIPROC epoxy_glXMakeCurrentReadSGI = epoxy_glXMakeCurrentReadSGI_global_rewrite_ptr;
+PFNGLXMAKECURRENTPROC epoxy_glXMakeCurrent = epoxy_glXMakeCurrent_global_rewrite_ptr;
 
-PUBLIC PFNGLXNAMEDCOPYBUFFERSUBDATANVPROC epoxy_glXNamedCopyBufferSubDataNV = epoxy_glXNamedCopyBufferSubDataNV_global_rewrite_ptr;
+PFNGLXMAKECURRENTREADSGIPROC epoxy_glXMakeCurrentReadSGI = epoxy_glXMakeCurrentReadSGI_global_rewrite_ptr;
 
-PUBLIC PFNGLXQUERYCHANNELDELTASSGIXPROC epoxy_glXQueryChannelDeltasSGIX = epoxy_glXQueryChannelDeltasSGIX_global_rewrite_ptr;
+PFNGLXNAMEDCOPYBUFFERSUBDATANVPROC epoxy_glXNamedCopyBufferSubDataNV = epoxy_glXNamedCopyBufferSubDataNV_global_rewrite_ptr;
 
-PUBLIC PFNGLXQUERYCHANNELRECTSGIXPROC epoxy_glXQueryChannelRectSGIX = epoxy_glXQueryChannelRectSGIX_global_rewrite_ptr;
+PFNGLXQUERYCHANNELDELTASSGIXPROC epoxy_glXQueryChannelDeltasSGIX = epoxy_glXQueryChannelDeltasSGIX_global_rewrite_ptr;
 
-PUBLIC PFNGLXQUERYCONTEXTPROC epoxy_glXQueryContext = epoxy_glXQueryContext_global_rewrite_ptr;
+PFNGLXQUERYCHANNELRECTSGIXPROC epoxy_glXQueryChannelRectSGIX = epoxy_glXQueryChannelRectSGIX_global_rewrite_ptr;
 
-PUBLIC PFNGLXQUERYCONTEXTINFOEXTPROC epoxy_glXQueryContextInfoEXT = epoxy_glXQueryContextInfoEXT_global_rewrite_ptr;
+PFNGLXQUERYCONTEXTPROC epoxy_glXQueryContext = epoxy_glXQueryContext_global_rewrite_ptr;
 
-PUBLIC PFNGLXQUERYCURRENTRENDERERINTEGERMESAPROC epoxy_glXQueryCurrentRendererIntegerMESA = epoxy_glXQueryCurrentRendererIntegerMESA_global_rewrite_ptr;
+PFNGLXQUERYCONTEXTINFOEXTPROC epoxy_glXQueryContextInfoEXT = epoxy_glXQueryContextInfoEXT_global_rewrite_ptr;
 
-PUBLIC PFNGLXQUERYCURRENTRENDERERSTRINGMESAPROC epoxy_glXQueryCurrentRendererStringMESA = epoxy_glXQueryCurrentRendererStringMESA_global_rewrite_ptr;
+PFNGLXQUERYCURRENTRENDERERINTEGERMESAPROC epoxy_glXQueryCurrentRendererIntegerMESA = epoxy_glXQueryCurrentRendererIntegerMESA_global_rewrite_ptr;
 
-PUBLIC PFNGLXQUERYDRAWABLEPROC epoxy_glXQueryDrawable = epoxy_glXQueryDrawable_global_rewrite_ptr;
+PFNGLXQUERYCURRENTRENDERERSTRINGMESAPROC epoxy_glXQueryCurrentRendererStringMESA = epoxy_glXQueryCurrentRendererStringMESA_global_rewrite_ptr;
 
-PUBLIC PFNGLXQUERYEXTENSIONPROC epoxy_glXQueryExtension = epoxy_glXQueryExtension_global_rewrite_ptr;
+PFNGLXQUERYDRAWABLEPROC epoxy_glXQueryDrawable = epoxy_glXQueryDrawable_global_rewrite_ptr;
 
-PUBLIC PFNGLXQUERYEXTENSIONSSTRINGPROC epoxy_glXQueryExtensionsString = epoxy_glXQueryExtensionsString_global_rewrite_ptr;
+PFNGLXQUERYEXTENSIONPROC epoxy_glXQueryExtension = epoxy_glXQueryExtension_global_rewrite_ptr;
 
-PUBLIC PFNGLXQUERYFRAMECOUNTNVPROC epoxy_glXQueryFrameCountNV = epoxy_glXQueryFrameCountNV_global_rewrite_ptr;
+PFNGLXQUERYEXTENSIONSSTRINGPROC epoxy_glXQueryExtensionsString = epoxy_glXQueryExtensionsString_global_rewrite_ptr;
 
-PUBLIC PFNGLXQUERYGLXPBUFFERSGIXPROC epoxy_glXQueryGLXPbufferSGIX = epoxy_glXQueryGLXPbufferSGIX_global_rewrite_ptr;
+PFNGLXQUERYFRAMECOUNTNVPROC epoxy_glXQueryFrameCountNV = epoxy_glXQueryFrameCountNV_global_rewrite_ptr;
 
-PUBLIC PFNGLXQUERYHYPERPIPEATTRIBSGIXPROC epoxy_glXQueryHyperpipeAttribSGIX = epoxy_glXQueryHyperpipeAttribSGIX_global_rewrite_ptr;
+PFNGLXQUERYGLXPBUFFERSGIXPROC epoxy_glXQueryGLXPbufferSGIX = epoxy_glXQueryGLXPbufferSGIX_global_rewrite_ptr;
 
-PUBLIC PFNGLXQUERYHYPERPIPEBESTATTRIBSGIXPROC epoxy_glXQueryHyperpipeBestAttribSGIX = epoxy_glXQueryHyperpipeBestAttribSGIX_global_rewrite_ptr;
+PFNGLXQUERYHYPERPIPEATTRIBSGIXPROC epoxy_glXQueryHyperpipeAttribSGIX = epoxy_glXQueryHyperpipeAttribSGIX_global_rewrite_ptr;
 
-PUBLIC PFNGLXQUERYHYPERPIPECONFIGSGIXPROC epoxy_glXQueryHyperpipeConfigSGIX = epoxy_glXQueryHyperpipeConfigSGIX_global_rewrite_ptr;
+PFNGLXQUERYHYPERPIPEBESTATTRIBSGIXPROC epoxy_glXQueryHyperpipeBestAttribSGIX = epoxy_glXQueryHyperpipeBestAttribSGIX_global_rewrite_ptr;
 
-PUBLIC PFNGLXQUERYHYPERPIPENETWORKSGIXPROC epoxy_glXQueryHyperpipeNetworkSGIX = epoxy_glXQueryHyperpipeNetworkSGIX_global_rewrite_ptr;
+PFNGLXQUERYHYPERPIPECONFIGSGIXPROC epoxy_glXQueryHyperpipeConfigSGIX = epoxy_glXQueryHyperpipeConfigSGIX_global_rewrite_ptr;
 
-PUBLIC PFNGLXQUERYMAXSWAPBARRIERSSGIXPROC epoxy_glXQueryMaxSwapBarriersSGIX = epoxy_glXQueryMaxSwapBarriersSGIX_global_rewrite_ptr;
+PFNGLXQUERYHYPERPIPENETWORKSGIXPROC epoxy_glXQueryHyperpipeNetworkSGIX = epoxy_glXQueryHyperpipeNetworkSGIX_global_rewrite_ptr;
 
-PUBLIC PFNGLXQUERYMAXSWAPGROUPSNVPROC epoxy_glXQueryMaxSwapGroupsNV = epoxy_glXQueryMaxSwapGroupsNV_global_rewrite_ptr;
+PFNGLXQUERYMAXSWAPBARRIERSSGIXPROC epoxy_glXQueryMaxSwapBarriersSGIX = epoxy_glXQueryMaxSwapBarriersSGIX_global_rewrite_ptr;
 
-PUBLIC PFNGLXQUERYRENDERERINTEGERMESAPROC epoxy_glXQueryRendererIntegerMESA = epoxy_glXQueryRendererIntegerMESA_global_rewrite_ptr;
+PFNGLXQUERYMAXSWAPGROUPSNVPROC epoxy_glXQueryMaxSwapGroupsNV = epoxy_glXQueryMaxSwapGroupsNV_global_rewrite_ptr;
 
-PUBLIC PFNGLXQUERYRENDERERSTRINGMESAPROC epoxy_glXQueryRendererStringMESA = epoxy_glXQueryRendererStringMESA_global_rewrite_ptr;
+PFNGLXQUERYRENDERERINTEGERMESAPROC epoxy_glXQueryRendererIntegerMESA = epoxy_glXQueryRendererIntegerMESA_global_rewrite_ptr;
 
-PUBLIC PFNGLXQUERYSERVERSTRINGPROC epoxy_glXQueryServerString = epoxy_glXQueryServerString_global_rewrite_ptr;
+PFNGLXQUERYRENDERERSTRINGMESAPROC epoxy_glXQueryRendererStringMESA = epoxy_glXQueryRendererStringMESA_global_rewrite_ptr;
 
-PUBLIC PFNGLXQUERYSWAPGROUPNVPROC epoxy_glXQuerySwapGroupNV = epoxy_glXQuerySwapGroupNV_global_rewrite_ptr;
+PFNGLXQUERYSERVERSTRINGPROC epoxy_glXQueryServerString = epoxy_glXQueryServerString_global_rewrite_ptr;
 
-PUBLIC PFNGLXQUERYVERSIONPROC epoxy_glXQueryVersion = epoxy_glXQueryVersion_global_rewrite_ptr;
+PFNGLXQUERYSWAPGROUPNVPROC epoxy_glXQuerySwapGroupNV = epoxy_glXQuerySwapGroupNV_global_rewrite_ptr;
 
-PUBLIC PFNGLXQUERYVIDEOCAPTUREDEVICENVPROC epoxy_glXQueryVideoCaptureDeviceNV = epoxy_glXQueryVideoCaptureDeviceNV_global_rewrite_ptr;
+PFNGLXQUERYVERSIONPROC epoxy_glXQueryVersion = epoxy_glXQueryVersion_global_rewrite_ptr;
 
-PUBLIC PFNGLXRELEASEBUFFERSMESAPROC epoxy_glXReleaseBuffersMESA = epoxy_glXReleaseBuffersMESA_global_rewrite_ptr;
+PFNGLXQUERYVIDEOCAPTUREDEVICENVPROC epoxy_glXQueryVideoCaptureDeviceNV = epoxy_glXQueryVideoCaptureDeviceNV_global_rewrite_ptr;
 
-PUBLIC PFNGLXRELEASETEXIMAGEEXTPROC epoxy_glXReleaseTexImageEXT = epoxy_glXReleaseTexImageEXT_global_rewrite_ptr;
+PFNGLXRELEASEBUFFERSMESAPROC epoxy_glXReleaseBuffersMESA = epoxy_glXReleaseBuffersMESA_global_rewrite_ptr;
 
-PUBLIC PFNGLXRELEASEVIDEOCAPTUREDEVICENVPROC epoxy_glXReleaseVideoCaptureDeviceNV = epoxy_glXReleaseVideoCaptureDeviceNV_global_rewrite_ptr;
+PFNGLXRELEASETEXIMAGEEXTPROC epoxy_glXReleaseTexImageEXT = epoxy_glXReleaseTexImageEXT_global_rewrite_ptr;
 
-PUBLIC PFNGLXRELEASEVIDEODEVICENVPROC epoxy_glXReleaseVideoDeviceNV = epoxy_glXReleaseVideoDeviceNV_global_rewrite_ptr;
+PFNGLXRELEASEVIDEOCAPTUREDEVICENVPROC epoxy_glXReleaseVideoCaptureDeviceNV = epoxy_glXReleaseVideoCaptureDeviceNV_global_rewrite_ptr;
 
-PUBLIC PFNGLXRELEASEVIDEOIMAGENVPROC epoxy_glXReleaseVideoImageNV = epoxy_glXReleaseVideoImageNV_global_rewrite_ptr;
+PFNGLXRELEASEVIDEODEVICENVPROC epoxy_glXReleaseVideoDeviceNV = epoxy_glXReleaseVideoDeviceNV_global_rewrite_ptr;
 
-PUBLIC PFNGLXRESETFRAMECOUNTNVPROC epoxy_glXResetFrameCountNV = epoxy_glXResetFrameCountNV_global_rewrite_ptr;
+PFNGLXRELEASEVIDEOIMAGENVPROC epoxy_glXReleaseVideoImageNV = epoxy_glXReleaseVideoImageNV_global_rewrite_ptr;
 
-PUBLIC PFNGLXSELECTEVENTPROC epoxy_glXSelectEvent = epoxy_glXSelectEvent_global_rewrite_ptr;
+PFNGLXRESETFRAMECOUNTNVPROC epoxy_glXResetFrameCountNV = epoxy_glXResetFrameCountNV_global_rewrite_ptr;
 
-PUBLIC PFNGLXSELECTEVENTSGIXPROC epoxy_glXSelectEventSGIX = epoxy_glXSelectEventSGIX_global_rewrite_ptr;
+PFNGLXSELECTEVENTPROC epoxy_glXSelectEvent = epoxy_glXSelectEvent_global_rewrite_ptr;
 
-PUBLIC PFNGLXSENDPBUFFERTOVIDEONVPROC epoxy_glXSendPbufferToVideoNV = epoxy_glXSendPbufferToVideoNV_global_rewrite_ptr;
+PFNGLXSELECTEVENTSGIXPROC epoxy_glXSelectEventSGIX = epoxy_glXSelectEventSGIX_global_rewrite_ptr;
 
-PUBLIC PFNGLXSET3DFXMODEMESAPROC epoxy_glXSet3DfxModeMESA = epoxy_glXSet3DfxModeMESA_global_rewrite_ptr;
+PFNGLXSENDPBUFFERTOVIDEONVPROC epoxy_glXSendPbufferToVideoNV = epoxy_glXSendPbufferToVideoNV_global_rewrite_ptr;
 
-PUBLIC PFNGLXSWAPBUFFERSPROC epoxy_glXSwapBuffers = epoxy_glXSwapBuffers_global_rewrite_ptr;
+PFNGLXSET3DFXMODEMESAPROC epoxy_glXSet3DfxModeMESA = epoxy_glXSet3DfxModeMESA_global_rewrite_ptr;
 
-PUBLIC PFNGLXSWAPBUFFERSMSCOMLPROC epoxy_glXSwapBuffersMscOML = epoxy_glXSwapBuffersMscOML_global_rewrite_ptr;
+PFNGLXSWAPBUFFERSPROC epoxy_glXSwapBuffers = epoxy_glXSwapBuffers_global_rewrite_ptr;
 
-PUBLIC PFNGLXSWAPINTERVALEXTPROC epoxy_glXSwapIntervalEXT = epoxy_glXSwapIntervalEXT_global_rewrite_ptr;
+PFNGLXSWAPBUFFERSMSCOMLPROC epoxy_glXSwapBuffersMscOML = epoxy_glXSwapBuffersMscOML_global_rewrite_ptr;
 
-PUBLIC PFNGLXSWAPINTERVALSGIPROC epoxy_glXSwapIntervalSGI = epoxy_glXSwapIntervalSGI_global_rewrite_ptr;
+PFNGLXSWAPINTERVALEXTPROC epoxy_glXSwapIntervalEXT = epoxy_glXSwapIntervalEXT_global_rewrite_ptr;
 
-PUBLIC PFNGLXUSEXFONTPROC epoxy_glXUseXFont = epoxy_glXUseXFont_global_rewrite_ptr;
+PFNGLXSWAPINTERVALMESAPROC epoxy_glXSwapIntervalMESA = epoxy_glXSwapIntervalMESA_global_rewrite_ptr;
 
-PUBLIC PFNGLXWAITFORMSCOMLPROC epoxy_glXWaitForMscOML = epoxy_glXWaitForMscOML_global_rewrite_ptr;
+PFNGLXSWAPINTERVALSGIPROC epoxy_glXSwapIntervalSGI = epoxy_glXSwapIntervalSGI_global_rewrite_ptr;
 
-PUBLIC PFNGLXWAITFORSBCOMLPROC epoxy_glXWaitForSbcOML = epoxy_glXWaitForSbcOML_global_rewrite_ptr;
+PFNGLXUSEXFONTPROC epoxy_glXUseXFont = epoxy_glXUseXFont_global_rewrite_ptr;
 
-PUBLIC PFNGLXWAITGLPROC epoxy_glXWaitGL = epoxy_glXWaitGL_global_rewrite_ptr;
+PFNGLXWAITFORMSCOMLPROC epoxy_glXWaitForMscOML = epoxy_glXWaitForMscOML_global_rewrite_ptr;
 
-PUBLIC PFNGLXWAITVIDEOSYNCSGIPROC epoxy_glXWaitVideoSyncSGI = epoxy_glXWaitVideoSyncSGI_global_rewrite_ptr;
+PFNGLXWAITFORSBCOMLPROC epoxy_glXWaitForSbcOML = epoxy_glXWaitForSbcOML_global_rewrite_ptr;
 
-PUBLIC PFNGLXWAITXPROC epoxy_glXWaitX = epoxy_glXWaitX_global_rewrite_ptr;
+PFNGLXWAITGLPROC epoxy_glXWaitGL = epoxy_glXWaitGL_global_rewrite_ptr;
+
+PFNGLXWAITVIDEOSYNCSGIPROC epoxy_glXWaitVideoSyncSGI = epoxy_glXWaitVideoSyncSGI_global_rewrite_ptr;
+
+PFNGLXWAITXPROC epoxy_glXWaitX = epoxy_glXWaitX_global_rewrite_ptr;
 

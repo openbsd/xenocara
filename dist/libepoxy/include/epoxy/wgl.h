@@ -30,12 +30,9 @@
 #ifndef EPOXY_WGL_H
 #define EPOXY_WGL_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include <stdbool.h>
 #include <windows.h>
+
+#include "epoxy/common.h"
 
 #undef wglUseFontBitmaps
 #undef wglUseFontOutlines
@@ -52,13 +49,13 @@ extern "C" {
 #define wglUseFontBitmaps wglUseFontBitmapsA
 #endif
 
+EPOXY_BEGIN_DECLS
+
 #include "epoxy/wgl_generated.h"
 
-EPOXY_IMPORTEXPORT bool epoxy_has_wgl_extension(HDC hdc, const char *extension);
-EPOXY_IMPORTEXPORT void epoxy_handle_external_wglMakeCurrent(void);
+EPOXY_PUBLIC bool epoxy_has_wgl_extension(HDC hdc, const char *extension);
+EPOXY_PUBLIC void epoxy_handle_external_wglMakeCurrent(void);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EPOXY_END_DECLS
 
 #endif /* EPOXY_WGL_H */

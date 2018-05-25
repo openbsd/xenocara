@@ -25,16 +25,14 @@
  *
  * Provides an implementation of an EGL dispatch layer using global
  * function pointers
+ *
+ * You should include `<epoxy/egl.h>` instead of `<EGL/egl.h>`.
  */
 
 #ifndef EPOXY_EGL_H
 #define EPOXY_EGL_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include <stdbool.h>
+#include "epoxy/common.h"
 
 #if defined(__egl_h_) || defined(__eglext_h_)
 #error epoxy/egl.h must be included before (or in place of) GL/egl.h
@@ -43,13 +41,14 @@ extern "C" {
 #define __eglext_h_
 #endif
 
+EPOXY_BEGIN_DECLS
+
 #include "epoxy/egl_generated.h"
 
-bool epoxy_has_egl_extension(EGLDisplay dpy, const char *extension);
-int epoxy_egl_version(EGLDisplay dpy);
+EPOXY_PUBLIC bool epoxy_has_egl_extension(EGLDisplay dpy, const char *extension);
+EPOXY_PUBLIC int epoxy_egl_version(EGLDisplay dpy);
+EPOXY_PUBLIC bool epoxy_has_egl(void);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+EPOXY_END_DECLS
 
 #endif /* EPOXY_EGL_H */

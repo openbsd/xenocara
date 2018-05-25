@@ -22,9 +22,80 @@
  */
 
 /**
+ * \mainpage Epoxy
+ *
+ * \section intro_sec Introduction
+ *
+ * Epoxy is a library for handling OpenGL function pointer management for
+ * you.
+ *
+ * It hides the complexity of `dlopen()`, `dlsym()`, `glXGetProcAddress()`,
+ * `eglGetProcAddress()`, etc. from the app developer, with very little
+ * knowledge needed on their part.  They get to read GL specs and write
+ * code using undecorated function names like `glCompileShader()`.
+ *
+ * Don't forget to check for your extensions or versions being present
+ * before you use them, just like before!  We'll tell you what you forgot
+ * to check for instead of just segfaulting, though.
+ *
+ * \section features_sec Features
+ *
+ *   - Automatically initializes as new GL functions are used.
+ *   - GL 4.6 core and compatibility context support.
+ *   - GLES 1/2/3 context support.
+ *   - Knows about function aliases so (e.g.) `glBufferData()` can be
+ *     used with `GL_ARB_vertex_buffer_object` implementations, along
+ *     with GL 1.5+ implementations.
+ *   - EGL, GLX, and WGL support.
+ *   - Can be mixed with non-epoxy GL usage.
+ *
+ * \section using_sec Using Epoxy
+ *
+ * Using Epoxy should be as easy as replacing:
+ *
+ * ```cpp
+ * #include <GL/gl.h>
+ * #include <GL/glx.h>
+ * #include <GL/glext.h>
+ * ```
+ *
+ * with:
+ *
+ * ```cpp
+ * #include <epoxy/gl.h>
+ * #include <epoxy/glx.h>
+ * ```
+ *
+ * \subsection using_include_sec Headers
+ *
+ * Epoxy comes with the following public headers:
+ *
+ *  - `epoxy/gl.h`  - For GL API
+ *  - `epoxy/egl.h` - For EGL API
+ *  - `epoxy/glx.h` - For GLX API
+ *  - `epoxy/wgl.h` - For WGL API
+ *
+ * \section links_sec Additional links
+ *
+ * The latest version of the Epoxy code is available on [GitHub](https://github.com/anholt/libepoxy).
+ *
+ * For bug reports and enhancements, please use the [Issues](https://github.com/anholt/libepoxy/issues)
+ * link.
+ *
+ * The scope of this API reference does not include the documentation for
+ * OpenGL and OpenGL ES. For more information on those programming interfaces
+ * please visit:
+ *
+ *  - [Khronos](https://www.khronos.org/)
+ *  - [OpenGL page on Khronos.org](https://www.khronos.org/opengl/)
+ *  - [OpenGL ES page on Khronos.org](https://www.khronos.org/opengles/)
+ *  - [docs.GL](http://docs.gl/)
+ */
+
+/**
  * @file dispatch_common.c
  *
- * Implements common code shared by the generated GL/EGL/GLX dispatch code.
+ * @brief Implements common code shared by the generated GL/EGL/GLX dispatch code.
  *
  * A collection of some important specs on getting GL function pointers.
  *
@@ -104,22 +175,30 @@
 
 #ifdef __APPLE__
 #define GLX_LIB "/opt/X11/lib/libGL.1.dylib"
-#elif defined(ANDROID)
+#define OPENGL_LIB "/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL"
+#elif defined(__ANDROID__)
 #define GLX_LIB "libGLESv2.so"
 #elif defined(__OpenBSD__)
 #define GLX_LIB "libGL.so"
 #else
+#define GLVND_GLX_LIB "libGLX.so.1"
 #define GLX_LIB "libGL.so.1"
 #endif
 
-#if defined(ANDROID) || defined(__OpenBSD__)
+#ifdef __ANDROID__
 #define EGL_LIB "libEGL.so"
 #define GLES1_LIB "libGLESv1_CM.so"
 #define GLES2_LIB "libGLESv2.so"
+#elif defined _WIN32
+#define EGL_LIB "libEGL.dll"
+#define GLES1_LIB "libGLES_CM.dll"
+#define GLES2_LIB "libGLESv2.dll"
+#define OPENGL_LIB "OPENGL32"
 #else
 #define EGL_LIB "libEGL.so.1"
 #define GLES1_LIB "libGLESv1_CM.so.1"
 #define GLES2_LIB "libGLESv2.so.2"
+#define OPENGL_LIB "libOpenGL.so.0"
 #endif
 
 #ifdef __GNUC__
@@ -144,32 +223,37 @@
 
 struct api {
 #ifndef _WIN32
-    /**
+    /*
      * Locking for making sure we don't double-dlopen().
      */
     pthread_mutex_t mutex;
 #endif
 
-    /** dlopen() return value for libGL.so.1. */
+    /*
+     * dlopen() return value for the GLX API. This is libGLX.so.1 if the
+     * runtime is glvnd-enabled, else libGL.so.1
+     */
     void *glx_handle;
 
-    /**
-     * dlopen() return value for OS X's GL library.
+    /*
+     * dlopen() return value for the desktop GL library.
      *
-     * On linux, glx_handle is used instead.
+     * On Windows this is OPENGL32. On OSX this is classic libGL. On Linux
+     * this is either libOpenGL (if the runtime is glvnd-enabled) or
+     * classic libGL.so.1
      */
     void *gl_handle;
 
-    /** dlopen() return value for libEGL.so.1 */
+    /* dlopen() return value for libEGL.so.1 */
     void *egl_handle;
 
-    /** dlopen() return value for libGLESv1_CM.so.1 */
+    /* dlopen() return value for libGLESv1_CM.so.1 */
     void *gles1_handle;
 
-    /** dlopen() return value for libGLESv2.so.2 */
+    /* dlopen() return value for libGLESv2.so.2 */
     void *gles2_handle;
 
-    /**
+    /*
      * This value gets incremented when any thread is in
      * glBegin()/glEnd() called through epoxy.
      *
@@ -210,14 +294,13 @@ library_init(void)
 }
 
 static bool
-get_dlopen_handle(void **handle, const char *lib_name, bool exit_on_fail)
+get_dlopen_handle(void **handle, const char *lib_name, bool exit_on_fail, bool load)
 {
     if (*handle)
         return true;
 
     if (!library_initialized) {
-        fprintf(stderr,
-                "Attempting to dlopen() while in the dynamic linker.\n");
+        fputs("Attempting to dlopen() while in the dynamic linker.\n", stderr);
         abort();
     }
 
@@ -226,11 +309,15 @@ get_dlopen_handle(void **handle, const char *lib_name, bool exit_on_fail)
 #else
     pthread_mutex_lock(&api.mutex);
     if (!*handle) {
-        *handle = dlopen(lib_name, RTLD_LAZY | RTLD_LOCAL);
+        int flags = RTLD_LAZY | RTLD_LOCAL;
+        if (!load)
+            flags |= RTLD_NOLOAD;
+
+        *handle = dlopen(lib_name, flags);
         if (!*handle) {
             if (exit_on_fail) {
                 fprintf(stderr, "Couldn't open %s: %s\n", lib_name, dlerror());
-                exit(1);
+                abort();
             } else {
                 (void)dlerror();
             }
@@ -243,14 +330,10 @@ get_dlopen_handle(void **handle, const char *lib_name, bool exit_on_fail)
 }
 
 static void *
-do_dlsym(void **handle, const char *lib_name, const char *name,
-         bool exit_on_fail)
+do_dlsym(void **handle, const char *name, bool exit_on_fail)
 {
     void *result;
     const char *error = "";
-
-    if (!get_dlopen_handle(handle, lib_name, exit_on_fail))
-        return NULL;
 
 #ifdef _WIN32
     result = GetProcAddress(*handle, name);
@@ -260,14 +343,19 @@ do_dlsym(void **handle, const char *lib_name, const char *name,
         error = dlerror();
 #endif
     if (!result && exit_on_fail) {
-        fprintf(stderr,"%s() not found in %s: %s\n", name, lib_name, error);
-        exit(1);
+        fprintf(stderr, "%s() not found: %s\n", name, error);
+        abort();
     }
 
     return result;
 }
 
-PUBLIC bool
+/**
+ * @brief Checks whether we're using OpenGL or OpenGL ES
+ *
+ * @return `true` if we're using OpenGL
+ */
+bool
 epoxy_is_desktop_gl(void)
 {
     const char *es_prefix = "OpenGL ES";
@@ -308,10 +396,10 @@ epoxy_is_desktop_gl(void)
 }
 
 static int
-epoxy_internal_gl_version(int error_version)
+epoxy_internal_gl_version(GLenum version_string, int error_version)
 {
-    const char *version = (const char *)glGetString(GL_VERSION);
-    GLint major, minor;
+    const char *version = (const char *)glGetString(version_string);
+    GLint major, minor, factor;
     int scanf_count;
 
     if (!version)
@@ -326,15 +414,36 @@ epoxy_internal_gl_version(int error_version)
     if (scanf_count != 2) {
         fprintf(stderr, "Unable to interpret GL_VERSION string: %s\n",
                 version);
-        exit(1);
+        abort();
     }
-    return 10 * major + minor;
+
+    if (minor >= 10)
+        factor = 100;
+    else
+        factor = 10;
+
+    return factor * major + minor;
 }
 
-PUBLIC int
+/**
+ * @brief Returns the version of OpenGL we are using
+ *
+ * The version is encoded as:
+ *
+ * ```
+ *
+ *   version = major * 10 + minor
+ *
+ * ```
+ *
+ * So it can be easily used for version comparisons.
+ *
+ * @return The encoded version of OpenGL we are using
+ */
+int
 epoxy_gl_version(void)
 {
-    return epoxy_internal_gl_version(0);
+    return epoxy_internal_gl_version(GL_VERSION, 0);
 }
 
 int
@@ -343,14 +452,65 @@ epoxy_conservative_gl_version(void)
     if (api.begin_count)
         return 100;
 
-    return epoxy_internal_gl_version(100);
+    return epoxy_internal_gl_version(GL_VERSION, 100);
 }
 
+/**
+ * @brief Returns the version of the GL Shading Language we are using
+ *
+ * The version is encoded as:
+ *
+ * ```
+ *
+ *   version = major * 100 + minor
+ *
+ * ```
+ *
+ * So it can be easily used for version comparisons.
+ *
+ * @return The encoded version of the GL Shading Language we are using
+ */
+int
+epoxy_glsl_version(void)
+{
+    if (epoxy_gl_version() >= 20 ||
+        epoxy_has_gl_extension ("GL_ARB_shading_language_100"))
+        return epoxy_internal_gl_version(GL_SHADING_LANGUAGE_VERSION, 0);
+
+    return 0;
+}
+
+/**
+ * @brief Checks for the presence of an extension in an OpenGL extension string
+ *
+ * @param extension_list The string containing the list of extensions to check
+ * @param ext The name of the GL extension
+ * @return `true` if the extension is available'
+ *
+ * @note If you are looking to check whether a normal GL, EGL or GLX extension
+ * is supported by the client, this probably isn't the function you want.
+ *
+ * Some parts of the spec for OpenGL and friends will return an OpenGL formatted
+ * extension string that is separate from the usual extension strings for the
+ * spec. This function provides easy parsing of those strings.
+ *
+ * @see epoxy_has_gl_extension()
+ * @see epoxy_has_egl_extension()
+ * @see epoxy_has_glx_extension()
+ */
 bool
 epoxy_extension_in_string(const char *extension_list, const char *ext)
 {
     const char *ptr = extension_list;
-    int len = strlen(ext);
+    int len;
+
+    if (!ext)
+        return false;
+
+    len = strlen(ext);
+
+    if (extension_list == NULL || *extension_list == '\0')
+        return false;
 
     /* Make sure that don't just find an extension with our name as a prefix. */
     while (true) {
@@ -382,12 +542,37 @@ epoxy_internal_has_gl_extension(const char *ext, bool invalid_op_mode)
 
         for (i = 0; i < num_extensions; i++) {
             const char *gl_ext = (const char *)glGetStringi(GL_EXTENSIONS, i);
+            if (!gl_ext)
+                return false;
             if (strcmp(ext, gl_ext) == 0)
                 return true;
         }
 
         return false;
     }
+}
+
+bool
+epoxy_load_glx(bool exit_if_fails, bool load)
+{
+#ifdef GLVND_GLX_LIB
+    /* prefer the glvnd library if it exists */
+    if (!api.glx_handle)
+	get_dlopen_handle(&api.glx_handle, GLVND_GLX_LIB, false, load);
+#endif
+    if (!api.glx_handle)
+        get_dlopen_handle(&api.glx_handle, GLX_LIB, exit_if_fails, load);
+
+    return api.glx_handle != NULL;
+}
+
+void *
+epoxy_conservative_glx_dlsym(const char *name, bool exit_if_fails)
+{
+    if (epoxy_load_glx(exit_if_fails, exit_if_fails))
+        return do_dlsym(&api.glx_handle, name, exit_if_fails);
+
+    return NULL;
 }
 
 /**
@@ -400,16 +585,9 @@ epoxy_current_context_is_glx(void)
 #if !PLATFORM_HAS_GLX
     return false;
 #else
-    /* If the application hasn't explicitly called some of our GLX
-     * or EGL code but has presumably set up a context on its own,
-     * then we need to figure out how to getprocaddress anyway.
-     *
-     * If there's a public GetProcAddress loaded in the
-     * application's namespace, then use that.
-     */
     void *sym;
 
-    sym = dlsym(NULL, "glXGetCurrentContext");
+    sym = epoxy_conservative_glx_dlsym("glXGetCurrentContext", false);
     if (sym) {
         if (glXGetCurrentContext())
             return true;
@@ -418,7 +596,7 @@ epoxy_current_context_is_glx(void)
     }
 
 #if PLATFORM_HAS_EGL
-    sym = dlsym(NULL, "eglGetCurrentContext");
+    sym = epoxy_conservative_egl_dlsym("eglGetCurrentContext", false);
     if (sym) {
         if (epoxy_egl_get_current_gl_context_api() != EGL_NONE)
             return false;
@@ -427,34 +605,22 @@ epoxy_current_context_is_glx(void)
     }
 #endif /* PLATFORM_HAS_EGL */
 
-    /* OK, couldn't find anything in the app's address space.
-     * Presumably they dlopened with RTLD_LOCAL, which hides it
-     * from us.  Just go dlopen()ing likely libraries and try them.
-     */
-    sym = do_dlsym(&api.glx_handle, GLX_LIB, "glXGetCurrentContext", false);
-    if (sym && glXGetCurrentContext())
-        return true;
-
-#if PLATFORM_HAS_EGL
-    sym = do_dlsym(&api.egl_handle, EGL_LIB, "eglGetCurrentContext",
-                   false);
-    if (sym && epoxy_egl_get_current_gl_context_api() != EGL_NONE)
-        return false;
-#endif /* PLATFORM_HAS_EGL */
-
     return false;
 #endif /* PLATFORM_HAS_GLX */
 }
 
 /**
- * Returns true if the given GL extension is supported in the current context.
+ * @brief Returns true if the given GL extension is supported in the current context.
  *
- * Note that this function can't be called from within glBegin()/glEnd().
+ * @param ext The name of the GL extension
+ * @return `true` if the extension is available
  *
- * \sa epoxy_has_egl_extension()
- * \sa epoxy_has_glx_extension()
+ * @note that this function can't be called from within `glBegin()` and `glEnd()`.
+ *
+ * @see epoxy_has_egl_extension()
+ * @see epoxy_has_glx_extension()
  */
-PUBLIC bool
+bool
 epoxy_has_gl_extension(const char *ext)
 {
     return epoxy_internal_has_gl_extension(ext, false);
@@ -469,31 +635,59 @@ epoxy_conservative_has_gl_extension(const char *ext)
     return epoxy_internal_has_gl_extension(ext, true);
 }
 
+bool
+epoxy_load_egl(bool exit_if_fails, bool load)
+{
+    return get_dlopen_handle(&api.egl_handle, EGL_LIB, exit_if_fails, load);
+}
+
+void *
+epoxy_conservative_egl_dlsym(const char *name, bool exit_if_fails)
+{
+    if (epoxy_load_egl(exit_if_fails, exit_if_fails))
+        return do_dlsym(&api.egl_handle, name, exit_if_fails);
+
+    return NULL;
+}
+
 void *
 epoxy_egl_dlsym(const char *name)
 {
-    return do_dlsym(&api.egl_handle, EGL_LIB, name, true);
+    return epoxy_conservative_egl_dlsym(name, true);
 }
 
 void *
 epoxy_glx_dlsym(const char *name)
 {
-    return do_dlsym(&api.glx_handle, GLX_LIB, name, true);
+    return epoxy_conservative_glx_dlsym(name, true);
+}
+
+static void
+epoxy_load_gl(void)
+{
+    if (api.gl_handle)
+	return;
+
+#if defined(_WIN32) || defined(__APPLE__)
+    get_dlopen_handle(&api.gl_handle, OPENGL_LIB, true, true);
+#else
+
+#if defined(OPENGL_LIB)
+    if (!api.gl_handle)
+	get_dlopen_handle(&api.gl_handle, OPENGL_LIB, false, true);
+#endif
+
+    get_dlopen_handle(&api.glx_handle, GLX_LIB, true, true);
+    api.gl_handle = api.glx_handle;
+#endif
 }
 
 void *
 epoxy_gl_dlsym(const char *name)
 {
-#ifdef _WIN32
-    return do_dlsym(&api.gl_handle, "OPENGL32", name, true);
-#elif defined(__APPLE__)
-    return do_dlsym(&api.gl_handle,
-                    "/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL",
-                    name, true);
-#else
-    /* There's no library for desktop GL support independent of GLX. */
-    return epoxy_glx_dlsym(name);
-#endif
+    epoxy_load_gl();
+
+    return do_dlsym(&api.gl_handle, name, true);
 }
 
 void *
@@ -502,7 +696,8 @@ epoxy_gles1_dlsym(const char *name)
     if (epoxy_current_context_is_glx()) {
         return epoxy_get_proc_address(name);
     } else {
-        return do_dlsym(&api.gles1_handle, GLES1_LIB, name, true);
+        get_dlopen_handle(&api.gles1_handle, GLES1_LIB, true, true);
+        return do_dlsym(&api.gles1_handle, name, true);
     }
 }
 
@@ -512,7 +707,8 @@ epoxy_gles2_dlsym(const char *name)
     if (epoxy_current_context_is_glx()) {
         return epoxy_get_proc_address(name);
     } else {
-        return do_dlsym(&api.gles2_handle, GLES2_LIB, name, true);
+        get_dlopen_handle(&api.gles2_handle, GLES2_LIB, true, true);
+        return do_dlsym(&api.gles2_handle, name, true);
     }
 }
 
@@ -532,10 +728,12 @@ epoxy_gles3_dlsym(const char *name)
     if (epoxy_current_context_is_glx()) {
         return epoxy_get_proc_address(name);
     } else {
-        void *func = do_dlsym(&api.gles2_handle, GLES2_LIB, name, false);
+        if (get_dlopen_handle(&api.gles2_handle, GLES2_LIB, false, true)) {
+            void *func = do_dlsym(&api.gles2_handle, GLES2_LIB, false);
 
-        if (func)
-            return func;
+            if (func)
+                return func;
+        }
 
         return epoxy_get_proc_address(name);
     }
@@ -550,7 +748,7 @@ epoxy_get_core_proc_address(const char *name, int core_version)
 {
 #ifdef _WIN32
     int core_symbol_support = 11;
-#elif defined(ANDROID)
+#elif defined(__ANDROID__)
     /**
      * All symbols must be resolved through eglGetProcAddress
      * on Android
@@ -571,31 +769,15 @@ epoxy_get_core_proc_address(const char *name, int core_version)
 static EGLenum
 epoxy_egl_get_current_gl_context_api(void)
 {
-    EGLenum save_api = eglQueryAPI();
-    EGLContext ctx;
+    EGLint curapi;
 
-    if (eglBindAPI(EGL_OPENGL_API)) {
-        ctx = eglGetCurrentContext();
-        if (ctx) {
-            eglBindAPI(save_api);
-            return EGL_OPENGL_API;
-        }
-    } else {
-        (void)eglGetError();
+    if (eglQueryContext(eglGetCurrentDisplay(), eglGetCurrentContext(),
+			EGL_CONTEXT_CLIENT_TYPE, &curapi) == EGL_FALSE) {
+	(void)eglGetError();
+	return EGL_NONE;
     }
 
-    if (eglBindAPI(EGL_OPENGL_ES_API)) {
-        ctx = eglGetCurrentContext();
-        eglBindAPI(save_api);
-        if (ctx) {
-            eglBindAPI(save_api);
-            return EGL_OPENGL_ES_API;
-        }
-    } else {
-        (void)eglGetError();
-    }
-
-    return EGL_NONE;
+    return (EGLenum) curapi;
 }
 #endif /* PLATFORM_HAS_EGL */
 
@@ -626,22 +808,22 @@ epoxy_get_bootstrap_proc_address(const char *name)
      * non-X11 ES2 context from loading a bunch of X11 junk).
      */
 #if PLATFORM_HAS_EGL
-    get_dlopen_handle(&api.egl_handle, EGL_LIB, false);
+    get_dlopen_handle(&api.egl_handle, EGL_LIB, false, true);
     if (api.egl_handle) {
+        int version = 0;
         switch (epoxy_egl_get_current_gl_context_api()) {
         case EGL_OPENGL_API:
             return epoxy_gl_dlsym(name);
         case EGL_OPENGL_ES_API:
-            /* We can't resolve the GL version, because
-             * epoxy_glGetString() is one of the two things calling
-             * us.  Try the GLES2 implementation first, and fall back
-             * to GLES1 otherwise.
-             */
-            get_dlopen_handle(&api.gles2_handle, GLES2_LIB, false);
-            if (api.gles2_handle)
-                return epoxy_gles2_dlsym(name);
-            else
-                return epoxy_gles1_dlsym(name);
+            if (eglQueryContext(eglGetCurrentDisplay(),
+                                eglGetCurrentContext(),
+                                EGL_CONTEXT_CLIENT_VERSION,
+                                &version)) {
+                if (version >= 2)
+                    return epoxy_gles2_dlsym(name);
+                else
+                    return epoxy_gles1_dlsym(name);
+            }
         }
     }
 #endif /* PLATFORM_HAS_EGL */
@@ -653,28 +835,32 @@ epoxy_get_bootstrap_proc_address(const char *name)
 void *
 epoxy_get_proc_address(const char *name)
 {
-#ifdef _WIN32
+#if PLATFORM_HAS_EGL
+    GLenum egl_api = EGL_NONE;
+
+    if (!epoxy_current_context_is_glx())
+      egl_api = epoxy_egl_get_current_gl_context_api();
+
+    switch (egl_api) {
+    case EGL_OPENGL_API:
+    case EGL_OPENGL_ES_API:
+        return eglGetProcAddress(name);
+    case EGL_NONE:
+        break;
+    }
+#endif
+
+#if defined(_WIN32)
     return wglGetProcAddress(name);
 #elif defined(__APPLE__)
     return epoxy_gl_dlsym(name);
-#else
-    if (epoxy_current_context_is_glx()) {
+#elif PLATFORM_HAS_GLX
+    if (epoxy_current_context_is_glx())
         return glXGetProcAddressARB((const GLubyte *)name);
-    } else {
-#if PLATFORM_HAS_EGL
-        GLenum egl_api = epoxy_egl_get_current_gl_context_api();
+    assert(0 && "Couldn't find current GLX or EGL context.\n");
+#endif
 
-        switch (egl_api) {
-        case EGL_OPENGL_API:
-        case EGL_OPENGL_ES_API:
-            return eglGetProcAddress(name);
-        case EGL_NONE:
-            break;
-        }
-#endif
-    }
-    errx(1, "Couldn't find current GLX or EGL context.\n");
-#endif
+    return NULL;
 }
 
 WRAPPER_VISIBILITY (void)
@@ -705,5 +891,30 @@ WRAPPER(epoxy_glEnd)(void)
 #endif
 }
 
-PUBLIC PFNGLBEGINPROC epoxy_glBegin = epoxy_glBegin_wrapped;
-PUBLIC PFNGLENDPROC epoxy_glEnd = epoxy_glEnd_wrapped;
+PFNGLBEGINPROC epoxy_glBegin = epoxy_glBegin_wrapped;
+PFNGLENDPROC epoxy_glEnd = epoxy_glEnd_wrapped;
+
+epoxy_resolver_failure_handler_t epoxy_resolver_failure_handler;
+
+/**
+ * Sets the function that will be called every time Epoxy fails to
+ * resolve a symbol.
+ *
+ * @param handler The new handler function
+ * @return The previous handler function
+ */
+epoxy_resolver_failure_handler_t
+epoxy_set_resolver_failure_handler(epoxy_resolver_failure_handler_t handler)
+{
+#ifdef _WIN32
+    return InterlockedExchangePointer((void**)&epoxy_resolver_failure_handler,
+				      handler);
+#else
+    epoxy_resolver_failure_handler_t old;
+    pthread_mutex_lock(&api.mutex);
+    old = epoxy_resolver_failure_handler;
+    epoxy_resolver_failure_handler = handler;
+    pthread_mutex_unlock(&api.mutex);
+    return old;
+#endif
+}

@@ -1,3 +1,4 @@
+
 # Copyright © 2013 Intel Corporation
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
@@ -19,6 +20,8 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 
+ACLOCAL_AMFLAGS = -I m4
+
 SUBDIRS = include/epoxy src
 
 SUBDIRS += test
@@ -26,11 +29,40 @@ SUBDIRS += test
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = epoxy.pc
 
-EXTRA_DIST = \
-	README.md \
-	epoxy.pc.in \
+registry_files = \
 	registry/egl.xml \
 	registry/gl.xml \
 	registry/glx.xml \
 	registry/wgl.xml \
 	$()
+
+meson_build_files = \
+	meson_options.txt \
+	meson.build \
+	include/epoxy/meson.build \
+	src/meson.build \
+	test/meson.build \
+	doc/meson.build \
+	doc/Doxyfile.in \
+	cross/fedora-mingw64.txt \
+	$()
+
+EXTRA_DIST = \
+	.dir-locals.el \
+	README.md \
+	autogen.sh \
+	epoxy.pc.in \
+	$(registry_files) \
+	$(meson_build_files) \
+	$()
+
+dist-hook:
+	@if test -d "$(top_srcdir)/.git"; then \
+	  echo Generating ChangeLog... ; \
+	  ( $(top_srcdir)/missing --run git log --stat ) > "$(top_srcdir)/ChangeLog.tmp" \
+	  && mv -f "$(top_srcdir)/ChangeLog.tmp" "$(top_distdir)/ChangeLog" \
+	  || ( rm -f "$(top_srcdir)/ChangeLog.tmp"; \
+	       echo Failed to generate ChangeLog >&2 ); \
+	else \
+	  echo A git checkout is required to generate a ChangeLog >&2; \
+	fi
