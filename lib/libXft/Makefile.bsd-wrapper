@@ -1,5 +1,5 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.6 2016/05/29 11:59:59 dcoppa Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.7 2018/05/26 07:51:00 matthieu Exp $
 
-SHARED_LIBS=	Xft 10.0
+SHARED_LIBS=	Xft 11.0
 
 .include <bsd.xorg.mk>
