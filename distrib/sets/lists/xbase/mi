@@ -262,10 +262,10 @@
 ./usr/X11R6/lib/libXfixes.so.6.0
 ./usr/X11R6/lib/libXfont2.a
 ./usr/X11R6/lib/libXfont2.la
-./usr/X11R6/lib/libXfont2.so.0.0
+./usr/X11R6/lib/libXfont2.so.1.0
 ./usr/X11R6/lib/libXft.a
 ./usr/X11R6/lib/libXft.la
-./usr/X11R6/lib/libXft.so.10.0
+./usr/X11R6/lib/libXft.so.11.0
 ./usr/X11R6/lib/libXi.a
 ./usr/X11R6/lib/libXi.la
 ./usr/X11R6/lib/libXi.so.12.1
@@ -316,7 +316,7 @@
 ./usr/X11R6/lib/libdmx.so.2.0
 ./usr/X11R6/lib/libfontconfig.a
 ./usr/X11R6/lib/libfontconfig.la
-./usr/X11R6/lib/libfontconfig.so.11.0
+./usr/X11R6/lib/libfontconfig.so.12.0
 ./usr/X11R6/lib/libfontenc.a
 ./usr/X11R6/lib/libfontenc.la
 ./usr/X11R6/lib/libfontenc.so.4.0
