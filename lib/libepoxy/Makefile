@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.7 2018/05/25 06:24:59 matthieu Exp $
+# $OpenBSD: Makefile,v 1.8 2018/05/26 08:52:16 matthieu Exp $
 .include <bsd.xconf.mk>
 
 EPOXY=	${.CURDIR}/../../dist/libepoxy
@@ -12,6 +12,10 @@ EPOXY_TINY=	2
 INCSDIR=	${X11BASE}/include/epoxy
 
 CFLAGS+= -std=gnu99
+
+.if ${MACHINE_ARCH} == "mips64el" || ${MACHINE_ARCH} == "mips64"
+PICFLAG+= -mxgot
+.endif
 
 CPPFLAGS+= \
 	-I${.CURDIR} \
