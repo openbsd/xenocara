@@ -1,0 +1,149 @@
+commit b79a809d29cf9a5cf0715e59e5f0ce0a2dcc410b
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Oct 8 16:16:21 2013 -0700
+
+    Add FDFromFence request
+    
+    This lets DRI clients convert a fence back into a local object.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit a5392ea74a9b9e39de7b5c8107e68d0bb3724d77
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri Jul 12 10:26:44 2013 -0700
+
+    Remove events and other unused elements
+    
+    This renumbers the FenceFromFD request from 5 to 4 as well
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 66d339c11281b88212d55b4017e1fc7ca549e314
+Author: Keith Packard <keithp@keithp.com>
+Date:   Thu Jun 20 12:09:46 2013 -0700
+
+    Eliminate driverType and driverName from Open request
+    
+    Make application figure out the right driver on its own.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit d40b6e0297ee54919f654b905853d389ff766de1
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri Jun 7 09:48:55 2013 -0700
+
+    Re-word the caution about pixmap image formats non linearity
+    
+    Suggested by Arthur Huillet <arthur.huillet@free.fr>
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit ac4071c916fb91ac125d9495d57e4d9656f14afb
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Jun 4 17:34:23 2013 -0700
+
+    Clarify relationship with GLX
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit c8eb5c651f39fcedb725c8868def75906a400b64
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Jun 4 16:51:05 2013 -0700
+
+    Re-center the version and date lines
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 1694dc2781e6979de1654592bc72ef1782e485ec
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Jun 4 16:49:39 2013 -0700
+
+    Rename Swap to Present
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit bf7c7d373e326276dc59554fb2e3a60c384c4270
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Jun 4 15:19:34 2013 -0700
+
+    Pass Fence FDS from client. Clean up encoding.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit fbb449d411888ce09cae452c823db054cfef2ccd
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Jun 4 13:28:29 2013 -0700
+
+    Switch direction of FD passing for Sync Fences
+    
+    Pass FD from client to server to avoid a round trip.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 58ece91deea5fcfaae9ecc098d53294171f5acb8
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sun Jun 2 16:29:08 2013 -0700
+
+    Return buffer size in BufferFromPixmap reply
+    
+    The kernel doesn't provide an API to discover the size, so just pass
+    it back in the protocol
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 7fd74d6ad8c76d50dc347edc083a921a87d7ab0d
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri May 31 12:02:16 2013 -0700
+
+    Add PixmapFromBuffer and BufferFromPixmap encodings
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit f078e7fe0685573268f8d2cf5a473ff2d2344d1d
+Author: Keith Packard <keithp@keithp.com>
+Date:   Mon May 13 16:35:04 2013 -0700
+
+    Rename Connect as Open, make it work. Add SHM SyncFences
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit ef3eca70549719bd30b35f5d703727dd29b849b1
+Author: Keith Packard <keithp@keithp.com>
+Date:   Wed May 8 12:30:22 2013 -0700
+
+    Add GetSyncShmFD request
+    
+    Returns a file descriptor for a shared memory segment containing a
+    sync fence object.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 9998b10076e98e04188cb28dea13252dfae2757d
+Author: Keith Packard <keithp@keithp.com>
+Date:   Thu Apr 11 19:06:58 2013 -0700
+
+    Add 'event id' to DRI3 configure notify events
+    
+    This allows multiple subsystems within the application to all
+    separately control event delivery. Yes, it could be done client-side,
+    but it's way easier in the server.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 92135eefc5d452f8d4f1921a778af238e6b5d1a5
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Apr 9 21:38:37 2013 -0700
+
+    Initial DRI3 protocol headers
+    
+    Just getting started
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 9ab4a811fe9174cad10854da626102a64a0d5ece
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Feb 19 15:25:20 2013 -0800
+
+    Initial DRI3 protocol specification
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
