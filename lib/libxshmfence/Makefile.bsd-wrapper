@@ -1,0 +1,7 @@
+# $OpenBSD: Makefile.bsd-wrapper,v 1.1 2018/06/07 22:05:13 matthieu Exp $
+
+SHARED_LIBS=	xshmfence 0.0
+
+xsCONFIGURE_ARGS += --enable-futex
+
+.include <bsd.xorg.mk>
