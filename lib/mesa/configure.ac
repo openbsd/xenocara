@@ -1574,6 +1574,9 @@ if test "x$enable_dri" = xyes; then
         ;;
     *freebsd* | dragonfly* | *netbsd* | openbsd*)
         DEFINES="$DEFINES -DHAVE_ALIAS"
+        if test "x$enable_dri3" = xyes; then
+            DEFINES="$DEFINES -DHAVE_DRI3"
+        fi
         ;;
     gnu*)
         DEFINES="$DEFINES -DHAVE_ALIAS"
