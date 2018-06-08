@@ -17879,6 +17879,20 @@ fi
 fi
 
 if test "x$FUTEX" = "xauto"; then
+	ac_fn_c_check_header_mongrel "$LINENO" "sys/futex.h" "ac_cv_header_sys_futex_h" "$ac_includes_default"
+if test "x$ac_cv_header_sys_futex_h" = xyes; then :
+  FUTEX=yes
+fi
+
+
+	if test "x$FUTEX" = "xyes"; then
+
+$as_echo "#define HAVE_FUTEX 1" >>confdefs.h
+
+	fi
+fi
+
+if test "x$FUTEX" = "xauto"; then
 	ac_fn_c_check_header_compile "$LINENO" "sys/umtx.h" "ac_cv_header_sys_umtx_h" "#include <errno.h>
 	     #include <sys/types.h>
 "

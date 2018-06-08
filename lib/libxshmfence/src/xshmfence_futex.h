@@ -26,7 +26,21 @@
 
 #include <errno.h>
 
-#ifdef HAVE_UMTX
+#ifdef HAVE_FUTEX
+
+#include <sys/time.h>
+#include <sys/futex.h>
+#include <limits.h>
+
+static inline int futex_wake(int32_t *addr) {
+	return futex(addr, FUTEX_WAKE, INT_MAX, NULL, NULL);
+}
+
+static inline int futex_wait(int32_t *addr, int32_t value) {
+	return futex(addr, FUTEX_WAIT, value, NULL, NULL);
+}
+
+#elif HAVE_UMTX
 
 #include <sys/types.h>
 #include <sys/umtx.h>

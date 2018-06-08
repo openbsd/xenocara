@@ -60,6 +60,13 @@ if test "x$FUTEX" = "xauto"; then
 fi
 
 if test "x$FUTEX" = "xauto"; then
+	AC_CHECK_HEADER([sys/futex.h], [FUTEX=yes])
+	if test "x$FUTEX" = "xyes"; then
+		AC_DEFINE(HAVE_FUTEX, 1, [Use futex])
+	fi
+fi
+
+if test "x$FUTEX" = "xauto"; then
 	AC_CHECK_HEADER([sys/umtx.h], [FUTEX=yes], [FUTEX=no],
 	    [#include <errno.h>
 	     #include <sys/types.h>])
