@@ -3562,6 +3562,7 @@
 ./usr/X11R6/share/doc/damageproto
 ./usr/X11R6/share/doc/damageproto/damageproto.txt
 ./usr/X11R6/share/doc/dri2proto
+./usr/X11R6/share/doc/dri3proto
 ./usr/X11R6/share/doc/fixesproto
 ./usr/X11R6/share/doc/fixesproto/fixesproto.txt
 ./usr/X11R6/share/doc/fontconfig
