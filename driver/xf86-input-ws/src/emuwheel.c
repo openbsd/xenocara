@@ -1,4 +1,4 @@
-/*	$OpenBSD: emuwheel.c,v 1.3 2015/12/25 15:08:28 matthieu Exp $	*/
+/*	$OpenBSD: emuwheel.c,v 1.4 2018/06/18 20:07:30 bru Exp $	*/
 /*
 * Copyright 1990,91 by Thomas Roell, Dinkelscherben, Germany.
 * Copyright 1993 by David Dawes <dawes@xfree86.org>
@@ -115,7 +115,7 @@ wsWheelEmuFilterMotion(InputInfoPtr pInfo, int dx, int dy)
 				return TRUE;
 		}
 
-		if (dx) {
+		if (abs(dx) > abs(dy)) {
 			pAxis = &(priv->emulateWheel.X);
 			pOtherAxis = &(priv->emulateWheel.Y);
 			value = dx;
