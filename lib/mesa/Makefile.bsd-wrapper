@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.17 2018/02/21 06:01:53 jsg Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.18 2018/06/26 06:51:17 kettenis Exp $
 
 .include <bsd.own.mk>
 
@@ -30,6 +30,7 @@ CONFIGURE_ARGS=		--with-dri-drivers=${DRI_DRIVERS} \
 			--enable-osmesa \
 			--enable-gbm \
 			--enable-texture-float \
+			--enable-dri3 \
 			--with-egl-platforms="x11,drm" \
 			--prefix=${X11BASE} \
 			--with-dri-driverdir=${X11BASE}/lib/modules/dri \

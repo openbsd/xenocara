@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.14 2018/05/20 09:40:53 matthieu Exp $
+# $OpenBSD: Makefile,v 1.15 2018/06/26 06:51:17 kettenis Exp $
 
 .include <bsd.xconf.mk>
 
@@ -11,7 +11,7 @@ SUBDIR= bigreqsproto compositeproto dmxproto damageproto \
 	xf86vidmodeproto
 
 .if ${XENOCARA_BUILD_DRI:L} == "yes"
-SUBDIR+= xf86driproto dri2proto
+SUBDIR+= xf86driproto dri2proto dri3proto
 .endif
 
 .include <bsd.subdir.mk>
