@@ -703,6 +703,7 @@
 ./usr/X11R6/lib/pkgconfig/damageproto.pc
 ./usr/X11R6/lib/pkgconfig/dmx.pc
 ./usr/X11R6/lib/pkgconfig/dmxproto.pc
+./usr/X11R6/lib/pkgconfig/dri3proto.pc
 ./usr/X11R6/lib/pkgconfig/fixesproto.pc
 ./usr/X11R6/lib/pkgconfig/fontconfig.pc
 ./usr/X11R6/lib/pkgconfig/fontenc.pc
@@ -756,6 +757,7 @@
 ./usr/X11R6/lib/pkgconfig/xrender.pc
 ./usr/X11R6/lib/pkgconfig/xres.pc
 ./usr/X11R6/lib/pkgconfig/xscrnsaver.pc
+./usr/X11R6/lib/pkgconfig/xshmfence.pc
 ./usr/X11R6/lib/pkgconfig/xt.pc
 ./usr/X11R6/lib/pkgconfig/xtrans.pc
 ./usr/X11R6/lib/pkgconfig/xtst.pc
@@ -3563,6 +3565,7 @@
 ./usr/X11R6/share/doc/damageproto/damageproto.txt
 ./usr/X11R6/share/doc/dri2proto
 ./usr/X11R6/share/doc/dri3proto
+./usr/X11R6/share/doc/dri3proto/dri3proto.txt
 ./usr/X11R6/share/doc/fixesproto
 ./usr/X11R6/share/doc/fixesproto/fixesproto.txt
 ./usr/X11R6/share/doc/fontconfig

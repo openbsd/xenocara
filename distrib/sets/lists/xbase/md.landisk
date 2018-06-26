@@ -40,6 +40,8 @@
 ./usr/X11R6/include/X11/dri/xf86dristr.h
 ./usr/X11R6/include/X11/extensions/dri2proto.h
 ./usr/X11R6/include/X11/extensions/dri2tokens.h
+./usr/X11R6/include/X11/extensions/dri3proto.h
+./usr/X11R6/include/X11/xshmfence.h
 ./usr/X11R6/include/epoxy/common.h
 ./usr/X11R6/include/epoxy/egl.h
 ./usr/X11R6/include/epoxy/egl_generated.h
@@ -71,6 +73,7 @@
 ./usr/X11R6/include/xf86drm.h
 ./usr/X11R6/include/xf86drmMode.h
 ./usr/X11R6/include/xorg
+./usr/X11R6/include/xorg/dri3.h
 ./usr/X11R6/lib/libEGL.la
 ./usr/X11R6/lib/libEGL.so.1.1
 ./usr/X11R6/lib/libGL.la
@@ -96,6 +99,8 @@
 ./usr/X11R6/lib/libglapi.so.0.2
 ./usr/X11R6/lib/libtxc_dxtn.a
 ./usr/X11R6/lib/libtxc_dxtn.so.0.0
+./usr/X11R6/lib/libxshmfence.la
+./usr/X11R6/lib/libxshmfence.so.0.0
 ./usr/X11R6/lib/pkgconfig/dri.pc
 ./usr/X11R6/lib/pkgconfig/dri2proto.pc
 ./usr/X11R6/lib/pkgconfig/egl.pc
