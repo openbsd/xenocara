@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.36 2018/06/26 06:51:17 kettenis Exp $
+# $OpenBSD: Makefile,v 1.37 2018/06/28 20:11:32 kettenis Exp $
 
 .include <bsd.xconf.mk>
 
@@ -44,7 +44,11 @@ SUBDIR= freetype fontconfig libxtrans libXau libXdmcp ${XCB_LIBS}\
 	libXi libXinerama libxkbfile libxkbui  \
 	libXrandr libXRes libXScrnSaver \
 	libXtst libXv libXvMC libXxf86dga libXxf86vm \
-	libpciaccess libxshmfence pixman
+	libpciaccess pixman
+
+.if ${XENOCARA_BUILD_DRI3:L} == "yes"
+SUBDIR+= libxshmfence
+.endif
 
 .if ${XENOCARA_BUILD_GL:L} == "yes"
 SUBDIR+= libdrm
