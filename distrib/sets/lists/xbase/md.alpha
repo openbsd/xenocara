@@ -121,6 +121,7 @@
 ./usr/X11R6/lib/libglapi.so.0.2
 ./usr/X11R6/lib/libtxc_dxtn.a
 ./usr/X11R6/lib/libtxc_dxtn.so.0.0
+./usr/X11R6/lib/libxshmfence.a
 ./usr/X11R6/lib/libxshmfence.la
 ./usr/X11R6/lib/libxshmfence.so.0.0
 ./usr/X11R6/lib/pkgconfig/dri.pc
@@ -139,6 +140,7 @@
 ./usr/X11R6/lib/pkgconfig/libdrm_radeon.pc
 ./usr/X11R6/lib/pkgconfig/osmesa.pc
 ./usr/X11R6/lib/pkgconfig/xf86driproto.pc
+./usr/X11R6/lib/pkgconfig/xshmfence.pc
 ./usr/X11R6/man/man1/bdftruncate.1
 ./usr/X11R6/man/man1/dga.1
 ./usr/X11R6/man/man1/glxgears.1

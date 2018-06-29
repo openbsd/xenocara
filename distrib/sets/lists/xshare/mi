@@ -757,7 +757,6 @@
 ./usr/X11R6/lib/pkgconfig/xrender.pc
 ./usr/X11R6/lib/pkgconfig/xres.pc
 ./usr/X11R6/lib/pkgconfig/xscrnsaver.pc
-./usr/X11R6/lib/pkgconfig/xshmfence.pc
 ./usr/X11R6/lib/pkgconfig/xt.pc
 ./usr/X11R6/lib/pkgconfig/xtrans.pc
 ./usr/X11R6/lib/pkgconfig/xtst.pc
