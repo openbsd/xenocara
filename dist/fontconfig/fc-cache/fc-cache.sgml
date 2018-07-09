@@ -63,8 +63,7 @@ manpage.1: manpage.sgml
     <cmdsynopsis>
       <command>&dhpackage;</command>
 
-      <arg><option>-cEfrsvVh</option></arg>
-      <arg><option>--chroot <replacable>root</replacable></option></arg>
+      <arg><option>-EfrsvVh</option></arg>
       <arg><option>--error-on-no-fonts</option></arg>
       <arg><option>--force</option></arg>
       <arg><option>--really-force</option></arg>
@@ -119,13 +118,6 @@ manpage.1: manpage.sgml
 	</listitem>
       </varlistentry>
       <varlistentry>
-        <term><option>-c <replacable>root</replacable></option>
-	  <option>--chroot <replacable>root</replacable></option>
-	</term>
-	<listitem>
-	  <para>Change root directory into <replacable>root</replacable> 
-	    before starting.</para>
-	</listitem>
         <term><option>-f</option>
           <option>--force</option>
         </term>

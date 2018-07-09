@@ -65,7 +65,6 @@
 #define _GNU_SOURCE
 #include <getopt.h>
 const struct option longopts[] = {
-    {"chroot", 0, 0, 'c'},
     {"error-on-no-fonts", 0, 0, 'E'},
     {"force", 0, 0, 'f'},
     {"really-force", 0, 0, 'r'},
@@ -289,20 +288,16 @@ main (int argc, char **argv)
     int		i;
     int		changed;
     int		ret;
-    char	*destdir = NULL;
 #if HAVE_GETOPT_LONG || HAVE_GETOPT
     int		c;
 
 #if HAVE_GETOPT_LONG
-    while ((c = getopt_long (argc, argv, "c:Efrsy:Vvh", longopts, NULL)) != -1)
+    while ((c = getopt_long (argc, argv, "Efrsy:Vvh", longopts, NULL)) != -1)
 #else
-    while ((c = getopt (argc, argv, "c:Efrsy:Vvh")) != -1)
+    while ((c = getopt (argc, argv, "Efrsy:Vvh")) != -1)
 #endif
     {
 	switch (c) {
-	case 'c':
-	    destdir = optarg;
-	    break;
 	case 'E':
 	    error_on_no_fonts = FcTrue;
 	    break;
@@ -335,14 +330,7 @@ main (int argc, char **argv)
 #else
     i = 1;
 #endif
-    if (destdir) {
-	if (chroot(destdir) == -1) {
-	    fprintf(stderr, "%s: Can't chroot to %s: %s\n", argv[0], destdir,
-		    strerror(errno));
-	    return 1;
-	}
-	systemOnly = FcTrue;
-    }
+
     if (systemOnly)
 	FcConfigEnableHome (FcFalse);
     if (sysroot)

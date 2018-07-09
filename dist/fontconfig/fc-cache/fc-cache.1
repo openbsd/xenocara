@@ -9,7 +9,7 @@
 fc-cache \- build font information cache files
 .SH SYNOPSIS
 
-\fBfc-cache\fR [ \fB-cEfrsvVh\fR ] [ \fB--chroot root\fR ] [ \fB--error-on-no-fonts\fR ] [ \fB--force\fR ] [ \fB--really-force\fR ] [ \fB-y \fIdir\fB\fR | \fB--sysroot \fIdir\fB\fR ] [ \fB--system-only\fR ] [ \fB--verbose\fR ] [ \fB--version\fR ] [ \fB--help\fR ] [ \fB\fIdir\fB\fR\fI ...\fR ]
+\fBfc-cache\fR [ \fB-EfrsvVh\fR ] [ \fB--error-on-no-fonts\fR ] [ \fB--force\fR ] [ \fB--really-force\fR ] [ \fB-y \fIdir\fB\fR | \fB--sysroot \fIdir\fB\fR ] [ \fB--system-only\fR ] [ \fB--verbose\fR ] [ \fB--version\fR ] [ \fB--help\fR ] [ \fB\fIdir\fB\fR\fI ...\fR ]
 
 .SH "DESCRIPTION"
 .PP
@@ -38,10 +38,6 @@ options is included below.
 Raise an error if there are no fonts in
 \fB\fIdir\fB\fR or directories
 in the configuration if not given.
-.TP
-\fB-c root --chroot root \fR
-Change root directory into root 
-before starting.
 .TP
 \fB-f --force \fR
 Force re-generation of apparently up-to-date cache files,
