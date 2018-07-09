@@ -301,13 +301,13 @@ greet_user_rtn GreetUser(
     Arg		arglist[2];
     Display    *dpy;
 
-    dpy = InitGreet (d);
     /*
      * Run the setup script - note this usually will not work when
      * the server is grabbed, so we don't even bother trying.
      */
     if (!d->grabServer)
 	SetupDisplay (d);
+    dpy = InitGreet (d);
     if (!dpy) {
 	LogError ("Cannot reopen display %s for greet window\n", d->name);
 	exit (RESERVER_DISPLAY);
