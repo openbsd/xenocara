@@ -233,7 +233,6 @@ extern void LoadXloginResources (struct display *d);
 extern __dead void ManageSession (struct display *d);
 extern void SecureDisplay (struct display *d, Display *dpy);
 extern __dead void SessionExit (struct display *d, int status, int removeAuth);
-extern void SessionPingFailed (struct display *d);
 extern void SetupDisplay (struct display *d);
 extern void UnsecureDisplay (struct display *d, Display *dpy);
 extern void execute(char **argv, char **environ);
