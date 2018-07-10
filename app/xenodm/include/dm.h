@@ -244,7 +244,6 @@ extern int WaitForServer (struct display *d);
 extern void ResetServer (struct display *d);
 
 /* in util.c */
-extern char *localHostname (void);
 extern char **parseArgs (char **argv, const char *string);
 extern char **setEnv (char **e, const char *name, const char *value);
 extern char **putEnv(const char *string, char **env);
