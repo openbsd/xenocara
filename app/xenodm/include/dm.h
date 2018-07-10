@@ -53,7 +53,7 @@ from The Open Group.
 # include <time.h>
 # define Time_t time_t
 # include <stdlib.h>
-
+# include <stdbool.h>
 
 # include <X11/Xdmcp.h>
 
@@ -97,7 +97,7 @@ struct display {
 	int		openTimeout;	/* abort open attempt timeout */
 	int		startAttempts;	/* number of attempts at starting */
 	int		reservAttempts;	/* allowed start-IO error sequences */
-	int		terminateServer;/* restart for each session */
+	bool		terminateServer;/* restart for each session */
 	int		grabServer;	/* keep server grabbed for Login */
 	int		grabTimeout;	/* time to wait for grab */
 	int		resetSignal;	/* signal to reset server */
@@ -118,7 +118,7 @@ struct display {
 	char		*failsafeClient;/* a client to start when the session fails */
 
 	/* authorization resources */
-	int		authorize;	/* enable authorization */
+	bool		authorize;	/* enable authorization */
 	char		**authNames;	/* authorization protocol names */
 	unsigned short	*authNameLens;	/* authorization protocol name lens */
 	char		*clientAuthFile;/* client specified auth file */
@@ -230,14 +230,14 @@ extern void DeleteXloginResources (struct display *d, Display *dpy);
 extern void LoadXloginResources (struct display *d);
 extern __dead void ManageSession (struct display *d);
 extern void SecureDisplay (struct display *d, Display *dpy);
-extern __dead void SessionExit (struct display *d, int status, int removeAuth);
+extern __dead void SessionExit (struct display *d, int status, bool removeAuth);
 extern void SetupDisplay (struct display *d);
 extern void UnsecureDisplay (struct display *d, Display *dpy);
 extern void execute(char **argv, char **environ);
 
 /* server.c */
 extern const char *_SysErrorMsg (int n);
-extern int StartServer (struct display *d);
+extern bool StartServer (struct display *d);
 extern int WaitForServer (struct display *d);
 extern void ResetServer (struct display *d);
 

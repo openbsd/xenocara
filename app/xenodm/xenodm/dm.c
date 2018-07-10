@@ -52,7 +52,7 @@ from The Open Group.
 
 static void	StopAll (int n), RescanNotify (int n);
 static void	RescanServers (void);
-static void	RestartDisplay (struct display *d, int forceReserver);
+static void	RestartDisplay (struct display *d, bool forceReserver);
 static void	ScanServers (void);
 static void	SetConfigFileTime (void);
 static void	StartDisplays (void);
@@ -329,7 +329,7 @@ WaitForChild (void)
 		if (d->status == zombie)
 		    StopDisplay (d);
 		else
-		    RestartDisplay (d, FALSE);
+		    RestartDisplay (d, false);
 		break;
 	    case OPENFAILED_DISPLAY:
 		Debug ("Display exited with OPENFAILED_DISPLAY, try %d of %d\n",
@@ -347,7 +347,7 @@ WaitForChild (void)
 		}
 		else
 		{
-		    RestartDisplay (d, TRUE);
+		    RestartDisplay (d, true);
 		}
 		break;
 	    case RESERVER_DISPLAY:
@@ -389,7 +389,7 @@ WaitForChild (void)
 		     */
 		    StopDisplay(d);
 		  } else {
-		    RestartDisplay(d, TRUE);
+		    RestartDisplay(d, true);
 		  }
 		  d->lastReserv = now;
 		}
@@ -411,7 +411,7 @@ WaitForChild (void)
 			LogError ("display %s is being disabled\n", d->name);
 		    StopDisplay(d);
 		} else
-		    RestartDisplay (d, TRUE);
+		    RestartDisplay (d, true);
 		break;
 	    case REMANAGE_DISPLAY:
 		d->startTries = 0;
@@ -423,7 +423,7 @@ WaitForChild (void)
 		if (d->status == zombie)
 		    StopDisplay(d);
 		else
-		    RestartDisplay (d, FALSE);
+		    RestartDisplay (d, false);
 		break;
 	    default:
 		Debug ("Display exited with unknown status %d\n", waitVal(status));
@@ -631,7 +631,7 @@ StopDisplay (struct display *d)
  */
 
 static void
-RestartDisplay (struct display *d, int forceReserver)
+RestartDisplay (struct display *d, bool forceReserver)
 {
     if (d->serverPid != -1 && (forceReserver || d->terminateServer))
     {

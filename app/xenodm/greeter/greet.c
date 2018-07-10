@@ -327,7 +327,7 @@ greet_user_rtn GreetUser(
 	if (code != 0)
 	{
 	    CloseGreet (d);
-	    SessionExit (d, code, FALSE);
+	    SessionExit (d, code, false);
 	}
 	/*
 	 * Verify user
@@ -351,7 +351,7 @@ greet_user_rtn GreetUser(
     {
 	Debug ("Startup program %s exited with non-zero status\n",
 		d->startup);
-	SessionExit (d, OBEYSESS_DISPLAY, FALSE);
+	SessionExit (d, OBEYSESS_DISPLAY, false);
     }
     return Greet_Success;
 }
@@ -365,7 +365,7 @@ greet_user_rtn AutoLogin(
 
     if (!autoLoginEnv(d, verify, greet)) {
         LogError("Autologin %s failed\n", d->autoLogin);
-        SessionExit(d, UNMANAGE_DISPLAY, TRUE);
+        SessionExit(d, UNMANAGE_DISPLAY, true);
     }
     
     /*
@@ -375,7 +375,7 @@ greet_user_rtn AutoLogin(
     {
 	Debug ("Startup program %s exited with non-zero status\n",
 		d->startup);
-	SessionExit (d, OBEYSESS_DISPLAY, FALSE);
+	SessionExit (d, OBEYSESS_DISPLAY, false);
     }
     return Greet_Success;
 }

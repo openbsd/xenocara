@@ -87,12 +87,10 @@ findProtocol (unsigned short name_length, char *name)
     return (struct AuthProtocol *) 0;
 }
 
-int
+bool
 ValidAuthorization (unsigned short name_length, char *name)
 {
-    if (findProtocol (name_length, name))
-	return TRUE;
-    return FALSE;
+    return findProtocol (name_length, name) != NULL;
 }
 
 static Xauth *
@@ -110,7 +108,7 @@ GenerateAuthorization (unsigned short name_length, char *name)
 	if (!a->inited)
 	{
 	    (*a->InitAuth) (name_length, name);
-	    a->inited = TRUE;
+	    a->inited = true;
 	}
 	auth = (*a->GetAuth) (name_length, name);
 	if (auth)
@@ -189,7 +187,7 @@ CheckServerAuthDir (const char *path, struct stat *statb, int mode)
 static char authdir1[] = "authdir";
 static char authdir2[] = "authfiles";
 
-static int
+static bool
 MakeServerAuthFile (struct display *d, FILE ** file, uid_t uid, gid_t gid)
 {
     int len;
@@ -209,21 +207,21 @@ MakeServerAuthFile (struct display *d, FILE ** file, uid_t uid, gid_t gid)
 	if (d->clientAuthFile && *d->clientAuthFile) {
 	    d->authFile = strdup(d->clientAuthFile);
 	    if (!d->authFile)
-		return FALSE;
+		return false;
 	} else {
 	    CleanUpFileName (d->name, cleanname, NAMELEN - 8);
 
 	    /* Make authDir if it doesn't already exist */
 	    r = CheckServerAuthDir(authDir, &statb, 0755);
 	    if (r < 0) {
-		return FALSE;
+		return false;
 	    }
 
 	    len = strlen (authDir) + strlen (authdir1) + strlen (authdir2)
 		+ strlen (cleanname) + 14;
 	    d->authFile = malloc (len);
 	    if (!d->authFile)
-		return FALSE;
+		return false;
 
 	    snprintf (d->authFile, len, "%s/%s", authDir, authdir1);
 	    r = CheckServerAuthDir(d->authFile, &statb, 0700);
@@ -235,7 +233,7 @@ MakeServerAuthFile (struct display *d, FILE ** file, uid_t uid, gid_t gid)
 	    } else if (r < 0) {
 		free (d->authFile);
 		d->authFile = NULL;
-		return FALSE;
+		return false;
 	    } else {
 		(void) chown(d->authFile, uid, gid);
 	    }
@@ -246,7 +244,7 @@ MakeServerAuthFile (struct display *d, FILE ** file, uid_t uid, gid_t gid)
 	    if (r < 0) {
 		free (d->authFile);
 		d->authFile = NULL;
-		return FALSE;
+		return false;
 	    } else {
 		(void) chown(d->authFile, uid, gid);
 	    }
@@ -258,22 +256,22 @@ MakeServerAuthFile (struct display *d, FILE ** file, uid_t uid, gid_t gid)
 			  d->authFile, _SysErrorMsg (errno));
 		free (d->authFile);
 		d->authFile = NULL;
-		return FALSE;
+		return false;
 	    }
 
 	    *file = fdopen(fd, "w");
 	    if (!*file)
 		(void) close (fd);
-	    return TRUE;
+	    return true;
 	}
     }
 
     (void) unlink (d->authFile);
     *file = fopen (d->authFile, "w");
-    return TRUE;
+    return true;
 }
 
-int
+bool
 SaveServerAuthorizations (
     struct display  *d,
     Xauth	    **auths,
@@ -305,17 +303,17 @@ SaveServerAuthorizations (
     ret = MakeServerAuthFile(d, &auth_file, uid, gid);
     umask (mask);
     if (!ret)
-	return FALSE;
+	return false;
     if (!auth_file) {
 	LogError ("cannot open server authorization file %s: %s\n",
 		  d->authFile, _SysErrorMsg (errno));
-	ret = FALSE;
+	ret = false;
     }
     else
     {
 	fchown(fileno(auth_file), uid, gid);
 	Debug ("File: %s auth: %p\n", d->authFile, auths);
-	ret = TRUE;
+	ret = true;
 	if (count == 0)
 	{
 		/*
@@ -333,7 +331,7 @@ SaveServerAuthorizations (
 		if (ferror (auth_file))
 		{
 		    err = errno;
-		    ret = FALSE;
+		    ret = false;
 		}
 		/*
 		 * Rewind so that the garbage data is overwritten later.
@@ -357,7 +355,7 @@ SaveServerAuthorizations (
 		if (ferror (auth_file))
 		{
 		    err = errno;
-		    ret = FALSE;
+		    ret = false;
 		}
 	    }
 	}
@@ -371,7 +369,7 @@ SaveServerAuthorizations (
 	fclose (auth_file);
 
     }
-    if (ret == FALSE)
+    if (ret == false)
     {
 	LogError ("Cannot write to server authorization file %s%s%s\n",
 		  d->authFile,

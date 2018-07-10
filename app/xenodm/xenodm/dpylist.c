@@ -188,7 +188,7 @@ NewDisplay (char *name, char *class)
     d->systemPath = NULL;
     d->systemShell = NULL;
     d->failsafeClient = NULL;
-    d->authorize = FALSE;
+    d->authorize = false;
     d->authorizations = NULL;
     d->authNum = 0;
     d->authNameNum = 0;

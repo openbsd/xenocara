@@ -192,7 +192,7 @@ ManageSession (struct display *d)
         login_fbtab(d->windowPath, 0, 0);
     Debug ("Source reset program %s\n", d->reset);
     source (verify.systemEnviron, d->reset);
-    SessionExit (d, OBEYSESS_DISPLAY, TRUE);
+    SessionExit (d, OBEYSESS_DISPLAY, true);
 }
 
 void
@@ -248,7 +248,7 @@ SecureDisplay (struct display *d, Display *dpy)
 		       GrabModeAsync, CurrentTime) != GrabSuccess) {
 	LogError ("WARNING: keyboard on display %s could not be secured\n",
 		  d->name);
-	SessionExit (d, RESERVER_DISPLAY, FALSE);
+	SessionExit (d, RESERVER_DISPLAY, false);
     }
     Debug ("XGrabKeyboard succeeded %s\n", d->name);
     pseudoReset (dpy);
@@ -270,7 +270,7 @@ UnsecureDisplay (struct display *d, Display *dpy)
 }
 
 __dead void
-SessionExit (struct display *d, int status, int removeAuth)
+SessionExit (struct display *d, int status, bool removeAuth)
 {
 
     /* make sure the server gets reset after the session is over */

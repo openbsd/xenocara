@@ -47,7 +47,7 @@ from The Open Group.
 
 static int receivedUsr1;
 
-static int serverPause (unsigned t, pid_t serverPid);
+static bool serverPause (unsigned t, pid_t serverPid);
 
 /* ARGSUSED */
 static void
@@ -66,7 +66,8 @@ const char *_SysErrorMsg (int n)
     return (s ? s : "unknown error");
 }
 
-static int
+/* true if server successufully started */
+static bool
 StartServerOnce (struct display *d)
 {
     char	**f;
@@ -106,28 +107,28 @@ StartServerOnce (struct display *d)
 	exit (REMANAGE_DISPLAY);
     case -1:
 	LogError ("fork failed, sleeping\n");
-	return 0;
+	return false;
     default:
 	break;
     }
     Debug ("Server Started %d\n", pid);
     d->serverPid = pid;
     if (serverPause ((unsigned) d->openDelay, pid))
-	return FALSE;
-    return TRUE;
+	return false;
+    return true;
 }
 
-int
+bool
 StartServer (struct display *d)
 {
     int	i;
-    int	ret = FALSE;
+    bool ret = false;
 
     i = 0;
     while (d->serverAttempts == 0 || i < d->serverAttempts)
     {
         Debug("Starting X server attempt %d of %d\n", i, d->serverAttempts);
-	if ((ret = StartServerOnce (d)) == TRUE)
+	if ((ret = StartServerOnce (d)) == true)
 	    break;
 	sleep (d->openDelay);
 	i++;
@@ -147,9 +148,10 @@ chldHandler(int num)
     return;
 }
 
-static int	serverPauseRet;
+static bool	serverPauseRet;
 
-static int
+/* true if server died */
+static bool
 serverPause (unsigned t, pid_t serverPid)
 {
     struct timespec timeout;
@@ -157,7 +159,7 @@ serverPause (unsigned t, pid_t serverPid)
     int result;
     pid_t	pid;
 
-    serverPauseRet = 0;
+    serverPauseRet = false;
 
     for (;;) {
         timeout.tv_sec = t;
@@ -179,7 +181,7 @@ serverPause (unsigned t, pid_t serverPid)
         if (pid == serverPid ||
             (pid == -1 && errno == ECHILD)) {
             Debug ("Server dead\n");
-            serverPauseRet = 1;
+            serverPauseRet = true;
             break;
         }
         if (pid == 0) {

@@ -39,10 +39,10 @@ extern void	MitInitAuth (unsigned short name_len, char *name);
 extern Xauth	*MitGetAuth (unsigned short namelen, char *name);
 
 /* auth.c */
-extern int ValidAuthorization (unsigned short name_length, char *name);
+extern bool ValidAuthorization (unsigned short name_length, char *name);
 
 
-extern int SaveServerAuthorizations (struct display *d, Xauth **auths, int count);
+extern bool SaveServerAuthorizations (struct display *d, Xauth **auths, int count);
 extern void CleanUpFileName (char *src, char *dst, int len);
 extern void RemoveUserAuthorization (struct display *d, struct verify_info *verify);
 extern void SetAuthorization (struct display *d);
