@@ -37,16 +37,10 @@ from The Open Group.
 
 #include <X11/X.h>		/* FamilyInternet, etc. */
 
-
 # include "dm_socket.h"
 
 # ifdef UNIXCONN
-#  ifndef X_NO_SYS_UN
-#   include <sys/un.h>		/* struct sockaddr_un */
-#  endif
-# endif
-# ifdef DNETCONN
-#  include <netdnet/dn.h>		/* struct sockaddr_dn */
+#  include <sys/un.h>		/* struct sockaddr_un */
 # endif
 
 /* given an XdmcpNetaddr, returns the socket protocol family used,
@@ -54,12 +48,7 @@ from The Open Group.
 
 int NetaddrFamily(XdmcpNetaddr netaddrp)
 {
-# ifdef STREAMSCONN
-    short family = *(short *)netaddrp;
-    return family;
-# else
     return ((struct sockaddr *)netaddrp)->sa_family;
-# endif
 }
 
 /* given an XdmcpNetaddr, returns a pointer to the network address
@@ -67,17 +56,13 @@ int NetaddrFamily(XdmcpNetaddr netaddrp)
 
 char * NetaddrAddress(XdmcpNetaddr netaddrp, int *lenp)
 {
-# ifdef STREAMSCONN
-    *lenp = 4;
-    return netaddrp+4;
-# else
     switch (NetaddrFamily(netaddrp)) {
-#  ifdef UNIXCONN
+# ifdef UNIXCONN
     case AF_UNIX:
 	*lenp = strlen(((struct sockaddr_un *)netaddrp)->sun_path);
         return (char *) (((struct sockaddr_un *)netaddrp)->sun_path);
-#  endif
-#  ifdef TCPCONN
+# endif
+# ifdef TCPCONN
     case AF_INET:
         *lenp = sizeof (struct in_addr);
         return (char *) &(((struct sockaddr_in *)netaddrp)->sin_addr);
@@ -92,12 +77,11 @@ char * NetaddrAddress(XdmcpNetaddr netaddrp, int *lenp)
 	    return (char *) &(a->s6_addr);
 	}
     }
-#  endif
+# endif
     default:
 	*lenp = 0;
 	return NULL;
     }
-# endif /* STREAMSCONN else */
 }
 
 
@@ -112,24 +96,15 @@ int ConvertAddr (XdmcpNetaddr saddr, int *len, char **addr)
     if ((len == NULL) || (saddr == NULL))
         return -1;
     *addr = NetaddrAddress(saddr, len);
-# ifdef STREAMSCONN
-    /* kludge */
-    if (NetaddrFamily(saddr) == 2)
-	retval = FamilyInternet;
-# else
     switch (NetaddrFamily(saddr))
     {
-#  ifdef AF_UNSPEC
       case AF_UNSPEC:
 	retval = FamilyLocal;
 	break;
-#  endif
-#  ifdef AF_UNIX
       case AF_UNIX:
         retval = FamilyLocal;
 	break;
-#  endif
-#  ifdef TCPCONN
+# ifdef TCPCONN
       case AF_INET:
         retval = FamilyInternet;
 	break;
@@ -139,12 +114,11 @@ int ConvertAddr (XdmcpNetaddr saddr, int *len, char **addr)
 	else
 	    retval = FamilyInternet6;
 	break;
-#  endif
+# endif
       default:
 	retval = -1;
         break;
     }
-# endif /* STREAMSCONN else */
     Debug ("ConvertAddr returning %d for family %d\n", retval,
 	   NetaddrFamily(saddr));
     return retval;
