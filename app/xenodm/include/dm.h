@@ -208,10 +208,8 @@ extern void ParseDisplay (char *source);
 
 /* in netaddr.c */
 extern char *NetaddrAddress(XdmcpNetaddr netaddrp, int *lenp);
-extern char *NetaddrPort(XdmcpNetaddr netaddrp, int *lenp);
 extern int ConvertAddr (XdmcpNetaddr saddr, int *len, char **addr);
 extern int NetaddrFamily (XdmcpNetaddr netaddrp);
-extern int addressEqual (XdmcpNetaddr a1, int len1, XdmcpNetaddr a2, int len2);
 
 /* in reset.c */
 extern void pseudoReset (Display *dpy);

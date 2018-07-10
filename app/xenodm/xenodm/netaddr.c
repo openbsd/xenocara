@@ -62,33 +62,6 @@ int NetaddrFamily(XdmcpNetaddr netaddrp)
 # endif
 }
 
-
-/* given an XdmcpNetaddr, returns a pointer to the TCP/UDP port used
-   and sets *lenp to the length of the address
-   or 0 if not using TCP or UDP. */
-
-char * NetaddrPort(XdmcpNetaddr netaddrp, int *lenp)
-{
-# ifdef STREAMSCONN
-    *lenp = 2;
-    return netaddrp+2;
-# else
-    switch (NetaddrFamily(netaddrp))
-    {
-    case AF_INET:
-	*lenp = 2;
-	return (char *)&(((struct sockaddr_in *)netaddrp)->sin_port);
-    case AF_INET6:
-	*lenp = 2;
-	return (char *)&(((struct sockaddr_in6 *)netaddrp)->sin6_port);
-    default:
-	*lenp = 0;
-	return NULL;
-    }
-# endif
-}
-
-
 /* given an XdmcpNetaddr, returns a pointer to the network address
    and sets *lenp to the length of the address */
 
@@ -177,34 +150,6 @@ int ConvertAddr (XdmcpNetaddr saddr, int *len, char **addr)
     return retval;
 }
 
-int
-addressEqual (XdmcpNetaddr a1, int len1, XdmcpNetaddr a2, int len2)
-{
-    int partlen1, partlen2;
-    char *part1, *part2;
-
-    if (len1 != len2)
-    {
-	return FALSE;
-    }
-    if (NetaddrFamily(a1) != NetaddrFamily(a2))
-    {
-	return FALSE;
-    }
-    part1 = NetaddrPort(a1, &partlen1);
-    part2 = NetaddrPort(a2, &partlen2);
-    if (partlen1 != partlen2 || memcmp(part1, part2, partlen1) != 0)
-    {
-	return FALSE;
-    }
-    part1 = NetaddrAddress(a1, &partlen1);
-    part2 = NetaddrAddress(a2, &partlen2);
-    if (partlen1 != partlen2 || memcmp(part1, part2, partlen1) != 0)
-    {
-	return FALSE;
-    }
-    return TRUE;
-}
 
 # ifdef DEBUG
 /*ARGSUSED*/
