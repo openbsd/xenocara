@@ -260,18 +260,15 @@ GetResource (
 		LogOutOfMem ("GetResource");
 		return;
 	}
-	strncpy (new_string, string, len);
-	new_string[len] = '\0';
+	strlcpy (new_string, string, len);
 	*(valuep) = new_string;
 	break;
     case DM_INT:
-	strncpy (str_buf, string, sizeof (str_buf));
-	str_buf[sizeof (str_buf)-1] = '\0';
+	strlcpy (str_buf, string, sizeof (str_buf));
 	*((int *) valuep) = atoi (str_buf);
 	break;
     case DM_BOOL:
-	strncpy (str_buf, string, sizeof (str_buf));
-	str_buf[sizeof (str_buf)-1] = '\0';
+	strlcpy (str_buf, string, sizeof (str_buf));
 	XmuCopyISOLatin1Lowered (str_buf, str_buf);
 	if (!strcmp (str_buf, "true") ||
 	    !strcmp (str_buf, "on") ||

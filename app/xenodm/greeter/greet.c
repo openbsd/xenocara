@@ -101,10 +101,8 @@ GreetDone (
 	    data->name, strlen (data->passwd));
     switch (status) {
     case NOTIFY_OK:
-	strncpy (name, data->name, sizeof(name));
-	name[sizeof(name)-1] = '\0';
-	strncpy (password, data->passwd, sizeof(password));
-	password[sizeof(password)-1] = '\0';
+	strlcpy (name, data->name, sizeof(name));
+	strlcpy (password, data->passwd, sizeof(password));
 	code = 0;
 	done = 1;
 	break;

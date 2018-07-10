@@ -724,8 +724,7 @@ setAuthNumber (Xauth *auth, char *name)
 	    auth->number_length = strlen (colon);
 	number = malloc (auth->number_length + 1);
 	if (number) {
-	    strncpy (number, colon, auth->number_length);
-	    number[auth->number_length] = '\0';
+	    strlcpy (number, colon, auth->number_length);
 	} else {
 	    LogOutOfMem ("setAuthNumber");
 	    auth->number_length = 0;

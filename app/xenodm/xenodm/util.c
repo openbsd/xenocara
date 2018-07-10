@@ -136,8 +136,7 @@ putEnv(const char *string, char **env)
 	return NULL;
     }
 
-    strncpy(n, string,nl + 1);
-    n[nl] = 0;
+    strlcpy(n, string,nl + 1);
 
     env = setEnv(env,n,v);
     free(n);
@@ -193,8 +192,8 @@ parseArgs (char **argv, const char *string)
 				} else {
 				    argv = newargv;
 				}
-				argv[i] = strncpy (save, word, string-word);
-				argv[i][string-word] = '\0';
+				strlcpy (save, word, string-word);
+				argv[i] = save;
 				i++;
 			}
 			if (!*string)

@@ -763,7 +763,7 @@ SetPrompt (Widget ctx, int promptNum, const char *message,
         return -1;
     }
 
-    strncpy(prompt, message, messageLen);
+    strlcpy(prompt, message, messageLen);
 
     /* Make sure text prompts have at least two spaces at end */
     e = messageLen;
@@ -838,12 +838,10 @@ SetValue(Widget ctx, int promptNum, char *value)
     if (VALUE_TEXT(w, promptNum) == NULL)
         return -1;
 
-    if (value == NULL) {
+    if (value == NULL)
         bzero(VALUE_TEXT(w, promptNum), VALUE_TEXT_MAX(w, promptNum));
-    } else {
-        strncpy(VALUE_TEXT(w, promptNum), value, VALUE_TEXT_MAX(w, promptNum));
-        VALUE_TEXT(w, promptNum)[VALUE_TEXT_MAX(w, promptNum)] = '\0';
-    }
+    else
+        strlcpy(VALUE_TEXT(w, promptNum), value, VALUE_TEXT_MAX(w, promptNum));
 
     VALUE_SHOW_START(w, promptNum) = 0;
     VALUE_SHOW_END(w, promptNum) = 0;
@@ -885,8 +883,9 @@ realizeDeleteChar (LoginWidget ctx)
             } else {
                 EraseValue (ctx, redrawFrom, promptNum);
             }
-            strcpy(VALUE_TEXT(ctx, promptNum) + PROMPT_CURSOR(ctx, promptNum),
-                   VALUE_TEXT(ctx, promptNum) + PROMPT_CURSOR(ctx, promptNum) + 1);
+            strlcpy(VALUE_TEXT(ctx, promptNum) + PROMPT_CURSOR(ctx, promptNum),
+                    VALUE_TEXT(ctx, promptNum) + PROMPT_CURSOR(ctx, promptNum) + 1,
+                    VALUE_TEXT_MAX(ctx, promptNum));
             DrawValue (ctx, redrawFrom, promptNum);
         }
     }

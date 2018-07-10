@@ -89,8 +89,7 @@ splitIntoWords (char *s)
 	    freeFileArgs (args);
 	    return NULL;
 	}
-	strncpy (args[nargs], wordStart, s - wordStart);
-	args[nargs][s-wordStart] = '\0';
+	strlcpy (args[nargs], wordStart, s - wordStart);
 	++nargs;
 	args[nargs] = NULL;
     }
