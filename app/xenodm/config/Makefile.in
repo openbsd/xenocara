@@ -56,9 +56,8 @@ host_triplet = @host@
 subdir = config
 DIST_COMMON = README $(dist_pixmap_DATA) $(dist_xenodmscript_SCRIPTS) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(srcdir)/Xreset.in $(srcdir)/Xresources.in \
-	$(srcdir)/Xservers.in $(srcdir)/Xsession.in \
-	$(srcdir)/Xstartup.in $(srcdir)/xenodm-config.in
+	$(srcdir)/Xresources.in $(srcdir)/Xservers.in \
+	$(srcdir)/Xsession.in $(srcdir)/xenodm-config.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_define_dir.m4 \
 	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
@@ -68,8 +67,7 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
-CONFIG_CLEAN_FILES = Xreset Xresources Xservers Xsession Xstartup \
-	xenodm-config
+CONFIG_CLEAN_FILES = Xresources Xservers Xsession xenodm-config
 CONFIG_CLEAN_VPATH_FILES =
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
@@ -311,9 +309,7 @@ xenodmconfig_DATA = \
 	Xservers
 
 xenodmscript_SCRIPTS = \
-	Xreset \
-	Xsession \
-	Xstartup
+	Xsession
 
 dist_xenodmscript_SCRIPTS = \
 	GiveConsole \
@@ -358,15 +354,11 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
-Xreset: $(top_builddir)/config.status $(srcdir)/Xreset.in
-	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 Xresources: $(top_builddir)/config.status $(srcdir)/Xresources.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 Xservers: $(top_builddir)/config.status $(srcdir)/Xservers.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 Xsession: $(top_builddir)/config.status $(srcdir)/Xsession.in
-	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
-Xstartup: $(top_builddir)/config.status $(srcdir)/Xstartup.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 xenodm-config: $(top_builddir)/config.status $(srcdir)/xenodm-config.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@

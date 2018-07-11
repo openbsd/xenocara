@@ -1,7 +1,0 @@
-#!/bin/sh
-# Deregister a login. (Derived from TakeConsole as follows:)
-#
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-@bindir@/sessreg -d -w @WTMP_FILE@ -u @UTMP_FILE@ \
-	-x @XENODMCONFIGDIR@/Xservers -l $DISPLAY -h "" $USER

@@ -49,6 +49,9 @@ LogVWrite(const char *fmt, va_list args)
     char buf[1024];
     int len;
 
+    len = snprintf(buf, sizeof(buf), "[%5d] ", getpid());
+    write(STDERR_FILENO, buf, len);
+
     len = vsnprintf (buf, sizeof(buf), fmt, args);
     if (len >= sizeof(buf)) {
 	len = sizeof(buf) - 1;

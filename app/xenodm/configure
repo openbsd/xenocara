@@ -17819,10 +17819,11 @@ _ACEOF
 
 
 
-CHANGELOG_CMD="(GIT_DIR=\$(top_srcdir)/.git git log > \$(top_srcdir)/.changelog.tmp && \
+CHANGELOG_CMD="((GIT_DIR=\$(top_srcdir)/.git git log > \$(top_srcdir)/.changelog.tmp) 2>/dev/null && \
 mv \$(top_srcdir)/.changelog.tmp \$(top_srcdir)/ChangeLog) \
-|| (rm -f \$(top_srcdir)/.changelog.tmp; touch \$(top_srcdir)/ChangeLog; \
-echo 'git directory not found: installing possibly empty changelog.' >&2)"
+|| (rm -f \$(top_srcdir)/.changelog.tmp; test -e \$(top_srcdir)/ChangeLog || ( \
+touch \$(top_srcdir)/ChangeLog; \
+echo 'git failed to create ChangeLog: installing empty ChangeLog.' >&2))"
 
 
 
@@ -17830,13 +17831,44 @@ echo 'git directory not found: installing possibly empty changelog.' >&2)"
 macros_datadir=`$PKG_CONFIG --print-errors --variable=pkgdatadir xorg-macros`
 INSTALL_CMD="(cp -f "$macros_datadir/INSTALL" \$(top_srcdir)/.INSTALL.tmp && \
 mv \$(top_srcdir)/.INSTALL.tmp \$(top_srcdir)/INSTALL) \
-|| (rm -f \$(top_srcdir)/.INSTALL.tmp; touch \$(top_srcdir)/INSTALL; \
-echo 'util-macros \"pkgdatadir\" from xorg-macros.pc not found: installing possibly empty INSTALL.' >&2)"
+|| (rm -f \$(top_srcdir)/.INSTALL.tmp; test -e \$(top_srcdir)/INSTALL || ( \
+touch \$(top_srcdir)/INSTALL; \
+echo 'failed to copy INSTALL from util-macros: installing empty INSTALL.' >&2))"
 
 
 
 
 
+
+case $host_os in
+    solaris*)
+        # Solaris 2.0 - 11.3 use SysV man page section numbers, so we
+        # check for a man page file found in later versions that use
+        # traditional section numbers instead
+        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for /usr/share/man/man7/attributes.7" >&5
+$as_echo_n "checking for /usr/share/man/man7/attributes.7... " >&6; }
+if ${ac_cv_file__usr_share_man_man7_attributes_7+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  test "$cross_compiling" = yes &&
+  as_fn_error $? "cannot check for file existence when cross compiling" "$LINENO" 5
+if test -r "/usr/share/man/man7/attributes.7"; then
+  ac_cv_file__usr_share_man_man7_attributes_7=yes
+else
+  ac_cv_file__usr_share_man_man7_attributes_7=no
+fi
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_file__usr_share_man_man7_attributes_7" >&5
+$as_echo "$ac_cv_file__usr_share_man_man7_attributes_7" >&6; }
+if test "x$ac_cv_file__usr_share_man_man7_attributes_7" = xyes; then :
+  SYSV_MAN_SECTIONS=false
+else
+  SYSV_MAN_SECTIONS=true
+fi
+
+        ;;
+    *) SYSV_MAN_SECTIONS=false ;;
+esac
 
 if test x$APP_MAN_SUFFIX = x    ; then
     APP_MAN_SUFFIX=1
@@ -17853,9 +17885,9 @@ if test x$LIB_MAN_DIR = x    ; then
 fi
 
 if test x$FILE_MAN_SUFFIX = x    ; then
-    case $host_os in
-	solaris*)	FILE_MAN_SUFFIX=4  ;;
-	*)		FILE_MAN_SUFFIX=5  ;;
+    case $SYSV_MAN_SECTIONS in
+	true)				FILE_MAN_SUFFIX=4  ;;
+	*)				FILE_MAN_SUFFIX=5  ;;
     esac
 fi
 if test x$FILE_MAN_DIR = x    ; then
@@ -17863,9 +17895,9 @@ if test x$FILE_MAN_DIR = x    ; then
 fi
 
 if test x$MISC_MAN_SUFFIX = x    ; then
-    case $host_os in
-	solaris*)	MISC_MAN_SUFFIX=5  ;;
-	*)		MISC_MAN_SUFFIX=7  ;;
+    case $SYSV_MAN_SECTIONS in
+	true)				MISC_MAN_SUFFIX=5  ;;
+	*)				MISC_MAN_SUFFIX=7  ;;
     esac
 fi
 if test x$MISC_MAN_DIR = x    ; then
@@ -17873,9 +17905,9 @@ if test x$MISC_MAN_DIR = x    ; then
 fi
 
 if test x$DRIVER_MAN_SUFFIX = x    ; then
-    case $host_os in
-	solaris*)	DRIVER_MAN_SUFFIX=7  ;;
-	*)		DRIVER_MAN_SUFFIX=4  ;;
+    case $SYSV_MAN_SECTIONS in
+	true)				DRIVER_MAN_SUFFIX=7  ;;
+	*)				DRIVER_MAN_SUFFIX=4  ;;
     esac
 fi
 if test x$DRIVER_MAN_DIR = x    ; then
@@ -17883,9 +17915,9 @@ if test x$DRIVER_MAN_DIR = x    ; then
 fi
 
 if test x$ADMIN_MAN_SUFFIX = x    ; then
-    case $host_os in
-	solaris*)	ADMIN_MAN_SUFFIX=1m ;;
-	*)		ADMIN_MAN_SUFFIX=8  ;;
+    case $SYSV_MAN_SECTIONS in
+	true)				ADMIN_MAN_SUFFIX=1m ;;
+	*)				ADMIN_MAN_SUFFIX=8  ;;
     esac
 fi
 if test x$ADMIN_MAN_DIR = x    ; then
@@ -20105,7 +20137,7 @@ fi
 
 
 
-ac_config_files="$ac_config_files Makefile config/Makefile greeter/Makefile include/Makefile man/Makefile xenodm/Makefile config/Xreset config/Xresources config/Xservers config/Xsession config/Xstartup config/xenodm-config"
+ac_config_files="$ac_config_files Makefile config/Makefile greeter/Makefile include/Makefile man/Makefile xenodm/Makefile config/Xresources config/Xservers config/Xsession config/xenodm-config"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -21130,11 +21162,9 @@ do
     "include/Makefile") CONFIG_FILES="$CONFIG_FILES include/Makefile" ;;
     "man/Makefile") CONFIG_FILES="$CONFIG_FILES man/Makefile" ;;
     "xenodm/Makefile") CONFIG_FILES="$CONFIG_FILES xenodm/Makefile" ;;
-    "config/Xreset") CONFIG_FILES="$CONFIG_FILES config/Xreset" ;;
     "config/Xresources") CONFIG_FILES="$CONFIG_FILES config/Xresources" ;;
     "config/Xservers") CONFIG_FILES="$CONFIG_FILES config/Xservers" ;;
     "config/Xsession") CONFIG_FILES="$CONFIG_FILES config/Xsession" ;;
-    "config/Xstartup") CONFIG_FILES="$CONFIG_FILES config/Xstartup" ;;
     "config/xenodm-config") CONFIG_FILES="$CONFIG_FILES config/xenodm-config" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
