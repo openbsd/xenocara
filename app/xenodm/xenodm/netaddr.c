@@ -123,36 +123,3 @@ int ConvertAddr (XdmcpNetaddr saddr, int *len, char **addr)
 	   NetaddrFamily(saddr));
     return retval;
 }
-
-
-# ifdef DEBUG
-/*ARGSUSED*/
-void
-PrintSockAddr (struct sockaddr *a, int len)
-{
-    unsigned char    *t, *p;
-
-    Debug ("family %d, ", a->sa_family);
-    switch (a->sa_family) {
-    case AF_INET:
-
-	p = (unsigned char *) &((struct sockaddr_in *) a)->sin_port;
-	t = (unsigned char *) &((struct sockaddr_in *) a)->sin_addr;
-
-	Debug ("port %d, host %d.%d.%d.%d\n",
-		(p[0] << 8) + p[1], t[0], t[1], t[2], t[3]);
-	break;
-    case AF_INET6:
-    {
-	char astr[INET6_ADDRSTRLEN] = "";
-
-	inet_ntop(a->sa_family, &((struct sockaddr_in6 *) a)->sin6_addr,
-	  astr, sizeof(astr));
-	p = (unsigned char *) &((struct sockaddr_in6 *) a)->sin6_port;
-
-	Debug ("port %d, host %s\n", (p[0] << 8) + p[1], astr);
-	break;
-    }
-    }
-}
-# endif
