@@ -26,6 +26,10 @@
 
 #include "xshmfenceint.h"
 
+#ifndef __MAP_NOFAULT
+#define __MAP_NOFAULT		0
+#endif
+
 #if !HAVE_MEMFD_CREATE
 #if HAVE_DECL___NR_MEMFD_CREATE
 #include <asm/unistd.h>
@@ -105,7 +109,7 @@ struct xshmfence *
 xshmfence_map_shm(int fd)
 {
 	struct xshmfence *addr;
-	addr = mmap (NULL, sizeof (struct xshmfence) , PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+	addr = mmap (NULL, sizeof (struct xshmfence) , PROT_READ|PROT_WRITE, MAP_SHARED | __MAP_NOFAULT, fd, 0);
 	if (addr == MAP_FAILED) {
 		close (fd);
 		return 0;
