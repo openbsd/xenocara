@@ -37,12 +37,14 @@ from The Open Group.
 
 #include	"dm.h"
 #include	"dm_error.h"
+#include	"Login.h"
 
 #include	<pwd.h>
 
 #include	<login_cap.h>
 #include	<stdarg.h>
 #include	<bsd_auth.h>
+#include	<vis.h>
 
 #include	"greet.h"
 
@@ -85,13 +87,16 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 	char		path[MAXPATHLEN];
 	int		authok;
 	size_t		passwd_len;
+	char		visname[NAME_LEN*4];
 
 	/* User may have specified an authentication style. */
 	if ((style = strchr(greet->name, ':')) != NULL)
 		*style++ = '\0';
 
-	Debug ("Verify %s, style %s ...\n", greet->name,
+	strvis(visname, greet->name, 0);
+	Debug ("Verify %s, style %s ...\n", visname,
 	    style ? style : "default");
+	explicit_bzero(visname, NAME_LEN*4);
 
 	p = getpwnam (greet->name);
 	if (!p || strlen (greet->name) == 0) {
