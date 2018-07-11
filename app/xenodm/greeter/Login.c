@@ -84,18 +84,9 @@ from The Open Group.
 
 #include <X11/extensions/Xrender.h>
 
-#ifndef DEBUG
-# define XDM_ASSERT(a)	/* do nothing */
-#else
-# if defined(__STDC__) && __STDC_VERSION__ - 0 >= 199901L
-#  define XDM_ASSERT(a)	if (!(a)) { \
+#define XDM_ASSERT(a)	if (!(a)) { \
         Debug("Assertion failed in %s() at file %s line %d\n", \
               __func__, __FILE__, __LINE__); }
-# else
-#  define XDM_ASSERT(a)	if (!(a)) { \
-        Debug("Assertion failed at file %s line %d\n", __FILE__, __LINE__); }
-# endif
-#endif
 
 static void RedrawFail (LoginWidget w);
 static void ResetLogin (LoginWidget w);
