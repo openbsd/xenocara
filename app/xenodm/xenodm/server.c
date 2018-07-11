@@ -157,8 +157,10 @@ serverPause (unsigned t, pid_t serverPid)
     struct timespec timeout;
     sigset_t mask;
     int result;
-    pid_t	pid;
+    pid_t pid;
+    void (*old)(int);
 
+    Debug("serverPause\n");
     serverPauseRet = false;
 
     for (;;) {
@@ -166,7 +168,7 @@ serverPause (unsigned t, pid_t serverPid)
 	timeout.tv_nsec = 0;
 
         /* setup a SIGCHLD handler, to interrupt ppoll() below */
-        signal(SIGCHLD, chldHandler);
+        old = signal(SIGCHLD, chldHandler);
         /* unblock all signals*/
 	sigemptyset(&mask);
         if (!receivedUsr1) {
@@ -189,7 +191,7 @@ serverPause (unsigned t, pid_t serverPid)
             break;
         }
     }
-    signal(SIGCHLD, SIG_DFL);
+    signal(SIGCHLD, old);
     if (serverPauseRet) {
 	Debug ("Server died\n");
 	LogError ("server unexpectedly died\n");
@@ -235,6 +237,7 @@ WaitForServer (struct display *d)
 void
 ResetServer (struct display *d)
 {
+    Debug("ResetServer");
     if (d->dpy)
 	pseudoReset (d->dpy);
 }
