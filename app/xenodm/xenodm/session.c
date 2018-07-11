@@ -305,7 +305,7 @@ StartClient (
     pid_t	pid;
     struct passwd* pwd;
 
-    if (pledge("stdio rpath wpath cpath fattr proc getpw id exec dns unix inet", NULL) != 0)
+    if (pledge("stdio rpath wpath cpath fattr proc getpw id exec dns", NULL) != 0)
     	    exit(25);
 
     if (vinfo->argv) {
