@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.1 2016/10/23 08:30:37 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.2 2018/07/11 19:03:50 matthieu Exp $
 .include <bsd.own.mk>
 
 XENODMCONFIGDIR=/etc/X11/xenodm
@@ -25,7 +25,7 @@ realinstall:
 XENODMCONFIGFILES= \
 	xenodm-config Xresources Xservers
 XENODMCONFIGSCRIPTS= \
-	Xsession GiveConsole TakeConsole Xsetup_0 Xstartup Xreset
+	Xsession GiveConsole TakeConsole Xsetup_0
 
 afterinstall:
 	$(INSTALL_DATA) ${.CURDIR}/config/OpenBSD_1bpp.xpm $(DESTDIR)$(PIXMAPDIR)
