@@ -57,7 +57,7 @@ static void	ScanServers (void);
 static void	SetConfigFileTime (void);
 static void	StartDisplays (void);
 
-volatile int	Rescan;
+static volatile int	Rescan = 0;
 static long	ServersModTime, ConfigModTime;
 
 int nofork_session = 0;
@@ -279,7 +279,7 @@ StopAll (int n)
  * sub-daemon started
  */
 
-int	ChildReady;
+static volatile int	ChildReady = 0;
 
 /* ARGSUSED */
 static void
@@ -287,7 +287,7 @@ ChildNotify (int n)
 {
     int olderrno = errno;
 
-    ChildReady = 1;
+    ChildReady++;
     errno = olderrno;
 }
 
@@ -306,12 +306,12 @@ WaitForChild (void)
     Debug ("signals blocked\n");
     if (!ChildReady && !Rescan)
 	sigsuspend(&omask);
-    ChildReady = 0;
     sigprocmask(SIG_SETMASK, &omask, (sigset_t *)NULL);
     while ((pid = waitpid (-1, &status, WNOHANG)) > 0)
     {
 	Debug ("Manager wait returns pid: %d sig %d core %d code %d\n",
 	       pid, waitSig(status), waitCore(status), waitCode(status));
+        ChildReady--;
 	if (autoRescan)
 	    RescanIfMod ();
 	/* SUPPRESS 560 */
