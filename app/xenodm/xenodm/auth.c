@@ -663,7 +663,7 @@ DefineLocal (FILE *file, Xauth *auth)
 # include <ifaddrs.h>
 
 static void
-DefineSelf(int fd, FILE *file, Xauth *auth)
+DefineSelf(FILE *file, Xauth *auth)
 {
     struct ifaddrs *ifap, *ifr;
     char *addr;
@@ -738,16 +738,11 @@ setAuthNumber (Xauth *auth, char *name)
 static void
 writeLocalAuth (FILE *file, Xauth *auth, char *name)
 {
-    int	fd;
 
     Debug ("writeLocalAuth: %s %.*s\n", name, auth->name_length, auth->name);
     setAuthNumber (auth, name);
 #ifdef TCPCONN
-    fd = socket (AF_INET6, SOCK_STREAM, 0);
-    if (fd < 0)
-        fd = socket (AF_INET, SOCK_STREAM, 0);
-    DefineSelf (fd, file, auth);
-    close (fd);
+    DefineSelf (file, auth);
 #endif
     DefineLocal (file, auth);
 }
