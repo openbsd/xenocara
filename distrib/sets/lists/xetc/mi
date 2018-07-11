@@ -1,12 +1,10 @@
 ./etc/X11/twm/system.twmrc
 ./etc/X11/xenodm/GiveConsole
 ./etc/X11/xenodm/TakeConsole
-./etc/X11/xenodm/Xreset
 ./etc/X11/xenodm/Xresources
 ./etc/X11/xenodm/Xservers
 ./etc/X11/xenodm/Xsession
 ./etc/X11/xenodm/Xsetup_0
-./etc/X11/xenodm/Xstartup
 ./etc/X11/xenodm/xenodm-config
 ./etc/X11/xinit/xinitrc
 ./etc/X11/xsm/system.xsm
