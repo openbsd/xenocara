@@ -23,7 +23,7 @@
 .\" from The Open Group.
 .\"
 .\"
-.Dd $Mdocdate: August 22 2017 $
+.Dd $Mdocdate: July 11 2018 $
 .Dt XENODM 1
 .Os __xorgversion__
 .Sh NAME
@@ -938,6 +938,7 @@ Ctrl<Key>\e\e:    abort-session() \en\e
 <Key>BackSpace: delete-previous-character() \en\e
 <Key>Delete:    delete-previous-character() \en\e
 <Key>Return:    finish-field() \en\e
+<Key>Escape:	erase-line() \en\e
 <Key>:          insert-char() \e
 .Ed
 .Pp

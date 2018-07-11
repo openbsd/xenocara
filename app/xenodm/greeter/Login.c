@@ -1855,6 +1855,7 @@ char defaultLoginTranslations [] =
 "<Key>Delete:	delete-previous-character() \n"
 "<Key>Return:	finish-field() \n"
 "<Key>Tab:	tab-field() \n"
+"<Key>Escape:	erase-line() \n"
 "<KeyPress>:	insert-char()"
 ;
 
