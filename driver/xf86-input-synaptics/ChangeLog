@@ -1,3 +1,70 @@
+commit a46338a9923a2434b130cdaaed014e54020edf2a
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue May 29 13:17:59 2018 +1000
+
+    synaptics 1.9.1
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 9f3a6ac97e9d3f13cdfb38e54fbce92452025830
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon May 14 09:49:00 2018 +1000
+
+    eventcomm: if we get a read error other than EAGAIN, remove the fd
+    
+    Otherwise poll() keeps on triggering on our fd until udev gets around to
+    notifying the server that the device is in some state of deadness. Meanwhile,
+    the input thread is busy filling the log up with "Read error" messages. Great
+    way to test file systems and their capacity to handle out of space scenarios
+    but otherwise a bit pointless. Those FS developers should write their own
+    tests instead of relying on the synaptics driver!
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit 59eb0c372b615fce5039e69b5067adc0efe5b64b
+Author: Luca Castagnini <ilfigliodellaparolaavuoto@gmail.com>
+Date:   Wed Oct 25 12:14:45 2017 +0200
+
+    Replace SA_ONESHOT with the more portable SA_RESETHAND.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 6d3749105d964da5b4e534206fdb47f5ff8a697f
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Aug 17 13:10:31 2017 +1000
+
+    Drop HandleTouches - it's a noop
+    
+    With the removal of touch events in 0a4cf80a00663, this function is a noop. It
+    merely counted the number of touches but discarded the result. And
+    UpdateTouchState does the update anyway.
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=102209
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit afa8d7bb469e7ce01d9239f0dd790d3d620bfbd6
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 703b44fa687148e400f3a92bfe3a7e120e6c355e
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit 3261e07c923c449f08a96a8439c97479b7ff899c
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri Nov 18 13:00:09 2016 +1000

@@ -2965,24 +2965,6 @@ UpdateTouchState(InputInfoPtr pInfo, struct SynapticsHwState *hw)
 }
 
 static void
-HandleTouches(InputInfoPtr pInfo, struct SynapticsHwState *hw)
-{
-    SynapticsPrivate *priv = (SynapticsPrivate *) pInfo->private;
-    int new_active_touches = priv->num_active_touches;
-    int i;
-
-    /* Count new number of active touches */
-    for (i = 0; i < hw->num_mt_mask; i++) {
-        if (hw->slot_state[i] == SLOTSTATE_OPEN)
-            new_active_touches++;
-        else if (hw->slot_state[i] == SLOTSTATE_CLOSE)
-            new_active_touches--;
-    }
-
-    UpdateTouchState(pInfo, hw);
-}
-
-static void
 filter_jitter(SynapticsPrivate * priv, int *x, int *y)
 {
     SynapticsParameters *para = &priv->synpara;
@@ -3178,7 +3160,7 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
         post_button_click(pInfo, 1);
     }
 
-    HandleTouches(pInfo, hw);
+    UpdateTouchState(pInfo, hw);
 
     /* Save old values of some state variables */
     priv->finger_state = finger;
