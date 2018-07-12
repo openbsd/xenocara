@@ -563,8 +563,10 @@ usbMouseProc(DeviceIntPtr pPointer, int what)
                 pInfo->fd = -1;
             } else {
                 xf86FlushInput(pInfo->fd);
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 23
                 if (!xf86InstallSIGIOHandler (pInfo->fd, usbSigioReadInput,
                                               pInfo))
+#endif
                     AddEnabledDevice(pInfo->fd);
             }
         }

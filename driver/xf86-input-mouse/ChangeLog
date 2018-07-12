@@ -1,3 +1,59 @@
+commit cfde5e9f348db6e6b2639dd7e592520dff028452
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Mon Jun 18 21:35:56 2018 -0700
+
+    xf86-input-mouse 1.9.3
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit e6aa78128e8e4489e7845a3ada552427a43663b9
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jun 7 14:17:23 2016 -0400
+
+    bsd: Don't try to use SIGIO for input ABI >= 23
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 3c8f243b750a92d5837a449d344ff884dbd02b57
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Feb 16 09:21:21 2017 -0500
+
+    Adapt to removal of xf86GetOS
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 9d0d12cd432a7d27d526f8742332dee094834aa1
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 2ad101d5059b7200433afc36aea2c30d1839ea02
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 8976960cac1a0c885a07e75c86261361256a3887
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
 commit 9d6c38eae40a435b4057a33d55759810ea7b91c1
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Thu Nov 17 14:35:47 2016 +1000
