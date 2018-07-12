@@ -1,3 +1,31 @@
+commit 2abe23d23d3755335c10ff573e4e1f93b682e9d9
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Jun 8 09:10:03 2018 +1000
+
+    xkbcomp 1.4.2
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 5bc2849273a224a2df593b7e8df31f0bde666482
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jun 7 11:25:01 2018 +1000
+
+    Ignore xkb_keycodes.maximum of > 255
+    
+    Continuation from 7fdfabd75 "keycodes: Ignore high keycodes"
+    
+    A keymap with a key > 255 will have a xkb_keycodes.maximum of that keycode.
+    Let's not throw a fatal error on that, just crop it back to the maximum of
+    255. This doesn't set the "high_keycode_warned" on purpose so we get this for
+    the first key that actually matters.
+    
+    Reproducible with xkeyboard-config 2.24 which has a maximum of 374.
+    
+    https://bugzilla.redhat.com/show_bug.cgi?id=1587998
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+
 commit 34842845b191082fd1cfff3b7038332cdcadb825
 Author: Adam Jackson <ajax@redhat.com>
 Date:   Thu Mar 1 11:15:18 2018 -0500
