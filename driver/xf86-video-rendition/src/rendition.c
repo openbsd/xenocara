@@ -813,8 +813,6 @@ renditionPreInit(ScrnInfoPtr pScreenInfo, int flags)
      * Validate the modes.  Note that the limits passed to
      * xf86ValidateModes() are VGA CRTC architectural limits.
      */
-    pScreenInfo->maxHValue = MAX_HTOTAL;
-    pScreenInfo->maxVValue = MAX_VTOTAL;
     nModes = xf86ValidateModes(pScreenInfo,
             pScreenInfo->monitor->Modes, pScreenInfo->display->modes,
             &renditionClockRange, NULL, 8, MAX_HDISPLAY, Rounding,
@@ -1337,6 +1335,12 @@ renditionValidMode(SCRN_ARG_TYPE arg, DisplayModePtr pMode, Bool Verbose,
 {
     if (pMode->Flags & V_INTERLACE)
         return MODE_NO_INTERLACE;
+
+    if (pMode->HTotal > MAX_HTOTAL)
+        return MODE_BAD_HVALUE;
+
+    if (pMode->VTotal > MAX_VTOTAL)
+        return MODE_BAD_VVALUE;
 
     return MODE_OK;
 }

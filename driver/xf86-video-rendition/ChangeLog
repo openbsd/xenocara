@@ -1,3 +1,69 @@
+commit b15170d95115a9f1575f02448a3e7c48e3c4ef60
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Fri May 18 12:55:51 2018 -0400
+
+    rendition 4.2.7
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 70dd6c22b8af58c415ee142468d19dc8b428fffd
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Feb 16 11:19:37 2017 -0500
+
+    Move [HV]Total checks into renditionValidMode
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 43bfe6c1ed6871aed076eaa5dbd8bf1a6a0cf2e5
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:22 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 0057ae4ff06213db6e43ff5d0dd44fff1110e239
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 5ab0d297596bc45cd99f95fc569b41e7b1a161bc
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit e08d7a02d97edd6bc9b5d473ed588cf2187fb801
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 21:03:14 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5da5a83dd5eded7eca740ba32f12379685d9817f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 21:03:13 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 367efbf6ecd1bae7e59ba92a29700a2f93c9ebd9
 Author: Adam Jackson <ajax@redhat.com>
 Date:   Wed Nov 11 12:03:52 2015 -0500
