@@ -1,3 +1,78 @@
+commit c3ab2361f13154921df2992f9eacc1ea1b3f946b
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Jul 5 11:42:49 2018 -0400
+
+    libXinerama 1.1.4
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 56777107b0c517ba58304d6a247bf65f7a27eb96
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 13:52:49 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 8760aecaae521a4ea88793462eb743d5877320c8
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 7dcef53aa805884e1317d50db7778e422e3b412b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 1142dd023acaac3cad96137aaf24c45b260e3ecd
+Author: Tobias Stoeckmann <tobias@stoeckmann.org>
+Date:   Sun Jan 22 15:18:04 2017 +0100
+
+    libXinerama: Set number of screens to 0 on error
+    
+    The documentation of XineramaQueryScreens states that number is always
+    set to the amount of screens in the returned array, but if the
+    communication with the X server fails, NULL is returned without
+    modifying number.
+    
+    At least dwm relies on the fact that number is set to 0 on error, i.e.
+    when NULL is returned. As a NULL pointer contains 0 elements and the
+    documentation states that number contains the amount of elements of the
+    returned array, I think this should be fixed inside libXinerama.
+    
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit edd95182b26eb5d576d4878c559e0f17dddaa909
+Author: Michael Joost <mehl@michael-joost.de>
+Date:   Mon Nov 18 16:11:26 2013 +0100
+
+    Remove fallback for _XEatDataWords, require libX11 1.6 for it
+    
+    _XEatDataWords was orignally introduced with the May 2013 security
+    patches, and in order to ease the process of delivering those,
+    fallback versions of _XEatDataWords were included in the X extension
+    library patches so they could be applied to older versions that didn't
+    have libX11 1.6 yet.   Now that we're past that hurdle, we can drop
+    the fallbacks and just require libX11 1.6 for building new versions
+    of the extension libraries.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 6e1d1dc328ba8162bba2f4694e7f3c706a1491ff
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu May 30 17:27:51 2013 -0700

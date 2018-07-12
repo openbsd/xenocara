@@ -21,13 +21,14 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libXinerama], [1.1.3],
+AC_INIT([libXinerama], [1.1.4],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXinerama])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
+AM_MAINTAINER_MODE
 
 # Initialize libtool
 AC_PROG_LIBTOOL
@@ -40,13 +41,7 @@ XORG_DEFAULT_OPTIONS
 XORG_CHECK_MALLOC_ZERO
 
 # Obtain compiler/linker options for depedencies
-PKG_CHECK_MODULES(XINERAMA, x11 xext xextproto [xineramaproto >= 1.1.99.1])
-
-# Check for _XEatDataWords function that may be patched into older Xlib releases
-SAVE_LIBS="$LIBS"
-LIBS="$XINERAMA_LIBS"
-AC_CHECK_FUNCS([_XEatDataWords])
-LIBS="$SAVE_LIBS"
+PKG_CHECK_MODULES(XINERAMA, [x11 >= 1.6] xext xextproto [xineramaproto >= 1.1.99.1])
 
 # Allow checking code with lint, sparse, etc.
 XORG_WITH_LINT
