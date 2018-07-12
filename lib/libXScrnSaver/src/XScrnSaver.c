@@ -102,7 +102,7 @@ static Bool wire_to_event (
     	se->send_event = (sevent->type & 0x80) != 0;
     	se->display = dpy;
     	se->window = sevent->window;
-    	se->window = sevent->root;
+	se->root = sevent->root;
     	se->state = sevent->state;
 	se->kind = sevent->kind;
 	se->forced = True;

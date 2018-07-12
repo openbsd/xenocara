@@ -87,7 +87,7 @@ XSetWindowAttributes *\fIattributes\fP\^);
 void XScreenSaverUnsetAttributes(Display *\fIdpy\fP,
 Drawable \fIdrawable\fP\^);
 .HP
-void XScreenSaverSaverRegister(Display *\fIdpy\fP, int \fIscreen\fP,
+void XScreenSaverRegister(Display *\fIdpy\fP, int \fIscreen\fP,
 XID \fIxid\fP, Atom \fItype\fP\^);
 .HP
 Status XScreenSaverUnregister(Display *\fIdpy\fP, int \fIscreen\fP\^);

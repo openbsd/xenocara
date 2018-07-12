@@ -1,3 +1,88 @@
+commit 96fffcd9dcaf2ba37ec56aa798677de9ad58ae81
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Jul 5 12:29:44 2018 -0400
+
+    libXScrnSaver 1.2.3
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit a16cf8e5018ca78d1b6d282fb1574adec69d2d84
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 13:52:49 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit a8f59be6586877cae0a763145ca47bac3a0ea4ec
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 57ca1c84080b778de2be267c2547b40ceeb09c99
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 886f8ef984aa29bdc3a0de329af363bb3c8d1a33
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:39:32 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 53256679068b9e32a76d7840652ae26ec3300704
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:38:41 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 74406e5ea3378a9b633ad0776a4bb34347cf1911
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 7 19:45:45 2013 -0800
+
+    Copy root field from wire event into root, not window, of Xlib event
+    
+    Fixes cppcheck warning:
+    [src/XScrnSaver.c:104] -> [src/XScrnSaver.c:105]: (performance, inconclusive)
+     Variable 'window' is reassigned a value before the old one has been
+     used if variable is no semaphore variable.
+    
+    Error seems to date back to revision 1.1 in X Consortium RCS,
+    dated 1992-02-13, by "keith"
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit f388a2ff259ee1c1c6058762e900bb29550e8246
+Author: Daniel Martin <consume.noise@gmail.com>
+Date:   Fri Feb 8 01:36:53 2013 -0800
+
+    Fix typo in man page: XScreenSaverSaverRegister()
+    
+    Signed-off-by: Daniel Martin <consume.noise@gmail.com>
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
 commit 0ec072963f5964e09fbf84f4cd7d7ff8a9f3291f
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Mar 7 21:05:41 2012 -0800
