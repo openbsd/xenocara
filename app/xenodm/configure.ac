@@ -328,8 +328,10 @@ AC_CONFIG_FILES([Makefile
 		include/Makefile
 		man/Makefile
 		xenodm/Makefile
+		config/Xreset
 		config/Xresources
 		config/Xservers
 		config/Xsession
+		config/Xstartup
 		config/xenodm-config])
 AC_OUTPUT

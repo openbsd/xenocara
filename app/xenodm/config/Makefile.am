@@ -9,7 +9,9 @@ xenodmconfig_DATA = \
 	Xservers
 
 xenodmscript_SCRIPTS = \
-	Xsession
+        Xreset \
+	Xsession \
+	Xstartup
 
 dist_xenodmscript_SCRIPTS = \
 	GiveConsole \
