@@ -1,6 +1,8 @@
 #!/bin/sh
-# Deregister a login. (Derived from TakeConsole as follows:)
+#
+# $OpenBSD: Xreset.in,v 1.5 2018/07/15 09:58:03 matthieu Exp $
 #
 prefix="@prefix@"
 exec_prefix="@exec_prefix@"
+
 @bindir@/sessreg -d -l $DISPLAY -u none $USER
