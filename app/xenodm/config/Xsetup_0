@@ -1,9 +1,6 @@
 #!/bin/sh
-# $OpenBSD: Xsetup_0,v 1.4 2018/07/16 06:52:00 matthieu Exp $
-prefix=@prefix@
-exec_prefix=@exec_prefix@
+# $OpenBSD: Xsetup_0,v 1.5 2018/07/17 11:52:12 matthieu Exp $
 
-@bindir@/xconsole -geometry 480x130-0-0 -daemon -notify \
-     -verbose -fn fixed -exitOnFail
+xconsole -geometry 480x130-0-0 -daemon -notify -verbose -fn fixed -exitOnFail
 
-#@bindir@/sxpm OpenBSD.xpm &
+# sxpm OpenBSD.xpm &
