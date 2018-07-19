@@ -148,6 +148,25 @@ for more desperate cases, remove all files from XSRCDIR not in CVS:
  cd XSRCDIR
  cvs -q update -PAd -I - | awk '$1=="?" {print $2}' | xargs rm -f
 
+o Updating XCB to a new release
+  -----------------------------
+
+libxcb uses C source files that are generated from the XML protocol
+specification using xcbgen, written in Python. On OpenBSD those files
+cannot be generated during a normal 'make build' since Python is not
+in the base system. So the generated version are checked in CVS
+(in lib/libxcb/src/). Here is the receipt to update them when updating
+to a new release of XCB:
+
+1) Update proto/xcb-proto.
+2) Update the x11/py-xcbgen port to the same version and install the
+   package.
+3) Update dist/libxcb.
+4) Check lib/libxcb/src/Makefile if new files need to be generated.
+5) Run 'make' in lib/xcb/src to generate the files for the new version.
+6) Check lib/libxcb/ for other files needing updates.
+7) Commit the result.
+
 o How to build something with debug information?
   ----------------------------------------------
 
@@ -192,4 +211,4 @@ The core dump will be in /var/crash.
 See also <http://xorg.freedesktop.org/wiki/Development/Documentation/ServerDebugging>
 
 -- 
-$OpenBSD: README,v 1.41 2018/05/20 17:25:01 matthieu Exp $
+$OpenBSD: README,v 1.42 2018/07/19 12:14:37 matthieu Exp $
