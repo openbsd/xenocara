@@ -1,7 +1,7 @@
-#	$OpenBSD: Makefile,v 1.8 2018/07/19 11:52:37 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.9 2018/07/19 12:45:31 matthieu Exp $
 
 # This Makefile is used to generate the sources files with xcbgen
-# The x11/py-xcbgen pacage needs to be installed
+# The x11/py-xcbgen package needs to be installed
 
 DATADIR=	${X11BASE}/share
 PYTHON=		python${PYTHON_VERSION}
