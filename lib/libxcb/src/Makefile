@@ -1,8 +1,10 @@
-#	$OpenBSD: Makefile,v 1.7 2016/09/02 10:09:44 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.8 2018/07/19 11:52:37 matthieu Exp $
+
+# This Makefile is used to generate the sources files with xcbgen
+# The x11/py-xcbgen pacage needs to be installed
 
 DATADIR=	${X11BASE}/share
 PYTHON=		python${PYTHON_VERSION}
-PYTHONDIR=	${X11BASE}/lib/python${PYTHON_VERSION}/site-packages
 
 MANOPTIONS=	-c 'libxcb 1.12' -l 'X Version 11' -s 3
 
@@ -50,11 +52,10 @@ force-clean:
 .SUFFIXES: .xml .c .h
 
 .xml.c:
-	${PYTHON} ${LIBXCB}/src/c_client.py ${MANOPTIONS} -p ${PYTHONDIR} $<
+	${PYTHON} ${LIBXCB}/src/c_client.py ${MANOPTIONS}  $<
 
 .xml.h:
-	${PYTHON} ${LIBXCB}/src/c_client.py ${MANOPTIONS} -p ${PYTHONDIR} $<
-
+	${PYTHON} ${LIBXCB}/src/c_client.py ${MANOPTIONS} $<
 
 .include <bsd.xorg.mk>
 
