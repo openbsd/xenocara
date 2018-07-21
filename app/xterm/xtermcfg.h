@@ -167,7 +167,7 @@
 /* #undef OPT_NUM_LOCK */		/* CF_ARG_DISABLE(num-lock) */
 /* #define OPT_PASTE64 1 */		/* CF_ARG_ENABLE(past64) */
 /* #undef OPT_PC_COLORS */		/* CF_ARG_DISABLE(pc-color) */
-#undef OPT_SCREEN_DUMPS                /* CF_ARG_ENABLE(screen-dumps) */
+#define OPT_SCREEN_DUMPS 0		/* CF_ARG_ENABLE(screen-dumps) */
 #define OPT_PTY_HANDSHAKE 1	/* CF_ARG_ENABLE(pty-handshake) */
 #define OPT_READLINE 0		/* CF_ARG_ENABLE(readline-mouse) */
 /* #undef OPT_SAME_NAME */		/* CF_ARG_DISABLE(samename) */
