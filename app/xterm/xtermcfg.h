@@ -165,11 +165,11 @@
 /* #undef OPT_MAXIMIZE */		/* CF_ARG_DISABLE(maximize) */
 /* #undef OPT_MINI_LUIT */		/* CF_ARG_ENABLE(mini-luit) */
 /* #undef OPT_NUM_LOCK */		/* CF_ARG_DISABLE(num-lock) */
-#define OPT_PASTE64 1		/* CF_ARG_ENABLE(past64) */
+/* #define OPT_PASTE64 1 */		/* CF_ARG_ENABLE(past64) */
 /* #undef OPT_PC_COLORS */		/* CF_ARG_DISABLE(pc-color) */
 #undef OPT_SCREEN_DUMPS                /* CF_ARG_ENABLE(screen-dumps) */
 #define OPT_PTY_HANDSHAKE 1	/* CF_ARG_ENABLE(pty-handshake) */
-/* #undef OPT_READLINE */		/* CF_ARG_ENABLE(readline-mouse) */
+#define OPT_READLINE 0		/* CF_ARG_ENABLE(readline-mouse) */
 /* #undef OPT_SAME_NAME */		/* CF_ARG_DISABLE(samename) */
 /* #undef OPT_SCO_FUNC_KEYS */	/* CF_ARG_ENABLE(sco-fkeys) */
 /* #undef OPT_SELECTION_OPS */	/* CF_ARG_DISABLE(selection-ops) */
