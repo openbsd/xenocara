@@ -71,7 +71,8 @@ WSConsIsTouchpad(InputInfoPtr pInfo, const char *device)
     if (wsmouse_type == WSMOUSE_TYPE_SYNAPTICS ||
         wsmouse_type == WSMOUSE_TYPE_SYNAP_SBTN ||
         wsmouse_type == WSMOUSE_TYPE_ALPS ||
-        wsmouse_type == WSMOUSE_TYPE_ELANTECH)
+        wsmouse_type == WSMOUSE_TYPE_ELANTECH ||
+        wsmouse_type == WSMOUSE_TYPE_TOUCHPAD)
         rc = TRUE;
 
 out:
@@ -357,6 +358,9 @@ WSConsReadDevDimensions(InputInfoPtr pInfo)
         priv->has_double = FALSE;
         priv->has_triple = FALSE;
         break;
+    case WSMOUSE_TYPE_TOUCHPAD:
+    	/* Use Elantech settings for the generic type. */
+	/* FALLTHROUGH */
     case WSMOUSE_TYPE_ELANTECH:
         priv->model = MODEL_ELANTECH;
         priv->has_width = TRUE;

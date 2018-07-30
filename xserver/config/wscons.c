@@ -239,6 +239,7 @@ wscons_add_pointers(void)
           case WSMOUSE_TYPE_ALPS:
           case WSMOUSE_TYPE_ELANTECH:
           case WSMOUSE_TYPE_SYNAP_SBTN:
+          case WSMOUSE_TYPE_TOUCHPAD:
             wscons_add_pointer(devnam, "ws",
                                ATTR_TOUCHPAD);
             break;
