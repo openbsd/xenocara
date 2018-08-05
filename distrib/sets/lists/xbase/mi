@@ -281,6 +281,9 @@
 ./usr/X11R6/lib/libXpm.a
 ./usr/X11R6/lib/libXpm.la
 ./usr/X11R6/lib/libXpm.so.9.0
+./usr/X11R6/lib/libXpresent.a
+./usr/X11R6/lib/libXpresent.la
+./usr/X11R6/lib/libXpresent.so.1.0
 ./usr/X11R6/lib/libXrandr.a
 ./usr/X11R6/lib/libXrandr.la
 ./usr/X11R6/lib/libXrandr.so.7.1

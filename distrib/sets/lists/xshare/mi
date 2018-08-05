@@ -333,6 +333,7 @@
 ./usr/X11R6/include/X11/extensions/Xfixes.h
 ./usr/X11R6/include/X11/extensions/Xge.h
 ./usr/X11R6/include/X11/extensions/Xinerama.h
+./usr/X11R6/include/X11/extensions/Xpresent.h
 ./usr/X11R6/include/X11/extensions/Xrandr.h
 ./usr/X11R6/include/X11/extensions/Xrender.h
 ./usr/X11R6/include/X11/extensions/Xv.h
@@ -751,6 +752,7 @@
 ./usr/X11R6/lib/pkgconfig/xmuu.pc
 ./usr/X11R6/lib/pkgconfig/xorg-macros.pc
 ./usr/X11R6/lib/pkgconfig/xpm.pc
+./usr/X11R6/lib/pkgconfig/xpresent.pc
 ./usr/X11R6/lib/pkgconfig/xproto.pc
 ./usr/X11R6/lib/pkgconfig/xproxymngproto.pc
 ./usr/X11R6/lib/pkgconfig/xrandr.pc
@@ -2145,6 +2147,7 @@
 ./usr/X11R6/man/man3/XrmStringToQuarkList.3
 ./usr/X11R6/man/man3/XrmUniqueQuark.3
 ./usr/X11R6/man/man3/XrmValue.3
+./usr/X11R6/man/man3/Xpresent.3
 ./usr/X11R6/man/man3/Xss.3
 ./usr/X11R6/man/man3/XtAddActions.3
 ./usr/X11R6/man/man3/XtAddCallback.3
