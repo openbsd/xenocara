@@ -1,0 +1,5 @@
+# $OpenBSD: Makefile.bsd-wrapper,v 1.1 2018/08/05 12:06:41 matthieu Exp $
+
+SHARED_LIBS=	Xpresent 1.0
+
+.include <bsd.xorg.mk>
