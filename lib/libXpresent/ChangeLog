@@ -1,0 +1,84 @@
+commit ced59e4373b7ad8f89ba222b3f489fb22050b991
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri Apr 17 11:39:11 2015 -0700
+
+    Bump version to 1.0.0
+    
+    This should make release.sh happy
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 6f963811e4811199417f3c6bc1361248a6d565a8
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri Apr 17 11:38:49 2015 -0700
+
+    Reset version number so we can make release.sh happy
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit c66dc19c2d05a3a59320b9111dd50f077bf7315e
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri Apr 17 11:35:37 2015 -0700
+
+    Make libtool happier
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit a38c5027dfab030fc4dc89d7daa0f1e8dd9863a1
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri Dec 13 12:46:50 2013 -0800
+
+    Add PresentFreeInput to release allocated event ids
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 466657644f6046f4409a4b9be688954583afc639
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri Dec 13 12:39:01 2013 -0800
+
+    Add kind/mode to Complete, set pixmap in Idle
+    
+    Fix a couple of event issues noticed by Fredrik Höglund --
+    
+    XPresentCompleteNotifyEvent was missing kind and mode fields, and the
+    pixmap field was never getting set in the XPresentIdleNotifyEvent.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit f4061913a02987215984bcb0964938d873c2cd52
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri Dec 13 12:26:10 2013 -0800
+
+    Elide redirect stuff.
+    
+    This isn't part of the 1.0 specification, so remove it from the
+    current API.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 5de191e6b1847017ecc7e13bc195f47479d332ac
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Dec 10 13:32:11 2013 -0800
+
+    Update to protocol version 1.0
+    
+    Add Idle and Redirect events, change PresentRegion to PresentPixmap,
+    add capabilities
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 740fa7bc896293715afaa56b89e5eb4b5846ba13
+Author: Keith Packard <keithp@keithp.com>
+Date:   Thu Sep 12 17:16:11 2013 -0700
+
+    Add .gitignore
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 0c90a6e5f8e127d179d870a7fdad660acb9299c7
+Author: Keith Packard <keithp@keithp.com>
+Date:   Thu Sep 12 17:15:33 2013 -0700
+
+    Initial import of Xlib Present binding
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
