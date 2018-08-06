@@ -1,4 +1,4 @@
-/* $OpenBSD: privsep.c,v 1.28 2015/11/11 21:07:49 matthieu Exp $ */
+/* $OpenBSD: privsep.c,v 1.29 2018/08/06 20:11:34 matthieu Exp $ */
 /*
  * Copyright 2001 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -207,7 +207,7 @@ receive_fd(int s)
 	msg.msg_controllen = sizeof(cmsgbuf.buf);
 
 	do
-		n = recvmsg(s, &msg, 0);
+		n = recvmsg(s, &msg, MSG_CMSG_CLOEXEC);
 	while (n == -1 && errno == EINTR);
 
 	if (n != sizeof(int)) {
