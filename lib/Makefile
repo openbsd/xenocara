@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.39 2018/08/05 12:20:17 matthieu Exp $
+# $OpenBSD: Makefile,v 1.40 2018/08/06 15:09:42 matthieu Exp $
 
 .include <bsd.xconf.mk>
 
@@ -42,7 +42,7 @@ SUBDIR= freetype fontconfig libxtrans libXau libXdmcp ${XCB_LIBS}\
 	libXmu libXpm libXaw libXfixes libXcomposite \
 	libXdamage libXcursor libXfont2  \
 	libXi libXinerama libxkbfile libxkbui \
-	libXpresent libXrandr libXRes libXScrnSaver \
+	libXrandr libXpresent libXRes libXScrnSaver \
 	libXtst libXv libXvMC libXxf86dga libXxf86vm \
 	libpciaccess pixman
 
