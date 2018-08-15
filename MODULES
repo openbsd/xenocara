@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.388 2018/08/05 12:21:23 matthieu Exp $
+# $OpenBSD: MODULES,v 1.389 2018/08/15 11:03:19 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -8,7 +8,7 @@ app/bdftopcf		1.1	7.7+
 app/beforelight		1.0.5
 app/bitmap		1.0.8
 app/editres		1.0.7
-app/fonttosfnt		1.0.4
+app/fonttosfnt		1.0.5		needs-update
 app/fslsfonts		1.0.5
 app/fstobdf		1.0.6
 app/iceauth		1.0.8	7.7+
@@ -117,7 +117,7 @@ driver/xf86-video-mga		1.6.5	7.7+
 driver/xf86-video-neomagic	1.2.9	7.7+
 driver/xf86-video-nv		2.1.21	7.7+
 driver/xf86-video-openchrome	0.6	7.7+	needs-update-and-dri
-driver/xf86-video-r128		6.10.2	7.7+	needs-update
+driver/xf86-video-r128		6.11.0	7.7+	needs-update
 driver/xf86-video-rendition	4.2.7
 driver/xf86-video-s3		0.6.5
 driver/xf86-video-s3virge	1.10.7
@@ -250,4 +250,4 @@ util/gccmakedep			1.0.3
 util/macros			1.19.2	7.7+
 util/makedepend			1.0.5	7.7+
 
-xserver				1.20.0	7.7+	needs-update
+xserver				1.20.1	7.7+	needs-update
