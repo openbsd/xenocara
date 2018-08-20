@@ -1,4 +1,4 @@
-/* $OpenBSD: arm64_video.c,v 1.1 2017/03/07 03:40:34 jsg Exp $ */
+/* $OpenBSD: arm64_video.c,v 1.2 2018/08/20 21:48:55 kettenis Exp $ */
 /*
  * Copyright 1992 by Rich Murphey <Rich@Rice.edu>
  * Copyright 1993 by David Wexelblat <dwex@goblin.org>
@@ -42,7 +42,7 @@
 void
 xf86OSInitVidMem(VidMemInfoPtr pVidMem)
 {
-	pVidMem->initialised = TRUE;
+    pVidMem->initialised = TRUE;
 }
 
 #ifdef X_PRIVSEP
@@ -52,6 +52,7 @@ xf86OSInitVidMem(VidMemInfoPtr pVidMem)
 _X_EXPORT void
 xf86PrivilegedInit(void)
 {
-	xf86OpenConsole();
+    pci_system_init();
+    xf86OpenConsole();
 }
 #endif
