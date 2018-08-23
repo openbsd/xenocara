@@ -2002,6 +2002,7 @@
 ./usr/X11R6/man/man3/XkbGetKeyboardByName.3
 ./usr/X11R6/man/man3/XkbGetMap.3
 ./usr/X11R6/man/man3/XkbGetNameChanges.3
+./usr/X11R6/man/man3/XkbGetNamedDeviceIndicator.3
 ./usr/X11R6/man/man3/XkbGetNamedGeometry.3
 ./usr/X11R6/man/man3/XkbGetNamedIndicator.3
 ./usr/X11R6/man/man3/XkbGetNames.3
@@ -2083,6 +2084,7 @@
 ./usr/X11R6/man/man3/XkbSetMap.3
 ./usr/X11R6/man/man3/XkbSetModActionVMods.3
 ./usr/X11R6/man/man3/XkbSetNamedIndicator.3
+./usr/X11R6/man/man3/XkbSetNamedDeviceIndicator.3
 ./usr/X11R6/man/man3/XkbSetNames.3
 ./usr/X11R6/man/man3/XkbSetPtrActionX.3
 ./usr/X11R6/man/man3/XkbSetPtrActionY.3
