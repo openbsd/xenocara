@@ -2083,8 +2083,8 @@
 ./usr/X11R6/man/man3/XkbSetIndicatorMap.3
 ./usr/X11R6/man/man3/XkbSetMap.3
 ./usr/X11R6/man/man3/XkbSetModActionVMods.3
-./usr/X11R6/man/man3/XkbSetNamedIndicator.3
 ./usr/X11R6/man/man3/XkbSetNamedDeviceIndicator.3
+./usr/X11R6/man/man3/XkbSetNamedIndicator.3
 ./usr/X11R6/man/man3/XkbSetNames.3
 ./usr/X11R6/man/man3/XkbSetPtrActionX.3
 ./usr/X11R6/man/man3/XkbSetPtrActionY.3
@@ -2117,6 +2117,7 @@
 ./usr/X11R6/man/man3/XmbufGetVersion.3
 ./usr/X11R6/man/man3/XmbufGetWindowAttributes.3
 ./usr/X11R6/man/man3/XmbufQueryExtension.3
+./usr/X11R6/man/man3/Xpresent.3
 ./usr/X11R6/man/man3/Xrandr.3
 ./usr/X11R6/man/man3/XrmCombineDatabase.3
 ./usr/X11R6/man/man3/XrmCombineFileDatabase.3
@@ -2149,7 +2150,6 @@
 ./usr/X11R6/man/man3/XrmStringToQuarkList.3
 ./usr/X11R6/man/man3/XrmUniqueQuark.3
 ./usr/X11R6/man/man3/XrmValue.3
-./usr/X11R6/man/man3/Xpresent.3
 ./usr/X11R6/man/man3/Xss.3
 ./usr/X11R6/man/man3/XtAddActions.3
 ./usr/X11R6/man/man3/XtAddCallback.3
