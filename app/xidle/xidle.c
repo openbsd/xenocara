@@ -1,4 +1,4 @@
-/*	$OpenBSD: xidle.c,v 1.5 2017/08/20 16:43:25 matthieu Exp $	*/
+/*	$OpenBSD: xidle.c,v 1.6 2018/09/06 07:21:34 matthieu Exp $	*/
 /*
  * Copyright (c) 2005 Federico G. Schwindt
  * Copyright (c) 2005 Claudio Castiglia
@@ -53,7 +53,8 @@ enum {
 	north = 0x01,
 	south = 0x02,
 	east  = 0x04,
-	west  = 0x08
+	west  = 0x08,
+	none  = 0x10,
 };
 
 enum { XIDLE_LOCK = 1, XIDLE_DIE = 2 };
@@ -84,6 +85,7 @@ static XrmOptionDescRec opts[] = {
 	{ "-program",	".program",	XrmoptionSepArg,	(caddr_t)NULL },
 	{ "-timeout",	".timeout",	XrmoptionSepArg,	(caddr_t)NULL },
 
+	{ "-no",	".position",	XrmoptionNoArg,		(caddr_t)"no" },
 	{ "-ne",	".position",	XrmoptionNoArg,		(caddr_t)"ne" },
 	{ "-nw",	".position", 	XrmoptionNoArg,		(caddr_t)"nw" },
 	{ "-se",	".position",	XrmoptionNoArg,		(caddr_t)"se" },
@@ -108,7 +110,7 @@ usage()
 {
 	fprintf(stderr, "Usage:\n%s %s\n", __progname,
 	    "[-area pixels] [-delay secs] [-display host:dpy] "
-	    "[-ne | -nw | -se | -sw]\n      [-program path] [-timeout secs]");
+	    "[-no | -ne | -nw | -se | -sw]\n      [-program path] [-timeout secs]");
 	exit(1);
 }
 
@@ -133,12 +135,14 @@ init_x(struct xinfo *xi, int position, int area, int timeout)
 	    xi->coord_x, xi->coord_y, area, area, 0, 0, InputOnly,
 	    CopyFromParent, CWOverrideRedirect, &attr);
 
-	XSelectInput(dpy, xi->win, EnterWindowMask|StructureNotifyMask
+	if (position != none) {
+		XSelectInput(dpy, xi->win, EnterWindowMask|StructureNotifyMask
 #if 0
 			       |VisibilityChangeMask
 #endif
-	);
-	XMapWindow(dpy, xi->win);
+		);
+		XMapWindow(dpy, xi->win);
+	}
 
 	/*
 	 * AFAICT, we need the event number for ScreenSaverNotify
@@ -228,6 +232,7 @@ str2pos(const char *src)
 		{ "nw", north|west },
 		{ "se", south|east },
 		{ "sw", south|west },
+		{ "no", none       },
 		{ NULL, 0	   }
 	}, *s;
 

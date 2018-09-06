@@ -1,4 +1,4 @@
-.\" $OpenBSD: xidle.1,v 1.4 2017/11/09 19:13:03 schwarze Exp $
+.\" $OpenBSD: xidle.1,v 1.5 2018/09/06 07:21:34 matthieu Exp $
 .\"
 .\" Copyright (c) 2005 Federico G. Schwindt.
 .\"
@@ -35,7 +35,7 @@
 .Op Fl area Ar pixels
 .Op Fl delay Ar secs
 .Op Fl display Ar display
-.Op Fl nw | ne | sw | se
+.Op Fl no | nw | ne | sw | se
 .Op Fl program Ar path
 .Op Fl timeout Ar secs
 .Ek
@@ -66,8 +66,8 @@ The default is 2 seconds.
 .It Fl display Ar display
 This argument allows you to specify the server to connect to; see
 .Xr X 7 .
-.It Fl nw | ne | sw | se
-Set the position to one of northwest, northeast, southwest, or southeast,
+.It Fl no | nw | ne | sw | se
+Set the position to one of none, northwest, northeast, southwest, or southeast,
 respectively.
 If no position is specified,
 the default is northwest.
@@ -100,7 +100,9 @@ Specify the number of seconds to wait before running the program; see the
 .Fl delay
 option.
 .It Sy position No (class Sy Position )
-Set the position to one of: "nw", "ne", "sw", or "se"; see descriptions of the
+Set the position to one of: "no", "nw", "ne", "sw", or "se"; see descriptions
+of the
+.Fl no ,
 .Fl nw ,
 .Fl ne ,
 .Fl sw ,
