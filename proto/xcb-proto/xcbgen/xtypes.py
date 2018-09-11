@@ -36,10 +36,13 @@ class Type(object):
         self.is_reply = False
         self.is_union = False
         self.is_pad = False
+        self.is_eventstruct = False
+        self.is_event = False
         self.is_switch = False
         self.is_case_or_bitcase = False
         self.is_bitcase = False
         self.is_case = False
+        self.is_fd = False
         self.required_start_align = Alignment()
 
         # the biggest align value of an align-pad contained in this type
@@ -66,7 +69,7 @@ class Type(object):
         '''
         raise Exception('abstract fixed_size method not overridden!')
 
-    def make_member_of(self, module, complex_type, field_type, field_name, visible, wire, auto, enum=None):
+    def make_member_of(self, module, complex_type, field_type, field_name, visible, wire, auto, enum=None, is_fd=False):
         '''
         Default method for making a data type a member of a structure.
         Extend this if the data type needs to add an additional length field or something.
@@ -75,7 +78,7 @@ class Type(object):
         complex_type is the structure object.
         see Field for the meaning of the other parameters.
         '''
-        new_field = Field(self, field_type, field_name, visible, wire, auto, enum)
+        new_field = Field(self, field_type, field_name, visible, wire, auto, enum, is_fd)
 
         # We dump the _placeholder_byte if any fields are added.
         for (idx, field) in enumerate(complex_type.fields):
@@ -215,6 +218,18 @@ tchar =  SimpleType(('char',), 1)
 tfloat = SimpleType(('float',), 4)
 tdouble = SimpleType(('double',), 8)
 
+class FileDescriptor(SimpleType):
+    '''
+    Derived class which represents a file descriptor.
+    '''
+    def __init__(self):
+        SimpleType.__init__(self, ('int'), 4)
+        self.is_fd = True
+
+    def fixed_size(self):
+        return True
+
+    out = __main__.output['simple']
 
 class Enum(SimpleType):
     '''
@@ -308,7 +323,9 @@ class ListType(Type):
                 type.make_member_of(module, complex_type, lenfield_type, lenfield_name, True, lenwire, False, enum)
 
         # Add ourself to the structure by calling our original method.
-        Type.make_member_of(self, module, complex_type, field_type, field_name, visible, wire, auto, enum)
+        if self.member.is_fd:
+            wire = False
+        Type.make_member_of(self, module, complex_type, field_type, field_name, visible, wire, auto, enum, self.member.is_fd)
 
     def resolve(self, module):
         if self.resolved:
@@ -501,7 +518,7 @@ class ComplexType(Type):
                 int(required_start_align_element.get('align', "4"), 0),
                 int(required_start_align_element.get('offset', "0"), 0))
             if verbose_align_log:
-                print "Explicit start-align for %s: %s\n" % (self, self.required_start_align)
+                print ("Explicit start-align for %s: %s\n" % (self, self.required_start_align))
 
     def resolve(self, module):
         if self.resolved:
@@ -530,7 +547,12 @@ class ComplexType(Type):
             elif child.tag == 'list':
                 field_name = child.get('name')
                 fkey = child.get('type')
-                type = ListType(child, module.get_type(fkey), *self.lenfield_parent)
+                if fkey == 'fd':
+                    ftype = FileDescriptor()
+                    fkey = 'INT32'
+                else:
+                    ftype = module.get_type(fkey)
+                type = ListType(child, ftype, *self.lenfield_parent)
                 visible = True
             elif child.tag == 'switch':
                 field_name = child.get('name')
@@ -592,7 +614,7 @@ class ComplexType(Type):
                 if verbose_align_log:
                     print ("calc_required_start_align: %s has start-align %s"
                         % (str(self), str(self.required_start_align)))
-                    print "Details:\n" + str(log)
+                    print ("Details:\n" + str(log))
                 if self.required_start_align.offset != 0:
                     print (("WARNING: %s\n\thas start-align with non-zero offset: %s"
                         + "\n\tsuggest to add explicit definition with:"
@@ -619,12 +641,12 @@ class ComplexType(Type):
             for offset in range(0,align):
                 align_candidate = Alignment(align, offset)
                 if verbose_align_log:
-                    print "trying %s for %s" % (str(align_candidate), str(self))
+                    print ("trying %s for %s" % (str(align_candidate), str(self)))
                 my_log = AlignmentLog()
                 if self.is_possible_start_align(align_candidate, callstack, my_log):
                     log.append(my_log)
                     if verbose_align_log:
-                        print "found start-align %s for %s" % (str(align_candidate), str(self))
+                        print ("found start-align %s for %s" % (str(align_candidate), str(self)))
                     return align_candidate
                 else:
                     my_ok_count = my_log.ok_count()
@@ -641,7 +663,7 @@ class ComplexType(Type):
         # none of the candidates applies
         # this type has illegal internal aligns for all possible start_aligns
         if verbose_align_log:
-            print "didn't find start-align for %s" % str(self)
+            print ("didn't find start-align for %s" % str(self))
         log.append(best_log)
         return None
 
@@ -900,7 +922,7 @@ class SwitchType(ComplexType):
     # aux function for unchecked_get_alignment_after
     def get_align_for_selected_case_field(self, case_field, start_align, callstack, log):
         if verbose_align_log:
-            print "get_align_for_selected_case_field: %s, case_field = %s" % (str(self), str(case_field))
+            print ("get_align_for_selected_case_field: %s, case_field = %s" % (str(self), str(case_field)))
         total_align = start_align
         for field in self.bitcases:
             my_callstack = callstack[:]
@@ -1164,6 +1186,82 @@ class Request(ComplexType):
     out = __main__.output['request']
 
 
+class EventStructAllowedRule:
+
+    def __init__(self, parent, elt):
+        self.elt = elt
+        self.extension = elt.get('extension')
+        self.ge_events = elt.get('xge') == "true"
+        self.min_opcode = int( elt.get('opcode-min') )
+        self.max_opcode = int( elt.get('opcode-max') )
+
+    def resolve(self, parent, module):
+        # get the namespace of the specified extension
+        extension_namespace = module.get_namespace( self.extension )
+        if extension_namespace is None:
+            raise Exception( "EventStructAllowedRule.resolve: cannot find extension \"" + self.extension + "\"" )
+            return
+
+        # find and add the selected events
+        for opcode in range(self.min_opcode, self.max_opcode):
+            name_and_event = extension_namespace.get_event_by_opcode( opcode, self.ge_events )
+            if name_and_event is None:
+                # could not find event -> error handling
+                if self.ge_events:
+                    raise Exception("EventStructAllowedRule.resolve: cannot find xge-event with opcode " + str(opcode) + " in extension " + self.extension )
+                else:
+                    raise Exception("EventStructAllowedRule.resolve: cannot find oldstyle-event with opcode " + str(opcode) + " in extension " + self.extension )
+                return
+
+            ( name, event ) = name_and_event
+            # add event to EventStruct
+            parent.add_event( module, self.extension, opcode, name, event )
+
+
+class EventStruct(Union):
+    '''
+    Derived class representing an event-use-as-struct data type.
+    '''
+
+    def __init__(self, name, elt):
+        Union.__init__(self, name, elt)
+        self.is_eventstruct = True
+        self.events = []
+        self.allowedRules = []
+        self.contains_ge_events = False
+        for item in list(elt):
+            if item.tag == 'allowed':
+                allowedRule = EventStructAllowedRule(self, item)
+                self.allowedRules.append( allowedRule )
+                if allowedRule.ge_events:
+                    self.contains_ge_events = True
+
+    out = __main__.output['eventstruct']
+
+    def resolve(self, module):
+        if self.resolved:
+            return
+        for allowedRule in self.allowedRules:
+            allowedRule.resolve(self, module)
+        Union.resolve(self,module)
+        self.resolved = True
+
+    # add event. called by resolve
+    def add_event(self, module, extension, opcode, name, event_type ):
+        self.events.append( (extension, opcode, name, event_type) )
+        # Add the field to ourself
+        event_type.make_member_of(module, self, name, name[-1], True, True, False)
+        # Recursively resolve the event (could be another structure, list)
+        event_type.resolve(module)
+
+    def fixed_size(self):
+        is_fixed_size = True
+        for extension, opcode, name, event in self.events:
+            if not event.fixed_size():
+                is_fixed_size = False
+        return is_fixed_size
+
+
 class Event(ComplexType):
     '''
     Derived class representing an event data type.
@@ -1183,6 +1281,8 @@ class Event(ComplexType):
 
         self.is_ge_event = bool(elt.get('xge'))
 
+        self.is_event = True
+
         self.doc = None
         for item in list(elt):
             if item.tag == 'doc':
@@ -1192,6 +1292,13 @@ class Event(ComplexType):
         self.opcodes[name] = opcode
         if main:
             self.name = name
+
+    def get_name_for_opcode(self, opcode):
+        for name, my_opcode in self.opcodes.items():
+            if int(my_opcode) == opcode:
+                return name
+        else:
+            return None
 
     def resolve(self, module):
         def add_event_header():
