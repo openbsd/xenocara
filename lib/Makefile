@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.40 2018/08/06 15:09:42 matthieu Exp $
+# $OpenBSD: Makefile,v 1.41 2018/09/11 19:34:56 matthieu Exp $
 
 .include <bsd.xconf.mk>
 
@@ -19,12 +19,11 @@ XCB_LIBS= \
 	libxcb/libxcb-shape \
 	libxcb/libxcb-shm \
 	libxcb/libxcb-sync \
-	libxcb/libxcb-xevie \
 	libxcb/libxcb-xf86dri \
 	libxcb/libxcb-xfixes \
 	libxcb/libxcb-xinerama \
+	libxcb/libxcb-xinput \
 	libxcb/libxcb-xkb \
-	libxcb/libxcb-xprint \
 	libxcb/libxcb-xtest \
 	libxcb/libxcb-xv \
 	libxcb/libxcb-xvmc \

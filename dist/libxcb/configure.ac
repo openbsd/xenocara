@@ -2,7 +2,7 @@ dnl Process this file with autoconf to produce a configure script.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libxcb],[1.12],
+AC_INIT([libxcb],[1.13],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xcb],
         [libxcb])
 AC_CONFIG_AUX_DIR([build-aux])
@@ -50,7 +50,7 @@ fi
 AC_SUBST(HTML_CHECK_RESULT)
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XCBPROTO, xcb-proto >= 1.12)
+PKG_CHECK_MODULES(XCBPROTO, xcb-proto >= 1.13)
 NEEDED="pthread-stubs xau >= 0.99.2"
 PKG_CHECK_MODULES(NEEDED, $NEEDED)
 
@@ -220,6 +220,7 @@ XCB_EXTENSION(Damage, yes)
 XCB_EXTENSION(DPMS, yes)
 XCB_EXTENSION(DRI2, yes)
 XCB_EXTENSION(DRI3, $have_sendmsg)
+XCB_EXTENSION(GE, no)
 XCB_EXTENSION(GLX, yes)
 XCB_EXTENSION(Present, yes)
 XCB_EXTENSION(RandR, yes)
@@ -234,7 +235,7 @@ XCB_EXTENSION(Xevie, no)
 XCB_EXTENSION(XFixes, yes)
 XCB_EXTENSION(XFree86-DRI, yes)
 XCB_EXTENSION(Xinerama, yes)
-XCB_EXTENSION(XInput, no)
+XCB_EXTENSION(XInput, yes)
 XCB_EXTENSION(XKB, yes)
 XCB_EXTENSION(Xprint, no)
 XCB_EXTENSION(SELinux, no)
@@ -271,6 +272,7 @@ xcb-damage.pc
 xcb-dpms.pc
 xcb-dri2.pc
 xcb-dri3.pc
+xcb-ge.pc
 xcb-glx.pc
 xcb-present.pc
 xcb-randr.pc
@@ -318,6 +320,7 @@ echo "    Damage..............: ${BUILD_DAMAGE}"
 echo "    Dpms................: ${BUILD_DPMS}"
 echo "    Dri2................: ${BUILD_DRI2}"
 echo "    Dri3................: ${BUILD_DRI3}"
+echo "    GenericEvent........: ${BUILD_GE}"
 echo "    Glx.................: ${BUILD_GLX}"
 echo "    Randr...............: ${BUILD_RANDR}"
 echo "    Record..............: ${BUILD_RECORD}"
