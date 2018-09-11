@@ -660,12 +660,11 @@
 ./usr/X11R6/include/xcb/xcb_util.h
 ./usr/X11R6/include/xcb/xcb_xrm.h
 ./usr/X11R6/include/xcb/xcbext.h
-./usr/X11R6/include/xcb/xevie.h
 ./usr/X11R6/include/xcb/xf86dri.h
 ./usr/X11R6/include/xcb/xfixes.h
 ./usr/X11R6/include/xcb/xinerama.h
+./usr/X11R6/include/xcb/xinput.h
 ./usr/X11R6/include/xcb/xkb.h
-./usr/X11R6/include/xcb/xprint.h
 ./usr/X11R6/include/xcb/xproto.h
 ./usr/X11R6/include/xcb/xtest.h
 ./usr/X11R6/include/xcb/xv.h
