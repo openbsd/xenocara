@@ -29,10 +29,6 @@
 #ifndef FREEDRENO_PRIV_H_
 #define FREEDRENO_PRIV_H_
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
@@ -49,6 +45,7 @@
 #include "xf86atomic.h"
 
 #include "util_double_list.h"
+#include "util_math.h"
 
 #include "freedreno_drmif.h"
 #include "freedreno_ringbuffer.h"
@@ -117,8 +114,13 @@ drm_private int fd_bo_cache_free(struct fd_bo_cache *cache, struct fd_bo *bo);
 /* for where @table_lock is already held: */
 drm_private void fd_device_del_locked(struct fd_device *dev);
 
+enum fd_ringbuffer_flags {
+	FD_RINGBUFFER_OBJECT = 0x1,
+};
+
 struct fd_pipe_funcs {
-	struct fd_ringbuffer * (*ringbuffer_new)(struct fd_pipe *pipe, uint32_t size);
+	struct fd_ringbuffer * (*ringbuffer_new)(struct fd_pipe *pipe, uint32_t size,
+			enum fd_ringbuffer_flags flags);
 	int (*get_param)(struct fd_pipe *pipe, enum fd_param_id param, uint64_t *value);
 	int (*wait)(struct fd_pipe *pipe, uint32_t timestamp, uint64_t timeout);
 	void (*destroy)(struct fd_pipe *pipe);
@@ -128,6 +130,7 @@ struct fd_pipe {
 	struct fd_device *dev;
 	enum fd_pipe_id id;
 	uint32_t gpu_id;
+	atomic_t refcnt;
 	const struct fd_pipe_funcs *funcs;
 };
 
@@ -156,6 +159,7 @@ struct fd_bo_funcs {
 	int (*cpu_prep)(struct fd_bo *bo, struct fd_pipe *pipe, uint32_t op);
 	void (*cpu_fini)(struct fd_bo *bo);
 	int (*madvise)(struct fd_bo *bo, int willneed);
+	uint64_t (*iova)(struct fd_bo *bo);
 	void (*destroy)(struct fd_bo *bo);
 };
 
@@ -173,7 +177,6 @@ struct fd_bo {
 	time_t free_time;        /* time when added to bucket-list */
 };
 
-#define ALIGN(v,a) (((v) + (a) - 1) & ~((a) - 1))
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
 #define enable_debug 0  /* TODO make dynamic */
@@ -200,7 +203,7 @@ offset_bytes(void *end, void *start)
 	return ((char *)end) - ((char *)start);
 }
 
-#ifdef HAVE_VALGRIND
+#if HAVE_VALGRIND
 #  include <memcheck.h>
 
 /*

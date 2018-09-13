@@ -21,10 +21,6 @@
  *
 */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <stdio.h>
 #include <inttypes.h>
 
@@ -283,7 +279,7 @@ static void amdgpu_cs_vcn_dec_create(void)
 
 static void amdgpu_cs_vcn_dec_decode(void)
 {
-	const unsigned dpb_size = 15923584, ctx_size = 5287680, dt_size = 737280;
+	const unsigned dpb_size = 15923584, dt_size = 737280;
 	uint64_t msg_addr, fb_addr, bs_addr, dpb_addr, ctx_addr, dt_addr, it_addr, sum;
 	struct amdgpu_vcn_bo dec_buf;
 	int size, len, i, r;

@@ -21,10 +21,6 @@
  *
 */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,7 +47,7 @@
 #include "amdgpu_test.h"
 #include "amdgpu_internal.h"
 
-/* Test suit names */
+/* Test suite names */
 #define BASIC_TESTS_STR "Basic Tests"
 #define BO_TESTS_STR "BO Tests"
 #define CS_TESTS_STR "CS Tests"
@@ -167,7 +163,7 @@ static Suites_Active_Status suites_active_stat[] = {
 		},
 		{
 			.pName = VM_TESTS_STR,
-			.pActive = always_active,
+			.pActive = suite_vm_tests_enable,
 		},
 };
 
@@ -243,7 +239,6 @@ static const char options[]   = "hlrps:t:b:d:f";
 static int amdgpu_open_devices(int open_render_node)
 {
 	drmDevicePtr devices[MAX_CARDS_SUPPORTED];
-	int ret;
 	int i;
 	int drm_node;
 	int amd_index = 0;
@@ -400,7 +395,7 @@ static int amdgpu_find_device(uint8_t bus, uint16_t dev)
 	return -1;
 }
 
-static void amdgpu_disable_suits()
+static void amdgpu_disable_suites()
 {
 	amdgpu_device_handle device_handle;
 	uint32_t major_version, minor_version, family_id;
@@ -416,11 +411,11 @@ static void amdgpu_disable_suits()
 	if (amdgpu_device_deinitialize(device_handle))
 		return;
 
-	/* Set active status for suits based on their policies */
+	/* Set active status for suites based on their policies */
 	for (i = 0; i < size; ++i)
 		if (amdgpu_set_suite_active(suites_active_stat[i].pName,
 				suites_active_stat[i].pActive()))
-			fprintf(stderr, "suit deactivation failed - %s\n", CU_get_error_msg());
+			fprintf(stderr, "suite deactivation failed - %s\n", CU_get_error_msg());
 
 	/* Explicitly disable specific tests due to known bugs or preferences */
 	/*
@@ -433,6 +428,8 @@ static void amdgpu_disable_suits()
 	if (amdgpu_set_test_active(BO_TESTS_STR, "Metadata", CU_FALSE))
 		fprintf(stderr, "test deactivation failed - %s\n", CU_get_error_msg());
 
+	if (amdgpu_set_test_active(BASIC_TESTS_STR, "bo eviction Test", CU_FALSE))
+		fprintf(stderr, "test deactivation failed - %s\n", CU_get_error_msg());
 
 	/* This test was ran on GFX8 and GFX9 only */
 	if (family_id < AMDGPU_FAMILY_VI || family_id > AMDGPU_FAMILY_RV)
@@ -556,8 +553,8 @@ int main(int argc, char **argv)
 	/* Run tests using the CUnit Basic interface */
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 
-	/* Disable suits and individual tests based on misc. conditions */
-	amdgpu_disable_suits();
+	/* Disable suites and individual tests based on misc. conditions */
+	amdgpu_disable_suites();
 
 	if (display_list) {
 		display_test_suites();

@@ -21,10 +21,6 @@
  *
 */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -90,25 +86,27 @@ static void amdgpu_deadlock_compute(void);
 
 CU_BOOL suite_deadlock_tests_enable(void)
 {
+	CU_BOOL enable = CU_TRUE;
+
 	if (amdgpu_device_initialize(drm_amdgpu[0], &major_version,
 					     &minor_version, &device_handle))
 		return CU_FALSE;
 
+	if (device_handle->info.family_id == AMDGPU_FAMILY_AI ||
+	    device_handle->info.family_id == AMDGPU_FAMILY_SI ||
+	    device_handle->info.family_id == AMDGPU_FAMILY_RV) {
+		printf("\n\nCurrently hangs the CP on this ASIC, deadlock suite disabled\n");
+		enable = CU_FALSE;
+	}
+
 	if (amdgpu_device_deinitialize(device_handle))
 		return CU_FALSE;
 
-
-	if (device_handle->info.family_id == AMDGPU_FAMILY_AI) {
-		printf("\n\nCurrently hangs the CP on this ASIC, deadlock suite disabled\n");
-		return CU_FALSE;
-	}
-
-	return CU_TRUE;
+	return enable;
 }
 
 int suite_deadlock_tests_init(void)
 {
-	struct amdgpu_gpu_info gpu_info = {0};
 	int r;
 
 	r = amdgpu_device_initialize(drm_amdgpu[0], &major_version,
@@ -175,7 +173,7 @@ static void amdgpu_deadlock_helper(unsigned ip_type)
 	struct amdgpu_cs_ib_info ib_info;
 	struct amdgpu_cs_fence fence_status;
 	uint32_t expired;
-	int i, r, instance;
+	int i, r;
 	amdgpu_bo_list_handle bo_list;
 	amdgpu_va_handle va_handle;
 
@@ -229,7 +227,7 @@ static void amdgpu_deadlock_helper(unsigned ip_type)
 
 	for (i = 0; i < 200; i++) {
 		r = amdgpu_cs_submit(context_handle, 0,&ibs_request, 1);
-		CU_ASSERT_EQUAL(r, 0);
+		CU_ASSERT_EQUAL((r == 0 || r == -ECANCELED), 1);
 
 	}
 
@@ -242,7 +240,9 @@ static void amdgpu_deadlock_helper(unsigned ip_type)
 
 	r = amdgpu_cs_query_fence_status(&fence_status,
 			AMDGPU_TIMEOUT_INFINITE,0, &expired);
-	CU_ASSERT_EQUAL(r, 0);
+	CU_ASSERT_EQUAL((r == 0 || r == -ECANCELED), 1);
+
+	pthread_join(stress_thread, NULL);
 
 	r = amdgpu_bo_list_destroy(bo_list);
 	CU_ASSERT_EQUAL(r, 0);
@@ -253,6 +253,4 @@ static void amdgpu_deadlock_helper(unsigned ip_type)
 
 	r = amdgpu_cs_ctx_free(context_handle);
 	CU_ASSERT_EQUAL(r, 0);
-
-	pthread_join(stress_thread, NULL);
 }

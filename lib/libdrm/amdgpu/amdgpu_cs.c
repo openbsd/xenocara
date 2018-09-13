@@ -21,10 +21,6 @@
  *
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -194,8 +190,6 @@ static int amdgpu_cs_submit_one(amdgpu_context_handle context,
 	if (ibs_request->ip_type >= AMDGPU_HW_IP_NUM)
 		return -EINVAL;
 	if (ibs_request->ring >= AMDGPU_CS_MAX_RINGS)
-		return -EINVAL;
-	if (ibs_request->number_of_ibs > AMDGPU_CS_MAX_IBS_PER_SUBMIT)
 		return -EINVAL;
 	if (ibs_request->number_of_ibs == 0) {
 		ibs_request->seq_no = AMDGPU_NULL_SUBMIT_SEQ;
@@ -582,7 +576,7 @@ static int amdgpu_cs_reset_sem(amdgpu_semaphore_handle sem)
 	if (!sem || !sem->signal_fence.context)
 		return -EINVAL;
 
-	sem->signal_fence.context = NULL;;
+	sem->signal_fence.context = NULL;
 	sem->signal_fence.ip_type = 0;
 	sem->signal_fence.ip_instance = 0;
 	sem->signal_fence.ring = 0;

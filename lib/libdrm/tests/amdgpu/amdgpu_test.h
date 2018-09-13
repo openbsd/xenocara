@@ -30,7 +30,7 @@
 /**
  * Define max. number of card in system which we are able to handle
  */
-#define MAX_CARDS_SUPPORTED     4
+#define MAX_CARDS_SUPPORTED     128
 
 /* Forward reference for array to keep "drm" handles */
 extern int drm_amdgpu[MAX_CARDS_SUPPORTED];
@@ -185,6 +185,11 @@ int suite_vm_tests_init();
 int suite_vm_tests_clean();
 
 /**
+ * Decide if the suite is enabled by default or not.
+ */
+CU_BOOL suite_vm_tests_enable(void);
+
+/**
  * Tests in vm test suite
  */
 extern CU_TestInfo vm_tests[];
@@ -242,6 +247,29 @@ static inline int gpu_mem_free(amdgpu_bo_handle bo,
 
 	r = amdgpu_bo_free(bo);
 	CU_ASSERT_EQUAL(r, 0);
+
+	return 0;
+}
+
+static inline int
+amdgpu_bo_alloc_wrap(amdgpu_device_handle dev, unsigned size,
+		     unsigned alignment, unsigned heap, uint64_t flags,
+		     amdgpu_bo_handle *bo)
+{
+	struct amdgpu_bo_alloc_request request = {};
+	amdgpu_bo_handle buf_handle;
+	int r;
+
+	request.alloc_size = size;
+	request.phys_alignment = alignment;
+	request.preferred_heap = heap;
+	request.flags = flags;
+
+	r = amdgpu_bo_alloc(dev, &request, &buf_handle);
+	if (r)
+		return r;
+
+	*bo = buf_handle;
 
 	return 0;
 }
@@ -322,26 +350,26 @@ amdgpu_get_bo_list(amdgpu_device_handle dev, amdgpu_bo_handle bo1,
 }
 
 
-static inline CU_ErrorCode amdgpu_set_suite_active(const char *suit_name,
+static inline CU_ErrorCode amdgpu_set_suite_active(const char *suite_name,
 							  CU_BOOL active)
 {
-	CU_ErrorCode r = CU_set_suite_active(CU_get_suite(suit_name), active);
+	CU_ErrorCode r = CU_set_suite_active(CU_get_suite(suite_name), active);
 
 	if (r != CUE_SUCCESS)
-		fprintf(stderr, "Failed to obtain suite %s\n", suit_name);
+		fprintf(stderr, "Failed to obtain suite %s\n", suite_name);
 
 	return r;
 }
 
-static inline CU_ErrorCode amdgpu_set_test_active(const char *suit_name,
+static inline CU_ErrorCode amdgpu_set_test_active(const char *suite_name,
 				  const char *test_name, CU_BOOL active)
 {
 	CU_ErrorCode r;
-	CU_pSuite pSuite = CU_get_suite(suit_name);
+	CU_pSuite pSuite = CU_get_suite(suite_name);
 
 	if (!pSuite) {
 		fprintf(stderr, "Failed to obtain suite %s\n",
-				suit_name);
+				suite_name);
 		return CUE_NOSUITE;
 	}
 

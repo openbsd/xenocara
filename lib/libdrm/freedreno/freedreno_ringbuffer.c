@@ -26,25 +26,23 @@
  *    Rob Clark <robclark@freedesktop.org>
  */
 
-#ifdef HAVE_CONFIG_H
-# include <config.h>
-#endif
-
 #include <assert.h>
 
 #include "freedreno_drmif.h"
 #include "freedreno_priv.h"
 #include "freedreno_ringbuffer.h"
 
-struct fd_ringbuffer *
-fd_ringbuffer_new(struct fd_pipe *pipe, uint32_t size)
+static struct fd_ringbuffer *
+ringbuffer_new(struct fd_pipe *pipe, uint32_t size,
+		enum fd_ringbuffer_flags flags)
 {
 	struct fd_ringbuffer *ring;
 
-	ring = pipe->funcs->ringbuffer_new(pipe, size);
+	ring = pipe->funcs->ringbuffer_new(pipe, size, flags);
 	if (!ring)
 		return NULL;
 
+	ring->flags = flags;
 	ring->pipe = pipe;
 	ring->start = ring->funcs->hostptr(ring);
 	ring->end = &(ring->start[ring->size/4]);
@@ -54,9 +52,27 @@ fd_ringbuffer_new(struct fd_pipe *pipe, uint32_t size)
 	return ring;
 }
 
+struct fd_ringbuffer *
+fd_ringbuffer_new(struct fd_pipe *pipe, uint32_t size)
+{
+	return ringbuffer_new(pipe, size, 0);
+}
+
+struct fd_ringbuffer *
+fd_ringbuffer_new_object(struct fd_pipe *pipe, uint32_t size)
+{
+	/* we can't really support "growable" rb's in general for
+	 * stateobj's since we need a single gpu addr (ie. can't
+	 * do the trick of a chain of IB packets):
+	 */
+	assert(size);
+	return ringbuffer_new(pipe, size, FD_RINGBUFFER_OBJECT);
+}
+
 void fd_ringbuffer_del(struct fd_ringbuffer *ring)
 {
-	fd_ringbuffer_reset(ring);
+	if (!(ring->flags & FD_RINGBUFFER_OBJECT))
+		fd_ringbuffer_reset(ring);
 	ring->funcs->destroy(ring);
 }
 
@@ -67,6 +83,8 @@ void fd_ringbuffer_del(struct fd_ringbuffer *ring)
 void fd_ringbuffer_set_parent(struct fd_ringbuffer *ring,
 					 struct fd_ringbuffer *parent)
 {
+	/* state objects should not be parented! */
+	assert(!(ring->flags & FD_RINGBUFFER_OBJECT));
 	ring->parent = parent;
 }
 
@@ -154,6 +172,21 @@ fd_ringbuffer_emit_reloc_ring_full(struct fd_ringbuffer *ring,
 	uint32_t size = offset_bytes(target->cur, target->start);
 	return ring->funcs->emit_reloc_ring(ring, target, cmd_idx, 0, size);
 }
+
+uint32_t
+fd_ringbuffer_size(struct fd_ringbuffer *ring)
+{
+	/* only really needed for stateobj ringbuffers, and won't really
+	 * do what you expect for growable rb's.. so lets just restrict
+	 * this to stateobj's for now:
+	 */
+	assert(ring->flags & FD_RINGBUFFER_OBJECT);
+	return offset_bytes(ring->cur, ring->start);
+}
+
+/*
+ * Deprecated ringmarker API:
+ */
 
 struct fd_ringmarker * fd_ringmarker_new(struct fd_ringbuffer *ring)
 {

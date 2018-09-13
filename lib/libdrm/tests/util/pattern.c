@@ -23,10 +23,6 @@
  * IN THE SOFTWARE.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,7 +30,7 @@
 
 #include <drm_fourcc.h>
 
-#ifdef HAVE_CAIRO
+#if HAVE_CAIRO
 #include <cairo.h>
 #include <math.h>
 #endif
@@ -546,10 +542,9 @@ static void fill_smpte(const struct util_format_info *info, void *planes[3],
 static void make_pwetty(void *data, unsigned int width, unsigned int height,
 			unsigned int stride, uint32_t format)
 {
-#ifdef HAVE_CAIRO
+#if HAVE_CAIRO
 	cairo_surface_t *surface;
 	cairo_t *cr;
-	int x, y;
 	cairo_format_t cairo_format;
 
 	/* we can ignore the order of R,G,B channels */
@@ -576,8 +571,8 @@ static void make_pwetty(void *data, unsigned int width, unsigned int height,
 	cairo_surface_destroy(surface);
 
 	cairo_set_line_cap(cr, CAIRO_LINE_CAP_SQUARE);
-	for (x = 0; x < width; x += 250)
-		for (y = 0; y < height; y += 250) {
+	for (unsigned x = 0; x < width; x += 250)
+		for (unsigned y = 0; y < height; y += 250) {
 			char buf[64];
 
 			cairo_move_to(cr, x, y - 20);
@@ -824,8 +819,8 @@ static void fill_tiles(const struct util_format_info *info, void *planes[3],
 	}
 }
 
-static void fill_plain(const struct util_format_info *info, void *planes[3],
-		       unsigned int width, unsigned int height,
+static void fill_plain(void *planes[3],
+		       unsigned int height,
 		       unsigned int stride)
 {
 	memset(planes[0], 0x77, stride * height);
@@ -861,7 +856,7 @@ void util_fill_pattern(uint32_t format, enum util_fill_pattern pattern,
 		return fill_smpte(info, planes, width, height, stride);
 
 	case UTIL_PATTERN_PLAIN:
-		return fill_plain(info, planes, width, height, stride);
+		return fill_plain(planes, height, stride);
 
 	default:
 		printf("Error: unsupported test pattern %u.\n", pattern);
