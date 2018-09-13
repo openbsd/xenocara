@@ -62,6 +62,7 @@
 ./usr/X11R6/include/libdrm/i915_drm.h
 ./usr/X11R6/include/libdrm/mach64_drm.h
 ./usr/X11R6/include/libdrm/mga_drm.h
+./usr/X11R6/include/libdrm/msm_drm.h
 ./usr/X11R6/include/libdrm/nouveau/nouveau.h
 ./usr/X11R6/include/libdrm/nouveau/nvif/cl0080.h
 ./usr/X11R6/include/libdrm/nouveau/nvif/cl9097.h
@@ -273,7 +274,7 @@
 ./usr/X11R6/lib/libdrm.la
 ./usr/X11R6/lib/libdrm.so.7.6
 ./usr/X11R6/lib/libdrm_amdgpu.la
-./usr/X11R6/lib/libdrm_amdgpu.so.1.5
+./usr/X11R6/lib/libdrm_amdgpu.so.1.6
 ./usr/X11R6/lib/libdrm_freedreno.la
 ./usr/X11R6/lib/libdrm_freedreno.so.1.0
 ./usr/X11R6/lib/libdrm_nouveau.la
