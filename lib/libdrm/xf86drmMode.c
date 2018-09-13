@@ -38,10 +38,6 @@
  * platforms find which headers to include to get uint32_t
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <limits.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -831,8 +827,7 @@ int drmCheckModesettingSupported(const char *busid)
 	}
 #elif defined(__DragonFly__)
 	return 0;
-#endif
-#ifdef __OpenBSD__
+#elif defined(__OpenBSD__)
 	int	fd;
 	struct drm_mode_card_res res;
 	drmModeResPtr r = 0;
@@ -1311,6 +1306,9 @@ int drmModeAtomicAddProperty(drmModeAtomicReqPtr req,
 			     uint64_t value)
 {
 	if (!req)
+		return -EINVAL;
+
+	if (object_id == 0 || property_id == 0)
 		return -EINVAL;
 
 	if (req->cursor >= req->size_items) {

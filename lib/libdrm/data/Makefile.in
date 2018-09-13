@@ -72,7 +72,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 subdir = data
-DIST_COMMON = $(dist_libdrmdata_DATA) $(srcdir)/Makefile.am \
+DIST_COMMON = $(am__dist_libdrmdata_DATA_DIST) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
@@ -104,6 +104,7 @@ am__can_run_installinfo = \
     n|no|NO) false;; \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
+am__dist_libdrmdata_DATA_DIST = amdgpu.ids
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
@@ -284,7 +285,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-dist_libdrmdata_DATA = amdgpu.ids
+@HAVE_AMDGPU_TRUE@dist_libdrmdata_DATA = amdgpu.ids
 all: all-am
 
 .SUFFIXES:

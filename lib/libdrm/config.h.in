@@ -24,26 +24,14 @@
 /* Define to 1 if you have the `clock_gettime' function. */
 #undef HAVE_CLOCK_GETTIME
 
-/* Enable CUNIT Have amdgpu support */
-#undef HAVE_CUNIT
-
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
-
-/* Have etnaviv support */
-#undef HAVE_ETNAVIV
 
 /* Have EXYNOS support */
 #undef HAVE_EXYNOS
 
-/* Have freedreno support */
-#undef HAVE_FREEDRENO
-
 /* Have freedreno support for KGSL kernel interface */
 #undef HAVE_FREEDRENO_KGSL
-
-/* Install test programs */
-#undef HAVE_INSTALL_TESTS
 
 /* Have intel support */
 #undef HAVE_INTEL
@@ -63,10 +51,7 @@
 /* Have nouveau (nvidia) support */
 #undef HAVE_NOUVEAU
 
-/* Have OMAP support */
-#undef HAVE_OMAP
-
-/* Define to 1 if you have the `open_memstream' function. */
+/* Have open_memstream() */
 #undef HAVE_OPEN_MEMSTREAM
 
 /* Have radeon support */
@@ -95,9 +80,6 @@
 
 /* Define to 1 if you have the <sys/types.h> header file. */
 #undef HAVE_SYS_TYPES_H
-
-/* Have Tegra support */
-#undef HAVE_TEGRA
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H

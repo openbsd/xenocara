@@ -125,7 +125,7 @@ LTLIBRARIES = $(libdrm_amdgpu_la_LTLIBRARIES)
 libdrm_amdgpu_la_DEPENDENCIES = ../libdrm.la
 am__objects_1 = amdgpu_asic_id.lo amdgpu_bo.lo amdgpu_cs.lo \
 	amdgpu_device.lo amdgpu_gpu_info.lo amdgpu_vamgr.lo \
-	amdgpu_vm.lo util_hash.lo util_hash_table.lo
+	amdgpu_vm.lo handle_table.lo
 am_libdrm_amdgpu_la_OBJECTS = $(am__objects_1)
 libdrm_amdgpu_la_OBJECTS = $(am_libdrm_amdgpu_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -345,10 +345,8 @@ LIBDRM_AMDGPU_FILES := \
 	amdgpu_internal.h \
 	amdgpu_vamgr.c \
 	amdgpu_vm.c \
-	util_hash.c \
-	util_hash.h \
-	util_hash_table.c \
-	util_hash_table.h
+	handle_table.c \
+	handle_table.h
 
 LIBDRM_AMDGPU_H_FILES := \
 	amdgpu.h
@@ -457,8 +455,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/amdgpu_gpu_info.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/amdgpu_vamgr.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/amdgpu_vm.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/util_hash.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/util_hash_table.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/handle_table.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

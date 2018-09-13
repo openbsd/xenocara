@@ -197,12 +197,13 @@ am__klibdrminclude_HEADERS_DIST = include/drm/drm.h \
 	include/drm/drm_fourcc.h include/drm/drm_mode.h \
 	include/drm/drm_sarea.h include/drm/i915_drm.h \
 	include/drm/mach64_drm.h include/drm/mga_drm.h \
-	include/drm/nouveau_drm.h include/drm/qxl_drm.h \
-	include/drm/r128_drm.h include/drm/radeon_drm.h \
-	include/drm/amdgpu_drm.h include/drm/savage_drm.h \
-	include/drm/sis_drm.h include/drm/tegra_drm.h \
-	include/drm/vc4_drm.h include/drm/via_drm.h \
-	include/drm/virtgpu_drm.h include/drm/vmwgfx_drm.h
+	include/drm/msm_drm.h include/drm/nouveau_drm.h \
+	include/drm/qxl_drm.h include/drm/r128_drm.h \
+	include/drm/radeon_drm.h include/drm/amdgpu_drm.h \
+	include/drm/savage_drm.h include/drm/sis_drm.h \
+	include/drm/tegra_drm.h include/drm/vc4_drm.h \
+	include/drm/via_drm.h include/drm/virtgpu_drm.h \
+	include/drm/vmwgfx_drm.h
 HEADERS = $(klibdrminclude_HEADERS) $(libdrminclude_HEADERS)
 RECURSIVE_CLEAN_TARGETS = mostlyclean-recursive clean-recursive	\
   distclean-recursive maintainer-clean-recursive
@@ -433,6 +434,7 @@ LIBDRM_INCLUDE_H_FILES := \
 	include/drm/i915_drm.h \
 	include/drm/mach64_drm.h \
 	include/drm/mga_drm.h \
+	include/drm/msm_drm.h \
 	include/drm/nouveau_drm.h \
 	include/drm/qxl_drm.h \
 	include/drm/r128_drm.h \
@@ -444,6 +446,9 @@ LIBDRM_INCLUDE_H_FILES := \
 	include/drm/vc4_drm.h \
 	include/drm/via_drm.h \
 	include/drm/virtgpu_drm.h
+
+LIBDRM_INCLUDE_ANDROID_H_FILES := \
+	android/gralloc_handle.h
 
 LIBDRM_INCLUDE_VMWGFX_H_FILES := \
 	include/drm/vmwgfx_drm.h
@@ -514,7 +519,38 @@ libdrmincludedir = ${includedir}
 libdrminclude_HEADERS = $(LIBDRM_H_FILES)
 klibdrmincludedir = ${includedir}/libdrm
 klibdrminclude_HEADERS = $(LIBDRM_INCLUDE_H_FILES) $(am__append_1)
-EXTRA_DIST = include/drm/README
+EXTRA_DIST = \
+	include/drm/README \
+	amdgpu/meson.build \
+	data/meson.build \
+	etnaviv/meson.build \
+	exynos/meson.build \
+	freedreno/meson.build \
+	intel/meson.build \
+	libkms/meson.build \
+	man/meson.build \
+	nouveau/meson.build \
+	omap/meson.build \
+	radeon/meson.build \
+	tegra/meson.build \
+	tests/amdgpu/meson.build \
+	tests/etnaviv/meson.build \
+	tests/exynos/meson.build \
+	tests/kms/meson.build \
+	tests/kmstest/meson.build \
+	tests/meson.build \
+	tests/modeprint/meson.build \
+	tests/modetest/meson.build \
+	tests/nouveau/meson.build \
+	tests/proptest/meson.build \
+	tests/radeon/meson.build \
+	tests/tegra/meson.build \
+	tests/util/meson.build \
+	tests/vbltest/meson.build \
+	vc4/meson.build \
+	meson.build \
+	meson_options.txt
+
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 

@@ -104,7 +104,7 @@ libdrm_freedreno_la_DEPENDENCIES = ../libdrm.la
 am__libdrm_freedreno_la_SOURCES_DIST = freedreno_device.c \
 	freedreno_pipe.c freedreno_priv.h freedreno_ringbuffer.c \
 	freedreno_bo.c freedreno_bo_cache.c msm/msm_bo.c \
-	msm/msm_device.c msm/msm_drm.h msm/msm_pipe.c msm/msm_priv.h \
+	msm/msm_device.c msm/msm_pipe.c msm/msm_priv.h \
 	msm/msm_ringbuffer.c kgsl/kgsl_bo.c kgsl/kgsl_device.c \
 	kgsl/kgsl_drm.h kgsl/kgsl_pipe.c kgsl/kgsl_priv.h \
 	kgsl/kgsl_ringbuffer.c kgsl/msm_kgsl.h
@@ -336,7 +336,6 @@ LIBDRM_FREEDRENO_FILES := \
 	freedreno_bo_cache.c \
 	msm/msm_bo.c \
 	msm/msm_device.c \
-	msm/msm_drm.h \
 	msm/msm_pipe.c \
 	msm/msm_priv.h \
 	msm/msm_ringbuffer.c

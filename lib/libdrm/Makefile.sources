@@ -25,6 +25,7 @@ LIBDRM_INCLUDE_H_FILES := \
 	include/drm/i915_drm.h \
 	include/drm/mach64_drm.h \
 	include/drm/mga_drm.h \
+	include/drm/msm_drm.h \
 	include/drm/nouveau_drm.h \
 	include/drm/qxl_drm.h \
 	include/drm/r128_drm.h \
@@ -36,6 +37,9 @@ LIBDRM_INCLUDE_H_FILES := \
 	include/drm/vc4_drm.h \
 	include/drm/via_drm.h \
 	include/drm/virtgpu_drm.h
+
+LIBDRM_INCLUDE_ANDROID_H_FILES := \
+	android/gralloc_handle.h
 
 LIBDRM_INCLUDE_VMWGFX_H_FILES := \
 	include/drm/vmwgfx_drm.h
