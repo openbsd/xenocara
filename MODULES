@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.391 2018/09/11 19:38:31 matthieu Exp $
+# $OpenBSD: MODULES,v 1.392 2018/09/30 08:58:33 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -99,11 +99,11 @@ driver/xf86-input-penmount	1.5.0
 driver/xf86-input-synaptics	1.9.1	7.7+
 driver/xf86-input-vmmouse	13.1.0	7.7+
 driver/xf86-input-void		1.4.1	7.7+
-driver/xf86-video-amdgpu	18.0.1		needs-import
+driver/xf86-video-amdgpu	18.1.0		needs-import
 driver/xf86-video-apm		1.2.5
 driver/xf86-video-ark		0.7.5	7.7+
 driver/xf86-video-ast		1.0.1	7.7+
-driver/xf86-video-ati		18.0.1	7.7+
+driver/xf86-video-ati		18.1.0	7.7+	needs-update
 driver/xf86-video-chips		1.2.7
 driver/xf86-video-cirrus	1.5.3	7.7+
 driver/xf86-video-dummy		0.3.8	7.7+

@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.319 2018/09/13 12:05:53 jsg Exp $
+# $OpenBSD: 3RDPARTY,v 1.320 2018/09/30 08:58:33 matthieu Exp $
 #
 Package: 	Freetype
 Version:	2.9.1
@@ -8,13 +8,13 @@ Archive Site:	http://download.savannah.gnu.org/releases/freetype/
 
 Package:	xterm
 Version:	331
-Current Vers:	335
+Current Vers:	337
 Maintainer:	Thomas E. Dickey
 Archive Site:	http://invisible-island.net/xterm/xterm.html
 
 Package:	Mesa
 Version		13.0.6
-Current Vers:	18.2.0
+Current Vers:	18.2.1
 Maintainer:	Brian Paul
 Archive Site:	http://www.mesa3d.org/
 
@@ -44,13 +44,13 @@ Archive Site:	https://dejavu-fonts.github.io/
 
 Package:	xlockmore
 Version:	5.22
-Current Vers:	5.55
+Current Vers:	5.56
 Maintainer:	David A. Bagley
 Archive Site:	http://sillycycle.com/xlock/
 
 Package:	xkeyboard-config
 Version:	2.20
-Current Vers:	2.23.1
+Current Vers:	2.24
 Maintainer:	xkb@listserv.bat.ru
 Archive Site:	http://www.freedesktop.org/wiki/Software/XKeyboardConfig
 
