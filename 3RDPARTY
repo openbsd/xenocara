@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.320 2018/09/30 08:58:33 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.321 2018/10/16 19:33:35 matthieu Exp $
 #
 Package: 	Freetype
 Version:	2.9.1
@@ -14,13 +14,13 @@ Archive Site:	http://invisible-island.net/xterm/xterm.html
 
 Package:	Mesa
 Version		13.0.6
-Current Vers:	18.2.1
+Current Vers:	18.2.2
 Maintainer:	Brian Paul
 Archive Site:	http://www.mesa3d.org/
 
 Package:	libdrm
 Version:	2.4.94
-Current Vers:	2.4.94
+Current Vers:	2.4.96
 Maintainer:	Eric Anholt
 Archive Site:	http://dri.freedesktop.org/
 
