@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.393 2018/10/16 19:33:35 matthieu Exp $
+# $OpenBSD: MODULES,v 1.394 2018/10/20 19:26:12 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -173,8 +173,8 @@ font/xfree86-type1		1.0.4
 
 lib/libFS			1.0.7	7.7+
 lib/libICE			1.0.9	7.7+
-lib/libSM			1.2.3	7.7+	needs-update
-lib/libX11			1.6.7	7.7+	needs-update
+lib/libSM			1.2.3	7.7+
+lib/libX11			1.6.7	7.7+
 lib/libXScrnSaver		1.2.3	7.7+
 lib/libXau			1.0.8	7.7+
 lib/libXaw			1.0.13	7.7+
