@@ -32,6 +32,7 @@ in this Software without prior written authorization from The Open Group.
 #include <config.h>
 #endif
 #include <X11/SM/SMlib.h>
+#include <limits.h>
 #include "SMlibint.h"
 
 
@@ -53,15 +54,120 @@ in this Software without prior written authorization from The Open Group.
        return; \
     }
 
-#define CHECK_COMPLETE_SIZE(_iceConn, _majorOp, _minorOp, _expected_len, _actual_len, _pStart, _severity) \
-    if (((unsigned long)(PADDED_BYTES64((_actual_len)) - SIZEOF (iceMsg)) >> 3)	\
-        != _expected_len) \
-    { \
-       _IceErrorBadLength (_iceConn, _majorOp, _minorOp, _severity); \
-       IceDisposeCompleteMessage (iceConn, _pStart); \
-       return; \
+
+static char *
+extractArray8(char **pBuf, char *pEnd, Bool swap, int *len)
+{
+    char	*p;
+    int		n;
+
+    if (pEnd - *pBuf < 4)
+	return NULL;
+    EXTRACT_CARD32 (*pBuf, swap, n);
+    if (n < 0 || n > INT_MAX - 7)
+	return NULL;
+
+    if ((p = malloc (n + 1)) == NULL)
+	return NULL;
+    memcpy(p, *pBuf, n);
+    p[n] = '\0';
+
+    *pBuf += n + PAD64 (4 + n);
+    if (len != NULL)
+	*len = n;
+
+    return p;
+}
+
+
+static SmProp **
+extractListofProperty(char *pBuf, char *pEnd, Bool swap, int *count)
+{
+    int		i, j, n;
+    SmProp	**props;
+
+    if (pEnd - pBuf < 4)
+	return NULL;
+    EXTRACT_CARD32 (pBuf, swap, n);
+    if (n < 0 || n > INT_MAX / sizeof (SmProp *))
+	return NULL;
+    pBuf += 4;
+
+    props = malloc (n * sizeof(SmProp *));
+    if (props == NULL)
+	return NULL;
+
+    for (i = 0; i < n; i++)
+    {
+	props[i] = calloc (1, sizeof (SmProp));
+	if (props[i] == NULL)
+	    goto fail;
+	if ((props[i]->name = extractArray8 (&pBuf, pEnd, swap, NULL)) == NULL)
+	    goto fail;
+	if ((props[i]->type = extractArray8 (&pBuf, pEnd, swap, NULL)) == NULL)
+	    goto fail;
+
+	if (pEnd - pBuf < 4)
+	    goto fail;
+	EXTRACT_CARD32 (pBuf, swap, props[i]->num_vals);
+	if (props[i]->num_vals < 0)
+	    goto fail;
+	pBuf += 4;
+	props[i]->vals = calloc (props[i]->num_vals, sizeof (SmPropValue));
+	if (props[i]->vals == NULL)
+	    goto fail;
+
+	for (j = 0; j < props[i]->num_vals; j++)
+	{
+	    props[i]->vals[j].value = extractArray8 (&pBuf, pEnd, swap,
+		&props[i]->vals[j].length);
+	    if (props[i]->vals[j].value == NULL)
+		goto fail;
+	}
     }
 
+    *count = n;
+    return props;
+
+fail:
+    for (; i >= 0; i--)
+    {
+	if (props[i] != NULL)
+	{
+	    free (props[i]->name);
+	    free (props[i]->type);
+	    if (props[i]->vals != NULL)
+	    {
+		for (j = 0; j < props[i]->num_vals; j++)
+		    free (props[i]->vals[j].value);
+		free (props[i]->vals);
+	    }
+	    free (props[i]);
+	}
+    }
+    free (props);
+    return NULL;
+}
+
+
+static Bool
+validErrorMessage(char *pData, char *pEnd, int errorClass, Bool swap)
+{
+    if (errorClass == IceBadValue)
+    {
+	unsigned int length;
+
+	if (pEnd - pData < 8)
+	    return False;
+
+	pData += 4;
+	EXTRACT_CARD32 (pData, swap, length);
+	if (length > pEnd - pData)
+	    return False;
+    }
+
+    return True;
+}
 
 
 void
@@ -88,7 +194,7 @@ _SmcProcessMessage(IceConn iceConn, IcePointer clientData, int opcode,
     case SM_Error:
     {
 	iceErrorMsg 	*pMsg;
-	char	    	*pData;
+	char	    	*pData, *pEnd;
 
 	CHECK_AT_LEAST_SIZE (iceConn, _SmcOpcode, opcode,
 	    length, SIZEOF (iceErrorMsg), IceFatalToProtocol);
@@ -108,6 +214,8 @@ _SmcProcessMessage(IceConn iceConn, IcePointer clientData, int opcode,
 	    pMsg->offendingSequenceNum = lswapl (pMsg->offendingSequenceNum);
 	}
 
+	pEnd = pData + (length << 3) - (SIZEOF (iceErrorMsg) - SIZEOF(iceMsg));
+
 	if (replyWait &&
 	    replyWait->minor_opcode_of_request == SM_RegisterClient &&
             pMsg->errorClass == IceBadValue &&
@@ -124,6 +232,13 @@ _SmcProcessMessage(IceConn iceConn, IcePointer clientData, int opcode,
 	    reply->status = 0;
 
 	    *replyReadyRet = True;
+	}
+	else if (!validErrorMessage(pData, pEnd, pMsg->errorClass, swap))
+	{
+	    _IceErrorBadLength (iceConn, _SmcOpcode, opcode,
+		IceFatalToProtocol);
+	    IceDisposeCompleteMessage (iceConn, pData);
+	    return;
 	}
 	else
 	{
@@ -151,14 +266,12 @@ _SmcProcessMessage(IceConn iceConn, IcePointer clientData, int opcode,
         else
 	{
 	    smRegisterClientReplyMsg 	*pMsg;
-	    char			*pData, *pStart;
+	    char			*pData, *pStart, *pEnd;
 	    _SmcRegisterClientReply 	*reply =
 	        (_SmcRegisterClientReply *) (replyWait->reply);
 
-#if 0 /* No-op */
 	    CHECK_AT_LEAST_SIZE (iceConn, _SmcOpcode, opcode,
 		length, SIZEOF (smRegisterClientReplyMsg), IceFatalToProtocol);
-#endif
 
 	    IceReadCompleteMessage (iceConn, SIZEOF (smRegisterClientReplyMsg),
 		smRegisterClientReplyMsg, pMsg, pStart);
@@ -170,16 +283,16 @@ _SmcProcessMessage(IceConn iceConn, IcePointer clientData, int opcode,
 	    }
 
 	    pData = pStart;
+	    pEnd = pStart + (length << 3) -
+		(SIZEOF (smRegisterClientReplyMsg) - SIZEOF (iceMsg));
 
-	    SKIP_ARRAY8 (pData, swap);		/* client id */
-
-	    CHECK_COMPLETE_SIZE (iceConn, _SmcOpcode, opcode,
-		length, pData - pStart + SIZEOF (smRegisterClientReplyMsg),
-		pStart, IceFatalToProtocol);
-
-	    pData = pStart;
-
-	    EXTRACT_ARRAY8_AS_STRING (pData, swap, reply->client_id);
+	    reply->client_id = extractArray8(&pData, pEnd, swap, NULL);
+	    if (reply->client_id == NULL) {
+		_IceErrorBadLength (iceConn, _SmcOpcode, opcode,
+		    IceFatalToProtocol);
+		IceDisposeCompleteMessage (iceConn, pStart);
+		return;
+	    }
 
 	    reply->status = 1;
 	    *replyReadyRet = True;
@@ -357,15 +470,13 @@ _SmcProcessMessage(IceConn iceConn, IcePointer clientData, int opcode,
         else
 	{
 	    smPropertiesReplyMsg 	*pMsg;
-	    char 			*pData, *pStart;
-	    int				numProps;
+	    char 			*pStart, *pEnd;
+	    int				numProps = 0;
 	    SmProp			**props = NULL;
 	    _SmcPropReplyWait 		*next;
 
-#if 0 /* No-op */
 	    CHECK_AT_LEAST_SIZE (iceConn, _SmcOpcode, opcode,
 		length, SIZEOF (smPropertiesReplyMsg), IceFatalToProtocol);
-#endif
 
 	    IceReadCompleteMessage (iceConn, SIZEOF (smPropertiesReplyMsg),
 		smPropertiesReplyMsg, pMsg, pStart);
@@ -376,17 +487,17 @@ _SmcProcessMessage(IceConn iceConn, IcePointer clientData, int opcode,
 		return;
 	    }
 
-	    pData = pStart;
+	    pEnd = pStart + (length << 3) -
+		(SIZEOF (smPropertiesReplyMsg) - SIZEOF (iceMsg));
 
-	    SKIP_LISTOF_PROPERTY (pData, swap);
-
-	    CHECK_COMPLETE_SIZE (iceConn, _SmcOpcode, opcode,
-	        length, pData - pStart + SIZEOF (smPropertiesReplyMsg),
-	        pStart, IceFatalToProtocol);
-
-	    pData = pStart;
-
-	    EXTRACT_LISTOF_PROPERTY (pData, swap, numProps, props);
+	    props = extractListofProperty(pStart, pEnd, swap, &numProps);
+	    if (props == NULL)
+	    {
+		_IceErrorBadLength (iceConn, _SmcOpcode, opcode,
+		    IceFatalToProtocol);
+		IceDisposeCompleteMessage (iceConn, pStart);
+		return;
+	    }
 
 	    next = smcConn->prop_reply_waits->next;
 
@@ -432,7 +543,7 @@ _SmsProcessMessage(IceConn iceConn, IcePointer clientData, int opcode,
     case SM_Error:
     {
 	iceErrorMsg 	*pMsg;
-	char	    	*pData;
+	char	    	*pData, *pEnd;
 
 	CHECK_AT_LEAST_SIZE (iceConn, _SmsOpcode, opcode,
 	    length, SIZEOF (iceErrorMsg), IceFatalToProtocol);
@@ -452,6 +563,16 @@ _SmsProcessMessage(IceConn iceConn, IcePointer clientData, int opcode,
 	    pMsg->offendingSequenceNum = lswapl (pMsg->offendingSequenceNum);
 	}
 
+	pEnd = pData + (length << 3) - (SIZEOF (iceErrorMsg) - SIZEOF (iceMsg));
+
+	if (!validErrorMessage(pData, pEnd, pMsg->errorClass, swap))
+	{
+	    _IceErrorBadLength (iceConn, _SmcOpcode, opcode,
+		IceFatalToProtocol);
+	    IceDisposeCompleteMessage (iceConn, pData);
+	    return;
+	}
+
 	(*_SmsErrorHandler) (smsConn, swap,
 	    pMsg->offendingMinorOpcode,
 	    pMsg->offendingSequenceNum,
@@ -465,14 +586,12 @@ _SmsProcessMessage(IceConn iceConn, IcePointer clientData, int opcode,
     case SM_RegisterClient:
     {
 	smRegisterClientMsg 	*pMsg;
-	char 			*pData, *pStart;
+	char 			*pData, *pStart, *pEnd;
 	char 			*previousId;
 	int                      idLen;
 
-#if 0 /* No-op */
 	CHECK_AT_LEAST_SIZE (iceConn, _SmsOpcode, opcode,
 	    length, SIZEOF (smRegisterClientMsg), IceFatalToProtocol);
-#endif
 
 	IceReadCompleteMessage (iceConn, SIZEOF (smRegisterClientMsg),
 	    smRegisterClientMsg, pMsg, pStart);
@@ -484,16 +603,17 @@ _SmsProcessMessage(IceConn iceConn, IcePointer clientData, int opcode,
 	}
 
 	pData = pStart;
+	pEnd = pStart + (length << 3) -
+	    (SIZEOF (smRegisterClientMsg) - SIZEOF (iceMsg));
 
-	SKIP_ARRAY8 (pData, swap);	/* previous id */
-
-	CHECK_COMPLETE_SIZE (iceConn, _SmsOpcode, opcode,
-	   length, pData - pStart + SIZEOF (smRegisterClientMsg),
-	   pStart, IceFatalToProtocol);
-
-	pData = pStart;
-
-	EXTRACT_ARRAY8 (pData, swap, idLen, previousId);
+	previousId = extractArray8(&pData, pEnd, swap, &idLen);
+	if (previousId == NULL)
+	{
+	    _IceErrorBadLength (iceConn, _SmcOpcode, opcode,
+		IceFatalToProtocol);
+	    IceDisposeCompleteMessage (iceConn, pStart);
+	    return;
+	}
 
 	if (*previousId == '\0')
 	{
@@ -720,14 +840,12 @@ _SmsProcessMessage(IceConn iceConn, IcePointer clientData, int opcode,
     case SM_CloseConnection:
     {
 	smCloseConnectionMsg 	*pMsg;
-	char 			*pData, *pStart;
+	char 			*pData, *pStart, *pEnd;
 	int 			count, i;
 	char 			**reasonMsgs = NULL;
 
-#if 0 /* No-op */
 	CHECK_AT_LEAST_SIZE (iceConn, _SmsOpcode, opcode,
-	    length, SIZEOF (smCloseConnectionMsg), IceFatalToProtocol);
-#endif
+	    length, SIZEOF (smCloseConnectionMsg) + 8, IceFatalToProtocol);
 
 	IceReadCompleteMessage (iceConn, SIZEOF (smCloseConnectionMsg),
 	    smCloseConnectionMsg, pMsg, pStart);
@@ -739,22 +857,35 @@ _SmsProcessMessage(IceConn iceConn, IcePointer clientData, int opcode,
 	}
 
 	pData = pStart;
+	pEnd = pStart + (length << 3) -
+	    (SIZEOF (smCloseConnectionMsg) - SIZEOF (iceMsg));
 
 	EXTRACT_CARD32 (pData, swap, count);
 	pData += 4;
 
+	if (count < 0 || count > INT_MAX / sizeof (char *) ||
+	    (reasonMsgs = malloc (count * sizeof (char *))) == NULL)
+	{
+	    _IceErrorBadLength (iceConn, _SmcOpcode, opcode, IceFatalToProtocol);
+	    IceDisposeCompleteMessage (iceConn, pStart);
+	    return;
+	}
+
 	for (i = 0; i < count; i++)
-	    SKIP_ARRAY8 (pData, swap);
-
-	CHECK_COMPLETE_SIZE (iceConn, _SmsOpcode, opcode,
-	   length, pData - pStart + SIZEOF (smCloseConnectionMsg),
-	   pStart, IceFatalToProtocol);
-
-	pData = pStart + 8;
-
-	reasonMsgs = malloc (count * sizeof (char *));
-	for (i = 0; i < count; i++)
-	    EXTRACT_ARRAY8_AS_STRING (pData, swap, reasonMsgs[i]);
+	{
+	    reasonMsgs[i] = extractArray8(&pData, pEnd, swap, NULL);
+	    if (reasonMsgs[i] == NULL)
+		break;
+	}
+	if (i != count) {
+	    while (i-- > 0)
+		free (reasonMsgs[i]);
+	    free (reasonMsgs);
+	    _IceErrorBadLength (iceConn, _SmcOpcode, opcode,
+		IceFatalToProtocol);
+	    IceDisposeCompleteMessage (iceConn, pStart);
+	    return;
+	}
 
 	IceDisposeCompleteMessage (iceConn, pStart);
 
@@ -767,14 +898,12 @@ _SmsProcessMessage(IceConn iceConn, IcePointer clientData, int opcode,
     case SM_SetProperties:
     {
 	smSetPropertiesMsg 	*pMsg;
-	char 			*pData, *pStart;
+	char 			*pStart, *pEnd;
 	SmProp			**props = NULL;
-	int 			numProps;
+	int 			numProps = 0;
 
-#if 0 /* No-op */
 	CHECK_AT_LEAST_SIZE (iceConn, _SmsOpcode, opcode,
 	    length, SIZEOF (smSetPropertiesMsg), IceFatalToProtocol);
-#endif
 
 	IceReadCompleteMessage (iceConn, SIZEOF (smSetPropertiesMsg),
 	    smSetPropertiesMsg, pMsg, pStart);
@@ -785,17 +914,17 @@ _SmsProcessMessage(IceConn iceConn, IcePointer clientData, int opcode,
 	    return;
 	}
 
-	pData = pStart;
+	pEnd = pStart + (length << 3) -
+	    (SIZEOF (smSetPropertiesMsg) - SIZEOF (iceMsg));
 
-	SKIP_LISTOF_PROPERTY (pData, swap);
-
-	CHECK_COMPLETE_SIZE (iceConn, _SmsOpcode, opcode,
-	   length, pData - pStart + SIZEOF (smSetPropertiesMsg),
-	   pStart, IceFatalToProtocol);
-
-	pData = pStart;
-
-	EXTRACT_LISTOF_PROPERTY (pData, swap, numProps, props);
+	props = extractListofProperty(pStart, pEnd, swap, &numProps);
+	if (props == NULL)
+	{
+	    _IceErrorBadLength (iceConn, _SmcOpcode, opcode,
+		IceFatalToProtocol);
+	    IceDisposeCompleteMessage (iceConn, pStart);
+	    return;
+	}
 
 	(*smsConn->callbacks.set_properties.callback) (smsConn,
 	    smsConn->callbacks.set_properties.manager_data, numProps, props);
@@ -807,14 +936,12 @@ _SmsProcessMessage(IceConn iceConn, IcePointer clientData, int opcode,
     case SM_DeleteProperties:
     {
 	smDeletePropertiesMsg 	*pMsg;
-	char 			*pData, *pStart;
+	char 			*pData, *pStart, *pEnd;
 	int 			count, i;
 	char 			**propNames = NULL;
 
-#if 0 /* No-op */
 	CHECK_AT_LEAST_SIZE (iceConn, _SmsOpcode, opcode,
-	    length, SIZEOF (smDeletePropertiesMsg), IceFatalToProtocol);
-#endif
+	    length, SIZEOF (smDeletePropertiesMsg) + 8, IceFatalToProtocol);
 
 	IceReadCompleteMessage (iceConn, SIZEOF (smDeletePropertiesMsg),
 	    smDeletePropertiesMsg, pMsg, pStart);
@@ -826,22 +953,35 @@ _SmsProcessMessage(IceConn iceConn, IcePointer clientData, int opcode,
 	}
 
 	pData = pStart;
+	pEnd = pStart + (length << 3) -
+	    (SIZEOF (smDeletePropertiesMsg) - SIZEOF (iceMsg));
 
 	EXTRACT_CARD32 (pData, swap, count);
 	pData += 4;
 
+	if (count < 0 || count > INT_MAX / sizeof (char *) ||
+	    (propNames = malloc (count * sizeof (char *))) == NULL)
+	{
+	    IceDisposeCompleteMessage (iceConn, pStart);
+	    return;
+	}
+
 	for (i = 0; i < count; i++)
-	    SKIP_ARRAY8 (pData, swap);	/* prop names */
-
-	CHECK_COMPLETE_SIZE (iceConn, _SmsOpcode, opcode,
-	   length, pData - pStart + SIZEOF (smDeletePropertiesMsg),
-	   pStart, IceFatalToProtocol);
-
-	pData = pStart + 8;
-
-	propNames = malloc (count * sizeof (char *));
-	for (i = 0; i < count; i++)
-	    EXTRACT_ARRAY8_AS_STRING (pData, swap, propNames[i]);
+	{
+	    propNames[i] = extractArray8(&pData, pEnd, swap, NULL);
+	    if (propNames[i] == NULL)
+		break;
+	}
+	if (i != count)
+	{
+	    while (i-- > 0)
+		free (propNames[i]);
+	    free (propNames);
+	    _IceErrorBadLength (iceConn, _SmcOpcode, opcode,
+		IceFatalToProtocol);
+	    IceDisposeCompleteMessage (iceConn, pStart);
+	    return;
+	}
 
 	IceDisposeCompleteMessage (iceConn, pStart);
 

@@ -64,6 +64,7 @@ in this Software without prior written authorization from The Open Group.
 # include <X11/Xthreads.h>
 #endif
 #include <stdio.h>
+#include <unistd.h>
 
 #include <time.h>
 #define Time_t time_t

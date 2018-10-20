@@ -1,3 +1,139 @@
+commit a52c79544fcd6b5e2242b9122dfaa34be07aebb2
+Author: Matthieu Herrb <matthieu@herrb.eu>
+Date:   Sun Sep 30 11:03:41 2018 +0200
+
+    libSM 1.2.3
+    
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+
+commit d86106f2369ecf81155decaa360f9162c0c3cd53
+Author: Tobias Stoeckmann <tobias@stoeckmann.org>
+Date:   Wed Aug 15 21:21:09 2018 +0200
+
+    Fixed out ouf boundary accesses.
+    
+    Out of boundary accesses can occur while processing messages. This
+    affects clients and the session server.
+    
+    Generally, the code tries to prevent out of boundary accesses. It
+    initially "skips" over the memory areas by parsing supplied lengths.
+    Then, it checks if it skipped over the memory boundary. If not, then
+    data is actually read and memory allocated, etc.
+    
+    The problem is that while initially skipping over the memory,
+    subsequent lengths are already parsed, i.e. accessed. This results in
+    out of boundary reads on hostile messages.
+    
+    Lengths could also overflow on 32 bit systems, leading to out of
+    boundary writes if not enough bytes have been allocated.
+    
+    Authentication is handled by libICE, which is not affected, because the
+    macros for skipping already take care about memory boundaries.
+    
+    Therefore, this flaw can only be used by authenticated clients or by
+    hostile servers (which could simply accept every MIT cookie). Most
+    session managers only use Unix sockets, so in many cases it takes a
+    local authenticated user.
+    
+    In order to fix this, I decided to move the macros from SMlibint.h to
+    its only callers in sm_process.c, turning them into functions for much
+    easier error handling and readability.
+    
+    Instead of skipping over the memory, validation happens during actual
+    read and memory allocation operations, as it's rather unlikely to
+    encounter hostile code anyway, i.e. my code has more error cleanup
+    handling in it.
+    
+    Signed-off-by: Tobias Stoeckmann <tobias@stoeckmann.org>
+    Reviewed-by: Matthieu Herrb <matthieu@herrb.eu>
+
+commit 75ffafb4e04661fb890a9e8088b743cb077050a6
+Author: Fab <netbox253@free.fr>
+Date:   Sat Oct 7 14:23:52 2017 +0000
+
+    Fix callbacks signatures in libSM documentation
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=103135
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b347e9f8ef3ae027c049741ab5c0c8dac45c9eb2
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 13:52:49 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit d34f694e810d11f95cd61e4209cd6e38f70bce58
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit e27964e499f31f48782a6db7421660a230471b2c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit b64aa0ef375f2df3ce166733fe92429ba43b6145
+Author: Matthieu Herrb <matthieu@herrb.eu>
+Date:   Tue Oct 20 14:48:52 2015 -0400
+
+    Get rid of strcpy() in the HAVE_UUID_CREATE case
+    
+    Even though this use was safe, some linkers produce a warning
+    when strcpy() is used, and this is the only use in libSM.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0bf5d26d1d55029846514758f2ffd80e816bd9fb
+Author: Matthieu Herrb <matthieu@herrb.eu>
+Date:   Tue Oct 20 14:47:50 2015 -0400
+
+    Fix uuid_to_string(3) type
+    
+    It should be char *.
+    
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit 29ea6247434a85934986e7d4fc60862231c5d77d
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Sat Sep 13 19:38:12 2014 +0100
+
+    Include unistd.h for getpid()
+    
+    Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Reviewed-by: David Macek <david.macek.0@gmail.com>
+
+commit f2dd6934c38414bc448ee49b47604f135f5487ea
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 16 19:35:15 2013 -0800
+
+    Stop compiling empty sm_auth.c stub
+    
+    File exists as a placeholder in case someone someday decides to add
+    additional auth methods on top of what libICE provides, but it's been
+    two decades and no one has, so stop spending time compiling & linking
+    for now.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
 commit 0fd7aa17da41779129a3acfdad28e07c0072a160
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Sep 7 23:05:16 2013 -0700

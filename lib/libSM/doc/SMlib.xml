@@ -494,7 +494,7 @@ The Save Yourself callback is of type <function>SmcSaveYourselfProc</function>
 <funcprototype>
   <funcdef>typedef void (*<function>SaveYourselfProc</function>)</funcdef>
     <paramdef>SmcConn <parameter>smc_conn</parameter></paramdef>
-    <paramdef>SmcConn <parameter>client_data</parameter></paramdef>
+    <paramdef>SmPointer <parameter>client_data</parameter></paramdef>
     <paramdef>int <parameter>save_type</parameter></paramdef>
     <paramdef>Bool <parameter>shutdown</parameter></paramdef>
     <paramdef>int <parameter>interact_style</parameter></paramdef>
@@ -629,7 +629,7 @@ The Die callback is of type <xref linkend='SmcDieProc' xrefstyle='select: title'
 <funcprototype>
   <funcdef>typedef void (*<function>SmcDieProc</function>)</funcdef>
     <paramdef>SmcConn <parameter>smc_conn</parameter></paramdef>
-    <paramdef>SmcConn <parameter>client_data</parameter></paramdef>
+    <paramdef>SmPointer <parameter>client_data</parameter></paramdef>
 </funcprototype>
 </funcsynopsis>
 

@@ -17,13 +17,14 @@ endif
 
 libSM_la_SOURCES = \
 	SMlibint.h \
-	sm_auth.c \
 	sm_client.c \
 	sm_error.c \
 	sm_genid.c \
 	sm_manager.c \
 	sm_misc.c \
 	sm_process.c
+
+EXTRA_DIST = sm_auth.c
 
 smincludedir=$(includedir)/X11/SM
 sminclude_HEADERS=\

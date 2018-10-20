@@ -96,7 +96,7 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 am__DEPENDENCIES_1 =
 @WITH_LIBUUID_TRUE@am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
 libSM_la_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_2)
-am_libSM_la_OBJECTS = sm_auth.lo sm_client.lo sm_error.lo sm_genid.lo \
+am_libSM_la_OBJECTS = sm_client.lo sm_error.lo sm_genid.lo \
 	sm_manager.lo sm_misc.lo sm_process.lo
 libSM_la_OBJECTS = $(am_libSM_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -305,7 +305,6 @@ libSM_la_LDFLAGS = -version-number 6:0:1 -no-undefined
 libSM_la_LIBADD = $(SM_LIBS) $(am__append_2)
 libSM_la_SOURCES = \
 	SMlibint.h \
-	sm_auth.c \
 	sm_client.c \
 	sm_error.c \
 	sm_genid.c \
@@ -313,6 +312,7 @@ libSM_la_SOURCES = \
 	sm_misc.c \
 	sm_process.c
 
+EXTRA_DIST = sm_auth.c
 smincludedir = $(includedir)/X11/SM
 sminclude_HEADERS = \
 	$(top_srcdir)/include/X11/SM/SM.h \
@@ -396,7 +396,6 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sm_auth.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sm_client.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sm_error.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sm_genid.Plo@am__quote@
