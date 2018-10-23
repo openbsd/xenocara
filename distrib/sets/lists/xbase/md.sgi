@@ -277,7 +277,7 @@
 ./usr/X11R6/lib/libepoxy.a
 ./usr/X11R6/lib/libepoxy.so.3.0
 ./usr/X11R6/lib/libgbm.la
-./usr/X11R6/lib/libgbm.so.0.2
+./usr/X11R6/lib/libgbm.so.0.3
 ./usr/X11R6/lib/libglapi.la
 ./usr/X11R6/lib/libglapi.so.0.2
 ./usr/X11R6/lib/libtxc_dxtn.a
