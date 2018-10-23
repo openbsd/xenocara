@@ -101,7 +101,14 @@ void glcpp_set_column (int  column_no , yyscan_t yyscanner);
 #define RETURN_STRING_TOKEN(token)					\
 	do {								\
 		if (! parser->skipping) {				\
-			yylval->str = ralloc_strdup (yyextra, yytext);	\
+			/* We're not doing linear_strdup here, to avoid \
+			 * an implicit call on strlen() for the length  \
+			 * of the string, as this is already found by   \
+			 * flex and stored in yyleng */                 \
+			void *mem_ctx = yyextra->linalloc;		\
+			yylval->str = linear_alloc_child(mem_ctx,	\
+							 yyleng + 1);	\
+			memcpy(yylval->str, yytext, yyleng + 1);        \
 			RETURN_TOKEN_NEVER_SKIP (token);		\
 		}							\
 	} while(0)
@@ -175,7 +182,7 @@ glcpp_lex_update_state_per_token (glcpp_parser_t *parser, int token)
 
 SPACE		[[:space:]]
 NONSPACE	[^[:space:]]
-HSPACE		[ \t]
+HSPACE		[ \t\v\f]
 HASH		#
 NEWLINE		(\r\n|\n\r|\r|\n)
 IDENTIFIER	[_a-zA-Z][_a-zA-Z0-9]*

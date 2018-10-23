@@ -25,6 +25,7 @@
 
 #include "r600_pipe.h"
 #include "r600_isa.h"
+#include "tgsi/tgsi_exec.h"
 
 struct r600_bytecode_alu_src {
 	unsigned			sel;
@@ -120,7 +121,6 @@ struct r600_bytecode_vtx {
 struct r600_bytecode_gds {
 	struct list_head		list;
 	unsigned			op;
-	unsigned                        gds_op;
 	unsigned			src_gpr;
 	unsigned			src_rel;
 	unsigned			src_sel_x;
@@ -133,6 +133,10 @@ struct r600_bytecode_gds {
 	unsigned			dst_sel_y;
 	unsigned			dst_sel_z;
 	unsigned			dst_sel_w;
+	unsigned			uav_index_mode;
+	unsigned                        uav_id;
+	unsigned                        alloc_consume;
+	unsigned                        bcast_first_req;
 };
 
 struct r600_bytecode_output {
@@ -238,7 +242,7 @@ struct r600_bytecode {
 	unsigned			force_add_cf;
 	uint32_t			*bytecode;
 	uint32_t			fc_sp;
-	struct r600_cf_stack_entry	fc_stack[32];
+	struct r600_cf_stack_entry	fc_stack[TGSI_EXEC_MAX_NESTING];
 	struct r600_stack_info		stack;
 	unsigned	ar_loaded;
 	unsigned	ar_reg;
@@ -267,6 +271,8 @@ int r600_bytecode_add_alu(struct r600_bytecode *bc,
 		const struct r600_bytecode_alu *alu);
 int r600_bytecode_add_vtx(struct r600_bytecode *bc,
 		const struct r600_bytecode_vtx *vtx);
+int r600_bytecode_add_vtx_tc(struct r600_bytecode *bc,
+			     const struct r600_bytecode_vtx *vtx);
 int r600_bytecode_add_tex(struct r600_bytecode *bc,
 		const struct r600_bytecode_tex *tex);
 int r600_bytecode_add_gds(struct r600_bytecode *bc,

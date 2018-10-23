@@ -68,7 +68,7 @@ get_new_var(struct lower_io_types_state *state, nir_variable *var,
    nvar->data = var->data;
    nvar->data.location += off;
 
-   /* nir_variable_create is too clever for it's own good: */
+   /* nir_variable_create is too clever for its own good: */
    exec_node_remove(&nvar->node);
    exec_node_self_link(&nvar->node);      /* no delinit() :-( */
 
@@ -131,7 +131,7 @@ lower_io_types_block(struct lower_io_types_state *state, nir_block *block)
           (var->data.mode != nir_var_shader_out))
          continue;
 
-      bool vs_in = (state->shader->stage == MESA_SHADER_VERTEX) &&
+      bool vs_in = (state->shader->info.stage == MESA_SHADER_VERTEX) &&
                    (var->data.mode == nir_var_shader_in);
       if (glsl_count_attribute_slots(var->type, vs_in) == 1)
          continue;

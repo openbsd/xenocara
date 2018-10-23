@@ -39,11 +39,20 @@ struct gl_context;
 extern void GLAPIENTRY
 _mesa_GetnPolygonStippleARB( GLsizei bufSize, GLubyte *dest );
 
-extern void GLAPIENTRY
-_mesa_CullFace( GLenum mode );
+void GLAPIENTRY
+_mesa_CullFace_no_error(GLenum mode);
 
 extern void GLAPIENTRY
-_mesa_FrontFace( GLenum mode );
+_mesa_CullFace(GLenum mode);
+
+void GLAPIENTRY
+_mesa_FrontFace_no_error(GLenum mode);
+
+extern void GLAPIENTRY
+_mesa_FrontFace(GLenum mode);
+
+void GLAPIENTRY
+_mesa_PolygonMode_no_error(GLenum face, GLenum mode);
 
 extern void GLAPIENTRY
 _mesa_PolygonMode( GLenum face, GLenum mode );

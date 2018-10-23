@@ -1,9 +1,9 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.20 2018/08/27 15:04:15 kettenis Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.21 2018/10/23 06:35:32 jsg Exp $
 
 .include <bsd.own.mk>
 .include <bsd.xconf.mk>
 
-SHARED_LIBS=	EGL 1.1 gbm 0.2 glapi 0.2 GL 17.1 GLESv1_CM 1.0 GLESv2 1.2 \
+SHARED_LIBS=	EGL 1.1 gbm 0.3 glapi 0.2 GL 17.1 GLESv1_CM 1.0 GLESv2 1.2 \
 		OSMesa 11.0
 
 DRI_DRIVERS=		swrast
@@ -23,15 +23,15 @@ GALLIUM_DRIVERS=swrast,r300,r600
 CONFIGURE_ARGS=		--with-dri-drivers=${DRI_DRIVERS} \
 			--with-gallium-drivers=${GALLIUM_DRIVERS} \
 			--disable-silent-rules \
-			--disable-gallium-llvm \
-			--disable-llvm-shared-libs \
+			--disable-llvm \
+			--disable-glx-tls \
 			--disable-regen-sources \
 			--enable-gles1 --enable-gles2 \
 			--enable-shared-glapi \
 			--enable-osmesa \
 			--enable-gbm \
 			--enable-texture-float \
-			--with-egl-platforms="x11,drm" \
+			--with-platforms="x11,drm" \
 			--prefix=${X11BASE} \
 			--with-dri-driverdir=${X11BASE}/lib/modules/dri \
 			--with-dri-searchpath=${X11BASE}/lib/modules/dri
@@ -45,10 +45,10 @@ CONFIGURE_ARGS+=	--enable-dri3
 CONFIGURE_ARGS+=	USER_CFLAGS="-march=i586" USER_CXXFLAGS="-march=i586"
 .endif
 
-# powerpc lacks the __sync_add_and_fetch8 gcc atomic builtin
-# which is used by the shader cache implementation
-.if ${MACHINE_ARCH} == powerpc
-CONFIGURE_ARGS+=	--disable-shader-cache
+# -O2 gives "cc1: out of memory allocating 488 bytes"
+# on src/mesa/main/marshal_generated.c
+.if ${MACHINE} == sparc64
+CONFIGURE_ARGS+=       USER_CFLAGS="-fno-tree-pre"
 .endif
 
 .if ${MACHINE} == alpha

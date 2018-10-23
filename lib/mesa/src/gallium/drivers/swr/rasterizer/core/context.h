@@ -39,7 +39,7 @@
 #include "core/arena.h"
 #include "core/fifo.hpp"
 #include "core/knobs.h"
-#include "common/simdintrin.h"
+#include "common/intrin.h"
 #include "core/threads.h"
 #include "ringbuffer.h"
 #include "archrast/archrast.h"
@@ -62,7 +62,6 @@ struct TRI_FLAGS
     uint32_t coverageMask : (SIMD_TILE_X_DIM * SIMD_TILE_Y_DIM);
     uint32_t reserved : 32 - 1 - 1 - (SIMD_TILE_X_DIM * SIMD_TILE_Y_DIM);
     float pointSize;
-    uint32_t primID;
     uint32_t renderTargetArrayIndex;
     uint32_t viewportIndex;
 };
@@ -100,19 +99,11 @@ struct TRIANGLE_WORK_DESC
     TRI_FLAGS triFlags;
 };
 
-union CLEAR_FLAGS
-{
-    struct
-    {
-        uint32_t mask : 3;
-    };
-    uint32_t bits;
-};
-
 struct CLEAR_DESC
 {
     SWR_RECT rect;
-    CLEAR_FLAGS flags;
+    uint32_t attachmentMask;
+    uint32_t renderTargetArrayIndex;
     float clearRTColor[4];  // RGBA_32F
     float clearDepth;   // [0..1]
     uint8_t clearStencil;
@@ -223,8 +214,14 @@ struct PA_STATE;
 
 // function signature for pipeline stages that execute after primitive assembly
 typedef void(*PFN_PROCESS_PRIMS)(DRAW_CONTEXT *pDC, PA_STATE& pa, uint32_t workerId, simdvector prims[], 
-    uint32_t primMask, simdscalari primID, simdscalari viewportIdx);
+    uint32_t primMask, simdscalari const &primID);
 
+#if ENABLE_AVX512_SIMD16
+// function signature for pipeline stages that execute after primitive assembly
+typedef void(SIMDCALL *PFN_PROCESS_PRIMS_SIMD16)(DRAW_CONTEXT *pDC, PA_STATE& pa, uint32_t workerId, simd16vector prims[],
+    uint32_t primMask, simd16scalari const &primID);
+
+#endif
 OSALIGNLINE(struct) API_STATE
 {
     // Vertex Buffers
@@ -247,6 +244,8 @@ OSALIGNLINE(struct) API_STATE
     PFN_CS_FUNC             pfnCsFunc;
     uint32_t                totalThreadsInGroup;
     uint32_t                totalSpillFillSize;
+    uint32_t                scratchSpaceSize;
+    uint32_t                scratchSpaceNumInstances;
 
     // FE - Frontend State
     SWR_FRONTEND_STATE      frontendState;
@@ -297,14 +296,13 @@ OSALIGNLINE(struct) API_STATE
     SWR_BLEND_STATE         blendState;
     PFN_BLEND_JIT_FUNC      pfnBlendFunc[SWR_NUM_RENDERTARGETS];
 
-    // Stats are incremented when this is true.
-    bool enableStats;
-
     struct
     {
-        uint32_t colorHottileEnable : 8;
-        uint32_t depthHottileEnable: 1;
-        uint32_t stencilHottileEnable : 1;
+        uint32_t enableStatsFE : 1;             // Enable frontend pipeline stats
+        uint32_t enableStatsBE : 1;             // Enable backend pipeline stats
+        uint32_t colorHottileEnable : 8;        // Bitmask of enabled color hottiles
+        uint32_t depthHottileEnable: 1;         // Enable depth buffer hottile
+        uint32_t stencilHottileEnable : 1;      // Enable stencil buffer hottile
     };
 
     PFN_QUANTIZE_DEPTH      pfnQuantizeDepth;
@@ -345,11 +343,11 @@ struct BarycentricCoeffs
 // pipeline function pointer types
 typedef void(*PFN_BACKEND_FUNC)(DRAW_CONTEXT*, uint32_t, uint32_t, uint32_t, SWR_TRIANGLE_DESC&, RenderOutputBuffers&);
 typedef void(*PFN_OUTPUT_MERGER)(SWR_PS_CONTEXT &, uint8_t* (&)[SWR_NUM_RENDERTARGETS], uint32_t, const SWR_BLEND_STATE*,
-                                 const PFN_BLEND_JIT_FUNC (&)[SWR_NUM_RENDERTARGETS], simdscalar&, simdscalar);
+                                 const PFN_BLEND_JIT_FUNC (&)[SWR_NUM_RENDERTARGETS], simdscalar&, simdscalar const &);
 typedef void(*PFN_CALC_PIXEL_BARYCENTRICS)(const BarycentricCoeffs&, SWR_PS_CONTEXT &);
 typedef void(*PFN_CALC_SAMPLE_BARYCENTRICS)(const BarycentricCoeffs&, SWR_PS_CONTEXT&);
 typedef void(*PFN_CALC_CENTROID_BARYCENTRICS)(const BarycentricCoeffs&, SWR_PS_CONTEXT &, const uint64_t *const, const uint32_t,
-                                              const simdscalar, const simdscalar);
+                                              simdscalar const &, simdscalar const &);
 
 struct BACKEND_FUNCS
 {
@@ -366,6 +364,9 @@ struct DRAW_STATE
     // pipeline function pointers, filled in by API thread when setting up the draw
     BACKEND_FUNCS backendFuncs;
     PFN_PROCESS_PRIMS pfnProcessPrims;
+#if USE_SIMD16_FRONTEND
+    PFN_PROCESS_PRIMS_SIMD16 pfnProcessPrims_simd16;
+#endif
 
     CachingArena* pArena;     // This should only be used by API thread.
 };
@@ -404,15 +405,16 @@ struct DRAW_CONTEXT
     CachingArena*   pArena;
 
     uint32_t        drawId;
-    bool            dependent;
+    bool            dependentFE;    // Frontend work is dependent on all previous FE
+    bool            dependent;      // Backend work is dependent on all previous BE
     bool            isCompute;      // Is this DC a compute context?
     bool            cleanupState;   // True if this is the last draw using an entry in the state ring.
-    volatile bool   doneFE;         // Is FE work done for this draw?
 
     FE_WORK         FeWork;
 
+    volatile OSALIGNLINE(bool)       doneFE;         // Is FE work done for this draw?
     volatile OSALIGNLINE(uint32_t)   FeLock;
-    volatile int32_t    threadsDone;
+    volatile OSALIGNLINE(uint32_t)   threadsDone;
 
     SYNC_DESC       retireCallback; // Call this func when this DC is retired.
 };
@@ -479,10 +481,10 @@ struct SWR_CONTEXT
     THREAD_POOL threadPool; // Thread pool associated with this context
     SWR_THREADING_INFO threadInfo;
 
+    uint32_t MAX_DRAWS_IN_FLIGHT;
+
     std::condition_variable FifosNotEmpty;
     std::mutex WaitLock;
-
-    DRIVER_TYPE driverType;
 
     uint32_t privateStateSize;
 
@@ -496,15 +498,16 @@ struct SWR_CONTEXT
     PFN_UPDATE_STATS            pfnUpdateStats;
     PFN_UPDATE_STATS_FE         pfnUpdateStatsFE;
 
+
     // Global Stats
     SWR_STATS* pStats;
 
     // Scratch space for workers.
     uint8_t** ppScratch;
 
-    volatile int32_t  drawsOutstandingFE;
+    volatile OSALIGNLINE(uint32_t)  drawsOutstandingFE;
 
-    CachingAllocator cachingArenaAllocator;
+    OSALIGNLINE(CachingAllocator) cachingArenaAllocator;
     uint32_t frameCount;
 
     uint32_t lastFrameChecked;
@@ -515,17 +518,18 @@ struct SWR_CONTEXT
     HANDLE* pArContext;
 };
 
-#define UPDATE_STAT(name, count) if (GetApiState(pDC).enableStats) { pDC->dynState.pStats[workerId].name += count; }
-#define UPDATE_STAT_FE(name, count) if (GetApiState(pDC).enableStats) { pDC->dynState.statsFE.name += count; }
+#define UPDATE_STAT_BE(name, count) if (GetApiState(pDC).enableStatsBE) { pDC->dynState.pStats[workerId].name += count; }
+#define UPDATE_STAT_FE(name, count) if (GetApiState(pDC).enableStatsFE) { pDC->dynState.statsFE.name += count; }
 
 // ArchRast instrumentation framework
 #define AR_WORKER_CTX  pContext->pArContext[workerId]
 #define AR_API_CTX     pContext->pArContext[pContext->NumWorkerThreads]
 
 #ifdef KNOB_ENABLE_AR
-    #define _AR_BEGIN(ctx, type, id)    ArchRast::dispatch(ctx, ArchRast::Start(ArchRast::type, id))
-    #define _AR_END(ctx, type, count)   ArchRast::dispatch(ctx, ArchRast::End(ArchRast::type, count))
-    #define _AR_EVENT(ctx, event)       ArchRast::dispatch(ctx, ArchRast::event)
+    #define _AR_BEGIN(ctx, type, id)    ArchRast::Dispatch(ctx, ArchRast::Start(ArchRast::type, id))
+    #define _AR_END(ctx, type, count)   ArchRast::Dispatch(ctx, ArchRast::End(ArchRast::type, count))
+    #define _AR_EVENT(ctx, event)       ArchRast::Dispatch(ctx, ArchRast::event)
+    #define _AR_FLUSH(ctx, id)          ArchRast::FlushDraw(ctx, id)
 #else
     #ifdef KNOB_ENABLE_RDTSC
         #define _AR_BEGIN(ctx, type, id) (void)ctx; RDTSC_START(type)
@@ -535,6 +539,7 @@ struct SWR_CONTEXT
         #define _AR_END(ctx, type, id)
     #endif
     #define _AR_EVENT(ctx, event)
+    #define _AR_FLUSH(ctx, id)
 #endif
 
 // Use these macros for api thread.
@@ -546,3 +551,4 @@ struct SWR_CONTEXT
 #define AR_BEGIN(type, id) _AR_BEGIN(AR_WORKER_CTX, type, id)
 #define AR_END(type, count) _AR_END(AR_WORKER_CTX, type, count)
 #define AR_EVENT(event) _AR_EVENT(AR_WORKER_CTX, event)
+#define AR_FLUSH(id) _AR_FLUSH(AR_WORKER_CTX, id)

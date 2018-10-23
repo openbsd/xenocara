@@ -39,7 +39,7 @@
 #include <inttypes.h>
 
 
-static FILE *
+FILE *
 dd_get_file_stream(struct dd_screen *dscreen, unsigned apitrace_call_number)
 {
    struct pipe_screen *screen = dscreen->screen;
@@ -98,8 +98,13 @@ dd_num_active_viewports(struct dd_draw_state *dstate)
    else
       return 1;
 
-   tgsi_scan_shader(tokens, &info);
-   return info.writes_viewport_index ? PIPE_MAX_VIEWPORTS : 1;
+   if (tokens) {
+      tgsi_scan_shader(tokens, &info);
+      if (info.writes_viewport_index)
+         return PIPE_MAX_VIEWPORTS;
+   }
+
+   return 1;
 }
 
 #define COLOR_RESET	"\033[0m"
@@ -149,6 +154,12 @@ util_dump_uint(FILE *f, unsigned i)
 }
 
 static void
+util_dump_int(FILE *f, int i)
+{
+   fprintf(f, "%d", i);
+}
+
+static void
 util_dump_hex(FILE *f, unsigned i)
 {
    fprintf(f, "0x%x", i);
@@ -175,21 +186,11 @@ util_dump_color_union(FILE *f, const union pipe_color_union *color)
 }
 
 static void
-util_dump_query(FILE *f, struct dd_query *query)
-{
-   if (query->type >= PIPE_QUERY_DRIVER_SPECIFIC)
-      fprintf(f, "PIPE_QUERY_DRIVER_SPECIFIC + %i",
-              query->type - PIPE_QUERY_DRIVER_SPECIFIC);
-   else
-      fprintf(f, "%s", util_dump_query_type(query->type, false));
-}
-
-static void
 dd_dump_render_condition(struct dd_draw_state *dstate, FILE *f)
 {
    if (dstate->render_cond.query) {
       fprintf(f, "render condition:\n");
-      DUMP_M(query, &dstate->render_cond, query);
+      DUMP_M(query_type, &dstate->render_cond, query->type);
       DUMP_M(uint, &dstate->render_cond, condition);
       DUMP_M(uint, &dstate->render_cond, mode);
       fprintf(f, "\n");
@@ -197,9 +198,9 @@ dd_dump_render_condition(struct dd_draw_state *dstate, FILE *f)
 }
 
 static void
-dd_dump_draw_vbo(struct dd_draw_state *dstate, struct pipe_draw_info *info, FILE *f)
+dd_dump_shader(struct dd_draw_state *dstate, enum pipe_shader_type sh, FILE *f)
 {
-   int sh, i;
+   int i;
    const char *shader_str[PIPE_SHADER_TYPES];
 
    shader_str[PIPE_SHADER_VERTEX] = "VERTEX";
@@ -209,17 +210,95 @@ dd_dump_draw_vbo(struct dd_draw_state *dstate, struct pipe_draw_info *info, FILE
    shader_str[PIPE_SHADER_FRAGMENT] = "FRAGMENT";
    shader_str[PIPE_SHADER_COMPUTE] = "COMPUTE";
 
+   if (sh == PIPE_SHADER_TESS_CTRL &&
+       !dstate->shaders[PIPE_SHADER_TESS_CTRL] &&
+       dstate->shaders[PIPE_SHADER_TESS_EVAL])
+      fprintf(f, "tess_state: {default_outer_level = {%f, %f, %f, %f}, "
+              "default_inner_level = {%f, %f}}\n",
+              dstate->tess_default_levels[0],
+              dstate->tess_default_levels[1],
+              dstate->tess_default_levels[2],
+              dstate->tess_default_levels[3],
+              dstate->tess_default_levels[4],
+              dstate->tess_default_levels[5]);
+
+   if (sh == PIPE_SHADER_FRAGMENT)
+      if (dstate->rs) {
+         unsigned num_viewports = dd_num_active_viewports(dstate);
+
+         if (dstate->rs->state.rs.clip_plane_enable)
+            DUMP(clip_state, &dstate->clip_state);
+
+         for (i = 0; i < num_viewports; i++)
+            DUMP_I(viewport_state, &dstate->viewports[i], i);
+
+         if (dstate->rs->state.rs.scissor)
+            for (i = 0; i < num_viewports; i++)
+               DUMP_I(scissor_state, &dstate->scissors[i], i);
+
+         DUMP(rasterizer_state, &dstate->rs->state.rs);
+
+         if (dstate->rs->state.rs.poly_stipple_enable)
+            DUMP(poly_stipple, &dstate->polygon_stipple);
+         fprintf(f, "\n");
+      }
+
+   if (!dstate->shaders[sh])
+      return;
+
+   fprintf(f, COLOR_SHADER "begin shader: %s" COLOR_RESET "\n", shader_str[sh]);
+   DUMP(shader_state, &dstate->shaders[sh]->state.shader);
+
+   for (i = 0; i < PIPE_MAX_CONSTANT_BUFFERS; i++)
+      if (dstate->constant_buffers[sh][i].buffer ||
+            dstate->constant_buffers[sh][i].user_buffer) {
+         DUMP_I(constant_buffer, &dstate->constant_buffers[sh][i], i);
+         if (dstate->constant_buffers[sh][i].buffer)
+            DUMP_M(resource, &dstate->constant_buffers[sh][i], buffer);
+      }
+
+   for (i = 0; i < PIPE_MAX_SAMPLERS; i++)
+      if (dstate->sampler_states[sh][i])
+         DUMP_I(sampler_state, &dstate->sampler_states[sh][i]->state.sampler, i);
+
+   for (i = 0; i < PIPE_MAX_SAMPLERS; i++)
+      if (dstate->sampler_views[sh][i]) {
+         DUMP_I(sampler_view, dstate->sampler_views[sh][i], i);
+         DUMP_M(resource, dstate->sampler_views[sh][i], texture);
+      }
+
+   for (i = 0; i < PIPE_MAX_SHADER_IMAGES; i++)
+      if (dstate->shader_images[sh][i].resource) {
+         DUMP_I(image_view, &dstate->shader_images[sh][i], i);
+         if (dstate->shader_images[sh][i].resource)
+            DUMP_M(resource, &dstate->shader_images[sh][i], resource);
+      }
+
+   for (i = 0; i < PIPE_MAX_SHADER_BUFFERS; i++)
+      if (dstate->shader_buffers[sh][i].buffer) {
+         DUMP_I(shader_buffer, &dstate->shader_buffers[sh][i], i);
+         if (dstate->shader_buffers[sh][i].buffer)
+            DUMP_M(resource, &dstate->shader_buffers[sh][i], buffer);
+      }
+
+   fprintf(f, COLOR_SHADER "end shader: %s" COLOR_RESET "\n\n", shader_str[sh]);
+}
+
+static void
+dd_dump_draw_vbo(struct dd_draw_state *dstate, struct pipe_draw_info *info, FILE *f)
+{
+   int sh, i;
+
    DUMP(draw_info, info);
-   if (info->indexed) {
-      DUMP(index_buffer, &dstate->index_buffer);
-      if (dstate->index_buffer.buffer)
-         DUMP_M(resource, &dstate->index_buffer, buffer);
-   }
    if (info->count_from_stream_output)
       DUMP_M(stream_output_target, info,
              count_from_stream_output);
-   if (info->indirect)
-      DUMP_M(resource, info, indirect);
+   if (info->indirect) {
+      DUMP_M(resource, info, indirect->buffer);
+      if (info->indirect->indirect_draw_count)
+         DUMP_M(resource, info, indirect->indirect_draw_count);
+   }
+
    fprintf(f, "\n");
 
    /* TODO: dump active queries */
@@ -227,11 +306,10 @@ dd_dump_draw_vbo(struct dd_draw_state *dstate, struct pipe_draw_info *info, FILE
    dd_dump_render_condition(dstate, f);
 
    for (i = 0; i < PIPE_MAX_ATTRIBS; i++)
-      if (dstate->vertex_buffers[i].buffer ||
-          dstate->vertex_buffers[i].user_buffer) {
+      if (dstate->vertex_buffers[i].buffer.resource) {
          DUMP_I(vertex_buffer, &dstate->vertex_buffers[i], i);
-         if (dstate->vertex_buffers[i].buffer)
-            DUMP_M(resource, &dstate->vertex_buffers[i], buffer);
+         if (!dstate->vertex_buffers[i].is_user_buffer)
+            DUMP_M(resource, &dstate->vertex_buffers[i], buffer.resource);
       }
 
    if (dstate->velems) {
@@ -256,78 +334,7 @@ dd_dump_draw_vbo(struct dd_draw_state *dstate, struct pipe_draw_info *info, FILE
       if (sh == PIPE_SHADER_COMPUTE)
          continue;
 
-      if (sh == PIPE_SHADER_TESS_CTRL &&
-          !dstate->shaders[PIPE_SHADER_TESS_CTRL] &&
-          dstate->shaders[PIPE_SHADER_TESS_EVAL])
-         fprintf(f, "tess_state: {default_outer_level = {%f, %f, %f, %f}, "
-                 "default_inner_level = {%f, %f}}\n",
-                 dstate->tess_default_levels[0],
-                 dstate->tess_default_levels[1],
-                 dstate->tess_default_levels[2],
-                 dstate->tess_default_levels[3],
-                 dstate->tess_default_levels[4],
-                 dstate->tess_default_levels[5]);
-
-      if (sh == PIPE_SHADER_FRAGMENT)
-         if (dstate->rs) {
-            unsigned num_viewports = dd_num_active_viewports(dstate);
-
-            if (dstate->rs->state.rs.clip_plane_enable)
-               DUMP(clip_state, &dstate->clip_state);
-
-            for (i = 0; i < num_viewports; i++)
-               DUMP_I(viewport_state, &dstate->viewports[i], i);
-
-            if (dstate->rs->state.rs.scissor)
-               for (i = 0; i < num_viewports; i++)
-                  DUMP_I(scissor_state, &dstate->scissors[i], i);
-
-            DUMP(rasterizer_state, &dstate->rs->state.rs);
-
-            if (dstate->rs->state.rs.poly_stipple_enable)
-               DUMP(poly_stipple, &dstate->polygon_stipple);
-            fprintf(f, "\n");
-         }
-
-      if (!dstate->shaders[sh])
-         continue;
-
-      fprintf(f, COLOR_SHADER "begin shader: %s" COLOR_RESET "\n", shader_str[sh]);
-      DUMP(shader_state, &dstate->shaders[sh]->state.shader);
-
-      for (i = 0; i < PIPE_MAX_CONSTANT_BUFFERS; i++)
-         if (dstate->constant_buffers[sh][i].buffer ||
-             dstate->constant_buffers[sh][i].user_buffer) {
-            DUMP_I(constant_buffer, &dstate->constant_buffers[sh][i], i);
-            if (dstate->constant_buffers[sh][i].buffer)
-               DUMP_M(resource, &dstate->constant_buffers[sh][i], buffer);
-         }
-
-      for (i = 0; i < PIPE_MAX_SAMPLERS; i++)
-         if (dstate->sampler_states[sh][i])
-            DUMP_I(sampler_state, &dstate->sampler_states[sh][i]->state.sampler, i);
-
-      for (i = 0; i < PIPE_MAX_SAMPLERS; i++)
-         if (dstate->sampler_views[sh][i]) {
-            DUMP_I(sampler_view, dstate->sampler_views[sh][i], i);
-            DUMP_M(resource, dstate->sampler_views[sh][i], texture);
-         }
-
-      for (i = 0; i < PIPE_MAX_SHADER_IMAGES; i++)
-         if (dstate->shader_images[sh][i].resource) {
-            DUMP_I(image_view, &dstate->shader_images[sh][i], i);
-            if (dstate->shader_images[sh][i].resource)
-               DUMP_M(resource, &dstate->shader_images[sh][i], resource);
-         }
-
-      for (i = 0; i < PIPE_MAX_SHADER_BUFFERS; i++)
-         if (dstate->shader_buffers[sh][i].buffer) {
-            DUMP_I(shader_buffer, &dstate->shader_buffers[sh][i], i);
-            if (dstate->shader_buffers[sh][i].buffer)
-               DUMP_M(resource, &dstate->shader_buffers[sh][i], buffer);
-         }
-
-      fprintf(f, COLOR_SHADER "end shader: %s" COLOR_RESET "\n\n", shader_str[sh]);
+      dd_dump_shader(dstate, sh, f);
    }
 
    if (dstate->dsa)
@@ -363,7 +370,11 @@ static void
 dd_dump_launch_grid(struct dd_draw_state *dstate, struct pipe_grid_info *info, FILE *f)
 {
    fprintf(f, "%s:\n", __func__+8);
-   /* TODO */
+   DUMP(grid_info, info);
+   fprintf(f, "\n");
+
+   dd_dump_shader(dstate, PIPE_SHADER_COMPUTE, f);
+   fprintf(f, "\n");
 }
 
 static void
@@ -414,6 +425,18 @@ dd_dump_generate_mipmap(struct dd_draw_state *dstate, FILE *f)
 }
 
 static void
+dd_dump_get_query_result_resource(struct call_get_query_result_resource *info, FILE *f)
+{
+   fprintf(f, "%s:\n", __func__ + 8);
+   DUMP_M(query_type, info, query_type);
+   DUMP_M(uint, info, wait);
+   DUMP_M(query_value_type, info, result_type);
+   DUMP_M(int, info, index);
+   DUMP_M(resource, info, resource);
+   DUMP_M(uint, info, offset);
+}
+
+static void
 dd_dump_flush_resource(struct dd_draw_state *dstate, struct pipe_resource *res,
                        FILE *f)
 {
@@ -451,6 +474,13 @@ dd_dump_clear_buffer(struct dd_draw_state *dstate, struct call_clear_buffer *inf
 }
 
 static void
+dd_dump_clear_texture(struct dd_draw_state *dstate, FILE *f)
+{
+   fprintf(f, "%s:\n", __func__+8);
+   /* TODO */
+}
+
+static void
 dd_dump_clear_render_target(struct dd_draw_state *dstate, FILE *f)
 {
    fprintf(f, "%s:\n", __func__+8);
@@ -480,7 +510,7 @@ dd_dump_call(FILE *f, struct dd_draw_state *state, struct dd_call *call)
 {
    switch (call->type) {
    case CALL_DRAW_VBO:
-      dd_dump_draw_vbo(state, &call->info.draw_vbo, f);
+      dd_dump_draw_vbo(state, &call->info.draw_vbo.draw, f);
       break;
    case CALL_LAUNCH_GRID:
       dd_dump_launch_grid(state, &call->info.launch_grid, f);
@@ -501,6 +531,9 @@ dd_dump_call(FILE *f, struct dd_draw_state *state, struct dd_call *call)
    case CALL_CLEAR_BUFFER:
       dd_dump_clear_buffer(state, &call->info.clear_buffer, f);
       break;
+   case CALL_CLEAR_TEXTURE:
+      dd_dump_clear_texture(state, f);
+      break;
    case CALL_CLEAR_RENDER_TARGET:
       dd_dump_clear_render_target(state, f);
       break;
@@ -509,6 +542,9 @@ dd_dump_call(FILE *f, struct dd_draw_state *state, struct dd_call *call)
       break;
    case CALL_GENERATE_MIPMAP:
       dd_dump_generate_mipmap(state, f);
+      break;
+   case CALL_GET_QUERY_RESULT_RESOURCE:
+      dd_dump_get_query_result_resource(&call->info.get_query_result_resource, f);
       break;
    }
 }
@@ -525,6 +561,12 @@ dd_write_report(struct dd_context *dctx, struct dd_call *call, unsigned flags,
 
    dd_dump_call(f, &dctx->draw_state, call);
    dd_dump_driver_state(dctx, f, flags);
+
+   fprintf(f,"\n\n**************************************************"
+             "***************************\n");
+   fprintf(f, "Context Log:\n\n");
+   u_log_new_page_print(&dctx->log, f);
+
    if (dump_dmesg)
       dd_dump_dmesg(f);
    dd_close_file_stream(f);
@@ -559,7 +601,7 @@ dd_flush_and_check_hang(struct dd_context *dctx,
    if (!fence)
       return false;
 
-   idle = screen->fence_finish(screen, NULL, fence, timeout_ms * 1000000);
+   idle = screen->fence_finish(screen, pipe, fence, timeout_ms * 1000000);
    screen->fence_reference(screen, &fence, NULL);
    if (!idle)
       fprintf(stderr, "dd: GPU hang detected!\n");
@@ -578,10 +620,7 @@ dd_flush_and_handle_hang(struct dd_context *dctx,
       if (f) {
          fprintf(f, "dd: %s.\n", cause);
          dd_dump_driver_state(dctx, f,
-                              PIPE_DUMP_DEVICE_STATUS_REGISTERS |
-                              PIPE_DUMP_CURRENT_STATES |
-                              PIPE_DUMP_CURRENT_SHADERS |
-                              PIPE_DUMP_LAST_COMMAND_BUFFER);
+                              PIPE_DUMP_DEVICE_STATUS_REGISTERS);
          dd_dump_dmesg(f);
          dd_close_file_stream(f);
       }
@@ -596,9 +635,14 @@ dd_unreference_copy_of_call(struct dd_call *dst)
 {
    switch (dst->type) {
    case CALL_DRAW_VBO:
-      pipe_so_target_reference(&dst->info.draw_vbo.count_from_stream_output, NULL);
-      pipe_resource_reference(&dst->info.draw_vbo.indirect, NULL);
-      pipe_resource_reference(&dst->info.draw_vbo.indirect_params, NULL);
+      pipe_so_target_reference(&dst->info.draw_vbo.draw.count_from_stream_output, NULL);
+      pipe_resource_reference(&dst->info.draw_vbo.indirect.buffer, NULL);
+      pipe_resource_reference(&dst->info.draw_vbo.indirect.indirect_draw_count, NULL);
+      if (dst->info.draw_vbo.draw.index_size &&
+          !dst->info.draw_vbo.draw.has_user_indices)
+         pipe_resource_reference(&dst->info.draw_vbo.draw.index.resource, NULL);
+      else
+         dst->info.draw_vbo.draw.index.user = NULL;
       break;
    case CALL_LAUNCH_GRID:
       pipe_resource_reference(&dst->info.launch_grid.indirect, NULL);
@@ -619,12 +663,17 @@ dd_unreference_copy_of_call(struct dd_call *dst)
    case CALL_CLEAR_BUFFER:
       pipe_resource_reference(&dst->info.clear_buffer.res, NULL);
       break;
+   case CALL_CLEAR_TEXTURE:
+      break;
    case CALL_CLEAR_RENDER_TARGET:
       break;
    case CALL_CLEAR_DEPTH_STENCIL:
       break;
    case CALL_GENERATE_MIPMAP:
       pipe_resource_reference(&dst->info.generate_mipmap.res, NULL);
+      break;
+   case CALL_GET_QUERY_RESULT_RESOURCE:
+      pipe_resource_reference(&dst->info.get_query_result_resource.resource, NULL);
       break;
    }
 }
@@ -636,13 +685,30 @@ dd_copy_call(struct dd_call *dst, struct dd_call *src)
 
    switch (src->type) {
    case CALL_DRAW_VBO:
-      pipe_so_target_reference(&dst->info.draw_vbo.count_from_stream_output,
-                               src->info.draw_vbo.count_from_stream_output);
-      pipe_resource_reference(&dst->info.draw_vbo.indirect,
-                              src->info.draw_vbo.indirect);
-      pipe_resource_reference(&dst->info.draw_vbo.indirect_params,
-                              src->info.draw_vbo.indirect_params);
+      pipe_so_target_reference(&dst->info.draw_vbo.draw.count_from_stream_output,
+                               src->info.draw_vbo.draw.count_from_stream_output);
+      pipe_resource_reference(&dst->info.draw_vbo.indirect.buffer,
+                              src->info.draw_vbo.indirect.buffer);
+      pipe_resource_reference(&dst->info.draw_vbo.indirect.indirect_draw_count,
+                              src->info.draw_vbo.indirect.indirect_draw_count);
+
+      if (dst->info.draw_vbo.draw.index_size &&
+          !dst->info.draw_vbo.draw.has_user_indices)
+         pipe_resource_reference(&dst->info.draw_vbo.draw.index.resource, NULL);
+      else
+         dst->info.draw_vbo.draw.index.user = NULL;
+
+      if (src->info.draw_vbo.draw.index_size &&
+          !src->info.draw_vbo.draw.has_user_indices) {
+         pipe_resource_reference(&dst->info.draw_vbo.draw.index.resource,
+                                 src->info.draw_vbo.draw.index.resource);
+      }
+
       dst->info.draw_vbo = src->info.draw_vbo;
+      if (!src->info.draw_vbo.draw.indirect)
+         dst->info.draw_vbo.draw.indirect = NULL;
+      else
+         dst->info.draw_vbo.draw.indirect = &dst->info.draw_vbo.indirect;
       break;
    case CALL_LAUNCH_GRID:
       pipe_resource_reference(&dst->info.launch_grid.indirect,
@@ -675,6 +741,8 @@ dd_copy_call(struct dd_call *dst, struct dd_call *src)
                               src->info.clear_buffer.res);
       dst->info.clear_buffer = src->info.clear_buffer;
       break;
+   case CALL_CLEAR_TEXTURE:
+      break;
    case CALL_CLEAR_RENDER_TARGET:
       break;
    case CALL_CLEAR_DEPTH_STENCIL:
@@ -683,6 +751,12 @@ dd_copy_call(struct dd_call *dst, struct dd_call *src)
       pipe_resource_reference(&dst->info.generate_mipmap.res,
                               src->info.generate_mipmap.res);
       dst->info.generate_mipmap = src->info.generate_mipmap;
+      break;
+   case CALL_GET_QUERY_RESULT_RESOURCE:
+      pipe_resource_reference(&dst->info.get_query_result_resource.resource,
+                              src->info.get_query_result_resource.resource);
+      dst->info.get_query_result_resource = src->info.get_query_result_resource;
+      dst->info.get_query_result_resource.query = NULL;
       break;
    }
 }
@@ -695,8 +769,6 @@ dd_init_copy_of_draw_state(struct dd_draw_state_copy *state)
    /* Just clear pointers to gallium objects. Don't clear the whole structure,
     * because it would kill performance with its size of 130 KB.
     */
-   memset(&state->base.index_buffer, 0,
-          sizeof(state->base.index_buffer));
    memset(state->base.vertex_buffers, 0,
           sizeof(state->base.vertex_buffers));
    memset(state->base.so_targets, 0,
@@ -734,10 +806,8 @@ dd_unreference_copy_of_draw_state(struct dd_draw_state_copy *state)
    struct dd_draw_state *dst = &state->base;
    unsigned i,j;
 
-   util_set_index_buffer(&dst->index_buffer, NULL);
-
    for (i = 0; i < ARRAY_SIZE(dst->vertex_buffers); i++)
-      pipe_resource_reference(&dst->vertex_buffers[i].buffer, NULL);
+      pipe_vertex_buffer_unreference(&dst->vertex_buffers[i]);
    for (i = 0; i < ARRAY_SIZE(dst->so_targets); i++)
       pipe_so_target_reference(&dst->so_targets[i], NULL);
 
@@ -771,17 +841,13 @@ dd_copy_draw_state(struct dd_draw_state *dst, struct dd_draw_state *src)
       dst->render_cond.query = NULL;
    }
 
-   util_set_index_buffer(&dst->index_buffer, &src->index_buffer);
-
    for (i = 0; i < ARRAY_SIZE(src->vertex_buffers); i++) {
-      pipe_resource_reference(&dst->vertex_buffers[i].buffer,
-                              src->vertex_buffers[i].buffer);
-      memcpy(&dst->vertex_buffers[i], &src->vertex_buffers[i],
-             sizeof(src->vertex_buffers[i]));
+      pipe_vertex_buffer_reference(&dst->vertex_buffers[i],
+                                   &src->vertex_buffers[i]);
    }
 
    dst->num_so_targets = src->num_so_targets;
-   for (i = 0; i < ARRAY_SIZE(src->so_targets); i++)
+   for (i = 0; i < src->num_so_targets; i++)
       pipe_so_target_reference(&dst->so_targets[i], src->so_targets[i]);
    memcpy(dst->so_offsets, src->so_offsets, sizeof(src->so_offsets));
 
@@ -793,8 +859,12 @@ dd_copy_draw_state(struct dd_draw_state *dst, struct dd_draw_state *src)
 
       if (src->shaders[i]) {
          dst->shaders[i]->state.shader = src->shaders[i]->state.shader;
-         dst->shaders[i]->state.shader.tokens =
-            tgsi_dup_tokens(src->shaders[i]->state.shader.tokens);
+         if (src->shaders[i]->state.shader.tokens) {
+            dst->shaders[i]->state.shader.tokens =
+               tgsi_dup_tokens(src->shaders[i]->state.shader.tokens);
+         } else {
+            dst->shaders[i]->state.shader.ir.nir = NULL;
+         }
       } else {
          dst->shaders[i] = NULL;
       }
@@ -869,9 +939,9 @@ dd_free_record(struct dd_draw_record **record)
 {
    struct dd_draw_record *next = (*record)->next;
 
+   u_log_page_destroy((*record)->log_page);
    dd_unreference_copy_of_call(&(*record)->call);
    dd_unreference_copy_of_draw_state(&(*record)->draw_state);
-   FREE((*record)->driver_state_log);
    FREE(*record);
    *record = next;
 }
@@ -891,7 +961,11 @@ dd_dump_record(struct dd_context *dctx, struct dd_draw_record *record,
            (now - record->timestamp) / 1000);
 
    dd_dump_call(f, &record->draw_state.base, &record->call);
-   fprintf(f, "%s\n", record->driver_state_log);
+
+   fprintf(f,"\n\n**************************************************"
+             "***************************\n");
+   fprintf(f, "Context Log:\n\n");
+   u_log_page_print(record->log_page, f);
 
    dctx->pipe->dump_debug_state(dctx->pipe, f,
                                 PIPE_DUMP_DEVICE_STATUS_REGISTERS);
@@ -899,12 +973,13 @@ dd_dump_record(struct dd_context *dctx, struct dd_draw_record *record,
    fclose(f);
 }
 
-PIPE_THREAD_ROUTINE(dd_thread_pipelined_hang_detect, input)
+int
+dd_thread_pipelined_hang_detect(void *input)
 {
    struct dd_context *dctx = (struct dd_context *)input;
    struct dd_screen *dscreen = dd_screen(dctx->base.screen);
 
-   pipe_mutex_lock(dctx->mutex);
+   mtx_lock(&dctx->mutex);
 
    while (!dctx->kill_thread) {
       struct dd_draw_record **record = &dctx->records;
@@ -942,63 +1017,17 @@ PIPE_THREAD_ROUTINE(dd_thread_pipelined_hang_detect, input)
       }
 
       /* Unlock and sleep before starting all over again. */
-      pipe_mutex_unlock(dctx->mutex);
+      mtx_unlock(&dctx->mutex);
       os_time_sleep(10000); /* 10 ms */
-      pipe_mutex_lock(dctx->mutex);
+      mtx_lock(&dctx->mutex);
    }
 
    /* Thread termination. */
    while (dctx->records)
       dd_free_record(&dctx->records);
 
-   pipe_mutex_unlock(dctx->mutex);
+   mtx_unlock(&dctx->mutex);
    return 0;
-}
-
-static char *
-dd_get_driver_shader_log(struct dd_context *dctx)
-{
-#if defined(PIPE_OS_LINUX)
-   FILE *f;
-   char *buf;
-   int written_bytes;
-
-   if (!dctx->max_log_buffer_size)
-      dctx->max_log_buffer_size = 16 * 1024;
-
-   /* Keep increasing the buffer size until there is enough space.
-    *
-    * open_memstream can resize automatically, but it's VERY SLOW.
-    * fmemopen is much faster.
-    */
-   while (1) {
-      buf = malloc(dctx->max_log_buffer_size);
-      buf[0] = 0;
-
-      f = fmemopen(buf, dctx->max_log_buffer_size, "a");
-      if (!f) {
-         free(buf);
-         return NULL;
-      }
-
-      dd_dump_driver_state(dctx, f, PIPE_DUMP_CURRENT_SHADERS);
-      written_bytes = ftell(f);
-      fclose(f);
-
-      /* Return if the backing buffer is large enough. */
-      if (written_bytes < dctx->max_log_buffer_size - 1)
-         break;
-
-      /* Try again. */
-      free(buf);
-      dctx->max_log_buffer_size *= 2;
-   }
-
-   return buf;
-#else
-   /* Return an empty string. */
-   return (char*)calloc(1, 4);
-#endif
 }
 
 static void
@@ -1006,19 +1035,11 @@ dd_pipelined_process_draw(struct dd_context *dctx, struct dd_call *call)
 {
    struct pipe_context *pipe = dctx->pipe;
    struct dd_draw_record *record;
-   char *log;
 
    /* Make a record of the draw call. */
    record = MALLOC_STRUCT(dd_draw_record);
    if (!record)
       return;
-
-   /* Create the log. */
-   log = dd_get_driver_shader_log(dctx);
-   if (!log) {
-      FREE(record);
-      return;
-   }
 
    /* Update the fence with the GPU.
     *
@@ -1032,7 +1053,7 @@ dd_pipelined_process_draw(struct dd_context *dctx, struct dd_call *call)
    /* Initialize the record. */
    record->timestamp = os_time_get();
    record->sequence_no = dctx->sequence_no;
-   record->driver_state_log = log;
+   record->log_page = u_log_new_page(&dctx->log);
 
    memset(&record->call, 0, sizeof(record->call));
    dd_copy_call(&record->call, call);
@@ -1041,10 +1062,10 @@ dd_pipelined_process_draw(struct dd_context *dctx, struct dd_call *call)
    dd_copy_draw_state(&record->draw_state.base, &dctx->draw_state);
 
    /* Add the record to the list. */
-   pipe_mutex_lock(dctx->mutex);
+   mtx_lock(&dctx->mutex);
    record->next = dctx->records;
    dctx->records = record;
-   pipe_mutex_unlock(dctx->mutex);
+   mtx_unlock(&dctx->mutex);
 }
 
 static void
@@ -1094,14 +1115,13 @@ dd_after_draw(struct dd_context *dctx, struct dd_call *call)
          if (!dscreen->no_flush &&
             dd_flush_and_check_hang(dctx, NULL, 0)) {
             dd_write_report(dctx, call,
-                         PIPE_DUMP_DEVICE_STATUS_REGISTERS |
-                         PIPE_DUMP_CURRENT_STATES |
-                         PIPE_DUMP_CURRENT_SHADERS |
-                         PIPE_DUMP_LAST_COMMAND_BUFFER,
+                         PIPE_DUMP_DEVICE_STATUS_REGISTERS,
                          true);
 
             /* Terminate the process to prevent future hangs. */
             dd_kill_process();
+         } else {
+            u_log_page_destroy(u_log_new_page(&dctx->log));
          }
          break;
       case DD_DETECT_HANGS_PIPELINED:
@@ -1110,21 +1130,16 @@ dd_after_draw(struct dd_context *dctx, struct dd_call *call)
       case DD_DUMP_ALL_CALLS:
          if (!dscreen->no_flush)
             pipe->flush(pipe, NULL, 0);
-         dd_write_report(dctx, call,
-                         PIPE_DUMP_CURRENT_STATES |
-                         PIPE_DUMP_CURRENT_SHADERS |
-                         PIPE_DUMP_LAST_COMMAND_BUFFER,
-                         false);
+         dd_write_report(dctx, call, 0, false);
          break;
       case DD_DUMP_APITRACE_CALL:
          if (dscreen->apitrace_dump_call ==
              dctx->draw_state.apitrace_call_number) {
-            dd_write_report(dctx, call,
-                            PIPE_DUMP_CURRENT_STATES |
-                            PIPE_DUMP_CURRENT_SHADERS,
-                            false);
+            dd_write_report(dctx, call, 0, false);
             /* No need to continue. */
             exit(0);
+         } else {
+            u_log_page_destroy(u_log_new_page(&dctx->log));
          }
          break;
       default:
@@ -1147,7 +1162,13 @@ dd_context_draw_vbo(struct pipe_context *_pipe,
    struct dd_call call;
 
    call.type = CALL_DRAW_VBO;
-   call.info.draw_vbo = *info;
+   call.info.draw_vbo.draw = *info;
+   if (info->indirect) {
+      call.info.draw_vbo.indirect = *info->indirect;
+      call.info.draw_vbo.draw.indirect = &call.info.draw_vbo.indirect;
+   } else {
+      memset(&call.info.draw_vbo.indirect, 0, sizeof(*info->indirect));
+   }
 
    dd_before_draw(dctx);
    pipe->draw_vbo(pipe, info);
@@ -1240,6 +1261,39 @@ dd_context_generate_mipmap(struct pipe_context *_pipe,
                                   first_layer, last_layer);
    dd_after_draw(dctx, &call);
    return result;
+}
+
+static void
+dd_context_get_query_result_resource(struct pipe_context *_pipe,
+                                     struct pipe_query *query,
+                                     boolean wait,
+                                     enum pipe_query_value_type result_type,
+                                     int index,
+                                     struct pipe_resource *resource,
+                                     unsigned offset)
+{
+   struct dd_context *dctx = dd_context(_pipe);
+   struct dd_query *dquery = dd_query(query);
+   struct pipe_context *pipe = dctx->pipe;
+   struct dd_call call;
+
+   call.type = CALL_GET_QUERY_RESULT_RESOURCE;
+   call.info.get_query_result_resource.query = query;
+   call.info.get_query_result_resource.wait = wait;
+   call.info.get_query_result_resource.result_type = result_type;
+   call.info.get_query_result_resource.index = index;
+   call.info.get_query_result_resource.resource = resource;
+   call.info.get_query_result_resource.offset = offset;
+
+   /* In pipelined mode, the query may be deleted by the time we need to
+    * print it.
+    */
+   call.info.get_query_result_resource.query_type = dquery->type;
+
+   dd_before_draw(dctx);
+   pipe->get_query_result_resource(pipe, dquery->query, wait,
+                                   result_type, index, resource, offset);
+   dd_after_draw(dctx, &call);
 }
 
 static void
@@ -1339,6 +1393,24 @@ dd_context_clear_buffer(struct pipe_context *_pipe, struct pipe_resource *res,
    dd_after_draw(dctx, &call);
 }
 
+static void
+dd_context_clear_texture(struct pipe_context *_pipe,
+                         struct pipe_resource *res,
+                         unsigned level,
+                         const struct pipe_box *box,
+                         const void *data)
+{
+   struct dd_context *dctx = dd_context(_pipe);
+   struct pipe_context *pipe = dctx->pipe;
+   struct dd_call call;
+
+   call.type = CALL_CLEAR_TEXTURE;
+
+   dd_before_draw(dctx);
+   pipe->clear_texture(pipe, res, level, box, data);
+   dd_after_draw(dctx, &call);
+}
+
 void
 dd_init_draw_functions(struct dd_context *dctx)
 {
@@ -1351,6 +1423,8 @@ dd_init_draw_functions(struct dd_context *dctx)
    CTX_INIT(clear_render_target);
    CTX_INIT(clear_depth_stencil);
    CTX_INIT(clear_buffer);
+   CTX_INIT(clear_texture);
    CTX_INIT(flush_resource);
    CTX_INIT(generate_mipmap);
+   CTX_INIT(get_query_result_resource);
 }

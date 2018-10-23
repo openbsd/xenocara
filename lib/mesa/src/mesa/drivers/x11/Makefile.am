@@ -26,7 +26,6 @@
 EXTRA_DIST = SConscript
 
 if HAVE_SHARED_GLAPI
-SHARED_GLAPI_CFLAGS = -DGLX_SHARED_GLAPI
 SHARED_GLAPI_LIB = $(top_builddir)/src/mapi/shared-glapi/libglapi.la
 endif
 
@@ -39,7 +38,6 @@ AM_CPPFLAGS = \
 	-I$(top_srcdir)/src/gallium/auxiliary \
 	-I$(top_srcdir)/src/mesa/main \
 	$(X11_INCLUDES) \
-	$(SHARED_GLAPI_CFLAGS) \
 	$(DEFINES)
 
 lib_LTLIBRARIES = lib@GL_LIB@.la
@@ -76,6 +74,7 @@ lib@GL_LIB@_la_LIBADD = \
 lib@GL_LIB@_la_LDFLAGS = \
 	-no-undefined \
 	-version-number $(GL_MAJOR):$(GL_MINOR):$(GL_PATCH) \
+	$(BSYMBOLIC) \
 	$(GC_SECTIONS) \
 	$(LD_NO_UNDEFINED)
 

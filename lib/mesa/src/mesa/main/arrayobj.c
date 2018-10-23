@@ -28,9 +28,8 @@
 /**
  * \file arrayobj.c
  *
- * Implementation of Vertex Array Objects (VAOs), from OpenGL 3.1+,
- * the GL_ARB_vertex_array_object extension, or the older
- * GL_APPLE_vertex_array_object extension.
+ * Implementation of Vertex Array Objects (VAOs), from OpenGL 3.1+ /
+ * the GL_ARB_vertex_array_object extension.
  *
  * \todo
  * The code in this file borrows a lot from bufferobj.c.  There's a certain
@@ -67,11 +66,23 @@
 struct gl_vertex_array_object *
 _mesa_lookup_vao(struct gl_context *ctx, GLuint id)
 {
-   if (id == 0)
+   if (id == 0) {
       return NULL;
-   else
-      return (struct gl_vertex_array_object *)
-         _mesa_HashLookup(ctx->Array.Objects, id);
+   } else {
+      struct gl_vertex_array_object *vao;
+
+      if (ctx->Array.LastLookedUpVAO &&
+          ctx->Array.LastLookedUpVAO->Name == id) {
+         vao = ctx->Array.LastLookedUpVAO;
+      } else {
+         vao = (struct gl_vertex_array_object *)
+            _mesa_HashLookupLocked(ctx->Array.Objects, id);
+
+         _mesa_reference_vao(ctx, &ctx->Array.LastLookedUpVAO, vao);
+      }
+
+      return vao;
+   }
 }
 
 
@@ -108,7 +119,7 @@ _mesa_lookup_vao_err(struct gl_context *ctx, GLuint id, const char *caller)
          vao = ctx->Array.LastLookedUpVAO;
       } else {
          vao = (struct gl_vertex_array_object *)
-            _mesa_HashLookup(ctx->Array.Objects, id);
+            _mesa_HashLookupLocked(ctx->Array.Objects, id);
 
          /* The ARB_direct_state_access specification says:
           *
@@ -140,8 +151,8 @@ unbind_array_object_vbos(struct gl_context *ctx, struct gl_vertex_array_object *
 {
    GLuint i;
 
-   for (i = 0; i < ARRAY_SIZE(obj->VertexBinding); i++)
-      _mesa_reference_buffer_object(ctx, &obj->VertexBinding[i].BufferObj, NULL);
+   for (i = 0; i < ARRAY_SIZE(obj->BufferBinding); i++)
+      _mesa_reference_buffer_object(ctx, &obj->BufferBinding[i].BufferObj, NULL);
 
    for (i = 0; i < ARRAY_SIZE(obj->_VertexAttrib); i++)
       _mesa_reference_buffer_object(ctx, &obj->_VertexAttrib[i].BufferObj, NULL);
@@ -169,7 +180,6 @@ _mesa_delete_vao(struct gl_context *ctx, struct gl_vertex_array_object *obj)
 {
    unbind_array_object_vbos(ctx, obj);
    _mesa_reference_buffer_object(ctx, &obj->IndexBufferObj, NULL);
-   mtx_destroy(&obj->Mutex);
    free(obj->Label);
    free(obj);
 }
@@ -189,16 +199,12 @@ _mesa_reference_vao_(struct gl_context *ctx,
 
    if (*ptr) {
       /* Unreference the old array object */
-      GLboolean deleteFlag = GL_FALSE;
       struct gl_vertex_array_object *oldObj = *ptr;
 
-      mtx_lock(&oldObj->Mutex);
       assert(oldObj->RefCount > 0);
       oldObj->RefCount--;
-      deleteFlag = (oldObj->RefCount == 0);
-      mtx_unlock(&oldObj->Mutex);
 
-      if (deleteFlag)
+      if (oldObj->RefCount == 0)
          _mesa_delete_vao(ctx, oldObj);
 
       *ptr = NULL;
@@ -207,18 +213,10 @@ _mesa_reference_vao_(struct gl_context *ctx,
 
    if (vao) {
       /* reference new array object */
-      mtx_lock(&vao->Mutex);
-      if (vao->RefCount == 0) {
-         /* this array's being deleted (look just above) */
-         /* Not sure this can every really happen.  Warn if it does. */
-         _mesa_problem(NULL, "referencing deleted array object");
-         *ptr = NULL;
-      }
-      else {
-         vao->RefCount++;
-         *ptr = vao;
-      }
-      mtx_unlock(&vao->Mutex);
+      assert(vao->RefCount > 0);
+
+      vao->RefCount++;
+      *ptr = vao;
    }
 }
 
@@ -236,7 +234,7 @@ init_array(struct gl_context *ctx,
            GLuint index, GLint size, GLint type)
 {
    struct gl_array_attributes *array = &vao->VertexAttrib[index];
-   struct gl_vertex_buffer_binding *binding = &vao->VertexBinding[index];
+   struct gl_vertex_buffer_binding *binding = &vao->BufferBinding[index];
 
    array->Size = size;
    array->Type = type;
@@ -274,7 +272,6 @@ _mesa_initialize_vao(struct gl_context *ctx,
 
    vao->Name = name;
 
-   mtx_init(&vao->Mutex, mtx_plain);
    vao->RefCount = 1;
 
    /* Init the individual arrays */
@@ -313,34 +310,7 @@ _mesa_initialize_vao(struct gl_context *ctx,
 
 
 /**
- * Add the given array object to the array object pool.
- */
-static void
-save_array_object(struct gl_context *ctx, struct gl_vertex_array_object *vao)
-{
-   if (vao->Name > 0) {
-      /* insert into hash table */
-      _mesa_HashInsert(ctx->Array.Objects, vao->Name, vao);
-   }
-}
-
-
-/**
- * Remove the given array object from the array object pool.
- * Do not deallocate the array object though.
- */
-static void
-remove_array_object(struct gl_context *ctx, struct gl_vertex_array_object *vao)
-{
-   if (vao->Name > 0) {
-      /* remove from hash table */
-      _mesa_HashRemove(ctx->Array.Objects, vao->Name);
-   }
-}
-
-
-/**
- * Updates the derived gl_client_arrays when a gl_vertex_attrib_array
+ * Updates the derived gl_vertex_arrays when a gl_vertex_attrib_array
  * or a gl_vertex_buffer_binding has changed.
  */
 void
@@ -351,14 +321,11 @@ _mesa_update_vao_client_arrays(struct gl_context *ctx,
 
    while (arrays) {
       const int attrib = u_bit_scan64(&arrays);
-
-      struct gl_client_array *client_array;
-      struct gl_array_attributes *attrib_array;
-      struct gl_vertex_buffer_binding *buffer_binding;
-
-      attrib_array = &vao->VertexAttrib[attrib];
-      buffer_binding = &vao->VertexBinding[attrib_array->BufferBindingIndex];
-      client_array = &vao->_VertexAttrib[attrib];
+      struct gl_vertex_array *client_array = &vao->_VertexAttrib[attrib];
+      const struct gl_array_attributes *attrib_array =
+         &vao->VertexAttrib[attrib];
+      const struct gl_vertex_buffer_binding *buffer_binding =
+         &vao->BufferBinding[attrib_array->BufferBindingIndex];
 
       _mesa_update_client_array(ctx, client_array, attrib_array,
                                 buffer_binding);
@@ -380,7 +347,7 @@ _mesa_all_varyings_in_vbos(const struct gl_vertex_array_object *vao)
       const struct gl_array_attributes *attrib_array =
          &vao->VertexAttrib[i];
       const struct gl_vertex_buffer_binding *buffer_binding =
-         &vao->VertexBinding[attrib_array->BufferBindingIndex];
+         &vao->BufferBinding[attrib_array->BufferBindingIndex];
 
       /* Only enabled arrays shall appear in the _Enabled bitmask */
       assert(attrib_array->Enabled);
@@ -411,7 +378,7 @@ _mesa_all_buffers_are_unmapped(const struct gl_vertex_array_object *vao)
       const struct gl_array_attributes *attrib_array =
          &vao->VertexAttrib[i];
       const struct gl_vertex_buffer_binding *buffer_binding =
-         &vao->VertexBinding[attrib_array->BufferBindingIndex];
+         &vao->BufferBinding[attrib_array->BufferBindingIndex];
 
       /* Only enabled arrays shall appear in the _Enabled bitmask */
       assert(attrib_array->Enabled);
@@ -435,19 +402,17 @@ _mesa_all_buffers_are_unmapped(const struct gl_vertex_array_object *vao)
 
 
 /**
- * Helper for _mesa_BindVertexArray() and _mesa_BindVertexArrayAPPLE().
- * \param genRequired  specifies behavour when id was not generated with
- *                     glGenVertexArrays().
+ * ARB version of glBindVertexArray()
  */
-static void
-bind_vertex_array(struct gl_context *ctx, GLuint id, GLboolean genRequired)
+static ALWAYS_INLINE void
+bind_vertex_array(struct gl_context *ctx, GLuint id, bool no_error)
 {
-   struct gl_vertex_array_object * const oldObj = ctx->Array.VAO;
+   struct gl_vertex_array_object *const oldObj = ctx->Array.VAO;
    struct gl_vertex_array_object *newObj = NULL;
 
    assert(oldObj != NULL);
 
-   if ( oldObj->Name == id )
+   if (oldObj->Name == id)
       return;   /* rebinding the same array object- no change */
 
    /*
@@ -462,33 +427,13 @@ bind_vertex_array(struct gl_context *ctx, GLuint id, GLboolean genRequired)
    else {
       /* non-default array object */
       newObj = _mesa_lookup_vao(ctx, id);
-      if (!newObj) {
-         if (genRequired) {
-            _mesa_error(ctx, GL_INVALID_OPERATION,
-                        "glBindVertexArray(non-gen name)");
-            return;
-         }
-
-         /* For APPLE version, generate a new array object now */
-	 newObj = _mesa_new_vao(ctx, id);
-         if (!newObj) {
-            _mesa_error(ctx, GL_OUT_OF_MEMORY, "glBindVertexArrayAPPLE");
-            return;
-         }
-
-         save_array_object(ctx, newObj);
+      if (!no_error && !newObj) {
+         _mesa_error(ctx, GL_INVALID_OPERATION,
+                     "glBindVertexArray(non-gen name)");
+         return;
       }
 
-      if (!newObj->EverBound) {
-         /* The "Interactions with APPLE_vertex_array_object" section of the
-          * GL_ARB_vertex_array_object spec says:
-          *
-          *     "The first bind call, either BindVertexArray or
-          *     BindVertexArrayAPPLE, determines the semantic of the object."
-          */
-         newObj->ARBsemantics = genRequired;
-         newObj->EverBound = GL_TRUE;
-      }
+      newObj->EverBound = GL_TRUE;
    }
 
    if (ctx->Array.DrawMethod == DRAW_ARRAYS) {
@@ -511,33 +456,19 @@ bind_vertex_array(struct gl_context *ctx, GLuint id, GLboolean genRequired)
 }
 
 
-/**
- * ARB version of glBindVertexArray()
- * This function behaves differently from glBindVertexArrayAPPLE() in
- * that this function requires all ids to have been previously generated
- * by glGenVertexArrays[APPLE]().
- */
 void GLAPIENTRY
-_mesa_BindVertexArray( GLuint id )
+_mesa_BindVertexArray_no_error(GLuint id)
 {
    GET_CURRENT_CONTEXT(ctx);
-   bind_vertex_array(ctx, id, GL_TRUE);
+   bind_vertex_array(ctx, id, true);
 }
 
 
-/**
- * Bind a new array.
- *
- * \todo
- * The binding could be done more efficiently by comparing the non-NULL
- * pointers in the old and new objects.  The only arrays that are "dirty" are
- * the ones that are non-NULL in either object.
- */
 void GLAPIENTRY
-_mesa_BindVertexArrayAPPLE( GLuint id )
+_mesa_BindVertexArray(GLuint id)
 {
    GET_CURRENT_CONTEXT(ctx);
-   bind_vertex_array(ctx, id, GL_FALSE);
+   bind_vertex_array(ctx, id, false);
 }
 
 
@@ -547,33 +478,26 @@ _mesa_BindVertexArrayAPPLE( GLuint id )
  * \param n      Number of array objects to delete.
  * \param ids    Array of \c n array object IDs.
  */
-void GLAPIENTRY
-_mesa_DeleteVertexArrays(GLsizei n, const GLuint *ids)
+static void
+delete_vertex_arrays(struct gl_context *ctx, GLsizei n, const GLuint *ids)
 {
-   GET_CURRENT_CONTEXT(ctx);
    GLsizei i;
-
-   if (n < 0) {
-      _mesa_error(ctx, GL_INVALID_VALUE, "glDeleteVertexArray(n)");
-      return;
-   }
 
    for (i = 0; i < n; i++) {
       struct gl_vertex_array_object *obj = _mesa_lookup_vao(ctx, ids[i]);
 
-      if ( obj != NULL ) {
-	 assert( obj->Name == ids[i] );
+      if (obj) {
+         assert(obj->Name == ids[i]);
 
-	 /* If the array object is currently bound, the spec says "the binding
-	  * for that object reverts to zero and the default vertex array
-	  * becomes current."
-	  */
-	 if ( obj == ctx->Array.VAO ) {
-	    _mesa_BindVertexArray(0);
-	 }
+         /* If the array object is currently bound, the spec says "the binding
+          * for that object reverts to zero and the default vertex array
+          * becomes current."
+          */
+         if (obj == ctx->Array.VAO)
+            _mesa_BindVertexArray_no_error(0);
 
-	 /* The ID is immediately freed for re-use */
-	 remove_array_object(ctx, obj);
+         /* The ID is immediately freed for re-use */
+         _mesa_HashRemoveLocked(ctx->Array.Objects, obj->Name);
 
          if (ctx->Array.LastLookedUpVAO == obj)
             _mesa_reference_vao(ctx, &ctx->Array.LastLookedUpVAO, NULL);
@@ -587,9 +511,31 @@ _mesa_DeleteVertexArrays(GLsizei n, const GLuint *ids)
 }
 
 
+void GLAPIENTRY
+_mesa_DeleteVertexArrays_no_error(GLsizei n, const GLuint *ids)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   delete_vertex_arrays(ctx, n, ids);
+}
+
+
+void GLAPIENTRY
+_mesa_DeleteVertexArrays(GLsizei n, const GLuint *ids)
+{
+   GET_CURRENT_CONTEXT(ctx);
+
+   if (n < 0) {
+      _mesa_error(ctx, GL_INVALID_VALUE, "glDeleteVertexArray(n)");
+      return;
+   }
+
+   delete_vertex_arrays(ctx, n, ids);
+}
+
+
 /**
  * Generate a set of unique array object IDs and store them in \c arrays.
- * Helper for _mesa_GenVertexArrays[APPLE]() and _mesa_CreateVertexArrays()
+ * Helper for _mesa_GenVertexArrays() and _mesa_CreateVertexArrays()
  * below.
  *
  * \param n       Number of IDs to generate.
@@ -604,14 +550,8 @@ gen_vertex_arrays(struct gl_context *ctx, GLsizei n, GLuint *arrays,
    GLuint first;
    GLint i;
 
-   if (n < 0) {
-      _mesa_error(ctx, GL_INVALID_VALUE, "%s(n < 0)", func);
+   if (!arrays)
       return;
-   }
-
-   if (!arrays) {
-      return;
-   }
 
    first = _mesa_HashFindFreeKeyBlock(ctx->Array.Objects, n);
 
@@ -629,9 +569,22 @@ gen_vertex_arrays(struct gl_context *ctx, GLsizei n, GLuint *arrays,
          return;
       }
       obj->EverBound = create;
-      save_array_object(ctx, obj);
+      _mesa_HashInsertLocked(ctx->Array.Objects, obj->Name, obj);
       arrays[i] = first + i;
    }
+}
+
+
+static void
+gen_vertex_arrays_err(struct gl_context *ctx, GLsizei n, GLuint *arrays,
+                      bool create, const char *func)
+{
+   if (n < 0) {
+      _mesa_error(ctx, GL_INVALID_VALUE, "%s(n < 0)", func);
+      return;
+   }
+
+   gen_vertex_arrays(ctx, n, arrays, create, func);
 }
 
 
@@ -640,22 +593,18 @@ gen_vertex_arrays(struct gl_context *ctx, GLsizei n, GLuint *arrays,
  * All arrays will be required to live in VBOs.
  */
 void GLAPIENTRY
-_mesa_GenVertexArrays(GLsizei n, GLuint *arrays)
+_mesa_GenVertexArrays_no_error(GLsizei n, GLuint *arrays)
 {
    GET_CURRENT_CONTEXT(ctx);
    gen_vertex_arrays(ctx, n, arrays, false, "glGenVertexArrays");
 }
 
 
-/**
- * APPLE version of glGenVertexArraysAPPLE()
- * Arrays may live in VBOs or ordinary memory.
- */
 void GLAPIENTRY
-_mesa_GenVertexArraysAPPLE(GLsizei n, GLuint *arrays)
+_mesa_GenVertexArrays(GLsizei n, GLuint *arrays)
 {
    GET_CURRENT_CONTEXT(ctx);
-   gen_vertex_arrays(ctx, n, arrays, false, "glGenVertexArraysAPPLE");
+   gen_vertex_arrays_err(ctx, n, arrays, false, "glGenVertexArrays");
 }
 
 
@@ -664,10 +613,18 @@ _mesa_GenVertexArraysAPPLE(GLsizei n, GLuint *arrays)
  * Generates ID's and creates the array objects.
  */
 void GLAPIENTRY
-_mesa_CreateVertexArrays(GLsizei n, GLuint *arrays)
+_mesa_CreateVertexArrays_no_error(GLsizei n, GLuint *arrays)
 {
    GET_CURRENT_CONTEXT(ctx);
    gen_vertex_arrays(ctx, n, arrays, true, "glCreateVertexArrays");
+}
+
+
+void GLAPIENTRY
+_mesa_CreateVertexArrays(GLsizei n, GLuint *arrays)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   gen_vertex_arrays_err(ctx, n, arrays, true, "glCreateVertexArrays");
 }
 
 
@@ -685,14 +642,9 @@ _mesa_IsVertexArray( GLuint id )
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_BEGIN_END_WITH_RETVAL(ctx, GL_FALSE);
 
-   if (id == 0)
-      return GL_FALSE;
-
    obj = _mesa_lookup_vao(ctx, id);
-   if (obj == NULL)
-      return GL_FALSE;
 
-   return obj->EverBound;
+   return obj != NULL && obj->EverBound;
 }
 
 
@@ -702,38 +654,63 @@ _mesa_IsVertexArray( GLuint id )
  * This is the ARB_direct_state_access equivalent of
  * glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer).
  */
-void GLAPIENTRY
-_mesa_VertexArrayElementBuffer(GLuint vaobj, GLuint buffer)
+static ALWAYS_INLINE void
+vertex_array_element_buffer(struct gl_context *ctx, GLuint vaobj, GLuint buffer,
+                            bool no_error)
 {
-   GET_CURRENT_CONTEXT(ctx);
    struct gl_vertex_array_object *vao;
    struct gl_buffer_object *bufObj;
 
    ASSERT_OUTSIDE_BEGIN_END(ctx);
 
-   /* The GL_ARB_direct_state_access specification says:
-    *
-    *    "An INVALID_OPERATION error is generated by VertexArrayElementBuffer
-    *     if <vaobj> is not [compatibility profile: zero or] the name of an
-    *     existing vertex array object."
-    */
-   vao =_mesa_lookup_vao_err(ctx, vaobj, "glVertexArrayElementBuffer");
-   if (!vao)
-      return;
+   if (!no_error) {
+      /* The GL_ARB_direct_state_access specification says:
+       *
+       *    "An INVALID_OPERATION error is generated by
+       *     VertexArrayElementBuffer if <vaobj> is not [compatibility profile:
+       *     zero or] the name of an existing vertex array object."
+       */
+      vao =_mesa_lookup_vao_err(ctx, vaobj, "glVertexArrayElementBuffer");
+      if (!vao)
+         return;
+   } else {
+      vao = _mesa_lookup_vao(ctx, vaobj);
+   }
 
-   /* The GL_ARB_direct_state_access specification says:
-    *
-    *    "An INVALID_OPERATION error is generated if <buffer> is not zero or
-    *     the name of an existing buffer object."
-    */
-   if (buffer != 0)
-      bufObj = _mesa_lookup_bufferobj_err(ctx, buffer,
-                                          "glVertexArrayElementBuffer");
-   else
+   if (buffer != 0) {
+      if (!no_error) {
+         /* The GL_ARB_direct_state_access specification says:
+          *
+          *    "An INVALID_OPERATION error is generated if <buffer> is not zero
+          *     or the name of an existing buffer object."
+          */
+         bufObj = _mesa_lookup_bufferobj_err(ctx, buffer,
+                                             "glVertexArrayElementBuffer");
+      } else {
+         bufObj = _mesa_lookup_bufferobj(ctx, buffer);
+      }
+   } else {
       bufObj = ctx->Shared->NullBufferObj;
+   }
 
    if (bufObj)
       _mesa_reference_buffer_object(ctx, &vao->IndexBufferObj, bufObj);
+}
+
+
+void GLAPIENTRY
+_mesa_VertexArrayElementBuffer_no_error(GLuint vaobj, GLuint buffer)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   vertex_array_element_buffer(ctx, vaobj, buffer, true);
+}
+
+
+void GLAPIENTRY
+_mesa_VertexArrayElementBuffer(GLuint vaobj, GLuint buffer)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   vertex_array_element_buffer(ctx, vaobj, buffer, false);
 }
 
 

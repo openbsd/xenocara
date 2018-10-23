@@ -76,7 +76,6 @@ static const struct {
    unsigned num_dst;
    unsigned num_src;
 } op_table [TGSI_OPCODE_LAST] = {
-   [ TGSI_OPCODE_ABS     ] = { false,  false,                  0,  1,  1 },
    [ TGSI_OPCODE_ADD     ] = { false,   true,  TGSI_SWIZZLE_ZERO,  1,  2 },
    [ TGSI_OPCODE_CEIL    ] = { false,  false,                  0,  1,  1 },
    [ TGSI_OPCODE_CMP     ] = { false,  false,                  0,  1,  2 },
@@ -86,7 +85,6 @@ static const struct {
    [ TGSI_OPCODE_DP2     ] = { false,   true,   TGSI_SWIZZLE_ONE,  1,  2 },
    [ TGSI_OPCODE_DP3     ] = { false,   true,   TGSI_SWIZZLE_ONE,  1,  2 },
    [ TGSI_OPCODE_DP4     ] = { false,   true,   TGSI_SWIZZLE_ONE,  1,  2 },
-   [ TGSI_OPCODE_DPH     ] = { false,  false,                  0,  1,  2 },
    [ TGSI_OPCODE_DST     ] = { false,  false,                  0,  1,  2 },
    [ TGSI_OPCODE_END     ] = { false,  false,                  0,  0,  0 },
    [ TGSI_OPCODE_EX2     ] = { false,  false,                  0,  1,  1 },
@@ -107,7 +105,6 @@ static const struct {
    [ TGSI_OPCODE_RCP     ] = { false,  false,                  0,  1,  1 },
    [ TGSI_OPCODE_RET     ] = { false,  false,                  0,  0,  0 },
    [ TGSI_OPCODE_RSQ     ] = { false,  false,                  0,  1,  1 },
-   [ TGSI_OPCODE_SCS     ] = { false,  false,                  0,  1,  1 },
    [ TGSI_OPCODE_SEQ     ] = { false,  false,                  0,  1,  2 },
    [ TGSI_OPCODE_SGE     ] = { false,  false,                  0,  1,  2 },
    [ TGSI_OPCODE_SGT     ] = { false,  false,                  0,  1,  2 },
@@ -116,12 +113,10 @@ static const struct {
    [ TGSI_OPCODE_SLT     ] = { false,  false,                  0,  1,  2 },
    [ TGSI_OPCODE_SNE     ] = { false,  false,                  0,  1,  2 },
    [ TGSI_OPCODE_SSG     ] = { false,  false,                  0,  1,  1 },
-   [ TGSI_OPCODE_SUB     ] = { false,  false,                  0,  1,  2 },
    [ TGSI_OPCODE_TEX     ] = {  true,  false,                  0,  1,  2 },
    [ TGSI_OPCODE_TRUNC   ] = { false,  false,                  0,  1,  1 },
    [ TGSI_OPCODE_TXB     ] = {  true,  false,                  0,  1,  2 },
    [ TGSI_OPCODE_TXP     ] = {  true,  false,                  0,  1,  2 },
-   [ TGSI_OPCODE_XPD     ] = { false,  false,                  0,  1,  2 },
 };
 
 static boolean op_has_dst(unsigned opcode)

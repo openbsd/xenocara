@@ -222,8 +222,8 @@ I8_UINT                     ,   8,  1,  1,  1,     ,     ,     ,     ,     ,  ui
 I8_SINT                     ,   8,  1,  1,  1,     ,     ,     ,     ,     ,  si8,    , linear,
 DXT1_RGB_SRGB               ,  64,  4,  4,  1,  un4,  un4,  un4,     ,     ,     ,    ,   srgb,  dxt1
 R1_UNORM                    ,   1,  1,  1,  1,  un1,     ,     ,     ,     ,     ,    , linear,
-YCRCB_NORMAL                ,   0,  0,  0,  0,     ,     ,     ,     ,     ,     ,    ,    yuv,
-YCRCB_SWAPUVY               ,   0,  0,  0,  0,     ,     ,     ,     ,     ,     ,    ,    yuv,
+YCRCB_NORMAL                ,  16,  1,  1,  1,  un8,  un8,  un8,     ,     ,     ,    ,    yuv,
+YCRCB_SWAPUVY               ,  16,  1,  1,  1,  un8,  un8,  un8,     ,     ,     ,    ,    yuv,
 P2_UNORM_PALETTE0           ,   2,  1,  1,  1,     ,     ,     ,     ,     ,     , un2, linear,
 P2_UNORM_PALETTE1           ,   2,  1,  1,  1,     ,     ,     ,     ,     ,     , un2, linear,
 BC1_UNORM                   ,  64,  4,  4,  1,  un4,  un4,  un4,  un4,     ,     ,    , linear,  dxt1
@@ -235,8 +235,8 @@ BC1_UNORM_SRGB              ,  64,  4,  4,  1,  un4,  un4,  un4,  un4,     ,    
 BC2_UNORM_SRGB              , 128,  4,  4,  1,  un4,  un4,  un4,  un4,     ,     ,    ,   srgb,  dxt3
 BC3_UNORM_SRGB              , 128,  4,  4,  1,  un4,  un4,  un4,  un4,     ,     ,    ,   srgb,  dxt5
 MONO8                       ,   1,  1,  1,  1,     ,     ,     ,     ,     ,     ,    ,       ,
-YCRCB_SWAPUV                ,   0,  0,  0,  0,     ,     ,     ,     ,     ,     ,    ,    yuv,
-YCRCB_SWAPY                 ,   0,  0,  0,  0,     ,     ,     ,     ,     ,     ,    ,    yuv,
+YCRCB_SWAPUV                ,  16,  1,  1,  1,  un8,  un8,  un8,     ,     ,     ,    ,    yuv,
+YCRCB_SWAPY                 ,  16,  1,  1,  1,  un8,  un8,  un8,     ,     ,     ,    ,    yuv,
 DXT1_RGB                    ,  64,  4,  4,  1,  un4,  un4,  un4,     ,     ,     ,    , linear,  dxt1
 FXT1                        , 128,  8,  4,  1,  un4,  un4,  un4,     ,     ,     ,    , linear,  fxt1
 R8G8B8_UNORM                ,  24,  1,  1,  1,  un8,  un8,  un8,     ,     ,     ,    , linear,
@@ -314,6 +314,20 @@ ASTC_LDR_2D_10X8_FLT16      , 128, 10,  8,  1, sf16, sf16, sf16, sf16,     ,    
 ASTC_LDR_2D_10X10_FLT16     , 128, 10, 10,  1, sf16, sf16, sf16, sf16,     ,     ,    , linear,  astc
 ASTC_LDR_2D_12X10_FLT16     , 128, 12, 10,  1, sf16, sf16, sf16, sf16,     ,     ,    , linear,  astc
 ASTC_LDR_2D_12X12_FLT16     , 128, 12, 12,  1, sf16, sf16, sf16, sf16,     ,     ,    , linear,  astc
+ASTC_HDR_2D_4X4_FLT16       , 128,  4,  4,  1, sf16, sf16, sf16, sf16,     ,     ,    , linear,  astc
+ASTC_HDR_2D_5X4_FLT16       , 128,  5,  4,  1, sf16, sf16, sf16, sf16,     ,     ,    , linear,  astc
+ASTC_HDR_2D_5X5_FLT16       , 128,  5,  5,  1, sf16, sf16, sf16, sf16,     ,     ,    , linear,  astc
+ASTC_HDR_2D_6X5_FLT16       , 128,  6,  5,  1, sf16, sf16, sf16, sf16,     ,     ,    , linear,  astc
+ASTC_HDR_2D_6X6_FLT16       , 128,  6,  6,  1, sf16, sf16, sf16, sf16,     ,     ,    , linear,  astc
+ASTC_HDR_2D_8X5_FLT16       , 128,  8,  5,  1, sf16, sf16, sf16, sf16,     ,     ,    , linear,  astc
+ASTC_HDR_2D_8X6_FLT16       , 128,  8,  6,  1, sf16, sf16, sf16, sf16,     ,     ,    , linear,  astc
+ASTC_HDR_2D_8X8_FLT16       , 128,  8,  8,  1, sf16, sf16, sf16, sf16,     ,     ,    , linear,  astc
+ASTC_HDR_2D_10X5_FLT16      , 128, 10,  5,  1, sf16, sf16, sf16, sf16,     ,     ,    , linear,  astc
+ASTC_HDR_2D_10X6_FLT16      , 128, 10,  6,  1, sf16, sf16, sf16, sf16,     ,     ,    , linear,  astc
+ASTC_HDR_2D_10X8_FLT16      , 128, 10,  8,  1, sf16, sf16, sf16, sf16,     ,     ,    , linear,  astc
+ASTC_HDR_2D_10X10_FLT16     , 128, 10, 10,  1, sf16, sf16, sf16, sf16,     ,     ,    , linear,  astc
+ASTC_HDR_2D_12X10_FLT16     , 128, 12, 10,  1, sf16, sf16, sf16, sf16,     ,     ,    , linear,  astc
+ASTC_HDR_2D_12X12_FLT16     , 128, 12, 12,  1, sf16, sf16, sf16, sf16,     ,     ,    , linear,  astc
 HIZ                         , 128,  8,  4,  1,     ,     ,     ,     ,     ,     ,    ,       ,   hiz
 MCS_2X                      ,   8,  1,  1,  1,     ,     ,     ,     ,     ,     ,    ,       ,   mcs
 MCS_4X                      ,   8,  1,  1,  1,     ,     ,     ,     ,     ,     ,    ,       ,   mcs

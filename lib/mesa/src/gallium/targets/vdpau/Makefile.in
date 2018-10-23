@@ -58,64 +58,70 @@ DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/src/gallium/drivers/r300/Automake.inc \
 	$(top_srcdir)/src/gallium/drivers/r600/Automake.inc \
 	$(top_srcdir)/src/gallium/drivers/radeonsi/Automake.inc
-@HAVE_DRISW_TRUE@am__append_1 = \
+@HAVE_LIBDRM_TRUE@am__append_1 = \
+@HAVE_LIBDRM_TRUE@	$(LIBDRM_LIBS)
+
+@HAVE_DRISW_TRUE@am__append_2 = \
 @HAVE_DRISW_TRUE@	$(top_builddir)/src/gallium/winsys/sw/dri/libswdri.la
 
-@HAVE_DRISW_KMS_TRUE@am__append_2 = \
+@HAVE_DRISW_KMS_TRUE@am__append_3 = \
 @HAVE_DRISW_KMS_TRUE@	$(top_builddir)/src/gallium/winsys/sw/kms-dri/libswkmsdri.la \
 @HAVE_DRISW_KMS_TRUE@	$(LIBDRM_LIBS)
 
-@HAVE_LD_VERSION_SCRIPT_TRUE@am__append_3 = \
+@HAVE_LD_VERSION_SCRIPT_TRUE@am__append_4 = \
 @HAVE_LD_VERSION_SCRIPT_TRUE@	-Wl,--version-script=$(top_srcdir)/src/gallium/targets/vdpau/vdpau.sym
 
-@HAVE_LD_DYNAMIC_LIST_TRUE@am__append_4 = \
+@HAVE_LD_DYNAMIC_LIST_TRUE@am__append_5 = \
 @HAVE_LD_DYNAMIC_LIST_TRUE@	-Wl,--dynamic-list=$(top_srcdir)/src/gallium/targets/dri-vdpau.dyn
 
-@HAVE_GALLIUM_NOUVEAU_TRUE@am__append_5 = nouveau
-@HAVE_GALLIUM_NOUVEAU_TRUE@am__append_6 = -DGALLIUM_NOUVEAU
-@HAVE_GALLIUM_NOUVEAU_TRUE@am__append_7 = \
+@HAVE_GALLIUM_NOUVEAU_TRUE@am__append_6 = nouveau
+@HAVE_GALLIUM_NOUVEAU_TRUE@am__append_7 = -DGALLIUM_NOUVEAU
+@HAVE_GALLIUM_NOUVEAU_TRUE@am__append_8 = \
 @HAVE_GALLIUM_NOUVEAU_TRUE@	$(top_builddir)/src/gallium/winsys/nouveau/drm/libnouveaudrm.la \
 @HAVE_GALLIUM_NOUVEAU_TRUE@	$(top_builddir)/src/gallium/drivers/nouveau/libnouveau.la \
 @HAVE_GALLIUM_NOUVEAU_TRUE@	$(NOUVEAU_LIBS) \
 @HAVE_GALLIUM_NOUVEAU_TRUE@	$(LIBDRM_LIBS)
 
-@HAVE_GALLIUM_R300_TRUE@am__append_8 = r300
-@HAVE_GALLIUM_R300_TRUE@am__append_9 = -DGALLIUM_R300
-@HAVE_GALLIUM_R300_TRUE@am__append_10 = \
+@HAVE_GALLIUM_R300_TRUE@am__append_9 = r300
+@HAVE_GALLIUM_R300_TRUE@am__append_10 = -DGALLIUM_R300
+@HAVE_GALLIUM_R300_TRUE@am__append_11 = \
 @HAVE_GALLIUM_R300_TRUE@	$(top_builddir)/src/gallium/drivers/r300/libr300.la \
 @HAVE_GALLIUM_R300_TRUE@	$(RADEON_LIBS) \
 @HAVE_GALLIUM_R300_TRUE@	$(LIBDRM_LIBS)
 
-@HAVE_GALLIUM_R600_TRUE@am__append_11 = r600
-@HAVE_GALLIUM_R600_TRUE@am__append_12 = -DGALLIUM_R600
-@HAVE_GALLIUM_R600_TRUE@am__append_13 = \
+@HAVE_GALLIUM_R600_TRUE@am__append_12 = r600
+@HAVE_GALLIUM_R600_TRUE@am__append_13 = -DGALLIUM_R600
+@HAVE_GALLIUM_R600_TRUE@am__append_14 = \
 @HAVE_GALLIUM_R600_TRUE@	$(top_builddir)/src/gallium/drivers/r600/libr600.la \
 @HAVE_GALLIUM_R600_TRUE@	$(RADEON_LIBS) \
-@HAVE_GALLIUM_R600_TRUE@	$(LIBDRM_LIBS)
+@HAVE_GALLIUM_R600_TRUE@	$(LIBDRM_LIBS) \
+@HAVE_GALLIUM_R600_TRUE@	$(LIBELF_LIBS)
 
-@HAVE_GALLIUM_RADEONSI_TRUE@am__append_14 = radeonsi
-@HAVE_GALLIUM_RADEONSI_TRUE@am__append_15 = -DGALLIUM_RADEONSI
-@HAVE_GALLIUM_RADEONSI_TRUE@am__append_16 = \
+@HAVE_GALLIUM_RADEONSI_TRUE@am__append_15 = radeonsi
+@HAVE_GALLIUM_RADEONSI_TRUE@am__append_16 = -DGALLIUM_RADEONSI
+@HAVE_GALLIUM_RADEONSI_TRUE@am__append_17 = \
 @HAVE_GALLIUM_RADEONSI_TRUE@	$(top_builddir)/src/gallium/drivers/radeonsi/libradeonsi.la \
 @HAVE_GALLIUM_RADEONSI_TRUE@	$(RADEON_LIBS) \
 @HAVE_GALLIUM_RADEONSI_TRUE@	$(LIBDRM_LIBS) \
 @HAVE_GALLIUM_RADEONSI_TRUE@	$(AMDGPU_LIBS)
 
-@HAVE_GALLIUM_STATIC_TARGETS_TRUE@am__append_17 = target.c
-@HAVE_GALLIUM_STATIC_TARGETS_TRUE@am__append_18 = \
+@HAVE_GALLIUM_STATIC_TARGETS_TRUE@am__append_18 = target.c
+@HAVE_GALLIUM_STATIC_TARGETS_TRUE@am__append_19 = \
 @HAVE_GALLIUM_STATIC_TARGETS_TRUE@	$(top_builddir)/src/gallium/auxiliary/pipe-loader/libpipe_loader_static.la \
 @HAVE_GALLIUM_STATIC_TARGETS_TRUE@	$(GALLIUM_PIPE_LOADER_WINSYS_LIBS) \
 @HAVE_GALLIUM_STATIC_TARGETS_TRUE@	$(TARGET_LIB_DEPS) \
+@HAVE_GALLIUM_STATIC_TARGETS_TRUE@	$(TARGET_COMPILER_LIB_DEPS) \
 @HAVE_GALLIUM_STATIC_TARGETS_TRUE@	$(TARGET_RADEON_WINSYS) $(TARGET_RADEON_COMMON)
 
-@HAVE_GALLIUM_STATIC_TARGETS_FALSE@am__append_19 = \
+@HAVE_GALLIUM_STATIC_TARGETS_FALSE@am__append_20 = \
 @HAVE_GALLIUM_STATIC_TARGETS_FALSE@	$(top_builddir)/src/gallium/auxiliary/pipe-loader/libpipe_loader_dynamic.la
 
-@HAVE_MESA_LLVM_TRUE@am__append_20 = $(LLVM_LIBS)
-@HAVE_MESA_LLVM_TRUE@am__append_21 = $(LLVM_LDFLAGS)
+@HAVE_GALLIUM_LLVM_TRUE@am__append_21 = $(LLVM_LIBS)
+@HAVE_GALLIUM_LLVM_TRUE@am__append_22 = $(LLVM_LDFLAGS)
 subdir = src/gallium/targets/vdpau
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_gnu_make.m4 \
+am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_compile_flag.m4 \
+	$(top_srcdir)/m4/ax_check_gnu_make.m4 \
 	$(top_srcdir)/m4/ax_check_python_mako_module.m4 \
 	$(top_srcdir)/m4/ax_gcc_builtin.m4 \
 	$(top_srcdir)/m4/ax_gcc_func_attribute.m4 \
@@ -160,43 +166,48 @@ am__uninstall_files_from_dir = { \
 am__installdirs = "$(DESTDIR)$(vdpaudir)"
 LTLIBRARIES = $(vdpau_LTLIBRARIES)
 am__DEPENDENCIES_1 =
-am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1)
-@HAVE_DRISW_KMS_TRUE@am__DEPENDENCIES_3 = $(top_builddir)/src/gallium/winsys/sw/kms-dri/libswkmsdri.la \
+@HAVE_LIBDRM_TRUE@am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
+am__DEPENDENCIES_3 = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_2)
+@HAVE_DRISW_KMS_TRUE@am__DEPENDENCIES_4 = $(top_builddir)/src/gallium/winsys/sw/kms-dri/libswkmsdri.la \
 @HAVE_DRISW_KMS_TRUE@	$(am__DEPENDENCIES_1)
-am__DEPENDENCIES_4 =  \
+am__DEPENDENCIES_5 =  \
 	$(top_builddir)/src/gallium/winsys/sw/null/libws_null.la \
 	$(top_builddir)/src/gallium/winsys/sw/wrapper/libwsw.la \
-	$(am__append_1) $(am__DEPENDENCIES_3)
-@HAVE_GALLIUM_NOUVEAU_TRUE@am__DEPENDENCIES_5 = $(top_builddir)/src/gallium/winsys/nouveau/drm/libnouveaudrm.la \
+	$(am__append_2) $(am__DEPENDENCIES_4)
+@HAVE_GALLIUM_NOUVEAU_TRUE@am__DEPENDENCIES_6 = $(top_builddir)/src/gallium/winsys/nouveau/drm/libnouveaudrm.la \
 @HAVE_GALLIUM_NOUVEAU_TRUE@	$(top_builddir)/src/gallium/drivers/nouveau/libnouveau.la \
 @HAVE_GALLIUM_NOUVEAU_TRUE@	$(am__DEPENDENCIES_1) \
 @HAVE_GALLIUM_NOUVEAU_TRUE@	$(am__DEPENDENCIES_1)
-@HAVE_GALLIUM_R300_TRUE@am__DEPENDENCIES_6 = $(top_builddir)/src/gallium/drivers/r300/libr300.la \
+@HAVE_GALLIUM_R300_TRUE@am__DEPENDENCIES_7 = $(top_builddir)/src/gallium/drivers/r300/libr300.la \
 @HAVE_GALLIUM_R300_TRUE@	$(am__DEPENDENCIES_1) \
 @HAVE_GALLIUM_R300_TRUE@	$(am__DEPENDENCIES_1)
-@HAVE_GALLIUM_R600_TRUE@am__DEPENDENCIES_7 = $(top_builddir)/src/gallium/drivers/r600/libr600.la \
+@HAVE_GALLIUM_R600_TRUE@am__DEPENDENCIES_8 = $(top_builddir)/src/gallium/drivers/r600/libr600.la \
+@HAVE_GALLIUM_R600_TRUE@	$(am__DEPENDENCIES_1) \
 @HAVE_GALLIUM_R600_TRUE@	$(am__DEPENDENCIES_1) \
 @HAVE_GALLIUM_R600_TRUE@	$(am__DEPENDENCIES_1)
-@HAVE_GALLIUM_RADEONSI_TRUE@am__DEPENDENCIES_8 = $(top_builddir)/src/gallium/drivers/radeonsi/libradeonsi.la \
+@HAVE_GALLIUM_RADEONSI_TRUE@am__DEPENDENCIES_9 = $(top_builddir)/src/gallium/drivers/radeonsi/libradeonsi.la \
 @HAVE_GALLIUM_RADEONSI_TRUE@	$(am__DEPENDENCIES_1) \
 @HAVE_GALLIUM_RADEONSI_TRUE@	$(am__DEPENDENCIES_1) \
 @HAVE_GALLIUM_RADEONSI_TRUE@	$(am__DEPENDENCIES_1)
-am__DEPENDENCIES_9 = $(am__DEPENDENCIES_5) $(am__DEPENDENCIES_6) \
-	$(am__DEPENDENCIES_7) $(am__DEPENDENCIES_8)
-@HAVE_GALLIUM_STATIC_TARGETS_TRUE@am__DEPENDENCIES_10 = $(top_builddir)/src/gallium/auxiliary/pipe-loader/libpipe_loader_static.la \
-@HAVE_GALLIUM_STATIC_TARGETS_TRUE@	$(am__DEPENDENCIES_4) \
-@HAVE_GALLIUM_STATIC_TARGETS_TRUE@	$(am__DEPENDENCIES_9) \
+am__DEPENDENCIES_10 = $(am__DEPENDENCIES_6) $(am__DEPENDENCIES_7) \
+	$(am__DEPENDENCIES_8) $(am__DEPENDENCIES_9)
+@HAVE_GALLIUM_STATIC_TARGETS_TRUE@am__DEPENDENCIES_11 = $(top_builddir)/src/gallium/auxiliary/pipe-loader/libpipe_loader_static.la \
+@HAVE_GALLIUM_STATIC_TARGETS_TRUE@	$(am__DEPENDENCIES_5) \
+@HAVE_GALLIUM_STATIC_TARGETS_TRUE@	$(am__DEPENDENCIES_10) \
+@HAVE_GALLIUM_STATIC_TARGETS_TRUE@	$(TARGET_COMPILER_LIB_DEPS) \
 @HAVE_GALLIUM_STATIC_TARGETS_TRUE@	$(TARGET_RADEON_WINSYS) \
 @HAVE_GALLIUM_STATIC_TARGETS_TRUE@	$(TARGET_RADEON_COMMON)
-@HAVE_MESA_LLVM_TRUE@am__DEPENDENCIES_11 = $(am__DEPENDENCIES_1)
+@HAVE_GALLIUM_LLVM_TRUE@am__DEPENDENCIES_12 = $(am__DEPENDENCIES_1)
 libvdpau_gallium_la_DEPENDENCIES = $(top_builddir)/src/gallium/state_trackers/vdpau/libvdpautracker.la \
 	$(top_builddir)/src/gallium/auxiliary/libgalliumvlwinsys.la \
 	$(top_builddir)/src/gallium/auxiliary/libgalliumvl.la \
 	$(top_builddir)/src/gallium/auxiliary/libgallium.la \
 	$(top_builddir)/src/util/libmesautil.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_2) \
-	$(am__DEPENDENCIES_10) $(am__append_19) $(am__DEPENDENCIES_11)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_3) $(am__DEPENDENCIES_11) $(am__append_20) \
+	$(am__DEPENDENCIES_12)
 am__libvdpau_gallium_la_SOURCES_DIST = target.c
 @HAVE_GALLIUM_STATIC_TARGETS_TRUE@am__objects_1 = libvdpau_gallium_la-target.lo
 am_libvdpau_gallium_la_OBJECTS = $(am__objects_1)
@@ -277,6 +288,8 @@ AMDGPU_CFLAGS = @AMDGPU_CFLAGS@
 AMDGPU_LIBS = @AMDGPU_LIBS@
 AMTAR = @AMTAR@
 AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
+ANDROID_CFLAGS = @ANDROID_CFLAGS@
+ANDROID_LIBS = @ANDROID_LIBS@
 AR = @AR@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
@@ -307,8 +320,6 @@ DLLTOOL = @DLLTOOL@
 DLOPEN_LIBS = @DLOPEN_LIBS@
 DRI2PROTO_CFLAGS = @DRI2PROTO_CFLAGS@
 DRI2PROTO_LIBS = @DRI2PROTO_LIBS@
-DRI3PROTO_CFLAGS = @DRI3PROTO_CFLAGS@
-DRI3PROTO_LIBS = @DRI3PROTO_LIBS@
 DRIGL_CFLAGS = @DRIGL_CFLAGS@
 DRIGL_LIBS = @DRIGL_LIBS@
 DRI_DRIVER_INSTALL_DIR = @DRI_DRIVER_INSTALL_DIR@
@@ -321,10 +332,11 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGL_CFLAGS = @EGL_CFLAGS@
-EGL_CLIENT_APIS = @EGL_CLIENT_APIS@
 EGL_LIB_DEPS = @EGL_LIB_DEPS@
 EGL_NATIVE_PLATFORM = @EGL_NATIVE_PLATFORM@
 EGREP = @EGREP@
+ETNAVIV_CFLAGS = @ETNAVIV_CFLAGS@
+ETNAVIV_LIBS = @ETNAVIV_LIBS@
 EXEEXT = @EXEEXT@
 EXPAT_CFLAGS = @EXPAT_CFLAGS@
 EXPAT_LIBS = @EXPAT_LIBS@
@@ -351,6 +363,8 @@ GL_PC_LIB_PRIV = @GL_PC_LIB_PRIV@
 GL_PC_REQ_PRIV = @GL_PC_REQ_PRIV@
 GREP = @GREP@
 HAVE_XF86VIDMODE = @HAVE_XF86VIDMODE@
+I915_CFLAGS = @I915_CFLAGS@
+I915_LIBS = @I915_LIBS@
 INDENT = @INDENT@
 INDENT_FLAGS = @INDENT_FLAGS@
 INSTALL = @INSTALL@
@@ -358,45 +372,40 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
-INTEL_CFLAGS = @INTEL_CFLAGS@
-INTEL_LIBS = @INTEL_LIBS@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
 LD_NO_UNDEFINED = @LD_NO_UNDEFINED@
 LEX = @LEX@
 LEXLIB = @LEXLIB@
 LEX_OUTPUT_ROOT = @LEX_OUTPUT_ROOT@
+LIBATOMIC_LIBS = @LIBATOMIC_LIBS@
 LIBCLC_INCLUDEDIR = @LIBCLC_INCLUDEDIR@
 LIBCLC_LIBEXECDIR = @LIBCLC_LIBEXECDIR@
 LIBDRM_CFLAGS = @LIBDRM_CFLAGS@
 LIBDRM_LIBS = @LIBDRM_LIBS@
 LIBELF_CFLAGS = @LIBELF_CFLAGS@
 LIBELF_LIBS = @LIBELF_LIBS@
+LIBGLVND_DATADIR = @LIBGLVND_DATADIR@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
-LIBSENSORS_LDFLAGS = @LIBSENSORS_LDFLAGS@
-LIBSHA1_CFLAGS = @LIBSHA1_CFLAGS@
-LIBSHA1_LIBS = @LIBSHA1_LIBS@
+LIBSENSORS_LIBS = @LIBSENSORS_LIBS@
 LIBTOOL = @LIBTOOL@
+LIBUNWIND_CFLAGS = @LIBUNWIND_CFLAGS@
+LIBUNWIND_LIBS = @LIBUNWIND_LIBS@
 LIB_DIR = @LIB_DIR@
 LIB_EXT = @LIB_EXT@
 LIPO = @LIPO@
-LLVM_BINDIR = @LLVM_BINDIR@
 LLVM_CFLAGS = @LLVM_CFLAGS@
 LLVM_CONFIG = @LLVM_CONFIG@
-LLVM_CPPFLAGS = @LLVM_CPPFLAGS@
 LLVM_CXXFLAGS = @LLVM_CXXFLAGS@
 LLVM_INCLUDEDIR = @LLVM_INCLUDEDIR@
 LLVM_LDFLAGS = @LLVM_LDFLAGS@
-LLVM_LIBDIR = @LLVM_LIBDIR@
 LLVM_LIBS = @LLVM_LIBS@
-LLVM_VERSION = @LLVM_VERSION@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
-MESA_LLVM = @MESA_LLVM@
 MKDIR_P = @MKDIR_P@
 MSVC2013_COMPAT_CFLAGS = @MSVC2013_COMPAT_CFLAGS@
 MSVC2013_COMPAT_CXXFLAGS = @MSVC2013_COMPAT_CXXFLAGS@
@@ -412,13 +421,11 @@ NVVIEUX_CFLAGS = @NVVIEUX_CFLAGS@
 NVVIEUX_LIBS = @NVVIEUX_LIBS@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
-OMX_CFLAGS = @OMX_CFLAGS@
-OMX_LIBS = @OMX_LIBS@
-OMX_LIB_INSTALL_DIR = @OMX_LIB_INSTALL_DIR@
+OMX_BELLAGIO_CFLAGS = @OMX_BELLAGIO_CFLAGS@
+OMX_BELLAGIO_LIBS = @OMX_BELLAGIO_LIBS@
+OMX_BELLAGIO_LIB_INSTALL_DIR = @OMX_BELLAGIO_LIB_INSTALL_DIR@
 OPENCL_LIBNAME = @OPENCL_LIBNAME@
 OPENCL_VERSION = @OPENCL_VERSION@
-OPENSSL_CFLAGS = @OPENSSL_CFLAGS@
-OPENSSL_LIBS = @OPENSSL_LIBS@
 OSMESA_LIB = @OSMESA_LIB@
 OSMESA_LIB_DEPS = @OSMESA_LIB_DEPS@
 OSMESA_PC_LIB_PRIV = @OSMESA_PC_LIB_PRIV@
@@ -438,8 +445,6 @@ PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 POSIX_SHELL = @POSIX_SHELL@
-PRESENTPROTO_CFLAGS = @PRESENTPROTO_CFLAGS@
-PRESENTPROTO_LIBS = @PRESENTPROTO_LIBS@
 PTHREADSTUBS_CFLAGS = @PTHREADSTUBS_CFLAGS@
 PTHREADSTUBS_LIBS = @PTHREADSTUBS_LIBS@
 PTHREAD_CC = @PTHREAD_CC@
@@ -455,8 +460,6 @@ SED = @SED@
 SELINUX_CFLAGS = @SELINUX_CFLAGS@
 SELINUX_LIBS = @SELINUX_LIBS@
 SET_MAKE = @SET_MAKE@
-SHA1_CFLAGS = @SHA1_CFLAGS@
-SHA1_LIBS = @SHA1_LIBS@
 SHELL = @SHELL@
 SIMPENROSE_CFLAGS = @SIMPENROSE_CFLAGS@
 SIMPENROSE_LIBS = @SIMPENROSE_LIBS@
@@ -465,7 +468,8 @@ STRIP = @STRIP@
 SWR_AVX2_CXXFLAGS = @SWR_AVX2_CXXFLAGS@
 SWR_AVX_CXXFLAGS = @SWR_AVX_CXXFLAGS@
 SWR_CXX11_CXXFLAGS = @SWR_CXX11_CXXFLAGS@
-TIMESTAMP_CMD = @TIMESTAMP_CMD@
+SWR_KNL_CXXFLAGS = @SWR_KNL_CXXFLAGS@
+SWR_SKX_CXXFLAGS = @SWR_SKX_CXXFLAGS@
 VALGRIND_CFLAGS = @VALGRIND_CFLAGS@
 VALGRIND_LIBS = @VALGRIND_LIBS@
 VA_CFLAGS = @VA_CFLAGS@
@@ -473,25 +477,28 @@ VA_LIBS = @VA_LIBS@
 VA_LIB_INSTALL_DIR = @VA_LIB_INSTALL_DIR@
 VA_MAJOR = @VA_MAJOR@
 VA_MINOR = @VA_MINOR@
-VC4_CFLAGS = @VC4_CFLAGS@
-VC4_LIBS = @VC4_LIBS@
+VC5_SIMULATOR_CFLAGS = @VC5_SIMULATOR_CFLAGS@
+VC5_SIMULATOR_LIBS = @VC5_SIMULATOR_LIBS@
 VDPAU_CFLAGS = @VDPAU_CFLAGS@
 VDPAU_LIBS = @VDPAU_LIBS@
 VDPAU_LIB_INSTALL_DIR = @VDPAU_LIB_INSTALL_DIR@
 VDPAU_MAJOR = @VDPAU_MAJOR@
 VDPAU_MINOR = @VDPAU_MINOR@
 VERSION = @VERSION@
-VG_LIB_DEPS = @VG_LIB_DEPS@
 VISIBILITY_CFLAGS = @VISIBILITY_CFLAGS@
 VISIBILITY_CXXFLAGS = @VISIBILITY_CXXFLAGS@
 VL_CFLAGS = @VL_CFLAGS@
 VL_LIBS = @VL_LIBS@
 VULKAN_ICD_INSTALL_DIR = @VULKAN_ICD_INSTALL_DIR@
-WAYLAND_CFLAGS = @WAYLAND_CFLAGS@
-WAYLAND_LIBS = @WAYLAND_LIBS@
+WAYLAND_CLIENT_CFLAGS = @WAYLAND_CLIENT_CFLAGS@
+WAYLAND_CLIENT_LIBS = @WAYLAND_CLIENT_LIBS@
+WAYLAND_PROTOCOLS_DATADIR = @WAYLAND_PROTOCOLS_DATADIR@
 WAYLAND_SCANNER = @WAYLAND_SCANNER@
 WAYLAND_SCANNER_CFLAGS = @WAYLAND_SCANNER_CFLAGS@
 WAYLAND_SCANNER_LIBS = @WAYLAND_SCANNER_LIBS@
+WAYLAND_SERVER_CFLAGS = @WAYLAND_SERVER_CFLAGS@
+WAYLAND_SERVER_LIBS = @WAYLAND_SERVER_LIBS@
+WNO_OVERRIDE_INIT = @WNO_OVERRIDE_INIT@
 X11_INCLUDES = @X11_INCLUDES@
 XA_MAJOR = @XA_MAJOR@
 XA_MINOR = @XA_MINOR@
@@ -510,9 +517,10 @@ XVMC_LIBS = @XVMC_LIBS@
 XVMC_LIB_INSTALL_DIR = @XVMC_LIB_INSTALL_DIR@
 XVMC_MAJOR = @XVMC_MAJOR@
 XVMC_MINOR = @XVMC_MINOR@
-XXD = @XXD@
 YACC = @YACC@
 YFLAGS = @YFLAGS@
+ZLIB_CFLAGS = @ZLIB_CFLAGS@
+ZLIB_LIBS = @ZLIB_LIBS@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
@@ -615,17 +623,15 @@ GALLIUM_TARGET_CFLAGS = \
 	-I$(top_srcdir)/src/gallium/auxiliary \
 	-I$(top_srcdir)/src/gallium/drivers \
 	-I$(top_srcdir)/src/gallium/winsys \
+	-I$(top_builddir)/src/util/ \
+	-I$(top_builddir)/src/gallium/drivers/ \
 	$(DEFINES) \
 	$(PTHREAD_CFLAGS) \
 	$(LIBDRM_CFLAGS) \
 	$(VISIBILITY_CFLAGS)
 
-GALLIUM_COMMON_LIB_DEPS = \
-	-lm \
-	$(CLOCK_LIB) \
-	$(PTHREAD_LIBS) \
-	$(DLOPEN_LIBS)
-
+GALLIUM_COMMON_LIB_DEPS = -lm $(LIBUNWIND_LIBS) $(LIBSENSORS_LIBS) \
+	$(CLOCK_LIB) $(PTHREAD_LIBS) $(DLOPEN_LIBS) $(am__append_1)
 GALLIUM_WINSYS_CFLAGS = \
 	-I$(top_srcdir)/src \
 	-I$(top_srcdir)/include \
@@ -637,18 +643,18 @@ GALLIUM_WINSYS_CFLAGS = \
 GALLIUM_PIPE_LOADER_WINSYS_LIBS =  \
 	$(top_builddir)/src/gallium/winsys/sw/null/libws_null.la \
 	$(top_builddir)/src/gallium/winsys/sw/wrapper/libwsw.la \
-	$(am__append_1) $(am__append_2)
+	$(am__append_2) $(am__append_3)
 AM_CFLAGS = \
 	$(GALLIUM_TARGET_CFLAGS)
 
 vdpaudir = $(VDPAU_LIB_INSTALL_DIR)
 vdpau_LTLIBRARIES = libvdpau_gallium.la
 nodist_EXTRA_libvdpau_gallium_la_SOURCES = dummy.cpp
-libvdpau_gallium_la_SOURCES = $(am__append_17)
+libvdpau_gallium_la_SOURCES = $(am__append_18)
 libvdpau_gallium_la_LDFLAGS = -shared -module -no-undefined \
 	-version-number $(VDPAU_MAJOR):$(VDPAU_MINOR) $(GC_SECTIONS) \
-	$(LD_NO_UNDEFINED) $(am__append_3) $(am__append_4) \
-	$(am__append_21)
+	$(LD_NO_UNDEFINED) $(am__append_4) $(am__append_5) \
+	$(am__append_22)
 
 # NOTE: libvdpau_gallium does not use(link against) libvdpau
 libvdpau_gallium_la_LIBADD = $(top_builddir)/src/gallium/state_trackers/vdpau/libvdpautracker.la \
@@ -656,8 +662,8 @@ libvdpau_gallium_la_LIBADD = $(top_builddir)/src/gallium/state_trackers/vdpau/li
 	$(top_builddir)/src/gallium/auxiliary/libgalliumvl.la \
 	$(top_builddir)/src/gallium/auxiliary/libgallium.la \
 	$(top_builddir)/src/util/libmesautil.la $(VL_LIBS) \
-	$(LIBDRM_LIBS) $(GALLIUM_COMMON_LIB_DEPS) $(am__append_18) \
-	$(am__append_19) $(am__append_20)
+	$(XCB_DRI3_LIBS) $(LIBDRM_LIBS) $(GALLIUM_COMMON_LIB_DEPS) \
+	$(am__append_19) $(am__append_20) $(am__append_21)
 EXTRA_libvdpau_gallium_la_DEPENDENCIES = \
 	vdpau.sym \
 	$(top_srcdir)/src/gallium/targets/dri-vdpau.dyn
@@ -666,12 +672,12 @@ EXTRA_DIST = \
 	vdpau.sym \
 	$(top_srcdir)/src/gallium/targets/dri-vdpau.dyn
 
-TARGET_DRIVERS = $(am__append_5) $(am__append_8) $(am__append_11) \
-	$(am__append_14)
-TARGET_CPPFLAGS = $(am__append_6) $(am__append_9) $(am__append_12) \
+TARGET_DRIVERS = $(am__append_6) $(am__append_9) $(am__append_12) \
 	$(am__append_15)
-TARGET_LIB_DEPS = $(am__append_7) $(am__append_10) $(am__append_13) \
+TARGET_CPPFLAGS = $(am__append_7) $(am__append_10) $(am__append_13) \
 	$(am__append_16)
+TARGET_LIB_DEPS = $(am__append_8) $(am__append_11) $(am__append_14) \
+	$(am__append_17)
 @HAVE_GALLIUM_R300_TRUE@TARGET_RADEON_WINSYS = \
 @HAVE_GALLIUM_R300_TRUE@	$(top_builddir)/src/gallium/winsys/radeon/drm/libradeonwinsys.la
 
@@ -682,11 +688,12 @@ TARGET_LIB_DEPS = $(am__append_7) $(am__append_10) $(am__append_13) \
 @HAVE_GALLIUM_RADEONSI_TRUE@	$(top_builddir)/src/gallium/winsys/radeon/drm/libradeonwinsys.la \
 @HAVE_GALLIUM_RADEONSI_TRUE@	$(top_builddir)/src/gallium/winsys/amdgpu/drm/libamdgpuwinsys.la
 
-@HAVE_GALLIUM_R600_TRUE@TARGET_RADEON_COMMON = \
-@HAVE_GALLIUM_R600_TRUE@	$(top_builddir)/src/gallium/drivers/radeon/libradeon.la
+@HAVE_GALLIUM_RADEONSI_TRUE@TARGET_COMPILER_LIB_DEPS = \
+@HAVE_GALLIUM_RADEONSI_TRUE@	$(top_builddir)/src/compiler/nir/libnir.la
 
 @HAVE_GALLIUM_RADEONSI_TRUE@TARGET_RADEON_COMMON = \
-@HAVE_GALLIUM_RADEONSI_TRUE@	$(top_builddir)/src/gallium/drivers/radeon/libradeon.la
+@HAVE_GALLIUM_RADEONSI_TRUE@	$(top_builddir)/src/gallium/drivers/radeon/libradeon.la \
+@HAVE_GALLIUM_RADEONSI_TRUE@	$(top_builddir)/src/amd/common/libamd_common.la
 
 @HAVE_GALLIUM_STATIC_TARGETS_TRUE@libvdpau_gallium_la_CPPFLAGS = $(TARGET_CPPFLAGS)
 all: all-am
@@ -1105,7 +1112,8 @@ install-data-hook:
 		ln -sf $${l}						\
 		       $${dest_dir}/$${k};				\
 	done;								\
-	$(RM) $${dest_dir}/libvdpau_gallium.*
+	$(RM) $${dest_dir}/libvdpau_gallium.*;				\
+	$(RM) -d $${dest_dir} &>/dev/null || true
 
 uninstall-hook:
 	for i in $(TARGET_DRIVERS); do					\

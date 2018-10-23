@@ -37,6 +37,7 @@
 #include "util/u_math.h"
 #include "util/u_memory.h"
 #include "util/simple_list.h"
+#include "util/u_upload_mgr.h"
 #include "lp_clear.h"
 #include "lp_context.h"
 #include "lp_flush.h"
@@ -61,6 +62,9 @@ static void llvmpipe_destroy( struct pipe_context *pipe )
    if (llvmpipe->blitter) {
       util_blitter_destroy(llvmpipe->blitter);
    }
+
+   if (llvmpipe->pipe.stream_uploader)
+      u_upload_destroy(llvmpipe->pipe.stream_uploader);
 
    /* This will also destroy llvmpipe->setup:
     */
@@ -92,7 +96,7 @@ static void llvmpipe_destroy( struct pipe_context *pipe )
    }
 
    for (i = 0; i < llvmpipe->num_vertex_buffers; i++) {
-      pipe_resource_reference(&llvmpipe->vertex_buffer[i].buffer, NULL);
+      pipe_vertex_buffer_unreference(&llvmpipe->vertex_buffer[i]);
    }
 
    lp_delete_setup_variants(llvmpipe);
@@ -115,10 +119,10 @@ do_flush( struct pipe_context *pipe,
 
 
 static void
-llvmpipe_render_condition ( struct pipe_context *pipe,
-                            struct pipe_query *query,
-                            boolean condition,
-                            uint mode )
+llvmpipe_render_condition(struct pipe_context *pipe,
+                          struct pipe_query *query,
+                          boolean condition,
+                          enum pipe_render_cond_flag mode)
 {
    struct llvmpipe_context *llvmpipe = llvmpipe_context( pipe );
 
@@ -195,6 +199,11 @@ llvmpipe_create_context(struct pipe_screen *screen, void *priv,
    if (!llvmpipe->setup)
       goto fail;
 
+   llvmpipe->pipe.stream_uploader = u_upload_create_default(&llvmpipe->pipe);
+   if (!llvmpipe->pipe.stream_uploader)
+      goto fail;
+   llvmpipe->pipe.const_uploader = llvmpipe->pipe.stream_uploader;
+
    llvmpipe->blitter = util_blitter_create(&llvmpipe->pipe);
    if (!llvmpipe->blitter) {
       goto fail;
@@ -217,6 +226,12 @@ llvmpipe_create_context(struct pipe_screen *screen, void *priv,
    draw_wide_line_threshold(llvmpipe->draw, 10000.0);
 
    lp_reset_counters();
+
+   /* If llvmpipe_set_scissor_states() is never called, we still need to
+    * make sure that derived scissor state is computed.
+    * See https://bugs.freedesktop.org/show_bug.cgi?id=101709
+    */
+   llvmpipe->dirty |= LP_NEW_SCISSOR;
 
    return &llvmpipe->pipe;
 

@@ -35,7 +35,7 @@ struct gl_context;
 
 /**
  * \file arrayobj.h
- * Functions for the GL_APPLE_vertex_array_object extension.
+ * Functions for the GL_ARB_vertex_array_object extension.
  *
  * \author Ian Romanick <idr@us.ibm.com>
  * \author Brian Paul
@@ -94,19 +94,30 @@ _mesa_all_buffers_are_unmapped(const struct gl_vertex_array_object *vao);
  */
 
 
+void GLAPIENTRY
+_mesa_BindVertexArray_no_error(GLuint id);
+
 void GLAPIENTRY _mesa_BindVertexArray( GLuint id );
 
-void GLAPIENTRY _mesa_BindVertexArrayAPPLE( GLuint id );
+void GLAPIENTRY
+_mesa_DeleteVertexArrays_no_error(GLsizei n, const GLuint *ids);
 
 void GLAPIENTRY _mesa_DeleteVertexArrays(GLsizei n, const GLuint *ids);
 
+void GLAPIENTRY
+_mesa_GenVertexArrays_no_error(GLsizei n, GLuint *arrays);
+
 void GLAPIENTRY _mesa_GenVertexArrays(GLsizei n, GLuint *arrays);
 
-void GLAPIENTRY _mesa_GenVertexArraysAPPLE(GLsizei n, GLuint *buffer);
+void GLAPIENTRY
+_mesa_CreateVertexArrays_no_error(GLsizei n, GLuint *arrays);
 
 void GLAPIENTRY _mesa_CreateVertexArrays(GLsizei n, GLuint *arrays);
 
 GLboolean GLAPIENTRY _mesa_IsVertexArray( GLuint id );
+
+void GLAPIENTRY
+_mesa_VertexArrayElementBuffer_no_error(GLuint vaobj, GLuint buffer);
 
 void GLAPIENTRY _mesa_VertexArrayElementBuffer(GLuint vaobj, GLuint buffer);
 

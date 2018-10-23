@@ -5,6 +5,7 @@
 #include "util/u_dynarray.h"
 #include "util/u_inlines.h"
 #include "util/u_debug.h"
+#include "util/u_memory.h"
 
 #include "pipe/p_shader_tokens.h"
 #include "tgsi/tgsi_parse.h"
@@ -533,9 +534,6 @@ nvfx_fragprog_parse_instruction(struct nvfx_fpc *fpc,
    sat  = finst->Instruction.Saturate;
 
    switch (finst->Instruction.Opcode) {
-   case TGSI_OPCODE_ABS:
-      nvfx_fp_emit(fpc, arith(sat, MOV, dst, mask, abs(src[0]), none, none));
-      break;
    case TGSI_OPCODE_ADD:
       nvfx_fp_emit(fpc, arith(sat, ADD, dst, mask, src[0], src[1], none));
       break;
@@ -592,11 +590,6 @@ nvfx_fragprog_parse_instruction(struct nvfx_fpc *fpc,
       break;
    case TGSI_OPCODE_DP4:
       nvfx_fp_emit(fpc, arith(sat, DP4, dst, mask, src[0], src[1], none));
-      break;
-   case TGSI_OPCODE_DPH:
-      tmp = nvfx_src(temp(fpc));
-      nvfx_fp_emit(fpc, arith(0, DP3, tmp.reg, NVFX_FP_MASK_X, src[0], src[1], none));
-      nvfx_fp_emit(fpc, arith(sat, ADD, dst, mask, swz(tmp, X, X, X, X), swz(src[1], W, W, W, W), none));
       break;
    case TGSI_OPCODE_DST:
       nvfx_fp_emit(fpc, arith(sat, DST, dst, mask, src[0], src[1], none));
@@ -696,23 +689,6 @@ nvfx_fragprog_parse_instruction(struct nvfx_fpc *fpc,
          nvfx_fp_emit(fpc, arith(sat, EX2, dst, mask, neg(swz(tmp, X, X, X, X)), none, none));
       }
       break;
-   case TGSI_OPCODE_SCS:
-      /* avoid overwriting the source */
-      if(src[0].swz[NVFX_SWZ_X] != NVFX_SWZ_X)
-      {
-         if (mask & NVFX_FP_MASK_X)
-            nvfx_fp_emit(fpc, arith(sat, COS, dst, NVFX_FP_MASK_X, swz(src[0], X, X, X, X), none, none));
-         if (mask & NVFX_FP_MASK_Y)
-            nvfx_fp_emit(fpc, arith(sat, SIN, dst, NVFX_FP_MASK_Y, swz(src[0], X, X, X, X), none, none));
-      }
-      else
-      {
-         if (mask & NVFX_FP_MASK_Y)
-            nvfx_fp_emit(fpc, arith(sat, SIN, dst, NVFX_FP_MASK_Y, swz(src[0], X, X, X, X), none, none));
-         if (mask & NVFX_FP_MASK_X)
-            nvfx_fp_emit(fpc, arith(sat, COS, dst, NVFX_FP_MASK_X, swz(src[0], X, X, X, X), none, none));
-      }
-      break;
    case TGSI_OPCODE_SEQ:
       nvfx_fp_emit(fpc, arith(sat, SEQ, dst, mask, src[0], src[1], none));
       break;
@@ -753,9 +729,6 @@ nvfx_fragprog_parse_instruction(struct nvfx_fpc *fpc,
       }
       break;
    }
-   case TGSI_OPCODE_SUB:
-      nvfx_fp_emit(fpc, arith(sat, ADD, dst, mask, src[0], neg(src[1]), none));
-      break;
    case TGSI_OPCODE_TEX:
       nvfx_fp_emit(fpc, tex(sat, TEX, unit, dst, mask, src[0], none, none));
       break;
@@ -784,11 +757,6 @@ nvfx_fragprog_parse_instruction(struct nvfx_fpc *fpc,
         case TGSI_OPCODE_TXP:
                 nvfx_fp_emit(fpc, tex(sat, TXP, unit, dst, mask, src[0], none, none));
                 break;
-   case TGSI_OPCODE_XPD:
-      tmp = nvfx_src(temp(fpc));
-      nvfx_fp_emit(fpc, arith(0, MUL, tmp.reg, mask, swz(src[0], Z, X, Y, Y), swz(src[1], Y, Z, X, X), none));
-      nvfx_fp_emit(fpc, arith(sat, MAD, dst, (mask & ~NVFX_FP_MASK_W), swz(src[0], Y, Z, X, X), swz(src[1], Z, X, Y, Y), neg(tmp)));
-      break;
 
    case TGSI_OPCODE_IF:
       // MOVRC0 R31 (TR0.xyzw), R<src>:
@@ -1124,7 +1092,7 @@ _nvfx_fragprog_translate(uint16_t oclass, struct nv30_fragprog *fp)
       goto out_err;
 
    tgsi_parse_init(&parse, fp->pipe.tokens);
-   util_dynarray_init(&insns);
+   util_dynarray_init(&insns, NULL);
 
    while (!tgsi_parse_end_of_tokens(&parse)) {
       tgsi_parse_token(&parse);

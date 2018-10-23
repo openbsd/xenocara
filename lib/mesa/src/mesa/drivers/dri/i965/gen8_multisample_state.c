@@ -28,22 +28,6 @@
 #include "brw_multisample_state.h"
 
 /**
- * 3DSTATE_MULTISAMPLE
- */
-void
-gen8_emit_3dstate_multisample(struct brw_context *brw, unsigned num_samples)
-{
-   assert(num_samples <= 16);
-
-   unsigned log2_samples = ffs(MAX2(num_samples, 1)) - 1;
-
-   BEGIN_BATCH(2);
-   OUT_BATCH(GEN8_3DSTATE_MULTISAMPLE << 16 | (2 - 2));
-   OUT_BATCH(MS_PIXEL_LOCATION_CENTER | log2_samples << 1);
-   ADVANCE_BATCH();
-}
-
-/**
  * 3DSTATE_SAMPLE_PATTERN
  */
 void
@@ -69,21 +53,3 @@ gen8_emit_3dstate_sample_pattern(struct brw_context *brw)
    OUT_BATCH(brw_multisample_positions_1x_2x);
    ADVANCE_BATCH();
 }
-
-
-static void
-upload_multisample_state(struct brw_context *brw)
-{
-   gen8_emit_3dstate_multisample(brw, brw->num_samples);
-   gen6_emit_3dstate_sample_mask(brw, gen6_determine_sample_mask(brw));
-}
-
-const struct brw_tracked_state gen8_multisample_state = {
-   .dirty = {
-      .mesa = _NEW_MULTISAMPLE,
-      .brw = BRW_NEW_BLORP |
-             BRW_NEW_CONTEXT |
-             BRW_NEW_NUM_SAMPLES,
-   },
-   .emit = upload_multisample_state
-};

@@ -52,6 +52,7 @@
 #define FW_52_0_3 ((52 << 24) | (0 << 16) | (3 << 8))
 #define FW_52_4_3 ((52 << 24) | (4 << 16) | (3 << 8))
 #define FW_52_8_3 ((52 << 24) | (8 << 16) | (3 << 8))
+#define FW_53 (53 << 24)
 
 /**
  * flush commands to the hardware
@@ -178,14 +179,15 @@ static unsigned get_cpb_num(struct rvce_encoder *enc)
 	case 41:
 		dpb = 32768;
 		break;
-	default:
 	case 42:
 		dpb = 34816;
 		break;
 	case 50:
 		dpb = 110400;
 		break;
+	default:
 	case 51:
+	case 52:
 		dpb = 184320;
 		break;
 	}
@@ -196,7 +198,7 @@ static unsigned get_cpb_num(struct rvce_encoder *enc)
 /**
  * Get the slot for the currently encoded frame
  */
-struct rvce_cpb_slot *current_slot(struct rvce_encoder *enc)
+struct rvce_cpb_slot *si_current_slot(struct rvce_encoder *enc)
 {
 	return LIST_ENTRY(struct rvce_cpb_slot, enc->cpb_slots.prev, list);
 }
@@ -204,7 +206,7 @@ struct rvce_cpb_slot *current_slot(struct rvce_encoder *enc)
 /**
  * Get the slot for L0
  */
-struct rvce_cpb_slot *l0_slot(struct rvce_encoder *enc)
+struct rvce_cpb_slot *si_l0_slot(struct rvce_encoder *enc)
 {
 	return LIST_ENTRY(struct rvce_cpb_slot, enc->cpb_slots.next, list);
 }
@@ -212,7 +214,7 @@ struct rvce_cpb_slot *l0_slot(struct rvce_encoder *enc)
 /**
  * Get the slot for L1
  */
-struct rvce_cpb_slot *l1_slot(struct rvce_encoder *enc)
+struct rvce_cpb_slot *si_l1_slot(struct rvce_encoder *enc)
 {
 	return LIST_ENTRY(struct rvce_cpb_slot, enc->cpb_slots.next->next, list);
 }
@@ -220,12 +222,20 @@ struct rvce_cpb_slot *l1_slot(struct rvce_encoder *enc)
 /**
  * Calculate the offsets into the CPB
  */
-void rvce_frame_offset(struct rvce_encoder *enc, struct rvce_cpb_slot *slot,
-		       signed *luma_offset, signed *chroma_offset)
+void si_vce_frame_offset(struct rvce_encoder *enc, struct rvce_cpb_slot *slot,
+			 signed *luma_offset, signed *chroma_offset)
 {
-	unsigned pitch = align(enc->luma->level[0].pitch_bytes, 128);
-	unsigned vpitch = align(enc->luma->npix_y, 16);
-	unsigned fsize = pitch * (vpitch + vpitch / 2);
+	struct r600_common_screen *rscreen = (struct r600_common_screen *)enc->screen;
+	unsigned pitch, vpitch, fsize;
+
+	if (rscreen->chip_class < GFX9) {
+		pitch = align(enc->luma->u.legacy.level[0].nblk_x * enc->luma->bpe, 128);
+		vpitch = align(enc->luma->u.legacy.level[0].nblk_y, 16);
+	} else {
+		pitch = align(enc->luma->u.gfx9.surf_pitch * enc->luma->bpe, 256);
+		vpitch = align(enc->luma->u.gfx9.surf_height, 16);
+	}
+	fsize = pitch * (vpitch + vpitch / 2);
 
 	*luma_offset = slot->index * fsize;
 	*chroma_offset = *luma_offset + pitch * vpitch;
@@ -239,15 +249,14 @@ static void rvce_destroy(struct pipe_video_codec *encoder)
 	struct rvce_encoder *enc = (struct rvce_encoder*)encoder;
 	if (enc->stream_handle) {
 		struct rvid_buffer fb;
-		rvid_create_buffer(enc->screen, &fb, 512, PIPE_USAGE_STAGING);
+		si_vid_create_buffer(enc->screen, &fb, 512, PIPE_USAGE_STAGING);
 		enc->fb = &fb;
 		enc->session(enc);
-		enc->feedback(enc);
 		enc->destroy(enc);
 		flush(enc);
-		rvid_destroy_buffer(&fb);
+		si_vid_destroy_buffer(&fb);
 	}
-	rvid_destroy_buffer(&enc->cpb);
+	si_vid_destroy_buffer(&enc->cpb);
 	enc->ws->cs_destroy(enc->cs);
 	FREE(enc->cpb_array);
 	FREE(enc);
@@ -268,7 +277,7 @@ static void rvce_begin_frame(struct pipe_video_codec *encoder,
 		enc->pic.quant_b_frames != pic->quant_b_frames;
 
 	enc->pic = *pic;
-	get_pic_param(enc, pic);
+	si_get_pic_param(enc, pic);
 
 	enc->get_buffer(vid_buf->resources[0], &enc->handle, &enc->luma);
 	enc->get_buffer(vid_buf->resources[1], NULL, &enc->chroma);
@@ -281,8 +290,8 @@ static void rvce_begin_frame(struct pipe_video_codec *encoder,
 	
 	if (!enc->stream_handle) {
 		struct rvid_buffer fb;
-		enc->stream_handle = rvid_alloc_stream_handle();
-		rvid_create_buffer(enc->screen, &fb, 512, PIPE_USAGE_STAGING);
+		enc->stream_handle = si_vid_alloc_stream_handle();
+		si_vid_create_buffer(enc->screen, &fb, 512, PIPE_USAGE_STAGING);
 		enc->fb = &fb;
 		enc->session(enc);
 		enc->create(enc);
@@ -290,7 +299,7 @@ static void rvce_begin_frame(struct pipe_video_codec *encoder,
 		enc->feedback(enc);
 		flush(enc);
 		//dump_feedback(enc, &fb);
-		rvid_destroy_buffer(&fb);
+		si_vid_destroy_buffer(&fb);
 		need_rate_control = false;
 	}
 
@@ -311,7 +320,7 @@ static void rvce_encode_bitstream(struct pipe_video_codec *encoder,
 	enc->bs_size = destination->width0;
 
 	*fb = enc->fb = CALLOC_STRUCT(rvid_buffer);
-	if (!rvid_create_buffer(enc->screen, enc->fb, 512, PIPE_USAGE_STAGING)) {
+	if (!si_vid_create_buffer(enc->screen, enc->fb, 512, PIPE_USAGE_STAGING)) {
 		RVID_ERR("Can't create feedback buffer.\n");
 		return;
 	}
@@ -360,7 +369,7 @@ static void rvce_get_feedback(struct pipe_video_codec *encoder,
 		enc->ws->buffer_unmap(fb->res->buf);
 	}
 	//dump_feedback(enc, fb);
-	rvid_destroy_buffer(fb);
+	si_vid_destroy_buffer(fb);
 	FREE(fb);
 }
 
@@ -380,10 +389,10 @@ static void rvce_cs_flush(void *ctx, unsigned flags,
 	// just ignored
 }
 
-struct pipe_video_codec *rvce_create_encoder(struct pipe_context *context,
-					     const struct pipe_video_codec *templ,
-					     struct radeon_winsys* ws,
-					     rvce_get_buffer get_buffer)
+struct pipe_video_codec *si_vce_create_encoder(struct pipe_context *context,
+					       const struct pipe_video_codec *templ,
+					       struct radeon_winsys* ws,
+					       rvce_get_buffer get_buffer)
 {
 	struct r600_common_screen *rscreen = (struct r600_common_screen *)context->screen;
 	struct r600_common_context *rctx = (struct r600_common_context*)context;
@@ -396,7 +405,7 @@ struct pipe_video_codec *rvce_create_encoder(struct pipe_context *context,
 		RVID_ERR("Kernel doesn't supports VCE!\n");
 		return NULL;
 
-	} else if (!rvce_is_fw_version_supported(rscreen)) {
+	} else if (!si_vce_is_fw_version_supported(rscreen)) {
 		RVID_ERR("Unsupported VCE fw version loaded!\n");
 		return NULL;
 	}
@@ -412,7 +421,8 @@ struct pipe_video_codec *rvce_create_encoder(struct pipe_context *context,
 		enc->use_vui = true;
 	if (rscreen->info.family >= CHIP_TONGA &&
 	    rscreen->info.family != CHIP_STONEY &&
-	    rscreen->info.family != CHIP_POLARIS11)
+	    rscreen->info.family != CHIP_POLARIS11 &&
+	    rscreen->info.family != CHIP_POLARIS12)
 		enc->dual_pipe = true;
 	/* TODO enable B frame with dual instance */
 	if ((rscreen->info.family >= CHIP_TONGA) &&
@@ -454,15 +464,21 @@ struct pipe_video_codec *rvce_create_encoder(struct pipe_context *context,
 		goto error;
 
 	get_buffer(((struct vl_video_buffer *)tmp_buf)->resources[0], NULL, &tmp_surf);
-	cpb_size = align(tmp_surf->level[0].pitch_bytes, 128);
-	cpb_size = cpb_size * align(tmp_surf->npix_y, 32);
+
+	cpb_size = (rscreen->chip_class < GFX9) ?
+		align(tmp_surf->u.legacy.level[0].nblk_x * tmp_surf->bpe, 128) *
+		align(tmp_surf->u.legacy.level[0].nblk_y, 32) :
+
+		align(tmp_surf->u.gfx9.surf_pitch * tmp_surf->bpe, 256) *
+		align(tmp_surf->u.gfx9.surf_height, 32);
+
 	cpb_size = cpb_size * 3 / 2;
 	cpb_size = cpb_size * enc->cpb_num;
 	if (enc->dual_pipe)
 		cpb_size +=  RVCE_MAX_AUX_BUFFER_NUM *
 			RVCE_MAX_BITSTREAM_OUTPUT_ROW_SIZE * 2;
 	tmp_buf->destroy(tmp_buf);
-	if (!rvid_create_buffer(enc->screen, &enc->cpb, cpb_size, PIPE_USAGE_DEFAULT)) {
+	if (!si_vid_create_buffer(enc->screen, &enc->cpb, cpb_size, PIPE_USAGE_DEFAULT)) {
 		RVID_ERR("Can't create CPB buffer.\n");
 		goto error;
 	}
@@ -475,27 +491,31 @@ struct pipe_video_codec *rvce_create_encoder(struct pipe_context *context,
 
 	switch (rscreen->info.vce_fw_version) {
 	case FW_40_2_2:
-		radeon_vce_40_2_2_init(enc);
-		get_pic_param = radeon_vce_40_2_2_get_param;
+		si_vce_40_2_2_init(enc);
+		si_get_pic_param = si_vce_40_2_2_get_param;
 		break;
 
 	case FW_50_0_1:
 	case FW_50_1_2:
 	case FW_50_10_2:
 	case FW_50_17_3:
-		radeon_vce_50_init(enc);
-		get_pic_param = radeon_vce_50_get_param;
+		si_vce_50_init(enc);
+		si_get_pic_param = si_vce_50_get_param;
 		break;
 
 	case FW_52_0_3:
 	case FW_52_4_3:
 	case FW_52_8_3:
-		radeon_vce_52_init(enc);
-		get_pic_param = radeon_vce_52_get_param;
+		si_vce_52_init(enc);
+		si_get_pic_param = si_vce_52_get_param;
 		break;
 
 	default:
-		goto error;
+		if ((rscreen->info.vce_fw_version & (0xff << 24)) == FW_53) {
+			si_vce_52_init(enc);
+			si_get_pic_param = si_vce_52_get_param;
+		} else
+			goto error;
 	}
 
 	return &enc->base;
@@ -504,7 +524,7 @@ error:
 	if (enc->cs)
 		enc->ws->cs_destroy(enc->cs);
 
-	rvid_destroy_buffer(&enc->cpb);
+	si_vid_destroy_buffer(&enc->cpb);
 
 	FREE(enc->cpb_array);
 	FREE(enc);
@@ -514,7 +534,7 @@ error:
 /**
  * check if kernel has the right fw version loaded
  */
-bool rvce_is_fw_version_supported(struct r600_common_screen *rscreen)
+bool si_vce_is_fw_version_supported(struct r600_common_screen *rscreen)
 {
 	switch (rscreen->info.vce_fw_version) {
 	case FW_40_2_2:
@@ -527,16 +547,19 @@ bool rvce_is_fw_version_supported(struct r600_common_screen *rscreen)
 	case FW_52_8_3:
 		return true;
 	default:
-		return false;
+		if ((rscreen->info.vce_fw_version & (0xff << 24)) == FW_53)
+			return true;
+		else
+			return false;
 	}
 }
 
 /**
  * Add the buffer as relocation to the current command submission
  */
-void rvce_add_buffer(struct rvce_encoder *enc, struct pb_buffer *buf,
-                     enum radeon_bo_usage usage, enum radeon_bo_domain domain,
-                     signed offset)
+void si_vce_add_buffer(struct rvce_encoder *enc, struct pb_buffer *buf,
+		       enum radeon_bo_usage usage, enum radeon_bo_domain domain,
+		       signed offset)
 {
 	int reloc_idx;
 

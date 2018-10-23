@@ -187,11 +187,93 @@ gpr0_to_bool(struct brw_context *brw)
 }
 
 static void
+load_overflow_data_to_cs_gprs(struct brw_context *brw,
+                              struct brw_query_object *query,
+                              int idx)
+{
+   int offset = idx * sizeof(uint64_t) * 4;
+
+   brw_load_register_mem64(brw, HSW_CS_GPR(1), query->bo, offset);
+
+   offset += sizeof(uint64_t);
+   brw_load_register_mem64(brw, HSW_CS_GPR(2), query->bo, offset);
+
+   offset += sizeof(uint64_t);
+   brw_load_register_mem64(brw, HSW_CS_GPR(3), query->bo, offset);
+
+   offset += sizeof(uint64_t);
+   brw_load_register_mem64(brw, HSW_CS_GPR(4), query->bo, offset);
+}
+
+/*
+ * R3 = R4 - R3;
+ * R1 = R2 - R1;
+ * R1 = R3 - R1;
+ * R0 = R0 | R1;
+ */
+static void
+calc_overflow_for_stream(struct brw_context *brw)
+{
+   static const uint32_t maths[] = {
+      MI_MATH_ALU2(LOAD, SRCA, R4),
+      MI_MATH_ALU2(LOAD, SRCB, R3),
+      MI_MATH_ALU0(SUB),
+      MI_MATH_ALU2(STORE, R3, ACCU),
+      MI_MATH_ALU2(LOAD, SRCA, R2),
+      MI_MATH_ALU2(LOAD, SRCB, R1),
+      MI_MATH_ALU0(SUB),
+      MI_MATH_ALU2(STORE, R1, ACCU),
+      MI_MATH_ALU2(LOAD, SRCA, R3),
+      MI_MATH_ALU2(LOAD, SRCB, R1),
+      MI_MATH_ALU0(SUB),
+      MI_MATH_ALU2(STORE, R1, ACCU),
+      MI_MATH_ALU2(LOAD, SRCA, R1),
+      MI_MATH_ALU2(LOAD, SRCB, R0),
+      MI_MATH_ALU0(OR),
+      MI_MATH_ALU2(STORE, R0, ACCU),
+   };
+
+   BEGIN_BATCH(1 + ARRAY_SIZE(maths));
+   OUT_BATCH(HSW_MI_MATH | (1 + ARRAY_SIZE(maths) - 2));
+
+   for (int m = 0; m < ARRAY_SIZE(maths); m++)
+      OUT_BATCH(maths[m]);
+
+   ADVANCE_BATCH();
+}
+
+static void
+calc_overflow_to_gpr0(struct brw_context *brw, struct brw_query_object *query,
+                       int count)
+{
+   brw_load_register_imm64(brw, HSW_CS_GPR(0), 0ull);
+
+   for (int i = 0; i < count; i++) {
+      load_overflow_data_to_cs_gprs(brw, query, i);
+      calc_overflow_for_stream(brw);
+   }
+}
+
+/*
+ * Take a query and calculate whether there was overflow during transform
+ * feedback. Store the result in the gpr0 register.
+ */
+void
+hsw_overflow_result_to_gpr0(struct brw_context *brw,
+                            struct brw_query_object *query,
+                            int count)
+{
+   calc_overflow_to_gpr0(brw, query, count);
+   gpr0_to_bool(brw);
+}
+
+static void
 hsw_result_to_gpr0(struct gl_context *ctx, struct brw_query_object *query,
                    struct gl_buffer_object *buf, intptr_t offset,
                    GLenum pname, GLenum ptype)
 {
    struct brw_context *brw = brw_context(ctx);
+   const struct gen_device_info *devinfo = &brw->screen->devinfo;
 
    assert(query->bo);
    assert(pname != GL_QUERY_TARGET);
@@ -201,8 +283,6 @@ hsw_result_to_gpr0(struct gl_context *ctx, struct brw_query_object *query,
       brw_load_register_mem64(brw,
                               HSW_CS_GPR(0),
                               query->bo,
-                              I915_GEM_DOMAIN_INSTRUCTION,
-                              I915_GEM_DOMAIN_INSTRUCTION,
                               2 * sizeof(uint64_t));
       return;
    }
@@ -220,21 +300,20 @@ hsw_result_to_gpr0(struct gl_context *ctx, struct brw_query_object *query,
       brw_load_register_mem64(brw,
                               HSW_CS_GPR(0),
                               query->bo,
-                              I915_GEM_DOMAIN_INSTRUCTION,
-                              I915_GEM_DOMAIN_INSTRUCTION,
                               0 * sizeof(uint64_t));
+   } else if (query->Base.Target == GL_TRANSFORM_FEEDBACK_STREAM_OVERFLOW_ARB
+              || query->Base.Target == GL_TRANSFORM_FEEDBACK_OVERFLOW_ARB) {
+      /* Don't do anything in advance here, since the math for this is a little
+       * more complex.
+       */
    } else {
       brw_load_register_mem64(brw,
                               HSW_CS_GPR(1),
                               query->bo,
-                              I915_GEM_DOMAIN_INSTRUCTION,
-                              I915_GEM_DOMAIN_INSTRUCTION,
                               0 * sizeof(uint64_t));
       brw_load_register_mem64(brw,
                               HSW_CS_GPR(2),
                               query->bo,
-                              I915_GEM_DOMAIN_INSTRUCTION,
-                              I915_GEM_DOMAIN_INSTRUCTION,
                               1 * sizeof(uint64_t));
 
       BEGIN_BATCH(5);
@@ -260,7 +339,7 @@ hsw_result_to_gpr0(struct gl_context *ctx, struct brw_query_object *query,
        * and correctly emitted the number of pixel shader invocations, but,
        * whomever forgot to undo the multiply by 4.
        */
-      if (brw->gen == 8 || brw->is_haswell)
+      if (devinfo->gen == 8 || devinfo->is_haswell)
          shr_gpr0_by_2_bits(brw);
       break;
    case GL_TIME_ELAPSED:
@@ -274,6 +353,12 @@ hsw_result_to_gpr0(struct gl_context *ctx, struct brw_query_object *query,
    case GL_ANY_SAMPLES_PASSED_CONSERVATIVE:
       gpr0_to_bool(brw);
       break;
+   case GL_TRANSFORM_FEEDBACK_STREAM_OVERFLOW_ARB:
+      hsw_overflow_result_to_gpr0(brw, query, 1);
+      break;
+   case GL_TRANSFORM_FEEDBACK_OVERFLOW_ARB:
+      hsw_overflow_result_to_gpr0(brw, query, MAX_VERTEX_STREAMS);
+      break;
    }
 }
 
@@ -281,7 +366,7 @@ hsw_result_to_gpr0(struct gl_context *ctx, struct brw_query_object *query,
  * Store immediate data into the user buffer using the requested size.
  */
 static void
-store_query_result_imm(struct brw_context *brw, drm_intel_bo *bo,
+store_query_result_imm(struct brw_context *brw, struct brw_bo *bo,
                        uint32_t offset, GLenum ptype, uint64_t imm)
 {
    switch (ptype) {
@@ -299,13 +384,12 @@ store_query_result_imm(struct brw_context *brw, drm_intel_bo *bo,
 }
 
 static void
-set_predicate(struct brw_context *brw, drm_intel_bo *query_bo)
+set_predicate(struct brw_context *brw, struct brw_bo *query_bo)
 {
    brw_load_register_imm64(brw, MI_PREDICATE_SRC1, 0ull);
 
    /* Load query availability into SRC0 */
    brw_load_register_mem64(brw, MI_PREDICATE_SRC0, query_bo,
-                           I915_GEM_DOMAIN_INSTRUCTION, 0,
                            2 * sizeof(uint64_t));
 
    /* predicate = !(query_availability == 0); */
@@ -323,13 +407,14 @@ set_predicate(struct brw_context *brw, drm_intel_bo *query_bo)
  * query has not finished yet.
  */
 static void
-store_query_result_reg(struct brw_context *brw, drm_intel_bo *bo,
+store_query_result_reg(struct brw_context *brw, struct brw_bo *bo,
                        uint32_t offset, GLenum ptype, uint32_t reg,
                        const bool pipelined)
 {
-   uint32_t cmd_size = brw->gen >= 8 ? 4 : 3;
+   const struct gen_device_info *devinfo = &brw->screen->devinfo;
+   uint32_t cmd_size = devinfo->gen >= 8 ? 4 : 3;
    uint32_t dwords = (ptype == GL_INT || ptype == GL_UNSIGNED_INT) ? 1 : 2;
-   assert(brw->gen >= 6);
+   assert(devinfo->gen >= 6);
 
    BEGIN_BATCH(dwords * cmd_size);
    for (int i = 0; i < dwords; i++) {
@@ -337,12 +422,10 @@ store_query_result_reg(struct brw_context *brw, drm_intel_bo *bo,
                 (pipelined ? MI_STORE_REGISTER_MEM_PREDICATE : 0) |
                 (cmd_size - 2));
       OUT_BATCH(reg + 4 * i);
-      if (brw->gen >= 8) {
-         OUT_RELOC64(bo, I915_GEM_DOMAIN_INSTRUCTION,
-                     I915_GEM_DOMAIN_INSTRUCTION, offset + 4 * i);
+      if (devinfo->gen >= 8) {
+         OUT_RELOC64(bo, RELOC_WRITE, offset + 4 * i);
       } else {
-         OUT_RELOC(bo, I915_GEM_DOMAIN_INSTRUCTION,
-                   I915_GEM_DOMAIN_INSTRUCTION, offset + 4 * i);
+         OUT_RELOC(bo, RELOC_WRITE | RELOC_NEEDS_GGTT, offset + 4 * i);
       }
    }
    ADVANCE_BATCH();

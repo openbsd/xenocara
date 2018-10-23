@@ -40,6 +40,7 @@
 
 #include "st_context.h"
 #include "st_cb_bufferobjects.h"
+#include "st_cb_memoryobjects.h"
 #include "st_debug.h"
 
 #include "pipe/p_context.h"
@@ -96,9 +97,9 @@ st_bufferobj_free(struct gl_context *ctx, struct gl_buffer_object *obj)
  */
 static void
 st_bufferobj_subdata(struct gl_context *ctx,
-		     GLintptrARB offset,
-		     GLsizeiptrARB size,
-		     const void * data, struct gl_buffer_object *obj)
+                     GLintptrARB offset,
+                     GLsizeiptrARB size,
+                     const void * data, struct gl_buffer_object *obj)
 {
    struct st_buffer_object *st_obj = st_buffer_object(obj);
 
@@ -130,8 +131,8 @@ st_bufferobj_subdata(struct gl_context *ctx,
     * buffer directly.
     */
    pipe_buffer_write(st_context(ctx)->pipe,
-		     st_obj->buffer,
-		     offset, size, data);
+                     st_obj->buffer,
+                     offset, size, data);
 }
 
 
@@ -163,27 +164,22 @@ st_bufferobj_get_subdata(struct gl_context *ctx,
                     offset, size, data);
 }
 
-
-/**
- * Allocate space for and store data in a buffer object.  Any data that was
- * previously stored in the buffer object is lost.  If data is NULL,
- * memory will be allocated, but no copy will occur.
- * Called via ctx->Driver.BufferData().
- * \return GL_TRUE for success, GL_FALSE if out of memory
- */
-static GLboolean
-st_bufferobj_data(struct gl_context *ctx,
-		  GLenum target,
-		  GLsizeiptrARB size,
-		  const void * data,
-		  GLenum usage,
-                  GLbitfield storageFlags,
-		  struct gl_buffer_object *obj)
+static ALWAYS_INLINE GLboolean
+bufferobj_data(struct gl_context *ctx,
+               GLenum target,
+               GLsizeiptrARB size,
+               const void *data,
+               struct gl_memory_object *memObj,
+               GLuint64 offset,
+               GLenum usage,
+               GLbitfield storageFlags,
+               struct gl_buffer_object *obj)
 {
    struct st_context *st = st_context(ctx);
    struct pipe_context *pipe = st->pipe;
    struct pipe_screen *screen = pipe->screen;
    struct st_buffer_object *st_obj = st_buffer_object(obj);
+   struct st_memory_object *st_mem_obj = st_memory_object(memObj);
    unsigned bind, pipe_usage, pipe_flags = 0;
 
    if (target != GL_EXTERNAL_VIRTUAL_MEMORY_BUFFER_AMD &&
@@ -263,7 +259,7 @@ st_bufferobj_data(struct gl_context *ctx,
       case GL_STATIC_DRAW:
       case GL_STATIC_COPY:
       default:
-	 pipe_usage = PIPE_USAGE_DEFAULT;
+         pipe_usage = PIPE_USAGE_DEFAULT;
          break;
       case GL_DYNAMIC_DRAW:
       case GL_DYNAMIC_COPY:
@@ -293,6 +289,8 @@ st_bufferobj_data(struct gl_context *ctx,
       pipe_flags |= PIPE_RESOURCE_FLAG_MAP_PERSISTENT;
    if (storageFlags & GL_MAP_COHERENT_BIT)
       pipe_flags |= PIPE_RESOURCE_FLAG_MAP_COHERENT;
+   if (storageFlags & GL_SPARSE_STORAGE_BIT_ARB)
+      pipe_flags |= PIPE_RESOURCE_FLAG_SPARSE;
 
    pipe_resource_reference( &st_obj->buffer, NULL );
 
@@ -315,7 +313,12 @@ st_bufferobj_data(struct gl_context *ctx,
       buffer.depth0 = 1;
       buffer.array_size = 1;
 
-      if (target == GL_EXTERNAL_VIRTUAL_MEMORY_BUFFER_AMD) {
+      if (st_mem_obj) {
+         st_obj->buffer = screen->resource_from_memobj(screen, &buffer,
+                                                       st_mem_obj->memory,
+                                                       offset);
+      }
+      else if (target == GL_EXTERNAL_VIRTUAL_MEMORY_BUFFER_AMD) {
          st_obj->buffer =
             screen->resource_from_user_memory(screen, &buffer, (void*)data);
       }
@@ -350,6 +353,36 @@ st_bufferobj_data(struct gl_context *ctx,
    return GL_TRUE;
 }
 
+/**
+ * Allocate space for and store data in a buffer object.  Any data that was
+ * previously stored in the buffer object is lost.  If data is NULL,
+ * memory will be allocated, but no copy will occur.
+ * Called via ctx->Driver.BufferData().
+ * \return GL_TRUE for success, GL_FALSE if out of memory
+ */
+static GLboolean
+st_bufferobj_data(struct gl_context *ctx,
+                  GLenum target,
+                  GLsizeiptrARB size,
+                  const void *data,
+                  GLenum usage,
+                  GLbitfield storageFlags,
+                  struct gl_buffer_object *obj)
+{
+   return bufferobj_data(ctx, target, size, data, NULL, 0, usage, storageFlags, obj);
+}
+
+static GLboolean
+st_bufferobj_data_mem(struct gl_context *ctx,
+                      GLenum target,
+                      GLsizeiptrARB size,
+                      struct gl_memory_object *memObj,
+                      GLuint64 offset,
+                      GLenum usage,
+                      struct gl_buffer_object *bufObj)
+{
+   return bufferobj_data(ctx, target, size, NULL, memObj, offset, usage, 0, bufObj);
+}
 
 /**
  * Called via glInvalidateBuffer(Sub)Data.
@@ -418,7 +451,7 @@ st_bufferobj_map_range(struct gl_context *ctx,
       flags |= PIPE_TRANSFER_COHERENT;
 
    /* ... other flags ...
-    */
+   */
 
    if (access & MESA_MAP_NOWAIT_BIT)
       flags |= PIPE_TRANSFER_DONTBLOCK;
@@ -429,10 +462,10 @@ st_bufferobj_map_range(struct gl_context *ctx,
    assert(offset + length <= obj->Size);
 
    obj->Mappings[index].Pointer = pipe_buffer_map_range(pipe,
-                                        st_obj->buffer,
-                                        offset, length,
-                                        flags,
-                                        &st_obj->transfer[index]);
+                                                        st_obj->buffer,
+                                                        offset, length,
+                                                        flags,
+                                                        &st_obj->transfer[index]);
    if (obj->Mappings[index].Pointer) {
       obj->Mappings[index].Offset = offset;
       obj->Mappings[index].Length = length;
@@ -546,30 +579,32 @@ st_clear_buffer_subdata(struct gl_context *ctx,
                       clearValue, clearValueSize);
 }
 
-
-/* TODO: if buffer wasn't created with appropriate usage flags, need
- * to recreate it now and copy contents -- or possibly create a
- * gallium entrypoint to extend the usage flags and let the driver
- * decide if a copy is necessary.
- */
-void
-st_bufferobj_validate_usage(struct st_context *st,
-			    struct st_buffer_object *obj,
-			    unsigned usage)
+static void
+st_bufferobj_page_commitment(struct gl_context *ctx,
+                             struct gl_buffer_object *bufferObj,
+                             GLintptr offset, GLsizeiptr size,
+                             GLboolean commit)
 {
-}
+   struct pipe_context *pipe = st_context(ctx)->pipe;
+   struct st_buffer_object *buf = st_buffer_object(bufferObj);
+   struct pipe_box box;
 
+   u_box_1d(offset, size, &box);
+
+   if (!pipe->resource_commit(pipe, buf->buffer, 0, &box, commit)) {
+      _mesa_error(ctx, GL_OUT_OF_MEMORY, "glBufferPageCommitmentARB(out of memory)");
+      return;
+   }
+}
 
 void
 st_init_bufferobject_functions(struct pipe_screen *screen,
                                struct dd_function_table *functions)
 {
-   /* plug in default driver fallbacks (such as for ClearBufferSubData) */
-   _mesa_init_buffer_object_functions(functions);
-
    functions->NewBufferObject = st_bufferobj_alloc;
    functions->DeleteBuffer = st_bufferobj_free;
    functions->BufferData = st_bufferobj_data;
+   functions->BufferDataMem = st_bufferobj_data_mem;
    functions->BufferSubData = st_bufferobj_subdata;
    functions->GetBufferSubData = st_bufferobj_get_subdata;
    functions->MapBufferRange = st_bufferobj_map_range;
@@ -577,6 +612,7 @@ st_init_bufferobject_functions(struct pipe_screen *screen,
    functions->UnmapBuffer = st_bufferobj_unmap;
    functions->CopyBufferSubData = st_copy_buffer_subdata;
    functions->ClearBufferSubData = st_clear_buffer_subdata;
+   functions->BufferPageCommitment = st_bufferobj_page_commitment;
 
    if (screen->get_param(screen, PIPE_CAP_INVALIDATE_BUFFER))
       functions->InvalidateBufferSubData = st_bufferobj_invalidate;

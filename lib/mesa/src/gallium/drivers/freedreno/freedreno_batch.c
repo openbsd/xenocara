@@ -48,7 +48,8 @@ batch_init(struct fd_batch *batch)
 	 * we don't need to grow the ringbuffer.  Performance is likely to
 	 * suffer, but there is no good alternative.
 	 */
-	if (fd_device_version(ctx->screen->dev) < FD_VERSION_UNLIMITED_CMDS) {
+	if ((fd_device_version(ctx->screen->dev) < FD_VERSION_UNLIMITED_CMDS) ||
+			(fd_mesa_debug & FD_DBG_NOGROW)){
 		size = 0x100000;
 	}
 
@@ -59,6 +60,8 @@ batch_init(struct fd_batch *batch)
 	fd_ringbuffer_set_parent(batch->gmem, NULL);
 	fd_ringbuffer_set_parent(batch->draw, batch->gmem);
 	fd_ringbuffer_set_parent(batch->binning, batch->gmem);
+
+	batch->in_fence_fd = -1;
 
 	batch->cleared = batch->partial_cleared = 0;
 	batch->restore = batch->resolve = 0;
@@ -73,14 +76,14 @@ batch_init(struct fd_batch *batch)
 	batch->max_scissor.minx = batch->max_scissor.miny = ~0;
 	batch->max_scissor.maxx = batch->max_scissor.maxy = 0;
 
-	util_dynarray_init(&batch->draw_patches);
+	util_dynarray_init(&batch->draw_patches, NULL);
 
 	if (is_a3xx(ctx->screen))
-		util_dynarray_init(&batch->rbrc_patches);
+		util_dynarray_init(&batch->rbrc_patches, NULL);
 
 	assert(batch->resources->entries == 0);
 
-	util_dynarray_init(&batch->samples);
+	util_dynarray_init(&batch->samples, NULL);
 }
 
 struct fd_batch *
@@ -109,9 +112,16 @@ batch_fini(struct fd_batch *batch)
 {
 	pipe_resource_reference(&batch->query_buf, NULL);
 
+	if (batch->in_fence_fd != -1)
+		close(batch->in_fence_fd);
+
 	fd_ringbuffer_del(batch->draw);
 	fd_ringbuffer_del(batch->binning);
 	fd_ringbuffer_del(batch->gmem);
+	if (batch->lrz_clear) {
+		fd_ringbuffer_del(batch->lrz_clear);
+		batch->lrz_clear = NULL;
+	}
 
 	util_dynarray_fini(&batch->draw_patches);
 
@@ -164,9 +174,9 @@ batch_reset_resources_locked(struct fd_batch *batch)
 static void
 batch_reset_resources(struct fd_batch *batch)
 {
-	pipe_mutex_lock(batch->ctx->screen->lock);
+	mtx_lock(&batch->ctx->screen->lock);
 	batch_reset_resources_locked(batch);
-	pipe_mutex_unlock(batch->ctx->screen->lock);
+	mtx_unlock(&batch->ctx->screen->lock);
 }
 
 static void
@@ -197,9 +207,9 @@ __fd_batch_destroy(struct fd_batch *batch)
 
 	util_copy_framebuffer_state(&batch->framebuffer, NULL);
 
-	pipe_mutex_lock(batch->ctx->screen->lock);
+	mtx_lock(&batch->ctx->screen->lock);
 	fd_bc_invalidate_batch(batch, true);
-	pipe_mutex_unlock(batch->ctx->screen->lock);
+	mtx_unlock(&batch->ctx->screen->lock);
 
 	batch_fini(batch);
 
@@ -224,7 +234,7 @@ fd_batch_sync(struct fd_batch *batch)
 {
 	if (!batch->ctx->screen->reorder)
 		return;
-	util_queue_job_wait(&batch->flush_fence);
+	util_queue_fence_wait(&batch->flush_fence);
 }
 
 static void
@@ -256,9 +266,9 @@ batch_flush(struct fd_batch *batch)
 	/* close out the draw cmds by making sure any active queries are
 	 * paused:
 	 */
-	fd_hw_query_set_stage(batch, batch->draw, FD_STAGE_NULL);
+	fd_batch_set_stage(batch, FD_STAGE_NULL);
 
-	batch->ctx->dirty = ~0;
+	fd_context_all_dirty(batch->ctx);
 	batch_flush_reset_dependencies(batch, true);
 
 	if (batch->ctx->screen->reorder) {
@@ -266,7 +276,7 @@ batch_flush(struct fd_batch *batch)
 		fd_batch_reference(&tmp, batch);
 
 		if (!util_queue_is_initialized(&batch->ctx->flush_queue))
-			util_queue_init(&batch->ctx->flush_queue, "flush_queue", 16, 1);
+			util_queue_init(&batch->ctx->flush_queue, "flush_queue", 16, 1, 0);
 
 		util_queue_add_job(&batch->ctx->flush_queue,
 				batch, &batch->flush_fence,
@@ -281,9 +291,9 @@ batch_flush(struct fd_batch *batch)
 	if (batch == batch->ctx->batch) {
 		batch_reset(batch);
 	} else {
-		pipe_mutex_lock(batch->ctx->screen->lock);
+		mtx_lock(&batch->ctx->screen->lock);
 		fd_bc_invalidate_batch(batch, false);
-		pipe_mutex_unlock(batch->ctx->screen->lock);
+		mtx_unlock(&batch->ctx->screen->lock);
 	}
 }
 
@@ -331,9 +341,9 @@ batch_add_dep(struct fd_batch *batch, struct fd_batch *dep)
 	 */
 	if (batch_depends_on(dep, batch)) {
 		DBG("%p: flush forced on %p!", batch, dep);
-		pipe_mutex_unlock(batch->ctx->screen->lock);
+		mtx_unlock(&batch->ctx->screen->lock);
 		fd_batch_flush(dep, false);
-		pipe_mutex_lock(batch->ctx->screen->lock);
+		mtx_lock(&batch->ctx->screen->lock);
 	} else {
 		struct fd_batch *other = NULL;
 		fd_batch_reference_locked(&other, dep);
@@ -400,4 +410,19 @@ fd_batch_check_size(struct fd_batch *batch)
 	if (((ring->cur - ring->start) > (ring->size/4 - 0x1000)) ||
 			(fd_mesa_debug & FD_DBG_FLUSH))
 		fd_batch_flush(batch, true);
+}
+
+/* emit a WAIT_FOR_IDLE only if needed, ie. if there has not already
+ * been one since last draw:
+ */
+void
+fd_wfi(struct fd_batch *batch, struct fd_ringbuffer *ring)
+{
+	if (batch->needs_wfi) {
+		if (batch->ctx->screen->gpu_id >= 500)
+			OUT_WFI5(ring);
+		else
+			OUT_WFI(ring);
+		batch->needs_wfi = false;
+	}
 }

@@ -41,19 +41,22 @@ struct swr_resource {
    bool has_depth;
    bool has_stencil;
 
-   UINT alignedWidth;
-   UINT alignedHeight;
-
    SWR_SURFACE_STATE swr;
    SWR_SURFACE_STATE secondary; /* for faking depth/stencil merged formats */
 
    struct sw_displaytarget *display_target;
 
-   unsigned row_stride[PIPE_MAX_TEXTURE_LEVELS];
-   unsigned img_stride[PIPE_MAX_TEXTURE_LEVELS];
-   unsigned mip_offsets[PIPE_MAX_TEXTURE_LEVELS];
+   /* If resource is multisample, then this points to a alternate resource
+    * containing the resolved multisample surface, otherwise null */
+   struct pipe_resource *resolve_target;
+
+   size_t mip_offsets[PIPE_MAX_TEXTURE_LEVELS];
+   size_t secondary_mip_offsets[PIPE_MAX_TEXTURE_LEVELS];
 
    enum swr_resource_status status;
+
+   /* last pipe that used (validated) this resource */
+   struct pipe_context *curr_pipe;
 };
 
 
@@ -92,9 +95,13 @@ swr_resource_data(struct pipe_resource *resource)
 
    assert(!swr_resource_is_texture(resource));
 
-   return swr_r->swr.pBaseAddress;
+   return (uint8_t*)(swr_r->swr.xpBaseAddress);
 }
 
+
+void swr_invalidate_render_target(struct pipe_context *pipe,
+                                  uint32_t attachment,
+                                  uint16_t width, uint16_t height);
 
 void swr_store_render_target(struct pipe_context *pipe,
                              uint32_t attachment,

@@ -10,6 +10,7 @@ C_SOURCES := \
 	vc4_bufmgr.h \
 	vc4_cl.c \
 	vc4_cl_dump.c \
+	vc4_cl_dump.h \
 	vc4_cl.h \
 	vc4_context.c \
 	vc4_context.h \
@@ -28,6 +29,7 @@ C_SOURCES := \
 	vc4_opt_peephole_sf.c \
 	vc4_opt_small_immediates.c \
 	vc4_opt_vpm.c \
+	vc4_opt_coalesce_ff_writes.c \
 	vc4_program.c \
 	vc4_qir.c \
 	vc4_qir_emit_uniform_stream_resets.c \
@@ -54,6 +56,9 @@ C_SOURCES := \
 	vc4_simulator_validate.h \
 	vc4_state.c \
 	vc4_tiling.c \
+	vc4_tiling_lt.c \
 	vc4_tiling.h \
 	vc4_uniforms.c \
 	$()
+
+NEON_C_SOURCES := vc4_tiling_lt_neon.c

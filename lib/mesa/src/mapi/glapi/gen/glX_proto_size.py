@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 
 # (C) Copyright IBM Corporation 2004, 2005
 # All Rights Reserved.
@@ -330,10 +329,7 @@ class PrintGlxSizeStubs_c(PrintGlxSizeStubs_common):
         self.printFastcall()
         print ''
         print ''
-        print '#if defined(__CYGWIN__) || defined(__MINGW32__) || defined(GLX_USE_APPLEGL)'
-        print '#  undef HAVE_ALIAS'
-        print '#endif'
-        print '#ifdef HAVE_ALIAS'
+        print '#ifdef HAVE_FUNC_ATTRIBUTE_ALIAS'
         print '#  define ALIAS2(from,to) \\'
         print '    _X_INTERNAL PURE FASTCALL GLint __gl ## from ## _size( GLenum e ) \\'
         print '        __attribute__ ((alias( # to )));'
@@ -452,10 +448,7 @@ class PrintGlxReqSize_c(PrintGlxReqSize_common):
         print '#include "indirect_size.h"'
         print '#include "indirect_reqsize.h"'
         print ''
-        print '#if defined(__CYGWIN__) || defined(__MINGW32__)'
-        print '#  undef HAVE_ALIAS'
-        print '#endif'
-        print '#ifdef HAVE_ALIAS'
+        print '#ifdef HAVE_FUNC_ATTRIBUTE_ALIAS'
         print '#  define ALIAS2(from,to) \\'
         print '    GLint __glX ## from ## ReqSize( const GLbyte * pc, Bool swap, int reqlen ) \\'
         print '        __attribute__ ((alias( # to )));'

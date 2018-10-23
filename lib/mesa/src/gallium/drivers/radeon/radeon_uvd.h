@@ -56,6 +56,11 @@
 #define RUVD_GPCOM_VCPU_DATA1		0xEF14
 #define RUVD_ENGINE_CNTL		0xEF18
 
+#define RUVD_GPCOM_VCPU_CMD_SOC15		0x2070c
+#define RUVD_GPCOM_VCPU_DATA0_SOC15		0x20710
+#define RUVD_GPCOM_VCPU_DATA1_SOC15		0x20714
+#define RUVD_ENGINE_CNTL_SOC15			0x20718
+
 /* UVD commands to VCPU */
 #define RUVD_CMD_MSG_BUFFER		0x00000000
 #define RUVD_CMD_DPB_BUFFER		0x00000001
@@ -77,6 +82,7 @@
 #define RUVD_CODEC_MPEG2	0x00000003
 #define RUVD_CODEC_MPEG4	0x00000004
 #define RUVD_CODEC_H264_PERF	0x00000007
+#define RUVD_CODEC_MJPEG	0x00000008
 #define RUVD_CODEC_H265		0x00000010
 
 /* UVD decode target buffer tiling mode */
@@ -110,6 +116,11 @@
 #define RUVD_VC1_PROFILE_SIMPLE		0x00000000
 #define RUVD_VC1_PROFILE_MAIN		0x00000001
 #define RUVD_VC1_PROFILE_ADVANCED	0x00000002
+
+enum ruvd_surface_type {
+	RUVD_SURFACE_TYPE_LEGACY = 0,
+	RUVD_SURFACE_TYPE_GFX9
+};
 
 struct ruvd_mvc_element {
 	uint16_t	viewOrderIndex;
@@ -426,11 +437,11 @@ typedef struct pb_buffer* (*ruvd_set_dtb)
 (struct ruvd_msg* msg, struct vl_video_buffer *vb);
 
 /* create an UVD decode */
-struct pipe_video_codec *ruvd_create_decoder(struct pipe_context *context,
-					     const struct pipe_video_codec *templat,
-					     ruvd_set_dtb set_dtb);
+struct pipe_video_codec *si_common_uvd_create_decoder(struct pipe_context *context,
+						      const struct pipe_video_codec *templat,
+						      ruvd_set_dtb set_dtb);
 
 /* fill decoding target field from the luma and chroma surfaces */
-void ruvd_set_dt_surfaces(struct ruvd_msg *msg, struct radeon_surf *luma,
-			  struct radeon_surf *chroma);
+void si_uvd_set_dt_surfaces(struct ruvd_msg *msg, struct radeon_surf *luma,
+			    struct radeon_surf *chroma, enum ruvd_surface_type type);
 #endif

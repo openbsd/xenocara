@@ -65,7 +65,7 @@ nouveau_get_configs(uint32_t chipset)
 	};
 
 	const GLenum back_buffer_modes[] = {
-		GLX_NONE, GLX_SWAP_UNDEFINED_OML
+		__DRI_ATTRIB_SWAP_NONE, __DRI_ATTRIB_SWAP_UNDEFINED
 	};
 
 	for (i = 0; i < ARRAY_SIZE(formats); i++) {
@@ -259,27 +259,27 @@ nouveau_create_buffer(__DRIscreen *dri_screen,
 
 	/* Front buffer. */
 	rb = nouveau_renderbuffer_dri_new(color_format, drawable);
-	_mesa_add_renderbuffer(fb, BUFFER_FRONT_LEFT, rb);
+	_mesa_attach_and_own_rb(fb, BUFFER_FRONT_LEFT, rb);
 
 	/* Back buffer */
 	if (visual->doubleBufferMode) {
 		rb = nouveau_renderbuffer_dri_new(color_format, drawable);
-		_mesa_add_renderbuffer(fb, BUFFER_BACK_LEFT, rb);
+		_mesa_attach_and_own_rb(fb, BUFFER_BACK_LEFT, rb);
 	}
 
 	/* Depth/stencil buffer. */
 	if (visual->depthBits == 24 && visual->stencilBits == 8) {
 		rb = nouveau_renderbuffer_dri_new(GL_DEPTH24_STENCIL8_EXT, drawable);
-		_mesa_add_renderbuffer(fb, BUFFER_DEPTH, rb);
-		_mesa_add_renderbuffer(fb, BUFFER_STENCIL, rb);
+		_mesa_attach_and_own_rb(fb, BUFFER_DEPTH, rb);
+		_mesa_attach_and_reference_rb(fb, BUFFER_STENCIL, rb);
 
 	} else if (visual->depthBits == 24) {
 		rb = nouveau_renderbuffer_dri_new(GL_DEPTH_COMPONENT24, drawable);
-		_mesa_add_renderbuffer(fb, BUFFER_DEPTH, rb);
+		_mesa_attach_and_own_rb(fb, BUFFER_DEPTH, rb);
 
 	} else if (visual->depthBits == 16) {
 		rb = nouveau_renderbuffer_dri_new(GL_DEPTH_COMPONENT16, drawable);
-		_mesa_add_renderbuffer(fb, BUFFER_DEPTH, rb);
+		_mesa_attach_and_own_rb(fb, BUFFER_DEPTH, rb);
 	}
 
 	/* Software renderbuffers. */
@@ -324,6 +324,7 @@ static const __DRIextension *nouveau_screen_extensions[] = {
     &nouveau_texbuffer_extension.base,
     &nouveau_renderer_query_extension.base,
     &dri2ConfigQueryExtension.base,
+    &dri2NoErrorExtension.base,
     NULL
 };
 

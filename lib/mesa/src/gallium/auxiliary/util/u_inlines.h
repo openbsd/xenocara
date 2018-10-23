@@ -137,8 +137,14 @@ pipe_resource_reference(struct pipe_resource **ptr, struct pipe_resource *tex)
 
    if (pipe_reference_described(&(*ptr)->reference, &tex->reference, 
                                 (debug_reference_descriptor)debug_describe_resource)) {
-      pipe_resource_reference(&old_tex->next, NULL);
-      old_tex->screen->resource_destroy(old_tex->screen, old_tex);
+      /* Avoid recursion, which would prevent inlining this function */
+      do {
+         struct pipe_resource *next = old_tex->next;
+
+         old_tex->screen->resource_destroy(old_tex->screen, old_tex);
+         old_tex = next;
+      } while (pipe_reference_described(&old_tex->reference, NULL,
+                                        (debug_reference_descriptor)debug_describe_resource));
    }
    *ptr = tex;
 }
@@ -185,6 +191,25 @@ pipe_so_target_reference(struct pipe_stream_output_target **ptr,
                      (debug_reference_descriptor)debug_describe_so_target))
       old->context->stream_output_target_destroy(old->context, old);
    *ptr = target;
+}
+
+static inline void
+pipe_vertex_buffer_unreference(struct pipe_vertex_buffer *dst)
+{
+   if (dst->is_user_buffer)
+      dst->buffer.user = NULL;
+   else
+      pipe_resource_reference(&dst->buffer.resource, NULL);
+}
+
+static inline void
+pipe_vertex_buffer_reference(struct pipe_vertex_buffer *dst,
+                             const struct pipe_vertex_buffer *src)
+{
+   pipe_vertex_buffer_unreference(dst);
+   if (!src->is_user_buffer)
+      pipe_resource_reference(&dst->buffer.resource, src->buffer.resource);
+   memcpy(dst, src, sizeof(*src));
 }
 
 static inline void
@@ -458,7 +483,8 @@ pipe_transfer_unmap( struct pipe_context *context,
 }
 
 static inline void
-pipe_set_constant_buffer(struct pipe_context *pipe, uint shader, uint index,
+pipe_set_constant_buffer(struct pipe_context *pipe,
+                         enum pipe_shader_type shader, uint index,
                          struct pipe_resource *buf)
 {
    if (buf) {
@@ -510,7 +536,9 @@ util_query_clear_result(union pipe_query_result *result, unsigned type)
 {
    switch (type) {
    case PIPE_QUERY_OCCLUSION_PREDICATE:
+   case PIPE_QUERY_OCCLUSION_PREDICATE_CONSERVATIVE:
    case PIPE_QUERY_SO_OVERFLOW_PREDICATE:
+   case PIPE_QUERY_SO_OVERFLOW_ANY_PREDICATE:
    case PIPE_QUERY_GPU_FINISHED:
       result->b = FALSE;
       break;
@@ -536,7 +564,7 @@ util_query_clear_result(union pipe_query_result *result, unsigned type)
 }
 
 /** Convert PIPE_TEXTURE_x to TGSI_TEXTURE_x */
-static inline unsigned
+static inline enum tgsi_texture_type
 util_pipe_tex_to_tgsi_tex(enum pipe_texture_target pipe_tex_target,
                           unsigned nr_samples)
 {

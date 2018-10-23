@@ -22,7 +22,6 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#pragma once
 #ifndef IR_H
 #define IR_H
 
@@ -230,11 +229,12 @@ public:
 
    virtual ir_visitor_status accept(ir_hierarchical_visitor *);
 
-   virtual ir_constant *constant_expression_value(struct hash_table *variable_context = NULL);
+   virtual ir_constant *constant_expression_value(void *mem_ctx,
+                                                  struct hash_table *variable_context = NULL);
 
    ir_rvalue *as_rvalue_to_saturate();
 
-   virtual bool is_lvalue() const
+   virtual bool is_lvalue(const struct _mesa_glsl_parse_state *state = NULL) const
    {
       return false;
    }
@@ -476,6 +476,17 @@ public:
    }
 
    /**
+    * Return whether this variable contains a bindless sampler/image.
+    */
+   inline bool contains_bindless() const
+   {
+      if (!this->type->contains_sampler() && !this->type->contains_image())
+         return false;
+
+      return this->data.bindless || this->data.mode != ir_var_uniform;
+   }
+
+   /**
     * Set this->interface_type on a newly created variable.
     */
    void init_interface_type(const struct glsl_type *type)
@@ -599,7 +610,8 @@ public:
 
    inline bool is_name_ralloced() const
    {
-      return this->name != ir_variable::tmp_name;
+      return this->name != ir_variable::tmp_name &&
+             this->name != this->name_storage;
    }
 
    /**
@@ -624,6 +636,16 @@ public:
     */
    const char *name;
 
+private:
+   /**
+    * If the name length fits into name_storage, it's used, otherwise
+    * the name is ralloc'd. shader-db mining showed that 70% of variables
+    * fit here. This is a win over ralloc where only ralloc_header has
+    * 20 bytes on 64-bit (28 bytes with DEBUG), and we can also skip malloc.
+    */
+   char name_storage[16];
+
+public:
    struct ir_variable_data {
 
       /**
@@ -817,13 +839,13 @@ public:
       ir_depth_layout depth_layout:3;
 
       /**
-       * ARB_shader_image_load_store qualifiers.
+       * Memory qualifiers.
        */
-      unsigned image_read_only:1; /**< "readonly" qualifier. */
-      unsigned image_write_only:1; /**< "writeonly" qualifier. */
-      unsigned image_coherent:1;
-      unsigned image_volatile:1;
-      unsigned image_restrict:1;
+      unsigned memory_read_only:1; /**< "readonly" qualifier. */
+      unsigned memory_write_only:1; /**< "writeonly" qualifier. */
+      unsigned memory_coherent:1;
+      unsigned memory_volatile:1;
+      unsigned memory_restrict:1;
 
       /**
        * ARB_shader_storage_buffer_object
@@ -833,17 +855,23 @@ public:
       unsigned implicit_sized_array:1;
 
       /**
-       * Is this a non-patch TCS output / TES input array that was implicitly
-       * sized to gl_MaxPatchVertices?
-       */
-      unsigned tess_varying_implicit_sized_array:1;
-
-      /**
        * Whether this is a fragment shader output implicitly initialized with
        * the previous contents of the specified render target at the
        * framebuffer location corresponding to this shader invocation.
        */
       unsigned fb_fetch_output:1;
+
+      /**
+       * Non-zero if this variable is considered bindless as defined by
+       * ARB_bindless_texture.
+       */
+      unsigned bindless:1;
+
+      /**
+       * Non-zero if this variable is considered bound as defined by
+       * ARB_bindless_texture.
+       */
+      unsigned bound:1;
 
       /**
        * Emit a warning if this variable is accessed.
@@ -906,6 +934,9 @@ public:
 
       /**
        * Vertex stream output identifier.
+       *
+       * For packed outputs, bit 31 is set and bits [2*i+1,2*i] indicate the
+       * stream of the i-th component.
        */
       unsigned stream;
 
@@ -1091,6 +1122,13 @@ enum ir_intrinsic_id {
    ir_intrinsic_memory_barrier_image,
    ir_intrinsic_memory_barrier_shared,
 
+   ir_intrinsic_vote_all,
+   ir_intrinsic_vote_any,
+   ir_intrinsic_vote_eq,
+   ir_intrinsic_ballot,
+   ir_intrinsic_read_invocation,
+   ir_intrinsic_read_first_invocation,
+
    ir_intrinsic_shared_load,
    ir_intrinsic_shared_store = MAKE_INTRINSIC_FOR_TYPE(store, shared),
    ir_intrinsic_shared_atomic_add = MAKE_INTRINSIC_FOR_TYPE(atomic_add, shared),
@@ -1133,7 +1171,9 @@ public:
     * given a list of the actual parameters and the variable context.
     * Returns NULL for non-built-ins.
     */
-   ir_constant *constant_expression_value(exec_list *actual_parameters, struct hash_table *variable_context);
+   ir_constant *constant_expression_value(void *mem_ctx,
+                                          exec_list *actual_parameters,
+                                          struct hash_table *variable_context);
 
    /**
     * Get the name of the function for which this is a signature
@@ -1236,7 +1276,8 @@ private:
     * Returns false if the expression is not constant, true otherwise,
     * and the value in *result if result is non-NULL.
     */
-   bool constant_expression_evaluate_expression_list(const struct exec_list &body,
+   bool constant_expression_evaluate_expression_list(void *mem_ctx,
+                                                     const struct exec_list &body,
 						     struct hash_table *variable_context,
 						     ir_constant **result);
 };
@@ -1392,7 +1433,8 @@ public:
 
    virtual ir_assignment *clone(void *mem_ctx, struct hash_table *ht) const;
 
-   virtual ir_constant *constant_expression_value(struct hash_table *variable_context = NULL);
+   virtual ir_constant *constant_expression_value(void *mem_ctx,
+                                                  struct hash_table *variable_context = NULL);
 
    virtual void accept(ir_visitor *v)
    {
@@ -1460,6 +1502,7 @@ public:
 #include "ir_expression_operation.h"
 
 extern const char *const ir_expression_operation_strings[ir_last_opcode + 1];
+extern const char *const ir_expression_operation_enum_strings[ir_last_opcode + 1];
 
 class ir_expression : public ir_rvalue {
 public:
@@ -1497,21 +1540,14 @@ public:
     * If the expression cannot be constant folded, this method will return
     * \c NULL.
     */
-   virtual ir_constant *constant_expression_value(struct hash_table *variable_context = NULL);
+   virtual ir_constant *constant_expression_value(void *mem_ctx,
+                                                  struct hash_table *variable_context = NULL);
 
    /**
-    * Determine the number of operands used by an expression
+    * This is only here for ir_reader to used for testing purposes please use
+    * the precomputed num_operands field if you need the number of operands.
     */
-   static unsigned int get_num_operands(ir_expression_operation);
-
-   /**
-    * Determine the number of operands used by an expression
-    */
-   unsigned int get_num_operands() const
-   {
-      return (this->operation == ir_quadop_vector)
-	 ? this->type->vector_elements : get_num_operands(operation);
-   }
+   static unsigned get_num_operands(ir_expression_operation);
 
    /**
     * Return whether the expression operates on vectors horizontally.
@@ -1541,8 +1577,21 @@ public:
 
    virtual ir_variable *variable_referenced() const;
 
+   /**
+    * Determine the number of operands used by an expression
+    */
+   void init_num_operands()
+   {
+      if (operation == ir_quadop_vector) {
+         num_operands = this->type->vector_elements;
+      } else {
+         num_operands = get_num_operands(operation);
+      }
+   }
+
    ir_expression_operation operation;
    ir_rvalue *operands[4];
+   uint8_t num_operands;
 };
 
 
@@ -1559,7 +1608,6 @@ public:
    {
       assert(callee->return_type != NULL);
       actual_parameters->move_nodes_to(& this->actual_parameters);
-      this->use_builtin = callee->is_builtin();
    }
 
    ir_call(ir_function_signature *callee,
@@ -1570,12 +1618,12 @@ public:
    {
       assert(callee->return_type != NULL);
       actual_parameters->move_nodes_to(& this->actual_parameters);
-      this->use_builtin = callee->is_builtin();
    }
 
    virtual ir_call *clone(void *mem_ctx, struct hash_table *ht) const;
 
-   virtual ir_constant *constant_expression_value(struct hash_table *variable_context = NULL);
+   virtual ir_constant *constant_expression_value(void *mem_ctx,
+                                                  struct hash_table *variable_context = NULL);
 
    virtual void accept(ir_visitor *v)
    {
@@ -1611,9 +1659,6 @@ public:
 
    /* List of ir_rvalue of paramaters passed in this call. */
    exec_list actual_parameters;
-
-   /** Should this call only bind to a built-in function? */
-   bool use_builtin;
 
    /*
     * ARB_shader_subroutine support -
@@ -1772,7 +1817,7 @@ enum ir_texture_opcode {
  *
  *                                    Texel offset (0 or an expression)
  *                                    | Projection divisor
- *                                    | |  Shadow comparitor
+ *                                    | |  Shadow comparator
  *                                    | |  |
  *                                    v v  v
  * (tex <type> <sampler> <coordinate> 0 1 ( ))
@@ -1793,14 +1838,15 @@ public:
    ir_texture(enum ir_texture_opcode op)
       : ir_rvalue(ir_type_texture),
         op(op), sampler(NULL), coordinate(NULL), projector(NULL),
-        shadow_comparitor(NULL), offset(NULL)
+        shadow_comparator(NULL), offset(NULL)
    {
       memset(&lod_info, 0, sizeof(lod_info));
    }
 
    virtual ir_texture *clone(void *mem_ctx, struct hash_table *) const;
 
-   virtual ir_constant *constant_expression_value(struct hash_table *variable_context = NULL);
+   virtual ir_constant *constant_expression_value(void *mem_ctx,
+                                                  struct hash_table *variable_context = NULL);
 
    virtual void accept(ir_visitor *v)
    {
@@ -1848,7 +1894,7 @@ public:
     * If there is no shadow comparison, this will be \c NULL.  For the
     * \c ir_txf opcode, this *must* be \c NULL.
     */
-   ir_rvalue *shadow_comparitor;
+   ir_rvalue *shadow_comparator;
 
    /** Texel offset. */
    ir_rvalue *offset;
@@ -1897,7 +1943,8 @@ public:
 
    virtual ir_swizzle *clone(void *mem_ctx, struct hash_table *) const;
 
-   virtual ir_constant *constant_expression_value(struct hash_table *variable_context = NULL);
+   virtual ir_constant *constant_expression_value(void *mem_ctx,
+                                                  struct hash_table *variable_context = NULL);
 
    /**
     * Construct an ir_swizzle from the textual representation.  Can fail.
@@ -1914,9 +1961,9 @@ public:
    virtual bool equals(const ir_instruction *ir,
                        enum ir_node_type ignore = ir_type_unset) const;
 
-   bool is_lvalue() const
+   bool is_lvalue(const struct _mesa_glsl_parse_state *state) const
    {
-      return val->is_lvalue() && !mask.has_duplicates;
+      return val->is_lvalue(state) && !mask.has_duplicates;
    }
 
    /**
@@ -1941,7 +1988,7 @@ class ir_dereference : public ir_rvalue {
 public:
    virtual ir_dereference *clone(void *mem_ctx, struct hash_table *) const = 0;
 
-   bool is_lvalue() const;
+   bool is_lvalue(const struct _mesa_glsl_parse_state *state) const;
 
    /**
     * Get the variable that is ultimately referenced by an r-value
@@ -1963,7 +2010,8 @@ public:
    virtual ir_dereference_variable *clone(void *mem_ctx,
 					  struct hash_table *) const;
 
-   virtual ir_constant *constant_expression_value(struct hash_table *variable_context = NULL);
+   virtual ir_constant *constant_expression_value(void *mem_ctx,
+                                                  struct hash_table *variable_context = NULL);
 
    virtual bool equals(const ir_instruction *ir,
                        enum ir_node_type ignore = ir_type_unset) const;
@@ -2010,7 +2058,8 @@ public:
    virtual ir_dereference_array *clone(void *mem_ctx,
 				       struct hash_table *) const;
 
-   virtual ir_constant *constant_expression_value(struct hash_table *variable_context = NULL);
+   virtual ir_constant *constant_expression_value(void *mem_ctx,
+                                                  struct hash_table *variable_context = NULL);
 
    virtual bool equals(const ir_instruction *ir,
                        enum ir_node_type ignore = ir_type_unset) const;
@@ -2047,7 +2096,8 @@ public:
    virtual ir_dereference_record *clone(void *mem_ctx,
 					struct hash_table *) const;
 
-   virtual ir_constant *constant_expression_value(struct hash_table *variable_context = NULL);
+   virtual ir_constant *constant_expression_value(void *mem_ctx,
+                                                  struct hash_table *variable_context = NULL);
 
    /**
     * Get the variable that is ultimately referenced by an r-value
@@ -2065,7 +2115,7 @@ public:
    virtual ir_visitor_status accept(ir_hierarchical_visitor *);
 
    ir_rvalue *record;
-   const char *field;
+   int field_idx;
 };
 
 
@@ -2078,6 +2128,8 @@ union ir_constant_data {
       float f[16];
       bool b[16];
       double d[16];
+      uint64_t u64[16];
+      int64_t i64[16];
 };
 
 
@@ -2089,6 +2141,8 @@ public:
    ir_constant(int i, unsigned vector_elements=1);
    ir_constant(float f, unsigned vector_elements=1);
    ir_constant(double d, unsigned vector_elements=1);
+   ir_constant(uint64_t u64, unsigned vector_elements=1);
+   ir_constant(int64_t i64, unsigned vector_elements=1);
 
    /**
     * Construct an ir_constant from a list of ir_constant values
@@ -2114,7 +2168,8 @@ public:
 
    virtual ir_constant *clone(void *mem_ctx, struct hash_table *) const;
 
-   virtual ir_constant *constant_expression_value(struct hash_table *variable_context = NULL);
+   virtual ir_constant *constant_expression_value(void *mem_ctx,
+                                                  struct hash_table *variable_context = NULL);
 
    virtual void accept(ir_visitor *v)
    {
@@ -2139,11 +2194,13 @@ public:
    double get_double_component(unsigned i) const;
    int get_int_component(unsigned i) const;
    unsigned get_uint_component(unsigned i) const;
+   int64_t get_int64_component(unsigned i) const;
+   uint64_t get_uint64_component(unsigned i) const;
    /*@}*/
 
    ir_constant *get_array_element(unsigned i) const;
 
-   ir_constant *get_record_field(const char *name);
+   ir_constant *get_record_field(int idx);
 
    /**
     * Copy the values on another constant at a given offset.
@@ -2205,11 +2262,8 @@ public:
     */
    union ir_constant_data value;
 
-   /* Array elements */
-   ir_constant **array_elements;
-
-   /* Structure fields */
-   exec_list components;
+   /* Array elements and structure fields */
+   ir_constant **const_elements;
 
 private:
    /**
@@ -2357,29 +2411,6 @@ clone_ir_list(void *mem_ctx, exec_list *out, const exec_list *in);
 extern void
 _mesa_glsl_initialize_variables(exec_list *instructions,
 				struct _mesa_glsl_parse_state *state);
-
-extern void
-_mesa_glsl_initialize_derived_variables(struct gl_context *ctx,
-                                        gl_shader *shader);
-
-extern void
-_mesa_glsl_initialize_builtin_functions();
-
-extern ir_function_signature *
-_mesa_glsl_find_builtin_function(_mesa_glsl_parse_state *state,
-                                 const char *name, exec_list *actual_parameters);
-
-extern ir_function *
-_mesa_glsl_find_builtin_function_by_name(const char *name);
-
-extern gl_shader *
-_mesa_glsl_get_builtin_function_shader(void);
-
-extern ir_function_signature *
-_mesa_get_main_function_signature(glsl_symbol_table *symbols);
-
-extern void
-_mesa_glsl_release_builtin_functions(void);
 
 extern void
 reparent_ir(exec_list *list, void *mem_ctx);

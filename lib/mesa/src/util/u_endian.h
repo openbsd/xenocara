@@ -27,12 +27,20 @@
 #ifndef U_ENDIAN_H
 #define U_ENDIAN_H
 
-#if defined(__GLIBC__) || defined(ANDROID)
+#ifdef HAVE_ENDIAN_H
 #include <endian.h>
 
-#if __BYTE_ORDER == __LITTLE_ENDIAN
+/* glibc */
+#if defined(__BYTE_ORDER) && (__BYTE_ORDER == __LITTLE_ENDIAN)
 # define PIPE_ARCH_LITTLE_ENDIAN
-#elif __BYTE_ORDER == __BIG_ENDIAN
+#elif defined(__BYTE_ORDER) && (__BYTE_ORDER == __BIG_ENDIAN)
+# define PIPE_ARCH_BIG_ENDIAN
+#endif
+
+/* OpenBSD */
+#if defined(BYTE_ORDER) && (BYTE_ORDER == LITTLE_ENDIAN)
+# define PIPE_ARCH_LITTLE_ENDIAN
+#elif defined(BYTE_ORDER) && (BYTE_ORDER == BIG_ENDIAN)
 # define PIPE_ARCH_BIG_ENDIAN
 #endif
 
@@ -54,7 +62,7 @@
 # define PIPE_ARCH_BIG_ENDIAN
 #endif
 
-#elif defined(__OpenBSD__) || defined(__NetBSD__)
+#elif defined(__NetBSD__)
 #include <sys/types.h>
 #include <machine/endian.h>
 
@@ -63,6 +71,10 @@
 #elif _BYTE_ORDER == _BIG_ENDIAN
 # define PIPE_ARCH_BIG_ENDIAN
 #endif
+
+#elif defined(_MSC_VER)
+
+#define PIPE_ARCH_LITTLE_ENDIAN
 
 #endif
 

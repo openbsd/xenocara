@@ -450,54 +450,6 @@ vc4_logicop(nir_builder *b, int logicop_func,
 }
 
 static nir_ssa_def *
-vc4_nir_pipe_compare_func(nir_builder *b, int func,
-                          nir_ssa_def *src0, nir_ssa_def *src1)
-{
-        switch (func) {
-        default:
-                fprintf(stderr, "Unknown compare func %d\n", func);
-                /* FALLTHROUGH */
-        case PIPE_FUNC_NEVER:
-                return nir_imm_int(b, 0);
-        case PIPE_FUNC_ALWAYS:
-                return nir_imm_int(b, ~0);
-        case PIPE_FUNC_EQUAL:
-                return nir_feq(b, src0, src1);
-        case PIPE_FUNC_NOTEQUAL:
-                return nir_fne(b, src0, src1);
-        case PIPE_FUNC_GREATER:
-                return nir_flt(b, src1, src0);
-        case PIPE_FUNC_GEQUAL:
-                return nir_fge(b, src0, src1);
-        case PIPE_FUNC_LESS:
-                return nir_flt(b, src0, src1);
-        case PIPE_FUNC_LEQUAL:
-                return nir_fge(b, src1, src0);
-        }
-}
-
-static void
-vc4_nir_emit_alpha_test_discard(struct vc4_compile *c, nir_builder *b,
-                                nir_ssa_def *alpha)
-{
-        if (!c->fs_key->alpha_test)
-                return;
-
-        nir_ssa_def *condition =
-                vc4_nir_pipe_compare_func(b, c->fs_key->alpha_test_func,
-                                          alpha,
-                                          nir_load_alpha_ref_float(b));
-
-        nir_intrinsic_instr *discard =
-                nir_intrinsic_instr_create(b->shader,
-                                           nir_intrinsic_discard_if);
-        discard->num_components = 1;
-        discard->src[0] = nir_src_for_ssa(nir_inot(b, condition));
-        nir_builder_instr_insert(b, &discard->instr);
-        c->s->info.fs.uses_discard = true;
-}
-
-static nir_ssa_def *
 vc4_nir_swizzle_and_pack(struct vc4_compile *c, nir_builder *b,
                          nir_ssa_def **colors)
 {
@@ -536,8 +488,6 @@ vc4_nir_blend_pipeline(struct vc4_compile *c, nir_builder *b, nir_ssa_def *src,
 
         if (c->fs_key->sample_alpha_to_one && c->fs_key->msaa)
                 src_color[3] = nir_imm_float(b, 1.0);
-
-        vc4_nir_emit_alpha_test_discard(c, b, src_color[3]);
 
         nir_ssa_def *packed_color;
         if (srgb) {
@@ -630,25 +580,14 @@ vc4_nir_lower_blend_instr(struct vc4_compile *c, nir_builder *b,
 {
         nir_ssa_def *frag_color = intr->src[0].ssa;
 
-        if (c->fs_key->sample_coverage) {
-                nir_intrinsic_instr *load =
-                        nir_intrinsic_instr_create(b->shader,
-                                                   nir_intrinsic_load_sample_mask_in);
-                load->num_components = 1;
-                nir_ssa_dest_init(&load->instr, &load->dest, 1, 32, NULL);
-                nir_builder_instr_insert(b, &load->instr);
-
-                nir_ssa_def *bitmask = &load->dest.ssa;
-
-                vc4_nir_store_sample_mask(c, b, bitmask);
-        } else if (c->fs_key->sample_alpha_to_coverage) {
+        if (c->fs_key->sample_alpha_to_coverage) {
                 nir_ssa_def *a = nir_channel(b, frag_color, 3);
 
                 /* XXX: We should do a nice dither based on the fragment
                  * coordinate, instead.
                  */
                 nir_ssa_def *num_samples = nir_imm_float(b, VC4_MAX_SAMPLES);
-                nir_ssa_def *num_bits = nir_f2i(b, nir_fmul(b, a, num_samples));
+                nir_ssa_def *num_bits = nir_f2i32(b, nir_fmul(b, a, num_samples));
                 nir_ssa_def *bitmask = nir_isub(b,
                                                 nir_ishl(b,
                                                          nir_imm_int(b, 1),
@@ -729,5 +668,17 @@ vc4_nir_lower_blend(nir_shader *s, struct vc4_compile *c)
                                               nir_metadata_block_index |
                                               nir_metadata_dominance);
                 }
+        }
+
+        /* If we didn't do alpha-to-coverage on the output color, we still
+         * need to pass glSampleMask() through.
+         */
+        if (c->fs_key->sample_coverage && !c->fs_key->sample_alpha_to_coverage) {
+                nir_function_impl *impl = nir_shader_get_entrypoint(s);
+                nir_builder b;
+                nir_builder_init(&b, impl);
+                b.cursor = nir_after_block(nir_impl_last_block(impl));
+
+                vc4_nir_store_sample_mask(c, &b, nir_load_sample_mask_in(&b));
         }
 }

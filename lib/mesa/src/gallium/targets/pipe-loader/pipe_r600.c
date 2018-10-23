@@ -5,11 +5,11 @@
 #include "r600/r600_public.h"
 
 static struct pipe_screen *
-create_screen(int fd)
+create_screen(int fd, const struct pipe_screen_config *config)
 {
    struct radeon_winsys *rw;
 
-   rw = radeon_drm_winsys_create(fd, r600_screen_create);
+   rw = radeon_drm_winsys_create(fd, config, r600_screen_create);
    return rw ? debug_screen_wrap(rw->screen) : NULL;
 }
 
@@ -20,7 +20,7 @@ static const struct drm_conf_ret throttle_ret = {
 
 static const struct drm_conf_ret share_fd_ret = {
    .type = DRM_CONF_BOOL,
-   .val.val_int = true,
+   .val.val_bool = true,
 };
 
 static const struct drm_conf_ret *drm_configuration(enum drm_conf conf)

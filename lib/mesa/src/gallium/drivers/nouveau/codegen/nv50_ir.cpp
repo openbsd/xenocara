@@ -575,6 +575,7 @@ void Instruction::init()
    encSize = 0;
    ipa = 0;
    mask = 0;
+   precise = 0;
 
    lanes = 0xf;
 
@@ -905,6 +906,9 @@ TexInstruction::TexInstruction(Function *fn, operation op)
 
    tex.rIndirectSrc = -1;
    tex.sIndirectSrc = -1;
+
+   if (op == OP_TXF)
+      sType = TYPE_U32;
 }
 
 TexInstruction::~TexInstruction()
@@ -1179,7 +1183,11 @@ nv50_ir_init_prog_info(struct nv50_ir_prog_info *info)
       info->prop.gp.instanceCount = 1;
       info->prop.gp.maxVertices = 1;
    }
-   info->prop.cp.numThreads = 1;
+   if (info->type == PIPE_SHADER_COMPUTE) {
+      info->prop.cp.numThreads[0] =
+      info->prop.cp.numThreads[1] =
+      info->prop.cp.numThreads[2] = 1;
+   }
    info->io.pointSize = 0xff;
    info->io.instanceId = 0xff;
    info->io.vertexId = 0xff;
@@ -1210,8 +1218,8 @@ nv50_ir_generate_code(struct nv50_ir_prog_info *info)
    PROG_TYPE_CASE(FRAGMENT, FRAGMENT);
    PROG_TYPE_CASE(COMPUTE, COMPUTE);
    default:
-      type = nv50_ir::Program::TYPE_COMPUTE;
-      break;
+      INFO_DBG(info->dbgFlags, VERBOSE, "unsupported program type %u\n", info->type);
+      return -1;
    }
    INFO_DBG(info->dbgFlags, VERBOSE, "translating program of type %u\n", type);
 
@@ -1220,24 +1228,20 @@ nv50_ir_generate_code(struct nv50_ir_prog_info *info)
       return -1;
 
    nv50_ir::Program *prog = new nv50_ir::Program(type, targ);
-   if (!prog)
+   if (!prog) {
+      nv50_ir::Target::destroy(targ);
       return -1;
+   }
    prog->driver = info;
    prog->dbgFlags = info->dbgFlags;
    prog->optLevel = info->optLevel;
 
    switch (info->bin.sourceRep) {
-#if 0
-   case PIPE_IR_LLVM:
-   case PIPE_IR_GLSL:
-      return -1;
-   case PIPE_IR_SM4:
-      ret = prog->makeFromSM4(info) ? 0 : -2;
-      break;
-   case PIPE_IR_TGSI:
-#endif
-   default:
+   case PIPE_SHADER_IR_TGSI:
       ret = prog->makeFromTGSI(info) ? 0 : -2;
+      break;
+   default:
+      ret = -1;
       break;
    }
    if (ret < 0)

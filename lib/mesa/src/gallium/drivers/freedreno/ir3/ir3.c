@@ -40,13 +40,13 @@
  */
 void * ir3_alloc(struct ir3 *shader, int sz)
 {
-	return ralloc_size(shader, sz);
+	return rzalloc_size(shader, sz); /* TODO: don't use rzalloc */
 }
 
 struct ir3 * ir3_create(struct ir3_compiler *compiler,
 		unsigned nin, unsigned nout)
 {
-	struct ir3 *shader = ralloc(compiler, struct ir3);
+	struct ir3 *shader = rzalloc(compiler, struct ir3);
 
 	shader->compiler = compiler;
 	shader->ninputs = nin;
@@ -63,12 +63,6 @@ struct ir3 * ir3_create(struct ir3_compiler *compiler,
 
 void ir3_destroy(struct ir3 *shader)
 {
-	/* TODO convert the dynamic array to ralloc too: */
-	free(shader->indirects);
-	free(shader->predicates);
-	free(shader->baryfs);
-	free(shader->keeps);
-	free(shader->astc_srgb);
 	ralloc_free(shader);
 }
 
@@ -112,7 +106,7 @@ static uint32_t reg(struct ir3_register *reg, struct ir3_info *info,
 			info->max_const = MAX2(info->max_const, max);
 		} else if (val.num == 63) {
 			/* ignore writes to dummy register r63.x */
-		} else if ((max != REG_A0) && (max != REG_P0)) {
+		} else if (max < 48) {
 			if (reg->flags & IR3_REG_HALF) {
 				info->max_half_reg = MAX2(info->max_half_reg, max);
 			} else {
@@ -129,7 +123,9 @@ static int emit_cat0(struct ir3_instruction *instr, void *ptr,
 {
 	instr_cat0_t *cat0 = ptr;
 
-	if (info->gpu_id >= 400) {
+	if (info->gpu_id >= 500) {
+		cat0->a5xx.immed = instr->cat0.immed;
+	} else if (info->gpu_id >= 400) {
 		cat0->a4xx.immed = instr->cat0.immed;
 	} else {
 		cat0->a3xx.immed = instr->cat0.immed;
@@ -479,6 +475,13 @@ static int emit_cat6(struct ir3_instruction *instr, void *ptr,
 	struct ir3_register *dst, *src1, *src2;
 	instr_cat6_t *cat6 = ptr;
 
+	cat6->type     = instr->cat6.type;
+	cat6->opc      = instr->opc;
+	cat6->jmp_tgt  = !!(instr->flags & IR3_INSTR_JP);
+	cat6->sync     = !!(instr->flags & IR3_INSTR_SY);
+	cat6->g        = !!(instr->flags & IR3_INSTR_G);
+	cat6->opc_cat  = 6;
+
 	/* the "dst" for a store instruction is (from the perspective
 	 * of data flow in the shader, ie. register use/def, etc) in
 	 * fact a register that is read by the instruction, rather
@@ -504,7 +507,65 @@ static int emit_cat6(struct ir3_instruction *instr, void *ptr,
 	 * indicate to use the src_off encoding even if offset is zero
 	 * (but then what to do about dst_off?)
 	 */
-	if (instr->cat6.src_offset || (instr->opc == OPC_LDG)) {
+	if ((instr->opc == OPC_LDGB) || is_atomic(instr->opc)) {
+		struct ir3_register *src3 = instr->regs[3];
+		instr_cat6ldgb_t *ldgb = ptr;
+
+		/* maybe these two bits both determine the instruction encoding? */
+		cat6->src_off = false;
+
+		ldgb->d = 4 - 1;      /* always .4d ? */
+		ldgb->typed = false;  /* TODO true for images */
+		ldgb->type_size = instr->cat6.iim_val - 1;
+
+		ldgb->dst = reg(dst, info, instr->repeat, IR3_REG_R | IR3_REG_HALF);
+
+		/* first src is src_ssbo: */
+		iassert(src1->flags & IR3_REG_IMMED);
+		ldgb->src_ssbo = src1->uim_val;
+
+		/* then next two are src1/src2: */
+		ldgb->src1 = reg(src2, info, instr->repeat, IR3_REG_IMMED);
+		ldgb->src1_im = !!(src2->flags & IR3_REG_IMMED);
+		ldgb->src2 = reg(src3, info, instr->repeat, IR3_REG_IMMED);
+		ldgb->src2_im = !!(src3->flags & IR3_REG_IMMED);
+
+		if (is_atomic(instr->opc)) {
+			struct ir3_register *src4 = instr->regs[4];
+			ldgb->src3 = reg(src4, info, instr->repeat, 0);
+			ldgb->pad0 = 0x1;
+			ldgb->pad3 = 0x3;
+		} else {
+			ldgb->pad0 = 0x0;
+			ldgb->pad3 = 0x2;
+		}
+
+		return 0;
+	} else if (instr->opc == OPC_STGB) {
+		struct ir3_register *src3 = instr->regs[4];
+		instr_cat6stgb_t *stgb = ptr;
+
+		/* maybe these two bits both determine the instruction encoding? */
+		cat6->src_off = true;
+		stgb->pad3 = 0x2;
+
+		stgb->d = 4 - 1;    /* always .4d ? */
+		stgb->typed = false;
+		stgb->type_size = instr->cat6.iim_val - 1;
+
+		/* first src is dst_ssbo: */
+		iassert(dst->flags & IR3_REG_IMMED);
+		stgb->dst_ssbo = dst->uim_val;
+
+		/* then src1/src2/src3: */
+		stgb->src1 = reg(src1, info, instr->repeat, 0);
+		stgb->src2 = reg(src2, info, instr->repeat, IR3_REG_IMMED);
+		stgb->src2_im = !!(src2->flags & IR3_REG_IMMED);
+		stgb->src3 = reg(src3, info, instr->repeat, IR3_REG_IMMED);
+		stgb->src3_im = !!(src3->flags & IR3_REG_IMMED);
+
+		return 0;
+	} else if (instr->cat6.src_offset || (instr->opc == OPC_LDG)) {
 		instr_cat6a_t *cat6a = ptr;
 
 		cat6->src_off = true;
@@ -539,13 +600,6 @@ static int emit_cat6(struct ir3_instruction *instr, void *ptr,
 		cat6->dst_off = false;
 		cat6d->dst = reg(dst, info, instr->repeat, IR3_REG_R | IR3_REG_HALF);
 	}
-
-	cat6->type     = instr->cat6.type;
-	cat6->opc      = instr->opc;
-	cat6->jmp_tgt  = !!(instr->flags & IR3_INSTR_JP);
-	cat6->sync     = !!(instr->flags & IR3_INSTR_SY);
-	cat6->g        = !!(instr->flags & IR3_INSTR_G);
-	cat6->opc_cat  = 6;
 
 	return 0;
 }
@@ -624,7 +678,7 @@ static void insert_instr(struct ir3_block *block,
 	list_addtail(&instr->node, &block->instr_list);
 
 	if (is_input(instr))
-		array_insert(shader->baryfs, instr);
+		array_insert(shader, shader->baryfs, instr);
 }
 
 struct ir3_block * ir3_block_create(struct ir3 *shader)
@@ -727,7 +781,7 @@ ir3_instr_set_address(struct ir3_instruction *instr,
 	if (instr->address != addr) {
 		struct ir3 *ir = instr->block->shader;
 		instr->address = addr;
-		array_insert(ir->indirects, instr);
+		array_insert(ir, ir->indirects, instr);
 	}
 }
 

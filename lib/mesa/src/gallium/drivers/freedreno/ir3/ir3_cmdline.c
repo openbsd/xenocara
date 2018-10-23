@@ -46,6 +46,7 @@
 
 #include "compiler/glsl/standalone.h"
 #include "compiler/glsl/glsl_to_nir.h"
+#include "compiler/nir_types.h"
 
 static void dump_info(struct ir3_shader_variant *so, const char *str)
 {
@@ -57,7 +58,44 @@ static void dump_info(struct ir3_shader_variant *so, const char *str)
 	free(bin);
 }
 
-int st_glsl_type_size(const struct glsl_type *type);
+static void
+insert_sorted(struct exec_list *var_list, nir_variable *new_var)
+{
+	nir_foreach_variable(var, var_list) {
+		if (var->data.location > new_var->data.location) {
+			exec_node_insert_node_before(&var->node, &new_var->node);
+			return;
+		}
+	}
+	exec_list_push_tail(var_list, &new_var->node);
+}
+
+static void
+sort_varyings(struct exec_list *var_list)
+{
+	struct exec_list new_list;
+	exec_list_make_empty(&new_list);
+	nir_foreach_variable_safe(var, var_list) {
+		exec_node_remove(&var->node);
+		insert_sorted(&new_list, var);
+	}
+	exec_list_move_nodes_to(&new_list, var_list);
+}
+
+static void
+fixup_varying_slots(struct exec_list *var_list)
+{
+	nir_foreach_variable(var, var_list) {
+		if (var->data.location >= VARYING_SLOT_VAR0) {
+			var->data.location += 9;
+		} else if ((var->data.location >= VARYING_SLOT_TEX0) &&
+				(var->data.location <= VARYING_SLOT_TEX7)) {
+			var->data.location += VARYING_SLOT_VAR0 - VARYING_SLOT_TEX0;
+		}
+	}
+}
+
+static struct ir3_compiler *compiler;
 
 static nir_shader *
 load_glsl(unsigned num_files, char* const* files, gl_shader_stage stage)
@@ -72,9 +110,7 @@ load_glsl(unsigned num_files, char* const* files, gl_shader_stage stage)
 	if (!prog)
 		errx(1, "couldn't parse `%s'", files[0]);
 
-	nir_shader *nir = glsl_to_nir(prog, stage, ir3_get_compiler_options());
-
-	standalone_compiler_cleanup(prog);
+	nir_shader *nir = glsl_to_nir(prog, stage, ir3_get_compiler_options(compiler));
 
 	/* required NIR passes: */
 	/* TODO cmdline args for some of the conditional lowering passes? */
@@ -90,10 +126,41 @@ load_glsl(unsigned num_files, char* const* files, gl_shader_stage stage)
 	NIR_PASS_V(nir, nir_lower_var_copies);
 	NIR_PASS_V(nir, nir_lower_io_types);
 
-	// TODO nir_assign_var_locations??
+	switch (stage) {
+	case MESA_SHADER_VERTEX:
+		nir_assign_var_locations(&nir->inputs,
+				&nir->num_inputs,
+				ir3_glsl_type_size);
+
+		/* Re-lower global vars, to deal with any dead VS inputs. */
+		NIR_PASS_V(nir, nir_lower_global_vars_to_local);
+
+		sort_varyings(&nir->outputs);
+		nir_assign_var_locations(&nir->outputs,
+				&nir->num_outputs,
+				ir3_glsl_type_size);
+		fixup_varying_slots(&nir->outputs);
+		break;
+	case MESA_SHADER_FRAGMENT:
+		sort_varyings(&nir->inputs);
+		nir_assign_var_locations(&nir->inputs,
+				&nir->num_inputs,
+				ir3_glsl_type_size);
+		fixup_varying_slots(&nir->inputs);
+		nir_assign_var_locations(&nir->outputs,
+				&nir->num_outputs,
+				ir3_glsl_type_size);
+		break;
+	default:
+		errx(1, "unhandled shader stage: %d", stage);
+	}
+
+	nir_assign_var_locations(&nir->uniforms,
+			&nir->num_uniforms,
+			ir3_glsl_type_size);
 
 	NIR_PASS_V(nir, nir_lower_system_values);
-	NIR_PASS_V(nir, nir_lower_io, nir_var_all, st_glsl_type_size, 0);
+	NIR_PASS_V(nir, nir_lower_io, nir_var_all, ir3_glsl_type_size, 0);
 	NIR_PASS_V(nir, nir_lower_samplers, prog);
 
 	return nir;
@@ -298,6 +365,8 @@ int main(int argc, char **argv)
 
 	nir_shader *nir;
 
+	compiler = ir3_compiler_create(NULL, gpu_id);
+
 	if (s.from_tgsi) {
 		struct tgsi_token toks[65536];
 
@@ -324,13 +393,13 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
-	s.compiler = ir3_compiler_create(NULL, gpu_id);
+	s.compiler = compiler;
 	s.nir = ir3_optimize_nir(&s, nir, NULL);
 
 	v.key = key;
 	v.shader = &s;
 
-	switch (nir->stage) {
+	switch (nir->info.stage) {
 	case MESA_SHADER_FRAGMENT:
 		s.type = v.type = SHADER_FRAGMENT;
 		break;
@@ -341,7 +410,7 @@ int main(int argc, char **argv)
 		s.type = v.type = SHADER_COMPUTE;
 		break;
 	default:
-		errx(1, "unhandled shader stage: %d", nir->stage);
+		errx(1, "unhandled shader stage: %d", nir->info.stage);
 	}
 
 	info = "NIR compiler";

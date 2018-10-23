@@ -7,6 +7,8 @@
 
 #include "graw_util.h"
 
+#include "util/macros.h"
+
 
 static int width = 300;
 static int height = 300;
@@ -69,7 +71,7 @@ static struct vertex vertices[] =
    },
 };
 
-#define NUM_VERTS (sizeof(vertices) / sizeof(vertices[0]))
+#define NUM_VERTS ARRAY_SIZE(vertices)
 
 
 
@@ -94,7 +96,7 @@ set_vertices(void)
 
    vbuf.stride = sizeof(struct vertex);
    vbuf.buffer_offset = 0;
-   vbuf.buffer = pipe_buffer_create_with_data(info.ctx,
+   vbuf.buffer.resource = pipe_buffer_create_with_data(info.ctx,
                                               PIPE_BIND_VERTEX_BUFFER,
                                               PIPE_USAGE_DEFAULT,
                                               sizeof(vertices),

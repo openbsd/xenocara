@@ -29,6 +29,7 @@
 #include "pipe/p_screen.h"
 
 #include "util/u_video.h"
+#include "util/u_memory.h"
 
 #include "vl/vl_winsys.h"
 
@@ -51,7 +52,7 @@ vlVaQueryConfigProfiles(VADriverContextP ctx, VAProfile *profile_list, int *num_
    *num_profiles = 0;
 
    pscreen = VL_VA_PSCREEN(ctx);
-   for (p = PIPE_VIDEO_PROFILE_MPEG2_SIMPLE; p <= PIPE_VIDEO_PROFILE_HEVC_MAIN_444; ++p) {
+   for (p = PIPE_VIDEO_PROFILE_MPEG2_SIMPLE; p <= PIPE_VIDEO_PROFILE_JPEG_BASELINE; ++p) {
       if (u_reduce_video_profile(p) == PIPE_VIDEO_FORMAT_MPEG4 && !debug_get_option_mpeg4())
          continue;
 
@@ -101,6 +102,8 @@ vlVaQueryConfigEntrypoints(VADriverContextP ctx, VAProfile profile,
    if (num_entrypoints == 0)
       return VA_STATUS_ERROR_UNSUPPORTED_PROFILE;
 
+   assert(*num_entrypoints <= ctx->max_entrypoints);
+
    return VA_STATUS_SUCCESS;
 }
 
@@ -108,10 +111,13 @@ VAStatus
 vlVaGetConfigAttributes(VADriverContextP ctx, VAProfile profile, VAEntrypoint entrypoint,
                         VAConfigAttrib *attrib_list, int num_attribs)
 {
+   struct pipe_screen *pscreen;
    int i;
 
    if (!ctx)
       return VA_STATUS_ERROR_INVALID_CONTEXT;
+
+   pscreen = VL_VA_PSCREEN(ctx);
 
    for (i = 0; i < num_attribs; ++i) {
       unsigned int value;
@@ -119,6 +125,10 @@ vlVaGetConfigAttributes(VADriverContextP ctx, VAProfile profile, VAEntrypoint en
          switch (attrib_list[i].type) {
          case VAConfigAttribRTFormat:
             value = VA_RT_FORMAT_YUV420;
+	    if (pscreen->is_video_format_supported(pscreen, PIPE_FORMAT_P016,
+                                                   ProfileToPipe(profile),
+                                                   PIPE_VIDEO_ENTRYPOINT_BITSTREAM))
+		value |= VA_RT_FORMAT_YUV420_10BPP;
             break;
          default:
             value = VA_ATTRIB_NOT_SUPPORTED;
@@ -146,6 +156,7 @@ vlVaGetConfigAttributes(VADriverContextP ctx, VAProfile profile, VAEntrypoint en
          switch (attrib_list[i].type) {
          case VAConfigAttribRTFormat:
             value = (VA_RT_FORMAT_YUV420 |
+                     VA_RT_FORMAT_YUV420_10BPP |
                      VA_RT_FORMAT_RGB32);
             break;
          default:
@@ -169,6 +180,7 @@ vlVaCreateConfig(VADriverContextP ctx, VAProfile profile, VAEntrypoint entrypoin
    vlVaConfig *config;
    struct pipe_screen *pscreen;
    enum pipe_video_profile p;
+   unsigned int supported_rt_formats;
 
    if (!ctx)
       return VA_STATUS_ERROR_INVALID_CONTEXT;
@@ -183,11 +195,14 @@ vlVaCreateConfig(VADriverContextP ctx, VAProfile profile, VAEntrypoint entrypoin
       return VA_STATUS_ERROR_ALLOCATION_FAILED;
 
    if (profile == VAProfileNone && entrypoint == VAEntrypointVideoProc) {
-      config->entrypoint = VAEntrypointVideoProc;
+      config->entrypoint = PIPE_VIDEO_ENTRYPOINT_UNKNOWN;
       config->profile = PIPE_VIDEO_PROFILE_UNKNOWN;
+      supported_rt_formats = VA_RT_FORMAT_YUV420 |
+                             VA_RT_FORMAT_YUV420_10BPP |
+                             VA_RT_FORMAT_RGB32;
       for (int i = 0; i < num_attribs; i++) {
          if (attrib_list[i].type == VAConfigAttribRTFormat) {
-            if (attrib_list[i].value & (VA_RT_FORMAT_YUV420 | VA_RT_FORMAT_RGB32)) {
+            if (attrib_list[i].value & supported_rt_formats) {
                config->rt_format = attrib_list[i].value;
             } else {
                FREE(config);
@@ -198,11 +213,11 @@ vlVaCreateConfig(VADriverContextP ctx, VAProfile profile, VAEntrypoint entrypoin
 
       /* Default value if not specified in the input attributes. */
       if (!config->rt_format)
-         config->rt_format = VA_RT_FORMAT_YUV420 | VA_RT_FORMAT_RGB32;
+         config->rt_format = supported_rt_formats;
 
-      pipe_mutex_lock(drv->mutex);
+      mtx_lock(&drv->mutex);
       *config_id = handle_table_add(drv->htab, config);
-      pipe_mutex_unlock(drv->mutex);
+      mtx_unlock(&drv->mutex);
       return VA_STATUS_SUCCESS;
    }
 
@@ -241,6 +256,10 @@ vlVaCreateConfig(VADriverContextP ctx, VAProfile profile, VAEntrypoint entrypoin
    }
 
    config->profile = p;
+   supported_rt_formats = VA_RT_FORMAT_YUV420;
+   if (pscreen->is_video_format_supported(pscreen, PIPE_FORMAT_P016, p,
+					  config->entrypoint))
+      supported_rt_formats |= VA_RT_FORMAT_YUV420_10BPP;
 
    for (int i = 0; i <num_attribs ; i++) {
       if (attrib_list[i].type == VAConfigAttribRateControl) {
@@ -252,7 +271,7 @@ vlVaCreateConfig(VADriverContextP ctx, VAProfile profile, VAEntrypoint entrypoin
             config->rc = PIPE_H264_ENC_RATE_CONTROL_METHOD_DISABLE;
       }
       if (attrib_list[i].type == VAConfigAttribRTFormat) {
-         if (attrib_list[i].value == VA_RT_FORMAT_YUV420) {
+         if (attrib_list[i].value & supported_rt_formats) {
             config->rt_format = attrib_list[i].value;
          } else {
             FREE(config);
@@ -263,11 +282,11 @@ vlVaCreateConfig(VADriverContextP ctx, VAProfile profile, VAEntrypoint entrypoin
 
    /* Default value if not specified in the input attributes. */
    if (!config->rt_format)
-      config->rt_format = VA_RT_FORMAT_YUV420;
+      config->rt_format = supported_rt_formats;
 
-   pipe_mutex_lock(drv->mutex);
+   mtx_lock(&drv->mutex);
    *config_id = handle_table_add(drv->htab, config);
-   pipe_mutex_unlock(drv->mutex);
+   mtx_unlock(&drv->mutex);
 
    return VA_STATUS_SUCCESS;
 }
@@ -286,15 +305,17 @@ vlVaDestroyConfig(VADriverContextP ctx, VAConfigID config_id)
    if (!drv)
       return VA_STATUS_ERROR_INVALID_CONTEXT;
 
-   pipe_mutex_lock(drv->mutex);
+   mtx_lock(&drv->mutex);
    config = handle_table_get(drv->htab, config_id);
 
-   if (!config)
+   if (!config) {
+      mtx_unlock(&drv->mutex);
       return VA_STATUS_ERROR_INVALID_CONFIG;
+   }
 
    FREE(config);
    handle_table_remove(drv->htab, config_id);
-   pipe_mutex_unlock(drv->mutex);
+   mtx_unlock(&drv->mutex);
 
    return VA_STATUS_SUCCESS;
 }
@@ -314,22 +335,28 @@ vlVaQueryConfigAttributes(VADriverContextP ctx, VAConfigID config_id, VAProfile 
    if (!drv)
       return VA_STATUS_ERROR_INVALID_CONTEXT;
 
-   pipe_mutex_lock(drv->mutex);
+   mtx_lock(&drv->mutex);
    config = handle_table_get(drv->htab, config_id);
-   pipe_mutex_unlock(drv->mutex);
+   mtx_unlock(&drv->mutex);
 
    if (!config)
       return VA_STATUS_ERROR_INVALID_CONFIG;
 
    *profile = PipeToProfile(config->profile);
 
-   if (config->profile == PIPE_VIDEO_PROFILE_UNKNOWN) {
+   switch (config->entrypoint) {
+   case PIPE_VIDEO_ENTRYPOINT_BITSTREAM:
+      *entrypoint = VAEntrypointVLD;
+      break;
+   case PIPE_VIDEO_ENTRYPOINT_ENCODE:
+      *entrypoint = VAEntrypointEncSlice;
+      break;
+   case PIPE_VIDEO_ENTRYPOINT_UNKNOWN:
       *entrypoint = VAEntrypointVideoProc;
-      *num_attribs = 0;
-      return VA_STATUS_SUCCESS;
+      break;
+   default:
+      return VA_STATUS_ERROR_INVALID_CONFIG;
    }
-
-   *entrypoint = config->entrypoint;
 
    *num_attribs = 1;
    attrib_list[0].type = VAConfigAttribRTFormat;

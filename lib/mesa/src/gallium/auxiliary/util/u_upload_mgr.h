@@ -38,6 +38,9 @@
 struct pipe_context;
 struct pipe_resource;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * Create the upload manager.
@@ -50,6 +53,20 @@ struct pipe_resource;
 struct u_upload_mgr *
 u_upload_create(struct pipe_context *pipe, unsigned default_size,
                 unsigned bind, enum pipe_resource_usage usage);
+
+/**
+ * Create the default uploader for pipe_context. Only pipe_context::screen
+ * needs to be set for this to succeed.
+ */
+struct u_upload_mgr *
+u_upload_create_default(struct pipe_context *pipe);
+
+/**
+ * Create an uploader with identical parameters as another one, but using
+ * the given pipe_context instead.
+ */
+struct u_upload_mgr *
+u_upload_clone(struct pipe_context *pipe, struct u_upload_mgr *upload);
 
 /**
  * Destroy the upload manager.
@@ -102,23 +119,8 @@ void u_upload_data(struct u_upload_mgr *upload,
                    unsigned *out_offset,
                    struct pipe_resource **outbuf);
 
-
-/**
- * Allocate space in an upload buffer and copy an input buffer to it.
- *
- * Same as u_upload_data, except that the input data comes from a buffer
- * instead of a user pointer.
- */
-void u_upload_buffer(struct u_upload_mgr *upload,
-                     unsigned min_out_offset,
-                     unsigned offset,
-                     unsigned size,
-                     unsigned alignment,
-                     struct pipe_resource *inbuf,
-                     unsigned *out_offset,
-                     struct pipe_resource **outbuf);
-
-
-
+#ifdef __cplusplus
+} // extern "C" {
 #endif
 
+#endif

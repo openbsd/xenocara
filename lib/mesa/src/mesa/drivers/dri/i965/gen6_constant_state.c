@@ -24,81 +24,86 @@
 #include "brw_context.h"
 #include "brw_state.h"
 #include "brw_defines.h"
+#include "brw_program.h"
 #include "intel_batchbuffer.h"
+#include "intel_buffer_objects.h"
 #include "program/prog_parameter.h"
 
-void
-gen7_upload_constant_state(struct brw_context *brw,
-                           const struct brw_stage_state *stage_state,
-                           bool active, unsigned opcode)
+static uint32_t
+f_as_u32(float f)
 {
-   uint32_t mocs = brw->gen < 8 ? GEN7_MOCS_L3 : 0;
-
-   /* Disable if the shader stage is inactive or there are no push constants. */
-   active = active && stage_state->push_const_size != 0;
-
-   int dwords = brw->gen >= 8 ? 11 : 7;
-   BEGIN_BATCH(dwords);
-   OUT_BATCH(opcode << 16 | (dwords - 2));
-
-   /* Workaround for SKL+ (we use option #2 until we have a need for more
-    * constant buffers). This comes from the documentation for 3DSTATE_CONSTANT_*
-    *
-    * The driver must ensure The following case does not occur without a flush
-    * to the 3D engine: 3DSTATE_CONSTANT_* with buffer 3 read length equal to
-    * zero committed followed by a 3DSTATE_CONSTANT_* with buffer 0 read length
-    * not equal to zero committed. Possible ways to avoid this condition
-    * include:
-    *     1. always force buffer 3 to have a non zero read length
-    *     2. always force buffer 0 to a zero read length
-    */
-   if (brw->gen >= 9 && active) {
-      OUT_BATCH(0);
-      OUT_BATCH(stage_state->push_const_size);
-   } else {
-      OUT_BATCH(active ? stage_state->push_const_size : 0);
-      OUT_BATCH(0);
-   }
-   /* Pointer to the constant buffer.  Covered by the set of state flags
-    * from gen6_prepare_wm_contants
-    */
-   if (brw->gen >= 9 && active) {
-      OUT_BATCH(0);
-      OUT_BATCH(0);
-      OUT_BATCH(0);
-      OUT_BATCH(0);
-      /* XXX: When using buffers other than 0, you need to specify the
-       * graphics virtual address regardless of INSPM/debug bits
-       */
-      OUT_RELOC64(brw->batch.bo, I915_GEM_DOMAIN_RENDER, 0,
-                  stage_state->push_const_offset);
-      OUT_BATCH(0);
-      OUT_BATCH(0);
-   } else if (brw->gen >= 8) {
-      OUT_BATCH(active ? (stage_state->push_const_offset | mocs) : 0);
-      OUT_BATCH(0);
-      OUT_BATCH(0);
-      OUT_BATCH(0);
-      OUT_BATCH(0);
-      OUT_BATCH(0);
-      OUT_BATCH(0);
-      OUT_BATCH(0);
-   } else {
-      OUT_BATCH(active ? (stage_state->push_const_offset | mocs) : 0);
-      OUT_BATCH(0);
-      OUT_BATCH(0);
-      OUT_BATCH(0);
-   }
-
-   ADVANCE_BATCH();
-
-   /* On SKL+ the new constants don't take effect until the next corresponding
-    * 3DSTATE_BINDING_TABLE_POINTER_* command is parsed so we need to ensure
-    * that is sent
-    */
-   if (brw->gen >= 9)
-      brw->ctx.NewDriverState |= BRW_NEW_SURFACES;
+   union fi fi = { .f = f };
+   return fi.ui;
 }
+
+static uint32_t
+brw_param_value(struct brw_context *brw,
+                const struct gl_program *prog,
+                const struct brw_stage_state *stage_state,
+                uint32_t param)
+{
+   struct gl_context *ctx = &brw->ctx;
+
+   switch (BRW_PARAM_DOMAIN(param)) {
+   case BRW_PARAM_DOMAIN_BUILTIN:
+      if (param == BRW_PARAM_BUILTIN_ZERO) {
+         return 0;
+      } else if (BRW_PARAM_BUILTIN_IS_CLIP_PLANE(param)) {
+         gl_clip_plane *clip_planes = brw_select_clip_planes(ctx);
+         unsigned idx = BRW_PARAM_BUILTIN_CLIP_PLANE_IDX(param);
+         unsigned comp = BRW_PARAM_BUILTIN_CLIP_PLANE_COMP(param);
+         return ((uint32_t *)clip_planes[idx])[comp];
+      } else if (param >= BRW_PARAM_BUILTIN_TESS_LEVEL_OUTER_X &&
+                 param <= BRW_PARAM_BUILTIN_TESS_LEVEL_OUTER_W) {
+         unsigned i = param - BRW_PARAM_BUILTIN_TESS_LEVEL_OUTER_X;
+         return f_as_u32(ctx->TessCtrlProgram.patch_default_outer_level[i]);
+      } else if (param == BRW_PARAM_BUILTIN_TESS_LEVEL_INNER_X) {
+         return f_as_u32(ctx->TessCtrlProgram.patch_default_inner_level[0]);
+      } else if (param == BRW_PARAM_BUILTIN_TESS_LEVEL_INNER_Y) {
+         return f_as_u32(ctx->TessCtrlProgram.patch_default_inner_level[1]);
+      } else {
+         unreachable("Invalid param builtin");
+      }
+
+   case BRW_PARAM_DOMAIN_PARAMETER: {
+      unsigned idx = BRW_PARAM_PARAMETER_IDX(param);
+      unsigned comp = BRW_PARAM_PARAMETER_COMP(param);
+      assert(idx < prog->Parameters->NumParameters);
+      return prog->Parameters->ParameterValues[idx][comp].u;
+   }
+
+   case BRW_PARAM_DOMAIN_UNIFORM: {
+      unsigned idx = BRW_PARAM_UNIFORM_IDX(param);
+      assert(idx < prog->sh.data->NumUniformDataSlots);
+      return prog->sh.data->UniformDataSlots[idx].u;
+   }
+
+   case BRW_PARAM_DOMAIN_IMAGE: {
+      unsigned idx = BRW_PARAM_IMAGE_IDX(param);
+      unsigned offset = BRW_PARAM_IMAGE_OFFSET(param);
+      assert(offset < ARRAY_SIZE(stage_state->image_param));
+      return ((uint32_t *)&stage_state->image_param[idx])[offset];
+   }
+
+   default:
+      unreachable("Invalid param domain");
+   }
+}
+
+
+void
+brw_populate_constant_data(struct brw_context *brw,
+                           const struct gl_program *prog,
+                           const struct brw_stage_state *stage_state,
+                           void *void_dst,
+                           const uint32_t *param,
+                           unsigned nr_params)
+{
+   uint32_t *dst = void_dst;
+   for (unsigned i = 0; i < nr_params; i++)
+      dst[i] = brw_param_value(brw, prog, stage_state, param[i]);
+}
+
 
 /**
  * Creates a streamed BO containing the push constants for the VS or GS on
@@ -119,9 +124,9 @@ void
 gen6_upload_push_constants(struct brw_context *brw,
                            const struct gl_program *prog,
                            const struct brw_stage_prog_data *prog_data,
-                           struct brw_stage_state *stage_state,
-                           enum aub_state_struct_type type)
+                           struct brw_stage_state *stage_state)
 {
+   const struct gen_device_info *devinfo = &brw->screen->devinfo;
    struct gl_context *ctx = &brw->ctx;
 
    if (prog_data->nr_params == 0) {
@@ -134,12 +139,17 @@ gen6_upload_push_constants(struct brw_context *brw,
       if (prog)
          _mesa_load_state_parameters(ctx, prog->Parameters);
 
-      gl_constant_value *param;
       int i;
-
-      param = brw_state_batch(brw, type,
-                              prog_data->nr_params * sizeof(gl_constant_value),
-                              32, &stage_state->push_const_offset);
+      const int size = prog_data->nr_params * sizeof(gl_constant_value);
+      gl_constant_value *param;
+      if (devinfo->gen >= 8 || devinfo->is_haswell) {
+         param = intel_upload_space(brw, size, 32,
+                                    &stage_state->push_const_bo,
+                                    &stage_state->push_const_offset);
+      } else {
+         param = brw_state_batch(brw, size, 32,
+                                 &stage_state->push_const_offset);
+      }
 
       STATIC_ASSERT(sizeof(gl_constant_value) == sizeof(float));
 
@@ -149,9 +159,9 @@ gen6_upload_push_constants(struct brw_context *brw,
        * side effect of dereferencing uniforms, so _NEW_PROGRAM_CONSTANTS
        * wouldn't be set for them.
        */
-      for (i = 0; i < prog_data->nr_params; i++) {
-         param[i] = *prog_data->param[i];
-      }
+      brw_populate_constant_data(brw, prog, stage_state, param,
+                                 prog_data->param,
+                                 prog_data->nr_params);
 
       if (0) {
          fprintf(stderr, "%s constants:\n",
@@ -187,4 +197,142 @@ gen6_upload_push_constants(struct brw_context *brw,
        */
       assert(stage_state->push_const_size <= 32);
    }
+
+   stage_state->push_constants_dirty = true;
+}
+
+
+/**
+ * Creates a temporary BO containing the pull constant data for the shader
+ * stage, and the SURFACE_STATE struct that points at it.
+ *
+ * Pull constants are GLSL uniforms (and other constant data) beyond what we
+ * could fit as push constants, or that have variable-index array access
+ * (which is easiest to support using pull constants, and avoids filling
+ * register space with mostly-unused data).
+ *
+ * Compare this path to brw_curbe.c for gen4/5 push constants, and
+ * gen6_vs_state.c for gen6+ push constants.
+ */
+void
+brw_upload_pull_constants(struct brw_context *brw,
+                          GLbitfield64 brw_new_constbuf,
+                          const struct gl_program *prog,
+                          struct brw_stage_state *stage_state,
+                          const struct brw_stage_prog_data *prog_data)
+{
+   unsigned i;
+   uint32_t surf_index = prog_data->binding_table.pull_constants_start;
+
+   if (!prog_data->nr_pull_params) {
+      if (stage_state->surf_offset[surf_index]) {
+	 stage_state->surf_offset[surf_index] = 0;
+	 brw->ctx.NewDriverState |= brw_new_constbuf;
+      }
+      return;
+   }
+
+   /* Updates the ParamaterValues[i] pointers for all parameters of the
+    * basic type of PROGRAM_STATE_VAR.
+    */
+   _mesa_load_state_parameters(&brw->ctx, prog->Parameters);
+
+   /* BRW_NEW_*_PROG_DATA | _NEW_PROGRAM_CONSTANTS */
+   uint32_t size = prog_data->nr_pull_params * 4;
+   struct brw_bo *const_bo = NULL;
+   uint32_t const_offset;
+   gl_constant_value *constants = intel_upload_space(brw, size, 64,
+                                                     &const_bo, &const_offset);
+
+   STATIC_ASSERT(sizeof(gl_constant_value) == sizeof(float));
+
+   brw_populate_constant_data(brw, prog, stage_state, constants,
+                              prog_data->pull_param,
+                              prog_data->nr_pull_params);
+
+   if (0) {
+      for (i = 0; i < ALIGN(prog_data->nr_pull_params, 4) / 4; i++) {
+	 const gl_constant_value *row = &constants[i * 4];
+	 fprintf(stderr, "const surface %3d: %4.3f %4.3f %4.3f %4.3f\n",
+                 i, row[0].f, row[1].f, row[2].f, row[3].f);
+      }
+   }
+
+   brw_create_constant_surface(brw, const_bo, const_offset, size,
+                               &stage_state->surf_offset[surf_index]);
+   brw_bo_unreference(const_bo);
+
+   brw->ctx.NewDriverState |= brw_new_constbuf;
+}
+
+/**
+ * Creates a region containing the push constants for the CS on gen7+.
+ *
+ * Push constants are constant values (such as GLSL uniforms) that are
+ * pre-loaded into a shader stage's register space at thread spawn time.
+ *
+ * For other stages, see brw_curbe.c:brw_upload_constant_buffer for the
+ * equivalent gen4/5 code and gen6_vs_state.c:gen6_upload_push_constants for
+ * gen6+.
+ */
+void
+brw_upload_cs_push_constants(struct brw_context *brw,
+                             const struct gl_program *prog,
+                             const struct brw_cs_prog_data *cs_prog_data,
+                             struct brw_stage_state *stage_state)
+{
+   struct gl_context *ctx = &brw->ctx;
+   const struct brw_stage_prog_data *prog_data =
+      (struct brw_stage_prog_data*) cs_prog_data;
+
+   /* Updates the ParamaterValues[i] pointers for all parameters of the
+    * basic type of PROGRAM_STATE_VAR.
+    */
+   /* XXX: Should this happen somewhere before to get our state flag set? */
+   _mesa_load_state_parameters(ctx, prog->Parameters);
+
+   if (cs_prog_data->push.total.size == 0) {
+      stage_state->push_const_size = 0;
+      return;
+   }
+
+
+   uint32_t *param =
+      brw_state_batch(brw, ALIGN(cs_prog_data->push.total.size, 64),
+                      64, &stage_state->push_const_offset);
+   assert(param);
+
+   STATIC_ASSERT(sizeof(gl_constant_value) == sizeof(float));
+
+   if (cs_prog_data->push.cross_thread.size > 0) {
+      uint32_t *param_copy = param;
+      for (unsigned i = 0;
+           i < cs_prog_data->push.cross_thread.dwords;
+           i++) {
+         assert(prog_data->param[i] != BRW_PARAM_BUILTIN_THREAD_LOCAL_ID);
+         param_copy[i] = brw_param_value(brw, prog, stage_state,
+                                         prog_data->param[i]);
+      }
+   }
+
+   if (cs_prog_data->push.per_thread.size > 0) {
+      for (unsigned t = 0; t < cs_prog_data->threads; t++) {
+         unsigned dst =
+            8 * (cs_prog_data->push.per_thread.regs * t +
+                 cs_prog_data->push.cross_thread.regs);
+         unsigned src = cs_prog_data->push.cross_thread.dwords;
+         for ( ; src < prog_data->nr_params; src++, dst++) {
+            if (prog_data->param[src] == BRW_PARAM_BUILTIN_THREAD_LOCAL_ID) {
+               param[dst] = t * cs_prog_data->simd_size;
+            } else {
+               param[dst] = brw_param_value(brw, prog, stage_state,
+                                            prog_data->param[src]);
+            }
+         }
+      }
+   }
+
+   stage_state->push_const_size =
+      cs_prog_data->push.cross_thread.regs +
+      cs_prog_data->push.per_thread.regs;
 }

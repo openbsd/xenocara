@@ -112,11 +112,11 @@ static bool check_urb_layout(struct brw_context *brw)
 /* Most minimal update, forces re-emit of URB fence packet after GS
  * unit turned on/off.
  */
-static void recalculate_urb_fence( struct brw_context *brw )
+void
+brw_calculate_urb_fence(struct brw_context *brw, unsigned csize,
+                        unsigned vsize, unsigned sfsize)
 {
-   GLuint csize = brw->curbe.total_size;
-   GLuint vsize = brw_vue_prog_data(brw->vs.base.prog_data)->urb_entry_size;
-   GLuint sfsize = brw->sf.prog_data->urb_entry_size;
+   const struct gen_device_info *devinfo = &brw->screen->devinfo;
 
    if (csize < limits[CS].min_entry_size)
       csize = limits[CS].min_entry_size;
@@ -147,7 +147,7 @@ static void recalculate_urb_fence( struct brw_context *brw )
 
       brw->urb.constrained = 0;
 
-      if (brw->gen == 5) {
+      if (devinfo->gen == 5) {
          brw->urb.nr_vs_entries = 128;
          brw->urb.nr_sf_entries = 48;
          if (check_urb_layout(brw)) {
@@ -157,7 +157,7 @@ static void recalculate_urb_fence( struct brw_context *brw )
             brw->urb.nr_vs_entries = limits[VS].preferred_nr_entries;
             brw->urb.nr_sf_entries = limits[SF].preferred_nr_entries;
          }
-      } else if (brw->is_g4x) {
+      } else if (devinfo->is_g4x) {
 	 brw->urb.nr_vs_entries = 64;
 	 if (check_urb_layout(brw)) {
 	    goto done;
@@ -208,12 +208,19 @@ done:
    }
 }
 
+static void recalculate_urb_fence( struct brw_context *brw )
+{
+   brw_calculate_urb_fence(brw, brw->curbe.total_size,
+                           brw_vue_prog_data(brw->vs.base.prog_data)->urb_entry_size,
+                           brw->sf.prog_data->urb_entry_size);
+}
+
 
 const struct brw_tracked_state brw_recalculate_urb_fence = {
    .dirty = {
       .mesa = 0,
       .brw = BRW_NEW_BLORP |
-             BRW_NEW_CURBE_OFFSETS |
+             BRW_NEW_PUSH_CONSTANT_ALLOCATION |
              BRW_NEW_SF_PROG_DATA |
              BRW_NEW_VS_PROG_DATA,
    },
@@ -257,5 +264,5 @@ void brw_upload_urb_fence(struct brw_context *brw)
       while (--pad);
    }
 
-   BRW_BATCH_STRUCT(brw, &uf);
+   intel_batchbuffer_data(brw, &uf, sizeof(uf), RENDER_RING);
 }

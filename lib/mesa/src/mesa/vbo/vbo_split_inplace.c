@@ -42,7 +42,7 @@
  */
 struct split_context {
    struct gl_context *ctx;
-   const struct gl_client_array **array;
+   const struct gl_vertex_array **array;
    const struct _mesa_prim *prim;
    GLuint nr_prims;
    const struct _mesa_index_buffer *ib;
@@ -63,7 +63,7 @@ struct split_context {
 static void flush_vertex( struct split_context *split )
 {
    struct gl_context *ctx = split->ctx;
-   const struct gl_client_array **saved_arrays = ctx->Array._DrawArrays;
+   const struct gl_vertex_array **saved_arrays = ctx->Array._DrawArrays;
    struct _mesa_index_buffer ib;
    GLuint i;
 
@@ -75,7 +75,7 @@ static void flush_vertex( struct split_context *split )
 
       ib.count = split->max_index - split->min_index + 1;
       ib.ptr = (const void *)((const char *)ib.ptr + 
-                              split->min_index * _mesa_sizeof_type(ib.type));
+                              split->min_index * ib.index_size);
 
       /* Rebase the primitives to save index buffer entries. */
       for (i = 0; i < split->dstprim_nr; i++)
@@ -223,7 +223,7 @@ static void split_prims( struct split_context *split)
 	    elts[j] = prim->start + j;
 
 	 ib.count = count;
-	 ib.type = GL_UNSIGNED_INT;
+	 ib.index_size = 4;
 	 ib.obj = split->ctx->Shared->NullBufferObj;
 	 ib.ptr = elts;
 
@@ -262,7 +262,7 @@ static void split_prims( struct split_context *split)
 
 
 void vbo_split_inplace( struct gl_context *ctx,
-			const struct gl_client_array *arrays[],
+			const struct gl_vertex_array *arrays[],
 			const struct _mesa_prim *prim,
 			GLuint nr_prims,
 			const struct _mesa_index_buffer *ib,

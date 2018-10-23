@@ -165,7 +165,7 @@ lp_setup_rasterize_scene( struct lp_setup_context *setup )
    if (setup->last_fence)
       setup->last_fence->issued = TRUE;
 
-   pipe_mutex_lock(screen->rast_mutex);
+   mtx_lock(&screen->rast_mutex);
 
    /* FIXME: We enqueue the scene then wait on the rasterizer to finish.
     * This means we never actually run any vertex stuff in parallel to
@@ -179,7 +179,7 @@ lp_setup_rasterize_scene( struct lp_setup_context *setup )
     */
    lp_rast_queue_scene(screen->rast, scene);
    lp_rast_finish(screen->rast);
-   pipe_mutex_unlock(screen->rast_mutex);
+   mtx_unlock(&screen->rast_mutex);
 
    lp_scene_end_rasterization(setup->scene);
    lp_setup_reset( setup );
@@ -1347,6 +1347,10 @@ lp_setup_create( struct pipe_context *pipe,
    
    setup->dirty = ~0;
 
+   /* Initialize empty default fb correctly, so the rect is empty */
+   setup->framebuffer.x1 = -1;
+   setup->framebuffer.y1 = -1;
+
    return setup;
 
 no_scenes:
@@ -1376,6 +1380,7 @@ lp_setup_begin_query(struct lp_setup_context *setup,
 
    if (!(pq->type == PIPE_QUERY_OCCLUSION_COUNTER ||
          pq->type == PIPE_QUERY_OCCLUSION_PREDICATE ||
+         pq->type == PIPE_QUERY_OCCLUSION_PREDICATE_CONSERVATIVE ||
          pq->type == PIPE_QUERY_PIPELINE_STATISTICS))
       return;
 
@@ -1426,6 +1431,7 @@ lp_setup_end_query(struct lp_setup_context *setup, struct llvmpipe_query *pq)
 
       if (pq->type == PIPE_QUERY_OCCLUSION_COUNTER ||
           pq->type == PIPE_QUERY_OCCLUSION_PREDICATE ||
+          pq->type == PIPE_QUERY_OCCLUSION_PREDICATE_CONSERVATIVE ||
           pq->type == PIPE_QUERY_PIPELINE_STATISTICS ||
           pq->type == PIPE_QUERY_TIMESTAMP) {
          if (pq->type == PIPE_QUERY_TIMESTAMP &&
@@ -1462,6 +1468,7 @@ fail:
     */
    if (pq->type == PIPE_QUERY_OCCLUSION_COUNTER ||
       pq->type == PIPE_QUERY_OCCLUSION_PREDICATE ||
+      pq->type == PIPE_QUERY_OCCLUSION_PREDICATE_CONSERVATIVE ||
       pq->type == PIPE_QUERY_PIPELINE_STATISTICS) {
       unsigned i;
 

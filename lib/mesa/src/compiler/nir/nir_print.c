@@ -31,10 +31,6 @@
 #include <stdlib.h>
 #include <inttypes.h> /* for PRIx64 macro */
 
-#if defined(_WIN32) && !defined(snprintf)
-#define snprintf _snprintf
-#endif
-
 static void
 print_tabs(unsigned num_tabs, FILE *fp)
 {
@@ -261,7 +257,7 @@ static const char *
 get_var_name(nir_variable *var, print_state *state)
 {
    if (state->ht == NULL)
-      return var->name;
+      return var->name ? var->name : "unnamed";
 
    assert(state->syms);
 
@@ -295,30 +291,49 @@ static void
 print_constant(nir_constant *c, const struct glsl_type *type, print_state *state)
 {
    FILE *fp = state->fp;
-   unsigned total_elems = glsl_get_components(type);
-   unsigned i;
+   const unsigned rows = glsl_get_vector_elements(type);
+   const unsigned cols = glsl_get_matrix_columns(type);
+   unsigned i, j;
 
    switch (glsl_get_base_type(type)) {
    case GLSL_TYPE_UINT:
    case GLSL_TYPE_INT:
    case GLSL_TYPE_BOOL:
-      for (i = 0; i < total_elems; i++) {
+      /* Only float base types can be matrices. */
+      assert(cols == 1);
+
+      for (i = 0; i < rows; i++) {
          if (i > 0) fprintf(fp, ", ");
-         fprintf(fp, "0x%08x", c->value.u[i]);
+         fprintf(fp, "0x%08x", c->values[0].u32[i]);
       }
       break;
 
    case GLSL_TYPE_FLOAT:
-      for (i = 0; i < total_elems; i++) {
-         if (i > 0) fprintf(fp, ", ");
-         fprintf(fp, "%f", c->value.f[i]);
+      for (i = 0; i < cols; i++) {
+         for (j = 0; j < rows; j++) {
+            if (i + j > 0) fprintf(fp, ", ");
+            fprintf(fp, "%f", c->values[i].f32[j]);
+         }
       }
       break;
 
    case GLSL_TYPE_DOUBLE:
-      for (i = 0; i < total_elems; i++) {
+      for (i = 0; i < cols; i++) {
+         for (j = 0; j < rows; j++) {
+            if (i + j > 0) fprintf(fp, ", ");
+            fprintf(fp, "%f", c->values[i].f64[j]);
+         }
+      }
+      break;
+
+   case GLSL_TYPE_UINT64:
+   case GLSL_TYPE_INT64:
+      /* Only float base types can be matrices. */
+      assert(cols == 1);
+
+      for (i = 0; i < cols; i++) {
          if (i > 0) fprintf(fp, ", ");
-         fprintf(fp, "%f", c->value.d[i]);
+         fprintf(fp, "0x%08" PRIx64, c->values[0].u64[i]);
       }
       break;
 
@@ -401,7 +416,7 @@ print_var_decl(nir_variable *var, print_state *state)
       const char *loc = NULL;
       char buf[4];
 
-      switch (state->shader->stage) {
+      switch (state->shader->info.stage) {
       case MESA_SHADER_VERTEX:
          if (var->data.mode == nir_var_shader_in)
             loc = gl_vert_attrib_name(var->data.location);
@@ -432,7 +447,32 @@ print_var_decl(nir_variable *var, print_state *state)
          loc = buf;
       }
 
-      fprintf(fp, " (%s, %u)", loc, var->data.driver_location);
+      /* For shader I/O vars that have been split to components or packed,
+       * print the fractional location within the input/output.
+       */
+      unsigned int num_components =
+         glsl_get_components(glsl_without_array(var->type));
+      const char *components = NULL;
+      char components_local[6] = {'.' /* the rest is 0-filled */};
+      switch (var->data.mode) {
+      case nir_var_shader_in:
+      case nir_var_shader_out:
+         if (num_components < 4 && num_components != 0) {
+            const char *xyzw = "xyzw";
+            for (int i = 0; i < num_components; i++)
+               components_local[i + 1] = xyzw[i + var->data.location_frac];
+
+            components = components_local;
+         }
+         break;
+      default:
+         break;
+      }
+
+      fprintf(fp, " (%s%s, %u, %u)%s", loc,
+              components ? components : "",
+              var->data.driver_location, var->data.binding,
+              var->data.compact ? " compact" : "");
    }
 
    if (var->constant_initializer) {
@@ -698,8 +738,8 @@ print_tex_instr(nir_tex_instr *instr, print_state *state)
       case nir_tex_src_projector:
          fprintf(fp, "(projector)");
          break;
-      case nir_tex_src_comparitor:
-         fprintf(fp, "(comparitor)");
+      case nir_tex_src_comparator:
+         fprintf(fp, "(comparator)");
          break;
       case nir_tex_src_offset:
          fprintf(fp, "(offset)");
@@ -1141,13 +1181,26 @@ nir_print_shader_annotated(nir_shader *shader, FILE *fp,
 
    state.annotations = annotations;
 
-   fprintf(fp, "shader: %s\n", gl_shader_stage_name(shader->stage));
+   fprintf(fp, "shader: %s\n", gl_shader_stage_name(shader->info.stage));
 
    if (shader->info.name)
       fprintf(fp, "name: %s\n", shader->info.name);
 
    if (shader->info.label)
       fprintf(fp, "label: %s\n", shader->info.label);
+
+   switch (shader->info.stage) {
+   case MESA_SHADER_COMPUTE:
+      fprintf(fp, "local-size: %u, %u, %u%s\n",
+              shader->info.cs.local_size[0],
+              shader->info.cs.local_size[1],
+              shader->info.cs.local_size[2],
+              shader->info.cs.local_size_variable ? " (variable)" : "");
+      fprintf(fp, "shared-size: %u\n", shader->info.cs.shared_size);
+      break;
+   default:
+      break;
+   }
 
    fprintf(fp, "inputs: %u\n", shader->num_inputs);
    fprintf(fp, "outputs: %u\n", shader->num_outputs);

@@ -57,11 +57,14 @@ struct fd_gmem_stateobj {
 	uint16_t bin_w, nbins_x;
 	uint16_t minx, miny;
 	uint16_t width, height;
+	uint16_t maxpw, maxph;   /* maximum pipe width/height */
 };
 
 struct fd_batch;
 
 void fd_gmem_render_tiles(struct fd_batch *batch);
+void fd_gmem_render_noop(struct fd_batch *batch);
+void fd_gmem_flush_compute(struct fd_batch *batch);
 
 bool fd_gmem_needs_restore(struct fd_batch *batch, struct fd_tile *tile,
 		uint32_t buffers);

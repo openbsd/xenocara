@@ -168,6 +168,7 @@ private:
    void find_lsb_to_float_cast(ir_expression *ir);
    void find_msb_to_float_cast(ir_expression *ir);
    void imul_high_to_mul(ir_expression *ir);
+   void sqrt_to_abs_sqrt(ir_expression *ir);
 
    ir_expression *_carry(operand a, operand b);
 };
@@ -192,6 +193,7 @@ void
 lower_instructions_visitor::sub_to_add_neg(ir_expression *ir)
 {
    ir->operation = ir_binop_add;
+   ir->init_num_operands();
    ir->operands[1] = new(ir) ir_expression(ir_unop_neg, ir->operands[1]->type,
 					   ir->operands[1], NULL);
    this->progress = true;
@@ -210,6 +212,7 @@ lower_instructions_visitor::div_to_mul_rcp(ir_expression *ir)
 
    /* op0 / op1 -> op0 * (1.0 / op1) */
    ir->operation = ir_binop_mul;
+   ir->init_num_operands();
    ir->operands[1] = expr;
 
    this->progress = true;
@@ -260,6 +263,7 @@ lower_instructions_visitor::int_div_to_mul_rcp(ir_expression *ir)
       ir->operation = ir_unop_i2u;
       ir->operands[0] = new(ir) ir_expression(ir_unop_f2i, op0);
    }
+   ir->init_num_operands();
    ir->operands[1] = NULL;
 
    this->progress = true;
@@ -271,6 +275,7 @@ lower_instructions_visitor::exp_to_exp2(ir_expression *ir)
    ir_constant *log2_e = new(ir) ir_constant(float(M_LOG2E));
 
    ir->operation = ir_unop_exp2;
+   ir->init_num_operands();
    ir->operands[0] = new(ir) ir_expression(ir_binop_mul, ir->operands[0]->type,
 					   ir->operands[0], log2_e);
    this->progress = true;
@@ -284,6 +289,7 @@ lower_instructions_visitor::pow_to_exp2(ir_expression *ir)
 			    ir->operands[0]);
 
    ir->operation = ir_unop_exp2;
+   ir->init_num_operands();
    ir->operands[0] = new(ir) ir_expression(ir_binop_mul, ir->operands[1]->type,
 					   ir->operands[1], log2_x);
    ir->operands[1] = NULL;
@@ -294,6 +300,7 @@ void
 lower_instructions_visitor::log_to_log2(ir_expression *ir)
 {
    ir->operation = ir_binop_mul;
+   ir->init_num_operands();
    ir->operands[0] = new(ir) ir_expression(ir_unop_log2, ir->operands[0]->type,
 					   ir->operands[0], NULL);
    ir->operands[1] = new(ir) ir_constant(float(1.0 / M_LOG2E));
@@ -312,10 +319,10 @@ lower_instructions_visitor::mod_to_floor(ir_expression *ir)
 
    ir_assignment *const assign_x =
       new(ir) ir_assignment(new(ir) ir_dereference_variable(x),
-                            ir->operands[0], NULL);
+                            ir->operands[0]);
    ir_assignment *const assign_y =
       new(ir) ir_assignment(new(ir) ir_dereference_variable(y),
-                            ir->operands[1], NULL);
+                            ir->operands[1]);
 
    this->base_ir->insert_before(assign_x);
    this->base_ir->insert_before(assign_y);
@@ -344,6 +351,7 @@ lower_instructions_visitor::mod_to_floor(ir_expression *ir)
                             floor_expr);
 
    ir->operation = ir_binop_sub;
+   ir->init_num_operands();
    ir->operands[0] = new(ir) ir_dereference_variable(x);
    ir->operands[1] = mul_expr;
    this->progress = true;
@@ -357,13 +365,21 @@ lower_instructions_visitor::ldexp_to_arith(ir_expression *ir)
     * into
     *
     *    extracted_biased_exp = rshift(bitcast_f2i(abs(x)), exp_shift);
-    *    resulting_biased_exp = extracted_biased_exp + exp;
+    *    resulting_biased_exp = min(extracted_biased_exp + exp, 255);
     *
-    *    if (resulting_biased_exp < 1 || x == 0.0f) {
-    *       return copysign(0.0, x);
+    *    if (extracted_biased_exp >= 255)
+    *       return x; // +/-inf, NaN
+    *
+    *    sign_mantissa = bitcast_f2u(x) & sign_mantissa_mask;
+    *
+    *    if (min(resulting_biased_exp, extracted_biased_exp) < 1)
+    *       resulting_biased_exp = 0;
+    *    if (resulting_biased_exp >= 255 ||
+    *        min(resulting_biased_exp, extracted_biased_exp) < 1) {
+    *       sign_mantissa &= sign_mask;
     *    }
     *
-    *    return bitcast_u2f((bitcast_f2u(x) & sign_mantissa_mask) |
+    *    return bitcast_u2f(sign_mantissa |
     *                       lshift(i2u(resulting_biased_exp), exp_shift));
     *
     * which we can't actually implement as such, since the GLSL IR doesn't
@@ -371,46 +387,58 @@ lower_instructions_visitor::ldexp_to_arith(ir_expression *ir)
     * using conditional-select:
     *
     *    extracted_biased_exp = rshift(bitcast_f2i(abs(x)), exp_shift);
-    *    resulting_biased_exp = extracted_biased_exp + exp;
+    *    resulting_biased_exp = min(extracted_biased_exp + exp, 255);
     *
-    *    is_not_zero_or_underflow = logic_and(nequal(x, 0.0f),
-    *                                         gequal(resulting_biased_exp, 1);
-    *    x = csel(is_not_zero_or_underflow, x, copysign(0.0f, x));
-    *    resulting_biased_exp = csel(is_not_zero_or_underflow,
-    *                                resulting_biased_exp, 0);
+    *    sign_mantissa = bitcast_f2u(x) & sign_mantissa_mask;
     *
-    *    return bitcast_u2f((bitcast_f2u(x) & sign_mantissa_mask) |
-    *                       lshift(i2u(resulting_biased_exp), exp_shift));
+    *    flush_to_zero = lequal(min(resulting_biased_exp, extracted_biased_exp), 0);
+    *    resulting_biased_exp = csel(flush_to_zero, 0, resulting_biased_exp)
+    *    zero_mantissa = logic_or(flush_to_zero,
+    *                             gequal(resulting_biased_exp, 255));
+    *    sign_mantissa = csel(zero_mantissa, sign_mantissa & sign_mask, sign_mantissa);
+    *
+    *    result = sign_mantissa |
+    *             lshift(i2u(resulting_biased_exp), exp_shift));
+    *
+    *    return csel(extracted_biased_exp >= 255, x, bitcast_u2f(result));
+    *
+    * The definition of ldexp in the GLSL spec says:
+    *
+    *    "If this product is too large to be represented in the
+    *     floating-point type, the result is undefined."
+    *
+    * However, the definition of ldexp in the GLSL ES spec does not contain
+    * this sentence, so we do need to handle overflow correctly.
+    *
+    * There is additional language limiting the defined range of exp, but this
+    * is merely to allow implementations that store 2^exp in a temporary
+    * variable.
     */
 
    const unsigned vec_elem = ir->type->vector_elements;
 
    /* Types */
    const glsl_type *ivec = glsl_type::get_instance(GLSL_TYPE_INT, vec_elem, 1);
+   const glsl_type *uvec = glsl_type::get_instance(GLSL_TYPE_UINT, vec_elem, 1);
    const glsl_type *bvec = glsl_type::get_instance(GLSL_TYPE_BOOL, vec_elem, 1);
-
-   /* Constants */
-   ir_constant *zeroi = ir_constant::zero(ir, ivec);
-
-   ir_constant *sign_mask = new(ir) ir_constant(0x80000000u, vec_elem);
-
-   ir_constant *exp_shift = new(ir) ir_constant(23, vec_elem);
-   ir_constant *exp_width = new(ir) ir_constant(8, vec_elem);
 
    /* Temporary variables */
    ir_variable *x = new(ir) ir_variable(ir->type, "x", ir_var_temporary);
    ir_variable *exp = new(ir) ir_variable(ivec, "exp", ir_var_temporary);
-
-   ir_variable *zero_sign_x = new(ir) ir_variable(ir->type, "zero_sign_x",
-                                                  ir_var_temporary);
+   ir_variable *result = new(ir) ir_variable(uvec, "result", ir_var_temporary);
 
    ir_variable *extracted_biased_exp =
       new(ir) ir_variable(ivec, "extracted_biased_exp", ir_var_temporary);
    ir_variable *resulting_biased_exp =
       new(ir) ir_variable(ivec, "resulting_biased_exp", ir_var_temporary);
 
-   ir_variable *is_not_zero_or_underflow =
-      new(ir) ir_variable(bvec, "is_not_zero_or_underflow", ir_var_temporary);
+   ir_variable *sign_mantissa =
+      new(ir) ir_variable(uvec, "sign_mantissa", ir_var_temporary);
+
+   ir_variable *flush_to_zero =
+      new(ir) ir_variable(bvec, "flush_to_zero", ir_var_temporary);
+   ir_variable *zero_mantissa =
+      new(ir) ir_variable(bvec, "zero_mantissa", ir_var_temporary);
 
    ir_instruction &i = *base_ir;
 
@@ -423,45 +451,82 @@ lower_instructions_visitor::ldexp_to_arith(ir_expression *ir)
    /* Extract the biased exponent from <x>. */
    i.insert_before(extracted_biased_exp);
    i.insert_before(assign(extracted_biased_exp,
-                          rshift(bitcast_f2i(abs(x)), exp_shift)));
+                          rshift(bitcast_f2i(abs(x)),
+                                 new(ir) ir_constant(23, vec_elem))));
 
+   /* The definition of ldexp in the GLSL 4.60 spec says:
+    *
+    *    "If exp is greater than +128 (single-precision) or +1024
+    *     (double-precision), the value returned is undefined. If exp is less
+    *     than -126 (single-precision) or -1022 (double-precision), the value
+    *     returned may be flushed to zero."
+    *
+    * So we do not have to guard against the possibility of addition overflow,
+    * which could happen when exp is close to INT_MAX. Addition underflow
+    * cannot happen (the worst case is 0 + (-INT_MAX)).
+    */
    i.insert_before(resulting_biased_exp);
    i.insert_before(assign(resulting_biased_exp,
-                          add(extracted_biased_exp, exp)));
+                          min2(add(extracted_biased_exp, exp),
+                               new(ir) ir_constant(255, vec_elem))));
 
-   /* Test if result is ±0.0, subnormal, or underflow by checking if the
-    * resulting biased exponent would be less than 0x1. If so, the result is
-    * 0.0 with the sign of x. (Actually, invert the conditions so that
-    * immediate values are the second arguments, which is better for i965)
-    */
-   i.insert_before(zero_sign_x);
-   i.insert_before(assign(zero_sign_x,
-                          bitcast_u2f(bit_and(bitcast_f2u(x), sign_mask))));
+   i.insert_before(sign_mantissa);
+   i.insert_before(assign(sign_mantissa,
+                          bit_and(bitcast_f2u(x),
+                                  new(ir) ir_constant(0x807fffffu, vec_elem))));
 
-   i.insert_before(is_not_zero_or_underflow);
-   i.insert_before(assign(is_not_zero_or_underflow,
-                          logic_and(nequal(x, new(ir) ir_constant(0.0f, vec_elem)),
-                                    gequal(resulting_biased_exp,
-                                           new(ir) ir_constant(0x1, vec_elem)))));
-   i.insert_before(assign(x, csel(is_not_zero_or_underflow,
-                                  x, zero_sign_x)));
-   i.insert_before(assign(resulting_biased_exp,
-                          csel(is_not_zero_or_underflow,
-                               resulting_biased_exp, zeroi)));
-
-   /* We could test for overflows by checking if the resulting biased exponent
-    * would be greater than 0xFE. Turns out we don't need to because the GLSL
-    * spec says:
+   /* We flush to zero if the original or resulting biased exponent is 0,
+    * indicating a +/-0.0 or subnormal input or output.
     *
-    *    "If this product is too large to be represented in the
-    *     floating-point type, the result is undefined."
+    * The mantissa is set to 0 if the resulting biased exponent is 255, since
+    * an overflow should produce a +/-inf result.
+    *
+    * Note that NaN inputs are handled separately.
     */
+   i.insert_before(flush_to_zero);
+   i.insert_before(assign(flush_to_zero,
+                          lequal(min2(resulting_biased_exp,
+                                      extracted_biased_exp),
+                                 ir_constant::zero(ir, ivec))));
+   i.insert_before(assign(resulting_biased_exp,
+                          csel(flush_to_zero,
+                               ir_constant::zero(ir, ivec),
+                               resulting_biased_exp)));
 
-   ir_constant *exp_shift_clone = exp_shift->clone(ir, NULL);
-   ir->operation = ir_unop_bitcast_i2f;
-   ir->operands[0] = bitfield_insert(bitcast_f2i(x), resulting_biased_exp,
-                                     exp_shift_clone, exp_width);
-   ir->operands[1] = NULL;
+   i.insert_before(zero_mantissa);
+   i.insert_before(assign(zero_mantissa,
+                          logic_or(flush_to_zero,
+                                   equal(resulting_biased_exp,
+                                         new(ir) ir_constant(255, vec_elem)))));
+   i.insert_before(assign(sign_mantissa,
+                          csel(zero_mantissa,
+                               bit_and(sign_mantissa,
+                                       new(ir) ir_constant(0x80000000u, vec_elem)),
+                               sign_mantissa)));
+
+   /* Don't generate new IR that would need to be lowered in an additional
+    * pass.
+    */
+   i.insert_before(result);
+   if (!lowering(INSERT_TO_SHIFTS)) {
+      i.insert_before(assign(result,
+                             bitfield_insert(sign_mantissa,
+                                             i2u(resulting_biased_exp),
+                                             new(ir) ir_constant(23u, vec_elem),
+                                             new(ir) ir_constant(8u, vec_elem))));
+   } else {
+      i.insert_before(assign(result,
+                             bit_or(sign_mantissa,
+                                    lshift(i2u(resulting_biased_exp),
+                                           new(ir) ir_constant(23, vec_elem)))));
+   }
+
+   ir->operation = ir_triop_csel;
+   ir->init_num_operands();
+   ir->operands[0] = gequal(extracted_biased_exp,
+                            new(ir) ir_constant(255, vec_elem));
+   ir->operands[1] = new(ir) ir_dereference_variable(x);
+   ir->operands[2] = bitcast_u2f(result);
 
    this->progress = true;
 }
@@ -583,6 +648,7 @@ lower_instructions_visitor::dldexp_to_arith(ir_expression *ir)
    }
 
    ir->operation = ir_quadop_vector;
+   ir->init_num_operands();
    ir->operands[0] = results[0];
    ir->operands[1] = results[1];
    ir->operands[2] = results[2];
@@ -659,6 +725,7 @@ lower_instructions_visitor::dfrexp_sig_to_arith(ir_expression *ir)
 
    /* Put the dvec back together */
    ir->operation = ir_quadop_vector;
+   ir->init_num_operands();
    ir->operands[0] = results[0];
    ir->operands[1] = results[1];
    ir->operands[2] = results[2];
@@ -712,6 +779,7 @@ lower_instructions_visitor::dfrexp_exp_to_arith(ir_expression *ir)
 
    /* For non-zero inputs, shift the exponent down and apply bias. */
    ir->operation = ir_triop_csel;
+   ir->init_num_operands();
    ir->operands[0] = new(ir) ir_dereference_variable(is_not_zero);
    ir->operands[1] = add(exponent_bias, u2i(rshift(high_words, exponent_shift)));
    ir->operands[2] = izero;
@@ -732,6 +800,7 @@ lower_instructions_visitor::carry_to_arith(ir_expression *ir)
 
    ir_rvalue *x_clone = ir->operands[0]->clone(ir, NULL);
    ir->operation = ir_unop_i2u;
+   ir->init_num_operands();
    ir->operands[0] = b2i(less(add(ir->operands[0], ir->operands[1]), x_clone));
    ir->operands[1] = NULL;
 
@@ -749,6 +818,7 @@ lower_instructions_visitor::borrow_to_arith(ir_expression *ir)
     */
 
    ir->operation = ir_unop_i2u;
+   ir->init_num_operands();
    ir->operands[0] = b2i(less(ir->operands[0], ir->operands[1]));
    ir->operands[1] = NULL;
 
@@ -765,6 +835,7 @@ lower_instructions_visitor::sat_to_clamp(ir_expression *ir)
     */
 
    ir->operation = ir_binop_min;
+   ir->init_num_operands();
    ir->operands[0] = new(ir) ir_expression(ir_binop_max, ir->operands[0]->type,
                                            ir->operands[0],
                                            new(ir) ir_constant(0.0f));
@@ -795,6 +866,7 @@ lower_instructions_visitor::double_dot_to_fma(ir_expression *ir)
    }
 
    ir->operation = ir_triop_fma;
+   ir->init_num_operands();
    ir->operands[0] = swizzle(ir->operands[0], 0, 1);
    ir->operands[1] = swizzle(ir->operands[1], 0, 1);
    ir->operands[2] = new(ir) ir_dereference_variable(temp);
@@ -821,6 +893,7 @@ lower_instructions_visitor::double_lrp(ir_expression *ir)
    }
 
    ir->operation = ir_triop_fma;
+   ir->init_num_operands();
    ir->operands[0] = swizzle(op2, swizval, op0->type->vector_elements);
    ir->operands[2] = mul(sub(one, op2->clone(ir, NULL)), op0);
 
@@ -845,6 +918,7 @@ lower_instructions_visitor::dceil_to_dfrac(ir_expression *ir)
    i.insert_before(assign(frtemp, fract(ir->operands[0])));
 
    ir->operation = ir_binop_add;
+   ir->init_num_operands();
    ir->operands[0] = sub(ir->operands[0]->clone(ir, NULL), frtemp);
    ir->operands[1] = csel(nequal(frtemp, zero), one, zero->clone(ir, NULL));
 
@@ -859,6 +933,7 @@ lower_instructions_visitor::dfloor_to_dfrac(ir_expression *ir)
     * result = sub(x, frtemp);
     */
    ir->operation = ir_binop_sub;
+   ir->init_num_operands();
    ir->operands[1] = fract(ir->operands[0]->clone(ir, NULL));
 
    this->progress = true;
@@ -898,6 +973,7 @@ lower_instructions_visitor::dround_even_to_dfrac(ir_expression *ir)
    i.insert_before(assign(t2, sub(temp, frtemp)));
 
    ir->operation = ir_triop_csel;
+   ir->init_num_operands();
    ir->operands[0] = equal(fract(ir->operands[0]->clone(ir, NULL)),
                            p5->clone(ir, NULL));
    ir->operands[1] = csel(equal(fract(mul(t2, p5->clone(ir, NULL))),
@@ -933,6 +1009,7 @@ lower_instructions_visitor::dtrunc_to_dfrac(ir_expression *ir)
    i.insert_before(assign(temp, sub(arg->clone(ir, NULL), frtemp)));
 
    ir->operation = ir_triop_csel;
+   ir->init_num_operands();
    ir->operands[0] = gequal(arg->clone(ir, NULL), zero);
    ir->operands[1] = new (ir) ir_dereference_variable(temp);
    ir->operands[2] = add(temp,
@@ -956,6 +1033,7 @@ lower_instructions_visitor::dsign_to_csel(ir_expression *ir)
    ir_constant *neg_one = new(ir) ir_constant(-1.0, arg->type->vector_elements);
 
    ir->operation = ir_triop_csel;
+   ir->init_num_operands();
    ir->operands[0] = less(arg->clone(ir, NULL),
                           zero->clone(ir, NULL));
    ir->operands[1] = neg_one;
@@ -1005,6 +1083,7 @@ lower_instructions_visitor::bit_count_to_math(ir_expression *ir)
 
    /* int(((temp + (temp >> 4) & 0xF0F0F0Fu) * 0x1010101u) >> 24); */
    ir->operation = ir_unop_u2i;
+   ir->init_num_operands();
    ir->operands[0] = rshift(mul(bit_and(add(temp, rshift(temp, c4)), c0F0F0F0F),
                                 c01010101),
                             c24);
@@ -1048,6 +1127,7 @@ lower_instructions_visitor::extract_to_shifts(ir_expression *ir)
        * (value >> offset) & mask;
        */
       ir->operation = ir_binop_bit_and;
+      ir->init_num_operands();
       ir->operands[0] = rshift(ir->operands[0], ir->operands[1]);
       ir->operands[1] = mask;
       ir->operands[2] = NULL;
@@ -1078,6 +1158,7 @@ lower_instructions_visitor::extract_to_shifts(ir_expression *ir)
        * (bits == 0) ? 0 : e;
        */
       ir->operation = ir_triop_csel;
+      ir->init_num_operands();
       ir->operands[0] = equal(c0, bits);
       ir->operands[1] = c0->clone(ir, NULL);
       ir->operands[2] = expr;
@@ -1144,6 +1225,7 @@ lower_instructions_visitor::insert_to_shifts(ir_expression *ir)
 
    /* (base & ~mask) | ((insert << offset) & mask) */
    ir->operation = ir_binop_bit_or;
+   ir->init_num_operands();
    ir->operands[0] = bit_and(ir->operands[0], bit_not(mask));
    ir->operands[1] = bit_and(lshift(ir->operands[1], offset), mask);
    ir->operands[2] = NULL;
@@ -1227,10 +1309,12 @@ lower_instructions_visitor::reverse_to_shifts(ir_expression *ir)
 
    if (ir->operands[0]->type->base_type == GLSL_TYPE_UINT) {
       ir->operation = ir_binop_bit_or;
+      ir->init_num_operands();
       ir->operands[0] = rshift(temp, c16);
       ir->operands[1] = lshift(temp, c16->clone(ir, NULL));
    } else {
       ir->operation = ir_unop_u2i;
+      ir->init_num_operands();
       ir->operands[0] = bit_or(rshift(temp, c16),
                                lshift(temp, c16->clone(ir, NULL)));
    }
@@ -1311,6 +1395,7 @@ lower_instructions_visitor::find_lsb_to_float_cast(ir_expression *ir)
     * small.
     */
    ir->operation = ir_triop_csel;
+   ir->init_num_operands();
    ir->operands[0] = equal(lsb_only, c0);
    ir->operands[1] = cminus1;
    ir->operands[2] = new(ir) ir_dereference_variable(lsb);
@@ -1411,6 +1496,7 @@ lower_instructions_visitor::find_msb_to_float_cast(ir_expression *ir)
     * be negative.  It will only be negative (-0x7f, in fact) if temp is 0.
     */
    ir->operation = ir_triop_csel;
+   ir->init_num_operands();
    ir->operands[0] = less(msb, c0);
    ir->operands[1] = cminus1;
    ir->operands[2] = new(ir) ir_dereference_variable(msb);
@@ -1543,6 +1629,7 @@ lower_instructions_visitor::imul_high_to_mul(ir_expression *ir)
       assert(ir->operands[0]->type->base_type == GLSL_TYPE_UINT);
 
       ir->operation = ir_binop_add;
+      ir->init_num_operands();
       ir->operands[0] = add(hi, rshift(t1, c16->clone(ir, NULL)));
       ir->operands[1] = rshift(t2, c16->clone(ir, NULL));
    } else {
@@ -1565,10 +1652,18 @@ lower_instructions_visitor::imul_high_to_mul(ir_expression *ir)
                                          u2i(_carry(bit_not(lo), c1)))));
 
       ir->operation = ir_triop_csel;
+      ir->init_num_operands();
       ir->operands[0] = new(ir) ir_dereference_variable(different_signs);
       ir->operands[1] = new(ir) ir_dereference_variable(neg_hi);
       ir->operands[2] = u2i(hi);
    }
+}
+
+void
+lower_instructions_visitor::sqrt_to_abs_sqrt(ir_expression *ir)
+{
+   ir->operands[0] = new(ir) ir_expression(ir_unop_abs, ir->operands[0]);
+   this->progress = true;
 }
 
 ir_visitor_status
@@ -1706,6 +1801,12 @@ lower_instructions_visitor::visit_leave(ir_expression *ir)
    case ir_binop_imul_high:
       if (lowering(IMUL_HIGH_TO_MUL))
          imul_high_to_mul(ir);
+      break;
+
+   case ir_unop_rsq:
+   case ir_unop_sqrt:
+      if (lowering(SQRT_TO_ABS_SQRT))
+         sqrt_to_abs_sqrt(ir);
       break;
 
    default:

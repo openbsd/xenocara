@@ -306,7 +306,6 @@ void radeon_draw_buffer(struct gl_context *ctx, struct gl_framebuffer *fb)
 	if (ctx->Driver.Enable) {
 		ctx->Driver.Enable(ctx, GL_DEPTH_TEST,
 				   (ctx->Depth.Test && fb->Visual.depthBits > 0));
-		/* Need to update the derived ctx->Stencil._Enabled first */
 		ctx->Driver.Enable(ctx, GL_STENCIL_TEST,
 				   (ctx->Stencil.Enabled && fb->Visual.stencilBits > 0));
 	} else {
@@ -426,7 +425,7 @@ static void radeon_print_state_atom(radeonContextPtr radeon, struct radeon_state
 	if (!radeon_is_debug_enabled(RADEON_STATE, RADEON_VERBOSE) )
 		return;
 
-	dwords = (*state->check) (&radeon->glCtx, state);
+	dwords = state->check(&radeon->glCtx, state);
 
 	fprintf(stderr, "  emit %s %d/%d\n", state->name, dwords, state->cmd_size);
 
@@ -491,13 +490,13 @@ static inline void radeon_emit_atom(radeonContextPtr radeon, struct radeon_state
 	BATCH_LOCALS(radeon);
 	int dwords;
 
-	dwords = (*atom->check) (&radeon->glCtx, atom);
+	dwords = atom->check(&radeon->glCtx, atom);
 	if (dwords) {
 
 		radeon_print_state_atom(radeon, atom);
 
 		if (atom->emit) {
-			(*atom->emit)(&radeon->glCtx, atom);
+			atom->emit(&radeon->glCtx, atom);
 		} else {
 			BEGIN_BATCH(dwords);
 			OUT_BATCH_TABLE(atom->cmd, dwords);
@@ -591,7 +590,7 @@ flush_front:
 			 */
 			radeon->front_buffer_dirty = GL_FALSE;
 
-			(*screen->dri2.loader->flushFrontBuffer)(drawable, drawable->loaderPrivate);
+			screen->dri2.loader->flushFrontBuffer(drawable, drawable->loaderPrivate);
 		}
 	}
 }

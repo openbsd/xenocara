@@ -21,6 +21,11 @@
 
 SUBDIRS = . main/tests
 
+# state tracker tests depend on libmesagallium.la
+if HAVE_GALLIUM
+SUBDIRS += state_tracker/tests
+endif
+
 if HAVE_XLIB_GLX
 SUBDIRS += drivers/x11
 endif
@@ -37,6 +42,7 @@ include Makefile.sources
 
 EXTRA_DIST = \
 	drivers/SConscript \
+	main/format_fallback.py \
 	main/format_info.py \
 	main/format_pack.py \
 	main/format_parser.py \
@@ -54,6 +60,7 @@ EXTRA_DIST = \
 
 BUILT_SOURCES = \
 	main/get_hash.h \
+	main/format_fallback.c \
 	main/format_info.h \
 	main/format_pack.c \
 	main/format_unpack.c \
@@ -70,6 +77,11 @@ main/get_hash.h: ../mapi/glapi/gen/gl_and_es_API.xml main/get_hash_params.py \
                  main/get_hash_generator.py
 	$(PYTHON_GEN) $(srcdir)/main/get_hash_generator.py \
 		-f $(srcdir)/../mapi/glapi/gen/gl_and_es_API.xml > $@
+
+main/format_fallback.c: main/format_fallback.py \
+                        main/format_parser.py \
+	                main/formats.csv
+	$(PYTHON_GEN) $(srcdir)/main/format_fallback.py $(srcdir)/main/formats.csv $@
 
 main/format_info.h: main/formats.csv \
                     main/format_parser.py main/format_info.py
@@ -98,6 +110,7 @@ endif
 
 AM_CPPFLAGS = $(DEFINES) $(INCLUDE_DIRS)
 AM_CFLAGS = \
+	$(VDPAU_CFLAGS) \
 	$(LLVM_CFLAGS) \
 	$(VISIBILITY_CFLAGS) \
 	$(MSVC2013_COMPAT_CFLAGS)

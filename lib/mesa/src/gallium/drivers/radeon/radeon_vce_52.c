@@ -138,7 +138,7 @@ static void get_vui_param(struct rvce_encoder *enc, struct pipe_h264_enc_picture
 	enc->enc_pic.vui.max_dec_frame_buffering = 0x00000003;
 }
 
-void radeon_vce_52_get_param(struct rvce_encoder *enc, struct pipe_h264_enc_picture_desc *pic)
+void si_vce_52_get_param(struct rvce_encoder *enc, struct pipe_h264_enc_picture_desc *pic)
 {
 	get_rate_control_param(enc, pic);
 	get_motion_estimation_param(enc, pic);
@@ -167,6 +167,7 @@ void radeon_vce_52_get_param(struct rvce_encoder *enc, struct pipe_h264_enc_pict
 
 static void create(struct rvce_encoder *enc)
 {
+	struct r600_common_screen *rscreen = (struct r600_common_screen *)enc->screen;
 	enc->task_info(enc, 0x00000000, 0, 0, 0);
 
 	RVCE_BEGIN(0x01000001); // create cmd
@@ -177,9 +178,17 @@ static void create(struct rvce_encoder *enc)
 	RVCE_CS(enc->enc_pic.ec.enc_pic_struct_restriction);
 	RVCE_CS(enc->base.width); // encImageWidth
 	RVCE_CS(enc->base.height); // encImageHeight
-	RVCE_CS(enc->luma->level[0].pitch_bytes); // encRefPicLumaPitch
-	RVCE_CS(enc->chroma->level[0].pitch_bytes); // encRefPicChromaPitch
-	RVCE_CS(align(enc->luma->npix_y, 16) / 8); // encRefYHeightInQw
+
+	if (rscreen->chip_class < GFX9) {
+		RVCE_CS(enc->luma->u.legacy.level[0].nblk_x * enc->luma->bpe); // encRefPicLumaPitch
+		RVCE_CS(enc->chroma->u.legacy.level[0].nblk_x * enc->chroma->bpe); // encRefPicChromaPitch
+		RVCE_CS(align(enc->luma->u.legacy.level[0].nblk_y, 16) / 8); // encRefYHeightInQw
+	} else {
+		RVCE_CS(enc->luma->u.gfx9.surf_pitch * enc->luma->bpe); // encRefPicLumaPitch
+		RVCE_CS(enc->chroma->u.gfx9.surf_pitch * enc->chroma->bpe); // encRefPicChromaPitch
+		RVCE_CS(align(enc->luma->u.gfx9.surf_height, 16) / 8); // encRefYHeightInQw
+	}
+
 	RVCE_CS(enc->enc_pic.addrmode_arraymode_disrdo_distwoinstants);
 
 	RVCE_CS(enc->enc_pic.ec.enc_pre_encode_context_buffer_offset);
@@ -191,6 +200,7 @@ static void create(struct rvce_encoder *enc)
 
 static void encode(struct rvce_encoder *enc)
 {
+	struct r600_common_screen *rscreen = (struct r600_common_screen *)enc->screen;
 	signed luma_offset, chroma_offset, bs_offset;
 	unsigned dep, bs_idx = enc->bs_idx++;
 	int i;
@@ -239,13 +249,25 @@ static void encode(struct rvce_encoder *enc)
 	RVCE_CS(enc->enc_pic.eo.insert_aud);
 	RVCE_CS(enc->enc_pic.eo.end_of_sequence);
 	RVCE_CS(enc->enc_pic.eo.end_of_stream);
-	RVCE_READ(enc->handle, RADEON_DOMAIN_VRAM,
-		enc->luma->level[0].offset); // inputPictureLumaAddressHi/Lo
-	RVCE_READ(enc->handle, RADEON_DOMAIN_VRAM,
-		enc->chroma->level[0].offset); // inputPictureChromaAddressHi/Lo
-	RVCE_CS(align(enc->luma->npix_y, 16)); // encInputFrameYPitch
-	RVCE_CS(enc->luma->level[0].pitch_bytes); // encInputPicLumaPitch
-	RVCE_CS(enc->chroma->level[0].pitch_bytes); // encInputPicChromaPitch
+
+	if (rscreen->chip_class < GFX9) {
+		RVCE_READ(enc->handle, RADEON_DOMAIN_VRAM,
+			enc->luma->u.legacy.level[0].offset); // inputPictureLumaAddressHi/Lo
+		RVCE_READ(enc->handle, RADEON_DOMAIN_VRAM,
+			enc->chroma->u.legacy.level[0].offset); // inputPictureChromaAddressHi/Lo
+		RVCE_CS(align(enc->luma->u.legacy.level[0].nblk_y, 16)); // encInputFrameYPitch
+		RVCE_CS(enc->luma->u.legacy.level[0].nblk_x * enc->luma->bpe); // encInputPicLumaPitch
+		RVCE_CS(enc->chroma->u.legacy.level[0].nblk_x * enc->chroma->bpe); // encInputPicChromaPitch
+	} else {
+		RVCE_READ(enc->handle, RADEON_DOMAIN_VRAM,
+			enc->luma->u.gfx9.surf_offset); // inputPictureLumaAddressHi/Lo
+		RVCE_READ(enc->handle, RADEON_DOMAIN_VRAM,
+			enc->chroma->u.gfx9.surf_offset); // inputPictureChromaAddressHi/Lo
+		RVCE_CS(align(enc->luma->u.gfx9.surf_height, 16)); // encInputFrameYPitch
+		RVCE_CS(enc->luma->u.gfx9.surf_pitch * enc->luma->bpe); // encInputPicLumaPitch
+		RVCE_CS(enc->chroma->u.gfx9.surf_pitch * enc->chroma->bpe); // encInputPicChromaPitch
+	}
+
 	if (enc->dual_pipe)
 		enc->enc_pic.eo.enc_input_pic_addr_array_disable2pipe_disablemboffload = 0x00000000;
 	else
@@ -297,8 +319,8 @@ static void encode(struct rvce_encoder *enc)
 	RVCE_CS(0x00000000); // pictureStructure
 	if(enc->enc_pic.picture_type == PIPE_H264_ENC_PICTURE_TYPE_P ||
 		enc->enc_pic.picture_type == PIPE_H264_ENC_PICTURE_TYPE_B) {
-		struct rvce_cpb_slot *l0 = l0_slot(enc);
-		rvce_frame_offset(enc, l0, &luma_offset, &chroma_offset);
+		struct rvce_cpb_slot *l0 = si_l0_slot(enc);
+		si_vce_frame_offset(enc, l0, &luma_offset, &chroma_offset);
 		RVCE_CS(l0->picture_type);
 		RVCE_CS(l0->frame_num);
 		RVCE_CS(l0->pic_order_cnt);
@@ -334,8 +356,8 @@ static void encode(struct rvce_encoder *enc)
 	// encReferencePictureL1[0]
 	RVCE_CS(0x00000000); // pictureStructure
 	if(enc->enc_pic.picture_type == PIPE_H264_ENC_PICTURE_TYPE_B) {
-		struct rvce_cpb_slot *l1 = l1_slot(enc);
-		rvce_frame_offset(enc, l1, &luma_offset, &chroma_offset);
+		struct rvce_cpb_slot *l1 = si_l1_slot(enc);
+		si_vce_frame_offset(enc, l1, &luma_offset, &chroma_offset);
 		RVCE_CS(l1->picture_type);
 		RVCE_CS(l1->frame_num);
 		RVCE_CS(l1->pic_order_cnt);
@@ -354,7 +376,7 @@ static void encode(struct rvce_encoder *enc)
 		RVCE_CS(enc->enc_pic.eo.l1_chroma_offset);
 	}
 
-	rvce_frame_offset(enc, current_slot(enc), &luma_offset, &chroma_offset);
+	si_vce_frame_offset(enc, si_current_slot(enc), &luma_offset, &chroma_offset);
 	RVCE_CS(luma_offset);
 	RVCE_CS(chroma_offset);
 	RVCE_CS(enc->enc_pic.eo.enc_coloc_buffer_offset);
@@ -436,19 +458,21 @@ static void config_extension(struct rvce_encoder *enc)
 	RVCE_END();
 }
 
-static void destroy(struct rvce_encoder *enc)
-{
-	enc->task_info(enc, 0x00000001, 0, 0, 0);
-
-	RVCE_BEGIN(0x02000001); // destroy
-	RVCE_END();
-}
-
 static void feedback(struct rvce_encoder *enc)
 {
 	RVCE_BEGIN(0x05000005); // feedback buffer
 	RVCE_WRITE(enc->fb->res->buf, enc->fb->res->domains, 0x0); // feedbackRingAddressHi/Lo
 	RVCE_CS(enc->enc_pic.fb.feedback_ring_size);
+	RVCE_END();
+}
+
+static void destroy(struct rvce_encoder *enc)
+{
+	enc->task_info(enc, 0x00000001, 0, 0, 0);
+
+	feedback(enc);
+
+	RVCE_BEGIN(0x02000001); // destroy
 	RVCE_END();
 }
 
@@ -624,7 +648,7 @@ static void vui(struct rvce_encoder *enc)
 	RVCE_END();
 }
 
-void radeon_vce_52_init(struct rvce_encoder *enc)
+void si_vce_52_init(struct rvce_encoder *enc)
 {
 	enc->session = session;
 	enc->task_info = task_info;

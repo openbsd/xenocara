@@ -232,55 +232,55 @@ util_dump_format(FILE *stream, enum pipe_format format)
 static void
 util_dump_enum_blend_factor(FILE *stream, unsigned value)
 {
-   util_dump_enum(stream, util_dump_blend_factor(value, TRUE));
+   util_dump_enum(stream, util_str_blend_factor(value, TRUE));
 }
 
 static void
 util_dump_enum_blend_func(FILE *stream, unsigned value)
 {
-   util_dump_enum(stream, util_dump_blend_func(value, TRUE));
+   util_dump_enum(stream, util_str_blend_func(value, TRUE));
 }
 
 static void
 util_dump_enum_func(FILE *stream, unsigned value)
 {
-   util_dump_enum(stream, util_dump_func(value, TRUE));
+   util_dump_enum(stream, util_str_func(value, TRUE));
 }
 
 static void
 util_dump_enum_prim_mode(FILE *stream, unsigned value)
 {
-   util_dump_enum(stream, util_dump_prim_mode(value, TRUE));
+   util_dump_enum(stream, util_str_prim_mode(value, TRUE));
 }
 
 static void
 util_dump_enum_tex_target(FILE *stream, unsigned value)
 {
-   util_dump_enum(stream, util_dump_tex_target(value, TRUE));
+   util_dump_enum(stream, util_str_tex_target(value, TRUE));
 }
 
 static void
 util_dump_enum_tex_filter(FILE *stream, unsigned value)
 {
-   util_dump_enum(stream, util_dump_tex_filter(value, TRUE));
+   util_dump_enum(stream, util_str_tex_filter(value, TRUE));
 }
 
 static void
 util_dump_enum_tex_mipfilter(FILE *stream, unsigned value)
 {
-   util_dump_enum(stream, util_dump_tex_mipfilter(value, TRUE));
+   util_dump_enum(stream, util_str_tex_mipfilter(value, TRUE));
 }
 
 static void
 util_dump_enum_tex_wrap(FILE *stream, unsigned value)
 {
-   util_dump_enum(stream, util_dump_tex_wrap(value, TRUE));
+   util_dump_enum(stream, util_str_tex_wrap(value, TRUE));
 }
 
 static void
 util_dump_enum_stencil_op(FILE *stream, unsigned value)
 {
-   util_dump_enum(stream, util_dump_stencil_op(value, TRUE));
+   util_dump_enum(stream, util_str_stencil_op(value, TRUE));
 }
 
 
@@ -463,11 +463,13 @@ util_dump_shader_state(FILE *stream, const struct pipe_shader_state *state)
 
    util_dump_struct_begin(stream, "pipe_shader_state");
 
-   util_dump_member_begin(stream, "tokens");
-   fprintf(stream, "\"\n");
-   tgsi_dump_to_file(state->tokens, 0, stream);
-   fprintf(stream, "\"");
-   util_dump_member_end(stream);
+   if (state->type == PIPE_SHADER_IR_TGSI) {
+      util_dump_member_begin(stream, "tokens");
+      fprintf(stream, "\"\n");
+      tgsi_dump_to_file(state->tokens, 0, stream);
+      fprintf(stream, "\"");
+      util_dump_member_end(stream);
+   }
 
    if (state->stream_output.num_outputs) {
       util_dump_member_begin(stream, "stream_output");
@@ -832,25 +834,6 @@ util_dump_constant_buffer(FILE *stream,
 
 
 void
-util_dump_index_buffer(FILE *stream, const struct pipe_index_buffer *state)
-{
-   if (!state) {
-      util_dump_null(stream);
-      return;
-   }
-
-   util_dump_struct_begin(stream, "pipe_index_buffer");
-
-   util_dump_member(stream, uint, state, index_size);
-   util_dump_member(stream, uint, state, offset);
-   util_dump_member(stream, ptr, state, buffer);
-   util_dump_member(stream, ptr, state, user_buffer);
-
-   util_dump_struct_end(stream);
-}
-
-
-void
 util_dump_vertex_buffer(FILE *stream, const struct pipe_vertex_buffer *state)
 {
    if (!state) {
@@ -861,9 +844,9 @@ util_dump_vertex_buffer(FILE *stream, const struct pipe_vertex_buffer *state)
    util_dump_struct_begin(stream, "pipe_vertex_buffer");
 
    util_dump_member(stream, uint, state, stride);
+   util_dump_member(stream, bool, state, is_user_buffer);
    util_dump_member(stream, uint, state, buffer_offset);
-   util_dump_member(stream, ptr, state, buffer);
-   util_dump_member(stream, ptr, state, user_buffer);
+   util_dump_member(stream, ptr, state, buffer.resource);
 
    util_dump_struct_end(stream);
 }
@@ -917,7 +900,8 @@ util_dump_draw_info(FILE *stream, const struct pipe_draw_info *state)
 
    util_dump_struct_begin(stream, "pipe_draw_info");
 
-   util_dump_member(stream, bool, state, indexed);
+   util_dump_member(stream, uint, state, index_size);
+   util_dump_member(stream, uint, state, has_user_indices);
 
    util_dump_member(stream, enum_prim_mode, state, mode);
    util_dump_member(stream, uint, state, start);
@@ -926,6 +910,8 @@ util_dump_draw_info(FILE *stream, const struct pipe_draw_info *state)
    util_dump_member(stream, uint, state, start_instance);
    util_dump_member(stream, uint, state, instance_count);
 
+   util_dump_member(stream, uint, state, drawid);
+
    util_dump_member(stream, uint, state, vertices_per_patch);
 
    util_dump_member(stream, int,  state, index_bias);
@@ -933,9 +919,51 @@ util_dump_draw_info(FILE *stream, const struct pipe_draw_info *state)
    util_dump_member(stream, uint, state, max_index);
 
    util_dump_member(stream, bool, state, primitive_restart);
-   util_dump_member(stream, uint, state, restart_index);
+   if (state->primitive_restart)
+      util_dump_member(stream, uint, state, restart_index);
 
+   if (state->index_size) {
+      if (state->has_user_indices)
+         util_dump_member(stream, ptr, state, index.user);
+      else
+         util_dump_member(stream, ptr, state, index.resource);
+   }
    util_dump_member(stream, ptr, state, count_from_stream_output);
+
+   if (!state->indirect) {
+      util_dump_member(stream, ptr, state, indirect);
+   } else {
+      util_dump_member(stream, uint, state, indirect->offset);
+      util_dump_member(stream, uint, state, indirect->stride);
+      util_dump_member(stream, uint, state, indirect->draw_count);
+      util_dump_member(stream, uint, state, indirect->indirect_draw_count_offset);
+      util_dump_member(stream, ptr, state, indirect->buffer);
+      util_dump_member(stream, ptr, state, indirect->indirect_draw_count);
+   }
+
+   util_dump_struct_end(stream);
+}
+
+void util_dump_grid_info(FILE *stream, const struct pipe_grid_info *state)
+{
+   if (!state) {
+      util_dump_null(stream);
+      return;
+   }
+
+   util_dump_struct_begin(stream, "pipe_grid_info");
+
+   util_dump_member(stream, uint, state, pc);
+   util_dump_member(stream, ptr, state, input);
+   util_dump_member(stream, uint, state, work_dim);
+
+   util_dump_member_begin(stream, "block");
+   util_dump_array(stream, uint, state->block, ARRAY_SIZE(state->block));
+   util_dump_member_end(stream);
+
+   util_dump_member_begin(stream, "grid");
+   util_dump_array(stream, uint, state->grid, ARRAY_SIZE(state->grid));
+   util_dump_member_end(stream);
 
    util_dump_member(stream, ptr, state, indirect);
    util_dump_member(stream, uint, state, indirect_offset);

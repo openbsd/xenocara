@@ -91,6 +91,14 @@ struct ruvd_decoder {
 	bool				use_legacy;
 	struct rvid_buffer		ctx;
 	struct rvid_buffer		sessionctx;
+	struct {
+		unsigned 		data0;
+		unsigned		data1;
+		unsigned		cmd;
+		unsigned		cntl;
+	} reg;
+
+	void				*render_pic_list[16];
 };
 
 /* flush IB to the hardware */
@@ -120,14 +128,14 @@ static void send_cmd(struct ruvd_decoder *dec, unsigned cmd,
 		uint64_t addr;
 		addr = dec->ws->buffer_get_virtual_address(buf);
 		addr = addr + off;
-		set_reg(dec, RUVD_GPCOM_VCPU_DATA0, addr);
-		set_reg(dec, RUVD_GPCOM_VCPU_DATA1, addr >> 32);
+		set_reg(dec, dec->reg.data0, addr);
+		set_reg(dec, dec->reg.data1, addr >> 32);
 	} else {
 		off += dec->ws->buffer_get_reloc_offset(buf);
 		set_reg(dec, RUVD_GPCOM_VCPU_DATA0, off);
 		set_reg(dec, RUVD_GPCOM_VCPU_DATA1, reloc_idx * 4);
 	}
-	set_reg(dec, RUVD_GPCOM_VCPU_CMD, cmd << 1);
+	set_reg(dec, dec->reg.cmd, cmd << 1);
 }
 
 /* do the codec needs an IT buffer ?*/
@@ -151,6 +159,8 @@ static void map_msg_fb_it_buf(struct ruvd_decoder *dec)
 
 	/* calc buffer offsets */
 	dec->msg = (struct ruvd_msg *)ptr;
+	memset(dec->msg, 0, sizeof(*dec->msg));
+
 	dec->fb = (uint32_t *)(ptr + FB_BUFFER_OFFSET);
 	if (have_it(dec))
 		dec->it = (uint8_t *)(ptr + FB_BUFFER_OFFSET + dec->fb_size);
@@ -211,6 +221,9 @@ static uint32_t profile2stream_type(struct ruvd_decoder *dec, unsigned family)
 
 	case PIPE_VIDEO_FORMAT_HEVC:
 		return RUVD_CODEC_H265;
+
+	case PIPE_VIDEO_FORMAT_JPEG:
+		return RUVD_CODEC_MJPEG;
 
 	default:
 		assert(0);
@@ -322,6 +335,14 @@ static unsigned calc_ctx_size_h265_main10(struct ruvd_decoder *dec, struct pipe_
 	return cm_buffer_size + db_left_tile_ctx_size + db_left_tile_pxl_size;
 }
 
+static unsigned get_db_pitch_alignment(struct ruvd_decoder *dec)
+{
+	if (((struct r600_common_screen*)dec->screen)->family < CHIP_VEGA10)
+		return 16;
+	else
+		return 32;
+}
+
 /* calculate size of reference picture buffer */
 static unsigned calc_dpb_size(struct ruvd_decoder *dec)
 {
@@ -335,7 +356,7 @@ static unsigned calc_dpb_size(struct ruvd_decoder *dec)
 	unsigned max_references = dec->base.max_references + 1;
 
 	// aligned size of a single frame
-	image_size = width * height;
+	image_size = align(width, get_db_pitch_alignment(dec)) * height;
 	image_size += image_size / 2;
 	image_size = align(image_size, 1024);
 
@@ -410,9 +431,9 @@ static unsigned calc_dpb_size(struct ruvd_decoder *dec)
 		width = align (width, 16);
 		height = align (height, 16);
 		if (dec->base.profile == PIPE_VIDEO_PROFILE_HEVC_MAIN_10)
-			dpb_size = align((width * height * 9) / 4, 256) * max_references;
+			dpb_size = align((align(width, get_db_pitch_alignment(dec)) * height * 9) / 4, 256) * max_references;
 		else
-			dpb_size = align((width * height * 3) / 2, 256) * max_references;
+			dpb_size = align((align(width, get_db_pitch_alignment(dec)) * height * 3) / 2, 256) * max_references;
 		break;
 
 	case PIPE_VIDEO_FORMAT_VC1:
@@ -453,6 +474,10 @@ static unsigned calc_dpb_size(struct ruvd_decoder *dec)
 		dpb_size = MAX2(dpb_size, 30 * 1024 * 1024);
 		break;
 
+	case PIPE_VIDEO_FORMAT_JPEG:
+		dpb_size = 0;
+		break;
+
 	default:
 		// something is missing here
 		assert(0);
@@ -478,6 +503,7 @@ static struct ruvd_h264 get_h264_msg(struct ruvd_decoder *dec, struct pipe_h264_
 	memset(&result, 0, sizeof(result));
 	switch (pic->base.profile) {
 	case PIPE_VIDEO_PROFILE_MPEG4_AVC_BASELINE:
+	case PIPE_VIDEO_PROFILE_MPEG4_AVC_CONSTRAINED_BASELINE:
 		result.profile = RUVD_H264_PROFILE_BASELINE;
 		break;
 
@@ -572,7 +598,7 @@ static struct ruvd_h265 get_h265_msg(struct ruvd_decoder *dec, struct pipe_video
 				     struct pipe_h265_picture_desc *pic)
 {
 	struct ruvd_h265 result;
-	unsigned i;
+	unsigned i, j;
 
 	memset(&result, 0, sizeof(result));
 
@@ -652,11 +678,28 @@ static struct ruvd_h265 get_h265_msg(struct ruvd_decoder *dec, struct pipe_video
 		result.row_height_minus1[i] = pic->pps->row_height_minus1[i];
 
 	result.num_delta_pocs_ref_rps_idx = pic->NumDeltaPocsOfRefRpsIdx;
-	result.curr_idx = pic->CurrPicOrderCntVal;
 	result.curr_poc = pic->CurrPicOrderCntVal;
 
+	for (i = 0 ; i < 16 ; i++) {
+		for (j = 0; (pic->ref[j] != NULL) && (j < 16) ; j++) {
+			if (dec->render_pic_list[i] == pic->ref[j])
+				break;
+			if (j == 15)
+				dec->render_pic_list[i] = NULL;
+			else if (pic->ref[j+1] == NULL)
+				dec->render_pic_list[i] = NULL;
+		}
+	}
+	for (i = 0 ; i < 16 ; i++) {
+		if (dec->render_pic_list[i] == NULL) {
+			dec->render_pic_list[i] = target;
+			result.curr_idx = i;
+			break;
+		}
+	}
+
 	vl_video_buffer_set_associated_data(target, &dec->base,
-					    (void *)(uintptr_t)pic->CurrPicOrderCntVal,
+					    (void *)(uintptr_t)result.curr_idx,
 					    &ruvd_destroy_associated_data);
 
 	for (i = 0; i < 16; ++i) {
@@ -699,17 +742,20 @@ static struct ruvd_h265 get_h265_msg(struct ruvd_decoder *dec, struct pipe_video
 	memcpy(dec->it + 864, pic->pps->sps->ScalingList32x32, 2 * 64);
 
 	for (i = 0 ; i < 2 ; i++) {
-		for (int j = 0 ; j < 15 ; j++)
+		for (j = 0 ; j < 15 ; j++)
 			result.direct_reflist[i][j] = pic->RefPicList[i][j];
 	}
 
-	if ((pic->base.profile == PIPE_VIDEO_PROFILE_HEVC_MAIN_10) &&
-		(target->buffer_format == PIPE_FORMAT_NV12)) {
-		result.p010_mode = 0;
-		result.luma_10to8 = 5;
-		result.chroma_10to8 = 5;
-		result.sclr_luma10to8 = 4;
-		result.sclr_chroma10to8 = 4;
+	if (pic->base.profile == PIPE_VIDEO_PROFILE_HEVC_MAIN_10) {
+		if (target->buffer_format == PIPE_FORMAT_P016) {
+			result.p010_mode = 1;
+			result.msb_mode = 1;
+		} else {
+			result.luma_10to8 = 5;
+			result.chroma_10to8 = 5;
+			result.sclr_luma10to8 = 4;
+			result.sclr_chroma10to8 = 4;
+		}
 	}
 
 	/* TODO
@@ -831,12 +877,17 @@ static struct ruvd_mpeg2 get_mpeg2_msg(struct ruvd_decoder *dec,
 	for (i = 0; i < 2; ++i)
 		result.ref_pic_idx[i] = get_ref_pic_idx(dec, pic->ref[i]);
 
-	result.load_intra_quantiser_matrix = 1;
-	result.load_nonintra_quantiser_matrix = 1;
-
-	for (i = 0; i < 64; ++i) {
-		result.intra_quantiser_matrix[i] = pic->intra_matrix[zscan[i]];
-		result.nonintra_quantiser_matrix[i] = pic->non_intra_matrix[zscan[i]];
+	if(pic->intra_matrix) {
+		result.load_intra_quantiser_matrix = 1;
+		for (i = 0; i < 64; ++i) {
+			result.intra_quantiser_matrix[i] = pic->intra_matrix[zscan[i]];
+		}
+	}
+	if(pic->non_intra_matrix) {
+		result.load_nonintra_quantiser_matrix = 1;
+		for (i = 0; i < 64; ++i) {
+			result.nonintra_quantiser_matrix[i] = pic->non_intra_matrix[zscan[i]];
+		}
 	}
 
 	result.profile_and_level_indication = 0;
@@ -920,6 +971,139 @@ static struct ruvd_mpeg4 get_mpeg4_msg(struct ruvd_decoder *dec,
 	return result;
 }
 
+static void get_mjpeg_slice_header(struct ruvd_decoder *dec, struct pipe_mjpeg_picture_desc *pic)
+{
+	int size = 0, saved_size, len_pos, i;
+	uint16_t *bs;
+	uint8_t *buf = dec->bs_ptr;
+
+	/* SOI */
+	buf[size++] = 0xff;
+	buf[size++] = 0xd8;
+
+	/* DQT */
+	buf[size++] = 0xff;
+	buf[size++] = 0xdb;
+
+	len_pos = size++;
+	size++;
+
+	for (i = 0; i < 4; ++i) {
+		if (pic->quantization_table.load_quantiser_table[i] == 0)
+			continue;
+
+		buf[size++] = i;
+		memcpy((buf + size), &pic->quantization_table.quantiser_table[i], 64);
+		size += 64;
+	}
+
+	bs = (uint16_t*)&buf[len_pos];
+	*bs = util_bswap16(size - 4);
+
+	saved_size = size;
+
+	/* DHT */
+	buf[size++] = 0xff;
+	buf[size++] = 0xc4;
+
+	len_pos = size++;
+	size++;
+
+	for (i = 0; i < 2; ++i) {
+		if (pic->huffman_table.load_huffman_table[i] == 0)
+			continue;
+
+		buf[size++] = 0x00 | i;
+		memcpy((buf + size), &pic->huffman_table.table[i].num_dc_codes, 16);
+		size += 16;
+		memcpy((buf + size), &pic->huffman_table.table[i].dc_values, 12);
+		size += 12;
+	}
+
+	for (i = 0; i < 2; ++i) {
+		if (pic->huffman_table.load_huffman_table[i] == 0)
+			continue;
+
+		buf[size++] = 0x10 | i;
+		memcpy((buf + size), &pic->huffman_table.table[i].num_ac_codes, 16);
+		size += 16;
+		memcpy((buf + size), &pic->huffman_table.table[i].ac_values, 162);
+		size += 162;
+	}
+
+	bs = (uint16_t*)&buf[len_pos];
+	*bs = util_bswap16(size - saved_size - 2);
+
+	saved_size = size;
+
+	/* DRI */
+	if (pic->slice_parameter.restart_interval) {
+		buf[size++] = 0xff;
+		buf[size++] = 0xdd;
+		buf[size++] = 0x00;
+		buf[size++] = 0x04;
+		bs = (uint16_t*)&buf[size++];
+		*bs = util_bswap16(pic->slice_parameter.restart_interval);
+		saved_size = ++size;
+	}
+
+	/* SOF */
+	buf[size++] = 0xff;
+	buf[size++] = 0xc0;
+
+	len_pos = size++;
+	size++;
+
+	buf[size++] = 0x08;
+
+	bs = (uint16_t*)&buf[size++];
+	*bs = util_bswap16(pic->picture_parameter.picture_height);
+	size++;
+
+	bs = (uint16_t*)&buf[size++];
+	*bs = util_bswap16(pic->picture_parameter.picture_width);
+	size++;
+
+	buf[size++] = pic->picture_parameter.num_components;
+
+	for (i = 0; i < pic->picture_parameter.num_components; ++i) {
+		buf[size++] = pic->picture_parameter.components[i].component_id;
+		buf[size++] = pic->picture_parameter.components[i].h_sampling_factor << 4 |
+			pic->picture_parameter.components[i].v_sampling_factor;
+		buf[size++] = pic->picture_parameter.components[i].quantiser_table_selector;
+	}
+
+	bs = (uint16_t*)&buf[len_pos];
+	*bs = util_bswap16(size - saved_size - 2);
+
+	saved_size = size;
+
+	/* SOS */
+	buf[size++] = 0xff;
+	buf[size++] = 0xda;
+
+	len_pos = size++;
+	size++;
+
+	buf[size++] = pic->slice_parameter.num_components;
+
+	for (i = 0; i < pic->slice_parameter.num_components; ++i) {
+		buf[size++] = pic->slice_parameter.components[i].component_selector;
+		buf[size++] = pic->slice_parameter.components[i].dc_table_selector << 4 |
+			pic->slice_parameter.components[i].ac_table_selector;
+	}
+
+	buf[size++] = 0x00;
+	buf[size++] = 0x3f;
+	buf[size++] = 0x00;
+
+	bs = (uint16_t*)&buf[len_pos];
+	*bs = util_bswap16(size - saved_size - 2);
+
+	dec->bs_ptr += size;
+	dec->bs_size += size;
+}
+
 /**
  * destroy this video decoder
  */
@@ -931,7 +1115,6 @@ static void ruvd_destroy(struct pipe_video_codec *decoder)
 	assert(decoder);
 
 	map_msg_fb_it_buf(dec);
-	memset(dec->msg, 0, sizeof(*dec->msg));
 	dec->msg->size = sizeof(*dec->msg);
 	dec->msg->msg_type = RUVD_MSG_DESTROY;
 	dec->msg->stream_handle = dec->stream_handle;
@@ -942,13 +1125,13 @@ static void ruvd_destroy(struct pipe_video_codec *decoder)
 	dec->ws->cs_destroy(dec->cs);
 
 	for (i = 0; i < NUM_BUFFERS; ++i) {
-		rvid_destroy_buffer(&dec->msg_fb_it_buffers[i]);
-		rvid_destroy_buffer(&dec->bs_buffers[i]);
+		si_vid_destroy_buffer(&dec->msg_fb_it_buffers[i]);
+		si_vid_destroy_buffer(&dec->bs_buffers[i]);
 	}
 
-	rvid_destroy_buffer(&dec->dpb);
-	rvid_destroy_buffer(&dec->ctx);
-	rvid_destroy_buffer(&dec->sessionctx);
+	si_vid_destroy_buffer(&dec->dpb);
+	si_vid_destroy_buffer(&dec->ctx);
+	si_vid_destroy_buffer(&dec->sessionctx);
 
 	FREE(dec);
 }
@@ -999,6 +1182,7 @@ static void ruvd_decode_bitstream(struct pipe_video_codec *decoder,
 				  const unsigned *sizes)
 {
 	struct ruvd_decoder *dec = (struct ruvd_decoder*)decoder;
+	enum pipe_video_format format = u_reduce_video_profile(picture->profile);
 	unsigned i;
 
 	assert(decoder);
@@ -1006,13 +1190,19 @@ static void ruvd_decode_bitstream(struct pipe_video_codec *decoder,
 	if (!dec->bs_ptr)
 		return;
 
+	if (format == PIPE_VIDEO_FORMAT_JPEG)
+		get_mjpeg_slice_header(dec, (struct pipe_mjpeg_picture_desc*)picture);
+
 	for (i = 0; i < num_buffers; ++i) {
 		struct rvid_buffer *buf = &dec->bs_buffers[dec->cur_buffer];
 		unsigned new_size = dec->bs_size + sizes[i];
 
+		if (format == PIPE_VIDEO_FORMAT_JPEG)
+			new_size += 2; /* save for EOI */
+
 		if (new_size > buf->res->buf->size) {
 			dec->ws->buffer_unmap(buf->res->buf);
-			if (!rvid_resize_buffer(dec->screen, dec->cs, buf, new_size)) {
+			if (!si_vid_resize_buffer(dec->screen, dec->cs, buf, new_size)) {
 				RVID_ERR("Can't resize bitstream buffer!");
 				return;
 			}
@@ -1028,6 +1218,13 @@ static void ruvd_decode_bitstream(struct pipe_video_codec *decoder,
 		memcpy(dec->bs_ptr, buffers[i], sizes[i]);
 		dec->bs_size += sizes[i];
 		dec->bs_ptr += sizes[i];
+	}
+
+	if (format == PIPE_VIDEO_FORMAT_JPEG) {
+		((uint8_t *)dec->bs_ptr)[0] = 0xff;	/* EOI */
+		((uint8_t *)dec->bs_ptr)[1] = 0xd9;
+		dec->bs_size += 2;
+		dec->bs_ptr += 2;
 	}
 }
 
@@ -1072,9 +1269,10 @@ static void ruvd_end_frame(struct pipe_video_codec *decoder,
 		dec->msg->body.decode.height_in_samples = align(dec->msg->body.decode.height_in_samples, 16) / 16;
 	}
 
-	dec->msg->body.decode.dpb_size = dec->dpb.res->buf->size;
+	if (dec->dpb.res)
+		dec->msg->body.decode.dpb_size = dec->dpb.res->buf->size;
 	dec->msg->body.decode.bsd_size = bs_size;
-	dec->msg->body.decode.db_pitch = align(dec->base.width, 16);
+	dec->msg->body.decode.db_pitch = align(dec->base.width, get_db_pitch_alignment(dec));
 
 	if (dec->stream_type == RUVD_CODEC_H264_PERF &&
 	    ((struct r600_common_screen*)dec->screen)->family >= CHIP_POLARIS10)
@@ -1097,10 +1295,10 @@ static void ruvd_end_frame(struct pipe_video_codec *decoder,
 				ctx_size = calc_ctx_size_h265_main10(dec, (struct pipe_h265_picture_desc*)picture);
 			else
 				ctx_size = calc_ctx_size_h265_main(dec);
-			if (!rvid_create_buffer(dec->screen, &dec->ctx, ctx_size, PIPE_USAGE_DEFAULT)) {
+			if (!si_vid_create_buffer(dec->screen, &dec->ctx, ctx_size, PIPE_USAGE_DEFAULT)) {
 				RVID_ERR("Can't allocated context buffer.\n");
 			}
-			rvid_clear_buffer(decoder->context, &dec->ctx);
+			si_vid_clear_buffer(decoder->context, &dec->ctx);
 		}
 
 		if (dec->ctx.res)
@@ -1119,6 +1317,9 @@ static void ruvd_end_frame(struct pipe_video_codec *decoder,
 		dec->msg->body.decode.codec.mpeg4 = get_mpeg4_msg(dec, (struct pipe_mpeg4_picture_desc*)picture);
 		break;
 
+	case PIPE_VIDEO_FORMAT_JPEG:
+		break;
+
 	default:
 		assert(0);
 		return;
@@ -1132,8 +1333,10 @@ static void ruvd_end_frame(struct pipe_video_codec *decoder,
 
 	send_msg_buf(dec);
 
-	send_cmd(dec, RUVD_CMD_DPB_BUFFER, dec->dpb.res->buf, 0,
-		 RADEON_USAGE_READWRITE, RADEON_DOMAIN_VRAM);
+	if (dec->dpb.res)
+		send_cmd(dec, RUVD_CMD_DPB_BUFFER, dec->dpb.res->buf, 0,
+			RADEON_USAGE_READWRITE, RADEON_DOMAIN_VRAM);
+
 	if (dec->ctx.res)
 		send_cmd(dec, RUVD_CMD_CONTEXT_BUFFER, dec->ctx.res->buf, 0,
 			RADEON_USAGE_READWRITE, RADEON_DOMAIN_VRAM);
@@ -1146,7 +1349,7 @@ static void ruvd_end_frame(struct pipe_video_codec *decoder,
 	if (have_it(dec))
 		send_cmd(dec, RUVD_CMD_ITSCALING_TABLE_BUFFER, msg_fb_it_buf->res->buf,
 			 FB_BUFFER_OFFSET + dec->fb_size, RADEON_USAGE_READ, RADEON_DOMAIN_GTT);
-	set_reg(dec, RUVD_ENGINE_CNTL, 1);
+	set_reg(dec, dec->reg.cntl, 1);
 
 	flush(dec, RADEON_FLUSH_ASYNC);
 	next_buffer(dec);
@@ -1162,9 +1365,9 @@ static void ruvd_flush(struct pipe_video_codec *decoder)
 /**
  * create and UVD decoder
  */
-struct pipe_video_codec *ruvd_create_decoder(struct pipe_context *context,
-					     const struct pipe_video_codec *templ,
-					     ruvd_set_dtb set_dtb)
+struct pipe_video_codec *si_common_uvd_create_decoder(struct pipe_context *context,
+						      const struct pipe_video_codec *templ,
+						      ruvd_set_dtb set_dtb)
 {
 	struct radeon_winsys* ws = ((struct r600_common_context *)context)->ws;
 	struct r600_common_context *rctx = (struct r600_common_context*)context;
@@ -1179,7 +1382,7 @@ struct pipe_video_codec *ruvd_create_decoder(struct pipe_context *context,
 
 	switch(u_reduce_video_profile(templ->profile)) {
 	case PIPE_VIDEO_FORMAT_MPEG12:
-		if (templ->entrypoint > PIPE_VIDEO_ENTRYPOINT_BITSTREAM || info.family < CHIP_PALM)
+		if (templ->entrypoint > PIPE_VIDEO_ENTRYPOINT_BITSTREAM)
 			return vl_create_mpeg12_decoder(context, templ);
 
 		/* fall through */
@@ -1219,7 +1422,7 @@ struct pipe_video_codec *ruvd_create_decoder(struct pipe_context *context,
 
 	dec->stream_type = profile2stream_type(dec, info.family);
 	dec->set_dtb = set_dtb;
-	dec->stream_handle = rvid_alloc_stream_handle();
+	dec->stream_handle = si_vid_alloc_stream_handle();
 	dec->screen = context->screen;
 	dec->ws = ws;
 	dec->cs = ws->cs_create(rctx->ctx, RING_UVD, NULL, NULL);
@@ -1228,6 +1431,8 @@ struct pipe_video_codec *ruvd_create_decoder(struct pipe_context *context,
 		goto error;
 	}
 
+	for (i = 0; i < 16; i++)
+		 dec->render_pic_list[i] = NULL;
 	dec->fb_size = (info.family == CHIP_TONGA) ? FB_BUFFER_SIZE_TONGA :
 			FB_BUFFER_SIZE;
 	bs_buf_size = width * height * (512 / (16 * 16));
@@ -1236,48 +1441,60 @@ struct pipe_video_codec *ruvd_create_decoder(struct pipe_context *context,
 		STATIC_ASSERT(sizeof(struct ruvd_msg) <= FB_BUFFER_OFFSET);
 		if (have_it(dec))
 			msg_fb_it_size += IT_SCALING_TABLE_SIZE;
-		if (!rvid_create_buffer(dec->screen, &dec->msg_fb_it_buffers[i],
+		if (!si_vid_create_buffer(dec->screen, &dec->msg_fb_it_buffers[i],
 					msg_fb_it_size, PIPE_USAGE_STAGING)) {
 			RVID_ERR("Can't allocated message buffers.\n");
 			goto error;
 		}
 
-		if (!rvid_create_buffer(dec->screen, &dec->bs_buffers[i],
+		if (!si_vid_create_buffer(dec->screen, &dec->bs_buffers[i],
 					bs_buf_size, PIPE_USAGE_STAGING)) {
 			RVID_ERR("Can't allocated bitstream buffers.\n");
 			goto error;
 		}
 
-		rvid_clear_buffer(context, &dec->msg_fb_it_buffers[i]);
-		rvid_clear_buffer(context, &dec->bs_buffers[i]);
+		si_vid_clear_buffer(context, &dec->msg_fb_it_buffers[i]);
+		si_vid_clear_buffer(context, &dec->bs_buffers[i]);
 	}
 
 	dpb_size = calc_dpb_size(dec);
-
-	if (!rvid_create_buffer(dec->screen, &dec->dpb, dpb_size, PIPE_USAGE_DEFAULT)) {
-		RVID_ERR("Can't allocated dpb.\n");
-		goto error;
+	if (dpb_size) {
+		if (!si_vid_create_buffer(dec->screen, &dec->dpb, dpb_size, PIPE_USAGE_DEFAULT)) {
+			RVID_ERR("Can't allocated dpb.\n");
+			goto error;
+		}
+		si_vid_clear_buffer(context, &dec->dpb);
 	}
-
-	rvid_clear_buffer(context, &dec->dpb);
 
 	if (dec->stream_type == RUVD_CODEC_H264_PERF && info.family >= CHIP_POLARIS10) {
 		unsigned ctx_size = calc_ctx_size_h264_perf(dec);
-		if (!rvid_create_buffer(dec->screen, &dec->ctx, ctx_size, PIPE_USAGE_DEFAULT)) {
+		if (!si_vid_create_buffer(dec->screen, &dec->ctx, ctx_size, PIPE_USAGE_DEFAULT)) {
 			RVID_ERR("Can't allocated context buffer.\n");
 			goto error;
 		}
-		rvid_clear_buffer(context, &dec->ctx);
+		si_vid_clear_buffer(context, &dec->ctx);
 	}
 
 	if (info.family >= CHIP_POLARIS10 && info.drm_minor >= 3) {
-		if (!rvid_create_buffer(dec->screen, &dec->sessionctx,
+		if (!si_vid_create_buffer(dec->screen, &dec->sessionctx,
 					UVD_SESSION_CONTEXT_SIZE,
 					PIPE_USAGE_DEFAULT)) {
 			RVID_ERR("Can't allocated session ctx.\n");
 			goto error;
 		}
-		rvid_clear_buffer(context, &dec->sessionctx);
+		si_vid_clear_buffer(context, &dec->sessionctx);
+	}
+
+	if (info.family >= CHIP_VEGA10) {
+		dec->reg.data0 = RUVD_GPCOM_VCPU_DATA0_SOC15;
+		dec->reg.data1 = RUVD_GPCOM_VCPU_DATA1_SOC15;
+		dec->reg.cmd = RUVD_GPCOM_VCPU_CMD_SOC15;
+		dec->reg.cntl = RUVD_ENGINE_CNTL_SOC15;
+	} else {
+		dec->reg.data0 = RUVD_GPCOM_VCPU_DATA0;
+		dec->reg.data1 = RUVD_GPCOM_VCPU_DATA1;
+		dec->reg.cmd = RUVD_GPCOM_VCPU_CMD;
+		dec->reg.cntl = RUVD_ENGINE_CNTL;
 	}
 
 	map_msg_fb_it_buf(dec);
@@ -1301,13 +1518,13 @@ error:
 	if (dec->cs) dec->ws->cs_destroy(dec->cs);
 
 	for (i = 0; i < NUM_BUFFERS; ++i) {
-		rvid_destroy_buffer(&dec->msg_fb_it_buffers[i]);
-		rvid_destroy_buffer(&dec->bs_buffers[i]);
+		si_vid_destroy_buffer(&dec->msg_fb_it_buffers[i]);
+		si_vid_destroy_buffer(&dec->bs_buffers[i]);
 	}
 
-	rvid_destroy_buffer(&dec->dpb);
-	rvid_destroy_buffer(&dec->ctx);
-	rvid_destroy_buffer(&dec->sessionctx);
+	si_vid_destroy_buffer(&dec->dpb);
+	si_vid_destroy_buffer(&dec->ctx);
+	si_vid_destroy_buffer(&dec->sessionctx);
 
 	FREE(dec);
 
@@ -1315,10 +1532,20 @@ error:
 }
 
 /* calculate top/bottom offset */
-static unsigned texture_offset(struct radeon_surf *surface, unsigned layer)
+static unsigned texture_offset(struct radeon_surf *surface, unsigned layer,
+				enum ruvd_surface_type type)
 {
-	return surface->level[0].offset +
-		layer * surface->level[0].slice_size;
+	switch (type) {
+	default:
+	case RUVD_SURFACE_TYPE_LEGACY:
+		return surface->u.legacy.level[0].offset +
+			layer * surface->u.legacy.level[0].slice_size;
+		break;
+	case RUVD_SURFACE_TYPE_GFX9:
+		return surface->u.gfx9.surf_offset +
+			layer * surface->u.gfx9.surf_slice_size;
+		break;
+	}
 }
 
 /* hw encode the aspect of macro tiles */
@@ -1350,43 +1577,68 @@ static unsigned bank_wh(unsigned bankwh)
 /**
  * fill decoding target field from the luma and chroma surfaces
  */
-void ruvd_set_dt_surfaces(struct ruvd_msg *msg, struct radeon_surf *luma,
-			  struct radeon_surf *chroma)
+void si_uvd_set_dt_surfaces(struct ruvd_msg *msg, struct radeon_surf *luma,
+			    struct radeon_surf *chroma, enum ruvd_surface_type type)
 {
-	msg->body.decode.dt_pitch = luma->level[0].pitch_bytes;
-	switch (luma->level[0].mode) {
-	case RADEON_SURF_MODE_LINEAR_ALIGNED:
+	switch (type) {
+	default:
+	case RUVD_SURFACE_TYPE_LEGACY:
+		msg->body.decode.dt_pitch = luma->u.legacy.level[0].nblk_x * luma->blk_w;
+		switch (luma->u.legacy.level[0].mode) {
+		case RADEON_SURF_MODE_LINEAR_ALIGNED:
+			msg->body.decode.dt_tiling_mode = RUVD_TILE_LINEAR;
+			msg->body.decode.dt_array_mode = RUVD_ARRAY_MODE_LINEAR;
+			break;
+		case RADEON_SURF_MODE_1D:
+			msg->body.decode.dt_tiling_mode = RUVD_TILE_8X8;
+			msg->body.decode.dt_array_mode = RUVD_ARRAY_MODE_1D_THIN;
+			break;
+		case RADEON_SURF_MODE_2D:
+			msg->body.decode.dt_tiling_mode = RUVD_TILE_8X8;
+			msg->body.decode.dt_array_mode = RUVD_ARRAY_MODE_2D_THIN;
+			break;
+		default:
+			assert(0);
+			break;
+		}
+
+		msg->body.decode.dt_luma_top_offset = texture_offset(luma, 0, type);
+		if (chroma)
+			msg->body.decode.dt_chroma_top_offset = texture_offset(chroma, 0, type);
+		if (msg->body.decode.dt_field_mode) {
+			msg->body.decode.dt_luma_bottom_offset = texture_offset(luma, 1, type);
+			if (chroma)
+				msg->body.decode.dt_chroma_bottom_offset = texture_offset(chroma, 1, type);
+		} else {
+			msg->body.decode.dt_luma_bottom_offset = msg->body.decode.dt_luma_top_offset;
+			msg->body.decode.dt_chroma_bottom_offset = msg->body.decode.dt_chroma_top_offset;
+		}
+
+		if (chroma) {
+			assert(luma->u.legacy.bankw == chroma->u.legacy.bankw);
+			assert(luma->u.legacy.bankh == chroma->u.legacy.bankh);
+			assert(luma->u.legacy.mtilea == chroma->u.legacy.mtilea);
+		}
+
+		msg->body.decode.dt_surf_tile_config |= RUVD_BANK_WIDTH(bank_wh(luma->u.legacy.bankw));
+		msg->body.decode.dt_surf_tile_config |= RUVD_BANK_HEIGHT(bank_wh(luma->u.legacy.bankh));
+		msg->body.decode.dt_surf_tile_config |= RUVD_MACRO_TILE_ASPECT_RATIO(macro_tile_aspect(luma->u.legacy.mtilea));
+		break;
+	case RUVD_SURFACE_TYPE_GFX9:
+		msg->body.decode.dt_pitch = luma->u.gfx9.surf_pitch * luma->blk_w;
+		/* SWIZZLE LINEAR MODE */
 		msg->body.decode.dt_tiling_mode = RUVD_TILE_LINEAR;
 		msg->body.decode.dt_array_mode = RUVD_ARRAY_MODE_LINEAR;
-		break;
-	case RADEON_SURF_MODE_1D:
-		msg->body.decode.dt_tiling_mode = RUVD_TILE_8X8;
-		msg->body.decode.dt_array_mode = RUVD_ARRAY_MODE_1D_THIN;
-		break;
-	case RADEON_SURF_MODE_2D:
-		msg->body.decode.dt_tiling_mode = RUVD_TILE_8X8;
-		msg->body.decode.dt_array_mode = RUVD_ARRAY_MODE_2D_THIN;
-		break;
-	default:
-		assert(0);
+		msg->body.decode.dt_luma_top_offset = texture_offset(luma, 0, type);
+		msg->body.decode.dt_chroma_top_offset = texture_offset(chroma, 0, type);
+		if (msg->body.decode.dt_field_mode) {
+			msg->body.decode.dt_luma_bottom_offset = texture_offset(luma, 1, type);
+			msg->body.decode.dt_chroma_bottom_offset = texture_offset(chroma, 1, type);
+		} else {
+			msg->body.decode.dt_luma_bottom_offset = msg->body.decode.dt_luma_top_offset;
+			msg->body.decode.dt_chroma_bottom_offset = msg->body.decode.dt_chroma_top_offset;
+		}
+		msg->body.decode.dt_surf_tile_config = 0;
 		break;
 	}
-
-	msg->body.decode.dt_luma_top_offset = texture_offset(luma, 0);
-	msg->body.decode.dt_chroma_top_offset = texture_offset(chroma, 0);
-	if (msg->body.decode.dt_field_mode) {
-		msg->body.decode.dt_luma_bottom_offset = texture_offset(luma, 1);
-		msg->body.decode.dt_chroma_bottom_offset = texture_offset(chroma, 1);
-	} else {
-		msg->body.decode.dt_luma_bottom_offset = msg->body.decode.dt_luma_top_offset;
-		msg->body.decode.dt_chroma_bottom_offset = msg->body.decode.dt_chroma_top_offset;
-	}
-
-	assert(luma->bankw == chroma->bankw);
-	assert(luma->bankh == chroma->bankh);
-	assert(luma->mtilea == chroma->mtilea);
-
-	msg->body.decode.dt_surf_tile_config |= RUVD_BANK_WIDTH(bank_wh(luma->bankw));
-	msg->body.decode.dt_surf_tile_config |= RUVD_BANK_HEIGHT(bank_wh(luma->bankh));
-	msg->body.decode.dt_surf_tile_config |= RUVD_MACRO_TILE_ASPECT_RATIO(macro_tile_aspect(luma->mtilea));
 }

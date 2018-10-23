@@ -71,9 +71,12 @@ int eg_bytecode_cf_build(struct r600_bytecode *bc, struct r600_bytecode_cf *cf)
 		} else if (cfop->flags & CF_CLAUSE) {
 			/* CF_TEX/VTX (CF_ALU already handled above) */
 			bc->bytecode[id++] = S_SQ_CF_WORD0_ADDR(cf->addr >> 1);
-			bc->bytecode[id++] = S_SQ_CF_WORD1_CF_INST(opcode) |
+			bc->bytecode[id] = S_SQ_CF_WORD1_CF_INST(opcode) |
 					S_SQ_CF_WORD1_BARRIER(1) |
 					S_SQ_CF_WORD1_COUNT((cf->ndw / 4) - 1);
+			if (bc->chip_class == EVERGREEN) /* no EOP on cayman */
+				bc->bytecode[id] |= S_SQ_CF_ALLOC_EXPORT_WORD1_END_OF_PROGRAM(cf->end_of_program);
+			id++;
 		} else if (cfop->flags & CF_EXP) {
 			/* EXPORT instructions */
 			bc->bytecode[id++] = S_SQ_CF_ALLOC_EXPORT_WORD0_RW_GPR(cf->output.gpr) |
@@ -111,12 +114,14 @@ int eg_bytecode_cf_build(struct r600_bytecode *bc, struct r600_bytecode_cf *cf)
 		} else {
 			/* other instructions */
 			bc->bytecode[id++] = S_SQ_CF_WORD0_ADDR(cf->cf_addr >> 1);
-			bc->bytecode[id++] =  S_SQ_CF_WORD1_CF_INST(opcode)|
+			bc->bytecode[id] = S_SQ_CF_WORD1_CF_INST(opcode) |
 					S_SQ_CF_WORD1_BARRIER(1) |
 					S_SQ_CF_WORD1_COND(cf->cond) |
 					S_SQ_CF_WORD1_POP_COUNT(cf->pop_count) |
-					S_SQ_CF_WORD1_COUNT(cf->count) |
-					S_SQ_CF_WORD1_END_OF_PROGRAM(cf->end_of_program);
+					S_SQ_CF_WORD1_COUNT(cf->count);
+			if (bc->chip_class == EVERGREEN) /* no EOP on cayman */
+				bc->bytecode[id] |= S_SQ_CF_ALLOC_EXPORT_WORD1_END_OF_PROGRAM(cf->end_of_program);
+			id++;
 		}
 	}
 	return 0;
@@ -196,7 +201,12 @@ int egcm_load_index_reg(struct r600_bytecode *bc, unsigned id, bool inside_alu_c
 
 int eg_bytecode_gds_build(struct r600_bytecode *bc, struct r600_bytecode_gds *gds, unsigned id)
 {
-	unsigned opcode = r600_isa_fetch_opcode(bc->isa->hw_class, gds->op) >> 8;
+	unsigned gds_op = (r600_isa_fetch_opcode(bc->isa->hw_class, gds->op) >> 8) & 0x3f;
+	unsigned opcode;
+	if (gds->op == FETCH_OP_TF_WRITE)
+		opcode = 5;
+	else
+		opcode = 4;
 	bc->bytecode[id++] = S_SQ_MEM_GDS_WORD0_MEM_INST(2) |
 		S_SQ_MEM_GDS_WORD0_MEM_OP(opcode) |
 		S_SQ_MEM_GDS_WORD0_SRC_GPR(gds->src_gpr) |
@@ -207,8 +217,12 @@ int eg_bytecode_gds_build(struct r600_bytecode *bc, struct r600_bytecode_gds *gd
 
 	bc->bytecode[id++] = S_SQ_MEM_GDS_WORD1_DST_GPR(gds->dst_gpr) |
 		S_SQ_MEM_GDS_WORD1_DST_REL(gds->dst_rel) |
-		S_SQ_MEM_GDS_WORD1_GDS_OP(gds->gds_op) |
-		S_SQ_MEM_GDS_WORD1_SRC_GPR(gds->src_gpr2);
+		S_SQ_MEM_GDS_WORD1_GDS_OP(gds_op) |
+		S_SQ_MEM_GDS_WORD1_SRC_GPR(gds->src_gpr2) |
+		S_SQ_MEM_GDS_WORD1_UAV_INDEX_MODE(gds->uav_index_mode) |
+		S_SQ_MEM_GDS_WORD1_UAV_ID(gds->uav_id) |
+		S_SQ_MEM_GDS_WORD1_ALLOC_CONSUME(gds->alloc_consume) |
+		S_SQ_MEM_GDS_WORD1_BCAST_FIRST_REQ(gds->bcast_first_req);
 
 	bc->bytecode[id++] = S_SQ_MEM_GDS_WORD2_DST_SEL_X(gds->dst_sel_x) |
 		S_SQ_MEM_GDS_WORD2_DST_SEL_Y(gds->dst_sel_y) |

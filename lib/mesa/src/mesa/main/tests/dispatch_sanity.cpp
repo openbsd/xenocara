@@ -961,12 +961,64 @@ const struct function common_desktop_functions_possible[] = {
    /* GL_KHR_blend_equation_advanced */
    { "glBlendBarrierKHR", 20, -1 },
 
+   /* GL_ARB_sparse_buffer */
+   { "glBufferPageCommitmentARB", 43, -1 },
+   { "glNamedBufferPageCommitmentARB", 43, -1 },
+
+   /* GL_ARB_bindless_texture */
+   { "glGetTextureHandleARB", 40, -1 },
+   { "glGetTextureSamplerHandleARB", 40, -1 },
+   { "glMakeTextureHandleResidentARB", 40, -1 },
+   { "glMakeTextureHandleNonResidentARB", 40, -1 },
+   { "glIsTextureHandleResidentARB", 40, -1 },
+   { "glGetImageHandleARB", 40, -1 },
+   { "glMakeImageHandleResidentARB", 40, -1 },
+   { "glMakeImageHandleNonResidentARB", 40, -1 },
+   { "glIsImageHandleResidentARB", 40, -1 },
+   { "glUniformHandleui64ARB", 40, -1 },
+   { "glUniformHandleui64vARB", 40, -1 },
+   { "glProgramUniformHandleui64ARB", 40, -1 },
+   { "glProgramUniformHandleui64vARB", 40, -1 },
+   { "glVertexAttribL1ui64ARB", 40, -1 },
+   { "glVertexAttribL1ui64vARB", 40, -1 },
+   { "glGetVertexAttribLui64vARB", 40, -1 },
+
+   /* GL_EXT_external_objects */
+   { "glGetUnsignedBytevEXT", 45, -1 },
+   { "glGetUnsignedBytei_vEXT", 45, -1 },
+   { "glDeleteMemoryObjectsEXT", 45, -1 },
+   { "glIsMemoryObjectEXT", 45, -1 },
+   { "glCreateMemoryObjectsEXT", 45, -1 },
+   { "glMemoryObjectParameterivEXT", 45, -1 },
+   { "glGetMemoryObjectParameterivEXT", 45, -1 },
+   { "glTexStorageMem2DEXT", 45, -1 },
+   { "glTexStorageMem2DMultisampleEXT", 45, -1 },
+   { "glTexStorageMem3DEXT", 45, -1 },
+   { "glTexStorageMem3DMultisampleEXT", 45, -1 },
+   { "glBufferStorageMemEXT", 45, -1 },
+   { "glTextureStorageMem2DEXT", 45, -1 },
+   { "glTextureStorageMem2DMultisampleEXT", 45, -1 },
+   { "glTextureStorageMem3DEXT", 45, -1 },
+   { "glTextureStorageMem3DMultisampleEXT", 45, -1 },
+   { "glNamedBufferStorageMemEXT", 45, -1 },
+   { "glTexStorageMem1DEXT", 45, -1 },
+   { "glTextureStorageMem1DEXT", 45, -1 },
+   { "glGenSemaphoresEXT", 45, -1 },
+   { "glDeleteSemaphoresEXT", 45, -1 },
+   { "glIsSemaphoreEXT", 45, -1 },
+   { "glSemaphoreParameterui64vEXT", 45, -1 },
+   { "glGetSemaphoreParameterui64vEXT", 45, -1 },
+   { "glWaitSemaphoreEXT", 45, -1 },
+   { "glSignalSemaphoreEXT", 45, -1 },
+
+   /* GL_EXT_external_objects_fd */
+   { "glImportMemoryFdEXT", 45, -1 },
+   { "glImportSemaphoreFdEXT", 45, -1 },
+
    { NULL, 0, -1 }
 };
 
 const struct function gl_compatibility_functions_possible[] = {
-   { "glBindVertexArrayAPPLE", 10, -1 },
-   { "glGenVertexArraysAPPLE", 10, -1 },
    { "glBindRenderbufferEXT", 10, -1 },
    { "glBindFramebufferEXT", 10, -1 },
    { "glNewList", 10, _gloffset_NewList },
@@ -1871,6 +1923,44 @@ const struct function gl_core_functions_possible[] = {
 
    /* GL_ARB_ES3_2_compatibility */
    { "glPrimitiveBoundingBoxARB", 45, -1 },
+
+   /* GL_ARB_gpu_shader_int64 */
+   { "glUniform1i64ARB", 45, -1 },
+   { "glUniform2i64ARB", 45, -1 },
+   { "glUniform3i64ARB", 45, -1 },
+   { "glUniform4i64ARB", 45, -1 },
+   { "glUniform1ui64ARB", 45, -1 },
+   { "glUniform2ui64ARB", 45, -1 },
+   { "glUniform3ui64ARB", 45, -1 },
+   { "glUniform4ui64ARB", 45, -1 },
+   { "glUniform1i64vARB", 45, -1 },
+   { "glUniform2i64vARB", 45, -1 },
+   { "glUniform3i64vARB", 45, -1 },
+   { "glUniform4i64vARB", 45, -1 },
+   { "glUniform1ui64vARB", 45, -1 },
+   { "glUniform2ui64vARB", 45, -1 },
+   { "glUniform3ui64vARB", 45, -1 },
+   { "glUniform4ui64vARB", 45, -1 },
+   { "glGetUniformi64vARB", 45, -1 },
+   { "glGetUniformui64vARB", 45, -1 },
+   { "glGetnUniformi64vARB", 45, -1 },
+   { "glGetnUniformui64vARB", 45, -1 },
+   { "glProgramUniform1i64ARB", 45, -1 },
+   { "glProgramUniform2i64ARB", 45, -1 },
+   { "glProgramUniform3i64ARB", 45, -1 },
+   { "glProgramUniform4i64ARB", 45, -1 },
+   { "glProgramUniform1ui64ARB", 45, -1 },
+   { "glProgramUniform2ui64ARB", 45, -1 },
+   { "glProgramUniform3ui64ARB", 45, -1 },
+   { "glProgramUniform4ui64ARB", 45, -1 },
+   { "glProgramUniform1i64vARB", 45, -1 },
+   { "glProgramUniform2i64vARB", 45, -1 },
+   { "glProgramUniform3i64vARB", 45, -1 },
+   { "glProgramUniform4i64vARB", 45, -1 },
+   { "glProgramUniform1ui64vARB", 45, -1 },
+   { "glProgramUniform2ui64vARB", 45, -1 },
+   { "glProgramUniform3ui64vARB", 45, -1 },
+   { "glProgramUniform4ui64vARB", 45, -1 },
 
    { NULL, 0, -1 }
 };

@@ -34,10 +34,12 @@ namespace {
 class ubo_visitor : public program_resource_visitor {
 public:
    ubo_visitor(void *mem_ctx, gl_uniform_buffer_variable *variables,
-               unsigned num_variables, struct gl_shader_program *prog)
+               unsigned num_variables, struct gl_shader_program *prog,
+               bool use_std430_as_default)
       : index(0), offset(0), buffer_size(0), variables(variables),
-        num_variables(num_variables), mem_ctx(mem_ctx), is_array_instance(false),
-        prog(prog)
+        num_variables(num_variables), mem_ctx(mem_ctx),
+        is_array_instance(false), prog(prog),
+        use_std430_as_default(use_std430_as_default)
    {
       /* empty */
    }
@@ -47,7 +49,8 @@ public:
       this->offset = 0;
       this->buffer_size = 0;
       this->is_array_instance = strchr(name, ']') != NULL;
-      this->program_resource_visitor::process(type, name);
+      this->program_resource_visitor::process(type, name,
+                                              use_std430_as_default);
    }
 
    unsigned index;
@@ -60,17 +63,10 @@ public:
    struct gl_shader_program *prog;
 
 private:
-   virtual void visit_field(const glsl_type *type, const char *name,
-                            bool row_major)
-   {
-      (void) type;
-      (void) name;
-      (void) row_major;
-      assert(!"Should not get here.");
-   }
-
    virtual void enter_record(const glsl_type *type, const char *,
-                             bool row_major, const enum glsl_interface_packing packing) {
+                             bool row_major,
+                             const enum glsl_interface_packing packing)
+   {
       assert(type->is_record());
       if (packing == GLSL_INTERFACE_PACKING_STD430)
          this->offset = glsl_align(
@@ -81,15 +77,17 @@ private:
    }
 
    virtual void leave_record(const glsl_type *type, const char *,
-                             bool row_major, const enum glsl_interface_packing packing) {
+                             bool row_major,
+                             const enum glsl_interface_packing packing)
+   {
       assert(type->is_record());
 
       /* If this is the last field of a structure, apply rule #9.  The
-       * GL_ARB_uniform_buffer_object spec says:
+       * ARB_uniform_buffer_object spec says:
        *
-       *     "The structure may have padding at the end; the base offset of
-       *     the member following the sub-structure is rounded up to the next
-       *     multiple of the base alignment of the structure."
+       *    The structure may have padding at the end; the base offset of the
+       *    member following the sub-structure is rounded up to the next
+       *    multiple of the base alignment of the structure.
        */
       if (packing == GLSL_INTERFACE_PACKING_STD430)
          this->offset = glsl_align(
@@ -138,15 +136,16 @@ private:
       unsigned alignment = 0;
       unsigned size = 0;
 
-      /* From ARB_program_interface_query:
+      /* The ARB_program_interface_query spec says:
        *
-       *     "If the final member of an active shader storage block is array
-       *      with no declared size, the minimum buffer size is computed
-       *      assuming the array was declared as an array with one element."
+       *    If the final member of an active shader storage block is array
+       *    with no declared size, the minimum buffer size is computed
+       *    assuming the array was declared as an array with one element.
        *
-       * For that reason, we use the base type of the unsized array to calculate
-       * its size. We don't need to check if the unsized array is the last member
-       * of a shader storage block (that check was already done by the parser).
+       * For that reason, we use the base type of the unsized array to
+       * calculate its size. We don't need to check if the unsized array is
+       * the last member of a shader storage block (that check was already
+       * done by the parser).
        */
       const glsl_type *type_for_size = type;
       if (type->is_unsized_array()) {
@@ -173,18 +172,20 @@ private:
 
       this->offset += size;
 
-      /* From the GL_ARB_uniform_buffer_object spec:
+      /* The ARB_uniform_buffer_object spec says:
        *
-       *     "For uniform blocks laid out according to [std140] rules, the
-       *      minimum buffer object size returned by the
-       *      UNIFORM_BLOCK_DATA_SIZE query is derived by taking the offset of
-       *      the last basic machine unit consumed by the last uniform of the
-       *      uniform block (including any end-of-array or end-of-structure
-       *      padding), adding one, and rounding up to the next multiple of
-       *      the base alignment required for a vec4."
+       *    For uniform blocks laid out according to [std140] rules, the
+       *    minimum buffer object size returned by the UNIFORM_BLOCK_DATA_SIZE
+       *    query is derived by taking the offset of the last basic machine
+       *    unit consumed by the last uniform of the uniform block (including
+       *    any end-of-array or end-of-structure padding), adding one, and
+       *    rounding up to the next multiple of the base alignment required
+       *    for a vec4.
        */
       this->buffer_size = glsl_align(this->offset, 16);
    }
+
+   bool use_std430_as_default;
 };
 
 class count_block_size : public program_resource_visitor {
@@ -197,12 +198,13 @@ public:
    unsigned num_active_uniforms;
 
 private:
-   virtual void visit_field(const glsl_type *type, const char *name,
-                            bool row_major)
+   virtual void visit_field(const glsl_type * /* type */,
+                            const char * /* name */,
+                            bool /* row_major */,
+                            const glsl_type * /* record_type */,
+                            const enum glsl_interface_packing,
+                            bool /* last_field */)
    {
-      (void) type;
-      (void) name;
-      (void) row_major;
       this->num_active_uniforms++;
    }
 };
@@ -214,7 +216,7 @@ struct block {
    bool has_instance_name;
 };
 
-static void process_block_array_leaf(char **name, gl_uniform_block *blocks,
+static void process_block_array_leaf(const char *name, gl_uniform_block *blocks,
                                      ubo_visitor *parcel,
                                      gl_uniform_buffer_variable *variables,
                                      const struct link_uniform_block_active *const b,
@@ -250,7 +252,7 @@ process_block_array(struct uniform_block_array_elements *ub_array, char **name,
                              parcel, variables, b, block_index,
                              binding_offset, ctx, prog, first_index);
       } else {
-         process_block_array_leaf(name, blocks,
+         process_block_array_leaf(*name, blocks,
                                   parcel, variables, b, block_index,
                                   binding_offset, *block_index - first_index,
                                   ctx, prog);
@@ -259,7 +261,7 @@ process_block_array(struct uniform_block_array_elements *ub_array, char **name,
 }
 
 static void
-process_block_array_leaf(char **name,
+process_block_array_leaf(const char *name,
                          gl_uniform_block *blocks,
                          ubo_visitor *parcel, gl_uniform_buffer_variable *variables,
                          const struct link_uniform_block_active *const b,
@@ -270,23 +272,24 @@ process_block_array_leaf(char **name,
    unsigned i = *block_index;
    const glsl_type *type =  b->type->without_array();
 
-   blocks[i].Name = ralloc_strdup(blocks, *name);
+   blocks[i].Name = ralloc_strdup(blocks, name);
    blocks[i].Uniforms = &variables[(*parcel).index];
 
-   /* The GL_ARB_shading_language_420pack spec says:
+   /* The ARB_shading_language_420pack spec says:
     *
-    *     "If the binding identifier is used with a uniform block instanced as
-    *     an array then the first element of the array takes the specified
-    *     block binding and each subsequent element takes the next consecutive
-    *     uniform block binding point."
+    *    If the binding identifier is used with a uniform block instanced as
+    *    an array then the first element of the array takes the specified
+    *    block binding and each subsequent element takes the next consecutive
+    *    uniform block binding point.
     */
    blocks[i].Binding = (b->has_binding) ? b->binding + *binding_offset : 0;
 
    blocks[i].UniformBufferSize = 0;
-   blocks[i]._Packing = gl_uniform_block_packing(type->interface_packing);
+   blocks[i]._Packing = glsl_interface_packing(type->interface_packing);
+   blocks[i]._RowMajor = type->get_interface_row_major();
    blocks[i].linearized_array_index = linearized_index;
 
-   parcel->process(type, blocks[i].Name);
+   parcel->process(type, b->has_instance_name ? blocks[i].Name : "");
 
    blocks[i].UniformBufferSize = parcel->buffer_size;
 
@@ -346,23 +349,16 @@ create_buffer_blocks(void *mem_ctx, struct gl_context *ctx,
    /* Allocate storage to hold all of the information related to uniform
     * blocks that can be queried through the API.
     */
-   struct gl_uniform_block *blocks = ralloc_array(mem_ctx, gl_uniform_block, num_blocks);
+   struct gl_uniform_block *blocks =
+      rzalloc_array(mem_ctx, gl_uniform_block, num_blocks);
    gl_uniform_buffer_variable *variables =
       ralloc_array(blocks, gl_uniform_buffer_variable, num_variables);
 
    /* Add each variable from each uniform block to the API tracking
     * structures.
     */
-   ubo_visitor parcel(blocks, variables, num_variables, prog);
-
-   STATIC_ASSERT(unsigned(GLSL_INTERFACE_PACKING_STD140)
-                 == unsigned(ubo_packing_std140));
-   STATIC_ASSERT(unsigned(GLSL_INTERFACE_PACKING_SHARED)
-                 == unsigned(ubo_packing_shared));
-   STATIC_ASSERT(unsigned(GLSL_INTERFACE_PACKING_PACKED)
-                 == unsigned(ubo_packing_packed));
-   STATIC_ASSERT(unsigned(GLSL_INTERFACE_PACKING_STD430)
-                 == unsigned(ubo_packing_std430));
+   ubo_visitor parcel(blocks, variables, num_variables, prog,
+                      ctx->Const.UseSTD430AsDefaultPacking);
 
    unsigned i = 0;
    struct hash_entry *entry;
@@ -374,8 +370,8 @@ create_buffer_blocks(void *mem_ctx, struct gl_context *ctx,
       if ((create_ubo_blocks && !b->is_shader_storage) ||
           (!create_ubo_blocks && b->is_shader_storage)) {
 
+         unsigned binding_offset = 0;
          if (b->array != NULL) {
-            unsigned binding_offset = 0;
             char *name = ralloc_strdup(NULL,
                                        block_type->without_array()->name);
             size_t name_length = strlen(name);
@@ -386,30 +382,9 @@ create_buffer_blocks(void *mem_ctx, struct gl_context *ctx,
                                 i);
             ralloc_free(name);
          } else {
-            blocks[i].Name = ralloc_strdup(blocks, block_type->name);
-            blocks[i].Uniforms = &variables[parcel.index];
-            blocks[i].Binding = (b->has_binding) ? b->binding : 0;
-            blocks[i].UniformBufferSize = 0;
-            blocks[i]._Packing =
-               gl_uniform_block_packing(block_type->interface_packing);
-
-            parcel.process(block_type,
-                           b->has_instance_name ? block_type->name : "");
-
-            blocks[i].UniformBufferSize = parcel.buffer_size;
-
-            /* Check SSBO size is lower than maximum supported size for SSBO
-             */
-            if (b->is_shader_storage &&
-                parcel.buffer_size > ctx->Const.MaxShaderStorageBlockSize) {
-               linker_error(prog, "shader storage block `%s' has size %d, "
-                            "which is larger than than the maximum allowed (%d)",
-                            block_type->name, parcel.buffer_size,
-                            ctx->Const.MaxShaderStorageBlockSize);
-            }
-            blocks[i].NumUniforms = (unsigned)(ptrdiff_t)
-               (&variables[parcel.index] - blocks[i].Uniforms);
-            i++;
+            process_block_array_leaf(block_type->name, blocks, &parcel,
+                                     variables, b, &i, &binding_offset,
+                                     0, ctx, prog);
          }
       }
    }
@@ -443,8 +418,7 @@ link_uniform_blocks(void *mem_ctx,
       return;
    }
 
-   /* Determine which uniform blocks are active.
-    */
+   /* Determine which uniform blocks are active. */
    link_uniform_block_active_visitor v(mem_ctx, block_hash, prog);
    visit_list_elements(&v, shader->ir);
 
@@ -470,7 +444,8 @@ link_uniform_blocks(void *mem_ctx,
       }
 
       block_size.num_active_uniforms = 0;
-      block_size.process(b->type->without_array(), "");
+      block_size.process(b->type->without_array(), "",
+                         ctx->Const.UseSTD430AsDefaultPacking);
 
       if (b->array != NULL) {
          unsigned aoa_size = b->type->arrays_of_arrays_size();
@@ -509,12 +484,12 @@ link_uniform_blocks_are_compatible(const gl_uniform_block *a,
 
    /* Page 35 (page 42 of the PDF) in section 4.3.7 of the GLSL 1.50 spec says:
     *
-    *     "Matched block names within an interface (as defined above) must
-    *     match in terms of having the same number of declarations with the
-    *     same sequence of types and the same sequence of member names, as
-    *     well as having the same member-wise layout qualification....if a
-    *     matching block is declared as an array, then the array sizes must
-    *     also match... Any mismatch will generate a link error."
+    *    Matched block names within an interface (as defined above) must match
+    *    in terms of having the same number of declarations with the same
+    *    sequence of types and the same sequence of member names, as well as
+    *    having the same member-wise layout qualification....if a matching
+    *    block is declared as an array, then the array sizes must also
+    *    match... Any mismatch will generate a link error.
     *
     * Arrays are not yet supported, so there is no check for that.
     */
@@ -522,6 +497,12 @@ link_uniform_blocks_are_compatible(const gl_uniform_block *a,
       return false;
 
    if (a->_Packing != b->_Packing)
+      return false;
+
+   if (a->_RowMajor != b->_RowMajor)
+      return false;
+
+   if (a->Binding != b->Binding)
       return false;
 
    for (unsigned i = 0; i < a->NumUniforms; i++) {

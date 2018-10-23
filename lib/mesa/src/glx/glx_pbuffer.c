@@ -901,7 +901,7 @@ glXGetSelectedEvent(Display * dpy, GLXDrawable drawable, unsigned long *mask)
    __glXSendError(dpy, GLXBadDrawable, drawable, X_GLXGetDrawableAttributes,
                   true);
 #else
-   unsigned int value;
+   unsigned int value = 0;
 
 
    /* The non-sense with value is required because on LP64 platforms
@@ -992,7 +992,6 @@ glXDestroyWindow(Display * dpy, GLXWindow win)
 #endif
 }
 
-#ifndef GLX_USE_APPLEGL
 _GLX_PUBLIC
 GLX_ALIAS_VOID(glXDestroyGLXPbufferSGIX,
                (Display * dpy, GLXPbufferSGIX pbuf),
@@ -1008,4 +1007,3 @@ GLX_ALIAS_VOID(glXGetSelectedEventSGIX,
                (Display * dpy, GLXDrawable drawable,
                 unsigned long *mask), (dpy, drawable, mask),
                glXGetSelectedEvent)
-#endif

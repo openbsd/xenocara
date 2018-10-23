@@ -5,10 +5,13 @@
 
 struct radeon_winsys;
 struct pipe_screen;
+struct pipe_screen_config;
 
-typedef struct pipe_screen *(*radeon_screen_create_t)(struct radeon_winsys *);
+typedef struct pipe_screen *(*radeon_screen_create_t)(struct radeon_winsys *,
+                                                      const struct pipe_screen_config *);
 
 struct radeon_winsys *
-radeon_drm_winsys_create(int fd, radeon_screen_create_t screen_create);
+radeon_drm_winsys_create(int fd, const struct pipe_screen_config *config,
+			 radeon_screen_create_t screen_create);
 
 #endif

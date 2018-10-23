@@ -30,6 +30,7 @@
 #include "builder.h"
 #include "common/rdtsc_buckets.h"
 
+#include <cstdarg>
 
 namespace SwrJit
 {
@@ -41,7 +42,7 @@ namespace SwrJit
     ///        number of mantissa bits.
     /// @param val - 32-bit float
     /// @todo Maybe move this outside of this file into a header?
-    static uint16_t Convert32To16Float(float val)
+    static uint16_t ConvertFloat32ToFloat16(float val)
     {
         uint32_t sign, exp, mant;
         uint32_t roundBits;
@@ -111,9 +112,9 @@ namespace SwrJit
     ///        float
     /// @param val - 16-bit float
     /// @todo Maybe move this outside of this file into a header?
-    static float ConvertSmallFloatTo32(UINT val)
+    static float ConvertFloat16ToFloat32(uint32_t val)
     {
-        UINT result;
+        uint32_t result;
         if ((val & 0x7fff) == 0)
         {
             result = ((uint32_t)(val & 0x8000)) << 16;
@@ -235,13 +236,6 @@ namespace SwrJit
         return UndefValue::get(VectorType::get(t, mVWidth));
     }
 
-    #if HAVE_LLVM == 0x306
-    Value *Builder::VINSERT(Value *vec, Value *val, uint64_t index)
-    {
-        return VINSERT(vec, val, C((int64_t)index));
-    }
-    #endif
-
     Value *Builder::VBROADCAST(Value *src)
     {
         // check if src is already a vector
@@ -281,6 +275,22 @@ namespace SwrJit
         for (auto i : indexList)
             indices.push_back(C(i));
         return GEPA(ptr, indices);
+    }
+
+    Value *Builder::IN_BOUNDS_GEP(Value* ptr, const std::initializer_list<Value*> &indexList)
+    {
+        std::vector<Value*> indices;
+        for (auto i : indexList)
+            indices.push_back(i);
+        return IN_BOUNDS_GEP(ptr, indices);
+    }
+
+    Value *Builder::IN_BOUNDS_GEP(Value* ptr, const std::initializer_list<uint32_t> &indexList)
+    {
+        std::vector<Value*> indices;
+        for (auto i : indexList)
+            indices.push_back(C(i));
+        return IN_BOUNDS_GEP(ptr, indices);
     }
 
     LoadInst *Builder::LOAD(Value *basePtr, const std::initializer_list<uint32_t> &indices, const llvm::Twine& name)
@@ -323,7 +333,6 @@ namespace SwrJit
         return CALLA(Callee, args);
     }
 
-    #if HAVE_LLVM > 0x306
     CallInst *Builder::CALL(Value *Callee, Value* arg)
     {
         std::vector<Value*> args;
@@ -347,7 +356,13 @@ namespace SwrJit
         args.push_back(arg3);
         return CALLA(Callee, args);
     }
-    #endif
+
+    //////////////////////////////////////////////////////////////////////////
+    Value *Builder::DEBUGTRAP()
+    {
+        Function *func = Intrinsic::getDeclaration(JM()->mpCurrentModule, Intrinsic::debugtrap);
+        return CALL(func);
+    }
 
     Value *Builder::VRCP(Value *va)
     {
@@ -496,11 +511,7 @@ namespace SwrJit
 
         // get a pointer to the first character in the constant string array
         std::vector<Constant*> geplist{C(0),C(0)};
-    #if HAVE_LLVM == 0x306
-        Constant *strGEP = ConstantExpr::getGetElementPtr(gvPtr,geplist,false);
-    #else
         Constant *strGEP = ConstantExpr::getGetElementPtr(nullptr, gvPtr,geplist,false);
-    #endif
 
         // insert the pointer to the format string in the argument vector
         printCallArgs[0] = strGEP;
@@ -631,6 +642,55 @@ namespace SwrJit
     }
 
     //////////////////////////////////////////////////////////////////////////
+    /// @brief Generate a masked gather operation in LLVM IR.  If not
+    /// supported on the underlying platform, emulate it with loads
+    /// @param vSrc - SIMD wide value that will be loaded if mask is invalid
+    /// @param pBase - Int8* base VB address pointer value
+    /// @param vIndices - SIMD wide value of VB byte offsets
+    /// @param vMask - SIMD wide mask that controls whether to access memory or the src values
+    /// @param scale - value to scale indices by
+    Value *Builder::GATHERPD(Value* vSrc, Value* pBase, Value* vIndices, Value* vMask, Value* scale)
+    {
+        Value* vGather;
+
+        // use avx2 gather instruction if available
+        if(JM()->mArch.AVX2())
+        {
+            vGather = VGATHERPD(vSrc, pBase, vIndices, vMask, scale);
+        }
+        else
+        {
+            Value* pStack = STACKSAVE();
+
+            // store vSrc on the stack.  this way we can select between a valid load address and the vSrc address
+            Value* vSrcPtr = ALLOCA(vSrc->getType());
+            STORE(vSrc, vSrcPtr);
+
+            vGather = UndefValue::get(VectorType::get(mDoubleTy, 4));
+            Value *vScaleVec = VECTOR_SPLAT(4, Z_EXT(scale,mInt32Ty));
+            Value *vOffsets = MUL(vIndices,vScaleVec);
+            Value *mask = MASK(vMask);
+            for(uint32_t i = 0; i < mVWidth/2; ++i)
+            {
+                // single component byte index
+                Value *offset = VEXTRACT(vOffsets,C(i));
+                // byte pointer to component
+                Value *loadAddress = GEP(pBase,offset);
+                loadAddress = BITCAST(loadAddress,PointerType::get(mDoubleTy,0));
+                // pointer to the value to load if we're masking off a component
+                Value *maskLoadAddress = GEP(vSrcPtr,{C(0), C(i)});
+                Value *selMask = VEXTRACT(mask,C(i));
+                // switch in a safe address to load if we're trying to access a vertex
+                Value *validAddress = SELECT(selMask, loadAddress, maskLoadAddress);
+                Value *val = LOAD(validAddress);
+                vGather = VINSERT(vGather,val,C(i));
+            }
+            STACKRESTORE(pStack);
+        }
+        return vGather;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     /// @brief convert x86 <N x float> mask to llvm <N x i1> mask
     Value* Builder::MASK(Value* vmask)
     {
@@ -703,22 +763,10 @@ namespace SwrJit
     /// lower 8 values are used.
     Value *Builder::PMOVSXBD(Value* a)
     {
-        // llvm-3.9 removed the pmovsxbd intrinsic
-    #if HAVE_LLVM < 0x309
-        // use avx2 byte sign extend instruction if available
-        if(JM()->mArch.AVX2())
-        {
-            Function *pmovsxbd = Intrinsic::getDeclaration(JM()->mpCurrentModule, Intrinsic::x86_avx2_pmovsxbd);
-            return CALL(pmovsxbd, std::initializer_list<Value*>{a});
-        }
-        else
-    #endif
-        {
-            // VPMOVSXBD output type
-            Type* v8x32Ty = VectorType::get(mInt32Ty, 8);
-            // Extract 8 values from 128bit lane and sign extend
-            return S_EXT(VSHUFFLE(a, a, C<int>({0, 1, 2, 3, 4, 5, 6, 7})), v8x32Ty);
-        }
+        // VPMOVSXBD output type
+        Type* v8x32Ty = VectorType::get(mInt32Ty, 8);
+        // Extract 8 values from 128bit lane and sign extend
+        return S_EXT(VSHUFFLE(a, a, C<int>({0, 1, 2, 3, 4, 5, 6, 7})), v8x32Ty);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -727,22 +775,10 @@ namespace SwrJit
     /// @param a - 128bit SIMD lane(8x16bit) of 16bit integer values.
     Value *Builder::PMOVSXWD(Value* a)
     {
-        // llvm-3.9 removed the pmovsxwd intrinsic
-    #if HAVE_LLVM < 0x309
-        // use avx2 word sign extend if available
-        if(JM()->mArch.AVX2())
-        {
-            Function *pmovsxwd = Intrinsic::getDeclaration(JM()->mpCurrentModule, Intrinsic::x86_avx2_pmovsxwd);
-            return CALL(pmovsxwd, std::initializer_list<Value*>{a});
-        }
-        else
-    #endif
-        {
-            // VPMOVSXWD output type
-            Type* v8x32Ty = VectorType::get(mInt32Ty, 8);
-            // Extract 8 values from 128bit lane and sign extend
-            return S_EXT(VSHUFFLE(a, a, C<int>({0, 1, 2, 3, 4, 5, 6, 7})), v8x32Ty);
-        }
+        // VPMOVSXWD output type
+        Type* v8x32Ty = VectorType::get(mInt32Ty, 8);
+        // Extract 8 values from 128bit lane and sign extend
+        return S_EXT(VSHUFFLE(a, a, C<int>({0, 1, 2, 3, 4, 5, 6, 7})), v8x32Ty);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -828,11 +864,11 @@ namespace SwrJit
         else
         {
             FunctionType* pFuncTy = FunctionType::get(mFP32Ty, mInt16Ty);
-            Function* pCvtPh2Ps = cast<Function>(JM()->mpCurrentModule->getOrInsertFunction("ConvertSmallFloatTo32", pFuncTy));
+            Function* pCvtPh2Ps = cast<Function>(JM()->mpCurrentModule->getOrInsertFunction("ConvertFloat16ToFloat32", pFuncTy));
 
-            if (sys::DynamicLibrary::SearchForAddressOfSymbol("ConvertSmallFloatTo32") == nullptr)
+            if (sys::DynamicLibrary::SearchForAddressOfSymbol("ConvertFloat16ToFloat32") == nullptr)
             {
-                sys::DynamicLibrary::AddSymbol("ConvertSmallFloatTo32", (void *)&ConvertSmallFloatTo32);
+                sys::DynamicLibrary::AddSymbol("ConvertFloat16ToFloat32", (void *)&ConvertFloat16ToFloat32);
             }
 
             Value* pResult = UndefValue::get(mSimdFP32Ty);
@@ -861,11 +897,11 @@ namespace SwrJit
         {
             // call scalar C function for now
             FunctionType* pFuncTy = FunctionType::get(mInt16Ty, mFP32Ty);
-            Function* pCvtPs2Ph = cast<Function>(JM()->mpCurrentModule->getOrInsertFunction("Convert32To16Float", pFuncTy));
+            Function* pCvtPs2Ph = cast<Function>(JM()->mpCurrentModule->getOrInsertFunction("ConvertFloat32ToFloat16", pFuncTy));
 
-            if (sys::DynamicLibrary::SearchForAddressOfSymbol("Convert32To16Float") == nullptr)
+            if (sys::DynamicLibrary::SearchForAddressOfSymbol("ConvertFloat32ToFloat16") == nullptr)
             {
-                sys::DynamicLibrary::AddSymbol("Convert32To16Float", (void *)&Convert32To16Float);
+                sys::DynamicLibrary::AddSymbol("ConvertFloat32ToFloat16", (void *)&ConvertFloat32ToFloat16);
             }
 
             Value* pResult = UndefValue::get(mSimdInt16Ty);
@@ -882,74 +918,14 @@ namespace SwrJit
 
     Value *Builder::PMAXSD(Value* a, Value* b)
     {
-        // llvm-3.9 removed the pmax intrinsics
-    #if HAVE_LLVM >= 0x309
         Value* cmp = ICMP_SGT(a, b);
         return SELECT(cmp, a, b);
-    #else
-        if (JM()->mArch.AVX2())
-        {
-            Function* pmaxsd = Intrinsic::getDeclaration(JM()->mpCurrentModule, Intrinsic::x86_avx2_pmaxs_d);
-            return CALL(pmaxsd, {a, b});
-        }
-        else
-        {
-            // use 4-wide sse max intrinsic on lower/upper halves of 8-wide sources
-            Function* pmaxsd = Intrinsic::getDeclaration(JM()->mpCurrentModule, Intrinsic::x86_sse41_pmaxsd);
-
-            // low 128
-            Value* aLo = VEXTRACTI128(a, C((uint8_t)0));
-            Value* bLo = VEXTRACTI128(b, C((uint8_t)0));
-            Value* resLo = CALL(pmaxsd, {aLo, bLo});
-
-            // high 128
-            Value* aHi = VEXTRACTI128(a, C((uint8_t)1));
-            Value* bHi = VEXTRACTI128(b, C((uint8_t)1));
-            Value* resHi = CALL(pmaxsd, {aHi, bHi});
-
-            // combine 
-            Value* result = VINSERTI128(VUNDEF_I(), resLo, C((uint8_t)0));
-            result = VINSERTI128(result, resHi, C((uint8_t)1));
-
-            return result;
-        }
-    #endif
     }
 
     Value *Builder::PMINSD(Value* a, Value* b)
     {
-        // llvm-3.9 removed the pmin intrinsics
-    #if HAVE_LLVM >= 0x309
         Value* cmp = ICMP_SLT(a, b);
         return SELECT(cmp, a, b);
-    #else
-        if (JM()->mArch.AVX2())
-        {
-            Function* pminsd = Intrinsic::getDeclaration(JM()->mpCurrentModule, Intrinsic::x86_avx2_pmins_d);
-            return CALL(pminsd, {a, b});
-        }
-        else
-        {
-            // use 4-wide sse max intrinsic on lower/upper halves of 8-wide sources
-            Function* pminsd = Intrinsic::getDeclaration(JM()->mpCurrentModule, Intrinsic::x86_sse41_pminsd);
-
-            // low 128
-            Value* aLo = VEXTRACTI128(a, C((uint8_t)0));
-            Value* bLo = VEXTRACTI128(b, C((uint8_t)0));
-            Value* resLo = CALL(pminsd, {aLo, bLo});
-
-            // high 128
-            Value* aHi = VEXTRACTI128(a, C((uint8_t)1));
-            Value* bHi = VEXTRACTI128(b, C((uint8_t)1));
-            Value* resHi = CALL(pminsd, {aHi, bHi});
-
-            // combine 
-            Value* result = VINSERTI128(VUNDEF_I(), resLo, C((uint8_t)0));
-            result = VINSERTI128(result, resHi, C((uint8_t)1));
-
-            return result;
-        }
-    #endif
     }
 
     void Builder::Gather4(const SWR_FORMAT format, Value* pSrcBase, Value* byteOffsets, 
@@ -1040,7 +1016,7 @@ namespace SwrJit
             }
                 break;
             default:
-                SWR_ASSERT(0, "Invalid float format");
+                SWR_INVALID("Invalid float format");
                 break;
         }
     }
@@ -1127,7 +1103,7 @@ namespace SwrJit
             }
                 break;
             default:
-                SWR_ASSERT(0, "unsupported format");
+                SWR_INVALID("unsupported format");
             break;
         }
     }
@@ -1333,7 +1309,17 @@ namespace SwrJit
         IRB()->SetInsertPoint(&pFunc->getEntryBlock(),
                               pFunc->getEntryBlock().begin());
         Value* pAlloca = ALLOCA(pType);
-        IRB()->restoreIP(saveIP);
+        if (saveIP.isSet()) IRB()->restoreIP(saveIP);
+        return pAlloca;
+    }
+
+    Value* Builder::CreateEntryAlloca(Function* pFunc, Type* pType, Value* pArraySize)
+    {
+        auto saveIP = IRB()->saveIP();
+        IRB()->SetInsertPoint(&pFunc->getEntryBlock(),
+            pFunc->getEntryBlock().begin());
+        Value* pAlloca = ALLOCA(pType, pArraySize);
+        if (saveIP.isSet()) IRB()->restoreIP(saveIP);
         return pAlloca;
     }
 
@@ -1479,11 +1465,7 @@ namespace SwrJit
     Value* Builder::STACKSAVE()
     {
         Function* pfnStackSave = Intrinsic::getDeclaration(JM()->mpCurrentModule, Intrinsic::stacksave);
-    #if HAVE_LLVM == 0x306
-        return CALL(pfnStackSave);
-    #else
         return CALLA(pfnStackSave);
-    #endif
     }
 
     void Builder::STACKRESTORE(Value* pSaved)
@@ -1529,7 +1511,7 @@ namespace SwrJit
     #if defined( _WIN32 )
         char strBuf[1024];
         vsnprintf_s(strBuf, _TRUNCATE, fmt, args);
-        OutputDebugString(strBuf);
+        OutputDebugStringA(strBuf);
     #endif
 
         va_end(args);
@@ -1537,29 +1519,16 @@ namespace SwrJit
 
     Value *Builder::VEXTRACTI128(Value* a, Constant* imm8)
     {
-    #if HAVE_LLVM == 0x306
-        Function *func =
-            Intrinsic::getDeclaration(JM()->mpCurrentModule,
-                                      Intrinsic::x86_avx_vextractf128_si_256);
-        return CALL(func, {a, imm8});
-    #else
         bool flag = !imm8->isZeroValue();
         SmallVector<Constant*,8> idx;
         for (unsigned i = 0; i < mVWidth / 2; i++) {
             idx.push_back(C(flag ? i + mVWidth / 2 : i));
         }
         return VSHUFFLE(a, VUNDEF_I(), ConstantVector::get(idx));
-    #endif
     }
 
     Value *Builder::VINSERTI128(Value* a, Value* b, Constant* imm8)
     {
-    #if HAVE_LLVM == 0x306
-        Function *func =
-            Intrinsic::getDeclaration(JM()->mpCurrentModule,
-                                      Intrinsic::x86_avx_vinsertf128_si_256);
-        return CALL(func, {a, b, imm8});
-    #else
         bool flag = !imm8->isZeroValue();
         SmallVector<Constant*,8> idx;
         for (unsigned i = 0; i < mVWidth; i++) {
@@ -1575,7 +1544,6 @@ namespace SwrJit
             idx2.push_back(C(flag ? i + mVWidth / 2 : i));
         }
         return VSHUFFLE(a, inter, ConstantVector::get(idx2));
-    #endif
     }
 
     // rdtsc buckets macros
@@ -1623,4 +1591,45 @@ namespace SwrJit
         }
     }
 
+
+    uint32_t Builder::GetTypeSize(Type* pType)
+    {
+        if (pType->isStructTy())
+        {
+            uint32_t numElems = pType->getStructNumElements();
+            Type* pElemTy = pType->getStructElementType(0);
+            return numElems * GetTypeSize(pElemTy);
+        }
+
+        if (pType->isArrayTy())
+        {
+            uint32_t numElems = pType->getArrayNumElements();
+            Type* pElemTy = pType->getArrayElementType();
+            return numElems * GetTypeSize(pElemTy);
+        }
+
+        if (pType->isIntegerTy())
+        {
+            uint32_t bitSize = pType->getIntegerBitWidth();
+            return bitSize / 8;
+        }
+
+        if (pType->isFloatTy())
+        {
+            return 4;
+        }
+
+        if (pType->isHalfTy())
+        {
+            return 2;
+        }
+
+        if (pType->isDoubleTy())
+        {
+            return 8;
+        }
+
+        SWR_ASSERT(false, "Unimplemented type.");
+        return 0;
+    }
 }

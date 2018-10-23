@@ -482,7 +482,7 @@ i915_init_program(struct i915_context *i915, struct i915_fragment_program *p)
    p->decl_t = 0;
    p->temp_flag = 0xffff000;
    p->utemp_flag = ~0x7;
-   p->wpos_tex = -1;
+   p->wpos_tex = I915_WPOS_TEX_INVALID;
    p->depth_written = 0;
    p->nr_params = 0;
 
@@ -517,18 +517,18 @@ i915_fini_program(struct i915_fragment_program *p)
    }
 
    if (p->error) {
-      p->FragProg.Base.NumNativeInstructions = 0;
-      p->FragProg.Base.NumNativeAluInstructions = 0;
-      p->FragProg.Base.NumNativeTexInstructions = 0;
-      p->FragProg.Base.NumNativeTexIndirections = 0;
+      p->FragProg.arb.NumNativeInstructions = 0;
+      p->FragProg.arb.NumNativeAluInstructions = 0;
+      p->FragProg.arb.NumNativeTexInstructions = 0;
+      p->FragProg.arb.NumNativeTexIndirections = 0;
    }
    else {
-      p->FragProg.Base.NumNativeInstructions = (p->nr_alu_insn +
+      p->FragProg.arb.NumNativeInstructions = (p->nr_alu_insn +
                                                 p->nr_tex_insn +
                                                 p->nr_decl_insn);
-      p->FragProg.Base.NumNativeAluInstructions = p->nr_alu_insn;
-      p->FragProg.Base.NumNativeTexInstructions = p->nr_tex_insn;
-      p->FragProg.Base.NumNativeTexIndirections = p->nr_tex_indirect;
+      p->FragProg.arb.NumNativeAluInstructions = p->nr_alu_insn;
+      p->FragProg.arb.NumNativeTexInstructions = p->nr_tex_insn;
+      p->FragProg.arb.NumNativeTexIndirections = p->nr_tex_indirect;
    }
 
    p->declarations[0] |= program_size + decl_size - 2;

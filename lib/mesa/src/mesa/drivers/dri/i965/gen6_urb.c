@@ -64,17 +64,18 @@ gen6_upload_urb(struct brw_context *brw, unsigned vs_size,
    }
 
    /* Then clamp to the maximum allowed by the hardware */
-   if (nr_vs_entries > devinfo->urb.max_vs_entries)
-      nr_vs_entries = devinfo->urb.max_vs_entries;
+   if (nr_vs_entries > devinfo->urb.max_entries[MESA_SHADER_VERTEX])
+      nr_vs_entries = devinfo->urb.max_entries[MESA_SHADER_VERTEX];
 
-   if (nr_gs_entries > devinfo->urb.max_gs_entries)
-      nr_gs_entries = devinfo->urb.max_gs_entries;
+   if (nr_gs_entries > devinfo->urb.max_entries[MESA_SHADER_GEOMETRY])
+      nr_gs_entries = devinfo->urb.max_entries[MESA_SHADER_GEOMETRY];
 
    /* Finally, both must be a multiple of 4 (see 3DSTATE_URB in the PRM). */
    brw->urb.nr_vs_entries = ROUND_DOWN_TO(nr_vs_entries, 4);
    brw->urb.nr_gs_entries = ROUND_DOWN_TO(nr_gs_entries, 4);
 
-   assert(brw->urb.nr_vs_entries >= devinfo->urb.min_vs_entries);
+   assert(brw->urb.nr_vs_entries >=
+          devinfo->urb.min_entries[MESA_SHADER_VERTEX]);
    assert(brw->urb.nr_vs_entries % 4 == 0);
    assert(brw->urb.nr_gs_entries % 4 == 0);
    assert(vs_size <= 5);
@@ -114,7 +115,8 @@ upload_urb(struct brw_context *brw)
    const unsigned vs_size = MAX2(vs_vue_prog_data->urb_entry_size, 1);
 
    /* BRW_NEW_GEOMETRY_PROGRAM, BRW_NEW_GS_PROG_DATA */
-   const bool gs_present = brw->ff_gs.prog_active || brw->geometry_program;
+   const bool gs_present =
+      brw->ff_gs.prog_active || brw->programs[MESA_SHADER_GEOMETRY];
 
    /* Whe using GS to do transform feedback only we use the same VUE layout for
     * VS outputs and GS outputs (as it's what the SF and Clipper expect), so we
@@ -127,7 +129,7 @@ upload_urb(struct brw_context *brw)
     * outputs can be different from the VS outputs.
     */
    unsigned gs_size = vs_size;
-   if (brw->geometry_program) {
+   if (brw->programs[MESA_SHADER_GEOMETRY]) {
       const struct brw_vue_prog_data *gs_vue_prog_data =
          brw_vue_prog_data(brw->gs.base.prog_data);
       gs_size = gs_vue_prog_data->urb_entry_size;

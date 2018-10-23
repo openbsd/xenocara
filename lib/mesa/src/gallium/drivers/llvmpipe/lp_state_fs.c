@@ -84,6 +84,7 @@
 #include "gallivm/lp_bld_flow.h"
 #include "gallivm/lp_bld_debug.h"
 #include "gallivm/lp_bld_arit.h"
+#include "gallivm/lp_bld_bitarit.h"
 #include "gallivm/lp_bld_pack.h"
 #include "gallivm/lp_bld_format.h"
 #include "gallivm/lp_bld_quad.h"
@@ -127,7 +128,7 @@ generate_quad_mask(struct gallivm_state *gallivm,
    struct lp_type mask_type;
    LLVMTypeRef i32t = LLVMInt32TypeInContext(gallivm->context);
    LLVMValueRef bits[16];
-   LLVMValueRef mask;
+   LLVMValueRef mask, bits_vec;
    int shift, i;
 
    /*
@@ -179,15 +180,15 @@ generate_quad_mask(struct gallivm_state *gallivm,
       bits[4*i + 2] = LLVMConstInt(i32t, 1ULL << (j + 4), 0);
       bits[4*i + 3] = LLVMConstInt(i32t, 1ULL << (j + 5), 0);
    }
-   mask = LLVMBuildAnd(builder, mask, LLVMConstVector(bits, fs_type.length), "");
+   bits_vec = LLVMConstVector(bits, fs_type.length);
+   mask = LLVMBuildAnd(builder, mask, bits_vec, "");
 
    /*
-    * mask = mask != 0 ? ~0 : 0
+    * mask = mask == bits ? ~0 : 0
     */
    mask = lp_build_compare(gallivm,
-                           mask_type, PIPE_FUNC_NOTEQUAL,
-                           mask,
-                           lp_build_const_int_vec(gallivm, mask_type, 0));
+                           mask_type, PIPE_FUNC_EQUAL,
+                           mask, bits_vec);
 
    return mask;
 }
@@ -347,7 +348,8 @@ generate_fs_loop(struct gallivm_state *gallivm,
       if (!shader->info.base.writes_z && !shader->info.base.writes_stencil) {
          if (key->alpha.enabled ||
              key->blend.alpha_to_coverage ||
-             shader->info.base.uses_kill) {
+             shader->info.base.uses_kill ||
+             shader->info.base.writes_samplemask) {
             /* With alpha test and kill, can do the depth test early
              * and hopefully eliminate some quads.  But need to do a
              * special deferred depth write once the final mask value
@@ -514,6 +516,25 @@ generate_fs_loop(struct gallivm_state *gallivm,
                                     &mask, alpha,
                                     (depth_mode & LATE_DEPTH_TEST) != 0);
       }
+   }
+
+   if (shader->info.base.writes_samplemask) {
+      int smaski = find_output_by_semantic(&shader->info.base,
+                                           TGSI_SEMANTIC_SAMPLEMASK,
+                                           0);
+      LLVMValueRef smask;
+      struct lp_build_context smask_bld;
+      lp_build_context_init(&smask_bld, gallivm, int_type);
+
+      assert(smaski >= 0);
+      smask = LLVMBuildLoad(builder, outputs[smaski][0], "smask");
+      /*
+       * Pixel is alive according to the first sample in the mask.
+       */
+      smask = LLVMBuildBitCast(builder, smask, smask_bld.vec_type, "");
+      smask = lp_build_and(&smask_bld, smask, smask_bld.one);
+      smask = lp_build_cmp(&smask_bld, PIPE_FUNC_NOTEQUAL, smask, smask_bld.zero);
+      lp_build_mask_update(&mask, smask);
    }
 
    /* Late Z test */
@@ -734,6 +755,10 @@ generate_fs_twiddle(struct gallivm_state *gallivm,
       }
    } else if (twiddle) {
       /* Twiddle pixels across elements of array */
+      /*
+       * XXX: we should avoid this in some cases, but would need to tell
+       * lp_build_conv to reorder (or deal with it ourselves).
+       */
       lp_bld_quad_twiddle(gallivm, type, src, src_count, dst);
    } else {
       /* Do nothing */
@@ -761,6 +786,94 @@ generate_fs_twiddle(struct gallivm_state *gallivm,
    }
 
    return src_count;
+}
+
+
+/*
+ * Untwiddle and transpose, much like the above.
+ * However, this is after conversion, so we get packed vectors.
+ * At this time only handle 4x16i8 rgba / 2x16i8 rg / 1x16i8 r data,
+ * the vectors will look like:
+ * r0r1r4r5r2r3r6r7r8r9r12... (albeit color channels may
+ * be swizzled here). Extending to 16bit should be trivial.
+ * Should also be extended to handle twice wide vectors with AVX2...
+ */
+static void
+fs_twiddle_transpose(struct gallivm_state *gallivm,
+                     struct lp_type type,
+                     LLVMValueRef *src,
+                     unsigned src_count,
+                     LLVMValueRef *dst)
+{
+   unsigned i, j;
+   struct lp_type type64, type16, type32;
+   LLVMTypeRef type64_t, type8_t, type16_t, type32_t;
+   LLVMBuilderRef builder = gallivm->builder;
+   LLVMValueRef tmp[4], shuf[8];
+   for (j = 0; j < 2; j++) {
+      shuf[j*4 + 0] = lp_build_const_int32(gallivm, j*4 + 0);
+      shuf[j*4 + 1] = lp_build_const_int32(gallivm, j*4 + 2);
+      shuf[j*4 + 2] = lp_build_const_int32(gallivm, j*4 + 1);
+      shuf[j*4 + 3] = lp_build_const_int32(gallivm, j*4 + 3);
+   }
+
+   assert(src_count == 4 || src_count == 2 || src_count == 1);
+   assert(type.width == 8);
+   assert(type.length == 16);
+
+   type8_t = lp_build_vec_type(gallivm, type);
+
+   type64 = type;
+   type64.length /= 8;
+   type64.width *= 8;
+   type64_t = lp_build_vec_type(gallivm, type64);
+
+   type16 = type;
+   type16.length /= 2;
+   type16.width *= 2;
+   type16_t = lp_build_vec_type(gallivm, type16);
+
+   type32 = type;
+   type32.length /= 4;
+   type32.width *= 4;
+   type32_t = lp_build_vec_type(gallivm, type32);
+
+   lp_build_transpose_aos_n(gallivm, type, src, src_count, tmp);
+
+   if (src_count == 1) {
+      /* transpose was no-op, just untwiddle */
+      LLVMValueRef shuf_vec;
+      shuf_vec = LLVMConstVector(shuf, 8);
+      tmp[0] = LLVMBuildBitCast(builder, src[0], type16_t, "");
+      tmp[0] = LLVMBuildShuffleVector(builder, tmp[0], tmp[0], shuf_vec, "");
+      dst[0] = LLVMBuildBitCast(builder, tmp[0], type8_t, "");
+   } else if (src_count == 2) {
+      LLVMValueRef shuf_vec;
+      shuf_vec = LLVMConstVector(shuf, 4);
+
+      for (i = 0; i < 2; i++) {
+         tmp[i] = LLVMBuildBitCast(builder, tmp[i], type32_t, "");
+         tmp[i] = LLVMBuildShuffleVector(builder, tmp[i], tmp[i], shuf_vec, "");
+         dst[i] = LLVMBuildBitCast(builder, tmp[i], type8_t, "");
+      }
+   } else {
+      for (j = 0; j < 2; j++) {
+         LLVMValueRef lo, hi, lo2, hi2;
+          /*
+          * Note that if we only really have 3 valid channels (rgb)
+          * and we don't need alpha we could substitute a undef here
+          * for the respective channel (causing llvm to drop conversion
+          * for alpha).
+          */
+         /* we now have rgba0rgba1rgba4rgba5 etc, untwiddle */
+         lo2 = LLVMBuildBitCast(builder, tmp[j*2], type64_t, "");
+         hi2 = LLVMBuildBitCast(builder, tmp[j*2 + 1], type64_t, "");
+         lo = lp_build_interleave2(gallivm, type64, lo2, hi2, 0);
+         hi = lp_build_interleave2(gallivm, type64, lo2, hi2, 1);
+         dst[j*2] = LLVMBuildBitCast(builder, lo, type8_t, "");
+         dst[j*2 + 1] = LLVMBuildBitCast(builder, hi, type8_t, "");
+      }
+   }
 }
 
 
@@ -799,7 +912,8 @@ load_unswizzled_block(struct gallivm_state *gallivm,
       gep[1] = LLVMBuildAdd(builder, bx, by, "");
 
       dst_ptr = LLVMBuildGEP(builder, base_ptr, gep, 2, "");
-      dst_ptr = LLVMBuildBitCast(builder, dst_ptr, LLVMPointerType(lp_build_vec_type(gallivm, dst_type), 0), "");
+      dst_ptr = LLVMBuildBitCast(builder, dst_ptr,
+                                 LLVMPointerType(lp_build_vec_type(gallivm, dst_type), 0), "");
 
       dst[i] = LLVMBuildLoad(builder, dst_ptr, "");
 
@@ -843,7 +957,8 @@ store_unswizzled_block(struct gallivm_state *gallivm,
       gep[1] = LLVMBuildAdd(builder, bx, by, "");
 
       src_ptr = LLVMBuildGEP(builder, base_ptr, gep, 2, "");
-      src_ptr = LLVMBuildBitCast(builder, src_ptr, LLVMPointerType(lp_build_vec_type(gallivm, src_type), 0), "");
+      src_ptr = LLVMBuildBitCast(builder, src_ptr,
+                                 LLVMPointerType(lp_build_vec_type(gallivm, src_type), 0), "");
 
       src_ptr = LLVMBuildStore(builder, src[i], src_ptr);
 
@@ -1096,7 +1211,7 @@ scale_bits(struct gallivm_state *gallivm,
                             lp_build_const_int_vec(gallivm, src_type, db),
                             "");
 
-      if (db < src_bits) {
+      if (db <= src_bits) {
          /* Enough bits in src to fill the remainder */
          LLVMValueRef lower = LLVMBuildLShr(builder,
                                             src,
@@ -1154,7 +1269,7 @@ convert_to_blend_type(struct gallivm_state *gallivm,
    LLVMBuilderRef builder = gallivm->builder;
    struct lp_type blend_type;
    struct lp_type mem_type;
-   unsigned i, j, k;
+   unsigned i, j;
    unsigned pixels = block_size / num_srcs;
    bool is_arith;
 
@@ -1267,9 +1382,7 @@ convert_to_blend_type(struct gallivm_state *gallivm,
          unsigned from_lsb = src_fmt->nr_channels - j - 1;
 #endif
 
-         for (k = 0; k < src_fmt->channel[j].size; ++k) {
-            mask |= 1 << k;
-         }
+         mask = (1 << src_fmt->channel[j].size) - 1;
 
          /* Extract bits from source */
          chans[j] = LLVMBuildLShr(builder,
@@ -1460,7 +1573,8 @@ convert_from_blend_type(struct gallivm_state *gallivm,
          /* Extract bits */
          chans[j] = LLVMBuildLShr(builder,
                                   dst[i],
-                                  lp_build_const_int_vec(gallivm, src_type, from_lsb * blend_type.width),
+                                  lp_build_const_int_vec(gallivm, src_type,
+                                                         from_lsb * blend_type.width),
                                   "");
 
          chans[j] = LLVMBuildAnd(builder,
@@ -1548,7 +1662,8 @@ convert_alpha(struct gallivm_state *gallivm,
       /* If there is a src for each pixel broadcast the alpha across whole row */
       if (src_count == block_size) {
          for (i = 0; i < src_count; ++i) {
-            src_alpha[i] = lp_build_broadcast(gallivm, lp_build_vec_type(gallivm, row_type), src_alpha[i]);
+            src_alpha[i] = lp_build_broadcast(gallivm,
+                              lp_build_vec_type(gallivm, row_type), src_alpha[i]);
          }
       } else {
          unsigned pixels = block_size / src_count;
@@ -1634,6 +1749,7 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
    struct lp_type blend_type;
    struct lp_type row_type;
    struct lp_type dst_type;
+   struct lp_type ls_type;
 
    unsigned char swizzle[TGSI_NUM_CHANNELS];
    unsigned vector_width;
@@ -1653,6 +1769,7 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
                                      util_blend_state_is_dual(&variant->key.blend, 0);
 
    const boolean is_1d = variant->key.resource_1d;
+   boolean twiddle_after_convert = FALSE;
    unsigned num_fullblock_fs = is_1d ? 2 * num_fs : num_fs;
    LLVMValueRef fpstate = 0;
 
@@ -1748,13 +1865,23 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
    }
 
    /* If 3 channels then pad to include alpha for 4 element transpose */
-   if (dst_channels == 3 && !has_alpha) {
+   if (dst_channels == 3) {
+      assert (!has_alpha);
       for (i = 0; i < TGSI_NUM_CHANNELS; i++) {
          if (swizzle[i] > TGSI_NUM_CHANNELS)
             swizzle[i] = 3;
       }
       if (out_format_desc->nr_channels == 4) {
          dst_channels = 4;
+         /*
+          * We use alpha from the color conversion, not separate one.
+          * We had to include it for transpose, hence it will get converted
+          * too (albeit when doing transpose after conversion, that would
+          * no longer be the case necessarily).
+          * (It works only with 4 channel dsts, e.g. rgbx formats, because
+          * otherwise we really have padding, not alpha, included.)
+          */
+         has_alpha = true;
       }
    }
 
@@ -1786,6 +1913,7 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
       /*
        * XXX If we include that here maybe could actually use it instead of
        * separate alpha for blending?
+       * (Difficult though we actually convert pad channels, not alpha.)
        */
       if (dst_channels == 3 && !has_alpha) {
          fs_src[i][3] = alpha;
@@ -1793,11 +1921,14 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
 
       /* We split the row_mask and row_alpha as we want 128bit interleave */
       if (fs_type.length == 8) {
-         src_mask[i*2 + 0]  = lp_build_extract_range(gallivm, fs_mask[i], 0, src_channels);
-         src_mask[i*2 + 1]  = lp_build_extract_range(gallivm, fs_mask[i], src_channels, src_channels);
+         src_mask[i*2 + 0]  = lp_build_extract_range(gallivm, fs_mask[i],
+                                                     0, src_channels);
+         src_mask[i*2 + 1]  = lp_build_extract_range(gallivm, fs_mask[i],
+                                                     src_channels, src_channels);
 
          src_alpha[i*2 + 0] = lp_build_extract_range(gallivm, alpha, 0, src_channels);
-         src_alpha[i*2 + 1] = lp_build_extract_range(gallivm, alpha, src_channels, src_channels);
+         src_alpha[i*2 + 1] = lp_build_extract_range(gallivm, alpha,
+                                                     src_channels, src_channels);
       } else {
          src_mask[i] = fs_mask[i];
          src_alpha[i] = alpha;
@@ -1828,7 +1959,8 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
          }
          if (fs_type.length == 8) {
             src1_alpha[i*2 + 0] = lp_build_extract_range(gallivm, alpha, 0, src_channels);
-            src1_alpha[i*2 + 1] = lp_build_extract_range(gallivm, alpha, src_channels, src_channels);
+            src1_alpha[i*2 + 1] = lp_build_extract_range(gallivm, alpha,
+                                                         src_channels, src_channels);
          } else {
             src1_alpha[i] = alpha;
          }
@@ -1855,13 +1987,44 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
    }
 
    /*
+    * We actually should generally do conversion first (for non-1d cases)
+    * when the blend format is 8 or 16 bits. The reason is obvious,
+    * there's 2 or 4 times less vectors to deal with for the interleave...
+    * Albeit for the AVX (not AVX2) case there's no benefit with 16 bit
+    * vectors (as it can do 32bit unpack with 256bit vectors, but 8/16bit
+    * unpack only with 128bit vectors).
+    * Note: for 16bit sizes really need matching pack conversion code
+    */
+   if (!is_1d && dst_channels != 3 && dst_type.width == 8) {
+      twiddle_after_convert = TRUE;
+   }
+
+   /*
     * Pixel twiddle from fragment shader order to memory order
     */
-   src_count = generate_fs_twiddle(gallivm, fs_type, num_fullblock_fs,
-                                   dst_channels, fs_src, src, pad_inline);
-   if (dual_source_blend) {
-      generate_fs_twiddle(gallivm, fs_type, num_fullblock_fs, dst_channels,
-                          fs_src1, src1, pad_inline);
+   if (!twiddle_after_convert) {
+      src_count = generate_fs_twiddle(gallivm, fs_type, num_fullblock_fs,
+                                      dst_channels, fs_src, src, pad_inline);
+      if (dual_source_blend) {
+         generate_fs_twiddle(gallivm, fs_type, num_fullblock_fs, dst_channels,
+                             fs_src1, src1, pad_inline);
+      }
+   } else {
+      src_count = num_fullblock_fs * dst_channels;
+      /*
+       * We reorder things a bit here, so the cases for 4-wide and 8-wide
+       * (AVX) turn out the same later when untwiddling/transpose (albeit
+       * for true AVX2 path untwiddle needs to be different).
+       * For now just order by colors first (so we can use unpack later).
+       */
+      for (j = 0; j < num_fullblock_fs; j++) {
+         for (i = 0; i < dst_channels; i++) {
+            src[i*num_fullblock_fs + j] = fs_src[j][i];
+            if (dual_source_blend) {
+               src1[i*num_fullblock_fs + j] = fs_src1[j][i];
+            }
+         }
+      }
    }
 
    src_channels = dst_channels < 3 ? dst_channels : 4;
@@ -1905,13 +2068,21 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
       assert(bits == 128 || bits == 256);
    }
 
+   if (twiddle_after_convert) {
+      fs_twiddle_transpose(gallivm, row_type, src, src_count, src);
+      if (dual_source_blend) {
+         fs_twiddle_transpose(gallivm, row_type, src1, src_count, src1);
+      }
+   }
 
    /*
     * Blend Colour conversion
     */
    blend_color = lp_jit_context_f_blend_color(gallivm, context_ptr);
-   blend_color = LLVMBuildPointerCast(builder, blend_color, LLVMPointerType(lp_build_vec_type(gallivm, fs_type), 0), "");
-   blend_color = LLVMBuildLoad(builder, LLVMBuildGEP(builder, blend_color, &i32_zero, 1, ""), "");
+   blend_color = LLVMBuildPointerCast(builder, blend_color,
+                    LLVMPointerType(lp_build_vec_type(gallivm, fs_type), 0), "");
+   blend_color = LLVMBuildLoad(builder, LLVMBuildGEP(builder, blend_color,
+                               &i32_zero, 1, ""), "");
 
    /* Convert */
    lp_build_conv(gallivm, fs_type, blend_type, &blend_color, 1, &blend_color, 1);
@@ -1988,13 +2159,19 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
          mask_type.length = pixels;
          mask_type.width = row_type.width * dst_channels;
 
-         src_mask[i] = LLVMBuildIntCast(builder, src_mask[i], lp_build_int_vec_type(gallivm, mask_type), "");
+         /*
+          * If mask_type width is smaller than 32bit, this doesn't quite
+          * generate the most efficient code (could use some pack).
+          */
+         src_mask[i] = LLVMBuildIntCast(builder, src_mask[i],
+                                        lp_build_int_vec_type(gallivm, mask_type), "");
 
          mask_type.length *= dst_channels;
          mask_type.width /= dst_channels;
       }
 
-      src_mask[i] = LLVMBuildBitCast(builder, src_mask[i], lp_build_int_vec_type(gallivm, mask_type), "");
+      src_mask[i] = LLVMBuildBitCast(builder, src_mask[i],
+                                     lp_build_int_vec_type(gallivm, mask_type), "");
       src_mask[i] = lp_build_pad_vector(gallivm, src_mask[i], row_type.length);
    }
 
@@ -2059,17 +2236,41 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
     */
    dst_alignment = MIN2(16, dst_alignment);
 
+   ls_type = dst_type;
+
+   if (dst_count > src_count) {
+      if ((dst_type.width == 8 || dst_type.width == 16) &&
+          util_is_power_of_two(dst_type.length) &&
+          dst_type.length * dst_type.width < 128) {
+         /*
+          * Never try to load values as 4xi8 which we will then
+          * concatenate to larger vectors. This gives llvm a real
+          * headache (the problem is the type legalizer (?) will
+          * try to load that as 4xi8 zext to 4xi32 to fill the vector,
+          * then the shuffles to concatenate are more or less impossible
+          * - llvm is easily capable of generating a sequence of 32
+          * pextrb/pinsrb instructions for that. Albeit it appears to
+          * be fixed in llvm 4.0. So, load and concatenate with 32bit
+          * width to avoid the trouble (16bit seems not as bad, llvm
+          * probably recognizes the load+shuffle as only one shuffle
+          * is necessary, but we can do just the same anyway).
+          */
+         ls_type.length = dst_type.length * dst_type.width / 32;
+         ls_type.width = 32;
+      }
+   }
+
    if (is_1d) {
       load_unswizzled_block(gallivm, color_ptr, stride, block_width, 1,
-                            dst, dst_type, dst_count / 4, dst_alignment);
+                            dst, ls_type, dst_count / 4, dst_alignment);
       for (i = dst_count / 4; i < dst_count; i++) {
-         dst[i] = lp_build_undef(gallivm, dst_type);
+         dst[i] = lp_build_undef(gallivm, ls_type);
       }
 
    }
    else {
       load_unswizzled_block(gallivm, color_ptr, stride, block_width, block_height,
-                            dst, dst_type, dst_count, dst_alignment);
+                            dst, ls_type, dst_count, dst_alignment);
    }
 
 
@@ -2084,7 +2285,24 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
     * on all 16 pixels in that single vector at once.
     */
    if (dst_count > src_count) {
-      lp_build_concat_n(gallivm, dst_type, dst, 4, dst, src_count);
+      if (ls_type.length != dst_type.length && ls_type.length == 1) {
+         LLVMTypeRef elem_type = lp_build_elem_type(gallivm, ls_type);
+         LLVMTypeRef ls_vec_type = LLVMVectorType(elem_type, 1);
+         for (i = 0; i < dst_count; i++) {
+            dst[i] = LLVMBuildBitCast(builder, dst[i], ls_vec_type, "");
+         }
+      }
+
+      lp_build_concat_n(gallivm, ls_type, dst, 4, dst, src_count);
+
+      if (ls_type.length != dst_type.length) {
+         struct lp_type tmp_type = dst_type;
+         tmp_type.length = dst_type.length * 4 / src_count;
+         for (i = 0; i < src_count; i++) {
+            dst[i] = LLVMBuildBitCast(builder, dst[i],
+                                      lp_build_vec_type(gallivm, tmp_type), "");
+         }
+      }
    }
 
    /*
@@ -2099,7 +2317,8 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
     * It seems some cleanup could be done here (like skipping conversion/blend
     * when not needed).
     */
-   convert_to_blend_type(gallivm, block_size, out_format_desc, dst_type, row_type, dst, src_count);
+   convert_to_blend_type(gallivm, block_size, out_format_desc, dst_type,
+                         row_type, dst, src_count);
 
    /*
     * FIXME: Really should get logic ops / masks out of generic blend / row
@@ -2125,7 +2344,8 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
                                   pad_inline ? 4 : dst_channels);
    }
 
-   convert_from_blend_type(gallivm, block_size, out_format_desc, row_type, dst_type, dst, src_count);
+   convert_from_blend_type(gallivm, block_size, out_format_desc,
+                           row_type, dst_type, dst, src_count);
 
    /* Split the blend rows back to memory rows */
    if (dst_count > src_count) {
@@ -2296,7 +2516,7 @@ generate_fragment(struct llvmpipe_context *lp,
     */
    for(i = 0; i < ARRAY_SIZE(arg_types); ++i)
       if(LLVMGetTypeKind(arg_types[i]) == LLVMPointerTypeKind)
-         LLVMAddAttribute(LLVMGetParam(function, i), LLVMNoAliasAttribute);
+         lp_add_function_attr(function, i + 1, LP_FUNC_ATTR_NOALIAS);
 
    context_ptr  = LLVMGetParam(function, 0);
    x            = LLVMGetParam(function, 1);
@@ -2476,25 +2696,27 @@ dump_fs_variant_key(const struct lp_fragment_shader_variant_key *key)
    for (i = 0; i < key->nr_cbufs; ++i) {
       debug_printf("cbuf_format[%u] = %s\n", i, util_format_name(key->cbuf_format[i]));
    }
-   if (key->depth.enabled) {
+   if (key->depth.enabled || key->stencil[0].enabled) {
       debug_printf("depth.format = %s\n", util_format_name(key->zsbuf_format));
-      debug_printf("depth.func = %s\n", util_dump_func(key->depth.func, TRUE));
+   }
+   if (key->depth.enabled) {
+      debug_printf("depth.func = %s\n", util_str_func(key->depth.func, TRUE));
       debug_printf("depth.writemask = %u\n", key->depth.writemask);
    }
 
    for (i = 0; i < 2; ++i) {
       if (key->stencil[i].enabled) {
-         debug_printf("stencil[%u].func = %s\n", i, util_dump_func(key->stencil[i].func, TRUE));
-         debug_printf("stencil[%u].fail_op = %s\n", i, util_dump_stencil_op(key->stencil[i].fail_op, TRUE));
-         debug_printf("stencil[%u].zpass_op = %s\n", i, util_dump_stencil_op(key->stencil[i].zpass_op, TRUE));
-         debug_printf("stencil[%u].zfail_op = %s\n", i, util_dump_stencil_op(key->stencil[i].zfail_op, TRUE));
+         debug_printf("stencil[%u].func = %s\n", i, util_str_func(key->stencil[i].func, TRUE));
+         debug_printf("stencil[%u].fail_op = %s\n", i, util_str_stencil_op(key->stencil[i].fail_op, TRUE));
+         debug_printf("stencil[%u].zpass_op = %s\n", i, util_str_stencil_op(key->stencil[i].zpass_op, TRUE));
+         debug_printf("stencil[%u].zfail_op = %s\n", i, util_str_stencil_op(key->stencil[i].zfail_op, TRUE));
          debug_printf("stencil[%u].valuemask = 0x%x\n", i, key->stencil[i].valuemask);
          debug_printf("stencil[%u].writemask = 0x%x\n", i, key->stencil[i].writemask);
       }
    }
 
    if (key->alpha.enabled) {
-      debug_printf("alpha.func = %s\n", util_dump_func(key->alpha.func, TRUE));
+      debug_printf("alpha.func = %s\n", util_str_func(key->alpha.func, TRUE));
    }
 
    if (key->occlusion_count) {
@@ -2502,15 +2724,15 @@ dump_fs_variant_key(const struct lp_fragment_shader_variant_key *key)
    }
 
    if (key->blend.logicop_enable) {
-      debug_printf("blend.logicop_func = %s\n", util_dump_logicop(key->blend.logicop_func, TRUE));
+      debug_printf("blend.logicop_func = %s\n", util_str_logicop(key->blend.logicop_func, TRUE));
    }
    else if (key->blend.rt[0].blend_enable) {
-      debug_printf("blend.rgb_func = %s\n",   util_dump_blend_func  (key->blend.rt[0].rgb_func, TRUE));
-      debug_printf("blend.rgb_src_factor = %s\n",   util_dump_blend_factor(key->blend.rt[0].rgb_src_factor, TRUE));
-      debug_printf("blend.rgb_dst_factor = %s\n",   util_dump_blend_factor(key->blend.rt[0].rgb_dst_factor, TRUE));
-      debug_printf("blend.alpha_func = %s\n",       util_dump_blend_func  (key->blend.rt[0].alpha_func, TRUE));
-      debug_printf("blend.alpha_src_factor = %s\n", util_dump_blend_factor(key->blend.rt[0].alpha_src_factor, TRUE));
-      debug_printf("blend.alpha_dst_factor = %s\n", util_dump_blend_factor(key->blend.rt[0].alpha_dst_factor, TRUE));
+      debug_printf("blend.rgb_func = %s\n",   util_str_blend_func  (key->blend.rt[0].rgb_func, TRUE));
+      debug_printf("blend.rgb_src_factor = %s\n",   util_str_blend_factor(key->blend.rt[0].rgb_src_factor, TRUE));
+      debug_printf("blend.rgb_dst_factor = %s\n",   util_str_blend_factor(key->blend.rt[0].rgb_dst_factor, TRUE));
+      debug_printf("blend.alpha_func = %s\n",       util_str_blend_func  (key->blend.rt[0].alpha_func, TRUE));
+      debug_printf("blend.alpha_src_factor = %s\n", util_str_blend_factor(key->blend.rt[0].alpha_src_factor, TRUE));
+      debug_printf("blend.alpha_dst_factor = %s\n", util_str_blend_factor(key->blend.rt[0].alpha_dst_factor, TRUE));
    }
    debug_printf("blend.colormask = 0x%x\n", key->blend.rt[0].colormask);
    if (key->blend.alpha_to_coverage) {
@@ -2520,17 +2742,17 @@ dump_fs_variant_key(const struct lp_fragment_shader_variant_key *key)
       const struct lp_static_sampler_state *sampler = &key->state[i].sampler_state;
       debug_printf("sampler[%u] = \n", i);
       debug_printf("  .wrap = %s %s %s\n",
-                   util_dump_tex_wrap(sampler->wrap_s, TRUE),
-                   util_dump_tex_wrap(sampler->wrap_t, TRUE),
-                   util_dump_tex_wrap(sampler->wrap_r, TRUE));
+                   util_str_tex_wrap(sampler->wrap_s, TRUE),
+                   util_str_tex_wrap(sampler->wrap_t, TRUE),
+                   util_str_tex_wrap(sampler->wrap_r, TRUE));
       debug_printf("  .min_img_filter = %s\n",
-                   util_dump_tex_filter(sampler->min_img_filter, TRUE));
+                   util_str_tex_filter(sampler->min_img_filter, TRUE));
       debug_printf("  .min_mip_filter = %s\n",
-                   util_dump_tex_mipfilter(sampler->min_mip_filter, TRUE));
+                   util_str_tex_mipfilter(sampler->min_mip_filter, TRUE));
       debug_printf("  .mag_img_filter = %s\n",
-                   util_dump_tex_filter(sampler->mag_img_filter, TRUE));
+                   util_str_tex_filter(sampler->mag_img_filter, TRUE));
       if (sampler->compare_mode != PIPE_TEX_COMPARE_NONE)
-         debug_printf("  .compare_func = %s\n", util_dump_func(sampler->compare_func, TRUE));
+         debug_printf("  .compare_func = %s\n", util_str_func(sampler->compare_func, TRUE));
       debug_printf("  .normalized_coords = %u\n", sampler->normalized_coords);
       debug_printf("  .min_max_lod_equal = %u\n", sampler->min_max_lod_equal);
       debug_printf("  .lod_bias_non_zero = %u\n", sampler->lod_bias_non_zero);
@@ -2543,7 +2765,7 @@ dump_fs_variant_key(const struct lp_fragment_shader_variant_key *key)
       debug_printf("  .format = %s\n",
                    util_format_name(texture->format));
       debug_printf("  .target = %s\n",
-                   util_dump_tex_target(texture->target, TRUE));
+                   util_str_tex_target(texture->target, TRUE));
       debug_printf("  .level_zero_only = %u\n",
                    texture->level_zero_only);
       debug_printf("  .pot = %u %u %u\n",
@@ -2576,7 +2798,7 @@ generate_variant(struct llvmpipe_context *lp,
                  const struct lp_fragment_shader_variant_key *key)
 {
    struct lp_fragment_shader_variant *variant;
-   const struct util_format_description *cbuf0_format_desc;
+   const struct util_format_description *cbuf0_format_desc = NULL;
    boolean fullcolormask;
    char module_name[64];
 
@@ -2617,7 +2839,8 @@ generate_variant(struct llvmpipe_context *lp,
          !key->alpha.enabled &&
          !key->blend.alpha_to_coverage &&
          !key->depth.enabled &&
-         !shader->info.base.uses_kill
+         !shader->info.base.uses_kill &&
+         !shader->info.base.writes_samplemask
       ? TRUE : FALSE;
 
    if ((shader->info.base.num_tokens <= 1) &&
@@ -2792,14 +3015,13 @@ void
 llvmpipe_remove_shader_variant(struct llvmpipe_context *lp,
                                struct lp_fragment_shader_variant *variant)
 {
-   if (gallivm_debug & GALLIVM_DEBUG_IR) {
-      debug_printf("llvmpipe: del fs #%u var #%u v created #%u v cached"
-                   " #%u v total cached #%u\n",
-                   variant->shader->no,
-                   variant->no,
+   if ((LP_DEBUG & DEBUG_FS) || (gallivm_debug & GALLIVM_DEBUG_IR)) {
+      debug_printf("llvmpipe: del fs #%u var %u v created %u v cached %u "
+                   "v total cached %u inst %u total inst %u\n",
+                   variant->shader->no, variant->no,
                    variant->shader->variants_created,
                    variant->shader->variants_cached,
-                   lp->nr_fs_variants);
+                   lp->nr_fs_variants, variant->nr_instrs, lp->nr_fs_instrs);
    }
 
    gallivm_destroy(variant->gallivm);
@@ -2853,7 +3075,7 @@ llvmpipe_delete_fs_state(struct pipe_context *pipe, void *fs)
 
 static void
 llvmpipe_set_constant_buffer(struct pipe_context *pipe,
-                             uint shader, uint index,
+                             enum pipe_shader_type shader, uint index,
                              const struct pipe_constant_buffer *cb)
 {
    struct llvmpipe_context *llvmpipe = llvmpipe_context(pipe);
@@ -3156,7 +3378,7 @@ llvmpipe_update_fs(struct llvmpipe_context *lp)
       unsigned i;
       unsigned variants_to_cull;
 
-      if (0) {
+      if (LP_DEBUG & DEBUG_FS) {
          debug_printf("%u variants,\t%u instrs,\t%u instrs/variant\n",
                       lp->nr_fs_variants,
                       lp->nr_fs_instrs,
@@ -3164,13 +3386,21 @@ llvmpipe_update_fs(struct llvmpipe_context *lp)
       }
 
       /* First, check if we've exceeded the max number of shader variants.
-       * If so, free 25% of them (the least recently used ones).
+       * If so, free 6.25% of them (the least recently used ones).
        */
-      variants_to_cull = lp->nr_fs_variants >= LP_MAX_SHADER_VARIANTS ? LP_MAX_SHADER_VARIANTS / 4 : 0;
+      variants_to_cull = lp->nr_fs_variants >= LP_MAX_SHADER_VARIANTS ? LP_MAX_SHADER_VARIANTS / 16 : 0;
 
       if (variants_to_cull ||
           lp->nr_fs_instrs >= LP_MAX_SHADER_INSTRUCTIONS) {
          struct pipe_context *pipe = &lp->pipe;
+
+         if (gallivm_debug & GALLIVM_DEBUG_PERF) {
+            debug_printf("Evicting FS: %u fs variants,\t%u total variants,"
+                         "\t%u instrs,\t%u instrs/variant\n",
+                         shader->variants_cached,
+                         lp->nr_fs_variants, lp->nr_fs_instrs,
+                         lp->nr_fs_instrs / lp->nr_fs_variants);
+         }
 
          /*
           * XXX: we need to flush the context until we have some sort of

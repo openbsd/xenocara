@@ -32,89 +32,120 @@
 
 void
 radv_meta_save(struct radv_meta_saved_state *state,
-	       const struct radv_cmd_buffer *cmd_buffer,
-	       uint32_t dynamic_mask)
+	       struct radv_cmd_buffer *cmd_buffer, uint32_t flags)
 {
-	state->old_pipeline = cmd_buffer->state.pipeline;
-	state->old_descriptor_set0 = cmd_buffer->state.descriptors[0];
-	memcpy(state->old_vertex_bindings, cmd_buffer->state.vertex_bindings,
-	       sizeof(state->old_vertex_bindings));
+	assert(flags & (RADV_META_SAVE_GRAPHICS_PIPELINE |
+			RADV_META_SAVE_COMPUTE_PIPELINE));
 
-	state->dynamic_mask = dynamic_mask;
-	radv_dynamic_state_copy(&state->dynamic, &cmd_buffer->state.dynamic,
-				dynamic_mask);
+	state->flags = flags;
 
-	memcpy(state->push_constants, cmd_buffer->push_constants, MAX_PUSH_CONSTANTS_SIZE);
+	if (state->flags & RADV_META_SAVE_GRAPHICS_PIPELINE) {
+		assert(!(state->flags & RADV_META_SAVE_COMPUTE_PIPELINE));
+
+		state->old_pipeline = cmd_buffer->state.pipeline;
+
+		/* Save all viewports. */
+		state->viewport.count = cmd_buffer->state.dynamic.viewport.count;
+		typed_memcpy(state->viewport.viewports,
+			     cmd_buffer->state.dynamic.viewport.viewports,
+			     MAX_VIEWPORTS);
+
+		/* Save all scissors. */
+		state->scissor.count = cmd_buffer->state.dynamic.scissor.count;
+		typed_memcpy(state->scissor.scissors,
+			     cmd_buffer->state.dynamic.scissor.scissors,
+			     MAX_SCISSORS);
+
+		/* The most common meta operations all want to have the
+		 * viewport reset and any scissors disabled. The rest of the
+		 * dynamic state should have no effect.
+		 */
+		cmd_buffer->state.dynamic.viewport.count = 0;
+		cmd_buffer->state.dynamic.scissor.count = 0;
+		cmd_buffer->state.dirty |= 1 << VK_DYNAMIC_STATE_VIEWPORT |
+					   1 << VK_DYNAMIC_STATE_SCISSOR;
+	}
+
+	if (state->flags & RADV_META_SAVE_COMPUTE_PIPELINE) {
+		assert(!(state->flags & RADV_META_SAVE_GRAPHICS_PIPELINE));
+
+		state->old_pipeline = cmd_buffer->state.compute_pipeline;
+	}
+
+	if (state->flags & RADV_META_SAVE_DESCRIPTORS) {
+		state->old_descriptor_set0 = cmd_buffer->state.descriptors[0];
+	}
+
+	if (state->flags & RADV_META_SAVE_CONSTANTS) {
+		memcpy(state->push_constants, cmd_buffer->push_constants,
+		       MAX_PUSH_CONSTANTS_SIZE);
+	}
+
+	if (state->flags & RADV_META_SAVE_PASS) {
+		state->pass = cmd_buffer->state.pass;
+		state->subpass = cmd_buffer->state.subpass;
+		state->framebuffer = cmd_buffer->state.framebuffer;
+		state->attachments = cmd_buffer->state.attachments;
+		state->render_area = cmd_buffer->state.render_area;
+	}
 }
 
 void
 radv_meta_restore(const struct radv_meta_saved_state *state,
 		  struct radv_cmd_buffer *cmd_buffer)
 {
-	cmd_buffer->state.pipeline = state->old_pipeline;
-	radv_bind_descriptor_set(cmd_buffer, state->old_descriptor_set0, 0);
-	memcpy(cmd_buffer->state.vertex_bindings, state->old_vertex_bindings,
-	       sizeof(state->old_vertex_bindings));
+	if (state->flags & RADV_META_SAVE_GRAPHICS_PIPELINE) {
+		radv_CmdBindPipeline(radv_cmd_buffer_to_handle(cmd_buffer),
+				     VK_PIPELINE_BIND_POINT_GRAPHICS,
+				     radv_pipeline_to_handle(state->old_pipeline));
 
-	cmd_buffer->state.vb_dirty |= (1 << RADV_META_VERTEX_BINDING_COUNT) - 1;
-	cmd_buffer->state.dirty |= RADV_CMD_DIRTY_PIPELINE;
+		cmd_buffer->state.dirty |= RADV_CMD_DIRTY_PIPELINE;
 
-	radv_dynamic_state_copy(&cmd_buffer->state.dynamic, &state->dynamic,
-				state->dynamic_mask);
-	cmd_buffer->state.dirty |= state->dynamic_mask;
+		/* Restore all viewports. */
+		cmd_buffer->state.dynamic.viewport.count = state->viewport.count;
+		typed_memcpy(cmd_buffer->state.dynamic.viewport.viewports,
+			     state->viewport.viewports,
+			     MAX_VIEWPORTS);
 
-	memcpy(cmd_buffer->push_constants, state->push_constants, MAX_PUSH_CONSTANTS_SIZE);
-	cmd_buffer->push_constant_stages |= VK_SHADER_STAGE_ALL_GRAPHICS | VK_SHADER_STAGE_COMPUTE_BIT;
-}
+		/* Restore all scissors. */
+		cmd_buffer->state.dynamic.scissor.count = state->scissor.count;
+		typed_memcpy(cmd_buffer->state.dynamic.scissor.scissors,
+			     state->scissor.scissors,
+			     MAX_SCISSORS);
 
-void
-radv_meta_save_pass(struct radv_meta_saved_pass_state *state,
-                    const struct radv_cmd_buffer *cmd_buffer)
-{
-	state->pass = cmd_buffer->state.pass;
-	state->subpass = cmd_buffer->state.subpass;
-	state->framebuffer = cmd_buffer->state.framebuffer;
-	state->attachments = cmd_buffer->state.attachments;
-	state->render_area = cmd_buffer->state.render_area;
-}
+		cmd_buffer->state.dirty |= 1 << VK_DYNAMIC_STATE_VIEWPORT |
+					   1 << VK_DYNAMIC_STATE_SCISSOR;
+	}
 
-void
-radv_meta_restore_pass(const struct radv_meta_saved_pass_state *state,
-                       struct radv_cmd_buffer *cmd_buffer)
-{
-	cmd_buffer->state.pass = state->pass;
-	cmd_buffer->state.subpass = state->subpass;
-	cmd_buffer->state.framebuffer = state->framebuffer;
-	cmd_buffer->state.attachments = state->attachments;
-	cmd_buffer->state.render_area = state->render_area;
-	if (state->subpass)
-		radv_emit_framebuffer_state(cmd_buffer);
-}
+	if (state->flags & RADV_META_SAVE_COMPUTE_PIPELINE) {
+		radv_CmdBindPipeline(radv_cmd_buffer_to_handle(cmd_buffer),
+				     VK_PIPELINE_BIND_POINT_COMPUTE,
+				     radv_pipeline_to_handle(state->old_pipeline));
+	}
 
-void
-radv_meta_save_compute(struct radv_meta_saved_compute_state *state,
-                       const struct radv_cmd_buffer *cmd_buffer,
-                       unsigned push_constant_size)
-{
-	state->old_pipeline = cmd_buffer->state.compute_pipeline;
-	state->old_descriptor_set0 = cmd_buffer->state.descriptors[0];
+	if (state->flags & RADV_META_SAVE_DESCRIPTORS) {
+		cmd_buffer->state.descriptors[0] = state->old_descriptor_set0;
+		cmd_buffer->state.descriptors_dirty |= (1 << 0);
+	}
 
-	if (push_constant_size)
-		memcpy(state->push_constants, cmd_buffer->push_constants, push_constant_size);
-}
-
-void
-radv_meta_restore_compute(const struct radv_meta_saved_compute_state *state,
-                          struct radv_cmd_buffer *cmd_buffer,
-                          unsigned push_constant_size)
-{
-	radv_CmdBindPipeline(radv_cmd_buffer_to_handle(cmd_buffer), VK_PIPELINE_BIND_POINT_COMPUTE,
-			     radv_pipeline_to_handle(state->old_pipeline));
-	radv_bind_descriptor_set(cmd_buffer, state->old_descriptor_set0, 0);
-
-	if (push_constant_size) {
-		memcpy(cmd_buffer->push_constants, state->push_constants, push_constant_size);
+	if (state->flags & RADV_META_SAVE_CONSTANTS) {
+		memcpy(cmd_buffer->push_constants, state->push_constants,
+		       MAX_PUSH_CONSTANTS_SIZE);
 		cmd_buffer->push_constant_stages |= VK_SHADER_STAGE_COMPUTE_BIT;
+
+		if (state->flags & RADV_META_SAVE_GRAPHICS_PIPELINE) {
+			cmd_buffer->push_constant_stages |= VK_SHADER_STAGE_ALL_GRAPHICS;
+		}
+	}
+
+	if (state->flags & RADV_META_SAVE_PASS) {
+		cmd_buffer->state.pass = state->pass;
+		cmd_buffer->state.subpass = state->subpass;
+		cmd_buffer->state.framebuffer = state->framebuffer;
+		cmd_buffer->state.attachments = state->attachments;
+		cmd_buffer->state.render_area = state->render_area;
+		if (state->subpass)
+			radv_emit_framebuffer_state(cmd_buffer);
 	}
 }
 
@@ -324,6 +355,10 @@ radv_device_init_meta(struct radv_device *device)
 	if (result != VK_SUCCESS)
 		goto fail_buffer;
 
+	result = radv_device_init_meta_query_state(device);
+	if (result != VK_SUCCESS)
+		goto fail_query;
+
 	result = radv_device_init_meta_fast_clear_flush_state(device);
 	if (result != VK_SUCCESS)
 		goto fail_fast_clear;
@@ -331,11 +366,19 @@ radv_device_init_meta(struct radv_device *device)
 	result = radv_device_init_meta_resolve_compute_state(device);
 	if (result != VK_SUCCESS)
 		goto fail_resolve_compute;
+
+	result = radv_device_init_meta_resolve_fragment_state(device);
+	if (result != VK_SUCCESS)
+		goto fail_resolve_fragment;
 	return VK_SUCCESS;
 
+fail_resolve_fragment:
+	radv_device_finish_meta_resolve_compute_state(device);
 fail_resolve_compute:
 	radv_device_finish_meta_fast_clear_flush_state(device);
 fail_fast_clear:
+	radv_device_finish_meta_query_state(device);
+fail_query:
 	radv_device_finish_meta_buffer_state(device);
 fail_buffer:
 	radv_device_finish_meta_depth_decomp_state(device);
@@ -363,26 +406,166 @@ radv_device_finish_meta(struct radv_device *device)
 	radv_device_finish_meta_blit2d_state(device);
 	radv_device_finish_meta_bufimage_state(device);
 	radv_device_finish_meta_depth_decomp_state(device);
+	radv_device_finish_meta_query_state(device);
 	radv_device_finish_meta_buffer_state(device);
 	radv_device_finish_meta_fast_clear_flush_state(device);
 	radv_device_finish_meta_resolve_compute_state(device);
+	radv_device_finish_meta_resolve_fragment_state(device);
 
 	radv_store_meta_pipeline(device);
 	radv_pipeline_cache_finish(&device->meta_state.cache);
 }
 
-/*
- * The most common meta operations all want to have the viewport
- * reset and any scissors disabled. The rest of the dynamic state
- * should have no effect.
- */
-void
-radv_meta_save_graphics_reset_vport_scissor(struct radv_meta_saved_state *saved_state,
-					    struct radv_cmd_buffer *cmd_buffer)
+nir_ssa_def *radv_meta_gen_rect_vertices_comp2(nir_builder *vs_b, nir_ssa_def *comp2)
 {
-	uint32_t dirty_state = (1 << VK_DYNAMIC_STATE_VIEWPORT) | (1 << VK_DYNAMIC_STATE_SCISSOR);
-	radv_meta_save(saved_state, cmd_buffer, dirty_state);
-	cmd_buffer->state.dynamic.viewport.count = 0;
-	cmd_buffer->state.dynamic.scissor.count = 0;
-	cmd_buffer->state.dirty |= dirty_state;
+
+	nir_intrinsic_instr *vertex_id = nir_intrinsic_instr_create(vs_b->shader, nir_intrinsic_load_vertex_id_zero_base);
+	nir_ssa_dest_init(&vertex_id->instr, &vertex_id->dest, 1, 32, "vertexid");
+	nir_builder_instr_insert(vs_b, &vertex_id->instr);
+
+	/* vertex 0 - -1.0, -1.0 */
+	/* vertex 1 - -1.0, 1.0 */
+	/* vertex 2 - 1.0, -1.0 */
+	/* so channel 0 is vertex_id != 2 ? -1.0 : 1.0
+	   channel 1 is vertex id != 1 ? -1.0 : 1.0 */
+
+	nir_ssa_def *c0cmp = nir_ine(vs_b, &vertex_id->dest.ssa,
+				     nir_imm_int(vs_b, 2));
+	nir_ssa_def *c1cmp = nir_ine(vs_b, &vertex_id->dest.ssa,
+				     nir_imm_int(vs_b, 1));
+
+	nir_ssa_def *comp[4];
+	comp[0] = nir_bcsel(vs_b, c0cmp,
+			    nir_imm_float(vs_b, -1.0),
+			    nir_imm_float(vs_b, 1.0));
+
+	comp[1] = nir_bcsel(vs_b, c1cmp,
+			    nir_imm_float(vs_b, -1.0),
+			    nir_imm_float(vs_b, 1.0));
+	comp[2] = comp2;
+	comp[3] = nir_imm_float(vs_b, 1.0);
+	nir_ssa_def *outvec = nir_vec(vs_b, comp, 4);
+
+	return outvec;
+}
+
+nir_ssa_def *radv_meta_gen_rect_vertices(nir_builder *vs_b)
+{
+	return radv_meta_gen_rect_vertices_comp2(vs_b, nir_imm_float(vs_b, 0.0));
+}
+
+/* vertex shader that generates vertices */
+nir_shader *
+radv_meta_build_nir_vs_generate_vertices(void)
+{
+	const struct glsl_type *vec4 = glsl_vec4_type();
+
+	nir_builder b;
+	nir_variable *v_position;
+
+	nir_builder_init_simple_shader(&b, NULL, MESA_SHADER_VERTEX, NULL);
+	b.shader->info.name = ralloc_strdup(b.shader, "meta_vs_gen_verts");
+
+	nir_ssa_def *outvec = radv_meta_gen_rect_vertices(&b);
+
+	v_position = nir_variable_create(b.shader, nir_var_shader_out, vec4,
+					 "gl_Position");
+	v_position->data.location = VARYING_SLOT_POS;
+
+	nir_store_var(&b, v_position, outvec, 0xf);
+
+	return b.shader;
+}
+
+nir_shader *
+radv_meta_build_nir_fs_noop(void)
+{
+	nir_builder b;
+
+	nir_builder_init_simple_shader(&b, NULL, MESA_SHADER_FRAGMENT, NULL);
+	b.shader->info.name = ralloc_asprintf(b.shader,
+					       "meta_noop_fs");
+
+	return b.shader;
+}
+
+void radv_meta_build_resolve_shader_core(nir_builder *b,
+					 bool is_integer,
+					 int samples,
+					 nir_variable *input_img,
+					 nir_variable *color,
+					 nir_ssa_def *img_coord)
+{
+	/* do a txf_ms on each sample */
+	nir_ssa_def *tmp;
+	nir_if *outer_if = NULL;
+
+	nir_tex_instr *tex = nir_tex_instr_create(b->shader, 2);
+	tex->sampler_dim = GLSL_SAMPLER_DIM_MS;
+	tex->op = nir_texop_txf_ms;
+	tex->src[0].src_type = nir_tex_src_coord;
+	tex->src[0].src = nir_src_for_ssa(img_coord);
+	tex->src[1].src_type = nir_tex_src_ms_index;
+	tex->src[1].src = nir_src_for_ssa(nir_imm_int(b, 0));
+	tex->dest_type = nir_type_float;
+	tex->is_array = false;
+	tex->coord_components = 2;
+	tex->texture = nir_deref_var_create(tex, input_img);
+	tex->sampler = NULL;
+
+	nir_ssa_dest_init(&tex->instr, &tex->dest, 4, 32, "tex");
+	nir_builder_instr_insert(b, &tex->instr);
+
+	tmp = &tex->dest.ssa;
+
+	if (!is_integer && samples > 1) {
+		nir_tex_instr *tex_all_same = nir_tex_instr_create(b->shader, 1);
+		tex_all_same->sampler_dim = GLSL_SAMPLER_DIM_MS;
+		tex_all_same->op = nir_texop_samples_identical;
+		tex_all_same->src[0].src_type = nir_tex_src_coord;
+		tex_all_same->src[0].src = nir_src_for_ssa(img_coord);
+		tex_all_same->dest_type = nir_type_float;
+		tex_all_same->is_array = false;
+		tex_all_same->coord_components = 2;
+		tex_all_same->texture = nir_deref_var_create(tex_all_same, input_img);
+		tex_all_same->sampler = NULL;
+
+		nir_ssa_dest_init(&tex_all_same->instr, &tex_all_same->dest, 1, 32, "tex");
+		nir_builder_instr_insert(b, &tex_all_same->instr);
+
+		nir_ssa_def *all_same = nir_ieq(b, &tex_all_same->dest.ssa, nir_imm_int(b, 0));
+		nir_if *if_stmt = nir_if_create(b->shader);
+		if_stmt->condition = nir_src_for_ssa(all_same);
+		nir_cf_node_insert(b->cursor, &if_stmt->cf_node);
+
+		b->cursor = nir_after_cf_list(&if_stmt->then_list);
+		for (int i = 1; i < samples; i++) {
+			nir_tex_instr *tex_add = nir_tex_instr_create(b->shader, 2);
+			tex_add->sampler_dim = GLSL_SAMPLER_DIM_MS;
+			tex_add->op = nir_texop_txf_ms;
+			tex_add->src[0].src_type = nir_tex_src_coord;
+			tex_add->src[0].src = nir_src_for_ssa(img_coord);
+			tex_add->src[1].src_type = nir_tex_src_ms_index;
+			tex_add->src[1].src = nir_src_for_ssa(nir_imm_int(b, i));
+			tex_add->dest_type = nir_type_float;
+			tex_add->is_array = false;
+			tex_add->coord_components = 2;
+			tex_add->texture = nir_deref_var_create(tex_add, input_img);
+			tex_add->sampler = NULL;
+
+			nir_ssa_dest_init(&tex_add->instr, &tex_add->dest, 4, 32, "tex");
+			nir_builder_instr_insert(b, &tex_add->instr);
+
+			tmp = nir_fadd(b, tmp, &tex_add->dest.ssa);
+		}
+
+		tmp = nir_fdiv(b, tmp, nir_imm_float(b, samples));
+		nir_store_var(b, color, tmp, 0xf);
+		b->cursor = nir_after_cf_list(&if_stmt->else_list);
+		outer_if = if_stmt;
+	}
+	nir_store_var(b, color, &tex->dest.ssa, 0xf);
+
+	if (outer_if)
+		b->cursor = nir_after_cf_node(&outer_if->cf_node);
 }

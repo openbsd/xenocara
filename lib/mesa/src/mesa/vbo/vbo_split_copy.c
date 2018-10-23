@@ -52,7 +52,7 @@
 struct copy_context {
 
    struct gl_context *ctx;
-   const struct gl_client_array **array;
+   const struct gl_vertex_array **array;
    const struct _mesa_prim *prim;
    GLuint nr_prims;
    const struct _mesa_index_buffer *ib;
@@ -63,15 +63,15 @@ struct copy_context {
    struct {
       GLuint attr;
       GLuint size;
-      const struct gl_client_array *array;
+      const struct gl_vertex_array *array;
       const GLubyte *src_ptr;
 
-      struct gl_client_array dstarray;
+      struct gl_vertex_array dstarray;
 
    } varying[VERT_ATTRIB_MAX];
    GLuint nr_varying;
 
-   const struct gl_client_array *dstarray_ptr[VERT_ATTRIB_MAX];
+   const struct gl_vertex_array *dstarray_ptr[VERT_ATTRIB_MAX];
    struct _mesa_index_buffer dstib;
 
    GLuint *translated_elt_buf;
@@ -104,7 +104,7 @@ struct copy_context {
 };
 
 
-static GLuint attr_size( const struct gl_client_array *array )
+static GLuint attr_size( const struct gl_vertex_array *array )
 {
    return array->Size * _mesa_sizeof_type(array->Type);
 }
@@ -140,7 +140,7 @@ check_flush( struct copy_context *copy )
  */
 static void
 dump_draw_info(struct gl_context *ctx,
-               const struct gl_client_array **arrays,
+               const struct gl_vertex_array **arrays,
                const struct _mesa_prim *prims,
                GLuint nr_prims,
                const struct _mesa_index_buffer *ib,
@@ -174,7 +174,7 @@ static void
 flush( struct copy_context *copy )
 {
    struct gl_context *ctx = copy->ctx;
-   const struct gl_client_array **saved_arrays = ctx->Array._DrawArrays;
+   const struct gl_vertex_array **saved_arrays = ctx->Array._DrawArrays;
    GLuint i;
 
    /* Set some counters: 
@@ -258,7 +258,7 @@ elt(struct copy_context *copy, GLuint elt_idx)
 /*       printf("  --> emit to dstelt %d\n", copy->dstbuf_nr); */
 
       for (i = 0; i < copy->nr_varying; i++) {
-	 const struct gl_client_array *srcarray = copy->varying[i].array;
+	 const struct gl_vertex_array *srcarray = copy->varying[i].array;
 	 const GLubyte *srcptr = copy->varying[i].src_ptr + elt * srcarray->StrideB;
 
 	 memcpy(csr, srcptr, copy->varying[i].size);
@@ -479,8 +479,8 @@ replay_init( struct copy_context *copy )
             ADD_POINTERS(copy->ib->obj->Mappings[MAP_INTERNAL].Pointer,
                          copy->ib->ptr);
 
-   switch (copy->ib->type) {
-   case GL_UNSIGNED_BYTE:
+   switch (copy->ib->index_size) {
+   case 1:
       copy->translated_elt_buf = malloc(sizeof(GLuint) * copy->ib->count);
       copy->srcelt = copy->translated_elt_buf;
 
@@ -488,7 +488,7 @@ replay_init( struct copy_context *copy )
 	 copy->translated_elt_buf[i] = ((const GLubyte *)srcptr)[i];
       break;
 
-   case GL_UNSIGNED_SHORT:
+   case 2:
       copy->translated_elt_buf = malloc(sizeof(GLuint) * copy->ib->count);
       copy->srcelt = copy->translated_elt_buf;
 
@@ -496,7 +496,7 @@ replay_init( struct copy_context *copy )
 	 copy->translated_elt_buf[i] = ((const GLushort *)srcptr)[i];
       break;
 
-   case GL_UNSIGNED_INT:
+   case 4:
       copy->translated_elt_buf = NULL;
       copy->srcelt = (const GLuint *)srcptr;
       break;
@@ -521,8 +521,8 @@ replay_init( struct copy_context *copy )
    /* Setup new vertex arrays to point into the output buffer: 
     */
    for (offset = 0, i = 0; i < copy->nr_varying; i++) {
-      const struct gl_client_array *src = copy->varying[i].array;
-      struct gl_client_array *dst = &copy->varying[i].dstarray;
+      const struct gl_vertex_array *src = copy->varying[i].array;
+      struct gl_vertex_array *dst = &copy->varying[i].dstarray;
 
       dst->Size = src->Size;
       dst->Type = src->Type;
@@ -551,7 +551,7 @@ replay_init( struct copy_context *copy )
     * list:
     */
    copy->dstib.count = 0;	/* duplicates dstelt_nr */
-   copy->dstib.type = GL_UNSIGNED_INT;
+   copy->dstib.index_size = 4;
    copy->dstib.obj = ctx->Shared->NullBufferObj;
    copy->dstib.ptr = copy->dstelt;
 }
@@ -593,7 +593,7 @@ replay_finish( struct copy_context *copy )
  * Split VBO into smaller pieces, draw the pieces.
  */
 void vbo_split_copy( struct gl_context *ctx,
-		     const struct gl_client_array *arrays[],
+		     const struct gl_vertex_array *arrays[],
 		     const struct _mesa_prim *prim,
 		     GLuint nr_prims,
 		     const struct _mesa_index_buffer *ib,

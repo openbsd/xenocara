@@ -36,7 +36,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "main/context.h"
 #include "main/enums.h"
 #include "main/image.h"
-#include "util/simple_list.h"
 #include "main/teximage.h"
 #include "main/texobj.h"
 
@@ -45,7 +44,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "radeon_ioctl.h"
 #include "radeon_tex.h"
 
-#include "xmlpool.h"
+#include "util/xmlpool.h"
 
 
 

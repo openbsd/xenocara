@@ -27,6 +27,7 @@
  */
 
 #include <xf86drm.h>
+#include "vc4_cl_dump.h"
 #include "vc4_context.h"
 #include "util/hash_table.h"
 
@@ -117,11 +118,16 @@ vc4_flush_jobs_reading_resource(struct vc4_context *vc4,
                 struct vc4_job *job = entry->data;
 
                 struct vc4_bo **referenced_bos = job->bo_pointers.base;
+                bool found = false;
                 for (int i = 0; i < cl_offset(&job->bo_handles) / 4; i++) {
                         if (referenced_bos[i] == rsc->bo) {
-                                vc4_job_submit(vc4, job);
-                                continue;
+                                found = true;
+                                break;
                         }
+                }
+                if (found) {
+                        vc4_job_submit(vc4, job);
+                        continue;
                 }
 
                 /* Also check for the Z/color buffers, since the references to
@@ -258,6 +264,13 @@ vc4_get_job_for_fbo(struct vc4_context *vc4)
         job->draw_tiles_y = DIV_ROUND_UP(vc4->framebuffer.height,
                                          job->tile_height);
 
+        /* Initialize the job with the raster order flags -- each draw will
+         * check that we haven't changed the flags, since that requires a
+         * flush.
+         */
+        if (vc4->rasterizer)
+                job->flags = vc4->rasterizer->tile_raster_order_flags;
+
         vc4->job = job;
 
         return job;
@@ -377,13 +390,11 @@ vc4_job_submit(struct vc4_context *vc4, struct vc4_job *job)
                  * until the FLUSH completes.
                  */
                 cl_ensure_space(&job->bcl, 8);
-                struct vc4_cl_out *bcl = cl_start(&job->bcl);
-                cl_u8(&bcl, VC4_PACKET_INCREMENT_SEMAPHORE);
+                cl_emit(&job->bcl, INCREMENT_SEMAPHORE, incr);
                 /* The FLUSH caps all of our bin lists with a
                  * VC4_PACKET_RETURN.
                  */
-                cl_u8(&bcl, VC4_PACKET_FLUSH);
-                cl_end(&job->bcl, bcl);
+                cl_emit(&job->bcl, FLUSH, flush);
         }
         struct drm_vc4_submit_cl submit = {
                 .color_read.hindex = ~0,
@@ -457,6 +468,7 @@ vc4_job_submit(struct vc4_context *vc4, struct vc4_job *job)
                 submit.clear_z = job->clear_depth;
                 submit.clear_s = job->clear_stencil;
         }
+        submit.flags |= job->flags;
 
         if (!(vc4_debug & VC4_DEBUG_NORAST)) {
                 int ret;

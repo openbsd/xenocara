@@ -29,7 +29,6 @@
 
 #include "isl/isl.h"
 
-struct brw_context;
 struct brw_stage_prog_data;
 
 #ifdef __cplusplus
@@ -46,16 +45,10 @@ struct blorp_context {
 
    const struct brw_compiler *compiler;
 
-   struct {
-      uint32_t tex;
-      uint32_t rb;
-      uint32_t vb;
-   } mocs;
-
    bool (*lookup_shader)(struct blorp_context *blorp,
                          const void *key, uint32_t key_size,
                          uint32_t *kernel_out, void *prog_data_out);
-   void (*upload_shader)(struct blorp_context *blorp,
+   bool (*upload_shader)(struct blorp_context *blorp,
                          const void *key, uint32_t key_size,
                          const void *kernel, uint32_t kernel_size,
                          const struct brw_stage_prog_data *prog_data,
@@ -76,6 +69,9 @@ enum blorp_batch_flags {
     * hardware.
     */
    BLORP_BATCH_NO_EMIT_DEPTH_STENCIL = (1 << 0),
+
+   /* This flag indicates that the blorp call should be predicated. */
+   BLORP_BATCH_PREDICATE_ENABLE      = (1 << 1),
 };
 
 struct blorp_batch {
@@ -90,9 +86,9 @@ void blorp_batch_finish(struct blorp_batch *batch);
 
 struct blorp_address {
    void *buffer;
-   uint32_t read_domains;
-   uint32_t write_domain;
+   unsigned reloc_flags;
    uint32_t offset;
+   uint32_t mocs;
 };
 
 struct blorp_surf
@@ -132,6 +128,12 @@ blorp_copy(struct blorp_batch *batch,
            uint32_t src_width, uint32_t src_height);
 
 void
+blorp_buffer_copy(struct blorp_batch *batch,
+                  struct blorp_address src,
+                  struct blorp_address dst,
+                  uint64_t size);
+
+void
 blorp_fast_clear(struct blorp_batch *batch,
                  const struct blorp_surf *surf, enum isl_format format,
                  uint32_t level, uint32_t start_layer, uint32_t num_layers,
@@ -155,10 +157,59 @@ blorp_clear_depth_stencil(struct blorp_batch *batch,
                           uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1,
                           bool clear_depth, float depth_value,
                           uint8_t stencil_mask, uint8_t stencil_value);
+bool
+blorp_can_hiz_clear_depth(uint8_t gen, enum isl_format format,
+                          uint32_t num_samples,
+                          uint32_t x0, uint32_t y0,
+                          uint32_t x1, uint32_t y1);
+
+void
+blorp_gen8_hiz_clear_attachments(struct blorp_batch *batch,
+                                 uint32_t num_samples,
+                                 uint32_t x0, uint32_t y0,
+                                 uint32_t x1, uint32_t y1,
+                                 bool clear_depth, bool clear_stencil,
+                                 uint8_t stencil_value);
+void
+blorp_clear_attachments(struct blorp_batch *batch,
+                        uint32_t binding_table_offset,
+                        enum isl_format depth_format,
+                        uint32_t num_samples,
+                        uint32_t start_layer, uint32_t num_layers,
+                        uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1,
+                        bool clear_color, union isl_color_value color_value,
+                        bool clear_depth, float depth_value,
+                        uint8_t stencil_mask, uint8_t stencil_value);
+
+enum blorp_fast_clear_op {
+   BLORP_FAST_CLEAR_OP_NONE = 0,
+   BLORP_FAST_CLEAR_OP_CLEAR,
+   BLORP_FAST_CLEAR_OP_RESOLVE_PARTIAL,
+   BLORP_FAST_CLEAR_OP_RESOLVE_FULL,
+};
 
 void
 blorp_ccs_resolve(struct blorp_batch *batch,
-                  struct blorp_surf *surf, enum isl_format format);
+                  struct blorp_surf *surf, uint32_t level, uint32_t layer,
+                  enum isl_format format,
+                  enum blorp_fast_clear_op resolve_op);
+
+/* Resolves subresources of the image subresource range specified in the
+ * binding table.
+ */
+void
+blorp_ccs_resolve_attachment(struct blorp_batch *batch,
+                             const uint32_t binding_table_offset,
+                             struct blorp_surf * const surf,
+                             const uint32_t level, const uint32_t num_layers,
+                             const enum isl_format format,
+                             const enum blorp_fast_clear_op resolve_op);
+
+void
+blorp_mcs_partial_resolve(struct blorp_batch *batch,
+                          struct blorp_surf *surf,
+                          enum isl_format format,
+                          uint32_t start_layer, uint32_t num_layers);
 
 /**
  * For an overview of the HiZ operations, see the following sections of the
@@ -178,9 +229,9 @@ enum blorp_hiz_op {
 };
 
 void
-blorp_gen6_hiz_op(struct blorp_batch *batch,
-                  struct blorp_surf *surf, unsigned level, unsigned layer,
-                  enum blorp_hiz_op op);
+blorp_hiz_op(struct blorp_batch *batch, struct blorp_surf *surf,
+             uint32_t level, uint32_t start_layer, uint32_t num_layers,
+             enum blorp_hiz_op op);
 
 #ifdef __cplusplus
 } /* end extern "C" */

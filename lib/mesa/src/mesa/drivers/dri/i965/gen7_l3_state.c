@@ -49,13 +49,14 @@ get_pipeline_state_l3_weights(const struct brw_context *brw)
    bool needs_dc = false, needs_slm = false;
 
    for (unsigned i = 0; i < ARRAY_SIZE(stage_states); i++) {
-      const struct gl_shader_program *prog =
+      const struct gl_program *prog =
          brw->ctx._Shader->CurrentProgram[stage_states[i]->stage];
       const struct brw_stage_prog_data *prog_data = stage_states[i]->prog_data;
 
-      needs_dc |= (prog && (prog->NumAtomicBuffers ||
-                            prog->NumShaderStorageBlocks)) ||
-         (prog_data && (prog_data->total_scratch || prog_data->nr_image_params));
+      needs_dc |= (prog && (prog->sh.data->NumAtomicBuffers ||
+                            prog->sh.data->NumShaderStorageBlocks ||
+                            prog->info.num_images)) ||
+         (prog_data && prog_data->total_scratch);
       needs_slm |= prog_data && prog_data->total_shared;
    }
 
@@ -69,6 +70,7 @@ get_pipeline_state_l3_weights(const struct brw_context *brw)
 static void
 setup_l3_config(struct brw_context *brw, const struct gen_l3_config *cfg)
 {
+   const struct gen_device_info *devinfo = &brw->screen->devinfo;
    const bool has_dc = cfg->n[GEN_L3P_DC] || cfg->n[GEN_L3P_ALL];
    const bool has_is = cfg->n[GEN_L3P_IS] || cfg->n[GEN_L3P_RO] ||
                        cfg->n[GEN_L3P_ALL];
@@ -116,7 +118,7 @@ setup_l3_config(struct brw_context *brw, const struct gen_l3_config *cfg)
                                PIPE_CONTROL_NO_WRITE |
                                PIPE_CONTROL_CS_STALL);
 
-   if (brw->gen >= 8) {
+   if (devinfo->gen >= 8) {
       assert(!cfg->n[GEN_L3P_IS] && !cfg->n[GEN_L3P_C] && !cfg->n[GEN_L3P_T]);
 
       BEGIN_BATCH(3);
@@ -140,11 +142,11 @@ setup_l3_config(struct brw_context *brw, const struct gen_l3_config *cfg)
        * client (URB for all validated configurations) set to the
        * lower-bandwidth 2-bank address hashing mode.
        */
-      const bool urb_low_bw = has_slm && !brw->is_baytrail;
+      const bool urb_low_bw = has_slm && !devinfo->is_baytrail;
       assert(!urb_low_bw || cfg->n[GEN_L3P_URB] == cfg->n[GEN_L3P_SLM]);
 
       /* Minimum number of ways that can be allocated to the URB. */
-      const unsigned n0_urb = (brw->is_baytrail ? 32 : 0);
+      const unsigned n0_urb = (devinfo->is_baytrail ? 32 : 0);
       assert(cfg->n[GEN_L3P_URB] >= n0_urb);
 
       BEGIN_BATCH(7);
@@ -152,8 +154,8 @@ setup_l3_config(struct brw_context *brw, const struct gen_l3_config *cfg)
 
       /* Demote any clients with no ways assigned to LLC. */
       OUT_BATCH(GEN7_L3SQCREG1);
-      OUT_BATCH((brw->is_haswell ? HSW_L3SQCREG1_SQGHPCI_DEFAULT :
-                 brw->is_baytrail ? VLV_L3SQCREG1_SQGHPCI_DEFAULT :
+      OUT_BATCH((devinfo->is_haswell ? HSW_L3SQCREG1_SQGHPCI_DEFAULT :
+                 devinfo->is_baytrail ? VLV_L3SQCREG1_SQGHPCI_DEFAULT :
                  IVB_L3SQCREG1_SQGHPCI_DEFAULT) |
                 (has_dc ? 0 : GEN7_L3SQCREG1_CONV_DC_UC) |
                 (has_is ? 0 : GEN7_L3SQCREG1_CONV_IS_UC) |
@@ -175,7 +177,7 @@ setup_l3_config(struct brw_context *brw, const struct gen_l3_config *cfg)
 
       ADVANCE_BATCH();
 
-      if (brw->is_haswell && brw->screen->cmd_parser_version >= 4) {
+      if (can_do_hsw_l3_atomics(brw->screen)) {
          /* Enable L3 atomics on HSW if we have a DC partition, otherwise keep
           * them disabled to avoid crashing the system hard.
           */
@@ -204,6 +206,15 @@ update_urb_size(struct brw_context *brw, const struct gen_l3_config *cfg)
    if (brw->urb.size != sz) {
       brw->urb.size = sz;
       brw->ctx.NewDriverState |= BRW_NEW_URB_SIZE;
+
+      /* If we change the total URB size, reset the individual stage sizes to
+       * zero so that, even if there is no URB size change, gen7_upload_urb
+       * still re-emits 3DSTATE_URB_*.
+       */
+      brw->urb.vsize = 0;
+      brw->urb.gsize = 0;
+      brw->urb.hsize = 0;
+      brw->urb.dsize = 0;
    }
 }
 
@@ -229,7 +240,7 @@ emit_l3_state(struct brw_context *brw)
    const float dw_threshold = (brw->ctx.NewDriverState & BRW_NEW_BATCH ?
                                small_dw_threshold : large_dw_threshold);
 
-   if (dw > dw_threshold && brw->can_do_pipelined_register_writes) {
+   if (dw > dw_threshold && can_do_pipelined_register_writes(brw->screen)) {
       const struct gen_l3_config *const cfg =
          gen_get_l3_config(&brw->screen->devinfo, w);
 
@@ -252,6 +263,8 @@ const struct brw_tracked_state gen7_l3_state = {
              BRW_NEW_CS_PROG_DATA |
              BRW_NEW_FS_PROG_DATA |
              BRW_NEW_GS_PROG_DATA |
+             BRW_NEW_TCS_PROG_DATA |
+             BRW_NEW_TES_PROG_DATA |
              BRW_NEW_VS_PROG_DATA,
    },
    .emit = emit_l3_state
@@ -296,7 +309,8 @@ gen7_restore_default_l3_config(struct brw_context *brw)
    const struct gen_device_info *devinfo = &brw->screen->devinfo;
    const struct gen_l3_config *const cfg = gen_get_default_l3_config(devinfo);
 
-   if (cfg != brw->l3.config && brw->can_do_pipelined_register_writes) {
+   if (cfg != brw->l3.config &&
+       can_do_pipelined_register_writes(brw->screen)) {
       setup_l3_config(brw, cfg);
       update_urb_size(brw, cfg);
       brw->l3.config = cfg;

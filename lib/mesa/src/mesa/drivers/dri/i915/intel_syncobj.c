@@ -38,7 +38,6 @@
  * performance bottleneck, though.
  */
 
-#include "util/simple_list.h"
 #include "main/imports.h"
 
 #include "intel_context.h"
@@ -161,7 +160,7 @@ intel_fence_server_wait(struct intel_context *intel, struct intel_fence *fence)
 }
 
 static struct gl_sync_object *
-intel_gl_new_sync_object(struct gl_context *ctx, GLuint id)
+intel_gl_new_sync_object(struct gl_context *ctx)
 {
    struct intel_gl_sync_object *sync;
 

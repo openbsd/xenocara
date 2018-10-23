@@ -34,6 +34,7 @@
 
 #include "amdgpu_bo.h"
 #include "util/u_memory.h"
+#include <amdgpu_drm.h>
 
 struct amdgpu_ctx {
    struct amdgpu_winsys *ws;
@@ -41,6 +42,8 @@ struct amdgpu_ctx {
    amdgpu_bo_handle user_fence_bo;
    uint64_t *user_fence_cpu_address_base;
    int refcount;
+   unsigned initial_num_total_rejected_cs;
+   unsigned num_rejected_cs;
 };
 
 struct amdgpu_cs_buffer {
@@ -57,10 +60,8 @@ struct amdgpu_cs_buffer {
 };
 
 enum ib_type {
-   IB_CONST_PREAMBLE = 0,
-   IB_CONST = 1, /* the const IB must be first */
-   IB_MAIN = 2,
-   IB_NUM
+   IB_MAIN,
+   IB_NUM,
 };
 
 struct amdgpu_ib {
@@ -72,27 +73,40 @@ struct amdgpu_ib {
    unsigned                used_ib_space;
    unsigned                max_ib_size;
    uint32_t                *ptr_ib_size;
+   bool                    ptr_ib_size_inside_ib;
    enum ib_type            ib_type;
 };
 
 struct amdgpu_cs_context {
-   struct amdgpu_cs_request    request;
-   struct amdgpu_cs_ib_info    ib[IB_NUM];
+   struct drm_amdgpu_cs_chunk_ib ib[IB_NUM];
 
    /* Buffers. */
    unsigned                    max_real_buffers;
    unsigned                    num_real_buffers;
+   struct amdgpu_cs_buffer     *real_buffers;
+
+   unsigned                    max_real_submit;
    amdgpu_bo_handle            *handles;
    uint8_t                     *flags;
-   struct amdgpu_cs_buffer     *real_buffers;
 
    unsigned                    num_slab_buffers;
    unsigned                    max_slab_buffers;
    struct amdgpu_cs_buffer     *slab_buffers;
 
+   unsigned                    num_sparse_buffers;
+   unsigned                    max_sparse_buffers;
+   struct amdgpu_cs_buffer     *sparse_buffers;
+
    int                         buffer_indices_hashlist[4096];
 
-   unsigned                    max_dependencies;
+   struct amdgpu_winsys_bo     *last_added_bo;
+   unsigned                    last_added_bo_index;
+   unsigned                    last_added_bo_usage;
+   uint64_t                    last_added_bo_priority_usage;
+
+   struct pipe_fence_handle    **fence_dependencies;
+   unsigned                    num_fence_dependencies;
+   unsigned                    max_fence_dependencies;
 
    struct pipe_fence_handle    *fence;
 
@@ -102,10 +116,9 @@ struct amdgpu_cs_context {
 
 struct amdgpu_cs {
    struct amdgpu_ib main; /* must be first because this is inherited */
-   struct amdgpu_ib const_ib; /* optional constant engine IB */
-   struct amdgpu_ib const_preamble_ib;
    struct amdgpu_ctx *ctx;
    enum ring_type ring_type;
+   struct drm_amdgpu_cs_chunk_fence fence_chunk;
 
    /* We flip between these two CS. While one is being consumed
     * by the kernel in another thread, the other one is being filled
@@ -127,7 +140,10 @@ struct amdgpu_cs {
 
 struct amdgpu_fence {
    struct pipe_reference reference;
+   /* If ctx == NULL, this fence is syncobj-based. */
+   uint32_t syncobj;
 
+   struct amdgpu_winsys *ws;
    struct amdgpu_ctx *ctx;  /* submission context */
    struct amdgpu_cs_fence fence;
    uint64_t *user_fence_cpu_address;
@@ -137,6 +153,11 @@ struct amdgpu_fence {
    volatile int submission_in_progress; /* bool (int for atomicity) */
    volatile int signalled;              /* bool (int for atomicity) */
 };
+
+static inline bool amdgpu_fence_is_syncobj(struct amdgpu_fence *fence)
+{
+   return fence->ctx == NULL;
+}
 
 static inline void amdgpu_ctx_unref(struct amdgpu_ctx *ctx)
 {
@@ -154,8 +175,14 @@ static inline void amdgpu_fence_reference(struct pipe_fence_handle **dst,
    struct amdgpu_fence *rsrc = (struct amdgpu_fence *)src;
 
    if (pipe_reference(&(*rdst)->reference, &rsrc->reference)) {
-      amdgpu_ctx_unref((*rdst)->ctx);
-      FREE(*rdst);
+      struct amdgpu_fence *fence = *rdst;
+
+      if (amdgpu_fence_is_syncobj(fence))
+         amdgpu_cs_destroy_syncobj(fence->ws->dev, fence->syncobj);
+      else
+         amdgpu_ctx_unref(fence->ctx);
+
+      FREE(fence);
    }
    *rdst = rsrc;
 }
@@ -184,10 +211,6 @@ amdgpu_cs_from_ib(struct amdgpu_ib *ib)
    switch (ib->ib_type) {
    case IB_MAIN:
       return get_container(ib, struct amdgpu_cs, main);
-   case IB_CONST:
-      return get_container(ib, struct amdgpu_cs, const_ib);
-   case IB_CONST_PREAMBLE:
-      return get_container(ib, struct amdgpu_cs, const_preamble_ib);
    default:
       unreachable("bad ib_type");
    }
@@ -217,8 +240,9 @@ amdgpu_bo_is_referenced_by_cs_with_usage(struct amdgpu_cs *cs,
    if (index == -1)
       return false;
 
-   buffer = bo->bo ? &cs->csc->real_buffers[index]
-                   : &cs->csc->slab_buffers[index];
+   buffer = bo->bo ? &cs->csc->real_buffers[index] :
+            bo->sparse ? &cs->csc->sparse_buffers[index] :
+            &cs->csc->slab_buffers[index];
 
    return (buffer->usage & usage) != 0;
 }
@@ -231,6 +255,9 @@ amdgpu_bo_is_referenced_by_any_cs(struct amdgpu_winsys_bo *bo)
 
 bool amdgpu_fence_wait(struct pipe_fence_handle *fence, uint64_t timeout,
                        bool absolute);
+void amdgpu_add_fences(struct amdgpu_winsys_bo *bo,
+                       unsigned num_fences,
+                       struct pipe_fence_handle **fences);
 void amdgpu_cs_sync_flush(struct radeon_winsys_cs *rcs);
 void amdgpu_cs_init_functions(struct amdgpu_winsys *ws);
 void amdgpu_cs_submit_ib(void *job, int thread_index);

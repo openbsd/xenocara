@@ -27,26 +27,13 @@
 
 #include "main/glheader.h"
 #include "st_context.h"
+#include "st_cb_fbo.h"
 #include "st_cb_viewport.h"
 
 #include "pipe/p_state.h"
 #include "pipe/p_defines.h"
 #include "util/u_atomic.h"
 
-/**
- * Cast wrapper to convert a struct gl_framebuffer to an st_framebuffer.
- * Return NULL if the struct gl_framebuffer is a user-created framebuffer.
- * We'll only return non-null for window system framebuffers.
- * Note that this function may fail.
- */
-static inline struct st_framebuffer *
-st_ws_framebuffer(struct gl_framebuffer *fb)
-{
-   /* FBO cannot be casted.  See st_new_framebuffer */
-   if (fb && _mesa_is_winsys_fbo(fb))
-      return (struct st_framebuffer *) fb;
-   return NULL;
-}
 
 static void st_viewport(struct gl_context *ctx)
 {
@@ -67,9 +54,9 @@ static void st_viewport(struct gl_context *ctx)
    stdraw = st_ws_framebuffer(st->ctx->DrawBuffer);
    stread = st_ws_framebuffer(st->ctx->ReadBuffer);
 
-   if (stdraw && stdraw->iface)
+   if (stdraw)
       stdraw->iface_stamp = p_atomic_read(&stdraw->iface->stamp) - 1;
-   if (stread && stread != stdraw && stread->iface)
+   if (stread && stread != stdraw)
       stread->iface_stamp = p_atomic_read(&stread->iface->stamp) - 1;
 }
 

@@ -88,23 +88,23 @@ update_max_array_access(ir_rvalue *ir, int idx, YYLTYPE *loc,
 
       if (deref_var != NULL) {
          if (deref_var->var->is_interface_instance()) {
-            unsigned field_index =
-               deref_record->record->type->field_index(deref_record->field);
-            assert(field_index < deref_var->var->get_interface_type()->length);
+            unsigned field_idx = deref_record->field_idx;
+            assert(field_idx < deref_var->var->get_interface_type()->length);
 
             int *const max_ifc_array_access =
                deref_var->var->get_max_ifc_array_access();
 
             assert(max_ifc_array_access != NULL);
 
-            if (idx > max_ifc_array_access[field_index]) {
-               max_ifc_array_access[field_index] = idx;
+            if (idx > max_ifc_array_access[field_idx]) {
+               max_ifc_array_access[field_idx] = idx;
 
                /* Check whether this access will, as a side effect, implicitly
                 * cause the size of a built-in array to be too large.
                 */
-               check_builtin_array_max_size(deref_record->field, idx+1, *loc,
-                                            state);
+               const char *field_name =
+                  deref_record->record->type->fields.structure[field_idx].name;
+               check_builtin_array_max_size(field_name, idx+1, *loc, state);
             }
          }
       }
@@ -167,7 +167,7 @@ _mesa_ast_array_index_to_hir(void *mem_ctx,
     * index is not a constant expression, ensure that the array has a
     * declared size.
     */
-   ir_constant *const const_index = idx->constant_expression_value();
+   ir_constant *const const_index = idx->constant_expression_value(mem_ctx);
    if (const_index != NULL && idx->type->is_integer()) {
       const int idx = const_index->value.i[0];
       const char *type_name = "error";
@@ -233,6 +233,20 @@ _mesa_ast_array_index_to_hir(void *mem_ctx,
          else if (array->variable_referenced()->data.mode !=
                   ir_var_shader_storage) {
             _mesa_glsl_error(&loc, state, "unsized array index must be constant");
+         } else {
+            /* Unsized array non-constant indexing on SSBO is allowed only for
+             * the last member of the SSBO definition.
+             */
+            ir_variable *var = array->variable_referenced();
+            const glsl_type *iface_type = var->get_interface_type();
+            int field_index = iface_type->field_index(var->name);
+            /* Field index can be < 0 for instance arrays */
+            if (field_index >= 0 &&
+                field_index != (int) iface_type->length - 1) {
+               _mesa_glsl_error(&loc, state, "Indirect access on unsized "
+                                "array is limited to the last member of "
+                                "SSBO.");
+            }
          }
       } else if (array->type->without_array()->is_interface()
                  && ((array->variable_referenced()->data.mode == ir_var_uniform
@@ -285,12 +299,18 @@ _mesa_ast_array_index_to_hir(void *mem_ctx,
        * values must not diverge between shader invocations run together. If the
        * values *do* diverge, then the behavior of the operation requiring a
        * dynamically uniform expression is undefined.
+       *
+       * From section 4.1.7 of the ARB_bindless_texture spec:
+       *
+       *    "Samplers aggregated into arrays within a shader (using square
+       *    brackets []) can be indexed with arbitrary integer expressions."
        */
       if (array->type->without_array()->is_sampler()) {
          if (!state->is_version(400, 320) &&
              !state->ARB_gpu_shader5_enable &&
              !state->EXT_gpu_shader5_enable &&
-             !state->OES_gpu_shader5_enable) {
+             !state->OES_gpu_shader5_enable &&
+             !state->has_bindless()) {
             if (state->is_version(130, 300))
                _mesa_glsl_error(&loc, state,
                                 "sampler arrays indexed with non-constant "

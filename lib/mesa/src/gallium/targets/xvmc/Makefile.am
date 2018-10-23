@@ -30,6 +30,7 @@ libXvMCgallium_la_LIBADD = \
 	$(top_builddir)/src/util/libmesautil.la \
 	$(XVMC_LIBS) \
 	$(VL_LIBS) \
+	$(XCB_DRI3_LIBS) \
 	$(LIBDRM_LIBS) \
 	$(GALLIUM_COMMON_LIB_DEPS)
 
@@ -52,6 +53,7 @@ libXvMCgallium_la_LIBADD += \
 	$(top_builddir)/src/gallium/auxiliary/pipe-loader/libpipe_loader_static.la \
 	$(GALLIUM_PIPE_LOADER_WINSYS_LIBS) \
 	$(TARGET_LIB_DEPS) \
+	$(TARGET_COMPILER_LIB_DEPS) \
 	$(TARGET_RADEON_WINSYS) $(TARGET_RADEON_COMMON)
 
 else # HAVE_GALLIUM_STATIC_TARGETS
@@ -60,7 +62,7 @@ libXvMCgallium_la_LIBADD += \
 
 endif # HAVE_GALLIUM_STATIC_TARGETS
 
-if HAVE_MESA_LLVM
+if HAVE_GALLIUM_LLVM
 libXvMCgallium_la_LIBADD += $(LLVM_LIBS)
 libXvMCgallium_la_LDFLAGS += $(LLVM_LDFLAGS)
 endif
@@ -76,7 +78,8 @@ install-data-hook:
 		ln -f $${dest_dir}/$${j}.$(XVMC_MAJOR).$(XVMC_MINOR)	\
 		      $${dest_dir}/$${l};				\
 	done;								\
-	$(RM) $${dest_dir}/libXvMCgallium.*
+	$(RM) $${dest_dir}/libXvMCgallium.*;				\
+	$(RM) -d $${dest_dir} &>/dev/null || true
 
 uninstall-hook:
 	for i in $(TARGET_DRIVERS); do					\

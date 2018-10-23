@@ -402,30 +402,6 @@ static void lp_exec_break(struct lp_exec_mask *mask,
    lp_exec_mask_update(mask);
 }
 
-static void lp_exec_break_condition(struct lp_exec_mask *mask,
-                                    LLVMValueRef cond)
-{
-   LLVMBuilderRef builder = mask->bld->gallivm->builder;
-   struct function_ctx *ctx = func_ctx(mask);
-   LLVMValueRef cond_mask = LLVMBuildAnd(builder,
-                                         mask->exec_mask,
-                                         cond, "cond_mask");
-   cond_mask = LLVMBuildNot(builder, cond_mask, "break_cond");
-
-   if (ctx->break_type == LP_EXEC_MASK_BREAK_TYPE_LOOP) {
-      mask->break_mask = LLVMBuildAnd(builder,
-                                      mask->break_mask,
-                                      cond_mask, "breakc_full");
-   }
-   else {
-      mask->switch_mask = LLVMBuildAnd(builder,
-                                       mask->switch_mask,
-                                       cond_mask, "breakc_switch");
-   }
-
-   lp_exec_mask_update(mask);
-}
-
 static void lp_exec_continue(struct lp_exec_mask *mask)
 {
    LLVMBuilderRef builder = mask->bld->gallivm->builder;
@@ -753,30 +729,21 @@ static void lp_exec_default(struct lp_exec_mask *mask,
  */
 static void lp_exec_mask_store(struct lp_exec_mask *mask,
                                struct lp_build_context *bld_store,
-                               LLVMValueRef pred,
                                LLVMValueRef val,
                                LLVMValueRef dst_ptr)
 {
    LLVMBuilderRef builder = mask->bld->gallivm->builder;
+   LLVMValueRef exec_mask = mask->has_mask ? mask->exec_mask : NULL;
 
    assert(lp_check_value(bld_store->type, val));
    assert(LLVMGetTypeKind(LLVMTypeOf(dst_ptr)) == LLVMPointerTypeKind);
    assert(LLVMGetElementType(LLVMTypeOf(dst_ptr)) == LLVMTypeOf(val));
 
-   /* Mix the predicate and execution mask */
-   if (mask->has_mask) {
-      if (pred) {
-         pred = LLVMBuildAnd(builder, pred, mask->exec_mask, "");
-      } else {
-         pred = mask->exec_mask;
-      }
-   }
-
-   if (pred) {
+   if (exec_mask) {
       LLVMValueRef res, dst;
 
       dst = LLVMBuildLoad(builder, dst_ptr, "");
-      res = lp_build_select(bld_store, pred, val, dst);
+      res = lp_build_select(bld_store, exec_mask, val, dst);
       LLVMBuildStore(builder, res, dst_ptr);
    } else
       LLVMBuildStore(builder, val, dst_ptr);
@@ -1036,22 +1003,12 @@ emit_mask_scatter(struct lp_build_tgsi_soa_context *bld,
                   LLVMValueRef base_ptr,
                   LLVMValueRef indexes,
                   LLVMValueRef values,
-                  struct lp_exec_mask *mask,
-                  LLVMValueRef pred)
+                  struct lp_exec_mask *mask)
 {
    struct gallivm_state *gallivm = bld->bld_base.base.gallivm;
    LLVMBuilderRef builder = gallivm->builder;
    unsigned i;
-
-   /* Mix the predicate and execution mask */
-   if (mask->has_mask) {
-      if (pred) {
-         pred = LLVMBuildAnd(builder, pred, mask->exec_mask, "");
-      }
-      else {
-         pred = mask->exec_mask;
-      }
-   }
+   LLVMValueRef pred = mask->has_mask ? mask->exec_mask : NULL;
 
    /*
     * Loop over elements of index_vec, store scalar value.
@@ -1315,9 +1272,9 @@ emit_fetch_constant(
 /**
  * Fetch 64-bit values from two separate channels.
  * 64-bit values are stored split across two channels, like xy and zw.
- * This function creates a set of 16 floats,
+ * This function creates a set of vec_length*2 floats,
  * extracts the values from the two channels,
- * puts them in the correct place, then casts to 8 64-bits.
+ * puts them in the correct place, then casts to vec_length 64-bits.
  */
 static LLVMValueRef
 emit_fetch_64bit(
@@ -1332,9 +1289,9 @@ emit_fetch_64bit(
    LLVMValueRef res;
    struct lp_build_context *bld_fetch = stype_to_fetch(bld_base, stype);
    int i;
-   LLVMValueRef shuffles[16];
+   LLVMValueRef shuffles[2 * (LP_MAX_VECTOR_WIDTH/32)];
    int len = bld_base->base.type.length * 2;
-   assert(len <= 16);
+   assert(len <= (2 * (LP_MAX_VECTOR_WIDTH/32)));
 
    for (i = 0; i < bld_base->base.type.length * 2; i+=2) {
       shuffles[i] = lp_build_const_int32(gallivm, i / 2);
@@ -1733,76 +1690,8 @@ emit_fetch_deriv(
       *ddy = lp_build_ddy(&bld->bld_base.base, src);
 }
 
-
 /**
- * Predicate.
- */
-static void
-emit_fetch_predicate(
-   struct lp_build_tgsi_soa_context *bld,
-   const struct tgsi_full_instruction *inst,
-   LLVMValueRef *pred)
-{
-   LLVMBuilderRef builder = bld->bld_base.base.gallivm->builder;
-   unsigned index;
-   unsigned char swizzles[4];
-   LLVMValueRef unswizzled[4] = {NULL, NULL, NULL, NULL};
-   LLVMValueRef value;
-   unsigned chan;
-
-   if (!inst->Instruction.Predicate) {
-      TGSI_FOR_EACH_CHANNEL( chan ) {
-         pred[chan] = NULL;
-      }
-      return;
-   }
-
-   swizzles[0] = inst->Predicate.SwizzleX;
-   swizzles[1] = inst->Predicate.SwizzleY;
-   swizzles[2] = inst->Predicate.SwizzleZ;
-   swizzles[3] = inst->Predicate.SwizzleW;
-
-   index = inst->Predicate.Index;
-   assert(index < LP_MAX_TGSI_PREDS);
-
-   TGSI_FOR_EACH_CHANNEL( chan ) {
-      unsigned swizzle = swizzles[chan];
-
-      /*
-       * Only fetch the predicate register channels that are actually listed
-       * in the swizzles
-       */
-      if (!unswizzled[swizzle]) {
-         value = LLVMBuildLoad(builder,
-                               bld->preds[index][swizzle], "");
-
-         /*
-          * Convert the value to an integer mask.
-          *
-          * TODO: Short-circuit this comparison -- a D3D setp_xx instructions
-          * is needlessly causing two comparisons due to storing the intermediate
-          * result as float vector instead of an integer mask vector.
-          */
-         value = lp_build_compare(bld->bld_base.base.gallivm,
-                                  bld->bld_base.base.type,
-                                  PIPE_FUNC_NOTEQUAL,
-                                  value,
-                                  bld->bld_base.base.zero);
-         if (inst->Predicate.Negate) {
-            value = LLVMBuildNot(builder, value, "");
-         }
-
-         unswizzled[swizzle] = value;
-      } else {
-         value = unswizzled[swizzle];
-      }
-
-      pred[chan] = value;
-   }
-}
-
-/**
- * store an array of 8 64-bit into two arrays of 8 floats
+ * store an array of vec-length 64-bit into two arrays of vec_length floats
  * i.e.
  * value is d0, d1, d2, d3 etc.
  * each 64-bit has high and low pieces x, y
@@ -1813,7 +1702,6 @@ emit_fetch_predicate(
 static void
 emit_store_64bit_chan(struct lp_build_tgsi_context *bld_base,
                       LLVMValueRef chan_ptr, LLVMValueRef chan_ptr2,
-                      LLVMValueRef pred,
                       LLVMValueRef value)
 {
    struct lp_build_tgsi_soa_context * bld = lp_soa_context(bld_base);
@@ -1822,8 +1710,8 @@ emit_store_64bit_chan(struct lp_build_tgsi_context *bld_base,
    struct lp_build_context *float_bld = &bld_base->base;
    unsigned i;
    LLVMValueRef temp, temp2;
-   LLVMValueRef shuffles[8];
-   LLVMValueRef shuffles2[8];
+   LLVMValueRef shuffles[LP_MAX_VECTOR_WIDTH/32];
+   LLVMValueRef shuffles2[LP_MAX_VECTOR_WIDTH/32];
 
    for (i = 0; i < bld_base->base.type.length; i++) {
       shuffles[i] = lp_build_const_int32(gallivm, i * 2);
@@ -1841,8 +1729,8 @@ emit_store_64bit_chan(struct lp_build_tgsi_context *bld_base,
                                                   bld_base->base.type.length),
                                   "");
 
-   lp_exec_mask_store(&bld->exec_mask, float_bld, pred, temp, chan_ptr);
-   lp_exec_mask_store(&bld->exec_mask, float_bld, pred, temp2, chan_ptr2);
+   lp_exec_mask_store(&bld->exec_mask, float_bld, temp, chan_ptr);
+   lp_exec_mask_store(&bld->exec_mask, float_bld, temp2, chan_ptr2);
 }
 
 /**
@@ -1854,7 +1742,6 @@ emit_store_chan(
    const struct tgsi_full_instruction *inst,
    unsigned index,
    unsigned chan_index,
-   LLVMValueRef pred,
    LLVMValueRef value)
 {
    struct lp_build_tgsi_soa_context * bld = lp_soa_context(bld_base);
@@ -1864,7 +1751,7 @@ emit_store_chan(
    struct lp_build_context *float_bld = &bld_base->base;
    struct lp_build_context *int_bld = &bld_base->int_bld;
    LLVMValueRef indirect_index = NULL;
-   enum tgsi_opcode_type dtype = tgsi_opcode_infer_dst_type(inst->Instruction.Opcode);
+   enum tgsi_opcode_type dtype = tgsi_opcode_infer_dst_type(inst->Instruction.Opcode, index);
 
    /*
     * Apply saturation.
@@ -1917,7 +1804,7 @@ emit_store_chan(
 
          /* Scatter store values into output registers */
          emit_mask_scatter(bld, outputs_array, index_vec, value,
-                           &bld->exec_mask, pred);
+                           &bld->exec_mask);
       }
       else {
          LLVMValueRef out_ptr = lp_get_output_ptr(bld, reg->Register.Index,
@@ -1927,9 +1814,9 @@ emit_store_chan(
             LLVMValueRef out_ptr2 = lp_get_output_ptr(bld, reg->Register.Index,
                                                       chan_index + 1);
             emit_store_64bit_chan(bld_base, out_ptr, out_ptr2,
-                                  pred, value);
+                                  value);
          } else
-            lp_exec_mask_store(&bld->exec_mask, float_bld, pred, value, out_ptr);
+            lp_exec_mask_store(&bld->exec_mask, float_bld, value, out_ptr);
       }
       break;
 
@@ -1955,7 +1842,7 @@ emit_store_chan(
 
          /* Scatter store values into temp registers */
          emit_mask_scatter(bld, temps_array, index_vec, value,
-                           &bld->exec_mask, pred);
+                           &bld->exec_mask);
       }
       else {
          LLVMValueRef temp_ptr;
@@ -1966,10 +1853,10 @@ emit_store_chan(
                                                          reg->Register.Index,
                                                          chan_index + 1);
             emit_store_64bit_chan(bld_base, temp_ptr, temp_ptr2,
-                                  pred, value);
+                                  value);
          }
          else
-            lp_exec_mask_store(&bld->exec_mask, float_bld, pred, value, temp_ptr);
+            lp_exec_mask_store(&bld->exec_mask, float_bld, value, temp_ptr);
       }
       break;
 
@@ -1977,15 +1864,8 @@ emit_store_chan(
       assert(dtype == TGSI_TYPE_SIGNED);
       assert(LLVMTypeOf(value) == int_bld->vec_type);
       value = LLVMBuildBitCast(builder, value, int_bld->vec_type, "");
-      lp_exec_mask_store(&bld->exec_mask, int_bld, pred, value,
+      lp_exec_mask_store(&bld->exec_mask, int_bld, value,
                          bld->addr[reg->Register.Index][chan_index]);
-      break;
-
-   case TGSI_FILE_PREDICATE:
-      assert(LLVMTypeOf(value) == float_bld->vec_type);
-      value = LLVMBuildBitCast(builder, value, float_bld->vec_type, "");
-      lp_exec_mask_store(&bld->exec_mask, float_bld, pred, value,
-                         bld->preds[reg->Register.Index][chan_index]);
       break;
 
    default:
@@ -2033,23 +1913,18 @@ emit_store(
    struct lp_build_tgsi_context * bld_base,
    const struct tgsi_full_instruction * inst,
    const struct tgsi_opcode_info * info,
+   unsigned index,
    LLVMValueRef dst[4])
 
 {
-   unsigned chan_index;
-   struct lp_build_tgsi_soa_context * bld = lp_soa_context(bld_base);
-   enum tgsi_opcode_type dtype = tgsi_opcode_infer_dst_type(inst->Instruction.Opcode);
-   if(info->num_dst) {
-      LLVMValueRef pred[TGSI_NUM_CHANNELS];
+   enum tgsi_opcode_type dtype = tgsi_opcode_infer_dst_type(inst->Instruction.Opcode, index);
 
-      emit_fetch_predicate( bld, inst, pred );
-
-      TGSI_FOR_EACH_DST0_ENABLED_CHANNEL( inst, chan_index ) {
-
-         if (tgsi_type_is_64bit(dtype) && (chan_index == 1 || chan_index == 3))
-             continue;
-         emit_store_chan(bld_base, inst, 0, chan_index, pred[chan_index], dst[chan_index]);
-      }
+   unsigned writemask = inst->Dst[index].Register.WriteMask;
+   while (writemask) {
+      unsigned chan_index = u_bit_scan(&writemask);
+      if (tgsi_type_is_64bit(dtype) && (chan_index == 1 || chan_index == 3))
+          continue;
+      emit_store_chan(bld_base, inst, index, chan_index, dst[chan_index]);
    }
 }
 
@@ -2356,6 +2231,7 @@ emit_sample(struct lp_build_tgsi_soa_context *bld,
             const struct tgsi_full_instruction *inst,
             enum lp_build_tex_modifier modifier,
             boolean compare,
+            enum lp_sampler_op_type sample_type,
             LLVMValueRef *texel)
 {
    struct gallivm_state *gallivm = bld->bld_base.base.gallivm;
@@ -2369,7 +2245,7 @@ emit_sample(struct lp_build_tgsi_soa_context *bld,
 
    unsigned num_offsets, num_derivs, i;
    unsigned layer_coord = 0;
-   unsigned sample_key = LP_SAMPLER_OP_TEXTURE << LP_SAMPLER_OP_TYPE_SHIFT;
+   unsigned sample_key = sample_type << LP_SAMPLER_OP_TYPE_SHIFT;
 
    memset(&params, 0, sizeof(params));
 
@@ -2764,7 +2640,6 @@ near_end_of_shader(struct lp_build_tgsi_soa_context *bld,
          opcode == TGSI_OPCODE_SAMPLE_L ||
          opcode == TGSI_OPCODE_SVIEWINFO ||
          opcode == TGSI_OPCODE_CAL ||
-         opcode == TGSI_OPCODE_CALLNZ ||
          opcode == TGSI_OPCODE_IF ||
          opcode == TGSI_OPCODE_UIF ||
          opcode == TGSI_OPCODE_BGNLOOP ||
@@ -2995,15 +2870,6 @@ lp_emit_declaration_soa(
          assert(idx < LP_MAX_TGSI_ADDRS);
          for (i = 0; i < TGSI_NUM_CHANNELS; i++)
             bld->addr[idx][i] = lp_build_alloca(gallivm, bld_base->base.int_vec_type, "addr");
-      }
-      break;
-
-   case TGSI_FILE_PREDICATE:
-      assert(last < LP_MAX_TGSI_PREDS);
-      for (idx = first; idx <= last; ++idx) {
-         for (i = 0; i < TGSI_NUM_CHANNELS; i++)
-            bld->preds[idx][i] = lp_build_alloca(gallivm, vec_type,
-                                                 "predicate");
       }
       break;
 
@@ -3279,6 +3145,18 @@ tg4_emit(
 }
 
 static void
+lodq_emit(
+   const struct lp_build_tgsi_action * action,
+   struct lp_build_tgsi_context * bld_base,
+   struct lp_build_emit_data * emit_data)
+{
+   struct lp_build_tgsi_soa_context * bld = lp_soa_context(bld_base);
+
+   emit_tex(bld, emit_data->inst, LP_BLD_TEX_MODIFIER_NONE,
+            emit_data->output, 1, LP_SAMPLER_OP_LODQ);
+}
+
+static void
 txq_emit(
    const struct lp_build_tgsi_action * action,
    struct lp_build_tgsi_context * bld_base,
@@ -3320,7 +3198,7 @@ sample_emit(
    struct lp_build_tgsi_soa_context * bld = lp_soa_context(bld_base);
 
    emit_sample(bld, emit_data->inst, LP_BLD_TEX_MODIFIER_NONE,
-               FALSE, emit_data->output);
+               FALSE, LP_SAMPLER_OP_TEXTURE, emit_data->output);
 }
 
 static void
@@ -3332,7 +3210,7 @@ sample_b_emit(
    struct lp_build_tgsi_soa_context * bld = lp_soa_context(bld_base);
 
    emit_sample(bld, emit_data->inst, LP_BLD_TEX_MODIFIER_LOD_BIAS,
-               FALSE, emit_data->output);
+               FALSE, LP_SAMPLER_OP_TEXTURE, emit_data->output);
 }
 
 static void
@@ -3344,7 +3222,7 @@ sample_c_emit(
    struct lp_build_tgsi_soa_context * bld = lp_soa_context(bld_base);
 
    emit_sample(bld, emit_data->inst, LP_BLD_TEX_MODIFIER_NONE,
-               TRUE, emit_data->output);
+               TRUE, LP_SAMPLER_OP_TEXTURE, emit_data->output);
 }
 
 static void
@@ -3356,7 +3234,7 @@ sample_c_lz_emit(
    struct lp_build_tgsi_soa_context * bld = lp_soa_context(bld_base);
 
    emit_sample(bld, emit_data->inst, LP_BLD_TEX_MODIFIER_LOD_ZERO,
-               TRUE, emit_data->output);
+               TRUE, LP_SAMPLER_OP_TEXTURE, emit_data->output);
 }
 
 static void
@@ -3368,7 +3246,7 @@ sample_d_emit(
    struct lp_build_tgsi_soa_context * bld = lp_soa_context(bld_base);
 
    emit_sample(bld, emit_data->inst, LP_BLD_TEX_MODIFIER_EXPLICIT_DERIV,
-               FALSE, emit_data->output);
+               FALSE, LP_SAMPLER_OP_TEXTURE, emit_data->output);
 }
 
 static void
@@ -3380,7 +3258,19 @@ sample_l_emit(
    struct lp_build_tgsi_soa_context * bld = lp_soa_context(bld_base);
 
    emit_sample(bld, emit_data->inst, LP_BLD_TEX_MODIFIER_EXPLICIT_LOD,
-               FALSE, emit_data->output);
+               FALSE, LP_SAMPLER_OP_TEXTURE, emit_data->output);
+}
+
+static void
+gather4_emit(
+   const struct lp_build_tgsi_action * action,
+   struct lp_build_tgsi_context * bld_base,
+   struct lp_build_emit_data * emit_data)
+{
+   struct lp_build_tgsi_soa_context * bld = lp_soa_context(bld_base);
+
+   emit_sample(bld, emit_data->inst, LP_BLD_TEX_MODIFIER_NONE,
+               FALSE, LP_SAMPLER_OP_GATHER, emit_data->output);
 }
 
 static void
@@ -3392,6 +3282,18 @@ sviewinfo_emit(
    struct lp_build_tgsi_soa_context * bld = lp_soa_context(bld_base);
 
    emit_size_query(bld, emit_data->inst, emit_data->output, TRUE);
+}
+
+static void
+lod_emit(
+   const struct lp_build_tgsi_action * action,
+   struct lp_build_tgsi_context * bld_base,
+   struct lp_build_emit_data * emit_data)
+{
+   struct lp_build_tgsi_soa_context * bld = lp_soa_context(bld_base);
+
+   emit_sample(bld, emit_data->inst, LP_BLD_TEX_MODIFIER_NONE,
+               FALSE, LP_SAMPLER_OP_LODQ, emit_data->output);
 }
 
 static LLVMValueRef
@@ -3585,24 +3487,6 @@ brk_emit(
    struct lp_build_tgsi_soa_context * bld = lp_soa_context(bld_base);
 
    lp_exec_break(&bld->exec_mask, bld_base);
-}
-
-static void
-breakc_emit(
-   const struct lp_build_tgsi_action * action,
-   struct lp_build_tgsi_context * bld_base,
-   struct lp_build_emit_data * emit_data)
-{
-   struct lp_build_tgsi_soa_context * bld = lp_soa_context(bld_base);
-   LLVMBuilderRef builder = bld_base->base.gallivm->builder;
-   struct lp_build_context *uint_bld = &bld_base->uint_bld;
-   LLVMValueRef unsigned_cond = 
-      LLVMBuildBitCast(builder, emit_data->args[0], uint_bld->vec_type, "");
-   LLVMValueRef cond = lp_build_cmp(uint_bld, PIPE_FUNC_NOTEQUAL,
-                                    unsigned_cond,
-                                    uint_bld->zero);
-
-   lp_exec_break_condition(&bld->exec_mask, cond);
 }
 
 static void
@@ -3986,7 +3870,6 @@ lp_build_tgsi_soa(struct gallivm_state *gallivm,
    bld.bld_base.op_actions[TGSI_OPCODE_BGNLOOP].emit = bgnloop_emit;
    bld.bld_base.op_actions[TGSI_OPCODE_BGNSUB].emit = bgnsub_emit;
    bld.bld_base.op_actions[TGSI_OPCODE_BRK].emit = brk_emit;
-   bld.bld_base.op_actions[TGSI_OPCODE_BREAKC].emit = breakc_emit;
    bld.bld_base.op_actions[TGSI_OPCODE_CAL].emit = cal_emit;
    bld.bld_base.op_actions[TGSI_OPCODE_CASE].emit = case_emit;
    bld.bld_base.op_actions[TGSI_OPCODE_CONT].emit = cont_emit;
@@ -4015,6 +3898,7 @@ lp_build_tgsi_soa(struct gallivm_state *gallivm,
    bld.bld_base.op_actions[TGSI_OPCODE_TXB2].emit = txb2_emit;
    bld.bld_base.op_actions[TGSI_OPCODE_TXL2].emit = txl2_emit;
    bld.bld_base.op_actions[TGSI_OPCODE_TG4].emit = tg4_emit;
+   bld.bld_base.op_actions[TGSI_OPCODE_LODQ].emit = lodq_emit;
    /* DX10 sampling ops */
    bld.bld_base.op_actions[TGSI_OPCODE_SAMPLE].emit = sample_emit;
    bld.bld_base.op_actions[TGSI_OPCODE_SAMPLE_B].emit = sample_b_emit;
@@ -4024,7 +3908,10 @@ lp_build_tgsi_soa(struct gallivm_state *gallivm,
    bld.bld_base.op_actions[TGSI_OPCODE_SAMPLE_I].emit = sample_i_emit;
    bld.bld_base.op_actions[TGSI_OPCODE_SAMPLE_I_MS].emit = sample_i_emit;
    bld.bld_base.op_actions[TGSI_OPCODE_SAMPLE_L].emit = sample_l_emit;
+   bld.bld_base.op_actions[TGSI_OPCODE_GATHER4].emit = gather4_emit;
    bld.bld_base.op_actions[TGSI_OPCODE_SVIEWINFO].emit = sviewinfo_emit;
+   bld.bld_base.op_actions[TGSI_OPCODE_LOD].emit = lod_emit;
+
 
    if (gs_iface) {
       /* There's no specific value for this because it should always

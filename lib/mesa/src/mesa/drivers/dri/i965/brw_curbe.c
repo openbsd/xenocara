@@ -41,7 +41,7 @@
  * quickly at thread setup time.  Each individual fixed function unit's state
  * (brw_vs_state.c for example) tells the hardware which subset of the CURBE
  * it wants in its register space, and we calculate those areas here under the
- * BRW_NEW_CURBE_OFFSETS state flag.  The brw_urb.c allocation will control
+ * BRW_NEW_PUSH_CONSTANT_ALLOCATION state flag.  The brw_urb.c allocation will control
  * how many CURBEs can be loaded into the hardware at once before a pipeline
  * stall occurs at CMD_CONST_BUFFER time.
  *
@@ -135,7 +135,7 @@ static void calculate_curbe_offsets( struct brw_context *brw )
                  brw->curbe.vs_start,
                  brw->curbe.vs_size );
 
-      brw->ctx.NewDriverState |= BRW_NEW_CURBE_OFFSETS;
+      brw->ctx.NewDriverState |= BRW_NEW_PUSH_CONSTANT_ALLOCATION;
    }
 }
 
@@ -195,13 +195,20 @@ static const GLfloat fixed_plane[6][4] = {
 static void
 brw_upload_constant_buffer(struct brw_context *brw)
 {
+   const struct gen_device_info *devinfo = &brw->screen->devinfo;
    struct gl_context *ctx = &brw->ctx;
-   /* BRW_NEW_CURBE_OFFSETS */
+   /* BRW_NEW_PUSH_CONSTANT_ALLOCATION */
    const GLuint sz = brw->curbe.total_size;
    const GLuint bufsz = sz * 16 * sizeof(GLfloat);
    gl_constant_value *buf;
    GLuint i;
    gl_clip_plane *clip_planes;
+
+   /* BRW_NEW_FRAGMENT_PROGRAM */
+   struct gl_program *fp = brw->programs[MESA_SHADER_FRAGMENT];
+
+   /* BRW_NEW_VERTEX_PROGRAM */
+   struct gl_program *vp = brw->programs[MESA_SHADER_VERTEX];
 
    if (sz == 0) {
       goto emit;
@@ -214,15 +221,15 @@ brw_upload_constant_buffer(struct brw_context *brw)
 
    /* fragment shader constants */
    if (brw->curbe.wm_size) {
-      _mesa_load_state_parameters(ctx, brw->fragment_program->Base.Parameters);
+      _mesa_load_state_parameters(ctx, fp->Parameters);
 
-      /* BRW_NEW_CURBE_OFFSETS */
+      /* BRW_NEW_PUSH_CONSTANT_ALLOCATION */
       GLuint offset = brw->curbe.wm_start * 16;
 
       /* BRW_NEW_FS_PROG_DATA | _NEW_PROGRAM_CONSTANTS: copy uniform values */
-      for (i = 0; i < brw->wm.base.prog_data->nr_params; i++) {
-	 buf[offset + i] = *brw->wm.base.prog_data->param[i];
-      }
+      brw_populate_constant_data(brw, fp, &brw->wm.base, &buf[offset],
+                                 brw->wm.base.prog_data->param,
+                                 brw->wm.base.prog_data->nr_params);
    }
 
    /* clipper constants */
@@ -256,14 +263,14 @@ brw_upload_constant_buffer(struct brw_context *brw)
 
    /* vertex shader constants */
    if (brw->curbe.vs_size) {
-      _mesa_load_state_parameters(ctx, brw->vertex_program->Base.Parameters);
+      _mesa_load_state_parameters(ctx, vp->Parameters);
 
       GLuint offset = brw->curbe.vs_start * 16;
 
       /* BRW_NEW_VS_PROG_DATA | _NEW_PROGRAM_CONSTANTS: copy uniform values */
-      for (i = 0; i < brw->vs.base.prog_data->nr_params; i++) {
-         buf[offset + i] = *brw->vs.base.prog_data->param[i];
-      }
+      brw_populate_constant_data(brw, vp, &brw->vs.base, &buf[offset],
+                                 brw->vs.base.prog_data->param,
+                                 brw->vs.base.prog_data->nr_params);
    }
 
    if (0) {
@@ -301,8 +308,7 @@ emit:
       OUT_BATCH(0);
    } else {
       OUT_BATCH((CMD_CONST_BUFFER << 16) | (1 << 8) | (2 - 2));
-      OUT_RELOC(brw->curbe.curbe_bo,
-		I915_GEM_DOMAIN_INSTRUCTION, 0,
+      OUT_RELOC(brw->curbe.curbe_bo, 0,
 		(brw->curbe.total_size - 1) + brw->curbe.curbe_offset);
    }
    ADVANCE_BATCH();
@@ -324,9 +330,8 @@ emit:
     *
     * BRW_NEW_FRAGMENT_PROGRAM
     */
-   if (brw->gen == 4 && !brw->is_g4x &&
-       (brw->fragment_program->Base.nir->info.inputs_read &
-        (1 << VARYING_SLOT_POS))) {
+   if (devinfo->gen == 4 && !devinfo->is_g4x &&
+       (fp->info.inputs_read & (1 << VARYING_SLOT_POS))) {
       BEGIN_BATCH(2);
       OUT_BATCH(_3DSTATE_GLOBAL_DEPTH_OFFSET_CLAMP << 16 | (2 - 2));
       OUT_BATCH(0);
@@ -339,7 +344,7 @@ const struct brw_tracked_state brw_constant_buffer = {
       .mesa = _NEW_PROGRAM_CONSTANTS,
       .brw  = BRW_NEW_BATCH |
               BRW_NEW_BLORP |
-              BRW_NEW_CURBE_OFFSETS |
+              BRW_NEW_PUSH_CONSTANT_ALLOCATION |
               BRW_NEW_FRAGMENT_PROGRAM |
               BRW_NEW_FS_PROG_DATA |
               BRW_NEW_PSP | /* Implicit - hardware requires this, not used above */
@@ -348,4 +353,3 @@ const struct brw_tracked_state brw_constant_buffer = {
    },
    .emit = brw_upload_constant_buffer,
 };
-

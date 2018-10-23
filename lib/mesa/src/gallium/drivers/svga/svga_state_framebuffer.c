@@ -34,6 +34,7 @@
 #include "svga_debug.h"
 #include "svga_screen.h"
 #include "svga_surface.h"
+#include "svga_resource_texture.h"
 
 
 /*
@@ -71,6 +72,10 @@ emit_fb_vgpu9(struct svga_context *svga)
          if (svga->curr.nr_fbs++ > MAX_RT_PER_BATCH)
             return PIPE_ERROR_OUT_OF_MEMORY;
 
+         /* Check to see if we need to propagate the render target surface */
+         if (hw->cbufs[i] && svga_surface_needs_propagation(hw->cbufs[i]))
+            svga_propagate_surface(svga, hw->cbufs[i], TRUE);
+
          ret = SVGA3D_SetRenderTarget(svga->swc, SVGA3D_RT_COLOR0 + i,
                                       curr->cbufs[i]);
          if (ret != PIPE_OK)
@@ -78,12 +83,23 @@ emit_fb_vgpu9(struct svga_context *svga)
 
          pipe_surface_reference(&hw->cbufs[i], curr->cbufs[i]);
       }
+
+      /* Set the rendered-to flag */
+      struct pipe_surface *s = curr->cbufs[i];
+      if (s) {
+         svga_set_texture_rendered_to(svga_texture(s->texture),
+                                      s->u.tex.first_layer, s->u.tex.level);
+      }
    }
 
    if ((curr->zsbuf != hw->zsbuf) || (reemit && hw->zsbuf)) {
       ret = SVGA3D_SetRenderTarget(svga->swc, SVGA3D_RT_DEPTH, curr->zsbuf);
       if (ret != PIPE_OK)
          return ret;
+
+      /* Check to see if we need to propagate the depth stencil surface */
+      if (hw->zsbuf && svga_surface_needs_propagation(hw->zsbuf))
+         svga_propagate_surface(svga, hw->zsbuf, TRUE);
 
       if (curr->zsbuf &&
           util_format_is_depth_and_stencil(curr->zsbuf->format)) {
@@ -99,6 +115,13 @@ emit_fb_vgpu9(struct svga_context *svga)
       }
 
       pipe_surface_reference(&hw->zsbuf, curr->zsbuf);
+
+      /* Set the rendered-to flag */
+      struct pipe_surface *s = curr->zsbuf;
+      if (s) {
+         svga_set_texture_rendered_to(svga_texture(s->texture),
+                                      s->u.tex.first_layer, s->u.tex.level);
+      }
    }
 
    return PIPE_OK;
@@ -174,6 +197,12 @@ emit_fb_vgpu10(struct svga_context *svga)
 
    assert(svga_have_vgpu10(svga));
 
+   /* Reset the has_backed_views flag.
+    * The flag is set in svga_validate_surface_view() if
+    * a backed surface view is used.
+    */
+   svga->state.hw_draw.has_backed_views = FALSE;
+
    /* Setup render targets array.  Note that we loop over the max of the
     * number of previously bound buffers and the new buffers to unbind
     * any previously bound buffers when the new number of buffers is less
@@ -181,14 +210,19 @@ emit_fb_vgpu10(struct svga_context *svga)
     */
    for (i = 0; i < num_color; i++) {
       if (curr->cbufs[i]) {
-         rtv[i] = svga_validate_surface_view(svga,
-                                             svga_surface(curr->cbufs[i]));
+         struct pipe_surface *s = curr->cbufs[i];
+
+         rtv[i] = svga_validate_surface_view(svga, svga_surface(s));
          if (rtv[i] == NULL) {
             return PIPE_ERROR_OUT_OF_MEMORY;
          }
 
          assert(svga_surface(rtv[i])->view_id != SVGA3D_INVALID_ID);
          last_rtv = i;
+
+         /* Set the rendered-to flag */
+         svga_set_texture_rendered_to(svga_texture(s->texture),
+                                      s->u.tex.first_layer, s->u.tex.level);
       }
       else {
          rtv[i] = NULL;
@@ -197,19 +231,25 @@ emit_fb_vgpu10(struct svga_context *svga)
 
    /* Setup depth stencil view */
    if (curr->zsbuf) {
+      struct pipe_surface *s = curr->zsbuf;
+
       dsv = svga_validate_surface_view(svga, svga_surface(curr->zsbuf));
       if (!dsv) {
          return PIPE_ERROR_OUT_OF_MEMORY;
       }
+
+      /* Set the rendered-to flag */
+      svga_set_texture_rendered_to(svga_texture(s->texture),
+                                      s->u.tex.first_layer, s->u.tex.level);
    }
    else {
       dsv = NULL;
    }
 
    /* avoid emitting redundant SetRenderTargets command */
-   if ((num_color != svga->state.hw_draw.num_rendertargets) ||
-       (dsv != svga->state.hw_draw.dsv) ||
-       memcmp(rtv, svga->state.hw_draw.rtv, num_color * sizeof(rtv[0]))) {
+   if ((num_color != svga->state.hw_clear.num_rendertargets) ||
+       (dsv != svga->state.hw_clear.dsv) ||
+       memcmp(rtv, svga->state.hw_clear.rtv, num_color * sizeof(rtv[0]))) {
 
       ret = SVGA3D_vgpu10_SetRenderTargets(svga->swc, num_color, rtv, dsv);
       if (ret != PIPE_OK)
@@ -218,16 +258,17 @@ emit_fb_vgpu10(struct svga_context *svga)
       /* number of render targets sent to the device, not including trailing
        * unbound render targets.
        */
-      svga->state.hw_draw.num_rendertargets = last_rtv + 1;
-      svga->state.hw_draw.dsv = dsv;
-      memcpy(svga->state.hw_draw.rtv, rtv, num_color * sizeof(rtv[0]));
+      svga->state.hw_clear.num_rendertargets = last_rtv + 1;
+      svga->state.hw_clear.dsv = dsv;
+      memcpy(svga->state.hw_clear.rtv, rtv, num_color * sizeof(rtv[0]));
     
       for (i = 0; i < ss->max_color_buffers; i++) {
          if (hw->cbufs[i] != curr->cbufs[i]) {
             /* propagate the backed view surface before unbinding it */
             if (hw->cbufs[i] && svga_surface(hw->cbufs[i])->backed) {
                svga_propagate_surface(svga,
-                                      &svga_surface(hw->cbufs[i])->backed->base);
+                                      &svga_surface(hw->cbufs[i])->backed->base,
+                                      TRUE);
             }
             pipe_surface_reference(&hw->cbufs[i], curr->cbufs[i]);
          }
@@ -237,7 +278,8 @@ emit_fb_vgpu10(struct svga_context *svga)
       if (hw->zsbuf != curr->zsbuf) {
          /* propagate the backed view surface before unbinding it */
          if (hw->zsbuf && svga_surface(hw->zsbuf)->backed) {
-            svga_propagate_surface(svga, &svga_surface(hw->zsbuf)->backed->base);
+            svga_propagate_surface(svga, &svga_surface(hw->zsbuf)->backed->base,
+                                   TRUE);
          }
          pipe_surface_reference(&hw->zsbuf, curr->zsbuf);
       }
@@ -293,7 +335,7 @@ svga_reemit_framebuffer_bindings(struct svga_context *svga)
 enum pipe_error
 svga_rebind_framebuffer_bindings(struct svga_context *svga)
 {
-   struct svga_hw_draw_state *hw = &svga->state.hw_draw;
+   struct svga_hw_clear_state *hw = &svga->state.hw_clear;
    unsigned i;
    enum pipe_error ret;
 
@@ -393,7 +435,7 @@ emit_viewport( struct svga_context *svga,
    /* Enable prescale to adjust vertex positions to match
       VGPU10 convention only if rasterization is enabled.
     */
-   if (svga->curr.rast->templ.rasterizer_discard) {
+   if (svga->curr.rast && svga->curr.rast->templ.rasterizer_discard) {
       degenerate = TRUE;
       goto out;
    } else {
@@ -497,7 +539,7 @@ emit_viewport( struct svga_context *svga,
     * screen-space coordinates slightly relative to D3D which is
     * what hardware implements natively.
     */
-   if (svga->curr.rast->templ.half_pixel_center) {
+   if (svga->curr.rast && svga->curr.rast->templ.half_pixel_center) {
       float adjust_x = 0.0;
       float adjust_y = 0.0;
 
@@ -512,20 +554,13 @@ emit_viewport( struct svga_context *svga,
          }
       }
       else {
-         switch (svga->curr.reduced_prim) {
-         case PIPE_PRIM_POINTS:
-            adjust_x = -0.375;
-            adjust_y = -0.75;
-            break;
-         case PIPE_PRIM_LINES:
-            adjust_x = -0.5;
-            adjust_y = 0;
-            break;
-         case PIPE_PRIM_TRIANGLES:
-            adjust_x = -0.5;
-            adjust_y = -0.5;
-            break;
-         }
+         /* Use (-0.5, -0.5) bias for all prim types.
+          * Regarding line rasterization, this does not seem to satisfy
+          * the Piglit gl-1.0-ortho-pos test but it generally produces
+          * results identical or very similar to VGPU10.
+          */
+         adjust_x = -0.5;
+         adjust_y = -0.5;
       }
 
       if (invertY)

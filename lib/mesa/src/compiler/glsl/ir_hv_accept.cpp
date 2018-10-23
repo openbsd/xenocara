@@ -137,7 +137,7 @@ ir_expression::accept(ir_hierarchical_visitor *v)
    if (s != visit_continue)
       return (s == visit_continue_with_parent) ? visit_continue : s;
 
-   for (unsigned i = 0; i < this->get_num_operands(); i++) {
+   for (unsigned i = 0; i < this->num_operands; i++) {
       switch (this->operands[i]->accept(v)) {
       case visit_continue:
 	 break;
@@ -178,8 +178,8 @@ ir_texture::accept(ir_hierarchical_visitor *v)
 	 return (s == visit_continue_with_parent) ? visit_continue : s;
    }
 
-   if (this->shadow_comparitor) {
-      s = this->shadow_comparitor->accept(v);
+   if (this->shadow_comparator) {
+      s = this->shadow_comparator->accept(v);
       if (s != visit_continue)
 	 return (s == visit_continue_with_parent) ? visit_continue : s;
    }

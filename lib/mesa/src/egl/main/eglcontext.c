@@ -312,6 +312,80 @@ _eglParseContextAttribList(_EGLContext *ctx, _EGLDisplay *dpy,
             ctx->Flags |= EGL_CONTEXT_OPENGL_FORWARD_COMPATIBLE_BIT_KHR;
          break;
 
+      case EGL_CONTEXT_OPENGL_NO_ERROR_KHR:
+         if (dpy->Version < 14 ||
+             !dpy->Extensions.KHR_create_context_no_error) {
+            err = EGL_BAD_ATTRIBUTE;
+            break;
+         }
+
+         /* The KHR_no_error spec only applies against OpenGL 2.0+ and
+          * OpenGL ES 2.0+
+          */
+         if ((api != EGL_OPENGL_API && api != EGL_OPENGL_ES_API) ||
+             ctx->ClientMajorVersion < 2) {
+            err = EGL_BAD_ATTRIBUTE;
+            break;
+         }
+
+         /* Canonicalize value to EGL_TRUE/EGL_FALSE definitions */
+         ctx->NoError = !!val;
+         break;
+
+      case EGL_CONTEXT_PRIORITY_LEVEL_IMG:
+         /* The  EGL_IMG_context_priority spec says:
+          *
+          * "EGL_CONTEXT_PRIORITY_LEVEL_IMG determines the priority level of
+          * the context to be created. This attribute is a hint, as an
+          * implementation may not support multiple contexts at some
+          * priority levels and system policy may limit access to high
+          * priority contexts to appropriate system privilege level. The
+          * default value for EGL_CONTEXT_PRIORITY_LEVEL_IMG is
+          * EGL_CONTEXT_PRIORITY_MEDIUM_IMG."
+          */
+         {
+            int bit;
+
+            switch (val) {
+            case EGL_CONTEXT_PRIORITY_HIGH_IMG:
+               bit = __EGL_CONTEXT_PRIORITY_HIGH_BIT;
+               break;
+            case EGL_CONTEXT_PRIORITY_MEDIUM_IMG:
+               bit = __EGL_CONTEXT_PRIORITY_MEDIUM_BIT;
+               break;
+            case EGL_CONTEXT_PRIORITY_LOW_IMG:
+               bit = __EGL_CONTEXT_PRIORITY_LOW_BIT;
+               break;
+            default:
+               bit = -1;
+               break;
+            }
+
+            if (bit < 0) {
+               err = EGL_BAD_ATTRIBUTE;
+               break;
+            }
+
+            /* "This extension allows an EGLContext to be created with a
+             * priority hint. It is possible that an implementation will not
+             * honour the hint, especially if there are constraints on the
+             * number of high priority contexts available in the system, or
+             * system policy limits access to high priority contexts to
+             * appropriate system privilege level. A query is provided to find
+             * the real priority level assigned to the context after creation."
+             *
+             * We currently assume that the driver applies the priority hint
+             * and filters out any it cannot handle during the screen setup,
+             * e.g. dri2_setup_screen(). As such we can mask any change that
+             * the driver would fail, and ctx->ContextPriority matches the
+             * hint applied to the driver/hardware backend.
+             */
+            if (dpy->Extensions.IMG_context_priority & (1 << bit))
+               ctx->ContextPriority = val;
+
+            break;
+         }
+
       default:
          err = EGL_BAD_ATTRIBUTE;
          break;
@@ -458,6 +532,16 @@ _eglParseContextAttribList(_EGLContext *ctx, _EGLDisplay *dpy,
       break;
    }
 
+   /* The EGL_KHR_create_context_no_error spec says:
+    *
+    *    "BAD_MATCH is generated if the EGL_CONTEXT_OPENGL_NO_ERROR_KHR is TRUE at
+    *    the same time as a debug or robustness context is specified."
+    */
+   if (ctx->NoError && (ctx->Flags & EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR ||
+                        ctx->Flags & EGL_CONTEXT_OPENGL_ROBUST_ACCESS_BIT_KHR)) {
+      err = EGL_BAD_MATCH;
+   }
+
    if ((ctx->Flags & ~(EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR
                       | EGL_CONTEXT_OPENGL_FORWARD_COMPATIBLE_BIT_KHR
                       | EGL_CONTEXT_OPENGL_ROBUST_ACCESS_BIT_KHR)) != 0) {
@@ -489,10 +573,8 @@ _eglInitContext(_EGLContext *ctx, _EGLDisplay *dpy, _EGLConfig *conf,
    const EGLenum api = eglQueryAPI();
    EGLint err;
 
-   if (api == EGL_NONE) {
-      _eglError(EGL_BAD_MATCH, "eglCreateContext(no client API)");
-      return EGL_FALSE;
-   }
+   if (api == EGL_NONE)
+      return _eglError(EGL_BAD_MATCH, "eglCreateContext(no client API)");
 
    _eglInitResource(&ctx->Resource, sizeof(*ctx), dpy);
    ctx->ClientAPI = api;
@@ -505,6 +587,7 @@ _eglInitContext(_EGLContext *ctx, _EGLDisplay *dpy, _EGLConfig *conf,
    ctx->Flags = 0;
    ctx->Profile = EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT_KHR;
    ctx->ResetNotificationStrategy = EGL_NO_RESET_NOTIFICATION_KHR;
+   ctx->ContextPriority = EGL_CONTEXT_PRIORITY_MEDIUM_IMG;
 
    err = _eglParseContextAttribList(ctx, dpy, attrib_list);
    if (err == EGL_SUCCESS && ctx->Config) {
@@ -570,6 +653,9 @@ _eglQueryContext(_EGLDriver *drv, _EGLDisplay *dpy, _EGLContext *c,
    case EGL_RENDER_BUFFER:
       *value = _eglQueryContextRenderBuffer(c);
       break;
+   case EGL_CONTEXT_PRIORITY_LEVEL_IMG:
+      *value = c->ContextPriority;
+      break;
    default:
       return _eglError(EGL_BAD_ATTRIBUTE, "eglQueryContext");
    }
@@ -583,7 +669,7 @@ _eglQueryContext(_EGLDriver *drv, _EGLDisplay *dpy, _EGLContext *c,
  *
  * Note that the context may be NULL.
  */
-static _EGLContext *
+_EGLContext *
 _eglBindContextToThread(_EGLContext *ctx, _EGLThreadInfo *t)
 {
    _EGLContext *oldCtx;

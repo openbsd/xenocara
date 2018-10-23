@@ -95,7 +95,7 @@ get_texcoord_mapping(struct i915_fragment_program *p, uint8_t texcoord)
 static GLuint
 src_vector(struct i915_fragment_program *p,
            const struct prog_src_register *source,
-           const struct gl_fragment_program *program)
+           const struct gl_program *program)
 {
    GLuint src;
    unsigned unit;
@@ -186,7 +186,7 @@ src_vector(struct i915_fragment_program *p,
    case PROGRAM_STATE_VAR:
    case PROGRAM_UNIFORM:
       src = i915_emit_param4fv(p,
-	 &program->Base.Parameters->ParameterValues[source->Index][0].f);
+	 &program->Parameters->ParameterValues[source->Index][0].f);
       break;
 
    default:
@@ -278,8 +278,8 @@ translate_tex_src_target(struct i915_fragment_program *p, GLubyte bit)
 #define EMIT_TEX( OP )						\
 do {								\
    GLuint dim = translate_tex_src_target( p, inst->TexSrcTarget );	\
-   const struct gl_fragment_program *program = &p->FragProg;	\
-   GLuint unit = program->Base.SamplerUnits[inst->TexSrcUnit];	\
+   const struct gl_program *program = &p->FragProg;	\
+   GLuint unit = program->SamplerUnits[inst->TexSrcUnit];	\
    GLuint sampler = i915_emit_decl(p, REG_TYPE_S,		\
 				   unit, dim);			\
    GLuint coord = src_vector( p, &inst->SrcReg[0], program);	\
@@ -313,13 +313,13 @@ do {									\
  */
 static bool calc_live_regs( struct i915_fragment_program *p )
 {
-    const struct gl_fragment_program *program = &p->FragProg;
+    const struct gl_program *program = &p->FragProg;
     GLuint regsUsed = ~((1 << I915_MAX_TEMPORARY) - 1);
     uint8_t live_components[I915_MAX_TEMPORARY] = { 0, };
     GLint i;
    
-    for (i = program->Base.NumInstructions - 1; i >= 0; i--) {
-        struct prog_instruction *inst = &program->Base.Instructions[i];
+    for (i = program->arb.NumInstructions - 1; i >= 0; i--) {
+        struct prog_instruction *inst = &program->arb.Instructions[i];
         int opArgs = _mesa_num_inst_src_regs(inst->Opcode);
         int a;
 
@@ -361,8 +361,8 @@ static bool calc_live_regs( struct i915_fragment_program *p )
 static GLuint get_live_regs( struct i915_fragment_program *p, 
                              const struct prog_instruction *inst )
 {
-    const struct gl_fragment_program *program = &p->FragProg;
-    GLuint nr = inst - program->Base.Instructions;
+    const struct gl_program *program = &p->FragProg;
+    GLuint nr = inst - program->arb.Instructions;
 
     return p->usedRegs[nr];
 }
@@ -382,11 +382,11 @@ static GLuint get_live_regs( struct i915_fragment_program *p,
 static void
 upload_program(struct i915_fragment_program *p)
 {
-   const struct gl_fragment_program *program = &p->FragProg;
-   const struct prog_instruction *inst = program->Base.Instructions;
+   const struct gl_program *program = &p->FragProg;
+   const struct prog_instruction *inst = program->arb.Instructions;
 
    if (INTEL_DEBUG & DEBUG_WM)
-      _mesa_print_program(&program->Base);
+      _mesa_print_program(program);
 
    /* Is this a parse-failed program?  Ensure a valid program is
     * loaded, as the flagging of an error isn't sufficient to stop
@@ -402,9 +402,9 @@ upload_program(struct i915_fragment_program *p)
       return;
    }
 
-   if (program->Base.NumInstructions > I915_MAX_INSN) {
+   if (program->arb.NumInstructions > I915_MAX_INSN) {
       i915_program_error(p, "Exceeded max instructions (%d out of %d)",
-			 program->Base.NumInstructions, I915_MAX_INSN);
+                         program->arb.NumInstructions, I915_MAX_INSN);
       return;
    }
 
@@ -1032,7 +1032,7 @@ fixup_depth_write(struct i915_fragment_program *p)
 static void
 check_texcoord_mapping(struct i915_fragment_program *p)
 {
-   GLbitfield64 inputs = p->FragProg.Base.InputsRead;
+   GLbitfield64 inputs = p->FragProg.info.inputs_read;
    unsigned unit = 0;
 
    for (unsigned i = 0; i < p->ctx->Const.MaxTextureCoordUnits; i++) {
@@ -1059,11 +1059,11 @@ check_texcoord_mapping(struct i915_fragment_program *p)
 static void
 check_wpos(struct i915_fragment_program *p)
 {
-   GLbitfield64 inputs = p->FragProg.Base.InputsRead;
+   GLbitfield64 inputs = p->FragProg.info.inputs_read;
    GLint i;
    unsigned unit = 0;
 
-   p->wpos_tex = -1;
+   p->wpos_tex = I915_WPOS_TEX_INVALID;
 
    if ((inputs & VARYING_BIT_POS) == 0)
       return;
@@ -1087,7 +1087,7 @@ translate_program(struct i915_fragment_program *p)
 
    if (INTEL_DEBUG & DEBUG_WM) {
       printf("fp:\n");
-      _mesa_print_program(&p->FragProg.Base);
+      _mesa_print_program(&p->FragProg);
       printf("\n");
    }
 
@@ -1108,7 +1108,7 @@ track_params(struct i915_fragment_program *p)
    GLint i;
 
    if (p->nr_params)
-      _mesa_load_state_parameters(p->ctx, p->FragProg.Base.Parameters);
+      _mesa_load_state_parameters(p->ctx, p->FragProg.Parameters);
 
    for (i = 0; i < p->nr_params; i++) {
       GLint reg = p->param[i].reg;
@@ -1119,46 +1119,24 @@ track_params(struct i915_fragment_program *p)
    p->on_hardware = 0;          /* overkill */
 }
 
-
-static void
-i915BindProgram(struct gl_context * ctx, GLenum target, struct gl_program *prog)
-{
-   if (target == GL_FRAGMENT_PROGRAM_ARB) {
-      struct i915_context *i915 = I915_CONTEXT(ctx);
-      struct i915_fragment_program *p = (struct i915_fragment_program *) prog;
-
-      if (i915->current_program == p)
-         return;
-
-      if (i915->current_program) {
-         i915->current_program->on_hardware = 0;
-         i915->current_program->params_uptodate = 0;
-      }
-
-      i915->current_program = p;
-
-      assert(p->on_hardware == 0);
-      assert(p->params_uptodate == 0);
-
-   }
-}
-
 static struct gl_program *
-i915NewProgram(struct gl_context * ctx, GLenum target, GLuint id)
+i915NewProgram(struct gl_context * ctx, GLenum target, GLuint id,
+               bool is_arb_asm)
 {
    switch (target) {
    case GL_VERTEX_PROGRAM_ARB: {
-      struct gl_vertex_program *prog = CALLOC_STRUCT(gl_vertex_program);
-      return _mesa_init_gl_program(&prog->Base, target, id);
+      struct gl_program *prog = rzalloc(NULL, struct gl_program);
+      return _mesa_init_gl_program(prog, target, id, is_arb_asm);
    }
 
    case GL_FRAGMENT_PROGRAM_ARB:{
          struct i915_fragment_program *prog =
-            CALLOC_STRUCT(i915_fragment_program);
+            rzalloc(NULL, struct i915_fragment_program);
          if (prog) {
             i915_init_program(I915_CONTEXT(ctx), prog);
 
-            return _mesa_init_gl_program(&prog->FragProg.Base, target, id);
+            return _mesa_init_gl_program(&prog->FragProg, target, id,
+                                         is_arb_asm);
          }
          else
             return NULL;
@@ -1167,7 +1145,7 @@ i915NewProgram(struct gl_context * ctx, GLenum target, GLuint id)
    default:
       /* Just fallback:
        */
-      return _mesa_new_program(ctx, target, id);
+      return _mesa_new_program(ctx, target, id, is_arb_asm);
    }
 }
 
@@ -1257,9 +1235,10 @@ i915ValidateFragmentProgram(struct i915_context *i915)
    struct i915_fragment_program *p =
       (struct i915_fragment_program *) ctx->FragmentProgram._Current;
 
-   const GLbitfield64 inputsRead = p->FragProg.Base.InputsRead;
+   const GLbitfield64 inputsRead = p->FragProg.info.inputs_read;
    GLuint s4 = i915->state.Ctx[I915_CTXREG_LIS4] & ~S4_VFMT_MASK;
    GLuint s2 = S2_TEXCOORD_NONE;
+   GLuint s3 = 0;
    int i, offset = 0;
 
    /* Important:
@@ -1274,12 +1253,10 @@ i915ValidateFragmentProgram(struct i915_context *i915)
    intel->coloroffset = 0;
    intel->specoffset = 0;
 
-   if (inputsRead & VARYING_BITS_TEX_ANY || p->wpos_tex != -1) {
-      EMIT_ATTR(_TNL_ATTRIB_POS, EMIT_4F_VIEWPORT, S4_VFMT_XYZW, 16);
-   }
-   else {
-      EMIT_ATTR(_TNL_ATTRIB_POS, EMIT_3F_VIEWPORT, S4_VFMT_XYZ, 12);
-   }
+   /* Always emit W to get consistent perspective
+    * correct interpolation of primary/secondary colors.
+    */
+   EMIT_ATTR(_TNL_ATTRIB_POS, EMIT_4F_VIEWPORT, S4_VFMT_XYZW, 16);
 
    /* Handle gl_PointSize builtin var here */
    if (ctx->Point._Attenuated || ctx->VertexProgram.PointSizeEnabled)
@@ -1325,6 +1302,7 @@ i915ValidateFragmentProgram(struct i915_context *i915)
           */
          s2 &= ~S2_TEXCOORD_FMT(i, S2_TEXCOORD_FMT0_MASK);
          s2 |= S2_TEXCOORD_FMT(i, SZ_TO_HW(wpos_size));
+         s3 |= S3_TEXCOORD_PERSPECTIVE_DISABLE(i);
 
          intel->wpos_offset = offset;
          EMIT_PAD(wpos_size);
@@ -1332,6 +1310,7 @@ i915ValidateFragmentProgram(struct i915_context *i915)
    }
 
    if (s2 != i915->state.Ctx[I915_CTXREG_LIS2] ||
+       s3 != i915->state.Ctx[I915_CTXREG_LIS3] ||
        s4 != i915->state.Ctx[I915_CTXREG_LIS4]) {
       I915_STATECHANGE(i915, I915_UPLOAD_CTX);
 
@@ -1350,6 +1329,7 @@ i915ValidateFragmentProgram(struct i915_context *i915)
       intel->vertex_size >>= 2;
 
       i915->state.Ctx[I915_CTXREG_LIS2] = s2;
+      i915->state.Ctx[I915_CTXREG_LIS3] = s3;
       i915->state.Ctx[I915_CTXREG_LIS4] = s4;
 
       assert(intel->vtbl.check_vertex_size(intel, intel->vertex_size));
@@ -1370,7 +1350,6 @@ i915ValidateFragmentProgram(struct i915_context *i915)
 void
 i915InitFragProgFuncs(struct dd_function_table *functions)
 {
-   functions->BindProgram = i915BindProgram;
    functions->NewProgram = i915NewProgram;
    functions->DeleteProgram = i915DeleteProgram;
    functions->IsProgramNative = i915IsProgramNative;

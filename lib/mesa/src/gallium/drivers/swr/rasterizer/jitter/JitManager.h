@@ -29,9 +29,6 @@
 ******************************************************************************/
 #pragma once
 
-#include "common/os.h"
-#include "common/isa.hpp"
-
 #if defined(_WIN32)
 #pragma warning(disable : 4146 4244 4267 4800 4996)
 #endif
@@ -47,15 +44,9 @@
 #include "llvm/IR/Type.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/IntrinsicInst.h"
+#include "llvm/ExecutionEngine/ObjectCache.h"
 
 #include "llvm/Config/llvm-config.h"
-#ifndef LLVM_VERSION_MAJOR
-#include "llvm/Config/config.h"
-#endif
-
-#ifndef HAVE_LLVM
-#define HAVE_LLVM ((LLVM_VERSION_MAJOR << 8) | LLVM_VERSION_MINOR)
-#endif
 
 #include "llvm/IR/Verifier.h"
 #include "llvm/ExecutionEngine/MCJIT.h"
@@ -64,15 +55,9 @@
 
 #include "llvm/Analysis/Passes.h"
 
-#if HAVE_LLVM == 0x306
-#include "llvm/PassManager.h"
-using FunctionPassManager = llvm::FunctionPassManager;
-using PassManager = llvm::PassManager;
-#else
 #include "llvm/IR/LegacyPassManager.h"
 using FunctionPassManager = llvm::legacy::FunctionPassManager;
 using PassManager = llvm::legacy::PassManager;
-#endif
 
 #include "llvm/CodeGen/Passes.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
@@ -83,6 +68,11 @@ using PassManager = llvm::legacy::PassManager;
 #include "llvm/Support/Host.h"
 #include "llvm/Support/DynamicLibrary.h"
 
+
+#include "common/os.h"
+#include "common/isa.hpp"
+
+#include <mutex>
 
 #pragma pop_macro("DEBUG")
 
@@ -139,6 +129,31 @@ struct JitLLVMContext : llvm::LLVMContext
 {
 };
 
+//////////////////////////////////////////////////////////////////////////
+/// JitCache
+//////////////////////////////////////////////////////////////////////////
+class JitCache : public llvm::ObjectCache
+{
+public:
+    /// constructor
+    JitCache();
+    virtual ~JitCache() {}
+
+    void SetCpu(const llvm::StringRef& cpu) { mCpu = cpu.str(); }
+
+    /// notifyObjectCompiled - Provides a pointer to compiled code for Module M.
+    virtual void notifyObjectCompiled(const llvm::Module *M, llvm::MemoryBufferRef Obj);
+
+    /// Returns a pointer to a newly allocated MemoryBuffer that contains the
+    /// object which corresponds with Module M, or 0 if an object is not
+    /// available.
+    virtual std::unique_ptr<llvm::MemoryBuffer> getObject(const llvm::Module* M);
+
+private:
+    std::string mCpu;
+    llvm::SmallString<MAX_PATH> mCacheDir;
+    uint32_t mCurrentModuleCRC;
+};
 
 //////////////////////////////////////////////////////////////////////////
 /// JitManager
@@ -151,6 +166,7 @@ struct JitManager
     JitLLVMContext          mContext;   ///< LLVM compiler
     llvm::IRBuilder<>       mBuilder;   ///< LLVM IR Builder
     llvm::ExecutionEngine*  mpExec;
+    JitCache                mCache;
 
     // Need to be rebuilt after a JIT and before building new IR
     llvm::Module* mpCurrentModule;
@@ -164,8 +180,6 @@ struct JitManager
     llvm::Type*                mInt32Ty;
     llvm::Type*                mInt64Ty;
     llvm::Type*                mFP32Ty;
-    llvm::StructType*          mV4FP32Ty;
-    llvm::StructType*          mV4Int32Ty;
 
     llvm::Type* mSimtFP32Ty;
     llvm::Type* mSimtInt32Ty;
@@ -173,6 +187,14 @@ struct JitManager
     llvm::Type* mSimdVectorInt32Ty;
     llvm::Type* mSimdVectorTy;
 
+#if USE_SIMD16_SHADERS
+    llvm::Type* mSimd16FP32Ty;
+    llvm::Type* mSimd16Int32Ty;
+
+    llvm::Type* mSimd16VectorFP32Ty;
+    llvm::Type* mSimd16VectorInt32Ty;
+
+#endif
     // fetch shader types
     llvm::FunctionType*        mFetchShaderTy;
 
@@ -180,7 +202,6 @@ struct JitManager
     std::string mCore;
 
     void SetupNewModule();
-    bool SetupModuleFromIR(const uint8_t *pIR);
 
     void DumpAsm(llvm::Function* pFunction, const char* fileName);
     static void DumpToFile(llvm::Function *f, const char *fileName);

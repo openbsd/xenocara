@@ -28,6 +28,7 @@
 #include "pipe/p_defines.h"
 #include "util/u_math.h"
 
+#include "svga_resource_texture.h"
 #include "svga_sampler_view.h"
 #include "svga_winsys.h"
 #include "svga_context.h"
@@ -175,6 +176,8 @@ update_tss_binding(struct svga_context *svga,
                             &queue);
    }
 
+   svga->state.hw_draw.num_backed_views = 0;
+
    if (queue.bind_count) {
       SVGA3dTextureState *ts;
 
@@ -185,12 +188,19 @@ update_tss_binding(struct svga_context *svga,
 
       for (i = 0; i < queue.bind_count; i++) {
          struct svga_winsys_surface *handle;
+         struct svga_hw_view_state *view = queue.bind[i].view;
 
          ts[i].stage = queue.bind[i].unit;
          ts[i].name = SVGA3D_TS_BIND_TEXTURE;
 
-         if (queue.bind[i].view->v) {
-            handle = queue.bind[i].view->v->handle;
+         if (view->v) {
+            handle = view->v->handle;
+
+            /* Keep track of number of views with a backing copy
+             * of texture.
+             */
+            if (handle != svga_texture(view->texture)->handle)
+               svga->state.hw_draw.num_backed_views++;
          }
          else {
             handle = NULL;
@@ -294,6 +304,7 @@ svga_reemit_tss_bindings(struct svga_context *svga)
 
 struct svga_tracked_state svga_hw_tss_binding = {
    "texture binding emit",
+   SVGA_NEW_FRAME_BUFFER |
    SVGA_NEW_TEXTURE_BINDING |
    SVGA_NEW_STIPPLE |
    SVGA_NEW_SAMPLER,

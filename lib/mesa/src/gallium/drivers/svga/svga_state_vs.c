@@ -52,7 +52,6 @@ get_dummy_vertex_shader(void)
    const struct tgsi_token *tokens;
    struct ureg_src src;
    struct ureg_dst dst;
-   unsigned num_tokens;
 
    ureg = ureg_create(PIPE_SHADER_VERTEX);
    if (!ureg)
@@ -63,7 +62,7 @@ get_dummy_vertex_shader(void)
    ureg_MOV(ureg, dst, src);
    ureg_END(ureg);
 
-   tokens = ureg_get_tokens(ureg, &num_tokens);
+   tokens = ureg_get_tokens(ureg, NULL);
 
    ureg_destroy(ureg);
 
@@ -264,7 +263,6 @@ compile_passthrough_vs(struct svga_context *svga,
    struct ureg_src src[PIPE_MAX_SHADER_INPUTS];
    struct ureg_dst dst[PIPE_MAX_SHADER_OUTPUTS];
    struct ureg_program *ureg;
-   unsigned num_tokens;
    struct svga_compile_key key;
    enum pipe_error ret;
 
@@ -313,7 +311,7 @@ compile_passthrough_vs(struct svga_context *svga,
    ureg_END(ureg);
 
    memset(&new_vs, 0, sizeof(new_vs));
-   new_vs.base.tokens = ureg_get_tokens(ureg, &num_tokens);
+   new_vs.base.tokens = ureg_get_tokens(ureg, NULL);
    tgsi_scan_shader(new_vs.base.tokens, &new_vs.base.info);
 
    memset(&key, 0, sizeof(key));
@@ -355,11 +353,14 @@ emit_hw_vs(struct svga_context *svga, unsigned dirty)
       /* No GS stream out */
       if (svga_have_vs_streamout(svga)) {
          /* Set VS stream out */
-         svga_set_stream_output(svga, vs->base.stream_output);
+         ret = svga_set_stream_output(svga, vs->base.stream_output);
       }
       else {
          /* turn off stream out */
-         svga_set_stream_output(svga, NULL);
+         ret = svga_set_stream_output(svga, NULL);
+      }
+      if (ret != PIPE_OK) {
+         goto done;
       }
    }
 

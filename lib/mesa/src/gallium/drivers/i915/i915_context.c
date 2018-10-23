@@ -37,6 +37,8 @@
 #include "pipe/p_defines.h"
 #include "util/u_inlines.h"
 #include "util/u_memory.h"
+#include "util/u_prim.h"
+#include "util/u_upload_mgr.h"
 #include "pipe/p_screen.h"
 
 
@@ -56,6 +58,9 @@ i915_draw_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info)
    const void *mapped_indices = NULL;
    unsigned i;
 
+   if (!u_trim_pipe_prim(info->mode, (unsigned*)&info->count))
+      return;
+
    /*
     * Ack vs contants here, helps ipers a lot.
     */
@@ -68,22 +73,23 @@ i915_draw_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info)
     * Map vertex buffers
     */
    for (i = 0; i < i915->nr_vertex_buffers; i++) {
-      const void *buf = i915->vertex_buffers[i].user_buffer;
+      const void *buf = i915->vertex_buffers[i].is_user_buffer ?
+                           i915->vertex_buffers[i].buffer.user : NULL;
       if (!buf)
-            buf = i915_buffer(i915->vertex_buffers[i].buffer)->data;
+            buf = i915_buffer(i915->vertex_buffers[i].buffer.resource)->data;
       draw_set_mapped_vertex_buffer(draw, i, buf, ~0);
    }
 
    /*
     * Map index buffer, if present
     */
-   if (info->indexed) {
-      mapped_indices = i915->index_buffer.user_buffer;
+   if (info->index_size) {
+      mapped_indices = info->has_user_indices ? info->index.user : NULL;
       if (!mapped_indices)
-         mapped_indices = i915_buffer(i915->index_buffer.buffer)->data;
+         mapped_indices = i915_buffer(info->index.resource)->data;
       draw_set_indexes(draw,
-                       (ubyte *) mapped_indices + i915->index_buffer.offset,
-                       i915->index_buffer.index_size, ~0);
+                       (ubyte *) mapped_indices,
+                       info->index_size, ~0);
    }
 
    if (i915->constants[PIPE_SHADER_VERTEX])
@@ -137,6 +143,9 @@ static void i915_destroy(struct pipe_context *pipe)
 
    draw_destroy(i915->draw);
 
+   if (i915->base.stream_uploader)
+      u_upload_destroy(i915->base.stream_uploader);
+
    if(i915->batch)
       i915->iws->batchbuffer_destroy(i915->batch);
 
@@ -166,6 +175,8 @@ i915_create_context(struct pipe_screen *screen, void *priv, unsigned flags)
    i915->iws = i915_screen(screen)->iws;
    i915->base.screen = screen;
    i915->base.priv = priv;
+   i915->base.stream_uploader = u_upload_create_default(&i915->base);
+   i915->base.const_uploader = i915->base.stream_uploader;
 
    i915->base.destroy = i915_destroy;
 

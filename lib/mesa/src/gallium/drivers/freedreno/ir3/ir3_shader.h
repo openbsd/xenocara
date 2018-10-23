@@ -31,36 +31,30 @@
 
 #include "pipe/p_state.h"
 #include "compiler/shader_enums.h"
+#include "util/bitscan.h"
 
 #include "ir3.h"
 #include "disasm.h"
 
+struct glsl_type;
+
 /* driver param indices: */
 enum ir3_driver_param {
+	/* compute shader driver params: */
+	IR3_DP_NUM_WORK_GROUPS_X = 0,
+	IR3_DP_NUM_WORK_GROUPS_Y = 1,
+	IR3_DP_NUM_WORK_GROUPS_Z = 2,
+	IR3_DP_CS_COUNT   = 4,   /* must be aligned to vec4 */
+
+	/* vertex shader driver params: */
 	IR3_DP_VTXID_BASE = 0,
 	IR3_DP_VTXCNT_MAX = 1,
 	/* user-clip-plane components, up to 8x vec4's: */
 	IR3_DP_UCP0_X     = 4,
 	/* .... */
 	IR3_DP_UCP7_W     = 35,
-	IR3_DP_COUNT      = 36   /* must be aligned to vec4 */
+	IR3_DP_VS_COUNT   = 36   /* must be aligned to vec4 */
 };
-
-/* Layout of constant registers:
- *
- *    num_uniform * vec4  -  user consts
- *    4 * vec4            -  UBO addresses
- *    if (vertex shader) {
- *        N * vec4        -  driver params (IR3_DP_*)
- *        1 * vec4        -  stream-out addresses
- *    }
- *
- * TODO this could be made more dynamic, to at least skip sections
- * that we don't need..
- */
-#define IR3_UBOS_OFF         0  /* UBOs after user consts */
-#define IR3_DRIVER_PARAM_OFF 4  /* driver params after UBOs */
-#define IR3_TFBOS_OFF       (IR3_DRIVER_PARAM_OFF + IR3_DP_COUNT/4)
 
 /* Configuration key used to identify a shader variant.. different
  * shader variants can be used to implement features not supported
@@ -120,6 +114,57 @@ ir3_shader_key_equal(struct ir3_shader_key *a, struct ir3_shader_key *b)
 	return a->global == b->global;
 }
 
+/* will the two keys produce different lowering for a fragment shader? */
+static inline bool
+ir3_shader_key_changes_fs(struct ir3_shader_key *key, struct ir3_shader_key *last_key)
+{
+	if (last_key->has_per_samp || key->has_per_samp) {
+		if ((last_key->fsaturate_s != key->fsaturate_s) ||
+				(last_key->fsaturate_t != key->fsaturate_t) ||
+				(last_key->fsaturate_r != key->fsaturate_r) ||
+				(last_key->fastc_srgb != key->fastc_srgb))
+			return true;
+	}
+
+	if (last_key->fclamp_color != key->fclamp_color)
+		return true;
+
+	if (last_key->color_two_side != key->color_two_side)
+		return true;
+
+	if (last_key->half_precision != key->half_precision)
+		return true;
+
+	if (last_key->rasterflat != key->rasterflat)
+		return true;
+
+	if (last_key->ucp_enables != key->ucp_enables)
+		return true;
+
+	return false;
+}
+
+/* will the two keys produce different lowering for a vertex shader? */
+static inline bool
+ir3_shader_key_changes_vs(struct ir3_shader_key *key, struct ir3_shader_key *last_key)
+{
+	if (last_key->has_per_samp || key->has_per_samp) {
+		if ((last_key->vsaturate_s != key->vsaturate_s) ||
+				(last_key->vsaturate_t != key->vsaturate_t) ||
+				(last_key->vsaturate_r != key->vsaturate_r) ||
+				(last_key->vastc_srgb != key->vastc_srgb))
+			return true;
+	}
+
+	if (last_key->vclamp_color != key->vclamp_color)
+		return true;
+
+	if (last_key->ucp_enables != key->ucp_enables)
+		return true;
+
+	return false;
+}
+
 struct ir3_shader_variant {
 	struct fd_bo *bo;
 
@@ -141,6 +186,12 @@ struct ir3_shader_variant {
 	 * the uniforms and the built-in compiler constants
 	 */
 	unsigned constlen;
+
+	/* number of uniforms (in vec4), not including built-in compiler
+	 * constants, etc.
+	 */
+	unsigned num_uniforms;
+	unsigned num_ubos;
 
 	/* About Linkage:
 	 *   + Let the frag shader determine the position/compmask for the
@@ -180,16 +231,10 @@ struct ir3_shader_variant {
 		uint8_t regid;
 		uint8_t compmask;
 		uint8_t ncomp;
-		/* In theory inloc of fs should match outloc of vs.  Or
-		 * rather the outloc of the vs is 8 plus the offset passed
-		 * to bary.f.  Presumably that +8 is to account for
-		 * gl_Position/gl_PointSize?
-		 *
-		 * NOTE inloc is currently aligned to 4 (we don't try
-		 * to pack varyings).  Changing this would likely break
-		 * assumptions in few places (like setting up of flat
-		 * shading in fd3_program) so be sure to check all the
-		 * spots where inloc is used.
+		/* location of input (ie. offset passed to bary.f, etc).  This
+		 * matches the SP_VS_VPC_DST_REG.OUTLOCn value (a3xx and a4xx
+		 * have the OUTLOCn value offset by 8, presumably to account
+		 * for gl_Position/gl_PointSize)
 		 */
 		uint8_t inloc;
 		/* vertex shader specific: */
@@ -213,15 +258,24 @@ struct ir3_shader_variant {
 	/* do we have one or more texture sample instructions: */
 	bool has_samp;
 
+	/* do we have one or more SSBO instructions: */
+	bool has_ssbo;
+
 	/* do we have kill instructions: */
 	bool has_kill;
 
-	/* const reg # of first immediate, ie. 1 == c1
-	 * (not regid, because TGSI thinks in terms of vec4 registers,
-	 * not scalar registers)
+	/* Layout of constant registers, each section (in vec4). Pointer size
+	 * is 32b (a3xx, a4xx), or 64b (a5xx+), which effects the size of the
+	 * UBO and stream-out consts.
 	 */
-	unsigned first_driver_param;
-	unsigned first_immediate;
+	struct {
+		/* user const start at zero */
+		unsigned ubo;
+		unsigned driver_param;
+		unsigned tfbo;
+		unsigned immediate;
+	} constbase;
+
 	unsigned immediates_count;
 	struct {
 		uint32_t val[4];
@@ -268,6 +322,10 @@ void * ir3_shader_assemble(struct ir3_shader_variant *v, uint32_t gpu_id);
 struct ir3_shader * ir3_shader_create(struct ir3_compiler *compiler,
 		const struct pipe_shader_state *cso, enum shader_t type,
 		struct pipe_debug_callback *debug);
+struct ir3_shader *
+ir3_shader_create_compute(struct ir3_compiler *compiler,
+		const struct pipe_compute_state *cso,
+		struct pipe_debug_callback *debug);
 void ir3_shader_destroy(struct ir3_shader *shader);
 struct ir3_shader_variant * ir3_shader_variant(struct ir3_shader *shader,
 		struct ir3_shader_key key, struct pipe_debug_callback *debug);
@@ -276,8 +334,15 @@ uint64_t ir3_shader_outputs(const struct ir3_shader *so);
 
 struct fd_ringbuffer;
 struct fd_context;
-void ir3_emit_consts(const struct ir3_shader_variant *v, struct fd_ringbuffer *ring,
-		struct fd_context *ctx, const struct pipe_draw_info *info, uint32_t dirty);
+void ir3_emit_vs_consts(const struct ir3_shader_variant *v, struct fd_ringbuffer *ring,
+		struct fd_context *ctx, const struct pipe_draw_info *info);
+void ir3_emit_fs_consts(const struct ir3_shader_variant *v, struct fd_ringbuffer *ring,
+		struct fd_context *ctx);
+void ir3_emit_cs_consts(const struct ir3_shader_variant *v, struct fd_ringbuffer *ring,
+		struct fd_context *ctx, const struct pipe_grid_info *info);
+
+int
+ir3_glsl_type_size(const struct glsl_type *type);
 
 static inline const char *
 ir3_shader_stage(struct ir3_shader *shader)
@@ -344,6 +409,52 @@ ir3_next_varying(const struct ir3_shader_variant *so, int i)
 	return i;
 }
 
+struct ir3_shader_linkage {
+	uint8_t max_loc;
+	uint8_t cnt;
+	struct {
+		uint8_t regid;
+		uint8_t compmask;
+		uint8_t loc;
+	} var[32];
+};
+
+static inline void
+ir3_link_add(struct ir3_shader_linkage *l, uint8_t regid, uint8_t compmask, uint8_t loc)
+{
+	int i = l->cnt++;
+
+	debug_assert(i < ARRAY_SIZE(l->var));
+
+	l->var[i].regid    = regid;
+	l->var[i].compmask = compmask;
+	l->var[i].loc      = loc;
+	l->max_loc = MAX2(l->max_loc, loc + util_last_bit(compmask));
+}
+
+static inline void
+ir3_link_shaders(struct ir3_shader_linkage *l,
+		const struct ir3_shader_variant *vs,
+		const struct ir3_shader_variant *fs)
+{
+	int j = -1, k;
+
+	while (l->cnt < ARRAY_SIZE(l->var)) {
+		j = ir3_next_varying(fs, j);
+
+		if (j >= fs->inputs_count)
+			break;
+
+		if (fs->inputs[j].inloc >= fs->total_in)
+			continue;
+
+		k = ir3_find_output(vs, fs->inputs[j].slot);
+
+		ir3_link_add(l, vs->outputs[k].regid,
+			fs->inputs[j].compmask, fs->inputs[j].inloc);
+	}
+}
+
 static inline uint32_t
 ir3_find_output_regid(const struct ir3_shader_variant *so, unsigned slot)
 {
@@ -351,6 +462,16 @@ ir3_find_output_regid(const struct ir3_shader_variant *so, unsigned slot)
 	for (j = 0; j < so->outputs_count; j++)
 		if (so->outputs[j].slot == slot)
 			return so->outputs[j].regid;
+	return regid(63, 0);
+}
+
+static inline uint32_t
+ir3_find_sysval_regid(const struct ir3_shader_variant *so, unsigned slot)
+{
+	int j;
+	for (j = 0; j < so->inputs_count; j++)
+		if (so->inputs[j].sysval && (so->inputs[j].slot == slot))
+			return so->inputs[j].regid;
 	return regid(63, 0);
 }
 

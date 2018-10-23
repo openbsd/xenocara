@@ -147,11 +147,11 @@ private:
     // Any tile that has work queued to it is a dirty tile.
     std::vector<MacroTileQueue*> mDirtyTiles;
 
-    OSALIGNLINE(LONG) mWorkItemsProduced { 0 };
-    OSALIGNLINE(volatile LONG) mWorkItemsConsumed { 0 };
+    OSALIGNLINE(long) mWorkItemsProduced { 0 };
+    OSALIGNLINE(volatile long) mWorkItemsConsumed { 0 };
 };
 
-typedef void(*PFN_DISPATCH)(DRAW_CONTEXT* pDC, uint32_t workerId, uint32_t threadGroupId, void*& pSpillFillBuffer);
+typedef void(*PFN_DISPATCH)(DRAW_CONTEXT* pDC, uint32_t workerId, uint32_t threadGroupId, void*& pSpillFillBuffer, void*& pScratchSpace);
 
 //////////////////////////////////////////////////////////////////////////
 /// DispatchQueue - work queue for dispatch
@@ -191,7 +191,7 @@ public:
     //         Otherwise, there is no more work to do.
     bool getWork(uint32_t& groupId)
     {
-        LONG result = InterlockedDecrement(&mTasksAvailable);
+        long result = InterlockedDecrement(&mTasksAvailable);
 
         if (result >= 0)
         {
@@ -208,7 +208,7 @@ public:
     ///        the last worker to complete this dispatch.
     bool finishedWork()
     {
-        LONG result = InterlockedDecrement(&mTasksOutstanding);
+        long result = InterlockedDecrement(&mTasksOutstanding);
         SWR_ASSERT(result >= 0, "Should never oversubscribe work");
 
         return (result == 0) ? true : false;
@@ -231,17 +231,17 @@ public:
 
     //////////////////////////////////////////////////////////////////////////
     /// @brief Dispatches a unit of work
-    void dispatch(DRAW_CONTEXT* pDC, uint32_t workerId, uint32_t threadGroupId, void*& pSpillFillBuffer)
+    void dispatch(DRAW_CONTEXT* pDC, uint32_t workerId, uint32_t threadGroupId, void*& pSpillFillBuffer, void*& pScratchSpace)
     {
         SWR_ASSERT(mPfnDispatch != nullptr);
-        mPfnDispatch(pDC, workerId, threadGroupId, pSpillFillBuffer);
+        mPfnDispatch(pDC, workerId, threadGroupId, pSpillFillBuffer, pScratchSpace);
     }
 
     void* mpTaskData{ nullptr };        // The API thread will set this up and the callback task function will interpet this.
     PFN_DISPATCH mPfnDispatch{ nullptr };      // Function to call per dispatch
 
-    OSALIGNLINE(volatile LONG) mTasksAvailable{ 0 };
-    OSALIGNLINE(volatile LONG) mTasksOutstanding{ 0 };
+    OSALIGNLINE(volatile long) mTasksAvailable{ 0 };
+    OSALIGNLINE(volatile long) mTasksOutstanding{ 0 };
 };
 
 

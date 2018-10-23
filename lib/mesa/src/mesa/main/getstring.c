@@ -32,6 +32,7 @@
 #include "extensions.h"
 #include "mtypes.h"
 #include "macros.h"
+#include "version.h"
 
 /**
  * Return the string for a glGetString(GL_SHADING_LANGUAGE_VERSION) query.
@@ -65,6 +66,8 @@ shading_language_version(struct gl_context *ctx)
          return (const GLubyte *) "4.40";
       case 450:
          return (const GLubyte *) "4.50";
+      case 460:
+         return (const GLubyte *) "4.60";
       default:
          _mesa_problem(ctx,
                        "Invalid GLSL version in shading_language_version()");
@@ -182,6 +185,25 @@ _mesa_GetStringi(GLenum name, GLuint index)
          return (const GLubyte *) 0;
       }
       return _mesa_get_enabled_extension(ctx, index);
+   case GL_SHADING_LANGUAGE_VERSION:
+      {
+         char *version;
+         int num;
+         if (!_mesa_is_desktop_gl(ctx) || ctx->Version < 43) {
+            _mesa_error(ctx, GL_INVALID_ENUM,
+                        "glGetStringi(GL_SHADING_LANGUAGE_VERSION): "
+                        "supported only in GL4.3 and later");
+            return (const GLubyte *) 0;
+         }
+         num = _mesa_get_shading_language_version(ctx, index, &version);
+         if (index >= num) {
+            _mesa_error(ctx, GL_INVALID_VALUE,
+                        "glGetStringi(GL_SHADING_LANGUAGE_VERSION, index=%d)",
+                        index);
+            return (const GLubyte *) 0;
+         }
+         return (const GLubyte *) version;
+      }
    default:
       _mesa_error(ctx, GL_INVALID_ENUM, "glGetStringi");
       return (const GLubyte *) 0;
@@ -303,6 +325,17 @@ _mesa_GetError( void )
    GET_CURRENT_CONTEXT(ctx);
    GLenum e = ctx->ErrorValue;
    ASSERT_OUTSIDE_BEGIN_END_WITH_RETVAL(ctx, 0);
+
+   /* From Issue (3) of the KHR_no_error spec:
+    *
+    *    "Should glGetError() always return NO_ERROR or have undefined
+    *    results?
+    *
+    *    RESOLVED: It should for all errors except OUT_OF_MEMORY."
+    */
+   if (_mesa_is_no_error_enabled(ctx) && e != GL_OUT_OF_MEMORY) {
+      e = GL_NO_ERROR;
+   }
 
    if (MESA_VERBOSE & VERBOSE_API)
       _mesa_debug(ctx, "glGetError <-- %s\n", _mesa_enum_to_string(e));

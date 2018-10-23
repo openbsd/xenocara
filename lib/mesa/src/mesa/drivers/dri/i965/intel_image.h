@@ -40,7 +40,7 @@
 #include <xf86drm.h>
 
 #include "main/mtypes.h"
-#include "intel_bufmgr.h"
+#include "brw_bufmgr.h"
 #include <GL/internal/dri_interface.h>
 
 #ifdef __cplusplus
@@ -65,11 +65,13 @@ struct intel_image_format {
 };
 
 struct __DRIimageRec {
-   drm_intel_bo *bo;
+   struct intel_screen *screen;
+   struct brw_bo *bo;
    uint32_t pitch; /**< in bytes */
    GLenum internal_format;
    uint32_t dri_format;
-   GLuint format;
+   GLuint format; /**< mesa_format or mesa_array_format */
+   uint64_t modifier; /**< fb modifier (fourcc) */
    uint32_t offset;
 
    /*
@@ -78,7 +80,7 @@ struct __DRIimageRec {
     */
    uint32_t strides[3];
    uint32_t offsets[3];
-   struct intel_image_format *planar_format;
+   const struct intel_image_format *planar_format;
 
    /* particular miptree level */
    GLuint width;
@@ -89,6 +91,15 @@ struct __DRIimageRec {
 
    /** The image was created with EGL_EXT_image_dma_buf_import. */
    bool dma_buf_imported;
+
+   /** Offset of the auxiliary compression surface in the bo. */
+   uint32_t aux_offset;
+
+   /** Pitch of the auxiliary compression surface. */
+   uint32_t aux_pitch;
+
+   /** Total size in bytes of the auxiliary compression surface. */
+   uint32_t aux_size;
 
    /**
     * Provided by EGL_EXT_image_dma_buf_import.

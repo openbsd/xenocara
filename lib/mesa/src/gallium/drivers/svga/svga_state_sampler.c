@@ -44,7 +44,7 @@
 #include "svga_shader.h"
 #include "svga_state.h"
 #include "svga_surface.h"
-
+#include "svga3d_surfacedefs.h"
 
 /** Get resource handle for a texture or buffer */
 static inline struct svga_winsys_surface *
@@ -64,8 +64,8 @@ svga_resource_handle(struct pipe_resource *res)
  * any of the resources bound to any of the currently bound sampler views.
  */
 boolean
-svga_check_sampler_view_resource_collision(struct svga_context *svga,
-                                           struct svga_winsys_surface *res,
+svga_check_sampler_view_resource_collision(const struct svga_context *svga,
+                                           const struct svga_winsys_surface *res,
                                            enum pipe_shader_type shader)
 {
    struct pipe_screen *screen = svga->pipe.screen;
@@ -141,11 +141,11 @@ svga_validate_pipe_sampler_view(struct svga_context *svga,
        * create a BGRA view (and vice versa).
        */
       if (viewFormat == PIPE_FORMAT_B8G8R8X8_UNORM &&
-          texture->format == PIPE_FORMAT_B8G8R8A8_UNORM) {
+          svga_texture_device_format_has_alpha(texture)) {
          viewFormat = PIPE_FORMAT_B8G8R8A8_UNORM;
       }
       else if (viewFormat == PIPE_FORMAT_B8G8R8A8_UNORM &&
-          texture->format == PIPE_FORMAT_B8G8R8X8_UNORM) {
+               !svga_texture_device_format_has_alpha(texture)) {
          viewFormat = PIPE_FORMAT_B8G8R8X8_UNORM;
       }
 
@@ -278,14 +278,54 @@ update_sampler_resources(struct svga_context *svga, unsigned dirty)
          if (count != svga->state.hw_draw.num_sampler_views[shader] ||
              memcmp(sampler_views, svga->state.hw_draw.sampler_views[shader],
                     count * sizeof(sampler_views[0])) != 0) {
-            ret = SVGA3D_vgpu10_SetShaderResources(svga->swc,
-                                                svga_shader_type(shader),
-                                                0, /* startView */
-                                                nviews,
-                                                ids,
-                                                surfaces);
-            if (ret != PIPE_OK)
-               return ret;
+            SVGA3dShaderResourceViewId *pIds = ids;
+            struct svga_winsys_surface **pSurf = surfaces;
+            unsigned numSR = 0;
+
+            /* Loop through the sampler view list to only emit
+             * the sampler views that are not already in the
+             * corresponding entries in the device's
+             * shader resource list.
+             */
+            for (i = 0; i < nviews; i++) {
+                boolean emit;
+
+                emit = sampler_views[i] ==
+                       svga->state.hw_draw.sampler_views[shader][i];
+
+                if (!emit && i == nviews-1) {
+                   /* Include the last sampler view in the next emit
+                    * if it is different.
+                    */
+                   emit = TRUE;
+                   numSR++;
+                   i++;
+                }
+ 
+                if (emit) {
+                   /* numSR can only be 0 if the first entry of the list
+                    * is the same as the one in the device list.
+                    * In this case, * there is nothing to send yet.
+                    */
+                   if (numSR) {
+                      ret = SVGA3D_vgpu10_SetShaderResources(
+                               svga->swc,
+                               svga_shader_type(shader),
+                               i - numSR, /* startView */
+                               numSR,
+                               pIds,
+                               pSurf);
+
+                      if (ret != PIPE_OK)
+                         return ret;
+                   }
+                   pIds += (numSR + 1);
+                   pSurf += (numSR + 1);
+                   numSR = 0;
+                }
+                else
+                   numSR++;
+            }
 
             /* Save referenced sampler views in the hw draw state.  */
             svga->state.hw_draw.num_sampler_views[shader] = count;

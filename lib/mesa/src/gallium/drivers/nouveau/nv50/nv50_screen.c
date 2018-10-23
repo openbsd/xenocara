@@ -175,7 +175,6 @@ nv50_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
    case PIPE_CAP_QUADS_FOLLOW_PROVOKING_VERTEX_CONVENTION:
    case PIPE_CAP_START_INSTANCE:
    case PIPE_CAP_USER_CONSTANT_BUFFERS:
-   case PIPE_CAP_USER_INDEX_BUFFERS:
    case PIPE_CAP_USER_VERTEX_BUFFERS:
    case PIPE_CAP_TEXTURE_MULTISAMPLE:
    case PIPE_CAP_PREFER_BLIT_BASED_TEXTURE_TRANSFER:
@@ -198,6 +197,11 @@ nv50_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
    case PIPE_CAP_STRING_MARKER:
    case PIPE_CAP_CULL_DISTANCE:
    case PIPE_CAP_TGSI_ARRAY_COMPONENTS:
+   case PIPE_CAP_TGSI_MUL_ZERO_WINS:
+   case PIPE_CAP_TGSI_TEX_TXF_LZ:
+   case PIPE_CAP_TGSI_CLOCK:
+   case PIPE_CAP_CAN_BIND_CONST_BUFFER_AS_VERTEX:
+   case PIPE_CAP_ALLOW_MAPPED_BUFFERS_DURING_EXECUTION:
       return 1;
    case PIPE_CAP_SEAMLESS_CUBE_MAP:
       return 1; /* class_3d >= NVA0_3D_CLASS; */
@@ -254,6 +258,26 @@ nv50_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
    case PIPE_CAP_TGSI_VOTE:
    case PIPE_CAP_POLYGON_OFFSET_UNITS_UNSCALED:
    case PIPE_CAP_VIEWPORT_SUBPIXEL_BITS:
+   case PIPE_CAP_STREAM_OUTPUT_INTERLEAVE_BUFFERS:
+   case PIPE_CAP_TGSI_CAN_READ_OUTPUTS:
+   case PIPE_CAP_NATIVE_FENCE_FD:
+   case PIPE_CAP_GLSL_OPTIMIZE_CONSERVATIVELY:
+   case PIPE_CAP_TGSI_FS_FBFETCH:
+   case PIPE_CAP_DOUBLES:
+   case PIPE_CAP_INT64:
+   case PIPE_CAP_INT64_DIVMOD:
+   case PIPE_CAP_POLYGON_MODE_FILL_RECTANGLE:
+   case PIPE_CAP_SPARSE_BUFFER_PAGE_SIZE:
+   case PIPE_CAP_TGSI_BALLOT:
+   case PIPE_CAP_TGSI_TES_LAYER_VIEWPORT:
+   case PIPE_CAP_POST_DEPTH_COVERAGE:
+   case PIPE_CAP_BINDLESS_TEXTURE:
+   case PIPE_CAP_NIR_SAMPLERS_AS_DEREF:
+   case PIPE_CAP_QUERY_SO_OVERFLOW:
+   case PIPE_CAP_MEMOBJ:
+   case PIPE_CAP_LOAD_CONSTBUF:
+   case PIPE_CAP_TGSI_ANY_REG_AS_ADDRESS:
+   case PIPE_CAP_TILE_RASTER_ORDER:
       return 0;
 
    case PIPE_CAP_VENDOR_ID:
@@ -279,7 +303,8 @@ nv50_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
 }
 
 static int
-nv50_screen_get_shader_param(struct pipe_screen *pscreen, unsigned shader,
+nv50_screen_get_shader_param(struct pipe_screen *pscreen,
+                             enum pipe_shader_type shader,
                              enum pipe_shader_cap param)
 {
    switch (shader) {
@@ -316,17 +341,19 @@ nv50_screen_get_shader_param(struct pipe_screen *pscreen, unsigned shader,
    case PIPE_SHADER_CAP_INDIRECT_TEMP_ADDR:
    case PIPE_SHADER_CAP_INDIRECT_CONST_ADDR:
       return 1;
-   case PIPE_SHADER_CAP_MAX_PREDS:
-      return 0;
    case PIPE_SHADER_CAP_MAX_TEMPS:
       return nv50_screen(pscreen)->max_tls_space / ONE_TEMP_SIZE;
    case PIPE_SHADER_CAP_TGSI_CONT_SUPPORTED:
       return 1;
    case PIPE_SHADER_CAP_TGSI_SQRT_SUPPORTED:
       return 1;
+   case PIPE_SHADER_CAP_INT64_ATOMICS:
+   case PIPE_SHADER_CAP_FP16:
    case PIPE_SHADER_CAP_SUBROUTINES:
       return 0; /* please inline, or provide function declarations */
    case PIPE_SHADER_CAP_INTEGERS:
+      return 1;
+   case PIPE_SHADER_CAP_TGSI_SKIP_MERGE_REGISTERS:
       return 1;
    case PIPE_SHADER_CAP_MAX_TEXTURE_SAMPLERS:
       /* The chip could handle more sampler views than samplers */
@@ -336,14 +363,15 @@ nv50_screen_get_shader_param(struct pipe_screen *pscreen, unsigned shader,
       return PIPE_SHADER_IR_TGSI;
    case PIPE_SHADER_CAP_MAX_UNROLL_ITERATIONS_HINT:
       return 32;
-   case PIPE_SHADER_CAP_DOUBLES:
    case PIPE_SHADER_CAP_TGSI_DROUND_SUPPORTED:
    case PIPE_SHADER_CAP_TGSI_DFRACEXP_DLDEXP_SUPPORTED:
+   case PIPE_SHADER_CAP_TGSI_LDEXP_SUPPORTED:
    case PIPE_SHADER_CAP_TGSI_FMA_SUPPORTED:
    case PIPE_SHADER_CAP_TGSI_ANY_INOUT_DECL_RANGE:
    case PIPE_SHADER_CAP_MAX_SHADER_BUFFERS:
    case PIPE_SHADER_CAP_SUPPORTED_IRS:
    case PIPE_SHADER_CAP_MAX_SHADER_IMAGES:
+   case PIPE_SHADER_CAP_LOWER_IF_THRESHOLD:
       return 0;
    default:
       NOUVEAU_ERR("unknown PIPE_SHADER_CAP %d\n", param);
@@ -1011,7 +1039,7 @@ nv50_screen_create(struct nouveau_device *dev)
       goto fail;
    }
 
-   nouveau_fence_new(&screen->base, &screen->base.fence.current, false);
+   nouveau_fence_new(&screen->base, &screen->base.fence.current);
 
    return &screen->base;
 

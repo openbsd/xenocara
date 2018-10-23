@@ -18,8 +18,8 @@
 
 <p>The current version of EGL in Mesa implements EGL 1.4.  More information
 about EGL can be found at
-<a href="http://www.khronos.org/egl/">
-http://www.khronos.org/egl/</a>.</p>
+<a href="https://www.khronos.org/egl/">
+https://www.khronos.org/egl/</a>.</p>
 
 <p>The Mesa's implementation of EGL uses a driver architecture.  The main
 library (<code>libEGL</code>) is window system neutral.  It provides the EGL
@@ -44,7 +44,7 @@ the driver for your hardware.  For example</p>
 
 <p>The main library and OpenGL is enabled by default.  The first two options
 above enables <a href="opengles.html">OpenGL ES 1.x and 2.x</a>.  The last two
-options enables the listed classic and and Gallium drivers respectively.</p>
+options enables the listed classic and Gallium drivers respectively.</p>
 
 </li>
 
@@ -77,15 +77,13 @@ drivers will be installed to <code>${libdir}/egl</code>.</p>
 
 </dd>
 
-<dt><code>--with-egl-platforms</code></dt>
+<dt><code>--with-platforms</code></dt>
 <dd>
 
 <p>List the platforms (window systems) to support.  Its argument is a comma
-separated string such as <code>--with-egl-platforms=x11,drm</code>.  It decides
+separated string such as <code>--with-platforms=x11,drm</code>.  It decides
 the platforms a driver may support.  The first listed platform is also used by
-the main library to decide the native platform: the platform the EGL native
-types such as <code>EGLNativeDisplayType</code> or
-<code>EGLNativeWindowType</code> defined for.</p>
+the main library to decide the native platform.</p>
 
 <p>The available platforms are <code>x11</code>, <code>drm</code>,
 <code>wayland</code>, <code>surfaceless</code>, <code>android</code>,
@@ -132,44 +130,13 @@ mesa/demos repository.</p>
 runtime</p>
 
 <dl>
-<dt><code>EGL_DRIVERS_PATH</code></dt>
-<dd>
-
-<p>By default, the main library will look for drivers in the directory where
-the drivers are installed to.  This variable specifies a list of
-colon-separated directories where the main library will look for drivers, in
-addition to the default directory.  This variable is ignored for setuid/setgid
-binaries.</p>
-
-<p>This variable is usually set to test an uninstalled build.  For example, one
-may set</p>
-
-<pre>
-  $ export LD_LIBRARY_PATH=$mesa/lib
-  $ export EGL_DRIVERS_PATH=$mesa/lib/egl
-</pre>
-
-<p>to test a build without installation</p>
-
-</dd>
-
-<dt><code>EGL_DRIVER</code></dt>
-<dd>
-
-<p>This variable specifies a full path to or the name of an EGL driver.  It
-forces the specified EGL driver to be loaded.  It comes in handy when one wants
-to test a specific driver.  This variable is ignored for setuid/setgid
-binaries.</p>
-
-</dd>
-
 <dt><code>EGL_PLATFORM</code></dt>
 <dd>
 
 <p>This variable specifies the native platform.  The valid values are the same
-as those for <code>--with-egl-platforms</code>.  When the variable is not set,
+as those for <code>--with-platforms</code>.  When the variable is not set,
 the main library uses the first platform listed in
-<code>--with-egl-platforms</code> as the native platform.</p>
+<code>--with-platforms</code> as the native platform.</p>
 
 <p>Extensions like <code>EGL_MESA_drm_display</code> define new functions to
 create displays for non-native platforms.  These extensions are usually used by

@@ -27,11 +27,6 @@ if HAVE_GALLIUM_I915
 SUBDIRS += drivers/i915 winsys/i915/drm
 endif
 
-## ilo/i965
-if HAVE_GALLIUM_ILO
-SUBDIRS += drivers/ilo winsys/intel/drm
-endif
-
 ## nouveau
 if HAVE_GALLIUM_NOUVEAU
 SUBDIRS += drivers/nouveau winsys/nouveau/drm
@@ -47,7 +42,7 @@ if HAVE_GALLIUM_R300
 SUBDIRS += drivers/r300
 endif
 
-## radeon - linked into r600 and radeonsi
+## radeon - linked into radeonsi
 if HAVE_GALLIUM_RADEON_COMMON
 SUBDIRS += drivers/radeon
 endif
@@ -68,6 +63,18 @@ if NEED_RADEON_DRM_WINSYS
 SUBDIRS += winsys/radeon/drm
 endif
 
+if HAVE_GALLIUM_ETNAVIV
+SUBDIRS += drivers/etnaviv winsys/etnaviv/drm
+endif
+
+if HAVE_GALLIUM_IMX
+SUBDIRS += drivers/imx winsys/imx/drm
+endif
+
+if HAVE_GALLIUM_PL111
+SUBDIRS += drivers/pl111 winsys/pl111/drm
+endif
+
 ## swrast/softpipe
 if HAVE_GALLIUM_SOFTPIPE
 SUBDIRS += drivers/softpipe
@@ -85,6 +92,11 @@ endif
 ## vc4/rpi
 if HAVE_GALLIUM_VC4
 SUBDIRS += drivers/vc4 winsys/vc4/drm
+endif
+
+## vc5
+if HAVE_GALLIUM_VC5
+SUBDIRS += drivers/vc5 winsys/vc5/drm
 endif
 
 ## virgl
@@ -142,8 +154,8 @@ if HAVE_GALLIUM_XLIB_GLX
 SUBDIRS += state_trackers/glx/xlib targets/libgl-xlib
 endif
 
-if HAVE_ST_OMX
-SUBDIRS += state_trackers/omx targets/omx
+if HAVE_ST_OMX_BELLAGIO
+SUBDIRS += state_trackers/omx_bellagio targets/omx-bellagio
 endif
 
 if HAVE_GALLIUM_OSMESA

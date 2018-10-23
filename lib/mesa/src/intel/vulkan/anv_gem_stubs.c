@@ -27,14 +27,16 @@
 
 #include "anv_private.h"
 
+#ifndef HAVE_MEMFD_CREATE
 static inline int
 memfd_create(const char *name, unsigned int flags)
 {
    return syscall(SYS_memfd_create, name, flags);
 }
+#endif
 
 uint32_t
-anv_gem_create(struct anv_device *device, size_t size)
+anv_gem_create(struct anv_device *device, uint64_t size)
 {
    int fd = memfd_create("fake bo", MFD_CLOEXEC);
    if (fd == -1)
@@ -78,6 +80,12 @@ uint32_t
 anv_gem_userptr(struct anv_device *device, void *mem, size_t size)
 {
    return -1;
+}
+
+int
+anv_gem_busy(struct anv_device *device, uint32_t gem_handle)
+{
+   return 0;
 }
 
 int
@@ -139,7 +147,26 @@ anv_gem_destroy_context(struct anv_device *device, int context)
 }
 
 int
+anv_gem_get_context_param(int fd, int context, uint32_t param, uint64_t *value)
+{
+   unreachable("Unused");
+}
+
+int
 anv_gem_get_aperture(int fd, uint64_t *size)
+{
+   unreachable("Unused");
+}
+
+bool
+anv_gem_supports_48b_addresses(int fd)
+{
+   unreachable("Unused");
+}
+
+int
+anv_gem_gpu_get_reset_stats(struct anv_device *device,
+                            uint32_t *active, uint32_t *pending)
 {
    unreachable("Unused");
 }
@@ -152,6 +179,69 @@ anv_gem_handle_to_fd(struct anv_device *device, uint32_t gem_handle)
 
 uint32_t
 anv_gem_fd_to_handle(struct anv_device *device, int fd)
+{
+   unreachable("Unused");
+}
+
+int
+anv_gem_sync_file_merge(struct anv_device *device, int fd1, int fd2)
+{
+   unreachable("Unused");
+}
+
+int
+anv_gem_syncobj_export_sync_file(struct anv_device *device, uint32_t handle)
+{
+   unreachable("Unused");
+}
+
+int
+anv_gem_syncobj_import_sync_file(struct anv_device *device,
+                                 uint32_t handle, int fd)
+{
+   unreachable("Unused");
+}
+
+uint32_t
+anv_gem_syncobj_create(struct anv_device *device, uint32_t flags)
+{
+   unreachable("Unused");
+}
+
+void
+anv_gem_syncobj_destroy(struct anv_device *device, uint32_t handle)
+{
+   unreachable("Unused");
+}
+
+int
+anv_gem_syncobj_handle_to_fd(struct anv_device *device, uint32_t handle)
+{
+   unreachable("Unused");
+}
+
+uint32_t
+anv_gem_syncobj_fd_to_handle(struct anv_device *device, int fd)
+{
+   unreachable("Unused");
+}
+
+void
+anv_gem_syncobj_reset(struct anv_device *device, uint32_t handle)
+{
+   unreachable("Unused");
+}
+
+bool
+anv_gem_supports_syncobj_wait(int fd)
+{
+   return false;
+}
+
+int
+anv_gem_syncobj_wait(struct anv_device *device,
+                     uint32_t *handles, uint32_t num_handles,
+                     int64_t abs_timeout_ns, bool wait_all)
 {
    unreachable("Unused");
 }

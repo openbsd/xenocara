@@ -58,6 +58,8 @@ struct pipe_surface;
 struct pipe_transfer;
 struct pipe_box;
 struct pipe_memory_info;
+struct disk_cache;
+struct driOptionCache;
 
 
 /**
@@ -96,7 +98,8 @@ struct pipe_screen {
     * Query a per-shader-stage integer-valued capability/parameter/limit
     * \param param  one of PIPE_CAP_x
     */
-   int (*get_shader_param)( struct pipe_screen *, unsigned shader, enum pipe_shader_cap param );
+   int (*get_shader_param)( struct pipe_screen *, enum pipe_shader_type shader,
+                            enum pipe_shader_cap param );
 
    /**
     * Query an integer-valued capability/parameter/limit for a codec/profile
@@ -202,6 +205,23 @@ struct pipe_screen {
                                                        void *user_memory);
 
    /**
+    * Unlike pipe_resource::bind, which describes what state trackers want,
+    * resources can have much greater capabilities in practice, often implied
+    * by the tiling layout or memory placement. This function allows querying
+    * whether a capability is supported beyond what was requested by state
+    * trackers. It's also useful for querying capabilities of imported
+    * resources where the capabilities are unknown at first.
+    *
+    * Only these flags are allowed:
+    * - PIPE_BIND_SCANOUT
+    * - PIPE_BIND_CURSOR
+    * - PIPE_BIND_LINEAR
+    */
+   bool (*check_resource_capability)(struct pipe_screen *screen,
+                                     struct pipe_resource *resource,
+                                     unsigned bind);
+
+   /**
     * Get a winsys_handle from a texture. Some platforms/winsys requires
     * that the texture is created with a special usage flag like
     * DISPLAYTARGET or PRIMARY.
@@ -224,6 +244,14 @@ struct pipe_screen {
 				  struct winsys_handle *handle,
 				  unsigned usage);
 
+   /**
+    * Mark the resource as changed so derived internal resources will be
+    * recreated on next use.
+    *
+    * This is necessary when reimporting external images that can't be directly
+    * used as texture sampler source, to avoid sampling from old copies.
+    */
+   void (*resource_changed)(struct pipe_screen *, struct pipe_resource *pt);
 
    void (*resource_destroy)(struct pipe_screen *,
 			    struct pipe_resource *pt);
@@ -265,6 +293,16 @@ struct pipe_screen {
                            uint64_t timeout);
 
    /**
+    * For fences created with PIPE_FLUSH_FENCE_FD (exported fd) or
+    * by create_fence_fd() (imported fd), return the native fence fd
+    * associated with the fence.  This may return -1 for fences
+    * created with PIPE_FLUSH_DEFERRED if the fence command has not
+    * been flushed yet.
+    */
+   int (*fence_get_fd)(struct pipe_screen *screen,
+                       struct pipe_fence_handle *fence);
+
+   /**
     * Returns a driver-specific query.
     *
     * If \p info is NULL, the number of available queries is returned.
@@ -299,7 +337,101 @@ struct pipe_screen {
     */
    const void *(*get_compiler_options)(struct pipe_screen *screen,
                                       enum pipe_shader_ir ir,
-                                      unsigned shader);
+                                      enum pipe_shader_type shader);
+
+   /**
+    * Returns a pointer to a driver-specific on-disk shader cache. If the
+    * driver failed to create the cache or does not support an on-disk shader
+    * cache NULL is returned. The callback itself may also be NULL if the
+    * driver doesn't support an on-disk shader cache.
+    */
+   struct disk_cache *(*get_disk_shader_cache)(struct pipe_screen *screen);
+
+   /**
+    * Create a new texture object from the given template info, taking
+    * format modifiers into account. \p modifiers specifies a list of format
+    * modifier tokens, as defined in drm_fourcc.h. The driver then picks the
+    * best modifier among these and creates the resource. \p count must
+    * contain the size of \p modifiers array.
+    *
+    * Returns NULL if an entry in \p modifiers is unsupported by the driver,
+    * or if only DRM_FORMAT_MOD_INVALID is provided.
+    */
+   struct pipe_resource * (*resource_create_with_modifiers)(
+                           struct pipe_screen *,
+                           const struct pipe_resource *templat,
+                           const uint64_t *modifiers, int count);
+
+   /**
+    * Get supported modifiers for a format.
+    * If \p max is 0, the total number of supported modifiers for the supplied
+    * format is returned in \p count, with no modification to \p modifiers.
+    * Otherwise, \p modifiers is filled with upto \p max supported modifier
+    * codes, and \p count with the number of modifiers copied.
+    * The \p external_only array is used to return whether the format and
+    * modifier combination can only be used with an external texture target.
+    */
+   void (*query_dmabuf_modifiers)(struct pipe_screen *screen,
+                                  enum pipe_format format, int max,
+                                  uint64_t *modifiers,
+                                  unsigned int *external_only, int *count);
+
+   /**
+    * Create a memory object from a winsys handle
+    *
+    * The underlying memory is most often allocated in by a foregin API.
+    * Then the underlying memory object is then exported through interfaces
+    * compatible with EXT_external_resources.
+    *
+    * Note: For DRM_API_HANDLE_TYPE_FD handles, the caller retains ownership
+    * of the fd.
+    *
+    * \param handle  A handle representing the memory object to import
+    */
+   struct pipe_memory_object *(*memobj_create_from_handle)(struct pipe_screen *screen,
+                                                           struct winsys_handle *handle,
+                                                           bool dedicated);
+
+   /**
+    * Destroy a memory object
+    *
+    * \param memobj  The memory object to destroy
+    */
+   void (*memobj_destroy)(struct pipe_screen *screen,
+                          struct pipe_memory_object *memobj);
+
+   /**
+    * Create a texture from a memory object
+    *
+    * \param t       texture template
+    * \param memobj  The memory object used to back the texture
+    */
+   struct pipe_resource * (*resource_from_memobj)(struct pipe_screen *screen,
+                                                  const struct pipe_resource *t,
+                                                  struct pipe_memory_object *memobj,
+                                                  uint64_t offset);
+
+   /**
+    * Fill @uuid with a unique driver identifier
+    *
+    * \param uuid    pointer to a memory region of PIPE_UUID_SIZE bytes
+    */
+   void (*get_driver_uuid)(struct pipe_screen *screen, char *uuid);
+
+   /**
+    * Fill @uuid with a unique device identifier
+    *
+    * \param uuid    pointer to a memory region of PIPE_UUID_SIZE bytes
+    */
+   void (*get_device_uuid)(struct pipe_screen *screen, char *uuid);
+};
+
+
+/**
+ * Global configuration options for screen creation.
+ */
+struct pipe_screen_config {
+   const struct driOptionCache *options;
 };
 
 

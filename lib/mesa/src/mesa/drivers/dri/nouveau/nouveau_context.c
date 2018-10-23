@@ -55,6 +55,7 @@ nouveau_context_create(gl_api api,
 		       unsigned minor_version,
 		       uint32_t flags,
 		       bool notify_reset,
+                       unsigned priority,
 		       unsigned *error,
 		       void *share_ctx)
 {
@@ -63,7 +64,7 @@ nouveau_context_create(gl_api api,
 	struct nouveau_context *nctx;
 	struct gl_context *ctx;
 
-	if (flags & ~__DRI_CTX_FLAG_DEBUG) {
+	if (flags & ~(__DRI_CTX_FLAG_DEBUG | __DRI_CTX_FLAG_NO_ERROR)) {
 		*error = __DRI_CTX_ERROR_UNKNOWN_FLAG;
 		return false;
 	}
@@ -259,9 +260,9 @@ nouveau_update_renderbuffers(__DRIcontext *dri_ctx, __DRIdrawable *draw)
 	else if (fb->Visual.haveStencilBuffer)
 		attachments[i++] = __DRI_BUFFER_STENCIL;
 
-	buffers = (*screen->dri2.loader->getBuffers)(draw, &draw->w, &draw->h,
-						     attachments, i, &count,
-						     draw->loaderPrivate);
+	buffers = screen->dri2.loader->getBuffers(draw, &draw->w, &draw->h,
+						  attachments, i, &count,
+						  draw->loaderPrivate);
 	if (buffers == NULL)
 		return;
 

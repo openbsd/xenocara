@@ -195,6 +195,15 @@ vc4_render_blit(struct pipe_context *ctx, struct pipe_blit_info *info)
                 return false;
         }
 
+        /* Enable the scissor, so we get a minimal set of tiles rendered. */
+        if (!info->scissor_enable) {
+                info->scissor_enable = true;
+                info->scissor.minx = info->dst.box.x;
+                info->scissor.miny = info->dst.box.y;
+                info->scissor.maxx = info->dst.box.x + info->dst.box.width;
+                info->scissor.maxy = info->dst.box.y + info->dst.box.height;
+        }
+
         vc4_blitter_save(vc4);
         util_blitter_blit(vc4->blitter, info);
 
@@ -212,14 +221,16 @@ vc4_blit(struct pipe_context *pctx, const struct pipe_blit_info *blit_info)
         if (vc4_tile_blit(pctx, blit_info))
                 return;
 
-        if (util_try_blit_via_copy_region(pctx, &info)) {
-                return; /* done */
-        }
-
         if (info.mask & PIPE_MASK_S) {
-                fprintf(stderr, "cannot blit stencil, skipping\n");
+                if (util_try_blit_via_copy_region(pctx, &info))
+                        return;
+
                 info.mask &= ~PIPE_MASK_S;
+                fprintf(stderr, "cannot blit stencil, skipping\n");
         }
 
-        vc4_render_blit(pctx, &info);
+        if (vc4_render_blit(pctx, &info))
+                return;
+
+        fprintf(stderr, "Unsupported blit\n");
 }

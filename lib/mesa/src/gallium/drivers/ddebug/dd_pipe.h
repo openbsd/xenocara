@@ -33,6 +33,7 @@
 #include "pipe/p_screen.h"
 #include "dd_util.h"
 #include "os/os_thread.h"
+#include "util/u_log.h"
 
 enum dd_mode {
    DD_DETECT_HANGS,
@@ -62,9 +63,11 @@ enum call_type
    CALL_FLUSH_RESOURCE,
    CALL_CLEAR,
    CALL_CLEAR_BUFFER,
+   CALL_CLEAR_TEXTURE,
    CALL_CLEAR_RENDER_TARGET,
    CALL_CLEAR_DEPTH_STENCIL,
    CALL_GENERATE_MIPMAP,
+   CALL_GET_QUERY_RESULT_RESOURCE,
 };
 
 struct call_resource_copy_region
@@ -103,12 +106,27 @@ struct call_generate_mipmap {
    unsigned last_layer;
 };
 
+struct call_draw_info {
+   struct pipe_draw_info draw;
+   struct pipe_draw_indirect_info indirect;
+};
+
+struct call_get_query_result_resource {
+   struct pipe_query *query;
+   enum pipe_query_type query_type;
+   boolean wait;
+   enum pipe_query_value_type result_type;
+   int index;
+   struct pipe_resource *resource;
+   unsigned offset;
+};
+
 struct dd_call
 {
    enum call_type type;
 
    union {
-      struct pipe_draw_info draw_vbo;
+      struct call_draw_info draw_vbo;
       struct pipe_grid_info launch_grid;
       struct call_resource_copy_region resource_copy_region;
       struct pipe_blit_info blit;
@@ -116,6 +134,7 @@ struct dd_call
       struct call_clear clear;
       struct call_clear_buffer clear_buffer;
       struct call_generate_mipmap generate_mipmap;
+      struct call_get_query_result_resource get_query_result_resource;
    } info;
 };
 
@@ -150,7 +169,6 @@ struct dd_draw_state
       unsigned mode;
    } render_cond;
 
-   struct pipe_index_buffer index_buffer;
    struct pipe_vertex_buffer vertex_buffers[PIPE_MAX_ATTRIBS];
 
    unsigned num_so_targets;
@@ -207,7 +225,7 @@ struct dd_draw_record {
 
    struct dd_call call;
    struct dd_draw_state_copy draw_state;
-   char *driver_state_log;
+   struct u_log_page *log_page;
 };
 
 struct dd_context
@@ -217,6 +235,8 @@ struct dd_context
 
    struct dd_draw_state draw_state;
    unsigned num_draw_calls;
+
+   struct u_log_context log;
 
    /* Pipelined hang detection.
     *
@@ -234,8 +254,8 @@ struct dd_context
     * their fences. Records with signalled fences are freed. On fence timeout,
     * the thread dumps the record of the oldest unsignalled fence.
     */
-   pipe_thread thread;
-   pipe_mutex mutex;
+   thrd_t thread;
+   mtx_t mutex;
    int kill_thread;
    struct pipe_resource *fence;
    struct pipe_transfer *fence_transfer;
@@ -251,8 +271,11 @@ dd_context_create(struct dd_screen *dscreen, struct pipe_context *pipe);
 
 void
 dd_init_draw_functions(struct dd_context *dctx);
-PIPE_THREAD_ROUTINE(dd_thread_pipelined_hang_detect, input);
+int
+dd_thread_pipelined_hang_detect(void *input);
 
+FILE *
+dd_get_file_stream(struct dd_screen *dscreen, unsigned apitrace_call_number);
 
 static inline struct dd_context *
 dd_context(struct pipe_context *pipe)
@@ -264,6 +287,22 @@ static inline struct dd_screen *
 dd_screen(struct pipe_screen *screen)
 {
    return (struct dd_screen*)screen;
+}
+
+static inline struct dd_query *
+dd_query(struct pipe_query *query)
+{
+   return (struct dd_query *)query;
+}
+
+static inline struct pipe_query *
+dd_query_unwrap(struct pipe_query *query)
+{
+   if (query) {
+      return dd_query(query)->query;
+   } else {
+      return NULL;
+   }
 }
 
 

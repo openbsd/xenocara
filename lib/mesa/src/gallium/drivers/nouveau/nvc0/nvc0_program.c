@@ -486,6 +486,12 @@ nvc0_fp_gen_header(struct nvc0_program *fp, struct nv50_ir_prog_info *info)
 
    fp->fp.early_z = info->prop.fp.earlyFragTests;
    fp->fp.sample_mask_in = info->prop.fp.usesSampleMaskIn;
+   fp->fp.reads_framebuffer = info->prop.fp.readsFramebuffer;
+   fp->fp.post_depth_coverage = info->prop.fp.postDepthCoverage;
+
+   /* Mark position xy and layer as read */
+   if (fp->fp.reads_framebuffer)
+      fp->hdr[5] |= 0x32000000;
 
    return 0;
 }
@@ -562,7 +568,7 @@ nvc0_program_translate(struct nvc0_program *prog, uint16_t chipset,
 
    info->type = prog->type;
    info->target = chipset;
-   info->bin.sourceRep = NV50_PROGRAM_IR_TGSI;
+   info->bin.sourceRep = PIPE_SHADER_IR_TGSI;
    info->bin.source = (void *)prog->pipe.tokens;
 
 #ifdef DEBUG
@@ -583,6 +589,7 @@ nvc0_program_translate(struct nvc0_program *prog, uint16_t chipset,
    info->io.suInfoBase = NVC0_CB_AUX_SU_INFO(0);
    if (info->target >= NVISA_GK104_CHIPSET) {
       info->io.texBindBase = NVC0_CB_AUX_TEX_INFO(0);
+      info->io.fbtexBindBase = NVC0_CB_AUX_FB_TEX_INFO;
    }
 
    if (prog->type == PIPE_SHADER_COMPUTE) {

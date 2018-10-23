@@ -328,7 +328,7 @@ static void r300_clear(struct pipe_context* pipe,
             /* Pair the resource with the CMASK to avoid other resources
              * accessing it. */
             if (!r300->screen->cmask_resource) {
-                pipe_mutex_lock(r300->screen->cmask_mutex);
+                mtx_lock(&r300->screen->cmask_mutex);
                 /* Double checking (first unlocked, then locked). */
                 if (!r300->screen->cmask_resource) {
                     /* Don't reference this, so that the texture can be
@@ -336,7 +336,7 @@ static void r300_clear(struct pipe_context* pipe,
                      * Then in texture_destroy, we set cmask_resource to NULL. */
                     r300->screen->cmask_resource = fb->cbufs[0]->texture;
                 }
-                pipe_mutex_unlock(r300->screen->cmask_mutex);
+                mtx_unlock(&r300->screen->cmask_mutex);
             }
 
             if (r300->screen->cmask_resource == fb->cbufs[0]->texture) {
@@ -567,7 +567,7 @@ static void r300_resource_copy_region(struct pipe_context *pipe,
      * colorbuffers. */
 
     util_blitter_default_dst_texture(&dst_templ, dst, dst_level, dstz);
-    util_blitter_default_src_texture(&src_templ, src, src_level);
+    util_blitter_default_src_texture(r300->blitter, &src_templ, src, src_level);
 
     layout = util_format_description(dst_templ.format)->layout;
 

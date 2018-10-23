@@ -42,7 +42,7 @@
 #include <stdbool.h>
 #include "dri_util.h"
 #include "utils.h"
-#include "xmlpool.h"
+#include "util/xmlpool.h"
 #include "main/mtypes.h"
 #include "main/framebuffer.h"
 #include "main/version.h"
@@ -75,6 +75,8 @@ setupLoaderExtensions(__DRIscreen *psp,
 	    psp->dri2.image = (__DRIimageLookupExtension *) extensions[i];
 	if (strcmp(extensions[i]->name, __DRI_USE_INVALIDATE) == 0)
 	    psp->dri2.useInvalidate = (__DRIuseInvalidateExtension *) extensions[i];
+        if (strcmp(extensions[i]->name, __DRI_BACKGROUND_CALLABLE) == 0)
+            psp->dri2.backgroundCallable = (__DRIbackgroundCallableExtension *) extensions[i];
 	if (strcmp(extensions[i]->name, __DRI_SWRAST_LOADER) == 0)
 	    psp->swrast_loader = (__DRIswrastLoaderExtension *) extensions[i];
         if (strcmp(extensions[i]->name, __DRI_IMAGE_LOADER) == 0)
@@ -158,11 +160,9 @@ driCreateNewScreen2(int scrn, int fd,
 
     api = API_OPENGL_COMPAT;
     if (_mesa_override_gl_version_contextless(&consts, &api, &version)) {
-       if (api == API_OPENGL_CORE) {
-          psp->max_gl_core_version = version;
-       } else {
+       psp->max_gl_core_version = version;
+       if (api == API_OPENGL_COMPAT)
           psp->max_gl_compat_version = version;
-       }
     }
 
     psp->api_mask = 0;
@@ -304,6 +304,7 @@ driCreateContextAttribs(__DRIscreen *screen, int api,
     unsigned minor_version = 0;
     uint32_t flags = 0;
     bool notify_reset = false;
+    unsigned priority = __DRI_CTX_PRIORITY_MEDIUM;
 
     assert((num_attribs == 0) || (attribs != NULL));
 
@@ -346,6 +347,9 @@ driCreateContextAttribs(__DRIscreen *screen, int api,
             notify_reset = (attribs[i * 2 + 1]
                             != __DRI_CTX_RESET_NO_NOTIFICATION);
             break;
+	case __DRI_CTX_ATTRIB_PRIORITY:
+	    priority = attribs[i * 2 + 1];
+	    break;
 	default:
 	    /* We can't create a context that satisfies the requirements of an
 	     * attribute that we don't understand.  Return failure.
@@ -401,7 +405,8 @@ driCreateContextAttribs(__DRIscreen *screen, int api,
     if (mesa_api != API_OPENGL_COMPAT
         && mesa_api != API_OPENGL_CORE
         && (flags & ~(__DRI_CTX_FLAG_DEBUG |
-	              __DRI_CTX_FLAG_ROBUST_BUFFER_ACCESS))) {
+	              __DRI_CTX_FLAG_ROBUST_BUFFER_ACCESS |
+	              __DRI_CTX_FLAG_NO_ERROR))) {
 	*error = __DRI_CTX_ERROR_BAD_FLAG;
 	return NULL;
     }
@@ -423,7 +428,8 @@ driCreateContextAttribs(__DRIscreen *screen, int api,
 
     const uint32_t allowed_flags = (__DRI_CTX_FLAG_DEBUG
                                     | __DRI_CTX_FLAG_FORWARD_COMPATIBLE
-                                    | __DRI_CTX_FLAG_ROBUST_BUFFER_ACCESS);
+                                    | __DRI_CTX_FLAG_ROBUST_BUFFER_ACCESS
+                                    | __DRI_CTX_FLAG_NO_ERROR);
     if (flags & ~allowed_flags) {
 	*error = __DRI_CTX_ERROR_UNKNOWN_FLAG;
 	return NULL;
@@ -447,7 +453,8 @@ driCreateContextAttribs(__DRIscreen *screen, int api,
 
     if (!screen->driver->CreateContext(mesa_api, modes, context,
                                        major_version, minor_version,
-                                       flags, notify_reset, error, shareCtx)) {
+                                       flags, notify_reset, priority,
+                                       error, shareCtx)) {
         free(context);
         return NULL;
     }
@@ -465,6 +472,8 @@ driContextSetFlags(struct gl_context *ctx, uint32_t flags)
        _mesa_set_debug_state_int(ctx, GL_DEBUG_OUTPUT, GL_TRUE);
         ctx->Const.ContextFlags |= GL_CONTEXT_FLAG_DEBUG_BIT;
     }
+    if ((flags & __DRI_CTX_FLAG_NO_ERROR) != 0)
+        ctx->Const.ContextFlags |= GL_CONTEXT_FLAG_NO_ERROR_BIT_KHR;
 }
 
 static __DRIcontext *
@@ -761,7 +770,7 @@ driSwapBuffers(__DRIdrawable *pdp)
 
 /** Core interface */
 const __DRIcoreExtension driCoreExtension = {
-    .base = { __DRI_CORE, 1 },
+    .base = { __DRI_CORE, 2 },
 
     .createNewScreen            = NULL,
     .destroyScreen              = driDestroyScreen,
@@ -856,8 +865,10 @@ driGLFormatToImageFormat(mesa_format format)
       return __DRI_IMAGE_FORMAT_ABGR8888;
    case MESA_FORMAT_R8G8B8X8_UNORM:
       return __DRI_IMAGE_FORMAT_XBGR8888;
+   case MESA_FORMAT_L_UNORM8:
    case MESA_FORMAT_R_UNORM8:
       return __DRI_IMAGE_FORMAT_R8;
+   case MESA_FORMAT_L8A8_UNORM:
    case MESA_FORMAT_R8G8_UNORM:
       return __DRI_IMAGE_FORMAT_GR88;
    case MESA_FORMAT_NONE:
@@ -891,8 +902,12 @@ driImageFormatToGLFormat(uint32_t image_format)
       return MESA_FORMAT_R8G8B8X8_UNORM;
    case __DRI_IMAGE_FORMAT_R8:
       return MESA_FORMAT_R_UNORM8;
+   case __DRI_IMAGE_FORMAT_R16:
+      return MESA_FORMAT_R_UNORM16;
    case __DRI_IMAGE_FORMAT_GR88:
       return MESA_FORMAT_R8G8_UNORM;
+   case __DRI_IMAGE_FORMAT_GR1616:
+      return MESA_FORMAT_R16G16_UNORM;
    case __DRI_IMAGE_FORMAT_SARGB8:
       return MESA_FORMAT_B8G8R8A8_SRGB;
    case __DRI_IMAGE_FORMAT_NONE:
@@ -926,4 +941,8 @@ const __DRIcopySubBufferExtension driCopySubBufferExtension = {
    .base = { __DRI_COPY_SUB_BUFFER, 1 },
 
    .copySubBuffer               = driCopySubBuffer,
+};
+
+const __DRInoErrorExtension dri2NoErrorExtension = {
+   .base = { __DRI2_NO_ERROR, 1 },
 };

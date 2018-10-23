@@ -28,10 +28,11 @@
 #include "sid.h"
 #include "radeon/r600_cs.h"
 
-/* Alignment for optimal performance. */
-#define CP_DMA_ALIGNMENT	32
-/* The max number of bytes to copy per packet. */
-#define CP_DMA_MAX_BYTE_COUNT	((1 << 21) - CP_DMA_ALIGNMENT)
+/* Recommended maximum sizes for optimal performance.
+ * Fall back to compute or SDMA if the size is greater.
+ */
+#define CP_DMA_COPY_PERF_THRESHOLD	(64 * 1024) /* copied from Vulkan */
+#define CP_DMA_CLEAR_PERF_THRESHOLD	(32 * 1024) /* guess (clear is much slower) */
 
 /* Set this if you want the ME to wait until CP DMA is done.
  * It should be set on the last CP DMA packet. */
@@ -44,6 +45,18 @@
 #define CP_DMA_USE_L2		(1 << 2) /* CIK+ */
 #define CP_DMA_CLEAR		(1 << 3)
 
+/* The max number of bytes that can be copied per packet. */
+static inline unsigned cp_dma_max_byte_count(struct si_context *sctx)
+{
+	unsigned max = sctx->b.chip_class >= GFX9 ?
+			       S_414_BYTE_COUNT_GFX9(~0u) :
+			       S_414_BYTE_COUNT_GFX6(~0u);
+
+	/* make it aligned for optimal performance */
+	return max & ~(SI_CPDMA_ALIGNMENT - 1);
+}
+
+
 /* Emit a CP DMA packet to do a copy from one buffer to another, or to clear
  * a buffer. The size must fit in bits [20:0]. If CP_DMA_CLEAR is set, src_va is a 32-bit
  * clear value.
@@ -53,22 +66,34 @@ static void si_emit_cp_dma(struct si_context *sctx, uint64_t dst_va,
 			   enum r600_coherency coher)
 {
 	struct radeon_winsys_cs *cs = sctx->b.gfx.cs;
-	uint32_t header = 0, command = S_414_BYTE_COUNT(size);
+	uint32_t header = 0, command = 0;
 
 	assert(size);
-	assert(size <= CP_DMA_MAX_BYTE_COUNT);
+	assert(size <= cp_dma_max_byte_count(sctx));
+
+	if (sctx->b.chip_class >= GFX9)
+		command |= S_414_BYTE_COUNT_GFX9(size);
+	else
+		command |= S_414_BYTE_COUNT_GFX6(size);
 
 	/* Sync flags. */
 	if (flags & CP_DMA_SYNC)
 		header |= S_411_CP_SYNC(1);
-	else
-		command |= S_414_DISABLE_WR_CONFIRM(1);
+	else {
+		if (sctx->b.chip_class >= GFX9)
+			command |= S_414_DISABLE_WR_CONFIRM_GFX9(1);
+		else
+			command |= S_414_DISABLE_WR_CONFIRM_GFX6(1);
+	}
 
 	if (flags & CP_DMA_RAW_WAIT)
 		command |= S_414_RAW_WAIT(1);
 
 	/* Src and dst flags. */
-	if (flags & CP_DMA_USE_L2)
+	if (sctx->b.chip_class >= GFX9 && !(flags & CP_DMA_CLEAR) &&
+	    src_va == dst_va)
+		header |= S_411_DSL_SEL(V_411_NOWHERE); /* prefetch only */
+	else if (flags & CP_DMA_USE_L2)
 		header |= S_411_DSL_SEL(V_411_DST_ADDR_TC_L2);
 
 	if (flags & CP_DMA_CLEAR)
@@ -117,50 +142,68 @@ static unsigned get_flush_flags(struct si_context *sctx, enum r600_coherency coh
 		       SI_CONTEXT_INV_VMEM_L1 |
 		       (sctx->b.chip_class == SI ? SI_CONTEXT_INV_GLOBAL_L2 : 0);
 	case R600_COHERENCY_CB_META:
-		return SI_CONTEXT_FLUSH_AND_INV_CB |
-		       SI_CONTEXT_FLUSH_AND_INV_CB_META;
+		return SI_CONTEXT_FLUSH_AND_INV_CB;
 	}
 }
 
 static unsigned get_tc_l2_flag(struct si_context *sctx, enum r600_coherency coher)
 {
-	return coher == R600_COHERENCY_SHADER &&
-	       sctx->b.chip_class >= CIK ? CP_DMA_USE_L2 : 0;
+	if ((sctx->b.chip_class >= GFX9 && coher == R600_COHERENCY_CB_META) ||
+	    (sctx->b.chip_class >= CIK && coher == R600_COHERENCY_SHADER))
+		return CP_DMA_USE_L2;
+
+	return 0;
 }
 
 static void si_cp_dma_prepare(struct si_context *sctx, struct pipe_resource *dst,
 			      struct pipe_resource *src, unsigned byte_count,
-			      uint64_t remaining_size, unsigned *flags)
+			      uint64_t remaining_size, unsigned user_flags,
+			      bool *is_first, unsigned *packet_flags)
 {
-	/* Count memory usage in so that need_cs_space can take it into account. */
-	r600_context_add_resource_size(&sctx->b.b, dst);
-	if (src)
-		r600_context_add_resource_size(&sctx->b.b, src);
+	/* Fast exit for a CPDMA prefetch. */
+	if ((user_flags & SI_CPDMA_SKIP_ALL) == SI_CPDMA_SKIP_ALL) {
+		*is_first = false;
+		return;
+	}
 
-	si_need_cs_space(sctx);
+	if (!(user_flags & SI_CPDMA_SKIP_BO_LIST_UPDATE)) {
+		/* Count memory usage in so that need_cs_space can take it into account. */
+		r600_context_add_resource_size(&sctx->b.b, dst);
+		if (src)
+			r600_context_add_resource_size(&sctx->b.b, src);
+	}
+
+	if (!(user_flags & SI_CPDMA_SKIP_CHECK_CS_SPACE))
+		si_need_cs_space(sctx);
 
 	/* This must be done after need_cs_space. */
-	radeon_add_to_buffer_list(&sctx->b, &sctx->b.gfx,
-				  (struct r600_resource*)dst,
-				  RADEON_USAGE_WRITE, RADEON_PRIO_CP_DMA);
-	if (src)
+	if (!(user_flags & SI_CPDMA_SKIP_BO_LIST_UPDATE)) {
 		radeon_add_to_buffer_list(&sctx->b, &sctx->b.gfx,
-					  (struct r600_resource*)src,
-					  RADEON_USAGE_READ, RADEON_PRIO_CP_DMA);
+					  (struct r600_resource*)dst,
+					  RADEON_USAGE_WRITE, RADEON_PRIO_CP_DMA);
+		if (src)
+			radeon_add_to_buffer_list(&sctx->b, &sctx->b.gfx,
+						  (struct r600_resource*)src,
+						  RADEON_USAGE_READ, RADEON_PRIO_CP_DMA);
+	}
 
 	/* Flush the caches for the first copy only.
 	 * Also wait for the previous CP DMA operations.
 	 */
-	if (sctx->b.flags) {
+	if (!(user_flags & SI_CPDMA_SKIP_GFX_SYNC) && sctx->b.flags)
 		si_emit_cache_flush(sctx);
-		*flags |= CP_DMA_RAW_WAIT;
-	}
+
+	if (!(user_flags & SI_CPDMA_SKIP_SYNC_BEFORE) && *is_first)
+		*packet_flags |= CP_DMA_RAW_WAIT;
+
+	*is_first = false;
 
 	/* Do the synchronization after the last dma, so that all data
 	 * is written to memory.
 	 */
-	if (byte_count == remaining_size)
-		*flags |= CP_DMA_SYNC;
+	if (!(user_flags & SI_CPDMA_SKIP_SYNC_AFTER) &&
+	    byte_count == remaining_size)
+		*packet_flags |= CP_DMA_SYNC;
 }
 
 static void si_clear_buffer(struct pipe_context *ctx, struct pipe_resource *dst,
@@ -168,52 +211,86 @@ static void si_clear_buffer(struct pipe_context *ctx, struct pipe_resource *dst,
 			    enum r600_coherency coher)
 {
 	struct si_context *sctx = (struct si_context*)ctx;
+	struct radeon_winsys *ws = sctx->b.ws;
+	struct r600_resource *rdst = r600_resource(dst);
 	unsigned tc_l2_flag = get_tc_l2_flag(sctx, coher);
 	unsigned flush_flags = get_flush_flags(sctx, coher);
+	uint64_t dma_clear_size;
+	bool is_first = true;
 
 	if (!size)
 		return;
 
+       dma_clear_size = size & ~3ull;
+
 	/* Mark the buffer range of destination as valid (initialized),
 	 * so that transfer_map knows it should wait for the GPU when mapping
 	 * that range. */
-	util_range_add(&r600_resource(dst)->valid_buffer_range, offset,
-		       offset + size);
+	util_range_add(&rdst->valid_buffer_range, offset,
+		       offset + dma_clear_size);
 
-	/* Fallback for unaligned clears. */
-	if (offset % 4 != 0 || size % 4 != 0) {
-		uint8_t *map = sctx->b.ws->buffer_map(r600_resource(dst)->buf,
-						      sctx->b.gfx.cs,
-						      PIPE_TRANSFER_WRITE);
-		map += offset;
-		for (uint64_t i = 0; i < size; i++) {
-			unsigned byte_within_dword = (offset + i) % 4;
-			*map++ = (value >> (byte_within_dword * 8)) & 0xff;
+	/* dma_clear_buffer can use clear_buffer on failure. Make sure that
+	 * doesn't happen. We don't want an infinite recursion: */
+	if (sctx->b.dma.cs &&
+	    !(dst->flags & PIPE_RESOURCE_FLAG_SPARSE) &&
+	    (offset % 4 == 0) &&
+	    /* CP DMA is very slow. Always use SDMA for big clears. This
+	     * alone improves DeusEx:MD performance by 70%. */
+	    (size > CP_DMA_CLEAR_PERF_THRESHOLD ||
+	     /* Buffers not used by the GFX IB yet will be cleared by SDMA.
+	      * This happens to move most buffer clears to SDMA, including
+	      * DCC and CMASK clears, because pipe->clear clears them before
+	      * si_emit_framebuffer_state (in a draw call) adds them.
+	      * For example, DeusEx:MD has 21 buffer clears per frame and all
+	      * of them are moved to SDMA thanks to this. */
+	     !ws->cs_is_buffer_referenced(sctx->b.gfx.cs, rdst->buf,
+				          RADEON_USAGE_READWRITE))) {
+		sctx->b.dma_clear_buffer(ctx, dst, offset, dma_clear_size, value);
+
+		offset += dma_clear_size;
+		size -= dma_clear_size;
+	} else if (dma_clear_size >= 4) {
+		uint64_t va = rdst->gpu_address + offset;
+
+		offset += dma_clear_size;
+		size -= dma_clear_size;
+
+		/* Flush the caches. */
+		sctx->b.flags |= SI_CONTEXT_PS_PARTIAL_FLUSH |
+				 SI_CONTEXT_CS_PARTIAL_FLUSH | flush_flags;
+
+		while (dma_clear_size) {
+			unsigned byte_count = MIN2(dma_clear_size, cp_dma_max_byte_count(sctx));
+			unsigned dma_flags = tc_l2_flag  | CP_DMA_CLEAR;
+
+			si_cp_dma_prepare(sctx, dst, NULL, byte_count, dma_clear_size, 0,
+					  &is_first, &dma_flags);
+
+			/* Emit the clear packet. */
+			si_emit_cp_dma(sctx, va, value, byte_count, dma_flags, coher);
+
+			dma_clear_size -= byte_count;
+			va += byte_count;
 		}
-		return;
+
+		if (tc_l2_flag)
+			rdst->TC_L2_dirty = true;
+
+		/* If it's not a framebuffer fast clear... */
+		if (coher == R600_COHERENCY_SHADER)
+			sctx->b.num_cp_dma_calls++;
 	}
 
-	uint64_t va = r600_resource(dst)->gpu_address + offset;
+	if (size) {
+		/* Handle non-dword alignment.
+		 *
+		 * This function is called for embedded texture metadata clears,
+		 * but those should always be properly aligned. */
+		assert(dst->target == PIPE_BUFFER);
+		assert(size < 4);
 
-	/* Flush the caches. */
-	sctx->b.flags |= SI_CONTEXT_PS_PARTIAL_FLUSH |
-	                 SI_CONTEXT_CS_PARTIAL_FLUSH | flush_flags;
-
-	while (size) {
-		unsigned byte_count = MIN2(size, CP_DMA_MAX_BYTE_COUNT);
-		unsigned dma_flags = tc_l2_flag  | CP_DMA_CLEAR;
-
-		si_cp_dma_prepare(sctx, dst, NULL, byte_count, size, &dma_flags);
-
-		/* Emit the clear packet. */
-		si_emit_cp_dma(sctx, va, value, byte_count, dma_flags, coher);
-
-		size -= byte_count;
-		va += byte_count;
+		pipe_buffer_write(ctx, dst, offset, size, &value);
 	}
-
-	if (tc_l2_flag)
-		r600_resource(dst)->TC_L2_dirty = true;
 }
 
 /**
@@ -222,13 +299,14 @@ static void si_clear_buffer(struct pipe_context *ctx, struct pipe_resource *dst,
  *
  * \param size  Remaining size to the CP DMA alignment.
  */
-static void si_cp_dma_realign_engine(struct si_context *sctx, unsigned size)
+static void si_cp_dma_realign_engine(struct si_context *sctx, unsigned size,
+				     unsigned user_flags, bool *is_first)
 {
 	uint64_t va;
 	unsigned dma_flags = 0;
-	unsigned scratch_size = CP_DMA_ALIGNMENT * 2;
+	unsigned scratch_size = SI_CPDMA_ALIGNMENT * 2;
 
-	assert(size < CP_DMA_ALIGNMENT);
+	assert(size < SI_CPDMA_ALIGNMENT);
 
 	/* Use the scratch buffer as the dummy buffer. The 3D engine should be
 	 * idle at this point.
@@ -236,41 +314,53 @@ static void si_cp_dma_realign_engine(struct si_context *sctx, unsigned size)
 	if (!sctx->scratch_buffer ||
 	    sctx->scratch_buffer->b.b.width0 < scratch_size) {
 		r600_resource_reference(&sctx->scratch_buffer, NULL);
-		sctx->scratch_buffer =
-			si_resource_create_custom(&sctx->screen->b.b,
-						  PIPE_USAGE_DEFAULT,
-						  scratch_size);
+		sctx->scratch_buffer = (struct r600_resource*)
+			si_aligned_buffer_create(&sctx->screen->b.b,
+						   R600_RESOURCE_FLAG_UNMAPPABLE,
+						   PIPE_USAGE_DEFAULT,
+						   scratch_size, 256);
 		if (!sctx->scratch_buffer)
 			return;
-		sctx->emit_scratch_reloc = true;
+
+		si_mark_atom_dirty(sctx, &sctx->scratch_state);
 	}
 
 	si_cp_dma_prepare(sctx, &sctx->scratch_buffer->b.b,
-			  &sctx->scratch_buffer->b.b, size, size, &dma_flags);
+			  &sctx->scratch_buffer->b.b, size, size, user_flags,
+			  is_first, &dma_flags);
 
 	va = sctx->scratch_buffer->gpu_address;
-	si_emit_cp_dma(sctx, va, va + CP_DMA_ALIGNMENT, size, dma_flags,
+	si_emit_cp_dma(sctx, va, va + SI_CPDMA_ALIGNMENT, size, dma_flags,
 		       R600_COHERENCY_SHADER);
 }
 
+/**
+ * Do memcpy between buffers using CP DMA.
+ *
+ * \param user_flags	bitmask of SI_CPDMA_*
+ */
 void si_copy_buffer(struct si_context *sctx,
 		    struct pipe_resource *dst, struct pipe_resource *src,
-		    uint64_t dst_offset, uint64_t src_offset, unsigned size)
+		    uint64_t dst_offset, uint64_t src_offset, unsigned size,
+		    unsigned user_flags)
 {
 	uint64_t main_dst_offset, main_src_offset;
 	unsigned skipped_size = 0;
 	unsigned realign_size = 0;
 	unsigned tc_l2_flag = get_tc_l2_flag(sctx, R600_COHERENCY_SHADER);
 	unsigned flush_flags = get_flush_flags(sctx, R600_COHERENCY_SHADER);
+	bool is_first = true;
 
 	if (!size)
 		return;
 
-	/* Mark the buffer range of destination as valid (initialized),
-	 * so that transfer_map knows it should wait for the GPU when mapping
-	 * that range. */
-	util_range_add(&r600_resource(dst)->valid_buffer_range, dst_offset,
-		       dst_offset + size);
+	if (dst != src || dst_offset != src_offset) {
+		/* Mark the buffer range of destination as valid (initialized),
+		 * so that transfer_map knows it should wait for the GPU when mapping
+		 * that range. */
+		util_range_add(&r600_resource(dst)->valid_buffer_range, dst_offset,
+			       dst_offset + size);
+	}
 
 	dst_offset += r600_resource(dst)->gpu_address;
 	src_offset += r600_resource(src)->gpu_address;
@@ -282,15 +372,15 @@ void si_copy_buffer(struct si_context *sctx,
 		 * just to align the internal counter. Otherwise, the DMA engine
 		 * would slow down by an order of magnitude for following copies.
 		 */
-		if (size % CP_DMA_ALIGNMENT)
-			realign_size = CP_DMA_ALIGNMENT - (size % CP_DMA_ALIGNMENT);
+		if (size % SI_CPDMA_ALIGNMENT)
+			realign_size = SI_CPDMA_ALIGNMENT - (size % SI_CPDMA_ALIGNMENT);
 
 		/* If the copy begins unaligned, we must start copying from the next
 		 * aligned block and the skipped part should be copied after everything
 		 * else has been copied. Only the src alignment matters, not dst.
 		 */
-		if (src_offset % CP_DMA_ALIGNMENT) {
-			skipped_size = CP_DMA_ALIGNMENT - (src_offset % CP_DMA_ALIGNMENT);
+		if (src_offset % SI_CPDMA_ALIGNMENT) {
+			skipped_size = SI_CPDMA_ALIGNMENT - (src_offset % SI_CPDMA_ALIGNMENT);
 			/* The main part will be skipped if the size is too small. */
 			skipped_size = MIN2(skipped_size, size);
 			size -= skipped_size;
@@ -298,8 +388,9 @@ void si_copy_buffer(struct si_context *sctx,
 	}
 
 	/* Flush the caches. */
-	sctx->b.flags |= SI_CONTEXT_PS_PARTIAL_FLUSH |
-	                 SI_CONTEXT_CS_PARTIAL_FLUSH | flush_flags;
+	if (!(user_flags & SI_CPDMA_SKIP_GFX_SYNC))
+		sctx->b.flags |= SI_CONTEXT_PS_PARTIAL_FLUSH |
+				 SI_CONTEXT_CS_PARTIAL_FLUSH | flush_flags;
 
 	/* This is the main part doing the copying. Src is always aligned. */
 	main_dst_offset = dst_offset + skipped_size;
@@ -307,11 +398,11 @@ void si_copy_buffer(struct si_context *sctx,
 
 	while (size) {
 		unsigned dma_flags = tc_l2_flag;
-		unsigned byte_count = MIN2(size, CP_DMA_MAX_BYTE_COUNT);
+		unsigned byte_count = MIN2(size, cp_dma_max_byte_count(sctx));
 
 		si_cp_dma_prepare(sctx, dst, src, byte_count,
 				  size + skipped_size + realign_size,
-				  &dma_flags);
+				  user_flags, &is_first, &dma_flags);
 
 		si_emit_cp_dma(sctx, main_dst_offset, main_src_offset,
 			       byte_count, dma_flags, R600_COHERENCY_SHADER);
@@ -326,8 +417,8 @@ void si_copy_buffer(struct si_context *sctx,
 		unsigned dma_flags = tc_l2_flag;
 
 		si_cp_dma_prepare(sctx, dst, src, skipped_size,
-				  skipped_size + realign_size,
-				  &dma_flags);
+				  skipped_size + realign_size, user_flags,
+				  &is_first, &dma_flags);
 
 		si_emit_cp_dma(sctx, dst_offset, src_offset, skipped_size,
 			       dma_flags, R600_COHERENCY_SHADER);
@@ -335,10 +426,109 @@ void si_copy_buffer(struct si_context *sctx,
 
 	/* Finally, realign the engine if the size wasn't aligned. */
 	if (realign_size)
-		si_cp_dma_realign_engine(sctx, realign_size);
+		si_cp_dma_realign_engine(sctx, realign_size, user_flags,
+					 &is_first);
 
 	if (tc_l2_flag)
 		r600_resource(dst)->TC_L2_dirty = true;
+
+	/* If it's not a prefetch... */
+	if (dst_offset != src_offset)
+		sctx->b.num_cp_dma_calls++;
+}
+
+void cik_prefetch_TC_L2_async(struct si_context *sctx, struct pipe_resource *buf,
+			      uint64_t offset, unsigned size)
+{
+	assert(sctx->b.chip_class >= CIK);
+
+	si_copy_buffer(sctx, buf, buf, offset, offset, size, SI_CPDMA_SKIP_ALL);
+}
+
+static void cik_prefetch_shader_async(struct si_context *sctx,
+				      struct si_pm4_state *state)
+{
+	struct pipe_resource *bo = &state->bo[0]->b.b;
+	assert(state->nbo == 1);
+
+	cik_prefetch_TC_L2_async(sctx, bo, 0, bo->width0);
+}
+
+static void cik_prefetch_VBO_descriptors(struct si_context *sctx)
+{
+	if (!sctx->vertex_elements)
+		return;
+
+	cik_prefetch_TC_L2_async(sctx, &sctx->vertex_buffers.buffer->b.b,
+				 sctx->vertex_buffers.gpu_address -
+				 sctx->vertex_buffers.buffer->gpu_address,
+				 sctx->vertex_elements->desc_list_byte_size);
+}
+
+void cik_emit_prefetch_L2(struct si_context *sctx)
+{
+	/* Prefetch shaders and VBO descriptors to TC L2. */
+	if (sctx->b.chip_class >= GFX9) {
+		/* Choose the right spot for the VBO prefetch. */
+		if (sctx->tes_shader.cso) {
+			if (sctx->prefetch_L2_mask & SI_PREFETCH_HS)
+				cik_prefetch_shader_async(sctx, sctx->queued.named.hs);
+			if (sctx->prefetch_L2_mask & SI_PREFETCH_VBO_DESCRIPTORS)
+				cik_prefetch_VBO_descriptors(sctx);
+			if (sctx->prefetch_L2_mask & SI_PREFETCH_GS)
+				cik_prefetch_shader_async(sctx, sctx->queued.named.gs);
+			if (sctx->prefetch_L2_mask & SI_PREFETCH_VS)
+				cik_prefetch_shader_async(sctx, sctx->queued.named.vs);
+		} else if (sctx->gs_shader.cso) {
+			if (sctx->prefetch_L2_mask & SI_PREFETCH_GS)
+				cik_prefetch_shader_async(sctx, sctx->queued.named.gs);
+			if (sctx->prefetch_L2_mask & SI_PREFETCH_VBO_DESCRIPTORS)
+				cik_prefetch_VBO_descriptors(sctx);
+			if (sctx->prefetch_L2_mask & SI_PREFETCH_VS)
+				cik_prefetch_shader_async(sctx, sctx->queued.named.vs);
+		} else {
+			if (sctx->prefetch_L2_mask & SI_PREFETCH_VS)
+				cik_prefetch_shader_async(sctx, sctx->queued.named.vs);
+			if (sctx->prefetch_L2_mask & SI_PREFETCH_VBO_DESCRIPTORS)
+				cik_prefetch_VBO_descriptors(sctx);
+		}
+	} else {
+		/* SI-CI-VI */
+		/* Choose the right spot for the VBO prefetch. */
+		if (sctx->tes_shader.cso) {
+			if (sctx->prefetch_L2_mask & SI_PREFETCH_LS)
+				cik_prefetch_shader_async(sctx, sctx->queued.named.ls);
+			if (sctx->prefetch_L2_mask & SI_PREFETCH_VBO_DESCRIPTORS)
+				cik_prefetch_VBO_descriptors(sctx);
+			if (sctx->prefetch_L2_mask & SI_PREFETCH_HS)
+				cik_prefetch_shader_async(sctx, sctx->queued.named.hs);
+			if (sctx->prefetch_L2_mask & SI_PREFETCH_ES)
+				cik_prefetch_shader_async(sctx, sctx->queued.named.es);
+			if (sctx->prefetch_L2_mask & SI_PREFETCH_GS)
+				cik_prefetch_shader_async(sctx, sctx->queued.named.gs);
+			if (sctx->prefetch_L2_mask & SI_PREFETCH_VS)
+				cik_prefetch_shader_async(sctx, sctx->queued.named.vs);
+		} else if (sctx->gs_shader.cso) {
+			if (sctx->prefetch_L2_mask & SI_PREFETCH_ES)
+				cik_prefetch_shader_async(sctx, sctx->queued.named.es);
+			if (sctx->prefetch_L2_mask & SI_PREFETCH_VBO_DESCRIPTORS)
+				cik_prefetch_VBO_descriptors(sctx);
+			if (sctx->prefetch_L2_mask & SI_PREFETCH_GS)
+				cik_prefetch_shader_async(sctx, sctx->queued.named.gs);
+			if (sctx->prefetch_L2_mask & SI_PREFETCH_VS)
+				cik_prefetch_shader_async(sctx, sctx->queued.named.vs);
+		} else {
+			if (sctx->prefetch_L2_mask & SI_PREFETCH_VS)
+				cik_prefetch_shader_async(sctx, sctx->queued.named.vs);
+			if (sctx->prefetch_L2_mask & SI_PREFETCH_VBO_DESCRIPTORS)
+				cik_prefetch_VBO_descriptors(sctx);
+		}
+	}
+
+	if (sctx->prefetch_L2_mask & SI_PREFETCH_PS)
+		cik_prefetch_shader_async(sctx, sctx->queued.named.ps);
+
+	sctx->prefetch_L2_mask = 0;
 }
 
 void si_init_cp_dma_functions(struct si_context *sctx)

@@ -37,7 +37,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "main/api_arrayelt.h"
 #include "main/api_exec.h"
 #include "main/context.h"
-#include "util/simple_list.h"
 #include "main/imports.h"
 #include "main/extensions.h"
 #include "main/version.h"
@@ -66,7 +65,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "radeon_span.h"
 
 #include "utils.h"
-#include "xmlpool.h" /* for symbolic values of enum-type options */
+#include "util/xmlpool.h" /* for symbolic values of enum-type options */
 
 /* Return various strings for glGetString().
  */
@@ -179,6 +178,7 @@ GLboolean r200CreateContext( gl_api api,
 			     unsigned minor_version,
 			     uint32_t flags,
                              bool notify_reset,
+                             unsigned priority,
 			     unsigned *error,
 			     void *sharedContextPrivate)
 {
@@ -190,7 +190,7 @@ GLboolean r200CreateContext( gl_api api,
    int i;
    int tcl_mode;
 
-   if (flags & ~__DRI_CTX_FLAG_DEBUG) {
+   if (flags & ~(__DRI_CTX_FLAG_DEBUG | __DRI_CTX_FLAG_NO_ERROR)) {
       *error = __DRI_CTX_ERROR_UNKNOWN_FLAG;
       return false;
    }
@@ -200,7 +200,6 @@ GLboolean r200CreateContext( gl_api api,
       return false;
    }
 
-   assert(glVisual);
    assert(driContextPriv);
    assert(screen);
 
@@ -341,6 +340,7 @@ GLboolean r200CreateContext( gl_api api,
    ctx->Extensions.ARB_texture_env_combine = true;
    ctx->Extensions.ARB_texture_env_dot3 = true;
    ctx->Extensions.ARB_texture_env_crossbar = true;
+   ctx->Extensions.ARB_texture_filter_anisotropic = true;
    ctx->Extensions.ARB_texture_mirror_clamp_to_edge = true;
    ctx->Extensions.ARB_vertex_program = true;
    ctx->Extensions.ATI_fragment_shader = (ctx->Const.MaxTextureUnits == 6);
@@ -364,14 +364,8 @@ GLboolean r200CreateContext( gl_api api,
 	others get the bit ordering right but don't actually do YUV-RGB conversion */
       ctx->Extensions.MESA_ycbcr_texture = true;
    }
-   if (rmesa->radeon.glCtx.Mesa_DXTn) {
-      ctx->Extensions.EXT_texture_compression_s3tc = true;
-      ctx->Extensions.ANGLE_texture_compression_dxt = true;
-   }
-   else if (driQueryOptionb (&rmesa->radeon.optionCache, "force_s3tc_enable")) {
-      ctx->Extensions.EXT_texture_compression_s3tc = true;
-      ctx->Extensions.ANGLE_texture_compression_dxt = true;
-   }
+   ctx->Extensions.EXT_texture_compression_s3tc = true;
+   ctx->Extensions.ANGLE_texture_compression_dxt = true;
 
 #if 0
    r200InitDriverFuncs( ctx );

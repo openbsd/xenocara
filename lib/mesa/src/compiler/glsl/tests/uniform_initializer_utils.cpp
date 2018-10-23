@@ -96,6 +96,12 @@ generate_data_element(void *mem_ctx, const glsl_type *type,
       case GLSL_TYPE_DOUBLE:
 	 data.d[i] = double(values[idx]);
 	 break;
+      case GLSL_TYPE_UINT64:
+	 data.u64[i] = (uint64_t) values[idx];
+	 break;
+      case GLSL_TYPE_INT64:
+	 data.i64[i] = (int64_t) values[idx];
+	 break;
       case GLSL_TYPE_ATOMIC_UINT:
       case GLSL_TYPE_STRUCT:
       case GLSL_TYPE_ARRAY:
@@ -129,6 +135,12 @@ generate_data_element(void *mem_ctx, const glsl_type *type,
 	 break;
       case GLSL_TYPE_DOUBLE:
 	 ASSERT_EQ(data.d[i], val->value.d[i]);
+	 break;
+      case GLSL_TYPE_UINT64:
+	 ASSERT_EQ(data.u64[i], val->value.u64[i]);
+	 break;
+      case GLSL_TYPE_INT64:
+	 ASSERT_EQ(data.i64[i], val->value.i64[i]);
 	 break;
       case GLSL_TYPE_ATOMIC_UINT:
       case GLSL_TYPE_STRUCT:
@@ -186,6 +198,22 @@ generate_array_data(void *mem_ctx, enum glsl_base_type base_type,
    val = new(mem_ctx) ir_constant(array_type, &values_for_array);
 }
 
+static uint64_t
+uint64_storage(union gl_constant_value *storage)
+{
+   uint64_t val;
+   memcpy(&val, &storage->i, sizeof(uint64_t));
+   return val;
+}
+
+static uint64_t
+double_storage(union gl_constant_value *storage)
+{
+   double val;
+   memcpy(&val, &storage->i, sizeof(double));
+   return val;
+}
+
 /**
  * Verify that the data stored for the uniform matches the initializer
  *
@@ -202,12 +230,12 @@ verify_data(gl_constant_value *storage, unsigned storage_array_size,
             ir_constant *val, unsigned red_zone_size,
             unsigned int boolean_true)
 {
-   if (val->type->base_type == GLSL_TYPE_ARRAY) {
-      const glsl_type *const element_type = val->array_elements[0]->type;
+   if (val->type->is_array()) {
+      const glsl_type *const element_type = val->const_elements[0]->type;
 
       for (unsigned i = 0; i < storage_array_size; i++) {
 	 verify_data(storage + (i * element_type->components()), 0,
-		     val->array_elements[i], 0, boolean_true);
+                     val->const_elements[i], 0, boolean_true);
       }
 
       const unsigned components = element_type->components();
@@ -234,7 +262,13 @@ verify_data(gl_constant_value *storage, unsigned storage_array_size,
 	    EXPECT_EQ(val->value.b[i] ? boolean_true : 0, storage[i].i);
 	    break;
 	 case GLSL_TYPE_DOUBLE:
-	    EXPECT_EQ(val->value.d[i], *(double *)&storage[i*2].i);
+	    EXPECT_EQ(val->value.d[i], double_storage(&storage[i*2]));
+	    break;
+	 case GLSL_TYPE_UINT64:
+            EXPECT_EQ(val->value.u64[i], uint64_storage(&storage[i*2]));
+	    break;
+	 case GLSL_TYPE_INT64:
+	    EXPECT_EQ(val->value.i64[i], uint64_storage(&storage[i*2]));
 	    break;
          case GLSL_TYPE_ATOMIC_UINT:
 	 case GLSL_TYPE_STRUCT:

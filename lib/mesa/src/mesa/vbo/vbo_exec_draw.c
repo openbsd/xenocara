@@ -174,7 +174,7 @@ vbo_exec_bind_arrays( struct gl_context *ctx )
 {
    struct vbo_context *vbo = vbo_context(ctx);
    struct vbo_exec_context *exec = &vbo->exec;
-   struct gl_client_array *arrays = exec->vtx.arrays;
+   struct gl_vertex_array *arrays = exec->vtx.arrays;
    const GLuint *map;
    GLuint attr;
    GLbitfield64 varying_inputs = 0x0;
@@ -211,8 +211,10 @@ vbo_exec_bind_arrays( struct gl_context *ctx )
        * glVertexAttrib(0, val) calls to feed into the GENERIC0 input.
        * The original state gets essentially restored below.
        */
-      if ((ctx->VertexProgram._Current->Base.InputsRead & VERT_BIT_POS) == 0 &&
-          (ctx->VertexProgram._Current->Base.InputsRead & VERT_BIT_GENERIC0)) {
+      if ((ctx->VertexProgram._Current->info.inputs_read &
+           VERT_BIT_POS) == 0 &&
+          (ctx->VertexProgram._Current->info.inputs_read &
+           VERT_BIT_GENERIC0)) {
          swap_pos = true;
          exec->vtx.inputs[VERT_ATTRIB_GENERIC0] = exec->vtx.inputs[0];
          exec->vtx.attrsz[VERT_ATTRIB_GENERIC0] = exec->vtx.attrsz[0];
@@ -424,9 +426,7 @@ vbo_exec_vtx_flush(struct vbo_exec_context *exec, GLboolean keepUnmapped)
          if (ctx->NewState)
             _mesa_update_state( ctx );
 
-         if (_mesa_is_bufferobj(exec->vtx.bufferobj)) {
-            vbo_exec_vtx_unmap( exec );
-         }
+         vbo_exec_vtx_unmap(exec);
 
          if (0)
             printf("%s %d %d\n", __func__, exec->vtx.prim_count,
@@ -441,19 +441,15 @@ vbo_exec_vtx_flush(struct vbo_exec_context *exec, GLboolean keepUnmapped)
 				       exec->vtx.vert_count - 1,
 				       NULL, 0, NULL);
 
-	 /* If using a real VBO, get new storage -- unless asked not to.
-          */
-         if (_mesa_is_bufferobj(exec->vtx.bufferobj) && !keepUnmapped) {
+         /* Get new storage -- unless asked not to. */
+         if (!keepUnmapped)
             vbo_exec_vtx_map( exec );
-         }
       }
    }
 
    /* May have to unmap explicitly if we didn't draw:
     */
-   if (keepUnmapped &&
-       _mesa_is_bufferobj(exec->vtx.bufferobj) &&
-       exec->vtx.buffer_map) {
+   if (keepUnmapped && exec->vtx.buffer_map) {
       vbo_exec_vtx_unmap( exec );
    }
 

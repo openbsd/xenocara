@@ -5,6 +5,7 @@ AM_CPPFLAGS = \
 	-I$(top_srcdir)/src \
 	-I$(top_srcdir)/src/mapi \
 	-I$(top_srcdir)/src/mesa \
+	-I$(top_builddir)/src/glx \
 	-I$(top_srcdir)/src/glx \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/include/GL/internal \
@@ -12,8 +13,9 @@ AM_CPPFLAGS = \
 	$(LIBDRM_CFLAGS) \
 	$(X11_INCLUDES)
 
-TESTS = glx-test
+TESTS = glx-test dispatch-index-check
 check_PROGRAMS = glx-test
+EXTRA_DIST = dispatch-index-check
 
 glx_test_SOURCES =			\
 	clientinfo_unittest.cpp		\

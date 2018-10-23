@@ -95,7 +95,10 @@ lower_bitmap(nir_shader *shader, nir_builder *b,
    tex->sampler_index = options->sampler;
    tex->texture_index = options->sampler;
    tex->dest_type = nir_type_float;
-   tex->src[0].src = nir_src_for_ssa(texcoord);
+   tex->src[0].src_type = nir_tex_src_coord;
+   tex->src[0].src =
+      nir_src_for_ssa(nir_channels(b, texcoord,
+                                   (1 << tex->coord_components) - 1));
 
    nir_ssa_dest_init(&tex->instr, &tex->dest, 4, 32, NULL);
    nir_builder_instr_insert(b, &tex->instr);
@@ -130,7 +133,7 @@ void
 nir_lower_bitmap(nir_shader *shader,
                  const nir_lower_bitmap_options *options)
 {
-   assert(shader->stage == MESA_SHADER_FRAGMENT);
+   assert(shader->info.stage == MESA_SHADER_FRAGMENT);
 
    lower_bitmap_impl(nir_shader_get_entrypoint(shader), options);
 }

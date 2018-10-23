@@ -66,6 +66,16 @@ vc4_pipe_flush(struct pipe_context *pctx, struct pipe_fence_handle **fence,
         }
 }
 
+/* We can't flush the texture cache within rendering a tile, so we have to
+ * flush all rendering to the kernel so that the next job reading from the
+ * tile gets a flushed cache.
+ */
+static void
+vc4_texture_barrier(struct pipe_context *pctx, unsigned flags)
+{
+        vc4_flush(pctx);
+}
+
 static void
 vc4_invalidate_resource(struct pipe_context *pctx, struct pipe_resource *prsc)
 {
@@ -132,6 +142,7 @@ vc4_context_create(struct pipe_screen *pscreen, void *priv, unsigned flags)
         pctx->destroy = vc4_context_destroy;
         pctx->flush = vc4_pipe_flush;
         pctx->invalidate_resource = vc4_invalidate_resource;
+        pctx->texture_barrier = vc4_texture_barrier;
 
         vc4_draw_init(pctx);
         vc4_state_init(pctx);
@@ -144,7 +155,12 @@ vc4_context_create(struct pipe_screen *pscreen, void *priv, unsigned flags)
         vc4->fd = screen->fd;
 
         slab_create_child(&vc4->transfer_pool, &screen->transfer_pool);
-        vc4->blitter = util_blitter_create(pctx);
+
+	vc4->uploader = u_upload_create_default(&vc4->base);
+	vc4->base.stream_uploader = vc4->uploader;
+	vc4->base.const_uploader = vc4->uploader;
+
+	vc4->blitter = util_blitter_create(pctx);
         if (!vc4->blitter)
                 goto fail;
 
@@ -152,10 +168,6 @@ vc4_context_create(struct pipe_screen *pscreen, void *priv, unsigned flags)
                                                    (1 << PIPE_PRIM_QUADS) - 1);
         if (!vc4->primconvert)
                 goto fail;
-
-        vc4->uploader = u_upload_create(pctx, 16 * 1024,
-                                        PIPE_BIND_INDEX_BUFFER,
-                                        PIPE_USAGE_STREAM);
 
         vc4_debug |= saved_shaderdb_flag;
 

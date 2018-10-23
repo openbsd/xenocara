@@ -41,6 +41,7 @@
 #include "main/pack.h"
 #include "main/pbo.h"
 #include "main/readpix.h"
+#include "main/state.h"
 #include "main/texformat.h"
 #include "main/teximage.h"
 #include "main/texstore.h"
@@ -463,7 +464,6 @@ make_texture(struct st_context *st,
 
    {
       struct pipe_transfer *transfer;
-      GLboolean success;
       GLubyte *dest;
       const GLbitfield imageTransferStateSave = ctx->_ImageTransferState;
 
@@ -496,9 +496,9 @@ make_texture(struct st_context *st,
                               format, type,     /* src format/type */
                               pixels,           /* data source */
                               unpack);
-         success = GL_TRUE;
       }
       else {
+         bool MAYBE_UNUSED success;
          success = _mesa_texstore(ctx, 2,           /* dims */
                                   baseInternalFormat, /* baseInternalFormat */
                                   mformat,          /* mesa_format */
@@ -508,12 +508,12 @@ make_texture(struct st_context *st,
                                   format, type,     /* src format/type */
                                   pixels,           /* data source */
                                   unpack);
+
+         assert(success);
       }
 
       /* unmap */
       pipe_transfer_unmap(pipe, transfer);
-
-      assert(success);
 
       /* restore */
       ctx->_ImageTransferState = imageTransferStateSave;
@@ -569,7 +569,7 @@ draw_textured_quad(struct gl_context *ctx, GLint x, GLint y, GLfloat z,
    const unsigned fb_width = _mesa_geometric_width(ctx->DrawBuffer);
    const unsigned fb_height = _mesa_geometric_height(ctx->DrawBuffer);
    GLfloat x0, y0, x1, y1;
-   GLsizei maxSize;
+   GLsizei MAYBE_UNUSED maxSize;
    boolean normalized = sv[0]->texture->target == PIPE_TEXTURE_2D;
    unsigned cso_state_mask;
 
@@ -1072,6 +1072,8 @@ st_DrawPixels(struct gl_context *ctx, GLint x, GLint y,
    /* Mesa state should be up to date by now */
    assert(ctx->NewState == 0x0);
 
+   _mesa_update_draw_buffer_bounds(ctx, ctx->DrawBuffer);
+
    st_flush_bitmap_cache(st);
    st_invalidate_readpix_cache(st);
 
@@ -1123,8 +1125,7 @@ st_DrawPixels(struct gl_context *ctx, GLint x, GLint y,
       /* compiling a new fragment shader variant added new state constants
        * into the constant buffer, we need to update them
        */
-      st_upload_constants(st, st->fp->Base.Base.Parameters,
-                          MESA_SHADER_FRAGMENT);
+      st_upload_constants(st, &st->fp->Base);
    }
 
    /* Put glDrawPixels image into a texture */
@@ -1318,7 +1319,7 @@ blit_copy_pixels(struct gl_context *ctx, GLint srcx, GLint srcy,
        !ctx->FragmentProgram.Enabled &&
        !ctx->VertexProgram.Enabled &&
        !ctx->_Shader->CurrentProgram[MESA_SHADER_FRAGMENT] &&
-       !ctx->ATIFragmentShader._Enabled &&
+       !_mesa_ati_fragment_shader_enabled(ctx) &&
        ctx->DrawBuffer->_NumColorDrawBuffers == 1 &&
        !ctx->Query.CondRenderQuery &&
        !ctx->Query.CurrentOcclusionObject) {
@@ -1438,6 +1439,8 @@ st_CopyPixels(struct gl_context *ctx, GLint srcx, GLint srcy,
    GLint readX, readY, readW, readH;
    struct gl_pixelstore_attrib pack = ctx->DefaultPacking;
 
+   _mesa_update_draw_buffer_bounds(ctx, ctx->DrawBuffer);
+
    st_flush_bitmap_cache(st);
    st_invalidate_readpix_cache(st);
 
@@ -1487,8 +1490,7 @@ st_CopyPixels(struct gl_context *ctx, GLint srcx, GLint srcy,
       /* compiling a new fragment shader variant added new state constants
        * into the constant buffer, we need to update them
        */
-      st_upload_constants(st, st->fp->Base.Base.Parameters,
-                          MESA_SHADER_FRAGMENT);
+      st_upload_constants(st, &st->fp->Base);
    }
    else {
       assert(type == GL_DEPTH);

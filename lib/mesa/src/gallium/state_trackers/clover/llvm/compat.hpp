@@ -36,9 +36,15 @@
 
 #include "util/algorithm.hpp"
 
+#include <llvm/IR/LLVMContext.h>
 #include <llvm/Linker/Linker.h>
 #include <llvm/Transforms/IPO.h>
 #include <llvm/Target/TargetMachine.h>
+#if HAVE_LLVM >= 0x0400
+#include <llvm/Support/Error.h>
+#else
+#include <llvm/Support/ErrorOr.h>
+#endif
 
 #if HAVE_LLVM >= 0x0307
 #include <llvm/IR/LegacyPassManager.h>
@@ -50,6 +56,7 @@
 #include <llvm/Support/FormattedStream.h>
 #endif
 
+#include <clang/Basic/TargetInfo.h>
 #include <clang/Frontend/CodeGenOptions.h>
 #include <clang/Frontend/CompilerInstance.h>
 
@@ -60,6 +67,22 @@ namespace clover {
          typedef ::llvm::TargetLibraryInfoImpl target_library_info;
 #else
          typedef ::llvm::TargetLibraryInfo target_library_info;
+#endif
+
+         template<typename T, typename AS>
+         unsigned target_address_space(const T &target, const AS lang_as) {
+            const auto &map = target.getAddressSpaceMap();
+#if HAVE_LLVM >= 0x0500
+            return map[static_cast<unsigned>(lang_as)];
+#else
+            return map[lang_as - clang::LangAS::Offset];
+#endif
+         }
+
+#if HAVE_LLVM >= 0x0500
+         const clang::InputKind ik_opencl = clang::InputKind::OpenCL;
+#else
+         const clang::InputKind ik_opencl = clang::IK_OpenCL;
 #endif
 
          inline void
@@ -78,7 +101,14 @@ namespace clover {
          inline void
          add_link_bitcode_file(clang::CodeGenOptions &opts,
                                const std::string &path) {
-#if HAVE_LLVM >= 0x0308
+#if HAVE_LLVM >= 0x0500
+            clang::CodeGenOptions::BitcodeFileToLink F;
+
+            F.Filename = path;
+            F.PropagateAttrs = true;
+            F.LinkFlags = ::llvm::Linker::Flags::None;
+            opts.LinkBitcodeFiles.emplace_back(F);
+#elif HAVE_LLVM >= 0x0308
             opts.LinkBitcodeFiles.emplace_back(::llvm::Linker::Flags::None, path);
 #else
             opts.LinkBitcodeFile = path;
@@ -113,18 +143,18 @@ namespace clover {
 #endif
          }
 
-         inline std::unique_ptr<::llvm::Linker>
+         inline std::unique_ptr< ::llvm::Linker>
          create_linker(::llvm::Module &mod) {
 #if HAVE_LLVM >= 0x0308
-            return std::unique_ptr<::llvm::Linker>(new ::llvm::Linker(mod));
+            return std::unique_ptr< ::llvm::Linker>(new ::llvm::Linker(mod));
 #else
-            return std::unique_ptr<::llvm::Linker>(new ::llvm::Linker(&mod));
+            return std::unique_ptr< ::llvm::Linker>(new ::llvm::Linker(&mod));
 #endif
          }
 
          inline bool
          link_in_module(::llvm::Linker &linker,
-                        std::unique_ptr<::llvm::Module> mod) {
+                        std::unique_ptr< ::llvm::Module> mod) {
 #if HAVE_LLVM >= 0x0308
             return linker.linkInModule(std::move(mod));
 #else
@@ -153,11 +183,40 @@ namespace clover {
 #endif
          }
 
+#if HAVE_LLVM >= 0x0600
+         const auto default_code_model = ::llvm::None;
+#else
+         const auto default_code_model = ::llvm::CodeModel::Default;
+#endif
+
 #if HAVE_LLVM >= 0x0309
          const auto default_reloc_model = ::llvm::None;
 #else
          const auto default_reloc_model = ::llvm::Reloc::Default;
 #endif
+
+         template<typename M, typename F> void
+         handle_module_error(M &mod, const F &f) {
+#if HAVE_LLVM >= 0x0400
+            if (::llvm::Error err = mod.takeError())
+               ::llvm::handleAllErrors(std::move(err), [&](::llvm::ErrorInfoBase &eib) {
+                     f(eib.message());
+                  });
+#else
+            if (!mod)
+               f(mod.getError().message());
+#endif
+         }
+
+        template<typename T> void
+        set_diagnostic_handler(::llvm::LLVMContext &ctx,
+                               T *diagnostic_handler, void *data) {
+#if HAVE_LLVM >= 0x0600
+           ctx.setDiagnosticHandlerCallBack(diagnostic_handler, data);
+#else
+           ctx.setDiagnosticHandler(diagnostic_handler, data);
+#endif
+        }
       }
    }
 }

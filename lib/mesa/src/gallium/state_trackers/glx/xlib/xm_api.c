@@ -142,8 +142,11 @@ xmesa_close_display(Display *display)
 {
    XMesaExtDisplayInfo *info, *prev;
 
+   /* These assertions are not valid since screen creation can fail and result
+    * in an empty list
    assert(MesaExtInfo.ndisplays > 0);
    assert(MesaExtInfo.head);
+   */
 
    _XLockMutex(_Xglobal_lock);
    /* first find display */
@@ -181,6 +184,9 @@ xmesa_close_display(Display *display)
     *    xmdpy->screen->destroy(xmdpy->screen);
     * }
     */
+
+   if (xmdpy->smapi->destroy)
+      xmdpy->smapi->destroy(xmdpy->smapi);
    free(xmdpy->smapi);
 
    XFree((char *) info);
@@ -189,7 +195,7 @@ xmesa_close_display(Display *display)
 static XMesaDisplay
 xmesa_init_display( Display *display )
 {
-   pipe_static_mutex(init_mutex);
+   static mtx_t init_mutex = _MTX_INITIALIZER_NP;
    XMesaDisplay xmdpy;
    XMesaExtDisplayInfo *info;
 
@@ -197,14 +203,14 @@ xmesa_init_display( Display *display )
       return NULL;
    }
 
-   pipe_mutex_lock(init_mutex);
+   mtx_lock(&init_mutex);
 
    /* Look for XMesaDisplay which corresponds to this display */
    info = MesaExtInfo.head;
    while(info) {
       if (info->display == display) {
          /* Found it */
-         pipe_mutex_unlock(init_mutex);
+         mtx_unlock(&init_mutex);
          return  &info->mesaDisplay;
       }
       info = info->next;
@@ -216,11 +222,34 @@ xmesa_init_display( Display *display )
    /* allocate mesa display info */
    info = (XMesaExtDisplayInfo *) Xmalloc(sizeof(XMesaExtDisplayInfo));
    if (info == NULL) {
-      pipe_mutex_unlock(init_mutex);
+      mtx_unlock(&init_mutex);
       return NULL;
    }
    info->display = display;
+
    xmdpy = &info->mesaDisplay; /* to be filled out below */
+   xmdpy->display = display;
+   xmdpy->pipe = NULL;
+
+   xmdpy->smapi = CALLOC_STRUCT(st_manager);
+   if (!xmdpy->smapi) {
+      Xfree(info);
+      mtx_unlock(&init_mutex);
+      return NULL;
+   }
+
+   xmdpy->screen = driver.create_pipe_screen(display);
+   if (!xmdpy->screen) {
+      free(xmdpy->smapi);
+      Xfree(info);
+      mtx_unlock(&init_mutex);
+      return NULL;
+   }
+
+   /* At this point, both smapi and screen are known to be valid */
+   xmdpy->smapi->screen = xmdpy->screen;
+   xmdpy->smapi->get_param = xmesa_get_param;
+   (void) mtx_init(&xmdpy->mutex, mtx_plain);
 
    /* chain to the list of displays */
    _XLockMutex(_Xglobal_lock);
@@ -229,33 +258,7 @@ xmesa_init_display( Display *display )
    MesaExtInfo.ndisplays++;
    _XUnlockMutex(_Xglobal_lock);
 
-   /* now create the new XMesaDisplay info */
-   assert(display);
-
-   xmdpy->display = display;
-   xmdpy->screen = driver.create_pipe_screen(display);
-   xmdpy->smapi = CALLOC_STRUCT(st_manager);
-   xmdpy->pipe = NULL;
-   if (xmdpy->smapi) {
-      xmdpy->smapi->screen = xmdpy->screen;
-      xmdpy->smapi->get_param = xmesa_get_param;
-   }
-
-   if (xmdpy->screen && xmdpy->smapi) {
-      pipe_mutex_init(xmdpy->mutex);
-   }
-   else {
-      if (xmdpy->screen) {
-         xmdpy->screen->destroy(xmdpy->screen);
-         xmdpy->screen = NULL;
-      }
-      free(xmdpy->smapi);
-      xmdpy->smapi = NULL;
-
-      xmdpy->display = NULL;
-   }
-
-   pipe_mutex_unlock(init_mutex);
+   mtx_unlock(&init_mutex);
 
    return xmdpy;
 }
@@ -372,9 +375,9 @@ xmesa_get_window_size(Display *dpy, XMesaBuffer b,
    XMesaDisplay xmdpy = xmesa_init_display(dpy);
    Status stat;
 
-   pipe_mutex_lock(xmdpy->mutex);
+   mtx_lock(&xmdpy->mutex);
    stat = get_drawable_size(dpy, b->ws.drawable, width, height);
-   pipe_mutex_unlock(xmdpy->mutex);
+   mtx_unlock(&xmdpy->mutex);
 
    if (!stat) {
       /* probably querying a window that's recently been destroyed */
@@ -453,11 +456,11 @@ choose_pixel_format(XMesaVisual v)
  * stencil sizes.
  */
 static enum pipe_format
-choose_depth_stencil_format(XMesaDisplay xmdpy, int depth, int stencil)
+choose_depth_stencil_format(XMesaDisplay xmdpy, int depth, int stencil,
+                            int sample_count)
 {
    const enum pipe_texture_target target = PIPE_TEXTURE_2D;
    const unsigned tex_usage = PIPE_BIND_DEPTH_STENCIL;
-   const unsigned sample_count = 0;
    enum pipe_format formats[8], fmt;
    int count, i;
 
@@ -594,6 +597,11 @@ xmesa_free_buffer(XMesaBuffer buffer)
           * want to dereference this pointer in the future.
           */
          b->ws.drawable = 0;
+
+         /* Notify the st manager that the associated framebuffer interface
+          * object is no longer valid.
+          */
+         stapi->destroy_drawable(stapi, buffer->stfb);
 
          /* XXX we should move the buffer to a delete-pending list and destroy
           * the buffer until it is no longer current.
@@ -861,8 +869,8 @@ XMesaVisual XMesaCreateVisual( Display *display,
 
       vis->numAuxBuffers = 0;
       vis->level = 0;
-      vis->sampleBuffers = 0;
-      vis->samples = 0;
+      vis->sampleBuffers = num_samples > 1;
+      vis->samples = num_samples;
    }
 
    v->stvis.buffer_mask = ST_ATTACHMENT_FRONT_LEFT_MASK;
@@ -875,6 +883,14 @@ XMesaVisual XMesaCreateVisual( Display *display,
    }
 
    v->stvis.color_format = choose_pixel_format(v);
+
+   /* Check format support at requested num_samples (for multisample) */
+   if (!xmdpy->screen->is_format_supported(xmdpy->screen,
+                                           v->stvis.color_format,
+                                           PIPE_TEXTURE_2D, num_samples,
+                                           PIPE_BIND_RENDER_TARGET))
+      v->stvis.color_format = PIPE_FORMAT_NONE;
+
    if (v->stvis.color_format == PIPE_FORMAT_NONE) {
       free(v->visinfo);
       free(v);
@@ -882,7 +898,8 @@ XMesaVisual XMesaCreateVisual( Display *display,
    }
 
    v->stvis.depth_stencil_format =
-      choose_depth_stencil_format(xmdpy, depth_size, stencil_size);
+      choose_depth_stencil_format(xmdpy, depth_size, stencil_size,
+                                  num_samples);
 
    v->stvis.accum_format = (accum_red_size +
          accum_green_size + accum_blue_size + accum_alpha_size) ?
@@ -918,10 +935,10 @@ xmesa_get_name(void)
 /**
  * Do per-display initializations.
  */
-void
+int
 xmesa_init( Display *display )
 {
-   xmesa_init_display(display);
+   return xmesa_init_display(display) ? 0 : 1;
 }
 
 

@@ -24,6 +24,25 @@
 #include "isl_gen7.h"
 #include "isl_priv.h"
 
+static bool
+gen7_format_needs_valign2(const struct isl_device *dev,
+                          enum isl_format format)
+{
+   assert(ISL_DEV_GEN(dev) == 7);
+
+   /* From the Ivybridge PRM (2012-05-31), Volume 4, Part 1, Section 2.12.1,
+    * RENDER_SURFACE_STATE Surface Vertical Alignment:
+    *
+    *    - Value of 1 [VALIGN_4] is not supported for format YCRCB_NORMAL
+    *      (0x182), YCRCB_SWAPUVY (0x183), YCRCB_SWAPUV (0x18f), YCRCB_SWAPY
+    *      (0x190)
+    *
+    *    - VALIGN_4 is not supported for surface format R32G32B32_FLOAT.
+    */
+   return isl_format_is_yuv(format) ||
+          format == ISL_FORMAT_R32G32B32_FLOAT;
+}
+
 bool
 isl_gen7_choose_msaa_layout(const struct isl_device *dev,
                             const struct isl_surf_init_info *info,
@@ -76,8 +95,13 @@ isl_gen7_choose_msaa_layout(const struct isl_device *dev,
     * Note that the above SINT restrictions apply only to *MSRTs* (that is,
     * *multisampled* render targets). The restrictions seem to permit an MCS
     * if the render target is singlesampled.
+    *
+    * Moreover, empirically it looks that hardware can render multisampled
+    * surfaces with RGBA8I, RGBA16I and RGBA32I.
     */
-   if (isl_format_has_sint_channel(info->format))
+
+   /* Multisampling requires vertical alignment of four. */
+   if (info->samples > 1 && gen7_format_needs_valign2(dev, info->format))
       return false;
 
    /* More obvious restrictions */
@@ -108,7 +132,7 @@ isl_gen7_choose_msaa_layout(const struct isl_device *dev,
     *    is >= 8192 (meaning the actual surface width is >= 8193 pixels), this
     *    field must be set to MSFMT_MSS.
     */
-   if (info->samples == 8 && info->width == 8192)
+   if (info->samples == 8 && info->width > 8192)
       require_array = true;
 
    /* From the Ivybridge PRM, Volume 4 Part 1 p72, SURFACE_STATE, Multisampled
@@ -149,25 +173,6 @@ isl_gen7_choose_msaa_layout(const struct isl_device *dev,
     */
    *msaa_layout = ISL_MSAA_LAYOUT_ARRAY;
    return true;
-}
-
-static bool
-gen7_format_needs_valign2(const struct isl_device *dev,
-                          enum isl_format format)
-{
-   assert(ISL_DEV_GEN(dev) == 7);
-
-   /* From the Ivybridge PRM (2012-05-31), Volume 4, Part 1, Section 2.12.1,
-    * RENDER_SURFACE_STATE Surface Vertical Alignment:
-    *
-    *    - Value of 1 [VALIGN_4] is not supported for format YCRCB_NORMAL
-    *      (0x182), YCRCB_SWAPUVY (0x183), YCRCB_SWAPUV (0x18f), YCRCB_SWAPY
-    *      (0x190)
-    *
-    *    - VALIGN_4 is not supported for surface format R32G32B32_FLOAT.
-    */
-   return isl_format_is_yuv(format) ||
-          format == ISL_FORMAT_R32G32B32_FLOAT;
 }
 
 /**
@@ -214,6 +219,12 @@ isl_gen6_filter_tiling(const struct isl_device *dev,
    } else {
       *flags &= ~ISL_TILING_W_BIT;
    }
+
+   /* From the SKL+ PRMs, RENDER_SURFACE_STATE:TileMode,
+    *    If Surface Format is ASTC*, this field must be TILEMODE_YMAJOR.
+    */
+   if (isl_format_get_layout(info->format)->txc == ISL_TXC_ASTC)
+      *flags &= ISL_TILING_Y0_BIT;
 
    /* MCS buffers are always Y-tiled */
    if (isl_format_get_layout(info->format)->txc == ISL_TXC_MCS)
@@ -283,104 +294,6 @@ isl_gen6_filter_tiling(const struct isl_device *dev,
       *flags &= ~ISL_TILING_Y0_BIT;
 }
 
-/**
- * Choose horizontal subimage alignment, in units of surface elements.
- */
-static uint32_t
-gen7_choose_halign_el(const struct isl_device *dev,
-                      const struct isl_surf_init_info *restrict info)
-{
-   if (isl_format_is_compressed(info->format))
-      return 1;
-
-   /* From the Ivybridge PRM (2012-05-31), Volume 4, Part 1, Section 2.12.1,
-    * RENDER_SURFACE_STATE Surface Hoizontal Alignment:
-    *
-    *    - This field is intended to be set to HALIGN_8 only if the surface
-    *      was rendered as a depth buffer with Z16 format or a stencil buffer,
-    *      since these surfaces support only alignment of 8. Use of HALIGN_8
-    *      for other surfaces is supported, but uses more memory.
-    */
-   if (isl_surf_info_is_z16(info) ||
-       isl_surf_usage_is_stencil(info->usage))
-      return 8;
-
-   return 4;
-}
-
-/**
- * Choose vertical subimage alignment, in units of surface elements.
- */
-static uint32_t
-gen7_choose_valign_el(const struct isl_device *dev,
-                      const struct isl_surf_init_info *restrict info,
-                      enum isl_tiling tiling)
-{
-   MAYBE_UNUSED bool require_valign2 = false;
-   bool require_valign4 = false;
-
-   if (isl_format_is_compressed(info->format))
-      return 1;
-
-   if (gen7_format_needs_valign2(dev, info->format))
-      require_valign2 = true;
-
-   /* From the Ivybridge PRM, Volume 4, Part 1, Section 2.12.1:
-    * RENDER_SURFACE_STATE Surface Vertical Alignment:
-    *
-    *    - This field is intended to be set to VALIGN_4 if the surface was
-    *      rendered as a depth buffer, for a multisampled (4x) render target,
-    *      or for a multisampled (8x) render target, since these surfaces
-    *      support only alignment of 4.  Use of VALIGN_4 for other surfaces is
-    *      supported, but uses more memory.  This field must be set to
-    *      VALIGN_4 for all tiled Y Render Target surfaces.
-    *
-    */
-   if (isl_surf_usage_is_depth(info->usage) ||
-       info->samples > 1 ||
-       ((info->usage & ISL_SURF_USAGE_RENDER_TARGET_BIT) &&
-        tiling == ISL_TILING_Y0)) {
-      require_valign4 = true;
-   }
-
-   if (isl_surf_usage_is_stencil(info->usage)) {
-      /* The Ivybridge PRM states that the stencil buffer's vertical alignment
-       * is 8 [Ivybridge PRM, Volume 1, Part 1, Section 6.18.4.4 Alignment
-       * Unit Size]. However, valign=8 is outside the set of valid values of
-       * RENDER_SURFACE_STATE.SurfaceVerticalAlignment, which is VALIGN_2
-       * (0x0) and VALIGN_4 (0x1).
-       *
-       * The PRM is generally confused about the width, height, and alignment
-       * of the stencil buffer; and this confusion appears elsewhere. For
-       * example, the following PRM text effectively converts the stencil
-       * buffer's 8-pixel alignment to a 4-pixel alignment [Ivybridge PRM,
-       * Volume 1, Part 1, Section
-       * 6.18.4.2 Base Address and LOD Calculation]:
-       *
-       *    For separate stencil buffer, the width must be mutiplied by 2 and
-       *    height divided by 2 as follows:
-       *
-       *       w_L = 2*i*ceil(W_L/i)
-       *       h_L = 1/2*j*ceil(H_L/j)
-       *
-       * The root of the confusion is that, in W tiling, each pair of rows is
-       * interleaved into one.
-       *
-       * FINISHME(chadv): Decide to set valign=4 or valign=8 after isl's API
-       * is more polished.
-       */
-      require_valign4 = true;
-   }
-
-   assert(!require_valign2 || !require_valign4);
-
-   if (require_valign4)
-      return 4;
-
-   /* Prefer VALIGN_2 because it conserves memory. */
-   return 2;
-}
-
 void
 isl_gen7_choose_image_alignment_el(const struct isl_device *dev,
                                    const struct isl_surf_init_info *restrict info,
@@ -397,9 +310,80 @@ isl_gen7_choose_image_alignment_el(const struct isl_device *dev,
    /* IVB+ does not support combined depthstencil. */
    assert(!isl_surf_usage_is_depth_and_stencil(info->usage));
 
-   *image_align_el = (struct isl_extent3d) {
-      .w = gen7_choose_halign_el(dev, info),
-      .h = gen7_choose_valign_el(dev, info, tiling),
-      .d = 1,
-   };
+   /* From the Ivy Bridge PRM, Vol. 2, Part 2, Section 6.18.4.4,
+    * "Alignment unit size", the alignment parameters are summarized in the
+    * following table:
+    *
+    *     Surface Defined By | Surface Format  | Align Width | Align Height
+    *    --------------------+-----------------+-------------+--------------
+    *       DEPTH_BUFFER     |   D16_UNORM     |      8      |      4
+    *                        |     other       |      4      |      4
+    *    --------------------+-----------------+-------------+--------------
+    *       STENCIL_BUFFER   |      N/A        |      8      |      8
+    *    --------------------+-----------------+-------------+--------------
+    *       SURFACE_STATE    | BC*, ETC*, EAC* |      4      |      4
+    *                        |      FXT1       |      8      |      4
+    *                        |   all others    |   HALIGN    |   VALIGN
+    *    -------------------------------------------------------------------
+    */
+   if (isl_surf_usage_is_depth(info->usage)) {
+      *image_align_el = info->format == ISL_FORMAT_R16_UNORM ?
+                        isl_extent3d(8, 4, 1) : isl_extent3d(4, 4, 1);
+      return;
+   } else if (isl_surf_usage_is_stencil(info->usage)) {
+      *image_align_el = isl_extent3d(8, 8, 1);
+      return;
+   } else if (isl_format_is_compressed(info->format)) {
+      /* Compressed formats all have alignment equal to block size. */
+      *image_align_el = isl_extent3d(1, 1, 1);
+      return;
+   }
+
+   /* Everything after this point is in the "set by Surface Horizontal or
+    * Vertical Alignment" case.  Now it's just a matter of applying
+    * restrictions.
+    */
+
+   /* There are no restrictions on halign beyond what's given in the table
+    * above.  We set it to the minimum value of 4 because that uses the least
+    * memory.
+    */
+   const uint32_t halign = 4;
+
+   bool require_valign4 = false;
+
+   /* From the Ivybridge PRM, Volume 4, Part 1, Section 2.12.1:
+    * RENDER_SURFACE_STATE Surface Vertical Alignment:
+    *
+    *    * This field is intended to be set to VALIGN_4 if the surface was
+    *      rendered as a depth buffer,
+    *
+    *    * for a multisampled (4x) render target, or for a multisampled (8x)
+    *      render target, since these surfaces support only alignment of 4.
+    *
+    *    * This field must be set to VALIGN_4 for all tiled Y Render Target
+    *      surfaces
+    *
+    *    * Value of 1 is not supported for format YCRCB_NORMAL (0x182),
+    *      YCRCB_SWAPUVY (0x183), YCRCB_SWAPUV (0x18f), YCRCB_SWAPY (0x190)
+    *
+    *    * If Number of Multisamples is not MULTISAMPLECOUNT_1, this field
+    *      must be set to VALIGN_4."
+    *
+    * The first restriction is already handled by the table above and the
+    * second restriction is redundant with the fifth.
+    */
+   if (info->samples > 1)
+      require_valign4 = true;
+
+   if (tiling == ISL_TILING_Y0 &&
+       (info->usage & ISL_SURF_USAGE_RENDER_TARGET_BIT))
+      require_valign4 = true;
+
+   assert(!(require_valign4 && gen7_format_needs_valign2(dev, info->format)));
+
+   /* We default to VALIGN_2 because it uses the least memory. */
+   const uint32_t valign = require_valign4 ? 4 : 2;
+
+   *image_align_el = isl_extent3d(halign, valign, 1);
 }

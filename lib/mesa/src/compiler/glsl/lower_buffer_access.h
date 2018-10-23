@@ -31,7 +31,6 @@
  * shared variables.
  */
 
-#pragma once
 #ifndef LOWER_BUFFER_ACCESS_H
 #define LOWER_BUFFER_ACCESS_H
 
@@ -59,6 +58,9 @@ public:
                             bool *row_major, int *matrix_columns,
                             const glsl_struct_field **struct_field,
                             enum glsl_interface_packing packing);
+
+protected:
+   bool use_std430_as_default;
 };
 
 } /* namespace lower_buffer_access */

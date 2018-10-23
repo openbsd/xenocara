@@ -72,16 +72,22 @@ lower_buffer_access::emit_access(void *mem_ctx,
             new(mem_ctx) ir_dereference_record(deref->clone(mem_ctx, NULL),
                                                field->name);
 
-         field_offset =
-            glsl_align(field_offset,
-                       field->type->std140_base_alignment(row_major));
+         unsigned field_align;
+         if (packing == GLSL_INTERFACE_PACKING_STD430)
+            field_align = field->type->std430_base_alignment(row_major);
+         else
+            field_align = field->type->std140_base_alignment(row_major);
+         field_offset = glsl_align(field_offset, field_align);
 
          emit_access(mem_ctx, is_write, field_deref, base_offset,
                      deref_offset + field_offset,
                      row_major, 1, packing,
                      writemask_for_size(field_deref->type->vector_elements));
 
-         field_offset += field->type->std140_size(row_major);
+         if (packing == GLSL_INTERFACE_PACKING_STD430)
+            field_offset += field->type->std430_size(row_major);
+         else
+            field_offset += field->type->std140_size(row_major);
       }
       return;
    }
@@ -164,8 +170,8 @@ lower_buffer_access::emit_access(void *mem_ctx,
       /* We're dereffing a column out of a row-major matrix, so we
        * gather the vector from each stored row.
       */
-      assert(deref->type->base_type == GLSL_TYPE_FLOAT ||
-             deref->type->base_type == GLSL_TYPE_DOUBLE);
+      assert(deref->type->is_float() || deref->type->is_double());
+
       /* Matrices, row_major or not, are stored as if they were
        * arrays of vectors of the appropriate size in std140.
        * Arrays have their strides rounded up to a vec4, so the
@@ -199,7 +205,7 @@ lower_buffer_access::emit_access(void *mem_ctx,
       else
          matrix_stride = glsl_align(matrix_columns * N, 16);
 
-      const glsl_type *deref_type = deref->type->base_type == GLSL_TYPE_FLOAT ?
+      const glsl_type *deref_type = deref->type->is_float() ?
          glsl_type::float_type : glsl_type::double_type;
 
       for (unsigned i = 0; i < deref->type->vector_elements; i++) {
@@ -252,7 +258,7 @@ lower_buffer_access::is_dereferenced_thing_row_major(const ir_rvalue *deref)
 
          ir = record_deref->record;
 
-         const int idx = ir->type->field_index(record_deref->field);
+         const int idx = record_deref->field_idx;
          assert(idx >= 0);
 
          const enum glsl_matrix_layout matrix_layout =
@@ -404,7 +410,7 @@ lower_buffer_access::setup_buffer_access(void *mem_ctx,
             array_index = i2u(array_index);
 
          ir_constant *const_index =
-            array_index->constant_expression_value(NULL);
+            array_index->constant_expression_value(mem_ctx, NULL);
          if (const_index) {
             *const_offset += array_stride * const_index->value.u[0];
          } else {
@@ -445,8 +451,8 @@ lower_buffer_access::setup_buffer_access(void *mem_ctx,
 
             intra_struct_offset = glsl_align(intra_struct_offset, field_align);
 
-            if (strcmp(struct_type->fields.structure[i].name,
-                       deref_record->field) == 0) {
+            assert(deref_record->field_idx >= 0);
+            if (i == (unsigned) deref_record->field_idx) {
                if (struct_field)
                   *struct_field = &struct_type->fields.structure[i];
                break;

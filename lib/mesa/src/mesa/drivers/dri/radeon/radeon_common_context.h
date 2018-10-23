@@ -2,7 +2,6 @@
 #ifndef COMMON_CONTEXT_H
 #define COMMON_CONTEXT_H
 
-#include "main/mm.h"
 #include "math/m_vector.h"
 #include "tnl/t_context.h"
 #include "main/colormac.h"
@@ -497,7 +496,7 @@ static inline __DRIdrawable* radeon_get_readable(radeonContextPtr radeon)
 	return radeon->driContext->driReadablePriv;
 }
 
-extern const char const *radeonVendorString;
+extern const char *const radeonVendorString;
 
 const char *radeonGetRendererString(radeonScreenPtr radeonScreen);
 

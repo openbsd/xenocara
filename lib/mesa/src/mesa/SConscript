@@ -31,10 +31,6 @@ if env['platform'] == 'windows':
     if not env['gles']:
         # prevent _glapi_* from being declared __declspec(dllimport)
         env.Append(CPPDEFINES = ['_GLAPI_NO_EXPORTS'])
-else:
-    env.Append(CPPDEFINES = [
-        ('HAVE_DLOPEN', '1'),
-    ])
 
 # parse Makefile.sources
 source_lists = env.ParseSourceList('Makefile.sources')
@@ -79,6 +75,13 @@ format_unpack = env.CodeGenerate(
       command = python_cmd + ' $SCRIPT ' + ' $SOURCE > $TARGET'
 )
 
+format_fallback = env.CodeGenerate(
+      target = 'main/format_fallback.c',
+      script = 'main/format_fallback.py',
+      source = 'main/formats.csv',
+      command = python_cmd + ' $SCRIPT ' + ' $SOURCE ' + ' $TARGET'
+)
+
 #
 # Assembly sources
 #
@@ -117,6 +120,22 @@ if env['platform'] not in ('cygwin', 'darwin', 'windows', 'haiku'):
         # build dir) to the include path
         env.Prepend(CPPPATH = [matypes[0].dir])
 
+
+# The marshal_generated.c file is generated from the GL/ES API.xml file
+env.CodeGenerate(
+    target = 'main/marshal_generated.c',
+    script = GLAPI + 'gen/gl_marshal.py',
+    source = [GLAPI + 'gen/gl_and_es_API.xml'] + env.Glob(GLAPI + 'gen/*.xml'),
+    command = python_cmd + ' $SCRIPT -f $SOURCE > $TARGET'
+    )
+
+# The marshal_generated.h file is generated from the GL/ES API.xml file
+env.CodeGenerate(
+    target = 'main/marshal_generated.h',
+    script = GLAPI + 'gen/gl_marshal_h.py',
+    source = [GLAPI + 'gen/gl_and_es_API.xml'] + env.Glob(GLAPI + 'gen/*.xml'),
+    command = python_cmd + ' $SCRIPT -f $SOURCE > $TARGET'
+    )
 
 #
 # Libraries

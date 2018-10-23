@@ -659,6 +659,7 @@ public:
 			return false;
 
 		switch (hw_chip) {
+		case HW_CHIP_HEMLOCK:
 		case HW_CHIP_CYPRESS:
 		case HW_CHIP_JUNIPER:
 			return false;
@@ -787,7 +788,7 @@ public: \
 	} \
 	unsigned get_##name() const { \
 		return (value>>(first_bit))&((1ull<<((last_bit)-(first_bit)+1))-1); \
-	} \
+	}
 
 #define BC_RSRVD(fmt, last_bit, first_bit)
 

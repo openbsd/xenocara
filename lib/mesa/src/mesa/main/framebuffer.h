@@ -72,10 +72,6 @@ extern void
 _mesa_resizebuffers( struct gl_context *ctx );
 
 extern void
-_mesa_scissor_bounding_box(const struct gl_context *ctx,
-                           const struct gl_framebuffer *buffer,
-                           unsigned idx, int *bbox);
-extern void
 _mesa_intersect_scissor_bounding_box(const struct gl_context *ctx,
                                      unsigned idx, int *bbox);
 
@@ -128,10 +124,14 @@ extern GLboolean
 _mesa_dest_buffer_exists(struct gl_context *ctx, GLenum format);
 
 extern GLenum
-_mesa_get_color_read_type(struct gl_context *ctx);
+_mesa_get_color_read_type(struct gl_context *ctx,
+                          struct gl_framebuffer *fb,
+                          const char *caller);
 
 extern GLenum
-_mesa_get_color_read_format(struct gl_context *ctx);
+_mesa_get_color_read_format(struct gl_context *ctx,
+                            struct gl_framebuffer *fb,
+                            const char *caller);
 
 extern struct gl_renderbuffer *
 _mesa_get_read_renderbuffer_for_format(const struct gl_context *ctx,
@@ -148,5 +148,11 @@ _mesa_is_front_buffer_drawing(const struct gl_framebuffer *fb);
 
 extern bool
 _mesa_is_multisample_enabled(const struct gl_context *ctx);
+
+extern bool
+_mesa_is_alpha_test_enabled(const struct gl_context *ctx);
+
+extern bool
+_mesa_is_alpha_to_coverage_enabled(const struct gl_context *ctx);
 
 #endif /* FRAMEBUFFER_H */

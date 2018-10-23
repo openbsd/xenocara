@@ -54,25 +54,29 @@ target_triplet = @target@
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/Makefile.sources $(top_srcdir)/bin/depcomp \
 	$(top_srcdir)/src/gallium/Automake.inc
-@HAVE_DRISW_TRUE@am__append_1 = \
+@HAVE_LIBDRM_TRUE@am__append_1 = \
+@HAVE_LIBDRM_TRUE@	$(LIBDRM_LIBS)
+
+@HAVE_DRISW_TRUE@am__append_2 = \
 @HAVE_DRISW_TRUE@	$(top_builddir)/src/gallium/winsys/sw/dri/libswdri.la
 
-@HAVE_DRISW_KMS_TRUE@am__append_2 = \
+@HAVE_DRISW_KMS_TRUE@am__append_3 = \
 @HAVE_DRISW_KMS_TRUE@	$(top_builddir)/src/gallium/winsys/sw/kms-dri/libswkmsdri.la \
 @HAVE_DRISW_KMS_TRUE@	$(LIBDRM_LIBS)
 
-@HAVE_LIBDRM_TRUE@am__append_3 = \
-@HAVE_LIBDRM_TRUE@	$(LIBDRM_CFLAGS)
-
 @HAVE_LIBDRM_TRUE@am__append_4 = \
-@HAVE_LIBDRM_TRUE@	$(DRM_SOURCES)
+@HAVE_LIBDRM_TRUE@	$(LIBDRM_CFLAGS)
 
 @HAVE_LIBDRM_TRUE@am__append_5 = \
 @HAVE_LIBDRM_TRUE@	$(DRM_SOURCES)
 
+@HAVE_LIBDRM_TRUE@am__append_6 = \
+@HAVE_LIBDRM_TRUE@	$(DRM_SOURCES)
+
 subdir = src/gallium/auxiliary/pipe-loader
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_gnu_make.m4 \
+am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_compile_flag.m4 \
+	$(top_srcdir)/m4/ax_check_gnu_make.m4 \
 	$(top_srcdir)/m4/ax_check_python_mako_module.m4 \
 	$(top_srcdir)/m4/ax_gcc_builtin.m4 \
 	$(top_srcdir)/m4/ax_gcc_func_attribute.m4 \
@@ -89,10 +93,11 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 libpipe_loader_dynamic_la_DEPENDENCIES =  \
-	$(top_builddir)/src/loader/libloader.la
+	$(top_builddir)/src/loader/libloader.la \
+	$(top_builddir)/src/util/libxmlconfig.la
 am__libpipe_loader_dynamic_la_SOURCES_DIST = pipe_loader.c \
 	pipe_loader.h pipe_loader_priv.h pipe_loader_sw.c \
-	pipe_loader_drm.c
+	driinfo_gallium.h pipe_loader_drm.c
 am__objects_1 = libpipe_loader_dynamic_la-pipe_loader.lo \
 	libpipe_loader_dynamic_la-pipe_loader_sw.lo
 am__objects_2 = libpipe_loader_dynamic_la-pipe_loader_drm.lo
@@ -110,10 +115,11 @@ libpipe_loader_dynamic_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(libpipe_loader_dynamic_la_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
 libpipe_loader_static_la_DEPENDENCIES =  \
-	$(top_builddir)/src/loader/libloader.la
+	$(top_builddir)/src/loader/libloader.la \
+	$(top_builddir)/src/util/libxmlconfig.la
 am__libpipe_loader_static_la_SOURCES_DIST = pipe_loader.c \
 	pipe_loader.h pipe_loader_priv.h pipe_loader_sw.c \
-	pipe_loader_drm.c
+	driinfo_gallium.h pipe_loader_drm.c
 am__objects_4 = libpipe_loader_static_la-pipe_loader.lo \
 	libpipe_loader_static_la-pipe_loader_sw.lo
 am__objects_5 = libpipe_loader_static_la-pipe_loader_drm.lo
@@ -177,6 +183,8 @@ AMDGPU_CFLAGS = @AMDGPU_CFLAGS@
 AMDGPU_LIBS = @AMDGPU_LIBS@
 AMTAR = @AMTAR@
 AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
+ANDROID_CFLAGS = @ANDROID_CFLAGS@
+ANDROID_LIBS = @ANDROID_LIBS@
 AR = @AR@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
@@ -207,8 +215,6 @@ DLLTOOL = @DLLTOOL@
 DLOPEN_LIBS = @DLOPEN_LIBS@
 DRI2PROTO_CFLAGS = @DRI2PROTO_CFLAGS@
 DRI2PROTO_LIBS = @DRI2PROTO_LIBS@
-DRI3PROTO_CFLAGS = @DRI3PROTO_CFLAGS@
-DRI3PROTO_LIBS = @DRI3PROTO_LIBS@
 DRIGL_CFLAGS = @DRIGL_CFLAGS@
 DRIGL_LIBS = @DRIGL_LIBS@
 DRI_DRIVER_INSTALL_DIR = @DRI_DRIVER_INSTALL_DIR@
@@ -221,10 +227,11 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGL_CFLAGS = @EGL_CFLAGS@
-EGL_CLIENT_APIS = @EGL_CLIENT_APIS@
 EGL_LIB_DEPS = @EGL_LIB_DEPS@
 EGL_NATIVE_PLATFORM = @EGL_NATIVE_PLATFORM@
 EGREP = @EGREP@
+ETNAVIV_CFLAGS = @ETNAVIV_CFLAGS@
+ETNAVIV_LIBS = @ETNAVIV_LIBS@
 EXEEXT = @EXEEXT@
 EXPAT_CFLAGS = @EXPAT_CFLAGS@
 EXPAT_LIBS = @EXPAT_LIBS@
@@ -251,6 +258,8 @@ GL_PC_LIB_PRIV = @GL_PC_LIB_PRIV@
 GL_PC_REQ_PRIV = @GL_PC_REQ_PRIV@
 GREP = @GREP@
 HAVE_XF86VIDMODE = @HAVE_XF86VIDMODE@
+I915_CFLAGS = @I915_CFLAGS@
+I915_LIBS = @I915_LIBS@
 INDENT = @INDENT@
 INDENT_FLAGS = @INDENT_FLAGS@
 INSTALL = @INSTALL@
@@ -258,45 +267,40 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
-INTEL_CFLAGS = @INTEL_CFLAGS@
-INTEL_LIBS = @INTEL_LIBS@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
 LD_NO_UNDEFINED = @LD_NO_UNDEFINED@
 LEX = @LEX@
 LEXLIB = @LEXLIB@
 LEX_OUTPUT_ROOT = @LEX_OUTPUT_ROOT@
+LIBATOMIC_LIBS = @LIBATOMIC_LIBS@
 LIBCLC_INCLUDEDIR = @LIBCLC_INCLUDEDIR@
 LIBCLC_LIBEXECDIR = @LIBCLC_LIBEXECDIR@
 LIBDRM_CFLAGS = @LIBDRM_CFLAGS@
 LIBDRM_LIBS = @LIBDRM_LIBS@
 LIBELF_CFLAGS = @LIBELF_CFLAGS@
 LIBELF_LIBS = @LIBELF_LIBS@
+LIBGLVND_DATADIR = @LIBGLVND_DATADIR@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
-LIBSENSORS_LDFLAGS = @LIBSENSORS_LDFLAGS@
-LIBSHA1_CFLAGS = @LIBSHA1_CFLAGS@
-LIBSHA1_LIBS = @LIBSHA1_LIBS@
+LIBSENSORS_LIBS = @LIBSENSORS_LIBS@
 LIBTOOL = @LIBTOOL@
+LIBUNWIND_CFLAGS = @LIBUNWIND_CFLAGS@
+LIBUNWIND_LIBS = @LIBUNWIND_LIBS@
 LIB_DIR = @LIB_DIR@
 LIB_EXT = @LIB_EXT@
 LIPO = @LIPO@
-LLVM_BINDIR = @LLVM_BINDIR@
 LLVM_CFLAGS = @LLVM_CFLAGS@
 LLVM_CONFIG = @LLVM_CONFIG@
-LLVM_CPPFLAGS = @LLVM_CPPFLAGS@
 LLVM_CXXFLAGS = @LLVM_CXXFLAGS@
 LLVM_INCLUDEDIR = @LLVM_INCLUDEDIR@
 LLVM_LDFLAGS = @LLVM_LDFLAGS@
-LLVM_LIBDIR = @LLVM_LIBDIR@
 LLVM_LIBS = @LLVM_LIBS@
-LLVM_VERSION = @LLVM_VERSION@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
-MESA_LLVM = @MESA_LLVM@
 MKDIR_P = @MKDIR_P@
 MSVC2013_COMPAT_CFLAGS = @MSVC2013_COMPAT_CFLAGS@
 MSVC2013_COMPAT_CXXFLAGS = @MSVC2013_COMPAT_CXXFLAGS@
@@ -312,13 +316,11 @@ NVVIEUX_CFLAGS = @NVVIEUX_CFLAGS@
 NVVIEUX_LIBS = @NVVIEUX_LIBS@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
-OMX_CFLAGS = @OMX_CFLAGS@
-OMX_LIBS = @OMX_LIBS@
-OMX_LIB_INSTALL_DIR = @OMX_LIB_INSTALL_DIR@
+OMX_BELLAGIO_CFLAGS = @OMX_BELLAGIO_CFLAGS@
+OMX_BELLAGIO_LIBS = @OMX_BELLAGIO_LIBS@
+OMX_BELLAGIO_LIB_INSTALL_DIR = @OMX_BELLAGIO_LIB_INSTALL_DIR@
 OPENCL_LIBNAME = @OPENCL_LIBNAME@
 OPENCL_VERSION = @OPENCL_VERSION@
-OPENSSL_CFLAGS = @OPENSSL_CFLAGS@
-OPENSSL_LIBS = @OPENSSL_LIBS@
 OSMESA_LIB = @OSMESA_LIB@
 OSMESA_LIB_DEPS = @OSMESA_LIB_DEPS@
 OSMESA_PC_LIB_PRIV = @OSMESA_PC_LIB_PRIV@
@@ -338,8 +340,6 @@ PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 POSIX_SHELL = @POSIX_SHELL@
-PRESENTPROTO_CFLAGS = @PRESENTPROTO_CFLAGS@
-PRESENTPROTO_LIBS = @PRESENTPROTO_LIBS@
 PTHREADSTUBS_CFLAGS = @PTHREADSTUBS_CFLAGS@
 PTHREADSTUBS_LIBS = @PTHREADSTUBS_LIBS@
 PTHREAD_CC = @PTHREAD_CC@
@@ -355,8 +355,6 @@ SED = @SED@
 SELINUX_CFLAGS = @SELINUX_CFLAGS@
 SELINUX_LIBS = @SELINUX_LIBS@
 SET_MAKE = @SET_MAKE@
-SHA1_CFLAGS = @SHA1_CFLAGS@
-SHA1_LIBS = @SHA1_LIBS@
 SHELL = @SHELL@
 SIMPENROSE_CFLAGS = @SIMPENROSE_CFLAGS@
 SIMPENROSE_LIBS = @SIMPENROSE_LIBS@
@@ -365,7 +363,8 @@ STRIP = @STRIP@
 SWR_AVX2_CXXFLAGS = @SWR_AVX2_CXXFLAGS@
 SWR_AVX_CXXFLAGS = @SWR_AVX_CXXFLAGS@
 SWR_CXX11_CXXFLAGS = @SWR_CXX11_CXXFLAGS@
-TIMESTAMP_CMD = @TIMESTAMP_CMD@
+SWR_KNL_CXXFLAGS = @SWR_KNL_CXXFLAGS@
+SWR_SKX_CXXFLAGS = @SWR_SKX_CXXFLAGS@
 VALGRIND_CFLAGS = @VALGRIND_CFLAGS@
 VALGRIND_LIBS = @VALGRIND_LIBS@
 VA_CFLAGS = @VA_CFLAGS@
@@ -373,25 +372,28 @@ VA_LIBS = @VA_LIBS@
 VA_LIB_INSTALL_DIR = @VA_LIB_INSTALL_DIR@
 VA_MAJOR = @VA_MAJOR@
 VA_MINOR = @VA_MINOR@
-VC4_CFLAGS = @VC4_CFLAGS@
-VC4_LIBS = @VC4_LIBS@
+VC5_SIMULATOR_CFLAGS = @VC5_SIMULATOR_CFLAGS@
+VC5_SIMULATOR_LIBS = @VC5_SIMULATOR_LIBS@
 VDPAU_CFLAGS = @VDPAU_CFLAGS@
 VDPAU_LIBS = @VDPAU_LIBS@
 VDPAU_LIB_INSTALL_DIR = @VDPAU_LIB_INSTALL_DIR@
 VDPAU_MAJOR = @VDPAU_MAJOR@
 VDPAU_MINOR = @VDPAU_MINOR@
 VERSION = @VERSION@
-VG_LIB_DEPS = @VG_LIB_DEPS@
 VISIBILITY_CFLAGS = @VISIBILITY_CFLAGS@
 VISIBILITY_CXXFLAGS = @VISIBILITY_CXXFLAGS@
 VL_CFLAGS = @VL_CFLAGS@
 VL_LIBS = @VL_LIBS@
 VULKAN_ICD_INSTALL_DIR = @VULKAN_ICD_INSTALL_DIR@
-WAYLAND_CFLAGS = @WAYLAND_CFLAGS@
-WAYLAND_LIBS = @WAYLAND_LIBS@
+WAYLAND_CLIENT_CFLAGS = @WAYLAND_CLIENT_CFLAGS@
+WAYLAND_CLIENT_LIBS = @WAYLAND_CLIENT_LIBS@
+WAYLAND_PROTOCOLS_DATADIR = @WAYLAND_PROTOCOLS_DATADIR@
 WAYLAND_SCANNER = @WAYLAND_SCANNER@
 WAYLAND_SCANNER_CFLAGS = @WAYLAND_SCANNER_CFLAGS@
 WAYLAND_SCANNER_LIBS = @WAYLAND_SCANNER_LIBS@
+WAYLAND_SERVER_CFLAGS = @WAYLAND_SERVER_CFLAGS@
+WAYLAND_SERVER_LIBS = @WAYLAND_SERVER_LIBS@
+WNO_OVERRIDE_INIT = @WNO_OVERRIDE_INIT@
 X11_INCLUDES = @X11_INCLUDES@
 XA_MAJOR = @XA_MAJOR@
 XA_MINOR = @XA_MINOR@
@@ -410,9 +412,10 @@ XVMC_LIBS = @XVMC_LIBS@
 XVMC_LIB_INSTALL_DIR = @XVMC_LIB_INSTALL_DIR@
 XVMC_MAJOR = @XVMC_MAJOR@
 XVMC_MINOR = @XVMC_MINOR@
-XXD = @XXD@
 YACC = @YACC@
 YFLAGS = @YFLAGS@
+ZLIB_CFLAGS = @ZLIB_CFLAGS@
+ZLIB_LIBS = @ZLIB_LIBS@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
@@ -477,7 +480,8 @@ COMMON_SOURCES := \
 	pipe_loader.c \
 	pipe_loader.h \
 	pipe_loader_priv.h \
-	pipe_loader_sw.c
+	pipe_loader_sw.c \
+	driinfo_gallium.h
 
 DRM_SOURCES := \
 	pipe_loader_drm.c
@@ -524,17 +528,15 @@ GALLIUM_TARGET_CFLAGS = \
 	-I$(top_srcdir)/src/gallium/auxiliary \
 	-I$(top_srcdir)/src/gallium/drivers \
 	-I$(top_srcdir)/src/gallium/winsys \
+	-I$(top_builddir)/src/util/ \
+	-I$(top_builddir)/src/gallium/drivers/ \
 	$(DEFINES) \
 	$(PTHREAD_CFLAGS) \
 	$(LIBDRM_CFLAGS) \
 	$(VISIBILITY_CFLAGS)
 
-GALLIUM_COMMON_LIB_DEPS = \
-	-lm \
-	$(CLOCK_LIB) \
-	$(PTHREAD_LIBS) \
-	$(DLOPEN_LIBS)
-
+GALLIUM_COMMON_LIB_DEPS = -lm $(LIBUNWIND_LIBS) $(LIBSENSORS_LIBS) \
+	$(CLOCK_LIB) $(PTHREAD_LIBS) $(DLOPEN_LIBS) $(am__append_1)
 GALLIUM_WINSYS_CFLAGS = \
 	-I$(top_srcdir)/src \
 	-I$(top_srcdir)/include \
@@ -546,13 +548,13 @@ GALLIUM_WINSYS_CFLAGS = \
 GALLIUM_PIPE_LOADER_WINSYS_LIBS =  \
 	$(top_builddir)/src/gallium/winsys/sw/null/libws_null.la \
 	$(top_builddir)/src/gallium/winsys/sw/wrapper/libwsw.la \
-	$(am__append_1) $(am__append_2)
+	$(am__append_2) $(am__append_3)
 
 # XXX: check if we need the gallium/winsys include
 AM_CFLAGS = -I$(top_srcdir)/src/loader \
-	-I$(top_srcdir)/src/gallium/winsys \
+	-I$(top_srcdir)/src/gallium/winsys -I$(top_builddir)/src/util \
 	$(GALLIUM_PIPE_LOADER_DEFINES) $(GALLIUM_CFLAGS) \
-	$(VISIBILITY_CFLAGS) $(am__append_3)
+	$(VISIBILITY_CFLAGS) $(am__append_4)
 noinst_LTLIBRARIES = \
 	libpipe_loader_static.la \
 	libpipe_loader_dynamic.la
@@ -565,13 +567,15 @@ libpipe_loader_dynamic_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	-DPIPE_SEARCH_DIR=\"$(libdir)/gallium-pipe\"
 
-libpipe_loader_static_la_SOURCES = $(COMMON_SOURCES) $(am__append_4)
-libpipe_loader_dynamic_la_SOURCES = $(COMMON_SOURCES) $(am__append_5)
+libpipe_loader_static_la_SOURCES = $(COMMON_SOURCES) $(am__append_5)
+libpipe_loader_dynamic_la_SOURCES = $(COMMON_SOURCES) $(am__append_6)
 libpipe_loader_static_la_LIBADD = \
-	$(top_builddir)/src/loader/libloader.la
+	$(top_builddir)/src/loader/libloader.la \
+	$(top_builddir)/src/util/libxmlconfig.la
 
 libpipe_loader_dynamic_la_LIBADD = \
-	$(top_builddir)/src/loader/libloader.la
+	$(top_builddir)/src/loader/libloader.la \
+	$(top_builddir)/src/util/libxmlconfig.la
 
 EXTRA_DIST = SConscript
 all: all-am

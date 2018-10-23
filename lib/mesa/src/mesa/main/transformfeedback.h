@@ -42,10 +42,6 @@ _mesa_init_transform_feedback(struct gl_context *ctx);
 extern void
 _mesa_free_transform_feedback(struct gl_context *ctx);
 
-extern GLboolean
-_mesa_validate_transform_feedback_buffers(struct gl_context *ctx);
-
-
 extern void
 _mesa_init_transform_feedback_functions(struct dd_function_table *driver);
 
@@ -57,19 +53,23 @@ _mesa_compute_max_transform_feedback_vertices( struct gl_context *ctx,
 
 /*** GL_EXT_transform_feedback ***/
 
+void GLAPIENTRY
+_mesa_BeginTransformFeedback_no_error(GLenum mode);
+
 extern void GLAPIENTRY
 _mesa_BeginTransformFeedback(GLenum mode);
+
+void GLAPIENTRY
+_mesa_EndTransformFeedback_no_error(void);
 
 extern void GLAPIENTRY
 _mesa_EndTransformFeedback(void);
 
-extern void
-_mesa_bind_buffer_range_transform_feedback(struct gl_context *ctx,
-					   struct gl_transform_feedback_object *obj,
-					   GLuint index,
-					   struct gl_buffer_object *bufObj,
-					   GLintptr offset,
-					   GLsizeiptr size, bool dsa);
+extern bool
+_mesa_validate_buffer_range_xfb(struct gl_context *ctx,
+                                struct gl_transform_feedback_object *obj,
+                                GLuint index, struct gl_buffer_object *bufObj,
+                                GLintptr offset, GLsizeiptr size, bool dsa);
 
 extern void
 _mesa_bind_buffer_base_transform_feedback(struct gl_context *ctx,
@@ -78,9 +78,18 @@ _mesa_bind_buffer_base_transform_feedback(struct gl_context *ctx,
 					  struct gl_buffer_object *bufObj,
 					  bool dsa);
 
+void GLAPIENTRY
+_mesa_BindBufferOffsetEXT_no_error(GLenum target, GLuint index, GLuint buffer,
+                                   GLintptr offset);
+
 extern void GLAPIENTRY
 _mesa_BindBufferOffsetEXT(GLenum target, GLuint index, GLuint buffer,
                           GLintptr offset);
+
+void GLAPIENTRY
+_mesa_TransformFeedbackVaryings_no_error(GLuint program, GLsizei count,
+                                         const GLchar *const *varyings,
+                                         GLenum bufferMode);
 
 extern void GLAPIENTRY
 _mesa_TransformFeedbackVaryings(GLuint program, GLsizei count,
@@ -111,14 +120,23 @@ _mesa_CreateTransformFeedbacks(GLsizei n, GLuint *names);
 extern GLboolean GLAPIENTRY
 _mesa_IsTransformFeedback(GLuint name);
 
+void GLAPIENTRY
+_mesa_BindTransformFeedback_no_error(GLenum target, GLuint name);
+
 extern void GLAPIENTRY
 _mesa_BindTransformFeedback(GLenum target, GLuint name);
 
 extern void GLAPIENTRY
 _mesa_DeleteTransformFeedbacks(GLsizei n, const GLuint *names);
 
+void GLAPIENTRY
+_mesa_PauseTransformFeedback_no_error(void);
+
 extern void GLAPIENTRY
 _mesa_PauseTransformFeedback(void);
+
+void GLAPIENTRY
+_mesa_ResumeTransformFeedback_no_error(void);
 
 extern void GLAPIENTRY
 _mesa_ResumeTransformFeedback(void);
@@ -148,6 +166,26 @@ _mesa_set_transform_feedback_binding(struct gl_context *ctx,
 
    if (bufObj != ctx->Shared->NullBufferObj)
       bufObj->UsageHistory |= USAGE_TRANSFORM_FEEDBACK_BUFFER;
+}
+
+static inline void
+_mesa_bind_buffer_range_xfb(struct gl_context *ctx,
+                            struct gl_transform_feedback_object *obj,
+                            GLuint index, struct gl_buffer_object *bufObj,
+                            GLintptr offset, GLsizeiptr size)
+{
+   /* Note: no need to FLUSH_VERTICES or flag NewTransformFeedback, because
+    * transform feedback buffers can't be changed while transform feedback is
+    * active.
+    */
+
+   /* The general binding point */
+   _mesa_reference_buffer_object(ctx,
+                                 &ctx->TransformFeedback.CurrentBuffer,
+                                 bufObj);
+
+   /* The per-attribute binding point */
+   _mesa_set_transform_feedback_binding(ctx, obj, index, bufObj, offset, size);
 }
 
 /*** GL_ARB_direct_state_access ***/

@@ -62,6 +62,7 @@
 #include "util/u_box.h"
 #include "util/u_debug.h"
 #include "util/u_format.h"
+#include "util/u_inlines.h"
 #include "util/u_memory.h"
 
 #include "postprocess/filters.h"
@@ -432,6 +433,7 @@ osmesa_st_framebuffer_validate(struct st_context_iface *stctx,
 
       templat.format = format;
       templat.bind = bind;
+      pipe_resource_reference(&out[i], NULL);
       out[i] = osbuffer->textures[statts[i]] =
          screen->resource_create(screen, &templat);
    }
@@ -439,6 +441,7 @@ osmesa_st_framebuffer_validate(struct st_context_iface *stctx,
    return TRUE;
 }
 
+static uint32_t osmesa_fb_ID = 0;
 
 static struct st_framebuffer_iface *
 osmesa_create_st_framebuffer(void)
@@ -448,6 +451,8 @@ osmesa_create_st_framebuffer(void)
       stfbi->flush_front = osmesa_st_framebuffer_flush_front;
       stfbi->validate = osmesa_st_framebuffer_validate;
       p_atomic_set(&stfbi->stamp, 1);
+      stfbi->ID = p_atomic_inc_return(&osmesa_fb_ID);
+      stfbi->state_manager = get_st_manager();
    }
    return stfbi;
 }
@@ -508,6 +513,14 @@ osmesa_find_buffer(enum pipe_format color_format,
 static void
 osmesa_destroy_buffer(struct osmesa_buffer *osbuffer)
 {
+   struct st_api *stapi = get_st_api();
+
+   /*
+    * Notify the state manager that the associated framebuffer interface
+    * is no longer valid.
+    */
+   stapi->destroy_drawable(stapi, osbuffer->stfb);
+
    FREE(osbuffer->stfb);
    FREE(osbuffer);
 }
@@ -677,7 +690,6 @@ OSMesaCreateContextAttribs(const int *attribList, OSMesaContext sharelist)
    attribs.options.disable_blend_func_extended = FALSE;
    attribs.options.disable_glsl_line_continuations = FALSE;
    attribs.options.disable_shader_bit_encoding = FALSE;
-   attribs.options.force_s3tc_enable = FALSE;
    attribs.options.force_glsl_version = 0;
 
    osmesa_init_st_visual(&attribs.visual,

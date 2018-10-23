@@ -299,6 +299,10 @@ SVGA3D_InvalidateGBImagePartial(struct svga_winsys_context *swc,
                                 const SVGA3dBox *box,
                                 bool invertBox);
 
+enum pipe_error
+SVGA3D_InvalidateGBSurface(struct svga_winsys_context *swc,
+                           struct svga_winsys_surface *surface);
+
 
 enum pipe_error
 SVGA3D_SetGBShaderConstsInline(struct svga_winsys_context *swc,
@@ -660,7 +664,7 @@ SVGA3D_vgpu10_UpdateSubResource(struct svga_winsys_context *swc,
 
 enum pipe_error
 SVGA3D_vgpu10_GenMips(struct svga_winsys_context *swc,
-                      const SVGA3dShaderResourceViewId shaderResourceViewId,
+                      SVGA3dShaderResourceViewId shaderResourceViewId,
                       struct svga_winsys_surface *view);
 
 enum pipe_error

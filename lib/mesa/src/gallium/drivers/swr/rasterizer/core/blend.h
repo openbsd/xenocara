@@ -161,7 +161,7 @@ void GenerateBlendFactor(SWR_BLEND_FACTOR func, simdvector &constantColor, simdv
         result.x = result.y = result.z = result.w = _simd_sub_ps(_simd_set1_ps(1.0f), src1.w);
         break;
 
-    default: SWR_ASSERT(false, "Unimplemented blend factor: %d", func);
+    default: SWR_INVALID("Unimplemented blend factor: %d", func);
     }
 
     if (Color)
@@ -220,7 +220,7 @@ INLINE void BlendFunc(SWR_BLEND_OP blendOp, simdvector &src, simdvector &srcFact
         break;
         
     default:
-        SWR_ASSERT(false, "Unimplemented blend function: %d", blendOp);
+        SWR_INVALID("Unimplemented blend function: %d", blendOp);
     }
 
     if (Color)
@@ -272,13 +272,13 @@ INLINE void Clamp(simdvector &src)
         break;
 
     default:
-        SWR_ASSERT(false, "Unimplemented clamp: %d", type);
+        SWR_INVALID("Unimplemented clamp: %d", type);
         break;
     }
 }
 
 template<SWR_TYPE type>
-void Blend(const SWR_BLEND_STATE *pBlendState, const SWR_RENDER_TARGET_BLEND_STATE *pState, simdvector &src, simdvector& src1, BYTE *pDst, simdvector &result)
+void Blend(const SWR_BLEND_STATE *pBlendState, const SWR_RENDER_TARGET_BLEND_STATE *pState, simdvector &src, simdvector& src1, uint8_t *pDst, simdvector &result)
 {
     // load render target
     simdvector dst;

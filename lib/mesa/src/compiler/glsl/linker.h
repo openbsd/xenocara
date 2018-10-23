@@ -22,7 +22,6 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#pragma once
 #ifndef GLSL_LINKER_H
 #define GLSL_LINKER_H
 
@@ -35,8 +34,7 @@ link_invalidate_variable_locations(exec_list *ir);
 
 extern void
 link_assign_uniform_locations(struct gl_shader_program *prog,
-                              struct gl_context *ctx,
-                              unsigned int num_explicit_uniform_locs);
+                              struct gl_context *ctx);
 
 extern void
 link_set_uniform_initializers(struct gl_shader_program *prog,
@@ -85,6 +83,15 @@ extern void
 link_check_atomic_counter_resources(struct gl_context *ctx,
                                     struct gl_shader_program *prog);
 
+
+extern struct gl_linked_shader *
+link_intrastage_shaders(void *mem_ctx,
+                        struct gl_context *ctx,
+                        struct gl_shader_program *prog,
+                        struct gl_shader **shader_list,
+                        unsigned num_shaders,
+                        bool allow_missing_main);
+
 /**
  * Class for processing all of the leaf fields of a variable that corresponds
  * to a program resource.
@@ -115,7 +122,7 @@ public:
     * matter.  For example, enumerating the names of members of the block, but
     * not for determining the offsets of members.
     */
-   void process(ir_variable *var);
+   void process(ir_variable *var, bool use_std430_as_default);
 
    /**
     * Begin processing a variable of a structured type.
@@ -132,7 +139,8 @@ public:
     * \c type must be \c GLSL_TYPE_RECORD, \c GLSL_TYPE_INTERFACE, or an array
     * there of.
     */
-   void process(const glsl_type *type, const char *name);
+   void process(const glsl_type *type, const char *name,
+                bool use_std430_as_default);
 
 protected:
    /**
@@ -145,23 +153,11 @@ protected:
     * \param last_field   Set if \c name is the last field of the structure
     *                     containing it.  This will always be false for items
     *                     not contained in a structure or interface block.
-    *
-    * The default implementation just calls the other \c visit_field method.
     */
    virtual void visit_field(const glsl_type *type, const char *name,
                             bool row_major, const glsl_type *record_type,
                             const enum glsl_interface_packing packing,
-                            bool last_field);
-
-   /**
-    * Method invoked for each leaf of the variable
-    *
-    * \param type  Type of the field.
-    * \param name  Fully qualified name of the field.
-    * \param row_major  For a matrix type, is it stored row-major.
-    */
-   virtual void visit_field(const glsl_type *type, const char *name,
-                            bool row_major) = 0;
+                            bool last_field) = 0;
 
    /**
     * Visit a record before visiting its fields

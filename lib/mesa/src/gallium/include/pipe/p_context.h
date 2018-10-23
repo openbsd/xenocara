@@ -53,7 +53,6 @@ struct pipe_grid_info;
 struct pipe_fence_handle;
 struct pipe_framebuffer_state;
 struct pipe_image_view;
-struct pipe_index_buffer;
 struct pipe_query;
 struct pipe_poly_stipple;
 struct pipe_rasterizer_state;
@@ -76,6 +75,8 @@ struct pipe_viewport_state;
 struct pipe_compute_state;
 union pipe_color_union;
 union pipe_query_result;
+struct u_log_context;
+struct u_upload_mgr;
 
 /**
  * Gallium rendering context.  Basically:
@@ -88,6 +89,16 @@ struct pipe_context {
 
    void *priv;  /**< context private data (for DRI for example) */
    void *draw;  /**< private, for draw module (temporary?) */
+
+   /**
+    * Stream uploaders created by the driver. All drivers, state trackers, and
+    * modules should use them.
+    *
+    * Use u_upload_alloc or u_upload_data as many times as you want.
+    * Once you are done, use u_upload_unmap.
+    */
+   struct u_upload_mgr *stream_uploader; /* everything but shader constants */
+   struct u_upload_mgr *const_uploader;  /* shader constants only */
 
    void (*destroy)( struct pipe_context * );
 
@@ -108,7 +119,7 @@ struct pipe_context {
    void (*render_condition)( struct pipe_context *pipe,
                              struct pipe_query *query,
                              boolean condition,
-                             uint mode );
+                             enum pipe_render_cond_flag mode );
 
    /**
     * Query objects
@@ -262,7 +273,7 @@ struct pipe_context {
                             const struct pipe_clip_state * );
 
    void (*set_constant_buffer)( struct pipe_context *,
-                                uint shader, uint index,
+                                enum pipe_shader_type shader, uint index,
                                 const struct pipe_constant_buffer *buf );
 
    void (*set_framebuffer_state)( struct pipe_context *,
@@ -342,9 +353,6 @@ struct pipe_context {
                                unsigned start_slot,
                                unsigned num_buffers,
                                const struct pipe_vertex_buffer * );
-
-   void (*set_index_buffer)( struct pipe_context *pipe,
-                             const struct pipe_index_buffer * );
 
    /*@}*/
 
@@ -475,6 +483,25 @@ struct pipe_context {
                  unsigned flags);
 
    /**
+    * Create a fence from a native sync fd.
+    *
+    * This is used for importing a foreign/external fence fd.
+    *
+    * \param fence  if not NULL, an old fence to unref and transfer a
+    *    new fence reference to
+    * \param fd     native fence fd
+    */
+   void (*create_fence_fd)(struct pipe_context *pipe,
+                           struct pipe_fence_handle **fence,
+                           int fd);
+
+   /**
+    * Insert commands to have GPU wait for fence to be signaled.
+    */
+   void (*fence_server_sync)(struct pipe_context *pipe,
+                             struct pipe_fence_handle *fence);
+
+   /**
     * Create a view on a texture to be used by a shader stage.
     */
    struct pipe_sampler_view * (*create_sampler_view)(struct pipe_context *ctx,
@@ -547,12 +574,25 @@ struct pipe_context {
    /**
     * Flush any pending framebuffer writes and invalidate texture caches.
     */
-   void (*texture_barrier)(struct pipe_context *);
+   void (*texture_barrier)(struct pipe_context *, unsigned flags);
 
    /**
     * Flush caches according to flags.
     */
    void (*memory_barrier)(struct pipe_context *, unsigned flags);
+
+   /**
+    * Change the commitment status of a part of the given resource, which must
+    * have been created with the PIPE_RESOURCE_FLAG_SPARSE bit.
+    *
+    * \param level The texture level whose commitment should be changed.
+    * \param box The region of the resource whose commitment should be changed.
+    * \param commit Whether memory should be committed or un-committed.
+    *
+    * \return false if out of memory, true on success.
+    */
+   bool (*resource_commit)(struct pipe_context *, struct pipe_resource *,
+                           unsigned level, struct pipe_box *box, bool commit);
 
    /**
     * Creates a video codec for a specific video format/profile
@@ -710,6 +750,19 @@ struct pipe_context {
                             unsigned flags);
 
    /**
+    * Set the log context to which the driver should write internal debug logs
+    * (internal states, command streams).
+    *
+    * The caller must ensure that the log context is destroyed and reset to
+    * NULL before the pipe context is destroyed, and that log context functions
+    * are only called from the driver thread.
+    *
+    * \param ctx pipe context
+    * \param log logging context
+    */
+   void (*set_log_context)(struct pipe_context *ctx, struct u_log_context *log);
+
+   /**
     * Emit string marker in cmdstream
     */
    void (*emit_string_marker)(struct pipe_context *ctx,
@@ -727,6 +780,65 @@ struct pipe_context {
                               unsigned last_level,
                               unsigned first_layer,
                               unsigned last_layer);
+
+   /**
+    * Create a 64-bit texture handle.
+    *
+    * \param ctx        pipe context
+    * \param view       pipe sampler view object
+    * \param state      pipe sampler state template
+    * \return           a 64-bit texture handle if success, 0 otherwise
+    */
+   uint64_t (*create_texture_handle)(struct pipe_context *ctx,
+                                     struct pipe_sampler_view *view,
+                                     const struct pipe_sampler_state *state);
+
+   /**
+    * Delete a texture handle.
+    *
+    * \param ctx        pipe context
+    * \param handle     64-bit texture handle
+    */
+   void (*delete_texture_handle)(struct pipe_context *ctx, uint64_t handle);
+
+   /**
+    * Make a texture handle resident.
+    *
+    * \param ctx        pipe context
+    * \param handle     64-bit texture handle
+    * \param resident   TRUE for resident, FALSE otherwise
+    */
+   void (*make_texture_handle_resident)(struct pipe_context *ctx,
+                                        uint64_t handle, bool resident);
+
+   /**
+    * Create a 64-bit image handle.
+    *
+    * \param ctx        pipe context
+    * \param image      pipe image view template
+    * \return           a 64-bit image handle if success, 0 otherwise
+    */
+   uint64_t (*create_image_handle)(struct pipe_context *ctx,
+                                   const struct pipe_image_view *image);
+
+   /**
+    * Delete an image handle.
+    *
+    * \param ctx        pipe context
+    * \param handle     64-bit image handle
+    */
+   void (*delete_image_handle)(struct pipe_context *ctx, uint64_t handle);
+
+   /**
+    * Make an image handle resident.
+    *
+    * \param ctx        pipe context
+    * \param handle     64-bit image handle
+    * \param access     GL_READ_ONLY, GL_WRITE_ONLY or GL_READ_WRITE
+    * \param resident   TRUE for resident, FALSE otherwise
+    */
+   void (*make_image_handle_resident)(struct pipe_context *ctx, uint64_t handle,
+                                      unsigned access, bool resident);
 };
 
 

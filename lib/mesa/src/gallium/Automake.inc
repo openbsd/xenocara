@@ -39,6 +39,8 @@ GALLIUM_TARGET_CFLAGS = \
 	-I$(top_srcdir)/src/gallium/auxiliary \
 	-I$(top_srcdir)/src/gallium/drivers \
 	-I$(top_srcdir)/src/gallium/winsys \
+	-I$(top_builddir)/src/util/ \
+	-I$(top_builddir)/src/gallium/drivers/ \
 	$(DEFINES) \
 	$(PTHREAD_CFLAGS) \
 	$(LIBDRM_CFLAGS) \
@@ -46,9 +48,16 @@ GALLIUM_TARGET_CFLAGS = \
 
 GALLIUM_COMMON_LIB_DEPS = \
 	-lm \
+	$(LIBUNWIND_LIBS) \
+	$(LIBSENSORS_LIBS) \
 	$(CLOCK_LIB) \
 	$(PTHREAD_LIBS) \
 	$(DLOPEN_LIBS)
+
+if HAVE_LIBDRM
+GALLIUM_COMMON_LIB_DEPS += \
+	$(LIBDRM_LIBS)
+endif
 
 GALLIUM_WINSYS_CFLAGS = \
 	-I$(top_srcdir)/src \

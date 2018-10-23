@@ -25,7 +25,8 @@
  *
  */
 
-#pragma once
+#ifndef NIR_TYPES_H
+#define NIR_TYPES_H
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -47,6 +48,8 @@ const struct glsl_type *glsl_get_struct_field(const struct glsl_type *type,
 
 const struct glsl_type *glsl_get_array_element(const struct glsl_type *type);
 const struct glsl_type *glsl_without_array(const struct glsl_type *type);
+const struct glsl_type *glsl_get_array_instance(const struct glsl_type *type,
+                                                unsigned array_size);
 
 const struct glsl_type *glsl_get_column_type(const struct glsl_type *type);
 
@@ -92,6 +95,8 @@ glsl_get_bit_size(const struct glsl_type *type)
       return 32;
 
    case GLSL_TYPE_DOUBLE:
+   case GLSL_TYPE_INT64:
+   case GLSL_TYPE_UINT64:
       return 64;
 
    default:
@@ -101,6 +106,7 @@ glsl_get_bit_size(const struct glsl_type *type)
    return 0;
 }
 
+bool glsl_type_is_64bit(const struct glsl_type *type);
 bool glsl_type_is_void(const struct glsl_type *type);
 bool glsl_type_is_error(const struct glsl_type *type);
 bool glsl_type_is_vector(const struct glsl_type *type);
@@ -108,9 +114,13 @@ bool glsl_type_is_scalar(const struct glsl_type *type);
 bool glsl_type_is_vector_or_scalar(const struct glsl_type *type);
 bool glsl_type_is_matrix(const struct glsl_type *type);
 bool glsl_type_is_array(const struct glsl_type *type);
+bool glsl_type_is_array_of_arrays(const struct glsl_type *type);
 bool glsl_type_is_struct(const struct glsl_type *type);
 bool glsl_type_is_sampler(const struct glsl_type *type);
 bool glsl_type_is_image(const struct glsl_type *type);
+bool glsl_type_is_dual_slot(const struct glsl_type *type);
+bool glsl_type_is_numeric(const struct glsl_type *type);
+bool glsl_type_is_boolean(const struct glsl_type *type);
 bool glsl_sampler_type_is_shadow(const struct glsl_type *type);
 bool glsl_sampler_type_is_array(const struct glsl_type *type);
 
@@ -122,6 +132,8 @@ const struct glsl_type *glsl_dvec_type(unsigned n);
 const struct glsl_type *glsl_vec4_type(void);
 const struct glsl_type *glsl_int_type(void);
 const struct glsl_type *glsl_uint_type(void);
+const struct glsl_type *glsl_int64_t_type(void);
+const struct glsl_type *glsl_uint64_t_type(void);
 const struct glsl_type *glsl_bool_type(void);
 
 const struct glsl_type *glsl_scalar_type(enum glsl_base_type base_type);
@@ -133,6 +145,11 @@ const struct glsl_type *glsl_array_type(const struct glsl_type *base,
                                         unsigned elements);
 const struct glsl_type *glsl_struct_type(const struct glsl_struct_field *fields,
                                          unsigned num_fields, const char *name);
+const struct glsl_type *glsl_interface_type(const struct glsl_struct_field *fields,
+                                            unsigned num_fields,
+                                            enum glsl_interface_packing packing,
+                                            bool row_major,
+                                            const char *block_name);
 const struct glsl_type *glsl_sampler_type(enum glsl_sampler_dim dim,
                                           bool is_shadow, bool is_array,
                                           enum glsl_base_type base_type);
@@ -146,6 +163,10 @@ const struct glsl_type * glsl_function_type(const struct glsl_type *return_type,
 
 const struct glsl_type *glsl_transposed_type(const struct glsl_type *type);
 
+const struct glsl_type *glsl_channel_type(const struct glsl_type *type);
+
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* NIR_TYPES_H */

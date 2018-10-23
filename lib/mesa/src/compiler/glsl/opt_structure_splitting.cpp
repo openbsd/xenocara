@@ -233,13 +233,9 @@ ir_structure_splitting_visitor::split_deref(ir_dereference **deref)
    if (!entry)
       return;
 
-   unsigned int i;
-   for (i = 0; i < entry->var->type->length; i++) {
-      if (strcmp(deref_record->field,
-		 entry->var->type->fields.structure[i].name) == 0)
-	 break;
-   }
-   assert(i != entry->var->type->length);
+   int i = deref_record->field_idx;
+   assert(i >= 0);
+   assert((unsigned) i < entry->var->type->length);
 
    *deref = new(entry->mem_ctx) ir_dereference_variable(entry->components[i]);
 }
@@ -289,9 +285,7 @@ ir_structure_splitting_visitor::visit_leave(ir_assignment *ir)
 				     type->fields.structure[i].name);
 	 }
 
-	 ir->insert_before(new(mem_ctx) ir_assignment(new_lhs,
-						      new_rhs,
-						      NULL));
+         ir->insert_before(new(mem_ctx) ir_assignment(new_lhs, new_rhs));
       }
       ir->remove();
    } else {
@@ -316,13 +310,13 @@ do_structure_splitting(exec_list *instructions)
    /* Trim out variables we can't split. */
    foreach_in_list_safe(variable_entry, entry, &refs.variable_list) {
       if (debug) {
-	 printf("structure %s@%p: decl %d, whole_access %d\n",
-		entry->var->name, (void *) entry->var, entry->declaration,
-		entry->whole_structure_access);
+         printf("structure %s@%p: decl %d, whole_access %d\n",
+                entry->var->name, (void *) entry->var, entry->declaration,
+                entry->whole_structure_access);
       }
 
       if (!entry->declaration || entry->whole_structure_access) {
-	 entry->remove();
+         entry->remove();
       }
    }
 
@@ -339,20 +333,36 @@ do_structure_splitting(exec_list *instructions)
 
       entry->mem_ctx = ralloc_parent(entry->var);
 
-      entry->components = ralloc_array(mem_ctx,
-				       ir_variable *,
-				       type->length);
+      entry->components = ralloc_array(mem_ctx, ir_variable *, type->length);
 
       for (unsigned int i = 0; i < entry->var->type->length; i++) {
-	 const char *name = ralloc_asprintf(mem_ctx, "%s_%s",
-					    entry->var->name,
-					    type->fields.structure[i].name);
+         const char *name = ralloc_asprintf(mem_ctx, "%s_%s", entry->var->name,
+                                            type->fields.structure[i].name);
+         ir_variable *new_var =
+            new(entry->mem_ctx) ir_variable(type->fields.structure[i].type,
+                                            name,
+                                            (ir_variable_mode) entry->var->data.mode);
 
-	 entry->components[i] =
-	    new(entry->mem_ctx) ir_variable(type->fields.structure[i].type,
-					    name,
-					    (ir_variable_mode) entry->var->data.mode);
-	 entry->var->insert_before(entry->components[i]);
+         if (type->fields.structure[i].type->without_array()->is_image()) {
+            /* Do not lose memory/format qualifiers for images declared inside
+             * structures as allowed by ARB_bindless_texture.
+             */
+            new_var->data.memory_read_only =
+               type->fields.structure[i].memory_read_only;
+            new_var->data.memory_write_only =
+               type->fields.structure[i].memory_write_only;
+            new_var->data.memory_coherent =
+               type->fields.structure[i].memory_coherent;
+            new_var->data.memory_volatile =
+               type->fields.structure[i].memory_volatile;
+            new_var->data.memory_restrict =
+               type->fields.structure[i].memory_restrict;
+            new_var->data.image_format =
+               type->fields.structure[i].image_format;
+         }
+
+         entry->components[i] = new_var;
+         entry->var->insert_before(entry->components[i]);
       }
 
       entry->var->remove();

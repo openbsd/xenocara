@@ -35,6 +35,7 @@
 #include "radeon/radeon_video.h"
 #include "radeon/radeon_uvd.h"
 #include "radeon/radeon_vce.h"
+#include "radeon/radeon_vcn_dec.h"
 
 /**
  * creates an video buffer with an UVD compatible memory layout
@@ -47,7 +48,7 @@ struct pipe_video_buffer *si_video_buffer_create(struct pipe_context *pipe,
 	struct radeon_surf *surfaces[VL_NUM_COMPONENTS] = {};
 	struct pb_buffer **pbs[VL_NUM_COMPONENTS] = {};
 	const enum pipe_format *resource_formats;
-	struct pipe_video_buffer template;
+	struct pipe_video_buffer vidtemplate;
 	struct pipe_resource templ;
 	unsigned i, array_size;
 
@@ -59,34 +60,26 @@ struct pipe_video_buffer *si_video_buffer_create(struct pipe_context *pipe,
 		return NULL;
 
 	array_size = tmpl->interlaced ? 2 : 1;
-	template = *tmpl;
-	template.width = align(tmpl->width, VL_MACROBLOCK_WIDTH);
-	template.height = align(tmpl->height / array_size, VL_MACROBLOCK_HEIGHT);
+	vidtemplate = *tmpl;
+	vidtemplate.width = align(tmpl->width, VL_MACROBLOCK_WIDTH);
+	vidtemplate.height = align(tmpl->height / array_size, VL_MACROBLOCK_HEIGHT);
 
-	vl_video_buffer_template(&templ, &template, resource_formats[0], 1, array_size, PIPE_USAGE_DEFAULT, 0);
-	/* TODO: get tiling working */
-	templ.bind = PIPE_BIND_LINEAR;
-	resources[0] = (struct r600_texture *)
-		pipe->screen->resource_create(pipe->screen, &templ);
-	if (!resources[0])
-		goto error;
+	assert(resource_formats[0] != PIPE_FORMAT_NONE);
 
-	if (resource_formats[1] != PIPE_FORMAT_NONE) {
-		vl_video_buffer_template(&templ, &template, resource_formats[1], 1, array_size, PIPE_USAGE_DEFAULT, 1);
-		templ.bind = PIPE_BIND_LINEAR;
-		resources[1] = (struct r600_texture *)
-			pipe->screen->resource_create(pipe->screen, &templ);
-		if (!resources[1])
-			goto error;
-	}
-
-	if (resource_formats[2] != PIPE_FORMAT_NONE) {
-		vl_video_buffer_template(&templ, &template, resource_formats[2], 1, array_size, PIPE_USAGE_DEFAULT, 2);
-		templ.bind = PIPE_BIND_LINEAR;
-		resources[2] = (struct r600_texture *)
-			pipe->screen->resource_create(pipe->screen, &templ);
-		if (!resources[2])
-			goto error;
+	for (i = 0; i < VL_NUM_COMPONENTS; ++i) {
+		if (resource_formats[i] != PIPE_FORMAT_NONE) {
+			vl_video_buffer_template(&templ, &vidtemplate,
+			                         resource_formats[i], 1,
+			                         array_size, PIPE_USAGE_DEFAULT, i);
+			/* Set PIPE_BIND_SHARED to avoid reallocation in r600_texture_get_handle,
+			 * which can't handle joined surfaces. */
+			/* TODO: get tiling working */
+			templ.bind = PIPE_BIND_LINEAR | PIPE_BIND_SHARED;
+			resources[i] = (struct r600_texture *)
+			                pipe->screen->resource_create(pipe->screen, &templ);
+			if (!resources[i])
+				goto error;
+		}
 	}
 
 	for (i = 0; i < VL_NUM_COMPONENTS; ++i) {
@@ -97,7 +90,7 @@ struct pipe_video_buffer *si_video_buffer_create(struct pipe_context *pipe,
 		pbs[i] = &resources[i]->resource.buf;
 	}
 
-	rvid_join_surfaces(ctx->b.ws, pbs, surfaces);
+	si_vid_join_surfaces(&ctx->b, pbs, surfaces);
 
 	for (i = 0; i < VL_NUM_COMPONENTS; ++i) {
 		if (!resources[i])
@@ -108,8 +101,8 @@ struct pipe_video_buffer *si_video_buffer_create(struct pipe_context *pipe,
 			resources[i]->resource.buf);
 	}
 
-	template.height *= array_size;
-	return vl_video_buffer_create_ex2(pipe, &template, (struct pipe_resource **)resources);
+	vidtemplate.height *= array_size;
+	return vl_video_buffer_create_ex2(pipe, &vidtemplate, (struct pipe_resource **)resources);
 
 error:
 	for (i = 0; i < VL_NUM_COMPONENTS; ++i)
@@ -121,12 +114,16 @@ error:
 /* set the decoding target buffer offsets */
 static struct pb_buffer* si_uvd_set_dtb(struct ruvd_msg *msg, struct vl_video_buffer *buf)
 {
+	struct si_screen *sscreen = (struct si_screen*)buf->base.context->screen;
 	struct r600_texture *luma = (struct r600_texture *)buf->resources[0];
 	struct r600_texture *chroma = (struct r600_texture *)buf->resources[1];
+	enum ruvd_surface_type type =  (sscreen->b.chip_class >= GFX9) ?
+					RUVD_SURFACE_TYPE_GFX9 :
+					RUVD_SURFACE_TYPE_LEGACY;
 
 	msg->body.decode.dt_field_mode = buf->base.interlaced;
 
-	ruvd_set_dt_surfaces(msg, &luma->surface, &chroma->surface);
+	si_uvd_set_dt_surfaces(msg, &luma->surface, (chroma) ? &chroma->surface : NULL, type);
 
 	return luma->resource.buf;
 }
@@ -152,9 +149,11 @@ struct pipe_video_codec *si_uvd_create_decoder(struct pipe_context *context,
 					       const struct pipe_video_codec *templ)
 {
 	struct si_context *ctx = (struct si_context *)context;
+	bool vcn = (ctx->b.family == CHIP_RAVEN) ? true : false;
 
-        if (templ->entrypoint == PIPE_VIDEO_ENTRYPOINT_ENCODE)
-                return rvce_create_encoder(context, templ, ctx->b.ws, si_vce_get_buffer);
+	if (templ->entrypoint == PIPE_VIDEO_ENTRYPOINT_ENCODE)
+		return si_vce_create_encoder(context, templ, ctx->b.ws, si_vce_get_buffer);
 
-	return ruvd_create_decoder(context, templ, si_uvd_set_dtb);
+	return (vcn) ? 	radeon_create_decoder(context, templ) :
+		si_common_uvd_create_decoder(context, templ, si_uvd_set_dtb);
 }

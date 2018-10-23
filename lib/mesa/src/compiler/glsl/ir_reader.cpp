@@ -833,7 +833,7 @@ ir_reader::read_constant(s_expression *expr)
 	 return NULL;
       }
 
-      if (type->base_type == GLSL_TYPE_FLOAT) {
+      if (type->is_float()) {
 	 s_number *value = SX_AS_NUMBER(expr);
 	 if (value == NULL) {
 	    ir_read_error(values, "expected numbers");
@@ -1047,11 +1047,11 @@ ir_reader::read_texture(s_expression *expr)
       }
 
       if (s_shadow->subexpressions.is_empty()) {
-	 tex->shadow_comparitor = NULL;
+	 tex->shadow_comparator = NULL;
       } else {
-	 tex->shadow_comparitor = read_rvalue(s_shadow);
-	 if (tex->shadow_comparitor == NULL) {
-	    ir_read_error(NULL, "when reading shadow comparitor in (%s ..)",
+	 tex->shadow_comparator = read_rvalue(s_shadow);
+	 if (tex->shadow_comparator == NULL) {
+	    ir_read_error(NULL, "when reading shadow comparator in (%s ..)",
 			  tex->opcode_string());
 	    return NULL;
 	 }

@@ -128,7 +128,7 @@ block_check_for_allowed_instrs(nir_block *block, unsigned *count, bool alu_ok)
             if (!list_empty(&mov->dest.dest.ssa.if_uses))
                return false;
 
-            /* The only uses of this definition must be phi's in the successor */
+            /* The only uses of this definition must be phis in the successor */
             nir_foreach_use(use, &mov->dest.dest.ssa) {
                if (use->parent_instr->type != nir_instr_type_phi ||
                    use->parent_instr->block != block->successors[0])
@@ -147,7 +147,8 @@ block_check_for_allowed_instrs(nir_block *block, unsigned *count, bool alu_ok)
 }
 
 static bool
-nir_opt_peephole_select_block(nir_block *block, void *mem_ctx, unsigned limit)
+nir_opt_peephole_select_block(nir_block *block, nir_shader *shader,
+                              unsigned limit)
 {
    if (nir_cf_node_is_first(&block->cf_node))
       return false;
@@ -203,7 +204,7 @@ nir_opt_peephole_select_block(nir_block *block, void *mem_ctx, unsigned limit)
          break;
 
       nir_phi_instr *phi = nir_instr_as_phi(instr);
-      nir_alu_instr *sel = nir_alu_instr_create(mem_ctx, nir_op_bcsel);
+      nir_alu_instr *sel = nir_alu_instr_create(shader, nir_op_bcsel);
       nir_src_copy(&sel->src[0].src, &if_stmt->condition, sel);
       /* Splat the condition to all channels */
       memset(sel->src[0].swizzle, 0, sizeof sel->src[0].swizzle);
@@ -236,11 +237,11 @@ nir_opt_peephole_select_block(nir_block *block, void *mem_ctx, unsigned limit)
 static bool
 nir_opt_peephole_select_impl(nir_function_impl *impl, unsigned limit)
 {
-   void *mem_ctx = ralloc_parent(impl);
+   nir_shader *shader = impl->function->shader;
    bool progress = false;
 
    nir_foreach_block_safe(block, impl) {
-      progress |= nir_opt_peephole_select_block(block, mem_ctx, limit);
+      progress |= nir_opt_peephole_select_block(block, shader, limit);
    }
 
    if (progress)

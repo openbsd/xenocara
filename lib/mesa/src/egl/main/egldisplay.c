@@ -36,6 +36,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "c11/threads.h"
+#include "util/u_atomic.h"
 
 #include "eglcontext.h"
 #include "eglcurrent.h"
@@ -48,10 +49,6 @@
 #include "eglsync.h"
 
 /* Includes for _eglNativePlatformDetectNativeDisplay */
-#ifdef HAVE_MINCORE
-#include <unistd.h>
-#include <sys/mman.h>
-#endif
 #ifdef HAVE_WAYLAND_PLATFORM
 #include <wayland-client.h>
 #endif
@@ -61,7 +58,7 @@
 
 
 /**
- * Map --with-egl-platforms names to platform types.
+ * Map --with-platforms names to platform types.
  */
 static const struct {
    _EGLPlatformType platform;
@@ -101,35 +98,6 @@ _eglGetNativePlatformFromEnv(void)
    }
 
    return plat;
-}
-
-
-/**
- * Perform validity checks on a generic pointer.
- */
-static EGLBoolean
-_eglPointerIsDereferencable(void *p)
-{
-#ifdef HAVE_MINCORE
-   uintptr_t addr = (uintptr_t) p;
-   unsigned char valid = 0;
-   const long page_size = getpagesize();
-
-   if (p == NULL)
-      return EGL_FALSE;
-
-   /* align addr to page_size */
-   addr &= ~(page_size - 1);
-
-   if (mincore((void *) addr, page_size, &valid) < 0) {
-      _eglLog(_EGL_DEBUG, "mincore failed: %m");
-      return EGL_FALSE;
-   }
-
-   return (valid & 0x01) == 0x01;
-#else
-   return p != NULL;
-#endif
 }
 
 
@@ -180,24 +148,31 @@ _eglNativePlatformDetectNativeDisplay(void *nativeDisplay)
 _EGLPlatformType
 _eglGetNativePlatform(void *nativeDisplay)
 {
-   static _EGLPlatformType native_platform;
-   char *detection_method;
+   static _EGLPlatformType native_platform = _EGL_INVALID_PLATFORM;
+   _EGLPlatformType detected_platform = native_platform;
 
-   native_platform = _eglGetNativePlatformFromEnv();
-   detection_method = "environment overwrite";
+   if (detected_platform == _EGL_INVALID_PLATFORM) {
+      const char *detection_method;
 
-   if (native_platform == _EGL_INVALID_PLATFORM) {
-      native_platform = _eglNativePlatformDetectNativeDisplay(nativeDisplay);
-      detection_method = "autodetected";
+      detected_platform = _eglGetNativePlatformFromEnv();
+      detection_method = "environment overwrite";
+
+      if (detected_platform == _EGL_INVALID_PLATFORM) {
+         detected_platform = _eglNativePlatformDetectNativeDisplay(nativeDisplay);
+         detection_method = "autodetected";
+      }
+
+      if (detected_platform == _EGL_INVALID_PLATFORM) {
+         detected_platform = _EGL_NATIVE_PLATFORM;
+         detection_method = "build-time configuration";
+      }
+
+      _eglLog(_EGL_DEBUG, "Native platform type: %s (%s)",
+              egl_platforms[detected_platform].name, detection_method);
+
+      p_atomic_cmpxchg(&native_platform, _EGL_INVALID_PLATFORM,
+                       detected_platform);
    }
-
-   if (native_platform == _EGL_INVALID_PLATFORM) {
-      native_platform = _EGL_NATIVE_PLATFORM;
-      detection_method = "build-time configuration";
-   }
-
-   _eglLog(_EGL_DEBUG, "Native platform type: %s (%s)",
-           egl_platforms[native_platform].name, detection_method);
 
    return native_platform;
 }
@@ -472,7 +447,7 @@ _eglUnlinkResource(_EGLResource *res, _EGLResourceType type)
 
 #ifdef HAVE_X11_PLATFORM
 static EGLBoolean
-_eglParseX11DisplayAttribList(const EGLint *attrib_list)
+_eglParseX11DisplayAttribList(_EGLDisplay *display, const EGLint *attrib_list)
 {
    int i;
 
@@ -486,14 +461,11 @@ _eglParseX11DisplayAttribList(const EGLint *attrib_list)
 
       /* EGL_EXT_platform_x11 recognizes exactly one attribute,
        * EGL_PLATFORM_X11_SCREEN_EXT, which is optional.
-       * 
-       * Mesa supports connecting to only the default screen, so we reject
-       * screen != 0.
        */
-      if (attrib != EGL_PLATFORM_X11_SCREEN_EXT || value != 0) {
-         _eglError(EGL_BAD_ATTRIBUTE, "eglGetPlatformDisplay");
-         return EGL_FALSE;
-      }
+      if (attrib != EGL_PLATFORM_X11_SCREEN_EXT)
+         return _eglError(EGL_BAD_ATTRIBUTE, "eglGetPlatformDisplay");
+
+      display->Options.Platform = (void *)(uintptr_t)value;
    }
 
    return EGL_TRUE;
@@ -503,11 +475,19 @@ _EGLDisplay*
 _eglGetX11Display(Display *native_display,
                   const EGLint *attrib_list)
 {
-   if (!_eglParseX11DisplayAttribList(attrib_list)) {
+   _EGLDisplay *display = _eglFindDisplay(_EGL_PLATFORM_X11,
+                                          native_display);
+
+   if (!display) {
+      _eglError(EGL_BAD_ALLOC, "eglGetPlatformDisplay");
       return NULL;
    }
 
-   return _eglFindDisplay(_EGL_PLATFORM_X11, native_display);
+   if (!_eglParseX11DisplayAttribList(display, attrib_list)) {
+      return NULL;
+   }
+
+   return display;
 }
 #endif /* HAVE_X11_PLATFORM */
 

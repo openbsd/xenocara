@@ -24,15 +24,13 @@
  * IN THE SOFTWARE.
  */
 
-#pragma once
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifndef VK_FORMAT_H
+#define VK_FORMAT_H
 
 #include <assert.h>
 #include <vulkan/vulkan.h>
 #include <util/macros.h>
+
 enum vk_format_layout {
 	/**
 	 * Formats with vk_format_block::width == vk_format_block::height == 1
@@ -369,6 +367,19 @@ vk_format_is_depth(VkFormat format)
 }
 
 static inline bool
+vk_format_is_stencil(VkFormat format)
+{
+	const struct vk_format_description *desc = vk_format_description(format);
+
+	assert(desc);
+	if (!desc) {
+		return false;
+	}
+
+	return vk_format_has_stencil(desc);
+}
+
+static inline bool
 vk_format_is_color(VkFormat format)
 {
 	return !vk_format_is_depth_or_stencil(format);
@@ -396,6 +407,13 @@ vk_format_is_int(VkFormat format)
 	int channel =  vk_format_get_first_non_void_channel(format);
 
 	return channel >= 0 && desc->channel[channel].pure_integer;
+}
+
+static inline bool
+vk_format_is_srgb(VkFormat format)
+{
+	const struct vk_format_description *desc = vk_format_description(format);
+	return desc->colorspace == VK_FORMAT_COLORSPACE_SRGB;
 }
 
 static inline VkFormat
@@ -446,6 +464,28 @@ vk_format_get_component_bits(VkFormat format,
 		return 0;
 	}
 }
-#ifdef __cplusplus
-} // extern "C" {
-#endif
+
+static inline VkFormat
+vk_to_non_srgb_format(VkFormat format)
+{
+	switch(format) {
+	case VK_FORMAT_R8_SRGB :
+		return VK_FORMAT_R8_UNORM;
+	case VK_FORMAT_R8G8_SRGB:
+		return VK_FORMAT_R8G8_UNORM;
+	case VK_FORMAT_R8G8B8_SRGB:
+		return VK_FORMAT_R8G8B8_UNORM;
+	case VK_FORMAT_B8G8R8_SRGB:
+		return VK_FORMAT_B8G8R8_UNORM;
+	case VK_FORMAT_R8G8B8A8_SRGB :
+		return VK_FORMAT_R8G8B8A8_UNORM;
+	case VK_FORMAT_B8G8R8A8_SRGB:
+		return VK_FORMAT_B8G8R8A8_UNORM;
+	case VK_FORMAT_A8B8G8R8_SRGB_PACK32:
+		return VK_FORMAT_A8B8G8R8_UNORM_PACK32;
+	default:
+		return format;
+	}
+}
+
+#endif /* VK_FORMAT_H */

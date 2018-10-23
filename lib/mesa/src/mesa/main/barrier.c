@@ -67,11 +67,10 @@ _mesa_MemoryBarrier(GLbitfield barriers)
       ctx->Driver.MemoryBarrier(ctx, barriers);
 }
 
-void GLAPIENTRY
-_mesa_MemoryBarrierByRegion(GLbitfield barriers)
+static ALWAYS_INLINE void
+memory_barrier_by_region(struct gl_context *ctx, GLbitfield barriers,
+                         bool no_error)
 {
-   GET_CURRENT_CONTEXT(ctx);
-
    GLbitfield all_allowed_bits = GL_ATOMIC_COUNTER_BARRIER_BIT |
                                  GL_FRAMEBUFFER_BARRIER_BIT |
                                  GL_SHADER_IMAGE_ACCESS_BARRIER_BIT |
@@ -100,7 +99,7 @@ _mesa_MemoryBarrierByRegion(GLbitfield barriers)
        *     value ALL_BARRIER_BITS, and has any bits set other than those
        *     described above."
        */
-      if ((barriers & ~all_allowed_bits) != 0) {
+      if (!no_error && (barriers & ~all_allowed_bits) != 0) {
          _mesa_error(ctx, GL_INVALID_VALUE,
                      "glMemoryBarrierByRegion(unsupported barrier bit");
       }
@@ -110,11 +109,26 @@ _mesa_MemoryBarrierByRegion(GLbitfield barriers)
 }
 
 void GLAPIENTRY
+_mesa_MemoryBarrierByRegion_no_error(GLbitfield barriers)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   memory_barrier_by_region(ctx, barriers, true);
+}
+
+void GLAPIENTRY
+_mesa_MemoryBarrierByRegion(GLbitfield barriers)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   memory_barrier_by_region(ctx, barriers, false);
+}
+
+void GLAPIENTRY
 _mesa_BlendBarrier(void)
 {
    GET_CURRENT_CONTEXT(ctx);
 
-   if (!ctx->Extensions.MESA_shader_framebuffer_fetch_non_coherent) {
+   if (!ctx->Extensions.MESA_shader_framebuffer_fetch_non_coherent &&
+       !ctx->Extensions.KHR_blend_equation_advanced) {
       _mesa_error(ctx, GL_INVALID_OPERATION,
                   "glBlendBarrier(not supported)");
       return;

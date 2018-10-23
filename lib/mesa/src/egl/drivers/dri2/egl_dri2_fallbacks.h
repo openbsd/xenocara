@@ -22,7 +22,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#pragma once
+#ifndef EGL_DRI2_FALLBACKS_INCLUDED
+#define EGL_DRI2_FALLBACKS_INCLUDED
 
 #include "egltypedefs.h"
 
@@ -55,18 +56,12 @@ dri2_fallback_create_image_khr(_EGLDriver *drv, _EGLDisplay *disp,
 }
 
 static inline EGLBoolean
-dri2_fallback_swap_interval(_EGLDriver *drv, _EGLDisplay *dpy,
-                            _EGLSurface *surf, EGLint interval)
-{
-   return EGL_FALSE;
-}
-
-static inline EGLBoolean
 dri2_fallback_swap_buffers_with_damage(_EGLDriver *drv, _EGLDisplay *dpy,
                                       _EGLSurface *surf,
                                       const EGLint *rects, EGLint n_rects)
 {
    struct dri2_egl_display *dri2_dpy = dri2_egl_display(dpy);
+   dri2_dpy->vtbl->set_damage_region(drv, dpy, surf, rects, n_rects);
    return dri2_dpy->vtbl->swap_buffers(drv, dpy, surf);
 }
 
@@ -94,6 +89,14 @@ dri2_fallback_copy_buffers(_EGLDriver *drv, _EGLDisplay *dpy,
    return EGL_FALSE;
 }
 
+static inline EGLBoolean
+dri2_fallback_set_damage_region(_EGLDriver *drv, _EGLDisplay *dpy,
+                                _EGLSurface *surf,
+                                const EGLint *rects, EGLint n_rects)
+{
+   return EGL_FALSE;
+}
+
 static inline EGLint
 dri2_fallback_query_buffer_age(_EGLDriver *drv, _EGLDisplay *dpy,
                                _EGLSurface *surf)
@@ -116,3 +119,5 @@ dri2_fallback_get_sync_values(_EGLDisplay *dpy, _EGLSurface *surf,
 {
    return EGL_FALSE;
 }
+
+#endif /* EGL_DRI2_FALLBACKS_INCLUDED */

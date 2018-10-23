@@ -757,7 +757,7 @@ do_row(GLenum datatype, GLuint comps, GLint srcWidth,
    }
 
    else {
-      _mesa_problem(NULL, "bad format in do_row()");
+      unreachable("bad format in do_row()");
    }
 }
 
@@ -1401,7 +1401,7 @@ do_row_3D(GLenum datatype, GLuint comps, GLint srcWidth,
    }
 
    else {
-      _mesa_problem(NULL, "bad format in do_row()");
+      unreachable("bad format in do_row()");
    }
 }
 
@@ -1754,8 +1754,7 @@ _mesa_generate_mipmap_level(GLenum target,
       /* no mipmaps, do nothing */
       break;
    default:
-      _mesa_problem(NULL, "bad tex target in _mesa_generate_mipmaps");
-      return;
+      unreachable("bad tex target in _mesa_generate_mipmaps");
    }
 }
 
@@ -1867,7 +1866,7 @@ prepare_mipmap_level(struct gl_context *ctx,
          /* in case the mipmap level is part of an FBO: */
          _mesa_update_fbo_texture(ctx, texObj, face, level);
 
-         ctx->NewState |= _NEW_TEXTURE;
+         ctx->NewState |= _NEW_TEXTURE_OBJECT;
       }
    }
 

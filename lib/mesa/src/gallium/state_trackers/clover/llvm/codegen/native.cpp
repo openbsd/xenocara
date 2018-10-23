@@ -115,7 +115,7 @@ namespace {
       std::unique_ptr<TargetMachine> tm {
          t->createTargetMachine(target.triple, target.cpu, "", {},
                                 compat::default_reloc_model,
-                                ::llvm::CodeModel::Default,
+                                compat::default_code_model,
                                 ::llvm::CodeGenOpt::Default) };
       if (!tm)
          fail(r_log, build_error(),
@@ -156,7 +156,7 @@ clover::llvm::print_module_native(const ::llvm::Module &mod,
                                   const target &target) {
    std::string log;
    try {
-      std::unique_ptr<::llvm::Module> cmod { CloneModule(&mod) };
+      std::unique_ptr< ::llvm::Module> cmod { CloneModule(&mod) };
       return as_string(emit_code(*cmod, target,
                                  TargetMachine::CGFT_AssemblyFile, log));
    } catch (...) {

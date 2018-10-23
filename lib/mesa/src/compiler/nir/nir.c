@@ -32,9 +32,10 @@
 nir_shader *
 nir_shader_create(void *mem_ctx,
                   gl_shader_stage stage,
-                  const nir_shader_compiler_options *options)
+                  const nir_shader_compiler_options *options,
+                  shader_info *si)
 {
-   nir_shader *shader = ralloc(mem_ctx, nir_shader);
+   nir_shader *shader = rzalloc(mem_ctx, nir_shader);
 
    exec_list_make_empty(&shader->uniforms);
    exec_list_make_empty(&shader->inputs);
@@ -42,7 +43,13 @@ nir_shader_create(void *mem_ctx,
    exec_list_make_empty(&shader->shared);
 
    shader->options = options;
-   memset(&shader->info, 0, sizeof(shader->info));
+
+   if (si) {
+      assert(si->stage == stage);
+      shader->info = *si;
+   } else {
+      shader->info.stage = stage;
+   }
 
    exec_list_make_empty(&shader->functions);
    exec_list_make_empty(&shader->registers);
@@ -54,8 +61,6 @@ nir_shader_create(void *mem_ctx,
    shader->num_outputs = 0;
    shader->num_uniforms = 0;
    shader->num_shared = 0;
-
-   shader->stage = stage;
 
    return shader;
 }
@@ -140,7 +145,7 @@ nir_shader_add_variable(nir_shader *shader, nir_variable *var)
       break;
 
    case nir_var_shared:
-      assert(shader->stage == MESA_SHADER_COMPUTE);
+      assert(shader->info.stage == MESA_SHADER_COMPUTE);
       exec_list_push_tail(&shader->shared, &var->node);
       break;
 
@@ -159,8 +164,10 @@ nir_variable_create(nir_shader *shader, nir_variable_mode mode,
    var->type = type;
    var->data.mode = mode;
 
-   if ((mode == nir_var_shader_in && shader->stage != MESA_SHADER_VERTEX) ||
-       (mode == nir_var_shader_out && shader->stage != MESA_SHADER_FRAGMENT))
+   if ((mode == nir_var_shader_in &&
+        shader->info.stage != MESA_SHADER_VERTEX) ||
+       (mode == nir_var_shader_out &&
+        shader->info.stage != MESA_SHADER_FRAGMENT))
       var->data.interpolation = INTERP_MODE_SMOOTH;
 
    if (mode == nir_var_shader_in || mode == nir_var_uniform)
@@ -334,7 +341,7 @@ nir_function_impl_create(nir_function *function)
 nir_block *
 nir_block_create(nir_shader *shader)
 {
-   nir_block *block = ralloc(shader, nir_block);
+   nir_block *block = rzalloc(shader, nir_block);
 
    cf_init(&block->cf_node, nir_cf_node_block);
 
@@ -343,7 +350,7 @@ nir_block_create(nir_shader *shader)
                                           _mesa_key_pointer_equal);
    block->imm_dom = NULL;
    /* XXX maybe it would be worth it to defer allocation?  This
-    * way it doesn't get allocated for shader ref's that never run
+    * way it doesn't get allocated for shader refs that never run
     * nir_calc_dominance?  For example, state-tracker creates an
     * initial IR, clones that, runs appropriate lowering pass, passes
     * to driver which does common lowering/opt, and then stores ref
@@ -391,7 +398,7 @@ nir_if_create(nir_shader *shader)
 nir_loop *
 nir_loop_create(nir_shader *shader)
 {
-   nir_loop *loop = ralloc(shader, nir_loop);
+   nir_loop *loop = rzalloc(shader, nir_loop);
 
    cf_init(&loop->cf_node, nir_cf_node_loop);
 
@@ -446,9 +453,10 @@ nir_alu_instr *
 nir_alu_instr_create(nir_shader *shader, nir_op op)
 {
    unsigned num_srcs = nir_op_infos[op].num_inputs;
+   /* TODO: don't use rzalloc */
    nir_alu_instr *instr =
-      ralloc_size(shader,
-                  sizeof(nir_alu_instr) + num_srcs * sizeof(nir_alu_src));
+      rzalloc_size(shader,
+                   sizeof(nir_alu_instr) + num_srcs * sizeof(nir_alu_src));
 
    instr_init(&instr->instr, nir_instr_type_alu);
    instr->op = op;
@@ -484,8 +492,9 @@ nir_intrinsic_instr *
 nir_intrinsic_instr_create(nir_shader *shader, nir_intrinsic_op op)
 {
    unsigned num_srcs = nir_intrinsic_infos[op].num_srcs;
+   /* TODO: don't use rzalloc */
    nir_intrinsic_instr *instr =
-      ralloc_size(shader,
+      rzalloc_size(shader,
                   sizeof(nir_intrinsic_instr) + num_srcs * sizeof(nir_src));
 
    instr_init(&instr->instr, nir_instr_type_intrinsic);
@@ -534,6 +543,28 @@ nir_tex_instr_create(nir_shader *shader, unsigned num_srcs)
    instr->sampler = NULL;
 
    return instr;
+}
+
+void
+nir_tex_instr_add_src(nir_tex_instr *tex,
+                      nir_tex_src_type src_type,
+                      nir_src src)
+{
+   nir_tex_src *new_srcs = rzalloc_array(tex, nir_tex_src,
+                                         tex->num_srcs + 1);
+
+   for (unsigned i = 0; i < tex->num_srcs; i++) {
+      new_srcs[i].src_type = tex->src[i].src_type;
+      nir_instr_move_src(&tex->instr, &new_srcs[i].src,
+                         &tex->src[i].src);
+   }
+
+   ralloc_free(tex->src);
+   tex->src = new_srcs;
+
+   tex->src[tex->num_srcs].src_type = src_type;
+   nir_instr_rewrite_src(&tex->instr, &tex->src[tex->num_srcs].src, src);
+   tex->num_srcs++;
 }
 
 void
@@ -620,18 +651,21 @@ nir_deref_struct_create(void *mem_ctx, unsigned field_index)
    return deref;
 }
 
-static nir_deref_var *
-copy_deref_var(void *mem_ctx, nir_deref_var *deref)
+nir_deref_var *
+nir_deref_var_clone(const nir_deref_var *deref, void *mem_ctx)
 {
+   if (deref == NULL)
+      return NULL;
+
    nir_deref_var *ret = nir_deref_var_create(mem_ctx, deref->var);
    ret->deref.type = deref->deref.type;
    if (deref->deref.child)
-      ret->deref.child = nir_copy_deref(ret, deref->deref.child);
+      ret->deref.child = nir_deref_clone(deref->deref.child, ret);
    return ret;
 }
 
 static nir_deref_array *
-copy_deref_array(void *mem_ctx, nir_deref_array *deref)
+deref_array_clone(const nir_deref_array *deref, void *mem_ctx)
 {
    nir_deref_array *ret = nir_deref_array_create(mem_ctx);
    ret->base_offset = deref->base_offset;
@@ -641,33 +675,33 @@ copy_deref_array(void *mem_ctx, nir_deref_array *deref)
    }
    ret->deref.type = deref->deref.type;
    if (deref->deref.child)
-      ret->deref.child = nir_copy_deref(ret, deref->deref.child);
+      ret->deref.child = nir_deref_clone(deref->deref.child, ret);
    return ret;
 }
 
 static nir_deref_struct *
-copy_deref_struct(void *mem_ctx, nir_deref_struct *deref)
+deref_struct_clone(const nir_deref_struct *deref, void *mem_ctx)
 {
    nir_deref_struct *ret = nir_deref_struct_create(mem_ctx, deref->index);
    ret->deref.type = deref->deref.type;
    if (deref->deref.child)
-      ret->deref.child = nir_copy_deref(ret, deref->deref.child);
+      ret->deref.child = nir_deref_clone(deref->deref.child, ret);
    return ret;
 }
 
 nir_deref *
-nir_copy_deref(void *mem_ctx, nir_deref *deref)
+nir_deref_clone(const nir_deref *deref, void *mem_ctx)
 {
    if (deref == NULL)
       return NULL;
 
    switch (deref->deref_type) {
    case nir_deref_type_var:
-      return &copy_deref_var(mem_ctx, nir_deref_as_var(deref))->deref;
+      return &nir_deref_var_clone(nir_deref_as_var(deref), mem_ctx)->deref;
    case nir_deref_type_array:
-      return &copy_deref_array(mem_ctx, nir_deref_as_array(deref))->deref;
+      return &deref_array_clone(nir_deref_as_array(deref), mem_ctx)->deref;
    case nir_deref_type_struct:
-      return &copy_deref_struct(mem_ctx, nir_deref_as_struct(deref))->deref;
+      return &deref_struct_clone(nir_deref_as_struct(deref), mem_ctx)->deref;
    default:
       unreachable("Invalid dereference type");
    }
@@ -692,7 +726,9 @@ deref_foreach_leaf_build_recur(nir_deref_var *deref, nir_deref *tail,
    assert(tail->child == NULL);
    switch (glsl_get_base_type(tail->type)) {
    case GLSL_TYPE_UINT:
+   case GLSL_TYPE_UINT64:
    case GLSL_TYPE_INT:
+   case GLSL_TYPE_INT64:
    case GLSL_TYPE_FLOAT:
    case GLSL_TYPE_DOUBLE:
    case GLSL_TYPE_BOOL:
@@ -802,7 +838,7 @@ nir_deref_get_const_initializer_load(nir_shader *shader, nir_deref_var *deref)
    assert(constant);
 
    const nir_deref *tail = &deref->deref;
-   unsigned matrix_offset = 0;
+   unsigned matrix_col = 0;
    while (tail->child) {
       switch (tail->child->deref_type) {
       case nir_deref_type_array: {
@@ -810,7 +846,7 @@ nir_deref_get_const_initializer_load(nir_shader *shader, nir_deref_var *deref)
          assert(arr->deref_array_type == nir_deref_array_type_direct);
          if (glsl_type_is_matrix(tail->type)) {
             assert(arr->deref.child == NULL);
-            matrix_offset = arr->base_offset;
+            matrix_col = arr->base_offset;
          } else {
             constant = constant->elements[arr->base_offset];
          }
@@ -834,24 +870,18 @@ nir_deref_get_const_initializer_load(nir_shader *shader, nir_deref_var *deref)
       nir_load_const_instr_create(shader, glsl_get_vector_elements(tail->type),
                                   bit_size);
 
-   matrix_offset *= load->def.num_components;
-   for (unsigned i = 0; i < load->def.num_components; i++) {
-      switch (glsl_get_base_type(tail->type)) {
-      case GLSL_TYPE_FLOAT:
-      case GLSL_TYPE_INT:
-      case GLSL_TYPE_UINT:
-         load->value.u32[i] = constant->value.u[matrix_offset + i];
-         break;
-      case GLSL_TYPE_DOUBLE:
-         load->value.f64[i] = constant->value.d[matrix_offset + i];
-         break;
-      case GLSL_TYPE_BOOL:
-         load->value.u32[i] = constant->value.b[matrix_offset + i] ?
-                             NIR_TRUE : NIR_FALSE;
-         break;
-      default:
-         unreachable("Invalid immediate type");
-      }
+   switch (glsl_get_base_type(tail->type)) {
+   case GLSL_TYPE_FLOAT:
+   case GLSL_TYPE_INT:
+   case GLSL_TYPE_UINT:
+   case GLSL_TYPE_DOUBLE:
+   case GLSL_TYPE_UINT64:
+   case GLSL_TYPE_INT64:
+   case GLSL_TYPE_BOOL:
+      load->value = constant->values[matrix_col];
+      break;
+   default:
+      unreachable("Invalid immediate type");
    }
 
    return load;
@@ -1505,6 +1535,19 @@ nir_instr_rewrite_dest(nir_instr *instr, nir_dest *dest, nir_dest new_dest)
       src_add_all_uses(dest->reg.indirect, instr, NULL);
 }
 
+void
+nir_instr_rewrite_deref(nir_instr *instr, nir_deref_var **deref,
+                        nir_deref_var *new_deref)
+{
+   if (*deref)
+      visit_deref_src(*deref, remove_use_cb, NULL);
+
+   *deref = new_deref;
+
+   if (*deref)
+      visit_deref_src(*deref, add_use_cb, instr);
+}
+
 /* note: does *not* take ownership of 'name' */
 void
 nir_ssa_def_init(nir_instr *instr, nir_ssa_def *def,
@@ -1757,7 +1800,7 @@ nir_block *nir_cf_node_cf_tree_last(nir_cf_node *node)
 nir_block *nir_cf_node_cf_tree_next(nir_cf_node *node)
 {
    if (node->type == nir_cf_node_block)
-      return nir_cf_node_cf_tree_first(nir_cf_node_next(node));
+      return nir_block_cf_tree_next(nir_cf_node_as_block(node));
    else if (node->type == nir_cf_node_function)
       return NULL;
    else
@@ -1874,6 +1917,8 @@ nir_intrinsic_from_system_value(gl_system_value val)
       return nir_intrinsic_load_base_vertex;
    case SYSTEM_VALUE_INVOCATION_ID:
       return nir_intrinsic_load_invocation_id;
+   case SYSTEM_VALUE_FRAG_COORD:
+      return nir_intrinsic_load_frag_coord;
    case SYSTEM_VALUE_FRONT_FACE:
       return nir_intrinsic_load_front_face;
    case SYSTEM_VALUE_SAMPLE_ID:
@@ -1902,6 +1947,22 @@ nir_intrinsic_from_system_value(gl_system_value val)
       return nir_intrinsic_load_patch_vertices_in;
    case SYSTEM_VALUE_HELPER_INVOCATION:
       return nir_intrinsic_load_helper_invocation;
+   case SYSTEM_VALUE_VIEW_INDEX:
+      return nir_intrinsic_load_view_index;
+   case SYSTEM_VALUE_SUBGROUP_SIZE:
+      return nir_intrinsic_load_subgroup_size;
+   case SYSTEM_VALUE_SUBGROUP_INVOCATION:
+      return nir_intrinsic_load_subgroup_invocation;
+   case SYSTEM_VALUE_SUBGROUP_EQ_MASK:
+      return nir_intrinsic_load_subgroup_eq_mask;
+   case SYSTEM_VALUE_SUBGROUP_GE_MASK:
+      return nir_intrinsic_load_subgroup_ge_mask;
+   case SYSTEM_VALUE_SUBGROUP_GT_MASK:
+      return nir_intrinsic_load_subgroup_gt_mask;
+   case SYSTEM_VALUE_SUBGROUP_LE_MASK:
+      return nir_intrinsic_load_subgroup_le_mask;
+   case SYSTEM_VALUE_SUBGROUP_LT_MASK:
+      return nir_intrinsic_load_subgroup_lt_mask;
    default:
       unreachable("system value does not directly correspond to intrinsic");
    }
@@ -1925,6 +1986,8 @@ nir_system_value_from_intrinsic(nir_intrinsic_op intrin)
       return SYSTEM_VALUE_BASE_VERTEX;
    case nir_intrinsic_load_invocation_id:
       return SYSTEM_VALUE_INVOCATION_ID;
+   case nir_intrinsic_load_frag_coord:
+      return SYSTEM_VALUE_FRAG_COORD;
    case nir_intrinsic_load_front_face:
       return SYSTEM_VALUE_FRONT_FACE;
    case nir_intrinsic_load_sample_id:
@@ -1953,6 +2016,22 @@ nir_system_value_from_intrinsic(nir_intrinsic_op intrin)
       return SYSTEM_VALUE_VERTICES_IN;
    case nir_intrinsic_load_helper_invocation:
       return SYSTEM_VALUE_HELPER_INVOCATION;
+   case nir_intrinsic_load_view_index:
+      return SYSTEM_VALUE_VIEW_INDEX;
+   case nir_intrinsic_load_subgroup_size:
+      return SYSTEM_VALUE_SUBGROUP_SIZE;
+   case nir_intrinsic_load_subgroup_invocation:
+      return SYSTEM_VALUE_SUBGROUP_INVOCATION;
+   case nir_intrinsic_load_subgroup_eq_mask:
+      return SYSTEM_VALUE_SUBGROUP_EQ_MASK;
+   case nir_intrinsic_load_subgroup_ge_mask:
+      return SYSTEM_VALUE_SUBGROUP_GE_MASK;
+   case nir_intrinsic_load_subgroup_gt_mask:
+      return SYSTEM_VALUE_SUBGROUP_GT_MASK;
+   case nir_intrinsic_load_subgroup_le_mask:
+      return SYSTEM_VALUE_SUBGROUP_LE_MASK;
+   case nir_intrinsic_load_subgroup_lt_mask:
+      return SYSTEM_VALUE_SUBGROUP_LT_MASK;
    default:
       unreachable("intrinsic doesn't produce a system value");
    }

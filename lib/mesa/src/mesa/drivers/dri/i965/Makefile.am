@@ -30,34 +30,43 @@ AM_CFLAGS = \
 	-I$(top_srcdir)/src/mesa/ \
 	-I$(top_srcdir)/src/gallium/include \
 	-I$(top_srcdir)/src/gallium/auxiliary \
-	-I$(top_builddir)/src/mesa/drivers/dri/common \
+	-I$(top_builddir)/src/util \
 	-I$(top_srcdir)/src/mesa/drivers/dri/common \
-	-I$(top_srcdir)/src/mesa/drivers/dri/intel/server \
 	-I$(top_srcdir)/src/gtest/include \
 	-I$(top_builddir)/src/compiler/glsl \
 	-I$(top_builddir)/src/compiler/nir \
 	-I$(top_srcdir)/src/compiler/nir \
 	-I$(top_builddir)/src/intel \
 	-I$(top_srcdir)/src/intel \
+	-I$(top_srcdir)/include/drm-uapi \
 	$(DEFINES) \
 	$(VISIBILITY_CFLAGS) \
-	$(INTEL_CFLAGS)
+	$(WNO_OVERRIDE_INIT) \
+	$(LIBDRM_CFLAGS) \
+	$(VALGRIND_CFLAGS) \
+	-msse2
 
 AM_CXXFLAGS = $(AM_CFLAGS)
 
-MKDIR_GEN = $(AM_V_at)$(MKDIR_P) $(@D)
-if REGEN_SOURCES
-brw_nir_trig_workarounds.c: brw_nir_trig_workarounds.py $(top_srcdir)/src/compiler/nir/nir_algebraic.py
-	$(MKDIR_GEN)
-	$(AM_V_GEN) PYTHONPATH=$(top_srcdir)/src/compiler/nir $(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_nir_trig_workarounds.py > $@ || ($(RM) $@; false)
-endif
-
 I965_PERGEN_LIBS = \
+	libi965_gen4.la \
+	libi965_gen45.la \
+	libi965_gen5.la \
 	libi965_gen6.la \
 	libi965_gen7.la \
 	libi965_gen75.la \
 	libi965_gen8.la \
-	libi965_gen9.la
+	libi965_gen9.la \
+	libi965_gen10.la
+
+libi965_gen4_la_SOURCES = $(i965_gen4_FILES)
+libi965_gen4_la_CFLAGS = $(AM_CFLAGS) -DGEN_VERSIONx10=40
+
+libi965_gen45_la_SOURCES = $(i965_gen45_FILES)
+libi965_gen45_la_CFLAGS = $(AM_CFLAGS) -DGEN_VERSIONx10=45
+
+libi965_gen5_la_SOURCES = $(i965_gen5_FILES)
+libi965_gen5_la_CFLAGS = $(AM_CFLAGS) -DGEN_VERSIONx10=50
 
 libi965_gen6_la_SOURCES = $(i965_gen6_FILES)
 libi965_gen6_la_CFLAGS = $(AM_CFLAGS) -DGEN_VERSIONx10=60
@@ -74,94 +83,83 @@ libi965_gen8_la_CFLAGS = $(AM_CFLAGS) -DGEN_VERSIONx10=80
 libi965_gen9_la_SOURCES = $(i965_gen9_FILES)
 libi965_gen9_la_CFLAGS = $(AM_CFLAGS) -DGEN_VERSIONx10=90
 
+libi965_gen10_la_SOURCES = $(i965_gen10_FILES)
+libi965_gen10_la_CFLAGS = $(AM_CFLAGS) -DGEN_VERSIONx10=100
+
 noinst_LTLIBRARIES = \
 	libi965_dri.la \
-	libi965_compiler.la \
 	$(I965_PERGEN_LIBS)
 
-libi965_dri_la_SOURCES = $(i965_FILES)
+libi965_dri_la_SOURCES = \
+	$(i965_FILES) \
+	$(i965_oa_GENERATED_FILES)
 libi965_dri_la_LIBADD = \
 	$(top_builddir)/src/intel/common/libintel_common.la \
 	$(top_builddir)/src/intel/isl/libisl.la \
-	libi965_compiler.la \
+	$(top_builddir)/src/intel/compiler/libintel_compiler.la \
 	$(top_builddir)/src/intel/blorp/libblorp.la \
 	$(I965_PERGEN_LIBS) \
-	$(INTEL_LIBS)
+	$(LIBDRM_LIBS)
 
-libi965_compiler_la_SOURCES = \
-	$(i965_compiler_FILES) \
-	$(i965_compiler_GENERATED_FILES)
-
-BUILT_SOURCES = $(i965_compiler_GENERATED_FILES)
+BUILT_SOURCES = $(i965_oa_GENERATED_FILES)
 CLEANFILES = $(BUILT_SOURCES)
 
 EXTRA_DIST = \
-	brw_nir_trig_workarounds.py
+	brw_oa_hsw.xml \
+	brw_oa_bdw.xml \
+	brw_oa_chv.xml \
+	brw_oa_sklgt2.xml \
+	brw_oa_sklgt3.xml \
+	brw_oa_sklgt4.xml \
+	brw_oa_bxt.xml \
+	brw_oa_kblgt2.xml \
+	brw_oa_kblgt3.xml \
+	brw_oa_glk.xml \
+	brw_oa.py
 
-TEST_LIBS = \
-	libi965_compiler.la \
-	$(I965_PERGEN_LIBS) \
-	$(top_builddir)/src/compiler/nir/libnir.la \
-	$(top_builddir)/src/util/libmesautil.la \
-	$(top_builddir)/src/intel/isl/libisl.la \
-	$(PTHREAD_LIBS) \
-	$(DLOPEN_LIBS)
-
-TESTS = \
-	test_fs_cmod_propagation \
-	test_fs_copy_propagation \
-	test_fs_saturate_propagation \
-        test_eu_compact \
-	test_vf_float_conversions \
-	test_vec4_cmod_propagation \
-        test_vec4_copy_propagation \
-        test_vec4_register_coalesce
-
-check_PROGRAMS = $(TESTS)
-
-test_fs_cmod_propagation_SOURCES = \
-	test_fs_cmod_propagation.cpp
-test_fs_cmod_propagation_LDADD = \
-	$(top_builddir)/src/gtest/libgtest.la \
-	$(TEST_LIBS)
-
-test_fs_copy_propagation_SOURCES = \
-	test_fs_copy_propagation.cpp
-test_fs_copy_propagation_LDADD = \
-	$(top_builddir)/src/gtest/libgtest.la \
-	$(TEST_LIBS)
-
-test_fs_saturate_propagation_SOURCES = \
-	test_fs_saturate_propagation.cpp
-test_fs_saturate_propagation_LDADD = \
-	$(top_builddir)/src/gtest/libgtest.la \
-	$(TEST_LIBS)
-
-test_vf_float_conversions_SOURCES = \
-	test_vf_float_conversions.cpp
-test_vf_float_conversions_LDADD = \
-	$(top_builddir)/src/gtest/libgtest.la \
-	$(TEST_LIBS)
-
-test_vec4_register_coalesce_SOURCES = \
-	test_vec4_register_coalesce.cpp
-test_vec4_register_coalesce_LDADD = \
-        $(top_builddir)/src/gtest/libgtest.la \
-        $(TEST_LIBS)
-
-test_vec4_copy_propagation_SOURCES = \
-	test_vec4_copy_propagation.cpp
-test_vec4_copy_propagation_LDADD = \
-        $(top_builddir)/src/gtest/libgtest.la \
-        $(TEST_LIBS)
-
-test_vec4_cmod_propagation_SOURCES = \
-	test_vec4_cmod_propagation.cpp
-test_vec4_cmod_propagation_LDADD = \
-	$(top_builddir)/src/gtest/libgtest.la \
-	$(TEST_LIBS)
-
-test_eu_compact_SOURCES = \
-	test_eu_compact.c
-nodist_EXTRA_test_eu_compact_SOURCES = dummy.cpp
-test_eu_compact_LDADD = $(TEST_LIBS)
+# Note: we avoid using a multi target rule here and outputting both the
+# .c and .h files in one go so we don't hit problems with parallel
+# make and multiple invocations of the same script trying to write
+# to the same files.
+if REGEN_SOURCES
+brw_oa_hsw.h: brw_oa.py brw_oa_hsw.xml Makefile.am
+	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --header=$(builddir)/brw_oa_hsw.h --chipset=hsw $(srcdir)/brw_oa_hsw.xml
+brw_oa_hsw.c: brw_oa.py brw_oa_hsw.xml Makefile.am
+	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --code=$(builddir)/brw_oa_hsw.c --chipset=hsw $(srcdir)/brw_oa_hsw.xml
+brw_oa_bdw.h: brw_oa.py brw_oa_bdw.xml Makefile.am
+	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --header=$(builddir)/brw_oa_bdw.h --chipset=bdw $(srcdir)/brw_oa_bdw.xml
+brw_oa_bdw.c: brw_oa.py brw_oa_bdw.xml Makefile.am
+	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --code=$(builddir)/brw_oa_bdw.c --chipset=bdw $(srcdir)/brw_oa_bdw.xml
+brw_oa_chv.h: brw_oa.py brw_oa_chv.xml Makefile.am
+	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --header=$(builddir)/brw_oa_chv.h --chipset=chv $(srcdir)/brw_oa_chv.xml
+brw_oa_chv.c: brw_oa.py brw_oa_chv.xml Makefile.am
+	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --code=$(builddir)/brw_oa_chv.c --chipset=chv $(srcdir)/brw_oa_chv.xml
+brw_oa_sklgt2.h: brw_oa.py brw_oa_sklgt2.xml Makefile.am
+	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --header=$(builddir)/brw_oa_sklgt2.h --chipset=sklgt2 $(srcdir)/brw_oa_sklgt2.xml
+brw_oa_sklgt2.c: brw_oa.py brw_oa_sklgt2.xml Makefile.am
+	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --code=$(builddir)/brw_oa_sklgt2.c --chipset=sklgt2 $(srcdir)/brw_oa_sklgt2.xml
+brw_oa_sklgt3.h: brw_oa.py brw_oa_sklgt3.xml Makefile.am
+	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --header=$(builddir)/brw_oa_sklgt3.h --chipset=sklgt3 $(srcdir)/brw_oa_sklgt3.xml
+brw_oa_sklgt3.c: brw_oa.py brw_oa_sklgt3.xml Makefile.am
+	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --code=$(builddir)/brw_oa_sklgt3.c --chipset=sklgt3 $(srcdir)/brw_oa_sklgt3.xml
+brw_oa_sklgt4.h: brw_oa.py brw_oa_sklgt4.xml Makefile.am
+	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --header=$(builddir)/brw_oa_sklgt4.h --chipset=sklgt4 $(srcdir)/brw_oa_sklgt4.xml
+brw_oa_sklgt4.c: brw_oa.py brw_oa_sklgt4.xml Makefile.am
+	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --code=$(builddir)/brw_oa_sklgt4.c --chipset=sklgt4 $(srcdir)/brw_oa_sklgt4.xml
+brw_oa_bxt.h: brw_oa.py brw_oa_bxt.xml Makefile.am
+	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --header=$(builddir)/brw_oa_bxt.h --chipset=bxt $(srcdir)/brw_oa_bxt.xml
+brw_oa_bxt.c: brw_oa.py brw_oa_bxt.xml Makefile.am
+	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --code=$(builddir)/brw_oa_bxt.c --chipset=bxt $(srcdir)/brw_oa_bxt.xml
+brw_oa_kblgt2.h: brw_oa.py brw_oa_kblgt2.xml Makefile.am
+	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --header=$(builddir)/brw_oa_kblgt2.h --chipset=kblgt2 $(srcdir)/brw_oa_kblgt2.xml
+brw_oa_kblgt2.c: brw_oa.py brw_oa_kblgt2.xml Makefile.am
+	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --code=$(builddir)/brw_oa_kblgt2.c --chipset=kblgt2 $(srcdir)/brw_oa_kblgt2.xml
+brw_oa_kblgt3.h: brw_oa.py brw_oa_kblgt3.xml Makefile.am
+	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --header=$(builddir)/brw_oa_kblgt3.h --chipset=kblgt3 $(srcdir)/brw_oa_kblgt3.xml
+brw_oa_kblgt3.c: brw_oa.py brw_oa_kblgt3.xml Makefile.am
+	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --code=$(builddir)/brw_oa_kblgt3.c --chipset=kblgt3 $(srcdir)/brw_oa_kblgt3.xml
+brw_oa_glk.h: brw_oa.py brw_oa_glk.xml Makefile.am
+	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --header=$(builddir)/brw_oa_glk.h --chipset=glk $(srcdir)/brw_oa_glk.xml
+brw_oa_glk.c: brw_oa.py brw_oa_glk.xml Makefile.am
+	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --code=$(builddir)/brw_oa_glk.c --chipset=glk $(srcdir)/brw_oa_glk.xml
+endif

@@ -35,11 +35,11 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "main/glheader.h"
 #include "main/imports.h"
-#include "main/api_arrayelt.h"
 #include "main/enums.h"
 #include "main/light.h"
 #include "main/framebuffer.h"
 #include "main/fbobject.h"
+#include "main/state.h"
 #include "main/stencil.h"
 #include "main/viewport.h"
 
@@ -61,6 +61,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "r200_swtcl.h"
 #include "r200_vertprog.h"
 
+#include "util/simple_list.h"
 
 /* =============================================================
  * Alpha blending
@@ -2265,7 +2266,7 @@ GLboolean r200ValidateState( struct gl_context *ctx )
 	_NEW_MODELVIEW|_NEW_PROJECTION|_NEW_TRANSFORM|
 	_NEW_LIGHT|_NEW_TEXTURE|_NEW_TEXTURE_MATRIX|
 	_NEW_FOG|_NEW_POINT|_NEW_TRACK_MATRIX)) {
-      if (ctx->VertexProgram._Enabled) {
+      if (_mesa_arb_vertex_program_enabled(ctx)) {
 	 r200SetupVertexProg( ctx );
       }
       else TCL_FALLBACK(ctx, R200_TCL_FALLBACK_VERTEX_PROGRAM, 0);
@@ -2276,14 +2277,22 @@ GLboolean r200ValidateState( struct gl_context *ctx )
 }
 
 
-static void r200InvalidateState( struct gl_context *ctx, GLuint new_state )
+static void r200InvalidateState(struct gl_context *ctx)
 {
+   GLuint new_state = ctx->NewState;
+
+   r200ContextPtr rmesa = R200_CONTEXT(ctx);
+
+   if (new_state & (_NEW_SCISSOR | _NEW_BUFFERS | _NEW_VIEWPORT))
+      _mesa_update_draw_buffer_bounds(ctx, ctx->DrawBuffer);
+
    _swrast_InvalidateState( ctx, new_state );
    _swsetup_InvalidateState( ctx, new_state );
-   _vbo_InvalidateState( ctx, new_state );
    _tnl_InvalidateState( ctx, new_state );
-   _ae_invalidate_state( ctx, new_state );
    R200_CONTEXT(ctx)->radeon.NewGLState |= new_state;
+
+   if (new_state & _NEW_PROGRAM)
+      rmesa->curr_vp_hw = NULL;
 }
 
 /* A hack.  The r200 can actually cope just fine with materials
@@ -2320,7 +2329,8 @@ static void r200WrapRunPipeline( struct gl_context *ctx )
       if (!r200ValidateState( ctx ))
 	 FALLBACK(rmesa, RADEON_FALLBACK_TEXTURE, GL_TRUE);
 
-   has_material = !ctx->VertexProgram._Enabled && ctx->Light.Enabled && check_material( ctx );
+   has_material = !_mesa_arb_vertex_program_enabled(ctx) &&
+                  ctx->Light.Enabled && check_material( ctx );
 
    if (has_material) {
       TCL_FALLBACK( ctx, R200_TCL_FALLBACK_MATERIAL, GL_TRUE );

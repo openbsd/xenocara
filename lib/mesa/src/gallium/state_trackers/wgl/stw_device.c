@@ -63,6 +63,24 @@ stw_get_param(struct st_manager *smapi,
    }
 }
 
+
+/** Get the refresh rate for the monitor, in Hz */
+static int
+get_refresh_rate(void)
+{
+   DEVMODE devModes;
+
+   if (EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &devModes)) {
+      /* clamp the value, just in case we get garbage */
+      return CLAMP(devModes.dmDisplayFrequency, 30, 120);
+   }
+   else {
+      /* reasonable default */
+      return 60;
+   }
+}
+
+
 boolean
 stw_init(const struct stw_winsys *stw_winsys)
 {
@@ -72,7 +90,7 @@ stw_init(const struct stw_winsys *stw_winsys)
    debug_disable_error_message_boxes();
 
    debug_printf("%s\n", __FUNCTION__);
-   
+
    assert(!stw_dev);
 
    stw_tls_init();
@@ -83,7 +101,7 @@ stw_init(const struct stw_winsys *stw_winsys)
 #ifdef DEBUG
    stw_dev->memdbg_no = debug_memory_begin();
 #endif
-   
+
    stw_dev->stw_winsys = stw_winsys;
 
    stw_dev->stapi = stw_st_create_api();
@@ -92,10 +110,10 @@ stw_init(const struct stw_winsys *stw_winsys)
       goto error1;
 
    screen = stw_winsys->create_screen();
-   if(!screen)
+   if (!screen)
       goto error1;
 
-   if(stw_winsys->get_adapter_luid)
+   if (stw_winsys->get_adapter_luid)
       stw_winsys->get_adapter_luid(screen, &stw_dev->AdapterLuid);
 
    stw_dev->smapi->screen = screen;
@@ -115,6 +133,13 @@ stw_init(const struct stw_winsys *stw_winsys)
    }
 
    stw_pixelformat_init();
+
+   /* env var override for WGL_EXT_swap_control, useful for testing/debugging */
+   const char *s = os_get_option("SVGA_SWAP_INTERVAL");
+   if (s) {
+      stw_dev->swap_interval = atoi(s);
+   }
+   stw_dev->refresh_rate = get_refresh_rate();
 
    stw_dev->initialized = true;
 
@@ -153,7 +178,7 @@ stw_cleanup(void)
 
    if (!stw_dev)
       return;
-   
+
    /*
     * Abort cleanup if there are still active contexts. In some situations
     * this DLL may be unloaded before the DLL that is using GL contexts is.
@@ -170,10 +195,13 @@ stw_cleanup(void)
    handle_table_destroy(stw_dev->ctx_table);
 
    stw_framebuffer_cleanup();
-   
+
    DeleteCriticalSection(&stw_dev->fb_mutex);
    DeleteCriticalSection(&stw_dev->ctx_mutex);
-   
+
+   if (stw_dev->smapi->destroy)
+      stw_dev->smapi->destroy(stw_dev->smapi);
+
    FREE(stw_dev->smapi);
    stw_dev->stapi->destroy(stw_dev->stapi);
 
@@ -195,9 +223,7 @@ stw_cleanup(void)
 
 
 void APIENTRY
-DrvSetCallbackProcs(
-   INT nProcs,
-   PROC *pProcs )
+DrvSetCallbackProcs(INT nProcs, PROC *pProcs)
 {
    size_t size;
 
@@ -212,8 +238,7 @@ DrvSetCallbackProcs(
 
 
 BOOL APIENTRY
-DrvValidateVersion(
-   ULONG ulVersion )
+DrvValidateVersion(ULONG ulVersion)
 {
    /* ulVersion is the version reported by the KMD:
     * - via D3DKMTQueryAdapterInfo(KMTQAITYPE_UMOPENGLINFO) on WDDM,

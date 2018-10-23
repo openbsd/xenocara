@@ -21,9 +21,9 @@
  * IN THE SOFTWARE.
  */
 
-#include "brw_shader.h"
-#include "brw_nir.h"
+#include "compiler/brw_nir.h"
 #include "compiler/glsl/ir_uniform.h"
+#include "brw_program.h"
 
 static void
 brw_nir_setup_glsl_builtin_uniform(nir_variable *var,
@@ -61,14 +61,66 @@ brw_nir_setup_glsl_builtin_uniform(nir_variable *var,
          last_swiz = swiz;
 
          stage_prog_data->param[uniform_index++] =
-            &prog->Parameters->ParameterValues[index][swiz];
+            BRW_PARAM_PARAMETER(index, swiz);
       }
    }
 }
 
 static void
+setup_vec4_image_param(uint32_t *params, uint32_t idx,
+                       unsigned offset, unsigned n)
+{
+   assert(offset % sizeof(uint32_t) == 0);
+   for (unsigned i = 0; i < n; ++i)
+      params[i] = BRW_PARAM_IMAGE(idx, offset / sizeof(uint32_t) + i);
+
+   for (unsigned i = n; i < 4; ++i)
+      params[i] = BRW_PARAM_BUILTIN_ZERO;
+}
+
+static void
+brw_setup_image_uniform_values(gl_shader_stage stage,
+                               struct brw_stage_prog_data *stage_prog_data,
+                               unsigned param_start_index,
+                               const gl_uniform_storage *storage)
+{
+   uint32_t *param = &stage_prog_data->param[param_start_index];
+
+   for (unsigned i = 0; i < MAX2(storage->array_elements, 1); i++) {
+      const unsigned image_idx = storage->opaque[stage].index + i;
+
+      /* Upload the brw_image_param structure.  The order is expected to match
+       * the BRW_IMAGE_PARAM_*_OFFSET defines.
+       */
+      setup_vec4_image_param(param + BRW_IMAGE_PARAM_SURFACE_IDX_OFFSET,
+                             image_idx,
+                             offsetof(brw_image_param, surface_idx), 1);
+      setup_vec4_image_param(param + BRW_IMAGE_PARAM_OFFSET_OFFSET,
+                             image_idx,
+                             offsetof(brw_image_param, offset), 2);
+      setup_vec4_image_param(param + BRW_IMAGE_PARAM_SIZE_OFFSET,
+                             image_idx,
+                             offsetof(brw_image_param, size), 3);
+      setup_vec4_image_param(param + BRW_IMAGE_PARAM_STRIDE_OFFSET,
+                             image_idx,
+                             offsetof(brw_image_param, stride), 4);
+      setup_vec4_image_param(param + BRW_IMAGE_PARAM_TILING_OFFSET,
+                             image_idx,
+                             offsetof(brw_image_param, tiling), 3);
+      setup_vec4_image_param(param + BRW_IMAGE_PARAM_SWIZZLING_OFFSET,
+                             image_idx,
+                             offsetof(brw_image_param, swizzling), 2);
+      param += BRW_IMAGE_PARAM_SIZE;
+
+      brw_mark_surface_used(
+         stage_prog_data,
+         stage_prog_data->binding_table.image_start + image_idx);
+   }
+}
+
+static void
 brw_nir_setup_glsl_uniform(gl_shader_stage stage, nir_variable *var,
-                           struct gl_shader_program *shader_prog,
+                           const struct gl_program *prog,
                            struct brw_stage_prog_data *stage_prog_data,
                            bool is_scalar)
 {
@@ -81,10 +133,11 @@ brw_nir_setup_glsl_uniform(gl_shader_stage stage, nir_variable *var,
     * with our name, or the prefix of a component that starts with our name.
     */
    unsigned uniform_index = var->data.driver_location / 4;
-   for (unsigned u = 0; u < shader_prog->NumUniformStorage; u++) {
-      struct gl_uniform_storage *storage = &shader_prog->UniformStorage[u];
+   for (unsigned u = 0; u < prog->sh.data->NumUniformStorage; u++) {
+      struct gl_uniform_storage *storage =
+         &prog->sh.data->UniformStorage[u];
 
-      if (storage->builtin)
+      if (storage->builtin || storage->type->is_sampler())
          continue;
 
       if (strncmp(var->name, storage->name, namelen) != 0 ||
@@ -105,22 +158,27 @@ brw_nir_setup_glsl_uniform(gl_shader_stage stage, nir_variable *var,
                                   storage->type->matrix_columns);
          unsigned vector_size = storage->type->vector_elements;
          unsigned max_vector_size = 4;
-         if (storage->type->base_type == GLSL_TYPE_DOUBLE) {
+         if (storage->type->base_type == GLSL_TYPE_DOUBLE ||
+             storage->type->base_type == GLSL_TYPE_UINT64 ||
+             storage->type->base_type == GLSL_TYPE_INT64) {
             vector_size *= 2;
-            max_vector_size *= 2;
+            if (vector_size > 4)
+               max_vector_size = 8;
          }
 
          for (unsigned s = 0; s < vector_count; s++) {
             unsigned i;
             for (i = 0; i < vector_size; i++) {
-               stage_prog_data->param[uniform_index++] = components++;
+               uint32_t idx = components - prog->sh.data->UniformDataSlots;
+               stage_prog_data->param[uniform_index++] = BRW_PARAM_UNIFORM(idx);
+               components++;
             }
 
             if (!is_scalar) {
                /* Pad out with zeros if needed (only needed for vec4) */
                for (; i < max_vector_size; i++) {
-                  static const gl_constant_value zero = { 0.0 };
-                  stage_prog_data->param[uniform_index++] = &zero;
+                  stage_prog_data->param[uniform_index++] =
+                     BRW_PARAM_BUILTIN_ZERO;
                }
             }
          }
@@ -129,12 +187,15 @@ brw_nir_setup_glsl_uniform(gl_shader_stage stage, nir_variable *var,
 }
 
 void
-brw_nir_setup_glsl_uniforms(nir_shader *shader,
-                            struct gl_shader_program *shader_prog,
+brw_nir_setup_glsl_uniforms(void *mem_ctx, nir_shader *shader,
                             const struct gl_program *prog,
                             struct brw_stage_prog_data *stage_prog_data,
                             bool is_scalar)
 {
+   unsigned nr_params = shader->num_uniforms / 4;
+   stage_prog_data->nr_params = nr_params;
+   stage_prog_data->param = rzalloc_array(mem_ctx, uint32_t, nr_params);
+
    nir_foreach_variable(var, &shader->uniforms) {
       /* UBO's, atomics and samplers don't take up space in the
          uniform file */
@@ -145,17 +206,22 @@ brw_nir_setup_glsl_uniforms(nir_shader *shader,
          brw_nir_setup_glsl_builtin_uniform(var, prog, stage_prog_data,
                                             is_scalar);
       } else {
-         brw_nir_setup_glsl_uniform(shader->stage, var, shader_prog,
+         brw_nir_setup_glsl_uniform(shader->info.stage, var, prog,
                                     stage_prog_data, is_scalar);
       }
    }
 }
 
 void
-brw_nir_setup_arb_uniforms(nir_shader *shader, struct gl_program *prog,
+brw_nir_setup_arb_uniforms(void *mem_ctx, nir_shader *shader,
+                           struct gl_program *prog,
                            struct brw_stage_prog_data *stage_prog_data)
 {
    struct gl_program_parameter_list *plist = prog->Parameters;
+
+   unsigned nr_params = plist->NumParameters * 4;
+   stage_prog_data->nr_params = nr_params;
+   stage_prog_data->param = rzalloc_array(mem_ctx, uint32_t, nr_params);
 
    /* For ARB programs, prog_to_nir generates a single "parameters" variable
     * for all uniform data.  nir_lower_wpos_ytransform may also create an
@@ -171,12 +237,9 @@ brw_nir_setup_arb_uniforms(nir_shader *shader, struct gl_program *prog,
       assert(plist->Parameters[p].Size <= 4);
 
       unsigned i;
-      for (i = 0; i < plist->Parameters[p].Size; i++) {
-         stage_prog_data->param[4 * p + i] = &plist->ParameterValues[p][i];
-      }
-      for (; i < 4; i++) {
-         static const gl_constant_value zero = { 0.0 };
-         stage_prog_data->param[4 * p + i] = &zero;
-      }
+      for (i = 0; i < plist->Parameters[p].Size; i++)
+         stage_prog_data->param[4 * p + i] = BRW_PARAM_PARAMETER(p, i);
+      for (; i < 4; i++)
+         stage_prog_data->param[4 * p + i] = BRW_PARAM_BUILTIN_ZERO;
    }
 }

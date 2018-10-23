@@ -28,11 +28,11 @@
 #ifndef TGSI_UTIL_H
 #define TGSI_UTIL_H
 
+#include "pipe/p_shader_tokens.h"
+
 #if defined __cplusplus
 extern "C" {
 #endif
-
-#include "pipe/p_shader_tokens.h"
 
 struct tgsi_src_register;
 struct tgsi_full_src_register;
@@ -96,6 +96,18 @@ tgsi_is_msaa_target(unsigned target)
 {
    return (target == TGSI_TEXTURE_2D_MSAA ||
            target == TGSI_TEXTURE_2D_ARRAY_MSAA);
+}
+
+static inline bool
+tgsi_is_array_sampler(unsigned target)
+{
+   return target == TGSI_TEXTURE_1D_ARRAY ||
+          target == TGSI_TEXTURE_SHADOW1D_ARRAY ||
+          target == TGSI_TEXTURE_2D_ARRAY ||
+          target == TGSI_TEXTURE_SHADOW2D_ARRAY ||
+          target == TGSI_TEXTURE_CUBE_ARRAY ||
+          target == TGSI_TEXTURE_SHADOWCUBE_ARRAY ||
+          target == TGSI_TEXTURE_2D_ARRAY_MSAA;
 }
 
 #if defined __cplusplus

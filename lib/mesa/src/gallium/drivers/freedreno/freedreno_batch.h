@@ -55,7 +55,7 @@ enum fd_render_stage {
 	FD_STAGE_ALL      = 0xff,
 };
 
-#define MAX_HW_SAMPLE_PROVIDERS 4
+#define MAX_HW_SAMPLE_PROVIDERS 5
 struct fd_hw_sample_provider;
 struct fd_hw_sample;
 
@@ -67,6 +67,9 @@ struct fd_batch {
 	struct pipe_reference reference;
 	unsigned seqno;
 	unsigned idx;
+
+	int in_fence_fd;
+	bool needs_out_fence_fd;
 
 	struct fd_context *ctx;
 
@@ -150,6 +153,9 @@ struct fd_batch {
 	struct fd_ringbuffer *binning;
 	/** tiling/gmem (IB0) cmdstream: */
 	struct fd_ringbuffer *gmem;
+
+	// TODO maybe more generically split out clear and clear_binning rings?
+	struct fd_ringbuffer *lrz_clear;
 
 	/**
 	 * hw query related state:
@@ -261,17 +267,7 @@ fd_reset_wfi(struct fd_batch *batch)
 	batch->needs_wfi = true;
 }
 
-/* emit a WAIT_FOR_IDLE only if needed, ie. if there has not already
- * been one since last draw:
- */
-static inline void
-fd_wfi(struct fd_batch *batch, struct fd_ringbuffer *ring)
-{
-	if (batch->needs_wfi) {
-		OUT_WFI(ring);
-		batch->needs_wfi = false;
-	}
-}
+void fd_wfi(struct fd_batch *batch, struct fd_ringbuffer *ring);
 
 /* emit a CP_EVENT_WRITE:
  */
