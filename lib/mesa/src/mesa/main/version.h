@@ -47,4 +47,15 @@ _mesa_override_gl_version(struct gl_context *ctx);
 extern void
 _mesa_override_glsl_version(struct gl_constants *consts);
 
+extern void
+_mesa_get_driver_uuid(struct gl_context *ctx, GLint *uuid);
+
+extern void
+_mesa_get_device_uuid(struct gl_context *ctx, GLint *uuid);
+
+extern int
+_mesa_get_shading_language_version(const struct gl_context *ctx,
+                                   int index,
+                                   char **versionOut);
+
 #endif /* VERSION_H */
