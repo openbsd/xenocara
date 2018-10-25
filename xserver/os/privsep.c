@@ -1,4 +1,4 @@
-/* $OpenBSD: privsep.c,v 1.29 2018/08/06 20:11:34 matthieu Exp $ */
+/* $OpenBSD: privsep.c,v 1.30 2018/10/25 06:41:25 mestre Exp $ */
 /*
  * Copyright 2001 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -274,6 +274,10 @@ priv_init(uid_t uid, gid_t gid)
 	setproctitle("[priv]");
 	close(socks[1]);
 
+	for (dev = allowed_devices; dev->name != NULL; dev++) {
+		if (unveil(dev->name, "rw") == -1)
+			err(1, "unveil");
+	}
 	if (pledge("stdio rpath wpath sendfd proc", NULL) == -1)
 		err(1, "pledge");
 
