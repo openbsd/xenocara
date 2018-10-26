@@ -174,19 +174,19 @@ main(int argc, char *argv[])
             exit(1);
         }
         if (pledge("stdio rpath wpath cpath", NULL) == -1) {
-            fprintf(stderr, "%s: could not pledge", program_name);
+            fprintf(stderr, "%s: could not pledge\n", program_name);
             exit(1);
         }
     }
     if (input_name && !output_name) {
         if (pledge("stdio rpath", NULL) == -1) {
-            fprintf(stderr, "%s: could not pledge", program_name);
+            fprintf(stderr, "%s: could not pledge\n", program_name);
             exit(1);
         }
     }
     if (!input_name && !output_name) {
         if (pledge("stdio", NULL) == -1) {
-            fprintf(stderr, "%s: could not pledge", program_name);
+            fprintf(stderr, "%s: could not pledge\n", program_name);
             exit(1);
         }
     }
