@@ -39,6 +39,7 @@ from The Open Group.
 #include "bdfint.h"
 #include "pcf.h"
 #include <stdio.h>
+#include <unistd.h>
 #include <X11/Xos.h>
 
 int
@@ -158,6 +159,38 @@ main(int argc, char *argv[])
         }
         argv++;
     }
+
+    if (input_name) {
+        if (unveil(input_name, "r") == -1) {
+            fprintf(stderr, "%s: could not unveil %s\n",
+                    program_name, input_name);
+            exit(1);
+		}
+    }
+    if (output_name) {
+        if (unveil(output_name, "rwc") == -1) {
+            fprintf(stderr, "%s: could not unveil %s\n",
+                    program_name, output_name);
+            exit(1);
+        }
+        if (pledge("stdio rpath wpath cpath", NULL) == -1) {
+            fprintf(stderr, "%s: could not pledge", program_name);
+            exit(1);
+        }
+    }
+    if (input_name && !output_name) {
+        if (pledge("stdio rpath", NULL) == -1) {
+            fprintf(stderr, "%s: could not pledge", program_name);
+            exit(1);
+        }
+    }
+    if (!input_name && !output_name) {
+        if (pledge("stdio", NULL) == -1) {
+            fprintf(stderr, "%s: could not pledge", program_name);
+            exit(1);
+        }
+    }
+
     if (input_name) {
         input = FontFileOpen(input_name);
         if (!input) {
