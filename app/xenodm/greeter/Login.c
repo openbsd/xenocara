@@ -754,7 +754,7 @@ SetPrompt (Widget ctx, int promptNum, const char *message,
         return -1;
     }
 
-    strlcpy(prompt, message, messageLen);
+    strlcpy(prompt, message, messageLen + 3);
 
     /* Make sure text prompts have at least two spaces at end */
     e = messageLen;
