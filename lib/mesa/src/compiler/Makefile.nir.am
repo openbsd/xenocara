@@ -52,11 +52,11 @@ nir/nir_opcodes.c: nir/nir_opcodes.py nir/nir_opcodes_c.py
 nir/nir_opt_algebraic.c: nir/nir_opt_algebraic.py nir/nir_algebraic.py
 	$(MKDIR_GEN)
 	$(PYTHON_GEN) $(srcdir)/nir/nir_opt_algebraic.py > $@ || ($(RM) $@; false)
-endif
 
 spirv/spirv_info.c: spirv/spirv_info_c.py spirv/spirv.core.grammar.json
 	$(MKDIR_GEN)
 	$(PYTHON_GEN) $(srcdir)/spirv/spirv_info_c.py $(srcdir)/spirv/spirv.core.grammar.json $@ || ($(RM) $@; false)
+endif
 
 noinst_PROGRAMS += spirv2nir
 
