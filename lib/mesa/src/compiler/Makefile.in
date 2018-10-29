@@ -2635,9 +2635,9 @@ dist-hook:
 @REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
 @REGEN_SOURCES_TRUE@	$(PYTHON_GEN) $(srcdir)/nir/nir_opt_algebraic.py > $@ || ($(RM) $@; false)
 
-spirv/spirv_info.c: spirv/spirv_info_c.py spirv/spirv.core.grammar.json
-	$(MKDIR_GEN)
-	$(PYTHON_GEN) $(srcdir)/spirv/spirv_info_c.py $(srcdir)/spirv/spirv.core.grammar.json $@ || ($(RM) $@; false)
+@REGEN_SOURCES_TRUE@spirv/spirv_info.c: spirv/spirv_info_c.py spirv/spirv.core.grammar.json
+@REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
+@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) $(srcdir)/spirv/spirv_info_c.py $(srcdir)/spirv/spirv.core.grammar.json $@ || ($(RM) $@; false)
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
