@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -u
+
 # The following symbols (past the first five) are taken from the public headers.
 # A list of the latter should be available Makefile.sources/LIBDRM_FREEDRENO_H_FILES
 
@@ -46,19 +48,16 @@ fd_ringbuffer_emit_reloc_ring_full
 fd_ringbuffer_flush
 fd_ringbuffer_grow
 fd_ringbuffer_new
+fd_ringbuffer_new_flags
 fd_ringbuffer_new_object
+fd_ringbuffer_ref
 fd_ringbuffer_reloc
 fd_ringbuffer_reloc2
 fd_ringbuffer_reset
 fd_ringbuffer_set_parent
 fd_ringbuffer_size
 fd_ringbuffer_timestamp
-fd_ringmarker_del
-fd_ringmarker_dwords
-fd_ringmarker_flush
 fd_ringbuffer_flush2
-fd_ringmarker_mark
-fd_ringmarker_new
 EOF
 done)
 

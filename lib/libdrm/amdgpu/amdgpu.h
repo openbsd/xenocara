@@ -721,7 +721,17 @@ int amdgpu_find_bo_by_cpu_mapping(amdgpu_device_handle dev,
 int amdgpu_bo_free(amdgpu_bo_handle buf_handle);
 
 /**
- * Request CPU access to GPU accessible memory
+ * Increase the reference count of a buffer object
+ *
+ * \param   bo - \c [in]  Buffer object handle to increase the reference count
+ *
+ * \sa amdgpu_bo_alloc(), amdgpu_bo_free()
+ *
+*/
+void amdgpu_bo_inc_ref(amdgpu_bo_handle bo);
+
+/**
+ * Request CPU access to GPU accessable memory
  *
  * \param   buf_handle - \c [in] Buffer handle
  * \param   cpu        - \c [out] CPU address to be used for access

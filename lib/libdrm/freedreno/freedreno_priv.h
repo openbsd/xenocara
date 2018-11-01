@@ -98,6 +98,7 @@ struct fd_device {
 	const struct fd_device_funcs *funcs;
 
 	struct fd_bo_cache bo_cache;
+	struct fd_bo_cache ring_cache;
 
 	int closefd;        /* call close(fd) upon destruction */
 
@@ -113,10 +114,6 @@ drm_private int fd_bo_cache_free(struct fd_bo_cache *cache, struct fd_bo *bo);
 
 /* for where @table_lock is already held: */
 drm_private void fd_device_del_locked(struct fd_device *dev);
-
-enum fd_ringbuffer_flags {
-	FD_RINGBUFFER_OBJECT = 0x1,
-};
 
 struct fd_pipe_funcs {
 	struct fd_ringbuffer * (*ringbuffer_new)(struct fd_pipe *pipe, uint32_t size,
@@ -134,11 +131,6 @@ struct fd_pipe {
 	const struct fd_pipe_funcs *funcs;
 };
 
-struct fd_ringmarker {
-	struct fd_ringbuffer *ring;
-	uint32_t *cur;
-};
-
 struct fd_ringbuffer_funcs {
 	void * (*hostptr)(struct fd_ringbuffer *ring);
 	int (*flush)(struct fd_ringbuffer *ring, uint32_t *last_start,
@@ -148,8 +140,7 @@ struct fd_ringbuffer_funcs {
 	void (*emit_reloc)(struct fd_ringbuffer *ring,
 			const struct fd_reloc *reloc);
 	uint32_t (*emit_reloc_ring)(struct fd_ringbuffer *ring,
-			struct fd_ringbuffer *target, uint32_t cmd_idx,
-			uint32_t submit_offset, uint32_t size);
+			struct fd_ringbuffer *target, uint32_t cmd_idx);
 	uint32_t (*cmd_count)(struct fd_ringbuffer *ring);
 	void (*destroy)(struct fd_ringbuffer *ring);
 };
@@ -172,10 +163,18 @@ struct fd_bo {
 	atomic_t refcnt;
 	const struct fd_bo_funcs *funcs;
 
-	int bo_reuse;
+	enum {
+		NO_CACHE = 0,
+		BO_CACHE = 1,
+		RING_CACHE = 2,
+	} bo_reuse;
+
 	struct list_head list;   /* bucket-list entry */
 	time_t free_time;        /* time when added to bucket-list */
 };
+
+drm_private struct fd_bo *fd_bo_new_ring(struct fd_device *dev,
+		uint32_t size, uint32_t flags);
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
