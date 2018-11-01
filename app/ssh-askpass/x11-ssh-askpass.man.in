@@ -45,7 +45,7 @@ are as follows:
 .Bl -dash -offset indent
 .It 
 Configurable via the standard X resource mechanisms
-.Pa /etc/X11/app-defaults ,
+.Pa /usr/X11R6/share/X11/app-defaults ,
 .Pa ~/.Xdefaults ,
 .Xr xrdb 1 ,
 etc.
@@ -285,8 +285,9 @@ the string to display on the button.
 the font to use for this button label.
 .El
 .Sh FILES
-.Bl -tag -width "/etc/X11/app-defaults/SshAskpass" -compact
-.It Pa /etc/X11/app-defaults/SshAskpass
+.Bl -tag -width Ds -compact
+.It Pa /usr/X11R6/share/X11/app-defaults/SshAskpass
+The default application resources.
 .El
 .Sh SEE ALSO
 .Xr ssh 1 ,
