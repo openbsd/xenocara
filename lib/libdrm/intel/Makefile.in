@@ -127,7 +127,7 @@ am__installdirs = "$(DESTDIR)$(libdrm_intel_ladir)" \
 LTLIBRARIES = $(libdrm_intel_la_LTLIBRARIES)
 libdrm_intel_la_DEPENDENCIES = ../libdrm.la
 am__objects_1 = intel_bufmgr.lo intel_bufmgr_fake.lo \
-	intel_bufmgr_gem.lo intel_decode.lo mm.lo
+	intel_bufmgr_gem.lo intel_decode.lo intel_chipset.lo mm.lo
 am_libdrm_intel_la_OBJECTS = $(am__objects_1)
 libdrm_intel_la_OBJECTS = $(am_libdrm_intel_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -346,12 +346,14 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 LIBDRM_INTEL_FILES := \
+	i915_pciids.h \
 	intel_bufmgr.c \
 	intel_bufmgr_priv.h \
 	intel_bufmgr_fake.c \
 	intel_bufmgr_gem.c \
 	intel_decode.c \
 	intel_chipset.h \
+	intel_chipset.c \
 	mm.c \
 	mm.h \
 	uthash.h
@@ -363,6 +365,7 @@ LIBDRM_INTEL_H_FILES := \
 
 AM_CFLAGS = \
 	$(WARN_CFLAGS) \
+	-fvisibility=hidden \
 	-I$(top_srcdir) \
 	$(PTHREADSTUBS_CFLAGS) \
 	$(PCIACCESS_CFLAGS) \
@@ -388,6 +391,7 @@ BATCHES = \
 	tests/gen7-2d-copy.batch \
 	tests/gen7-3d.batch
 
+AM_TESTS_ENVIRONMENT = NM='$(NM)'
 EXTRA_DIST = \
 	$(BATCHES) \
 	$(BATCHES:.batch=.batch.sh) \
@@ -493,6 +497,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intel_bufmgr.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intel_bufmgr_fake.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intel_bufmgr_gem.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intel_chipset.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intel_decode.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mm.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_decode.Po@am__quote@

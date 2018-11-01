@@ -328,6 +328,7 @@ LIBDRM_ETNAVIV_H_FILES := \
 
 AM_CFLAGS = \
 	$(WARN_CFLAGS) \
+	-fvisibility=hidden \
 	-I$(top_srcdir) \
 	$(PTHREADSTUBS_CFLAGS) \
 	-I$(top_srcdir)/include/drm
@@ -344,6 +345,7 @@ libdrm_etnaviv_la_SOURCES = $(LIBDRM_ETNAVIV_FILES)
 libdrm_etnavivincludedir = ${includedir}/libdrm
 libdrm_etnavivinclude_HEADERS = $(LIBDRM_ETNAVIV_H_FILES)
 pkgconfig_DATA = libdrm_etnaviv.pc
+AM_TESTS_ENVIRONMENT = NM='$(NM)'
 TESTS = etnaviv-symbol-check
 EXTRA_DIST = $(TESTS)
 all: all-am

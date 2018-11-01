@@ -314,6 +314,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CFLAGS = \
 	$(WARN_CFLAGS) \
+	-fvisibility=hidden \
 	-I$(top_srcdir) \
 	$(PTHREADSTUBS_CFLAGS) \
 	-I$(top_srcdir)/include/drm
@@ -328,6 +329,7 @@ libdrm_omapcommoninclude_HEADERS = omap_drm.h
 libdrm_omapincludedir = ${includedir}/libdrm
 libdrm_omapinclude_HEADERS = omap_drmif.h
 pkgconfig_DATA = libdrm_omap.pc
+AM_TESTS_ENVIRONMENT = NM='$(NM)'
 TESTS = omap-symbol-check
 EXTRA_DIST = $(TESTS)
 all: all-am

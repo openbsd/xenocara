@@ -279,9 +279,9 @@ MODETEST_FILES := \
 	cursor.h \
 	modetest.c
 
-AM_CFLAGS = $(filter-out -Wpointer-arith, $(WARN_CFLAGS)) -pthread \
-	-I$(top_srcdir)/include/drm -I$(top_srcdir)/tests \
-	-I$(top_srcdir)
+AM_CFLAGS = $(filter-out -Wpointer-arith, $(WARN_CFLAGS)) \
+	-fvisibility=hidden -pthread -I$(top_srcdir)/include/drm \
+	-I$(top_srcdir)/tests -I$(top_srcdir)
 modetest_SOURCES = $(MODETEST_FILES)
 modetest_LDADD = \
 	$(top_builddir)/libdrm.la \

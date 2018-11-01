@@ -70,7 +70,8 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
 am_modeprint_OBJECTS = modeprint.$(OBJEXT)
 modeprint_OBJECTS = $(am_modeprint_OBJECTS)
-modeprint_DEPENDENCIES = $(top_builddir)/libdrm.la
+modeprint_DEPENDENCIES = $(top_builddir)/tests/util/libutil.la \
+	$(top_builddir)/libdrm.la
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
@@ -271,6 +272,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CFLAGS = \
 	$(WARN_CFLAGS)\
+	-fvisibility=hidden \
 	-I$(top_srcdir)/include/drm \
 	-I$(top_srcdir)/tests \
 	-I$(top_srcdir)
@@ -279,6 +281,7 @@ modeprint_SOURCES = \
 	modeprint.c
 
 modeprint_LDADD = \
+	$(top_builddir)/tests/util/libutil.la \
 	$(top_builddir)/libdrm.la
 
 all: all-am
