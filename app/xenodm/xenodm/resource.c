@@ -50,7 +50,6 @@ int	sourceAddress;
 char	*authDir;
 int	autoRescan;
 int	removeDomainname;
-char	*keyFile;
 char	**exportList;
 
 #define DM_STRING	0
@@ -95,9 +94,6 @@ char	**exportList;
 #ifndef DEF_USER_AUTH_DIR
 # define DEF_USER_AUTH_DIR	"/tmp"
 #endif
-#ifndef DEF_KEY_FILE
-# define DEF_KEY_FILE	""
-#endif
 #ifndef DEF_ACCESS_FILE
 # define DEF_ACCESS_FILE	""
 #endif
@@ -122,8 +118,6 @@ struct dmResources {
 				"true"} ,
 { "removeDomainname","RemoveDomainname",DM_BOOL,(char **) &removeDomainname,
 				"true"} ,
-{ "keyFile",	"KeyFile",	DM_STRING,	&keyFile,
-				DEF_KEY_FILE} ,
 { "exportList",	"ExportList",	DM_ARGV,	(char **) &exportList,
 				""} ,
 { "sourceAddress","SourceAddress",DM_BOOL,	(char **) &sourceAddress,

@@ -182,7 +182,6 @@ extern int	daemonMode;
 extern char	*authDir;
 extern int	autoRescan;
 extern int	removeDomainname;
-extern char	*keyFile;
 extern char	**exportList;
 
 extern struct display	*FindDisplayByName (char *name),

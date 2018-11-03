@@ -1,8 +1,7 @@
-! $OpenBSD: xenodm-config.in,v 1.4 2017/09/05 17:48:07 deraadt Exp $
+! $OpenBSD: xenodm-config.in,v 1.5 2018/11/03 18:04:45 matthieu Exp $
 !
 DisplayManager.authDir:	@XENODMXAUTHDIR@
 DisplayManager.errorLogFile:	@XENODMLOGDIR@/xenodm.log
-DisplayManager.keyFile:		@XENODMCONFIGDIR@/xenodm-keys
 DisplayManager.servers:		@XENODMCONFIGDIR@/Xservers
 DisplayManager*resources:	@XENODMCONFIGDIR@/Xresources
 ! All displays should use authorization, but we cannot be sure
