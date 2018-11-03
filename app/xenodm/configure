@@ -19729,49 +19729,6 @@ XDMGREET_LIBS="$XDMGREET_LIBS $XENODM_TOOLKIT_LIBS $DMCP_LIBS $GREETER_LIBS"
 XENODM_CFLAGS="$XENODM_CFLAGS $DMCP_CFLAGS $XLIB_CFLAGS $AUTH_CFLAGS $STATIC_GREETER_CFLAGS"
 XENODM_LIBS="$XENODM_LIBS $DMCP_LIBS"
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for XdmcpWrap in -lXdmcp" >&5
-$as_echo_n "checking for XdmcpWrap in -lXdmcp... " >&6; }
-if ${ac_cv_lib_Xdmcp_XdmcpWrap+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lXdmcp $DMCP_LIBS $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char XdmcpWrap ();
-int
-main ()
-{
-return XdmcpWrap ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_Xdmcp_XdmcpWrap=yes
-else
-  ac_cv_lib_Xdmcp_XdmcpWrap=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_Xdmcp_XdmcpWrap" >&5
-$as_echo "$ac_cv_lib_Xdmcp_XdmcpWrap" >&6; }
-if test "x$ac_cv_lib_Xdmcp_XdmcpWrap" = xyes; then :
-  xdmauth="yes"
-else
-  xdmauth="no"
-fi
-
-
 
 
 
