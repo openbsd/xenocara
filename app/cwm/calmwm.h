@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.361 2018/07/16 14:19:23 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.362 2018/11/08 15:49:42 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -130,6 +130,7 @@ struct client_ctx {
 	Window			 win;
 	Colormap		 colormap;
 	int			 bwidth; /* border width */
+	int			 obwidth; /* original border width */
 	struct geom		 geom, savegeom, fullgeom;
 	struct {
 		long		 flags;	/* defined hints */
