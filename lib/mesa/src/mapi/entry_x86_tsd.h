@@ -31,7 +31,7 @@
 #define HIDDEN
 #endif
 
-#define X86_ENTRY_SIZE 64
+#define X86_ENTRY_SIZE 32
 
 __asm__(".text\n"
         ".balign 32\n"
@@ -44,16 +44,12 @@ __asm__(".text\n"
    func ":"
 
 #define STUB_ASM_CODE(slot)         \
-   "call 1f\n\t"                    \
-   "1:\n\t"                         \
-   "popl %eax\n\t"                  \
-   "addl $_GLOBAL_OFFSET_TABLE_+[.-1b], %eax\n\t" \
-   "movl " ENTRY_CURRENT_TABLE "@GOT(%eax), %eax\n\t" \
-   "mov (%eax), %eax\n\t"           \
+   "movl " ENTRY_CURRENT_TABLE ", %eax\n\t" \
    "testl %eax, %eax\n\t"           \
-   "jne 1f\n\t"                     \
-   "call " ENTRY_CURRENT_TABLE_GET "@PLT\n\t" \
+   "je 1f\n\t"                      \
+   "jmp *(4 * " slot ")(%eax)\n"    \
    "1:\n\t"                         \
+   "call " ENTRY_CURRENT_TABLE_GET "\n\t" \
    "jmp *(4 * " slot ")(%eax)"
 
 #define MAPI_TMP_STUB_ASM_GCC
