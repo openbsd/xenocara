@@ -1,4 +1,4 @@
-/*	$OpenBSD: xidle.c,v 1.6 2018/09/06 07:21:34 matthieu Exp $	*/
+/*	$OpenBSD: xidle.c,v 1.7 2018/11/11 16:01:21 kn Exp $	*/
 /*
  * Copyright (c) 2005 Federico G. Schwindt
  * Copyright (c) 2005 Claudio Castiglia
@@ -344,9 +344,6 @@ main(int argc, char **argv)
 	int fd;
 	u_long last_serial = 0;
 
-	bzero(&x, sizeof(struct xinfo));
-
-	
 	parse_opts(argc, argv, &x.dpy, &area, &delay, &timeout,
 	    &position, args);
 
