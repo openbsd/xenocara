@@ -1,4 +1,4 @@
-/*	$OpenBSD: xidle.c,v 1.7 2018/11/11 16:01:21 kn Exp $	*/
+/*	$OpenBSD: xidle.c,v 1.8 2018/11/11 16:10:37 kn Exp $	*/
 /*
  * Copyright (c) 2005 Federico G. Schwindt
  * Copyright (c) 2005 Claudio Castiglia
@@ -187,14 +187,10 @@ action(struct xinfo *xi, char **args)
 	switch (fork()) {
 	case -1:
 		err(1, "fork");
-		/* NOTREACHED */
-
 	case 0:
 		setsid();
 		execv(*args, args);
 		exit(1);
-		/* NOTREACHED */
-
 	default:
 		wait(&dumb);
 		XSync(xi->dpy, True);
@@ -259,6 +255,7 @@ void
 parse_opts(int argc, char **argv, Display **dpy, int *area, int *delay,
     int *timeout, int *position, char **args)
 {
+	const char *errstr;
 	char **ap, *program = PATH_PROG;
 	char *display, *p;
 	XrmDatabase tdb, rdb = NULL;
@@ -276,7 +273,6 @@ parse_opts(int argc, char **argv, Display **dpy, int *area, int *delay,
 	*dpy = XOpenDisplay(display);
 	if (!*dpy) {
 		errx(1, "Unable to open display %s", XDisplayName(display));
-		/* NOTREACHED */
 	}
 
 	/* Get server resources database. */
@@ -297,29 +293,26 @@ parse_opts(int argc, char **argv, Display **dpy, int *area, int *delay,
 	    __progname, &argc, argv);
 	if (argc > 1) {
 		usage();
-		/* NOTREACHED */
 	}
 	if (getres(&value, rdb, "area", "Area")) {
-		*area = strtol((char *)value.addr, &p, 10);
-		if (*p || *area < 1) {
-fail:			errx(1, "illegal value -- %s", (char *)value.addr);
-			/* NOTREACHED */
-		}
+		*area = strtonum(value.addr, 1, INT_MAX, &errstr);
+		if (errstr)
+			errx(1, "area is %s: %s", errstr, value.addr);
 	}
 	if (getres(&value, rdb, "delay", "Delay")) {
-		*delay = strtol((char *)value.addr, &p, 10);
-		if (*p || *delay < 0)
-			goto fail;
+		*delay = strtonum(value.addr, 0, INT_MAX, &errstr);
+		if (errstr)
+			errx(1, "delay is %s: %s", errstr, value.addr);
 	}
 	if (getres(&value, rdb, "position", "Position")) {
-		*position = str2pos((char *)value.addr);
+		*position = str2pos(value.addr);
 		if (!*position)
-			goto fail;
+			errx(1, "position is invalid: %s", value.addr);
 	}
 	if (getres(&value, rdb, "timeout", "Timeout")) {
-		*timeout = strtol((char *)value.addr, &p, 10);
-		if (*p || *timeout < 0)
-			goto fail;
+		*timeout = strtonum(value.addr, 0, INT_MAX, &errstr);
+		if (errstr)
+			errx(1, "timeout is %s: %s", errstr, value.addr);
 	}
 	if (getres(&value, rdb, "program", "Program")) {
 		/* Should be the last :) */
@@ -451,6 +444,4 @@ main(int argc, char **argv)
 			break;
 		}
 	}
-
-	/* NOTREACHED */
 }
