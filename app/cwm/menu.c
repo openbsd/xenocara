@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: menu.c,v 1.105 2017/12/19 19:38:43 okan Exp $
+ * $OpenBSD: menu.c,v 1.106 2018/11/14 19:22:51 okan Exp $
  */
 
 #include <sys/types.h>
@@ -159,6 +159,7 @@ out:
 		mi = NULL;
 	}
 
+	XSelectInput(X_Dpy, sc->menu.win, NoEventMask);
 	XSetInputFocus(X_Dpy, focuswin, focusrevert, CurrentTime);
 	/* restore if user didn't move */
 	xu_ptr_getpos(sc->rootwin, &xcur, &ycur);
