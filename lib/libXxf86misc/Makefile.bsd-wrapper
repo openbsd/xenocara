@@ -1,5 +1,0 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.3 2013/08/13 07:07:19 guenther Exp $
-
-SHARED_LIBS=	Xxf86misc 6.0
-
-.include <bsd.xorg.mk>
