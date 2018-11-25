@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.394 2018/10/20 19:26:12 matthieu Exp $
+# $OpenBSD: MODULES,v 1.395 2018/11/25 10:19:27 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -117,7 +117,7 @@ driver/xf86-video-mga		1.6.5	7.7+
 driver/xf86-video-neomagic	1.2.9	7.7+
 driver/xf86-video-nv		2.1.21	7.7+
 driver/xf86-video-openchrome	0.6	7.7+	needs-update-and-dri
-driver/xf86-video-r128		6.11.0	7.7+	needs-update
+driver/xf86-video-r128		6.12.0	7.7+	needs-update
 driver/xf86-video-rendition	4.2.7
 driver/xf86-video-s3		0.6.5
 driver/xf86-video-s3virge	1.10.7
@@ -250,4 +250,4 @@ util/gccmakedep			1.0.3
 util/macros			1.19.2	7.7+
 util/makedepend			1.0.5	7.7+
 
-xserver				1.20.2	7.7+	needs-update
+xserver				1.20.3	7.7+	needs-update
