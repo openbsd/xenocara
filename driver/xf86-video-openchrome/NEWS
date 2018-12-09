@@ -1,3 +1,144 @@
+OpenChrome DDX Version 0.6 (March 7th, 2017)
+--------------------------------------------
+
+OpenChrome DDX Version 0.6 is an improved version of OpenChrome DDX 
+Version 0.5 with a number of improvements made to the code. OpenChrome 
+DDX Version 0.6 is written in a way to completely replace Version 
+0.2.904 through 0.5.
+
+OpenChrome DDX Version 0.6 has added the following new features.
+
+- First official support for CX700, VX700, and VX800 chipsets 
+  integrated TMDS transmitter (i.e., DVI support)
+- Initial support for Silicon Image SiI 164 TMDS transmitter
+
+
+OpenChrome DDX Version 0.6 has the following improvements.
+
+- Improved FP reinitialization when resuming from standby
+  (HP 2133 Mini-Note, FIC CE260 / CE261 based netbooks like 
+   Everex CloudBook and Sylvania g netbook)
+- Improved automatic detection of display resources
+- Improved X Server stability in dual monitor mode
+- Automatic active steering of the display controller channel to the 
+  correct display output device
+
+
+OpenChrome DDX Version 0.6 fixes the following bugs.
+
+- Fix for the disruption of the VT (Virtual Terminal) screen bug 
+  introduced in Version 0.5
+- Fix for HP 2133 Mini-Note's PCIe WLAN getting turned off 
+  inadvertently bug introduced in Version 0.5
+
+
+OpenChrome Version 0.5 (July 6th, 2016)
+---------------------------------------
+
+Based on OpenChrome Version 0.4.0 code, OpenChrome Version 0.5 fixes 
+several bugs while adding two new features. 
+
+- Major code cleanup
+- Removal of more manual options (BusWidth, ForcePanel, and AccelMethod)
+- Fix for runtime screen resolution change X.Org Server crash bug
+- Fix for CLE266 chipset not being able to function correctly if 
+  "CRT + TV" option was chosen in BIOS setup
+- Initial support for VIA Technologies VT1632A TMDS transmitter for DVI
+- Initial support for multiple display output (i.e., RandR)
+
+
+OpenChrome Version 0.4.0 (March 31st, 2016)
+-------------------------------------------
+
+OpenChrome Version 0.4.0 is a major break from the past versions where 
+configuring the display resources were done manually. Now the displays 
+are detected mostly automatically, although a few manual options still 
+remain. These will be retired in the near future. Besides that, two 
+alternative mode setting options were discontinued (VBE mode setting 
+and "legacy" mode setting), in order to simplify the code. A regression 
+affecting those with a DVI to VGA adapter, which appeared in OpenChrome 
+Version 0.3.x, is now fixed. More importantly, devices that were not 
+registered with a known device table (a large table that is located 
+internally inside the code) used to crash during boot time, but since 
+this table was removed completely, this bug does not appear anymore.
+
+- Removal of VBE (VESA BIOS Extension) mode setting
+  (removal of VBEModes and VbeSaveRestore options)
+- Removal of "legacy" mode setting
+  (removal of ModeSwitchMethod option)
+- Removal of ActiveDevice option
+- Removal of ForcePanel option
+- Removal of PanelSize option
+- Removal of a known device table internally
+- Mostly automatic display detection
+- Fix for a regression affecting those with DVI to VGA adapter
+- Fix for a boot time crash for devices that were not on the known 
+  device table
+- Fix for a possible OLPC XO-1.5 detection issue (untested)
+- Fix for various small compilation warnings / errors
+
+
+openchrome 0.3.3 (23/05/2013)
+-----------------------------
+
+This is a bugfix release.
+- Fix integer overflow in libchromeXvMC (CVE-2013-1994).
+- Various bug fixes and improvements.
+
+
+openchrome 0.3.2 (27/03/2013)
+-----------------------------
+
+This is a bugfix release.
+- EXA fixes. Compositing is now enabled again.
+- TV out fixes and enhancements.
+- Fix memory detection on P4M800.
+- Fix for lockup when probing some I2C bus on P4M900.
+- VGA out probing with Vblank.
+- Fix building with autoconf 1.13.1.
+- Fix for X server 1.14.
+- Various bug fixes and improvements.
+
+
+openchrome 0.3.1 (04/09/2012)
+-----------------------------
+
+This is a bugfix release. It mainly fixes a crash at startup with X server 1.13.
+
+
+openchrome 0.3.0 (20/07/2012)
+-----------------------------
+
+The 0.3.0 release is a major step forward for the openchrome X.org
+driver. It brings most of the features that are needed with todays X
+server. The code has seen a major overhaul, with a lot of new features
+and a lot of cleanup. It has been tested on most of the available VIA
+IGPs and we believe there are no regression at this point. However, the
+testing was done on a limited range of hardware, so your mileage may
+vary. Please let us know if you have any trouble using it.
+
+* New Features :
+- TTM/GEM support.
+- KMS support.
+- Better RandR support.
+- XAA removal.
+- DGA removal.
+- Support for X server 1.13 API.
+- Code cleanup and bug fixes.
+
+* Known bugs and limitations :
+- Dual screen is not fully working.
+- EXA compositing is disabled.
+- KMS-enabled DRM module is not in upstream kernel yet.
+
+Starting with the 0.3.0 release, please submit bugs and patches to
+freedesktop.org bug tracker.
+https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=Driver/openchrome
+
+The old ticket tracker is kept as a reference only. It is still
+available at : http://www.openchrome.org/trac/report/1?asc=1&sort=ticket
+
+
 openchrome 0.2.906 (15/05/2012)
 -------------------------------
 * New features :

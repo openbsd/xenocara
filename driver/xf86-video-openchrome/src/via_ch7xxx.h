@@ -86,8 +86,6 @@ static DisplayModeRec CH7011Modes[]={
     { MODEPREFIX("720x576"),      28500,  720,  728,  744,  760, 0,  576,  635,  643,  750, 0, V_NHSYNC | V_PVSYNC, MODESUFFIXPAL  },
     { MODEPREFIX("720x480Noscale"), 27972,  720,  736,  768,  888, 0,  480,  480,  483,  525, 0, V_NHSYNC | V_NVSYNC, MODESUFFIXNTSC },
     { MODEPREFIX("720x576Noscale"), 28000,  720,  728,  864,  896, 0,  576,  576,  579,  625, 0, V_NHSYNC | V_NVSYNC, MODESUFFIXPAL  },
-
-    { MODEPREFIX(NULL), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, MODESUFFIXNTSC },
 };
 
 static DisplayModeRec CH7019Modes[]={
@@ -103,8 +101,6 @@ static DisplayModeRec CH7019Modes[]={
     { MODEPREFIX("800x600Over"),    32500,  800,  832,  928, 1000, 0,  600,  600,  604,  650, 0, V_PHSYNC | V_PVSYNC, MODESUFFIXPAL  },
     { MODEPREFIX("1024x768Over"),   50400, 1024, 1040, 1112, 1200, 0,  768,  772,  776,  840, 0, V_NHSYNC | V_NVSYNC, MODESUFFIXNTSC },
     { MODEPREFIX("1024x768Over"),   49500, 1024, 1032, 1112, 1200, 0,  768,  771,  776,  825, 0, V_NHSYNC | V_NVSYNC, MODESUFFIXPAL  },
-
-    { MODEPREFIX(NULL), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, MODESUFFIXNTSC },
 };
 
 
@@ -137,8 +133,7 @@ struct CH7xxxTableRec {
     CARD16  DotCrawlNTSC[VIA_BIOS_NUM_TV_OTHER];
 };
 
-
-static struct CH7xxxTableRec 
+static struct CH7xxxTableRec
 CH7011Table[] = {
     { "640x480", 640,  480, TVTYPE_NTSC,
       { 0X6A, /* 0x00		Mode 17 */
@@ -222,7 +217,7 @@ CH7011Table[] = {
         0X15, /* 0x06 VP */
         0X66, /* 0x07 BL	Default 0x83 */
         0X3,  /* 0x08 CE	Default 0x03 */
-        0X88, 
+        0X88,
         0X59,
         0X2E,
         0X19,
@@ -575,7 +570,7 @@ CH7019Table[] = {
       { 0X47, 0X7F, 0X7F, 0X47, 0X9A, 0X23, 0X95, 0X1E, 0X70, 0XDF, 0XDF, 0X70, 0X51, 0XA, 0X11, 0X5D, 0, 0, 0, 0, 0, 0XA0, 0X40, 0X81, 0, 0, 0X80, 0X20, 0X90, 0, 0, 0 },
       { 0X3284, 0, 0, 0, 0, 0, 0, 0 },
     },
-        
+
     { "800x600", 800,  600, TVTYPE_NTSC,
       { 0XCF, 0X7F, 0X76, 0X8F, 0X59, 0X3C, 0X15, 0X83, 0X3, 0X88, 0X59, 0X2E, 0X19, 0X8B, 0X3A, 0X63,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0X48, 0X40, 0XD2, 0X80,
@@ -602,7 +597,7 @@ CH7019Table[] = {
       { 0XBF, 0X1F, 0X1F, 0XBF, 0XDB, 0X33, 0X38, 0X8E, 0XED, 0X57, 0X57, 0XED, 0X52, 0X12, 0X74, 0X4D, 0, 0, 0, 0, 0, 0XC8, 0X90, 0X81, 0, 0, 0X80, 0X20, 0X90, 0, 0, 0 },
       { 0X3A84, 0, 0, 0, 0, 0, 0, 0 },
     },
-        
+
     { "1024x768", 1024,  768, TVTYPE_NTSC,
       { 0XEE, 0X7F, 0X7E, 0X87, 0X49, 0X32, 0X9, 0X83, 0X3, 0X88, 0X47, 0X4D, 0X1B, 0XE4, 0X89, 0X51,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0X48, 0X40, 0XD2, 0X80,

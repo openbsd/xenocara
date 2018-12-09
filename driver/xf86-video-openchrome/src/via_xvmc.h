@@ -26,11 +26,12 @@
 #ifndef _VIA_XVMC_H
 #define _VIA_XVMC_H 1
 
+#include "via_drmclient.h"
 #include "via_drm.h"
 
 /*
- * This file contains the common definitions between the XvMC lib and the 
- * X server side. It is referenced also by the XvMC lib. Make sure any 
+ * This file contains the common definitions between the XvMC lib and the
+ * X server side. It is referenced also by the XvMC lib. Make sure any
  * structure change is reflected also in a change in minor version number!!
  */
 

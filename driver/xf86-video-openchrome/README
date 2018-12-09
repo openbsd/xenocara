@@ -1,64 +1,225 @@
-xf86-video-openchrome
----------------------
-(http://www.openchrome.org)
+OpenChrome DDX Version 0.6 Release Note (March 7th, 2017)
+---------------------------------------------------------
 
-SUPPORTED CHIPSETS :
---------------------
-- CLE266 (VT3122)
-- KM400/P4M800 (VT3205)
-- K8M800 (VT3204)
-- PM800/PM880/CN400 (VT3259)
-- VM800/CN700/P4M800Pro (VT3314)
-- CX700 (VT3324)
-- P4M890 (VT3327)
-- K8M890 (VT3336)
-- P4M900/VN896 (VT3364)
-- VX800 (VT3353)
-- VX855 (VT3409)
-- VX900 (VT3410)
+OpenChrome DDX is an open source implementation of X.Org Server 
+DDX (Device Dependent X) graphics device driver for VIA Technologies 
+UniChrome and Chrome9 IGPs. (Integrated Graphics Processor)
+OpenChrome DDX handles only 2D and video acceleration.
+Please note that OpenChrome does not support VIA Technologies IGPs 
+that are related to Trident Microsystems (i.e., Apollo MVP4, PLE133, 
+and KLE133) or S3 Graphics (i.e., KM266). Here is the project home 
+page for OpenChrome.
+
+http://www.freedesktop.org/wiki/Openchrome/
+
+Please note that VIA Technologies does not support OpenChrome in any way.
 
 
-SUPPORTED FEATURES :
---------------------
-- Free modesetting for Unichrome, Unichrome Pro and Chrome9 chipsets.
-- VBE modesetting for everything not natively supported.
-- TV-out support.
-- EXA acceleration.
-- Hardware MPEG2 acceleration.
+
+Supported Chipsets
+------------------
+
+- CLE266
+- KM400(A) / KN400(A) / P4M800
+- K8M800 / K8N800
+- PM800 / PN800 / PM880 / CN333 / CN400
+- P4M800 Pro / VN800 / CN700
+- CX700 / VX700
+- P4M890 / VN890 / CN800
+- K8M890 / K8N890
+- P4M900 / VN896 / CN896
+- VX800 / VX820
+- VX855 / VX875
+- VX900
 
 
-KNOWN BUGS/LIMITATIONS :
-------------------------
-* Laptop panel
-- Laptop displays for anything other than CLE266 and KM400/P4M800 are only
-  supported thru VBE calls.
-- Virtual terminal is broken on some laptop displays. Use a vesa framebuffer to
-  work around that (append vga=791 to your kernel command line, for example).
 
-* XvMC
-- The hardware MPEG4 acceleration that is present on some chipsets is not
-  implemented.
-- No XvMC support for CX700 and newer (new, unsupported engine).
-- No XvMC support for K8M890, P4M890 and P4M900/VN896 (need to get dri working
-  for them first).
+Supported Features
+------------------
 
-* TV output
-- TV modes are hardcoded and must be choosen inside a list depending on the TV
-  encoder.
-- Outputs are dependent on each other and will use the least common
-  denominator. If you're using both VGA/LCD output and TV output, the VGA/LCD
-  output will be limited by the TV encoder (720x576@50Hz for example).
-  In other words, there is no dual screen support.
-
-* Misc.
-- Add-on TMDS encoders are not supported, except thru VBE.
-- CX700, VX800 and VX855 integrated TMDS is supported.
-
-* Chrome9
-- Chrome9 chipsets' family (P4M900, K8M890, VX800, VX855, VX900) currently
-  doesn't support neither AGP DMA nor 3D acceleration. 
+- VGA
+- DVI from an integrated TMDS transmitter (CX700, VX700, and VX800 
+  chipsets)
+- DVI from Silicon Image SiI 164 and VIA Technologies VT1632(A) TMDS 
+  transmitters
+- Flat Panel
+- EXA acceleration (RENDER acceleration)
+- Xv and XvMC
+- Dual monitor support
 
 
-Please note that 3D acceleration is provided by Mesa (http://mesa3d.org) and is
-not directly related to openchrome.
 
+Unproven Features
+-----------------
+
+- Standby resume
+- TV out
+- KMS support
+  (Kernel Mode Setting; requires the use of still in 
+   development KMS supporting OpenChrome DRM. See "Where to Obtain 
+   OpenChrome Source Code" section for more details.)
+
+
+
+Unimplemented Features
+----------------------
+
+- Hardware cursor support for CLE266, KM400(A) / KN400(A), and 
+  P4M800 chipsets
+- DVI via Chrontel TMDS transmitter
+- LVDS via VT1631 / VT1636 LVDS transmitter
+- External HDMI transmitter
+  (i.e., Jetway J7F5M-VHE-LF motherboard, VIA Embedded EPIA-P720 
+  motherboard, etc.)
+- HDMI support for VX900 chipset
+  (HDMI is supported via still in development KMS supporting 
+   OpenChrome DRM. See "Where to Obtain OpenChrome Source Code" 
+   section for more details.)
+- DisplayPort support for VX900 chipset
+
+
+
+OS Support
+----------
+
+- X.Org Server Version 1.7 or later
+  (It might not work correctly if it is compiled against an older 
+   X.Org Server.)
+- Linux Version 2.6.32 or later
+  (Note: For Linux Version 4.5 or later, you may have to blacklist 
+  vesafb. This is a bug that has not been fixed so far.)
+
+
+
+What's New for OpenChrome DDX Version 0.6
+-----------------------------------------
+
+OpenChrome DDX Version 0.6 is an improved version of OpenChrome DDX 
+Version 0.5 with a number of improvements made to the code. OpenChrome 
+DDX Version 0.6 is written in a way to completely replace Version 
+0.2.904 through 0.5.
+
+OpenChrome DDX Version 0.6 has added the following new features.
+
+- First official support for CX700, VX700, and VX800 chipsets 
+  integrated TMDS transmitter (i.e., DVI support)
+- Initial support for Silicon Image SiI 164 TMDS transmitter
+
+
+OpenChrome DDX Version 0.6 has the following improvements.
+
+- Improved FP reinitialization when resuming from standby
+  (HP 2133 Mini-Note, FIC CE260 / CE261 based netbooks like 
+   Everex CloudBook and Sylvania g netbook)
+- Improved automatic detection of display resources
+- Improved X Server stability in dual monitor mode
+- Automatic active steering of the display controller channel to the 
+  correct display output device
+
+
+OpenChrome DDX Version 0.6 fixes the following bugs.
+
+- Fix for the disruption of the VT (Virtual Terminal) screen bug 
+  introduced in Version 0.5
+- Fix for HP 2133 Mini-Note's PCIe WLAN getting turned off 
+  inadvertently bug introduced in Version 0.5
+
+
+
+How to Contact OpenChrome Developers
+------------------------------------
+
+Please visit these OpenChrome mailing lists.
+
+http://lists.freedesktop.org/mailman/listinfo/openchrome-users
+http://lists.freedesktop.org/mailman/listinfo/openchrome-devel
+
+openchrome-users mailing list is meant for non-technical users asking 
+questions about how to use OpenChrome, etc. openchrome-devel mailing 
+list is for discussing OpenChrome development issues.
+
+
+
+Support for Older Versions
+--------------------------
+
+The OpenChrome Project practices rolling release update policy for 
+OpenChrome DDX. What this means is that the older version of 
+OpenChrome DDX will not be supported once a new version is out. 
+It is sometimes useful to try out the older version, in order to see 
+if a regression has occurred, but generally speaking, there will be 
+no fixes for the older versions. OpenChrome DDX is written so that it 
+can be compiled against X.Org Server Version 1.7 or later and Linux 
+Version 2.6.32 or later. We will likely maintain this minimum platform 
+requirement for the foreseeable future. What this means is that if the 
+user wanted to try the latest OpenChrome DDX, it can do so with an OS 
+that was released around Year 2010. OpenChrome DDX might still compile 
+for anything older than that, but it might not be stable enough to be 
+useful.
+
+
+
+Where to File a Bug Report
+--------------------------
+
+In order to file a bug report, please visit http://bugs.freedesktop.org. 
+When you file the bug, file it against "xorg." When specifying the 
+component, please select "Driver/openchrome." This allows a message to 
+be sent to openchrome-devel mailing list, so that developers can be 
+notified of the bug.
+    It is highly recommended to file the bug report over at 
+http://bugs.freedesktop.org rather than sending a message to 
+openchrome-devel mailing list. Also, filing a bug report against the 
+Linux / BSD distribution you are using (i.e., Debian, Ubuntu, Fedora, 
+etc.) will likely be a waste of your time since the developers for those 
+distributions do not directly work on developing OpenChrome.
+
+
+
+Where to Submit a Patch
+-----------------------
+
+In order to submit a patch to improve OpenChrome, please visit 
+http://bugs.freedesktop.org. Open a bug report and upload the patch there.
+When you file the bug, file it against "xorg." When specifying the 
+component, please select "Driver/openchrome." This allows a message to 
+be sent to openchrome-devel mailing list, so that developers can be 
+notified of the bug.
+
+
+
+Where to Obtain OpenChrome Source Code
+--------------------------------------
+
+OpenChrome source code repository is located at.
+
+http://cgit.freedesktop.org/openchrome/xf86-video-openchrome/
+
+
+OpenChrome DRM (Direct Rendering Manager) module source code 
+repository is located at.
+
+https://cgit.freedesktop.org/openchrome/drm-openchrome/
+https://cgit.freedesktop.org/openchrome/drm-openchrome/tree/drivers/gpu/drm/via
+
+
+
+If You See a Bug
+----------------
+
+If you see a bug, please don't be surprised. OpenChrome has been in 
+development for more than 10 years. In that process, there were many 
+different developers that wrote the code in varying ways. OpenChrome 
+is a unified graphics device driver that supports 12 generations of 
+VIA Technologies IGP starting from CLE266 chipset all the way to 
+VX900 chipset. Even the VIA Technologies in house unified graphics 
+device driver does not support the number of devices OpenChrome does. 
+Furthermore, VIA Technologies IGPs tend to rely heavily on many 
+different external encoders and transmitters to display the image. 
+As a result, it is very difficult to get the code right for every 
+possible configuration you can think of.
+    Starting with OpenChrome Version 0.4, the project is under new 
+management, and moving forward, the emphasis will be on device driver 
+reliability and code maintainability.
+
+(End of document.)

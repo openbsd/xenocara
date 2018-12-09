@@ -2,6 +2,9 @@
 
 #include "xorg-server.h"
 
+/* Use Damage extension */
+#undef DAMAGE
+
 /* Enable debug support */
 #undef HAVE_DEBUG
 
@@ -11,8 +14,14 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
+/* libudev support */
+#undef HAVE_LIBUDEV
+
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
+
+/* libpciacces available */
+#undef HAVE_PCIACCESS
 
 /* Define to 1 if you have the <pthread.h> header file. */
 #undef HAVE_PTHREAD_H
@@ -46,9 +55,6 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
-
-/* Define to 1 if you have the <xaa.h> header file. */
-#undef HAVE_XAA_H
 
 /* xextproto 7.1 available */
 #undef HAVE_XEXTPROTO_71
@@ -84,20 +90,20 @@
 /* Enable build of registers dumper tool */
 #undef TOOLS
 
-/* Build support for XAA */
-#undef USE_XAA
-
 /* Version number of package */
 #undef VERSION
 
+/* Major version */
+#undef VIA_MAJOR_VERSION
+
+/* Minor version */
+#undef VIA_MINOR_VERSION
+
+/* Patch version */
+#undef VIA_PATCHLEVEL
+
 /* Enable DRI driver support */
 #undef XF86DRI
-
-/* Enable developmental DRI driver support */
-#undef XF86DRI_DEVEL
-
-/* Enable libpciaccess */
-#undef XSERVER_LIBPCIACCESS
 
 /* Enable XVideo debug support */
 #undef XV_DEBUG
@@ -113,3 +119,14 @@
 
 /* Compatibility define for older Xen */
 #undef X_USE_REGION_NULL
+
+/* Enable large inode numbers on Mac OS X 10.5.  */
+#ifndef _DARWIN_USE_64_BIT_INODE
+# define _DARWIN_USE_64_BIT_INODE 1
+#endif
+
+/* Number of bits in a file offset, on hosts where this is settable. */
+#undef _FILE_OFFSET_BITS
+
+/* Define for large files, on AIX-style hosts. */
+#undef _LARGE_FILES

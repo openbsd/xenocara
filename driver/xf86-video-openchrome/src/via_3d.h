@@ -24,6 +24,7 @@
 #ifndef VIA_3D_H
 #define VIA_3D_H
 
+#include "xorg-server.h"
 #include "xf86.h"
 #include "via_dmabuffer.h"
 

@@ -1,5 +1,6 @@
 /*
- * Copyright 2006-2007 The Openchrome Project  [openchrome.org]
+ * Copyright 2006-2015 The Openchrome Project
+ *                     [https://www.freedesktop.org/wiki/Openchrome]
  * Copyright 1998-2003 VIA Technologies, Inc. All Rights Reserved.
  * Copyright 2001-2003 S3 Graphics, Inc. All Rights Reserved.
  *
@@ -26,7 +27,7 @@
 #ifndef _VIA_PRIV_H_
 #define _VIA_PRIV_H_ 1
 
-#ifdef OPENCHROMEDRI
+#ifdef HAVE_DRI
 #include "via_drm.h"
 #endif
 #include "exa.h"
@@ -129,40 +130,20 @@ typedef struct
     CARD32         dwMPEGProgressiveMode; /* default value : VIA_PROGRESSIVE */
     CARD32         dwHQVheapInfo;         /* video memory heap of the HQV buffer */
     CARD32         dwVideoControl;        /* video control flag */
-    CARD32         dwminifyH; 			   /* Horizontal minify factor */
+    CARD32         dwminifyH;			   /* Horizontal minify factor */
     CARD32         dwminifyV;			   /* Vertical minify factor */
     CARD32         dwMpegDecoded;
 } OVERLAYRECORD;
 
 #define MEM_BLOCKS		4
 
-typedef struct {
-    unsigned long   base;		/* Offset into fb */
-    int    pool;			/* Pool we drew from */
-#ifdef OPENCHROMEDRI
-    int    drm_fd;			/* Fd in DRM mode */
-    drm_via_mem_t drm;			/* DRM management object */
-#endif
-    void  *pVia;			/* VIA driver pointer */
-#ifdef USE_XAA
-    FBLinearPtr linear;			/* X linear pool info ptr */
-#endif
-    ExaOffscreenArea *exa;
-    ScrnInfoPtr pScrn;
-} VIAMem;
-
-typedef VIAMem *VIAMemPtr;
-
-
-
 typedef struct  {
     unsigned long   gdwVideoFlagSW;
     unsigned long   gdwVideoFlagMPEG;
     unsigned long   gdwAlphaEnabled;		/* For Alpha blending use*/
 
-    VIAMem SWOVMem;
-    VIAMem HQVMem;
-    VIAMem SWfbMem;
+    struct buffer_object  *HQVMem;
+    struct buffer_object  *SWfbMem;
 
     CARD32 SrcFourCC;
     DDUPDATEOVERLAY UpdateOverlayBackup;    /* For HQVcontrol func use
@@ -172,11 +153,6 @@ typedef struct  {
     SWDEVICE   SWDevice;
     OVERLAYRECORD   overlayRecordV1;
     OVERLAYRECORD   overlayRecordV3;
-
-    BoxRec  AvailFBArea;
-#ifdef USE_XAA
-    FBLinearPtr   SWOVlinear;
-#endif
 
     Bool MPEG_ON;
     Bool SWVideo_ON;

@@ -45,7 +45,7 @@ typedef struct {
 } viaRegion, *viaRegionPtr;
 
 typedef struct {
-    viaRegion regs, agp;
+    viaRegion regs;
     int deviceID;
     int width;
     int height;
@@ -53,8 +53,6 @@ typedef struct {
     int bytesPerPixel;
     int priv1;
     int priv2;
-    int fbOffset;
-    int fbSize;
     Bool drixinerama;
     int backOffset;
     int depthOffset;
@@ -74,5 +72,8 @@ typedef struct {
 typedef struct {
     int dummy;
 } VIADRIContextRec, *VIADRIContextPtr;
+
+Bool VIADRIKernelInit(ScrnInfoPtr pScrn);
+void kickVblank(ScrnInfoPtr pScrn);
 
 #endif /* _VIA_DRI_H_ */

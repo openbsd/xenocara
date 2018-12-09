@@ -30,19 +30,17 @@
 #include "config.h"
 #endif
 
-#include "via.h"
 #include "compiler.h"
 #include "xf86.h"
 #include "via_driver.h" /* for HAVE_DEBUG */
-#include "via_vgahw.h"
 
-#if ABI_VIDEODRV_VERSION < 12
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 12
 #define PIOOFFSET hwp->PIOOffset
 #else
 #define PIOOFFSET 0
 #endif
 
-static CARD8
+CARD8
 ViaVgahwIn(vgaHWPtr hwp, int address)
 {
     if (hwp->MMIOBase)
@@ -131,12 +129,14 @@ ViaGrMask(vgaHWPtr hwp, CARD8 index, CARD8 value, CARD8 mask)
     hwp->writeGr(hwp, index, tmp);
 }
 
-
 #ifdef HAVE_DEBUG
 void
 ViaVgahwPrint(vgaHWPtr hwp)
 {
     int i;
+
+    if (!hwp)
+	return;
 
     xf86DrvMsg(hwp->pScrn->scrnIndex, X_INFO, "VGA Sequence registers:\n");
     for (i = 0x00; i < 0x80; i++)

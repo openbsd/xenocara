@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Thomas Hellstrom (2005) 
+ * Copyright (C) Thomas Hellstrom (2005)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -91,10 +91,5 @@ typedef struct _ViaCommandBuffer
 
 #define OUT_RING_SubA(val1, val2) \
   OUT_RING(((val1) << HC_SubA_SHIFT) | ((val2) & HC_Para_MASK))
-
-extern int viaSetupCBuffer(ScrnInfoPtr pScrn, ViaCommandBuffer * buf,
-    unsigned size);
-extern void viaTearDownCBuffer(ViaCommandBuffer * buf);
-extern void viaFlushPCI(ViaCommandBuffer * buf);
 
 #endif

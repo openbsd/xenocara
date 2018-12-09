@@ -25,15 +25,7 @@
 
 #include "vgaHW.h"
 
-/* not used currently */
-/*
 CARD8 ViaVgahwIn(vgaHWPtr hwp, int address);
-void ViaVgahwOut(vgaHWPtr hwp, int address, CARD8 value);
-
-CARD8 ViaVgahwRead(vgaHWPtr hwp, int indexaddress, CARD8 index, 
-		   int valueaddress);
-*/
-
 void ViaVgahwWrite(vgaHWPtr hwp, int indexaddress, CARD8 index,
 		  int valueaddress, CARD8 value);
 

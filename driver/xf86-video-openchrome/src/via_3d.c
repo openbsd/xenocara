@@ -257,8 +257,12 @@ viaSet3DCompositeOperator(Via3DState * v3d, CARD8 op)
 {
     ViaCompositeOperator *vOp = viaOperatorModes + op;
 
-    v3d->blendDirty = TRUE;
-    if (v3d && vOp->supported) {
+    if (v3d)
+        v3d->blendDirty = TRUE;
+    else
+        return;
+
+    if (vOp->supported) {
         v3d->blendCol0 = vOp->col0 << 4;
         v3d->blendCol1 = vOp->col1 << 2;
         v3d->blendAl0 = vOp->al0 << 4;
