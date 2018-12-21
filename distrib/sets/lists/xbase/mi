@@ -77,12 +77,8 @@
 ./usr/X11R6/bin/fc-query
 ./usr/X11R6/bin/fc-scan
 ./usr/X11R6/bin/fc-validate
-./usr/X11R6/bin/fontname.sh
-./usr/X11R6/bin/fontprop.sh
 ./usr/X11R6/bin/fonttosfnt
 ./usr/X11R6/bin/freetype-config
-./usr/X11R6/bin/fslsfonts
-./usr/X11R6/bin/fstobdf
 ./usr/X11R6/bin/fvwm
 ./usr/X11R6/bin/iceauth
 ./usr/X11R6/bin/ico
@@ -95,7 +91,6 @@
 ./usr/X11R6/bin/resize
 ./usr/X11R6/bin/sessreg
 ./usr/X11R6/bin/setxkbmap
-./usr/X11R6/bin/showfont
 ./usr/X11R6/bin/showrgb
 ./usr/X11R6/bin/smproxy
 ./usr/X11R6/bin/ssh-askpass
@@ -105,7 +100,6 @@
 ./usr/X11R6/bin/viewres
 ./usr/X11R6/bin/x11perf
 ./usr/X11R6/bin/xauth
-./usr/X11R6/bin/xauth_switch_to_sun-des-1
 ./usr/X11R6/bin/xbacklight
 ./usr/X11R6/bin/xbiff
 ./usr/X11R6/bin/xcalc
@@ -123,8 +117,6 @@
 ./usr/X11R6/bin/xeyes
 ./usr/X11R6/bin/xfd
 ./usr/X11R6/bin/xfontsel
-./usr/X11R6/bin/xfsinfo
-./usr/X11R6/bin/xfwp
 ./usr/X11R6/bin/xgamma
 ./usr/X11R6/bin/xgc
 ./usr/X11R6/bin/xhost
@@ -159,7 +151,6 @@
 ./usr/X11R6/bin/xset
 ./usr/X11R6/bin/xsetroot
 ./usr/X11R6/bin/xsm
-./usr/X11R6/bin/xstdcmap
 ./usr/X11R6/bin/xterm
 ./usr/X11R6/bin/xtsscale
 ./usr/X11R6/bin/xvctl
