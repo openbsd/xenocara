@@ -51,5 +51,6 @@
 void
 osPciInit(void)
 {
+    xf86OpenConsole();
     xf86InitVidMem();
 }
