@@ -1,4 +1,4 @@
-/*	$OpenBSD: video.c,v 1.25 2018/04/09 18:16:44 cheloha Exp $	*/
+/*	$OpenBSD: video.c,v 1.26 2019/01/04 17:45:00 landry Exp $	*/
 /*
  * Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
  *
@@ -1854,7 +1854,7 @@ main(int argc, char *argv[])
 	struct xdsp *x = &vid.xdsp;
 	const char *errstr;
 	size_t len;
-	int ch, err = 0;
+	int ch, errs = 0;
 
 	bzero(&vid, sizeof(struct video));
 
@@ -1872,21 +1872,21 @@ main(int argc, char *argv[])
 			x->cur_adap = strtonum(optarg, 0, 4, &errstr);
 			if (errstr != NULL) {
 				warnx("Xv adaptor '%s' is %s", optarg, errstr);
-				err++;
+				errs++;
 			}
 			break;
 		case 'e':
 			vid.enc = find_enc(optarg);
 			if (vid.enc >= ENC_LAST) {
 				warnx("encoding '%s' is invalid", optarg);
-				err++;
+				errs++;
 			}
 			break;
 		case 'f':
 			len = strlcpy(d->path, optarg, sizeof(d->path));
 			if (len >= sizeof(d->path)) {
 				warnx("file path is too long: %s", optarg);
-				err++;
+				errs++;
 			}
 			break;
 		case 'g':
@@ -1894,8 +1894,8 @@ main(int argc, char *argv[])
 			break;
 		case 'i':
 			if (vid.mode & (M_IN_FILE | M_OUT_FILE)) {
-				warnx("only one input or ouput file allowed");
-				err++;
+				warnx("only one input or output file allowed");
+				errs++;
 			} else {
 				vid.mode = (vid.mode & ~M_IN_DEV) | M_IN_FILE;
 				vid.mmap_on = 0; /* mmap mode does not work for files */
@@ -1904,15 +1904,15 @@ main(int argc, char *argv[])
 				if (len >= sizeof(vid.iofile)) {
 					warnx("input path is too long: %s",
 					    optarg);
-					err++;
+					errs++;
 				}
 			}
 			break;
 		case 'o':
 		case 'O':
 			if (vid.mode & (M_IN_FILE | M_OUT_FILE)) {
-				warnx("only one input or ouput file allowed");
-				err++;
+				warnx("only one input or output file allowed");
+				errs++;
 			} else {
 				vid.mode |= M_OUT_FILE;
 				if (ch != 'O')
@@ -1922,7 +1922,7 @@ main(int argc, char *argv[])
 				if (len >= sizeof(vid.iofile)) {
 					warnx("output path is too long: %s",
 					    optarg);
-					err++;
+					errs++;
 				}
 			}
 			break;
@@ -1937,7 +1937,7 @@ main(int argc, char *argv[])
 			vid.fps = strtonum(optarg, 1, 100, &errstr);
 			if (errstr != NULL) {
 				warnx("frame rate '%s' is %s", optarg, errstr);
-				err++;
+				errs++;
 			}
 			break;
 		case 's':
@@ -1947,13 +1947,13 @@ main(int argc, char *argv[])
 			vid.verbose++;
 			break;
 		default:
-			err++;
+			errs++;
 			break;
 		}
-		if (err > 0)
+		if (errs > 0)
 			break;
 	}
-	if (err > 0) {
+	if (errs > 0) {
 		usage();
 		cleanup(&vid, 1);
 	}
