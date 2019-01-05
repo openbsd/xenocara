@@ -424,6 +424,21 @@ static const struct mga_device_attributes attribs[] = {
 	},
 
 	16384, 0x4000,          /* Memory probe size & offset values */
+    },
+
+    [17] = { 0, 1, 0, 0, 1, 0, 0, 0, new_BARs,
+            (TRANSC_SOLID_FILL | TWO_PASS_COLOR_EXPAND | USE_LINEAR_EXPANSION),
+	{
+	    { 50000, 230000 }, /* System VCO frequencies */
+	    { 50000, 203400 }, /* Pixel VCO frequencies */
+	    { 0, 0 },          /* Video VCO frequencies */
+	    45000,            /* Memory clock */
+	    27050,             /* PLL reference frequency */
+	    0,                 /* Supports fast bitblt? */
+	    MGA_HOST_PCI       /* Host interface */
+	},
+
+	16384, 0x4000,          /* Memory probe size & offset values */
     }
 };
 
@@ -458,6 +473,8 @@ static const struct pci_id_match mga_device_match[] = {
 
     MGA_DEVICE_MATCH( PCI_CHIP_MGAG200_EW3_PCI, 16 ),
 
+    MGA_DEVICE_MATCH( PCI_CHIP_MGAG200_EH3_PCI, 17 ),
+
     { 0, 0, 0 },
 };
 #endif
@@ -479,6 +496,7 @@ static SymTabRec MGAChipsets[] = {
     { PCI_CHIP_MGAG200_WINBOND_PCI,	"mgag200 eW Nuvoton" },
     { PCI_CHIP_MGAG200_EW3_PCI,	"mgag200 eW3 Nuvoton" },
     { PCI_CHIP_MGAG200_EH_PCI,	"mgag200eH" },
+     { PCI_CHIP_MGAG200_EH3_PCI,	"mgag200eH3" },
     { PCI_CHIP_MGAG400,		"mgag400" },
     { PCI_CHIP_MGAG550,		"mgag550" },
     {-1,			NULL }
@@ -506,6 +524,8 @@ static PciChipsets MGAPciChipsets[] = {
     { PCI_CHIP_MGAG200_EW3_PCI, PCI_CHIP_MGAG200_EW3_PCI,
 	RES_SHARED_VGA },
     { PCI_CHIP_MGAG200_EH_PCI, PCI_CHIP_MGAG200_EH_PCI,
+	RES_SHARED_VGA },
+    { PCI_CHIP_MGAG200_EH3_PCI, PCI_CHIP_MGAG200_EH3_PCI,
 	RES_SHARED_VGA },
     { PCI_CHIP_MGAG400,	    PCI_CHIP_MGAG400,	RES_SHARED_VGA },
     { PCI_CHIP_MGAG550,	    PCI_CHIP_MGAG550,	RES_SHARED_VGA },
@@ -680,7 +700,6 @@ MGAPciProbe(DriverPtr drv, int entity_num, struct pci_device * dev,
 	    intptr_t match_data)
 {
     ScrnInfoPtr pScrn = NULL;
-    EntityInfoPtr pEnt;
     MGAPtr pMga;
 
     if (pci_device_has_kernel_driver(dev)) {
@@ -693,6 +712,7 @@ MGAPciProbe(DriverPtr drv, int entity_num, struct pci_device * dev,
 	    case PCI_CHIP_MGAG200_ER_PCI:
 	    case PCI_CHIP_MGAG200_WINBOND_PCI:
 	    case PCI_CHIP_MGAG200_EH_PCI:
+	    case PCI_CHIP_MGAG200_EH3_PCI:
 		xf86DrvMsg(0, X_ERROR,
 	                   "mga: The PCI device 0x%x at %2.2d@%2.2d:%2.2d:%1.1d has a kernel module claiming it.\n",
 	                   dev->device_id, dev->bus, dev->domain, dev->dev, dev->func);
@@ -737,7 +757,6 @@ MGAPciProbe(DriverPtr drv, int entity_num, struct pci_device * dev,
 	 * For cards that can do dual head per entity, mark the entity
 	 * as sharable. 
 	 */
-	pEnt = xf86GetEntityInfo(entity_num);
 	if (pMga->chip_attribs->dual_head_possible) {
 	    MGAEntPtr pMgaEnt = NULL;
 	    DevUnion *pPriv;
@@ -948,6 +967,10 @@ MGAProbe(DriverPtr drv, int flags)
                 attrib_no = 16;
                 break;
 
+            case PCI_CHIP_MGAG200_EH3_PCI:
+                attrib_no = 17;
+                break;
+
 	    default:
 		return FALSE;
             }
@@ -999,7 +1022,9 @@ MGASoftReset(ScrnInfoPtr pScrn)
 	MGAPtr pMga = MGAPTR(pScrn);
 
 	pMga->FbMapSize = 8192 * 1024;
-	MGAMapMem(pScrn);
+	if (!MGAMapMem(pScrn)) {
+	    return;
+	}
 
 	/* set soft reset bit */
 	OUTREG(MGAREG_Reset, 1);
@@ -1120,7 +1145,9 @@ MGACountRam(ScrnInfoPtr pScrn)
 	    ProbeSize = 16384;
 	    ProbeSizeOffset = 0x10000;
 	    pMga->FbMapSize = ProbeSize * 1024;
-	    MGAMapMem(pScrn);
+	    if (!MGAMapMem(pScrn)) {
+		return 0;
+	    }
 	    base = pMga->FbBase;
 	}
 
@@ -1135,7 +1162,7 @@ MGACountRam(ScrnInfoPtr pScrn)
 	}
 
         if (pMga->is_G200WB) {
-            CARD32 Option, MaxMapSize;
+            uint32_t Option, MaxMapSize;
 
 #ifdef XSERVER_LIBPCIACCESS
             pci_device_cfg_read_u32(pMga->PciInfo, &Option, 
@@ -1160,7 +1187,9 @@ MGACountRam(ScrnInfoPtr pScrn)
             else {
                 MGAUnmapMem(pScrn);
                 pMga->FbMapSize = ProbeSize * 1024;
-                MGAMapMem(pScrn);
+                if (!MGAMapMem(pScrn)) {
+		    return 0;
+		}
                 base = pMga->FbBase;
             }
         }
@@ -1567,7 +1596,8 @@ MGAPreInit(ScrnInfoPtr pScrn, int flags)
     pMga->is_G200EV = (pMga->Chipset == PCI_CHIP_MGAG200_EV_PCI);
     pMga->is_G200WB = (pMga->Chipset == PCI_CHIP_MGAG200_WINBOND_PCI)
 	|| (pMga->Chipset ==  PCI_CHIP_MGAG200_EW3_PCI);
-    pMga->is_G200EH = (pMga->Chipset == PCI_CHIP_MGAG200_EH_PCI);
+    pMga->is_G200EH = (pMga->Chipset == PCI_CHIP_MGAG200_EH_PCI)
+        ||  (pMga->Chipset ==  PCI_CHIP_MGAG200_EH3_PCI);
     pMga->is_G200ER = (pMga->Chipset == PCI_CHIP_MGAG200_ER_PCI);
 
     pMga->DualHeadEnabled = FALSE;
@@ -1594,6 +1624,7 @@ MGAPreInit(ScrnInfoPtr pScrn, int flags)
     case PCI_CHIP_MGAG200_ER_PCI:
     case PCI_CHIP_MGAG200_WINBOND_PCI:
     case PCI_CHIP_MGAG200_EH_PCI:
+    case PCI_CHIP_MGAG200_EH3_PCI:
 	pMga->HWCursor = FALSE;
 	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		   "HW cursor is not supported with video redirection on"
@@ -1933,11 +1964,14 @@ MGAPreInit(ScrnInfoPtr pScrn, int flags)
     } else {
 	int from = X_DEFAULT;
 #ifdef USE_EXA
-	char *s = xf86GetOptValString(pMga->Options, OPTION_ACCELMETHOD);
+	const char *s = xf86GetOptValString(pMga->Options, OPTION_ACCELMETHOD);
 #endif
 	pMga->NoAccel = FALSE;
 	pMga->Exa = FALSE;
 #ifdef USE_EXA
+#ifndef USE_XAA
+	pMga->Exa = TRUE;
+#endif
 	if (!xf86NameCmp(s, "EXA")) {
 	    pMga->Exa = TRUE;
 	    from = X_CONFIG;
@@ -2078,6 +2112,7 @@ MGAPreInit(ScrnInfoPtr pScrn, int flags)
     case PCI_CHIP_MGAG200_EV_PCI:
     case PCI_CHIP_MGAG200_EH_PCI:
     case PCI_CHIP_MGAG200_ER_PCI:	
+    case PCI_CHIP_MGAG200_EH3_PCI:
     case PCI_CHIP_MGAG400:
     case PCI_CHIP_MGAG550:
 	MGAGSetupFuncs(pScrn);
@@ -2192,6 +2227,7 @@ MGAPreInit(ScrnInfoPtr pScrn, int flags)
 	  case PCI_CHIP_MGAG200_EW3_PCI:
 	  case PCI_CHIP_MGAG200_EV_PCI:
 	  case PCI_CHIP_MGAG200_EH_PCI:
+	  case PCI_CHIP_MGAG200_EH3_PCI:
 	  case PCI_CHIP_MGAG200_ER_PCI:	  
 	    pMga->SrcOrg = 0;
 	    pMga->DstOrg = 0;
@@ -2376,7 +2412,8 @@ MGAPreInit(ScrnInfoPtr pScrn, int flags)
         case PCI_CHIP_MGAG200_WINBOND_PCI:
 	case PCI_CHIP_MGAG200_EW3_PCI:
 	case PCI_CHIP_MGAG200_EV_PCI:
-    case PCI_CHIP_MGAG200_EH_PCI:
+        case PCI_CHIP_MGAG200_EH_PCI:
+        case PCI_CHIP_MGAG200_EH3_PCI:
 	case PCI_CHIP_MGAG200_ER_PCI:	
 	case PCI_CHIP_MGAG400:
 	case PCI_CHIP_MGAG550:
@@ -2612,7 +2649,7 @@ MGAMapMem(ScrnInfoPtr pScrn)
 #ifdef XSERVER_LIBPCIACCESS
     struct pci_device *const dev = pMga->PciInfo;
     struct pci_mem_region *region;
-    int i, err;
+    int err;
 #endif
 
 
@@ -2637,7 +2674,7 @@ MGAMapMem(ScrnInfoPtr pScrn)
 	    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		       "MAPPED Framebuffer %08llX %llx to %08llX.\n",
 		       (long long)fbaddr, (long long)fbsize,
-		       (long long)pMga->FbBase);
+		       (long long)(uintptr_t)pMga->FbBase);
 
 	if(pMga->entityPrivate == NULL || pMga->entityPrivate->mappedIOUsage == 0) {
 	    region = &dev->regions[pMga->io_bar];
@@ -2773,7 +2810,7 @@ MGAUnmapMem(ScrnInfoPtr pScrn)
 			pMga->entityPrivate->mappedIOBase = NULL;
 	    }
 
-	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "UNMAPPING framebuffer 0x%08llX, 0x%llX.\n", (long long)pMga->FbBase, (long long)pMga->FbMapSize);
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "UNMAPPING framebuffer 0x%08llX, 0x%llX.\n", (long long)(uintptr_t)pMga->FbBase, (long long)pMga->FbMapSize);
         pci_device_unmap_range(dev, pMga->FbBase, 
 			       pMga->FbMapSize);
 #else
@@ -2941,19 +2978,27 @@ MGAModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
             
             ulMemoryBandwidth = (mode->Clock * ulBitsPerPixel) / 1000;
 
-            if      (ulMemoryBandwidth    > 3100)  ucHiPriLvl = 0;
-            else if (ulMemoryBandwidth    > 2600)  ucHiPriLvl = 1;
-            else if (ulMemoryBandwidth    > 1900)  ucHiPriLvl = 2;
-            else if (ulMemoryBandwidth    > 1160)  ucHiPriLvl = 3;
-            else if (ulMemoryBandwidth    > 440)   ucHiPriLvl = 4;
-            else ucHiPriLvl = 5;
+            if (pMga->reg_1e24 >= 0x04)
+            {
+                ucHiPriLvl = 0;
+            }
+            else
+            {
+
+                if      (ulMemoryBandwidth    > 3100)  ucHiPriLvl = 0;
+                else if (ulMemoryBandwidth    > 2600)  ucHiPriLvl = 1;
+                else if (ulMemoryBandwidth    > 1900)  ucHiPriLvl = 2;
+                else if (ulMemoryBandwidth    > 1160)  ucHiPriLvl = 3;
+                else if (ulMemoryBandwidth    > 440)   ucHiPriLvl = 4;
+                else ucHiPriLvl = 5;
+            }
 
             OUTREG8(0x1FDE, 0x06);
 		    OUTREG8(0x1FDF, ucHiPriLvl);
 
-            xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Clock           == %d\n",   mode->Clock);
-            xf86DrvMsg(pScrn->scrnIndex, X_INFO, "BitsPerPixel    == %d\n",   pScrn->bitsPerPixel);
-            xf86DrvMsg(pScrn->scrnIndex, X_INFO, "MemoryBandwidth == %d\n",   ulMemoryBandwidth);
+            xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Clock           == %u\n",   mode->Clock);
+            xf86DrvMsg(pScrn->scrnIndex, X_INFO, "BitsPerPixel    == %u\n",   pScrn->bitsPerPixel);
+            xf86DrvMsg(pScrn->scrnIndex, X_INFO, "MemoryBandwidth == %u\n",   (unsigned)ulMemoryBandwidth);
             xf86DrvMsg(pScrn->scrnIndex, X_INFO, "HiPriLvl        == %02X\n", ucHiPriLvl);
         }
         else
@@ -3103,7 +3148,7 @@ MGACrtc2FillStrip(ScrnInfoPtr pScrn)
 	    (pScrn->bitsPerPixel >> 3) * pScrn->displayWidth * pScrn->virtualY);
     } else {
 	xf86SetLastScrnFlag(pScrn->entityList[0], pScrn->scrnIndex);
-#ifdef HAVE_XAA_H
+#ifdef USE_XAA
 	pMga->RestoreAccelState(pScrn);
 	pMga->SetupForSolidFill(pScrn, 0, GXcopy, 0xFFFFFFFF);
 	pMga->SubsequentSolidFillRect(pScrn, pScrn->virtualX, 0,
@@ -3126,16 +3171,12 @@ MGAScreenInit(SCREEN_INIT_ARGS_DECL)
     vgaHWPtr hwp;
     MGAPtr pMga;
     MGARamdacPtr MGAdac;
-    int ret;
     VisualPtr visual;
     unsigned char *FBStart;
     int width, height, displayWidth;
     MGAEntPtr pMgaEnt = NULL;
     int f;
-    CARD32 VRTemp, FBTemp;
-#ifdef MGADRI
-    MessageType driFrom = X_DEFAULT;
-#endif
+    CARD32 VRTemp = 0, FBTemp = 0;
     DPMSSetProcPtr mga_dpms_set_proc = NULL;
 
     hwp = VGAHWPTR(pScrn);
@@ -3317,20 +3358,16 @@ MGAScreenInit(SCREEN_INIT_ARGS_DECL)
 	xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
 		   "Not supported by hardware, not initializing the DRI\n");
 	pMga->directRenderingEnabled = FALSE;
-	driFrom = X_PROBED;
     } else if (!xf86ReturnOptValBool(pMga->Options, OPTION_DRI, TRUE)) {
-	driFrom = X_CONFIG;
     } else if ( pMga->NoAccel ) {
        xf86DrvMsg( pScrn->scrnIndex, X_ERROR,
 		   "Acceleration disabled, not initializing the DRI\n" );
        pMga->directRenderingEnabled = FALSE;
-       driFrom = X_CONFIG;
     }
     else if ( pMga->TexturedVideo == TRUE ) {
        xf86DrvMsg( pScrn->scrnIndex, X_ERROR,
 		   "Textured video enabled, not initializing the DRI\n" );
        pMga->directRenderingEnabled = FALSE;
-       driFrom = X_CONFIG;
     }
     else if (pMga->SecondCrtc == TRUE) {
        xf86DrvMsg( pScrn->scrnIndex, X_ERROR,
@@ -3345,7 +3382,6 @@ MGAScreenInit(SCREEN_INIT_ARGS_DECL)
 	  "Need at least %d kB video memory at this resolution, bit depth\n",
 	  (3 * displayWidth * height * (pScrn->bitsPerPixel >> 3)) / 1024 );
        pMga->directRenderingEnabled = FALSE;
-       driFrom = X_PROBED;
     }
     else {
        pMga->directRenderingEnabled = MGADRIScreenInit(pScreen);
@@ -3712,7 +3748,7 @@ MGACloseScreen(CLOSE_SCREEN_ARGS_DECL)
     vgaHWPtr hwp = VGAHWPTR(pScrn);
     MGAPtr pMga = MGAPTR(pScrn);
     MGAEntPtr pMgaEnt = NULL;
-    CARD32 VRTemp, FBTemp;
+    CARD32 VRTemp = 0, FBTemp = 0;
 
     if (pMga->MergedFB)
          MGACloseScreenMerged(pScreen);
@@ -3853,15 +3889,17 @@ MGAValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode, Bool verbose, int flags)
 	            return MODE_VIRTUAL_Y;
 	        if (xf86ModeBandwidth(mode, pScrn->bitsPerPixel) > 244)
 	            return MODE_BANDWIDTH;
-        } else {
-            if (pMga->reg_1e24 == 0x02) {
-	            if (mode->HDisplay > 1920)
-	                return MODE_VIRTUAL_X;
-	            if (mode->VDisplay > 1200)
-	                return MODE_VIRTUAL_Y;
-	            if (xf86ModeBandwidth(mode, pScrn->bitsPerPixel) > 301)
-	                return MODE_BANDWIDTH;
-            }
+        } else if (pMga->reg_1e24 == 0x02) {
+            if (mode->HDisplay > 1920)
+                return MODE_VIRTUAL_X;
+            if (mode->VDisplay > 1200)
+                return MODE_VIRTUAL_Y;
+            if (xf86ModeBandwidth(mode, pScrn->bitsPerPixel) > 301)
+                return MODE_BANDWIDTH;
+        }
+        else {
+            if (xf86ModeBandwidth(mode, pScrn->bitsPerPixel) > 550)
+                return MODE_BANDWIDTH;
         }
     } else if (pMga->is_G200WB){
         if (mode->Flags & V_DBLSCAN)
@@ -3878,7 +3916,7 @@ MGAValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode, Bool verbose, int flags)
     } else if (pMga->is_G200EV
 	       && (xf86ModeBandwidth(mode, pScrn->bitsPerPixel) > 327)) {
 	return MODE_BANDWIDTH;
-    } else if (pMga->is_G200EH
+    } else if (pMga->is_G200EH && (pMga->Chipset != PCI_CHIP_MGAG200_EH3_PCI)
                && (xf86ModeBandwidth(mode, pScrn->bitsPerPixel) > 375)) {
         return MODE_BANDWIDTH;
     } else if (pMga->is_G200ER

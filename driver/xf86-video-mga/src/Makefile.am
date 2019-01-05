@@ -30,8 +30,6 @@ mga_drv_ladir = @moduledir@/drivers
 mga_drv_la_LIBADD = $(noinst_LTLIBRARIES)
 
 mga_drv_la_SOURCES = \
-         binding.h \
-         client.h \
          mga_bios.c \
          mga_common.h \
          mga_dac3026.c \
@@ -41,7 +39,6 @@ mga_drv_la_SOURCES = \
          mga_driver.c \
          mga_g450pll.c \
          mga.h \
-         mga_halmod.c \
          mga_hwcurs.c \
          mga_macros.h \
          mga_maven.h \

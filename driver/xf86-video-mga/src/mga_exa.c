@@ -695,6 +695,14 @@ mgaComposite(PixmapPtr pDst, int srcx, int srcy, int maskx, int masky,
     OUTREG(MGAREG_YDSTLEN | MGAREG_EXEC, (dsty << 16) | (h & 0xffff));
 }
 
+struct unaligned_32 {
+    uint32_t val;
+} __attribute__((packed));
+
+struct unaligned_64 {
+    uint64_t val;
+} __attribute__((packed));
+
 static Bool
 mgaUploadToScreen(PixmapPtr pDst, int x, int y, int w, int h,
                   char *src, int src_pitch)
@@ -720,7 +728,15 @@ mgaUploadToScreen(PixmapPtr pDst, int x, int y, int w, int h,
     OUTREG(MGAREG_YDSTLEN | MGAREG_EXEC, (y << 16) | (h & 0xffff));
 
     while (h--) {
-        memcpy (pMga->ILOADBase, src, bytes_padded);
+        int i = 0;
+
+        if (sizeof(long) == 8) {
+            for (; i + 4 < bytes_padded; i += 8)
+                *(volatile uint64_t *)(pMga->ILOADBase + i) = ((struct unaligned_64 *)(src + i))->val;
+        }
+
+        for (; i < bytes_padded; i += 4)
+            *(volatile uint32_t *)(pMga->ILOADBase + i) = ((struct unaligned_32 *)(src + i))->val;
         src += src_pitch;
     }
 
@@ -737,7 +753,7 @@ mgaWaitMarker(ScreenPtr pScreen, int marker)
 
     WAITFIFO(1);
 
-    OUTREG(MGAREG_CACHEFLUSH, 0);
+    OUTREG8(MGAREG_CACHEFLUSH, 0);
 
     /* wait until the "drawing engine busy" bit is unset */
     while (INREG (MGAREG_Status) & 0x10000);

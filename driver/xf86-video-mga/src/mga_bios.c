@@ -297,7 +297,6 @@ Bool mga_read_and_process_bios( ScrnInfoPtr pScrn )
 #ifndef XSERVER_LIBPCIACCESS
     Bool pciBIOS = TRUE;
 #endif
-    int rlen;
     static const unsigned expected_length[] = { 0, 64, 64, 64, 128, 128 };
     unsigned version;
     unsigned pins_len;

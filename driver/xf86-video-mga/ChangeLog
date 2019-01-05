@@ -1,3 +1,283 @@
+commit 924c310dfecbfb916f0e81c03f1142a401bed056
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Fri Dec 7 16:43:46 2018 -0800
+
+    Version bumped to Version 2.0.0
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit ada903eea2e138643faa721f37737ed885363bf7
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Fri Dec 7 16:21:44 2018 -0800
+
+    Version bumped to Version 1.6.901
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 54f0f0723d4291a23a2f1c10fcf33560f9a4340a
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Thu Dec 6 20:49:31 2018 -0800
+
+    Remove last remnants of old Matrox HAL
+    
+    Apparently, commit 94bbeb132c7eda912d1b402a1a91ca7cbbf5e6a1
+    missed removing a few more files related to old Matrox HAL.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b293b0956d518b2cc3833d0d2d846301fe35c0a0
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Thu Nov 29 10:41:23 2018 -0800
+
+    Version bumped to Version 1.6.900
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit c5d295f06c83ba69811c17880e033cbd0fdb52b1
+Author: Henry Zhao <henry.zhao@oracle.com>
+Date:   Mon Nov 26 13:15:24 2018 -0800
+
+    Write 8 bits instead of 32 to MGAREG_CACHEFLUSH
+    
+    Fixes misaligned address crash when EXA is enabled on Solaris SPARC
+    (Oracle Bug id 22993744)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 11abbd45e0c93b672a7e8d5730560a6b351c7a9b
+Author: Matthieu Herrb <matthieu@herrb.eu>
+Date:   Mon Nov 26 21:12:05 2018 +0100
+
+    Use fabs() to compute absolute value of floating point number.
+    
+    Fixes a warning from clang and looks like it was a real bug.
+    
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4ce40b932cdced590af1c32f6f491f63e9a247dd
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Mon Nov 26 11:03:39 2018 -0800
+
+    Suppression of a compilation error when XAA is not in use
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 4017c6e91f8938f1f1617e53e30ee1d3d10d490c
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Mon Nov 26 11:02:30 2018 -0800
+
+    Convert most HAVE_XAA_H conditional compilation labels to USE_XAA
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit c5922dcc3ff26c9b1291e90ecedee35f97bc51c8
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Mon Nov 26 11:01:33 2018 -0800
+
+    Eliminate set but unused variables
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 8db8f6b3f323a9d9cd934172c9f4d4a93a6b7394
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Mon Nov 26 11:00:32 2018 -0800
+
+    Eliminate unused variables
+    
+    Care had to be taken to properly handle XAA usage situation
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 94c70f888b3e3b1e4c9f324f188279f276c9cbbd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 25 14:31:30 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a939aa56b3af4418d0c026a3775fde7288b0cca7
+Author: Mikulas Patocka <mikulas@twibright.com>
+Date:   Tue Nov 20 08:41:14 2018 -0800
+
+    mga_drv: fix image corruption due to memcpy reordering
+    
+    The memcpy specification doesn't specify how the destination is written -
+    and on glibc 2.19 memcpy is doing some bytewise writes with the rep stosb
+    instruction. These bytewise writes confuse the hardware (because it
+    expects 32-bit writes) and result in image corruption.
+    
+    This patch replaces memcpy with explicit writes, so that the sequential
+    write order and 32-bit write size is guaranteed. We use the "volatile"
+    attribute to make sure that compiler optimizations won't cause write
+    reordering. When reading the memory, we use a structure with "packed"
+    attribute to avoid unaligned traps on RISC machines.
+    
+    Tested-by: Kevin Brace <kevinbrace@gmx.com>
+    Signed-off-by: Mikulas Patocka <mikulas@twibright.com>
+
+commit 0f4883f0b8ebfd105d5cee93841bc69f0f2b60b7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 18 13:25:33 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 34f37fe119f07e1e7b79964de08ac601a0753a7f
+Author: Nicolas Kaiser <nikai@nikai.net>
+Date:   Sun May 29 11:36:11 2011 +0200
+
+    fix typo in MGADRIMoveBuffersXAA()
+    
+    Fix typo in MGADRIMoveBuffersXAA().
+    
+    Signed-off-by: Nicolas Kaiser <nikai@nikai.net>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
+commit 31544d805f99da54d5d3c658ccc137813dbde52b
+Author: Mikulas Patocka <mikulas@twibright.com>
+Date:   Tue Feb 13 01:43:13 2018 +0100
+
+    mga_drv: use exa by default
+    
+    If the Xserver doesn't support XAA, we must turn EXA on by default -
+    otherwise we end up with no acceleration at all.
+    
+    Reviewed-by: Matt Turner <mattst88@gmail.com>
+    Signed-off-by: Mikulas Patocka <mikulas@twibright.com>
+
+commit 97c801e49251ffedf0eebd0563c737318433f114
+Author: Mikulas Patocka <mikulas@twibright.com>
+Date:   Tue Feb 13 01:42:41 2018 +0100
+
+    mga_drv: fix warning
+    
+    Fix warnings in the MGA driver. There's no functional change.
+    
+    Reviewed-by: Matt Turner <mattst88@gmail.com>
+    Signed-off-by: Mikulas Patocka <mikulas@twibright.com>
+
+commit 767c19e7142da1060586b1ff2b5e7253b6d6276b
+Author: Mikulas Patocka <mikulas@twibright.com>
+Date:   Tue Feb 13 01:42:27 2018 +0100
+
+    mga_drv: fix structure definition
+    
+    Fix missing entry in structure definition.
+    
+    Reviewed-by: Matt Turner <mattst88@gmail.com>
+    Signed-off-by: Mikulas Patocka <mikulas@twibright.com>
+
+commit b9aab0dcb171ab936a8581d8287aac3a90652a09
+Author: Mikulas Patocka <mikulas@twibright.com>
+Date:   Tue Feb 13 01:42:08 2018 +0100
+
+    mga_drv: fix a typo
+    
+    Fix a typo that causes dynamic symbol lookup failure and xserver crash.
+    
+    Reviewed-by: Matt Turner <mattst88@gmail.com>
+    Signed-off-by: Mikulas Patocka <mikulas@twibright.com>
+
+commit 2998868964b2f3a56b6759fd8dc4462d812dbe1a
+Author: Emil Velikov <emil.velikov@collabora.com>
+Date:   Mon Jul 17 11:05:57 2017 +0100
+
+    xf86-video-mga: remove the GlxSetVisualConfigs stub and friends
+    
+    The function was an empty since 2008 at least. Remove it alongside the
+    unused GLX visuals code.
+    
+    With this all the GL/GLX dependencies in the driver are gone.
+    
+    Cc: Mathieu Larouche <mathieu.larouche@matrox.com>
+    Cc: Dave Airlie <airlied@redhat.com>
+    Signed-off-by: Emil Velikov <emil.velikov@collabora.com>
+    ---
+    There's a GLX reference in mga_ucode.h - a file which was seemingly
+    never used since day 1. I'm not going to bother with that, since I've
+    taken enough of a diversion already ;-)
+
+commit 42fabf69c33d0e803eb661cc06217611bc3c9048
+Author: Mathieu Larouche <mathieu.larouche@matrox.com>
+Date:   Tue Jun 13 13:43:45 2017 -0400
+
+    xf86-video-mga: Fix to always set HiPri for G200e4 V2
+    
+      - Changed the HiPri value for G200e4 to always be 0.
+      - Added Bandwith limitation to block resolution above 1920x1200x60Hz
+    
+      - (V2): Pulled out ulMemoryBandwidth of condition so it's always initialized
+            as reviewed by : Stefan Dirsch <sndirsch@suse.de>
+    
+    Reviewed-by: Samer El-Haj-Mahmoud <smahmoud@lenovo.com>
+
+commit e55abc95c2b7f7cb8de73e1e21688fb5b5c08d5c
+Author: Mathieu Larouche <mathieu.larouche@matrox.com>
+Date:   Tue Feb 7 11:12:14 2017 -0500
+
+    xf86-video-mga: Add support for a new G200eH3 device
+    
+    - Added support for the new deviceID for G200eH3
+    - Added PLL algorithm for the G200eH3
+    - Removed the bandwidth limitation for the G200eH3
+    
+    Signed-off-by: Mathieu Larouche <mathieu.larouche@matrox.com>
+    Reviewed-by: Dave Airlie <airlied@redhat.com>
+
+commit 2ccc50072ccb70411e5e32644e74ef7c6b33f628
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:22 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit b9f57d1717fe9035d354b47e877ae110546d6f28
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 0b8e81d2a435e190e1a1b81e776423d255b4cb9a
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 7407e79cd62f7209a5fe0265882d0ee3d0007196
+Author: Colin Walters <walters@verbum.org>
+Date:   Wed Jan 4 17:37:06 2012 -0500
+
+    autogen.sh: Implement GNOME Build API
+    
+    http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 9ae2ad4ee9b0a9ad64fec0f88b68886d7b0b8663
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jan 26 11:18:06 2017 +1000
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit 979e0e73eb3424b6a97746e29c8b4a5b7e86196e
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Tue Jan 17 14:40:48 2017 -0800

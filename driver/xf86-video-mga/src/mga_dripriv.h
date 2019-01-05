@@ -28,18 +28,7 @@
 #ifndef __MGA_DRIPRIV_H__
 #define __MGA_DRIPRIV_H__
 
-#include "GL/glxint.h"
-
 #define MGA_MAX_DRAWABLES 256
-
-extern void GlxSetVisualConfigs( int nconfigs,
-				 __GLXvisualConfig *configs,
-				 void **configprivs );
-
-typedef struct {
-  /* Nothing here yet */
-  int dummy;
-} MGAConfigPrivRec, *MGAConfigPrivPtr;
 
 typedef struct {
   /* Nothing here yet */

@@ -694,8 +694,8 @@ MGA3026Init(ScrnInfoPtr pScrn, DisplayModePtr mode)
 	MGA_NOT_HAL(MGATi3026SetMCLK(pScrn, MGAdac->MemoryClock));
 
 #ifdef DEBUG		
-	ErrorF("%6ld: %02X %02X %02X	%02X %02X %02X	%08lX\n", mode->Clock,
-		pReg->DacClk[0], pReg->DacClk[1], pReg->DacClk[2], pReg->DacClk[3], pReg->DacClk[4], pReg->DacClk[5], pReg->Option);
+	ErrorF("%6d: %02X %02X %02X	%02X %02X %02X	%08X\n", mode->Clock,
+		pReg->DacClk[0], pReg->DacClk[1], pReg->DacClk[2], pReg->DacClk[3], pReg->DacClk[4], pReg->DacClk[5], (unsigned)pReg->Option);
 	for (i=0; i<sizeof(MGADACregs); i++) ErrorF("%02X ", pReg->DacRegs[i]);
 	for (i=0; i<6; i++) ErrorF(" %02X", pReg->ExtVga[i]);
 	ErrorF("\n");
@@ -863,8 +863,8 @@ MGA3026Save(ScrnInfoPtr pScrn, vgaRegPtr vgaReg, MGARegPtr mgaReg,
 #endif
 	
 #ifdef DEBUG		
-	ErrorF("read: %02X %02X %02X	%02X %02X %02X	%08lX\n",
-		mgaReg->DacClk[0], mgaReg->DacClk[1], mgaReg->DacClk[2], mgaReg->DacClk[3], mgaReg->DacClk[4], mgaReg->DacClk[5], mgaReg->Option);
+	ErrorF("read: %02X %02X %02X	%02X %02X %02X	%08X\n",
+		mgaReg->DacClk[0], mgaReg->DacClk[1], mgaReg->DacClk[2], mgaReg->DacClk[3], mgaReg->DacClk[4], mgaReg->DacClk[5], (unsigned)mgaReg->Option);
 	for (i=0; i<sizeof(MGADACregs); i++) ErrorF("%02X ", mgaReg->DacRegs[i]);
 	for (i=0; i<6; i++) ErrorF(" %02X", mgaReg->ExtVga[i]);
 	ErrorF("\n");

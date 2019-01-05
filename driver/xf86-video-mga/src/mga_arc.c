@@ -59,6 +59,7 @@ in this Software without prior written authorization from The Open Group.
 	OUTREG(MGAREG_YDSTLEN + MGAREG_EXEC, ((y) << 16) | 1); \
 }
 
+#ifdef USE_XAA
 static void
 MGAZeroArc(
     DrawablePtr pDraw,
@@ -220,4 +221,5 @@ MGAPolyArcThinSolid (
 	    miPolyArc(pDraw, pGC, 1, arc);
     }
 }
+#endif /* USE_XAA */
 

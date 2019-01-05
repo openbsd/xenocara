@@ -134,7 +134,7 @@ static CARD32 G450FindNextPLLParam(ScrnInfoPtr pScrn, CARD32 ulFout,
       *pulPLLMNP |= (CARD32)ucP;
       
 #ifdef DEBUG
-      ErrorF("FINS_S: VCO = %d, S = %02X, *pulPLLMNP = %08X\n", ulVCO, (ULONG)ucS, *pulPLLMNP);
+      ErrorF("FINS_S: VCO = %d, S = %02X, *pulPLLMNP = %08X\n", (unsigned)ulVCO, (unsigned)ucS, (unsigned)*pulPLLMNP);
 #endif
   }
 
@@ -315,7 +315,7 @@ double MGAG450SetPLLFreq(ScrnInfoPtr pScrn, long f_out)
    MGAPtr pMga = MGAPTR(pScrn);
 
 #ifdef DEBUG
-   xf86DrvMsg(pScrn->scrnIndex,X_INFO, "Restoring PLLClk = %d\n",f_out);
+   xf86DrvMsg(pScrn->scrnIndex,X_INFO, "Restoring PLLClk = %ld\n", f_out);
 #endif
    G450FindFirstPLLParam(pScrn, f_out, &ulMNP);
    ulMNPTable[0] = ulMNP;
@@ -489,7 +489,7 @@ MGAG450SavePLLFreq(ScrnInfoPtr pScrn)
     G450ApplyPFactor(pScrn, ucP, &freq);
 
 #ifdef DEBUG
-    xf86DrvMsg(pScrn->scrnIndex,X_INFO,"Saved PLLClk = %d\n",freq);
+    xf86DrvMsg(pScrn->scrnIndex,X_INFO,"Saved PLLClk = %u\n", (unsigned)freq);
 #endif
     return freq;
 }
@@ -506,7 +506,7 @@ MGAG450PrintPLL(ScrnInfoPtr pScrn)
     ucP = (CARD8)(ulMNP & 0x03);
     G450ApplyPFactor(pScrn, ucP, &freq);
 
-    xf86DrvMsg(pScrn->scrnIndex,X_INFO,"MGAGClock = %d -- MNP = 0x%x\n",
-	       freq,ulMNP);
+    xf86DrvMsg(pScrn->scrnIndex,X_INFO,"MGAGClock = %u -- MNP = 0x%x\n",
+	       (unsigned)freq, (unsigned)ulMNP);
 }
 #endif

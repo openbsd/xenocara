@@ -58,7 +58,6 @@ MGAG200E4ComputePLLParam(ScrnInfoPtr pScrn, long lFo, int *M, int *N, int *P)
 {
     unsigned int ulComputedFo;
     unsigned int ulFDelta;
-    unsigned int ulFPermitedDelta;
     unsigned int ulFTmpDelta;
     unsigned int ulVCOMax, ulVCOMin;
     unsigned int ulTestP;
@@ -81,8 +80,6 @@ MGAG200E4ComputePLLParam(ScrnInfoPtr pScrn, long lFo, int *M, int *N, int *P)
     ulFoInternal = lFo * 2;
 
     ulFDelta = 0xFFFFFFFF;
-    /* Permited delta is 0.5% as VESA Specification */
-    ulFPermitedDelta = ulFoInternal * 5 / 1000;  
 
     for (i = 0 ; i < P_ARRAY_SIZE ; i++)
     {
@@ -125,7 +122,6 @@ MGAG200SEComputePLLParam(ScrnInfoPtr pScrn, long lFo, int *M, int *N, int *P)
 {
     unsigned int ulComputedFo;
     unsigned int ulFDelta;
-    unsigned int ulFPermitedDelta;
     unsigned int ulFTmpDelta;
     unsigned int ulVCOMax, ulVCOMin;
     unsigned int ulTestP;
@@ -138,8 +134,6 @@ MGAG200SEComputePLLParam(ScrnInfoPtr pScrn, long lFo, int *M, int *N, int *P)
     ulPLLFreqRef    = 25000;
 
     ulFDelta = 0xFFFFFFFF;
-    /* Permited delta is 0.5% as VESA Specification */
-    ulFPermitedDelta = lFo * 5 / 1000;  
 
     /* Then we need to minimize the M while staying within 0.5% */
     for (ulTestP = 8; ulTestP > 0; ulTestP >>= 1) {
@@ -170,7 +164,6 @@ MGAG200EVComputePLLParam(ScrnInfoPtr pScrn, long lFo, int *M, int *N, int *P)
 {
     unsigned int ulComputedFo;
     unsigned int ulFDelta;
-    unsigned int ulFPermitedDelta;
     unsigned int ulFTmpDelta;
     unsigned int ulTestP;
     unsigned int ulTestM;
@@ -184,8 +177,6 @@ MGAG200EVComputePLLParam(ScrnInfoPtr pScrn, long lFo, int *M, int *N, int *P)
     ulPLLFreqRef    = 50000;
 
     ulFDelta = 0xFFFFFFFF;
-    /* Permited delta is 0.5% as VESA Specification */
-    ulFPermitedDelta = lFo * 5 / 1000;  
 
     /* Then we need to minimize the M while staying within 0.5% */
     for (ulTestP = 16; ulTestP > 0; ulTestP--) {
@@ -221,7 +212,6 @@ MGAG200WBComputePLLParam(ScrnInfoPtr pScrn, long lFo, int *M, int *N, int *P)
 {
     unsigned int ulComputedFo;
     unsigned int ulFDelta;
-    unsigned int ulFPermitedDelta;
     unsigned int ulFTmpDelta;
     unsigned int ulVCOMax, ulVCOMin;
     unsigned int ulTestP;
@@ -244,8 +234,6 @@ MGAG200WBComputePLLParam(ScrnInfoPtr pScrn, long lFo, int *M, int *N, int *P)
     ulTestMEnd      = 16;
 
     ulFDelta = 0xFFFFFFFF;
-    /* Permited delta is 0.5% as VESA Specification */
-    ulFPermitedDelta = lFo * 5 / 1000;
 
     /* Then we need to minimize the M while staying within 0.5% */
     for (ulTestP = ulTestPStart; ulTestP < 9; ulTestP++) {
@@ -281,7 +269,6 @@ MGAG200EW3ComputePLLParam(ScrnInfoPtr pScrn ,long lFo, int *M, int *N, int *P)
 {
     unsigned int ulComputedFo;
     unsigned int ulFDelta;
-    unsigned int ulFPermitedDelta;
     unsigned int ulFTmpDelta;
     unsigned int ulVCOMax, ulVCOMin;
     unsigned int ulTestP1;
@@ -311,8 +298,6 @@ MGAG200EW3ComputePLLParam(ScrnInfoPtr pScrn ,long lFo, int *M, int *N, int *P)
     ulTestNEnd      = 2048;
 
     ulFDelta = 0xFFFFFFFF;
-    /* Permited delta is 0.5% as VESA Specification */
-    ulFPermitedDelta = lFo * 5 / 1000;
 
     /* Then we need to minimize the M while staying within 0.5% */
     for (ulTestP1 = ulTestP1Start; ulTestP1 < ulTestP1End; ulTestP1++) {
@@ -349,7 +334,6 @@ MGAG200EHComputePLLParam(ScrnInfoPtr pScrn, long lFo, int *M, int *N, int *P)
 {
     unsigned int ulComputedFo;
     unsigned int ulFDelta;
-    unsigned int ulFPermitedDelta;
     unsigned int ulFTmpDelta;
     unsigned int ulTestP;
     unsigned int ulTestM;
@@ -363,8 +347,6 @@ MGAG200EHComputePLLParam(ScrnInfoPtr pScrn, long lFo, int *M, int *N, int *P)
     ulPLLFreqRef    = 33333;
 
     ulFDelta = 0xFFFFFFFF;
-    /* Permited delta is 0.5% as VESA Specification */
-    ulFPermitedDelta = lFo * 5 / 1000;  
 
     /* Then we need to minimize the M while staying within 0.5% */
     for (ulTestP = 16; ulTestP > 0; ulTestP>>= 1) {
@@ -389,6 +371,49 @@ MGAG200EHComputePLLParam(ScrnInfoPtr pScrn, long lFo, int *M, int *N, int *P)
                if ((lFo * ulTestP) >= 600000)
                    *P |= 0x80;
            }
+        }
+    }
+}
+
+void
+MGAG200EH3ComputePLLParam(ScrnInfoPtr pScrn, long lFo, int *M, int *N, int *P)
+{
+    unsigned int ulComputedFo;
+    unsigned int ulFDelta;
+    unsigned int ulFTmpDelta;
+    unsigned int ulTestP;
+    unsigned int ulTestM;
+    unsigned int ulTestN;
+    unsigned int ulVCOMax;
+    unsigned int ulVCOMin;
+    unsigned int ulPLLFreqRef;
+
+    ulVCOMax        = 3000000;
+    ulVCOMin        = 1500000;
+    ulPLLFreqRef    = 25000;
+
+    ulTestP         = 0;
+
+    ulFDelta = 0xFFFFFFFF;
+
+    /* Then we need to minimize the M while staying within 0.5% */
+    for (ulTestM = 150; ulTestM >= 6; ulTestM--) {
+        if ((lFo * ulTestM) > ulVCOMax) continue;
+        if ((lFo * ulTestM) < ulVCOMin) continue;
+
+        for (ulTestN = 120; ulTestN >= 60; ulTestN--) {
+            ulComputedFo = (ulPLLFreqRef * ulTestN) / ulTestM;
+            if (ulComputedFo > lFo)
+	        ulFTmpDelta = ulComputedFo - lFo;
+            else
+                ulFTmpDelta = lFo - ulComputedFo;
+
+            if (ulFTmpDelta < ulFDelta) {
+                ulFDelta = ulFTmpDelta;
+                *M = (CARD8)(ulTestM);
+                *N = (CARD8)(ulTestN);
+                *P = (CARD8)(ulTestP);
+            }
         }
     }
 }
@@ -781,12 +806,8 @@ MGAG200EHPIXPLLSET(ScrnInfoPtr pScrn, MGARegPtr mgaReg)
 {
     MGAPtr pMga = MGAPTR(pScrn);
 
-    unsigned long ulFallBackCounter, ulLoopCount, ulLockCheckIterations = 0, ulTempCount, ulVCount;
+    unsigned long ulLoopCount, ulLockCheckIterations = 0, ulTempCount, ulVCount;
     unsigned char ucTempByte, ucPixCtrl, ucPLLLocked = FALSE;
-    unsigned char ucM;
-    unsigned char ucN;
-    unsigned char ucP;
-    unsigned char ucS;
 
     while(ulLockCheckIterations <= 32 && ucPLLLocked == FALSE)
     {
@@ -940,8 +961,8 @@ MGAGCalcClock ( ScrnInfoPtr pScrn, long f_out,
 			/*
 			 * Pick the closest frequency.
 			 */
-			if ( abs(calc_f - f_vco) < m_err ) {
-				m_err = abs(calc_f - f_vco);
+			if ( fabs(calc_f - f_vco) < m_err ) {
+				m_err = fabs(calc_f - f_vco);
 				*best_m = m;
 				*best_n = n;
 			}
@@ -1056,7 +1077,14 @@ MGAGSetPCLK( ScrnInfoPtr pScrn, long f_out )
 	    pReg->PllN = n;
 	    pReg->PllP = p;
     } else if (pMga->is_G200EH) {
-	    MGAG200EHComputePLLParam(pScrn, f_out, &m, &n, &p);
+            if (pMga->Chipset == PCI_CHIP_MGAG200_EH3_PCI)
+            {
+                 MGAG200EH3ComputePLLParam(pScrn, f_out, &m, &n, &p);
+            }
+            else
+            {
+                 MGAG200EHComputePLLParam(pScrn, f_out, &m, &n, &p);
+            }
 
 	    pReg->PllM = m;
 	    pReg->PllN = n;
@@ -1263,6 +1291,7 @@ MGAGInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
 			break;
 
         case PCI_CHIP_MGAG200_EH_PCI:
+        case PCI_CHIP_MGAG200_EH3_PCI:
                 pReg->DacRegs[MGA1064_MISC_CTL] =
                     MGA1064_MISC_CTL_VGA8 |
                     MGA1064_MISC_CTL_DAC_RAM_CS;
@@ -1756,8 +1785,8 @@ MGA_NOT_HAL(
 		ErrorF("0x%02X, ", mgaReg->DacRegs[i]);
 #endif
 	}
-	ErrorF("\nOPTION  = %08lX\n", mgaReg->Option);
-	ErrorF("OPTION2 = %08lX\n", mgaReg->Option2);
+	ErrorF("\nOPTION  = %08X\n", (unsigned)mgaReg->Option);
+	ErrorF("OPTION2 = %08X\n", (unsigned)mgaReg->Option2);
 	ErrorF("CRTCEXT:");
 	for (i=0; i<6; i++) ErrorF(" %02X", mgaReg->ExtVga[i]);
 	ErrorF("\n");
@@ -1901,8 +1930,8 @@ MGAGSave(ScrnInfoPtr pScrn, vgaRegPtr vgaReg, MGARegPtr mgaReg,
 		ErrorF("0x%02X, ", mgaReg->DacRegs[i]);
 #endif
 	}
-	ErrorF("\nOPTION  = %08lX\n:", mgaReg->Option);
-	ErrorF("OPTION2 = %08lX\nCRTCEXT:", mgaReg->Option2);
+	ErrorF("\nOPTION  = %08X\n:", (unsigned)mgaReg->Option);
+	ErrorF("OPTION2 = %08X\nCRTCEXT:", (unsigned)mgaReg->Option2);
 	for (i=0; i<6; i++) ErrorF(" %02X", mgaReg->ExtVga[i]);
 	ErrorF("\n");
 #endif
@@ -2119,7 +2148,7 @@ MGAG_I2CPutBits(I2CBusPtr b, int clock, int data)
 
 
 static I2CBusPtr
-mgag_create_i2c_bus(const char *name, unsigned bus_index, unsigned scrn_index)
+mgag_create_i2c_bus(char *name, unsigned bus_index, unsigned scrn_index)
 {
     I2CBusPtr I2CPtr = xf86CreateI2CBusRec();
 
@@ -2129,7 +2158,7 @@ mgag_create_i2c_bus(const char *name, unsigned bus_index, unsigned scrn_index)
 	I2CPtr->I2CPutBits = MGAG_I2CPutBits;
 	I2CPtr->I2CGetBits = MGAG_I2CGetBits;
 	I2CPtr->AcknTimeout = 5;
-	I2CPtr->DriverPrivate.ptr = & i2c_priv[bus_index];
+	I2CPtr->DriverPrivate.ptr = (void *) &i2c_priv[bus_index];
 
 	if (!xf86I2CBusInit(I2CPtr)) {
 	    xf86DestroyI2CBusRec(I2CPtr, TRUE, TRUE);

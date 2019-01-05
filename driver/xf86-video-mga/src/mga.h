@@ -41,11 +41,7 @@
 #define _XF86DRI_SERVER_
 #include "mga_dripriv.h"
 #include "dri.h"
-#include "GL/glxint.h"
 
-#include "dri.h"
-
-#include "GL/glxint.h"
 #include "mga_dri.h"
 #endif
 
@@ -150,7 +146,9 @@ void MGAdbg_outreg32(ScrnInfoPtr, int,int, char*);
 #define PCI_CHIP_MGAG200_EW3_PCI 0x0536
 #endif
 
-
+#ifndef PCI_CHIP_MGAG200_EH3_PCI
+#define PCI_CHIP_MGAG200_EH3_PCI 0x0538
+#endif
 
 /*
  * Read/write to the DAC via MMIO 
@@ -220,9 +218,9 @@ typedef struct {
     unsigned char       * DacRegs;
     unsigned long	crtc2[0x58];
     unsigned char	dac2[0x21];
-    CARD32		Option;
-    CARD32		Option2;
-    CARD32		Option3;
+    uint32_t		Option;
+    uint32_t		Option2;
+    uint32_t		Option3;
     long                Clock;
     unsigned char	Pan_Ctl;
     Bool                PIXPLLCSaved;
@@ -523,7 +521,7 @@ typedef struct {
     MessageType		BiosFrom;
 #endif
     unsigned long	FbAddress;
-    unsigned char *     IOBase;
+    void *		IOBase;
     unsigned char *	FbBase;
     unsigned char *	ILOADBase;
     unsigned char *	FbStart;
@@ -561,7 +559,7 @@ typedef struct {
     CARD32		MAccess;
     int			FifoSize;
     int			StyleLen;
-#ifdef HAVE_XAA_H
+#ifdef USE_XAA
     XAAInfoRecPtr	AccelInfoRec;
 #endif
     xf86CursorInfoPtr	CursorInfoRec;
@@ -609,9 +607,6 @@ typedef struct {
     Bool 		directRenderingEnabled;
     DRIInfoPtr 		pDRIInfo;
     int 		drmFD;
-    int 		numVisualConfigs;
-    __GLXvisualConfig*	pVisualConfigs;
-    MGAConfigPrivPtr 	pVisualConfigsPriv;
     MGADRIServerPrivatePtr DRIServerInfo;
 
     MGARegRec		DRContextRegs;
@@ -742,8 +737,9 @@ Bool mgaExaInit(ScreenPtr pScreen);
 
 Bool MGAHWCursorInit(ScreenPtr pScreen);
 
-
+#ifdef USE_XAA
 void MGAPolyArcThinSolid(DrawablePtr, GCPtr, int, xArc*);
+#endif /* USE_XAA */
 
 Bool MGADGAInit(ScreenPtr pScreen);
 

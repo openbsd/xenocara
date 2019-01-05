@@ -23,10 +23,6 @@
 #include "miline.h"
 #include "servermd.h"
 
-#ifdef MGADRI
-#include "GL/glxtokens.h"
-#endif
-
 #include "mga.h"
 #include "mga_reg.h"
 #include "mga_macros.h"
@@ -61,7 +57,7 @@ do { \
   XAAMoveDWORDS((d),(s),(c)); \
 } while (0)
 
-#ifdef HAVE_XAA_H
+#ifdef USE_XAA
 static void mgaSetupForSolidFill( ScrnInfoPtr pScrn, int color,
     int rop, unsigned int planemask );
 
@@ -576,20 +572,29 @@ MGASubsequentCPUToScreenTexture (
 
 Bool mgaAccelInit( ScreenPtr pScreen )
 {
-#ifdef HAVE_XAA_H
+#ifdef USE_XAA
     XAAInfoRecPtr infoPtr;
 #endif
     ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     MGAPtr pMga = MGAPTR(pScrn);
-    int maxFastBlitMem, maxlines;
+//  int maxFastBlitMem, maxlines;
+#ifdef USE_XAA
+    int maxFastBlitMem;
+#endif /* USE_XAA */
+    int maxlines;
+
+#if defined(USE_XAA) && defined(RENDER)
     Bool doRender = FALSE;
+#endif /* defined(USE_XAA) && defined(RENDER) */
     BoxRec AvailFBArea;
+#ifdef USE_XAA
     int i;
+#endif /* USE_XAA */
 
     pMga->ScratchBuffer = malloc(((pScrn->displayWidth * pMga->CurrentLayout.bitsPerPixel) + 127) >> 3);
     if(!pMga->ScratchBuffer) return FALSE;
 
-#ifdef HAVE_XAA_H
+#ifdef USE_XAA
     pMga->AccelInfoRec = infoPtr = XAACreateInfoRec();
     if(!infoPtr) return FALSE;
 #endif
@@ -625,7 +630,7 @@ Bool mgaAccelInit( ScreenPtr pScreen )
 	pMga->AtypeNoBLK = MGAAtypeNoBLK;
     }
 
-#ifdef HAVE_XAA_H
+#ifdef USE_XAA
     /* fill out infoPtr here */
     infoPtr->Flags = 	PIXMAP_CACHE |
 			OFFSCREEN_PIXMAPS |
@@ -932,7 +937,7 @@ Bool mgaAccelInit( ScreenPtr pScreen )
 
     }
 
-#ifdef HAVE_XAA_H
+#ifdef USE_XAA
     for (i = 0; i < pScrn->numEntities; i++) {
 	if (xf86IsEntityShared(pScrn->entityList[i])) {
 	    infoPtr->RestoreAccelState = mgaRestoreAccelState;
@@ -971,7 +976,7 @@ Bool mgaAccelInit( ScreenPtr pScreen )
 }
 
 
-#ifdef HAVE_XAA_H
+#ifdef USE_XAA
 /* Support for multiscreen */
 static void mgaRestoreAccelState(ScrnInfoPtr pScrn)
 {
@@ -1100,7 +1105,7 @@ void MGAStormEngineInit( ScrnInfoPtr pScrn )
     opmode &= ~0x30000;
 #endif
 
-#ifdef HAVE_XAA_H
+#ifdef USE_XAA
     pMga->SetupForSolidFill = mgaSetupForSolidFill;
     pMga->SubsequentSolidFillRect = mgaSubsequentSolidFillRect;
     pMga->RestoreAccelState = mgaRestoreAccelState;
@@ -1152,6 +1157,7 @@ void MGAStormEngineInit( ScrnInfoPtr pScrn )
     case PCI_CHIP_MGAG200_EV_PCI:
     case PCI_CHIP_MGAG200_EH_PCI:
     case PCI_CHIP_MGAG200_ER_PCI:	
+    case PCI_CHIP_MGAG200_EH3_PCI:
 	pMga->SrcOrg = 0;
 	OUTREG(MGAREG_SRCORG, pMga->realSrcOrg);
 	OUTREG(MGAREG_DSTORG, pMga->DstOrg);
@@ -1178,7 +1184,7 @@ void MGAStormEngineInit( ScrnInfoPtr pScrn )
 }
 
 
-#ifdef HAVE_XAA_H
+#ifdef USE_XAA
 static void
 MGASetClippingRectangle(
    ScrnInfoPtr pScrn,

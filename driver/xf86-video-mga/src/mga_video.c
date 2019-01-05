@@ -565,8 +565,12 @@ MGAAllocateMemory(
    void **mem_struct,
    int size
 ){
+#if defined(USE_XAA) || defined(USE_EXA)
    MGAPtr pMga = MGAPTR(pScrn);
+#endif /* defined(USE_XAA) || defined(USE_EXA) */
+#ifdef USE_XAA
    ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
+#endif /* USE_XAA */
    int offset = 0;
 
 #ifdef USE_EXA
@@ -644,7 +648,9 @@ MGAAllocateMemory(
 static void
 MGAFreeMemory(ScrnInfoPtr pScrn, void *mem_struct)
 {
+#if defined(USE_XAA) || defined(USE_EXA)
     MGAPtr pMga = MGAPTR(pScrn);
+#endif /* defined(USE_XAA) || defined(USE_EXA) */
 
 #ifdef USE_EXA
     if (pMga->Exa) {
@@ -1374,6 +1380,7 @@ static void CopyMungedScanline_AXP(CARD32 *fb_ptr, short src_w,
     }
 }
 
+#if 0
 static void CopyMungedScanline_AXP2(CARD32 *fb_ptr, short src_w,
 				    CARD32 *tsp, CARD32 *tpu, CARD32 *tpv)
 {
@@ -1393,6 +1400,7 @@ static void CopyMungedScanline_AXP2(CARD32 *fb_ptr, short src_w,
 	fb_ptr+=4;
     }
 }
+#endif
 
 
 static void CopyMungedScanlineFilter_AXP(CARD32 *fb_ptr, short src_w,
@@ -1466,6 +1474,7 @@ static void CopyMungedScanlineFilter_AXP(CARD32 *fb_ptr, short src_w,
     }
 }
 
+#if 0
 static void CopyMungedScanlineFilterDown_AXP(CARD32 *fb_ptr, short src_w,
 					     CARD32 *tsp1, CARD32 *tpu1, CARD32 *tpv1,
 					     CARD32 *tsp2, CARD32 *tpu2, CARD32 *tpv2,
@@ -1504,6 +1513,7 @@ static void CopyMungedScanlineFilterDown_AXP(CARD32 *fb_ptr, short src_w,
 	fb_ptr+=4;
     }
 }
+#endif
 
 static void MGACopyScaledILOAD(
 			       ScrnInfoPtr pScrn,
@@ -1520,7 +1530,12 @@ static void MGACopyScaledILOAD(
     CARD32 *fb_ptr;
     unsigned char *ubuf, *vbuf, *tbuf;
     CARD32 *pu, *pv;
-    int k,l, pl, dl, xds, yds;
+    int k,l;
+#ifdef MGA2164_BLIT_DUP
+    int pl;
+#endif /* MGA2164_BLIT_DUP */
+    int dl;
+    int xds, yds;
     short box_h;
     short scr_pitch = ( pScrn->virtualX + 15) & ~15;
 
@@ -1606,8 +1621,10 @@ static void MGACopyScaledILOAD(
     ubuf=vbuf+width*height/4;
     pu = (CARD32 *)(ubuf+(src_y/2)*(width/2));
     pv = (CARD32 *)(vbuf+(src_y/2)*(width/2));
-
-    for(pl=-1,dl=0;dl<box_h;dl++) {
+#ifdef MGA2164_BLIT_DUP
+    pl = -1;
+#endif /* MGA2164_BLIT_DUP */
+    for(dl=0;dl<box_h;dl++) {
 	int beta;
 	l=(dl+(pbox->y1-drw_y))*src_h/drw_h;
 	/* FIXME: check the math */
@@ -1764,7 +1781,9 @@ static void MGACopyScaledILOAD(
 		    default:
 			break;
 		    }
+#ifdef MGA2164_BLIT_DUP
 		    pl=l;
+#endif /* MGA2164_BLIT_DUP */
 		} else {
 		    /* dup lines */
 
@@ -1801,7 +1820,10 @@ static void MGACopyILOAD(
     CARD32 *fb_ptr;
     CARD8  *ubuf, *vbuf;
     CARD32 *pu, *pv;
-    int k,l;
+#ifdef CUSTOM_MEMCOPY
+    int k;
+#endif /* CUSTOM_MEMCOPY */
+    int l;
     short clip_x1, clip_x2, tmp_w;
 
 #ifdef DEBUG_MGA2164
@@ -1968,7 +1990,6 @@ MGAPutImageILOAD(
     MGAPortPrivPtr pPriv = pMga->portPrivate;
     INT32 x1, x2, y1, y2;
     int dstPitch = 0;
-    int bpp;
     BoxRec dstBox;
     int nbox;
     BoxPtr pbox;
@@ -1984,9 +2005,7 @@ MGAPutImageILOAD(
 			      clipBoxes, width, height))
 	return Success;
 
-    bpp = pScrn->bitsPerPixel >> 3;
-
-#ifdef HAVE_XAA_H
+#ifdef USE_XAA
     if( pMga->AccelInfoRec->NeedToSync && ((long)data != pPriv->lastPort) ) {
 	MGAStormSync(pScrn);
     }
@@ -2020,7 +2039,7 @@ MGAPutImageILOAD(
 	pbox++;
     }
 
-#ifdef HAVE_XAA_H
+#ifdef USE_XAA
     pMga->AccelInfoRec->NeedToSync = TRUE;
 #endif
     pPriv->videoStatus = FREE_TIMER;

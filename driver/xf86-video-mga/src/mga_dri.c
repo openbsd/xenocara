@@ -48,14 +48,7 @@
 #include "mga_drm.h"
 
 #define _XF86DRI_SERVER_
-#include "GL/glxtokens.h"
 #include "sarea.h"
-
-
-
-
-
-#include "GL/glxtokens.h"
 
 #include "mga_reg.h"
 #include "mga.h"
@@ -66,224 +59,6 @@
 
 static char MGAKernelDriverName[] = "mga";
 static char MGAClientDriverName[] = "mga";
-
-/* Initialize the visual configs that are supported by the hardware.
- * These are combined with the visual configs that the indirect
- * rendering core supports, and the intersection is exported to the
- * client.
- */
-static Bool MGAInitVisualConfigs( ScreenPtr pScreen )
-{
-   ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
-   MGAPtr pMga = MGAPTR(pScrn);
-   int numConfigs = 0;
-   __GLXvisualConfig *pConfigs = 0;
-   MGAConfigPrivPtr pMGAConfigs = 0;
-   MGAConfigPrivPtr *pMGAConfigPtrs = 0;
-   int i, db, depth, stencil, accum;
-
-   switch ( pScrn->bitsPerPixel ) {
-   case 8:
-   case 24:
-      break;
-
-   case 16:
-      numConfigs = 8;
-
-      pConfigs = (__GLXvisualConfig*)calloc( sizeof(__GLXvisualConfig),
-						numConfigs );
-      if ( !pConfigs ) {
-	 return FALSE;
-      }
-
-      pMGAConfigs = (MGAConfigPrivPtr)calloc( sizeof(MGAConfigPrivRec),
-						 numConfigs );
-      if ( !pMGAConfigs ) {
-	 free(pConfigs);
-	 return FALSE;
-      }
-
-      pMGAConfigPtrs = (MGAConfigPrivPtr*)calloc( sizeof(MGAConfigPrivPtr),
-						     numConfigs );
-      if ( !pMGAConfigPtrs ) {
-	 free(pConfigs);
-	 free(pMGAConfigs);
-	 return FALSE;
-      }
-
-      for ( i = 0 ; i < numConfigs ; i++ ) {
-	 pMGAConfigPtrs[i] = &pMGAConfigs[i];
-      }
-
-      i = 0;
-      for ( accum = 0 ; accum <= 1 ; accum++ ) {
-         for ( stencil = 0 ; stencil <= 1 ; stencil++ ) {
-            for ( db = 1 ; db >= 0 ; db-- ) {
-               pConfigs[i].vid			= -1;
-               pConfigs[i].class		= -1;
-               pConfigs[i].rgba			= TRUE;
-               pConfigs[i].redSize		= 5;
-               pConfigs[i].greenSize		= 6;
-               pConfigs[i].blueSize		= 5;
-               pConfigs[i].alphaSize		= 0;
-               pConfigs[i].redMask		= 0x0000F800;
-               pConfigs[i].greenMask		= 0x000007E0;
-               pConfigs[i].blueMask		= 0x0000001F;
-               pConfigs[i].alphaMask		= 0;
-               if ( accum ) {
-                  pConfigs[i].accumRedSize	= 16;
-                  pConfigs[i].accumGreenSize	= 16;
-                  pConfigs[i].accumBlueSize	= 16;
-                  pConfigs[i].accumAlphaSize	= 0;
-               } else {
-                  pConfigs[i].accumRedSize	= 0;
-                  pConfigs[i].accumGreenSize	= 0;
-                  pConfigs[i].accumBlueSize	= 0;
-                  pConfigs[i].accumAlphaSize	= 0;
-               }
-               if ( db ) {
-                  pConfigs[i].doubleBuffer	= TRUE;
-               } else {
-                  pConfigs[i].doubleBuffer	= FALSE;
-	       }
-               pConfigs[i].stereo		= FALSE;
-               pConfigs[i].bufferSize		= 16;
-               pConfigs[i].depthSize		= 16;
-               if ( stencil ) {
-                  pConfigs[i].stencilSize	= 8;
-               } else {
-                  pConfigs[i].stencilSize	= 0;
-	       }
-               pConfigs[i].auxBuffers		= 0;
-               pConfigs[i].level		= 0;
-               if ( accum || stencil ) {
-                  pConfigs[i].visualRating	= GLX_SLOW_CONFIG;
-               } else {
-                  pConfigs[i].visualRating	= GLX_NONE;
-	       }
-               pConfigs[i].transparentPixel	= GLX_NONE;
-               pConfigs[i].transparentRed	= 0;
-               pConfigs[i].transparentGreen	= 0;
-               pConfigs[i].transparentBlue	= 0;
-               pConfigs[i].transparentAlpha	= 0;
-               pConfigs[i].transparentIndex	= 0;
-               i++;
-            }
-         }
-      }
-      if ( i != numConfigs ) {
-         xf86DrvMsg( pScrn->scrnIndex, X_ERROR,
-		     "[drm] Incorrect initialization of visuals\n" );
-         return FALSE;
-      }
-      break;
-
-   case 32:
-      numConfigs = 8;
-
-      pConfigs = (__GLXvisualConfig*)calloc( sizeof(__GLXvisualConfig),
-						numConfigs );
-      if ( !pConfigs ) {
-	 return FALSE;
-      }
-
-      pMGAConfigs = (MGAConfigPrivPtr)calloc( sizeof(MGAConfigPrivRec),
-						 numConfigs );
-      if ( !pMGAConfigs ) {
-	 free(pConfigs);
-	 return FALSE;
-      }
-
-      pMGAConfigPtrs = (MGAConfigPrivPtr*)calloc( sizeof(MGAConfigPrivPtr),
-						     numConfigs );
-      if ( !pMGAConfigPtrs ) {
-	 free(pConfigs);
-	 free(pMGAConfigs);
-	 return FALSE;
-      }
-
-      for ( i = 0 ; i < numConfigs ; i++ ) {
-	 pMGAConfigPtrs[i] = &pMGAConfigs[i];
-      }
-
-      i = 0;
-      for ( accum = 0 ; accum <= 1 ; accum++ ) {
-         for ( depth = 0 ; depth <= 1 ; depth++ ) { /* and stencil */
-            for ( db = 1 ; db >= 0 ; db-- ) {
-               pConfigs[i].vid			= -1;
-               pConfigs[i].class		= -1;
-               pConfigs[i].rgba			= TRUE;
-               pConfigs[i].redSize		= 8;
-               pConfigs[i].greenSize		= 8;
-               pConfigs[i].blueSize		= 8;
-               pConfigs[i].alphaSize		= 0;
-               pConfigs[i].redMask		= 0x00FF0000;
-               pConfigs[i].greenMask		= 0x0000FF00;
-               pConfigs[i].blueMask		= 0x000000FF;
-               pConfigs[i].alphaMask		= 0x0;
-               if ( accum ) {
-                  pConfigs[i].accumRedSize	= 16;
-                  pConfigs[i].accumGreenSize	= 16;
-                  pConfigs[i].accumBlueSize	= 16;
-                  pConfigs[i].accumAlphaSize	= 0;
-               } else {
-                  pConfigs[i].accumRedSize	= 0;
-                  pConfigs[i].accumGreenSize	= 0;
-                  pConfigs[i].accumBlueSize	= 0;
-                  pConfigs[i].accumAlphaSize	= 0;
-               }
-               if ( db ) {
-                  pConfigs[i].doubleBuffer	= TRUE;
-               } else {
-                  pConfigs[i].doubleBuffer	= FALSE;
-	       }
-               pConfigs[i].stereo		= FALSE;
-               pConfigs[i].bufferSize		= 24;
-               if ( depth ) {
-		     pConfigs[i].depthSize	= 24;
-                     pConfigs[i].stencilSize	= 8;
-               }
-               else {
-                     pConfigs[i].depthSize	= 0;
-                     pConfigs[i].stencilSize	= 0;
-               }
-               pConfigs[i].auxBuffers		= 0;
-               pConfigs[i].level		= 0;
-               if ( accum ) {
-                  pConfigs[i].visualRating	= GLX_SLOW_CONFIG;
-               } else {
-                  pConfigs[i].visualRating	= GLX_NONE;
-	       }
-               pConfigs[i].transparentPixel	= GLX_NONE;
-               pConfigs[i].transparentRed	= 0;
-               pConfigs[i].transparentGreen	= 0;
-               pConfigs[i].transparentBlue	= 0;
-               pConfigs[i].transparentAlpha	= 0;
-               pConfigs[i].transparentIndex	= 0;
-               i++;
-            }
-         }
-      }
-      if ( i != numConfigs ) {
-         xf86DrvMsg( pScrn->scrnIndex, X_ERROR,
-		     "[drm] Incorrect initialization of visuals\n" );
-         return FALSE;
-      }
-      break;
-
-   default:
-      /* Unexpected bits/pixels */
-      break;
-   }
-
-   pMga->numVisualConfigs = numConfigs;
-   pMga->pVisualConfigs = pConfigs;
-   pMga->pVisualConfigsPriv = pMGAConfigs;
-
-   GlxSetVisualConfigs( numConfigs, pConfigs, (void **)pMGAConfigPtrs );
-
-   return TRUE;
-}
 
 static Bool MGACreateContext( ScreenPtr pScreen, VisualPtr visual,
 			      drm_context_t hwContext, void *pVisualConfigPriv,
@@ -346,12 +121,13 @@ static void MGAWaitForIdleDMA( ScrnInfoPtr pScrn )
 void MGAGetQuiescence( ScrnInfoPtr pScrn )
 {
    MGAPtr pMga = MGAPTR(pScrn);
+#ifdef USE_XAA
+   MGAFBLayout *pLayout = &pMga->CurrentLayout;
+#endif /* USE_XAA */
 
    pMga->haveQuiescense = 1;
 
    if ( pMga->directRenderingEnabled ) {
-      MGAFBLayout *pLayout = &pMga->CurrentLayout;
-
       MGAWaitForIdleDMA( pScrn );
 
         /* FIXME what about EXA? */
@@ -958,7 +734,7 @@ static void MGADRIMoveBuffersXAA(WindowPtr pParent, DDXPointRec ptOldOrg,
     pboxNew1 = 0;
     pptNew1 = 0;
     pboxNew2 = 0;
-    pboxNew2 = 0;
+    pptNew2 = 0;
     pptSrc = &ptOldOrg;
 
     dx = pParent->drawable.x - ptOldOrg.x;
@@ -1095,10 +871,9 @@ Bool MGADRIScreenInit( ScreenPtr pScreen )
        return FALSE;
    }
 
-   /* Check that the GLX, DRI, and DRM modules have been loaded by testing
+   /* Check that the DRI, and DRM modules have been loaded by testing
     * for canonical symbols in each module.
     */
-   if ( !xf86LoaderCheckSymbol( "GlxSetVisualConfigs" ) )	return FALSE;
    if ( !xf86LoaderCheckSymbol( "drmAvailable" ) )		return FALSE;
    if ( !xf86LoaderCheckSymbol( "DRIQueryVersion" ) ) {
       xf86DrvMsg( pScreen->myNum, X_ERROR,
@@ -1350,10 +1125,6 @@ Bool MGADRIScreenInit( ScreenPtr pScreen )
 			&scratch_ptr);
    }
 
-   if ( !MGAInitVisualConfigs( pScreen ) ) {
-      DRICloseScreen( pScreen );
-      return FALSE;
-   }
    xf86DrvMsg( pScrn->scrnIndex, X_INFO, "[dri] visual configs initialized\n" );
 
    return TRUE;
@@ -1495,6 +1266,4 @@ void MGADRICloseScreen( ScreenPtr pScreen )
    }
    free(pMga->DRIServerInfo);
    pMga->DRIServerInfo = 0;
-   free(pMga->pVisualConfigs);
-   free(pMga->pVisualConfigsPriv);
 }
