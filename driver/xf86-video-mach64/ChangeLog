@@ -1,3 +1,94 @@
+commit a504b15fc74f7725f67866e22407b742d1d435a9
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Fri May 18 12:49:30 2018 -0400
+
+    mach64 6.9.6
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit eab6848f85d26c824f8096949105bf4894a1d48d
+Author: Emil Velikov <emil.velikov@collabora.com>
+Date:   Mon Jul 17 13:44:55 2017 +0100
+
+    xf86-video-mach64: remove the GlxSetVisualConfigs stub and friends
+    
+    The function was an empty since 2008 at least. Remove it alongside the
+    unused GLX visuals code.
+    
+    With this all the GL/GLX dependencies in the driver are gone.
+    
+    Cc: Adam Jackson <ajax@redhat.com>
+    Cc: Connor Behan <connor.behan@gmail.com>
+    Signed-off-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 5ae03dc9f4564de54df6427ed7e6e80e75a4179e
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Feb 16 11:18:10 2017 -0500
+
+    D'oh, fix the previous commit
+    
+    These limits are against mode->[HV]Total, not Display.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit e27785a3fbabc9f354c361b5058b0359b6d9b5ae
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Feb 16 11:13:59 2017 -0500
+
+    Move max mode h/v checks into ATIValidMode
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit dec6d18b61a1f8841303572ae5931fe6c937664f
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:22 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit e67dab498fc7b6b4c73b5c33c550ecfcb814b4b1
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 2707a8ea311a2d40e0db8161225241bc360ab61d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 811890e401299f5a80e237fbaa216c9242654119
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 21:03:14 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit de20547a7c31cf576d9b5b9ac607a1bde93542b8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 21:03:13 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 8f920350a736012ce2a7469d8252f5f5bf72cef3
 Author: Adam Jackson <ajax@redhat.com>
 Date:   Mon May 4 15:50:09 2015 -0400
@@ -601,11 +692,11 @@ Date:   Sun May 10 16:56:02 2009 -0700
     Fixes these warnings from parfait source checker:
     
     Error: Read buffer overflow at src/atimach64render.c:601
-    	in function 'Mach64PrepareTexture' [Symbolic analysis]
+            in function 'Mach64PrepareTexture' [Symbolic analysis]
            In array dereference of Mach64TexFormats[i] with index 'i'
            Array size is 6 elements (of 12 bytes each), index >= 0 and index <= 6
     Error: Read buffer overflow at src/atimach64render.c:712
-    	in function 'Mach64PrepareComposite' [Symbolic analysis]
+            in function 'Mach64PrepareComposite' [Symbolic analysis]
            In array dereference of Mach64TexFormats[i] with index 'i'
            Array size is 6 elements (of 12 bytes each), index >= 0 and index <= 6
     
@@ -816,7 +907,7 @@ Date:   Sun Feb 24 05:37:22 2008 -0500
     
     Conflicts:
     
-    	src/radeon_commonfuncs.c
+            src/radeon_commonfuncs.c
 
 commit 27ddb39b12a0b54e099fd5274c4c91f08e2d2822
 Author: Alex Deucher <alex@samba.(none)>
@@ -1902,8 +1993,8 @@ Date:   Fri Dec 21 09:36:22 2007 +1000
     
     Conflicts:
     
-    	src/radeon_display.c
-    	src/radeon_driver.c
+            src/radeon_display.c
+            src/radeon_driver.c
 
 commit eb99c3c5c9a2249cb84920f0f225e525fc3a4144
 Author: Alex Deucher <alex@botch2.(none)>
@@ -2283,10 +2374,10 @@ Date:   Mon Dec 10 15:18:03 2007 +1000
     
     Conflicts:
     
-    	src/radeon.h
-    	src/radeon_crtc.c
-    	src/radeon_driver.c
-    	src/radeon_output.c
+            src/radeon.h
+            src/radeon_crtc.c
+            src/radeon_driver.c
+            src/radeon_output.c
 
 commit 6451ea2dcc4fac762442f699935864f4a8d445f7
 Merge: 0d89556 5896ca4
@@ -2357,7 +2448,7 @@ Date:   Thu Dec 6 14:22:03 2007 +1000
     
     Conflicts:
     
-    	src/radeon_output.c
+            src/radeon_output.c
 
 commit 21ed435398e4a398dd8a0a5d7c1d4cc45e916332
 Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
@@ -2864,9 +2955,9 @@ Date:   Tue Nov 20 13:02:43 2007 +1000
     
     Conflicts:
     
-    	src/radeon_chipset.h
-    	src/radeon_driver.c
-    	src/radeon_probe.c
+            src/radeon_chipset.h
+            src/radeon_driver.c
+            src/radeon_probe.c
 
 commit 0d1e0c7805b3d8e56ccb49465e6b144afb7bdc51
 Author: Dave Airlie <airlied@redhat.com>
@@ -2889,8 +2980,8 @@ Date:   Tue Nov 20 08:04:32 2007 +1000
     
     Conflicts:
     
-    	src/radeon_cursor.c
-    	src/radeon_output.c
+            src/radeon_cursor.c
+            src/radeon_output.c
 
 commit 744c8cb6c293fcaa687566f52901644e699baace
 Merge: e258fbe e530af7
@@ -4101,7 +4192,7 @@ Date:   Tue Aug 28 16:01:12 2007 +0300
     
     Conflicts:
     
-    	src/ati.c
+            src/ati.c
 
 commit 673f799729824f4439dd5f681f75dd5aab50947f
 Author: Alex Deucher <alex@botch2.(none)>
@@ -4372,14 +4463,14 @@ Date:   Thu Aug 23 19:42:19 2007 +1000
     
     Conflicts:
     
-    	src/radeon.h
-    	src/radeon_bios.c
-    	src/radeon_display.c
-    	src/radeon_dri.c
-    	src/radeon_driver.c
-    	src/radeon_modes.c
-    	src/radeon_probe.h
-    	src/radeon_video.c
+            src/radeon.h
+            src/radeon_bios.c
+            src/radeon_display.c
+            src/radeon_dri.c
+            src/radeon_driver.c
+            src/radeon_modes.c
+            src/radeon_probe.h
+            src/radeon_video.c
 
 commit 53a67e31904bec9a3aa1bd24de8034dcafea1d2a
 Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
@@ -5245,9 +5336,9 @@ Date:   Wed May 30 17:27:22 2007 +1000
     
     Conflicts:
     
-    	src/radeon_cursor.c
-    	src/radeon_display.c
-    	src/radeon_driver.c
+            src/radeon_cursor.c
+            src/radeon_display.c
+            src/radeon_driver.c
 
 commit 800bf53279e2c2bf854682bbfd6fa16d03afed00
 Author: Matthieu Herrb <matthieu@deville.herrb.com>
@@ -6233,8 +6324,8 @@ Date:   Sun Feb 25 23:27:19 2007 +1100
     
     Conflicts:
     
-    	src/radeon_display.c
-    	src/radeon_driver.c
+            src/radeon_display.c
+            src/radeon_driver.c
 
 commit 3b43788c45f51ad2d3e8e64383c412f4ddd97207
 Author: Dave Airlie <airlied@linux.ie>
@@ -7744,7 +7835,7 @@ Date:   Fri Sep 22 06:00:04 2006 +1000
     
     Conflicts:
     
-    	src/radeon_driver.c
+            src/radeon_driver.c
 
 commit 9fa176c7989030e7340cc9b85d0b6a7b34303091
 Author: Alex Deucher <alex@samba.(none)>

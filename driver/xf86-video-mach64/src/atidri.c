@@ -52,219 +52,12 @@
 #include "xf86.h"
 #include "windowstr.h"
 
-/* GLX/DRI/DRM definitions */
+/* DRI/DRM definitions */
 #define _XF86DRI_SERVER_
-#include "GL/glxtokens.h"
 #include "sarea.h"
 
 static char ATIKernelDriverName[] = "mach64";
 static char ATIClientDriverName[] = "mach64";
-
-/* Initialize the visual configs that are supported by the hardware.
- * These are combined with the visual configs that the indirect
- * rendering core supports, and the intersection is exported to the
- * client.
- */
-static Bool ATIInitVisualConfigs( ScreenPtr pScreen )
-{
-   ScrnInfoPtr pScreenInfo = xf86ScreenToScrn(pScreen);
-   ATIPtr pATI = ATIPTR(pScreenInfo);
-   int numConfigs = 0;
-   __GLXvisualConfig *pConfigs = NULL;
-   ATIConfigPrivPtr pATIConfigs = NULL;
-   ATIConfigPrivPtr *pATIConfigPtrs = NULL;
-   int i, accum, stencil, db;
-
-   switch ( pATI->bitsPerPixel ) {
-   case 8:  /* 8bpp mode is not support */
-   case 15: /* FIXME */
-   case 24: /* FIXME */
-      xf86DrvMsg(pScreen->myNum, X_ERROR,
-		 "[dri] ATIInitVisualConfigs failed (%d bpp not supported).  "
-		 "Disabling DRI.\n", pATI->bitsPerPixel);
-      return FALSE;
-
-#define ATI_USE_ACCUM   1
-#define ATI_USE_STENCIL 1
-
-   case 16:
-
-      if ( pATI->depth != 16) {
-	 xf86DrvMsg(pScreen->myNum, X_ERROR,
-		    "[dri] ATIInitVisualConfigs failed (depth %d at 16 bpp not supported).  "
-		     "Disabling DRI.\n", pATI->depth);
-	 return FALSE;
-      }
-
-      numConfigs = 1;
-      if ( ATI_USE_ACCUM )   numConfigs *= 2;
-      if ( ATI_USE_STENCIL ) numConfigs *= 2;
-      numConfigs *= 2; /* single- and double-buffered */
-
-      pConfigs = (__GLXvisualConfig*)
-	 xnfcalloc( sizeof(__GLXvisualConfig), numConfigs );
-      if ( !pConfigs ) {
-	 return FALSE;
-      }
-      pATIConfigs = (ATIConfigPrivPtr)
-	 xnfcalloc( sizeof(ATIConfigPrivRec), numConfigs );
-      if ( !pATIConfigs ) {
-	 free( pConfigs );
-	 return FALSE;
-      }
-      pATIConfigPtrs = (ATIConfigPrivPtr*)
-	 xnfcalloc( sizeof(ATIConfigPrivPtr), numConfigs );
-      if ( !pATIConfigPtrs ) {
-	 free( pConfigs );
-	 free( pATIConfigs );
-	 return FALSE;
-      }
-
-      i = 0;
-      for (db = 1; db >= 0; db--) {
-	 for ( accum = 0 ; accum <= ATI_USE_ACCUM ; accum++ ) {
-	    for ( stencil = 0 ; stencil <= ATI_USE_STENCIL ; stencil++ ) {
-	       pATIConfigPtrs[i] = &pATIConfigs[i];
-
-	       pConfigs[i].vid			= -1;
-	       pConfigs[i].class		= -1;
-	       pConfigs[i].rgba			= TRUE;
-	       pConfigs[i].redSize		= 5;
-	       pConfigs[i].greenSize		= 6;
-	       pConfigs[i].blueSize		= 5;
-	       pConfigs[i].alphaSize		= 0;
-	       pConfigs[i].redMask		= 0x0000F800;
-	       pConfigs[i].greenMask		= 0x000007E0;
-	       pConfigs[i].blueMask		= 0x0000001F;
-	       pConfigs[i].alphaMask		= 0x00000000;
-	       if ( accum ) {	/* Simulated in software */
-		  pConfigs[i].accumRedSize	= 16;
-		  pConfigs[i].accumGreenSize	= 16;
-		  pConfigs[i].accumBlueSize	= 16;
-		  pConfigs[i].accumAlphaSize	= 0;
-	       } else {
-		  pConfigs[i].accumRedSize	= 0;
-		  pConfigs[i].accumGreenSize	= 0;
-		  pConfigs[i].accumBlueSize	= 0;
-		  pConfigs[i].accumAlphaSize	= 0;
-	       }
-	       pConfigs[i].doubleBuffer		= db ? TRUE : FALSE;
-	       pConfigs[i].stereo		= FALSE;
-	       pConfigs[i].bufferSize		= 16;
-	       pConfigs[i].depthSize		= 16;
-	       if ( stencil ) {	/* Simulated in software */
-		  pConfigs[i].stencilSize	= 8;
-	       } else {
-		  pConfigs[i].stencilSize	= 0;
-	       }
-	       pConfigs[i].auxBuffers		= 0;
-	       pConfigs[i].level		= 0;
-	       if ( accum || stencil ) {
-		  pConfigs[i].visualRating	= GLX_SLOW_CONFIG;
-	       } else {
-		  pConfigs[i].visualRating	= GLX_NONE;
-	       }
-	       pConfigs[i].transparentPixel	= GLX_NONE;
-	       pConfigs[i].transparentRed	= 0;
-	       pConfigs[i].transparentGreen	= 0;
-	       pConfigs[i].transparentBlue	= 0;
-	       pConfigs[i].transparentAlpha	= 0;
-	       pConfigs[i].transparentIndex	= 0;
-	       i++;
-	    }
-	 }
-      }
-      break;
-
-   case 32:
-      numConfigs = 1;
-      if ( ATI_USE_ACCUM )   numConfigs *= 2;
-      if ( ATI_USE_STENCIL ) numConfigs *= 2;
-      numConfigs *= 2; /* single- and double-buffered */
-
-      pConfigs = (__GLXvisualConfig*)
-	 xnfcalloc( sizeof(__GLXvisualConfig), numConfigs );
-      if ( !pConfigs ) {
-	 return FALSE;
-      }
-      pATIConfigs = (ATIConfigPrivPtr)
-	 xnfcalloc( sizeof(ATIConfigPrivRec), numConfigs );
-      if ( !pATIConfigs ) {
-	 free( pConfigs );
-	 return FALSE;
-      }
-      pATIConfigPtrs = (ATIConfigPrivPtr*)
-	 xnfcalloc( sizeof(ATIConfigPrivPtr), numConfigs );
-      if ( !pATIConfigPtrs ) {
-	 free( pConfigs );
-	 free( pATIConfigs );
-	 return FALSE;
-      }
-
-      i = 0;
-      for (db = 1; db >= 0; db--) {
-	 for ( accum = 0 ; accum <= ATI_USE_ACCUM ; accum++ ) {
-	    for ( stencil = 0 ; stencil <= ATI_USE_STENCIL ; stencil++ ) {
-	       pATIConfigPtrs[i] = &pATIConfigs[i];
-
-	       pConfigs[i].vid			= -1;
-	       pConfigs[i].class		= -1;
-	       pConfigs[i].rgba			= TRUE;
-	       pConfigs[i].redSize		= 8;
-	       pConfigs[i].greenSize		= 8;
-	       pConfigs[i].blueSize		= 8;
-	       pConfigs[i].alphaSize		= 0;
-	       pConfigs[i].redMask		= 0x00FF0000;
-	       pConfigs[i].greenMask		= 0x0000FF00;
-	       pConfigs[i].blueMask		= 0x000000FF;
-	       pConfigs[i].alphaMask		= 0x00000000;
-	       if ( accum ) {	/* Simulated in software */
-		  pConfigs[i].accumRedSize	= 16;
-		  pConfigs[i].accumGreenSize	= 16;
-		  pConfigs[i].accumBlueSize	= 16;
-		  pConfigs[i].accumAlphaSize	= 0;
-	       } else {
-		  pConfigs[i].accumRedSize	= 0;
-		  pConfigs[i].accumGreenSize	= 0;
-		  pConfigs[i].accumBlueSize	= 0;
-		  pConfigs[i].accumAlphaSize	= 0;
-	       }
-	       pConfigs[i].doubleBuffer		= db ? TRUE : FALSE;
-	       pConfigs[i].stereo		= FALSE;
-	       pConfigs[i].bufferSize		= 24;
-	       if ( stencil ) {	/* Simulated in software */
-		  pConfigs[i].depthSize		= 16;
-		  pConfigs[i].stencilSize	= 8;
-	       } else {
-		  pConfigs[i].depthSize		= 16;
-		  pConfigs[i].stencilSize	= 0;
-	    }
-	       pConfigs[i].auxBuffers		= 0;
-	       pConfigs[i].level		= 0;
-	       if ( accum || stencil ) {
-		  pConfigs[i].visualRating	= GLX_SLOW_CONFIG;
-	       } else {
-		  pConfigs[i].visualRating	= GLX_NONE;
-	    }
-	       pConfigs[i].transparentPixel	= GLX_NONE;
-	       pConfigs[i].transparentRed	= 0;
-	       pConfigs[i].transparentGreen	= 0;
-	       pConfigs[i].transparentBlue	= 0;
-	       pConfigs[i].transparentAlpha	= 0;
-	       pConfigs[i].transparentIndex	= 0;
-	       i++;
-	    }
-	 }
-      }
-      break;
-   }
-
-   pATI->numVisualConfigs = numConfigs;
-   pATI->pVisualConfigs = pConfigs;
-   pATI->pVisualConfigsPriv = pATIConfigs;
-   GlxSetVisualConfigs( numConfigs, pConfigs, (void**)pATIConfigPtrs );
-   return TRUE;
-}
 
 /* Create the ATI-specific context information */
 static Bool ATICreateContext( ScreenPtr pScreen, VisualPtr visual,
@@ -1181,10 +974,9 @@ Bool ATIDRIScreenInit( ScreenPtr pScreen )
    drmVersionPtr version;
    int major, minor, patch;
 
-   /* Check that the GLX, DRI, and DRM modules have been loaded by testing
+   /* Check that the DRI, and DRM modules have been loaded by testing
     * for known symbols in each module.
     */
-   if ( !xf86LoaderCheckSymbol("GlxSetVisualConfigs") ) return FALSE;
    if ( !xf86LoaderCheckSymbol("drmAvailable") ) return FALSE;
    if ( !xf86LoaderCheckSymbol("DRIQueryVersion") ) {
       xf86DrvMsg( pScreen->myNum, X_ERROR,
@@ -1426,10 +1218,6 @@ Bool ATIDRIScreenInit( ScreenPtr pScreen )
       return FALSE;
    }
 
-   if ( !ATIInitVisualConfigs( pScreen ) ) {
-      ATIDRICloseScreen( pScreen );
-      return FALSE;
-   }
    xf86DrvMsg( pScreenInfo->scrnIndex, X_INFO,
 	       "[dri] Visual configs initialized\n" );
 
@@ -1628,13 +1416,5 @@ void ATIDRICloseScreen( ScreenPtr pScreen )
    if ( pATI->pDRIServerInfo ) {
       free( pATI->pDRIServerInfo );
       pATI->pDRIServerInfo = NULL;
-   }
-   if ( pATI->pVisualConfigs ) {
-      free( pATI->pVisualConfigs );
-      pATI->pVisualConfigs = NULL;
-   }
-   if ( pATI->pVisualConfigsPriv ) {
-      free( pATI->pVisualConfigsPriv );
-      pATI->pVisualConfigsPriv = NULL;
    }
 }

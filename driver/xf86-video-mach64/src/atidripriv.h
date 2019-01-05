@@ -37,21 +37,11 @@
 #ifndef __ATIDRIPRIV_H__
 #define __ATIDRIPRIV_H__ 1
 
-#include "GL/glxint.h"
-#include "GL/glxtokens.h"
-
 #define ATI_MAX_DRAWABLES	256
 
 typedef struct {
     /* Nothing here yet */
     int dummy;
-} ATIConfigPrivRec, *ATIConfigPrivPtr;
-
-typedef struct {
-    /* Nothing here yet */
-    int dummy;
 } ATIDRIContextRec, *ATIDRIContextPtr;
-
-extern void GlxSetVisualConfigs(int, __GLXvisualConfig *, void **);
 
 #endif /* __ATIDRIPRIV_H__ */

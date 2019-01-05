@@ -497,9 +497,6 @@ typedef struct _ATIRec
     DRIInfoPtr pDRIInfo;
     int drmFD;
     int irq;
-    int numVisualConfigs;
-    __GLXvisualConfig *pVisualConfigs;
-    ATIConfigPrivPtr pVisualConfigsPriv;
     ATIDRIServerInfoPtr pDRIServerInfo;
     Bool NeedDRISync;
     Bool have3DWindows;

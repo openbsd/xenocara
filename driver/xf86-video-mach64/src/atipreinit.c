@@ -2256,8 +2256,6 @@ ATIPreInit
 
     pitchInc = minPitch * pATI->bitsPerPixel;
 
-    pScreenInfo->maxHValue = (MaxBits(CRTC_H_TOTAL) + 1) << 3;
-
     if (pATI->Chip < ATI_CHIP_264VT)
     {
         /*
@@ -2268,11 +2266,7 @@ ATIPreInit
          */
         ATIClockRange.doubleScanAllowed = FALSE;
 
-        /* CRTC_H_TOTAL is one bit narrower */
-        pScreenInfo->maxHValue >>= 1;
     }
-
-    pScreenInfo->maxVValue = MaxBits(CRTC_V_TOTAL) + 1;
 
     maxPitch = minPitch * MaxBits(CRTC_PITCH);
 

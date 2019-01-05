@@ -53,6 +53,23 @@ ATIValidMode
         return MODE_OK;
     }
 
+    {
+        int maxHValue, maxVValue;
+
+        maxHValue = (MaxBits(CRTC_H_TOTAL) + 1) << 3;
+        if (pATI->Chip < ATI_CHIP_264VT)
+        {
+            /* CRTC_H_TOTAL is one bit narrower */
+            maxHValue >>= 1;
+        }
+        if (pMode->HTotal > maxHValue)
+            return MODE_BAD_HVALUE;
+
+        maxVValue = MaxBits(CRTC_V_TOTAL) + 1;
+        if (pMode->VTotal > maxVValue)
+            return MODE_BAD_VVALUE;
+    }
+
     /*
      * The following is done for every mode in the monitor section that
      * survives the common layer's basic checks.
