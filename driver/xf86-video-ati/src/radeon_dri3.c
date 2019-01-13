@@ -169,6 +169,7 @@ static PixmapPtr radeon_dri3_pixmap_from_fd(ScreenPtr screen,
 
 			if (priv) {
 				radeon_set_pixmap_private(pixmap, priv);
+				pixmap->usage_hint |= RADEON_CREATE_PIXMAP_DRI2;
 				return pixmap;
 			}
 
@@ -213,19 +214,18 @@ static int radeon_dri3_fd_from_pixmap(ScreenPtr screen,
 {
 	struct radeon_bo *bo;
 	int fd;
-
-	bo = radeon_get_pixmap_bo(pixmap);
-	if (!bo) {
 #ifdef USE_GLAMOR
-		ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
-		RADEONInfoPtr info = RADEONPTR(scrn);
+	ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
+	RADEONInfoPtr info = RADEONPTR(scrn);
 
-		if (info->use_glamor)
-			return glamor_fd_from_pixmap(screen, pixmap, stride, size);
+	if (info->use_glamor)
+		return glamor_fd_from_pixmap(screen, pixmap, stride, size);
 #endif
 
+	bo = radeon_get_pixmap_bo(pixmap)->bo.radeon;
+	if (!bo) {
 		exaMoveInPixmap(pixmap);
-		bo = radeon_get_pixmap_bo(pixmap);
+		bo = radeon_get_pixmap_bo(pixmap)->bo.radeon;
 		if (!bo)
 			return -1;
 	}

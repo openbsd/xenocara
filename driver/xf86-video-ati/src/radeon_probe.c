@@ -278,7 +278,7 @@ radeon_platform_probe(DriverPtr pDriver,
 }
 #endif
 
-_X_EXPORT DriverRec RADEON =
+DriverRec RADEON =
 {
     RADEON_VERSION_CURRENT,
     RADEON_DRIVER_NAME,

@@ -56,7 +56,6 @@ typedef struct {
 } drmmode_rec, *drmmode_ptr;
 
 typedef struct {
-  struct drmmode_fb *fb;
   void *event_data;
   int flip_count;
   unsigned int fe_frame;
@@ -64,6 +63,7 @@ typedef struct {
   xf86CrtcPtr fe_crtc;
   radeon_drm_handler_proc handler;
   radeon_drm_abort_proc abort;
+  struct drmmode_fb *fb[0];
 } drmmode_flipdata_rec, *drmmode_flipdata_ptr;
 
 struct drmmode_fb {
@@ -72,7 +72,7 @@ struct drmmode_fb {
 };
 
 struct drmmode_scanout {
-    struct radeon_bo *bo;
+    struct radeon_buffer *bo;
     PixmapPtr pixmap;
     int width, height;
 };
@@ -88,7 +88,7 @@ typedef struct {
     Bool ignore_damage;
     RegionRec scanout_last_region;
     unsigned scanout_id;
-    Bool scanout_update_pending;
+    uintptr_t scanout_update_pending;
     Bool tear_free;
 
     PixmapPtr prime_scanout_pixmap;
@@ -103,18 +103,14 @@ typedef struct {
      * modeset)
      */
     Bool need_modeset;
+    /* For keeping track of nested calls to drm_wait_pending_flip /
+     * drm_queue_handle_deferred
+     */
+    int wait_flip_nesting_level;
     /* A flip to this FB is pending for this CRTC */
     struct drmmode_fb *flip_pending;
     /* The FB currently being scanned out by this CRTC, if any */
     struct drmmode_fb *fb;
-
-#ifdef HAVE_PRESENT_H
-    /* Deferred processing of Present vblank event */
-    uint64_t present_vblank_event_id;
-    uint64_t present_vblank_usec;
-    unsigned present_vblank_msc;
-    Bool present_flip_expected;
-#endif
 } drmmode_crtc_private_rec, *drmmode_crtc_private_ptr;
 
 typedef struct {
@@ -138,6 +134,10 @@ typedef struct {
     int enc_clone_mask;
     int tear_free;
 } drmmode_output_private_rec, *drmmode_output_private_ptr;
+
+typedef struct {
+    uint32_t lessee_id;
+} drmmode_lease_private_rec, *drmmode_lease_private_ptr;
 
 
 enum drmmode_flip_sync {

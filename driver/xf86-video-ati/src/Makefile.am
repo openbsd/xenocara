@@ -62,8 +62,8 @@ radeon_drv_la_SOURCES = \
 	$(RADEON_KMS_SRCS)
 
 if GLAMOR
-AM_CFLAGS += @LIBGLAMOR_CFLAGS@
-radeon_drv_la_LIBADD += @LIBGLAMOR_LIBS@
+AM_CFLAGS += @LIBGLAMOR_CFLAGS@ @GBM_CFLAGS@
+radeon_drv_la_LIBADD += @LIBGLAMOR_LIBS@ @GBM_LIBS@
 radeon_drv_la_SOURCES += \
 	 radeon_glamor_wrappers.c \
 	 radeon_glamor.c

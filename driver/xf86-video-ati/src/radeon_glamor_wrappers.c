@@ -55,17 +55,17 @@ radeon_glamor_prepare_access_cpu(ScrnInfoPtr scrn, RADEONInfoPtr info,
 				 PixmapPtr pixmap, struct radeon_pixmap *priv,
 				 Bool need_sync)
 {
-	struct radeon_bo *bo = priv->bo;
+	struct radeon_buffer *bo = priv->bo;
 	int ret;
 
-	/* When falling back to swrast, flush all pending operations */
-	if (need_sync) {
-		glamor_block_handler(scrn->pScreen);
-		info->gpu_flushed++;
-	}
-
 	if (!pixmap->devPrivate.ptr) {
-		ret = radeon_bo_map(bo, 1);
+		/* When falling back to swrast, flush all pending operations */
+		if (need_sync) {
+			glamor_block_handler(scrn->pScreen);
+			info->gpu_flushed++;
+		}
+
+		ret = radeon_bo_map(bo->bo.radeon, 1);
 		if (ret) {
 			xf86DrvMsg(scrn->scrnIndex, X_WARNING,
 				   "%s: bo map (tiling_flags %d) failed: %s\n",
@@ -75,12 +75,11 @@ radeon_glamor_prepare_access_cpu(ScrnInfoPtr scrn, RADEONInfoPtr info,
 			return FALSE;
 		}
 
-		pixmap->devPrivate.ptr = bo->ptr;
-		info->gpu_synced = info->gpu_flushed;
-	} else if (need_sync) {
-		radeon_bo_wait(bo);
-		info->gpu_synced = info->gpu_flushed;
-	}
+		pixmap->devPrivate.ptr = bo->bo.radeon->ptr;
+	} else if (need_sync)
+		radeon_finish(scrn, bo);
+
+	info->gpu_synced = info->gpu_flushed;
 
 	return TRUE;
 }
@@ -133,7 +132,7 @@ radeon_glamor_finish_access_cpu(PixmapPtr pixmap)
 static Bool
 radeon_glamor_prepare_access_gpu(struct radeon_pixmap *priv)
 {
-	return priv != NULL;
+	return !!priv;
 }
 
 static void
@@ -202,7 +201,7 @@ radeon_glamor_picture_prepare_access_cpu_ro(ScrnInfoPtr scrn,
 	PixmapPtr pixmap;
 	struct radeon_pixmap *priv;
 
-	if (picture->pDrawable == NULL)
+	if (!picture->pDrawable)
 		return TRUE;
 
 	pixmap = get_drawable_pixmap(picture->pDrawable);

@@ -33,6 +33,12 @@ struct radeon_pixmap;
 
 #ifdef USE_GLAMOR
 
+#ifndef HAVE_GLAMOR_FINISH
+#include <GL/gl.h>
+#endif
+
+#include <gbm.h>
+
 #define GLAMOR_FOR_XORG  1
 #include <glamor.h>
 
@@ -65,11 +71,26 @@ void radeon_glamor_screen_init(ScreenPtr screen);
 Bool radeon_glamor_create_screen_resources(ScreenPtr screen);
 void radeon_glamor_free_screen(int scrnIndex, int flags);
 
-Bool radeon_glamor_create_textured_pixmap(PixmapPtr pixmap, struct radeon_pixmap *priv);
+Bool radeon_glamor_create_textured_pixmap(PixmapPtr pixmap, struct radeon_buffer *bo);
 void radeon_glamor_exchange_buffers(PixmapPtr src, PixmapPtr dst);
 PixmapPtr radeon_glamor_set_pixmap_bo(DrawablePtr drawable, PixmapPtr pixmap);
 
 XF86VideoAdaptorPtr radeon_glamor_xv_init(ScreenPtr pScreen, int num_adapt);
+
+static inline void
+radeon_glamor_finish(ScrnInfoPtr scrn)
+{
+	RADEONInfoPtr info = RADEONPTR(scrn);
+
+#if HAVE_GLAMOR_FINISH
+	glamor_finish(scrn->pScreen);
+#else
+	glamor_block_handler(scrn->pScreen);
+	glFinish();
+#endif
+
+	info->gpu_flushed++;
+}
 
 #else
 
@@ -79,7 +100,7 @@ static inline void radeon_glamor_fini(ScreenPtr screen) { }
 static inline Bool radeon_glamor_create_screen_resources(ScreenPtr screen) { return FALSE; }
 static inline void radeon_glamor_free_screen(int scrnIndex, int flags) { }
 
-static inline Bool radeon_glamor_create_textured_pixmap(PixmapPtr pixmap, struct radeon_pixmap *priv) { return TRUE; }
+static inline Bool radeon_glamor_create_textured_pixmap(PixmapPtr pixmap, struct radeon_buffer *bo) { return TRUE; }
 
 static inline void radeon_glamor_exchange_buffers(PixmapPtr src, PixmapPtr dst) {}
 static inline PixmapPtr radeon_glamor_set_pixmap_bo(DrawablePtr drawable, PixmapPtr pixmap) { return pixmap; }
@@ -87,6 +108,9 @@ static inline PixmapPtr radeon_glamor_set_pixmap_bo(DrawablePtr drawable, Pixmap
 static inline struct radeon_pixmap *radeon_get_pixmap_private(PixmapPtr pixmap) { return NULL; }
 
 static inline XF86VideoAdaptorPtr radeon_glamor_xv_init(ScreenPtr pScreen, int num_adapt) { return NULL; }
+
+static inline void radeon_glamor_finish(ScrnInfoPtr pScrn) { }
+
 #endif
 
 #endif /* RADEON_GLAMOR_H */

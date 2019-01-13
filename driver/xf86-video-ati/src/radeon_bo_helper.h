@@ -23,10 +23,30 @@
 #ifndef RADEON_BO_HELPER_H
 #define RADEON_BO_HELPER_H 1
 
-extern struct radeon_bo*
+#ifdef USE_GLAMOR
+#include <gbm.h>
+#endif
+
+#define RADEON_BO_FLAGS_GBM	0x1
+
+struct radeon_buffer {
+	union {
+#ifdef USE_GLAMOR
+		struct gbm_bo *gbm;
+#endif
+		struct radeon_bo *radeon;
+	} bo;
+	uint32_t ref_count;
+    uint32_t flags;
+};
+
+extern struct radeon_buffer *
 radeon_alloc_pixmap_bo(ScrnInfoPtr pScrn, int width, int height, int depth,
 		       int usage_hint, int bitsPerPixel, int *new_pitch,
 		       struct radeon_surface *new_surface, uint32_t *new_tiling);
+
+extern void
+radeon_finish(ScrnInfoPtr scrn, struct radeon_buffer *bo);
 
 extern void
 radeon_pixmap_clear(PixmapPtr pixmap);
@@ -55,6 +75,39 @@ static inline PixmapPtr get_drawable_pixmap(DrawablePtr drawable)
 	return (PixmapPtr)drawable;
     else
 	return drawable->pScreen->GetWindowPixmap((WindowPtr)drawable);
+}
+
+static inline void
+radeon_buffer_ref(struct radeon_buffer *buffer)
+{
+    buffer->ref_count++;
+}
+
+static inline void
+radeon_buffer_unref(struct radeon_buffer **buffer)
+{
+    struct radeon_buffer *buf = *buffer;
+
+    if (!buf)
+	return;
+
+    if (buf->ref_count > 1) {
+	buf->ref_count--;
+	return;
+    }
+
+#ifdef USE_GLAMOR
+    if (buf->flags & RADEON_BO_FLAGS_GBM) {
+	gbm_bo_destroy(buf->bo.gbm);
+    } else
+#endif
+    {
+	radeon_bo_unmap(buf->bo.radeon);
+	radeon_bo_unref(buf->bo.radeon);
+    }
+
+    free(buf);
+    *buffer = NULL;
 }
 
 #endif /* RADEON_BO_HELPER_H */

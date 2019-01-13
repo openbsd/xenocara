@@ -71,7 +71,7 @@ EVERGREENPrepareSolid(PixmapPtr pPix, int alu, Pixel pm, Pixel fg)
     if (!RADEONValidPM(pm, pPix->drawable.bitsPerPixel))
 	RADEON_FALLBACK(("invalid planemask\n"));
 
-    dst.bo = radeon_get_pixmap_bo(pPix);
+    dst.bo = radeon_get_pixmap_bo(pPix)->bo.radeon;
     dst.tiling_flags = radeon_get_pixmap_tiling(pPix);
     dst.surface = radeon_get_pixmap_surface(pPix);
 
@@ -466,13 +466,13 @@ EVERGREENPrepareCopy(PixmapPtr pSrc,   PixmapPtr pDst,
 
     accel_state->same_surface = FALSE;
 
-    src_obj.bo = radeon_get_pixmap_bo(pSrc);
-    dst_obj.bo = radeon_get_pixmap_bo(pDst);
+    src_obj.bo = radeon_get_pixmap_bo(pSrc)->bo.radeon;
+    dst_obj.bo = radeon_get_pixmap_bo(pDst)->bo.radeon;
     dst_obj.surface = radeon_get_pixmap_surface(pDst);
     src_obj.surface = radeon_get_pixmap_surface(pSrc);
     dst_obj.tiling_flags = radeon_get_pixmap_tiling(pDst);
     src_obj.tiling_flags = radeon_get_pixmap_tiling(pSrc);
-    if (radeon_get_pixmap_bo(pSrc) == radeon_get_pixmap_bo(pDst))
+    if (src_obj.bo == dst_obj.bo)
 	accel_state->same_surface = TRUE;
 
     src_obj.width = pSrc->drawable.width;
@@ -511,7 +511,7 @@ EVERGREENPrepareCopy(PixmapPtr pSrc,   PixmapPtr pDst,
 	accel_state->copy_area_bo = radeon_bo_open(info->bufmgr, 0, size, 0,
 						   RADEON_GEM_DOMAIN_VRAM,
 						   0);
-	if (accel_state->copy_area_bo == NULL)
+	if (!accel_state->copy_area_bo)
 	    RADEON_FALLBACK(("temp copy surface alloc failed\n"));
 
 	radeon_cs_space_add_persistent_bo(info->cs, accel_state->copy_area_bo,
@@ -1301,7 +1301,7 @@ static Bool EVERGREENPrepareComposite(int op, PicturePtr pSrcPicture,
 	return FALSE;
 
     if (pSrc) {
-	src_obj.bo = radeon_get_pixmap_bo(pSrc);
+	src_obj.bo = radeon_get_pixmap_bo(pSrc)->bo.radeon;
 	src_obj.surface = radeon_get_pixmap_surface(pSrc);
 	src_obj.tiling_flags = radeon_get_pixmap_tiling(pSrc);
 	src_obj.pitch = exaGetPixmapPitch(pSrc) / (pSrc->drawable.bitsPerPixel / 8);
@@ -1311,7 +1311,7 @@ static Bool EVERGREENPrepareComposite(int op, PicturePtr pSrcPicture,
 	src_obj.domain = RADEON_GEM_DOMAIN_VRAM | RADEON_GEM_DOMAIN_GTT;
     }
 
-    dst_obj.bo = radeon_get_pixmap_bo(pDst);
+    dst_obj.bo = radeon_get_pixmap_bo(pDst)->bo.radeon;
     dst_obj.surface = radeon_get_pixmap_surface(pDst);
     dst_obj.tiling_flags = radeon_get_pixmap_tiling(pDst);
     dst_obj.pitch = exaGetPixmapPitch(pDst) / (pDst->drawable.bitsPerPixel / 8);
@@ -1325,7 +1325,7 @@ static Bool EVERGREENPrepareComposite(int op, PicturePtr pSrcPicture,
 
     if (pMaskPicture) {
 	if (pMask) {
-	    mask_obj.bo = radeon_get_pixmap_bo(pMask);
+	    mask_obj.bo = radeon_get_pixmap_bo(pMask)->bo.radeon;
 	    mask_obj.tiling_flags = radeon_get_pixmap_tiling(pMask);
 	    mask_obj.pitch = exaGetPixmapPitch(pMask) / (pMask->drawable.bitsPerPixel / 8);
 	    mask_obj.surface = radeon_get_pixmap_surface(pMask);
@@ -1673,16 +1673,16 @@ EVERGREENUploadToScreen(PixmapPtr pDst, int x, int y, int w, int h,
 	return FALSE;
 
     driver_priv = exaGetPixmapDriverPrivate(pDst);
-    if (!driver_priv || !driver_priv->bo)
+    if (!driver_priv || !driver_priv->bo->bo.radeon)
 	return FALSE;
 
     /* If we know the BO won't be busy / in VRAM, don't bother with a scratch */
-    copy_dst = driver_priv->bo;
+    copy_dst = driver_priv->bo->bo.radeon;
     copy_pitch = pDst->devKind;
     if (!(driver_priv->tiling_flags & (RADEON_TILING_MACRO | RADEON_TILING_MICRO))) {
-	if (!radeon_bo_is_referenced_by_cs(driver_priv->bo, info->cs)) {
+	if (!radeon_bo_is_referenced_by_cs(driver_priv->bo->bo.radeon, info->cs)) {
 	    flush = FALSE;
-	    if (!radeon_bo_is_busy(driver_priv->bo, &dst_domain) &&
+	    if (!radeon_bo_is_busy(driver_priv->bo->bo.radeon, &dst_domain) &&
 		!(dst_domain & RADEON_GEM_DOMAIN_VRAM))
 		goto copy;
 	}
@@ -1693,7 +1693,7 @@ EVERGREENUploadToScreen(PixmapPtr pDst, int x, int y, int w, int h,
     base_align = drmmode_get_base_align(pScrn, (bpp / 8), 0);
     size = scratch_pitch * height * (bpp / 8);
     scratch = radeon_bo_open(info->bufmgr, 0, size, base_align, RADEON_GEM_DOMAIN_GTT, 0);
-    if (scratch == NULL) {
+    if (!scratch) {
 	goto copy;
     }
 
@@ -1711,7 +1711,7 @@ EVERGREENUploadToScreen(PixmapPtr pDst, int x, int y, int w, int h,
     dst_obj.height = pDst->drawable.height;
     dst_obj.bpp = bpp;
     dst_obj.domain = RADEON_GEM_DOMAIN_VRAM;
-    dst_obj.bo = radeon_get_pixmap_bo(pDst);
+    dst_obj.bo = radeon_get_pixmap_bo(pDst)->bo.radeon;
     dst_obj.tiling_flags = radeon_get_pixmap_tiling(pDst);
     dst_obj.surface = radeon_get_pixmap_surface(pDst);
 
@@ -1739,7 +1739,7 @@ copy:
     r = TRUE;
     size = w * bpp / 8;
     dst = copy_dst->ptr;
-    if (copy_dst == driver_priv->bo)
+    if (copy_dst == driver_priv->bo->bo.radeon)
 	dst += y * copy_pitch + x * bpp / 8;
     for (i = 0; i < h; i++) {
 	memcpy(dst + i * copy_pitch, src, size);
@@ -1789,15 +1789,15 @@ EVERGREENDownloadFromScreen(PixmapPtr pSrc, int x, int y, int w,
 	return FALSE;
 
     driver_priv = exaGetPixmapDriverPrivate(pSrc);
-    if (!driver_priv || !driver_priv->bo)
+    if (!driver_priv || !driver_priv->bo->bo.radeon)
 	return FALSE;
 
     /* If we know the BO won't end up in VRAM anyway, don't bother with a scratch */
-    copy_src = driver_priv->bo;
+    copy_src = driver_priv->bo->bo.radeon;
     copy_pitch = pSrc->devKind;
     if (!(driver_priv->tiling_flags & (RADEON_TILING_MACRO | RADEON_TILING_MICRO))) {
-	if (radeon_bo_is_referenced_by_cs(driver_priv->bo, info->cs)) {
-	    src_domain = radeon_bo_get_src_domain(driver_priv->bo);
+	if (radeon_bo_is_referenced_by_cs(driver_priv->bo->bo.radeon, info->cs)) {
+	    src_domain = radeon_bo_get_src_domain(driver_priv->bo->bo.radeon);
 	    if ((src_domain & (RADEON_GEM_DOMAIN_GTT | RADEON_GEM_DOMAIN_VRAM)) ==
 		(RADEON_GEM_DOMAIN_GTT | RADEON_GEM_DOMAIN_VRAM))
 		src_domain = 0;
@@ -1806,7 +1806,7 @@ EVERGREENDownloadFromScreen(PixmapPtr pSrc, int x, int y, int w,
 	}
 
 	if (!src_domain)
-	    radeon_bo_is_busy(driver_priv->bo, &src_domain);
+	    radeon_bo_is_busy(driver_priv->bo->bo.radeon, &src_domain);
 
 	if (src_domain & ~(uint32_t)RADEON_GEM_DOMAIN_VRAM)
 	    goto copy;
@@ -1821,7 +1821,7 @@ EVERGREENDownloadFromScreen(PixmapPtr pSrc, int x, int y, int w,
     base_align = drmmode_get_base_align(pScrn, (bpp / 8), 0);
     size = scratch_pitch * height * (bpp / 8);
     scratch = radeon_bo_open(info->bufmgr, 0, size, base_align, RADEON_GEM_DOMAIN_GTT, 0);
-    if (scratch == NULL) {
+    if (!scratch) {
 	goto copy;
     }
     radeon_cs_space_reset_bos(info->cs);
@@ -1841,7 +1841,7 @@ EVERGREENDownloadFromScreen(PixmapPtr pSrc, int x, int y, int w,
     src_obj.height = pSrc->drawable.height;
     src_obj.bpp = bpp;
     src_obj.domain = RADEON_GEM_DOMAIN_VRAM | RADEON_GEM_DOMAIN_GTT;
-    src_obj.bo = radeon_get_pixmap_bo(pSrc);
+    src_obj.bo = radeon_get_pixmap_bo(pSrc)->bo.radeon;
     src_obj.tiling_flags = radeon_get_pixmap_tiling(pSrc);
     src_obj.surface = radeon_get_pixmap_surface(pSrc);
 
@@ -1883,7 +1883,7 @@ copy:
     }
     r = TRUE;
     w *= bpp / 8;
-    if (copy_src == driver_priv->bo)
+    if (copy_src == driver_priv->bo->bo.radeon)
 	size = y * copy_pitch + x * bpp / 8;
     else
 	size = 0;
@@ -1927,7 +1927,7 @@ EVERGREENAllocShaders(ScrnInfoPtr pScrn, ScreenPtr pScreen)
 
     accel_state->shaders_bo = radeon_bo_open(info->bufmgr, 0, size, 0,
 					     RADEON_GEM_DOMAIN_VRAM, 0);
-    if (accel_state->shaders_bo == NULL) {
+    if (!accel_state->shaders_bo) {
 	ErrorF("Allocating shader failed\n");
 	return FALSE;
     }
@@ -2046,7 +2046,7 @@ EVERGREENDrawInit(ScreenPtr pScreen)
     ScrnInfoPtr pScrn =  xf86ScreenToScrn(pScreen);
     RADEONInfoPtr info   = RADEONPTR(pScrn);
 
-    if (info->accel_state->exa == NULL) {
+    if (!info->accel_state->exa) {
 	xf86DrvMsg(pScreen->myNum, X_ERROR, "Memory map not set up\n");
 	return FALSE;
     }
@@ -2065,7 +2065,6 @@ EVERGREENDrawInit(ScreenPtr pScreen)
     info->accel_state->exa->MarkSync = EVERGREENMarkSync;
     info->accel_state->exa->WaitMarker = EVERGREENSync;
 
-    info->accel_state->exa->CreatePixmap = RADEONEXACreatePixmap;
     info->accel_state->exa->DestroyPixmap = RADEONEXADestroyPixmap;
     info->accel_state->exa->PixmapIsOffscreen = RADEONEXAPixmapIsOffscreen;
     info->accel_state->exa->PrepareAccess = RADEONPrepareAccess_CS;

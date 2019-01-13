@@ -150,7 +150,7 @@ Bool RADEONGetPixmapOffsetPitch(PixmapPtr pPix, uint32_t *pitch_offset)
  */
 Bool radeon_transform_is_affine_or_scaled(PictTransformPtr t)
 {
-	if (t == NULL)
+	if (!t)
 		return TRUE;
 	/* the shaders don't handle scaling either */
 	return t->matrix[2][0] == 0 && t->matrix[2][1] == 0 && t->matrix[2][2] == IntToxFixed(1);
@@ -184,11 +184,11 @@ Bool RADEONPrepareAccess_CS(PixmapPtr pPix, int index)
 	return FALSE;
 
     /* if we have more refs than just the BO then flush */
-    if (radeon_bo_is_referenced_by_cs(driver_priv->bo, info->cs)) {
+    if (radeon_bo_is_referenced_by_cs(driver_priv->bo->bo.radeon, info->cs)) {
 	flush = TRUE;
 
 	if (can_fail) {
-	    possible_domains = radeon_bo_get_src_domain(driver_priv->bo);
+	    possible_domains = radeon_bo_get_src_domain(driver_priv->bo->bo.radeon);
 	    if (possible_domains == RADEON_GEM_DOMAIN_VRAM)
 		return FALSE; /* use DownloadFromScreen */
 	}
@@ -196,7 +196,7 @@ Bool RADEONPrepareAccess_CS(PixmapPtr pPix, int index)
 
     /* if the BO might end up in VRAM, prefer DownloadFromScreen */
     if (can_fail && (possible_domains & RADEON_GEM_DOMAIN_VRAM)) {
-	radeon_bo_is_busy(driver_priv->bo, &current_domain);
+	radeon_bo_is_busy(driver_priv->bo->bo.radeon, &current_domain);
 
 	if (current_domain & possible_domains) {
 	    if (current_domain == RADEON_GEM_DOMAIN_VRAM)
@@ -209,14 +209,14 @@ Bool RADEONPrepareAccess_CS(PixmapPtr pPix, int index)
         radeon_cs_flush_indirect(pScrn);
     
     /* flush IB */
-    ret = radeon_bo_map(driver_priv->bo, 1);
+    ret = radeon_bo_map(driver_priv->bo->bo.radeon, 1);
     if (ret) {
       FatalError("failed to map pixmap %d\n", ret);
       return FALSE;
     }
     driver_priv->bo_mapped = TRUE;
 
-    pPix->devPrivate.ptr = driver_priv->bo->ptr;
+    pPix->devPrivate.ptr = driver_priv->bo->bo.radeon->ptr;
 
     return TRUE;
 }
@@ -229,40 +229,11 @@ void RADEONFinishAccess_CS(PixmapPtr pPix, int index)
     if (!driver_priv || !driver_priv->bo_mapped)
         return;
 
-    radeon_bo_unmap(driver_priv->bo);
+    radeon_bo_unmap(driver_priv->bo->bo.radeon);
     driver_priv->bo_mapped = FALSE;
     pPix->devPrivate.ptr = NULL;
 }
 
-
-void *RADEONEXACreatePixmap(ScreenPtr pScreen, int size, int align)
-{
-    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
-    RADEONInfoPtr info = RADEONPTR(pScrn);
-    struct radeon_exa_pixmap_priv *new_priv;
-
-    if (size != 0 && !info->exa_force_create &&
-	info->exa_pixmaps == FALSE)
-        return NULL;
-	    
-    new_priv = calloc(1, sizeof(struct radeon_exa_pixmap_priv));
-    if (!new_priv)
-	return NULL;
-
-    if (size == 0)
-	return new_priv;
-
-    new_priv->bo = radeon_bo_open(info->bufmgr, 0, size, align,
-				  RADEON_GEM_DOMAIN_VRAM, 0);
-    if (!new_priv->bo) {
-	free(new_priv);
-	ErrorF("Failed to alloc memory\n");
-	return NULL;
-    }
-    
-    return new_priv;
-
-}
 
 void *RADEONEXACreatePixmap2(ScreenPtr pScreen, int width, int height,
 			     int depth, int usage_hint, int bitsPerPixel,
@@ -306,8 +277,7 @@ void RADEONEXADestroyPixmap(ScreenPtr pScreen, void *driverPriv)
     if (!driverPriv)
       return;
 
-    if (driver_priv->bo)
-	radeon_bo_unref(driver_priv->bo);
+    radeon_buffer_unref(&driver_priv->bo);
     drmmode_fb_reference(pRADEONEnt->fd, &driver_priv->fb, NULL);
     free(driverPriv);
 }
@@ -316,7 +286,7 @@ Bool RADEONEXASharePixmapBacking(PixmapPtr ppix, ScreenPtr slave, void **fd_hand
 {
     struct radeon_exa_pixmap_priv *driver_priv = exaGetPixmapDriverPrivate(ppix);
 
-    if (!radeon_share_pixmap_backing(driver_priv->bo, fd_handle))
+    if (!radeon_share_pixmap_backing(driver_priv->bo->bo.radeon, fd_handle))
 	return FALSE;
 
     driver_priv->shared = TRUE;
@@ -326,11 +296,12 @@ Bool RADEONEXASharePixmapBacking(PixmapPtr ppix, ScreenPtr slave, void **fd_hand
 Bool RADEONEXASetSharedPixmapBacking(PixmapPtr ppix, void *fd_handle)
 {
     struct radeon_exa_pixmap_priv *driver_priv = exaGetPixmapDriverPrivate(ppix);
+    int ihandle = (int)(long)fd_handle;
 
     if (!radeon_set_shared_pixmap_backing(ppix, fd_handle, &driver_priv->surface))
 	return FALSE;
 
-    driver_priv->shared = TRUE;
+    driver_priv->shared = ihandle != -1;
     return TRUE;
 }
 

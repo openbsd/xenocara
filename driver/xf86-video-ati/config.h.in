@@ -17,6 +17,9 @@
 /* Have glamor_egl_destroy_textured_pixmap API */
 #undef HAVE_GLAMOR_EGL_DESTROY_TEXTURED_PIXMAP
 
+/* Have glamor_finish API */
+#undef HAVE_GLAMOR_FINISH
+
 /* Have glamor_glyphs_init API */
 #undef HAVE_GLAMOR_GLYPHS_INIT
 

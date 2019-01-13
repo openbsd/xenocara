@@ -66,7 +66,8 @@ static inline void radeon_add_pixmap(struct radeon_cs *cs, PixmapPtr pPix, int r
 {
     struct radeon_exa_pixmap_priv *driver_priv = exaGetPixmapDriverPrivate(pPix);
 
-    radeon_cs_space_add_persistent_bo(cs, driver_priv->bo, read_domains, write_domain);
+    radeon_cs_space_add_persistent_bo(cs, driver_priv->bo->bo.radeon,
+				      read_domains, write_domain);
 }
 
 extern void radeon_ib_discard(ScrnInfoPtr pScrn);

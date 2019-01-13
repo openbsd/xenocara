@@ -23,12 +23,13 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-ati],
-        [18.0.1],
+        [18.1.0],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=Driver/Radeon],
         [xf86-video-ati])
 
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_MACRO_DIR([m4])
 
 AC_CONFIG_AUX_DIR(.)
 
@@ -69,7 +70,7 @@ XORG_DRIVER_CHECK_EXT(XV, videoproto)
 XORG_DRIVER_CHECK_EXT(DPMSExtension, xextproto)
 
 # Checks for libraries.
-PKG_CHECK_MODULES(LIBDRM, [libdrm >= 2.4.78])
+PKG_CHECK_MODULES(LIBDRM, [libdrm >= 2.4.89])
 PKG_CHECK_MODULES(LIBDRM_RADEON, [libdrm_radeon])
 
 # Obtain compiler/linker options for the driver dependencies
@@ -137,12 +138,22 @@ if test "x$GLAMOR" != "xno"; then
 					 [Have glamor_egl_destroy_textured_pixmap API])], [],
 			      [#include "xorg-server.h"
 			       #include "glamor.h"])
+
+		AC_CHECK_DECL(glamor_finish,
+			      [AC_DEFINE(HAVE_GLAMOR_FINISH, 1,
+					 [Have glamor_finish API])],
+					 [PKG_CHECK_MODULES(LIBGL, [gl])],
+			      [#include "xorg-server.h"
+			       #include "glamor.h"])
 	fi
 
 	if test "x$GLAMOR_XSERVER" != xyes; then
 		PKG_CHECK_MODULES(LIBGLAMOR, [glamor >= 0.6.0])
 		PKG_CHECK_MODULES(LIBGLAMOR_EGL, [glamor-egl])
 	fi
+
+	PKG_CHECK_MODULES(GBM, [gbm >= 10.6])
+
 	AC_DEFINE(USE_GLAMOR, 1, [Enable glamor acceleration])
 else
 	AC_MSG_RESULT([$GLAMOR])

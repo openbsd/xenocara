@@ -109,7 +109,7 @@ ati_device_get_primary(void)
 
     device_iter = pci_slot_match_iterator_create(NULL);
 
-    while ((device = pci_device_next(device_iter)) != NULL) {
+    while ((device = pci_device_next(device_iter))) {
         if (xf86IsPrimaryPci(device))
             break;
     }
@@ -128,7 +128,7 @@ ati_device_get_indexed(int index)
 
     device_iter = pci_slot_match_iterator_create(NULL);
 
-    while ((device = pci_device_next(device_iter)) != NULL) {
+    while ((device = pci_device_next(device_iter))) {
         if (device->vendor_id == PCI_VENDOR_ATI) {
             if (count == index)
                 return device;

@@ -345,12 +345,10 @@ R600SetAccelState(ScrnInfoPtr pScrn,
 
 extern Bool RADEONPrepareAccess_CS(PixmapPtr pPix, int index);
 extern void RADEONFinishAccess_CS(PixmapPtr pPix, int index);
-extern void *RADEONEXACreatePixmap(ScreenPtr pScreen, int size, int align);
 extern void *RADEONEXACreatePixmap2(ScreenPtr pScreen, int width, int height,
 				    int depth, int usage_hint, int bitsPerPixel,
 				    int *new_pitch);
 extern void RADEONEXADestroyPixmap(ScreenPtr pScreen, void *driverPriv);
-extern struct radeon_bo *radeon_get_pixmap_bo(PixmapPtr pPix);
 extern Bool RADEONEXAPixmapIsOffscreen(PixmapPtr pPix);
 extern Bool RADEONEXASharePixmapBacking(PixmapPtr ppix, ScreenPtr slave, void **handle_p);
 extern Bool RADEONEXASetSharedPixmapBacking(PixmapPtr ppix, void *handle);

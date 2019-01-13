@@ -630,7 +630,7 @@ static Bool R100PrepareComposite(int op,
 	return FALSE;
     pp_cntl = RADEON_TEX_0_ENABLE | RADEON_TEX_BLEND_0_ENABLE;
 
-    if (pMask != NULL) {
+    if (pMask) {
 	if (!R100TextureSetup(pMaskPicture, pMask, 1))
 	    return FALSE;
 	pp_cntl |= RADEON_TEX_1_ENABLE;
@@ -992,7 +992,7 @@ static Bool R200PrepareComposite(int op, PicturePtr pSrcPicture,
 	return FALSE;
     pp_cntl = RADEON_TEX_0_ENABLE | RADEON_TEX_BLEND_0_ENABLE;
 
-    if (pMask != NULL) {
+    if (pMask) {
 	if (!R200TextureSetup(pMaskPicture, pMask, 1))
 	    return FALSE;
 	pp_cntl |= RADEON_TEX_1_ENABLE;
@@ -1484,7 +1484,7 @@ static Bool R300PrepareComposite(int op, PicturePtr pSrcPicture,
 	return FALSE;
     txenable = R300_TEX_0_ENABLE;
 
-    if (pMask != NULL) {
+    if (pMask) {
 	if (!R300TextureSetup(pMaskPicture, pMask, 1))
 	    return FALSE;
 	txenable |= R300_TEX_1_ENABLE;

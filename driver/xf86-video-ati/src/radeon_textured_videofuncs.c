@@ -63,10 +63,12 @@ RADEONPrepareTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
     radeon_cs_space_add_persistent_bo(info->cs, src_bo, RADEON_GEM_DOMAIN_GTT | RADEON_GEM_DOMAIN_VRAM, 0);
 
     if (pPriv->bicubic_enabled)
-	radeon_cs_space_add_persistent_bo(info->cs, info->bicubic_bo, RADEON_GEM_DOMAIN_GTT | RADEON_GEM_DOMAIN_VRAM, 0);
+	radeon_cs_space_add_persistent_bo(info->cs, info->bicubic_bo,
+					  RADEON_GEM_DOMAIN_GTT | RADEON_GEM_DOMAIN_VRAM, 0);
 
     driver_priv = exaGetPixmapDriverPrivate(pPixmap);
-    radeon_cs_space_add_persistent_bo(info->cs, driver_priv->bo, 0, RADEON_GEM_DOMAIN_VRAM);
+    radeon_cs_space_add_persistent_bo(info->cs, driver_priv->bo->bo.radeon, 0,
+				      RADEON_GEM_DOMAIN_VRAM);
 
     ret = radeon_cs_space_check(info->cs);
     if (ret) {
@@ -433,10 +435,12 @@ R200PrepareTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
     radeon_cs_space_add_persistent_bo(info->cs, src_bo, RADEON_GEM_DOMAIN_GTT | RADEON_GEM_DOMAIN_VRAM, 0);
 
     if (pPriv->bicubic_enabled)
-	radeon_cs_space_add_persistent_bo(info->cs, info->bicubic_bo, RADEON_GEM_DOMAIN_GTT | RADEON_GEM_DOMAIN_VRAM, 0);
+	radeon_cs_space_add_persistent_bo(info->cs, info->bicubic_bo,
+					  RADEON_GEM_DOMAIN_GTT | RADEON_GEM_DOMAIN_VRAM, 0);
 
     driver_priv = exaGetPixmapDriverPrivate(pPixmap);
-    radeon_cs_space_add_persistent_bo(info->cs, driver_priv->bo, 0, RADEON_GEM_DOMAIN_VRAM);
+    radeon_cs_space_add_persistent_bo(info->cs, driver_priv->bo->bo.radeon, 0,
+				      RADEON_GEM_DOMAIN_VRAM);
 
     ret = radeon_cs_space_check(info->cs);
     if (ret) {
@@ -958,10 +962,12 @@ R300PrepareTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
     radeon_cs_space_add_persistent_bo(info->cs, src_bo, RADEON_GEM_DOMAIN_GTT | RADEON_GEM_DOMAIN_VRAM, 0);
 
     if (pPriv->bicubic_enabled)
-	radeon_cs_space_add_persistent_bo(info->cs, info->bicubic_bo, RADEON_GEM_DOMAIN_GTT | RADEON_GEM_DOMAIN_VRAM, 0);
+	radeon_cs_space_add_persistent_bo(info->cs, info->bicubic_bo,
+					  RADEON_GEM_DOMAIN_GTT | RADEON_GEM_DOMAIN_VRAM, 0);
 
     driver_priv = exaGetPixmapDriverPrivate(pPixmap);
-    radeon_cs_space_add_persistent_bo(info->cs, driver_priv->bo, 0, RADEON_GEM_DOMAIN_VRAM);
+    radeon_cs_space_add_persistent_bo(info->cs, driver_priv->bo->bo.radeon, 0,
+				      RADEON_GEM_DOMAIN_VRAM);
 
     ret = radeon_cs_space_check(info->cs);
     if (ret) {
@@ -2376,10 +2382,12 @@ R500PrepareTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
     radeon_cs_space_add_persistent_bo(info->cs, src_bo, RADEON_GEM_DOMAIN_GTT | RADEON_GEM_DOMAIN_VRAM, 0);
 
     if (pPriv->bicubic_enabled)
-	radeon_cs_space_add_persistent_bo(info->cs, info->bicubic_bo, RADEON_GEM_DOMAIN_GTT | RADEON_GEM_DOMAIN_VRAM, 0);
+	radeon_cs_space_add_persistent_bo(info->cs, info->bicubic_bo,
+					  RADEON_GEM_DOMAIN_GTT | RADEON_GEM_DOMAIN_VRAM, 0);
     
     driver_priv = exaGetPixmapDriverPrivate(pPixmap);
-    radeon_cs_space_add_persistent_bo(info->cs, driver_priv->bo, 0, RADEON_GEM_DOMAIN_VRAM);
+    radeon_cs_space_add_persistent_bo(info->cs, driver_priv->bo->bo.radeon, 0,
+				      RADEON_GEM_DOMAIN_VRAM);
 
     ret = radeon_cs_space_check(info->cs);
     if (ret) {

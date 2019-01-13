@@ -153,7 +153,7 @@ radeon_allocate_video_bo(ScrnInfoPtr pScrn,
 static void
 RADEONFreeVideoMemory(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 {
-    if (pPriv->video_memory != NULL) {
+    if (pPriv->video_memory) {
 	radeon_bo_unref(pPriv->video_memory);
 	pPriv->video_memory = NULL;
 
@@ -312,7 +312,7 @@ RADEONPutImageTextured(ScrnInfoPtr pScrn,
 	RADEONFreeVideoMemory(pScrn, pPriv);
     }
 
-    if (pPriv->video_memory == NULL) {
+    if (!pPriv->video_memory) {
       Bool ret;
       ret = radeon_allocate_video_bo(pScrn,
 				     &pPriv->video_memory,
@@ -329,7 +329,7 @@ RADEONPutImageTextured(ScrnInfoPtr pScrn,
 
     /* Bicubic filter loading */
     if (pPriv->bicubic_enabled) {
-	if (info->bicubic_bo == NULL)
+	if (!info->bicubic_bo)
 	    pPriv->bicubic_enabled = FALSE;
     }
 
@@ -725,7 +725,7 @@ static void radeon_unload_bicubic_texture(ScrnInfoPtr pScrn)
 {
     RADEONInfoPtr    info = RADEONPTR(pScrn);
 
-    if (info->bicubic_memory != NULL) {
+    if (info->bicubic_memory) {
 	radeon_bo_unref(info->bicubic_memory);
 	info->bicubic_memory = NULL;
     }
@@ -827,7 +827,7 @@ RADEONSetupImageTexturedVideo(ScreenPtr pScreen)
 
     adapt = calloc(1, sizeof(XF86VideoAdaptorRec) + num_texture_ports *
 		   (sizeof(RADEONPortPrivRec) + sizeof(DevUnion)));
-    if (adapt == NULL)
+    if (!adapt)
 	return NULL;
 
     xvBicubic         = MAKE_ATOM("XV_BICUBIC");

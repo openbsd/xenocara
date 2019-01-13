@@ -50,6 +50,7 @@ radeon_glamor_exchange_buffers(PixmapPtr src,
 Bool
 radeon_glamor_create_screen_resources(ScreenPtr screen)
 {
+	PixmapPtr screen_pixmap = screen->GetScreenPixmap(screen);
 	ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
 	RADEONInfoPtr info = RADEONPTR(scrn);
 
@@ -61,13 +62,8 @@ radeon_glamor_create_screen_resources(ScreenPtr screen)
 		return FALSE;
 #endif
 
-	if (!glamor_egl_create_textured_screen(screen,
-					       info->front_bo->handle,
-					       scrn->displayWidth *
-					       info->pixel_bytes))
-		return FALSE;
-
-	return TRUE;
+	return radeon_glamor_create_textured_pixmap(screen_pixmap,
+						    info->front_buffer);
 }
 
 
@@ -136,6 +132,13 @@ radeon_glamor_pre_init(ScrnInfoPtr scrn)
 	}
 #endif
 
+	info->gbm = gbm_create_device(pRADEONEnt->fd);
+	if (!info->gbm) {
+		xf86DrvMsg(scrn->scrnIndex, X_ERROR,
+			   "gbm_create_device returned NULL\n");
+		return FALSE;
+	}
+
 	/* Load glamor module */
 	if ((glamor_module = xf86LoadSubModule(scrn, GLAMOR_EGL_MODULE_NAME))) {
 		version = xf86GetModuleVersion(glamor_module);
@@ -164,10 +167,26 @@ radeon_glamor_pre_init(ScrnInfoPtr scrn)
 }
 
 Bool
-radeon_glamor_create_textured_pixmap(PixmapPtr pixmap, struct radeon_pixmap *priv)
+radeon_glamor_create_textured_pixmap(PixmapPtr pixmap, struct radeon_buffer *bo)
 {
-	return glamor_egl_create_textured_pixmap(pixmap, priv->bo->handle,
-						 pixmap->devKind);
+	ScrnInfoPtr scrn = xf86ScreenToScrn(pixmap->drawable.pScreen);
+	RADEONInfoPtr info = RADEONPTR(scrn);
+
+	if (!info->use_glamor)
+		return TRUE;
+
+	if (bo->flags & RADEON_BO_FLAGS_GBM) {
+		return glamor_egl_create_textured_pixmap_from_gbm_bo(pixmap,
+								     bo->bo.gbm
+#if XORG_VERSION_CURRENT > XORG_VERSION_NUMERIC(1,19,99,903,0)
+								     , FALSE
+#endif
+								     );
+	} else {
+		return glamor_egl_create_textured_pixmap(pixmap,
+							 bo->bo.radeon->handle,
+							 pixmap->devKind);
+	}
 }
 
 static Bool radeon_glamor_destroy_pixmap(PixmapPtr pixmap)
@@ -179,13 +198,6 @@ static Bool radeon_glamor_destroy_pixmap(PixmapPtr pixmap)
 #endif
 
 	if (pixmap->refcnt == 1) {
-		if (pixmap->devPrivate.ptr) {
-			struct radeon_bo *bo = radeon_get_pixmap_bo(pixmap);
-
-			if (bo)
-				radeon_bo_unmap(bo);
-		}
-
 #ifdef HAVE_GLAMOR_EGL_DESTROY_TEXTURED_PIXMAP
 		glamor_egl_destroy_textured_pixmap(pixmap);
 #endif
@@ -213,6 +225,9 @@ radeon_glamor_create_pixmap(ScreenPtr screen, int w, int h, int depth,
 	RADEONInfoPtr info = RADEONPTR(scrn);
 	struct radeon_pixmap *priv;
 	PixmapPtr pixmap, new_pixmap = NULL;
+
+	if (!xf86GetPixFormat(scrn, depth))
+		return NULL;
 
 	if (!RADEON_CREATE_PIXMAP_SHARED(usage)) {
 		if (info->shadow_primary) {
@@ -242,13 +257,12 @@ radeon_glamor_create_pixmap(ScreenPtr screen, int w, int h, int depth,
 		int stride;
 
 		priv = calloc(1, sizeof (struct radeon_pixmap));
-		if (priv == NULL)
+		if (!priv)
 			goto fallback_pixmap;
 
 		priv->bo = radeon_alloc_pixmap_bo(scrn, w, h, depth, usage,
 						  pixmap->drawable.bitsPerPixel,
-						  &stride,
-						  &priv->surface,
+						  &stride, NULL,
 						  &priv->tiling_flags);
 		if (!priv->bo)
 			goto fallback_priv;
@@ -257,7 +271,7 @@ radeon_glamor_create_pixmap(ScreenPtr screen, int w, int h, int depth,
 
 		screen->ModifyPixmapHeader(pixmap, w, h, 0, 0, stride, NULL);
 
-		if (!radeon_glamor_create_textured_pixmap(pixmap, priv))
+		if (!radeon_glamor_create_textured_pixmap(pixmap, priv->bo))
 			goto fallback_glamor;
 
 		pixmap->devPrivate.ptr = NULL;
@@ -287,7 +301,7 @@ fallback_glamor:
 	 * afterwards.
 	 */
 	new_pixmap = glamor_create_pixmap(screen, w, h,	depth, usage);
-	radeon_bo_unref(priv->bo);
+	radeon_buffer_unref(&priv->bo);
 fallback_priv:
 	free(priv);
 fallback_pixmap:
@@ -388,16 +402,14 @@ radeon_glamor_set_shared_pixmap_backing(PixmapPtr pixmap, void *handle)
 {
 	ScreenPtr screen = pixmap->drawable.pScreen;
 	ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
-	struct radeon_surface surface;
-	struct radeon_pixmap *priv;
+	int ihandle = (int)(long)handle;
 
-	if (!radeon_set_shared_pixmap_backing(pixmap, handle, &surface))
+	if (!radeon_set_shared_pixmap_backing(pixmap, handle, NULL))
 		return FALSE;
 
-	priv = radeon_get_pixmap_private(pixmap);
-	priv->surface = surface;
-
-	if (!radeon_glamor_create_textured_pixmap(pixmap, priv)) {
+	if (ihandle != -1 &&
+	    !radeon_glamor_create_textured_pixmap(pixmap,
+						  radeon_get_pixmap_bo(pixmap))) {
 		xf86DrvMsg(scrn->scrnIndex, X_ERROR,
 			   "Failed to get PRIME drawable for glamor pixmap.\n");
 		return FALSE;

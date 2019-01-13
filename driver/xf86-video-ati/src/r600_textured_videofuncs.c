@@ -152,7 +152,7 @@ R600DisplayTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
     CLEAR (vs_conf);
     CLEAR (ps_conf);
 
-    dst_obj.bo = radeon_get_pixmap_bo(pPixmap);
+    dst_obj.bo = radeon_get_pixmap_bo(pPixmap)->bo.radeon;
     dst_obj.tiling_flags = radeon_get_pixmap_tiling(pPixmap);
     dst_obj.surface = radeon_get_pixmap_surface(pPixmap);
 
