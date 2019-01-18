@@ -84,11 +84,11 @@ am__EXEEXT_1 = oob-test$(EXEEXT) infinite-loop$(EXEEXT) \
 	scaling-helpers-test$(EXEEXT) thread-test$(EXEEXT) \
 	rotate-test$(EXEEXT) alphamap$(EXEEXT) \
 	gradient-crash-test$(EXEEXT) pixel-test$(EXEEXT) \
-	matrix-test$(EXEEXT) composite-traps-test$(EXEEXT) \
-	region-contains-test$(EXEEXT) glyph-test$(EXEEXT) \
-	solid-test$(EXEEXT) stress-test$(EXEEXT) cover-test$(EXEEXT) \
-	blitters-test$(EXEEXT) affine-test$(EXEEXT) \
-	scaling-test$(EXEEXT) composite$(EXEEXT) \
+	matrix-test$(EXEEXT) filter-reduction-test$(EXEEXT) \
+	composite-traps-test$(EXEEXT) region-contains-test$(EXEEXT) \
+	glyph-test$(EXEEXT) solid-test$(EXEEXT) stress-test$(EXEEXT) \
+	cover-test$(EXEEXT) blitters-test$(EXEEXT) \
+	affine-test$(EXEEXT) scaling-test$(EXEEXT) composite$(EXEEXT) \
 	tolerance-test$(EXEEXT)
 am__EXEEXT_2 = lowlevel-blt-bench$(EXEEXT) radial-perf-test$(EXEEXT) \
 	check-formats$(EXEEXT) scaling-bench$(EXEEXT) \
@@ -171,6 +171,12 @@ fetch_test_SOURCES = fetch-test.c
 fetch_test_OBJECTS = fetch-test.$(OBJEXT)
 fetch_test_LDADD = $(LDADD)
 fetch_test_DEPENDENCIES = libutils.la \
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
+filter_reduction_test_SOURCES = filter-reduction-test.c
+filter_reduction_test_OBJECTS = filter-reduction-test.$(OBJEXT)
+filter_reduction_test_LDADD = $(LDADD)
+filter_reduction_test_DEPENDENCIES = libutils.la \
 	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1)
 glyph_test_SOURCES = glyph-test.c
@@ -355,26 +361,26 @@ SOURCES = $(libutils_la_SOURCES) a1-trap-test.c affine-bench.c \
 	affine-test.c alpha-loop.c alphamap.c blitters-test.c \
 	check-formats.c combiner-test.c composite.c \
 	composite-traps-test.c cover-test.c fence-image-self-test.c \
-	fetch-test.c glyph-test.c gradient-crash-test.c \
-	infinite-loop.c lowlevel-blt-bench.c matrix-test.c oob-test.c \
-	pdf-op-test.c pixel-test.c prng-test.c radial-invalid.c \
-	radial-perf-test.c region-contains-test.c region-test.c \
-	region-translate-test.c rotate-test.c scaling-bench.c \
-	scaling-crash-test.c scaling-helpers-test.c scaling-test.c \
-	solid-test.c stress-test.c thread-test.c tolerance-test.c \
-	trap-crasher.c
+	fetch-test.c filter-reduction-test.c glyph-test.c \
+	gradient-crash-test.c infinite-loop.c lowlevel-blt-bench.c \
+	matrix-test.c oob-test.c pdf-op-test.c pixel-test.c \
+	prng-test.c radial-invalid.c radial-perf-test.c \
+	region-contains-test.c region-test.c region-translate-test.c \
+	rotate-test.c scaling-bench.c scaling-crash-test.c \
+	scaling-helpers-test.c scaling-test.c solid-test.c \
+	stress-test.c thread-test.c tolerance-test.c trap-crasher.c
 DIST_SOURCES = $(libutils_la_SOURCES) a1-trap-test.c affine-bench.c \
 	affine-test.c alpha-loop.c alphamap.c blitters-test.c \
 	check-formats.c combiner-test.c composite.c \
 	composite-traps-test.c cover-test.c fence-image-self-test.c \
-	fetch-test.c glyph-test.c gradient-crash-test.c \
-	infinite-loop.c lowlevel-blt-bench.c matrix-test.c oob-test.c \
-	pdf-op-test.c pixel-test.c prng-test.c radial-invalid.c \
-	radial-perf-test.c region-contains-test.c region-test.c \
-	region-translate-test.c rotate-test.c scaling-bench.c \
-	scaling-crash-test.c scaling-helpers-test.c scaling-test.c \
-	solid-test.c stress-test.c thread-test.c tolerance-test.c \
-	trap-crasher.c
+	fetch-test.c filter-reduction-test.c glyph-test.c \
+	gradient-crash-test.c infinite-loop.c lowlevel-blt-bench.c \
+	matrix-test.c oob-test.c pdf-op-test.c pixel-test.c \
+	prng-test.c radial-invalid.c radial-perf-test.c \
+	region-contains-test.c region-test.c region-translate-test.c \
+	rotate-test.c scaling-bench.c scaling-crash-test.c \
+	scaling-helpers-test.c scaling-test.c solid-test.c \
+	stress-test.c thread-test.c tolerance-test.c trap-crasher.c
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -457,6 +463,7 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PIXMAN_GNUPLOT = @PIXMAN_GNUPLOT@
 PIXMAN_TIMERS = @PIXMAN_TIMERS@
 PIXMAN_VERSION_MAJOR = @PIXMAN_VERSION_MAJOR@
 PIXMAN_VERSION_MICRO = @PIXMAN_VERSION_MICRO@
@@ -558,6 +565,7 @@ TESTPROGRAMS = \
 	gradient-crash-test	      \
 	pixel-test		      \
 	matrix-test		      \
+	filter-reduction-test         \
 	composite-traps-test	      \
 	region-contains-test	      \
 	glyph-test		      \
@@ -695,6 +703,9 @@ fence-image-self-test$(EXEEXT): $(fence_image_self_test_OBJECTS) $(fence_image_s
 fetch-test$(EXEEXT): $(fetch_test_OBJECTS) $(fetch_test_DEPENDENCIES) $(EXTRA_fetch_test_DEPENDENCIES) 
 	@rm -f fetch-test$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(fetch_test_OBJECTS) $(fetch_test_LDADD) $(LIBS)
+filter-reduction-test$(EXEEXT): $(filter_reduction_test_OBJECTS) $(filter_reduction_test_DEPENDENCIES) $(EXTRA_filter_reduction_test_DEPENDENCIES) 
+	@rm -f filter-reduction-test$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(filter_reduction_test_OBJECTS) $(filter_reduction_test_LDADD) $(LIBS)
 glyph-test$(EXEEXT): $(glyph_test_OBJECTS) $(glyph_test_DEPENDENCIES) $(EXTRA_glyph_test_DEPENDENCIES) 
 	@rm -f glyph-test$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(glyph_test_OBJECTS) $(glyph_test_LDADD) $(LIBS)
@@ -787,6 +798,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cover-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fence-image-self-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fetch-test.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/filter-reduction-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glyph-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gradient-crash-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/infinite-loop.Po@am__quote@
