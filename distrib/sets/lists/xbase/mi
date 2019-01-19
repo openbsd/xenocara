@@ -205,7 +205,6 @@
 ./usr/X11R6/lib/X11/fvwm/system.fvwm2rc
 ./usr/X11R6/lib/X11/fvwm/system.fvwm2rc-sample-1
 ./usr/X11R6/lib/X11/fvwm/system.fvwm2rc-sample-2
-./usr/X11R6/lib/X11/proxymngr
 ./usr/X11R6/lib/X11/xman.help
 ./usr/X11R6/lib/libFS.a
 ./usr/X11R6/lib/libFS.la
