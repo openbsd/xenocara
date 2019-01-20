@@ -3934,6 +3934,12 @@
 ./usr/X11R6/share/doc/xextproto/sync.xml
 ./usr/X11R6/share/doc/xextproto/tog-cup.xml
 ./usr/X11R6/share/doc/xextproto/xtest.xml
+./usr/X11R6/share/doc/xorgproto
+./usr/X11R6/share/doc/xorgproto/SIAddresses
+./usr/X11R6/share/doc/xorgproto/inputproto
+./usr/X11R6/share/doc/xorgproto/kbproto
+./usr/X11R6/share/doc/xorgproto/x11proto
+./usr/X11R6/share/doc/xorgproto/xextproto
 ./usr/X11R6/share/doc/xorg-docs
 ./usr/X11R6/share/doc/xorg-docs/MAINTAINERS
 ./usr/X11R6/share/doc/xtrans
