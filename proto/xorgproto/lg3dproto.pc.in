@@ -1,0 +1,9 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+ 
+Name: Lg3dProto
+Description: LGE extension headers
+Version: 5.0
+Cflags: -I${includedir}

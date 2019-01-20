@@ -1,0 +1,41 @@
+		X Window System Unified Protocol
+
+This package provides the headers and specification documents defining
+the core protocol and (many) extensions for the X Window System. The
+extensions are those common among servers descended from X.Org 6.7. It
+also includes a number of headers that aren't purely protocol related,
+but are depended upon by many other X Window System packages to provide
+common definitions and porting layer.
+
+Though the protocol specifications herein are authoritative, the
+content of the headers is bound by compatibility constraints with older
+versions of the X11 suite. If you are looking for a machine-readable
+protocol description suitable for code generation or use in new
+projects, please refer to the XCB project:
+
+        https://xcb.freedesktop.org/
+        https://cgit.freedesktop.org/xcb/proto
+
+All questions regarding this software should be directed at the
+Xorg mailing list:
+
+        http://lists.freedesktop.org/mailman/listinfo/xorg
+
+Please submit bug reports to the Xorg bugzilla:
+
+        https://bugs.freedesktop.org/enter_bug.cgi?product=xorg
+
+The master development code repository can be found at:
+
+        git://anongit.freedesktop.org/git/xorg/proto/xorgproto
+
+        http://cgit.freedesktop.org/xorg/proto/xorgproto
+
+For patch submission instructions, see:
+
+	http://www.x.org/wiki/Development/Documentation/SubmittingPatches
+
+For more information on the git code manager, see:
+
+        http://wiki.x.org/wiki/GitPage
+

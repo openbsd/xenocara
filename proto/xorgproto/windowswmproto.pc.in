@@ -1,0 +1,9 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+ 
+Name: WindowsWMProto
+Description: WindowsWM extension headers
+Version: 1.0.4
+Cflags: -I${includedir}
