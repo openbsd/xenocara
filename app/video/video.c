@@ -1,4 +1,4 @@
-/*	$OpenBSD: video.c,v 1.26 2019/01/04 17:45:00 landry Exp $	*/
+/*	$OpenBSD: video.c,v 1.27 2019/01/22 20:02:40 landry Exp $	*/
 /*
  * Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
  *
@@ -1961,6 +1961,8 @@ main(int argc, char *argv[])
 	argv += optind;
 
 	if (vid.mode & M_QUERY) {
+		if (pledge("stdio rpath wpath video", NULL) == -1)
+			err(1, "pledge");
 		dev_dump_query(&vid);
 		cleanup(&vid, 0);
 	}
@@ -1970,6 +1972,14 @@ main(int argc, char *argv[])
 
 	if (!setup(&vid))
 		cleanup(&vid, 1);
+
+	if (vid.mode & M_IN_FILE) {
+		if (pledge("stdio rpath", NULL) == -1)
+			err(1, "pledge");
+	} else {
+		if (pledge("stdio rpath video", NULL) == -1)
+			err(1, "pledge");
+	}
 
 	if (!stream(&vid))
 		cleanup(&vid, 1);
