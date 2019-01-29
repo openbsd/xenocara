@@ -27,6 +27,7 @@
  *    Keith Whitwell <keithw@vmware.com>
  */
 
+#include "main/errors.h"
 #include "main/glheader.h"
 #include "main/imports.h"
 #include "main/api_arrayelt.h"
@@ -440,7 +441,7 @@ static void cube_emit_cs(struct gl_context *ctx, struct radeon_state_atom *atom)
 	case 2: base_reg = RADEON_PP_CUBIC_OFFSET_T2_0; break;
 	default:
 	case 0: base_reg = RADEON_PP_CUBIC_OFFSET_T0_0; break;
-   };
+   }
    BEGIN_BATCH(dwords);
    OUT_BATCH_TABLE(atom->cmd, 2);
    lvl = &t->mt->levels[0];

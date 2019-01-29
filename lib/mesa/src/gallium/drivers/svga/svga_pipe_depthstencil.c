@@ -172,6 +172,21 @@ svga_create_depth_stencil_state(struct pipe_context *pipe,
 
       ds->stencil_mask      = templ->stencil[1].valuemask & 0xff;
       ds->stencil_writemask = templ->stencil[1].writemask & 0xff;
+
+      if (templ->stencil[1].valuemask != templ->stencil[0].valuemask) {
+         pipe_debug_message(&svga->debug.callback, CONFORMANCE,
+                            "two-sided stencil mask not supported "
+                            "(front=0x%x, back=0x%x)",
+                            templ->stencil[0].valuemask,
+                            templ->stencil[1].valuemask);
+      }
+      if (templ->stencil[1].writemask != templ->stencil[0].writemask) {
+         pipe_debug_message(&svga->debug.callback, CONFORMANCE,
+                            "two-sided stencil writemask not supported "
+                            "(front=0x%x, back=0x%x)",
+                            templ->stencil[0].writemask,
+                            templ->stencil[1].writemask);
+      }
    }
    else {
       /* back face state is same as front-face state */
@@ -290,6 +305,17 @@ svga_set_sample_mask(struct pipe_context *pipe,
 }
 
 
+static void
+svga_set_min_samples(struct pipe_context *pipe, unsigned min_samples)
+{
+   /* This specifies the minimum number of times the fragment shader
+    * must run when doing per-sample shading for a MSAA render target.
+    * For our SVGA3D device, the FS is automatically run in per-sample
+    * mode if it uses the sample ID or sample position registers.
+    */
+}
+
+
 void
 svga_init_depth_stencil_functions(struct svga_context *svga)
 {
@@ -299,4 +325,5 @@ svga_init_depth_stencil_functions(struct svga_context *svga)
 
    svga->pipe.set_stencil_ref = svga_set_stencil_ref;
    svga->pipe.set_sample_mask = svga_set_sample_mask;
+   svga->pipe.set_min_samples = svga_set_min_samples;
 }

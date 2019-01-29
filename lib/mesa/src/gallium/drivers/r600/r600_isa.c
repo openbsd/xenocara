@@ -506,6 +506,7 @@ static const struct cf_op_info cf_op_table[] = {
 		{"ALU_EXT",                       {   -1,   -1, 0x0C, 0x0C },  CF_CLAUSE | CF_ALU | CF_ALU_EXT  },
 		{"ALU_CONTINUE",                  { 0x0D, 0x0D, 0x0D,   -1 },  CF_CLAUSE | CF_ALU  },
 		{"ALU_BREAK",                     { 0x0E, 0x0E, 0x0E,   -1 },  CF_CLAUSE | CF_ALU  },
+		{"ALU_VALID_PIXEL_MODE",          {   -1,   -1,   -1, 0x0E },  CF_CLAUSE | CF_ALU  },
 		{"ALU_ELSE_AFTER",                { 0x0F, 0x0F, 0x0F, 0x0F },  CF_CLAUSE | CF_ALU  },
 		{"CF_NATIVE",                     { 0x00, 0x00, 0x00, 0x00 },  0  }
 };
@@ -557,7 +558,7 @@ int r600_isa_init(struct r600_context *ctx, struct r600_isa *isa) {
 
 	for (i = 0; i < ARRAY_SIZE(r600_alu_op_table); ++i) {
 		const struct alu_op_info *op = &r600_alu_op_table[i];
-		unsigned opc;
+		int opc;
 		if (op->flags & AF_LDS || op->slots[isa->hw_class] == 0)
 			continue;
 		opc = op->opcode[isa->hw_class >> 1];
@@ -570,7 +571,7 @@ int r600_isa_init(struct r600_context *ctx, struct r600_isa *isa) {
 
 	for (i = 0; i < ARRAY_SIZE(fetch_op_table); ++i) {
 		const struct fetch_op_info *op = &fetch_op_table[i];
-		unsigned opc = op->opcode[isa->hw_class];
+		int opc = op->opcode[isa->hw_class];
 		if ((op->flags & FF_GDS) || ((opc & 0xFF) != opc))
 			continue; /* ignore GDS ops and INST_MOD versions for now */
 		isa->fetch_map[opc] = i + 1;
@@ -578,7 +579,7 @@ int r600_isa_init(struct r600_context *ctx, struct r600_isa *isa) {
 
 	for (i = 0; i < ARRAY_SIZE(cf_op_table); ++i) {
 		const struct cf_op_info *op = &cf_op_table[i];
-		unsigned opc = op->opcode[isa->hw_class];
+		int opc = op->opcode[isa->hw_class];
 		if (opc == -1)
 			continue;
 		/* using offset for CF_ALU_xxx opcodes because they overlap with other

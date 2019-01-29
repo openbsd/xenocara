@@ -21,6 +21,11 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
+
+#ifndef _MSC_VER
+#include <unistd.h>
+#endif
+
 #include "main/glheader.h"
 #include "main/imports.h"
 #include "program/prog_instruction.h"
@@ -289,7 +294,6 @@ result                    { return RESULT; }
 {dot}texture              { return TEXTURE; }
 {dot}transpose            { return TRANSPOSE; }
 {dot}attrib               { return_token_or_DOT(require_ARB_vp, VTXATTRIB); }
-{dot}weight               { return_token_or_DOT(require_ARB_vp, WEIGHT); }
 
 texture                   { return_token_or_IDENTIFIER(require_ARB_fp, TEXTURE_UNIT); }
 1D                        { return_token_or_IDENTIFIER(require_ARB_fp, TEX_1D); }

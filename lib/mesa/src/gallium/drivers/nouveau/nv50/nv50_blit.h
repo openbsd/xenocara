@@ -17,16 +17,17 @@ nv50_blit_select_mode(const struct pipe_blit_info *);
 void
 nv50_resource_resolve(struct pipe_context *, const struct pipe_resolve_info *);
 
-#define NV50_BLIT_MODE_PASS  0 /* pass through TEX $t0/$s0 output */
-#define NV50_BLIT_MODE_Z24S8 1 /* encode ZS values for RGBA unorm8 */
-#define NV50_BLIT_MODE_S8Z24 2
-#define NV50_BLIT_MODE_X24S8 3
-#define NV50_BLIT_MODE_S8X24 4
-#define NV50_BLIT_MODE_Z24X8 5
-#define NV50_BLIT_MODE_X8Z24 6
-#define NV50_BLIT_MODE_ZS    7 /* put $t0/$s0 into R, $t1/$s1 into G */
-#define NV50_BLIT_MODE_XS    8 /* put $t1/$s1 into G */
-#define NV50_BLIT_MODES      9
+#define NV50_BLIT_MODE_PASS       0 /* pass through TEX $t0/$s0 output */
+#define NV50_BLIT_MODE_Z24S8      1 /* encode ZS values for RGBA unorm8 */
+#define NV50_BLIT_MODE_S8Z24      2
+#define NV50_BLIT_MODE_X24S8      3
+#define NV50_BLIT_MODE_S8X24      4
+#define NV50_BLIT_MODE_Z24X8      5
+#define NV50_BLIT_MODE_X8Z24      6
+#define NV50_BLIT_MODE_ZS         7 /* put $t0/$s0 into R, $t1/$s1 into G */
+#define NV50_BLIT_MODE_XS         8 /* put $t1/$s1 into G */
+#define NV50_BLIT_MODE_INT_CLAMP  9 /* unsigned to signed integer conversion */
+#define NV50_BLIT_MODES          10
 
 /* CUBE and RECT textures are reinterpreted as 2D(_ARRAY) */
 #define NV50_BLIT_TEXTURE_BUFFER    0
@@ -85,7 +86,8 @@ static inline unsigned
 nv50_blit_get_filter(const struct pipe_blit_info *info)
 {
    if (info->dst.resource->nr_samples < info->src.resource->nr_samples)
-      return util_format_is_depth_or_stencil(info->src.format) ? 0 : 1;
+      return (util_format_is_depth_or_stencil(info->src.format) ||
+              util_format_is_pure_integer(info->src.format)) ? 0 : 1;
 
    if (info->filter != PIPE_TEX_FILTER_LINEAR)
       return 0;

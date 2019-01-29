@@ -38,8 +38,11 @@ TESTS = \
 	insert_many \
 	null_destroy \
 	random_entry \
+	remove_key \
 	remove_null \
 	replacement \
 	$()
 
 check_PROGRAMS = $(TESTS)
+
+EXTRA_DIST = meson.build

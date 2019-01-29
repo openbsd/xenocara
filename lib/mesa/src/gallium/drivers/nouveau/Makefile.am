@@ -24,6 +24,7 @@ include Makefile.sources
 include $(top_srcdir)/src/gallium/Automake.inc
 
 AM_CPPFLAGS = \
+	-I$(top_srcdir)/include/drm-uapi \
 	$(GALLIUM_DRIVER_CFLAGS) \
 	$(LIBDRM_CFLAGS) \
 	$(NOUVEAU_CFLAGS)
@@ -50,4 +51,4 @@ nouveau_compiler_LDADD = \
 	$(top_builddir)/src/util/libmesautil.la \
 	$(GALLIUM_COMMON_LIB_DEPS)
 
-EXTRA_DIST = codegen/lib nvc0/mme
+EXTRA_DIST = codegen/lib nvc0/mme meson.build

@@ -171,6 +171,12 @@ struct r600_resource {
 	/* Whether this resource is referenced by bindless handles. */
 	bool				texture_handle_allocated;
 	bool				image_handle_allocated;
+
+	/*
+	 * EG/Cayman only - for RAT operations hw need an immediate buffer
+	 * to store results in.
+	 */
+	struct r600_resource            *immed_buffer;
 };
 
 struct r600_transfer {
@@ -482,7 +488,7 @@ struct r600_viewports {
 };
 
 struct r600_ring {
-	struct radeon_winsys_cs		*cs;
+	struct radeon_cmdbuf		*cs;
 	void (*flush)(void *ctx, unsigned flags,
 		      struct pipe_fence_handle **fence);
 };
@@ -558,8 +564,6 @@ struct r600_common_context {
 	unsigned			num_cs_flushes;
 	unsigned			num_cb_cache_flushes;
 	unsigned			num_db_cache_flushes;
-	unsigned			num_L2_invalidates;
-	unsigned			num_L2_writebacks;
 	unsigned			num_resident_handles;
 	uint64_t			num_alloc_tex_transfer_bytes;
 
@@ -675,6 +679,7 @@ void r600_gfx_write_event_eop(struct r600_common_context *ctx,
 			      uint32_t new_fence, unsigned query_type);
 unsigned r600_gfx_write_fence_dwords(struct r600_common_screen *screen);
 void r600_gfx_wait_fence(struct r600_common_context *ctx,
+			 struct r600_resource *buf,
 			 uint64_t va, uint32_t ref, uint32_t mask);
 void r600_draw_rectangle(struct blitter_context *blitter,
 			 void *vertex_elements_cso,
@@ -703,7 +708,7 @@ struct pipe_resource *r600_resource_create_common(struct pipe_screen *screen,
 const char *r600_get_llvm_processor_name(enum radeon_family family);
 void r600_need_dma_space(struct r600_common_context *ctx, unsigned num_dw,
 			 struct r600_resource *dst, struct r600_resource *src);
-void radeon_save_cs(struct radeon_winsys *ws, struct radeon_winsys_cs *cs,
+void radeon_save_cs(struct radeon_winsys *ws, struct radeon_cmdbuf *cs,
 		    struct radeon_saved_cs *saved, bool get_buffer_list);
 void radeon_clear_saved_cs(struct radeon_saved_cs *saved);
 bool r600_check_device_reset(struct r600_common_context *rctx);
@@ -773,6 +778,9 @@ void evergreen_do_fast_color_clear(struct r600_common_context *rctx,
 				   const union pipe_color_union *color);
 void r600_init_screen_texture_functions(struct r600_common_screen *rscreen);
 void r600_init_context_texture_functions(struct r600_common_context *rctx);
+void eg_resource_alloc_immed(struct r600_common_screen *rscreen,
+			     struct r600_resource *res,
+			     unsigned immed_size);
 
 /* r600_viewport.c */
 void evergreen_apply_scissor_bug_workaround(struct r600_common_context *rctx,
@@ -791,10 +799,8 @@ extern const unsigned eg_max_dist_4x;
 void cayman_get_sample_position(struct pipe_context *ctx, unsigned sample_count,
 				unsigned sample_index, float *out_value);
 void cayman_init_msaa(struct pipe_context *ctx);
-void cayman_emit_msaa_sample_locs(struct radeon_winsys_cs *cs, int nr_samples);
-void cayman_emit_msaa_config(struct radeon_winsys_cs *cs, int nr_samples,
-			     int ps_iter_samples, int overrast_samples,
-			     unsigned sc_mode_cntl_1);
+void cayman_emit_msaa_state(struct radeon_cmdbuf *cs, int nr_samples,
+			    int ps_iter_samples, int overrast_samples);
 
 
 /* Inline helpers. */

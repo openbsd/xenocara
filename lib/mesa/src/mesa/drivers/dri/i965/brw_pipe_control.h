@@ -34,6 +34,7 @@ struct brw_bo;
  * additional flushing control.
  */
 #define _3DSTATE_PIPE_CONTROL		(CMD_3D | (3 << 27) | (2 << 24))
+#define PIPE_CONTROL_LRI_WRITE_IMMEDIATE (1 << 23) /* Gen7+ */
 #define PIPE_CONTROL_CS_STALL		(1 << 20)
 #define PIPE_CONTROL_GLOBAL_SNAPSHOT_COUNT_RESET	(1 << 19)
 #define PIPE_CONTROL_TLB_INVALIDATE	(1 << 18)
@@ -85,5 +86,6 @@ void brw_emit_post_sync_nonzero_flush(struct brw_context *brw);
 void brw_emit_depth_stall_flushes(struct brw_context *brw);
 void gen7_emit_vs_workaround_flush(struct brw_context *brw);
 void gen7_emit_cs_stall_flush(struct brw_context *brw);
+void gen10_emit_isp_disable(struct brw_context *brw);
 
 #endif

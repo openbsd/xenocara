@@ -33,11 +33,10 @@ AM_CPPFLAGS = \
 	-I$(top_srcdir)/src/gallium/winsys \
 	-I$(top_srcdir)/src/gallium/state_trackers/glx/xlib \
 	-I$(top_srcdir)/src/gallium/auxiliary \
-	-DGALLIUM_SOFTPIPE \
-	-DGALLIUM_TRACE
+	-DGALLIUM_SOFTPIPE
 
 noinst_LTLIBRARIES = libosmesa.la
 
 libosmesa_la_SOURCES = $(C_SOURCES)
 
-EXTRA_DIST = SConscript
+EXTRA_DIST = SConscript meson.build

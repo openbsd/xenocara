@@ -76,7 +76,7 @@ util_gen_mipmap(struct pipe_context *pipe, struct pipe_resource *pt,
       return TRUE;
 
    if (!screen->is_format_supported(screen, format, pt->target,
-                                    pt->nr_samples,
+                                    pt->nr_samples, pt->nr_storage_samples,
                                     PIPE_BIND_SAMPLER_VIEW |
                                     (is_zs ? PIPE_BIND_DEPTH_STENCIL :
                                      PIPE_BIND_RENDER_TARGET))) {
@@ -113,8 +113,8 @@ util_gen_mipmap(struct pipe_context *pipe, struct pipe_resource *pt,
       if (pt->target == PIPE_TEXTURE_3D) {
          /* generate all layers/slices at once */
          blit.src.box.z = blit.dst.box.z = 0;
-         blit.src.box.depth = util_max_layer(pt, blit.src.level)+1;
-         blit.dst.box.depth = util_max_layer(pt, blit.dst.level)+1;
+         blit.src.box.depth = util_num_layers(pt, blit.src.level);
+         blit.dst.box.depth = util_num_layers(pt, blit.dst.level);
       }
       else {
          blit.src.box.z = blit.dst.box.z = first_layer;

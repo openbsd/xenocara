@@ -1,5 +1,3 @@
-/* -*- mode: C; c-file-style: "k&r"; tab-width 4; indent-tabs-mode: t; -*- */
-
 /*
  * Copyright (C) 2014 Rob Clark <robclark@freedesktop.org>
  *
@@ -32,10 +30,6 @@
 #include "pipe/p_context.h"
 #include "freedreno_context.h"
 #include "ir3_shader.h"
-
-struct fd4_shader_stateobj {
-	struct ir3_shader *shader;
-};
 
 struct fd4_emit;
 

@@ -29,17 +29,9 @@
 #include "util/hash_table.h"
 #include "compiler/nir/nir.h"
 #include "compiler/nir/nir_builder.h"
+#include "common/v3d_device_info.h"
 #include "v3d_compiler.h"
 
-/* We don't do any address packing. */
-#define __gen_user_data void
-#define __gen_address_type uint32_t
-#define __gen_address_offset(reloc) (*reloc)
-#define __gen_emit_reloc(cl, reloc)
-#include "cle/v3d_packet_v33_pack.h"
-
-static struct qreg
-ntq_get_src(struct v3d_compile *c, nir_src src, int i);
 static void
 ntq_emit_cf_list(struct v3d_compile *c, struct exec_list *list);
 
@@ -64,18 +56,21 @@ resize_qreg_array(struct v3d_compile *c,
                 (*regs)[i] = c->undef;
 }
 
-static struct qreg
-vir_SFU(struct v3d_compile *c, int waddr, struct qreg src)
+void
+vir_emit_thrsw(struct v3d_compile *c)
 {
-        vir_FMOV_dest(c, vir_reg(QFILE_MAGIC, waddr), src);
-        return vir_FMOV(c, vir_reg(QFILE_MAGIC, V3D_QPU_WADDR_R4));
-}
+        if (c->threads == 1)
+                return;
 
-static struct qreg
-vir_LDTMU(struct v3d_compile *c)
-{
-        vir_NOP(c)->qpu.sig.ldtmu = true;
-        return vir_MOV(c, vir_reg(QFILE_MAGIC, V3D_QPU_WADDR_R4));
+        /* Always thread switch after each texture operation for now.
+         *
+         * We could do better by batching a bunch of texture fetches up and
+         * then doing one thread switch and collecting all their results
+         * afterward.
+         */
+        c->last_thrsw = vir_NOP(c);
+        c->last_thrsw->qpu.sig.thrsw = true;
+        c->last_thrsw_at_top_level = (c->execute.file == QFILE_NULL);
 }
 
 static struct qreg
@@ -117,6 +112,7 @@ indirect_uniform_load(struct v3d_compile *c, nir_intrinsic_instr *intr)
                      vir_uniform(c, QUNIFORM_UBO_ADDR, 0),
                      indirect_offset);
 
+        vir_emit_thrsw(c);
         return vir_LDTMU(c);
 }
 
@@ -144,7 +140,7 @@ ntq_init_ssa_def(struct v3d_compile *c, nir_ssa_def *def)
  * (knowing that the previous instruction doesn't depend on flags) and rewrite
  * its destination to be the NIR reg's destination
  */
-static void
+void
 ntq_store_dest(struct v3d_compile *c, nir_dest *dest, int chan,
                struct qreg result)
 {
@@ -195,14 +191,11 @@ ntq_store_dest(struct v3d_compile *c, nir_dest *dest, int chan,
                 if (c->execute.file != QFILE_NULL) {
                         last_inst->dst.index = qregs[chan].index;
 
-                        /* Set the flags to the current exec mask.  To insert
-                         * the flags push, we temporarily remove our SSA
-                         * instruction.
+                        /* Set the flags to the current exec mask.
                          */
-                        list_del(&last_inst->link);
+                        c->cursor = vir_before_inst(last_inst);
                         vir_PF(c, c->execute, V3D_QPU_PF_PUSHZ);
-                        list_addtail(&last_inst->link,
-                                     &c->cur_block->instructions);
+                        c->cursor = vir_after_inst(last_inst);
 
                         vir_set_cond(last_inst, V3D_QPU_COND_IFA);
                         last_inst->cond_is_exec_mask = true;
@@ -210,7 +203,7 @@ ntq_store_dest(struct v3d_compile *c, nir_dest *dest, int chan,
         }
 }
 
-static struct qreg
+struct qreg
 ntq_get_src(struct v3d_compile *c, nir_src src, int i)
 {
         struct hash_entry *entry;
@@ -233,7 +226,7 @@ static struct qreg
 ntq_get_alu_src(struct v3d_compile *c, nir_alu_instr *instr,
                 unsigned src)
 {
-        assert(util_is_power_of_two(instr->dest.write_mask));
+        assert(util_is_power_of_two_or_zero(instr->dest.write_mask));
         unsigned chan = ffs(instr->dest.write_mask) - 1;
         struct qreg r = ntq_get_src(c, instr->src[src].src,
                                     instr->src[src].swizzle[chan]);
@@ -243,21 +236,6 @@ ntq_get_alu_src(struct v3d_compile *c, nir_alu_instr *instr,
 
         return r;
 };
-
-static inline struct qreg
-vir_SAT(struct v3d_compile *c, struct qreg val)
-{
-        return vir_FMAX(c,
-                        vir_FMIN(c, val, vir_uniform_f(c, 1.0)),
-                        vir_uniform_f(c, 0.0));
-}
-
-static struct qreg
-ntq_umul(struct v3d_compile *c, struct qreg src0, struct qreg src1)
-{
-        vir_MULTOP(c, src0, src1);
-        return vir_UMUL24(c, src0, src1);
-}
 
 static struct qreg
 ntq_minify(struct v3d_compile *c, struct qreg size, struct qreg level)
@@ -331,165 +309,10 @@ ntq_emit_tex(struct v3d_compile *c, nir_tex_instr *instr)
                 break;
         }
 
-        struct V3D33_TEXTURE_UNIFORM_PARAMETER_0_CFG_MODE1 p0_unpacked = {
-                V3D33_TEXTURE_UNIFORM_PARAMETER_0_CFG_MODE1_header,
-
-                .fetch_sample_mode = instr->op == nir_texop_txf,
-        };
-
-        switch (instr->sampler_dim) {
-        case GLSL_SAMPLER_DIM_1D:
-                if (instr->is_array)
-                        p0_unpacked.lookup_type = TEXTURE_1D_ARRAY;
-                else
-                        p0_unpacked.lookup_type = TEXTURE_1D;
-                break;
-        case GLSL_SAMPLER_DIM_2D:
-        case GLSL_SAMPLER_DIM_RECT:
-                if (instr->is_array)
-                        p0_unpacked.lookup_type = TEXTURE_2D_ARRAY;
-                else
-                        p0_unpacked.lookup_type = TEXTURE_2D;
-                break;
-        case GLSL_SAMPLER_DIM_3D:
-                p0_unpacked.lookup_type = TEXTURE_3D;
-                break;
-        case GLSL_SAMPLER_DIM_CUBE:
-                p0_unpacked.lookup_type = TEXTURE_CUBE_MAP;
-                break;
-        default:
-                unreachable("Bad sampler type");
-        }
-
-        struct qreg coords[5];
-        int next_coord = 0;
-        for (unsigned i = 0; i < instr->num_srcs; i++) {
-                switch (instr->src[i].src_type) {
-                case nir_tex_src_coord:
-                        for (int j = 0; j < instr->coord_components; j++) {
-                                coords[next_coord++] =
-                                        ntq_get_src(c, instr->src[i].src, j);
-                        }
-                        if (instr->coord_components < 2)
-                                coords[next_coord++] = vir_uniform_f(c, 0.5);
-                        break;
-                case nir_tex_src_bias:
-                        coords[next_coord++] =
-                                ntq_get_src(c, instr->src[i].src, 0);
-
-                        p0_unpacked.bias_supplied = true;
-                        break;
-                case nir_tex_src_lod:
-                        /* XXX: Needs base level addition */
-                        coords[next_coord++] =
-                                ntq_get_src(c, instr->src[i].src, 0);
-
-                        if (instr->op != nir_texop_txf &&
-                            instr->op != nir_texop_tg4) {
-                                p0_unpacked.disable_autolod_use_bias_only = true;
-                        }
-                        break;
-                case nir_tex_src_comparator:
-                        coords[next_coord++] =
-                                ntq_get_src(c, instr->src[i].src, 0);
-
-                        p0_unpacked.shadow = true;
-                        break;
-
-                case nir_tex_src_offset: {
-                        nir_const_value *offset =
-                                nir_src_as_const_value(instr->src[i].src);
-                        p0_unpacked.texel_offset_for_s_coordinate =
-                                offset->i32[0];
-
-                        if (instr->coord_components >= 2)
-                                p0_unpacked.texel_offset_for_t_coordinate =
-                                        offset->i32[1];
-
-                        if (instr->coord_components >= 3)
-                                p0_unpacked.texel_offset_for_r_coordinate =
-                                        offset->i32[2];
-                        break;
-                }
-
-                default:
-                        unreachable("unknown texture source");
-                }
-        }
-
-        uint32_t p0_packed;
-        V3D33_TEXTURE_UNIFORM_PARAMETER_0_CFG_MODE1_pack(NULL,
-                                                         (uint8_t *)&p0_packed,
-                                                         &p0_unpacked);
-
-        /* There is no native support for GL texture rectangle coordinates, so
-         * we have to rescale from ([0, width], [0, height]) to ([0, 1], [0,
-         * 1]).
-         */
-        if (instr->sampler_dim == GLSL_SAMPLER_DIM_RECT) {
-                coords[0] = vir_FMUL(c, coords[0],
-                                     vir_uniform(c, QUNIFORM_TEXRECT_SCALE_X,
-                                                 unit));
-                coords[1] = vir_FMUL(c, coords[1],
-                                     vir_uniform(c, QUNIFORM_TEXRECT_SCALE_Y,
-                                                 unit));
-        }
-
-        struct qreg texture_u[] = {
-                vir_uniform(c, QUNIFORM_TEXTURE_CONFIG_P0_0 + unit, p0_packed),
-                vir_uniform(c, QUNIFORM_TEXTURE_CONFIG_P1, unit),
-        };
-        uint32_t next_texture_u = 0;
-
-        for (int i = 0; i < next_coord; i++) {
-                struct qreg dst;
-
-                if (i == next_coord - 1)
-                        dst = vir_reg(QFILE_MAGIC, V3D_QPU_WADDR_TMUL);
-                else
-                        dst = vir_reg(QFILE_MAGIC, V3D_QPU_WADDR_TMU);
-
-                struct qinst *tmu = vir_MOV_dest(c, dst, coords[i]);
-
-                if (i < 2) {
-                        tmu->has_implicit_uniform = true;
-                        tmu->src[vir_get_implicit_uniform_src(tmu)] =
-                                texture_u[next_texture_u++];
-                }
-        }
-
-        bool return_16 = (c->key->tex[unit].return_size == 16 ||
-                          p0_unpacked.shadow);
-
-        struct qreg return_values[4];
-        for (int i = 0; i < c->key->tex[unit].return_channels; i++)
-                return_values[i] = vir_LDTMU(c);
-        /* Swizzling .zw of an RG texture should give undefined results, not
-         * crash the compiler.
-         */
-        for (int i = c->key->tex[unit].return_channels; i < 4; i++)
-                return_values[i] = c->undef;
-
-        for (int i = 0; i < nir_tex_instr_dest_size(instr); i++) {
-                struct qreg chan;
-
-                if (return_16) {
-                        STATIC_ASSERT(PIPE_SWIZZLE_X == 0);
-                        chan = return_values[i / 2];
-
-                        enum v3d_qpu_input_unpack unpack;
-                        if (i & 1)
-                                unpack = V3D_QPU_UNPACK_H;
-                        else
-                                unpack = V3D_QPU_UNPACK_L;
-
-                        chan = vir_FMOV(c, chan);
-                        vir_set_unpack(c->defs[chan.index], 0, unpack);
-                } else {
-                        chan = vir_MOV(c, return_values[i]);
-                }
-                ntq_store_dest(c, &instr->dest, i, chan);
-        }
+        if (c->devinfo->ver >= 40)
+                v3d40_vir_emit_tex(c, instr);
+        else
+                v3d33_vir_emit_tex(c, instr);
 }
 
 static struct qreg
@@ -500,8 +323,7 @@ ntq_fsincos(struct v3d_compile *c, struct qreg src, bool is_cos)
                 input = vir_FADD(c, input, vir_uniform_f(c, 0.5));
 
         struct qreg periods = vir_FROUND(c, input);
-        struct qreg sin_output = vir_SFU(c, V3D_QPU_WADDR_SIN,
-                                         vir_FSUB(c, input, periods));
+        struct qreg sin_output = vir_SIN(c, vir_FSUB(c, input, periods));
         return vir_XOR(c, sin_output, vir_SHL(c,
                                               vir_FTOIN(c, periods),
                                               vir_uniform_ui(c, -1)));
@@ -539,16 +361,26 @@ emit_fragcoord_input(struct v3d_compile *c, int attr)
         c->inputs[attr * 4 + 0] = vir_FXCD(c);
         c->inputs[attr * 4 + 1] = vir_FYCD(c);
         c->inputs[attr * 4 + 2] = c->payload_z;
-        c->inputs[attr * 4 + 3] = vir_SFU(c, V3D_QPU_WADDR_RECIP,
-                                          c->payload_w);
+        c->inputs[attr * 4 + 3] = vir_RECIP(c, c->payload_w);
 }
 
 static struct qreg
 emit_fragment_varying(struct v3d_compile *c, nir_variable *var,
                       uint8_t swizzle)
 {
-        struct qreg vary = vir_reg(QFILE_VARY, ~0);
+        struct qreg r3 = vir_reg(QFILE_MAGIC, V3D_QPU_WADDR_R3);
         struct qreg r5 = vir_reg(QFILE_MAGIC, V3D_QPU_WADDR_R5);
+
+        struct qreg vary;
+        if (c->devinfo->ver >= 41) {
+                struct qinst *ldvary = vir_add_inst(V3D_QPU_A_NOP, c->undef,
+                                                    c->undef, c->undef);
+                ldvary->qpu.sig.ldvary = true;
+                vary = vir_emit_def(c, ldvary);
+        } else {
+                vir_NOP(c)->qpu.sig.ldvary = true;
+                vary = r3;
+        }
 
         /* For gl_PointCoord input or distance along a line, we'll be called
          * with no nir_variable, and we don't count toward VPM size so we
@@ -565,31 +397,36 @@ emit_fragment_varying(struct v3d_compile *c, nir_variable *var,
         switch (var->data.interpolation) {
         case INTERP_MODE_NONE:
                 /* If a gl_FrontColor or gl_BackColor input has no interp
-                 * qualifier, then flag it for glShadeModel() handling by the
-                 * driver.
+                 * qualifier, then if we're using glShadeModel(GL_FLAT) it
+                 * needs to be flat shaded.
                  */
                 switch (var->data.location) {
                 case VARYING_SLOT_COL0:
                 case VARYING_SLOT_COL1:
                 case VARYING_SLOT_BFC0:
                 case VARYING_SLOT_BFC1:
-                        BITSET_SET(c->shade_model_flags, i);
-                        break;
+                        if (c->fs_key->shade_model_flat) {
+                                BITSET_SET(c->flat_shade_flags, i);
+                                vir_MOV_dest(c, c->undef, vary);
+                                return vir_MOV(c, r5);
+                        } else {
+                                return vir_FADD(c, vir_FMUL(c, vary,
+                                                            c->payload_w), r5);
+                        }
                 default:
                         break;
                 }
                 /* FALLTHROUGH */
         case INTERP_MODE_SMOOTH:
                 if (var->data.centroid) {
+                        BITSET_SET(c->centroid_flags, i);
                         return vir_FADD(c, vir_FMUL(c, vary,
                                                     c->payload_w_centroid), r5);
                 } else {
                         return vir_FADD(c, vir_FMUL(c, vary, c->payload_w), r5);
                 }
         case INTERP_MODE_NOPERSPECTIVE:
-                /* C appears after the mov from the varying.
-                   XXX: improve ldvary setup.
-                */
+                BITSET_SET(c->noperspective_flags, i);
                 return vir_FADD(c, vir_MOV(c, vary), r5);
         case INTERP_MODE_FLAT:
                 BITSET_SET(c->flat_shade_flags, i);
@@ -604,8 +441,9 @@ static void
 emit_fragment_input(struct v3d_compile *c, int attr, nir_variable *var)
 {
         for (int i = 0; i < glsl_get_vector_elements(var->type); i++) {
-                c->inputs[attr * 4 + i] =
-                        emit_fragment_varying(c, var, i);
+                int chan = var->data.location_frac + i;
+                c->inputs[attr * 4 + chan] =
+                        emit_fragment_varying(c, var, chan);
         }
 }
 
@@ -662,7 +500,9 @@ ntq_emit_comparison(struct v3d_compile *c, struct qreg *dest,
                     nir_alu_instr *sel_instr)
 {
         struct qreg src0 = ntq_get_alu_src(c, compare_instr, 0);
-        struct qreg src1 = ntq_get_alu_src(c, compare_instr, 1);
+        struct qreg src1;
+        if (nir_op_infos[compare_instr->op].num_inputs > 1)
+                src1 = ntq_get_alu_src(c, compare_instr, 1);
         bool cond_invert = false;
 
         switch (compare_instr->op) {
@@ -806,6 +646,14 @@ ntq_emit_alu(struct v3d_compile *c, nir_alu_instr *instr)
         case nir_op_imov:
                 result = vir_MOV(c, src[0]);
                 break;
+
+        case nir_op_fneg:
+                result = vir_XOR(c, src[0], vir_uniform_ui(c, 1 << 31));
+                break;
+        case nir_op_ineg:
+                result = vir_NEG(c, src[0]);
+                break;
+
         case nir_op_fmul:
                 result = vir_FMUL(c, src[0], src[1]);
                 break;
@@ -888,8 +736,12 @@ ntq_emit_alu(struct v3d_compile *c, nir_alu_instr *instr)
                 result = vir_NOT(c, src[0]);
                 break;
 
+        case nir_op_ufind_msb:
+                result = vir_SUB(c, vir_uniform_ui(c, 31), vir_CLZ(c, src[0]));
+                break;
+
         case nir_op_imul:
-                result = ntq_umul(c, src[0], src[1]);
+                result = vir_UMUL(c, src[0], src[1]);
                 break;
 
         case nir_op_seq:
@@ -921,16 +773,16 @@ ntq_emit_alu(struct v3d_compile *c, nir_alu_instr *instr)
                 break;
 
         case nir_op_frcp:
-                result = vir_SFU(c, V3D_QPU_WADDR_RECIP, src[0]);
+                result = vir_RECIP(c, src[0]);
                 break;
         case nir_op_frsq:
-                result = vir_SFU(c, V3D_QPU_WADDR_RSQRT, src[0]);
+                result = vir_RSQRT(c, src[0]);
                 break;
         case nir_op_fexp2:
-                result = vir_SFU(c, V3D_QPU_WADDR_EXP, src[0]);
+                result = vir_EXP(c, src[0]);
                 break;
         case nir_op_flog2:
-                result = vir_SFU(c, V3D_QPU_WADDR_LOG, src[0]);
+                result = vir_LOG(c, src[0]);
                 break;
 
         case nir_op_fceil:
@@ -986,6 +838,27 @@ ntq_emit_alu(struct v3d_compile *c, nir_alu_instr *instr)
                 result = vir_FDY(c, src[0]);
                 break;
 
+        case nir_op_uadd_carry:
+                vir_PF(c, vir_ADD(c, src[0], src[1]), V3D_QPU_PF_PUSHC);
+                result = vir_MOV(c, vir_SEL(c, V3D_QPU_COND_IFA,
+                                            vir_uniform_ui(c, ~0),
+                                            vir_uniform_ui(c, 0)));
+                break;
+
+        case nir_op_pack_half_2x16_split:
+                result = vir_VFPACK(c, src[0], src[1]);
+                break;
+
+        case nir_op_unpack_half_2x16_split_x:
+                result = vir_FMOV(c, src[0]);
+                vir_set_unpack(c->defs[result.index], 0, V3D_QPU_UNPACK_L);
+                break;
+
+        case nir_op_unpack_half_2x16_split_y:
+                result = vir_FMOV(c, src[0]);
+                vir_set_unpack(c->defs[result.index], 0, V3D_QPU_UNPACK_H);
+                break;
+
         default:
                 fprintf(stderr, "unknown NIR ALU inst: ");
                 nir_print_instr(&instr->instr, stderr);
@@ -996,7 +869,7 @@ ntq_emit_alu(struct v3d_compile *c, nir_alu_instr *instr)
         /* We have a scalar result, so the instruction should only have a
          * single channel written to.
          */
-        assert(util_is_power_of_two(instr->dest.write_mask));
+        assert(util_is_power_of_two_or_zero(instr->dest.write_mask));
         ntq_store_dest(c, &instr->dest.dest,
                        ffs(instr->dest.write_mask) - 1, result);
 }
@@ -1036,6 +909,22 @@ emit_frag_end(struct v3d_compile *c)
         }
         */
 
+        bool has_any_tlb_color_write = false;
+        for (int rt = 0; rt < c->fs_key->nr_cbufs; rt++) {
+                if (c->output_color_var[rt])
+                        has_any_tlb_color_write = true;
+        }
+
+        if (c->fs_key->sample_alpha_to_coverage && c->output_color_var[0]) {
+                struct nir_variable *var = c->output_color_var[0];
+                struct qreg *color = &c->outputs[var->data.driver_location * 4];
+
+                vir_SETMSF_dest(c, vir_reg(QFILE_NULL, 0),
+                                vir_AND(c,
+                                        vir_MSF(c),
+                                        vir_FTOC(c, color[3])));
+        }
+
         if (c->output_position_index != -1) {
                 struct qinst *inst = vir_MOV_dest(c,
                                                   vir_reg(QFILE_TLBU, 0),
@@ -1046,7 +935,19 @@ emit_frag_end(struct v3d_compile *c)
                                        TLB_TYPE_DEPTH |
                                        TLB_DEPTH_TYPE_PER_PIXEL |
                                        0xffffff00);
-        } else if (c->s->info.fs.uses_discard) {
+        } else if (c->s->info.fs.uses_discard ||
+                   c->fs_key->sample_alpha_to_coverage ||
+                   !has_any_tlb_color_write) {
+                /* Emit passthrough Z if it needed to be delayed until shader
+                 * end due to potential discards.
+                 *
+                 * Since (single-threaded) fragment shaders always need a TLB
+                 * write, emit passthrouh Z if we didn't have any color
+                 * buffers and flag us as potentially discarding, so that we
+                 * can use Z as the TLB write.
+                 */
+                c->s->info.fs.uses_discard = true;
+
                 struct qinst *inst = vir_MOV_dest(c,
                                                   vir_reg(QFILE_TLBU, 0),
                                                   vir_reg(QFILE_NULL, 0));
@@ -1075,11 +976,18 @@ emit_frag_end(struct v3d_compile *c)
                 conf |= TLB_SAMPLE_MODE_PER_PIXEL;
                 conf |= (7 - rt) << TLB_RENDER_TARGET_SHIFT;
 
+                if (c->fs_key->swap_color_rb & (1 << rt))
+                        num_components = MAX2(num_components, 3);
+
                 assert(num_components != 0);
                 switch (glsl_get_base_type(var->type)) {
                 case GLSL_TYPE_UINT:
                 case GLSL_TYPE_INT:
-                        conf |= TLB_TYPE_I32_COLOR;
+                        /* The F32 vs I32 distinction was dropped in 4.2. */
+                        if (c->devinfo->ver < 42)
+                                conf |= TLB_TYPE_I32_COLOR;
+                        else
+                                conf |= TLB_TYPE_F32_COLOR;
                         conf |= ((num_components - 1) <<
                                  TLB_VEC_SIZE_MINUS_1_SHIFT);
 
@@ -1099,7 +1007,7 @@ emit_frag_end(struct v3d_compile *c)
                         struct qreg b = color[2];
                         struct qreg a = color[3];
 
-                        if (c->fs_key->f32_color_rb) {
+                        if (c->fs_key->f32_color_rb & (1 << rt)) {
                                 conf |= TLB_TYPE_F32_COLOR;
                                 conf |= ((num_components - 1) <<
                                          TLB_VEC_SIZE_MINUS_1_SHIFT);
@@ -1117,15 +1025,20 @@ emit_frag_end(struct v3d_compile *c)
                                 b = color[0];
                         }
 
+                        if (c->fs_key->sample_alpha_to_one)
+                                a = vir_uniform_f(c, 1.0);
+
                         if (c->fs_key->f32_color_rb & (1 << rt)) {
-                                inst = vir_MOV_dest(c, vir_reg(QFILE_TLBU, 0), color[0]);
+                                inst = vir_MOV_dest(c, vir_reg(QFILE_TLBU, 0), r);
                                 inst->src[vir_get_implicit_uniform_src(inst)] =
                                         vir_uniform_ui(c, conf);
 
-                                for (int i = 1; i < num_components; i++) {
-                                        inst = vir_MOV_dest(c, vir_reg(QFILE_TLB, 0),
-                                                            color[i]);
-                                }
+                                if (num_components >= 2)
+                                        vir_MOV_dest(c, vir_reg(QFILE_TLB, 0), g);
+                                if (num_components >= 3)
+                                        vir_MOV_dest(c, vir_reg(QFILE_TLB, 0), b);
+                                if (num_components >= 4)
+                                        vir_MOV_dest(c, vir_reg(QFILE_TLB, 0), a);
                         } else {
                                 inst = vir_VFPACK_dest(c, vir_reg(QFILE_TLB, 0), r, g);
                                 if (conf != ~0) {
@@ -1134,7 +1047,8 @@ emit_frag_end(struct v3d_compile *c)
                                                 vir_uniform_ui(c, conf);
                                 }
 
-                                inst = vir_VFPACK_dest(c, vir_reg(QFILE_TLB, 0), b, a);
+                                if (num_components >= 3)
+                                        inst = vir_VFPACK_dest(c, vir_reg(QFILE_TLB, 0), b, a);
                         }
                         break;
                 }
@@ -1143,7 +1057,21 @@ emit_frag_end(struct v3d_compile *c)
 }
 
 static void
-emit_scaled_viewport_write(struct v3d_compile *c, struct qreg rcp_w)
+vir_VPM_WRITE(struct v3d_compile *c, struct qreg val, uint32_t *vpm_index)
+{
+        if (c->devinfo->ver >= 40) {
+                vir_STVPMV(c, vir_uniform_ui(c, *vpm_index), val);
+                *vpm_index = *vpm_index + 1;
+        } else {
+                vir_MOV_dest(c, vir_reg(QFILE_MAGIC, V3D_QPU_WADDR_VPM), val);
+        }
+
+        c->num_vpm_writes++;
+}
+
+static void
+emit_scaled_viewport_write(struct v3d_compile *c, struct qreg rcp_w,
+                           uint32_t *vpm_index)
 {
         for (int i = 0; i < 2; i++) {
                 struct qreg coord = c->outputs[c->output_position_index + i];
@@ -1151,34 +1079,32 @@ emit_scaled_viewport_write(struct v3d_compile *c, struct qreg rcp_w)
                                  vir_uniform(c, QUNIFORM_VIEWPORT_X_SCALE + i,
                                              0));
                 coord = vir_FMUL(c, coord, rcp_w);
-                vir_FTOIN_dest(c, vir_reg(QFILE_MAGIC, V3D_QPU_WADDR_VPM),
-                               coord);
+                vir_VPM_WRITE(c, vir_FTOIN(c, coord), vpm_index);
         }
 
 }
 
 static void
-emit_zs_write(struct v3d_compile *c, struct qreg rcp_w)
+emit_zs_write(struct v3d_compile *c, struct qreg rcp_w, uint32_t *vpm_index)
 {
         struct qreg zscale = vir_uniform(c, QUNIFORM_VIEWPORT_Z_SCALE, 0);
         struct qreg zoffset = vir_uniform(c, QUNIFORM_VIEWPORT_Z_OFFSET, 0);
 
-        vir_FADD_dest(c, vir_reg(QFILE_MAGIC, V3D_QPU_WADDR_VPM),
-                      vir_FMUL(c, vir_FMUL(c,
-                                           c->outputs[c->output_position_index + 2],
-                                           zscale),
-                               rcp_w),
-                      zoffset);
+        struct qreg z = c->outputs[c->output_position_index + 2];
+        z = vir_FMUL(c, z, zscale);
+        z = vir_FMUL(c, z, rcp_w);
+        z = vir_FADD(c, z, zoffset);
+        vir_VPM_WRITE(c, z, vpm_index);
 }
 
 static void
-emit_rcp_wc_write(struct v3d_compile *c, struct qreg rcp_w)
+emit_rcp_wc_write(struct v3d_compile *c, struct qreg rcp_w, uint32_t *vpm_index)
 {
-        vir_VPM_WRITE(c, rcp_w);
+        vir_VPM_WRITE(c, rcp_w, vpm_index);
 }
 
 static void
-emit_point_size_write(struct v3d_compile *c)
+emit_point_size_write(struct v3d_compile *c, uint32_t *vpm_index)
 {
         struct qreg point_size;
 
@@ -1192,55 +1118,67 @@ emit_point_size_write(struct v3d_compile *c)
          */
         point_size = vir_FMAX(c, point_size, vir_uniform_f(c, .125));
 
-        vir_VPM_WRITE(c, point_size);
+        vir_VPM_WRITE(c, point_size, vpm_index);
 }
 
 static void
 emit_vpm_write_setup(struct v3d_compile *c)
 {
-        uint32_t packed;
-        struct V3D33_VPM_GENERIC_BLOCK_WRITE_SETUP unpacked = {
-                V3D33_VPM_GENERIC_BLOCK_WRITE_SETUP_header,
+        if (c->devinfo->ver >= 40)
+                return;
 
-                .horiz = true,
-                .laned = false,
-                .segs = true,
-                .stride = 1,
-                .size = VPM_SETUP_SIZE_32_BIT,
-                .addr = 0,
-        };
+        v3d33_vir_vpm_write_setup(c);
+}
 
-        V3D33_VPM_GENERIC_BLOCK_WRITE_SETUP_pack(NULL,
-                                                (uint8_t *)&packed,
-                                                &unpacked);
-        vir_VPMSETUP(c, vir_uniform_ui(c, packed));
+/**
+ * Sets up c->outputs[c->output_position_index] for the vertex shader
+ * epilogue, if an output vertex position wasn't specified in the user's
+ * shader.  This may be the case for transform feedback with rasterizer
+ * discard enabled.
+ */
+static void
+setup_default_position(struct v3d_compile *c)
+{
+        if (c->output_position_index != -1)
+                return;
+
+        c->output_position_index = c->outputs_array_size;
+        for (int i = 0; i < 4; i++) {
+                add_output(c,
+                           c->output_position_index + i,
+                           VARYING_SLOT_POS, i);
+        }
 }
 
 static void
 emit_vert_end(struct v3d_compile *c)
 {
-        struct qreg rcp_w = vir_SFU(c, V3D_QPU_WADDR_RECIP,
-                                    c->outputs[c->output_position_index + 3]);
+        setup_default_position(c);
+
+        uint32_t vpm_index = 0;
+        struct qreg rcp_w = vir_RECIP(c,
+                                      c->outputs[c->output_position_index + 3]);
 
         emit_vpm_write_setup(c);
 
         if (c->vs_key->is_coord) {
                 for (int i = 0; i < 4; i++)
-                        vir_VPM_WRITE(c, c->outputs[c->output_position_index + i]);
-                emit_scaled_viewport_write(c, rcp_w);
+                        vir_VPM_WRITE(c, c->outputs[c->output_position_index + i],
+                                      &vpm_index);
+                emit_scaled_viewport_write(c, rcp_w, &vpm_index);
                 if (c->vs_key->per_vertex_point_size) {
-                        emit_point_size_write(c);
+                        emit_point_size_write(c, &vpm_index);
                         /* emit_rcp_wc_write(c, rcp_w); */
                 }
                 /* XXX: Z-only rendering */
                 if (0)
-                        emit_zs_write(c, rcp_w);
+                        emit_zs_write(c, rcp_w, &vpm_index);
         } else {
-                emit_scaled_viewport_write(c, rcp_w);
-                emit_zs_write(c, rcp_w);
-                emit_rcp_wc_write(c, rcp_w);
+                emit_scaled_viewport_write(c, rcp_w, &vpm_index);
+                emit_zs_write(c, rcp_w, &vpm_index);
+                emit_rcp_wc_write(c, rcp_w, &vpm_index);
                 if (c->vs_key->per_vertex_point_size)
-                        emit_point_size_write(c);
+                        emit_point_size_write(c, &vpm_index);
         }
 
         for (int i = 0; i < c->vs_key->num_fs_inputs; i++) {
@@ -1251,7 +1189,8 @@ emit_vert_end(struct v3d_compile *c)
                         struct v3d_varying_slot output = c->output_slots[j];
 
                         if (!memcmp(&input, &output, sizeof(input))) {
-                                vir_VPM_WRITE(c, c->outputs[j]);
+                                vir_VPM_WRITE(c, c->outputs[j],
+                                              &vpm_index);
                                 break;
                         }
                 }
@@ -1259,8 +1198,14 @@ emit_vert_end(struct v3d_compile *c)
                  * this FS input.
                  */
                 if (j == c->num_outputs)
-                        vir_VPM_WRITE(c, vir_uniform_f(c, 0.0));
+                        vir_VPM_WRITE(c, vir_uniform_f(c, 0.0),
+                                      &vpm_index);
         }
+
+        /* GFXH-1684: VPM writes need to be complete by the end of the shader.
+         */
+        if (c->devinfo->ver >= 40 && c->devinfo->ver <= 42)
+                vir_VPMWT(c);
 }
 
 void
@@ -1284,6 +1229,8 @@ v3d_optimize_nir(struct nir_shader *s)
                 NIR_PASS(progress, s, nir_opt_constant_folding);
                 NIR_PASS(progress, s, nir_opt_undef);
         } while (progress);
+
+        NIR_PASS(progress, s, nir_opt_move_load_ubo);
 }
 
 static int
@@ -1303,6 +1250,12 @@ ntq_emit_vpm_read(struct v3d_compile *c,
 {
         struct qreg vpm = vir_reg(QFILE_VPM, vpm_index);
 
+        if (c->devinfo->ver >= 40 ) {
+                return vir_LDVPMV_IN(c,
+                                     vir_uniform_ui(c,
+                                                    (*num_components_queued)++));
+        }
+
         if (*num_components_queued != 0) {
                 (*num_components_queued)--;
                 c->num_inputs++;
@@ -1311,24 +1264,7 @@ ntq_emit_vpm_read(struct v3d_compile *c,
 
         uint32_t num_components = MIN2(*remaining, 32);
 
-        struct V3D33_VPM_GENERIC_BLOCK_READ_SETUP unpacked = {
-                V3D33_VPM_GENERIC_BLOCK_READ_SETUP_header,
-
-                .horiz = true,
-                .laned = false,
-                /* If the field is 0, that means a read count of 32. */
-                .num = num_components & 31,
-                .segs = true,
-                .stride = 1,
-                .size = VPM_SETUP_SIZE_32_BIT,
-                .addr = c->num_inputs,
-        };
-
-        uint32_t packed;
-        V3D33_VPM_GENERIC_BLOCK_READ_SETUP_pack(NULL,
-                                                (uint8_t *)&packed,
-                                                &unpacked);
-        vir_VPMSETUP(c, vir_uniform_ui(c, packed));
+        v3d33_vir_vpm_read_setup(c, num_components);
 
         *num_components_queued = num_components - 1;
         *remaining -= num_components;
@@ -1338,7 +1274,72 @@ ntq_emit_vpm_read(struct v3d_compile *c,
 }
 
 static void
-ntq_setup_inputs(struct v3d_compile *c)
+ntq_setup_vpm_inputs(struct v3d_compile *c)
+{
+        /* Figure out how many components of each vertex attribute the shader
+         * uses.  Each variable should have been split to individual
+         * components and unused ones DCEed.  The vertex fetcher will load
+         * from the start of the attribute to the number of components we
+         * declare we need in c->vattr_sizes[].
+         */
+        nir_foreach_variable(var, &c->s->inputs) {
+                /* No VS attribute array support. */
+                assert(MAX2(glsl_get_length(var->type), 1) == 1);
+
+                unsigned loc = var->data.driver_location;
+                int start_component = var->data.location_frac;
+                int num_components = glsl_get_components(var->type);
+
+                c->vattr_sizes[loc] = MAX2(c->vattr_sizes[loc],
+                                           start_component + num_components);
+        }
+
+        unsigned num_components = 0;
+        uint32_t vpm_components_queued = 0;
+        bool uses_iid = c->s->info.system_values_read &
+                (1ull << SYSTEM_VALUE_INSTANCE_ID);
+        bool uses_vid = c->s->info.system_values_read &
+                (1ull << SYSTEM_VALUE_VERTEX_ID);
+        num_components += uses_iid;
+        num_components += uses_vid;
+
+        for (int i = 0; i < ARRAY_SIZE(c->vattr_sizes); i++)
+                num_components += c->vattr_sizes[i];
+
+        if (uses_iid) {
+                c->iid = ntq_emit_vpm_read(c, &vpm_components_queued,
+                                           &num_components, ~0);
+        }
+
+        if (uses_vid) {
+                c->vid = ntq_emit_vpm_read(c, &vpm_components_queued,
+                                           &num_components, ~0);
+        }
+
+        for (int loc = 0; loc < ARRAY_SIZE(c->vattr_sizes); loc++) {
+                resize_qreg_array(c, &c->inputs, &c->inputs_array_size,
+                                  (loc + 1) * 4);
+
+                for (int i = 0; i < c->vattr_sizes[loc]; i++) {
+                        c->inputs[loc * 4 + i] =
+                                ntq_emit_vpm_read(c,
+                                                  &vpm_components_queued,
+                                                  &num_components,
+                                                  loc * 4 + i);
+
+                }
+        }
+
+        if (c->devinfo->ver >= 40) {
+                assert(vpm_components_queued == num_components);
+        } else {
+                assert(vpm_components_queued == 0);
+                assert(num_components == 0);
+        }
+}
+
+static void
+ntq_setup_fs_inputs(struct v3d_compile *c)
 {
         unsigned num_entries = 0;
         unsigned num_components = 0;
@@ -1360,27 +1361,6 @@ ntq_setup_inputs(struct v3d_compile *c)
          */
         qsort(&vars, num_entries, sizeof(*vars), driver_location_compare);
 
-        uint32_t vpm_components_queued = 0;
-        if (c->s->info.stage == MESA_SHADER_VERTEX) {
-                bool uses_iid = c->s->info.system_values_read &
-                        (1ull << SYSTEM_VALUE_INSTANCE_ID);
-                bool uses_vid = c->s->info.system_values_read &
-                        (1ull << SYSTEM_VALUE_VERTEX_ID);
-
-                num_components += uses_iid;
-                num_components += uses_vid;
-
-                if (uses_iid) {
-                        c->iid = ntq_emit_vpm_read(c, &vpm_components_queued,
-                                                   &num_components, ~0);
-                }
-
-                if (uses_vid) {
-                        c->vid = ntq_emit_vpm_read(c, &vpm_components_queued,
-                                                   &num_components, ~0);
-                }
-        }
-
         for (unsigned i = 0; i < num_entries; i++) {
                 nir_variable *var = vars[i];
                 unsigned array_len = MAX2(glsl_get_length(var->type), 1);
@@ -1391,37 +1371,18 @@ ntq_setup_inputs(struct v3d_compile *c)
                 resize_qreg_array(c, &c->inputs, &c->inputs_array_size,
                                   (loc + 1) * 4);
 
-                if (c->s->info.stage == MESA_SHADER_FRAGMENT) {
-                        if (var->data.location == VARYING_SLOT_POS) {
-                                emit_fragcoord_input(c, loc);
-                        } else if (var->data.location == VARYING_SLOT_PNTC ||
-                                   (var->data.location >= VARYING_SLOT_VAR0 &&
-                                    (c->fs_key->point_sprite_mask &
-                                     (1 << (var->data.location -
-                                            VARYING_SLOT_VAR0))))) {
-                                c->inputs[loc * 4 + 0] = c->point_x;
-                                c->inputs[loc * 4 + 1] = c->point_y;
-                        } else {
-                                emit_fragment_input(c, loc, var);
-                        }
+                if (var->data.location == VARYING_SLOT_POS) {
+                        emit_fragcoord_input(c, loc);
+                } else if (var->data.location == VARYING_SLOT_PNTC ||
+                           (var->data.location >= VARYING_SLOT_VAR0 &&
+                            (c->fs_key->point_sprite_mask &
+                             (1 << (var->data.location -
+                                    VARYING_SLOT_VAR0))))) {
+                        c->inputs[loc * 4 + 0] = c->point_x;
+                        c->inputs[loc * 4 + 1] = c->point_y;
                 } else {
-                        int var_components = glsl_get_components(var->type);
-
-                        for (int i = 0; i < var_components; i++) {
-                                c->inputs[loc * 4 + i] =
-                                        ntq_emit_vpm_read(c,
-                                                          &vpm_components_queued,
-                                                          &num_components,
-                                                          loc * 4 + i);
-
-                        }
-                        c->vattr_sizes[loc] = var_components;
+                        emit_fragment_input(c, loc, var);
                 }
-        }
-
-        if (c->s->info.stage == MESA_SHADER_VERTEX) {
-                assert(vpm_components_queued == 0);
-                assert(num_components == 0);
         }
 }
 
@@ -1435,8 +1396,11 @@ ntq_setup_outputs(struct v3d_compile *c)
                 assert(array_len == 1);
                 (void)array_len;
 
-                for (int i = 0; i < 4; i++)
-                        add_output(c, loc + i, var->data.location, i);
+                for (int i = 0; i < 4 - var->data.location_frac; i++) {
+                        add_output(c, loc + var->data.location_frac + i,
+                                   var->data.location,
+                                   var->data.location_frac + i);
+                }
 
                 if (c->s->info.stage == MESA_SHADER_FRAGMENT) {
                         switch (var->data.location) {
@@ -1566,6 +1530,8 @@ ntq_emit_intrinsic(struct v3d_compile *c, nir_intrinsic_instr *instr)
                                              ntq_get_src(c, instr->src[1], 0),
                                              vir_uniform_ui(c, i * 4)));
 
+                        vir_emit_thrsw(c);
+
                         ntq_store_dest(c, &instr->dest, i, vir_LDTMU(c));
                 }
                 break;
@@ -1669,7 +1635,7 @@ ntq_emit_intrinsic(struct v3d_compile *c, nir_intrinsic_instr *instr)
                          * the condition so that we can use zero as "executing
                          * and discarding."
                          */
-                        vir_PF(c, vir_AND(c, c->execute, vir_NOT(c, cond)),
+                        vir_PF(c, vir_OR(c, c->execute, vir_NOT(c, cond)),
                                V3D_QPU_PF_PUSHZ);
                         vir_set_cond(vir_SETMSF_dest(c, vir_reg(QFILE_NULL, 0),
                                                      vir_uniform_ui(c, 0)),
@@ -1698,7 +1664,7 @@ ntq_emit_intrinsic(struct v3d_compile *c, nir_intrinsic_instr *instr)
 static void
 ntq_activate_execute_for_block(struct v3d_compile *c)
 {
-        vir_PF(c, vir_SUB(c, c->execute, vir_uniform_ui(c, c->cur_block->index)),
+        vir_PF(c, vir_XOR(c, c->execute, vir_uniform_ui(c, c->cur_block->index)),
                V3D_QPU_PF_PUSHZ);
 
         vir_MOV_cond(c, V3D_QPU_COND_IFA, c->execute, vir_uniform_ui(c, 0));
@@ -1760,7 +1726,7 @@ ntq_emit_if(struct v3d_compile *c, nir_if *if_stmt)
                              vir_uniform_ui(c, after_block->index));
 
                 /* If everything points at ENDIF, then jump there immediately. */
-                vir_PF(c, vir_SUB(c, c->execute,
+                vir_PF(c, vir_XOR(c, c->execute,
                                   vir_uniform_ui(c, after_block->index)),
                        V3D_QPU_PF_PUSHZ);
                 vir_BRANCH(c, V3D_QPU_BRANCH_COND_ALLA);
@@ -1874,7 +1840,7 @@ ntq_emit_loop(struct v3d_compile *c, nir_loop *loop)
          *
          * XXX: Use the .ORZ flags update, instead.
          */
-        vir_PF(c, vir_SUB(c,
+        vir_PF(c, vir_XOR(c,
                           c->execute,
                           vir_uniform_ui(c, c->loop_cont_block->index)),
                V3D_QPU_PF_PUSHZ);
@@ -1882,7 +1848,11 @@ ntq_emit_loop(struct v3d_compile *c, nir_loop *loop)
 
         vir_PF(c, c->execute, V3D_QPU_PF_PUSHZ);
 
-        vir_BRANCH(c, V3D_QPU_BRANCH_COND_ANYA);
+        struct qinst *branch = vir_BRANCH(c, V3D_QPU_BRANCH_COND_ANYA);
+        /* Pixels that were not dispatched or have been discarded should not
+         * contribute to looping again.
+         */
+        branch->qpu.branch.msfign = V3D_QPU_MSFIGN_P;
         vir_link_blocks(c->cur_block, c->loop_cont_block);
         vir_link_blocks(c->cur_block, c->loop_break_block);
 
@@ -1954,7 +1924,11 @@ nir_to_vir(struct v3d_compile *c)
                 }
         }
 
-        ntq_setup_inputs(c);
+        if (c->s->info.stage == MESA_SHADER_FRAGMENT)
+                ntq_setup_fs_inputs(c);
+        else
+                ntq_setup_vpm_inputs(c);
+
         ntq_setup_outputs(c);
         ntq_setup_uniforms(c);
         ntq_setup_registers(c, &c->s->registers);
@@ -1968,20 +1942,33 @@ nir_to_vir(struct v3d_compile *c)
 }
 
 const nir_shader_compiler_options v3d_nir_options = {
+        .lower_all_io_to_temps = true,
         .lower_extract_byte = true,
         .lower_extract_word = true,
-        .lower_bitfield_insert = true,
-        .lower_bitfield_extract = true,
+        .lower_bfm = true,
+        .lower_bitfield_insert_to_shifts = true,
+        .lower_bitfield_extract_to_shifts = true,
+        .lower_bitfield_reverse = true,
+        .lower_bit_count = true,
         .lower_pack_unorm_2x16 = true,
         .lower_pack_snorm_2x16 = true,
         .lower_pack_unorm_4x8 = true,
         .lower_pack_snorm_4x8 = true,
+        .lower_unpack_unorm_4x8 = true,
+        .lower_unpack_snorm_4x8 = true,
+        .lower_pack_half_2x16 = true,
+        .lower_unpack_half_2x16 = true,
+        .lower_fdiv = true,
+        .lower_find_lsb = true,
         .lower_ffma = true,
         .lower_flrp32 = true,
         .lower_fpow = true,
         .lower_fsat = true,
         .lower_fsqrt = true,
-        .lower_negate = true,
+        .lower_ifind_msb = true,
+        .lower_ldexp = true,
+        .lower_mul_high = true,
+        .lower_wpos_pntc = true,
         .native_integers = true,
 };
 
@@ -2003,6 +1990,85 @@ count_nir_instrs(nir_shader *nir)
 }
 #endif
 
+/**
+ * When demoting a shader down to single-threaded, removes the THRSW
+ * instructions (one will still be inserted at v3d_vir_to_qpu() for the
+ * program end).
+ */
+static void
+vir_remove_thrsw(struct v3d_compile *c)
+{
+        vir_for_each_block(block, c) {
+                vir_for_each_inst_safe(inst, block) {
+                        if (inst->qpu.sig.thrsw)
+                                vir_remove_instruction(c, inst);
+                }
+        }
+
+        c->last_thrsw = NULL;
+}
+
+void
+vir_emit_last_thrsw(struct v3d_compile *c)
+{
+        /* On V3D before 4.1, we need a TMU op to be outstanding when thread
+         * switching, so disable threads if we didn't do any TMU ops (each of
+         * which would have emitted a THRSW).
+         */
+        if (!c->last_thrsw_at_top_level && c->devinfo->ver < 41) {
+                c->threads = 1;
+                if (c->last_thrsw)
+                        vir_remove_thrsw(c);
+                return;
+        }
+
+        /* If we're threaded and the last THRSW was in conditional code, then
+         * we need to emit another one so that we can flag it as the last
+         * thrsw.
+         */
+        if (c->last_thrsw && !c->last_thrsw_at_top_level) {
+                assert(c->devinfo->ver >= 41);
+                vir_emit_thrsw(c);
+        }
+
+        /* If we're threaded, then we need to mark the last THRSW instruction
+         * so we can emit a pair of them at QPU emit time.
+         *
+         * For V3D 4.x, we can spawn the non-fragment shaders already in the
+         * post-last-THRSW state, so we can skip this.
+         */
+        if (!c->last_thrsw && c->s->info.stage == MESA_SHADER_FRAGMENT) {
+                assert(c->devinfo->ver >= 41);
+                vir_emit_thrsw(c);
+        }
+
+        if (c->last_thrsw)
+                c->last_thrsw->is_last_thrsw = true;
+}
+
+/* There's a flag in the shader for "center W is needed for reasons other than
+ * non-centroid varyings", so we just walk the program after VIR optimization
+ * to see if it's used.  It should be harmless to set even if we only use
+ * center W for varyings.
+ */
+static void
+vir_check_payload_w(struct v3d_compile *c)
+{
+        if (c->s->info.stage != MESA_SHADER_FRAGMENT)
+                return;
+
+        vir_for_each_inst_inorder(inst, c) {
+                for (int i = 0; i < vir_get_nsrc(inst); i++) {
+                        if (inst->src[i].file == QFILE_REG &&
+                            inst->src[i].index == 0) {
+                                c->uses_center_w = true;
+                                return;
+                        }
+                }
+        }
+
+}
+
 void
 v3d_nir_to_vir(struct v3d_compile *c)
 {
@@ -2015,6 +2081,9 @@ v3d_nir_to_vir(struct v3d_compile *c)
         }
 
         nir_to_vir(c);
+
+        /* Emit the last THRSW before STVPM and TLB writes. */
+        vir_emit_last_thrsw(c);
 
         switch (c->s->info.stage) {
         case MESA_SHADER_FRAGMENT:
@@ -2039,6 +2108,8 @@ v3d_nir_to_vir(struct v3d_compile *c)
         vir_optimize(c);
         vir_lower_uniforms(c);
 
+        vir_check_payload_w(c);
+
         /* XXX: vir_schedule_instructions(c); */
 
         if (V3D_DEBUG & (V3D_DEBUG_VIR |
@@ -2050,5 +2121,33 @@ v3d_nir_to_vir(struct v3d_compile *c)
                 fprintf(stderr, "\n");
         }
 
-        v3d_vir_to_qpu(c);
+        /* Attempt to allocate registers for the temporaries.  If we fail,
+         * reduce thread count and try again.
+         */
+        int min_threads = (c->devinfo->ver >= 41) ? 2 : 1;
+        struct qpu_reg *temp_registers;
+        while (true) {
+                bool spilled;
+                temp_registers = v3d_register_allocate(c, &spilled);
+                if (spilled)
+                        continue;
+
+                if (temp_registers)
+                        break;
+
+                if (c->threads == min_threads) {
+                        fprintf(stderr, "Failed to register allocate at %d threads:\n",
+                                c->threads);
+                        vir_dump(c);
+                        c->failed = true;
+                        return;
+                }
+
+                c->threads /= 2;
+
+                if (c->threads == 1)
+                        vir_remove_thrsw(c);
+        }
+
+        v3d_vir_to_qpu(c, temp_registers);
 }

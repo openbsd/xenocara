@@ -22,6 +22,9 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#ifndef TEXCOMPRESS_S3TC_TMP_H
+#define TEXCOMPRESS_S3TC_TMP_H
+
 #ifdef __APPLE__
 #include <OpenGL/gl.h>
 #else
@@ -182,8 +185,8 @@ static void fetch_2d_texel_rgba_dxt5(GLint srcRowStride, const GLubyte *pixdata,
 
 #define ALPHACUT 127
 
-static void fancybasecolorsearch( GLubyte *blkaddr, GLubyte srccolors[4][4][4], GLubyte *bestcolor[2],
-                           GLint numxpixels, GLint numypixels, GLint type, GLboolean haveAlpha)
+static void fancybasecolorsearch( UNUSED GLubyte *blkaddr, GLubyte srccolors[4][4][4], GLubyte *bestcolor[2],
+                           GLint numxpixels, GLint numypixels, UNUSED GLint type, UNUSED GLboolean haveAlpha)
 {
    /* use same luminance-weighted distance metric to determine encoding as for finding the base colors */
 
@@ -987,3 +990,5 @@ static void tx_compress_dxtn(GLint srccomps, GLint width, GLint height, const GL
       return;
    }
 }
+
+#endif

@@ -91,7 +91,8 @@ pp_init_prog(struct pp_queue_t *ppq, struct pipe_context *pipe,
    p->rasterizer.cull_face = PIPE_FACE_NONE;
    p->rasterizer.half_pixel_center = 1;
    p->rasterizer.bottom_edge_rule = 1;
-   p->rasterizer.depth_clip = 1;
+   p->rasterizer.depth_clip_near = 1;
+   p->rasterizer.depth_clip_far = 1;
 
    p->sampler.wrap_s = p->sampler.wrap_t = p->sampler.wrap_r =
       PIPE_TEX_WRAP_CLAMP_TO_EDGE;
@@ -119,7 +120,7 @@ pp_init_prog(struct pp_queue_t *ppq, struct pipe_context *pipe,
 
    if (!p->screen->is_format_supported(p->screen,
                                        PIPE_FORMAT_R32G32B32A32_FLOAT,
-                                       PIPE_BUFFER, 1,
+                                       PIPE_BUFFER, 1, 1,
                                        PIPE_BIND_VERTEX_BUFFER))
       pp_debug("Vertex buf format fail\n");
 

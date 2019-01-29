@@ -46,13 +46,14 @@
  * The same is done for the gl_FragData fragment shader output.
  */
 
-#include "main/core.h" /* for snprintf and ARRAY_SIZE */
 #include "ir.h"
 #include "ir_rvalue_visitor.h"
 #include "ir_optimization.h"
 #include "ir_print_visitor.h"
 #include "compiler/glsl_types.h"
 #include "link_varyings.h"
+#include "main/mtypes.h"
+#include "util/u_string.h"
 
 namespace {
 
@@ -322,14 +323,14 @@ public:
 
          if (!(external_color_usage & (1 << i))) {
             if (info->color[i]) {
-               snprintf(name, 32, "gl_%s_FrontColor%i_dummy", mode_str, i);
+               util_snprintf(name, 32, "gl_%s_FrontColor%i_dummy", mode_str, i);
                this->new_color[i] =
                   new (ctx) ir_variable(glsl_type::vec4_type, name,
                                         ir_var_temporary);
             }
 
             if (info->backcolor[i]) {
-               snprintf(name, 32, "gl_%s_BackColor%i_dummy", mode_str, i);
+               util_snprintf(name, 32, "gl_%s_BackColor%i_dummy", mode_str, i);
                this->new_backcolor[i] =
                   new (ctx) ir_variable(glsl_type::vec4_type, name,
                                         ir_var_temporary);
@@ -341,7 +342,7 @@ public:
           info->fog) {
          char name[32];
 
-         snprintf(name, 32, "gl_%s_FogFragCoord_dummy", mode_str);
+         util_snprintf(name, 32, "gl_%s_FogFragCoord_dummy", mode_str);
          this->new_fog = new (ctx) ir_variable(glsl_type::float_type, name,
                                                ir_var_temporary);
       }
@@ -365,13 +366,13 @@ public:
             if (!(external_usage & (1 << i))) {
                /* This varying is unused in the next stage. Declare
                 * a temporary instead of an output. */
-               snprintf(name, 32, "gl_%s_%s%i_dummy", mode_str, var_name, i);
+               util_snprintf(name, 32, "gl_%s_%s%i_dummy", mode_str, var_name, i);
                new_var[i] =
                   new (ctx) ir_variable(glsl_type::vec4_type, name,
                                         ir_var_temporary);
             }
             else {
-               snprintf(name, 32, "gl_%s_%s%i", mode_str, var_name, i);
+               util_snprintf(name, 32, "gl_%s_%s%i", mode_str, var_name, i);
                new_var[i] =
                   new(ctx) ir_variable(glsl_type::vec4_type, name,
                                        this->info->mode);
@@ -557,6 +558,9 @@ do_dead_builtin_varyings(struct gl_context *ctx,
    if (producer) {
       producer_info.get(producer->ir, num_tfeedback_decls, tfeedback_decls);
 
+      if (producer->Stage == MESA_SHADER_TESS_CTRL)
+         producer_info.lower_texcoord_array = false;
+
       if (!consumer) {
          /* At least eliminate unused gl_TexCoord elements. */
          if (producer_info.lower_texcoord_array) {
@@ -568,6 +572,9 @@ do_dead_builtin_varyings(struct gl_context *ctx,
 
    if (consumer) {
       consumer_info.get(consumer->ir, 0, NULL);
+
+      if (consumer->Stage != MESA_SHADER_FRAGMENT)
+         consumer_info.lower_texcoord_array = false;
 
       if (!producer) {
          /* At least eliminate unused gl_TexCoord elements. */

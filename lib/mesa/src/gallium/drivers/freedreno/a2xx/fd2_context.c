@@ -1,5 +1,3 @@
-/* -*- mode: C; c-file-style: "k&r"; tab-width 4; indent-tabs-mode: t; -*- */
-
 /*
  * Copyright (C) 2013 Rob Clark <robclark@freedesktop.org>
  *
@@ -41,6 +39,7 @@ static void
 fd2_context_destroy(struct pipe_context *pctx)
 {
 	fd_context_destroy(pctx);
+	free(pctx);
 }
 
 static struct pipe_resource *
@@ -113,7 +112,7 @@ fd2_context_create(struct pipe_screen *pscreen, void *priv, unsigned flags)
 
 	pctx = fd_context_init(&fd2_ctx->base, pscreen,
 			(screen->gpu_id >= 220) ? a22x_primtypes : a20x_primtypes,
-			priv);
+			priv, flags);
 	if (!pctx)
 		return NULL;
 

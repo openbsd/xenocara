@@ -115,7 +115,7 @@ lp_setup_unmap_vertices(struct vbuf_render *vbr,
 
 
 static void
-lp_setup_set_primitive(struct vbuf_render *vbr, unsigned prim)
+lp_setup_set_primitive(struct vbuf_render *vbr, enum pipe_prim_type prim)
 {
    lp_setup_context(vbr)->prim = prim;
 }
@@ -571,7 +571,7 @@ lp_setup_pipeline_statistics(
       stats->gs_invocations;
    llvmpipe->pipeline_statistics.gs_primitives +=
       stats->gs_primitives;
-   if (!llvmpipe_rasterization_disabled(llvmpipe)) {
+   if (!setup->rasterizer_discard) {
       llvmpipe->pipeline_statistics.c_invocations +=
          stats->c_invocations;
    } else {

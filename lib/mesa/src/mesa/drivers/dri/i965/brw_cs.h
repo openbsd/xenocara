@@ -32,6 +32,13 @@ extern "C" {
 void
 brw_upload_cs_prog(struct brw_context *brw);
 
+void
+brw_cs_populate_key(struct brw_context *brw, struct brw_cs_prog_key *key);
+void
+brw_cs_populate_default_key(const struct gen_device_info *devinfo,
+                            struct brw_cs_prog_key *key,
+                            struct gl_program *prog);
+
 #ifdef __cplusplus
 }
 #endif

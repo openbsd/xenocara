@@ -92,7 +92,7 @@ wsw_is_dt_format_supported(struct sw_winsys *ws,
    struct wrapper_sw_winsys *wsw = wrapper_sw_winsys(ws);
 
    return wsw->screen->is_format_supported(wsw->screen, format,
-                                           PIPE_TEXTURE_2D, 0,
+                                           PIPE_TEXTURE_2D, 0, 0,
                                            PIPE_BIND_RENDER_TARGET |
                                            PIPE_BIND_DISPLAY_TARGET);
 }
@@ -186,7 +186,7 @@ wsw_dt_from_handle(struct sw_winsys *ws,
    struct pipe_resource *tex;
 
    tex = wsw->screen->resource_from_handle(wsw->screen, templ, whandle,
-                                           PIPE_HANDLE_USAGE_READ_WRITE);
+                                           PIPE_HANDLE_USAGE_FRAMEBUFFER_WRITE);
    if (!tex)
       return NULL;
 
@@ -203,7 +203,7 @@ wsw_dt_get_handle(struct sw_winsys *ws,
    struct pipe_resource *tex = wdt->tex;
 
    return wsw->screen->resource_get_handle(wsw->screen, NULL, tex, whandle,
-                                           PIPE_HANDLE_USAGE_READ_WRITE);
+                                           PIPE_HANDLE_USAGE_FRAMEBUFFER_WRITE);
 }
 
 static void *

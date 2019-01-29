@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <sys/utsname.h>
 
+#include "util/mesa-sha1.h"
 #include "sid.h"
 #include "gfx9d.h"
 #include "ac_debug.h"
@@ -61,7 +62,8 @@ radv_init_trace(struct radv_device *device)
 
 	device->trace_bo = ws->buffer_create(ws, TRACE_BO_SIZE, 8,
 					     RADEON_DOMAIN_VRAM,
-					     RADEON_FLAG_CPU_ACCESS);
+					     RADEON_FLAG_CPU_ACCESS|
+					     RADEON_FLAG_NO_INTERPROCESS_SHARING);
 	if (!device->trace_bo)
 		return false;
 
@@ -78,7 +80,7 @@ radv_init_trace(struct radv_device *device)
 }
 
 static void
-radv_dump_trace(struct radv_device *device, struct radeon_winsys_cs *cs)
+radv_dump_trace(struct radv_device *device, struct radeon_cmdbuf *cs)
 {
 	const char *filename = getenv("RADV_TRACE_FILE");
 	FILE *f = fopen(filename, "w");
@@ -367,11 +369,9 @@ static void si_add_split_disasm(const char *disasm,
 }
 
 static void
-radv_dump_annotated_shader(struct radv_pipeline *pipeline,
-			   struct radv_shader_variant *shader,
-			   gl_shader_stage stage,
-			   struct ac_wave_info *waves, unsigned num_waves,
-			   FILE *f)
+radv_dump_annotated_shader(struct radv_shader_variant *shader,
+			   gl_shader_stage stage, struct ac_wave_info *waves,
+			   unsigned num_waves, FILE *f)
 {
 	uint64_t start_addr, end_addr;
 	unsigned i;
@@ -442,27 +442,21 @@ radv_dump_annotated_shader(struct radv_pipeline *pipeline,
 
 static void
 radv_dump_annotated_shaders(struct radv_pipeline *pipeline,
-			    struct radv_shader_variant *compute_shader,
-			    FILE *f)
+			    VkShaderStageFlagBits active_stages, FILE *f)
 {
 	struct ac_wave_info waves[AC_MAX_WAVES_PER_CHIP];
 	unsigned num_waves = ac_get_wave_info(waves);
-	unsigned mask;
 
 	fprintf(f, COLOR_CYAN "The number of active waves = %u" COLOR_RESET
 		"\n\n", num_waves);
 
 	/* Dump annotated active graphics shaders. */
-	mask = pipeline->active_stages;
-	while (mask) {
-		int stage = u_bit_scan(&mask);
+	while (active_stages) {
+		int stage = u_bit_scan(&active_stages);
 
-		radv_dump_annotated_shader(pipeline, pipeline->shaders[stage],
+		radv_dump_annotated_shader(pipeline->shaders[stage],
 					   stage, waves, num_waves, f);
 	}
-
-	radv_dump_annotated_shader(pipeline, compute_shader,
-				   MESA_SHADER_COMPUTE, waves, num_waves, f);
 
 	/* Print waves executing shaders that are not currently bound. */
 	unsigned i;
@@ -498,7 +492,13 @@ radv_dump_shader(struct radv_pipeline *pipeline,
 	fprintf(f, "%s:\n\n", radv_get_shader_name(shader, stage));
 
 	if (shader->spirv) {
-		fprintf(f, "SPIRV:\n");
+		unsigned char sha1[21];
+		char sha1buf[41];
+
+		_mesa_sha1_compute(shader->spirv, shader->spirv_size, sha1);
+		_mesa_sha1_format(sha1buf, sha1);
+
+		fprintf(f, "SPIRV (sha1: %s):\n", sha1buf);
 		radv_print_spirv(shader->spirv, shader->spirv_size, f);
 	}
 
@@ -507,55 +507,59 @@ radv_dump_shader(struct radv_pipeline *pipeline,
 		nir_print_shader(shader->nir, f);
 	}
 
-	fprintf(stderr, "DISASM:\n%s\n", shader->disasm_string);
+	fprintf(f, "LLVM IR:\n%s\n", shader->llvm_ir_string);
+	fprintf(f, "DISASM:\n%s\n", shader->disasm_string);
 
 	radv_shader_dump_stats(pipeline->device, shader, stage, f);
 }
 
 static void
 radv_dump_shaders(struct radv_pipeline *pipeline,
-		  struct radv_shader_variant *compute_shader, FILE *f)
+		  VkShaderStageFlagBits active_stages, FILE *f)
 {
-	unsigned mask;
-
 	/* Dump active graphics shaders. */
-	mask = pipeline->active_stages;
-	while (mask) {
-		int stage = u_bit_scan(&mask);
+	while (active_stages) {
+		int stage = u_bit_scan(&active_stages);
 
 		radv_dump_shader(pipeline, pipeline->shaders[stage], stage, f);
 	}
+}
 
-	radv_dump_shader(pipeline, compute_shader, MESA_SHADER_COMPUTE, f);
+static void
+radv_dump_pipeline_state(struct radv_pipeline *pipeline,
+			 VkShaderStageFlagBits active_stages, FILE *f)
+{
+	radv_dump_shaders(pipeline, active_stages, f);
+	radv_dump_annotated_shaders(pipeline, active_stages, f);
+	radv_dump_descriptors(pipeline, f);
 }
 
 static void
 radv_dump_graphics_state(struct radv_pipeline *graphics_pipeline,
 			 struct radv_pipeline *compute_pipeline, FILE *f)
 {
-	struct radv_shader_variant *compute_shader =
-		compute_pipeline ? compute_pipeline->shaders[MESA_SHADER_COMPUTE] : NULL;
+	VkShaderStageFlagBits active_stages;
 
-	if (!graphics_pipeline)
-		return;
+	if (graphics_pipeline) {
+		active_stages = graphics_pipeline->active_stages;
+		radv_dump_pipeline_state(graphics_pipeline, active_stages, f);
+	}
 
-	radv_dump_shaders(graphics_pipeline, compute_shader, f);
-	radv_dump_annotated_shaders(graphics_pipeline, compute_shader, f);
-	radv_dump_descriptors(graphics_pipeline, f);
+	if (compute_pipeline) {
+		active_stages = VK_SHADER_STAGE_COMPUTE_BIT;
+		radv_dump_pipeline_state(compute_pipeline, active_stages, f);
+	}
 }
 
 static void
 radv_dump_compute_state(struct radv_pipeline *compute_pipeline, FILE *f)
 {
+	VkShaderStageFlagBits active_stages = VK_SHADER_STAGE_COMPUTE_BIT;
+
 	if (!compute_pipeline)
 		return;
 
-	radv_dump_shaders(compute_pipeline,
-			  compute_pipeline->shaders[MESA_SHADER_COMPUTE], f);
-	radv_dump_annotated_shaders(compute_pipeline,
-				    compute_pipeline->shaders[MESA_SHADER_COMPUTE],
-				    f);
-	radv_dump_descriptors(compute_pipeline, f);
+	radv_dump_pipeline_state(compute_pipeline, active_stages, f);
 }
 
 static struct radv_pipeline *
@@ -592,28 +596,32 @@ radv_dump_dmesg(FILE *f)
 	pclose(p);
 }
 
-static void
+void
 radv_dump_enabled_options(struct radv_device *device, FILE *f)
 {
 	uint64_t mask;
 
-	fprintf(f, "Enabled debug options: ");
+	if (device->instance->debug_flags) {
+		fprintf(f, "Enabled debug options: ");
 
-	mask = device->instance->debug_flags;
-	while (mask) {
-		int i = u_bit_scan64(&mask);
-		fprintf(f, "%s, ", radv_get_debug_option_name(i));
+		mask = device->instance->debug_flags;
+		while (mask) {
+			int i = u_bit_scan64(&mask);
+			fprintf(f, "%s, ", radv_get_debug_option_name(i));
+		}
+		fprintf(f, "\n");
 	}
-	fprintf(f, "\n");
 
-	fprintf(f, "Enabled perftest options: ");
+	if (device->instance->perftest_flags) {
+		fprintf(f, "Enabled perftest options: ");
 
-	mask = device->instance->perftest_flags;
-	while (mask) {
-		int i = u_bit_scan64(&mask);
-		fprintf(f, "%s, ", radv_get_perftest_option_name(i));
+		mask = device->instance->perftest_flags;
+		while (mask) {
+			int i = u_bit_scan64(&mask);
+			fprintf(f, "%s, ", radv_get_perftest_option_name(i));
+		}
+		fprintf(f, "\n");
 	}
-	fprintf(f, "\n");
 }
 
 static void
@@ -630,11 +638,9 @@ radv_dump_device_name(struct radv_device *device, FILE *f)
 		snprintf(kernel_version, sizeof(kernel_version),
 			 " / %s", uname_data.release);
 
-	if (HAVE_LLVM > 0) {
-		snprintf(llvm_string, sizeof(llvm_string),
-			 ", LLVM %i.%i.%i", (HAVE_LLVM >> 8) & 0xff,
-			 HAVE_LLVM & 0xff, MESA_LLVM_VERSION_PATCH);
-	}
+	snprintf(llvm_string, sizeof(llvm_string),
+		 ", LLVM %i.%i.%i", (HAVE_LLVM >> 8) & 0xff,
+		 HAVE_LLVM & 0xff, MESA_LLVM_VERSION_PATCH);
 
 	fprintf(f, "Device name: %s (%s DRM %i.%i.%i%s%s)\n\n",
 		chip_name, device->physical_device->name,
@@ -654,7 +660,7 @@ radv_gpu_hang_occured(struct radv_queue *queue, enum ring_type ring)
 }
 
 void
-radv_check_gpu_hangs(struct radv_queue *queue, struct radeon_winsys_cs *cs)
+radv_check_gpu_hangs(struct radv_queue *queue, struct radeon_cmdbuf *cs)
 {
 	struct radv_pipeline *graphics_pipeline, *compute_pipeline;
 	struct radv_device *device = queue->device;

@@ -7,6 +7,7 @@ env.Prepend(CPPPATH = [
     '#src/mapi',
     '#src/mesa',
     Dir('../../../mapi'), # src/mapi build path for python-generated GL API files/headers
+    Dir('../../../mapi/glapi'), # src/mapi/glapi build path
 ])
 
 env.Prepend(LIBS = [
@@ -14,6 +15,8 @@ env.Prepend(LIBS = [
     glapi,
     compiler,
     mesa,
+    spirv,
+    nir,
     glsl,
 ])
 
@@ -25,10 +28,8 @@ if env['platform'] == 'windows':
     env.AppendUnique(CPPDEFINES = [
         '_GDI32_', # prevent wgl* being declared __declspec(dllimport)
         'BUILD_GL32', # declare gl* as __declspec(dllexport) in Mesa headers
+        '_GLAPI_NO_EXPORTS', # prevent _glapi_* from being declared __declspec(dllimport)
     ])
-    if not env['gles']:
-        # prevent _glapi_* from being declared __declspec(dllimport)
-        env.Append(CPPDEFINES = ['_GLAPI_NO_EXPORTS'])
 
     sources += ['osmesa.def']
 

@@ -118,7 +118,6 @@ define_blend_state_object(struct svga_context *svga,
       perRT[i].renderTargetWriteMask = bs->rt[i].writemask;
       perRT[i].logicOpEnable = 0;
       perRT[i].logicOp = SVGA3D_LOGICOP_COPY;
-      assert(perRT[i].srcBlend == perRT[0].srcBlend);
    }
 
    /* Loop in case command buffer is full and we need to flush and retry */
@@ -147,6 +146,17 @@ svga_create_blend_state(struct pipe_context *pipe,
 
    if (!blend)
       return NULL;
+
+   /* Find index of first target with blending enabled.  If no blending is
+    * enabled at all, first_enabled will be zero.
+    */
+   unsigned first_enabled = 0;
+   for (i = 0; i < PIPE_MAX_COLOR_BUFS; i++) {
+      if (templ->rt[i].blend_enable) {
+         first_enabled = i;
+         break;
+      }
+   }
 
    /* Fill in the per-rendertarget blend state.  We currently only
     * support independent blend enable and colormask per render target.
@@ -260,24 +270,26 @@ svga_create_blend_state(struct pipe_context *pipe,
          }
       }
       else {
-         /* Note: the vgpu10 device does not yet support independent
-          * blend terms per render target.  Target[0] always specifies the
-          * blending terms.
+         /* Note: per-target blend terms are only supported for sm4_1
+          * device. For vgpu10 device, the blending terms must be identical
+          * for all targets (this is why we need the first_enabled index).
           */
-         if (templ->independent_blend_enable || templ->rt[0].blend_enable) {
-            /* always use the 0th target's blending terms for now */
+         const unsigned j =
+            svga_have_sm4_1(svga) && templ->independent_blend_enable
+            ? i : first_enabled;
+         if (templ->independent_blend_enable || templ->rt[j].blend_enable) {
             blend->rt[i].srcblend =
-               svga_translate_blend_factor(svga, templ->rt[0].rgb_src_factor);
+               svga_translate_blend_factor(svga, templ->rt[j].rgb_src_factor);
             blend->rt[i].dstblend =
-               svga_translate_blend_factor(svga, templ->rt[0].rgb_dst_factor);
+               svga_translate_blend_factor(svga, templ->rt[j].rgb_dst_factor);
             blend->rt[i].blendeq =
-               svga_translate_blend_func(templ->rt[0].rgb_func);
+               svga_translate_blend_func(templ->rt[j].rgb_func);
             blend->rt[i].srcblend_alpha =
-               svga_translate_blend_factor(svga, templ->rt[0].alpha_src_factor);
+               svga_translate_blend_factor(svga, templ->rt[j].alpha_src_factor);
             blend->rt[i].dstblend_alpha =
-               svga_translate_blend_factor(svga, templ->rt[0].alpha_dst_factor);
+               svga_translate_blend_factor(svga, templ->rt[j].alpha_dst_factor);
             blend->rt[i].blendeq_alpha =
-               svga_translate_blend_func(templ->rt[0].alpha_func);
+               svga_translate_blend_func(templ->rt[j].alpha_func);
 
             if (blend->rt[i].srcblend_alpha != blend->rt[i].srcblend ||
                 blend->rt[i].dstblend_alpha != blend->rt[i].dstblend ||
@@ -361,7 +373,7 @@ static void svga_delete_blend_state(struct pipe_context *pipe,
    struct svga_blend_state *bs =
       (struct svga_blend_state *) blend;
 
-   if (bs->id != SVGA3D_INVALID_ID) {
+   if (svga_have_vgpu10(svga) && bs->id != SVGA3D_INVALID_ID) {
       enum pipe_error ret;
 
       ret = SVGA3D_vgpu10_DestroyBlendState(svga->swc, bs->id);

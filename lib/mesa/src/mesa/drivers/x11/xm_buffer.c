@@ -31,6 +31,7 @@
 
 #include "glxheader.h"
 #include "xmesaP.h"
+#include "main/errors.h"
 #include "main/imports.h"
 #include "main/formats.h"
 #include "main/framebuffer.h"
@@ -422,7 +423,8 @@ xmesa_MapRenderbuffer(struct gl_context *ctx,
                       struct gl_renderbuffer *rb,
                       GLuint x, GLuint y, GLuint w, GLuint h,
                       GLbitfield mode,
-                      GLubyte **mapOut, GLint *rowStrideOut)
+                      GLubyte **mapOut, GLint *rowStrideOut,
+                      bool flip_y)
 {
    struct xmesa_renderbuffer *xrb = xmesa_renderbuffer(rb);
 
@@ -505,7 +507,7 @@ xmesa_MapRenderbuffer(struct gl_context *ctx,
 
    /* otherwise, this is an ordinary malloc-based renderbuffer */
    _swrast_map_soft_renderbuffer(ctx, rb, x, y, w, h, mode,
-                                 mapOut, rowStrideOut);
+                                 mapOut, rowStrideOut, false);
 }
 
 

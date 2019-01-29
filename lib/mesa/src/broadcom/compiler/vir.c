@@ -21,6 +21,7 @@
  * IN THE SOFTWARE.
  */
 
+#include "broadcom/common/v3d_device_info.h"
 #include "v3d_compiler.h"
 
 int
@@ -73,6 +74,8 @@ vir_has_implicit_uniform(struct qinst *inst)
 int
 vir_get_implicit_uniform_src(struct qinst *inst)
 {
+        if (!vir_has_implicit_uniform(inst))
+                return -1;
         return vir_get_nsrc(inst) - 1;
 }
 
@@ -91,6 +94,11 @@ vir_has_side_effects(struct v3d_compile *c, struct qinst *inst)
                 case V3D_QPU_A_SETREVF:
                 case V3D_QPU_A_SETMSF:
                 case V3D_QPU_A_VPMSETUP:
+                case V3D_QPU_A_STVPMV:
+                case V3D_QPU_A_STVPMD:
+                case V3D_QPU_A_STVPMP:
+                case V3D_QPU_A_VPMWT:
+                case V3D_QPU_A_TMUWT:
                         return true;
                 default:
                         break;
@@ -104,8 +112,12 @@ vir_has_side_effects(struct v3d_compile *c, struct qinst *inst)
                 }
         }
 
-        if (inst->qpu.sig.ldtmu)
+        if (inst->qpu.sig.ldtmu ||
+            inst->qpu.sig.ldvary ||
+            inst->qpu.sig.wrtmuc ||
+            inst->qpu.sig.thrsw) {
                 return true;
+        }
 
         return false;
 }
@@ -183,6 +195,11 @@ vir_is_tex(struct qinst *inst)
         if (inst->dst.file == QFILE_MAGIC)
                 return v3d_qpu_magic_waddr_is_tmu(inst->dst.index);
 
+        if (inst->qpu.type == V3D_QPU_INSTR_TYPE_ALU &&
+            inst->qpu.alu.add.op == V3D_QPU_A_TMUWT) {
+                return true;
+        }
+
         return false;
 }
 
@@ -198,11 +215,10 @@ vir_depends_on_flags(struct qinst *inst)
 }
 
 bool
-vir_writes_r3(struct qinst *inst)
+vir_writes_r3(const struct v3d_device_info *devinfo, struct qinst *inst)
 {
         for (int i = 0; i < vir_get_nsrc(inst); i++) {
                 switch (inst->src[i].file) {
-                case QFILE_VARY:
                 case QFILE_VPM:
                         return true;
                 default:
@@ -210,11 +226,18 @@ vir_writes_r3(struct qinst *inst)
                 }
         }
 
+        if (devinfo->ver < 41 && (inst->qpu.sig.ldvary ||
+                                  inst->qpu.sig.ldtlb ||
+                                  inst->qpu.sig.ldtlbu ||
+                                  inst->qpu.sig.ldvpm)) {
+                return true;
+        }
+
         return false;
 }
 
 bool
-vir_writes_r4(struct qinst *inst)
+vir_writes_r4(const struct v3d_device_info *devinfo, struct qinst *inst)
 {
         switch (inst->dst.file) {
         case QFILE_MAGIC:
@@ -231,7 +254,7 @@ vir_writes_r4(struct qinst *inst)
                 break;
         }
 
-        if (inst->qpu.sig.ldtmu)
+        if (devinfo->ver < 41 && inst->qpu.sig.ldtmu)
                 return true;
 
         return false;
@@ -339,10 +362,17 @@ vir_get_temp(struct v3d_compile *c)
         if (c->num_temps > c->defs_array_size) {
                 uint32_t old_size = c->defs_array_size;
                 c->defs_array_size = MAX2(old_size * 2, 16);
+
                 c->defs = reralloc(c, c->defs, struct qinst *,
                                    c->defs_array_size);
                 memset(&c->defs[old_size], 0,
                        sizeof(c->defs[0]) * (c->defs_array_size - old_size));
+
+                c->spillable = reralloc(c, c->spillable,
+                                        BITSET_WORD,
+                                        BITSET_WORDS(c->defs_array_size));
+                for (int i = old_size; i < c->defs_array_size; i++)
+                        BITSET_SET(c->spillable, i);
         }
 
         return reg;
@@ -403,11 +433,17 @@ vir_branch_inst(enum v3d_qpu_branch_cond cond, struct qreg src)
 static void
 vir_emit(struct v3d_compile *c, struct qinst *inst)
 {
-        list_addtail(&inst->link, &c->cur_block->instructions);
+        switch (c->cursor.mode) {
+        case vir_cursor_add:
+                list_add(&inst->link, c->cursor.link);
+                break;
+        case vir_cursor_addtail:
+                list_addtail(&inst->link, c->cursor.link);
+                break;
+        }
 
-        if (inst->dst.file == QFILE_MAGIC &&
-            inst->dst.index == V3D_QPU_WADDR_VPM)
-                c->num_vpm_writes++;
+        c->cursor = vir_after_inst(inst);
+        c->live_intervals_valid = false;
 }
 
 /* Updates inst to write to a new temporary, emits it, and notes the def. */
@@ -415,6 +451,16 @@ struct qreg
 vir_emit_def(struct v3d_compile *c, struct qinst *inst)
 {
         assert(inst->dst.file == QFILE_NULL);
+
+        /* If we're emitting an instruction that's a def, it had better be
+         * writing a register.
+         */
+        if (inst->qpu.type == V3D_QPU_INSTR_TYPE_ALU) {
+                assert(inst->qpu.alu.add.op == V3D_QPU_A_NOP ||
+                       v3d_qpu_add_op_has_dst(inst->qpu.alu.add.op));
+                assert(inst->qpu.alu.mul.op == V3D_QPU_M_NOP ||
+                       v3d_qpu_mul_op_has_dst(inst->qpu.alu.mul.op));
+        }
 
         inst->dst = vir_get_temp(c);
 
@@ -457,6 +503,7 @@ void
 vir_set_emit_block(struct v3d_compile *c, struct qblock *block)
 {
         c->cur_block = block;
+        c->cursor = vir_after_block(block);
         list_addtail(&block->link, &c->blocks);
 }
 
@@ -520,6 +567,7 @@ vir_compile_init(const struct v3d_compiler *compiler,
         c->key = key;
         c->program_id = program_id;
         c->variant_id = variant_id;
+        c->threads = 4;
 
         s = nir_shader_clone(c, s);
         c->s = s;
@@ -537,11 +585,18 @@ vir_compile_init(const struct v3d_compiler *compiler,
         return c;
 }
 
+static int
+type_size_vec4(const struct glsl_type *type)
+{
+        return glsl_count_attribute_slots(type, false);
+}
+
 static void
 v3d_lower_nir(struct v3d_compile *c)
 {
         struct nir_lower_tex_options tex_options = {
-                .lower_rect = false, /* XXX */
+                .lower_txd = true,
+                .lower_rect = false, /* XXX: Use this on V3D 3.x */
                 .lower_txp = ~0,
                 /* Apply swizzles to all samplers. */
                 .swizzle_result = ~0,
@@ -553,6 +608,13 @@ v3d_lower_nir(struct v3d_compile *c)
         for (int i = 0; i < ARRAY_SIZE(c->key->tex); i++) {
                 for (int j = 0; j < 4; j++)
                         tex_options.swizzles[i][j] = c->key->tex[i].swizzle[j];
+
+                if (c->key->tex[i].clamp_s)
+                        tex_options.saturate_s |= 1 << i;
+                if (c->key->tex[i].clamp_t)
+                        tex_options.saturate_t |= 1 << i;
+                if (c->key->tex[i].clamp_r)
+                        tex_options.saturate_r |= 1 << i;
         }
 
         NIR_PASS_V(c->s, nir_lower_tex, &tex_options);
@@ -562,6 +624,7 @@ static void
 v3d_lower_nir_late(struct v3d_compile *c)
 {
         NIR_PASS_V(c->s, v3d_nir_lower_io, c);
+        NIR_PASS_V(c->s, v3d_nir_lower_txf_ms, c);
         NIR_PASS_V(c->s, nir_lower_idiv);
 }
 
@@ -620,6 +683,10 @@ static void
 v3d_set_prog_data(struct v3d_compile *c,
                   struct v3d_prog_data *prog_data)
 {
+        prog_data->threads = c->threads;
+        prog_data->single_seg = !c->last_thrsw;
+        prog_data->spill_size = c->spill_size;
+
         v3d_set_prog_data_uniforms(c, prog_data);
         v3d_set_prog_data_ubo(c, prog_data);
 }
@@ -651,6 +718,26 @@ uint64_t *v3d_compile_vs(const struct v3d_compiler *compiler,
                                                  program_id, variant_id);
 
         c->vs_key = key;
+
+        /* Split our I/O vars and dead code eliminate the unused
+         * components.
+         */
+        NIR_PASS_V(c->s, nir_lower_io_to_scalar_early,
+                   nir_var_shader_in | nir_var_shader_out);
+        uint64_t used_outputs[4] = {0};
+        for (int i = 0; i < c->vs_key->num_fs_inputs; i++) {
+                int slot = v3d_slot_get_slot(c->vs_key->fs_inputs[i]);
+                int comp = v3d_slot_get_component(c->vs_key->fs_inputs[i]);
+                used_outputs[comp] |= 1ull << slot;
+        }
+        NIR_PASS_V(c->s, nir_remove_unused_io_vars,
+                   &c->s->outputs, used_outputs, NULL); /* demotes to globals */
+        NIR_PASS_V(c->s, nir_lower_global_vars_to_local);
+        v3d_optimize_nir(c->s);
+        NIR_PASS_V(c->s, nir_remove_dead_variables, nir_var_shader_in);
+        NIR_PASS_V(c->s, nir_lower_io, nir_var_shader_in | nir_var_shader_out,
+                   type_size_vec4,
+                   (nir_lower_io_options)0);
 
         v3d_lower_nir(c);
 
@@ -685,14 +772,38 @@ uint64_t *v3d_compile_vs(const struct v3d_compiler *compiler,
                 prog_data->vpm_input_size += c->vattr_sizes[i];
         }
 
-        /* Input/output segment size are in 8x32-bit multiples. */
-        prog_data->vpm_input_size = align(prog_data->vpm_input_size, 8) / 8;
-        prog_data->vpm_output_size = align(c->num_vpm_writes, 8) / 8;
-
         prog_data->uses_vid = (s->info.system_values_read &
                                (1ull << SYSTEM_VALUE_VERTEX_ID));
         prog_data->uses_iid = (s->info.system_values_read &
                                (1ull << SYSTEM_VALUE_INSTANCE_ID));
+
+        if (prog_data->uses_vid)
+                prog_data->vpm_input_size++;
+        if (prog_data->uses_iid)
+                prog_data->vpm_input_size++;
+
+        /* Input/output segment size are in sectors (8 rows of 32 bits per
+         * channel).
+         */
+        prog_data->vpm_input_size = align(prog_data->vpm_input_size, 8) / 8;
+        prog_data->vpm_output_size = align(c->num_vpm_writes, 8) / 8;
+
+        /* Compute VCM cache size.  We set up our program to take up less than
+         * half of the VPM, so that any set of bin and render programs won't
+         * run out of space.  We need space for at least one input segment,
+         * and then allocate the rest to output segments (one for the current
+         * program, the rest to VCM).  The valid range of the VCM cache size
+         * field is 1-4 16-vertex batches, but GFXH-1744 limits us to 2-4
+         * batches.
+         */
+        assert(c->devinfo->vpm_size);
+        int sector_size = 16 * sizeof(uint32_t) * 8;
+        int vpm_size_in_sectors = c->devinfo->vpm_size / sector_size;
+        int half_vpm = vpm_size_in_sectors / 2;
+        int vpm_output_sectors = half_vpm - prog_data->vpm_input_size;
+        int vpm_output_batches = vpm_output_sectors / prog_data->vpm_output_size;
+        assert(vpm_output_batches >= 2);
+        prog_data->vcm_cache_size = CLAMP(vpm_output_batches - 1, 2, 4);
 
         return v3d_return_qpu_insts(c, final_assembly_size);
 }
@@ -705,10 +816,48 @@ v3d_set_fs_prog_data_inputs(struct v3d_compile *c,
         memcpy(prog_data->input_slots, c->input_slots,
                c->num_inputs * sizeof(*c->input_slots));
 
-        memcpy(prog_data->flat_shade_flags, c->flat_shade_flags,
-               sizeof(c->flat_shade_flags));
-        memcpy(prog_data->shade_model_flags, c->shade_model_flags,
-               sizeof(c->shade_model_flags));
+        STATIC_ASSERT(ARRAY_SIZE(prog_data->flat_shade_flags) >
+                      (V3D_MAX_FS_INPUTS - 1) / 24);
+        for (int i = 0; i < V3D_MAX_FS_INPUTS; i++) {
+                if (BITSET_TEST(c->flat_shade_flags, i))
+                        prog_data->flat_shade_flags[i / 24] |= 1 << (i % 24);
+
+                if (BITSET_TEST(c->noperspective_flags, i))
+                        prog_data->noperspective_flags[i / 24] |= 1 << (i % 24);
+
+                if (BITSET_TEST(c->centroid_flags, i))
+                        prog_data->centroid_flags[i / 24] |= 1 << (i % 24);
+        }
+}
+
+static void
+v3d_fixup_fs_output_types(struct v3d_compile *c)
+{
+        nir_foreach_variable(var, &c->s->outputs) {
+                uint32_t mask = 0;
+
+                switch (var->data.location) {
+                case FRAG_RESULT_COLOR:
+                        mask = ~0;
+                        break;
+                case FRAG_RESULT_DATA0:
+                case FRAG_RESULT_DATA1:
+                case FRAG_RESULT_DATA2:
+                case FRAG_RESULT_DATA3:
+                        mask = 1 << (var->data.location - FRAG_RESULT_DATA0);
+                        break;
+                }
+
+                if (c->fs_key->int_color_rb & mask) {
+                        var->type =
+                                glsl_vector_type(GLSL_TYPE_INT,
+                                                 glsl_get_components(var->type));
+                } else if (c->fs_key->uint_color_rb & mask) {
+                        var->type =
+                                glsl_vector_type(GLSL_TYPE_UINT,
+                                                 glsl_get_components(var->type));
+                }
+        }
 }
 
 uint64_t *v3d_compile_fs(const struct v3d_compiler *compiler,
@@ -722,6 +871,9 @@ uint64_t *v3d_compile_fs(const struct v3d_compiler *compiler,
                                                  program_id, variant_id);
 
         c->fs_key = key;
+
+        if (key->int_color_rb || key->uint_color_rb)
+                v3d_fixup_fs_output_types(c);
 
         v3d_lower_nir(c);
 
@@ -754,7 +906,9 @@ uint64_t *v3d_compile_fs(const struct v3d_compiler *compiler,
         v3d_set_fs_prog_data_inputs(c, prog_data);
         prog_data->writes_z = (c->s->info.outputs_written &
                                (1 << FRAG_RESULT_DEPTH));
-        prog_data->discard = c->s->info.fs.uses_discard;
+        prog_data->discard = (c->s->info.fs.uses_discard ||
+                              c->fs_key->sample_alpha_to_coverage);
+        prog_data->uses_center_w = c->uses_center_w;
 
         return v3d_return_qpu_insts(c, final_assembly_size);
 }
@@ -765,8 +919,12 @@ vir_remove_instruction(struct v3d_compile *c, struct qinst *qinst)
         if (qinst->dst.file == QFILE_TEMP)
                 c->defs[qinst->dst.index] = NULL;
 
+        assert(&qinst->link != c->cursor.link);
+
         list_del(&qinst->link);
         free(qinst);
+
+        c->live_intervals_valid = false;
 }
 
 struct qreg
@@ -792,6 +950,10 @@ vir_follow_movs(struct v3d_compile *c, struct qreg reg)
 void
 vir_compile_destroy(struct v3d_compile *c)
 {
+        /* Defuse the assert that we aren't removing the cursor's instruction.
+         */
+        c->cursor.link = NULL;
+
         vir_for_each_block(block, c) {
                 while (!list_empty(&block->instructions)) {
                         struct qinst *qinst =
@@ -836,20 +998,40 @@ vir_uniform(struct v3d_compile *c,
         return vir_reg(QFILE_UNIF, uniform);
 }
 
+static bool
+vir_can_set_flags(struct v3d_compile *c, struct qinst *inst)
+{
+        if (c->devinfo->ver >= 40 && (v3d_qpu_reads_vpm(&inst->qpu) ||
+                                      v3d_qpu_uses_sfu(&inst->qpu))) {
+                return false;
+        }
+
+        return true;
+}
+
 void
 vir_PF(struct v3d_compile *c, struct qreg src, enum v3d_qpu_pf pf)
 {
         struct qinst *last_inst = NULL;
 
-        if (!list_empty(&c->cur_block->instructions))
+        if (!list_empty(&c->cur_block->instructions)) {
                 last_inst = (struct qinst *)c->cur_block->instructions.prev;
+
+                /* Can't stuff the PF into the last last inst if our cursor
+                 * isn't pointing after it.
+                 */
+                struct vir_cursor after_inst = vir_after_inst(last_inst);
+                if (c->cursor.mode != after_inst.mode ||
+                    c->cursor.link != after_inst.link)
+                        last_inst = NULL;
+        }
 
         if (src.file != QFILE_TEMP ||
             !c->defs[src.index] ||
-            last_inst != c->defs[src.index]) {
+            last_inst != c->defs[src.index] ||
+            !vir_can_set_flags(c, last_inst)) {
                 /* XXX: Make the MOV be the appropriate type */
                 last_inst = vir_MOV_dest(c, vir_reg(QFILE_NULL, 0), src);
-                last_inst = (struct qinst *)c->cur_block->instructions.prev;
         }
 
         vir_set_pf(last_inst, pf);
@@ -880,6 +1062,7 @@ vir_optimize(struct v3d_compile *c)
 
                 OPTPASS(vir_opt_copy_propagate);
                 OPTPASS(vir_opt_dead_code);
+                OPTPASS(vir_opt_small_immediates);
 
                 if (!progress)
                         break;

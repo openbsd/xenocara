@@ -157,6 +157,9 @@ void bc_dump::dump(cf_node& n) {
 
 		s << "  ES:" << n.bc.elem_size;
 
+		if (n.bc.mark)
+			s << " MARK";
+
 	} else {
 
 		if (n.bc.op_ptr->flags & CF_CLAUSE) {
@@ -232,7 +235,7 @@ static void print_dst(sb_ostream &s, bc_alu &alu)
 		reg_char = 'T';
 	}
 
-	if (alu.write_mask || alu.op_ptr->src_count == 3) {
+	if (alu.write_mask || (alu.op_ptr->src_count == 3 && alu.op < LDS_OP2_LDS_ADD)) {
 		s << reg_char;
 		print_sel(s, sel, alu.dst_rel, alu.index_mode, 0);
 	} else {
@@ -329,6 +332,27 @@ static void print_src(sb_ostream &s, bc_alu &alu, unsigned idx)
 			break;
 		case ALU_SRC_0:
 			s << "0";
+			break;
+		case ALU_SRC_TIME_LO:
+			s << "TIME_LO";
+			break;
+		case ALU_SRC_TIME_HI:
+			s << "TIME_HI";
+			break;
+		case ALU_SRC_MASK_LO:
+			s << "MASK_LO";
+			break;
+		case ALU_SRC_MASK_HI:
+			s << "MASK_HI";
+			break;
+		case ALU_SRC_HW_WAVE_ID:
+			s << "HW_WAVE_ID";
+			break;
+		case ALU_SRC_SIMD_ID:
+			s << "SIMD_ID";
+			break;
+		case ALU_SRC_SE_ID:
+			s << "SE_ID";
 			break;
 		default:
 			s << "??IMM_" <<  sel;
@@ -452,11 +476,14 @@ void bc_dump::dump(fetch_node& n) {
 	sb_ostringstream s;
 	static const char * fetch_type[] = {"VERTEX", "INSTANCE", ""};
 	unsigned gds = n.bc.op_ptr->flags & FF_GDS;
+	bool gds_has_ret = gds && n.bc.op >= FETCH_OP_GDS_ADD_RET &&
+		n.bc.op <= FETCH_OP_GDS_USHORT_READ_RET;
+	bool show_dst = !gds || (gds && gds_has_ret);
 
 	s << n.bc.op_ptr->name;
 	fill_to(s, 20);
 
-	if (!gds) {
+	if (show_dst) {
 		s << "R";
 		print_sel(s, n.bc.dst_gpr, n.bc.dst_rel, INDEX_LOOP, 0);
 		s << ".";
@@ -483,7 +510,13 @@ void bc_dump::dump(fetch_node& n) {
 		s << ",   RID:" << n.bc.resource_id;
 
 	if (gds) {
-
+		s << " UAV:" << n.bc.uav_id;
+		if (n.bc.uav_index_mode)
+			s << " UAV:SQ_CF_INDEX_" << (n.bc.uav_index_mode - V_SQ_CF_INDEX_0);
+		if (n.bc.bcast_first_req)
+			s << " BFQ";
+		if (n.bc.alloc_consume)
+			s << " AC";
 	} else if (vtx) {
 		s << "  " << fetch_type[n.bc.fetch_type];
 		if (!ctx.is_cayman() && n.bc.mega_fetch_count)
@@ -514,6 +547,18 @@ void bc_dump::dump(fetch_node& n) {
 			s << " RIM:SQ_CF_INDEX_" << (n.bc.resource_index_mode - V_SQ_CF_INDEX_0);
 		if (ctx.is_egcm() && n.bc.sampler_index_mode)
 			s << " SID:SQ_CF_INDEX_" << (n.bc.sampler_index_mode - V_SQ_CF_INDEX_0);
+	}
+
+	if (n.bc.op_ptr->flags & FF_MEM) {
+		s << ", ELEM_SIZE:" << n.bc.elem_size;
+		if (n.bc.uncached)
+			s << ", UNCACHED";
+		if (n.bc.indexed)
+			s << ", INDEXED";
+		if (n.bc.burst_count)
+			s << ", BURST_COUNT:" << n.bc.burst_count;
+		s << ", ARRAY_BASE:" << n.bc.array_base;
+		s << ", ARRAY_SIZE:" << n.bc.array_size;
 	}
 
 	sblog << s.str() << "\n";

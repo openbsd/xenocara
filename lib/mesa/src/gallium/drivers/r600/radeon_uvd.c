@@ -73,7 +73,7 @@ struct ruvd_decoder {
 
 	struct pipe_screen		*screen;
 	struct radeon_winsys*		ws;
-	struct radeon_winsys_cs*	cs;
+	struct radeon_cmdbuf*	cs;
 
 	unsigned			cur_buffer;
 
@@ -120,8 +120,7 @@ static void send_cmd(struct ruvd_decoder *dec, unsigned cmd,
 	int reloc_idx;
 
 	reloc_idx = dec->ws->cs_add_buffer(dec->cs, buf, usage | RADEON_USAGE_SYNCHRONIZED,
-					   domain,
-					  RADEON_PRIO_UVD);
+					   domain, 0);
 	if (!dec->use_legacy) {
 		uint64_t addr;
 		addr = dec->ws->buffer_get_virtual_address(buf);
@@ -1259,7 +1258,7 @@ static void ruvd_end_frame(struct pipe_video_codec *decoder,
 			 FB_BUFFER_OFFSET + dec->fb_size, RADEON_USAGE_READ, RADEON_DOMAIN_GTT);
 	set_reg(dec, dec->reg.cntl, 1);
 
-	flush(dec, RADEON_FLUSH_ASYNC);
+	flush(dec, PIPE_FLUSH_ASYNC);
 	next_buffer(dec);
 }
 
@@ -1414,7 +1413,7 @@ error:
 static unsigned texture_offset(struct radeon_surf *surface, unsigned layer)
 {
 	return surface->u.legacy.level[0].offset +
-		layer * surface->u.legacy.level[0].slice_size;
+		layer * (uint64_t)surface->u.legacy.level[0].slice_size_dw * 4;
 }
 
 /* hw encode the aspect of macro tiles */

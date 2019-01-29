@@ -54,8 +54,13 @@ _eglGetDriver(void)
 {
    mtx_lock(&_eglModuleMutex);
 
-   if (!_eglDriver)
-      _eglDriver = _eglBuiltInDriver();
+   if (!_eglDriver) {
+      _eglDriver = calloc(1, sizeof(*_eglDriver));
+      if (!_eglDriver)
+         return NULL;
+      _eglInitDriverFallbacks(_eglDriver);
+      _eglInitDriver(_eglDriver);
+   }
 
    mtx_unlock(&_eglModuleMutex);
 
@@ -84,18 +89,16 @@ _eglMatchDriver(_EGLDisplay *dpy)
    assert(!dpy->Initialized);
 
    /* set options */
-   dpy->Options.UseFallback =
+   dpy->Options.ForceSoftware =
       env_var_as_boolean("LIBGL_ALWAYS_SOFTWARE", false);
 
    best_drv = _eglMatchAndInitialize(dpy);
-   if (!best_drv) {
-      dpy->Options.UseFallback = EGL_TRUE;
+   if (!best_drv && !dpy->Options.ForceSoftware) {
+      dpy->Options.ForceSoftware = EGL_TRUE;
       best_drv = _eglMatchAndInitialize(dpy);
    }
 
    if (best_drv) {
-      _eglLog(_EGL_DEBUG, "the best driver is %s",
-            best_drv->Name);
       dpy->Driver = best_drv;
       dpy->Initialized = EGL_TRUE;
    }

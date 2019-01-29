@@ -180,8 +180,6 @@ vir_setup_def(struct v3d_compile *c, struct qblock *block, int ip,
 static void
 sf_state_clear(struct hash_table *partial_update_ht)
 {
-        struct hash_entry *entry;
-
         hash_table_foreach(partial_update_ht, entry) {
                 struct partial_update_state *state = entry->data;
 
@@ -311,10 +309,20 @@ vir_calculate_live_intervals(struct v3d_compile *c)
 {
         int bitset_words = BITSET_WORDS(c->num_temps);
 
-        /* If we called this function more than once, then we should be
-         * freeing the previous arrays.
+        /* We may be called more than once if we've rearranged the program to
+         * try to get register allocation to succeed.
          */
-        assert(!c->temp_start);
+        if (c->temp_start) {
+                ralloc_free(c->temp_start);
+                ralloc_free(c->temp_end);
+
+                vir_for_each_block(block, c) {
+                        ralloc_free(block->def);
+                        ralloc_free(block->use);
+                        ralloc_free(block->live_in);
+                        ralloc_free(block->live_out);
+                }
+        }
 
         c->temp_start = rzalloc_array(c, int, c->num_temps);
         c->temp_end = rzalloc_array(c, int, c->num_temps);
@@ -337,4 +345,6 @@ vir_calculate_live_intervals(struct v3d_compile *c)
                 ;
 
         vir_compute_start_end(c, c->num_temps);
+
+        c->live_intervals_valid = true;
 }

@@ -310,12 +310,6 @@ _swrast_depth_test_span(struct gl_context *ctx, SWspan *span)
       zBufferVals = zStart;
    }
    else {
-      if (_mesa_get_format_datatype(rb->Format) != GL_UNSIGNED_NORMALIZED) {
-         _mesa_problem(ctx, "Incorrectly writing swrast's integer depth "
-                       "values to %s depth buffer",
-                       _mesa_get_format_name(rb->Format));
-      }
-
       /* copy Z buffer values into temp buffer (32-bit Z values) */
       zBufferTemp = malloc(count * sizeof(GLuint));
       if (!zBufferTemp)
@@ -570,7 +564,8 @@ _swrast_clear_depth_buffer(struct gl_context *ctx)
    }
 
    ctx->Driver.MapRenderbuffer(ctx, rb, x, y, width, height,
-                               mapMode, &map, &rowStride);
+                               mapMode, &map, &rowStride,
+                               ctx->DrawBuffer->FlipY);
    if (!map) {
       _mesa_error(ctx, GL_OUT_OF_MEMORY, "glClear(depth)");
       return;
@@ -695,7 +690,8 @@ _swrast_clear_depth_stencil_buffer(struct gl_context *ctx)
    }
 
    ctx->Driver.MapRenderbuffer(ctx, rb, x, y, width, height,
-                               mapMode, &map, &rowStride);
+                               mapMode, &map, &rowStride,
+                               ctx->DrawBuffer->FlipY);
    if (!map) {
       _mesa_error(ctx, GL_OUT_OF_MEMORY, "glClear(depth+stencil)");
       return;

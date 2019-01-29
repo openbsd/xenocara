@@ -256,7 +256,7 @@ ensure_can_read(struct blob_reader *blob, size_t size)
    if (blob->overrun)
       return false;
 
-   if (blob->current < blob->end && blob->end - blob->current >= size)
+   if (blob->current <= blob->end && blob->end - blob->current >= size)
       return true;
 
    blob->overrun = true;
@@ -289,6 +289,13 @@ blob_copy_bytes(struct blob_reader *blob, void *dest, size_t size)
       return;
 
    memcpy(dest, bytes, size);
+}
+
+void
+blob_skip_bytes(struct blob_reader *blob, size_t size)
+{
+   if (ensure_can_read (blob, size))
+      blob->current += size;
 }
 
 /* These next three read functions have identical form. If we add any beyond

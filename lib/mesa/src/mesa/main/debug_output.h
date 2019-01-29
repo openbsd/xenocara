@@ -29,15 +29,15 @@
 
 #include <stdio.h>
 #include <stdarg.h>
-#include "compiler.h"
 #include "glheader.h"
-#include "mtypes.h"
+#include "menums.h"
 
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+struct gl_context;
 
 void
 _mesa_init_debug_output(struct gl_context *ctx);

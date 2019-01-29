@@ -198,8 +198,8 @@ blit_nearest(struct gl_context *ctx,
    /* Blit to all the draw buffers */
    for (i = 0; i < numDrawBuffers; i++) {
       if (buffer == GL_COLOR_BUFFER_BIT) {
-         int idx = drawFb->_ColorDrawBufferIndexes[i];
-         if (idx == -1)
+         gl_buffer_index idx = drawFb->_ColorDrawBufferIndexes[i];
+         if (idx == BUFFER_NONE)
             continue;
          drawAtt = &drawFb->Attachment[idx];
          drawRb = drawAtt->Renderbuffer;
@@ -253,7 +253,7 @@ blit_nearest(struct gl_context *ctx,
          ctx->Driver.MapRenderbuffer(ctx, readRb, 0, 0,
                                      readRb->Width, readRb->Height,
                                      GL_MAP_READ_BIT | GL_MAP_WRITE_BIT,
-                                     &map, &rowStride);
+                                     &map, &rowStride, readFb->FlipY);
          if (!map) {
             goto fail_no_memory;
          }
@@ -280,14 +280,16 @@ blit_nearest(struct gl_context *ctx,
          ctx->Driver.MapRenderbuffer(ctx, readRb,
                                      srcXpos, srcYpos,
                                      srcWidth, srcHeight,
-                                     GL_MAP_READ_BIT, &srcMap, &srcRowStride);
+                                     GL_MAP_READ_BIT, &srcMap, &srcRowStride,
+                                     readFb->FlipY);
          if (!srcMap) {
             goto fail_no_memory;
          }
          ctx->Driver.MapRenderbuffer(ctx, drawRb,
                                      dstXpos, dstYpos,
                                      dstWidth, dstHeight,
-                                     GL_MAP_WRITE_BIT, &dstMap, &dstRowStride);
+                                     GL_MAP_WRITE_BIT, &dstMap, &dstRowStride,
+                                     drawFb->FlipY);
          if (!dstMap) {
             ctx->Driver.UnmapRenderbuffer(ctx, readRb);
             goto fail_no_memory;
@@ -569,12 +571,12 @@ blit_linear(struct gl_context *ctx,
    }
 
    for (i = 0; i < drawFb->_NumColorDrawBuffers; i++) {
-      GLint idx = drawFb->_ColorDrawBufferIndexes[i];
+      gl_buffer_index idx = drawFb->_ColorDrawBufferIndexes[i];
       struct gl_renderbuffer_attachment *drawAtt;
       struct gl_renderbuffer *drawRb;
       mesa_format drawFormat;
 
-      if (idx == -1)
+      if (idx == BUFFER_NONE)
          continue;
 
       drawAtt = &drawFb->Attachment[idx];
@@ -594,7 +596,8 @@ blit_linear(struct gl_context *ctx,
          ctx->Driver.MapRenderbuffer(ctx, readRb,
                                      0, 0, readRb->Width, readRb->Height,
                                      GL_MAP_READ_BIT | GL_MAP_WRITE_BIT,
-                                     &srcMap, &srcRowStride);
+                                     &srcMap, &srcRowStride,
+                                     readFb->FlipY);
          if (!srcMap) {
             goto fail_no_memory;
          }
@@ -609,13 +612,15 @@ blit_linear(struct gl_context *ctx,
           */
          ctx->Driver.MapRenderbuffer(ctx, readRb,
                                      0, 0, readRb->Width, readRb->Height,
-                                     GL_MAP_READ_BIT, &srcMap, &srcRowStride);
+                                     GL_MAP_READ_BIT, &srcMap, &srcRowStride,
+                                     readFb->FlipY);
          if (!srcMap) {
             goto fail_no_memory;
          }
          ctx->Driver.MapRenderbuffer(ctx, drawRb,
                                      0, 0, drawRb->Width, drawRb->Height,
-                                     GL_MAP_WRITE_BIT, &dstMap, &dstRowStride);
+                                     GL_MAP_WRITE_BIT, &dstMap, &dstRowStride,
+                                     drawFb->FlipY);
          if (!dstMap) {
             ctx->Driver.UnmapRenderbuffer(ctx, readRb);
             goto fail_no_memory;

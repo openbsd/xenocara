@@ -37,6 +37,7 @@
 #include "main/macros.h"
 #include "util/list.h"
 #include "glsl_parser_extras.h"
+#include "main/mtypes.h"
 
 using namespace ir_builder;
 
@@ -137,13 +138,13 @@ lower_shared_reference_visitor::handle_rvalue(ir_rvalue **rvalue)
    ir_rvalue *offset = NULL;
    unsigned const_offset = get_shared_offset(var);
    bool row_major;
-   int matrix_columns;
+   const glsl_type *matrix_type;
    assert(var->get_interface_type() == NULL);
    const enum glsl_interface_packing packing = GLSL_INTERFACE_PACKING_STD430;
 
    setup_buffer_access(mem_ctx, deref,
                        &offset, &const_offset,
-                       &row_major, &matrix_columns, NULL, packing);
+                       &row_major, &matrix_type, NULL, packing);
 
    /* Now that we've calculated the offset to the start of the
     * dereference, walk over the type and emit loads into a temporary.
@@ -163,7 +164,7 @@ lower_shared_reference_visitor::handle_rvalue(ir_rvalue **rvalue)
    deref = new(mem_ctx) ir_dereference_variable(load_var);
 
    emit_access(mem_ctx, false, deref, load_offset, const_offset, row_major,
-               matrix_columns, packing, 0);
+               matrix_type, packing, 0);
 
    *rvalue = deref;
 
@@ -205,13 +206,13 @@ lower_shared_reference_visitor::handle_assignment(ir_assignment *ir)
    ir_rvalue *offset = NULL;
    unsigned const_offset = get_shared_offset(var);
    bool row_major;
-   int matrix_columns;
+   const glsl_type *matrix_type;
    assert(var->get_interface_type() == NULL);
    const enum glsl_interface_packing packing = GLSL_INTERFACE_PACKING_STD430;
 
    setup_buffer_access(mem_ctx, deref,
                        &offset, &const_offset,
-                       &row_major, &matrix_columns, NULL, packing);
+                       &row_major, &matrix_type, NULL, packing);
 
    deref = new(mem_ctx) ir_dereference_variable(store_var);
 
@@ -223,7 +224,7 @@ lower_shared_reference_visitor::handle_assignment(ir_assignment *ir)
 
    /* Now we have to write the value assigned to the temporary back to memory */
    emit_access(mem_ctx, true, deref, store_offset, const_offset, row_major,
-               matrix_columns, packing, ir->write_mask);
+               matrix_type, packing, ir->write_mask);
 
    progress = true;
 }
@@ -241,7 +242,7 @@ lower_shared_reference_visitor::insert_buffer_access(void *mem_ctx,
                                                      const glsl_type *type,
                                                      ir_rvalue *offset,
                                                      unsigned mask,
-                                                     int channel)
+                                                     int /* channel */)
 {
    if (buffer_access_type == shared_store_access) {
       ir_call *store = shared_store(mem_ctx, deref, offset, mask);
@@ -352,7 +353,8 @@ lower_shared_reference_visitor::lower_shared_atomic_intrinsic(ir_call *ir)
           inst->ir_type == ir_type_swizzle);
 
    ir_rvalue *deref = (ir_rvalue *) inst;
-   assert(deref->type->is_scalar() && deref->type->is_integer());
+   assert(deref->type->is_scalar() &&
+          (deref->type->is_integer() || deref->type->is_float()));
 
    ir_variable *var = deref->variable_referenced();
    assert(var);
@@ -364,18 +366,18 @@ lower_shared_reference_visitor::lower_shared_atomic_intrinsic(ir_call *ir)
    ir_rvalue *offset = NULL;
    unsigned const_offset = get_shared_offset(var);
    bool row_major;
-   int matrix_columns;
+   const glsl_type *matrix_type;
    assert(var->get_interface_type() == NULL);
    const enum glsl_interface_packing packing = GLSL_INTERFACE_PACKING_STD430;
    buffer_access_type = shared_atomic_access;
 
    setup_buffer_access(mem_ctx, deref,
                        &offset, &const_offset,
-                       &row_major, &matrix_columns, NULL, packing);
+                       &row_major, &matrix_type, NULL, packing);
 
    assert(offset);
    assert(!row_major);
-   assert(matrix_columns == 1);
+   assert(matrix_type == NULL);
 
    ir_rvalue *deref_offset =
       add(offset, new(mem_ctx) ir_constant(const_offset));
@@ -388,8 +390,7 @@ lower_shared_reference_visitor::lower_shared_atomic_intrinsic(ir_call *ir)
       ir_variable(glsl_type::uint_type, "offset" , ir_var_function_in);
    sig_params.push_tail(sig_param);
 
-   const glsl_type *type = deref->type->base_type == GLSL_TYPE_INT ?
-      glsl_type::int_type : glsl_type::uint_type;
+   const glsl_type *type = deref->type->get_scalar_type();
    sig_param = new(mem_ctx)
          ir_variable(type, "data1", ir_var_function_in);
    sig_params.push_tail(sig_param);

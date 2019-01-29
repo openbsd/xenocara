@@ -49,6 +49,8 @@ dce(struct v3d_compile *c, struct qinst *inst)
         }
         assert(inst->qpu.flags.apf == V3D_QPU_PF_NONE);
         assert(inst->qpu.flags.mpf == V3D_QPU_PF_NONE);
+        assert(inst->qpu.flags.auf == V3D_QPU_UF_NONE);
+        assert(inst->qpu.flags.muf == V3D_QPU_UF_NONE);
         vir_remove_instruction(c, inst);
 }
 
@@ -78,15 +80,19 @@ has_nonremovable_reads(struct v3d_compile *c, struct qinst *inst)
                         if (total_size == 1)
                                 return true;
                 }
-
-                /* Dead code removal of varyings is tricky, so just assert
-                 * that it all happened at the NIR level.
-                 */
-                if (inst->src[i].file == QFILE_VARY)
-                        return true;
         }
 
         return false;
+}
+
+static bool
+can_write_to_null(struct v3d_compile *c, struct qinst *inst)
+{
+        /* The SFU instructions must write to a physical register. */
+        if (c->devinfo->ver >= 41 && v3d_qpu_uses_sfu(&inst->qpu))
+                return false;
+
+        return true;
 }
 
 bool
@@ -114,7 +120,9 @@ vir_opt_dead_code(struct v3d_compile *c)
                                 continue;
 
                         if (inst->qpu.flags.apf != V3D_QPU_PF_NONE ||
-                            inst->qpu.flags.mpf != V3D_QPU_PF_NONE||
+                            inst->qpu.flags.mpf != V3D_QPU_PF_NONE ||
+                            inst->qpu.flags.auf != V3D_QPU_UF_NONE ||
+                            inst->qpu.flags.muf != V3D_QPU_UF_NONE ||
                             has_nonremovable_reads(c, inst)) {
                                 /* If we can't remove the instruction, but we
                                  * don't need its destination value, just
@@ -124,7 +132,8 @@ vir_opt_dead_code(struct v3d_compile *c)
                                  * it's nicer to read the VIR code without
                                  * unused destination regs.
                                  */
-                                if (inst->dst.file == QFILE_TEMP) {
+                                if (inst->dst.file == QFILE_TEMP &&
+                                    can_write_to_null(c, inst)) {
                                         if (debug) {
                                                 fprintf(stderr,
                                                         "Removing dst from: ");

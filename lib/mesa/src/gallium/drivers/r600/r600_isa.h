@@ -115,7 +115,7 @@ enum alu_op_flags
 	AF_CC_LE	= (5U << AF_CC_SHIFT),
 };
 
-/* flags for FETCH instructions (TEX/VTX) */
+/* flags for FETCH instructions (TEX/VTX/GDS) */
 enum fetch_op_flags
 {
 	FF_GDS		= (1<<0),
@@ -646,10 +646,11 @@ struct cf_op_info
 #define CF_OP_ALU_EXT                      84
 #define CF_OP_ALU_CONTINUE                 85
 #define CF_OP_ALU_BREAK                    86
-#define CF_OP_ALU_ELSE_AFTER               87
+#define CF_OP_ALU_VALID_PIXEL_MODE         87
+#define CF_OP_ALU_ELSE_AFTER               88
 
 /* CF_NATIVE means that r600_bytecode_cf contains pre-encoded native data */
-#define CF_NATIVE                          88
+#define CF_NATIVE                          89
 
 enum r600_chip_class {
 	ISA_CC_R600,
