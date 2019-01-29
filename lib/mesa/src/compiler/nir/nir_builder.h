@@ -25,6 +25,7 @@
 #define NIR_BUILDER_H
 
 #include "nir_control_flow.h"
+#include "util/half_float.h"
 
 struct exec_list;
 
@@ -206,6 +207,40 @@ nir_build_imm(nir_builder *build, unsigned num_components,
 }
 
 static inline nir_ssa_def *
+nir_imm_bool(nir_builder *build, bool x)
+{
+   nir_const_value v;
+
+   memset(&v, 0, sizeof(v));
+   v.u32[0] = x ? NIR_TRUE : NIR_FALSE;
+
+   return nir_build_imm(build, 1, 32, v);
+}
+
+static inline nir_ssa_def *
+nir_imm_true(nir_builder *build)
+{
+   return nir_imm_bool(build, true);
+}
+
+static inline nir_ssa_def *
+nir_imm_false(nir_builder *build)
+{
+   return nir_imm_bool(build, false);
+}
+
+static inline nir_ssa_def *
+nir_imm_float16(nir_builder *build, float x)
+{
+   nir_const_value v;
+
+   memset(&v, 0, sizeof(v));
+   v.u16[0] = _mesa_float_to_half(x);
+
+   return nir_build_imm(build, 1, 16, v);
+}
+
+static inline nir_ssa_def *
 nir_imm_float(nir_builder *build, float x)
 {
    nir_const_value v;
@@ -228,6 +263,21 @@ nir_imm_double(nir_builder *build, double x)
 }
 
 static inline nir_ssa_def *
+nir_imm_floatN_t(nir_builder *build, double x, unsigned bit_size)
+{
+   switch (bit_size) {
+   case 16:
+      return nir_imm_float16(build, x);
+   case 32:
+      return nir_imm_float(build, x);
+   case 64:
+      return nir_imm_double(build, x);
+   }
+
+   unreachable("unknown float immediate bit size");
+}
+
+static inline nir_ssa_def *
 nir_imm_vec4(nir_builder *build, float x, float y, float z, float w)
 {
    nir_const_value v;
@@ -239,6 +289,18 @@ nir_imm_vec4(nir_builder *build, float x, float y, float z, float w)
    v.f32[3] = w;
 
    return nir_build_imm(build, 4, 32, v);
+}
+
+static inline nir_ssa_def *
+nir_imm_ivec2(nir_builder *build, int x, int y)
+{
+   nir_const_value v;
+
+   memset(&v, 0, sizeof(v));
+   v.i32[0] = x;
+   v.i32[1] = y;
+
+   return nir_build_imm(build, 2, 32, v);
 }
 
 static inline nir_ssa_def *
@@ -261,6 +323,18 @@ nir_imm_int64(nir_builder *build, int64_t x)
    v.i64[0] = x;
 
    return nir_build_imm(build, 1, 64, v);
+}
+
+static inline nir_ssa_def *
+nir_imm_intN_t(nir_builder *build, uint64_t x, unsigned bit_size)
+{
+   nir_const_value v;
+
+   memset(&v, 0, sizeof(v));
+   assert(bit_size <= 64);
+   v.i64[0] = x & (~0ull >> (64 - bit_size));
+
+   return nir_build_imm(build, 1, bit_size, v);
 }
 
 static inline nir_ssa_def *
@@ -336,7 +410,8 @@ nir_build_alu(nir_builder *build, nir_op op, nir_ssa_def *src0,
     * scalar value was passed into a multiply with a vector).
     */
    for (unsigned i = 0; i < op_info->num_inputs; i++) {
-      for (unsigned j = instr->src[i].src.ssa->num_components; j < 4; j++) {
+      for (unsigned j = instr->src[i].src.ssa->num_components;
+           j < NIR_MAX_VEC_COMPONENTS; j++) {
          instr->src[i].swizzle[j] = instr->src[i].src.ssa->num_components - 1;
       }
    }
@@ -405,12 +480,13 @@ nir_imov_alu(nir_builder *build, nir_alu_src src, unsigned num_components)
  * Construct an fmov or imov that reswizzles the source's components.
  */
 static inline nir_ssa_def *
-nir_swizzle(nir_builder *build, nir_ssa_def *src, const unsigned swiz[4],
+nir_swizzle(nir_builder *build, nir_ssa_def *src, const unsigned *swiz,
             unsigned num_components, bool use_fmov)
 {
+   assert(num_components <= NIR_MAX_VEC_COMPONENTS);
    nir_alu_src alu_src = { NIR_SRC_INIT };
    alu_src.src = nir_src_for_ssa(src);
-   for (unsigned i = 0; i < num_components; i++)
+   for (unsigned i = 0; i < num_components && i < NIR_MAX_VEC_COMPONENTS; i++)
       alu_src.swizzle[i] = swiz[i];
 
    return use_fmov ? nir_fmov_alu(build, alu_src, num_components) :
@@ -450,22 +526,21 @@ nir_bany_inequal(nir_builder *b, nir_ssa_def *src0, nir_ssa_def *src1)
 static inline nir_ssa_def *
 nir_bany(nir_builder *b, nir_ssa_def *src)
 {
-   return nir_bany_inequal(b, src, nir_imm_int(b, 0));
+   return nir_bany_inequal(b, src, nir_imm_false(b));
 }
 
 static inline nir_ssa_def *
 nir_channel(nir_builder *b, nir_ssa_def *def, unsigned c)
 {
-   unsigned swizzle[4] = {c, c, c, c};
-   return nir_swizzle(b, def, swizzle, 1, false);
+   return nir_swizzle(b, def, &c, 1, false);
 }
 
 static inline nir_ssa_def *
-nir_channels(nir_builder *b, nir_ssa_def *def, unsigned mask)
+nir_channels(nir_builder *b, nir_ssa_def *def, nir_component_mask_t mask)
 {
-   unsigned num_channels = 0, swizzle[4] = { 0, 0, 0, 0 };
+   unsigned num_channels = 0, swizzle[NIR_MAX_VEC_COMPONENTS] = { 0 };
 
-   for (unsigned i = 0; i < 4; i++) {
+   for (unsigned i = 0; i < NIR_MAX_VEC_COMPONENTS; i++) {
       if ((mask & (1 << i)) == 0)
          continue;
       swizzle[num_channels++] = i;
@@ -501,7 +576,9 @@ nir_ssa_for_src(nir_builder *build, nir_src src, int num_components)
 static inline nir_ssa_def *
 nir_ssa_for_alu_src(nir_builder *build, nir_alu_instr *instr, unsigned srcn)
 {
-   static uint8_t trivial_swizzle[4] = { 0, 1, 2, 3 };
+   static uint8_t trivial_swizzle[NIR_MAX_VEC_COMPONENTS];
+   for (int i = 0; i < NIR_MAX_VEC_COMPONENTS; ++i)
+      trivial_swizzle[i] = i;
    nir_alu_src *src = &instr->src[srcn];
    unsigned num_components = nir_ssa_alu_instr_src_components(instr, srcn);
 
@@ -513,117 +590,240 @@ nir_ssa_for_alu_src(nir_builder *build, nir_alu_instr *instr, unsigned srcn)
    return nir_imov_alu(build, *src, num_components);
 }
 
-static inline nir_ssa_def *
-nir_load_var(nir_builder *build, nir_variable *var)
+static inline nir_deref_instr *
+nir_build_deref_var(nir_builder *build, nir_variable *var)
 {
-   const unsigned num_components = glsl_get_vector_elements(var->type);
+   nir_deref_instr *deref =
+      nir_deref_instr_create(build->shader, nir_deref_type_var);
 
+   deref->mode = var->data.mode;
+   deref->type = var->type;
+   deref->var = var;
+
+   nir_ssa_dest_init(&deref->instr, &deref->dest, 1, 32, NULL);
+
+   nir_builder_instr_insert(build, &deref->instr);
+
+   return deref;
+}
+
+static inline nir_deref_instr *
+nir_build_deref_array(nir_builder *build, nir_deref_instr *parent,
+                      nir_ssa_def *index)
+{
+   assert(glsl_type_is_array(parent->type) ||
+          glsl_type_is_matrix(parent->type) ||
+          glsl_type_is_vector(parent->type));
+
+   nir_deref_instr *deref =
+      nir_deref_instr_create(build->shader, nir_deref_type_array);
+
+   deref->mode = parent->mode;
+   deref->type = glsl_get_array_element(parent->type);
+   deref->parent = nir_src_for_ssa(&parent->dest.ssa);
+   deref->arr.index = nir_src_for_ssa(index);
+
+   nir_ssa_dest_init(&deref->instr, &deref->dest,
+                     parent->dest.ssa.num_components,
+                     parent->dest.ssa.bit_size, NULL);
+
+   nir_builder_instr_insert(build, &deref->instr);
+
+   return deref;
+}
+
+static inline nir_deref_instr *
+nir_build_deref_array_wildcard(nir_builder *build, nir_deref_instr *parent)
+{
+   assert(glsl_type_is_array(parent->type) ||
+          glsl_type_is_matrix(parent->type));
+
+   nir_deref_instr *deref =
+      nir_deref_instr_create(build->shader, nir_deref_type_array_wildcard);
+
+   deref->mode = parent->mode;
+   deref->type = glsl_get_array_element(parent->type);
+   deref->parent = nir_src_for_ssa(&parent->dest.ssa);
+
+   nir_ssa_dest_init(&deref->instr, &deref->dest,
+                     parent->dest.ssa.num_components,
+                     parent->dest.ssa.bit_size, NULL);
+
+   nir_builder_instr_insert(build, &deref->instr);
+
+   return deref;
+}
+
+static inline nir_deref_instr *
+nir_build_deref_struct(nir_builder *build, nir_deref_instr *parent,
+                       unsigned index)
+{
+   assert(glsl_type_is_struct(parent->type));
+
+   nir_deref_instr *deref =
+      nir_deref_instr_create(build->shader, nir_deref_type_struct);
+
+   deref->mode = parent->mode;
+   deref->type = glsl_get_struct_field(parent->type, index);
+   deref->parent = nir_src_for_ssa(&parent->dest.ssa);
+   deref->strct.index = index;
+
+   nir_ssa_dest_init(&deref->instr, &deref->dest,
+                     parent->dest.ssa.num_components,
+                     parent->dest.ssa.bit_size, NULL);
+
+   nir_builder_instr_insert(build, &deref->instr);
+
+   return deref;
+}
+
+static inline nir_deref_instr *
+nir_build_deref_cast(nir_builder *build, nir_ssa_def *parent,
+                     nir_variable_mode mode, const struct glsl_type *type)
+{
+   nir_deref_instr *deref =
+      nir_deref_instr_create(build->shader, nir_deref_type_cast);
+
+   deref->mode = mode;
+   deref->type = type;
+   deref->parent = nir_src_for_ssa(parent);
+
+   nir_ssa_dest_init(&deref->instr, &deref->dest,
+                     parent->num_components, parent->bit_size, NULL);
+
+   nir_builder_instr_insert(build, &deref->instr);
+
+   return deref;
+}
+
+/** Returns a deref that follows another but starting from the given parent
+ *
+ * The new deref will be the same type and take the same array or struct index
+ * as the leader deref but it may have a different parent.  This is very
+ * useful for walking deref paths.
+ */
+static inline nir_deref_instr *
+nir_build_deref_follower(nir_builder *b, nir_deref_instr *parent,
+                         nir_deref_instr *leader)
+{
+   /* If the derefs would have the same parent, don't make a new one */
+   assert(leader->parent.is_ssa);
+   if (leader->parent.ssa == &parent->dest.ssa)
+      return leader;
+
+   UNUSED nir_deref_instr *leader_parent = nir_src_as_deref(leader->parent);
+
+   switch (leader->deref_type) {
+   case nir_deref_type_var:
+      unreachable("A var dereference cannot have a parent");
+      break;
+
+   case nir_deref_type_array:
+   case nir_deref_type_array_wildcard:
+      assert(glsl_type_is_matrix(parent->type) ||
+             glsl_type_is_array(parent->type));
+      assert(glsl_get_length(parent->type) ==
+             glsl_get_length(leader_parent->type));
+
+      if (leader->deref_type == nir_deref_type_array) {
+         assert(leader->arr.index.is_ssa);
+         return nir_build_deref_array(b, parent, leader->arr.index.ssa);
+      } else {
+         return nir_build_deref_array_wildcard(b, parent);
+      }
+
+   case nir_deref_type_struct:
+      assert(glsl_type_is_struct(parent->type));
+      assert(glsl_get_length(parent->type) ==
+             glsl_get_length(leader_parent->type));
+
+      return nir_build_deref_struct(b, parent, leader->strct.index);
+
+   default:
+      unreachable("Invalid deref instruction type");
+   }
+}
+
+static inline nir_ssa_def *
+nir_load_reg(nir_builder *build, nir_register *reg)
+{
+   return nir_ssa_for_src(build, nir_src_for_reg(reg), reg->num_components);
+}
+
+static inline nir_ssa_def *
+nir_load_deref(nir_builder *build, nir_deref_instr *deref)
+{
    nir_intrinsic_instr *load =
-      nir_intrinsic_instr_create(build->shader, nir_intrinsic_load_var);
-   load->num_components = num_components;
-   load->variables[0] = nir_deref_var_create(load, var);
-   nir_ssa_dest_init(&load->instr, &load->dest, num_components,
-                     glsl_get_bit_size(var->type), NULL);
+      nir_intrinsic_instr_create(build->shader, nir_intrinsic_load_deref);
+   load->num_components = glsl_get_vector_elements(deref->type);
+   load->src[0] = nir_src_for_ssa(&deref->dest.ssa);
+   nir_ssa_dest_init(&load->instr, &load->dest, load->num_components,
+                     glsl_get_bit_size(deref->type), NULL);
    nir_builder_instr_insert(build, &load->instr);
    return &load->dest.ssa;
 }
 
-static inline nir_ssa_def *
-nir_load_deref_var(nir_builder *build, nir_deref_var *deref)
+static inline void
+nir_store_deref(nir_builder *build, nir_deref_instr *deref,
+                nir_ssa_def *value, unsigned writemask)
 {
-   const struct glsl_type *type = nir_deref_tail(&deref->deref)->type;
-   const unsigned num_components = glsl_get_vector_elements(type);
+   nir_intrinsic_instr *store =
+      nir_intrinsic_instr_create(build->shader, nir_intrinsic_store_deref);
+   store->num_components = glsl_get_vector_elements(deref->type);
+   store->src[0] = nir_src_for_ssa(&deref->dest.ssa);
+   store->src[1] = nir_src_for_ssa(value);
+   nir_intrinsic_set_write_mask(store,
+                                writemask & ((1 << store->num_components) - 1));
+   nir_builder_instr_insert(build, &store->instr);
+}
 
-   nir_intrinsic_instr *load =
-      nir_intrinsic_instr_create(build->shader, nir_intrinsic_load_var);
-   load->num_components = num_components;
-   load->variables[0] = nir_deref_var_clone(deref, load);
-   nir_ssa_dest_init(&load->instr, &load->dest, num_components,
-                     glsl_get_bit_size(type), NULL);
-   nir_builder_instr_insert(build, &load->instr);
-   return &load->dest.ssa;
+static inline void
+nir_copy_deref(nir_builder *build, nir_deref_instr *dest, nir_deref_instr *src)
+{
+   nir_intrinsic_instr *copy =
+      nir_intrinsic_instr_create(build->shader, nir_intrinsic_copy_deref);
+   copy->src[0] = nir_src_for_ssa(&dest->dest.ssa);
+   copy->src[1] = nir_src_for_ssa(&src->dest.ssa);
+   nir_builder_instr_insert(build, &copy->instr);
+}
+
+static inline nir_ssa_def *
+nir_load_var(nir_builder *build, nir_variable *var)
+{
+   return nir_load_deref(build, nir_build_deref_var(build, var));
 }
 
 static inline void
 nir_store_var(nir_builder *build, nir_variable *var, nir_ssa_def *value,
               unsigned writemask)
 {
-   const unsigned num_components = glsl_get_vector_elements(var->type);
-
-   nir_intrinsic_instr *store =
-      nir_intrinsic_instr_create(build->shader, nir_intrinsic_store_var);
-   store->num_components = num_components;
-   nir_intrinsic_set_write_mask(store, writemask);
-   store->variables[0] = nir_deref_var_create(store, var);
-   store->src[0] = nir_src_for_ssa(value);
-   nir_builder_instr_insert(build, &store->instr);
-}
-
-static inline void
-nir_store_deref_var(nir_builder *build, nir_deref_var *deref,
-                    nir_ssa_def *value, unsigned writemask)
-{
-   const unsigned num_components =
-      glsl_get_vector_elements(nir_deref_tail(&deref->deref)->type);
-
-   nir_intrinsic_instr *store =
-      nir_intrinsic_instr_create(build->shader, nir_intrinsic_store_var);
-   store->num_components = num_components;
-   store->const_index[0] = writemask & ((1 << num_components) - 1);
-   store->variables[0] = nir_deref_var_clone(deref, store);
-   store->src[0] = nir_src_for_ssa(value);
-   nir_builder_instr_insert(build, &store->instr);
-}
-
-static inline void
-nir_copy_deref_var(nir_builder *build, nir_deref_var *dest, nir_deref_var *src)
-{
-   assert(nir_deref_tail(&dest->deref)->type ==
-          nir_deref_tail(&src->deref)->type);
-
-   nir_intrinsic_instr *copy =
-      nir_intrinsic_instr_create(build->shader, nir_intrinsic_copy_var);
-   copy->variables[0] = nir_deref_var_clone(dest, copy);
-   copy->variables[1] = nir_deref_var_clone(src, copy);
-   nir_builder_instr_insert(build, &copy->instr);
+   nir_store_deref(build, nir_build_deref_var(build, var), value, writemask);
 }
 
 static inline void
 nir_copy_var(nir_builder *build, nir_variable *dest, nir_variable *src)
 {
-   nir_intrinsic_instr *copy =
-      nir_intrinsic_instr_create(build->shader, nir_intrinsic_copy_var);
-   copy->variables[0] = nir_deref_var_create(copy, dest);
-   copy->variables[1] = nir_deref_var_create(copy, src);
-   nir_builder_instr_insert(build, &copy->instr);
+   nir_copy_deref(build, nir_build_deref_var(build, dest),
+                         nir_build_deref_var(build, src));
 }
 
-/* Generic builder for system values. */
 static inline nir_ssa_def *
-nir_load_system_value(nir_builder *build, nir_intrinsic_op op, int index)
+nir_load_param(nir_builder *build, uint32_t param_idx)
 {
-   nir_intrinsic_instr *load = nir_intrinsic_instr_create(build->shader, op);
-   load->num_components = nir_intrinsic_infos[op].dest_components;
-   load->const_index[0] = index;
+   assert(param_idx < build->impl->function->num_params);
+   nir_parameter *param = &build->impl->function->params[param_idx];
+
+   nir_intrinsic_instr *load =
+      nir_intrinsic_instr_create(build->shader, nir_intrinsic_load_param);
+   nir_intrinsic_set_param_idx(load, param_idx);
+   load->num_components = param->num_components;
    nir_ssa_dest_init(&load->instr, &load->dest,
-                     nir_intrinsic_infos[op].dest_components, 32, NULL);
+                     param->num_components, param->bit_size, NULL);
    nir_builder_instr_insert(build, &load->instr);
    return &load->dest.ssa;
 }
 
-/* Generate custom builders for system values. */
-#define INTRINSIC(name, num_srcs, src_components, has_dest, dest_components, \
-                  num_variables, num_indices, idx0, idx1, idx2, flags)
-#define LAST_INTRINSIC(name)
-
-#define DEFINE_SYSTEM_VALUE(name)                                        \
-   static inline nir_ssa_def *                                           \
-   nir_load_##name(nir_builder *build)                                   \
-   {                                                                     \
-      return nir_load_system_value(build, nir_intrinsic_load_##name, 0); \
-   }
-
-#include "nir_intrinsics.h"
+#include "nir_builder_opcodes.h"
 
 static inline nir_ssa_def *
 nir_load_barycentric(nir_builder *build, nir_intrinsic_op op,

@@ -26,7 +26,7 @@
  *
  **************************************************************************/
 
-#if HAVE_GALLIUM_EXTRA_HUD
+#ifdef HAVE_GALLIUM_EXTRA_HUD
 
 /* Purpose: Reading /sys/block/<*>/stat MB/s read/write throughput per second,
  * displaying on the HUD.
@@ -34,7 +34,7 @@
 
 #include "hud/hud_private.h"
 #include "util/list.h"
-#include "os/os_time.h"
+#include "util/os_time.h"
 #include "os/os_thread.h"
 #include "util/u_memory.h"
 #include <stdio.h>
@@ -117,7 +117,7 @@ get_file_values(const char *fn, struct stat_s *s)
 }
 
 static void
-query_dsi_load(struct hud_graph *gr)
+query_dsi_load(struct hud_graph *gr, struct pipe_context *pipe)
 {
    /* The framework calls us periodically, compensate for the
     * calling interval accordingly when reporting per second.

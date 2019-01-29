@@ -57,16 +57,12 @@ extern const struct brw_tracked_state brw_recalculate_urb_fence;
 extern const struct brw_tracked_state brw_sf_vp;
 extern const struct brw_tracked_state brw_cs_texture_surfaces;
 extern const struct brw_tracked_state brw_vs_ubo_surfaces;
-extern const struct brw_tracked_state brw_vs_abo_surfaces;
 extern const struct brw_tracked_state brw_vs_image_surfaces;
 extern const struct brw_tracked_state brw_tcs_ubo_surfaces;
-extern const struct brw_tracked_state brw_tcs_abo_surfaces;
 extern const struct brw_tracked_state brw_tcs_image_surfaces;
 extern const struct brw_tracked_state brw_tes_ubo_surfaces;
-extern const struct brw_tracked_state brw_tes_abo_surfaces;
 extern const struct brw_tracked_state brw_tes_image_surfaces;
 extern const struct brw_tracked_state brw_gs_ubo_surfaces;
-extern const struct brw_tracked_state brw_gs_abo_surfaces;
 extern const struct brw_tracked_state brw_gs_image_surfaces;
 extern const struct brw_tracked_state brw_renderbuffer_surfaces;
 extern const struct brw_tracked_state brw_renderbuffer_read_surfaces;
@@ -77,10 +73,8 @@ extern const struct brw_tracked_state brw_tes_binding_table;
 extern const struct brw_tracked_state brw_tcs_binding_table;
 extern const struct brw_tracked_state brw_vs_binding_table;
 extern const struct brw_tracked_state brw_wm_ubo_surfaces;
-extern const struct brw_tracked_state brw_wm_abo_surfaces;
 extern const struct brw_tracked_state brw_wm_image_surfaces;
 extern const struct brw_tracked_state brw_cs_ubo_surfaces;
-extern const struct brw_tracked_state brw_cs_abo_surfaces;
 extern const struct brw_tracked_state brw_cs_image_surfaces;
 
 extern const struct brw_tracked_state brw_psp_urb_cbs;
@@ -95,7 +89,6 @@ extern const struct brw_tracked_state gen6_sampler_state;
 extern const struct brw_tracked_state gen6_sol_surface;
 extern const struct brw_tracked_state gen6_sf_vp;
 extern const struct brw_tracked_state gen6_urb;
-extern const struct brw_tracked_state gen7_depthbuffer;
 extern const struct brw_tracked_state gen7_l3_state;
 extern const struct brw_tracked_state gen7_push_constant_space;
 extern const struct brw_tracked_state gen7_urb;
@@ -121,14 +114,18 @@ void brw_upload_invariant_state(struct brw_context *brw);
 uint32_t
 brw_depthbuffer_format(struct brw_context *brw);
 
-uint32_t
-brw_convert_depth_value(mesa_format format, float value);
-
 void brw_upload_state_base_address(struct brw_context *brw);
 
 /* gen8_depth_state.c */
 void gen8_write_pma_stall_bits(struct brw_context *brw,
                                uint32_t pma_stall_bits);
+
+/* brw_disk_cache.c */
+void brw_disk_cache_init(struct intel_screen *screen);
+bool brw_disk_cache_upload_program(struct brw_context *brw,
+                                   gl_shader_stage stage);
+void brw_disk_cache_write_compute_program(struct brw_context *brw);
+void brw_disk_cache_write_render_programs(struct brw_context *brw);
 
 /***********************************************************************
  * brw_state.c
@@ -166,11 +163,9 @@ void brw_upload_cache(struct brw_cache *cache,
                       GLuint aux_sz,
                       uint32_t *out_offset, void *out_aux);
 
-bool brw_search_cache(struct brw_cache *cache,
-                      enum brw_cache_id cache_id,
-                      const void *key,
-                      GLuint key_size,
-                      uint32_t *inout_offset, void *inout_aux);
+bool brw_search_cache(struct brw_cache *cache, enum brw_cache_id cache_id,
+                      const void *key, GLuint key_size, uint32_t *inout_offset,
+                      void *inout_aux, bool flag_state);
 
 const void *brw_find_previous_compile(struct brw_cache *cache,
                                       enum brw_cache_id cache_id,
@@ -183,11 +178,12 @@ void brw_destroy_caches( struct brw_context *brw );
 
 void brw_print_program_cache(struct brw_context *brw);
 
+enum brw_cache_id brw_stage_cache_id(gl_shader_stage stage);
+
 /* intel_batchbuffer.c */
 void brw_require_statebuffer_space(struct brw_context *brw, int size);
 void *brw_state_batch(struct brw_context *brw,
                       int size, int alignment, uint32_t *out_offset);
-uint32_t brw_state_batch_size(struct brw_context *brw, uint32_t offset);
 
 /* brw_wm_surface_state.c */
 uint32_t brw_get_surface_tiling_bits(uint32_t tiling);
@@ -333,6 +329,7 @@ void gen75_init_atoms(struct brw_context *brw);
 void gen8_init_atoms(struct brw_context *brw);
 void gen9_init_atoms(struct brw_context *brw);
 void gen10_init_atoms(struct brw_context *brw);
+void gen11_init_atoms(struct brw_context *brw);
 
 /* Memory Object Control State:
  * Specifying zero for L3 means "uncached in L3", at least on Haswell
@@ -383,6 +380,12 @@ void gen10_init_atoms(struct brw_context *brw);
 #define CNL_MOCS_WB  (2 << 1)
 /* TC=LLC/eLLC, LeCC=PTE, LRUM=3, L3CC=WB */
 #define CNL_MOCS_PTE (1 << 1)
+
+/* Ice Lake uses same MOCS settings as Cannonlake */
+/* TC=LLC/eLLC, LeCC=WB, LRUM=3, L3CC=WB */
+#define ICL_MOCS_WB  (2 << 1)
+/* TC=LLC/eLLC, LeCC=PTE, LRUM=3, L3CC=WB */
+#define ICL_MOCS_PTE (1 << 1)
 
 uint32_t brw_get_bo_mocs(const struct gen_device_info *devinfo,
                          struct brw_bo *bo);

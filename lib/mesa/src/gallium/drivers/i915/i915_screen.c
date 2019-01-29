@@ -27,11 +27,12 @@
 
 
 #include "draw/draw_context.h"
-#include "os/os_misc.h"
+#include "util/os_misc.h"
 #include "util/u_format.h"
 #include "util/u_format_s3tc.h"
 #include "util/u_inlines.h"
 #include "util/u_memory.h"
+#include "util/u_screen.h"
 #include "util/u_string.h"
 
 #include "i915_reg.h"
@@ -168,6 +169,11 @@ i915_get_shader_param(struct pipe_screen *screen,
       case PIPE_SHADER_CAP_TGSI_LDEXP_SUPPORTED:
       case PIPE_SHADER_CAP_TGSI_FMA_SUPPORTED:
       case PIPE_SHADER_CAP_TGSI_ANY_INOUT_DECL_RANGE:
+      case PIPE_SHADER_CAP_MAX_SHADER_BUFFERS:
+      case PIPE_SHADER_CAP_MAX_SHADER_IMAGES:
+      case PIPE_SHADER_CAP_LOWER_IF_THRESHOLD:
+      case PIPE_SHADER_CAP_PREFERRED_IR:
+      case PIPE_SHADER_CAP_TGSI_SKIP_MERGE_REGISTERS:
          return 0;
       case PIPE_SHADER_CAP_MAX_UNROLL_ITERATIONS_HINT:
          return 32;
@@ -194,24 +200,23 @@ i915_get_param(struct pipe_screen *screen, enum pipe_cap cap)
    case PIPE_CAP_MIXED_FRAMEBUFFER_SIZES:
    case PIPE_CAP_POINT_SPRITE:
    case PIPE_CAP_PRIMITIVE_RESTART: /* draw module */
-   case PIPE_CAP_TEXTURE_SHADOW_MAP:
-   case PIPE_CAP_TWO_SIDED_STENCIL:
    case PIPE_CAP_VERTEX_ELEMENT_INSTANCE_DIVISOR:
    case PIPE_CAP_BLEND_EQUATION_SEPARATE:
    case PIPE_CAP_TGSI_INSTANCEID:
    case PIPE_CAP_VERTEX_COLOR_CLAMPED:
    case PIPE_CAP_USER_VERTEX_BUFFERS:
-   case PIPE_CAP_USER_CONSTANT_BUFFERS:
    case PIPE_CAP_MIXED_COLOR_DEPTH_BITS:
       return 1;
 
    /* Unsupported features (boolean caps). */
    case PIPE_CAP_MAX_TEXTURE_ARRAY_LAYERS:
    case PIPE_CAP_DEPTH_CLIP_DISABLE:
+   case PIPE_CAP_DEPTH_CLIP_DISABLE_SEPARATE:
    case PIPE_CAP_INDEP_BLEND_ENABLE:
    case PIPE_CAP_INDEP_BLEND_FUNC:
    case PIPE_CAP_SHADER_STENCIL_EXPORT:
    case PIPE_CAP_TEXTURE_MIRROR_CLAMP:
+   case PIPE_CAP_TEXTURE_MIRROR_CLAMP_TO_EDGE:
    case PIPE_CAP_TEXTURE_SWIZZLE:
    case PIPE_CAP_QUERY_TIME_ELAPSED:
    case PIPE_CAP_SM3:
@@ -281,6 +286,13 @@ i915_get_param(struct pipe_screen *screen, enum pipe_cap cap)
    case PIPE_CAP_TGSI_ARRAY_COMPONENTS:
    case PIPE_CAP_POLYGON_MODE_FILL_RECTANGLE:
    case PIPE_CAP_POST_DEPTH_COVERAGE:
+   case PIPE_CAP_CONSERVATIVE_RASTER_POST_SNAP_TRIANGLES:
+   case PIPE_CAP_CONSERVATIVE_RASTER_POST_SNAP_POINTS_LINES:
+   case PIPE_CAP_CONSERVATIVE_RASTER_PRE_SNAP_TRIANGLES:
+   case PIPE_CAP_CONSERVATIVE_RASTER_PRE_SNAP_POINTS_LINES:
+   case PIPE_CAP_CONSERVATIVE_RASTER_POST_DEPTH_COVERAGE:
+   case PIPE_CAP_MAX_CONSERVATIVE_RASTER_SUBPIXEL_PRECISION_BIAS:
+   case PIPE_CAP_MAX_TEXTURE_UPLOAD_MEMORY_BUDGET:
       return 0;
 
    case PIPE_CAP_MAX_DUAL_SOURCE_RENDER_TARGETS:
@@ -319,7 +331,21 @@ i915_get_param(struct pipe_screen *screen, enum pipe_cap cap)
    case PIPE_CAP_LOAD_CONSTBUF:
    case PIPE_CAP_TGSI_ANY_REG_AS_ADDRESS:
    case PIPE_CAP_TILE_RASTER_ORDER:
+   case PIPE_CAP_MAX_COMBINED_SHADER_OUTPUT_RESOURCES:
+   case PIPE_CAP_FRAMEBUFFER_MSAA_CONSTRAINTS:
+   case PIPE_CAP_SIGNED_VERTEX_BUFFER_OFFSET:
+   case PIPE_CAP_CONTEXT_PRIORITY_MASK:
+   case PIPE_CAP_FENCE_SIGNAL:
+   case PIPE_CAP_CONSTBUF0_FLAGS:
+   case PIPE_CAP_PACKED_UNIFORMS:
+   case PIPE_CAP_PROGRAMMABLE_SAMPLE_LOCATIONS:
       return 0;
+
+   case PIPE_CAP_MAX_GS_INVOCATIONS:
+      return 32;
+
+   case PIPE_CAP_MAX_SHADER_BUFFER_SIZE:
+      return 1 << 27;
 
    case PIPE_CAP_MAX_VIEWPORTS:
       return 1;
@@ -328,6 +354,7 @@ i915_get_param(struct pipe_screen *screen, enum pipe_cap cap)
       return 64;
 
    case PIPE_CAP_GLSL_FEATURE_LEVEL:
+   case PIPE_CAP_GLSL_FEATURE_LEVEL_COMPATIBILITY:
       return 120;
 
    case PIPE_CAP_CONSTANT_BUFFER_OFFSET_ALIGNMENT:
@@ -398,9 +425,12 @@ i915_get_param(struct pipe_screen *screen, enum pipe_cap cap)
    case PIPE_CAP_UMA:
       return 1;
 
-   default:
-      debug_printf("%s: Unknown cap %u.\n", __FUNCTION__, cap);
+   case PIPE_CAP_COMPUTE:
+   case PIPE_CAP_QUERY_BUFFER_OBJECT:
       return 0;
+
+   default:
+      return u_pipe_screen_get_param_defaults(screen, cap);
    }
 }
 
@@ -424,6 +454,13 @@ i915_get_paramf(struct pipe_screen *screen, enum pipe_capf cap)
    case PIPE_CAPF_MAX_TEXTURE_LOD_BIAS:
       return 16.0;
 
+   case PIPE_CAPF_MIN_CONSERVATIVE_RASTER_DILATE:
+      /* fall-through */
+   case PIPE_CAPF_MAX_CONSERVATIVE_RASTER_DILATE:
+      /* fall-through */
+   case PIPE_CAPF_CONSERVATIVE_RASTER_DILATE_GRANULARITY:
+      return 0.0f;
+
    default:
       debug_printf("%s: Unknown cap %u.\n", __FUNCTION__, cap);
       return 0;
@@ -435,6 +472,7 @@ i915_is_format_supported(struct pipe_screen *screen,
                          enum pipe_format format,
                          enum pipe_texture_target target,
                          unsigned sample_count,
+                         unsigned storage_sample_count,
                          unsigned tex_usage)
 {
    static const enum pipe_format tex_supported[] = {
@@ -487,11 +525,11 @@ i915_is_format_supported(struct pipe_screen *screen,
    const enum pipe_format *list;
    uint i;
 
-   if (!util_format_is_supported(format, tex_usage))
-      return FALSE;
-
    if (sample_count > 1)
       return FALSE;
+
+   if (MAX2(1, sample_count) != MAX2(1, storage_sample_count))
+      return false;
 
    if(tex_usage & PIPE_BIND_DEPTH_STENCIL)
       list = depth_supported;

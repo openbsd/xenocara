@@ -36,8 +36,10 @@
 
 
 #include "c99_math.h"
+#include "main/errors.h"
 #include "main/glheader.h"
 #include "main/macros.h"
+#include "main/mtypes.h"
 #include "prog_execute.h"
 #include "prog_instruction.h"
 #include "prog_parameter.h"
@@ -117,11 +119,13 @@ get_src_register_pointer(const struct prog_src_register *source,
       /* Fallthrough */
    case PROGRAM_CONSTANT:
       /* Fallthrough */
-   case PROGRAM_UNIFORM:
+   case PROGRAM_UNIFORM: {
       if (reg >= (GLint) prog->Parameters->NumParameters)
          return ZeroVec;
-      return (GLfloat *) prog->Parameters->ParameterValues[reg];
 
+      unsigned pvo = prog->Parameters->ParameterValueOffset[reg];
+      return (GLfloat *) prog->Parameters->ParameterValues + pvo;
+   }
    case PROGRAM_SYSTEM_VALUE:
       assert(reg < (GLint) ARRAY_SIZE(machine->SystemValues));
       return machine->SystemValues[reg];
@@ -222,8 +226,7 @@ fetch_vector4(const struct prog_src_register *source,
  * XXX this currently only works for fragment program input attribs.
  */
 static void
-fetch_vector4_deriv(struct gl_context * ctx,
-                    const struct prog_src_register *source,
+fetch_vector4_deriv(const struct prog_src_register *source,
                     const struct gl_program_machine *machine,
                     char xOrY, GLfloat result[4])
 {
@@ -507,16 +510,14 @@ _mesa_execute_program(struct gl_context * ctx,
       case OPCODE_DDX:         /* Partial derivative with respect to X */
          {
             GLfloat result[4];
-            fetch_vector4_deriv(ctx, &inst->SrcReg[0], machine,
-                                'X', result);
+            fetch_vector4_deriv(&inst->SrcReg[0], machine, 'X', result);
             store_vector4(inst, machine, result);
          }
          break;
       case OPCODE_DDY:         /* Partial derivative with respect to Y */
          {
             GLfloat result[4];
-            fetch_vector4_deriv(ctx, &inst->SrcReg[0], machine,
-                                'Y', result);
+            fetch_vector4_deriv(&inst->SrcReg[0], machine, 'Y', result);
             store_vector4(inst, machine, result);
          }
          break;

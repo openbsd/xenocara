@@ -42,6 +42,9 @@ include Makefile.sources
 
 EXTRA_DIST = \
 	drivers/SConscript \
+	main/meson.build \
+	program/meson.build \
+	meson.build \
 	main/format_fallback.py \
 	main/format_info.py \
 	main/format_pack.py \
@@ -71,7 +74,7 @@ CLEANFILES = \
 	program/program_parse.tab.h
 
 if REGEN_SOURCES
-PYTHON_GEN = $(AM_V_GEN)$(PYTHON2) $(PYTHON_FLAGS)
+PYTHON_GEN = $(AM_V_GEN)$(PYTHON) $(PYTHON_FLAGS)
 
 main/get_hash.h: ../mapi/glapi/gen/gl_and_es_API.xml main/get_hash_params.py \
                  main/get_hash_generator.py

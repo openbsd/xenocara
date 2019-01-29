@@ -25,7 +25,6 @@ from __future__ import absolute_import, division, print_function
 import argparse
 import csv
 import re
-import textwrap
 
 from mako import template
 
@@ -76,7 +75,7 @@ isl_format_layouts[] = {
     % for mask in ['r', 'g', 'b', 'a', 'l', 'i', 'p']:
       <% channel = getattr(format, mask, None) %>\\
       % if channel.type is not None:
-        .${mask} = { ISL_${channel.type}, ${channel.size} },
+        .${mask} = { ISL_${channel.type}, ${channel.start}, ${channel.size} },
       % else:
         .${mask} = {},
       % endif
@@ -88,6 +87,14 @@ isl_format_layouts[] = {
 
 % endfor
 };
+
+bool
+isl_format_is_valid(enum isl_format format)
+{
+    if (format >= sizeof(isl_format_layouts) / sizeof(isl_format_layouts[0]))
+        return false;
+    return isl_format_layouts[format].name;
+}
 
 enum isl_format
 isl_format_srgb_to_linear(enum isl_format format)
@@ -139,7 +146,10 @@ class Channel(object):
         else:
             grouped = self._splitter.match(line)
             self.type = self._types[grouped.group('type')].upper()
-            self.size = grouped.group('size')
+            self.size = int(grouped.group('size'))
+
+        # Default the start bit to -1
+        self.start = -1
 
 
 class Format(object):
@@ -161,13 +171,21 @@ class Format(object):
         self.i = Channel(line[10])
         self.p = Channel(line[11])
 
+        # Set the start bit value for each channel
+        self.order = line[12].strip()
+        bit = 0
+        for c in self.order:
+            chan = getattr(self, c)
+            chan.start = bit
+            bit = bit + chan.size
+
         # alpha doesn't have a colorspace of it's own.
-        self.colorspace = line[12].strip().upper()
-        if self.colorspace in ['', 'ALPHA']:
+        self.colorspace = line[13].strip().upper()
+        if self.colorspace in ['']:
             self.colorspace = 'NONE'
 
         # This sets it to the line value, or if it's an empty string 'NONE'
-        self.txc = line[13].strip().upper() or 'NONE'
+        self.txc = line[14].strip().upper() or 'NONE'
 
 
 def reader(csvfile):
@@ -198,13 +216,13 @@ def get_srgb_to_linear_map(formats):
             ('U8SRGB',  'FLT16'),
         ]
 
-        found = False;
+        found = False
         for rep in replacements:
             rgb_name = fmt.name.replace(rep[0], rep[1])
             if rgb_name in names:
                 found = True
                 yield fmt.name, rgb_name
-                break;
+                break
 
         # We should have found a format name
         assert found

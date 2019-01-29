@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 import re
 
@@ -76,7 +77,6 @@ template = """\
  */
 
 #include <math.h>
-#include "main/core.h"
 #include "util/rounding.h" /* for _mesa_roundeven */
 #include "util/half_float.h"
 #include "nir_constant_expressions.h"
@@ -387,9 +387,10 @@ struct bool32_vec {
    % endif
 </%def>
 
-% for name, op in sorted(opcodes.iteritems()):
+% for name, op in sorted(opcodes.items()):
 static nir_const_value
-evaluate_${name}(MAYBE_UNUSED unsigned num_components, unsigned bit_size,
+evaluate_${name}(MAYBE_UNUSED unsigned num_components,
+                 ${"UNUSED" if op_bit_sizes(op) is None else ""} unsigned bit_size,
                  MAYBE_UNUSED nir_const_value *_src)
 {
    nir_const_value _dst_val = { {0, } };
@@ -419,7 +420,7 @@ nir_eval_const_opcode(nir_op op, unsigned num_components,
                       unsigned bit_width, nir_const_value *src)
 {
    switch (op) {
-% for name in sorted(opcodes.iterkeys()):
+% for name in sorted(opcodes.keys()):
    case nir_op_${name}:
       return evaluate_${name}(num_components, bit_width, src);
 % endfor
@@ -431,8 +432,8 @@ nir_eval_const_opcode(nir_op op, unsigned num_components,
 from nir_opcodes import opcodes
 from mako.template import Template
 
-print Template(template).render(opcodes=opcodes, type_sizes=type_sizes,
+print(Template(template).render(opcodes=opcodes, type_sizes=type_sizes,
                                 type_has_size=type_has_size,
                                 type_add_size=type_add_size,
                                 op_bit_sizes=op_bit_sizes,
-                                get_const_field=get_const_field)
+                                get_const_field=get_const_field))

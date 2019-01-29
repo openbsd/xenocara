@@ -29,6 +29,7 @@
 #include "glsl_parser_extras.h"
 #include "main/macros.h"
 #include "util/hash_table.h"
+#include "util/u_string.h"
 
 class ir_builder_print_visitor : public ir_hierarchical_visitor {
 public:
@@ -551,8 +552,6 @@ ir_builder_print_visitor::print_without_declaration(const ir_expression *ir)
    case ir_binop_mul:
    case ir_binop_imul_high:
    case ir_binop_less:
-   case ir_binop_greater:
-   case ir_binop_lequal:
    case ir_binop_gequal:
    case ir_binop_equal:
    case ir_binop_nequal:
@@ -707,9 +706,9 @@ ir_builder_print_visitor::visit_leave(ir_call *ir)
       const struct hash_entry *const he =
          _mesa_hash_table_search(index_map, ir->return_deref);
 
-      snprintf(return_deref_string, sizeof(return_deref_string),
-               "operand(r%04X).val",
-               (unsigned)(uintptr_t) he->data);
+      util_snprintf(return_deref_string, sizeof(return_deref_string),
+                    "operand(r%04X).val",
+                    (unsigned)(uintptr_t) he->data);
    } else {
       strcpy(return_deref_string, "NULL");
    }

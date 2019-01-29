@@ -36,7 +36,7 @@ if REGEN_SOURCES
 compiler/brw_nir_trig_workarounds.c: compiler/brw_nir_trig_workarounds.py \
                                      $(top_srcdir)/src/compiler/nir/nir_algebraic.py
 	$(MKDIR_GEN)
-	$(AM_V_GEN) $(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/compiler/brw_nir_trig_workarounds.py -p $(top_srcdir)/src/compiler/nir > $@ || ($(RM) $@; false)
+	$(AM_V_GEN) $(PYTHON) $(PYTHON_FLAGS) $(srcdir)/compiler/brw_nir_trig_workarounds.py -p $(top_srcdir)/src/compiler/nir > $@ || ($(RM) $@; false)
 endif
 
 EXTRA_DIST += \
@@ -50,9 +50,10 @@ TEST_LIBS = \
 	$(top_builddir)/src/gtest/libgtest.la \
 	compiler/libintel_compiler.la \
 	common/libintel_common.la \
+	dev/libintel_dev.la \
 	$(top_builddir)/src/compiler/nir/libnir.la \
-	$(top_builddir)/src/util/libmesautil.la \
 	$(top_builddir)/src/intel/isl/libisl.la \
+	$(top_builddir)/src/util/libmesautil.la \
 	$(PTHREAD_LIBS) \
 	$(DLOPEN_LIBS)
 
@@ -65,6 +66,7 @@ COMPILER_TESTS = \
 	compiler/test_vf_float_conversions \
 	compiler/test_vec4_cmod_propagation \
 	compiler/test_vec4_copy_propagation \
+	compiler/test_vec4_dead_code_eliminate \
 	compiler/test_vec4_register_coalesce
 
 TESTS += $(COMPILER_TESTS)
@@ -97,6 +99,10 @@ compiler_test_vec4_copy_propagation_LDADD = $(TEST_LIBS)
 compiler_test_vec4_cmod_propagation_SOURCES = \
 	compiler/test_vec4_cmod_propagation.cpp
 compiler_test_vec4_cmod_propagation_LDADD = $(TEST_LIBS)
+
+compiler_test_vec4_dead_code_eliminate_SOURCES = \
+	compiler/test_vec4_dead_code_eliminate.cpp
+compiler_test_vec4_dead_code_eliminate_LDADD = $(TEST_LIBS)
 
 # Strictly speaking this is neither a C++ test nor using gtest - we can address
 # address that at a later point. Until then, this allows us a to simplify things.

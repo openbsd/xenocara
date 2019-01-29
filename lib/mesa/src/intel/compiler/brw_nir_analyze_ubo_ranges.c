@@ -124,11 +124,28 @@ analyze_ubos_block(struct ubo_analysis_state *state, nir_block *block)
          continue;
 
       nir_intrinsic_instr *intrin = nir_instr_as_intrinsic(instr);
-      if (intrin->intrinsic == nir_intrinsic_load_uniform)
+      switch (intrin->intrinsic) {
+      case nir_intrinsic_load_uniform:
+      case nir_intrinsic_image_deref_load:
+      case nir_intrinsic_image_deref_store:
+      case nir_intrinsic_image_deref_atomic_add:
+      case nir_intrinsic_image_deref_atomic_min:
+      case nir_intrinsic_image_deref_atomic_max:
+      case nir_intrinsic_image_deref_atomic_and:
+      case nir_intrinsic_image_deref_atomic_or:
+      case nir_intrinsic_image_deref_atomic_xor:
+      case nir_intrinsic_image_deref_atomic_exchange:
+      case nir_intrinsic_image_deref_atomic_comp_swap:
+      case nir_intrinsic_image_deref_size:
          state->uses_regular_uniforms = true;
-
-      if (intrin->intrinsic != nir_intrinsic_load_ubo)
          continue;
+
+      case nir_intrinsic_load_ubo:
+         break; /* Fall through to the analysis below */
+
+      default:
+         continue; /* Not a uniform or UBO intrinsic */
+      }
 
       nir_const_value *block_const = nir_src_as_const_value(intrin->src[0]);
       nir_const_value *offset_const = nir_src_as_const_value(intrin->src[1]);
@@ -137,14 +154,26 @@ analyze_ubos_block(struct ubo_analysis_state *state, nir_block *block)
          const int block = block_const->u32[0];
          const int offset = offset_const->u32[0] / 32;
 
-         /* Won't fit in our bitfield */
+         /* Avoid shifting by larger than the width of our bitfield, as this
+          * is undefined in C.  Even if we require multiple bits to represent
+          * the entire value, it's OK to record a partial value - the backend
+          * is capable of falling back to pull loads for later components of
+          * vectors, as it has to shrink ranges for other reasons anyway.
+          */
          if (offset >= 64)
             continue;
+
+         /* The value might span multiple 32-byte chunks. */
+         const int bytes = nir_intrinsic_dest_components(intrin) *
+                           (nir_dest_bit_size(intrin->dest) / 8);
+         const int start = ROUND_DOWN_TO(offset_const->u32[0], 32);
+         const int end = ALIGN(offset_const->u32[0] + bytes, 32);
+         const int chunks = (end - start) / 32;
 
          /* TODO: should we count uses in loops as higher benefit? */
 
          struct ubo_block_info *info = get_block_info(state, block);
-         info->offsets |= 1ull << offset;
+         info->offsets |= ((1ull << chunks) - 1) << offset;
          info->uses[offset]++;
       }
    }
@@ -158,7 +187,7 @@ print_ubo_entry(FILE *file,
    struct ubo_block_info *info = get_block_info(state, entry->range.block);
 
    fprintf(file,
-           "block %2d, start %2d, length %2d, bits = %zx, "
+           "block %2d, start %2d, length %2d, bits = %"PRIx64", "
            "benefit %2d, cost %2d, score = %2d\n",
            entry->range.block, entry->range.start, entry->range.length,
            info->offsets, entry->benefit, entry->range.length, score(entry));
@@ -167,6 +196,7 @@ print_ubo_entry(FILE *file,
 void
 brw_nir_analyze_ubo_ranges(const struct brw_compiler *compiler,
                            nir_shader *nir,
+                           const struct brw_vs_prog_key *vs_key,
                            struct brw_ubo_range out_ranges[4])
 {
    const struct gen_device_info *devinfo = compiler->devinfo;
@@ -185,6 +215,23 @@ brw_nir_analyze_ubo_ranges(const struct brw_compiler *compiler,
          _mesa_hash_table_create(mem_ctx, NULL, _mesa_key_pointer_equal),
    };
 
+   switch (nir->info.stage) {
+   case MESA_SHADER_VERTEX:
+      if (vs_key && vs_key->nr_userclip_plane_consts > 0)
+         state.uses_regular_uniforms = true;
+      break;
+
+   case MESA_SHADER_COMPUTE:
+      /* Compute shaders use push constants to get the subgroup ID so it's
+       * best to just assume some system values are pushed.
+       */
+      state.uses_regular_uniforms = true;
+      break;
+
+   default:
+      break;
+   }
+
    /* Walk the IR, recording how many times each UBO block/offset is used. */
    nir_foreach_function(function, nir) {
       if (function->impl) {
@@ -198,7 +245,6 @@ brw_nir_analyze_ubo_ranges(const struct brw_compiler *compiler,
    struct util_dynarray ranges;
    util_dynarray_init(&ranges, mem_ctx);
 
-   struct hash_entry *entry;
    hash_table_foreach(state.blocks, entry) {
       const int b = entry->hash - 1;
       const struct ubo_block_info *info = entry->data;

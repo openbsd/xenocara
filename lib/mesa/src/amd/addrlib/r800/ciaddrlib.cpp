@@ -35,15 +35,7 @@
 
 #include "si_gb_reg.h"
 
-#include "si_ci_vi_merged_enum.h"
-
-#if BRAHMA_BUILD
-#include "amdgpu_id.h"
-#else
-#include "ci_id.h"
-#include "kv_id.h"
-#include "vi_id.h"
-#endif
+#include "amdgpu_asic_addr.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -188,7 +180,6 @@ CiLib::CiLib(const Client* pClient)
     m_allowNonDispThickModes(FALSE)
 {
     m_class = CI_ADDRLIB;
-    memset(&m_settings, 0, sizeof(m_settings));
 }
 
 /**
@@ -410,6 +401,7 @@ ChipFamily CiLib::HwlConvertChipFamily(
             m_settings.isPolaris10       = ASICREV_IS_POLARIS10_P(uChipRevision);
             m_settings.isPolaris11       = ASICREV_IS_POLARIS11_M(uChipRevision);
             m_settings.isPolaris12       = ASICREV_IS_POLARIS12_V(uChipRevision);
+            m_settings.isVegaM           = ASICREV_IS_VEGAM_P(uChipRevision);
             family = ADDR_CHIP_FAMILY_VI;
             break;
         case FAMILY_CZ:
@@ -450,7 +442,6 @@ BOOL_32 CiLib::HwlInitGlobalParams(
     // read the correct pipes from tile mode table
     if (m_settings.isHawaii)
     {
-        // Hawaii has 16-pipe, see GFXIP_Config_Summary.xls
         m_pipes = 16;
     }
     else if (m_settings.isBonaire || m_settings.isSpectre)
@@ -479,6 +470,10 @@ BOOL_32 CiLib::HwlInitGlobalParams(
     else if (m_settings.isPolaris11 || m_settings.isPolaris12)
     {
         m_pipes = 4;
+    }
+    else if (m_settings.isVegaM)
+    {
+        m_pipes = 16;
     }
 
     if (valid)
@@ -600,9 +595,9 @@ INT_32 CiLib::HwlPostCheckTileIndex(
 ****************************************************************************************************
 */
 ADDR_E_RETURNCODE CiLib::HwlSetupTileCfg(
-    UINT_32         bpp,            ///< [in] Bits per pixel
-    INT_32          index,          ///< [in] Tile index
-    INT_32          macroModeIndex, ///< [in] Index in macro tile mode table(CI)
+    UINT_32         bpp,            ///< Bits per pixel
+    INT_32          index,          ///< Tile index
+    INT_32          macroModeIndex, ///< Index in macro tile mode table(CI)
     ADDR_TILEINFO*  pInfo,          ///< [out] Tile Info
     AddrTileMode*   pMode,          ///< [out] Tile mode
     AddrTileType*   pType           ///< [out] Tile type
@@ -711,13 +706,12 @@ ADDR_E_RETURNCODE CiLib::HwlComputeSurfaceInfo(
 
     ADDR_E_RETURNCODE retCode = SiLib::HwlComputeSurfaceInfo(pIn, pOut);
 
-
     if ((pIn->mipLevel > 0) &&
         (pOut->tcCompatible == TRUE) &&
         (pOut->tileMode != pIn->tileMode) &&
         (m_settings.isVolcanicIslands == TRUE))
     {
-        CheckTcCompatibility(pOut->pTileInfo, pIn->bpp, pOut->tileMode, pOut->tileType, pOut);
+        pOut->tcCompatible = CheckTcCompatibility(pOut->pTileInfo, pIn->bpp, pOut->tileMode, pOut->tileType, pOut);
     }
 
     if (pOut->macroModeIndex == TileIndexNoMacroIndex)
@@ -747,7 +741,7 @@ ADDR_E_RETURNCODE CiLib::HwlComputeSurfaceInfo(
 
                 SiLib::HwlComputeSurfaceInfo(&localIn, pOut);
 
-                ADDR_ASSERT(((MinDepth2DThinIndex <= pOut->tileIndex) && (MaxDepth2DThinIndex >= pOut->tileIndex)) || pOut->tileIndex == Depth1DThinIndex);
+                ADDR_ASSERT((MinDepth2DThinIndex <= pOut->tileIndex) && (MaxDepth2DThinIndex >= pOut->tileIndex));
 
                 depthStencil2DTileConfigMatch = DepthStencilTileCfgMatch(pIn, pOut);
             }
@@ -1572,7 +1566,7 @@ VOID CiLib::HwlSetupTileInfo(
 
     if (flags.tcCompatible)
     {
-        CheckTcCompatibility(pTileInfo, bpp, tileMode, inTileType, pOut);
+        flags.tcCompatible = CheckTcCompatibility(pTileInfo, bpp, tileMode, inTileType, pOut);
     }
 
     pOut->tcCompatible = flags.tcCompatible;
@@ -2168,29 +2162,27 @@ VOID CiLib::HwlPadDimensions(
 
 /**
 ****************************************************************************************************
-*   CiLib::HwlGetMaxAlignments
+*   CiLib::HwlComputeMaxBaseAlignments
 *
 *   @brief
 *       Gets maximum alignments
 *   @return
-*       ADDR_E_RETURNCODE
+*       maximum alignments
 ****************************************************************************************************
 */
-ADDR_E_RETURNCODE CiLib::HwlGetMaxAlignments(
-    ADDR_GET_MAX_ALIGNMENTS_OUTPUT* pOut    ///< [out] output structure
-    ) const
+UINT_32 CiLib::HwlComputeMaxBaseAlignments() const
 {
     const UINT_32 pipes = HwlGetPipes(&m_tileTable[0].info);
 
     // Initial size is 64 KiB for PRT.
-    UINT_64 maxBaseAlign = 64 * 1024;
+    UINT_32 maxBaseAlign = 64 * 1024;
 
     for (UINT_32 i = 0; i < m_noOfMacroEntries; i++)
     {
         // The maximum tile size is 16 byte-per-pixel and either 8-sample or 8-slice.
         UINT_32 tileSize = m_macroTileTable[i].tileSplitBytes;
 
-        UINT_64 baseAlign = tileSize * pipes * m_macroTileTable[i].banks *
+        UINT_32 baseAlign = tileSize * pipes * m_macroTileTable[i].banks *
                             m_macroTileTable[i].bankWidth * m_macroTileTable[i].bankHeight;
 
         if (baseAlign > maxBaseAlign)
@@ -2199,12 +2191,32 @@ ADDR_E_RETURNCODE CiLib::HwlGetMaxAlignments(
         }
     }
 
-    if (pOut != NULL)
+    return maxBaseAlign;
+}
+
+/**
+****************************************************************************************************
+*   CiLib::HwlComputeMaxMetaBaseAlignments
+*
+*   @brief
+*       Gets maximum alignments for metadata
+*   @return
+*       maximum alignments for metadata
+****************************************************************************************************
+*/
+UINT_32 CiLib::HwlComputeMaxMetaBaseAlignments() const
+{
+    UINT_32 maxBank = 1;
+
+    for (UINT_32 i = 0; i < m_noOfMacroEntries; i++)
     {
-        pOut->baseAlign = maxBaseAlign;
+        if ((m_settings.isVolcanicIslands) && IsMacroTiled(m_tileTable[i].mode))
+        {
+            maxBank = Max(maxBank, m_macroTileTable[i].banks);
+        }
     }
 
-    return ADDR_OK;
+    return SiLib::HwlComputeMaxMetaBaseAlignments() * maxBank;
 }
 
 /**
@@ -2271,19 +2283,21 @@ BOOL_32 CiLib::DepthStencilTileCfgMatch(
 *   CiLib::DepthStencilTileCfgMatch
 *
 *   @brief
-*       Turn off TcCompatible if requirement is not met
+*       Check if tc compatibility is available
 *   @return
-*       N/A
+*       If tc compatibility is not available
 ****************************************************************************************************
 */
-VOID CiLib::CheckTcCompatibility(
-    const ADDR_TILEINFO*              pTileInfo,    ///< [in] input tile info
-    UINT_32                           bpp,          ///< [in] Bits per pixel
-    AddrTileMode                      tileMode,     ///< [in] input tile mode
-    AddrTileType                      tileType,     ///< [in] input tile type
-    ADDR_COMPUTE_SURFACE_INFO_OUTPUT* pOut          ///< [out] out structure
+BOOL_32 CiLib::CheckTcCompatibility(
+    const ADDR_TILEINFO*                    pTileInfo,    ///< [in] input tile info
+    UINT_32                                 bpp,          ///< [in] Bits per pixel
+    AddrTileMode                            tileMode,     ///< [in] input tile mode
+    AddrTileType                            tileType,     ///< [in] input tile type
+    const ADDR_COMPUTE_SURFACE_INFO_OUTPUT* pOut          ///< [in] output surf info
     ) const
 {
+    BOOL_32 tcCompatible = TRUE;
+
     if (IsMacroTiled(tileMode))
     {
         if (tileType != ADDR_DEPTH_SAMPLE_ORDER)
@@ -2309,7 +2323,7 @@ VOID CiLib::CheckTcCompatibility(
 
                 if (m_rowSize < colorTileSplit)
                 {
-                    pOut->tcCompatible = FALSE;
+                    tcCompatible = FALSE;
                 }
             }
         }
@@ -2317,8 +2331,10 @@ VOID CiLib::CheckTcCompatibility(
     else
     {
         // Client should not enable tc compatible for linear and 1D tile modes.
-        pOut->tcCompatible = FALSE;
+        tcCompatible = FALSE;
     }
+
+    return tcCompatible;
 }
 
 } // V1

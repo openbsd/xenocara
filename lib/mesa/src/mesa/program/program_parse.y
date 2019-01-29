@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "main/errors.h"
 #include "main/mtypes.h"
 #include "main/imports.h"
 #include "program/program.h"
@@ -38,6 +39,8 @@
 #include "program/symbol_table.h"
 #include "program/program_parser.h"
 
+#include "util/u_math.h"
+
 extern void *yy_scan_string(char *);
 extern void yy_delete_buffer(void *);
 
@@ -45,13 +48,13 @@ static struct asm_symbol *declare_variable(struct asm_parser_state *state,
     char *name, enum asm_type t, struct YYLTYPE *locp);
 
 static int add_state_reference(struct gl_program_parameter_list *param_list,
-    const gl_state_index tokens[STATE_LENGTH]);
+    const gl_state_index16 tokens[STATE_LENGTH]);
 
 static int initialize_symbol_from_state(struct gl_program *prog,
-    struct asm_symbol *param_var, const gl_state_index tokens[STATE_LENGTH]);
+    struct asm_symbol *param_var, const gl_state_index16 tokens[STATE_LENGTH]);
 
 static int initialize_symbol_from_param(struct gl_program *prog,
-    struct asm_symbol *param_var, const gl_state_index tokens[STATE_LENGTH]);
+    struct asm_symbol *param_var, const gl_state_index16 tokens[STATE_LENGTH]);
 
 static int initialize_symbol_from_const(struct gl_program *prog,
     struct asm_symbol *param_var, const struct asm_vector *vec,
@@ -136,7 +139,7 @@ static struct asm_instruction *asm_instruction_copy_ctor(
    unsigned attrib;
    int integer;
    float real;
-   gl_state_index state[STATE_LENGTH];
+   gl_state_index16 state[STATE_LENGTH];
    int negate;
    struct asm_vector vector;
    enum prog_opcode opcode;
@@ -186,7 +189,6 @@ static struct asm_instruction *asm_instruction_copy_ctor(
 %token TEX_SHADOW1D TEX_SHADOW2D TEX_SHADOWRECT
 %token TEX_ARRAY1D TEX_ARRAY2D TEX_ARRAYSHADOW1D TEX_ARRAYSHADOW2D 
 %token VERTEX VTXATTRIB
-%token WEIGHT
 
 %token <string> IDENTIFIER USED_IDENTIFIER
 %type <string> string
@@ -1007,10 +1009,6 @@ vtxAttribItem: POSITION
 	{
 	   $$ = VERT_ATTRIB_POS;
 	}
-	| WEIGHT vtxOptWeightNum
-	{
-	   $$ = VERT_ATTRIB_WEIGHT;
-	}
 	| NORMAL
 	{
 	   $$ = VERT_ATTRIB_NORMAL;
@@ -1049,7 +1047,6 @@ vtxAttribNum: INTEGER
 	}
 	;
 
-vtxOptWeightNum:  | '[' vtxWeightNum ']';
 vtxWeightNum: INTEGER;
 
 fragAttribItem: POSITION
@@ -2219,8 +2216,29 @@ int
 validate_inputs(struct YYLTYPE *locp, struct asm_parser_state *state)
 {
    const GLbitfield64 inputs = state->prog->info.inputs_read | state->InputsBound;
+   GLbitfield ff_inputs = 0;
 
-   if (((inputs & VERT_BIT_FF_ALL) & (inputs >> VERT_ATTRIB_GENERIC0)) != 0) {
+   /* Since Mesa internal attribute indices are different from
+    * how NV_vertex_program defines attribute aliasing, we have to construct
+    * a separate usage mask based on how the aliasing is defined.
+    *
+    * Note that attribute aliasing is optional if NV_vertex_program is
+    * unsupported.
+    */
+   if (inputs & VERT_BIT_POS)
+      ff_inputs |= 1 << 0;
+   if (inputs & VERT_BIT_NORMAL)
+      ff_inputs |= 1 << 2;
+   if (inputs & VERT_BIT_COLOR0)
+      ff_inputs |= 1 << 3;
+   if (inputs & VERT_BIT_COLOR1)
+      ff_inputs |= 1 << 4;
+   if (inputs & VERT_BIT_FOG)
+      ff_inputs |= 1 << 5;
+
+   ff_inputs |= ((inputs & VERT_BIT_TEX_ALL) >> VERT_ATTRIB_TEX0) << 8;
+
+   if ((ff_inputs & (inputs >> VERT_ATTRIB_GENERIC0)) != 0) {
       yyerror(locp, state, "illegal use of generic attribute and name attribute");
       return 0;
    }
@@ -2284,7 +2302,7 @@ declare_variable(struct asm_parser_state *state, char *name, enum asm_type t,
 
 
 int add_state_reference(struct gl_program_parameter_list *param_list,
-			const gl_state_index tokens[STATE_LENGTH])
+			const gl_state_index16 tokens[STATE_LENGTH])
 {
    const GLuint size = 4; /* XXX fix */
    char *name;
@@ -2292,7 +2310,7 @@ int add_state_reference(struct gl_program_parameter_list *param_list,
 
    name = _mesa_program_state_string(tokens);
    index = _mesa_add_parameter(param_list, PROGRAM_STATE_VAR, name,
-                               size, GL_NONE, NULL, tokens);
+                               size, GL_NONE, NULL, tokens, true);
    param_list->StateFlags |= _mesa_program_state_flags(tokens);
 
    /* free name string here since we duplicated it in add_parameter() */
@@ -2305,10 +2323,10 @@ int add_state_reference(struct gl_program_parameter_list *param_list,
 int
 initialize_symbol_from_state(struct gl_program *prog,
 			     struct asm_symbol *param_var, 
-			     const gl_state_index tokens[STATE_LENGTH])
+			     const gl_state_index16 tokens[STATE_LENGTH])
 {
    int idx = -1;
-   gl_state_index state_tokens[STATE_LENGTH];
+   gl_state_index16 state_tokens[STATE_LENGTH];
 
 
    memcpy(state_tokens, tokens, sizeof(state_tokens));
@@ -2357,10 +2375,10 @@ initialize_symbol_from_state(struct gl_program *prog,
 int
 initialize_symbol_from_param(struct gl_program *prog,
 			     struct asm_symbol *param_var, 
-			     const gl_state_index tokens[STATE_LENGTH])
+			     const gl_state_index16 tokens[STATE_LENGTH])
 {
    int idx = -1;
-   gl_state_index state_tokens[STATE_LENGTH];
+   gl_state_index16 state_tokens[STATE_LENGTH];
 
 
    memcpy(state_tokens, tokens, sizeof(state_tokens));
@@ -2591,7 +2609,7 @@ _mesa_parse_arb_program(struct gl_context *ctx, GLenum target, const GLubyte *st
 
    state->prog->arb.NumParameters = state->prog->Parameters->NumParameters;
    state->prog->arb.NumAttributes =
-      _mesa_bitcount_64(state->prog->info.inputs_read);
+      util_bitcount64(state->prog->info.inputs_read);
 
    /*
     * Initialize native counts to logical counts.  The device driver may

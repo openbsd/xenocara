@@ -31,6 +31,7 @@
 #include "main/context.h"
 #include "program_resource.h"
 #include "compiler/glsl/ir_uniform.h"
+
 static bool
 supported_interface_enum(struct gl_context *ctx, GLenum iface)
 {
@@ -76,7 +77,7 @@ lookup_linked_program(GLuint program, const char *caller)
    if (!prog)
       return NULL;
 
-   if (prog->data->LinkStatus == linking_failure) {
+   if (prog->data->LinkStatus == LINKING_FAILURE) {
       _mesa_error(ctx, GL_INVALID_OPERATION, "%s(program not linked)",
                   caller);
       return NULL;
@@ -200,7 +201,7 @@ _mesa_GetProgramInterfaceiv(GLuint program, GLenum programInterface,
                     "glGetProgramInterfaceiv(%s pname %s)",
                     _mesa_enum_to_string(programInterface),
                     _mesa_enum_to_string(pname));
-      };
+      }
       break;
    case GL_MAX_NUM_COMPATIBLE_SUBROUTINES:
       switch (programInterface) {

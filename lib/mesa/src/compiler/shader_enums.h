@@ -48,6 +48,14 @@ typedef enum
    MESA_SHADER_COMPUTE = 5,
 } gl_shader_stage;
 
+/**
+ * Number of STATE_* values we need to address any GL state.
+ * Used to dimension arrays.
+ */
+#define STATE_LENGTH 5
+
+typedef short gl_state_index16; /* see enum gl_state_index */
+
 const char *gl_shader_stage_name(gl_shader_stage stage);
 
 /**
@@ -74,40 +82,39 @@ const char *_mesa_shader_stage_to_abbrev(unsigned stage);
  */
 typedef enum
 {
-   VERT_ATTRIB_POS = 0,
-   VERT_ATTRIB_WEIGHT = 1,
-   VERT_ATTRIB_NORMAL = 2,
-   VERT_ATTRIB_COLOR0 = 3,
-   VERT_ATTRIB_COLOR1 = 4,
-   VERT_ATTRIB_FOG = 5,
-   VERT_ATTRIB_COLOR_INDEX = 6,
-   VERT_ATTRIB_EDGEFLAG = 7,
-   VERT_ATTRIB_TEX0 = 8,
-   VERT_ATTRIB_TEX1 = 9,
-   VERT_ATTRIB_TEX2 = 10,
-   VERT_ATTRIB_TEX3 = 11,
-   VERT_ATTRIB_TEX4 = 12,
-   VERT_ATTRIB_TEX5 = 13,
-   VERT_ATTRIB_TEX6 = 14,
-   VERT_ATTRIB_TEX7 = 15,
-   VERT_ATTRIB_POINT_SIZE = 16,
-   VERT_ATTRIB_GENERIC0 = 17,
-   VERT_ATTRIB_GENERIC1 = 18,
-   VERT_ATTRIB_GENERIC2 = 19,
-   VERT_ATTRIB_GENERIC3 = 20,
-   VERT_ATTRIB_GENERIC4 = 21,
-   VERT_ATTRIB_GENERIC5 = 22,
-   VERT_ATTRIB_GENERIC6 = 23,
-   VERT_ATTRIB_GENERIC7 = 24,
-   VERT_ATTRIB_GENERIC8 = 25,
-   VERT_ATTRIB_GENERIC9 = 26,
-   VERT_ATTRIB_GENERIC10 = 27,
-   VERT_ATTRIB_GENERIC11 = 28,
-   VERT_ATTRIB_GENERIC12 = 29,
-   VERT_ATTRIB_GENERIC13 = 30,
-   VERT_ATTRIB_GENERIC14 = 31,
-   VERT_ATTRIB_GENERIC15 = 32,
-   VERT_ATTRIB_MAX = 33
+   VERT_ATTRIB_POS,
+   VERT_ATTRIB_NORMAL,
+   VERT_ATTRIB_COLOR0,
+   VERT_ATTRIB_COLOR1,
+   VERT_ATTRIB_FOG,
+   VERT_ATTRIB_COLOR_INDEX,
+   VERT_ATTRIB_EDGEFLAG,
+   VERT_ATTRIB_TEX0,
+   VERT_ATTRIB_TEX1,
+   VERT_ATTRIB_TEX2,
+   VERT_ATTRIB_TEX3,
+   VERT_ATTRIB_TEX4,
+   VERT_ATTRIB_TEX5,
+   VERT_ATTRIB_TEX6,
+   VERT_ATTRIB_TEX7,
+   VERT_ATTRIB_POINT_SIZE,
+   VERT_ATTRIB_GENERIC0,
+   VERT_ATTRIB_GENERIC1,
+   VERT_ATTRIB_GENERIC2,
+   VERT_ATTRIB_GENERIC3,
+   VERT_ATTRIB_GENERIC4,
+   VERT_ATTRIB_GENERIC5,
+   VERT_ATTRIB_GENERIC6,
+   VERT_ATTRIB_GENERIC7,
+   VERT_ATTRIB_GENERIC8,
+   VERT_ATTRIB_GENERIC9,
+   VERT_ATTRIB_GENERIC10,
+   VERT_ATTRIB_GENERIC11,
+   VERT_ATTRIB_GENERIC12,
+   VERT_ATTRIB_GENERIC13,
+   VERT_ATTRIB_GENERIC14,
+   VERT_ATTRIB_GENERIC15,
+   VERT_ATTRIB_MAX
 } gl_vert_attrib;
 
 const char *gl_vert_attrib_name(gl_vert_attrib attrib);
@@ -125,6 +132,11 @@ const char *gl_vert_attrib_name(gl_vert_attrib attrib);
  * VERT_ATTRIB_GENERIC
  *   include the OpenGL 2.0+ GLSL generic shader attributes.
  *   These alias the generic GL_ARB_vertex_shader attributes.
+ * VERT_ATTRIB_MAT
+ *   include the generic shader attributes used to alias
+ *   varying material values for the TNL shader programs.
+ *   They are located at the end of the generic attribute
+ *   block not to overlap with the generic 0 attribute.
  */
 #define VERT_ATTRIB_FF(i)           (VERT_ATTRIB_POS + (i))
 #define VERT_ATTRIB_FF_MAX          VERT_ATTRIB_GENERIC0
@@ -135,42 +147,51 @@ const char *gl_vert_attrib_name(gl_vert_attrib attrib);
 #define VERT_ATTRIB_GENERIC(i)      (VERT_ATTRIB_GENERIC0 + (i))
 #define VERT_ATTRIB_GENERIC_MAX     MAX_VERTEX_GENERIC_ATTRIBS
 
+#define VERT_ATTRIB_MAT0            \
+   (VERT_ATTRIB_GENERIC_MAX - VERT_ATTRIB_MAT_MAX)
+#define VERT_ATTRIB_MAT(i)          \
+   VERT_ATTRIB_GENERIC((i) + VERT_ATTRIB_MAT0)
+#define VERT_ATTRIB_MAT_MAX         MAT_ATTRIB_MAX
+
 /**
  * Bitflags for vertex attributes.
  * These are used in bitfields in many places.
  */
 /*@{*/
-#define VERT_BIT_POS             BITFIELD64_BIT(VERT_ATTRIB_POS)
-#define VERT_BIT_WEIGHT          BITFIELD64_BIT(VERT_ATTRIB_WEIGHT)
-#define VERT_BIT_NORMAL          BITFIELD64_BIT(VERT_ATTRIB_NORMAL)
-#define VERT_BIT_COLOR0          BITFIELD64_BIT(VERT_ATTRIB_COLOR0)
-#define VERT_BIT_COLOR1          BITFIELD64_BIT(VERT_ATTRIB_COLOR1)
-#define VERT_BIT_FOG             BITFIELD64_BIT(VERT_ATTRIB_FOG)
-#define VERT_BIT_COLOR_INDEX     BITFIELD64_BIT(VERT_ATTRIB_COLOR_INDEX)
-#define VERT_BIT_EDGEFLAG        BITFIELD64_BIT(VERT_ATTRIB_EDGEFLAG)
-#define VERT_BIT_TEX0            BITFIELD64_BIT(VERT_ATTRIB_TEX0)
-#define VERT_BIT_TEX1            BITFIELD64_BIT(VERT_ATTRIB_TEX1)
-#define VERT_BIT_TEX2            BITFIELD64_BIT(VERT_ATTRIB_TEX2)
-#define VERT_BIT_TEX3            BITFIELD64_BIT(VERT_ATTRIB_TEX3)
-#define VERT_BIT_TEX4            BITFIELD64_BIT(VERT_ATTRIB_TEX4)
-#define VERT_BIT_TEX5            BITFIELD64_BIT(VERT_ATTRIB_TEX5)
-#define VERT_BIT_TEX6            BITFIELD64_BIT(VERT_ATTRIB_TEX6)
-#define VERT_BIT_TEX7            BITFIELD64_BIT(VERT_ATTRIB_TEX7)
-#define VERT_BIT_POINT_SIZE      BITFIELD64_BIT(VERT_ATTRIB_POINT_SIZE)
-#define VERT_BIT_GENERIC0        BITFIELD64_BIT(VERT_ATTRIB_GENERIC0)
+#define VERT_BIT_POS             BITFIELD_BIT(VERT_ATTRIB_POS)
+#define VERT_BIT_NORMAL          BITFIELD_BIT(VERT_ATTRIB_NORMAL)
+#define VERT_BIT_COLOR0          BITFIELD_BIT(VERT_ATTRIB_COLOR0)
+#define VERT_BIT_COLOR1          BITFIELD_BIT(VERT_ATTRIB_COLOR1)
+#define VERT_BIT_FOG             BITFIELD_BIT(VERT_ATTRIB_FOG)
+#define VERT_BIT_COLOR_INDEX     BITFIELD_BIT(VERT_ATTRIB_COLOR_INDEX)
+#define VERT_BIT_EDGEFLAG        BITFIELD_BIT(VERT_ATTRIB_EDGEFLAG)
+#define VERT_BIT_TEX0            BITFIELD_BIT(VERT_ATTRIB_TEX0)
+#define VERT_BIT_TEX1            BITFIELD_BIT(VERT_ATTRIB_TEX1)
+#define VERT_BIT_TEX2            BITFIELD_BIT(VERT_ATTRIB_TEX2)
+#define VERT_BIT_TEX3            BITFIELD_BIT(VERT_ATTRIB_TEX3)
+#define VERT_BIT_TEX4            BITFIELD_BIT(VERT_ATTRIB_TEX4)
+#define VERT_BIT_TEX5            BITFIELD_BIT(VERT_ATTRIB_TEX5)
+#define VERT_BIT_TEX6            BITFIELD_BIT(VERT_ATTRIB_TEX6)
+#define VERT_BIT_TEX7            BITFIELD_BIT(VERT_ATTRIB_TEX7)
+#define VERT_BIT_POINT_SIZE      BITFIELD_BIT(VERT_ATTRIB_POINT_SIZE)
+#define VERT_BIT_GENERIC0        BITFIELD_BIT(VERT_ATTRIB_GENERIC0)
 
-#define VERT_BIT(i)              BITFIELD64_BIT(i)
-#define VERT_BIT_ALL             BITFIELD64_RANGE(0, VERT_ATTRIB_MAX)
+#define VERT_BIT(i)              BITFIELD_BIT(i)
+#define VERT_BIT_ALL             BITFIELD_RANGE(0, VERT_ATTRIB_MAX)
 
 #define VERT_BIT_FF(i)           VERT_BIT(i)
-#define VERT_BIT_FF_ALL          BITFIELD64_RANGE(0, VERT_ATTRIB_FF_MAX)
+#define VERT_BIT_FF_ALL          BITFIELD_RANGE(0, VERT_ATTRIB_FF_MAX)
 #define VERT_BIT_TEX(i)          VERT_BIT(VERT_ATTRIB_TEX(i))
 #define VERT_BIT_TEX_ALL         \
-   BITFIELD64_RANGE(VERT_ATTRIB_TEX(0), VERT_ATTRIB_TEX_MAX)
+   BITFIELD_RANGE(VERT_ATTRIB_TEX(0), VERT_ATTRIB_TEX_MAX)
 
 #define VERT_BIT_GENERIC(i)      VERT_BIT(VERT_ATTRIB_GENERIC(i))
 #define VERT_BIT_GENERIC_ALL     \
-   BITFIELD64_RANGE(VERT_ATTRIB_GENERIC(0), VERT_ATTRIB_GENERIC_MAX)
+   BITFIELD_RANGE(VERT_ATTRIB_GENERIC(0), VERT_ATTRIB_GENERIC_MAX)
+
+#define VERT_BIT_MAT(i)	         VERT_BIT(VERT_ATTRIB_MAT(i))
+#define VERT_BIT_MAT_ALL         \
+   BITFIELD_RANGE(VERT_ATTRIB_MAT(0), VERT_ATTRIB_MAT_MAX)
 /*@}*/
 
 #define MAX_VARYING 32 /**< number of float[4] vectors */
@@ -376,6 +397,14 @@ typedef enum
    SYSTEM_VALUE_SUBGROUP_LT_MASK,
    /*@}*/
 
+   /**
+    * Builtin variables added by VK_KHR_subgroups
+    */
+   /*@{*/
+   SYSTEM_VALUE_NUM_SUBGROUPS,
+   SYSTEM_VALUE_SUBGROUP_ID,
+   /*@}*/
+
    /*@}*/
 
    /**
@@ -475,6 +504,27 @@ typedef enum
    SYSTEM_VALUE_BASE_VERTEX,
 
    /**
+    * Depending on the type of the draw call (indexed or non-indexed),
+    * is the value of \c basevertex passed to \c glDrawElementsBaseVertex and
+    * similar, or is the value of \c first passed to \c glDrawArrays and
+    * similar.
+    *
+    * \note
+    * It can be used to calculate the \c SYSTEM_VALUE_VERTEX_ID as
+    * \c SYSTEM_VALUE_VERTEX_ID_ZERO_BASE plus \c SYSTEM_VALUE_FIRST_VERTEX.
+    *
+    * \sa SYSTEM_VALUE_VERTEX_ID_ZERO_BASE, SYSTEM_VALUE_VERTEX_ID
+    */
+   SYSTEM_VALUE_FIRST_VERTEX,
+
+   /**
+    * If the Draw command used to start the rendering was an indexed draw
+    * or not (~0/0). Useful to calculate \c SYSTEM_VALUE_BASE_VERTEX as
+    * \c SYSTEM_VALUE_IS_INDEXED_DRAW & \c SYSTEM_VALUE_FIRST_VERTEX.
+    */
+   SYSTEM_VALUE_IS_INDEXED_DRAW,
+
+   /**
     * Value of \c baseinstance passed to instanced draw entry points
     *
     * \sa SYSTEM_VALUE_INSTANCE_ID
@@ -535,7 +585,12 @@ typedef enum
    SYSTEM_VALUE_WORK_GROUP_ID,
    SYSTEM_VALUE_NUM_WORK_GROUPS,
    SYSTEM_VALUE_LOCAL_GROUP_SIZE,
+   SYSTEM_VALUE_GLOBAL_GROUP_SIZE,
+   SYSTEM_VALUE_WORK_DIM,
    /*@}*/
+
+   /** Required for VK_KHR_device_group */
+   SYSTEM_VALUE_DEVICE_INDEX,
 
    /** Required for VK_KHX_multiview */
    SYSTEM_VALUE_VIEW_INDEX,
@@ -545,6 +600,12 @@ typedef enum
     * calculate stride for stream-out outputs.  Not externally visible.
     */
    SYSTEM_VALUE_VERTEX_CNT,
+
+   /**
+    * Driver internal varying-coord, used for varying-fetch instructions.
+    * Not externally visible.
+    */
+   SYSTEM_VALUE_VARYING_COORD,
 
    SYSTEM_VALUE_MAX             /**< Number of values */
 } gl_system_value;
@@ -629,11 +690,13 @@ enum gl_frag_depth_layout
 /**
  * \brief Buffer access qualifiers
  */
-enum gl_buffer_access_qualifier
+enum gl_access_qualifier
 {
-   ACCESS_COHERENT = 1,
-   ACCESS_RESTRICT = 2,
-   ACCESS_VOLATILE = 4,
+   ACCESS_COHERENT      = (1 << 0),
+   ACCESS_RESTRICT      = (1 << 1),
+   ACCESS_VOLATILE      = (1 << 2),
+   ACCESS_NON_READABLE  = (1 << 3),
+   ACCESS_NON_WRITEABLE = (1 << 4),
 };
 
 /**

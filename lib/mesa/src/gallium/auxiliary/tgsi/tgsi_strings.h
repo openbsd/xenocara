@@ -52,6 +52,8 @@ extern const char *tgsi_interpolate_names[TGSI_INTERPOLATE_COUNT];
 
 extern const char *tgsi_interpolate_locations[TGSI_INTERPOLATE_LOC_COUNT];
 
+extern const char *tgsi_invariant_name;
+
 extern const char *tgsi_primitive_names[PIPE_PRIM_MAX];
 
 extern const char *tgsi_fs_coord_origin_names[2];
@@ -60,7 +62,7 @@ extern const char *tgsi_fs_coord_pixel_center_names[2];
 
 extern const char *tgsi_immediate_type_names[6];
 
-extern const char *tgsi_memory_names[3];
+extern const char *tgsi_memory_names[4];
 
 
 const char *

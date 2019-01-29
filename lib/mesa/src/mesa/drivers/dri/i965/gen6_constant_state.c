@@ -28,6 +28,7 @@
 #include "intel_batchbuffer.h"
 #include "intel_buffer_objects.h"
 #include "program/prog_parameter.h"
+#include "main/shaderapi.h"
 
 static uint32_t
 f_as_u32(float f)
@@ -67,9 +68,10 @@ brw_param_value(struct brw_context *brw,
 
    case BRW_PARAM_DOMAIN_PARAMETER: {
       unsigned idx = BRW_PARAM_PARAMETER_IDX(param);
+      unsigned offset = prog->Parameters->ParameterValueOffset[idx];
       unsigned comp = BRW_PARAM_PARAMETER_COMP(param);
       assert(idx < prog->Parameters->NumParameters);
-      return prog->Parameters->ParameterValues[idx][comp].u;
+      return prog->Parameters->ParameterValues[offset + comp].u;
    }
 
    case BRW_PARAM_DOMAIN_UNIFORM: {
@@ -129,7 +131,14 @@ gen6_upload_push_constants(struct brw_context *brw,
    const struct gen_device_info *devinfo = &brw->screen->devinfo;
    struct gl_context *ctx = &brw->ctx;
 
-   if (prog_data->nr_params == 0) {
+   bool active = prog_data &&
+      (stage_state->stage != MESA_SHADER_TESS_CTRL ||
+       brw->programs[MESA_SHADER_TESS_EVAL]);
+
+   if (active)
+      _mesa_shader_write_subroutine_indices(ctx, stage_state->stage);
+
+   if (!active || prog_data->nr_params == 0) {
       stage_state->push_const_size = 0;
    } else {
       /* Updates the ParamaterValues[i] pointers for all parameters of the
@@ -143,9 +152,9 @@ gen6_upload_push_constants(struct brw_context *brw,
       const int size = prog_data->nr_params * sizeof(gl_constant_value);
       gl_constant_value *param;
       if (devinfo->gen >= 8 || devinfo->is_haswell) {
-         param = intel_upload_space(brw, size, 32,
-                                    &stage_state->push_const_bo,
-                                    &stage_state->push_const_offset);
+         param = brw_upload_space(&brw->upload, size, 32,
+                                  &stage_state->push_const_bo,
+                                  &stage_state->push_const_offset);
       } else {
          param = brw_state_batch(brw, size, 32,
                                  &stage_state->push_const_offset);
@@ -241,8 +250,8 @@ brw_upload_pull_constants(struct brw_context *brw,
    uint32_t size = prog_data->nr_pull_params * 4;
    struct brw_bo *const_bo = NULL;
    uint32_t const_offset;
-   gl_constant_value *constants = intel_upload_space(brw, size, 64,
-                                                     &const_bo, &const_offset);
+   gl_constant_value *constants = brw_upload_space(&brw->upload, size, 64,
+                                                   &const_bo, &const_offset);
 
    STATIC_ASSERT(sizeof(gl_constant_value) == sizeof(float));
 
@@ -258,8 +267,11 @@ brw_upload_pull_constants(struct brw_context *brw,
       }
    }
 
-   brw_create_constant_surface(brw, const_bo, const_offset, size,
-                               &stage_state->surf_offset[surf_index]);
+   brw_emit_buffer_surface_state(brw, &stage_state->surf_offset[surf_index],
+                                 const_bo, const_offset,
+                                 ISL_FORMAT_R32G32B32A32_FLOAT,
+                                 size, 1, 0);
+
    brw_bo_unreference(const_bo);
 
    brw->ctx.NewDriverState |= brw_new_constbuf;
@@ -309,7 +321,7 @@ brw_upload_cs_push_constants(struct brw_context *brw,
       for (unsigned i = 0;
            i < cs_prog_data->push.cross_thread.dwords;
            i++) {
-         assert(prog_data->param[i] != BRW_PARAM_BUILTIN_THREAD_LOCAL_ID);
+         assert(prog_data->param[i] != BRW_PARAM_BUILTIN_SUBGROUP_ID);
          param_copy[i] = brw_param_value(brw, prog, stage_state,
                                          prog_data->param[i]);
       }
@@ -322,8 +334,8 @@ brw_upload_cs_push_constants(struct brw_context *brw,
                  cs_prog_data->push.cross_thread.regs);
          unsigned src = cs_prog_data->push.cross_thread.dwords;
          for ( ; src < prog_data->nr_params; src++, dst++) {
-            if (prog_data->param[src] == BRW_PARAM_BUILTIN_THREAD_LOCAL_ID) {
-               param[dst] = t * cs_prog_data->simd_size;
+            if (prog_data->param[src] == BRW_PARAM_BUILTIN_SUBGROUP_ID) {
+               param[dst] = t;
             } else {
                param[dst] = brw_param_value(brw, prog, stage_state,
                                             prog_data->param[src]);

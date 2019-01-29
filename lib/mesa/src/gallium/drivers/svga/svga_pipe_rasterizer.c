@@ -142,7 +142,7 @@ define_rasterizer_object(struct svga_context *svga,
                                              depth_bias,
                                              depth_bias_clamp,
                                              slope_scaled_depth_bias,
-                                             rast->templ.depth_clip,
+                                             rast->templ.depth_clip_near,
                                              rast->templ.scissor,
                                              rast->templ.multisample,
                                              rast->templ.line_smooth,
@@ -172,25 +172,27 @@ svga_create_rasterizer_state(struct pipe_context *pipe,
    /* need this for draw module. */
    rast->templ = *templ;
 
-   /* light_twoside          - XXX: need fragment shader variant */
-   /* poly_smooth            - XXX: no fallback available */
-   /* poly_stipple_enable    - draw module */
-   /* sprite_coord_enable    - ? */
-   /* point_quad_rasterization - ? */
-   /* point_size_per_vertex  - ? */
-   /* sprite_coord_mode      - ??? */
-   /* flatshade_first        - handled by index translation */
-   /* half_pixel_center      - XXX - viewport code */
-   /* line_width             - draw module */
-   /* fill_cw, fill_ccw      - draw module or index translation */
-
    rast->shademode = svga_translate_flatshade(templ->flatshade);
    rast->cullmode = svga_translate_cullmode(templ->cull_face, templ->front_ccw);
    rast->scissortestenable = templ->scissor;
    rast->multisampleantialias = templ->multisample;
    rast->antialiasedlineenable = templ->line_smooth;
    rast->lastpixel = templ->line_last_pixel;
-   rast->pointsprite = templ->sprite_coord_enable != 0x0;
+   rast->pointsprite = templ->point_quad_rasterization;
+
+   if (rast->templ.multisample) {
+      /* The OpenGL 3.0 spec says points are always drawn as circles when
+       * MSAA is enabled.  Note that our implementation isn't 100% correct,
+       * though.  Our smooth point implementation involves drawing a square,
+       * computing fragment distance from point center, then attenuating
+       * the fragment alpha value.  We should not attenuate alpha if msaa
+       * is enabled.  We should kill fragments entirely outside the circle
+       * and let the GPU compute per-fragment coverage.
+       * But as-is, our implementation gives acceptable results and passes
+       * Piglit's MSAA point smooth test.
+       */
+      rast->templ.point_smooth = TRUE;
+   }
 
    if (templ->point_smooth) {
       /* For smooth points we need to generate fragments for at least
@@ -233,7 +235,7 @@ svga_create_rasterizer_state(struct pipe_context *pipe,
          rast->need_pipeline |= SVGA_PIPELINE_FLAG_LINES;
          rast->need_pipeline_lines_str = "line stipple";
       }
-   } 
+   }
 
    if (!svga_have_vgpu10(svga) && templ->point_smooth) {
       rast->need_pipeline |= SVGA_PIPELINE_FLAG_POINTS;
@@ -255,7 +257,7 @@ svga_create_rasterizer_state(struct pipe_context *pipe,
    {
       int fill_front = templ->fill_front;
       int fill_back = templ->fill_back;
-      int fill = PIPE_POLYGON_MODE_FILL;
+      int fill;
       boolean offset_front = util_get_offset(templ, fill_front);
       boolean offset_back = util_get_offset(templ, fill_back);
       boolean offset = FALSE;
@@ -267,23 +269,23 @@ svga_create_rasterizer_state(struct pipe_context *pipe,
          break;
 
       case PIPE_FACE_FRONT:
-         offset = offset_front;
-         fill = fill_front;
-         break;
-
-      case PIPE_FACE_BACK:
          offset = offset_back;
          fill = fill_back;
          break;
 
+      case PIPE_FACE_BACK:
+         offset = offset_front;
+         fill = fill_front;
+         break;
+
       case PIPE_FACE_NONE:
-         if (fill_front != fill_back || offset_front != offset_back) 
-         {
+         if (fill_front != fill_back || offset_front != offset_back) {
             /* Always need the draw module to work out different
              * front/back fill modes:
              */
             rast->need_pipeline |= SVGA_PIPELINE_FLAG_TRIS;
             rast->need_pipeline_tris_str = "different front/back fillmodes";
+            fill = PIPE_POLYGON_MODE_FILL;
          }
          else {
             offset = offset_front;
@@ -303,9 +305,7 @@ svga_create_rasterizer_state(struct pipe_context *pipe,
       if (fill != PIPE_POLYGON_MODE_FILL &&
           (templ->flatshade ||
            templ->light_twoside ||
-           offset ||
-           templ->cull_face != PIPE_FACE_NONE)) 
-      {
+           offset)) {
          fill = PIPE_POLYGON_MODE_FILL;
          rast->need_pipeline |= SVGA_PIPELINE_FLAG_TRIS;
          rast->need_pipeline_tris_str = "unfilled primitives with no index manipulation";
@@ -315,8 +315,7 @@ svga_create_rasterizer_state(struct pipe_context *pipe,
        * then we also need the pipeline for tris.
        */
       if (fill == PIPE_POLYGON_MODE_LINE &&
-          (rast->need_pipeline & SVGA_PIPELINE_FLAG_LINES))
-      {
+          (rast->need_pipeline & SVGA_PIPELINE_FLAG_LINES)) {
          fill = PIPE_POLYGON_MODE_FILL;
          rast->need_pipeline |= SVGA_PIPELINE_FLAG_TRIS;
          rast->need_pipeline_tris_str = "decomposing lines";
@@ -325,8 +324,7 @@ svga_create_rasterizer_state(struct pipe_context *pipe,
       /* Similarly for points:
        */
       if (fill == PIPE_POLYGON_MODE_POINT &&
-          (rast->need_pipeline & SVGA_PIPELINE_FLAG_POINTS))
-      {
+          (rast->need_pipeline & SVGA_PIPELINE_FLAG_POINTS)) {
          fill = PIPE_POLYGON_MODE_FILL;
          rast->need_pipeline |= SVGA_PIPELINE_FLAG_TRIS;
          rast->need_pipeline_tris_str = "decomposing points";

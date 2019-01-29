@@ -91,6 +91,9 @@ enum st_api_feature
 #define ST_CONTEXT_FLAG_ROBUST_ACCESS       (1 << 2)
 #define ST_CONTEXT_FLAG_RESET_NOTIFICATION_ENABLED (1 << 3)
 #define ST_CONTEXT_FLAG_NO_ERROR            (1 << 4)
+#define ST_CONTEXT_FLAG_RELEASE_NONE	    (1 << 5)
+#define ST_CONTEXT_FLAG_HIGH_PRIORITY       (1 << 6)
+#define ST_CONTEXT_FLAG_LOW_PRIORITY        (1 << 7)
 
 /**
  * Reasons that context creation might fail.
@@ -146,6 +149,7 @@ enum st_attachment_type {
 #define ST_FLUSH_FRONT                    (1 << 0)
 #define ST_FLUSH_END_OF_FRAME             (1 << 1)
 #define ST_FLUSH_WAIT                     (1 << 2)
+#define ST_FLUSH_FENCE_FD                 (1 << 3)
 
 /**
  * Value to st_manager->get_param function.
@@ -186,6 +190,8 @@ struct st_egl_image
  */
 struct st_visual
 {
+   bool no_config;
+
    /**
     * Available buffers.  Bitfield of ST_ATTACHMENT_*_MASK bits.
     */
@@ -198,7 +204,7 @@ struct st_visual
    enum pipe_format color_format;
    enum pipe_format depth_stencil_format;
    enum pipe_format accum_format;
-   int samples;
+   unsigned samples;
 
    /**
     * Desired render buffer.
@@ -214,15 +220,17 @@ struct st_config_options
 {
    boolean disable_blend_func_extended;
    boolean disable_glsl_line_continuations;
-   boolean disable_shader_bit_encoding;
    boolean force_glsl_extensions_warn;
    unsigned force_glsl_version;
    boolean allow_glsl_extension_directive_midshader;
+   boolean allow_glsl_builtin_const_expression;
+   boolean allow_glsl_relaxed_es;
    boolean allow_glsl_builtin_variable_redeclaration;
    boolean allow_higher_compat_version;
    boolean glsl_zero_init;
    boolean force_glsl_abs_sqrt;
    boolean allow_glsl_cross_stage_interpolation_mismatch;
+   boolean allow_glsl_layout_qualifier_on_function_parameters;
    unsigned char config_options_sha1[20];
 };
 

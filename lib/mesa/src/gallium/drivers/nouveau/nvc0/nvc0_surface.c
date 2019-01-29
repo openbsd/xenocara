@@ -403,10 +403,7 @@ nvc0_clear_buffer_push_nvc0(struct pipe_context *pipe,
       size -= nr * 4;
    }
 
-   if (buf->mm) {
-      nouveau_fence_ref(nvc0->screen->base.fence.current, &buf->fence);
-      nouveau_fence_ref(nvc0->screen->base.fence.current, &buf->fence_wr);
-   }
+   nvc0_resource_validate(buf, NOUVEAU_BO_WR);
 
    nouveau_bufctx_reset(nvc0->bufctx, 0);
 }
@@ -453,10 +450,7 @@ nvc0_clear_buffer_push_nve4(struct pipe_context *pipe,
       size -= nr * 4;
    }
 
-   if (buf->mm) {
-      nouveau_fence_ref(nvc0->screen->base.fence.current, &buf->fence);
-      nouveau_fence_ref(nvc0->screen->base.fence.current, &buf->fence_wr);
-   }
+   nvc0_resource_validate(buf, NOUVEAU_BO_WR);
 
    nouveau_bufctx_reset(nvc0->bufctx, 0);
 }
@@ -540,6 +534,8 @@ nvc0_clear_buffer(struct pipe_context *pipe,
       return;
    }
 
+   util_range_add(&buf->valid_buffer_range, offset, offset + size);
+
    assert(size % data_size == 0);
 
    if (data_size == 12) {
@@ -570,10 +566,10 @@ nvc0_clear_buffer(struct pipe_context *pipe,
    PUSH_REFN (push, buf->bo, buf->domain | NOUVEAU_BO_WR);
 
    BEGIN_NVC0(push, NVC0_3D(CLEAR_COLOR(0)), 4);
-   PUSH_DATAf(push, color.f[0]);
-   PUSH_DATAf(push, color.f[1]);
-   PUSH_DATAf(push, color.f[2]);
-   PUSH_DATAf(push, color.f[3]);
+   PUSH_DATA (push, color.ui[0]);
+   PUSH_DATA (push, color.ui[1]);
+   PUSH_DATA (push, color.ui[2]);
+   PUSH_DATA (push, color.ui[3]);
    BEGIN_NVC0(push, NVC0_3D(SCREEN_SCISSOR_HORIZ), 2);
    PUSH_DATA (push, width << 16);
    PUSH_DATA (push, height << 16);
@@ -600,10 +596,7 @@ nvc0_clear_buffer(struct pipe_context *pipe,
 
    IMMED_NVC0(push, NVC0_3D(COND_MODE), nvc0->cond_condmode);
 
-   if (buf->mm) {
-      nouveau_fence_ref(nvc0->screen->base.fence.current, &buf->fence);
-      nouveau_fence_ref(nvc0->screen->base.fence.current, &buf->fence_wr);
-   }
+   nvc0_resource_validate(buf, NOUVEAU_BO_WR);
 
    if (width * height != elements) {
       offset += width * height * data_size;
@@ -759,6 +752,16 @@ nvc0_clear(struct pipe_context *pipe, unsigned buffers,
                     (j << NVC0_3D_CLEAR_BUFFERS_LAYER__SHIFT));
       }
    }
+}
+
+static void
+gm200_evaluate_depth_buffer(struct pipe_context *pipe)
+{
+   struct nvc0_context *nvc0 = nvc0_context(pipe);
+   struct nouveau_pushbuf *push = nvc0->base.pushbuf;
+
+   nvc0_state_validate_3d(nvc0, NVC0_NEW_3D_FRAMEBUFFER);
+   IMMED_NVC0(push, SUBC_3D(0x11fc), 1);
 }
 
 
@@ -1570,6 +1573,13 @@ nvc0_blit(struct pipe_context *pipe, const struct pipe_blit_info *info)
    struct nouveau_pushbuf *push = nvc0->base.pushbuf;
    bool eng3d = false;
 
+   if (info->src.box.width == 0 || info->src.box.height == 0 ||
+       info->dst.box.width == 0 || info->dst.box.height == 0) {
+      pipe_debug_message(&nvc0->base.debug, ERROR,
+                         "Blit with zero-size src or dst box");
+      return;
+   }
+
    if (util_format_is_depth_or_stencil(info->dst.resource->format)) {
       if (!(info->mask & PIPE_MASK_ZS))
          return;
@@ -1607,6 +1617,10 @@ nvc0_blit(struct pipe_context *pipe, const struct pipe_blit_info *info)
             else
             if (util_format_is_alpha(info->src.format))
                eng3d = info->src.format != PIPE_FORMAT_A8_UNORM;
+            else
+            if (util_format_is_srgb(info->dst.format) &&
+                util_format_get_nr_components(info->src.format) == 1)
+               eng3d = true;
             else
                eng3d = !nv50_2d_format_supported(info->src.format);
          }
@@ -1727,4 +1741,6 @@ nvc0_init_surface_functions(struct nvc0_context *nvc0)
    pipe->clear_depth_stencil = nvc0_clear_depth_stencil;
    pipe->clear_texture = nv50_clear_texture;
    pipe->clear_buffer = nvc0_clear_buffer;
+   if (nvc0->screen->base.class_3d >= GM200_3D_CLASS)
+      pipe->evaluate_depth_buffer = gm200_evaluate_depth_buffer;
 }

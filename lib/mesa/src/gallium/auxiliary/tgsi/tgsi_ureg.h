@@ -28,6 +28,7 @@
 #ifndef TGSI_UREG_H
 #define TGSI_UREG_H
 
+#include "pipe/p_format.h"
 #include "pipe/p_compiler.h"
 #include "pipe/p_shader_tokens.h"
 #include "util/u_debug.h"
@@ -79,6 +80,7 @@ struct ureg_dst
    unsigned DimIndirect     : 1;  /* BOOL */
    unsigned Dimension       : 1;  /* BOOL */
    unsigned Saturate        : 1;  /* BOOL */
+   unsigned Invariant       : 1;  /* BOOL */
    int      Index           : 16; /* SINT */
    int      IndirectIndex   : 16; /* SINT */
    unsigned IndirectFile    : 4;  /* TGSI_FILE_ */
@@ -93,10 +95,11 @@ struct ureg_dst
 struct pipe_context;
 
 struct ureg_program *
-ureg_create(unsigned processor);
+ureg_create(enum pipe_shader_type processor);
 
 struct ureg_program *
-ureg_create_with_screen(unsigned processor, struct pipe_screen *screen);
+ureg_create_with_screen(enum pipe_shader_type processor,
+                        struct pipe_screen *screen);
 
 const struct tgsi_token *
 ureg_finalize( struct ureg_program * );
@@ -168,11 +171,11 @@ ureg_property(struct ureg_program *ureg, unsigned name, unsigned value);
 
 struct ureg_src
 ureg_DECL_fs_input_cyl_centroid_layout(struct ureg_program *,
-                       unsigned semantic_name,
+                       enum tgsi_semantic semantic_name,
                        unsigned semantic_index,
-                       unsigned interp_mode,
+                       enum tgsi_interpolate_mode interp_mode,
                        unsigned cylindrical_wrap,
-                       unsigned interp_location,
+                       enum tgsi_interpolate_loc interp_location,
                        unsigned index,
                        unsigned usage_mask,
                        unsigned array_id,
@@ -180,19 +183,19 @@ ureg_DECL_fs_input_cyl_centroid_layout(struct ureg_program *,
 
 struct ureg_src
 ureg_DECL_fs_input_cyl_centroid(struct ureg_program *,
-                       unsigned semantic_name,
+                       enum tgsi_semantic semantic_name,
                        unsigned semantic_index,
-                       unsigned interp_mode,
+                       enum tgsi_interpolate_mode interp_mode,
                        unsigned cylindrical_wrap,
-                       unsigned interp_location,
+                       enum tgsi_interpolate_loc interp_location,
                        unsigned array_id,
                        unsigned array_size);
 
 static inline struct ureg_src
 ureg_DECL_fs_input_cyl(struct ureg_program *ureg,
-                       unsigned semantic_name,
+                       enum tgsi_semantic semantic_name,
                        unsigned semantic_index,
-                       unsigned interp_mode,
+                       enum tgsi_interpolate_mode interp_mode,
                        unsigned cylindrical_wrap)
 {
    return ureg_DECL_fs_input_cyl_centroid(ureg,
@@ -200,20 +203,20 @@ ureg_DECL_fs_input_cyl(struct ureg_program *ureg,
                                  semantic_index,
                                  interp_mode,
                                  cylindrical_wrap,
-                                 0, 0, 1);
+                                 TGSI_INTERPOLATE_LOC_CENTER, 0, 1);
 }
 
 static inline struct ureg_src
 ureg_DECL_fs_input(struct ureg_program *ureg,
-                   unsigned semantic_name,
+                   enum tgsi_semantic semantic_name,
                    unsigned semantic_index,
-                   unsigned interp_mode)
+                   enum tgsi_interpolate_mode interp_mode)
 {
    return ureg_DECL_fs_input_cyl_centroid(ureg,
                                  semantic_name,
                                  semantic_index,
                                  interp_mode,
-                                 0, 0, 0, 1);
+                                 0, TGSI_INTERPOLATE_LOC_CENTER, 0, 1);
 }
 
 struct ureg_src
@@ -222,7 +225,7 @@ ureg_DECL_vs_input( struct ureg_program *,
 
 struct ureg_src
 ureg_DECL_input_layout(struct ureg_program *,
-                unsigned semantic_name,
+                enum tgsi_semantic semantic_name,
                 unsigned semantic_index,
                 unsigned index,
                 unsigned usage_mask,
@@ -231,29 +234,30 @@ ureg_DECL_input_layout(struct ureg_program *,
 
 struct ureg_src
 ureg_DECL_input(struct ureg_program *,
-                unsigned semantic_name,
+                enum tgsi_semantic semantic_name,
                 unsigned semantic_index,
                 unsigned array_id,
                 unsigned array_size);
 
 struct ureg_src
 ureg_DECL_system_value(struct ureg_program *,
-                       unsigned semantic_name,
+                       enum tgsi_semantic semantic_name,
                        unsigned semantic_index);
 
 struct ureg_dst
 ureg_DECL_output_layout(struct ureg_program *,
-                        unsigned semantic_name,
+                        enum tgsi_semantic semantic_name,
                         unsigned semantic_index,
                         unsigned streams,
                         unsigned index,
                         unsigned usage_mask,
                         unsigned array_id,
-                        unsigned array_size);
+                        unsigned array_size,
+                        boolean invariant);
 
 struct ureg_dst
 ureg_DECL_output_masked(struct ureg_program *,
-                        unsigned semantic_name,
+                        enum tgsi_semantic semantic_name,
                         unsigned semantic_index,
                         unsigned usage_mask,
                         unsigned array_id,
@@ -261,12 +265,12 @@ ureg_DECL_output_masked(struct ureg_program *,
 
 struct ureg_dst
 ureg_DECL_output(struct ureg_program *,
-                 unsigned semantic_name,
+                 enum tgsi_semantic semantic_name,
                  unsigned semantic_index);
 
 struct ureg_dst
 ureg_DECL_output_array(struct ureg_program *ureg,
-                       unsigned semantic_name,
+                       enum tgsi_semantic semantic_name,
                        unsigned semantic_index,
                        unsigned array_id,
                        unsigned array_size);
@@ -316,6 +320,13 @@ struct ureg_src
 ureg_DECL_constant( struct ureg_program *,
                     unsigned index );
 
+void
+ureg_DECL_hw_atomic(struct ureg_program *ureg,
+                    unsigned first,
+                    unsigned last,
+                    unsigned buffer_id,
+                    unsigned array_id);
+
 struct ureg_dst
 ureg_DECL_temporary( struct ureg_program * );
 
@@ -354,17 +365,17 @@ ureg_DECL_sampler( struct ureg_program *,
 struct ureg_src
 ureg_DECL_sampler_view(struct ureg_program *,
                        unsigned index,
-                       unsigned target,
-                       unsigned return_type_x,
-                       unsigned return_type_y,
-                       unsigned return_type_z,
-                       unsigned return_type_w );
+                       enum tgsi_texture_type target,
+                       enum tgsi_return_type return_type_x,
+                       enum tgsi_return_type return_type_y,
+                       enum tgsi_return_type return_type_z,
+                       enum tgsi_return_type return_type_w );
 
 struct ureg_src
 ureg_DECL_image(struct ureg_program *ureg,
                 unsigned index,
-                unsigned target,
-                unsigned format,
+                enum tgsi_texture_type target,
+                enum pipe_format format,
                 boolean wr,
                 boolean raw);
 
@@ -542,7 +553,7 @@ ureg_fixup_label(struct ureg_program *ureg,
  */
 void
 ureg_insn(struct ureg_program *ureg,
-          unsigned opcode,
+          enum tgsi_opcode opcode,
           const struct ureg_dst *dst,
           unsigned nr_dst,
           const struct ureg_src *src,
@@ -552,11 +563,11 @@ ureg_insn(struct ureg_program *ureg,
 
 void
 ureg_tex_insn(struct ureg_program *ureg,
-              unsigned opcode,
+              enum tgsi_opcode opcode,
               const struct ureg_dst *dst,
               unsigned nr_dst,
-              unsigned target,
-              unsigned return_type,
+              enum tgsi_texture_type target,
+              enum tgsi_return_type return_type,
               const struct tgsi_texture_offset *texoffsets,
               unsigned nr_offset,
               const struct ureg_src *src,
@@ -565,14 +576,14 @@ ureg_tex_insn(struct ureg_program *ureg,
 
 void
 ureg_memory_insn(struct ureg_program *ureg,
-                 unsigned opcode,
+                 enum tgsi_opcode opcode,
                  const struct ureg_dst *dst,
                  unsigned nr_dst,
                  const struct ureg_src *src,
                  unsigned nr_src,
                  unsigned qualifier,
-                 unsigned texture,
-                 unsigned format);
+                 enum tgsi_texture_type texture,
+                 enum pipe_format format);
 
 /***********************************************************************
  * Internal instruction helpers, don't call these directly:
@@ -585,7 +596,7 @@ struct ureg_emit_insn_result {
 
 struct ureg_emit_insn_result
 ureg_emit_insn(struct ureg_program *ureg,
-               unsigned opcode,
+               enum tgsi_opcode opcode,
                boolean saturate,
                unsigned precise,
                unsigned num_dst,
@@ -599,7 +610,9 @@ ureg_emit_label(struct ureg_program *ureg,
 void
 ureg_emit_texture(struct ureg_program *ureg,
                   unsigned insn_token,
-                  unsigned target, unsigned return_type, unsigned num_offsets);
+                  enum tgsi_texture_type target,
+                  enum tgsi_return_type return_type,
+                  unsigned num_offsets);
 
 void
 ureg_emit_texture_offset(struct ureg_program *ureg,
@@ -609,8 +622,8 @@ void
 ureg_emit_memory(struct ureg_program *ureg,
                  unsigned insn_token,
                  unsigned qualifier,
-                 unsigned texture,
-                 unsigned format);
+                 enum tgsi_texture_type texture,
+                 enum pipe_format format);
 
 void 
 ureg_emit_dst( struct ureg_program *ureg,
@@ -628,7 +641,7 @@ ureg_fixup_insn_size(struct ureg_program *ureg,
 #define OP00( op )                                              \
 static inline void ureg_##op( struct ureg_program *ureg )       \
 {                                                               \
-   unsigned opcode = TGSI_OPCODE_##op;                          \
+   enum tgsi_opcode opcode = TGSI_OPCODE_##op;                  \
    struct ureg_emit_insn_result insn;                           \
    insn = ureg_emit_insn(ureg,                                  \
                          opcode,                                \
@@ -643,7 +656,7 @@ static inline void ureg_##op( struct ureg_program *ureg )       \
 static inline void ureg_##op( struct ureg_program *ureg,        \
                               struct ureg_src src )             \
 {                                                               \
-   unsigned opcode = TGSI_OPCODE_##op;                          \
+   enum tgsi_opcode opcode = TGSI_OPCODE_##op;                  \
    struct ureg_emit_insn_result insn;                           \
    insn = ureg_emit_insn(ureg,                                  \
                          opcode,                                \
@@ -659,7 +672,7 @@ static inline void ureg_##op( struct ureg_program *ureg,        \
 static inline void ureg_##op( struct ureg_program *ureg,        \
                               unsigned *label_token )           \
 {                                                               \
-   unsigned opcode = TGSI_OPCODE_##op;                          \
+   enum tgsi_opcode opcode = TGSI_OPCODE_##op;                  \
    struct ureg_emit_insn_result insn;                           \
    insn = ureg_emit_insn(ureg,                                  \
                          opcode,                                \
@@ -676,7 +689,7 @@ static inline void ureg_##op( struct ureg_program *ureg,        \
                               struct ureg_src src,              \
                               unsigned *label_token )          \
 {                                                               \
-   unsigned opcode = TGSI_OPCODE_##op;                          \
+   enum tgsi_opcode opcode = TGSI_OPCODE_##op;                  \
    struct ureg_emit_insn_result insn;                           \
    insn = ureg_emit_insn(ureg,                                  \
                          opcode,                                \
@@ -693,7 +706,7 @@ static inline void ureg_##op( struct ureg_program *ureg,        \
 static inline void ureg_##op( struct ureg_program *ureg,                \
                               struct ureg_dst dst )                     \
 {                                                                       \
-   unsigned opcode = TGSI_OPCODE_##op;                                  \
+   enum tgsi_opcode opcode = TGSI_OPCODE_##op;                          \
    struct ureg_emit_insn_result insn;                                   \
    if (ureg_dst_is_empty(dst))                                          \
       return;                                                           \
@@ -713,7 +726,7 @@ static inline void ureg_##op( struct ureg_program *ureg,                \
                               struct ureg_dst dst,                      \
                               struct ureg_src src )                     \
 {                                                                       \
-   unsigned opcode = TGSI_OPCODE_##op;                                  \
+   enum tgsi_opcode opcode = TGSI_OPCODE_##op;                          \
    struct ureg_emit_insn_result insn;                                   \
    if (ureg_dst_is_empty(dst))                                          \
       return;                                                           \
@@ -734,7 +747,7 @@ static inline void ureg_##op( struct ureg_program *ureg,                \
                               struct ureg_src src0,                     \
                               struct ureg_src src1 )                    \
 {                                                                       \
-   unsigned opcode = TGSI_OPCODE_##op;                                  \
+   enum tgsi_opcode opcode = TGSI_OPCODE_##op;                          \
    struct ureg_emit_insn_result insn;                                   \
    if (ureg_dst_is_empty(dst))                                          \
       return;                                                           \
@@ -753,12 +766,12 @@ static inline void ureg_##op( struct ureg_program *ureg,                \
 #define OP12_TEX( op )                                                  \
 static inline void ureg_##op( struct ureg_program *ureg,                \
                               struct ureg_dst dst,                      \
-                              unsigned target,                          \
+                              enum tgsi_texture_type target,            \
                               struct ureg_src src0,                     \
                               struct ureg_src src1 )                    \
 {                                                                       \
-   unsigned opcode = TGSI_OPCODE_##op;                                  \
-   unsigned return_type = TGSI_RETURN_TYPE_UNKNOWN;                     \
+   enum tgsi_opcode opcode = TGSI_OPCODE_##op;                          \
+   enum tgsi_return_type return_type = TGSI_RETURN_TYPE_UNKNOWN;        \
    struct ureg_emit_insn_result insn;                                   \
    if (ureg_dst_is_empty(dst))                                          \
       return;                                                           \
@@ -783,7 +796,7 @@ static inline void ureg_##op( struct ureg_program *ureg,                \
                               struct ureg_src src1,                     \
                               struct ureg_src src2 )                    \
 {                                                                       \
-   unsigned opcode = TGSI_OPCODE_##op;                                  \
+   enum tgsi_opcode opcode = TGSI_OPCODE_##op;                          \
    struct ureg_emit_insn_result insn;                                   \
    if (ureg_dst_is_empty(dst))                                          \
       return;                                                           \
@@ -803,14 +816,14 @@ static inline void ureg_##op( struct ureg_program *ureg,                \
 #define OP14_TEX( op )                                                  \
 static inline void ureg_##op( struct ureg_program *ureg,                \
                               struct ureg_dst dst,                      \
-                              unsigned target,                          \
+                              enum tgsi_texture_type target,            \
                               struct ureg_src src0,                     \
                               struct ureg_src src1,                     \
                               struct ureg_src src2,                     \
                               struct ureg_src src3 )                    \
 {                                                                       \
-   unsigned opcode = TGSI_OPCODE_##op;                                  \
-   unsigned return_type = TGSI_RETURN_TYPE_UNKNOWN;                     \
+   enum tgsi_opcode opcode = TGSI_OPCODE_##op;                          \
+   enum tgsi_return_type return_type = TGSI_RETURN_TYPE_UNKNOWN;        \
    struct ureg_emit_insn_result insn;                                   \
    if (ureg_dst_is_empty(dst))                                          \
       return;                                                           \
@@ -1007,6 +1020,7 @@ ureg_dst_array_register(unsigned file,
    dst.DimIndIndex = 0;
    dst.DimIndSwizzle = 0;
    dst.ArrayID = array_id;
+   dst.Invariant = 0;
 
    return dst;
 }
@@ -1038,6 +1052,7 @@ ureg_dst( struct ureg_src src )
    dst.DimIndIndex = src.DimIndIndex;
    dst.DimIndSwizzle = src.DimIndSwizzle;
    dst.ArrayID = src.ArrayID;
+   dst.Invariant = 0;
 
    return dst;
 }
@@ -1129,6 +1144,7 @@ ureg_dst_undef( void )
    dst.DimIndIndex = 0;
    dst.DimIndSwizzle = 0;
    dst.ArrayID = 0;
+   dst.Invariant = 0;
 
    return dst;
 }

@@ -24,10 +24,14 @@
 #include "brw_context.h"
 #include "compiler/brw_nir.h"
 #include "brw_program.h"
+#include "compiler/glsl/gl_nir.h"
+#include "compiler/glsl/gl_nir_linker.h"
 #include "compiler/glsl/ir.h"
 #include "compiler/glsl/ir_optimization.h"
 #include "compiler/glsl/program.h"
+#include "compiler/nir/nir_serialize.h"
 #include "program/program.h"
+#include "main/glspirv.h"
 #include "main/mtypes.h"
 #include "main/shaderapi.h"
 #include "main/shaderobj.h"
@@ -98,7 +102,8 @@ process_glsl_ir(struct brw_context *brw,
 
    ralloc_adopt(mem_ctx, shader->ir);
 
-   lower_blend_equation_advanced(shader);
+   lower_blend_equation_advanced(
+      shader, ctx->Extensions.KHR_blend_equation_advanced_coherent);
 
    /* lower_packing_builtins() inserts arithmetic instructions, so it
     * must precede lower_instructions().
@@ -224,6 +229,9 @@ brw_link_shader(struct gl_context *ctx, struct gl_shader_program *shProg)
    unsigned int stage;
    struct shader_info *infos[MESA_SHADER_STAGES] = { 0, };
 
+   if (shProg->data->LinkStatus == LINKING_SKIPPED)
+      return GL_TRUE;
+
    for (stage = 0; stage < ARRAY_SIZE(shProg->_LinkedShaders); stage++) {
       struct gl_linked_shader *shader = shProg->_LinkedShaders[stage];
       if (!shader)
@@ -232,12 +240,12 @@ brw_link_shader(struct gl_context *ctx, struct gl_shader_program *shProg)
       struct gl_program *prog = shader->Program;
       prog->Parameters = _mesa_new_parameter_list();
 
-      process_glsl_ir(brw, shProg, shader);
+      if (!shader->spirv_data)
+         process_glsl_ir(brw, shProg, shader);
 
       _mesa_copy_linked_program_data(shProg, shader);
 
       prog->ShadowSamplers = shader->shadow_samplers;
-      _mesa_update_shader_textures_used(shProg, prog);
 
       bool debug_enabled =
          (INTEL_DEBUG & intel_debug_flag_for_shader_stage(shader->Stage));
@@ -251,6 +259,25 @@ brw_link_shader(struct gl_context *ctx, struct gl_shader_program *shProg)
 
       prog->nir = brw_create_nir(brw, shProg, prog, (gl_shader_stage) stage,
                                  compiler->scalar_stage[stage]);
+   }
+
+   /* SPIR-V programs use a NIR linker */
+   if (shProg->data->spirv) {
+      if (!gl_nir_link_uniforms(ctx, shProg))
+         return false;
+
+      gl_nir_link_assign_atomic_counter_resources(ctx, shProg);
+      gl_nir_link_assign_xfb_resources(ctx, shProg);
+   }
+
+   for (stage = 0; stage < ARRAY_SIZE(shProg->_LinkedShaders); stage++) {
+      struct gl_linked_shader *shader = shProg->_LinkedShaders[stage];
+      if (!shader)
+         continue;
+
+      struct gl_program *prog = shader->Program;
+
+      NIR_PASS_V(prog->nir, brw_nir_lower_gl_images, prog);
    }
 
    /* Determine first and last stage. */
@@ -291,10 +318,17 @@ brw_link_shader(struct gl_context *ctx, struct gl_shader_program *shProg)
          continue;
 
       struct gl_program *prog = shader->Program;
+
+      _mesa_update_shader_textures_used(shProg, prog);
+
       brw_shader_gather_info(prog->nir, prog);
 
-      NIR_PASS_V(prog->nir, nir_lower_samplers, shProg);
-      NIR_PASS_V(prog->nir, nir_lower_atomics, shProg);
+      NIR_PASS_V(prog->nir, gl_nir_lower_samplers, shProg);
+      NIR_PASS_V(prog->nir, gl_nir_lower_atomics, shProg, false);
+      NIR_PASS_V(prog->nir, nir_lower_atomics_to_ssbo,
+                 prog->nir->info.num_abos);
+
+      nir_sweep(prog->nir);
 
       infos[stage] = &prog->nir->info;
 
@@ -308,14 +342,10 @@ brw_link_shader(struct gl_context *ctx, struct gl_shader_program *shProg)
        * get sent to the shader.
        */
       nir_foreach_variable(var, &prog->nir->uniforms) {
-         if (strncmp(var->name, "gl_", 3) == 0) {
-            const nir_state_slot *const slots = var->state_slots;
-            assert(var->state_slots != NULL);
-
-            for (unsigned int i = 0; i < var->num_state_slots; i++) {
-               _mesa_add_state_reference(prog->Parameters,
-                                         (gl_state_index *)slots[i].tokens);
-            }
+         const nir_state_slot *const slots = var->state_slots;
+         for (unsigned int i = 0; i < var->num_state_slots; i++) {
+            assert(slots != NULL);
+            _mesa_add_state_reference(prog->Parameters, slots[i].tokens);
          }
       }
    }
@@ -345,7 +375,11 @@ brw_link_shader(struct gl_context *ctx, struct gl_shader_program *shProg)
    if (brw->precompile && !brw_shader_precompile(ctx, shProg))
       return false;
 
-   build_program_resource_list(ctx, shProg);
+   /* SPIR-V programs build its resource list from linked NIR shaders. */
+   if (!shProg->data->spirv)
+      build_program_resource_list(ctx, shProg);
+   else
+      nir_build_program_resource_list(ctx, shProg);
 
    for (stage = 0; stage < ARRAY_SIZE(shProg->_LinkedShaders); stage++) {
       struct gl_linked_shader *shader = shProg->_LinkedShaders[stage];

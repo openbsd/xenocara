@@ -82,14 +82,117 @@ loader_open_device(const char *device_name)
    return fd;
 }
 
+static char *loader_get_kernel_driver_name(int fd)
+{
+#if HAVE_LIBDRM
+   char *driver;
+   drmVersionPtr version = drmGetVersion(fd);
+
+   if (!version) {
+      log_(_LOADER_WARNING, "failed to get driver name for fd %d\n", fd);
+      return NULL;
+   }
+
+   driver = strndup(version->name, version->name_len);
+
+   drmFreeVersion(version);
+   return driver;
+#else
+   return NULL;
+#endif
+}
+
 #if defined(HAVE_LIBDRM)
+int
+loader_open_render_node(const char *name)
+{
+   drmDevicePtr *devices, device;
+   int err, render = -ENOENT, fd;
+   unsigned int num, i;
+
+   err = drmGetDevices2(0, NULL, 0);
+   if (err < 0)
+      return err;
+
+   num = err;
+
+   devices = calloc(num, sizeof(*devices));
+   if (!devices)
+      return -ENOMEM;
+
+   err = drmGetDevices2(0, devices, num);
+   if (err < 0) {
+      render = err;
+      goto free;
+   }
+
+   for (i = 0; i < num; i++) {
+      device = devices[i];
+
+      if ((device->available_nodes & (1 << DRM_NODE_RENDER)) &&
+          (device->bustype == DRM_BUS_PLATFORM)) {
+         drmVersionPtr version;
+
+         fd = open(device->nodes[DRM_NODE_RENDER], O_RDWR | O_CLOEXEC);
+         if (fd < 0)
+            continue;
+
+         version = drmGetVersion(fd);
+         if (!version) {
+            close(fd);
+            continue;
+         }
+
+         if (strcmp(version->name, name) != 0) {
+            drmFreeVersion(version);
+            close(fd);
+            continue;
+         }
+
+         drmFreeVersion(version);
+         render = fd;
+         break;
+      }
+   }
+
+   drmFreeDevices(devices, num);
+
+free:
+   free(devices);
+   return render;
+}
+
 #ifdef USE_DRICONF
 static const char __driConfigOptionsLoader[] =
 DRI_CONF_BEGIN
     DRI_CONF_SECTION_INITIALIZATION
         DRI_CONF_DEVICE_ID_PATH_TAG()
+        DRI_CONF_DRI_DRIVER()
     DRI_CONF_SECTION_END
 DRI_CONF_END;
+
+static char *loader_get_dri_config_driver(int fd)
+{
+   driOptionCache defaultInitOptions;
+   driOptionCache userInitOptions;
+   char *dri_driver = NULL;
+   char *kernel_driver = loader_get_kernel_driver_name(fd);
+
+   driParseOptionInfo(&defaultInitOptions, __driConfigOptionsLoader);
+   driParseConfigFiles(&userInitOptions, &defaultInitOptions, 0,
+                       "loader", kernel_driver);
+   if (driCheckOption(&userInitOptions, "dri_driver", DRI_STRING)) {
+      char *opt = driQueryOptionstr(&userInitOptions, "dri_driver");
+      /* not an empty string */
+      if (*opt)
+         dri_driver = strdup(opt);
+   }
+   driDestroyOptionCache(&userInitOptions);
+   driDestroyOptionInfo(&defaultInitOptions);
+
+   free(kernel_driver);
+   return dri_driver;
+}
 
 static char *loader_get_dri_config_device_id(void)
 {
@@ -98,7 +201,7 @@ static char *loader_get_dri_config_device_id(void)
    char *prime = NULL;
 
    driParseOptionInfo(&defaultInitOptions, __driConfigOptionsLoader);
-   driParseConfigFiles(&userInitOptions, &defaultInitOptions, 0, "loader");
+   driParseConfigFiles(&userInitOptions, &defaultInitOptions, 0, "loader", NULL);
    if (driCheckOption(&userInitOptions, "device_id", DRI_STRING))
       prime = strdup(driQueryOptionstr(&userInitOptions, "device_id"));
    driDestroyOptionCache(&userInitOptions);
@@ -110,18 +213,43 @@ static char *loader_get_dri_config_device_id(void)
 
 static char *drm_construct_id_path_tag(drmDevicePtr device)
 {
-/* Length of "pci-xxxx_xx_xx_x\0" */
-#define PCI_ID_PATH_TAG_LENGTH 17
    char *tag = NULL;
 
    if (device->bustype == DRM_BUS_PCI) {
-        tag = calloc(PCI_ID_PATH_TAG_LENGTH, sizeof(char));
-        if (tag == NULL)
-            return NULL;
+      if (asprintf(&tag, "pci-%04x_%02x_%02x_%1u",
+                   device->businfo.pci->domain,
+                   device->businfo.pci->bus,
+                   device->businfo.pci->dev,
+                   device->businfo.pci->func) < 0) {
+         return NULL;
+      }
+   } else if (device->bustype == DRM_BUS_PLATFORM ||
+              device->bustype == DRM_BUS_HOST1X) {
+      char *fullname, *name, *address;
 
-        snprintf(tag, PCI_ID_PATH_TAG_LENGTH, "pci-%04x_%02x_%02x_%1u",
-                 device->businfo.pci->domain, device->businfo.pci->bus,
-                 device->businfo.pci->dev, device->businfo.pci->func);
+      if (device->bustype == DRM_BUS_PLATFORM)
+         fullname = device->businfo.platform->fullname;
+      else
+         fullname = device->businfo.host1x->fullname;
+
+      name = strrchr(fullname, '/');
+      if (!name)
+         name = strdup(fullname);
+      else
+         name = strdup(name + 1);
+
+      address = strchr(name, '@');
+      if (address) {
+         *address++ = '\0';
+
+         if (asprintf(&tag, "platform-%s_%s", address, name) < 0)
+            tag = NULL;
+      } else {
+         if (asprintf(&tag, "platform-%s", name) < 0)
+            tag = NULL;
+      }
+
+      free(name);
    }
    return tag;
 }
@@ -237,33 +365,16 @@ int loader_get_user_preferred_fd(int default_fd, bool *different_device)
    return default_fd;
 }
 #else
+int
+loader_open_render_node(const char *name)
+{
+   return -1;
+}
+
 int loader_get_user_preferred_fd(int default_fd, bool *different_device)
 {
    *different_device = false;
    return default_fd;
-}
-#endif
-
-#if defined(HAVE_LIBDRM)
-static int
-dev_node_from_fd(int fd, unsigned int *maj, unsigned int *min)
-{
-   struct stat buf;
-
-   if (fstat(fd, &buf) < 0) {
-      log_(_LOADER_WARNING, "MESA-LOADER: failed to stat fd %d\n", fd);
-      return -1;
-   }
-
-   if (!S_ISCHR(buf.st_mode)) {
-      log_(_LOADER_WARNING, "MESA-LOADER: fd %d not a character device\n", fd);
-      return -1;
-   }
-
-   *maj = major(buf.st_rdev);
-   *min = minor(buf.st_rdev);
-
-   return 0;
 }
 #endif
 
@@ -307,35 +418,15 @@ loader_get_pci_id_for_fd(int fd, int *vendor_id, int *chip_id)
    return 0;
 }
 
-
-#if defined(HAVE_LIBDRM)
-static char *
-drm_get_device_name_for_fd(int fd)
-{
-   unsigned int maj, min;
-   char buf[0x40];
-   int n;
-
-   if (dev_node_from_fd(fd, &maj, &min) < 0)
-      return NULL;
-
-   n = snprintf(buf, sizeof(buf), DRM_DEV_NAME, DRM_DIR_NAME, min);
-   if (n == -1 || n >= sizeof(buf))
-      return NULL;
-
-   return strdup(buf);
-}
-#endif
-
 char *
 loader_get_device_name_for_fd(int fd)
 {
    char *result = NULL;
 
 #if HAVE_LIBDRM
-   if ((result = drm_get_device_name_for_fd(fd)))
-      return result;
+   result = drmGetDeviceNameFromFd2(fd);
 #endif
+
    return result;
 }
 
@@ -356,23 +447,16 @@ loader_get_driver_for_fd(int fd)
          return strdup(driver);
    }
 
-   if (!loader_get_pci_id_for_fd(fd, &vendor_id, &chip_id)) {
-
-#if HAVE_LIBDRM
-      /* fallback to drmGetVersion(): */
-      drmVersionPtr version = drmGetVersion(fd);
-
-      if (!version) {
-         log_(_LOADER_WARNING, "failed to get driver name for fd %d\n", fd);
-         return NULL;
-      }
-
-      driver = strndup(version->name, version->name_len);
-      log_(_LOADER_INFO, "using driver %s for %d\n", driver, fd);
-
-      drmFreeVersion(version);
+#if defined(HAVE_LIBDRM) && defined(USE_DRICONF)
+   driver = loader_get_dri_config_driver(fd);
+   if (driver)
+      return driver;
 #endif
 
+   if (!loader_get_pci_id_for_fd(fd, &vendor_id, &chip_id)) {
+      driver = loader_get_kernel_driver_name(fd);
+      if (driver)
+         log_(_LOADER_INFO, "using driver %s for %d\n", driver, fd);
       return driver;
    }
 
@@ -426,8 +510,8 @@ loader_get_extensions_name(const char *driver_name)
 
    const size_t len = strlen(name);
    for (size_t i = 0; i < len; i++) {
-	   if (name[i] == '-')
-		   name[i] = '_';
+      if (name[i] == '-')
+         name[i] = '_';
    }
 
    return name;

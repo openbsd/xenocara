@@ -430,9 +430,8 @@ _mesa_is_shader_image_format_supported(const struct gl_context *ctx,
     * ARB_shader_image_load_store extension, c.f. table 3.21 of the OpenGL 4.2
     * specification.
     *
-    * These can be supported by GLES 3.1 with GL_NV_image_formats &
-    * GL_EXT_texture_norm16 extensions but we don't have support for the
-    * latter in Mesa yet.
+    * Following formats are supported by GLES 3.1 with GL_NV_image_formats &
+    * GL_EXT_texture_norm16 extensions.
     */
    case GL_RGBA16:
    case GL_RGBA16_SNORM:
@@ -440,7 +439,7 @@ _mesa_is_shader_image_format_supported(const struct gl_context *ctx,
    case GL_RG16_SNORM:
    case GL_R16:
    case GL_R16_SNORM:
-      return _mesa_is_desktop_gl(ctx);
+      return _mesa_is_desktop_gl(ctx) || _mesa_has_EXT_texture_norm16(ctx);
 
    default:
       return false;
@@ -464,6 +463,8 @@ _mesa_init_image_units(struct gl_context *ctx)
 {
    unsigned i;
 
+   ASSERT_BITFIELD_SIZE(struct gl_image_unit, Format, MESA_FORMAT_COUNT);
+
    for (i = 0; i < ARRAY_SIZE(ctx->ImageUnits); ++i)
       ctx->ImageUnits[i] = _mesa_default_image_unit(ctx);
 }
@@ -476,13 +477,6 @@ _mesa_is_image_unit_valid(struct gl_context *ctx, struct gl_image_unit *u)
 
    if (!t)
       return GL_FALSE;
-
-   /* The GL 4.5 Core spec doesn't say anything about buffers. In practice,
-    * the image buffer format is always compatible with the underlying
-    * buffer storage.
-    */
-   if (t->Target == GL_TEXTURE_BUFFER)
-      return GL_TRUE;
 
    if (!t->_BaseComplete && !t->_MipmapComplete)
        _mesa_test_texobj_completeness(ctx, t);
@@ -497,14 +491,20 @@ _mesa_is_image_unit_valid(struct gl_context *ctx, struct gl_image_unit *u)
        u->_Layer >= _mesa_get_texture_layers(t, u->Level))
       return GL_FALSE;
 
-   struct gl_texture_image *img = (t->Target == GL_TEXTURE_CUBE_MAP ?
-                                   t->Image[u->_Layer][u->Level] :
-                                   t->Image[0][u->Level]);
+   if (t->Target == GL_TEXTURE_BUFFER) {
+      tex_format = _mesa_get_shader_image_format(t->BufferObjectFormat);
 
-   if (!img || img->Border || img->NumSamples > ctx->Const.MaxImageSamples)
-      return GL_FALSE;
+   } else {
+      struct gl_texture_image *img = (t->Target == GL_TEXTURE_CUBE_MAP ?
+                                      t->Image[u->_Layer][u->Level] :
+                                      t->Image[0][u->Level]);
 
-   tex_format = _mesa_get_shader_image_format(img->InternalFormat);
+      if (!img || img->Border || img->NumSamples > ctx->Const.MaxImageSamples)
+         return GL_FALSE;
+
+      tex_format = _mesa_get_shader_image_format(img->InternalFormat);
+   }
+
    if (!tex_format)
       return GL_FALSE;
 

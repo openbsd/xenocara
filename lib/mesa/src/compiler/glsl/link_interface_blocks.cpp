@@ -30,7 +30,9 @@
 #include "glsl_symbol_table.h"
 #include "linker.h"
 #include "main/macros.h"
+#include "main/mtypes.h"
 #include "util/hash_table.h"
+#include "util/u_string.h"
 
 
 namespace {
@@ -114,7 +116,7 @@ intrastage_match(ir_variable *a,
        */
       if ((a->data.how_declared != ir_var_declared_implicitly ||
            b->data.how_declared != ir_var_declared_implicitly) &&
-          (!prog->IsES || prog->data->Version != 310 ||
+          (!prog->IsES ||
            interstage_member_mismatch(prog, a->get_interface_type(),
                                       b->get_interface_type())))
          return false;
@@ -137,7 +139,7 @@ intrastage_match(ir_variable *a,
    /* If a block is an array then it must match across the shader.
     * Unsized arrays are also processed and matched agaist sized arrays.
     */
-   if (b->type != a->type &&
+   if (b->type != a->type && (b->type->is_array() || a->type->is_array()) &&
        (b->is_interface_instance() || a->is_interface_instance()) &&
        !validate_intrastage_arrays(prog, b, a))
       return false;
@@ -232,7 +234,7 @@ public:
       if (var->data.explicit_location &&
           var->data.location >= VARYING_SLOT_VAR0) {
          char location_str[11];
-         snprintf(location_str, 11, "%d", var->data.location);
+         util_snprintf(location_str, 11, "%d", var->data.location);
 
          const struct hash_entry *entry =
             _mesa_hash_table_search(ht, location_str);
@@ -258,7 +260,7 @@ public:
           * unsigned location value which is overkill but future proof.
           */
          char location_str[11];
-         snprintf(location_str, 11, "%d", var->data.location);
+         util_snprintf(location_str, 11, "%d", var->data.location);
          _mesa_hash_table_insert(ht, ralloc_strdup(mem_ctx, location_str), var);
       } else {
          _mesa_hash_table_insert(ht,
@@ -415,9 +417,15 @@ validate_interstage_inout_blocks(struct gl_shader_program *prog,
        * write to any of the pre-defined outputs (e.g. if the vertex shader
        * does not write to gl_Position, etc), which is allowed and results in
        * undefined behavior.
+       *
+       * From Section 4.3.4 (Inputs) of the GLSL 1.50 spec:
+       *
+       *    "Only the input variables that are actually read need to be written
+       *     by the previous stage; it is allowed to have superfluous
+       *     declarations of input variables."
        */
       if (producer_def == NULL &&
-          !is_builtin_gl_in_block(var, consumer->Stage)) {
+          !is_builtin_gl_in_block(var, consumer->Stage) && var->data.used) {
          linker_error(prog, "Input block `%s' is not an output of "
                       "the previous stage\n", var->get_interface_type()->name);
          return;

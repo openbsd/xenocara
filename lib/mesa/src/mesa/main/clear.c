@@ -118,7 +118,7 @@ color_buffer_writes_enabled(const struct gl_context *ctx, unsigned idx)
 
    if (rb) {
       for (c = 0; c < 4; c++) {
-         if (ctx->Color.ColorMask[idx][c] &&
+         if (GET_COLORMASK_BIT(ctx->Color.ColorMask, idx, c) &&
              _mesa_format_has_color_component(rb->Format, c)) {
             return true;
          }
@@ -194,9 +194,9 @@ clear(struct gl_context *ctx, GLbitfield mask, bool no_error)
       if (mask & GL_COLOR_BUFFER_BIT) {
          GLuint i;
          for (i = 0; i < ctx->DrawBuffer->_NumColorDrawBuffers; i++) {
-            GLint buf = ctx->DrawBuffer->_ColorDrawBufferIndexes[i];
+            gl_buffer_index buf = ctx->DrawBuffer->_ColorDrawBufferIndexes[i];
 
-            if (buf >= 0 && color_buffer_writes_enabled(ctx, i)) {
+            if (buf != BUFFER_NONE && color_buffer_writes_enabled(ctx, i)) {
                bufferMask |= 1 << buf;
             }
          }
@@ -321,9 +321,10 @@ make_color_buffer_mask(struct gl_context *ctx, GLint drawbuffer)
       break;
    default:
       {
-         GLint buf = ctx->DrawBuffer->_ColorDrawBufferIndexes[drawbuffer];
+         gl_buffer_index buf =
+            ctx->DrawBuffer->_ColorDrawBufferIndexes[drawbuffer];
 
-         if (buf >= 0 && att[buf].Renderbuffer) {
+         if (buf != BUFFER_NONE && att[buf].Renderbuffer) {
             mask |= 1 << buf;
          }
       }

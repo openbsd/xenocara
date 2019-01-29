@@ -208,7 +208,7 @@ comp_to_swizzle(GLenum comp)
 
 
 static void
-set_swizzle_component(GLuint *swizzle, GLuint comp, GLuint swz)
+set_swizzle_component(GLushort *swizzle, GLuint comp, GLuint swz)
 {
    assert(comp < 4);
    assert(swz <= SWIZZLE_NIL);
@@ -1287,8 +1287,8 @@ _mesa_legal_get_tex_level_parameter_target(struct gl_context *ctx, GLenum target
        * From the OpenGL 3.1 spec:
        * "target may also be TEXTURE_BUFFER, indicating the texture buffer."
        */
-      return (ctx->API == API_OPENGL_CORE && ctx->Version >= 31) ||
-         _mesa_has_OES_texture_buffer(ctx);
+      return (_mesa_is_desktop_gl(ctx) && ctx->Version >= 31) ||
+             _mesa_has_OES_texture_buffer(ctx);
    case GL_TEXTURE_CUBE_MAP_ARRAY:
       return _mesa_has_texture_cube_map_array(ctx);
    }
@@ -1425,6 +1425,11 @@ get_tex_level_parameter_image(struct gl_context *ctx,
                                                     GL_TEXTURE_RED_SIZE),
                               _mesa_get_format_bits(texFormat,
                                                     GL_TEXTURE_GREEN_SIZE));
+            }
+            if (*params == 0 && pname == GL_TEXTURE_INTENSITY_SIZE) {
+               /* Gallium may store intensity as LA */
+               *params = _mesa_get_format_bits(texFormat, 
+                                               GL_TEXTURE_ALPHA_SIZE);
             }
          }
          else {
@@ -1979,33 +1984,32 @@ get_tex_parameterfv(struct gl_context *ctx,
          break;
 
       case GL_TEXTURE_IMMUTABLE_LEVELS:
-         if (_mesa_is_gles3(ctx) ||
-             (_mesa_is_desktop_gl(ctx) && ctx->Extensions.ARB_texture_view))
+         if (_mesa_is_gles3(ctx) || _mesa_has_texture_view(ctx))
             *params = (GLfloat) obj->ImmutableLevels;
          else
             goto invalid_pname;
          break;
 
       case GL_TEXTURE_VIEW_MIN_LEVEL:
-         if (!ctx->Extensions.ARB_texture_view)
+         if (!_mesa_has_texture_view(ctx))
             goto invalid_pname;
          *params = (GLfloat) obj->MinLevel;
          break;
 
       case GL_TEXTURE_VIEW_NUM_LEVELS:
-         if (!ctx->Extensions.ARB_texture_view)
+         if (!_mesa_has_texture_view(ctx))
             goto invalid_pname;
          *params = (GLfloat) obj->NumLevels;
          break;
 
       case GL_TEXTURE_VIEW_MIN_LAYER:
-         if (!ctx->Extensions.ARB_texture_view)
+         if (!_mesa_has_texture_view(ctx))
             goto invalid_pname;
          *params = (GLfloat) obj->MinLayer;
          break;
 
       case GL_TEXTURE_VIEW_NUM_LAYERS:
-         if (!ctx->Extensions.ARB_texture_view)
+         if (!_mesa_has_texture_view(ctx))
             goto invalid_pname;
          *params = (GLfloat) obj->NumLayers;
          break;

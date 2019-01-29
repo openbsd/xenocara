@@ -13,6 +13,7 @@ AM_CFLAGS = \
 	$(MSVC2013_COMPAT_CFLAGS)
 
 AM_CXXFLAGS = \
+	$(GALLIUM_CFLAGS) \
 	$(VISIBILITY_CXXFLAGS) \
 	$(MSVC2013_COMPAT_CXXFLAGS)
 
@@ -20,6 +21,14 @@ libgallium_la_SOURCES = \
 	$(C_SOURCES) \
 	$(NIR_SOURCES) \
 	$(GENERATED_SOURCES)
+
+if HAVE_PLATFORM_ANDROID
+# Android's libbacktrace headers required C++11, but the Android toolchain (at
+# least in the Chrome OS SDK) does not enable C++11 by default.
+AM_CXXFLAGS += $(CXX11_CXXFLAGS)
+
+libgallium_la_SOURCES += util/u_debug_stack_android.cpp
+endif
 
 if HAVE_LIBDRM
 
@@ -37,7 +46,6 @@ AM_CFLAGS += \
 	$(LLVM_CFLAGS)
 
 AM_CXXFLAGS += \
-	$(GALLIUM_CFLAGS) \
 	$(LLVM_CXXFLAGS)
 
 libgallium_la_SOURCES += \
@@ -46,9 +54,8 @@ libgallium_la_SOURCES += \
 endif
 
 MKDIR_GEN = $(AM_V_at)$(MKDIR_P) $(@D)
-
 if REGEN_SOURCES
-PYTHON_GEN =  $(AM_V_GEN)$(PYTHON2) $(PYTHON_FLAGS)
+PYTHON_GEN =  $(AM_V_GEN)$(PYTHON) $(PYTHON_FLAGS)
 
 indices/u_indices_gen.c: indices/u_indices_gen.py
 	$(MKDIR_GEN)
@@ -111,6 +118,9 @@ endif # NEED_GALLIUM_VL
 
 EXTRA_DIST = \
 	SConscript \
+	driver_rbug/README \
+	driver_trace/README \
+	driver_trace/trace.xsl \
 	indices/u_indices.c \
 	indices/u_unfilled_indices.c \
 	indices/u_indices_gen.py \
@@ -118,7 +128,9 @@ EXTRA_DIST = \
 	postprocess/ADDING \
 	rbug/README \
 	target-helpers \
+	util/u_debug_stack_android.cpp \
 	util/u_format.csv \
 	util/u_format_pack.py \
 	util/u_format_parse.py \
-	util/u_format_table.py
+	util/u_format_table.py \
+	meson.build

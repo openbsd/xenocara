@@ -54,6 +54,7 @@
 #include "ast.h"
 #include "compiler/glsl_types.h"
 #include "util/hash_table.h"
+#include "main/mtypes.h"
 #include "main/macros.h"
 #include "main/shaderobj.h"
 #include "ir.h"
@@ -65,6 +66,9 @@ using namespace ir_builder;
 static void
 detect_conflicting_assignments(struct _mesa_glsl_parse_state *state,
                                exec_list *instructions);
+static void
+verify_subroutine_associated_funcs(struct _mesa_glsl_parse_state *state);
+
 static void
 remove_per_vertex_blocks(exec_list *instructions,
                          _mesa_glsl_parse_state *state, ir_variable_mode mode);
@@ -154,6 +158,7 @@ _mesa_ast_to_hir(exec_list *instructions, struct _mesa_glsl_parse_state *state)
    foreach_list_typed (ast_node, ast, link, & state->translation_unit)
       ast->hir(instructions, state);
 
+   verify_subroutine_associated_funcs(state);
    detect_recursion_unlinked(state, instructions);
    detect_conflicting_assignments(state, instructions);
 
@@ -311,10 +316,6 @@ apply_implicit_conversion(const glsl_type *to, ir_rvalue * &from,
 
    /* Prior to GLSL 1.20, there are no implicit conversions */
    if (!state->is_version(120, 0))
-      return false;
-
-   /* ESSL does not allow implicit conversions */
-   if (state->es_shader)
       return false;
 
    /* From page 27 (page 33 of the PDF) of the GLSL 1.50 spec:
@@ -891,7 +892,8 @@ validate_assignment(struct _mesa_glsl_parse_state *state,
    }
    if (unsized_array) {
       if (is_initializer) {
-         return rhs;
+         if (rhs->type->get_scalar_type() == lhs->type->get_scalar_type())
+            return rhs;
       } else {
          _mesa_glsl_error(&loc, state,
                           "implicitly sized arrays cannot be assigned");
@@ -1011,6 +1013,8 @@ do_assignment(exec_list *instructions, struct _mesa_glsl_parse_state *state,
          mark_whole_array_access(rhs);
          mark_whole_array_access(lhs);
       }
+   } else {
+     error_emitted = true;
    }
 
    /* Most callers of do_assignment (assign, add_assign, pre_inc/dec,
@@ -1108,12 +1112,17 @@ do_comparison(void *mem_ctx, int operation, ir_rvalue *op0, ir_rvalue *op1)
 
    switch (op0->type->base_type) {
    case GLSL_TYPE_FLOAT:
+   case GLSL_TYPE_FLOAT16:
    case GLSL_TYPE_UINT:
    case GLSL_TYPE_INT:
    case GLSL_TYPE_BOOL:
    case GLSL_TYPE_DOUBLE:
    case GLSL_TYPE_UINT64:
    case GLSL_TYPE_INT64:
+   case GLSL_TYPE_UINT16:
+   case GLSL_TYPE_INT16:
+   case GLSL_TYPE_UINT8:
+   case GLSL_TYPE_INT8:
       return new(mem_ctx) ir_expression(operation, op0, op1);
 
    case GLSL_TYPE_ARRAY: {
@@ -1337,8 +1346,8 @@ ast_expression::do_hir(exec_list *instructions,
       ir_binop_lshift,
       ir_binop_rshift,
       ir_binop_less,
-      ir_binop_greater,
-      ir_binop_lequal,
+      ir_binop_less,    /* This is correct.  See the ast_greater case below. */
+      ir_binop_gequal,  /* This is correct.  See the ast_lequal case below. */
       ir_binop_gequal,
       ir_binop_all_equal,
       ir_binop_any_nequal,
@@ -1391,8 +1400,7 @@ ast_expression::do_hir(exec_list *instructions,
 
    switch (this->oper) {
    case ast_aggregate:
-      assert(!"ast_aggregate: Should never get here.");
-      break;
+      unreachable("ast_aggregate: Should never get here.");
 
    case ast_assign: {
       this->subexpressions[0]->set_is_lhs(true);
@@ -1487,6 +1495,15 @@ ast_expression::do_hir(exec_list *instructions,
       assert(type->is_error()
              || (type->is_boolean() && type->is_scalar()));
 
+      /* Like NIR, GLSL IR does not have opcodes for > or <=.  Instead, swap
+       * the arguments and use < or >=.
+       */
+      if (this->oper == ast_greater || this->oper == ast_lequal) {
+         ir_rvalue *const tmp = op[0];
+         op[0] = op[1];
+         op[1] = tmp;
+      }
+
       result = new(ctx) ir_expression(operations[this->oper], type,
                                       op[0], op[1]);
       error_emitted = type->is_error();
@@ -1577,7 +1594,6 @@ ast_expression::do_hir(exec_list *instructions,
 
       if (rhs_instructions.is_empty()) {
          result = new(ctx) ir_expression(ir_binop_logic_and, op[0], op[1]);
-         type = result->type;
       } else {
          ir_variable *const tmp = new(ctx) ir_variable(glsl_type::bool_type,
                                                        "and_tmp",
@@ -1599,7 +1615,6 @@ ast_expression::do_hir(exec_list *instructions,
          stmt->else_instructions.push_tail(else_assign);
 
          result = new(ctx) ir_dereference_variable(tmp);
-         type = tmp->type;
       }
       break;
    }
@@ -1613,7 +1628,6 @@ ast_expression::do_hir(exec_list *instructions,
 
       if (rhs_instructions.is_empty()) {
          result = new(ctx) ir_expression(ir_binop_logic_or, op[0], op[1]);
-         type = result->type;
       } else {
          ir_variable *const tmp = new(ctx) ir_variable(glsl_type::bool_type,
                                                        "or_tmp",
@@ -1635,7 +1649,6 @@ ast_expression::do_hir(exec_list *instructions,
          stmt->else_instructions.push_tail(else_assign);
 
          result = new(ctx) ir_dereference_variable(tmp);
-         type = tmp->type;
       }
       break;
    }
@@ -1673,6 +1686,12 @@ ast_expression::do_hir(exec_list *instructions,
       op[1] = this->subexpressions[1]->hir(instructions, state);
 
       orig_type = op[0]->type;
+
+      /* Break out if operand types were not parsed successfully. */
+      if ((op[0]->type == glsl_type::error_type ||
+           op[1]->type == glsl_type::error_type))
+         break;
+
       type = arithmetic_result_type(op[0], op[1],
                                     (this->oper == ast_mul_assign),
                                     state, & loc);
@@ -1840,9 +1859,11 @@ ast_expression::do_hir(exec_list *instructions,
        *   expressions; such use results in a compile-time error."
        */
       if (type->contains_opaque()) {
-         _mesa_glsl_error(&loc, state, "opaque variables cannot be operands "
-                          "of the ?: operator");
-         error_emitted = true;
+         if (!(state->has_bindless() && (type->is_image() || type->is_sampler()))) {
+            _mesa_glsl_error(&loc, state, "variables of type %s cannot be "
+                             "operands of the ?: operator", type->name);
+            error_emitted = true;
+         }
       }
 
       ir_constant *cond_val = op[0]->constant_expression_value(ctx);
@@ -1916,6 +1937,11 @@ ast_expression::do_hir(exec_list *instructions,
 
       error_emitted = op[0]->type->is_error() || op[1]->type->is_error();
 
+      if (error_emitted) {
+         result = ir_rvalue::error_value(ctx);
+         break;
+      }
+
       type = arithmetic_result_type(op[0], op[1], false, state, & loc);
 
       ir_rvalue *temp_rhs;
@@ -1963,15 +1989,13 @@ ast_expression::do_hir(exec_list *instructions,
    }
 
    case ast_unsized_array_dim:
-      assert(!"ast_unsized_array_dim: Should never get here.");
-      break;
+      unreachable("ast_unsized_array_dim: Should never get here.");
 
    case ast_function_call:
       /* Should *NEVER* get here.  ast_function_call should always be handled
        * by ast_function_expression::hir.
        */
-      assert(0);
-      break;
+      unreachable("ast_function_call: handled elsewhere ");
 
    case ast_identifier: {
       /* ast_identifier can appear several places in a full abstract syntax
@@ -2000,6 +2024,20 @@ ast_expression::do_hir(exec_list *instructions,
             _mesa_glsl_warning(&loc, state, "`%s' used uninitialized",
                                this->primary_expression.identifier);
          }
+
+         /* From the EXT_shader_framebuffer_fetch spec:
+          *
+          *   "Unless the GL_EXT_shader_framebuffer_fetch extension has been
+          *    enabled in addition, it's an error to use gl_LastFragData if it
+          *    hasn't been explicitly redeclared with layout(noncoherent)."
+          */
+         if (var->data.fb_fetch_output && var->data.memory_coherent &&
+             !state->EXT_shader_framebuffer_fetch_enable) {
+            _mesa_glsl_error(&loc, state,
+                             "invalid use of framebuffer fetch output not "
+                             "qualified with layout(noncoherent)");
+         }
+
       } else {
          _mesa_glsl_error(& loc, state, "`%s' undeclared",
                           this->primary_expression.identifier);
@@ -2361,7 +2399,9 @@ ast_type_specifier::glsl_type(const char **name,
 {
    const struct glsl_type *type;
 
-   if (structure)
+   if (this->type != NULL)
+      type = this->type;
+   else if (structure)
       type = structure->type;
    else
       type = state->symbols->get_type(this->type_name);
@@ -3873,6 +3913,16 @@ apply_layout_qualifier_to_variable(const struct ast_type_qualifier *qual,
 
    if (state->has_bindless())
       apply_bindless_qualifier_to_variable(qual, var, state, loc);
+
+   if (qual->flags.q.pixel_interlock_ordered ||
+       qual->flags.q.pixel_interlock_unordered ||
+       qual->flags.q.sample_interlock_ordered ||
+       qual->flags.q.sample_interlock_unordered) {
+      _mesa_glsl_error(loc, state, "interlock layout qualifiers: "
+                       "pixel_interlock_ordered, pixel_interlock_unordered, "
+                       "sample_interlock_ordered and sample_interlock_unordered, "
+                       "only valid in fragment shader input layout declaration.");
+   }
 }
 
 static void
@@ -3984,8 +4034,41 @@ apply_type_qualifier_to_variable(const struct ast_type_qualifier *qual,
    else if (qual->flags.q.shared_storage)
       var->data.mode = ir_var_shader_shared;
 
-   var->data.fb_fetch_output = state->stage == MESA_SHADER_FRAGMENT &&
-                               qual->flags.q.in && qual->flags.q.out;
+   if (!is_parameter && state->has_framebuffer_fetch() &&
+       state->stage == MESA_SHADER_FRAGMENT) {
+      if (state->is_version(130, 300))
+         var->data.fb_fetch_output = qual->flags.q.in && qual->flags.q.out;
+      else
+         var->data.fb_fetch_output = (strcmp(var->name, "gl_LastFragData") == 0);
+   }
+
+   if (var->data.fb_fetch_output) {
+      var->data.assigned = true;
+      var->data.memory_coherent = !qual->flags.q.non_coherent;
+
+      /* From the EXT_shader_framebuffer_fetch spec:
+       *
+       *   "It is an error to declare an inout fragment output not qualified
+       *    with layout(noncoherent) if the GL_EXT_shader_framebuffer_fetch
+       *    extension hasn't been enabled."
+       */
+      if (var->data.memory_coherent &&
+          !state->EXT_shader_framebuffer_fetch_enable)
+         _mesa_glsl_error(loc, state,
+                          "invalid declaration of framebuffer fetch output not "
+                          "qualified with layout(noncoherent)");
+
+   } else {
+      /* From the EXT_shader_framebuffer_fetch spec:
+       *
+       *   "Fragment outputs declared inout may specify the following layout
+       *    qualifier: [...] noncoherent"
+       */
+      if (qual->flags.q.non_coherent)
+         _mesa_glsl_error(loc, state,
+                          "invalid layout(noncoherent) qualifier not part of "
+                          "framebuffer fetch output declaration");
+   }
 
    if (!is_parameter && is_varying_var(var, state->stage)) {
       /* User-defined ins/outs are not permitted in compute shaders. */
@@ -4066,30 +4149,8 @@ apply_type_qualifier_to_variable(const struct ast_type_qualifier *qual,
       }
    }
 
-   if (state->all_invariant && (state->current_function == NULL)) {
-      switch (state->stage) {
-      case MESA_SHADER_VERTEX:
-         if (var->data.mode == ir_var_shader_out)
-            var->data.invariant = true;
-         break;
-      case MESA_SHADER_TESS_CTRL:
-      case MESA_SHADER_TESS_EVAL:
-      case MESA_SHADER_GEOMETRY:
-         if ((var->data.mode == ir_var_shader_in)
-             || (var->data.mode == ir_var_shader_out))
-            var->data.invariant = true;
-         break;
-      case MESA_SHADER_FRAGMENT:
-         if (var->data.mode == ir_var_shader_in)
-            var->data.invariant = true;
-         break;
-      case MESA_SHADER_COMPUTE:
-         /* Invariance isn't meaningful in compute shaders. */
-         break;
-      default:
-         break;
-      }
-   }
+   if (state->all_invariant && var->data.mode == ir_var_shader_out)
+      var->data.invariant = true;
 
    var->data.interpolation =
       interpret_interpolation_qualifier(qual, var->type,
@@ -4275,8 +4336,12 @@ get_variable_being_redeclared(ir_variable **var_ptr, YYLTYPE loc,
        *   "By default, gl_LastFragData is declared with the mediump precision
        *    qualifier. This can be changed by redeclaring the corresponding
        *    variables with the desired precision qualifier."
+       *
+       *   "Fragment shaders may specify the following layout qualifier only for
+       *    redeclaring the built-in gl_LastFragData array [...]: noncoherent"
        */
       earlier->data.precision = var->data.precision;
+      earlier->data.memory_coherent = var->data.memory_coherent;
 
    } else if (earlier->data.how_declared == ir_var_declared_implicitly &&
               state->allow_builtin_variable_redeclaration) {
@@ -4506,41 +4571,43 @@ process_initializer(ir_variable *var, ast_declaration *decl,
       /* Never emit code to initialize a uniform.
        */
       const glsl_type *initializer_type;
+      bool error_emitted = false;
       if (!type->qualifier.flags.q.uniform) {
-         do_assignment(initializer_instructions, state,
-                       NULL,
-                       lhs, rhs,
-                       &result, true,
-                       true,
-                       type->get_location());
+         error_emitted =
+            do_assignment(initializer_instructions, state,
+                          NULL, lhs, rhs,
+                          &result, true, true,
+                          type->get_location());
          initializer_type = result->type;
       } else
          initializer_type = rhs->type;
 
-      var->constant_initializer = rhs->constant_expression_value(mem_ctx);
-      var->data.has_initializer = true;
+      if (!error_emitted) {
+         var->constant_initializer = rhs->constant_expression_value(mem_ctx);
+         var->data.has_initializer = true;
 
-      /* If the declared variable is an unsized array, it must inherrit
-       * its full type from the initializer.  A declaration such as
-       *
-       *     uniform float a[] = float[](1.0, 2.0, 3.0, 3.0);
-       *
-       * becomes
-       *
-       *     uniform float a[4] = float[](1.0, 2.0, 3.0, 3.0);
-       *
-       * The assignment generated in the if-statement (below) will also
-       * automatically handle this case for non-uniforms.
-       *
-       * If the declared variable is not an array, the types must
-       * already match exactly.  As a result, the type assignment
-       * here can be done unconditionally.  For non-uniforms the call
-       * to do_assignment can change the type of the initializer (via
-       * the implicit conversion rules).  For uniforms the initializer
-       * must be a constant expression, and the type of that expression
-       * was validated above.
-       */
-      var->type = initializer_type;
+         /* If the declared variable is an unsized array, it must inherrit
+         * its full type from the initializer.  A declaration such as
+         *
+         *     uniform float a[] = float[](1.0, 2.0, 3.0, 3.0);
+         *
+         * becomes
+         *
+         *     uniform float a[4] = float[](1.0, 2.0, 3.0, 3.0);
+         *
+         * The assignment generated in the if-statement (below) will also
+         * automatically handle this case for non-uniforms.
+         *
+         * If the declared variable is not an array, the types must
+         * already match exactly.  As a result, the type assignment
+         * here can be done unconditionally.  For non-uniforms the call
+         * to do_assignment can change the type of the initializer (via
+         * the implicit conversion rules).  For uniforms the initializer
+         * must be a constant expression, and the type of that expression
+         * was validated above.
+         */
+         var->type = initializer_type;
+      }
 
       var->data.read_only = temp;
    }
@@ -6579,7 +6646,6 @@ ast_case_statement_list::hir(exec_list *instructions,
     * if default should be chosen or not.
     */
    if (!default_case.is_empty()) {
-      struct hash_entry *entry;
       ir_factory body(instructions, state);
 
       ir_expression *cmp = NULL;
@@ -7357,7 +7423,7 @@ ast_process_struct_or_iface_block_members(exec_list *instructions,
                   if (member_align == 0 ||
                       member_align & (member_align - 1)) {
                      _mesa_glsl_error(&loc, state, "align layout qualifier "
-                                      "in not a power of 2");
+                                      "is not a power of 2");
                   } else {
                      fields[i].offset = glsl_align(offset, member_align);
                      next_offset = glsl_align(fields[i].offset + size, align);
@@ -8618,6 +8684,38 @@ detect_conflicting_assignments(struct _mesa_glsl_parse_state *state,
    }
 }
 
+static void
+verify_subroutine_associated_funcs(struct _mesa_glsl_parse_state *state)
+{
+   YYLTYPE loc;
+   memset(&loc, 0, sizeof(loc));
+
+   /* Section 6.1.2 (Subroutines) of the GLSL 4.00 spec says:
+    *
+    *   "A program will fail to compile or link if any shader
+    *    or stage contains two or more functions with the same
+    *    name if the name is associated with a subroutine type."
+    */
+
+   for (int i = 0; i < state->num_subroutines; i++) {
+      unsigned definitions = 0;
+      ir_function *fn = state->subroutines[i];
+      /* Calculate number of function definitions with the same name */
+      foreach_in_list(ir_function_signature, sig, &fn->signatures) {
+         if (sig->is_defined) {
+            if (++definitions > 1) {
+               _mesa_glsl_error(&loc, state,
+                     "%s shader contains two or more function "
+                     "definitions with name `%s', which is "
+                     "associated with a subroutine type.\n",
+                     _mesa_shader_stage_to_string(state->stage),
+                     fn->name);
+               return;
+            }
+         }
+      }
+   }
+}
 
 static void
 remove_per_vertex_blocks(exec_list *instructions,

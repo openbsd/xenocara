@@ -380,6 +380,7 @@ void
 intelInitDriverFunctions(struct dd_function_table *functions)
 {
    _mesa_init_driver_functions(functions);
+   _tnl_init_driver_draw_function(functions);
 
    functions->Flush = intel_glFlush;
    functions->Finish = intelFinish;
@@ -447,7 +448,7 @@ intelInitContext(struct intel_context *intel,
 	  0, sizeof(ctx->TextureFormatSupported));
 
    driParseConfigFiles(&intel->optionCache, &intelScreen->optionCache,
-                       sPriv->myNum, "i915");
+                       sPriv->myNum, "i915", NULL);
    intel->maxBatchSize = 4096;
 
    /* Estimate the size of the mappable aperture into the GTT.  There's an
@@ -531,12 +532,10 @@ intelInitContext(struct intel_context *intel,
 
    intel_fbo_init(intel);
 
-   intel->use_early_z = driQueryOptionb(&intel->optionCache, "early_z");
-
    intel->prim.primitive = ~0;
 
    /* Force all software fallbacks */
-   if (driQueryOptionb(&intel->optionCache, "no_rast")) {
+   if (getenv("INTEL_NO_RAST")) {
       fprintf(stderr, "disabling 3D rasterization\n");
       intel->no_rast = 1;
    }
@@ -626,20 +625,11 @@ intelMakeCurrent(__DRIcontext * driContextPriv,
                  __DRIdrawable * driReadPriv)
 {
    struct intel_context *intel;
-   GET_CURRENT_CONTEXT(curCtx);
 
    if (driContextPriv)
       intel = (struct intel_context *) driContextPriv->driverPrivate;
    else
       intel = NULL;
-
-   /* According to the glXMakeCurrent() man page: "Pending commands to
-    * the previous context, if any, are flushed before it is released."
-    * But only flush if we're actually changing contexts.
-    */
-   if (intel_context(curCtx) && intel_context(curCtx) != intel) {
-      _mesa_flush(curCtx);
-   }
 
    if (driContextPriv) {
       struct gl_context *ctx = &intel->ctx;

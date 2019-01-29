@@ -147,19 +147,25 @@ anv_gem_destroy_context(struct anv_device *device, int context)
 }
 
 int
+anv_gem_set_context_param(int fd, int context, uint32_t param, uint64_t value)
+{
+   unreachable("Unused");
+}
+
+int
 anv_gem_get_context_param(int fd, int context, uint32_t param, uint64_t *value)
+{
+   unreachable("Unused");
+}
+
+bool
+anv_gem_has_context_priority(int fd)
 {
    unreachable("Unused");
 }
 
 int
 anv_gem_get_aperture(int fd, uint64_t *size)
-{
-   unreachable("Unused");
-}
-
-bool
-anv_gem_supports_48b_addresses(int fd)
 {
    unreachable("Unused");
 }
@@ -242,6 +248,13 @@ int
 anv_gem_syncobj_wait(struct anv_device *device,
                      uint32_t *handles, uint32_t num_handles,
                      int64_t abs_timeout_ns, bool wait_all)
+{
+   unreachable("Unused");
+}
+
+int
+anv_gem_reg_read(struct anv_device *device,
+                 uint32_t offset, uint64_t *result)
 {
    unreachable("Unused");
 }

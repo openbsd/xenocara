@@ -288,7 +288,7 @@ _mesa_glsl_initialize_types(struct _mesa_glsl_parse_state *state)
    /* Add deprecated structure types.  While these were deprecated in 1.30,
     * they're still present.  We've removed them in 1.40+ (OpenGL 3.1+).
     */
-   if (state->compat_shader) {
+   if (state->compat_shader || state->ARB_compatibility_enable) {
       for (unsigned i = 0; i < ARRAY_SIZE(deprecated_types); i++) {
          add_type(symbols, deprecated_types[i]);
       }
@@ -331,7 +331,8 @@ _mesa_glsl_initialize_types(struct _mesa_glsl_parse_state *state)
       add_type(symbols, glsl_type::sampler2DArrayShadow_type);
    }
 
-   if (state->OES_EGL_image_external_enable) {
+   if (state->OES_EGL_image_external_enable ||
+       state->OES_EGL_image_external_essl3_enable) {
       add_type(symbols, glsl_type::samplerExternalOES_type);
    }
 
@@ -410,7 +411,8 @@ _mesa_glsl_initialize_types(struct _mesa_glsl_parse_state *state)
       add_type(symbols, glsl_type::dmat4x3_type);
    }
 
-   if (state->ARB_gpu_shader_int64_enable) {
+   if (state->ARB_gpu_shader_int64_enable ||
+       state->AMD_gpu_shader_int64_enable) {
       add_type(symbols, glsl_type::int64_t_type);
       add_type(symbols, glsl_type::i64vec2_type);
       add_type(symbols, glsl_type::i64vec3_type);

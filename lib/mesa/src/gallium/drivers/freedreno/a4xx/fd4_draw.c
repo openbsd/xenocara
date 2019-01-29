@@ -1,5 +1,3 @@
-/* -*- mode: C; c-file-style: "k&r"; tab-width 4; indent-tabs-mode: t; -*- */
-
 /*
  * Copyright (C) 2014 Rob Clark <robclark@freedesktop.org>
  *
@@ -69,7 +67,7 @@ draw_impl(struct fd_context *ctx, struct fd_ringbuffer *ring,
 		primtype = DI_PT_POINTLIST_PSIZE;
 
 	fd4_draw_emit(ctx->batch, ring, primtype,
-			emit->key.binning_pass ? IGNORE_VISIBILITY : USE_VISIBILITY,
+			emit->binning_pass ? IGNORE_VISIBILITY : USE_VISIBILITY,
 			info, index_offset);
 }
 
@@ -135,13 +133,18 @@ fd4_draw_vbo(struct fd_context *ctx, const struct pipe_draw_info *info,
 	fixup_shader_state(ctx, &emit.key);
 
 	enum fd_dirty_3d_state dirty = ctx->dirty;
+	const struct ir3_shader_variant *vp = fd4_emit_get_vp(&emit);
+	const struct ir3_shader_variant *fp = fd4_emit_get_fp(&emit);
 
 	/* do regular pass first, since that is more likely to fail compiling: */
 
-	if (!(fd4_emit_get_vp(&emit) && fd4_emit_get_fp(&emit)))
+	if (!vp || !fp)
 		return false;
 
-	emit.key.binning_pass = false;
+	ctx->stats.vs_regs += ir3_shader_halfregs(vp);
+	ctx->stats.fs_regs += ir3_shader_halfregs(fp);
+
+	emit.binning_pass = false;
 	emit.dirty = dirty;
 
 	struct fd_ringbuffer *ring = ctx->batch->draw;
@@ -165,7 +168,7 @@ fd4_draw_vbo(struct fd_context *ctx, const struct pipe_draw_info *info,
 	}
 
 	/* and now binning pass: */
-	emit.key.binning_pass = true;
+	emit.binning_pass = true;
 	emit.dirty = dirty & ~(FD_DIRTY_BLEND);
 	emit.vp = NULL;   /* we changed key so need to refetch vp */
 	emit.fp = NULL;

@@ -1,5 +1,3 @@
-/* -*- mode: C; c-file-style: "k&r"; tab-width 4; indent-tabs-mode: t; -*- */
-
 /*
  * Copyright (C) 2014 Rob Clark <robclark@freedesktop.org>
  *
@@ -44,7 +42,15 @@ enum ir3_driver_param {
 	IR3_DP_NUM_WORK_GROUPS_X = 0,
 	IR3_DP_NUM_WORK_GROUPS_Y = 1,
 	IR3_DP_NUM_WORK_GROUPS_Z = 2,
-	IR3_DP_CS_COUNT   = 4,   /* must be aligned to vec4 */
+	IR3_DP_LOCAL_GROUP_SIZE_X = 4,
+	IR3_DP_LOCAL_GROUP_SIZE_Y = 5,
+	IR3_DP_LOCAL_GROUP_SIZE_Z = 6,
+	/* NOTE: gl_NumWorkGroups should be vec4 aligned because
+	 * glDispatchComputeIndirect() needs to load these from
+	 * the info->indirect buffer.  Keep that in mind when/if
+	 * adding any addition CS driver params.
+	 */
+	IR3_DP_CS_COUNT   = 8,   /* must be aligned to vec4 */
 
 	/* vertex shader driver params: */
 	IR3_DP_VTXID_BASE = 0,
@@ -54,6 +60,40 @@ enum ir3_driver_param {
 	/* .... */
 	IR3_DP_UCP7_W     = 35,
 	IR3_DP_VS_COUNT   = 36   /* must be aligned to vec4 */
+};
+
+/**
+ * For consts needed to pass internal values to shader which may or may not
+ * be required, rather than allocating worst-case const space, we scan the
+ * shader and allocate consts as-needed:
+ *
+ *   + SSBO sizes: only needed if shader has a get_buffer_size intrinsic
+ *     for a given SSBO
+ *
+ *   + Image dimensions: needed to calculate pixel offset, but only for
+ *     images that have a image_store intrinsic
+ */
+struct ir3_driver_const_layout {
+	struct {
+		uint32_t mask;  /* bitmask of SSBOs that have get_buffer_size */
+		uint32_t count; /* number of consts allocated */
+		/* one const allocated per SSBO which has get_buffer_size,
+		 * ssbo_sizes.off[ssbo_id] is offset from start of ssbo_sizes
+		 * consts:
+		 */
+		uint32_t off[PIPE_MAX_SHADER_BUFFERS];
+	} ssbo_size;
+
+	struct {
+		uint32_t mask;  /* bitmask of images that have image_store */
+		uint32_t count; /* number of consts allocated */
+		/* three const allocated per image which has image_store:
+		 *  + cpp         (bytes per pixel)
+		 *  + pitch       (y pitch)
+		 *  + array_pitch (z pitch)
+		 */
+		uint32_t off[PIPE_MAX_SHADER_IMAGES];
+	} image_dims;
 };
 
 /* Configuration key used to identify a shader variant.. different
@@ -74,7 +114,6 @@ struct ir3_shader_key {
 			/*
 			 * Vertex shader variant parameters:
 			 */
-			unsigned binning_pass : 1;
 			unsigned vclamp_color : 1;
 
 			/*
@@ -101,6 +140,9 @@ struct ir3_shader_key {
 	 */
 	uint16_t fsaturate_s, fsaturate_t, fsaturate_r;
 
+	/* bitmask of ms shifts */
+	uint32_t vsamples, fsamples;
+
 	/* bitmask of samplers which need astc srgb workaround: */
 	uint16_t vastc_srgb, fastc_srgb;
 };
@@ -122,6 +164,7 @@ ir3_shader_key_changes_fs(struct ir3_shader_key *key, struct ir3_shader_key *las
 		if ((last_key->fsaturate_s != key->fsaturate_s) ||
 				(last_key->fsaturate_t != key->fsaturate_t) ||
 				(last_key->fsaturate_r != key->fsaturate_r) ||
+				(last_key->fsamples != key->fsamples) ||
 				(last_key->fastc_srgb != key->fastc_srgb))
 			return true;
 	}
@@ -152,6 +195,7 @@ ir3_shader_key_changes_vs(struct ir3_shader_key *key, struct ir3_shader_key *las
 		if ((last_key->vsaturate_s != key->vsaturate_s) ||
 				(last_key->vsaturate_t != key->vsaturate_t) ||
 				(last_key->vsaturate_r != key->vsaturate_r) ||
+				(last_key->vsamples != key->vsamples) ||
 				(last_key->vastc_srgb != key->vastc_srgb))
 			return true;
 	}
@@ -173,6 +217,13 @@ struct ir3_shader_variant {
 
 	struct ir3_shader_key key;
 
+	/* vertex shaders can have an extra version for hwbinning pass,
+	 * which is pointed to by so->binning:
+	 */
+	bool binning_pass;
+	struct ir3_shader_variant *binning;
+
+	struct ir3_driver_const_layout const_layout;
 	struct ir3_info info;
 	struct ir3 *ir;
 
@@ -191,6 +242,7 @@ struct ir3_shader_variant {
 	 * constants, etc.
 	 */
 	unsigned num_uniforms;
+
 	unsigned num_ubos;
 
 	/* About Linkage:
@@ -202,10 +254,6 @@ struct ir3_shader_variant {
 	 *   + From the vert shader, we only need the output regid
 	 */
 
-	/* for frag shader, pos_regid holds the frag_pos, ie. what is passed
-	 * to bary.f instructions
-	 */
-	uint8_t pos_regid;
 	bool frag_coord, frag_face, color0_mrt;
 
 	/* NOTE: for input/outputs, slot is:
@@ -255,8 +303,8 @@ struct ir3_shader_variant {
 	 */
 	unsigned varying_in;
 
-	/* do we have one or more texture sample instructions: */
-	bool has_samp;
+	/* number of samplers/textures (which are currently 1:1): */
+	int num_samp;
 
 	/* do we have one or more SSBO instructions: */
 	bool has_ssbo;
@@ -271,15 +319,19 @@ struct ir3_shader_variant {
 	struct {
 		/* user const start at zero */
 		unsigned ubo;
+		/* NOTE that a3xx might need a section for SSBO addresses too */
+		unsigned ssbo_sizes;
+		unsigned image_dims;
 		unsigned driver_param;
 		unsigned tfbo;
 		unsigned immediate;
 	} constbase;
 
 	unsigned immediates_count;
+	unsigned immediates_size;
 	struct {
 		uint32_t val[4];
-	} immediates[64];
+	} *immediates;
 
 	/* for astc srgb workaround, the number/base of additional
 	 * alpha tex states we need, and index of original tex states
@@ -297,8 +349,6 @@ struct ir3_shader_variant {
 	struct ir3_shader *shader;
 };
 
-typedef struct nir_shader nir_shader;
-
 struct ir3_shader {
 	enum shader_t type;
 
@@ -311,7 +361,7 @@ struct ir3_shader {
 
 	struct ir3_compiler *compiler;
 
-	nir_shader *nir;
+	struct nir_shader *nir;
 	struct pipe_stream_output_info stream_output;
 
 	struct ir3_shader_variant *variants;
@@ -328,8 +378,9 @@ ir3_shader_create_compute(struct ir3_compiler *compiler,
 		struct pipe_debug_callback *debug);
 void ir3_shader_destroy(struct ir3_shader *shader);
 struct ir3_shader_variant * ir3_shader_variant(struct ir3_shader *shader,
-		struct ir3_shader_key key, struct pipe_debug_callback *debug);
-void ir3_shader_disasm(struct ir3_shader_variant *so, uint32_t *bin);
+		struct ir3_shader_key key, bool binning_pass,
+		struct pipe_debug_callback *debug);
+void ir3_shader_disasm(struct ir3_shader_variant *so, uint32_t *bin, FILE *out);
 uint64_t ir3_shader_outputs(const struct ir3_shader *so);
 
 struct fd_ringbuffer;
@@ -473,6 +524,15 @@ ir3_find_sysval_regid(const struct ir3_shader_variant *so, unsigned slot)
 		if (so->inputs[j].sysval && (so->inputs[j].slot == slot))
 			return so->inputs[j].regid;
 	return regid(63, 0);
+}
+
+/* calculate register footprint in terms of half-regs (ie. one full
+ * reg counts as two half-regs).
+ */
+static inline uint32_t
+ir3_shader_halfregs(const struct ir3_shader_variant *v)
+{
+	return (2 * (v->info.max_reg + 1)) + (v->info.max_half_reg + 1);
 }
 
 #endif /* IR3_SHADER_H_ */

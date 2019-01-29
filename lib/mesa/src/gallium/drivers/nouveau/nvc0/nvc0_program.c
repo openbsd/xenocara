@@ -134,10 +134,20 @@ nvc0_fp_assign_output_slots(struct nv50_ir_prog_info *info)
    unsigned count = info->prop.fp.numColourResults * 4;
    unsigned i, c;
 
+   /* Compute the relative position of each color output, since skipped MRT
+    * positions will not have registers allocated to them.
+    */
+   unsigned colors[8] = {0};
+   for (i = 0; i < info->numOutputs; ++i)
+      if (info->out[i].sn == TGSI_SEMANTIC_COLOR)
+         colors[info->out[i].si] = 1;
+   for (i = 0, c = 0; i < 8; i++)
+      if (colors[i])
+         colors[i] = c++;
    for (i = 0; i < info->numOutputs; ++i)
       if (info->out[i].sn == TGSI_SEMANTIC_COLOR)
          for (c = 0; c < 4; ++c)
-            info->out[i].slot[c] = info->out[i].si * 4 + c;
+            info->out[i].slot[c] = colors[info->out[i].si] * 4 + c;
 
    if (info->io.sampleMask < PIPE_MAX_SHADER_OUTPUTS)
       info->out[info->io.sampleMask].slot[0] = count++;
@@ -471,10 +481,13 @@ nvc0_fp_gen_header(struct nvc0_program *fp, struct nv50_ir_prog_info *info)
          }
       }
    }
+   /* GM20x+ needs TGSI_SEMANTIC_POSITION to access sample locations */
+   if (info->prop.fp.readsSampleLocations && info->target >= NVISA_GM200_CHIPSET)
+      fp->hdr[5] |= 0x30000000;
 
    for (i = 0; i < info->numOutputs; ++i) {
       if (info->out[i].sn == TGSI_SEMANTIC_COLOR)
-         fp->hdr[18] |= 0xf << info->out[i].slot[0];
+         fp->hdr[18] |= 0xf << (4 * info->out[i].si);
    }
 
    /* There are no "regular" attachments, but the shader still needs to be
@@ -575,10 +588,12 @@ nvc0_program_translate(struct nvc0_program *prog, uint16_t chipset,
    info->target = debug_get_num_option("NV50_PROG_CHIPSET", chipset);
    info->optLevel = debug_get_num_option("NV50_PROG_OPTIMIZE", 3);
    info->dbgFlags = debug_get_num_option("NV50_PROG_DEBUG", 0);
+   info->omitLineNum = debug_get_num_option("NV50_PROG_DEBUG_OMIT_LINENUM", 0);
 #else
    info->optLevel = 3;
 #endif
 
+   info->bin.smemSize = prog->cp.smem_size;
    info->io.genUserClip = prog->vp.num_ucps;
    info->io.auxCBSlot = 15;
    info->io.msInfoCBSlot = 15;
@@ -590,6 +605,7 @@ nvc0_program_translate(struct nvc0_program *prog, uint16_t chipset,
    if (info->target >= NVISA_GK104_CHIPSET) {
       info->io.texBindBase = NVC0_CB_AUX_TEX_INFO(0);
       info->io.fbtexBindBase = NVC0_CB_AUX_FB_TEX_INFO;
+      info->io.bindlessBase = NVC0_CB_AUX_BINDLESS_INFO(0);
    }
 
    if (prog->type == PIPE_SHADER_COMPUTE) {
@@ -618,6 +634,7 @@ nvc0_program_translate(struct nvc0_program *prog, uint16_t chipset,
    prog->relocs = info->bin.relocData;
    prog->fixups = info->bin.fixupData;
    prog->num_gprs = MAX2(4, (info->bin.maxGPR + 1));
+   prog->cp.smem_size = info->bin.smemSize;
    prog->num_barriers = info->numBarriers;
 
    prog->vp.need_vertex_id = info->io.vertexId < PIPE_MAX_SHADER_INPUTS;
@@ -682,9 +699,10 @@ nvc0_program_translate(struct nvc0_program *prog, uint16_t chipset,
                                                 &prog->pipe.stream_output);
 
    pipe_debug_message(debug, SHADER_INFO,
-                      "type: %d, local: %d, gpr: %d, inst: %d, bytes: %d",
-                      prog->type, info->bin.tlsSpace, prog->num_gprs,
-                      info->bin.instructions, info->bin.codeSize);
+                      "type: %d, local: %d, shared: %d, gpr: %d, inst: %d, bytes: %d",
+                      prog->type, info->bin.tlsSpace, info->bin.smemSize,
+                      prog->num_gprs, info->bin.instructions,
+                      info->bin.codeSize);
 
 #ifdef DEBUG
    if (debug_get_option("NV50_PROG_CHIPSET", NULL) && info->dbgFlags)

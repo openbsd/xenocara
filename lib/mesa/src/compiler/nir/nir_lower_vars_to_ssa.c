@@ -27,6 +27,7 @@
 
 #include "nir.h"
 #include "nir_builder.h"
+#include "nir_deref.h"
 #include "nir_phi_builder.h"
 #include "nir_vla.h"
 
@@ -38,10 +39,10 @@ struct deref_node {
    bool lower_to_ssa;
 
    /* Only valid for things that end up in the direct list.
-    * Note that multiple nir_deref_vars may correspond to this node, but they
-    * will all be equivalent, so any is as good as the other.
+    * Note that multiple nir_deref_instrs may correspond to this node, but
+    * they will all be equivalent, so any is as good as the other.
     */
-   nir_deref_var *deref;
+   nir_deref_path path;
    struct exec_node direct_derefs_link;
 
    struct set *loads;
@@ -49,6 +50,11 @@ struct deref_node {
    struct set *copies;
 
    struct nir_phi_builder_value *pb_value;
+
+   /* True if this node is fully direct.  If set, it must be in the children
+    * array of its parent.
+    */
+   bool is_direct;
 
    struct deref_node *wildcard;
    struct deref_node *indirect;
@@ -92,16 +98,17 @@ struct lower_variables_state {
 
 static struct deref_node *
 deref_node_create(struct deref_node *parent,
-                  const struct glsl_type *type, nir_shader *shader)
+                  const struct glsl_type *type,
+                  bool is_direct, void *mem_ctx)
 {
    size_t size = sizeof(struct deref_node) +
                  glsl_get_length(type) * sizeof(struct deref_node *);
 
-   struct deref_node *node = rzalloc_size(shader, size);
+   struct deref_node *node = rzalloc_size(mem_ctx, size);
    node->type = type;
    node->parent = parent;
-   node->deref = NULL;
    exec_node_init(&node->direct_derefs_link);
+   node->is_direct = is_direct;
 
    return node;
 }
@@ -120,7 +127,7 @@ get_deref_node_for_var(nir_variable *var, struct lower_variables_state *state)
    if (var_entry) {
       return var_entry->data;
    } else {
-      node = deref_node_create(NULL, var->type, state->dead_ctx);
+      node = deref_node_create(NULL, var->type, true, state->dead_ctx);
       _mesa_hash_table_insert(state->deref_var_nodes, var, node);
       return node;
    }
@@ -132,82 +139,89 @@ get_deref_node_for_var(nir_variable *var, struct lower_variables_state *state)
  * table of of fully-qualified direct derefs.
  */
 static struct deref_node *
-get_deref_node(nir_deref_var *deref, struct lower_variables_state *state)
+get_deref_node_recur(nir_deref_instr *deref,
+                     struct lower_variables_state *state)
 {
-   bool is_direct = true;
+   if (deref->deref_type == nir_deref_type_var)
+      return get_deref_node_for_var(deref->var, state);
 
-   /* Start at the base of the chain. */
-   struct deref_node *node = get_deref_node_for_var(deref->var, state);
-   assert(deref->deref.type == node->type);
+   struct deref_node *parent =
+      get_deref_node_recur(nir_deref_instr_parent(deref), state);
 
-   for (nir_deref *tail = deref->deref.child; tail; tail = tail->child) {
-      switch (tail->deref_type) {
-      case nir_deref_type_struct: {
-         nir_deref_struct *deref_struct = nir_deref_as_struct(tail);
+   switch (deref->deref_type) {
+   case nir_deref_type_struct:
+      assert(glsl_type_is_struct(parent->type));
+      assert(deref->strct.index < glsl_get_length(parent->type));
 
-         assert(deref_struct->index < glsl_get_length(node->type));
-
-         if (node->children[deref_struct->index] == NULL)
-            node->children[deref_struct->index] =
-               deref_node_create(node, tail->type, state->dead_ctx);
-
-         node = node->children[deref_struct->index];
-         break;
+      if (parent->children[deref->strct.index] == NULL) {
+         parent->children[deref->strct.index] =
+            deref_node_create(parent, deref->type, parent->is_direct,
+                              state->dead_ctx);
       }
 
-      case nir_deref_type_array: {
-         nir_deref_array *arr = nir_deref_as_array(tail);
+      return parent->children[deref->strct.index];
 
-         switch (arr->deref_array_type) {
-         case nir_deref_array_type_direct:
-            /* This is possible if a loop unrolls and generates an
-             * out-of-bounds offset.  We need to handle this at least
-             * somewhat gracefully.
-             */
-            if (arr->base_offset >= glsl_get_length(node->type))
-               return NULL;
+   case nir_deref_type_array: {
+      if (nir_src_is_const(deref->arr.index)) {
+         uint32_t index = nir_src_as_uint(deref->arr.index);
+         /* This is possible if a loop unrolls and generates an
+          * out-of-bounds offset.  We need to handle this at least
+          * somewhat gracefully.
+          */
+         if (index >= glsl_get_length(parent->type))
+            return NULL;
 
-            if (node->children[arr->base_offset] == NULL)
-               node->children[arr->base_offset] =
-                  deref_node_create(node, tail->type, state->dead_ctx);
-
-            node = node->children[arr->base_offset];
-            break;
-
-         case nir_deref_array_type_indirect:
-            if (node->indirect == NULL)
-               node->indirect = deref_node_create(node, tail->type,
-                                                  state->dead_ctx);
-
-            node = node->indirect;
-            is_direct = false;
-            break;
-
-         case nir_deref_array_type_wildcard:
-            if (node->wildcard == NULL)
-               node->wildcard = deref_node_create(node, tail->type,
-                                                  state->dead_ctx);
-
-            node = node->wildcard;
-            is_direct = false;
-            break;
-
-         default:
-            unreachable("Invalid array deref type");
+         if (parent->children[index] == NULL) {
+            parent->children[index] =
+               deref_node_create(parent, deref->type, parent->is_direct,
+                                 state->dead_ctx);
          }
-         break;
+
+         return parent->children[index];
+      } else {
+         if (parent->indirect == NULL) {
+            parent->indirect =
+               deref_node_create(parent, deref->type, false, state->dead_ctx);
+         }
+
+         return parent->indirect;
       }
-      default:
-         unreachable("Invalid deref type");
-      }
+      break;
    }
 
-   assert(node);
+   case nir_deref_type_array_wildcard:
+      if (parent->wildcard == NULL) {
+         parent->wildcard =
+            deref_node_create(parent, deref->type, false, state->dead_ctx);
+      }
 
-   /* Only insert if it isn't already in the list. */
-   if (is_direct && state->add_to_direct_deref_nodes &&
+      return parent->wildcard;
+
+   default:
+      unreachable("Invalid deref type");
+   }
+}
+
+static struct deref_node *
+get_deref_node(nir_deref_instr *deref, struct lower_variables_state *state)
+{
+   /* This pass only works on local variables.  Just ignore any derefs with
+    * a non-local mode.
+    */
+   if (deref->mode != nir_var_local)
+      return NULL;
+
+   struct deref_node *node = get_deref_node_recur(deref, state);
+   if (!node)
+      return NULL;
+
+   /* Insert the node in the direct derefs list.  We only do this if it's not
+    * already in the list and we only bother for deref nodes which are used
+    * directly in a load or store.
+    */
+   if (node->is_direct && state->add_to_direct_deref_nodes &&
        node->direct_derefs_link.next == NULL) {
-      node->deref = deref;
+      nir_deref_path_init(&node->path, deref, state->dead_ctx);
       assert(deref->var != NULL);
       exec_list_push_tail(&state->direct_deref_nodes,
                           &node->direct_derefs_link);
@@ -217,45 +231,42 @@ get_deref_node(nir_deref_var *deref, struct lower_variables_state *state)
 }
 
 /* \sa foreach_deref_node_match */
-static bool
-foreach_deref_node_worker(struct deref_node *node, nir_deref *deref,
-                          bool (* cb)(struct deref_node *node,
+static void
+foreach_deref_node_worker(struct deref_node *node, nir_deref_instr **path,
+                          void (* cb)(struct deref_node *node,
                                       struct lower_variables_state *state),
                           struct lower_variables_state *state)
 {
-   if (deref->child == NULL) {
-      return cb(node, state);
-   } else {
-      switch (deref->child->deref_type) {
-      case nir_deref_type_array: {
-         nir_deref_array *arr = nir_deref_as_array(deref->child);
-         assert(arr->deref_array_type == nir_deref_array_type_direct);
-         if (node->children[arr->base_offset] &&
-             !foreach_deref_node_worker(node->children[arr->base_offset],
-                                        deref->child, cb, state))
-            return false;
+   if (*path == NULL) {
+      cb(node, state);
+      return;
+   }
 
-         if (node->wildcard &&
-             !foreach_deref_node_worker(node->wildcard,
-                                        deref->child, cb, state))
-            return false;
+   switch ((*path)->deref_type) {
+   case nir_deref_type_struct:
+      if (node->children[(*path)->strct.index]) {
+         foreach_deref_node_worker(node->children[(*path)->strct.index],
+                                   path + 1, cb, state);
+      }
+      return;
 
-         return true;
+   case nir_deref_type_array: {
+      uint32_t index = nir_src_as_uint((*path)->arr.index);
+
+      if (node->children[index]) {
+         foreach_deref_node_worker(node->children[index],
+                                   path + 1, cb, state);
       }
 
-      case nir_deref_type_struct: {
-         nir_deref_struct *str = nir_deref_as_struct(deref->child);
-         if (node->children[str->index] &&
-             !foreach_deref_node_worker(node->children[str->index],
-                                        deref->child, cb, state))
-            return false;
-
-         return true;
+      if (node->wildcard) {
+         foreach_deref_node_worker(node->wildcard,
+                                   path + 1, cb, state);
       }
+      return;
+   }
 
-      default:
-         unreachable("Invalid deref child type");
-      }
+   default:
+      unreachable("Unsupported deref type");
    }
 }
 
@@ -271,67 +282,62 @@ foreach_deref_node_worker(struct deref_node *node, nir_deref *deref,
  * The given deref must be a full-length and fully qualified (no wildcards
  * or indirects) deref chain.
  */
-static bool
-foreach_deref_node_match(nir_deref_var *deref,
-                         bool (* cb)(struct deref_node *node,
+static void
+foreach_deref_node_match(nir_deref_path *path,
+                         void (* cb)(struct deref_node *node,
                                      struct lower_variables_state *state),
                          struct lower_variables_state *state)
 {
-   nir_deref_var var_deref = *deref;
-   var_deref.deref.child = NULL;
-   struct deref_node *node = get_deref_node(&var_deref, state);
+   assert(path->path[0]->deref_type == nir_deref_type_var);
+   struct deref_node *node = get_deref_node_for_var(path->path[0]->var, state);
 
    if (node == NULL)
-      return false;
+      return;
 
-   return foreach_deref_node_worker(node, &deref->deref, cb, state);
+   foreach_deref_node_worker(node, &path->path[1], cb, state);
 }
 
 /* \sa deref_may_be_aliased */
 static bool
-deref_may_be_aliased_node(struct deref_node *node, nir_deref *deref,
-                          struct lower_variables_state *state)
+path_may_be_aliased_node(struct deref_node *node, nir_deref_instr **path,
+                         struct lower_variables_state *state)
 {
-   if (deref->child == NULL) {
+   if (*path == NULL)
       return false;
-   } else {
-      switch (deref->child->deref_type) {
-      case nir_deref_type_array: {
-         nir_deref_array *arr = nir_deref_as_array(deref->child);
-         if (arr->deref_array_type == nir_deref_array_type_indirect)
-            return true;
 
-         /* If there is an indirect at this level, we're aliased. */
-         if (node->indirect)
-            return true;
-
-         assert(arr->deref_array_type == nir_deref_array_type_direct);
-
-         if (node->children[arr->base_offset] &&
-             deref_may_be_aliased_node(node->children[arr->base_offset],
-                                       deref->child, state))
-            return true;
-
-         if (node->wildcard &&
-             deref_may_be_aliased_node(node->wildcard, deref->child, state))
-            return true;
-
+   switch ((*path)->deref_type) {
+   case nir_deref_type_struct:
+      if (node->children[(*path)->strct.index]) {
+         return path_may_be_aliased_node(node->children[(*path)->strct.index],
+                                         path + 1, state);
+      } else {
          return false;
       }
 
-      case nir_deref_type_struct: {
-         nir_deref_struct *str = nir_deref_as_struct(deref->child);
-         if (node->children[str->index]) {
-             return deref_may_be_aliased_node(node->children[str->index],
-                                              deref->child, state);
-         } else {
-            return false;
-         }
-      }
+   case nir_deref_type_array: {
+      if (!nir_src_is_const((*path)->arr.index))
+         return true;
 
-      default:
-         unreachable("Invalid nir_deref child type");
-      }
+      uint32_t index = nir_src_as_uint((*path)->arr.index);
+
+      /* If there is an indirect at this level, we're aliased. */
+      if (node->indirect)
+         return true;
+
+      if (node->children[index] &&
+          path_may_be_aliased_node(node->children[index],
+                                   path + 1, state))
+         return true;
+
+      if (node->wildcard &&
+          path_may_be_aliased_node(node->wildcard, path + 1, state))
+         return true;
+
+      return false;
+   }
+
+   default:
+      unreachable("Unsupported deref type");
    }
 }
 
@@ -350,18 +356,22 @@ deref_may_be_aliased_node(struct deref_node *node, nir_deref *deref,
  * references.
  */
 static bool
-deref_may_be_aliased(nir_deref_var *deref,
-                     struct lower_variables_state *state)
+path_may_be_aliased(nir_deref_path *path,
+                    struct lower_variables_state *state)
 {
-   return deref_may_be_aliased_node(get_deref_node_for_var(deref->var, state),
-                                    &deref->deref, state);
+   assert(path->path[0]->deref_type == nir_deref_type_var);
+   nir_variable *var = path->path[0]->var;
+
+   return path_may_be_aliased_node(get_deref_node_for_var(var, state),
+                                   &path->path[1], state);
 }
 
 static void
 register_load_instr(nir_intrinsic_instr *load_instr,
                     struct lower_variables_state *state)
 {
-   struct deref_node *node = get_deref_node(load_instr->variables[0], state);
+   nir_deref_instr *deref = nir_src_as_deref(load_instr->src[0]);
+   struct deref_node *node = get_deref_node(deref, state);
    if (node == NULL)
       return;
 
@@ -376,7 +386,8 @@ static void
 register_store_instr(nir_intrinsic_instr *store_instr,
                      struct lower_variables_state *state)
 {
-   struct deref_node *node = get_deref_node(store_instr->variables[0], state);
+   nir_deref_instr *deref = nir_src_as_deref(store_instr->src[0]);
+   struct deref_node *node = get_deref_node(deref, state);
    if (node == NULL)
       return;
 
@@ -392,9 +403,8 @@ register_copy_instr(nir_intrinsic_instr *copy_instr,
                     struct lower_variables_state *state)
 {
    for (unsigned idx = 0; idx < 2; idx++) {
-      struct deref_node *node =
-         get_deref_node(copy_instr->variables[idx], state);
-
+      nir_deref_instr *deref = nir_src_as_deref(copy_instr->src[idx]);
+      struct deref_node *node = get_deref_node(deref, state);
       if (node == NULL)
          continue;
 
@@ -406,57 +416,58 @@ register_copy_instr(nir_intrinsic_instr *copy_instr,
    }
 }
 
-/* Registers all variable uses in the given block. */
-static bool
-register_variable_uses_block(nir_block *block,
-                             struct lower_variables_state *state)
+static void
+register_variable_uses(nir_function_impl *impl,
+                       struct lower_variables_state *state)
 {
-   nir_foreach_instr_safe(instr, block) {
-      if (instr->type != nir_instr_type_intrinsic)
-         continue;
+   nir_foreach_block(block, impl) {
+      nir_foreach_instr_safe(instr, block) {
+         if (instr->type != nir_instr_type_intrinsic)
+            continue;
 
-      nir_intrinsic_instr *intrin = nir_instr_as_intrinsic(instr);
+         nir_intrinsic_instr *intrin = nir_instr_as_intrinsic(instr);
 
-      switch (intrin->intrinsic) {
-      case nir_intrinsic_load_var:
-         register_load_instr(intrin, state);
-         break;
+         switch (intrin->intrinsic) {
+         case nir_intrinsic_load_deref:
+            register_load_instr(intrin, state);
+            break;
 
-      case nir_intrinsic_store_var:
-         register_store_instr(intrin, state);
-         break;
+         case nir_intrinsic_store_deref:
+            register_store_instr(intrin, state);
+            break;
 
-      case nir_intrinsic_copy_var:
-         register_copy_instr(intrin, state);
-         break;
+         case nir_intrinsic_copy_deref:
+            register_copy_instr(intrin, state);
+            break;
 
-      default:
-         continue;
+         default:
+            continue;
+         }
       }
    }
-
-   return true;
 }
 
 /* Walks over all of the copy instructions to or from the given deref_node
  * and lowers them to load/store intrinsics.
  */
-static bool
+static void
 lower_copies_to_load_store(struct deref_node *node,
                            struct lower_variables_state *state)
 {
    if (!node->copies)
-      return true;
+      return;
 
-   struct set_entry *copy_entry;
+   nir_builder b;
+   nir_builder_init(&b, state->impl);
+
    set_foreach(node->copies, copy_entry) {
       nir_intrinsic_instr *copy = (void *)copy_entry->key;
 
-      nir_lower_var_copy_instr(copy, state->shader);
+      nir_lower_deref_copy_instr(&b, copy);
 
       for (unsigned i = 0; i < 2; ++i) {
-         struct deref_node *arg_node =
-            get_deref_node(copy->variables[i], state);
+         nir_deref_instr *arg_deref = nir_src_as_deref(copy->src[i]);
+         struct deref_node *arg_node = get_deref_node(arg_deref, state);
 
          /* Only bother removing copy entries for other nodes */
          if (arg_node == NULL || arg_node == node)
@@ -471,8 +482,6 @@ lower_copies_to_load_store(struct deref_node *node,
    }
 
    node->copies = NULL;
-
-   return true;
 }
 
 /* Performs variable renaming
@@ -496,10 +505,12 @@ rename_variables(struct lower_variables_state *state)
          nir_intrinsic_instr *intrin = nir_instr_as_intrinsic(instr);
 
          switch (intrin->intrinsic) {
-         case nir_intrinsic_load_var: {
-            struct deref_node *node =
-               get_deref_node(intrin->variables[0], state);
+         case nir_intrinsic_load_deref: {
+            nir_deref_instr *deref = nir_src_as_deref(intrin->src[0]);
+            if (deref->mode != nir_var_local)
+               continue;
 
+            struct deref_node *node = get_deref_node(deref, state);
             if (node == NULL) {
                /* If we hit this path then we are referencing an invalid
                 * value.  Most likely, we unrolled something and are
@@ -544,9 +555,15 @@ rename_variables(struct lower_variables_state *state)
             break;
          }
 
-         case nir_intrinsic_store_var: {
-            struct deref_node *node =
-               get_deref_node(intrin->variables[0], state);
+         case nir_intrinsic_store_deref: {
+            nir_deref_instr *deref = nir_src_as_deref(intrin->src[0]);
+            if (deref->mode != nir_var_local)
+               continue;
+
+            struct deref_node *node = get_deref_node(deref, state);
+
+            assert(intrin->src[1].is_ssa);
+            nir_ssa_def *value = intrin->src[1].ssa;
 
             if (node == NULL) {
                /* Probably an out-of-bounds array store.  That should be a
@@ -561,22 +578,20 @@ rename_variables(struct lower_variables_state *state)
             assert(intrin->num_components ==
                    glsl_get_vector_elements(node->type));
 
-            assert(intrin->src[0].is_ssa);
-
             nir_ssa_def *new_def;
             b.cursor = nir_before_instr(&intrin->instr);
 
             unsigned wrmask = nir_intrinsic_write_mask(intrin);
             if (wrmask == (1 << intrin->num_components) - 1) {
                /* Whole variable store - just copy the source.  Note that
-                * intrin->num_components and intrin->src[0].ssa->num_components
+                * intrin->num_components and value->num_components
                 * may differ.
                 */
                unsigned swiz[4];
                for (unsigned i = 0; i < 4; i++)
                   swiz[i] = i < intrin->num_components ? i : 0;
 
-               new_def = nir_swizzle(&b, intrin->src[0].ssa, swiz,
+               new_def = nir_swizzle(&b, value, swiz,
                                      intrin->num_components, false);
             } else {
                nir_ssa_def *old_def =
@@ -588,7 +603,7 @@ rename_variables(struct lower_variables_state *state)
                nir_ssa_def *srcs[4];
                for (unsigned i = 0; i < intrin->num_components; i++) {
                   if (wrmask & (1 << i)) {
-                     srcs[i] = nir_channel(&b, intrin->src[0].ssa, i);
+                     srcs[i] = nir_channel(&b, value, i);
                   } else {
                      srcs[i] = nir_channel(&b, old_def, i);
                   }
@@ -654,9 +669,7 @@ nir_lower_vars_to_ssa_impl(nir_function_impl *impl)
    /* Build the initial deref structures and direct_deref_nodes table */
    state.add_to_direct_deref_nodes = true;
 
-   nir_foreach_block(block, impl) {
-      register_variable_uses_block(block, &state);
-   }
+   register_variable_uses(impl, &state);
 
    bool progress = false;
 
@@ -667,14 +680,15 @@ nir_lower_vars_to_ssa_impl(nir_function_impl *impl)
 
    foreach_list_typed_safe(struct deref_node, node, direct_derefs_link,
                            &state.direct_deref_nodes) {
-      nir_deref_var *deref = node->deref;
+      nir_deref_path *path = &node->path;
 
-      if (deref->var->data.mode != nir_var_local) {
-         exec_node_remove(&node->direct_derefs_link);
-         continue;
-      }
+      assert(path->path[0]->deref_type == nir_deref_type_var);
+      nir_variable *var = path->path[0]->var;
 
-      if (deref_may_be_aliased(deref, &state)) {
+      /* We don't build deref nodes for non-local variables */
+      assert(var->data.mode == nir_var_local);
+
+      if (path_may_be_aliased(path, &state)) {
          exec_node_remove(&node->direct_derefs_link);
          continue;
       }
@@ -682,7 +696,7 @@ nir_lower_vars_to_ssa_impl(nir_function_impl *impl)
       node->lower_to_ssa = true;
       progress = true;
 
-      foreach_deref_node_match(deref, lower_copies_to_load_store, &state);
+      foreach_deref_node_match(path, lower_copies_to_load_store, &state);
    }
 
    if (!progress)
@@ -696,9 +710,7 @@ nir_lower_vars_to_ssa_impl(nir_function_impl *impl)
     * added load/store instructions are registered.  We need this
     * information for phi node insertion below.
     */
-   nir_foreach_block(block, impl) {
-      register_variable_uses_block(block, &state);
-   }
+   register_variable_uses(impl, &state);
 
    state.phi_builder = nir_phi_builder_create(state.impl);
 
@@ -711,10 +723,9 @@ nir_lower_vars_to_ssa_impl(nir_function_impl *impl)
       memset(store_blocks, 0,
              BITSET_WORDS(state.impl->num_blocks) * sizeof(*store_blocks));
 
-      assert(node->deref->var->constant_initializer == NULL);
+      assert(node->path.path[0]->var->constant_initializer == NULL);
 
       if (node->stores) {
-         struct set_entry *store_entry;
          set_foreach(node->stores, store_entry) {
             nir_intrinsic_instr *store =
                (nir_intrinsic_instr *)store_entry->key;

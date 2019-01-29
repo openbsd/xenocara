@@ -31,6 +31,7 @@
 
 #include "pipe/p_context.h"
 #include "util/u_sampler.h"
+#include "util/simple_mtx.h"
 
 #include "main/mtypes.h"
 
@@ -41,9 +42,9 @@ struct pipe_resource;
 struct st_texture_image_transfer {
    struct pipe_transfer *transfer;
 
-   /* For ETC fallback. */
-   GLubyte *temp_data; /**< Temporary ETC texture storage. */
-   unsigned temp_stride; /**< Stride of the ETC texture storage. */
+   /* For compressed texture fallback. */
+   GLubyte *temp_data; /**< Temporary compressed texture storage. */
+   unsigned temp_stride; /**< Stride of the compressed texture storage. */
    GLubyte *map; /**< Saved map pointer of the uncompressed transfer. */
 };
 
@@ -60,6 +61,16 @@ struct st_sampler_view {
    bool srgb_skip_decode;
 };
 
+
+/**
+ * Container for per-context sampler views of a texture.
+ */
+struct st_sampler_views {
+   struct st_sampler_views *next;
+   uint32_t max;
+   uint32_t count;
+   struct st_sampler_view views[0];
+};
 
 /**
  * Subclass of gl_texure_image.
@@ -79,10 +90,11 @@ struct st_texture_image
    struct st_texture_image_transfer *transfer;
    unsigned num_transfers;
 
-   /* For ETC images, keep track of the original data. This is necessary for
-    * mapping/unmapping, as well as image copies.
+   /* For compressed images unsupported by the driver. Keep track of
+    * the original data. This is necessary for mapping/unmapping,
+    * as well as image copies.
     */
-   GLubyte *etc_data;
+   GLubyte *compressed_data;
 };
 
 
@@ -105,13 +117,34 @@ struct st_texture_object
     */
    struct pipe_resource *pt;
 
-   /* Number of views in sampler_views array */
-   GLuint num_sampler_views;
+   /* Protect modifications of the sampler_views array */
+   simple_mtx_t validate_mutex;
 
-   /* Array of sampler views (one per context) attached to this texture
+   /* Container of sampler views (one per context) attached to this texture
     * object. Created lazily on first binding in context.
+    *
+    * Purely read-only accesses to the current context's own sampler view
+    * require no locking. Another thread may simultaneously replace the
+    * container object in order to grow the array, but the old container will
+    * be kept alive.
+    *
+    * Writing to the container (even for modifying the current context's own
+    * sampler view) always requires taking the validate_mutex to protect against
+    * concurrent container switches.
+    *
+    * NULL'ing another context's sampler view is allowed only while
+    * implementing an API call that modifies the texture: an application which
+    * calls those while simultaneously reading the texture in another context
+    * invokes undefined behavior. (TODO: a dubious violation of this rule is
+    * st_finalize_texture, which is a lazy operation that corresponds to a
+    * texture modification.)
     */
-   struct st_sampler_view *sampler_views;
+   struct st_sampler_views *sampler_views;
+
+   /* Old sampler views container objects that have not been freed yet because
+    * other threads/contexts may still be reading from them.
+    */
+   struct st_sampler_views *sampler_views_old;
 
    /* True if this texture comes from the window system. Such a texture
     * cannot be reallocated and the format can only be changed with a sampler
@@ -283,16 +316,17 @@ void
 st_destroy_bound_image_handles(struct st_context *st);
 
 bool
-st_etc_fallback(struct st_context *st, struct gl_texture_image *texImage);
+st_compressed_format_fallback(struct st_context *st, mesa_format format);
 
 void
 st_convert_image(const struct st_context *st, const struct gl_image_unit *u,
-                 struct pipe_image_view *img);
+                 struct pipe_image_view *img, unsigned shader_access);
 
 void
 st_convert_image_from_unit(const struct st_context *st,
                            struct pipe_image_view *img,
-                           GLuint imgUnit);
+                           GLuint imgUnit,
+                           unsigned shader_access);
 
 void
 st_convert_sampler(const struct st_context *st,

@@ -26,7 +26,6 @@
 #ifndef FBOBJECT_H
 #define FBOBJECT_H
 
-#include "compiler.h"
 #include "glheader.h"
 #include <stdbool.h>
 
@@ -96,7 +95,8 @@ _mesa_framebuffer_renderbuffer(struct gl_context *ctx,
 extern void
 _mesa_renderbuffer_storage(struct gl_context *ctx, struct gl_renderbuffer *rb,
                            GLenum internalFormat, GLsizei width,
-                           GLsizei height, GLsizei samples);
+                           GLsizei height, GLsizei samples,
+                           GLsizei storageSamples);
 
 extern void
 _mesa_validate_framebuffer(struct gl_context *ctx, struct gl_framebuffer *fb);
@@ -112,7 +112,7 @@ extern GLboolean
 _mesa_is_legal_color_format(const struct gl_context *ctx, GLenum baseFormat);
 
 extern GLenum
-_mesa_base_fbo_format(struct gl_context *ctx, GLenum internalFormat);
+_mesa_base_fbo_format(const struct gl_context *ctx, GLenum internalFormat);
 
 extern bool
 _mesa_detach_renderbuffer(struct gl_context *ctx,
@@ -174,6 +174,11 @@ _mesa_RenderbufferStorageMultisample(GLenum target, GLsizei samples,
                                      GLsizei width, GLsizei height);
 
 extern void GLAPIENTRY
+_mesa_RenderbufferStorageMultisampleAdvancedAMD(
+      GLenum target, GLsizei samples, GLsizei storageSamples,
+      GLenum internalFormat, GLsizei width, GLsizei height);
+
+extern void GLAPIENTRY
 _es_RenderbufferStorageEXT(GLenum target, GLenum internalFormat,
 			   GLsizei width, GLsizei height);
 
@@ -185,6 +190,11 @@ extern void GLAPIENTRY
 _mesa_NamedRenderbufferStorageMultisample(GLuint renderbuffer, GLsizei samples,
                                           GLenum internalformat,
                                           GLsizei width, GLsizei height);
+
+extern void GLAPIENTRY
+_mesa_NamedRenderbufferStorageMultisampleAdvancedAMD(
+      GLuint renderbuffer, GLsizei samples, GLsizei storageSamples,
+      GLenum internalformat, GLsizei width, GLsizei height);
 
 extern void GLAPIENTRY
 _mesa_EGLImageTargetRenderbufferStorageOES(GLenum target, GLeglImageOES image);
@@ -355,5 +365,25 @@ _mesa_FramebufferParameteri(GLenum target, GLenum pname, GLint param);
 
 extern void GLAPIENTRY
 _mesa_GetFramebufferParameteriv(GLenum target, GLenum pname, GLint *params);
+
+extern void GLAPIENTRY
+_mesa_FramebufferSampleLocationsfvARB(GLenum target, GLuint start,
+                                      GLsizei count, const GLfloat *v);
+
+extern void GLAPIENTRY
+_mesa_NamedFramebufferSampleLocationsfvARB(GLuint framebuffer, GLuint start,
+                                           GLsizei count, const GLfloat *v);
+
+extern void GLAPIENTRY
+_mesa_FramebufferSampleLocationsfvARB_no_error(GLenum target, GLuint start,
+                                               GLsizei count, const GLfloat *v);
+
+extern void GLAPIENTRY
+_mesa_NamedFramebufferSampleLocationsfvARB_no_error(GLuint framebuffer,
+                                                    GLuint start, GLsizei count,
+                                                    const GLfloat *v);
+
+extern void GLAPIENTRY
+_mesa_EvaluateDepthValuesARB(void);
 
 #endif /* FBOBJECT_H */

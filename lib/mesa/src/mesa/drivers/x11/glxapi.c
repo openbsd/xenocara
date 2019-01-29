@@ -35,7 +35,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "main/glheader.h"
-#include "main/compiler.h"
 #include "glapi/glapi.h"
 #include "glxapi.h"
 
@@ -911,43 +910,6 @@ glXAssociateDMPbufferSGIX(Display *dpy, GLXPbufferSGIX pbuffer, DMparams *params
 #endif
 
 
-/*** GLX_SGIX_swap_group ***/
-
-void PUBLIC
-glXJoinSwapGroupSGIX(Display *dpy, GLXDrawable drawable, GLXDrawable member)
-{
-   struct _glxapi_table *t;
-   GET_DISPATCH(dpy, t);
-   if (!t)
-      return;
-   t->JoinSwapGroupSGIX(dpy, drawable, member);
-}
-
-
-/*** GLX_SGIX_swap_barrier ***/
-
-void PUBLIC
-glXBindSwapBarrierSGIX(Display *dpy, GLXDrawable drawable, int barrier)
-{
-   struct _glxapi_table *t;
-   GET_DISPATCH(dpy, t);
-   if (!t)
-      return;
-   t->BindSwapBarrierSGIX(dpy, drawable, barrier);
-}
-
-Bool PUBLIC
-glXQueryMaxSwapBarriersSGIX(Display *dpy, int screen, int *max)
-{
-   struct _glxapi_table *t;
-   GET_DISPATCH(dpy, t);
-   if (!t)
-      return False;
-   return t->QueryMaxSwapBarriersSGIX(dpy, screen, max);
-}
-
-
-
 /*** GLX_SUN_get_transparent_index ***/
 
 Status PUBLIC
@@ -1004,66 +966,6 @@ glXCreateGLXPixmapMESA(Display *dpy, XVisualInfo *visinfo, Pixmap pixmap, Colorm
 
 
 
-/*** GLX_MESA_set_3dfx_mode ***/
-
-Bool PUBLIC
-glXSet3DfxModeMESA(int mode)
-{
-   struct _glxapi_table *t;
-   Display *dpy = glXGetCurrentDisplay();
-   GET_DISPATCH(dpy, t);
-   if (!t)
-      return False;
-   return t->Set3DfxModeMESA(mode);
-}
-
-
-
-/*** GLX_NV_vertex_array_range ***/
-
-void PUBLIC *
-glXAllocateMemoryNV( GLsizei size,
-                     GLfloat readFrequency,
-                     GLfloat writeFrequency,
-                     GLfloat priority )
-{
-   struct _glxapi_table *t;
-   Display *dpy = glXGetCurrentDisplay();
-   GET_DISPATCH(dpy, t);
-   if (!t)
-      return NULL;
-   return t->AllocateMemoryNV(size, readFrequency, writeFrequency, priority);
-}
-
-
-void PUBLIC
-glXFreeMemoryNV( GLvoid *pointer )
-{
-   struct _glxapi_table *t;
-   Display *dpy = glXGetCurrentDisplay();
-   GET_DISPATCH(dpy, t);
-   if (!t)
-      return;
-   t->FreeMemoryNV(pointer);
-}
-
-
-
-
-/*** GLX_MESA_agp_offset */
-
-GLuint PUBLIC
-glXGetAGPOffsetMESA( const GLvoid *pointer )
-{
-   struct _glxapi_table *t;
-   Display *dpy = glXGetCurrentDisplay();
-   GET_DISPATCH(dpy, t);
-   if (!t)
-      return ~0;
-   return t->GetAGPOffsetMESA(pointer);
-}
-
-
 /*** GLX_EXT_texture_from_pixmap */
 
 void PUBLIC
@@ -1110,7 +1012,6 @@ _glxapi_get_extensions(void)
       "GLX_MESA_copy_sub_buffer",
       "GLX_MESA_release_buffers",
       "GLX_MESA_pixmap_colormap",
-      "GLX_MESA_set_3dfx_mode",
       "GLX_SGIX_fbconfig",
       "GLX_SGIX_pbuffer",
       "GLX_EXT_texture_from_pixmap",
@@ -1263,13 +1164,6 @@ static struct name_address_pair GLX_functions[] = {
    { "glXAssociateDMPbufferSGIX", (__GLXextFuncPtr) glXAssociateDMPbufferSGIX },
 #endif
 
-   /*** GLX_SGIX_swap_group ***/
-   { "glXJoinSwapGroupSGIX", (__GLXextFuncPtr) glXJoinSwapGroupSGIX },
-
-   /*** GLX_SGIX_swap_barrier ***/
-   { "glXBindSwapBarrierSGIX", (__GLXextFuncPtr) glXBindSwapBarrierSGIX },
-   { "glXQueryMaxSwapBarriersSGIX", (__GLXextFuncPtr) glXQueryMaxSwapBarriersSGIX },
-
    /*** GLX_SUN_get_transparent_index ***/
    { "glXGetTransparentIndexSUN", (__GLXextFuncPtr) glXGetTransparentIndexSUN },
 
@@ -1282,18 +1176,8 @@ static struct name_address_pair GLX_functions[] = {
    /*** GLX_MESA_release_buffers ***/
    { "glXReleaseBuffersMESA", (__GLXextFuncPtr) glXReleaseBuffersMESA },
 
-   /*** GLX_MESA_set_3dfx_mode ***/
-   { "glXSet3DfxModeMESA", (__GLXextFuncPtr) glXSet3DfxModeMESA },
-
    /*** GLX_ARB_get_proc_address ***/
    { "glXGetProcAddressARB", (__GLXextFuncPtr) glXGetProcAddressARB },
-
-   /*** GLX_NV_vertex_array_range ***/
-   { "glXAllocateMemoryNV", (__GLXextFuncPtr) glXAllocateMemoryNV },
-   { "glXFreeMemoryNV", (__GLXextFuncPtr) glXFreeMemoryNV },
-
-   /*** GLX_MESA_agp_offset ***/
-   { "glXGetAGPOffsetMESA", (__GLXextFuncPtr) glXGetAGPOffsetMESA },
 
    /*** GLX_EXT_texture_from_pixmap ***/
    { "glXBindTexImageEXT", (__GLXextFuncPtr) glXBindTexImageEXT },

@@ -23,7 +23,7 @@
 # GLX extension.  All rendering is converted to Xlib calls.  No hardware
 # acceleration.
 
-EXTRA_DIST = SConscript
+EXTRA_DIST = SConscript meson.build
 
 if HAVE_SHARED_GLAPI
 SHARED_GLAPI_LIB = $(top_builddir)/src/mapi/shared-glapi/libglapi.la
@@ -68,6 +68,7 @@ GL_PATCH = 0
 lib@GL_LIB@_la_LIBADD = \
 	$(top_builddir)/src/mesa/libmesa.la \
 	$(top_builddir)/src/mapi/glapi/libglapi.la \
+	$(top_builddir)/src/util/libmesautil.la \
 	$(SHARED_GLAPI_LIB) \
 	$(GL_LIB_DEPS)
 

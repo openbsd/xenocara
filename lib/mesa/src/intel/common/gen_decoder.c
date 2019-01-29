@@ -35,22 +35,11 @@
 
 #include "gen_decoder.h"
 
+#include "isl/isl.h"
 #include "genxml/genX_xml.h"
 
 #define XML_BUFFER_SIZE 4096
-
-struct gen_spec {
-   uint32_t gen;
-
-   int ncommands;
-   struct gen_group *commands[256];
-   int nstructs;
-   struct gen_group *structs[256];
-   int nregisters;
-   struct gen_group *registers[256];
-   int nenums;
-   struct gen_enum *enums[256];
-};
+#define MAX_VALUE_ITEMS 128
 
 struct location {
    const char *filename;
@@ -61,13 +50,14 @@ struct parser_context {
    XML_Parser parser;
    int foo;
    struct location loc;
-   const char *platform;
 
    struct gen_group *group;
    struct gen_enum *enoom;
 
-   int nvalues;
-   struct gen_value *values[256];
+   int n_values, n_allocated_values;
+   struct gen_value **values;
+
+   struct gen_field *last_field;
 
    struct gen_spec *spec;
 };
@@ -87,42 +77,34 @@ gen_group_get_opcode(struct gen_group *group)
 struct gen_group *
 gen_spec_find_struct(struct gen_spec *spec, const char *name)
 {
-   for (int i = 0; i < spec->nstructs; i++)
-      if (strcmp(spec->structs[i]->name, name) == 0)
-         return spec->structs[i];
-
-   return NULL;
+   struct hash_entry *entry = _mesa_hash_table_search(spec->structs,
+                                                      name);
+   return entry ? entry->data : NULL;
 }
 
 struct gen_group *
 gen_spec_find_register(struct gen_spec *spec, uint32_t offset)
 {
-   for (int i = 0; i < spec->nregisters; i++)
-      if (spec->registers[i]->register_offset == offset)
-         return spec->registers[i];
-
-   return NULL;
+   struct hash_entry *entry =
+      _mesa_hash_table_search(spec->registers_by_offset,
+                              (void *) (uintptr_t) offset);
+   return entry ? entry->data : NULL;
 }
 
 struct gen_group *
 gen_spec_find_register_by_name(struct gen_spec *spec, const char *name)
 {
-   for (int i = 0; i < spec->nregisters; i++) {
-      if (strcmp(spec->registers[i]->name, name) == 0)
-         return spec->registers[i];
-   }
-
-   return NULL;
+   struct hash_entry *entry =
+      _mesa_hash_table_search(spec->registers_by_name, name);
+   return entry ? entry->data : NULL;
 }
 
 struct gen_enum *
 gen_spec_find_enum(struct gen_spec *spec, const char *name)
 {
-   for (int i = 0; i < spec->nenums; i++)
-      if (strcmp(spec->enums[i]->name, name) == 0)
-         return spec->enums[i];
-
-   return NULL;
+   struct hash_entry *entry = _mesa_hash_table_search(spec->enums,
+                                                      name);
+   return entry ? entry->data : NULL;
 }
 
 uint32_t
@@ -145,43 +127,13 @@ fail(struct location *loc, const char *msg, ...)
    exit(EXIT_FAILURE);
 }
 
-static void *
-fail_on_null(void *p)
-{
-   if (p == NULL) {
-      fprintf(stderr, "aubinator: out of memory\n");
-      exit(EXIT_FAILURE);
-   }
-
-   return p;
-}
-
-static char *
-xstrdup(const char *s)
-{
-   return fail_on_null(strdup(s));
-}
-
-static void *
-zalloc(size_t s)
-{
-   return calloc(s, 1);
-}
-
-static void *
-xzalloc(size_t s)
-{
-   return fail_on_null(zalloc(s));
-}
-
 static void
 get_group_offset_count(const char **atts, uint32_t *offset, uint32_t *count,
                        uint32_t *size, bool *variable)
 {
-   char *p;
-   int i;
+   for (int i = 0; atts[i]; i += 2) {
+      char *p;
 
-   for (i = 0; atts[i]; i += 2) {
       if (strcmp(atts[i], "count") == 0) {
          *count = strtoul(atts[i + 1], &p, 0);
          if (*count == 0)
@@ -199,18 +151,30 @@ static struct gen_group *
 create_group(struct parser_context *ctx,
              const char *name,
              const char **atts,
-             struct gen_group *parent)
+             struct gen_group *parent,
+             bool fixed_length)
 {
    struct gen_group *group;
 
-   group = xzalloc(sizeof(*group));
+   group = rzalloc(ctx->spec, struct gen_group);
    if (name)
-      group->name = xstrdup(name);
+      group->name = ralloc_strdup(group, name);
 
    group->spec = ctx->spec;
-   group->group_offset = 0;
-   group->group_count = 0;
    group->variable = false;
+   group->fixed_length = fixed_length;
+   group->dword_length_field = NULL;
+   group->dw_length = 0;
+   group->bias = 1;
+
+   for (int i = 0; atts[i]; i += 2) {
+      char *p;
+      if (strcmp(atts[i], "length") == 0) {
+         group->dw_length = strtoul(atts[i + 1], &p, 0);
+      } else if (strcmp(atts[i], "bias") == 0) {
+         group->bias = strtoul(atts[i + 1], &p, 0);
+      }
+   }
 
    if (parent) {
       group->parent = parent;
@@ -229,11 +193,9 @@ create_enum(struct parser_context *ctx, const char *name, const char **atts)
 {
    struct gen_enum *e;
 
-   e = xzalloc(sizeof(*e));
+   e = rzalloc(ctx->spec, struct gen_enum);
    if (name)
-      e->name = xstrdup(name);
-
-   e->nvalues = 0;
+      e->name = ralloc_strdup(e, name);
 
    return e;
 }
@@ -241,10 +203,9 @@ create_enum(struct parser_context *ctx, const char *name, const char **atts)
 static void
 get_register_offset(const char **atts, uint32_t *offset)
 {
-   char *p;
-   int i;
+   for (int i = 0; atts[i]; i += 2) {
+      char *p;
 
-   for (i = 0; atts[i]; i += 2) {
       if (strcmp(atts[i], "num") == 0)
          *offset = strtoul(atts[i + 1], &p, 0);
    }
@@ -282,18 +243,10 @@ mask(int start, int end)
 }
 
 static inline uint64_t
-field(uint64_t value, int start, int end)
+field_value(uint64_t value, int start, int end)
 {
    get_start_end_pos(&start, &end);
    return (value & mask(start, end)) >> (start);
-}
-
-static inline uint64_t
-field_address(uint64_t value, int start, int end)
-{
-   /* no need to right shift for address/offset */
-   get_start_end_pos(&start, &end);
-   return (value & mask(start, end));
 }
 
 static struct gen_type
@@ -333,21 +286,25 @@ static struct gen_field *
 create_field(struct parser_context *ctx, const char **atts)
 {
    struct gen_field *field;
-   char *p;
-   int i;
 
-   field = xzalloc(sizeof(*field));
+   field = rzalloc(ctx->group, struct gen_field);
+   field->parent = ctx->group;
 
-   for (i = 0; atts[i]; i += 2) {
-      if (strcmp(atts[i], "name") == 0)
-         field->name = xstrdup(atts[i + 1]);
-      else if (strcmp(atts[i], "start") == 0)
+   for (int i = 0; atts[i]; i += 2) {
+      char *p;
+
+      if (strcmp(atts[i], "name") == 0) {
+         field->name = ralloc_strdup(field, atts[i + 1]);
+         if (strcmp(field->name, "DWord Length") == 0) {
+            field->parent->dword_length_field = field;
+         }
+      } else if (strcmp(atts[i], "start") == 0) {
          field->start = strtoul(atts[i + 1], &p, 0);
-      else if (strcmp(atts[i], "end") == 0) {
+      } else if (strcmp(atts[i], "end") == 0) {
          field->end = strtoul(atts[i + 1], &p, 0);
-      } else if (strcmp(atts[i], "type") == 0)
+      } else if (strcmp(atts[i], "type") == 0) {
          field->type = string_to_type(ctx, atts[i + 1]);
-      else if (strcmp(atts[i], "default") == 0 &&
+      } else if (strcmp(atts[i], "default") == 0 &&
                field->start >= 16 && field->end <= 31) {
          field->has_default = true;
          field->default_value = strtoul(atts[i + 1], &p, 0);
@@ -360,11 +317,11 @@ create_field(struct parser_context *ctx, const char **atts)
 static struct gen_value *
 create_value(struct parser_context *ctx, const char **atts)
 {
-   struct gen_value *value = xzalloc(sizeof(*value));
+   struct gen_value *value = rzalloc(ctx->values, struct gen_value);
 
    for (int i = 0; atts[i]; i += 2) {
       if (strcmp(atts[i], "name") == 0)
-         value->name = xstrdup(atts[i + 1]);
+         value->name = ralloc_strdup(value, atts[i + 1]);
       else if (strcmp(atts[i], "value") == 0)
          value->value = strtoul(atts[i + 1], NULL, 0);
    }
@@ -372,32 +329,37 @@ create_value(struct parser_context *ctx, const char **atts)
    return value;
 }
 
-static void
+static struct gen_field *
 create_and_append_field(struct parser_context *ctx,
                         const char **atts)
 {
-   if (ctx->group->nfields == ctx->group->fields_size) {
-      ctx->group->fields_size = MAX2(ctx->group->fields_size * 2, 2);
-      ctx->group->fields =
-         (struct gen_field **) realloc(ctx->group->fields,
-                                       sizeof(ctx->group->fields[0]) *
-                                       ctx->group->fields_size);
+   struct gen_field *field = create_field(ctx, atts);
+   struct gen_field *prev = NULL, *list = ctx->group->fields;
+
+   while (list && field->start > list->start) {
+      prev = list;
+      list = list->next;
    }
 
-   ctx->group->fields[ctx->group->nfields++] = create_field(ctx, atts);
+   field->next = list;
+   if (prev == NULL)
+      ctx->group->fields = field;
+   else
+      prev->next = field;
+
+   return field;
 }
 
 static void
 start_element(void *data, const char *element_name, const char **atts)
 {
    struct parser_context *ctx = data;
-   int i;
    const char *name = NULL;
    const char *gen = NULL;
 
    ctx->loc.line_number = XML_GetCurrentLineNumber(ctx->parser);
 
-   for (i = 0; atts[i]; i += 2) {
+   for (int i = 0; atts[i]; i += 2) {
       if (strcmp(atts[i], "name") == 0)
          name = atts[i + 1];
       else if (strcmp(atts[i], "gen") == 0)
@@ -410,7 +372,6 @@ start_element(void *data, const char *element_name, const char **atts)
       if (gen == NULL)
          fail(&ctx->loc, "no gen given");
 
-      ctx->platform = xstrdup(name);
       int major, minor;
       int n = sscanf(gen, "%d.%d", &major, &minor);
       if (n == 0)
@@ -419,27 +380,34 @@ start_element(void *data, const char *element_name, const char **atts)
          minor = 0;
 
       ctx->spec->gen = gen_make_gen(major, minor);
-   } else if (strcmp(element_name, "instruction") == 0 ||
-              strcmp(element_name, "struct") == 0) {
-      ctx->group = create_group(ctx, name, atts, NULL);
+   } else if (strcmp(element_name, "instruction") == 0) {
+      ctx->group = create_group(ctx, name, atts, NULL, false);
+   } else if (strcmp(element_name, "struct") == 0) {
+      ctx->group = create_group(ctx, name, atts, NULL, true);
    } else if (strcmp(element_name, "register") == 0) {
-      ctx->group = create_group(ctx, name, atts, NULL);
+      ctx->group = create_group(ctx, name, atts, NULL, true);
       get_register_offset(atts, &ctx->group->register_offset);
    } else if (strcmp(element_name, "group") == 0) {
       struct gen_group *previous_group = ctx->group;
       while (previous_group->next)
          previous_group = previous_group->next;
 
-      struct gen_group *group = create_group(ctx, "", atts, ctx->group);
+      struct gen_group *group = create_group(ctx, "", atts, ctx->group, false);
       previous_group->next = group;
       ctx->group = group;
    } else if (strcmp(element_name, "field") == 0) {
-      create_and_append_field(ctx, atts);
+      ctx->last_field = create_and_append_field(ctx, atts);
    } else if (strcmp(element_name, "enum") == 0) {
       ctx->enoom = create_enum(ctx, name, atts);
    } else if (strcmp(element_name, "value") == 0) {
-      ctx->values[ctx->nvalues++] = create_value(ctx, atts);
-      assert(ctx->nvalues < ARRAY_SIZE(ctx->values));
+      if (ctx->n_values >= ctx->n_allocated_values) {
+         ctx->n_allocated_values = MAX2(2, ctx->n_allocated_values * 2);
+         ctx->values = reralloc_array_size(ctx->spec, ctx->values,
+                                           sizeof(struct gen_value *),
+                                           ctx->n_allocated_values);
+      }
+      assert(ctx->n_values < ctx->n_allocated_values);
+      ctx->values[ctx->n_values++] = create_value(ctx, atts);
    }
 
 }
@@ -454,49 +422,46 @@ end_element(void *data, const char *name)
        strcmp(name, "struct") == 0 ||
        strcmp(name, "register") == 0) {
       struct gen_group *group = ctx->group;
+      struct gen_field *list = group->fields;
 
       ctx->group = ctx->group->parent;
 
-      for (int i = 0; i < group->nfields; i++) {
-         if (group->fields[i]->start >= 16 &&
-             group->fields[i]->end <= 31 &&
-             group->fields[i]->has_default) {
+      while (list && list->end <= 31) {
+         if (list->start >= 16 && list->has_default) {
             group->opcode_mask |=
-               mask(group->fields[i]->start % 32, group->fields[i]->end % 32);
-            group->opcode |=
-               group->fields[i]->default_value << group->fields[i]->start;
+               mask(list->start % 32, list->end % 32);
+            group->opcode |= list->default_value << list->start;
          }
+         list = list->next;
       }
 
       if (strcmp(name, "instruction") == 0)
-         spec->commands[spec->ncommands++] = group;
+         _mesa_hash_table_insert(spec->commands, group->name, group);
       else if (strcmp(name, "struct") == 0)
-         spec->structs[spec->nstructs++] = group;
-      else if (strcmp(name, "register") == 0)
-         spec->registers[spec->nregisters++] = group;
-
-      assert(spec->ncommands < ARRAY_SIZE(spec->commands));
-      assert(spec->nstructs < ARRAY_SIZE(spec->structs));
-      assert(spec->nregisters < ARRAY_SIZE(spec->registers));
+         _mesa_hash_table_insert(spec->structs, group->name, group);
+      else if (strcmp(name, "register") == 0) {
+         _mesa_hash_table_insert(spec->registers_by_name, group->name, group);
+         _mesa_hash_table_insert(spec->registers_by_offset,
+                                 (void *) (uintptr_t) group->register_offset,
+                                 group);
+      }
    } else if (strcmp(name, "group") == 0) {
       ctx->group = ctx->group->parent;
    } else if (strcmp(name, "field") == 0) {
-      assert(ctx->group->nfields > 0);
-      struct gen_field *field = ctx->group->fields[ctx->group->nfields - 1];
-      size_t size = ctx->nvalues * sizeof(ctx->values[0]);
-      field->inline_enum.values = xzalloc(size);
-      field->inline_enum.nvalues = ctx->nvalues;
-      memcpy(field->inline_enum.values, ctx->values, size);
-      ctx->nvalues = 0;
+      struct gen_field *field = ctx->last_field;
+      ctx->last_field = NULL;
+      field->inline_enum.values = ctx->values;
+      field->inline_enum.nvalues = ctx->n_values;
+      ctx->values = ralloc_array(ctx->spec, struct gen_value*, ctx->n_allocated_values = 2);
+      ctx->n_values = 0;
    } else if (strcmp(name, "enum") == 0) {
       struct gen_enum *e = ctx->enoom;
-      size_t size = ctx->nvalues * sizeof(ctx->values[0]);
-      e->values = xzalloc(size);
-      e->nvalues = ctx->nvalues;
-      memcpy(e->values, ctx->values, size);
-      ctx->nvalues = 0;
+      e->values = ctx->values;
+      e->nvalues = ctx->n_values;
+      ctx->values = ralloc_array(ctx->spec, struct gen_value*, ctx->n_allocated_values = 2);
+      ctx->n_values = 0;
       ctx->enoom = NULL;
-      spec->enums[spec->nenums++] = e;
+      _mesa_hash_table_insert(spec->enums, e->name, e);
    }
 }
 
@@ -506,14 +471,13 @@ character_data(void *data, const XML_Char *s, int len)
 }
 
 static int
-devinfo_to_gen(const struct gen_device_info *devinfo)
+devinfo_to_gen(const struct gen_device_info *devinfo, bool x10)
 {
-   int value = 10 * devinfo->gen;
+   if (devinfo->is_baytrail || devinfo->is_haswell) {
+      return devinfo->gen * 10 + 5;
+   }
 
-   if (devinfo->is_baytrail || devinfo->is_haswell)
-      value += 5;
-
-   return value;
+   return x10 ? devinfo->gen * 10 : devinfo->gen;
 }
 
 static uint32_t zlib_inflate(const void *compressed_data,
@@ -564,14 +528,44 @@ static uint32_t zlib_inflate(const void *compressed_data,
    return zstream.total_out;
 }
 
+static uint32_t _hash_uint32(const void *key)
+{
+   return (uint32_t) (uintptr_t) key;
+}
+
+static struct gen_spec *
+gen_spec_init(void)
+{
+   struct gen_spec *spec;
+   spec = rzalloc(NULL, struct gen_spec);
+   if (spec == NULL)
+      return NULL;
+
+   spec->commands =
+      _mesa_hash_table_create(spec, _mesa_hash_string, _mesa_key_string_equal);
+   spec->structs =
+      _mesa_hash_table_create(spec, _mesa_hash_string, _mesa_key_string_equal);
+   spec->registers_by_name =
+      _mesa_hash_table_create(spec, _mesa_hash_string, _mesa_key_string_equal);
+   spec->registers_by_offset =
+      _mesa_hash_table_create(spec, _hash_uint32, _mesa_key_pointer_equal);
+   spec->enums =
+      _mesa_hash_table_create(spec, _mesa_hash_string, _mesa_key_string_equal);
+   spec->access_cache =
+      _mesa_hash_table_create(spec, _mesa_hash_string, _mesa_key_string_equal);
+
+   return spec;
+}
+
 struct gen_spec *
 gen_spec_load(const struct gen_device_info *devinfo)
 {
    struct parser_context ctx;
    void *buf;
-   uint8_t *text_data;
-   uint32_t text_offset = 0, text_length = 0, total_length;
-   uint32_t gen_10 = devinfo_to_gen(devinfo);
+   uint8_t *text_data = NULL;
+   uint32_t text_offset = 0, text_length = 0;
+   MAYBE_UNUSED uint32_t total_length;
+   uint32_t gen_10 = devinfo_to_gen(devinfo, true);
 
    for (int i = 0; i < ARRAY_SIZE(genxml_files_table); i++) {
       if (genxml_files_table[i].gen_10 == gen_10) {
@@ -597,7 +591,11 @@ gen_spec_load(const struct gen_device_info *devinfo)
    XML_SetElementHandler(ctx.parser, start_element, end_element);
    XML_SetCharacterDataHandler(ctx.parser, character_data);
 
-   ctx.spec = xzalloc(sizeof(*ctx.spec));
+   ctx.spec = gen_spec_init();
+   if (ctx.spec == NULL) {
+      fprintf(stderr, "Failed to create gen_spec\n");
+      return NULL;
+   }
 
    total_length = zlib_inflate(compress_genxmls,
                                sizeof(compress_genxmls),
@@ -636,7 +634,7 @@ gen_spec_load_from_path(const struct gen_device_info *devinfo,
    FILE *input;
 
    len = snprintf(filename, filename_len, "%s/gen%i.xml",
-                  path, devinfo_to_gen(devinfo));
+                  path, devinfo_to_gen(devinfo, false));
    assert(len < filename_len);
 
    input = fopen(filename, "r");
@@ -659,24 +657,31 @@ gen_spec_load_from_path(const struct gen_device_info *devinfo,
    XML_SetElementHandler(ctx.parser, start_element, end_element);
    XML_SetCharacterDataHandler(ctx.parser, character_data);
    ctx.loc.filename = filename;
-   ctx.spec = xzalloc(sizeof(*ctx.spec));
+
+   ctx.spec = gen_spec_init();
+   if (ctx.spec == NULL) {
+      fprintf(stderr, "Failed to create gen_spec\n");
+      goto end;
+   }
 
    do {
       buf = XML_GetBuffer(ctx.parser, XML_BUFFER_SIZE);
       len = fread(buf, 1, XML_BUFFER_SIZE, input);
-      if (len == 0) {
+      if (ferror(input)) {
          fprintf(stderr, "fread: %m\n");
-         free(ctx.spec);
+         gen_spec_destroy(ctx.spec);
          ctx.spec = NULL;
          goto end;
-      }
+      } else if (feof(input))
+         goto end;
+
       if (XML_ParseBuffer(ctx.parser, len, len == 0) == 0) {
          fprintf(stderr,
                  "Error parsing XML at line %ld col %ld: %s\n",
                  XML_GetCurrentLineNumber(ctx.parser),
                  XML_GetCurrentColumnNumber(ctx.parser),
                  XML_ErrorString(XML_GetErrorCode(ctx.parser)));
-         free(ctx.spec);
+         gen_spec_destroy(ctx.spec);
          ctx.spec = NULL;
          goto end;
       }
@@ -688,16 +693,54 @@ gen_spec_load_from_path(const struct gen_device_info *devinfo,
    fclose(input);
    free(filename);
 
+   /* free ctx.spec if genxml is empty */
+   if (ctx.spec && _mesa_hash_table_num_entries(ctx.spec->commands) == 0) {
+      gen_spec_destroy(ctx.spec);
+      return NULL;
+   }
+
    return ctx.spec;
+}
+
+void gen_spec_destroy(struct gen_spec *spec)
+{
+   ralloc_free(spec);
 }
 
 struct gen_group *
 gen_spec_find_instruction(struct gen_spec *spec, const uint32_t *p)
 {
-   for (int i = 0; i < spec->ncommands; i++) {
-      uint32_t opcode = *p & spec->commands[i]->opcode_mask;
-      if (opcode == spec->commands[i]->opcode)
-         return spec->commands[i];
+   hash_table_foreach(spec->commands, entry) {
+      struct gen_group *command = entry->data;
+      uint32_t opcode = *p & command->opcode_mask;
+      if (opcode == command->opcode)
+         return command;
+   }
+
+   return NULL;
+}
+
+struct gen_field *
+gen_group_find_field(struct gen_group *group, const char *name)
+{
+   char path[256];
+   snprintf(path, sizeof(path), "%s/%s", group->name, name);
+
+   struct gen_spec *spec = group->spec;
+   struct hash_entry *entry = _mesa_hash_table_search(spec->access_cache,
+                                                      path);
+   if (entry)
+      return entry->data;
+
+   struct gen_field *field = group->fields;
+   while (field) {
+      if (strcmp(field->name, name) == 0) {
+         _mesa_hash_table_insert(spec->access_cache,
+                                 ralloc_strdup(spec, path),
+                                 field);
+         return field;
+      }
+      field = field->next;
    }
 
    return NULL;
@@ -706,33 +749,44 @@ gen_spec_find_instruction(struct gen_spec *spec, const uint32_t *p)
 int
 gen_group_get_length(struct gen_group *group, const uint32_t *p)
 {
+   if (group) {
+      if (group->fixed_length)
+         return group->dw_length;
+      else {
+         struct gen_field *field = group->dword_length_field;
+         if (field) {
+            return field_value(p[0], field->start, field->end) + group->bias;
+         }
+      }
+   }
+
    uint32_t h = p[0];
-   uint32_t type = field(h, 29, 31);
+   uint32_t type = field_value(h, 29, 31);
 
    switch (type) {
    case 0: /* MI */ {
-      uint32_t opcode = field(h, 23, 28);
+      uint32_t opcode = field_value(h, 23, 28);
       if (opcode < 16)
          return 1;
       else
-         return field(h, 0, 7) + 2;
+         return field_value(h, 0, 7) + 2;
       break;
    }
 
    case 2: /* BLT */ {
-      return field(h, 0, 7) + 2;
+      return field_value(h, 0, 7) + 2;
    }
 
    case 3: /* Render */ {
-      uint32_t subtype = field(h, 27, 28);
-      uint32_t opcode = field(h, 24, 26);
-      uint16_t whole_opcode = field(h, 16, 31);
+      uint32_t subtype = field_value(h, 27, 28);
+      uint32_t opcode = field_value(h, 24, 26);
+      uint16_t whole_opcode = field_value(h, 16, 31);
       switch (subtype) {
       case 0:
          if (whole_opcode == 0x6104 /* PIPELINE_SELECT_965 */)
             return 1;
          else if (opcode < 2)
-            return field(h, 0, 7) + 2;
+            return field_value(h, 0, 7) + 2;
          else
             return -1;
       case 1:
@@ -742,9 +796,9 @@ gen_group_get_length(struct gen_group *group, const uint32_t *p)
             return -1;
       case 2: {
          if (opcode == 0)
-            return field(h, 0, 7) + 2;
+            return field_value(h, 0, 7) + 2;
          else if (opcode < 3)
-            return field(h, 0, 15) + 2;
+            return field_value(h, 0, 15) + 2;
          else
             return -1;
       }
@@ -752,7 +806,7 @@ gen_group_get_length(struct gen_group *group, const uint32_t *p)
          if (whole_opcode == 0x780b)
             return 1;
          else if (opcode < 4)
-            return field(h, 0, 7) + 2;
+            return field_value(h, 0, 7) + 2;
          else
             return -1;
       }
@@ -760,19 +814,6 @@ gen_group_get_length(struct gen_group *group, const uint32_t *p)
    }
 
    return -1;
-}
-
-void
-gen_field_iterator_init(struct gen_field_iterator *iter,
-                        struct gen_group *group,
-                        const uint32_t *p,
-                        bool print_colors)
-{
-   memset(iter, 0, sizeof(*iter));
-
-   iter->group = group;
-   iter->p = p;
-   iter->print_colors = print_colors;
 }
 
 static const char *
@@ -789,7 +830,7 @@ gen_get_enum_name(struct gen_enum *e, uint64_t value)
 static bool
 iter_more_fields(const struct gen_field_iterator *iter)
 {
-   return iter->field_iter < iter->group->nfields;
+   return iter->field != NULL && iter->field->next != NULL;
 }
 
 static uint32_t
@@ -803,12 +844,26 @@ static bool
 iter_more_groups(const struct gen_field_iterator *iter)
 {
    if (iter->group->variable) {
+      int length = gen_group_get_length(iter->group, iter->p);
+      assert(length >= 0 && "error the length is unknown!");
       return iter_group_offset_bits(iter, iter->group_iter + 1) <
-              (gen_group_get_length(iter->group, iter->p) * 32);
+              (length * 32);
    } else {
       return (iter->group_iter + 1) < iter->group->group_count ||
          iter->group->next != NULL;
    }
+}
+
+static void
+iter_start_field(struct gen_field_iterator *iter, struct gen_field *field)
+{
+   iter->field = field;
+
+   int group_member_offset = iter_group_offset_bits(iter, iter->group_iter);
+
+   iter->start_bit = group_member_offset + iter->field->start;
+   iter->end_bit = group_member_offset + iter->field->end;
+   iter->struct_desc = NULL;
 }
 
 static void
@@ -825,69 +880,92 @@ iter_advance_group(struct gen_field_iterator *iter)
       }
    }
 
-   iter->field_iter = 0;
+   iter_start_field(iter, iter->group->fields);
 }
 
 static bool
 iter_advance_field(struct gen_field_iterator *iter)
 {
-   while (!iter_more_fields(iter)) {
+   if (iter_more_fields(iter)) {
+      iter_start_field(iter, iter->field->next);
+   } else {
       if (!iter_more_groups(iter))
          return false;
 
       iter_advance_group(iter);
    }
+   return true;
+}
 
-   iter->field = iter->group->fields[iter->field_iter++];
-   if (iter->field->name)
-       strncpy(iter->name, iter->field->name, sizeof(iter->name));
-   else
-      memset(iter->name, 0, sizeof(iter->name));
-   iter->dword = iter_group_offset_bits(iter, iter->group_iter) / 32 +
-      iter->field->start / 32;
-   iter->struct_desc = NULL;
+static bool
+iter_decode_field_raw(struct gen_field_iterator *iter, uint64_t *qw)
+{
+   *qw = 0;
+
+   int field_start = iter->p_bit + iter->start_bit;
+   int field_end = iter->p_bit + iter->end_bit;
+
+   const uint32_t *p = iter->p + (iter->start_bit / 32);
+   if (iter->p_end && p >= iter->p_end)
+      return false;
+
+   if ((field_end - field_start) > 32) {
+      if (!iter->p_end || (p + 1) < iter->p_end)
+         *qw = ((uint64_t) p[1]) << 32;
+      *qw |= p[0];
+   } else
+      *qw = p[0];
+
+   *qw = field_value(*qw, field_start, field_end);
+
+   /* Address & offset types have to be aligned to dwords, their start bit is
+    * a reminder of the alignment requirement.
+    */
+   if (iter->field->type.kind == GEN_TYPE_ADDRESS ||
+       iter->field->type.kind == GEN_TYPE_OFFSET)
+      *qw <<= field_start % 32;
 
    return true;
 }
 
-bool
-gen_field_iterator_next(struct gen_field_iterator *iter)
+static bool
+iter_decode_field(struct gen_field_iterator *iter)
 {
    union {
       uint64_t qw;
       float f;
    } v;
 
-   if (!iter_advance_field(iter))
-      return false;
-
-   if ((iter->field->end - iter->field->start) > 32)
-      v.qw = ((uint64_t) iter->p[iter->dword+1] << 32) | iter->p[iter->dword];
+   if (iter->field->name)
+      snprintf(iter->name, sizeof(iter->name), "%s", iter->field->name);
    else
-      v.qw = iter->p[iter->dword];
+      memset(iter->name, 0, sizeof(iter->name));
+
+   memset(&v, 0, sizeof(v));
+
+   if (!iter_decode_field_raw(iter, &iter->raw_value))
+      return false;
 
    const char *enum_name = NULL;
 
+   v.qw = iter->raw_value;
    switch (iter->field->type.kind) {
    case GEN_TYPE_UNKNOWN:
    case GEN_TYPE_INT: {
-      uint64_t value = field(v.qw, iter->field->start, iter->field->end);
-      snprintf(iter->value, sizeof(iter->value), "%"PRId64, value);
-      enum_name = gen_get_enum_name(&iter->field->inline_enum, value);
+      snprintf(iter->value, sizeof(iter->value), "%"PRId64, v.qw);
+      enum_name = gen_get_enum_name(&iter->field->inline_enum, v.qw);
       break;
    }
    case GEN_TYPE_UINT: {
-      uint64_t value = field(v.qw, iter->field->start, iter->field->end);
-      snprintf(iter->value, sizeof(iter->value), "%"PRIu64, value);
-      enum_name = gen_get_enum_name(&iter->field->inline_enum, value);
+      snprintf(iter->value, sizeof(iter->value), "%"PRIu64, v.qw);
+      enum_name = gen_get_enum_name(&iter->field->inline_enum, v.qw);
       break;
    }
    case GEN_TYPE_BOOL: {
       const char *true_string =
          iter->print_colors ? "\e[0;35mtrue\e[0m" : "true";
       snprintf(iter->value, sizeof(iter->value), "%s",
-               field(v.qw, iter->field->start, iter->field->end) ?
-               true_string : "false");
+               v.qw ? true_string : "false");
       break;
    }
    case GEN_TYPE_FLOAT:
@@ -895,8 +973,7 @@ gen_field_iterator_next(struct gen_field_iterator *iter)
       break;
    case GEN_TYPE_ADDRESS:
    case GEN_TYPE_OFFSET:
-      snprintf(iter->value, sizeof(iter->value), "0x%08"PRIx64,
-               field_address(v.qw, iter->field->start, iter->field->end));
+      snprintf(iter->value, sizeof(iter->value), "0x%08"PRIx64, v.qw);
       break;
    case GEN_TYPE_STRUCT:
       snprintf(iter->value, sizeof(iter->value), "<struct %s>",
@@ -907,20 +984,21 @@ gen_field_iterator_next(struct gen_field_iterator *iter)
       break;
    case GEN_TYPE_UFIXED:
       snprintf(iter->value, sizeof(iter->value), "%f",
-               (float) field(v.qw, iter->field->start,
-                             iter->field->end) / (1 << iter->field->type.f));
+               (float) v.qw / (1 << iter->field->type.f));
       break;
-   case GEN_TYPE_SFIXED:
-      /* FIXME: Sign extend extracted field. */
-      snprintf(iter->value, sizeof(iter->value), "%s", "foo");
+   case GEN_TYPE_SFIXED: {
+      /* Sign extend before converting */
+      int bits = iter->field->type.i + iter->field->type.f + 1;
+      int64_t v_sign_extend = ((int64_t)(v.qw << (64 - bits))) >> (64 - bits);
+      snprintf(iter->value, sizeof(iter->value), "%f",
+               (float) v_sign_extend / (1 << iter->field->type.f));
       break;
+   }
    case GEN_TYPE_MBO:
        break;
    case GEN_TYPE_ENUM: {
-      uint64_t value = field(v.qw, iter->field->start, iter->field->end);
-      snprintf(iter->value, sizeof(iter->value),
-               "%"PRId64, value);
-      enum_name = gen_get_enum_name(iter->field->type.gen_enum, value);
+      snprintf(iter->value, sizeof(iter->value), "%"PRId64, v.qw);
+      enum_name = gen_get_enum_name(iter->field->type.gen_enum, v.qw);
       break;
    }
    }
@@ -935,21 +1013,78 @@ gen_field_iterator_next(struct gen_field_iterator *iter)
       int length = strlen(iter->value);
       snprintf(iter->value + length, sizeof(iter->value) - length,
                " (%s)", enum_name);
+   } else if (strcmp(iter->name, "Surface Format") == 0 ||
+              strcmp(iter->name, "Source Element Format") == 0) {
+      if (isl_format_is_valid((enum isl_format)v.qw)) {
+         const char *fmt_name = isl_format_get_name((enum isl_format)v.qw);
+         int length = strlen(iter->value);
+         snprintf(iter->value + length, sizeof(iter->value) - length,
+                  " (%s)", fmt_name);
+      }
    }
+
+   return true;
+}
+
+void
+gen_field_iterator_init(struct gen_field_iterator *iter,
+                        struct gen_group *group,
+                        const uint32_t *p, int p_bit,
+                        bool print_colors)
+{
+   memset(iter, 0, sizeof(*iter));
+
+   iter->group = group;
+   iter->p = p;
+   iter->p_bit = p_bit;
+
+   int length = gen_group_get_length(iter->group, iter->p);
+   assert(length >= 0 && "error the length is unknown!");
+   iter->p_end = length >= 0 ? &p[length] : NULL;
+   iter->print_colors = print_colors;
+}
+
+bool
+gen_field_iterator_next(struct gen_field_iterator *iter)
+{
+   /* Initial condition */
+   if (!iter->field) {
+      if (iter->group->fields)
+         iter_start_field(iter, iter->group->fields);
+      else
+         iter_start_field(iter, iter->group->next->fields);
+
+      bool result = iter_decode_field(iter);
+      if (!result && iter->p_end) {
+         /* We're dealing with a non empty struct of length=0 (BLEND_STATE on
+          * Gen 7.5)
+          */
+         assert(iter->group->dw_length == 0);
+      }
+
+      return result;
+   }
+
+   if (!iter_advance_field(iter))
+      return false;
+
+   if (!iter_decode_field(iter))
+      return false;
 
    return true;
 }
 
 static void
 print_dword_header(FILE *outfile,
-                   struct gen_field_iterator *iter, uint64_t offset)
+                   struct gen_field_iterator *iter,
+                   uint64_t offset, uint32_t dword)
 {
    fprintf(outfile, "0x%08"PRIx64":  0x%08x : Dword %d\n",
-           offset + 4 * iter->dword, iter->p[iter->dword], iter->dword);
+           offset + 4 * dword, iter->p[dword], dword);
 }
 
-static bool
-is_header_field(struct gen_group *group, struct gen_field *field)
+bool
+gen_field_is_header(struct gen_field *field)
 {
    uint32_t bits;
 
@@ -959,28 +1094,31 @@ is_header_field(struct gen_group *group, struct gen_field *field)
    bits = (1U << (field->end - field->start + 1)) - 1;
    bits <<= field->start;
 
-   return (group->opcode_mask & bits) != 0;
+   return (field->parent->opcode_mask & bits) != 0;
 }
 
 void
-gen_print_group(FILE *outfile, struct gen_group *group,
-                uint64_t offset, const uint32_t *p, bool color)
+gen_print_group(FILE *outfile, struct gen_group *group, uint64_t offset,
+                const uint32_t *p, int p_bit, bool color)
 {
    struct gen_field_iterator iter;
-   int last_dword = 0;
+   int last_dword = -1;
 
-   gen_field_iterator_init(&iter, group, p, color);
+   gen_field_iterator_init(&iter, group, p, p_bit, color);
    while (gen_field_iterator_next(&iter)) {
-      if (last_dword != iter.dword) {
-         print_dword_header(outfile, &iter, offset);
-         last_dword = iter.dword;
+      int iter_dword = iter.end_bit / 32;
+      if (last_dword != iter_dword) {
+         for (int i = last_dword + 1; i <= iter_dword; i++)
+            print_dword_header(outfile, &iter, offset, i);
+         last_dword = iter_dword;
       }
-      if (!is_header_field(group, iter.field)) {
+      if (!gen_field_is_header(iter.field)) {
          fprintf(outfile, "    %s: %s\n", iter.name, iter.value);
          if (iter.struct_desc) {
-            uint64_t struct_offset = offset + 4 * iter.dword;
+            int struct_dword = iter.start_bit / 32;
+            uint64_t struct_offset = offset + 4 * struct_dword;
             gen_print_group(outfile, iter.struct_desc, struct_offset,
-                            &p[iter.dword], color);
+                            &p[struct_dword], iter.start_bit % 32, color);
          }
       }
    }

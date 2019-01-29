@@ -34,6 +34,10 @@
  * Basic notes:
  *   1. Want compact representations, so we use bitfields.
  *   2. Put bitfields before other (GLfloat) fields.
+ *   3. enum bitfields need to be at least one bit extra in size so the most
+ *      significant bit is zero.  MSVC treats enums as signed so if the high
+ *      bit is set, the value will be interpreted as a negative number.
+ *      That causes trouble in various places.
  */
 
 
@@ -60,7 +64,7 @@ extern "C" {
 #define PIPE_MAX_SAMPLERS         32
 #define PIPE_MAX_SHADER_INPUTS    80 /* 32 GENERIC + 32 PATCH + 16 others */
 #define PIPE_MAX_SHADER_OUTPUTS   80 /* 32 GENERIC + 32 PATCH + 16 others */
-#define PIPE_MAX_SHADER_SAMPLER_VIEWS 32
+#define PIPE_MAX_SHADER_SAMPLER_VIEWS 128
 #define PIPE_MAX_SHADER_BUFFERS   32
 #define PIPE_MAX_SHADER_IMAGES    32
 #define PIPE_MAX_TEXTURE_LEVELS   16
@@ -70,7 +74,9 @@ extern "C" {
 #define PIPE_MAX_CLIP_OR_CULL_DISTANCE_COUNT 8
 #define PIPE_MAX_CLIP_OR_CULL_DISTANCE_ELEMENT_COUNT 2
 #define PIPE_MAX_WINDOW_RECTANGLES 8
+#define PIPE_MAX_SAMPLE_LOCATION_GRID_SIZE 4
 
+#define PIPE_MAX_HW_ATOMIC_BUFFERS 32
 
 struct pipe_reference
 {
@@ -108,6 +114,7 @@ struct pipe_rasterizer_state
    unsigned line_smooth:1;
    unsigned line_stipple_enable:1;
    unsigned line_last_pixel:1;
+   unsigned conservative_raster_mode:2; /**< PIPE_CONSERVATIVE_RASTER_x */
 
    /**
     * Use the first vertex of a primitive as the provoking vertex for
@@ -117,6 +124,12 @@ struct pipe_rasterizer_state
 
    unsigned half_pixel_center:1;
    unsigned bottom_edge_rule:1;
+
+   /*
+    * Conservative rasterization subpixel precision bias in bits
+    */
+   unsigned subpixel_precision_x:4;
+   unsigned subpixel_precision_y:4;
 
    /**
     * When true, rasterization is disabled and no pixels are written.
@@ -138,8 +151,12 @@ struct pipe_rasterizer_state
     * When false, depth clipping is disabled and the depth value will be
     * clamped later at the per-pixel level before depth testing.
     * This depends on PIPE_CAP_DEPTH_CLIP_DISABLE.
+    *
+    * If PIPE_CAP_DEPTH_CLIP_DISABLE_SEPARATE is unsupported, depth_clip_near
+    * is equal to depth_clip_far.
     */
-   unsigned depth_clip:1;
+   unsigned depth_clip_near:1;
+   unsigned depth_clip_far:1;
 
    /**
     * When true clip space in the z axis goes from [0..1] (D3D).  When false
@@ -181,6 +198,7 @@ struct pipe_rasterizer_state
    float offset_units;
    float offset_scale;
    float offset_clamp;
+   float conservative_raster_dilate;
 };
 
 
@@ -262,7 +280,6 @@ struct pipe_shader_state
    /* TODO move tokens into union. */
    const struct tgsi_token *tokens;
    union {
-      void *llvm;
       void *native;
       void *nir;
    } ir;
@@ -436,8 +453,8 @@ struct pipe_surface
 struct pipe_sampler_view
 {
    struct pipe_reference reference;
-   enum pipe_format format:16;      /**< typed PIPE_FORMAT_x */
-   enum pipe_texture_target target:4; /**< PIPE_TEXTURE_x */
+   enum pipe_format format:15;      /**< typed PIPE_FORMAT_x */
+   enum pipe_texture_target target:5; /**< PIPE_TEXTURE_x */
    unsigned swizzle_r:3;         /**< PIPE_SWIZZLE_x for red component */
    unsigned swizzle_g:3;         /**< PIPE_SWIZZLE_x for green component */
    unsigned swizzle_b:3;         /**< PIPE_SWIZZLE_x for blue component */
@@ -467,7 +484,8 @@ struct pipe_image_view
 {
    struct pipe_resource *resource; /**< resource into which this is a view  */
    enum pipe_format format;      /**< typed PIPE_FORMAT_x */
-   unsigned access;              /**< PIPE_IMAGE_ACCESS_x */
+   uint16_t access;              /**< PIPE_IMAGE_ACCESS_x */
+   uint16_t shader_access;       /**< PIPE_IMAGE_ACCESS_x */
 
    union {
       struct {
@@ -506,7 +524,6 @@ struct pipe_box
 struct pipe_resource
 {
    struct pipe_reference reference;
-   struct pipe_screen *screen; /**< screen that this texture belongs to */
 
    unsigned width0; /**< Used by both buffers and textures. */
    uint16_t height0; /* Textures: The maximum height/depth/array_size is 16k. */
@@ -516,9 +533,20 @@ struct pipe_resource
    enum pipe_format format:16;         /**< PIPE_FORMAT_x */
    enum pipe_texture_target target:8; /**< PIPE_TEXTURE_x */
    unsigned last_level:8;    /**< Index of last mipmap level present/defined */
-   unsigned nr_samples:8;    /**< for multisampled surfaces, nr of samples */
-   unsigned usage:8;         /**< PIPE_USAGE_x (not a bitmask) */
 
+   /** Number of samples determining quality, driving rasterizer, shading,
+    *  and framebuffer.
+    */
+   unsigned nr_samples:8;
+
+   /** Multiple samples within a pixel can have the same value.
+    *  nr_storage_samples determines how many slots for different values
+    *  there are per pixel. Only color buffers can set this lower than
+    *  nr_samples.
+    */
+   unsigned nr_storage_samples:8;
+
+   unsigned usage:8;         /**< PIPE_USAGE_x (not a bitmask) */
    unsigned bind;            /**< bitmask of PIPE_BIND_x */
    unsigned flags;           /**< bitmask of PIPE_RESOURCE_FLAG_x */
 
@@ -527,6 +555,8 @@ struct pipe_resource
     * next plane.
     */
    struct pipe_resource *next;
+   /* The screen pointer should be last for optimal structure packing. */
+   struct pipe_screen *screen; /**< screen that this texture belongs to */
 };
 
 
@@ -777,8 +807,9 @@ struct pipe_blit_info
 struct pipe_grid_info
 {
    /**
-    * For drivers that use PIPE_SHADER_IR_LLVM as their prefered IR, this value
-    * will be the index of the kernel in the opencl.kernels metadata list.
+    * For drivers that use PIPE_SHADER_IR_NATIVE as their prefered IR, this
+    * value will be the index of the kernel in the opencl.kernels metadata
+    * list.
     */
    uint32_t pc;
 

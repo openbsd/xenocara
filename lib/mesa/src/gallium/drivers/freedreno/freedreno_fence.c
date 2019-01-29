@@ -1,5 +1,3 @@
-/* -*- mode: C; c-file-style: "k&r"; tab-width 4; indent-tabs-mode: t; -*- */
-
 /*
  * Copyright (C) 2012 Rob Clark <robclark@freedesktop.org>
  *
@@ -36,16 +34,39 @@
 
 struct pipe_fence_handle {
 	struct pipe_reference reference;
-	struct fd_context *ctx;
+	/* fence holds a weak reference to the batch until the batch is flushed,
+	 * at which point fd_fence_populate() is called and timestamp and possibly
+	 * fence_fd become valid and the week reference is dropped.
+	 */
+	struct fd_batch *batch;
+	struct fd_pipe *pipe;
 	struct fd_screen *screen;
 	int fence_fd;
 	uint32_t timestamp;
 };
 
+static void fence_flush(struct pipe_fence_handle *fence)
+{
+	if (fence->batch)
+		fd_batch_flush(fence->batch, true, true);
+	debug_assert(!fence->batch);
+}
+
+void fd_fence_populate(struct pipe_fence_handle *fence,
+		uint32_t timestamp, int fence_fd)
+{
+	if (!fence->batch)
+		return;
+	fence->timestamp = timestamp;
+	fence->fence_fd = fence_fd;
+	fence->batch = NULL;
+}
+
 static void fd_fence_destroy(struct pipe_fence_handle *fence)
 {
 	if (fence->fence_fd != -1)
 		close(fence->fence_fd);
+	fd_pipe_del(fence->pipe);
 	FREE(fence);
 }
 
@@ -64,42 +85,21 @@ boolean fd_fence_finish(struct pipe_screen *pscreen,
 		struct pipe_fence_handle *fence,
 		uint64_t timeout)
 {
+	fence_flush(fence);
+
 	if (fence->fence_fd != -1) {
 		int ret = sync_wait(fence->fence_fd, timeout / 1000000);
 		return ret == 0;
 	}
 
-	if (fd_pipe_wait_timeout(fence->screen->pipe, fence->timestamp, timeout))
+	if (fd_pipe_wait_timeout(fence->pipe, fence->timestamp, timeout))
 		return false;
 
 	return true;
 }
 
-void fd_create_fence_fd(struct pipe_context *pctx,
-		struct pipe_fence_handle **pfence, int fd)
-{
-	*pfence = fd_fence_create(fd_context(pctx), 0, dup(fd));
-}
-
-void fd_fence_server_sync(struct pipe_context *pctx,
-		struct pipe_fence_handle *fence)
-{
-	struct fd_context *ctx = fd_context(pctx);
-	struct fd_batch *batch = ctx->batch;
-
-	if (sync_accumulate("freedreno", &batch->in_fence_fd, fence->fence_fd)) {
-		/* error */
-	}
-}
-
-int fd_fence_get_fd(struct pipe_screen *pscreen,
-		struct pipe_fence_handle *fence)
-{
-	return dup(fence->fence_fd);
-}
-
-struct pipe_fence_handle * fd_fence_create(struct fd_context *ctx,
-		uint32_t timestamp, int fence_fd)
+static struct pipe_fence_handle * fence_create(struct fd_context *ctx,
+		struct fd_batch *batch, uint32_t timestamp, int fence_fd)
 {
 	struct pipe_fence_handle *fence;
 
@@ -109,10 +109,48 @@ struct pipe_fence_handle * fd_fence_create(struct fd_context *ctx,
 
 	pipe_reference_init(&fence->reference, 1);
 
-	fence->ctx = ctx;
+	fence->batch = batch;
+	fence->pipe = fd_pipe_ref(ctx->pipe);
 	fence->screen = ctx->screen;
 	fence->timestamp = timestamp;
 	fence->fence_fd = fence_fd;
 
 	return fence;
+}
+
+void fd_create_fence_fd(struct pipe_context *pctx,
+		struct pipe_fence_handle **pfence, int fd,
+		enum pipe_fd_type type)
+{
+	assert(type == PIPE_FD_TYPE_NATIVE_SYNC);
+	*pfence = fence_create(fd_context(pctx), NULL, 0, dup(fd));
+}
+
+void fd_fence_server_sync(struct pipe_context *pctx,
+		struct pipe_fence_handle *fence)
+{
+	struct fd_context *ctx = fd_context(pctx);
+	struct fd_batch *batch = fd_context_batch(ctx);
+
+	fence_flush(fence);
+
+	/* if not an external fence, then nothing more to do without preemption: */
+	if (fence->fence_fd == -1)
+		return;
+
+	if (sync_accumulate("freedreno", &batch->in_fence_fd, fence->fence_fd)) {
+		/* error */
+	}
+}
+
+int fd_fence_get_fd(struct pipe_screen *pscreen,
+		struct pipe_fence_handle *fence)
+{
+	fence_flush(fence);
+	return dup(fence->fence_fd);
+}
+
+struct pipe_fence_handle * fd_fence_create(struct fd_batch *batch)
+{
+	return fence_create(batch->ctx, batch, 0, -1);
 }

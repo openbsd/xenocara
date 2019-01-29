@@ -29,17 +29,26 @@ AM_CFLAGS = \
 	-I$(top_builddir)/src/compiler/nir \
 	-I$(top_srcdir)/src/amd/common \
 	$(RADEON_CFLAGS) \
-	$(LLVM_CFLAGS)
+	$(LLVM_CFLAGS) \
+	-Wstrict-overflow=0
+# ^^ disable warnings about overflows (os_time_timeout)
 
 noinst_LTLIBRARIES = libradeonsi.la
 
 libradeonsi_la_SOURCES = $(C_SOURCES)
 
+libradeonsi_la_LIBADD = \
+	$(CLOCK_LIB) \
+	$(LLVM_LIBS)
+
+libradeonsi_la_LDFLAGS = \
+	$(LLVM_LDFLAGS)
+
 GEN_DRIINFO_INPUTS = \
 	$(top_srcdir)/src/gallium/auxiliary/pipe-loader/driinfo_gallium.h \
 	$(srcdir)/driinfo_radeonsi.h
 
-PYTHON_GEN = $(AM_V_GEN)$(PYTHON2) $(PYTHON_FLAGS)
+PYTHON_GEN = $(AM_V_GEN)$(PYTHON) $(PYTHON_FLAGS)
 MERGE_DRIINFO = $(top_srcdir)/src/util/merge_driinfo.py
 
 if REGEN_SOURCES
@@ -49,3 +58,4 @@ endif
 
 BUILT_SOURCES = $(GENERATED_SOURCES)
 CLEANFILES = $(GENERATED_SOURCES)
+EXTRA_DIST = meson.build

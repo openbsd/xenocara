@@ -48,8 +48,8 @@ brw_blorp_lookup_shader(struct blorp_context *blorp,
                         uint32_t *kernel_out, void *prog_data_out)
 {
    struct brw_context *brw = blorp->driver_ctx;
-   return brw_search_cache(&brw->cache, BRW_CACHE_BLORP_PROG,
-                           key, key_size, kernel_out, prog_data_out);
+   return brw_search_cache(&brw->cache, BRW_CACHE_BLORP_PROG, key, key_size,
+                           kernel_out, prog_data_out, true);
 }
 
 static bool
@@ -106,6 +106,10 @@ brw_blorp_init(struct brw_context *brw)
    case 10:
       brw->blorp.exec = gen10_blorp_exec;
       break;
+   case 11:
+      brw->blorp.exec = gen11_blorp_exec;
+      break;
+
    default:
       unreachable("Invalid gen");
    }
@@ -117,7 +121,7 @@ brw_blorp_init(struct brw_context *brw)
 static void
 blorp_surf_for_miptree(struct brw_context *brw,
                        struct blorp_surf *surf,
-                       struct intel_mipmap_tree *mt,
+                       const struct intel_mipmap_tree *mt,
                        enum isl_aux_usage aux_usage,
                        bool is_render_target,
                        unsigned *level,
@@ -139,25 +143,18 @@ blorp_surf_for_miptree(struct brw_context *brw,
          intel_miptree_check_level_layer(mt, *level, start_layer + i);
    }
 
-   surf->surf = &mt->surf;
-   surf->addr = (struct blorp_address) {
-      .buffer = mt->bo,
-      .offset = mt->offset,
-      .reloc_flags = is_render_target ? EXEC_OBJECT_WRITE : 0,
-      .mocs = brw_get_bo_mocs(devinfo, mt->bo),
+   *surf = (struct blorp_surf) {
+      .surf = &mt->surf,
+      .addr = (struct blorp_address) {
+         .buffer = mt->bo,
+         .offset = mt->offset,
+         .reloc_flags = is_render_target ? EXEC_OBJECT_WRITE : 0,
+         .mocs = brw_get_bo_mocs(devinfo, mt->bo),
+      },
+      .aux_usage = aux_usage,
+      .tile_x_sa = mt->level[*level].level_x,
+      .tile_y_sa = mt->level[*level].level_y,
    };
-
-   surf->aux_usage = aux_usage;
-
-   struct isl_surf *aux_surf = NULL;
-   if (mt->mcs_buf)
-      aux_surf = &mt->mcs_buf->surf;
-   else if (mt->hiz_buf)
-      aux_surf = &mt->hiz_buf->surf;
-
-   if (mt->format == MESA_FORMAT_S_UINT8 && is_render_target &&
-       devinfo->gen <= 7)
-      mt->r8stencil_needs_update = true;
 
    if (surf->aux_usage == ISL_AUX_USAGE_HIZ &&
        !intel_miptree_level_has_hiz(mt, *level))
@@ -167,24 +164,20 @@ blorp_surf_for_miptree(struct brw_context *brw,
       /* We only really need a clear color if we also have an auxiliary
        * surface.  Without one, it does nothing.
        */
-      surf->clear_color = mt->fast_clear_color;
+      surf->clear_color =
+         intel_miptree_get_clear_color(devinfo, mt, mt->surf.format,
+                                       !is_render_target, (struct brw_bo **)
+                                       &surf->clear_color_addr.buffer,
+                                       &surf->clear_color_addr.offset);
 
-      surf->aux_surf = aux_surf;
+      surf->aux_surf = &mt->aux_buf->surf;
       surf->aux_addr = (struct blorp_address) {
          .reloc_flags = is_render_target ? EXEC_OBJECT_WRITE : 0,
          .mocs = surf->addr.mocs,
       };
 
-      if (mt->mcs_buf) {
-         surf->aux_addr.buffer = mt->mcs_buf->bo;
-         surf->aux_addr.offset = mt->mcs_buf->offset;
-      } else {
-         assert(mt->hiz_buf);
-         assert(surf->aux_usage == ISL_AUX_USAGE_HIZ);
-
-         surf->aux_addr.buffer = mt->hiz_buf->bo;
-         surf->aux_addr.offset = mt->hiz_buf->offset;
-      }
+      surf->aux_addr.buffer = mt->aux_buf->bo;
+      surf->aux_addr.offset = mt->aux_buf->offset;
    } else {
       surf->aux_addr = (struct blorp_address) {
          .buffer = NULL,
@@ -194,8 +187,31 @@ blorp_surf_for_miptree(struct brw_context *brw,
    assert((surf->aux_usage == ISL_AUX_USAGE_NONE) ==
           (surf->aux_addr.buffer == NULL));
 
+   if (!is_render_target && brw->screen->devinfo.gen == 9)
+      gen9_apply_single_tex_astc5x5_wa(brw, mt->format, surf->aux_usage);
+
    /* ISL wants real levels, not offset ones. */
    *level -= mt->first_level;
+}
+
+static bool
+brw_blorp_supports_dst_format(struct brw_context *brw, mesa_format format)
+{
+   /* If it's renderable, it's definitely supported. */
+   if (brw->mesa_format_supports_render[format])
+      return true;
+
+   /* BLORP can't compress anything */
+   if (_mesa_is_format_compressed(format))
+      return false;
+
+   /* No exotic formats such as GL_LUMINANCE_ALPHA */
+   if (_mesa_get_format_bits(format, GL_RED_BITS) == 0 &&
+       _mesa_get_format_bits(format, GL_DEPTH_BITS) == 0 &&
+       _mesa_get_format_bits(format, GL_STENCIL_BITS) == 0)
+      return false;
+
+   return true;
 }
 
 static enum isl_format
@@ -215,15 +231,20 @@ brw_blorp_to_isl_format(struct brw_context *brw, mesa_format format,
       return ISL_FORMAT_R32_FLOAT;
    case MESA_FORMAT_Z_UNORM16:
       return ISL_FORMAT_R16_UNORM;
-   default: {
+   default:
       if (is_render_target) {
-         assert(brw->mesa_format_supports_render[format]);
-         return brw->mesa_to_isl_render_format[format];
+         assert(brw_blorp_supports_dst_format(brw, format));
+         if (brw->mesa_format_supports_render[format]) {
+            return brw->mesa_to_isl_render_format[format];
+         } else {
+            return brw_isl_format_for_mesa_format(format);
+         }
       } else {
+         /* Some destinations (is_render_target == true) are supported by
+          * blorp even though we technically can't render to them.
+          */
          return brw_isl_format_for_mesa_format(format);
       }
-      break;
-   }
    }
 }
 
@@ -265,12 +286,12 @@ brw_blorp_blit_miptrees(struct brw_context *brw,
                         float src_x1, float src_y1,
                         float dst_x0, float dst_y0,
                         float dst_x1, float dst_y1,
-                        GLenum filter, bool mirror_x, bool mirror_y,
+                        GLenum gl_filter, bool mirror_x, bool mirror_y,
                         bool decode_srgb, bool encode_srgb)
 {
    const struct gen_device_info *devinfo = &brw->screen->devinfo;
 
-   DBG("%s from %dx %s mt %p %d %d (%f,%f) (%f,%f)"
+   DBG("%s from %dx %s mt %p %d %d (%f,%f) (%f,%f) "
        "to %dx %s mt %p %d %d (%f,%f) (%f,%f) (flip %d,%d)\n",
        __func__,
        src_mt->surf.samples, _mesa_get_format_name(src_mt->format), src_mt,
@@ -302,10 +323,70 @@ brw_blorp_blit_miptrees(struct brw_context *brw,
       src_format = dst_format = MESA_FORMAT_R_FLOAT32;
    }
 
+   enum blorp_filter blorp_filter;
+   if (fabsf(dst_x1 - dst_x0) == fabsf(src_x1 - src_x0) &&
+       fabsf(dst_y1 - dst_y0) == fabsf(src_y1 - src_y0)) {
+      if (src_mt->surf.samples > 1 && dst_mt->surf.samples <= 1) {
+         /* From the OpenGL ES 3.2 specification, section 16.2.1:
+          *
+          *    "If the read framebuffer is multisampled (its effective value
+          *    of SAMPLE_BUFFERS is one) and the draw framebuffer is not (its
+          *    value of SAMPLE_BUFFERS is zero), the samples corresponding to
+          *    each pixel location in the source are converted to a single
+          *    sample before being written to the destination.  The filter
+          *    parameter is ignored. If the source formats are integer types
+          *    or stencil values, a single sample’s value is selected for each
+          *    pixel.  If the source formats are floating-point or normalized
+          *    types, the sample values for each pixel are resolved in an
+          *    implementation-dependent manner.  If the source formats are
+          *    depth values, sample values are resolved in an implementation-
+          *    dependent manner where the result will be between the minimum
+          *    and maximum depth values in the pixel."
+          *
+          * For depth and stencil resolves, we choose to always use the value
+          * at sample 0.
+          */
+         GLenum base_format = _mesa_get_format_base_format(src_mt->format);
+         if (base_format == GL_DEPTH_COMPONENT ||
+             base_format == GL_STENCIL_INDEX ||
+             base_format == GL_DEPTH_STENCIL ||
+             _mesa_is_format_integer(src_mt->format)) {
+            /* The OpenGL ES 3.2 spec says:
+             *
+             *    "If the source formats are integer types or stencil values,
+             *    a single sample's value is selected for each pixel."
+             *
+             * Just take sample 0 in this case.
+             */
+            blorp_filter = BLORP_FILTER_SAMPLE_0;
+         } else {
+            blorp_filter = BLORP_FILTER_AVERAGE;
+         }
+      } else {
+         /* From the OpenGL 4.6 specification, section 18.3.1:
+          *
+          *    "If the source and destination dimensions are identical, no
+          *    filtering is applied."
+          *
+          * Using BLORP_FILTER_NONE will also handle the upsample case by
+          * replicating the one value in the source to all values in the
+          * destination.
+          */
+         blorp_filter = BLORP_FILTER_NONE;
+      }
+   } else if (gl_filter == GL_LINEAR ||
+              gl_filter == GL_SCALED_RESOLVE_FASTEST_EXT ||
+              gl_filter == GL_SCALED_RESOLVE_NICEST_EXT) {
+      blorp_filter = BLORP_FILTER_BILINEAR;
+   } else {
+      blorp_filter = BLORP_FILTER_NEAREST;
+   }
+
    enum isl_format src_isl_format =
       brw_blorp_to_isl_format(brw, src_format, false);
    enum isl_aux_usage src_aux_usage =
-      intel_miptree_texture_aux_usage(brw, src_mt, src_isl_format);
+      intel_miptree_texture_aux_usage(brw, src_mt, src_isl_format,
+                                      0 /* The astc5x5 WA isn't needed */);
    /* We do format workarounds for some depth formats so we can't reliably
     * sample with HiZ.  One of these days, we should fix that.
     */
@@ -347,7 +428,7 @@ brw_blorp_blit_miptrees(struct brw_context *brw,
               dst_isl_format, ISL_SWIZZLE_IDENTITY,
               src_x0, src_y0, src_x1, src_y1,
               dst_x0, dst_y0, dst_x1, dst_y1,
-              filter, mirror_x, mirror_y);
+              blorp_filter, mirror_x, mirror_y);
    blorp_batch_finish(&batch);
 
    intel_miptree_finish_write(brw, dst_mt, dst_level, dst_layer, 1,
@@ -567,14 +648,6 @@ try_blorp_blit(struct brw_context *brw,
       src_mt = find_miptree(buffer_bit, src_irb);
       dst_mt = find_miptree(buffer_bit, dst_irb);
 
-      /* We can't handle format conversions between Z24 and other formats
-       * since we have to lie about the surface format. See the comments in
-       * brw_blorp_surface_info::set().
-       */
-      if ((src_mt->format == MESA_FORMAT_Z24_UNORM_X8_UINT) !=
-          (dst_mt->format == MESA_FORMAT_Z24_UNORM_X8_UINT))
-         return false;
-
       /* We also can't handle any combined depth-stencil formats because we
        * have to reinterpret as a color format.
        */
@@ -643,32 +716,14 @@ brw_blorp_copytexsubimage(struct brw_context *brw,
    struct intel_mipmap_tree *src_mt = src_irb->mt;
    struct intel_mipmap_tree *dst_mt = intel_image->mt;
 
-   /* There is support for only up to eight samples. */
-   if (src_mt->surf.samples > 8 || dst_mt->surf.samples > 8)
-      return false;
-
-   if (_mesa_get_format_base_format(src_rb->Format) !=
-       _mesa_get_format_base_format(dst_image->TexFormat)) {
-      return false;
-   }
-
-   /* We can't handle format conversions between Z24 and other formats since
-    * we have to lie about the surface format.  See the comments in
-    * brw_blorp_surface_info::set().
-    */
-   if ((src_mt->format == MESA_FORMAT_Z24_UNORM_X8_UINT) !=
-       (dst_mt->format == MESA_FORMAT_Z24_UNORM_X8_UINT)) {
-      return false;
-   }
-
-   /* We also can't handle any combined depth-stencil formats because we
-    * have to reinterpret as a color format.
+   /* We can't handle any combined depth-stencil formats because we have to
+    * reinterpret as a color format.
     */
    if (_mesa_get_format_base_format(src_mt->format) == GL_DEPTH_STENCIL ||
        _mesa_get_format_base_format(dst_mt->format) == GL_DEPTH_STENCIL)
       return false;
 
-   if (!brw->mesa_format_supports_render[dst_image->TexFormat])
+   if (!brw_blorp_supports_dst_format(brw, dst_image->TexFormat))
       return false;
 
    /* Source clipping shouldn't be necessary, since copytexsubimage (in
@@ -689,7 +744,7 @@ brw_blorp_copytexsubimage(struct brw_context *brw,
    /* Account for the fact that in the system framebuffer, the origin is at
     * the lower left.
     */
-   bool mirror_y = _mesa_is_winsys_fbo(ctx->ReadBuffer);
+   bool mirror_y = ctx->ReadBuffer->FlipY;
    if (mirror_y)
       apply_y_flip(&srcY0, &srcY1, src_rb->Height);
 
@@ -822,7 +877,8 @@ blorp_get_client_bo(struct brw_context *brw,
        * data which we need to copy into a BO.
        */
       struct brw_bo *bo =
-         brw_bo_alloc(brw->bufmgr, "tmp_tex_subimage_src", size, 64);
+         brw_bo_alloc(brw->bufmgr, "tmp_tex_subimage_src", size,
+                      BRW_MEMZONE_OTHER);
       if (bo == NULL) {
          perf_debug("intel_texsubimage: temp bo creation failed: size = %u\n",
                     size);
@@ -1131,7 +1187,7 @@ err:
 
 static bool
 set_write_disables(const struct intel_renderbuffer *irb,
-                   const GLubyte *color_mask, bool *color_write_disable)
+                   const unsigned color_mask, bool *color_write_disable)
 {
    /* Format information in the renderbuffer represents the requirements
     * given by the client. There are cases where the backing miptree uses,
@@ -1139,14 +1195,14 @@ set_write_disables(const struct intel_renderbuffer *irb,
     * RGB we can treat alpha as not used and write whatever we like into it.
     */
    const GLenum base_format = irb->Base.Base._BaseFormat;
-   const int components = _mesa_base_format_component_count(base_format);
+   const int components = _mesa_components_in_format(base_format);
    bool disables = false;
 
    assert(components > 0);
 
    for (int i = 0; i < components; i++) {
-      color_write_disable[i] = !color_mask[i];
-      disables = disables || !color_mask[i];
+      color_write_disable[i] = !(color_mask & (1 << i));
+      disables = disables || color_write_disable[i];
    }
 
    return disables;
@@ -1168,12 +1224,12 @@ do_single_blorp_clear(struct brw_context *brw, struct gl_framebuffer *fb,
 
    x0 = fb->_Xmin;
    x1 = fb->_Xmax;
-   if (rb->Name != 0) {
-      y0 = fb->_Ymin;
-      y1 = fb->_Ymax;
-   } else {
+   if (fb->FlipY) {
       y0 = rb->Height - fb->_Ymax;
       y1 = rb->Height - fb->_Ymin;
+   } else {
+      y0 = fb->_Ymin;
+      y1 = fb->_Ymax;
    }
 
    /* If the clear region is empty, just return. */
@@ -1183,7 +1239,8 @@ do_single_blorp_clear(struct brw_context *brw, struct gl_framebuffer *fb,
    bool can_fast_clear = !partial_clear;
 
    bool color_write_disable[4] = { false, false, false, false };
-   if (set_write_disables(irb, ctx->Color.ColorMask[buf], color_write_disable))
+   if (set_write_disables(irb, GET_COLORMASK(ctx->Color.ColorMask, buf),
+                          color_write_disable))
       can_fast_clear = false;
 
    /* We store clear colors as floats or uints as needed.  If there are
@@ -1211,16 +1268,18 @@ do_single_blorp_clear(struct brw_context *brw, struct gl_framebuffer *fb,
 
    /* If the MCS buffer hasn't been allocated yet, we need to allocate it now.
     */
-   if (can_fast_clear && !irb->mt->mcs_buf) {
+   if (can_fast_clear && !irb->mt->aux_buf) {
       assert(irb->mt->aux_usage == ISL_AUX_USAGE_CCS_D);
-      if (!intel_miptree_alloc_ccs(brw, irb->mt)) {
-         /* There are a few reasons in addition to out-of-memory, that can
-          * cause intel_miptree_alloc_non_msrt_mcs to fail.  Try to recover by
-          * falling back to non-fast clear.
-          */
+      if (!intel_miptree_alloc_aux(brw, irb->mt)) {
+         /* We're out of memory. Fall back to a non-fast clear. */
          can_fast_clear = false;
       }
    }
+
+   /* FINISHME: Debug and enable fast clears */
+   const struct gen_device_info *devinfo = &brw->screen->devinfo;
+   if (devinfo->gen >= 11)
+      can_fast_clear = false;
 
    if (can_fast_clear) {
       const enum isl_aux_state aux_state =
@@ -1229,13 +1288,12 @@ do_single_blorp_clear(struct brw_context *brw, struct gl_framebuffer *fb,
          brw_meta_convert_fast_clear_color(brw, irb->mt,
                                            &ctx->Color.ClearColor);
 
-      bool same_clear_color =
-         !intel_miptree_set_clear_color(ctx, irb->mt, clear_color);
+      intel_miptree_set_clear_color(brw, irb->mt, clear_color);
 
-      /* If the buffer is already in INTEL_FAST_CLEAR_STATE_CLEAR, the clear
+      /* If the buffer is already in ISL_AUX_STATE_CLEAR, the clear
        * is redundant and can be skipped.
        */
-      if (aux_state == ISL_AUX_STATE_CLEAR && same_clear_color)
+      if (aux_state == ISL_AUX_STATE_CLEAR)
          return;
 
       DBG("%s (fast) to mt %p level %d layers %d+%d\n", __FUNCTION__,
@@ -1262,7 +1320,8 @@ do_single_blorp_clear(struct brw_context *brw, struct gl_framebuffer *fb,
       brw_emit_end_of_pipe_sync(brw, PIPE_CONTROL_RENDER_TARGET_FLUSH);
 
       struct blorp_batch batch;
-      blorp_batch_init(&brw->blorp, &batch, brw, 0);
+      blorp_batch_init(&brw->blorp, &batch, brw,
+                       BLORP_BATCH_NO_UPDATE_CLEAR_COLOR);
       blorp_fast_clear(&batch, &surf, isl_format,
                        level, irb->mt_layer, num_layers,
                        x0, y0, x1, y1);
@@ -1356,9 +1415,8 @@ brw_blorp_clear_depth_stencil(struct brw_context *brw,
    if (!(mask & (BUFFER_BITS_DEPTH_STENCIL)))
       return;
 
-   uint32_t x0, x1, y0, y1, rb_name, rb_height;
+   uint32_t x0, x1, y0, y1, rb_height;
    if (depth_rb) {
-      rb_name = depth_rb->Name;
       rb_height = depth_rb->Height;
       if (stencil_rb) {
          assert(depth_rb->Width == stencil_rb->Width);
@@ -1366,18 +1424,17 @@ brw_blorp_clear_depth_stencil(struct brw_context *brw,
       }
    } else {
       assert(stencil_rb);
-      rb_name = stencil_rb->Name;
       rb_height = stencil_rb->Height;
    }
 
    x0 = fb->_Xmin;
    x1 = fb->_Xmax;
-   if (rb_name != 0) {
-      y0 = fb->_Ymin;
-      y1 = fb->_Ymax;
-   } else {
+   if (fb->FlipY) {
       y0 = rb_height - fb->_Ymax;
       y1 = rb_height - fb->_Ymin;
+   } else {
+      y0 = fb->_Ymin;
+      y1 = fb->_Ymax;
    }
 
    /* If the clear region is empty, just return. */
@@ -1417,11 +1474,11 @@ brw_blorp_clear_depth_stencil(struct brw_context *brw,
          assert(level == irb->mt_level);
          assert(start_layer == irb->mt_layer);
          assert(num_layers == fb->MaxNumLayers ? irb->layer_count : 1);
-      } else {
-         level = irb->mt_level;
-         start_layer = irb->mt_layer;
-         num_layers = fb->MaxNumLayers ? irb->layer_count : 1;
       }
+
+      level = irb->mt_level;
+      start_layer = irb->mt_layer;
+      num_layers = fb->MaxNumLayers ? irb->layer_count : 1;
 
       stencil_mask = ctx->Stencil.WriteMask[0] & 0xff;
 
@@ -1462,7 +1519,7 @@ brw_blorp_clear_depth_stencil(struct brw_context *brw,
 void
 brw_blorp_resolve_color(struct brw_context *brw, struct intel_mipmap_tree *mt,
                         unsigned level, unsigned layer,
-                        enum blorp_fast_clear_op resolve_op)
+                        enum isl_aux_op resolve_op)
 {
    DBG("%s to mt %p level %u layer %u\n", __FUNCTION__, mt, level, layer);
 
@@ -1491,7 +1548,7 @@ brw_blorp_resolve_color(struct brw_context *brw, struct intel_mipmap_tree *mt,
 
    struct blorp_batch batch;
    blorp_batch_init(&brw->blorp, &batch, brw, 0);
-   blorp_ccs_resolve(&batch, &surf, level, layer,
+   blorp_ccs_resolve(&batch, &surf, level, layer, 1,
                      brw_blorp_to_isl_format(brw, format, true),
                      resolve_op);
    blorp_batch_finish(&batch);
@@ -1538,26 +1595,26 @@ brw_blorp_mcs_partial_resolve(struct brw_context *brw,
 void
 intel_hiz_exec(struct brw_context *brw, struct intel_mipmap_tree *mt,
                unsigned int level, unsigned int start_layer,
-               unsigned int num_layers, enum blorp_hiz_op op)
+               unsigned int num_layers, enum isl_aux_op op)
 {
    assert(intel_miptree_level_has_hiz(mt, level));
-   assert(op != BLORP_HIZ_OP_NONE);
+   assert(op != ISL_AUX_OP_NONE);
    const struct gen_device_info *devinfo = &brw->screen->devinfo;
    const char *opname = NULL;
 
    switch (op) {
-   case BLORP_HIZ_OP_DEPTH_RESOLVE:
+   case ISL_AUX_OP_FULL_RESOLVE:
       opname = "depth resolve";
       break;
-   case BLORP_HIZ_OP_HIZ_RESOLVE:
+   case ISL_AUX_OP_AMBIGUATE:
       opname = "hiz ambiguate";
       break;
-   case BLORP_HIZ_OP_DEPTH_CLEAR:
+   case ISL_AUX_OP_FAST_CLEAR:
       opname = "depth clear";
       break;
-   case BLORP_HIZ_OP_NONE:
-      opname = "noop?";
-      break;
+   case ISL_AUX_OP_PARTIAL_RESOLVE:
+   case ISL_AUX_OP_NONE:
+      unreachable("Invalid HiZ op");
    }
 
    DBG("%s %s to mt %p level %d layers %d-%d\n",
@@ -1608,7 +1665,7 @@ intel_hiz_exec(struct brw_context *brw, struct intel_mipmap_tree *mt,
        brw_emit_pipe_control_flush(brw, PIPE_CONTROL_DEPTH_STALL);
    }
 
-   assert(mt->aux_usage == ISL_AUX_USAGE_HIZ && mt->hiz_buf);
+   assert(mt->aux_usage == ISL_AUX_USAGE_HIZ && mt->aux_buf);
 
    struct isl_surf isl_tmp[2];
    struct blorp_surf surf;
@@ -1616,7 +1673,8 @@ intel_hiz_exec(struct brw_context *brw, struct intel_mipmap_tree *mt,
                           &level, start_layer, num_layers, isl_tmp);
 
    struct blorp_batch batch;
-   blorp_batch_init(&brw->blorp, &batch, brw, 0);
+   blorp_batch_init(&brw->blorp, &batch, brw,
+                    BLORP_BATCH_NO_UPDATE_CLEAR_COLOR);
    blorp_hiz_op(&batch, &surf, level, start_layer, num_layers, op);
    blorp_batch_finish(&batch);
 

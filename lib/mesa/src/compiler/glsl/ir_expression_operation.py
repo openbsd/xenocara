@@ -62,7 +62,7 @@ class type_signature_iter(object):
    def __iter__(self):
       return self
 
-   def next(self):
+   def __next__(self):
       if self.i < len(self.source_types):
          i = self.i
          self.i += 1
@@ -75,6 +75,8 @@ class type_signature_iter(object):
          return (dest_type, self.num_operands * (self.source_types[i],))
       else:
          raise StopIteration()
+
+   next = __next__
 
 
 uint_type = type("unsigned", "u", "GLSL_TYPE_UINT")
@@ -114,7 +116,7 @@ constant_template_common = mako.template.Template("""\
 constant_template_vector_scalar = mako.template.Template("""\
    case ${op.get_enum_name()}:
     % if "mixed" in op.flags:
-        % for i in xrange(op.num_operands):
+        % for i in range(op.num_operands):
       assert(op[${i}]->type->base_type == ${op.source_types[0].glsl_type} ||
             % for src_type in op.source_types[1:-1]:
              op[${i}]->type->base_type == ${src_type.glsl_type} ||
@@ -533,7 +535,7 @@ ir_expression_operation = [
 
    # Bit operations, part of ARB_gpu_shader5.
    operation("bitfield_reverse", 1, source_types=(uint_type, int_type), c_expression="bitfield_reverse({src0})"),
-   operation("bit_count", 1, source_types=(uint_type, int_type), dest_type=int_type, c_expression="_mesa_bitcount({src0})"),
+   operation("bit_count", 1, source_types=(uint_type, int_type), dest_type=int_type, c_expression="util_bitcount({src0})"),
    operation("find_msb", 1, source_types=(uint_type, int_type), dest_type=int_type, c_expression={'u': "find_msb_uint({src0})", 'i': "find_msb_int({src0})"}),
    operation("find_lsb", 1, source_types=(uint_type, int_type), dest_type=int_type, c_expression="find_msb_uint({src0} & -{src0})"),
 
@@ -602,8 +604,6 @@ ir_expression_operation = [
    # Binary comparison operators which return a boolean vector.
    # The type of both operands must be equal.
    operation("less", 2, printable_name="<", source_types=numeric_types, dest_type=bool_type, c_expression="{src0} < {src1}"),
-   operation("greater", 2, printable_name=">", source_types=numeric_types, dest_type=bool_type, c_expression="{src0} > {src1}"),
-   operation("lequal", 2, printable_name="<=", source_types=numeric_types, dest_type=bool_type, c_expression="{src0} <= {src1}"),
    operation("gequal", 2, printable_name=">=", source_types=numeric_types, dest_type=bool_type, c_expression="{src0} >= {src1}"),
    operation("equal", 2, printable_name="==", source_types=all_types, dest_type=bool_type, c_expression="{src0} == {src1}"),
    operation("nequal", 2, printable_name="!=", source_types=all_types, dest_type=bool_type, c_expression="{src0} != {src1}"),

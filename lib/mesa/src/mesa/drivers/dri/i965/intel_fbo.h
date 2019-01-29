@@ -116,6 +116,11 @@ struct intel_renderbuffer
     * for the duration of a mapping.
     */
    bool singlesample_mt_is_tmp;
+
+   /**
+    * Set to true when application specifically asked for a sRGB visual.
+    */
+   bool need_srgb;
 };
 
 

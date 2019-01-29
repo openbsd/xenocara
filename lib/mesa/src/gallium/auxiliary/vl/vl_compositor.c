@@ -611,7 +611,8 @@ init_pipe_state(struct vl_compositor *c)
    rast.offset_scale = 1;
    rast.half_pixel_center = 1;
    rast.bottom_edge_rule = 1;
-   rast.depth_clip = 1;
+   rast.depth_clip_near = 1;
+   rast.depth_clip_far = 1;
 
    c->rast = c->pipe->create_rasterizer_state(c->pipe, &rast);
 
@@ -1437,7 +1438,7 @@ vl_compositor_init_state(struct vl_compositor_state *s, struct pipe_context *pip
     * Const buffer contains the color conversion matrix and bias vectors
     */
    /* XXX: Create with IMMUTABLE/STATIC... although it does change every once in a long while... */
-   s->csc_matrix = pipe_buffer_create
+   s->csc_matrix = pipe_buffer_create_const0
    (
       pipe->screen,
       PIPE_BIND_CONSTANT_BUFFER,

@@ -23,8 +23,7 @@
  */
 
 /**
- * \file vbo_context.h
- * \brief VBO builder module datatypes and definitions.
+ * \brief Public interface to the VBO module
  * \author Keith Whitwell
  */
 
@@ -34,51 +33,25 @@
 
 #include <stdbool.h>
 #include "main/glheader.h"
+#include "main/draw.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-struct gl_vertex_array;
 struct gl_context;
-struct gl_transform_feedback_object;
 
-struct _mesa_prim {
-   GLuint mode:8;    /**< GL_POINTS, GL_LINES, GL_QUAD_STRIP, etc */
-   GLuint indexed:1;
-   GLuint begin:1;
-   GLuint end:1;
-   GLuint weak:1;
-   GLuint no_current_update:1;
-   GLuint is_indirect:1;
-   GLuint pad:18;
+GLboolean
+_vbo_CreateContext(struct gl_context *ctx);
 
-   GLuint start;
-   GLuint count;
-   GLint basevertex;
-   GLuint num_instances;
-   GLuint base_instance;
-   GLuint draw_id;
+void
+_vbo_DestroyContext(struct gl_context *ctx);
 
-   GLsizeiptr indirect_offset;
-};
+void
+vbo_exec_invalidate_state(struct gl_context *ctx);
 
-/* Would like to call this a "vbo_index_buffer", but this would be
- * confusing as the indices are not neccessarily yet in a non-null
- * buffer object.
- */
-struct _mesa_index_buffer {
-   GLuint count;
-   unsigned index_size;
-   struct gl_buffer_object *obj;
-   const void *ptr;
-};
-
-
-
-GLboolean _vbo_CreateContext( struct gl_context *ctx );
-void _vbo_DestroyContext( struct gl_context *ctx );
-
+void
+_vbo_install_exec_vtxfmt(struct gl_context *ctx);
 
 void
 vbo_initialize_exec_dispatch(const struct gl_context *ctx,
@@ -88,96 +61,28 @@ void
 vbo_initialize_save_dispatch(const struct gl_context *ctx,
                              struct _glapi_table *exec);
 
-void vbo_exec_FlushVertices(struct gl_context *ctx, GLuint flags);
-void vbo_save_SaveFlushVertices(struct gl_context *ctx);
-void vbo_save_NotifyBegin(struct gl_context *ctx, GLenum mode);
-void vbo_save_NewList(struct gl_context *ctx, GLuint list, GLenum mode);
-void vbo_save_EndList(struct gl_context *ctx);
-void vbo_save_BeginCallList(struct gl_context *ctx, struct gl_display_list *list);
-void vbo_save_EndCallList(struct gl_context *ctx);
+void
+vbo_exec_FlushVertices(struct gl_context *ctx, GLuint flags);
 
+void
+vbo_save_SaveFlushVertices(struct gl_context *ctx);
 
-typedef void (*vbo_draw_func)( struct gl_context *ctx,
-			       const struct _mesa_prim *prims,
-			       GLuint nr_prims,
-			       const struct _mesa_index_buffer *ib,
-			       GLboolean index_bounds_valid,
-			       GLuint min_index,
-			       GLuint max_index,
-			       struct gl_transform_feedback_object *tfb_vertcount,
-                               unsigned stream,
-			       struct gl_buffer_object *indirect);
+void
+vbo_save_NotifyBegin(struct gl_context *ctx, GLenum mode,
+                     bool no_current_update);
 
+void
+vbo_save_NewList(struct gl_context *ctx, GLuint list, GLenum mode);
 
-typedef void (*vbo_indirect_draw_func)(
-   struct gl_context *ctx,
-   GLuint mode,
-   struct gl_buffer_object *indirect_data,
-   GLsizeiptr indirect_offset,
-   unsigned draw_count,
-   unsigned stride,
-   struct gl_buffer_object *indirect_params,
-   GLsizeiptr indirect_params_offset,
-   const struct _mesa_index_buffer *ib);
+void
+vbo_save_EndList(struct gl_context *ctx);
 
+void
+vbo_save_BeginCallList(struct gl_context *ctx, struct gl_display_list *list);
 
+void
+vbo_save_EndCallList(struct gl_context *ctx);
 
-
-/* Utility function to cope with various constraints on tnl modules or
- * hardware.  This can be used to split an incoming set of arrays and
- * primitives against the following constraints:
- *    - Maximum number of indices in index buffer.
- *    - Maximum number of vertices referenced by index buffer.
- *    - Maximum hardware vertex buffer size.
- */
-struct split_limits {
-   GLuint max_verts;
-   GLuint max_indices;
-   GLuint max_vb_size;		/* bytes */
-};
-
-
-void vbo_split_prims( struct gl_context *ctx,
-		      const struct gl_vertex_array *arrays[],
-		      const struct _mesa_prim *prim,
-		      GLuint nr_prims,
-		      const struct _mesa_index_buffer *ib,
-		      GLuint min_index,
-		      GLuint max_index,
-		      vbo_draw_func draw,
-		      const struct split_limits *limits );
-
-
-/* Helpers for dealing translating away non-zero min_index.
- */
-GLboolean vbo_all_varyings_in_vbos( const struct gl_vertex_array *arrays[] );
-GLboolean vbo_any_varyings_in_vbos( const struct gl_vertex_array *arrays[] );
-
-void vbo_rebase_prims( struct gl_context *ctx,
-		       const struct gl_vertex_array *arrays[],
-		       const struct _mesa_prim *prim,
-		       GLuint nr_prims,
-		       const struct _mesa_index_buffer *ib,
-		       GLuint min_index,
-		       GLuint max_index,
-		       vbo_draw_func draw );
-
-static inline int
-vbo_sizeof_ib_type(GLenum type)
-{
-   switch (type) {
-   case GL_UNSIGNED_INT:
-      return sizeof(GLuint);
-   case GL_UNSIGNED_SHORT:
-      return sizeof(GLushort);
-   case GL_UNSIGNED_BYTE:
-      return sizeof(GLubyte);
-   default:
-      assert(!"unsupported index data type");
-      /* In case assert is turned off */
-      return 0;
-   }
-}
 
 void
 vbo_delete_minmax_cache(struct gl_buffer_object *bufferObj);
@@ -187,27 +92,11 @@ vbo_get_minmax_indices(struct gl_context *ctx, const struct _mesa_prim *prim,
                        const struct _mesa_index_buffer *ib,
                        GLuint *min_index, GLuint *max_index, GLuint nr_prims);
 
-void vbo_use_buffer_objects(struct gl_context *ctx);
-
-void vbo_always_unmap_buffers(struct gl_context *ctx);
-
-void vbo_set_draw_func(struct gl_context *ctx, vbo_draw_func func);
-
-void vbo_set_indirect_draw_func(struct gl_context *ctx,
-                                vbo_indirect_draw_func func);
-
-size_t
-vbo_count_tessellated_primitives(GLenum mode, GLuint count,
-                                 GLuint num_instances);
+void
+vbo_use_buffer_objects(struct gl_context *ctx);
 
 void
-vbo_try_prim_conversion(struct _mesa_prim *p);
-
-bool
-vbo_can_merge_prims(const struct _mesa_prim *p0, const struct _mesa_prim *p1);
-
-void
-vbo_merge_prims(struct _mesa_prim *p0, const struct _mesa_prim *p1);
+vbo_always_unmap_buffers(struct gl_context *ctx);
 
 void
 vbo_sw_primitive_restart(struct gl_context *ctx,
@@ -215,6 +104,15 @@ vbo_sw_primitive_restart(struct gl_context *ctx,
                          GLuint nr_prims,
                          const struct _mesa_index_buffer *ib,
                          struct gl_buffer_object *indirect);
+
+
+const struct gl_array_attributes*
+_vbo_current_attrib(const struct gl_context *ctx, gl_vert_attrib attr);
+
+
+const struct gl_vertex_buffer_binding*
+_vbo_current_binding(const struct gl_context *ctx);
+
 
 void GLAPIENTRY
 _es_Color4f(GLfloat r, GLfloat g, GLfloat b, GLfloat a);

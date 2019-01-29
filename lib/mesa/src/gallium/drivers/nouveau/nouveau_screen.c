@@ -8,7 +8,7 @@
 #include "util/u_format_s3tc.h"
 #include "util/u_string.h"
 
-#include "os/os_time.h"
+#include "util/os_time.h"
 
 #include <stdio.h>
 #include <errno.h>
@@ -102,14 +102,14 @@ nouveau_screen_bo_from_handle(struct pipe_screen *pscreen,
       return NULL;
    }
 
-   if (whandle->type != DRM_API_HANDLE_TYPE_SHARED &&
-       whandle->type != DRM_API_HANDLE_TYPE_FD) {
+   if (whandle->type != WINSYS_HANDLE_TYPE_SHARED &&
+       whandle->type != WINSYS_HANDLE_TYPE_FD) {
       debug_printf("%s: attempt to import unsupported handle type %d\n",
                    __FUNCTION__, whandle->type);
       return NULL;
    }
 
-   if (whandle->type == DRM_API_HANDLE_TYPE_SHARED)
+   if (whandle->type == WINSYS_HANDLE_TYPE_SHARED)
       ret = nouveau_bo_name_ref(dev, whandle->handle, &bo);
    else
       ret = nouveau_bo_prime_handle_ref(dev, whandle->handle, &bo);
@@ -133,12 +133,12 @@ nouveau_screen_bo_get_handle(struct pipe_screen *pscreen,
 {
    whandle->stride = stride;
 
-   if (whandle->type == DRM_API_HANDLE_TYPE_SHARED) {
+   if (whandle->type == WINSYS_HANDLE_TYPE_SHARED) {
       return nouveau_bo_name_get(bo, &whandle->handle) == 0;
-   } else if (whandle->type == DRM_API_HANDLE_TYPE_KMS) {
+   } else if (whandle->type == WINSYS_HANDLE_TYPE_KMS) {
       whandle->handle = bo->handle;
       return true;
-   } else if (whandle->type == DRM_API_HANDLE_TYPE_FD) {
+   } else if (whandle->type == WINSYS_HANDLE_TYPE_FD) {
       return nouveau_bo_set_prime(bo, (int *)&whandle->handle) == 0;
    } else {
       return false;
@@ -148,20 +148,21 @@ nouveau_screen_bo_get_handle(struct pipe_screen *pscreen,
 static void
 nouveau_disk_cache_create(struct nouveau_screen *screen)
 {
-   uint32_t mesa_timestamp;
-   char *timestamp_str;
-   int res;
+   struct mesa_sha1 ctx;
+   unsigned char sha1[20];
+   char cache_id[20 * 2 + 1];
 
-   if (disk_cache_get_function_timestamp(nouveau_disk_cache_create,
-                                         &mesa_timestamp)) {
-      res = asprintf(&timestamp_str, "%u", mesa_timestamp);
-      if (res != -1) {
-         screen->disk_shader_cache =
-            disk_cache_create(nouveau_screen_get_name(&screen->base),
-                              timestamp_str, 0);
-         free(timestamp_str);
-      }
-   }
+   _mesa_sha1_init(&ctx);
+   if (!disk_cache_get_function_identifier(nouveau_disk_cache_create,
+                                           &ctx))
+      return;
+
+   _mesa_sha1_final(&ctx, sha1);
+   disk_cache_format_hex_id(cache_id, sha1, 20 * 2);
+
+   screen->disk_shader_cache =
+      disk_cache_create(nouveau_screen_get_name(&screen->base),
+                        cache_id, 0);
 }
 
 int
@@ -242,6 +243,7 @@ nouveau_screen_init(struct nouveau_screen *screen, struct nouveau_device *dev)
 
    nouveau_disk_cache_create(screen);
 
+   screen->transfer_pushbuf_threshold = 192;
    screen->lowmem_bindings = PIPE_BIND_GLOBAL; /* gallium limit */
    screen->vidmem_bindings =
       PIPE_BIND_RENDER_TARGET | PIPE_BIND_DEPTH_STENCIL |

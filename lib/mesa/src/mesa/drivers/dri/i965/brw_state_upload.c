@@ -49,6 +49,7 @@ static void
 brw_upload_initial_gpu_state(struct brw_context *brw)
 {
    const struct gen_device_info *devinfo = &brw->screen->devinfo;
+   const struct brw_compiler *compiler = brw->screen->compiler;
 
    /* On platforms with hardware contexts, we can set our initial GPU state
     * right away rather than doing it via state atoms.  This saves a small
@@ -62,26 +63,54 @@ brw_upload_initial_gpu_state(struct brw_context *brw)
 
    brw_upload_invariant_state(brw);
 
+   if (devinfo->gen == 11) {
+      /* The default behavior of bit 5 "Headerless Message for Pre-emptable
+       * Contexts" in SAMPLER MODE register is set to 0, which means
+       * headerless sampler messages are not allowed for pre-emptable
+       * contexts. Set the bit 5 to 1 to allow them.
+       */
+      brw_load_register_imm32(brw, GEN11_SAMPLER_MODE,
+                              HEADERLESS_MESSAGE_FOR_PREEMPTABLE_CONTEXTS_MASK |
+                              HEADERLESS_MESSAGE_FOR_PREEMPTABLE_CONTEXTS);
+
+      /* Bit 1 "Enabled Texel Offset Precision Fix" must be set in
+       * HALF_SLICE_CHICKEN7 register.
+       */
+      brw_load_register_imm32(brw, HALF_SLICE_CHICKEN7,
+                              TEXEL_OFFSET_FIX_MASK |
+                              TEXEL_OFFSET_FIX_ENABLE);
+   }
+
+   if (devinfo->gen == 10 || devinfo->gen == 11) {
+      /* From gen10 workaround table in h/w specs:
+       *
+       *    "On 3DSTATE_3D_MODE, driver must always program bits 31:16 of DW1
+       *     a value of 0xFFFF"
+       *
+       * This means that we end up setting the entire 3D_MODE state. Bits
+       * in this register control things such as slice hashing and we want
+       * the default values of zero at the moment.
+       */
+      BEGIN_BATCH(2);
+      OUT_BATCH(_3DSTATE_3D_MODE  << 16 | (2 - 2));
+      OUT_BATCH(0xFFFF << 16);
+      ADVANCE_BATCH();
+   }
+
    if (devinfo->gen == 9) {
       /* Recommended optimizations for Victim Cache eviction and floating
        * point blending.
        */
-      BEGIN_BATCH(3);
-      OUT_BATCH(MI_LOAD_REGISTER_IMM | (3 - 2));
-      OUT_BATCH(GEN7_CACHE_MODE_1);
-      OUT_BATCH(REG_MASK(GEN9_FLOAT_BLEND_OPTIMIZATION_ENABLE) |
-                REG_MASK(GEN9_PARTIAL_RESOLVE_DISABLE_IN_VC) |
-                GEN9_FLOAT_BLEND_OPTIMIZATION_ENABLE |
-                GEN9_PARTIAL_RESOLVE_DISABLE_IN_VC);
-      ADVANCE_BATCH();
+      brw_load_register_imm32(brw, GEN7_CACHE_MODE_1,
+                              REG_MASK(GEN9_FLOAT_BLEND_OPTIMIZATION_ENABLE) |
+                              REG_MASK(GEN9_PARTIAL_RESOLVE_DISABLE_IN_VC) |
+                              GEN9_FLOAT_BLEND_OPTIMIZATION_ENABLE |
+                              GEN9_PARTIAL_RESOLVE_DISABLE_IN_VC);
 
       if (gen_device_info_is_9lp(devinfo)) {
-         BEGIN_BATCH(3);
-         OUT_BATCH(MI_LOAD_REGISTER_IMM | (3 - 2));
-         OUT_BATCH(GEN7_GT_MODE);
-         OUT_BATCH(GEN9_SUBSLICE_HASHING_MASK_BITS |
-                   GEN9_SUBSLICE_HASHING_16x16);
-         ADVANCE_BATCH();
+         brw_load_register_imm32(brw, GEN7_GT_MODE,
+                                 GEN9_SUBSLICE_HASHING_MASK_BITS |
+                                 GEN9_SUBSLICE_HASHING_16x16);
       }
    }
 
@@ -100,6 +129,29 @@ brw_upload_initial_gpu_state(struct brw_context *brw)
       OUT_BATCH(_3DSTATE_WM_CHROMAKEY << 16 | (2 - 2));
       OUT_BATCH(0);
       ADVANCE_BATCH();
+   }
+
+   /* Set the "CONSTANT_BUFFER Address Offset Disable" bit, so
+    * 3DSTATE_CONSTANT_XS buffer 0 is an absolute address.
+    *
+    * This is only safe on kernels with context isolation support.
+    */
+   if (!compiler->constant_buffer_0_is_relative) {
+      if (devinfo->gen >= 9) {
+         BEGIN_BATCH(3);
+         OUT_BATCH(MI_LOAD_REGISTER_IMM | (3 - 2));
+         OUT_BATCH(CS_DEBUG_MODE2);
+         OUT_BATCH(REG_MASK(CSDBG2_CONSTANT_BUFFER_ADDRESS_OFFSET_DISABLE) |
+                   CSDBG2_CONSTANT_BUFFER_ADDRESS_OFFSET_DISABLE);
+         ADVANCE_BATCH();
+      } else if (devinfo->gen == 8) {
+         BEGIN_BATCH(3);
+         OUT_BATCH(MI_LOAD_REGISTER_IMM | (3 - 2));
+         OUT_BATCH(INSTPM);
+         OUT_BATCH(REG_MASK(INSTPM_CONSTANT_BUFFER_ADDRESS_OFFSET_DISABLE) |
+                   INSTPM_CONSTANT_BUFFER_ADDRESS_OFFSET_DISABLE);
+         ADVANCE_BATCH();
+      }
    }
 }
 
@@ -150,7 +202,9 @@ void brw_init_state( struct brw_context *brw )
 
    brw_init_caches(brw);
 
-   if (devinfo->gen >= 10)
+   if (devinfo->gen >= 11)
+      gen11_init_atoms(brw);
+   else if (devinfo->gen >= 10)
       gen10_init_atoms(brw);
    else if (devinfo->gen >= 9)
       gen9_init_atoms(brw);
@@ -190,7 +244,7 @@ void brw_init_state( struct brw_context *brw )
    ctx->DriverFlags.NewUniformBuffer = BRW_NEW_UNIFORM_BUFFER;
    ctx->DriverFlags.NewShaderStorageBuffer = BRW_NEW_UNIFORM_BUFFER;
    ctx->DriverFlags.NewTextureBuffer = BRW_NEW_TEXTURE_BUFFER;
-   ctx->DriverFlags.NewAtomicBuffer = BRW_NEW_ATOMIC_BUFFER;
+   ctx->DriverFlags.NewAtomicBuffer = BRW_NEW_UNIFORM_BUFFER;
    ctx->DriverFlags.NewImageUnits = BRW_NEW_IMAGE_UNITS;
    ctx->DriverFlags.NewDefaultTessLevels = BRW_NEW_DEFAULT_TESS_LEVELS;
    ctx->DriverFlags.NewIntelConservativeRasterization = BRW_NEW_CONSERVATIVE_RASTERIZATION;
@@ -309,7 +363,6 @@ static struct dirty_bit_map brw_bits[] = {
    DEFINE_BIT(BRW_NEW_RASTERIZER_DISCARD),
    DEFINE_BIT(BRW_NEW_STATS_WM),
    DEFINE_BIT(BRW_NEW_UNIFORM_BUFFER),
-   DEFINE_BIT(BRW_NEW_ATOMIC_BUFFER),
    DEFINE_BIT(BRW_NEW_IMAGE_UNITS),
    DEFINE_BIT(BRW_NEW_META_IN_PROGRESS),
    DEFINE_BIT(BRW_NEW_PUSH_CONSTANT_ALLOCATION),
@@ -418,8 +471,11 @@ brw_upload_programs(struct brw_context *brw,
          brw_upload_clip_prog(brw);
          brw_upload_sf_prog(brw);
       }
+
+      brw_disk_cache_write_render_programs(brw);
    } else if (pipeline == BRW_COMPUTE_PIPELINE) {
       brw_upload_cs_prog(brw);
+      brw_disk_cache_write_compute_program(brw);
    }
 }
 

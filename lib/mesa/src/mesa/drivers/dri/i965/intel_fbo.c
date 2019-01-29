@@ -105,7 +105,8 @@ intel_map_renderbuffer(struct gl_context *ctx,
 		       GLuint x, GLuint y, GLuint w, GLuint h,
 		       GLbitfield mode,
 		       GLubyte **out_map,
-		       GLint *out_stride)
+		       GLint *out_stride,
+		       bool flip_y)
 {
    struct brw_context *brw = brw_context(ctx);
    struct swrast_renderbuffer *srb = (struct swrast_renderbuffer *)rb;
@@ -162,14 +163,14 @@ intel_map_renderbuffer(struct gl_context *ctx,
     * upside-down.  So we need to ask for a rectangle on flipped vertically, and
     * we then return a pointer to the bottom of it with a negative stride.
     */
-   if (rb->Name == 0) {
+   if (flip_y) {
       y = rb->Height - y - h;
    }
 
    intel_miptree_map(brw, mt, irb->mt_level, irb->mt_layer,
 		     x, y, w, h, mode, &map, &stride);
 
-   if (rb->Name == 0) {
+   if (flip_y) {
       map += (h - 1) * stride;
       stride = -stride;
    }
@@ -289,6 +290,7 @@ intel_alloc_private_renderbuffer_storage(struct gl_context * ctx, struct gl_rend
    assert(rb->Format != MESA_FORMAT_NONE);
 
    rb->NumSamples = intel_quantize_num_samples(screen, rb->NumSamples);
+   rb->NumStorageSamples = rb->NumSamples;
    rb->Width = width;
    rb->Height = height;
    rb->_BaseFormat = _mesa_get_format_base_format(rb->Format);
@@ -326,6 +328,35 @@ intel_alloc_renderbuffer_storage(struct gl_context * ctx, struct gl_renderbuffer
    return intel_alloc_private_renderbuffer_storage(ctx, rb, internalFormat, width, height);
 }
 
+static mesa_format
+fallback_rgbx_to_rgba(struct intel_screen *screen, struct gl_renderbuffer *rb,
+                      mesa_format original_format)
+{
+   mesa_format format = original_format;
+
+   /* The base format and internal format must be derived from the user-visible
+    * format (that is, the gl_config's format), even if we internally use
+    * choose a different format for the renderbuffer. Otherwise, rendering may
+    * use incorrect channel write masks.
+    */
+   rb->_BaseFormat = _mesa_get_format_base_format(original_format);
+   rb->InternalFormat = rb->_BaseFormat;
+
+   if (!screen->mesa_format_supports_render[original_format]) {
+      /* The glRenderbufferStorage paths in core Mesa detect if the driver
+       * does not support the user-requested format, and then searches for
+       * a fallback format. The DRI code bypasses core Mesa, though. So we do
+       * the fallbacks here.
+       *
+       * We must support MESA_FORMAT_R8G8B8X8 on Android because the Android
+       * framework requires HAL_PIXEL_FORMAT_RGBX8888 winsys surfaces.
+       */
+      format = _mesa_format_fallback_rgbx_to_rgba(original_format);
+      assert(screen->mesa_format_supports_render[format]);
+   }
+   return format;
+}
+
 static void
 intel_image_target_renderbuffer_storage(struct gl_context *ctx,
 					struct gl_renderbuffer *rb,
@@ -348,8 +379,13 @@ intel_image_target_renderbuffer_storage(struct gl_context *ctx,
       return;
    }
 
+   rb->Format = fallback_rgbx_to_rgba(brw->screen, rb, image->format);
+
+   mesa_format chosen_format = rb->Format == image->format ?
+      image->format : rb->Format;
+
    /* __DRIimage is opaque to the core so it has to be checked here */
-   if (!brw->mesa_format_supports_render[image->format]) {
+   if (!brw->mesa_format_supports_render[chosen_format]) {
       _mesa_error(ctx, GL_INVALID_OPERATION,
             "glEGLImageTargetRenderbufferStorage(unsupported image format)");
       return;
@@ -364,15 +400,12 @@ intel_image_target_renderbuffer_storage(struct gl_context *ctx,
     * content.
     */
    irb->mt = intel_miptree_create_for_dri_image(brw, image, GL_TEXTURE_2D,
-                                                image->format, false);
+                                                rb->Format, false);
    if (!irb->mt)
       return;
 
-   rb->InternalFormat = image->internal_format;
    rb->Width = image->width;
    rb->Height = image->height;
-   rb->Format = image->format;
-   rb->_BaseFormat = _mesa_get_format_base_format(image->format);
    rb->NeedsFinishRenderTexture = true;
    irb->layer_count = 1;
 }
@@ -432,28 +465,9 @@ intel_create_winsys_renderbuffer(struct intel_screen *screen,
    _mesa_init_renderbuffer(rb, 0);
    rb->ClassID = INTEL_RB_CLASS;
    rb->NumSamples = num_samples;
+   rb->NumStorageSamples = num_samples;
 
-   /* The base format and internal format must be derived from the user-visible
-    * format (that is, the gl_config's format), even if we internally use
-    * choose a different format for the renderbuffer. Otherwise, rendering may
-    * use incorrect channel write masks.
-    */
-   rb->_BaseFormat = _mesa_get_format_base_format(format);
-   rb->InternalFormat = rb->_BaseFormat;
-
-   rb->Format = format;
-   if (!screen->mesa_format_supports_render[rb->Format]) {
-      /* The glRenderbufferStorage paths in core Mesa detect if the driver
-       * does not support the user-requested format, and then searches for
-       * a falback format. The DRI code bypasses core Mesa, though. So we do
-       * the fallbacks here.
-       *
-       * We must support MESA_FORMAT_R8G8B8X8 on Android because the Android
-       * framework requires HAL_PIXEL_FORMAT_RGBX8888 winsys surfaces.
-       */
-      rb->Format = _mesa_format_fallback_rgbx_to_rgba(rb->Format);
-      assert(screen->mesa_format_supports_render[rb->Format]);
-   }
+   rb->Format = fallback_rgbx_to_rgba(screen, rb, format);
 
    /* intel-specific methods */
    rb->Delete = intel_delete_renderbuffer;
@@ -845,11 +859,12 @@ intel_blit_framebuffer_with_blitter(struct gl_context *ctx,
          if (!intel_miptree_blit(brw,
                                  src_irb->mt,
                                  src_irb->mt_level, src_irb->mt_layer,
-                                 srcX0, srcY0, src_rb->Name == 0,
+                                 srcX0, srcY0, readFb->FlipY,
                                  dst_irb->mt,
                                  dst_irb->mt_level, dst_irb->mt_layer,
-                                 dstX0, dstY0, dst_rb->Name == 0,
-                                 dstX1 - dstX0, dstY1 - dstY0, GL_COPY)) {
+                                 dstX0, dstY0, drawFb->FlipY,
+                                 dstX1 - dstX0, dstY1 - dstY0,
+                                 COLOR_LOGICOP_COPY)) {
             perf_debug("glBlitFramebuffer(): unknown blit failure.  "
                        "Falling back to software rendering.\n");
             return mask;
@@ -914,14 +929,6 @@ intel_blit_framebuffer(struct gl_context *ctx,
       assert(!"Invalid blit");
    }
 
-   /* Try using the BLT engine. */
-   mask = intel_blit_framebuffer_with_blitter(ctx, readFb, drawFb,
-                                              srcX0, srcY0, srcX1, srcY1,
-                                              dstX0, dstY0, dstX1, dstY1,
-                                              mask);
-   if (mask == 0x0)
-      return;
-
    _swrast_BlitFramebuffer(ctx, readFb, drawFb,
                            srcX0, srcY0, srcX1, srcY1,
                            dstX0, dstY0, dstX1, dstY1,
@@ -972,11 +979,9 @@ intel_renderbuffer_move_to_temp(struct brw_context *brw,
 void
 brw_cache_sets_clear(struct brw_context *brw)
 {
-   struct hash_entry *render_entry;
    hash_table_foreach(brw->render_cache, render_entry)
       _mesa_hash_table_remove(brw->render_cache, render_entry);
 
-   struct set_entry *depth_entry;
    set_foreach(brw->depth_cache, depth_entry)
       _mesa_set_remove(brw->depth_cache, depth_entry);
 }

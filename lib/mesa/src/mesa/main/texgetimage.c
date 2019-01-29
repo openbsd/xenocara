@@ -761,16 +761,15 @@ _mesa_GetTexSubImage_sw(struct gl_context *ctx,
 
 
 /**
- * This is the software fallback for Driver.GetCompressedTexSubImage().
- * All error checking will have been done before this routine is called.
+ * This function assumes that all error checking has been done.
  */
-void
-_mesa_GetCompressedTexSubImage_sw(struct gl_context *ctx,
-                                  struct gl_texture_image *texImage,
-                                  GLint xoffset, GLint yoffset,
-                                  GLint zoffset, GLsizei width,
-                                  GLint height, GLint depth,
-                                  GLvoid *img)
+static void
+get_compressed_texsubimage_sw(struct gl_context *ctx,
+                              struct gl_texture_image *texImage,
+                              GLint xoffset, GLint yoffset,
+                              GLint zoffset, GLsizei width,
+                              GLint height, GLint depth,
+                              GLvoid *img)
 {
    const GLuint dimensions =
       _mesa_get_texture_dimensions(texImage->TexObject->Target);
@@ -901,8 +900,7 @@ select_tex_image(const struct gl_texture_object *texObj, GLenum target,
 
 /**
  * Error-check the offset and size arguments to
- * glGet[Compressed]TextureSubImage().  Also checks if the specified
- * texture image is missing.
+ * glGet[Compressed]TextureSubImage().
  * \return true if error, false if no error.
  */
 static bool
@@ -914,7 +912,7 @@ dimensions_error_check(struct gl_context *ctx,
                        const char *caller)
 {
    const struct gl_texture_image *texImage;
-   int i;
+   GLuint imageWidth = 0, imageHeight = 0, imageDepth = 0;
 
    if (xoffset < 0) {
       _mesa_error(ctx, GL_INVALID_VALUE, "%s(xoffset = %d)", caller, xoffset);
@@ -954,7 +952,7 @@ dimensions_error_check(struct gl_context *ctx,
                      "%s(1D, yoffset = %d)", caller, yoffset);
          return true;
       }
-      if (height > 1) {
+      if (height != 1) {
          _mesa_error(ctx, GL_INVALID_VALUE,
                      "%s(1D, height = %d)", caller, height);
          return true;
@@ -968,7 +966,7 @@ dimensions_error_check(struct gl_context *ctx,
                      "%s(zoffset = %d)", caller, zoffset);
          return true;
       }
-      if (depth > 1) {
+      if (depth != 1) {
          _mesa_error(ctx, GL_INVALID_VALUE,
                      "%s(depth = %d)", caller, depth);
          return true;
@@ -983,54 +981,44 @@ dimensions_error_check(struct gl_context *ctx,
                      "%s(zoffset + depth = %d)", caller, zoffset + depth);
          return true;
       }
-      /* check that the range of faces exist */
-      for (i = 0; i < depth; i++) {
-         GLenum face = GL_TEXTURE_CUBE_MAP_POSITIVE_X + zoffset + i;
-         if (!_mesa_select_tex_image(texObj, face, level)) {
-            /* non-existant face */
-            _mesa_error(ctx, GL_INVALID_OPERATION,
-                        "%s(missing cube face)", caller);
-            return true;
-         }
-      }
       break;
    default:
       ; /* nothing */
    }
 
    texImage = select_tex_image(texObj, target, level, zoffset);
-   if (!texImage) {
-      /* missing texture image */
-      _mesa_error(ctx, GL_INVALID_OPERATION, "%s(missing image)", caller);
-      return true;
+   if (texImage) {
+      imageWidth = texImage->Width;
+      imageHeight = texImage->Height;
+      imageDepth = texImage->Depth;
    }
 
-   if (xoffset + width > texImage->Width) {
+   if (xoffset + width > imageWidth) {
       _mesa_error(ctx, GL_INVALID_VALUE,
                   "%s(xoffset %d + width %d > %u)",
-                  caller, xoffset, width, texImage->Width);
+                  caller, xoffset, width, imageWidth);
       return true;
    }
 
-   if (yoffset + height > texImage->Height) {
+   if (yoffset + height > imageHeight) {
       _mesa_error(ctx, GL_INVALID_VALUE,
                   "%s(yoffset %d + height %d > %u)",
-                  caller, yoffset, height, texImage->Height);
+                  caller, yoffset, height, imageHeight);
       return true;
    }
 
    if (target != GL_TEXTURE_CUBE_MAP) {
       /* Cube map error checking was done above */
-      if (zoffset + depth > texImage->Depth) {
+      if (zoffset + depth > imageDepth) {
          _mesa_error(ctx, GL_INVALID_VALUE,
                      "%s(zoffset %d + depth %d > %u)",
-                     caller, zoffset, depth, texImage->Depth);
+                     caller, zoffset, depth, imageDepth);
          return true;
       }
    }
 
    /* Extra checks for compressed textures */
-   {
+   if (texImage) {
       GLuint bw, bh, bd;
       _mesa_get_format_block_size_3d(texImage->TexFormat, &bw, &bh, &bd);
       if (bw > 1 || bh > 1 || bd > 1) {
@@ -1136,53 +1124,15 @@ pbo_error_check(struct gl_context *ctx, GLenum target,
 
 
 /**
- * Do error checking for all (non-compressed) get-texture-image functions.
- * \return true if any error, false if no errors.
+ * Do teximage-related error checking for getting uncompressed images.
+ * \return true if there was an error
  */
 static bool
-getteximage_error_check(struct gl_context *ctx,
-                        struct gl_texture_object *texObj,
-                        GLenum target, GLint level,
-                        GLint xoffset, GLint yoffset, GLint zoffset,
-                        GLsizei width, GLsizei height, GLsizei depth,
-                        GLenum format, GLenum type, GLsizei bufSize,
-                        GLvoid *pixels, const char *caller)
+teximage_error_check(struct gl_context *ctx,
+                     struct gl_texture_image *texImage,
+                     GLenum format, const char *caller)
 {
-   struct gl_texture_image *texImage;
-   GLenum baseFormat, err;
-   GLint maxLevels;
-
-   assert(texObj);
-
-   if (texObj->Target == 0) {
-      _mesa_error(ctx, GL_INVALID_OPERATION, "%s(invalid texture)", caller);
-      return true;
-   }
-
-   maxLevels = _mesa_max_texture_levels(ctx, target);
-   if (level < 0 || level >= maxLevels) {
-      _mesa_error(ctx, GL_INVALID_VALUE, "%s(level = %d)", caller, level);
-      return true;
-   }
-
-   err = _mesa_error_check_format_and_type(ctx, format, type);
-   if (err != GL_NO_ERROR) {
-      _mesa_error(ctx, err, "%s(format/type)", caller);
-      return true;
-   }
-
-   if (dimensions_error_check(ctx, texObj, target, level,
-                              xoffset, yoffset, zoffset,
-                              width, height, depth, caller)) {
-      return true;
-   }
-
-   if (pbo_error_check(ctx, target, width, height, depth,
-                       format, type, bufSize, pixels, caller)) {
-      return true;
-   }
-
-   texImage = select_tex_image(texObj, target, level, zoffset);
+   GLenum baseFormat;
    assert(texImage);
 
    /*
@@ -1215,8 +1165,8 @@ getteximage_error_check(struct gl_context *ctx,
       return true;
    }
    else if (_mesa_is_stencil_format(format)
-	    && !_mesa_is_depthstencil_format(baseFormat)
-	    && !_mesa_is_stencil_format(baseFormat)) {
+            && !_mesa_is_depthstencil_format(baseFormat)
+            && !_mesa_is_stencil_format(baseFormat)) {
       _mesa_error(ctx, GL_INVALID_OPERATION,
                   "%s(format mismatch)", caller);
       return true;
@@ -1238,6 +1188,142 @@ getteximage_error_check(struct gl_context *ctx,
             _mesa_is_format_integer(texImage->TexFormat)) {
       _mesa_error(ctx, GL_INVALID_OPERATION,
                   "%s(format mismatch)", caller);
+      return true;
+   }
+
+   return false;
+}
+
+
+/**
+ * Do common teximage-related error checking for getting uncompressed images.
+ * \return true if there was an error
+ */
+static bool
+common_error_check(struct gl_context *ctx,
+                   struct gl_texture_object *texObj,
+                   GLenum target, GLint level,
+                   GLsizei width, GLsizei height, GLsizei depth,
+                   GLenum format, GLenum type, GLsizei bufSize,
+                   GLvoid *pixels, const char *caller)
+{
+   GLenum err;
+   GLint maxLevels;
+
+   if (texObj->Target == 0) {
+      _mesa_error(ctx, GL_INVALID_OPERATION, "%s(invalid texture)", caller);
+      return true;
+   }
+
+   maxLevels = _mesa_max_texture_levels(ctx, target);
+   if (level < 0 || level >= maxLevels) {
+      _mesa_error(ctx, GL_INVALID_VALUE, "%s(level = %d)", caller, level);
+      return true;
+   }
+
+   err = _mesa_error_check_format_and_type(ctx, format, type);
+   if (err != GL_NO_ERROR) {
+      _mesa_error(ctx, err, "%s(format/type)", caller);
+      return true;
+   }
+
+   /* According to OpenGL 4.6 spec, section 8.11.4 ("Texture Image Queries"):
+    *
+    *   "An INVALID_OPERATION error is generated by GetTextureImage if the
+    *   effective target is TEXTURE_CUBE_MAP or TEXTURE_CUBE_MAP_ARRAY ,
+    *   and the texture object is not cube complete or cube array complete,
+    *   respectively."
+    *
+    * This applies also to GetTextureSubImage, GetCompressedTexImage,
+    * GetCompressedTextureImage, and GetnCompressedTexImage.
+    */
+   if (target == GL_TEXTURE_CUBE_MAP && !_mesa_cube_complete(texObj)) {
+      _mesa_error(ctx, GL_INVALID_OPERATION,
+                  "%s(cube incomplete)", caller);
+      return true;
+   }
+
+   return false;
+}
+
+
+/**
+ * Do error checking for all (non-compressed) get-texture-image functions.
+ * \return true if any error, false if no errors.
+ */
+static bool
+getteximage_error_check(struct gl_context *ctx,
+                        struct gl_texture_object *texObj,
+                        GLenum target, GLint level,
+                        GLsizei width, GLsizei height, GLsizei depth,
+                        GLenum format, GLenum type, GLsizei bufSize,
+                        GLvoid *pixels, const char *caller)
+{
+   struct gl_texture_image *texImage;
+
+   assert(texObj);
+
+   if (common_error_check(ctx, texObj, target, level, width, height, depth,
+                          format, type, bufSize, pixels, caller)) {
+      return true;
+   }
+
+   if (width == 0 || height == 0 || depth == 0) {
+      /* Not an error, but nothing to do.  Return 'true' so that the
+       * caller simply returns.
+       */
+      return true;
+   }
+
+   if (pbo_error_check(ctx, target, width, height, depth,
+                       format, type, bufSize, pixels, caller)) {
+      return true;
+   }
+
+   texImage = select_tex_image(texObj, target, level, 0);
+   if (teximage_error_check(ctx, texImage, format, caller)) {
+      return true;
+   }
+
+   return false;
+}
+
+
+/**
+ * Do error checking for all (non-compressed) get-texture-image functions.
+ * \return true if any error, false if no errors.
+ */
+static bool
+gettexsubimage_error_check(struct gl_context *ctx,
+                           struct gl_texture_object *texObj,
+                           GLenum target, GLint level,
+                           GLint xoffset, GLint yoffset, GLint zoffset,
+                           GLsizei width, GLsizei height, GLsizei depth,
+                           GLenum format, GLenum type, GLsizei bufSize,
+                           GLvoid *pixels, const char *caller)
+{
+   struct gl_texture_image *texImage;
+
+   assert(texObj);
+
+   if (common_error_check(ctx, texObj, target, level, width, height, depth,
+                          format, type, bufSize, pixels, caller)) {
+      return true;
+   }
+
+   if (dimensions_error_check(ctx, texObj, target, level,
+                              xoffset, yoffset, zoffset,
+                              width, height, depth, caller)) {
+      return true;
+   }
+
+   if (pbo_error_check(ctx, target, width, height, depth,
+                       format, type, bufSize, pixels, caller)) {
+      return true;
+   }
+
+   texImage = select_tex_image(texObj, target, level, zoffset);
+   if (teximage_error_check(ctx, texImage, format, caller)) {
       return true;
    }
 
@@ -1373,7 +1459,7 @@ _mesa_GetnTexImageARB(GLenum target, GLint level, GLenum format, GLenum type,
    get_texture_image_dims(texObj, target, level, &width, &height, &depth);
 
    if (getteximage_error_check(ctx, texObj, target, level,
-                               0, 0, 0, width, height, depth,
+                               width, height, depth,
                                format, type, bufSize, pixels, caller)) {
       return;
    }
@@ -1404,7 +1490,7 @@ _mesa_GetTexImage(GLenum target, GLint level, GLenum format, GLenum type,
    get_texture_image_dims(texObj, target, level, &width, &height, &depth);
 
    if (getteximage_error_check(ctx, texObj, target, level,
-                               0, 0, 0, width, height, depth,
+                               width, height, depth,
                                format, type, INT_MAX, pixels, caller)) {
       return;
    }
@@ -1438,7 +1524,7 @@ _mesa_GetTextureImage(GLuint texture, GLint level, GLenum format, GLenum type,
                           &width, &height, &depth);
 
    if (getteximage_error_check(ctx, texObj, texObj->Target, level,
-                               0, 0, 0, width, height, depth,
+                               width, height, depth,
                                format, type, bufSize, pixels, caller)) {
       return;
    }
@@ -1471,9 +1557,10 @@ _mesa_GetTextureSubImage(GLuint texture, GLint level,
       return;
    }
 
-   if (getteximage_error_check(ctx, texObj, texObj->Target, level,
-                               xoffset, yoffset, zoffset, width, height, depth,
-                               format, type, bufSize, pixels, caller)) {
+   if (gettexsubimage_error_check(ctx, texObj, texObj->Target, level,
+                                  xoffset, yoffset, zoffset,
+                                  width, height, depth,
+                                  format, type, bufSize, pixels, caller)) {
       return;
    }
 
@@ -1661,9 +1748,9 @@ get_compressed_texture_image(struct gl_context *ctx,
       texImage = texObj->Image[firstFace + i][level];
       assert(texImage);
 
-      ctx->Driver.GetCompressedTexSubImage(ctx, texImage,
-                                           xoffset, yoffset, zoffset,
-                                           width, height, depth, pixels);
+      get_compressed_texsubimage_sw(ctx, texImage,
+                                    xoffset, yoffset, zoffset,
+                                    width, height, depth, pixels);
 
       /* next cube face */
       pixels = (GLubyte *) pixels + imageStride;

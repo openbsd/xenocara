@@ -279,8 +279,35 @@ struct pipe_context {
    void (*set_framebuffer_state)( struct pipe_context *,
                                   const struct pipe_framebuffer_state * );
 
+   /**
+    * Set the sample locations used during rasterization. When NULL or sized
+    * zero, the default locations are used.
+    *
+    * Note that get_sample_position() still returns the default locations.
+    *
+    * The samples are accessed with
+    * locations[(pixel_y*grid_w+pixel_x)*ms+i],
+    * where:
+    * ms      = the sample count
+    * grid_w  = the pixel grid width for the sample count
+    * grid_w  = the pixel grid height for the sample count
+    * pixel_x = the window x coordinate modulo grid_w
+    * pixel_y = the window y coordinate modulo grid_w
+    * i       = the sample index
+    * This gives a result with the x coordinate as the low 4 bits and the y
+    * coordinate as the high 4 bits. For each coordinate 0 is the left or top
+    * edge of the pixel's rectangle and 16 (not 15) is the right or bottom edge.
+    *
+    * Out of bounds accesses are return undefined values.
+    *
+    * The pixel grid is used to vary sample locations across pixels and its
+    * size can be queried with get_sample_pixel_grid().
+    */
+   void (*set_sample_locations)( struct pipe_context *,
+                                 size_t size, const uint8_t *locations );
+
    void (*set_polygon_stipple)( struct pipe_context *,
-				const struct pipe_poly_stipple * );
+                                const struct pipe_poly_stipple * );
 
    void (*set_scissor_states)( struct pipe_context *,
                                unsigned start_slot,
@@ -330,6 +357,22 @@ struct pipe_context {
                               enum pipe_shader_type shader,
                               unsigned start_slot, unsigned count,
                               const struct pipe_shader_buffer *buffers);
+
+   /**
+    * Bind an array of hw atomic buffers for use by all shaders.
+    * And buffers that were previously bound to the specified range
+    * will be unbound.
+    *
+    * \param start_slot first buffer slot to bind.
+    * \param count      number of consecutive buffers to bind.
+    * \param buffers    array of pointers to the buffers to bind, it
+    *                   should contain at least \a count elements
+    *                   unless it's NULL, in which case no buffers will
+    *                   be bound.
+    */
+   void (*set_hw_atomic_buffers)(struct pipe_context *,
+                                 unsigned start_slot, unsigned count,
+                                 const struct pipe_shader_buffer *buffers);
 
    /**
     * Bind an array of images that will be used by a shader.
@@ -469,7 +512,23 @@ struct pipe_context {
                         int clear_value_size);
 
    /**
-    * Flush draw commands
+    * If a depth buffer is rendered with different sample location state than
+    * what is current at the time of reading, the values may differ because
+    * depth buffer compression can depend the sample locations.
+    *
+    * This function is a hint to decompress the current depth buffer to avoid
+    * such problems.
+    */
+   void (*evaluate_depth_buffer)(struct pipe_context *pipe);
+
+   /**
+    * Flush draw commands.
+    *
+    * This guarantees that the new fence (if any) will finish in finite time,
+    * unless PIPE_FLUSH_DEFERRED is used.
+    *
+    * Subsequent operations on other contexts of the same screen are guaranteed
+    * to execute after the flushed commands, unless PIPE_FLUSH_ASYNC is used.
     *
     * NOTE: use screen->fence_reference() (or equivalent) to transfer
     * new fence ref to **fence, to ensure that previous fence is unref'd
@@ -483,17 +542,19 @@ struct pipe_context {
                  unsigned flags);
 
    /**
-    * Create a fence from a native sync fd.
+    * Create a fence from a fd.
     *
     * This is used for importing a foreign/external fence fd.
     *
     * \param fence  if not NULL, an old fence to unref and transfer a
     *    new fence reference to
-    * \param fd     native fence fd
+    * \param fd     fd representing the fence object
+    * \param type   indicates which fence types backs fd
     */
    void (*create_fence_fd)(struct pipe_context *pipe,
                            struct pipe_fence_handle **fence,
-                           int fd);
+                           int fd,
+                           enum pipe_fd_type type);
 
    /**
     * Insert commands to have GPU wait for fence to be signaled.
@@ -502,12 +563,28 @@ struct pipe_context {
                              struct pipe_fence_handle *fence);
 
    /**
+    * Insert commands to have the GPU signal a fence.
+    */
+   void (*fence_server_signal)(struct pipe_context *pipe,
+                               struct pipe_fence_handle *fence);
+
+   /**
     * Create a view on a texture to be used by a shader stage.
     */
    struct pipe_sampler_view * (*create_sampler_view)(struct pipe_context *ctx,
                                                      struct pipe_resource *texture,
                                                      const struct pipe_sampler_view *templat);
 
+   /**
+    * Destroy a view on a texture.
+    *
+    * \param ctx the current context
+    * \param view the view to be destroyed
+    *
+    * \note The current context may not be the context in which the view was
+    *       created (view->context). However, the caller must guarantee that
+    *       the context which created the view is still alive.
+    */
    void (*sampler_view_destroy)(struct pipe_context *ctx,
                                 struct pipe_sampler_view *view);
 
@@ -680,7 +757,7 @@ struct pipe_context {
    /*@}*/
 
    /**
-    * Get sample position for an individual sample point.
+    * Get the default sample position for an individual sample point.
     *
     * \param sample_count - total number of samples
     * \param sample_index - sample to get the position values for
@@ -839,6 +916,24 @@ struct pipe_context {
     */
    void (*make_image_handle_resident)(struct pipe_context *ctx, uint64_t handle,
                                       unsigned access, bool resident);
+
+   /**
+    * Call the given function from the driver thread.
+    *
+    * This is set by threaded contexts for use by debugging wrappers.
+    *
+    * \param asap if true, run the callback immediately if there are no pending
+    *             commands to be processed by the driver thread
+    */
+   void (*callback)(struct pipe_context *ctx, void (*fn)(void *), void *data,
+                    bool asap);
+
+   /**
+    * Set a context parameter See enum pipe_context_param for more details.
+    */
+   void (*set_context_param)(struct pipe_context *ctx,
+                             enum pipe_context_param param,
+                             unsigned value);
 };
 
 

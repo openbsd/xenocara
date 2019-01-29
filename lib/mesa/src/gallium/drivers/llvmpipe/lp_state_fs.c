@@ -67,7 +67,7 @@
 #include "util/u_string.h"
 #include "util/simple_list.h"
 #include "util/u_dual_blend.h"
-#include "os/os_time.h"
+#include "util/os_time.h"
 #include "pipe/p_shader_tokens.h"
 #include "draw/draw_context.h"
 #include "tgsi/tgsi_dump.h"
@@ -299,7 +299,7 @@ generate_fs_loop(struct gallivm_state *gallivm,
                  LLVMValueRef context_ptr,
                  LLVMValueRef num_loop,
                  struct lp_build_interp_soa_context *interp,
-                 struct lp_build_sampler_soa *sampler,
+                 const struct lp_build_sampler_soa *sampler,
                  LLVMValueRef mask_store,
                  LLVMValueRef (*out_color)[4],
                  LLVMValueRef depth_ptr,
@@ -2240,7 +2240,7 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
 
    if (dst_count > src_count) {
       if ((dst_type.width == 8 || dst_type.width == 16) &&
-          util_is_power_of_two(dst_type.length) &&
+          util_is_power_of_two_or_zero(dst_type.length) &&
           dst_type.length * dst_type.width < 128) {
          /*
           * Never try to load values as 4xi8 which we will then
@@ -2554,6 +2554,25 @@ generate_fragment(struct llvmpipe_context *lp,
    assert(builder);
    LLVMPositionBuilderAtEnd(builder, block);
 
+   /*
+    * Must not count ps invocations if there's a null shader.
+    * (It would be ok to count with null shader if there's d/s tests,
+    * but only if there's d/s buffers too, which is different
+    * to implicit rasterization disable which must not depend
+    * on the d/s buffers.)
+    * Could use popcount on mask, but pixel accuracy is not required.
+    * Could disable if there's no stats query, but maybe not worth it.
+    */
+   if (shader->info.base.num_instructions > 1) {
+      LLVMValueRef invocs, val;
+      invocs = lp_jit_thread_data_invocations(gallivm, thread_data_ptr);
+      val = LLVMBuildLoad(builder, invocs, "");
+      val = LLVMBuildAdd(builder, val,
+                         LLVMConstInt(LLVMInt64TypeInContext(gallivm->context), 1, 0),
+                         "invoc_count");
+      LLVMBuildStore(builder, val, invocs);
+   }
+
    /* code generated texture sampling */
    sampler = lp_llvm_sampler_soa_create(key->state);
 
@@ -2842,13 +2861,6 @@ generate_variant(struct llvmpipe_context *lp,
          !shader->info.base.uses_kill &&
          !shader->info.base.writes_samplemask
       ? TRUE : FALSE;
-
-   if ((shader->info.base.num_tokens <= 1) &&
-       !key->depth.enabled && !key->stencil[0].enabled) {
-      variant->ps_inv_multiplier = 0;
-   } else {
-      variant->ps_inv_multiplier = 1;
-   }
 
    if ((LP_DEBUG & DEBUG_FS) || (gallivm_debug & GALLIVM_DEBUG_IR)) {
       lp_debug_fs_variant(variant);
@@ -3200,7 +3212,7 @@ make_variant_key(struct llvmpipe_context *lp,
    if (lp->rasterizer->clip_halfz) {
       key->depth_clamp = 1;
    } else {
-      key->depth_clamp = (lp->rasterizer->depth_clip == 0) ? 1 : 0;
+      key->depth_clamp = (lp->rasterizer->depth_clip_near == 0) ? 1 : 0;
    }
 
    /* alpha test only applies if render buffer 0 is non-integer (or does not exist) */
@@ -3323,7 +3335,12 @@ make_variant_key(struct llvmpipe_context *lp,
    if (shader->info.base.file_max[TGSI_FILE_SAMPLER_VIEW] != -1) {
       key->nr_sampler_views = shader->info.base.file_max[TGSI_FILE_SAMPLER_VIEW] + 1;
       for(i = 0; i < key->nr_sampler_views; ++i) {
-         if(shader->info.base.file_mask[TGSI_FILE_SAMPLER_VIEW] & (1 << i)) {
+         /*
+          * Note sview may exceed what's representable by file_mask.
+          * This will still work, the only downside is that not actually
+          * used views may be included in the shader key.
+          */
+         if(shader->info.base.file_mask[TGSI_FILE_SAMPLER_VIEW] & (1u << (i & 31))) {
             lp_sampler_static_texture_state(&key->state[i].texture_state,
                                             lp->sampler_views[PIPE_SHADER_FRAGMENT][i]);
          }
@@ -3465,17 +3482,4 @@ llvmpipe_init_fs_funcs(struct llvmpipe_context *llvmpipe)
    llvmpipe->pipe.set_constant_buffer = llvmpipe_set_constant_buffer;
 }
 
-/*
- * Rasterization is disabled if there is no pixel shader and
- * both depth and stencil testing are disabled:
- * http://msdn.microsoft.com/en-us/library/windows/desktop/bb205125
- */
-boolean
-llvmpipe_rasterization_disabled(struct llvmpipe_context *lp)
-{
-   boolean null_fs = !lp->fs || lp->fs->info.base.num_tokens <= 1;
 
-   return (null_fs &&
-           !lp->depth_stencil->depth.enabled &&
-           !lp->depth_stencil->stencil[0].enabled);
-}

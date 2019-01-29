@@ -69,7 +69,7 @@ brw_select_clip_planes(struct gl_context *ctx)
    }
 }
 
-GLbitfield64
+static GLbitfield64
 brw_vs_outputs_written(struct brw_context *brw, struct brw_vs_prog_key *key,
                        GLbitfield64 user_varyings)
 {
@@ -159,7 +159,6 @@ brw_codegen_vs_prog(struct brw_context *brw,
 {
    const struct brw_compiler *compiler = brw->screen->compiler;
    const struct gen_device_info *devinfo = &brw->screen->devinfo;
-   GLuint program_size;
    const GLuint *program;
    struct brw_vs_prog_data prog_data;
    struct brw_stage_prog_data *stage_prog_data = &prog_data.base.base;
@@ -182,7 +181,7 @@ brw_codegen_vs_prog(struct brw_context *brw,
       brw_nir_setup_glsl_uniforms(mem_ctx, vp->program.nir, &vp->program,
                                   &prog_data.base.base,
                                   compiler->scalar_stage[MESA_SHADER_VERTEX]);
-      brw_nir_analyze_ubo_ranges(compiler, vp->program.nir,
+      brw_nir_analyze_ubo_ranges(compiler, vp->program.nir, key,
                                  prog_data.base.base.ubo_ranges);
    } else {
       brw_nir_setup_arb_uniforms(mem_ctx, vp->program.nir, &vp->program,
@@ -222,11 +221,10 @@ brw_codegen_vs_prog(struct brw_context *brw,
    char *error_str;
    program = brw_compile_vs(compiler, brw, mem_ctx, key, &prog_data,
                             vp->program.nir,
-                            !_mesa_is_gles3(&brw->ctx),
-                            st_index, &program_size, &error_str);
+                            st_index, &error_str);
    if (program == NULL) {
       if (!vp->program.is_arb_asm) {
-         vp->program.sh.data->LinkStatus = linking_failure;
+         vp->program.sh.data->LinkStatus = LINKING_FAILURE;
          ralloc_strcat(&vp->program.sh.data->InfoLog, error_str);
       }
 
@@ -255,10 +253,10 @@ brw_codegen_vs_prog(struct brw_context *brw,
    ralloc_steal(NULL, prog_data.base.base.param);
    ralloc_steal(NULL, prog_data.base.base.pull_param);
    brw_upload_cache(&brw->cache, BRW_CACHE_VS_PROG,
-		    key, sizeof(struct brw_vs_prog_key),
-		    program, program_size,
-		    &prog_data, sizeof(prog_data),
-		    &brw->vs.base.prog_offset, &brw->vs.base.prog_data);
+                    key, sizeof(struct brw_vs_prog_key),
+                    program, prog_data.base.base.program_size,
+                    &prog_data, sizeof(prog_data),
+                    &brw->vs.base.prog_offset, &brw->vs.base.prog_data);
    ralloc_free(mem_ctx);
 
    return true;
@@ -343,13 +341,36 @@ brw_upload_vs_prog(struct brw_context *brw)
 
    brw_vs_populate_key(brw, &key);
 
-   if (!brw_search_cache(&brw->cache, BRW_CACHE_VS_PROG,
-			 &key, sizeof(key),
-			 &brw->vs.base.prog_offset, &brw->vs.base.prog_data)) {
-      bool success = brw_codegen_vs_prog(brw, vp, &key);
-      (void) success;
-      assert(success);
-   }
+   if (brw_search_cache(&brw->cache, BRW_CACHE_VS_PROG, &key, sizeof(key),
+                        &brw->vs.base.prog_offset, &brw->vs.base.prog_data,
+                        true))
+      return;
+
+   if (brw_disk_cache_upload_program(brw, MESA_SHADER_VERTEX))
+      return;
+
+   vp = (struct brw_program *) brw->programs[MESA_SHADER_VERTEX];
+   vp->id = key.program_string_id;
+
+   MAYBE_UNUSED bool success = brw_codegen_vs_prog(brw, vp, &key);
+   assert(success);
+}
+
+void
+brw_vs_populate_default_key(const struct gen_device_info *devinfo,
+                            struct brw_vs_prog_key *key,
+                            struct gl_program *prog)
+{
+   struct brw_program *bvp = brw_program(prog);
+
+   memset(key, 0, sizeof(*key));
+
+   brw_setup_tex_for_precompile(devinfo, &key->tex, prog);
+   key->program_string_id = bvp->id;
+   key->clamp_vertex_color =
+      (prog->info.outputs_written &
+       (VARYING_BIT_COL0 | VARYING_BIT_COL1 | VARYING_BIT_BFC0 |
+        VARYING_BIT_BFC1));
 }
 
 bool
@@ -363,14 +384,7 @@ brw_vs_precompile(struct gl_context *ctx, struct gl_program *prog)
 
    struct brw_program *bvp = brw_program(prog);
 
-   memset(&key, 0, sizeof(key));
-
-   brw_setup_tex_for_precompile(brw, &key.tex, prog);
-   key.program_string_id = bvp->id;
-   key.clamp_vertex_color =
-      (prog->info.outputs_written &
-       (VARYING_BIT_COL0 | VARYING_BIT_COL1 | VARYING_BIT_BFC0 |
-        VARYING_BIT_BFC1));
+   brw_vs_populate_default_key(&brw->screen->devinfo, &key, prog);
 
    success = brw_codegen_vs_prog(brw, bvp, &key);
 

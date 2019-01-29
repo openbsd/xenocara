@@ -1,5 +1,3 @@
-/* -*- mode: C; c-file-style: "k&r"; tab-width 4; indent-tabs-mode: t; -*- */
-
 /*
  * Copyright (C) 2015 Rob Clark <robclark@freedesktop.org>
  *
@@ -35,9 +33,9 @@
 
 #include "nir/tgsi_to_nir.h"
 
+
 static const nir_shader_compiler_options options = {
 		.lower_fpow = true,
-		.lower_fsat = true,
 		.lower_scmp = true,
 		.lower_flrp32 = true,
 		.lower_flrp64 = true,
@@ -45,28 +43,14 @@ static const nir_shader_compiler_options options = {
 		.lower_fmod32 = true,
 		.lower_fmod64 = true,
 		.lower_fdiv = true,
+		.lower_ldexp = true,
 		.fuse_ffma = true,
 		.native_integers = true,
 		.vertex_id_zero_based = true,
 		.lower_extract_byte = true,
 		.lower_extract_word = true,
-};
-
-static const nir_shader_compiler_options options_5xx = {
-		.lower_fpow = true,
-		.lower_fsat = true,
-		.lower_scmp = true,
-		.lower_flrp32 = true,
-		.lower_flrp64 = true,
-		.lower_ffract = true,
-		.lower_fmod32 = true,
-		.lower_fmod64 = true,
-		.lower_fdiv = true,
-		.fuse_ffma = true,
-		.native_integers = true,
-		.vertex_id_zero_based = false,
-		.lower_extract_byte = true,
-		.lower_extract_word = true,
+		.lower_all_io_to_temps = true,
+		.lower_helper_invocation = true,
 };
 
 struct nir_shader *
@@ -78,8 +62,6 @@ ir3_tgsi_to_nir(const struct tgsi_token *tokens)
 const nir_shader_compiler_options *
 ir3_get_compiler_options(struct ir3_compiler *compiler)
 {
-	if (compiler->gpu_id >= 500)
-		return &options_5xx;
 	return &options;
 }
 
@@ -110,15 +92,37 @@ ir3_optimize_loop(nir_shader *s)
 
 		OPT_V(s, nir_lower_vars_to_ssa);
 		progress |= OPT(s, nir_opt_copy_prop_vars);
+		progress |= OPT(s, nir_opt_dead_write_vars);
 		progress |= OPT(s, nir_lower_alu_to_scalar);
 		progress |= OPT(s, nir_lower_phis_to_scalar);
 
 		progress |= OPT(s, nir_copy_prop);
 		progress |= OPT(s, nir_opt_dce);
 		progress |= OPT(s, nir_opt_cse);
-		progress |= OPT(s, ir3_nir_lower_if_else);
+		static int gcm = -1;
+		if (gcm == -1)
+			gcm = env2u("GCM");
+		if (gcm == 1)
+			progress |= OPT(s, nir_opt_gcm, true);
+		else if (gcm == 2)
+			progress |= OPT(s, nir_opt_gcm, false);
+		progress |= OPT(s, nir_opt_peephole_select, 16);
+		progress |= OPT(s, nir_opt_intrinsics);
 		progress |= OPT(s, nir_opt_algebraic);
 		progress |= OPT(s, nir_opt_constant_folding);
+		progress |= OPT(s, nir_opt_dead_cf);
+		if (OPT(s, nir_opt_trivial_continues)) {
+			progress |= true;
+			/* If nir_opt_trivial_continues makes progress, then we need to clean
+			 * things up if we want any hope of nir_opt_if or nir_opt_loop_unroll
+			 * to make progress.
+			 */
+			OPT(s, nir_copy_prop);
+			OPT(s, nir_opt_dce);
+		}
+		progress |= OPT(s, nir_opt_if);
+		progress |= OPT(s, nir_opt_remove_phis);
+		progress |= OPT(s, nir_opt_undef);
 
 	} while (progress);
 }
@@ -188,6 +192,8 @@ ir3_optimize_nir(struct ir3_shader *shader, nir_shader *s,
 
 	OPT_V(s, nir_lower_tex, &tex_options);
 	OPT_V(s, nir_lower_load_const_to_scalar);
+	if (shader->compiler->gpu_id < 500)
+		OPT_V(s, ir3_nir_lower_tg4_to_tex);
 
 	ir3_optimize_loop(s);
 
@@ -199,6 +205,8 @@ ir3_optimize_nir(struct ir3_shader *shader, nir_shader *s,
 
 	OPT_V(s, nir_remove_dead_variables, nir_var_local);
 
+	OPT_V(s, nir_move_load_const);
+
 	if (fd_mesa_debug & FD_DBG_DISASM) {
 		debug_printf("----------------------\n");
 		nir_print_shader(s, stdout);
@@ -208,4 +216,57 @@ ir3_optimize_nir(struct ir3_shader *shader, nir_shader *s,
 	nir_sweep(s);
 
 	return s;
+}
+
+void
+ir3_nir_scan_driver_consts(nir_shader *shader,
+		struct ir3_driver_const_layout *layout)
+{
+	nir_foreach_function(function, shader) {
+		if (!function->impl)
+			continue;
+
+		nir_foreach_block(block, function->impl) {
+			nir_foreach_instr(instr, block) {
+				if (instr->type != nir_instr_type_intrinsic)
+					continue;
+
+				nir_intrinsic_instr *intr =
+					nir_instr_as_intrinsic(instr);
+				unsigned idx;
+
+				switch (intr->intrinsic) {
+				case nir_intrinsic_get_buffer_size:
+					idx = nir_src_as_const_value(intr->src[0])->u32[0];
+					if (layout->ssbo_size.mask & (1 << idx))
+						break;
+					layout->ssbo_size.mask |= (1 << idx);
+					layout->ssbo_size.off[idx] =
+						layout->ssbo_size.count;
+					layout->ssbo_size.count += 1; /* one const per */
+					break;
+				case nir_intrinsic_image_deref_atomic_add:
+				case nir_intrinsic_image_deref_atomic_min:
+				case nir_intrinsic_image_deref_atomic_max:
+				case nir_intrinsic_image_deref_atomic_and:
+				case nir_intrinsic_image_deref_atomic_or:
+				case nir_intrinsic_image_deref_atomic_xor:
+				case nir_intrinsic_image_deref_atomic_exchange:
+				case nir_intrinsic_image_deref_atomic_comp_swap:
+				case nir_intrinsic_image_deref_store:
+				case nir_intrinsic_image_deref_size:
+					idx = nir_intrinsic_get_var(intr, 0)->data.driver_location;
+					if (layout->image_dims.mask & (1 << idx))
+						break;
+					layout->image_dims.mask |= (1 << idx);
+					layout->image_dims.off[idx] =
+						layout->image_dims.count;
+					layout->image_dims.count += 3; /* three const per */
+					break;
+				default:
+					break;
+				}
+			}
+		}
+	}
 }

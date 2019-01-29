@@ -26,8 +26,10 @@
  **************************************************************************/
 
 #include "main/imports.h"
+#include "main/arrayobj.h"
 #include "main/image.h"
 #include "main/macros.h"
+#include "main/varray.h"
 
 #include "vbo/vbo.h"
 
@@ -130,9 +132,7 @@ st_feedback_draw_vbo(struct gl_context *ctx,
    struct pipe_vertex_element velements[PIPE_MAX_ATTRIBS];
    struct pipe_transfer *vb_transfer[PIPE_MAX_ATTRIBS] = {NULL};
    struct pipe_transfer *ib_transfer = NULL;
-   const struct gl_vertex_array **arrays = ctx->Array._DrawArrays;
    GLuint attr, i;
-   const GLubyte *low_addr = NULL;
    const void *mapped_indices = NULL;
 
    if (!draw)
@@ -167,37 +167,28 @@ st_feedback_draw_vbo(struct gl_context *ctx,
    draw_bind_vertex_shader(draw, st->vp_variant->draw_shader);
    set_feedback_vertex_format(ctx);
 
-   /* Find the lowest address of the arrays we're drawing */
-   if (vp->num_inputs) {
-      low_addr = arrays[vp->index_to_input[0]]->Ptr;
-
-      for (attr = 1; attr < vp->num_inputs; attr++) {
-         const GLubyte *start = arrays[vp->index_to_input[attr]]->Ptr;
-         low_addr = MIN2(low_addr, start);
-      }
-   }
-
    /* loop over TGSI shader inputs to determine vertex buffer
     * and attribute info
     */
    for (attr = 0; attr < vp->num_inputs; attr++) {
       const GLuint mesaAttr = vp->index_to_input[attr];
-      struct gl_buffer_object *bufobj = arrays[mesaAttr]->BufferObj;
+      const struct gl_vertex_buffer_binding *binding;
+      const struct gl_array_attributes *attrib;
       void *map;
 
-      if (bufobj && bufobj->Name) {
-         /* Attribute data is in a VBO.
-          * Recall that for VBOs, the gl_vertex_array->Ptr field is
-          * really an offset from the start of the VBO, not a pointer.
-          */
-         struct st_buffer_object *stobj = st_buffer_object(bufobj);
+      _mesa_draw_attrib_and_binding(ctx, mesaAttr, &attrib, &binding);
+
+      if (_mesa_is_bufferobj(binding->BufferObj)) {
+         /* Attribute data is in a VBO. */
+         struct st_buffer_object *stobj = st_buffer_object(binding->BufferObj);
          assert(stobj->buffer);
 
          vbuffers[attr].buffer.resource = NULL;
          vbuffers[attr].is_user_buffer = false;
          pipe_resource_reference(&vbuffers[attr].buffer.resource, stobj->buffer);
-         vbuffers[attr].buffer_offset = pointer_to_offset(low_addr);
-         velements[attr].src_offset = arrays[mesaAttr]->Ptr - low_addr;
+         vbuffers[attr].buffer_offset = _mesa_draw_binding_offset(binding);
+         velements[attr].src_offset =
+            _mesa_draw_attributes_relative_offset(attrib);
 
          /* map the attrib buffer */
          map = pipe_buffer_map(pipe, vbuffers[attr].buffer.resource,
@@ -207,7 +198,8 @@ st_feedback_draw_vbo(struct gl_context *ctx,
                                        vbuffers[attr].buffer.resource->width0);
       }
       else {
-         vbuffers[attr].buffer.user = arrays[mesaAttr]->Ptr;
+         /* Attribute data is in a user space array. */
+         vbuffers[attr].buffer.user = attrib->Ptr;
          vbuffers[attr].is_user_buffer = true;
          vbuffers[attr].buffer_offset = 0;
          velements[attr].src_offset = 0;
@@ -217,15 +209,10 @@ st_feedback_draw_vbo(struct gl_context *ctx,
       }
 
       /* common-case setup */
-      vbuffers[attr].stride = arrays[mesaAttr]->StrideB; /* in bytes */
+      vbuffers[attr].stride = binding->Stride; /* in bytes */
       velements[attr].instance_divisor = 0;
       velements[attr].vertex_buffer_index = attr;
-      velements[attr].src_format = 
-         st_pipe_vertex_format(arrays[mesaAttr]->Type,
-                               arrays[mesaAttr]->Size,
-                               arrays[mesaAttr]->Format,
-                               arrays[mesaAttr]->Normalized,
-                               arrays[mesaAttr]->Integer);
+      velements[attr].src_format = st_pipe_vertex_format(attrib);
       assert(velements[attr].src_format);
 
       /* tell draw about this attribute */

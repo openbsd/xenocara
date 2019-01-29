@@ -32,7 +32,7 @@
  * @author Jose Fonseca <jfonseca@vmware.com>
  */
 
-#include "u_debug.h"
+#include "util/u_debug.h"
 #include "u_debug_symbol.h"
 #include "u_debug_stack.h"
 
@@ -90,8 +90,8 @@ symbol_name_cached(unw_cursor_t *cursor, unw_proc_info_t *pip)
          procname[1] = 0;
       }
 
-      asprintf(&name, "%s%s", procname, ret == -UNW_ENOMEM ? "..." : "");
-
+      if (asprintf(&name, "%s%s", procname, ret == -UNW_ENOMEM ? "..." : "") == -1) 
+         name = "??";
       util_hash_table_set(symbols_hash, addr, (void*)name);
    }
    mtx_unlock(&symbols_mutex);
@@ -193,7 +193,8 @@ debug_backtrace_print(FILE *f,
             frame_ip(&backtrace[i]));
    }
 }
-
+#elif defined(ANDROID)
+   /* Not implemented here; see u_debug_stack_android.cpp */
 #else /* ! HAVE_LIBUNWIND */
 
 #if defined(PIPE_OS_WINDOWS)
@@ -264,8 +265,11 @@ debug_backtrace_capture(struct debug_stack_frame *backtrace,
    }
 #endif
 
-#if defined(PIPE_CC_GCC)
+#if defined(PIPE_CC_GCC) && (PIPE_CC_GCC_VERSION > 404) || defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wframe-address"
    frame_pointer = ((const void **)__builtin_frame_address(1));
+#pragma GCC diagnostic pop
 #elif defined(PIPE_CC_MSVC) && defined(PIPE_ARCH_X86)
    __asm {
       mov frame_pointer, ebp

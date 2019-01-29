@@ -55,6 +55,9 @@ static EGLBoolean
 dri2_x11_swap_interval(_EGLDriver *drv, _EGLDisplay *disp, _EGLSurface *surf,
                        EGLint interval);
 
+uint32_t
+dri2_format_for_depth(struct dri2_egl_display *dri2_dpy, uint32_t depth);
+
 static void
 swrastCreateDrawable(struct dri2_egl_display * dri2_dpy,
                      struct dri2_egl_surface * dri2_surf)
@@ -75,6 +78,7 @@ swrastCreateDrawable(struct dri2_egl_display * dri2_dpy,
    xcb_create_gc(dri2_dpy->conn, dri2_surf->swapgc, dri2_surf->drawable, mask, valgc);
    switch (dri2_surf->depth) {
       case 32:
+      case 30:
       case 24:
          dri2_surf->bytes_per_pixel = 4;
          break;
@@ -208,6 +212,36 @@ get_xcb_screen(xcb_screen_iterator_t iter, int screen)
     return NULL;
 }
 
+static xcb_visualtype_t *
+get_xcb_visualtype_for_depth(struct dri2_egl_display *dri2_dpy, int depth)
+{
+   xcb_visualtype_iterator_t visual_iter;
+   xcb_screen_t *screen = dri2_dpy->screen;
+   xcb_depth_iterator_t depth_iter = xcb_screen_allowed_depths_iterator(screen);
+
+   for (; depth_iter.rem; xcb_depth_next(&depth_iter)) {
+      if (depth_iter.data->depth != depth)
+         continue;
+
+      visual_iter = xcb_depth_visuals_iterator(depth_iter.data);
+      if (visual_iter.rem)
+         return visual_iter.data;
+   }
+
+   return NULL;
+}
+
+/* Get red channel mask for given depth. */
+unsigned int
+dri2_x11_get_red_mask_for_depth(struct dri2_egl_display *dri2_dpy, int depth)
+{
+   xcb_visualtype_t *visual = get_xcb_visualtype_for_depth(dri2_dpy, depth);
+
+   if (visual)
+      return visual->red_mask;
+
+   return 0;
+}
 
 /**
  * Called via eglCreateWindowSurface(), drv->API.CreateWindowSurface().
@@ -249,6 +283,11 @@ dri2_x11_create_surface(_EGLDriver *drv, _EGLDisplay *disp, EGLint type,
 
    config = dri2_get_dri_config(dri2_conf, type,
                                 dri2_surf->base.GLColorspace);
+
+   if (!config) {
+      _eglError(EGL_BAD_MATCH, "Unsupported surfacetype/colorspace configuration");
+      goto cleanup_pixmap;
+   }
 
    if (dri2_dpy->dri2) {
       dri2_surf->dri_drawable =
@@ -704,7 +743,6 @@ dri2_x11_connect(struct dri2_egl_display *dri2_dpy)
 
    if (dri2_dpy->driver_name == NULL) {
       close(dri2_dpy->fd);
-      free(dri2_dpy->driver_name);
       free(connect);
       return EGL_FALSE;
    }
@@ -783,13 +821,14 @@ dri2_x11_add_configs_for_visuals(struct dri2_egl_display *dri2_dpy,
                   config_count++;
 
             /* Allow a 24-bit RGB visual to match a 32-bit RGBA EGLConfig.
+             * Ditto for 30-bit RGB visuals to match a 32-bit RGBA EGLConfig.
              * Otherwise it will only match a 32-bit RGBA visual.  On a
              * composited window manager on X11, this will make all of the
              * EGLConfigs with destination alpha get blended by the
              * compositor.  This is probably not what the application
              * wants... especially on drivers that only have 32-bit RGBA
              * EGLConfigs! */
-            if (d.data->depth == 24) {
+            if (d.data->depth == 24 || d.data->depth == 30) {
                rgba_masks[3] =
                   ~(rgba_masks[0] | rgba_masks[1] | rgba_masks[2]);
                dri2_conf = dri2_add_config(disp, config, config_count + 1,
@@ -859,23 +898,22 @@ dri2_x11_swap_buffers_msc(_EGLDriver *drv, _EGLDisplay *disp, _EGLSurface *draw,
    xcb_dri2_swap_buffers_reply_t *reply;
    int64_t swap_count = -1;
 
-   /* No-op for a pixmap or pbuffer surface */
-   if (draw->Type == EGL_PIXMAP_BIT || draw->Type == EGL_PBUFFER_BIT)
-      return 0;
+   if (draw->SwapBehavior == EGL_BUFFER_PRESERVED || !dri2_dpy->swap_available) {
+      swap_count = dri2_copy_region(drv, disp, draw, dri2_surf->region) ? 0 : -1;
+   } else {
+      dri2_flush_drawable_for_swapbuffers(disp, draw);
 
-   if (draw->SwapBehavior == EGL_BUFFER_PRESERVED || !dri2_dpy->swap_available)
-      return dri2_copy_region(drv, disp, draw, dri2_surf->region) ? 0 : -1;
+      cookie = xcb_dri2_swap_buffers_unchecked(dri2_dpy->conn,
+                                               dri2_surf->drawable, msc_hi,
+                                               msc_lo, divisor_hi, divisor_lo,
+                                               remainder_hi, remainder_lo);
 
-   dri2_flush_drawable_for_swapbuffers(disp, draw);
+      reply = xcb_dri2_swap_buffers_reply(dri2_dpy->conn, cookie, NULL);
 
-   cookie = xcb_dri2_swap_buffers_unchecked(dri2_dpy->conn, dri2_surf->drawable,
-                  msc_hi, msc_lo, divisor_hi, divisor_lo, remainder_hi, remainder_lo);
-
-   reply = xcb_dri2_swap_buffers_reply(dri2_dpy->conn, cookie, NULL);
-
-   if (reply) {
-      swap_count = (((int64_t)reply->swap_hi) << 32) | reply->swap_lo;
-      free(reply);
+      if (reply) {
+         swap_count = combine_u32_into_u64(reply->swap_hi, reply->swap_lo);
+         free(reply);
+      }
    }
 
    /* Since we aren't watching for the server's invalidate events like we're
@@ -997,6 +1035,27 @@ dri2_x11_copy_buffers(_EGLDriver *drv, _EGLDisplay *disp, _EGLSurface *surf,
    return EGL_TRUE;
 }
 
+uint32_t
+dri2_format_for_depth(struct dri2_egl_display *dri2_dpy, uint32_t depth)
+{
+   switch (depth) {
+   case 16:
+      return __DRI_IMAGE_FORMAT_RGB565;
+   case 24:
+      return __DRI_IMAGE_FORMAT_XRGB8888;
+   case 30:
+      /* Different preferred formats for different hw */
+      if (dri2_x11_get_red_mask_for_depth(dri2_dpy, 30) == 0x3ff)
+         return __DRI_IMAGE_FORMAT_XBGR2101010;
+      else
+         return __DRI_IMAGE_FORMAT_XRGB2101010;
+   case 32:
+      return __DRI_IMAGE_FORMAT_ARGB8888;
+   default:
+      return __DRI_IMAGE_FORMAT_NONE;
+   }
+}
+
 static _EGLImage *
 dri2_create_image_khr_pixmap(_EGLDisplay *disp, _EGLContext *ctx,
 			     EGLClientBuffer buffer, const EGLint *attr_list)
@@ -1041,17 +1100,8 @@ dri2_create_image_khr_pixmap(_EGLDisplay *disp, _EGLContext *ctx,
       return NULL;
    }
 
-   switch (geometry_reply->depth) {
-   case 16:
-      format = __DRI_IMAGE_FORMAT_RGB565;
-      break;
-   case 24:
-      format = __DRI_IMAGE_FORMAT_XRGB8888;
-      break;
-   case 32:
-      format = __DRI_IMAGE_FORMAT_ARGB8888;
-      break;
-   default:
+   format = dri2_format_for_depth(dri2_dpy, geometry_reply->depth);
+   if (format == __DRI_IMAGE_FORMAT_NONE) {
       _eglError(EGL_BAD_PARAMETER,
 		"dri2_create_image_khr: unsupported pixmap depth");
       free(buffers_reply);
@@ -1135,7 +1185,8 @@ static const struct dri2_egl_display_vtbl dri2_x11_swrast_display_vtbl = {
    .set_damage_region = dri2_fallback_set_damage_region,
    .swap_buffers_region = dri2_fallback_swap_buffers_region,
    .post_sub_buffer = dri2_fallback_post_sub_buffer,
-   .copy_buffers = dri2_x11_copy_buffers,
+   /* XXX: should really implement this since X11 has pixmaps */
+   .copy_buffers = dri2_fallback_copy_buffers,
    .query_buffer_age = dri2_fallback_query_buffer_age,
    .query_surface = dri2_query_surface,
    .create_wayland_buffer_from_image = dri2_fallback_create_wayland_buffer_from_image,
@@ -1220,6 +1271,7 @@ disconnect:
 static EGLBoolean
 dri2_initialize_x11_swrast(_EGLDriver *drv, _EGLDisplay *disp)
 {
+   _EGLDevice *dev;
    struct dri2_egl_display *dri2_dpy;
 
    dri2_dpy = calloc(1, sizeof *dri2_dpy);
@@ -1229,6 +1281,14 @@ dri2_initialize_x11_swrast(_EGLDriver *drv, _EGLDisplay *disp)
    dri2_dpy->fd = -1;
    if (!dri2_get_xcb_connection(drv, disp, dri2_dpy))
       goto cleanup;
+
+   dev = _eglAddDevice(dri2_dpy->fd, true);
+   if (!dev) {
+      _eglError(EGL_NOT_INITIALIZED, "DRI2: failed to find EGLDevice");
+      goto cleanup;
+   }
+
+   disp->Device = dev;
 
    /*
     * Every hardware driver_name is set using strdup. Doing the same in
@@ -1298,6 +1358,7 @@ static const __DRIextension *dri3_image_loader_extensions[] = {
 static EGLBoolean
 dri2_initialize_x11_dri3(_EGLDriver *drv, _EGLDisplay *disp)
 {
+   _EGLDevice *dev;
    struct dri2_egl_display *dri2_dpy;
 
    dri2_dpy = calloc(1, sizeof *dri2_dpy);
@@ -1310,6 +1371,14 @@ dri2_initialize_x11_dri3(_EGLDriver *drv, _EGLDisplay *disp)
 
    if (!dri3_x11_connect(dri2_dpy))
       goto cleanup;
+
+   dev = _eglAddDevice(dri2_dpy->fd, false);
+   if (!dev) {
+      _eglError(EGL_NOT_INITIALIZED, "DRI2: failed to find EGLDevice");
+      goto cleanup;
+   }
+
+   disp->Device = dev;
 
    if (!dri2_load_driver_dri3(disp))
       goto cleanup;
@@ -1396,6 +1465,7 @@ static const __DRIextension *dri2_loader_extensions[] = {
 static EGLBoolean
 dri2_initialize_x11_dri2(_EGLDriver *drv, _EGLDisplay *disp)
 {
+   _EGLDevice *dev;
    struct dri2_egl_display *dri2_dpy;
 
    dri2_dpy = calloc(1, sizeof *dri2_dpy);
@@ -1408,6 +1478,14 @@ dri2_initialize_x11_dri2(_EGLDriver *drv, _EGLDisplay *disp)
 
    if (!dri2_x11_connect(dri2_dpy))
       goto cleanup;
+
+   dev = _eglAddDevice(dri2_dpy->fd, false);
+   if (!dev) {
+      _eglError(EGL_NOT_INITIALIZED, "DRI2: failed to find EGLDevice");
+      goto cleanup;
+   }
+
+   disp->Device = dev;
 
    if (!dri2_load_driver(disp))
       goto cleanup;
@@ -1460,7 +1538,7 @@ dri2_initialize_x11(_EGLDriver *drv, _EGLDisplay *disp)
 {
    EGLBoolean initialized = EGL_FALSE;
 
-   if (!disp->Options.UseFallback) {
+   if (!disp->Options.ForceSoftware) {
 #ifdef HAVE_DRI3
       if (!env_var_as_boolean("LIBGL_DRI3_DISABLE", false))
          initialized = dri2_initialize_x11_dri3(drv, disp);
@@ -1476,3 +1554,9 @@ dri2_initialize_x11(_EGLDriver *drv, _EGLDisplay *disp)
    return initialized;
 }
 
+void
+dri2_teardown_x11(struct dri2_egl_display *dri2_dpy)
+{
+   if (dri2_dpy->own_device)
+      xcb_disconnect(dri2_dpy->conn);
+}

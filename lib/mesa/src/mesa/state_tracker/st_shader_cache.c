@@ -26,9 +26,17 @@
 #include "st_program.h"
 #include "st_shader_cache.h"
 #include "compiler/glsl/program.h"
+#include "compiler/nir/nir.h"
+#include "compiler/nir/nir_serialize.h"
 #include "pipe/p_shader_tokens.h"
 #include "program/ir_to_mesa.h"
 #include "util/u_memory.h"
+
+void
+st_get_program_binary_driver_sha1(struct gl_context *ctx, uint8_t *sha1)
+{
+   disk_cache_compute_key(ctx->Cache, NULL, 0, sha1);
+}
 
 static void
 write_stream_out_to_cache(struct blob *blob,
@@ -39,24 +47,107 @@ write_stream_out_to_cache(struct blob *blob,
 }
 
 static void
-write_tgsi_to_cache(struct blob *blob, struct pipe_shader_state *tgsi,
-                    struct st_context *st, unsigned char *sha1,
-                    unsigned num_tokens)
+copy_blob_to_driver_cache_blob(struct blob *blob, struct gl_program *prog)
+{
+   prog->driver_cache_blob = ralloc_size(NULL, blob->size);
+   memcpy(prog->driver_cache_blob, blob->data, blob->size);
+   prog->driver_cache_blob_size = blob->size;
+}
+
+static void
+write_tgsi_to_cache(struct blob *blob, const struct tgsi_token *tokens,
+                    struct gl_program *prog, unsigned num_tokens)
 {
    blob_write_uint32(blob, num_tokens);
-   blob_write_bytes(blob, tgsi->tokens,
-                    num_tokens * sizeof(struct tgsi_token));
+   blob_write_bytes(blob, tokens, num_tokens * sizeof(struct tgsi_token));
+   copy_blob_to_driver_cache_blob(blob, prog);
+}
 
-   disk_cache_put(st->ctx->Cache, sha1, blob->data, blob->size, NULL);
+static void
+write_nir_to_cache(struct blob *blob, struct gl_program *prog)
+{
+   nir_serialize(blob, prog->nir);
+   copy_blob_to_driver_cache_blob(blob, prog);
+}
+
+static void
+st_serialise_ir_program(struct gl_context *ctx, struct gl_program *prog,
+                        bool nir)
+{
+   if (prog->driver_cache_blob)
+      return;
+
+   struct blob blob;
+   blob_init(&blob);
+
+   switch (prog->info.stage) {
+   case MESA_SHADER_VERTEX: {
+      struct st_vertex_program *stvp = (struct st_vertex_program *) prog;
+
+      blob_write_uint32(&blob, stvp->num_inputs);
+      blob_write_bytes(&blob, stvp->index_to_input,
+                       sizeof(stvp->index_to_input));
+      blob_write_bytes(&blob, stvp->input_to_index,
+                       sizeof(stvp->input_to_index));
+      blob_write_bytes(&blob, stvp->result_to_output,
+                       sizeof(stvp->result_to_output));
+
+      write_stream_out_to_cache(&blob, &stvp->tgsi);
+
+      if (nir)
+         write_nir_to_cache(&blob, prog);
+      else
+         write_tgsi_to_cache(&blob, stvp->tgsi.tokens, prog,
+                             stvp->num_tgsi_tokens);
+      break;
+   }
+   case MESA_SHADER_TESS_CTRL:
+   case MESA_SHADER_TESS_EVAL:
+   case MESA_SHADER_GEOMETRY: {
+      struct st_common_program *stcp = (struct st_common_program *) prog;
+
+      write_stream_out_to_cache(&blob, &stcp->tgsi);
+
+      if (nir)
+         write_nir_to_cache(&blob, prog);
+      else
+         write_tgsi_to_cache(&blob, stcp->tgsi.tokens, prog,
+                             stcp->num_tgsi_tokens);
+      break;
+   }
+   case MESA_SHADER_FRAGMENT: {
+      struct st_fragment_program *stfp = (struct st_fragment_program *) prog;
+
+      if (nir)
+         write_nir_to_cache(&blob, prog);
+      else
+         write_tgsi_to_cache(&blob, stfp->tgsi.tokens, prog,
+                             stfp->num_tgsi_tokens);
+      break;
+   }
+   case MESA_SHADER_COMPUTE: {
+      struct st_compute_program *stcp = (struct st_compute_program *) prog;
+
+      if (nir)
+         write_nir_to_cache(&blob, prog);
+      else
+         write_tgsi_to_cache(&blob, stcp->tgsi.prog, prog,
+                             stcp->num_tgsi_tokens);
+      break;
+   }
+   default:
+      unreachable("Unsupported stage");
+   }
+
+   blob_finish(&blob);
 }
 
 /**
  * Store tgsi and any other required state in on-disk shader cache.
  */
 void
-st_store_tgsi_in_disk_cache(struct st_context *st, struct gl_program *prog,
-                            struct pipe_shader_state *out_state,
-                            unsigned num_tokens)
+st_store_ir_in_disk_cache(struct st_context *st, struct gl_program *prog,
+                          bool nir)
 {
    if (!st->ctx->Cache)
       return;
@@ -68,61 +159,12 @@ st_store_tgsi_in_disk_cache(struct st_context *st, struct gl_program *prog,
    if (memcmp(prog->sh.data->sha1, zero, sizeof(prog->sh.data->sha1)) == 0)
       return;
 
-   unsigned char *sha1;
-   struct blob blob;
-   blob_init(&blob);
-
-   switch (prog->info.stage) {
-   case MESA_SHADER_VERTEX: {
-      struct st_vertex_program *stvp = (struct st_vertex_program *) prog;
-      sha1 = stvp->sha1;
-
-      blob_write_uint32(&blob, stvp->num_inputs);
-      blob_write_bytes(&blob, stvp->index_to_input,
-                       sizeof(stvp->index_to_input));
-      blob_write_bytes(&blob, stvp->result_to_output,
-                       sizeof(stvp->result_to_output));
-
-      write_stream_out_to_cache(&blob, &stvp->tgsi);
-      write_tgsi_to_cache(&blob, &stvp->tgsi, st, sha1, num_tokens);
-      break;
-   }
-   case MESA_SHADER_TESS_CTRL:
-   case MESA_SHADER_TESS_EVAL:
-   case MESA_SHADER_GEOMETRY: {
-      struct st_common_program *p = st_common_program(prog);
-      sha1 = p->sha1;
-
-      write_stream_out_to_cache(&blob, out_state);
-      write_tgsi_to_cache(&blob, out_state, st, sha1, num_tokens);
-      break;
-   }
-   case MESA_SHADER_FRAGMENT: {
-      struct st_fragment_program *stfp = (struct st_fragment_program *) prog;
-      sha1 = stfp->sha1;
-
-      write_tgsi_to_cache(&blob, &stfp->tgsi, st, sha1, num_tokens);
-      break;
-   }
-   case MESA_SHADER_COMPUTE: {
-      struct st_compute_program *stcp = (struct st_compute_program *) prog;
-      sha1 = stcp->sha1;
-
-      write_tgsi_to_cache(&blob, out_state, st, sha1, num_tokens);
-      break;
-   }
-   default:
-      unreachable("Unsupported stage");
-   }
+   st_serialise_ir_program(st->ctx, prog, nir);
 
    if (st->ctx->_Shader->Flags & GLSL_CACHE_INFO) {
-      char sha1_buf[41];
-      _mesa_sha1_format(sha1_buf, sha1);
-      fprintf(stderr, "putting %s tgsi_tokens in cache: %s\n",
-              _mesa_shader_stage_to_string(prog->info.stage), sha1_buf);
+      fprintf(stderr, "putting %s state tracker IR in cache\n",
+              _mesa_shader_stage_to_string(prog->info.stage));
    }
-
-   blob_finish(&blob);
 }
 
 static void
@@ -135,269 +177,277 @@ read_stream_out_from_cache(struct blob_reader *blob_reader,
 
 static void
 read_tgsi_from_cache(struct blob_reader *blob_reader,
-                     const struct tgsi_token **tokens)
+                     const struct tgsi_token **tokens,
+                     unsigned *num_tokens)
 {
-   uint32_t num_tokens  = blob_read_uint32(blob_reader);
-   unsigned tokens_size = num_tokens * sizeof(struct tgsi_token);
+   *num_tokens  = blob_read_uint32(blob_reader);
+   unsigned tokens_size = *num_tokens * sizeof(struct tgsi_token);
    *tokens = (const struct tgsi_token*) MALLOC(tokens_size);
    blob_copy_bytes(blob_reader, (uint8_t *) *tokens, tokens_size);
 }
 
+static void
+st_deserialise_ir_program(struct gl_context *ctx,
+                          struct gl_shader_program *shProg,
+                          struct gl_program *prog, bool nir)
+{
+   struct st_context *st = st_context(ctx);
+   size_t size = prog->driver_cache_blob_size;
+   uint8_t *buffer = (uint8_t *) prog->driver_cache_blob;
+   const struct nir_shader_compiler_options *options =
+      ctx->Const.ShaderCompilerOptions[prog->info.stage].NirOptions;
+
+   assert(prog->driver_cache_blob && prog->driver_cache_blob_size > 0);
+
+   struct blob_reader blob_reader;
+   blob_reader_init(&blob_reader, buffer, size);
+
+   switch (prog->info.stage) {
+   case MESA_SHADER_VERTEX: {
+      struct st_vertex_program *stvp = (struct st_vertex_program *) prog;
+
+      st_release_vp_variants(st, stvp);
+
+      stvp->num_inputs = blob_read_uint32(&blob_reader);
+      blob_copy_bytes(&blob_reader, (uint8_t *) stvp->index_to_input,
+                      sizeof(stvp->index_to_input));
+      blob_copy_bytes(&blob_reader, (uint8_t *) stvp->input_to_index,
+                      sizeof(stvp->input_to_index));
+      blob_copy_bytes(&blob_reader, (uint8_t *) stvp->result_to_output,
+                      sizeof(stvp->result_to_output));
+
+      read_stream_out_from_cache(&blob_reader, &stvp->tgsi);
+
+      if (nir) {
+         stvp->tgsi.type = PIPE_SHADER_IR_NIR;
+         stvp->shader_program = shProg;
+         stvp->tgsi.ir.nir = nir_deserialize(NULL, options, &blob_reader);
+         prog->nir = stvp->tgsi.ir.nir;
+      } else {
+         read_tgsi_from_cache(&blob_reader, &stvp->tgsi.tokens,
+                              &stvp->num_tgsi_tokens);
+      }
+
+      if (st->vp == stvp)
+         st->dirty |= ST_NEW_VERTEX_PROGRAM(st, stvp);
+
+      break;
+   }
+   case MESA_SHADER_TESS_CTRL: {
+      struct st_common_program *sttcp = st_common_program(prog);
+
+      st_release_basic_variants(st, sttcp->Base.Target,
+                                &sttcp->variants, &sttcp->tgsi);
+
+      read_stream_out_from_cache(&blob_reader, &sttcp->tgsi);
+
+      if (nir) {
+         sttcp->tgsi.type = PIPE_SHADER_IR_NIR;
+         sttcp->shader_program = shProg;
+         sttcp->tgsi.ir.nir = nir_deserialize(NULL, options, &blob_reader);
+         prog->nir = sttcp->tgsi.ir.nir;
+      } else {
+         read_tgsi_from_cache(&blob_reader, &sttcp->tgsi.tokens,
+                              &sttcp->num_tgsi_tokens);
+      }
+
+      if (st->tcp == sttcp)
+         st->dirty |= sttcp->affected_states;
+
+      break;
+   }
+   case MESA_SHADER_TESS_EVAL: {
+      struct st_common_program *sttep = st_common_program(prog);
+
+      st_release_basic_variants(st, sttep->Base.Target,
+                                &sttep->variants, &sttep->tgsi);
+
+      read_stream_out_from_cache(&blob_reader, &sttep->tgsi);
+
+      if (nir) {
+         sttep->tgsi.type = PIPE_SHADER_IR_NIR;
+         sttep->shader_program = shProg;
+         sttep->tgsi.ir.nir = nir_deserialize(NULL, options, &blob_reader);
+         prog->nir = sttep->tgsi.ir.nir;
+      } else {
+         read_tgsi_from_cache(&blob_reader, &sttep->tgsi.tokens,
+                              &sttep->num_tgsi_tokens);
+      }
+
+      if (st->tep == sttep)
+         st->dirty |= sttep->affected_states;
+
+      break;
+   }
+   case MESA_SHADER_GEOMETRY: {
+      struct st_common_program *stgp = st_common_program(prog);
+
+      st_release_basic_variants(st, stgp->Base.Target, &stgp->variants,
+                                &stgp->tgsi);
+
+      read_stream_out_from_cache(&blob_reader, &stgp->tgsi);
+
+      if (nir) {
+         stgp->tgsi.type = PIPE_SHADER_IR_NIR;
+         stgp->shader_program = shProg;
+         stgp->tgsi.ir.nir = nir_deserialize(NULL, options, &blob_reader);
+         prog->nir = stgp->tgsi.ir.nir;
+      } else {
+         read_tgsi_from_cache(&blob_reader, &stgp->tgsi.tokens,
+                              &stgp->num_tgsi_tokens);
+      }
+
+      if (st->gp == stgp)
+         st->dirty |= stgp->affected_states;
+
+      break;
+   }
+   case MESA_SHADER_FRAGMENT: {
+      struct st_fragment_program *stfp = (struct st_fragment_program *) prog;
+
+      st_release_fp_variants(st, stfp);
+
+      if (nir) {
+         stfp->tgsi.type = PIPE_SHADER_IR_NIR;
+         stfp->shader_program = shProg;
+         stfp->tgsi.ir.nir = nir_deserialize(NULL, options, &blob_reader);
+         prog->nir = stfp->tgsi.ir.nir;
+      } else {
+         read_tgsi_from_cache(&blob_reader, &stfp->tgsi.tokens,
+                              &stfp->num_tgsi_tokens);
+      }
+
+      if (st->fp == stfp)
+         st->dirty |= stfp->affected_states;
+
+      break;
+   }
+   case MESA_SHADER_COMPUTE: {
+      struct st_compute_program *stcp = (struct st_compute_program *) prog;
+
+      st_release_cp_variants(st, stcp);
+
+      if (nir) {
+         stcp->tgsi.ir_type = PIPE_SHADER_IR_NIR;
+         stcp->shader_program = shProg;
+         stcp->tgsi.prog = nir_deserialize(NULL, options, &blob_reader);
+         prog->nir = (nir_shader *) stcp->tgsi.prog;
+      } else {
+         read_tgsi_from_cache(&blob_reader,
+                              (const struct tgsi_token**) &stcp->tgsi.prog,
+                              &stcp->num_tgsi_tokens);
+      }
+
+      stcp->tgsi.req_local_mem = stcp->Base.info.cs.shared_size;
+      stcp->tgsi.req_private_mem = 0;
+      stcp->tgsi.req_input_mem = 0;
+
+      if (st->cp == stcp)
+         st->dirty |= stcp->affected_states;
+
+      break;
+   }
+   default:
+      unreachable("Unsupported stage");
+   }
+
+   /* Make sure we don't try to read more data than we wrote. This should
+    * never happen in release builds but its useful to have this check to
+    * catch development bugs.
+    */
+   if (blob_reader.current != blob_reader.end || blob_reader.overrun) {
+      assert(!"Invalid TGSI shader disk cache item!");
+
+      if (ctx->_Shader->Flags & GLSL_CACHE_INFO) {
+         fprintf(stderr, "Error reading program from cache (invalid "
+                 "TGSI cache item)\n");
+      }
+   }
+
+   st_set_prog_affected_state_flags(prog);
+   _mesa_associate_uniform_storage(ctx, shProg, prog, false);
+
+   /* Create Gallium shaders now instead of on demand. */
+   if (ST_DEBUG & DEBUG_PRECOMPILE ||
+       st->shader_has_one_variant[prog->info.stage])
+      st_precompile_shader_variant(st, prog);
+}
+
 bool
-st_load_tgsi_from_disk_cache(struct gl_context *ctx,
-                             struct gl_shader_program *prog)
+st_load_ir_from_disk_cache(struct gl_context *ctx,
+                           struct gl_shader_program *prog,
+                           bool nir)
 {
    if (!ctx->Cache)
       return false;
 
-   unsigned char *stage_sha1[MESA_SHADER_STAGES];
-   char sha1_buf[41];
-
-   /* Compute and store sha1 for each stage. These will be reused by the
-    * cache store pass if we fail to find the cached tgsi.
+   /* If we didn't load the GLSL metadata from cache then we could not have
+    * loaded the tgsi either.
     */
-   for (unsigned i = 0; i < MESA_SHADER_STAGES; i++) {
-      if (prog->_LinkedShaders[i] == NULL)
-         continue;
-
-      char *buf = ralloc_strdup(NULL, "tgsi_tokens ");
-      _mesa_sha1_format(sha1_buf,
-                        prog->_LinkedShaders[i]->Program->sh.data->sha1);
-      ralloc_strcat(&buf, sha1_buf);
-
-      struct gl_program *glprog = prog->_LinkedShaders[i]->Program;
-      switch (glprog->info.stage) {
-      case MESA_SHADER_VERTEX: {
-         struct st_vertex_program *stvp = (struct st_vertex_program *) glprog;
-         stage_sha1[i] = stvp->sha1;
-         ralloc_strcat(&buf, " vs");
-         disk_cache_compute_key(ctx->Cache, buf, strlen(buf), stage_sha1[i]);
-         break;
-      }
-      case MESA_SHADER_TESS_CTRL: {
-         struct st_common_program *stcp = st_common_program(glprog);
-         stage_sha1[i] = stcp->sha1;
-         ralloc_strcat(&buf, " tcs");
-         disk_cache_compute_key(ctx->Cache, buf, strlen(buf), stage_sha1[i]);
-         break;
-      }
-      case MESA_SHADER_TESS_EVAL: {
-         struct st_common_program *step = st_common_program(glprog);
-         stage_sha1[i] = step->sha1;
-         ralloc_strcat(&buf, " tes");
-         disk_cache_compute_key(ctx->Cache, buf, strlen(buf), stage_sha1[i]);
-         break;
-      }
-      case MESA_SHADER_GEOMETRY: {
-         struct st_common_program *stgp = st_common_program(glprog);
-         stage_sha1[i] = stgp->sha1;
-         ralloc_strcat(&buf, " gs");
-         disk_cache_compute_key(ctx->Cache, buf, strlen(buf), stage_sha1[i]);
-         break;
-      }
-      case MESA_SHADER_FRAGMENT: {
-         struct st_fragment_program *stfp =
-            (struct st_fragment_program *) glprog;
-         stage_sha1[i] = stfp->sha1;
-         ralloc_strcat(&buf, " fs");
-         disk_cache_compute_key(ctx->Cache, buf, strlen(buf), stage_sha1[i]);
-         break;
-      }
-      case MESA_SHADER_COMPUTE: {
-         struct st_compute_program *stcp =
-            (struct st_compute_program *) glprog;
-         stage_sha1[i] = stcp->sha1;
-         ralloc_strcat(&buf, " cs");
-         disk_cache_compute_key(ctx->Cache, buf, strlen(buf), stage_sha1[i]);
-         break;
-      }
-      default:
-         unreachable("Unsupported stage");
-      }
-
-      ralloc_free(buf);
-   }
-
-   /* Now that we have created the sha1 keys that will be used for writting to
-    * the tgsi cache fallback to the regular glsl to tgsi path if we didn't
-    * load the GLSL IR from cache. We do this as glsl to tgsi can alter things
-    * such as gl_program_parameter_list which holds things like uniforms.
-    */
-   if (prog->data->LinkStatus != linking_skipped)
+   if (prog->data->LinkStatus != LINKING_SKIPPED)
       return false;
 
-   uint8_t *buffer = NULL;
-   if (ctx->_Shader->Flags & GLSL_CACHE_FALLBACK) {
-      goto fallback_recompile;
-   }
-
-   struct st_context *st = st_context(ctx);
    for (unsigned i = 0; i < MESA_SHADER_STAGES; i++) {
       if (prog->_LinkedShaders[i] == NULL)
          continue;
 
-      unsigned char *sha1 = stage_sha1[i];
-      size_t size;
-      buffer = (uint8_t *) disk_cache_get(ctx->Cache, sha1, &size);
-      if (buffer) {
-         struct blob_reader blob_reader;
-         blob_reader_init(&blob_reader, buffer, size);
+      struct gl_program *glprog = prog->_LinkedShaders[i]->Program;
+      st_deserialise_ir_program(ctx, prog, glprog, nir);
 
-         struct gl_program *glprog = prog->_LinkedShaders[i]->Program;
-         switch (glprog->info.stage) {
-         case MESA_SHADER_VERTEX: {
-            struct st_vertex_program *stvp =
-               (struct st_vertex_program *) glprog;
+      /* We don't need the cached blob anymore so free it */
+      ralloc_free(glprog->driver_cache_blob);
+      glprog->driver_cache_blob = NULL;
+      glprog->driver_cache_blob_size = 0;
 
-            st_release_vp_variants(st, stvp);
-
-            stvp->num_inputs = blob_read_uint32(&blob_reader);
-            blob_copy_bytes(&blob_reader, (uint8_t *) stvp->index_to_input,
-                            sizeof(stvp->index_to_input));
-            blob_copy_bytes(&blob_reader, (uint8_t *) stvp->result_to_output,
-                            sizeof(stvp->result_to_output));
-
-            read_stream_out_from_cache(&blob_reader, &stvp->tgsi);
-            read_tgsi_from_cache(&blob_reader, &stvp->tgsi.tokens);
-
-            if (st->vp == stvp)
-               st->dirty |= ST_NEW_VERTEX_PROGRAM(st, stvp);
-
-            break;
-         }
-         case MESA_SHADER_TESS_CTRL: {
-            struct st_common_program *sttcp = st_common_program(glprog);
-
-            st_release_basic_variants(st, sttcp->Base.Target,
-                                      &sttcp->variants, &sttcp->tgsi);
-
-            read_stream_out_from_cache(&blob_reader, &sttcp->tgsi);
-            read_tgsi_from_cache(&blob_reader, &sttcp->tgsi.tokens);
-
-            if (st->tcp == sttcp)
-               st->dirty |= sttcp->affected_states;
-
-            break;
-         }
-         case MESA_SHADER_TESS_EVAL: {
-            struct st_common_program *sttep = st_common_program(glprog);
-
-            st_release_basic_variants(st, sttep->Base.Target,
-                                      &sttep->variants, &sttep->tgsi);
-
-            read_stream_out_from_cache(&blob_reader, &sttep->tgsi);
-            read_tgsi_from_cache(&blob_reader, &sttep->tgsi.tokens);
-
-            if (st->tep == sttep)
-               st->dirty |= sttep->affected_states;
-
-            break;
-         }
-         case MESA_SHADER_GEOMETRY: {
-            struct st_common_program *stgp = st_common_program(glprog);
-
-            st_release_basic_variants(st, stgp->Base.Target, &stgp->variants,
-                                      &stgp->tgsi);
-
-            read_stream_out_from_cache(&blob_reader, &stgp->tgsi);
-            read_tgsi_from_cache(&blob_reader, &stgp->tgsi.tokens);
-
-            if (st->gp == stgp)
-               st->dirty |= stgp->affected_states;
-
-            break;
-         }
-         case MESA_SHADER_FRAGMENT: {
-            struct st_fragment_program *stfp =
-               (struct st_fragment_program *) glprog;
-
-            st_release_fp_variants(st, stfp);
-
-            read_tgsi_from_cache(&blob_reader, &stfp->tgsi.tokens);
-
-            if (st->fp == stfp)
-               st->dirty |= stfp->affected_states;
-
-            break;
-         }
-         case MESA_SHADER_COMPUTE: {
-            struct st_compute_program *stcp =
-               (struct st_compute_program *) glprog;
-
-            st_release_cp_variants(st, stcp);
-
-            read_tgsi_from_cache(&blob_reader,
-                                 (const struct tgsi_token**) &stcp->tgsi.prog);
-
-            stcp->tgsi.req_local_mem = stcp->Base.info.cs.shared_size;
-            stcp->tgsi.req_private_mem = 0;
-            stcp->tgsi.req_input_mem = 0;
-
-            if (st->cp == stcp)
-                st->dirty |= stcp->affected_states;
-
-            break;
-         }
-         default:
-            unreachable("Unsupported stage");
-         }
-
-         if (blob_reader.current != blob_reader.end || blob_reader.overrun) {
-            /* Something very bad has gone wrong discard the item from the
-             * cache and rebuild/link from source.
-             */
-            assert(!"Invalid TGSI shader disk cache item!");
-
-            if (ctx->_Shader->Flags & GLSL_CACHE_INFO) {
-               fprintf(stderr, "Error reading program from cache (invalid "
-                       "TGSI cache item)\n");
-            }
-
-            disk_cache_remove(ctx->Cache, sha1);
-
-            goto fallback_recompile;
-         }
-
-         if (ctx->_Shader->Flags & GLSL_CACHE_INFO) {
-            _mesa_sha1_format(sha1_buf, sha1);
-            fprintf(stderr, "%s tgsi_tokens retrieved from cache: %s\n",
-                    _mesa_shader_stage_to_string(i), sha1_buf);
-         }
-
-         st_set_prog_affected_state_flags(glprog);
-         _mesa_associate_uniform_storage(ctx, prog, glprog, false);
-
-         /* Create Gallium shaders now instead of on demand. */
-         if (ST_DEBUG & DEBUG_PRECOMPILE ||
-             st->shader_has_one_variant[glprog->info.stage])
-            st_precompile_shader_variant(st, glprog);
-
-         free(buffer);
-      } else {
-         /* Failed to find a matching cached shader so fallback to recompile.
-          */
-         if (ctx->_Shader->Flags & GLSL_CACHE_INFO) {
-            fprintf(stderr, "TGSI cache item not found.\n");
-         }
-
-         goto fallback_recompile;
+      if (ctx->_Shader->Flags & GLSL_CACHE_INFO) {
+         fprintf(stderr, "%s state tracker IR retrieved from cache\n",
+                 _mesa_shader_stage_to_string(i));
       }
    }
 
    return true;
+}
 
-fallback_recompile:
-   free(buffer);
+void
+st_serialise_tgsi_program(struct gl_context *ctx, struct gl_program *prog)
+{
+   st_serialise_ir_program(ctx, prog, false);
+}
 
-   if (ctx->_Shader->Flags & GLSL_CACHE_INFO)
-      fprintf(stderr, "TGSI cache falling back to recompile.\n");
+void
+st_serialise_tgsi_program_binary(struct gl_context *ctx,
+                                 struct gl_shader_program *shProg,
+                                 struct gl_program *prog)
+{
+   st_serialise_ir_program(ctx, prog, false);
+}
 
-   for (unsigned i = 0; i < prog->NumShaders; i++) {
-      _mesa_glsl_compile_shader(ctx, prog->Shaders[i], false, false, true);
-   }
+void
+st_deserialise_tgsi_program(struct gl_context *ctx,
+                            struct gl_shader_program *shProg,
+                            struct gl_program *prog)
+{
+   st_deserialise_ir_program(ctx, shProg, prog, false);
+}
 
-   prog->data->skip_cache = true;
-   _mesa_glsl_link_shader(ctx, prog);
+void
+st_serialise_nir_program(struct gl_context *ctx, struct gl_program *prog)
+{
+   st_serialise_ir_program(ctx, prog, true);
+}
 
-   return true;
+void
+st_serialise_nir_program_binary(struct gl_context *ctx,
+                                struct gl_shader_program *shProg,
+                                struct gl_program *prog)
+{
+   st_serialise_ir_program(ctx, prog, true);
+}
+
+void
+st_deserialise_nir_program(struct gl_context *ctx,
+                           struct gl_shader_program *shProg,
+                           struct gl_program *prog)
+{
+   st_deserialise_ir_program(ctx, shProg, prog, true);
 }

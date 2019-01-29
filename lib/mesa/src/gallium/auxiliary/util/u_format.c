@@ -32,11 +32,11 @@
  * @author Jose Fonseca <jfonseca@vmware.com>
  */
 
-#include "u_math.h"
 #include "u_memory.h"
 #include "u_format.h"
 #include "u_format_s3tc.h"
 #include "u_surface.h"
+#include "util/u_math.h"
 
 #include "pipe/p_defines.h"
 
@@ -234,26 +234,6 @@ util_format_is_subsampled_422(enum pipe_format format)
       desc->block.height == 1 &&
       desc->block.bits == 32;
 }
-
-boolean
-util_format_is_supported(enum pipe_format format, unsigned bind)
-{
-   if (format >= PIPE_FORMAT_COUNT) {
-      return FALSE;
-   }
-
-#ifndef TEXTURE_FLOAT_ENABLED
-   if ((bind & PIPE_BIND_RENDER_TARGET) &&
-       format != PIPE_FORMAT_R9G9B9E5_FLOAT &&
-       format != PIPE_FORMAT_R11G11B10_FLOAT &&
-       util_format_is_float(format)) {
-      return FALSE;
-   }
-#endif
-
-   return TRUE;
-}
-
 
 /**
  * Calculates the MRD for the depth format. MRD is used in depth bias

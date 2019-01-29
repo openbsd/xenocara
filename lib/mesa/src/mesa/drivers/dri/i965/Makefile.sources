@@ -14,6 +14,7 @@ i965_FILES = \
 	brw_cs.h \
 	brw_curbe.c \
 	brw_defines.h \
+	brw_disk_cache.c \
 	brw_draw.c \
 	brw_draw.h \
 	brw_draw_upload.c \
@@ -21,6 +22,7 @@ i965_FILES = \
 	brw_ff_gs_emit.c \
 	brw_ff_gs.h \
 	brw_formatquery.c \
+	brw_generate_mipmap.c \
 	brw_gs.c \
 	brw_gs.h \
 	brw_gs_surface_state.c \
@@ -35,8 +37,11 @@ i965_FILES = \
 	brw_pipe_control.h \
 	brw_performance_query.h \
 	brw_performance_query.c \
+	brw_performance_query_mdapi.c \
+	brw_performance_query_metrics.h \
 	brw_program.c \
 	brw_program.h \
+	brw_program_binary.c \
 	brw_program_cache.c \
 	brw_primitive_restart.c \
 	brw_queryobj.c \
@@ -63,14 +68,12 @@ i965_FILES = \
 	gen4_blorp_exec.h \
 	gen6_clip_state.c \
 	gen6_constant_state.c \
-	gen6_depth_state.c \
 	gen6_multisample_state.c \
 	gen6_queryobj.c \
 	gen6_sampler_state.c \
 	gen6_sol.c \
 	gen6_urb.c \
 	gen7_l3_state.c \
-	gen7_misc_state.c \
 	gen7_sol_state.c \
 	gen7_urb.c \
 	gen8_depth_state.c \
@@ -107,10 +110,19 @@ i965_FILES = \
 	intel_tex_image.c \
 	intel_tex_obj.h \
 	intel_tex_validate.c \
-	intel_tiled_memcpy.c \
-	intel_tiled_memcpy.h \
 	intel_upload.c \
 	libdrm_macros.h
+
+intel_tiled_memcpy_FILES = \
+	intel_tiled_memcpy_normal.c \
+	intel_tiled_memcpy.h
+
+intel_tiled_memcpy_sse41_FILES = \
+	intel_tiled_memcpy_sse41.c \
+	intel_tiled_memcpy_sse41.h
+
+intel_tiled_memcpy_dep_FILES = \
+	intel_tiled_memcpy.c
 
 i965_gen4_FILES = \
 	genX_blorp_exec.c \
@@ -148,24 +160,25 @@ i965_gen10_FILES = \
 	genX_blorp_exec.c \
 	genX_state_upload.c
 
+i965_gen11_FILES = \
+	genX_blorp_exec.c \
+	genX_state_upload.c
+
 i965_oa_GENERATED_FILES = \
-	brw_oa_hsw.h \
-	brw_oa_hsw.c \
-	brw_oa_bdw.h \
-	brw_oa_bdw.c \
-	brw_oa_chv.h \
-	brw_oa_chv.c \
-	brw_oa_sklgt2.h \
-	brw_oa_sklgt2.c \
-	brw_oa_sklgt3.h \
-	brw_oa_sklgt3.c \
-	brw_oa_sklgt4.h \
-	brw_oa_sklgt4.c \
-	brw_oa_bxt.h \
-	brw_oa_bxt.c \
-	brw_oa_kblgt2.h \
-	brw_oa_kblgt2.c \
-	brw_oa_kblgt3.h \
-	brw_oa_kblgt3.c \
-	brw_oa_glk.h \
-	brw_oa_glk.c
+	brw_oa_metrics.c \
+	brw_oa_metrics.h
+
+i965_oa_xml_FILES = \
+	brw_oa_hsw.xml \
+	brw_oa_bdw.xml \
+	brw_oa_chv.xml \
+	brw_oa_sklgt2.xml \
+	brw_oa_sklgt3.xml \
+	brw_oa_sklgt4.xml \
+	brw_oa_bxt.xml \
+	brw_oa_kblgt2.xml \
+	brw_oa_kblgt3.xml \
+	brw_oa_glk.xml \
+	brw_oa_cflgt2.xml \
+	brw_oa_cflgt3.xml \
+	brw_oa_cnl.xml

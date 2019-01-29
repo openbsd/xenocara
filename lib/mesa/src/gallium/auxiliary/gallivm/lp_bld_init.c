@@ -32,7 +32,7 @@
 #include "util/u_debug.h"
 #include "util/u_memory.h"
 #include "util/simple_list.h"
-#include "os/os_time.h"
+#include "util/os_time.h"
 #include "lp_bld.h"
 #include "lp_bld_debug.h"
 #include "lp_bld_misc.h"
@@ -40,6 +40,9 @@
 
 #include <llvm-c/Analysis.h>
 #include <llvm-c/Transforms/Scalar.h>
+#if HAVE_LLVM >= 0x0700
+#include <llvm-c/Transforms/Utils.h>
+#endif
 #include <llvm-c/BitWriter.h>
 
 
@@ -56,6 +59,17 @@ static const bool use_mcjit = USE_MCJIT;
 static bool use_mcjit = FALSE;
 #endif
 
+unsigned gallivm_perf = 0;
+
+static const struct debug_named_value lp_bld_perf_flags[] = {
+   { "no_brilinear", GALLIVM_PERF_NO_BRILINEAR, "disable brilinear optimization" },
+   { "no_rho_approx", GALLIVM_PERF_NO_RHO_APPROX, "disable rho_approx optimization" },
+   { "no_quad_lod", GALLIVM_PERF_NO_QUAD_LOD, "disable quad_lod optimization" },
+   { "nopt",   GALLIVM_PERF_NO_OPT, "disable optimization passes to speed up shader compilation" },
+   { "no_filter_hacks", GALLIVM_PERF_NO_BRILINEAR | GALLIVM_PERF_NO_RHO_APPROX |
+     GALLIVM_PERF_NO_QUAD_LOD, "disable filter optimization hacks" },
+   DEBUG_NAMED_VALUE_END
+};
 
 #ifdef DEBUG
 unsigned gallivm_debug = 0;
@@ -64,11 +78,7 @@ static const struct debug_named_value lp_bld_debug_flags[] = {
    { "tgsi",   GALLIVM_DEBUG_TGSI, NULL },
    { "ir",     GALLIVM_DEBUG_IR, NULL },
    { "asm",    GALLIVM_DEBUG_ASM, NULL },
-   { "nopt",   GALLIVM_DEBUG_NO_OPT, NULL },
    { "perf",   GALLIVM_DEBUG_PERF, NULL },
-   { "no_brilinear", GALLIVM_DEBUG_NO_BRILINEAR, NULL },
-   { "no_rho_approx", GALLIVM_DEBUG_NO_RHO_APPROX, NULL },
-   { "no_quad_lod", GALLIVM_DEBUG_NO_QUAD_LOD, NULL },
    { "gc",     GALLIVM_DEBUG_GC, NULL },
    { "dumpbc", GALLIVM_DEBUG_DUMP_BC, NULL },
    DEBUG_NAMED_VALUE_END
@@ -133,14 +143,27 @@ create_pass_manager(struct gallivm_state *gallivm)
       free(td_str);
    }
 
-   if ((gallivm_debug & GALLIVM_DEBUG_NO_OPT) == 0) {
-      /* These are the passes currently listed in llvm-c/Transforms/Scalar.h,
-       * but there are more on SVN.
-       * TODO: Add more passes.
+   if ((gallivm_perf & GALLIVM_PERF_NO_OPT) == 0) {
+      /*
+       * TODO: Evaluate passes some more - keeping in mind
+       * both quality of generated code and compile times.
+       */
+      /*
+       * NOTE: if you change this, don't forget to change the output
+       * with GALLIVM_DEBUG_DUMP_BC in gallivm_compile_module.
        */
       LLVMAddScalarReplAggregatesPass(gallivm->passmgr);
-      LLVMAddLICMPass(gallivm->passmgr);
+      LLVMAddEarlyCSEPass(gallivm->passmgr);
       LLVMAddCFGSimplificationPass(gallivm->passmgr);
+      /*
+       * FIXME: LICM is potentially quite useful. However, for some
+       * rather crazy shaders the compile time can reach _hours_ per shader,
+       * due to licm implying lcssa (since llvm 3.5), which can take forever.
+       * Even for sane shaders, the cost of licm is rather high (and not just
+       * due to lcssa, licm itself too), though mostly only in cases when it
+       * can actually move things, so having to disable it is a pity.
+       * LLVMAddLICMPass(gallivm->passmgr);
+       */
       LLVMAddReassociatePass(gallivm->passmgr);
       LLVMAddPromoteMemoryToRegisterPass(gallivm->passmgr);
       LLVMAddConstantPropagationPass(gallivm->passmgr);
@@ -224,7 +247,7 @@ init_gallivm_engine(struct gallivm_state *gallivm)
       char *error = NULL;
       int ret;
 
-      if (gallivm_debug & GALLIVM_DEBUG_NO_OPT) {
+      if (gallivm_perf & GALLIVM_PERF_NO_OPT) {
          optlevel = None;
       }
       else {
@@ -404,6 +427,8 @@ lp_build_init(void)
    gallivm_debug = debug_get_option_gallivm_debug();
 #endif
 
+   gallivm_perf = debug_get_flags_option("GALLIVM_PERF", lp_bld_perf_flags, 0 );
+
    lp_set_target_options();
 
    util_cpu_detect();
@@ -565,6 +590,22 @@ gallivm_compile_module(struct gallivm_state *gallivm)
       gallivm->builder = NULL;
    }
 
+   /* Dump bitcode to a file */
+   if (gallivm_debug & GALLIVM_DEBUG_DUMP_BC) {
+      char filename[256];
+      assert(gallivm->module_name);
+      util_snprintf(filename, sizeof(filename), "ir_%s.bc", gallivm->module_name);
+      LLVMWriteBitcodeToFile(gallivm->module, filename);
+      debug_printf("%s written\n", filename);
+      debug_printf("Invoke as \"opt %s %s | llc -O%d %s%s\"\n",
+                   gallivm_debug & GALLIVM_PERF_NO_OPT ? "-mem2reg" :
+                   "-sroa -early-cse -simplifycfg -reassociate "
+                   "-mem2reg -constprop -instcombine -gvn",
+                   filename, gallivm_debug & GALLIVM_PERF_NO_OPT ? 0 : 2,
+                   (HAVE_LLVM >= 0x0305) ? "[-mcpu=<-mcpu option>] " : "",
+                   "[-mattr=<-mattr option(s)>]");
+   }
+
    if (gallivm_debug & GALLIVM_DEBUG_PERF)
       time_begin = os_time_get();
 
@@ -592,23 +633,10 @@ gallivm_compile_module(struct gallivm_state *gallivm)
 
    if (gallivm_debug & GALLIVM_DEBUG_PERF) {
       int64_t time_end = os_time_get();
-      int time_msec = (int)(time_end - time_begin) / 1000;
+      int time_msec = (int)((time_end - time_begin) / 1000);
       assert(gallivm->module_name);
       debug_printf("optimizing module %s took %d msec\n",
                    gallivm->module_name, time_msec);
-   }
-
-   /* Dump byte code to a file */
-   if (gallivm_debug & GALLIVM_DEBUG_DUMP_BC) {
-      char filename[256];
-      assert(gallivm->module_name);
-      util_snprintf(filename, sizeof(filename), "ir_%s.bc", gallivm->module_name);
-      LLVMWriteBitcodeToFile(gallivm->module, filename);
-      debug_printf("%s written\n", filename);
-      debug_printf("Invoke as \"llc %s%s -o - %s\"\n",
-                   (HAVE_LLVM >= 0x0305) ? "[-mcpu=<-mcpu option>] " : "",
-                   "[-mattr=<-mattr option(s)>]",
-                   filename);
    }
 
    if (use_mcjit) {

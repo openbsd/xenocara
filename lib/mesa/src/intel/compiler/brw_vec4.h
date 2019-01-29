@@ -45,8 +45,7 @@ brw_vec4_generate_assembly(const struct brw_compiler *compiler,
                            void *mem_ctx,
                            const nir_shader *nir,
                            struct brw_vue_prog_data *prog_data,
-                           const struct cfg_t *cfg,
-                           unsigned *out_assembly_size);
+                           const struct cfg_t *cfg);
 
 #ifdef __cplusplus
 } /* extern "C" */
@@ -72,7 +71,6 @@ public:
 		void *mem_ctx,
                 bool no_spills,
                 int shader_time_index);
-   virtual ~vec4_visitor();
 
    dst_reg dst_null_f()
    {

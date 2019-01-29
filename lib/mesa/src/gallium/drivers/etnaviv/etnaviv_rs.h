@@ -56,6 +56,7 @@ struct rs_state {
    uint32_t clear_bits;
    uint32_t clear_mode; /* VIVS_RS_CLEAR_CONTROL_MODE_XXX */
    uint32_t clear_value[4];
+   uint32_t tile_count;
    uint8_t aa;
    uint8_t endian_mode; /* ENDIAN_MODE_XXX */
 };
@@ -83,8 +84,8 @@ void
 etna_compile_rs_state(struct etna_context *ctx, struct compiled_rs_state *cs,
                       const struct rs_state *rs);
 
-/* modify the clear bits value in the compiled RS state */
+/* Context initialization for RS clear_blit functions. */
 void
-etna_modify_rs_clearbits(struct compiled_rs_state *cs, uint32_t clear_bits);
+etna_clear_blit_rs_init(struct pipe_context *pctx);
 
 #endif

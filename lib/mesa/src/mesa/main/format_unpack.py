@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 from mako.template import Template
 from sys import argv
@@ -42,6 +43,7 @@ string = """/*
 
 #include <stdint.h>
 
+#include "errors.h"
 #include "format_unpack.h"
 #include "format_utils.h"
 #include "macros.h"
@@ -320,7 +322,7 @@ _mesa_unpack_rgba_row(mesa_format format, GLuint n,
    case ${f.name}:
       for (i = 0; i < n; ++i) {
          unpack_float_${f.short_name()}(s, dst[i]);
-         s += ${f.block_size() / 8};
+         s += ${f.block_size() // 8};
       }
       break;
 %endfor
@@ -353,7 +355,7 @@ _mesa_unpack_ubyte_rgba_row(mesa_format format, GLuint n,
    case ${f.name}:
       for (i = 0; i < n; ++i) {
          unpack_ubyte_${f.short_name()}(s, dst[i]);
-         s += ${f.block_size() / 8};
+         s += ${f.block_size() // 8};
       }
       break;
 %endfor
@@ -395,7 +397,7 @@ _mesa_unpack_uint_rgba_row(mesa_format format, GLuint n,
    case ${f.name}:
       for (i = 0; i < n; ++i) {
          unpack_int_${f.short_name()}(s, dst[i]);
-         s += ${f.block_size() / 8};
+         s += ${f.block_size() // 8};
       }
       break;
 %endfor
@@ -888,6 +890,6 @@ _mesa_unpack_depth_stencil_row(mesa_format format, GLuint n,
 }
 """
 
-template = Template(string);
+template = Template(string, future_imports=['division']);
 
-print template.render(argv = argv[0:])
+print(template.render(argv = argv[0:]))

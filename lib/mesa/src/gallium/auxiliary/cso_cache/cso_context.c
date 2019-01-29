@@ -87,9 +87,8 @@ struct cso_context {
     */
    int max_sampler_seen;
 
-   struct pipe_vertex_buffer aux_vertex_buffer_current;
-   struct pipe_vertex_buffer aux_vertex_buffer_saved;
-   unsigned aux_vertex_buffer_index;
+   struct pipe_vertex_buffer vertex_buffer0_current;
+   struct pipe_vertex_buffer vertex_buffer0_saved;
 
    struct pipe_constant_buffer aux_constbuf_current[PIPE_SHADER_TYPES];
    struct pipe_constant_buffer aux_constbuf_saved[PIPE_SHADER_TYPES];
@@ -128,6 +127,10 @@ struct cso_context {
    struct pipe_stencil_ref stencil_ref, stencil_ref_saved;
 };
 
+struct pipe_context *cso_get_pipe_context(struct cso_context *cso)
+{
+   return cso->pipe;
+}
 
 static boolean delete_blend_state(struct cso_context *ctx, void *state)
 {
@@ -157,7 +160,7 @@ static boolean delete_depth_stencil_state(struct cso_context *ctx, void *state)
    return TRUE;
 }
 
-static boolean delete_sampler_state(struct cso_context *ctx, void *state)
+static boolean delete_sampler_state(UNUSED struct cso_context *ctx, void *state)
 {
    struct cso_sampler *cso = (struct cso_sampler *)state;
    if (cso->delete_state)
@@ -287,8 +290,7 @@ static void cso_init_vbuf(struct cso_context *cso, unsigned flags)
 
    /* Install u_vbuf if there is anything unsupported. */
    if (u_vbuf_get_caps(cso->pipe->screen, &caps, flags)) {
-      cso->vbuf = u_vbuf_create(cso->pipe, &caps,
-                                cso->aux_vertex_buffer_index);
+      cso->vbuf = u_vbuf_create(cso->pipe, &caps);
    }
 }
 
@@ -308,8 +310,6 @@ cso_create_context(struct pipe_context *pipe, unsigned u_vbuf_flags)
 
    ctx->pipe = pipe;
    ctx->sample_mask = ~0;
-
-   ctx->aux_vertex_buffer_index = 0; /* 0 for now */
 
    cso_init_vbuf(ctx, u_vbuf_flags);
 
@@ -403,16 +403,18 @@ void cso_destroy_context( struct cso_context *ctx )
          ctx->pipe->set_stream_output_targets(ctx->pipe, 0, NULL, NULL);
    }
 
-   for (i = 0; i < PIPE_MAX_SHADER_SAMPLER_VIEWS; i++) {
+   for (i = 0; i < ctx->nr_fragment_views; i++) {
       pipe_sampler_view_reference(&ctx->fragment_views[i], NULL);
+   }
+   for (i = 0; i < ctx->nr_fragment_views_saved; i++) {
       pipe_sampler_view_reference(&ctx->fragment_views_saved[i], NULL);
    }
 
    util_unreference_framebuffer_state(&ctx->fb);
    util_unreference_framebuffer_state(&ctx->fb_saved);
 
-   pipe_vertex_buffer_unreference(&ctx->aux_vertex_buffer_current);
-   pipe_vertex_buffer_unreference(&ctx->aux_vertex_buffer_saved);
+   pipe_vertex_buffer_unreference(&ctx->vertex_buffer0_current);
+   pipe_vertex_buffer_unreference(&ctx->vertex_buffer0_saved);
 
    for (i = 0; i < PIPE_SHADER_TYPES; i++) {
       pipe_resource_reference(&ctx->aux_constbuf_current[i].buffer, NULL);
@@ -587,6 +589,11 @@ enum pipe_error cso_set_rasterizer(struct cso_context *ctx,
                                                        CSO_RASTERIZER,
                                                        (void*)templ, key_size);
    void *handle = NULL;
+
+   /* We can't have both point_quad_rasterization (sprites) and point_smooth
+    * (round AA points) enabled at the same time.
+    */
+   assert(!(templ->point_quad_rasterization && templ->point_smooth));
 
    if (cso_hash_iter_is_null(iter)) {
       struct cso_rasterizer *cso = MALLOC(sizeof(struct cso_rasterizer));
@@ -1140,6 +1147,9 @@ void cso_set_vertex_buffers(struct cso_context *ctx,
 {
    struct u_vbuf *vbuf = ctx->vbuf;
 
+   if (!count)
+      return;
+
    if (vbuf) {
       u_vbuf_set_vertex_buffers(vbuf, start_slot, count, buffers);
       return;
@@ -1147,15 +1157,12 @@ void cso_set_vertex_buffers(struct cso_context *ctx,
 
    /* Save what's in the auxiliary slot, so that we can save and restore it
     * for meta ops. */
-   if (start_slot <= ctx->aux_vertex_buffer_index &&
-       start_slot+count > ctx->aux_vertex_buffer_index) {
+   if (start_slot == 0) {
       if (buffers) {
-         const struct pipe_vertex_buffer *vb =
-               buffers + (ctx->aux_vertex_buffer_index - start_slot);
-
-         pipe_vertex_buffer_reference(&ctx->aux_vertex_buffer_current, vb);
+         pipe_vertex_buffer_reference(&ctx->vertex_buffer0_current,
+                                      buffers);
       } else {
-         pipe_vertex_buffer_unreference(&ctx->aux_vertex_buffer_current);
+         pipe_vertex_buffer_unreference(&ctx->vertex_buffer0_current);
       }
    }
 
@@ -1163,39 +1170,32 @@ void cso_set_vertex_buffers(struct cso_context *ctx,
 }
 
 static void
-cso_save_aux_vertex_buffer_slot(struct cso_context *ctx)
+cso_save_vertex_buffer0(struct cso_context *ctx)
 {
    struct u_vbuf *vbuf = ctx->vbuf;
 
    if (vbuf) {
-      u_vbuf_save_aux_vertex_buffer_slot(vbuf);
+      u_vbuf_save_vertex_buffer0(vbuf);
       return;
    }
 
-   pipe_vertex_buffer_reference(&ctx->aux_vertex_buffer_saved,
-                                &ctx->aux_vertex_buffer_current);
+   pipe_vertex_buffer_reference(&ctx->vertex_buffer0_saved,
+                                &ctx->vertex_buffer0_current);
 }
 
 static void
-cso_restore_aux_vertex_buffer_slot(struct cso_context *ctx)
+cso_restore_vertex_buffer0(struct cso_context *ctx)
 {
    struct u_vbuf *vbuf = ctx->vbuf;
 
    if (vbuf) {
-      u_vbuf_restore_aux_vertex_buffer_slot(vbuf);
+      u_vbuf_restore_vertex_buffer0(vbuf);
       return;
    }
 
-   cso_set_vertex_buffers(ctx, ctx->aux_vertex_buffer_index, 1,
-                          &ctx->aux_vertex_buffer_saved);
-   pipe_vertex_buffer_unreference(&ctx->aux_vertex_buffer_saved);
+   cso_set_vertex_buffers(ctx, 0, 1, &ctx->vertex_buffer0_saved);
+   pipe_vertex_buffer_unreference(&ctx->vertex_buffer0_saved);
 }
-
-unsigned cso_get_aux_vertex_buffer_slot(struct cso_context *ctx)
-{
-   return ctx->aux_vertex_buffer_index;
-}
-
 
 
 void
@@ -1537,6 +1537,23 @@ cso_set_constant_buffer_resource(struct cso_context *cso,
 }
 
 void
+cso_set_constant_user_buffer(struct cso_context *cso,
+                             enum pipe_shader_type shader_stage,
+                             unsigned index, void *ptr, unsigned size)
+{
+   if (ptr) {
+      struct pipe_constant_buffer cb;
+      cb.buffer = NULL;
+      cb.buffer_offset = 0;
+      cb.buffer_size = size;
+      cb.user_buffer = ptr;
+      cso_set_constant_buffer(cso, shader_stage, index, &cb);
+   } else {
+      cso_set_constant_buffer(cso, shader_stage, index, NULL);
+   }
+}
+
+void
 cso_save_constant_buffer_slot0(struct cso_context *cso,
                                enum pipe_shader_type shader_stage)
 {
@@ -1567,7 +1584,7 @@ cso_save_state(struct cso_context *cso, unsigned state_mask)
    cso->saved_state = state_mask;
 
    if (state_mask & CSO_BIT_AUX_VERTEX_BUFFER_SLOT)
-      cso_save_aux_vertex_buffer_slot(cso);
+      cso_save_vertex_buffer0(cso);
    if (state_mask & CSO_BIT_BLEND)
       cso_save_blend(cso);
    if (state_mask & CSO_BIT_DEPTH_STENCIL_ALPHA)
@@ -1622,7 +1639,7 @@ cso_restore_state(struct cso_context *cso)
    assert(state_mask);
 
    if (state_mask & CSO_BIT_AUX_VERTEX_BUFFER_SLOT)
-      cso_restore_aux_vertex_buffer_slot(cso);
+      cso_restore_vertex_buffer0(cso);
    if (state_mask & CSO_BIT_BLEND)
       cso_restore_blend(cso);
    if (state_mask & CSO_BIT_DEPTH_STENCIL_ALPHA)
@@ -1676,6 +1693,12 @@ cso_draw_vbo(struct cso_context *cso,
              const struct pipe_draw_info *info)
 {
    struct u_vbuf *vbuf = cso->vbuf;
+
+   /* We can't have both indirect drawing and SO-vertex-count drawing */
+   assert(info->indirect == NULL || info->count_from_stream_output == NULL);
+
+   /* We can't have SO-vertex-count drawing with an index buffer */
+   assert(info->count_from_stream_output == NULL || info->index_size == 0);
 
    if (vbuf) {
       u_vbuf_draw_vbo(vbuf, info);

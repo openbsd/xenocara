@@ -58,10 +58,14 @@ DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 @HAVE_LIBDRM_TRUE@am__append_1 = \
 @HAVE_LIBDRM_TRUE@	$(LIBDRM_LIBS)
 
-@HAVE_DRISW_TRUE@am__append_2 = \
+@HAVE_PLATFORM_ANDROID_TRUE@am__append_2 = \
+@HAVE_PLATFORM_ANDROID_TRUE@	$(ANDROID_LIBS) \
+@HAVE_PLATFORM_ANDROID_TRUE@	$(BACKTRACE_LIBS)
+
+@HAVE_DRISW_TRUE@am__append_3 = \
 @HAVE_DRISW_TRUE@	$(top_builddir)/src/gallium/winsys/sw/dri/libswdri.la
 
-@HAVE_DRISW_KMS_TRUE@am__append_3 = \
+@HAVE_DRISW_KMS_TRUE@am__append_4 = \
 @HAVE_DRISW_KMS_TRUE@	$(top_builddir)/src/gallium/winsys/sw/kms-dri/libswkmsdri.la \
 @HAVE_DRISW_KMS_TRUE@	$(LIBDRM_LIBS)
 
@@ -87,40 +91,53 @@ CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 libfreedreno_la_LIBADD =
 am__objects_1 = freedreno_batch.lo freedreno_batch_cache.lo \
-	freedreno_context.lo freedreno_draw.lo freedreno_fence.lo \
-	freedreno_gmem.lo freedreno_program.lo freedreno_query.lo \
-	freedreno_query_acc.lo freedreno_query_hw.lo \
-	freedreno_query_sw.lo freedreno_resource.lo \
-	freedreno_screen.lo freedreno_state.lo freedreno_surface.lo \
-	freedreno_texture.lo freedreno_util.lo
+	freedreno_blitter.lo freedreno_context.lo freedreno_draw.lo \
+	freedreno_fence.lo freedreno_gmem.lo freedreno_program.lo \
+	freedreno_query.lo freedreno_query_acc.lo \
+	freedreno_query_hw.lo freedreno_query_sw.lo \
+	freedreno_resource.lo freedreno_screen.lo freedreno_state.lo \
+	freedreno_surface.lo freedreno_texture.lo freedreno_util.lo
 am__dirstamp = $(am__leading_dot)dirstamp
-am__objects_2 = a2xx/disasm-a2xx.lo a2xx/fd2_blend.lo \
+am__objects_2 = drm/freedreno_bo.lo drm/freedreno_bo_cache.lo \
+	drm/freedreno_device.lo drm/freedreno_pipe.lo \
+	drm/freedreno_ringbuffer.lo drm/msm_bo.lo drm/msm_device.lo \
+	drm/msm_pipe.lo drm/msm_ringbuffer.lo drm/msm_ringbuffer_sp.lo
+am__objects_3 = a2xx/disasm-a2xx.lo a2xx/fd2_blend.lo \
 	a2xx/fd2_compiler.lo a2xx/fd2_context.lo a2xx/fd2_draw.lo \
 	a2xx/fd2_emit.lo a2xx/fd2_gmem.lo a2xx/fd2_program.lo \
 	a2xx/fd2_rasterizer.lo a2xx/fd2_screen.lo a2xx/fd2_texture.lo \
 	a2xx/fd2_util.lo a2xx/fd2_zsa.lo a2xx/ir-a2xx.lo
-am__objects_3 = a3xx/fd3_blend.lo a3xx/fd3_context.lo a3xx/fd3_draw.lo \
+am__objects_4 = a3xx/fd3_blend.lo a3xx/fd3_context.lo a3xx/fd3_draw.lo \
 	a3xx/fd3_emit.lo a3xx/fd3_format.lo a3xx/fd3_gmem.lo \
 	a3xx/fd3_program.lo a3xx/fd3_query.lo a3xx/fd3_rasterizer.lo \
 	a3xx/fd3_screen.lo a3xx/fd3_texture.lo a3xx/fd3_zsa.lo
-am__objects_4 = a4xx/fd4_blend.lo a4xx/fd4_context.lo a4xx/fd4_draw.lo \
+am__objects_5 = a4xx/fd4_blend.lo a4xx/fd4_context.lo a4xx/fd4_draw.lo \
 	a4xx/fd4_emit.lo a4xx/fd4_format.lo a4xx/fd4_gmem.lo \
 	a4xx/fd4_program.lo a4xx/fd4_query.lo a4xx/fd4_rasterizer.lo \
 	a4xx/fd4_screen.lo a4xx/fd4_texture.lo a4xx/fd4_zsa.lo
-am__objects_5 = a5xx/fd5_blend.lo a5xx/fd5_compute.lo \
-	a5xx/fd5_context.lo a5xx/fd5_draw.lo a5xx/fd5_emit.lo \
-	a5xx/fd5_format.lo a5xx/fd5_gmem.lo a5xx/fd5_program.lo \
-	a5xx/fd5_query.lo a5xx/fd5_rasterizer.lo a5xx/fd5_screen.lo \
-	a5xx/fd5_texture.lo a5xx/fd5_zsa.lo
-am__objects_6 = ir3/disasm-a3xx.lo ir3/ir3.lo ir3/ir3_compiler_nir.lo \
-	ir3/ir3_compiler.lo ir3/ir3_cp.lo ir3/ir3_depth.lo \
-	ir3/ir3_group.lo ir3/ir3_legalize.lo ir3/ir3_nir.lo \
-	ir3/ir3_nir_lower_if_else.lo ir3/ir3_print.lo ir3/ir3_ra.lo \
-	ir3/ir3_sched.lo ir3/ir3_shader.lo
-am__objects_7 = ir3/ir3_nir_trig.lo
+am__objects_6 = a5xx/fd5_blend.lo a5xx/fd5_blitter.lo \
+	a5xx/fd5_compute.lo a5xx/fd5_context.lo a5xx/fd5_draw.lo \
+	a5xx/fd5_emit.lo a5xx/fd5_format.lo a5xx/fd5_gmem.lo \
+	a5xx/fd5_image.lo a5xx/fd5_perfcntr.lo a5xx/fd5_program.lo \
+	a5xx/fd5_query.lo a5xx/fd5_rasterizer.lo a5xx/fd5_resource.lo \
+	a5xx/fd5_screen.lo a5xx/fd5_texture.lo a5xx/fd5_zsa.lo
+am__objects_7 = a6xx/fd6_blend.lo a6xx/fd6_blitter.lo \
+	a6xx/fd6_context.lo a6xx/fd6_draw.lo a6xx/fd6_emit.lo \
+	a6xx/fd6_format.lo a6xx/fd6_gmem.lo a6xx/fd6_image.lo \
+	a6xx/fd6_program.lo a6xx/fd6_query.lo a6xx/fd6_rasterizer.lo \
+	a6xx/fd6_resource.lo a6xx/fd6_screen.lo a6xx/fd6_texture.lo \
+	a6xx/fd6_zsa.lo
+am__objects_8 = ir3/disasm-a3xx.lo ir3/ir3.lo ir3/ir3_cache.lo \
+	ir3/ir3_compiler_nir.lo ir3/ir3_compiler.lo ir3/ir3_cp.lo \
+	ir3/ir3_depth.lo ir3/ir3_group.lo ir3/ir3_legalize.lo \
+	ir3/ir3_nir.lo ir3/ir3_nir_lower_tg4_to_tex.lo \
+	ir3/ir3_print.lo ir3/ir3_ra.lo ir3/ir3_sched.lo \
+	ir3/ir3_shader.lo
+am__objects_9 = ir3/ir3_nir_trig.lo
 am_libfreedreno_la_OBJECTS = $(am__objects_1) $(am__objects_2) \
 	$(am__objects_3) $(am__objects_4) $(am__objects_5) \
-	$(am__objects_6) $(am__objects_7)
+	$(am__objects_6) $(am__objects_7) $(am__objects_8) \
+	$(am__objects_9)
 libfreedreno_la_OBJECTS = $(am_libfreedreno_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -131,16 +148,20 @@ am_ir3_compiler_OBJECTS = ir3/ir3_cmdline.$(OBJEXT)
 ir3_compiler_OBJECTS = $(am_ir3_compiler_OBJECTS)
 am__DEPENDENCIES_1 =
 @HAVE_LIBDRM_TRUE@am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
-am__DEPENDENCIES_3 = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+@HAVE_PLATFORM_ANDROID_TRUE@am__DEPENDENCIES_3 =  \
+@HAVE_PLATFORM_ANDROID_TRUE@	$(am__DEPENDENCIES_1) \
+@HAVE_PLATFORM_ANDROID_TRUE@	$(am__DEPENDENCIES_1)
+am__DEPENDENCIES_4 = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_2)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_2) \
+	$(am__DEPENDENCIES_3)
 ir3_compiler_DEPENDENCIES = libfreedreno.la \
 	$(top_builddir)/src/gallium/auxiliary/libgallium.la \
 	$(top_builddir)/src/compiler/nir/libnir.la \
 	$(top_builddir)/src/compiler/glsl/libstandalone.la \
 	$(top_builddir)/src/util/libmesautil.la \
 	$(top_builddir)/src/mesa/libmesagallium.la \
-	$(am__DEPENDENCIES_3) $(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_4) $(am__DEPENDENCIES_1)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -216,6 +237,8 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BACKTRACE_CFLAGS = @BACKTRACE_CFLAGS@
+BACKTRACE_LIBS = @BACKTRACE_LIBS@
 BSYMBOLIC = @BSYMBOLIC@
 CC = @CC@
 CCAS = @CCAS@
@@ -229,6 +252,7 @@ CLOVER_STD_OVERRIDE = @CLOVER_STD_OVERRIDE@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
+CXX11_CXXFLAGS = @CXX11_CXXFLAGS@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
@@ -262,8 +286,6 @@ EXEEXT = @EXEEXT@
 EXPAT_CFLAGS = @EXPAT_CFLAGS@
 EXPAT_LIBS = @EXPAT_LIBS@
 FGREP = @FGREP@
-FREEDRENO_CFLAGS = @FREEDRENO_CFLAGS@
-FREEDRENO_LIBS = @FREEDRENO_LIBS@
 GALLIUM_PIPE_LOADER_DEFINES = @GALLIUM_PIPE_LOADER_DEFINES@
 GBM_PC_LIB_PRIV = @GBM_PC_LIB_PRIV@
 GBM_PC_REQ_PRIV = @GBM_PC_REQ_PRIV@
@@ -282,8 +304,8 @@ GL_LIB_DEPS = @GL_LIB_DEPS@
 GL_PC_CFLAGS = @GL_PC_CFLAGS@
 GL_PC_LIB_PRIV = @GL_PC_LIB_PRIV@
 GL_PC_REQ_PRIV = @GL_PC_REQ_PRIV@
+GL_PKGCONF_LIB = @GL_PKGCONF_LIB@
 GREP = @GREP@
-HAVE_XF86VIDMODE = @HAVE_XF86VIDMODE@
 I915_CFLAGS = @I915_CFLAGS@
 I915_LIBS = @I915_LIBS@
 INDENT = @INDENT@
@@ -295,6 +317,7 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
+LD_BUILD_ID = @LD_BUILD_ID@
 LD_NO_UNDEFINED = @LD_NO_UNDEFINED@
 LEX = @LEX@
 LEXLIB = @LEXLIB@
@@ -332,7 +355,7 @@ MSVC2013_COMPAT_CFLAGS = @MSVC2013_COMPAT_CFLAGS@
 MSVC2013_COMPAT_CXXFLAGS = @MSVC2013_COMPAT_CXXFLAGS@
 NINE_MAJOR = @NINE_MAJOR@
 NINE_MINOR = @NINE_MINOR@
-NINE_TINY = @NINE_TINY@
+NINE_PATCH = @NINE_PATCH@
 NINE_VERSION = @NINE_VERSION@
 NM = @NM@
 NMEDIT = @NMEDIT@
@@ -345,6 +368,9 @@ OBJEXT = @OBJEXT@
 OMX_BELLAGIO_CFLAGS = @OMX_BELLAGIO_CFLAGS@
 OMX_BELLAGIO_LIBS = @OMX_BELLAGIO_LIBS@
 OMX_BELLAGIO_LIB_INSTALL_DIR = @OMX_BELLAGIO_LIB_INSTALL_DIR@
+OMX_TIZONIA_CFLAGS = @OMX_TIZONIA_CFLAGS@
+OMX_TIZONIA_LIBS = @OMX_TIZONIA_LIBS@
+OMX_TIZONIA_LIB_INSTALL_DIR = @OMX_TIZONIA_LIB_INSTALL_DIR@
 OPENCL_LIBNAME = @OPENCL_LIBNAME@
 OPENCL_VERSION = @OPENCL_VERSION@
 OSMESA_LIB = @OSMESA_LIB@
@@ -372,11 +398,16 @@ PTHREAD_CC = @PTHREAD_CC@
 PTHREAD_CFLAGS = @PTHREAD_CFLAGS@
 PTHREAD_LIBS = @PTHREAD_LIBS@
 PWR8_CFLAGS = @PWR8_CFLAGS@
-PYTHON2 = @PYTHON2@
+PYTHON = @PYTHON@
+PYTHON_EXEC_PREFIX = @PYTHON_EXEC_PREFIX@
+PYTHON_PLATFORM = @PYTHON_PLATFORM@
+PYTHON_PREFIX = @PYTHON_PREFIX@
+PYTHON_VERSION = @PYTHON_VERSION@
 RADEON_CFLAGS = @RADEON_CFLAGS@
 RADEON_LIBS = @RADEON_LIBS@
 RANLIB = @RANLIB@
 RM = @RM@
+SCANNER_ARG = @SCANNER_ARG@
 SED = @SED@
 SELINUX_CFLAGS = @SELINUX_CFLAGS@
 SELINUX_LIBS = @SELINUX_LIBS@
@@ -388,9 +419,10 @@ SSE41_CFLAGS = @SSE41_CFLAGS@
 STRIP = @STRIP@
 SWR_AVX2_CXXFLAGS = @SWR_AVX2_CXXFLAGS@
 SWR_AVX_CXXFLAGS = @SWR_AVX_CXXFLAGS@
-SWR_CXX11_CXXFLAGS = @SWR_CXX11_CXXFLAGS@
 SWR_KNL_CXXFLAGS = @SWR_KNL_CXXFLAGS@
 SWR_SKX_CXXFLAGS = @SWR_SKX_CXXFLAGS@
+V3D_SIMULATOR_CFLAGS = @V3D_SIMULATOR_CFLAGS@
+V3D_SIMULATOR_LIBS = @V3D_SIMULATOR_LIBS@
 VALGRIND_CFLAGS = @VALGRIND_CFLAGS@
 VALGRIND_LIBS = @VALGRIND_LIBS@
 VA_CFLAGS = @VA_CFLAGS@
@@ -398,8 +430,8 @@ VA_LIBS = @VA_LIBS@
 VA_LIB_INSTALL_DIR = @VA_LIB_INSTALL_DIR@
 VA_MAJOR = @VA_MAJOR@
 VA_MINOR = @VA_MINOR@
-VC5_SIMULATOR_CFLAGS = @VC5_SIMULATOR_CFLAGS@
-VC5_SIMULATOR_LIBS = @VC5_SIMULATOR_LIBS@
+VC4_CFLAGS = @VC4_CFLAGS@
+VC4_LIBS = @VC4_LIBS@
 VDPAU_CFLAGS = @VDPAU_CFLAGS@
 VDPAU_LIBS = @VDPAU_LIBS@
 VDPAU_LIB_INSTALL_DIR = @VDPAU_LIB_INSTALL_DIR@
@@ -413,7 +445,11 @@ VL_LIBS = @VL_LIBS@
 VULKAN_ICD_INSTALL_DIR = @VULKAN_ICD_INSTALL_DIR@
 WAYLAND_CLIENT_CFLAGS = @WAYLAND_CLIENT_CFLAGS@
 WAYLAND_CLIENT_LIBS = @WAYLAND_CLIENT_LIBS@
+WAYLAND_EGL_CFLAGS = @WAYLAND_EGL_CFLAGS@
+WAYLAND_EGL_LIBS = @WAYLAND_EGL_LIBS@
+WAYLAND_PROTOCOLS_CFLAGS = @WAYLAND_PROTOCOLS_CFLAGS@
 WAYLAND_PROTOCOLS_DATADIR = @WAYLAND_PROTOCOLS_DATADIR@
+WAYLAND_PROTOCOLS_LIBS = @WAYLAND_PROTOCOLS_LIBS@
 WAYLAND_SCANNER = @WAYLAND_SCANNER@
 WAYLAND_SCANNER_CFLAGS = @WAYLAND_SCANNER_CFLAGS@
 WAYLAND_SCANNER_LIBS = @WAYLAND_SCANNER_LIBS@
@@ -423,16 +459,20 @@ WNO_OVERRIDE_INIT = @WNO_OVERRIDE_INIT@
 X11_INCLUDES = @X11_INCLUDES@
 XA_MAJOR = @XA_MAJOR@
 XA_MINOR = @XA_MINOR@
-XA_TINY = @XA_TINY@
+XA_PATCH = @XA_PATCH@
 XA_VERSION = @XA_VERSION@
 XCB_DRI2_CFLAGS = @XCB_DRI2_CFLAGS@
 XCB_DRI2_LIBS = @XCB_DRI2_LIBS@
 XCB_DRI3_CFLAGS = @XCB_DRI3_CFLAGS@
 XCB_DRI3_LIBS = @XCB_DRI3_LIBS@
-XF86VIDMODE_CFLAGS = @XF86VIDMODE_CFLAGS@
-XF86VIDMODE_LIBS = @XF86VIDMODE_LIBS@
+XCB_DRI3_MODIFIERS_CFLAGS = @XCB_DRI3_MODIFIERS_CFLAGS@
+XCB_DRI3_MODIFIERS_LIBS = @XCB_DRI3_MODIFIERS_LIBS@
+XCB_RANDR_CFLAGS = @XCB_RANDR_CFLAGS@
+XCB_RANDR_LIBS = @XCB_RANDR_LIBS@
 XLIBGL_CFLAGS = @XLIBGL_CFLAGS@
 XLIBGL_LIBS = @XLIBGL_LIBS@
+XLIB_RANDR_CFLAGS = @XLIB_RANDR_CFLAGS@
+XLIB_RANDR_LIBS = @XLIB_RANDR_LIBS@
 XVMC_CFLAGS = @XVMC_CFLAGS@
 XVMC_LIBS = @XVMC_LIBS@
 XVMC_LIB_INSTALL_DIR = @XVMC_LIB_INSTALL_DIR@
@@ -487,9 +527,13 @@ mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
 pdfdir = @pdfdir@
+pkgpyexecdir = @pkgpyexecdir@
+pkgpythondir = @pkgpythondir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+pyexecdir = @pyexecdir@
+pythondir = @pythondir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -510,6 +554,8 @@ C_SOURCES := \
 	freedreno_batch.h \
 	freedreno_batch_cache.c \
 	freedreno_batch_cache.h \
+	freedreno_blitter.c \
+	freedreno_blitter.h \
 	freedreno_context.c \
 	freedreno_context.h \
 	freedreno_draw.c \
@@ -518,6 +564,7 @@ C_SOURCES := \
 	freedreno_fence.h \
 	freedreno_gmem.c \
 	freedreno_gmem.h \
+	freedreno_perfcntr.h \
 	freedreno_program.c \
 	freedreno_program.h \
 	freedreno_query.c \
@@ -540,6 +587,23 @@ C_SOURCES := \
 	freedreno_texture.h \
 	freedreno_util.c \
 	freedreno_util.h
+
+drm_SOURCES := \
+	drm/freedreno_bo.c \
+	drm/freedreno_bo_cache.c \
+	drm/freedreno_device.c \
+	drm/freedreno_drmif.h \
+	drm/freedreno_pipe.c \
+	drm/freedreno_priv.h \
+	drm/freedreno_ringbuffer.c \
+	drm/freedreno_ringbuffer.h \
+	drm/msm_bo.c \
+	drm/msm_device.c \
+	drm/msm_drm.h \
+	drm/msm_pipe.c \
+	drm/msm_priv.h \
+	drm/msm_ringbuffer.c \
+	drm/msm_ringbuffer_sp.c
 
 a2xx_SOURCES := \
 	a2xx/a2xx.xml.h \
@@ -630,6 +694,8 @@ a5xx_SOURCES := \
 	a5xx/a5xx.xml.h \
 	a5xx/fd5_blend.c \
 	a5xx/fd5_blend.h \
+	a5xx/fd5_blitter.c \
+	a5xx/fd5_blitter.h \
 	a5xx/fd5_compute.c \
 	a5xx/fd5_compute.h \
 	a5xx/fd5_context.c \
@@ -642,12 +708,17 @@ a5xx_SOURCES := \
 	a5xx/fd5_format.h \
 	a5xx/fd5_gmem.c \
 	a5xx/fd5_gmem.h \
+	a5xx/fd5_image.c \
+	a5xx/fd5_image.h \
+	a5xx/fd5_perfcntr.c \
 	a5xx/fd5_program.c \
 	a5xx/fd5_program.h \
 	a5xx/fd5_query.c \
 	a5xx/fd5_query.h \
 	a5xx/fd5_rasterizer.c \
 	a5xx/fd5_rasterizer.h \
+	a5xx/fd5_resource.c \
+	a5xx/fd5_resource.h \
 	a5xx/fd5_screen.c \
 	a5xx/fd5_screen.h \
 	a5xx/fd5_texture.c \
@@ -655,10 +726,45 @@ a5xx_SOURCES := \
 	a5xx/fd5_zsa.c \
 	a5xx/fd5_zsa.h
 
+a6xx_SOURCES := \
+	a6xx/a6xx.xml.h \
+	a6xx/fd6_blend.c \
+	a6xx/fd6_blend.h \
+	a6xx/fd6_blitter.c \
+	a6xx/fd6_blitter.h \
+	a6xx/fd6_context.c \
+	a6xx/fd6_context.h \
+	a6xx/fd6_draw.c \
+	a6xx/fd6_draw.h \
+	a6xx/fd6_emit.c \
+	a6xx/fd6_emit.h \
+	a6xx/fd6_format.c \
+	a6xx/fd6_format.h \
+	a6xx/fd6_gmem.c \
+	a6xx/fd6_gmem.h \
+	a6xx/fd6_image.c \
+	a6xx/fd6_image.h \
+	a6xx/fd6_program.c \
+	a6xx/fd6_program.h \
+	a6xx/fd6_query.c \
+	a6xx/fd6_query.h \
+	a6xx/fd6_rasterizer.c \
+	a6xx/fd6_rasterizer.h \
+	a6xx/fd6_resource.c \
+	a6xx/fd6_resource.h \
+	a6xx/fd6_screen.c \
+	a6xx/fd6_screen.h \
+	a6xx/fd6_texture.c \
+	a6xx/fd6_texture.h \
+	a6xx/fd6_zsa.c \
+	a6xx/fd6_zsa.h
+
 ir3_SOURCES := \
 	ir3/disasm-a3xx.c \
 	ir3/instr-a3xx.h \
 	ir3/ir3.c \
+	ir3/ir3_cache.c \
+	ir3/ir3_cache.h \
 	ir3/ir3_compiler_nir.c \
 	ir3/ir3_compiler.c \
 	ir3/ir3_compiler.h \
@@ -669,7 +775,7 @@ ir3_SOURCES := \
 	ir3/ir3_legalize.c \
 	ir3/ir3_nir.c \
 	ir3/ir3_nir.h \
-	ir3/ir3_nir_lower_if_else.c \
+	ir3/ir3_nir_lower_tg4_to_tex.c \
 	ir3/ir3_print.c \
 	ir3/ir3_ra.c \
 	ir3/ir3_sched.c \
@@ -729,7 +835,8 @@ GALLIUM_TARGET_CFLAGS = \
 	$(VISIBILITY_CFLAGS)
 
 GALLIUM_COMMON_LIB_DEPS = -lm $(LIBUNWIND_LIBS) $(LIBSENSORS_LIBS) \
-	$(CLOCK_LIB) $(PTHREAD_LIBS) $(DLOPEN_LIBS) $(am__append_1)
+	$(CLOCK_LIB) $(PTHREAD_LIBS) $(DLOPEN_LIBS) $(am__append_1) \
+	$(am__append_2)
 GALLIUM_WINSYS_CFLAGS = \
 	-I$(top_srcdir)/src \
 	-I$(top_srcdir)/include \
@@ -741,29 +848,32 @@ GALLIUM_WINSYS_CFLAGS = \
 GALLIUM_PIPE_LOADER_WINSYS_LIBS =  \
 	$(top_builddir)/src/gallium/winsys/sw/null/libws_null.la \
 	$(top_builddir)/src/gallium/winsys/sw/wrapper/libwsw.la \
-	$(am__append_2) $(am__append_3)
+	$(am__append_3) $(am__append_4)
 AM_CFLAGS = \
 	-Wno-packed-bitfield-compat \
 	-I$(top_srcdir)/src/gallium/drivers/freedreno/ir3 \
 	-I$(top_builddir)/src/compiler/nir \
 	-I$(top_srcdir)/src/compiler/nir \
 	$(GALLIUM_DRIVER_CFLAGS) \
-	$(FREEDRENO_CFLAGS)
+	$(LIBDRM_CFLAGS) \
+	$(VALGRIND_CFLAGS)
 
 MKDIR_GEN = $(AM_V_at)$(MKDIR_P) $(@D)
 noinst_LTLIBRARIES = libfreedreno.la
 libfreedreno_la_SOURCES = \
 	$(C_SOURCES) \
+	$(drm_SOURCES) \
 	$(a2xx_SOURCES) \
 	$(a3xx_SOURCES) \
 	$(a4xx_SOURCES) \
 	$(a5xx_SOURCES) \
+	$(a6xx_SOURCES) \
 	$(ir3_SOURCES) \
 	$(ir3_GENERATED_FILES)
 
 BUILT_SOURCES := $(ir3_GENERATED_FILES)
 CLEANFILES := $(BUILT_SOURCES)
-EXTRA_DIST = ir3/ir3_nir_trig.py
+EXTRA_DIST = ir3/ir3_nir_trig.py meson.build
 
 # XXX: Required due to the C++ sources in libnir
 nodist_EXTRA_ir3_compiler_SOURCES = dummy.cpp
@@ -778,7 +888,7 @@ ir3_compiler_LDADD = \
 	$(top_builddir)/src/util/libmesautil.la \
 	$(top_builddir)/src/mesa/libmesagallium.la \
 	$(GALLIUM_COMMON_LIB_DEPS) \
-	$(FREEDRENO_LIBS)
+	$(LIBDRM_LIBS)
 
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-am
@@ -827,6 +937,28 @@ clean-noinstLTLIBRARIES:
 	  echo rm -f $${locs}; \
 	  rm -f $${locs}; \
 	}
+drm/$(am__dirstamp):
+	@$(MKDIR_P) drm
+	@: > drm/$(am__dirstamp)
+drm/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) drm/$(DEPDIR)
+	@: > drm/$(DEPDIR)/$(am__dirstamp)
+drm/freedreno_bo.lo: drm/$(am__dirstamp) drm/$(DEPDIR)/$(am__dirstamp)
+drm/freedreno_bo_cache.lo: drm/$(am__dirstamp) \
+	drm/$(DEPDIR)/$(am__dirstamp)
+drm/freedreno_device.lo: drm/$(am__dirstamp) \
+	drm/$(DEPDIR)/$(am__dirstamp)
+drm/freedreno_pipe.lo: drm/$(am__dirstamp) \
+	drm/$(DEPDIR)/$(am__dirstamp)
+drm/freedreno_ringbuffer.lo: drm/$(am__dirstamp) \
+	drm/$(DEPDIR)/$(am__dirstamp)
+drm/msm_bo.lo: drm/$(am__dirstamp) drm/$(DEPDIR)/$(am__dirstamp)
+drm/msm_device.lo: drm/$(am__dirstamp) drm/$(DEPDIR)/$(am__dirstamp)
+drm/msm_pipe.lo: drm/$(am__dirstamp) drm/$(DEPDIR)/$(am__dirstamp)
+drm/msm_ringbuffer.lo: drm/$(am__dirstamp) \
+	drm/$(DEPDIR)/$(am__dirstamp)
+drm/msm_ringbuffer_sp.lo: drm/$(am__dirstamp) \
+	drm/$(DEPDIR)/$(am__dirstamp)
 a2xx/$(am__dirstamp):
 	@$(MKDIR_P) a2xx
 	@: > a2xx/$(am__dirstamp)
@@ -909,6 +1041,8 @@ a5xx/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) a5xx/$(DEPDIR)
 	@: > a5xx/$(DEPDIR)/$(am__dirstamp)
 a5xx/fd5_blend.lo: a5xx/$(am__dirstamp) a5xx/$(DEPDIR)/$(am__dirstamp)
+a5xx/fd5_blitter.lo: a5xx/$(am__dirstamp) \
+	a5xx/$(DEPDIR)/$(am__dirstamp)
 a5xx/fd5_compute.lo: a5xx/$(am__dirstamp) \
 	a5xx/$(DEPDIR)/$(am__dirstamp)
 a5xx/fd5_context.lo: a5xx/$(am__dirstamp) \
@@ -918,16 +1052,50 @@ a5xx/fd5_emit.lo: a5xx/$(am__dirstamp) a5xx/$(DEPDIR)/$(am__dirstamp)
 a5xx/fd5_format.lo: a5xx/$(am__dirstamp) \
 	a5xx/$(DEPDIR)/$(am__dirstamp)
 a5xx/fd5_gmem.lo: a5xx/$(am__dirstamp) a5xx/$(DEPDIR)/$(am__dirstamp)
+a5xx/fd5_image.lo: a5xx/$(am__dirstamp) a5xx/$(DEPDIR)/$(am__dirstamp)
+a5xx/fd5_perfcntr.lo: a5xx/$(am__dirstamp) \
+	a5xx/$(DEPDIR)/$(am__dirstamp)
 a5xx/fd5_program.lo: a5xx/$(am__dirstamp) \
 	a5xx/$(DEPDIR)/$(am__dirstamp)
 a5xx/fd5_query.lo: a5xx/$(am__dirstamp) a5xx/$(DEPDIR)/$(am__dirstamp)
 a5xx/fd5_rasterizer.lo: a5xx/$(am__dirstamp) \
+	a5xx/$(DEPDIR)/$(am__dirstamp)
+a5xx/fd5_resource.lo: a5xx/$(am__dirstamp) \
 	a5xx/$(DEPDIR)/$(am__dirstamp)
 a5xx/fd5_screen.lo: a5xx/$(am__dirstamp) \
 	a5xx/$(DEPDIR)/$(am__dirstamp)
 a5xx/fd5_texture.lo: a5xx/$(am__dirstamp) \
 	a5xx/$(DEPDIR)/$(am__dirstamp)
 a5xx/fd5_zsa.lo: a5xx/$(am__dirstamp) a5xx/$(DEPDIR)/$(am__dirstamp)
+a6xx/$(am__dirstamp):
+	@$(MKDIR_P) a6xx
+	@: > a6xx/$(am__dirstamp)
+a6xx/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) a6xx/$(DEPDIR)
+	@: > a6xx/$(DEPDIR)/$(am__dirstamp)
+a6xx/fd6_blend.lo: a6xx/$(am__dirstamp) a6xx/$(DEPDIR)/$(am__dirstamp)
+a6xx/fd6_blitter.lo: a6xx/$(am__dirstamp) \
+	a6xx/$(DEPDIR)/$(am__dirstamp)
+a6xx/fd6_context.lo: a6xx/$(am__dirstamp) \
+	a6xx/$(DEPDIR)/$(am__dirstamp)
+a6xx/fd6_draw.lo: a6xx/$(am__dirstamp) a6xx/$(DEPDIR)/$(am__dirstamp)
+a6xx/fd6_emit.lo: a6xx/$(am__dirstamp) a6xx/$(DEPDIR)/$(am__dirstamp)
+a6xx/fd6_format.lo: a6xx/$(am__dirstamp) \
+	a6xx/$(DEPDIR)/$(am__dirstamp)
+a6xx/fd6_gmem.lo: a6xx/$(am__dirstamp) a6xx/$(DEPDIR)/$(am__dirstamp)
+a6xx/fd6_image.lo: a6xx/$(am__dirstamp) a6xx/$(DEPDIR)/$(am__dirstamp)
+a6xx/fd6_program.lo: a6xx/$(am__dirstamp) \
+	a6xx/$(DEPDIR)/$(am__dirstamp)
+a6xx/fd6_query.lo: a6xx/$(am__dirstamp) a6xx/$(DEPDIR)/$(am__dirstamp)
+a6xx/fd6_rasterizer.lo: a6xx/$(am__dirstamp) \
+	a6xx/$(DEPDIR)/$(am__dirstamp)
+a6xx/fd6_resource.lo: a6xx/$(am__dirstamp) \
+	a6xx/$(DEPDIR)/$(am__dirstamp)
+a6xx/fd6_screen.lo: a6xx/$(am__dirstamp) \
+	a6xx/$(DEPDIR)/$(am__dirstamp)
+a6xx/fd6_texture.lo: a6xx/$(am__dirstamp) \
+	a6xx/$(DEPDIR)/$(am__dirstamp)
+a6xx/fd6_zsa.lo: a6xx/$(am__dirstamp) a6xx/$(DEPDIR)/$(am__dirstamp)
 ir3/$(am__dirstamp):
 	@$(MKDIR_P) ir3
 	@: > ir3/$(am__dirstamp)
@@ -936,6 +1104,7 @@ ir3/$(DEPDIR)/$(am__dirstamp):
 	@: > ir3/$(DEPDIR)/$(am__dirstamp)
 ir3/disasm-a3xx.lo: ir3/$(am__dirstamp) ir3/$(DEPDIR)/$(am__dirstamp)
 ir3/ir3.lo: ir3/$(am__dirstamp) ir3/$(DEPDIR)/$(am__dirstamp)
+ir3/ir3_cache.lo: ir3/$(am__dirstamp) ir3/$(DEPDIR)/$(am__dirstamp)
 ir3/ir3_compiler_nir.lo: ir3/$(am__dirstamp) \
 	ir3/$(DEPDIR)/$(am__dirstamp)
 ir3/ir3_compiler.lo: ir3/$(am__dirstamp) ir3/$(DEPDIR)/$(am__dirstamp)
@@ -944,7 +1113,7 @@ ir3/ir3_depth.lo: ir3/$(am__dirstamp) ir3/$(DEPDIR)/$(am__dirstamp)
 ir3/ir3_group.lo: ir3/$(am__dirstamp) ir3/$(DEPDIR)/$(am__dirstamp)
 ir3/ir3_legalize.lo: ir3/$(am__dirstamp) ir3/$(DEPDIR)/$(am__dirstamp)
 ir3/ir3_nir.lo: ir3/$(am__dirstamp) ir3/$(DEPDIR)/$(am__dirstamp)
-ir3/ir3_nir_lower_if_else.lo: ir3/$(am__dirstamp) \
+ir3/ir3_nir_lower_tg4_to_tex.lo: ir3/$(am__dirstamp) \
 	ir3/$(DEPDIR)/$(am__dirstamp)
 ir3/ir3_print.lo: ir3/$(am__dirstamp) ir3/$(DEPDIR)/$(am__dirstamp)
 ir3/ir3_ra.lo: ir3/$(am__dirstamp) ir3/$(DEPDIR)/$(am__dirstamp)
@@ -978,6 +1147,10 @@ mostlyclean-compile:
 	-rm -f a4xx/*.lo
 	-rm -f a5xx/*.$(OBJEXT)
 	-rm -f a5xx/*.lo
+	-rm -f a6xx/*.$(OBJEXT)
+	-rm -f a6xx/*.lo
+	-rm -f drm/*.$(OBJEXT)
+	-rm -f drm/*.lo
 	-rm -f ir3/*.$(OBJEXT)
 	-rm -f ir3/*.lo
 
@@ -987,6 +1160,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dummy.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/freedreno_batch.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/freedreno_batch_cache.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/freedreno_blitter.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/freedreno_context.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/freedreno_draw.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/freedreno_fence.Plo@am__quote@
@@ -1041,20 +1215,50 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@a4xx/$(DEPDIR)/fd4_texture.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@a4xx/$(DEPDIR)/fd4_zsa.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@a5xx/$(DEPDIR)/fd5_blend.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@a5xx/$(DEPDIR)/fd5_blitter.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@a5xx/$(DEPDIR)/fd5_compute.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@a5xx/$(DEPDIR)/fd5_context.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@a5xx/$(DEPDIR)/fd5_draw.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@a5xx/$(DEPDIR)/fd5_emit.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@a5xx/$(DEPDIR)/fd5_format.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@a5xx/$(DEPDIR)/fd5_gmem.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@a5xx/$(DEPDIR)/fd5_image.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@a5xx/$(DEPDIR)/fd5_perfcntr.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@a5xx/$(DEPDIR)/fd5_program.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@a5xx/$(DEPDIR)/fd5_query.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@a5xx/$(DEPDIR)/fd5_rasterizer.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@a5xx/$(DEPDIR)/fd5_resource.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@a5xx/$(DEPDIR)/fd5_screen.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@a5xx/$(DEPDIR)/fd5_texture.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@a5xx/$(DEPDIR)/fd5_zsa.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@a6xx/$(DEPDIR)/fd6_blend.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@a6xx/$(DEPDIR)/fd6_blitter.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@a6xx/$(DEPDIR)/fd6_context.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@a6xx/$(DEPDIR)/fd6_draw.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@a6xx/$(DEPDIR)/fd6_emit.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@a6xx/$(DEPDIR)/fd6_format.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@a6xx/$(DEPDIR)/fd6_gmem.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@a6xx/$(DEPDIR)/fd6_image.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@a6xx/$(DEPDIR)/fd6_program.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@a6xx/$(DEPDIR)/fd6_query.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@a6xx/$(DEPDIR)/fd6_rasterizer.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@a6xx/$(DEPDIR)/fd6_resource.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@a6xx/$(DEPDIR)/fd6_screen.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@a6xx/$(DEPDIR)/fd6_texture.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@a6xx/$(DEPDIR)/fd6_zsa.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@drm/$(DEPDIR)/freedreno_bo.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@drm/$(DEPDIR)/freedreno_bo_cache.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@drm/$(DEPDIR)/freedreno_device.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@drm/$(DEPDIR)/freedreno_pipe.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@drm/$(DEPDIR)/freedreno_ringbuffer.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@drm/$(DEPDIR)/msm_bo.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@drm/$(DEPDIR)/msm_device.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@drm/$(DEPDIR)/msm_pipe.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@drm/$(DEPDIR)/msm_ringbuffer.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@drm/$(DEPDIR)/msm_ringbuffer_sp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ir3/$(DEPDIR)/disasm-a3xx.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ir3/$(DEPDIR)/ir3.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@ir3/$(DEPDIR)/ir3_cache.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ir3/$(DEPDIR)/ir3_cmdline.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ir3/$(DEPDIR)/ir3_compiler.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ir3/$(DEPDIR)/ir3_compiler_nir.Plo@am__quote@
@@ -1063,7 +1267,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@ir3/$(DEPDIR)/ir3_group.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ir3/$(DEPDIR)/ir3_legalize.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ir3/$(DEPDIR)/ir3_nir.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@ir3/$(DEPDIR)/ir3_nir_lower_if_else.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@ir3/$(DEPDIR)/ir3_nir_lower_tg4_to_tex.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ir3/$(DEPDIR)/ir3_nir_trig.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ir3/$(DEPDIR)/ir3_print.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ir3/$(DEPDIR)/ir3_ra.Plo@am__quote@
@@ -1127,6 +1331,8 @@ clean-libtool:
 	-rm -rf a3xx/.libs a3xx/_libs
 	-rm -rf a4xx/.libs a4xx/_libs
 	-rm -rf a5xx/.libs a5xx/_libs
+	-rm -rf a6xx/.libs a6xx/_libs
+	-rm -rf drm/.libs drm/_libs
 	-rm -rf ir3/.libs ir3/_libs
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
@@ -1266,6 +1472,10 @@ distclean-generic:
 	-rm -f a4xx/$(am__dirstamp)
 	-rm -f a5xx/$(DEPDIR)/$(am__dirstamp)
 	-rm -f a5xx/$(am__dirstamp)
+	-rm -f a6xx/$(DEPDIR)/$(am__dirstamp)
+	-rm -f a6xx/$(am__dirstamp)
+	-rm -f drm/$(DEPDIR)/$(am__dirstamp)
+	-rm -f drm/$(am__dirstamp)
 	-rm -f ir3/$(DEPDIR)/$(am__dirstamp)
 	-rm -f ir3/$(am__dirstamp)
 
@@ -1279,7 +1489,7 @@ clean-am: clean-generic clean-libtool clean-noinstLTLIBRARIES \
 	clean-noinstPROGRAMS mostlyclean-am
 
 distclean: distclean-am
-	-rm -rf ./$(DEPDIR) a2xx/$(DEPDIR) a3xx/$(DEPDIR) a4xx/$(DEPDIR) a5xx/$(DEPDIR) ir3/$(DEPDIR)
+	-rm -rf ./$(DEPDIR) a2xx/$(DEPDIR) a3xx/$(DEPDIR) a4xx/$(DEPDIR) a5xx/$(DEPDIR) a6xx/$(DEPDIR) drm/$(DEPDIR) ir3/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -1325,7 +1535,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-	-rm -rf ./$(DEPDIR) a2xx/$(DEPDIR) a3xx/$(DEPDIR) a4xx/$(DEPDIR) a5xx/$(DEPDIR) ir3/$(DEPDIR)
+	-rm -rf ./$(DEPDIR) a2xx/$(DEPDIR) a3xx/$(DEPDIR) a4xx/$(DEPDIR) a5xx/$(DEPDIR) a6xx/$(DEPDIR) drm/$(DEPDIR) ir3/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
@@ -1360,9 +1570,9 @@ uninstall-am:
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	tags uninstall uninstall-am
 
-ir3/ir3_nir_trig.c: ir3/ir3_nir_trig.py $(top_srcdir)/src/compiler/nir/nir_algebraic.py
-	$(MKDIR_GEN)
-	$(AM_V_GEN) PYTHONPATH=$(top_srcdir)/src/compiler/nir $(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/ir3/ir3_nir_trig.py > $@ || ($(RM) $@; false)
+@REGEN_SOURCES_TRUE@ir3/ir3_nir_trig.c: ir3/ir3_nir_trig.py $(top_srcdir)/src/compiler/nir/nir_algebraic.py
+@REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
+@REGEN_SOURCES_TRUE@	$(AM_V_GEN) $(PYTHON) $(PYTHON_FLAGS) $(srcdir)/ir3/ir3_nir_trig.py -p $(top_srcdir)/src/compiler/nir > $@ || ($(RM) $@; false)
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

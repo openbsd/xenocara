@@ -27,7 +27,6 @@
  */
 
 #include <unistd.h>
-#include <fcntl.h>
 #include "xa_tracker.h"
 #include "xa_priv.h"
 #include "pipe/p_state.h"
@@ -104,7 +103,7 @@ xa_get_pipe_format(struct xa_tracker *xa, enum xa_formats xa_format)
 	break;
     case xa_format_a8:
         if (xa->screen->is_format_supported(xa->screen, PIPE_FORMAT_R8_UNORM,
-                                            PIPE_TEXTURE_2D, 0,
+                                            PIPE_TEXTURE_2D, 0, 0,
                                             stype_bind[xa_type_a] |
                                             PIPE_BIND_RENDER_TARGET))
             fdesc.format = PIPE_FORMAT_R8_UNORM;
@@ -134,7 +133,7 @@ xa_get_pipe_format(struct xa_tracker *xa, enum xa_formats xa_format)
 	break;
     case xa_format_yuv8:
         if (xa->screen->is_format_supported(xa->screen, PIPE_FORMAT_R8_UNORM,
-                                            PIPE_TEXTURE_2D, 0,
+                                            PIPE_TEXTURE_2D, 0, 0,
                                             stype_bind[xa_type_yuv_component]))
             fdesc.format = PIPE_FORMAT_R8_UNORM;
         else
@@ -153,15 +152,11 @@ xa_tracker_create(int drm_fd)
     struct xa_tracker *xa = calloc(1, sizeof(struct xa_tracker));
     enum xa_surface_type stype;
     unsigned int num_formats;
-    int fd;
 
     if (!xa)
 	return NULL;
 
-    if (drm_fd < 0 || (fd = fcntl(drm_fd, F_DUPFD_CLOEXEC, 3)) < 0)
-	goto out_no_fd;
-
-    if (pipe_loader_drm_probe_fd(&xa->dev, fd))
+    if (pipe_loader_drm_probe_fd(&xa->dev, drm_fd))
 	xa->screen = pipe_loader_create_screen(xa->dev);
 
     if (!xa->screen)
@@ -196,7 +191,7 @@ xa_tracker_create(int drm_fd)
                 xa_get_pipe_format(xa, xa_format);
 
 	    if (xa->screen->is_format_supported(xa->screen, fdesc.format,
-						PIPE_TEXTURE_2D, 0, bind)) {
+						PIPE_TEXTURE_2D, 0, 0, bind)) {
 		if (xa->format_map[stype][0] == 0)
 		    xa->format_map[stype][0] = num_formats;
 		xa->format_map[stype][1] = num_formats;
@@ -213,9 +208,7 @@ xa_tracker_create(int drm_fd)
  out_no_screen:
     if (xa->dev)
 	pipe_loader_release(&xa->dev, 1);
-    else
-	close(fd);
- out_no_fd:
+
     free(xa);
     return NULL;
 }
@@ -227,6 +220,7 @@ xa_tracker_destroy(struct xa_tracker *xa)
     xa_context_destroy(xa->default_ctx);
     xa->screen->destroy(xa->screen);
     pipe_loader_release(&xa->dev, 1);
+    /* CHECK: The XA API user preserves ownership of the original fd */
     free(xa);
 }
 
@@ -300,7 +294,7 @@ xa_format_check_supported(struct xa_tracker *xa,
 	bind |= PIPE_BIND_SCANOUT;
 
     if (!xa->screen->is_format_supported(xa->screen, fdesc.format,
-					 PIPE_TEXTURE_2D, 0, bind))
+					 PIPE_TEXTURE_2D, 0, 0, bind))
 	return -XA_ERR_INVAL;
 
     return XA_ERR_NONE;
@@ -311,12 +305,12 @@ handle_type(enum xa_handle_type type)
 {
     switch (type) {
     case xa_handle_type_kms:
-	return DRM_API_HANDLE_TYPE_KMS;
+	return WINSYS_HANDLE_TYPE_KMS;
     case xa_handle_type_fd:
-        return DRM_API_HANDLE_TYPE_FD;
+        return WINSYS_HANDLE_TYPE_FD;
     case xa_handle_type_shared:
     default:
-	return DRM_API_HANDLE_TYPE_SHARED;
+	return WINSYS_HANDLE_TYPE_SHARED;
     }
 }
 
@@ -364,7 +358,7 @@ surface_create(struct xa_tracker *xa,
 
     if (whandle)
 	srf->tex = xa->screen->resource_from_handle(xa->screen, template, whandle,
-                                                    PIPE_HANDLE_USAGE_READ_WRITE);
+                                                    PIPE_HANDLE_USAGE_FRAMEBUFFER_WRITE);
     else
 	srf->tex = xa->screen->resource_create(xa->screen, template);
     if (!srf->tex)
@@ -404,7 +398,7 @@ xa_surface_from_handle(struct xa_tracker *xa,
 		  uint32_t handle, uint32_t stride)
 {
     return xa_surface_from_handle2(xa, width, height, depth, stype, xa_format,
-                                   DRM_API_HANDLE_TYPE_SHARED, flags, handle,
+                                   WINSYS_HANDLE_TYPE_SHARED, flags, handle,
                                    stride);
 }
 
@@ -470,7 +464,7 @@ xa_surface_redefine(struct xa_surface *srf,
 	    return -XA_ERR_INVAL;
 
 	if (!xa->screen->is_format_supported(xa->screen, fdesc.format,
-					     PIPE_TEXTURE_2D, 0,
+					     PIPE_TEXTURE_2D, 0, 0,
 					     template->bind |
 					     PIPE_BIND_RENDER_TARGET))
 	    return -XA_ERR_INVAL;
@@ -552,7 +546,7 @@ xa_surface_handle(struct xa_surface *srf,
     whandle.type = handle_type(type);
     res = screen->resource_get_handle(screen, srf->xa->default_ctx->pipe,
                                       srf->tex, &whandle,
-                                      PIPE_HANDLE_USAGE_READ_WRITE);
+                                      PIPE_HANDLE_USAGE_FRAMEBUFFER_WRITE);
     if (!res)
 	return -XA_ERR_INVAL;
 

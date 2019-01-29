@@ -41,10 +41,12 @@
 
 static bool
 is_format_supported(struct pipe_screen *screen, enum pipe_format format,
-                    unsigned nr_samples, unsigned usage)
+                    unsigned nr_samples, unsigned nr_storage_samples,
+                    unsigned usage)
 {
    bool supported = screen->is_format_supported(screen, format, PIPE_TEXTURE_2D,
-                                                nr_samples, usage);
+                                                nr_samples, nr_storage_samples,
+                                                usage);
 
    /* for sampling, some formats can be emulated.. it doesn't matter that
     * the surface will have a format that the driver can't cope with because
@@ -55,14 +57,14 @@ is_format_supported(struct pipe_screen *screen, enum pipe_format format,
       if (format == PIPE_FORMAT_IYUV) {
          supported = screen->is_format_supported(screen, PIPE_FORMAT_R8_UNORM,
                                                  PIPE_TEXTURE_2D, nr_samples,
-                                                 usage);
+                                                 nr_storage_samples, usage);
       } else if (format == PIPE_FORMAT_NV12) {
          supported = screen->is_format_supported(screen, PIPE_FORMAT_R8_UNORM,
                                                  PIPE_TEXTURE_2D, nr_samples,
-                                                 usage) &&
+                                                 nr_storage_samples, usage) &&
                      screen->is_format_supported(screen, PIPE_FORMAT_R8G8_UNORM,
                                                  PIPE_TEXTURE_2D, nr_samples,
-                                                 usage);
+                                                 nr_storage_samples, usage);
       }
    }
 
@@ -91,7 +93,8 @@ st_get_egl_image(struct gl_context *ctx, GLeglImageOES image_handle,
       return false;
    }
 
-   if (!is_format_supported(screen, out->format, out->texture->nr_samples, usage)) {
+   if (!is_format_supported(screen, out->format, out->texture->nr_samples,
+                            out->texture->nr_storage_samples, usage)) {
       /* unable to specify a texture object using the specified EGL image */
       pipe_resource_reference(&out->texture, NULL);
       _mesa_error(ctx, GL_INVALID_OPERATION, "%s(format not supported)", error);
@@ -229,6 +232,8 @@ st_bind_egl_image(struct gl_context *ctx,
    pipe_resource_reference(&stObj->pt, stimg->texture);
    st_texture_release_all_sampler_views(st, stObj);
    pipe_resource_reference(&stImage->pt, stObj->pt);
+   if (st->pipe->screen->resource_changed)
+      st->pipe->screen->resource_changed(st->pipe->screen, stImage->pt);
 
    stObj->surface_format = stimg->format;
    stObj->level_override = stimg->level;

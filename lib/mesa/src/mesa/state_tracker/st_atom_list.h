@@ -10,7 +10,6 @@ ST_STATE(ST_NEW_VS_STATE, st_update_vp)
 
 ST_STATE(ST_NEW_POLY_STIPPLE, st_update_polygon_stipple)
 ST_STATE(ST_NEW_WINDOW_RECTANGLES, st_update_window_rectangles)
-ST_STATE(ST_NEW_BLEND, st_update_blend)
 ST_STATE(ST_NEW_BLEND_COLOR, st_update_blend_color)
 
 ST_STATE(ST_NEW_VS_SAMPLER_VIEWS, st_update_vertex_textures)
@@ -33,8 +32,9 @@ ST_STATE(ST_NEW_GS_IMAGES, st_bind_gs_images)
 ST_STATE(ST_NEW_FS_IMAGES, st_bind_fs_images)
 
 ST_STATE(ST_NEW_FB_STATE, st_update_framebuffer_state) /* depends on update_*_texture and bind_*_images */
+ST_STATE(ST_NEW_BLEND, st_update_blend) /* depends on update_framebuffer_state */
 ST_STATE(ST_NEW_RASTERIZER, st_update_rasterizer) /* depends on update_framebuffer_state */
-ST_STATE(ST_NEW_SAMPLE_MASK, st_update_sample_mask) /* depends on update_framebuffer_state */
+ST_STATE(ST_NEW_SAMPLE_STATE, st_update_sample_state) /* depends on update_framebuffer_state */
 ST_STATE(ST_NEW_SAMPLE_SHADING, st_update_sample_shading)
 ST_STATE(ST_NEW_SCISSOR, st_update_scissor) /* depends on update_framebuffer_state */
 ST_STATE(ST_NEW_VIEWPORT, st_update_viewport) /* depends on update_framebuffer_state */
@@ -65,6 +65,8 @@ ST_STATE(ST_NEW_GS_SSBOS, st_bind_gs_ssbos)
 
 ST_STATE(ST_NEW_PIXEL_TRANSFER, st_update_pixel_transfer)
 ST_STATE(ST_NEW_TESS_STATE, st_update_tess)
+
+ST_STATE(ST_NEW_HW_ATOMICS, st_bind_hw_atomic_buffers)
 
 /* this must be done after the vertex program update */
 ST_STATE(ST_NEW_VERTEX_ARRAYS, st_update_array)

@@ -31,9 +31,9 @@
 #ifndef DD_INCLUDED
 #define DD_INCLUDED
 
-/* THIS FILE ONLY INCLUDED BY mtypes.h !!!!! */
-
 #include "glheader.h"
+#include "formats.h"
+#include "menums.h"
 
 struct gl_bitmap_atlas;
 struct gl_buffer_object;
@@ -50,7 +50,11 @@ struct gl_shader_program;
 struct gl_texture_image;
 struct gl_texture_object;
 struct gl_memory_info;
+struct gl_transform_feedback_object;
+struct ati_fragment_shader;
 struct util_queue_monitoring;
+struct _mesa_prim;
+struct _mesa_index_buffer;
 
 /* GL_ARB_vertex_buffer_object */
 /* Modifies GL_MAP_UNSYNCHRONIZED_BIT to allow driver to fail (return
@@ -337,16 +341,6 @@ struct dd_function_table {
                                  GLsizei width, GLsizei height, GLsizei depth,
                                  GLenum format,
                                  GLsizei imageSize, const GLvoid *data);
-
-   /**
-    * Called by glGetCompressedTexImage.
-    */
-   void (*GetCompressedTexSubImage)(struct gl_context *ctx,
-                                    struct gl_texture_image *texImage,
-                                    GLint xoffset, GLint yoffset,
-                                    GLint zoffset, GLsizei width,
-                                    GLsizei height, GLsizei depth,
-                                    GLvoid *data);
    /*@}*/
 
    /**
@@ -435,7 +429,8 @@ struct dd_function_table {
 			   struct gl_renderbuffer *rb,
 			   GLuint x, GLuint y, GLuint w, GLuint h,
 			   GLbitfield mode,
-			   GLubyte **mapOut, GLint *rowStrideOut);
+			   GLubyte **mapOut, GLint *rowStrideOut,
+			   bool flip_y);
 
    void (*UnmapRenderbuffer)(struct gl_context *ctx,
 			     struct gl_renderbuffer *rb);
@@ -499,6 +494,85 @@ struct dd_function_table {
                            struct gl_shader_program *shader);
    /*@}*/
 
+
+   /**
+    * \name Draw functions.
+    */
+   /*@{*/
+   /**
+    * For indirect array drawing:
+    *
+    *    typedef struct {
+    *       GLuint count;
+    *       GLuint primCount;
+    *       GLuint first;
+    *       GLuint baseInstance; // in GL 4.2 and later, must be zero otherwise
+    *    } DrawArraysIndirectCommand;
+    *
+    * For indirect indexed drawing:
+    *
+    *    typedef struct {
+    *       GLuint count;
+    *       GLuint primCount;
+    *       GLuint firstIndex;
+    *       GLint  baseVertex;
+    *       GLuint baseInstance; // in GL 4.2 and later, must be zero otherwise
+    *    } DrawElementsIndirectCommand;
+    */
+
+   /**
+    * Draw a number of primitives.
+    * \param prims  array [nr_prims] describing what to draw (prim type,
+    *               vertex count, first index, instance count, etc).
+    * \param ib  index buffer for indexed drawing, NULL for array drawing
+    * \param index_bounds_valid  are min_index and max_index valid?
+    * \param min_index  lowest vertex index used
+    * \param max_index  highest vertex index used
+    * \param tfb_vertcount  if non-null, indicates which transform feedback
+    *                       object has the vertex count.
+    * \param tfb_stream  If called via DrawTransformFeedbackStream, specifies
+    *                    the vertex stream buffer from which to get the vertex
+    *                    count.
+    * \param indirect  If any prims are indirect, this specifies the buffer
+    *                  to find the "DrawArrays/ElementsIndirectCommand" data.
+    *                  This may be deprecated in the future
+    */
+   void (*Draw)(struct gl_context *ctx,
+                const struct _mesa_prim *prims, GLuint nr_prims,
+                const struct _mesa_index_buffer *ib,
+                GLboolean index_bounds_valid,
+                GLuint min_index, GLuint max_index,
+                struct gl_transform_feedback_object *tfb_vertcount,
+                unsigned tfb_stream, struct gl_buffer_object *indirect);
+
+
+   /**
+    * Draw a primitive, getting the vertex count, instance count, start
+    * vertex, etc. from a buffer object.
+    * \param mode  GL_POINTS, GL_LINES, GL_TRIANGLE_STRIP, etc.
+    * \param indirect_data  buffer to get "DrawArrays/ElementsIndirectCommand"
+    *                       data
+    * \param indirect_offset  offset of first primitive in indrect_data buffer
+    * \param draw_count  number of primitives to draw
+    * \param stride  stride, in bytes, between
+    *                "DrawArrays/ElementsIndirectCommand" objects
+    * \param indirect_draw_count_buffer  if non-NULL specifies a buffer to get
+    *                                    the real draw_count value.  Used for
+    *                                    GL_ARB_indirect_parameters.
+    * \param indirect_draw_count_offset  offset to the draw_count value in
+    *                                    indirect_draw_count_buffer
+    * \param ib  index buffer for indexed drawing, NULL otherwise.
+    */
+   void (*DrawIndirect)(struct gl_context *ctx, GLuint mode,
+                        struct gl_buffer_object *indirect_data,
+                        GLsizeiptr indirect_offset, unsigned draw_count,
+                        unsigned stride,
+                        struct gl_buffer_object *indirect_draw_count_buffer,
+                        GLsizeiptr indirect_draw_count_offset,
+                        const struct _mesa_index_buffer *ib);
+   /*@}*/
+
+
    /**
     * \name State-changing functions.
     *
@@ -538,9 +612,9 @@ struct dd_function_table {
    /** Specify mapping of depth values from NDC to window coordinates */
    void (*DepthRange)(struct gl_context *ctx);
    /** Specify the current buffer for writing */
-   void (*DrawBuffer)( struct gl_context *ctx, GLenum buffer );
-   /** Specify the buffers for writing for fragment programs*/
-   void (*DrawBuffers)(struct gl_context *ctx, GLsizei n, const GLenum *buffers);
+   void (*DrawBuffer)(struct gl_context *ctx);
+   /** Used to allocated any buffers with on-demand creation */
+   void (*DrawBufferAllocate)(struct gl_context *ctx);
    /** Enable or disable server-side gl capabilities */
    void (*Enable)(struct gl_context *ctx, GLenum cap, GLboolean state);
    /** Specify fog parameters */
@@ -559,7 +633,7 @@ struct dd_function_table {
    /** Specify the width of rasterized lines */
    void (*LineWidth)(struct gl_context *ctx, GLfloat width);
    /** Specify a logical pixel operation for color index rendering */
-   void (*LogicOpcode)(struct gl_context *ctx, GLenum opcode);
+   void (*LogicOpcode)(struct gl_context *ctx, enum gl_logicop_mode opcode);
    void (*PointParameterfv)(struct gl_context *ctx, GLenum pname,
                             const GLfloat *params);
    /** Specify the diameter of rasterized points */
@@ -713,6 +787,14 @@ struct dd_function_table {
    void (*DiscardFramebuffer)(struct gl_context *ctx,
                               GLenum target, GLsizei numAttachments,
                               const GLenum *attachments);
+
+   /**
+    * \name Functions for GL_ARB_sample_locations
+    */
+   void (*GetProgrammableSampleCaps)(struct gl_context *ctx,
+                                     const struct gl_framebuffer *fb,
+                                     GLuint *bits, GLuint *width, GLuint *height);
+   void (*EvaluateDepthValues)(struct gl_context *ctx);
 
    /**
     * \name Query objects
@@ -973,15 +1055,15 @@ struct dd_function_table {
    /** @} */
 
    /**
-    * GL_MESA_shader_framebuffer_fetch_non_coherent rendering barrier.
+    * GL_EXT_shader_framebuffer_fetch_non_coherent rendering barrier.
     *
     * On return from this function any framebuffer contents written by
     * previous draw commands are guaranteed to be visible from subsequent
     * fragment shader invocations using the
-    * MESA_shader_framebuffer_fetch_non_coherent interface.
+    * EXT_shader_framebuffer_fetch_non_coherent interface.
     */
    /** @{ */
-   void (*BlendBarrier)(struct gl_context *ctx);
+   void (*FramebufferFetchBarrier)(struct gl_context *ctx);
    /** @} */
 
    /**
@@ -1125,6 +1207,97 @@ struct dd_function_table {
                                 struct gl_memory_object *memObj,
                                 GLuint64 size,
                                 int fd);
+   /*@}*/
+
+   /**
+    * \name GL_ARB_get_program_binary
+    */
+   /*@{*/
+   /**
+    * Calls to retrieve/store a binary serialized copy of the current program.
+    */
+   void (*GetProgramBinaryDriverSHA1)(struct gl_context *ctx, uint8_t *sha1);
+
+   void (*ProgramBinarySerializeDriverBlob)(struct gl_context *ctx,
+                                            struct gl_shader_program *shProg,
+                                            struct gl_program *prog);
+
+   void (*ProgramBinaryDeserializeDriverBlob)(struct gl_context *ctx,
+                                              struct gl_shader_program *shProg,
+                                              struct gl_program *prog);
+   /*@}*/
+
+   /**
+    * \name GL_EXT_semaphore interface
+    */
+   /*@{*/
+  /**
+    * Called to allocate a new semaphore object. Drivers will usually
+    * allocate/return a subclass of gl_semaphore_object.
+    */
+   struct gl_semaphore_object * (*NewSemaphoreObject)(struct gl_context *ctx,
+                                                      GLuint name);
+   /**
+    * Called to delete/free a semaphore object. Drivers should free the
+    * object and any associated resources.
+    */
+   void (*DeleteSemaphoreObject)(struct gl_context *ctx,
+                                 struct gl_semaphore_object *semObj);
+
+   /**
+    * Introduce an operation to wait for the semaphore object in the GL
+    * server's command stream
+    */
+   void (*ServerWaitSemaphoreObject)(struct gl_context *ctx,
+                                     struct gl_semaphore_object *semObj,
+                                     GLuint numBufferBarriers,
+                                     struct gl_buffer_object **bufObjs,
+                                     GLuint numTextureBarriers,
+                                     struct gl_texture_object **texObjs,
+                                     const GLenum *srcLayouts);
+
+   /**
+    * Introduce an operation to signal the semaphore object in the GL
+    * server's command stream
+    */
+   void (*ServerSignalSemaphoreObject)(struct gl_context *ctx,
+                                       struct gl_semaphore_object *semObj,
+                                       GLuint numBufferBarriers,
+                                       struct gl_buffer_object **bufObjs,
+                                       GLuint numTextureBarriers,
+                                       struct gl_texture_object **texObjs,
+                                       const GLenum *dstLayouts);
+   /*@}*/
+
+   /**
+    * \name GL_EXT_semaphore_fd interface
+    */
+   /*@{*/
+   /**
+    * Called to import a semaphore object. The caller relinquishes ownership
+    * of fd after the call returns.
+    *
+    * Accessing fd after ImportSemaphoreFd returns results in undefined
+    * behaviour. This is consistent with EXT_semaphore_fd.
+    */
+   void (*ImportSemaphoreFd)(struct gl_context *ctx,
+                                struct gl_semaphore_object *semObj,
+                                int fd);
+   /*@}*/
+
+   /**
+    * \name Disk shader cache functions
+    */
+   /*@{*/
+   /**
+    * Called to initialize gl_program::driver_cache_blob (and size) with a
+    * ralloc allocated buffer.
+    *
+    * This buffer will be saved and restored as part of the gl_program
+    * serialization and deserialization.
+    */
+   void (*ShaderCacheSerializeDriverBlob)(struct gl_context *ctx,
+                                          struct gl_program *prog);
    /*@}*/
 };
 

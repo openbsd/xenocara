@@ -38,11 +38,7 @@
 #include "addrobject.h"
 #include "addrelemlib.h"
 
-#if BRAHMA_BUILD
-#include "amdgpu_id.h"
-#else
-#include "atiid.h"
-#endif
+#include "amdgpu_asic_addr.h"
 
 #ifndef CIASICIDGFXENGINE_R600
 #define CIASICIDGFXENGINE_R600 0x00000006
@@ -128,6 +124,123 @@ enum BankSwapSize
 
 /**
 ****************************************************************************************************
+* @brief Enums that define max compressed fragments config
+****************************************************************************************************
+*/
+enum NumMaxCompressedFragmentsConfig
+{
+    ADDR_CONFIG_1_MAX_COMPRESSED_FRAGMENTS   = 0x00000000,
+    ADDR_CONFIG_2_MAX_COMPRESSED_FRAGMENTS   = 0x00000001,
+    ADDR_CONFIG_4_MAX_COMPRESSED_FRAGMENTS   = 0x00000002,
+    ADDR_CONFIG_8_MAX_COMPRESSED_FRAGMENTS   = 0x00000003,
+};
+
+/**
+****************************************************************************************************
+* @brief Enums that define num pipes config
+****************************************************************************************************
+*/
+enum NumPipesConfig
+{
+    ADDR_CONFIG_1_PIPE                       = 0x00000000,
+    ADDR_CONFIG_2_PIPE                       = 0x00000001,
+    ADDR_CONFIG_4_PIPE                       = 0x00000002,
+    ADDR_CONFIG_8_PIPE                       = 0x00000003,
+    ADDR_CONFIG_16_PIPE                      = 0x00000004,
+    ADDR_CONFIG_32_PIPE                      = 0x00000005,
+    ADDR_CONFIG_64_PIPE                      = 0x00000006,
+};
+
+/**
+****************************************************************************************************
+* @brief Enums that define num banks config
+****************************************************************************************************
+*/
+enum NumBanksConfig
+{
+    ADDR_CONFIG_1_BANK                       = 0x00000000,
+    ADDR_CONFIG_2_BANK                       = 0x00000001,
+    ADDR_CONFIG_4_BANK                       = 0x00000002,
+    ADDR_CONFIG_8_BANK                       = 0x00000003,
+    ADDR_CONFIG_16_BANK                      = 0x00000004,
+};
+
+/**
+****************************************************************************************************
+* @brief Enums that define num rb per shader engine config
+****************************************************************************************************
+*/
+enum NumRbPerShaderEngineConfig
+{
+    ADDR_CONFIG_1_RB_PER_SHADER_ENGINE       = 0x00000000,
+    ADDR_CONFIG_2_RB_PER_SHADER_ENGINE       = 0x00000001,
+    ADDR_CONFIG_4_RB_PER_SHADER_ENGINE       = 0x00000002,
+};
+
+/**
+****************************************************************************************************
+* @brief Enums that define num shader engines config
+****************************************************************************************************
+*/
+enum NumShaderEnginesConfig
+{
+    ADDR_CONFIG_1_SHADER_ENGINE              = 0x00000000,
+    ADDR_CONFIG_2_SHADER_ENGINE              = 0x00000001,
+    ADDR_CONFIG_4_SHADER_ENGINE              = 0x00000002,
+    ADDR_CONFIG_8_SHADER_ENGINE              = 0x00000003,
+};
+
+/**
+****************************************************************************************************
+* @brief Enums that define pipe interleave size config
+****************************************************************************************************
+*/
+enum PipeInterleaveSizeConfig
+{
+    ADDR_CONFIG_PIPE_INTERLEAVE_256B         = 0x00000000,
+    ADDR_CONFIG_PIPE_INTERLEAVE_512B         = 0x00000001,
+    ADDR_CONFIG_PIPE_INTERLEAVE_1KB          = 0x00000002,
+    ADDR_CONFIG_PIPE_INTERLEAVE_2KB          = 0x00000003,
+};
+
+/**
+****************************************************************************************************
+* @brief Enums that define row size config
+****************************************************************************************************
+*/
+enum RowSizeConfig
+{
+    ADDR_CONFIG_1KB_ROW                      = 0x00000000,
+    ADDR_CONFIG_2KB_ROW                      = 0x00000001,
+    ADDR_CONFIG_4KB_ROW                      = 0x00000002,
+};
+
+/**
+****************************************************************************************************
+* @brief Enums that define bank interleave size config
+****************************************************************************************************
+*/
+enum BankInterleaveSizeConfig
+{
+    ADDR_CONFIG_BANK_INTERLEAVE_1            = 0x00000000,
+    ADDR_CONFIG_BANK_INTERLEAVE_2            = 0x00000001,
+    ADDR_CONFIG_BANK_INTERLEAVE_4            = 0x00000002,
+    ADDR_CONFIG_BANK_INTERLEAVE_8            = 0x00000003,
+};
+
+/**
+****************************************************************************************************
+* @brief Enums that define engine tile size config
+****************************************************************************************************
+*/
+enum ShaderEngineTileSizeConfig
+{
+    ADDR_CONFIG_SE_TILE_16                   = 0x00000000,
+    ADDR_CONFIG_SE_TILE_32                   = 0x00000001,
+};
+
+/**
+****************************************************************************************************
 * @brief This class contains asic independent address lib functionalities
 ****************************************************************************************************
 */
@@ -169,14 +282,38 @@ public:
 
     BOOL_32 GetExportNorm(const ELEM_GETEXPORTNORM_INPUT* pIn) const;
 
-    ADDR_E_RETURNCODE GetMaxAlignments(ADDR_GET_MAX_ALIGNMENTS_OUTPUT* pOut) const;
+    ADDR_E_RETURNCODE GetMaxAlignments(ADDR_GET_MAX_ALINGMENTS_OUTPUT* pOut) const;
+
+    ADDR_E_RETURNCODE GetMaxMetaAlignments(ADDR_GET_MAX_ALINGMENTS_OUTPUT* pOut) const;
 
 protected:
     Lib();  // Constructor is protected
     Lib(const Client* pClient);
 
-    /// Pure virtual function to get max alignments
-    virtual ADDR_E_RETURNCODE HwlGetMaxAlignments(ADDR_GET_MAX_ALIGNMENTS_OUTPUT* pOut) const = 0;
+    /// Pure virtual function to get max base alignments
+    virtual UINT_32 HwlComputeMaxBaseAlignments() const = 0;
+
+    /// Gets maximum alignements for metadata
+    virtual UINT_32 HwlComputeMaxMetaBaseAlignments() const
+    {
+        ADDR_NOT_IMPLEMENTED();
+
+        return 0;
+    }
+
+    VOID ValidBaseAlignments(UINT_32 alignment) const
+    {
+#if DEBUG
+        ADDR_ASSERT(alignment <= m_maxBaseAlign);
+#endif
+    }
+
+    VOID ValidMetaBaseAlignments(UINT_32 metaAlignment) const
+    {
+#if DEBUG
+        ADDR_ASSERT(metaAlignment <= m_maxMetaBaseAlign);
+#endif
+    }
 
     //
     // Initialization
@@ -228,6 +365,8 @@ private:
 
     VOID SetMinPitchAlignPixels(UINT_32 minPitchAlignPixels);
 
+    VOID SetMaxAlignments();
+
 protected:
     LibClass    m_class;        ///< Store class type (HWL type)
 
@@ -257,6 +396,10 @@ protected:
 
     UINT_32     m_minPitchAlignPixels;  ///< Minimum pitch alignment in pixels
     UINT_32     m_maxSamples;           ///< Max numSamples
+
+    UINT_32     m_maxBaseAlign;         ///< Max base alignment for data surface
+    UINT_32     m_maxMetaBaseAlign;     ///< Max base alignment for metadata
+
 private:
     ElemLib*    m_pElemLib;             ///< Element Lib pointer
 };

@@ -25,6 +25,12 @@
 #ifndef GLSL_LINKER_H
 #define GLSL_LINKER_H
 
+#include "linker_util.h"
+
+struct gl_shader_program;
+struct gl_shader;
+struct gl_linked_shader;
+
 extern bool
 link_function_calls(gl_shader_program *prog, gl_linked_shader *main,
                     gl_shader **shader_list, unsigned num_shaders);
@@ -91,6 +97,10 @@ link_intrastage_shaders(void *mem_ctx,
                         struct gl_shader **shader_list,
                         unsigned num_shaders,
                         bool allow_missing_main);
+
+extern unsigned
+link_calculate_matrix_stride(const glsl_type *matrix, bool row_major,
+                             enum glsl_interface_packing packing);
 
 /**
  * Class for processing all of the leaf fields of a variable that corresponds
@@ -159,16 +169,6 @@ protected:
                             const enum glsl_interface_packing packing,
                             bool last_field) = 0;
 
-   /**
-    * Visit a record before visiting its fields
-    *
-    * For structures-of-structures or interfaces-of-structures, this visits
-    * the inner structure before visiting its fields.
-    *
-    * The default implementation does nothing.
-    */
-   virtual void visit_field(const glsl_struct_field *field);
-
    virtual void enter_record(const glsl_type *type, const char *name,
                              bool row_major, const enum glsl_interface_packing packing);
 
@@ -192,25 +192,6 @@ private:
                   const enum glsl_interface_packing packing,
                   bool last_field, unsigned record_array_count,
                   const glsl_struct_field *named_ifc_member);
-};
-
-void
-linker_error(gl_shader_program *prog, const char *fmt, ...);
-
-void
-linker_warning(gl_shader_program *prog, const char *fmt, ...);
-
-/**
- * Sometimes there are empty slots left over in UniformRemapTable after we
- * allocate slots to explicit locations. This struct represents a single
- * continouous block of empty slots in UniformRemapTable.
- */
-struct empty_uniform_block {
-   struct exec_node link;
-   /* The start location of the block */
-   unsigned start;
-   /* The number of slots in the block */
-   unsigned slots;
 };
 
 #endif /* GLSL_LINKER_H */

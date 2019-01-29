@@ -1,5 +1,6 @@
 /*
  * Copyright 2015 Advanced Micro Devices, Inc.
+ * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -19,18 +20,12 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- *
- * Authors:
- *  Nicolai Hähnle <nicolai.haehnle@amd.com>
- *
  */
 
-#include "radeon/r600_cs.h"
-#include "radeon/r600_query.h"
+#include "si_build_pm4.h"
+#include "si_query.h"
 #include "util/u_memory.h"
 
-#include "si_pipe.h"
-#include "sid.h"
 
 enum si_pc_reg_layout {
 	/* All secondary selector dwords follow as one block after the primary
@@ -101,7 +96,7 @@ static const unsigned si_pc_shader_type_bits[] = {
 static struct si_pc_block_base cik_CB = {
 	.name = "CB",
 	.num_counters = 4,
-	.flags = R600_PC_BLOCK_SE | R600_PC_BLOCK_INSTANCE_GROUPS,
+	.flags = SI_PC_BLOCK_SE | SI_PC_BLOCK_INSTANCE_GROUPS,
 
 	.select0 = R_037000_CB_PERFCOUNTER_FILTER,
 	.counter0_lo = R_035018_CB_PERFCOUNTER0_LO,
@@ -148,7 +143,7 @@ static struct si_pc_block_base cik_CPG = {
 static struct si_pc_block_base cik_DB = {
 	.name = "DB",
 	.num_counters = 4,
-	.flags = R600_PC_BLOCK_SE | R600_PC_BLOCK_INSTANCE_GROUPS,
+	.flags = SI_PC_BLOCK_SE | SI_PC_BLOCK_INSTANCE_GROUPS,
 
 	.select0 = R_037100_DB_PERFCOUNTER0_SELECT,
 	.counter0_lo = R_035100_DB_PERFCOUNTER0_LO,
@@ -199,7 +194,7 @@ static struct si_pc_block_base cik_IA = {
 static struct si_pc_block_base cik_PA_SC = {
 	.name = "PA_SC",
 	.num_counters = 8,
-	.flags = R600_PC_BLOCK_SE,
+	.flags = SI_PC_BLOCK_SE,
 
 	.select0 = R_036500_PA_SC_PERFCOUNTER0_SELECT,
 	.counter0_lo = R_034500_PA_SC_PERFCOUNTER0_LO,
@@ -211,7 +206,7 @@ static struct si_pc_block_base cik_PA_SC = {
 static struct si_pc_block_base cik_PA_SU = {
 	.name = "PA_SU",
 	.num_counters = 4,
-	.flags = R600_PC_BLOCK_SE,
+	.flags = SI_PC_BLOCK_SE,
 
 	.select0 = R_036400_PA_SU_PERFCOUNTER0_SELECT,
 	.counter0_lo = R_034400_PA_SU_PERFCOUNTER0_LO,
@@ -222,7 +217,7 @@ static struct si_pc_block_base cik_PA_SU = {
 static struct si_pc_block_base cik_SPI = {
 	.name = "SPI",
 	.num_counters = 6,
-	.flags = R600_PC_BLOCK_SE,
+	.flags = SI_PC_BLOCK_SE,
 
 	.select0 = R_036600_SPI_PERFCOUNTER0_SELECT,
 	.counter0_lo = R_034604_SPI_PERFCOUNTER0_LO,
@@ -233,7 +228,7 @@ static struct si_pc_block_base cik_SPI = {
 static struct si_pc_block_base cik_SQ = {
 	.name = "SQ",
 	.num_counters = 16,
-	.flags = R600_PC_BLOCK_SE | R600_PC_BLOCK_SHADER,
+	.flags = SI_PC_BLOCK_SE | SI_PC_BLOCK_SHADER,
 
 	.select0 = R_036700_SQ_PERFCOUNTER0_SELECT,
 	.select_or = S_036700_SQC_BANK_MASK(15) |
@@ -245,7 +240,7 @@ static struct si_pc_block_base cik_SQ = {
 static struct si_pc_block_base cik_SX = {
 	.name = "SX",
 	.num_counters = 4,
-	.flags = R600_PC_BLOCK_SE,
+	.flags = SI_PC_BLOCK_SE,
 
 	.select0 = R_036900_SX_PERFCOUNTER0_SELECT,
 	.counter0_lo = R_034900_SX_PERFCOUNTER0_LO,
@@ -256,7 +251,7 @@ static struct si_pc_block_base cik_SX = {
 static struct si_pc_block_base cik_TA = {
 	.name = "TA",
 	.num_counters = 2,
-	.flags = R600_PC_BLOCK_SE | R600_PC_BLOCK_INSTANCE_GROUPS | R600_PC_BLOCK_SHADER_WINDOWED,
+	.flags = SI_PC_BLOCK_SE | SI_PC_BLOCK_INSTANCE_GROUPS | SI_PC_BLOCK_SHADER_WINDOWED,
 
 	.select0 = R_036B00_TA_PERFCOUNTER0_SELECT,
 	.counter0_lo = R_034B00_TA_PERFCOUNTER0_LO,
@@ -267,7 +262,7 @@ static struct si_pc_block_base cik_TA = {
 static struct si_pc_block_base cik_TD = {
 	.name = "TD",
 	.num_counters = 2,
-	.flags = R600_PC_BLOCK_SE | R600_PC_BLOCK_INSTANCE_GROUPS | R600_PC_BLOCK_SHADER_WINDOWED,
+	.flags = SI_PC_BLOCK_SE | SI_PC_BLOCK_INSTANCE_GROUPS | SI_PC_BLOCK_SHADER_WINDOWED,
 
 	.select0 = R_036C00_TD_PERFCOUNTER0_SELECT,
 	.counter0_lo = R_034C00_TD_PERFCOUNTER0_LO,
@@ -278,7 +273,7 @@ static struct si_pc_block_base cik_TD = {
 static struct si_pc_block_base cik_TCA = {
 	.name = "TCA",
 	.num_counters = 4,
-	.flags = R600_PC_BLOCK_INSTANCE_GROUPS,
+	.flags = SI_PC_BLOCK_INSTANCE_GROUPS,
 
 	.select0 = R_036E40_TCA_PERFCOUNTER0_SELECT,
 	.counter0_lo = R_034E40_TCA_PERFCOUNTER0_LO,
@@ -289,7 +284,7 @@ static struct si_pc_block_base cik_TCA = {
 static struct si_pc_block_base cik_TCC = {
 	.name = "TCC",
 	.num_counters = 4,
-	.flags = R600_PC_BLOCK_INSTANCE_GROUPS,
+	.flags = SI_PC_BLOCK_INSTANCE_GROUPS,
 
 	.select0 = R_036E00_TCC_PERFCOUNTER0_SELECT,
 	.counter0_lo = R_034E00_TCC_PERFCOUNTER0_LO,
@@ -300,7 +295,7 @@ static struct si_pc_block_base cik_TCC = {
 static struct si_pc_block_base cik_TCP = {
 	.name = "TCP",
 	.num_counters = 4,
-	.flags = R600_PC_BLOCK_SE | R600_PC_BLOCK_INSTANCE_GROUPS | R600_PC_BLOCK_SHADER_WINDOWED,
+	.flags = SI_PC_BLOCK_SE | SI_PC_BLOCK_INSTANCE_GROUPS | SI_PC_BLOCK_SHADER_WINDOWED,
 
 	.select0 = R_036D00_TCP_PERFCOUNTER0_SELECT,
 	.counter0_lo = R_034D00_TCP_PERFCOUNTER0_LO,
@@ -311,7 +306,7 @@ static struct si_pc_block_base cik_TCP = {
 static struct si_pc_block_base cik_VGT = {
 	.name = "VGT",
 	.num_counters = 4,
-	.flags = R600_PC_BLOCK_SE,
+	.flags = SI_PC_BLOCK_SE,
 
 	.select0 = R_036230_VGT_PERFCOUNTER0_SELECT,
 	.counter0_lo = R_034240_VGT_PERFCOUNTER0_LO,
@@ -350,9 +345,9 @@ static struct si_pc_block_base cik_SRBM = {
  * blocks here matters.
  */
 static struct si_pc_block groups_CIK[] = {
-	{ &cik_CB, 226, 4 },
+	{ &cik_CB, 226},
 	{ &cik_CPF, 17 },
-	{ &cik_DB, 257, 4 },
+	{ &cik_DB, 257},
 	{ &cik_GRBM, 34 },
 	{ &cik_GRBMSE, 15 },
 	{ &cik_PA_SU, 153 },
@@ -362,7 +357,7 @@ static struct si_pc_block groups_CIK[] = {
 	{ &cik_SX, 32 },
 	{ &cik_TA, 111, 11 },
 	{ &cik_TCA, 39, 2 },
-	{ &cik_TCC, 160, 16 },
+	{ &cik_TCC, 160},
 	{ &cik_TD, 55, 11 },
 	{ &cik_TCP, 154, 11 },
 	{ &cik_GDS, 121 },
@@ -377,19 +372,19 @@ static struct si_pc_block groups_CIK[] = {
 };
 
 static struct si_pc_block groups_VI[] = {
-	{ &cik_CB, 396, 4 },
+	{ &cik_CB, 405},
 	{ &cik_CPF, 19 },
-	{ &cik_DB, 257, 4 },
+	{ &cik_DB, 257},
 	{ &cik_GRBM, 34 },
 	{ &cik_GRBMSE, 15 },
-	{ &cik_PA_SU, 153 },
+	{ &cik_PA_SU, 154 },
 	{ &cik_PA_SC, 397 },
 	{ &cik_SPI, 197 },
 	{ &cik_SQ, 273 },
 	{ &cik_SX, 34 },
 	{ &cik_TA, 119, 16 },
 	{ &cik_TCA, 35, 2 },
-	{ &cik_TCC, 192, 16 },
+	{ &cik_TCC, 192},
 	{ &cik_TD, 55, 16 },
 	{ &cik_TCP, 180, 16 },
 	{ &cik_GDS, 121 },
@@ -404,9 +399,9 @@ static struct si_pc_block groups_VI[] = {
 };
 
 static struct si_pc_block groups_gfx9[] = {
-	{ &cik_CB, 438, 4 },
+	{ &cik_CB, 438},
 	{ &cik_CPF, 32 },
-	{ &cik_DB, 328, 4 },
+	{ &cik_DB, 328},
 	{ &cik_GRBM, 38 },
 	{ &cik_GRBMSE, 16 },
 	{ &cik_PA_SU, 292 },
@@ -416,7 +411,7 @@ static struct si_pc_block groups_gfx9[] = {
 	{ &cik_SX, 208 },
 	{ &cik_TA, 119, 16 },
 	{ &cik_TCA, 35, 2 },
-	{ &cik_TCC, 256, 16 },
+	{ &cik_TCC, 256},
 	{ &cik_TD, 57, 16 },
 	{ &cik_TCP, 85, 16 },
 	{ &cik_GDS, 121 },
@@ -427,39 +422,10 @@ static struct si_pc_block groups_gfx9[] = {
 	{ &cik_CPC, 35 },
 };
 
-static void si_pc_get_size(struct r600_perfcounter_block *group,
-			unsigned count, unsigned *selectors,
-			unsigned *num_select_dw, unsigned *num_read_dw)
-{
-	struct si_pc_block *sigroup = (struct si_pc_block *)group->data;
-	struct si_pc_block_base *regs = sigroup->b;
-	unsigned layout_multi = regs->layout & SI_PC_MULTI_MASK;
-
-	if (regs->layout & SI_PC_FAKE) {
-		*num_select_dw = 0;
-	} else if (layout_multi == SI_PC_MULTI_BLOCK) {
-		if (count < regs->num_multi)
-			*num_select_dw = 2 * (count + 2) + regs->num_prelude;
-		else
-			*num_select_dw = 2 + count + regs->num_multi + regs->num_prelude;
-	} else if (layout_multi == SI_PC_MULTI_TAIL) {
-		*num_select_dw = 4 + count + MIN2(count, regs->num_multi) + regs->num_prelude;
-	} else if (layout_multi == SI_PC_MULTI_CUSTOM) {
-		assert(regs->num_prelude == 0);
-		*num_select_dw = 3 * (count + MIN2(count, regs->num_multi));
-	} else {
-		assert(layout_multi == SI_PC_MULTI_ALTERNATE);
-
-		*num_select_dw = 2 + count + MIN2(count, regs->num_multi) + regs->num_prelude;
-	}
-
-	*num_read_dw = 6 * count;
-}
-
-static void si_pc_emit_instance(struct r600_common_context *ctx,
+static void si_pc_emit_instance(struct si_context *sctx,
 				int se, int instance)
 {
-	struct radeon_winsys_cs *cs = ctx->gfx.cs;
+	struct radeon_cmdbuf *cs = sctx->gfx_cs;
 	unsigned value = S_030800_SH_BROADCAST_WRITES(1);
 
 	if (se >= 0) {
@@ -477,23 +443,23 @@ static void si_pc_emit_instance(struct r600_common_context *ctx,
 	radeon_set_uconfig_reg(cs, R_030800_GRBM_GFX_INDEX, value);
 }
 
-static void si_pc_emit_shaders(struct r600_common_context *ctx,
+static void si_pc_emit_shaders(struct si_context *sctx,
 			       unsigned shaders)
 {
-	struct radeon_winsys_cs *cs = ctx->gfx.cs;
+	struct radeon_cmdbuf *cs = sctx->gfx_cs;
 
 	radeon_set_uconfig_reg_seq(cs, R_036780_SQ_PERFCOUNTER_CTRL, 2);
 	radeon_emit(cs, shaders & 0x7f);
 	radeon_emit(cs, 0xffffffff);
 }
 
-static void si_pc_emit_select(struct r600_common_context *ctx,
-		        struct r600_perfcounter_block *group,
+static void si_pc_emit_select(struct si_context *sctx,
+		        struct si_perfcounter_block *group,
 		        unsigned count, unsigned *selectors)
 {
 	struct si_pc_block *sigroup = (struct si_pc_block *)group->data;
 	struct si_pc_block_base *regs = sigroup->b;
-	struct radeon_winsys_cs *cs = ctx->gfx.cs;
+	struct radeon_cmdbuf *cs = sctx->gfx_cs;
 	unsigned idx;
 	unsigned layout_multi = regs->layout & SI_PC_MULTI_MASK;
 	unsigned dw;
@@ -583,17 +549,17 @@ static void si_pc_emit_select(struct r600_common_context *ctx,
 	}
 }
 
-static void si_pc_emit_start(struct r600_common_context *ctx,
+static void si_pc_emit_start(struct si_context *sctx,
 			     struct r600_resource *buffer, uint64_t va)
 {
-	struct radeon_winsys_cs *cs = ctx->gfx.cs;
+	struct radeon_cmdbuf *cs = sctx->gfx_cs;
 
-	radeon_add_to_buffer_list(ctx, &ctx->gfx, buffer,
+	radeon_add_to_buffer_list(sctx, sctx->gfx_cs, buffer,
 				  RADEON_USAGE_WRITE, RADEON_PRIO_QUERY);
 
 	radeon_emit(cs, PKT3(PKT3_COPY_DATA, 4, 0));
 	radeon_emit(cs, COPY_DATA_SRC_SEL(COPY_DATA_IMM) |
-			COPY_DATA_DST_SEL(COPY_DATA_MEM));
+			COPY_DATA_DST_SEL(COPY_DATA_DST_MEM_GRBM));
 	radeon_emit(cs, 1); /* immediate */
 	radeon_emit(cs, 0); /* unused */
 	radeon_emit(cs, va);
@@ -609,15 +575,17 @@ static void si_pc_emit_start(struct r600_common_context *ctx,
 
 /* Note: The buffer was already added in si_pc_emit_start, so we don't have to
  * do it again in here. */
-static void si_pc_emit_stop(struct r600_common_context *ctx,
+static void si_pc_emit_stop(struct si_context *sctx,
 			    struct r600_resource *buffer, uint64_t va)
 {
-	struct radeon_winsys_cs *cs = ctx->gfx.cs;
+	struct radeon_cmdbuf *cs = sctx->gfx_cs;
 
-	si_gfx_write_event_eop(ctx, V_028A90_BOTTOM_OF_PIPE_TS, 0,
-				 EOP_DATA_SEL_VALUE_32BIT,
-				 buffer, va, 0, R600_NOT_QUERY);
-	si_gfx_wait_fence(ctx, va, 0, 0xffffffff);
+	si_cp_release_mem(sctx, V_028A90_BOTTOM_OF_PIPE_TS, 0,
+			  EOP_DST_SEL_MEM,
+			  EOP_INT_SEL_SEND_DATA_AFTER_WR_CONFIRM,
+			  EOP_DATA_SEL_VALUE_32BIT,
+			  buffer, va, 0, SI_NOT_QUERY);
+	si_cp_wait_mem(sctx, va, 0, 0xffffffff, 0);
 
 	radeon_emit(cs, PKT3(PKT3_EVENT_WRITE, 0, 0));
 	radeon_emit(cs, EVENT_TYPE(V_028A90_PERFCOUNTER_SAMPLE) | EVENT_INDEX(0));
@@ -628,14 +596,14 @@ static void si_pc_emit_stop(struct r600_common_context *ctx,
 			       S_036020_PERFMON_SAMPLE_ENABLE(1));
 }
 
-static void si_pc_emit_read(struct r600_common_context *ctx,
-			    struct r600_perfcounter_block *group,
+static void si_pc_emit_read(struct si_context *sctx,
+			    struct si_perfcounter_block *group,
 			    unsigned count, unsigned *selectors,
 			    struct r600_resource *buffer, uint64_t va)
 {
 	struct si_pc_block *sigroup = (struct si_pc_block *)group->data;
 	struct si_pc_block_base *regs = sigroup->b;
-	struct radeon_winsys_cs *cs = ctx->gfx.cs;
+	struct radeon_cmdbuf *cs = sctx->gfx_cs;
 	unsigned idx;
 	unsigned reg = regs->counter0_lo;
 	unsigned reg_delta = 8;
@@ -650,7 +618,7 @@ static void si_pc_emit_read(struct r600_common_context *ctx,
 
 			radeon_emit(cs, PKT3(PKT3_COPY_DATA, 4, 0));
 			radeon_emit(cs, COPY_DATA_SRC_SEL(COPY_DATA_PERF) |
-					COPY_DATA_DST_SEL(COPY_DATA_MEM) |
+					COPY_DATA_DST_SEL(COPY_DATA_DST_MEM_GRBM) |
 					COPY_DATA_COUNT_SEL); /* 64 bits */
 			radeon_emit(cs, reg >> 2);
 			radeon_emit(cs, 0); /* unused */
@@ -663,7 +631,7 @@ static void si_pc_emit_read(struct r600_common_context *ctx,
 		for (idx = 0; idx < count; ++idx) {
 			radeon_emit(cs, PKT3(PKT3_COPY_DATA, 4, 0));
 			radeon_emit(cs, COPY_DATA_SRC_SEL(COPY_DATA_IMM) |
-					COPY_DATA_DST_SEL(COPY_DATA_MEM) |
+					COPY_DATA_DST_SEL(COPY_DATA_DST_MEM_GRBM) |
 					COPY_DATA_COUNT_SEL);
 			radeon_emit(cs, 0); /* immediate */
 			radeon_emit(cs, 0);
@@ -674,20 +642,20 @@ static void si_pc_emit_read(struct r600_common_context *ctx,
 	}
 }
 
-static void si_pc_cleanup(struct r600_common_screen *rscreen)
+static void si_pc_cleanup(struct si_screen *sscreen)
 {
-	si_perfcounters_do_destroy(rscreen->perfcounters);
-	rscreen->perfcounters = NULL;
+	si_perfcounters_do_destroy(sscreen->perfcounters);
+	sscreen->perfcounters = NULL;
 }
 
 void si_init_perfcounters(struct si_screen *screen)
 {
-	struct r600_perfcounters *pc;
+	struct si_perfcounters *pc;
 	struct si_pc_block *blocks;
 	unsigned num_blocks;
 	unsigned i;
 
-	switch (screen->b.chip_class) {
+	switch (screen->info.chip_class) {
 	case CIK:
 		blocks = groups_CIK;
 		num_blocks = ARRAY_SIZE(groups_CIK);
@@ -705,27 +673,24 @@ void si_init_perfcounters(struct si_screen *screen)
 		return; /* not implemented */
 	}
 
-	if (screen->b.info.max_sh_per_se != 1) {
+	if (screen->info.max_sh_per_se != 1) {
 		/* This should not happen on non-SI chips. */
 		fprintf(stderr, "si_init_perfcounters: max_sh_per_se = %d not "
 			"supported (inaccurate performance counters)\n",
-			screen->b.info.max_sh_per_se);
+			screen->info.max_sh_per_se);
 	}
 
-	pc = CALLOC_STRUCT(r600_perfcounters);
+	pc = CALLOC_STRUCT(si_perfcounters);
 	if (!pc)
 		return;
 
-	pc->num_start_cs_dwords = 14;
-	pc->num_stop_cs_dwords = 14 + si_gfx_write_fence_dwords(&screen->b);
+	pc->num_stop_cs_dwords = 14 + si_cp_write_fence_dwords(screen);
 	pc->num_instance_cs_dwords = 3;
-	pc->num_shaders_cs_dwords = 4;
 
 	pc->num_shader_types = ARRAY_SIZE(si_pc_shader_type_bits);
 	pc->shader_type_suffixes = si_pc_shader_type_suffixes;
 	pc->shader_type_bits = si_pc_shader_type_bits;
 
-	pc->get_size = si_pc_get_size;
 	pc->emit_instance = si_pc_emit_instance;
 	pc->emit_shaders = si_pc_emit_shaders;
 	pc->emit_select = si_pc_emit_select;
@@ -741,12 +706,15 @@ void si_init_perfcounters(struct si_screen *screen)
 		struct si_pc_block *block = &blocks[i];
 		unsigned instances = block->instances;
 
-		if (!strcmp(block->b->name, "IA")) {
-			if (screen->b.info.max_se > 2)
-				instances = 2;
-		}
+		if (!strcmp(block->b->name, "CB") ||
+		    !strcmp(block->b->name, "DB"))
+			instances = screen->info.max_se;
+		else if (!strcmp(block->b->name, "TCC"))
+			instances = screen->info.num_tcc_blocks;
+		else if (!strcmp(block->b->name, "IA"))
+			instances = MAX2(1, screen->info.max_se / 2);
 
-		si_perfcounters_add_block(&screen->b, pc,
+		si_perfcounters_add_block(screen, pc,
 					    block->b->name,
 					    block->b->flags,
 					    block->b->num_counters,
@@ -755,7 +723,7 @@ void si_init_perfcounters(struct si_screen *screen)
 					    block);
 	}
 
-	screen->b.perfcounters = pc;
+	screen->perfcounters = pc;
 	return;
 
 error:

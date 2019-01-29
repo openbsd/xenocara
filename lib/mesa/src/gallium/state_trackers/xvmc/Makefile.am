@@ -27,6 +27,7 @@ AM_CFLAGS = \
 	$(GALLIUM_CFLAGS) \
 	$(VISIBILITY_CFLAGS) \
 	$(VL_CFLAGS) \
+	$(X11_INCLUDES) \
 	$(XCB_DRI3_CFLAGS) \
 	$(XVMC_CFLAGS)
 
@@ -59,3 +60,5 @@ tests_test_rendering_SOURCES = tests/test_rendering.c tests/testlib.c
 tests_test_rendering_LDADD = $(TEST_LIBS)
 tests_xvmc_bench_SOURCES = tests/xvmc_bench.c tests/testlib.c
 tests_xvmc_bench_LDADD = $(TEST_LIBS)
+
+EXTRA_DIST = meson.build

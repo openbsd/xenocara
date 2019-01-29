@@ -41,6 +41,7 @@ public:
    fs_reg(enum brw_reg_file file, int nr, enum brw_reg_type type);
 
    bool equals(const fs_reg &r) const;
+   bool negative_equals(const fs_reg &r) const;
    bool is_contiguous() const;
 
    /**
@@ -312,6 +313,13 @@ subscript(fs_reg reg, brw_reg_type type, unsigned i)
    return byte_offset(retype(reg, type), i * type_sz(type));
 }
 
+static inline fs_reg
+horiz_stride(fs_reg reg, unsigned s)
+{
+   reg.stride *= s;
+   return reg;
+}
+
 static const fs_reg reg_undef;
 
 class fs_inst : public backend_instruction {
@@ -346,6 +354,7 @@ public:
    unsigned components_read(unsigned i) const;
    unsigned size_read(int arg) const;
    bool can_do_source_mods(const struct gen_device_info *devinfo);
+   bool can_do_cmod();
    bool can_change_types() const;
    bool has_source_and_destination_hazard() const;
 
@@ -366,6 +375,7 @@ public:
 
    uint8_t sources; /**< Number of fs_reg sources. */
 
+   bool last_rt:1;
    bool pi_noperspective:1;   /**< Pixel interpolator noperspective flag */
 };
 
@@ -465,9 +475,6 @@ get_exec_type(const fs_inst *inst)
    if (exec_type == BRW_REGISTER_TYPE_B)
       exec_type = inst->dst.type;
 
-   /* TODO: We need to handle half-float conversions. */
-   assert(exec_type != BRW_REGISTER_TYPE_HF ||
-          inst->dst.type == BRW_REGISTER_TYPE_HF);
    assert(exec_type != BRW_REGISTER_TYPE_B);
 
    return exec_type;
@@ -477,6 +484,34 @@ static inline unsigned
 get_exec_type_size(const fs_inst *inst)
 {
    return type_sz(get_exec_type(inst));
+}
+
+/**
+ * Return whether the following regioning restriction applies to the specified
+ * instruction.  From the Cherryview PRM Vol 7. "Register Region
+ * Restrictions":
+ *
+ * "When source or destination datatype is 64b or operation is integer DWord
+ *  multiply, regioning in Align1 must follow these rules:
+ *
+ *  1. Source and Destination horizontal stride must be aligned to the same qword.
+ *  2. Regioning must ensure Src.Vstride = Src.Width * Src.Hstride.
+ *  3. Source and Destination offset must be the same, except the case of
+ *     scalar source."
+ */
+static inline bool
+has_dst_aligned_region_restriction(const gen_device_info *devinfo,
+                                   const fs_inst *inst)
+{
+   const brw_reg_type exec_type = get_exec_type(inst);
+   const bool is_int_multiply = !brw_reg_type_is_floating_point(exec_type) &&
+         (inst->opcode == BRW_OPCODE_MUL || inst->opcode == BRW_OPCODE_MAD);
+
+   if (type_sz(inst->dst.type) > 4 || type_sz(exec_type) > 4 ||
+       (type_sz(exec_type) == 4 && is_int_multiply))
+      return devinfo->is_cherryview || gen_device_info_is_9lp(devinfo);
+   else
+      return false;
 }
 
 #endif

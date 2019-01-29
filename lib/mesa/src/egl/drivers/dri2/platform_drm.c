@@ -43,9 +43,9 @@
 static struct gbm_bo *
 lock_front_buffer(struct gbm_surface *_surf)
 {
-   struct gbm_dri_surface *surf = (struct gbm_dri_surface *) _surf;
+   struct gbm_dri_surface *surf = gbm_dri_surface(_surf);
    struct dri2_egl_surface *dri2_surf = surf->dri_private;
-   struct gbm_dri_device *device = (struct gbm_dri_device *) _surf->gbm;
+   struct gbm_dri_device *device = gbm_dri_device(_surf->gbm);
    struct gbm_bo *bo;
 
    if (dri2_surf->current == NULL) {
@@ -66,7 +66,7 @@ lock_front_buffer(struct gbm_surface *_surf)
 static void
 release_buffer(struct gbm_surface *_surf, struct gbm_bo *bo)
 {
-   struct gbm_dri_surface *surf = (struct gbm_dri_surface *) _surf;
+   struct gbm_dri_surface *surf = gbm_dri_surface(_surf);
    struct dri2_egl_surface *dri2_surf = surf->dri_private;
 
    for (unsigned i = 0; i < ARRAY_SIZE(dri2_surf->color_buffers); i++) {
@@ -80,7 +80,7 @@ release_buffer(struct gbm_surface *_surf, struct gbm_bo *bo)
 static int
 has_free_buffers(struct gbm_surface *_surf)
 {
-   struct gbm_dri_surface *surf = (struct gbm_dri_surface *) _surf;
+   struct gbm_dri_surface *surf = gbm_dri_surface(_surf);
    struct dri2_egl_surface *dri2_surf = surf->dri_private;
 
    for (unsigned i = 0; i < ARRAY_SIZE(dri2_surf->color_buffers); i++)
@@ -88,6 +88,44 @@ has_free_buffers(struct gbm_surface *_surf)
 	 return 1;
 
    return 0;
+}
+
+static bool
+dri2_drm_config_is_compatible(struct dri2_egl_display *dri2_dpy,
+                              const __DRIconfig *config,
+                              struct gbm_surface *surface)
+{
+   const struct gbm_dri_visual *visual = NULL;
+   unsigned int red, green, blue, alpha;
+   int i;
+
+   /* Check that the EGLConfig being used to render to the surface is
+    * compatible with the surface format. Since mixing ARGB and XRGB of
+    * otherwise-compatible formats is relatively common, explicitly allow
+    * this.
+    */
+   dri2_dpy->core->getConfigAttrib(config, __DRI_ATTRIB_RED_MASK, &red);
+   dri2_dpy->core->getConfigAttrib(config, __DRI_ATTRIB_GREEN_MASK, &green);
+   dri2_dpy->core->getConfigAttrib(config, __DRI_ATTRIB_BLUE_MASK, &blue);
+   dri2_dpy->core->getConfigAttrib(config, __DRI_ATTRIB_ALPHA_MASK, &alpha);
+
+   for (i = 0; i < dri2_dpy->gbm_dri->num_visuals; i++) {
+      visual = &dri2_dpy->gbm_dri->visual_table[i];
+      if (visual->gbm_format == surface->format)
+         break;
+   }
+
+   if (i == dri2_dpy->gbm_dri->num_visuals)
+      return false;
+
+   if (red != visual->rgba_masks.red ||
+       green != visual->rgba_masks.green ||
+       blue != visual->rgba_masks.blue ||
+       (alpha && visual->rgba_masks.alpha && alpha != visual->rgba_masks.alpha)) {
+      return false;
+   }
+
+   return true;
 }
 
 static _EGLSurface *
@@ -110,17 +148,28 @@ dri2_drm_create_window_surface(_EGLDriver *drv, _EGLDisplay *disp,
       return NULL;
    }
 
-   if (!dri2_init_surface(&dri2_surf->base, disp, EGL_WINDOW_BIT, conf, attrib_list, false))
+   if (!dri2_init_surface(&dri2_surf->base, disp, EGL_WINDOW_BIT, conf,
+                          attrib_list, false))
       goto cleanup_surf;
+
+   config = dri2_get_dri_config(dri2_conf, EGL_WINDOW_BIT,
+                                dri2_surf->base.GLColorspace);
+
+   if (!config) {
+      _eglError(EGL_BAD_MATCH, "Unsupported surfacetype/colorspace configuration");
+      goto cleanup_surf;
+   }
+
+   if (!dri2_drm_config_is_compatible(dri2_dpy, config, surface)) {
+      _eglError(EGL_BAD_MATCH, "EGL config not compatible with GBM format");
+      goto cleanup_surf;
+   }
 
    surf = gbm_dri_surface(surface);
    dri2_surf->gbm_surf = surf;
    dri2_surf->base.Width =  surf->base.width;
    dri2_surf->base.Height = surf->base.height;
    surf->dri_private = dri2_surf;
-
-   config = dri2_get_dri_config(dri2_conf, EGL_WINDOW_BIT,
-                                dri2_surf->base.GLColorspace);
 
    if (dri2_dpy->dri2) {
       dri2_surf->dri_drawable =
@@ -256,7 +305,7 @@ back_bo_to_dri_buffer(struct dri2_egl_surface *dri2_surf, __DRIbuffer *buffer)
    struct gbm_dri_bo *bo;
    int name, pitch;
 
-   bo = (struct gbm_dri_bo *) dri2_surf->back->bo;
+   bo = gbm_dri_bo(dri2_surf->back->bo);
 
    dri2_dpy->image->queryImage(bo->image, __DRI_IMAGE_ATTRIB_NAME, &name);
    dri2_dpy->image->queryImage(bo->image, __DRI_IMAGE_ATTRIB_STRIDE, &pitch);
@@ -360,7 +409,7 @@ dri2_drm_image_get_buffers(__DRIdrawable *driDrawable,
    if (get_back_bo(dri2_surf) < 0)
       return 0;
 
-   bo = (struct gbm_dri_bo *) dri2_surf->back->bo;
+   bo = gbm_dri_bo(dri2_surf->back->bo);
    buffers->image_mask = __DRI_IMAGE_BUFFER_BACK;
    buffers->back = bo->image;
 
@@ -385,22 +434,20 @@ dri2_drm_swap_buffers(_EGLDriver *drv, _EGLDisplay *disp, _EGLSurface *draw)
       return EGL_TRUE;
    }
 
-   if (dri2_surf->base.Type == EGL_WINDOW_BIT) {
-      if (dri2_surf->current)
-         _eglError(EGL_BAD_SURFACE, "dri2_swap_buffers");
-      for (unsigned i = 0; i < ARRAY_SIZE(dri2_surf->color_buffers); i++)
-         if (dri2_surf->color_buffers[i].age > 0)
-            dri2_surf->color_buffers[i].age++;
+   if (dri2_surf->current)
+      _eglError(EGL_BAD_SURFACE, "dri2_swap_buffers");
+   for (unsigned i = 0; i < ARRAY_SIZE(dri2_surf->color_buffers); i++)
+      if (dri2_surf->color_buffers[i].age > 0)
+         dri2_surf->color_buffers[i].age++;
 
-      /* Make sure we have a back buffer in case we're swapping without
-       * ever rendering. */
-      if (get_back_bo(dri2_surf) < 0)
-         return _eglError(EGL_BAD_ALLOC, "dri2_swap_buffers");
+   /* Make sure we have a back buffer in case we're swapping without
+    * ever rendering. */
+   if (get_back_bo(dri2_surf) < 0)
+      return _eglError(EGL_BAD_ALLOC, "dri2_swap_buffers");
 
-      dri2_surf->current = dri2_surf->back;
-      dri2_surf->current->age = 1;
-      dri2_surf->back = NULL;
-   }
+   dri2_surf->current = dri2_surf->back;
+   dri2_surf->current->age = 1;
+   dri2_surf->back = NULL;
 
    dri2_flush_drawable_for_swapbuffers(disp, draw);
    dri2_dpy->flush->invalidate(dri2_surf->dri_drawable);
@@ -572,37 +619,36 @@ static EGLBoolean
 drm_add_configs_for_visuals(_EGLDriver *drv, _EGLDisplay *disp)
 {
    struct dri2_egl_display *dri2_dpy = dri2_egl_display(disp);
-   static const struct {
-      int format;
-      unsigned int red_mask;
-      unsigned int alpha_mask;
-   } visuals[] = {
-      { GBM_FORMAT_XRGB2101010, 0x3ff00000, 0x00000000 },
-      { GBM_FORMAT_ARGB2101010, 0x3ff00000, 0xc0000000 },
-      { GBM_FORMAT_XRGB8888,    0x00ff0000, 0x00000000 },
-      { GBM_FORMAT_ARGB8888,    0x00ff0000, 0xff000000 },
-      { GBM_FORMAT_RGB565,      0x0000f800, 0x00000000 },
-   };
-
-   unsigned int format_count[ARRAY_SIZE(visuals)] = { 0 };
+   const struct gbm_dri_visual *visuals = dri2_dpy->gbm_dri->visual_table;
+   int num_visuals = dri2_dpy->gbm_dri->num_visuals;
+   unsigned int format_count[num_visuals];
    unsigned int config_count = 0;
 
+   memset(format_count, 0, num_visuals * sizeof(unsigned int));
+
    for (unsigned i = 0; dri2_dpy->driver_configs[i]; i++) {
-      unsigned int red, alpha;
+      unsigned int red, green, blue, alpha;
 
       dri2_dpy->core->getConfigAttrib(dri2_dpy->driver_configs[i],
                                       __DRI_ATTRIB_RED_MASK, &red);
       dri2_dpy->core->getConfigAttrib(dri2_dpy->driver_configs[i],
+                                      __DRI_ATTRIB_GREEN_MASK, &green);
+      dri2_dpy->core->getConfigAttrib(dri2_dpy->driver_configs[i],
+                                      __DRI_ATTRIB_BLUE_MASK, &blue);
+      dri2_dpy->core->getConfigAttrib(dri2_dpy->driver_configs[i],
                                       __DRI_ATTRIB_ALPHA_MASK, &alpha);
 
-      for (unsigned j = 0; j < ARRAY_SIZE(visuals); j++) {
+      for (unsigned j = 0; j < num_visuals; j++) {
          struct dri2_egl_config *dri2_conf;
 
-         if (visuals[j].red_mask != red || visuals[j].alpha_mask != alpha)
+         if (visuals[j].rgba_masks.red != red ||
+             visuals[j].rgba_masks.green != green ||
+             visuals[j].rgba_masks.blue != blue ||
+             visuals[j].rgba_masks.alpha != alpha)
             continue;
 
          const EGLint attr_list[] = {
-            EGL_NATIVE_VISUAL_ID,  visuals[j].format,
+            EGL_NATIVE_VISUAL_ID, visuals[j].gbm_format,
             EGL_NONE,
          };
 
@@ -619,7 +665,7 @@ drm_add_configs_for_visuals(_EGLDriver *drv, _EGLDisplay *disp)
    for (unsigned i = 0; i < ARRAY_SIZE(format_count); i++) {
       if (!format_count[i]) {
          _eglLog(_EGL_DEBUG, "No DRI config supports native format 0x%x",
-                 visuals[i].format);
+                 visuals[i].gbm_format);
       }
    }
 
@@ -648,12 +694,13 @@ static const struct dri2_egl_display_vtbl dri2_drm_display_vtbl = {
 EGLBoolean
 dri2_initialize_drm(_EGLDriver *drv, _EGLDisplay *disp)
 {
+   _EGLDevice *dev;
    struct dri2_egl_display *dri2_dpy;
    struct gbm_device *gbm;
    const char *err;
 
    /* Not supported yet */
-   if (disp->Options.UseFallback)
+   if (disp->Options.ForceSoftware)
       return EGL_FALSE;
 
    loader_set_logger(_eglLog);
@@ -689,6 +736,14 @@ dri2_initialize_drm(_EGLDriver *drv, _EGLDisplay *disp)
       err = "DRI2: gbm device using incorrect/incompatible backend";
       goto cleanup;
    }
+
+   dev = _eglAddDevice(dri2_dpy->fd, false);
+   if (!dev) {
+      err = "DRI2: failed to find EGLDevice";
+      goto cleanup;
+   }
+
+   disp->Device = dev;
 
    dri2_dpy->gbm_dri = gbm_dri_device(gbm);
    dri2_dpy->driver_name = strdup(dri2_dpy->gbm_dri->driver_name);
@@ -744,4 +799,11 @@ dri2_initialize_drm(_EGLDriver *drv, _EGLDisplay *disp)
 cleanup:
    dri2_display_destroy(disp);
    return _eglError(EGL_NOT_INITIALIZED, err);
+}
+
+void
+dri2_teardown_drm(struct dri2_egl_display *dri2_dpy)
+{
+   if (dri2_dpy->own_device)
+      gbm_device_destroy(&dri2_dpy->gbm_dri->base);
 }

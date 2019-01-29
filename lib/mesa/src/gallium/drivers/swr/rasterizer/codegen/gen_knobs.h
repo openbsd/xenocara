@@ -1,38 +1,39 @@
 /******************************************************************************
-* Copyright (C) 2015-2017 Intel Corporation.   All Rights Reserved.
-*
-* Permission is hereby granted, free of charge, to any person obtaining a
-* copy of this software and associated documentation files (the "Software"),
-* to deal in the Software without restriction, including without limitation
-* the rights to use, copy, modify, merge, publish, distribute, sublicense,
-* and/or sell copies of the Software, and to permit persons to whom the
-* Software is furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice (including the next
-* paragraph) shall be included in all copies or substantial portions of the
-* Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
-* THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-* FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-* IN THE SOFTWARE.
-*
-* @file gen_knobs.h
-*
-* @brief Dynamic Knobs for Core.
-*
-* ======================= AUTO GENERATED: DO NOT EDIT !!! ====================
-*
-* Generation Command Line:
-*  ./rasterizer/codegen/gen_knobs.py
-*    --output
-*    rasterizer/codegen/gen_knobs.h
-*    --gen_h
-*
-******************************************************************************/
+ * Copyright (C) 2015-2018 Intel Corporation.   All Rights Reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice (including the next
+ * paragraph) shall be included in all copies or substantial portions of the
+ * Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ *
+ * @file gen_knobs.h
+ *
+ * @brief Dynamic Knobs for Core.
+ *
+ * ======================= AUTO GENERATED: DO NOT EDIT !!! ====================
+ *
+ * Generation Command Line:
+ *  ./rasterizer/codegen/gen_knobs.py
+ *    --output
+ *    rasterizer/codegen/gen_knobs.h
+ *    --gen_h
+ *
+ ******************************************************************************/
+// clang-format off
 
 #pragma once
 #include <string>
@@ -41,11 +42,11 @@ struct KnobBase
 {
 private:
     // Update the input string.
-    static void autoExpandEnvironmentVariables(std::string &text);
+    static void autoExpandEnvironmentVariables(std::string& text);
 
 protected:
     // Leave input alone and return new string.
-    static std::string expandEnvironmentVariables(std::string const &input)
+    static std::string expandEnvironmentVariables(std::string const& input)
     {
         std::string text = input;
         autoExpandEnvironmentVariables(text);
@@ -53,7 +54,7 @@ protected:
     }
 
     template <typename T>
-    static T expandEnvironmentVariables(T const &input)
+    static T expandEnvironmentVariables(T const& input)
     {
         return input;
     }
@@ -63,8 +64,8 @@ template <typename T>
 struct Knob : KnobBase
 {
 public:
-    const   T&  Value() const               { return m_Value; }
-    const   T&  Value(T const &newValue)
+    const T& Value() const { return m_Value; }
+    const T& Value(T const& newValue)
     {
         m_Value = expandEnvironmentVariables(newValue);
         return Value();
@@ -164,6 +165,30 @@ struct GlobalKnobs
     DEFINE_KNOB(MAX_WORKER_THREADS, uint32_t, 0);
 
     //-----------------------------------------------------------
+    // KNOB_BASE_NUMA_NODE
+    //
+    // Starting NUMA node index to use when allocating compute resources.
+    // Setting this to a non-zero value will reduce the maximum # of NUMA nodes used.
+    //
+    DEFINE_KNOB(BASE_NUMA_NODE, uint32_t, 0);
+
+    //-----------------------------------------------------------
+    // KNOB_BASE_CORE
+    //
+    // Starting core index to use when allocating compute resources.
+    // Setting this to a non-zero value will reduce the maximum # of cores used.
+    //
+    DEFINE_KNOB(BASE_CORE, uint32_t, 0);
+
+    //-----------------------------------------------------------
+    // KNOB_BASE_THREAD
+    //
+    // Starting thread index to use when allocating compute resources.
+    // Setting this to a non-zero value will reduce the maximum # of threads used.
+    //
+    DEFINE_KNOB(BASE_THREAD, uint32_t, 0);
+
+    //-----------------------------------------------------------
     // KNOB_BUCKETS_START_FRAME
     //
     // Frame from when to start saving buckets data.
@@ -230,6 +255,19 @@ struct GlobalKnobs
     // Enables caching of compiled shaders
     //
     DEFINE_KNOB(JIT_ENABLE_CACHE, bool, false);
+
+    //-----------------------------------------------------------
+    // KNOB_JIT_OPTIMIZATION_LEVEL
+    //
+    // JIT compile optimization level:
+    //
+    //     Automatic    = -0x0000001
+    //     Debug        = 0x00000000
+    //     Less         = 0x00000001
+    //     Optimize     = 0x00000002
+    //     Aggressive   = 0x00000003
+    //
+    DEFINE_KNOB(JIT_OPTIMIZATION_LEVEL, int, -1);
 
     //-----------------------------------------------------------
     // KNOB_JIT_CACHE_DIR
@@ -308,6 +346,16 @@ struct GlobalKnobs
     //
     DEFINE_KNOB(TOSS_RS, bool, false);
 
+    //-----------------------------------------------------------
+    // KNOB_DISABLE_SPLIT_DRAW
+    //
+    // Don't split large draws into smaller draws.,
+    // MAX_PRIMS_PER_DRAW and MAX_TESS_PRIMS_PER_DRAW can be used to control split size.
+    // 
+    // Useful to disable split draws for gathering archrast stats.
+    //
+    DEFINE_KNOB(DISABLE_SPLIT_DRAW, bool, false);
+
 
     std::string ToString(const char* optPerLinePrefix="");
     GlobalKnobs();
@@ -325,6 +373,9 @@ extern GlobalKnobs g_GlobalKnobs;
 #define KNOB_MAX_CORES_PER_NUMA_NODE     GET_KNOB(MAX_CORES_PER_NUMA_NODE)
 #define KNOB_MAX_THREADS_PER_CORE        GET_KNOB(MAX_THREADS_PER_CORE)
 #define KNOB_MAX_WORKER_THREADS          GET_KNOB(MAX_WORKER_THREADS)
+#define KNOB_BASE_NUMA_NODE              GET_KNOB(BASE_NUMA_NODE)
+#define KNOB_BASE_CORE                   GET_KNOB(BASE_CORE)
+#define KNOB_BASE_THREAD                 GET_KNOB(BASE_THREAD)
 #define KNOB_BUCKETS_START_FRAME         GET_KNOB(BUCKETS_START_FRAME)
 #define KNOB_BUCKETS_END_FRAME           GET_KNOB(BUCKETS_END_FRAME)
 #define KNOB_WORKER_SPIN_LOOP_COUNT      GET_KNOB(WORKER_SPIN_LOOP_COUNT)
@@ -333,6 +384,7 @@ extern GlobalKnobs g_GlobalKnobs;
 #define KNOB_MAX_TESS_PRIMS_PER_DRAW     GET_KNOB(MAX_TESS_PRIMS_PER_DRAW)
 #define KNOB_DEBUG_OUTPUT_DIR            GET_KNOB(DEBUG_OUTPUT_DIR)
 #define KNOB_JIT_ENABLE_CACHE            GET_KNOB(JIT_ENABLE_CACHE)
+#define KNOB_JIT_OPTIMIZATION_LEVEL      GET_KNOB(JIT_OPTIMIZATION_LEVEL)
 #define KNOB_JIT_CACHE_DIR               GET_KNOB(JIT_CACHE_DIR)
 #define KNOB_TOSS_DRAW                   GET_KNOB(TOSS_DRAW)
 #define KNOB_TOSS_QUEUE_FE               GET_KNOB(TOSS_QUEUE_FE)
@@ -342,5 +394,7 @@ extern GlobalKnobs g_GlobalKnobs;
 #define KNOB_TOSS_SETUP_TRIS             GET_KNOB(TOSS_SETUP_TRIS)
 #define KNOB_TOSS_BIN_TRIS               GET_KNOB(TOSS_BIN_TRIS)
 #define KNOB_TOSS_RS                     GET_KNOB(TOSS_RS)
+#define KNOB_DISABLE_SPLIT_DRAW          GET_KNOB(DISABLE_SPLIT_DRAW)
 
 
+// clang-format on

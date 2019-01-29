@@ -27,12 +27,8 @@
 #ifndef VARRAY_H
 #define VARRAY_H
 
-
-#include "glheader.h"
 #include "bufferobj.h"
 
-struct gl_vertex_array;
-struct gl_context;
 
 /**
  * Returns a pointer to the vertex attribute data in a client array,
@@ -46,31 +42,9 @@ _mesa_vertex_attrib_address(const struct gl_array_attributes *array,
    if (_mesa_is_bufferobj(binding->BufferObj))
       return (const GLubyte *) (binding->Offset + array->RelativeOffset);
    else
-      return array->Ptr;       
+      return array->Ptr;
 }
 
-/**
- * Sets the fields in a gl_vertex_array to values derived from a
- * gl_vertex_attrib_array and a gl_vertex_buffer_binding.
- */
-static inline void
-_mesa_update_client_array(struct gl_context *ctx,
-                          struct gl_vertex_array *dst,
-                          const struct gl_array_attributes *src,
-                          const struct gl_vertex_buffer_binding *binding)
-{
-   dst->Size = src->Size;
-   dst->Type = src->Type;
-   dst->Format = src->Format;
-   dst->StrideB = binding->Stride;
-   dst->Ptr = _mesa_vertex_attrib_address(src, binding);
-   dst->Normalized = src->Normalized;
-   dst->Integer = src->Integer;
-   dst->Doubles = src->Doubles;
-   dst->InstanceDivisor = binding->InstanceDivisor;
-   dst->_ElementSize = src->_ElementSize;
-   _mesa_reference_buffer_object(ctx, &dst->BufferObj, binding->BufferObj);
-}
 
 static inline bool
 _mesa_attr_zero_aliases_vertex(const struct gl_context *ctx)
@@ -78,10 +52,11 @@ _mesa_attr_zero_aliases_vertex(const struct gl_context *ctx)
    return ctx->_AttribZeroAliasesVertex;
 }
 
+
 extern void
 _mesa_update_array_format(struct gl_context *ctx,
                           struct gl_vertex_array_object *vao,
-                          GLuint attrib, GLint size, GLenum type,
+                          gl_vert_attrib attrib, GLint size, GLenum type,
                           GLenum format, GLboolean normalized,
                           GLboolean integer, GLboolean doubles,
                           GLuint relativeOffset);
@@ -89,7 +64,21 @@ _mesa_update_array_format(struct gl_context *ctx,
 extern void
 _mesa_enable_vertex_array_attrib(struct gl_context *ctx,
                                  struct gl_vertex_array_object *vao,
-                                 unsigned attrib);
+                                 gl_vert_attrib attrib);
+
+
+extern void
+_mesa_disable_vertex_array_attrib(struct gl_context *ctx,
+                                  struct gl_vertex_array_object *vao,
+                                  gl_vert_attrib attrib);
+
+
+extern void
+_mesa_vertex_attrib_binding(struct gl_context *ctx,
+                            struct gl_vertex_array_object *vao,
+                            gl_vert_attrib attribIndex,
+                            GLuint bindingIndex);
+
 
 extern void
 _mesa_bind_vertex_buffer(struct gl_context *ctx,
@@ -177,7 +166,7 @@ _mesa_SecondaryColorPointer_no_error(GLint size, GLenum type,
                                      GLsizei stride, const GLvoid *ptr);
 extern void GLAPIENTRY
 _mesa_SecondaryColorPointer(GLint size, GLenum type,
-			       GLsizei stride, const GLvoid *ptr);
+                            GLsizei stride, const GLvoid *ptr);
 
 
 extern void GLAPIENTRY
@@ -193,8 +182,8 @@ _mesa_VertexAttribPointer_no_error(GLuint index, GLint size, GLenum type,
                                    const GLvoid *pointer);
 extern void GLAPIENTRY
 _mesa_VertexAttribPointer(GLuint index, GLint size, GLenum type,
-                             GLboolean normalized, GLsizei stride,
-                             const GLvoid *pointer);
+                          GLboolean normalized, GLsizei stride,
+                          const GLvoid *pointer);
 
 void GLAPIENTRY
 _mesa_VertexAttribIPointer_no_error(GLuint index, GLint size, GLenum type,
@@ -282,64 +271,11 @@ _mesa_InterleavedArrays(GLenum format, GLsizei stride, const GLvoid *pointer);
 
 
 extern void GLAPIENTRY
-_mesa_MultiDrawArrays( GLenum mode, const GLint *first,
-                          const GLsizei *count, GLsizei primcount );
-
-extern void GLAPIENTRY
-_mesa_MultiDrawElementsEXT( GLenum mode, const GLsizei *count, GLenum type,
-                            const GLvoid **indices, GLsizei primcount );
-
-extern void GLAPIENTRY
-_mesa_MultiDrawElementsBaseVertex( GLenum mode,
-				   const GLsizei *count, GLenum type,
-				   const GLvoid **indices, GLsizei primcount,
-				   const GLint *basevertex);
-
-extern void GLAPIENTRY
-_mesa_MultiModeDrawArraysIBM( const GLenum * mode, const GLint * first,
-			      const GLsizei * count,
-			      GLsizei primcount, GLint modestride );
-
-
-extern void GLAPIENTRY
-_mesa_MultiModeDrawElementsIBM( const GLenum * mode, const GLsizei * count,
-				GLenum type, const GLvoid * const * indices,
-				GLsizei primcount, GLint modestride );
-
-extern void GLAPIENTRY
 _mesa_LockArraysEXT(GLint first, GLsizei count);
 
 extern void GLAPIENTRY
-_mesa_UnlockArraysEXT( void );
+_mesa_UnlockArraysEXT(void);
 
-
-extern void GLAPIENTRY
-_mesa_DrawArrays(GLenum mode, GLint first, GLsizei count);
-
-extern void GLAPIENTRY
-_mesa_DrawArraysInstanced(GLenum mode, GLint first, GLsizei count,
-                          GLsizei primcount);
-
-extern void GLAPIENTRY
-_mesa_DrawElements(GLenum mode, GLsizei count, GLenum type,
-                   const GLvoid *indices);
-
-extern void GLAPIENTRY
-_mesa_DrawRangeElements(GLenum mode, GLuint start, GLuint end, GLsizei count,
-                        GLenum type, const GLvoid *indices);
-
-extern void GLAPIENTRY
-_mesa_DrawElementsBaseVertex(GLenum mode, GLsizei count, GLenum type,
-			     const GLvoid *indices, GLint basevertex);
-
-extern void GLAPIENTRY
-_mesa_DrawRangeElementsBaseVertex(GLenum mode, GLuint start, GLuint end,
-				  GLsizei count, GLenum type,
-				  const GLvoid *indices,
-				  GLint basevertex);
-
-extern void GLAPIENTRY
-_mesa_DrawTransformFeedback(GLenum mode, GLuint name);
 
 void GLAPIENTRY
 _mesa_PrimitiveRestartIndex_no_error(GLuint index);
@@ -456,12 +392,9 @@ _mesa_VertexArrayBindingDivisor_no_error(GLuint vaobj, GLuint bindingIndex,
                                          GLuint divisor);
 
 extern void GLAPIENTRY
-_mesa_VertexArrayBindingDivisor(GLuint vaobj, GLuint bindingIndex, GLuint divisor);
+_mesa_VertexArrayBindingDivisor(GLuint vaobj, GLuint bindingIndex,
+                                GLuint divisor);
 
-extern void
-_mesa_copy_client_array(struct gl_context *ctx,
-                        struct gl_vertex_array *dst,
-                        struct gl_vertex_array *src);
 
 extern void
 _mesa_copy_vertex_attrib_array(struct gl_context *ctx,
@@ -477,9 +410,9 @@ extern void
 _mesa_print_arrays(struct gl_context *ctx);
 
 extern void
-_mesa_init_varray( struct gl_context * ctx );
+_mesa_init_varray(struct gl_context *ctx);
 
-extern void 
+extern void
 _mesa_free_varray_data(struct gl_context *ctx);
 
 #endif

@@ -25,7 +25,13 @@
  */
 
 #include "u_queue.h"
+
+#include <time.h>
+
+#include "util/os_time.h"
 #include "util/u_string.h"
+#include "util/u_thread.h"
+#include "u_process.h"
 
 static void util_queue_killall_and_wait(struct util_queue *queue);
 
@@ -89,7 +95,52 @@ remove_from_atexit_list(struct util_queue *queue)
  * util_queue_fence
  */
 
-static void
+#ifdef UTIL_QUEUE_FENCE_FUTEX
+static bool
+do_futex_fence_wait(struct util_queue_fence *fence,
+                    bool timeout, int64_t abs_timeout)
+{
+   uint32_t v = fence->val;
+   struct timespec ts;
+   ts.tv_sec = abs_timeout / (1000*1000*1000);
+   ts.tv_nsec = abs_timeout % (1000*1000*1000);
+
+   while (v != 0) {
+      if (v != 2) {
+         v = p_atomic_cmpxchg(&fence->val, 1, 2);
+         if (v == 0)
+            return true;
+      }
+
+      int r = futex_wait(&fence->val, 2, timeout ? &ts : NULL);
+      if (timeout && r < 0) {
+         if (errno == ETIMEDOUT)
+            return false;
+      }
+
+      v = fence->val;
+   }
+
+   return true;
+}
+
+void
+_util_queue_fence_wait(struct util_queue_fence *fence)
+{
+   do_futex_fence_wait(fence, false, 0);
+}
+
+bool
+_util_queue_fence_wait_timeout(struct util_queue_fence *fence,
+                               int64_t abs_timeout)
+{
+   return do_futex_fence_wait(fence, true, abs_timeout);
+}
+
+#endif
+
+#ifdef UTIL_QUEUE_FENCE_STANDARD
+void
 util_queue_fence_signal(struct util_queue_fence *fence)
 {
    mtx_lock(&fence->mutex);
@@ -99,12 +150,45 @@ util_queue_fence_signal(struct util_queue_fence *fence)
 }
 
 void
-util_queue_fence_wait(struct util_queue_fence *fence)
+_util_queue_fence_wait(struct util_queue_fence *fence)
 {
    mtx_lock(&fence->mutex);
    while (!fence->signalled)
       cnd_wait(&fence->cond, &fence->mutex);
    mtx_unlock(&fence->mutex);
+}
+
+bool
+_util_queue_fence_wait_timeout(struct util_queue_fence *fence,
+                               int64_t abs_timeout)
+{
+   /* This terrible hack is made necessary by the fact that we really want an
+    * internal interface consistent with os_time_*, but cnd_timedwait is spec'd
+    * to be relative to the TIME_UTC clock.
+    */
+   int64_t rel = abs_timeout - os_time_get_nano();
+
+   if (rel > 0) {
+      struct timespec ts;
+
+      timespec_get(&ts, TIME_UTC);
+
+      ts.tv_sec += abs_timeout / (1000*1000*1000);
+      ts.tv_nsec += abs_timeout % (1000*1000*1000);
+      if (ts.tv_nsec >= (1000*1000*1000)) {
+         ts.tv_sec++;
+         ts.tv_nsec -= (1000*1000*1000);
+      }
+
+      mtx_lock(&fence->mutex);
+      while (!fence->signalled) {
+         if (cnd_timedwait(&fence->cond, &fence->mutex, &ts) != thrd_success)
+            break;
+      }
+      mtx_unlock(&fence->mutex);
+   }
+
+   return fence->signalled;
 }
 
 void
@@ -136,6 +220,7 @@ util_queue_fence_destroy(struct util_queue_fence *fence)
    cnd_destroy(&fence->cond);
    mtx_destroy(&fence->mutex);
 }
+#endif
 
 /****************************************************************************
  * util_queue implementation
@@ -154,9 +239,23 @@ util_queue_thread_func(void *input)
 
    free(input);
 
-   if (queue->name) {
+#ifdef HAVE_PTHREAD_SETAFFINITY
+   if (queue->flags & UTIL_QUEUE_INIT_SET_FULL_THREAD_AFFINITY) {
+      /* Don't inherit the thread affinity from the parent thread.
+       * Set the full mask.
+       */
+      cpu_set_t cpuset;
+      CPU_ZERO(&cpuset);
+      for (unsigned i = 0; i < CPU_SETSIZE; i++)
+         CPU_SET(i, &cpuset);
+
+      pthread_setaffinity_np(pthread_self(), sizeof(cpuset), &cpuset);
+   }
+#endif
+
+   if (strlen(queue->name) > 0) {
       char name[16];
-      util_snprintf(name, sizeof(name), "%s:%i", queue->name, thread_index);
+      util_snprintf(name, sizeof(name), "%s%i", queue->name, thread_index);
       u_thread_setname(name);
    }
 
@@ -215,8 +314,34 @@ util_queue_init(struct util_queue *queue,
 {
    unsigned i;
 
+   /* Form the thread name from process_name and name, limited to 13
+    * characters. Characters 14-15 are reserved for the thread number.
+    * Character 16 should be 0. Final form: "process:name12"
+    *
+    * If name is too long, it's truncated. If any space is left, the process
+    * name fills it.
+    */
+   const char *process_name = util_get_process_name();
+   int process_len = process_name ? strlen(process_name) : 0;
+   int name_len = strlen(name);
+   const int max_chars = sizeof(queue->name) - 1;
+
+   name_len = MIN2(name_len, max_chars);
+
+   /* See if there is any space left for the process name, reserve 1 for
+    * the colon. */
+   process_len = MIN2(process_len, max_chars - name_len - 1);
+   process_len = MAX2(process_len, 0);
+
    memset(queue, 0, sizeof(*queue));
-   queue->name = name;
+
+   if (process_len) {
+      util_snprintf(queue->name, sizeof(queue->name), "%.*s:%s",
+                    process_len, process_name, name);
+   } else {
+      util_snprintf(queue->name, sizeof(queue->name), "%s", name);
+   }
+
    queue->flags = flags;
    queue->num_threads = num_threads;
    queue->max_jobs = max_jobs;
@@ -227,6 +352,7 @@ util_queue_init(struct util_queue *queue,
       goto fail;
 
    (void) mtx_init(&queue->lock, mtx_plain);
+   (void) mtx_init(&queue->finish_lock, mtx_plain);
 
    queue->num_queued = 0;
    cnd_init(&queue->has_queued_cond);
@@ -314,6 +440,7 @@ util_queue_destroy(struct util_queue *queue)
 
    cnd_destroy(&queue->has_space_cond);
    cnd_destroy(&queue->has_queued_cond);
+   mtx_destroy(&queue->finish_lock);
    mtx_destroy(&queue->lock);
    free(queue->jobs);
    free(queue->threads);
@@ -328,8 +455,6 @@ util_queue_add_job(struct util_queue *queue,
 {
    struct util_queue_job *ptr;
 
-   assert(fence->signalled);
-
    mtx_lock(&queue->lock);
    if (queue->kill_threads) {
       mtx_unlock(&queue->lock);
@@ -339,7 +464,7 @@ util_queue_add_job(struct util_queue *queue,
       return;
    }
 
-   fence->signalled = false;
+   util_queue_fence_reset(fence);
 
    assert(queue->num_queued >= 0 && queue->num_queued <= queue->max_jobs);
 
@@ -427,6 +552,46 @@ util_queue_drop_job(struct util_queue *queue, struct util_queue_fence *fence)
       util_queue_fence_signal(fence);
    else
       util_queue_fence_wait(fence);
+}
+
+static void
+util_queue_finish_execute(void *data, int num_thread)
+{
+   util_barrier *barrier = data;
+   util_barrier_wait(barrier);
+}
+
+/**
+ * Wait until all previously added jobs have completed.
+ */
+void
+util_queue_finish(struct util_queue *queue)
+{
+   util_barrier barrier;
+   struct util_queue_fence *fences = malloc(queue->num_threads * sizeof(*fences));
+
+   util_barrier_init(&barrier, queue->num_threads);
+
+   /* If 2 threads were adding jobs for 2 different barries at the same time,
+    * a deadlock would happen, because 1 barrier requires that all threads
+    * wait for it exclusively.
+    */
+   mtx_lock(&queue->finish_lock);
+
+   for (unsigned i = 0; i < queue->num_threads; ++i) {
+      util_queue_fence_init(&fences[i]);
+      util_queue_add_job(queue, &barrier, &fences[i], util_queue_finish_execute, NULL);
+   }
+
+   for (unsigned i = 0; i < queue->num_threads; ++i) {
+      util_queue_fence_wait(&fences[i]);
+      util_queue_fence_destroy(&fences[i]);
+   }
+   mtx_unlock(&queue->finish_lock);
+
+   util_barrier_destroy(&barrier);
+
+   free(fences);
 }
 
 int64_t

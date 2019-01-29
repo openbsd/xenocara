@@ -43,6 +43,7 @@ public:
    src_reg(struct ::brw_reg reg);
 
    bool equals(const src_reg &r) const;
+   bool negative_equals(const src_reg &r) const;
 
    src_reg(class vec4_visitor *v, const struct glsl_type *type);
    src_reg(class vec4_visitor *v, const struct glsl_type *type, int size);
@@ -290,6 +291,7 @@ public:
                       int swizzle, int swizzle_mask);
    void reswizzle(int dst_writemask, int swizzle);
    bool can_do_source_mods(const struct gen_device_info *devinfo);
+   bool can_do_cmod();
    bool can_do_writemask(const struct gen_device_info *devinfo);
    bool can_change_types() const;
    bool has_source_and_destination_hazard() const;
@@ -329,8 +331,34 @@ public:
    bool writes_flag()
    {
       return (conditional_mod && (opcode != BRW_OPCODE_SEL &&
+                                  opcode != BRW_OPCODE_CSEL &&
                                   opcode != BRW_OPCODE_IF &&
                                   opcode != BRW_OPCODE_WHILE));
+   }
+
+   bool reads_g0_implicitly() const
+   {
+      switch (opcode) {
+      case SHADER_OPCODE_TEX:
+      case SHADER_OPCODE_TXL:
+      case SHADER_OPCODE_TXD:
+      case SHADER_OPCODE_TXF:
+      case SHADER_OPCODE_TXF_CMS_W:
+      case SHADER_OPCODE_TXF_CMS:
+      case SHADER_OPCODE_TXF_MCS:
+      case SHADER_OPCODE_TXS:
+      case SHADER_OPCODE_TG4:
+      case SHADER_OPCODE_TG4_OFFSET:
+      case SHADER_OPCODE_SAMPLEINFO:
+      case VS_OPCODE_PULL_CONSTANT_LOAD:
+      case GS_OPCODE_SET_PRIMITIVE_ID:
+      case GS_OPCODE_GET_INSTANCE_ID:
+      case SHADER_OPCODE_GEN4_SCRATCH_READ:
+      case SHADER_OPCODE_GEN4_SCRATCH_WRITE:
+         return true;
+      default:
+         return false;
+      }
    }
 };
 

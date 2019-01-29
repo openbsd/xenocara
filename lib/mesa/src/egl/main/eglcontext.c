@@ -386,6 +386,15 @@ _eglParseContextAttribList(_EGLContext *ctx, _EGLDisplay *dpy,
             break;
          }
 
+      case EGL_CONTEXT_RELEASE_BEHAVIOR_KHR:
+         if (val == EGL_CONTEXT_RELEASE_BEHAVIOR_NONE_KHR ||
+             val == EGL_CONTEXT_RELEASE_BEHAVIOR_FLUSH_KHR) {
+            ctx->ReleaseBehavior = val;
+         } else {
+            err = EGL_BAD_ATTRIBUTE;
+         }
+         break;
+
       default:
          err = EGL_BAD_ATTRIBUTE;
          break;
@@ -579,15 +588,14 @@ _eglInitContext(_EGLContext *ctx, _EGLDisplay *dpy, _EGLConfig *conf,
    _eglInitResource(&ctx->Resource, sizeof(*ctx), dpy);
    ctx->ClientAPI = api;
    ctx->Config = conf;
-   ctx->WindowRenderBuffer = EGL_NONE;
    ctx->Profile = EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT_KHR;
 
    ctx->ClientMajorVersion = 1; /* the default, per EGL spec */
    ctx->ClientMinorVersion = 0;
    ctx->Flags = 0;
-   ctx->Profile = EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT_KHR;
    ctx->ResetNotificationStrategy = EGL_NO_RESET_NOTIFICATION_KHR;
    ctx->ContextPriority = EGL_CONTEXT_PRIORITY_MEDIUM_IMG;
+   ctx->ReleaseBehavior = EGL_CONTEXT_RELEASE_BEHAVIOR_FLUSH_KHR;
 
    err = _eglParseContextAttribList(ctx, dpy, attrib_list);
    if (err == EGL_SUCCESS && ctx->Config) {
@@ -611,15 +619,42 @@ static EGLint
 _eglQueryContextRenderBuffer(_EGLContext *ctx)
 {
    _EGLSurface *surf = ctx->DrawSurface;
-   EGLint rb;
 
+   /* From the EGL 1.5 spec:
+    *
+    *    - If the context is not bound to a surface, then EGL_NONE will be
+    *      returned.
+    */
    if (!surf)
       return EGL_NONE;
-   if (surf->Type == EGL_WINDOW_BIT && ctx->WindowRenderBuffer != EGL_NONE)
-      rb = ctx->WindowRenderBuffer;
-   else
-      rb = surf->RenderBuffer;
-   return rb;
+
+   switch (surf->Type) {
+   default:
+      unreachable("bad EGLSurface type");
+   case EGL_PIXMAP_BIT:
+      /* - If the context is bound to a pixmap surface, then EGL_SINGLE_BUFFER
+       *   will be returned.
+       */
+      return EGL_SINGLE_BUFFER;
+   case EGL_PBUFFER_BIT:
+      /* - If the context is bound to a pbuffer surface, then EGL_BACK_BUFFER
+       *   will be returned.
+       */
+      return EGL_BACK_BUFFER;
+   case EGL_WINDOW_BIT:
+      /* - If the context is bound to a window surface, then either
+       *   EGL_BACK_BUFFER or EGL_SINGLE_BUFFER may be returned. The value
+       *   returned depends on both the buffer requested by the setting of the
+       *   EGL_RENDER_BUFFER property of the surface [...], and on the client
+       *   API (not all client APIs support single-buffer Rendering to window
+       *   surfaces). Some client APIs allow control of whether rendering goes
+       *   to the front or back buffer. This client API-specific choice is not
+       *   reflected in the returned value, which only describes the buffer
+       *   that will be rendered to by default if not overridden by the client
+       *   API.
+       */
+      return surf->ActiveRenderBuffer;
+   }
 }
 
 

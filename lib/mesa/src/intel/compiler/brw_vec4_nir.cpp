@@ -37,12 +37,7 @@ vec4_visitor::emit_nir_code()
    if (nir->num_uniforms > 0)
       nir_setup_uniforms();
 
-   /* get the main function and emit it */
-   nir_foreach_function(function, nir) {
-      assert(strcmp(function->name, "main") == 0);
-      assert(function->impl);
-      nir_emit_impl(function->impl);
-   }
+   nir_emit_impl(nir_shader_get_entrypoint((nir_shader *)nir));
 }
 
 void
@@ -169,8 +164,7 @@ vec4_visitor::nir_emit_instr(nir_instr *instr)
       break;
 
    default:
-      fprintf(stderr, "VS instruction not yet implemented by NIR->vec4\n");
-      break;
+      unreachable("VS instruction not yet implemented by NIR->vec4");
    }
 }
 
@@ -455,7 +449,7 @@ vec4_visitor::nir_emit_intrinsic(nir_intrinsic_instr *instr)
          prog_data->base.binding_table.ssbo_start + ssbo_index;
       dst_reg result_dst = get_nir_dest(instr->dest);
       vec4_instruction *inst = new(mem_ctx)
-         vec4_instruction(VS_OPCODE_GET_BUFFER_SIZE, result_dst);
+         vec4_instruction(SHADER_OPCODE_GET_BUFFER_SIZE, result_dst);
 
       inst->base_mrf = 2;
       inst->mlen = 1; /* always at least one */
@@ -710,9 +704,20 @@ vec4_visitor::nir_emit_intrinsic(nir_intrinsic_instr *instr)
       break;
    }
 
-   case nir_intrinsic_ssbo_atomic_add:
-      nir_emit_ssbo_atomic(BRW_AOP_ADD, instr);
+   case nir_intrinsic_ssbo_atomic_add: {
+      int op = BRW_AOP_ADD;
+      const nir_const_value *const val = nir_src_as_const_value(instr->src[2]);
+
+      if (val != NULL) {
+         if (val->i32[0] == 1)
+            op = BRW_AOP_INC;
+         else if (val->i32[0] == -1)
+            op = BRW_AOP_DEC;
+      }
+
+      nir_emit_ssbo_atomic(op, instr);
       break;
+   }
    case nir_intrinsic_ssbo_atomic_imin:
       nir_emit_ssbo_atomic(BRW_AOP_IMIN, instr);
       break;
@@ -801,52 +806,6 @@ vec4_visitor::nir_emit_intrinsic(nir_intrinsic_instr *instr)
          emit(SHADER_OPCODE_MOV_INDIRECT, dest, src,
               indirect, brw_imm_ud(instr->const_index[1]));
       }
-      break;
-   }
-
-   case nir_intrinsic_atomic_counter_inc:
-   case nir_intrinsic_atomic_counter_dec:
-   case nir_intrinsic_atomic_counter_read:
-   case nir_intrinsic_atomic_counter_add:
-   case nir_intrinsic_atomic_counter_min:
-   case nir_intrinsic_atomic_counter_max:
-   case nir_intrinsic_atomic_counter_and:
-   case nir_intrinsic_atomic_counter_or:
-   case nir_intrinsic_atomic_counter_xor:
-   case nir_intrinsic_atomic_counter_exchange:
-   case nir_intrinsic_atomic_counter_comp_swap: {
-      unsigned surf_index = prog_data->base.binding_table.abo_start +
-         (unsigned) instr->const_index[0];
-      const vec4_builder bld =
-         vec4_builder(this).at_end().annotate(current_annotation, base_ir);
-
-      /* Get some metadata from the image intrinsic. */
-      const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
-
-      /* Get the arguments of the atomic intrinsic. */
-      src_reg offset = get_nir_src(instr->src[0], nir_type_int32,
-                                   instr->num_components);
-      const src_reg surface = brw_imm_ud(surf_index);
-      const src_reg src0 = (info->num_srcs >= 2
-                           ? get_nir_src(instr->src[1]) : src_reg());
-      const src_reg src1 = (info->num_srcs >= 3
-                           ? get_nir_src(instr->src[2]) : src_reg());
-
-      src_reg tmp;
-
-      dest = get_nir_dest(instr->dest);
-
-      if (instr->intrinsic == nir_intrinsic_atomic_counter_read) {
-         tmp = emit_untyped_read(bld, surface, offset, 1, 1);
-      } else {
-         tmp = emit_untyped_atomic(bld, surface, offset,
-                                   src0, src1,
-                                   1, 1,
-                                   get_atomic_counter_op(instr->intrinsic));
-      }
-
-      bld.MOV(retype(dest, tmp.type), tmp);
-      brw_mark_surface_used(stage_prog_data, surf_index);
       break;
    }
 
@@ -984,7 +943,9 @@ vec4_visitor::nir_emit_ssbo_atomic(int op, nir_intrinsic_instr *instr)
    }
 
    src_reg offset = get_nir_src(instr->src[1], 1);
-   src_reg data1 = get_nir_src(instr->src[2], 1);
+   src_reg data1;
+   if (op != BRW_AOP_INC && op != BRW_AOP_DEC && op != BRW_AOP_PREDEC)
+      data1 = get_nir_src(instr->src[2], 1);
    src_reg data2;
    if (op == BRW_AOP_CMPWR)
       data2 = get_nir_src(instr->src[3], 1);
@@ -1620,7 +1581,12 @@ vec4_visitor::nir_emit_alu(nir_alu_instr *instr)
 
    case nir_op_b2i:
    case nir_op_b2f:
-      emit(MOV(dst, negate(op[0])));
+      if (nir_dest_bit_size(instr->dest.dest) > 32) {
+         assert(dst.type == BRW_REGISTER_TYPE_DF);
+         emit_conversion_to_double(dst, negate(op[0]), false);
+      } else {
+         emit(MOV(dst, negate(op[0])));
+      }
       break;
 
    case nir_op_f2b:
@@ -1852,7 +1818,20 @@ vec4_visitor::nir_emit_alu(nir_alu_instr *instr)
       unreachable("not reached: should have been lowered");
 
    case nir_op_fsign:
-      if (type_sz(op[0].type) < 8) {
+      assert(!instr->dest.saturate);
+      if (op[0].abs) {
+         /* Straightforward since the source can be assumed to be either
+          * strictly >= 0 or strictly <= 0 depending on the setting of the
+          * negate flag.
+          */
+         inst = emit(MOV(dst, op[0]));
+         inst->conditional_mod = BRW_CONDITIONAL_NZ;
+
+         inst = (op[0].negate)
+            ? emit(MOV(dst, brw_imm_f(-1.0f)))
+            : emit(MOV(dst, brw_imm_f(1.0f)));
+         inst->predicate = BRW_PREDICATE_NORMAL;
+       } else if (type_sz(op[0].type) < 8) {
          /* AND(val, 0x80000000) gives the sign bit.
           *
           * Predicated OR ORs 1.0 (0x3f800000) with the sign bit if val is not
@@ -1867,11 +1846,6 @@ vec4_visitor::nir_emit_alu(nir_alu_instr *instr)
          inst = emit(OR(dst, src_reg(dst), brw_imm_ud(0x3f800000u)));
          inst->predicate = BRW_PREDICATE_NORMAL;
          dst.type = BRW_REGISTER_TYPE_F;
-
-         if (instr->dest.saturate) {
-            inst = emit(MOV(dst, src_reg(dst)));
-            inst->saturate = true;
-         }
       } else {
          /* For doubles we do the same but we need to consider:
           *
@@ -1904,7 +1878,7 @@ vec4_visitor::nir_emit_alu(nir_alu_instr *instr)
          /* Now convert the result from float to double */
          emit_conversion_to_double(dst, retype(src_reg(tmp),
                                                BRW_REGISTER_TYPE_F),
-                                   instr->dest.saturate);
+                                   false);
       }
       break;
 

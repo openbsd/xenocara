@@ -132,6 +132,7 @@ CORE_CXX_SOURCES := \
 	rasterizer/core/threads.h \
 	rasterizer/core/tilemgr.cpp \
 	rasterizer/core/tilemgr.h \
+	rasterizer/core/tileset.h \
 	rasterizer/core/utils.h
 
 JITTER_CXX_SOURCES := \
@@ -140,15 +141,23 @@ JITTER_CXX_SOURCES := \
 	rasterizer/jitter/builder.cpp \
 	rasterizer/jitter/builder.h \
 	rasterizer/jitter/builder_math.h \
+	rasterizer/jitter/builder_mem.cpp \
+	rasterizer/jitter/builder_mem.h \
+	rasterizer/jitter/builder_gfx_mem.cpp \
+	rasterizer/jitter/builder_gfx_mem.h \
 	rasterizer/jitter/builder_misc.cpp \
 	rasterizer/jitter/builder_misc.h \
 	rasterizer/jitter/fetch_jit.cpp \
 	rasterizer/jitter/fetch_jit.h \
 	rasterizer/jitter/jit_api.h \
+	rasterizer/jitter/jit_pch.hpp \
 	rasterizer/jitter/JitManager.cpp \
 	rasterizer/jitter/JitManager.h \
 	rasterizer/jitter/streamout_jit.cpp \
-	rasterizer/jitter/streamout_jit.h
+	rasterizer/jitter/streamout_jit.h \
+	rasterizer/jitter/shader_lib/DebugOutput.cpp \
+	rasterizer/jitter/functionpasses/passes.h \
+	rasterizer/jitter/functionpasses/lower_x86.cpp
 
 MEMORY_CXX_SOURCES := \
 	rasterizer/memory/ClearTile.cpp \
@@ -168,4 +177,6 @@ MEMORY_CXX_SOURCES := \
 	rasterizer/memory/StoreTile_TileY2.cpp \
 	rasterizer/memory/StoreTile_TileY.cpp \
 	rasterizer/memory/TilingFunctions.h \
-	rasterizer/memory/tilingtraits.h
+	rasterizer/memory/tilingtraits.h \
+	rasterizer/memory/InitMemory.cpp \
+	rasterizer/memory/InitMemory.h

@@ -34,16 +34,14 @@
 #ifndef ST_DRAW_H
 #define ST_DRAW_H
 
-#include "main/compiler.h"
 #include "main/glheader.h"
 
 struct _mesa_index_buffer;
 struct _mesa_prim;
-struct gl_vertex_array;
 struct gl_context;
 struct st_context;
 
-void st_init_draw( struct st_context *st );
+void st_init_draw_functions(struct dd_function_table *functions);
 
 void st_destroy_draw( struct st_context *st );
 

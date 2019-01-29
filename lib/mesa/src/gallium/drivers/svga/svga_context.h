@@ -31,7 +31,7 @@
 #include "pipe/p_defines.h"
 #include "pipe/p_state.h"
 
-#include "os/os_time.h"
+#include "util/os_time.h"
 
 #include "util/u_blitter.h"
 #include "util/list.h"
@@ -73,6 +73,7 @@ enum svga_hud {
    SVGA_QUERY_NUM_SURFACE_VIEWS,
    SVGA_QUERY_NUM_GENERATE_MIPMAP,
    SVGA_QUERY_NUM_FAILED_ALLOCATIONS,
+   SVGA_QUERY_NUM_COMMANDS_PER_DRAW,
 
 /*SVGA_QUERY_MAX has to be last because it is size of an array*/
    SVGA_QUERY_MAX
@@ -211,7 +212,7 @@ struct svga_sampler_state {
    unsigned view_min_lod;
    unsigned view_max_lod;
 
-   SVGA3dSamplerId id;
+   SVGA3dSamplerId id[2];
 };
 
 
@@ -299,8 +300,6 @@ struct svga_state
    struct {
       unsigned flag_1d;
       unsigned flag_srgb;
-      unsigned flag_rect;  /* sampler views with rectangular texture target */
-      unsigned flag_buf;   /* sampler views with texture buffer target */
    } tex_flags;
 
    unsigned sample_mask;
@@ -716,6 +715,12 @@ static inline boolean
 svga_have_vgpu10(const struct svga_context *svga)
 {
    return svga_screen(svga->pipe.screen)->sws->have_vgpu10;
+}
+
+static inline boolean
+svga_have_sm4_1(const struct svga_context *svga)
+{
+   return svga_screen(svga->pipe.screen)->sws->have_sm4_1;
 }
 
 static inline boolean

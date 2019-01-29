@@ -43,10 +43,20 @@
 
 #define RDECODE_PKT2()				(RDECODE_PKT_TYPE_S(2))
 
+#define RDECODE_PKT_REG_J(x)			((unsigned)(x) & 0x3FFFF)
+#define RDECODE_PKT_RES_J(x)			(((unsigned)(x)	& 0x3F) << 18)
+#define RDECODE_PKT_COND_J(x)			(((unsigned)(x)	& 0xF) << 24)
+#define RDECODE_PKT_TYPE_J(x)			(((unsigned)(x)	& 0xF) << 28)
+#define RDECODE_PKTJ(reg, cond, type)		(RDECODE_PKT_REG_J(reg) | \
+						RDECODE_PKT_RES_J(0) | \
+						RDECODE_PKT_COND_J(cond) | \
+						RDECODE_PKT_TYPE_J(type))
+
 #define RDECODE_CMD_MSG_BUFFER				0x00000000
 #define RDECODE_CMD_DPB_BUFFER				0x00000001
 #define RDECODE_CMD_DECODING_TARGET_BUFFER		0x00000002
 #define RDECODE_CMD_FEEDBACK_BUFFER			0x00000003
+#define RDECODE_CMD_PROB_TBL_BUFFER			0x00000004
 #define RDECODE_CMD_SESSION_CONTEXT_BUFFER		0x00000005
 #define RDECODE_CMD_BITSTREAM_BUFFER			0x00000100
 #define RDECODE_CMD_IT_SCALING_TABLE_BUFFER		0x00000204
@@ -61,7 +71,9 @@
 #define RDECODE_CODEC_MPEG2_VLD 			0x00000003
 #define RDECODE_CODEC_MPEG4				0x00000004
 #define RDECODE_CODEC_H264_PERF 			0x00000007
+#define RDECODE_CODEC_JPEG				0x00000008
 #define RDECODE_CODEC_H265				0x00000010
+#define RDECODE_CODEC_VP9				0x00000011
 
 #define RDECODE_ARRAY_MODE_LINEAR			0x00000000
 #define RDECODE_ARRAY_MODE_MACRO_LINEAR_MICRO_TILED	0x00000001
@@ -100,10 +112,117 @@
 #define RDECODE_MESSAGE_MPEG2_VLD			0x0000000A
 #define RDECODE_MESSAGE_MPEG4_ASP_VLD			0x0000000B
 #define RDECODE_MESSAGE_HEVC				0x0000000D
+#define RDECODE_MESSAGE_VP9				0x0000000E
 
 #define RDECODE_FEEDBACK_PROFILING			0x00000001
 
 #define RDECODE_SPS_INFO_H264_EXTENSION_SUPPORT_FLAG_SHIFT	7
+
+#define NUM_BUFFERS			4
+
+#define RDECODE_VP9_PROBS_DATA_SIZE			2304
+
+#define mmUVD_JPEG_CNTL 				0x0200
+#define mmUVD_JPEG_CNTL_BASE_IDX			1
+#define mmUVD_JPEG_RB_BASE				0x0201
+#define mmUVD_JPEG_RB_BASE_BASE_IDX			1
+#define mmUVD_JPEG_RB_WPTR				0x0202
+#define mmUVD_JPEG_RB_WPTR_BASE_IDX			1
+#define mmUVD_JPEG_RB_RPTR				0x0203
+#define mmUVD_JPEG_RB_RPTR_BASE_IDX			1
+#define mmUVD_JPEG_RB_SIZE				0x0204
+#define mmUVD_JPEG_RB_SIZE_BASE_IDX			1
+#define mmUVD_JPEG_TIER_CNTL2				0x021a
+#define mmUVD_JPEG_TIER_CNTL2_BASE_IDX			1
+#define mmUVD_JPEG_UV_TILING_CTRL			0x021c
+#define mmUVD_JPEG_UV_TILING_CTRL_BASE_IDX		1
+#define mmUVD_JPEG_TILING_CTRL				0x021e
+#define mmUVD_JPEG_TILING_CTRL_BASE_IDX 		1
+#define mmUVD_JPEG_OUTBUF_RPTR				0x0220
+#define mmUVD_JPEG_OUTBUF_RPTR_BASE_IDX 		1
+#define mmUVD_JPEG_OUTBUF_WPTR				0x0221
+#define mmUVD_JPEG_OUTBUF_WPTR_BASE_IDX 		1
+#define mmUVD_JPEG_PITCH				0x0222
+#define mmUVD_JPEG_PITCH_BASE_IDX			1
+#define mmUVD_JPEG_INT_EN				0x0229
+#define mmUVD_JPEG_INT_EN_BASE_IDX			1
+#define mmUVD_JPEG_UV_PITCH				0x022b
+#define mmUVD_JPEG_UV_PITCH_BASE_IDX			1
+#define mmUVD_JPEG_INDEX				0x023e
+#define mmUVD_JPEG_INDEX_BASE_IDX			1
+#define mmUVD_JPEG_DATA 				0x023f
+#define mmUVD_JPEG_DATA_BASE_IDX			1
+#define mmUVD_LMI_JPEG_WRITE_64BIT_BAR_HIGH		0x0438
+#define mmUVD_LMI_JPEG_WRITE_64BIT_BAR_HIGH_BASE_IDX	1
+#define mmUVD_LMI_JPEG_WRITE_64BIT_BAR_LOW		0x0439
+#define mmUVD_LMI_JPEG_WRITE_64BIT_BAR_LOW_BASE_IDX	1
+#define mmUVD_LMI_JPEG_READ_64BIT_BAR_HIGH		0x045a
+#define mmUVD_LMI_JPEG_READ_64BIT_BAR_HIGH_BASE_IDX	1
+#define mmUVD_LMI_JPEG_READ_64BIT_BAR_LOW		0x045b
+#define mmUVD_LMI_JPEG_READ_64BIT_BAR_LOW_BASE_IDX	1
+#define mmUVD_CTX_INDEX 				0x0528
+#define mmUVD_CTX_INDEX_BASE_IDX			1
+#define mmUVD_CTX_DATA  				0x0529
+#define mmUVD_CTX_DATA_BASE_IDX 			1
+#define mmUVD_SOFT_RESET				0x05a0
+#define mmUVD_SOFT_RESET_BASE_IDX			1
+
+#define UVD_BASE_INST0_SEG0				0x00007800
+#define UVD_BASE_INST0_SEG1				0x00007E00
+#define UVD_BASE_INST0_SEG2				0
+#define UVD_BASE_INST0_SEG3				0
+#define UVD_BASE_INST0_SEG4				0
+
+#define SOC15_REG_ADDR(reg)			(UVD_BASE_INST0_SEG1 + reg)
+
+#define COND0	0
+#define COND1	1
+#define COND2	2
+#define COND3	3
+#define COND4	4
+#define COND5	5
+#define COND6	6
+#define COND7	7
+
+#define TYPE0	0
+#define TYPE1	1
+#define TYPE2	2
+#define TYPE3	3
+#define TYPE4	4
+#define TYPE5	5
+#define TYPE6	6
+#define TYPE7	7
+
+/* VP9 Frame header flags */
+#define RDECODE_FRAME_HDR_INFO_VP9_USE_PREV_IN_FIND_MV_REFS_SHIFT              (13)
+#define RDECODE_FRAME_HDR_INFO_VP9_MODE_REF_DELTA_UPDATE_SHIFT                 (12)
+#define RDECODE_FRAME_HDR_INFO_VP9_MODE_REF_DELTA_ENABLED_SHIFT                (11)
+#define RDECODE_FRAME_HDR_INFO_VP9_SEGMENTATION_UPDATE_DATA_SHIFT              (10)
+#define RDECODE_FRAME_HDR_INFO_VP9_SEGMENTATION_TEMPORAL_UPDATE_SHIFT           (9)
+#define RDECODE_FRAME_HDR_INFO_VP9_SEGMENTATION_UPDATE_MAP_SHIFT                (8)
+#define RDECODE_FRAME_HDR_INFO_VP9_SEGMENTATION_ENABLED_SHIFT                   (7)
+#define RDECODE_FRAME_HDR_INFO_VP9_FRAME_PARALLEL_DECODING_MODE_SHIFT           (6)
+#define RDECODE_FRAME_HDR_INFO_VP9_REFRESH_FRAME_CONTEXT_SHIFT                  (5)
+#define RDECODE_FRAME_HDR_INFO_VP9_ALLOW_HIGH_PRECISION_MV_SHIFT                (4)
+#define RDECODE_FRAME_HDR_INFO_VP9_INTRA_ONLY_SHIFT                             (3)
+#define RDECODE_FRAME_HDR_INFO_VP9_ERROR_RESILIENT_MODE_SHIFT                   (2)
+#define RDECODE_FRAME_HDR_INFO_VP9_FRAME_TYPE_SHIFT                             (1)
+#define RDECODE_FRAME_HDR_INFO_VP9_SHOW_EXISTING_FRAME_SHIFT                    (0)
+
+#define RDECODE_FRAME_HDR_INFO_VP9_USE_PREV_IN_FIND_MV_REFS_MASK                (0x00002000)
+#define RDECODE_FRAME_HDR_INFO_VP9_MODE_REF_DELTA_UPDATE_MASK                   (0x00001000)
+#define RDECODE_FRAME_HDR_INFO_VP9_MODE_REF_DELTA_ENABLED_MASK                  (0x00000800)
+#define RDECODE_FRAME_HDR_INFO_VP9_SEGMENTATION_UPDATE_DATA_MASK                (0x00000400)
+#define RDECODE_FRAME_HDR_INFO_VP9_SEGMENTATION_TEMPORAL_UPDATE_MASK            (0x00000200)
+#define RDECODE_FRAME_HDR_INFO_VP9_SEGMENTATION_UPDATE_MAP_MASK                 (0x00000100)
+#define RDECODE_FRAME_HDR_INFO_VP9_SEGMENTATION_ENABLED_MASK                    (0x00000080)
+#define RDECODE_FRAME_HDR_INFO_VP9_FRAME_PARALLEL_DECODING_MODE_MASK            (0x00000040)
+#define RDECODE_FRAME_HDR_INFO_VP9_REFRESH_FRAME_CONTEXT_MASK                   (0x00000020)
+#define RDECODE_FRAME_HDR_INFO_VP9_ALLOW_HIGH_PRECISION_MV_MASK                 (0x00000010)
+#define RDECODE_FRAME_HDR_INFO_VP9_INTRA_ONLY_MASK                              (0x00000008)
+#define RDECODE_FRAME_HDR_INFO_VP9_ERROR_RESILIENT_MODE_MASK                    (0x00000004)
+#define RDECODE_FRAME_HDR_INFO_VP9_FRAME_TYPE_MASK                              (0x00000002)
+#define RDECODE_FRAME_HDR_INFO_VP9_SHOW_EXISTING_FRAME_MASK                     (0x00000001)
 
 typedef struct rvcn_dec_message_index_s {
 	unsigned int	message_id;
@@ -443,6 +562,47 @@ typedef struct rvcn_dec_message_hevc_s {
 	unsigned char	direct_reflist[2][15];
 } rvcn_dec_message_hevc_t;
 
+typedef struct rvcn_dec_message_vp9_s {
+	unsigned int	frame_header_flags;
+
+	unsigned char	frame_context_idx;
+	unsigned char	reset_frame_context;
+
+	unsigned char	curr_pic_idx;
+	unsigned char	interp_filter;
+
+	unsigned char	filter_level;
+	unsigned char	sharpness_level;
+	unsigned char	lf_adj_level[8][4][2];
+	unsigned char	base_qindex;
+	signed char	y_dc_delta_q;
+	signed char	uv_ac_delta_q;
+	signed char	uv_dc_delta_q;
+
+	unsigned char	log2_tile_cols;
+	unsigned char	log2_tile_rows;
+	unsigned char	tx_mode;
+	unsigned char	reference_mode;
+	unsigned char	chroma_format;
+
+	unsigned char	ref_frame_map[8];
+
+	unsigned char	frame_refs[3];
+	unsigned char	ref_frame_sign_bias[3];
+	unsigned char	frame_to_show;
+	unsigned char	bit_depth_luma_minus8;
+	unsigned char	bit_depth_chroma_minus8;
+
+	unsigned char	p010_mode;
+	unsigned char	msb_mode;
+	unsigned char	luma_10to8;
+	unsigned char	chroma_10to8;
+
+	unsigned int	vp9_frame_size;
+	unsigned int	compressed_header_size;
+	unsigned int	uncompressed_header_size;
+} rvcn_dec_message_vp9_t;
+
 typedef struct rvcn_dec_feature_index_s {
 	unsigned int	feature_id;
 	unsigned int	offset;
@@ -499,6 +659,118 @@ typedef struct rvcn_dec_feedback_profiling_s {
 	unsigned int	dmaHwCrc32Value;
 	unsigned int	dmaHwCrc32Value2;
 } rvcn_dec_feedback_profiling_t;
+
+typedef struct rvcn_dec_vp9_nmv_ctx_mask_s {
+    unsigned short	classes_mask[2];
+    unsigned short	bits_mask[2];
+    unsigned char	joints_mask;
+    unsigned char	sign_mask[2];
+    unsigned char	class0_mask[2];
+    unsigned char	class0_fp_mask[2];
+    unsigned char	fp_mask[2];
+    unsigned char	class0_hp_mask[2];
+    unsigned char	hp_mask[2];
+    unsigned char	reserve[11];
+} rvcn_dec_vp9_nmv_ctx_mask_t;
+
+typedef struct rvcn_dec_vp9_nmv_component_s{
+    unsigned char	sign;
+    unsigned char	classes[10];
+    unsigned char	class0[1];
+    unsigned char	bits[10];
+    unsigned char	class0_fp[2][3];
+    unsigned char	fp[3];
+    unsigned char	class0_hp;
+    unsigned char	hp;
+} rvcn_dec_vp9_nmv_component_t;
+
+typedef struct rvcn_dec_vp9_probs_s {
+    rvcn_dec_vp9_nmv_ctx_mask_t	nmvc_mask;
+    unsigned char	coef_probs[4][2][2][6][6][3];
+    unsigned char	y_mode_prob[4][9];
+    unsigned char	uv_mode_prob[10][9];
+    unsigned char	single_ref_prob[5][2];
+    unsigned char	switchable_interp_prob[4][2];
+    unsigned char	partition_prob[16][3];
+    unsigned char	inter_mode_probs[7][3];
+    unsigned char	mbskip_probs[3];
+    unsigned char	intra_inter_prob[4];
+    unsigned char	comp_inter_prob[5];
+    unsigned char	comp_ref_prob[5];
+    unsigned char	tx_probs_32x32[2][3];
+    unsigned char	tx_probs_16x16[2][2];
+    unsigned char	tx_probs_8x8[2][1];
+    unsigned char	mv_joints[3];
+    rvcn_dec_vp9_nmv_component_t mv_comps[2];
+} rvcn_dec_vp9_probs_t;
+
+typedef struct rvcn_dec_vp9_probs_segment_s {
+    union {
+        rvcn_dec_vp9_probs_t	probs;
+        unsigned char	probs_data[RDECODE_VP9_PROBS_DATA_SIZE];
+    };
+
+    union {
+        struct {
+            unsigned int	feature_data[8];
+            unsigned char	tree_probs[7];
+            unsigned char	pred_probs[3];
+            unsigned char	abs_delta;
+            unsigned char	feature_mask[8];
+        } seg;
+        unsigned char	segment_data[256];
+    };
+} rvcn_dec_vp9_probs_segment_t;
+
+struct jpeg_params {
+	unsigned			bsd_size;
+	unsigned			dt_pitch;
+	unsigned			dt_uv_pitch;
+	unsigned			dt_luma_top_offset;
+	unsigned			dt_chroma_top_offset;
+};
+
+struct radeon_decoder {
+	struct pipe_video_codec		base;
+
+	unsigned			stream_handle;
+	unsigned			stream_type;
+	unsigned			frame_number;
+
+	struct pipe_screen		*screen;
+	struct radeon_winsys		*ws;
+	struct radeon_cmdbuf		*cs;
+
+	void				*msg;
+	uint32_t			*fb;
+	uint8_t				*it;
+	uint8_t				*probs;
+	void				*bs_ptr;
+
+	struct rvid_buffer		msg_fb_it_probs_buffers[NUM_BUFFERS];
+	struct rvid_buffer		bs_buffers[NUM_BUFFERS];
+	struct rvid_buffer		dpb;
+	struct rvid_buffer		ctx;
+	struct rvid_buffer		sessionctx;
+
+	unsigned			bs_size;
+	unsigned			cur_buffer;
+	void				*render_pic_list[16];
+	bool				show_frame;
+	unsigned			ref_idx;
+	struct jpeg_params		jpg;
+	void (*send_cmd)(struct radeon_decoder *dec,
+			 struct pipe_video_buffer *target,
+			 struct pipe_picture_desc *picture);
+};
+
+void send_cmd_dec(struct radeon_decoder *dec,
+		  struct pipe_video_buffer *target,
+		  struct pipe_picture_desc *picture);
+
+void send_cmd_jpeg(struct radeon_decoder *dec,
+		  struct pipe_video_buffer *target,
+		  struct pipe_picture_desc *picture);
 
 struct pipe_video_codec *radeon_create_decoder(struct pipe_context *context,
 		const struct pipe_video_codec *templat);

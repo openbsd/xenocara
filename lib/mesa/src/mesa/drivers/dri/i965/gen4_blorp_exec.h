@@ -46,8 +46,7 @@ instruction_state_address(struct blorp_batch *batch, uint32_t offset)
 }
 
 static struct blorp_address
-blorp_emit_vs_state(struct blorp_batch *batch,
-                    const struct blorp_params *params)
+blorp_emit_vs_state(struct blorp_batch *batch)
 {
    assert(batch->blorp->driver_ctx == batch->driver_batch);
    struct brw_context *brw = batch->driver_batch;
@@ -116,7 +115,7 @@ blorp_emit_wm_state(struct blorp_batch *batch,
          /* Iron Lake can't do sampler prefetch */
          wm.SamplerCount = (GEN_GEN != 5);
          wm.BindingTableEntryCount = 2;
-         uint32_t sampler = blorp_emit_sampler_state(batch, params);
+         uint32_t sampler = blorp_emit_sampler_state(batch);
          wm.SamplerStatePointer = dynamic_state_address(batch, sampler);
       }
 
@@ -133,17 +132,22 @@ blorp_emit_wm_state(struct blorp_batch *batch,
 
          wm._8PixelDispatchEnable = prog_data->dispatch_8;
          wm._16PixelDispatchEnable = prog_data->dispatch_16;
+         wm._32PixelDispatchEnable = prog_data->dispatch_32;
 
 #if GEN_GEN == 4
          wm.KernelStartPointer0 =
             instruction_state_address(batch, params->wm_prog_kernel);
-         wm.GRFRegisterCount0 = prog_data->reg_blocks_0;
+         wm.GRFRegisterCount0 = brw_wm_prog_data_reg_blocks(prog_data, wm, 0);
 #else
-         wm.KernelStartPointer0 = params->wm_prog_kernel;
-         wm.GRFRegisterCount0 = prog_data->reg_blocks_0;
-         wm.KernelStartPointer2 =
-            params->wm_prog_kernel + prog_data->prog_offset_2;
-         wm.GRFRegisterCount2 = prog_data->reg_blocks_2;
+         wm.KernelStartPointer0 = params->wm_prog_kernel +
+                                  brw_wm_prog_data_prog_offset(prog_data, wm, 0);
+         wm.KernelStartPointer1 = params->wm_prog_kernel +
+                                  brw_wm_prog_data_prog_offset(prog_data, wm, 1);
+         wm.KernelStartPointer2 = params->wm_prog_kernel +
+                                  brw_wm_prog_data_prog_offset(prog_data, wm, 2);
+         wm.GRFRegisterCount0 = brw_wm_prog_data_reg_blocks(prog_data, wm, 0);
+         wm.GRFRegisterCount1 = brw_wm_prog_data_reg_blocks(prog_data, wm, 1);
+         wm.GRFRegisterCount2 = brw_wm_prog_data_reg_blocks(prog_data, wm, 2);
 #endif
       }
 
@@ -155,10 +159,9 @@ blorp_emit_wm_state(struct blorp_batch *batch,
 }
 
 static struct blorp_address
-blorp_emit_color_calc_state(struct blorp_batch *batch,
-                            const struct blorp_params *params)
+blorp_emit_color_calc_state(struct blorp_batch *batch)
 {
-   uint32_t cc_viewport = blorp_emit_cc_viewport(batch, params);
+   uint32_t cc_viewport = blorp_emit_cc_viewport(batch);
 
    uint32_t offset;
    blorp_emit_dynamic(batch, GENX(COLOR_CALC_STATE), cc, 64, &offset) {
@@ -178,12 +181,12 @@ blorp_emit_pipeline(struct blorp_batch *batch,
    emit_urb_config(batch, params);
 
    blorp_emit(batch, GENX(3DSTATE_PIPELINED_POINTERS), pp) {
-      pp.PointertoVSState = blorp_emit_vs_state(batch, params);
+      pp.PointertoVSState = blorp_emit_vs_state(batch);
       pp.GSEnable = false;
       pp.ClipEnable = false;
       pp.PointertoSFState = blorp_emit_sf_state(batch, params);
       pp.PointertoWMState = blorp_emit_wm_state(batch, params);
-      pp.PointertoColorCalcState = blorp_emit_color_calc_state(batch, params);
+      pp.PointertoColorCalcState = blorp_emit_color_calc_state(batch);
    }
 
    brw_upload_urb_fence(brw);

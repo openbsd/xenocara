@@ -120,7 +120,7 @@ st_DrawTex(struct gl_context *ctx, GLfloat x, GLfloat y, GLfloat z,
    st_flush_bitmap_cache(st);
    st_invalidate_readpix_cache(st);
 
-   st_validate_state(st, ST_PIPELINE_RENDER);
+   st_validate_state(st, ST_PIPELINE_META);
 
    /* determine if we need vertex color */
    if (ctx->FragmentProgram._Current->info.inputs_read & VARYING_BIT_COL0)
@@ -276,8 +276,7 @@ st_DrawTex(struct gl_context *ctx, GLfloat x, GLfloat y, GLfloat z,
       cso_set_viewport(cso, &vp);
    }
 
-   util_draw_vertex_buffer(pipe, cso, vbuffer,
-			   cso_get_aux_vertex_buffer_slot(cso),
+   util_draw_vertex_buffer(pipe, cso, vbuffer, 0,
                            offset,  /* offset */
                            PIPE_PRIM_TRIANGLE_FAN,
                            4,  /* verts */

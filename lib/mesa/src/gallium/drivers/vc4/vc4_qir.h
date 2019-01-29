@@ -363,6 +363,7 @@ struct vc4_fs_key {
         uint8_t alpha_test_func;
         uint8_t logicop_func;
         uint32_t point_sprite_mask;
+        uint32_t ubo_1_size;
 
         struct pipe_rt_blend_state blend;
 };
@@ -591,6 +592,8 @@ uint8_t qir_channels_written(struct qinst *inst);
 
 void qir_dump(struct vc4_compile *c);
 void qir_dump_inst(struct vc4_compile *c, struct qinst *inst);
+char *qir_describe_uniform(enum quniform_contents contents, uint32_t data,
+                           const uint32_t *uniforms);
 const char *qir_get_stage_name(enum qstage stage);
 
 void qir_validate(struct vc4_compile *c);

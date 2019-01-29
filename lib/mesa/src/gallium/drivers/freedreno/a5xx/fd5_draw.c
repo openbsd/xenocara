@@ -54,15 +54,15 @@ draw_impl(struct fd_context *ctx, struct fd_ringbuffer *ring,
 
 	OUT_PKT4(ring, REG_A5XX_VFD_INDEX_OFFSET, 2);
 	OUT_RING(ring, info->index_size ? info->index_bias : info->start); /* VFD_INDEX_OFFSET */
-	OUT_RING(ring, info->start_instance);   /* ??? UNKNOWN_2209 */
+	OUT_RING(ring, info->start_instance);   /* VFD_INSTANCE_START_OFFSET */
 
 	OUT_PKT4(ring, REG_A5XX_PC_RESTART_INDEX, 1);
 	OUT_RING(ring, info->primitive_restart ? /* PC_RESTART_INDEX */
 			info->restart_index : 0xffffffff);
 
-	fd5_emit_render_cntl(ctx, false, emit->key.binning_pass);
+	fd5_emit_render_cntl(ctx, false, emit->binning_pass);
 	fd5_draw_emit(ctx->batch, ring, primtype,
-			emit->key.binning_pass ? IGNORE_VISIBILITY : USE_VISIBILITY,
+			emit->binning_pass ? IGNORE_VISIBILITY : USE_VISIBILITY,
 			info, index_offset);
 }
 
@@ -106,8 +106,6 @@ fd5_draw_vbo(struct fd_context *ctx, const struct pipe_draw_info *info,
 			.vclamp_color = ctx->rasterizer->clamp_vertex_color,
 			.fclamp_color = ctx->rasterizer->clamp_fragment_color,
 			.rasterflat = ctx->rasterizer->flatshade,
-			.half_precision = ctx->in_blit &&
-					fd_half_precision(&ctx->batch->framebuffer),
 			.ucp_enables = ctx->rasterizer->clip_plane_enable,
 			.has_per_samp = (fd5_ctx->fsaturate || fd5_ctx->vsaturate ||
 					fd5_ctx->fastc_srgb || fd5_ctx->vastc_srgb),
@@ -119,6 +117,8 @@ fd5_draw_vbo(struct fd_context *ctx, const struct pipe_draw_info *info,
 			.fsaturate_r = fd5_ctx->fsaturate_r,
 			.vastc_srgb = fd5_ctx->vastc_srgb,
 			.fastc_srgb = fd5_ctx->fastc_srgb,
+			.vsamples = ctx->tex[PIPE_SHADER_VERTEX].samples,
+			.fsamples = ctx->tex[PIPE_SHADER_FRAGMENT].samples,
 		},
 		.rasterflat = ctx->rasterizer->flatshade,
 		.sprite_coord_enable = ctx->rasterizer->sprite_coord_enable,
@@ -136,18 +136,21 @@ fd5_draw_vbo(struct fd_context *ctx, const struct pipe_draw_info *info,
 	if (!vp || !fp)
 		return false;
 
+	ctx->stats.vs_regs += ir3_shader_halfregs(vp);
+	ctx->stats.fs_regs += ir3_shader_halfregs(fp);
+
 	/* figure out whether we need to disable LRZ write for binning
 	 * pass using draw pass's fp:
 	 */
 	emit.no_lrz_write = fp->writes_pos || fp->has_kill;
 
-	emit.key.binning_pass = false;
+	emit.binning_pass = false;
 	emit.dirty = dirty;
 
 	draw_impl(ctx, ctx->batch->draw, &emit, index_offset);
 
 	/* and now binning pass: */
-	emit.key.binning_pass = true;
+	emit.binning_pass = true;
 	emit.dirty = dirty & ~(FD_DIRTY_BLEND);
 	emit.vp = NULL;   /* we changed key so need to refetch vp */
 	emit.fp = NULL;
@@ -194,8 +197,7 @@ fd5_clear_lrz(struct fd_batch *batch, struct fd_resource *zsbuf, double depth)
 	// draw
 
 	if (!batch->lrz_clear) {
-		batch->lrz_clear = fd_ringbuffer_new(batch->ctx->screen->pipe, 0x1000);
-		fd_ringbuffer_set_parent(batch->lrz_clear, batch->gmem);
+		batch->lrz_clear = fd_submit_new_ringbuffer(batch->submit, 0x1000, 0);
 	}
 
 	ring = batch->lrz_clear;
@@ -209,7 +211,8 @@ fd5_clear_lrz(struct fd_batch *batch, struct fd_resource *zsbuf, double depth)
 	OUT_RING(ring, 0x20fffff);
 
 	OUT_PKT4(ring, REG_A5XX_GRAS_SU_CNTL, 1);
-	OUT_RING(ring, A5XX_GRAS_SU_CNTL_LINEHALFWIDTH(0.0));
+	OUT_RING(ring, A5XX_GRAS_SU_CNTL_LINEHALFWIDTH(0.0) |
+			COND(zsbuf->base.nr_samples > 1, A5XX_GRAS_SU_CNTL_MSAA_ENABLE));
 
 	OUT_PKT4(ring, REG_A5XX_GRAS_CNTL, 1);
 	OUT_RING(ring, 0x00000000);
@@ -267,16 +270,10 @@ fd5_clear(struct fd_context *ctx, unsigned buffers,
 {
 	struct fd_ringbuffer *ring = ctx->batch->draw;
 	struct pipe_framebuffer_state *pfb = &ctx->batch->framebuffer;
-	struct pipe_scissor_state *scissor = fd_context_get_scissor(ctx);
 
 	if ((buffers & (PIPE_CLEAR_DEPTH | PIPE_CLEAR_STENCIL)) &&
 			is_z32(pfb->zsbuf->format))
 		return false;
-
-	ctx->batch->max_scissor.minx = MIN2(ctx->batch->max_scissor.minx, scissor->minx);
-	ctx->batch->max_scissor.miny = MIN2(ctx->batch->max_scissor.miny, scissor->miny);
-	ctx->batch->max_scissor.maxx = MAX2(ctx->batch->max_scissor.maxx, scissor->maxx);
-	ctx->batch->max_scissor.maxy = MAX2(ctx->batch->max_scissor.maxy, scissor->maxy);
 
 	fd5_emit_render_cntl(ctx, true, false);
 

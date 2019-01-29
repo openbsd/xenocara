@@ -40,8 +40,7 @@
 #ifndef PROGRAM_H
 #define PROGRAM_H
 
-#include "main/compiler.h"
-#include "main/mtypes.h"
+#include "prog_parameter.h"
 
 
 #ifdef __cplusplus
@@ -109,8 +108,7 @@ _mesa_find_free_register(const GLboolean used[],
 
 extern GLint
 _mesa_get_min_invocations_per_fragment(struct gl_context *ctx,
-                                       const struct gl_program *prog,
-                                       bool ignore_sample_qualifier);
+                                       const struct gl_program *prog);
 
 static inline GLuint
 _mesa_program_enum_to_shader_stage(GLenum v)
@@ -158,6 +156,11 @@ _mesa_shader_stage_to_program(unsigned stage)
    assert(!"Unexpected shader stage in _mesa_shader_stage_to_program");
    return GL_VERTEX_PROGRAM_ARB;
 }
+
+
+GLbitfield
+gl_external_samplers(const struct gl_program *prog);
+
 
 #ifdef __cplusplus
 } /* extern "C" */

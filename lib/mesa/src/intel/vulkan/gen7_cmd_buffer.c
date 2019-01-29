@@ -48,8 +48,9 @@ clamp_int64(int64_t x, int64_t min, int64_t max)
 void
 gen7_cmd_buffer_emit_scissor(struct anv_cmd_buffer *cmd_buffer)
 {
-   uint32_t count = cmd_buffer->state.dynamic.scissor.count;
-   const VkRect2D *scissors =  cmd_buffer->state.dynamic.scissor.scissors;
+   struct anv_framebuffer *fb = cmd_buffer->state.framebuffer;
+   uint32_t count = cmd_buffer->state.gfx.dynamic.scissor.count;
+   const VkRect2D *scissors = cmd_buffer->state.gfx.dynamic.scissor.scissors;
    struct anv_state scissor_state =
       anv_cmd_buffer_alloc_dynamic_state(cmd_buffer, count * 8, 32);
 
@@ -73,8 +74,8 @@ gen7_cmd_buffer_emit_scissor(struct anv_cmd_buffer *cmd_buffer)
          /* Do this math using int64_t so overflow gets clamped correctly. */
          .ScissorRectangleYMin = clamp_int64(s->offset.y, 0, max),
          .ScissorRectangleXMin = clamp_int64(s->offset.x, 0, max),
-         .ScissorRectangleYMax = clamp_int64((uint64_t) s->offset.y + s->extent.height - 1, 0, max),
-         .ScissorRectangleXMax = clamp_int64((uint64_t) s->offset.x + s->extent.width - 1, 0, max)
+         .ScissorRectangleYMax = clamp_int64((uint64_t) s->offset.y + s->extent.height - 1, 0, fb->height - 1),
+         .ScissorRectangleXMax = clamp_int64((uint64_t) s->offset.x + s->extent.width - 1, 0, fb->width - 1)
       };
 
       if (s->extent.width <= 0 || s->extent.height <= 0) {
@@ -113,12 +114,12 @@ void genX(CmdBindIndexBuffer)(
    ANV_FROM_HANDLE(anv_cmd_buffer, cmd_buffer, commandBuffer);
    ANV_FROM_HANDLE(anv_buffer, buffer, _buffer);
 
-   cmd_buffer->state.dirty |= ANV_CMD_DIRTY_INDEX_BUFFER;
+   cmd_buffer->state.gfx.dirty |= ANV_CMD_DIRTY_INDEX_BUFFER;
    if (GEN_IS_HASWELL)
       cmd_buffer->state.restart_index = restart_index_for_type[indexType];
-   cmd_buffer->state.gen7.index_buffer = buffer;
-   cmd_buffer->state.gen7.index_type = vk_to_gen_index_type[indexType];
-   cmd_buffer->state.gen7.index_offset = offset;
+   cmd_buffer->state.gfx.gen7.index_buffer = buffer;
+   cmd_buffer->state.gfx.gen7.index_type = vk_to_gen_index_type[indexType];
+   cmd_buffer->state.gfx.gen7.index_offset = offset;
 }
 
 static uint32_t
@@ -127,11 +128,11 @@ get_depth_format(struct anv_cmd_buffer *cmd_buffer)
    const struct anv_render_pass *pass = cmd_buffer->state.pass;
    const struct anv_subpass *subpass = cmd_buffer->state.subpass;
 
-   if (subpass->depth_stencil_attachment.attachment >= pass->attachment_count)
+   if (!subpass->depth_stencil_attachment)
       return D16_UNORM;
 
    struct anv_render_pass_attachment *att =
-      &pass->attachments[subpass->depth_stencil_attachment.attachment];
+      &pass->attachments[subpass->depth_stencil_attachment->attachment];
 
    switch (att->format) {
    case VK_FORMAT_D16_UNORM:
@@ -154,38 +155,38 @@ get_depth_format(struct anv_cmd_buffer *cmd_buffer)
 void
 genX(cmd_buffer_flush_dynamic_state)(struct anv_cmd_buffer *cmd_buffer)
 {
-   struct anv_pipeline *pipeline = cmd_buffer->state.pipeline;
+   struct anv_pipeline *pipeline = cmd_buffer->state.gfx.base.pipeline;
+   struct anv_dynamic_state *d = &cmd_buffer->state.gfx.dynamic;
 
-   if (cmd_buffer->state.dirty & (ANV_CMD_DIRTY_PIPELINE |
-                                  ANV_CMD_DIRTY_RENDER_TARGETS |
-                                  ANV_CMD_DIRTY_DYNAMIC_LINE_WIDTH |
-                                  ANV_CMD_DIRTY_DYNAMIC_DEPTH_BIAS)) {
+   if (cmd_buffer->state.gfx.dirty & (ANV_CMD_DIRTY_PIPELINE |
+                                      ANV_CMD_DIRTY_RENDER_TARGETS |
+                                      ANV_CMD_DIRTY_DYNAMIC_LINE_WIDTH |
+                                      ANV_CMD_DIRTY_DYNAMIC_DEPTH_BIAS)) {
       uint32_t sf_dw[GENX(3DSTATE_SF_length)];
       struct GENX(3DSTATE_SF) sf = {
          GENX(3DSTATE_SF_header),
          .DepthBufferSurfaceFormat = get_depth_format(cmd_buffer),
-         .LineWidth = cmd_buffer->state.dynamic.line_width,
-         .GlobalDepthOffsetConstant = cmd_buffer->state.dynamic.depth_bias.bias,
-         .GlobalDepthOffsetScale = cmd_buffer->state.dynamic.depth_bias.slope,
-         .GlobalDepthOffsetClamp = cmd_buffer->state.dynamic.depth_bias.clamp
+         .LineWidth = d->line_width,
+         .GlobalDepthOffsetConstant = d->depth_bias.bias,
+         .GlobalDepthOffsetScale = d->depth_bias.slope,
+         .GlobalDepthOffsetClamp = d->depth_bias.clamp
       };
       GENX(3DSTATE_SF_pack)(NULL, sf_dw, &sf);
 
       anv_batch_emit_merge(&cmd_buffer->batch, sf_dw, pipeline->gen7.sf);
    }
 
-   if (cmd_buffer->state.dirty & (ANV_CMD_DIRTY_DYNAMIC_BLEND_CONSTANTS |
-                                  ANV_CMD_DIRTY_DYNAMIC_STENCIL_REFERENCE)) {
-      struct anv_dynamic_state *d = &cmd_buffer->state.dynamic;
+   if (cmd_buffer->state.gfx.dirty & (ANV_CMD_DIRTY_DYNAMIC_BLEND_CONSTANTS |
+                                      ANV_CMD_DIRTY_DYNAMIC_STENCIL_REFERENCE)) {
       struct anv_state cc_state =
          anv_cmd_buffer_alloc_dynamic_state(cmd_buffer,
                                             GENX(COLOR_CALC_STATE_length) * 4,
                                             64);
       struct GENX(COLOR_CALC_STATE) cc = {
-         .BlendConstantColorRed = cmd_buffer->state.dynamic.blend_constants[0],
-         .BlendConstantColorGreen = cmd_buffer->state.dynamic.blend_constants[1],
-         .BlendConstantColorBlue = cmd_buffer->state.dynamic.blend_constants[2],
-         .BlendConstantColorAlpha = cmd_buffer->state.dynamic.blend_constants[3],
+         .BlendConstantColorRed = d->blend_constants[0],
+         .BlendConstantColorGreen = d->blend_constants[1],
+         .BlendConstantColorBlue = d->blend_constants[2],
+         .BlendConstantColorAlpha = d->blend_constants[3],
          .StencilReferenceValue = d->stencil_reference.front & 0xff,
          .BackfaceStencilReferenceValue = d->stencil_reference.back & 0xff,
       };
@@ -197,12 +198,11 @@ genX(cmd_buffer_flush_dynamic_state)(struct anv_cmd_buffer *cmd_buffer)
       }
    }
 
-   if (cmd_buffer->state.dirty & (ANV_CMD_DIRTY_PIPELINE |
-                                  ANV_CMD_DIRTY_RENDER_TARGETS |
-                                  ANV_CMD_DIRTY_DYNAMIC_STENCIL_COMPARE_MASK |
-                                  ANV_CMD_DIRTY_DYNAMIC_STENCIL_WRITE_MASK)) {
+   if (cmd_buffer->state.gfx.dirty & (ANV_CMD_DIRTY_PIPELINE |
+                                      ANV_CMD_DIRTY_RENDER_TARGETS |
+                                      ANV_CMD_DIRTY_DYNAMIC_STENCIL_COMPARE_MASK |
+                                      ANV_CMD_DIRTY_DYNAMIC_STENCIL_WRITE_MASK)) {
       uint32_t depth_stencil_dw[GENX(DEPTH_STENCIL_STATE_length)];
-      struct anv_dynamic_state *d = &cmd_buffer->state.dynamic;
 
       struct GENX(DEPTH_STENCIL_STATE) depth_stencil = {
          .StencilTestMask = d->stencil_compare_mask.front & 0xff,
@@ -228,11 +228,11 @@ genX(cmd_buffer_flush_dynamic_state)(struct anv_cmd_buffer *cmd_buffer)
       }
    }
 
-   if (cmd_buffer->state.gen7.index_buffer &&
-       cmd_buffer->state.dirty & (ANV_CMD_DIRTY_PIPELINE |
-                                  ANV_CMD_DIRTY_INDEX_BUFFER)) {
-      struct anv_buffer *buffer = cmd_buffer->state.gen7.index_buffer;
-      uint32_t offset = cmd_buffer->state.gen7.index_offset;
+   if (cmd_buffer->state.gfx.gen7.index_buffer &&
+       cmd_buffer->state.gfx.dirty & (ANV_CMD_DIRTY_PIPELINE |
+                                      ANV_CMD_DIRTY_INDEX_BUFFER)) {
+      struct anv_buffer *buffer = cmd_buffer->state.gfx.gen7.index_buffer;
+      uint32_t offset = cmd_buffer->state.gfx.gen7.index_offset;
 
 #if GEN_IS_HASWELL
       anv_batch_emit(&cmd_buffer->batch, GEN75_3DSTATE_VF, vf) {
@@ -245,17 +245,18 @@ genX(cmd_buffer_flush_dynamic_state)(struct anv_cmd_buffer *cmd_buffer)
 #if !GEN_IS_HASWELL
          ib.CutIndexEnable             = pipeline->primitive_restart;
 #endif
-         ib.IndexFormat                = cmd_buffer->state.gen7.index_type;
-         ib.MemoryObjectControlState   = GENX(MOCS);
+         ib.IndexFormat                = cmd_buffer->state.gfx.gen7.index_type;
+         ib.IndexBufferMOCS            = anv_mocs_for_bo(cmd_buffer->device,
+                                                         buffer->address.bo);
 
-         ib.BufferStartingAddress =
-            (struct anv_address) { buffer->bo, buffer->offset + offset };
-         ib.BufferEndingAddress =
-            (struct anv_address) { buffer->bo, buffer->offset + buffer->size };
+         ib.BufferStartingAddress      = anv_address_add(buffer->address,
+                                                         offset);
+         ib.BufferEndingAddress        = anv_address_add(buffer->address,
+                                                         buffer->size);
       }
    }
 
-   cmd_buffer->state.dirty = 0;
+   cmd_buffer->state.gfx.dirty = 0;
 }
 
 void

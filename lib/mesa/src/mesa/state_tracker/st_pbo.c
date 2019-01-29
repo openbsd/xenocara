@@ -245,7 +245,7 @@ st_pbo_draw(struct st_context *st, const struct st_pbo_addresses *addr,
 
       velem.src_offset = 0;
       velem.instance_divisor = 0;
-      velem.vertex_buffer_index = cso_get_aux_vertex_buffer_slot(cso);
+      velem.vertex_buffer_index = 0;
       velem.src_format = PIPE_FORMAT_R32G32_FLOAT;
 
       cso_set_vertex_elements(cso, 1, &velem);
@@ -259,21 +259,9 @@ st_pbo_draw(struct st_context *st, const struct st_pbo_addresses *addr,
    {
       struct pipe_constant_buffer cb;
 
-      if (!st->has_user_constbuf) {
-         cb.buffer = NULL;
-         cb.user_buffer = NULL;
-         u_upload_data(st->pipe->const_uploader, 0, sizeof(addr->constants),
-                       st->ctx->Const.UniformBufferOffsetAlignment,
-                       &addr->constants, &cb.buffer_offset, &cb.buffer);
-         if (!cb.buffer)
-            return false;
-
-         u_upload_unmap(st->pipe->const_uploader);
-      } else {
-         cb.buffer = NULL;
-         cb.user_buffer = &addr->constants;
-         cb.buffer_offset = 0;
-      }
+      cb.buffer = NULL;
+      cb.user_buffer = &addr->constants;
+      cb.buffer_offset = 0;
       cb.buffer_size = sizeof(addr->constants);
 
       cso_set_constant_buffer(cso, PIPE_SHADER_FRAGMENT, 0, &cb);

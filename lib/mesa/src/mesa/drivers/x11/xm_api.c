@@ -84,6 +84,7 @@
 #include "tnl/t_pipeline.h"
 #include "drivers/common/driverfuncs.h"
 #include "drivers/common/meta.h"
+#include "util/u_math.h"
 
 /**
  * Global X driver lock
@@ -463,9 +464,9 @@ setup_truecolor(XMesaVisual v, XMesaBuffer buffer, XMesaColormap cmap)
           3*16, 11*16,  1*16,  9*16,
          15*16,  7*16, 13*16,  5*16,
       };
-      GLint rBits = _mesa_bitcount(rmask);
-      GLint gBits = _mesa_bitcount(gmask);
-      GLint bBits = _mesa_bitcount(bmask);
+      GLint rBits = util_bitcount(rmask);
+      GLint gBits = util_bitcount(gmask);
+      GLint bBits = util_bitcount(bmask);
       GLint maxBits;
       GLuint i;
 
@@ -828,9 +829,9 @@ XMesaVisual XMesaCreateVisual( XMesaDisplay *display,
    {
       const int xclass = v->visualType;
       if (xclass == GLX_TRUE_COLOR || xclass == GLX_DIRECT_COLOR) {
-         red_bits   = _mesa_bitcount(GET_REDMASK(v));
-         green_bits = _mesa_bitcount(GET_GREENMASK(v));
-         blue_bits  = _mesa_bitcount(GET_BLUEMASK(v));
+         red_bits   = util_bitcount(GET_REDMASK(v));
+         green_bits = util_bitcount(GET_GREENMASK(v));
+         blue_bits  = util_bitcount(GET_BLUEMASK(v));
       }
       else {
          /* this is an approximation */
@@ -906,6 +907,7 @@ XMesaContext XMesaCreateContext( XMesaVisual v, XMesaContext share_list )
 
    /* initialize with default driver functions, then plug in XMesa funcs */
    _mesa_init_driver_functions(&functions);
+   _tnl_init_driver_draw_function(&functions);
    xmesa_init_driver_functions(v, &functions);
    if (!_mesa_initialize_context(mesaCtx, API_OPENGL_COMPAT, &v->mesa_visual,
                       share_list ? &(share_list->mesa) : (struct gl_context *) NULL,
@@ -957,6 +959,7 @@ XMesaContext XMesaCreateContext( XMesaVisual v, XMesaContext share_list )
 
    _mesa_meta_init(mesaCtx);
 
+   _mesa_override_extensions(mesaCtx);
    _mesa_compute_version(mesaCtx);
 
     /* Exec table initialization requires the version to be computed */
@@ -1093,8 +1096,8 @@ XMesaCreatePixmapTextureBuffer(XMesaVisual v, XMesaPixmap p,
       if (ctx->Extensions.ARB_texture_non_power_of_two) {
          target = GLX_TEXTURE_2D_EXT;
       }
-      else if (   _mesa_bitcount(width)  == 1
-               && _mesa_bitcount(height) == 1) {
+      else if (   util_bitcount(width)  == 1
+               && util_bitcount(height) == 1) {
          /* power of two size */
          if (height == 1) {
             target = GLX_TEXTURE_1D_EXT;
@@ -1219,11 +1222,6 @@ GLboolean XMesaMakeCurrent2( XMesaContext c, XMesaBuffer drawBuffer,
 
       c->xm_buffer = drawBuffer;
 
-      /* Call this periodically to detect when the user has begun using
-       * GL rendering from multiple threads.
-       */
-      _glapi_check_multithread();
-
       xmesa_check_and_update_buffer_size(c, drawBuffer);
       if (readBuffer != drawBuffer)
          xmesa_check_and_update_buffer_size(c, readBuffer);
@@ -1309,14 +1307,6 @@ Display *XMesaGetCurrentDisplay(void)
    GET_CURRENT_CONTEXT(ctx);
    XMesaContext xmctx = XMESA_CONTEXT(ctx);
    return xmctx ? xmctx->display : NULL;
-}
-
-
-
-GLboolean XMesaSetFXmode( GLint mode )
-{
-   (void) mode;
-   return GL_FALSE;
 }
 
 

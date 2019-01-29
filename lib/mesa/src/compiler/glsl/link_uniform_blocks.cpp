@@ -21,13 +21,14 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include "main/core.h"
 #include "ir.h"
 #include "linker.h"
 #include "ir_uniform.h"
 #include "link_uniform_block_active_visitor.h"
 #include "util/hash_table.h"
 #include "program.h"
+#include "main/errors.h"
+#include "main/mtypes.h"
 
 namespace {
 
@@ -297,7 +298,7 @@ process_block_array_leaf(const char *name,
    if (b->is_shader_storage &&
        parcel->buffer_size > ctx->Const.MaxShaderStorageBlockSize) {
       linker_error(prog, "shader storage block `%s' has size %d, "
-                   "which is larger than than the maximum allowed (%d)",
+                   "which is larger than the maximum allowed (%d)",
                    b->type->name,
                    parcel->buffer_size,
                    ctx->Const.MaxShaderStorageBlockSize);
@@ -361,7 +362,6 @@ create_buffer_blocks(void *mem_ctx, struct gl_context *ctx,
                       ctx->Const.UseSTD430AsDefaultPacking);
 
    unsigned i = 0;
-   struct hash_entry *entry;
    hash_table_foreach (block_hash, entry) {
       const struct link_uniform_block_active *const b =
          (const struct link_uniform_block_active *) entry->data;
@@ -428,7 +428,6 @@ link_uniform_blocks(void *mem_ctx,
    unsigned num_ubo_variables = 0;
    unsigned num_ssbo_variables = 0;
    count_block_size block_size;
-   struct hash_entry *entry;
 
    hash_table_foreach (block_hash, entry) {
       struct link_uniform_block_active *const b =

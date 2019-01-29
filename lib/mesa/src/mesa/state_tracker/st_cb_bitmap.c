@@ -30,6 +30,7 @@
   *   Brian Paul
   */
 
+#include "main/errors.h"
 #include "main/imports.h"
 #include "main/image.h"
 #include "main/bufferobj.h"
@@ -224,10 +225,10 @@ setup_render_state(struct gl_context *ctx,
    {
       struct pipe_sampler_state *samplers[PIPE_MAX_SAMPLERS];
       uint num = MAX2(fpv->bitmap_sampler + 1,
-                      st->state.num_samplers[PIPE_SHADER_FRAGMENT]);
+                      st->state.num_frag_samplers);
       uint i;
-      for (i = 0; i < st->state.num_samplers[PIPE_SHADER_FRAGMENT]; i++) {
-         samplers[i] = &st->state.samplers[PIPE_SHADER_FRAGMENT][i];
+      for (i = 0; i < st->state.num_frag_samplers; i++) {
+         samplers[i] = &st->state.frag_samplers[i];
       }
       if (atlas)
          samplers[fpv->bitmap_sampler] = &st->bitmap.atlas_sampler;
@@ -242,7 +243,7 @@ setup_render_state(struct gl_context *ctx,
       struct pipe_sampler_view *sampler_views[PIPE_MAX_SAMPLERS];
       uint num = MAX2(fpv->bitmap_sampler + 1,
                       st->state.num_sampler_views[PIPE_SHADER_FRAGMENT]);
-      memcpy(sampler_views, st->state.sampler_views[PIPE_SHADER_FRAGMENT],
+      memcpy(sampler_views, st->state.frag_sampler_views,
              sizeof(sampler_views));
       sampler_views[fpv->bitmap_sampler] = sv;
       cso_set_sampler_views(cso, PIPE_SHADER_FRAGMENT, num, sampler_views);
@@ -559,21 +560,22 @@ init_bitmap_state(struct st_context *st)
    memset(&st->bitmap.rasterizer, 0, sizeof(st->bitmap.rasterizer));
    st->bitmap.rasterizer.half_pixel_center = 1;
    st->bitmap.rasterizer.bottom_edge_rule = 1;
-   st->bitmap.rasterizer.depth_clip = 1;
+   st->bitmap.rasterizer.depth_clip_near = 1;
+   st->bitmap.rasterizer.depth_clip_far = 1;
 
    /* find a usable texture format */
    if (screen->is_format_supported(screen, PIPE_FORMAT_I8_UNORM,
-                                   st->internal_target, 0,
+                                   st->internal_target, 0, 0,
                                    PIPE_BIND_SAMPLER_VIEW)) {
       st->bitmap.tex_format = PIPE_FORMAT_I8_UNORM;
    }
    else if (screen->is_format_supported(screen, PIPE_FORMAT_A8_UNORM,
-                                        st->internal_target, 0,
+                                        st->internal_target, 0, 0,
                                         PIPE_BIND_SAMPLER_VIEW)) {
       st->bitmap.tex_format = PIPE_FORMAT_A8_UNORM;
    }
    else if (screen->is_format_supported(screen, PIPE_FORMAT_L8_UNORM,
-                                        st->internal_target, 0,
+                                        st->internal_target, 0, 0,
                                         PIPE_BIND_SAMPLER_VIEW)) {
       st->bitmap.tex_format = PIPE_FORMAT_L8_UNORM;
    }
@@ -626,7 +628,7 @@ st_Bitmap(struct gl_context *ctx, GLint x, GLint y,
    if ((st->dirty | ctx->NewDriverState) & ~ST_NEW_CONSTANTS &
        ST_PIPELINE_RENDER_STATE_MASK ||
        st->gfx_shaders_may_be_dirty) {
-      st_validate_state(st, ST_PIPELINE_RENDER);
+      st_validate_state(st, ST_PIPELINE_META);
    }
 
    if (UseBitmapCache && accum_bitmap(ctx, x, y, width, height, unpack, bitmap))
@@ -681,7 +683,7 @@ st_DrawAtlasBitmaps(struct gl_context *ctx,
 
    st_flush_bitmap_cache(st);
 
-   st_validate_state(st, ST_PIPELINE_RENDER);
+   st_validate_state(st, ST_PIPELINE_META);
    st_invalidate_readpix_cache(st);
 
    sv = st_create_texture_sampler_view(pipe, stObj->pt);
@@ -773,10 +775,7 @@ st_DrawAtlasBitmaps(struct gl_context *ctx,
 
    u_upload_unmap(pipe->stream_uploader);
 
-   cso_set_vertex_buffers(st->cso_context,
-                          cso_get_aux_vertex_buffer_slot(st->cso_context),
-                          1, &vb);
-
+   cso_set_vertex_buffers(st->cso_context, 0, 1, &vb);
    cso_draw_arrays(st->cso_context, PIPE_PRIM_QUADS, 0, num_verts);
 
 out:

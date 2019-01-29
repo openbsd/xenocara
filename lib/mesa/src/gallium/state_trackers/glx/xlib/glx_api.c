@@ -39,6 +39,9 @@
 #include <GL/glxproto.h>
 
 #include "xm_api.h"
+#include "main/imports.h"
+#include "main/errors.h"
+#include "util/u_math.h"
 
 /* An "Atrribs/Attribs" typo was fixed in glxproto.h in Nov 2014.
  * This is in case we don't have the updated header.
@@ -181,7 +184,7 @@ save_glx_visual( Display *dpy, XVisualInfo *vinfo,
                  GLint depth_size, GLint stencil_size,
                  GLint accumRedSize, GLint accumGreenSize,
                  GLint accumBlueSize, GLint accumAlphaSize,
-                 GLint level, GLint numAuxBuffers, GLint num_samples )
+                 GLint level, GLint numAuxBuffers, GLuint num_samples )
 {
    GLboolean ximageFlag = GL_TRUE;
    XMesaVisual xmvis;
@@ -417,9 +420,9 @@ get_visual( Display *dpy, int scr, unsigned int depth, int xclass )
     * 10 bits per color channel.  Mesa's limited to a max of 8 bits/channel.
     */
    if (vis && depth > 24 && (xclass==TrueColor || xclass==DirectColor)) {
-      if (_mesa_bitcount((GLuint) vis->red_mask  ) <= 8 &&
-          _mesa_bitcount((GLuint) vis->green_mask) <= 8 &&
-          _mesa_bitcount((GLuint) vis->blue_mask ) <= 8) {
+      if (util_bitcount((GLuint) vis->red_mask  ) <= 8 &&
+          util_bitcount((GLuint) vis->green_mask) <= 8 &&
+          util_bitcount((GLuint) vis->blue_mask ) <= 8) {
          return vis;
       }
       else {
@@ -999,6 +1002,10 @@ choose_visual( Display *dpy, int screen, const int *list, GLboolean fbConfig )
 
    (void) caveat;
 
+   if (num_samples < 0) {
+      _mesa_warning(NULL, "GLX_SAMPLES_ARB: number of samples must not be negative");
+      return NULL;
+   }
 
    /*
     * Since we're only simulating the GLX extension this function will never
@@ -2641,39 +2648,6 @@ glXAssociateDMPbufferSGIX(Display *dpy, GLXPbufferSGIX pbuffer,
    return False;
 }
 #endif
-
-
-/*** GLX_SGIX_swap_group ***/
-
-PUBLIC void
-glXJoinSwapGroupSGIX(Display *dpy, GLXDrawable drawable, GLXDrawable member)
-{
-   (void) dpy;
-   (void) drawable;
-   (void) member;
-}
-
-
-
-/*** GLX_SGIX_swap_barrier ***/
-
-PUBLIC void
-glXBindSwapBarrierSGIX(Display *dpy, GLXDrawable drawable, int barrier)
-{
-   (void) dpy;
-   (void) drawable;
-   (void) barrier;
-}
-
-PUBLIC Bool
-glXQueryMaxSwapBarriersSGIX(Display *dpy, int screen, int *max)
-{
-   (void) dpy;
-   (void) screen;
-   (void) max;
-   return False;
-}
-
 
 
 /*** GLX_SUN_get_transparent_index ***/

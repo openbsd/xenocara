@@ -27,6 +27,7 @@
 
 
 #include <stdio.h>
+#include "main/arrayobj.h"
 #include "main/glheader.h"
 #include "main/context.h"
 
@@ -138,18 +139,15 @@ static void check_program_state( struct st_context *st )
 
 static void check_attrib_edgeflag(struct st_context *st)
 {
-   const struct gl_vertex_array **arrays = st->ctx->Array._DrawArrays;
    GLboolean vertdata_edgeflags, edgeflag_culls_prims, edgeflags_enabled;
    struct gl_program *vp = st->ctx->VertexProgram._Current;
-
-   if (!arrays)
-      return;
 
    edgeflags_enabled = st->ctx->Polygon.FrontMode != GL_FILL ||
                        st->ctx->Polygon.BackMode != GL_FILL;
 
    vertdata_edgeflags = edgeflags_enabled &&
-                        arrays[VERT_ATTRIB_EDGEFLAG]->StrideB != 0;
+      _mesa_draw_edge_flag_array_enabled(st->ctx);
+
    if (vertdata_edgeflags != st->vertdata_edgeflags) {
       st->vertdata_edgeflags = vertdata_edgeflags;
       if (vp)
@@ -201,6 +199,16 @@ void st_validate_state( struct st_context *st, enum st_pipeline pipeline )
    case ST_PIPELINE_CLEAR:
       st_manager_validate_framebuffers(st);
       pipeline_mask = ST_PIPELINE_CLEAR_STATE_MASK;
+      break;
+
+   case ST_PIPELINE_META:
+      if (st->gfx_shaders_may_be_dirty) {
+         check_program_state(st);
+         st->gfx_shaders_may_be_dirty = false;
+      }
+
+      st_manager_validate_framebuffers(st);
+      pipeline_mask = ST_PIPELINE_META_STATE_MASK;
       break;
 
    case ST_PIPELINE_UPDATE_FRAMEBUFFER:

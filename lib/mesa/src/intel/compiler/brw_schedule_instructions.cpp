@@ -369,6 +369,7 @@ schedule_node::set_latency_gen7(bool is_haswell)
       break;
 
    case SHADER_OPCODE_UNTYPED_ATOMIC:
+   case SHADER_OPCODE_UNTYPED_ATOMIC_FLOAT:
    case SHADER_OPCODE_TYPED_ATOMIC:
       /* Test code:
        *   mov(8)    g112<1>ud       0x00000000ud       { align1 WE_all 1Q };
@@ -763,22 +764,22 @@ vec4_instruction_scheduler::vec4_instruction_scheduler(vec4_visitor *v,
 }
 
 void
-vec4_instruction_scheduler::count_reads_remaining(backend_instruction *be)
+vec4_instruction_scheduler::count_reads_remaining(backend_instruction *)
 {
 }
 
 void
-vec4_instruction_scheduler::setup_liveness(cfg_t *cfg)
+vec4_instruction_scheduler::setup_liveness(cfg_t *)
 {
 }
 
 void
-vec4_instruction_scheduler::update_register_pressure(backend_instruction *be)
+vec4_instruction_scheduler::update_register_pressure(backend_instruction *)
 {
 }
 
 int
-vec4_instruction_scheduler::get_register_pressure_benefit(backend_instruction *be)
+vec4_instruction_scheduler::get_register_pressure_benefit(backend_instruction *)
 {
    return 0;
 }
@@ -974,7 +975,7 @@ fs_instruction_scheduler::calculate_deps()
     */
    schedule_node *last_grf_write[grf_count * 16];
    schedule_node *last_mrf_write[BRW_MAX_MRF(v->devinfo->gen)];
-   schedule_node *last_conditional_mod[4] = {};
+   schedule_node *last_conditional_mod[8] = {};
    schedule_node *last_accumulator_write = NULL;
    /* Fixed HW registers are assumed to be separate from the virtual
     * GRFs, so they can be tracked separately.  We don't really write
@@ -1267,6 +1268,9 @@ vec4_instruction_scheduler::calculate_deps()
          }
       }
 
+      if (inst->reads_g0_implicitly())
+         add_dep(last_fixed_grf_write, n);
+
       if (!inst->is_send_from_grf()) {
          for (int i = 0; i < inst->mlen; i++) {
             /* It looks like the MRF regs are released in the send
@@ -1543,14 +1547,15 @@ vec4_instruction_scheduler::choose_instruction_to_schedule()
 int
 fs_instruction_scheduler::issue_time(backend_instruction *inst)
 {
+   const unsigned overhead = v->bank_conflict_cycles((fs_inst *)inst);
    if (is_compressed((fs_inst *)inst))
-      return 4;
+      return 4 + overhead;
    else
-      return 2;
+      return 2 + overhead;
 }
 
 int
-vec4_instruction_scheduler::issue_time(backend_instruction *inst)
+vec4_instruction_scheduler::issue_time(backend_instruction *)
 {
    /* We always execute as two vec4s in parallel. */
    return 2;

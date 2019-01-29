@@ -27,7 +27,13 @@
 
 #include "nir.h"
 #include "nir_control_flow_private.h"
+#include "util/half_float.h"
+#include <limits.h>
 #include <assert.h>
+#include <math.h>
+#include "util/u_math.h"
+
+#include "main/menums.h" /* BITFIELD64_MASK */
 
 nir_shader *
 nir_shader_create(void *mem_ctx,
@@ -123,10 +129,6 @@ nir_shader_add_variable(nir_shader *shader, nir_variable *var)
       assert(!"nir_shader_add_variable cannot be used for local variables");
       break;
 
-   case nir_var_param:
-      assert(!"nir_shader_add_variable cannot be used for function parameters");
-      break;
-
    case nir_var_global:
       exec_list_push_tail(&shader->globals, &var->node);
       break;
@@ -163,6 +165,7 @@ nir_variable_create(nir_shader *shader, nir_variable_mode mode,
    var->name = ralloc_strdup(var, name);
    var->type = type;
    var->data.mode = mode;
+   var->data.how_declared = nir_var_declared_normally;
 
    if ((mode == nir_var_shader_in &&
         shader->info.stage != MESA_SHADER_VERTEX) ||
@@ -203,12 +206,14 @@ nir_function_create(nir_shader *shader, const char *name)
    func->shader = shader;
    func->num_params = 0;
    func->params = NULL;
-   func->return_type = glsl_void_type();
    func->impl = NULL;
 
    return func;
 }
 
+/* NOTE: if the instruction you are copying a src to is already added
+ * to the IR, use nir_instr_rewrite_src() instead.
+ */
 void nir_src_copy(nir_src *dest, const nir_src *src, void *mem_ctx)
 {
    dest->is_ssa = src->is_ssa;
@@ -250,7 +255,7 @@ nir_alu_src_copy(nir_alu_src *dest, const nir_alu_src *src,
    nir_src_copy(&dest->src, &src->src, &instr->instr);
    dest->abs = src->abs;
    dest->negate = src->negate;
-   for (unsigned i = 0; i < 4; i++)
+   for (unsigned i = 0; i < NIR_MAX_VEC_COMPONENTS; i++)
       dest->swizzle[i] = src->swizzle[i];
 }
 
@@ -284,9 +289,6 @@ nir_function_impl_create_bare(nir_shader *shader)
    exec_list_make_empty(&impl->body);
    exec_list_make_empty(&impl->registers);
    exec_list_make_empty(&impl->locals);
-   impl->num_params = 0;
-   impl->params = NULL;
-   impl->return_var = NULL;
    impl->reg_alloc = 0;
    impl->ssa_alloc = 0;
    impl->valid_metadata = nir_metadata_none;
@@ -314,26 +316,6 @@ nir_function_impl_create(nir_function *function)
 
    function->impl = impl;
    impl->function = function;
-
-   impl->num_params = function->num_params;
-   impl->params = ralloc_array(function->shader,
-                               nir_variable *, impl->num_params);
-
-   for (unsigned i = 0; i < impl->num_params; i++) {
-      impl->params[i] = rzalloc(function->shader, nir_variable);
-      impl->params[i]->type = function->params[i].type;
-      impl->params[i]->data.mode = nir_var_param;
-      impl->params[i]->data.location = i;
-   }
-
-   if (!glsl_type_is_void(function->return_type)) {
-      impl->return_var = rzalloc(function->shader, nir_variable);
-      impl->return_var->type = function->return_type;
-      impl->return_var->data.mode = nir_var_param;
-      impl->return_var->data.location = -1;
-   } else {
-      impl->return_var = NULL;
-   }
 
    return impl;
 }
@@ -443,10 +425,8 @@ alu_src_init(nir_alu_src *src)
 {
    src_init(&src->src);
    src->abs = src->negate = false;
-   src->swizzle[0] = 0;
-   src->swizzle[1] = 1;
-   src->swizzle[2] = 2;
-   src->swizzle[3] = 3;
+   for (int i = 0; i < NIR_MAX_VEC_COMPONENTS; ++i)
+      src->swizzle[i] = i;
 }
 
 nir_alu_instr *
@@ -467,6 +447,26 @@ nir_alu_instr_create(nir_shader *shader, nir_op op)
    return instr;
 }
 
+nir_deref_instr *
+nir_deref_instr_create(nir_shader *shader, nir_deref_type deref_type)
+{
+   nir_deref_instr *instr =
+      rzalloc_size(shader, sizeof(nir_deref_instr));
+
+   instr_init(&instr->instr, nir_instr_type_deref);
+
+   instr->deref_type = deref_type;
+   if (deref_type != nir_deref_type_var)
+      src_init(&instr->parent);
+
+   if (deref_type == nir_deref_type_array)
+      src_init(&instr->arr.index);
+
+   dest_init(&instr->dest);
+
+   return instr;
+}
+
 nir_jump_instr *
 nir_jump_instr_create(nir_shader *shader, nir_jump_type type)
 {
@@ -480,7 +480,7 @@ nir_load_const_instr *
 nir_load_const_instr_create(nir_shader *shader, unsigned num_components,
                             unsigned bit_size)
 {
-   nir_load_const_instr *instr = ralloc(shader, nir_load_const_instr);
+   nir_load_const_instr *instr = rzalloc(shader, nir_load_const_instr);
    instr_init(&instr->instr, nir_instr_type_load_const);
 
    nir_ssa_def_init(&instr->instr, &instr->def, num_components, bit_size, NULL);
@@ -512,13 +512,16 @@ nir_intrinsic_instr_create(nir_shader *shader, nir_intrinsic_op op)
 nir_call_instr *
 nir_call_instr_create(nir_shader *shader, nir_function *callee)
 {
-   nir_call_instr *instr = ralloc(shader, nir_call_instr);
-   instr_init(&instr->instr, nir_instr_type_call);
+   const unsigned num_params = callee->num_params;
+   nir_call_instr *instr =
+      rzalloc_size(shader, sizeof(*instr) +
+                   num_params * sizeof(instr->params[0]));
 
+   instr_init(&instr->instr, nir_instr_type_call);
    instr->callee = callee;
-   instr->num_params = callee->num_params;
-   instr->params = ralloc_array(instr, nir_deref_var *, instr->num_params);
-   instr->return_deref = NULL;
+   instr->num_params = num_params;
+   for (unsigned i = 0; i < num_params; i++)
+      src_init(&instr->params[i]);
 
    return instr;
 }
@@ -538,9 +541,7 @@ nir_tex_instr_create(nir_shader *shader, unsigned num_srcs)
 
    instr->texture_index = 0;
    instr->texture_array_size = 0;
-   instr->texture = NULL;
    instr->sampler_index = 0;
-   instr->sampler = NULL;
 
    return instr;
 }
@@ -618,273 +619,70 @@ nir_ssa_undef_instr_create(nir_shader *shader,
    return instr;
 }
 
-nir_deref_var *
-nir_deref_var_create(void *mem_ctx, nir_variable *var)
+static nir_const_value
+const_value_float(double d, unsigned bit_size)
 {
-   nir_deref_var *deref = ralloc(mem_ctx, nir_deref_var);
-   deref->deref.deref_type = nir_deref_type_var;
-   deref->deref.child = NULL;
-   deref->deref.type = var->type;
-   deref->var = var;
-   return deref;
-}
-
-nir_deref_array *
-nir_deref_array_create(void *mem_ctx)
-{
-   nir_deref_array *deref = ralloc(mem_ctx, nir_deref_array);
-   deref->deref.deref_type = nir_deref_type_array;
-   deref->deref.child = NULL;
-   deref->deref_array_type = nir_deref_array_type_direct;
-   src_init(&deref->indirect);
-   deref->base_offset = 0;
-   return deref;
-}
-
-nir_deref_struct *
-nir_deref_struct_create(void *mem_ctx, unsigned field_index)
-{
-   nir_deref_struct *deref = ralloc(mem_ctx, nir_deref_struct);
-   deref->deref.deref_type = nir_deref_type_struct;
-   deref->deref.child = NULL;
-   deref->index = field_index;
-   return deref;
-}
-
-nir_deref_var *
-nir_deref_var_clone(const nir_deref_var *deref, void *mem_ctx)
-{
-   if (deref == NULL)
-      return NULL;
-
-   nir_deref_var *ret = nir_deref_var_create(mem_ctx, deref->var);
-   ret->deref.type = deref->deref.type;
-   if (deref->deref.child)
-      ret->deref.child = nir_deref_clone(deref->deref.child, ret);
-   return ret;
-}
-
-static nir_deref_array *
-deref_array_clone(const nir_deref_array *deref, void *mem_ctx)
-{
-   nir_deref_array *ret = nir_deref_array_create(mem_ctx);
-   ret->base_offset = deref->base_offset;
-   ret->deref_array_type = deref->deref_array_type;
-   if (deref->deref_array_type == nir_deref_array_type_indirect) {
-      nir_src_copy(&ret->indirect, &deref->indirect, mem_ctx);
-   }
-   ret->deref.type = deref->deref.type;
-   if (deref->deref.child)
-      ret->deref.child = nir_deref_clone(deref->deref.child, ret);
-   return ret;
-}
-
-static nir_deref_struct *
-deref_struct_clone(const nir_deref_struct *deref, void *mem_ctx)
-{
-   nir_deref_struct *ret = nir_deref_struct_create(mem_ctx, deref->index);
-   ret->deref.type = deref->deref.type;
-   if (deref->deref.child)
-      ret->deref.child = nir_deref_clone(deref->deref.child, ret);
-   return ret;
-}
-
-nir_deref *
-nir_deref_clone(const nir_deref *deref, void *mem_ctx)
-{
-   if (deref == NULL)
-      return NULL;
-
-   switch (deref->deref_type) {
-   case nir_deref_type_var:
-      return &nir_deref_var_clone(nir_deref_as_var(deref), mem_ctx)->deref;
-   case nir_deref_type_array:
-      return &deref_array_clone(nir_deref_as_array(deref), mem_ctx)->deref;
-   case nir_deref_type_struct:
-      return &deref_struct_clone(nir_deref_as_struct(deref), mem_ctx)->deref;
+   nir_const_value v;
+   switch (bit_size) {
+   case 16: v.u16[0] = _mesa_float_to_half(d);  break;
+   case 32: v.f32[0] = d;                       break;
+   case 64: v.f64[0] = d;                       break;
    default:
-      unreachable("Invalid dereference type");
+      unreachable("Invalid bit size");
    }
-
-   return NULL;
+   return v;
 }
 
-/* This is the second step in the recursion.  We've found the tail and made a
- * copy.  Now we need to iterate over all possible leaves and call the
- * callback on each one.
- */
-static bool
-deref_foreach_leaf_build_recur(nir_deref_var *deref, nir_deref *tail,
-                               nir_deref_foreach_leaf_cb cb, void *state)
+static nir_const_value
+const_value_int(int64_t i, unsigned bit_size)
 {
-   unsigned length;
-   union {
-      nir_deref_array arr;
-      nir_deref_struct str;
-   } tmp;
-
-   assert(tail->child == NULL);
-   switch (glsl_get_base_type(tail->type)) {
-   case GLSL_TYPE_UINT:
-   case GLSL_TYPE_UINT64:
-   case GLSL_TYPE_INT:
-   case GLSL_TYPE_INT64:
-   case GLSL_TYPE_FLOAT:
-   case GLSL_TYPE_DOUBLE:
-   case GLSL_TYPE_BOOL:
-      if (glsl_type_is_vector_or_scalar(tail->type))
-         return cb(deref, state);
-      /* Fall Through */
-
-   case GLSL_TYPE_ARRAY:
-      tmp.arr.deref.deref_type = nir_deref_type_array;
-      tmp.arr.deref.type = glsl_get_array_element(tail->type);
-      tmp.arr.deref_array_type = nir_deref_array_type_direct;
-      tmp.arr.indirect = NIR_SRC_INIT;
-      tail->child = &tmp.arr.deref;
-
-      length = glsl_get_length(tail->type);
-      for (unsigned i = 0; i < length; i++) {
-         tmp.arr.deref.child = NULL;
-         tmp.arr.base_offset = i;
-         if (!deref_foreach_leaf_build_recur(deref, &tmp.arr.deref, cb, state))
-            return false;
-      }
-      return true;
-
-   case GLSL_TYPE_STRUCT:
-      tmp.str.deref.deref_type = nir_deref_type_struct;
-      tail->child = &tmp.str.deref;
-
-      length = glsl_get_length(tail->type);
-      for (unsigned i = 0; i < length; i++) {
-         tmp.arr.deref.child = NULL;
-         tmp.str.deref.type = glsl_get_struct_field(tail->type, i);
-         tmp.str.index = i;
-         if (!deref_foreach_leaf_build_recur(deref, &tmp.arr.deref, cb, state))
-            return false;
-      }
-      return true;
-
+   nir_const_value v;
+   switch (bit_size) {
+   case 8:  v.i8[0]  = i;  break;
+   case 16: v.i16[0] = i;  break;
+   case 32: v.i32[0] = i;  break;
+   case 64: v.i64[0] = i;  break;
    default:
-      unreachable("Invalid type for dereference");
+      unreachable("Invalid bit size");
    }
+   return v;
 }
 
-/* This is the first step of the foreach_leaf recursion.  In this step we are
- * walking to the end of the deref chain and making a copy in the stack as we
- * go.  This is because we don't want to mutate the deref chain that was
- * passed in by the caller.  The downside is that this deref chain is on the
- * stack and , if the caller wants to do anything with it, they will have to
- * make their own copy because this one will go away.
- */
-static bool
-deref_foreach_leaf_copy_recur(nir_deref_var *deref, nir_deref *tail,
-                              nir_deref_foreach_leaf_cb cb, void *state)
+nir_const_value
+nir_alu_binop_identity(nir_op binop, unsigned bit_size)
 {
-   union {
-      nir_deref_array arr;
-      nir_deref_struct str;
-   } c;
-
-   if (tail->child) {
-      switch (tail->child->deref_type) {
-      case nir_deref_type_array:
-         c.arr = *nir_deref_as_array(tail->child);
-         tail->child = &c.arr.deref;
-         return deref_foreach_leaf_copy_recur(deref, &c.arr.deref, cb, state);
-
-      case nir_deref_type_struct:
-         c.str = *nir_deref_as_struct(tail->child);
-         tail->child = &c.str.deref;
-         return deref_foreach_leaf_copy_recur(deref, &c.str.deref, cb, state);
-
-      case nir_deref_type_var:
-      default:
-         unreachable("Invalid deref type for a child");
-      }
-   } else {
-      /* We've gotten to the end of the original deref.  Time to start
-       * building our own derefs.
-       */
-      return deref_foreach_leaf_build_recur(deref, tail, cb, state);
-   }
-}
-
-/**
- * This function iterates over all of the possible derefs that can be created
- * with the given deref as the head.  It then calls the provided callback with
- * a full deref for each one.
- *
- * The deref passed to the callback will be allocated on the stack.  You will
- * need to make a copy if you want it to hang around.
- */
-bool
-nir_deref_foreach_leaf(nir_deref_var *deref,
-                       nir_deref_foreach_leaf_cb cb, void *state)
-{
-   nir_deref_var copy = *deref;
-   return deref_foreach_leaf_copy_recur(&copy, &copy.deref, cb, state);
-}
-
-/* Returns a load_const instruction that represents the constant
- * initializer for the given deref chain.  The caller is responsible for
- * ensuring that there actually is a constant initializer.
- */
-nir_load_const_instr *
-nir_deref_get_const_initializer_load(nir_shader *shader, nir_deref_var *deref)
-{
-   nir_constant *constant = deref->var->constant_initializer;
-   assert(constant);
-
-   const nir_deref *tail = &deref->deref;
-   unsigned matrix_col = 0;
-   while (tail->child) {
-      switch (tail->child->deref_type) {
-      case nir_deref_type_array: {
-         nir_deref_array *arr = nir_deref_as_array(tail->child);
-         assert(arr->deref_array_type == nir_deref_array_type_direct);
-         if (glsl_type_is_matrix(tail->type)) {
-            assert(arr->deref.child == NULL);
-            matrix_col = arr->base_offset;
-         } else {
-            constant = constant->elements[arr->base_offset];
-         }
-         break;
-      }
-
-      case nir_deref_type_struct: {
-         constant = constant->elements[nir_deref_as_struct(tail->child)->index];
-         break;
-      }
-
-      default:
-         unreachable("Invalid deref child type");
-      }
-
-      tail = tail->child;
-   }
-
-   unsigned bit_size = glsl_get_bit_size(tail->type);
-   nir_load_const_instr *load =
-      nir_load_const_instr_create(shader, glsl_get_vector_elements(tail->type),
-                                  bit_size);
-
-   switch (glsl_get_base_type(tail->type)) {
-   case GLSL_TYPE_FLOAT:
-   case GLSL_TYPE_INT:
-   case GLSL_TYPE_UINT:
-   case GLSL_TYPE_DOUBLE:
-   case GLSL_TYPE_UINT64:
-   case GLSL_TYPE_INT64:
-   case GLSL_TYPE_BOOL:
-      load->value = constant->values[matrix_col];
-      break;
+   const int64_t max_int = (1ull << (bit_size - 1)) - 1;
+   const int64_t min_int = -max_int - 1;
+   switch (binop) {
+   case nir_op_iadd:
+      return const_value_int(0, bit_size);
+   case nir_op_fadd:
+      return const_value_float(0, bit_size);
+   case nir_op_imul:
+      return const_value_int(1, bit_size);
+   case nir_op_fmul:
+      return const_value_float(1, bit_size);
+   case nir_op_imin:
+      return const_value_int(max_int, bit_size);
+   case nir_op_umin:
+      return const_value_int(~0ull, bit_size);
+   case nir_op_fmin:
+      return const_value_float(INFINITY, bit_size);
+   case nir_op_imax:
+      return const_value_int(min_int, bit_size);
+   case nir_op_umax:
+      return const_value_int(0, bit_size);
+   case nir_op_fmax:
+      return const_value_float(-INFINITY, bit_size);
+   case nir_op_iand:
+      return const_value_int(~0ull, bit_size);
+   case nir_op_ior:
+      return const_value_int(0, bit_size);
+   case nir_op_ixor:
+      return const_value_int(0, bit_size);
    default:
-      unreachable("Invalid immediate type");
+      unreachable("Invalid reduction operation");
    }
-
-   return load;
 }
 
 nir_function_impl *
@@ -1084,7 +882,7 @@ remove_defs_uses(nir_instr *instr)
    nir_foreach_src(instr, remove_use_cb, instr);
 }
 
-void nir_instr_remove(nir_instr *instr)
+void nir_instr_remove_v(nir_instr *instr)
 {
    remove_defs_uses(instr);
    exec_node_remove(&instr->node);
@@ -1121,6 +919,12 @@ static bool
 visit_alu_dest(nir_alu_instr *instr, nir_foreach_dest_cb cb, void *state)
 {
    return cb(&instr->dest.dest, state);
+}
+
+static bool
+visit_deref_dest(nir_deref_instr *instr, nir_foreach_dest_cb cb, void *state)
+{
+   return cb(&instr->dest, state);
 }
 
 static bool
@@ -1164,6 +968,8 @@ nir_foreach_dest(nir_instr *instr, nir_foreach_dest_cb cb, void *state)
    switch (instr->type) {
    case nir_instr_type_alu:
       return visit_alu_dest(nir_instr_as_alu(instr), cb, state);
+   case nir_instr_type_deref:
+      return visit_deref_dest(nir_instr_as_deref(instr), cb, state);
    case nir_instr_type_intrinsic:
       return visit_intrinsic_dest(nir_instr_as_intrinsic(instr), cb, state);
    case nir_instr_type_tex:
@@ -1209,6 +1015,7 @@ nir_foreach_ssa_def(nir_instr *instr, nir_foreach_ssa_def_cb cb, void *state)
 {
    switch (instr->type) {
    case nir_instr_type_alu:
+   case nir_instr_type_deref:
    case nir_instr_type_tex:
    case nir_instr_type_intrinsic:
    case nir_instr_type_phi:
@@ -1240,31 +1047,6 @@ visit_src(nir_src *src, nir_foreach_src_cb cb, void *state)
 }
 
 static bool
-visit_deref_array_src(nir_deref_array *deref, nir_foreach_src_cb cb,
-                      void *state)
-{
-   if (deref->deref_array_type == nir_deref_array_type_indirect)
-      return visit_src(&deref->indirect, cb, state);
-   return true;
-}
-
-static bool
-visit_deref_src(nir_deref_var *deref, nir_foreach_src_cb cb, void *state)
-{
-   nir_deref *cur = &deref->deref;
-   while (cur != NULL) {
-      if (cur->deref_type == nir_deref_type_array) {
-         if (!visit_deref_array_src(nir_deref_as_array(cur), cb, state))
-            return false;
-      }
-
-      cur = cur->child;
-   }
-
-   return true;
-}
-
-static bool
 visit_alu_src(nir_alu_instr *instr, nir_foreach_src_cb cb, void *state)
 {
    for (unsigned i = 0; i < nir_op_infos[instr->op].num_inputs; i++)
@@ -1275,20 +1057,27 @@ visit_alu_src(nir_alu_instr *instr, nir_foreach_src_cb cb, void *state)
 }
 
 static bool
+visit_deref_instr_src(nir_deref_instr *instr,
+                      nir_foreach_src_cb cb, void *state)
+{
+   if (instr->deref_type != nir_deref_type_var) {
+      if (!visit_src(&instr->parent, cb, state))
+         return false;
+   }
+
+   if (instr->deref_type == nir_deref_type_array) {
+      if (!visit_src(&instr->arr.index, cb, state))
+         return false;
+   }
+
+   return true;
+}
+
+static bool
 visit_tex_src(nir_tex_instr *instr, nir_foreach_src_cb cb, void *state)
 {
    for (unsigned i = 0; i < instr->num_srcs; i++) {
       if (!visit_src(&instr->src[i].src, cb, state))
-         return false;
-   }
-
-   if (instr->texture != NULL) {
-      if (!visit_deref_src(instr->texture, cb, state))
-         return false;
-   }
-
-   if (instr->sampler != NULL) {
-      if (!visit_deref_src(instr->sampler, cb, state))
          return false;
    }
 
@@ -1305,10 +1094,14 @@ visit_intrinsic_src(nir_intrinsic_instr *instr, nir_foreach_src_cb cb,
          return false;
    }
 
-   unsigned num_vars =
-      nir_intrinsic_infos[instr->intrinsic].num_variables;
-   for (unsigned i = 0; i < num_vars; i++) {
-      if (!visit_deref_src(instr->variables[i], cb, state))
+   return true;
+}
+
+static bool
+visit_call_src(nir_call_instr *instr, nir_foreach_src_cb cb, void *state)
+{
+   for (unsigned i = 0; i < instr->num_params; i++) {
+      if (!visit_src(&instr->params[i], cb, state))
          return false;
    }
 
@@ -1362,6 +1155,10 @@ nir_foreach_src(nir_instr *instr, nir_foreach_src_cb cb, void *state)
       if (!visit_alu_src(nir_instr_as_alu(instr), cb, state))
          return false;
       break;
+   case nir_instr_type_deref:
+      if (!visit_deref_instr_src(nir_instr_as_deref(instr), cb, state))
+         return false;
+      break;
    case nir_instr_type_intrinsic:
       if (!visit_intrinsic_src(nir_instr_as_intrinsic(instr), cb, state))
          return false;
@@ -1371,7 +1168,8 @@ nir_foreach_src(nir_instr *instr, nir_foreach_src_cb cb, void *state)
          return false;
       break;
    case nir_instr_type_call:
-      /* Call instructions have no regular sources */
+      if (!visit_call_src(nir_instr_as_call(instr), cb, state))
+         return false;
       break;
    case nir_instr_type_load_const:
       /* Constant load instructions have no regular sources */
@@ -1398,6 +1196,98 @@ nir_foreach_src(nir_instr *instr, nir_foreach_src_cb cb, void *state)
    dest_state.state = state;
    dest_state.cb = cb;
    return nir_foreach_dest(instr, visit_dest_indirect, &dest_state);
+}
+
+int64_t
+nir_src_comp_as_int(nir_src src, unsigned comp)
+{
+   assert(nir_src_is_const(src));
+   nir_load_const_instr *load = nir_instr_as_load_const(src.ssa->parent_instr);
+
+   assert(comp < load->def.num_components);
+   switch (load->def.bit_size) {
+   case 8:  return load->value.i8[comp];
+   case 16: return load->value.i16[comp];
+   case 32: return load->value.i32[comp];
+   case 64: return load->value.i64[comp];
+   default:
+      unreachable("Invalid bit size");
+   }
+}
+
+uint64_t
+nir_src_comp_as_uint(nir_src src, unsigned comp)
+{
+   assert(nir_src_is_const(src));
+   nir_load_const_instr *load = nir_instr_as_load_const(src.ssa->parent_instr);
+
+   assert(comp < load->def.num_components);
+   switch (load->def.bit_size) {
+   case 8:  return load->value.u8[comp];
+   case 16: return load->value.u16[comp];
+   case 32: return load->value.u32[comp];
+   case 64: return load->value.u64[comp];
+   default:
+      unreachable("Invalid bit size");
+   }
+}
+
+bool
+nir_src_comp_as_bool(nir_src src, unsigned comp)
+{
+   assert(nir_src_is_const(src));
+   nir_load_const_instr *load = nir_instr_as_load_const(src.ssa->parent_instr);
+
+   assert(comp < load->def.num_components);
+   assert(load->def.bit_size == 32);
+   assert(load->value.u32[comp] == NIR_TRUE ||
+          load->value.u32[comp] == NIR_FALSE);
+
+   return load->value.u32[comp];
+}
+
+double
+nir_src_comp_as_float(nir_src src, unsigned comp)
+{
+   assert(nir_src_is_const(src));
+   nir_load_const_instr *load = nir_instr_as_load_const(src.ssa->parent_instr);
+
+   assert(comp < load->def.num_components);
+   switch (load->def.bit_size) {
+   case 16: return _mesa_half_to_float(load->value.u16[comp]);
+   case 32: return load->value.f32[comp];
+   case 64: return load->value.f64[comp];
+   default:
+      unreachable("Invalid bit size");
+   }
+}
+
+int64_t
+nir_src_as_int(nir_src src)
+{
+   assert(nir_src_num_components(src) == 1);
+   return nir_src_comp_as_int(src, 0);
+}
+
+uint64_t
+nir_src_as_uint(nir_src src)
+{
+   assert(nir_src_num_components(src) == 1);
+   return nir_src_comp_as_uint(src, 0);
+}
+
+bool
+nir_src_as_bool(nir_src src)
+{
+   assert(nir_src_num_components(src) == 1);
+   return nir_src_comp_as_bool(src, 0);
+}
+
+double
+nir_src_as_float(nir_src src)
+{
+   assert(nir_src_num_components(src) == 1);
+   return nir_src_comp_as_float(src, 0);
 }
 
 nir_const_value *
@@ -1535,19 +1425,6 @@ nir_instr_rewrite_dest(nir_instr *instr, nir_dest *dest, nir_dest new_dest)
       src_add_all_uses(dest->reg.indirect, instr, NULL);
 }
 
-void
-nir_instr_rewrite_deref(nir_instr *instr, nir_deref_var **deref,
-                        nir_deref_var *new_deref)
-{
-   if (*deref)
-      visit_deref_src(*deref, remove_use_cb, NULL);
-
-   *deref = new_deref;
-
-   if (*deref)
-      visit_deref_src(*deref, add_use_cb, instr);
-}
-
 /* note: does *not* take ownership of 'name' */
 void
 nir_ssa_def_init(nir_instr *instr, nir_ssa_def *def,
@@ -1643,10 +1520,10 @@ nir_ssa_def_rewrite_uses_after(nir_ssa_def *def, nir_src new_src,
       nir_if_rewrite_condition(use_src->parent_if, new_src);
 }
 
-uint8_t
-nir_ssa_def_components_read(nir_ssa_def *def)
+nir_component_mask_t
+nir_ssa_def_components_read(const nir_ssa_def *def)
 {
-   uint8_t read_mask = 0;
+   nir_component_mask_t read_mask = 0;
    nir_foreach_use(use, def) {
       if (use->parent_instr->type == nir_instr_type_alu) {
          nir_alu_instr *alu = nir_instr_as_alu(use->parent_instr);
@@ -1654,7 +1531,7 @@ nir_ssa_def_components_read(nir_ssa_def *def)
          int src_idx = alu_src - &alu->src[0];
          assert(src_idx >= 0 && src_idx < nir_op_infos[alu->op].num_inputs);
 
-         for (unsigned c = 0; c < 4; c++) {
+         for (unsigned c = 0; c < NIR_MAX_VEC_COMPONENTS; c++) {
             if (!nir_alu_instr_channel_used(alu, src_idx, c))
                continue;
 
@@ -1664,6 +1541,9 @@ nir_ssa_def_components_read(nir_ssa_def *def)
          return (1 << def->num_components) - 1;
       }
    }
+
+   if (!list_empty(&def->if_uses))
+      read_mask |= 1;
 
    return read_mask;
 }
@@ -1853,7 +1733,10 @@ nir_index_blocks(nir_function_impl *impl)
       block->index = index++;
    }
 
-   impl->num_blocks = index;
+   /* The end_block isn't really part of the program, which is why its index
+    * is >= num_blocks.
+    */
+   impl->num_blocks = impl->end_block->index = index;
 }
 
 static bool
@@ -1913,6 +1796,10 @@ nir_intrinsic_from_system_value(gl_system_value val)
       return nir_intrinsic_load_base_instance;
    case SYSTEM_VALUE_VERTEX_ID_ZERO_BASE:
       return nir_intrinsic_load_vertex_id_zero_base;
+   case SYSTEM_VALUE_IS_INDEXED_DRAW:
+      return nir_intrinsic_load_is_indexed_draw;
+   case SYSTEM_VALUE_FIRST_VERTEX:
+      return nir_intrinsic_load_first_vertex;
    case SYSTEM_VALUE_BASE_VERTEX:
       return nir_intrinsic_load_base_vertex;
    case SYSTEM_VALUE_INVOCATION_ID:
@@ -1963,6 +1850,16 @@ nir_intrinsic_from_system_value(gl_system_value val)
       return nir_intrinsic_load_subgroup_le_mask;
    case SYSTEM_VALUE_SUBGROUP_LT_MASK:
       return nir_intrinsic_load_subgroup_lt_mask;
+   case SYSTEM_VALUE_NUM_SUBGROUPS:
+      return nir_intrinsic_load_num_subgroups;
+   case SYSTEM_VALUE_SUBGROUP_ID:
+      return nir_intrinsic_load_subgroup_id;
+   case SYSTEM_VALUE_LOCAL_GROUP_SIZE:
+      return nir_intrinsic_load_local_group_size;
+   case SYSTEM_VALUE_GLOBAL_INVOCATION_ID:
+      return nir_intrinsic_load_global_invocation_id;
+   case SYSTEM_VALUE_WORK_DIM:
+      return nir_intrinsic_load_work_dim;
    default:
       unreachable("system value does not directly correspond to intrinsic");
    }
@@ -1982,6 +1879,10 @@ nir_system_value_from_intrinsic(nir_intrinsic_op intrin)
       return SYSTEM_VALUE_BASE_INSTANCE;
    case nir_intrinsic_load_vertex_id_zero_base:
       return SYSTEM_VALUE_VERTEX_ID_ZERO_BASE;
+   case nir_intrinsic_load_first_vertex:
+      return SYSTEM_VALUE_FIRST_VERTEX;
+   case nir_intrinsic_load_is_indexed_draw:
+      return SYSTEM_VALUE_IS_INDEXED_DRAW;
    case nir_intrinsic_load_base_vertex:
       return SYSTEM_VALUE_BASE_VERTEX;
    case nir_intrinsic_load_invocation_id:
@@ -2032,7 +1933,59 @@ nir_system_value_from_intrinsic(nir_intrinsic_op intrin)
       return SYSTEM_VALUE_SUBGROUP_LE_MASK;
    case nir_intrinsic_load_subgroup_lt_mask:
       return SYSTEM_VALUE_SUBGROUP_LT_MASK;
+   case nir_intrinsic_load_num_subgroups:
+      return SYSTEM_VALUE_NUM_SUBGROUPS;
+   case nir_intrinsic_load_subgroup_id:
+      return SYSTEM_VALUE_SUBGROUP_ID;
+   case nir_intrinsic_load_local_group_size:
+      return SYSTEM_VALUE_LOCAL_GROUP_SIZE;
+   case nir_intrinsic_load_global_invocation_id:
+      return SYSTEM_VALUE_GLOBAL_INVOCATION_ID;
    default:
       unreachable("intrinsic doesn't produce a system value");
    }
+}
+
+/* OpenGL utility method that remaps the location attributes if they are
+ * doubles. Not needed for vulkan due the differences on the input location
+ * count for doubles on vulkan vs OpenGL
+ *
+ * The bitfield returned in dual_slot is one bit for each double input slot in
+ * the original OpenGL single-slot input numbering.  The mapping from old
+ * locations to new locations is as follows:
+ *
+ *    new_loc = loc + util_bitcount(dual_slot & BITFIELD64_MASK(loc))
+ */
+void
+nir_remap_dual_slot_attributes(nir_shader *shader, uint64_t *dual_slot)
+{
+   assert(shader->info.stage == MESA_SHADER_VERTEX);
+
+   *dual_slot = 0;
+   nir_foreach_variable(var, &shader->inputs) {
+      if (glsl_type_is_dual_slot(glsl_without_array(var->type))) {
+         unsigned slots = glsl_count_attribute_slots(var->type, true);
+         *dual_slot |= BITFIELD64_MASK(slots) << var->data.location;
+      }
+   }
+
+   nir_foreach_variable(var, &shader->inputs) {
+      var->data.location +=
+         util_bitcount64(*dual_slot & BITFIELD64_MASK(var->data.location));
+   }
+}
+
+/* Returns an attribute mask that has been re-compacted using the given
+ * dual_slot mask.
+ */
+uint64_t
+nir_get_single_slot_attribs_mask(uint64_t attribs, uint64_t dual_slot)
+{
+   while (dual_slot) {
+      unsigned loc = u_bit_scan64(&dual_slot);
+      /* mask of all bits up to and including loc */
+      uint64_t mask = BITFIELD64_MASK(loc + 1);
+      attribs = (attribs & mask) | ((attribs & ~mask) >> 1);
+   }
+   return attribs;
 }

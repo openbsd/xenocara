@@ -1,5 +1,6 @@
 /*
  * Copyright 2012 Advanced Micro Devices, Inc.
+ * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -19,9 +20,6 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- * Authors:
- *      Christian König <christian.koenig@amd.com>
  */
 
 #ifndef SI_PM4_H
@@ -34,6 +32,13 @@
 
 // forward defines
 struct si_context;
+
+/* State atoms are callbacks which write a sequence of packets into a GPU
+ * command buffer (AKA indirect buffer, AKA IB, AKA command stream, AKA CS).
+ */
+struct si_atom {
+	void (*emit)(struct si_context *ctx);
+};
 
 struct si_pm4_state
 {
@@ -54,6 +59,10 @@ struct si_pm4_state
 	struct r600_resource	*bo[SI_PM4_MAX_BO];
 	enum radeon_bo_usage	bo_usage[SI_PM4_MAX_BO];
 	enum radeon_bo_priority	bo_priority[SI_PM4_MAX_BO];
+
+	/* For shader states only */
+	struct si_shader *shader;
+	struct si_atom atom;
 };
 
 void si_pm4_cmd_begin(struct si_pm4_state *state, unsigned opcode);

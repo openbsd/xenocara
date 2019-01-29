@@ -58,6 +58,14 @@ void genX(cmd_buffer_flush_compute_state)(struct anv_cmd_buffer *cmd_buffer);
 void genX(cmd_buffer_enable_pma_fix)(struct anv_cmd_buffer *cmd_buffer,
                                      bool enable);
 
+void genX(cmd_buffer_mark_image_written)(struct anv_cmd_buffer *cmd_buffer,
+                                         const struct anv_image *image,
+                                         VkImageAspectFlagBits aspect,
+                                         enum isl_aux_usage aux_usage,
+                                         uint32_t level,
+                                         uint32_t base_layer,
+                                         uint32_t layer_count);
+
 void
 genX(emit_urb_setup)(struct anv_device *device, struct anv_batch *batch,
                      const struct gen_l3_config *l3_config,
@@ -65,13 +73,15 @@ genX(emit_urb_setup)(struct anv_device *device, struct anv_batch *batch,
                      const unsigned entry_size[4]);
 
 void genX(cmd_buffer_so_memcpy)(struct anv_cmd_buffer *cmd_buffer,
-                                struct anv_bo *dst, uint32_t dst_offset,
-                                struct anv_bo *src, uint32_t src_offset,
+                                struct anv_address dst, struct anv_address src,
                                 uint32_t size);
 
 void genX(cmd_buffer_mi_memcpy)(struct anv_cmd_buffer *cmd_buffer,
-                                struct anv_bo *dst, uint32_t dst_offset,
-                                struct anv_bo *src, uint32_t src_offset,
+                                struct anv_address dst, struct anv_address src,
+                                uint32_t size);
+
+void genX(cmd_buffer_mi_memset)(struct anv_cmd_buffer *cmd_buffer,
+                                struct anv_address dst, uint32_t value,
                                 uint32_t size);
 
 void genX(blorp_exec)(struct blorp_batch *batch,

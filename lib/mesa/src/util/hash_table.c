@@ -141,6 +141,28 @@ _mesa_hash_table_create(void *mem_ctx,
    return ht;
 }
 
+struct hash_table *
+_mesa_hash_table_clone(struct hash_table *src, void *dst_mem_ctx)
+{
+   struct hash_table *ht;
+
+   ht = ralloc(dst_mem_ctx, struct hash_table);
+   if (ht == NULL)
+      return NULL;
+
+   memcpy(ht, src, sizeof(struct hash_table));
+
+   ht->table = ralloc_array(ht, struct hash_entry, ht->size);
+   if (ht->table == NULL) {
+      ralloc_free(ht);
+      return NULL;
+   }
+
+   memcpy(ht->table, src->table, ht->size * sizeof(struct hash_entry));
+
+   return ht;
+}
+
 /**
  * Frees the given hash table.
  *
@@ -155,8 +177,6 @@ _mesa_hash_table_destroy(struct hash_table *ht,
       return;
 
    if (delete_function) {
-      struct hash_entry *entry;
-
       hash_table_foreach(ht, entry) {
          delete_function(entry);
       }
@@ -262,7 +282,7 @@ static void
 _mesa_hash_table_rehash(struct hash_table *ht, unsigned new_size_index)
 {
    struct hash_table old_ht;
-   struct hash_entry *table, *entry;
+   struct hash_entry *table;
 
    if (new_size_index >= ARRAY_SIZE(hash_sizes))
       return;
@@ -399,6 +419,15 @@ _mesa_hash_table_remove(struct hash_table *ht,
 }
 
 /**
+ * Removes the entry with the corresponding key, if exists.
+ */
+void _mesa_hash_table_remove_key(struct hash_table *ht,
+                                 const void *key)
+{
+   _mesa_hash_table_remove(ht, _mesa_hash_table_search(ht, key));
+}
+
+/**
  * This function is an iterator over the hash table.
  *
  * Pass in NULL for the first entry, as in the start of a for loop.  Note that
@@ -476,9 +505,10 @@ _mesa_hash_data(const void *data, size_t size)
 
 /** FNV-1a string hash implementation */
 uint32_t
-_mesa_hash_string(const char *key)
+_mesa_hash_string(const void *_key)
 {
    uint32_t hash = _mesa_fnv32_1a_offset_bias;
+   const char *key = _key;
 
    while (*key != 0) {
       hash = _mesa_fnv32_1a_accumulate(hash, *key);

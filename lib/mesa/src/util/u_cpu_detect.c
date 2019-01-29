@@ -162,10 +162,13 @@ check_os_altivec_support(void)
 
          util_cpu_caps.has_altivec = 1;
 
+/* no support for POWER7 VSX instructions in binutils 2.17 */
+#ifndef __OpenBSD__
          if (enable_vsx) {
             __asm __volatile("xxland %vs0, %vs0, %vs0");
             util_cpu_caps.has_vsx = 1;
          }
+#endif
          signal(SIGILL, SIG_DFL);
       } else {
          util_cpu_caps.has_altivec = 0;

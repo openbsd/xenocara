@@ -98,6 +98,7 @@ struct svga_shader_emitter_v10
    struct svga_compile_key key;
    struct tgsi_shader_info info;
    unsigned unit;
+   unsigned version; /**< Either 40 or 41 at this time */
 
    unsigned inst_start_token;
    boolean discard_instruction; /**< throw away current instruction? */
@@ -181,6 +182,14 @@ struct svga_shader_emitter_v10
 
       unsigned fragcoord_input_index;  /**< real fragment position input reg */
       unsigned fragcoord_tmp_index;    /**< 1/w modified position temp reg */
+
+      /** Which texture units are doing shadow comparison in the FS code */
+      unsigned shadow_compare_units;
+
+      unsigned sample_id_sys_index;  /**< TGSI index of sample id sys value */
+
+      unsigned sample_pos_sys_index; /**< TGSI index of sample pos sys value */
+      unsigned sample_pos_tmp_index; /**< which temp reg has the sample pos */
    } fs;
 
    /* For geometry shaders only */
@@ -406,6 +415,9 @@ check_register_index(struct svga_shader_emitter_v10 *emit,
          emit->register_overflow = TRUE;
       }
       break;
+   case VGPU10_OPERAND_TYPE_OUTPUT_COVERAGE_MASK:
+      /* nothing */
+      break;
    default:
       assert(0);
       ; /* nothing */
@@ -498,7 +510,7 @@ translate_shader_type(unsigned type)
  * as seen below.  All other opcodes are handled/translated specially.
  */
 static VGPU10_OPCODE_TYPE
-translate_opcode(unsigned opcode)
+translate_opcode(enum tgsi_opcode opcode)
 {
    switch (opcode) {
    case TGSI_OPCODE_MOV:
@@ -640,6 +652,19 @@ translate_opcode(unsigned opcode)
       return VGPU10_OPCODE_LT;
    case TGSI_OPCODE_ROUND:
       return VGPU10_OPCODE_ROUND_NE;
+   case TGSI_OPCODE_SAMPLE_POS:
+      /* Note: we never actually get this opcode because there's no GLSL
+       * function to query multisample resource sample positions.  There's
+       * only the TGSI_SEMANTIC_SAMPLEPOS system value which contains the
+       * position of the current sample in the render target.
+       */
+      /* FALL-THROUGH */
+   case TGSI_OPCODE_SAMPLE_INFO:
+      /* NOTE: we never actually get this opcode because the GLSL compiler
+       * implements the gl_NumSamples variable with a simple constant in the
+       * constant buffer.
+       */
+      /* FALL-THROUGH */
    default:
       assert(!"Unexpected TGSI opcode in translate_opcode()");
       return VGPU10_OPCODE_NOP;
@@ -853,9 +878,9 @@ emit_dst_register(struct svga_shader_emitter_v10 *emit,
    const enum tgsi_semantic sem_name = emit->info.output_semantic_name[index];
    const unsigned sem_index = emit->info.output_semantic_index[index];
    unsigned writemask = reg->Register.WriteMask;
-   const unsigned indirect = reg->Register.Indirect;
+   const boolean indirect = reg->Register.Indirect;
    const unsigned tempArrayId = get_temp_array_id(emit, file, index);
-   const unsigned index2d = reg->Register.Dimension;
+   const boolean index2d = reg->Register.Dimension;
    VGPU10OperandToken0 operand0;
 
    if (file == TGSI_FILE_OUTPUT) {
@@ -894,6 +919,15 @@ emit_dst_register(struct svga_shader_emitter_v10 *emit,
             /* Fragment depth output register */
             operand0.value = 0;
             operand0.operandType = VGPU10_OPERAND_TYPE_OUTPUT_DEPTH;
+            operand0.indexDimension = VGPU10_OPERAND_INDEX_0D;
+            operand0.numComponents = VGPU10_OPERAND_1_COMPONENT;
+            emit_dword(emit, operand0.value);
+            return;
+         }
+         else if (sem_name == TGSI_SEMANTIC_SAMPLEMASK) {
+            /* Fragment sample mask output */
+            operand0.value = 0;
+            operand0.operandType = VGPU10_OPERAND_TYPE_OUTPUT_COVERAGE_MASK;
             operand0.indexDimension = VGPU10_OPERAND_INDEX_0D;
             operand0.numComponents = VGPU10_OPERAND_1_COMPONENT;
             emit_dword(emit, operand0.value);
@@ -961,6 +995,9 @@ emit_dst_register(struct svga_shader_emitter_v10 *emit,
 
 /**
  * Translate a src register of a TGSI instruction and emit VGPU10 tokens.
+ * In quite a few cases, we do register substitution.  For example, if
+ * the TGSI register is the front/back-face register, we replace that with
+ * a temp register containing a value we computed earlier.
  */
 static void
 emit_src_register(struct svga_shader_emitter_v10 *emit,
@@ -968,43 +1005,59 @@ emit_src_register(struct svga_shader_emitter_v10 *emit,
 {
    enum tgsi_file_type file = reg->Register.File;
    unsigned index = reg->Register.Index;
-   const unsigned indirect = reg->Register.Indirect;
+   const boolean indirect = reg->Register.Indirect;
    const unsigned tempArrayId = get_temp_array_id(emit, file, index);
-   const unsigned index2d = reg->Register.Dimension;
+   const boolean index2d = reg->Register.Dimension;
    const unsigned swizzleX = reg->Register.SwizzleX;
    const unsigned swizzleY = reg->Register.SwizzleY;
    const unsigned swizzleZ = reg->Register.SwizzleZ;
    const unsigned swizzleW = reg->Register.SwizzleW;
-   const unsigned absolute = reg->Register.Absolute;
-   const unsigned negate = reg->Register.Negate;
+   const boolean absolute = reg->Register.Absolute;
+   const boolean negate = reg->Register.Negate;
    bool is_prim_id = FALSE;
 
    VGPU10OperandToken0 operand0;
    VGPU10OperandToken1 operand1;
 
-   if (emit->unit == PIPE_SHADER_FRAGMENT &&
-      file == TGSI_FILE_INPUT) {
-      if (index == emit->fs.face_input_index) {
-         /* Replace INPUT[FACE] with TEMP[FACE] */
-         file = TGSI_FILE_TEMPORARY;
-         index = emit->fs.face_tmp_index;
+   if (emit->unit == PIPE_SHADER_FRAGMENT){
+      if (file == TGSI_FILE_INPUT) {
+         if (index == emit->fs.face_input_index) {
+            /* Replace INPUT[FACE] with TEMP[FACE] */
+            file = TGSI_FILE_TEMPORARY;
+            index = emit->fs.face_tmp_index;
+         }
+         else if (index == emit->fs.fragcoord_input_index) {
+            /* Replace INPUT[POSITION] with TEMP[POSITION] */
+            file = TGSI_FILE_TEMPORARY;
+            index = emit->fs.fragcoord_tmp_index;
+         }
+         else {
+            /* We remap fragment shader inputs to that FS input indexes
+             * match up with VS/GS output indexes.
+             */
+            index = emit->linkage.input_map[index];
+         }
       }
-      else if (index == emit->fs.fragcoord_input_index) {
-         /* Replace INPUT[POSITION] with TEMP[POSITION] */
-         file = TGSI_FILE_TEMPORARY;
-         index = emit->fs.fragcoord_tmp_index;
-      }
-      else {
-         /* We remap fragment shader inputs to that FS input indexes
-          * match up with VS/GS output indexes.
-          */
-         index = emit->linkage.input_map[index];
+      else if (file == TGSI_FILE_SYSTEM_VALUE) {
+         if (index == emit->fs.sample_pos_sys_index) {
+            assert(emit->version >= 41);
+            /* Current sample position is in a temp register */
+            file = TGSI_FILE_TEMPORARY;
+            index = emit->fs.sample_pos_tmp_index;
+         }
+         else {
+            /* Map the TGSI system value to a VGPU10 input register */
+            assert(index < ARRAY_SIZE(emit->system_value_indexes));
+            file = TGSI_FILE_INPUT;
+            index = emit->system_value_indexes[index];
+         }
       }
    }
-   else if (emit->unit == PIPE_SHADER_GEOMETRY &&
-            file == TGSI_FILE_INPUT) {
-      is_prim_id = (index == emit->gs.prim_id_index);
-      index = emit->linkage.input_map[index];
+   else if (emit->unit == PIPE_SHADER_GEOMETRY) {
+      if (file == TGSI_FILE_INPUT) {
+         is_prim_id = (index == emit->gs.prim_id_index);
+         index = emit->linkage.input_map[index];
+      }
    }
    else if (emit->unit == PIPE_SHADER_VERTEX) {
       if (file == TGSI_FILE_INPUT) {
@@ -1021,7 +1074,9 @@ emit_src_register(struct svga_shader_emitter_v10 *emit,
          }
       }
       else if (file == TGSI_FILE_SYSTEM_VALUE) {
+         /* Map the TGSI system value to a VGPU10 input register */
          assert(index < ARRAY_SIZE(emit->system_value_indexes));
+         file = TGSI_FILE_INPUT;
          index = emit->system_value_indexes[index];
       }
    }
@@ -1190,12 +1245,38 @@ emit_face_register(struct svga_shader_emitter_v10 *emit)
 
 
 /**
+ * Emit tokens for the "rasterizer" register used by the SAMPLE_POS
+ * instruction.
+ */
+static void
+emit_rasterizer_register(struct svga_shader_emitter_v10 *emit)
+{
+   VGPU10OperandToken0 operand0;
+
+   /* init */
+   operand0.value = 0;
+
+   /* No register index for rasterizer index (there's only one) */
+   operand0.operandType = VGPU10_OPERAND_TYPE_RASTERIZER;
+   operand0.indexDimension = VGPU10_OPERAND_INDEX_0D;
+   operand0.numComponents = VGPU10_OPERAND_4_COMPONENT;
+   operand0.selectionMode = VGPU10_OPERAND_4_COMPONENT_SWIZZLE_MODE;
+   operand0.swizzleX = VGPU10_COMPONENT_X;
+   operand0.swizzleY = VGPU10_COMPONENT_Y;
+   operand0.swizzleZ = VGPU10_COMPONENT_Z;
+   operand0.swizzleW = VGPU10_COMPONENT_W;
+
+   emit_dword(emit, operand0.value);
+}
+
+
+/**
  * Emit the token for a VGPU10 opcode.
  * \param saturate   clamp result to [0,1]?
  */
 static void
 emit_opcode(struct svga_shader_emitter_v10 *emit,
-            unsigned vgpu10_opcode, boolean saturate)
+            VGPU10_OPCODE_TYPE vgpu10_opcode, boolean saturate)
 {
    VGPU10OpcodeToken0 token0;
 
@@ -1374,6 +1455,29 @@ make_src_reg(enum tgsi_file_type file, unsigned index)
    reg.Register.SwizzleY = TGSI_SWIZZLE_Y;
    reg.Register.SwizzleZ = TGSI_SWIZZLE_Z;
    reg.Register.SwizzleW = TGSI_SWIZZLE_W;
+   return reg;
+}
+
+
+/**
+ * Create a tgsi_full_src_register with a swizzle such that all four
+ * vector components have the same scalar value.
+ */
+static struct tgsi_full_src_register
+make_src_scalar_reg(enum tgsi_file_type file, unsigned index, unsigned component)
+{
+   struct tgsi_full_src_register reg;
+
+   assert(component >= TGSI_SWIZZLE_X);
+   assert(component <= TGSI_SWIZZLE_W);
+
+   memset(&reg, 0, sizeof(reg));
+   reg.Register.File = file;
+   reg.Register.Index = index;
+   reg.Register.SwizzleX =
+   reg.Register.SwizzleY =
+   reg.Register.SwizzleZ =
+   reg.Register.SwizzleW = component;
    return reg;
 }
 
@@ -1786,7 +1890,7 @@ alloc_immediate_int4(struct svga_shader_emitter_v10 *emit,
 static unsigned
 alloc_system_value_index(struct svga_shader_emitter_v10 *emit, unsigned index)
 {
-   const unsigned n = emit->info.file_max[TGSI_FILE_INPUT] + 1 + index;
+   const unsigned n = emit->linkage.input_map_max + 1 + index;
    assert(index < ARRAY_SIZE(emit->system_value_indexes));
    emit->system_value_indexes[index] = n;
    return n;
@@ -1854,13 +1958,25 @@ translate_interpolation(const struct svga_shader_emitter_v10 *emit,
    case TGSI_INTERPOLATE_CONSTANT:
       return VGPU10_INTERPOLATION_CONSTANT;
    case TGSI_INTERPOLATE_LINEAR:
-      return interpolate_loc == TGSI_INTERPOLATE_LOC_CENTROID ?
-             VGPU10_INTERPOLATION_LINEAR_NOPERSPECTIVE_CENTROID :
-             VGPU10_INTERPOLATION_LINEAR_NOPERSPECTIVE;
+      if (interpolate_loc == TGSI_INTERPOLATE_LOC_CENTROID) {
+         return VGPU10_INTERPOLATION_LINEAR_NOPERSPECTIVE_CENTROID;
+      } else if (interpolate_loc == TGSI_INTERPOLATE_LOC_SAMPLE &&
+                 emit->version >= 41) {
+         return VGPU10_INTERPOLATION_LINEAR_NOPERSPECTIVE_SAMPLE;
+      } else {
+         return VGPU10_INTERPOLATION_LINEAR_NOPERSPECTIVE;
+      }
+      break;
    case TGSI_INTERPOLATE_PERSPECTIVE:
-      return interpolate_loc == TGSI_INTERPOLATE_LOC_CENTROID ?
-             VGPU10_INTERPOLATION_LINEAR_CENTROID :
-             VGPU10_INTERPOLATION_LINEAR;
+      if (interpolate_loc == TGSI_INTERPOLATE_LOC_CENTROID) {
+         return VGPU10_INTERPOLATION_LINEAR_CENTROID;
+      } else if (interpolate_loc == TGSI_INTERPOLATE_LOC_SAMPLE &&
+                 emit->version >= 41) {
+         return VGPU10_INTERPOLATION_LINEAR_SAMPLE;
+      } else {
+         return VGPU10_INTERPOLATION_LINEAR;
+      }
+      break;
    default:
       assert(!"Unexpected interpolation mode");
       return VGPU10_INTERPOLATION_CONSTANT;
@@ -2006,7 +2122,9 @@ emit_decl_instruction(struct svga_shader_emitter_v10 *emit,
                       unsigned index, unsigned size)
 {
    assert(opcode0.opcodeType);
-   assert(operand0.mask);
+   assert(operand0.mask ||
+          (operand0.operandType == VGPU10_OPERAND_TYPE_OUTPUT_DEPTH) ||
+          (operand0.operandType == VGPU10_OPERAND_TYPE_OUTPUT_COVERAGE_MASK));
 
    begin_emit_instruction(emit);
    emit_dword(emit, opcode0.value);
@@ -2050,11 +2168,15 @@ emit_decl_instruction(struct svga_shader_emitter_v10 *emit,
  */
 static void
 emit_input_declaration(struct svga_shader_emitter_v10 *emit,
-                       unsigned opcodeType, unsigned operandType,
-                       unsigned dim, unsigned index, unsigned size,
-                       unsigned name, unsigned numComp,
-                       unsigned selMode, unsigned usageMask,
-                       unsigned interpMode)
+                       VGPU10_OPCODE_TYPE opcodeType,
+                       VGPU10_OPERAND_TYPE operandType,
+                       VGPU10_OPERAND_INDEX_DIMENSION dim,
+                       unsigned index, unsigned size,
+                       VGPU10_SYSTEM_NAME name,
+                       VGPU10_OPERAND_NUM_COMPONENTS numComp,
+                       VGPU10_OPERAND_4_COMPONENT_SELECTION_MODE selMode,
+                       unsigned usageMask,
+                       VGPU10_INTERPOLATION_MODE interpMode)
 {
    VGPU10OpcodeToken0 opcode0;
    VGPU10OperandToken0 operand0;
@@ -2064,6 +2186,7 @@ emit_input_declaration(struct svga_shader_emitter_v10 *emit,
    assert(opcodeType == VGPU10_OPCODE_DCL_INPUT ||
           opcodeType == VGPU10_OPCODE_DCL_INPUT_SIV ||
           opcodeType == VGPU10_OPCODE_DCL_INPUT_PS ||
+          opcodeType == VGPU10_OPCODE_DCL_INPUT_PS_SIV ||
           opcodeType == VGPU10_OPCODE_DCL_INPUT_PS_SGV);
    assert(operandType == VGPU10_OPERAND_TYPE_INPUT ||
           operandType == VGPU10_OPERAND_TYPE_INPUT_PRIMITIVEID);
@@ -2075,13 +2198,17 @@ emit_input_declaration(struct svga_shader_emitter_v10 *emit,
           name == VGPU10_NAME_INSTANCE_ID ||
           name == VGPU10_NAME_VERTEX_ID ||
           name == VGPU10_NAME_PRIMITIVE_ID ||
-          name == VGPU10_NAME_IS_FRONT_FACE);
+          name == VGPU10_NAME_IS_FRONT_FACE ||
+          name == VGPU10_NAME_SAMPLE_INDEX);
+
    assert(interpMode == VGPU10_INTERPOLATION_UNDEFINED ||
           interpMode == VGPU10_INTERPOLATION_CONSTANT ||
           interpMode == VGPU10_INTERPOLATION_LINEAR ||
           interpMode == VGPU10_INTERPOLATION_LINEAR_CENTROID ||
           interpMode == VGPU10_INTERPOLATION_LINEAR_NOPERSPECTIVE ||
-          interpMode == VGPU10_INTERPOLATION_LINEAR_NOPERSPECTIVE_CENTROID);
+          interpMode == VGPU10_INTERPOLATION_LINEAR_NOPERSPECTIVE_CENTROID ||
+          interpMode == VGPU10_INTERPOLATION_LINEAR_SAMPLE ||
+          interpMode == VGPU10_INTERPOLATION_LINEAR_NOPERSPECTIVE_SAMPLE);
 
    check_register_index(emit, opcodeType, index);
 
@@ -2114,8 +2241,9 @@ emit_input_declaration(struct svga_shader_emitter_v10 *emit,
  */
 static void
 emit_output_declaration(struct svga_shader_emitter_v10 *emit,
-                        unsigned type, unsigned index,
-                        unsigned name, unsigned usageMask)
+                        VGPU10_OPCODE_TYPE type, unsigned index,
+                        VGPU10_SYSTEM_NAME name,
+                        unsigned usageMask)
 {
    VGPU10OpcodeToken0 opcode0;
    VGPU10OperandToken0 operand0;
@@ -2167,7 +2295,32 @@ emit_fragdepth_output_declaration(struct svga_shader_emitter_v10 *emit)
    operand0.operandType = VGPU10_OPERAND_TYPE_OUTPUT_DEPTH;
    operand0.numComponents = VGPU10_OPERAND_1_COMPONENT;
    operand0.indexDimension = VGPU10_OPERAND_INDEX_0D;
-   operand0.mask = VGPU10_OPERAND_4_COMPONENT_MASK_ALL;
+   operand0.mask = 0;
+
+   emit_decl_instruction(emit, opcode0, operand0, name_token, 0, 1);
+}
+
+
+/**
+ * Emit the declaration for the fragment sample mask/coverage output.
+ */
+static void
+emit_samplemask_output_declaration(struct svga_shader_emitter_v10 *emit)
+{
+   VGPU10OpcodeToken0 opcode0;
+   VGPU10OperandToken0 operand0;
+   VGPU10NameToken name_token;
+
+   assert(emit->unit == PIPE_SHADER_FRAGMENT);
+   assert(emit->version >= 41);
+
+   opcode0.value = operand0.value = name_token.value = 0;
+
+   opcode0.opcodeType = VGPU10_OPCODE_DCL_OUTPUT;
+   operand0.operandType = VGPU10_OPERAND_TYPE_OUTPUT_COVERAGE_MASK;
+   operand0.numComponents = VGPU10_OPERAND_0_COMPONENT;
+   operand0.indexDimension = VGPU10_OPERAND_INDEX_0D;
+   operand0.mask = 0;
 
    emit_decl_instruction(emit, opcode0, operand0, name_token, 0, 1);
 }
@@ -2205,8 +2358,33 @@ emit_system_value_declaration(struct svga_shader_emitter_v10 *emit,
                              VGPU10_OPERAND_4_COMPONENT_MASK_X,
                              VGPU10_INTERPOLATION_UNDEFINED);
       break;
+   case TGSI_SEMANTIC_SAMPLEID:
+      assert(emit->unit == PIPE_SHADER_FRAGMENT);
+      emit->fs.sample_id_sys_index = index;
+      index = alloc_system_value_index(emit, index);
+      emit_input_declaration(emit, VGPU10_OPCODE_DCL_INPUT_PS_SIV,
+                             VGPU10_OPERAND_TYPE_INPUT,
+                             VGPU10_OPERAND_INDEX_1D,
+                             index, 1,
+                             VGPU10_NAME_SAMPLE_INDEX,
+                             VGPU10_OPERAND_4_COMPONENT,
+                             VGPU10_OPERAND_4_COMPONENT_MASK_MODE,
+                             VGPU10_OPERAND_4_COMPONENT_MASK_X,
+                             VGPU10_INTERPOLATION_CONSTANT);
+      break;
+   case TGSI_SEMANTIC_SAMPLEPOS:
+      /* This system value contains the position of the current sample
+       * when using per-sample shading.  We implement this by calling
+       * the VGPU10_OPCODE_SAMPLE_POS instruction with the current sample
+       * index as the argument.  See emit_sample_position_instructions().
+       */
+      assert(emit->version >= 41);
+      emit->fs.sample_pos_sys_index = index;
+      index = alloc_system_value_index(emit, index);
+      break;
    default:
-      ; /* XXX */
+      debug_printf("unexpected sytem value semantic index %u\n",
+         semantic_name);
    }
 }
 
@@ -2349,7 +2527,9 @@ emit_input_declarations(struct svga_shader_emitter_v10 *emit)
          enum tgsi_semantic semantic_name = emit->info.input_semantic_name[i];
          unsigned usage_mask = emit->info.input_usage_mask[i];
          unsigned index = emit->linkage.input_map[i];
-         unsigned type, interpolationMode, name;
+         VGPU10_OPCODE_TYPE type;
+         VGPU10_INTERPOLATION_MODE interpolationMode;
+         VGPU10_SYSTEM_NAME name;
 
          if (usage_mask == 0)
             continue;  /* register is not actually used */
@@ -2377,6 +2557,12 @@ emit_input_declarations(struct svga_shader_emitter_v10 *emit)
             interpolationMode = VGPU10_INTERPOLATION_CONSTANT;
             name = VGPU10_NAME_PRIMITIVE_ID;
          }
+         else if (semantic_name == TGSI_SEMANTIC_SAMPLEID) {
+            /* sample index / ID */
+            type = VGPU10_OPCODE_DCL_INPUT_PS_SGV;
+            interpolationMode = VGPU10_INTERPOLATION_CONSTANT;
+            name = VGPU10_NAME_SAMPLE_INDEX;
+         }
          else {
             /* general fragment input */
             type = VGPU10_OPCODE_DCL_INPUT_PS;
@@ -2386,7 +2572,7 @@ emit_input_declarations(struct svga_shader_emitter_v10 *emit)
                                        emit->info.input_interpolate_loc[i]);
 
             /* keeps track if flat interpolation mode is being used */
-            emit->uses_flat_interp = emit->uses_flat_interp ||
+            emit->uses_flat_interp |=
                (interpolationMode == VGPU10_INTERPOLATION_CONSTANT);
 
             name = VGPU10_NAME_UNDEFINED;
@@ -2408,10 +2594,11 @@ emit_input_declarations(struct svga_shader_emitter_v10 *emit)
          enum tgsi_semantic semantic_name = emit->info.input_semantic_name[i];
          unsigned usage_mask = emit->info.input_usage_mask[i];
          unsigned index = emit->linkage.input_map[i];
-         unsigned opcodeType, operandType;
-         unsigned numComp, selMode;
-         unsigned name;
-         unsigned dim;
+         VGPU10_OPCODE_TYPE opcodeType, operandType;
+         VGPU10_OPERAND_NUM_COMPONENTS numComp;
+         VGPU10_OPERAND_4_COMPONENT_SELECTION_MODE selMode;
+         VGPU10_SYSTEM_NAME name;
+         VGPU10_OPERAND_INDEX_DIMENSION dim;
 
          if (usage_mask == 0)
             continue;  /* register is not actually used */
@@ -2539,13 +2726,18 @@ emit_output_declarations(struct svga_shader_emitter_v10 *emit)
             /* Fragment depth output */
             emit_fragdepth_output_declaration(emit);
          }
+         else if (semantic_name == TGSI_SEMANTIC_SAMPLEMASK) {
+            /* Fragment depth output */
+            emit_samplemask_output_declaration(emit);
+         }
          else {
             assert(!"Bad output semantic name");
          }
       }
       else {
          /* VS or GS */
-         unsigned name, type;
+         VGPU10_COMPONENT_NAME name;
+         VGPU10_OPCODE_TYPE type;
          unsigned writemask = VGPU10_OPERAND_4_COMPONENT_MASK_ALL;
 
          switch (semantic_name) {
@@ -2731,6 +2923,11 @@ emit_temporaries_declaration(struct svga_shader_emitter_v10 *emit)
          /* Allocate a temp for modified fragment position register */
          emit->fs.fragcoord_tmp_index = total_temps;
          total_temps += 1;
+      }
+
+      if (emit->fs.sample_pos_sys_index != INVALID_INDEX) {
+         /* Allocate a temp for the sample position */
+         emit->fs.sample_pos_tmp_index = total_temps++;
       }
    }
 
@@ -2963,12 +3160,20 @@ emit_sampler_declarations(struct svga_shader_emitter_v10 *emit)
 
 
 /**
- * Translate TGSI_TEXTURE_x to VGAPU10_RESOURCE_DIMENSION_x.
+ * Translate TGSI_TEXTURE_x to VGPU10_RESOURCE_DIMENSION_x.
  */
 static unsigned
 tgsi_texture_to_resource_dimension(enum tgsi_texture_type target,
+                                   unsigned num_samples,
                                    boolean is_array)
 {
+   if (target == TGSI_TEXTURE_2D_MSAA && num_samples < 2) {
+      target = TGSI_TEXTURE_2D;
+   }
+   else if (target == TGSI_TEXTURE_2D_ARRAY_MSAA && num_samples < 2) {
+      target = TGSI_TEXTURE_2D_ARRAY;
+   }
+
    switch (target) {
    case TGSI_TEXTURE_BUFFER:
       return VGPU10_RESOURCE_DIMENSION_BUFFER;
@@ -2980,6 +3185,7 @@ tgsi_texture_to_resource_dimension(enum tgsi_texture_type target,
    case TGSI_TEXTURE_3D:
       return VGPU10_RESOURCE_DIMENSION_TEXTURE3D;
    case TGSI_TEXTURE_CUBE:
+   case TGSI_TEXTURE_SHADOWCUBE:
       return VGPU10_RESOURCE_DIMENSION_TEXTURECUBE;
    case TGSI_TEXTURE_SHADOW1D:
       return VGPU10_RESOURCE_DIMENSION_TEXTURE1D;
@@ -2994,15 +3200,15 @@ tgsi_texture_to_resource_dimension(enum tgsi_texture_type target,
    case TGSI_TEXTURE_SHADOW2D_ARRAY:
       return is_array ? VGPU10_RESOURCE_DIMENSION_TEXTURE2DARRAY
          : VGPU10_RESOURCE_DIMENSION_TEXTURE2D;
-   case TGSI_TEXTURE_SHADOWCUBE:
-      return VGPU10_RESOURCE_DIMENSION_TEXTURECUBE;
    case TGSI_TEXTURE_2D_MSAA:
       return VGPU10_RESOURCE_DIMENSION_TEXTURE2DMS;
    case TGSI_TEXTURE_2D_ARRAY_MSAA:
       return is_array ? VGPU10_RESOURCE_DIMENSION_TEXTURE2DMSARRAY
          : VGPU10_RESOURCE_DIMENSION_TEXTURE2DMS;
    case TGSI_TEXTURE_CUBE_ARRAY:
-      return VGPU10_RESOURCE_DIMENSION_TEXTURECUBEARRAY;
+   case TGSI_TEXTURE_SHADOWCUBE_ARRAY:
+      return is_array ? VGPU10_RESOURCE_DIMENSION_TEXTURECUBEARRAY
+         : VGPU10_RESOURCE_DIMENSION_TEXTURECUBE;
    default:
       assert(!"Unexpected resource type");
       return VGPU10_RESOURCE_DIMENSION_TEXTURE2D;
@@ -3054,7 +3260,9 @@ emit_resource_declarations(struct svga_shader_emitter_v10 *emit)
       opcode0.opcodeType = VGPU10_OPCODE_DCL_RESOURCE;
       opcode0.resourceDimension =
          tgsi_texture_to_resource_dimension(emit->sampler_target[i],
+                                            emit->key.tex[i].num_samples,
                                             emit->key.tex[i].is_array);
+      opcode0.sampleCount = emit->key.tex[i].num_samples;
       operand0.value = 0;
       operand0.numComponents = VGPU10_OPERAND_0_COMPONENT;
       operand0.operandType = VGPU10_OPERAND_TYPE_RESOURCE;
@@ -3103,7 +3311,7 @@ emit_resource_declarations(struct svga_shader_emitter_v10 *emit)
 
 static void
 emit_instruction_op1(struct svga_shader_emitter_v10 *emit,
-                     unsigned opcode,
+                     VGPU10_OPCODE_TYPE opcode,
                      const struct tgsi_full_dst_register *dst,
                      const struct tgsi_full_src_register *src,
                      boolean saturate)
@@ -3117,7 +3325,7 @@ emit_instruction_op1(struct svga_shader_emitter_v10 *emit,
 
 static void
 emit_instruction_op2(struct svga_shader_emitter_v10 *emit,
-                     unsigned opcode,
+                     VGPU10_OPCODE_TYPE opcode,
                      const struct tgsi_full_dst_register *dst,
                      const struct tgsi_full_src_register *src1,
                      const struct tgsi_full_src_register *src2,
@@ -3133,7 +3341,7 @@ emit_instruction_op2(struct svga_shader_emitter_v10 *emit,
 
 static void
 emit_instruction_op3(struct svga_shader_emitter_v10 *emit,
-                     unsigned opcode,
+                     VGPU10_OPCODE_TYPE opcode,
                      const struct tgsi_full_dst_register *dst,
                      const struct tgsi_full_src_register *src1,
                      const struct tgsi_full_src_register *src2,
@@ -3481,7 +3689,7 @@ emit_arl_uarl(struct svga_shader_emitter_v10 *emit,
 {
    unsigned index = inst->Dst[0].Register.Index;
    struct tgsi_full_dst_register dst;
-   unsigned opcode;
+   VGPU10_OPCODE_TYPE opcode;
 
    assert(index < MAX_VGPU10_ADDR_REGS);
    dst = make_dst_temp_reg(emit->address_reg_index[index]);
@@ -4052,6 +4260,30 @@ emit_lit(struct svga_shader_emitter_v10 *emit,
    emit_instruction_op1(emit, VGPU10_OPCODE_MOV, &inst->Dst[0], &move_src,
                         FALSE);
    free_temp_indexes(emit);
+
+   return TRUE;
+}
+
+
+/**
+ * Emit Level Of Detail Query (LODQ) instruction.
+ */
+static boolean
+emit_lodq(struct svga_shader_emitter_v10 *emit,
+          const struct tgsi_full_instruction *inst)
+{
+   const uint unit = inst->Src[1].Register.Index;
+
+   assert(emit->version >= 41);
+
+   /* LOD dst, coord, resource, sampler */
+   begin_emit_instruction(emit);
+   emit_opcode(emit, VGPU10_OPCODE_LOD, FALSE);
+   emit_dst_register(emit, &inst->Dst[0]);
+   emit_src_register(emit, &inst->Src[0]); /* coord */
+   emit_resource_register(emit, unit);
+   emit_sampler_register(emit, unit);
+   end_emit_instruction(emit);
 
    return TRUE;
 }
@@ -4735,7 +4967,7 @@ setup_texcoord(struct svga_shader_emitter_v10 *emit,
                unsigned unit,
                const struct tgsi_full_src_register *coord)
 {
-   if (emit->key.tex[unit].unnormalized) {
+   if (emit->sampler_view[unit] && emit->key.tex[unit].unnormalized) {
       unsigned scale_index = emit->texcoord_scale_index[unit];
       unsigned tmp = get_temp_index(emit);
       struct tgsi_full_src_register tmp_src = make_src_temp_reg(tmp);
@@ -4779,16 +5011,12 @@ emit_tex_compare_refcoord(struct svga_shader_emitter_v10 *emit,
                           const struct tgsi_full_src_register *coord)
 {
    struct tgsi_full_src_register coord_src_ref;
-   unsigned component;
+   int component;
 
    assert(tgsi_is_shadow_target(target));
 
-   assert(target != TGSI_TEXTURE_SHADOWCUBE_ARRAY); /* XXX not implemented */
-   if (target == TGSI_TEXTURE_SHADOW2D_ARRAY ||
-       target == TGSI_TEXTURE_SHADOWCUBE)
-      component = TGSI_SWIZZLE_W;
-   else
-      component = TGSI_SWIZZLE_Z;
+   component = tgsi_util_get_shadow_ref_src_index(target) % 4;
+   assert(component >= 0);
 
    coord_src_ref = scalar_src(coord, component);
 
@@ -4851,6 +5079,8 @@ begin_tex_swizzle(struct svga_shader_emitter_v10 *emit,
    }
    swz->inst_dst = &inst->Dst[0];
    swz->coord_src = &inst->Src[0];
+
+   emit->fs.shadow_compare_units |= shadow_compare << unit;
 }
 
 
@@ -4890,30 +5120,14 @@ end_tex_swizzle(struct svga_shader_emitter_v10 *emit,
 
       assert(emit->unit == PIPE_SHADER_FRAGMENT);
 
-      switch (swz->texture_target) {
-      case TGSI_TEXTURE_SHADOW2D:
-      case TGSI_TEXTURE_SHADOWRECT:
-      case TGSI_TEXTURE_SHADOW1D_ARRAY:
-         coord_src = scalar_src(swz->coord_src, TGSI_SWIZZLE_Z);
-         break;
-      case TGSI_TEXTURE_SHADOW1D:
-         coord_src = scalar_src(swz->coord_src, TGSI_SWIZZLE_Y);
-         break;
-      case TGSI_TEXTURE_SHADOWCUBE:
-      case TGSI_TEXTURE_SHADOW2D_ARRAY:
-         coord_src = scalar_src(swz->coord_src, TGSI_SWIZZLE_W);
-         break;
-      default:
-         assert(!"Unexpected texture target in end_tex_swizzle()");
-         coord_src = scalar_src(swz->coord_src, TGSI_SWIZZLE_Z);
-      }
+      int component =
+         tgsi_util_get_shadow_ref_src_index(swz->texture_target) % 4;
+      assert(component >= 0);
+      coord_src = scalar_src(swz->coord_src, component);
 
       /* COMPARE tmp, coord, texel */
-      /* XXX it would seem that the texel and coord arguments should
-       * be transposed here, but piglit tests indicate otherwise.
-       */
       emit_comparison(emit, compare_func,
-                      &swz->tmp_dst, &texel_src, &coord_src);
+                      &swz->tmp_dst, &coord_src, &texel_src);
 
       /* AND dest, tmp, {1.0} */
       begin_emit_instruction(emit);
@@ -5043,7 +5257,7 @@ is_valid_tex_instruction(struct svga_shader_emitter_v10 *emit,
                          const struct tgsi_full_instruction *inst)
 {
    const unsigned unit = inst->Src[1].Register.Index;
-   const unsigned target = inst->Texture.Texture;
+   const enum tgsi_texture_type target = inst->Texture.Texture;
    boolean valid = TRUE;
 
    if (tgsi_is_shadow_target(target) &&
@@ -5075,8 +5289,8 @@ emit_tex(struct svga_shader_emitter_v10 *emit,
          const struct tgsi_full_instruction *inst)
 {
    const uint unit = inst->Src[1].Register.Index;
-   unsigned target = inst->Texture.Texture;
-   unsigned opcode;
+   const enum tgsi_texture_type target = inst->Texture.Texture;
+   VGPU10_OPCODE_TYPE opcode;
    struct tgsi_full_src_register coord;
    int offsets[3];
    struct tex_swizzle_info swz_info;
@@ -5116,6 +5330,103 @@ emit_tex(struct svga_shader_emitter_v10 *emit,
    return TRUE;
 }
 
+/**
+ * Emit code for TGSI_OPCODE_TG4 (texture lookup for texture gather)
+ */
+static boolean
+emit_tg4(struct svga_shader_emitter_v10 *emit,
+         const struct tgsi_full_instruction *inst)
+{
+   const uint unit = inst->Src[2].Register.Index;
+   struct tgsi_full_src_register src;
+   int offsets[3];
+
+   /* check that the sampler returns a float */
+   if (!is_valid_tex_instruction(emit, inst))
+      return TRUE;
+
+   /* Only a single channel is supported in SM4_1 and we report
+    * PIPE_CAP_MAX_TEXTURE_GATHER_COMPONENTS = 1.
+    * Only the 0th component will be gathered.
+    */
+   switch (emit->key.tex[unit].swizzle_r) {
+   case PIPE_SWIZZLE_X:
+      get_texel_offsets(emit, inst, offsets);
+      src = setup_texcoord(emit, unit, &inst->Src[0]);
+
+      /* Gather dst, coord, resource, sampler */
+      begin_emit_instruction(emit);
+      emit_sample_opcode(emit, VGPU10_OPCODE_GATHER4,
+                         inst->Instruction.Saturate, offsets);
+      emit_dst_register(emit, &inst->Dst[0]);
+      emit_src_register(emit, &src);
+      emit_resource_register(emit, unit);
+      emit_sampler_register(emit, unit);
+      end_emit_instruction(emit);
+      break;
+   case PIPE_SWIZZLE_W:
+   case PIPE_SWIZZLE_1:
+      src = make_immediate_reg_float(emit, 1.0);
+      emit_instruction_op1(emit, VGPU10_OPCODE_MOV,
+                           &inst->Dst[0], &src, FALSE);
+      break;
+   case PIPE_SWIZZLE_Y:
+   case PIPE_SWIZZLE_Z:
+   case PIPE_SWIZZLE_0:
+   default:
+      src = make_immediate_reg_float(emit, 0.0);
+      emit_instruction_op1(emit, VGPU10_OPCODE_MOV,
+                           &inst->Dst[0], &src, FALSE);
+      break;
+   }
+
+   return TRUE;
+}
+
+
+
+/**
+ * Emit code for TGSI_OPCODE_TEX2 (texture lookup for shadow cube map arrays)
+ */
+static boolean
+emit_tex2(struct svga_shader_emitter_v10 *emit,
+         const struct tgsi_full_instruction *inst)
+{
+   const uint unit = inst->Src[2].Register.Index;
+   unsigned target = inst->Texture.Texture;
+   struct tgsi_full_src_register coord, ref;
+   int offsets[3];
+   struct tex_swizzle_info swz_info;
+
+   /* check that the sampler returns a float */
+   if (!is_valid_tex_instruction(emit, inst))
+      return TRUE;
+
+   begin_tex_swizzle(emit, unit, inst, FALSE, &swz_info);
+
+   get_texel_offsets(emit, inst, offsets);
+
+   coord = setup_texcoord(emit, unit, &inst->Src[0]);
+   ref = scalar_src(&inst->Src[1], TGSI_SWIZZLE_X);
+
+   /* SAMPLE_C dst, coord, resource, sampler, ref */
+   begin_emit_instruction(emit);
+   emit_sample_opcode(emit, VGPU10_OPCODE_SAMPLE_C,
+                      inst->Instruction.Saturate, offsets);
+   emit_dst_register(emit, get_tex_swizzle_dst(&swz_info));
+   emit_src_register(emit, &coord);
+   emit_resource_register(emit, unit);
+   emit_sampler_register(emit, unit);
+   emit_tex_compare_refcoord(emit, target, &ref);
+   end_emit_instruction(emit);
+
+   end_tex_swizzle(emit, &swz_info);
+
+   free_temp_indexes(emit);
+
+   return TRUE;
+}
+
 
 /**
  * Emit code for TGSI_OPCODE_TXP (projective texture)
@@ -5125,8 +5436,8 @@ emit_txp(struct svga_shader_emitter_v10 *emit,
          const struct tgsi_full_instruction *inst)
 {
    const uint unit = inst->Src[1].Register.Index;
-   unsigned target = inst->Texture.Texture;
-   unsigned opcode;
+   const enum tgsi_texture_type target = inst->Texture.Texture;
+   VGPU10_OPCODE_TYPE opcode;
    int offsets[3];
    unsigned tmp = get_temp_index(emit);
    struct tgsi_full_src_register tmp_src = make_src_temp_reg(tmp);
@@ -5187,7 +5498,7 @@ emit_txd(struct svga_shader_emitter_v10 *emit,
          const struct tgsi_full_instruction *inst)
 {
    const uint unit = inst->Src[3].Register.Index;
-   unsigned target = inst->Texture.Texture;
+   const enum tgsi_texture_type target = inst->Texture.Texture;
    int offsets[3];
    struct tgsi_full_src_register coord;
    struct tex_swizzle_info swz_info;
@@ -5227,7 +5538,8 @@ emit_txf(struct svga_shader_emitter_v10 *emit,
          const struct tgsi_full_instruction *inst)
 {
    const uint unit = inst->Src[1].Register.Index;
-   const boolean msaa = tgsi_is_msaa_target(inst->Texture.Texture);
+   const boolean msaa = tgsi_is_msaa_target(inst->Texture.Texture)
+      && emit->key.tex[unit].num_samples > 1;
    int offsets[3];
    struct tex_swizzle_info swz_info;
 
@@ -5236,6 +5548,8 @@ emit_txf(struct svga_shader_emitter_v10 *emit,
    get_texel_offsets(emit, inst, offsets);
 
    if (msaa) {
+      assert(emit->key.tex[unit].num_samples > 1);
+
       /* Fetch one sample from an MSAA texture */
       struct tgsi_full_src_register sampleIndex =
          scalar_src(&inst->Src[0], TGSI_SWIZZLE_W);
@@ -5277,8 +5591,9 @@ static boolean
 emit_txl_txb(struct svga_shader_emitter_v10 *emit,
              const struct tgsi_full_instruction *inst)
 {
-   unsigned target = inst->Texture.Texture;
-   unsigned opcode, unit;
+   const enum tgsi_texture_type target = inst->Texture.Texture;
+   VGPU10_OPCODE_TYPE opcode;
+   unsigned unit;
    int offsets[3];
    struct tgsi_full_src_register coord, lod_bias;
    struct tex_swizzle_info swz_info;
@@ -5317,6 +5632,50 @@ emit_txl_txb(struct svga_shader_emitter_v10 *emit,
    emit_resource_register(emit, unit);
    emit_sampler_register(emit, unit);
    emit_src_register(emit, &lod_bias);
+   end_emit_instruction(emit);
+
+   end_tex_swizzle(emit, &swz_info);
+
+   free_temp_indexes(emit);
+
+   return TRUE;
+}
+
+
+/**
+ * Emit code for TGSI_OPCODE_TXL2 (explicit LOD) for cubemap array.
+ */
+static boolean
+emit_txl2(struct svga_shader_emitter_v10 *emit,
+          const struct tgsi_full_instruction *inst)
+{
+   unsigned target = inst->Texture.Texture;
+   unsigned opcode, unit;
+   int offsets[3];
+   struct tgsi_full_src_register coord, lod;
+   struct tex_swizzle_info swz_info;
+
+   assert(inst->Instruction.Opcode == TGSI_OPCODE_TXL2);
+
+   lod = scalar_src(&inst->Src[1], TGSI_SWIZZLE_X);
+   unit = inst->Src[2].Register.Index;
+
+   begin_tex_swizzle(emit, unit, inst, tgsi_is_shadow_target(target),
+                     &swz_info);
+
+   get_texel_offsets(emit, inst, offsets);
+
+   coord = setup_texcoord(emit, unit, &inst->Src[0]);
+
+   /* SAMPLE_L dst, coord(s0), resource, sampler, lod(s3) */
+   begin_emit_instruction(emit);
+   opcode = VGPU10_OPCODE_SAMPLE_L;
+   emit_sample_opcode(emit, opcode, inst->Instruction.Saturate, offsets);
+   emit_dst_register(emit, get_tex_swizzle_dst(&swz_info));
+   emit_src_register(emit, &coord);
+   emit_resource_register(emit, unit);
+   emit_sampler_register(emit, unit);
+   emit_src_register(emit, &lod);
    end_emit_instruction(emit);
 
    end_tex_swizzle(emit, &swz_info);
@@ -5369,13 +5728,12 @@ static boolean
 emit_simple(struct svga_shader_emitter_v10 *emit,
             const struct tgsi_full_instruction *inst)
 {
-   const unsigned opcode = inst->Instruction.Opcode;
+   const enum tgsi_opcode opcode = inst->Instruction.Opcode;
    const struct tgsi_opcode_info *op = tgsi_get_opcode_info(opcode);
    unsigned i;
 
    begin_emit_instruction(emit);
-   emit_opcode(emit, translate_opcode(inst->Instruction.Opcode),
-               inst->Instruction.Saturate);
+   emit_opcode(emit, translate_opcode(opcode), inst->Instruction.Saturate);
    for (i = 0; i < op->num_dst; i++) {
       emit_dst_register(emit, &inst->Dst[i]);
    }
@@ -5421,13 +5779,12 @@ emit_simple_1dst(struct svga_shader_emitter_v10 *emit,
                  unsigned dst_count,
                  unsigned dst_index)
 {
-   const unsigned opcode = inst->Instruction.Opcode;
+   const enum tgsi_opcode opcode = inst->Instruction.Opcode;
    const struct tgsi_opcode_info *op = tgsi_get_opcode_info(opcode);
    unsigned i;
 
    begin_emit_instruction(emit);
-   emit_opcode(emit, translate_opcode(inst->Instruction.Opcode),
-               inst->Instruction.Saturate);
+   emit_opcode(emit, translate_opcode(opcode), inst->Instruction.Saturate);
 
    for (i = 0; i < dst_count; i++) {
       if (i == dst_index) {
@@ -5454,7 +5811,7 @@ emit_vgpu10_instruction(struct svga_shader_emitter_v10 *emit,
                         unsigned inst_number,
                         const struct tgsi_full_instruction *inst)
 {
-   const unsigned opcode = inst->Instruction.Opcode;
+   const enum tgsi_opcode opcode = inst->Instruction.Opcode;
 
    switch (opcode) {
    case TGSI_OPCODE_ADD:
@@ -5552,6 +5909,8 @@ emit_vgpu10_instruction(struct svga_shader_emitter_v10 *emit,
       return emit_lg2(emit, inst);
    case TGSI_OPCODE_LIT:
       return emit_lit(emit, inst);
+   case TGSI_OPCODE_LODQ:
+      return emit_lodq(emit, inst);
    case TGSI_OPCODE_LOG:
       return emit_log(emit, inst);
    case TGSI_OPCODE_LRP:
@@ -5584,6 +5943,10 @@ emit_vgpu10_instruction(struct svga_shader_emitter_v10 *emit,
       return emit_issg(emit, inst);
    case TGSI_OPCODE_TEX:
       return emit_tex(emit, inst);
+   case TGSI_OPCODE_TG4:
+      return emit_tg4(emit, inst);
+   case TGSI_OPCODE_TEX2:
+      return emit_tex2(emit, inst);
    case TGSI_OPCODE_TXP:
       return emit_txp(emit, inst);
    case TGSI_OPCODE_TXB:
@@ -5594,6 +5957,8 @@ emit_vgpu10_instruction(struct svga_shader_emitter_v10 *emit,
       return emit_txd(emit, inst);
    case TGSI_OPCODE_TXF:
       return emit_txf(emit, inst);
+   case TGSI_OPCODE_TXL2:
+      return emit_txl2(emit, inst);
    case TGSI_OPCODE_TXQ:
       return emit_txq(emit, inst);
    case TGSI_OPCODE_UIF:
@@ -5923,6 +6288,55 @@ emit_fragcoord_instructions(struct svga_shader_emitter_v10 *emit)
 
 
 /**
+ * Emit the extra code to get the current sample position value and
+ * put it into a temp register.
+ */
+static void
+emit_sample_position_instructions(struct svga_shader_emitter_v10 *emit)
+{
+   assert(emit->unit == PIPE_SHADER_FRAGMENT);
+
+   if (emit->fs.sample_pos_sys_index != INVALID_INDEX) {
+      assert(emit->version >= 41);
+
+      struct tgsi_full_dst_register tmp_dst =
+         make_dst_temp_reg(emit->fs.sample_pos_tmp_index);
+      struct tgsi_full_src_register half =
+         make_immediate_reg_float4(emit, 0.5, 0.5, 0.0, 0.0);
+
+      struct tgsi_full_src_register tmp_src =
+         make_src_temp_reg(emit->fs.sample_pos_tmp_index);
+      struct tgsi_full_src_register sample_index_reg =
+         make_src_scalar_reg(TGSI_FILE_SYSTEM_VALUE,
+                             emit->fs.sample_id_sys_index, TGSI_SWIZZLE_X);
+
+      /* The first src register is a shader resource (if we want a
+       * multisampled resource sample position) or the rasterizer register
+       * (if we want the current sample position in the color buffer).  We
+       * want the later.
+       */
+
+      /* SAMPLE_POS dst, RASTERIZER, sampleIndex */
+      begin_emit_instruction(emit);
+      emit_opcode(emit, VGPU10_OPCODE_SAMPLE_POS, FALSE);
+      emit_dst_register(emit, &tmp_dst);
+      emit_rasterizer_register(emit);
+      emit_src_register(emit, &sample_index_reg);
+      end_emit_instruction(emit);
+
+      /* Convert from D3D coords to GL coords by adding 0.5 bias */
+      /* ADD dst, dst, half */
+      begin_emit_instruction(emit);
+      emit_opcode(emit, VGPU10_OPCODE_ADD, FALSE);
+      emit_dst_register(emit, &tmp_dst);
+      emit_src_register(emit, &tmp_src);
+      emit_src_register(emit, &half);
+      end_emit_instruction(emit);
+   }
+}
+
+
+/**
  * Emit extra instructions to adjust VS inputs/attributes.  This can
  * mean casting a vertex attribute from int to float or setting the
  * W component to 1, or both.
@@ -6141,6 +6555,7 @@ emit_pre_helpers(struct svga_shader_emitter_v10 *emit)
    if (emit->unit == PIPE_SHADER_FRAGMENT) {
       emit_frontface_instructions(emit);
       emit_fragcoord_instructions(emit);
+      emit_sample_position_instructions(emit);
    }
    else if (emit->unit == PIPE_SHADER_VERTEX) {
       emit_vertex_attrib_instructions(emit);
@@ -6393,8 +6808,8 @@ emit_vgpu10_header(struct svga_shader_emitter_v10 *emit)
    VGPU10ProgramToken ptoken;
 
    /* First token: VGPU10ProgramToken  (version info, program type (VS,GS,PS)) */
-   ptoken.majorVersion = 4;
-   ptoken.minorVersion = 0;
+   ptoken.majorVersion = emit->version / 10;
+   ptoken.minorVersion = emit->version % 10;
    ptoken.programType = translate_shader_type(emit->unit);
    if (!emit_dword(emit, ptoken.value))
       return FALSE;
@@ -6500,7 +6915,7 @@ struct svga_shader_variant *
 svga_tgsi_vgpu10_translate(struct svga_context *svga,
                            const struct svga_shader *shader,
                            const struct svga_compile_key *key,
-                           unsigned unit)
+                           enum pipe_shader_type unit)
 {
    struct svga_shader_variant *variant = NULL;
    struct svga_shader_emitter_v10 *emit;
@@ -6524,6 +6939,8 @@ svga_tgsi_vgpu10_translate(struct svga_context *svga,
       goto done;
 
    emit->unit = unit;
+   emit->version = svga_have_sm4_1(svga) ? 41 : 40;
+
    emit->key = *key;
 
    emit->vposition.need_prescale = (emit->key.vs.need_prescale ||
@@ -6535,6 +6952,8 @@ svga_tgsi_vgpu10_translate(struct svga_context *svga,
    emit->fs.color_tmp_index = INVALID_INDEX;
    emit->fs.face_input_index = INVALID_INDEX;
    emit->fs.fragcoord_input_index = INVALID_INDEX;
+   emit->fs.sample_id_sys_index = INVALID_INDEX;
+   emit->fs.sample_pos_sys_index = INVALID_INDEX;
 
    emit->gs.prim_id_index = INVALID_INDEX;
 
@@ -6595,6 +7014,13 @@ svga_tgsi_vgpu10_translate(struct svga_context *svga,
       assert(vs);
       svga_link_shaders(&vs->base.info, &emit->info, &emit->linkage);
    }
+
+   /* Since vertex shader does not need to go through the linker to
+    * establish the input map, we need to make sure the highest index
+    * of input registers is set properly here.
+    */
+   emit->linkage.input_map_max = MAX2((int)emit->linkage.input_map_max,
+                                      emit->info.file_max[TGSI_FILE_INPUT]);
 
    determine_clipping_mode(emit);
 
@@ -6678,6 +7104,10 @@ svga_tgsi_vgpu10_translate(struct svga_context *svga,
     *  for any of the varyings.
     */
    variant->uses_flat_interp = emit->uses_flat_interp;
+
+   variant->fs_shadow_compare_units = emit->fs.shadow_compare_units;
+
+   variant->fs_shadow_compare_units = emit->fs.shadow_compare_units;
 
    if (tokens != shader->tokens) {
       tgsi_free_tokens(tokens);

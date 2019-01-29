@@ -36,7 +36,12 @@ EXTRA_DIST = \
 	mapi_abi.py \
 	glapi/SConscript \
 	glapi/registry/gl.xml \
-	shared-glapi/SConscript
+	shared-glapi/SConscript \
+	es1api/meson.build \
+	es2api/meson.build \
+	glapi/meson.build \
+	shared-glapi/meson.build \
+	meson.build
 
 AM_CFLAGS = \
 	$(PTHREAD_CFLAGS) \
@@ -54,7 +59,7 @@ AM_CPPFLAGS =							\
 include Makefile.sources
 
 MKDIR_GEN = $(AM_V_at)$(MKDIR_P) $(@D)
-PYTHON_GEN = $(AM_V_GEN)$(PYTHON2) $(PYTHON_FLAGS)
+PYTHON_GEN = $(AM_V_GEN)$(PYTHON) $(PYTHON_FLAGS)
 
 glapi_gen_mapi_deps := \
 	mapi_abi.py \
@@ -87,7 +92,8 @@ check_PROGRAMS += shared-glapi-test
 shared_glapi_test_SOURCES = shared-glapi/tests/check_table.cpp
 shared_glapi_test_CPPFLAGS = \
 	$(AM_CPPFLAGS) \
-	-I$(top_srcdir)/src/gtest/include
+	-I$(top_srcdir)/src/gtest/include \
+	-I$(top_srcdir)/src/mesa
 shared_glapi_test_LDADD = \
 	$(top_builddir)/src/mapi/shared-glapi/libglapi.la \
 	$(top_builddir)/src/gtest/libgtest.la
@@ -151,7 +157,8 @@ check_PROGRAMS += glapi-test
 glapi_test_SOURCES = glapi/tests/check_table.cpp
 glapi_test_CPPFLAGS = \
 	$(AM_CPPFLAGS) \
-	-I$(top_srcdir)/src/gtest/include
+	-I$(top_srcdir)/src/gtest/include \
+	-I$(top_srcdir)/src/mesa
 
 glapi_test_LDADD = \
 	$(top_builddir)/src/mapi/glapi/libglapi.la \

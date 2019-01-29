@@ -74,7 +74,7 @@
 
 #include "brw_eu.h"
 #include "brw_shader.h"
-#include "intel_asm_annotation.h"
+#include "brw_disasm_info.h"
 #include "common/gen_debug.h"
 
 static const uint32_t g45_control_index_table[32] = {
@@ -635,6 +635,41 @@ static const uint16_t gen8_src_index_table[32] = {
    0b010001101001,
    0b010001101010,
    0b010110001000
+};
+
+static const uint32_t gen11_datatype_table[32] = {
+   0b001000000000000000001,
+   0b001000000000001000000,
+   0b001000000000001000001,
+   0b001000000000011000001,
+   0b001000000000101100101,
+   0b001000000101111100101,
+   0b001000000100101000001,
+   0b001000000100101000101,
+   0b001000000100101100101,
+   0b001000001000001000001,
+   0b001000011000001000000,
+   0b001000011000001000001,
+   0b001000101000101000101,
+   0b001000111000101000100,
+   0b001000111000101000101,
+   0b001100100100101100101,
+   0b001100101100100100101,
+   0b001100101100101100100,
+   0b001100101100101100101,
+   0b001100111100101100100,
+   0b000000000010000001100,
+   0b001000000000001100101,
+   0b001000000000101000101,
+   0b001000001000001000000,
+   0b001000101000101000100,
+   0b001000111000100000100,
+   0b001001001001000001001,
+   0b001101111100101100101,
+   0b001100111100101100101,
+   0b001001111001101001100,
+   0b001001001001001001000,
+   0b001001011001001001000,
 };
 
 /* This is actually the control index table for Cherryview (26 bits), but the
@@ -1450,8 +1485,15 @@ brw_init_compaction_tables(const struct gen_device_info *devinfo)
    assert(gen8_datatype_table[ARRAY_SIZE(gen8_datatype_table) - 1] != 0);
    assert(gen8_subreg_table[ARRAY_SIZE(gen8_subreg_table) - 1] != 0);
    assert(gen8_src_index_table[ARRAY_SIZE(gen8_src_index_table) - 1] != 0);
+   assert(gen11_datatype_table[ARRAY_SIZE(gen11_datatype_table) - 1] != 0);
 
    switch (devinfo->gen) {
+   case 11:
+      control_index_table = gen8_control_index_table;
+      datatype_table = gen11_datatype_table;
+      subreg_table = gen8_subreg_table;
+      src_index_table = gen8_src_index_table;
+      break;
    case 10:
    case 9:
    case 8:
@@ -1486,7 +1528,7 @@ brw_init_compaction_tables(const struct gen_device_info *devinfo)
 
 void
 brw_compact_instructions(struct brw_codegen *p, int start_offset,
-                         int num_annotations, struct annotation *annotation)
+                         struct disasm_info *disasm)
 {
    if (unlikely(INTEL_DEBUG & DEBUG_NO_COMPACTION))
       return;
@@ -1501,7 +1543,7 @@ brw_compact_instructions(struct brw_codegen *p, int start_offset,
    /* For an instruction at byte offset 8*i after compaction, this was its IP
     * (in 16-byte units) before compaction.
     */
-   int old_ip[(p->next_insn_offset - start_offset) / sizeof(brw_compact_inst)];
+   int old_ip[(p->next_insn_offset - start_offset) / sizeof(brw_compact_inst) + 1];
 
    if (devinfo->gen == 4 && !devinfo->is_g4x)
       return;
@@ -1555,6 +1597,12 @@ brw_compact_instructions(struct brw_codegen *p, int start_offset,
          offset += sizeof(brw_inst);
       }
    }
+
+   /* Add an entry for the ending offset of the program. This greatly
+    * simplifies the linked list walk at the end of the function.
+    */
+   old_ip[offset / sizeof(brw_compact_inst)] =
+      (p->next_insn_offset - start_offset) / sizeof(brw_inst);
 
    /* Fix up control flow offsets. */
    p->next_insn_offset = start_offset + offset;
@@ -1651,21 +1699,21 @@ brw_compact_instructions(struct brw_codegen *p, int start_offset,
    }
    p->nr_insn = p->next_insn_offset / sizeof(brw_inst);
 
-   /* Update the instruction offsets for each annotation. */
-   if (annotation) {
-      for (int offset = 0, i = 0; i < num_annotations; i++) {
+   /* Update the instruction offsets for each group. */
+   if (disasm) {
+      int offset = 0;
+
+      foreach_list_typed(struct inst_group, group, link, &disasm->group_list) {
          while (start_offset + old_ip[offset / sizeof(brw_compact_inst)] *
-                sizeof(brw_inst) != annotation[i].offset) {
+                sizeof(brw_inst) != group->offset) {
             assert(start_offset + old_ip[offset / sizeof(brw_compact_inst)] *
-                   sizeof(brw_inst) < annotation[i].offset);
+                   sizeof(brw_inst) < group->offset);
             offset = next_offset(devinfo, store, offset);
          }
 
-         annotation[i].offset = start_offset + offset;
+         group->offset = start_offset + offset;
 
          offset = next_offset(devinfo, store, offset);
       }
-
-      annotation[num_annotations].offset = p->next_insn_offset;
    }
 }

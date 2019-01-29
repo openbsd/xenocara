@@ -1,14 +1,19 @@
 C_SOURCES :=  \
 	hw/cmdstream.xml.h \
 	hw/common.xml.h \
+	hw/common_3d.xml.h \
 	hw/isa.xml.h \
 	hw/state_3d.xml.h \
+	hw/state_blt.xml.h \
 	hw/state.xml.h \
+	hw/texdesc_3d.xml.h \
 	\
 	etnaviv_asm.c \
 	etnaviv_asm.h \
 	etnaviv_blend.c \
 	etnaviv_blend.h \
+	etnaviv_blt.c \
+	etnaviv_blt.h \
 	etnaviv_clear_blit.c \
 	etnaviv_clear_blit.h \
 	etnaviv_compiler.c \
@@ -31,6 +36,8 @@ C_SOURCES :=  \
 	etnaviv_query_hw.h \
 	etnaviv_query_sw.c \
 	etnaviv_query_sw.h \
+	etnaviv_query_pm.c \
+	etnaviv_query_pm.h \
 	etnaviv_rasterizer.c \
 	etnaviv_rasterizer.h \
 	etnaviv_resource.c \
@@ -47,6 +54,8 @@ C_SOURCES :=  \
 	etnaviv_surface.h \
 	etnaviv_texture.c \
 	etnaviv_texture.h \
+	etnaviv_texture_state.c \
+	etnaviv_texture_state.h \
 	etnaviv_tiling.c \
 	etnaviv_tiling.h \
 	etnaviv_transfer.c \

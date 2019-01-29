@@ -27,16 +27,20 @@
 #define SHADEROBJ_H
 
 
-#include "main/compiler.h"
 #include "main/glheader.h"
-#include "main/mtypes.h"
+#include "compiler/shader_enums.h"
 #include "program/ir_to_mesa.h"
+#include "util/macros.h"
 
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+struct gl_shader_program_data;
+struct gl_linked_shader;
+struct dd_function_table;
+struct gl_pipeline_object;
 
 /**
  * Internal functions

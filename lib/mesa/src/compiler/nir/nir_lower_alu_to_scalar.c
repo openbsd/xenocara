@@ -96,6 +96,8 @@ lower_alu_instr_scalar(nir_alu_instr *instr, nir_builder *b)
    case nir_op_vec4:
    case nir_op_vec3:
    case nir_op_vec2:
+   case nir_op_cube_face_coord:
+   case nir_op_cube_face_index:
       /* We don't need to scalarize these ops, they're the ones generated to
        * group up outputs into a value that can be SSAed.
        */
@@ -105,11 +107,11 @@ lower_alu_instr_scalar(nir_alu_instr *instr, nir_builder *b)
       if (!b->shader->options->lower_pack_half_2x16)
          return false;
 
+      nir_ssa_def *src_vec2 = nir_ssa_for_alu_src(b, instr, 0);
+
       nir_ssa_def *val =
-         nir_pack_half_2x16_split(b, nir_channel(b, instr->src[0].src.ssa,
-                                                 instr->src[0].swizzle[0]),
-                                     nir_channel(b, instr->src[0].src.ssa,
-                                                 instr->src[0].swizzle[1]));
+         nir_pack_half_2x16_split(b, nir_channel(b, src_vec2, 0),
+                                     nir_channel(b, src_vec2, 1));
 
       nir_ssa_def_rewrite_uses(&instr->dest.dest.ssa, nir_src_for_ssa(val));
       nir_instr_remove(&instr->instr);
@@ -128,9 +130,11 @@ lower_alu_instr_scalar(nir_alu_instr *instr, nir_builder *b)
       if (!b->shader->options->lower_unpack_half_2x16)
          return false;
 
+      nir_ssa_def *packed = nir_ssa_for_alu_src(b, instr, 0);
+
       nir_ssa_def *comps[2];
-      comps[0] = nir_unpack_half_2x16_split_x(b, instr->src[0].src.ssa);
-      comps[1] = nir_unpack_half_2x16_split_y(b, instr->src[0].src.ssa);
+      comps[0] = nir_unpack_half_2x16_split_x(b, packed);
+      comps[1] = nir_unpack_half_2x16_split_y(b, packed);
       nir_ssa_def *vec = nir_vec(b, comps, 2);
 
       nir_ssa_def_rewrite_uses(&instr->dest.dest.ssa, nir_src_for_ssa(vec));
@@ -142,8 +146,8 @@ lower_alu_instr_scalar(nir_alu_instr *instr, nir_builder *b)
       assert(b->shader->options->lower_pack_snorm_2x16 ||
              b->shader->options->lower_pack_unorm_2x16);
 
-      nir_ssa_def *word =
-         nir_extract_u16(b, instr->src[0].src.ssa, nir_imm_int(b, 0));
+      nir_ssa_def *word = nir_extract_u16(b, nir_ssa_for_alu_src(b, instr, 0),
+                                             nir_imm_int(b, 0));
       nir_ssa_def *val =
          nir_ior(b, nir_ishl(b, nir_channel(b, word, 1), nir_imm_int(b, 16)),
                                 nir_channel(b, word, 0));
@@ -157,8 +161,8 @@ lower_alu_instr_scalar(nir_alu_instr *instr, nir_builder *b)
       assert(b->shader->options->lower_pack_snorm_4x8 ||
              b->shader->options->lower_pack_unorm_4x8);
 
-      nir_ssa_def *byte =
-         nir_extract_u8(b, instr->src[0].src.ssa, nir_imm_int(b, 0));
+      nir_ssa_def *byte = nir_extract_u8(b, nir_ssa_for_alu_src(b, instr, 0),
+                                            nir_imm_int(b, 0));
       nir_ssa_def *val =
          nir_ior(b, nir_ior(b, nir_ishl(b, nir_channel(b, byte, 3), nir_imm_int(b, 24)),
                                nir_ishl(b, nir_channel(b, byte, 2), nir_imm_int(b, 16))),
@@ -171,14 +175,15 @@ lower_alu_instr_scalar(nir_alu_instr *instr, nir_builder *b)
    }
 
    case nir_op_fdph: {
+      nir_ssa_def *src0_vec = nir_ssa_for_alu_src(b, instr, 0);
+      nir_ssa_def *src1_vec = nir_ssa_for_alu_src(b, instr, 1);
+
       nir_ssa_def *sum[4];
       for (unsigned i = 0; i < 3; i++) {
-         sum[i] = nir_fmul(b, nir_channel(b, instr->src[0].src.ssa,
-                                          instr->src[0].swizzle[i]),
-                              nir_channel(b, instr->src[1].src.ssa,
-                                          instr->src[1].swizzle[i]));
+         sum[i] = nir_fmul(b, nir_channel(b, src0_vec, i),
+                              nir_channel(b, src1_vec, i));
       }
-      sum[3] = nir_channel(b, instr->src[1].src.ssa, instr->src[1].swizzle[3]);
+      sum[3] = nir_channel(b, src1_vec, 3);
 
       nir_ssa_def *val = nir_fadd(b, nir_fadd(b, sum[0], sum[1]),
                                      nir_fadd(b, sum[2], sum[3]));
@@ -189,6 +194,7 @@ lower_alu_instr_scalar(nir_alu_instr *instr, nir_builder *b)
    }
 
    case nir_op_unpack_64_2x32:
+   case nir_op_unpack_32_2x16:
       return false;
 
       LOWER_REDUCTION(nir_op_fdot, nir_op_fmul, nir_op_fadd);
@@ -207,9 +213,9 @@ lower_alu_instr_scalar(nir_alu_instr *instr, nir_builder *b)
       return false;
 
    unsigned num_components = instr->dest.dest.ssa.num_components;
-   nir_ssa_def *comps[] = { NULL, NULL, NULL, NULL };
+   nir_ssa_def *comps[NIR_MAX_VEC_COMPONENTS] = { NULL };
 
-   for (chan = 0; chan < 4; chan++) {
+   for (chan = 0; chan < NIR_MAX_VEC_COMPONENTS; chan++) {
       if (!(instr->dest.write_mask & (1 << chan)))
          continue;
 
@@ -223,7 +229,7 @@ lower_alu_instr_scalar(nir_alu_instr *instr, nir_builder *b)
                               0 : chan);
 
          nir_alu_src_copy(&lower->src[i], &instr->src[i], lower);
-         for (int j = 0; j < 4; j++)
+         for (int j = 0; j < NIR_MAX_VEC_COMPONENTS; j++)
             lower->src[i].swizzle[j] = instr->src[i].swizzle[src_chan];
       }
 

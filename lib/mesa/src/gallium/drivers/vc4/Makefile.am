@@ -30,7 +30,8 @@ AM_CFLAGS = \
 	-I$(top_builddir)/src/compiler/nir \
 	-I$(top_srcdir)/include/drm-uapi \
 	-I$(top_builddir)/src \
-	-I$(top_srcdir)/src/broadcom/cle \
+	-I$(top_srcdir)/src/broadcom \
+	-I$(top_builddir)/src/broadcom \
 	$(LIBDRM_CFLAGS) \
 	$(GALLIUM_DRIVER_CFLAGS) \
 	$(SIM_CFLAGS) \
@@ -54,4 +55,4 @@ endif
 
 libvc4_la_LDFLAGS = $(SIM_LDFLAGS)
 
-EXTRA_DIST = kernel/README
+EXTRA_DIST = kernel/README meson.build

@@ -24,22 +24,12 @@ def write_git_sha1_h_file(filename):
     to retrieve the git hashid and write the header file.  An empty file
     will be created if anything goes wrong."""
 
-    tempfile = "git_sha1.h.tmp"
-    with open(tempfile, "w") as f:
-        args = [ python_cmd, Dir('#').abspath + '/bin/git_sha1_gen.py' ]
-        try:
-            subprocess.Popen(args, stdout=f).wait()
-        except:
-            print("Warning: exception in write_git_sha1_h_file()")
-            return
-
-    if not os.path.exists(filename) or not filecmp.cmp(tempfile, filename):
-        # The filename does not exist or it's different from the new file,
-        # so replace old file with new.
-        if os.path.exists(filename):
-            os.remove(filename)
-        os.rename(tempfile, filename)
-    return
+    args = [ python_cmd, Dir('#').abspath + '/bin/git_sha1_gen.py', '--output', filename ]
+    try:
+        subprocess.call(args)
+    except:
+        print("Warning: exception in write_git_sha1_h_file()")
+        return
 
 
 # Create the git_sha1.h header file
@@ -52,10 +42,6 @@ env.Append(CPPPATH = ["#" + env['build_dir']])
 if env['platform'] != 'windows':
     SConscript('loader/SConscript')
 
-# When env['gles'] is set, the targets defined in mapi/glapi/SConscript are not
-# used.  libgl-xlib and libgl-gdi adapt themselves to use the targets defined
-# in mapi/glapi-shared/SConscript.  mesa/SConscript also adapts itself to
-# enable OpenGL ES support.
 SConscript('mapi/glapi/gen/SConscript')
 SConscript('mapi/glapi/SConscript')
 
@@ -70,9 +56,6 @@ if not env['embedded']:
         SConscript('glx/SConscript')
     if env['platform'] == 'haiku':
         SConscript('egl/SConscript')
-
-    if env['gles']:
-        SConscript('mapi/shared-glapi/SConscript')
 
 SConscript('gallium/SConscript')
 

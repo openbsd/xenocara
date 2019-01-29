@@ -21,6 +21,7 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <getopt.h>
 
@@ -33,7 +34,6 @@
  * offline compile GLSL code and examine the resulting GLSL IR.
  */
 
-#include "main/mtypes.h"
 #include "standalone.h"
 
 static struct standalone_options options;
@@ -62,7 +62,10 @@ usage_fail(const char *name)
       "Possible options are:\n";
    printf(header, name);
    for (const struct option *o = compiler_opts; o->name != 0; ++o) {
-      printf("    --%s\n", o->name);
+      printf("    --%s", o->name);
+      if (o->has_arg == required_argument)
+         printf(" (mandatory)");
+      printf("\n");
    }
    exit(EXIT_FAILURE);
 }

@@ -1,5 +1,3 @@
-/* -*- mode: C; c-file-style: "k&r"; tab-width 4; indent-tabs-mode: t; -*- */
-
 /*
  * Copyright (C) 2012 Rob Clark <robclark@freedesktop.org>
  *
@@ -70,7 +68,7 @@
 
 static uint32_t bin_width(struct fd_screen *screen)
 {
-	if (is_a4xx(screen) || is_a5xx(screen))
+	if (is_a4xx(screen) || is_a5xx(screen) || is_a6xx(screen))
 		return 1024;
 	if (is_a3xx(screen))
 		return 992;
@@ -107,17 +105,18 @@ static void
 calculate_tiles(struct fd_batch *batch)
 {
 	struct fd_context *ctx = batch->ctx;
+	struct fd_screen *screen = ctx->screen;
 	struct fd_gmem_stateobj *gmem = &ctx->gmem;
 	struct pipe_scissor_state *scissor = &batch->max_scissor;
 	struct pipe_framebuffer_state *pfb = &batch->framebuffer;
-	const uint32_t gmem_alignw = ctx->screen->gmem_alignw;
-	const uint32_t gmem_alignh = ctx->screen->gmem_alignh;
-	const unsigned npipes = ctx->screen->num_vsc_pipes;
-	const uint32_t gmem_size = ctx->screen->gmemsize_bytes;
+	const uint32_t gmem_alignw = screen->gmem_alignw;
+	const uint32_t gmem_alignh = screen->gmem_alignh;
+	const unsigned npipes = screen->num_vsc_pipes;
+	const uint32_t gmem_size = screen->gmemsize_bytes;
 	uint32_t minx, miny, width, height;
 	uint32_t nbins_x = 1, nbins_y = 1;
 	uint32_t bin_w, bin_h;
-	uint32_t max_width = bin_width(ctx->screen);
+	uint32_t max_width = bin_width(screen);
 	uint8_t cbuf_cpp[MAX_RENDER_TARGETS] = {0}, zsbuf_cpp[2] = {0};
 	uint32_t i, j, t, xoff, yoff;
 	uint32_t tpp_x, tpp_y;
@@ -135,6 +134,8 @@ calculate_tiles(struct fd_batch *batch)
 			cbuf_cpp[i] = util_format_get_blocksize(pfb->cbufs[i]->format);
 		else
 			cbuf_cpp[i] = 4;
+		/* if MSAA, color buffers are super-sampled in GMEM: */
+		cbuf_cpp[i] *= pfb->samples;
 	}
 
 	if (!memcmp(gmem->zsbuf_cpp, zsbuf_cpp, sizeof(zsbuf_cpp)) &&
@@ -214,10 +215,10 @@ calculate_tiles(struct fd_batch *batch)
 #define div_round_up(v, a)  (((v) + (a) - 1) / (a))
 	/* figure out number of tiles per pipe: */
 	tpp_x = tpp_y = 1;
-	while (div_round_up(nbins_y, tpp_y) > 8)
+	while (div_round_up(nbins_y, tpp_y) > screen->num_vsc_pipes)
 		tpp_y += 2;
 	while ((div_round_up(nbins_y, tpp_y) *
-			div_round_up(nbins_x, tpp_x)) > 8)
+			div_round_up(nbins_x, tpp_x)) > screen->num_vsc_pipes)
 		tpp_x += 1;
 
 	gmem->maxpw = tpp_x;
@@ -226,7 +227,7 @@ calculate_tiles(struct fd_batch *batch)
 	/* configure pipes: */
 	xoff = yoff = 0;
 	for (i = 0; i < npipes; i++) {
-		struct fd_vsc_pipe *pipe = &ctx->pipe[i];
+		struct fd_vsc_pipe *pipe = &ctx->vsc_pipe[i];
 
 		if (xoff >= nbins_x) {
 			xoff = 0;
@@ -246,7 +247,7 @@ calculate_tiles(struct fd_batch *batch)
 	}
 
 	for (; i < npipes; i++) {
-		struct fd_vsc_pipe *pipe = &ctx->pipe[i];
+		struct fd_vsc_pipe *pipe = &ctx->vsc_pipe[i];
 		pipe->x = pipe->y = pipe->w = pipe->h = 0;
 	}
 
@@ -372,15 +373,14 @@ render_sysmem(struct fd_batch *batch)
 static void
 flush_ring(struct fd_batch *batch)
 {
-	struct fd_context *ctx = batch->ctx;
+	uint32_t timestamp;
 	int out_fence_fd = -1;
 
-	fd_ringbuffer_flush2(batch->gmem, batch->in_fence_fd,
-			batch->needs_out_fence_fd ? &out_fence_fd : NULL);
+	fd_submit_flush(batch->submit, batch->in_fence_fd,
+			batch->needs_out_fence_fd ? &out_fence_fd : NULL,
+			&timestamp);
 
-	fd_fence_ref(&ctx->screen->base, &ctx->last_fence, NULL);
-	ctx->last_fence = fd_fence_create(ctx,
-			fd_ringbuffer_timestamp(batch->gmem), out_fence_fd);
+	fd_fence_populate(batch->fence, timestamp, out_fence_fd);
 }
 
 void
@@ -390,11 +390,19 @@ fd_gmem_render_tiles(struct fd_batch *batch)
 	struct pipe_framebuffer_state *pfb = &batch->framebuffer;
 	bool sysmem = false;
 
-	if (ctx->emit_sysmem_prep) {
-		if (batch->cleared || batch->gmem_reason || (batch->num_draws > 5)) {
-			DBG("GMEM: cleared=%x, gmem_reason=%x, num_draws=%u",
-				batch->cleared, batch->gmem_reason, batch->num_draws);
+	if (ctx->emit_sysmem_prep && !batch->nondraw) {
+		if (batch->cleared || batch->gmem_reason ||
+				((batch->num_draws > 5) && !batch->blit) ||
+				(pfb->samples > 1)) {
+			DBG("GMEM: cleared=%x, gmem_reason=%x, num_draws=%u, samples=%u",
+				batch->cleared, batch->gmem_reason, batch->num_draws,
+				pfb->samples);
 		} else if (!(fd_mesa_debug & FD_DBG_NOBYPASS)) {
+			sysmem = true;
+		}
+
+		/* For ARB_framebuffer_no_attachments: */
+		if ((pfb->nr_cbufs == 0) && !pfb->zsbuf) {
 			sysmem = true;
 		}
 	}
@@ -403,7 +411,10 @@ fd_gmem_render_tiles(struct fd_batch *batch)
 
 	ctx->stats.batch_total++;
 
-	if (sysmem) {
+	if (batch->nondraw) {
+		DBG("%p: rendering non-draw", batch);
+		ctx->stats.batch_nondraw++;
+	} else if (sysmem) {
 		DBG("%p: rendering sysmem %ux%u (%s/%s)",
 			batch, pfb->width, pfb->height,
 			util_format_short_name(pipe_surface_format(pfb->cbufs[0])),
@@ -428,42 +439,6 @@ fd_gmem_render_tiles(struct fd_batch *batch)
 	flush_ring(batch);
 }
 
-/* special case for when we need to create a fence but have no rendering
- * to flush.. just emit a no-op string-marker packet.
- */
-void
-fd_gmem_render_noop(struct fd_batch *batch)
-{
-	struct fd_context *ctx = batch->ctx;
-	struct pipe_context *pctx = &ctx->base;
-
-	pctx->emit_string_marker(pctx, "noop", 4);
-	/* emit IB to drawcmds (which contain the string marker): */
-	ctx->emit_ib(batch->gmem, batch->draw);
-	flush_ring(batch);
-}
-
-void
-fd_gmem_flush_compute(struct fd_batch *batch)
-{
-	render_sysmem(batch);
-	flush_ring(batch);
-}
-
-/* tile needs restore if it isn't completely contained within the
- * cleared scissor:
- */
-static bool
-skip_restore(struct pipe_scissor_state *scissor, struct fd_tile *tile)
-{
-	unsigned minx = tile->xoff;
-	unsigned maxx = tile->xoff + tile->bin_w;
-	unsigned miny = tile->yoff;
-	unsigned maxy = tile->yoff + tile->bin_h;
-	return (minx >= scissor->minx) && (maxx <= scissor->maxx) &&
-			(miny >= scissor->miny) && (maxy <= scissor->maxy);
-}
-
 /* When deciding whether a tile needs mem2gmem, we need to take into
  * account the scissor rect(s) that were cleared.  To simplify we only
  * consider the last scissor rect for each buffer, since the common
@@ -474,22 +449,6 @@ fd_gmem_needs_restore(struct fd_batch *batch, struct fd_tile *tile,
 		uint32_t buffers)
 {
 	if (!(batch->restore & buffers))
-		return false;
-
-	/* if buffers partially cleared, then slow-path to figure out
-	 * if this particular tile needs restoring:
-	 */
-	if ((buffers & FD_BUFFER_COLOR) &&
-			(batch->partial_cleared & FD_BUFFER_COLOR) &&
-			skip_restore(&batch->cleared_scissor.color, tile))
-		return false;
-	if ((buffers & FD_BUFFER_DEPTH) &&
-			(batch->partial_cleared & FD_BUFFER_DEPTH) &&
-			skip_restore(&batch->cleared_scissor.depth, tile))
-		return false;
-	if ((buffers & FD_BUFFER_STENCIL) &&
-			(batch->partial_cleared & FD_BUFFER_STENCIL) &&
-			skip_restore(&batch->cleared_scissor.stencil, tile))
 		return false;
 
 	return true;

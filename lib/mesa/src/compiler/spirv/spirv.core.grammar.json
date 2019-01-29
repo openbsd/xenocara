@@ -26,7 +26,7 @@
   ],
   "magic_number" : "0x07230203",
   "major_version" : 1,
-  "minor_version" : 2,
+  "minor_version" : 3,
   "revision" : 1,
   "instructions" : [
     {
@@ -2410,7 +2410,7 @@
         { "kind" : "IdResult" },
         { "kind" : "IdScope",        "name" : "'Execution'" },
         { "kind" : "GroupOperation", "name" : "'Operation'" },
-        { "kind" : "IdRef",          "name" : "X" }
+        { "kind" : "IdRef",          "name" : "'X'" }
       ],
       "capabilities" : [ "Groups" ]
     },
@@ -2434,7 +2434,7 @@
         { "kind" : "IdResult" },
         { "kind" : "IdScope",        "name" : "'Execution'" },
         { "kind" : "GroupOperation", "name" : "'Operation'" },
-        { "kind" : "IdRef",          "name" : "X" }
+        { "kind" : "IdRef",          "name" : "'X'" }
       ],
       "capabilities" : [ "Groups" ]
     },
@@ -2446,7 +2446,7 @@
         { "kind" : "IdResult" },
         { "kind" : "IdScope",        "name" : "'Execution'" },
         { "kind" : "GroupOperation", "name" : "'Operation'" },
-        { "kind" : "IdRef",          "name" : "X" }
+        { "kind" : "IdRef",          "name" : "'X'" }
       ],
       "capabilities" : [ "Groups" ]
     },
@@ -2458,7 +2458,7 @@
         { "kind" : "IdResult" },
         { "kind" : "IdScope",        "name" : "'Execution'" },
         { "kind" : "GroupOperation", "name" : "'Operation'" },
-        { "kind" : "IdRef",          "name" : "X" }
+        { "kind" : "IdRef",          "name" : "'X'" }
       ],
       "capabilities" : [ "Groups" ]
     },
@@ -2470,7 +2470,7 @@
         { "kind" : "IdResult" },
         { "kind" : "IdScope",        "name" : "'Execution'" },
         { "kind" : "GroupOperation", "name" : "'Operation'" },
-        { "kind" : "IdRef",          "name" : "X" }
+        { "kind" : "IdRef",          "name" : "'X'" }
       ],
       "capabilities" : [ "Groups" ]
     },
@@ -2886,7 +2886,8 @@
         { "kind" : "IdRef",                             "name" : "'Coordinate'" },
         { "kind" : "ImageOperands", "quantifier" : "?" }
       ],
-      "capabilities" : [ "SparseResidency" ]
+      "capabilities" : [ "SparseResidency" ],
+      "version" : "None"
     },
     {
       "opname" : "OpImageSparseSampleProjExplicitLod",
@@ -2898,7 +2899,8 @@
         { "kind" : "IdRef",         "name" : "'Coordinate'" },
         { "kind" : "ImageOperands" }
       ],
-      "capabilities" : [ "SparseResidency" ]
+      "capabilities" : [ "SparseResidency" ],
+      "version" : "None"
     },
     {
       "opname" : "OpImageSparseSampleProjDrefImplicitLod",
@@ -2911,7 +2913,8 @@
         { "kind" : "IdRef",                             "name" : "'D~ref~'" },
         { "kind" : "ImageOperands", "quantifier" : "?" }
       ],
-      "capabilities" : [ "SparseResidency" ]
+      "capabilities" : [ "SparseResidency" ],
+      "version" : "None"
     },
     {
       "opname" : "OpImageSparseSampleProjDrefExplicitLod",
@@ -2924,7 +2927,8 @@
         { "kind" : "IdRef",         "name" : "'D~ref~'" },
         { "kind" : "ImageOperands" }
       ],
-      "capabilities" : [ "SparseResidency" ]
+      "capabilities" : [ "SparseResidency" ],
+      "version" : "None"
     },
     {
       "opname" : "OpImageSparseFetch",
@@ -3018,9 +3022,10 @@
       "operands" : [
         { "kind" : "IdResultType" },
         { "kind" : "IdResult" },
-        { "kind" : "IdRef",        "name" : "'Pointer'" }
+        { "kind" : "IdRef", "name" : "'Pointer'" }
       ],
-      "capabilities" : [ "Addresses" ]
+      "capabilities" : [ "Addresses" ],
+      "version" : "1.1"
     },
     {
       "opname" : "OpTypePipeStorage",
@@ -3028,7 +3033,8 @@
       "operands" : [
         { "kind" : "IdResult" }
       ],
-      "capabilities" : [ "PipeStorage" ]
+      "capabilities" : [ "PipeStorage" ],
+      "version" : "1.1"
     },
     {
       "opname" : "OpConstantPipeStorage",
@@ -3040,7 +3046,8 @@
         { "kind" : "LiteralInteger", "name" : "'Packet Alignment'" },
         { "kind" : "LiteralInteger", "name" : "'Capacity'" }
       ],
-      "capabilities" : [ "PipeStorage" ]
+      "capabilities" : [ "PipeStorage" ],
+      "version" : "1.1"
     },
     {
       "opname" : "OpCreatePipeFromPipeStorage",
@@ -3048,9 +3055,10 @@
       "operands" : [
         { "kind" : "IdResultType" },
         { "kind" : "IdResult" },
-        { "kind" : "IdRef",        "name" : "'Pipe Storage'" }
+        { "kind" : "IdRef", "name" : "'Pipe Storage'" }
       ],
-      "capabilities" : [ "PipeStorage" ]
+      "capabilities" : [ "PipeStorage" ],
+      "version" : "1.1"
     },
     {
       "opname" : "OpGetKernelLocalSizeForSubgroupCount",
@@ -3058,13 +3066,14 @@
       "operands" : [
         { "kind" : "IdResultType" },
         { "kind" : "IdResult" },
-        { "kind" : "IdRef",        "name" : "'Subgroup Count'" },
-        { "kind" : "IdRef",        "name" : "'Invoke'" },
-        { "kind" : "IdRef",        "name" : "'Param'" },
-        { "kind" : "IdRef",        "name" : "'Param Size'" },
-        { "kind" : "IdRef",        "name" : "'Param Align'" }
+        { "kind" : "IdRef", "name" : "'Subgroup Count'" },
+        { "kind" : "IdRef", "name" : "'Invoke'" },
+        { "kind" : "IdRef", "name" : "'Param'" },
+        { "kind" : "IdRef", "name" : "'Param Size'" },
+        { "kind" : "IdRef", "name" : "'Param Align'" }
       ],
-      "capabilities" : [ "SubgroupDispatch" ]
+      "capabilities" : [ "SubgroupDispatch" ],
+      "version" : "1.1"
     },
     {
       "opname" : "OpGetKernelMaxNumSubgroups",
@@ -3072,12 +3081,13 @@
       "operands" : [
         { "kind" : "IdResultType" },
         { "kind" : "IdResult" },
-        { "kind" : "IdRef",        "name" : "'Invoke'" },
-        { "kind" : "IdRef",        "name" : "'Param'" },
-        { "kind" : "IdRef",        "name" : "'Param Size'" },
-        { "kind" : "IdRef",        "name" : "'Param Align'" }
+        { "kind" : "IdRef", "name" : "'Invoke'" },
+        { "kind" : "IdRef", "name" : "'Param'" },
+        { "kind" : "IdRef", "name" : "'Param Size'" },
+        { "kind" : "IdRef", "name" : "'Param Align'" }
       ],
-      "capabilities" : [ "SubgroupDispatch" ]
+      "capabilities" : [ "SubgroupDispatch" ],
+      "version" : "1.1"
     },
     {
       "opname" : "OpTypeNamedBarrier",
@@ -3085,7 +3095,8 @@
       "operands" : [
         { "kind" : "IdResult" }
       ],
-      "capabilities" : [ "NamedBarrier" ]
+      "capabilities" : [ "NamedBarrier" ],
+      "version" : "1.1"
     },
     {
       "opname" : "OpNamedBarrierInitialize",
@@ -3093,42 +3104,496 @@
       "operands" : [
         { "kind" : "IdResultType" },
         { "kind" : "IdResult" },
-        { "kind" : "IdRef",        "name" : "'Subgroup Count'" }
+        { "kind" : "IdRef", "name" : "'Subgroup Count'" }
       ],
-      "capabilities" : [ "NamedBarrier" ]
+      "capabilities" : [ "NamedBarrier" ],
+      "version" : "1.1"
     },
     {
       "opname" : "OpMemoryNamedBarrier",
       "opcode" : 329,
       "operands" : [
-        { "kind" : "IdRef",             "name" : "'Named Barrier'" },
-        { "kind" : "IdScope",           "name" : "'Memory'" },
+        { "kind" : "IdRef", "name" : "'Named Barrier'" },
+        { "kind" : "IdScope", "name" : "'Memory'" },
         { "kind" : "IdMemorySemantics", "name" : "'Semantics'" }
       ],
-      "capabilities" : [ "NamedBarrier" ]
+      "capabilities" : [ "NamedBarrier" ],
+      "version" : "1.1"
     },
     {
       "opname" : "OpModuleProcessed",
       "opcode" : 330,
       "operands" : [
         { "kind" : "LiteralString", "name" : "'Process'" }
-      ]
+      ],
+      "version" : "1.1"
     },
     {
       "opname" : "OpExecutionModeId",
       "opcode" : 331,
       "operands" : [
-        { "kind" : "IdRef",           "name" : "'Entry Point'" },
-        { "kind" : "ExecutionMode",   "name" : "'Mode'" }
-      ]
+        { "kind" : "IdRef", "name" : "'Entry Point'" },
+        { "kind" : "ExecutionMode", "name" : "'Mode'" }
+      ],
+      "version" : "1.2"
     },
     {
       "opname" : "OpDecorateId",
       "opcode" : 332,
       "operands" : [
-        { "kind" : "IdRef",      "name" : "'Target'" },
+        { "kind" : "IdRef", "name" : "'Target'" },
         { "kind" : "Decoration" }
-      ]
+      ],
+      "extensions" : [ "SPV_GOOGLE_hlsl_functionality1" ],
+      "version" : "1.2"
+    },
+    {
+      "opname" : "OpGroupNonUniformElect",
+      "opcode" : 333,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdScope", "name" : "'Execution'" }
+      ],
+      "capabilities" : [ "GroupNonUniform" ],
+      "version" : "1.3"
+    },
+    {
+      "opname" : "OpGroupNonUniformAll",
+      "opcode" : 334,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdScope", "name" : "'Execution'" },
+        { "kind" : "IdRef", "name" : "'Predicate'" }
+      ],
+      "capabilities" : [ "GroupNonUniformVote" ],
+      "version" : "1.3"
+    },
+    {
+      "opname" : "OpGroupNonUniformAny",
+      "opcode" : 335,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdScope", "name" : "'Execution'" },
+        { "kind" : "IdRef", "name" : "'Predicate'" }
+      ],
+      "capabilities" : [ "GroupNonUniformVote" ],
+      "version" : "1.3"
+    },
+    {
+      "opname" : "OpGroupNonUniformAllEqual",
+      "opcode" : 336,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdScope", "name" : "'Execution'" },
+        { "kind" : "IdRef", "name" : "'Value'" }
+      ],
+      "capabilities" : [ "GroupNonUniformVote" ],
+      "version" : "1.3"
+    },
+    {
+      "opname" : "OpGroupNonUniformBroadcast",
+      "opcode" : 337,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdScope", "name" : "'Execution'" },
+        { "kind" : "IdRef", "name" : "'Value'" },
+        { "kind" : "IdRef", "name" : "'Id'" }
+      ],
+      "capabilities" : [ "GroupNonUniformBallot" ],
+      "version" : "1.3"
+    },
+    {
+      "opname" : "OpGroupNonUniformBroadcastFirst",
+      "opcode" : 338,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdScope", "name" : "'Execution'" },
+        { "kind" : "IdRef", "name" : "'Value'" }
+      ],
+      "capabilities" : [ "GroupNonUniformBallot" ],
+      "version" : "1.3"
+    },
+    {
+      "opname" : "OpGroupNonUniformBallot",
+      "opcode" : 339,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdScope", "name" : "'Execution'" },
+        { "kind" : "IdRef", "name" : "'Predicate'" }
+      ],
+      "capabilities" : [ "GroupNonUniformBallot" ],
+      "version" : "1.3"
+    },
+    {
+      "opname" : "OpGroupNonUniformInverseBallot",
+      "opcode" : 340,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdScope", "name" : "'Execution'" },
+        { "kind" : "IdRef", "name" : "'Value'" }
+      ],
+      "capabilities" : [ "GroupNonUniformBallot" ],
+      "version" : "1.3"
+    },
+    {
+      "opname" : "OpGroupNonUniformBallotBitExtract",
+      "opcode" : 341,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdScope", "name" : "'Execution'" },
+        { "kind" : "IdRef", "name" : "'Value'" },
+        { "kind" : "IdRef", "name" : "'Index'" }
+      ],
+      "capabilities" : [ "GroupNonUniformBallot" ],
+      "version" : "1.3"
+    },
+    {
+      "opname" : "OpGroupNonUniformBallotBitCount",
+      "opcode" : 342,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdScope", "name" : "'Execution'" },
+        { "kind" : "GroupOperation", "name" : "'Operation'" },
+        { "kind" : "IdRef", "name" : "'Value'" }
+      ],
+      "capabilities" : [ "GroupNonUniformBallot" ],
+      "version" : "1.3"
+    },
+    {
+      "opname" : "OpGroupNonUniformBallotFindLSB",
+      "opcode" : 343,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdScope", "name" : "'Execution'" },
+        { "kind" : "IdRef", "name" : "'Value'" }
+      ],
+      "capabilities" : [ "GroupNonUniformBallot" ],
+      "version" : "1.3"
+    },
+    {
+      "opname" : "OpGroupNonUniformBallotFindMSB",
+      "opcode" : 344,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdScope", "name" : "'Execution'" },
+        { "kind" : "IdRef", "name" : "'Value'" }
+      ],
+      "capabilities" : [ "GroupNonUniformBallot" ],
+      "version" : "1.3"
+    },
+    {
+      "opname" : "OpGroupNonUniformShuffle",
+      "opcode" : 345,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdScope", "name" : "'Execution'" },
+        { "kind" : "IdRef", "name" : "'Value'" },
+        { "kind" : "IdRef", "name" : "'Id'" }
+      ],
+      "capabilities" : [ "GroupNonUniformShuffle" ],
+      "version" : "1.3"
+    },
+    {
+      "opname" : "OpGroupNonUniformShuffleXor",
+      "opcode" : 346,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdScope", "name" : "'Execution'" },
+        { "kind" : "IdRef", "name" : "'Value'" },
+        { "kind" : "IdRef", "name" : "'Mask'" }
+      ],
+      "capabilities" : [ "GroupNonUniformShuffle" ],
+      "version" : "1.3"
+    },
+    {
+      "opname" : "OpGroupNonUniformShuffleUp",
+      "opcode" : 347,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdScope", "name" : "'Execution'" },
+        { "kind" : "IdRef", "name" : "'Value'" },
+        { "kind" : "IdRef", "name" : "'Delta'" }
+      ],
+      "capabilities" : [ "GroupNonUniformShuffleRelative" ],
+      "version" : "1.3"
+    },
+    {
+      "opname" : "OpGroupNonUniformShuffleDown",
+      "opcode" : 348,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdScope", "name" : "'Execution'" },
+        { "kind" : "IdRef", "name" : "'Value'" },
+        { "kind" : "IdRef", "name" : "'Delta'" }
+      ],
+      "capabilities" : [ "GroupNonUniformShuffleRelative" ],
+      "version" : "1.3"
+    },
+    {
+      "opname" : "OpGroupNonUniformIAdd",
+      "opcode" : 349,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdScope", "name" : "'Execution'" },
+        { "kind" : "GroupOperation", "name" : "'Operation'" },
+        { "kind" : "IdRef", "name" : "'Value'" },
+        { "kind" : "IdRef", "name" : "'ClusterSize'", "quantifier" : "?" }
+      ],
+      "capabilities" : [ "GroupNonUniformArithmetic", "GroupNonUniformClustered" ],
+      "version" : "1.3"
+    },
+    {
+      "opname" : "OpGroupNonUniformFAdd",
+      "opcode" : 350,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdScope", "name" : "'Execution'" },
+        { "kind" : "GroupOperation", "name" : "'Operation'" },
+        { "kind" : "IdRef", "name" : "'Value'" },
+        { "kind" : "IdRef", "name" : "'ClusterSize'", "quantifier" : "?" }
+      ],
+      "capabilities" : [ "GroupNonUniformArithmetic", "GroupNonUniformClustered" ],
+      "version" : "1.3"
+    },
+    {
+      "opname" : "OpGroupNonUniformIMul",
+      "opcode" : 351,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdScope", "name" : "'Execution'" },
+        { "kind" : "GroupOperation", "name" : "'Operation'" },
+        { "kind" : "IdRef", "name" : "'Value'" },
+        { "kind" : "IdRef", "name" : "'ClusterSize'", "quantifier" : "?" }
+      ],
+      "capabilities" : [ "GroupNonUniformArithmetic", "GroupNonUniformClustered" ],
+      "version" : "1.3"
+    },
+    {
+      "opname" : "OpGroupNonUniformFMul",
+      "opcode" : 352,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdScope", "name" : "'Execution'" },
+        { "kind" : "GroupOperation", "name" : "'Operation'" },
+        { "kind" : "IdRef", "name" : "'Value'" },
+        { "kind" : "IdRef", "name" : "'ClusterSize'", "quantifier" : "?" }
+      ],
+      "capabilities" : [ "GroupNonUniformArithmetic", "GroupNonUniformClustered" ],
+      "version" : "1.3"
+    },
+    {
+      "opname" : "OpGroupNonUniformSMin",
+      "opcode" : 353,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdScope", "name" : "'Execution'" },
+        { "kind" : "GroupOperation", "name" : "'Operation'" },
+        { "kind" : "IdRef", "name" : "'Value'" },
+        { "kind" : "IdRef", "name" : "'ClusterSize'", "quantifier" : "?" }
+      ],
+      "capabilities" : [ "GroupNonUniformArithmetic", "GroupNonUniformClustered" ],
+      "version" : "1.3"
+    },
+    {
+      "opname" : "OpGroupNonUniformUMin",
+      "opcode" : 354,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdScope", "name" : "'Execution'" },
+        { "kind" : "GroupOperation", "name" : "'Operation'" },
+        { "kind" : "IdRef", "name" : "'Value'" },
+        { "kind" : "IdRef", "name" : "'ClusterSize'", "quantifier" : "?" }
+      ],
+      "capabilities" : [ "GroupNonUniformArithmetic", "GroupNonUniformClustered" ],
+      "version" : "1.3"
+    },
+    {
+      "opname" : "OpGroupNonUniformFMin",
+      "opcode" : 355,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdScope", "name" : "'Execution'" },
+        { "kind" : "GroupOperation", "name" : "'Operation'" },
+        { "kind" : "IdRef", "name" : "'Value'" },
+        { "kind" : "IdRef", "name" : "'ClusterSize'", "quantifier" : "?" }
+      ],
+      "capabilities" : [ "GroupNonUniformArithmetic", "GroupNonUniformClustered" ],
+      "version" : "1.3"
+    },
+    {
+      "opname" : "OpGroupNonUniformSMax",
+      "opcode" : 356,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdScope", "name" : "'Execution'" },
+        { "kind" : "GroupOperation", "name" : "'Operation'" },
+        { "kind" : "IdRef", "name" : "'Value'" },
+        { "kind" : "IdRef", "name" : "'ClusterSize'", "quantifier" : "?" }
+      ],
+      "capabilities" : [ "GroupNonUniformArithmetic", "GroupNonUniformClustered" ],
+      "version" : "1.3"
+    },
+    {
+      "opname" : "OpGroupNonUniformUMax",
+      "opcode" : 357,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdScope", "name" : "'Execution'" },
+        { "kind" : "GroupOperation", "name" : "'Operation'" },
+        { "kind" : "IdRef", "name" : "'Value'" },
+        { "kind" : "IdRef", "name" : "'ClusterSize'", "quantifier" : "?" }
+      ],
+      "capabilities" : [ "GroupNonUniformArithmetic", "GroupNonUniformClustered" ],
+      "version" : "1.3"
+    },
+    {
+      "opname" : "OpGroupNonUniformFMax",
+      "opcode" : 358,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdScope", "name" : "'Execution'" },
+        { "kind" : "GroupOperation", "name" : "'Operation'" },
+        { "kind" : "IdRef", "name" : "'Value'" },
+        { "kind" : "IdRef", "name" : "'ClusterSize'", "quantifier" : "?" }
+      ],
+      "capabilities" : [ "GroupNonUniformArithmetic", "GroupNonUniformClustered" ],
+      "version" : "1.3"
+    },
+    {
+      "opname" : "OpGroupNonUniformBitwiseAnd",
+      "opcode" : 359,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdScope", "name" : "'Execution'" },
+        { "kind" : "GroupOperation", "name" : "'Operation'" },
+        { "kind" : "IdRef", "name" : "'Value'" },
+        { "kind" : "IdRef", "name" : "'ClusterSize'", "quantifier" : "?" }
+      ],
+      "capabilities" : [ "GroupNonUniformArithmetic", "GroupNonUniformClustered" ],
+      "version" : "1.3"
+    },
+    {
+      "opname" : "OpGroupNonUniformBitwiseOr",
+      "opcode" : 360,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdScope", "name" : "'Execution'" },
+        { "kind" : "GroupOperation", "name" : "'Operation'" },
+        { "kind" : "IdRef", "name" : "'Value'" },
+        { "kind" : "IdRef", "name" : "'ClusterSize'", "quantifier" : "?" }
+      ],
+      "capabilities" : [ "GroupNonUniformArithmetic", "GroupNonUniformClustered" ],
+      "version" : "1.3"
+    },
+    {
+      "opname" : "OpGroupNonUniformBitwiseXor",
+      "opcode" : 361,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdScope", "name" : "'Execution'" },
+        { "kind" : "GroupOperation", "name" : "'Operation'" },
+        { "kind" : "IdRef", "name" : "'Value'" },
+        { "kind" : "IdRef", "name" : "'ClusterSize'", "quantifier" : "?" }
+      ],
+      "capabilities" : [ "GroupNonUniformArithmetic", "GroupNonUniformClustered" ],
+      "version" : "1.3"
+    },
+    {
+      "opname" : "OpGroupNonUniformLogicalAnd",
+      "opcode" : 362,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdScope", "name" : "'Execution'" },
+        { "kind" : "GroupOperation", "name" : "'Operation'" },
+        { "kind" : "IdRef", "name" : "'Value'" },
+        { "kind" : "IdRef", "name" : "'ClusterSize'", "quantifier" : "?" }
+      ],
+      "capabilities" : [ "GroupNonUniformArithmetic", "GroupNonUniformClustered" ],
+      "version" : "1.3"
+    },
+    {
+      "opname" : "OpGroupNonUniformLogicalOr",
+      "opcode" : 363,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdScope", "name" : "'Execution'" },
+        { "kind" : "GroupOperation", "name" : "'Operation'" },
+        { "kind" : "IdRef", "name" : "'Value'" },
+        { "kind" : "IdRef", "name" : "'ClusterSize'", "quantifier" : "?" }
+      ],
+      "capabilities" : [ "GroupNonUniformArithmetic", "GroupNonUniformClustered" ],
+      "version" : "1.3"
+    },
+    {
+      "opname" : "OpGroupNonUniformLogicalXor",
+      "opcode" : 364,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdScope", "name" : "'Execution'" },
+        { "kind" : "GroupOperation", "name" : "'Operation'" },
+        { "kind" : "IdRef", "name" : "'Value'" },
+        { "kind" : "IdRef", "name" : "'ClusterSize'", "quantifier" : "?" }
+      ],
+      "capabilities" : [ "GroupNonUniformArithmetic", "GroupNonUniformClustered" ],
+      "version" : "1.3"
+    },
+    {
+      "opname" : "OpGroupNonUniformQuadBroadcast",
+      "opcode" : 365,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdScope", "name" : "'Execution'" },
+        { "kind" : "IdRef", "name" : "'Value'" },
+        { "kind" : "IdRef", "name" : "'Index'" }
+      ],
+      "capabilities" : [ "GroupNonUniformQuad" ],
+      "version" : "1.3"
+    },
+    {
+      "opname" : "OpGroupNonUniformQuadSwap",
+      "opcode" : 366,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdScope", "name" : "'Execution'" },
+        { "kind" : "IdRef", "name" : "'Value'" },
+        { "kind" : "IdRef", "name" : "'Direction'" }
+      ],
+      "capabilities" : [ "GroupNonUniformQuad" ],
+      "version" : "1.3"
     },
     {
       "opname" : "OpSubgroupBallotKHR",
@@ -3138,7 +3603,9 @@
         { "kind" : "IdResult" },
         { "kind" : "IdRef", "name" : "'Predicate'" }
       ],
-      "capabilities" : [ "SubgroupBallotKHR" ]
+      "capabilities" : [ "SubgroupBallotKHR" ],
+      "extensions" : [ "SPV_KHR_shader_ballot" ],
+      "version" : "None"
     },
     {
       "opname" : "OpSubgroupFirstInvocationKHR",
@@ -3148,7 +3615,9 @@
         { "kind" : "IdResult" },
         { "kind" : "IdRef", "name" : "'Value'" }
       ],
-      "capabilities" : [ "SubgroupBallotKHR" ]
+      "capabilities" : [ "SubgroupBallotKHR" ],
+      "extensions" : [ "SPV_KHR_shader_ballot" ],
+      "version" : "None"
     },
     {
       "opname" : "OpSubgroupAllKHR",
@@ -3158,7 +3627,11 @@
         { "kind" : "IdResult" },
         { "kind" : "IdRef", "name" : "'Predicate'" }
       ],
-      "capabilities" : [ "SubgroupVoteKHR" ]
+      "extensions" : [
+        "SPV_KHR_subgroup_vote"
+      ],
+      "capabilities" : [ "SubgroupVoteKHR" ],
+      "version" : "None"
     },
     {
       "opname" : "OpSubgroupAnyKHR",
@@ -3168,7 +3641,11 @@
         { "kind" : "IdResult" },
         { "kind" : "IdRef", "name" : "'Predicate'" }
       ],
-      "capabilities" : [ "SubgroupVoteKHR" ]
+      "extensions" : [
+        "SPV_KHR_subgroup_vote"
+      ],
+      "capabilities" : [ "SubgroupVoteKHR" ],
+      "version" : "None"
     },
     {
       "opname" : "OpSubgroupAllEqualKHR",
@@ -3178,7 +3655,11 @@
         { "kind" : "IdResult" },
         { "kind" : "IdRef", "name" : "'Predicate'" }
       ],
-      "capabilities" : [ "SubgroupVoteKHR" ]
+      "extensions" : [
+        "SPV_KHR_subgroup_vote"
+      ],
+      "capabilities" : [ "SubgroupVoteKHR" ],
+      "version" : "None"
     },
     {
       "opname" : "OpSubgroupReadInvocationKHR",
@@ -3189,7 +3670,9 @@
         { "kind" : "IdRef", "name" : "'Value'" },
         { "kind" : "IdRef", "name" : "'Index'" }
       ],
-      "capabilities" : [ "SubgroupBallotKHR" ]
+      "capabilities" : [ "SubgroupBallotKHR" ],
+      "extensions" : [ "SPV_KHR_shader_ballot" ],
+      "version" : "None"
     },
     {
       "opname" : "OpGroupIAddNonUniformAMD",
@@ -3201,7 +3684,9 @@
         { "kind" : "GroupOperation", "name" : "'Operation'" },
         { "kind" : "IdRef",          "name" : "'X'" }
       ],
-      "capabilities" : [ "Groups" ]
+      "capabilities" : [ "Groups" ],
+      "extensions" : [ "SPV_AMD_shader_ballot" ],
+      "version" : "None"
     },
     {
       "opname" : "OpGroupFAddNonUniformAMD",
@@ -3213,7 +3698,9 @@
         { "kind" : "GroupOperation", "name" : "'Operation'" },
         { "kind" : "IdRef",          "name" : "'X'" }
       ],
-      "capabilities" : [ "Groups" ]
+      "capabilities" : [ "Groups" ],
+      "extensions" : [ "SPV_AMD_shader_ballot" ],
+      "version" : "None"
     },
     {
       "opname" : "OpGroupFMinNonUniformAMD",
@@ -3223,9 +3710,11 @@
         { "kind" : "IdResult" },
         { "kind" : "IdScope",        "name" : "'Execution'" },
         { "kind" : "GroupOperation", "name" : "'Operation'" },
-        { "kind" : "IdRef",          "name" : "X" }
+        { "kind" : "IdRef",          "name" : "'X'" }
       ],
-      "capabilities" : [ "Groups" ]
+      "capabilities" : [ "Groups" ],
+      "extensions" : [ "SPV_AMD_shader_ballot" ],
+      "version" : "None"
     },
     {
       "opname" : "OpGroupUMinNonUniformAMD",
@@ -3237,7 +3726,9 @@
         { "kind" : "GroupOperation", "name" : "'Operation'" },
         { "kind" : "IdRef",          "name" : "'X'" }
       ],
-      "capabilities" : [ "Groups" ]
+      "capabilities" : [ "Groups" ],
+      "extensions" : [ "SPV_AMD_shader_ballot" ],
+      "version" : "None"
     },
     {
       "opname" : "OpGroupSMinNonUniformAMD",
@@ -3247,9 +3738,11 @@
         { "kind" : "IdResult" },
         { "kind" : "IdScope",        "name" : "'Execution'" },
         { "kind" : "GroupOperation", "name" : "'Operation'" },
-        { "kind" : "IdRef",          "name" : "X" }
+        { "kind" : "IdRef",          "name" : "'X'" }
       ],
-      "capabilities" : [ "Groups" ]
+      "capabilities" : [ "Groups" ],
+      "extensions" : [ "SPV_AMD_shader_ballot" ],
+      "version" : "None"
     },
     {
       "opname" : "OpGroupFMaxNonUniformAMD",
@@ -3259,9 +3752,11 @@
         { "kind" : "IdResult" },
         { "kind" : "IdScope",        "name" : "'Execution'" },
         { "kind" : "GroupOperation", "name" : "'Operation'" },
-        { "kind" : "IdRef",          "name" : "X" }
+        { "kind" : "IdRef",          "name" : "'X'" }
       ],
-      "capabilities" : [ "Groups" ]
+      "capabilities" : [ "Groups" ],
+      "extensions" : [ "SPV_AMD_shader_ballot" ],
+      "version" : "None"
     },
     {
       "opname" : "OpGroupUMaxNonUniformAMD",
@@ -3271,9 +3766,11 @@
         { "kind" : "IdResult" },
         { "kind" : "IdScope",        "name" : "'Execution'" },
         { "kind" : "GroupOperation", "name" : "'Operation'" },
-        { "kind" : "IdRef",          "name" : "X" }
+        { "kind" : "IdRef",          "name" : "'X'" }
       ],
-      "capabilities" : [ "Groups" ]
+      "capabilities" : [ "Groups" ],
+      "extensions" : [ "SPV_AMD_shader_ballot" ],
+      "version" : "None"
     },
     {
       "opname" : "OpGroupSMaxNonUniformAMD",
@@ -3283,9 +3780,247 @@
         { "kind" : "IdResult" },
         { "kind" : "IdScope",        "name" : "'Execution'" },
         { "kind" : "GroupOperation", "name" : "'Operation'" },
-        { "kind" : "IdRef",          "name" : "X" }
+        { "kind" : "IdRef",          "name" : "'X'" }
       ],
-      "capabilities" : [ "Groups" ]
+      "capabilities" : [ "Groups" ],
+      "extensions" : [ "SPV_AMD_shader_ballot" ],
+      "version" : "None"
+    },
+    {
+      "opname" : "OpFragmentMaskFetchAMD",
+      "opcode" : 5011,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdRef", "name" : "'Image'" },
+        { "kind" : "IdRef", "name" : "'Coordinate'" }
+      ],
+      "capabilities" : [ "FragmentMaskAMD" ],
+      "extensions" : [ "SPV_AMD_shader_fragment_mask" ],
+      "version" : "None"
+    },
+    {
+      "opname" : "OpFragmentFetchAMD",
+      "opcode" : 5012,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdRef", "name" : "'Image'" },
+        { "kind" : "IdRef", "name" : "'Coordinate'" },
+        { "kind" : "IdRef", "name" : "'Fragment Index'" }
+      ],
+      "capabilities" : [ "FragmentMaskAMD" ],
+      "extensions" : [ "SPV_AMD_shader_fragment_mask" ],
+      "version" : "None"
+    },
+    {
+      "opname" : "OpWritePackedPrimitiveIndices4x8NV",
+      "opcode" : 5299,
+      "operands" : [
+        { "kind" : "IdRef", "name" : "'Index Offset'" },
+        { "kind" : "IdRef", "name" : "'Packed Indices'" }
+      ],
+      "capabilities" : [ "MeshShadingNV" ],
+      "extensions" : [ "SPV_NV_mesh_shader" ],
+      "version" : "None"
+    },
+    {
+      "opname" : "OpReportIntersectionNVX",
+      "opcode" : 5334,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdRef", "name" : "'Hit'" },
+        { "kind" : "IdRef", "name" : "'HitKind'" }
+      ],
+      "capabilities" : [ "RaytracingNVX" ],
+      "extensions" : [ "SPV_NVX_raytracing" ]
+    },
+    {
+      "opname" : "OpIgnoreIntersectionNVX",
+      "opcode" : 5335,
+
+      "capabilities" : [ "RaytracingNVX" ],
+      "extensions" : [ "SPV_NVX_raytracing" ]
+    },
+    {
+      "opname" : "OpTerminateRayNVX",
+      "opcode" : 5336,
+
+      "capabilities" : [ "RaytracingNVX" ],
+      "extensions" : [ "SPV_NVX_raytracing" ]
+    },
+    {
+      "opname" : "OpTraceNVX",
+      "opcode" : 5337,
+      "operands" : [
+
+        { "kind" : "IdRef", "name" : "'Accel'" },
+        { "kind" : "IdRef", "name" : "'Ray Flags'" },
+        { "kind" : "IdRef", "name" : "'Cull Mask'" },
+        { "kind" : "IdRef", "name" : "'SBT Offset'" },
+        { "kind" : "IdRef", "name" : "'SBT Stride'" },
+        { "kind" : "IdRef", "name" : "'Miss Index'" },
+        { "kind" : "IdRef", "name" : "'Ray Origin'" },
+        { "kind" : "IdRef", "name" : "'Ray Tmin'" },
+        { "kind" : "IdRef", "name" : "'Ray Direction'" },
+        { "kind" : "IdRef", "name" : "'Ray Tmax'" },
+        { "kind" : "IdRef", "name" : "'PayloadId'" }
+      ],
+      "capabilities" : [ "RaytracingNVX" ],
+      "extensions" : [ "SPV_NVX_raytracing" ]
+    },
+    {
+      "opname" : "OpTypeAccelerationStructureNVX",
+      "opcode" : 5341,
+      "operands" : [
+        { "kind" : "IdResult" }
+      ],
+      "capabilities" : [ "RaytracingNVX" ],
+      "extensions" : [ "SPV_NVX_raytracing" ]
+    },
+    {
+      "opname" : "OpSubgroupShuffleINTEL",
+      "opcode" : 5571,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdRef", "name" : "'Data'" },
+        { "kind" : "IdRef", "name" : "'InvocationId'" }
+      ],
+      "capabilities" : [ "SubgroupShuffleINTEL" ],
+      "version" : "None"
+    },
+    {
+      "opname" : "OpSubgroupShuffleDownINTEL",
+      "opcode" : 5572,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdRef", "name" : "'Current'" },
+        { "kind" : "IdRef", "name" : "'Next'" },
+        { "kind" : "IdRef", "name" : "'Delta'" }
+      ],
+      "capabilities" : [ "SubgroupShuffleINTEL" ],
+      "version" : "None"
+    },
+    {
+      "opname" : "OpSubgroupShuffleUpINTEL",
+      "opcode" : 5573,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdRef", "name" : "'Previous'" },
+        { "kind" : "IdRef", "name" : "'Current'" },
+        { "kind" : "IdRef", "name" : "'Delta'" }
+      ],
+      "capabilities" : [ "SubgroupShuffleINTEL" ],
+      "version" : "None"
+    },
+    {
+      "opname" : "OpSubgroupShuffleXorINTEL",
+      "opcode" : 5574,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdRef", "name" : "'Data'" },
+        { "kind" : "IdRef", "name" : "'Value'" }
+      ],
+      "capabilities" : [ "SubgroupShuffleINTEL" ],
+      "version" : "None"
+    },
+    {
+      "opname" : "OpSubgroupBlockReadINTEL",
+      "opcode" : 5575,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdRef", "name" : "'Ptr'" }
+      ],
+      "capabilities" : [ "SubgroupBufferBlockIOINTEL" ],
+      "version" : "None"
+    },
+    {
+      "opname" : "OpSubgroupBlockWriteINTEL",
+      "opcode" : 5576,
+      "operands" : [
+        { "kind" : "IdRef", "name" : "'Ptr'" },
+        { "kind" : "IdRef", "name" : "'Data'" }
+      ],
+      "capabilities" : [ "SubgroupBufferBlockIOINTEL" ],
+      "version" : "None"
+    },
+    {
+      "opname" : "OpSubgroupImageBlockReadINTEL",
+      "opcode" : 5577,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdRef", "name" : "'Image'" },
+        { "kind" : "IdRef", "name" : "'Coordinate'" }
+      ],
+      "capabilities" : [ "SubgroupImageBlockIOINTEL" ],
+      "version" : "None"
+    },
+    {
+      "opname" : "OpSubgroupImageBlockWriteINTEL",
+      "opcode" : 5578,
+      "operands" : [
+        { "kind" : "IdRef", "name" : "'Image'" },
+        { "kind" : "IdRef", "name" : "'Coordinate'" },
+        { "kind" : "IdRef", "name" : "'Data'" }
+      ],
+      "capabilities" : [ "SubgroupImageBlockIOINTEL" ],
+      "version" : "None"
+    },
+    {
+      "opname" : "OpDecorateStringGOOGLE",
+      "opcode" : 5632,
+      "operands" : [
+        { "kind" : "IdRef",         "name" : "'Target'" },
+        { "kind" : "Decoration" }
+      ],
+      "extensions" : [ "SPV_GOOGLE_decorate_string", "SPV_GOOGLE_hlsl_functionality1" ],
+      "version" : "None"
+    },
+    {
+      "opname" : "OpMemberDecorateStringGOOGLE",
+      "opcode" : 5633,
+      "operands" : [
+        { "kind" : "IdRef",          "name" : "'Struct Type'" },
+        { "kind" : "LiteralInteger", "name" : "'Member'" },
+        { "kind" : "Decoration" }
+      ],
+      "extensions" : [ "SPV_GOOGLE_decorate_string", "SPV_GOOGLE_hlsl_functionality1" ],
+      "version" : "None"
+    },
+    {
+      "opname" : "OpGroupNonUniformPartitionNV",
+      "opcode" : 5296,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdRef", "name" : "'Value'" }
+      ],
+      "capabilities" : [ "GroupNonUniformPartitionedNV" ],
+      "extensions" : [ "SPV_NV_shader_subgroup_partitioned" ],
+      "version" : "None"
+    },
+	{
+      "opname" : "OpImageSampleFootprintNV",
+      "opcode" : 5283,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdRef", "name" : "'Sampled Image'" },
+        { "kind" : "IdRef", "name" : "'Coordinate'" },
+        { "kind" : "IdRef", "name" : "'Granularity'" },
+        { "kind" : "IdRef", "name" : "'Coarse'" },
+        { "kind" : "ImageOperands", "quantifier" : "?" }
+      ],
+      "capabilities" : [ "ImageFootprintNV" ],
+      "extensions" : [ "SPV_NV_shader_image_footprint" ],
+      "version" : "None"
     }
   ],
   "operand_kinds" : [
@@ -3338,6 +4073,7 @@
         {
           "enumerant" : "ConstOffsets",
           "value" : "0x0020",
+          "capabilities" : [ "ImageGatherExtended" ],
           "parameters" : [
             { "kind" : "IdRef" }
           ]
@@ -3356,6 +4092,32 @@
           "parameters" : [
             { "kind" : "IdRef" }
           ]
+        },
+        {
+          "enumerant" : "MakeTexelAvailableKHR",
+          "value" : "0x0100",
+          "capabilities" : [ "VulkanMemoryModelKHR" ],
+          "parameters" : [
+            { "kind" : "IdScope" }
+          ]
+        },
+        {
+          "enumerant" : "MakeTexelVisibleKHR",
+          "value" : "0x0200",
+          "capabilities" : [ "VulkanMemoryModelKHR" ],
+          "parameters" : [
+            { "kind" : "IdScope" }
+          ]
+        },
+        {
+          "enumerant" : "NonPrivateTexelKHR",
+          "value" : "0x0400",
+          "capabilities" : [ "VulkanMemoryModelKHR" ]
+        },
+        {
+          "enumerant" : "VolatileTexelKHR",
+          "value" : "0x0800",
+          "capabilities" : [ "VulkanMemoryModelKHR" ]
         }
       ]
     },
@@ -3430,15 +4192,16 @@
         },
         {
           "enumerant" : "DependencyInfinite",
-          "value" : "0x0004"
+          "value" : "0x0004",
+          "version" : "1.1"
         },
         {
           "enumerant" : "DependencyLength",
           "value" : "0x0008",
           "parameters" : [
             { "kind" : "LiteralInteger" }
-          ]
-
+          ],
+          "version" : "1.1"
         }
       ]
     },
@@ -3521,6 +4284,21 @@
         {
           "enumerant" : "ImageMemory",
           "value" : "0x0800"
+        },
+        {
+          "enumerant" : "OutputMemoryKHR",
+          "value" : "0x1000",
+          "capabilities" : [ "VulkanMemoryModelKHR" ]
+        },
+        {
+          "enumerant" : "MakeAvailableKHR",
+          "value" : "0x2000",
+          "capabilities" : [ "VulkanMemoryModelKHR" ]
+        },
+        {
+          "enumerant" : "MakeVisibleKHR",
+          "value" : "0x4000",
+          "capabilities" : [ "VulkanMemoryModelKHR" ]
         }
       ]
     },
@@ -3546,6 +4324,27 @@
         {
           "enumerant" : "Nontemporal",
           "value" : "0x0004"
+        },
+        {
+          "enumerant" : "MakePointerAvailableKHR",
+          "value" : "0x0008",
+          "parameters" : [
+            { "kind" : "IdScope" }
+          ],
+          "capabilities" : [ "VulkanMemoryModelKHR" ]
+        },
+        {
+          "enumerant" : "MakePointerVisibleKHR",
+          "value" : "0x0010",
+          "parameters" : [
+            { "kind" : "IdScope" }
+          ],
+          "capabilities" : [ "VulkanMemoryModelKHR" ]
+        },
+        {
+          "enumerant" : "NonPrivatePointerKHR",
+          "value" : "0x0020",
+          "capabilities" : [ "VulkanMemoryModelKHR" ]
         }
       ]
     },
@@ -3632,6 +4431,46 @@
           "enumerant" : "Kernel",
           "value" : 6,
           "capabilities" : [ "Kernel" ]
+        },
+        {
+          "enumerant" : "TaskNV",
+          "value" : 5267,
+          "capabilities" : [ "MeshShadingNV" ]
+        },
+        {
+          "enumerant" : "MeshNV",
+          "value" : 5268,
+          "capabilities" : [ "MeshShadingNV" ]
+        },
+        {
+          "enumerant" : "RayGenerationNVX",
+          "value" : 5313,
+          "capabilities" : [ "RaytracingNVX" ]
+        },
+        {
+          "enumerant" : "IntersectionNVX",
+          "value" : 5314,
+          "capabilities" : [ "RaytracingNVX" ]
+        },
+        {
+          "enumerant" : "AnyHitNVX",
+          "value" : 5315,
+          "capabilities" : [ "RaytracingNVX" ]
+        },
+        {
+          "enumerant" : "ClosestHitNVX",
+          "value" : 5316,
+          "capabilities" : [ "RaytracingNVX" ]
+        },
+        {
+          "enumerant" : "MissNVX",
+          "value" : 5317,
+          "capabilities" : [ "RaytracingNVX" ]
+        },
+        {
+          "enumerant" : "CallableNVX",
+          "value" : 5318,
+          "capabilities" : [ "RaytracingNVX" ]
         }
       ]
     },
@@ -3673,6 +4512,11 @@
           "enumerant" : "OpenCL",
           "value" : 2,
           "capabilities" : [ "Kernel" ]
+        },
+        {
+          "enumerant" : "VulkanKHR",
+          "value" : 3,
+          "capabilities" : [ "VulkanMemoryModelKHR" ]
         }
       ]
     },
@@ -3820,7 +4664,7 @@
         {
           "enumerant" : "OutputVertices",
           "value" : 26,
-          "capabilities" : [ "Geometry", "Tessellation" ],
+          "capabilities" : [ "Geometry", "Tessellation", "MeshShadingNV" ],
           "parameters" : [
             { "kind" : "LiteralInteger", "name" : "'Vertex count'" }
           ]
@@ -3828,7 +4672,7 @@
         {
           "enumerant" : "OutputPoints",
           "value" : 27,
-          "capabilities" : [ "Geometry" ]
+          "capabilities" : [ "Geometry", "MeshShadingNV" ]
         },
         {
           "enumerant" : "OutputLineStrip",
@@ -3856,12 +4700,14 @@
         {
           "enumerant" : "Initializer",
           "value" : 33,
-          "capabilities" : [ "Kernel" ]
+          "capabilities" : [ "Kernel" ],
+          "version" : "1.1"
         },
         {
           "enumerant" : "Finalizer",
           "value" : 34,
-          "capabilities" : [ "Kernel" ]
+          "capabilities" : [ "Kernel" ],
+          "version" : "1.1"
         },
         {
           "enumerant" : "SubgroupSize",
@@ -3869,7 +4715,8 @@
           "capabilities" : [ "SubgroupDispatch" ],
           "parameters" : [
             { "kind" : "LiteralInteger", "name" : "'Subgroup Size'" }
-          ]
+          ],
+          "version" : "1.1"
         },
         {
           "enumerant" : "SubgroupsPerWorkgroup",
@@ -3877,7 +4724,8 @@
           "capabilities" : [ "SubgroupDispatch" ],
           "parameters" : [
             { "kind" : "LiteralInteger", "name" : "'Subgroups Per Workgroup'" }
-          ]
+          ],
+          "version" : "1.1"
         },
         {
           "enumerant" : "SubgroupsPerWorkgroupId",
@@ -3885,7 +4733,8 @@
           "capabilities" : [ "SubgroupDispatch" ],
           "parameters" : [
             { "kind" : "IdRef", "name" : "'Subgroups Per Workgroup'" }
-          ]
+          ],
+          "version" : "1.2"
         },
         {
           "enumerant" : "LocalSizeId",
@@ -3894,7 +4743,8 @@
             { "kind" : "IdRef", "name" : "'x size'" },
             { "kind" : "IdRef", "name" : "'y size'" },
             { "kind" : "IdRef", "name" : "'z size'" }
-          ]
+          ],
+          "version" : "1.2"
         },
         {
           "enumerant" : "LocalSizeHintId",
@@ -3902,12 +4752,60 @@
           "capabilities" : [ "Kernel" ],
           "parameters" : [
             { "kind" : "IdRef", "name" : "'Local Size Hint'" }
-          ]
+          ],
+          "version" : "1.2"
         },
         {
           "enumerant" : "PostDepthCoverage",
           "value" : 4446,
-          "capabilities" : [ "SampleMaskPostDepthCoverage" ]
+          "capabilities" : [ "SampleMaskPostDepthCoverage" ],
+          "extensions" : [ "SPV_KHR_post_depth_coverage" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "StencilRefReplacingEXT",
+          "value" : 5027,
+          "capabilities" : [ "StencilExportEXT" ],
+          "extensions" : [ "SPV_EXT_shader_stencil_export" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "OutputLinesNV",
+          "value" : 5269,
+          "capabilities" : [ "MeshShadingNV" ],
+          "extensions" : [ "SPV_NV_mesh_shader" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "OutputPrimitivesNV",
+          "value" : 5270,
+          "capabilities" : [ "MeshShadingNV" ],
+          "parameters" : [
+            { "kind" : "LiteralInteger", "name" : "'Primitive count'" }
+          ],
+          "extensions" : [ "SPV_NV_mesh_shader" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "DerivativeGroupQuadsNV",
+          "value" : 5289,
+          "capabilities" : [ "ComputeDerivativeGroupQuadsNV" ],
+          "extensions" : [ "SPV_NV_compute_shader_derivatives" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "DerivativeGroupLinearNV",
+          "value" : 5290,
+          "capabilities" : [ "ComputeDerivativeGroupLinearNV" ],
+          "extensions" : [ "SPV_NV_compute_shader_derivatives" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "OutputTrianglesNV",
+          "value" : 5298,
+          "capabilities" : [ "MeshShadingNV" ],
+          "extensions" : [ "SPV_NV_mesh_shader" ],
+          "version" : "None"
         }
       ]
     },
@@ -3975,7 +4873,33 @@
           "extensions" : [
             "SPV_KHR_storage_buffer_storage_class",
             "SPV_KHR_variable_pointers"
-          ]
+          ],
+          "capabilities" : [ "Shader" ],
+          "version" : "1.3"
+        },
+        {
+          "enumerant" : "RayPayloadNVX",
+          "value" : 5338,
+          "extensions" : [ "SPV_NVX_raytracing" ],
+          "capabilities" : [ "RaytracingNVX" ]
+        },
+        {
+          "enumerant" : "HitAttributeNVX",
+          "value" : 5339,
+          "extensions" : [ "SPV_NVX_raytracing" ],
+          "capabilities" : [ "RaytracingNVX" ]
+        },
+        {
+          "enumerant" : "IncomingRayPayloadNVX",
+          "value" : 5342,
+          "extensions" : [ "SPV_NVX_raytracing" ],
+          "capabilities" : [ "RaytracingNVX" ]
+        },
+{
+          "enumerant" : "ShaderRecordBufferNVX",
+          "value" : 5343,
+          "extensions" : [ "SPV_NVX_raytracing" ],
+          "capabilities" : [ "RaytracingNVX" ]
         }
       ]
     },
@@ -3986,11 +4910,12 @@
         {
           "enumerant" : "1D",
           "value" : 0,
-          "capabilities" : [ "Sampled1D" ]
+          "capabilities" : [ "Sampled1D", "Image1D" ]
         },
         {
           "enumerant" : "2D",
-          "value" : 1
+          "value" : 1,
+          "capabilities" : [ "Shader", "Kernel", "ImageMSArray" ]
         },
         {
           "enumerant" : "3D",
@@ -3999,17 +4924,17 @@
         {
           "enumerant" : "Cube",
           "value" : 3,
-          "capabilities" : [ "Shader" ]
+          "capabilities" : [ "Shader", "ImageCubeArray" ]
         },
         {
           "enumerant" : "Rect",
           "value" : 4,
-          "capabilities" : [ "SampledRect" ]
+          "capabilities" : [ "SampledRect", "ImageRect" ]
         },
         {
           "enumerant" : "Buffer",
           "value" : 5,
-          "capabilities" : [ "SampledBuffer" ]
+          "capabilities" : [ "SampledBuffer", "ImageBuffer" ]
         },
         {
           "enumerant" : "SubpassData",
@@ -4473,47 +5398,19 @@
       "enumerants" : [
         {
           "enumerant" : "RTE",
-          "value" : 0,
-          "capabilities" : [
-            "Kernel",
-            "StorageUniformBufferBlock16",
-            "StorageUniform16",
-            "StoragePushConstant16",
-            "StorageInputOutput16"
-          ]
+          "value" : 0
         },
         {
           "enumerant" : "RTZ",
-          "value" : 1,
-          "capabilities" : [
-            "Kernel",
-            "StorageUniformBufferBlock16",
-            "StorageUniform16",
-            "StoragePushConstant16",
-            "StorageInputOutput16"
-          ]
+          "value" : 1
         },
         {
           "enumerant" : "RTP",
-          "value" : 2,
-          "capabilities" : [
-            "Kernel",
-            "StorageUniformBufferBlock16",
-            "StorageUniform16",
-            "StoragePushConstant16",
-            "StorageInputOutput16"
-          ]
+          "value" : 2
         },
         {
           "enumerant" : "RTN",
-          "value" : 3,
-          "capabilities" : [
-            "Kernel",
-            "StorageUniformBufferBlock16",
-            "StorageUniform16",
-            "StoragePushConstant16",
-            "StorageInputOutput16"
-          ]
+          "value" : 3
         }
       ]
     },
@@ -4827,13 +5724,6 @@
         {
           "enumerant" : "FPRoundingMode",
           "value" : 39,
-          "capabilities" : [
-            "Kernel",
-            "StorageUniformBufferBlock16",
-            "StorageUniform16",
-            "StoragePushConstant16",
-            "StorageInputOutput16"
-          ],
           "parameters" : [
             { "kind" : "FPRoundingMode", "name" : "'Floating-Point Rounding Mode'" }
           ]
@@ -4882,7 +5772,8 @@
           "capabilities" : [ "Addresses" ],
           "parameters" : [
             { "kind" : "LiteralInteger", "name" : "'Max Byte Offset'" }
-          ]
+          ],
+          "version" : "1.1"
         },
         {
           "enumerant" : "AlignmentId",
@@ -4890,7 +5781,8 @@
           "capabilities" : [ "Kernel" ],
           "parameters" : [
             { "kind" : "IdRef", "name" : "'Alignment'" }
-          ]
+          ],
+          "version" : "1.2"
         },
         {
           "enumerant" : "MaxByteOffsetId",
@@ -4898,34 +5790,95 @@
           "capabilities" : [ "Addresses" ],
           "parameters" : [
             { "kind" : "IdRef", "name" : "'Max Byte Offset'" }
-          ]
+          ],
+          "version" : "1.2"
         },
         {
           "enumerant" : "ExplicitInterpAMD",
-          "value" : 4999
+          "value" : 4999,
+          "extensions" : [ "SPV_AMD_shader_explicit_vertex_parameter" ],
+          "version" : "None"
         },
         {
           "enumerant" : "OverrideCoverageNV",
           "value" : 5248,
-          "capabilities" : [ "SampleMaskOverrideCoverageNV" ]
+          "capabilities" : [ "SampleMaskOverrideCoverageNV" ],
+          "extensions" : [ "SPV_NV_sample_mask_override_coverage" ],
+          "version" : "None"
         },
         {
           "enumerant" : "PassthroughNV",
           "value" : 5250,
-          "capabilities" : [ "GeometryShaderPassthroughNV" ]
+          "capabilities" : [ "GeometryShaderPassthroughNV" ],
+          "extensions" : [ "SPV_NV_geometry_shader_passthrough" ],
+          "version" : "None"
         },
         {
           "enumerant" : "ViewportRelativeNV",
           "value" : 5252,
-          "capabilities" : [ "ShaderViewportMaskNV" ]
+          "capabilities" : [ "ShaderViewportMaskNV" ],
+          "version" : "None"
         },
         {
           "enumerant" : "SecondaryViewportRelativeNV",
           "value" : 5256,
           "capabilities" : [ "ShaderStereoViewNV" ],
+          "extensions" : [ "SPV_NV_stereo_view_rendering" ],
+          "version" : "None",
           "parameters" : [
             { "kind" : "LiteralInteger", "name" : "'Offset'" }
           ]
+        },
+        {
+          "enumerant" : "PerPrimitiveNV",
+          "value" : 5271,
+          "capabilities" : [ "MeshShadingNV" ],
+          "extensions" : [ "SPV_NV_mesh_shader" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "PerViewNV",
+          "value" : 5272,
+          "capabilities" : [ "MeshShadingNV" ],
+          "extensions" : [ "SPV_NV_mesh_shader" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "PerTaskNV",
+          "value" : 5273,
+          "capabilities" : [ "MeshShadingNV" ],
+          "extensions" : [ "SPV_NV_mesh_shader" ],
+          "version" : "None"
+        },
+		{
+          "enumerant" : "PerVertexNV",
+          "value" : 5285,
+          "capabilities" : [ "FragmentBarycentricNV" ],
+          "extensions" : [ "SPV_NV_fragment_shader_barycentric" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "NonUniformEXT",
+          "value" : 5300,
+          "capabilities" : [ "ShaderNonUniformEXT" ]
+        },
+        {
+          "enumerant" : "HlslCounterBufferGOOGLE",
+          "value" : 5634,
+          "parameters" : [
+            { "kind" : "IdRef", "name" : "'Counter Buffer'" }
+          ],
+          "extensions" : [ "SPV_GOOGLE_hlsl_functionality1" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "HlslSemanticGOOGLE",
+          "value" : 5635,
+          "parameters" : [
+            { "kind" : "LiteralString", "name" : "'Semantic'" }
+          ],
+          "extensions" : [ "SPV_GOOGLE_hlsl_functionality1" ],
+          "version" : "None"
         }
       ]
     },
@@ -4966,7 +5919,7 @@
         {
           "enumerant" : "PrimitiveId",
           "value" : 7,
-          "capabilities" : [ "Geometry", "Tessellation" ]
+          "capabilities" : [ "Geometry", "Tessellation", "RaytracingNVX" ]
         },
         {
           "enumerant" : "InvocationId",
@@ -5031,7 +5984,7 @@
         {
           "enumerant" : "SampleMask",
           "value" : 20,
-          "capabilities" : [ "SampleRateShading" ]
+          "capabilities" : [ "Shader" ]
         },
         {
           "enumerant" : "FragDepth",
@@ -5095,7 +6048,7 @@
         {
           "enumerant" : "SubgroupSize",
           "value" : 36,
-          "capabilities" : [ "Kernel" ]
+          "capabilities" : [ "Kernel", "GroupNonUniform", "SubgroupBallotKHR" ]
         },
         {
           "enumerant" : "SubgroupMaxSize",
@@ -5105,7 +6058,7 @@
         {
           "enumerant" : "NumSubgroups",
           "value" : 38,
-          "capabilities" : [ "Kernel" ]
+          "capabilities" : [ "Kernel", "GroupNonUniform" ]
         },
         {
           "enumerant" : "NumEnqueuedSubgroups",
@@ -5115,12 +6068,12 @@
         {
           "enumerant" : "SubgroupId",
           "value" : 40,
-          "capabilities" : [ "Kernel" ]
+          "capabilities" : [ "Kernel", "GroupNonUniform" ]
         },
         {
           "enumerant" : "SubgroupLocalInvocationId",
           "value" : 41,
-          "capabilities" : [ "Kernel" ]
+          "capabilities" : [ "Kernel", "GroupNonUniform", "SubgroupBallotKHR" ]
         },
         {
           "enumerant" : "VertexIndex",
@@ -5133,107 +6086,357 @@
           "capabilities" : [ "Shader" ]
         },
         {
+          "enumerant" : "SubgroupEqMask",
+          "value" : 4416,
+          "capabilities" : [ "SubgroupBallotKHR", "GroupNonUniformBallot" ],
+          "version" : "1.3"
+        },
+        {
+          "enumerant" : "SubgroupGeMask",
+          "value" : 4417,
+          "capabilities" : [ "SubgroupBallotKHR", "GroupNonUniformBallot" ],
+          "version" : "1.3"
+        },
+        {
+          "enumerant" : "SubgroupGtMask",
+          "value" : 4418,
+          "capabilities" : [ "SubgroupBallotKHR", "GroupNonUniformBallot" ],
+          "version" : "1.3"
+        },
+        {
+          "enumerant" : "SubgroupLeMask",
+          "value" : 4419,
+          "capabilities" : [ "SubgroupBallotKHR", "GroupNonUniformBallot" ],
+          "version" : "1.3"
+        },
+        {
+          "enumerant" : "SubgroupLtMask",
+          "value" : 4420,
+          "capabilities" : [ "SubgroupBallotKHR", "GroupNonUniformBallot" ],
+          "version" : "1.3"
+        },
+        {
           "enumerant" : "SubgroupEqMaskKHR",
           "value" : 4416,
-          "capabilities" : [ "SubgroupBallotKHR" ]
+          "capabilities" : [ "SubgroupBallotKHR", "GroupNonUniformBallot" ],
+          "extensions" : [ "SPV_KHR_shader_ballot" ],
+          "version" : "1.3"
         },
         {
           "enumerant" : "SubgroupGeMaskKHR",
           "value" : 4417,
-          "capabilities" : [ "SubgroupBallotKHR" ]
+          "capabilities" : [ "SubgroupBallotKHR", "GroupNonUniformBallot" ],
+          "extensions" : [ "SPV_KHR_shader_ballot" ],
+          "version" : "1.3"
         },
         {
           "enumerant" : "SubgroupGtMaskKHR",
           "value" : 4418,
-          "capabilities" : [ "SubgroupBallotKHR" ]
+          "capabilities" : [ "SubgroupBallotKHR", "GroupNonUniformBallot" ],
+          "extensions" : [ "SPV_KHR_shader_ballot" ],
+          "version" : "1.3"
         },
         {
           "enumerant" : "SubgroupLeMaskKHR",
           "value" : 4419,
-          "capabilities" : [ "SubgroupBallotKHR" ]
+          "capabilities" : [ "SubgroupBallotKHR", "GroupNonUniformBallot" ],
+          "extensions" : [ "SPV_KHR_shader_ballot" ],
+          "version" : "1.3"
         },
         {
           "enumerant" : "SubgroupLtMaskKHR",
           "value" : 4420,
-          "capabilities" : [ "SubgroupBallotKHR" ]
+          "capabilities" : [ "SubgroupBallotKHR", "GroupNonUniformBallot" ],
+          "extensions" : [ "SPV_KHR_shader_ballot" ],
+          "version" : "1.3"
         },
         {
           "enumerant" : "BaseVertex",
           "value" : 4424,
-          "capabilities" : [ "DrawParameters" ]
+          "capabilities" : [ "DrawParameters" ],
+          "extensions" : [ "SPV_KHR_shader_draw_parameters" ],
+          "version" : "1.3"
         },
         {
           "enumerant" : "BaseInstance",
           "value" : 4425,
-          "capabilities" : [ "DrawParameters" ]
+          "capabilities" : [ "DrawParameters" ],
+          "extensions" : [ "SPV_KHR_shader_draw_parameters" ],
+          "version" : "1.3"
         },
         {
           "enumerant" : "DrawIndex",
           "value" : 4426,
-          "capabilities" : [ "DrawParameters" ]
+          "capabilities" : [ "DrawParameters", "MeshShadingNV" ],
+          "extensions" : [ "SPV_KHR_shader_draw_parameters", "SPV_NV_mesh_shader" ],
+          "version" : "1.3"
         },
         {
           "enumerant" : "DeviceIndex",
           "value" : 4438,
-          "capabilities" : [ "DeviceGroup" ]
+          "capabilities" : [ "DeviceGroup" ],
+          "extensions" : [ "SPV_KHR_device_group" ],
+          "version" : "1.3"
         },
         {
           "enumerant" : "ViewIndex",
           "value" : 4440,
-          "capabilities" : [ "MultiView" ]
+          "capabilities" : [ "MultiView" ],
+          "extensions" : [ "SPV_KHR_multiview" ],
+          "version" : "1.3"
         },
         {
           "enumerant" : "BaryCoordNoPerspAMD",
-          "value" : 4992
+          "value" : 4992,
+          "extensions" : [ "SPV_AMD_shader_explicit_vertex_parameter" ],
+          "version" : "None"
         },
         {
           "enumerant" : "BaryCoordNoPerspCentroidAMD",
-          "value" : 4993
+          "value" : 4993,
+          "extensions" : [ "SPV_AMD_shader_explicit_vertex_parameter" ],
+          "version" : "None"
         },
         {
           "enumerant" : "BaryCoordNoPerspSampleAMD",
-          "value" : 4994
+          "value" : 4994,
+          "extensions" : [ "SPV_AMD_shader_explicit_vertex_parameter" ],
+          "version" : "None"
         },
         {
           "enumerant" : "BaryCoordSmoothAMD",
-          "value" : 4995
+          "value" : 4995,
+          "extensions" : [ "SPV_AMD_shader_explicit_vertex_parameter" ],
+          "version" : "None"
         },
         {
           "enumerant" : "BaryCoordSmoothCentroidAMD",
-          "value" : 4996
+          "value" : 4996,
+          "extensions" : [ "SPV_AMD_shader_explicit_vertex_parameter" ],
+          "version" : "None"
         },
         {
           "enumerant" : "BaryCoordSmoothSampleAMD",
-          "value" : 4997
+          "value" : 4997,
+          "extensions" : [ "SPV_AMD_shader_explicit_vertex_parameter" ],
+          "version" : "None"
         },
         {
           "enumerant" : "BaryCoordPullModelAMD",
-          "value" : 4998
+          "value" : 4998,
+          "extensions" : [ "SPV_AMD_shader_explicit_vertex_parameter" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "FragStencilRefEXT",
+          "value" : 5014,
+          "capabilities" : [ "StencilExportEXT" ],
+          "extensions" : [ "SPV_EXT_shader_stencil_export" ],
+          "version" : "None"
         },
         {
           "enumerant" : "ViewportMaskNV",
           "value" : 5253,
-          "capabilities" : [ "ShaderViewportMaskNV" ]
+          "capabilities" : [ "ShaderViewportMaskNV", "MeshShadingNV" ],
+          "extensions" : [ "SPV_NV_viewport_array2", "SPV_NV_mesh_shader" ],
+          "version" : "None"
         },
         {
           "enumerant" : "SecondaryPositionNV",
           "value" : 5257,
-          "capabilities" : [ "ShaderStereoViewNV" ]
+          "capabilities" : [ "ShaderStereoViewNV" ],
+          "extensions" : [ "SPV_NV_stereo_view_rendering" ],
+          "version" : "None"
         },
         {
           "enumerant" : "SecondaryViewportMaskNV",
           "value" : 5258,
-          "capabilities" : [ "ShaderStereoViewNV" ]
+          "capabilities" : [ "ShaderStereoViewNV" ],
+          "extensions" : [ "SPV_NV_stereo_view_rendering" ],
+          "version" : "None"
         },
         {
           "enumerant" : "PositionPerViewNV",
           "value" : 5261,
-          "capabilities" : [ "PerViewAttributesNV" ]
+          "capabilities" : [ "PerViewAttributesNV", "MeshShadingNV" ],
+          "extensions" : [ "SPV_NVX_multiview_per_view_attributes", "SPV_NV_mesh_shader" ],
+          "version" : "None"
         },
         {
           "enumerant" : "ViewportMaskPerViewNV",
           "value" : 5262,
-          "capabilities" : [ "PerViewAttributesNV" ]
+          "capabilities" : [ "PerViewAttributesNV", "MeshShadingNV" ],
+          "extensions" : [ "SPV_NVX_multiview_per_view_attributes", "SPV_NV_mesh_shader" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "FullyCoveredEXT",
+          "value" : 5264,
+          "capabilities" : [ "FragmentFullyCoveredEXT" ],
+          "extensions" : [ "SPV_EXT_fragment_fully_covered" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "TaskCountNV",
+          "value" : 5274,
+          "capabilities" : [ "MeshShadingNV" ],
+          "extensions" : [ "SPV_NV_mesh_shader" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "PrimitiveCountNV",
+          "value" : 5275,
+          "capabilities" : [ "MeshShadingNV" ],
+          "extensions" : [ "SPV_NV_mesh_shader" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "PrimitiveIndicesNV",
+          "value" : 5276,
+          "capabilities" : [ "MeshShadingNV" ],
+          "extensions" : [ "SPV_NV_mesh_shader" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "ClipDistancePerViewNV",
+          "value" : 5277,
+          "capabilities" : [ "MeshShadingNV" ],
+          "extensions" : [ "SPV_NV_mesh_shader" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "CullDistancePerViewNV",
+          "value" : 5278,
+          "capabilities" : [ "MeshShadingNV" ],
+          "extensions" : [ "SPV_NV_mesh_shader" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "LayerPerViewNV",
+          "value" : 5279,
+          "capabilities" : [ "MeshShadingNV" ],
+          "extensions" : [ "SPV_NV_mesh_shader" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "MeshViewCountNV",
+          "value" : 5280,
+          "capabilities" : [ "MeshShadingNV" ],
+          "extensions" : [ "SPV_NV_mesh_shader" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "MeshViewIndicesNV",
+          "value" : 5281,
+          "capabilities" : [ "MeshShadingNV" ],
+          "extensions" : [ "SPV_NV_mesh_shader" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "BaryCoordNV",
+          "value" : 5286,
+          "capabilities" : [ "FragmentBarycentricNV" ],
+          "extensions" : [ "SPV_NV_fragment_shader_barycentric" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "BaryCoordNoPerspNV",
+          "value" : 5287,
+          "capabilities" : [ "FragmentBarycentricNV" ],
+          "extensions" : [ "SPV_NV_fragment_shader_barycentric" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "FragmentSizeNV",
+          "value" : 5292 ,
+          "capabilities" : [ "ShadingRateNV" ],
+          "extensions" : [ "SPV_NV_shading_rate" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "InvocationsPerPixelNV",
+          "value" : 5293,
+          "capabilities" : [ "ShadingRateNV" ],
+          "extensions" : [ "SPV_NV_shading_rate" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "LaunchIdNVX",
+          "value" : 5319,
+          "capabilities" : [ "RaytracingNVX" ],
+          "extensions" : [ "SPV_NVX_raytracing" ]
+        },
+        {
+          "enumerant" : "LaunchSizeNVX",
+          "value" : 5320,
+          "capabilities" : [ "RaytracingNVX" ],
+          "extensions" : [ "SPV_NVX_raytracing" ]
+        },
+        {
+          "enumerant" : "WorldRayOriginNVX",
+          "value" : 5321,
+          "capabilities" : [ "RaytracingNVX" ],
+          "extensions" : [ "SPV_NVX_raytracing" ]
+        },
+        {
+          "enumerant" : "WorldRayDirectionNVX",
+          "value" : 5322,
+          "capabilities" : [ "RaytracingNVX" ],
+          "extensions" : [ "SPV_NVX_raytracing" ]
+        },
+        {
+          "enumerant" : "ObjectRayOriginNVX",
+          "value" : 5323,
+          "capabilities" : [ "RaytracingNVX" ],
+          "extensions" : [ "SPV_NVX_raytracing" ]
+        },
+        {
+          "enumerant" : "ObjectRayDirectionNVX",
+          "value" : 5324,
+          "capabilities" : [ "RaytracingNVX" ],
+          "extensions" : [ "SPV_NVX_raytracing" ]
+        },
+        {
+          "enumerant" : "RayTminNVX",
+          "value" : 5325,
+          "capabilities" : [ "RaytracingNVX" ],
+          "extensions" : [ "SPV_NVX_raytracing" ]
+        },
+        {
+          "enumerant" : "RayTmaxNVX",
+          "value" : 5326,
+          "capabilities" : [ "RaytracingNVX" ],
+          "extensions" : [ "SPV_NVX_raytracing" ]
+        },
+        {
+          "enumerant" : "InstanceCustomIndexNVX",
+          "value" : 5327,
+          "capabilities" : [ "RaytracingNVX" ],
+          "extensions" : [ "SPV_NVX_raytracing" ]
+        },
+        {
+          "enumerant" : "ObjectToWorldNVX",
+          "value" : 5330,
+          "capabilities" : [ "RaytracingNVX" ],
+          "extensions" : [ "SPV_NVX_raytracing" ]
+        },
+        {
+          "enumerant" : "WorldToObjectNVX",
+          "value" : 5331,
+          "capabilities" : [ "RaytracingNVX" ],
+          "extensions" : [ "SPV_NVX_raytracing" ]
+        },
+        {
+          "enumerant" : "HitTNVX",
+          "value" : 5332,
+          "capabilities" : [ "RaytracingNVX" ],
+          "extensions" : [ "SPV_NVX_raytracing" ]
+        },
+        {
+          "enumerant" : "HitKindNVX",
+          "value" : 5333,
+          "capabilities" : [ "RaytracingNVX" ],
+          "extensions" : [ "SPV_NVX_raytracing" ]
         }
       ]
     },
@@ -5260,6 +6463,11 @@
         {
           "enumerant" : "Invocation",
           "value" : 4
+        },
+        {
+          "enumerant" : "QueueFamilyKHR",
+          "value" : 5,
+          "capabilities" : [ "VulkanMemoryModelKHR" ]
         }
       ]
     },
@@ -5270,17 +6478,44 @@
         {
           "enumerant" : "Reduce",
           "value" : 0,
-          "capabilities" : [ "Kernel" ]
+          "capabilities" : [ "Kernel", "GroupNonUniformArithmetic", "GroupNonUniformBallot" ]
         },
         {
           "enumerant" : "InclusiveScan",
           "value" : 1,
-          "capabilities" : [ "Kernel" ]
+          "capabilities" : [ "Kernel", "GroupNonUniformArithmetic", "GroupNonUniformBallot" ]
         },
         {
           "enumerant" : "ExclusiveScan",
           "value" : 2,
-          "capabilities" : [ "Kernel" ]
+          "capabilities" : [ "Kernel", "GroupNonUniformArithmetic", "GroupNonUniformBallot" ]
+        },
+        {
+          "enumerant" : "ClusteredReduce",
+          "value" : 3,
+          "capabilities" : [ "GroupNonUniformClustered" ],
+          "version" : "1.3"
+        },
+        {
+          "enumerant" : "PartitionedReduceNV",
+          "value" : 6,
+          "capabilities" : [ "GroupNonUniformPartitionedNV" ],
+          "extensions" : [ "SPV_NV_shader_subgroup_partitioned" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "PartitionedInclusiveScanNV",
+          "value" : 7,
+          "capabilities" : [ "GroupNonUniformPartitionedNV" ],
+          "extensions" : [ "SPV_NV_shader_subgroup_partitioned" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "PartitionedExclusiveScanNV",
+          "value" : 8,
+          "capabilities" : [ "GroupNonUniformPartitionedNV" ],
+          "extensions" : [ "SPV_NV_shader_subgroup_partitioned" ],
+          "version" : "None"
         }
       ]
     },
@@ -5487,8 +6722,7 @@
         },
         {
           "enumerant" : "Int8",
-          "value" : 39,
-          "capabilities" : [ "Kernel" ]
+          "value" : 39
         },
         {
           "enumerant" : "InputAttachment",
@@ -5581,42 +6815,98 @@
         {
           "enumerant" : "SubgroupDispatch",
           "value" : 58,
-          "capabilities" : [ "DeviceEnqueue" ]
+          "capabilities" : [ "DeviceEnqueue" ],
+          "version" : "1.1"
         },
         {
           "enumerant" : "NamedBarrier",
           "value" : 59,
-          "capabilities" : [ "Kernel" ]
+          "capabilities" : [ "Kernel" ],
+          "version" : "1.1"
         },
         {
           "enumerant" : "PipeStorage",
           "value" : 60,
-          "capabilities" : [ "Pipes" ]
+          "capabilities" : [ "Pipes" ],
+          "version" : "1.1"
+        },
+        {
+          "enumerant" : "GroupNonUniform",
+          "value" : 61,
+          "version" : "1.3"
+        },
+        {
+          "enumerant" : "GroupNonUniformVote",
+          "value" : 62,
+          "capabilities" : [ "GroupNonUniform" ],
+          "version" : "1.3"
+        },
+        {
+          "enumerant" : "GroupNonUniformArithmetic",
+          "value" : 63,
+          "capabilities" : [ "GroupNonUniform" ],
+          "version" : "1.3"
+        },
+        {
+          "enumerant" : "GroupNonUniformBallot",
+          "value" : 64,
+          "capabilities" : [ "GroupNonUniform" ],
+          "version" : "1.3"
+        },
+        {
+          "enumerant" : "GroupNonUniformShuffle",
+          "value" : 65,
+          "capabilities" : [ "GroupNonUniform" ],
+          "version" : "1.3"
+        },
+        {
+          "enumerant" : "GroupNonUniformShuffleRelative",
+          "value" : 66,
+          "capabilities" : [ "GroupNonUniform" ],
+          "version" : "1.3"
+        },
+        {
+          "enumerant" : "GroupNonUniformClustered",
+          "value" : 67,
+          "capabilities" : [ "GroupNonUniform" ],
+          "version" : "1.3"
+        },
+        {
+          "enumerant" : "GroupNonUniformQuad",
+          "value" : 68,
+          "capabilities" : [ "GroupNonUniform" ],
+          "version" : "1.3"
         },
         {
           "enumerant" : "SubgroupBallotKHR",
           "value" : 4423,
-          "extensions" : [ "SPV_KHR_shader_ballot" ]
+          "extensions" : [ "SPV_KHR_shader_ballot" ],
+          "version" : "None"
         },
         {
           "enumerant" : "DrawParameters",
           "value" : 4427,
-          "extensions" : [ "SPV_KHR_shader_draw_parameters" ]
+          "capabilities" : [ "Shader" ],
+          "extensions" : [ "SPV_KHR_shader_draw_parameters" ],
+          "version" : "1.3"
         },
         {
           "enumerant" : "SubgroupVoteKHR",
           "value" : 4431,
-          "extensions" : [ "SPV_KHR_subgroup_vote" ]
+          "extensions" : [ "SPV_KHR_subgroup_vote" ],
+          "version" : "None"
         },
         {
           "enumerant" : "StorageBuffer16BitAccess",
           "value" : 4433,
-          "extensions" : [ "SPV_KHR_16bit_storage" ]
+          "extensions" : [ "SPV_KHR_16bit_storage" ],
+          "version" : "1.3"
         },
         {
           "enumerant" : "StorageUniformBufferBlock16",
           "value" : 4433,
-          "extensions" : [ "SPV_KHR_16bit_storage" ]
+          "extensions" : [ "SPV_KHR_16bit_storage" ],
+          "version" : "1.3"
         },
         {
           "enumerant" : "UniformAndStorageBuffer16BitAccess",
@@ -5625,7 +6915,8 @@
             "StorageBuffer16BitAccess",
             "StorageUniformBufferBlock16"
           ],
-          "extensions" : [ "SPV_KHR_16bit_storage" ]
+          "extensions" : [ "SPV_KHR_16bit_storage" ],
+          "version" : "1.3"
         },
         {
           "enumerant" : "StorageUniform16",
@@ -5634,92 +6925,334 @@
             "StorageBuffer16BitAccess",
             "StorageUniformBufferBlock16"
           ],
-          "extensions" : [ "SPV_KHR_16bit_storage" ]
+          "extensions" : [ "SPV_KHR_16bit_storage" ],
+          "version" : "1.3"
         },
         {
           "enumerant" : "StoragePushConstant16",
           "value" : 4435,
-          "extensions" : [ "SPV_KHR_16bit_storage" ]
+          "extensions" : [ "SPV_KHR_16bit_storage" ],
+          "version" : "1.3"
         },
         {
           "enumerant" : "StorageInputOutput16",
           "value" : 4436,
-          "extensions" : [ "SPV_KHR_16bit_storage" ]
+          "extensions" : [ "SPV_KHR_16bit_storage" ],
+          "version" : "1.3"
         },
         {
           "enumerant" : "DeviceGroup",
           "value" : 4437,
-          "extensions" : [ "SPV_KHR_device_group" ]
+          "extensions" : [ "SPV_KHR_device_group" ],
+          "version" : "1.3"
         },
         {
           "enumerant" : "MultiView",
           "value" : 4439,
           "capabilities" : [ "Shader" ],
-          "extensions" : [ "SPV_KHR_multiview" ]
+          "extensions" : [ "SPV_KHR_multiview" ],
+          "version" : "1.3"
         },
         {
           "enumerant" : "VariablePointersStorageBuffer",
           "value" : 4441,
           "capabilities" : [ "Shader" ],
-          "extensions" : [ "SPV_KHR_variable_pointers" ]
+          "extensions" : [ "SPV_KHR_variable_pointers" ],
+          "version" : "1.3"
         },
         {
           "enumerant" : "VariablePointers",
           "value" : 4442,
           "capabilities" : [ "VariablePointersStorageBuffer" ],
-          "extensions" : [ "SPV_KHR_variable_pointers" ]
+          "extensions" : [ "SPV_KHR_variable_pointers" ],
+          "version" : "1.3"
         },
-        {          "enumerant" : "AtomicStorageOps",
+        {
+          "enumerant" : "AtomicStorageOps",
           "value" : 4445,
-          "extensions" : [ "SPV_KHR_shader_atomic_counter_ops" ]
+          "extensions" : [ "SPV_KHR_shader_atomic_counter_ops" ],
+          "version" : "None"
         },
         {
           "enumerant" : "SampleMaskPostDepthCoverage",
           "value" : 4447,
-          "capabilities" : [ "SampleRateShading" ],
-          "extensions" : [ "SPV_KHR_post_depth_coverage" ]
+          "extensions" : [ "SPV_KHR_post_depth_coverage" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "StorageBuffer8BitAccess",
+          "value" : 4448,
+          "extensions" : [ "SPV_KHR_8bit_storage" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "UniformAndStorageBuffer8BitAccess",
+          "value" : 4449,
+          "capabilities" : [ "StorageBuffer8BitAccess" ],
+          "extensions" : [ "SPV_KHR_8bit_storage" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "StoragePushConstant8",
+          "value" : 4450,
+          "extensions" : [ "SPV_KHR_8bit_storage" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "Float16ImageAMD",
+          "value" : 5008,
+          "capabilities" : [ "Shader" ],
+          "extensions" : [ "SPV_AMD_gpu_shader_half_float_fetch" ],
+          "version" : "None"
         },
         {
           "enumerant" : "ImageGatherBiasLodAMD",
           "value" : 5009,
           "capabilities" : [ "Shader" ],
-          "extensions" : [ "SPV_AMD_texture_gather_bias_lod" ]
+          "extensions" : [ "SPV_AMD_texture_gather_bias_lod" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "FragmentMaskAMD",
+          "value" : 5010,
+          "capabilities" : [ "Shader" ],
+          "extensions" : [ "SPV_AMD_shader_fragment_mask" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "StencilExportEXT",
+          "value" : 5013,
+          "capabilities" : [ "Shader" ],
+          "extensions" : [ "SPV_EXT_shader_stencil_export" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "ImageReadWriteLodAMD",
+          "value" : 5015,
+          "capabilities" : [ "Shader" ],
+          "extensions" : [ "SPV_AMD_shader_image_load_store_lod" ],
+          "version" : "None"
         },
         {
           "enumerant" : "SampleMaskOverrideCoverageNV",
           "value" : 5249,
           "capabilities" : [ "SampleRateShading" ],
-          "extensions" : [ "SPV_NV_sample_mask_override_coverage" ]
+          "extensions" : [ "SPV_NV_sample_mask_override_coverage" ],
+          "version" : "None"
         },
         {
           "enumerant" : "GeometryShaderPassthroughNV",
           "value" : 5251,
           "capabilities" : [ "Geometry" ],
-          "extensions" : [ "SPV_NV_geometry_shader_passthrough" ]
+          "extensions" : [ "SPV_NV_geometry_shader_passthrough" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "ShaderViewportIndexLayerEXT",
+          "value" : 5254,
+          "capabilities" : [ "MultiViewport" ],
+          "extensions" : [ "SPV_EXT_shader_viewport_index_layer" ],
+          "version" : "None"
         },
         {
           "enumerant" : "ShaderViewportIndexLayerNV",
           "value" : 5254,
           "capabilities" : [ "MultiViewport" ],
-          "extensions" : [ "SPV_NV_viewport_array2" ]
+          "extensions" : [ "SPV_NV_viewport_array2" ],
+          "version" : "None"
         },
         {
           "enumerant" : "ShaderViewportMaskNV",
           "value" : 5255,
           "capabilities" : [ "ShaderViewportIndexLayerNV" ],
-          "extensions" : [ "SPV_NV_viewport_array2" ]
+          "extensions" : [ "SPV_NV_viewport_array2" ],
+          "version" : "None"
         },
         {
           "enumerant" : "ShaderStereoViewNV",
           "value" : 5259,
           "capabilities" : [ "ShaderViewportMaskNV" ],
-          "extensions" : [ "SPV_NV_stereo_view_rendering" ]
+          "extensions" : [ "SPV_NV_stereo_view_rendering" ],
+          "version" : "None"
         },
         {
           "enumerant" : "PerViewAttributesNV",
           "value" : 5260,
           "capabilities" : [ "MultiView" ],
-          "extensions" : [ "SPV_NVX_multiview_per_view_attributes" ]
+          "extensions" : [ "SPV_NVX_multiview_per_view_attributes" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "FragmentFullyCoveredEXT",
+          "value" : 5265,
+          "capabilities" : [ "Shader" ],
+          "extensions" : [ "SPV_EXT_fragment_fully_covered" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "MeshShadingNV",
+          "value" : 5266,
+          "capabilities" : [ "Shader" ],
+          "extensions" : [ "SPV_NV_mesh_shader" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "ShaderNonUniformEXT",
+          "value" : 5301,
+          "capabilities" : [ "Shader" ],
+          "extensions" : [ "SPV_EXT_descriptor_indexing" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "RuntimeDescriptorArrayEXT",
+          "value" : 5302,
+          "capabilities" : [ "Shader" ],
+          "extensions" : [ "SPV_EXT_descriptor_indexing" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "InputAttachmentArrayDynamicIndexingEXT",
+          "value" : 5303,
+          "capabilities" : [ "InputAttachment" ],
+          "extensions" : [ "SPV_EXT_descriptor_indexing" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "UniformTexelBufferArrayDynamicIndexingEXT",
+          "value" : 5304,
+          "capabilities" : [ "SampledBuffer" ],
+          "extensions" : [ "SPV_EXT_descriptor_indexing" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "StorageTexelBufferArrayDynamicIndexingEXT",
+          "value" : 5305,
+          "capabilities" : [ "ImageBuffer" ],
+          "extensions" : [ "SPV_EXT_descriptor_indexing" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "UniformBufferArrayNonUniformIndexingEXT",
+          "value" : 5306,
+          "capabilities" : [ "ShaderNonUniformEXT" ],
+          "extensions" : [ "SPV_EXT_descriptor_indexing" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "SampledImageArrayNonUniformIndexingEXT",
+          "value" : 5307,
+          "capabilities" : [ "ShaderNonUniformEXT" ],
+          "extensions" : [ "SPV_EXT_descriptor_indexing" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "StorageBufferArrayNonUniformIndexingEXT",
+          "value" : 5308,
+          "capabilities" : [ "ShaderNonUniformEXT" ],
+          "extensions" : [ "SPV_EXT_descriptor_indexing" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "StorageImageArrayNonUniformIndexingEXT",
+          "value" : 5309,
+          "capabilities" : [ "ShaderNonUniformEXT" ],
+          "extensions" : [ "SPV_EXT_descriptor_indexing" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "InputAttachmentArrayNonUniformIndexingEXT",
+          "value" : 5310,
+          "capabilities" : [ "InputAttachment", "ShaderNonUniformEXT" ],
+          "extensions" : [ "SPV_EXT_descriptor_indexing" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "UniformTexelBufferArrayNonUniformIndexingEXT",
+          "value" : 5311,
+          "capabilities" : [ "SampledBuffer", "ShaderNonUniformEXT" ],
+          "extensions" : [ "SPV_EXT_descriptor_indexing" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "StorageTexelBufferArrayNonUniformIndexingEXT",
+          "value" : 5312,
+          "capabilities" : [ "ImageBuffer", "ShaderNonUniformEXT" ],
+          "extensions" : [ "SPV_EXT_descriptor_indexing" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "RaytracingNVX",
+          "value" : 5340,
+          "capabilities" : [ "Shader" ],
+          "extensions" : [ "SPV_NVX_raytracing" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "SubgroupShuffleINTEL",
+          "value" : 5568,
+          "extensions" : [ "SPV_INTEL_subgroups" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "SubgroupBufferBlockIOINTEL",
+          "value" : 5569,
+          "extensions" : [ "SPV_INTEL_subgroups" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "SubgroupImageBlockIOINTEL",
+          "value" : 5570,
+          "extensions" : [ "SPV_INTEL_subgroups" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "GroupNonUniformPartitionedNV",
+          "value" : 5297,
+          "extensions" : [ "SPV_NV_shader_subgroup_partitioned" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "VulkanMemoryModelKHR",
+          "value" : 5345,
+          "extensions" : [ "SPV_KHR_vulkan_memory_model" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "VulkanMemoryModelDeviceScopeKHR",
+          "value" : 5346,
+          "extensions" : [ "SPV_KHR_vulkan_memory_model" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "ImageFootprintNV",
+          "value" : 5282,
+          "extensions" : [ "SPV_NV_shader_image_footprint" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "FragmentBarycentricNV",
+          "value" : 5284,
+          "extensions" : [ "SPV_NV_fragment_shader_barycentric" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "ComputeDerivativeGroupQuadsNV",
+          "value" : 5288,
+          "extensions" : [ "SPV_NV_compute_shader_derivatives" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "ComputeDerivativeGroupLinearNV",
+          "value" : 5350,
+          "extensions" : [ "SPV_NV_compute_shader_derivatives" ],
+          "version" : "None"
+        },
+        {
+          "enumerant" : "ShadingRateNV",
+          "value" : 5291,
+          "capabilities" : [ "Shader" ],
+          "extensions" : [ "SPV_NV_shading_rate" ],
+          "version" : "None"
         }
       ]
     },

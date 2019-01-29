@@ -33,7 +33,6 @@
 #include "list.h"
 #include "ir_visitor.h"
 #include "ir_hierarchical_visitor.h"
-#include "main/mtypes.h"
 
 #ifdef __cplusplus
 
@@ -397,7 +396,7 @@ depth_layout_string(ir_depth_layout layout);
  * \sa ir_variable::state_slots
  */
 struct ir_state_slot {
-   int tokens[5];
+   gl_state_index16 tokens[STATE_LENGTH];
    int swizzle;
 };
 
@@ -457,7 +456,7 @@ public:
     *
     * For the first declaration below, there will be an \c ir_variable named
     * "instance" whose type and whose instance_type will be the same
-    *  \cglsl_type.  For the second declaration, there will be an \c ir_variable
+    * \c glsl_type.  For the second declaration, there will be an \c ir_variable
     * named "f" whose type is float and whose instance_type is B2.
     *
     * "instance" is an interface instance variable, but "f" is not.
@@ -668,8 +667,8 @@ public:
        * variable has been used.  For example, it is an error to redeclare a
        * variable as invariant after it has been used.
        *
-       * This is only maintained in the ast_to_hir.cpp path, not in
-       * Mesa's fixed function or ARB program paths.
+       * This is maintained in the ast_to_hir.cpp path and during linking,
+       * but not in Mesa's fixed function or ARB program paths.
        */
       unsigned used:1;
 
@@ -1121,6 +1120,8 @@ enum ir_intrinsic_id {
    ir_intrinsic_memory_barrier_buffer,
    ir_intrinsic_memory_barrier_image,
    ir_intrinsic_memory_barrier_shared,
+   ir_intrinsic_begin_invocation_interlock,
+   ir_intrinsic_end_invocation_interlock,
 
    ir_intrinsic_vote_all,
    ir_intrinsic_vote_any,

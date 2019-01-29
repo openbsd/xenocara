@@ -32,6 +32,8 @@
 #include "util/u_format.h"
 #include "tgsi/tgsi_dump.h"
 
+#include <inttypes.h>
+
 #include "u_dump.h"
 
 
@@ -75,6 +77,14 @@ util_dump_float(FILE *stream, double value)
    util_stream_writef(stream, "%g", value);
 }
 
+void
+util_dump_ns(FILE *f, uint64_t time)
+{
+   uint64_t secs = time / (1000*1000*1000);
+   unsigned usecs = (time % (1000*1000*1000)) / 1000;
+   fprintf(f, "%"PRIu64".%06us", secs, usecs);
+}
+
 static void
 util_dump_string(FILE *stream, const char *str)
 {
@@ -102,7 +112,7 @@ util_dump_array_end(FILE *stream)
 }
 
 static void
-util_dump_elem_begin(FILE *stream)
+util_dump_elem_begin(UNUSED FILE *stream)
 {
 }
 
@@ -113,7 +123,7 @@ util_dump_elem_end(FILE *stream)
 }
 
 static void
-util_dump_struct_begin(FILE *stream, const char *name)
+util_dump_struct_begin(FILE *stream, UNUSED const char *name)
 {
    fputs("{", stream);
 }
@@ -142,11 +152,11 @@ util_dump_null(FILE *stream)
    fputs("NULL", stream);
 }
 
-static void
+void
 util_dump_ptr(FILE *stream, const void *value)
 {
    if(value)
-      util_stream_writef(stream, "0x%08lx", (unsigned long)(uintptr_t)value);
+      util_stream_writef(stream, "%p", value);
    else
       util_dump_null(stream);
 }
@@ -309,6 +319,7 @@ util_dump_resource(FILE *stream, const struct pipe_resource *state)
 
    util_dump_member(stream, uint, state, last_level);
    util_dump_member(stream, uint, state, nr_samples);
+   util_dump_member(stream, uint, state, nr_storage_samples);
    util_dump_member(stream, uint, state, usage);
    util_dump_member(stream, uint, state, bind);
    util_dump_member(stream, uint, state, flags);
@@ -357,7 +368,8 @@ util_dump_rasterizer_state(FILE *stream, const struct pipe_rasterizer_state *sta
    util_dump_member(stream, bool, state, half_pixel_center);
    util_dump_member(stream, bool, state, bottom_edge_rule);
    util_dump_member(stream, bool, state, rasterizer_discard);
-   util_dump_member(stream, bool, state, depth_clip);
+   util_dump_member(stream, bool, state, depth_clip_near);
+   util_dump_member(stream, bool, state, depth_clip_far);
    util_dump_member(stream, bool, state, clip_halfz);
    util_dump_member(stream, uint, state, clip_plane_enable);
 
@@ -802,7 +814,7 @@ util_dump_transfer(FILE *stream, const struct pipe_transfer *state)
 
    util_dump_member(stream, ptr, state, resource);
    util_dump_member(stream, uint, state, level);
-   util_dump_member(stream, uint, state, usage);
+   util_dump_member(stream, transfer_usage, state, usage);
    util_dump_member_begin(stream, "box");
    util_dump_box(stream, &state->box);
    util_dump_member_end(stream);

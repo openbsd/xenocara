@@ -44,7 +44,7 @@ blorp_emit_dwords(struct blorp_batch *batch, unsigned n)
    assert(batch->blorp->driver_ctx == batch->driver_batch);
    struct brw_context *brw = batch->driver_batch;
 
-   intel_batchbuffer_begin(brw, n, RENDER_RING);
+   intel_batchbuffer_begin(brw, n);
    uint32_t *map = brw->batch.map_next;
    brw->batch.map_next += n;
    intel_batchbuffer_advance(brw);
@@ -93,6 +93,19 @@ blorp_surface_reloc(struct blorp_batch *batch, uint32_t ss_offset,
    *(uint32_t *)reloc_ptr = reloc_val;
 #endif
 }
+
+#if GEN_GEN >= 7 && GEN_GEN < 10
+static struct blorp_address
+blorp_get_surface_base_address(struct blorp_batch *batch)
+{
+   assert(batch->blorp->driver_ctx == batch->driver_batch);
+   struct brw_context *brw = batch->driver_batch;
+   return (struct blorp_address) {
+      .buffer = brw->batch.state.bo,
+      .offset = 0,
+   };
+}
+#endif
 
 static void *
 blorp_alloc_dynamic_state(struct blorp_batch *batch,
@@ -153,6 +166,15 @@ blorp_alloc_vertex_buffer(struct blorp_batch *batch, uint32_t size,
       .buffer = brw->batch.state.bo,
       .offset = offset,
 
+      /* The VF cache designers apparently cut corners, and made the cache
+       * only consider the bottom 32 bits of memory addresses.  If you happen
+       * to have two vertex buffers which get placed exactly 4 GiB apart and
+       * use them in back-to-back draw calls, you can get collisions.  To work
+       * around this problem, we restrict vertex buffers to the low 32 bits of
+       * the address space.
+       */
+      .reloc_flags = RELOC_32BIT,
+
 #if GEN_GEN == 10
       .mocs = CNL_MOCS_WB,
 #elif GEN_GEN == 9
@@ -165,6 +187,35 @@ blorp_alloc_vertex_buffer(struct blorp_batch *batch, uint32_t size,
    };
 
    return data;
+}
+
+/**
+ * See vf_invalidate_for_vb_48b_transitions in genX_state_upload.c.
+ */
+static void
+blorp_vf_invalidate_for_vb_48b_transitions(struct blorp_batch *batch,
+                                           const struct blorp_address *addrs,
+                                           unsigned num_vbs)
+{
+#if GEN_GEN >= 8
+   struct brw_context *brw = batch->driver_batch;
+   bool need_invalidate = false;
+
+   for (unsigned i = 0; i < num_vbs; i++) {
+      struct brw_bo *bo = addrs[i].buffer;
+      uint16_t high_bits =
+         bo && (bo->kflags & EXEC_OBJECT_PINNED) ? bo->gtt_offset >> 32u : 0;
+
+      if (high_bits != brw->vb.last_bo_high_bits[i]) {
+         need_invalidate = true;
+         brw->vb.last_bo_high_bits[i] = high_bits;
+      }
+   }
+
+   if (need_invalidate) {
+      brw_emit_pipe_control_flush(brw, PIPE_CONTROL_VF_CACHE_INVALIDATE | PIPE_CONTROL_CS_STALL);
+   }
+#endif
 }
 
 #if GEN_GEN >= 8
@@ -181,7 +232,8 @@ blorp_get_workaround_page(struct blorp_batch *batch)
 #endif
 
 static void
-blorp_flush_range(struct blorp_batch *batch, void *start, size_t size)
+blorp_flush_range(UNUSED struct blorp_batch *batch, UNUSED void *start,
+                  UNUSED size_t size)
 {
    /* All allocated states come from the batch which we will flush before we
     * submit it.  There's nothing for us to do here.
@@ -190,7 +242,8 @@ blorp_flush_range(struct blorp_batch *batch, void *start, size_t size)
 
 static void
 blorp_emit_urb_config(struct blorp_batch *batch,
-                      unsigned vs_entry_size, unsigned sf_entry_size)
+                      unsigned vs_entry_size,
+                      MAYBE_UNUSED unsigned sf_entry_size)
 {
    assert(batch->blorp->driver_ctx == batch->driver_batch);
    struct brw_context *brw = batch->driver_batch;
@@ -217,6 +270,20 @@ genX(blorp_exec)(struct blorp_batch *batch,
    struct gl_context *ctx = &brw->ctx;
    bool check_aperture_failed_once = false;
 
+#if GEN_GEN >= 11
+   /* The PIPE_CONTROL command description says:
+    *
+    * "Whenever a Binding Table Index (BTI) used by a Render Taget Message
+    *  points to a different RENDER_SURFACE_STATE, SW must issue a Render
+    *  Target Cache Flush by enabling this bit. When render target flush
+    *  is set due to new association of BTI, PS Scoreboard Stall bit must
+    *  be set in this packet."
+   */
+   brw_emit_pipe_control_flush(brw,
+                               PIPE_CONTROL_RENDER_TARGET_FLUSH |
+                               PIPE_CONTROL_STALL_AT_SCOREBOARD);
+#endif
+
    /* Flush the sampler and render caches.  We definitely need to flush the
     * sampler cache so that we get updated contents from the render cache for
     * the glBlitFramebuffer() source.  Also, we are sometimes warned in the
@@ -239,9 +306,10 @@ genX(blorp_exec)(struct blorp_batch *batch,
    brw_select_pipeline(brw, BRW_RENDER_PIPELINE);
 
 retry:
-   intel_batchbuffer_require_space(brw, 1400, RENDER_RING);
+   intel_batchbuffer_require_space(brw, 1400);
    brw_require_statebuffer_space(brw, 600);
    intel_batchbuffer_save_state(brw);
+   check_aperture_failed_once |= intel_batchbuffer_saved_state_is_empty(brw);
    brw->batch.no_wrap = true;
 
 #if GEN_GEN == 6

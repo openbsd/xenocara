@@ -100,9 +100,8 @@ brw_nir_link_shaders(const struct brw_compiler *compiler,
                      nir_shader **producer, nir_shader **consumer);
 
 bool brw_nir_lower_cs_intrinsics(nir_shader *nir,
-                                 struct brw_cs_prog_data *prog_data);
+                                 unsigned dispatch_width);
 void brw_nir_lower_vs_inputs(nir_shader *nir,
-                             bool use_legacy_snorm_formula,
                              const uint8_t *vs_attrib_wa_flags);
 void brw_nir_lower_vue_inputs(nir_shader *nir,
                               const struct brw_vue_map *vue_map);
@@ -110,18 +109,21 @@ void brw_nir_lower_tes_inputs(nir_shader *nir, const struct brw_vue_map *vue);
 void brw_nir_lower_fs_inputs(nir_shader *nir,
                              const struct gen_device_info *devinfo,
                              const struct brw_wm_prog_key *key);
-void brw_nir_lower_vue_outputs(nir_shader *nir, bool is_scalar);
+void brw_nir_lower_vue_outputs(nir_shader *nir);
 void brw_nir_lower_tcs_outputs(nir_shader *nir, const struct brw_vue_map *vue,
                                GLenum tes_primitive_mode);
 void brw_nir_lower_fs_outputs(nir_shader *nir);
-void brw_nir_lower_cs_shared(nir_shader *nir);
+
+bool brw_nir_lower_image_load_store(nir_shader *nir,
+                                    const struct gen_device_info *devinfo);
+void brw_nir_rewrite_image_intrinsic(nir_intrinsic_instr *intrin,
+                                     nir_ssa_def *index);
 
 nir_shader *brw_postprocess_nir(nir_shader *nir,
                                 const struct brw_compiler *compiler,
                                 bool is_scalar);
 
 bool brw_nir_apply_attribute_workarounds(nir_shader *nir,
-                                         bool use_legacy_snorm_formula,
                                          const uint8_t *attrib_wa_flags);
 
 bool brw_nir_apply_trig_workarounds(nir_shader *nir);
@@ -147,15 +149,25 @@ void brw_nir_setup_arb_uniforms(void *mem_ctx, nir_shader *shader,
                                 struct gl_program *prog,
                                 struct brw_stage_prog_data *stage_prog_data);
 
+void brw_nir_lower_gl_images(nir_shader *shader,
+                             const struct gl_program *prog);
+
 void brw_nir_analyze_ubo_ranges(const struct brw_compiler *compiler,
                                 nir_shader *nir,
+                                const struct brw_vs_prog_key *vs_key,
                                 struct brw_ubo_range out_ranges[4]);
 
 bool brw_nir_opt_peephole_ffma(nir_shader *shader);
 
 nir_shader *brw_nir_optimize(nir_shader *nir,
                              const struct brw_compiler *compiler,
-                             bool is_scalar);
+                             bool is_scalar,
+                             bool allow_copies);
+
+nir_shader *brw_nir_create_passthrough_tcs(void *mem_ctx,
+                                           const struct brw_compiler *compiler,
+                                           const nir_shader_compiler_options *options,
+                                           const struct brw_tcs_prog_key *key);
 
 #define BRW_NIR_FRAG_OUTPUT_INDEX_SHIFT 0
 #define BRW_NIR_FRAG_OUTPUT_INDEX_MASK INTEL_MASK(0, 0)

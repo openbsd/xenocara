@@ -30,7 +30,6 @@
 #include "drivers/common/meta.h"
 
 #include "intel_batchbuffer.h"
-#include "intel_blit.h"
 #include "intel_fbo.h"
 #include "intel_mipmap_tree.h"
 
@@ -206,33 +205,14 @@ brw_fast_clear_depth(struct gl_context *ctx)
              * value so this shouldn't happen often.
              */
             intel_hiz_exec(brw, mt, level, layer, 1,
-                           BLORP_HIZ_OP_DEPTH_RESOLVE);
+                           ISL_AUX_OP_FULL_RESOLVE);
             intel_miptree_set_aux_state(brw, mt, level, layer, 1,
                                         ISL_AUX_STATE_RESOLVED);
          }
       }
 
-      intel_miptree_set_depth_clear_value(ctx, mt, clear_value);
-   }
-
-   bool need_clear = false;
-   for (unsigned a = 0; a < num_layers; a++) {
-      enum isl_aux_state aux_state =
-         intel_miptree_get_aux_state(mt, depth_irb->mt_level,
-                                     depth_irb->mt_layer + a);
-
-      if (aux_state != ISL_AUX_STATE_CLEAR) {
-         need_clear = true;
-         break;
-      }
-   }
-
-   if (!need_clear) {
-      /* If all of the layers we intend to clear are already in the clear
-       * state then simply updating the miptree fast clear value is sufficient
-       * to change their clear value.
-       */
-      return true;
+      const union isl_color_value clear_color = { .f32 = {clear_value, } };
+      intel_miptree_set_clear_color(brw, mt, clear_color);
    }
 
    for (unsigned a = 0; a < num_layers; a++) {
@@ -243,17 +223,13 @@ brw_fast_clear_depth(struct gl_context *ctx)
       if (aux_state != ISL_AUX_STATE_CLEAR) {
          intel_hiz_exec(brw, mt, depth_irb->mt_level,
                         depth_irb->mt_layer + a, 1,
-                        BLORP_HIZ_OP_DEPTH_CLEAR);
+                        ISL_AUX_OP_FAST_CLEAR);
       }
    }
 
-   /* Now, the HiZ buffer contains data that needs to be resolved to the depth
-    * buffer.
-    */
    intel_miptree_set_aux_state(brw, mt, depth_irb->mt_level,
                                depth_irb->mt_layer, num_layers,
                                ISL_AUX_STATE_CLEAR);
-
    return true;
 }
 
@@ -283,14 +259,6 @@ brw_clear(struct gl_context *ctx, GLbitfield mask)
 	 DBG("fast clear: depth\n");
 	 mask &= ~BUFFER_BIT_DEPTH;
       }
-   }
-
-   if (mask & BUFFER_BIT_STENCIL) {
-      struct intel_renderbuffer *stencil_irb =
-         intel_get_renderbuffer(fb, BUFFER_STENCIL);
-      struct intel_mipmap_tree *mt = stencil_irb->mt;
-      if (mt && mt->stencil_mt)
-         mt->stencil_mt->r8stencil_needs_update = true;
    }
 
    if (mask & BUFFER_BITS_COLOR) {

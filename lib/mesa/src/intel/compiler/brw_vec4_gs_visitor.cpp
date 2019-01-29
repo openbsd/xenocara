@@ -618,7 +618,6 @@ brw_compile_gs(const struct brw_compiler *compiler, void *log_data,
                const nir_shader *src_shader,
                struct gl_program *prog,
                int shader_time_index,
-               unsigned *final_assembly_size,
                char **error_str)
 {
    struct brw_gs_compile c;
@@ -643,7 +642,7 @@ brw_compile_gs(const struct brw_compiler *compiler, void *log_data,
 
    shader = brw_nir_apply_sampler_key(shader, compiler, &key->tex, is_scalar);
    brw_nir_lower_vue_inputs(shader, &c.input_vue_map);
-   brw_nir_lower_vue_outputs(shader, is_scalar);
+   brw_nir_lower_vue_outputs(shader);
    shader = brw_postprocess_nir(shader, compiler, is_scalar);
 
    prog_data->base.clip_distance_mask =
@@ -857,7 +856,7 @@ brw_compile_gs(const struct brw_compiler *compiler, void *log_data,
          prog_data->base.dispatch_mode = DISPATCH_MODE_SIMD8;
          prog_data->base.base.dispatch_grf_start_reg = v.payload.num_regs;
 
-         fs_generator g(compiler, log_data, mem_ctx, &c.key,
+         fs_generator g(compiler, log_data, mem_ctx,
                         &prog_data->base.base, v.promoted_constants,
                         false, MESA_SHADER_GEOMETRY);
          if (unlikely(INTEL_DEBUG & DEBUG_GS)) {
@@ -868,7 +867,7 @@ brw_compile_gs(const struct brw_compiler *compiler, void *log_data,
             g.enable_debug(name);
          }
          g.generate_code(v.cfg, 8);
-         return g.get_assembly(final_assembly_size);
+         return g.get_assembly();
       }
    }
 
@@ -898,8 +897,7 @@ brw_compile_gs(const struct brw_compiler *compiler, void *log_data,
             /* Success! Backup is not needed */
             ralloc_free(param);
             return brw_vec4_generate_assembly(compiler, log_data, mem_ctx,
-                                              shader, &prog_data->base, v.cfg,
-                                              final_assembly_size);
+                                              shader, &prog_data->base, v.cfg);
          } else {
             /* These variables could be modified by the execution of the GS
              * visitor if it packed the uniforms in the push constant buffer.
@@ -962,8 +960,7 @@ brw_compile_gs(const struct brw_compiler *compiler, void *log_data,
          *error_str = ralloc_strdup(mem_ctx, gs->fail_msg);
    } else {
       ret = brw_vec4_generate_assembly(compiler, log_data, mem_ctx, shader,
-                                       &prog_data->base, gs->cfg,
-                                       final_assembly_size);
+                                       &prog_data->base, gs->cfg);
    }
 
    delete gs;

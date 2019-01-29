@@ -27,6 +27,7 @@
  * \file mipmap.c  mipmap generation and teximage resizing functions.
  */
 
+#include "errors.h"
 #include "imports.h"
 #include "formats.h"
 #include "glformats.h"
@@ -42,6 +43,30 @@
 #include "util/format_r11g11b10f.h"
 
 
+/**
+ * Compute the expected number of mipmap levels in the texture given
+ * the width/height/depth of the base image and the GL_TEXTURE_BASE_LEVEL/
+ * GL_TEXTURE_MAX_LEVEL settings.  This will tell us how many mipmap
+ * levels should be generated.
+ */
+unsigned
+_mesa_compute_num_levels(struct gl_context *ctx,
+                         struct gl_texture_object *texObj,
+                         GLenum target)
+{
+   const struct gl_texture_image *baseImage;
+   GLuint numLevels;
+
+   baseImage = _mesa_get_tex_image(ctx, texObj, target, texObj->BaseLevel);
+
+   numLevels = texObj->BaseLevel + baseImage->MaxNumLevels;
+   numLevels = MIN2(numLevels, (GLuint) texObj->MaxLevel + 1);
+   if (texObj->Immutable)
+      numLevels = MIN2(numLevels, texObj->NumLevels);
+   assert(numLevels >= 1);
+
+   return numLevels;
+}
 
 static GLint
 bytes_per_pixel(GLenum datatype, GLuint comps)
@@ -1445,9 +1470,9 @@ make_1d_mipmap(GLenum datatype, GLuint comps, GLint border,
 static void
 make_2d_mipmap(GLenum datatype, GLuint comps, GLint border,
                GLint srcWidth, GLint srcHeight,
-	       const GLubyte *srcPtr, GLint srcRowStride,
+               const GLubyte *srcPtr, GLint srcRowStride,
                GLint dstWidth, GLint dstHeight,
-	       GLubyte *dstPtr, GLint dstRowStride)
+               GLubyte *dstPtr, GLint dstRowStride)
 {
    const GLint bpt = bytes_per_pixel(datatype, comps);
    const GLint srcWidthNB = srcWidth - 2 * border;  /* sizes w/out border */
@@ -1736,17 +1761,17 @@ _mesa_generate_mipmap_level(GLenum target,
       assert(srcHeight == 1);
       assert(dstHeight == 1);
       for (i = 0; i < dstDepth; i++) {
-	 make_1d_mipmap(datatype, comps, border,
-			srcWidth, srcData[i],
-			dstWidth, dstData[i]);
+         make_1d_mipmap(datatype, comps, border,
+                        srcWidth, srcData[i],
+                        dstWidth, dstData[i]);
       }
       break;
    case GL_TEXTURE_2D_ARRAY_EXT:
    case GL_TEXTURE_CUBE_MAP_ARRAY:
       for (i = 0; i < dstDepth; i++) {
-	 make_2d_mipmap(datatype, comps, border,
-			srcWidth, srcHeight, srcData[i], srcRowStride,
-			dstWidth, dstHeight, dstData[i], dstRowStride);
+         make_2d_mipmap(datatype, comps, border,
+                        srcWidth, srcHeight, srcData[i], srcRowStride,
+                        dstWidth, dstHeight, dstData[i], dstRowStride);
       }
       break;
    case GL_TEXTURE_RECTANGLE_NV:
@@ -1775,7 +1800,7 @@ _mesa_next_mipmap_level_size(GLenum target, GLint border,
       *dstWidth = srcWidth; /* can't go smaller */
    }
 
-   if ((srcHeight - 2 * border > 1) && 
+   if ((srcHeight - 2 * border > 1) &&
        target != GL_TEXTURE_1D_ARRAY_EXT &&
        target != GL_PROXY_TEXTURE_1D_ARRAY_EXT) {
       *dstHeight = (srcHeight - 2 * border) / 2 + 2 * border;
@@ -1919,9 +1944,9 @@ _mesa_prepare_mipmap_levels(struct gl_context *ctx,
 
 static void
 generate_mipmap_uncompressed(struct gl_context *ctx, GLenum target,
-			     struct gl_texture_object *texObj,
-			     const struct gl_texture_image *srcImage,
-			     GLuint maxLevel)
+                             struct gl_texture_object *texObj,
+                             const struct gl_texture_image *srcImage,
+                             GLuint maxLevel)
 {
    GLuint level;
    GLenum datatype;
@@ -1958,10 +1983,10 @@ generate_mipmap_uncompressed(struct gl_context *ctx, GLenum target,
       dstDepth = dstImage->Depth;
 
       if (target == GL_TEXTURE_1D_ARRAY) {
-	 srcDepth = srcHeight;
-	 dstDepth = dstHeight;
-	 srcHeight = 1;
-	 dstHeight = 1;
+         srcDepth = srcHeight;
+         dstDepth = dstHeight;
+         srcHeight = 1;
+         dstHeight = 1;
       }
 
       /* Map src texture image slices */
@@ -2039,9 +2064,9 @@ generate_mipmap_uncompressed(struct gl_context *ctx, GLenum target,
 
 static void
 generate_mipmap_compressed(struct gl_context *ctx, GLenum target,
-			   struct gl_texture_object *texObj,
-			   struct gl_texture_image *srcImage,
-			   GLuint maxLevel)
+                           struct gl_texture_object *texObj,
+                           struct gl_texture_image *srcImage,
+                           GLuint maxLevel)
 {
    GLuint level;
    mesa_format temp_format;
@@ -2054,8 +2079,8 @@ generate_mipmap_compressed(struct gl_context *ctx, GLenum target,
 
    /* only two types of compressed textures at this time */
    assert(texObj->Target == GL_TEXTURE_2D ||
-	  texObj->Target == GL_TEXTURE_2D_ARRAY ||
-	  texObj->Target == GL_TEXTURE_CUBE_MAP ||
+          texObj->Target == GL_TEXTURE_2D_ARRAY ||
+          texObj->Target == GL_TEXTURE_CUBE_MAP ||
           texObj->Target == GL_TEXTURE_CUBE_MAP_ARRAY);
 
    /*
@@ -2148,11 +2173,11 @@ generate_mipmap_compressed(struct gl_context *ctx, GLenum target,
       temp_dst_img_stride = _mesa_format_image_size(temp_format, dstWidth,
                                                     dstHeight, 1);
       if (!temp_dst) {
-	 temp_dst = malloc(temp_dst_img_stride * dstDepth);
-	 if (!temp_dst) {
-	    _mesa_error(ctx, GL_OUT_OF_MEMORY, "generate mipmaps");
+         temp_dst = malloc(temp_dst_img_stride * dstDepth);
+         if (!temp_dst) {
+            _mesa_error(ctx, GL_OUT_OF_MEMORY, "generate mipmaps");
             goto end;
-	 }
+         }
       }
 
       /* for 2D arrays, setup array[depth] of slice pointers */
@@ -2181,9 +2206,9 @@ generate_mipmap_compressed(struct gl_context *ctx, GLenum target,
 
       /* swap src and dest pointers */
       {
-	 GLubyte *temp = temp_src;
-	 temp_src = temp_dst;
-	 temp_dst = temp;
+         GLubyte *temp = temp_src;
+         temp_src = temp_dst;
+         temp_dst = temp;
          temp_src_row_stride = temp_dst_row_stride;
          temp_src_img_stride = temp_dst_img_stride;
       }

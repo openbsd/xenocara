@@ -36,7 +36,7 @@
 
 #include "brw_eu_defines.h"
 #include "brw_reg_type.h"
-#include "common/gen_device_info.h"
+#include "dev/gen_device_info.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -343,7 +343,7 @@ REG_TYPE(src2)
  *  @{
  */
 static inline uint16_t
-brw_inst_3src_a1_src0_imm(const struct gen_device_info *devinfo,
+brw_inst_3src_a1_src0_imm(MAYBE_UNUSED const struct gen_device_info *devinfo,
                           const brw_inst *insn)
 {
    assert(devinfo->gen >= 10);
@@ -351,7 +351,7 @@ brw_inst_3src_a1_src0_imm(const struct gen_device_info *devinfo,
 }
 
 static inline uint16_t
-brw_inst_3src_a1_src2_imm(const struct gen_device_info *devinfo,
+brw_inst_3src_a1_src2_imm(MAYBE_UNUSED const struct gen_device_info *devinfo,
                           const brw_inst *insn)
 {
    assert(devinfo->gen >= 10);
@@ -359,7 +359,7 @@ brw_inst_3src_a1_src2_imm(const struct gen_device_info *devinfo,
 }
 
 static inline void
-brw_inst_set_3src_a1_src0_imm(const struct gen_device_info *devinfo,
+brw_inst_set_3src_a1_src0_imm(MAYBE_UNUSED const struct gen_device_info *devinfo,
                               brw_inst *insn, uint16_t value)
 {
    assert(devinfo->gen >= 10);
@@ -367,7 +367,7 @@ brw_inst_set_3src_a1_src0_imm(const struct gen_device_info *devinfo,
 }
 
 static inline void
-brw_inst_set_3src_a1_src2_imm(const struct gen_device_info *devinfo,
+brw_inst_set_3src_a1_src2_imm(MAYBE_UNUSED const struct gen_device_info *devinfo,
                               brw_inst *insn, uint16_t value)
 {
    assert(devinfo->gen >= 10);
@@ -459,6 +459,84 @@ FC(gen4_pop_count,  115, 112, devinfo->gen < 6)
 #define MD(x) ((x) + 96)
 
 /**
+ * Set the SEND(C) message descriptor immediate.
+ *
+ * This doesn't include the SFID nor the EOT field that were considered to be
+ * part of the message descriptor by ancient versions of the BSpec, because
+ * they are present in the instruction even if the message descriptor is
+ * provided indirectly in the address register, so we want to specify them
+ * separately.
+ */
+static inline void
+brw_inst_set_send_desc(const struct gen_device_info *devinfo,
+                       brw_inst *inst, uint32_t value)
+{
+   if (devinfo->gen >= 9) {
+      brw_inst_set_bits(inst, 126, 96, value);
+      assert(value >> 31 == 0);
+   } else if (devinfo->gen >= 5) {
+      brw_inst_set_bits(inst, 124, 96, value);
+      assert(value >> 29 == 0);
+   } else {
+      brw_inst_set_bits(inst, 119, 96, value);
+      assert(value >> 24 == 0);
+   }
+}
+
+/**
+ * Get the SEND(C) message descriptor immediate.
+ *
+ * \sa brw_inst_set_send_desc().
+ */
+static inline uint32_t
+brw_inst_send_desc(const struct gen_device_info *devinfo, const brw_inst *inst)
+{
+   if (devinfo->gen >= 9)
+      return brw_inst_bits(inst, 126, 96);
+   else if (devinfo->gen >= 5)
+      return brw_inst_bits(inst, 124, 96);
+   else
+      return brw_inst_bits(inst, 119, 96);
+}
+
+/**
+ * Set the SEND(C) message extended descriptor immediate.
+ *
+ * This doesn't include the SFID nor the EOT field that were considered to be
+ * part of the extended message descriptor by some versions of the BSpec,
+ * because they are present in the instruction even if the extended message
+ * descriptor is provided indirectly in a register, so we want to specify them
+ * separately.
+ */
+static inline void
+brw_inst_set_send_ex_desc(const struct gen_device_info *devinfo,
+                          brw_inst *inst, uint32_t value)
+{
+   assert(devinfo->gen >= 9);
+   brw_inst_set_bits(inst, 94, 91, (value >> 28) & ((1u << 4) - 1));
+   brw_inst_set_bits(inst, 88, 85, (value >> 24) & ((1u << 4) - 1));
+   brw_inst_set_bits(inst, 83, 80, (value >> 20) & ((1u << 4) - 1));
+   brw_inst_set_bits(inst, 67, 64, (value >> 16) & ((1u << 4) - 1));
+   assert((value & ((1u << 16) - 1)) == 0);
+}
+
+/**
+ * Get the SEND(C) message extended descriptor immediate.
+ *
+ * \sa brw_inst_set_send_ex_desc().
+ */
+static inline uint32_t
+brw_inst_send_ex_desc(const struct gen_device_info *devinfo,
+                      const brw_inst *inst)
+{
+   assert(devinfo->gen >= 9);
+   return (brw_inst_bits(inst, 94, 91) << 28 |
+           brw_inst_bits(inst, 88, 85) << 24 |
+           brw_inst_bits(inst, 83, 80) << 20 |
+           brw_inst_bits(inst, 67, 64) << 16);
+}
+
+/**
  * Fields for SEND messages:
  *  @{
  */
@@ -505,6 +583,9 @@ FF(sfid,
    /* 6:   */  27,  24,
    /* 7:   */  27,  24,
    /* 8:   */  27,  24)
+FF(null_rt,
+   /* 4-7: */ -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+   /* 8:   */ 80, 80) /* actually only Gen11+ */
 FC(base_mrf,   27,  24, devinfo->gen < 6);
 /** @} */
 
@@ -626,7 +707,7 @@ FF(dp_msg_type,
    -1, -1, -1, -1, -1, -1,
    /* 6:   */ MD(16), MD(13),
    /* 7:   */ MD(17), MD(14),
-   /* 8:   */ MD(17), MD(14))
+   /* 8:   */ MD(18), MD(14))
 FF(dp_msg_control,
    /* 4:   */ MD(11), MD( 8),
    /* 4.5-5: use dp_read_msg_control or dp_write_msg_control */ -1, -1, -1, -1,
@@ -700,7 +781,8 @@ brw_inst_imm_ud(const struct gen_device_info *devinfo, const brw_inst *insn)
 }
 
 static inline uint64_t
-brw_inst_imm_uq(const struct gen_device_info *devinfo, const brw_inst *insn)
+brw_inst_imm_uq(MAYBE_UNUSED const struct gen_device_info *devinfo,
+                const brw_inst *insn)
 {
    assert(devinfo->gen >= 8);
    return brw_inst_bits(insn, 127, 64);
@@ -799,7 +881,7 @@ brw_inst_##reg##_type(const struct gen_device_info *devinfo,                  \
                       const brw_inst *inst)                                   \
 {                                                                             \
    unsigned file = __builtin_strcmp("dst", #reg) == 0 ?                       \
-                   BRW_GENERAL_REGISTER_FILE :                                \
+                   (unsigned) BRW_GENERAL_REGISTER_FILE :                     \
                    brw_inst_##reg##_reg_file(devinfo, inst);                  \
    unsigned hw_type = brw_inst_##reg##_reg_hw_type(devinfo, inst);            \
    return brw_hw_type_to_reg_type(devinfo, (enum brw_reg_file)file, hw_type); \

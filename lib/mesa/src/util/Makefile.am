@@ -21,8 +21,14 @@
 
 SUBDIRS = . \
 	xmlpool \
+	tests/fast_idiv_by_const \
 	tests/hash_table \
-	tests/string_buffer
+	tests/string_buffer \
+	tests/set
+
+if HAVE_STD_CXX11
+SUBDIRS += tests/vma
+endif
 
 include Makefile.sources
 
@@ -54,7 +60,8 @@ libmesautil_la_LIBADD = \
 	$(PTHREAD_LIBS) \
 	$(CLOCK_LIB) \
 	$(ZLIB_LIBS) \
-	$(LIBATOMIC_LIBS)
+	$(LIBATOMIC_LIBS) \
+	-lm
 
 libxmlconfig_la_SOURCES = $(XMLCONFIG_FILES)
 libxmlconfig_la_CFLAGS = \
@@ -62,11 +69,13 @@ libxmlconfig_la_CFLAGS = \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/src \
 	-DSYSCONFDIR=\"$(sysconfdir)\" \
+	-DDATADIR=\"$(datadir)\" \
 	$(VISIBILITY_CFLAGS) \
 	$(EXPAT_CFLAGS)
 libxmlconfig_la_LIBADD = $(EXPAT_LIBS) -lm
 
-sysconf_DATA =
+drircdir = $(datadir)/drirc.d
+drirc_DATA = 
 
 u_atomic_test_LDADD = libmesautil.la
 roundeven_test_LDADD = -lm
@@ -78,15 +87,16 @@ TESTS = $(check_PROGRAMS)
 BUILT_SOURCES = $(MESA_UTIL_GENERATED_FILES)
 CLEANFILES = $(BUILT_SOURCES)
 EXTRA_DIST = \
-	drirc \
+	00-mesa-defaults.conf \
 	format_srgb.py \
 	merge_driinfo.py \
 	SConscript \
 	xmlpool.h \
-	sha1/README
+	sha1/README \
+	meson.build
 
 if REGEN_SOURCES
-PYTHON_GEN = $(AM_V_GEN)$(PYTHON2) $(PYTHON_FLAGS)
+PYTHON_GEN = $(AM_V_GEN)$(PYTHON) $(PYTHON_FLAGS)
 
 format_srgb.c: format_srgb.py
 	$(PYTHON_GEN) $(srcdir)/format_srgb.py > $@

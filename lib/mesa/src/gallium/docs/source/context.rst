@@ -64,7 +64,13 @@ objects. They all follow simple, one-method binding calls, e.g.
 * ``set_stencil_ref`` sets the stencil front and back reference values
   which are used as comparison values in stencil test.
 * ``set_blend_color``
-* ``set_sample_mask``
+* ``set_sample_mask``  sets the per-context multisample sample mask.  Note
+  that this takes effect even if multisampling is not explicitly enabled if
+  the frambuffer surface(s) are multisampled.  Also, this mask is AND-ed
+  with the optional fragment shader sample mask output (when emitted).
+* ``set_sample_locations`` sets the sample locations used for rasterization.
+  ```get_sample_position``` still returns the default locations. When NULL,
+  the default locations are used.
 * ``set_min_samples`` sets the minimum number of samples that must be run.
 * ``set_clip_state``
 * ``set_polygon_stipple``
@@ -144,6 +150,14 @@ to the array index which is used for sampling.
 
 * ``sampler_view_destroy`` destroys a sampler view and releases its reference
   to associated texture.
+
+Hardware Atomic buffers
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Buffers containing hw atomics are required to support the feature
+on some drivers.
+
+Drivers that require this need to fill the ``set_hw_atomic_buffers`` method.
 
 Shader Resources
 ^^^^^^^^^^^^^^^^
@@ -258,6 +272,17 @@ format.
 (which may be multiple bytes in length). Logically this is a memset with a
 multi-byte element value starting at offset bytes from resource start, going
 for size bytes. It is guaranteed that size % clear_value_size == 0.
+
+Evaluating Depth Buffers
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+``evaluate_depth_buffer`` is a hint to decompress the current depth buffer
+assuming the current sample locations to avoid problems that could arise when
+using programmable sample locations.
+
+If a depth buffer is rendered with different sample location state than
+what is current at the time of reading the depth buffer, the values may differ
+because depth buffer compression can depend the sample locations.
 
 
 Uploading
@@ -521,6 +546,29 @@ and the context is still unflushed, and the ctx parameter of fence_finish is
 equal to the context where the fence was created, fence_finish will flush
 the context.
 
+PIPE_FLUSH_ASYNC: The flush is allowed to be asynchronous. Unlike
+``PIPE_FLUSH_DEFERRED``, the driver must still ensure that the returned fence
+will finish in finite time. However, subsequent operations in other contexts of
+the same screen are no longer guaranteed to happen after the flush. Drivers
+which use this flag must implement pipe_context::fence_server_sync.
+
+PIPE_FLUSH_HINT_FINISH: Hints to the driver that the caller will immediately
+wait for the returned fence.
+
+Additional flags may be set together with ``PIPE_FLUSH_DEFERRED`` for even
+finer-grained fences. Note that as a general rule, GPU caches may not have been
+flushed yet when these fences are signaled. Drivers are free to ignore these
+flags and create normal fences instead. At most one of the following flags can
+be specified:
+
+PIPE_FLUSH_TOP_OF_PIPE: The fence should be signaled as soon as the next
+command is ready to start executing at the top of the pipeline, before any of
+its data is actually read (including indirect draw parameters).
+
+PIPE_FLUSH_BOTTOM_OF_PIPE: The fence should be signaled as soon as the previous
+command has finished executing on the GPU entirely (but data written by the
+command may still be in caches and inaccessible to the CPU).
+
 
 ``flush_resource``
 
@@ -533,7 +581,38 @@ by a single pipe_screen and is not shared with another process.
 (i.e. you shouldn't use it to flush caches explicitly if you want to e.g.
 use the resource for texturing)
 
+Fences
+^^^^^^
 
+``pipe_fence_handle``, and related methods, are used to synchronize
+execution between multiple parties. Examples include CPU <-> GPU synchronization,
+renderer <-> windowing system, multiple external APIs, etc.
+
+A ``pipe_fence_handle`` can either be 'one time use' or 're-usable'. A 'one time use'
+fence behaves like a traditional GPU fence. Once it reaches the signaled state it
+is forever considered to be signaled.
+
+Once a re-usable ``pipe_fence_handle`` becomes signaled, it can be reset
+back into an unsignaled state. The ``pipe_fence_handle`` will be reset to
+the unsignaled state by performing a wait operation on said object, i.e.
+``fence_server_sync``. As a corollary to this behaviour, a re-usable
+``pipe_fence_handle`` can only have one waiter.
+
+This behaviour is useful in producer <-> consumer chains. It helps avoid
+unecessarily sharing a new ``pipe_fence_handle`` each time a new frame is
+ready. Instead, the fences are exchanged once ahead of time, and access is synchronized
+through GPU signaling instead of direct producer <-> consumer communication.
+
+``fence_server_sync`` inserts a wait command into the GPU's command stream.
+
+``fence_server_signal`` inserts a signal command into the GPU's command stream.
+
+There are no guarantees that the wait/signal commands will be flushed when
+calling ``fence_server_sync`` or ``fence_server_signal``. An explicit
+call to ``flush`` is required to make sure the commands are emitted to the GPU.
+
+The Gallium implementation may implicitly ``flush`` the command stream during a
+``fence_server_sync`` or ``fence_server_signal`` call if necessary.
 
 Resource Busy Queries
 ^^^^^^^^^^^^^^^^^^^^^

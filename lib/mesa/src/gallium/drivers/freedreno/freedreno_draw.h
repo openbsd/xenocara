@@ -1,5 +1,3 @@
-/* -*- mode: C; c-file-style: "k&r"; tab-width 4; indent-tabs-mode: t; -*- */
-
 /*
  * Copyright (C) 2012 Rob Clark <robclark@freedesktop.org>
  *
@@ -74,18 +72,25 @@ fd_draw(struct fd_batch *batch, struct fd_ringbuffer *ring,
 		OUT_RING(ring, 0);
 	}
 
-	OUT_PKT3(ring, CP_DRAW_INDX, idx_buffer ? 5 : 3);
-	OUT_RING(ring, 0x00000000);        /* viz query info. */
-	if (vismode == USE_VISIBILITY) {
-		/* leave vis mode blank for now, it will be patched up when
-		 * we know if we are binning or not
-		 */
-		OUT_RINGP(ring, DRAW(primtype, src_sel, idx_type, 0, instances),
-				&batch->draw_patches);
+	if (is_a20x(batch->ctx->screen)) {
+		OUT_PKT3(ring, CP_DRAW_INDX, idx_buffer ? 4 : 2);
+		OUT_RING(ring, 0x00000000);
+		OUT_RING(ring, DRAW_A20X(primtype, src_sel, idx_type, vismode, count));
 	} else {
-		OUT_RING(ring, DRAW(primtype, src_sel, idx_type, vismode, instances));
+		OUT_PKT3(ring, CP_DRAW_INDX, idx_buffer ? 5 : 3);
+		OUT_RING(ring, 0x00000000);        /* viz query info. */
+		if (vismode == USE_VISIBILITY) {
+			/* leave vis mode blank for now, it will be patched up when
+			 * we know if we are binning or not
+			 */
+			OUT_RINGP(ring, DRAW(primtype, src_sel, idx_type, 0, instances),
+					&batch->draw_patches);
+		} else {
+			OUT_RING(ring, DRAW(primtype, src_sel, idx_type, vismode, instances));
+		}
+		OUT_RING(ring, count);             /* NumIndices */
 	}
-	OUT_RING(ring, count);             /* NumIndices */
+
 	if (idx_buffer) {
 		OUT_RELOC(ring, fd_resource(idx_buffer)->bo, idx_offset, 0, 0);
 		OUT_RING (ring, idx_size);

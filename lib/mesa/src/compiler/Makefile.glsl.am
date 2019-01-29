@@ -31,7 +31,6 @@ EXTRA_DIST += glsl/tests glsl/glcpp/tests glsl/README	\
 	SConscript.glsl
 
 TESTS += glsl/glcpp/tests/glcpp-test.sh			\
-	glsl/glcpp/tests/glcpp-test-cr-lf.sh		\
 	glsl/tests/blob-test				\
 	glsl/tests/cache-test				\
 	glsl/tests/general-ir-test			\
@@ -42,7 +41,7 @@ TESTS += glsl/glcpp/tests/glcpp-test.sh			\
 
 TESTS_ENVIRONMENT= \
 	export abs_builddir=$(abs_builddir); \
-	export PYTHON2=$(PYTHON2); \
+	export PYTHON=$(PYTHON); \
 	export PYTHON_FLAGS=$(PYTHON_FLAGS);
 
 check_PROGRAMS +=					\
@@ -54,7 +53,7 @@ check_PROGRAMS +=					\
 	glsl/tests/sampler-types-test			\
 	glsl/tests/uniform-initializer-test
 
-noinst_PROGRAMS = glsl_compiler
+noinst_PROGRAMS += glsl_compiler
 
 glsl_tests_blob_test_SOURCES =				\
 	glsl/tests/blob_test.c

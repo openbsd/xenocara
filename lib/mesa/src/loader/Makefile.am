@@ -21,7 +21,7 @@
 
 include Makefile.sources
 
-EXTRA_DIST = SConscript
+EXTRA_DIST = SConscript meson.build
 
 noinst_LTLIBRARIES = libloader.la
 
@@ -30,6 +30,7 @@ AM_CPPFLAGS = \
 	-DUSE_DRICONF \
 	$(DEFINES) \
 	-I$(top_srcdir)/include \
+	-I$(top_srcdir)/include/drm-uapi \
 	-I$(top_srcdir)/src \
 	$(VISIBILITY_CFLAGS) \
 	$(XCB_DRI3_CFLAGS) \

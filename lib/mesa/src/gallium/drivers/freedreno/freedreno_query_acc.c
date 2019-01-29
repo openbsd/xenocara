@@ -49,6 +49,7 @@ fd_acc_destroy_query(struct fd_context *ctx, struct fd_query *q)
 	pipe_resource_reference(&aq->prsc, NULL);
 	list_del(&aq->node);
 
+	free(aq->query_data);
 	free(aq);
 }
 
@@ -66,17 +67,17 @@ realloc_query_bo(struct fd_context *ctx, struct fd_acc_query *aq)
 	/* don't assume the buffer is zero-initialized: */
 	rsc = fd_resource(aq->prsc);
 
-	fd_bo_cpu_prep(rsc->bo, ctx->screen->pipe, DRM_FREEDRENO_PREP_WRITE);
+	fd_bo_cpu_prep(rsc->bo, ctx->pipe, DRM_FREEDRENO_PREP_WRITE);
 
 	map = fd_bo_map(rsc->bo);
-	memset(map, 0, aq->provider->size);
+	memset(map, 0, aq->size);
 	fd_bo_cpu_fini(rsc->bo);
 }
 
 static boolean
 fd_acc_begin_query(struct fd_context *ctx, struct fd_query *q)
 {
-	struct fd_batch *batch = ctx->batch;
+	struct fd_batch *batch = fd_context_batch(ctx);
 	struct fd_acc_query *aq = fd_acc_query(q);
 	const struct fd_acc_sample_provider *p = aq->provider;
 
@@ -99,7 +100,7 @@ fd_acc_begin_query(struct fd_context *ctx, struct fd_query *q)
 static void
 fd_acc_end_query(struct fd_context *ctx, struct fd_query *q)
 {
-	struct fd_batch *batch = ctx->batch;
+	struct fd_batch *batch = fd_context_batch(ctx);
 	struct fd_acc_query *aq = fd_acc_query(q);
 	const struct fd_acc_sample_provider *p = aq->provider;
 
@@ -138,11 +139,11 @@ fd_acc_get_query_result(struct fd_context *ctx, struct fd_query *q,
 			 * spin forever:
 			 */
 			if (aq->no_wait_cnt++ > 5)
-				fd_batch_flush(rsc->write_batch, false);
+				fd_batch_flush(rsc->write_batch, false, false);
 			return false;
 		}
 
-		ret = fd_bo_cpu_prep(rsc->bo, ctx->screen->pipe,
+		ret = fd_bo_cpu_prep(rsc->bo, ctx->pipe,
 				DRM_FREEDRENO_PREP_READ | DRM_FREEDRENO_PREP_NOSYNC);
 		if (ret)
 			return false;
@@ -151,13 +152,13 @@ fd_acc_get_query_result(struct fd_context *ctx, struct fd_query *q,
 	}
 
 	if (rsc->write_batch)
-		fd_batch_flush(rsc->write_batch, true);
+		fd_batch_flush(rsc->write_batch, true, false);
 
 	/* get the result: */
-	fd_bo_cpu_prep(rsc->bo, ctx->screen->pipe, DRM_FREEDRENO_PREP_READ);
+	fd_bo_cpu_prep(rsc->bo, ctx->pipe, DRM_FREEDRENO_PREP_READ);
 
 	void *ptr = fd_bo_map(rsc->bo);
-	p->result(ctx, ptr, result);
+	p->result(aq, ptr, result);
 	fd_bo_cpu_fini(rsc->bo);
 
 	return true;
@@ -171,14 +172,11 @@ static const struct fd_query_funcs acc_query_funcs = {
 };
 
 struct fd_query *
-fd_acc_create_query(struct fd_context *ctx, unsigned query_type)
+fd_acc_create_query2(struct fd_context *ctx, unsigned query_type,
+		const struct fd_acc_sample_provider *provider)
 {
 	struct fd_acc_query *aq;
 	struct fd_query *q;
-	int idx = pidx(query_type);
-
-	if ((idx < 0) || !ctx->acc_sample_providers[idx])
-		return NULL;
 
 	aq = CALLOC_STRUCT(fd_acc_query);
 	if (!aq)
@@ -186,7 +184,8 @@ fd_acc_create_query(struct fd_context *ctx, unsigned query_type)
 
 	DBG("%p: query_type=%u", aq, query_type);
 
-	aq->provider = ctx->acc_sample_providers[idx];
+	aq->provider = provider;
+	aq->size = provider->size;
 
 	list_inithead(&aq->node);
 
@@ -195,6 +194,18 @@ fd_acc_create_query(struct fd_context *ctx, unsigned query_type)
 	q->type = query_type;
 
 	return q;
+}
+
+struct fd_query *
+fd_acc_create_query(struct fd_context *ctx, unsigned query_type)
+{
+	int idx = pidx(query_type);
+
+	if ((idx < 0) || !ctx->acc_sample_providers[idx])
+		return NULL;
+
+	return fd_acc_create_query2(ctx, query_type,
+			ctx->acc_sample_providers[idx]);
 }
 
 void

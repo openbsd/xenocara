@@ -54,12 +54,15 @@
 #endif
 #include "common/gen_clflush.h"
 #include "common/gen_debug.h"
-#include "common/gen_device_info.h"
+#include "common/gen_gem.h"
+#include "dev/gen_device_info.h"
 #include "libdrm_macros.h"
 #include "main/macros.h"
 #include "util/macros.h"
 #include "util/hash_table.h"
 #include "util/list.h"
+#include "util/u_dynarray.h"
+#include "util/vma.h"
 #include "brw_bufmgr.h"
 #include "brw_context.h"
 #include "string.h"
@@ -84,7 +87,7 @@
 #define VG_DEFINED(ptr, size) VG(VALGRIND_MAKE_MEM_DEFINED(ptr, size))
 #define VG_NOACCESS(ptr, size) VG(VALGRIND_MAKE_MEM_NOACCESS(ptr, size))
 
-#define memclear(s) memset(&s, 0, sizeof(s))
+#define PAGE_SIZE 4096
 
 #define FILE_DEBUG_FLAG DEBUG_BUFMGR
 
@@ -98,9 +101,41 @@ atomic_add_unless(int *v, int add, int unless)
    return c == unless;
 }
 
+/**
+ * i965 fixed-size bucketing VMA allocator.
+ *
+ * The BO cache maintains "cache buckets" for buffers of various sizes.
+ * All buffers in a given bucket are identically sized - when allocating,
+ * we always round up to the bucket size.  This means that virtually all
+ * allocations are fixed-size; only buffers which are too large to fit in
+ * a bucket can be variably-sized.
+ *
+ * We create an allocator for each bucket.  Each contains a free-list, where
+ * each node contains a <starting address, 64-bit bitmap> pair.  Each bit
+ * represents a bucket-sized block of memory.  (At the first level, each
+ * bit corresponds to a page.  For the second bucket, bits correspond to
+ * two pages, and so on.)  1 means a block is free, and 0 means it's in-use.
+ * The lowest bit in the bitmap is for the first block.
+ *
+ * This makes allocations cheap - any bit of any node will do.  We can pick
+ * the head of the list and use ffs() to find a free block.  If there are
+ * none, we allocate 64 blocks from a larger allocator - either a bigger
+ * bucketing allocator, or a fallback top-level allocator for large objects.
+ */
+struct vma_bucket_node {
+   uint64_t start_address;
+   uint64_t bitmap;
+};
+
 struct bo_cache_bucket {
+   /** List of cached BOs. */
    struct list_head head;
+
+   /** Size of this bucket, in bytes. */
    uint64_t size;
+
+   /** List of vma_bucket_nodes. */
+   struct util_dynarray vma_list[BRW_MEMZONE_COUNT];
 };
 
 struct brw_bufmgr {
@@ -116,15 +151,23 @@ struct brw_bufmgr {
    struct hash_table *name_table;
    struct hash_table *handle_table;
 
+   struct util_vma_heap vma_allocator[BRW_MEMZONE_COUNT];
+
    bool has_llc:1;
    bool has_mmap_wc:1;
    bool bo_reuse:1;
+
+   uint64_t initial_kflags;
 };
 
 static int bo_set_tiling_internal(struct brw_bo *bo, uint32_t tiling_mode,
                                   uint32_t stride);
 
 static void bo_free(struct brw_bo *bo);
+
+static uint64_t vma_alloc(struct brw_bufmgr *bufmgr,
+                          enum brw_memory_zone memzone,
+                          uint64_t size, uint64_t alignment);
 
 static uint32_t
 key_hash_uint(const void *key)
@@ -152,7 +195,7 @@ bo_tile_size(struct brw_bufmgr *bufmgr, uint64_t size, uint32_t tiling)
       return size;
 
    /* 965+ just need multiples of page size for tiling */
-   return ALIGN(size, 4096);
+   return ALIGN(size, PAGE_SIZE);
 }
 
 /*
@@ -180,32 +223,234 @@ bo_tile_pitch(struct brw_bufmgr *bufmgr, uint32_t pitch, uint32_t tiling)
    return ALIGN(pitch, tile_width);
 }
 
+/**
+ * This function finds the correct bucket fit for the input size.
+ * The function works with O(1) complexity when the requested size
+ * was queried instead of iterating the size through all the buckets.
+ */
 static struct bo_cache_bucket *
 bucket_for_size(struct brw_bufmgr *bufmgr, uint64_t size)
 {
-   int i;
+   /* Calculating the pages and rounding up to the page size. */
+   const unsigned pages = (size + PAGE_SIZE - 1) / PAGE_SIZE;
 
-   for (i = 0; i < bufmgr->num_buckets; i++) {
-      struct bo_cache_bucket *bucket = &bufmgr->cache_bucket[i];
-      if (bucket->size >= size) {
-         return bucket;
+   /* Row  Bucket sizes    clz((x-1) | 3)   Row    Column
+    *        in pages                      stride   size
+    *   0:   1  2  3  4 -> 30 30 30 30        4       1
+    *   1:   5  6  7  8 -> 29 29 29 29        4       1
+    *   2:  10 12 14 16 -> 28 28 28 28        8       2
+    *   3:  20 24 28 32 -> 27 27 27 27       16       4
+    */
+   const unsigned row = 30 - __builtin_clz((pages - 1) | 3);
+   const unsigned row_max_pages = 4 << row;
+
+   /* The '& ~2' is the special case for row 1. In row 1, max pages /
+    * 2 is 2, but the previous row maximum is zero (because there is
+    * no previous row). All row maximum sizes are power of 2, so that
+    * is the only case where that bit will be set.
+    */
+   const unsigned prev_row_max_pages = (row_max_pages / 2) & ~2;
+   int col_size_log2 = row - 1;
+   col_size_log2 += (col_size_log2 < 0);
+
+   const unsigned col = (pages - prev_row_max_pages +
+                        ((1 << col_size_log2) - 1)) >> col_size_log2;
+
+   /* Calculating the index based on the row and column. */
+   const unsigned index = (row * 4) + (col - 1);
+
+   return (index < bufmgr->num_buckets) ?
+          &bufmgr->cache_bucket[index] : NULL;
+}
+
+static enum brw_memory_zone
+memzone_for_address(uint64_t address)
+{
+   const uint64_t _4GB = 1ull << 32;
+
+   if (address >= _4GB)
+      return BRW_MEMZONE_OTHER;
+
+   return BRW_MEMZONE_LOW_4G;
+}
+
+static uint64_t
+bucket_vma_alloc(struct brw_bufmgr *bufmgr,
+                 struct bo_cache_bucket *bucket,
+                 enum brw_memory_zone memzone)
+{
+   struct util_dynarray *vma_list = &bucket->vma_list[memzone];
+   struct vma_bucket_node *node;
+
+   if (vma_list->size == 0) {
+      /* This bucket allocator is out of space - allocate a new block of
+       * memory for 64 blocks from a larger allocator (either a larger
+       * bucket or util_vma).
+       *
+       * We align the address to the node size (64 blocks) so that
+       * bucket_vma_free can easily compute the starting address of this
+       * block by rounding any address we return down to the node size.
+       *
+       * Set the first bit used, and return the start address.
+       */
+      uint64_t node_size = 64ull * bucket->size;
+      node = util_dynarray_grow(vma_list, sizeof(struct vma_bucket_node));
+
+      if (unlikely(!node))
+         return 0ull;
+
+      uint64_t addr = vma_alloc(bufmgr, memzone, node_size, node_size);
+      node->start_address = gen_48b_address(addr);
+      node->bitmap = ~1ull;
+      return node->start_address;
+   }
+
+   /* Pick any bit from any node - they're all the right size and free. */
+   node = util_dynarray_top_ptr(vma_list, struct vma_bucket_node);
+   int bit = ffsll(node->bitmap) - 1;
+   assert(bit >= 0 && bit <= 63);
+
+   /* Reserve the memory by clearing the bit. */
+   assert((node->bitmap & (1ull << bit)) != 0ull);
+   node->bitmap &= ~(1ull << bit);
+
+   uint64_t addr = node->start_address + bit * bucket->size;
+
+   /* If this node is now completely full, remove it from the free list. */
+   if (node->bitmap == 0ull) {
+      (void) util_dynarray_pop(vma_list, struct vma_bucket_node);
+   }
+
+   return addr;
+}
+
+static void
+bucket_vma_free(struct bo_cache_bucket *bucket, uint64_t address)
+{
+   enum brw_memory_zone memzone = memzone_for_address(address);
+   struct util_dynarray *vma_list = &bucket->vma_list[memzone];
+   const uint64_t node_bytes = 64ull * bucket->size;
+   struct vma_bucket_node *node = NULL;
+
+   /* bucket_vma_alloc allocates 64 blocks at a time, and aligns it to
+    * that 64 block size.  So, we can round down to get the starting address.
+    */
+   uint64_t start = (address / node_bytes) * node_bytes;
+
+   /* Dividing the offset from start by bucket size gives us the bit index. */
+   int bit = (address - start) / bucket->size;
+
+   assert(start + bit * bucket->size == address);
+
+   util_dynarray_foreach(vma_list, struct vma_bucket_node, cur) {
+      if (cur->start_address == start) {
+         node = cur;
+         break;
       }
    }
 
+   if (!node) {
+      /* No node - the whole group of 64 blocks must have been in-use. */
+      node = util_dynarray_grow(vma_list, sizeof(struct vma_bucket_node));
+
+      if (unlikely(!node))
+         return; /* bogus, leaks some GPU VMA, but nothing we can do... */
+
+      node->start_address = start;
+      node->bitmap = 0ull;
+   }
+
+   /* Set the bit to return the memory. */
+   assert((node->bitmap & (1ull << bit)) == 0ull);
+   node->bitmap |= 1ull << bit;
+
+   /* The block might be entirely free now, and if so, we could return it
+    * to the larger allocator.  But we may as well hang on to it, in case
+    * we get more allocations at this block size.
+    */
+}
+
+static struct bo_cache_bucket *
+get_bucket_allocator(struct brw_bufmgr *bufmgr, uint64_t size)
+{
+   /* Skip using the bucket allocator for very large sizes, as it allocates
+    * 64 of them and this can balloon rather quickly.
+    */
+   if (size > 1024 * PAGE_SIZE)
+      return NULL;
+
+   struct bo_cache_bucket *bucket = bucket_for_size(bufmgr, size);
+
+   if (bucket && bucket->size == size)
+      return bucket;
+
    return NULL;
+}
+
+/**
+ * Allocate a section of virtual memory for a buffer, assigning an address.
+ *
+ * This uses either the bucket allocator for the given size, or the large
+ * object allocator (util_vma).
+ */
+static uint64_t
+vma_alloc(struct brw_bufmgr *bufmgr,
+          enum brw_memory_zone memzone,
+          uint64_t size,
+          uint64_t alignment)
+{
+   /* Without softpin support, we let the kernel assign addresses. */
+   assert(brw_using_softpin(bufmgr));
+
+   struct bo_cache_bucket *bucket = get_bucket_allocator(bufmgr, size);
+   uint64_t addr;
+
+   if (bucket) {
+      addr = bucket_vma_alloc(bufmgr, bucket, memzone);
+   } else {
+      addr = util_vma_heap_alloc(&bufmgr->vma_allocator[memzone], size,
+                                 alignment);
+   }
+
+   assert((addr >> 48ull) == 0);
+   assert((addr % alignment) == 0);
+
+   return gen_canonical_address(addr);
+}
+
+/**
+ * Free a virtual memory area, allowing the address to be reused.
+ */
+static void
+vma_free(struct brw_bufmgr *bufmgr,
+         uint64_t address,
+         uint64_t size)
+{
+   assert(brw_using_softpin(bufmgr));
+
+   /* Un-canonicalize the address. */
+   address = gen_48b_address(address);
+
+   if (address == 0ull)
+      return;
+
+   struct bo_cache_bucket *bucket = get_bucket_allocator(bufmgr, size);
+
+   if (bucket) {
+      bucket_vma_free(bucket, address);
+   } else {
+      enum brw_memory_zone memzone = memzone_for_address(address);
+      util_vma_heap_free(&bufmgr->vma_allocator[memzone], address, size);
+   }
 }
 
 int
 brw_bo_busy(struct brw_bo *bo)
 {
    struct brw_bufmgr *bufmgr = bo->bufmgr;
-   struct drm_i915_gem_busy busy;
-   int ret;
+   struct drm_i915_gem_busy busy = { .handle = bo->gem_handle };
 
-   memclear(busy);
-   busy.handle = bo->gem_handle;
-
-   ret = drmIoctl(bufmgr->fd, DRM_IOCTL_I915_GEM_BUSY, &busy);
+   int ret = drmIoctl(bufmgr->fd, DRM_IOCTL_I915_GEM_BUSY, &busy);
    if (ret == 0) {
       bo->idle = !busy.busy;
       return busy.busy;
@@ -216,12 +461,12 @@ brw_bo_busy(struct brw_bo *bo)
 int
 brw_bo_madvise(struct brw_bo *bo, int state)
 {
-   struct drm_i915_gem_madvise madv;
+   struct drm_i915_gem_madvise madv = {
+      .handle = bo->gem_handle,
+      .madv = state,
+      .retained = 1,
+   };
 
-   memclear(madv);
-   madv.handle = bo->gem_handle;
-   madv.madv = state;
-   madv.retained = 1;
    drmIoctl(bo->bufmgr->fd, DRM_IOCTL_I915_GEM_MADVISE, &madv);
 
    return madv.retained;
@@ -245,12 +490,12 @@ static struct brw_bo *
 bo_alloc_internal(struct brw_bufmgr *bufmgr,
                   const char *name,
                   uint64_t size,
+                  enum brw_memory_zone memzone,
                   unsigned flags,
                   uint32_t tiling_mode,
-                  uint32_t stride, uint64_t alignment)
+                  uint32_t stride)
 {
    struct brw_bo *bo;
-   unsigned int page_size = getpagesize();
    int ret;
    struct bo_cache_bucket *bucket;
    bool alloc_from_cache;
@@ -276,12 +521,12 @@ bo_alloc_internal(struct brw_bufmgr *bufmgr,
     * allocation up.
     */
    if (bucket == NULL) {
-      bo_size = size;
-      if (bo_size < page_size)
-         bo_size = page_size;
+      unsigned int page_size = getpagesize();
+      bo_size = size == 0 ? page_size : ALIGN(size, page_size);
    } else {
       bo_size = bucket->size;
    }
+   assert(bo_size);
 
    mtx_lock(&bufmgr->lock);
    /* Get a buffer out of the cache if available */
@@ -298,9 +543,7 @@ retry:
          bo = LIST_ENTRY(struct brw_bo, bucket->head.prev, head);
          list_del(&bo->head);
          alloc_from_cache = true;
-         bo->align = alignment;
       } else {
-         assert(alignment == 0);
          /* For non-render-target BOs (where we're probably
           * going to map it first thing in order to fill it
           * with data), check if the last BO in the cache is
@@ -338,9 +581,16 @@ retry:
       }
    }
 
-   if (!alloc_from_cache) {
-      struct drm_i915_gem_create create;
-
+   if (alloc_from_cache) {
+      /* If the cache BO isn't in the right memory zone, free the old
+       * memory and assign it a new address.
+       */
+      if ((bo->kflags & EXEC_OBJECT_PINNED) &&
+          memzone != memzone_for_address(bo->gtt_offset)) {
+         vma_free(bufmgr, bo->gtt_offset, bo->size);
+         bo->gtt_offset = 0ull;
+      }
+   } else {
       bo = calloc(1, sizeof(*bo));
       if (!bo)
          goto err;
@@ -348,8 +598,7 @@ retry:
       bo->size = bo_size;
       bo->idle = true;
 
-      memclear(create);
-      create.size = bo_size;
+      struct drm_i915_gem_create create = { .size = bo_size };
 
       /* All new BOs we get from the kernel are zeroed, so we don't need to
        * worry about that here.
@@ -363,7 +612,6 @@ retry:
       bo->gem_handle = create.handle;
 
       bo->bufmgr = bufmgr;
-      bo->align = alignment;
 
       bo->tiling_mode = I915_TILING_NONE;
       bo->swizzle_mode = I915_BIT_6_SWIZZLE_NONE;
@@ -391,6 +639,14 @@ retry:
    bo->reusable = true;
    bo->cache_coherent = bufmgr->has_llc;
    bo->index = -1;
+   bo->kflags = bufmgr->initial_kflags;
+
+   if ((bo->kflags & EXEC_OBJECT_PINNED) && bo->gtt_offset == 0ull) {
+      bo->gtt_offset = vma_alloc(bufmgr, memzone, bo->size, 1);
+
+      if (bo->gtt_offset == 0ull)
+         goto err_free;
+   }
 
    mtx_unlock(&bufmgr->lock);
 
@@ -408,23 +664,27 @@ err:
 
 struct brw_bo *
 brw_bo_alloc(struct brw_bufmgr *bufmgr,
-             const char *name, uint64_t size, uint64_t alignment)
+             const char *name, uint64_t size,
+             enum brw_memory_zone memzone)
 {
-   return bo_alloc_internal(bufmgr, name, size, 0, I915_TILING_NONE, 0, 0);
+   return bo_alloc_internal(bufmgr, name, size, memzone,
+                            0, I915_TILING_NONE, 0);
 }
 
 struct brw_bo *
 brw_bo_alloc_tiled(struct brw_bufmgr *bufmgr, const char *name,
-                   uint64_t size, uint32_t tiling_mode, uint32_t pitch,
+                   uint64_t size, enum brw_memory_zone memzone,
+                   uint32_t tiling_mode, uint32_t pitch,
                    unsigned flags)
 {
-   return bo_alloc_internal(bufmgr, name, size, flags, tiling_mode, pitch, 0);
+   return bo_alloc_internal(bufmgr, name, size, memzone,
+                            flags, tiling_mode, pitch);
 }
 
 struct brw_bo *
 brw_bo_alloc_tiled_2d(struct brw_bufmgr *bufmgr, const char *name,
-                      int x, int y, int cpp, uint32_t tiling,
-                      uint32_t *pitch, unsigned flags)
+                      int x, int y, int cpp, enum brw_memory_zone memzone,
+                      uint32_t tiling, uint32_t *pitch, unsigned flags)
 {
    uint64_t size;
    uint32_t stride;
@@ -459,7 +719,8 @@ brw_bo_alloc_tiled_2d(struct brw_bufmgr *bufmgr, const char *name,
    if (tiling == I915_TILING_NONE)
       stride = 0;
 
-   return bo_alloc_internal(bufmgr, name, size, flags, tiling, stride, 0);
+   return bo_alloc_internal(bufmgr, name, size, memzone,
+                            flags, tiling, stride);
 }
 
 /**
@@ -473,9 +734,6 @@ brw_bo_gem_create_from_name(struct brw_bufmgr *bufmgr,
                             const char *name, unsigned int handle)
 {
    struct brw_bo *bo;
-   int ret;
-   struct drm_gem_open open_arg;
-   struct drm_i915_gem_get_tiling get_tiling;
 
    /* At the moment most applications only have a few named bo.
     * For instance, in a DRI client only the render buffers passed
@@ -490,9 +748,8 @@ brw_bo_gem_create_from_name(struct brw_bufmgr *bufmgr,
       goto out;
    }
 
-   memclear(open_arg);
-   open_arg.name = handle;
-   ret = drmIoctl(bufmgr->fd, DRM_IOCTL_GEM_OPEN, &open_arg);
+   struct drm_gem_open open_arg = { .name = handle };
+   int ret = drmIoctl(bufmgr->fd, DRM_IOCTL_GEM_OPEN, &open_arg);
    if (ret != 0) {
       DBG("Couldn't reference %s handle 0x%08x: %s\n",
           name, handle, strerror(errno));
@@ -523,12 +780,15 @@ brw_bo_gem_create_from_name(struct brw_bufmgr *bufmgr,
    bo->global_name = handle;
    bo->reusable = false;
    bo->external = true;
+   bo->kflags = bufmgr->initial_kflags;
+
+   if (bo->kflags & EXEC_OBJECT_PINNED)
+      bo->gtt_offset = vma_alloc(bufmgr, BRW_MEMZONE_OTHER, bo->size, 1);
 
    _mesa_hash_table_insert(bufmgr->handle_table, &bo->gem_handle, bo);
    _mesa_hash_table_insert(bufmgr->name_table, &bo->global_name, bo);
 
-   memclear(get_tiling);
-   get_tiling.handle = bo->gem_handle;
+   struct drm_i915_gem_get_tiling get_tiling = { .handle = bo->gem_handle };
    ret = drmIoctl(bufmgr->fd, DRM_IOCTL_I915_GEM_GET_TILING, &get_tiling);
    if (ret != 0)
       goto err_unref;
@@ -552,8 +812,6 @@ static void
 bo_free(struct brw_bo *bo)
 {
    struct brw_bufmgr *bufmgr = bo->bufmgr;
-   struct drm_gem_close close;
-   int ret;
 
    if (bo->map_cpu) {
       VG_NOACCESS(bo->map_cpu, bo->size);
@@ -581,13 +839,16 @@ bo_free(struct brw_bo *bo)
    }
 
    /* Close this object */
-   memclear(close);
-   close.handle = bo->gem_handle;
-   ret = drmIoctl(bufmgr->fd, DRM_IOCTL_GEM_CLOSE, &close);
+   struct drm_gem_close close = { .handle = bo->gem_handle };
+   int ret = drmIoctl(bufmgr->fd, DRM_IOCTL_GEM_CLOSE, &close);
    if (ret != 0) {
       DBG("DRM_IOCTL_GEM_CLOSE %d failed (%s): %s\n",
           bo->gem_handle, bo->name, strerror(errno));
    }
+
+   if (bo->kflags & EXEC_OBJECT_PINNED)
+      vma_free(bo->bufmgr, bo->gtt_offset, bo->size);
+
    free(bo);
 }
 
@@ -631,7 +892,6 @@ bo_unreference_final(struct brw_bo *bo, time_t time)
       bo->free_time = time;
 
       bo->name = NULL;
-      bo->kflags = 0;
 
       list_addtail(&bo->head, &bucket->head);
    } else {
@@ -712,22 +972,19 @@ brw_bo_map_cpu(struct brw_context *brw, struct brw_bo *bo, unsigned flags)
    assert(bo->cache_coherent || !(flags & MAP_WRITE));
 
    if (!bo->map_cpu) {
-      struct drm_i915_gem_mmap mmap_arg;
-      void *map;
-
       DBG("brw_bo_map_cpu: %d (%s)\n", bo->gem_handle, bo->name);
 
-      memclear(mmap_arg);
-      mmap_arg.handle = bo->gem_handle;
-      mmap_arg.size = bo->size;
+      struct drm_i915_gem_mmap mmap_arg = {
+         .handle = bo->gem_handle,
+         .size = bo->size,
+      };
       int ret = drmIoctl(bufmgr->fd, DRM_IOCTL_I915_GEM_MMAP, &mmap_arg);
       if (ret != 0) {
-         ret = -errno;
          DBG("%s:%d: Error mapping buffer %d (%s): %s .\n",
              __FILE__, __LINE__, bo->gem_handle, bo->name, strerror(errno));
          return NULL;
       }
-      map = (void *) (uintptr_t) mmap_arg.addr_ptr;
+      void *map = (void *) (uintptr_t) mmap_arg.addr_ptr;
       VG_DEFINED(map, bo->size);
 
       if (p_atomic_cmpxchg(&bo->map_cpu, NULL, map)) {
@@ -777,24 +1034,21 @@ brw_bo_map_wc(struct brw_context *brw, struct brw_bo *bo, unsigned flags)
       return NULL;
 
    if (!bo->map_wc) {
-      struct drm_i915_gem_mmap mmap_arg;
-      void *map;
-
       DBG("brw_bo_map_wc: %d (%s)\n", bo->gem_handle, bo->name);
 
-      memclear(mmap_arg);
-      mmap_arg.handle = bo->gem_handle;
-      mmap_arg.size = bo->size;
-      mmap_arg.flags = I915_MMAP_WC;
+      struct drm_i915_gem_mmap mmap_arg = {
+         .handle = bo->gem_handle,
+         .size = bo->size,
+         .flags = I915_MMAP_WC,
+      };
       int ret = drmIoctl(bufmgr->fd, DRM_IOCTL_I915_GEM_MMAP, &mmap_arg);
       if (ret != 0) {
-         ret = -errno;
          DBG("%s:%d: Error mapping buffer %d (%s): %s .\n",
              __FILE__, __LINE__, bo->gem_handle, bo->name, strerror(errno));
          return NULL;
       }
 
-      map = (void *) (uintptr_t) mmap_arg.addr_ptr;
+      void *map = (void *) (uintptr_t) mmap_arg.addr_ptr;
       VG_DEFINED(map, bo->size);
 
       if (p_atomic_cmpxchg(&bo->map_wc, NULL, map)) {
@@ -843,13 +1097,9 @@ brw_bo_map_gtt(struct brw_context *brw, struct brw_bo *bo, unsigned flags)
 
    /* Get a mapping of the buffer if we haven't before. */
    if (bo->map_gtt == NULL) {
-      struct drm_i915_gem_mmap_gtt mmap_arg;
-      void *map;
-
       DBG("bo_map_gtt: mmap %d (%s)\n", bo->gem_handle, bo->name);
 
-      memclear(mmap_arg);
-      mmap_arg.handle = bo->gem_handle;
+      struct drm_i915_gem_mmap_gtt mmap_arg = { .handle = bo->gem_handle };
 
       /* Get the fake offset back... */
       int ret = drmIoctl(bufmgr->fd, DRM_IOCTL_I915_GEM_MMAP_GTT, &mmap_arg);
@@ -860,8 +1110,8 @@ brw_bo_map_gtt(struct brw_context *brw, struct brw_bo *bo, unsigned flags)
       }
 
       /* and mmap it. */
-      map = drm_mmap(0, bo->size, PROT_READ | PROT_WRITE,
-                     MAP_SHARED, bufmgr->fd, mmap_arg.offset);
+      void *map = drm_mmap(0, bo->size, PROT_READ | PROT_WRITE,
+                           MAP_SHARED, bufmgr->fd, mmap_arg.offset);
       if (map == MAP_FAILED) {
          DBG("%s:%d: Error mapping buffer %d (%s): %s .\n",
              __FILE__, __LINE__, bo->gem_handle, bo->name, strerror(errno));
@@ -963,15 +1213,15 @@ brw_bo_subdata(struct brw_bo *bo, uint64_t offset,
                uint64_t size, const void *data)
 {
    struct brw_bufmgr *bufmgr = bo->bufmgr;
-   struct drm_i915_gem_pwrite pwrite;
-   int ret;
 
-   memclear(pwrite);
-   pwrite.handle = bo->gem_handle;
-   pwrite.offset = offset;
-   pwrite.size = size;
-   pwrite.data_ptr = (uint64_t) (uintptr_t) data;
-   ret = drmIoctl(bufmgr->fd, DRM_IOCTL_I915_GEM_PWRITE, &pwrite);
+   struct drm_i915_gem_pwrite pwrite = {
+      .handle = bo->gem_handle,
+      .offset = offset,
+      .size = size,
+      .data_ptr = (uint64_t) (uintptr_t) data,
+   };
+
+   int ret = drmIoctl(bufmgr->fd, DRM_IOCTL_I915_GEM_PWRITE, &pwrite);
    if (ret != 0) {
       ret = -errno;
       DBG("%s:%d: Error writing data to buffer %d: "
@@ -1023,18 +1273,17 @@ int
 brw_bo_wait(struct brw_bo *bo, int64_t timeout_ns)
 {
    struct brw_bufmgr *bufmgr = bo->bufmgr;
-   struct drm_i915_gem_wait wait;
-   int ret;
 
    /* If we know it's idle, don't bother with the kernel round trip */
    if (bo->idle && !bo->external)
       return 0;
 
-   memclear(wait);
-   wait.bo_handle = bo->gem_handle;
-   wait.timeout_ns = timeout_ns;
-   ret = drmIoctl(bufmgr->fd, DRM_IOCTL_I915_GEM_WAIT, &wait);
-   if (ret == -1)
+   struct drm_i915_gem_wait wait = {
+      .bo_handle = bo->gem_handle,
+      .timeout_ns = timeout_ns,
+   };
+   int ret = drmIoctl(bufmgr->fd, DRM_IOCTL_I915_GEM_WAIT, &wait);
+   if (ret != 0)
       return -errno;
 
    bo->idle = true;
@@ -1056,10 +1305,22 @@ brw_bufmgr_destroy(struct brw_bufmgr *bufmgr)
 
          bo_free(bo);
       }
+
+      if (brw_using_softpin(bufmgr)) {
+         for (int z = 0; z < BRW_MEMZONE_COUNT; z++) {
+            util_dynarray_fini(&bucket->vma_list[z]);
+         }
+      }
    }
 
    _mesa_hash_table_destroy(bufmgr->name_table, NULL);
    _mesa_hash_table_destroy(bufmgr->handle_table, NULL);
+
+   if (brw_using_softpin(bufmgr)) {
+      for (int z = 0; z < BRW_MEMZONE_COUNT; z++) {
+         util_vma_heap_finish(&bufmgr->vma_allocator[z]);
+      }
+   }
 
    free(bufmgr);
 }
@@ -1110,12 +1371,11 @@ static struct brw_bo *
 brw_bo_gem_create_from_prime_internal(struct brw_bufmgr *bufmgr, int prime_fd,
                                       int tiling_mode, uint32_t stride)
 {
-   int ret;
    uint32_t handle;
    struct brw_bo *bo;
 
    mtx_lock(&bufmgr->lock);
-   ret = drmPrimeFDToHandle(bufmgr->fd, prime_fd, &handle);
+   int ret = drmPrimeFDToHandle(bufmgr->fd, prime_fd, &handle);
    if (ret) {
       DBG("create_from_prime: failed to obtain handle from fd: %s\n",
           strerror(errno));
@@ -1157,6 +1417,12 @@ brw_bo_gem_create_from_prime_internal(struct brw_bufmgr *bufmgr, int prime_fd,
    bo->name = "prime";
    bo->reusable = false;
    bo->external = true;
+   bo->kflags = bufmgr->initial_kflags;
+
+   if (bo->kflags & EXEC_OBJECT_PINNED) {
+      assert(bo->size > 0);
+      bo->gtt_offset = vma_alloc(bufmgr, BRW_MEMZONE_OTHER, bo->size, 1);
+   }
 
    if (tiling_mode < 0) {
       struct drm_i915_gem_get_tiling get_tiling = { .handle = bo->gem_handle };
@@ -1243,10 +1509,8 @@ brw_bo_flink(struct brw_bo *bo, uint32_t *name)
    struct brw_bufmgr *bufmgr = bo->bufmgr;
 
    if (!bo->global_name) {
-      struct drm_gem_flink flink;
+      struct drm_gem_flink flink = { .handle = bo->gem_handle };
 
-      memclear(flink);
-      flink.handle = bo->gem_handle;
       if (drmIoctl(bufmgr->fd, DRM_IOCTL_GEM_FLINK, &flink))
          return -errno;
 
@@ -1286,8 +1550,16 @@ add_bucket(struct brw_bufmgr *bufmgr, int size)
    assert(i < ARRAY_SIZE(bufmgr->cache_bucket));
 
    list_inithead(&bufmgr->cache_bucket[i].head);
+   if (brw_using_softpin(bufmgr)) {
+      for (int z = 0; z < BRW_MEMZONE_COUNT; z++)
+         util_dynarray_init(&bufmgr->cache_bucket[i].vma_list[z], NULL);
+   }
    bufmgr->cache_bucket[i].size = size;
    bufmgr->num_buckets++;
+
+   assert(bucket_for_size(bufmgr, size) == &bufmgr->cache_bucket[i]);
+   assert(bucket_for_size(bufmgr, size - 2048) == &bufmgr->cache_bucket[i]);
+   assert(bucket_for_size(bufmgr, size + 1) != &bufmgr->cache_bucket[i]);
 }
 
 static void
@@ -1303,12 +1575,12 @@ init_cache_buckets(struct brw_bufmgr *bufmgr)
     * width/height alignment and rounding of sizes to pages will
     * get us useful cache hit rates anyway)
     */
-   add_bucket(bufmgr, 4096);
-   add_bucket(bufmgr, 4096 * 2);
-   add_bucket(bufmgr, 4096 * 3);
+   add_bucket(bufmgr, PAGE_SIZE);
+   add_bucket(bufmgr, PAGE_SIZE * 2);
+   add_bucket(bufmgr, PAGE_SIZE * 3);
 
    /* Initialize the linked lists for BO reuse cache. */
-   for (size = 4 * 4096; size <= cache_max_size; size *= 2) {
+   for (size = 4 * PAGE_SIZE; size <= cache_max_size; size *= 2) {
       add_bucket(bufmgr, size);
 
       add_bucket(bufmgr, size + size * 1 / 4);
@@ -1320,11 +1592,8 @@ init_cache_buckets(struct brw_bufmgr *bufmgr)
 uint32_t
 brw_create_hw_context(struct brw_bufmgr *bufmgr)
 {
-   struct drm_i915_gem_context_create create;
-   int ret;
-
-   memclear(create);
-   ret = drmIoctl(bufmgr->fd, DRM_IOCTL_I915_GEM_CONTEXT_CREATE, &create);
+   struct drm_i915_gem_context_create create = { };
+   int ret = drmIoctl(bufmgr->fd, DRM_IOCTL_I915_GEM_CONTEXT_CREATE, &create);
    if (ret != 0) {
       DBG("DRM_IOCTL_I915_GEM_CONTEXT_CREATE failed: %s\n", strerror(errno));
       return 0;
@@ -1355,7 +1624,7 @@ brw_hw_context_set_priority(struct brw_bufmgr *bufmgr,
 void
 brw_destroy_hw_context(struct brw_bufmgr *bufmgr, uint32_t ctx_id)
 {
-   struct drm_i915_gem_context_destroy d = {.ctx_id = ctx_id };
+   struct drm_i915_gem_context_destroy d = { .ctx_id = ctx_id };
 
    if (ctx_id != 0 &&
        drmIoctl(bufmgr->fd, DRM_IOCTL_I915_GEM_CONTEXT_DESTROY, &d) != 0) {
@@ -1367,13 +1636,8 @@ brw_destroy_hw_context(struct brw_bufmgr *bufmgr, uint32_t ctx_id)
 int
 brw_reg_read(struct brw_bufmgr *bufmgr, uint32_t offset, uint64_t *result)
 {
-   struct drm_i915_reg_read reg_read;
-   int ret;
-
-   memclear(reg_read);
-   reg_read.offset = offset;
-
-   ret = drmIoctl(bufmgr->fd, DRM_IOCTL_I915_REG_READ, &reg_read);
+   struct drm_i915_reg_read reg_read = { .offset = offset };
+   int ret = drmIoctl(bufmgr->fd, DRM_IOCTL_I915_REG_READ, &reg_read);
 
    *result = reg_read.val;
    return ret;
@@ -1382,16 +1646,35 @@ brw_reg_read(struct brw_bufmgr *bufmgr, uint32_t offset, uint64_t *result)
 static int
 gem_param(int fd, int name)
 {
-   drm_i915_getparam_t gp;
    int v = -1; /* No param uses (yet) the sign bit, reserve it for errors */
 
-   memset(&gp, 0, sizeof(gp));
-   gp.param = name;
-   gp.value = &v;
+   struct drm_i915_getparam gp = { .param = name, .value = &v };
    if (drmIoctl(fd, DRM_IOCTL_I915_GETPARAM, &gp))
       return -1;
 
    return v;
+}
+
+static int
+gem_context_getparam(int fd, uint32_t context, uint64_t param, uint64_t *value)
+{
+   struct drm_i915_gem_context_param gp = {
+      .ctx_id = context,
+      .param = param,
+   };
+
+   if (drmIoctl(fd, DRM_IOCTL_I915_GEM_CONTEXT_GETPARAM, &gp))
+      return -1;
+
+   *value = gp.value;
+
+   return 0;
+}
+
+bool
+brw_using_softpin(struct brw_bufmgr *bufmgr)
+{
+   return bufmgr->initial_kflags & EXEC_OBJECT_PINNED;
 }
 
 /**
@@ -1425,8 +1708,39 @@ brw_bufmgr_init(struct gen_device_info *devinfo, int fd)
       return NULL;
    }
 
+   uint64_t gtt_size;
+   if (gem_context_getparam(fd, 0, I915_CONTEXT_PARAM_GTT_SIZE, &gtt_size))
+      gtt_size = 0;
+
    bufmgr->has_llc = devinfo->has_llc;
    bufmgr->has_mmap_wc = gem_param(fd, I915_PARAM_MMAP_VERSION) > 0;
+
+   const uint64_t _4GB = 4ull << 30;
+
+   if (devinfo->gen >= 8 && gtt_size > _4GB) {
+      bufmgr->initial_kflags |= EXEC_OBJECT_SUPPORTS_48B_ADDRESS;
+
+      /* Allocate VMA in userspace if we have softpin and full PPGTT. */
+      if (gem_param(fd, I915_PARAM_HAS_EXEC_SOFTPIN) > 0 &&
+          gem_param(fd, I915_PARAM_HAS_ALIASING_PPGTT) > 1) {
+         bufmgr->initial_kflags |= EXEC_OBJECT_PINNED;
+
+         util_vma_heap_init(&bufmgr->vma_allocator[BRW_MEMZONE_LOW_4G],
+                            PAGE_SIZE, _4GB);
+         util_vma_heap_init(&bufmgr->vma_allocator[BRW_MEMZONE_OTHER],
+                            1 * _4GB, gtt_size - 1 * _4GB);
+      } else if (devinfo->gen >= 10) {
+         /* Softpin landed in 4.5, but GVT used an aliasing PPGTT until
+          * kernel commit 6b3816d69628becb7ff35978aa0751798b4a940a in
+          * 4.14.  Gen10+ GVT hasn't landed yet, so it's not actually a
+          * problem - but extending this requirement back to earlier gens
+          * might actually mean requiring 4.14.
+          */
+         fprintf(stderr, "i965 requires softpin (Kernel 4.5) on Gen10+.");
+         free(bufmgr);
+         return NULL;
+      }
+   }
 
    init_cache_buckets(bufmgr);
 

@@ -62,9 +62,29 @@ fd5_pipe_sampler_view(struct pipe_sampler_view *pview)
 	return (struct fd5_pipe_sampler_view *)pview;
 }
 
-unsigned fd5_get_const_idx(struct fd_context *ctx,
-		struct fd_texture_stateobj *tex, unsigned samp_id);
-
 void fd5_texture_init(struct pipe_context *pctx);
+
+
+static inline enum a5xx_tex_type
+fd5_tex_type(unsigned target)
+{
+	switch (target) {
+	default:
+		assert(0);
+	case PIPE_BUFFER:
+	case PIPE_TEXTURE_1D:
+	case PIPE_TEXTURE_1D_ARRAY:
+		return A5XX_TEX_1D;
+	case PIPE_TEXTURE_RECT:
+	case PIPE_TEXTURE_2D:
+	case PIPE_TEXTURE_2D_ARRAY:
+		return A5XX_TEX_2D;
+	case PIPE_TEXTURE_3D:
+		return A5XX_TEX_3D;
+	case PIPE_TEXTURE_CUBE:
+	case PIPE_TEXTURE_CUBE_ARRAY:
+		return A5XX_TEX_CUBE;
+	}
+}
 
 #endif /* FD5_TEXTURE_H_ */

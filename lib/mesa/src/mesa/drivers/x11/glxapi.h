@@ -164,13 +164,6 @@ struct _glxapi_table {
    void *AssociciateDMPbufferSGIX;
 #endif
 
-   /*** GLX_SGIX_swap_group ***/
-   void (*JoinSwapGroupSGIX)(Display *, GLXDrawable, GLXDrawable);
-
-   /*** GLX_SGIX_swap_barrier ***/
-   void (*BindSwapBarrierSGIX)(Display *, GLXDrawable, int);
-   Bool (*QueryMaxSwapBarriersSGIX)(Display *, int, int *);
-
    /*** GLX_SUN_get_transparent_index ***/
    Status (*GetTransparentIndexSUN)(Display *, Window, Window, long *);
 
@@ -182,19 +175,6 @@ struct _glxapi_table {
 
    /*** GLX_MESA_pixmap_colormap ***/
    GLXPixmap (*CreateGLXPixmapMESA)(Display *dpy, XVisualInfo *visinfo, Pixmap pixmap, Colormap cmap);
-
-   /*** GLX_MESA_set_3dfx_mode ***/
-   Bool (*Set3DfxModeMESA)(int mode);
-
-   /*** GLX_NV_vertex_array_range ***/
-   void * (*AllocateMemoryNV)( GLsizei size,
-                               GLfloat readFrequency,
-                               GLfloat writeFrequency,
-                               GLfloat priority );
-   void (*FreeMemoryNV)( GLvoid *pointer );
-
-   /*** GLX_MESA_agp_offset ***/
-   GLuint (*GetAGPOffsetMESA)( const GLvoid *pointer );
 
    /*** GLX_EXT_texture_from_pixmap ***/
    void (*BindTexImageEXT)(Display *dpy, GLXDrawable drawable, int buffer,

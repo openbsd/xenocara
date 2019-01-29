@@ -44,7 +44,7 @@ AM_CFLAGS = \
 	$(WNO_OVERRIDE_INIT) \
 	$(LIBDRM_CFLAGS) \
 	$(VALGRIND_CFLAGS) \
-	-msse2
+	-msse2 -mstackrealign
 
 AM_CXXFLAGS = $(AM_CFLAGS)
 
@@ -57,7 +57,8 @@ I965_PERGEN_LIBS = \
 	libi965_gen75.la \
 	libi965_gen8.la \
 	libi965_gen9.la \
-	libi965_gen10.la
+	libi965_gen10.la \
+	libi965_gen11.la
 
 libi965_gen4_la_SOURCES = $(i965_gen4_FILES)
 libi965_gen4_la_CFLAGS = $(AM_CFLAGS) -DGEN_VERSIONx10=40
@@ -86,80 +87,57 @@ libi965_gen9_la_CFLAGS = $(AM_CFLAGS) -DGEN_VERSIONx10=90
 libi965_gen10_la_SOURCES = $(i965_gen10_FILES)
 libi965_gen10_la_CFLAGS = $(AM_CFLAGS) -DGEN_VERSIONx10=100
 
+libi965_gen11_la_SOURCES = $(i965_gen11_FILES)
+libi965_gen11_la_CFLAGS = $(AM_CFLAGS) -DGEN_VERSIONx10=110
+
 noinst_LTLIBRARIES = \
 	libi965_dri.la \
+	libintel_tiled_memcpy.la \
+	libintel_tiled_memcpy_sse41.la \
 	$(I965_PERGEN_LIBS)
+
+libintel_tiled_memcpy_la_SOURCES = \
+	$(intel_tiled_memcpy_FILES)
+libintel_tiled_memcpy_la_CFLAGS = \
+	$(AM_CFLAGS)
+
+libintel_tiled_memcpy_sse41_la_SOURCES = \
+	$(intel_tiled_memcpy_sse41_FILES)
+libintel_tiled_memcpy_sse41_la_CFLAGS = \
+	$(AM_CFLAGS) $(SSE41_CFLAGS)
 
 libi965_dri_la_SOURCES = \
 	$(i965_FILES) \
 	$(i965_oa_GENERATED_FILES)
 libi965_dri_la_LIBADD = \
 	$(top_builddir)/src/intel/common/libintel_common.la \
+	$(top_builddir)/src/intel/dev/libintel_dev.la \
 	$(top_builddir)/src/intel/isl/libisl.la \
 	$(top_builddir)/src/intel/compiler/libintel_compiler.la \
 	$(top_builddir)/src/intel/blorp/libblorp.la \
 	$(I965_PERGEN_LIBS) \
+	libintel_tiled_memcpy.la \
+	libintel_tiled_memcpy_sse41.la \
 	$(LIBDRM_LIBS)
 
 BUILT_SOURCES = $(i965_oa_GENERATED_FILES)
 CLEANFILES = $(BUILT_SOURCES)
 
 EXTRA_DIST = \
-	brw_oa_hsw.xml \
-	brw_oa_bdw.xml \
-	brw_oa_chv.xml \
-	brw_oa_sklgt2.xml \
-	brw_oa_sklgt3.xml \
-	brw_oa_sklgt4.xml \
-	brw_oa_bxt.xml \
-	brw_oa_kblgt2.xml \
-	brw_oa_kblgt3.xml \
-	brw_oa_glk.xml \
-	brw_oa.py
+	brw_oa.py \
+	$(i965_oa_xml_FILES) \
+	$(intel_tiled_memcpy_dep_FILES) \
+	meson.build
 
-# Note: we avoid using a multi target rule here and outputting both the
-# .c and .h files in one go so we don't hit problems with parallel
-# make and multiple invocations of the same script trying to write
-# to the same files.
 if REGEN_SOURCES
-brw_oa_hsw.h: brw_oa.py brw_oa_hsw.xml Makefile.am
-	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --header=$(builddir)/brw_oa_hsw.h --chipset=hsw $(srcdir)/brw_oa_hsw.xml
-brw_oa_hsw.c: brw_oa.py brw_oa_hsw.xml Makefile.am
-	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --code=$(builddir)/brw_oa_hsw.c --chipset=hsw $(srcdir)/brw_oa_hsw.xml
-brw_oa_bdw.h: brw_oa.py brw_oa_bdw.xml Makefile.am
-	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --header=$(builddir)/brw_oa_bdw.h --chipset=bdw $(srcdir)/brw_oa_bdw.xml
-brw_oa_bdw.c: brw_oa.py brw_oa_bdw.xml Makefile.am
-	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --code=$(builddir)/brw_oa_bdw.c --chipset=bdw $(srcdir)/brw_oa_bdw.xml
-brw_oa_chv.h: brw_oa.py brw_oa_chv.xml Makefile.am
-	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --header=$(builddir)/brw_oa_chv.h --chipset=chv $(srcdir)/brw_oa_chv.xml
-brw_oa_chv.c: brw_oa.py brw_oa_chv.xml Makefile.am
-	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --code=$(builddir)/brw_oa_chv.c --chipset=chv $(srcdir)/brw_oa_chv.xml
-brw_oa_sklgt2.h: brw_oa.py brw_oa_sklgt2.xml Makefile.am
-	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --header=$(builddir)/brw_oa_sklgt2.h --chipset=sklgt2 $(srcdir)/brw_oa_sklgt2.xml
-brw_oa_sklgt2.c: brw_oa.py brw_oa_sklgt2.xml Makefile.am
-	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --code=$(builddir)/brw_oa_sklgt2.c --chipset=sklgt2 $(srcdir)/brw_oa_sklgt2.xml
-brw_oa_sklgt3.h: brw_oa.py brw_oa_sklgt3.xml Makefile.am
-	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --header=$(builddir)/brw_oa_sklgt3.h --chipset=sklgt3 $(srcdir)/brw_oa_sklgt3.xml
-brw_oa_sklgt3.c: brw_oa.py brw_oa_sklgt3.xml Makefile.am
-	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --code=$(builddir)/brw_oa_sklgt3.c --chipset=sklgt3 $(srcdir)/brw_oa_sklgt3.xml
-brw_oa_sklgt4.h: brw_oa.py brw_oa_sklgt4.xml Makefile.am
-	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --header=$(builddir)/brw_oa_sklgt4.h --chipset=sklgt4 $(srcdir)/brw_oa_sklgt4.xml
-brw_oa_sklgt4.c: brw_oa.py brw_oa_sklgt4.xml Makefile.am
-	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --code=$(builddir)/brw_oa_sklgt4.c --chipset=sklgt4 $(srcdir)/brw_oa_sklgt4.xml
-brw_oa_bxt.h: brw_oa.py brw_oa_bxt.xml Makefile.am
-	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --header=$(builddir)/brw_oa_bxt.h --chipset=bxt $(srcdir)/brw_oa_bxt.xml
-brw_oa_bxt.c: brw_oa.py brw_oa_bxt.xml Makefile.am
-	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --code=$(builddir)/brw_oa_bxt.c --chipset=bxt $(srcdir)/brw_oa_bxt.xml
-brw_oa_kblgt2.h: brw_oa.py brw_oa_kblgt2.xml Makefile.am
-	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --header=$(builddir)/brw_oa_kblgt2.h --chipset=kblgt2 $(srcdir)/brw_oa_kblgt2.xml
-brw_oa_kblgt2.c: brw_oa.py brw_oa_kblgt2.xml Makefile.am
-	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --code=$(builddir)/brw_oa_kblgt2.c --chipset=kblgt2 $(srcdir)/brw_oa_kblgt2.xml
-brw_oa_kblgt3.h: brw_oa.py brw_oa_kblgt3.xml Makefile.am
-	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --header=$(builddir)/brw_oa_kblgt3.h --chipset=kblgt3 $(srcdir)/brw_oa_kblgt3.xml
-brw_oa_kblgt3.c: brw_oa.py brw_oa_kblgt3.xml Makefile.am
-	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --code=$(builddir)/brw_oa_kblgt3.c --chipset=kblgt3 $(srcdir)/brw_oa_kblgt3.xml
-brw_oa_glk.h: brw_oa.py brw_oa_glk.xml Makefile.am
-	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --header=$(builddir)/brw_oa_glk.h --chipset=glk $(srcdir)/brw_oa_glk.xml
-brw_oa_glk.c: brw_oa.py brw_oa_glk.xml Makefile.am
-	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py --code=$(builddir)/brw_oa_glk.c --chipset=glk $(srcdir)/brw_oa_glk.xml
+brw_oa_metrics.c: brw_oa.py $(i965_oa_xml_FILES)
+	$(PYTHON) $(PYTHON_FLAGS) $(srcdir)/brw_oa.py \
+	--code=$(builddir)/brw_oa_metrics.c \
+	--header=$(builddir)/brw_oa_metrics.h \
+	$(i965_oa_xml_FILES:%=$(srcdir)/%)
 endif
+
+brw_oa_metrics.h: brw_oa_metrics.c
+
+intel_tiled_memcpy_normal.c: $(intel_tiled_memcpy_dep_FILES)
+intel_tiled_memcpy_sse41.c: $(intel_tiled_memcpy_dep_FILES)

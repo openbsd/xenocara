@@ -25,8 +25,9 @@
 #define SWR_PUBLIC_H
 
 struct pipe_screen;
-struct sw_winsys;
 struct sw_displaytarget;
+struct sw_winsys;
+struct swr_screen;
 
 #ifdef __cplusplus
 extern "C" {
@@ -36,7 +37,10 @@ extern "C" {
 struct pipe_screen *swr_create_screen(struct sw_winsys *winsys);
 
 // arch-specific dll entry point
-PUBLIC struct pipe_screen *swr_create_screen_internal(struct sw_winsys *winsys);
+struct pipe_screen *swr_create_screen_internal(struct sw_winsys *winsys);
+
+// cleanup for failed screen creation
+void swr_destroy_screen_internal(struct swr_screen **screen);
 
 #ifdef _WIN32
 void swr_gdi_swap(struct pipe_screen *screen,

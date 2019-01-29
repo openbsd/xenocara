@@ -275,7 +275,7 @@ draw_update_clip_flags(struct draw_context *draw)
    draw->guard_band_xy = (!draw->driver.bypass_clip_xy &&
                           draw->driver.guard_band_xy);
    draw->clip_z = (!draw->driver.bypass_clip_z &&
-                   draw->rasterizer && draw->rasterizer->depth_clip) &&
+                   draw->rasterizer && draw->rasterizer->depth_clip_near) &&
                   !window_space;
    draw->clip_user = draw->rasterizer &&
                      draw->rasterizer->clip_plane_enable != 0 &&
@@ -973,7 +973,7 @@ draw_set_sampler_views(struct draw_context *draw,
 
    for (i = 0; i < num; ++i)
       draw->sampler_views[shader_stage][i] = views[i];
-   for (i = num; i < PIPE_MAX_SHADER_SAMPLER_VIEWS; ++i)
+   for (i = num; i < draw->num_sampler_views[shader_stage]; ++i)
       draw->sampler_views[shader_stage][i] = NULL;
 
    draw->num_sampler_views[shader_stage] = num;

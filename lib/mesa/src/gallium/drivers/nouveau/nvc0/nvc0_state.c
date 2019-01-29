@@ -233,7 +233,10 @@ nvc0_rasterizer_state_create(struct pipe_context *pipe,
     SB_IMMED_3D(so, MULTISAMPLE_ENABLE, cso->multisample);
 
     SB_IMMED_3D(so, LINE_SMOOTH_ENABLE, cso->line_smooth);
-    if (cso->line_smooth || cso->multisample)
+    /* On GM20x+, LINE_WIDTH_SMOOTH controls both aliased and smooth
+     * rendering and LINE_WIDTH_ALIASED seems to be ignored
+     */
+    if (cso->line_smooth || cso->multisample || class_3d >= GM200_3D_CLASS)
        SB_BEGIN_3D(so, LINE_WIDTH_SMOOTH, 1);
     else
        SB_BEGIN_3D(so, LINE_WIDTH_ALIASED, 1);
@@ -308,7 +311,7 @@ nvc0_rasterizer_state_create(struct pipe_context *pipe,
         SB_DATA    (so, fui(cso->offset_clamp));
     }
 
-    if (cso->depth_clip)
+    if (cso->depth_clip_near)
        reg = NVC0_3D_VIEW_VOLUME_CLIP_CTRL_UNK1_UNK1;
     else
        reg =
@@ -323,6 +326,20 @@ nvc0_rasterizer_state_create(struct pipe_context *pipe,
     SB_IMMED_3D(so, DEPTH_CLIP_NEGATIVE_Z, cso->clip_halfz);
 
     SB_IMMED_3D(so, PIXEL_CENTER_INTEGER, !cso->half_pixel_center);
+
+    if (class_3d >= GM200_3D_CLASS) {
+        if (cso->conservative_raster_mode != PIPE_CONSERVATIVE_RASTER_OFF) {
+            bool post_snap = cso->conservative_raster_mode ==
+                PIPE_CONSERVATIVE_RASTER_POST_SNAP;
+            uint32_t state = cso->subpixel_precision_x;
+            state |= cso->subpixel_precision_y << 4;
+            state |= (uint32_t)(cso->conservative_raster_dilate * 4) << 8;
+            state |= (post_snap || class_3d < GP100_3D_CLASS) ? 1 << 10 : 0;
+            SB_IMMED_3D(so, MACRO_CONSERVATIVE_RASTER_STATE, state);
+        } else {
+            SB_IMMED_3D(so, CONSERVATIVE_RASTER, 0);
+        }
+    }
 
     assert(so->size <= ARRAY_SIZE(so->state));
     return (void *)so;
@@ -447,10 +464,14 @@ nvc0_stage_sampler_states_bind(struct nvc0_context *nvc0,
                                unsigned s,
                                unsigned nr, void **hwcso)
 {
+   unsigned highest_found = 0;
    unsigned i;
 
    for (i = 0; i < nr; ++i) {
       struct nv50_tsc_entry *old = nvc0->samplers[s][i];
+
+      if (hwcso[i])
+         highest_found = i;
 
       if (hwcso[i] == old)
          continue;
@@ -460,14 +481,8 @@ nvc0_stage_sampler_states_bind(struct nvc0_context *nvc0,
       if (old)
          nvc0_screen_tsc_unlock(nvc0->screen, old);
    }
-   for (; i < nvc0->num_samplers[s]; ++i) {
-      if (nvc0->samplers[s][i]) {
-         nvc0_screen_tsc_unlock(nvc0->screen, nvc0->samplers[s][i]);
-         nvc0->samplers[s][i] = NULL;
-      }
-   }
-
-   nvc0->num_samplers[s] = nr;
+   if (nr >= nvc0->num_samplers[s])
+      nvc0->num_samplers[s] = highest_found + 1;
 }
 
 static void
@@ -837,7 +852,21 @@ nvc0_set_framebuffer_state(struct pipe_context *pipe,
 
     util_copy_framebuffer_state(&nvc0->framebuffer, fb);
 
-    nvc0->dirty_3d |= NVC0_NEW_3D_FRAMEBUFFER;
+    nvc0->dirty_3d |= NVC0_NEW_3D_FRAMEBUFFER | NVC0_NEW_3D_SAMPLE_LOCATIONS;
+}
+
+static void
+nvc0_set_sample_locations(struct pipe_context *pipe,
+                          size_t size, const uint8_t *locations)
+{
+    struct nvc0_context *nvc0 = nvc0_context(pipe);
+
+    nvc0->sample_locations_enabled = size && locations;
+    if (size > sizeof(nvc0->sample_locations))
+       size = sizeof(nvc0->sample_locations);
+    memcpy(nvc0->sample_locations, locations, size);
+
+    nvc0->dirty_3d |= NVC0_NEW_3D_SAMPLE_LOCATIONS;
 }
 
 static void
@@ -1390,6 +1419,7 @@ nvc0_init_state_functions(struct nvc0_context *nvc0)
    pipe->set_min_samples = nvc0_set_min_samples;
    pipe->set_constant_buffer = nvc0_set_constant_buffer;
    pipe->set_framebuffer_state = nvc0_set_framebuffer_state;
+   pipe->set_sample_locations = nvc0_set_sample_locations;
    pipe->set_polygon_stipple = nvc0_set_polygon_stipple;
    pipe->set_scissor_states = nvc0_set_scissor_states;
    pipe->set_viewport_states = nvc0_set_viewport_states;

@@ -149,6 +149,7 @@
 #include "ir_builder.h"
 #include "ir_optimization.h"
 #include "program/prog_instruction.h"
+#include "main/mtypes.h"
 
 using namespace ir_builder;
 
@@ -728,12 +729,17 @@ lower_packed_varyings_visitor::get_packed_varying_deref(
       unpacked_var->insert_before(packed_var);
       this->packed_varyings[slot] = packed_var;
    } else {
+      ir_variable *var = this->packed_varyings[slot];
+
+      /* The slot needs to be marked as always active if any variable that got
+       * packed there was.
+       */
+      var->data.always_active_io |= unpacked_var->data.always_active_io;
+
       /* For geometry shader inputs, only update the packed variable name the
        * first time we visit each component.
        */
       if (this->gs_input_vertices == 0 || vertex_index == 0) {
-         ir_variable *var = this->packed_varyings[slot];
-
          if (var->is_name_ralloced())
             ralloc_asprintf_append((char **) &var->name, ",%s", name);
          else
@@ -766,7 +772,7 @@ lower_packed_varyings_visitor::needs_lowering(ir_variable *var)
    /* Override disable_varying_packing if the var is only used by transform
     * feedback. Also override it if transform feedback is enabled and the
     * variable is an array, struct or matrix as the elements of these types
-    * will always has the same interpolation and therefore asre safe to pack.
+    * will always have the same interpolation and therefore are safe to pack.
     */
    const glsl_type *type = var->type;
    if (disable_varying_packing && !var->data.is_xfb_only &&

@@ -174,11 +174,7 @@ static void r200_init_vtbl(radeonContextPtr radeon)
 GLboolean r200CreateContext( gl_api api,
 			     const struct gl_config *glVisual,
 			     __DRIcontext *driContextPriv,
-			     unsigned major_version,
-			     unsigned minor_version,
-			     uint32_t flags,
-                             bool notify_reset,
-                             unsigned priority,
+			     const struct __DriverContextConfig *ctx_config,
 			     unsigned *error,
 			     void *sharedContextPrivate)
 {
@@ -190,12 +186,12 @@ GLboolean r200CreateContext( gl_api api,
    int i;
    int tcl_mode;
 
-   if (flags & ~(__DRI_CTX_FLAG_DEBUG | __DRI_CTX_FLAG_NO_ERROR)) {
+   if (ctx_config->flags & ~(__DRI_CTX_FLAG_DEBUG | __DRI_CTX_FLAG_NO_ERROR)) {
       *error = __DRI_CTX_ERROR_UNKNOWN_FLAG;
       return false;
    }
 
-   if (notify_reset) {
+   if (ctx_config->attribute_mask) {
       *error = __DRI_CTX_ERROR_UNKNOWN_ATTRIBUTE;
       return false;
    }
@@ -220,7 +216,7 @@ GLboolean r200CreateContext( gl_api api,
     * the default textures.
     */
    driParseConfigFiles (&rmesa->radeon.optionCache, &screen->optionCache,
-			screen->driScreen->myNum, "r200");
+			screen->driScreen->myNum, "r200", NULL);
    rmesa->radeon.initialMaxAnisotropy = driQueryOptionf(&rmesa->radeon.optionCache,
 							"def_max_anisotropy");
 
@@ -231,6 +227,7 @@ GLboolean r200CreateContext( gl_api api,
     * (the texture functions are especially important)
     */
    _mesa_init_driver_functions(&functions);
+   _tnl_init_driver_draw_function(&functions);
    r200InitDriverFuncs(&functions);
    r200InitIoctlFuncs(&functions);
    r200InitStateFuncs(&rmesa->radeon, &functions);
@@ -251,7 +248,7 @@ GLboolean r200CreateContext( gl_api api,
 
    ctx = &rmesa->radeon.glCtx;
 
-   driContextSetFlags(ctx, flags);
+   driContextSetFlags(ctx, ctx_config->flags);
 
    /* Initialize the software rasterizer and helper modules.
     */
@@ -356,6 +353,7 @@ GLboolean r200CreateContext( gl_api api,
    ctx->Extensions.EXT_texture_filter_anisotropic = true;
    ctx->Extensions.EXT_texture_mirror_clamp = true;
    ctx->Extensions.MESA_pack_invert = true;
+   ctx->Extensions.NV_fog_distance = true;
    ctx->Extensions.NV_texture_rectangle = true;
    ctx->Extensions.OES_EGL_image = true;
 
@@ -385,7 +383,7 @@ GLboolean r200CreateContext( gl_api api,
       (getenv("R200_GART_CLIENT_TEXTURES") != 0);
 
    tcl_mode = driQueryOptioni(&rmesa->radeon.optionCache, "tcl_mode");
-   if (driQueryOptionb(&rmesa->radeon.optionCache, "no_rast")) {
+   if (getenv("R200_NO_RAST")) {
       fprintf(stderr, "disabling 3D acceleration\n");
       FALLBACK(rmesa, R200_FALLBACK_DISABLE, 1);
    }
@@ -398,6 +396,7 @@ GLboolean r200CreateContext( gl_api api,
       TCL_FALLBACK(&rmesa->radeon.glCtx, R200_TCL_FALLBACK_TCL_DISABLE, 1);
    }
 
+   _mesa_override_extensions(ctx);
    _mesa_compute_version(ctx);
 
    /* Exec table initialization requires the version to be computed */

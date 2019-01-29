@@ -33,6 +33,7 @@
   *   Michel Dänzer
   */
 
+#include "main/errors.h"
 #include "main/glheader.h"
 #include "main/accum.h"
 #include "main/formats.h"
@@ -70,7 +71,8 @@ st_init_clear(struct st_context *st)
 
    st->clear.raster.half_pixel_center = 1;
    st->clear.raster.bottom_edge_rule = 1;
-   st->clear.raster.depth_clip = 1;
+   st->clear.raster.depth_clip_near = 1;
+   st->clear.raster.depth_clip_far = 1;
 }
 
 
@@ -226,14 +228,7 @@ clear_with_quad(struct gl_context *ctx, unsigned clear_buffers)
             if (!(clear_buffers & (PIPE_CLEAR_COLOR0 << i)))
                continue;
 
-            if (ctx->Color.ColorMask[i][0])
-               blend.rt[i].colormask |= PIPE_MASK_R;
-            if (ctx->Color.ColorMask[i][1])
-               blend.rt[i].colormask |= PIPE_MASK_G;
-            if (ctx->Color.ColorMask[i][2])
-               blend.rt[i].colormask |= PIPE_MASK_B;
-            if (ctx->Color.ColorMask[i][3])
-               blend.rt[i].colormask |= PIPE_MASK_A;
+            blend.rt[i].colormask = GET_COLORMASK(ctx->Color.ColorMask, i);
          }
 
          if (ctx->Color.DitherFlag)
@@ -338,32 +333,6 @@ is_window_rectangle_enabled(struct gl_context *ctx)
 
 
 /**
- * Return if all of the color channels are masked.
- */
-static inline GLboolean
-is_color_disabled(struct gl_context *ctx, int i)
-{
-   return !ctx->Color.ColorMask[i][0] &&
-          !ctx->Color.ColorMask[i][1] &&
-          !ctx->Color.ColorMask[i][2] &&
-          !ctx->Color.ColorMask[i][3];
-}
-
-
-/**
- * Return if any of the color channels are masked.
- */
-static inline GLboolean
-is_color_masked(struct gl_context *ctx, int i)
-{
-   return !ctx->Color.ColorMask[i][0] ||
-          !ctx->Color.ColorMask[i][1] ||
-          !ctx->Color.ColorMask[i][2] ||
-          !ctx->Color.ColorMask[i][3];
-}
-
-
-/**
  * Return if all of the stencil bits are masked.
  */
 static inline GLboolean
@@ -412,9 +381,9 @@ st_Clear(struct gl_context *ctx, GLbitfield mask)
 
    if (mask & BUFFER_BITS_COLOR) {
       for (i = 0; i < ctx->DrawBuffer->_NumColorDrawBuffers; i++) {
-         GLint b = ctx->DrawBuffer->_ColorDrawBufferIndexes[i];
+         gl_buffer_index b = ctx->DrawBuffer->_ColorDrawBufferIndexes[i];
 
-         if (b >= 0 && mask & (1 << b)) {
+         if (b != BUFFER_NONE && mask & (1 << b)) {
             struct gl_renderbuffer *rb
                = ctx->DrawBuffer->Attachment[b].Renderbuffer;
             struct st_renderbuffer *strb = st_renderbuffer(rb);
@@ -423,12 +392,12 @@ st_Clear(struct gl_context *ctx, GLbitfield mask)
             if (!strb || !strb->surface)
                continue;
 
-            if (is_color_disabled(ctx, colormask_index))
+            if (!GET_COLORMASK(ctx->Color.ColorMask, colormask_index))
                continue;
 
             if (is_scissor_enabled(ctx, rb) ||
                 is_window_rectangle_enabled(ctx) ||
-                is_color_masked(ctx, colormask_index))
+                GET_COLORMASK(ctx->Color.ColorMask, colormask_index) != 0xf)
                quad_buffers |= PIPE_CLEAR_COLOR0 << i;
             else
                clear_buffers |= PIPE_CLEAR_COLOR0 << i;

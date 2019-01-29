@@ -19,17 +19,10 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 
-if HAVE_SHARED_GLAPI
-SHARED_GLAPI_LIB = $(top_builddir)/src/mapi/shared-glapi/libglapi.la
-endif
 
 SUBDIRS =
 
-EXTRA_DIST = SConscript
-
-if HAVE_XF86VIDMODE
-EXTRA_DEFINES_XF86VIDMODE = -DXF86VIDMODE
-endif
+EXTRA_DIST = SConscript meson.build
 
 AM_CFLAGS = \
 	-I$(top_srcdir)/include \
@@ -41,7 +34,6 @@ AM_CFLAGS = \
 	-I$(top_builddir)/src/mapi/glapi \
 	-I$(top_srcdir)/src/mapi/glapi \
 	$(VISIBILITY_CFLAGS) \
-	$(EXTRA_DEFINES_XF86VIDMODE) \
 	-D_REENTRANT \
 	-DDEFAULT_DRIVER_DIR=\"$(DRI_DRIVER_SEARCH_DIR)\" \
 	$(DEFINES) \
@@ -181,7 +173,7 @@ GL_LIBS = \
 	$(LIBDRM_LIBS) \
 	libglx.la \
 	$(top_builddir)/src/mapi/glapi/libglapi.la \
-	$(SHARED_GLAPI_LIB) \
+	$(top_builddir)/src/mapi/shared-glapi/libglapi.la \
 	$(GL_LIB_DEPS)
 
 GL_LDFLAGS = \

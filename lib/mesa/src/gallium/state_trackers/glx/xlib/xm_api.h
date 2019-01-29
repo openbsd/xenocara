@@ -53,11 +53,11 @@ and create a window, you must do the following to use the X/Mesa interface:
 
 
 
-#ifndef XMESA_H
-#define XMESA_H
+#ifndef XM_API_H
+#define XM_API_H
 
 
-#include "main/core.h" /* for gl_config */
+#include "main/mtypes.h" /* for gl_config */
 #include "state_tracker/st_api.h"
 #include "os/os_thread.h"
 

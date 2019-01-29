@@ -71,12 +71,19 @@ enum radeon_micro_mode {
 
 struct legacy_surf_level {
     uint64_t                    offset;
-    uint64_t                    slice_size;
-    uint64_t                    dcc_offset;
-    uint64_t                    dcc_fast_clear_size;
-    uint16_t                    nblk_x;
-    uint16_t                    nblk_y;
-    enum radeon_surf_mode       mode;
+    uint32_t                    slice_size_dw; /* in dwords; max = 4GB / 4. */
+    uint32_t                    dcc_offset; /* relative offset within DCC mip tree */
+    uint32_t                    dcc_fast_clear_size;
+    unsigned                    nblk_x:15;
+    unsigned                    nblk_y:15;
+    enum radeon_surf_mode       mode:2;
+};
+
+struct legacy_surf_fmask {
+    unsigned slice_tile_max; /* max 4M */
+    uint8_t tiling_index;    /* max 31 */
+    uint8_t bankh;           /* max 8 */
+    uint16_t pitch_in_pixels;
 };
 
 struct legacy_surf_layout {
@@ -101,6 +108,8 @@ struct legacy_surf_layout {
     struct legacy_surf_level    stencil_level[RADEON_SURF_MAX_LEVELS];
     uint8_t                     tiling_index[RADEON_SURF_MAX_LEVELS];
     uint8_t                     stencil_tiling_index[RADEON_SURF_MAX_LEVELS];
+    struct legacy_surf_fmask    fmask;
+    unsigned                    cmask_slice_tile_max;
 };
 
 /* Same as addrlib - AddrResourceType. */
@@ -142,11 +151,6 @@ struct gfx9_surf_layout {
     uint16_t                    dcc_pitch_max;  /* (mip chain pitch - 1) */
 
     uint64_t                    stencil_offset; /* separate stencil */
-    uint64_t                    fmask_size;
-    uint64_t                    cmask_size;
-
-    uint32_t                    fmask_alignment;
-    uint32_t                    cmask_alignment;
 };
 
 struct radeon_surf {
@@ -175,7 +179,8 @@ struct radeon_surf {
     /* Tile swizzle can be OR'd with low bits of the BASE_256B address.
      * The value is the same for all mipmap levels. Supported tile modes:
      * - GFX6: Only macro tiling.
-     * - GFX9: Only *_X swizzle modes. Level 0 must not be in the mip tail.
+     * - GFX9: Only *_X and *_T swizzle modes. Level 0 must not be in the mip
+     *   tail.
      *
      * Only these surfaces are allowed to set it:
      * - color (if it doesn't have to be displayable)
@@ -185,16 +190,23 @@ struct radeon_surf {
      * - depth/stencil if HTILE is not TC-compatible and if the gen is not GFX9
      */
     uint8_t                     tile_swizzle;
+    uint8_t                     fmask_tile_swizzle;
 
     uint64_t                    surf_size;
-    uint64_t                    dcc_size;
-    uint64_t                    htile_size;
-
-    uint32_t                    htile_slice_size;
-
+    uint64_t                    fmask_size;
     uint32_t                    surf_alignment;
+    uint32_t                    fmask_alignment;
+
+    /* DCC and HTILE are very small. */
+    uint32_t                    dcc_size;
     uint32_t                    dcc_alignment;
+
+    uint32_t                    htile_size;
+    uint32_t                    htile_slice_size;
     uint32_t                    htile_alignment;
+
+    uint32_t                    cmask_size;
+    uint32_t                    cmask_alignment;
 
     union {
         /* R600-VI return values.
@@ -213,10 +225,13 @@ struct ac_surf_info {
 	uint32_t width;
 	uint32_t height;
 	uint32_t depth;
-	uint8_t samples;
+	uint8_t samples; /* For Z/S: samples; For color: FMASK coverage samples */
+	uint8_t storage_samples; /* For color: allocated samples */
 	uint8_t levels;
+	uint8_t num_channels; /* heuristic for displayability */
 	uint16_t array_size;
 	uint32_t *surf_index; /* Set a monotonic counter for tile swizzling. */
+	uint32_t *fmask_surf_index;
 };
 
 struct ac_surf_config {
@@ -233,6 +248,10 @@ int ac_compute_surface(ADDR_HANDLE addrlib, const struct radeon_info *info,
 		       const struct ac_surf_config * config,
 		       enum radeon_surf_mode mode,
 		       struct radeon_surf *surf);
+
+void ac_compute_cmask(const struct radeon_info *info,
+		      const struct ac_surf_config *config,
+		      struct radeon_surf *surf);
 
 #ifdef __cplusplus
 }

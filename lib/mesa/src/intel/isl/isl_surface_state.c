@@ -27,7 +27,9 @@
 #define __gen_user_data void
 
 static uint64_t
-__gen_combine_address(void *data, void *loc, uint64_t addr, uint32_t delta)
+__gen_combine_address(__attribute__((unused)) void *data,
+                      __attribute__((unused)) void *loc, uint64_t addr,
+                      uint32_t delta)
 {
    return addr + delta;
 }
@@ -268,7 +270,7 @@ isl_genX(surf_fill_state_s)(const struct isl_device *dev, void *state,
       assert(surf_fmtl->bh == view_fmtl->bh);
    }
 
-   s.SurfaceFormat = (enum GENX(SURFACE_FORMAT)) info->view->format;
+   s.SurfaceFormat = info->view->format;
 
 #if GEN_GEN <= 5
    s.ColorBufferComponentWriteDisables = info->write_disables;
@@ -428,7 +430,7 @@ isl_genX(surf_fill_state_s)(const struct isl_device *dev, void *state,
       /* For gen9 1-D textures, surface pitch is ignored */
       s.SurfacePitch = 0;
    } else {
-      s.SurfacePitch = info->surf->row_pitch - 1;
+      s.SurfacePitch = info->surf->row_pitch_B - 1;
    }
 
 #if GEN_GEN >= 8
@@ -468,42 +470,15 @@ isl_genX(surf_fill_state_s)(const struct isl_device *dev, void *state,
 #endif
 
 #if (GEN_GEN >= 8 || GEN_IS_HASWELL)
-   if (info->view->usage & ISL_SURF_USAGE_RENDER_TARGET_BIT) {
-      /* From the Sky Lake PRM Vol. 2d,
-       * RENDER_SURFACE_STATE::Shader Channel Select Red
-       *
-       *    "For Render Target, Red, Green and Blue Shader Channel Selects
-       *    MUST be such that only valid components can be swapped i.e. only
-       *    change the order of components in the pixel. Any other values for
-       *    these Shader Channel Select fields are not valid for Render
-       *    Targets. This also means that there MUST not be multiple shader
-       *    channels mapped to the same RT channel."
-       */
-      assert(info->view->swizzle.r == ISL_CHANNEL_SELECT_RED ||
-             info->view->swizzle.r == ISL_CHANNEL_SELECT_GREEN ||
-             info->view->swizzle.r == ISL_CHANNEL_SELECT_BLUE);
-      assert(info->view->swizzle.g == ISL_CHANNEL_SELECT_RED ||
-             info->view->swizzle.g == ISL_CHANNEL_SELECT_GREEN ||
-             info->view->swizzle.g == ISL_CHANNEL_SELECT_BLUE);
-      assert(info->view->swizzle.b == ISL_CHANNEL_SELECT_RED ||
-             info->view->swizzle.b == ISL_CHANNEL_SELECT_GREEN ||
-             info->view->swizzle.b == ISL_CHANNEL_SELECT_BLUE);
-      assert(info->view->swizzle.r != info->view->swizzle.g);
-      assert(info->view->swizzle.r != info->view->swizzle.b);
-      assert(info->view->swizzle.g != info->view->swizzle.b);
+   if (info->view->usage & ISL_SURF_USAGE_RENDER_TARGET_BIT)
+      assert(isl_swizzle_supports_rendering(dev->info, info->view->swizzle));
 
-      /* From the Sky Lake PRM Vol. 2d,
-       * RENDER_SURFACE_STATE::Shader Channel Select Alpha
-       *
-       *    "For Render Target, this field MUST be programmed to
-       *    value = SCS_ALPHA."
-       */
-      assert(info->view->swizzle.a == ISL_CHANNEL_SELECT_ALPHA);
-   }
    s.ShaderChannelSelectRed = (enum GENX(ShaderChannelSelect)) info->view->swizzle.r;
    s.ShaderChannelSelectGreen = (enum GENX(ShaderChannelSelect)) info->view->swizzle.g;
    s.ShaderChannelSelectBlue = (enum GENX(ShaderChannelSelect)) info->view->swizzle.b;
    s.ShaderChannelSelectAlpha = (enum GENX(ShaderChannelSelect)) info->view->swizzle.a;
+#else
+   assert(isl_swizzle_is_identity(info->view->swizzle));
 #endif
 
    s.SurfaceBaseAddress = info->address;
@@ -561,7 +536,7 @@ isl_genX(surf_fill_state_s)(const struct isl_device *dev, void *state,
       struct isl_tile_info tile_info;
       isl_surf_get_tile_info(info->aux_surf, &tile_info);
       uint32_t pitch_in_tiles =
-         info->aux_surf->row_pitch / tile_info.phys_extent_B.width;
+         info->aux_surf->row_pitch_B / tile_info.phys_extent_B.width;
 
       s.AuxiliarySurfaceBaseAddress = info->aux_address;
       s.AuxiliarySurfacePitch = pitch_in_tiles - 1;
@@ -635,11 +610,21 @@ isl_genX(surf_fill_state_s)(const struct isl_device *dev, void *state,
 #endif
 
    if (info->aux_usage != ISL_AUX_USAGE_NONE) {
+      if (info->use_clear_address) {
+#if GEN_GEN >= 10
+         s.ClearValueAddressEnable = true;
+         s.ClearValueAddress = info->clear_address;
+#else
+         unreachable("Gen9 and earlier do not support indirect clear colors");
+#endif
+      }
 #if GEN_GEN >= 9
-      s.RedClearColor = info->clear_color.u32[0];
-      s.GreenClearColor = info->clear_color.u32[1];
-      s.BlueClearColor = info->clear_color.u32[2];
-      s.AlphaClearColor = info->clear_color.u32[3];
+      if (!info->use_clear_address) {
+         s.RedClearColor = info->clear_color.u32[0];
+         s.GreenClearColor = info->clear_color.u32[1];
+         s.BlueClearColor = info->clear_color.u32[2];
+         s.AlphaClearColor = info->clear_color.u32[3];
+      }
 #elif GEN_GEN >= 7
       /* Prior to Sky Lake, we only have one bit for the clear color which
        * gives us 0 or 1 in whatever the surface's format happens to be.
@@ -673,7 +658,27 @@ void
 isl_genX(buffer_fill_state_s)(void *state,
                               const struct isl_buffer_fill_state_info *restrict info)
 {
-   uint32_t num_elements = info->size / info->stride;
+   uint64_t buffer_size = info->size_B;
+
+   /* Uniform and Storage buffers need to have surface size not less that the
+    * aligned 32-bit size of the buffer. To calculate the array lenght on
+    * unsized arrays in StorageBuffer the last 2 bits store the padding size
+    * added to the surface, so we can calculate latter the original buffer
+    * size to know the number of elements.
+    *
+    *  surface_size = isl_align(buffer_size, 4) +
+    *                 (isl_align(buffer_size) - buffer_size)
+    *
+    *  buffer_size = (surface_size & ~3) - (surface_size & 3)
+    */
+   if (info->format == ISL_FORMAT_RAW  ||
+       info->stride_B < isl_format_get_layout(info->format)->bpb / 8) {
+      assert(info->stride_B == 1);
+      uint64_t aligned_size = isl_align(buffer_size, 4);
+      buffer_size = aligned_size + (aligned_size - buffer_size);
+   }
+
+   uint32_t num_elements = buffer_size / info->stride_B;
 
    if (GEN_GEN >= 7) {
       /* From the IVB PRM, SURFACE_STATE::Height,
@@ -696,7 +701,7 @@ isl_genX(buffer_fill_state_s)(void *state,
    struct GENX(RENDER_SURFACE_STATE) s = { 0, };
 
    s.SurfaceType = SURFTYPE_BUFFER;
-   s.SurfaceFormat = (enum GENX(SURFACE_FORMAT)) info->format;
+   s.SurfaceFormat = info->format;
 
 #if GEN_GEN >= 6
    s.SurfaceVerticalAlignment = isl_to_gen_valign[4];
@@ -716,7 +721,7 @@ isl_genX(buffer_fill_state_s)(void *state,
    s.Depth = ((num_elements - 1) >> 20) & 0x7f;
 #endif
 
-   s.SurfacePitch = info->stride - 1;
+   s.SurfacePitch = info->stride_B - 1;
 
 #if GEN_GEN >= 6
    s.NumberofMultisamples = MULTISAMPLECOUNT_1;
@@ -754,7 +759,7 @@ isl_genX(null_fill_state)(void *state, struct isl_extent3d size)
 {
    struct GENX(RENDER_SURFACE_STATE) s = {
       .SurfaceType = SURFTYPE_NULL,
-      .SurfaceFormat = (enum GENX(SURFACE_FORMAT)) ISL_FORMAT_B8G8R8A8_UNORM,
+      .SurfaceFormat = ISL_FORMAT_B8G8R8A8_UNORM,
 #if GEN_GEN >= 7
       .SurfaceArray = size.depth > 0,
 #endif

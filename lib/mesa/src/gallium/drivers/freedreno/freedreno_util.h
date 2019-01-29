@@ -1,5 +1,3 @@
-/* -*- mode: C; c-file-style: "k&r"; tab-width 4; indent-tabs-mode: t; -*- */
-
 /*
  * Copyright (C) 2012 Rob Clark <robclark@freedesktop.org>
  *
@@ -29,8 +27,8 @@
 #ifndef FREEDRENO_UTIL_H_
 #define FREEDRENO_UTIL_H_
 
-#include <freedreno_drmif.h>
-#include <freedreno_ringbuffer.h>
+#include "drm/freedreno_drmif.h"
+#include "drm/freedreno_ringbuffer.h"
 
 #include "pipe/p_format.h"
 #include "pipe/p_state.h"
@@ -59,8 +57,9 @@ enum adreno_stencil_op fd_stencil_op(unsigned op);
 #define A3XX_MAX_RENDER_TARGETS 4
 #define A4XX_MAX_RENDER_TARGETS 8
 #define A5XX_MAX_RENDER_TARGETS 8
+#define A6XX_MAX_RENDER_TARGETS 8
 
-#define MAX_RENDER_TARGETS A5XX_MAX_RENDER_TARGETS
+#define MAX_RENDER_TARGETS A6XX_MAX_RENDER_TARGETS
 
 #define FD_DBG_MSGS     0x0001
 #define FD_DBG_DISASM   0x0002
@@ -80,6 +79,12 @@ enum adreno_stencil_op fd_stencil_op(unsigned op);
 #define FD_DBG_BSTAT    0x8000
 #define FD_DBG_NOGROW  0x10000
 #define FD_DBG_LRZ     0x20000
+#define FD_DBG_NOINDR  0x40000
+#define FD_DBG_NOBLIT  0x80000
+#define FD_DBG_HIPRIO 0x100000
+#define FD_DBG_TTILE  0x200000
+#define FD_DBG_PERFC  0x400000
+#define FD_DBG_SOFTPIN 0x800000
 
 extern int fd_mesa_debug;
 extern bool fd_binning_enabled;
@@ -106,6 +111,19 @@ static inline uint32_t DRAW(enum pc_di_primtype prim_type,
 			(vis_cull_mode     << 9) |
 			(1                 << 14) |
 			(instances         << 24);
+}
+
+static inline uint32_t DRAW_A20X(enum pc_di_primtype prim_type,
+		enum pc_di_src_sel source_select, enum pc_di_index_size index_size,
+		enum pc_di_vis_cull_mode vis_cull_mode,
+		uint16_t count)
+{
+	return (prim_type         << 0) |
+			(source_select     << 6) |
+			((index_size & 1)  << 11) |
+			((index_size >> 1) << 13) |
+			(vis_cull_mode     << 9) |
+			(count         << 16);
 }
 
 /* for tracking cmdstream positions that need to be patched: */
@@ -179,14 +197,13 @@ fd_half_precision(struct pipe_framebuffer_state *pfb)
 #define LOG_DWORDS 0
 
 static inline void emit_marker(struct fd_ringbuffer *ring, int scratch_idx);
-static inline void emit_marker5(struct fd_ringbuffer *ring, int scratch_idx);
 
 static inline void
 OUT_RING(struct fd_ringbuffer *ring, uint32_t data)
 {
 	if (LOG_DWORDS) {
 		DBG("ring[%p]: OUT_RING   %04x:  %08x", ring,
-				(uint32_t)(ring->cur - ring->last_start), data);
+				(uint32_t)(ring->cur - ring->start), data);
 	}
 	fd_ringbuffer_emit(ring, data);
 }
@@ -198,7 +215,7 @@ OUT_RINGP(struct fd_ringbuffer *ring, uint32_t data,
 {
 	if (LOG_DWORDS) {
 		DBG("ring[%p]: OUT_RINGP  %04x:  %08x", ring,
-				(uint32_t)(ring->cur - ring->last_start), data);
+				(uint32_t)(ring->cur - ring->start), data);
 	}
 	util_dynarray_append(buf, struct fd_cs_patch, ((struct fd_cs_patch){
 		.cs  = ring->cur++,
@@ -216,10 +233,10 @@ OUT_RELOC(struct fd_ringbuffer *ring, struct fd_bo *bo,
 {
 	if (LOG_DWORDS) {
 		DBG("ring[%p]: OUT_RELOC   %04x:  %p+%u << %d", ring,
-				(uint32_t)(ring->cur - ring->last_start), bo, offset, shift);
+				(uint32_t)(ring->cur - ring->start), bo, offset, shift);
 	}
 	debug_assert(offset < fd_bo_size(bo));
-	fd_ringbuffer_reloc2(ring, &(struct fd_reloc){
+	fd_ringbuffer_reloc(ring, &(struct fd_reloc){
 		.bo = bo,
 		.flags = FD_RELOC_READ,
 		.offset = offset,
@@ -235,10 +252,10 @@ OUT_RELOCW(struct fd_ringbuffer *ring, struct fd_bo *bo,
 {
 	if (LOG_DWORDS) {
 		DBG("ring[%p]: OUT_RELOCW  %04x:  %p+%u << %d", ring,
-				(uint32_t)(ring->cur - ring->last_start), bo, offset, shift);
+				(uint32_t)(ring->cur - ring->start), bo, offset, shift);
 	}
 	debug_assert(offset < fd_bo_size(bo));
-	fd_ringbuffer_reloc2(ring, &(struct fd_reloc){
+	fd_ringbuffer_reloc(ring, &(struct fd_reloc){
 		.bo = bo,
 		.flags = FD_RELOC_READ | FD_RELOC_WRITE,
 		.offset = offset,
@@ -248,24 +265,21 @@ OUT_RELOCW(struct fd_ringbuffer *ring, struct fd_bo *bo,
 	});
 }
 
-static inline void BEGIN_RING(struct fd_ringbuffer *ring, uint32_t ndwords)
+static inline void
+OUT_RB(struct fd_ringbuffer *ring, struct fd_ringbuffer *target)
 {
-	if (ring->cur + ndwords >= ring->end)
-		fd_ringbuffer_grow(ring, ndwords);
+	fd_ringbuffer_emit_reloc_ring_full(ring, target, 0);
 }
 
-static inline uint32_t
-__gpu_id(struct fd_ringbuffer *ring)
+static inline void BEGIN_RING(struct fd_ringbuffer *ring, uint32_t ndwords)
 {
-	uint64_t val;
-	fd_pipe_get_param(ring->pipe, FD_GPU_ID, &val);
-	return val;
+	if (ring->cur + ndwords > ring->end)
+		fd_ringbuffer_grow(ring, ndwords);
 }
 
 static inline void
 OUT_PKT0(struct fd_ringbuffer *ring, uint16_t regindx, uint16_t cnt)
 {
-	debug_assert(__gpu_id(ring) < 500);
 	BEGIN_RING(ring, cnt+1);
 	OUT_RING(ring, CP_TYPE0_PKT | ((cnt-1) << 16) | (regindx & 0x7FFF));
 }
@@ -273,7 +287,6 @@ OUT_PKT0(struct fd_ringbuffer *ring, uint16_t regindx, uint16_t cnt)
 static inline void
 OUT_PKT2(struct fd_ringbuffer *ring)
 {
-	debug_assert(__gpu_id(ring) < 500);
 	BEGIN_RING(ring, 1);
 	OUT_RING(ring, CP_TYPE2_PKT);
 }
@@ -281,7 +294,6 @@ OUT_PKT2(struct fd_ringbuffer *ring)
 static inline void
 OUT_PKT3(struct fd_ringbuffer *ring, uint8_t opcode, uint16_t cnt)
 {
-	debug_assert(__gpu_id(ring) < 500);
 	BEGIN_RING(ring, cnt+1);
 	OUT_RING(ring, CP_TYPE3_PKT | ((cnt-1) << 16) | ((opcode & 0xFF) << 8));
 }
@@ -339,9 +351,10 @@ OUT_WFI5(struct fd_ringbuffer *ring)
 static inline void
 __OUT_IB(struct fd_ringbuffer *ring, bool prefetch, struct fd_ringbuffer *target)
 {
-	unsigned count = fd_ringbuffer_cmd_count(target);
+	if (target->cur == target->start)
+		return;
 
-	debug_assert(__gpu_id(ring) < 500);
+	unsigned count = fd_ringbuffer_cmd_count(target);
 
 	/* for debug after a lock up, write a unique counter value
 	 * to scratch6 for each IB, to make it easier to match up
@@ -366,15 +379,10 @@ __OUT_IB(struct fd_ringbuffer *ring, bool prefetch, struct fd_ringbuffer *target
 static inline void
 __OUT_IB5(struct fd_ringbuffer *ring, struct fd_ringbuffer *target)
 {
-	unsigned count = fd_ringbuffer_cmd_count(target);
+	if (target->cur == target->start)
+		return;
 
-	/* for debug after a lock up, write a unique counter value
-	 * to scratch6 for each IB, to make it easier to match up
-	 * register dumps to cmdstream.  The combination of IB and
-	 * DRAW (scratch7) is enough to "triangulate" the particular
-	 * draw that caused lockup.
-	 */
-	emit_marker5(ring, 6);
+	unsigned count = fd_ringbuffer_cmd_count(target);
 
 	for (unsigned i = 0; i < count; i++) {
 		uint32_t dwords;
@@ -383,8 +391,6 @@ __OUT_IB5(struct fd_ringbuffer *ring, struct fd_ringbuffer *target)
 		assert(dwords > 0);
 		OUT_RING(ring, dwords);
 	}
-
-	emit_marker5(ring, 6);
 }
 
 /* CP_SCRATCH_REG4 is used to hold base address for query results: */
@@ -402,16 +408,6 @@ emit_marker(struct fd_ringbuffer *ring, int scratch_idx)
 	if (reg == HW_QUERY_BASE_REG)
 		return;
 	OUT_PKT0(ring, reg, 1);
-	OUT_RING(ring, ++marker_cnt);
-}
-
-static inline void
-emit_marker5(struct fd_ringbuffer *ring, int scratch_idx)
-{
-	extern unsigned marker_cnt;
-//XXX	unsigned reg = REG_A5XX_CP_SCRATCH_REG(scratch_idx);
-	unsigned reg = 0x00000b78 + scratch_idx;
-	OUT_PKT4(ring, reg, 1);
 	OUT_RING(ring, ++marker_cnt);
 }
 
@@ -446,6 +442,22 @@ pack_rgba(enum pipe_format format, const float *rgba)
 
 
 #define BIT(bit) (1u << bit)
+
+/*
+ * a3xx+ helpers:
+ */
+
+static inline enum a3xx_msaa_samples
+fd_msaa_samples(unsigned samples)
+{
+	switch (samples) {
+	default:
+		debug_assert(0);
+	case 1: return MSAA_ONE;
+	case 2: return MSAA_TWO;
+	case 4: return MSAA_FOUR;
+	}
+}
 
 /*
  * a4xx+ helpers:

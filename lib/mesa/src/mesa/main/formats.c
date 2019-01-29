@@ -24,6 +24,7 @@
  */
 
 
+#include "errors.h"
 #include "imports.h"
 #include "formats.h"
 #include "macros.h"
@@ -622,6 +623,48 @@ _mesa_is_format_etc2(mesa_format format)
       return GL_TRUE;
    default:
       return GL_FALSE;
+   }
+}
+
+
+/**
+ * Return TRUE if format is an ASTC 2D compressed format.
+ */
+bool
+_mesa_is_format_astc_2d(mesa_format format)
+{
+   switch (format) {
+   case MESA_FORMAT_RGBA_ASTC_4x4:
+   case MESA_FORMAT_RGBA_ASTC_5x4:
+   case MESA_FORMAT_RGBA_ASTC_5x5:
+   case MESA_FORMAT_RGBA_ASTC_6x5:
+   case MESA_FORMAT_RGBA_ASTC_6x6:
+   case MESA_FORMAT_RGBA_ASTC_8x5:
+   case MESA_FORMAT_RGBA_ASTC_8x6:
+   case MESA_FORMAT_RGBA_ASTC_8x8:
+   case MESA_FORMAT_RGBA_ASTC_10x5:
+   case MESA_FORMAT_RGBA_ASTC_10x6:
+   case MESA_FORMAT_RGBA_ASTC_10x8:
+   case MESA_FORMAT_RGBA_ASTC_10x10:
+   case MESA_FORMAT_RGBA_ASTC_12x10:
+   case MESA_FORMAT_RGBA_ASTC_12x12:
+   case MESA_FORMAT_SRGB8_ALPHA8_ASTC_4x4:
+   case MESA_FORMAT_SRGB8_ALPHA8_ASTC_5x4:
+   case MESA_FORMAT_SRGB8_ALPHA8_ASTC_5x5:
+   case MESA_FORMAT_SRGB8_ALPHA8_ASTC_6x5:
+   case MESA_FORMAT_SRGB8_ALPHA8_ASTC_6x6:
+   case MESA_FORMAT_SRGB8_ALPHA8_ASTC_8x5:
+   case MESA_FORMAT_SRGB8_ALPHA8_ASTC_8x6:
+   case MESA_FORMAT_SRGB8_ALPHA8_ASTC_8x8:
+   case MESA_FORMAT_SRGB8_ALPHA8_ASTC_10x5:
+   case MESA_FORMAT_SRGB8_ALPHA8_ASTC_10x6:
+   case MESA_FORMAT_SRGB8_ALPHA8_ASTC_10x8:
+   case MESA_FORMAT_SRGB8_ALPHA8_ASTC_10x10:
+   case MESA_FORMAT_SRGB8_ALPHA8_ASTC_12x10:
+   case MESA_FORMAT_SRGB8_ALPHA8_ASTC_12x12:
+      return true;
+   default:
+      return false;
    }
 }
 

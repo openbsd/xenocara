@@ -86,7 +86,6 @@ setup_l3_config(struct brw_context *brw, const struct gen_l3_config *cfg)
     */
    brw_emit_pipe_control_flush(brw,
                                PIPE_CONTROL_DATA_CACHE_FLUSH |
-                               PIPE_CONTROL_NO_WRITE |
                                PIPE_CONTROL_CS_STALL);
 
    /* ...followed by a second pipelined PIPE_CONTROL that initiates
@@ -107,33 +106,26 @@ setup_l3_config(struct brw_context *brw, const struct gen_l3_config *cfg)
                                PIPE_CONTROL_TEXTURE_CACHE_INVALIDATE |
                                PIPE_CONTROL_CONST_CACHE_INVALIDATE |
                                PIPE_CONTROL_INSTRUCTION_INVALIDATE |
-                               PIPE_CONTROL_STATE_CACHE_INVALIDATE |
-                               PIPE_CONTROL_NO_WRITE);
+                               PIPE_CONTROL_STATE_CACHE_INVALIDATE);
 
    /* Now send a third stalling flush to make sure that invalidation is
     * complete when the L3 configuration registers are modified.
     */
    brw_emit_pipe_control_flush(brw,
                                PIPE_CONTROL_DATA_CACHE_FLUSH |
-                               PIPE_CONTROL_NO_WRITE |
                                PIPE_CONTROL_CS_STALL);
 
    if (devinfo->gen >= 8) {
       assert(!cfg->n[GEN_L3P_IS] && !cfg->n[GEN_L3P_C] && !cfg->n[GEN_L3P_T]);
 
-      BEGIN_BATCH(3);
-      OUT_BATCH(MI_LOAD_REGISTER_IMM | (3 - 2));
+      const unsigned imm_data = ((has_slm ? GEN8_L3CNTLREG_SLM_ENABLE : 0) |
+         SET_FIELD(cfg->n[GEN_L3P_URB], GEN8_L3CNTLREG_URB_ALLOC) |
+         SET_FIELD(cfg->n[GEN_L3P_RO], GEN8_L3CNTLREG_RO_ALLOC) |
+         SET_FIELD(cfg->n[GEN_L3P_DC], GEN8_L3CNTLREG_DC_ALLOC) |
+         SET_FIELD(cfg->n[GEN_L3P_ALL], GEN8_L3CNTLREG_ALL_ALLOC));
 
       /* Set up the L3 partitioning. */
-      OUT_BATCH(GEN8_L3CNTLREG);
-      OUT_BATCH((has_slm ? GEN8_L3CNTLREG_SLM_ENABLE : 0) |
-                SET_FIELD(cfg->n[GEN_L3P_URB], GEN8_L3CNTLREG_URB_ALLOC) |
-                SET_FIELD(cfg->n[GEN_L3P_RO], GEN8_L3CNTLREG_RO_ALLOC) |
-                SET_FIELD(cfg->n[GEN_L3P_DC], GEN8_L3CNTLREG_DC_ALLOC) |
-                SET_FIELD(cfg->n[GEN_L3P_ALL], GEN8_L3CNTLREG_ALL_ALLOC));
-
-      ADVANCE_BATCH();
-
+      brw_load_register_imm32(brw, GEN8_L3CNTLREG, imm_data);
    } else {
       assert(!cfg->n[GEN_L3P_ALL]);
 

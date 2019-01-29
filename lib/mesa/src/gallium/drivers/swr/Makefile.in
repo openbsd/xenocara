@@ -103,21 +103,40 @@ DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 @HAVE_LIBDRM_TRUE@am__append_1 = \
 @HAVE_LIBDRM_TRUE@	$(LIBDRM_LIBS)
 
-@HAVE_DRISW_TRUE@am__append_2 = \
+@HAVE_PLATFORM_ANDROID_TRUE@am__append_2 = \
+@HAVE_PLATFORM_ANDROID_TRUE@	$(ANDROID_LIBS) \
+@HAVE_PLATFORM_ANDROID_TRUE@	$(BACKTRACE_LIBS)
+
+@HAVE_DRISW_TRUE@am__append_3 = \
 @HAVE_DRISW_TRUE@	$(top_builddir)/src/gallium/winsys/sw/dri/libswdri.la
 
-@HAVE_DRISW_KMS_TRUE@am__append_3 = \
+@HAVE_DRISW_KMS_TRUE@am__append_4 = \
 @HAVE_DRISW_KMS_TRUE@	$(top_builddir)/src/gallium/winsys/sw/kms-dri/libswkmsdri.la \
 @HAVE_DRISW_KMS_TRUE@	$(LIBDRM_LIBS)
 
-@HAVE_SWR_AVX_TRUE@am__append_4 = -DHAVE_SWR_AVX
-@HAVE_SWR_AVX2_TRUE@am__append_5 = -DHAVE_SWR_AVX2
-@HAVE_SWR_KNL_TRUE@am__append_6 = -DHAVE_SWR_KNL
-@HAVE_SWR_SKX_TRUE@am__append_7 = -DHAVE_SWR_SKX
-@HAVE_SWR_AVX_TRUE@am__append_8 = libswrAVX.la
-@HAVE_SWR_AVX2_TRUE@am__append_9 = libswrAVX2.la
-@HAVE_SWR_KNL_TRUE@am__append_10 = libswrKNL.la
-@HAVE_SWR_SKX_TRUE@am__append_11 = libswrSKX.la
+@HAVE_SWR_AVX_TRUE@am__append_5 = -DHAVE_SWR_AVX
+@HAVE_SWR_AVX2_TRUE@am__append_6 = -DHAVE_SWR_AVX2
+@HAVE_SWR_KNL_TRUE@am__append_7 = -DHAVE_SWR_KNL
+@HAVE_SWR_SKX_TRUE@am__append_8 = -DHAVE_SWR_SKX
+@HAVE_SWR_BUILTIN_TRUE@am__append_9 = -DHAVE_SWR_BUILTIN
+@HAVE_SWR_AVX_TRUE@@HAVE_SWR_BUILTIN_TRUE@am__append_10 = libswrAVX.la
+@HAVE_SWR_AVX_TRUE@@HAVE_SWR_BUILTIN_TRUE@am__append_11 = libswrAVX.la
+@HAVE_SWR_AVX2_TRUE@@HAVE_SWR_BUILTIN_TRUE@am__append_12 = libswrAVX2.la
+@HAVE_SWR_AVX2_TRUE@@HAVE_SWR_BUILTIN_TRUE@am__append_13 = libswrAVX2.la
+@HAVE_SWR_BUILTIN_TRUE@@HAVE_SWR_KNL_TRUE@am__append_14 = libswrKNL.la
+@HAVE_SWR_BUILTIN_TRUE@@HAVE_SWR_KNL_TRUE@am__append_15 = libswrKNL.la
+@HAVE_SWR_BUILTIN_TRUE@@HAVE_SWR_SKX_TRUE@am__append_16 = libswrSKX.la
+@HAVE_SWR_BUILTIN_TRUE@@HAVE_SWR_SKX_TRUE@am__append_17 = libswrSKX.la
+# gen_knobs.* included here to provide driver access to swr configuration
+@HAVE_SWR_BUILTIN_FALSE@am__append_18 = \
+@HAVE_SWR_BUILTIN_FALSE@       $(COMMON_CXX_SOURCES) \
+@HAVE_SWR_BUILTIN_FALSE@       rasterizer/codegen/gen_knobs.cpp \
+@HAVE_SWR_BUILTIN_FALSE@       rasterizer/codegen/gen_knobs.h
+
+@HAVE_SWR_AVX_TRUE@@HAVE_SWR_BUILTIN_FALSE@am__append_19 = libswrAVX.la
+@HAVE_SWR_AVX2_TRUE@@HAVE_SWR_BUILTIN_FALSE@am__append_20 = libswrAVX2.la
+@HAVE_SWR_BUILTIN_FALSE@@HAVE_SWR_KNL_TRUE@am__append_21 = libswrKNL.la
+@HAVE_SWR_BUILTIN_FALSE@@HAVE_SWR_SKX_TRUE@am__append_22 = libswrSKX.la
 subdir = src/gallium/drivers/swr
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_compile_flag.m4 \
@@ -165,7 +184,65 @@ am__uninstall_files_from_dir = { \
   }
 am__installdirs = "$(DESTDIR)$(libdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES) $(noinst_LTLIBRARIES)
-libmesaswr_la_LIBADD =
+@HAVE_SWR_BUILTIN_TRUE@libmesaswr_la_DEPENDENCIES = $(am__append_11) \
+@HAVE_SWR_BUILTIN_TRUE@	$(am__append_13) $(am__append_15) \
+@HAVE_SWR_BUILTIN_TRUE@	$(am__append_17)
+am__libmesaswr_la_SOURCES_DIST = swr_clear.cpp swr_context.cpp \
+	swr_context.h swr_draw.cpp swr_public.h swr_resource.h \
+	swr_screen.cpp swr_screen.h swr_state.cpp swr_state.h \
+	swr_tex_sample.cpp swr_tex_sample.h swr_scratch.h \
+	swr_scratch.cpp swr_shader.cpp swr_shader.h swr_memory.h \
+	swr_fence.h swr_fence.cpp swr_fence_work.h swr_fence_work.cpp \
+	swr_query.h swr_query.cpp rasterizer/jitter/blend_jit.cpp \
+	rasterizer/jitter/blend_jit.h rasterizer/jitter/builder.cpp \
+	rasterizer/jitter/builder.h rasterizer/jitter/builder_math.h \
+	rasterizer/jitter/builder_mem.cpp \
+	rasterizer/jitter/builder_mem.h \
+	rasterizer/jitter/builder_gfx_mem.cpp \
+	rasterizer/jitter/builder_gfx_mem.h \
+	rasterizer/jitter/builder_misc.cpp \
+	rasterizer/jitter/builder_misc.h \
+	rasterizer/jitter/fetch_jit.cpp rasterizer/jitter/fetch_jit.h \
+	rasterizer/jitter/jit_api.h rasterizer/jitter/jit_pch.hpp \
+	rasterizer/jitter/JitManager.cpp \
+	rasterizer/jitter/JitManager.h \
+	rasterizer/jitter/streamout_jit.cpp \
+	rasterizer/jitter/streamout_jit.h \
+	rasterizer/jitter/shader_lib/DebugOutput.cpp \
+	rasterizer/jitter/functionpasses/passes.h \
+	rasterizer/jitter/functionpasses/lower_x86.cpp swr_loader.cpp \
+	rasterizer/common/formats.cpp rasterizer/common/formats.h \
+	rasterizer/common/intrin.h rasterizer/common/isa.hpp \
+	rasterizer/common/os.cpp rasterizer/common/os.h \
+	rasterizer/common/rdtsc_buckets.cpp \
+	rasterizer/common/rdtsc_buckets.h \
+	rasterizer/common/rdtsc_buckets_shared.h \
+	rasterizer/common/simd16intrin.h \
+	rasterizer/common/simdintrin.h rasterizer/common/simdlib.hpp \
+	rasterizer/common/simdlib_128_avx.inl \
+	rasterizer/common/simdlib_128_avx2.inl \
+	rasterizer/common/simdlib_128_avx512.inl \
+	rasterizer/common/simdlib_128_avx512_core.inl \
+	rasterizer/common/simdlib_128_avx512_knights.inl \
+	rasterizer/common/simdlib_256_avx.inl \
+	rasterizer/common/simdlib_256_avx2.inl \
+	rasterizer/common/simdlib_256_avx512.inl \
+	rasterizer/common/simdlib_256_avx512_core.inl \
+	rasterizer/common/simdlib_256_avx512_knights.inl \
+	rasterizer/common/simdlib_512_avx512.inl \
+	rasterizer/common/simdlib_512_avx512_core.inl \
+	rasterizer/common/simdlib_512_avx512_knights.inl \
+	rasterizer/common/simdlib_512_avx512_masks.inl \
+	rasterizer/common/simdlib_512_avx512_masks_core.inl \
+	rasterizer/common/simdlib_512_avx512_masks_knights.inl \
+	rasterizer/common/simdlib_512_emu.inl \
+	rasterizer/common/simdlib_512_emu_masks.inl \
+	rasterizer/common/simdlib_interface.hpp \
+	rasterizer/common/simdlib_types.hpp \
+	rasterizer/common/swr_assert.cpp \
+	rasterizer/common/swr_assert.h \
+	rasterizer/codegen/gen_knobs.cpp \
+	rasterizer/codegen/gen_knobs.h
 am__objects_1 = libmesaswr_la-swr_clear.lo \
 	libmesaswr_la-swr_context.lo libmesaswr_la-swr_draw.lo \
 	libmesaswr_la-swr_screen.lo libmesaswr_la-swr_state.lo \
@@ -173,20 +250,25 @@ am__objects_1 = libmesaswr_la-swr_clear.lo \
 	libmesaswr_la-swr_shader.lo libmesaswr_la-swr_fence.lo \
 	libmesaswr_la-swr_fence_work.lo libmesaswr_la-swr_query.lo
 am__dirstamp = $(am__leading_dot)dirstamp
-am__objects_2 = rasterizer/common/libmesaswr_la-formats.lo \
-	rasterizer/common/libmesaswr_la-os.lo \
-	rasterizer/common/libmesaswr_la-rdtsc_buckets.lo \
-	rasterizer/common/libmesaswr_la-swr_assert.lo
-am__objects_3 = rasterizer/jitter/libmesaswr_la-blend_jit.lo \
+am__objects_2 = rasterizer/jitter/libmesaswr_la-blend_jit.lo \
 	rasterizer/jitter/libmesaswr_la-builder.lo \
+	rasterizer/jitter/libmesaswr_la-builder_mem.lo \
+	rasterizer/jitter/libmesaswr_la-builder_gfx_mem.lo \
 	rasterizer/jitter/libmesaswr_la-builder_misc.lo \
 	rasterizer/jitter/libmesaswr_la-fetch_jit.lo \
 	rasterizer/jitter/libmesaswr_la-JitManager.lo \
-	rasterizer/jitter/libmesaswr_la-streamout_jit.lo
-am__objects_4 = libmesaswr_la-swr_loader.lo
+	rasterizer/jitter/libmesaswr_la-streamout_jit.lo \
+	rasterizer/jitter/shader_lib/libmesaswr_la-DebugOutput.lo \
+	rasterizer/jitter/functionpasses/libmesaswr_la-lower_x86.lo
+am__objects_3 = libmesaswr_la-swr_loader.lo
+am__objects_4 = rasterizer/common/libmesaswr_la-formats.lo \
+	rasterizer/common/libmesaswr_la-os.lo \
+	rasterizer/common/libmesaswr_la-rdtsc_buckets.lo \
+	rasterizer/common/libmesaswr_la-swr_assert.lo
+@HAVE_SWR_BUILTIN_FALSE@am__objects_5 = $(am__objects_4) \
+@HAVE_SWR_BUILTIN_FALSE@	rasterizer/codegen/libmesaswr_la-gen_knobs.lo
 am_libmesaswr_la_OBJECTS = $(am__objects_1) $(am__objects_2) \
-	$(am__objects_3) rasterizer/codegen/libmesaswr_la-gen_knobs.lo \
-	$(am__objects_4)
+	$(am__objects_3) $(am__objects_5)
 libmesaswr_la_OBJECTS = $(am_libmesaswr_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -253,9 +335,9 @@ am__libswrAVX_la_SOURCES_DIST = rasterizer/archrast/archrast.cpp \
 	rasterizer/core/state_funcs.h rasterizer/core/tessellator.h \
 	rasterizer/core/threads.cpp rasterizer/core/threads.h \
 	rasterizer/core/tilemgr.cpp rasterizer/core/tilemgr.h \
-	rasterizer/core/utils.h rasterizer/memory/ClearTile.cpp \
-	rasterizer/memory/Convert.h rasterizer/memory/LoadTile.cpp \
-	rasterizer/memory/LoadTile.h \
+	rasterizer/core/tileset.h rasterizer/core/utils.h \
+	rasterizer/memory/ClearTile.cpp rasterizer/memory/Convert.h \
+	rasterizer/memory/LoadTile.cpp rasterizer/memory/LoadTile.h \
 	rasterizer/memory/LoadTile_Linear.cpp \
 	rasterizer/memory/LoadTile_TileX.cpp \
 	rasterizer/memory/LoadTile_TileY.cpp \
@@ -268,12 +350,15 @@ am__libswrAVX_la_SOURCES_DIST = rasterizer/archrast/archrast.cpp \
 	rasterizer/memory/StoreTile_TileY2.cpp \
 	rasterizer/memory/StoreTile_TileY.cpp \
 	rasterizer/memory/TilingFunctions.h \
-	rasterizer/memory/tilingtraits.h gen_swr_context_llvm.h \
+	rasterizer/memory/tilingtraits.h \
+	rasterizer/memory/InitMemory.cpp \
+	rasterizer/memory/InitMemory.h gen_swr_context_llvm.h \
 	rasterizer/codegen/gen_knobs.cpp \
 	rasterizer/codegen/gen_knobs.h \
 	rasterizer/jitter/gen_state_llvm.h \
 	rasterizer/jitter/gen_builder.hpp \
-	rasterizer/jitter/gen_builder_x86.hpp \
+	rasterizer/jitter/gen_builder_meta.hpp \
+	rasterizer/jitter/gen_builder_intrin.hpp \
 	rasterizer/archrast/gen_ar_event.hpp \
 	rasterizer/archrast/gen_ar_event.cpp \
 	rasterizer/archrast/gen_ar_eventhandler.hpp \
@@ -288,12 +373,12 @@ am__libswrAVX_la_SOURCES_DIST = rasterizer/archrast/archrast.cpp \
 	rasterizer/core/backends/gen_rasterizer2.cpp \
 	rasterizer/core/backends/gen_rasterizer3.cpp \
 	rasterizer/core/backends/gen_rasterizer.hpp
-am__objects_5 = rasterizer/archrast/libswrAVX_la-archrast.lo
-am__objects_6 = rasterizer/common/libswrAVX_la-formats.lo \
+am__objects_6 = rasterizer/archrast/libswrAVX_la-archrast.lo
+am__objects_7 = rasterizer/common/libswrAVX_la-formats.lo \
 	rasterizer/common/libswrAVX_la-os.lo \
 	rasterizer/common/libswrAVX_la-rdtsc_buckets.lo \
 	rasterizer/common/libswrAVX_la-swr_assert.lo
-am__objects_7 = rasterizer/core/libswrAVX_la-api.lo \
+am__objects_8 = rasterizer/core/libswrAVX_la-api.lo \
 	rasterizer/core/libswrAVX_la-backend.lo \
 	rasterizer/core/libswrAVX_la-backend_clear.lo \
 	rasterizer/core/libswrAVX_la-backend_sample.lo \
@@ -306,7 +391,7 @@ am__objects_7 = rasterizer/core/libswrAVX_la-api.lo \
 	rasterizer/core/libswrAVX_la-rdtsc_core.lo \
 	rasterizer/core/libswrAVX_la-threads.lo \
 	rasterizer/core/libswrAVX_la-tilemgr.lo
-am__objects_8 = rasterizer/memory/libswrAVX_la-ClearTile.lo \
+am__objects_9 = rasterizer/memory/libswrAVX_la-ClearTile.lo \
 	rasterizer/memory/libswrAVX_la-LoadTile.lo \
 	rasterizer/memory/libswrAVX_la-LoadTile_Linear.lo \
 	rasterizer/memory/libswrAVX_la-LoadTile_TileX.lo \
@@ -318,8 +403,9 @@ am__objects_8 = rasterizer/memory/libswrAVX_la-ClearTile.lo \
 	rasterizer/memory/libswrAVX_la-StoreTile_TileX2.lo \
 	rasterizer/memory/libswrAVX_la-StoreTile_TileX.lo \
 	rasterizer/memory/libswrAVX_la-StoreTile_TileY2.lo \
-	rasterizer/memory/libswrAVX_la-StoreTile_TileY.lo
-am__objects_9 = rasterizer/codegen/libswrAVX_la-gen_knobs.lo \
+	rasterizer/memory/libswrAVX_la-StoreTile_TileY.lo \
+	rasterizer/memory/libswrAVX_la-InitMemory.lo
+am__objects_10 = rasterizer/codegen/libswrAVX_la-gen_knobs.lo \
 	rasterizer/archrast/libswrAVX_la-gen_ar_event.lo \
 	rasterizer/core/backends/libswrAVX_la-gen_BackendPixelRate0.lo \
 	rasterizer/core/backends/libswrAVX_la-gen_BackendPixelRate1.lo \
@@ -329,14 +415,16 @@ am__objects_9 = rasterizer/codegen/libswrAVX_la-gen_knobs.lo \
 	rasterizer/core/backends/libswrAVX_la-gen_rasterizer1.lo \
 	rasterizer/core/backends/libswrAVX_la-gen_rasterizer2.lo \
 	rasterizer/core/backends/libswrAVX_la-gen_rasterizer3.lo
-am__objects_10 = $(am__objects_5) $(am__objects_6) $(am__objects_7) \
-	$(am__objects_8) $(am__objects_9)
-@HAVE_SWR_AVX_TRUE@am_libswrAVX_la_OBJECTS = $(am__objects_10)
+am__objects_11 = $(am__objects_6) $(am__objects_7) $(am__objects_8) \
+	$(am__objects_9) $(am__objects_10)
+@HAVE_SWR_AVX_TRUE@am_libswrAVX_la_OBJECTS = $(am__objects_11)
 libswrAVX_la_OBJECTS = $(am_libswrAVX_la_OBJECTS)
 libswrAVX_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(libswrAVX_la_CXXFLAGS) \
 	$(CXXFLAGS) $(libswrAVX_la_LDFLAGS) $(LDFLAGS) -o $@
-@HAVE_SWR_AVX_TRUE@am_libswrAVX_la_rpath = -rpath $(libdir)
+@HAVE_SWR_AVX_TRUE@@HAVE_SWR_BUILTIN_FALSE@am_libswrAVX_la_rpath =  \
+@HAVE_SWR_AVX_TRUE@@HAVE_SWR_BUILTIN_FALSE@	-rpath $(libdir)
+@HAVE_SWR_AVX_TRUE@@HAVE_SWR_BUILTIN_TRUE@am_libswrAVX_la_rpath =
 @HAVE_SWR_AVX2_TRUE@libswrAVX2_la_DEPENDENCIES =  \
 @HAVE_SWR_AVX2_TRUE@	$(am__DEPENDENCIES_1)
 am__libswrAVX2_la_SOURCES_DIST = rasterizer/archrast/archrast.cpp \
@@ -394,9 +482,9 @@ am__libswrAVX2_la_SOURCES_DIST = rasterizer/archrast/archrast.cpp \
 	rasterizer/core/state_funcs.h rasterizer/core/tessellator.h \
 	rasterizer/core/threads.cpp rasterizer/core/threads.h \
 	rasterizer/core/tilemgr.cpp rasterizer/core/tilemgr.h \
-	rasterizer/core/utils.h rasterizer/memory/ClearTile.cpp \
-	rasterizer/memory/Convert.h rasterizer/memory/LoadTile.cpp \
-	rasterizer/memory/LoadTile.h \
+	rasterizer/core/tileset.h rasterizer/core/utils.h \
+	rasterizer/memory/ClearTile.cpp rasterizer/memory/Convert.h \
+	rasterizer/memory/LoadTile.cpp rasterizer/memory/LoadTile.h \
 	rasterizer/memory/LoadTile_Linear.cpp \
 	rasterizer/memory/LoadTile_TileX.cpp \
 	rasterizer/memory/LoadTile_TileY.cpp \
@@ -409,12 +497,15 @@ am__libswrAVX2_la_SOURCES_DIST = rasterizer/archrast/archrast.cpp \
 	rasterizer/memory/StoreTile_TileY2.cpp \
 	rasterizer/memory/StoreTile_TileY.cpp \
 	rasterizer/memory/TilingFunctions.h \
-	rasterizer/memory/tilingtraits.h gen_swr_context_llvm.h \
+	rasterizer/memory/tilingtraits.h \
+	rasterizer/memory/InitMemory.cpp \
+	rasterizer/memory/InitMemory.h gen_swr_context_llvm.h \
 	rasterizer/codegen/gen_knobs.cpp \
 	rasterizer/codegen/gen_knobs.h \
 	rasterizer/jitter/gen_state_llvm.h \
 	rasterizer/jitter/gen_builder.hpp \
-	rasterizer/jitter/gen_builder_x86.hpp \
+	rasterizer/jitter/gen_builder_meta.hpp \
+	rasterizer/jitter/gen_builder_intrin.hpp \
 	rasterizer/archrast/gen_ar_event.hpp \
 	rasterizer/archrast/gen_ar_event.cpp \
 	rasterizer/archrast/gen_ar_eventhandler.hpp \
@@ -429,12 +520,12 @@ am__libswrAVX2_la_SOURCES_DIST = rasterizer/archrast/archrast.cpp \
 	rasterizer/core/backends/gen_rasterizer2.cpp \
 	rasterizer/core/backends/gen_rasterizer3.cpp \
 	rasterizer/core/backends/gen_rasterizer.hpp
-am__objects_11 = rasterizer/archrast/libswrAVX2_la-archrast.lo
-am__objects_12 = rasterizer/common/libswrAVX2_la-formats.lo \
+am__objects_12 = rasterizer/archrast/libswrAVX2_la-archrast.lo
+am__objects_13 = rasterizer/common/libswrAVX2_la-formats.lo \
 	rasterizer/common/libswrAVX2_la-os.lo \
 	rasterizer/common/libswrAVX2_la-rdtsc_buckets.lo \
 	rasterizer/common/libswrAVX2_la-swr_assert.lo
-am__objects_13 = rasterizer/core/libswrAVX2_la-api.lo \
+am__objects_14 = rasterizer/core/libswrAVX2_la-api.lo \
 	rasterizer/core/libswrAVX2_la-backend.lo \
 	rasterizer/core/libswrAVX2_la-backend_clear.lo \
 	rasterizer/core/libswrAVX2_la-backend_sample.lo \
@@ -447,7 +538,7 @@ am__objects_13 = rasterizer/core/libswrAVX2_la-api.lo \
 	rasterizer/core/libswrAVX2_la-rdtsc_core.lo \
 	rasterizer/core/libswrAVX2_la-threads.lo \
 	rasterizer/core/libswrAVX2_la-tilemgr.lo
-am__objects_14 = rasterizer/memory/libswrAVX2_la-ClearTile.lo \
+am__objects_15 = rasterizer/memory/libswrAVX2_la-ClearTile.lo \
 	rasterizer/memory/libswrAVX2_la-LoadTile.lo \
 	rasterizer/memory/libswrAVX2_la-LoadTile_Linear.lo \
 	rasterizer/memory/libswrAVX2_la-LoadTile_TileX.lo \
@@ -459,8 +550,9 @@ am__objects_14 = rasterizer/memory/libswrAVX2_la-ClearTile.lo \
 	rasterizer/memory/libswrAVX2_la-StoreTile_TileX2.lo \
 	rasterizer/memory/libswrAVX2_la-StoreTile_TileX.lo \
 	rasterizer/memory/libswrAVX2_la-StoreTile_TileY2.lo \
-	rasterizer/memory/libswrAVX2_la-StoreTile_TileY.lo
-am__objects_15 = rasterizer/codegen/libswrAVX2_la-gen_knobs.lo \
+	rasterizer/memory/libswrAVX2_la-StoreTile_TileY.lo \
+	rasterizer/memory/libswrAVX2_la-InitMemory.lo
+am__objects_16 = rasterizer/codegen/libswrAVX2_la-gen_knobs.lo \
 	rasterizer/archrast/libswrAVX2_la-gen_ar_event.lo \
 	rasterizer/core/backends/libswrAVX2_la-gen_BackendPixelRate0.lo \
 	rasterizer/core/backends/libswrAVX2_la-gen_BackendPixelRate1.lo \
@@ -470,15 +562,17 @@ am__objects_15 = rasterizer/codegen/libswrAVX2_la-gen_knobs.lo \
 	rasterizer/core/backends/libswrAVX2_la-gen_rasterizer1.lo \
 	rasterizer/core/backends/libswrAVX2_la-gen_rasterizer2.lo \
 	rasterizer/core/backends/libswrAVX2_la-gen_rasterizer3.lo
-am__objects_16 = $(am__objects_11) $(am__objects_12) $(am__objects_13) \
-	$(am__objects_14) $(am__objects_15)
-@HAVE_SWR_AVX2_TRUE@am_libswrAVX2_la_OBJECTS = $(am__objects_16)
+am__objects_17 = $(am__objects_12) $(am__objects_13) $(am__objects_14) \
+	$(am__objects_15) $(am__objects_16)
+@HAVE_SWR_AVX2_TRUE@am_libswrAVX2_la_OBJECTS = $(am__objects_17)
 libswrAVX2_la_OBJECTS = $(am_libswrAVX2_la_OBJECTS)
 libswrAVX2_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
 	$(libswrAVX2_la_CXXFLAGS) $(CXXFLAGS) $(libswrAVX2_la_LDFLAGS) \
 	$(LDFLAGS) -o $@
-@HAVE_SWR_AVX2_TRUE@am_libswrAVX2_la_rpath = -rpath $(libdir)
+@HAVE_SWR_AVX2_TRUE@@HAVE_SWR_BUILTIN_FALSE@am_libswrAVX2_la_rpath =  \
+@HAVE_SWR_AVX2_TRUE@@HAVE_SWR_BUILTIN_FALSE@	-rpath $(libdir)
+@HAVE_SWR_AVX2_TRUE@@HAVE_SWR_BUILTIN_TRUE@am_libswrAVX2_la_rpath =
 @HAVE_SWR_KNL_TRUE@libswrKNL_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am__libswrKNL_la_SOURCES_DIST = rasterizer/archrast/archrast.cpp \
 	rasterizer/archrast/archrast.h \
@@ -535,9 +629,9 @@ am__libswrKNL_la_SOURCES_DIST = rasterizer/archrast/archrast.cpp \
 	rasterizer/core/state_funcs.h rasterizer/core/tessellator.h \
 	rasterizer/core/threads.cpp rasterizer/core/threads.h \
 	rasterizer/core/tilemgr.cpp rasterizer/core/tilemgr.h \
-	rasterizer/core/utils.h rasterizer/memory/ClearTile.cpp \
-	rasterizer/memory/Convert.h rasterizer/memory/LoadTile.cpp \
-	rasterizer/memory/LoadTile.h \
+	rasterizer/core/tileset.h rasterizer/core/utils.h \
+	rasterizer/memory/ClearTile.cpp rasterizer/memory/Convert.h \
+	rasterizer/memory/LoadTile.cpp rasterizer/memory/LoadTile.h \
 	rasterizer/memory/LoadTile_Linear.cpp \
 	rasterizer/memory/LoadTile_TileX.cpp \
 	rasterizer/memory/LoadTile_TileY.cpp \
@@ -550,12 +644,15 @@ am__libswrKNL_la_SOURCES_DIST = rasterizer/archrast/archrast.cpp \
 	rasterizer/memory/StoreTile_TileY2.cpp \
 	rasterizer/memory/StoreTile_TileY.cpp \
 	rasterizer/memory/TilingFunctions.h \
-	rasterizer/memory/tilingtraits.h gen_swr_context_llvm.h \
+	rasterizer/memory/tilingtraits.h \
+	rasterizer/memory/InitMemory.cpp \
+	rasterizer/memory/InitMemory.h gen_swr_context_llvm.h \
 	rasterizer/codegen/gen_knobs.cpp \
 	rasterizer/codegen/gen_knobs.h \
 	rasterizer/jitter/gen_state_llvm.h \
 	rasterizer/jitter/gen_builder.hpp \
-	rasterizer/jitter/gen_builder_x86.hpp \
+	rasterizer/jitter/gen_builder_meta.hpp \
+	rasterizer/jitter/gen_builder_intrin.hpp \
 	rasterizer/archrast/gen_ar_event.hpp \
 	rasterizer/archrast/gen_ar_event.cpp \
 	rasterizer/archrast/gen_ar_eventhandler.hpp \
@@ -570,12 +667,12 @@ am__libswrKNL_la_SOURCES_DIST = rasterizer/archrast/archrast.cpp \
 	rasterizer/core/backends/gen_rasterizer2.cpp \
 	rasterizer/core/backends/gen_rasterizer3.cpp \
 	rasterizer/core/backends/gen_rasterizer.hpp
-am__objects_17 = rasterizer/archrast/libswrKNL_la-archrast.lo
-am__objects_18 = rasterizer/common/libswrKNL_la-formats.lo \
+am__objects_18 = rasterizer/archrast/libswrKNL_la-archrast.lo
+am__objects_19 = rasterizer/common/libswrKNL_la-formats.lo \
 	rasterizer/common/libswrKNL_la-os.lo \
 	rasterizer/common/libswrKNL_la-rdtsc_buckets.lo \
 	rasterizer/common/libswrKNL_la-swr_assert.lo
-am__objects_19 = rasterizer/core/libswrKNL_la-api.lo \
+am__objects_20 = rasterizer/core/libswrKNL_la-api.lo \
 	rasterizer/core/libswrKNL_la-backend.lo \
 	rasterizer/core/libswrKNL_la-backend_clear.lo \
 	rasterizer/core/libswrKNL_la-backend_sample.lo \
@@ -588,7 +685,7 @@ am__objects_19 = rasterizer/core/libswrKNL_la-api.lo \
 	rasterizer/core/libswrKNL_la-rdtsc_core.lo \
 	rasterizer/core/libswrKNL_la-threads.lo \
 	rasterizer/core/libswrKNL_la-tilemgr.lo
-am__objects_20 = rasterizer/memory/libswrKNL_la-ClearTile.lo \
+am__objects_21 = rasterizer/memory/libswrKNL_la-ClearTile.lo \
 	rasterizer/memory/libswrKNL_la-LoadTile.lo \
 	rasterizer/memory/libswrKNL_la-LoadTile_Linear.lo \
 	rasterizer/memory/libswrKNL_la-LoadTile_TileX.lo \
@@ -600,8 +697,9 @@ am__objects_20 = rasterizer/memory/libswrKNL_la-ClearTile.lo \
 	rasterizer/memory/libswrKNL_la-StoreTile_TileX2.lo \
 	rasterizer/memory/libswrKNL_la-StoreTile_TileX.lo \
 	rasterizer/memory/libswrKNL_la-StoreTile_TileY2.lo \
-	rasterizer/memory/libswrKNL_la-StoreTile_TileY.lo
-am__objects_21 = rasterizer/codegen/libswrKNL_la-gen_knobs.lo \
+	rasterizer/memory/libswrKNL_la-StoreTile_TileY.lo \
+	rasterizer/memory/libswrKNL_la-InitMemory.lo
+am__objects_22 = rasterizer/codegen/libswrKNL_la-gen_knobs.lo \
 	rasterizer/archrast/libswrKNL_la-gen_ar_event.lo \
 	rasterizer/core/backends/libswrKNL_la-gen_BackendPixelRate0.lo \
 	rasterizer/core/backends/libswrKNL_la-gen_BackendPixelRate1.lo \
@@ -611,14 +709,16 @@ am__objects_21 = rasterizer/codegen/libswrKNL_la-gen_knobs.lo \
 	rasterizer/core/backends/libswrKNL_la-gen_rasterizer1.lo \
 	rasterizer/core/backends/libswrKNL_la-gen_rasterizer2.lo \
 	rasterizer/core/backends/libswrKNL_la-gen_rasterizer3.lo
-am__objects_22 = $(am__objects_17) $(am__objects_18) $(am__objects_19) \
-	$(am__objects_20) $(am__objects_21)
-@HAVE_SWR_KNL_TRUE@am_libswrKNL_la_OBJECTS = $(am__objects_22)
+am__objects_23 = $(am__objects_18) $(am__objects_19) $(am__objects_20) \
+	$(am__objects_21) $(am__objects_22)
+@HAVE_SWR_KNL_TRUE@am_libswrKNL_la_OBJECTS = $(am__objects_23)
 libswrKNL_la_OBJECTS = $(am_libswrKNL_la_OBJECTS)
 libswrKNL_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(libswrKNL_la_CXXFLAGS) \
 	$(CXXFLAGS) $(libswrKNL_la_LDFLAGS) $(LDFLAGS) -o $@
-@HAVE_SWR_KNL_TRUE@am_libswrKNL_la_rpath = -rpath $(libdir)
+@HAVE_SWR_BUILTIN_FALSE@@HAVE_SWR_KNL_TRUE@am_libswrKNL_la_rpath =  \
+@HAVE_SWR_BUILTIN_FALSE@@HAVE_SWR_KNL_TRUE@	-rpath $(libdir)
+@HAVE_SWR_BUILTIN_TRUE@@HAVE_SWR_KNL_TRUE@am_libswrKNL_la_rpath =
 @HAVE_SWR_SKX_TRUE@libswrSKX_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am__libswrSKX_la_SOURCES_DIST = rasterizer/archrast/archrast.cpp \
 	rasterizer/archrast/archrast.h \
@@ -675,9 +775,9 @@ am__libswrSKX_la_SOURCES_DIST = rasterizer/archrast/archrast.cpp \
 	rasterizer/core/state_funcs.h rasterizer/core/tessellator.h \
 	rasterizer/core/threads.cpp rasterizer/core/threads.h \
 	rasterizer/core/tilemgr.cpp rasterizer/core/tilemgr.h \
-	rasterizer/core/utils.h rasterizer/memory/ClearTile.cpp \
-	rasterizer/memory/Convert.h rasterizer/memory/LoadTile.cpp \
-	rasterizer/memory/LoadTile.h \
+	rasterizer/core/tileset.h rasterizer/core/utils.h \
+	rasterizer/memory/ClearTile.cpp rasterizer/memory/Convert.h \
+	rasterizer/memory/LoadTile.cpp rasterizer/memory/LoadTile.h \
 	rasterizer/memory/LoadTile_Linear.cpp \
 	rasterizer/memory/LoadTile_TileX.cpp \
 	rasterizer/memory/LoadTile_TileY.cpp \
@@ -690,12 +790,15 @@ am__libswrSKX_la_SOURCES_DIST = rasterizer/archrast/archrast.cpp \
 	rasterizer/memory/StoreTile_TileY2.cpp \
 	rasterizer/memory/StoreTile_TileY.cpp \
 	rasterizer/memory/TilingFunctions.h \
-	rasterizer/memory/tilingtraits.h gen_swr_context_llvm.h \
+	rasterizer/memory/tilingtraits.h \
+	rasterizer/memory/InitMemory.cpp \
+	rasterizer/memory/InitMemory.h gen_swr_context_llvm.h \
 	rasterizer/codegen/gen_knobs.cpp \
 	rasterizer/codegen/gen_knobs.h \
 	rasterizer/jitter/gen_state_llvm.h \
 	rasterizer/jitter/gen_builder.hpp \
-	rasterizer/jitter/gen_builder_x86.hpp \
+	rasterizer/jitter/gen_builder_meta.hpp \
+	rasterizer/jitter/gen_builder_intrin.hpp \
 	rasterizer/archrast/gen_ar_event.hpp \
 	rasterizer/archrast/gen_ar_event.cpp \
 	rasterizer/archrast/gen_ar_eventhandler.hpp \
@@ -710,12 +813,12 @@ am__libswrSKX_la_SOURCES_DIST = rasterizer/archrast/archrast.cpp \
 	rasterizer/core/backends/gen_rasterizer2.cpp \
 	rasterizer/core/backends/gen_rasterizer3.cpp \
 	rasterizer/core/backends/gen_rasterizer.hpp
-am__objects_23 = rasterizer/archrast/libswrSKX_la-archrast.lo
-am__objects_24 = rasterizer/common/libswrSKX_la-formats.lo \
+am__objects_24 = rasterizer/archrast/libswrSKX_la-archrast.lo
+am__objects_25 = rasterizer/common/libswrSKX_la-formats.lo \
 	rasterizer/common/libswrSKX_la-os.lo \
 	rasterizer/common/libswrSKX_la-rdtsc_buckets.lo \
 	rasterizer/common/libswrSKX_la-swr_assert.lo
-am__objects_25 = rasterizer/core/libswrSKX_la-api.lo \
+am__objects_26 = rasterizer/core/libswrSKX_la-api.lo \
 	rasterizer/core/libswrSKX_la-backend.lo \
 	rasterizer/core/libswrSKX_la-backend_clear.lo \
 	rasterizer/core/libswrSKX_la-backend_sample.lo \
@@ -728,7 +831,7 @@ am__objects_25 = rasterizer/core/libswrSKX_la-api.lo \
 	rasterizer/core/libswrSKX_la-rdtsc_core.lo \
 	rasterizer/core/libswrSKX_la-threads.lo \
 	rasterizer/core/libswrSKX_la-tilemgr.lo
-am__objects_26 = rasterizer/memory/libswrSKX_la-ClearTile.lo \
+am__objects_27 = rasterizer/memory/libswrSKX_la-ClearTile.lo \
 	rasterizer/memory/libswrSKX_la-LoadTile.lo \
 	rasterizer/memory/libswrSKX_la-LoadTile_Linear.lo \
 	rasterizer/memory/libswrSKX_la-LoadTile_TileX.lo \
@@ -740,8 +843,9 @@ am__objects_26 = rasterizer/memory/libswrSKX_la-ClearTile.lo \
 	rasterizer/memory/libswrSKX_la-StoreTile_TileX2.lo \
 	rasterizer/memory/libswrSKX_la-StoreTile_TileX.lo \
 	rasterizer/memory/libswrSKX_la-StoreTile_TileY2.lo \
-	rasterizer/memory/libswrSKX_la-StoreTile_TileY.lo
-am__objects_27 = rasterizer/codegen/libswrSKX_la-gen_knobs.lo \
+	rasterizer/memory/libswrSKX_la-StoreTile_TileY.lo \
+	rasterizer/memory/libswrSKX_la-InitMemory.lo
+am__objects_28 = rasterizer/codegen/libswrSKX_la-gen_knobs.lo \
 	rasterizer/archrast/libswrSKX_la-gen_ar_event.lo \
 	rasterizer/core/backends/libswrSKX_la-gen_BackendPixelRate0.lo \
 	rasterizer/core/backends/libswrSKX_la-gen_BackendPixelRate1.lo \
@@ -751,14 +855,16 @@ am__objects_27 = rasterizer/codegen/libswrSKX_la-gen_knobs.lo \
 	rasterizer/core/backends/libswrSKX_la-gen_rasterizer1.lo \
 	rasterizer/core/backends/libswrSKX_la-gen_rasterizer2.lo \
 	rasterizer/core/backends/libswrSKX_la-gen_rasterizer3.lo
-am__objects_28 = $(am__objects_23) $(am__objects_24) $(am__objects_25) \
-	$(am__objects_26) $(am__objects_27)
-@HAVE_SWR_SKX_TRUE@am_libswrSKX_la_OBJECTS = $(am__objects_28)
+am__objects_29 = $(am__objects_24) $(am__objects_25) $(am__objects_26) \
+	$(am__objects_27) $(am__objects_28)
+@HAVE_SWR_SKX_TRUE@am_libswrSKX_la_OBJECTS = $(am__objects_29)
 libswrSKX_la_OBJECTS = $(am_libswrSKX_la_OBJECTS)
 libswrSKX_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(libswrSKX_la_CXXFLAGS) \
 	$(CXXFLAGS) $(libswrSKX_la_LDFLAGS) $(LDFLAGS) -o $@
-@HAVE_SWR_SKX_TRUE@am_libswrSKX_la_rpath = -rpath $(libdir)
+@HAVE_SWR_BUILTIN_FALSE@@HAVE_SWR_SKX_TRUE@am_libswrSKX_la_rpath =  \
+@HAVE_SWR_BUILTIN_FALSE@@HAVE_SWR_SKX_TRUE@	-rpath $(libdir)
+@HAVE_SWR_BUILTIN_TRUE@@HAVE_SWR_SKX_TRUE@am_libswrSKX_la_rpath =
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -814,7 +920,7 @@ am__v_CCLD_1 =
 SOURCES = $(libmesaswr_la_SOURCES) $(libswrAVX_la_SOURCES) \
 	$(libswrAVX2_la_SOURCES) $(libswrKNL_la_SOURCES) \
 	$(libswrSKX_la_SOURCES)
-DIST_SOURCES = $(libmesaswr_la_SOURCES) \
+DIST_SOURCES = $(am__libmesaswr_la_SOURCES_DIST) \
 	$(am__libswrAVX_la_SOURCES_DIST) \
 	$(am__libswrAVX2_la_SOURCES_DIST) \
 	$(am__libswrKNL_la_SOURCES_DIST) \
@@ -839,6 +945,8 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BACKTRACE_CFLAGS = @BACKTRACE_CFLAGS@
+BACKTRACE_LIBS = @BACKTRACE_LIBS@
 BSYMBOLIC = @BSYMBOLIC@
 CC = @CC@
 CCAS = @CCAS@
@@ -852,6 +960,7 @@ CLOVER_STD_OVERRIDE = @CLOVER_STD_OVERRIDE@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
+CXX11_CXXFLAGS = @CXX11_CXXFLAGS@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
@@ -885,8 +994,6 @@ EXEEXT = @EXEEXT@
 EXPAT_CFLAGS = @EXPAT_CFLAGS@
 EXPAT_LIBS = @EXPAT_LIBS@
 FGREP = @FGREP@
-FREEDRENO_CFLAGS = @FREEDRENO_CFLAGS@
-FREEDRENO_LIBS = @FREEDRENO_LIBS@
 GALLIUM_PIPE_LOADER_DEFINES = @GALLIUM_PIPE_LOADER_DEFINES@
 GBM_PC_LIB_PRIV = @GBM_PC_LIB_PRIV@
 GBM_PC_REQ_PRIV = @GBM_PC_REQ_PRIV@
@@ -905,8 +1012,8 @@ GL_LIB_DEPS = @GL_LIB_DEPS@
 GL_PC_CFLAGS = @GL_PC_CFLAGS@
 GL_PC_LIB_PRIV = @GL_PC_LIB_PRIV@
 GL_PC_REQ_PRIV = @GL_PC_REQ_PRIV@
+GL_PKGCONF_LIB = @GL_PKGCONF_LIB@
 GREP = @GREP@
-HAVE_XF86VIDMODE = @HAVE_XF86VIDMODE@
 I915_CFLAGS = @I915_CFLAGS@
 I915_LIBS = @I915_LIBS@
 INDENT = @INDENT@
@@ -918,6 +1025,7 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
+LD_BUILD_ID = @LD_BUILD_ID@
 LD_NO_UNDEFINED = @LD_NO_UNDEFINED@
 LEX = @LEX@
 LEXLIB = @LEXLIB@
@@ -955,7 +1063,7 @@ MSVC2013_COMPAT_CFLAGS = @MSVC2013_COMPAT_CFLAGS@
 MSVC2013_COMPAT_CXXFLAGS = @MSVC2013_COMPAT_CXXFLAGS@
 NINE_MAJOR = @NINE_MAJOR@
 NINE_MINOR = @NINE_MINOR@
-NINE_TINY = @NINE_TINY@
+NINE_PATCH = @NINE_PATCH@
 NINE_VERSION = @NINE_VERSION@
 NM = @NM@
 NMEDIT = @NMEDIT@
@@ -968,6 +1076,9 @@ OBJEXT = @OBJEXT@
 OMX_BELLAGIO_CFLAGS = @OMX_BELLAGIO_CFLAGS@
 OMX_BELLAGIO_LIBS = @OMX_BELLAGIO_LIBS@
 OMX_BELLAGIO_LIB_INSTALL_DIR = @OMX_BELLAGIO_LIB_INSTALL_DIR@
+OMX_TIZONIA_CFLAGS = @OMX_TIZONIA_CFLAGS@
+OMX_TIZONIA_LIBS = @OMX_TIZONIA_LIBS@
+OMX_TIZONIA_LIB_INSTALL_DIR = @OMX_TIZONIA_LIB_INSTALL_DIR@
 OPENCL_LIBNAME = @OPENCL_LIBNAME@
 OPENCL_VERSION = @OPENCL_VERSION@
 OSMESA_LIB = @OSMESA_LIB@
@@ -995,11 +1106,16 @@ PTHREAD_CC = @PTHREAD_CC@
 PTHREAD_CFLAGS = @PTHREAD_CFLAGS@
 PTHREAD_LIBS = @PTHREAD_LIBS@
 PWR8_CFLAGS = @PWR8_CFLAGS@
-PYTHON2 = @PYTHON2@
+PYTHON = @PYTHON@
+PYTHON_EXEC_PREFIX = @PYTHON_EXEC_PREFIX@
+PYTHON_PLATFORM = @PYTHON_PLATFORM@
+PYTHON_PREFIX = @PYTHON_PREFIX@
+PYTHON_VERSION = @PYTHON_VERSION@
 RADEON_CFLAGS = @RADEON_CFLAGS@
 RADEON_LIBS = @RADEON_LIBS@
 RANLIB = @RANLIB@
 RM = @RM@
+SCANNER_ARG = @SCANNER_ARG@
 SED = @SED@
 SELINUX_CFLAGS = @SELINUX_CFLAGS@
 SELINUX_LIBS = @SELINUX_LIBS@
@@ -1011,9 +1127,10 @@ SSE41_CFLAGS = @SSE41_CFLAGS@
 STRIP = @STRIP@
 SWR_AVX2_CXXFLAGS = @SWR_AVX2_CXXFLAGS@
 SWR_AVX_CXXFLAGS = @SWR_AVX_CXXFLAGS@
-SWR_CXX11_CXXFLAGS = @SWR_CXX11_CXXFLAGS@
 SWR_KNL_CXXFLAGS = @SWR_KNL_CXXFLAGS@
 SWR_SKX_CXXFLAGS = @SWR_SKX_CXXFLAGS@
+V3D_SIMULATOR_CFLAGS = @V3D_SIMULATOR_CFLAGS@
+V3D_SIMULATOR_LIBS = @V3D_SIMULATOR_LIBS@
 VALGRIND_CFLAGS = @VALGRIND_CFLAGS@
 VALGRIND_LIBS = @VALGRIND_LIBS@
 VA_CFLAGS = @VA_CFLAGS@
@@ -1021,8 +1138,8 @@ VA_LIBS = @VA_LIBS@
 VA_LIB_INSTALL_DIR = @VA_LIB_INSTALL_DIR@
 VA_MAJOR = @VA_MAJOR@
 VA_MINOR = @VA_MINOR@
-VC5_SIMULATOR_CFLAGS = @VC5_SIMULATOR_CFLAGS@
-VC5_SIMULATOR_LIBS = @VC5_SIMULATOR_LIBS@
+VC4_CFLAGS = @VC4_CFLAGS@
+VC4_LIBS = @VC4_LIBS@
 VDPAU_CFLAGS = @VDPAU_CFLAGS@
 VDPAU_LIBS = @VDPAU_LIBS@
 VDPAU_LIB_INSTALL_DIR = @VDPAU_LIB_INSTALL_DIR@
@@ -1036,7 +1153,11 @@ VL_LIBS = @VL_LIBS@
 VULKAN_ICD_INSTALL_DIR = @VULKAN_ICD_INSTALL_DIR@
 WAYLAND_CLIENT_CFLAGS = @WAYLAND_CLIENT_CFLAGS@
 WAYLAND_CLIENT_LIBS = @WAYLAND_CLIENT_LIBS@
+WAYLAND_EGL_CFLAGS = @WAYLAND_EGL_CFLAGS@
+WAYLAND_EGL_LIBS = @WAYLAND_EGL_LIBS@
+WAYLAND_PROTOCOLS_CFLAGS = @WAYLAND_PROTOCOLS_CFLAGS@
 WAYLAND_PROTOCOLS_DATADIR = @WAYLAND_PROTOCOLS_DATADIR@
+WAYLAND_PROTOCOLS_LIBS = @WAYLAND_PROTOCOLS_LIBS@
 WAYLAND_SCANNER = @WAYLAND_SCANNER@
 WAYLAND_SCANNER_CFLAGS = @WAYLAND_SCANNER_CFLAGS@
 WAYLAND_SCANNER_LIBS = @WAYLAND_SCANNER_LIBS@
@@ -1046,16 +1167,20 @@ WNO_OVERRIDE_INIT = @WNO_OVERRIDE_INIT@
 X11_INCLUDES = @X11_INCLUDES@
 XA_MAJOR = @XA_MAJOR@
 XA_MINOR = @XA_MINOR@
-XA_TINY = @XA_TINY@
+XA_PATCH = @XA_PATCH@
 XA_VERSION = @XA_VERSION@
 XCB_DRI2_CFLAGS = @XCB_DRI2_CFLAGS@
 XCB_DRI2_LIBS = @XCB_DRI2_LIBS@
 XCB_DRI3_CFLAGS = @XCB_DRI3_CFLAGS@
 XCB_DRI3_LIBS = @XCB_DRI3_LIBS@
-XF86VIDMODE_CFLAGS = @XF86VIDMODE_CFLAGS@
-XF86VIDMODE_LIBS = @XF86VIDMODE_LIBS@
+XCB_DRI3_MODIFIERS_CFLAGS = @XCB_DRI3_MODIFIERS_CFLAGS@
+XCB_DRI3_MODIFIERS_LIBS = @XCB_DRI3_MODIFIERS_LIBS@
+XCB_RANDR_CFLAGS = @XCB_RANDR_CFLAGS@
+XCB_RANDR_LIBS = @XCB_RANDR_LIBS@
 XLIBGL_CFLAGS = @XLIBGL_CFLAGS@
 XLIBGL_LIBS = @XLIBGL_LIBS@
+XLIB_RANDR_CFLAGS = @XLIB_RANDR_CFLAGS@
+XLIB_RANDR_LIBS = @XLIB_RANDR_LIBS@
 XVMC_CFLAGS = @XVMC_CFLAGS@
 XVMC_LIBS = @XVMC_LIBS@
 XVMC_LIB_INSTALL_DIR = @XVMC_LIB_INSTALL_DIR@
@@ -1110,9 +1235,13 @@ mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
 pdfdir = @pdfdir@
+pkgpyexecdir = @pkgpyexecdir@
+pkgpythondir = @pkgpythondir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+pyexecdir = @pyexecdir@
+pythondir = @pythondir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -1238,6 +1367,7 @@ CORE_CXX_SOURCES := \
 	rasterizer/core/threads.h \
 	rasterizer/core/tilemgr.cpp \
 	rasterizer/core/tilemgr.h \
+	rasterizer/core/tileset.h \
 	rasterizer/core/utils.h
 
 JITTER_CXX_SOURCES := \
@@ -1246,15 +1376,23 @@ JITTER_CXX_SOURCES := \
 	rasterizer/jitter/builder.cpp \
 	rasterizer/jitter/builder.h \
 	rasterizer/jitter/builder_math.h \
+	rasterizer/jitter/builder_mem.cpp \
+	rasterizer/jitter/builder_mem.h \
+	rasterizer/jitter/builder_gfx_mem.cpp \
+	rasterizer/jitter/builder_gfx_mem.h \
 	rasterizer/jitter/builder_misc.cpp \
 	rasterizer/jitter/builder_misc.h \
 	rasterizer/jitter/fetch_jit.cpp \
 	rasterizer/jitter/fetch_jit.h \
 	rasterizer/jitter/jit_api.h \
+	rasterizer/jitter/jit_pch.hpp \
 	rasterizer/jitter/JitManager.cpp \
 	rasterizer/jitter/JitManager.h \
 	rasterizer/jitter/streamout_jit.cpp \
-	rasterizer/jitter/streamout_jit.h
+	rasterizer/jitter/streamout_jit.h \
+	rasterizer/jitter/shader_lib/DebugOutput.cpp \
+	rasterizer/jitter/functionpasses/passes.h \
+	rasterizer/jitter/functionpasses/lower_x86.cpp
 
 MEMORY_CXX_SOURCES := \
 	rasterizer/memory/ClearTile.cpp \
@@ -1274,7 +1412,9 @@ MEMORY_CXX_SOURCES := \
 	rasterizer/memory/StoreTile_TileY2.cpp \
 	rasterizer/memory/StoreTile_TileY.cpp \
 	rasterizer/memory/TilingFunctions.h \
-	rasterizer/memory/tilingtraits.h
+	rasterizer/memory/tilingtraits.h \
+	rasterizer/memory/InitMemory.cpp \
+	rasterizer/memory/InitMemory.h
 
 GALLIUM_CFLAGS = \
 	-I$(top_srcdir)/include \
@@ -1326,7 +1466,8 @@ GALLIUM_TARGET_CFLAGS = \
 	$(VISIBILITY_CFLAGS)
 
 GALLIUM_COMMON_LIB_DEPS = -lm $(LIBUNWIND_LIBS) $(LIBSENSORS_LIBS) \
-	$(CLOCK_LIB) $(PTHREAD_LIBS) $(DLOPEN_LIBS) $(am__append_1)
+	$(CLOCK_LIB) $(PTHREAD_LIBS) $(DLOPEN_LIBS) $(am__append_1) \
+	$(am__append_2)
 GALLIUM_WINSYS_CFLAGS = \
 	-I$(top_srcdir)/src \
 	-I$(top_srcdir)/include \
@@ -1338,24 +1479,17 @@ GALLIUM_WINSYS_CFLAGS = \
 GALLIUM_PIPE_LOADER_WINSYS_LIBS =  \
 	$(top_builddir)/src/gallium/winsys/sw/null/libws_null.la \
 	$(top_builddir)/src/gallium/winsys/sw/wrapper/libwsw.la \
-	$(am__append_2) $(am__append_3)
-AM_CXXFLAGS = $(GALLIUM_DRIVER_CFLAGS) $(SWR_CXX11_CXXFLAGS)
-noinst_LTLIBRARIES = libmesaswr.la
-
-# gen_knobs.* included here to provide driver access to swr configuration
-libmesaswr_la_SOURCES = \
-	$(CXX_SOURCES) \
-	$(COMMON_CXX_SOURCES) \
-	$(JITTER_CXX_SOURCES) \
-	rasterizer/codegen/gen_knobs.cpp \
-	rasterizer/codegen/gen_knobs.h \
-	$(LOADER_SOURCES)
-
+	$(am__append_3) $(am__append_4)
+AM_CXXFLAGS = $(GALLIUM_DRIVER_CFLAGS) $(CXX11_CXXFLAGS)
+noinst_LTLIBRARIES = libmesaswr.la $(am__append_10) $(am__append_12) \
+	$(am__append_14) $(am__append_16)
+libmesaswr_la_SOURCES = $(CXX_SOURCES) $(JITTER_CXX_SOURCES) \
+	$(LOADER_SOURCES) $(am__append_18)
 COMMON_CXXFLAGS = \
 	-fno-strict-aliasing \
 	$(GALLIUM_DRIVER_CFLAGS) \
 	$(LLVM_CXXFLAGS) \
-	$(SWR_CXX11_CXXFLAGS) \
+	$(CXX11_CXXFLAGS) \
 	-I$(builddir)/rasterizer/codegen \
 	-I$(builddir)/rasterizer/core \
 	-I$(builddir)/rasterizer/jitter \
@@ -1369,8 +1503,8 @@ COMMON_CXXFLAGS = \
 
 # SWR_AVX_CXXFLAGS needed for intrinsic usage in swr api headers
 libmesaswr_la_CXXFLAGS = $(SWR_AVX_CXXFLAGS) $(COMMON_CXXFLAGS) \
-	$(am__append_4) $(am__append_5) $(am__append_6) \
-	$(am__append_7)
+	$(am__append_5) $(am__append_6) $(am__append_7) \
+	$(am__append_8) $(am__append_9)
 COMMON_SOURCES = \
 	$(ARCHRAST_CXX_SOURCES) \
 	$(COMMON_CXX_SOURCES) \
@@ -1384,7 +1518,8 @@ BUILT_SOURCES = \
 	rasterizer/codegen/gen_knobs.h \
 	rasterizer/jitter/gen_state_llvm.h \
 	rasterizer/jitter/gen_builder.hpp \
-	rasterizer/jitter/gen_builder_x86.hpp \
+	rasterizer/jitter/gen_builder_meta.hpp \
+	rasterizer/jitter/gen_builder_intrin.hpp \
 	rasterizer/archrast/gen_ar_event.hpp \
 	rasterizer/archrast/gen_ar_event.cpp \
 	rasterizer/archrast/gen_ar_eventhandler.hpp \
@@ -1401,7 +1536,7 @@ BUILT_SOURCES = \
 	rasterizer/core/backends/gen_rasterizer.hpp
 
 @REGEN_SOURCES_TRUE@MKDIR_GEN = $(AM_V_at)$(MKDIR_P) $(@D)
-@REGEN_SOURCES_TRUE@PYTHON_GEN = $(AM_V_GEN)$(PYTHON2) $(PYTHON_FLAGS)
+@REGEN_SOURCES_TRUE@PYTHON_GEN = $(AM_V_GEN)$(PYTHON) $(PYTHON_FLAGS)
 COMMON_LDFLAGS = \
 	-shared \
 	-module \
@@ -1409,8 +1544,8 @@ COMMON_LDFLAGS = \
 	$(GC_SECTIONS) \
 	$(LD_NO_UNDEFINED)
 
-lib_LTLIBRARIES = $(am__append_8) $(am__append_9) $(am__append_10) \
-	$(am__append_11)
+lib_LTLIBRARIES = $(am__append_19) $(am__append_20) $(am__append_21) \
+	$(am__append_22)
 @HAVE_SWR_AVX_TRUE@libswrAVX_la_CXXFLAGS = \
 @HAVE_SWR_AVX_TRUE@	$(PTHREAD_CFLAGS) \
 @HAVE_SWR_AVX_TRUE@	$(SWR_AVX_CXXFLAGS) \
@@ -1471,9 +1606,17 @@ lib_LTLIBRARIES = $(am__append_8) $(am__append_9) $(am__append_10) \
 @HAVE_SWR_SKX_TRUE@libswrSKX_la_LDFLAGS = \
 @HAVE_SWR_SKX_TRUE@	$(COMMON_LDFLAGS)
 
+@HAVE_SWR_BUILTIN_TRUE@libmesaswr_la_LIBADD = $(am__append_11) \
+@HAVE_SWR_BUILTIN_TRUE@	$(am__append_13) $(am__append_15) \
+@HAVE_SWR_BUILTIN_TRUE@	$(am__append_17)
 EXTRA_DIST = \
 	SConscript \
+	meson.build \
+	rasterizer/jitter/meson.build \
+	rasterizer/codegen/meson.build \
+	rasterizer/core/backends/meson.build \
 	rasterizer/archrast/events.proto \
+	rasterizer/archrast/events_private.proto \
 	rasterizer/codegen/gen_llvm_ir_macros.py \
 	rasterizer/codegen/gen_llvm_types.py \
 	rasterizer/codegen/gen_archrast.py \
@@ -1574,6 +1717,54 @@ clean-noinstLTLIBRARIES:
 	  echo rm -f $${locs}; \
 	  rm -f $${locs}; \
 	}
+rasterizer/jitter/$(am__dirstamp):
+	@$(MKDIR_P) rasterizer/jitter
+	@: > rasterizer/jitter/$(am__dirstamp)
+rasterizer/jitter/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) rasterizer/jitter/$(DEPDIR)
+	@: > rasterizer/jitter/$(DEPDIR)/$(am__dirstamp)
+rasterizer/jitter/libmesaswr_la-blend_jit.lo:  \
+	rasterizer/jitter/$(am__dirstamp) \
+	rasterizer/jitter/$(DEPDIR)/$(am__dirstamp)
+rasterizer/jitter/libmesaswr_la-builder.lo:  \
+	rasterizer/jitter/$(am__dirstamp) \
+	rasterizer/jitter/$(DEPDIR)/$(am__dirstamp)
+rasterizer/jitter/libmesaswr_la-builder_mem.lo:  \
+	rasterizer/jitter/$(am__dirstamp) \
+	rasterizer/jitter/$(DEPDIR)/$(am__dirstamp)
+rasterizer/jitter/libmesaswr_la-builder_gfx_mem.lo:  \
+	rasterizer/jitter/$(am__dirstamp) \
+	rasterizer/jitter/$(DEPDIR)/$(am__dirstamp)
+rasterizer/jitter/libmesaswr_la-builder_misc.lo:  \
+	rasterizer/jitter/$(am__dirstamp) \
+	rasterizer/jitter/$(DEPDIR)/$(am__dirstamp)
+rasterizer/jitter/libmesaswr_la-fetch_jit.lo:  \
+	rasterizer/jitter/$(am__dirstamp) \
+	rasterizer/jitter/$(DEPDIR)/$(am__dirstamp)
+rasterizer/jitter/libmesaswr_la-JitManager.lo:  \
+	rasterizer/jitter/$(am__dirstamp) \
+	rasterizer/jitter/$(DEPDIR)/$(am__dirstamp)
+rasterizer/jitter/libmesaswr_la-streamout_jit.lo:  \
+	rasterizer/jitter/$(am__dirstamp) \
+	rasterizer/jitter/$(DEPDIR)/$(am__dirstamp)
+rasterizer/jitter/shader_lib/$(am__dirstamp):
+	@$(MKDIR_P) rasterizer/jitter/shader_lib
+	@: > rasterizer/jitter/shader_lib/$(am__dirstamp)
+rasterizer/jitter/shader_lib/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) rasterizer/jitter/shader_lib/$(DEPDIR)
+	@: > rasterizer/jitter/shader_lib/$(DEPDIR)/$(am__dirstamp)
+rasterizer/jitter/shader_lib/libmesaswr_la-DebugOutput.lo:  \
+	rasterizer/jitter/shader_lib/$(am__dirstamp) \
+	rasterizer/jitter/shader_lib/$(DEPDIR)/$(am__dirstamp)
+rasterizer/jitter/functionpasses/$(am__dirstamp):
+	@$(MKDIR_P) rasterizer/jitter/functionpasses
+	@: > rasterizer/jitter/functionpasses/$(am__dirstamp)
+rasterizer/jitter/functionpasses/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) rasterizer/jitter/functionpasses/$(DEPDIR)
+	@: > rasterizer/jitter/functionpasses/$(DEPDIR)/$(am__dirstamp)
+rasterizer/jitter/functionpasses/libmesaswr_la-lower_x86.lo:  \
+	rasterizer/jitter/functionpasses/$(am__dirstamp) \
+	rasterizer/jitter/functionpasses/$(DEPDIR)/$(am__dirstamp)
 rasterizer/common/$(am__dirstamp):
 	@$(MKDIR_P) rasterizer/common
 	@: > rasterizer/common/$(am__dirstamp)
@@ -1592,30 +1783,6 @@ rasterizer/common/libmesaswr_la-rdtsc_buckets.lo:  \
 rasterizer/common/libmesaswr_la-swr_assert.lo:  \
 	rasterizer/common/$(am__dirstamp) \
 	rasterizer/common/$(DEPDIR)/$(am__dirstamp)
-rasterizer/jitter/$(am__dirstamp):
-	@$(MKDIR_P) rasterizer/jitter
-	@: > rasterizer/jitter/$(am__dirstamp)
-rasterizer/jitter/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) rasterizer/jitter/$(DEPDIR)
-	@: > rasterizer/jitter/$(DEPDIR)/$(am__dirstamp)
-rasterizer/jitter/libmesaswr_la-blend_jit.lo:  \
-	rasterizer/jitter/$(am__dirstamp) \
-	rasterizer/jitter/$(DEPDIR)/$(am__dirstamp)
-rasterizer/jitter/libmesaswr_la-builder.lo:  \
-	rasterizer/jitter/$(am__dirstamp) \
-	rasterizer/jitter/$(DEPDIR)/$(am__dirstamp)
-rasterizer/jitter/libmesaswr_la-builder_misc.lo:  \
-	rasterizer/jitter/$(am__dirstamp) \
-	rasterizer/jitter/$(DEPDIR)/$(am__dirstamp)
-rasterizer/jitter/libmesaswr_la-fetch_jit.lo:  \
-	rasterizer/jitter/$(am__dirstamp) \
-	rasterizer/jitter/$(DEPDIR)/$(am__dirstamp)
-rasterizer/jitter/libmesaswr_la-JitManager.lo:  \
-	rasterizer/jitter/$(am__dirstamp) \
-	rasterizer/jitter/$(DEPDIR)/$(am__dirstamp)
-rasterizer/jitter/libmesaswr_la-streamout_jit.lo:  \
-	rasterizer/jitter/$(am__dirstamp) \
-	rasterizer/jitter/$(DEPDIR)/$(am__dirstamp)
 rasterizer/codegen/$(am__dirstamp):
 	@$(MKDIR_P) rasterizer/codegen
 	@: > rasterizer/codegen/$(am__dirstamp)
@@ -1734,6 +1901,9 @@ rasterizer/memory/libswrAVX_la-StoreTile_TileY2.lo:  \
 	rasterizer/memory/$(am__dirstamp) \
 	rasterizer/memory/$(DEPDIR)/$(am__dirstamp)
 rasterizer/memory/libswrAVX_la-StoreTile_TileY.lo:  \
+	rasterizer/memory/$(am__dirstamp) \
+	rasterizer/memory/$(DEPDIR)/$(am__dirstamp)
+rasterizer/memory/libswrAVX_la-InitMemory.lo:  \
 	rasterizer/memory/$(am__dirstamp) \
 	rasterizer/memory/$(DEPDIR)/$(am__dirstamp)
 rasterizer/codegen/libswrAVX_la-gen_knobs.lo:  \
@@ -1866,6 +2036,9 @@ rasterizer/memory/libswrAVX2_la-StoreTile_TileY2.lo:  \
 rasterizer/memory/libswrAVX2_la-StoreTile_TileY.lo:  \
 	rasterizer/memory/$(am__dirstamp) \
 	rasterizer/memory/$(DEPDIR)/$(am__dirstamp)
+rasterizer/memory/libswrAVX2_la-InitMemory.lo:  \
+	rasterizer/memory/$(am__dirstamp) \
+	rasterizer/memory/$(DEPDIR)/$(am__dirstamp)
 rasterizer/codegen/libswrAVX2_la-gen_knobs.lo:  \
 	rasterizer/codegen/$(am__dirstamp) \
 	rasterizer/codegen/$(DEPDIR)/$(am__dirstamp)
@@ -1987,6 +2160,9 @@ rasterizer/memory/libswrKNL_la-StoreTile_TileY2.lo:  \
 	rasterizer/memory/$(am__dirstamp) \
 	rasterizer/memory/$(DEPDIR)/$(am__dirstamp)
 rasterizer/memory/libswrKNL_la-StoreTile_TileY.lo:  \
+	rasterizer/memory/$(am__dirstamp) \
+	rasterizer/memory/$(DEPDIR)/$(am__dirstamp)
+rasterizer/memory/libswrKNL_la-InitMemory.lo:  \
 	rasterizer/memory/$(am__dirstamp) \
 	rasterizer/memory/$(DEPDIR)/$(am__dirstamp)
 rasterizer/codegen/libswrKNL_la-gen_knobs.lo:  \
@@ -2112,6 +2288,9 @@ rasterizer/memory/libswrSKX_la-StoreTile_TileY2.lo:  \
 rasterizer/memory/libswrSKX_la-StoreTile_TileY.lo:  \
 	rasterizer/memory/$(am__dirstamp) \
 	rasterizer/memory/$(DEPDIR)/$(am__dirstamp)
+rasterizer/memory/libswrSKX_la-InitMemory.lo:  \
+	rasterizer/memory/$(am__dirstamp) \
+	rasterizer/memory/$(DEPDIR)/$(am__dirstamp)
 rasterizer/codegen/libswrSKX_la-gen_knobs.lo:  \
 	rasterizer/codegen/$(am__dirstamp) \
 	rasterizer/codegen/$(DEPDIR)/$(am__dirstamp)
@@ -2159,6 +2338,10 @@ mostlyclean-compile:
 	-rm -f rasterizer/core/backends/*.lo
 	-rm -f rasterizer/jitter/*.$(OBJEXT)
 	-rm -f rasterizer/jitter/*.lo
+	-rm -f rasterizer/jitter/functionpasses/*.$(OBJEXT)
+	-rm -f rasterizer/jitter/functionpasses/*.lo
+	-rm -f rasterizer/jitter/shader_lib/*.$(OBJEXT)
+	-rm -f rasterizer/jitter/shader_lib/*.lo
 	-rm -f rasterizer/memory/*.$(OBJEXT)
 	-rm -f rasterizer/memory/*.lo
 
@@ -2297,10 +2480,15 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@rasterizer/jitter/$(DEPDIR)/libmesaswr_la-JitManager.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@rasterizer/jitter/$(DEPDIR)/libmesaswr_la-blend_jit.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@rasterizer/jitter/$(DEPDIR)/libmesaswr_la-builder.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@rasterizer/jitter/$(DEPDIR)/libmesaswr_la-builder_gfx_mem.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@rasterizer/jitter/$(DEPDIR)/libmesaswr_la-builder_mem.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@rasterizer/jitter/$(DEPDIR)/libmesaswr_la-builder_misc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@rasterizer/jitter/$(DEPDIR)/libmesaswr_la-fetch_jit.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@rasterizer/jitter/$(DEPDIR)/libmesaswr_la-streamout_jit.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@rasterizer/jitter/functionpasses/$(DEPDIR)/libmesaswr_la-lower_x86.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@rasterizer/jitter/shader_lib/$(DEPDIR)/libmesaswr_la-DebugOutput.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@rasterizer/memory/$(DEPDIR)/libswrAVX2_la-ClearTile.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@rasterizer/memory/$(DEPDIR)/libswrAVX2_la-InitMemory.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@rasterizer/memory/$(DEPDIR)/libswrAVX2_la-LoadTile.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@rasterizer/memory/$(DEPDIR)/libswrAVX2_la-LoadTile_Linear.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@rasterizer/memory/$(DEPDIR)/libswrAVX2_la-LoadTile_TileX.Plo@am__quote@
@@ -2314,6 +2502,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@rasterizer/memory/$(DEPDIR)/libswrAVX2_la-StoreTile_TileY.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@rasterizer/memory/$(DEPDIR)/libswrAVX2_la-StoreTile_TileY2.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@rasterizer/memory/$(DEPDIR)/libswrAVX_la-ClearTile.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@rasterizer/memory/$(DEPDIR)/libswrAVX_la-InitMemory.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@rasterizer/memory/$(DEPDIR)/libswrAVX_la-LoadTile.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@rasterizer/memory/$(DEPDIR)/libswrAVX_la-LoadTile_Linear.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@rasterizer/memory/$(DEPDIR)/libswrAVX_la-LoadTile_TileX.Plo@am__quote@
@@ -2327,6 +2516,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@rasterizer/memory/$(DEPDIR)/libswrAVX_la-StoreTile_TileY.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@rasterizer/memory/$(DEPDIR)/libswrAVX_la-StoreTile_TileY2.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@rasterizer/memory/$(DEPDIR)/libswrKNL_la-ClearTile.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@rasterizer/memory/$(DEPDIR)/libswrKNL_la-InitMemory.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@rasterizer/memory/$(DEPDIR)/libswrKNL_la-LoadTile.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@rasterizer/memory/$(DEPDIR)/libswrKNL_la-LoadTile_Linear.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@rasterizer/memory/$(DEPDIR)/libswrKNL_la-LoadTile_TileX.Plo@am__quote@
@@ -2340,6 +2530,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@rasterizer/memory/$(DEPDIR)/libswrKNL_la-StoreTile_TileY.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@rasterizer/memory/$(DEPDIR)/libswrKNL_la-StoreTile_TileY2.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@rasterizer/memory/$(DEPDIR)/libswrSKX_la-ClearTile.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@rasterizer/memory/$(DEPDIR)/libswrSKX_la-InitMemory.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@rasterizer/memory/$(DEPDIR)/libswrSKX_la-LoadTile.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@rasterizer/memory/$(DEPDIR)/libswrSKX_la-LoadTile_Linear.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@rasterizer/memory/$(DEPDIR)/libswrSKX_la-LoadTile_TileX.Plo@am__quote@
@@ -2454,34 +2645,6 @@ libmesaswr_la-swr_query.lo: swr_query.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesaswr_la_CXXFLAGS) $(CXXFLAGS) -c -o libmesaswr_la-swr_query.lo `test -f 'swr_query.cpp' || echo '$(srcdir)/'`swr_query.cpp
 
-rasterizer/common/libmesaswr_la-formats.lo: rasterizer/common/formats.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesaswr_la_CXXFLAGS) $(CXXFLAGS) -MT rasterizer/common/libmesaswr_la-formats.lo -MD -MP -MF rasterizer/common/$(DEPDIR)/libmesaswr_la-formats.Tpo -c -o rasterizer/common/libmesaswr_la-formats.lo `test -f 'rasterizer/common/formats.cpp' || echo '$(srcdir)/'`rasterizer/common/formats.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) rasterizer/common/$(DEPDIR)/libmesaswr_la-formats.Tpo rasterizer/common/$(DEPDIR)/libmesaswr_la-formats.Plo
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='rasterizer/common/formats.cpp' object='rasterizer/common/libmesaswr_la-formats.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesaswr_la_CXXFLAGS) $(CXXFLAGS) -c -o rasterizer/common/libmesaswr_la-formats.lo `test -f 'rasterizer/common/formats.cpp' || echo '$(srcdir)/'`rasterizer/common/formats.cpp
-
-rasterizer/common/libmesaswr_la-os.lo: rasterizer/common/os.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesaswr_la_CXXFLAGS) $(CXXFLAGS) -MT rasterizer/common/libmesaswr_la-os.lo -MD -MP -MF rasterizer/common/$(DEPDIR)/libmesaswr_la-os.Tpo -c -o rasterizer/common/libmesaswr_la-os.lo `test -f 'rasterizer/common/os.cpp' || echo '$(srcdir)/'`rasterizer/common/os.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) rasterizer/common/$(DEPDIR)/libmesaswr_la-os.Tpo rasterizer/common/$(DEPDIR)/libmesaswr_la-os.Plo
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='rasterizer/common/os.cpp' object='rasterizer/common/libmesaswr_la-os.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesaswr_la_CXXFLAGS) $(CXXFLAGS) -c -o rasterizer/common/libmesaswr_la-os.lo `test -f 'rasterizer/common/os.cpp' || echo '$(srcdir)/'`rasterizer/common/os.cpp
-
-rasterizer/common/libmesaswr_la-rdtsc_buckets.lo: rasterizer/common/rdtsc_buckets.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesaswr_la_CXXFLAGS) $(CXXFLAGS) -MT rasterizer/common/libmesaswr_la-rdtsc_buckets.lo -MD -MP -MF rasterizer/common/$(DEPDIR)/libmesaswr_la-rdtsc_buckets.Tpo -c -o rasterizer/common/libmesaswr_la-rdtsc_buckets.lo `test -f 'rasterizer/common/rdtsc_buckets.cpp' || echo '$(srcdir)/'`rasterizer/common/rdtsc_buckets.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) rasterizer/common/$(DEPDIR)/libmesaswr_la-rdtsc_buckets.Tpo rasterizer/common/$(DEPDIR)/libmesaswr_la-rdtsc_buckets.Plo
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='rasterizer/common/rdtsc_buckets.cpp' object='rasterizer/common/libmesaswr_la-rdtsc_buckets.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesaswr_la_CXXFLAGS) $(CXXFLAGS) -c -o rasterizer/common/libmesaswr_la-rdtsc_buckets.lo `test -f 'rasterizer/common/rdtsc_buckets.cpp' || echo '$(srcdir)/'`rasterizer/common/rdtsc_buckets.cpp
-
-rasterizer/common/libmesaswr_la-swr_assert.lo: rasterizer/common/swr_assert.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesaswr_la_CXXFLAGS) $(CXXFLAGS) -MT rasterizer/common/libmesaswr_la-swr_assert.lo -MD -MP -MF rasterizer/common/$(DEPDIR)/libmesaswr_la-swr_assert.Tpo -c -o rasterizer/common/libmesaswr_la-swr_assert.lo `test -f 'rasterizer/common/swr_assert.cpp' || echo '$(srcdir)/'`rasterizer/common/swr_assert.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) rasterizer/common/$(DEPDIR)/libmesaswr_la-swr_assert.Tpo rasterizer/common/$(DEPDIR)/libmesaswr_la-swr_assert.Plo
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='rasterizer/common/swr_assert.cpp' object='rasterizer/common/libmesaswr_la-swr_assert.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesaswr_la_CXXFLAGS) $(CXXFLAGS) -c -o rasterizer/common/libmesaswr_la-swr_assert.lo `test -f 'rasterizer/common/swr_assert.cpp' || echo '$(srcdir)/'`rasterizer/common/swr_assert.cpp
-
 rasterizer/jitter/libmesaswr_la-blend_jit.lo: rasterizer/jitter/blend_jit.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesaswr_la_CXXFLAGS) $(CXXFLAGS) -MT rasterizer/jitter/libmesaswr_la-blend_jit.lo -MD -MP -MF rasterizer/jitter/$(DEPDIR)/libmesaswr_la-blend_jit.Tpo -c -o rasterizer/jitter/libmesaswr_la-blend_jit.lo `test -f 'rasterizer/jitter/blend_jit.cpp' || echo '$(srcdir)/'`rasterizer/jitter/blend_jit.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) rasterizer/jitter/$(DEPDIR)/libmesaswr_la-blend_jit.Tpo rasterizer/jitter/$(DEPDIR)/libmesaswr_la-blend_jit.Plo
@@ -2495,6 +2658,20 @@ rasterizer/jitter/libmesaswr_la-builder.lo: rasterizer/jitter/builder.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='rasterizer/jitter/builder.cpp' object='rasterizer/jitter/libmesaswr_la-builder.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesaswr_la_CXXFLAGS) $(CXXFLAGS) -c -o rasterizer/jitter/libmesaswr_la-builder.lo `test -f 'rasterizer/jitter/builder.cpp' || echo '$(srcdir)/'`rasterizer/jitter/builder.cpp
+
+rasterizer/jitter/libmesaswr_la-builder_mem.lo: rasterizer/jitter/builder_mem.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesaswr_la_CXXFLAGS) $(CXXFLAGS) -MT rasterizer/jitter/libmesaswr_la-builder_mem.lo -MD -MP -MF rasterizer/jitter/$(DEPDIR)/libmesaswr_la-builder_mem.Tpo -c -o rasterizer/jitter/libmesaswr_la-builder_mem.lo `test -f 'rasterizer/jitter/builder_mem.cpp' || echo '$(srcdir)/'`rasterizer/jitter/builder_mem.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) rasterizer/jitter/$(DEPDIR)/libmesaswr_la-builder_mem.Tpo rasterizer/jitter/$(DEPDIR)/libmesaswr_la-builder_mem.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='rasterizer/jitter/builder_mem.cpp' object='rasterizer/jitter/libmesaswr_la-builder_mem.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesaswr_la_CXXFLAGS) $(CXXFLAGS) -c -o rasterizer/jitter/libmesaswr_la-builder_mem.lo `test -f 'rasterizer/jitter/builder_mem.cpp' || echo '$(srcdir)/'`rasterizer/jitter/builder_mem.cpp
+
+rasterizer/jitter/libmesaswr_la-builder_gfx_mem.lo: rasterizer/jitter/builder_gfx_mem.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesaswr_la_CXXFLAGS) $(CXXFLAGS) -MT rasterizer/jitter/libmesaswr_la-builder_gfx_mem.lo -MD -MP -MF rasterizer/jitter/$(DEPDIR)/libmesaswr_la-builder_gfx_mem.Tpo -c -o rasterizer/jitter/libmesaswr_la-builder_gfx_mem.lo `test -f 'rasterizer/jitter/builder_gfx_mem.cpp' || echo '$(srcdir)/'`rasterizer/jitter/builder_gfx_mem.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) rasterizer/jitter/$(DEPDIR)/libmesaswr_la-builder_gfx_mem.Tpo rasterizer/jitter/$(DEPDIR)/libmesaswr_la-builder_gfx_mem.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='rasterizer/jitter/builder_gfx_mem.cpp' object='rasterizer/jitter/libmesaswr_la-builder_gfx_mem.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesaswr_la_CXXFLAGS) $(CXXFLAGS) -c -o rasterizer/jitter/libmesaswr_la-builder_gfx_mem.lo `test -f 'rasterizer/jitter/builder_gfx_mem.cpp' || echo '$(srcdir)/'`rasterizer/jitter/builder_gfx_mem.cpp
 
 rasterizer/jitter/libmesaswr_la-builder_misc.lo: rasterizer/jitter/builder_misc.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesaswr_la_CXXFLAGS) $(CXXFLAGS) -MT rasterizer/jitter/libmesaswr_la-builder_misc.lo -MD -MP -MF rasterizer/jitter/$(DEPDIR)/libmesaswr_la-builder_misc.Tpo -c -o rasterizer/jitter/libmesaswr_la-builder_misc.lo `test -f 'rasterizer/jitter/builder_misc.cpp' || echo '$(srcdir)/'`rasterizer/jitter/builder_misc.cpp
@@ -2524,12 +2701,19 @@ rasterizer/jitter/libmesaswr_la-streamout_jit.lo: rasterizer/jitter/streamout_ji
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesaswr_la_CXXFLAGS) $(CXXFLAGS) -c -o rasterizer/jitter/libmesaswr_la-streamout_jit.lo `test -f 'rasterizer/jitter/streamout_jit.cpp' || echo '$(srcdir)/'`rasterizer/jitter/streamout_jit.cpp
 
-rasterizer/codegen/libmesaswr_la-gen_knobs.lo: rasterizer/codegen/gen_knobs.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesaswr_la_CXXFLAGS) $(CXXFLAGS) -MT rasterizer/codegen/libmesaswr_la-gen_knobs.lo -MD -MP -MF rasterizer/codegen/$(DEPDIR)/libmesaswr_la-gen_knobs.Tpo -c -o rasterizer/codegen/libmesaswr_la-gen_knobs.lo `test -f 'rasterizer/codegen/gen_knobs.cpp' || echo '$(srcdir)/'`rasterizer/codegen/gen_knobs.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) rasterizer/codegen/$(DEPDIR)/libmesaswr_la-gen_knobs.Tpo rasterizer/codegen/$(DEPDIR)/libmesaswr_la-gen_knobs.Plo
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='rasterizer/codegen/gen_knobs.cpp' object='rasterizer/codegen/libmesaswr_la-gen_knobs.lo' libtool=yes @AMDEPBACKSLASH@
+rasterizer/jitter/shader_lib/libmesaswr_la-DebugOutput.lo: rasterizer/jitter/shader_lib/DebugOutput.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesaswr_la_CXXFLAGS) $(CXXFLAGS) -MT rasterizer/jitter/shader_lib/libmesaswr_la-DebugOutput.lo -MD -MP -MF rasterizer/jitter/shader_lib/$(DEPDIR)/libmesaswr_la-DebugOutput.Tpo -c -o rasterizer/jitter/shader_lib/libmesaswr_la-DebugOutput.lo `test -f 'rasterizer/jitter/shader_lib/DebugOutput.cpp' || echo '$(srcdir)/'`rasterizer/jitter/shader_lib/DebugOutput.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) rasterizer/jitter/shader_lib/$(DEPDIR)/libmesaswr_la-DebugOutput.Tpo rasterizer/jitter/shader_lib/$(DEPDIR)/libmesaswr_la-DebugOutput.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='rasterizer/jitter/shader_lib/DebugOutput.cpp' object='rasterizer/jitter/shader_lib/libmesaswr_la-DebugOutput.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesaswr_la_CXXFLAGS) $(CXXFLAGS) -c -o rasterizer/codegen/libmesaswr_la-gen_knobs.lo `test -f 'rasterizer/codegen/gen_knobs.cpp' || echo '$(srcdir)/'`rasterizer/codegen/gen_knobs.cpp
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesaswr_la_CXXFLAGS) $(CXXFLAGS) -c -o rasterizer/jitter/shader_lib/libmesaswr_la-DebugOutput.lo `test -f 'rasterizer/jitter/shader_lib/DebugOutput.cpp' || echo '$(srcdir)/'`rasterizer/jitter/shader_lib/DebugOutput.cpp
+
+rasterizer/jitter/functionpasses/libmesaswr_la-lower_x86.lo: rasterizer/jitter/functionpasses/lower_x86.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesaswr_la_CXXFLAGS) $(CXXFLAGS) -MT rasterizer/jitter/functionpasses/libmesaswr_la-lower_x86.lo -MD -MP -MF rasterizer/jitter/functionpasses/$(DEPDIR)/libmesaswr_la-lower_x86.Tpo -c -o rasterizer/jitter/functionpasses/libmesaswr_la-lower_x86.lo `test -f 'rasterizer/jitter/functionpasses/lower_x86.cpp' || echo '$(srcdir)/'`rasterizer/jitter/functionpasses/lower_x86.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) rasterizer/jitter/functionpasses/$(DEPDIR)/libmesaswr_la-lower_x86.Tpo rasterizer/jitter/functionpasses/$(DEPDIR)/libmesaswr_la-lower_x86.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='rasterizer/jitter/functionpasses/lower_x86.cpp' object='rasterizer/jitter/functionpasses/libmesaswr_la-lower_x86.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesaswr_la_CXXFLAGS) $(CXXFLAGS) -c -o rasterizer/jitter/functionpasses/libmesaswr_la-lower_x86.lo `test -f 'rasterizer/jitter/functionpasses/lower_x86.cpp' || echo '$(srcdir)/'`rasterizer/jitter/functionpasses/lower_x86.cpp
 
 libmesaswr_la-swr_loader.lo: swr_loader.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesaswr_la_CXXFLAGS) $(CXXFLAGS) -MT libmesaswr_la-swr_loader.lo -MD -MP -MF $(DEPDIR)/libmesaswr_la-swr_loader.Tpo -c -o libmesaswr_la-swr_loader.lo `test -f 'swr_loader.cpp' || echo '$(srcdir)/'`swr_loader.cpp
@@ -2537,6 +2721,41 @@ libmesaswr_la-swr_loader.lo: swr_loader.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='swr_loader.cpp' object='libmesaswr_la-swr_loader.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesaswr_la_CXXFLAGS) $(CXXFLAGS) -c -o libmesaswr_la-swr_loader.lo `test -f 'swr_loader.cpp' || echo '$(srcdir)/'`swr_loader.cpp
+
+rasterizer/common/libmesaswr_la-formats.lo: rasterizer/common/formats.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesaswr_la_CXXFLAGS) $(CXXFLAGS) -MT rasterizer/common/libmesaswr_la-formats.lo -MD -MP -MF rasterizer/common/$(DEPDIR)/libmesaswr_la-formats.Tpo -c -o rasterizer/common/libmesaswr_la-formats.lo `test -f 'rasterizer/common/formats.cpp' || echo '$(srcdir)/'`rasterizer/common/formats.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) rasterizer/common/$(DEPDIR)/libmesaswr_la-formats.Tpo rasterizer/common/$(DEPDIR)/libmesaswr_la-formats.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='rasterizer/common/formats.cpp' object='rasterizer/common/libmesaswr_la-formats.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesaswr_la_CXXFLAGS) $(CXXFLAGS) -c -o rasterizer/common/libmesaswr_la-formats.lo `test -f 'rasterizer/common/formats.cpp' || echo '$(srcdir)/'`rasterizer/common/formats.cpp
+
+rasterizer/common/libmesaswr_la-os.lo: rasterizer/common/os.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesaswr_la_CXXFLAGS) $(CXXFLAGS) -MT rasterizer/common/libmesaswr_la-os.lo -MD -MP -MF rasterizer/common/$(DEPDIR)/libmesaswr_la-os.Tpo -c -o rasterizer/common/libmesaswr_la-os.lo `test -f 'rasterizer/common/os.cpp' || echo '$(srcdir)/'`rasterizer/common/os.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) rasterizer/common/$(DEPDIR)/libmesaswr_la-os.Tpo rasterizer/common/$(DEPDIR)/libmesaswr_la-os.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='rasterizer/common/os.cpp' object='rasterizer/common/libmesaswr_la-os.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesaswr_la_CXXFLAGS) $(CXXFLAGS) -c -o rasterizer/common/libmesaswr_la-os.lo `test -f 'rasterizer/common/os.cpp' || echo '$(srcdir)/'`rasterizer/common/os.cpp
+
+rasterizer/common/libmesaswr_la-rdtsc_buckets.lo: rasterizer/common/rdtsc_buckets.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesaswr_la_CXXFLAGS) $(CXXFLAGS) -MT rasterizer/common/libmesaswr_la-rdtsc_buckets.lo -MD -MP -MF rasterizer/common/$(DEPDIR)/libmesaswr_la-rdtsc_buckets.Tpo -c -o rasterizer/common/libmesaswr_la-rdtsc_buckets.lo `test -f 'rasterizer/common/rdtsc_buckets.cpp' || echo '$(srcdir)/'`rasterizer/common/rdtsc_buckets.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) rasterizer/common/$(DEPDIR)/libmesaswr_la-rdtsc_buckets.Tpo rasterizer/common/$(DEPDIR)/libmesaswr_la-rdtsc_buckets.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='rasterizer/common/rdtsc_buckets.cpp' object='rasterizer/common/libmesaswr_la-rdtsc_buckets.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesaswr_la_CXXFLAGS) $(CXXFLAGS) -c -o rasterizer/common/libmesaswr_la-rdtsc_buckets.lo `test -f 'rasterizer/common/rdtsc_buckets.cpp' || echo '$(srcdir)/'`rasterizer/common/rdtsc_buckets.cpp
+
+rasterizer/common/libmesaswr_la-swr_assert.lo: rasterizer/common/swr_assert.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesaswr_la_CXXFLAGS) $(CXXFLAGS) -MT rasterizer/common/libmesaswr_la-swr_assert.lo -MD -MP -MF rasterizer/common/$(DEPDIR)/libmesaswr_la-swr_assert.Tpo -c -o rasterizer/common/libmesaswr_la-swr_assert.lo `test -f 'rasterizer/common/swr_assert.cpp' || echo '$(srcdir)/'`rasterizer/common/swr_assert.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) rasterizer/common/$(DEPDIR)/libmesaswr_la-swr_assert.Tpo rasterizer/common/$(DEPDIR)/libmesaswr_la-swr_assert.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='rasterizer/common/swr_assert.cpp' object='rasterizer/common/libmesaswr_la-swr_assert.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesaswr_la_CXXFLAGS) $(CXXFLAGS) -c -o rasterizer/common/libmesaswr_la-swr_assert.lo `test -f 'rasterizer/common/swr_assert.cpp' || echo '$(srcdir)/'`rasterizer/common/swr_assert.cpp
+
+rasterizer/codegen/libmesaswr_la-gen_knobs.lo: rasterizer/codegen/gen_knobs.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesaswr_la_CXXFLAGS) $(CXXFLAGS) -MT rasterizer/codegen/libmesaswr_la-gen_knobs.lo -MD -MP -MF rasterizer/codegen/$(DEPDIR)/libmesaswr_la-gen_knobs.Tpo -c -o rasterizer/codegen/libmesaswr_la-gen_knobs.lo `test -f 'rasterizer/codegen/gen_knobs.cpp' || echo '$(srcdir)/'`rasterizer/codegen/gen_knobs.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) rasterizer/codegen/$(DEPDIR)/libmesaswr_la-gen_knobs.Tpo rasterizer/codegen/$(DEPDIR)/libmesaswr_la-gen_knobs.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='rasterizer/codegen/gen_knobs.cpp' object='rasterizer/codegen/libmesaswr_la-gen_knobs.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesaswr_la_CXXFLAGS) $(CXXFLAGS) -c -o rasterizer/codegen/libmesaswr_la-gen_knobs.lo `test -f 'rasterizer/codegen/gen_knobs.cpp' || echo '$(srcdir)/'`rasterizer/codegen/gen_knobs.cpp
 
 rasterizer/archrast/libswrAVX_la-archrast.lo: rasterizer/archrast/archrast.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswrAVX_la_CXXFLAGS) $(CXXFLAGS) -MT rasterizer/archrast/libswrAVX_la-archrast.lo -MD -MP -MF rasterizer/archrast/$(DEPDIR)/libswrAVX_la-archrast.Tpo -c -o rasterizer/archrast/libswrAVX_la-archrast.lo `test -f 'rasterizer/archrast/archrast.cpp' || echo '$(srcdir)/'`rasterizer/archrast/archrast.cpp
@@ -2754,6 +2973,13 @@ rasterizer/memory/libswrAVX_la-StoreTile_TileY.lo: rasterizer/memory/StoreTile_T
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='rasterizer/memory/StoreTile_TileY.cpp' object='rasterizer/memory/libswrAVX_la-StoreTile_TileY.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswrAVX_la_CXXFLAGS) $(CXXFLAGS) -c -o rasterizer/memory/libswrAVX_la-StoreTile_TileY.lo `test -f 'rasterizer/memory/StoreTile_TileY.cpp' || echo '$(srcdir)/'`rasterizer/memory/StoreTile_TileY.cpp
+
+rasterizer/memory/libswrAVX_la-InitMemory.lo: rasterizer/memory/InitMemory.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswrAVX_la_CXXFLAGS) $(CXXFLAGS) -MT rasterizer/memory/libswrAVX_la-InitMemory.lo -MD -MP -MF rasterizer/memory/$(DEPDIR)/libswrAVX_la-InitMemory.Tpo -c -o rasterizer/memory/libswrAVX_la-InitMemory.lo `test -f 'rasterizer/memory/InitMemory.cpp' || echo '$(srcdir)/'`rasterizer/memory/InitMemory.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) rasterizer/memory/$(DEPDIR)/libswrAVX_la-InitMemory.Tpo rasterizer/memory/$(DEPDIR)/libswrAVX_la-InitMemory.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='rasterizer/memory/InitMemory.cpp' object='rasterizer/memory/libswrAVX_la-InitMemory.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswrAVX_la_CXXFLAGS) $(CXXFLAGS) -c -o rasterizer/memory/libswrAVX_la-InitMemory.lo `test -f 'rasterizer/memory/InitMemory.cpp' || echo '$(srcdir)/'`rasterizer/memory/InitMemory.cpp
 
 rasterizer/codegen/libswrAVX_la-gen_knobs.lo: rasterizer/codegen/gen_knobs.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswrAVX_la_CXXFLAGS) $(CXXFLAGS) -MT rasterizer/codegen/libswrAVX_la-gen_knobs.lo -MD -MP -MF rasterizer/codegen/$(DEPDIR)/libswrAVX_la-gen_knobs.Tpo -c -o rasterizer/codegen/libswrAVX_la-gen_knobs.lo `test -f 'rasterizer/codegen/gen_knobs.cpp' || echo '$(srcdir)/'`rasterizer/codegen/gen_knobs.cpp
@@ -3042,6 +3268,13 @@ rasterizer/memory/libswrAVX2_la-StoreTile_TileY.lo: rasterizer/memory/StoreTile_
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswrAVX2_la_CXXFLAGS) $(CXXFLAGS) -c -o rasterizer/memory/libswrAVX2_la-StoreTile_TileY.lo `test -f 'rasterizer/memory/StoreTile_TileY.cpp' || echo '$(srcdir)/'`rasterizer/memory/StoreTile_TileY.cpp
 
+rasterizer/memory/libswrAVX2_la-InitMemory.lo: rasterizer/memory/InitMemory.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswrAVX2_la_CXXFLAGS) $(CXXFLAGS) -MT rasterizer/memory/libswrAVX2_la-InitMemory.lo -MD -MP -MF rasterizer/memory/$(DEPDIR)/libswrAVX2_la-InitMemory.Tpo -c -o rasterizer/memory/libswrAVX2_la-InitMemory.lo `test -f 'rasterizer/memory/InitMemory.cpp' || echo '$(srcdir)/'`rasterizer/memory/InitMemory.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) rasterizer/memory/$(DEPDIR)/libswrAVX2_la-InitMemory.Tpo rasterizer/memory/$(DEPDIR)/libswrAVX2_la-InitMemory.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='rasterizer/memory/InitMemory.cpp' object='rasterizer/memory/libswrAVX2_la-InitMemory.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswrAVX2_la_CXXFLAGS) $(CXXFLAGS) -c -o rasterizer/memory/libswrAVX2_la-InitMemory.lo `test -f 'rasterizer/memory/InitMemory.cpp' || echo '$(srcdir)/'`rasterizer/memory/InitMemory.cpp
+
 rasterizer/codegen/libswrAVX2_la-gen_knobs.lo: rasterizer/codegen/gen_knobs.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswrAVX2_la_CXXFLAGS) $(CXXFLAGS) -MT rasterizer/codegen/libswrAVX2_la-gen_knobs.lo -MD -MP -MF rasterizer/codegen/$(DEPDIR)/libswrAVX2_la-gen_knobs.Tpo -c -o rasterizer/codegen/libswrAVX2_la-gen_knobs.lo `test -f 'rasterizer/codegen/gen_knobs.cpp' || echo '$(srcdir)/'`rasterizer/codegen/gen_knobs.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) rasterizer/codegen/$(DEPDIR)/libswrAVX2_la-gen_knobs.Tpo rasterizer/codegen/$(DEPDIR)/libswrAVX2_la-gen_knobs.Plo
@@ -3328,6 +3561,13 @@ rasterizer/memory/libswrKNL_la-StoreTile_TileY.lo: rasterizer/memory/StoreTile_T
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='rasterizer/memory/StoreTile_TileY.cpp' object='rasterizer/memory/libswrKNL_la-StoreTile_TileY.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswrKNL_la_CXXFLAGS) $(CXXFLAGS) -c -o rasterizer/memory/libswrKNL_la-StoreTile_TileY.lo `test -f 'rasterizer/memory/StoreTile_TileY.cpp' || echo '$(srcdir)/'`rasterizer/memory/StoreTile_TileY.cpp
+
+rasterizer/memory/libswrKNL_la-InitMemory.lo: rasterizer/memory/InitMemory.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswrKNL_la_CXXFLAGS) $(CXXFLAGS) -MT rasterizer/memory/libswrKNL_la-InitMemory.lo -MD -MP -MF rasterizer/memory/$(DEPDIR)/libswrKNL_la-InitMemory.Tpo -c -o rasterizer/memory/libswrKNL_la-InitMemory.lo `test -f 'rasterizer/memory/InitMemory.cpp' || echo '$(srcdir)/'`rasterizer/memory/InitMemory.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) rasterizer/memory/$(DEPDIR)/libswrKNL_la-InitMemory.Tpo rasterizer/memory/$(DEPDIR)/libswrKNL_la-InitMemory.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='rasterizer/memory/InitMemory.cpp' object='rasterizer/memory/libswrKNL_la-InitMemory.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswrKNL_la_CXXFLAGS) $(CXXFLAGS) -c -o rasterizer/memory/libswrKNL_la-InitMemory.lo `test -f 'rasterizer/memory/InitMemory.cpp' || echo '$(srcdir)/'`rasterizer/memory/InitMemory.cpp
 
 rasterizer/codegen/libswrKNL_la-gen_knobs.lo: rasterizer/codegen/gen_knobs.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswrKNL_la_CXXFLAGS) $(CXXFLAGS) -MT rasterizer/codegen/libswrKNL_la-gen_knobs.lo -MD -MP -MF rasterizer/codegen/$(DEPDIR)/libswrKNL_la-gen_knobs.Tpo -c -o rasterizer/codegen/libswrKNL_la-gen_knobs.lo `test -f 'rasterizer/codegen/gen_knobs.cpp' || echo '$(srcdir)/'`rasterizer/codegen/gen_knobs.cpp
@@ -3616,6 +3856,13 @@ rasterizer/memory/libswrSKX_la-StoreTile_TileY.lo: rasterizer/memory/StoreTile_T
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswrSKX_la_CXXFLAGS) $(CXXFLAGS) -c -o rasterizer/memory/libswrSKX_la-StoreTile_TileY.lo `test -f 'rasterizer/memory/StoreTile_TileY.cpp' || echo '$(srcdir)/'`rasterizer/memory/StoreTile_TileY.cpp
 
+rasterizer/memory/libswrSKX_la-InitMemory.lo: rasterizer/memory/InitMemory.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswrSKX_la_CXXFLAGS) $(CXXFLAGS) -MT rasterizer/memory/libswrSKX_la-InitMemory.lo -MD -MP -MF rasterizer/memory/$(DEPDIR)/libswrSKX_la-InitMemory.Tpo -c -o rasterizer/memory/libswrSKX_la-InitMemory.lo `test -f 'rasterizer/memory/InitMemory.cpp' || echo '$(srcdir)/'`rasterizer/memory/InitMemory.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) rasterizer/memory/$(DEPDIR)/libswrSKX_la-InitMemory.Tpo rasterizer/memory/$(DEPDIR)/libswrSKX_la-InitMemory.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='rasterizer/memory/InitMemory.cpp' object='rasterizer/memory/libswrSKX_la-InitMemory.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswrSKX_la_CXXFLAGS) $(CXXFLAGS) -c -o rasterizer/memory/libswrSKX_la-InitMemory.lo `test -f 'rasterizer/memory/InitMemory.cpp' || echo '$(srcdir)/'`rasterizer/memory/InitMemory.cpp
+
 rasterizer/codegen/libswrSKX_la-gen_knobs.lo: rasterizer/codegen/gen_knobs.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libswrSKX_la_CXXFLAGS) $(CXXFLAGS) -MT rasterizer/codegen/libswrSKX_la-gen_knobs.lo -MD -MP -MF rasterizer/codegen/$(DEPDIR)/libswrSKX_la-gen_knobs.Tpo -c -o rasterizer/codegen/libswrSKX_la-gen_knobs.lo `test -f 'rasterizer/codegen/gen_knobs.cpp' || echo '$(srcdir)/'`rasterizer/codegen/gen_knobs.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) rasterizer/codegen/$(DEPDIR)/libswrSKX_la-gen_knobs.Tpo rasterizer/codegen/$(DEPDIR)/libswrSKX_la-gen_knobs.Plo
@@ -3697,6 +3944,8 @@ clean-libtool:
 	-rm -rf rasterizer/core/.libs rasterizer/core/_libs
 	-rm -rf rasterizer/core/backends/.libs rasterizer/core/backends/_libs
 	-rm -rf rasterizer/jitter/.libs rasterizer/jitter/_libs
+	-rm -rf rasterizer/jitter/functionpasses/.libs rasterizer/jitter/functionpasses/_libs
+	-rm -rf rasterizer/jitter/shader_lib/.libs rasterizer/jitter/shader_lib/_libs
 	-rm -rf rasterizer/memory/.libs rasterizer/memory/_libs
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
@@ -3847,6 +4096,10 @@ distclean-generic:
 	-rm -f rasterizer/core/backends/$(am__dirstamp)
 	-rm -f rasterizer/jitter/$(DEPDIR)/$(am__dirstamp)
 	-rm -f rasterizer/jitter/$(am__dirstamp)
+	-rm -f rasterizer/jitter/functionpasses/$(DEPDIR)/$(am__dirstamp)
+	-rm -f rasterizer/jitter/functionpasses/$(am__dirstamp)
+	-rm -f rasterizer/jitter/shader_lib/$(DEPDIR)/$(am__dirstamp)
+	-rm -f rasterizer/jitter/shader_lib/$(am__dirstamp)
 	-rm -f rasterizer/memory/$(DEPDIR)/$(am__dirstamp)
 	-rm -f rasterizer/memory/$(am__dirstamp)
 
@@ -3861,7 +4114,7 @@ clean-am: clean-generic clean-libLTLIBRARIES clean-libtool clean-local \
 	clean-noinstLTLIBRARIES mostlyclean-am
 
 distclean: distclean-am
-	-rm -rf ./$(DEPDIR) rasterizer/archrast/$(DEPDIR) rasterizer/codegen/$(DEPDIR) rasterizer/common/$(DEPDIR) rasterizer/core/$(DEPDIR) rasterizer/core/backends/$(DEPDIR) rasterizer/jitter/$(DEPDIR) rasterizer/memory/$(DEPDIR)
+	-rm -rf ./$(DEPDIR) rasterizer/archrast/$(DEPDIR) rasterizer/codegen/$(DEPDIR) rasterizer/common/$(DEPDIR) rasterizer/core/$(DEPDIR) rasterizer/core/backends/$(DEPDIR) rasterizer/jitter/$(DEPDIR) rasterizer/jitter/functionpasses/$(DEPDIR) rasterizer/jitter/shader_lib/$(DEPDIR) rasterizer/memory/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -3907,7 +4160,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-	-rm -rf ./$(DEPDIR) rasterizer/archrast/$(DEPDIR) rasterizer/codegen/$(DEPDIR) rasterizer/common/$(DEPDIR) rasterizer/core/$(DEPDIR) rasterizer/core/backends/$(DEPDIR) rasterizer/jitter/$(DEPDIR) rasterizer/memory/$(DEPDIR)
+	-rm -rf ./$(DEPDIR) rasterizer/archrast/$(DEPDIR) rasterizer/codegen/$(DEPDIR) rasterizer/common/$(DEPDIR) rasterizer/core/$(DEPDIR) rasterizer/core/backends/$(DEPDIR) rasterizer/jitter/$(DEPDIR) rasterizer/jitter/functionpasses/$(DEPDIR) rasterizer/jitter/shader_lib/$(DEPDIR) rasterizer/memory/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
@@ -3948,6 +4201,7 @@ uninstall-am: uninstall-libLTLIBRARIES
 @REGEN_SOURCES_TRUE@		$(srcdir)/rasterizer/codegen/gen_llvm_types.py \
 @REGEN_SOURCES_TRUE@		--input $(srcdir)/swr_context.h \
 @REGEN_SOURCES_TRUE@		--output ./gen_swr_context_llvm.h
+@REGEN_SOURCES_TRUE@	$(AM_V_GEN)touch $@
 
 @REGEN_SOURCES_TRUE@rasterizer/codegen/gen_knobs.cpp: rasterizer/codegen/gen_knobs.py rasterizer/codegen/knob_defs.py rasterizer/codegen/templates/gen_knobs.cpp rasterizer/codegen/gen_common.py
 @REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
@@ -3955,6 +4209,7 @@ uninstall-am: uninstall-libLTLIBRARIES
 @REGEN_SOURCES_TRUE@		$(srcdir)/rasterizer/codegen/gen_knobs.py \
 @REGEN_SOURCES_TRUE@		--output rasterizer/codegen/gen_knobs.cpp \
 @REGEN_SOURCES_TRUE@		--gen_cpp
+@REGEN_SOURCES_TRUE@	$(AM_V_GEN)touch $@
 
 @REGEN_SOURCES_TRUE@rasterizer/codegen/gen_knobs.h: rasterizer/codegen/gen_knobs.py rasterizer/codegen/knob_defs.py rasterizer/codegen/templates/gen_knobs.h rasterizer/codegen/gen_common.py
 @REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
@@ -3962,6 +4217,7 @@ uninstall-am: uninstall-libLTLIBRARIES
 @REGEN_SOURCES_TRUE@		$(srcdir)/rasterizer/codegen/gen_knobs.py \
 @REGEN_SOURCES_TRUE@		--output rasterizer/codegen/gen_knobs.h \
 @REGEN_SOURCES_TRUE@		--gen_h
+@REGEN_SOURCES_TRUE@	$(AM_V_GEN)touch $@
 
 @REGEN_SOURCES_TRUE@rasterizer/jitter/gen_state_llvm.h: rasterizer/codegen/gen_llvm_types.py rasterizer/codegen/templates/gen_llvm.hpp rasterizer/core/state.h rasterizer/codegen/gen_common.py
 @REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
@@ -3969,6 +4225,7 @@ uninstall-am: uninstall-libLTLIBRARIES
 @REGEN_SOURCES_TRUE@		$(srcdir)/rasterizer/codegen/gen_llvm_types.py \
 @REGEN_SOURCES_TRUE@		--input $(srcdir)/rasterizer/core/state.h \
 @REGEN_SOURCES_TRUE@		--output rasterizer/jitter/gen_state_llvm.h
+@REGEN_SOURCES_TRUE@	$(AM_V_GEN)touch $@
 
 @REGEN_SOURCES_TRUE@rasterizer/jitter/gen_builder.hpp: rasterizer/codegen/gen_llvm_ir_macros.py rasterizer/codegen/templates/gen_builder.hpp rasterizer/codegen/gen_common.py
 @REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
@@ -3977,45 +4234,63 @@ uninstall-am: uninstall-libLTLIBRARIES
 @REGEN_SOURCES_TRUE@		--input $(LLVM_INCLUDEDIR)/llvm/IR/IRBuilder.h \
 @REGEN_SOURCES_TRUE@		--output rasterizer/jitter \
 @REGEN_SOURCES_TRUE@		--gen_h
+@REGEN_SOURCES_TRUE@	$(AM_V_GEN)touch $@
 
-@REGEN_SOURCES_TRUE@rasterizer/jitter/gen_builder_x86.hpp: rasterizer/codegen/gen_llvm_ir_macros.py rasterizer/codegen/templates/gen_builder.hpp rasterizer/codegen/gen_common.py
+@REGEN_SOURCES_TRUE@rasterizer/jitter/gen_builder_meta.hpp: rasterizer/codegen/gen_llvm_ir_macros.py rasterizer/codegen/templates/gen_builder.hpp rasterizer/codegen/gen_common.py
 @REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
 @REGEN_SOURCES_TRUE@	$(PYTHON_GEN) \
 @REGEN_SOURCES_TRUE@		$(srcdir)/rasterizer/codegen/gen_llvm_ir_macros.py \
 @REGEN_SOURCES_TRUE@		--output rasterizer/jitter \
-@REGEN_SOURCES_TRUE@		--gen_x86_h
+@REGEN_SOURCES_TRUE@		--gen_meta_h
+@REGEN_SOURCES_TRUE@	$(AM_V_GEN)touch $@
 
-@REGEN_SOURCES_TRUE@rasterizer/archrast/gen_ar_event.hpp: rasterizer/codegen/gen_archrast.py rasterizer/codegen/templates/gen_ar_event.hpp rasterizer/archrast/events.proto rasterizer/codegen/gen_common.py
+@REGEN_SOURCES_TRUE@rasterizer/jitter/gen_builder_intrin.hpp: rasterizer/codegen/gen_llvm_ir_macros.py rasterizer/codegen/templates/gen_builder.hpp rasterizer/codegen/gen_common.py
+@REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
+@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) \
+@REGEN_SOURCES_TRUE@		$(srcdir)/rasterizer/codegen/gen_llvm_ir_macros.py \
+@REGEN_SOURCES_TRUE@		--output rasterizer/jitter \
+@REGEN_SOURCES_TRUE@		--gen_intrin_h
+@REGEN_SOURCES_TRUE@	$(AM_V_GEN)touch $@
+
+@REGEN_SOURCES_TRUE@rasterizer/archrast/gen_ar_event.hpp: rasterizer/codegen/gen_archrast.py rasterizer/codegen/templates/gen_ar_event.hpp rasterizer/archrast/events.proto rasterizer/archrast/events_private.proto rasterizer/codegen/gen_common.py
 @REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
 @REGEN_SOURCES_TRUE@	$(PYTHON_GEN) \
 @REGEN_SOURCES_TRUE@		$(srcdir)/rasterizer/codegen/gen_archrast.py \
 @REGEN_SOURCES_TRUE@		--proto $(srcdir)/rasterizer/archrast/events.proto \
+@REGEN_SOURCES_TRUE@		--proto_private $(srcdir)/rasterizer/archrast/events_private.proto \
 @REGEN_SOURCES_TRUE@		--output rasterizer/archrast/gen_ar_event.hpp \
-@REGEN_SOURCES_TRUE@		--gen_event_h
+@REGEN_SOURCES_TRUE@		--gen_event_hpp
+@REGEN_SOURCES_TRUE@	$(AM_V_GEN)touch $@
 
-@REGEN_SOURCES_TRUE@rasterizer/archrast/gen_ar_event.cpp: rasterizer/codegen/gen_archrast.py rasterizer/codegen/templates/gen_ar_event.cpp rasterizer/archrast/events.proto rasterizer/codegen/gen_common.py
+@REGEN_SOURCES_TRUE@rasterizer/archrast/gen_ar_event.cpp: rasterizer/codegen/gen_archrast.py rasterizer/codegen/templates/gen_ar_event.cpp rasterizer/archrast/events.proto rasterizer/archrast/events_private.proto rasterizer/codegen/gen_common.py
 @REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
 @REGEN_SOURCES_TRUE@	$(PYTHON_GEN) \
 @REGEN_SOURCES_TRUE@		$(srcdir)/rasterizer/codegen/gen_archrast.py \
 @REGEN_SOURCES_TRUE@		--proto $(srcdir)/rasterizer/archrast/events.proto \
+@REGEN_SOURCES_TRUE@		--proto_private $(srcdir)/rasterizer/archrast/events_private.proto \
 @REGEN_SOURCES_TRUE@		--output rasterizer/archrast/gen_ar_event.cpp \
 @REGEN_SOURCES_TRUE@		--gen_event_cpp
+@REGEN_SOURCES_TRUE@	$(AM_V_GEN)touch $@
 
-@REGEN_SOURCES_TRUE@rasterizer/archrast/gen_ar_eventhandler.hpp: rasterizer/codegen/gen_archrast.py rasterizer/codegen/templates/gen_ar_eventhandler.hpp rasterizer/archrast/events.proto rasterizer/codegen/gen_common.py
+@REGEN_SOURCES_TRUE@rasterizer/archrast/gen_ar_eventhandler.hpp: rasterizer/codegen/gen_archrast.py rasterizer/codegen/templates/gen_ar_eventhandler.hpp rasterizer/archrast/events.proto rasterizer/archrast/events_private.proto rasterizer/codegen/gen_common.py
 @REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
 @REGEN_SOURCES_TRUE@	$(PYTHON_GEN) \
 @REGEN_SOURCES_TRUE@		$(srcdir)/rasterizer/codegen/gen_archrast.py \
 @REGEN_SOURCES_TRUE@		--proto $(srcdir)/rasterizer/archrast/events.proto \
+@REGEN_SOURCES_TRUE@		--proto_private $(srcdir)/rasterizer/archrast/events_private.proto \
 @REGEN_SOURCES_TRUE@		--output rasterizer/archrast/gen_ar_eventhandler.hpp \
-@REGEN_SOURCES_TRUE@		--gen_eventhandler_h
+@REGEN_SOURCES_TRUE@		--gen_eventhandler_hpp
+@REGEN_SOURCES_TRUE@	$(AM_V_GEN)touch $@
 
-@REGEN_SOURCES_TRUE@rasterizer/archrast/gen_ar_eventhandlerfile.hpp: rasterizer/codegen/gen_archrast.py rasterizer/codegen/templates/gen_ar_eventhandlerfile.hpp rasterizer/archrast/events.proto rasterizer/codegen/gen_common.py
+@REGEN_SOURCES_TRUE@rasterizer/archrast/gen_ar_eventhandlerfile.hpp: rasterizer/codegen/gen_archrast.py rasterizer/codegen/templates/gen_ar_eventhandlerfile.hpp rasterizer/archrast/events.proto rasterizer/archrast/events_private.proto rasterizer/codegen/gen_common.py
 @REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
 @REGEN_SOURCES_TRUE@	$(PYTHON_GEN) \
 @REGEN_SOURCES_TRUE@		$(srcdir)/rasterizer/codegen/gen_archrast.py \
 @REGEN_SOURCES_TRUE@		--proto $(srcdir)/rasterizer/archrast/events.proto \
+@REGEN_SOURCES_TRUE@		--proto_private $(srcdir)/rasterizer/archrast/events_private.proto \
 @REGEN_SOURCES_TRUE@		--output rasterizer/archrast/gen_ar_eventhandlerfile.hpp \
-@REGEN_SOURCES_TRUE@		--gen_eventhandlerfile_h
+@REGEN_SOURCES_TRUE@		--gen_eventhandlerfile_hpp
+@REGEN_SOURCES_TRUE@	$(AM_V_GEN)touch $@
 
 rasterizer/core/backends/gen_BackendPixelRate0.cpp \
 rasterizer/core/backends/gen_BackendPixelRate1.cpp \
@@ -4034,23 +4309,23 @@ backend.intermediate
 # use intermediate rule to tell make that all files can be
 # generated in one invocation of gen_backends.py (prevents
 # parallel make race condition)
-.INTERMEDIATE: backend.intermediate
-backend.intermediate: rasterizer/codegen/gen_backends.py rasterizer/codegen/templates/gen_backend.cpp rasterizer/codegen/templates/gen_header_init.hpp
-	$(MKDIR_GEN)
-	$(PYTHON_GEN) \
-		$(srcdir)/rasterizer/codegen/gen_backends.py \
-		--outdir rasterizer/core/backends \
-		--dim 5 2 3 2 2 2 \
-		--numfiles 4 \
-		--cpp \
-		--hpp
+@REGEN_SOURCES_TRUE@.INTERMEDIATE: backend.intermediate
+@REGEN_SOURCES_TRUE@backend.intermediate: rasterizer/codegen/gen_backends.py rasterizer/codegen/templates/gen_backend.cpp rasterizer/codegen/templates/gen_header_init.hpp
+@REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
+@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) \
+@REGEN_SOURCES_TRUE@		$(srcdir)/rasterizer/codegen/gen_backends.py \
+@REGEN_SOURCES_TRUE@		--outdir rasterizer/core/backends \
+@REGEN_SOURCES_TRUE@		--dim 5 2 3 2 2 2 \
+@REGEN_SOURCES_TRUE@		--numfiles 4 \
+@REGEN_SOURCES_TRUE@		--cpp \
+@REGEN_SOURCES_TRUE@		--hpp
 
-rasterizer/core/backends/gen_rasterizer0.cpp \
-rasterizer/core/backends/gen_rasterizer1.cpp \
-rasterizer/core/backends/gen_rasterizer2.cpp \
-rasterizer/core/backends/gen_rasterizer3.cpp \
-rasterizer/core/backends/gen_rasterizer.hpp: \
-rasterizer.intermediate
+@REGEN_SOURCES_TRUE@rasterizer/core/backends/gen_rasterizer0.cpp \
+@REGEN_SOURCES_TRUE@rasterizer/core/backends/gen_rasterizer1.cpp \
+@REGEN_SOURCES_TRUE@rasterizer/core/backends/gen_rasterizer2.cpp \
+@REGEN_SOURCES_TRUE@rasterizer/core/backends/gen_rasterizer3.cpp \
+@REGEN_SOURCES_TRUE@rasterizer/core/backends/gen_rasterizer.hpp: \
+@REGEN_SOURCES_TRUE@rasterizer.intermediate
 
 # 5 SWR_MULTISAMPLE_TYPE_COUNT
 # 2 CenterPattern
@@ -4062,17 +4337,17 @@ rasterizer.intermediate
 # use intermediate rule to tell make that all files can be
 # generated in one invocation of gen_backends.py (prevents
 # parallel make race condition)
-.INTERMEDIATE: rasterizer.intermediate
-rasterizer.intermediate: rasterizer/codegen/gen_backends.py rasterizer/codegen/templates/gen_rasterizer.cpp rasterizer/codegen/templates/gen_header_init.hpp
-	$(MKDIR_GEN)
-	$(PYTHON_GEN) \
-		$(srcdir)/rasterizer/codegen/gen_backends.py \
-		--outdir rasterizer/core/backends \
-		--rast \
-		--dim 5 2 2 3 5 2 \
-		--numfiles 4 \
-		--cpp \
-		--hpp
+@REGEN_SOURCES_TRUE@.INTERMEDIATE: rasterizer.intermediate
+@REGEN_SOURCES_TRUE@rasterizer.intermediate: rasterizer/codegen/gen_backends.py rasterizer/codegen/templates/gen_rasterizer.cpp rasterizer/codegen/templates/gen_header_init.hpp
+@REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
+@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) \
+@REGEN_SOURCES_TRUE@		$(srcdir)/rasterizer/codegen/gen_backends.py \
+@REGEN_SOURCES_TRUE@		--outdir rasterizer/core/backends \
+@REGEN_SOURCES_TRUE@		--rast \
+@REGEN_SOURCES_TRUE@		--dim 5 2 2 3 5 2 \
+@REGEN_SOURCES_TRUE@		--numfiles 4 \
+@REGEN_SOURCES_TRUE@		--cpp \
+@REGEN_SOURCES_TRUE@		--hpp
 
 @BUILD_SHARED_TRUE@@HAVE_COMPAT_SYMLINKS_TRUE@all-local : .install-gallium-links
 
@@ -4107,9 +4382,9 @@ rasterizer.intermediate: rasterizer/codegen/gen_backends.py rasterizer/codegen/t
 # Generated gen_builder.hpp is not backwards compatible. So ship only one
 # created with the oldest supported version of LLVM.
 dist-hook:
-@SWR_INVALID_LLVM_VERSION_TRUE@	@echo "*******************************************************"
-@SWR_INVALID_LLVM_VERSION_TRUE@	@echo "LLVM 3.9.0 or LLVM 3.9.1 required to create the tarball"
-@SWR_INVALID_LLVM_VERSION_TRUE@	@echo "*******************************************************"
+@SWR_INVALID_LLVM_VERSION_TRUE@	@echo "*****************************************"
+@SWR_INVALID_LLVM_VERSION_TRUE@	@echo "LLVM 6.0.x required to create the tarball"
+@SWR_INVALID_LLVM_VERSION_TRUE@	@echo "*****************************************"
 @SWR_INVALID_LLVM_VERSION_TRUE@	@test
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

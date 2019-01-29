@@ -1,4 +1,4 @@
-﻿# Copyright (C) 2014-2017 Intel Corporation.   All Rights Reserved.
+﻿# Copyright (C) 2014-2018 Intel Corporation.   All Rights Reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -21,12 +21,12 @@
 
 from __future__ import print_function
 import os, sys, re
-from gen_common import MakoTemplateWriter, ArgumentParser
+from gen_common import *
 from argparse import FileType
 
 '''
 '''
-def gen_llvm_type(type, name, is_pointer, is_pointer_pointer, is_array, is_array_array, array_count, array_count1, is_llvm_struct, is_llvm_enum, is_llvm_pfn, output_file):
+def gen_llvm_type(type, name, idx, is_pointer, is_pointer_pointer, is_array, is_array_array, array_count, array_count1, is_llvm_struct, is_llvm_enum, is_llvm_pfn, output_file):
 
     llvm_type = ''
 
@@ -60,6 +60,10 @@ def gen_llvm_type(type, name, is_pointer, is_pointer_pointer, is_array, is_array
             llvm_type = 'VectorType::get(Type::getFloatTy(ctx), pJitMgr->mVWidth)'
         elif type == 'simdscalari':
             llvm_type = 'VectorType::get(Type::getInt32Ty(ctx), pJitMgr->mVWidth)'
+        elif type == 'simd16scalar':
+            llvm_type = 'VectorType::get(Type::getFloatTy(ctx), 16)'
+        elif type == 'simd16scalari':
+            llvm_type = 'VectorType::get(Type::getInt32Ty(ctx), 16)'
         elif type == '__m128i':
             llvm_type = 'VectorType::get(Type::getInt32Ty(ctx), 4)'
         elif type == 'SIMD256::Float':
@@ -94,6 +98,7 @@ def gen_llvm_type(type, name, is_pointer, is_pointer_pointer, is_array, is_array
 
     return {
         'name'  : name,
+        'lineNum' : idx,
         'type'  : llvm_type,
     }
 
@@ -125,6 +130,7 @@ def gen_llvm_types(input_file, output_file):
 
                 type_entry = {
                     'name'      : struct_name,
+                    'lineNum'   : idx+1,
                     'members'   : [],
                 }
 
@@ -137,6 +143,7 @@ def gen_llvm_types(input_file, output_file):
                     is_llvm_typedef = re.search(r'@llvm_typedef', line)
                     if is_llvm_typedef is not None:
                         is_llvm_typedef = True
+                        continue
                     else:
                         is_llvm_typedef = False
 
@@ -290,7 +297,7 @@ def gen_llvm_types(input_file, output_file):
                         if type is not None:
                             type_entry['members'].append(
                                 gen_llvm_type(
-                                    type, name, is_pointer, is_pointer_pointer, is_array, is_array_array,
+                                    type, name, idx+1, is_pointer, is_pointer_pointer, is_array, is_array_array,
                                     array_count, array_count1, is_llvm_struct, is_llvm_enum, is_llvm_pfn, output_file))
 
                     # Detect end of structure
@@ -307,7 +314,9 @@ def gen_llvm_types(input_file, output_file):
         output_file,
         cmdline=sys.argv,
         filename=os.path.basename(output_file),
-        types=types)
+        types=types,
+        input_dir=os.path.dirname(input_file.name),
+        input_file=os.path.basename(input_file.name))
 
 '''
     Function which is invoked when this script is started from a command line.
@@ -324,8 +333,29 @@ def main():
             help='Path to output file', required=True)
     args = parser.parse_args()
 
-    gen_llvm_types(args.input, args.output)
+    final_output_dir = os.path.dirname(args.output)
+    if MakeDir(final_output_dir):
+        return 1
+
+    final_output_file = args.output
+
+    tmp_dir = MakeTmpDir('_codegen')
+    args.output = os.path.join(tmp_dir, os.path.basename(args.output))
+
+    rval = 0
+    try:
+        gen_llvm_types(args.input, args.output)
+
+        rval = CopyFileIfDifferent(args.output, final_output_file)
+    except:
+        print('ERROR: Could not generate llvm types', file=sys.stderr)
+        rval = 1
+
+    finally:
+        DeleteDirTree(tmp_dir)
+
+    return rval
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())
 # END OF FILE

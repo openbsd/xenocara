@@ -25,12 +25,6 @@
  *
  **************************************************************************/
 
-/*
- * Authors:
- *	Christian König <christian.koenig@amd.com>
- *
- */
-
 #include <sys/types.h>
 #include <assert.h>
 #include <errno.h>
@@ -45,7 +39,7 @@
 #include "vl/vl_defines.h"
 #include "vl/vl_mpeg12_decoder.h"
 
-#include "r600_pipe_common.h"
+#include "radeonsi/si_pipe.h"
 #include "radeon_video.h"
 #include "radeon_uvd.h"
 
@@ -73,7 +67,7 @@ struct ruvd_decoder {
 
 	struct pipe_screen		*screen;
 	struct radeon_winsys*		ws;
-	struct radeon_winsys_cs*	cs;
+	struct radeon_cmdbuf*	cs;
 
 	unsigned			cur_buffer;
 
@@ -122,8 +116,7 @@ static void send_cmd(struct ruvd_decoder *dec, unsigned cmd,
 	int reloc_idx;
 
 	reloc_idx = dec->ws->cs_add_buffer(dec->cs, buf, usage | RADEON_USAGE_SYNCHRONIZED,
-					   domain,
-					  RADEON_PRIO_UVD);
+					   domain, 0);
 	if (!dec->use_legacy) {
 		uint64_t addr;
 		addr = dec->ws->buffer_get_virtual_address(buf);
@@ -337,7 +330,7 @@ static unsigned calc_ctx_size_h265_main10(struct ruvd_decoder *dec, struct pipe_
 
 static unsigned get_db_pitch_alignment(struct ruvd_decoder *dec)
 {
-	if (((struct r600_common_screen*)dec->screen)->family < CHIP_VEGA10)
+	if (((struct si_screen*)dec->screen)->info.family < CHIP_VEGA10)
 		return 16;
 	else
 		return 32;
@@ -402,7 +395,7 @@ static unsigned calc_dpb_size(struct ruvd_decoder *dec)
 			max_references = MAX2(MIN2(NUM_H264_REFS, num_dpb_buffer), max_references);
 			dpb_size = image_size * max_references;
 			if ((dec->stream_type != RUVD_CODEC_H264_PERF) ||
-			    (((struct r600_common_screen*)dec->screen)->family < CHIP_POLARIS10)) {
+			    (((struct si_screen*)dec->screen)->info.family < CHIP_POLARIS10)) {
 				dpb_size += max_references * align(width_in_mb * height_in_mb  * 192, alignment);
 				dpb_size += align(width_in_mb * height_in_mb * 32, alignment);
 			}
@@ -412,7 +405,7 @@ static unsigned calc_dpb_size(struct ruvd_decoder *dec)
 			// reference picture buffer
 			dpb_size = image_size * max_references;
 			if ((dec->stream_type != RUVD_CODEC_H264_PERF) ||
-			    (((struct r600_common_screen*)dec->screen)->family < CHIP_POLARIS10)) {
+			    (((struct si_screen*)dec->screen)->info.family < CHIP_POLARIS10)) {
 				// macroblock context buffer
 				dpb_size += width_in_mb * height_in_mb * max_references * 192;
 				// IT surface buffer
@@ -612,7 +605,7 @@ static struct ruvd_h265 get_h265_msg(struct ruvd_decoder *dec, struct pipe_video
 	result.sps_info_flags |= pic->pps->sps->sps_temporal_mvp_enabled_flag << 6;
 	result.sps_info_flags |= pic->pps->sps->strong_intra_smoothing_enabled_flag << 7;
 	result.sps_info_flags |= pic->pps->sps->separate_colour_plane_flag << 8;
-	if (((struct r600_common_screen*)dec->screen)->family == CHIP_CARRIZO)
+	if (((struct si_screen*)dec->screen)->info.family == CHIP_CARRIZO)
 		result.sps_info_flags |= 1 << 9;
 	if (pic->UseRefPicList == true)
 		result.sps_info_flags |= 1 << 10;
@@ -971,139 +964,6 @@ static struct ruvd_mpeg4 get_mpeg4_msg(struct ruvd_decoder *dec,
 	return result;
 }
 
-static void get_mjpeg_slice_header(struct ruvd_decoder *dec, struct pipe_mjpeg_picture_desc *pic)
-{
-	int size = 0, saved_size, len_pos, i;
-	uint16_t *bs;
-	uint8_t *buf = dec->bs_ptr;
-
-	/* SOI */
-	buf[size++] = 0xff;
-	buf[size++] = 0xd8;
-
-	/* DQT */
-	buf[size++] = 0xff;
-	buf[size++] = 0xdb;
-
-	len_pos = size++;
-	size++;
-
-	for (i = 0; i < 4; ++i) {
-		if (pic->quantization_table.load_quantiser_table[i] == 0)
-			continue;
-
-		buf[size++] = i;
-		memcpy((buf + size), &pic->quantization_table.quantiser_table[i], 64);
-		size += 64;
-	}
-
-	bs = (uint16_t*)&buf[len_pos];
-	*bs = util_bswap16(size - 4);
-
-	saved_size = size;
-
-	/* DHT */
-	buf[size++] = 0xff;
-	buf[size++] = 0xc4;
-
-	len_pos = size++;
-	size++;
-
-	for (i = 0; i < 2; ++i) {
-		if (pic->huffman_table.load_huffman_table[i] == 0)
-			continue;
-
-		buf[size++] = 0x00 | i;
-		memcpy((buf + size), &pic->huffman_table.table[i].num_dc_codes, 16);
-		size += 16;
-		memcpy((buf + size), &pic->huffman_table.table[i].dc_values, 12);
-		size += 12;
-	}
-
-	for (i = 0; i < 2; ++i) {
-		if (pic->huffman_table.load_huffman_table[i] == 0)
-			continue;
-
-		buf[size++] = 0x10 | i;
-		memcpy((buf + size), &pic->huffman_table.table[i].num_ac_codes, 16);
-		size += 16;
-		memcpy((buf + size), &pic->huffman_table.table[i].ac_values, 162);
-		size += 162;
-	}
-
-	bs = (uint16_t*)&buf[len_pos];
-	*bs = util_bswap16(size - saved_size - 2);
-
-	saved_size = size;
-
-	/* DRI */
-	if (pic->slice_parameter.restart_interval) {
-		buf[size++] = 0xff;
-		buf[size++] = 0xdd;
-		buf[size++] = 0x00;
-		buf[size++] = 0x04;
-		bs = (uint16_t*)&buf[size++];
-		*bs = util_bswap16(pic->slice_parameter.restart_interval);
-		saved_size = ++size;
-	}
-
-	/* SOF */
-	buf[size++] = 0xff;
-	buf[size++] = 0xc0;
-
-	len_pos = size++;
-	size++;
-
-	buf[size++] = 0x08;
-
-	bs = (uint16_t*)&buf[size++];
-	*bs = util_bswap16(pic->picture_parameter.picture_height);
-	size++;
-
-	bs = (uint16_t*)&buf[size++];
-	*bs = util_bswap16(pic->picture_parameter.picture_width);
-	size++;
-
-	buf[size++] = pic->picture_parameter.num_components;
-
-	for (i = 0; i < pic->picture_parameter.num_components; ++i) {
-		buf[size++] = pic->picture_parameter.components[i].component_id;
-		buf[size++] = pic->picture_parameter.components[i].h_sampling_factor << 4 |
-			pic->picture_parameter.components[i].v_sampling_factor;
-		buf[size++] = pic->picture_parameter.components[i].quantiser_table_selector;
-	}
-
-	bs = (uint16_t*)&buf[len_pos];
-	*bs = util_bswap16(size - saved_size - 2);
-
-	saved_size = size;
-
-	/* SOS */
-	buf[size++] = 0xff;
-	buf[size++] = 0xda;
-
-	len_pos = size++;
-	size++;
-
-	buf[size++] = pic->slice_parameter.num_components;
-
-	for (i = 0; i < pic->slice_parameter.num_components; ++i) {
-		buf[size++] = pic->slice_parameter.components[i].component_selector;
-		buf[size++] = pic->slice_parameter.components[i].dc_table_selector << 4 |
-			pic->slice_parameter.components[i].ac_table_selector;
-	}
-
-	buf[size++] = 0x00;
-	buf[size++] = 0x3f;
-	buf[size++] = 0x00;
-
-	bs = (uint16_t*)&buf[len_pos];
-	*bs = util_bswap16(size - saved_size - 2);
-
-	dec->bs_ptr += size;
-	dec->bs_size += size;
-}
-
 /**
  * destroy this video decoder
  */
@@ -1182,7 +1042,6 @@ static void ruvd_decode_bitstream(struct pipe_video_codec *decoder,
 				  const unsigned *sizes)
 {
 	struct ruvd_decoder *dec = (struct ruvd_decoder*)decoder;
-	enum pipe_video_format format = u_reduce_video_profile(picture->profile);
 	unsigned i;
 
 	assert(decoder);
@@ -1190,15 +1049,9 @@ static void ruvd_decode_bitstream(struct pipe_video_codec *decoder,
 	if (!dec->bs_ptr)
 		return;
 
-	if (format == PIPE_VIDEO_FORMAT_JPEG)
-		get_mjpeg_slice_header(dec, (struct pipe_mjpeg_picture_desc*)picture);
-
 	for (i = 0; i < num_buffers; ++i) {
 		struct rvid_buffer *buf = &dec->bs_buffers[dec->cur_buffer];
 		unsigned new_size = dec->bs_size + sizes[i];
-
-		if (format == PIPE_VIDEO_FORMAT_JPEG)
-			new_size += 2; /* save for EOI */
 
 		if (new_size > buf->res->buf->size) {
 			dec->ws->buffer_unmap(buf->res->buf);
@@ -1218,13 +1071,6 @@ static void ruvd_decode_bitstream(struct pipe_video_codec *decoder,
 		memcpy(dec->bs_ptr, buffers[i], sizes[i]);
 		dec->bs_size += sizes[i];
 		dec->bs_ptr += sizes[i];
-	}
-
-	if (format == PIPE_VIDEO_FORMAT_JPEG) {
-		((uint8_t *)dec->bs_ptr)[0] = 0xff;	/* EOI */
-		((uint8_t *)dec->bs_ptr)[1] = 0xd9;
-		dec->bs_size += 2;
-		dec->bs_ptr += 2;
 	}
 }
 
@@ -1275,11 +1121,11 @@ static void ruvd_end_frame(struct pipe_video_codec *decoder,
 	dec->msg->body.decode.db_pitch = align(dec->base.width, get_db_pitch_alignment(dec));
 
 	if (dec->stream_type == RUVD_CODEC_H264_PERF &&
-	    ((struct r600_common_screen*)dec->screen)->family >= CHIP_POLARIS10)
+	    ((struct si_screen*)dec->screen)->info.family >= CHIP_POLARIS10)
 		dec->msg->body.decode.dpb_reserved = dec->ctx.res->buf->size;
 
 	dt = dec->set_dtb(dec->msg, (struct vl_video_buffer *)target);
-	if (((struct r600_common_screen*)dec->screen)->family >= CHIP_STONEY)
+	if (((struct si_screen*)dec->screen)->info.family >= CHIP_STONEY)
 		dec->msg->body.decode.dt_wa_chroma_top_offset = dec->msg->body.decode.dt_pitch / 2;
 
 	switch (u_reduce_video_profile(picture->profile)) {
@@ -1351,7 +1197,7 @@ static void ruvd_end_frame(struct pipe_video_codec *decoder,
 			 FB_BUFFER_OFFSET + dec->fb_size, RADEON_USAGE_READ, RADEON_DOMAIN_GTT);
 	set_reg(dec, dec->reg.cntl, 1);
 
-	flush(dec, RADEON_FLUSH_ASYNC);
+	flush(dec, PIPE_FLUSH_ASYNC);
 	next_buffer(dec);
 }
 
@@ -1369,16 +1215,13 @@ struct pipe_video_codec *si_common_uvd_create_decoder(struct pipe_context *conte
 						      const struct pipe_video_codec *templ,
 						      ruvd_set_dtb set_dtb)
 {
-	struct radeon_winsys* ws = ((struct r600_common_context *)context)->ws;
-	struct r600_common_context *rctx = (struct r600_common_context*)context;
+	struct si_context *sctx = (struct si_context*)context;
+	struct radeon_winsys *ws = sctx->ws;
 	unsigned dpb_size;
 	unsigned width = templ->width, height = templ->height;
 	unsigned bs_buf_size;
-	struct radeon_info info;
 	struct ruvd_decoder *dec;
 	int r, i;
-
-	ws->query_info(ws, &info);
 
 	switch(u_reduce_video_profile(templ->profile)) {
 	case PIPE_VIDEO_FORMAT_MPEG12:
@@ -1405,7 +1248,7 @@ struct pipe_video_codec *si_common_uvd_create_decoder(struct pipe_context *conte
 	if (!dec)
 		return NULL;
 
-	if (info.drm_major < 3)
+	if (sctx->screen->info.drm_major < 3)
 		dec->use_legacy = true;
 
 	dec->base = *templ;
@@ -1420,12 +1263,12 @@ struct pipe_video_codec *si_common_uvd_create_decoder(struct pipe_context *conte
 	dec->base.end_frame = ruvd_end_frame;
 	dec->base.flush = ruvd_flush;
 
-	dec->stream_type = profile2stream_type(dec, info.family);
+	dec->stream_type = profile2stream_type(dec, sctx->family);
 	dec->set_dtb = set_dtb;
 	dec->stream_handle = si_vid_alloc_stream_handle();
 	dec->screen = context->screen;
 	dec->ws = ws;
-	dec->cs = ws->cs_create(rctx->ctx, RING_UVD, NULL, NULL);
+	dec->cs = ws->cs_create(sctx->ctx, RING_UVD, NULL, NULL);
 	if (!dec->cs) {
 		RVID_ERR("Can't get command submission context.\n");
 		goto error;
@@ -1433,7 +1276,7 @@ struct pipe_video_codec *si_common_uvd_create_decoder(struct pipe_context *conte
 
 	for (i = 0; i < 16; i++)
 		 dec->render_pic_list[i] = NULL;
-	dec->fb_size = (info.family == CHIP_TONGA) ? FB_BUFFER_SIZE_TONGA :
+	dec->fb_size = (sctx->family == CHIP_TONGA) ? FB_BUFFER_SIZE_TONGA :
 			FB_BUFFER_SIZE;
 	bs_buf_size = width * height * (512 / (16 * 16));
 	for (i = 0; i < NUM_BUFFERS; ++i) {
@@ -1466,7 +1309,7 @@ struct pipe_video_codec *si_common_uvd_create_decoder(struct pipe_context *conte
 		si_vid_clear_buffer(context, &dec->dpb);
 	}
 
-	if (dec->stream_type == RUVD_CODEC_H264_PERF && info.family >= CHIP_POLARIS10) {
+	if (dec->stream_type == RUVD_CODEC_H264_PERF && sctx->family >= CHIP_POLARIS10) {
 		unsigned ctx_size = calc_ctx_size_h264_perf(dec);
 		if (!si_vid_create_buffer(dec->screen, &dec->ctx, ctx_size, PIPE_USAGE_DEFAULT)) {
 			RVID_ERR("Can't allocated context buffer.\n");
@@ -1475,7 +1318,7 @@ struct pipe_video_codec *si_common_uvd_create_decoder(struct pipe_context *conte
 		si_vid_clear_buffer(context, &dec->ctx);
 	}
 
-	if (info.family >= CHIP_POLARIS10 && info.drm_minor >= 3) {
+	if (sctx->family >= CHIP_POLARIS10 && sctx->screen->info.drm_minor >= 3) {
 		if (!si_vid_create_buffer(dec->screen, &dec->sessionctx,
 					UVD_SESSION_CONTEXT_SIZE,
 					PIPE_USAGE_DEFAULT)) {
@@ -1485,7 +1328,7 @@ struct pipe_video_codec *si_common_uvd_create_decoder(struct pipe_context *conte
 		si_vid_clear_buffer(context, &dec->sessionctx);
 	}
 
-	if (info.family >= CHIP_VEGA10) {
+	if (sctx->family >= CHIP_VEGA10) {
 		dec->reg.data0 = RUVD_GPCOM_VCPU_DATA0_SOC15;
 		dec->reg.data1 = RUVD_GPCOM_VCPU_DATA1_SOC15;
 		dec->reg.cmd = RUVD_GPCOM_VCPU_CMD_SOC15;
@@ -1539,7 +1382,7 @@ static unsigned texture_offset(struct radeon_surf *surface, unsigned layer,
 	default:
 	case RUVD_SURFACE_TYPE_LEGACY:
 		return surface->u.legacy.level[0].offset +
-			layer * surface->u.legacy.level[0].slice_size;
+			layer * (uint64_t)surface->u.legacy.level[0].slice_size_dw * 4;
 		break;
 	case RUVD_SURFACE_TYPE_GFX9:
 		return surface->u.gfx9.surf_offset +

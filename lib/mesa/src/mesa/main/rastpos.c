@@ -35,7 +35,6 @@
 #include "mtypes.h"
 #include "rastpos.h"
 #include "state.h"
-#include "main/dispatch.h"
 #include "main/viewport.h"
 #include "util/bitscan.h"
 
@@ -62,16 +61,35 @@ viewclip_point_xy( const GLfloat v[] )
 
 
 /**
- * Clip a point against the far/near Z clipping planes.
+ * Clip a point against the near Z clipping planes.
  *
  * \param v vertex vector describing the point to clip.
  *
  * \return zero if outside view volume, or one if inside.
  */
 static GLuint
-viewclip_point_z( const GLfloat v[] )
+viewclip_point_near_z( const GLfloat v[] )
 {
-   if (v[2] > v[3] || v[2] < -v[3] ) {
+   if (v[2] < -v[3]) {
+      return 0;
+   }
+   else {
+      return 1;
+   }
+}
+
+
+/**
+ * Clip a point against the far Z clipping planes.
+ *
+ * \param v vertex vector describing the point to clip.
+ *
+ * \return zero if outside view volume, or one if inside.
+ */
+static GLuint
+viewclip_point_far_z( const GLfloat v[] )
+{
+   if (v[2] > v[3]) {
       return 0;
    }
    else {
@@ -266,7 +284,8 @@ static void
 compute_texgen(struct gl_context *ctx, const GLfloat vObj[4], const GLfloat vEye[4],
                const GLfloat normal[3], GLuint unit, GLfloat texcoord[4])
 {
-   const struct gl_texture_unit *texUnit = &ctx->Texture.Unit[unit];
+   const struct gl_fixedfunc_texture_unit *texUnit =
+      &ctx->Texture.FixedFuncUnit[unit];
 
    /* always compute sphere map terms, just in case */
    GLfloat u[3], two_nu, rx, ry, rz, m, mInv;
@@ -389,8 +408,14 @@ _mesa_RasterPos(struct gl_context *ctx, const GLfloat vObj[4])
       TRANSFORM_POINT( clip, ctx->ProjectionMatrixStack.Top->m, eye );
 
       /* clip to view volume. */
-      if (!ctx->Transform.DepthClamp) {
-         if (viewclip_point_z(clip) == 0) {
+      if (!ctx->Transform.DepthClampNear) {
+         if (viewclip_point_near_z(clip) == 0) {
+            ctx->Current.RasterPosValid = GL_FALSE;
+            return;
+         }
+      }
+      if (!ctx->Transform.DepthClampFar) {
+         if (viewclip_point_far_z(clip) == 0) {
             ctx->Current.RasterPosValid = GL_FALSE;
             return;
          }
@@ -420,10 +445,22 @@ _mesa_RasterPos(struct gl_context *ctx, const GLfloat vObj[4])
       ctx->Current.RasterPos[2] = ndc[2] * scale[2] + translate[2];
       ctx->Current.RasterPos[3] = clip[3];
 
-      if (ctx->Transform.DepthClamp) {
-	 ctx->Current.RasterPos[3] = CLAMP(ctx->Current.RasterPos[3],
-					   ctx->ViewportArray[0].Near,
-					   ctx->ViewportArray[0].Far);
+      if (ctx->Transform.DepthClampNear &&
+          ctx->Transform.DepthClampFar) {
+         ctx->Current.RasterPos[3] = CLAMP(ctx->Current.RasterPos[3],
+                                           ctx->ViewportArray[0].Near,
+                                           ctx->ViewportArray[0].Far);
+      } else {
+         /* Clamp against near and far plane separately */
+         if (ctx->Transform.DepthClampNear) {
+            ctx->Current.RasterPos[3] = MAX2(ctx->Current.RasterPos[3],
+                                             ctx->ViewportArray[0].Near);
+         }
+
+         if (ctx->Transform.DepthClampFar) {
+            ctx->Current.RasterPos[3] = MIN2(ctx->Current.RasterPos[3],
+                                             ctx->ViewportArray[0].Far);
+         }
       }
 
       /* compute raster distance */
@@ -464,7 +501,7 @@ _mesa_RasterPos(struct gl_context *ctx, const GLfloat vObj[4])
          for (u = 0; u < ctx->Const.MaxTextureCoordUnits; u++) {
             GLfloat tc[4];
             COPY_4V(tc, ctx->Current.Attrib[VERT_ATTRIB_TEX0 + u]);
-            if (ctx->Texture.Unit[u].TexGenEnabled) {
+            if (ctx->Texture.FixedFuncUnit[u].TexGenEnabled) {
                compute_texgen(ctx, vObj, eye, norm, u, tc);
             }
             TRANSFORM_POINT(ctx->Current.RasterTexCoords[u],

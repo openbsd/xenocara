@@ -30,6 +30,7 @@
 #include <fcntl.h>
 
 #include "anv_private.h"
+#include "common/gen_defines.h"
 
 static int
 anv_ioctl(int fd, unsigned long request, void *arg)
@@ -302,6 +303,13 @@ close_and_return:
    return swizzled;
 }
 
+bool
+anv_gem_has_context_priority(int fd)
+{
+   return !anv_gem_set_context_param(fd, 0, I915_CONTEXT_PARAM_PRIORITY,
+                                     GEN_CONTEXT_MEDIUM_PRIORITY);
+}
+
 int
 anv_gem_create_context(struct anv_device *device)
 {
@@ -322,6 +330,21 @@ anv_gem_destroy_context(struct anv_device *device, int context)
    };
 
    return anv_ioctl(device->fd, DRM_IOCTL_I915_GEM_CONTEXT_DESTROY, &destroy);
+}
+
+int
+anv_gem_set_context_param(int fd, int context, uint32_t param, uint64_t value)
+{
+   struct drm_i915_gem_context_param p = {
+      .ctx_id = context,
+      .param = param,
+      .value = value,
+   };
+   int err = 0;
+
+   if (anv_ioctl(fd, DRM_IOCTL_I915_GEM_CONTEXT_SETPARAM, &p))
+      err = -errno;
+   return err;
 }
 
 int
@@ -352,24 +375,6 @@ anv_gem_get_aperture(int fd, uint64_t *size)
    *size = aperture.aper_available_size;
 
    return 0;
-}
-
-bool
-anv_gem_supports_48b_addresses(int fd)
-{
-   struct drm_i915_gem_exec_object2 obj = {
-      .flags = EXEC_OBJECT_SUPPORTS_48B_ADDRESS,
-   };
-
-   struct drm_i915_gem_execbuffer2 execbuf = {
-      .buffers_ptr = (uintptr_t)&obj,
-      .buffer_count = 1,
-      .rsvd1 = 0xffffffu,
-   };
-
-   int ret = anv_ioctl(fd, DRM_IOCTL_I915_GEM_EXECBUFFER2, &execbuf);
-
-   return ret == -1 && errno == ENOENT;
 }
 
 int
@@ -418,6 +423,19 @@ anv_gem_fd_to_handle(struct anv_device *device, int fd)
    return args.handle;
 }
 
+int
+anv_gem_reg_read(struct anv_device *device, uint32_t offset, uint64_t *result)
+{
+   struct drm_i915_reg_read args = {
+      .offset = offset
+   };
+
+   int ret = anv_ioctl(device->fd, DRM_IOCTL_I915_REG_READ, &args);
+
+   *result = args.val;
+   return ret;
+}
+
 #ifndef SYNC_IOC_MAGIC
 /* duplicated from linux/sync_file.h to avoid build-time dependency
  * on new (v4.7) kernel headers.  Once distro's are mostly using
@@ -439,12 +457,11 @@ struct sync_merge_data {
 int
 anv_gem_sync_file_merge(struct anv_device *device, int fd1, int fd2)
 {
-   const char name[] = "anv merge fence";
    struct sync_merge_data args = {
+      .name = "anv merge fence",
       .fd2 = fd2,
       .fence = -1,
    };
-   memcpy(args.name, name, sizeof(name));
 
    int ret = anv_ioctl(fd1, SYNC_IOC_MERGE, &args);
    if (ret == -1)

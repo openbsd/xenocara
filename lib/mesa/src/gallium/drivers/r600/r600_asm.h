@@ -116,6 +116,17 @@ struct r600_bytecode_vtx {
 	unsigned			offset;
 	unsigned			endian;
 	unsigned			buffer_index_mode;
+
+	// READ_SCRATCH fields
+	unsigned			uncached;
+	unsigned			indexed;
+	unsigned			src_sel_y;
+	unsigned			src_rel;
+	unsigned			elem_size;
+	unsigned			array_size;
+	unsigned			array_base;
+	unsigned			burst_count;
+	unsigned			dst_rel;
 };
 
 struct r600_bytecode_gds {
@@ -155,6 +166,13 @@ struct r600_bytecode_output {
 	unsigned			swizzle_w;
 	unsigned			burst_count;
 	unsigned			index_gpr;
+	unsigned			mark; /* used by MEM_SCRATCH */
+};
+
+struct r600_bytecode_rat {
+	unsigned			id;
+	unsigned			inst;
+	unsigned			index_mode;
 };
 
 struct r600_bytecode_kcache {
@@ -180,11 +198,14 @@ struct r600_bytecode_cf {
 	unsigned			eg_alu_extended;
 	unsigned			barrier;
 	unsigned			end_of_program;
+	unsigned                        mark;
+	unsigned                        vpm;
 	struct list_head		alu;
 	struct list_head		tex;
 	struct list_head		vtx;
 	struct list_head		gds;
 	struct r600_bytecode_output		output;
+	struct r600_bytecode_rat		rat;
 	struct r600_bytecode_alu		*curr_bs_head;
 	struct r600_bytecode_alu		*prev_bs_head;
 	struct r600_bytecode_alu		*prev2_bs_head;
@@ -253,6 +274,10 @@ struct r600_bytecode {
 	unsigned        index_reg[2]; /* indexing register CF_INDEX_[01] */
 	unsigned        debug_id;
 	struct r600_isa* isa;
+	struct r600_bytecode_output pending_outputs[5];
+	int n_pending_outputs;
+	boolean			need_wait_ack; /* emit a pending WAIT_ACK prior to control flow */
+	boolean			precise;
 };
 
 /* eg_asm.c */
@@ -279,6 +304,10 @@ int r600_bytecode_add_gds(struct r600_bytecode *bc,
 		const struct r600_bytecode_gds *gds);
 int r600_bytecode_add_output(struct r600_bytecode *bc,
 		const struct r600_bytecode_output *output);
+int r600_bytecode_add_pending_output(struct r600_bytecode *bc,
+		const struct r600_bytecode_output *output);
+void r600_bytecode_need_wait_ack(struct r600_bytecode *bc, boolean needed);
+boolean r600_bytecode_get_need_wait_ack(struct r600_bytecode *bc);
 int r600_bytecode_build(struct r600_bytecode *bc);
 int r600_bytecode_add_cf(struct r600_bytecode *bc);
 int r600_bytecode_add_cfinst(struct r600_bytecode *bc,
@@ -304,6 +333,9 @@ int r700_bytecode_alu_build(struct r600_bytecode *bc,
 		struct r600_bytecode_alu *alu, unsigned id);
 void r700_bytecode_alu_read(struct r600_bytecode *bc,
 		struct r600_bytecode_alu *alu, uint32_t word0, uint32_t word1);
+int r700_bytecode_fetch_mem_build(struct r600_bytecode *bc,
+		struct r600_bytecode_vtx *mem, unsigned id);
+
 void r600_bytecode_export_read(struct r600_bytecode *bc,
 		struct r600_bytecode_output *output, uint32_t word0, uint32_t word1);
 void eg_bytecode_export_read(struct r600_bytecode *bc,

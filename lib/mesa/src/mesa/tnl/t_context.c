@@ -96,11 +96,11 @@ _tnl_CreateContext( struct gl_context *ctx )
       insert_at_tail( tnl->_ShineTabList, s );
    }
 
-   /* plug in the VBO drawing function */
-   vbo_set_draw_func(ctx, _tnl_draw_prims);
-
    _math_init_transformation();
    _math_init_translate();
+
+   /* Keep our list of tnl_vertex_array inputs */
+   _tnl_init_inputs(&tnl->draw_arrays);
 
    return GL_TRUE;
 }
@@ -157,7 +157,8 @@ _tnl_InvalidateState( struct gl_context *ctx, GLuint new_state )
 
    for (i = 0; i < ctx->Const.MaxTextureCoordUnits; i++) {
      if (ctx->Texture._EnabledCoordUnits & (1 << i) ||
-	 (fp && fp->info.inputs_read & VARYING_BIT_TEX(i))) {
+	 (fp && fp->info.inputs_read & VARYING_BIT_TEX(i)) ||
+         _mesa_ati_fragment_shader_enabled(ctx)) {
        tnl->render_inputs_bitset |= BITFIELD64_BIT(_TNL_ATTRIB_TEX(i));
      }
    }

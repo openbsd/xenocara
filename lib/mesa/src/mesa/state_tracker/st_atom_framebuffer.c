@@ -95,7 +95,7 @@ framebuffer_quantize_num_samples(struct st_context *st, unsigned num_samples)
        * drivers callback must be adjusted for this.
        */
       if (screen->is_format_supported(screen, PIPE_FORMAT_NONE,
-                                      PIPE_TEXTURE_2D, msaa_mode,
+                                      PIPE_TEXTURE_2D, msaa_mode, msaa_mode,
                                       PIPE_BIND_RENDER_TARGET))
          quantized_samples = msaa_mode;
    }
@@ -172,27 +172,20 @@ st_update_framebuffer_state( struct st_context *st )
     * Depth/Stencil renderbuffer/surface.
     */
    strb = st_renderbuffer(fb->Attachment[BUFFER_DEPTH].Renderbuffer);
+   if (!strb)
+      strb = st_renderbuffer(fb->Attachment[BUFFER_STENCIL].Renderbuffer);
+
    if (strb) {
       if (strb->is_rtt) {
          /* rendering to a GL texture, may have to update surface */
          st_update_renderbuffer_surface(st, strb);
       }
       framebuffer.zsbuf = strb->surface;
-      update_framebuffer_size(&framebuffer, strb->surface);
-   }
-   else {
-      strb = st_renderbuffer(fb->Attachment[BUFFER_STENCIL].Renderbuffer);
-      if (strb) {
-         if (strb->is_rtt) {
-            /* rendering to a GL texture, may have to update surface */
-            st_update_renderbuffer_surface(st, strb);
-         }
-         framebuffer.zsbuf = strb->surface;
+      if (strb->surface)
          update_framebuffer_size(&framebuffer, strb->surface);
-      }
-      else
-         framebuffer.zsbuf = NULL;
    }
+   else
+      framebuffer.zsbuf = NULL;
 
 #ifdef DEBUG
    /* Make sure the resource binding flags were set properly */
@@ -216,4 +209,5 @@ st_update_framebuffer_state( struct st_context *st )
    st->state.fb_height = framebuffer.height;
    st->state.fb_num_samples = util_framebuffer_get_num_samples(&framebuffer);
    st->state.fb_num_layers = util_framebuffer_get_num_layers(&framebuffer);
+   st->state.fb_num_cb = framebuffer.nr_cbufs;
 }

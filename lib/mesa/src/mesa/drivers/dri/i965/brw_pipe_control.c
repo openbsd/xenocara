@@ -89,6 +89,26 @@ gen7_cs_stall_every_four_pipe_controls(struct brw_context *brw, uint32_t flags)
    return 0;
 }
 
+/* #1130 from gen10 workarounds page in h/w specs:
+ * "Enable Depth Stall on every Post Sync Op if Render target Cache Flush is
+ *  not enabled in same PIPE CONTROL and Enable Pixel score board stall if
+ *  Render target cache flush is enabled."
+ *
+ * Applicable to CNL B0 and C0 steppings only.
+ */
+static void
+gen10_add_rcpfe_workaround_bits(uint32_t *flags)
+{
+   if (*flags & PIPE_CONTROL_RENDER_TARGET_FLUSH) {
+      *flags = *flags | PIPE_CONTROL_STALL_AT_SCOREBOARD;
+   } else if (*flags &
+             (PIPE_CONTROL_WRITE_IMMEDIATE |
+              PIPE_CONTROL_WRITE_DEPTH_COUNT |
+              PIPE_CONTROL_WRITE_TIMESTAMP)) {
+      *flags = *flags | PIPE_CONTROL_DEPTH_STALL;
+   }
+}
+
 static void
 brw_emit_pipe_control(struct brw_context *brw, uint32_t flags,
                       struct brw_bo *bo, uint32_t offset, uint64_t imm)
@@ -137,6 +157,9 @@ brw_emit_pipe_control(struct brw_context *brw, uint32_t flags,
             }
          }
       }
+
+      if (devinfo->gen == 10)
+         gen10_add_rcpfe_workaround_bits(&flags);
 
       BEGIN_BATCH(6);
       OUT_BATCH(_3DSTATE_PIPE_CONTROL | (6 - 2));
@@ -294,6 +317,61 @@ gen7_emit_vs_workaround_flush(struct brw_context *brw)
                                brw->workaround_bo, 0, 0);
 }
 
+/**
+ * From the PRM, Volume 2a:
+ *
+ *    "Indirect State Pointers Disable
+ *
+ *    At the completion of the post-sync operation associated with this pipe
+ *    control packet, the indirect state pointers in the hardware are
+ *    considered invalid; the indirect pointers are not saved in the context.
+ *    If any new indirect state commands are executed in the command stream
+ *    while the pipe control is pending, the new indirect state commands are
+ *    preserved.
+ *
+ *    [DevIVB+]: Using Invalidate State Pointer (ISP) only inhibits context
+ *    restoring of Push Constant (3DSTATE_CONSTANT_*) commands. Push Constant
+ *    commands are only considered as Indirect State Pointers. Once ISP is
+ *    issued in a context, SW must initialize by programming push constant
+ *    commands for all the shaders (at least to zero length) before attempting
+ *    any rendering operation for the same context."
+ *
+ * 3DSTATE_CONSTANT_* packets are restored during a context restore,
+ * even though they point to a BO that has been already unreferenced at
+ * the end of the previous batch buffer. This has been fine so far since
+ * we are protected by these scratch page (every address not covered by
+ * a BO should be pointing to the scratch page). But on CNL, it is
+ * causing a GPU hang during context restore at the 3DSTATE_CONSTANT_*
+ * instruction.
+ *
+ * The flag "Indirect State Pointers Disable" in PIPE_CONTROL tells the
+ * hardware to ignore previous 3DSTATE_CONSTANT_* packets during a
+ * context restore, so the mentioned hang doesn't happen. However,
+ * software must program push constant commands for all stages prior to
+ * rendering anything, so we flag them as dirty.
+ *
+ * Finally, we also make sure to stall at pixel scoreboard to make sure the
+ * constants have been loaded into the EUs prior to disable the push constants
+ * so that it doesn't hang a previous 3DPRIMITIVE.
+ */
+void
+gen10_emit_isp_disable(struct brw_context *brw)
+{
+   brw_emit_pipe_control(brw,
+                         PIPE_CONTROL_STALL_AT_SCOREBOARD |
+                         PIPE_CONTROL_CS_STALL,
+                         NULL, 0, 0);
+   brw_emit_pipe_control(brw,
+                         PIPE_CONTROL_ISP_DIS |
+                         PIPE_CONTROL_CS_STALL,
+                         NULL, 0, 0);
+
+   brw->vs.base.push_constants_dirty = true;
+   brw->tcs.base.push_constants_dirty = true;
+   brw->tes.base.push_constants_dirty = true;
+   brw->gs.base.push_constants_dirty = true;
+   brw->wm.base.push_constants_dirty = true;
+}
 
 /**
  * Emit a PIPE_CONTROL command for gen7 with the CS Stall bit set.
@@ -466,29 +544,17 @@ brw_emit_mi_flush(struct brw_context *brw)
 {
    const struct gen_device_info *devinfo = &brw->screen->devinfo;
 
-   if (brw->batch.ring == BLT_RING && devinfo->gen >= 6) {
-      const unsigned n_dwords = devinfo->gen >= 8 ? 5 : 4;
-      BEGIN_BATCH_BLT(n_dwords);
-      OUT_BATCH(MI_FLUSH_DW | (n_dwords - 2));
-      OUT_BATCH(0);
-      OUT_BATCH(0);
-      OUT_BATCH(0);
-      if (n_dwords == 5)
-         OUT_BATCH(0);
-      ADVANCE_BATCH();
-   } else {
-      int flags = PIPE_CONTROL_NO_WRITE | PIPE_CONTROL_RENDER_TARGET_FLUSH;
-      if (devinfo->gen >= 6) {
-         flags |= PIPE_CONTROL_INSTRUCTION_INVALIDATE |
-                  PIPE_CONTROL_CONST_CACHE_INVALIDATE |
-                  PIPE_CONTROL_DATA_CACHE_FLUSH |
-                  PIPE_CONTROL_DEPTH_CACHE_FLUSH |
-                  PIPE_CONTROL_VF_CACHE_INVALIDATE |
-                  PIPE_CONTROL_TEXTURE_CACHE_INVALIDATE |
-                  PIPE_CONTROL_CS_STALL;
-      }
-      brw_emit_pipe_control_flush(brw, flags);
+   int flags = PIPE_CONTROL_RENDER_TARGET_FLUSH;
+   if (devinfo->gen >= 6) {
+      flags |= PIPE_CONTROL_INSTRUCTION_INVALIDATE |
+               PIPE_CONTROL_CONST_CACHE_INVALIDATE |
+               PIPE_CONTROL_DATA_CACHE_FLUSH |
+               PIPE_CONTROL_DEPTH_CACHE_FLUSH |
+               PIPE_CONTROL_VF_CACHE_INVALIDATE |
+               PIPE_CONTROL_TEXTURE_CACHE_INVALIDATE |
+               PIPE_CONTROL_CS_STALL;
    }
+   brw_emit_pipe_control_flush(brw, flags);
 }
 
 int
@@ -502,9 +568,8 @@ brw_init_pipe_control(struct brw_context *brw,
     * the gen6 workaround because it involves actually writing to
     * the buffer, and the kernel doesn't let us write to the batch.
     */
-   brw->workaround_bo = brw_bo_alloc(brw->bufmgr,
-                                     "pipe_control workaround",
-                                     4096, 4096);
+   brw->workaround_bo = brw_bo_alloc(brw->bufmgr, "workaround", 4096,
+                                     BRW_MEMZONE_OTHER);
    if (brw->workaround_bo == NULL)
       return -ENOMEM;
 

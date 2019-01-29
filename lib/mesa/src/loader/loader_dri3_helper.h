@@ -61,9 +61,13 @@ struct loader_dri3_buffer {
    struct xshmfence *shm_fence; /* pointer to xshmfence object */
    bool         busy;           /* Set on swap, cleared on IdleNotify */
    bool         own_pixmap;     /* We allocated the pixmap ID, free on destroy */
+   bool         reallocate;     /* Buffer should be reallocated and not reused */
 
+   uint32_t     num_planes;
    uint32_t     size;
-   uint32_t     pitch;
+   int          strides[4];
+   int          offsets[4];
+   uint64_t     modifier;
    uint32_t     cpp;
    uint32_t     flags;
    uint32_t     width, height;
@@ -108,19 +112,21 @@ struct loader_dri3_vtable {
 
 struct loader_dri3_drawable {
    xcb_connection_t *conn;
+   xcb_screen_t *screen;
    __DRIdrawable *dri_drawable;
    xcb_drawable_t drawable;
+   xcb_window_t window;
    int width;
    int height;
    int depth;
    uint8_t have_back;
    uint8_t have_fake_front;
    uint8_t is_pixmap;
-   uint8_t flipping;
 
    /* Information about the GPU owning the buffer */
    __DRIscreen *dri_screen;
    bool is_different_gpu;
+   bool multiplanes_available;
 
    /* Present extension capabilities
     */
@@ -137,10 +143,6 @@ struct loader_dri3_drawable {
 
    /* Last received UST/MSC values from present notify msc event */
    uint64_t notify_ust, notify_msc;
-
-   /* Serial numbers for tracking wait_for_msc events */
-   uint32_t send_msc_serial;
-   uint32_t recv_msc_serial;
 
    struct loader_dri3_buffer *buffers[LOADER_DRI3_NUM_BUFFERS];
    int cur_back;
@@ -161,6 +163,7 @@ struct loader_dri3_drawable {
 
    unsigned int swap_method;
    unsigned int back_format;
+   xcb_present_complete_mode_t last_present_mode;
 
    /* Currently protects the following fields:
     * event_cnd, has_event_waiter,
@@ -184,6 +187,7 @@ loader_dri3_drawable_init(xcb_connection_t *conn,
                           xcb_drawable_t drawable,
                           __DRIscreen *dri_screen,
                           bool is_different_gpu,
+                          bool is_multiplanes_available,
                           const __DRIconfig *dri_config,
                           struct loader_dri3_extensions *ext,
                           const struct loader_dri3_vtable *vtable,
@@ -241,6 +245,15 @@ loader_dri3_create_image(xcb_connection_t *c,
                          const __DRIimageExtension *image,
                          void *loaderPrivate);
 
+#ifdef HAVE_DRI3_MODIFIERS
+__DRIimage *
+loader_dri3_create_image_from_buffers(xcb_connection_t *c,
+                                      xcb_dri3_buffers_from_pixmap_reply_t *bp_reply,
+                                      unsigned int format,
+                                      __DRIscreen *dri_screen,
+                                      const __DRIimageExtension *image,
+                                      void *loaderPrivate);
+#endif
 int
 loader_dri3_get_buffers(__DRIdrawable *driDrawable,
                         unsigned int format,

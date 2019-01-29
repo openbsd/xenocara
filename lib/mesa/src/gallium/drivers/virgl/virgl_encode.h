@@ -70,7 +70,6 @@ static inline void virgl_encoder_write_block(struct virgl_cmd_buf *state,
    int x;
    memcpy(state->buf + state->cdw, ptr, len);
    x = (len % 4);
-//   fprintf(stderr, "[%d] block %d x is %d\n", state->cdw, len, x);
    if (x) {
       uint8_t *mp = (uint8_t *)(state->buf + state->cdw);
       mp += len;
@@ -90,6 +89,7 @@ extern int virgl_encode_shader_state(struct virgl_context *ctx,
                                      uint32_t handle,
                                      uint32_t type,
                                      const struct pipe_stream_output_info *so_info,
+                                     uint32_t cs_req_local_mem,
                                      const struct tgsi_token *tokens);
 
 int virgl_encode_stream_output_info(struct virgl_context *ctx,
@@ -211,6 +211,9 @@ void virgl_encoder_set_polygon_stipple(struct virgl_context *ctx,
 void virgl_encoder_set_sample_mask(struct virgl_context *ctx,
                                   unsigned sample_mask);
 
+void virgl_encoder_set_min_samples(struct virgl_context *ctx,
+                                  unsigned min_samples);
+
 void virgl_encoder_set_clip_state(struct virgl_context *ctx,
                                  const struct pipe_clip_state *clip);
 
@@ -251,4 +254,26 @@ int virgl_encoder_destroy_sub_ctx(struct virgl_context *ctx, uint32_t sub_ctx_id
 
 int virgl_encode_bind_shader(struct virgl_context *ctx,
                              uint32_t handle, uint32_t type);
+
+int virgl_encode_set_tess_state(struct virgl_context *ctx,
+                                const float outer[4],
+                                const float inner[2]);
+
+int virgl_encode_set_shader_buffers(struct virgl_context *ctx,
+                                    enum pipe_shader_type shader,
+                                    unsigned start_slot, unsigned count,
+                                    const struct pipe_shader_buffer *buffers);
+int virgl_encode_set_shader_images(struct virgl_context *ctx,
+                                   enum pipe_shader_type shader,
+                                   unsigned start_slot, unsigned count,
+                                   const struct pipe_image_view *images);
+int virgl_encode_set_hw_atomic_buffers(struct virgl_context *ctx,
+                                       unsigned start_slot, unsigned count,
+                                       const struct pipe_shader_buffer *buffers);
+int virgl_encode_memory_barrier(struct virgl_context *ctx,
+                                unsigned flags);
+int virgl_encode_launch_grid(struct virgl_context *ctx,
+                             const struct pipe_grid_info *grid_info);
+int virgl_encode_texture_barrier(struct virgl_context *ctx,
+                                 unsigned flags);
 #endif

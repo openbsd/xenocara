@@ -650,26 +650,11 @@ lp_build_create_jit_compiler_for_module(LLVMExecutionEngineRef *OutJIT,
     * which are fixed in LLVM 4.0.
     *
     * With LLVM 4.0 or higher:
-    * Make sure VSX instructions are ENABLED, unless
-    * a) the entire -mattr option is overridden via GALLIVM_MATTRS, or
-    * b) VSX instructions are explicitly enabled/disabled via GALLIVM_VSX=1 or 0.
+    * Make sure VSX instructions are ENABLED (if supported), unless
+    * VSX instructions are explicitly enabled/disabled via GALLIVM_VSX=1 or 0.
     */
    if (util_cpu_caps.has_altivec) {
-      char *env_mattrs = getenv("GALLIVM_MATTRS");
-      if (env_mattrs) {
-         MAttrs.push_back(env_mattrs);
-      }
-      else {
-         boolean enable_vsx = true;
-         char *env_vsx = getenv("GALLIVM_VSX");
-         if (env_vsx && env_vsx[0] == '0') {
-            enable_vsx = false;
-         }
-         if (enable_vsx)
-            MAttrs.push_back("+vsx");
-         else
-            MAttrs.push_back("-vsx");
-      }
+      MAttrs.push_back(util_cpu_caps.has_vsx ? "+vsx" : "-vsx");
    }
 #endif
 #endif
@@ -812,33 +797,4 @@ lp_is_function(LLVMValueRef v)
 #else
 	return llvm::isa<llvm::Function>(llvm::unwrap(v));
 #endif
-}
-
-extern "C" LLVMBuilderRef
-lp_create_builder(LLVMContextRef ctx, enum lp_float_mode float_mode)
-{
-   LLVMBuilderRef builder = LLVMCreateBuilderInContext(ctx);
-
-#if HAVE_LLVM >= 0x0308
-   llvm::FastMathFlags flags;
-
-   switch (float_mode) {
-   case LP_FLOAT_MODE_DEFAULT:
-      break;
-   case LP_FLOAT_MODE_NO_SIGNED_ZEROS_FP_MATH:
-      flags.setNoSignedZeros();
-      llvm::unwrap(builder)->setFastMathFlags(flags);
-      break;
-   case LP_FLOAT_MODE_UNSAFE_FP_MATH:
-#if HAVE_LLVM >= 0x0600
-      flags.setFast();
-#else
-      flags.setUnsafeAlgebra();
-#endif
-      llvm::unwrap(builder)->setFastMathFlags(flags);
-      break;
-   }
-#endif
-
-   return builder;
 }

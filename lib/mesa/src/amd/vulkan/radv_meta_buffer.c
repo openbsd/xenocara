@@ -25,7 +25,7 @@ build_buffer_fill_shader(struct radv_device *dev)
 	nir_ssa_def *global_id = nir_iadd(&b, nir_imul(&b, wg_id, block_size), invoc_id);
 
 	nir_ssa_def *offset = nir_imul(&b, global_id, nir_imm_int(&b, 16));
-	offset = nir_swizzle(&b, offset, (unsigned[]) {0, 0, 0, 0}, 1, false);
+	offset = nir_channel(&b, offset, 0);
 
 	nir_intrinsic_instr *dst_buf = nir_intrinsic_instr_create(b.shader,
 	                                                          nir_intrinsic_vulkan_resource_index);
@@ -77,7 +77,7 @@ build_buffer_copy_shader(struct radv_device *dev)
 	nir_ssa_def *global_id = nir_iadd(&b, nir_imul(&b, wg_id, block_size), invoc_id);
 
 	nir_ssa_def *offset = nir_imul(&b, global_id, nir_imm_int(&b, 16));
-	offset = nir_swizzle(&b, offset, (unsigned[]) {0, 0, 0, 0}, 1, false);
+	offset = nir_channel(&b, offset, 0);
 
 	nir_intrinsic_instr *dst_buf = nir_intrinsic_instr_create(b.shader,
 	                                                          nir_intrinsic_vulkan_resource_index);
@@ -398,21 +398,28 @@ static void copy_buffer_shader(struct radv_cmd_buffer *cmd_buffer,
 }
 
 
-void radv_fill_buffer(struct radv_cmd_buffer *cmd_buffer,
+uint32_t radv_fill_buffer(struct radv_cmd_buffer *cmd_buffer,
 		      struct radeon_winsys_bo *bo,
 		      uint64_t offset, uint64_t size, uint32_t value)
 {
+	uint32_t flush_bits = 0;
+
 	assert(!(offset & 3));
 	assert(!(size & 3));
 
-	if (size >= 4096)
+	if (size >= RADV_BUFFER_OPS_CS_THRESHOLD) {
 		fill_buffer_shader(cmd_buffer, bo, offset, size, value);
-	else if (size) {
+		flush_bits = RADV_CMD_FLAG_CS_PARTIAL_FLUSH |
+			     RADV_CMD_FLAG_INV_VMEM_L1 |
+			     RADV_CMD_FLAG_WRITEBACK_GLOBAL_L2;
+	} else if (size) {
 		uint64_t va = radv_buffer_get_va(bo);
 		va += offset;
-		cmd_buffer->device->ws->cs_add_buffer(cmd_buffer->cs, bo, 8);
+		radv_cs_add_buffer(cmd_buffer->device->ws, cmd_buffer->cs, bo);
 		si_cp_dma_clear_buffer(cmd_buffer, va, size, value);
 	}
+
+	return flush_bits;
 }
 
 static
@@ -422,7 +429,7 @@ void radv_copy_buffer(struct radv_cmd_buffer *cmd_buffer,
 		      uint64_t src_offset, uint64_t dst_offset,
 		      uint64_t size)
 {
-	if (size >= 4096 && !(size & 3) && !(src_offset & 3) && !(dst_offset & 3))
+	if (size >= RADV_BUFFER_OPS_CS_THRESHOLD && !(size & 3) && !(src_offset & 3) && !(dst_offset & 3))
 		copy_buffer_shader(cmd_buffer, src_bo, dst_bo,
 				   src_offset, dst_offset, size);
 	else if (size) {
@@ -431,8 +438,8 @@ void radv_copy_buffer(struct radv_cmd_buffer *cmd_buffer,
 		src_va += src_offset;
 		dst_va += dst_offset;
 
-		cmd_buffer->device->ws->cs_add_buffer(cmd_buffer->cs, src_bo, 8);
-		cmd_buffer->device->ws->cs_add_buffer(cmd_buffer->cs, dst_bo, 8);
+		radv_cs_add_buffer(cmd_buffer->device->ws, cmd_buffer->cs, src_bo);
+		radv_cs_add_buffer(cmd_buffer->device->ws, cmd_buffer->cs, dst_bo);
 
 		si_cp_dma_buffer_copy(cmd_buffer, src_va, dst_va, size);
 	}
@@ -465,6 +472,13 @@ void radv_CmdCopyBuffer(
 	RADV_FROM_HANDLE(radv_cmd_buffer, cmd_buffer, commandBuffer);
 	RADV_FROM_HANDLE(radv_buffer, src_buffer, srcBuffer);
 	RADV_FROM_HANDLE(radv_buffer, dest_buffer, destBuffer);
+	bool old_predicating;
+
+	/* VK_EXT_conditional_rendering says that copy commands should not be
+	 * affected by conditional rendering.
+	 */
+	old_predicating = cmd_buffer->state.predicating;
+	cmd_buffer->state.predicating = false;
 
 	for (unsigned r = 0; r < regionCount; r++) {
 		uint64_t src_offset = src_buffer->offset + pRegions[r].srcOffset;
@@ -474,6 +488,9 @@ void radv_CmdCopyBuffer(
 		radv_copy_buffer(cmd_buffer, src_buffer->bo, dest_buffer->bo,
 				 src_offset, dest_offset, copy_size);
 	}
+
+	/* Restore conditional rendering. */
+	cmd_buffer->state.predicating = old_predicating;
 }
 
 void radv_CmdUpdateBuffer(
@@ -496,10 +513,10 @@ void radv_CmdUpdateBuffer(
 	if (!dataSize)
 		return;
 
-	if (dataSize < 4096) {
+	if (dataSize < RADV_BUFFER_UPDATE_THRESHOLD) {
 		si_emit_cache_flush(cmd_buffer);
 
-		cmd_buffer->device->ws->cs_add_buffer(cmd_buffer->cs, dst_buffer->bo, 8);
+		radv_cs_add_buffer(cmd_buffer->device->ws, cmd_buffer->cs, dst_buffer->bo);
 
 		radeon_check_space(cmd_buffer->device->ws, cmd_buffer->cs, words + 4);
 
@@ -512,7 +529,8 @@ void radv_CmdUpdateBuffer(
 		radeon_emit(cmd_buffer->cs, va >> 32);
 		radeon_emit_array(cmd_buffer->cs, pData, words);
 
-		radv_cmd_buffer_trace_emit(cmd_buffer);
+		if (unlikely(cmd_buffer->device->trace_bo))
+			radv_cmd_buffer_trace_emit(cmd_buffer);
 	} else {
 		uint32_t buf_offset;
 		radv_cmd_buffer_upload_data(cmd_buffer, dataSize, 32, pData, &buf_offset);

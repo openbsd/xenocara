@@ -5,6 +5,7 @@
 #include "pipe/p_defines.h"
 #include "pipe/p_state.h"
 
+#include "util/list.h"
 #include "util/u_memory.h"
 #include "util/u_math.h"
 #include "util/u_inlines.h"
@@ -61,6 +62,8 @@
 #define NVC0_NEW_3D_DRIVERCONST  (1 << 27)
 #define NVC0_NEW_3D_WINDOW_RECTS (1 << 28)
 
+#define NVC0_NEW_3D_SAMPLE_LOCATIONS (1 << 29)
+
 #define NVC0_NEW_CP_PROGRAM   (1 << 0)
 #define NVC0_NEW_CP_SURFACES  (1 << 1)
 #define NVC0_NEW_CP_TEXTURES  (1 << 2)
@@ -81,6 +84,7 @@
 #define NVC0_BIND_3D_SUF         245
 #define NVC0_BIND_3D_BUF         246
 #define NVC0_BIND_3D_SCREEN      247
+#define NVC0_BIND_3D_BINDLESS    248
 #define NVC0_BIND_3D_TLS         249
 #define NVC0_BIND_3D_TEXT        250
 #define NVC0_BIND_3D_COUNT       251
@@ -95,7 +99,8 @@
 #define NVC0_BIND_CP_QUERY       52
 #define NVC0_BIND_CP_BUF         53
 #define NVC0_BIND_CP_TEXT        54
-#define NVC0_BIND_CP_COUNT       55
+#define NVC0_BIND_CP_BINDLESS    55
+#define NVC0_BIND_CP_COUNT       56
 
 /* bufctx for other operations */
 #define NVC0_BIND_2D            0
@@ -105,9 +110,9 @@
 /* 6 user uniform buffers, at 64K each */
 #define NVC0_CB_USR_INFO(s)         (s << 16)
 #define NVC0_CB_USR_SIZE            (6 << 16)
-/* 6 driver constbuts, at 2K each */
-#define NVC0_CB_AUX_INFO(s)         NVC0_CB_USR_SIZE + (s << 11)
-#define NVC0_CB_AUX_SIZE            (1 << 11)
+/* 6 driver constbuts, at 64K each */
+#define NVC0_CB_AUX_INFO(s)         NVC0_CB_USR_SIZE + (s << 16)
+#define NVC0_CB_AUX_SIZE            (1 << 16)
 /* XXX: Figure out what this UNK data is. */
 #define NVC0_CB_AUX_UNK_INFO        0x000
 #define NVC0_CB_AUX_UNK_SIZE        (8 * 4)
@@ -131,18 +136,26 @@
 #define NVC0_CB_AUX_UBO_SIZE        ((NVC0_MAX_PIPE_CONSTBUFS - 1) * 4 * 4)
 /* 8 sets of 32-bits integer pairs sample offsets */
 #define NVC0_CB_AUX_SAMPLE_INFO     0x1a0 /* FP */
-#define NVC0_CB_AUX_SAMPLE_SIZE     (8 * 4 * 2)
-/* draw parameters (index bais, base instance, drawid) */
+/* 256 bytes, though only 64 bytes used before GM200 */
+#define NVC0_CB_AUX_SAMPLE_SIZE     (8 * 2 * 4 * 4)
+/* draw parameters (index bias, base instance, drawid)
+ * be sure to update the indirect draw macros in com9097.mme when changing this
+ */
 #define NVC0_CB_AUX_DRAW_INFO       0x1a0 /* VP */
 /* 32 user buffers, at 4 32-bits integers each */
-#define NVC0_CB_AUX_BUF_INFO(i)     0x220 + (i) * 4 * 4
+#define NVC0_CB_AUX_BUF_INFO(i)     0x2a0 + (i) * 4 * 4
 #define NVC0_CB_AUX_BUF_SIZE        (NVC0_MAX_BUFFERS * 4 * 4)
 /* 8 surfaces, at 16 32-bits integers each */
-#define NVC0_CB_AUX_SU_INFO(i)      0x420 + (i) * 16 * 4
+#define NVC0_CB_AUX_SU_INFO(i)      0x4a0 + (i) * 16 * 4
 #define NVC0_CB_AUX_SU_SIZE         (NVC0_MAX_IMAGES * 16 * 4)
-/* 1 64-bits address and 1 32-bits sequence */
-#define NVC0_CB_AUX_MP_INFO         0x620
+/* 1 64-bits address and 1 32-bits sequence
+ * be sure to update the shaders in nvc0_query_hw_sm.c when changing this
+ */
+#define NVC0_CB_AUX_MP_INFO         0x6a0
 #define NVC0_CB_AUX_MP_SIZE         3 * 4
+/* 512 64-byte blocks for bindless image handles */
+#define NVC0_CB_AUX_BINDLESS_INFO(i) 0x6b0 + (i) * 16 * 4
+#define NVC0_CB_AUX_BINDLESS_SIZE   (NVE4_IMG_MAX_HANDLES * 16 * 4)
 /* 4 32-bits floats for the vertex runout, put at the end */
 #define NVC0_CB_AUX_RUNOUT_INFO     NVC0_CB_USR_SIZE + (NVC0_CB_AUX_SIZE * 6)
 
@@ -150,6 +163,13 @@ struct nvc0_blitctx;
 
 bool nvc0_blitctx_create(struct nvc0_context *);
 void nvc0_blitctx_destroy(struct nvc0_context *);
+
+struct nvc0_resident {
+   struct list_head list;
+   uint64_t handle;
+   struct nv04_resource *buf;
+   uint32_t flags;
+};
 
 struct nvc0_context {
    struct nouveau_context base;
@@ -212,7 +232,12 @@ struct nvc0_context {
 
    uint32_t tex_handles[6][PIPE_MAX_SAMPLERS]; /* for nve4 */
 
+   struct list_head tex_head;
+   struct list_head img_head;
+
    struct pipe_framebuffer_state framebuffer;
+   bool sample_locations_enabled;
+   uint8_t sample_locations[2 * 4 * 8];
    struct pipe_blend_color blend_colour;
    struct pipe_stencil_ref stencil_ref;
    struct pipe_poly_stipple stipple;
@@ -342,10 +367,11 @@ void nvc0_validate_textures(struct nvc0_context *);
 void nvc0_validate_samplers(struct nvc0_context *);
 void nve4_set_tex_handles(struct nvc0_context *);
 void nvc0_validate_surfaces(struct nvc0_context *);
-void nve4_set_surface_info(struct nouveau_pushbuf *, struct pipe_image_view *,
+void nve4_set_surface_info(struct nouveau_pushbuf *,
+                           const struct pipe_image_view *,
                            struct nvc0_context *);
 void nvc0_mark_image_range_valid(const struct pipe_image_view *);
-void nvc0_update_tic(struct nvc0_context *, struct nv50_tic_entry *,
+bool nvc0_update_tic(struct nvc0_context *, struct nv50_tic_entry *,
                      struct nv04_resource *);
 
 struct pipe_sampler_view *
@@ -361,6 +387,8 @@ nvc0_create_sampler_view(struct pipe_context *,
 struct pipe_sampler_view *
 gm107_create_texture_view_from_image(struct pipe_context *,
                                      const struct pipe_image_view *);
+
+void nvc0_init_bindless_functions(struct pipe_context *);
 
 /* nvc0_transfer.c */
 void

@@ -32,6 +32,7 @@ struct pipe_screen;
 struct tgsi_token;
 struct u_upload_mgr;
 struct virgl_cmd_buf;
+struct virgl_vertex_elements_state;
 
 struct virgl_sampler_view {
    struct pipe_sampler_view base;
@@ -53,6 +54,7 @@ struct virgl_context {
    struct virgl_cmd_buf *cbuf;
 
    struct virgl_textures_info samplers[PIPE_SHADER_TYPES];
+   struct virgl_vertex_elements_state *vertex_elements;
 
    struct pipe_framebuffer_state framebuffer;
 
@@ -68,9 +70,14 @@ struct virgl_context {
    unsigned num_so_targets;
 
    struct pipe_resource *ubos[PIPE_SHADER_TYPES][PIPE_MAX_CONSTANT_BUFFERS];
+
+   struct pipe_resource *ssbos[PIPE_SHADER_TYPES][PIPE_MAX_SHADER_BUFFERS];
+   struct pipe_resource *images[PIPE_SHADER_TYPES][PIPE_MAX_SHADER_BUFFERS];
    int num_transfers;
    int num_draws;
    struct list_head to_flush_bufs;
+
+   struct pipe_resource *atomic_buffers[PIPE_MAX_HW_ATOMIC_BUFFERS];
 
    struct primconvert_context *primconvert;
    uint32_t hw_sub_ctx_id;
@@ -109,6 +116,6 @@ void virgl_transfer_inline_write(struct pipe_context *ctx,
                                 unsigned stride,
                                 unsigned layer_stride);
 
-struct tgsi_token *virgl_tgsi_transform(const struct tgsi_token *tokens_in);
+struct tgsi_token *virgl_tgsi_transform(struct virgl_context *vctx, const struct tgsi_token *tokens_in);
 
 #endif

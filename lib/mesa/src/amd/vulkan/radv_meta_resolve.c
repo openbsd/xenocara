@@ -251,24 +251,12 @@ radv_device_finish_meta_resolve_state(struct radv_device *device)
 
 }
 
-static VkFormat pipeline_formats[] = {
-	VK_FORMAT_R8G8B8A8_UNORM,
-	VK_FORMAT_R8G8B8A8_UINT,
-	VK_FORMAT_R8G8B8A8_SINT,
-	VK_FORMAT_A2R10G10B10_UINT_PACK32,
-	VK_FORMAT_A2R10G10B10_SINT_PACK32,
-	VK_FORMAT_R16G16B16A16_UNORM,
-	VK_FORMAT_R16G16B16A16_SNORM,
-	VK_FORMAT_R16G16B16A16_UINT,
-	VK_FORMAT_R16G16B16A16_SINT,
-	VK_FORMAT_R32_SFLOAT,
-	VK_FORMAT_R32G32_SFLOAT,
-	VK_FORMAT_R32G32B32A32_SFLOAT
-};
-
 VkResult
-radv_device_init_meta_resolve_state(struct radv_device *device)
+radv_device_init_meta_resolve_state(struct radv_device *device, bool on_demand)
 {
+	if (on_demand)
+		return VK_SUCCESS;
+
 	VkResult res = VK_SUCCESS;
 	struct radv_meta_state *state = &device->meta_state;
 	struct radv_shader_module vs_module = { .nir = radv_meta_build_nir_vs_generate_vertices() };
@@ -278,8 +266,8 @@ radv_device_init_meta_resolve_state(struct radv_device *device)
 		goto fail;
 	}
 
-	for (uint32_t i = 0; i < ARRAY_SIZE(pipeline_formats); ++i) {
-		VkFormat format = pipeline_formats[i];
+	for (uint32_t i = 0; i < NUM_META_FS_KEYS; ++i) {
+		VkFormat format = radv_fs_key_format_exemplars[i];
 		unsigned fs_key = radv_format_meta_fs_key(format);
 		res = create_pass(device, format, &state->resolve.pass[fs_key]);
 		if (res != VK_SUCCESS)
@@ -344,20 +332,59 @@ enum radv_resolve_method {
 
 static void radv_pick_resolve_method_images(struct radv_image *src_image,
 					    struct radv_image *dest_image,
+					    VkImageLayout dest_image_layout,
+					    struct radv_cmd_buffer *cmd_buffer,
 					    enum radv_resolve_method *method)
 
 {
+	uint32_t queue_mask = radv_image_queue_family_mask(dest_image,
+	                                                   cmd_buffer->queue_family_index,
+	                                                   cmd_buffer->queue_family_index);
+
 	if (src_image->vk_format == VK_FORMAT_R16G16_UNORM ||
 	    src_image->vk_format == VK_FORMAT_R16G16_SNORM)
 		*method = RESOLVE_COMPUTE;
 	else if (vk_format_is_int(src_image->vk_format))
 		*method = RESOLVE_COMPUTE;
-
-	if (dest_image->surface.num_dcc_levels > 0) {
+	else if (src_image->info.array_size > 1 ||
+		 dest_image->info.array_size > 1)
+		*method = RESOLVE_COMPUTE;
+	
+	if (radv_layout_dcc_compressed(dest_image, dest_image_layout, queue_mask)) {
 		*method = RESOLVE_FRAGMENT;
 	} else if (dest_image->surface.micro_tile_mode != src_image->surface.micro_tile_mode) {
 		*method = RESOLVE_COMPUTE;
 	}
+}
+
+static VkResult
+build_resolve_pipeline(struct radv_device *device,
+                       unsigned fs_key)
+{
+	VkResult result = VK_SUCCESS;
+
+	if (device->meta_state.resolve.pipeline[fs_key])
+		return result;
+
+	mtx_lock(&device->meta_state.mtx);
+	if (device->meta_state.resolve.pipeline[fs_key]) {
+		mtx_unlock(&device->meta_state.mtx);
+		return result;
+	}
+
+	struct radv_shader_module vs_module = { .nir = radv_meta_build_nir_vs_generate_vertices() };
+
+	result = create_pass(device, radv_fs_key_format_exemplars[fs_key], &device->meta_state.resolve.pass[fs_key]);
+	if (result != VK_SUCCESS)
+		goto fail;
+
+	VkShaderModule vs_module_h = radv_shader_module_to_handle(&vs_module);
+	result = create_pipeline(device, vs_module_h, &device->meta_state.resolve.pipeline[fs_key], device->meta_state.resolve.pass[fs_key]);
+
+fail:
+	ralloc_free(vs_module.nir);
+	mtx_unlock(&device->meta_state.mtx);
+	return result;
 }
 
 void radv_CmdResolveImage(
@@ -395,6 +422,7 @@ void radv_CmdResolveImage(
 		resolve_method = RESOLVE_COMPUTE;
 
 	radv_pick_resolve_method_images(src_image, dest_image,
+					dest_image_layout, cmd_buffer,
 					&resolve_method);
 
 	if (resolve_method == RESOLVE_FRAGMENT) {
@@ -439,7 +467,7 @@ void radv_CmdResolveImage(
 	if (src_image->info.array_size > 1)
 		radv_finishme("vkCmdResolveImage: multisample array images");
 
-	if (dest_image->surface.dcc_size) {
+	if (radv_image_has_dcc(dest_image)) {
 		radv_initialize_dcc(cmd_buffer, dest_image, 0xffffffff);
 	}
 	unsigned fs_key = radv_format_meta_fs_key(dest_image->vk_format);
@@ -488,6 +516,12 @@ void radv_CmdResolveImage(
 
 		for (uint32_t layer = 0; layer < region->srcSubresource.layerCount;
 		     ++layer) {
+
+			VkResult ret = build_resolve_pipeline(device, fs_key);
+			if (ret != VK_SUCCESS) {
+				cmd_buffer->record_result = ret;
+				break;
+			}
 
 			struct radv_image_view src_iview;
 			radv_image_view_init(&src_iview, cmd_buffer->device,
@@ -604,8 +638,8 @@ radv_cmd_buffer_resolve_subpass(struct radv_cmd_buffer *cmd_buffer)
 		return;
 
 	for (uint32_t i = 0; i < subpass->color_count; ++i) {
-		VkAttachmentReference src_att = subpass->color_attachments[i];
-		VkAttachmentReference dest_att = subpass->resolve_attachments[i];
+		struct radv_subpass_attachment src_att = subpass->color_attachments[i];
+		struct radv_subpass_attachment dest_att = subpass->resolve_attachments[i];
 
 		if (src_att.attachment == VK_ATTACHMENT_UNUSED ||
 		    dest_att.attachment == VK_ATTACHMENT_UNUSED)
@@ -614,7 +648,7 @@ radv_cmd_buffer_resolve_subpass(struct radv_cmd_buffer *cmd_buffer)
 		struct radv_image *dst_img = cmd_buffer->state.framebuffer->attachments[dest_att.attachment].attachment->image;
 		struct radv_image *src_img = cmd_buffer->state.framebuffer->attachments[src_att.attachment].attachment->image;
 
-		radv_pick_resolve_method_images(src_img, dst_img, &resolve_method);
+		radv_pick_resolve_method_images(src_img, dst_img, dest_att.layout, cmd_buffer, &resolve_method);
 		if (resolve_method == RESOLVE_FRAGMENT) {
 			break;
 		}
@@ -632,8 +666,8 @@ radv_cmd_buffer_resolve_subpass(struct radv_cmd_buffer *cmd_buffer)
 		       RADV_META_SAVE_GRAPHICS_PIPELINE);
 
 	for (uint32_t i = 0; i < subpass->color_count; ++i) {
-		VkAttachmentReference src_att = subpass->color_attachments[i];
-		VkAttachmentReference dest_att = subpass->resolve_attachments[i];
+		struct radv_subpass_attachment src_att = subpass->color_attachments[i];
+		struct radv_subpass_attachment dest_att = subpass->resolve_attachments[i];
 
 		if (src_att.attachment == VK_ATTACHMENT_UNUSED ||
 		    dest_att.attachment == VK_ATTACHMENT_UNUSED)
@@ -641,18 +675,24 @@ radv_cmd_buffer_resolve_subpass(struct radv_cmd_buffer *cmd_buffer)
 
 		struct radv_image *dst_img = cmd_buffer->state.framebuffer->attachments[dest_att.attachment].attachment->image;
 
-		if (dst_img->surface.dcc_size) {
+		if (radv_image_has_dcc(dst_img)) {
 			radv_initialize_dcc(cmd_buffer, dst_img, 0xffffffff);
 			cmd_buffer->state.attachments[dest_att.attachment].current_layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 		}
 
 		struct radv_subpass resolve_subpass = {
 			.color_count = 2,
-			.color_attachments = (VkAttachmentReference[]) { src_att, dest_att },
+			.color_attachments = (struct radv_subpass_attachment[]) { src_att, dest_att },
 			.depth_stencil_attachment = { .attachment = VK_ATTACHMENT_UNUSED },
 		};
 
 		radv_cmd_buffer_set_subpass(cmd_buffer, &resolve_subpass, false);
+
+		VkResult ret = build_resolve_pipeline(cmd_buffer->device, radv_format_meta_fs_key(dst_img->vk_format));
+		if (ret != VK_SUCCESS) {
+			cmd_buffer->record_result = ret;
+			continue;
+		}
 
 		emit_resolve(cmd_buffer,
 			     dst_img->vk_format,
@@ -662,4 +702,72 @@ radv_cmd_buffer_resolve_subpass(struct radv_cmd_buffer *cmd_buffer)
 
 	cmd_buffer->state.subpass = subpass;
 	radv_meta_restore(&saved_state, cmd_buffer);
+}
+
+/**
+ * Decompress CMask/FMask before resolving a multisampled source image inside a
+ * subpass.
+ */
+void
+radv_decompress_resolve_subpass_src(struct radv_cmd_buffer *cmd_buffer)
+{
+	const struct radv_subpass *subpass = cmd_buffer->state.subpass;
+	struct radv_framebuffer *fb = cmd_buffer->state.framebuffer;
+
+	for (uint32_t i = 0; i < subpass->color_count; ++i) {
+		struct radv_subpass_attachment src_att = subpass->color_attachments[i];
+		struct radv_subpass_attachment dest_att = subpass->resolve_attachments[i];
+
+		if (src_att.attachment == VK_ATTACHMENT_UNUSED ||
+		    dest_att.attachment == VK_ATTACHMENT_UNUSED)
+			continue;
+
+		struct radv_image *src_image =
+			fb->attachments[src_att.attachment].attachment->image;
+
+		VkImageResolve region = {};
+		region.srcSubresource.baseArrayLayer = 0;
+		region.srcSubresource.mipLevel = 0;
+		region.srcSubresource.layerCount = src_image->info.array_size;
+
+		radv_decompress_resolve_src(cmd_buffer, src_image,
+					    src_att.layout, 1, &region);
+	}
+}
+
+/**
+ * Decompress CMask/FMask before resolving a multisampled source image.
+ */
+void
+radv_decompress_resolve_src(struct radv_cmd_buffer *cmd_buffer,
+			    struct radv_image *src_image,
+			    VkImageLayout src_image_layout,
+			    uint32_t region_count,
+			    const VkImageResolve *regions)
+{
+	for (uint32_t r = 0; r < region_count; ++r) {
+		const VkImageResolve *region = &regions[r];
+		const uint32_t src_base_layer =
+			radv_meta_get_iview_layer(src_image, &region->srcSubresource,
+						  &region->srcOffset);
+		VkImageSubresourceRange range;
+		range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		range.baseMipLevel = region->srcSubresource.mipLevel;
+		range.levelCount = 1;
+		range.baseArrayLayer = src_base_layer;
+		range.layerCount = region->srcSubresource.layerCount;
+
+		uint32_t queue_mask =
+			radv_image_queue_family_mask(src_image,
+						     cmd_buffer->queue_family_index,
+						     cmd_buffer->queue_family_index);
+
+		if (radv_layout_dcc_compressed(src_image, src_image_layout,
+					       queue_mask)) {
+			radv_decompress_dcc(cmd_buffer, src_image, &range);
+		} else {
+			radv_fast_clear_flush_image_inplace(cmd_buffer,
+							    src_image, &range);
+		}
+	}
 }

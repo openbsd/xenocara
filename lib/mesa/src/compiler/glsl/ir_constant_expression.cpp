@@ -34,12 +34,12 @@
  */
 
 #include <math.h>
-#include "main/core.h" /* for MAX2, MIN2, CLAMP */
 #include "util/rounding.h" /* for _mesa_roundeven */
 #include "util/half_float.h"
 #include "ir.h"
 #include "compiler/glsl_types.h"
 #include "util/hash_table.h"
+#include "util/u_math.h"
 
 static float
 dot_f(ir_constant *op0, ir_constant *op1)
@@ -826,7 +826,7 @@ ir_dereference_array::constant_expression_value(void *mem_ctx,
          const unsigned component = idx->value.u[0];
 
          return new(mem_ctx) ir_constant(array, component);
-      } else {
+      } else if (array->type->is_array()) {
          const unsigned index = idx->value.u[0];
          return array->get_array_element(index)->clone(mem_ctx, NULL);
       }

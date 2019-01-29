@@ -79,7 +79,7 @@ st_texture_create(struct st_context *st,
        (int) target, util_format_name(format), last_level);
 
    assert(format);
-   assert(screen->is_format_supported(screen, format, target, 0,
+   assert(screen->is_format_supported(screen, format, target, 0, 0,
                                       PIPE_BIND_SAMPLER_VIEW));
 
    memset(&pt, 0, sizeof(pt));
@@ -95,6 +95,7 @@ st_texture_create(struct st_context *st,
    /* only set this for OpenGL textures, not renderbuffers */
    pt.flags = PIPE_RESOURCE_FLAG_TEXTURING_MORE_LIKELY;
    pt.nr_samples = nr_samples;
+   pt.nr_storage_samples = nr_samples;
 
    newtex = screen->resource_create(screen, &pt);
 
@@ -414,7 +415,7 @@ st_create_color_map_texture(struct gl_context *ctx)
 
    /* find an RGBA texture format */
    format = st_choose_format(st, GL_RGBA, GL_NONE, GL_NONE,
-                             PIPE_TEXTURE_2D, 0, PIPE_BIND_SAMPLER_VIEW,
+                             PIPE_TEXTURE_2D, 0, 0, PIPE_BIND_SAMPLER_VIEW,
                              FALSE);
 
    /* create texture for color map/table */
@@ -539,7 +540,7 @@ st_create_image_handle_from_unit(struct st_context *st,
    struct pipe_context *pipe = st->pipe;
    struct pipe_image_view img;
 
-   st_convert_image_from_unit(st, &img, imgUnit);
+   st_convert_image_from_unit(st, &img, imgUnit, GL_READ_WRITE);
 
    return pipe->create_image_handle(pipe, &img);
 }

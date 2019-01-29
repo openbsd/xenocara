@@ -27,10 +27,8 @@ if env['platform'] == 'windows':
     env.Append(CPPDEFINES = [
         '_GDI32_', # prevent gl* being declared __declspec(dllimport) in MS headers
         'BUILD_GL32', # declare gl* as __declspec(dllexport) in Mesa headers
+        '_GLAPI_NO_EXPORTS', # prevent _glapi_* from being declared __declspec(dllimport)
     ])
-    if not env['gles']:
-        # prevent _glapi_* from being declared __declspec(dllimport)
-        env.Append(CPPDEFINES = ['_GLAPI_NO_EXPORTS'])
 
 # parse Makefile.sources
 source_lists = env.ParseSourceList('Makefile.sources')
@@ -42,6 +40,7 @@ env.CFile('program/program_parse.tab.c', 'program/program_parse.y')
 mesa_sources = (
     source_lists['MESA_FILES'] +
     source_lists['PROGRAM_FILES'] +
+    source_lists['PROGRAM_NIR_FILES'] +
     source_lists['STATETRACKER_FILES']
 )
 

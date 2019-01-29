@@ -27,6 +27,7 @@
  * \author Felix Kuehling
  */
 
+#include <limits.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
@@ -36,82 +37,11 @@
 #include <math.h>
 #include <unistd.h>
 #include <errno.h>
+#include <dirent.h>
+#include <fnmatch.h>
 #include "xmlconfig.h"
+#include "u_process.h"
 
-#undef GET_PROGRAM_NAME
-
-#if (defined(__GNU_LIBRARY__) || defined(__GLIBC__)) && !defined(__UCLIBC__)
-#    if !defined(__GLIBC__) || (__GLIBC__ < 2)
-/* These aren't declared in any libc5 header */
-extern char *program_invocation_name, *program_invocation_short_name;
-#    endif
-#    define GET_PROGRAM_NAME() program_invocation_short_name
-#elif defined(__CYGWIN__)
-#    define GET_PROGRAM_NAME() program_invocation_short_name
-#elif defined(__FreeBSD__) && (__FreeBSD__ >= 2)
-#    include <osreldate.h>
-#    if (__FreeBSD_version >= 440000)
-#        include <stdlib.h>
-#        define GET_PROGRAM_NAME() getprogname()
-#    endif
-#elif defined(__NetBSD__) && defined(__NetBSD_Version__) && (__NetBSD_Version__ >= 106000100)
-#    include <stdlib.h>
-#    define GET_PROGRAM_NAME() getprogname()
-#elif defined(__DragonFly__)
-#    include <stdlib.h>
-#    define GET_PROGRAM_NAME() getprogname()
-#elif defined(__APPLE__)
-#    include <stdlib.h>
-#    define GET_PROGRAM_NAME() getprogname()
-#elif defined(__sun)
-/* Solaris has getexecname() which returns the full path - return just
-   the basename to match BSD getprogname() */
-#    include <stdlib.h>
-#    include <libgen.h>
-
-static const char *
-__getProgramName()
-{
-    static const char *progname;
-
-    if (progname == NULL) {
-        const char *e = getexecname();
-        if (e != NULL) {
-            /* Have to make a copy since getexecname can return a readonly
-               string, but basename expects to be able to modify its arg. */
-            char *n = strdup(e);
-            if (n != NULL) {
-                progname = basename(n);
-            }
-        }
-    }
-    return progname;
-}
-
-#    define GET_PROGRAM_NAME() __getProgramName()
-#endif
-
-#if !defined(GET_PROGRAM_NAME)
-#    if defined(__OpenBSD__) || defined(NetBSD) || defined(__UCLIBC__) || defined(ANDROID)
-/* This is a hack. It's said to work on OpenBSD, NetBSD and GNU.
- * Rogelio M.Serrano Jr. reported it's also working with UCLIBC. It's
- * used as a last resort, if there is no documented facility available. */
-static const char *
-__getProgramName()
-{
-    extern const char *__progname;
-    char * arg = strrchr(__progname, '/');
-    if (arg)
-        return arg+1;
-    else
-        return __progname;
-}
-#        define GET_PROGRAM_NAME() __getProgramName()
-#    else
-#        define GET_PROGRAM_NAME() ""
-#        warning "Per application configuration won't work with your OS version."
-#    endif
-#endif
 
 /** \brief Find an option in an option cache with the name as key */
 static uint32_t
@@ -761,6 +691,7 @@ struct OptConfData {
     driOptionCache *cache;
     int screenNum;
     const char *driverName, *execName;
+    const char *kernelDriverName;
     uint32_t ignoringDevice;
     uint32_t ignoringApp;
     uint32_t inDriConf;
@@ -785,13 +716,16 @@ static void
 parseDeviceAttr(struct OptConfData *data, const XML_Char **attr)
 {
     uint32_t i;
-    const XML_Char *driver = NULL, *screen = NULL;
+    const XML_Char *driver = NULL, *screen = NULL, *kernel = NULL;
     for (i = 0; attr[i]; i += 2) {
         if (!strcmp (attr[i], "driver")) driver = attr[i+1];
         else if (!strcmp (attr[i], "screen")) screen = attr[i+1];
+        else if (!strcmp (attr[i], "kernel_driver")) kernel = attr[i+1];
         else XML_WARNING("unknown device attribute: %s.", attr[i]);
     }
     if (driver && strcmp (driver, data->driverName))
+        data->ignoringDevice = data->inDevice;
+    else if (kernel && (!data->kernelDriverName || strcmp (kernel, data->kernelDriverName)))
         data->ignoringDevice = data->inDevice;
     else if (screen) {
         driOptionValue screenNum;
@@ -939,9 +873,8 @@ initOptionCache(driOptionCache *cache, const driOptionCache *info)
     }
 }
 
-/** \brief Parse the named configuration file */
 static void
-parseOneConfigFile(XML_Parser p)
+_parseOneConfigFile(XML_Parser p)
 {
 #define BUF_SIZE 0x1000
     struct OptConfData *data = (struct OptConfData *)XML_GetUserData (p);
@@ -980,13 +913,83 @@ parseOneConfigFile(XML_Parser p)
 #undef BUF_SIZE
 }
 
+/** \brief Parse the named configuration file */
+static void
+parseOneConfigFile(struct OptConfData *data, const char *filename)
+{
+    XML_Parser p;
+
+    p = XML_ParserCreate (NULL); /* use encoding specified by file */
+    XML_SetElementHandler (p, optConfStartElem, optConfEndElem);
+    XML_SetUserData (p, data);
+    data->parser = p;
+    data->name = filename;
+    data->ignoringDevice = 0;
+    data->ignoringApp = 0;
+    data->inDriConf = 0;
+    data->inDevice = 0;
+    data->inApp = 0;
+    data->inOption = 0;
+
+    _parseOneConfigFile (p);
+    XML_ParserFree (p);
+}
+
+static int
+scandir_filter(const struct dirent *ent)
+{
+#ifndef DT_REG /* systems without d_type in dirent results */
+    struct stat st;
+
+    if ((lstat(ent->d_name, &st) != 0) ||
+        (!S_ISREG(st.st_mode) && !S_ISLNK(st.st_mode)))
+       return 0;
+#else
+    if (ent->d_type != DT_REG && ent->d_type != DT_LNK)
+       return 0;
+#endif
+
+    if (fnmatch("*.conf", ent->d_name, 0))
+       return 0;
+
+    return 1;
+}
+
+/** \brief Parse configuration files in a directory */
+static void
+parseConfigDir(struct OptConfData *data, const char *dirname)
+{
+    int i, count;
+    struct dirent **entries = NULL;
+
+    count = scandir(dirname, &entries, scandir_filter, alphasort);
+    if (count < 0)
+        return;
+
+    for (i = 0; i < count; i++) {
+        char filename[PATH_MAX];
+
+        snprintf(filename, PATH_MAX, "%s/%s", dirname, entries[i]->d_name);
+        free(entries[i]);
+
+        parseOneConfigFile(data, filename);
+    }
+
+    free(entries);
+}
+
 #ifndef SYSCONFDIR
 #define SYSCONFDIR "/etc"
 #endif
 
+#ifndef DATADIR
+#define DATADIR "/usr/share"
+#endif
+
 void
 driParseConfigFiles(driOptionCache *cache, const driOptionCache *info,
-                    int screenNum, const char *driverName)
+                    int screenNum, const char *driverName,
+                    const char *kernelDriverName)
 {
 #if defined(__OpenBSD__)
     /*
@@ -996,9 +999,7 @@ driParseConfigFiles(driOptionCache *cache, const driOptionCache *info,
      */
     initOptionCache (cache, info);
 #else
-    char *filenames[2] = { SYSCONFDIR "/drirc", NULL};
     char *home;
-    uint32_t i;
     struct OptConfData userData;
 
     initOptionCache (cache, info);
@@ -1006,41 +1007,18 @@ driParseConfigFiles(driOptionCache *cache, const driOptionCache *info,
     userData.cache = cache;
     userData.screenNum = screenNum;
     userData.driverName = driverName;
-    userData.execName = GET_PROGRAM_NAME();
+    userData.kernelDriverName = kernelDriverName;
+    userData.execName = util_get_process_name();
+
+    parseConfigDir(&userData, DATADIR "/drirc.d");
+    parseOneConfigFile(&userData, SYSCONFDIR "/drirc");
 
     if ((home = getenv ("HOME"))) {
-        uint32_t len = strlen (home);
-        filenames[1] = malloc(len + 7+1);
-        if (filenames[1] == NULL)
-            __driUtilMessage ("Can't allocate memory for %s/.drirc.", home);
-        else {
-            memcpy (filenames[1], home, len);
-            memcpy (filenames[1] + len, "/.drirc", 7+1);
-        }
+        char filename[PATH_MAX];
+
+        snprintf(filename, PATH_MAX, "%s/.drirc", home);
+        parseOneConfigFile(&userData, filename);
     }
-
-    for (i = 0; i < 2; ++i) {
-        XML_Parser p;
-        if (filenames[i] == NULL)
-            continue;
-
-        p = XML_ParserCreate (NULL); /* use encoding specified by file */
-        XML_SetElementHandler (p, optConfStartElem, optConfEndElem);
-        XML_SetUserData (p, &userData);
-        userData.parser = p;
-        userData.name = filenames[i];
-        userData.ignoringDevice = 0;
-        userData.ignoringApp = 0;
-        userData.inDriConf = 0;
-        userData.inDevice = 0;
-        userData.inApp = 0;
-        userData.inOption = 0;
-
-        parseOneConfigFile (p);
-        XML_ParserFree (p);
-    }
-
-    free(filenames[1]);
 #endif
 }
 

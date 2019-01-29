@@ -42,6 +42,7 @@
 #include "program.h"
 #include "ir_reader.h"
 #include "standalone_scaffolding.h"
+#include "main/mtypes.h"
 
 using namespace std;
 
@@ -72,8 +73,6 @@ do_optimization(struct exec_list *ir, const char *optimization,
       return do_constant_variable(ir);
    } else if (strcmp(optimization, "do_constant_variable_unlinked") == 0) {
       return do_constant_variable_unlinked(ir);
-   } else if (strcmp(optimization, "do_copy_propagation") == 0) {
-      return do_copy_propagation(ir);
    } else if (strcmp(optimization, "do_copy_propagation_elements") == 0) {
       return do_copy_propagation_elements(ir);
    } else if (strcmp(optimization, "do_constant_propagation") == 0) {
@@ -102,12 +101,10 @@ do_optimization(struct exec_list *ir, const char *optimization,
       return lower_if_to_cond_assign(MESA_SHADER_VERTEX, ir, int_0);
    } else if (strcmp(optimization, "do_mat_op_to_vec") == 0) {
       return do_mat_op_to_vec(ir);
-   } else if (strcmp(optimization, "do_noop_swizzle") == 0) {
-      return do_noop_swizzle(ir);
+   } else if (strcmp(optimization, "optimize_swizzles") == 0) {
+      return optimize_swizzles(ir);
    } else if (strcmp(optimization, "do_structure_splitting") == 0) {
       return do_structure_splitting(ir);
-   } else if (strcmp(optimization, "do_swizzle_swizzle") == 0) {
-      return do_swizzle_swizzle(ir);
    } else if (strcmp(optimization, "do_tree_grafting") == 0) {
       return do_tree_grafting(ir);
    } else if (strcmp(optimization, "do_vec_index_to_cond_assign") == 0) {

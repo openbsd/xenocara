@@ -110,6 +110,11 @@ generate_data_element(void *mem_ctx, const glsl_type *type,
       case GLSL_TYPE_INTERFACE:
       case GLSL_TYPE_SUBROUTINE:
       case GLSL_TYPE_FUNCTION:
+      case GLSL_TYPE_FLOAT16:
+      case GLSL_TYPE_UINT16:
+      case GLSL_TYPE_INT16:
+      case GLSL_TYPE_UINT8:
+      case GLSL_TYPE_INT8:
 	 ASSERT_TRUE(false);
 	 break;
       }
@@ -150,6 +155,11 @@ generate_data_element(void *mem_ctx, const glsl_type *type,
       case GLSL_TYPE_INTERFACE:
       case GLSL_TYPE_SUBROUTINE:
       case GLSL_TYPE_FUNCTION:
+      case GLSL_TYPE_FLOAT16:
+      case GLSL_TYPE_UINT16:
+      case GLSL_TYPE_INT16:
+      case GLSL_TYPE_UINT8:
+      case GLSL_TYPE_INT8:
 	 ASSERT_TRUE(false);
 	 break;
       }
@@ -278,6 +288,11 @@ verify_data(gl_constant_value *storage, unsigned storage_array_size,
 	 case GLSL_TYPE_INTERFACE:
 	 case GLSL_TYPE_SUBROUTINE:
          case GLSL_TYPE_FUNCTION:
+         case GLSL_TYPE_FLOAT16:
+         case GLSL_TYPE_UINT16:
+         case GLSL_TYPE_INT16:
+         case GLSL_TYPE_UINT8:
+         case GLSL_TYPE_INT8:
 	    ASSERT_TRUE(false);
 	    break;
 	 }

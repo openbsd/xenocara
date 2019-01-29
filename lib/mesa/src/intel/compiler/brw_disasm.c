@@ -406,7 +406,7 @@ static const char *const dp_dc0_msg_type_gen7[16] = {
    [GEN7_DATAPORT_DC_UNTYPED_SURFACE_WRITE] = "DC untyped surface write",
 };
 
-static const char *const dp_dc1_msg_type_hsw[16] = {
+static const char *const dp_dc1_msg_type_hsw[32] = {
    [HSW_DATAPORT_DC_PORT1_UNTYPED_SURFACE_READ] = "untyped surface read",
    [HSW_DATAPORT_DC_PORT1_UNTYPED_ATOMIC_OP] = "DC untyped atomic op",
    [HSW_DATAPORT_DC_PORT1_UNTYPED_ATOMIC_OP_SIMD4X2] =
@@ -421,6 +421,8 @@ static const char *const dp_dc1_msg_type_hsw[16] = {
    [HSW_DATAPORT_DC_PORT1_ATOMIC_COUNTER_OP_SIMD4X2] =
       "DC 4x2 atomic counter op",
    [HSW_DATAPORT_DC_PORT1_TYPED_SURFACE_WRITE] = "DC typed surface write",
+   [GEN9_DATAPORT_DC_PORT1_UNTYPED_ATOMIC_FLOAT_OP] =
+      "DC untyped atomic float op",
 };
 
 static const char *const aop[16] = {
@@ -439,6 +441,12 @@ static const char *const aop[16] = {
    [BRW_AOP_UMIN]   = "umin",
    [BRW_AOP_CMPWR]  = "cmpwr",
    [BRW_AOP_PREDEC] = "predec",
+};
+
+static const char *const aop_float[4] = {
+   [BRW_AOP_FMAX]   = "fmax",
+   [BRW_AOP_FMIN]   = "fmin",
+   [BRW_AOP_FCMPWR] = "fcmpwr",
 };
 
 static const char * const pixel_interpolator_msg_types[4] = {
@@ -846,7 +854,6 @@ src_ia1(FILE *file,
         const struct gen_device_info *devinfo,
         unsigned opcode,
         enum brw_reg_type type,
-        unsigned _reg_file,
         int _addr_imm,
         unsigned _addr_subreg_nr,
         unsigned _negate,
@@ -1032,6 +1039,12 @@ src0_3src(FILE *file, const struct gen_device_info *devinfo, const brw_inst *ins
       if (brw_inst_3src_a1_src0_reg_file(devinfo, inst) ==
           BRW_ALIGN1_3SRC_GENERAL_REGISTER_FILE) {
          _file = BRW_GENERAL_REGISTER_FILE;
+         reg_nr = brw_inst_3src_src0_reg_nr(devinfo, inst);
+         subreg_nr = brw_inst_3src_a1_src0_subreg_nr(devinfo, inst);
+         type = brw_inst_3src_a1_src0_type(devinfo, inst);
+      } else if (brw_inst_3src_a1_src0_type(devinfo, inst) ==
+                 BRW_REGISTER_TYPE_NF) {
+         _file = BRW_ARCHITECTURE_REGISTER_FILE;
          reg_nr = brw_inst_3src_src0_reg_nr(devinfo, inst);
          subreg_nr = brw_inst_3src_a1_src0_subreg_nr(devinfo, inst);
          type = brw_inst_3src_a1_src0_type(devinfo, inst);
@@ -1249,10 +1262,10 @@ imm(FILE *file, const struct gen_device_info *devinfo, enum brw_reg_type type,
 {
    switch (type) {
    case BRW_REGISTER_TYPE_UQ:
-      format(file, "0x%016lxUQ", brw_inst_imm_uq(devinfo, inst));
+      format(file, "0x%016"PRIx64"UQ", brw_inst_imm_uq(devinfo, inst));
       break;
    case BRW_REGISTER_TYPE_Q:
-      format(file, "%ldQ", brw_inst_imm_uq(devinfo, inst));
+      format(file, "%"PRId64"Q", brw_inst_imm_uq(devinfo, inst));
       break;
    case BRW_REGISTER_TYPE_UD:
       format(file, "0x%08xUD", brw_inst_imm_ud(devinfo, inst));
@@ -1270,7 +1283,9 @@ imm(FILE *file, const struct gen_device_info *devinfo, enum brw_reg_type type,
       format(file, "0x%08xUV", brw_inst_imm_ud(devinfo, inst));
       break;
    case BRW_REGISTER_TYPE_VF:
-      format(file, "[%-gF, %-gF, %-gF, %-gF]VF",
+      format(file, "0x%"PRIx64"VF", brw_inst_bits(inst, 127, 96));
+      pad(file, 48);
+      format(file, "/* [%-gF, %-gF, %-gF, %-gF]VF */",
              brw_vf_to_float(brw_inst_imm_ud(devinfo, inst)),
              brw_vf_to_float(brw_inst_imm_ud(devinfo, inst) >> 8),
              brw_vf_to_float(brw_inst_imm_ud(devinfo, inst) >> 16),
@@ -1280,14 +1295,19 @@ imm(FILE *file, const struct gen_device_info *devinfo, enum brw_reg_type type,
       format(file, "0x%08xV", brw_inst_imm_ud(devinfo, inst));
       break;
    case BRW_REGISTER_TYPE_F:
-      format(file, "%-gF", brw_inst_imm_f(devinfo, inst));
+      format(file, "0x%"PRIx64"F", brw_inst_bits(inst, 127, 96));
+      pad(file, 48);
+      format(file, " /* %-gF */", brw_inst_imm_f(devinfo, inst));
       break;
    case BRW_REGISTER_TYPE_DF:
-      format(file, "%-gDF", brw_inst_imm_df(devinfo, inst));
+      format(file, "0x%016"PRIx64"DF", brw_inst_bits(inst, 127, 64));
+      pad(file, 48);
+      format(file, "/* %-gDF */", brw_inst_imm_df(devinfo, inst));
       break;
    case BRW_REGISTER_TYPE_HF:
       string(file, "Half Float IMM");
       break;
+   case BRW_REGISTER_TYPE_NF:
    case BRW_REGISTER_TYPE_UB:
    case BRW_REGISTER_TYPE_B:
       format(file, "*** invalid immediate type %d ", type);
@@ -1319,7 +1339,6 @@ src0(FILE *file, const struct gen_device_info *devinfo, const brw_inst *inst)
                         devinfo,
                         brw_inst_opcode(devinfo, inst),
                         brw_inst_src0_type(devinfo, inst),
-                        brw_inst_src0_reg_file(devinfo, inst),
                         brw_inst_src0_ia1_addr_imm(devinfo, inst),
                         brw_inst_src0_ia_subreg_nr(devinfo, inst),
                         brw_inst_src0_negate(devinfo, inst),
@@ -1375,7 +1394,6 @@ src1(FILE *file, const struct gen_device_info *devinfo, const brw_inst *inst)
                         devinfo,
                         brw_inst_opcode(devinfo, inst),
                         brw_inst_src1_type(devinfo, inst),
-                        brw_inst_src1_reg_file(devinfo, inst),
                         brw_inst_src1_ia1_addr_imm(devinfo, inst),
                         brw_inst_src1_ia_subreg_nr(devinfo, inst),
                         brw_inst_src1_negate(devinfo, inst),
@@ -1501,6 +1519,7 @@ brw_disassemble_inst(FILE *file, const struct gen_device_info *devinfo,
        */
       if (brw_inst_cond_modifier(devinfo, inst) &&
           (devinfo->gen < 6 || (opcode != BRW_OPCODE_SEL &&
+                                opcode != BRW_OPCODE_CSEL &&
                                 opcode != BRW_OPCODE_IF &&
                                 opcode != BRW_OPCODE_WHILE))) {
          format(file, ".f%"PRIu64,
@@ -1587,7 +1606,13 @@ brw_disassemble_inst(FILE *file, const struct gen_device_info *devinfo,
          /* show the indirect descriptor source */
          pad(file, 48);
          err |= src1(file, devinfo, inst);
+         pad(file, 64);
+      } else {
+         pad(file, 48);
       }
+
+      /* Print message descriptor as immediate source */
+      fprintf(file, "0x%08"PRIx64, inst->data[1] >> 32);
 
       newline(file);
       pad(file, 16);
@@ -1596,7 +1621,7 @@ brw_disassemble_inst(FILE *file, const struct gen_device_info *devinfo,
       fprintf(file, "            ");
       err |= control(file, "SFID", devinfo->gen >= 6 ? gen6_sfid : gen4_sfid,
                      sfid, &space);
-
+      string(file, " MsgDesc:");
 
       if (brw_inst_src1_reg_file(devinfo, inst) != BRW_IMMEDIATE_VALUE) {
          format(file, " indirect");
@@ -1792,6 +1817,11 @@ brw_disassemble_inst(FILE *file, const struct gen_device_info *devinfo,
                          simd_modes[msg_ctrl >> 4], msg_ctrl & 0xf);
                   break;
                }
+               case GEN9_DATAPORT_DC_PORT1_UNTYPED_ATOMIC_FLOAT_OP:
+                  format(file, "SIMD%d,", (msg_ctrl & (1 << 4)) ? 8 : 16);
+                  control(file, "atomic float op", aop_float, msg_ctrl & 0xf,
+                          &space);
+                  break;
                default:
                   format(file, "0x%x", msg_ctrl);
                }

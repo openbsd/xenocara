@@ -59,13 +59,24 @@ DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 @HAVE_PLATFORM_X11_TRUE@	-DVK_USE_PLATFORM_XLIB_KHR
 
 @HAVE_PLATFORM_X11_TRUE@am__append_2 = $(VULKAN_WSI_X11_FILES)
-@HAVE_PLATFORM_WAYLAND_TRUE@am__append_3 = \
+@HAVE_PLATFORM_DRM_TRUE@am__append_3 = \
+@HAVE_PLATFORM_DRM_TRUE@	-DVK_USE_PLATFORM_DISPLAY_KHR
+
+@HAVE_PLATFORM_DRM_TRUE@am__append_4 = $(VULKAN_WSI_DISPLAY_FILES)
+@HAVE_XLIB_LEASE_TRUE@am__append_5 = \
+@HAVE_XLIB_LEASE_TRUE@	$(XCB_RANDR_CFLAGS) \
+@HAVE_XLIB_LEASE_TRUE@	$(XLIB_RANDR_CFLAGS) \
+@HAVE_XLIB_LEASE_TRUE@	-DVK_USE_PLATFORM_XLIB_XRANDR_EXT
+
+@HAVE_PLATFORM_WAYLAND_TRUE@am__append_6 = \
 @HAVE_PLATFORM_WAYLAND_TRUE@	-I$(top_builddir)/src/vulkan/wsi \
 @HAVE_PLATFORM_WAYLAND_TRUE@	$(WAYLAND_CLIENT_CFLAGS) \
 @HAVE_PLATFORM_WAYLAND_TRUE@	-DVK_USE_PLATFORM_WAYLAND_KHR
 
-@HAVE_PLATFORM_WAYLAND_TRUE@am__append_4 = \
-@HAVE_PLATFORM_WAYLAND_TRUE@	$(VULKAN_WSI_WAYLAND_FILES) \
+@HAVE_PLATFORM_WAYLAND_TRUE@am__append_7 = \
+@HAVE_PLATFORM_WAYLAND_TRUE@	$(VULKAN_WSI_WAYLAND_FILES)
+
+@HAVE_PLATFORM_WAYLAND_TRUE@am__append_8 = \
 @HAVE_PLATFORM_WAYLAND_TRUE@	$(VULKAN_WSI_WAYLAND_GENERATED_FILES)
 
 subdir = src/vulkan
@@ -89,7 +100,7 @@ CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 libvulkan_util_la_LIBADD =
 am__dirstamp = $(am__leading_dot)dirstamp
-am__objects_1 = util/vk_util.lo
+am__objects_1 = util/vk_debug_report.lo util/vk_util.lo
 am__objects_2 = util/vk_enum_to_str.lo
 am__objects_3 = $(am__objects_1) $(am__objects_2)
 am_libvulkan_util_la_OBJECTS = $(am__objects_3)
@@ -99,21 +110,28 @@ am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
 libvulkan_wsi_la_LIBADD =
-am__libvulkan_wsi_la_SOURCES_DIST = wsi/wsi_common.h \
-	wsi/wsi_common_queue.h wsi/wsi_common_x11.c \
-	wsi/wsi_common_x11.h wsi/wsi_common_wayland.c \
-	wsi/wsi_common_wayland.h wsi/wayland-drm-protocol.c \
-	wsi/wayland-drm-client-protocol.h
-am__objects_4 =
+am__libvulkan_wsi_la_SOURCES_DIST = wsi/wsi_common.c wsi/wsi_common.h \
+	wsi/wsi_common_private.h wsi/wsi_common_queue.h \
+	wsi/wsi_common_x11.c wsi/wsi_common_x11.h \
+	wsi/wsi_common_display.c wsi/wsi_common_display.h \
+	wsi/wsi_common_wayland.c wsi/wsi_common_wayland.h
+am__objects_4 = wsi/wsi_common.lo
 am__objects_5 = wsi/wsi_common_x11.lo
 @HAVE_PLATFORM_X11_TRUE@am__objects_6 = $(am__objects_5)
-am__objects_7 = wsi/wsi_common_wayland.lo
-am__objects_8 = wsi/wayland-drm-protocol.lo
-@HAVE_PLATFORM_WAYLAND_TRUE@am__objects_9 = $(am__objects_7) \
-@HAVE_PLATFORM_WAYLAND_TRUE@	$(am__objects_8)
-am__objects_10 = $(am__objects_4) $(am__objects_6) $(am__objects_9)
-am_libvulkan_wsi_la_OBJECTS = $(am__objects_10)
-libvulkan_wsi_la_OBJECTS = $(am_libvulkan_wsi_la_OBJECTS)
+am__objects_7 = wsi/wsi_common_display.lo
+@HAVE_PLATFORM_DRM_TRUE@am__objects_8 = $(am__objects_7)
+am__objects_9 = wsi/wsi_common_wayland.lo
+@HAVE_PLATFORM_WAYLAND_TRUE@am__objects_10 = $(am__objects_9)
+am__objects_11 = $(am__objects_4) $(am__objects_6) $(am__objects_8) \
+	$(am__objects_10)
+am_libvulkan_wsi_la_OBJECTS = $(am__objects_11)
+am__objects_12 = wsi/wayland-drm-protocol.lo \
+	wsi/linux-dmabuf-unstable-v1-protocol.lo
+@HAVE_PLATFORM_WAYLAND_TRUE@am__objects_13 = $(am__objects_12)
+am__objects_14 = $(am__objects_13)
+nodist_libvulkan_wsi_la_OBJECTS = $(am__objects_14)
+libvulkan_wsi_la_OBJECTS = $(am_libvulkan_wsi_la_OBJECTS) \
+	$(nodist_libvulkan_wsi_la_OBJECTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -148,7 +166,8 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(libvulkan_util_la_SOURCES) $(libvulkan_wsi_la_SOURCES)
+SOURCES = $(libvulkan_util_la_SOURCES) $(libvulkan_wsi_la_SOURCES) \
+	$(nodist_libvulkan_wsi_la_SOURCES)
 DIST_SOURCES = $(libvulkan_util_la_SOURCES) \
 	$(am__libvulkan_wsi_la_SOURCES_DIST)
 am__can_run_installinfo = \
@@ -171,6 +190,8 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BACKTRACE_CFLAGS = @BACKTRACE_CFLAGS@
+BACKTRACE_LIBS = @BACKTRACE_LIBS@
 BSYMBOLIC = @BSYMBOLIC@
 CC = @CC@
 CCAS = @CCAS@
@@ -184,6 +205,7 @@ CLOVER_STD_OVERRIDE = @CLOVER_STD_OVERRIDE@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
+CXX11_CXXFLAGS = @CXX11_CXXFLAGS@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
@@ -217,8 +239,6 @@ EXEEXT = @EXEEXT@
 EXPAT_CFLAGS = @EXPAT_CFLAGS@
 EXPAT_LIBS = @EXPAT_LIBS@
 FGREP = @FGREP@
-FREEDRENO_CFLAGS = @FREEDRENO_CFLAGS@
-FREEDRENO_LIBS = @FREEDRENO_LIBS@
 GALLIUM_PIPE_LOADER_DEFINES = @GALLIUM_PIPE_LOADER_DEFINES@
 GBM_PC_LIB_PRIV = @GBM_PC_LIB_PRIV@
 GBM_PC_REQ_PRIV = @GBM_PC_REQ_PRIV@
@@ -237,8 +257,8 @@ GL_LIB_DEPS = @GL_LIB_DEPS@
 GL_PC_CFLAGS = @GL_PC_CFLAGS@
 GL_PC_LIB_PRIV = @GL_PC_LIB_PRIV@
 GL_PC_REQ_PRIV = @GL_PC_REQ_PRIV@
+GL_PKGCONF_LIB = @GL_PKGCONF_LIB@
 GREP = @GREP@
-HAVE_XF86VIDMODE = @HAVE_XF86VIDMODE@
 I915_CFLAGS = @I915_CFLAGS@
 I915_LIBS = @I915_LIBS@
 INDENT = @INDENT@
@@ -250,6 +270,7 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
+LD_BUILD_ID = @LD_BUILD_ID@
 LD_NO_UNDEFINED = @LD_NO_UNDEFINED@
 LEX = @LEX@
 LEXLIB = @LEXLIB@
@@ -287,7 +308,7 @@ MSVC2013_COMPAT_CFLAGS = @MSVC2013_COMPAT_CFLAGS@
 MSVC2013_COMPAT_CXXFLAGS = @MSVC2013_COMPAT_CXXFLAGS@
 NINE_MAJOR = @NINE_MAJOR@
 NINE_MINOR = @NINE_MINOR@
-NINE_TINY = @NINE_TINY@
+NINE_PATCH = @NINE_PATCH@
 NINE_VERSION = @NINE_VERSION@
 NM = @NM@
 NMEDIT = @NMEDIT@
@@ -300,6 +321,9 @@ OBJEXT = @OBJEXT@
 OMX_BELLAGIO_CFLAGS = @OMX_BELLAGIO_CFLAGS@
 OMX_BELLAGIO_LIBS = @OMX_BELLAGIO_LIBS@
 OMX_BELLAGIO_LIB_INSTALL_DIR = @OMX_BELLAGIO_LIB_INSTALL_DIR@
+OMX_TIZONIA_CFLAGS = @OMX_TIZONIA_CFLAGS@
+OMX_TIZONIA_LIBS = @OMX_TIZONIA_LIBS@
+OMX_TIZONIA_LIB_INSTALL_DIR = @OMX_TIZONIA_LIB_INSTALL_DIR@
 OPENCL_LIBNAME = @OPENCL_LIBNAME@
 OPENCL_VERSION = @OPENCL_VERSION@
 OSMESA_LIB = @OSMESA_LIB@
@@ -327,11 +351,16 @@ PTHREAD_CC = @PTHREAD_CC@
 PTHREAD_CFLAGS = @PTHREAD_CFLAGS@
 PTHREAD_LIBS = @PTHREAD_LIBS@
 PWR8_CFLAGS = @PWR8_CFLAGS@
-PYTHON2 = @PYTHON2@
+PYTHON = @PYTHON@
+PYTHON_EXEC_PREFIX = @PYTHON_EXEC_PREFIX@
+PYTHON_PLATFORM = @PYTHON_PLATFORM@
+PYTHON_PREFIX = @PYTHON_PREFIX@
+PYTHON_VERSION = @PYTHON_VERSION@
 RADEON_CFLAGS = @RADEON_CFLAGS@
 RADEON_LIBS = @RADEON_LIBS@
 RANLIB = @RANLIB@
 RM = @RM@
+SCANNER_ARG = @SCANNER_ARG@
 SED = @SED@
 SELINUX_CFLAGS = @SELINUX_CFLAGS@
 SELINUX_LIBS = @SELINUX_LIBS@
@@ -343,9 +372,10 @@ SSE41_CFLAGS = @SSE41_CFLAGS@
 STRIP = @STRIP@
 SWR_AVX2_CXXFLAGS = @SWR_AVX2_CXXFLAGS@
 SWR_AVX_CXXFLAGS = @SWR_AVX_CXXFLAGS@
-SWR_CXX11_CXXFLAGS = @SWR_CXX11_CXXFLAGS@
 SWR_KNL_CXXFLAGS = @SWR_KNL_CXXFLAGS@
 SWR_SKX_CXXFLAGS = @SWR_SKX_CXXFLAGS@
+V3D_SIMULATOR_CFLAGS = @V3D_SIMULATOR_CFLAGS@
+V3D_SIMULATOR_LIBS = @V3D_SIMULATOR_LIBS@
 VALGRIND_CFLAGS = @VALGRIND_CFLAGS@
 VALGRIND_LIBS = @VALGRIND_LIBS@
 VA_CFLAGS = @VA_CFLAGS@
@@ -353,8 +383,8 @@ VA_LIBS = @VA_LIBS@
 VA_LIB_INSTALL_DIR = @VA_LIB_INSTALL_DIR@
 VA_MAJOR = @VA_MAJOR@
 VA_MINOR = @VA_MINOR@
-VC5_SIMULATOR_CFLAGS = @VC5_SIMULATOR_CFLAGS@
-VC5_SIMULATOR_LIBS = @VC5_SIMULATOR_LIBS@
+VC4_CFLAGS = @VC4_CFLAGS@
+VC4_LIBS = @VC4_LIBS@
 VDPAU_CFLAGS = @VDPAU_CFLAGS@
 VDPAU_LIBS = @VDPAU_LIBS@
 VDPAU_LIB_INSTALL_DIR = @VDPAU_LIB_INSTALL_DIR@
@@ -368,7 +398,11 @@ VL_LIBS = @VL_LIBS@
 VULKAN_ICD_INSTALL_DIR = @VULKAN_ICD_INSTALL_DIR@
 WAYLAND_CLIENT_CFLAGS = @WAYLAND_CLIENT_CFLAGS@
 WAYLAND_CLIENT_LIBS = @WAYLAND_CLIENT_LIBS@
+WAYLAND_EGL_CFLAGS = @WAYLAND_EGL_CFLAGS@
+WAYLAND_EGL_LIBS = @WAYLAND_EGL_LIBS@
+WAYLAND_PROTOCOLS_CFLAGS = @WAYLAND_PROTOCOLS_CFLAGS@
 WAYLAND_PROTOCOLS_DATADIR = @WAYLAND_PROTOCOLS_DATADIR@
+WAYLAND_PROTOCOLS_LIBS = @WAYLAND_PROTOCOLS_LIBS@
 WAYLAND_SCANNER = @WAYLAND_SCANNER@
 WAYLAND_SCANNER_CFLAGS = @WAYLAND_SCANNER_CFLAGS@
 WAYLAND_SCANNER_LIBS = @WAYLAND_SCANNER_LIBS@
@@ -378,16 +412,20 @@ WNO_OVERRIDE_INIT = @WNO_OVERRIDE_INIT@
 X11_INCLUDES = @X11_INCLUDES@
 XA_MAJOR = @XA_MAJOR@
 XA_MINOR = @XA_MINOR@
-XA_TINY = @XA_TINY@
+XA_PATCH = @XA_PATCH@
 XA_VERSION = @XA_VERSION@
 XCB_DRI2_CFLAGS = @XCB_DRI2_CFLAGS@
 XCB_DRI2_LIBS = @XCB_DRI2_LIBS@
 XCB_DRI3_CFLAGS = @XCB_DRI3_CFLAGS@
 XCB_DRI3_LIBS = @XCB_DRI3_LIBS@
-XF86VIDMODE_CFLAGS = @XF86VIDMODE_CFLAGS@
-XF86VIDMODE_LIBS = @XF86VIDMODE_LIBS@
+XCB_DRI3_MODIFIERS_CFLAGS = @XCB_DRI3_MODIFIERS_CFLAGS@
+XCB_DRI3_MODIFIERS_LIBS = @XCB_DRI3_MODIFIERS_LIBS@
+XCB_RANDR_CFLAGS = @XCB_RANDR_CFLAGS@
+XCB_RANDR_LIBS = @XCB_RANDR_LIBS@
 XLIBGL_CFLAGS = @XLIBGL_CFLAGS@
 XLIBGL_LIBS = @XLIBGL_LIBS@
+XLIB_RANDR_CFLAGS = @XLIB_RANDR_CFLAGS@
+XLIB_RANDR_LIBS = @XLIB_RANDR_LIBS@
 XVMC_CFLAGS = @XVMC_CFLAGS@
 XVMC_LIBS = @XVMC_LIBS@
 XVMC_LIB_INSTALL_DIR = @XVMC_LIB_INSTALL_DIR@
@@ -442,9 +480,13 @@ mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
 pdfdir = @pdfdir@
+pkgpyexecdir = @pkgpyexecdir@
+pkgpythondir = @pkgpythondir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+pyexecdir = @pyexecdir@
+pythondir = @pythondir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -458,7 +500,9 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 VULKAN_WSI_FILES := \
+	wsi/wsi_common.c \
 	wsi/wsi_common.h \
+	wsi/wsi_common_private.h \
 	wsi/wsi_common_queue.h
 
 VULKAN_WSI_WAYLAND_FILES := \
@@ -467,14 +511,22 @@ VULKAN_WSI_WAYLAND_FILES := \
 
 VULKAN_WSI_WAYLAND_GENERATED_FILES := \
 	wsi/wayland-drm-protocol.c \
-	wsi/wayland-drm-client-protocol.h
+	wsi/wayland-drm-client-protocol.h \
+	wsi/linux-dmabuf-unstable-v1-protocol.c \
+	wsi/linux-dmabuf-unstable-v1-client-protocol.h
 
 VULKAN_WSI_X11_FILES := \
 	wsi/wsi_common_x11.c \
 	wsi/wsi_common_x11.h
 
+VULKAN_WSI_DISPLAY_FILES := \
+	wsi/wsi_common_display.c \
+	wsi/wsi_common_display.h
+
 VULKAN_UTIL_FILES := \
 	util/vk_alloc.h \
+	util/vk_debug_report.c \
+	util/vk_debug_report.h \
 	util/vk_util.c \
 	util/vk_util.h
 
@@ -485,36 +537,41 @@ VULKAN_UTIL_GENERATED_FILES := \
 noinst_LTLIBRARIES = libvulkan_wsi.la libvulkan_util.la
 vulkan_includedir = $(includedir)/vulkan
 vulkan_api_xml = $(top_srcdir)/src/vulkan/registry/vk.xml
-vk_android_native_buffer_xml = $(top_srcdir)/src/vulkan/registry/vk_android_native_buffer.xml
 MKDIR_GEN = $(AM_V_at)$(MKDIR_P) $(@D)
-PYTHON_GEN = $(AM_V_GEN)$(PYTHON2) $(PYTHON_FLAGS)
+PYTHON_GEN = $(AM_V_GEN)$(PYTHON) $(PYTHON_FLAGS)
 EXTRA_DIST = \
-	$(top_srcdir)/include/vulkan/vk_android_native_buffer.h \
-	util/gen_enum_to_str.py
+	util/gen_enum_to_str.py \
+	util/meson.build \
+	wsi/meson.build \
+	meson.build
 
 VULKAN_UTIL_SOURCES = \
 	$(VULKAN_UTIL_FILES) \
 	$(VULKAN_UTIL_GENERATED_FILES)
 
-BUILT_SOURCES = $(VULKAN_UTIL_GENERATED_FILES) \
-	$(VULKAN_WSI_WAYLAND_GENERATED_FILES)
 libvulkan_util_la_SOURCES = $(VULKAN_UTIL_SOURCES)
-AM_CPPFLAGS = $(DEFINES) -I$(top_srcdir)/include -I$(top_srcdir)/src \
+AM_CPPFLAGS = $(DEFINES) -I$(top_srcdir)/include \
+	-I$(top_srcdir)/include/drm-uapi -I$(top_srcdir)/src \
 	-I$(top_srcdir)/src/vulkan/util \
 	-I$(top_srcdir)/src/gallium/auxiliary \
 	-I$(top_srcdir)/src/gallium/include $(am__append_1) \
-	$(am__append_3)
+	$(am__append_3) $(am__append_5) $(am__append_6)
 AM_CFLAGS = \
 	$(LIBDRM_CFLAGS) \
 	$(VISIBILITY_CFLAGS)
 
+VULKAN_WSI_GENERATED_SOURCES = $(am__append_8)
 VULKAN_WSI_SOURCES = $(VULKAN_WSI_FILES) $(am__append_2) \
-	$(am__append_4)
-CLEANFILES = $(BUILT_SOURCES)
+	$(am__append_4) $(am__append_7)
+CLEANFILES = \
+	$(VULKAN_UTIL_GENERATED_FILES) \
+	$(VULKAN_WSI_WAYLAND_GENERATED_FILES)
+
 WL_DRM_XML = $(top_srcdir)/src/egl/wayland/wayland-drm/wayland-drm.xml
+WL_DMABUF_XML = $(WAYLAND_PROTOCOLS_DATADIR)/unstable/linux-dmabuf/linux-dmabuf-unstable-v1.xml
+nodist_libvulkan_wsi_la_SOURCES = $(VULKAN_WSI_GENERATED_SOURCES)
 libvulkan_wsi_la_SOURCES = $(VULKAN_WSI_SOURCES)
-all: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) all-am
+all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .c .lo .o .obj
@@ -566,6 +623,8 @@ util/$(am__dirstamp):
 util/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) util/$(DEPDIR)
 	@: > util/$(DEPDIR)/$(am__dirstamp)
+util/vk_debug_report.lo: util/$(am__dirstamp) \
+	util/$(DEPDIR)/$(am__dirstamp)
 util/vk_util.lo: util/$(am__dirstamp) util/$(DEPDIR)/$(am__dirstamp)
 util/vk_enum_to_str.lo: util/$(am__dirstamp) \
 	util/$(DEPDIR)/$(am__dirstamp)
@@ -577,11 +636,16 @@ wsi/$(am__dirstamp):
 wsi/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) wsi/$(DEPDIR)
 	@: > wsi/$(DEPDIR)/$(am__dirstamp)
+wsi/wsi_common.lo: wsi/$(am__dirstamp) wsi/$(DEPDIR)/$(am__dirstamp)
 wsi/wsi_common_x11.lo: wsi/$(am__dirstamp) \
+	wsi/$(DEPDIR)/$(am__dirstamp)
+wsi/wsi_common_display.lo: wsi/$(am__dirstamp) \
 	wsi/$(DEPDIR)/$(am__dirstamp)
 wsi/wsi_common_wayland.lo: wsi/$(am__dirstamp) \
 	wsi/$(DEPDIR)/$(am__dirstamp)
 wsi/wayland-drm-protocol.lo: wsi/$(am__dirstamp) \
+	wsi/$(DEPDIR)/$(am__dirstamp)
+wsi/linux-dmabuf-unstable-v1-protocol.lo: wsi/$(am__dirstamp) \
 	wsi/$(DEPDIR)/$(am__dirstamp)
 libvulkan_wsi.la: $(libvulkan_wsi_la_OBJECTS) $(libvulkan_wsi_la_DEPENDENCIES) $(EXTRA_libvulkan_wsi_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(LINK)  $(libvulkan_wsi_la_OBJECTS) $(libvulkan_wsi_la_LIBADD) $(LIBS)
@@ -596,9 +660,13 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@util/$(DEPDIR)/vk_debug_report.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@util/$(DEPDIR)/vk_enum_to_str.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@util/$(DEPDIR)/vk_util.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wsi/$(DEPDIR)/linux-dmabuf-unstable-v1-protocol.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wsi/$(DEPDIR)/wayland-drm-protocol.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wsi/$(DEPDIR)/wsi_common.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@wsi/$(DEPDIR)/wsi_common_display.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wsi/$(DEPDIR)/wsi_common_wayland.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@wsi/$(DEPDIR)/wsi_common_x11.Plo@am__quote@
 
@@ -731,12 +799,10 @@ distdir: $(DISTFILES)
 	  fi; \
 	done
 check-am: all-am
-check: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) check-am
+check: check-am
 all-am: Makefile $(LTLIBRARIES)
 installdirs:
-install: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) install-am
+install: install-am
 install-exec: install-exec-am
 install-data: install-data-am
 uninstall: uninstall-am
@@ -771,7 +837,6 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 clean: clean-am
 
 clean-am: clean-generic clean-libtool clean-noinstLTLIBRARIES \
@@ -843,7 +908,7 @@ ps-am:
 
 uninstall-am:
 
-.MAKE: all check install install-am install-strip
+.MAKE: install-am install-strip
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
 	clean-libtool clean-noinstLTLIBRARIES cscopelist ctags \
@@ -860,21 +925,32 @@ uninstall-am:
 	tags uninstall uninstall-am
 
 
-util/vk_enum_to_str.c util/vk_enum_to_str.h: util/gen_enum_to_str.py \
-		$(vulkan_api_xml) $(vk_android_native_buffer_xml)
-	$(MKDIR_GEN)
-	$(PYTHON_GEN) $(srcdir)/util/gen_enum_to_str.py \
-	    --xml $(vulkan_api_xml) \
-	    --xml $(vk_android_native_buffer_xml) \
-	    --outdir $(top_builddir)/src/vulkan/util
+@REGEN_SOURCES_TRUE@util/vk_enum_to_str.c util/vk_enum_to_str.h: util/gen_enum_to_str.py \
+@REGEN_SOURCES_TRUE@		$(vulkan_api_xml)
+@REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
+@REGEN_SOURCES_TRUE@	$(PYTHON_GEN) $(srcdir)/util/gen_enum_to_str.py \
+@REGEN_SOURCES_TRUE@	    --xml $(vulkan_api_xml) \
+@REGEN_SOURCES_TRUE@	    --outdir $(top_builddir)/src/vulkan/util
 
 wsi/wayland-drm-protocol.c : $(WL_DRM_XML)
 	$(MKDIR_GEN)
-	$(AM_V_GEN)$(WAYLAND_SCANNER) code < $< > $@
+	$(AM_V_GEN)$(WAYLAND_SCANNER) $(SCANNER_ARG) $< $@
 
 wsi/wayland-drm-client-protocol.h : $(WL_DRM_XML)
 	$(MKDIR_GEN)
-	$(AM_V_GEN)$(WAYLAND_SCANNER) client-header < $< > $@
+	$(AM_V_GEN)$(WAYLAND_SCANNER) client-header $< $@
+
+wsi/linux-dmabuf-unstable-v1-protocol.c : $(WL_DMABUF_XML)
+	$(MKDIR_GEN)
+	$(AM_V_GEN)$(WAYLAND_SCANNER) $(SCANNER_ARG) $< $@
+
+wsi/linux-dmabuf-unstable-v1-client-protocol.h : $(WL_DMABUF_XML)
+	$(MKDIR_GEN)
+	$(AM_V_GEN)$(WAYLAND_SCANNER) client-header $< $@
+
+@HAVE_PLATFORM_WAYLAND_TRUE@wsi/linux-dmabuf-unstable-v1-protocol.lo: wsi/linux-dmabuf-unstable-v1-client-protocol.h
+@HAVE_PLATFORM_WAYLAND_TRUE@wsi/wayland-drm-protocol.lo: wsi/wayland-drm-client-protocol.h
+@HAVE_PLATFORM_WAYLAND_TRUE@wsi/wsi_common_wayland.lo: wsi/linux-dmabuf-unstable-v1-client-protocol.h wsi/wayland-drm-client-protocol.h
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

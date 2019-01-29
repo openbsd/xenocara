@@ -27,6 +27,8 @@
 
 #include "list.h"
 #include "glsl_parser_extras.h"
+#include "compiler/glsl_types.h"
+#include "util/bitset.h"
 
 struct _mesa_glsl_parse_state;
 
@@ -472,8 +474,15 @@ enum {
 
 struct ast_type_qualifier {
    DECLARE_RALLOC_CXX_OPERATORS(ast_type_qualifier);
+   /* Note: this bitset needs to have at least as many bits as the 'q'
+    * struct has flags, below.  Previously, the size was 128 instead of 96.
+    * But an apparent bug in GCC 5.4.0 causes bad SSE code generation
+    * elsewhere, leading to a crash.  96 bits works around the issue.
+    * See https://bugs.freedesktop.org/show_bug.cgi?id=105497
+    */
+   DECLARE_BITSET_T(bitset_t, 96);
 
-   union {
+   union flags {
       struct {
 	 unsigned invariant:1;
          unsigned precise:1;
@@ -617,6 +626,16 @@ struct ast_type_qualifier {
           * Flag set if GL_ARB_post_depth_coverage layout qualifier is used.
           */
          unsigned post_depth_coverage:1;
+
+         /**
+          * Flags for the layout qualifers added by ARB_fragment_shader_interlock
+          */
+
+         unsigned pixel_interlock_ordered:1;
+         unsigned pixel_interlock_unordered:1;
+         unsigned sample_interlock_ordered:1;
+         unsigned sample_interlock_unordered:1;
+
          /**
           * Flag set if GL_INTEL_conservartive_rasterization layout qualifier
           * is used.
@@ -630,12 +649,17 @@ struct ast_type_qualifier {
          unsigned bound_sampler:1;
          unsigned bound_image:1;
          /** \} */
+
+         /** \name Layout qualifiers for GL_EXT_shader_framebuffer_fetch_non_coherent */
+         /** \{ */
+         unsigned non_coherent:1;
+         /** \} */
       }
       /** \brief Set of flags, accessed by name. */
       q;
 
       /** \brief Set of flags, accessed as a bitmask. */
-      uint64_t i;
+      bitset_t i;
    } flags;
 
    /** Precision of the type (highp/medium/lowp). */
@@ -832,8 +856,8 @@ class ast_declarator_list;
 
 class ast_struct_specifier : public ast_node {
 public:
-   ast_struct_specifier(void *lin_ctx, const char *identifier,
-			ast_declarator_list *declarator_list);
+   ast_struct_specifier(const char *identifier,
+                        ast_declarator_list *declarator_list);
    virtual void print(void) const;
 
    virtual ir_rvalue *hir(exec_list *instructions,
@@ -853,7 +877,7 @@ class ast_type_specifier : public ast_node {
 public:
    /** Construct a type specifier from a type name */
    ast_type_specifier(const char *name) 
-      : type_name(name), structure(NULL), array_specifier(NULL),
+      : type(NULL), type_name(name), structure(NULL), array_specifier(NULL),
 	default_precision(ast_precision_none)
    {
       /* empty */
@@ -861,8 +885,15 @@ public:
 
    /** Construct a type specifier from a structure definition */
    ast_type_specifier(ast_struct_specifier *s)
-      : type_name(s->name), structure(s), array_specifier(NULL),
+      : type(NULL), type_name(s->name), structure(s), array_specifier(NULL),
 	default_precision(ast_precision_none)
+   {
+      /* empty */
+   }
+
+   ast_type_specifier(const struct glsl_type *t)
+      : type(t), type_name(t->name), structure(NULL), array_specifier(NULL),
+        default_precision(ast_precision_none)
    {
       /* empty */
    }
@@ -875,6 +906,7 @@ public:
 
    ir_rvalue *hir(exec_list *, struct _mesa_glsl_parse_state *);
 
+   const struct glsl_type *type;
    const char *type_name;
    ast_struct_specifier *structure;
 

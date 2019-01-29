@@ -40,6 +40,13 @@ enum hud_counter {
 };
 
 struct hud_context {
+   int refcount;
+   bool simple;
+
+   /* Context where queries are executed. */
+   struct pipe_context *record_pipe;
+
+   /* Context where the HUD is drawn: */
    struct pipe_context *pipe;
    struct cso_context *cso;
 
@@ -97,9 +104,10 @@ struct hud_graph {
    /* name and query */
    char name[128];
    void *query_data;
-   void (*begin_query)(struct hud_graph *gr);
-   void (*query_new_value)(struct hud_graph *gr);
-   void (*free_query_data)(void *ptr); /**< do not use ordinary free() */
+   void (*begin_query)(struct hud_graph *gr, struct pipe_context *pipe);
+   void (*query_new_value)(struct hud_graph *gr, struct pipe_context *pipe);
+   /* use this instead of ordinary free() */
+   void (*free_query_data)(void *ptr, struct pipe_context *pipe);
 
    /* mutable variables */
    unsigned num_vertices;
@@ -111,7 +119,7 @@ struct hud_graph {
 struct hud_pane {
    struct list_head head;
    struct hud_context *hud;
-   unsigned x1, y1, x2, y2;
+   unsigned x1, y1, x2, y2, y_simple;
    unsigned inner_x1;
    unsigned inner_y1;
    unsigned inner_x2;
@@ -149,13 +157,15 @@ struct hud_batch_query_context;
 int hud_get_num_cpus(void);
 
 void hud_fps_graph_install(struct hud_pane *pane);
+void hud_frametime_graph_install(struct hud_pane *pane);
 void hud_cpu_graph_install(struct hud_pane *pane, unsigned cpu_index);
 void hud_thread_busy_install(struct hud_pane *pane, const char *name, bool main);
 void hud_thread_counter_install(struct hud_pane *pane, const char *name,
                                 enum hud_counter counter);
 void hud_pipe_query_install(struct hud_batch_query_context **pbq,
-                            struct hud_pane *pane, struct pipe_context *pipe,
-                            const char *name, unsigned query_type,
+                            struct hud_pane *pane,
+                            const char *name,
+                            enum pipe_query_type query_type,
                             unsigned result_index,
                             uint64_t max_value,
                             enum pipe_driver_query_type type,
@@ -163,12 +173,15 @@ void hud_pipe_query_install(struct hud_batch_query_context **pbq,
                             unsigned flags);
 boolean hud_driver_query_install(struct hud_batch_query_context **pbq,
                                  struct hud_pane *pane,
-                                 struct pipe_context *pipe, const char *name);
-void hud_batch_query_begin(struct hud_batch_query_context *bq);
-void hud_batch_query_update(struct hud_batch_query_context *bq);
-void hud_batch_query_cleanup(struct hud_batch_query_context **pbq);
+                                 struct pipe_screen *screen, const char *name);
+void hud_batch_query_begin(struct hud_batch_query_context *bq,
+                           struct pipe_context *pipe);
+void hud_batch_query_update(struct hud_batch_query_context *bq,
+                            struct pipe_context *pipe);
+void hud_batch_query_cleanup(struct hud_batch_query_context **pbq,
+                             struct pipe_context *pipe);
 
-#if HAVE_GALLIUM_EXTRA_HUD
+#ifdef HAVE_GALLIUM_EXTRA_HUD
 int hud_get_num_nics(bool displayhelp);
 #define NIC_DIRECTION_RX 1
 #define NIC_DIRECTION_TX 2
@@ -189,7 +202,7 @@ int hud_get_num_cpufreq(bool displayhelp);
 void hud_cpufreq_graph_install(struct hud_pane *pane, int cpu_index, unsigned int mode);
 #endif
 
-#if HAVE_LIBSENSORS
+#ifdef HAVE_LIBSENSORS
 int hud_get_num_sensors(bool displayhelp);
 #define SENSORS_TEMP_CURRENT     1
 #define SENSORS_TEMP_CRITICAL    2

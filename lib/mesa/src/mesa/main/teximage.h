@@ -221,10 +221,11 @@ _mesa_legal_texture_base_format_for_target(struct gl_context *ctx,
                                            GLenum internalFormat);
 
 bool
-_mesa_format_no_online_compression(const struct gl_context *ctx, GLenum format);
+_mesa_format_no_online_compression(GLenum format);
 
 GLboolean
-_mesa_is_renderable_texture_format(struct gl_context *ctx, GLenum internalformat);
+_mesa_is_renderable_texture_format(const struct gl_context *ctx,
+                                   GLenum internalformat);
 
 extern void
 _mesa_texture_sub_image(struct gl_context *ctx, GLuint dims,

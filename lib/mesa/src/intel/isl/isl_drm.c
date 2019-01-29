@@ -28,7 +28,7 @@
 #include <i915_drm.h>
 
 #include "isl.h"
-#include "common/gen_device_info.h"
+#include "dev/gen_device_info.h"
 
 uint32_t
 isl_tiling_to_i915_tiling(enum isl_tiling tiling)
@@ -71,7 +71,7 @@ isl_tiling_from_i915_tiling(uint32_t tiling)
    unreachable("Invalid i915 tiling");
 }
 
-struct isl_drm_modifier_info modifier_info[] = {
+static const struct isl_drm_modifier_info modifier_info[] = {
    {
       .modifier = DRM_FORMAT_MOD_NONE,
       .name = "DRM_FORMAT_MOD_NONE",

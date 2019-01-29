@@ -79,6 +79,10 @@ u_reduce_video_profile(enum pipe_video_profile profile)
       case PIPE_VIDEO_PROFILE_JPEG_BASELINE:
          return PIPE_VIDEO_FORMAT_JPEG;
 
+      case PIPE_VIDEO_PROFILE_VP9_PROFILE0:
+      case PIPE_VIDEO_PROFILE_VP9_PROFILE2:
+         return PIPE_VIDEO_FORMAT_VP9;
+
       default:
          return PIPE_VIDEO_FORMAT_UNKNOWN;
    }
@@ -233,6 +237,30 @@ u_get_h264_level(uint32_t width, uint32_t height, uint32_t *max_reference)
       return 51;
    else
       return 52;
+}
+
+static inline uint32_t
+u_get_h264_profile_idc(enum pipe_video_profile profile)
+{
+   switch (profile) {
+      case PIPE_VIDEO_PROFILE_MPEG4_AVC_CONSTRAINED_BASELINE:
+      case PIPE_VIDEO_PROFILE_MPEG4_AVC_BASELINE:
+         return 66;
+      case PIPE_VIDEO_PROFILE_MPEG4_AVC_MAIN:
+         return 77;
+      case PIPE_VIDEO_PROFILE_MPEG4_AVC_EXTENDED:
+         return 88;
+      case PIPE_VIDEO_PROFILE_MPEG4_AVC_HIGH:
+         return 100;
+      case PIPE_VIDEO_PROFILE_MPEG4_AVC_HIGH10:
+         return 110;
+      case PIPE_VIDEO_PROFILE_MPEG4_AVC_HIGH422:
+         return 122;
+      case PIPE_VIDEO_PROFILE_MPEG4_AVC_HIGH444:
+         return 244;
+      default:
+         return 66; //use baseline profile instead
+   }
 }
 
 #ifdef __cplusplus

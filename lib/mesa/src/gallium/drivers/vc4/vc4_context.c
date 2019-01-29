@@ -42,7 +42,6 @@ vc4_flush(struct pipe_context *pctx)
 {
         struct vc4_context *vc4 = vc4_context(pctx);
 
-        struct hash_entry *entry;
         hash_table_foreach(vc4->jobs, entry) {
                 struct vc4_job *job = entry->data;
                 vc4_job_submit(vc4, job);
@@ -59,8 +58,17 @@ vc4_pipe_flush(struct pipe_context *pctx, struct pipe_fence_handle **fence,
 
         if (fence) {
                 struct pipe_screen *screen = pctx->screen;
+                int fd = -1;
+
+                if (flags & PIPE_FLUSH_FENCE_FD) {
+                        /* The vc4_fence takes ownership of the returned fd. */
+                        drmSyncobjExportSyncFile(vc4->fd, vc4->job_syncobj,
+                                                 &fd);
+                }
+
                 struct vc4_fence *f = vc4_fence_create(vc4->screen,
-                                                       vc4->last_emit_seqno);
+                                                       vc4->last_emit_seqno,
+                                                       fd);
                 screen->fence_reference(screen, fence, NULL);
                 *fence = (struct pipe_fence_handle *)f;
         }
@@ -115,7 +123,21 @@ vc4_context_destroy(struct pipe_context *pctx)
         pipe_surface_reference(&vc4->framebuffer.cbufs[0], NULL);
         pipe_surface_reference(&vc4->framebuffer.zsbuf, NULL);
 
+        if (vc4->yuv_linear_blit_vs)
+                pctx->delete_vs_state(pctx, vc4->yuv_linear_blit_vs);
+        if (vc4->yuv_linear_blit_fs_8bit)
+                pctx->delete_fs_state(pctx, vc4->yuv_linear_blit_fs_8bit);
+        if (vc4->yuv_linear_blit_fs_16bit)
+                pctx->delete_fs_state(pctx, vc4->yuv_linear_blit_fs_16bit);
+
         vc4_program_fini(pctx);
+
+        if (vc4->screen->has_syncobj) {
+                drmSyncobjDestroy(vc4->fd, vc4->job_syncobj);
+                drmSyncobjDestroy(vc4->fd, vc4->in_syncobj);
+        }
+        if (vc4->in_fence_fd >= 0)
+                close(vc4->in_fence_fd);
 
         ralloc_free(vc4);
 }
@@ -125,6 +147,7 @@ vc4_context_create(struct pipe_screen *pscreen, void *priv, unsigned flags)
 {
         struct vc4_screen *screen = vc4_screen(pscreen);
         struct vc4_context *vc4;
+        int err;
 
         /* Prevent dumping of the shaders built during context setup. */
         uint32_t saved_shaderdb_flag = vc4_debug & VC4_DEBUG_SHADERDB;
@@ -150,9 +173,15 @@ vc4_context_create(struct pipe_screen *pscreen, void *priv, unsigned flags)
         vc4_query_init(pctx);
         vc4_resource_context_init(pctx);
 
-        vc4_job_init(vc4);
-
         vc4->fd = screen->fd;
+
+        err = vc4_job_init(vc4);
+        if (err)
+                goto fail;
+
+        err = vc4_fence_context_init(vc4);
+        if (err)
+                goto fail;
 
         slab_create_child(&vc4->transfer_pool, &screen->transfer_pool);
 

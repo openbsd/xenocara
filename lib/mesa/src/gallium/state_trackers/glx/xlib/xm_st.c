@@ -30,6 +30,7 @@
 
 #include "util/u_inlines.h"
 #include "util/u_atomic.h"
+#include "util/u_memory.h"
 
 struct xmesa_st_framebuffer {
    XMesaDisplay display;
@@ -135,6 +136,7 @@ xmesa_st_framebuffer_validate_textures(struct st_framebuffer_iface *stfbi,
    templ.array_size = 1;
    templ.last_level = 0;
    templ.nr_samples = xstfb->stvis.samples;
+   templ.nr_storage_samples = xstfb->stvis.samples;
 
    for (i = 0; i < ST_ATTACHMENT_COUNT; i++) {
       enum pipe_format format;

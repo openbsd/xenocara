@@ -112,6 +112,7 @@ DispatchSanity_test::SetUpCtx(gl_api api, unsigned int version)
                             &driver_functions);
    _vbo_CreateContext(&ctx);
 
+   _mesa_override_extensions(&ctx);
    ctx.Version = version;
 
    _mesa_initialize_dispatch_tables(&ctx);
@@ -223,6 +224,8 @@ TEST_F(DispatchSanity_test, GLES31)
 }
 
 const struct function common_desktop_functions_possible[] = {
+   { "glBindRenderbufferEXT", 10, -1 },
+   { "glBindFramebufferEXT", 10, -1 },
    { "glCullFace", 10, -1 },
    { "glFrontFace", 10, -1 },
    { "glHint", 10, -1 },
@@ -504,6 +507,10 @@ const struct function common_desktop_functions_possible[] = {
    { "glDrawArraysInstanced", 31, -1 },
    { "glDrawElementsInstanced", 31, -1 },
    { "glPrimitiveRestartIndex", 31, -1 },
+   { "glTexBuffer", 31, -1 },
+
+   /* GL_ARB_texture_buffer_range */
+   { "glTexBufferRange", 43, -1 },
 
    /* GL_ARB_shader_objects */
    { "glDeleteObjectARB", 31, -1 },
@@ -569,6 +576,46 @@ const struct function common_desktop_functions_possible[] = {
    { "glBlendEquationSeparatei", 40, -1 },
    { "glBlendFunci", 40, -1 },
    { "glBlendFuncSeparatei", 40, -1 },
+
+   { "glGetSubroutineUniformLocation", 40, -1 },
+   { "glGetSubroutineIndex", 40, -1 },
+   { "glGetActiveSubroutineUniformiv", 40, -1 },
+   { "glGetActiveSubroutineUniformName", 40, -1 },
+   { "glGetActiveSubroutineName", 40, -1 },
+   { "glUniformSubroutinesuiv", 40, -1 },
+   { "glGetUniformSubroutineuiv", 40, -1 },
+   { "glGetProgramStageiv", 40, -1 },
+
+   { "glUniform1d", 40, -1 },
+   { "glUniform2d", 40, -1 },
+   { "glUniform3d", 40, -1 },
+   { "glUniform4d", 40, -1 },
+   { "glUniform1dv", 40, -1 },
+   { "glUniform2dv", 40, -1 },
+   { "glUniform3dv", 40, -1 },
+   { "glUniform4dv", 40, -1 },
+   { "glUniformMatrix2dv", 40, -1 },
+   { "glUniformMatrix3dv", 40, -1 },
+   { "glUniformMatrix4dv", 40, -1 },
+   { "glUniformMatrix2x3dv", 40, -1 },
+   { "glUniformMatrix2x4dv", 40, -1 },
+   { "glUniformMatrix3x2dv", 40, -1 },
+   { "glUniformMatrix3x4dv", 40, -1 },
+   { "glUniformMatrix4x2dv", 40, -1 },
+   { "glUniformMatrix4x3dv", 40, -1 },
+   { "glGetUniformdv", 43, -1 },
+
+   /* GL 4.1 */
+   { "glVertexAttribL1d", 41, -1 },
+   { "glVertexAttribL2d", 41, -1 },
+   { "glVertexAttribL3d", 41, -1 },
+   { "glVertexAttribL4d", 41, -1 },
+   { "glVertexAttribL1dv", 41, -1 },
+   { "glVertexAttribL2dv", 41, -1 },
+   { "glVertexAttribL3dv", 41, -1 },
+   { "glVertexAttribL4dv", 41, -1 },
+   { "glVertexAttribLPointer", 41, -1 },
+   { "glGetVertexAttribLdv", 41, -1 },
 
    /* GL 4.3 */
    { "glIsRenderbuffer", 43, -1 },
@@ -851,6 +898,15 @@ const struct function common_desktop_functions_possible[] = {
 // { "glTextureStorage2DMultisampleEXT", 43, -1 },      // XXX: Add to xml
 // { "glTextureStorage3DMultisampleEXT", 43, -1 },      // XXX: Add to xml
 
+   { "glViewportArrayv", 43, -1 },
+   { "glViewportIndexedf", 43, -1 },
+   { "glViewportIndexedfv", 43, -1 },
+   { "glScissorArrayv", 43, -1 },
+   { "glScissorIndexed", 43, -1 },
+   { "glScissorIndexedv", 43, -1 },
+   { "glDepthRangeArrayv", 43, -1 },
+   { "glDepthRangeIndexed", 43, -1 },
+
 /* GL 4.5 */
    /* aliased versions checked above */
    //{ "glGetGraphicsResetStatus", 45, -1 },
@@ -859,6 +915,105 @@ const struct function common_desktop_functions_possible[] = {
    //{ "glGetnUniformiv", 45, -1 },
    //{ "glGetnUniformuiv", 45, -1 },
    { "glMemoryBarrierByRegion", 45, -1 },
+
+   /* GL_ARB_direct_state_access */
+   { "glCreateTransformFeedbacks", 45, -1 },
+   { "glTransformFeedbackBufferBase", 45, -1 },
+   { "glTransformFeedbackBufferRange", 45, -1 },
+   { "glGetTransformFeedbackiv", 45, -1 },
+   { "glGetTransformFeedbacki_v", 45, -1 },
+   { "glGetTransformFeedbacki64_v", 45, -1 },
+   { "glCreateBuffers", 45, -1 },
+   { "glNamedBufferStorage", 45, -1 },
+   { "glNamedBufferData", 45, -1 },
+   { "glNamedBufferSubData", 45, -1 },
+   { "glCopyNamedBufferSubData", 45, -1 },
+   { "glClearNamedBufferData", 45, -1 },
+   { "glClearNamedBufferSubData", 45, -1 },
+   { "glMapNamedBuffer", 45, -1 },
+   { "glMapNamedBufferRange", 45, -1 },
+   { "glUnmapNamedBuffer", 45, -1 },
+   { "glFlushMappedNamedBufferRange", 45, -1 },
+   { "glGetNamedBufferParameteriv", 45, -1 },
+   { "glGetNamedBufferParameteri64v", 45, -1 },
+   { "glGetNamedBufferPointerv", 45, -1 },
+   { "glGetNamedBufferSubData", 45, -1 },
+   { "glCreateFramebuffers", 45, -1 },
+   { "glNamedFramebufferRenderbuffer", 45, -1 },
+   { "glNamedFramebufferParameteri", 45, -1 },
+   { "glNamedFramebufferTexture", 45, -1 },
+   { "glNamedFramebufferTextureLayer", 45, -1 },
+   { "glNamedFramebufferDrawBuffer", 45, -1 },
+   { "glNamedFramebufferDrawBuffers", 45, -1 },
+   { "glNamedFramebufferReadBuffer", 45, -1 },
+   { "glInvalidateNamedFramebufferSubData", 45, -1 },
+   { "glInvalidateNamedFramebufferData", 45, -1 },
+   { "glClearNamedFramebufferiv", 45, -1 },
+   { "glClearNamedFramebufferuiv", 45, -1 },
+   { "glClearNamedFramebufferfv", 45, -1 },
+   { "glClearNamedFramebufferfi", 45, -1 },
+   { "glBlitNamedFramebuffer", 45, -1 },
+   { "glCheckNamedFramebufferStatus", 45, -1 },
+   { "glGetNamedFramebufferParameteriv", 45, -1 },
+   { "glGetNamedFramebufferAttachmentParameteriv", 45, -1 },
+   { "glCreateRenderbuffers", 45, -1 },
+   { "glNamedRenderbufferStorage", 45, -1 },
+   { "glNamedRenderbufferStorageMultisample", 45, -1 },
+   { "glGetNamedRenderbufferParameteriv", 45, -1 },
+   { "glCreateTextures", 45, -1 },
+   { "glTextureStorage1D", 45, -1 },
+   { "glTextureStorage2D", 45, -1 },
+   { "glTextureStorage3D", 45, -1 },
+   { "glTextureSubImage1D", 45, -1 },
+   { "glTextureSubImage2D", 45, -1 },
+   { "glTextureSubImage3D", 45, -1 },
+   { "glBindTextureUnit", 45, -1 },
+   { "glTextureParameterf", 45, -1 },
+   { "glTextureParameterfv", 45, -1 },
+   { "glTextureParameteri", 45, -1 },
+   { "glTextureParameterIiv", 45, -1 },
+   { "glTextureParameterIuiv", 45, -1 },
+   { "glTextureParameteriv", 45, -1 },
+   { "glGetTextureLevelParameterfv", 45, -1 },
+   { "glGetTextureLevelParameteriv", 45, -1 },
+   { "glGetTextureParameterfv", 45, -1 },
+   { "glGetTextureParameterIiv", 45, -1 },
+   { "glGetTextureParameterIuiv", 45, -1 },
+   { "glGetTextureParameteriv", 45, -1 },
+   { "glCopyTextureSubImage1D", 45, -1 },
+   { "glCopyTextureSubImage2D", 45, -1 },
+   { "glCopyTextureSubImage3D", 45, -1 },
+   { "glGetTextureImage", 45, -1 },
+   { "glGetCompressedTextureImage", 45, -1 },
+   { "glCompressedTextureSubImage1D", 45, -1 },
+   { "glCompressedTextureSubImage2D", 45, -1 },
+   { "glCompressedTextureSubImage3D", 45, -1 },
+   { "glGenerateTextureMipmap", 45, -1 },
+   { "glTextureStorage2DMultisample", 45, -1 },
+   { "glTextureStorage3DMultisample", 45, -1 },
+   { "glTextureBuffer", 45, -1 },
+   { "glTextureBufferRange", 45, -1 },
+   { "glCreateVertexArrays", 45, -1 },
+   { "glDisableVertexArrayAttrib", 45, -1 },
+   { "glEnableVertexArrayAttrib", 45, -1 },
+   { "glVertexArrayElementBuffer", 45, -1 },
+   { "glVertexArrayVertexBuffer", 45, -1 },
+   { "glVertexArrayVertexBuffers", 45, -1 },
+   { "glVertexArrayAttribFormat", 45, -1 },
+   { "glVertexArrayAttribIFormat", 45, -1 },
+   { "glVertexArrayAttribLFormat", 45, -1 },
+   { "glVertexArrayAttribBinding", 45, -1 },
+   { "glVertexArrayBindingDivisor", 45, -1 },
+   { "glGetVertexArrayiv", 45, -1 },
+   { "glGetVertexArrayIndexediv", 45, -1 },
+   { "glGetVertexArrayIndexed64iv", 45, -1 },
+   { "glCreateSamplers", 45, -1 },
+   { "glCreateProgramPipelines", 45, -1 },
+   { "glCreateQueries", 45, -1 },
+   { "glGetQueryBufferObjectiv", 45, -1 },
+   { "glGetQueryBufferObjectuiv", 45, -1 },
+   { "glGetQueryBufferObjecti64v", 45, -1 },
+   { "glGetQueryBufferObjectui64v", 45, -1 },
 
    /* GL_ARB_internalformat_query */
    { "glGetInternalformativ", 30, -1 },
@@ -1015,12 +1170,38 @@ const struct function common_desktop_functions_possible[] = {
    { "glImportMemoryFdEXT", 45, -1 },
    { "glImportSemaphoreFdEXT", 45, -1 },
 
+   /* GL_ARB_gl_spirv */
+   { "glSpecializeShaderARB", 45, -1 },
+
+   /* GL_EXT_shader_framebuffer_fetch_non_coherent */
+   { "glFramebufferFetchBarrierEXT", 20, -1 },
+
+   /* GL_NV_conservative_raster */
+   { "glSubpixelPrecisionBiasNV", 10, -1 },
+
+   /* GL_NV_conservative_raster_dilate */
+   { "glConservativeRasterParameterfNV", 10, -1 },
+
+   /* GL_NV_conservative_raster_pre_snap_triangles */
+   { "glConservativeRasterParameteriNV", 10, -1 },
+
+   /* GL_ARB_sample_locations */
+   { "glFramebufferSampleLocationsfvARB", 30, -1 },
+   { "glNamedFramebufferSampleLocationsfvARB", 30, -1 },
+   { "glEvaluateDepthValuesARB", 30, -1 },
+
+   /* GL_ARB_indirect_parameters */
+   { "glMultiDrawArraysIndirectCountARB", 11, -1 },
+   { "glMultiDrawElementsIndirectCountARB", 11, -1 },
+
+   /* GL_AMD_framebuffer_multisample_advanced */
+   { "glRenderbufferStorageMultisampleAdvancedAMD", 11, -1 },
+   { "glNamedRenderbufferStorageMultisampleAdvancedAMD", 11, -1 },
+
    { NULL, 0, -1 }
 };
 
 const struct function gl_compatibility_functions_possible[] = {
-   { "glBindRenderbufferEXT", 10, -1 },
-   { "glBindFramebufferEXT", 10, -1 },
    { "glNewList", 10, _gloffset_NewList },
    { "glEndList", 10, _gloffset_EndList },
    { "glCallList", 10, _gloffset_CallList },
@@ -1417,7 +1598,6 @@ const struct function gl_compatibility_functions_possible[] = {
    { "glGetProgramLocalParameterfvARB", 10, -1 },
    { "glGetProgramivARB", 10, -1 },
    { "glGetProgramStringARB", 10, -1 },
-   { "glPolygonOffsetEXT", 10, -1 },
    { "glColorPointerEXT", 10, -1 },
    { "glEdgeFlagPointerEXT", 10, -1 },
    { "glIndexPointerEXT", 10, -1 },
@@ -1501,426 +1681,6 @@ const struct function gl_compatibility_functions_possible[] = {
 };
 
 const struct function gl_core_functions_possible[] = {
-   /* GL 3.1 */
-   { "glTexBuffer", 31, -1 },
-
-   /* GL 3.2 */
-   { "glFramebufferTexture", 32, -1 },
-
-   /* GL 4.0 */
-   { "glGetSubroutineUniformLocation", 40, -1 },
-   { "glGetSubroutineIndex", 40, -1 },
-   { "glGetActiveSubroutineUniformiv", 40, -1 },
-   { "glGetActiveSubroutineUniformName", 40, -1 },
-   { "glGetActiveSubroutineName", 40, -1 },
-   { "glUniformSubroutinesuiv", 40, -1 },
-   { "glGetUniformSubroutineuiv", 40, -1 },
-   { "glGetProgramStageiv", 40, -1 },
-
-   /* GL 4.3 */
-   { "glIsRenderbuffer", 43, -1 },
-   { "glBindRenderbuffer", 43, -1 },
-   { "glDeleteRenderbuffers", 43, -1 },
-   { "glGenRenderbuffers", 43, -1 },
-   { "glRenderbufferStorage", 43, -1 },
-   { "glGetRenderbufferParameteriv", 43, -1 },
-   { "glIsFramebuffer", 43, -1 },
-   { "glBindFramebuffer", 43, -1 },
-   { "glDeleteFramebuffers", 43, -1 },
-   { "glGenFramebuffers", 43, -1 },
-   { "glCheckFramebufferStatus", 43, -1 },
-   { "glFramebufferTexture1D", 43, -1 },
-   { "glFramebufferTexture2D", 43, -1 },
-   { "glFramebufferTexture3D", 43, -1 },
-   { "glFramebufferRenderbuffer", 43, -1 },
-   { "glGetFramebufferAttachmentParameteriv", 43, -1 },
-   { "glGenerateMipmap", 43, -1 },
-   { "glBlitFramebuffer", 43, -1 },
-   { "glRenderbufferStorageMultisample", 43, -1 },
-   { "glFramebufferTextureLayer", 43, -1 },
-   { "glMapBufferRange", 43, -1 },
-   { "glFlushMappedBufferRange", 43, -1 },
-   { "glBindVertexArray", 43, -1 },
-   { "glDeleteVertexArrays", 43, -1 },
-   { "glGenVertexArrays", 43, -1 },
-   { "glIsVertexArray", 43, -1 },
-   { "glGetUniformIndices", 43, -1 },
-   { "glGetActiveUniformsiv", 43, -1 },
-   { "glGetActiveUniformName", 43, -1 },
-   { "glGetUniformBlockIndex", 43, -1 },
-   { "glGetActiveUniformBlockiv", 43, -1 },
-   { "glGetActiveUniformBlockName", 43, -1 },
-   { "glUniformBlockBinding", 43, -1 },
-   { "glCopyBufferSubData", 43, -1 },
-   { "glDrawElementsBaseVertex", 43, -1 },
-   { "glDrawRangeElementsBaseVertex", 43, -1 },
-   { "glDrawElementsInstancedBaseVertex", 43, -1 },
-   { "glMultiDrawElementsBaseVertex", 43, -1 },
-   { "glProvokingVertex", 43, -1 },
-   { "glFenceSync", 43, -1 },
-   { "glIsSync", 43, -1 },
-   { "glDeleteSync", 43, -1 },
-   { "glClientWaitSync", 43, -1 },
-   { "glWaitSync", 43, -1 },
-   { "glGetInteger64v", 43, -1 },
-   { "glGetSynciv", 43, -1 },
-   { "glTexImage2DMultisample", 43, -1 },
-   { "glTexImage3DMultisample", 43, -1 },
-   { "glGetMultisamplefv", 43, -1 },
-   { "glSampleMaski", 43, -1 },
-   { "glBlendEquationiARB", 43, -1 },
-   { "glBlendEquationSeparateiARB", 43, -1 },
-   { "glBlendFunciARB", 43, -1 },
-   { "glBlendFuncSeparateiARB", 43, -1 },
-   { "glMinSampleShadingARB", 43, -1 },                 // XXX: Add to xml
-// { "glNamedStringARB", 43, -1 },                      // XXX: Add to xml
-// { "glDeleteNamedStringARB", 43, -1 },                // XXX: Add to xml
-// { "glCompileShaderIncludeARB", 43, -1 },             // XXX: Add to xml
-// { "glIsNamedStringARB", 43, -1 },                    // XXX: Add to xml
-// { "glGetNamedStringARB", 43, -1 },                   // XXX: Add to xml
-// { "glGetNamedStringivARB", 43, -1 },                 // XXX: Add to xml
-   { "glBindFragDataLocationIndexed", 43, -1 },
-   { "glGetFragDataIndex", 43, -1 },
-   { "glGenSamplers", 43, -1 },
-   { "glDeleteSamplers", 43, -1 },
-   { "glIsSampler", 43, -1 },
-   { "glBindSampler", 43, -1 },
-   { "glSamplerParameteri", 43, -1 },
-   { "glSamplerParameteriv", 43, -1 },
-   { "glSamplerParameterf", 43, -1 },
-   { "glSamplerParameterfv", 43, -1 },
-   { "glSamplerParameterIiv", 43, -1 },
-   { "glSamplerParameterIuiv", 43, -1 },
-   { "glGetSamplerParameteriv", 43, -1 },
-   { "glGetSamplerParameterIiv", 43, -1 },
-   { "glGetSamplerParameterfv", 43, -1 },
-   { "glGetSamplerParameterIuiv", 43, -1 },
-   { "glQueryCounter", 43, -1 },
-   { "glGetQueryObjecti64v", 43, -1 },
-   { "glGetQueryObjectui64v", 43, -1 },
-   { "glVertexP2ui", 43, -1 },
-   { "glVertexP2uiv", 43, -1 },
-   { "glVertexP3ui", 43, -1 },
-   { "glVertexP3uiv", 43, -1 },
-   { "glVertexP4ui", 43, -1 },
-   { "glVertexP4uiv", 43, -1 },
-   { "glTexCoordP1ui", 43, -1 },
-   { "glTexCoordP1uiv", 43, -1 },
-   { "glTexCoordP2ui", 43, -1 },
-   { "glTexCoordP2uiv", 43, -1 },
-   { "glTexCoordP3ui", 43, -1 },
-   { "glTexCoordP3uiv", 43, -1 },
-   { "glTexCoordP4ui", 43, -1 },
-   { "glTexCoordP4uiv", 43, -1 },
-   { "glMultiTexCoordP1ui", 43, -1 },
-   { "glMultiTexCoordP1uiv", 43, -1 },
-   { "glMultiTexCoordP2ui", 43, -1 },
-   { "glMultiTexCoordP2uiv", 43, -1 },
-   { "glMultiTexCoordP3ui", 43, -1 },
-   { "glMultiTexCoordP3uiv", 43, -1 },
-   { "glMultiTexCoordP4ui", 43, -1 },
-   { "glMultiTexCoordP4uiv", 43, -1 },
-   { "glNormalP3ui", 43, -1 },
-   { "glNormalP3uiv", 43, -1 },
-   { "glColorP3ui", 43, -1 },
-   { "glColorP3uiv", 43, -1 },
-   { "glColorP4ui", 43, -1 },
-   { "glColorP4uiv", 43, -1 },
-   { "glVertexAttribP1ui", 43, -1 },
-   { "glVertexAttribP1uiv", 43, -1 },
-   { "glVertexAttribP2ui", 43, -1 },
-   { "glVertexAttribP2uiv", 43, -1 },
-   { "glVertexAttribP3ui", 43, -1 },
-   { "glVertexAttribP3uiv", 43, -1 },
-   { "glVertexAttribP4ui", 43, -1 },
-   { "glVertexAttribP4uiv", 43, -1 },
-   { "glDrawArraysIndirect", 43, -1 },
-   { "glDrawElementsIndirect", 43, -1 },
-
-   { "glUniform1d", 40, -1 },
-   { "glUniform2d", 40, -1 },
-   { "glUniform3d", 40, -1 },
-   { "glUniform4d", 40, -1 },
-   { "glUniform1dv", 40, -1 },
-   { "glUniform2dv", 40, -1 },
-   { "glUniform3dv", 40, -1 },
-   { "glUniform4dv", 40, -1 },
-   { "glUniformMatrix2dv", 40, -1 },
-   { "glUniformMatrix3dv", 40, -1 },
-   { "glUniformMatrix4dv", 40, -1 },
-   { "glUniformMatrix2x3dv", 40, -1 },
-   { "glUniformMatrix2x4dv", 40, -1 },
-   { "glUniformMatrix3x2dv", 40, -1 },
-   { "glUniformMatrix3x4dv", 40, -1 },
-   { "glUniformMatrix4x2dv", 40, -1 },
-   { "glUniformMatrix4x3dv", 40, -1 },
-   { "glGetUniformdv", 43, -1 },
-
-   { "glBindTransformFeedback", 43, -1 },
-   { "glDeleteTransformFeedbacks", 43, -1 },
-   { "glGenTransformFeedbacks", 43, -1 },
-   { "glIsTransformFeedback", 43, -1 },
-   { "glPauseTransformFeedback", 43, -1 },
-   { "glResumeTransformFeedback", 43, -1 },
-   { "glDrawTransformFeedback", 43, -1 },
-   { "glDrawTransformFeedbackStream", 43, -1 },
-   { "glBeginQueryIndexed", 43, -1 },
-   { "glEndQueryIndexed", 43, -1 },
-   { "glGetQueryIndexediv", 43, -1 },
-   { "glReleaseShaderCompiler", 43, -1 },
-   { "glShaderBinary", 43, -1 },
-   { "glGetShaderPrecisionFormat", 43, -1 },
-   { "glDepthRangef", 43, -1 },
-   { "glClearDepthf", 43, -1 },
-   { "glGetProgramBinary", 43, -1 },
-   { "glProgramBinary", 43, -1 },
-   { "glProgramParameteri", 43, -1 },
-   { "glUseProgramStages", 43, -1 },
-   { "glActiveShaderProgram", 43, -1 },
-   { "glCreateShaderProgramv", 43, -1 },
-   { "glBindProgramPipeline", 43, -1 },
-   { "glDeleteProgramPipelines", 43, -1 },
-   { "glGenProgramPipelines", 43, -1 },
-   { "glIsProgramPipeline", 43, -1 },
-   { "glGetProgramPipelineiv", 43, -1 },
-   { "glProgramUniform1i", 43, -1 },
-   { "glProgramUniform1iv", 43, -1 },
-   { "glProgramUniform1f", 43, -1 },
-   { "glProgramUniform1fv", 43, -1 },
-   { "glProgramUniform1d", 40, -1 },
-   { "glProgramUniform1dv", 40, -1 },
-   { "glProgramUniform1ui", 43, -1 },
-   { "glProgramUniform1uiv", 43, -1 },
-   { "glProgramUniform2i", 43, -1 },
-   { "glProgramUniform2iv", 43, -1 },
-   { "glProgramUniform2f", 43, -1 },
-   { "glProgramUniform2fv", 43, -1 },
-   { "glProgramUniform2d", 40, -1 },
-   { "glProgramUniform2dv", 40, -1 },
-   { "glProgramUniform2ui", 43, -1 },
-   { "glProgramUniform2uiv", 43, -1 },
-   { "glProgramUniform3i", 43, -1 },
-   { "glProgramUniform3iv", 43, -1 },
-   { "glProgramUniform3f", 43, -1 },
-   { "glProgramUniform3fv", 43, -1 },
-   { "glProgramUniform3d", 40, -1 },
-   { "glProgramUniform3dv", 40, -1 },
-   { "glProgramUniform3ui", 43, -1 },
-   { "glProgramUniform3uiv", 43, -1 },
-   { "glProgramUniform4i", 43, -1 },
-   { "glProgramUniform4iv", 43, -1 },
-   { "glProgramUniform4f", 43, -1 },
-   { "glProgramUniform4fv", 43, -1 },
-   { "glProgramUniform4d", 40, -1 },
-   { "glProgramUniform4dv", 40, -1 },
-   { "glProgramUniform4ui", 43, -1 },
-   { "glProgramUniform4uiv", 43, -1 },
-   { "glProgramUniformMatrix2fv", 43, -1 },
-   { "glProgramUniformMatrix3fv", 43, -1 },
-   { "glProgramUniformMatrix4fv", 43, -1 },
-   { "glProgramUniformMatrix2dv", 40, -1 },
-   { "glProgramUniformMatrix3dv", 40, -1 },
-   { "glProgramUniformMatrix4dv", 40, -1 },
-   { "glProgramUniformMatrix2x3fv", 43, -1 },
-   { "glProgramUniformMatrix3x2fv", 43, -1 },
-   { "glProgramUniformMatrix2x4fv", 43, -1 },
-   { "glProgramUniformMatrix4x2fv", 43, -1 },
-   { "glProgramUniformMatrix3x4fv", 43, -1 },
-   { "glProgramUniformMatrix4x3fv", 43, -1 },
-   { "glProgramUniformMatrix2x3dv", 40, -1 },
-   { "glProgramUniformMatrix3x2dv", 40, -1 },
-   { "glProgramUniformMatrix2x4dv", 40, -1 },
-   { "glProgramUniformMatrix4x2dv", 40, -1 },
-   { "glProgramUniformMatrix3x4dv", 40, -1 },
-   { "glProgramUniformMatrix4x3dv", 40, -1 },
-   { "glValidateProgramPipeline", 43, -1 },
-   { "glGetProgramPipelineInfoLog", 43, -1 },
-
-   { "glVertexAttribL1d", 41, -1 },
-   { "glVertexAttribL2d", 41, -1 },
-   { "glVertexAttribL3d", 41, -1 },
-   { "glVertexAttribL4d", 41, -1 },
-   { "glVertexAttribL1dv", 41, -1 },
-   { "glVertexAttribL2dv", 41, -1 },
-   { "glVertexAttribL3dv", 41, -1 },
-   { "glVertexAttribL4dv", 41, -1 },
-   { "glVertexAttribLPointer", 41, -1 },
-   { "glGetVertexAttribLdv", 41, -1 },
-   { "glViewportArrayv", 43, -1 },
-   { "glViewportIndexedf", 43, -1 },
-   { "glViewportIndexedfv", 43, -1 },
-   { "glScissorArrayv", 43, -1 },
-   { "glScissorIndexed", 43, -1 },
-   { "glScissorIndexedv", 43, -1 },
-   { "glDepthRangeArrayv", 43, -1 },
-   { "glDepthRangeIndexed", 43, -1 },
-
-// { "glCreateSyncFromCLeventARB", 43, -1 },            // XXX: Add to xml
-
-   { "glDrawArraysInstancedBaseInstance", 43, -1 },
-   { "glDrawElementsInstancedBaseInstance", 43, -1 },
-   { "glDrawElementsInstancedBaseVertexBaseInstance", 43, -1 },
-   { "glDrawTransformFeedbackInstanced", 43, -1 },
-   { "glDrawTransformFeedbackStreamInstanced", 43, -1 },
-   { "glGetActiveAtomicCounterBufferiv", 43, -1 },
-   { "glBindImageTexture", 43, -1 },
-   { "glMemoryBarrier", 43, -1 },
-   { "glTexStorage1D", 43, -1 },
-   { "glTexStorage2D", 43, -1 },
-   { "glTexStorage3D", 43, -1 },
-   { "glTextureStorage1DEXT", 43, -1 },
-   { "glTextureStorage2DEXT", 43, -1 },
-   { "glTextureStorage3DEXT", 43, -1 },
-   { "glClearBufferData", 43, -1 },
-   { "glClearBufferSubData", 43, -1 },
-// { "glClearNamedBufferDataEXT", 43, -1 },             // XXX: Add to xml
-// { "glClearNamedBufferSubDataEXT", 43, -1 },          // XXX: Add to xml
-   { "glCopyImageSubData", 43, -1 },
-   { "glTextureView", 43, -1 },
-   { "glBindVertexBuffer", 43, -1 },
-   { "glVertexAttribFormat", 43, -1 },
-   { "glVertexAttribIFormat", 43, -1 },
-   { "glVertexAttribBinding", 43, -1 },
-   { "glVertexBindingDivisor", 43, -1 },
-// { "glVertexArrayBindVertexBufferEXT", 43, -1 },      // XXX: Add to xml
-// { "glVertexArrayVertexAttribFormatEXT", 43, -1 },    // XXX: Add to xml
-// { "glVertexArrayVertexAttribIFormatEXT", 43, -1 },   // XXX: Add to xml
-// { "glVertexArrayVertexAttribLFormatEXT", 43, -1 },   // XXX: Add to xml
-// { "glVertexArrayVertexAttribBindingEXT", 43, -1 },   // XXX: Add to xml
-// { "glVertexArrayVertexBindingDivisorEXT", 43, -1 },  // XXX: Add to xml
-// { "glFramebufferParameteri", 43, -1 },               // XXX: Add to xml
-// { "glGetFramebufferParameteriv", 43, -1 },           // XXX: Add to xml
-// { "glNamedFramebufferParameteriEXT", 43, -1 },       // XXX: Add to xml
-// { "glGetNamedFramebufferParameterivEXT", 43, -1 },   // XXX: Add to xml
-// { "glGetInternalformati64v", 43, -1 },               // XXX: Add to xml
-   { "glInvalidateTexSubImage", 43, -1 },
-   { "glInvalidateTexImage", 43, -1 },
-   { "glInvalidateBufferSubData", 43, -1 },
-   { "glInvalidateBufferData", 43, -1 },
-   { "glInvalidateFramebuffer", 43, -1 },
-   { "glInvalidateSubFramebuffer", 43, -1 },
-   { "glMultiDrawArraysIndirect", 43, -1 },
-   { "glMultiDrawElementsIndirect", 43, -1 },
-   { "glGetProgramInterfaceiv", 43, -1 },
-   { "glGetProgramResourceIndex", 43, -1 },
-   { "glGetProgramResourceName", 43, -1 },
-   { "glGetProgramResourceiv", 43, -1 },
-   { "glGetProgramResourceLocation", 43, -1 },
-   { "glGetProgramResourceLocationIndex", 43, -1 },
-// { "glShaderStorageBlockBinding", 43, -1 },           // XXX: Add to xml
-   { "glTexBufferRange", 43, -1 },
-// { "glTextureBufferRangeEXT", 43, -1 },               // XXX: Add to xml
-   { "glTexStorage2DMultisample", 43, -1 },
-   { "glTexStorage3DMultisample", 43, -1 },
-// { "glTextureStorage2DMultisampleEXT", 43, -1 },      // XXX: Add to xml
-// { "glTextureStorage3DMultisampleEXT", 43, -1 },      // XXX: Add to xml
-
-/* GL 4.5 */
-   { "glMemoryBarrierByRegion", 45, -1 },
-
-   /* GL_ARB_direct_state_access */
-   { "glCreateTransformFeedbacks", 45, -1 },
-   { "glTransformFeedbackBufferBase", 45, -1 },
-   { "glTransformFeedbackBufferRange", 45, -1 },
-   { "glGetTransformFeedbackiv", 45, -1 },
-   { "glGetTransformFeedbacki_v", 45, -1 },
-   { "glGetTransformFeedbacki64_v", 45, -1 },
-   { "glCreateBuffers", 45, -1 },
-   { "glNamedBufferStorage", 45, -1 },
-   { "glNamedBufferData", 45, -1 },
-   { "glNamedBufferSubData", 45, -1 },
-   { "glCopyNamedBufferSubData", 45, -1 },
-   { "glClearNamedBufferData", 45, -1 },
-   { "glClearNamedBufferSubData", 45, -1 },
-   { "glMapNamedBuffer", 45, -1 },
-   { "glMapNamedBufferRange", 45, -1 },
-   { "glUnmapNamedBuffer", 45, -1 },
-   { "glFlushMappedNamedBufferRange", 45, -1 },
-   { "glGetNamedBufferParameteriv", 45, -1 },
-   { "glGetNamedBufferParameteri64v", 45, -1 },
-   { "glGetNamedBufferPointerv", 45, -1 },
-   { "glGetNamedBufferSubData", 45, -1 },
-   { "glCreateFramebuffers", 45, -1 },
-   { "glNamedFramebufferRenderbuffer", 45, -1 },
-   { "glNamedFramebufferParameteri", 45, -1 },
-   { "glNamedFramebufferTexture", 45, -1 },
-   { "glNamedFramebufferTextureLayer", 45, -1 },
-   { "glNamedFramebufferDrawBuffer", 45, -1 },
-   { "glNamedFramebufferDrawBuffers", 45, -1 },
-   { "glNamedFramebufferReadBuffer", 45, -1 },
-   { "glInvalidateNamedFramebufferSubData", 45, -1 },
-   { "glInvalidateNamedFramebufferData", 45, -1 },
-   { "glClearNamedFramebufferiv", 45, -1 },
-   { "glClearNamedFramebufferuiv", 45, -1 },
-   { "glClearNamedFramebufferfv", 45, -1 },
-   { "glClearNamedFramebufferfi", 45, -1 },
-   { "glBlitNamedFramebuffer", 45, -1 },
-   { "glCheckNamedFramebufferStatus", 45, -1 },
-   { "glGetNamedFramebufferParameteriv", 45, -1 },
-   { "glGetNamedFramebufferAttachmentParameteriv", 45, -1 },
-   { "glCreateRenderbuffers", 45, -1 },
-   { "glNamedRenderbufferStorage", 45, -1 },
-   { "glNamedRenderbufferStorageMultisample", 45, -1 },
-   { "glGetNamedRenderbufferParameteriv", 45, -1 },
-   { "glCreateTextures", 45, -1 },
-   { "glTextureStorage1D", 45, -1 },
-   { "glTextureStorage2D", 45, -1 },
-   { "glTextureStorage3D", 45, -1 },
-   { "glTextureSubImage1D", 45, -1 },
-   { "glTextureSubImage2D", 45, -1 },
-   { "glTextureSubImage3D", 45, -1 },
-   { "glBindTextureUnit", 45, -1 },
-   { "glTextureParameterf", 45, -1 },
-   { "glTextureParameterfv", 45, -1 },
-   { "glTextureParameteri", 45, -1 },
-   { "glTextureParameterIiv", 45, -1 },
-   { "glTextureParameterIuiv", 45, -1 },
-   { "glTextureParameteriv", 45, -1 },
-   { "glGetTextureLevelParameterfv", 45, -1 },
-   { "glGetTextureLevelParameteriv", 45, -1 },
-   { "glGetTextureParameterfv", 45, -1 },
-   { "glGetTextureParameterIiv", 45, -1 },
-   { "glGetTextureParameterIuiv", 45, -1 },
-   { "glGetTextureParameteriv", 45, -1 },
-   { "glCopyTextureSubImage1D", 45, -1 },
-   { "glCopyTextureSubImage2D", 45, -1 },
-   { "glCopyTextureSubImage3D", 45, -1 },
-   { "glGetTextureImage", 45, -1 },
-   { "glGetCompressedTextureImage", 45, -1 },
-   { "glCompressedTextureSubImage1D", 45, -1 },
-   { "glCompressedTextureSubImage2D", 45, -1 },
-   { "glCompressedTextureSubImage3D", 45, -1 },
-   { "glGenerateTextureMipmap", 45, -1 },
-   { "glTextureStorage2DMultisample", 45, -1 },
-   { "glTextureStorage3DMultisample", 45, -1 },
-   { "glTextureBuffer", 45, -1 },
-   { "glTextureBufferRange", 45, -1 },
-   { "glCreateVertexArrays", 45, -1 },
-   { "glDisableVertexArrayAttrib", 45, -1 },
-   { "glEnableVertexArrayAttrib", 45, -1 },
-   { "glVertexArrayElementBuffer", 45, -1 },
-   { "glVertexArrayVertexBuffer", 45, -1 },
-   { "glVertexArrayVertexBuffers", 45, -1 },
-   { "glVertexArrayAttribFormat", 45, -1 },
-   { "glVertexArrayAttribIFormat", 45, -1 },
-   { "glVertexArrayAttribLFormat", 45, -1 },
-   { "glVertexArrayAttribBinding", 45, -1 },
-   { "glVertexArrayBindingDivisor", 45, -1 },
-   { "glGetVertexArrayiv", 45, -1 },
-   { "glGetVertexArrayIndexediv", 45, -1 },
-   { "glGetVertexArrayIndexed64iv", 45, -1 },
-   { "glCreateSamplers", 45, -1 },
-   { "glCreateProgramPipelines", 45, -1 },
-   { "glCreateQueries", 45, -1 },
-   { "glGetQueryBufferObjectiv", 45, -1 },
-   { "glGetQueryBufferObjectuiv", 45, -1 },
-   { "glGetQueryBufferObjecti64v", 45, -1 },
-   { "glGetQueryBufferObjectui64v", 45, -1 },
-
-   /* GL_ARB_indirect_parameters */
-   { "glMultiDrawArraysIndirectCountARB", 31, -1 },
-   { "glMultiDrawElementsIndirectCountARB", 31, -1 },
-
    /* GL_ARB_ES3_2_compatibility */
    { "glPrimitiveBoundingBoxARB", 45, -1 },
 
@@ -1961,6 +1721,9 @@ const struct function gl_core_functions_possible[] = {
    { "glProgramUniform2ui64vARB", 45, -1 },
    { "glProgramUniform3ui64vARB", 45, -1 },
    { "glProgramUniform4ui64vARB", 45, -1 },
+
+   /* GL_ARB_gl_spirv */
+   { "glSpecializeShaderARB", 45, -1 },
 
    { NULL, 0, -1 }
 };
@@ -2175,6 +1938,15 @@ const struct function gles11_functions_possible[] = {
    /* GL_EXT_polygon_offset_clamp */
    { "glPolygonOffsetClampEXT", 11, -1 },
 
+   /* GL_NV_conservative_raster */
+   { "glSubpixelPrecisionBiasNV", 20, -1 },
+
+   /* GL_NV_conservative_raster_dilate */
+   { "glConservativeRasterParameterfNV", 20, -1 },
+
+   /* GL_NV_conservative_raster_pre_snap_triangles */
+   { "glConservativeRasterParameteriNV", 20, -1 },
+
    { NULL, 0, -1 }
 };
 
@@ -2386,6 +2158,19 @@ const struct function gles2_functions_possible[] = {
    { "glValidateProgramPipelineEXT", 20, -1 },
    { "glGetProgramPipelineInfoLogEXT", 20, -1 },
 
+   /* GL_AMD_performance_monitor */
+   { "glGetPerfMonitorGroupsAMD", 20, -1 },
+   { "glGetPerfMonitorCountersAMD", 20, -1 },
+   { "glGetPerfMonitorGroupStringAMD", 20, -1 },
+   { "glGetPerfMonitorCounterStringAMD", 20, -1 },
+   { "glGetPerfMonitorCounterInfoAMD", 20, -1 },
+   { "glGenPerfMonitorsAMD", 20, -1 },
+   { "glDeletePerfMonitorsAMD", 20, -1 },
+   { "glSelectPerfMonitorCountersAMD", 20, -1 },
+   { "glBeginPerfMonitorAMD", 20, -1 },
+   { "glEndPerfMonitorAMD", 20, -1 },
+   { "glGetPerfMonitorCounterDataAMD", 20, -1 },
+
    /* GL_INTEL_performance_query */
    { "glGetFirstPerfQueryIdINTEL", 20, -1 },
    { "glGetNextPerfQueryIdINTEL", 20, -1 },
@@ -2424,11 +2209,39 @@ const struct function gles2_functions_possible[] = {
    /* GL_KHR_blend_equation_advanced */
    { "glBlendBarrierKHR", 20, -1 },
 
+   /* GL_EXT_occlusion_query_boolean */
+   { "glGenQueriesEXT", 20, -1 },
+   { "glDeleteQueriesEXT", 20, -1 },
+   { "glIsQueryEXT", 20, -1 },
+   { "glBeginQueryEXT", 20, -1 },
+   { "glEndQueryEXT", 20, -1 },
+   { "glGetQueryivEXT", 20, -1 },
+   { "glGetQueryObjectivEXT", 20, -1 },
+   { "glGetQueryObjectuivEXT", 20, -1 },
+
+   /* GL_EXT_disjoint_timer_query */
+   { "glGetQueryObjecti64vEXT", 20, -1 },
+   { "glGetQueryObjectui64vEXT", 20, -1 },
+   { "glQueryCounterEXT", 20, -1 },
+
+   /* GL_EXT_shader_framebuffer_fetch_non_coherent */
+   { "glFramebufferFetchBarrierEXT", 20, -1 },
+
+   /* GL_NV_conservative_raster */
+   { "glSubpixelPrecisionBiasNV", 20, -1 },
+
+   /* GL_NV_conservative_raster_dilate */
+   { "glConservativeRasterParameterfNV", 20, -1 },
+
+   /* GL_NV_conservative_raster_pre_snap_triangles */
+   { "glConservativeRasterParameteriNV", 20, -1 },
+
    { NULL, 0, -1 }
 };
 
 const struct function gles3_functions_possible[] = {
-   { "glBeginQuery", 30, -1 },
+   // We check for the aliased -EXT version in GLES 2
+   // { "glBeginQuery", 30, -1 },
    { "glBeginTransformFeedback", 30, -1 },
    { "glBindBufferBase", 30, -1 },
    { "glBindBufferRange", 30, -1 },
@@ -2449,7 +2262,8 @@ const struct function gles3_functions_possible[] = {
    { "glCopyBufferSubData", 30, -1 },
    // We check for the aliased -OES version in GLES 2
    // { "glCopyTexSubImage3D", 30, -1 },
-   { "glDeleteQueries", 30, -1 },
+   // We check for the aliased -EXT version in GLES 2
+   // { "glDeleteQueries", 30, -1 },
    { "glDeleteSamplers", 30, -1 },
    { "glDeleteSync", 30, -1 },
    { "glDeleteTransformFeedbacks", 30, -1 },
@@ -2460,13 +2274,15 @@ const struct function gles3_functions_possible[] = {
    // { "glDrawBuffers", 30, -1 },
    { "glDrawElementsInstanced", 30, -1 },
    { "glDrawRangeElements", 30, -1 },
-   { "glEndQuery", 30, -1 },
+   // We check for the aliased -EXT version in GLES 2
+   // { "glEndQuery", 30, -1 },
    { "glEndTransformFeedback", 30, -1 },
    { "glFenceSync", 30, -1 },
    // We check for the aliased -EXT version in GLES 2
    // { "glFlushMappedBufferRange", 30, -1 },
    { "glFramebufferTextureLayer", 30, -1 },
-   { "glGenQueries", 30, -1 },
+   // We check for the aliased -EXT version in GLES 2
+   // { "glGenQueries", 30, -1 },
    { "glGenSamplers", 30, -1 },
    { "glGenTransformFeedbacks", 30, -1 },
    // We check for the aliased -OES version in GLES 2
@@ -2484,8 +2300,10 @@ const struct function gles3_functions_possible[] = {
    { "glGetInternalformativ", 30, -1 },
    { "glGetInternalformati64v", 30, -1 },
    // glGetProgramBinary aliases glGetProgramBinaryOES in GLES 2
-   { "glGetQueryiv", 30, -1 },
-   { "glGetQueryObjectuiv", 30, -1 },
+   // We check for the aliased -EXT version in GLES 2
+   // { "glGetQueryiv", 30, -1 },
+   // We check for the aliased -EXT version in GLES 2
+   // { "glGetQueryObjectuiv", 30, -1 },
    { "glGetSamplerParameterfv", 30, -1 },
    { "glGetSamplerParameteriv", 30, -1 },
    { "glGetStringi", 30, -1 },
@@ -2498,7 +2316,8 @@ const struct function gles3_functions_possible[] = {
    { "glGetVertexAttribIuiv", 30, -1 },
    { "glInvalidateFramebuffer", 30, -1 },
    { "glInvalidateSubFramebuffer", 30, -1 },
-   { "glIsQuery", 30, -1 },
+   // We check for the aliased -EXT version in GLES 2
+   // { "glIsQuery", 30, -1 },
    { "glIsSampler", 30, -1 },
    { "glIsSync", 30, -1 },
    { "glIsTransformFeedback", 30, -1 },
@@ -2602,6 +2421,10 @@ const struct function gles3_functions_possible[] = {
    /* GL_EXT_window_rectangles */
    { "glWindowRectanglesEXT", 30, -1 },
 
+   /* GL_AMD_framebuffer_multisample_advanced */
+   { "glRenderbufferStorageMultisampleAdvancedAMD", 11, -1 },
+   { "glNamedRenderbufferStorageMultisampleAdvancedAMD", 11, -1 },
+
    { NULL, 0, -1 }
 };
 
@@ -2687,6 +2510,9 @@ const struct function gles31_functions_possible[] = {
    /* GL_OES_texture_storage_multisample_2d_array */
    { "glTexStorage3DMultisampleOES", 31, -1 },
 
+   /* GL_OES_texture_view */
+   { "glTextureViewOES", 31, -1 },
+
    /* GL_EXT_buffer_storage */
    { "glBufferStorageEXT", 31, -1 },
 
@@ -2716,6 +2542,11 @@ const struct function gles31_functions_possible[] = {
    { "glDepthRangeArrayfvOES", 31, -1 },
    { "glDepthRangeIndexedfOES", 31, -1 },
    { "glGetFloati_vOES", 31, -1 },
+
+   /* GL_ARB_sample_locations */
+   { "glFramebufferSampleLocationsfvARB", 31, -1 },
+   { "glNamedFramebufferSampleLocationsfvARB", 31, -1 },
+   { "glEvaluateDepthValuesARB", 31, -1 },
 
    { NULL, 0, -1 },
  };

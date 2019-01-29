@@ -53,7 +53,7 @@
 
 /* For importing wl_buffer */
 #if HAVE_WAYLAND_PLATFORM
-#include "../../../egl/wayland/wayland-drm/wayland-drm.h"
+#include "wayland-drm.h"
 #endif
 
 #ifndef DRM_FORMAT_MOD_INVALID
@@ -444,7 +444,7 @@ dri_screen_create_dri2(struct gbm_dri_device *dri, char *driver_name)
    if (ret) {
       fprintf(stderr, "failed to load driver: %s\n", dri->driver_name);
       return ret;
-   };
+   }
 
    dri->loader_extensions = gbm_dri_screen_extensions;
 
@@ -547,19 +547,55 @@ dri_screen_create_sw(struct gbm_dri_device *dri)
    return dri_screen_create_swrast(dri);
 }
 
-static const struct {
-   uint32_t gbm_format;
-   int dri_image_format;
-} gbm_to_dri_image_formats[] = {
-   { GBM_FORMAT_R8,          __DRI_IMAGE_FORMAT_R8          },
-   { GBM_FORMAT_GR88,        __DRI_IMAGE_FORMAT_GR88        },
-   { GBM_FORMAT_RGB565,      __DRI_IMAGE_FORMAT_RGB565      },
-   { GBM_FORMAT_XRGB8888,    __DRI_IMAGE_FORMAT_XRGB8888    },
-   { GBM_FORMAT_ARGB8888,    __DRI_IMAGE_FORMAT_ARGB8888    },
-   { GBM_FORMAT_XBGR8888,    __DRI_IMAGE_FORMAT_XBGR8888    },
-   { GBM_FORMAT_ABGR8888,    __DRI_IMAGE_FORMAT_ABGR8888    },
-   { GBM_FORMAT_XRGB2101010, __DRI_IMAGE_FORMAT_XRGB2101010 },
-   { GBM_FORMAT_ARGB2101010, __DRI_IMAGE_FORMAT_ARGB2101010 },
+static const struct gbm_dri_visual gbm_dri_visuals_table[] = {
+   {
+     GBM_FORMAT_R8, __DRI_IMAGE_FORMAT_R8,
+     { 0x000000ff, 0x00000000, 0x00000000, 0x00000000 },
+   },
+   {
+     GBM_FORMAT_GR88, __DRI_IMAGE_FORMAT_GR88,
+     { 0x000000ff, 0x0000ff00, 0x00000000, 0x00000000 },
+   },
+   {
+     GBM_FORMAT_ARGB1555, __DRI_IMAGE_FORMAT_ARGB1555,
+     { 0x00007c00, 0x000003e0, 0x0000001f, 0x00008000 },
+   },
+   {
+     GBM_FORMAT_RGB565, __DRI_IMAGE_FORMAT_RGB565,
+     { 0x0000f800, 0x000007e0, 0x0000001f, 0x00000000 },
+   },
+   {
+     GBM_FORMAT_XRGB8888, __DRI_IMAGE_FORMAT_XRGB8888,
+     { 0x00ff0000, 0x0000ff00, 0x000000ff, 0x00000000 },
+   },
+   {
+     GBM_FORMAT_ARGB8888, __DRI_IMAGE_FORMAT_ARGB8888,
+     { 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000 },
+   },
+   {
+     GBM_FORMAT_XBGR8888, __DRI_IMAGE_FORMAT_XBGR8888,
+     { 0x000000ff, 0x0000ff00, 0x00ff0000, 0x00000000 },
+   },
+   {
+     GBM_FORMAT_ABGR8888, __DRI_IMAGE_FORMAT_ABGR8888,
+     { 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000 },
+   },
+   {
+     GBM_FORMAT_XRGB2101010, __DRI_IMAGE_FORMAT_XRGB2101010,
+     { 0x3ff00000, 0x000ffc00, 0x000003ff, 0x00000000 },
+   },
+   {
+     GBM_FORMAT_ARGB2101010, __DRI_IMAGE_FORMAT_ARGB2101010,
+     { 0x3ff00000, 0x000ffc00, 0x000003ff, 0xc0000000 },
+   },
+   {
+     GBM_FORMAT_XBGR2101010, __DRI_IMAGE_FORMAT_XBGR2101010,
+     { 0x000003ff, 0x000ffc00, 0x3ff00000, 0x00000000 },
+   },
+   {
+     GBM_FORMAT_ABGR2101010, __DRI_IMAGE_FORMAT_ABGR2101010,
+     { 0x000003ff, 0x000ffc00, 0x3ff00000, 0xc0000000 },
+   },
 };
 
 /* The two GBM_BO_FORMAT_[XA]RGB8888 formats alias the GBM_FORMAT_*
@@ -584,9 +620,9 @@ gbm_format_to_dri_format(uint32_t gbm_format)
    int i;
 
    gbm_format = gbm_format_canonicalize(gbm_format);
-   for (i = 0; i < ARRAY_SIZE(gbm_to_dri_image_formats); i++) {
-      if (gbm_to_dri_image_formats[i].gbm_format == gbm_format)
-         return gbm_to_dri_image_formats[i].dri_image_format;
+   for (i = 0; i < ARRAY_SIZE(gbm_dri_visuals_table); i++) {
+      if (gbm_dri_visuals_table[i].gbm_format == gbm_format)
+         return gbm_dri_visuals_table[i].dri_image_format;
    }
 
    return 0;
@@ -597,9 +633,9 @@ gbm_dri_to_gbm_format(int dri_format)
 {
    int i;
 
-   for (i = 0; i < ARRAY_SIZE(gbm_to_dri_image_formats); i++) {
-      if (gbm_to_dri_image_formats[i].dri_image_format == dri_format)
-         return gbm_to_dri_image_formats[i].gbm_format;
+   for (i = 0; i < ARRAY_SIZE(gbm_dri_visuals_table); i++) {
+      if (gbm_dri_visuals_table[i].dri_image_format == dri_format)
+         return gbm_dri_visuals_table[i].gbm_format;
    }
 
    return 0;
@@ -829,6 +865,7 @@ gbm_dri_bo_get_offset(struct gbm_bo *_bo, int plane)
       dri->image->queryImage(image, __DRI_IMAGE_ATTRIB_OFFSET, &offset);
       dri->image->destroyImage(image);
    } else {
+      assert(plane == 0);
       dri->image->queryImage(bo->image, __DRI_IMAGE_ATTRIB_OFFSET, &offset);
    }
 
@@ -1393,6 +1430,9 @@ dri_device_create(int fd)
    dri->base.surface_destroy = gbm_dri_surface_destroy;
 
    dri->base.name = "drm";
+
+   dri->visual_table = gbm_dri_visuals_table;
+   dri->num_visuals = ARRAY_SIZE(gbm_dri_visuals_table);
 
    mtx_init(&dri->mutex, mtx_plain);
 

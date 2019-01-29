@@ -43,6 +43,7 @@
 #include "ir_builder_print_visitor.h"
 #include "builtin_functions.h"
 #include "opt_add_neg_to_sub.h"
+#include "main/mtypes.h"
 
 class dead_variable_visitor : public ir_hierarchical_visitor {
 public:
@@ -86,8 +87,6 @@ public:
 
    void remove_dead_variables()
    {
-      struct set_entry *entry;
-
       set_foreach(variables, entry) {
          ir_variable *ir = (ir_variable *) entry->key;
 
@@ -101,7 +100,7 @@ private:
 };
 
 static void
-init_gl_program(struct gl_program *prog, GLenum target, bool is_arb_asm)
+init_gl_program(struct gl_program *prog, bool is_arb_asm)
 {
    prog->RefCount = 1;
    prog->Format = GL_PROGRAM_FORMAT_ASCII_ARB;
@@ -109,7 +108,8 @@ init_gl_program(struct gl_program *prog, GLenum target, bool is_arb_asm)
 }
 
 static struct gl_program *
-new_program(struct gl_context *ctx, GLenum target, GLuint id, bool is_arb_asm)
+new_program(UNUSED struct gl_context *ctx, GLenum target,
+            UNUSED GLuint id, bool is_arb_asm)
 {
    switch (target) {
    case GL_VERTEX_PROGRAM_ARB: /* == GL_VERTEX_PROGRAM_NV */
@@ -119,7 +119,7 @@ new_program(struct gl_context *ctx, GLenum target, GLuint id, bool is_arb_asm)
    case GL_FRAGMENT_PROGRAM_ARB:
    case GL_COMPUTE_PROGRAM_NV: {
       struct gl_program *prog = rzalloc(NULL, struct gl_program);
-      init_gl_program(prog, target, is_arb_asm);
+      init_gl_program(prog, is_arb_asm);
       return prog;
    }
    default:
@@ -228,6 +228,9 @@ initialize_context(struct gl_context *ctx, gl_api api)
       ctx->Const.MaxLights = 8;
       ctx->Const.MaxTextureCoordUnits = 8;
       ctx->Const.MaxTextureUnits = 2;
+      ctx->Const.MaxUniformBufferBindings = 84;
+      ctx->Const.MaxVertexStreams = 4;
+      ctx->Const.MaxTransformFeedbackBuffers = 4;
 
       ctx->Const.Program[MESA_SHADER_VERTEX].MaxAttribs = 16;
       ctx->Const.Program[MESA_SHADER_VERTEX].MaxTextureImageUnits = 16;
@@ -261,6 +264,9 @@ initialize_context(struct gl_context *ctx, gl_api api)
       ctx->Const.MaxLights = 8;
       ctx->Const.MaxTextureCoordUnits = 8;
       ctx->Const.MaxTextureUnits = 2;
+      ctx->Const.MaxUniformBufferBindings = 84;
+      ctx->Const.MaxVertexStreams = 4;
+      ctx->Const.MaxTransformFeedbackBuffers = 4;
 
       ctx->Const.Program[MESA_SHADER_VERTEX].MaxAttribs = 16;
       ctx->Const.Program[MESA_SHADER_VERTEX].MaxTextureImageUnits = 16;
@@ -302,6 +308,9 @@ initialize_context(struct gl_context *ctx, gl_api api)
       ctx->Const.MaxLights = 0;
       ctx->Const.MaxTextureCoordUnits = 0;
       ctx->Const.MaxTextureUnits = 0;
+      ctx->Const.MaxUniformBufferBindings = 84;
+      ctx->Const.MaxVertexStreams = 4;
+      ctx->Const.MaxTransformFeedbackBuffers = 4;
 
       ctx->Const.Program[MESA_SHADER_VERTEX].MaxAttribs = 16;
       ctx->Const.Program[MESA_SHADER_VERTEX].MaxTextureImageUnits = 16;
@@ -510,7 +519,7 @@ standalone_compile_shader(const struct standalone_options *_options,
       } else {
          const gl_shader_stage stage = whole_program->Shaders[0]->Stage;
 
-         whole_program->data->LinkStatus = linking_success;
+         whole_program->data->LinkStatus = LINKING_SUCCESS;
          whole_program->_LinkedShaders[stage] =
             link_intrastage_shaders(whole_program /* mem_ctx */,
                                     ctx,

@@ -26,7 +26,7 @@
 #include "linker.h"
 #include "glsl_parser_extras.h"
 #include "glsl_symbol_table.h"
-#include "main/core.h"
+#include "main/mtypes.h"
 #include "main/uniforms.h"
 #include "program/prog_statevars.h"
 #include "program/prog_instruction.h"
@@ -36,11 +36,6 @@ using namespace ir_builder;
 
 static const struct gl_builtin_uniform_element gl_NumSamples_elements[] = {
    {NULL, {STATE_NUM_SAMPLES, 0, 0}, SWIZZLE_XXXX}
-};
-
-/* only for TCS */
-static const struct gl_builtin_uniform_element gl_PatchVerticesIn_elements[] = {
-   {NULL, {STATE_INTERNAL, STATE_TCS_PATCH_VERTICES_IN}, SWIZZLE_XXXX}
 };
 
 static const struct gl_builtin_uniform_element gl_DepthRange_elements[] = {
@@ -240,7 +235,6 @@ static const struct gl_builtin_uniform_element gl_NormalMatrix_elements[] = {
 #define STATEVAR(name) {#name, name ## _elements, ARRAY_SIZE(name ## _elements)}
 
 static const struct gl_builtin_uniform_desc _mesa_builtin_uniform_desc[] = {
-   STATEVAR(gl_PatchVerticesIn),
    STATEVAR(gl_NumSamples),
    STATEVAR(gl_DepthRange),
    STATEVAR(gl_ClipPlane),
@@ -447,7 +441,7 @@ private:
 builtin_variable_generator::builtin_variable_generator(
    exec_list *instructions, struct _mesa_glsl_parse_state *state)
    : instructions(instructions), state(state), symtab(state->symbols),
-     compatibility(state->compat_shader || !state->is_version(140, 100)),
+     compatibility(state->compat_shader || state->ARB_compatibility_enable),
      bool_t(glsl_type::bool_type), int_t(glsl_type::int_type),
      uint_t(glsl_type::uint_type),
      uint64_t(glsl_type::uint64_t_type),
@@ -1067,12 +1061,7 @@ builtin_variable_generator::generate_tcs_special_vars()
 {
    add_system_value(SYSTEM_VALUE_PRIMITIVE_ID, int_t, "gl_PrimitiveID");
    add_system_value(SYSTEM_VALUE_INVOCATION_ID, int_t, "gl_InvocationID");
-
-   if (state->ctx->Const.LowerTCSPatchVerticesIn) {
-      add_uniform(int_t, "gl_PatchVerticesIn");
-   } else {
-      add_system_value(SYSTEM_VALUE_VERTICES_IN, int_t, "gl_PatchVerticesIn");
-   }
+   add_system_value(SYSTEM_VALUE_VERTICES_IN, int_t, "gl_PatchVerticesIn");
 
    add_output(VARYING_SLOT_TESS_LEVEL_OUTER, array(float_t, 4),
               "gl_TessLevelOuter")->data.patch = 1;
@@ -1205,6 +1194,7 @@ builtin_variable_generator::generate_fs_special_vars()
       var->data.precision = GLSL_PRECISION_MEDIUM;
       var->data.read_only = 1;
       var->data.fb_fetch_output = 1;
+      var->data.memory_coherent = 1;
    }
 
    if (state->es_shader && state->language_version == 100 && state->EXT_blend_func_extended_enable) {

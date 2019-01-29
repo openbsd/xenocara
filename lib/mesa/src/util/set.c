@@ -34,6 +34,7 @@
 
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 
 #include "macros.h"
 #include "ralloc.h"
@@ -132,6 +133,28 @@ _mesa_set_create(void *mem_ctx,
    return ht;
 }
 
+struct set *
+_mesa_set_clone(struct set *set, void *dst_mem_ctx)
+{
+   struct set *clone;
+
+   clone = ralloc(dst_mem_ctx, struct set);
+   if (clone == NULL)
+      return NULL;
+
+   memcpy(clone, set, sizeof(struct set));
+
+   clone->table = ralloc_array(clone, struct set_entry, clone->size);
+   if (clone->table == NULL) {
+      ralloc_free(clone);
+      return NULL;
+   }
+
+   memcpy(clone->table, set->table, clone->size * sizeof(struct set_entry));
+
+   return clone;
+}
+
 /**
  * Frees the given set.
  *
@@ -145,14 +168,33 @@ _mesa_set_destroy(struct set *ht, void (*delete_function)(struct set_entry *entr
       return;
 
    if (delete_function) {
-      struct set_entry *entry;
-
       set_foreach (ht, entry) {
          delete_function(entry);
       }
    }
    ralloc_free(ht->table);
    ralloc_free(ht);
+}
+
+/**
+ * Clears all values from the given set.
+ *
+ * If delete_function is passed, it gets called on each entry present before
+ * the set is cleared.
+ */
+void
+_mesa_set_clear(struct set *set, void (*delete_function)(struct set_entry *entry))
+{
+   if (!set)
+      return;
+
+   set_foreach (set, entry) {
+      if (delete_function)
+         delete_function(entry);
+      entry->key = deleted_key;
+   }
+
+   set->entries = set->deleted_entries = 0;
 }
 
 /**
@@ -210,7 +252,7 @@ static void
 set_rehash(struct set *ht, unsigned new_size_index)
 {
    struct set old_ht;
-   struct set_entry *table, *entry;
+   struct set_entry *table;
 
    if (new_size_index >= ARRAY_SIZE(hash_sizes))
       return;
@@ -230,12 +272,8 @@ set_rehash(struct set *ht, unsigned new_size_index)
    ht->entries = 0;
    ht->deleted_entries = 0;
 
-   for (entry = old_ht.table;
-        entry != old_ht.table + old_ht.size;
-        entry++) {
-      if (entry_is_present(entry)) {
-         set_add(ht, entry->hash, entry->key);
-      }
+   set_foreach(&old_ht, entry) {
+      set_add(ht, entry->hash, entry->key);
    }
 
    ralloc_free(old_ht.table);
@@ -339,6 +377,15 @@ _mesa_set_remove(struct set *ht, struct set_entry *entry)
    entry->key = deleted_key;
    ht->entries--;
    ht->deleted_entries++;
+}
+
+/**
+ * Removes the entry with the corresponding key, if exists.
+ */
+void
+_mesa_set_remove_key(struct set *set, const void *key)
+{
+   _mesa_set_remove(set, _mesa_set_search(set, key));
 }
 
 /**

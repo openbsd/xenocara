@@ -22,20 +22,13 @@
  *
  */
 
-#ifdef HAVE_GETENTROPY
-
-#ifdef HAVE_SYS_RANDOM_H
-#include <sys/random.h>
-#else
-#include <unistd.h>
-#endif
-
-#elif defined(__linux__)
+#if defined(__linux__)
 #include <sys/file.h>
 #include <unistd.h>
 #include <fcntl.h>
 #else
 #include <time.h>
+#include <stdlib.h>
 #endif
 
 #include "rand_xor.h"
@@ -65,10 +58,9 @@ s_rand_xorshift128plus(uint64_t *seed, bool randomised_seed)
    if (!randomised_seed)
       goto fixed_seed;
 
-#ifdef HAVE_GETENTROPY
+#ifdef HAVE_ARC4RANDOM_BUF
    size_t seed_size = sizeof(uint64_t) * 2;
-   if (getentropy(seed, seed_size) == -1)
-      goto fixed_seed;
+   arc4random_buf(seed, seed_size);
    return;
 #elif defined(__linux__)
    int fd = open("/dev/urandom", O_RDONLY);

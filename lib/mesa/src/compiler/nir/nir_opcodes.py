@@ -91,6 +91,7 @@ tfloat = "float"
 tint = "int"
 tbool = "bool32"
 tuint = "uint"
+tuint16 = "uint16"
 tfloat32 = "float32"
 tint32 = "int32"
 tuint32 = "uint32"
@@ -179,8 +180,15 @@ for src_t in [tint, tuint, tfloat]:
       else:
          bit_sizes = [8, 16, 32, 64]
       for bit_size in bit_sizes:
-         unop_convert("{0}2{1}{2}".format(src_t[0], dst_t[0], bit_size),
-                      dst_t + str(bit_size), src_t, "src0")
+          if bit_size == 16 and dst_t == tfloat and src_t == tfloat:
+              rnd_modes = ['_rtne', '_rtz', '']
+              for rnd_mode in rnd_modes:
+                  unop_convert("{0}2{1}{2}{3}".format(src_t[0], dst_t[0],
+                                                       bit_size, rnd_mode),
+                               dst_t + str(bit_size), src_t, "src0")
+          else:
+              unop_convert("{0}2{1}{2}".format(src_t[0], dst_t[0], bit_size),
+                           dst_t + str(bit_size), src_t, "src0")
 
 # We'll hand-code the to/from bool conversion opcodes.  Because bool doesn't
 # have multiple bit-sizes, we can always infer the size from the other type.
@@ -207,6 +215,9 @@ unop("fquantize2f16", tfloat, "(fabs(src0) < ldexpf(1.0, -14)) ? copysignf(0.0f,
 unop("fsin", tfloat, "bit_size == 64 ? sin(src0) : sinf(src0)")
 unop("fcos", tfloat, "bit_size == 64 ? cos(src0) : cosf(src0)")
 
+# dfrexp
+unop_convert("frexp_exp", tint32, tfloat64, "frexp(src0, &dst);")
+unop_convert("frexp_sig", tfloat64, tfloat64, "int n; dst = frexp(src0, &n);")
 
 # Partial derivatives.
 
@@ -272,19 +283,34 @@ dst.x = (src0.x <<  0) |
         (src0.w << 24);
 """)
 
+unop_horiz("pack_32_2x16", 1, tuint32, 2, tuint16,
+           "dst.x = src0.x | ((uint32_t)src0.y << 16);")
+
 unop_horiz("pack_64_2x32", 1, tuint64, 2, tuint32,
            "dst.x = src0.x | ((uint64_t)src0.y << 32);")
+
+unop_horiz("pack_64_4x16", 1, tuint64, 4, tuint16,
+           "dst.x = src0.x | ((uint64_t)src0.y << 16) | ((uint64_t)src0.z << 32) | ((uint64_t)src0.w << 48);")
 
 unop_horiz("unpack_64_2x32", 2, tuint32, 1, tuint64,
            "dst.x = src0.x; dst.y = src0.x >> 32;")
 
+unop_horiz("unpack_64_4x16", 4, tuint16, 1, tuint64,
+           "dst.x = src0.x; dst.y = src0.x >> 16; dst.z = src0.x >> 32; dst.w = src0.w >> 48;")
+
+unop_horiz("unpack_32_2x16", 2, tuint16, 1, tuint32,
+           "dst.x = src0.x; dst.y = src0.x >> 16;")
+
 # Lowered floating point unpacking operations.
 
 
-unop_horiz("unpack_half_2x16_split_x", 1, tfloat32, 1, tuint32,
-           "unpack_half_1x16((uint16_t)(src0.x & 0xffff))")
-unop_horiz("unpack_half_2x16_split_y", 1, tfloat32, 1, tuint32,
-           "unpack_half_1x16((uint16_t)(src0.x >> 16))")
+unop_convert("unpack_half_2x16_split_x", tfloat32, tuint32,
+             "unpack_half_1x16((uint16_t)(src0 & 0xffff))")
+unop_convert("unpack_half_2x16_split_y", tfloat32, tuint32,
+             "unpack_half_1x16((uint16_t)(src0 >> 16))")
+
+unop_convert("unpack_32_2x16_split_x", tuint16, tuint32, "src0")
+unop_convert("unpack_32_2x16_split_y", tuint16, tuint32, "src0 >> 16")
 
 unop_convert("unpack_64_2x32_split_x", tuint32, tuint64, "src0")
 unop_convert("unpack_64_2x32_split_y", tuint32, tuint64, "src0 >> 32")
@@ -298,17 +324,17 @@ dst = 0;
 for (unsigned bit = 0; bit < 32; bit++)
    dst |= ((src0 >> bit) & 1) << (31 - bit);
 """)
-unop("bit_count", tuint32, """
+unop_convert("bit_count", tuint32, tuint, """
 dst = 0;
-for (unsigned bit = 0; bit < 32; bit++) {
+for (unsigned bit = 0; bit < bit_size; bit++) {
    if ((src0 >> bit) & 1)
       dst++;
 }
 """)
 
-unop_convert("ufind_msb", tint32, tuint32, """
+unop_convert("ufind_msb", tint32, tuint, """
 dst = -1;
-for (int bit = 31; bit >= 0; bit--) {
+for (int bit = bit_size - 1; bit >= 0; bit--) {
    if ((src0 >> bit) & 1) {
       dst = bit;
       break;
@@ -330,9 +356,9 @@ for (int bit = 31; bit >= 0; bit--) {
 }
 """)
 
-unop("find_lsb", tint32, """
+unop_convert("find_lsb", tint32, tint, """
 dst = -1;
-for (unsigned bit = 0; bit < 32; bit++) {
+for (unsigned bit = 0; bit < bit_size; bit++) {
    if ((src0 >> bit) & 1) {
       dst = bit;
       break;
@@ -341,9 +367,37 @@ for (unsigned bit = 0; bit < 32; bit++) {
 """)
 
 
-for i in xrange(1, 5):
-   for j in xrange(1, 5):
+for i in range(1, 5):
+   for j in range(1, 5):
       unop_horiz("fnoise{0}_{1}".format(i, j), i, tfloat, j, tfloat, "0.0f")
+
+
+# AMD_gcn_shader extended instructions
+unop_horiz("cube_face_coord", 2, tfloat32, 3, tfloat32, """
+dst.x = dst.y = 0.0;
+float absX = fabs(src0.x);
+float absY = fabs(src0.y);
+float absZ = fabs(src0.z);
+if (src0.x >= 0 && absX >= absY && absX >= absZ) { dst.x = -src0.y; dst.y = -src0.z; }
+if (src0.x < 0 && absX >= absY && absX >= absZ) { dst.x = -src0.y; dst.y = src0.z; }
+if (src0.y >= 0 && absY >= absX && absY >= absZ) { dst.x = src0.z; dst.y = src0.x; }
+if (src0.y < 0 && absY >= absX && absY >= absZ) { dst.x = -src0.z; dst.y = src0.x; }
+if (src0.z >= 0 && absZ >= absX && absZ >= absY) { dst.x = -src0.y; dst.y = src0.x; }
+if (src0.z < 0 && absZ >= absX && absZ >= absY) { dst.x = -src0.y; dst.y = -src0.x; }
+""")
+
+unop_horiz("cube_face_index", 1, tfloat32, 3, tfloat32, """
+float absX = fabs(src0.x);
+float absY = fabs(src0.y);
+float absZ = fabs(src0.z);
+if (src0.x >= 0 && absX >= absY && absX >= absZ) dst.x = 0;
+if (src0.x < 0 && absX >= absY && absX >= absZ) dst.x = 1;
+if (src0.y >= 0 && absY >= absX && absY >= absZ) dst.x = 2;
+if (src0.y < 0 && absY >= absX && absY >= absZ) dst.x = 3;
+if (src0.z >= 0 && absZ >= absX && absZ >= absY) dst.x = 4;
+if (src0.z < 0 && absZ >= absX && absZ >= absY) dst.x = 5;
+""")
+
 
 def binop_convert(name, out_type, in_type, alg_props, const_expr):
    opcode(name, 0, out_type, [0, 0], [in_type, in_type], alg_props, const_expr)
@@ -570,6 +624,9 @@ binop_horiz("pack_half_2x16_split", 1, tuint32, 1, tfloat32, 1, tfloat32,
 binop_convert("pack_64_2x32_split", tuint64, tuint32, "",
               "src0 | ((uint64_t)src1 << 32)")
 
+binop_convert("pack_32_2x16_split", tuint32, tuint16, "",
+              "src0 | ((uint32_t)src1 << 16)")
+
 # bfm implements the behavior of the first operation of the SM5 "bfi" assembly
 # and that of the "bfi1" i965 instruction. That is, it has undefined behavior
 # if either of its arguments are 32.
@@ -623,6 +680,20 @@ triop("flrp", tfloat, "src0 * (1 - src2) + src1 * src2")
 
 
 triop("fcsel", tfloat32, "(src0 != 0.0f) ? src1 : src2")
+
+# 3 way min/max/med
+triop("fmin3", tfloat, "fminf(src0, fminf(src1, src2))")
+triop("imin3", tint, "MIN2(src0, MIN2(src1, src2))")
+triop("umin3", tuint, "MIN2(src0, MIN2(src1, src2))")
+
+triop("fmax3", tfloat, "fmaxf(src0, fmaxf(src1, src2))")
+triop("imax3", tint, "MAX2(src0, MAX2(src1, src2))")
+triop("umax3", tuint, "MAX2(src0, MAX2(src1, src2))")
+
+triop("fmed3", tfloat, "fmaxf(fminf(fmaxf(src0, src1), src2), fminf(src0, src1))")
+triop("imed3", tint, "MAX2(MIN2(MAX2(src0, src1), src2), MIN2(src0, src1))")
+triop("umed3", tuint, "MAX2(MIN2(MAX2(src0, src1), src2), MIN2(src0, src1))")
+
 opcode("bcsel", 0, tuint, [0, 0, 0],
       [tbool, tuint, tuint], "", "src0 ? src1 : src2")
 

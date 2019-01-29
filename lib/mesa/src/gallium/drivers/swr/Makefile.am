@@ -22,24 +22,20 @@
 include Makefile.sources
 include $(top_srcdir)/src/gallium/Automake.inc
 
-AM_CXXFLAGS = $(GALLIUM_DRIVER_CFLAGS) $(SWR_CXX11_CXXFLAGS)
+AM_CXXFLAGS = $(GALLIUM_DRIVER_CFLAGS) $(CXX11_CXXFLAGS)
 
 noinst_LTLIBRARIES = libmesaswr.la
 
-# gen_knobs.* included here to provide driver access to swr configuration
 libmesaswr_la_SOURCES = \
 	$(CXX_SOURCES) \
-	$(COMMON_CXX_SOURCES) \
 	$(JITTER_CXX_SOURCES) \
-	rasterizer/codegen/gen_knobs.cpp \
-	rasterizer/codegen/gen_knobs.h \
 	$(LOADER_SOURCES)
 
 COMMON_CXXFLAGS = \
 	-fno-strict-aliasing \
 	$(GALLIUM_DRIVER_CFLAGS) \
 	$(LLVM_CXXFLAGS) \
-	$(SWR_CXX11_CXXFLAGS) \
+	$(CXX11_CXXFLAGS) \
 	-I$(builddir)/rasterizer/codegen \
 	-I$(builddir)/rasterizer/core \
 	-I$(builddir)/rasterizer/jitter \
@@ -84,7 +80,8 @@ BUILT_SOURCES = \
 	rasterizer/codegen/gen_knobs.h \
 	rasterizer/jitter/gen_state_llvm.h \
 	rasterizer/jitter/gen_builder.hpp \
-	rasterizer/jitter/gen_builder_x86.hpp \
+	rasterizer/jitter/gen_builder_meta.hpp \
+	rasterizer/jitter/gen_builder_intrin.hpp \
 	rasterizer/archrast/gen_ar_event.hpp \
 	rasterizer/archrast/gen_ar_event.cpp \
 	rasterizer/archrast/gen_ar_eventhandler.hpp \
@@ -102,12 +99,13 @@ BUILT_SOURCES = \
 
 if REGEN_SOURCES
 MKDIR_GEN = $(AM_V_at)$(MKDIR_P) $(@D)
-PYTHON_GEN = $(AM_V_GEN)$(PYTHON2) $(PYTHON_FLAGS)
+PYTHON_GEN = $(AM_V_GEN)$(PYTHON) $(PYTHON_FLAGS)
 gen_swr_context_llvm.h: rasterizer/codegen/gen_llvm_types.py rasterizer/codegen/templates/gen_llvm.hpp swr_context.h
 	$(PYTHON_GEN) \
 		$(srcdir)/rasterizer/codegen/gen_llvm_types.py \
 		--input $(srcdir)/swr_context.h \
 		--output ./gen_swr_context_llvm.h
+	$(AM_V_GEN)touch $@
 
 rasterizer/codegen/gen_knobs.cpp: rasterizer/codegen/gen_knobs.py rasterizer/codegen/knob_defs.py rasterizer/codegen/templates/gen_knobs.cpp rasterizer/codegen/gen_common.py
 	$(MKDIR_GEN)
@@ -115,6 +113,7 @@ rasterizer/codegen/gen_knobs.cpp: rasterizer/codegen/gen_knobs.py rasterizer/cod
 		$(srcdir)/rasterizer/codegen/gen_knobs.py \
 		--output rasterizer/codegen/gen_knobs.cpp \
 		--gen_cpp
+	$(AM_V_GEN)touch $@
 
 rasterizer/codegen/gen_knobs.h: rasterizer/codegen/gen_knobs.py rasterizer/codegen/knob_defs.py rasterizer/codegen/templates/gen_knobs.h rasterizer/codegen/gen_common.py
 	$(MKDIR_GEN)
@@ -122,6 +121,7 @@ rasterizer/codegen/gen_knobs.h: rasterizer/codegen/gen_knobs.py rasterizer/codeg
 		$(srcdir)/rasterizer/codegen/gen_knobs.py \
 		--output rasterizer/codegen/gen_knobs.h \
 		--gen_h
+	$(AM_V_GEN)touch $@
 
 rasterizer/jitter/gen_state_llvm.h: rasterizer/codegen/gen_llvm_types.py rasterizer/codegen/templates/gen_llvm.hpp rasterizer/core/state.h rasterizer/codegen/gen_common.py
 	$(MKDIR_GEN)
@@ -129,6 +129,7 @@ rasterizer/jitter/gen_state_llvm.h: rasterizer/codegen/gen_llvm_types.py rasteri
 		$(srcdir)/rasterizer/codegen/gen_llvm_types.py \
 		--input $(srcdir)/rasterizer/core/state.h \
 		--output rasterizer/jitter/gen_state_llvm.h
+	$(AM_V_GEN)touch $@
 
 rasterizer/jitter/gen_builder.hpp: rasterizer/codegen/gen_llvm_ir_macros.py rasterizer/codegen/templates/gen_builder.hpp rasterizer/codegen/gen_common.py
 	$(MKDIR_GEN)
@@ -137,45 +138,63 @@ rasterizer/jitter/gen_builder.hpp: rasterizer/codegen/gen_llvm_ir_macros.py rast
 		--input $(LLVM_INCLUDEDIR)/llvm/IR/IRBuilder.h \
 		--output rasterizer/jitter \
 		--gen_h
+	$(AM_V_GEN)touch $@
 
-rasterizer/jitter/gen_builder_x86.hpp: rasterizer/codegen/gen_llvm_ir_macros.py rasterizer/codegen/templates/gen_builder.hpp rasterizer/codegen/gen_common.py
+rasterizer/jitter/gen_builder_meta.hpp: rasterizer/codegen/gen_llvm_ir_macros.py rasterizer/codegen/templates/gen_builder.hpp rasterizer/codegen/gen_common.py
 	$(MKDIR_GEN)
 	$(PYTHON_GEN) \
 		$(srcdir)/rasterizer/codegen/gen_llvm_ir_macros.py \
 		--output rasterizer/jitter \
-		--gen_x86_h
+		--gen_meta_h
+	$(AM_V_GEN)touch $@
 
-rasterizer/archrast/gen_ar_event.hpp: rasterizer/codegen/gen_archrast.py rasterizer/codegen/templates/gen_ar_event.hpp rasterizer/archrast/events.proto rasterizer/codegen/gen_common.py
+rasterizer/jitter/gen_builder_intrin.hpp: rasterizer/codegen/gen_llvm_ir_macros.py rasterizer/codegen/templates/gen_builder.hpp rasterizer/codegen/gen_common.py
+	$(MKDIR_GEN)
+	$(PYTHON_GEN) \
+		$(srcdir)/rasterizer/codegen/gen_llvm_ir_macros.py \
+		--output rasterizer/jitter \
+		--gen_intrin_h
+	$(AM_V_GEN)touch $@
+
+rasterizer/archrast/gen_ar_event.hpp: rasterizer/codegen/gen_archrast.py rasterizer/codegen/templates/gen_ar_event.hpp rasterizer/archrast/events.proto rasterizer/archrast/events_private.proto rasterizer/codegen/gen_common.py
 	$(MKDIR_GEN)
 	$(PYTHON_GEN) \
 		$(srcdir)/rasterizer/codegen/gen_archrast.py \
 		--proto $(srcdir)/rasterizer/archrast/events.proto \
+		--proto_private $(srcdir)/rasterizer/archrast/events_private.proto \
 		--output rasterizer/archrast/gen_ar_event.hpp \
-		--gen_event_h
+		--gen_event_hpp
+	$(AM_V_GEN)touch $@
 
-rasterizer/archrast/gen_ar_event.cpp: rasterizer/codegen/gen_archrast.py rasterizer/codegen/templates/gen_ar_event.cpp rasterizer/archrast/events.proto rasterizer/codegen/gen_common.py
+rasterizer/archrast/gen_ar_event.cpp: rasterizer/codegen/gen_archrast.py rasterizer/codegen/templates/gen_ar_event.cpp rasterizer/archrast/events.proto rasterizer/archrast/events_private.proto rasterizer/codegen/gen_common.py
 	$(MKDIR_GEN)
 	$(PYTHON_GEN) \
 		$(srcdir)/rasterizer/codegen/gen_archrast.py \
 		--proto $(srcdir)/rasterizer/archrast/events.proto \
+		--proto_private $(srcdir)/rasterizer/archrast/events_private.proto \
 		--output rasterizer/archrast/gen_ar_event.cpp \
 		--gen_event_cpp
+	$(AM_V_GEN)touch $@
 
-rasterizer/archrast/gen_ar_eventhandler.hpp: rasterizer/codegen/gen_archrast.py rasterizer/codegen/templates/gen_ar_eventhandler.hpp rasterizer/archrast/events.proto rasterizer/codegen/gen_common.py
+rasterizer/archrast/gen_ar_eventhandler.hpp: rasterizer/codegen/gen_archrast.py rasterizer/codegen/templates/gen_ar_eventhandler.hpp rasterizer/archrast/events.proto rasterizer/archrast/events_private.proto rasterizer/codegen/gen_common.py
 	$(MKDIR_GEN)
 	$(PYTHON_GEN) \
 		$(srcdir)/rasterizer/codegen/gen_archrast.py \
 		--proto $(srcdir)/rasterizer/archrast/events.proto \
+		--proto_private $(srcdir)/rasterizer/archrast/events_private.proto \
 		--output rasterizer/archrast/gen_ar_eventhandler.hpp \
-		--gen_eventhandler_h
+		--gen_eventhandler_hpp
+	$(AM_V_GEN)touch $@
 
-rasterizer/archrast/gen_ar_eventhandlerfile.hpp: rasterizer/codegen/gen_archrast.py rasterizer/codegen/templates/gen_ar_eventhandlerfile.hpp rasterizer/archrast/events.proto rasterizer/codegen/gen_common.py
+rasterizer/archrast/gen_ar_eventhandlerfile.hpp: rasterizer/codegen/gen_archrast.py rasterizer/codegen/templates/gen_ar_eventhandlerfile.hpp rasterizer/archrast/events.proto rasterizer/archrast/events_private.proto rasterizer/codegen/gen_common.py
 	$(MKDIR_GEN)
 	$(PYTHON_GEN) \
 		$(srcdir)/rasterizer/codegen/gen_archrast.py \
 		--proto $(srcdir)/rasterizer/archrast/events.proto \
+		--proto_private $(srcdir)/rasterizer/archrast/events_private.proto \
 		--output rasterizer/archrast/gen_ar_eventhandlerfile.hpp \
-		--gen_eventhandlerfile_h
+		--gen_eventhandlerfile_hpp
+	$(AM_V_GEN)touch $@
 endif
 
 rasterizer/core/backends/gen_BackendPixelRate0.cpp \
@@ -195,6 +214,7 @@ backend.intermediate
 # use intermediate rule to tell make that all files can be
 # generated in one invocation of gen_backends.py (prevents
 # parallel make race condition)
+if REGEN_SOURCES
 .INTERMEDIATE: backend.intermediate
 backend.intermediate: rasterizer/codegen/gen_backends.py rasterizer/codegen/templates/gen_backend.cpp rasterizer/codegen/templates/gen_header_init.hpp
 	$(MKDIR_GEN)
@@ -234,6 +254,7 @@ rasterizer.intermediate: rasterizer/codegen/gen_backends.py rasterizer/codegen/t
 		--numfiles 4 \
 		--cpp \
 		--hpp
+endif
 
 COMMON_LDFLAGS = \
 	-shared \
@@ -245,8 +266,6 @@ COMMON_LDFLAGS = \
 lib_LTLIBRARIES =
 
 if HAVE_SWR_AVX
-lib_LTLIBRARIES += libswrAVX.la
-
 libswrAVX_la_CXXFLAGS = \
 	$(PTHREAD_CFLAGS) \
 	$(SWR_AVX_CXXFLAGS) \
@@ -264,7 +283,6 @@ libswrAVX_la_LDFLAGS = \
 endif
 
 if HAVE_SWR_AVX2
-lib_LTLIBRARIES += libswrAVX2.la
 libswrAVX2_la_CXXFLAGS = \
 	$(PTHREAD_CFLAGS) \
 	$(SWR_AVX2_CXXFLAGS) \
@@ -282,8 +300,6 @@ libswrAVX2_la_LDFLAGS = \
 endif
 
 if HAVE_SWR_KNL
-lib_LTLIBRARIES += libswrKNL.la
-
 libswrKNL_la_CXXFLAGS = \
 	$(PTHREAD_CFLAGS) \
 	$(SWR_KNL_CXXFLAGS) \
@@ -301,8 +317,6 @@ libswrKNL_la_LDFLAGS = \
 endif
 
 if HAVE_SWR_SKX
-lib_LTLIBRARIES += libswrSKX.la
-
 libswrSKX_la_CXXFLAGS = \
 	$(PTHREAD_CFLAGS) \
 	$(SWR_SKX_CXXFLAGS) \
@@ -319,21 +333,65 @@ libswrSKX_la_LDFLAGS = \
 	$(COMMON_LDFLAGS)
 endif
 
+if HAVE_SWR_BUILTIN
+libmesaswr_la_CXXFLAGS += -DHAVE_SWR_BUILTIN
+libmesaswr_la_LIBADD =
+if HAVE_SWR_AVX
+noinst_LTLIBRARIES += libswrAVX.la
+libmesaswr_la_LIBADD += libswrAVX.la
+endif
+if HAVE_SWR_AVX2
+noinst_LTLIBRARIES += libswrAVX2.la
+libmesaswr_la_LIBADD += libswrAVX2.la
+endif
+if HAVE_SWR_KNL
+noinst_LTLIBRARIES += libswrKNL.la
+libmesaswr_la_LIBADD += libswrKNL.la
+endif
+if HAVE_SWR_SKX
+noinst_LTLIBRARIES += libswrSKX.la
+libmesaswr_la_LIBADD += libswrSKX.la
+endif
+else # !HAVE_SWR_BUILTIN
+# gen_knobs.* included here to provide driver access to swr configuration
+libmesaswr_la_SOURCES += \
+       $(COMMON_CXX_SOURCES) \
+       rasterizer/codegen/gen_knobs.cpp \
+       rasterizer/codegen/gen_knobs.h
+if HAVE_SWR_AVX
+lib_LTLIBRARIES += libswrAVX.la
+endif
+if HAVE_SWR_AVX2
+lib_LTLIBRARIES += libswrAVX2.la
+endif
+if HAVE_SWR_KNL
+lib_LTLIBRARIES += libswrKNL.la
+endif
+if HAVE_SWR_SKX
+lib_LTLIBRARIES += libswrSKX.la
+endif
+endif
+
 include $(top_srcdir)/install-gallium-links.mk
 
 # Generated gen_builder.hpp is not backwards compatible. So ship only one
 # created with the oldest supported version of LLVM.
 dist-hook:
 if SWR_INVALID_LLVM_VERSION
-	@echo "*******************************************************"
-	@echo "LLVM 3.9.0 or LLVM 3.9.1 required to create the tarball"
-	@echo "*******************************************************"
+	@echo "*****************************************"
+	@echo "LLVM 6.0.x required to create the tarball"
+	@echo "*****************************************"
 	@test
 endif
 
 EXTRA_DIST = \
 	SConscript \
+	meson.build \
+	rasterizer/jitter/meson.build \
+	rasterizer/codegen/meson.build \
+	rasterizer/core/backends/meson.build \
 	rasterizer/archrast/events.proto \
+	rasterizer/archrast/events_private.proto \
 	rasterizer/codegen/gen_llvm_ir_macros.py \
 	rasterizer/codegen/gen_llvm_types.py \
 	rasterizer/codegen/gen_archrast.py \

@@ -24,6 +24,7 @@
 #include "brw_vec4.h"
 #include "brw_cfg.h"
 #include "brw_eu.h"
+#include "util/u_math.h"
 
 namespace brw {
 
@@ -584,8 +585,13 @@ type_size_xvec4(const struct glsl_type *type, bool as_vec4)
    case GLSL_TYPE_UINT:
    case GLSL_TYPE_INT:
    case GLSL_TYPE_FLOAT:
+   case GLSL_TYPE_FLOAT16:
    case GLSL_TYPE_BOOL:
    case GLSL_TYPE_DOUBLE:
+   case GLSL_TYPE_UINT16:
+   case GLSL_TYPE_INT16:
+   case GLSL_TYPE_UINT8:
+   case GLSL_TYPE_INT8:
    case GLSL_TYPE_UINT64:
    case GLSL_TYPE_INT64:
       if (type->is_matrix()) {
@@ -732,7 +738,7 @@ vec4_instruction *
 vec4_visitor::emit_lrp(const dst_reg &dst,
                        const src_reg &x, const src_reg &y, const src_reg &a)
 {
-   if (devinfo->gen >= 6) {
+   if (devinfo->gen >= 6 && devinfo->gen <= 10) {
       /* Note that the instruction's argument order is reversed from GLSL
        * and the IR.
        */
@@ -1312,7 +1318,7 @@ vec4_visitor::emit_urb_slot(dst_reg reg, int varying)
        * determine which edges should be drawn as wireframe.
        */
       current_annotation = "edge flag";
-      int edge_attr = _mesa_bitcount_64(nir->info.inputs_read &
+      int edge_attr = util_bitcount64(nir->info.inputs_read &
                                         BITFIELD64_MASK(VERT_ATTRIB_EDGEFLAG));
       emit(MOV(reg, src_reg(dst_reg(ATTR, edge_attr,
                                     glsl_type::float_type, WRITEMASK_XYZW))));
@@ -1881,10 +1887,6 @@ vec4_visitor::vec4_visitor(const struct brw_compiler *compiler,
    this->max_grf = devinfo->gen >= 7 ? GEN7_MRF_HACK_START : BRW_MAX_GRF;
 
    this->uniforms = 0;
-}
-
-vec4_visitor::~vec4_visitor()
-{
 }
 
 

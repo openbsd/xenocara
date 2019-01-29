@@ -19,9 +19,6 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- * Authors:
- *      Marek Olšák <maraeo@gmail.com>
  */
 
 #include "ac_debug.h"
@@ -764,7 +761,7 @@ unsigned ac_get_wave_info(struct ac_wave_info waves[AC_MAX_WAVES_PER_CHIP])
 	char line[2000];
 	unsigned num_waves = 0;
 
-	FILE *p = popen("umr -wa", "r");
+	FILE *p = popen("umr -O halt_waves -wa", "r");
 	if (!p)
 		return 0;
 

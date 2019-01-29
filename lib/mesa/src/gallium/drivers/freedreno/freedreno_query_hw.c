@@ -1,5 +1,3 @@
-/* -*- mode: C; c-file-style: "k&r"; tab-width 4; indent-tabs-mode: t; -*- */
-
 /*
  * Copyright (C) 2014 Rob Clark <robclark@freedesktop.org>
  *
@@ -137,7 +135,7 @@ fd_hw_destroy_query(struct fd_context *ctx, struct fd_query *q)
 static boolean
 fd_hw_begin_query(struct fd_context *ctx, struct fd_query *q)
 {
-	struct fd_batch *batch = ctx->batch;
+	struct fd_batch *batch = fd_context_batch(ctx);
 	struct fd_hw_query *hq = fd_hw_query(q);
 
 	DBG("%p: active=%d", q, q->active);
@@ -158,7 +156,7 @@ fd_hw_begin_query(struct fd_context *ctx, struct fd_query *q)
 static void
 fd_hw_end_query(struct fd_context *ctx, struct fd_query *q)
 {
-	struct fd_batch *batch = ctx->batch;
+	struct fd_batch *batch = fd_context_batch(ctx);
 	struct fd_hw_query *hq = fd_hw_query(q);
 
 	DBG("%p: active=%d", q, q->active);
@@ -211,14 +209,14 @@ fd_hw_get_query_result(struct fd_context *ctx, struct fd_query *q,
 			 * spin forever:
 			 */
 			if (hq->no_wait_cnt++ > 5)
-				fd_batch_flush(rsc->write_batch, false);
+				fd_batch_flush(rsc->write_batch, false, false);
 			return false;
 		}
 
 		if (!rsc->bo)
 			return false;
 
-		ret = fd_bo_cpu_prep(rsc->bo, ctx->screen->pipe,
+		ret = fd_bo_cpu_prep(rsc->bo, ctx->pipe,
 				DRM_FREEDRENO_PREP_READ | DRM_FREEDRENO_PREP_NOSYNC);
 		if (ret)
 			return false;
@@ -239,13 +237,13 @@ fd_hw_get_query_result(struct fd_context *ctx, struct fd_query *q,
 		struct fd_resource *rsc = fd_resource(start->prsc);
 
 		if (rsc->write_batch)
-			fd_batch_flush(rsc->write_batch, true);
+			fd_batch_flush(rsc->write_batch, true, false);
 
 		/* some piglit tests at least do query with no draws, I guess: */
 		if (!rsc->bo)
 			continue;
 
-		fd_bo_cpu_prep(rsc->bo, ctx->screen->pipe, DRM_FREEDRENO_PREP_READ);
+		fd_bo_cpu_prep(rsc->bo, ctx->pipe, DRM_FREEDRENO_PREP_READ);
 
 		void *ptr = fd_bo_map(rsc->bo);
 
@@ -301,7 +299,7 @@ fd_hw_sample_init(struct fd_batch *batch, uint32_t size)
 	struct fd_hw_sample *samp = slab_alloc_st(&batch->ctx->sample_pool);
 	pipe_reference_init(&samp->reference, 1);
 	samp->size = size;
-	debug_assert(util_is_power_of_two(size));
+	debug_assert(util_is_power_of_two_or_zero(size));
 	batch->next_sample_offset = align(batch->next_sample_offset, size);
 	samp->offset = batch->next_sample_offset;
 	/* NOTE: slab_alloc_st() does not zero out the buffer: */

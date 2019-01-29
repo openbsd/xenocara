@@ -2,20 +2,20 @@ descriptor=[
 { "apis": ["GL", "GLES", "GLES2", "GL_CORE"], "params": [
   [ "ALPHA_BITS", "BUFFER_INT(Visual.alphaBits), extra_new_buffers" ],
   [ "BLEND", "CONTEXT_BIT0(Color.BlendEnabled), NO_EXTRA" ],
-  [ "BLEND_SRC", "CONTEXT_ENUM(Color.Blend[0].SrcRGB), NO_EXTRA" ],
+  [ "BLEND_SRC", "CONTEXT_ENUM16(Color.Blend[0].SrcRGB), NO_EXTRA" ],
   [ "BLUE_BITS", "BUFFER_INT(Visual.blueBits), extra_new_buffers" ],
   [ "COLOR_CLEAR_VALUE", "LOC_CUSTOM, TYPE_FLOATN_4, 0, extra_new_frag_clamp" ],
   [ "COLOR_WRITEMASK", "LOC_CUSTOM, TYPE_INT_4, 0, NO_EXTRA" ],
   [ "CULL_FACE", "CONTEXT_BOOL(Polygon.CullFlag), NO_EXTRA" ],
-  [ "CULL_FACE_MODE", "CONTEXT_ENUM(Polygon.CullFaceMode), NO_EXTRA" ],
+  [ "CULL_FACE_MODE", "CONTEXT_ENUM16(Polygon.CullFaceMode), NO_EXTRA" ],
   [ "DEPTH_BITS", "BUFFER_INT(Visual.depthBits), extra_new_buffers" ],
   [ "DEPTH_CLEAR_VALUE", "CONTEXT_FIELD(Depth.Clear, TYPE_DOUBLEN), NO_EXTRA" ],
-  [ "DEPTH_FUNC", "CONTEXT_ENUM(Depth.Func), NO_EXTRA" ],
+  [ "DEPTH_FUNC", "CONTEXT_ENUM16(Depth.Func), NO_EXTRA" ],
   [ "DEPTH_RANGE", "LOC_CUSTOM, TYPE_DOUBLEN_2, 0, NO_EXTRA" ],
   [ "DEPTH_TEST", "CONTEXT_BOOL(Depth.Test), NO_EXTRA" ],
   [ "DEPTH_WRITEMASK", "CONTEXT_BOOL(Depth.Mask), NO_EXTRA" ],
   [ "DITHER", "CONTEXT_BOOL(Color.DitherFlag), NO_EXTRA" ],
-  [ "FRONT_FACE", "CONTEXT_ENUM(Polygon.FrontFace), NO_EXTRA" ],
+  [ "FRONT_FACE", "CONTEXT_ENUM16(Polygon.FrontFace), NO_EXTRA" ],
   [ "GREEN_BITS", "BUFFER_INT(Visual.greenBits), extra_new_buffers" ],
   [ "LINE_WIDTH", "CONTEXT_FLOAT(Line.Width), NO_EXTRA" ],
   [ "ALIASED_LINE_WIDTH_RANGE", "CONTEXT_FLOAT2(Const.MinLineWidth), NO_EXTRA" ],
@@ -33,10 +33,10 @@ descriptor=[
   [ "SCISSOR_TEST", "LOC_CUSTOM, TYPE_BOOLEAN, NO_OFFSET, NO_EXTRA" ],
   [ "STENCIL_BITS", "BUFFER_INT(Visual.stencilBits), extra_new_buffers" ],
   [ "STENCIL_CLEAR_VALUE", "CONTEXT_INT(Stencil.Clear), NO_EXTRA" ],
-  [ "STENCIL_FAIL", "LOC_CUSTOM, TYPE_ENUM, NO_OFFSET, NO_EXTRA" ],
-  [ "STENCIL_FUNC", "LOC_CUSTOM, TYPE_ENUM, NO_OFFSET, NO_EXTRA" ],
-  [ "STENCIL_PASS_DEPTH_FAIL", "LOC_CUSTOM, TYPE_ENUM, NO_OFFSET, NO_EXTRA" ],
-  [ "STENCIL_PASS_DEPTH_PASS", "LOC_CUSTOM, TYPE_ENUM, NO_OFFSET, NO_EXTRA" ],
+  [ "STENCIL_FAIL", "LOC_CUSTOM, TYPE_ENUM16, NO_OFFSET, NO_EXTRA" ],
+  [ "STENCIL_FUNC", "LOC_CUSTOM, TYPE_ENUM16, NO_OFFSET, NO_EXTRA" ],
+  [ "STENCIL_PASS_DEPTH_FAIL", "LOC_CUSTOM, TYPE_ENUM16, NO_OFFSET, NO_EXTRA" ],
+  [ "STENCIL_PASS_DEPTH_PASS", "LOC_CUSTOM, TYPE_ENUM16, NO_OFFSET, NO_EXTRA" ],
   [ "STENCIL_REF", "LOC_CUSTOM, TYPE_UINT, NO_OFFSET, NO_EXTRA" ],
   [ "STENCIL_TEST", "CONTEXT_BOOL(Stencil.Enabled), NO_EXTRA" ],
   [ "STENCIL_VALUE_MASK", "LOC_CUSTOM, TYPE_UINT, NO_OFFSET, NO_EXTRA" ],
@@ -61,15 +61,15 @@ descriptor=[
   [ "MAX_CUBE_MAP_TEXTURE_SIZE_ARB", "LOC_CUSTOM, TYPE_INT, offsetof(struct gl_context, Const.MaxCubeTextureLevels), extra_ARB_texture_cube_map" ],
 
 # XXX: OES_blend_subtract
-  [ "BLEND_SRC_RGB", "CONTEXT_ENUM(Color.Blend[0].SrcRGB), NO_EXTRA" ],
-  [ "BLEND_DST_RGB", "CONTEXT_ENUM(Color.Blend[0].DstRGB), NO_EXTRA" ],
-  [ "BLEND_SRC_ALPHA", "CONTEXT_ENUM(Color.Blend[0].SrcA), NO_EXTRA" ],
-  [ "BLEND_DST_ALPHA", "CONTEXT_ENUM(Color.Blend[0].DstA), NO_EXTRA" ],
+  [ "BLEND_SRC_RGB", "CONTEXT_ENUM16(Color.Blend[0].SrcRGB), NO_EXTRA" ],
+  [ "BLEND_DST_RGB", "CONTEXT_ENUM16(Color.Blend[0].DstRGB), NO_EXTRA" ],
+  [ "BLEND_SRC_ALPHA", "CONTEXT_ENUM16(Color.Blend[0].SrcA), NO_EXTRA" ],
+  [ "BLEND_DST_ALPHA", "CONTEXT_ENUM16(Color.Blend[0].DstA), NO_EXTRA" ],
 
 # GL_BLEND_EQUATION_RGB, which is what we're really after, is
 # defined identically to GL_BLEND_EQUATION.
-  [ "BLEND_EQUATION", "CONTEXT_ENUM(Color.Blend[0].EquationRGB), NO_EXTRA" ],
-  [ "BLEND_EQUATION_ALPHA_EXT", "CONTEXT_ENUM(Color.Blend[0].EquationA), NO_EXTRA" ],
+  [ "BLEND_EQUATION", "CONTEXT_ENUM16(Color.Blend[0].EquationRGB), NO_EXTRA" ],
+  [ "BLEND_EQUATION_ALPHA_EXT", "CONTEXT_ENUM16(Color.Blend[0].EquationA), NO_EXTRA" ],
 
 # GL_ARB_texture_compression
   [ "NUM_COMPRESSED_TEXTURE_FORMATS_ARB", "LOC_CUSTOM, TYPE_INT, 0, NO_EXTRA" ],
@@ -88,7 +88,7 @@ descriptor=[
   [ "MIN_SAMPLE_SHADING_VALUE_ARB", "CONTEXT_FLOAT(Multisample.MinSampleShadingValue), extra_gl40_ARB_sample_shading" ],
 
 # GL_SGIS_generate_mipmap
-  [ "GENERATE_MIPMAP_HINT_SGIS", "CONTEXT_ENUM(Hint.GenerateMipmap), NO_EXTRA" ],
+  [ "GENERATE_MIPMAP_HINT_SGIS", "CONTEXT_ENUM16(Hint.GenerateMipmap), NO_EXTRA" ],
 
 # GL_ARB_vertex_buffer_object
   [ "ARRAY_BUFFER_BINDING_ARB", "LOC_CUSTOM, TYPE_INT, 0, NO_EXTRA" ],
@@ -98,9 +98,9 @@ descriptor=[
   [ "ELEMENT_ARRAY_BUFFER_BINDING_ARB", "LOC_CUSTOM, TYPE_INT, 0, NO_EXTRA" ],
 
 # GL_ARB_color_buffer_float
-  [ "CLAMP_VERTEX_COLOR", "CONTEXT_ENUM(Light.ClampVertexColor), extra_ARB_color_buffer_float" ],
-  [ "CLAMP_FRAGMENT_COLOR", "CONTEXT_ENUM(Color.ClampFragmentColor), extra_ARB_color_buffer_float" ],
-  [ "CLAMP_READ_COLOR", "CONTEXT_ENUM(Color.ClampReadColor), extra_ARB_color_buffer_float_or_glcore" ],
+  [ "CLAMP_VERTEX_COLOR", "CONTEXT_ENUM16(Light.ClampVertexColor), extra_ARB_color_buffer_float" ],
+  [ "CLAMP_FRAGMENT_COLOR", "CONTEXT_ENUM16(Color.ClampFragmentColor), extra_ARB_color_buffer_float" ],
+  [ "CLAMP_READ_COLOR", "CONTEXT_ENUM16(Color.ClampReadColor), extra_ARB_color_buffer_float_or_glcore" ],
 
 # GL_ARB_copy_buffer
   [ "COPY_READ_BUFFER", "LOC_CUSTOM, TYPE_INT, 0, NO_EXTRA" ],
@@ -138,6 +138,11 @@ descriptor=[
 
 # GL_ARB_polygon_offset_clamp / GL_EXT_polygon_offset_clamp
   [ "POLYGON_OFFSET_CLAMP_EXT", "CONTEXT_FLOAT(Polygon.OffsetClamp), extra_ARB_polygon_offset_clamp" ],
+
+# GL_EXT_external_objects
+  [ "NUM_DEVICE_UUIDS_EXT", "LOC_CUSTOM, TYPE_INT, NO_OFFSET, NO_EXTRA" ],
+  [ "DRIVER_UUID_EXT", "LOC_CUSTOM, TYPE_INT_4, NO_OFFSET, NO_EXTRA" ],
+  [ "DEVICE_UUID_EXT", "LOC_CUSTOM, TYPE_INT_4, NO_OFFSET, NO_EXTRA" ],
 ]},
 
 # Enums in OpenGL and GLES1
@@ -155,9 +160,9 @@ descriptor=[
   [ "LIGHT_MODEL_AMBIENT", "CONTEXT_FIELD(Light.Model.Ambient[0], TYPE_FLOATN_4), NO_EXTRA" ],
   [ "LIGHT_MODEL_TWO_SIDE", "CONTEXT_BOOL(Light.Model.TwoSide), NO_EXTRA" ],
   [ "ALPHA_TEST", "CONTEXT_BOOL(Color.AlphaEnabled), NO_EXTRA" ],
-  [ "ALPHA_TEST_FUNC", "CONTEXT_ENUM(Color.AlphaFunc), NO_EXTRA" ],
+  [ "ALPHA_TEST_FUNC", "CONTEXT_ENUM16(Color.AlphaFunc), NO_EXTRA" ],
   [ "ALPHA_TEST_REF", "LOC_CUSTOM, TYPE_FLOATN, 0, extra_new_frag_clamp" ],
-  [ "BLEND_DST", "CONTEXT_ENUM(Color.Blend[0].DstRGB), NO_EXTRA" ],
+  [ "BLEND_DST", "CONTEXT_ENUM16(Color.Blend[0].DstRGB), NO_EXTRA" ],
   [ "CLIP_DISTANCE0", "CONTEXT_BIT0(Transform.ClipPlanesEnabled), extra_valid_clip_distance" ],
   [ "CLIP_DISTANCE1", "CONTEXT_BIT1(Transform.ClipPlanesEnabled), extra_valid_clip_distance" ],
   [ "CLIP_DISTANCE2", "CONTEXT_BIT2(Transform.ClipPlanesEnabled), extra_valid_clip_distance" ],
@@ -175,15 +180,15 @@ descriptor=[
   [ "FOG_COLOR", "LOC_CUSTOM, TYPE_FLOATN_4, 0, extra_new_frag_clamp" ],
   [ "FOG_DENSITY", "CONTEXT_FLOAT(Fog.Density), NO_EXTRA" ],
   [ "FOG_END", "CONTEXT_FLOAT(Fog.End), NO_EXTRA" ],
-  [ "FOG_HINT", "CONTEXT_ENUM(Hint.Fog), NO_EXTRA" ],
-  [ "FOG_MODE", "CONTEXT_ENUM(Fog.Mode), NO_EXTRA" ],
+  [ "FOG_HINT", "CONTEXT_ENUM16(Hint.Fog), NO_EXTRA" ],
+  [ "FOG_MODE", "CONTEXT_ENUM16(Fog.Mode), NO_EXTRA" ],
   [ "FOG_START", "CONTEXT_FLOAT(Fog.Start), NO_EXTRA" ],
   [ "LINE_SMOOTH", "CONTEXT_BOOL(Line.SmoothFlag), NO_EXTRA" ],
-  [ "LINE_SMOOTH_HINT", "CONTEXT_ENUM(Hint.LineSmooth), NO_EXTRA" ],
+  [ "LINE_SMOOTH_HINT", "CONTEXT_ENUM16(Hint.LineSmooth), NO_EXTRA" ],
   [ "LINE_WIDTH_RANGE", "CONTEXT_FLOAT2(Const.MinLineWidthAA), NO_EXTRA" ],
   [ "COLOR_LOGIC_OP", "CONTEXT_BOOL(Color.ColorLogicOpEnabled), NO_EXTRA" ],
-  [ "LOGIC_OP_MODE", "CONTEXT_ENUM(Color.LogicOp), NO_EXTRA" ],
-  [ "MATRIX_MODE", "CONTEXT_ENUM(Transform.MatrixMode), NO_EXTRA" ],
+  [ "LOGIC_OP_MODE", "CONTEXT_ENUM16(Color.LogicOp), NO_EXTRA" ],
+  [ "MATRIX_MODE", "CONTEXT_ENUM16(Transform.MatrixMode), NO_EXTRA" ],
   [ "MAX_MODELVIEW_STACK_DEPTH", "CONST(MAX_MODELVIEW_STACK_DEPTH), NO_EXTRA" ],
   [ "MAX_PROJECTION_STACK_DEPTH", "CONST(MAX_PROJECTION_STACK_DEPTH), NO_EXTRA" ],
   [ "MAX_TEXTURE_STACK_DEPTH", "CONST(MAX_TEXTURE_STACK_DEPTH), NO_EXTRA" ],
@@ -191,36 +196,36 @@ descriptor=[
   [ "MODELVIEW_STACK_DEPTH", "LOC_CUSTOM, TYPE_INT, offsetof(struct gl_context, ModelviewMatrixStack.Depth), NO_EXTRA" ],
   [ "NORMALIZE", "CONTEXT_BOOL(Transform.Normalize), NO_EXTRA" ],
   [ "PACK_SKIP_IMAGES", "CONTEXT_INT(Pack.SkipImages), NO_EXTRA" ],
-  [ "PERSPECTIVE_CORRECTION_HINT", "CONTEXT_ENUM(Hint.PerspectiveCorrection), NO_EXTRA" ],
+  [ "PERSPECTIVE_CORRECTION_HINT", "CONTEXT_ENUM16(Hint.PerspectiveCorrection), NO_EXTRA" ],
   [ "POINT_SIZE", "CONTEXT_FLOAT(Point.Size), NO_EXTRA" ],
   [ "POINT_SIZE_RANGE", "CONTEXT_FLOAT2(Const.MinPointSizeAA), NO_EXTRA" ],
   [ "POINT_SMOOTH", "CONTEXT_BOOL(Point.SmoothFlag), NO_EXTRA" ],
-  [ "POINT_SMOOTH_HINT", "CONTEXT_ENUM(Hint.PointSmooth), NO_EXTRA" ],
+  [ "POINT_SMOOTH_HINT", "CONTEXT_ENUM16(Hint.PointSmooth), NO_EXTRA" ],
   [ "POINT_SIZE_MIN_EXT", "CONTEXT_FLOAT(Point.MinSize), NO_EXTRA" ],
   [ "POINT_SIZE_MAX_EXT", "CONTEXT_FLOAT(Point.MaxSize), NO_EXTRA" ],
   [ "POINT_FADE_THRESHOLD_SIZE_EXT", "CONTEXT_FLOAT(Point.Threshold), NO_EXTRA" ],
   [ "PROJECTION_MATRIX", "CONTEXT_MATRIX(ProjectionMatrixStack.Top), NO_EXTRA" ],
   [ "PROJECTION_STACK_DEPTH", "LOC_CUSTOM, TYPE_INT, offsetof(struct gl_context, ProjectionMatrixStack.Depth), NO_EXTRA" ],
   [ "RESCALE_NORMAL", "CONTEXT_BOOL(Transform.RescaleNormals), NO_EXTRA" ],
-  [ "SHADE_MODEL", "CONTEXT_ENUM(Light.ShadeModel), NO_EXTRA" ],
+  [ "SHADE_MODEL", "CONTEXT_ENUM16(Light.ShadeModel), NO_EXTRA" ],
   [ "TEXTURE_2D", "LOC_CUSTOM, TYPE_BOOLEAN, 0, NO_EXTRA" ],
   [ "TEXTURE_MATRIX", "LOC_CUSTOM, TYPE_MATRIX, 0, extra_valid_texture_unit" ],
   [ "TEXTURE_STACK_DEPTH", "LOC_CUSTOM, TYPE_INT, 0, extra_valid_texture_unit" ],
   [ "VERTEX_ARRAY", "ARRAY_BOOL(VertexAttrib[VERT_ATTRIB_POS].Enabled), NO_EXTRA" ],
-  [ "VERTEX_ARRAY_SIZE", "ARRAY_INT(VertexAttrib[VERT_ATTRIB_POS].Size), NO_EXTRA" ],
-  [ "VERTEX_ARRAY_TYPE", "ARRAY_ENUM(VertexAttrib[VERT_ATTRIB_POS].Type), NO_EXTRA" ],
-  [ "VERTEX_ARRAY_STRIDE", "ARRAY_INT(VertexAttrib[VERT_ATTRIB_POS].Stride), NO_EXTRA" ],
+  [ "VERTEX_ARRAY_SIZE", "ARRAY_UBYTE(VertexAttrib[VERT_ATTRIB_POS].Size), NO_EXTRA" ],
+  [ "VERTEX_ARRAY_TYPE", "ARRAY_ENUM16(VertexAttrib[VERT_ATTRIB_POS].Type), NO_EXTRA" ],
+  [ "VERTEX_ARRAY_STRIDE", "ARRAY_SHORT(VertexAttrib[VERT_ATTRIB_POS].Stride), NO_EXTRA" ],
   [ "NORMAL_ARRAY", "ARRAY_BOOL(VertexAttrib[VERT_ATTRIB_NORMAL].Enabled), NO_EXTRA" ],
-  [ "NORMAL_ARRAY_TYPE", "ARRAY_ENUM(VertexAttrib[VERT_ATTRIB_NORMAL].Type), NO_EXTRA" ],
-  [ "NORMAL_ARRAY_STRIDE", "ARRAY_INT(VertexAttrib[VERT_ATTRIB_NORMAL].Stride), NO_EXTRA" ],
+  [ "NORMAL_ARRAY_TYPE", "ARRAY_ENUM16(VertexAttrib[VERT_ATTRIB_NORMAL].Type), NO_EXTRA" ],
+  [ "NORMAL_ARRAY_STRIDE", "ARRAY_SHORT(VertexAttrib[VERT_ATTRIB_NORMAL].Stride), NO_EXTRA" ],
   [ "COLOR_ARRAY", "ARRAY_BOOL(VertexAttrib[VERT_ATTRIB_COLOR0].Enabled), NO_EXTRA" ],
   [ "COLOR_ARRAY_SIZE", "LOC_CUSTOM, TYPE_INT, 0, NO_EXTRA" ],
-  [ "COLOR_ARRAY_TYPE", "ARRAY_ENUM(VertexAttrib[VERT_ATTRIB_COLOR0].Type), NO_EXTRA" ],
-  [ "COLOR_ARRAY_STRIDE", "ARRAY_INT(VertexAttrib[VERT_ATTRIB_COLOR0].Stride), NO_EXTRA" ],
+  [ "COLOR_ARRAY_TYPE", "ARRAY_ENUM16(VertexAttrib[VERT_ATTRIB_COLOR0].Type), NO_EXTRA" ],
+  [ "COLOR_ARRAY_STRIDE", "ARRAY_SHORT(VertexAttrib[VERT_ATTRIB_COLOR0].Stride), NO_EXTRA" ],
   [ "TEXTURE_COORD_ARRAY", "LOC_CUSTOM, TYPE_BOOLEAN, offsetof(struct gl_array_attributes, Enabled), NO_EXTRA" ],
-  [ "TEXTURE_COORD_ARRAY_SIZE", "LOC_CUSTOM, TYPE_INT, offsetof(struct gl_array_attributes, Size), NO_EXTRA" ],
-  [ "TEXTURE_COORD_ARRAY_TYPE", "LOC_CUSTOM, TYPE_ENUM, offsetof(struct gl_array_attributes, Type), NO_EXTRA" ],
-  [ "TEXTURE_COORD_ARRAY_STRIDE", "LOC_CUSTOM, TYPE_INT, offsetof(struct gl_array_attributes, Stride), NO_EXTRA" ],
+  [ "TEXTURE_COORD_ARRAY_SIZE", "LOC_CUSTOM, TYPE_UBYTE, offsetof(struct gl_array_attributes, Size), NO_EXTRA" ],
+  [ "TEXTURE_COORD_ARRAY_TYPE", "LOC_CUSTOM, TYPE_ENUM16, offsetof(struct gl_array_attributes, Type), NO_EXTRA" ],
+  [ "TEXTURE_COORD_ARRAY_STRIDE", "LOC_CUSTOM, TYPE_SHORT, offsetof(struct gl_array_attributes, Stride), NO_EXTRA" ],
 
 # GL_ARB_multitexture
   [ "MAX_TEXTURE_UNITS", "CONTEXT_INT(Const.MaxTextureUnits), NO_EXTRA" ],
@@ -229,7 +234,7 @@ descriptor=[
 # GL_ARB_texture_cube_map
   [ "TEXTURE_CUBE_MAP_ARB", "LOC_CUSTOM, TYPE_BOOLEAN, 0, NO_EXTRA" ],
 # S, T, and R are always set at the same time
-  [ "TEXTURE_GEN_STR_OES", "LOC_TEXUNIT, TYPE_BIT_0, offsetof(struct gl_texture_unit, TexGenEnabled), NO_EXTRA" ],
+  [ "TEXTURE_GEN_STR_OES", "LOC_TEXUNIT, TYPE_BIT_0, offsetof(struct gl_fixedfunc_texture_unit, TexGenEnabled), NO_EXTRA" ],
 
 # GL_ARB_multisample
   [ "MULTISAMPLE_ARB", "CONTEXT_BOOL(Multisample.Enabled), NO_EXTRA" ],
@@ -249,9 +254,14 @@ descriptor=[
 { "apis": ["GLES"], "params": [
 # OES_point_size_array
   [ "POINT_SIZE_ARRAY_OES", "ARRAY_FIELD(VertexAttrib[VERT_ATTRIB_POINT_SIZE].Enabled, TYPE_BOOLEAN), NO_EXTRA" ],
-  [ "POINT_SIZE_ARRAY_TYPE_OES", "ARRAY_FIELD(VertexAttrib[VERT_ATTRIB_POINT_SIZE].Type, TYPE_ENUM), NO_EXTRA" ],
-  [ "POINT_SIZE_ARRAY_STRIDE_OES", "ARRAY_FIELD(VertexAttrib[VERT_ATTRIB_POINT_SIZE].Stride, TYPE_INT), NO_EXTRA" ],
+  [ "POINT_SIZE_ARRAY_TYPE_OES", "ARRAY_FIELD(VertexAttrib[VERT_ATTRIB_POINT_SIZE].Type, TYPE_ENUM16), NO_EXTRA" ],
+  [ "POINT_SIZE_ARRAY_STRIDE_OES", "ARRAY_FIELD(VertexAttrib[VERT_ATTRIB_POINT_SIZE].Stride, TYPE_SHORT), NO_EXTRA" ],
   [ "POINT_SIZE_ARRAY_BUFFER_BINDING_OES", "LOC_CUSTOM, TYPE_INT, 0, NO_EXTRA" ],
+]},
+
+# Enums in GLES2, GLES3
+{ "apis": ["GLES2", "GLES3"], "params": [
+  [ "GPU_DISJOINT_EXT", "LOC_CUSTOM, TYPE_INT, 0, extra_EXT_disjoint_timer_query" ],
 ]},
 
 { "apis": ["GL", "GL_CORE", "GLES2"], "params": [
@@ -274,14 +284,14 @@ descriptor=[
   [ "MAX_COLOR_ATTACHMENTS", "CONTEXT_INT(Const.MaxColorAttachments), NO_EXTRA" ],
 
 # GL_ARB_draw_buffers / GL_NV_draw_buffers (for ES 2.0)
-  [ "DRAW_BUFFER0_ARB", "BUFFER_ENUM(ColorDrawBuffer[0]), NO_EXTRA" ],
-  [ "DRAW_BUFFER1_ARB", "BUFFER_ENUM(ColorDrawBuffer[1]), extra_valid_draw_buffer" ],
-  [ "DRAW_BUFFER2_ARB", "BUFFER_ENUM(ColorDrawBuffer[2]), extra_valid_draw_buffer" ],
-  [ "DRAW_BUFFER3_ARB", "BUFFER_ENUM(ColorDrawBuffer[3]), extra_valid_draw_buffer" ],
-  [ "DRAW_BUFFER4_ARB", "BUFFER_ENUM(ColorDrawBuffer[4]), extra_valid_draw_buffer" ],
-  [ "DRAW_BUFFER5_ARB", "BUFFER_ENUM(ColorDrawBuffer[5]), extra_valid_draw_buffer" ],
-  [ "DRAW_BUFFER6_ARB", "BUFFER_ENUM(ColorDrawBuffer[6]), extra_valid_draw_buffer" ],
-  [ "DRAW_BUFFER7_ARB", "BUFFER_ENUM(ColorDrawBuffer[7]), extra_valid_draw_buffer" ],
+  [ "DRAW_BUFFER0_ARB", "BUFFER_ENUM16(ColorDrawBuffer[0]), NO_EXTRA" ],
+  [ "DRAW_BUFFER1_ARB", "BUFFER_ENUM16(ColorDrawBuffer[1]), extra_valid_draw_buffer" ],
+  [ "DRAW_BUFFER2_ARB", "BUFFER_ENUM16(ColorDrawBuffer[2]), extra_valid_draw_buffer" ],
+  [ "DRAW_BUFFER3_ARB", "BUFFER_ENUM16(ColorDrawBuffer[3]), extra_valid_draw_buffer" ],
+  [ "DRAW_BUFFER4_ARB", "BUFFER_ENUM16(ColorDrawBuffer[4]), extra_valid_draw_buffer" ],
+  [ "DRAW_BUFFER5_ARB", "BUFFER_ENUM16(ColorDrawBuffer[5]), extra_valid_draw_buffer" ],
+  [ "DRAW_BUFFER6_ARB", "BUFFER_ENUM16(ColorDrawBuffer[6]), extra_valid_draw_buffer" ],
+  [ "DRAW_BUFFER7_ARB", "BUFFER_ENUM16(ColorDrawBuffer[7]), extra_valid_draw_buffer" ],
   [ "BLEND_COLOR_EXT", "LOC_CUSTOM, TYPE_FLOATN_4, 0, extra_new_frag_clamp" ],
 
 # GL_ARB_fragment_program
@@ -296,13 +306,13 @@ descriptor=[
   [ "CURRENT_PROGRAM", "LOC_CUSTOM, TYPE_INT, 0, NO_EXTRA" ],
 
 # OpenGL 2.0
-  [ "STENCIL_BACK_FUNC", "CONTEXT_ENUM(Stencil.Function[1]), NO_EXTRA" ],
+  [ "STENCIL_BACK_FUNC", "CONTEXT_ENUM16(Stencil.Function[1]), NO_EXTRA" ],
   [ "STENCIL_BACK_VALUE_MASK", "CONTEXT_UINT(Stencil.ValueMask[1]), NO_EXTRA" ],
   [ "STENCIL_BACK_WRITEMASK", "CONTEXT_UINT(Stencil.WriteMask[1]), NO_EXTRA" ],
   [ "STENCIL_BACK_REF", "LOC_CUSTOM, TYPE_UINT, NO_OFFSET, NO_EXTRA" ],
-  [ "STENCIL_BACK_FAIL", "CONTEXT_ENUM(Stencil.FailFunc[1]), NO_EXTRA" ],
-  [ "STENCIL_BACK_PASS_DEPTH_FAIL", "CONTEXT_ENUM(Stencil.ZFailFunc[1]), NO_EXTRA" ],
-  [ "STENCIL_BACK_PASS_DEPTH_PASS", "CONTEXT_ENUM(Stencil.ZPassFunc[1]), NO_EXTRA" ],
+  [ "STENCIL_BACK_FAIL", "CONTEXT_ENUM16(Stencil.FailFunc[1]), NO_EXTRA" ],
+  [ "STENCIL_BACK_PASS_DEPTH_FAIL", "CONTEXT_ENUM16(Stencil.ZFailFunc[1]), NO_EXTRA" ],
+  [ "STENCIL_BACK_PASS_DEPTH_PASS", "CONTEXT_ENUM16(Stencil.ZPassFunc[1]), NO_EXTRA" ],
   [ "MAX_VERTEX_ATTRIBS_ARB", "CONTEXT_INT(Const.Program[MESA_SHADER_VERTEX].MaxAttribs), extra_ARB_vertex_program_api_es2" ],
 
 # OES_texture_3D
@@ -310,10 +320,10 @@ descriptor=[
   [ "MAX_3D_TEXTURE_SIZE", "LOC_CUSTOM, TYPE_INT, offsetof(struct gl_context, Const.Max3DTextureLevels), NO_EXTRA" ],
 
 # GL_ARB_fragment_program/OES_standard_derivatives
-  [ "FRAGMENT_SHADER_DERIVATIVE_HINT", "CONTEXT_ENUM(Hint.FragmentShaderDerivative), extra_ARB_fragment_shader" ],
+  [ "FRAGMENT_SHADER_DERIVATIVE_HINT", "CONTEXT_ENUM16(Hint.FragmentShaderDerivative), extra_ARB_fragment_shader" ],
 
 # GL_NV_read_buffer
-  [ "READ_BUFFER", "LOC_CUSTOM, TYPE_ENUM, NO_OFFSET, extra_NV_read_buffer_api_gl" ],
+  [ "READ_BUFFER", "LOC_CUSTOM, TYPE_ENUM16, NO_OFFSET, extra_NV_read_buffer_api_gl" ],
 
 # GL_ARB_ES2_compatibility
   [ "SHADER_COMPILER", "CONST(1), extra_ARB_ES2_compatibility_api_es2" ],
@@ -324,8 +334,8 @@ descriptor=[
   [ "SHADER_BINARY_FORMATS", "LOC_CUSTOM, TYPE_INVALID, 0, extra_ARB_ES2_compatibility_api_es2" ],
 
 # GL_ARB_get_program_binary / GL_OES_get_program_binary
-  [ "NUM_PROGRAM_BINARY_FORMATS", "CONST(0), NO_EXTRA" ],
-  [ "PROGRAM_BINARY_FORMATS", "LOC_CUSTOM, TYPE_INVALID, 0, NO_EXTRA" ],
+  [ "NUM_PROGRAM_BINARY_FORMATS", "CONTEXT_UINT(Const.NumProgramBinaryFormats), NO_EXTRA" ],
+  [ "PROGRAM_BINARY_FORMATS", "LOC_CUSTOM, TYPE_INT_N, 0, NO_EXTRA" ],
 
 # GL_INTEL_performance_query
   [ "PERFQUERY_QUERY_NAME_LENGTH_MAX_INTEL", "CONST(MAX_PERFQUERY_QUERY_NAME_LENGTH), extra_INTEL_performance_query" ],
@@ -334,7 +344,7 @@ descriptor=[
   [ "PERFQUERY_GPA_EXTENDED_COUNTERS_INTEL", "CONST(PERFQUERY_HAVE_GPA_EXTENDED_COUNTERS), extra_INTEL_performance_query" ],
 
 # GL_KHR_context_flush_control
-  [ "CONTEXT_RELEASE_BEHAVIOR", "CONTEXT_ENUM(Const.ContextReleaseBehavior), NO_EXTRA" ],
+  [ "CONTEXT_RELEASE_BEHAVIOR", "CONTEXT_ENUM16(Const.ContextReleaseBehavior), NO_EXTRA" ],
 
 # blend_func_extended
   [ "MAX_DUAL_SOURCE_DRAW_BUFFERS", "CONTEXT_INT(Const.MaxDualSourceDrawBuffers), extra_ARB_blend_func_extended" ],
@@ -343,8 +353,28 @@ descriptor=[
   [ "BLEND_ADVANCED_COHERENT_KHR", "CONTEXT_BOOL(Color.BlendCoherent), extra_KHR_blend_equation_advanced_coherent" ],
 
 # GL_ARB_robustness / GL_KHR_robustness
-  [ "CONTEXT_ROBUST_ACCESS", "CONTEXT_ENUM(Const.RobustAccess), extra_KHR_robustness" ],
-  [ "RESET_NOTIFICATION_STRATEGY_ARB", "CONTEXT_ENUM(Const.ResetStrategy), extra_KHR_robustness_or_GL" ],
+  [ "CONTEXT_ROBUST_ACCESS", "CONTEXT_ENUM16(Const.RobustAccess), extra_KHR_robustness" ],
+  [ "RESET_NOTIFICATION_STRATEGY_ARB", "CONTEXT_ENUM16(Const.ResetStrategy), extra_KHR_robustness_or_GL" ],
+
+# GL_NV_conservative_raster
+  [ "SUBPIXEL_PRECISION_BIAS_X_BITS_NV", "CONTEXT_UINT(SubpixelPrecisionBias[0]), extra_NV_conservative_raster" ],
+  [ "SUBPIXEL_PRECISION_BIAS_Y_BITS_NV", "CONTEXT_UINT(SubpixelPrecisionBias[1]), extra_NV_conservative_raster" ],
+  [ "MAX_SUBPIXEL_PRECISION_BIAS_BITS_NV", "CONTEXT_UINT(Const.MaxSubpixelPrecisionBiasBits), extra_NV_conservative_raster" ],
+
+# GL_NV_conservative_raster_dilate
+  [ "CONSERVATIVE_RASTER_DILATE_RANGE_NV", "CONTEXT_FLOAT2(Const.ConservativeRasterDilateRange), extra_NV_conservative_raster_dilate" ],
+  [ "CONSERVATIVE_RASTER_DILATE_GRANULARITY_NV", "CONTEXT_FLOAT(Const.ConservativeRasterDilateGranularity), extra_NV_conservative_raster_dilate" ],
+  [ "CONSERVATIVE_RASTER_DILATE_NV", "CONTEXT_FLOAT(ConservativeRasterDilate), extra_NV_conservative_raster_dilate" ],
+
+# GL_NV_conservative_raster_pre_snap_triangles
+  [ "CONSERVATIVE_RASTER_MODE_NV", "CONTEXT_ENUM16(ConservativeRasterMode), extra_NV_conservative_raster_pre_snap_triangles" ],
+
+# GL_AMD_framebuffer_multisample_advanced
+  [ "MAX_COLOR_FRAMEBUFFER_SAMPLES_AMD", "CONTEXT_INT(Const.MaxColorFramebufferSamples), extra_AMD_framebuffer_multisample_advanced" ],
+  [ "MAX_COLOR_FRAMEBUFFER_STORAGE_SAMPLES_AMD", "CONTEXT_INT(Const.MaxColorFramebufferStorageSamples), extra_AMD_framebuffer_multisample_advanced" ],
+  [ "MAX_DEPTH_STENCIL_FRAMEBUFFER_SAMPLES_AMD", "CONTEXT_INT(Const.MaxDepthStencilFramebufferSamples), extra_AMD_framebuffer_multisample_advanced" ],
+  [ "NUM_SUPPORTED_MULTISAMPLE_MODES_AMD", "CONTEXT_INT(Const.NumSupportedMultisampleModes), extra_AMD_framebuffer_multisample_advanced" ],
+  [ "SUPPORTED_MULTISAMPLE_MODES_AMD", "LOC_CUSTOM, TYPE_INT_N, 0, extra_AMD_framebuffer_multisample_advanced" ],
 ]},
 
 # GLES3 is not a typo.
@@ -392,8 +422,8 @@ descriptor=[
   [ "MAX_COMBINED_UNIFORM_BLOCKS", "CONTEXT_INT(Const.MaxCombinedUniformBlocks), extra_ARB_uniform_buffer_object" ],
   [ "MAX_UNIFORM_BLOCK_SIZE", "CONTEXT_INT(Const.MaxUniformBlockSize), extra_ARB_uniform_buffer_object" ],
   [ "MAX_UNIFORM_BUFFER_BINDINGS", "CONTEXT_INT(Const.MaxUniformBufferBindings), extra_ARB_uniform_buffer_object" ],
-  [ "MAX_COMBINED_VERTEX_UNIFORM_COMPONENTS", "CONTEXT_INT(Const.Program[MESA_SHADER_VERTEX].MaxCombinedUniformComponents), extra_ARB_uniform_buffer_object" ],
-  [ "MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS", "CONTEXT_INT(Const.Program[MESA_SHADER_FRAGMENT].MaxCombinedUniformComponents), extra_ARB_uniform_buffer_object" ],
+  [ "MAX_COMBINED_VERTEX_UNIFORM_COMPONENTS", "CONTEXT_INT64(Const.Program[MESA_SHADER_VERTEX].MaxCombinedUniformComponents), extra_ARB_uniform_buffer_object" ],
+  [ "MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS", "CONTEXT_INT64(Const.Program[MESA_SHADER_FRAGMENT].MaxCombinedUniformComponents), extra_ARB_uniform_buffer_object" ],
   [ "UNIFORM_BUFFER_OFFSET_ALIGNMENT", "CONTEXT_INT(Const.UniformBufferOffsetAlignment), extra_ARB_uniform_buffer_object" ],
   [ "UNIFORM_BUFFER_BINDING", "LOC_CUSTOM, TYPE_INT, 0, extra_ARB_uniform_buffer_object" ],
 
@@ -427,14 +457,18 @@ descriptor=[
 # GL_EXT_window_rectangles
   [ "MAX_WINDOW_RECTANGLES_EXT", "CONTEXT_INT(Const.MaxWindowRectangles), extra_EXT_window_rectangles" ],
   [ "NUM_WINDOW_RECTANGLES_EXT", "CONTEXT_INT(Scissor.NumWindowRects), extra_EXT_window_rectangles" ],
-  [ "WINDOW_RECTANGLE_MODE_EXT", "CONTEXT_ENUM(Scissor.WindowRectMode), extra_EXT_window_rectangles" ],
+  [ "WINDOW_RECTANGLE_MODE_EXT", "CONTEXT_ENUM16(Scissor.WindowRectMode), extra_EXT_window_rectangles" ],
+
+  # GL_ARB_gpu_shader5 / GL_OES_shader_multisample_interpolation
+  [ "MIN_FRAGMENT_INTERPOLATION_OFFSET", "CONTEXT_FLOAT(Const.MinFragmentInterpolationOffset), extra_ARB_gpu_shader5_or_OES_sample_variables" ],
+  [ "MAX_FRAGMENT_INTERPOLATION_OFFSET", "CONTEXT_FLOAT(Const.MaxFragmentInterpolationOffset), extra_ARB_gpu_shader5_or_OES_sample_variables" ],
+  [ "FRAGMENT_INTERPOLATION_OFFSET_BITS", "CONST(FRAGMENT_INTERPOLATION_OFFSET_BITS), extra_ARB_gpu_shader5_or_OES_sample_variables" ],
 ]},
 
 { "apis": ["GLES", "GLES2"], "params": [
-# GL_EXT_shader_framebuffer_fetch.  Should be true if the MESA framebuffer
-# fetch extension is supported since the latter imposes no restrictions on
-# non-uniform per-sample discard.
-  [ "FRAGMENT_SHADER_DISCARDS_SAMPLES_EXT", "CONTEXT_BOOL(Extensions.MESA_shader_framebuffer_fetch), extra_EXT_shader_framebuffer_fetch" ],
+# GL_EXT_shader_framebuffer_fetch.  Should be true for most modern hardware
+# supporting sample shading.
+  [ "FRAGMENT_SHADER_DISCARDS_SAMPLES_EXT", "CONTEXT_BOOL(Extensions.EXT_shader_framebuffer_fetch), extra_EXT_shader_framebuffer_fetch" ],
 # GL_OES_EGL_image_external
   [ "TEXTURE_BINDING_EXTERNAL_OES", "LOC_CUSTOM, TYPE_INT, TEXTURE_EXTERNAL_INDEX, extra_OES_EGL_image_external" ],
   [ "TEXTURE_EXTERNAL_OES", "LOC_CUSTOM, TYPE_BOOLEAN, 0, extra_OES_EGL_image_external" ],
@@ -442,6 +476,16 @@ descriptor=[
 
 # Enums in OpenGL and ES 3.1
 { "apis": ["GL", "GL_CORE", "GLES31"], "params": [
+# GL_ARB_texture_buffer_object / GL_OES_texture_buffer
+  [ "MAX_TEXTURE_BUFFER_SIZE_ARB", "CONTEXT_INT(Const.MaxTextureBufferSize), extra_texture_buffer_object" ],
+  [ "TEXTURE_BINDING_BUFFER_ARB", "LOC_CUSTOM, TYPE_INT, 0, extra_texture_buffer_object" ],
+  [ "TEXTURE_BUFFER_DATA_STORE_BINDING_ARB", "LOC_CUSTOM, TYPE_INT, TEXTURE_BUFFER_INDEX, extra_texture_buffer_object" ],
+  [ "TEXTURE_BUFFER_FORMAT_ARB", "LOC_CUSTOM, TYPE_INT, 0, extra_texture_buffer_object" ],
+  [ "TEXTURE_BUFFER_ARB", "LOC_CUSTOM, TYPE_INT, 0, extra_texture_buffer_object" ],
+
+# GL_ARB_texture_buffer_range
+  [ "TEXTURE_BUFFER_OFFSET_ALIGNMENT", "CONTEXT_INT(Const.TextureBufferOffsetAlignment), extra_ARB_texture_buffer_range" ],
+
 # GL_ARB_shader_image_load_store / GLES 3.1
   [ "MAX_IMAGE_UNITS", "CONTEXT_INT(Const.MaxImageUnits), extra_ARB_shader_image_load_store" ],
   [ "MAX_VERTEX_IMAGE_UNIFORMS", "CONTEXT_INT(Const.Program[MESA_SHADER_VERTEX].MaxImageUniforms), extra_ARB_shader_image_load_store" ],
@@ -484,7 +528,7 @@ descriptor=[
   [ "MAX_COMPUTE_UNIFORM_COMPONENTS", "CONTEXT_INT(Const.Program[MESA_SHADER_COMPUTE].MaxUniformComponents), extra_ARB_compute_shader_es31" ],
   [ "MAX_COMPUTE_IMAGE_UNIFORMS", "CONTEXT_INT(Const.Program[MESA_SHADER_COMPUTE].MaxImageUniforms), extra_ARB_compute_shader_es31" ],
   [ "DISPATCH_INDIRECT_BUFFER_BINDING", "LOC_CUSTOM, TYPE_INT, 0, extra_ARB_compute_shader_es31" ],
-  [ "MAX_COMBINED_COMPUTE_UNIFORM_COMPONENTS", "CONTEXT_INT(Const.Program[MESA_SHADER_COMPUTE].MaxCombinedUniformComponents), extra_ARB_compute_shader_es31" ],
+  [ "MAX_COMBINED_COMPUTE_UNIFORM_COMPONENTS", "CONTEXT_INT64(Const.Program[MESA_SHADER_COMPUTE].MaxCombinedUniformComponents), extra_ARB_compute_shader_es31" ],
 
 # GL_ARB_framebuffer_no_attachments / GLES 3.1
   ["MAX_FRAMEBUFFER_WIDTH", "CONTEXT_INT(Const.MaxFramebufferWidth), extra_ARB_framebuffer_no_attachments"],
@@ -501,11 +545,11 @@ descriptor=[
   [ "PROGRAM_PIPELINE_BINDING", "LOC_CUSTOM, TYPE_INT, GL_PROGRAM_PIPELINE_BINDING, NO_EXTRA" ],
 
 # GL_ARB_vertex_attrib_binding / GLES 3.1
-  [ "MAX_VERTEX_ATTRIB_RELATIVE_OFFSET", "CONTEXT_ENUM(Const.MaxVertexAttribRelativeOffset), NO_EXTRA" ],
-  [ "MAX_VERTEX_ATTRIB_BINDINGS", "CONTEXT_ENUM(Const.MaxVertexAttribBindings), NO_EXTRA" ],
+  [ "MAX_VERTEX_ATTRIB_RELATIVE_OFFSET", "CONTEXT_INT(Const.MaxVertexAttribRelativeOffset), NO_EXTRA" ],
+  [ "MAX_VERTEX_ATTRIB_BINDINGS", "CONTEXT_INT(Const.MaxVertexAttribBindings), NO_EXTRA" ],
 
 # GL 4.4 / GLES 3.1
-  [ "MAX_VERTEX_ATTRIB_STRIDE", "CONTEXT_ENUM(Const.MaxVertexAttribStride), NO_EXTRA" ],
+  [ "MAX_VERTEX_ATTRIB_STRIDE", "CONTEXT_UINT(Const.MaxVertexAttribStride), NO_EXTRA" ],
 
   # GL_ARB_shader_storage_buffer_object / GLES 3.1
   [ "MAX_VERTEX_SHADER_STORAGE_BLOCKS", "CONTEXT_INT(Const.Program[MESA_SHADER_VERTEX].MaxShaderStorageBlocks), extra_ARB_shader_storage_buffer_object_es31" ],
@@ -526,18 +570,13 @@ descriptor=[
 
   # GL_NUM_SHADING_LANGUAGE_VERSIONS
   [ "NUM_SHADING_LANGUAGE_VERSIONS", "LOC_CUSTOM, TYPE_INT, 0, extra_version_43" ],
-]},
 
-# Enums in OpenGL Core profile and ES 3.0
-{ "apis": ["GL_CORE", "GLES3"], "params": [
-  # GL_ARB_gpu_shader5 / GL_OES_shader_multisample_interpolation
-  [ "MIN_FRAGMENT_INTERPOLATION_OFFSET", "CONTEXT_FLOAT(Const.MinFragmentInterpolationOffset), extra_ARB_gpu_shader5_or_OES_sample_variables" ],
-  [ "MAX_FRAGMENT_INTERPOLATION_OFFSET", "CONTEXT_FLOAT(Const.MaxFragmentInterpolationOffset), extra_ARB_gpu_shader5_or_OES_sample_variables" ],
-  [ "FRAGMENT_INTERPOLATION_OFFSET_BITS", "CONST(FRAGMENT_INTERPOLATION_OFFSET_BITS), extra_ARB_gpu_shader5_or_OES_sample_variables" ],
-]},
+  # GL_ARB_sample_locations
+  [ "SAMPLE_LOCATION_SUBPIXEL_BITS_ARB", "LOC_CUSTOM, TYPE_UINT, 0, extra_ARB_sample_locations" ],
+  [ "SAMPLE_LOCATION_PIXEL_GRID_WIDTH_ARB", "LOC_CUSTOM, TYPE_UINT, 0, extra_ARB_sample_locations" ],
+  [ "SAMPLE_LOCATION_PIXEL_GRID_HEIGHT_ARB", "LOC_CUSTOM, TYPE_UINT, 0, extra_ARB_sample_locations" ],
+  [ "PROGRAMMABLE_SAMPLE_LOCATION_TABLE_SIZE_ARB", "LOC_CUSTOM, TYPE_UINT, 0, extra_ARB_sample_locations" ],
 
-# Enums in OpenGL Core profile and ES 3.1
-{ "apis": ["GL_CORE", "GLES31"], "params": [
 # GL_ARB_draw_indirect / GLES 3.1
   [ "DRAW_INDIRECT_BUFFER_BINDING", "LOC_CUSTOM, TYPE_INT, 0, extra_ARB_draw_indirect" ],
 
@@ -567,8 +606,8 @@ descriptor=[
   [ "MAX_TESS_EVALUATION_INPUT_COMPONENTS", "CONTEXT_INT(Const.Program[MESA_SHADER_TESS_EVAL].MaxInputComponents), extra_ARB_tessellation_shader" ],
   [ "MAX_TESS_CONTROL_UNIFORM_BLOCKS", "CONTEXT_INT(Const.Program[MESA_SHADER_TESS_CTRL].MaxUniformBlocks), extra_ARB_tessellation_shader" ],
   [ "MAX_TESS_EVALUATION_UNIFORM_BLOCKS", "CONTEXT_INT(Const.Program[MESA_SHADER_TESS_EVAL].MaxUniformBlocks), extra_ARB_tessellation_shader" ],
-  [ "MAX_COMBINED_TESS_CONTROL_UNIFORM_COMPONENTS", "CONTEXT_INT(Const.Program[MESA_SHADER_TESS_CTRL].MaxCombinedUniformComponents), extra_ARB_tessellation_shader" ],
-  [ "MAX_COMBINED_TESS_EVALUATION_UNIFORM_COMPONENTS", "CONTEXT_INT(Const.Program[MESA_SHADER_TESS_EVAL].MaxCombinedUniformComponents), extra_ARB_tessellation_shader" ],
+  [ "MAX_COMBINED_TESS_CONTROL_UNIFORM_COMPONENTS", "CONTEXT_INT64(Const.Program[MESA_SHADER_TESS_CTRL].MaxCombinedUniformComponents), extra_ARB_tessellation_shader" ],
+  [ "MAX_COMBINED_TESS_EVALUATION_UNIFORM_COMPONENTS", "CONTEXT_INT64(Const.Program[MESA_SHADER_TESS_EVAL].MaxCombinedUniformComponents), extra_ARB_tessellation_shader" ],
   [ "PRIMITIVE_RESTART_FOR_PATCHES_SUPPORTED", "CONTEXT_BOOL(Const.PrimitiveRestartForPatches), extra_ARB_tessellation_shader" ],
 
 # GL_ARB_shader_image_load_store / geometry shader
@@ -597,23 +636,13 @@ descriptor=[
 
 # GL_ARB_uniform_buffer_object / geometry shader
   [ "MAX_GEOMETRY_UNIFORM_BLOCKS", "CONTEXT_INT(Const.Program[MESA_SHADER_GEOMETRY].MaxUniformBlocks), extra_ARB_uniform_buffer_object_and_geometry_shader" ],
-  [ "MAX_COMBINED_GEOMETRY_UNIFORM_COMPONENTS", "CONTEXT_INT(Const.Program[MESA_SHADER_GEOMETRY].MaxCombinedUniformComponents), extra_ARB_uniform_buffer_object_and_geometry_shader" ],
+  [ "MAX_COMBINED_GEOMETRY_UNIFORM_COMPONENTS", "CONTEXT_INT64(Const.Program[MESA_SHADER_GEOMETRY].MaxCombinedUniformComponents), extra_ARB_uniform_buffer_object_and_geometry_shader" ],
 
 # GL_ARB_viewport_array / GL_OES_geometry_shader
-  [ "LAYER_PROVOKING_VERTEX", "CONTEXT_ENUM(Const.LayerAndVPIndexProvokingVertex), extra_ARB_viewport_array_or_oes_geometry_shader" ],
+  [ "LAYER_PROVOKING_VERTEX", "CONTEXT_ENUM16(Const.LayerAndVPIndexProvokingVertex), extra_ARB_viewport_array_or_oes_geometry_shader" ],
 
 # GL_ARB_gpu_shader5 / GL_OES_geometry_shader
-  [ "MAX_GEOMETRY_SHADER_INVOCATIONS", "CONST(MAX_GEOMETRY_SHADER_INVOCATIONS), extra_ARB_gpu_shader5_or_oes_geometry_shader" ],
-
-# GL_ARB_texture_buffer_object / GL_OES_texture_buffer
-  [ "MAX_TEXTURE_BUFFER_SIZE_ARB", "CONTEXT_INT(Const.MaxTextureBufferSize), extra_texture_buffer_object" ],
-  [ "TEXTURE_BINDING_BUFFER_ARB", "LOC_CUSTOM, TYPE_INT, 0, extra_texture_buffer_object" ],
-  [ "TEXTURE_BUFFER_DATA_STORE_BINDING_ARB", "LOC_CUSTOM, TYPE_INT, TEXTURE_BUFFER_INDEX, extra_texture_buffer_object" ],
-  [ "TEXTURE_BUFFER_FORMAT_ARB", "LOC_CUSTOM, TYPE_INT, 0, extra_texture_buffer_object" ],
-  [ "TEXTURE_BUFFER_ARB", "LOC_CUSTOM, TYPE_INT, 0, extra_texture_buffer_object" ],
-
-# GL_ARB_texture_buffer_range
-  [ "TEXTURE_BUFFER_OFFSET_ALIGNMENT", "CONTEXT_INT(Const.TextureBufferOffsetAlignment), extra_ARB_texture_buffer_range" ],
+  [ "MAX_GEOMETRY_SHADER_INVOCATIONS", "CONTEXT_INT(Const.MaxGeometryShaderInvocations), extra_ARB_gpu_shader5_or_oes_geometry_shader" ],
 
 # GL_OES_primitive_bounding_box
   [ "PRIMITIVE_BOUNDING_BOX_ARB", "CONTEXT_FLOAT8(PrimitiveBoundingBox), extra_OES_primitive_bounding_box" ],
@@ -622,18 +651,17 @@ descriptor=[
   [ "MAX_VIEWPORTS", "CONTEXT_INT(Const.MaxViewports), extra_ARB_viewport_array_or_oes_viewport_array" ],
   [ "VIEWPORT_SUBPIXEL_BITS", "CONTEXT_INT(Const.ViewportSubpixelBits), extra_ARB_viewport_array_or_oes_viewport_array" ],
   [ "VIEWPORT_BOUNDS_RANGE", "CONTEXT_FLOAT2(Const.ViewportBounds), extra_ARB_viewport_array_or_oes_viewport_array" ],
-  [ "VIEWPORT_INDEX_PROVOKING_VERTEX", "CONTEXT_ENUM(Const.LayerAndVPIndexProvokingVertex), extra_ARB_viewport_array_or_oes_viewport_array" ],
+  [ "VIEWPORT_INDEX_PROVOKING_VERTEX", "CONTEXT_ENUM16(Const.LayerAndVPIndexProvokingVertex), extra_ARB_viewport_array_or_oes_viewport_array" ],
 
 # INTEL_conservative_rasterization
   [ "CONSERVATIVE_RASTERIZATION_INTEL", "CONTEXT_BOOL(IntelConservativeRasterization), extra_INTEL_conservative_rasterization" ],
 ]},
 
-{ "apis": ["GL_CORE", "GLES32"], "params": [
+# Enums in OpenGL and ES 3.2
+{ "apis": ["GL", "GL_CORE", "GLES32"], "params": [
   [ "MULTISAMPLE_LINE_WIDTH_RANGE_ARB", "CONTEXT_FLOAT2(Const.MinLineWidthAA), extra_ES32" ],
   [ "MULTISAMPLE_LINE_WIDTH_GRANULARITY_ARB", "CONTEXT_FLOAT(Const.LineWidthGranularity), extra_ES32" ],
-]},
 
-{ "apis": ["GL", "GL_CORE", "GLES32"], "params": [
 # GL 3.0 or ES 3.2
   [ "CONTEXT_FLAGS", "CONTEXT_INT(Const.ContextFlags), extra_version_30" ],
 ]},
@@ -652,11 +680,11 @@ descriptor=[
   [ "AUX_BUFFERS", "BUFFER_INT(Visual.numAuxBuffers), NO_EXTRA" ],
   [ "BLUE_BIAS", "CONTEXT_FLOAT(Pixel.BlueBias), NO_EXTRA" ],
   [ "BLUE_SCALE", "CONTEXT_FLOAT(Pixel.BlueScale), NO_EXTRA" ],
-  [ "CLIP_DEPTH_MODE", "CONTEXT_ENUM(Transform.ClipDepthMode), extra_ARB_clip_control" ],
-  [ "CLIP_ORIGIN", "CONTEXT_ENUM(Transform.ClipOrigin), extra_ARB_clip_control" ],
+  [ "CLIP_DEPTH_MODE", "CONTEXT_ENUM16(Transform.ClipDepthMode), extra_ARB_clip_control" ],
+  [ "CLIP_ORIGIN", "CONTEXT_ENUM16(Transform.ClipOrigin), extra_ARB_clip_control" ],
   [ "CLIENT_ATTRIB_STACK_DEPTH", "CONTEXT_INT(ClientAttribStackDepth), NO_EXTRA" ],
-  [ "COLOR_MATERIAL_FACE", "CONTEXT_ENUM(Light.ColorMaterialFace), NO_EXTRA" ],
-  [ "COLOR_MATERIAL_PARAMETER", "CONTEXT_ENUM(Light.ColorMaterialMode), NO_EXTRA" ],
+  [ "COLOR_MATERIAL_FACE", "CONTEXT_ENUM16(Light.ColorMaterialFace), NO_EXTRA" ],
+  [ "COLOR_MATERIAL_PARAMETER", "CONTEXT_ENUM16(Light.ColorMaterialMode), NO_EXTRA" ],
   [ "CURRENT_INDEX", "CONTEXT_FLOAT(Current.Attrib[VERT_ATTRIB_COLOR_INDEX][0]), extra_flush_current" ],
   [ "CURRENT_RASTER_COLOR", "CONTEXT_FIELD(Current.RasterColor[0], TYPE_FLOATN_4), NO_EXTRA" ],
   [ "CURRENT_RASTER_DISTANCE", "CONTEXT_FLOAT(Current.RasterDistance), NO_EXTRA" ],
@@ -668,10 +696,10 @@ descriptor=[
   [ "DEPTH_BIAS", "CONTEXT_FLOAT(Pixel.DepthBias), NO_EXTRA" ],
   [ "DEPTH_SCALE", "CONTEXT_FLOAT(Pixel.DepthScale), NO_EXTRA" ],
   [ "DOUBLEBUFFER", "BUFFER_INT(Visual.doubleBufferMode), NO_EXTRA" ],
-  [ "DRAW_BUFFER", "BUFFER_ENUM(ColorDrawBuffer[0]), NO_EXTRA" ],
+  [ "DRAW_BUFFER", "BUFFER_ENUM16(ColorDrawBuffer[0]), NO_EXTRA" ],
   [ "EDGE_FLAG", "LOC_CUSTOM, TYPE_BOOLEAN, 0, extra_flush_current" ],
   [ "FEEDBACK_BUFFER_SIZE", "CONTEXT_INT(Feedback.BufferSize), NO_EXTRA" ],
-  [ "FEEDBACK_BUFFER_TYPE", "CONTEXT_ENUM(Feedback.Type), NO_EXTRA" ],
+  [ "FEEDBACK_BUFFER_TYPE", "CONTEXT_ENUM16(Feedback.Type), NO_EXTRA" ],
   [ "FOG_INDEX", "CONTEXT_FLOAT(Fog.Index), NO_EXTRA" ],
   [ "GREEN_BIAS", "CONTEXT_FLOAT(Pixel.GreenBias), NO_EXTRA" ],
   [ "GREEN_SCALE", "CONTEXT_FLOAT(Pixel.GreenScale), NO_EXTRA" ],
@@ -681,7 +709,7 @@ descriptor=[
   [ "INDEX_OFFSET", "CONTEXT_INT(Pixel.IndexOffset), NO_EXTRA" ],
   [ "INDEX_SHIFT", "CONTEXT_INT(Pixel.IndexShift), NO_EXTRA" ],
   [ "INDEX_WRITEMASK", "CONTEXT_INT(Color.IndexMask), NO_EXTRA" ],
-  [ "LIGHT_MODEL_COLOR_CONTROL", "CONTEXT_ENUM(Light.Model.ColorControl), NO_EXTRA" ],
+  [ "LIGHT_MODEL_COLOR_CONTROL", "CONTEXT_ENUM16(Light.Model.ColorControl), NO_EXTRA" ],
   [ "LIGHT_MODEL_LOCAL_VIEWER", "CONTEXT_BOOL(Light.Model.LocalViewer), NO_EXTRA" ],
   [ "LINE_STIPPLE", "CONTEXT_BOOL(Line.StippleFlag), NO_EXTRA" ],
   [ "LINE_STIPPLE_PATTERN", "LOC_CUSTOM, TYPE_INT, 0, NO_EXTRA" ],
@@ -689,7 +717,7 @@ descriptor=[
   [ "LINE_WIDTH_GRANULARITY", "CONTEXT_FLOAT(Const.LineWidthGranularity), NO_EXTRA" ],
   [ "LIST_BASE", "CONTEXT_INT(List.ListBase), NO_EXTRA" ],
   [ "LIST_INDEX", "LOC_CUSTOM, TYPE_INT, 0, NO_EXTRA" ],
-  [ "LIST_MODE", "LOC_CUSTOM, TYPE_ENUM, 0, NO_EXTRA" ],
+  [ "LIST_MODE", "LOC_CUSTOM, TYPE_ENUM16, 0, NO_EXTRA" ],
   [ "INDEX_LOGIC_OP", "CONTEXT_BOOL(Color.IndexLogicOpEnabled), NO_EXTRA" ],
   [ "MAP1_COLOR_4", "CONTEXT_BOOL(Eval.Map1Color4), NO_EXTRA" ],
   [ "MAP1_GRID_DOMAIN", "CONTEXT_FLOAT2(Eval.MapGrid1u1), NO_EXTRA" ],
@@ -737,15 +765,14 @@ descriptor=[
   [ "PIXEL_MAP_S_TO_S_SIZE", "CONTEXT_INT(PixelMaps.StoS.Size), NO_EXTRA" ],
   [ "POINT_SIZE_GRANULARITY", "CONTEXT_FLOAT(Const.PointSizeGranularity), NO_EXTRA" ],
   [ "POLYGON_MODE", "CONTEXT_ENUM2(Polygon.FrontMode), NO_EXTRA" ],
-  [ "POLYGON_OFFSET_BIAS_EXT", "CONTEXT_FLOAT(Polygon.OffsetUnits), NO_EXTRA" ],
   [ "POLYGON_OFFSET_POINT", "CONTEXT_BOOL(Polygon.OffsetPoint), NO_EXTRA" ],
   [ "POLYGON_OFFSET_LINE", "CONTEXT_BOOL(Polygon.OffsetLine), NO_EXTRA" ],
   [ "POLYGON_SMOOTH", "CONTEXT_BOOL(Polygon.SmoothFlag), NO_EXTRA" ],
-  [ "POLYGON_SMOOTH_HINT", "CONTEXT_ENUM(Hint.PolygonSmooth), NO_EXTRA" ],
+  [ "POLYGON_SMOOTH_HINT", "CONTEXT_ENUM16(Hint.PolygonSmooth), NO_EXTRA" ],
   [ "POLYGON_STIPPLE", "CONTEXT_BOOL(Polygon.StippleFlag), NO_EXTRA" ],
   [ "RED_BIAS", "CONTEXT_FLOAT(Pixel.RedBias), NO_EXTRA" ],
   [ "RED_SCALE", "CONTEXT_FLOAT(Pixel.RedScale), NO_EXTRA" ],
-  [ "RENDER_MODE", "CONTEXT_ENUM(RenderMode), NO_EXTRA" ],
+  [ "RENDER_MODE", "CONTEXT_ENUM16(RenderMode), NO_EXTRA" ],
   [ "RGBA_MODE", "CONST(1), NO_EXTRA" ],
   [ "SELECTION_BUFFER_SIZE", "CONTEXT_INT(Select.BufferSize), NO_EXTRA" ],
   [ "STEREO", "BUFFER_INT(Visual.stereoMode), NO_EXTRA" ],
@@ -753,10 +780,10 @@ descriptor=[
   [ "TEXTURE_3D", "LOC_CUSTOM, TYPE_BOOLEAN, NO_OFFSET, NO_EXTRA" ],
   [ "TEXTURE_BINDING_1D", "LOC_CUSTOM, TYPE_INT, TEXTURE_1D_INDEX, NO_EXTRA" ],
   [ "TEXTURE_BINDING_1D_ARRAY", "LOC_CUSTOM, TYPE_INT, TEXTURE_1D_ARRAY_INDEX, extra_EXT_texture_array" ],
-  [ "TEXTURE_GEN_S", "LOC_TEXUNIT, TYPE_BIT_0, offsetof(struct gl_texture_unit, TexGenEnabled), NO_EXTRA" ],
-  [ "TEXTURE_GEN_T", "LOC_TEXUNIT, TYPE_BIT_1, offsetof(struct gl_texture_unit, TexGenEnabled), NO_EXTRA" ],
-  [ "TEXTURE_GEN_R", "LOC_TEXUNIT, TYPE_BIT_2, offsetof(struct gl_texture_unit, TexGenEnabled), NO_EXTRA" ],
-  [ "TEXTURE_GEN_Q", "LOC_TEXUNIT, TYPE_BIT_3, offsetof(struct gl_texture_unit, TexGenEnabled), NO_EXTRA" ],
+  [ "TEXTURE_GEN_S", "LOC_TEXUNIT, TYPE_BIT_0, offsetof(struct gl_fixedfunc_texture_unit, TexGenEnabled), NO_EXTRA" ],
+  [ "TEXTURE_GEN_T", "LOC_TEXUNIT, TYPE_BIT_1, offsetof(struct gl_fixedfunc_texture_unit, TexGenEnabled), NO_EXTRA" ],
+  [ "TEXTURE_GEN_R", "LOC_TEXUNIT, TYPE_BIT_2, offsetof(struct gl_fixedfunc_texture_unit, TexGenEnabled), NO_EXTRA" ],
+  [ "TEXTURE_GEN_Q", "LOC_TEXUNIT, TYPE_BIT_3, offsetof(struct gl_fixedfunc_texture_unit, TexGenEnabled), NO_EXTRA" ],
   [ "UNPACK_LSB_FIRST", "CONTEXT_BOOL(Unpack.LsbFirst), NO_EXTRA" ],
   [ "UNPACK_SWAP_BYTES", "CONTEXT_BOOL(Unpack.SwapBytes), NO_EXTRA" ],
   [ "ZOOM_X", "CONTEXT_FLOAT(Pixel.ZoomX), NO_EXTRA" ],
@@ -767,16 +794,16 @@ descriptor=[
   [ "NORMAL_ARRAY_COUNT_EXT", "CONST(0), NO_EXTRA" ],
   [ "COLOR_ARRAY_COUNT_EXT", "CONST(0), NO_EXTRA" ],
   [ "INDEX_ARRAY", "ARRAY_BOOL(VertexAttrib[VERT_ATTRIB_COLOR_INDEX].Enabled), NO_EXTRA" ],
-  [ "INDEX_ARRAY_TYPE", "ARRAY_ENUM(VertexAttrib[VERT_ATTRIB_COLOR_INDEX].Type), NO_EXTRA" ],
-  [ "INDEX_ARRAY_STRIDE", "ARRAY_INT(VertexAttrib[VERT_ATTRIB_COLOR_INDEX].Stride), NO_EXTRA" ],
+  [ "INDEX_ARRAY_TYPE", "ARRAY_ENUM16(VertexAttrib[VERT_ATTRIB_COLOR_INDEX].Type), NO_EXTRA" ],
+  [ "INDEX_ARRAY_STRIDE", "ARRAY_SHORT(VertexAttrib[VERT_ATTRIB_COLOR_INDEX].Stride), NO_EXTRA" ],
   [ "INDEX_ARRAY_COUNT_EXT", "CONST(0), NO_EXTRA" ],
   [ "TEXTURE_COORD_ARRAY_COUNT_EXT", "CONST(0), NO_EXTRA" ],
   [ "EDGE_FLAG_ARRAY", "ARRAY_BOOL(VertexAttrib[VERT_ATTRIB_EDGEFLAG].Enabled), NO_EXTRA" ],
-  [ "EDGE_FLAG_ARRAY_STRIDE", "ARRAY_INT(VertexAttrib[VERT_ATTRIB_EDGEFLAG].Stride), NO_EXTRA" ],
+  [ "EDGE_FLAG_ARRAY_STRIDE", "ARRAY_SHORT(VertexAttrib[VERT_ATTRIB_EDGEFLAG].Stride), NO_EXTRA" ],
   [ "EDGE_FLAG_ARRAY_COUNT_EXT", "CONST(0), NO_EXTRA" ],
 
 # GL_ARB_texture_compression
-  [ "TEXTURE_COMPRESSION_HINT_ARB", "CONTEXT_INT(Hint.TextureCompression), NO_EXTRA" ],
+  [ "TEXTURE_COMPRESSION_HINT_ARB", "CONTEXT_ENUM16(Hint.TextureCompression), NO_EXTRA" ],
 
 # GL_EXT_compiled_vertex_array
   [ "ARRAY_ELEMENT_LOCK_FIRST_EXT", "CONTEXT_INT(Array.LockFirst), NO_EXTRA" ],
@@ -801,26 +828,26 @@ descriptor=[
   [ "COLOR_SUM", "CONTEXT_BOOL(Fog.ColorSumEnabled), NO_EXTRA" ],
   [ "CURRENT_SECONDARY_COLOR", "CONTEXT_FIELD(Current.Attrib[VERT_ATTRIB_COLOR1][0], TYPE_FLOATN_4), extra_flush_current" ],
   [ "SECONDARY_COLOR_ARRAY", "ARRAY_BOOL(VertexAttrib[VERT_ATTRIB_COLOR1].Enabled), NO_EXTRA" ],
-  [ "SECONDARY_COLOR_ARRAY_TYPE", "ARRAY_ENUM(VertexAttrib[VERT_ATTRIB_COLOR1].Type), NO_EXTRA" ],
-  [ "SECONDARY_COLOR_ARRAY_STRIDE", "ARRAY_INT(VertexAttrib[VERT_ATTRIB_COLOR1].Stride), NO_EXTRA" ],
+  [ "SECONDARY_COLOR_ARRAY_TYPE", "ARRAY_ENUM16(VertexAttrib[VERT_ATTRIB_COLOR1].Type), NO_EXTRA" ],
+  [ "SECONDARY_COLOR_ARRAY_STRIDE", "ARRAY_SHORT(VertexAttrib[VERT_ATTRIB_COLOR1].Stride), NO_EXTRA" ],
   [ "SECONDARY_COLOR_ARRAY_SIZE", "LOC_CUSTOM, TYPE_INT, 0, NO_EXTRA" ],
 
 # GL_EXT_fog_coord
   [ "CURRENT_FOG_COORDINATE", "CONTEXT_FLOAT(Current.Attrib[VERT_ATTRIB_FOG][0]), extra_flush_current" ],
   [ "FOG_COORDINATE_ARRAY", "ARRAY_BOOL(VertexAttrib[VERT_ATTRIB_FOG].Enabled), NO_EXTRA" ],
-  [ "FOG_COORDINATE_ARRAY_TYPE", "ARRAY_ENUM(VertexAttrib[VERT_ATTRIB_FOG].Type), NO_EXTRA" ],
-  [ "FOG_COORDINATE_ARRAY_STRIDE", "ARRAY_INT(VertexAttrib[VERT_ATTRIB_FOG].Stride), NO_EXTRA" ],
-  [ "FOG_COORDINATE_SOURCE", "CONTEXT_ENUM(Fog.FogCoordinateSource), NO_EXTRA" ],
+  [ "FOG_COORDINATE_ARRAY_TYPE", "ARRAY_ENUM16(VertexAttrib[VERT_ATTRIB_FOG].Type), NO_EXTRA" ],
+  [ "FOG_COORDINATE_ARRAY_STRIDE", "ARRAY_SHORT(VertexAttrib[VERT_ATTRIB_FOG].Stride), NO_EXTRA" ],
+  [ "FOG_COORDINATE_SOURCE", "CONTEXT_ENUM16(Fog.FogCoordinateSource), NO_EXTRA" ],
 
 # GL_NV_fog_distance
-  [ "FOG_DISTANCE_MODE_NV", "CONTEXT_ENUM(Fog.FogDistanceMode), extra_NV_fog_distance" ],
+  [ "FOG_DISTANCE_MODE_NV", "CONTEXT_ENUM16(Fog.FogDistanceMode), extra_NV_fog_distance" ],
 
 # GL_IBM_rasterpos_clip
   [ "RASTER_POSITION_UNCLIPPED_IBM", "CONTEXT_BOOL(Transform.RasterPositionUnclipped), NO_EXTRA" ],
 
 # GL_NV_point_sprite
-  [ "POINT_SPRITE_R_MODE_NV", "CONTEXT_ENUM(Point.SpriteRMode), extra_NV_point_sprite" ],
-  [ "POINT_SPRITE_COORD_ORIGIN", "CONTEXT_ENUM(Point.SpriteOrigin), extra_NV_point_sprite_ARB_point_sprite" ],
+  [ "POINT_SPRITE_R_MODE_NV", "CONTEXT_ENUM16(Point.SpriteRMode), extra_NV_point_sprite" ],
+  [ "POINT_SPRITE_COORD_ORIGIN", "CONTEXT_ENUM16(Point.SpriteOrigin), extra_NV_point_sprite_ARB_point_sprite" ],
 
 # GL_NV_texture_rectangle
   [ "TEXTURE_RECTANGLE_NV", "LOC_CUSTOM, TYPE_BOOLEAN, 0, extra_NV_texture_rectangle" ],
@@ -829,7 +856,7 @@ descriptor=[
 
 # GL_EXT_stencil_two_side
   [ "STENCIL_TEST_TWO_SIDE_EXT", "CONTEXT_BOOL(Stencil.TestTwoSide), extra_EXT_stencil_two_side" ],
-  [ "ACTIVE_STENCIL_FACE_EXT", "LOC_CUSTOM, TYPE_ENUM, NO_OFFSET, NO_EXTRA" ],
+  [ "ACTIVE_STENCIL_FACE_EXT", "LOC_CUSTOM, TYPE_ENUM16, NO_OFFSET, NO_EXTRA" ],
 
 # GL_NV_light_max_exponent
   [ "MAX_SHININESS_NV", "CONTEXT_FLOAT(Const.MaxShininess), NO_EXTRA" ],
@@ -876,7 +903,7 @@ descriptor=[
   [ "DEPTH_BOUNDS_EXT", "CONTEXT_FLOAT2(Depth.BoundsMin), extra_EXT_depth_bounds_test" ],
 
 # GL_ARB_depth_clamp
-  [ "DEPTH_CLAMP", "CONTEXT_BOOL(Transform.DepthClamp), extra_ARB_depth_clamp" ],
+  [ "DEPTH_CLAMP", "LOC_CUSTOM, TYPE_BOOLEAN, 0, extra_ARB_depth_clamp" ],
 
 # GL_ATI_fragment_shader
   [ "FRAGMENT_SHADER_ATI", "CONTEXT_BOOL(ATIFragmentShader.Enabled), extra_ATI_fragment_shader" ],
@@ -890,7 +917,7 @@ descriptor=[
   [ "NUM_INPUT_INTERPOLATOR_COMPONENTS_ATI", "CONST(3), extra_ATI_fragment_shader" ],
 
 # GL_EXT_provoking_vertex
-  [ "PROVOKING_VERTEX_EXT", "CONTEXT_ENUM(Light.ProvokingVertex), extra_EXT_provoking_vertex" ],
+  [ "PROVOKING_VERTEX_EXT", "CONTEXT_ENUM16(Light.ProvokingVertex), extra_EXT_provoking_vertex" ],
   [ "QUADS_FOLLOW_PROVOKING_VERTEX_CONVENTION_EXT", "CONTEXT_BOOL(Const.QuadsFollowProvokingVertexConvention), extra_EXT_provoking_vertex_32" ],
 
 # GL_ARB_seamless_cube_map
@@ -955,10 +982,7 @@ descriptor=[
 
 # GL_ARB_sparse_buffer
   [ "SPARSE_BUFFER_PAGE_SIZE_ARB", "CONTEXT_INT(Const.SparseBufferPageSize), extra_ARB_sparse_buffer" ],
-]},
 
-# Enums restricted to OpenGL Core profile
-{ "apis": ["GL_CORE"], "params": [
 # GL_ARB_shader_subroutine
   [ "MAX_SUBROUTINES", "CONST(MAX_SUBROUTINES), NO_EXTRA" ],
   [ "MAX_SUBROUTINE_UNIFORM_LOCATIONS", "CONST(MAX_SUBROUTINE_UNIFORM_LOCATIONS), NO_EXTRA" ],
@@ -966,6 +990,10 @@ descriptor=[
 # GL_ARB_indirect_parameters
   [ "PARAMETER_BUFFER_BINDING_ARB", "LOC_CUSTOM, TYPE_INT, 0, extra_ARB_indirect_parameters" ],
 
-]}
+# GL 4.1
+# GL_AMD_depth_clamp_separate
+  [ "DEPTH_CLAMP_NEAR_AMD", "CONTEXT_BOOL(Transform.DepthClampNear), extra_AMD_depth_clamp_separate" ],
+  [ "DEPTH_CLAMP_FAR_AMD", "CONTEXT_BOOL(Transform.DepthClampFar), extra_AMD_depth_clamp_separate" ],
+]},
 
 ]

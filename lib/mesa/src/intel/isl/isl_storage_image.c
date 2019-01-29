@@ -161,32 +161,36 @@ isl_lower_storage_image_format(const struct gen_device_info *devinfo,
    /* No normalized fixed-point formats are supported by the hardware. */
    case ISL_FORMAT_R16G16B16A16_UNORM:
    case ISL_FORMAT_R16G16B16A16_SNORM:
-      return (devinfo->gen >= 8 || devinfo->is_haswell ?
+      return (devinfo->gen >= 11 ? format :
+              devinfo->gen >= 8 || devinfo->is_haswell ?
               ISL_FORMAT_R16G16B16A16_UINT :
               ISL_FORMAT_R32G32_UINT);
 
    case ISL_FORMAT_R8G8B8A8_UNORM:
    case ISL_FORMAT_R8G8B8A8_SNORM:
-      return (devinfo->gen >= 8 || devinfo->is_haswell ?
+      return (devinfo->gen >= 11 ? format :
+              devinfo->gen >= 8 || devinfo->is_haswell ?
               ISL_FORMAT_R8G8B8A8_UINT : ISL_FORMAT_R32_UINT);
 
    case ISL_FORMAT_R16G16_UNORM:
    case ISL_FORMAT_R16G16_SNORM:
-      return (devinfo->gen >= 8 || devinfo->is_haswell ?
+      return (devinfo->gen >= 11 ? format :
+              devinfo->gen >= 8 || devinfo->is_haswell ?
               ISL_FORMAT_R16G16_UINT : ISL_FORMAT_R32_UINT);
 
    case ISL_FORMAT_R8G8_UNORM:
    case ISL_FORMAT_R8G8_SNORM:
-      return (devinfo->gen >= 8 || devinfo->is_haswell ?
+      return (devinfo->gen >= 11 ? format :
+              devinfo->gen >= 8 || devinfo->is_haswell ?
               ISL_FORMAT_R8G8_UINT : ISL_FORMAT_R16_UINT);
 
    case ISL_FORMAT_R16_UNORM:
    case ISL_FORMAT_R16_SNORM:
-      return ISL_FORMAT_R16_UINT;
+      return (devinfo->gen >= 11 ? format : ISL_FORMAT_R16_UINT);
 
    case ISL_FORMAT_R8_UNORM:
    case ISL_FORMAT_R8_SNORM:
-      return ISL_FORMAT_R8_UINT;
+      return (devinfo->gen >= 11 ? format : ISL_FORMAT_R8_UINT);
 
    default:
       assert(!"Unknown image format");
@@ -224,14 +228,17 @@ isl_surf_fill_image_param(const struct isl_device *dev,
 {
    *param = image_param_defaults;
 
-   param->size[0] = isl_minify(surf->logical_level0_px.w, view->base_level);
-   param->size[1] = isl_minify(surf->logical_level0_px.h, view->base_level);
-   if (surf->dim == ISL_SURF_DIM_3D) {
-      param->size[2] = isl_minify(surf->logical_level0_px.d, view->base_level);
-   } else {
-      param->size[2] = surf->logical_level0_px.array_len -
-                       view->base_array_layer;
+   if (surf->dim != ISL_SURF_DIM_3D) {
+      assert(view->base_array_layer + view->array_len <=
+             surf->logical_level0_px.array_len);
    }
+   param->size[0] = isl_minify(surf->logical_level0_px.w, view->base_level);
+   param->size[1] = surf->dim == ISL_SURF_DIM_1D ?
+                    view->array_len :
+                    isl_minify(surf->logical_level0_px.h, view->base_level);
+   param->size[2] = surf->dim == ISL_SURF_DIM_2D ?
+                    view->array_len :
+                    isl_minify(surf->logical_level0_px.d, view->base_level);
 
    isl_surf_get_image_offset_el(surf, view->base_level,
                                 surf->dim == ISL_SURF_DIM_3D ?
@@ -242,7 +249,7 @@ isl_surf_fill_image_param(const struct isl_device *dev,
 
    const int cpp = isl_format_get_layout(surf->format)->bpb / 8;
    param->stride[0] = cpp;
-   param->stride[1] = surf->row_pitch / cpp;
+   param->stride[1] = surf->row_pitch_B / cpp;
 
    const struct isl_extent3d image_align_sa =
       isl_surf_get_image_alignment_sa(surf);
@@ -312,6 +319,6 @@ isl_buffer_fill_image_param(const struct isl_device *dev,
 {
    *param = image_param_defaults;
 
-   param->stride[0] = isl_format_layouts[format].bpb / 8;
+   param->stride[0] = isl_format_get_layout(format)->bpb / 8;
    param->size[0] = size / param->stride[0];
 }

@@ -86,7 +86,7 @@ lower_udiv64_mod64(nir_builder *b, nir_ssa_def *n, nir_ssa_def *d,
        * this is always true within the if statement.
        */
       if (n->num_components == 1)
-         need_high_div = nir_imm_int(b, NIR_TRUE);
+         need_high_div = nir_imm_true(b);
 
       nir_ssa_def *log2_d_lo = nir_ufind_msb(b, d_lo);
 
@@ -278,6 +278,9 @@ lower_int64_impl(nir_function_impl *impl, nir_lower_int64_options options)
          progress = true;
       }
    }
+
+   if (progress)
+      nir_metadata_preserve(impl, nir_metadata_none);
 
    return progress;
 }

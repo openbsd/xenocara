@@ -1,5 +1,3 @@
-/* -*- mode: C; c-file-style: "k&r"; tab-width 4; indent-tabs-mode: t; -*- */
-
 /*
  * Copyright (C) 2013 Rob Clark <robclark@freedesktop.org>
  *
@@ -209,7 +207,7 @@ emit_textures(struct fd_context *ctx, struct fd_ringbuffer *ring,
 					fd3_pipe_sampler_view(tex->textures[i]) :
 					&dummy_view;
 			struct fd_resource *rsc = fd_resource(view->base.texture);
-			if (rsc && rsc->base.b.target == PIPE_BUFFER) {
+			if (rsc && rsc->base.target == PIPE_BUFFER) {
 				OUT_RELOC(ring, rsc->bo, view->base.u.buf.offset, 0, 0);
 				j = 1;
 			} else {
@@ -308,7 +306,7 @@ fd3_emit_gmem_restore_tex(struct fd_ringbuffer *ring,
 		 */
 		if (rsc->stencil && i == 0) {
 			rsc = rsc->stencil;
-			format = fd_gmem_restore_format(rsc->base.b.format);
+			format = fd_gmem_restore_format(rsc->base.format);
 		}
 
 		/* note: PIPE_BUFFER disallowed for surfaces */
@@ -374,7 +372,7 @@ fd3_emit_vertex_bufs(struct fd_ringbuffer *ring, struct fd3_emit *emit)
 			continue;
 		if (vp->inputs[i].sysval) {
 			switch(vp->inputs[i].slot) {
-			case SYSTEM_VALUE_BASE_VERTEX:
+			case SYSTEM_VALUE_FIRST_VERTEX:
 				/* handled elsewhere */
 				break;
 			case SYSTEM_VALUE_VERTEX_ID_ZERO_BASE:
@@ -409,7 +407,16 @@ fd3_emit_vertex_bufs(struct fd_ringbuffer *ring, struct fd3_emit *emit)
 					(instance_regid != regid(63, 0)) ||
 					(vtxcnt_regid != regid(63, 0));
 			bool isint = util_format_is_pure_integer(pfmt);
+			uint32_t off = vb->buffer_offset + elem->src_offset;
 			uint32_t fs = util_format_get_blocksize(pfmt);
+
+#ifdef DEBUG
+			/* see dEQP-GLES31.stress.vertex_attribute_binding.buffer_bounds.bind_vertex_buffer_offset_near_wrap_10
+			 * should mesa/st be protecting us from this?
+			 */
+			if (off > fd_bo_size(rsc->bo))
+				continue;
+#endif
 
 			debug_assert(fmt != ~0);
 
@@ -420,7 +427,7 @@ fd3_emit_vertex_bufs(struct fd_ringbuffer *ring, struct fd3_emit *emit)
 					A3XX_VFD_FETCH_INSTR_0_INDEXCODE(j) |
 					COND(elem->instance_divisor, A3XX_VFD_FETCH_INSTR_0_INSTANCED) |
 					A3XX_VFD_FETCH_INSTR_0_STEPRATE(MAX2(1, elem->instance_divisor)));
-			OUT_RELOC(ring, rsc->bo, vb->buffer_offset + elem->src_offset, 0, 0);
+			OUT_RELOC(ring, rsc->bo, off, 0, 0);
 
 			OUT_PKT0(ring, REG_A3XX_VFD_DECODE_INSTR(j), 1);
 			OUT_RING(ring, A3XX_VFD_DECODE_INSTR_CONSTFILL |
@@ -502,7 +509,7 @@ fd3_emit_state(struct fd_context *ctx, struct fd_ringbuffer *ring,
 	}
 
 	if ((dirty & (FD_DIRTY_ZSA | FD_DIRTY_PROG | FD_DIRTY_BLEND_DUAL)) &&
-		!emit->key.binning_pass) {
+		!emit->binning_pass) {
 		uint32_t val = fd3_zsa_stateobj(ctx->zsa)->rb_render_control |
 			fd3_blend_stateobj(ctx->blend)->rb_render_control;
 
@@ -548,7 +555,7 @@ fd3_emit_state(struct fd_context *ctx, struct fd_ringbuffer *ring,
 		if (fp->has_kill) {
 			val |= A3XX_RB_DEPTH_CONTROL_EARLY_Z_DISABLE;
 		}
-		if (!ctx->rasterizer->depth_clip) {
+		if (!ctx->rasterizer->depth_clip_near) {
 			val |= A3XX_RB_DEPTH_CONTROL_Z_CLAMP_ENABLE;
 		}
 		OUT_PKT0(ring, REG_A3XX_RB_DEPTH_CONTROL, 1);
@@ -615,7 +622,7 @@ fd3_emit_state(struct fd_context *ctx, struct fd_ringbuffer *ring,
 		uint32_t val = fd3_rasterizer_stateobj(ctx->rasterizer)
 				->pc_prim_vtx_cntl;
 
-		if (!emit->key.binning_pass) {
+		if (!emit->binning_pass) {
 			uint32_t stride_in_vpc = align(fp->total_in, 4) / 4;
 			if (stride_in_vpc > 0)
 				stride_in_vpc = MAX2(stride_in_vpc, 2);
@@ -643,7 +650,7 @@ fd3_emit_state(struct fd_context *ctx, struct fd_ringbuffer *ring,
 		 * or nothing deal. So when we disable clipping, we must handle the
 		 * viewport clip via scissors.
 		 */
-		if (!ctx->rasterizer->depth_clip) {
+		if (!ctx->rasterizer->depth_clip_near) {
 			struct pipe_viewport_state *vp = &ctx->viewport;
 			minx = MAX2(minx, (int)floorf(vp->translate[0] - fabsf(vp->scale[0])));
 			miny = MAX2(miny, (int)floorf(vp->translate[1] - fabsf(vp->scale[1])));
@@ -714,7 +721,7 @@ fd3_emit_state(struct fd_context *ctx, struct fd_ringbuffer *ring,
 
 	if (emit->prog == &ctx->prog) { /* evil hack to deal sanely with clear path */
 		ir3_emit_vs_consts(vp, ring, ctx, emit->info);
-		if (!emit->key.binning_pass)
+		if (!emit->binning_pass)
 			ir3_emit_fs_consts(fp, ring, ctx);
 	}
 

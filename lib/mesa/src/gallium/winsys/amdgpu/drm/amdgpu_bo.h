@@ -25,10 +25,6 @@
  * next paragraph) shall be included in all copies or substantial portions
  * of the Software.
  */
-/*
- * Authors:
- *      Marek Olšák <maraeo@gmail.com>
- */
 
 #ifndef AMDGPU_BO_H
 #define AMDGPU_BO_H
@@ -70,13 +66,15 @@ struct amdgpu_winsys_bo {
          bool use_reusable_pool;
 
          struct list_head global_list_item;
+
+         uint32_t kms_handle;
       } real;
       struct {
          struct pb_slab_entry entry;
          struct amdgpu_winsys_bo *real;
       } slab;
       struct {
-         mtx_t commit_lock;
+         simple_mtx_t commit_lock;
          amdgpu_va_handle va_handle;
          enum radeon_bo_flag flags;
 

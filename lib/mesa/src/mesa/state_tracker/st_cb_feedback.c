@@ -40,6 +40,7 @@
 #include "main/imports.h"
 #include "main/context.h"
 #include "main/feedback.h"
+#include "main/varray.h"
 
 #include "vbo/vbo.h"
 
@@ -282,14 +283,14 @@ st_RenderMode(struct gl_context *ctx, GLenum newMode )
 
    if (newMode == GL_RENDER) {
       /* restore normal VBO draw function */
-      st_init_draw(st);
+      st_init_draw_functions(&ctx->Driver);
    }
    else if (newMode == GL_SELECT) {
       if (!st->selection_stage)
          st->selection_stage = draw_glselect_stage(ctx, draw);
       draw_set_rasterize_stage(draw, st->selection_stage);
       /* Plug in new vbo draw function */
-      vbo_set_draw_func(ctx, st_feedback_draw_vbo);
+      ctx->Driver.Draw = st_feedback_draw_vbo;
    }
    else {
       struct gl_program *vp = st->ctx->VertexProgram._Current;
@@ -298,7 +299,7 @@ st_RenderMode(struct gl_context *ctx, GLenum newMode )
          st->feedback_stage = draw_glfeedback_stage(ctx, draw);
       draw_set_rasterize_stage(draw, st->feedback_stage);
       /* Plug in new vbo draw function */
-      vbo_set_draw_func(ctx, st_feedback_draw_vbo);
+      ctx->Driver.Draw = st_feedback_draw_vbo;
       /* need to generate/use a vertex program that emits pos/color/tex */
       if (vp)
          st->dirty |= ST_NEW_VERTEX_PROGRAM(st, st_vertex_program(vp));
