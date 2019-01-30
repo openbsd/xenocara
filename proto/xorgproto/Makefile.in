@@ -53,43 +53,43 @@ build_triplet = @build@
 host_triplet = @host@
 subdir = .
 DIST_COMMON = README $(am__XCalibrateinclude_HEADERS_DIST) \
+	$(am__applewm_HEADERS_DIST) $(am__compat_HEADERS_DIST) \
 	$(am__configure_deps) $(am__evie_HEADERS_DIST) \
 	$(am__fontcache_HEADERS_DIST) $(am__lg3d_HEADERS_DIST) \
-	$(am__print_HEADERS_DIST) $(am__xf86rush_HEADERS_DIST) \
-	$(applewm_HEADERS) $(bigreqs_HEADERS) $(compat_HEADERS) \
-	$(composite_HEADERS) $(damage_HEADERS) $(dist_doc_DATA) \
-	$(dmx_HEADERS) $(dri2_HEADERS) $(dri3_HEADERS) \
-	$(fixes_HEADERS) $(fonts_HEADERS) $(gl_HEADERS) \
-	$(glinternal_HEADERS) $(input_HEADERS) $(kb_HEADERS) \
-	$(present_HEADERS) $(randr_HEADERS) $(record_HEADERS) \
-	$(render_HEADERS) $(resource_HEADERS) $(scrnsaver_HEADERS) \
-	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(srcdir)/applewmproto.pc.in $(srcdir)/bigreqsproto.pc.in \
-	$(srcdir)/compositeproto.pc.in $(srcdir)/damageproto.pc.in \
-	$(srcdir)/dmxproto.pc.in $(srcdir)/dri2proto.pc.in \
-	$(srcdir)/dri3proto.pc.in $(srcdir)/evieproto.pc.in \
-	$(srcdir)/fixesproto.pc.in $(srcdir)/fontcacheproto.pc.in \
-	$(srcdir)/fontsproto.pc.in $(srcdir)/glproto.pc.in \
-	$(srcdir)/inputproto.pc.in $(srcdir)/kbproto.pc.in \
-	$(srcdir)/lg3dproto.pc.in $(srcdir)/presentproto.pc.in \
-	$(srcdir)/printproto.pc.in $(srcdir)/randrproto.pc.in \
-	$(srcdir)/recordproto.pc.in $(srcdir)/renderproto.pc.in \
-	$(srcdir)/resourceproto.pc.in $(srcdir)/scrnsaverproto.pc.in \
-	$(srcdir)/trapproto.pc.in $(srcdir)/videoproto.pc.in \
-	$(srcdir)/windowswmproto.pc.in $(srcdir)/xcalibrateproto.pc.in \
-	$(srcdir)/xcmiscproto.pc.in $(srcdir)/xextproto.pc.in \
-	$(srcdir)/xf86bigfontproto.pc.in $(srcdir)/xf86dgaproto.pc.in \
-	$(srcdir)/xf86driproto.pc.in $(srcdir)/xf86miscproto.pc.in \
-	$(srcdir)/xf86rushproto.pc.in $(srcdir)/xf86vidmodeproto.pc.in \
-	$(srcdir)/xineramaproto.pc.in $(srcdir)/xproto.pc.in \
-	$(srcdir)/xproxymngproto.pc.in $(top_srcdir)/configure \
-	$(top_srcdir)/include/X11/Xpoll.h.in $(trap_HEADERS) \
-	$(video_HEADERS) $(windowswm_HEADERS) $(xcmisc_HEADERS) \
-	$(xext_HEADERS) $(xf86bigfont_HEADERS) $(xf86dga_HEADERS) \
-	$(xf86dri_HEADERS) $(xf86misc_HEADERS) $(xf86vidmode_HEADERS) \
-	$(xinerama_HEADERS) $(xproto_HEADERS) $(xproxymng_HEADERS) \
-	AUTHORS INSTALL compile config.guess config.sub install-sh \
-	missing
+	$(am__print_HEADERS_DIST) $(am__trap_HEADERS_DIST) \
+	$(am__windowswm_HEADERS_DIST) $(am__xf86misc_HEADERS_DIST) \
+	$(am__xf86rush_HEADERS_DIST) $(am__xproxymng_HEADERS_DIST) \
+	$(bigreqs_HEADERS) $(composite_HEADERS) $(damage_HEADERS) \
+	$(dist_doc_DATA) $(dmx_HEADERS) $(dri2_HEADERS) \
+	$(dri3_HEADERS) $(fixes_HEADERS) $(fonts_HEADERS) \
+	$(gl_HEADERS) $(glinternal_HEADERS) $(input_HEADERS) \
+	$(kb_HEADERS) $(present_HEADERS) $(randr_HEADERS) \
+	$(record_HEADERS) $(render_HEADERS) $(resource_HEADERS) \
+	$(scrnsaver_HEADERS) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in $(srcdir)/applewmproto.pc.in \
+	$(srcdir)/bigreqsproto.pc.in $(srcdir)/compositeproto.pc.in \
+	$(srcdir)/damageproto.pc.in $(srcdir)/dmxproto.pc.in \
+	$(srcdir)/dri2proto.pc.in $(srcdir)/dri3proto.pc.in \
+	$(srcdir)/evieproto.pc.in $(srcdir)/fixesproto.pc.in \
+	$(srcdir)/fontcacheproto.pc.in $(srcdir)/fontsproto.pc.in \
+	$(srcdir)/glproto.pc.in $(srcdir)/inputproto.pc.in \
+	$(srcdir)/kbproto.pc.in $(srcdir)/lg3dproto.pc.in \
+	$(srcdir)/presentproto.pc.in $(srcdir)/printproto.pc.in \
+	$(srcdir)/randrproto.pc.in $(srcdir)/recordproto.pc.in \
+	$(srcdir)/renderproto.pc.in $(srcdir)/resourceproto.pc.in \
+	$(srcdir)/scrnsaverproto.pc.in $(srcdir)/trapproto.pc.in \
+	$(srcdir)/videoproto.pc.in $(srcdir)/windowswmproto.pc.in \
+	$(srcdir)/xcalibrateproto.pc.in $(srcdir)/xcmiscproto.pc.in \
+	$(srcdir)/xextproto.pc.in $(srcdir)/xf86bigfontproto.pc.in \
+	$(srcdir)/xf86dgaproto.pc.in $(srcdir)/xf86driproto.pc.in \
+	$(srcdir)/xf86miscproto.pc.in $(srcdir)/xf86rushproto.pc.in \
+	$(srcdir)/xf86vidmodeproto.pc.in $(srcdir)/xineramaproto.pc.in \
+	$(srcdir)/xproto.pc.in $(srcdir)/xproxymngproto.pc.in \
+	$(top_srcdir)/configure $(top_srcdir)/include/X11/Xpoll.h.in \
+	$(video_HEADERS) $(xcmisc_HEADERS) $(xext_HEADERS) \
+	$(xf86bigfont_HEADERS) $(xf86dga_HEADERS) $(xf86dri_HEADERS) \
+	$(xf86vidmode_HEADERS) $(xinerama_HEADERS) $(xproto_HEADERS) \
+	AUTHORS INSTALL config.guess config.sub install-sh missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -236,6 +236,11 @@ DATA = $(applewmprotopkgconfig_DATA) $(bigreqsprotopkgconfig_DATA) \
 am__XCalibrateinclude_HEADERS_DIST =  \
 	include/X11/extensions/xcalibrateproto.h \
 	include/X11/extensions/xcalibratewire.h
+am__applewm_HEADERS_DIST = include/X11/extensions/applewmconst.h \
+	include/X11/extensions/applewmproto.h
+am__compat_HEADERS_DIST = include/X11/extensions/shapestr.h \
+	include/X11/extensions/shmstr.h \
+	include/X11/extensions/syncstr.h
 am__evie_HEADERS_DIST = include/X11/extensions/evieproto.h \
 	include/X11/extensions/Xeviestr.h
 am__fontcache_HEADERS_DIST = include/X11/extensions/fontcache.h \
@@ -244,8 +249,21 @@ am__fontcache_HEADERS_DIST = include/X11/extensions/fontcache.h \
 am__lg3d_HEADERS_DIST = include/X11/extensions/lgewire.h
 am__print_HEADERS_DIST = include/X11/extensions/Print.h \
 	include/X11/extensions/Printstr.h
+am__trap_HEADERS_DIST = include/X11/extensions/xtrapbits.h \
+	include/X11/extensions/xtrapddmi.h \
+	include/X11/extensions/xtrapdi.h \
+	include/X11/extensions/xtrapemacros.h \
+	include/X11/extensions/xtraplib.h \
+	include/X11/extensions/xtraplibp.h \
+	include/X11/extensions/xtrapproto.h
+am__windowswm_HEADERS_DIST = include/X11/extensions/windowswm.h \
+	include/X11/extensions/windowswmstr.h
+am__xf86misc_HEADERS_DIST = include/X11/extensions/xf86misc.h \
+	include/X11/extensions/xf86mscstr.h
 am__xf86rush_HEADERS_DIST = include/X11/extensions/xf86rush.h \
 	include/X11/extensions/xf86rushstr.h
+am__xproxymng_HEADERS_DIST = include/X11/PM/PM.h \
+	include/X11/PM/PMproto.h
 HEADERS = $(XCalibrateinclude_HEADERS) $(applewm_HEADERS) \
 	$(bigreqs_HEADERS) $(compat_HEADERS) $(composite_HEADERS) \
 	$(damage_HEADERS) $(dmx_HEADERS) $(dri2_HEADERS) \
@@ -416,13 +434,13 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-applewmdir = $(includedir)/X11/extensions
-applewm_HEADERS = \
-        include/X11/extensions/applewmconst.h \
-	include/X11/extensions/applewmproto.h
+@APPLEWM_TRUE@applewmdir = $(includedir)/X11/extensions
+@APPLEWM_TRUE@applewm_HEADERS = \
+@APPLEWM_TRUE@        include/X11/extensions/applewmconst.h \
+@APPLEWM_TRUE@	include/X11/extensions/applewmproto.h
 
-applewmprotopkgconfigdir = $(datadir)/pkgconfig
-applewmprotopkgconfig_DATA = applewmproto.pc
+@APPLEWM_TRUE@applewmprotopkgconfigdir = $(datadir)/pkgconfig
+@APPLEWM_TRUE@applewmprotopkgconfig_DATA = applewmproto.pc
 bigreqsdir = $(includedir)/X11/extensions
 bigreqs_HEADERS = \
 	include/X11/extensions/bigreqsproto.h \
@@ -547,14 +565,14 @@ kbprotopkgconfig_DATA = kbproto.pc
 @LEGACY_TRUE@lg3dprotopkgconfigdir = $(datadir)/pkgconfig
 @LEGACY_TRUE@lg3dprotopkgconfig_DATA = lg3dproto.pc
 @LEGACY_TRUE@lg3dproto_EXTRA_DIST = autogen.sh lg3dproto.pc.in
-xproxymngdir = $(includedir)/X11/PM
-xproxymng_HEADERS = \
-	include/X11/PM/PM.h \
-	include/X11/PM/PMproto.h
+@LEGACY_TRUE@xproxymngdir = $(includedir)/X11/PM
+@LEGACY_TRUE@xproxymng_HEADERS = \
+@LEGACY_TRUE@	include/X11/PM/PM.h \
+@LEGACY_TRUE@	include/X11/PM/PMproto.h
 
-pmprotopkgconfigdir = $(datadir)/pkgconfig
-pmprotopkgconfig_DATA = xproxymngproto.pc
-pmproto_EXTRA_DIST = xproxymngproto.pc.in
+@LEGACY_TRUE@pmprotopkgconfigdir = $(datadir)/pkgconfig
+@LEGACY_TRUE@pmprotopkgconfig_DATA = xproxymngproto.pc
+@LEGACY_TRUE@pmproto_EXTRA_DIST = xproxymngproto.pc.in
 presentdir = $(includedir)/X11/extensions
 present_HEADERS = \
 	include/X11/extensions/presentproto.h \
@@ -620,19 +638,19 @@ scrnsaver_HEADERS = \
 
 scrnsaverprotopkgconfigdir = $(datadir)/pkgconfig
 scrnsaverprotopkgconfig_DATA = scrnsaverproto.pc
-trapdir = $(includedir)/X11/extensions
-trap_HEADERS = \
-	include/X11/extensions/xtrapbits.h \
-	include/X11/extensions/xtrapddmi.h \
-	include/X11/extensions/xtrapdi.h \
-	include/X11/extensions/xtrapemacros.h \
-	include/X11/extensions/xtraplib.h \
-	include/X11/extensions/xtraplibp.h \
-	include/X11/extensions/xtrapproto.h
+@LEGACY_TRUE@trapdir = $(includedir)/X11/extensions
+@LEGACY_TRUE@trap_HEADERS = \
+@LEGACY_TRUE@	include/X11/extensions/xtrapbits.h \
+@LEGACY_TRUE@	include/X11/extensions/xtrapddmi.h \
+@LEGACY_TRUE@	include/X11/extensions/xtrapdi.h \
+@LEGACY_TRUE@	include/X11/extensions/xtrapemacros.h \
+@LEGACY_TRUE@	include/X11/extensions/xtraplib.h \
+@LEGACY_TRUE@	include/X11/extensions/xtraplibp.h \
+@LEGACY_TRUE@	include/X11/extensions/xtrapproto.h
 
-trapprotopkgconfigdir = $(datadir)/pkgconfig
-trapprotopkgconfig_DATA = trapproto.pc
-trapproto_EXTRA_DIST = trapproto.pc.in
+@LEGACY_TRUE@trapprotopkgconfigdir = $(datadir)/pkgconfig
+@LEGACY_TRUE@trapprotopkgconfig_DATA = trapproto.pc
+@LEGACY_TRUE@trapproto_EXTRA_DIST = trapproto.pc.in
 videodir = $(includedir)/X11/extensions
 video_HEADERS = \
 	include/X11/extensions/vldXvMC.h \
@@ -643,13 +661,13 @@ video_HEADERS = \
 
 videoprotopkgconfigdir = $(datadir)/pkgconfig
 videoprotopkgconfig_DATA = videoproto.pc
-windowswmdir = $(includedir)/X11/extensions
-windowswm_HEADERS = \
-        include/X11/extensions/windowswm.h \
-	include/X11/extensions/windowswmstr.h
+@WINDOWSWM_TRUE@windowswmdir = $(includedir)/X11/extensions
+@WINDOWSWM_TRUE@windowswm_HEADERS = \
+@WINDOWSWM_TRUE@        include/X11/extensions/windowswm.h \
+@WINDOWSWM_TRUE@	include/X11/extensions/windowswmstr.h
 
-windowswmprotopkgconfigdir = $(datadir)/pkgconfig
-windowswmprotopkgconfig_DATA = windowswmproto.pc
+@WINDOWSWM_TRUE@windowswmprotopkgconfigdir = $(datadir)/pkgconfig
+@WINDOWSWM_TRUE@windowswmprotopkgconfig_DATA = windowswmproto.pc
 xprotodir = $(includedir)/X11
 xproto_HEADERS = \
 	include/X11/ap_keysym.h \
@@ -723,11 +741,11 @@ xext_HEADERS = \
 	include/X11/extensions/xtestconst.h \
 	include/X11/extensions/xtestproto.h
 
-compatdir = $(xextdir)
-compat_HEADERS = \
-	include/X11/extensions/shapestr.h \
-	include/X11/extensions/shmstr.h \
-	include/X11/extensions/syncstr.h
+@LEGACY_TRUE@compatdir = $(xextdir)
+@LEGACY_TRUE@compat_HEADERS = \
+@LEGACY_TRUE@	include/X11/extensions/shapestr.h \
+@LEGACY_TRUE@	include/X11/extensions/shmstr.h \
+@LEGACY_TRUE@	include/X11/extensions/syncstr.h
 
 xextprotopkgconfigdir = $(datadir)/pkgconfig
 xextprotopkgconfig_DATA = xextproto.pc
@@ -759,14 +777,14 @@ xf86dri_HEADERS = \
 
 xf86driprotopkgconfigdir = $(datadir)/pkgconfig
 xf86driprotopkgconfig_DATA = xf86driproto.pc
-xf86miscdir = $(includedir)/X11/extensions
-xf86misc_HEADERS = \
-	include/X11/extensions/xf86misc.h \
-	include/X11/extensions/xf86mscstr.h
+@LEGACY_TRUE@xf86miscdir = $(includedir)/X11/extensions
+@LEGACY_TRUE@xf86misc_HEADERS = \
+@LEGACY_TRUE@	include/X11/extensions/xf86misc.h \
+@LEGACY_TRUE@	include/X11/extensions/xf86mscstr.h
 
-xf86miscprotopkgconfigdir = $(datadir)/pkgconfig
-xf86miscprotopkgconfig_DATA = xf86miscproto.pc
-xf86miscproto_EXTRA_DIST = xf86miscproto.pc.in
+@LEGACY_TRUE@xf86miscprotopkgconfigdir = $(datadir)/pkgconfig
+@LEGACY_TRUE@xf86miscprotopkgconfig_DATA = xf86miscproto.pc
+@LEGACY_TRUE@xf86miscproto_EXTRA_DIST = xf86miscproto.pc.in
 @LEGACY_TRUE@xf86rushdir = $(includedir)/X11/extensions
 @LEGACY_TRUE@xf86rush_HEADERS = \
 @LEGACY_TRUE@	include/X11/extensions/xf86rush.h \

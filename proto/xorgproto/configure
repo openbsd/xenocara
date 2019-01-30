@@ -687,6 +687,10 @@ am__EXEEXT_TRUE
 LTLIBOBJS
 LIBOBJS
 USE_FDS_BITS
+WINDOWSWM_FALSE
+WINDOWSWM_TRUE
+APPLEWM_FALSE
+APPLEWM_TRUE
 LEGACY_FALSE
 LEGACY_TRUE
 HAVE_STYLESHEETS_FALSE
@@ -839,6 +843,8 @@ with_xmlto
 with_fop
 with_xsltproc
 enable_legacy
+enable_applewm
+enable_windowswm
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1490,6 +1496,8 @@ Optional Features:
   --disable-silent-rules  verbose build output (undo: "make V=0")
   --enable-specs          Enable building the specs (default: yes)
   --enable-legacy         Install legacy protocol headers (default: false)
+  --enable-applewm        Install apple wm protocol headers (default: false)
+  --enable-windowswm      Install windows wm protocol headers (default: false)
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -11158,6 +11166,38 @@ else
 fi
 
 
+# Check whether --enable-applewm was given.
+if test "${enable_applewm+set}" = set; then :
+  enableval=$enable_applewm; APPLEWM=$enableval
+else
+  APPLEWM=no
+fi
+
+ if test "x$APPLEWM" = "xyes"; then
+  APPLEWM_TRUE=
+  APPLEWM_FALSE='#'
+else
+  APPLEWM_TRUE='#'
+  APPLEWM_FALSE=
+fi
+
+
+# Check whether --enable-windowswm was given.
+if test "${enable_windowswm+set}" = set; then :
+  enableval=$enable_windowswm; WINDOWSWM=$enableval
+else
+  WINDOWSWM=no
+fi
+
+ if test "x$WINDOWSWM" = "xyes"; then
+  WINDOWSWM_TRUE=
+  WINDOWSWM_FALSE='#'
+else
+  WINDOWSWM_TRUE='#'
+  WINDOWSWM_FALSE=
+fi
+
+
 for ac_header in sys/select.h sys/param.h sys/types.h sys/time.h
 do :
   as_ac_Header=`$as_echo "ac_cv_header_$ac_header" | $as_tr_sh`
@@ -11438,6 +11478,14 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${LEGACY_TRUE}" && test -z "${LEGACY_FALSE}"; then
   as_fn_error $? "conditional \"LEGACY\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${APPLEWM_TRUE}" && test -z "${APPLEWM_FALSE}"; then
+  as_fn_error $? "conditional \"APPLEWM\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${WINDOWSWM_TRUE}" && test -z "${WINDOWSWM_FALSE}"; then
+  as_fn_error $? "conditional \"WINDOWSWM\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 
