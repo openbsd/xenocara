@@ -1,3 +1,4 @@
+if APPLEWM
 applewmdir = $(includedir)/X11/extensions
 applewm_HEADERS = \
         include/X11/extensions/applewmconst.h \
@@ -5,6 +6,7 @@ applewm_HEADERS = \
 
 applewmprotopkgconfigdir = $(datadir)/pkgconfig
 applewmprotopkgconfig_DATA = applewmproto.pc
+endif
 
 bigreqsdir = $(includedir)/X11/extensions
 bigreqs_HEADERS = \
@@ -156,7 +158,6 @@ lg3dprotopkgconfigdir = $(datadir)/pkgconfig
 lg3dprotopkgconfig_DATA = lg3dproto.pc
 
 lg3dproto_EXTRA_DIST = autogen.sh lg3dproto.pc.in
-endif
 
 xproxymngdir = $(includedir)/X11/PM
 xproxymng_HEADERS = \
@@ -167,6 +168,7 @@ pmprotopkgconfigdir = $(datadir)/pkgconfig
 pmprotopkgconfig_DATA = xproxymngproto.pc
 
 pmproto_EXTRA_DIST = xproxymngproto.pc.in
+endif
 
 presentdir = $(includedir)/X11/extensions
 present_HEADERS = \
@@ -261,6 +263,7 @@ scrnsaver_HEADERS = \
 scrnsaverprotopkgconfigdir = $(datadir)/pkgconfig
 scrnsaverprotopkgconfig_DATA = scrnsaverproto.pc
 
+if LEGACY
 trapdir = $(includedir)/X11/extensions
 trap_HEADERS = \
 	include/X11/extensions/xtrapbits.h \
@@ -275,6 +278,7 @@ trapprotopkgconfigdir = $(datadir)/pkgconfig
 trapprotopkgconfig_DATA = trapproto.pc
 
 trapproto_EXTRA_DIST = trapproto.pc.in
+endif
 
 videodir = $(includedir)/X11/extensions
 video_HEADERS = \
@@ -287,6 +291,7 @@ video_HEADERS = \
 videoprotopkgconfigdir = $(datadir)/pkgconfig
 videoprotopkgconfig_DATA = videoproto.pc
 
+if WINDOWSWM
 windowswmdir = $(includedir)/X11/extensions
 windowswm_HEADERS = \
         include/X11/extensions/windowswm.h \
@@ -294,6 +299,7 @@ windowswm_HEADERS = \
 
 windowswmprotopkgconfigdir = $(datadir)/pkgconfig
 windowswmprotopkgconfig_DATA = windowswmproto.pc
+endif
 
 xprotodir = $(includedir)/X11
 xproto_HEADERS = \
@@ -370,11 +376,13 @@ xext_HEADERS = \
 	include/X11/extensions/xtestconst.h \
 	include/X11/extensions/xtestproto.h
 
+if LEGACY
 compatdir = $(xextdir)
 compat_HEADERS = \
 	include/X11/extensions/shapestr.h \
 	include/X11/extensions/shmstr.h \
 	include/X11/extensions/syncstr.h
+endif
 
 xextprotopkgconfigdir = $(datadir)/pkgconfig
 xextprotopkgconfig_DATA = xextproto.pc
@@ -410,6 +418,7 @@ xf86dri_HEADERS = \
 xf86driprotopkgconfigdir = $(datadir)/pkgconfig
 xf86driprotopkgconfig_DATA = xf86driproto.pc
 
+if LEGACY
 xf86miscdir = $(includedir)/X11/extensions
 xf86misc_HEADERS = \
 	include/X11/extensions/xf86misc.h \
@@ -420,7 +429,6 @@ xf86miscprotopkgconfig_DATA = xf86miscproto.pc
 
 xf86miscproto_EXTRA_DIST = xf86miscproto.pc.in
 
-if LEGACY
 xf86rushdir = $(includedir)/X11/extensions
 xf86rush_HEADERS = \
 	include/X11/extensions/xf86rush.h \

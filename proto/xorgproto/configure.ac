@@ -45,6 +45,18 @@ AC_ARG_ENABLE(legacy,
 			     [LEGACY=$enableval], [LEGACY=no])
 AM_CONDITIONAL(LEGACY, [test "x$LEGACY" = "xyes"])
 
+AC_ARG_ENABLE(applewm,
+	      AS_HELP_STRING([--enable-applewm],
+			     [Install apple wm protocol headers (default: false)]),
+			     [APPLEWM=$enableval], [APPLEWM=no])
+AM_CONDITIONAL(APPLEWM, [test "x$APPLEWM" = "xyes"])
+
+AC_ARG_ENABLE(windowswm,
+	      AS_HELP_STRING([--enable-windowswm],
+			     [Install windows wm protocol headers (default: false)]),
+			     [WINDOWSWM=$enableval], [WINDOWSWM=no])
+AM_CONDITIONAL(WINDOWSWM, [test "x$WINDOWSWM" = "xyes"])
+
 AC_CHECK_HEADERS([sys/select.h sys/param.h sys/types.h sys/time.h])
 
 # Handle Xpoll.h.in
