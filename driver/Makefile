@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.71 2018/08/27 15:03:23 kettenis Exp $
+# $OpenBSD: Makefile,v 1.72 2019/02/09 00:31:06 aoyama Exp $
 
 INPUT_DRV_DEFAULT= \
 	xf86-input-keyboard \
@@ -24,7 +24,8 @@ INPUT_DRV_landisk=
 
 INPUT_DRV_loongson= ${INPUT_DRV_DEFAULT}
 
-INPUT_DRV_luna88k= ${INPUT_DRV_DEFAULT}
+INPUT_DRV_luna88k= xf86-input-keyboard xf86-input-mouse xf86-input-void \
+	xf86-input-ws
 
 INPUT_DRV_macppc= ${INPUT_DRV_COMMON}
 
