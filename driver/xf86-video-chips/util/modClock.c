@@ -341,7 +341,7 @@ int main (int argc, char *argv[]) {
     return 1;
   }
 
-  if (! IS_Programmable(ChipType)) {
+  if (!(IS_Programmable(ChipType))) {
     fprintf(stderr, "No programmable Clock!\n");
     return 1;
   }

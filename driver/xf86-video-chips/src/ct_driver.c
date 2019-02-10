@@ -2423,7 +2423,7 @@ chipsPreInitWingine(ScrnInfoPtr pScrn, int flags)
     CHIPSPtr cPtr = CHIPSPTR(pScrn);
     CHIPSClockPtr SaveClk = &(cPtr->SavedReg.Clock);
     Bool useLinear = FALSE;
-    char *s;
+    const char *s;
 #ifndef XSERVER_LIBPCIACCESS
     resRange linearRes[] = { {ResExcMemBlock|ResBios|ResBus,0,0},_END };
 #endif
@@ -2890,7 +2890,7 @@ chipsPreInit655xx(ScrnInfoPtr pScrn, int flags)
     CHIPSPanelSizePtr Size = &cPtr->PanelSize;
     CHIPSClockPtr SaveClk = &(cPtr->SavedReg.Clock);
     Bool useLinear = FALSE;
-    char *s;
+    const char *s;
 #ifndef XSERVER_LIBPCIACCESS
     resRange linearRes[] = { {ResExcMemBlock|ResBios|ResBus,0,0},_END };
 #endif
