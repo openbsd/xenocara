@@ -6,7 +6,6 @@
 #include "xf86.h"
 #include "xf86_OSproc.h"
 #include "xf86Pci.h"
-#include "xf86PciInfo.h"
 #include "i128.h"
 #include "dgaproc.h"
 

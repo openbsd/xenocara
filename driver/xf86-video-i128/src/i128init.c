@@ -29,7 +29,6 @@
 
 
 #include "xf86.h"
-#include "xf86PciInfo.h"
 #include "xf86Pci.h"
 
 #include "i128.h"

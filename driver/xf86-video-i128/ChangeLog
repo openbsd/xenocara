@@ -1,3 +1,68 @@
+commit 674af4475064c8eb8a7f2a9368c04c9089582f94
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Fri Dec 7 15:15:03 2018 -0800
+
+    Version bumped to Version 1.4.0
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit a1aa486041e0ccdc8e5be3b26f260180e095d4c5
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Fri Dec 7 15:07:44 2018 -0800
+
+    Use const char for xf86GetOptValString return type
+    
+    Apparently, xf86GetOptValString changed their return type from char
+    to const char between X Server 1.15 and 1.16. In particular, X Server
+    commit e1e01d2e33c632e395d7e396f73fba8ae606b15a made the change. This
+    commit will suppress the compilation warning.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit b532708b75708f7d89449bb7b3b3f4f5df2bfb79
+Author: Laurent Carlier <lordheavym@gmail.com>
+Date:   Mon Nov 21 20:53:03 2016 +0100
+
+    Stop using deprecated xf86PciInfo.h
+    
+    v2: Remove empty lines
+    Signed-off-by: Laurent Carlier <lordheavym@gmail.com>
+    Reviewed-by: Connor Behan <connor.behan@gmail.com>
+
+commit ffeb1b0e41a0653416c69e083bb3cf31c5519663
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 25 13:59:00 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 628ffa784be178f402e4cb126ce3556fbd601df2
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:22 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit c87753733a6e1f85d1d037dced0b47ce0cf41658
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Sep 25 08:54:40 2012 -0400
+
+    Remove mibstore.h
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 3226d66c951f3621fb940cc5844098d892089eb1
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Aug 15 13:03:11 2012 -0400
+
+    Don't bother to include vbe.h
+    
+    Just copied from xf86 boilerplate afaict.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
 commit da79e51c46b9394b17927a3234af90376ad69b00
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Tue Jul 17 16:05:09 2012 +1000

@@ -38,9 +38,6 @@
 
 #include "compiler.h"
 
-/* Drivers for PCI hardware need this */
-#include "xf86PciInfo.h"
-
 /* Drivers that need to access the PCI config space directly need this */
 #include "xf86Pci.h"
 
@@ -584,7 +581,7 @@ I128PreInit(ScrnInfoPtr pScrn, int flags)
 	xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Acceleration disabled\n");
     } else {
         int from = X_DEFAULT;
-        char *s = xf86GetOptValString(pI128->Options, OPTION_ACCELMETHOD);
+        const char *s = xf86GetOptValString(pI128->Options, OPTION_ACCELMETHOD);
         pI128->NoAccel = FALSE;
         if (!xf86NameCmp(s, "EXA")) {
             pI128->exa = TRUE;

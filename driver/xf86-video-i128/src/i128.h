@@ -36,6 +36,12 @@ struct source_format {
 
 #define I128PTR(p) ((I128Ptr)((p)->driverPrivate))
 
+#define PCI_VENDOR_NUMNINE		0x105D
+#define PCI_CHIP_I128			0x2309
+#define PCI_CHIP_I128_2			0x2339
+#define PCI_CHIP_I128_T2R		0x493D
+#define PCI_CHIP_I128_T2R4		0x5348
+
 typedef struct {
     EntityInfoPtr	pEnt;
     pciVideoPtr		PciInfo;
