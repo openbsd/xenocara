@@ -118,7 +118,9 @@ static ModeStatus NEOValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode,
                                Bool verbose, int flags);
 
 /* Internally used functions */
+#ifdef HAVE_ISA
 static int      neoFindIsaDevice(GDevPtr dev);
+#endif
 static Bool     neoModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode);
 static void     neoSave(ScrnInfoPtr pScrn);
 static void     neoRestore(ScrnInfoPtr pScrn, vgaRegPtr VgaReg,
@@ -1954,7 +1956,6 @@ static Bool
 neoMapMem(ScrnInfoPtr pScrn)
 {
     NEOPtr nPtr = NEOPTR(pScrn);
-    vgaHWPtr hwp = VGAHWPTR(pScrn);
 
     if (!nPtr->noMMIO) {
         if (nPtr->pEnt->location.type == BUS_PCI){
@@ -2952,7 +2953,7 @@ neoCalcVCLK(ScrnInfoPtr pScrn, long freq)
 	for (n = 0; n <= MAX_N; n++)
 	    for (d = 1; d <= MAX_D; d++) {
 		f_out = (n+1.0)/((d+1.0)*(1<<f))*REF_FREQ;
-		f_diff = abs(f_out-f_target);
+		f_diff = fabs(f_out-f_target);
 		if (f_diff < f_best_diff) {
 		    f_best_diff = f_diff;
 		    n_best = n;

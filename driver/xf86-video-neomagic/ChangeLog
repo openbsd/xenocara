@@ -1,3 +1,85 @@
+commit 754031be27385154d39b65f8d703279f841b2c31
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Mon Dec 24 18:48:32 2018 -0600
+
+    Version bumped to 1.3.0
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 188c1b8d2b5b488bc5bee632dbff7cf98634f979
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Sat Dec 22 15:53:03 2018 -0600
+
+    Suppress unused function compilation warning
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 0b1df1d5f706b309e9d6fbd8e253b42979c045c8
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Sat Dec 22 15:48:24 2018 -0600
+
+    Eliminate unused variable compilation warning
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit f30dde6f9665b0ea687b55a5ad667fc01e17141a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 25 14:33:22 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 81b8ea1cb8aa8bc07e57ad885b4ba2957c90da6a
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:22 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 8f9e23c2454650268b94af5b0b0d3c49ae90a205
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit dab4b6caa89a699ae47d765cd609d5a54dc58da1
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 26a5c0f33d9209a59aa7bbe23a65cb6b01589841
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 21:03:14 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e3951f7124a0c5e91cd2d558b71c55bebd778eed
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 21:03:13 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit f0a61bc00011b0497edc79cf6fa11ae88a227df9
 Author: Julien Cristau <jcristau@debian.org>
 Date:   Fri May 8 11:48:52 2015 +0200
