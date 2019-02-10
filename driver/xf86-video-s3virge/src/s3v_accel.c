@@ -465,7 +465,7 @@ S3VAccelSync(ScrnInfoPtr pScrn)
     WAITIDLE();
 }
 
-
+#ifdef HAVE_XAA_H
 static void
 S3VEngineReset(ScrnInfoPtr pScrn)
 {
@@ -540,7 +540,6 @@ S3VWriteMask(
    return;
 }
 
-#ifdef HAVE_XAA_H
 
 	/************************\
 	|  Solid Filled Rects    |

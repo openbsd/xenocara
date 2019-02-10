@@ -18,15 +18,15 @@
 
   1.  Supported hardware
 
-  The s3virge driver in X11R7.5 supports the S3 ViRGE, ViRGE DX, GX,
+  The s3virge driver for Xorg supports the S3 ViRGE, ViRGE DX, GX,
   GX2, MX, MX+, and VX chipsets. It also supports Trio3D and Trio3D/2x
   chips. A majority of testing is done on ViRGE DX chips, making them
   the most stable to date. This release has added support for doublescan
   modes on DX.
 
   This driver is moderately stable, however please use caution with any
-  new install. Please report any problems to bugzilla.freedesktop.org,
-  using the xorg component.
+  new install. Please report any issues at
+  https://gitlab.freedesktop.org/xorg/driver/xf86-video-s3virge/issues
 
 
   2.  Features:
@@ -66,8 +66,8 @@
 
   5.  Support:
 
-  For support with X11R7.5 video drivers please refer to our web site at
-  wiki.x.org <http://wiki.x.org>.
+  For support with Xorg video drivers please refer to our web site at
+  https://wiki.x.org/
 
 
   6.  Authors

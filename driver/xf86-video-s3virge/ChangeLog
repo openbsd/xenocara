@@ -1,3 +1,123 @@
+commit 2b620c3fd42c304ee6808a25c205ea03d763032f
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Thu Feb 7 18:42:02 2019 -0800
+
+    Version bumped to 1.11.0
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 824193dacb16415e8536aac8c3a46a5081cbcc67
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Tue Dec 18 18:14:44 2018 -0600
+
+    Eliminate unused function compilation warnings
+    
+    It is an XAA related issue.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 80d285af637688630e9f7cdf52a3d8cce6db6b19
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Tue Dec 18 18:03:48 2018 -0600
+
+    Eliminate unused variable compilation warnings
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 5325b8f16bccdc4b8aea8e118e149e7a684d7e8c
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Tue Dec 18 17:59:11 2018 -0600
+
+    Use const char for xf86GetOptValString return type
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit f1f616ae6b928f42b1ee9fc6312bd8d20b75c750
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 7 19:07:10 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 03d8241e33f785f8654c1bb6a923fb9e1815d215
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 18 16:13:36 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 81542ee8efb9662016aea717b018f126e47d325b
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:22 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit f35fe04a596e05292c01a56076b8810db02ec5af
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 803b043ed780dcd236019a1ca7a0f495785b0f54
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit df98ecd2b53814c2dda0352f2d0ead1edcb87c8a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 21:03:14 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c91e9061fd26104845a8f9a8beeaf1c4d98f0d69
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 21:03:13 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 47f43694645f3e6347b536d5e3fb2fee56e715ab
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Mon Sep 28 22:49:22 2015 +0200
+
+    Add cast to remove a warning on 32-bit machines.
+    
+    PCI_REGION_BASE returns a 64-bit value, which needs to be converted
+    down to 32-bit before it can be put into a 32-bit pointer.
+
+commit 9c8a08c9c7a0f7ec591042abd5b4a0fb50c028f1
+Author: Nick Hudson <skrll@NetBSD.org>
+Date:   Mon Sep 28 22:49:21 2015 +0200
+
+    Increase BIOS_BSIZE.
+    
+    libpciaccess expects a much bigger buffer when reading ROM.
+    Bump it to the (normal) IO space size.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+
 commit 8a54ff31e6873d369ff94c75d630c21aab0f0e23
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Sat Sep 26 09:29:51 2015 -0700
