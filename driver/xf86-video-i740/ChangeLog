@@ -1,3 +1,89 @@
+commit 327d0fc8e6e7fc3ea1acce13c5f5d524df65dfc3
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Thu Dec 6 15:19:06 2018 -0800
+
+    Version bumped to Version 1.4.0
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit cca56a6eb27d3317575a405ebb7446b11d3a034d
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Thu Dec 6 14:53:12 2018 -0800
+
+    Declare a variable only when XSERVER_LIBPCIACCESS is defined
+    
+    This is to suppress a compilation warning when compiling against
+    newer X Servers.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 77346606a1b1bdb624ad7661de4008e6b0f63381
+Author: Laurent Carlier <lordheavym@gmail.com>
+Date:   Mon Nov 21 20:02:34 2016 +0100
+
+    Stop using deprecated xf86PciInfo.h
+    
+    Signed-off-by: Laurent Carlier <lordheavym@gmail.com>
+    Reviewed-by: Connor Behan <connor.behan@gmail.com>
+
+commit f2c051aa66e0168e31b72697ca86a108edbfd986
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 25 13:59:10 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 245372a8a4785e0eb9f1dbba9120a8ade2189b0a
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit dd22309f74d7e197321022413576bdc161f80c23
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 84d9ce838a1aa73d72d7e446075e8f0b7911fc5c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 531113a5897d8b0dae99b163ae4ffbb32fb22dc4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 21:03:14 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cdf9387e43ec5362488749a39870b4e8c96108ca
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 21:03:13 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 4ec050e2c080c5b8f24b4a11912489aa515c3b27
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Tue Jan 17 14:39:59 2017 -0800

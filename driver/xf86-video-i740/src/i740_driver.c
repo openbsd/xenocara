@@ -780,7 +780,9 @@ I740PreInit(ScrnInfoPtr pScrn, int flags) {
 
 static Bool I740MapMem(ScrnInfoPtr pScrn)
 {
+#ifndef XSERVER_LIBPCIACCESS
   int mmioFlags;
+#endif
   I740Ptr pI740;
 
   pI740 = I740PTR(pScrn);

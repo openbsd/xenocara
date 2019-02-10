@@ -37,7 +37,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "i740_pcirename.h"
 
-#include "xf86PciInfo.h"
 #include "xf86Pci.h"
 
 #include "i740_reg.h"
@@ -57,6 +56,11 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define OUTREG8(addr, val)  *(volatile CARD8  *)(pI740->MMIOBase + (addr)) = (val)
 #define OUTREG16(addr, val) *(volatile CARD16 *)(pI740->MMIOBase + (addr)) = (val)
 #define OUTREG(addr, val)   *(volatile CARD32 *)(pI740->MMIOBase + (addr)) = (val)
+
+#define PCI_VENDOR_REAL3D		0x003D
+#define PCI_CHIP_I740_PCI		0x00D1
+#define PCI_VENDOR_INTEL		0x8086
+#define PCI_CHIP_I740_AGP		0x7800
 
 typedef struct _I740Rec *I740Ptr;
 
