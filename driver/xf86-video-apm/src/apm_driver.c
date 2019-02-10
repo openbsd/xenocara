@@ -355,7 +355,8 @@ ApmPreInit(ScrnInfoPtr pScrn, int flags)
     EntityInfoPtr	pEnt;
     vgaHWPtr		hwp;
     MessageType		from;
-    char		*mod = NULL, *req = NULL, *s;
+    char		*mod = NULL;
+    const char		*s;
     ClockRangePtr	clockRanges;
     int			i;
     xf86MonPtr		MonInfo = NULL;
@@ -751,7 +752,11 @@ ApmPreInit(ScrnInfoPtr pScrn, int flags)
 	LinMap[0xFFECDB] = db;
 	LinMap[0xFFECD9] = d9;
 	/*pciWriteLong(pApm->PciTag, PCI_CMD_STAT_REG, save);*/
+#ifndef XSERVER_LIBPCIACCESS
 	xf86UnMapVidMem(pScrn->scrnIndex, (pointer)LinMap, pApm->LinMapSize);
+#else
+	pci_device_unmap_range(pApm->PciInfo, (pointer)LinMap, pApm->LinMapSize);
+#endif
 	from = X_PROBED;
     }
     else {
@@ -1134,11 +1139,19 @@ ApmUnmapMem(ScrnInfoPtr pScrn)
 	    WRXB(0xDB, pApm->db);
 	}
 	WRXB(0xC9, pApm->c9);
+#ifndef XSERVER_LIBPCIACCESS
 	xf86UnMapVidMem(pScrn->scrnIndex, (pointer)pApm->LinMap, pApm->LinMapSize);
+#else
+	pci_device_unmap_range(pApm->PciInfo, (pointer)pApm->LinMap, pApm->LinMapSize);
+#endif
 	pApm->LinMap = NULL;
     }
     else if (pApm->FbBase)
+#ifndef XSERVER_LIBPCIACCESS
 	xf86UnMapVidMem(pScrn->scrnIndex, (pointer)pApm->LinMap, 0x10000);
+#else
+	pci_device_unmap_range(pApm->PciInfo, (pointer)pApm->LinMap, 0x10000);
+#endif
 
     return TRUE;
 }

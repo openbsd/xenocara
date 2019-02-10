@@ -1,3 +1,66 @@
+commit b71848a9b9c3a01b35aa960de6e95e11778bdca5
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Wed Feb 6 19:57:59 2019 -0800
+
+    Version bumped to 1.3.0
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 175586a648374fbe702469f99e4fb1c5ca144e10
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Mon Dec 17 16:00:36 2018 -0600
+
+    Use libpciaccess for newer X Servers when unmapping video RAM
+    
+    Commit d1e29902483a82e86b07cd30d41d411e71b776ea missed using
+    XSERVER_LIBPCIACCESS conditional compilation keyword when unmapping
+    video RAM. This meant that the code was not getting compiled correctly
+    for newer X Servers due to the missing xf86UnMapVidMem.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 1d3102739815eb0c37bd9a9134bd0eb80deb3895
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Mon Dec 17 16:00:35 2018 -0600
+
+    Eliminate unused variable compilation warnings
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit ced64e1325c04aa079d7cef185bb157e4975dc21
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Mon Dec 17 16:00:34 2018 -0600
+
+    Use const char for xf86GetOptValString return type
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit 6e780e5870282ba871e575c5a1f1337fa385df47
+Author: Kevin Brace <kevinbrace@gmx.com>
+Date:   Mon Dec 17 16:00:33 2018 -0600
+
+    Remove miInitializeBackingStore
+    
+    Apparently, it is no longer available.
+    
+    Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
+
+commit a013a67e8bf1e915a781faaf966b06b8cc7696b3
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 9f67408e4f078e907fbf4feb45cfdcfd0cdebcca
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Jan 9 22:03:29 2013 -0500
+
+    Remove #include "mibstore.h"
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
 commit 736cb01bfafc2cbb1dfa4e449866b5bc333cfc86
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Tue Jul 17 16:05:09 2012 +1000

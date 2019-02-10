@@ -236,7 +236,6 @@ ApmDGAInit(ScreenPtr pScreen)
 static Bool
 ApmSetMode(ScrnInfoPtr pScrn, DGAModePtr pMode)
 {
-    int		index = pScrn->pScreen->myNum;
     APMDECL(pScrn);
 
     if (!pMode) { /* restore the original mode */
