@@ -1,4 +1,4 @@
-/*      $OpenBSD: xtsscale.c,v 1.23 2012/03/06 23:24:37 matthieu Exp $ */
+/*      $OpenBSD: xtsscale.c,v 1.24 2019/02/11 07:10:45 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Robert Nagy <robert@openbsd.org>
  * Copyright (c) 2009,2011 Matthieu Herrb <matthieu@herrb.eu>
@@ -732,7 +732,7 @@ calib:
 		cleanup_exit(device);
 
 	/* Check if  X and Y should be swapped */
-	if (fabs(x[0] - x[1]) > fabs(y[0] - y[1])) {
+	if (abs(x[0] - x[1]) > abs(y[0] - y[1])) {
 
 		calib.swapxy = 1;
 
