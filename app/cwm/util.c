@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: util.c,v 1.22 2018/02/04 22:56:26 okan Exp $
+ * $OpenBSD: util.c,v 1.23 2019/02/13 15:43:24 okan Exp $
  */
 
 #include <sys/types.h>
@@ -24,6 +24,7 @@
 #include <err.h>
 #include <errno.h>
 #include <limits.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

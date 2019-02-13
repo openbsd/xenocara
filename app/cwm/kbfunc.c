@@ -15,11 +15,12 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.159 2017/12/29 20:03:46 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.160 2019/02/13 15:43:24 okan Exp $
  */
 
 #include <sys/types.h>
 #include <sys/queue.h>
+#include <sys/stat.h>
 
 #include <dirent.h>
 #include <err.h>

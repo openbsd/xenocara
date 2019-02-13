@@ -15,12 +15,11 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.242 2018/11/13 17:37:13 okan Exp $
+ * $OpenBSD: conf.c,v 1.243 2019/02/13 15:43:24 okan Exp $
  */
 
 #include <sys/types.h>
 #include <sys/queue.h>
-#include <sys/stat.h>
 
 #include <err.h>
 #include <errno.h>
