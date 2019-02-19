@@ -669,7 +669,7 @@ v3d_resource_create_with_modifiers(struct pipe_screen *pscreen,
                 rsc->tiled = false;
         } else {
                 fprintf(stderr, "Unsupported modifier requested\n");
-                return NULL;
+                goto fail;
         }
 
         rsc->internal_format = prsc->format;
