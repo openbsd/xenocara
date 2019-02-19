@@ -178,6 +178,15 @@ fd_resource_level_linear(struct pipe_resource *prsc, int level)
 	return false;
 }
 
+/* access # of samples, with 0 normalized to 1 (which is what we care about
+ * most of the time)
+ */
+static inline unsigned
+fd_resource_nr_samples(struct pipe_resource *prsc)
+{
+	return MAX2(1, prsc->nr_samples);
+}
+
 void fd_blitter_pipe_begin(struct fd_context *ctx, bool render_cond, bool discard,
 		enum fd_render_stage stage);
 void fd_blitter_pipe_end(struct fd_context *ctx);

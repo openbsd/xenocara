@@ -1279,8 +1279,8 @@ nvc0_screen_create(struct nouveau_device *dev)
    for (i = 0; i < NVC0_MAX_VIEWPORTS; i++) {
       BEGIN_NVC0(push, NVC0_3D(SCISSOR_ENABLE(i)), 3);
       PUSH_DATA (push, 1);
-      PUSH_DATA (push, 8192 << 16);
-      PUSH_DATA (push, 8192 << 16);
+      PUSH_DATA (push, 16384 << 16);
+      PUSH_DATA (push, 16384 << 16);
    }
 
 #define MK_MACRO(m, n) i = nvc0_graph_set_macro(screen, m, i, sizeof(n), n);

@@ -21,7 +21,7 @@
  * MATERIALS OR THE USE OR OTHER DEALINGS IN THE MATERIALS.
  **********************************************************************************/
 
-/* $Revision: 1.12 $ on $Date: 2019/01/29 11:52:05 $ */
+/* $Revision: 1.13 $ on $Date: 2019/02/19 04:24:00 $ */
 
 #ifndef __CL_PLATFORM_H
 #define __CL_PLATFORM_H

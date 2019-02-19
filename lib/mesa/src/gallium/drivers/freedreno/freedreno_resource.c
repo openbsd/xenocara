@@ -839,8 +839,7 @@ fd_resource_create(struct pipe_screen *pscreen,
 
 	rsc->internal_format = format;
 	rsc->cpp = util_format_get_blocksize(format);
-	prsc->nr_samples = MAX2(1, prsc->nr_samples);
-	rsc->cpp *= prsc->nr_samples;
+	rsc->cpp *= fd_resource_nr_samples(prsc);
 
 	assert(rsc->cpp);
 
@@ -924,9 +923,9 @@ fd_resource_from_handle(struct pipe_screen *pscreen,
 	if (!rsc->bo)
 		goto fail;
 
-	prsc->nr_samples = MAX2(1, prsc->nr_samples);
 	rsc->internal_format = tmpl->format;
-	rsc->cpp = prsc->nr_samples * util_format_get_blocksize(tmpl->format);
+	rsc->cpp = util_format_get_blocksize(tmpl->format);
+	rsc->cpp *= fd_resource_nr_samples(prsc);
 	slice->pitch = handle->stride / rsc->cpp;
 	slice->offset = handle->offset;
 	slice->size0 = handle->stride * prsc->height0;

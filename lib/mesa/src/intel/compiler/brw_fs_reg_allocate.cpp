@@ -667,15 +667,14 @@ fs_visitor::assign_regs(bool allow_spilling, bool spill_all)
        * messages adding a node interference to the grf127_send_hack_node.
        * This node has a fixed asignment to grf127.
        *
-       * We don't apply it to SIMD16 because previous code avoids any register
-       * overlap between sources and destination.
+       * We don't apply it to SIMD16 instructions because previous code avoids
+       * any register overlap between sources and destination.
        */
       ra_set_node_reg(g, grf127_send_hack_node, 127);
-      if (dispatch_width == 8) {
-         foreach_block_and_inst(block, fs_inst, inst, cfg) {
-            if (inst->is_send_from_grf() && inst->dst.file == VGRF)
-               ra_add_node_interference(g, inst->dst.nr, grf127_send_hack_node);
-         }
+      foreach_block_and_inst(block, fs_inst, inst, cfg) {
+         if (inst->exec_size < 16 && inst->is_send_from_grf() &&
+             inst->dst.file == VGRF)
+            ra_add_node_interference(g, inst->dst.nr, grf127_send_hack_node);
       }
 
       if (spilled_any_registers) {

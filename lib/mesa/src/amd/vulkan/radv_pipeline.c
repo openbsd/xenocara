@@ -3179,11 +3179,11 @@ radv_compute_db_shader_control(const struct radv_device *device,
 	bool disable_rbplus = device->physical_device->has_rbplus &&
 	                      !device->physical_device->rbplus_allowed;
 
-	/* Do not enable the gl_SampleMask fragment shader output if MSAA is
-	 * disabled.
+	/* It shouldn't be needed to export gl_SampleMask when MSAA is disabled
+	 * but this appears to break Project Cars (DXVK). See
+	 * https://bugs.freedesktop.org/show_bug.cgi?id=109401
 	 */
-	bool mask_export_enable = ms->num_samples > 1 &&
-				  ps->info.info.ps.writes_sample_mask;
+	bool mask_export_enable = ps->info.info.ps.writes_sample_mask;
 
 	return  S_02880C_Z_EXPORT_ENABLE(ps->info.info.ps.writes_z) |
 		S_02880C_STENCIL_TEST_VAL_EXPORT_ENABLE(ps->info.info.ps.writes_stencil) |
@@ -3371,14 +3371,8 @@ radv_compute_ia_multi_vgt_param_helpers(struct radv_pipeline *pipeline,
 	else
 		ia_multi_vgt_param.primgroup_size = 128; /* recommended without a GS */
 
-	ia_multi_vgt_param.partial_es_wave = false;
-	if (pipeline->device->has_distributed_tess) {
-		if (radv_pipeline_has_gs(pipeline)) {
-			if (device->physical_device->rad_info.chip_class <= VI)
-				ia_multi_vgt_param.partial_es_wave = true;
-		}
-	}
 	/* GS requirement. */
+	ia_multi_vgt_param.partial_es_wave = false;
 	if (radv_pipeline_has_gs(pipeline) && device->physical_device->rad_info.chip_class <= VI)
 		if (SI_GS_PER_ES / ia_multi_vgt_param.primgroup_size >= pipeline->device->gs_table_depth - 3)
 			ia_multi_vgt_param.partial_es_wave = true;
@@ -3424,13 +3418,8 @@ radv_compute_ia_multi_vgt_param_helpers(struct radv_pipeline *pipeline,
 		/* Needed for 028B6C_DISTRIBUTION_MODE != 0 */
 		if (device->has_distributed_tess) {
 			if (radv_pipeline_has_gs(pipeline)) {
-				if (device->physical_device->rad_info.family == CHIP_TONGA ||
-				    device->physical_device->rad_info.family == CHIP_FIJI ||
-				    device->physical_device->rad_info.family == CHIP_POLARIS10 ||
-				    device->physical_device->rad_info.family == CHIP_POLARIS11 ||
-				    device->physical_device->rad_info.family == CHIP_POLARIS12 ||
-				    device->physical_device->rad_info.family == CHIP_VEGAM)
-					ia_multi_vgt_param.partial_vs_wave = true;
+				if (device->physical_device->rad_info.chip_class <= VI)
+					ia_multi_vgt_param.partial_es_wave = true;
 			} else {
 				ia_multi_vgt_param.partial_vs_wave = true;
 			}
@@ -3446,6 +3435,26 @@ radv_compute_ia_multi_vgt_param_helpers(struct radv_pipeline *pipeline,
 	     prim == V_008958_DI_PT_LINESTRIP_ADJ ||
 	     prim == V_008958_DI_PT_TRISTRIP_ADJ)) {
 		ia_multi_vgt_param.partial_vs_wave = true;
+	}
+
+	if (radv_pipeline_has_gs(pipeline)) {
+		/* On these chips there is the possibility of a hang if the
+		 * pipeline uses a GS and partial_vs_wave is not set.
+		 *
+		 * This mostly does not hit 4-SE chips, as those typically set
+		 * ia_switch_on_eoi and then partial_vs_wave is set for pipelines
+		 * with GS due to another workaround.
+		 *
+		 * Reproducer: https://bugs.freedesktop.org/show_bug.cgi?id=109242
+		 */
+		if (device->physical_device->rad_info.family == CHIP_TONGA ||
+		    device->physical_device->rad_info.family == CHIP_FIJI ||
+		    device->physical_device->rad_info.family == CHIP_POLARIS10 ||
+		    device->physical_device->rad_info.family == CHIP_POLARIS11 ||
+		    device->physical_device->rad_info.family == CHIP_POLARIS12 ||
+	            device->physical_device->rad_info.family == CHIP_VEGAM) {
+			ia_multi_vgt_param.partial_vs_wave = true;
+		}
 	}
 
 	ia_multi_vgt_param.base =

@@ -457,6 +457,8 @@ EGLBoolean
 dri2_initialize_wayland(_EGLDriver *drv, _EGLDisplay *disp);
 void
 dri2_teardown_wayland(struct dri2_egl_display *dri2_dpy);
+bool
+dri2_wl_is_format_supported(void* user_data, uint32_t format);
 #else
 static inline EGLBoolean
 dri2_initialize_wayland(_EGLDriver *drv, _EGLDisplay *disp)
