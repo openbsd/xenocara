@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.22 2019/02/07 18:34:52 deraadt Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.23 2019/02/19 05:57:17 jsg Exp $
 
 .include <bsd.own.mk>
 .include <bsd.xconf.mk>
@@ -43,12 +43,6 @@ CONFIGURE_ARGS+=	--enable-dri3
 # The i965 driver uses the cmpxchg8b instruction
 .if ${MACHINE} == i386
 CONFIGURE_ARGS+=	USER_CFLAGS="-march=i586" USER_CXXFLAGS="-march=i586"
-.endif
-
-# -O2 gives "cc1: out of memory allocating 488 bytes"
-# on src/mesa/main/marshal_generated.c
-.if ${MACHINE} == sparc64
-CONFIGURE_ARGS+=       USER_CFLAGS="-fno-tree-pre"
 .endif
 
 .if ${MACHINE} == alpha
