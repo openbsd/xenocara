@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.249 2019/02/22 19:40:32 okan Exp $
+ * $OpenBSD: client.c,v 1.250 2019/02/22 20:52:13 okan Exp $
  */
 
 #include <sys/types.h>
@@ -1052,12 +1052,11 @@ client_vtile(struct client_ctx *cc)
 
 	if (!gc)
 		return;
+	i = n = 0;
 
 	area = screen_area(sc,
 	    cc->geom.x + cc->geom.w / 2,
 	    cc->geom.y + cc->geom.h / 2, CWM_GAP);
-
-	i = n = 0;
 
 	TAILQ_FOREACH(ci, &gc->clientq, group_entry) {
 		if (ci->flags & CLIENT_HIDDEN ||
