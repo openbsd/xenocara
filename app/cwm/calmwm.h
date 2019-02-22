@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.362 2018/11/08 15:49:42 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.363 2019/02/22 19:40:32 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -401,7 +401,7 @@ void			 client_applysizehints(struct client_ctx *);
 void			 client_config(struct client_ctx *);
 struct client_ctx	*client_current(void);
 void			 client_cycle(struct screen_ctx *, int);
-void			 client_delete(struct client_ctx *);
+void			 client_remove(struct client_ctx *);
 void			 client_draw_border(struct client_ctx *);
 struct client_ctx	*client_find(Window);
 long			 client_get_wm_state(struct client_ctx *);
@@ -419,7 +419,7 @@ void			 client_ptrsave(struct client_ctx *);
 void			 client_ptrwarp(struct client_ctx *);
 void			 client_raise(struct client_ctx *);
 void			 client_resize(struct client_ctx *, int);
-void			 client_send_delete(struct client_ctx *);
+void			 client_close(struct client_ctx *);
 void			 client_set_wm_state(struct client_ctx *, long);
 void			 client_setactive(struct client_ctx *);
 void			 client_setname(struct client_ctx *);
@@ -490,7 +490,7 @@ void			 kbfunc_ptrmove(void *, struct cargs *);
 void			 kbfunc_client_snap(void *, struct cargs *);
 void			 kbfunc_client_move(void *, struct cargs *);
 void			 kbfunc_client_resize(void *, struct cargs *);
-void			 kbfunc_client_delete(void *, struct cargs *);
+void			 kbfunc_client_close(void *, struct cargs *);
 void			 kbfunc_client_lower(void *, struct cargs *);
 void			 kbfunc_client_raise(void *, struct cargs *);
 void			 kbfunc_client_hide(void *, struct cargs *);

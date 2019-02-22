@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.243 2019/02/13 15:43:24 okan Exp $
+ * $OpenBSD: conf.c,v 1.244 2019/02/22 19:40:33 okan Exp $
  */
 
 #include <sys/types.h>
@@ -67,7 +67,8 @@ static const struct {
 	{ FUNC_CC(window-lower, client_lower, 0) },
 	{ FUNC_CC(window-raise, client_raise, 0) },
 	{ FUNC_CC(window-hide, client_hide, 0) },
-	{ FUNC_CC(window-delete, client_delete, 0) },
+	{ FUNC_CC(window-close, client_close, 0) },
+	{ FUNC_CC(window-delete, client_close, 0) },
 	{ FUNC_CC(window-htile, client_htile, 0) },
 	{ FUNC_CC(window-vtile, client_vtile, 0) },
 	{ FUNC_CC(window-stick, client_toggle_sticky, 0) },
@@ -194,7 +195,7 @@ static const struct {
 	{ "M-Tab",	"window-cycle" },
 	{ "MS-Tab",	"window-rcycle" },
 	{ "CM-n",	"window-menu-label" },
-	{ "CM-x",	"window-delete" },
+	{ "CM-x",	"window-close" },
 	{ "CM-a",	"group-toggle-all" },
 	{ "CM-0",	"group-toggle-all" },
 	{ "CM-1",	"group-toggle-1" },

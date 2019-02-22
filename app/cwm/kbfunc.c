@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.160 2019/02/13 15:43:24 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.161 2019/02/22 19:40:33 okan Exp $
  */
 
 #include <sys/types.h>
@@ -324,9 +324,9 @@ kbfunc_client_snap(void *ctx, struct cargs *cargs)
 }
 
 void
-kbfunc_client_delete(void *ctx, struct cargs *cargs)
+kbfunc_client_close(void *ctx, struct cargs *cargs)
 {
-	client_send_delete(ctx);
+	client_close(ctx);
 }
 
 void
