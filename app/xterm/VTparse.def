@@ -1,10 +1,10 @@
-# $XTermId: VTparse.def,v 1.49 2014/04/25 21:36:12 tom Exp $
+# $XTermId: VTparse.def,v 1.59 2019/02/10 23:34:10 tom Exp $
 #
 # vile:confmode rs=lf
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 1996-2013,2014 by Thomas E. Dickey
+# Copyright 1996-2018,2019 by Thomas E. Dickey
 # 
 #                         All Rights Reserved
 # 
@@ -102,7 +102,6 @@ CASE_LS1R
 CASE_PRINT
 CASE_XTERM_SAVE
 CASE_XTERM_RESTORE
-CASE_XTERM_TITLE
 CASE_DECID
 CASE_HP_MEM_LOCK
 CASE_HP_MEM_UNLOCK
@@ -200,3 +199,17 @@ CASE_ESC_COLON
 CASE_SCS_PERCENT
 CASE_GSETS_PERCENT
 CASE_GRAPHICS_ATTRIBUTES
+CASE_DECRQPSR
+CASE_DECSCPP
+CASE_DECSNLS
+CASE_CSI_HASH_STATE
+CASE_XTERM_PUSH_SGR
+CASE_XTERM_REPORT_SGR
+CASE_XTERM_POP_SGR
+CASE_XTERM_CHECKSUM
+CASE_GSETS3
+CASE_GSETS5
+CASE_SCS_DQUOTE
+CASE_GSETS_DQUOTE
+CASE_SCS_AMPRSND
+CASE_GSETS_AMPRSND

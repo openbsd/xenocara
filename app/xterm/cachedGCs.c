@@ -1,7 +1,7 @@
-/* $XTermId: cachedGCs.c,v 1.67 2017/01/02 18:58:13 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.75 2018/07/15 18:21:17 tom Exp $ */
 
 /*
- * Copyright 2007-2016,2017 by Thomas E. Dickey
+ * Copyright 2007-2017,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -90,6 +90,8 @@ traceCgsEnum(CgsEnum value)
 	CASE(Bold);
 	CASE(NormReverse);
 	CASE(BoldReverse);
+	CASE(Border);
+	CASE(Filler);
 #if OPT_BOX_CHARS
 	CASE(Line);
 	CASE(Dots);
@@ -256,6 +258,8 @@ allocCache(void **cache_pointer)
     return *((CgsCache **) cache_pointer);
 }
 
+#define ALLOC_CACHE(p) ((*(p) == 0) ? allocCache(p) : *(p))
+
 static int
 dataIndex(CgsCache * me)
 {
@@ -282,10 +286,10 @@ myCache(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId)
 	(void) cgsWin;
 #else
 	if (cgsWin == &(TScreenOf(xw)->iconVwin))
-	    result = allocCache(&(TScreenOf(xw)->icon_cgs_cache));
+	    result = ALLOC_CACHE(&(TScreenOf(xw)->icon_cgs_cache));
 	else
 #endif
-	    result = allocCache(&(TScreenOf(xw)->main_cgs_cache));
+	    result = ALLOC_CACHE(&(TScreenOf(xw)->main_cgs_cache));
 
 	result += cgsId;
 	if (result->data == 0) {
@@ -330,6 +334,10 @@ newCache(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, CgsCache * me)
     mask = (GCForeground | GCBackground | GCFont);
 
     switch (cgsId) {
+    case gcFiller:
+    case gcBorder:
+	mask &= (XtGCMask) ~ GCFont;
+	/* FALLTHRU */
     case gcNorm:
     case gcBold:
     case gcNormReverse:
@@ -392,14 +400,11 @@ newCache(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, CgsCache * me)
     return THIS(gc);
 }
 
-static Boolean
-SameFont(XTermFonts * a, XTermFonts * b)
-{
-    return (Boolean) (HaveFont(a)
-		      && HaveFont(b)
-		      && ((a->fs == b->fs)
-			  || !memcmp(a->fs, b->fs, sizeof(*(a->fs)))));
-}
+#define SameFont(a, b) \
+	(Boolean) (HaveFont(a) \
+		   && HaveFont(b) \
+		   && (((a)->fs == (b)->fs) \
+		       || !memcmp((a)->fs, (b)->fs, sizeof(*((a)->fs)))))
 
 #define SameColor(a,b) ((a) == (b))
 #define SameCSet(a,b)  ((a) == (b))
@@ -503,7 +508,7 @@ setCgsFont(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, XTermFonts * font)
 		font = getIconicFont(screen);
 	    else
 #endif
-		font = getNormalFont(screen, fNorm);
+		font = GetNormalFont(screen, fNorm);
 	}
 	if (HaveFont(font) && okFont(font->fs)) {
 	    TRACE2(("setCgsFont next: %s for %s slot %p, gc %p\n",

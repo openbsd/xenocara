@@ -1,4 +1,4 @@
-XCOMM $XTermId: Imakefile,v 1.113 2016/10/06 00:56:32 tom Exp $
+XCOMM $XTermId: Imakefile,v 1.121 2018/08/12 17:23:20 tom Exp $
 XCOMM
 XCOMM                         Attention xterm porters
 XCOMM
@@ -88,7 +88,7 @@ INSTSETIDFLAGS = NullParameter
  */
 #ifdef LinuxGnuSourceDefines
 # ifdef UseInstalled
-   IMAKEDEFINES = -D_GNU_SOURCE
+   IMAKEDEFINES = -D_DEFAULT_SOURCE -U_XOPEN_SOURCE -D_XOPEN_SOURCE=600
 # endif
 #endif
 
@@ -129,15 +129,16 @@ module.o: ; $(CC) -c defines $(CFLAGS) module.c
  OSMAJORVERSION = OSMajorVersion
  OSMINORVERSION = OSMinorVersion
 
+/* none of these can be expected to use termcap unless emulated by terminfo */
 #if	defined(NTOArchitecture)	|| \
 	defined(OpenBSDArchitecture)	|| \
 	defined(SGIArchitecture)	|| \
-	defined(SunArchitecture)
-TERMCAPDEFINES=-DUSE_TERMINFO -DHAVE_TIGETSTR
-#elif   defined(LinuxArchitecture)
-# if LinuxUsesNcurses
-TERMCAPDEFINES=-DUSE_TERMINFO -DHAVE_TIGETSTR
-# endif
+	defined(SunArchitecture)	|| \
+	defined(NetBSDArchitecture)	|| \
+	defined(OpenBSDArchitecture)	|| \
+	defined(FreeBSDArchitecture)	|| \
+	defined(LinuxArchitecture)
+TERMCAPDEFINES=-DUSE_TERMINFO -DHAVE_TIGETSTR -DHAVE_TERM_H
 #endif
 
 #if !defined(OS2Architecture) && !defined(__GNU__) && !defined(Minix3Architecture)
@@ -247,7 +248,12 @@ AllTarget($(PROGRAMS))
 VTPARSE_H = VTparse.h VTparse.hin
 TEKPARSE_H = Tekparse.h Tekparse.hin
 
-.SUFFIXES : .def .hin
+VTPARSE_C = VTparse.h VTparse.cin
+TEKPARSE_C = Tekparse.h Tekparse.cin
+
+.SUFFIXES : .def .cin .hin
+.def.cin :
+	awk '/^CASE_/{printf "{ %d, \"%s\" },\n", n++, $$1; }' < $< >$@
 .def.hin :
 	awk '/^CASE_/{printf "#define %s %d\n", $$1, n++}' < $< >$@
 
@@ -259,6 +265,7 @@ SpecialCObjectRule(charproc,$(VTPARSE_H),$(MISC_DEFINES))
 SpecialCObjectRule(data,$(_NOOP_),$(MISC_DEFINES))
 SpecialCObjectRule(TekPrsTbl,$(TEKPARSE_H),$(MISC_DEFINES))
 SpecialCObjectRule(TekProc,$(TEKPARSE_H),$(MISC_DEFINES))
+SpecialCObjectRule(trace,$(VTPARSE_C) $(TEKPARSE_C),$(MISC_DEFINES))
 
 #if InstallXtermSetUID
 SetUIDProgramTarget(xterm,$(OBJS1),$(DEPLIBS1),$(XRFLIBS) XkbClientLibs XawClientLibs,$(TERMCAPLIB) $(PTYLIB))
@@ -331,6 +338,6 @@ InstallManPage(xterm,$(MANDIR))
 InstallManPage(resize,$(MANDIR))
 
 cleandir::
-	$(RM) *parse.hin
+	$(RM) *parse.hin *parse.cin
 
 DependTarget()

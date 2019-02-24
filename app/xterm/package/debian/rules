@@ -176,6 +176,7 @@ binary-arch: build install
 	dh_testdir
 	dh_testroot
 	dh_installdebconf
+	dh_lintian
 	dh_installdocs
 	dh_installmenu
 	dh_installmime

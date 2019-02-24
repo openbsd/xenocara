@@ -1,7 +1,7 @@
-/* $XTermId: fontutils.c,v 1.563 2017/12/30 15:04:01 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.629 2019/01/11 02:14:23 tom Exp $ */
 
 /*
- * Copyright 1998-2016,2017 by Thomas E. Dickey
+ * Copyright 1998-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -559,7 +559,7 @@ xtermSpecialFont(XtermWidget xw, unsigned attr_flags, unsigned draw_flags, unsig
     int res_y;
 
     props = get_font_name_props(screen->display,
-				getNormalFont(screen, fNorm)->fs, 0);
+				GetNormalFont(screen, fNorm)->fs, 0);
     if (props == 0)
 	return result;
 
@@ -1100,11 +1100,11 @@ reportVTFontInfo(XtermWidget xw, int fontnum)
 	    printf("Loaded VTFonts(default)\n");
 	}
 
-	reportOneVTFont("fNorm", getNormalFont(screen, fNorm));
-	reportOneVTFont("fBold", getNormalFont(screen, fBold));
+	reportOneVTFont("fNorm", GetNormalFont(screen, fNorm));
+	reportOneVTFont("fBold", GetNormalFont(screen, fBold));
 #if OPT_WIDE_CHARS
-	reportOneVTFont("fWide", getNormalFont(screen, fWide));
-	reportOneVTFont("fWBold", getNormalFont(screen, fWBold));
+	reportOneVTFont("fWide", GetNormalFont(screen, fWide));
+	reportOneVTFont("fWBold", GetNormalFont(screen, fWBold));
 #endif
     }
 }
@@ -1162,6 +1162,20 @@ xtermUpdateFontGCs(XtermWidget xw, Bool italic)
 	}
     });
 }
+
+#if OPT_WIDE_ATTRS
+unsigned
+xtermUpdateItalics(XtermWidget xw, unsigned new_attrs, unsigned old_attrs)
+{
+    if ((new_attrs & ATR_ITALIC) && !(old_attrs & ATR_ITALIC)) {
+	xtermLoadItalics(xw);
+	xtermUpdateFontGCs(xw, True);
+    } else if (!(new_attrs & ATR_ITALIC) && (old_attrs & ATR_ITALIC)) {
+	xtermUpdateFontGCs(xw, False);
+    }
+    return new_attrs;
+}
+#endif
 
 #if OPT_TRACE
 static void
@@ -1524,13 +1538,13 @@ xtermLoadFont(XtermWidget xw,
     screen->ifnts_ok = False;
 #endif
 
-    xtermCopyFontInfo(getNormalFont(screen, fNorm), &fnts[fNorm]);
-    xtermCopyFontInfo(getNormalFont(screen, fBold), &fnts[fBold]);
+    xtermCopyFontInfo(GetNormalFont(screen, fNorm), &fnts[fNorm]);
+    xtermCopyFontInfo(GetNormalFont(screen, fBold), &fnts[fBold]);
 #if OPT_WIDE_CHARS
-    xtermCopyFontInfo(getNormalFont(screen, fWide), &fnts[fWide]);
+    xtermCopyFontInfo(GetNormalFont(screen, fWide), &fnts[fWide]);
     if (fnts[fWBold].fs == NULL)
-	xtermCopyFontInfo(getNormalFont(screen, fWide), &fnts[fWide]);
-    xtermCopyFontInfo(getNormalFont(screen, fWBold), &fnts[fWBold]);
+	xtermCopyFontInfo(GetNormalFont(screen, fWide), &fnts[fWide]);
+    xtermCopyFontInfo(GetNormalFont(screen, fWBold), &fnts[fWBold]);
 #endif
 
     xtermUpdateFontGCs(xw, False);
@@ -1574,7 +1588,7 @@ xtermLoadFont(XtermWidget xw,
 	if (screen->utf8_mode || screen->unicode_font) {
 	    UIntSet(screen->fnt_boxes, 2);
 	    for (ch = 1; ch < 32; ch++) {
-		unsigned n = dec2ucs(ch);
+		unsigned n = dec2ucs(screen, ch);
 		if ((n != UCS_REPL)
 		    && (n != ch)
 		    && (screen->fnt_boxes & 2)) {
@@ -2081,16 +2095,16 @@ xtermLoadWideFonts(XtermWidget xw, Bool nullOk)
     TScreen *screen = TScreenOf(xw);
     Bool result;
 
-    if (EmptyFont(getNormalFont(screen, fWide)->fs)) {
-	result = (isWideFont(getNormalFont(screen, fNorm)->fs, "normal", nullOk)
-		  && isWideFont(getNormalFont(screen, fBold)->fs, "bold", nullOk));
+    if (EmptyFont(GetNormalFont(screen, fWide)->fs)) {
+	result = (isWideFont(GetNormalFont(screen, fNorm)->fs, "normal", nullOk)
+		  && isWideFont(GetNormalFont(screen, fBold)->fs, "bold", nullOk));
     } else {
-	result = (isWideFont(getNormalFont(screen, fWide)->fs, "wide", nullOk)
-		  && isWideFont(getNormalFont(screen, fWBold)->fs,
+	result = (isWideFont(GetNormalFont(screen, fWide)->fs, "wide", nullOk)
+		  && isWideFont(GetNormalFont(screen, fWBold)->fs,
 				"wide-bold", nullOk));
 	if (result && !screen->utf8_latin1) {
-	    result = (isWideFont(getNormalFont(screen, fNorm)->fs, "normal", nullOk)
-		      && isWideFont(getNormalFont(screen, fBold)->fs,
+	    result = (isWideFont(GetNormalFont(screen, fNorm)->fs, "normal", nullOk)
+		      && isWideFont(GetNormalFont(screen, fBold)->fs,
 				    "bold", nullOk));
 	}
     }
@@ -2195,21 +2209,27 @@ xtermSetCursorBox(TScreen *screen)
     screen->box = VTbox;
 }
 
-#define CACHE_XFT(dst,src) if (src != 0) {\
-	    failed += checkXft(xw, &(dst[fontnum]), src);\
-	    TRACE(("Xft metrics %s[%d] = %d (%d,%d)%s advance %d, actual %d%s\n",\
-		#dst,\
-	    	fontnum,\
-		src->height,\
-		src->ascent,\
-		src->descent,\
-		((src->ascent + src->descent) > src->height ? "*" : ""),\
-		src->max_advance_width,\
-		dst[fontnum].map.min_width,\
-		dst[fontnum].map.mixed ? " mixed" : ""));\
-	}
-
 #if OPT_RENDERFONT
+
+#define CACHE_XFT(dst,src) if (src.font != 0) {\
+	    int err = checkXft(xw, &(dst[fontnum]), &src);\
+	    TRACE(("Xft metrics %s[%d] = %d (%d,%d)%s advance %d, actual %d%s%s\n",\
+		#dst,\
+		fontnum,\
+		src.font->height,\
+		src.font->ascent,\
+		src.font->descent,\
+		((src.font->ascent + src.font->descent) > src.font->height ? "*" : ""),\
+		src.font->max_advance_width,\
+		dst[fontnum].map.min_width,\
+		dst[fontnum].map.mixed ? " mixed" : "",\
+		err ? " ERROR" : ""));\
+	    if (err) {\
+		xtermCloseXft(screen, &src);\
+		memset((&dst[fontnum]), 0, sizeof(dst[fontnum]));\
+		failed += err;\
+	    }\
+	}
 
 #if OPT_REPORT_FONTS
 static FcChar32
@@ -2278,7 +2298,7 @@ dumpXft(XtermWidget xw, XTermXftFonts *data)
     TRACE(("   data range %#6x..%#6x\n", first, last));
     for (c = first; c <= last; ++c) {
 	if (FcCharSetHasChar(xft->charset, c)) {
-	    int width = my_wcwidth((int) c);
+	    int width = CharWidth(c);
 	    XGlyphInfo extents;
 
 	    XftTextExtents32(XtDisplay(xw), xft, &c, 1, &extents);
@@ -2296,16 +2316,47 @@ dumpXft(XtermWidget xw, XTermXftFonts *data)
 #define DUMP_XFT(xw, data)	/* nothing */
 #endif
 
+/*
+ * Check if this is a FC_COLOR font, which fontconfig misrepresents to "fix" a
+ * problem with web browsers.  As of 2018/12 (4 years later), Xft does not work
+ * with that.  Even with this workaround, fontconfig has at least one bug which
+ * causes it to crash (Debian #917034).
+ */
+#ifdef FC_COLOR
+#define GetFcBool(pattern, what) \
+    (FcPatternGetBool(pattern, what, 0, &fcbogus) == FcResultMatch)
+
+static Boolean
+isBogusXft(XftFont *font)
+{
+    Boolean result = False;
+    if (font != 0) {
+	FcBool fcbogus;
+	if (GetFcBool(font->pattern, FC_COLOR) && fcbogus) {
+	    TRACE(("...matched color-bitmap font\n"));
+	    result = True;
+	} else if (GetFcBool(font->pattern, FC_OUTLINE) && !fcbogus) {
+	    TRACE(("...matched non-outline font\n"));
+	    /* This is legal for regular bitmap fonts - fontconfig attempts to
+	     * find a match - but problematic for misencoded color-bitmap fonts.
+	     */
+	}
+    }
+    return result;
+}
+#endif
+
 static int
-checkXft(XtermWidget xw, XTermXftFonts *data, XftFont *xft)
+checkXft(XtermWidget xw, XTermXftFonts *target, XTermXftFonts *source)
 {
     FcChar32 c;
     Dimension width = 0;
     int failed = 0;
 
-    data->font = xft;
-    data->map.min_width = 0;
-    data->map.max_width = (Dimension) xft->max_advance_width;
+    target->font = source->font;
+    target->pattern = source->pattern;
+    target->map.min_width = 0;
+    target->map.max_width = (Dimension) source->font->max_advance_width;
 
     /*
      * For each ASCII or ISO-8859-1 printable code, ask what its width is.
@@ -2314,16 +2365,22 @@ checkXft(XtermWidget xw, XTermXftFonts *data, XftFont *xft)
      *
      * Ignore control characters - their extent information is misleading.
      */
-    for (c = 32; c < 256; ++c) {
+    for (c = 32; c < 255; ++c) {
 	if (c >= 127 && c <= 159)
 	    continue;
-	if (FcCharSetHasChar(xft->charset, c)) {
+	if (FcCharSetHasChar(source->font->charset, c)) {
 	    XGlyphInfo extents;
 
-	    XftTextExtents32(XtDisplay(xw), xft, &c, 1, &extents);
-	    if (width < extents.width && extents.width <= data->map.max_width) {
-		width = extents.width;
+	    XftTextExtents32(XtDisplay(xw), source->font, &c, 1, &extents);
+	    if (width >= extents.width)
+		continue;
+	    if (extents.width >= (3 * target->map.max_width)) {
+		width = 0;	/* metrics are bogus - give up */
+		break;
 	    }
+	    if (extents.width > target->map.max_width)
+		continue;
+	    width = extents.width;
 	}
     }
     /*
@@ -2332,12 +2389,12 @@ checkXft(XtermWidget xw, XTermXftFonts *data, XftFont *xft)
      */
     if (width == 0) {
 	failed = 1;
-	if (xtermXftLastChar(xft) >= 256) {
-	    width = data->map.max_width;
+	if (xtermXftLastChar(source->font) >= 256) {
+	    width = target->map.max_width;
 	}
     }
-    data->map.min_width = width;
-    data->map.mixed = (data->map.max_width >= (data->map.min_width + 1));
+    target->map.min_width = width;
+    target->map.mixed = (target->map.max_width >= (target->map.min_width + 1));
     return failed;
 }
 
@@ -2376,6 +2433,7 @@ reportXftFonts(XtermWidget xw,
 		source = 0;
 	    }
 	}
+	fflush(stdout);
     }
 }
 #else
@@ -2395,23 +2453,49 @@ Boolean
 maybeXftCache(XtermWidget xw, XftFont *font)
 {
     Boolean result = False;
-    TScreen *screen = TScreenOf(xw);
-    ListXftFonts *p;
-    for (p = screen->list_xft_fonts; p != 0; p = p->next) {
-	if (p->font == font) {
-	    result = True;
-	    break;
+    if (font != 0) {
+	TScreen *screen = TScreenOf(xw);
+	ListXftFonts *p;
+	for (p = screen->list_xft_fonts; p != 0; p = p->next) {
+	    if (p->font == font) {
+		result = True;
+		break;
+	    }
 	}
-    }
-    if (!result) {
-	p = TypeXtMalloc(ListXftFonts);
-	if (p != 0) {
-	    p->font = font;
-	    p->next = screen->list_xft_fonts;
-	    screen->list_xft_fonts = p;
+	if (!result) {
+	    p = TypeXtMalloc(ListXftFonts);
+	    if (p != 0) {
+		p->font = font;
+		p->next = screen->list_xft_fonts;
+		screen->list_xft_fonts = p;
+	    }
 	}
     }
     return result;
+}
+
+/*
+ * Drop an entry from the cache, and close the font.
+ */
+void
+closeCachedXft(TScreen *screen, XftFont *font)
+{
+    if (font != 0) {
+	ListXftFonts *p, *q;
+
+	for (p = screen->list_xft_fonts, q = 0; p != 0; q = p, p = p->next) {
+	    if (p->font == font) {
+		XftFontClose(screen->display, font);
+		if (q != 0) {
+		    q->next = p->next;
+		} else {
+		    screen->list_xft_fonts = p->next;
+		}
+		free(p);
+		break;
+	    }
+	}
+    }
 }
 
 static XftFont *
@@ -2422,10 +2506,26 @@ xtermOpenXft(XtermWidget xw, const char *name, XftPattern *pat, const char *tag)
     XftResult status;
     XftFont *result = 0;
 
+    TRACE(("xtermOpenXft(name=%s, tag=%s)\n", name, tag));
     if (pat != 0) {
-	XftPattern *match = XftFontMatch(dpy, DefaultScreen(dpy), pat, &status);
+	XftPattern *match;
+
+	FcConfigSubstitute(NULL, pat, FcMatchPattern);
+	XftDefaultSubstitute(dpy, DefaultScreen(dpy), pat);
+
+	match = FcFontMatch(NULL, pat, &status);
 	if (match != 0) {
+	    Boolean maybeReopened = False;
 	    result = XftFontOpenPattern(dpy, match);
+#ifdef FC_COLOR
+	    if (result != 0) {
+		if (isBogusXft(result)) {
+		    XftFontClose(dpy, result);
+		    result = 0;
+		    maybeReopened = True;
+		}
+	    }
+#endif
 	    if (result != 0) {
 		TRACE(("...matched %s font\n", tag));
 		if (!maybeXftCache(xw, result)) {
@@ -2433,7 +2533,8 @@ xtermOpenXft(XtermWidget xw, const char *name, XftPattern *pat, const char *tag)
 		}
 	    } else {
 		TRACE(("...could not open %s font\n", tag));
-		XftPatternDestroy(match);
+		if (!maybeReopened)
+		    XftPatternDestroy(match);
 		if (xw->misc.fontWarnings >= fwAlways) {
 		    cannotFont(xw, "open", tag, name);
 		}
@@ -2447,9 +2548,7 @@ xtermOpenXft(XtermWidget xw, const char *name, XftPattern *pat, const char *tag)
     }
     return result;
 }
-#endif
 
-#if OPT_RENDERFONT
 #if OPT_SHIFT_FONTS
 /*
  * Don't make a dependency on the math library for a single function.
@@ -2532,6 +2631,7 @@ trace_xft_line_drawing(TScreen *screen, XftFont *font, FT_Face face)
 #endif
 #endif
 
+#if OPT_BOX_CHARS
 static void
 setBrokenBoxChars(XtermWidget xw, Bool state)
 {
@@ -2540,10 +2640,15 @@ setBrokenBoxChars(XtermWidget xw, Bool state)
     update_font_boxchars();
 }
 
+#else
+#define setBrokenBoxChars(xw, state)	/* nothing */
+#endif
+
 /*
  * Check if the line-drawing characters do not fill the bounding box.  If so,
  * they're not useful.
  */
+#if OPT_BOX_CHARS
 static void
 linedrawing_gaps(XtermWidget xw, XftFont *font)
 {
@@ -2653,6 +2758,7 @@ linedrawing_gaps(XtermWidget xw, XftFont *font)
     }
     XftUnlockFace(font);
 #else
+    (void) font;
     broken = True;
 #endif
 
@@ -2661,6 +2767,7 @@ linedrawing_gaps(XtermWidget xw, XftFont *font)
 	setBrokenBoxChars(xw, True);
     }
 }
+#endif /* OPT_BOX_CHARS */
 
 /*
  * Given the Xft font metrics, determine the actual font size.  This is used
@@ -2762,9 +2869,11 @@ setRenderFontsize(XtermWidget xw, VTwin *win, XftFont *font, const char *tag)
 	} else {
 	    TRACE(("setRenderFontsize %s unchanged\n", tag));
 	}
+#if OPT_BOX_CHARS
 	if (!screen->broken_box_chars && (tag == 0)) {
 	    linedrawing_gaps(xw, font);
 	}
+#endif
     }
 }
 #endif
@@ -2773,9 +2882,12 @@ static void
 checkFontInfo(int value, const char *tag, int failed)
 {
     if (value == 0 || failed) {
-	xtermWarning("Selected font has no non-zero %s for ISO-8859-1 encoding\n", tag);
-	if (value == 0)
+	if (value == 0) {
+	    xtermWarning("Selected font has no non-zero %s for ISO-8859-1 encoding\n", tag);
 	    exit(1);
+	} else {
+	    xtermWarning("Selected font has no valid %s for ISO-8859-1 encoding\n", tag);
+	}
     }
 }
 
@@ -2784,13 +2896,30 @@ void
 xtermCloseXft(TScreen *screen, XTermXftFonts *pub)
 {
     if (pub->font != 0) {
-	XftFontClose(screen->display, pub->font);
+	Cardinal n;
+
+	closeCachedXft(screen, pub->font);
 	pub->font = 0;
+
+	if (pub->pattern) {
+	    XftPatternDestroy(pub->pattern);
+	    pub->pattern = 0;
+	}
+	if (pub->fontset) {
+	    XftFontSetDestroy(pub->fontset);
+	    pub->fontset = 0;
+	}
+
+	for (n = 0; n < pub->limit; ++n) {
+	    if (pub->cache[n].font) {
+		closeCachedXft(screen, pub->cache[n].font);
+	    }
+	}
     }
 }
 
 /*
- * Get the faceName/faceDoublesize resource setting.
+ * Get the faceName/faceNameDoublesize resource setting.
  */
 String
 getFaceName(XtermWidget xw, Bool wideName GCC_UNUSED)
@@ -2858,22 +2987,25 @@ xtermComputeFontInfo(XtermWidget xw,
      */
     if (UsingRenderFont(xw) && fontnum >= 0) {
 	String face_name = getFaceName(xw, False);
-	XftFont *norm = screen->renderFontNorm[fontnum].font;
-	XftFont *bold = screen->renderFontBold[fontnum].font;
-	XftFont *ital = screen->renderFontItal[fontnum].font;
+	XTermXftFonts norm = screen->renderFontNorm[fontnum];
+	XTermXftFonts bold = screen->renderFontBold[fontnum];
+	XTermXftFonts ital = screen->renderFontItal[fontnum];
 #if OPT_RENDERWIDE
-	XftFont *wnorm = screen->renderWideNorm[fontnum].font;
-	XftFont *wbold = screen->renderWideBold[fontnum].font;
-	XftFont *wital = screen->renderWideItal[fontnum].font;
+	XTermXftFonts wnorm = screen->renderWideNorm[fontnum];
+	XTermXftFonts wbold = screen->renderWideBold[fontnum];
+	XTermXftFonts wital = screen->renderWideItal[fontnum];
 #endif
 
-	if (norm == 0 && face_name) {
+	if (norm.font == 0 && !IsEmpty(face_name)) {
 	    XftPattern *pat;
 	    double face_size;
 
 	    TRACE(("xtermComputeFontInfo font %d: norm(face %s, size %.1f)\n",
 		   fontnum, face_name,
 		   xw->misc.face_size[fontnum]));
+
+	    TRACE(("Using Xft %d\n", XftVersion));
+	    TRACE(("Using FontConfig %d\n", FC_VERSION));
 
 	    fillInFaceSize(xw, fontnum);
 	    face_size = xw->misc.face_size[fontnum];
@@ -2883,17 +3015,25 @@ xtermComputeFontInfo(XtermWidget xw,
 	     * cumulative.  Build the bold- and italic-patterns on top of the
 	     * normal pattern.
 	     */
+#ifdef FC_COLOR
 #define NormXftPattern \
-	    XFT_FAMILY, XftTypeString, "mono", \
-	    XFT_SIZE, XftTypeDouble, face_size
+	    XFT_FAMILY,     XftTypeString, "mono", \
+	    FC_COLOR,       XftTypeBool,   FcFalse, \
+	    FC_OUTLINE,     XftTypeBool,   FcTrue, \
+	    XFT_SIZE,       XftTypeDouble, face_size
+#else
+#define NormXftPattern \
+	    XFT_FAMILY,     XftTypeString, "mono", \
+	    XFT_SIZE,       XftTypeDouble, face_size
+#endif
 
 #define BoldXftPattern(norm) \
-	    XFT_WEIGHT, XftTypeInteger, XFT_WEIGHT_BOLD, \
-	    XFT_CHAR_WIDTH, XftTypeInteger, norm->max_advance_width
+	    XFT_WEIGHT,     XftTypeInteger, XFT_WEIGHT_BOLD, \
+	    XFT_CHAR_WIDTH, XftTypeInteger, norm.font->max_advance_width
 
 #define ItalXftPattern(norm) \
-	    XFT_SLANT, XftTypeInteger, XFT_SLANT_ITALIC, \
-	    XFT_CHAR_WIDTH, XftTypeInteger, norm->max_advance_width
+	    XFT_SLANT,      XftTypeInteger, XFT_SLANT_ITALIC, \
+	    XFT_CHAR_WIDTH, XftTypeInteger, norm.font->max_advance_width
 
 #if OPT_WIDE_ATTRS
 #define HAVE_ITALICS 1
@@ -2906,28 +3046,31 @@ xtermComputeFontInfo(XtermWidget xw,
 #endif
 
 	    if ((pat = XftNameParse(face_name)) != 0) {
-#define OPEN_XFT(tag) xtermOpenXft(xw, face_name, pat, tag)
-		XftPatternBuild(pat,
+#define OPEN_XFT(name, tag) name.font = xtermOpenXft(xw, face_name, name.pattern, tag)
+		norm.pattern = XftPatternDuplicate(pat);
+		XftPatternBuild(norm.pattern,
 				NormXftPattern,
 				(void *) 0);
-		norm = OPEN_XFT("normal");
+		OPEN_XFT(norm, "normal");
 
-		if (norm != 0) {
-		    XftPatternBuild(pat,
+		if (norm.font != 0) {
+		    bold.pattern = XftPatternDuplicate(pat);
+		    XftPatternBuild(bold.pattern,
+				    NormXftPattern,
 				    BoldXftPattern(norm),
 				    (void *) 0);
-		    bold = OPEN_XFT("bold");
+		    OPEN_XFT(bold, "bold");
 
 #if HAVE_ITALICS
 		    if (FIND_ITALICS) {
-			XftPatternBuild(pat,
+			ital.pattern = XftPatternDuplicate(pat);
+			XftPatternBuild(ital.pattern,
 					NormXftPattern,
 					ItalXftPattern(norm),
 					(void *) 0);
-			ital = OPEN_XFT("italic");
+			OPEN_XFT(ital, "italic");
 		    }
 #endif
-#undef OPEN_XFT
 
 		    /*
 		     * FIXME:  just assume that the corresponding font has no
@@ -2940,25 +3083,51 @@ xtermComputeFontInfo(XtermWidget xw,
 		    }
 		}
 
-		XftPatternDestroy(pat);
-	    }
+		CACHE_XFT(screen->renderFontNorm, norm);
 
-	    CACHE_XFT(screen->renderFontNorm, norm);
-	    CACHE_XFT(screen->renderFontBold, bold);
-	    CACHE_XFT(screen->renderFontItal, ital);
+		CACHE_XFT(screen->renderFontBold, bold);
+		if (norm.font != 0 && !bold.font) {
+		    xtermWarning("did not find a usable bold TrueType font\n");
+		    XftPatternDestroy(bold.pattern);
+		    bold.pattern = XftPatternDuplicate(pat);
+		    XftPatternBuild(bold.pattern,
+				    NormXftPattern,
+				    (void *) 0);
+		    OPEN_XFT(bold, "bold");
+		    failed = 0;
+		    CACHE_XFT(screen->renderFontBold, bold);
+		}
+#if HAVE_ITALICS
+		CACHE_XFT(screen->renderFontItal, ital);
+		if (norm.font != 0 && !ital.font) {
+		    xtermWarning("did not find a usable italic TrueType font\n");
+		    XftPatternDestroy(ital.pattern);
+		    ital.pattern = XftPatternDuplicate(pat);
+		    XftPatternBuild(ital.pattern,
+				    NormXftPattern,
+				    (void *) 0);
+		    OPEN_XFT(ital, "italics");
+		    failed = 0;
+		    CACHE_XFT(screen->renderFontItal, ital);
+		}
+#endif
+		XftPatternDestroy(pat);
+	    } else {
+		failed = 1;
+	    }
+#undef OPEN_XFT
 
 	    /*
-	     * See xtermXftDrawString().
+	     * See xtermXftDrawString().  A separate double-width font is nice
+	     * to have, but not essential.
 	     */
 #if OPT_RENDERWIDE
-	    if (norm != 0 && screen->wide_chars) {
-		int char_width = norm->max_advance_width * 2;
-#ifdef FC_ASPECT
+	    if (norm.font != 0 && screen->wide_chars) {
+		int char_width = norm.font->max_advance_width * 2;
 		double aspect = ((FirstItemOf(xw->work.fonts.xft.list_w)
 				  || screen->renderFontNorm[fontnum].map.mixed)
 				 ? 1.0
 				 : 2.0);
-#endif
 
 		face_name = getFaceName(xw, True);
 		TRACE(("xtermComputeFontInfo wide(face %s, char_width %d)\n",
@@ -2966,58 +3135,85 @@ xtermComputeFontInfo(XtermWidget xw,
 		       char_width));
 
 #define WideXftPattern \
-		XFT_FAMILY, XftTypeString, "mono", \
-		XFT_SIZE, XftTypeDouble, face_size, \
-		XFT_SPACING, XftTypeInteger, XFT_MONO
+		XFT_FAMILY,     XftTypeString,   "mono", \
+		XFT_SIZE,       XftTypeDouble,   face_size, \
+		XFT_SPACING,    XftTypeInteger,  XFT_MONO, \
+		XFT_CHAR_WIDTH, XftTypeInteger,  char_width, \
+		FC_ASPECT,      XftTypeDouble,   aspect
 
-		if (face_name && (pat = XftNameParse(face_name)) != 0) {
-#define OPEN_XFT(tag) xtermOpenXft(xw, face_name, pat, tag)
-		    XftPatternBuild(pat,
+		if (!IsEmpty(face_name) && (pat = XftNameParse(face_name))
+		    != 0) {
+#define OPEN_XFT(name, tag) name.font = xtermOpenXft(xw, face_name, name.pattern, tag)
+		    wnorm.pattern = XftPatternDuplicate(pat);
+		    XftPatternBuild(wnorm.pattern,
 				    WideXftPattern,
-				    XFT_CHAR_WIDTH, XftTypeInteger, char_width,
-#ifdef FC_ASPECT
-				    FC_ASPECT, XftTypeDouble, aspect,
-#endif
 				    (void *) 0);
-		    wnorm = OPEN_XFT("wide");
+		    OPEN_XFT(wnorm, "wide");
 
-		    if (wnorm != 0) {
-			XftPatternBuild(pat,
+		    if (wnorm.font != 0) {
+			wbold.pattern = XftPatternDuplicate(pat);
+			XftPatternBuild(wbold.pattern,
 					WideXftPattern,
 					BoldXftPattern(wnorm),
 					(void *) 0);
-			wbold = OPEN_XFT("wide-bold");
+			OPEN_XFT(wbold, "wide-bold");
 
 #if HAVE_ITALICS
 			if (FIND_ITALICS) {
-			    XftPatternBuild(pat,
+			    wital.pattern = XftPatternDuplicate(pat);
+			    XftPatternBuild(wital.pattern,
 					    WideXftPattern,
 					    ItalXftPattern(wnorm),
 					    (void *) 0);
-			    wital = OPEN_XFT("wide-italic");
+			    OPEN_XFT(wital, "wide-italic");
 			}
 #endif
-#undef OPEN_XFT
 		    }
+
+		    CACHE_XFT(screen->renderWideNorm, wnorm);
+
+		    CACHE_XFT(screen->renderWideBold, wbold);
+		    if (wnorm.font != 0 && !wbold.font) {
+			xtermWarning("did not find a usable wide-bold TrueType font\n");
+			XftPatternDestroy(wbold.pattern);
+			wbold.pattern = XftPatternDuplicate(pat);
+			XftPatternBuild(bold.pattern,
+					WideXftPattern,
+					(void *) 0);
+			OPEN_XFT(wbold, "wide-bold");
+			failed = 0;
+			CACHE_XFT(screen->renderWideBold, bold);
+		    }
+
+		    CACHE_XFT(screen->renderWideItal, wital);
+		    if (wnorm.font != 0 && !wital.font) {
+			xtermWarning("did not find a usable wide-italic TrueType font\n");
+			XftPatternDestroy(wital.pattern);
+			wital.pattern = XftPatternDuplicate(pat);
+			XftPatternBuild(wital.pattern,
+					WideXftPattern,
+					(void *) 0);
+			OPEN_XFT(wital, "wide-italic");
+			failed = 0;
+			CACHE_XFT(screen->renderWideItal, wital);
+		    }
+
 		    XftPatternDestroy(pat);
 		}
-
-		CACHE_XFT(screen->renderWideNorm, wnorm);
-		CACHE_XFT(screen->renderWideBold, wbold);
-		CACHE_XFT(screen->renderWideItal, wital);
+#undef OPEN_XFT
 	    }
 #endif /* OPT_RENDERWIDE */
 	}
-	if (norm == 0) {
+	if (norm.font == 0) {
 	    TRACE(("...no TrueType font found for number %d, disable menu entry\n", fontnum));
 	    xw->work.render_font = False;
 	    update_font_renderfont();
 	    /* now we will fall through into the bitmap fonts */
 	} else {
 	    setBrokenBoxChars(xw, False);
-	    setRenderFontsize(xw, win, norm, NULL);
-	    setRenderFontsize(xw, win, bold, "bold");
-	    setRenderFontsize(xw, win, ital, "ital");
+	    setRenderFontsize(xw, win, norm.font, NULL);
+	    setRenderFontsize(xw, win, bold.font, "bold");
+	    setRenderFontsize(xw, win, ital.font, "ital");
 #if OPT_BOX_CHARS
 	    setupPackedFonts(xw);
 
@@ -3092,12 +3288,16 @@ xtermUpdateFontInfo(XtermWidget xw, Bool doresize)
     int scrollbar_width;
     VTwin *win = &(screen->fullVwin);
 
+#if OPT_DOUBLE_BUFFER
+    discardRenderDraw(TScreenOf(xw));
+#endif /* OPT_DOUBLE_BUFFER */
+
     scrollbar_width = (xw->misc.scrollbar
 		       ? (screen->scrollWidget->core.width +
 			  BorderWidth(screen->scrollWidget))
 		       : 0);
-    xtermComputeFontInfo(xw, win, getNormalFont(screen, fNorm)->fs, scrollbar_width);
-    xtermSaveFontInfo(screen, getNormalFont(screen, fNorm)->fs);
+    xtermComputeFontInfo(xw, win, GetNormalFont(screen, fNorm)->fs, scrollbar_width);
+    xtermSaveFontInfo(screen, GetNormalFont(screen, fNorm)->fs);
 
     if (doresize) {
 	if (VWindow(screen)) {
@@ -3145,7 +3345,7 @@ xtermMissingChar(unsigned ch, XTermFonts * font)
 
     if (pc == 0 || CI_NONEXISTCHAR(pc)) {
 	TRACE2(("xtermMissingChar %#04x (!exists), %d cells\n",
-		ch, my_wcwidth((wchar_t) ch)));
+		ch, CharWidth(ch)));
 	result = True;
     }
     if (ch < KNOWN_MISSING) {
@@ -3396,10 +3596,23 @@ xtermDrawBoxChar(XtermWidget xw,
 	for (n = 1; n < 32; n++) {
 	    if (xtermMissingChar(n, getNormalFont(screen, which)))
 		continue;
-	    if (dec2ucs(n) != ch)
+	    if (dec2ucs(screen, n) != ch)
 		continue;
 	    TRACE(("...use xterm-style linedrawing U+%04X ->%d\n", ch, n));
 	    ch = n;
+	    break;
+	}
+    }
+#endif
+
+#if OPT_VT52_MODE
+    if (!(screen->vtXX_level)) {
+	switch (ch) {
+	case 6:
+	    ch = 7;
+	    break;
+	default:
+	    ch = 256;
 	    break;
 	}
     }
@@ -3531,9 +3744,215 @@ xtermDrawBoxChar(XtermWidget xw,
 #endif /* OPT_BOX_CHARS */
 
 #if OPT_RENDERFONT
+/*
+ * Check if the glyph is defined in the given font, and (try to) filter out
+ * cases where double-width glyphs are stuffed into a single-width outline.
+ */
+static Boolean
+foundXftGlyph(XtermWidget xw, XftFont *font, unsigned wc)
+{
+    TScreen *screen = TScreenOf(xw);
+    Boolean result = False;
+
+    if (font != 0 && XftGlyphExists(screen->display, font, wc)) {
+	int expect;
+
+	if ((expect = CharWidth(wc)) > 0) {
+	    XGlyphInfo gi;
+	    int actual;
+
+	    XftTextExtents32(screen->display, font, &wc, 1, &gi);
+	    /*
+	     * Some (more than a few) fonts are sloppy; allow 10% outside
+	     * the bounding box to accommodate them.
+	     */
+	    actual = ((gi.xOff * 10) >= (11 * FontWidth(screen))) ? 2 : 1;
+	    if (actual <= expect) {
+		/* allow double-cell if wcwidth agrees */
+		result = True;
+	    } else {
+		TRACE(("SKIP U+%04X %d vs %d (%d vs %d)\n",
+		       wc, gi.xOff, FontWidth(screen), actual, expect));
+	    }
+	} else {
+	    result = True;
+	}
+    }
+    return result;
+}
+
+static void
+markXftOpened(XtermWidget xw, XTermXftFonts *which, Cardinal n, unsigned wc)
+{
+    if (which->cache[n].usage != xcOpened) {
+	which->opened++;
+	which->cache[n].usage = xcOpened;
+	/* XFT_DEBUG=3 will show useful context for this */
+	if (getenv("XFT_DEBUG") != 0) {
+	    printf("xterm: matched U+%04X in fontset #%d [%u:%u]\n",
+		   wc, n + 1,
+		   which->opened,
+		   xw->work.max_fontsets);
+	}
+    }
+}
+
+XftFont *
+findXftGlyph(XtermWidget xw, XftFont *given, unsigned wc)
+{
+    TScreen *screen = TScreenOf(xw);
+    XTermXftFonts *which = 0;
+    XftFont *result = 0;
+    /* workaround for interface changes... */
+    int fontnum = screen->menu_font_number;
+    static int table[] =
+    {
+	offsetof(TScreen, renderFontNorm),
+	offsetof(TScreen, renderFontBold),
+	offsetof(TScreen, renderFontItal),
+#if OPT_RENDERWIDE
+	offsetof(TScreen, renderWideNorm),
+	offsetof(TScreen, renderWideBold),
+	offsetof(TScreen, renderWideItal),
+#endif
+    };
+    Cardinal n;
+    FcResult status;
+    const char *tag = 0;
+
+    /* if fontsets are not wanted, just leave */
+    if (xw->work.max_fontsets == 0) {
+	return 0;
+    }
+
+    /* ignore codes in private use areas */
+    if ((wc >= 0xe000 && wc <= 0xf8ff)
+	|| (wc >= 0xf0000 && wc <= 0xffffd)
+	|| (wc >= 0x100000 && wc <= 0x10fffd)) {
+	return 0;
+    }
+    /* the end of the BMP is reserved for non-characters */
+    if (wc >= 0xfff0 && wc <= 0xffff) {
+	return 0;
+    }
+
+    for (n = 0; n < XtNumber(table); ++n) {
+	XTermXftFonts *check = (XTermXftFonts *) ((void *) ((char *) screen
+							    + table[n]));
+	if (check[fontnum].font == given) {
+	    which = &check[fontnum];
+	    tag = whichFontEnum(n);
+	    break;
+	}
+    }
+    if (which != 0) {
+	if (which->fontset == 0) {
+	    FcFontSet *sortedFonts;
+	    FcPattern *myPattern;
+	    int j;
+
+	    myPattern = FcPatternDuplicate(which->pattern);
+
+	    FcPatternAddBool(myPattern, FC_SCALABLE, FcTrue);
+	    FcPatternAddInteger(myPattern, FC_CHAR_WIDTH, given->max_advance_width);
+
+	    FcConfigSubstitute(FcConfigGetCurrent(),
+			       myPattern,
+			       FcMatchPattern);
+	    FcDefaultSubstitute(myPattern);
+
+	    which->fontset = FcFontSetCreate();
+
+	    sortedFonts = FcFontSort(0, myPattern, FcTrue, 0, &status);
+
+	    if (!sortedFonts || sortedFonts->nfont <= 0) {
+		xtermWarning("did not find any usable TrueType font\n");
+		return 0;
+	    }
+	    which->limit = (unsigned) sortedFonts->nfont;
+	    which->cache = TypeCallocN(XTermXftCache, (which->limit + 1));
+	    for (j = 0; j < sortedFonts->nfont; j++) {
+		FcPattern *font_pattern;
+
+		font_pattern = FcFontRenderPrepare(FcConfigGetCurrent(),
+						   myPattern,
+						   sortedFonts->fonts[j]);
+		if (font_pattern)
+		    FcFontSetAdd(which->fontset, font_pattern);
+	    }
+
+	    FcFontSetSortDestroy(sortedFonts);
+	    FcPatternDestroy(myPattern);
+	}
+	if (which->fontset != 0) {
+	    XftFont *check;
+	    Cardinal empty = which->limit;
+
+	    for (n = 0; n < which->limit; ++n) {
+		XftCache usage = which->cache[n].usage;
+		if (usage == xcEmpty) {
+		    if (empty > n)
+			empty = n;
+		} else if (usage == xcOpened
+			   || (usage == xcUnused
+			       && (which->opened < xw->work.max_fontsets))) {
+		    check = which->cache[n].font;
+		    if (foundXftGlyph(xw, check, wc)) {
+			markXftOpened(xw, which, n, wc);
+			result = check;
+			TRACE_FALLBACK(xw, "old", wc, (int) n, result);
+			break;
+		    }
+		}
+	    }
+
+	    if ((result == 0)
+		&& (empty < which->limit)
+		&& (which->opened < xw->work.max_fontsets)) {
+		FcPattern *myPattern = 0;
+		FcPattern *myReport = 0;
+
+		for (n = empty; n < which->limit; ++n) {
+		    if (which->cache[n].usage >= xcBogus)
+			continue;
+		    if (resource.reportFonts) {
+			myReport = FcPatternDuplicate(which->fontset->fonts[n]);
+		    }
+		    myPattern = FcPatternDuplicate(which->fontset->fonts[n]);
+		    check = XftFontOpenPattern(screen->display, myPattern);
+		    closeCachedXft(screen, which->cache[n].font);
+		    (void) maybeXftCache(xw, check);
+		    which->cache[n].font = check;
+		    which->cache[n].usage = xcBogus;
+		    if (check == 0)
+			continue;	/* shouldn't happen... */
+#ifdef FC_COLOR
+		    if (isBogusXft(check)) {
+			continue;
+		    }
+#endif
+		    if (foundXftGlyph(xw, check, wc)) {
+			markXftOpened(xw, which, n, wc);
+			reportXftFonts(xw, check, "fallback", tag, myReport);
+			result = check;
+			TRACE_FALLBACK(xw, "new", wc, (int) n, result);
+			break;
+		    }
+		    /*
+		     * The slot is opened, but we are not using it.
+		     */
+		    which->cache[n].usage = xcUnused;
+		}
+	    }
+	}
+    }
+    return result;
+}
 
 /*
- * Check if the given character has a glyph known to Xft.
+ * Check if the given character has a glyph known to Xft.  If it is missing,
+ * try first to replace the font with a fallback that provides the glyph.
+ * If it is unable to provide a font containing the glyph, return true.
  *
  * see xc/lib/Xft/xftglyphs.c
  */
@@ -3547,7 +3966,7 @@ xtermXftMissing(XtermWidget xw, XftFont *font, unsigned wc)
 	if (!XftGlyphExists(screen->display, font, wc)) {
 #if OPT_WIDE_CHARS
 	    TRACE2(("xtermXftMissing %d (dec=%#x, ucs=%#x)\n",
-		    wc, ucs2dec(wc), dec2ucs(wc)));
+		    wc, ucs2dec(screen, wc), dec2ucs(screen, wc)));
 #else
 	    TRACE2(("xtermXftMissing %d\n", wc));
 #endif
@@ -3561,45 +3980,55 @@ xtermXftMissing(XtermWidget xw, XftFont *font, unsigned wc)
 #if OPT_WIDE_CHARS
 #define MY_UCS(ucs,dec) case ucs: result = dec; break
 unsigned
-ucs2dec(unsigned ch)
+ucs2dec(TScreen *screen, unsigned ch)
 {
     unsigned result = ch;
     if ((ch > 127)
 	&& (ch != UCS_REPL)) {
-	switch (ch) {
-	    MY_UCS(0x25ae, 0);	/* black vertical rectangle                   */
-	    MY_UCS(0x25c6, 1);	/* black diamond                              */
-	    MY_UCS(0x2592, 2);	/* medium shade                               */
-	    MY_UCS(0x2409, 3);	/* symbol for horizontal tabulation           */
-	    MY_UCS(0x240c, 4);	/* symbol for form feed                       */
-	    MY_UCS(0x240d, 5);	/* symbol for carriage return                 */
-	    MY_UCS(0x240a, 6);	/* symbol for line feed                       */
-	    MY_UCS(0x00b0, 7);	/* degree sign                                */
-	    MY_UCS(0x00b1, 8);	/* plus-minus sign                            */
-	    MY_UCS(0x2424, 9);	/* symbol for newline                         */
-	    MY_UCS(0x240b, 10);	/* symbol for vertical tabulation             */
-	    MY_UCS(0x2518, 11);	/* box drawings light up and left             */
-	    MY_UCS(0x2510, 12);	/* box drawings light down and left           */
-	    MY_UCS(0x250c, 13);	/* box drawings light down and right          */
-	    MY_UCS(0x2514, 14);	/* box drawings light up and right            */
-	    MY_UCS(0x253c, 15);	/* box drawings light vertical and horizontal */
-	    MY_UCS(0x23ba, 16);	/* box drawings scan 1                        */
-	    MY_UCS(0x23bb, 17);	/* box drawings scan 3                        */
-	    MY_UCS(0x2500, 18);	/* box drawings light horizontal              */
-	    MY_UCS(0x23bc, 19);	/* box drawings scan 7                        */
-	    MY_UCS(0x23bd, 20);	/* box drawings scan 9                        */
-	    MY_UCS(0x251c, 21);	/* box drawings light vertical and right      */
-	    MY_UCS(0x2524, 22);	/* box drawings light vertical and left       */
-	    MY_UCS(0x2534, 23);	/* box drawings light up and horizontal       */
-	    MY_UCS(0x252c, 24);	/* box drawings light down and horizontal     */
-	    MY_UCS(0x2502, 25);	/* box drawings light vertical                */
-	    MY_UCS(0x2264, 26);	/* less-than or equal to                      */
-	    MY_UCS(0x2265, 27);	/* greater-than or equal to                   */
-	    MY_UCS(0x03c0, 28);	/* greek small letter pi                      */
-	    MY_UCS(0x2260, 29);	/* not equal to                               */
-	    MY_UCS(0x00a3, 30);	/* pound sign                                 */
-	    MY_UCS(0x00b7, 31);	/* middle dot                                 */
-	}
+#if OPT_VT52_MODE
+	if (screen != 0 && !(screen->vtXX_level)) {
+	    /*
+	     * Intentionally empty: it would be possible to use the built-in
+	     * line-drawing fallback in xtermDrawBoxChar(), but for testing
+	     * ncurses, this is good enough.
+	     */
+	    ;
+	} else
+#endif
+	    switch (ch) {
+		MY_UCS(0x25ae, 0);	/* black vertical rectangle           */
+		MY_UCS(0x25c6, 1);	/* black diamond                      */
+		MY_UCS(0x2592, 2);	/* medium shade                       */
+		MY_UCS(0x2409, 3);	/* symbol for horizontal tabulation   */
+		MY_UCS(0x240c, 4);	/* symbol for form feed               */
+		MY_UCS(0x240d, 5);	/* symbol for carriage return         */
+		MY_UCS(0x240a, 6);	/* symbol for line feed               */
+		MY_UCS(0x00b0, 7);	/* degree sign                        */
+		MY_UCS(0x00b1, 8);	/* plus-minus sign                    */
+		MY_UCS(0x2424, 9);	/* symbol for newline                 */
+		MY_UCS(0x240b, 10);	/* symbol for vertical tabulation     */
+		MY_UCS(0x2518, 11);	/* box drawings light up and left     */
+		MY_UCS(0x2510, 12);	/* box drawings light down and left   */
+		MY_UCS(0x250c, 13);	/* box drawings light down and right  */
+		MY_UCS(0x2514, 14);	/* box drawings light up and right    */
+		MY_UCS(0x253c, 15);	/* box drawings light vertical and horizontal */
+		MY_UCS(0x23ba, 16);	/* box drawings scan 1                */
+		MY_UCS(0x23bb, 17);	/* box drawings scan 3                */
+		MY_UCS(0x2500, 18);	/* box drawings light horizontal      */
+		MY_UCS(0x23bc, 19);	/* box drawings scan 7                */
+		MY_UCS(0x23bd, 20);	/* box drawings scan 9                */
+		MY_UCS(0x251c, 21);	/* box drawings light vertical and right      */
+		MY_UCS(0x2524, 22);	/* box drawings light vertical and left       */
+		MY_UCS(0x2534, 23);	/* box drawings light up and horizontal       */
+		MY_UCS(0x252c, 24);	/* box drawings light down and horizontal     */
+		MY_UCS(0x2502, 25);	/* box drawings light vertical        */
+		MY_UCS(0x2264, 26);	/* less-than or equal to              */
+		MY_UCS(0x2265, 27);	/* greater-than or equal to           */
+		MY_UCS(0x03c0, 28);	/* greek small letter pi              */
+		MY_UCS(0x2260, 29);	/* not equal to                       */
+		MY_UCS(0x00a3, 30);	/* pound sign                         */
+		MY_UCS(0x00b7, 31);	/* middle dot                         */
+	    }
     }
     return result;
 }
@@ -3608,44 +4037,82 @@ ucs2dec(unsigned ch)
 #define MY_UCS(ucs,dec) case dec: result = ucs; break
 
 unsigned
-dec2ucs(unsigned ch)
+dec2ucs(TScreen *screen, unsigned ch)
 {
     unsigned result = ch;
     if (xtermIsDecGraphic(ch)) {
-	switch (ch) {
-	    MY_UCS(0x25ae, 0);	/* black vertical rectangle                   */
-	    MY_UCS(0x25c6, 1);	/* black diamond                              */
-	    MY_UCS(0x2592, 2);	/* medium shade                               */
-	    MY_UCS(0x2409, 3);	/* symbol for horizontal tabulation           */
-	    MY_UCS(0x240c, 4);	/* symbol for form feed                       */
-	    MY_UCS(0x240d, 5);	/* symbol for carriage return                 */
-	    MY_UCS(0x240a, 6);	/* symbol for line feed                       */
-	    MY_UCS(0x00b0, 7);	/* degree sign                                */
-	    MY_UCS(0x00b1, 8);	/* plus-minus sign                            */
-	    MY_UCS(0x2424, 9);	/* symbol for newline                         */
-	    MY_UCS(0x240b, 10);	/* symbol for vertical tabulation             */
-	    MY_UCS(0x2518, 11);	/* box drawings light up and left             */
-	    MY_UCS(0x2510, 12);	/* box drawings light down and left           */
-	    MY_UCS(0x250c, 13);	/* box drawings light down and right          */
-	    MY_UCS(0x2514, 14);	/* box drawings light up and right            */
-	    MY_UCS(0x253c, 15);	/* box drawings light vertical and horizontal */
-	    MY_UCS(0x23ba, 16);	/* box drawings scan 1                        */
-	    MY_UCS(0x23bb, 17);	/* box drawings scan 3                        */
-	    MY_UCS(0x2500, 18);	/* box drawings light horizontal              */
-	    MY_UCS(0x23bc, 19);	/* box drawings scan 7                        */
-	    MY_UCS(0x23bd, 20);	/* box drawings scan 9                        */
-	    MY_UCS(0x251c, 21);	/* box drawings light vertical and right      */
-	    MY_UCS(0x2524, 22);	/* box drawings light vertical and left       */
-	    MY_UCS(0x2534, 23);	/* box drawings light up and horizontal       */
-	    MY_UCS(0x252c, 24);	/* box drawings light down and horizontal     */
-	    MY_UCS(0x2502, 25);	/* box drawings light vertical                */
-	    MY_UCS(0x2264, 26);	/* less-than or equal to                      */
-	    MY_UCS(0x2265, 27);	/* greater-than or equal to                   */
-	    MY_UCS(0x03c0, 28);	/* greek small letter pi                      */
-	    MY_UCS(0x2260, 29);	/* not equal to                               */
-	    MY_UCS(0x00a3, 30);	/* pound sign                                 */
-	    MY_UCS(0x00b7, 31);	/* middle dot                                 */
-	}
+#if OPT_VT52_MODE
+	if (screen != 0 && !(screen->vtXX_level)) {
+	    switch (ch) {
+		MY_UCS(0x0020, 0);	/* reserved, treat as blank           */
+		MY_UCS(0x25ae, 1);	/* black vertical rectangle           */
+		MY_UCS(0x215f, 2);	/* "1/"                               */
+		MY_UCS(0x0020, 3);	/* "3/", not in Unicode, ignore       */
+		MY_UCS(0x0020, 4);	/* "5/", not in Unicode, ignore       */
+		MY_UCS(0x0020, 5);	/* "7/", not in Unicode, ignore       */
+		MY_UCS(0x00b0, 6);	/* degree sign                        */
+		MY_UCS(0x00b1, 7);	/* plus-minus sign                    */
+		MY_UCS(0x2192, 8);	/* right-arrow                        */
+		MY_UCS(0x2026, 9);	/* ellipsis                           */
+		MY_UCS(0x00f7, 10);	/* divide by                          */
+		MY_UCS(0x2193, 11);	/* down arrow                         */
+		MY_UCS(0x23ba, 12);	/* bar at scan 0                      */
+		MY_UCS(0x23ba, 13);	/* bar at scan 1                      */
+		MY_UCS(0x23bb, 14);	/* bar at scan 2                      */
+		MY_UCS(0x23bb, 15);	/* bar at scan 3                      */
+		MY_UCS(0x23bc, 16);	/* bar at scan 4                      */
+		MY_UCS(0x23bc, 17);	/* bar at scan 5                      */
+		MY_UCS(0x23bd, 18);	/* bar at scan 6                      */
+		MY_UCS(0x23bd, 19);	/* bar at scan 7                      */
+		MY_UCS(0x2080, 20);	/* subscript 0                        */
+		MY_UCS(0x2081, 21);	/* subscript 1                        */
+		MY_UCS(0x2082, 22);	/* subscript 2                        */
+		MY_UCS(0x2083, 23);	/* subscript 3                        */
+		MY_UCS(0x2084, 24);	/* subscript 4                        */
+		MY_UCS(0x2085, 25);	/* subscript 5                        */
+		MY_UCS(0x2086, 26);	/* subscript 6                        */
+		MY_UCS(0x2087, 27);	/* subscript 7                        */
+		MY_UCS(0x2088, 28);	/* subscript 8                        */
+		MY_UCS(0x2089, 29);	/* subscript 9                        */
+		MY_UCS(0x00b6, 30);	/* paragraph                          */
+		MY_UCS(0x007f, 31);	/* invalid, treat as rubout           */
+	    }
+	} else
+#endif
+	    switch (ch) {
+		MY_UCS(0x25ae, 0);	/* black vertical rectangle           */
+		MY_UCS(0x25c6, 1);	/* black diamond                      */
+		MY_UCS(0x2592, 2);	/* medium shade                       */
+		MY_UCS(0x2409, 3);	/* symbol for horizontal tabulation   */
+		MY_UCS(0x240c, 4);	/* symbol for form feed               */
+		MY_UCS(0x240d, 5);	/* symbol for carriage return         */
+		MY_UCS(0x240a, 6);	/* symbol for line feed               */
+		MY_UCS(0x00b0, 7);	/* degree sign                        */
+		MY_UCS(0x00b1, 8);	/* plus-minus sign                    */
+		MY_UCS(0x2424, 9);	/* symbol for newline                 */
+		MY_UCS(0x240b, 10);	/* symbol for vertical tabulation     */
+		MY_UCS(0x2518, 11);	/* box drawings light up and left     */
+		MY_UCS(0x2510, 12);	/* box drawings light down and left   */
+		MY_UCS(0x250c, 13);	/* box drawings light down and right  */
+		MY_UCS(0x2514, 14);	/* box drawings light up and right    */
+		MY_UCS(0x253c, 15);	/* box drawings light vertical and horizontal */
+		MY_UCS(0x23ba, 16);	/* box drawings scan 1                */
+		MY_UCS(0x23bb, 17);	/* box drawings scan 3                */
+		MY_UCS(0x2500, 18);	/* box drawings light horizontal      */
+		MY_UCS(0x23bc, 19);	/* box drawings scan 7                */
+		MY_UCS(0x23bd, 20);	/* box drawings scan 9                */
+		MY_UCS(0x251c, 21);	/* box drawings light vertical and right      */
+		MY_UCS(0x2524, 22);	/* box drawings light vertical and left       */
+		MY_UCS(0x2534, 23);	/* box drawings light up and horizontal       */
+		MY_UCS(0x252c, 24);	/* box drawings light down and horizontal     */
+		MY_UCS(0x2502, 25);	/* box drawings light vertical        */
+		MY_UCS(0x2264, 26);	/* less-than or equal to              */
+		MY_UCS(0x2265, 27);	/* greater-than or equal to           */
+		MY_UCS(0x03c0, 28);	/* greek small letter pi              */
+		MY_UCS(0x2260, 29);	/* not equal to                       */
+		MY_UCS(0x00a3, 30);	/* pound sign                         */
+		MY_UCS(0x00b7, 31);	/* middle dot                         */
+	    }
     }
     return result;
 }
@@ -4550,7 +5017,7 @@ getNormalFont(TScreen *screen, int which)
 {
     XTermFonts *result = 0;
     if (which >= 0 && which < fMAX)
-	result = &(screen->fnts[which]);
+	result = GetNormalFont(screen, which);
     return result;
 }
 
@@ -4560,7 +5027,7 @@ getDoubleFont(TScreen *screen, int which)
 {
     XTermFonts *result = 0;
     if ((int) which >= 0 && which < NUM_CHRSET)
-	result = &(screen->double_fonts[which]);
+	result = GetDoubleFont(screen, which);
     return result;
 }
 #endif
@@ -4572,7 +5039,7 @@ getItalicFont(TScreen *screen, int which)
     XTermFonts *result = 0;
 #if OPT_WIDE_ATTRS
     if (which >= 0 && which < fMAX)
-	result = &(screen->ifnts[which]);
+	result = GetItalicFont(screen, which);
 #else
     (void) screen;
     (void) which;
@@ -4625,7 +5092,7 @@ getMyXftFont(XtermWidget xw, int which, int fontnum)
 XftFont *
 getXftFont(XtermWidget xw, VTFontEnum which, int fontnum)
 {
-    XTermXftFonts *data = getMyXftFont(xw, which, fontnum);
+    XTermXftFonts *data = getMyXftFont(xw, (int) which, fontnum);
     XftFont *result = 0;
     if (data != 0)
 	result = data->font;

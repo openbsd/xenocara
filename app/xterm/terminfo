@@ -1,10 +1,10 @@
-# $XTermId: terminfo,v 1.177 2017/12/25 21:08:55 tom Exp $
+# $XTermId: terminfo,v 1.178 2019/01/13 19:27:05 tom Exp $
 #
 # Updates/notes/new entries (e.g., xterm-8bit, xterm-16color, xterm-256color)
 # - Thomas E. Dickey
 #
 #------------------------------------------------------------------------------
-# Copyright 1996-2016,2017 by Thomas E. Dickey
+# Copyright 1996-2017,2019 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -32,7 +32,7 @@
 # sale, use or other dealings in this Software without prior written
 # authorization.
 #------------------------------------------------------------------------------
-# format (ncurses 6.1): tic -W -1 -f -x terminfo
+# format (ncurses 6.1): tic -I -W -1 -f -x terminfo
 #------------------------------------------------------------------------------
 #
 # Special Capabilities:
@@ -136,6 +136,7 @@ xterm-new|modern xterm terminal emulator,
 	kcbt=\E[Z,
 	kent=\EOM,
 	rin=\E[%p1%dT,
+	use=xterm+sm+1006,
 	use=ansi+rep,
 	use=ecma+strikeout,
 	use=xterm+pcfkeys,
@@ -897,11 +898,50 @@ xterm+pce0|fragment with modifyCursorKeys:0,
 	kPRV7=\E[5;7~,
 	use=xterm+edit,
 
-# This is an ncurses extension
+# The rmxx/smxx capabilities are an ncurses extension
 ecma+strikeout|ECMA-48 strikeout/crossed-out,
 	rmxx=\E[29m,
 	smxx=\E[9m,
-#
+
+# The XM capability is an ncurses extension
+xterm+sm+1006|xterm SGR-mouse,
+	kmous=\E[<,
+	XM=\E[?1006;1000
+		%?
+			%p1%{1}%=
+			%th
+		%e
+			l
+		%;,
+	xm=\E[<
+		%p1%d;%p2%d;%p3%d;
+		%?
+			%p4
+			%tM
+		%e
+			m
+		%;,
+
+# By default, ncurses knows that xterm private mode 1000 enables/disables
+# the X11 xterm mouse protocol.  So XM is not needed here, except for clarity.
+xterm+x11mouse|X11 xterm mouse protocol,
+	kmous=\E[M,
+	XM=\E[?1000
+		%?
+			%p1%{1}%=
+			%th
+		%e
+			l
+		%;,
+	xm=\E[M
+		%?
+			%p4
+			%t3
+		%e
+			%p3%'\s'%+%c
+		%;
+		%p2%'!'%+%c%p1%'!'%+%c,
+
 # This chunk is used for building the VT220/Sun/PC keyboard variants.
 xterm-basic|modern xterm terminal emulator - common,
 	OTbs,

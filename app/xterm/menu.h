@@ -1,7 +1,7 @@
-/* $XTermId: menu.h,v 1.139 2016/12/22 02:04:51 tom Exp $ */
+/* $XTermId: menu.h,v 1.143 2019/01/13 17:21:25 tom Exp $ */
 
 /*
- * Copyright 1999-2015,2016 by Thomas E. Dickey
+ * Copyright 1999-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -30,7 +30,7 @@
  * authorization.
  *
  *
- * Copyright 1989  The Open Group
+ * Copyright 1989  X Consortium
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that
@@ -49,11 +49,10 @@
  * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
  *
- * Except as contained in this notice, the name of The Open Group shall
+ * Except as contained in this notice, the name of the X Consortium shall
  * not be used in advertising or otherwise to promote the sale, use or
  * other dealings in this Software without prior written authorization
- * from The Open Group.
- *
+ * from the X Consortium.
  */
 
 #ifndef included_menu_h
@@ -61,6 +60,10 @@
 /* *INDENT-OFF* */
 
 #include <xterm.h>
+
+#ifndef OPT_MENU_KEEPCLIPBOARD 
+#define OPT_MENU_KEEPCLIPBOARD 0	/* useful for debugging */
+#endif
 
 typedef struct _MenuEntry {
     const char *name;
@@ -117,6 +120,8 @@ extern void HandleOldFunctionKeys  PROTO_XT_ACTIONS_ARGS;
 extern void HandlePopupMenu        PROTO_XT_ACTIONS_ARGS;
 extern void HandlePrintControlMode PROTO_XT_ACTIONS_ARGS;
 extern void HandlePrintEverything  PROTO_XT_ACTIONS_ARGS;
+extern void HandlePrintImmediate   PROTO_XT_ACTIONS_ARGS;
+extern void HandlePrintOnError     PROTO_XT_ACTIONS_ARGS;
 extern void HandlePrintScreen      PROTO_XT_ACTIONS_ARGS;
 extern void HandleQuit             PROTO_XT_ACTIONS_ARGS;
 extern void HandleRedraw           PROTO_XT_ACTIONS_ARGS;
@@ -243,6 +248,9 @@ typedef enum {
     vtMenu_scrollttyoutput,
     vtMenu_allow132,
     vtMenu_keepSelection,
+#if OPT_MENU_KEEPCLIPBOARD
+    vtMenu_keepClipboard,
+#endif
     vtMenu_selectToClipboard,
     vtMenu_visualbell,
     vtMenu_bellIsUrgent,
@@ -459,7 +467,12 @@ extern void update_visualbell(void);
 extern void update_bellIsUrgent(void);
 extern void update_poponbell(void);
 
+#if OPT_MENU_KEEPCLIPBOARD
+extern void update_keepClipboard(void);
+#else
 #define update_keepClipboard() /* nothing */
+#endif
+
 #define update_marginbell() /* nothing */
 
 #if OPT_LOAD_VTFONTS

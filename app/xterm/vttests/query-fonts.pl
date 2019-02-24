@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
-# $XTermId: query-fonts.pl,v 1.6 2014/02/26 20:14:50 tom Exp $
+# $XTermId: query-fonts.pl,v 1.7 2018/08/10 15:01:35 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2010,2014 by Thomas E. Dickey
+# Copyright 2010-2014,2018 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -48,6 +48,8 @@ use Getopt::Std;
 use IO::Handle;
 
 our ( $opt_a, $opt_r, $opt_s );
+
+$Getopt::Std::STANDARD_HELP_VERSION = 1;
 &getopts('ars') || die(
     "Usage: $0 [options]\n
 Options:\n

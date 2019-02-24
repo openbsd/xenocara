@@ -1,7 +1,7 @@
-/* $XTermId: tabs.c,v 1.43 2012/06/10 16:53:59 tom Exp $ */
+/* $XTermId: tabs.c,v 1.46 2018/07/20 22:17:44 tom Exp $ */
 
 /*
- * Copyright 2000-2011,2012 by Thomas E. Dickey
+ * Copyright 2000-2012,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -84,7 +84,7 @@ TabReset(Tabs tabs)
 void
 TabSet(Tabs tabs, int col)
 {
-    if (col >= 0 && col < MAX_TABS) {
+    if (OkTAB(col)) {
 	SET_TAB(tabs, col);
     }
 }
@@ -95,7 +95,7 @@ TabSet(Tabs tabs, int col)
 void
 TabClear(Tabs tabs, int col)
 {
-    if (col >= 0 && col < MAX_TABS) {
+    if (OkTAB(col)) {
 	CLR_TAB(tabs, col);
     }
 }
@@ -186,4 +186,13 @@ void
 TabZonk(Tabs tabs)
 {
     memset(tabs, 0, sizeof(*tabs) * TAB_ARRAY_SIZE);
+}
+
+/*
+ * Check if a tab is set for the given column
+ */
+Bool
+TabIsSet(Tabs tabs, int col)
+{
+    return TST_TAB(tabs, col) ? True : False;
 }

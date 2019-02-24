@@ -1,14 +1,16 @@
--- $XTermId: THANKS,v 1.16 2017/05/27 16:55:42 tom Exp $
--- vile:txtmode fk=8bit
+-- $XTermId: THANKS,v 1.21 2019/01/13 17:18:41 tom Exp $
+-- vile:txtmode fk=utf-8
 There's no AUTHORS file in this distribution; it would be redundant since
 I (Thomas E. Dickey) have done more than 80% of the work on xterm since 1996.
 
-There's no reliable history before that point.
+There is no reliable history before that point.
 For some insight, see
 
-	http://invisible-island.net/xterm/xterm.faq.html#who_did_it
+	https://invisible-island.net/xterm/xterm.faq.html#who_did_it
+	https://invisible-island.net/personal/changelogs.html#categories
 
-Here's a list from xterm.log.html of people who have contributed changes.
+Here is a list from xterm.log.html of people who have contributed changes,
+or whose suggested change could be adapted:
 
 Adam M Costello
 Adam Sulmicki
@@ -29,33 +31,41 @@ Andries E Brouwer
 Anton Kovalenko
 Balazs Kezes
 Ben Wiley Sittler
+Ben Wong
 Ben Yoshino
 Bernhard R Link
 Bernhard Rosenkraenzer
 Bertram Felgenhauer
 Bill Nottingham
+Bjarni Ingi Gislason
 Bob Maynard
+Brad Town
 Bradd W Szonye
 Bram Moolenaar
 Branden Robinson
 Bruno Haible
+Cade Foster
 Caetano Jimenez Carezzato
 Chris Adams
 Chris Clayton
 Christian Biere
 Christian Weisgerber
 Chuck Blake
+Colum Paget
 D Roland Walker
 Dan Church
+Dan Thompson
 Daniel Colascione
 Daniel Drake
 Daniel Jacobowitz
+Dave Coffin
 Dave Simmons
 David Dawes
 David Krause
 David Madore
-David Martínez Moreno
+David MartÃ­nez Moreno
 David Mathog
+David Michael
 David Wolfskill
 David Wood
 David Yeo
@@ -85,6 +95,7 @@ H Merijn Brand
 Hasso Tepper
 Holger Veit
 Ilya Zakharevich
+Ingo BrÃ¼ckl
 Iwamoto Kouichi
 James Armstrong
 Jason Bacon
@@ -104,7 +115,8 @@ Johnny Billquist
 Julien Cristau
 Juliusz Chroboczek
 Jungshik Shin
-Jürgen Keil
+JÃ¼rgen Keil
+KUGA Tsutomu
 Kean Johnston
 Keith Packard
 Ken Martin
@@ -114,14 +126,16 @@ Kevin Schoedel
 Kiyokazu Suto
 Larry Hynes
 Larry Riedel
+Lauri Tirkkonen
 Lee Olsen
-Loïc Minier
+LoÃ¯c Minier
 Marc Bevand
 Marc La France
 Marco Peereboom
 Marius Tolzmann
 Mark Waggoner
 Markus Kuhn
+Martin Hostettler
 Martin Pirker
 Martin Tournoij
 Matthew Green
@@ -129,34 +143,40 @@ Matthias Baake
 Matthias Scheler
 Matthieu Herrb
 Matthieu Lagouge
-Mattias Engdegård
+Mattias EngdegÃ¥rd
 Max Mikhanosha
 Michael Riepe
 Michael Rohleder
 Michael Schroeder
 Mike Castle
 Mike Fabian
+Mike Frysinger
 Mike Hopkirk
 Milan Mehner
 Min Sik Kim
 Miroslav Lichvar
 Nam SungHyun
 Nelson Beebe
-Németh Márton
 Nicolas George
+NÃ©meth MÃ¡rton
+Olaf Rogalsky
 Ovidiu Gheorghioiu
 Paul Bolle
 Paul Gilmartin
 Paul Giordano
 Paul Lampert
 Paul Maier
+Paul Szabo
 Paul Vojta
 Paul Williams
 Pavel Roskin
 Peder Stray
 Per Hedeland
 Peter Berg Larsen
+Phil Sidler
 Pierre Lombard
+Pierre Pronchery
+Rajesh Mandalemula
 Richard Braakman
 Richard Griswold
 Richard Tollerton
@@ -168,20 +188,24 @@ Romain Francoise
 Ross Combs
 Ross Paterson
 Ryan Johnson
+Sam Stephenson
 Scott Sewall
 Semen A Ustimenko
 Sergei Laskavy
 Sergey Vlasov
 Slava Semushin
+Stefan Assmann
 Stefan Dirsch
 Stephen P Wall
 Stuart Lissaman
+Sven Joachim
 Sven Verdoolaege
 Taketo Kabe
 Taneli Huuskonen
 Ted Phelps
 Thierry Reding
 Thomas Wolff
+Thorsten Glaser
 Tim Adye
 Tim Pope
 Tobias Stoeckmann
@@ -194,8 +218,10 @@ Tomohiro Kubota
 Tor Lillqvist
 Torrey Lyons
 Victor Stinner
-Vincent Lefèvre
+Victor Vaile
+Vincent LefÃ¨vre
 Werner Fink
 Werner Lemberg
 Will Day
+Zarick Lau
 Zdenek Sekera

@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
-# $XTermId: dynamic.pl,v 1.4 2017/01/22 18:34:06 tom Exp $
+# $XTermId: dynamic.pl,v 1.5 2018/08/10 15:01:35 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2011-2014,2017 by Thomas E. Dickey
+# Copyright 2011-2017,2018 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -54,6 +54,8 @@ our @color_names = (
 );
 
 our ( $opt_c, $opt_r );
+
+$Getopt::Std::STANDARD_HELP_VERSION = 1;
 &getopts('c:r') || die(
     "Usage: $0 [options]\n
 Options:\n

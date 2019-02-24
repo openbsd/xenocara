@@ -1,4 +1,4 @@
-/* $XTermId: keysym2ucs.c,v 1.16 2016/05/22 20:22:53 tom Exp $
+/* $XTermId: keysym2ucs.c,v 1.19 2018/09/09 17:35:05 tom Exp $
  * This module converts keysym values into the corresponding ISO 10646
  * (UCS, Unicode) values.
  *
@@ -34,7 +34,7 @@
  */
 
 #ifndef KEYSYM2UCS_INCLUDED
-  
+
 #include "keysym2ucs.h"
 #define VISIBLE /* */
 
@@ -602,20 +602,20 @@ static struct codepair {
   { 0x0ba8, 0x2228 }, /*                   downcaret ∨ LOGICAL OR */
   { 0x0ba9, 0x2227 }, /*                     upcaret ∧ LOGICAL AND */
   { 0x0bc0, 0x00af }, /*                     overbar ¯ MACRON */
-  { 0x0bc2, 0x22a5 }, /*                    downtack ⊥ UP TACK */
+  { 0x0bc2, 0x22a4 }, /*                    downtack ⊤ DOWN TACK */
   { 0x0bc3, 0x2229 }, /*                      upshoe ∩ INTERSECTION */
   { 0x0bc4, 0x230a }, /*                   downstile ⌊ LEFT FLOOR */
   { 0x0bc6, 0x005f }, /*                    underbar _ LOW LINE */
   { 0x0bca, 0x2218 }, /*                         jot ∘ RING OPERATOR */
   { 0x0bcc, 0x2395 }, /*                        quad ⎕ APL FUNCTIONAL SYMBOL QUAD */
-  { 0x0bce, 0x22a4 }, /*                      uptack ⊤ DOWN TACK */
+  { 0x0bce, 0x22a5 }, /*                      uptack ⊥ UP TACK */
   { 0x0bcf, 0x25cb }, /*                      circle ○ WHITE CIRCLE */
   { 0x0bd3, 0x2308 }, /*                     upstile ⌈ LEFT CEILING */
   { 0x0bd6, 0x222a }, /*                    downshoe ∪ UNION */
   { 0x0bd8, 0x2283 }, /*                   rightshoe ⊃ SUPERSET OF */
   { 0x0bda, 0x2282 }, /*                    leftshoe ⊂ SUBSET OF */
-  { 0x0bdc, 0x22a2 }, /*                    lefttack ⊢ RIGHT TACK */
-  { 0x0bfc, 0x22a3 }, /*                   righttack ⊣ LEFT TACK */
+  { 0x0bdc, 0x22a3 }, /*                    lefttack ⊣ LEFT TACK */
+  { 0x0bfc, 0x22a2 }, /*                   righttack ⊢ RIGHT TACK */
   { 0x0cdf, 0x2017 }, /*        hebrew_doublelowline ‗ DOUBLE LOW LINE */
   { 0x0ce0, 0x05d0 }, /*                hebrew_aleph א HEBREW LETTER ALEF */
   { 0x0ce1, 0x05d1 }, /*                  hebrew_bet ב HEBREW LETTER BET */
@@ -702,7 +702,7 @@ static struct codepair {
   { 0x0dd8, 0x0e38 }, /*                  Thai_sarau ุ THAI CHARACTER SARA U */
   { 0x0dd9, 0x0e39 }, /*                 Thai_sarauu ู THAI CHARACTER SARA UU */
   { 0x0dda, 0x0e3a }, /*                Thai_phinthu ฺ THAI CHARACTER PHINTHU */
-  { 0x0dde, 0x0e3e }, /*      Thai_maihanakat_maitho ฾ ??? */
+/*  0x0dde                    Thai_maihanakat_maitho ? ??? */
   { 0x0ddf, 0x0e3f }, /*                   Thai_baht ฿ THAI CURRENCY SYMBOL BAHT */
   { 0x0de0, 0x0e40 }, /*                  Thai_sarae เ THAI CHARACTER SARA E */
   { 0x0de1, 0x0e41 }, /*                 Thai_saraae แ THAI CHARACTER SARA AE */
@@ -847,23 +847,23 @@ long keysym2ucs(KeySym keysym)
     /* first check for Latin-1 characters (1:1 mapping) */
     if ((keysym >= 0x0020 && keysym <= 0x007e) ||
         (keysym >= 0x00a0 && keysym <= 0x00ff))
-        return keysym;
+        return (long) keysym;
 
     /* also check for directly encoded 24-bit UCS characters */
     if ((keysym & 0xff000000) == 0x01000000)
-	return keysym & 0x00ffffff;
+        return (long) (keysym & 0x00ffffff);
 
     /* binary search in table */
     while (max >= min) {
-	int mid = (min + max) / 2;
-	if (keysymtab[mid].keysym < keysym)
-	    min = mid + 1;
-	else if (keysymtab[mid].keysym > keysym)
-	    max = mid - 1;
-	else {
-	    /* found it */
-	    return keysymtab[mid].ucs;
-	}
+        int mid = (min + max) / 2;
+        if (keysymtab[mid].keysym < keysym)
+            min = mid + 1;
+        else if (keysymtab[mid].keysym > keysym)
+            max = mid - 1;
+        else {
+            /* found it */
+            return keysymtab[mid].ucs;
+        }
     }
 
     /* no matching Unicode value found */

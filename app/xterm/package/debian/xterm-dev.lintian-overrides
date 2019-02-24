@@ -1,0 +1,25 @@
+# Ignore this, but keep in mind:
+#	https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=741573
+#	https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=707851
+xterm-dev: command-in-menu-file-and-desktop-file xterm-dev usr/share/menu/xterm-dev:7
+xterm-dev: command-in-menu-file-and-desktop-file uxterm-dev usr/share/menu/xterm-dev:14
+
+# The lintian warning is incorrect: there is no portable path for Perl.
+#	https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=906901
+#	https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=904409
+xterm-dev: wrong-path-for-interpreter usr/share/doc/xterm-dev/examples/vttests/256colors.pl (#!/usr/bin/env != /usr/bin/perl)
+xterm-dev: wrong-path-for-interpreter usr/share/doc/xterm-dev/examples/vttests/256colors2.pl (#!/usr/bin/env != /usr/bin/perl)
+xterm-dev: wrong-path-for-interpreter usr/share/doc/xterm-dev/examples/vttests/88colors.pl (#!/usr/bin/env != /usr/bin/perl)
+xterm-dev: wrong-path-for-interpreter usr/share/doc/xterm-dev/examples/vttests/88colors2.pl (#!/usr/bin/env != /usr/bin/perl)
+xterm-dev: wrong-path-for-interpreter usr/share/doc/xterm-dev/examples/vttests/closest-rgb.pl (#!/usr/bin/env != /usr/bin/perl)
+xterm-dev: wrong-path-for-interpreter usr/share/doc/xterm-dev/examples/vttests/dynamic.pl (#!/usr/bin/env != /usr/bin/perl)
+xterm-dev: wrong-path-for-interpreter usr/share/doc/xterm-dev/examples/vttests/paste64.pl (#!/usr/bin/env != /usr/bin/perl)
+xterm-dev: wrong-path-for-interpreter usr/share/doc/xterm-dev/examples/vttests/query-color.pl (#!/usr/bin/env != /usr/bin/perl)
+xterm-dev: wrong-path-for-interpreter usr/share/doc/xterm-dev/examples/vttests/query-fonts.pl (#!/usr/bin/env != /usr/bin/perl)
+xterm-dev: wrong-path-for-interpreter usr/share/doc/xterm-dev/examples/vttests/query-status.pl (#!/usr/bin/env != /usr/bin/perl)
+xterm-dev: wrong-path-for-interpreter usr/share/doc/xterm-dev/examples/vttests/report-sgr.pl (#!/usr/bin/env != /usr/bin/perl)
+xterm-dev: wrong-path-for-interpreter usr/share/doc/xterm-dev/examples/vttests/resize.pl (#!/usr/bin/env != /usr/bin/perl)
+xterm-dev: wrong-path-for-interpreter usr/share/doc/xterm-dev/examples/vttests/sgrPushPop.pl (#!/usr/bin/env != /usr/bin/perl)
+xterm-dev: wrong-path-for-interpreter usr/share/doc/xterm-dev/examples/vttests/tcapquery.pl (#!/usr/bin/env != /usr/bin/perl)
+
+# vile: confmode

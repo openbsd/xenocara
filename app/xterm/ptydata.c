@@ -1,7 +1,7 @@
-/* $XTermId: ptydata.c,v 1.107 2017/06/16 23:40:20 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.109 2018/08/27 00:27:17 tom Exp $ */
 
 /*
- * Copyright 1999-2016,2017 by Thomas E. Dickey
+ * Copyright 1999-2017,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -79,6 +79,13 @@ decodeUtf8(TScreen *screen, PtyData *data)
 		data->utf_data = (IChar) c;
 		data->utf_size = 1;
 	    }
+	    break;
+	} else if (screen->vt100_graphics
+		   && (c < 0x100)
+		   && (utf_count == 0)
+		   && screen->gsets[(int) screen->curgr] != nrc_ASCII) {
+	    data->utf_data = (IChar) c;
+	    data->utf_size = 1;
 	    break;
 	} else if (c < 0xc0) {
 	    /* We received a continuation byte */
@@ -260,7 +267,7 @@ nextPtyData(TScreen *screen, PtyData *data)
 {
     IChar result;
     if (screen->utf8_inparse) {
-	result = skipPtyData(data);
+	skipPtyData(data, result);
     } else {
 	result = *((data)->next++);
 	if (!screen->output_eight_bits) {
@@ -268,20 +275,6 @@ nextPtyData(TScreen *screen, PtyData *data)
 	}
     }
     TRACE2(("nextPtyData returns %#x\n", result));
-    return result;
-}
-
-/*
- * Simply return the data and skip past it.
- */
-IChar
-skipPtyData(PtyData *data)
-{
-    IChar result = data->utf_data;
-
-    data->next += data->utf_size;
-    data->utf_size = 0;
-
     return result;
 }
 #endif
@@ -479,3 +472,31 @@ noleaks_ptydata(void)
     }
 }
 #endif
+
+#ifdef TEST_PTYDATA
+void
+test_ptydata(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    unsigned code;
+    PtyData *data;
+    Char *next;
+
+    for (code = 0; code < 256; code++) {
+	initPtyData(&data);
+	next = convertToUTF8(data->buffer, code);
+	*next = 0;
+	data->next = data->buffer;
+	data->last = next;
+	decodeUtf8(screen, data);
+	TRACE(("TEST %04X (%d:%s) ->%04X\n", code,
+	       (int) (next - data->buffer),
+	       data->buffer,
+	       data->utf_data));
+	if (code != data->utf_data) {
+	    fprintf(stderr, "Mismatch: %04X vs %04X\n", code, data->utf_data);
+	}
+	free(data);
+    }
+}
+#endif /* TEST_PTYDATA */

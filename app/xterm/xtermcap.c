@@ -1,7 +1,7 @@
-/* $XTermId: xtermcap.c,v 1.49 2016/05/22 18:31:20 tom Exp $ */
+/* $XTermId: xtermcap.c,v 1.52 2018/12/15 15:15:00 tom Exp $ */
 
 /*
- * Copyright 2007-2014,2016 by Thomas E. Dickey
+ * Copyright 2007-2016,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -180,6 +180,11 @@ static const TCAPINFO table[] = {
 # if OPT_TCAP_QUERY && OPT_ISO_COLORS
 	/* XK_COLORS is a fake code. */
 	DATA(	"Co",	"colors",	XK_COLORS,	0	),
+#  if OPT_DIRECT_COLOR
+	/* note - termcap cannot support RGB */
+	DATA(	"Co",	"RGB",		XK_RGB,		0	),
+
+#  endif
 # endif
 	DATA(	"TN",	"name",		XK_TCAPNAME,	0	),
 #if USE_EXTENDED_NAMES
@@ -225,7 +230,7 @@ loadTermcapStrings(TScreen *screen)
     if (screen->tcap_fkeys == 0) {
 	Cardinal want = XtNumber(table);
 	Cardinal have;
-#ifdef USE_TERMCAP
+#if !USE_TERMINFO
 	char *area = screen->tcap_area;
 #endif
 
@@ -236,7 +241,7 @@ loadTermcapStrings(TScreen *screen)
 		char name[80];
 		char *fkey;
 
-#ifndef USE_TERMCAP
+#if USE_TERMINFO
 		fkey = tigetstr(strcpy(name, table[have].ti));
 #else
 		fkey = tgetstr(strcpy(name, table[have].tc), &area);
@@ -287,7 +292,7 @@ keyIsDistinct(XtermWidget xw, int which)
 		}
 	    } else {
 		/* there is no data for the shifted key */
-		result = -1;
+		result = False;
 	    }
 	}
 #endif
@@ -540,12 +545,12 @@ get_tcap_buffer(XtermWidget xw)
 char *
 get_tcap_erase(XtermWidget xw GCC_UNUSED)
 {
-#ifdef USE_TERMCAP
+#if !USE_TERMINFO
     char *area = TScreenOf(xw)->tcap_area;
 #endif
     char *fkey;
 
-#ifndef USE_TERMCAP
+#if USE_TERMINFO
     fkey = tigetstr("kbs");
 #else
     fkey = tgetstr("kb", &area);

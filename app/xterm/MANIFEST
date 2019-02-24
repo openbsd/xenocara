@@ -1,4 +1,4 @@
-MANIFEST for xterm-331, version xterm-331
+MANIFEST for xterm-344, version xterm-344
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -46,6 +46,7 @@ doublechr.c                     VT100 double-size character support
 error.h                         error-code definitions for 'xterm'
 fontutils.c                     xterm functions for (re)loading fonts
 fontutils.h                     interface of fontutils.c
+gen-charsets.pl                 script to convert codepages into code
 gen-pc-fkeys.pl                 script to generate extended function-key terminfo
 graphics.c                      graphics support functions for 'xterm'
 graphics.h                      interface of graphics.c
@@ -53,6 +54,7 @@ graphics_regis.c                support for ReGIS
 graphics_regis.h                interface of graphics_regis.c
 graphics_sixel.c                support for Sixels
 graphics_sixel.h                interface of graphics_sixel.c
+html.c                          format HTML-screendumps
 input.c                         VT100 key-symbol and function-key translation
 install-sh                      install-script (needed by configure)
 keysym2ucs.c                    lookup-table for UTF-8 to keysyms
@@ -81,6 +83,7 @@ screen.c                        VT100 screen update functions
 scrollback.c                    manage scrollback (a big FIFO)
 scrollbar.c                     VT100 scrollbar support functions
 sinstall.sh                     install setuid if existing program was
+svg.c                           format SVG-screendumps
 tabs.c                          VT100 tabstop support-functions
 termcap                         termcap entries for 'xterm'
 terminfo                        terminfo entries for 'xterm'
@@ -158,6 +161,7 @@ package/debian/source/format    build-script
 package/debian                  subdirectory
 package/debian/watch            build-script
 package/debian/xterm-dev.docs   build-script
+package/debian/xterm-dev.lintian-overrides  ignore useless warnings from lintian
 package/debian/xterm-dev.menu   Debian menu-file for xterm-dev package.
 package/debian/xterm-xres.sed   build-script
 package/freebsd                 subdirectory
@@ -190,16 +194,22 @@ vttests/88colors.pl             sample script showing 88-colors
 vttests/88colors2.pl            sample script showing 88-colors
 vttests/8colors.sh              test-script to illustrate 8-colors
 vttests/acolors.sh              demonstrate changing the ANSI colors
+vttests/closest-rgb.pl          demo of color-distances
 vttests/doublechars.sh          test script to demonstrate doublesize chars
 vttests/dynamic.pl              demo for dynamic colors
 vttests/dynamic.sh              script to illustrate the dynamic colors control sequence
 vttests/dynamic2.sh             complete example of dynamic colors
 vttests/fonts.sh                script to demonstrate font-switching sequences
+vttests/mouse-codes             demo script for mouse-codes
+vttests/other-sgr.sh            demonstrate non-VTxx SGRs
 vttests/paste64.pl              script to test base64-selection option
+vttests/print-vt-chars.pl       demo-script
 vttests/query-color.pl          demonstrate OSC 4
 vttests/query-fonts.pl          script to demo/test font-querying
+vttests/query-status.pl         query DECRQSS status
+vttests/report-sgr.pl           demonstrate report-sgr
 vttests/resize.pl               translated resize.sh to perl since it is easy to test, and I needed
 vttests/resize.sh               script to demonstrate resizing
+vttests/sgrPushPop.pl           Dan Thompson's script
 vttests/tcapquery.pl            script to test tcap-query option
 vttests/title.sh                test-script to show title of xterm in action
-vttests/true-color.pl		test script for true color

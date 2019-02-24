@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
-# $XTermId: tcapquery.pl,v 1.20 2017/01/22 18:34:06 tom Exp $
+# $XTermId: tcapquery.pl,v 1.21 2018/08/10 15:03:35 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2004-2014,2017 by Thomas E. Dickey
+# Copyright 2004-2017,2018 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -43,6 +43,8 @@ our (
     $opt_a, $opt_b, $opt_c, $opt_e, $opt_f, $opt_i,
     $opt_k, $opt_m, $opt_t, $opt_x, $opt_X
 );
+
+$Getopt::Std::STANDARD_HELP_VERSION = 1;
 &getopts('abcefikmt:x:X') || die(
     "Usage: $0 [options]\n
 Options:\n
@@ -319,6 +321,7 @@ if ( defined($opt_a) || defined($opt_m) ) {
     query_tcap( "#1", "kHLP" );
 
     query_tcap( "Co", "colors" );
+    query_tcap( "Co", "RGB" ) if ($opt_i);
 }
 
 if ( defined($opt_x) ) {

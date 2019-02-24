@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# $XTermId: convmap.pl,v 1.14 2016/05/22 19:57:09 tom Exp $
+# $XTermId: convmap.pl,v 1.15 2018/09/09 17:22:24 tom Exp $
 #
 # Generate keysym2ucs.c file
 #
@@ -79,10 +79,10 @@ while (<LIST>) {
     if (/^0x([0-9a-f]{4})\s+U([0-9a-f]{4})\s*(\#.*)?$/){
         my $keysym = hex($1);
         my $ucs = hex($2);
-	my $comment = $3;
-	$comment =~ s/^#\s*//;
+        my $comment = $3;
+        $comment =~ s/^#\s*//;
         $keysym_to_ucs{$keysym} = $ucs;
-	$keysym_to_keysymname{$keysym} = $comment;
+        $keysym_to_keysymname{$keysym} = $comment;
     } elsif (/^\s*\#/ || /^\s*$/) {
     } else {
         die("Syntax error in 'list' in line\n$_\n");
@@ -94,10 +94,10 @@ close(LIST);
 open(LIST, "</usr/include/X11/keysymdef.h") || die ("Can't open keysymdef.h:\n$!\n");
 while (<LIST>) {
     if (/^\#define\s+XK_([A-Za-z_0-9]+)\s+0x([0-9a-fA-F]+)\s*(\/.*)?$/) {
-	next if /\/\* deprecated \*\//;
-	my $keysymname = $1;
-	my $keysym = hex($2);
-	$keysym_to_keysymname{$keysym} = $keysymname;
+        next if /\/\* deprecated \*\//;
+        my $keysymname = $1;
+        my $keysym = hex($2);
+        $keysym_to_keysymname{$keysym} = $keysymname;
     }
 }
 close(LIST);
@@ -139,7 +139,7 @@ print <<EOT;
  */
 
 #ifndef KEYSYM2UCS_INCLUDED
-  
+
 #include "keysym2ucs.h"
 #define VISIBLE /* */
 
@@ -159,12 +159,12 @@ for $keysym (sort {$a <=> $b} keys(%keysym_to_keysymname)) {
     my $ucs = $keysym_to_ucs{$keysym};
     next if $keysym >= 0xf000 || $keysym < 0x100;
     if ($ucs) {
-	printf("  { 0x%04x, 0x%04x }, /*%28s %s %s */\n",
-	       $keysym, $ucs, $keysym_to_keysymname{$keysym}, utf8($ucs),
-	       defined($name{$ucs}) ? $name{$ucs} : "???" );
+        printf("  { 0x%04x, 0x%04x }, /*%28s %s %s */\n",
+               $keysym, $ucs, $keysym_to_keysymname{$keysym}, utf8($ucs),
+               defined($name{$ucs}) ? $name{$ucs} : "???" );
     } else {
-	printf("/*  0x%04x   %39s ? ??? */\n",
-	       $keysym, $keysym_to_keysymname{$keysym});
+        printf("/*  0x%04x   %39s ? ??? */\n",
+               $keysym, $keysym_to_keysymname{$keysym});
     }
 }
 
@@ -180,23 +180,23 @@ long keysym2ucs(KeySym keysym)
     /* first check for Latin-1 characters (1:1 mapping) */
     if ((keysym >= 0x0020 && keysym <= 0x007e) ||
         (keysym >= 0x00a0 && keysym <= 0x00ff))
-        return keysym;
+        return (long) keysym;
 
     /* also check for directly encoded 24-bit UCS characters */
     if ((keysym & 0xff000000) == 0x01000000)
-	return keysym & 0x00ffffff;
+        return (long) (keysym & 0x00ffffff);
 
     /* binary search in table */
     while (max >= min) {
-	int mid = (min + max) / 2;
-	if (keysymtab[mid].keysym < keysym)
-	    min = mid + 1;
-	else if (keysymtab[mid].keysym > keysym)
-	    max = mid - 1;
-	else {
-	    /* found it */
-	    return keysymtab[mid].ucs;
-	}
+        int mid = (min + max) / 2;
+        if (keysymtab[mid].keysym < keysym)
+            min = mid + 1;
+        else if (keysymtab[mid].keysym > keysym)
+            max = mid - 1;
+        else {
+            /* found it */
+            return keysymtab[mid].ucs;
+        }
     }
 
     /* no matching Unicode value found */

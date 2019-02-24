@@ -1,7 +1,7 @@
-/* $XTermId: main.c,v 1.809 2017/12/20 01:17:24 tom Exp $ */
+/* $XTermId: main.c,v 1.845 2018/12/16 23:06:59 tom Exp $ */
 
 /*
- * Copyright 2002-2016,2017 by Thomas E. Dickey
+ * Copyright 2002-2017,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -29,7 +29,7 @@
  * sale, use or other dealings in this Software without prior written
  * authorization.
  *
- * Copyright 1987, 1988  The Open Group
+ * Copyright 1987, 1988  X Consortium
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that
@@ -47,9 +47,9 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * Except as contained in this notice, the name of The Open Group shall not be
+ * Except as contained in this notice, the name of the X Consortium shall not be
  * used in advertising or otherwise to promote the sale, use or other dealings
- * in this Software without prior written authorization from The Open Group.
+ * in this Software without prior written authorization from the X Consortium.
  *
  * Copyright 1987, 1988 by Digital Equipment Corporation, Maynard.
  *
@@ -185,7 +185,7 @@ static void HsSysError(int) GCC_NORETURN;
 #define WTMP
 #endif
 
-#if defined(USE_TTY_GROUP) || defined(USE_UTMP_SETGID)
+#if defined(USE_TTY_GROUP) || defined(USE_UTMP_SETGID) || defined(HAVE_INITGROUPS)
 #include <grp.h>
 #endif
 
@@ -594,6 +594,16 @@ static unsigned command_length_with_luit = 0;
 */
 static TERMIO_STRUCT d_tio;
 
+#ifndef ONLCR
+#define ONLCR 0
+#endif
+
+#ifndef OPOST
+#define OPOST 0
+#endif
+
+#define D_TIO_FLAGS (OPOST | ONLCR)
+
 #ifdef HAS_LTCHARS
 static struct ltchars d_ltc;
 #endif /* HAS_LTCHARS */
@@ -603,9 +613,12 @@ static unsigned int d_lmode;
 #endif /* TIOCLSET */
 
 #else /* !TERMIO_STRUCT */
+
+#define D_SG_FLAGS (EVENP | ODDP | ECHO | CRMOD)
+
 static struct sgttyb d_sg =
 {
-    0, 0, 0177, CKILL, (EVENP | ODDP | ECHO | XTABS | CRMOD)
+    0, 0, 0177, CKILL, (D_SG_FLAGS | XTABS)
 };
 static struct tchars d_tc =
 {
@@ -637,12 +650,12 @@ static struct jtchars d_jtc =
 #define TTYMODE(name) { name, sizeof(name)-1, 0, 0 }
 static Boolean override_tty_modes = False;
 /* *INDENT-OFF* */
-static struct _xttymodes {
+static struct {
     const char *name;
     size_t len;
     int set;
     int value;
-} ttymodelist[] = {
+} ttyModes[] = {
     TTYMODE("intr"),		/* tchars.t_intrc ; VINTR */
 #define XTTYMODE_intr	0
     TTYMODE("quit"),		/* tchars.t_quitc ; VQUIT */
@@ -681,18 +694,47 @@ static struct _xttymodes {
 #define XTTYMODE_erase2	17
     TTYMODE("eol2"),		/* VEOL2 */
 #define XTTYMODE_eol2	18
-    { NULL,	0, 0, '\0' },	/* end of data */
+    TTYMODE("tabs"),		/* TAB0 */
+#define XTTYMODE_tabs	19
+    TTYMODE("-tabs"),		/* TAB3 */
+#define XTTYMODE__tabs	20
 };
 
+#ifndef TAB0
+#define TAB0 0
+#endif
+
+#ifndef TAB3
+#if defined(OXTABS)
+#define TAB3 OXTABS
+#elif defined(XTABS)
+#define TAB3 XTABS
+#endif
+#endif
+
+#ifndef TABDLY
+#define TABDLY (TAB0|TAB3)
+#endif
+
+#define isTtyMode(p,q) (ttyChars[p].myMode == q && ttyModes[q].set)
+
+#define isTabMode(n) \
+	(isTtyMode(n, XTTYMODE_tabs) || \
+	 isTtyMode(n, XTTYMODE__tabs))
+
+#define TMODE(ind,var) \
+	if (ttyModes[ind].set) \
+	    var = (cc_t) ttyModes[ind].value
+
 #define validTtyChar(data, n) \
-	    (known_ttyChars[n].sysMode >= 0 && \
-	     known_ttyChars[n].sysMode < (int) XtNumber(data.c_cc))
+	    (ttyChars[n].sysMode >= 0 && \
+	     ttyChars[n].sysMode < (int) XtNumber(data.c_cc))
 
 static const struct {
     int sysMode;
     int myMode;
     int myDefault;
-} known_ttyChars[] = {
+} ttyChars[] = {
 #ifdef VINTR
     { VINTR,    XTTYMODE_intr,   CINTR },
 #endif
@@ -747,12 +789,12 @@ static const struct {
 #ifdef VEOL2
     { VEOL2,    XTTYMODE_eol2,   CNUL },
 #endif
+    { -1,       XTTYMODE_tabs,   TAB0 },
+    { -1,       XTTYMODE__tabs,  TAB3 },
 };
 /* *INDENT-ON* */
 
-#define TMODE(ind,var) if (ttymodelist[ind].set) var = (cc_t) ttymodelist[ind].value
-
-static int parse_tty_modes(char *s, struct _xttymodes *modelist);
+static int parse_tty_modes(char *s);
 
 #ifndef USE_UTEMPTER
 #ifdef USE_SYSV_UTMP
@@ -807,7 +849,8 @@ static sigjmp_buf env;
 #define SetUtmpHost(dst, screen) \
 	{ \
 	    char host[sizeof(dst) + 1]; \
-	    strncpy(host, DisplayString(screen->display), sizeof(host)); \
+	    strncpy(host, DisplayString(screen->display), sizeof(host) - 1); \
+	    host[sizeof(dst)] = '\0'; \
 	    TRACE(("DisplayString(%s)\n", host)); \
 	    if (!resource.utmpDisplayId) { \
 		char *endptr = strrchr(host, ':'); \
@@ -823,7 +866,7 @@ static sigjmp_buf env;
 #  define SetUtmpSysLen(utmp) 			   \
 	{ \
 	    utmp.ut_host[sizeof(utmp.ut_host)-1] = '\0'; \
-	    utmp.ut_syslen = (short) strlen(utmp.ut_host) + 1; \
+	    utmp.ut_syslen = (short) ((int) strlen(utmp.ut_host) + 1); \
 	}
 #endif
 
@@ -837,6 +880,7 @@ static XtResource application_resources[] =
     Sres(XtNiconName, XtCIconName, icon_name, NULL),
     Sres("termName", "TermName", term_name, NULL),
     Sres("ttyModes", "TtyModes", tty_modes, NULL),
+    Sres("validShells", "ValidShells", valid_shells, NULL),
     Bres("hold", "Hold", hold_screen, False),
     Bres("utmpInhibit", "UtmpInhibit", utmpInhibit, False),
     Bres("utmpDisplayId", "UtmpDisplayId", utmpDisplayId, True),
@@ -891,6 +935,9 @@ static XtResource application_resources[] =
 #endif
 #if OPT_REPORT_FONTS
     Bres("reportFonts", "ReportFonts", reportFonts, False),
+#endif
+#if OPT_REPORT_ICONS
+    Bres("reportIcons", "ReportIcons", reportIcons, False),
 #endif
 #if OPT_SAME_NAME
     Bres("sameName", "SameName", sameName, True),
@@ -1036,6 +1083,9 @@ DATA("-report-charclass","*reportCClass", XrmoptionNoArg,	"on"),
 #endif
 #if OPT_REPORT_COLORS
 DATA("-report-colors",	"*reportColors", XrmoptionNoArg,	"on"),
+#endif
+#if OPT_REPORT_ICONS
+DATA("-report-icons",	"*reportIcons",	XrmoptionNoArg,		"on"),
 #endif
 #if OPT_REPORT_FONTS
 DATA("-report-fonts",	"*reportFonts", XrmoptionNoArg,		"on"),
@@ -1212,7 +1262,7 @@ static OptionHelp xtermOptions[] = {
 { "-kt keyboardtype",      "set keyboard type:" KEYBOARD_TYPES },
 #ifdef ALLOWLOGGING
 { "-/+l",                  "turn on/off logging" },
-{ "-lf filename",          "logging filename" },
+{ "-lf filename",          "logging filename (use '-' for standard out)" },
 #else
 { "-/+l",                  "turn on/off logging (not supported)" },
 { "-lf filename",          "logging filename (not supported)" },
@@ -2248,23 +2298,15 @@ main(int argc, char *argv[]ENVP_ARG)
      */
     memset(&d_tio, 0, sizeof(d_tio));
     d_tio.c_iflag = ICRNL | IXON;
-#ifdef TAB3
-    d_tio.c_oflag = OPOST | ONLCR | TAB3;
-#else
-#ifdef ONLCR
-    d_tio.c_oflag = OPOST | ONLCR;
-#else
-    d_tio.c_oflag = OPOST;
-#endif
-#endif
+    d_tio.c_oflag = TAB3 | D_TIO_FLAGS;
     {
 	Cardinal nn;
 
 	/* fill in default-values */
-	for (nn = 0; nn < XtNumber(known_ttyChars); ++nn) {
+	for (nn = 0; nn < XtNumber(ttyChars); ++nn) {
 	    if (validTtyChar(d_tio, nn)) {
-		d_tio.c_cc[known_ttyChars[nn].sysMode] =
-		    (cc_t) known_ttyChars[nn].myDefault;
+		d_tio.c_cc[ttyChars[nn].sysMode] =
+		    (cc_t) ttyChars[nn].myDefault;
 	    }
 	}
     }
@@ -2332,10 +2374,10 @@ main(int argc, char *argv[]ENVP_ARG)
 	for (i = 0; i <= 2; i++) {
 	    TERMIO_STRUCT deftio;
 	    if (ttyGetAttr(i, &deftio) == 0) {
-		for (nn = 0; nn < XtNumber(known_ttyChars); ++nn) {
+		for (nn = 0; nn < XtNumber(ttyChars); ++nn) {
 		    if (validTtyChar(d_tio, nn)) {
-			d_tio.c_cc[known_ttyChars[nn].sysMode] =
-			    deftio.c_cc[known_ttyChars[nn].sysMode];
+			d_tio.c_cc[ttyChars[nn].sysMode] =
+			    deftio.c_cc[ttyChars[nn].sysMode];
 		    }
 		}
 		break;
@@ -2413,7 +2455,7 @@ main(int argc, char *argv[]ENVP_ARG)
      * fill in terminal modes
      */
     if (resource.tty_modes) {
-	int n = parse_tty_modes(resource.tty_modes, ttymodelist);
+	int n = parse_tty_modes(resource.tty_modes);
 	if (n < 0) {
 	    xtermWarning("bad tty modes \"%s\"\n", resource.tty_modes);
 	} else if (n > 0) {
@@ -2849,17 +2891,7 @@ get_pty(int *pty, char *from GCC_UNUSED)
     result = pty_search(pty);
 #else
 #if defined(USE_USG_PTYS) || defined(__CYGWIN__)
-#ifdef __GLIBC__		/* if __GLIBC__ and USE_USG_PTYS, we know glibc >= 2.1 */
-    /* GNU libc 2 allows us to abstract away from having to know the
-       master pty device name. */
-    if ((*pty = getpt()) >= 0) {
-	char *name = ptsname(*pty);
-	if (name != 0) {	/* if filesystem is trashed, this may be null */
-	    strcpy(ttydev, name);
-	    result = 0;
-	}
-    }
-#elif defined(__MVS__)
+#if defined(__MVS__)
     result = pty_search(pty);
 #else
     result = ((*pty = open("/dev/ptmx", O_RDWR)) < 0);
@@ -3147,6 +3179,10 @@ typedef struct {
     char buffer[1024];
 } handshake_t;
 
+/* the buffer is large enough that we can always have a trailing null */
+#define copy_handshake(dst, src) \
+	strncpy(dst.buffer, src, sizeof(dst.buffer) - 1)[sizeof(dst.buffer) - 1] = '\0'
+
 #if OPT_TRACE
 static void
 trace_handshake(const char *tag, handshake_t * data)
@@ -3207,7 +3243,7 @@ HsSysError(int error)
     handshake.status = PTY_FATALERROR;
     handshake.error = errno;
     handshake.fatal_error = error;
-    strncpy(handshake.buffer, ttydev, sizeof(handshake.buffer) - 1);
+    copy_handshake(handshake, ttydev);
 
     if (resource.ptyHandshake && (cp_pipe[1] >= 0)) {
 	TRACE(("HsSysError errno=%d, error=%d device \"%s\"\n",
@@ -3406,52 +3442,130 @@ same_file(const char *a, const char *b)
     return result;
 }
 
+static int
+findValidShell(const char *haystack, const char *needle)
+{
+    int result = -1;
+    int count = -1;
+    const char *s, *t;
+    size_t have;
+    size_t want = strlen(needle);
+
+    TRACE(("findValidShell:\n%s\n", NonNull(haystack)));
+
+    for (s = t = haystack; (s != 0) && (*s != '\0'); s = t) {
+	++count;
+	if ((t = strchr(s, '\n')) == 0) {
+	    t = s + strlen(s);
+	}
+	have = (size_t) (t - s);
+
+	if ((have >= want) && (*s != '#')) {
+	    char *p = malloc(have + 1);
+
+	    if (p != 0) {
+		char *q;
+
+		memcpy(p, s, have);
+		p[have] = '\0';
+		if ((q = x_strtrim(p)) != 0) {
+		    TRACE(("...test %s\n", q));
+		    if (!strcmp(q, needle)) {
+			result = count;
+		    } else if (same_leaf(q, (char *) needle) &&
+			       same_file(q, needle)) {
+			result = count;
+		    }
+		    free(q);
+		}
+		free(p);
+	    }
+	    if (result >= 0)
+		break;
+	}
+	while (*t == '\n') {
+	    ++t;
+	}
+    }
+    return result;
+}
+
+static int
+ourValidShell(const char *pathname)
+{
+    return findValidShell(x_strtrim(resource.valid_shells), pathname);
+}
+
+#if defined(HAVE_GETUSERSHELL) && defined(HAVE_ENDUSERSHELL)
+static Boolean
+validShell(const char *pathname)
+{
+    int result = -1;
+
+    if (validProgram(pathname)) {
+	char *q;
+	int count = -1;
+
+	TRACE(("validShell:getusershell\n"));
+	while ((q = getusershell()) != 0) {
+	    ++count;
+	    TRACE(("...test \"%s\"\n", q));
+	    if (!strcmp(q, pathname)) {
+		result = count;
+		break;
+	    }
+	}
+	endusershell();
+
+	if (result < 0)
+	    result = ourValidShell(pathname);
+    }
+
+    TRACE(("validShell %s ->%d\n", NonNull(pathname), result));
+    return (result >= 0);
+}
+#else
 /*
  * Only set $SHELL for paths found in the standard location.
  */
 static Boolean
 validShell(const char *pathname)
 {
-    Boolean result = False;
+    int result = -1;
     const char *ok_shells = "/etc/shells";
     char *blob;
     struct stat sb;
     size_t rc;
     FILE *fp;
 
-    if (validProgram(pathname)
-	&& stat(ok_shells, &sb) == 0
-	&& (sb.st_mode & S_IFMT) == S_IFREG
-	&& ((size_t) sb.st_size > 0)
-	&& ((size_t) sb.st_size < (((size_t) ~0) - 2))
-	&& (blob = calloc((size_t) sb.st_size + 2, sizeof(char))) != 0) {
-	if ((fp = fopen(ok_shells, "r")) != 0) {
-	    rc = fread(blob, sizeof(char), (size_t) sb.st_size, fp);
-	    if (rc == (size_t) sb.st_size) {
-		char *p = blob;
-		char *q, *r;
-		blob[rc] = '\0';
-		while (!result && (q = strtok(p, "\n")) != 0) {
-		    if ((r = x_strtrim(q)) != 0) {
-			TRACE(("...test \"%s\"\n", q));
-			if (!strcmp(q, pathname)) {
-			    result = True;
-			} else if (same_leaf(q, (char *) pathname) &&
-				   same_file(q, pathname)) {
-			    result = True;
-			}
-			free(r);
-		    }
-		    p = 0;
+    if (validProgram(pathname)) {
+
+	TRACE(("validShell:%s\n", ok_shells));
+
+	if (stat(ok_shells, &sb) == 0
+	    && (sb.st_mode & S_IFMT) == S_IFREG
+	    && ((size_t) sb.st_size > 0)
+	    && ((size_t) sb.st_size < (((size_t) ~0) - 2))
+	    && (blob = calloc((size_t) sb.st_size + 2, sizeof(char))) != 0) {
+
+	    if ((fp = fopen(ok_shells, "r")) != 0) {
+		rc = fread(blob, sizeof(char), (size_t) sb.st_size, fp);
+		fclose(fp);
+
+		if (rc == (size_t) sb.st_size) {
+		    blob[rc] = '\0';
+		    result = findValidShell(blob, pathname);
 		}
 	    }
-	    fclose(fp);
+	    free(blob);
 	}
-	free(blob);
+	if (result < 0)
+	    result = ourValidShell(pathname);
     }
     TRACE(("validShell %s ->%d\n", NonNull(pathname), result));
-    return result;
+    return (result > 0);
 }
+#endif
 
 static char *
 resetShell(char *oldPath)
@@ -3804,8 +3918,8 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
     TRACE(("resource ptyInitialErase is %sset\n",
 	   resource.ptyInitialErase ? "" : "not "));
     setInitialErase = False;
-    if (override_tty_modes && ttymodelist[XTTYMODE_erase].set) {
-	initial_erase = ttymodelist[XTTYMODE_erase].value;
+    if (override_tty_modes && ttyModes[XTTYMODE_erase].set) {
+	initial_erase = ttyModes[XTTYMODE_erase].value;
 	setInitialErase = True;
     } else if (resource.ptyInitialErase) {
 	/* EMPTY */ ;
@@ -4068,7 +4182,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 		    /* let our master know that the open failed */
 		    handshake.status = PTY_BAD;
 		    handshake.error = errno;
-		    strncpy(handshake.buffer, ttydev, sizeof(handshake.buffer));
+		    copy_handshake(handshake, ttydev);
 		    TRACE_HANDSHAKE("writing", &handshake);
 		    IGNORE_RC(write(cp_pipe[1],
 				    (const char *) &handshake,
@@ -4137,7 +4251,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 		    if (screen->utf8_mode)
 			tio.c_iflag |= IUTF8;
 #endif
-		/* ouput: cr->cr, nl is not return, no delays, ln->cr/nl */
+		/* output: cr->cr, nl is not return, no delays, ln->cr/nl */
 #ifndef USE_POSIX_TERMIOS
 		UIntClr(tio.c_oflag,
 			(OCRNL
@@ -4149,12 +4263,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 			 | VTDLY
 			 | FFDLY));
 #endif /* USE_POSIX_TERMIOS */
-#ifdef ONLCR
-		tio.c_oflag |= ONLCR;
-#endif /* ONLCR */
-#ifdef OPOST
-		tio.c_oflag |= OPOST;
-#endif /* OPOST */
+		tio.c_oflag |= D_TIO_FLAGS;
 #ifndef USE_POSIX_TERMIOS
 # if defined(Lynx) && !defined(CBAUD)
 #  define CBAUD V_CBAUD
@@ -4188,9 +4297,9 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 #ifdef ECHOCTL
 		tio.c_lflag |= ECHOCTL | IEXTEN;
 #endif
-		for (nn = 0; nn < XtNumber(known_ttyChars); ++nn) {
+		for (nn = 0; nn < XtNumber(ttyChars); ++nn) {
 		    if (validTtyChar(tio, nn)) {
-			int sysMode = known_ttyChars[nn].sysMode;
+			int sysMode = ttyChars[nn].sysMode;
 #ifdef __MVS__
 			if (tio.c_cc[sysMode] != 0) {
 			    switch (sysMode) {
@@ -4200,15 +4309,21 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 			    }
 			}
 #endif
-			tio.c_cc[sysMode] = (cc_t) known_ttyChars[nn].myDefault;
+			tio.c_cc[sysMode] = (cc_t) ttyChars[nn].myDefault;
 		    }
 		}
 
 		if (override_tty_modes) {
-		    for (nn = 0; nn < XtNumber(known_ttyChars); ++nn) {
+		    TRACE(("applying termios ttyModes\n"));
+		    for (nn = 0; nn < XtNumber(ttyChars); ++nn) {
 			if (validTtyChar(tio, nn)) {
-			    TMODE(known_ttyChars[nn].myMode,
-				  tio.c_cc[known_ttyChars[nn].sysMode]);
+			    TMODE(ttyChars[nn].myMode,
+				  tio.c_cc[ttyChars[nn].sysMode]);
+			} else if (isTabMode(nn)) {
+			    unsigned tmp = (unsigned) tio.c_oflag;
+			    tmp = tmp & (unsigned) ~TABDLY;
+			    tmp |= (unsigned) ttyModes[ttyChars[nn].myMode].value;
+			    tio.c_oflag = tmp;
 			}
 		    }
 #ifdef HAS_LTCHARS
@@ -4270,6 +4385,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 		ltc = d_ltc;
 
 		if (override_tty_modes) {
+		    TRACE(("applying sgtty ttyModes\n"));
 		    TMODE(XTTYMODE_intr, tc.t_intrc);
 		    TMODE(XTTYMODE_quit, tc.t_quitc);
 		    TMODE(XTTYMODE_erase, sg.sg_erase);
@@ -4285,6 +4401,12 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 		    TMODE(XTTYMODE_flush, ltc.t_flushc);
 		    TMODE(XTTYMODE_weras, ltc.t_werasc);
 		    TMODE(XTTYMODE_lnext, ltc.t_lnextc);
+		    if (ttyModes[XTTYMODE_tabs].set
+			|| ttyModes[XTTYMODE__tabs].set) {
+			sg.sg_flags &= ~XTABS;
+			if (ttyModes[XTTYMODE__tabs].set.set)
+			    sg.sg_flags |= XTABS;
+		    }
 		}
 
 		if (ioctl(ttyfd, TIOCSETP, (char *) &sg) == -1)
@@ -4344,7 +4466,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 		   setInitialErase ? "YES" : "NO",
 		   resource.ptyInitialErase,
 		   override_tty_modes,
-		   ttymodelist[XTTYMODE_erase].set));
+		   ttyModes[XTTYMODE_erase].set));
 	    if (setInitialErase) {
 #if OPT_TRACE
 		int old_erase;
@@ -4639,9 +4761,9 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 #ifdef USE_LASTLOGX
 	    if (xw->misc.login_shell) {
 		memset(&lastlogx, 0, sizeof(lastlogx));
-		(void) strncpy(lastlogx.ll_line,
-			       my_pty_name(ttydev),
-			       sizeof(lastlogx.ll_line));
+		copy_filled(lastlogx.ll_line,
+			    my_pty_name(ttydev),
+			    sizeof(lastlogx.ll_line));
 		X_GETTIMEOFDAY(&lastlogx.ll_tv);
 		SetUtmpHost(lastlogx.ll_host, screen);
 		updlastlogx(_PATH_LASTLOGX, screen->uid, &lastlogx);
@@ -4655,9 +4777,9 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 		off_t offset = (off_t) ((size_t) screen->uid * size);
 
 		memset(&lastlog, 0, size);
-		(void) strncpy(lastlog.ll_line,
-			       my_pty_name(ttydev),
-			       sizeof(lastlog.ll_line));
+		copy_filled(lastlog.ll_line,
+			    my_pty_name(ttydev),
+			    sizeof(lastlog.ll_line));
 		SetUtmpHost(lastlog.ll_host, screen);
 		lastlog.ll_time = time((time_t *) 0);
 		if (lseek(i, offset, 0) != (off_t) (-1)) {
@@ -4679,7 +4801,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 	    if (resource.ptyHandshake) {
 		handshake.status = UTMP_ADDED;
 		handshake.error = 0;
-		strncpy(handshake.buffer, ttydev, sizeof(handshake.buffer));
+		copy_handshake(handshake, ttydev);
 		TRACE_HANDSHAKE("writing", &handshake);
 		IGNORE_RC(write(cp_pipe[1], (char *) &handshake, sizeof(handshake)));
 	    }
@@ -4713,7 +4835,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 		 */
 		handshake.status = PTY_GOOD;
 		handshake.error = 0;
-		(void) strncpy(handshake.buffer, ttydev, sizeof(handshake.buffer));
+		copy_handshake(handshake, ttydev);
 		TRACE_HANDSHAKE("writing", &handshake);
 		IGNORE_RC(write(cp_pipe[1],
 				(const char *) &handshake,
@@ -4983,7 +5105,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 			exit(ERROR_PTYS);
 		    }
 		    handshake.status = PTY_NEW;
-		    (void) strncpy(handshake.buffer, ttydev, sizeof(handshake.buffer));
+		    copy_handshake(handshake, ttydev);
 		    TRACE_HANDSHAKE("writing", &handshake);
 		    IGNORE_RC(write(pc_pipe[1],
 				    (const char *) &handshake,
@@ -5432,46 +5554,72 @@ remove_termcap_entry(char *buf, const char *str)
  *
  *         [SETTING] ...
  *
- * where setting consists of the words in the modelist followed by a character
- * or ^char.
+ * where setting consists of the words in the ttyModes[] array followed by a
+ * character or ^char.
  */
 static int
-parse_tty_modes(char *s, struct _xttymodes *modelist)
+parse_tty_modes(char *s)
 {
-    struct _xttymodes *mp;
     int c;
+    Cardinal j, k;
     int count = 0;
+    Boolean found;
 
     TRACE(("parse_tty_modes\n"));
     for (;;) {
 	size_t len;
 
-	while (*s && isascii(CharOf(*s)) && isspace(CharOf(*s)))
+	while (*s && isspace(CharOf(*s))) {
 	    s++;
-	if (!*s)
+	}
+	if (!*s) {
 	    return count;
+	}
 
-	for (len = 0; isalnum(CharOf(s[len])); ++len) ;
-	for (mp = modelist; mp->name; mp++) {
-	    if (len == mp->len
-		&& strncmp(s, mp->name, mp->len) == 0)
+	for (len = 0; s[len] && !isspace(CharOf(s[len])); ++len) {
+	    ;
+	}
+	found = False;
+	for (j = 0; j < XtNumber(ttyModes); ++j) {
+	    if (len == ttyModes[j].len
+		&& strncmp(s,
+			   ttyModes[j].name,
+			   ttyModes[j].len) == 0) {
+		found = True;
 		break;
+	    }
 	}
-	if (!mp->name)
+	if (!found) {
 	    return -1;
+	}
 
-	s += mp->len;
-	while (*s && isascii(CharOf(*s)) && isspace(CharOf(*s)))
+	s += ttyModes[j].len;
+	while (*s && isspace(CharOf(*s))) {
 	    s++;
-	if (!*s)
-	    return -1;
-
-	if ((c = decode_keyvalue(&s, False)) != -1) {
-	    mp->value = c;
-	    mp->set = 1;
-	    count++;
-	    TRACE(("...parsed #%d: %s=%#x\n", count, mp->name, c));
 	}
+
+	/* check if this needs a parameter */
+	found = False;
+	for (k = 0, c = 0; k < XtNumber(ttyChars); ++k) {
+	    if ((int) j == ttyChars[k].myMode) {
+		if (ttyChars[k].sysMode < 0) {
+		    found = True;
+		    c = ttyChars[k].myDefault;
+		}
+		break;
+	    }
+	}
+
+	if (!found) {
+	    if (!*s
+		|| (c = decode_keyvalue(&s, False)) == -1) {
+		return -1;
+	    }
+	}
+	ttyModes[j].value = c;
+	ttyModes[j].set = 1;
+	count++;
+	TRACE(("...parsed #%d: %s=%#x\n", count, ttyModes[j].name, c));
     }
 }
 

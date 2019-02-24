@@ -1,7 +1,7 @@
-/* $XTermId: xstrings.c,v 1.71 2017/11/10 00:52:29 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.72 2018/06/25 20:37:23 tom Exp $ */
 
 /*
- * Copyright 2000-2016,2017 by Thomas E. Dickey
+ * Copyright 2000-2017,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -102,8 +102,8 @@ x_decode_hex(const char *source, const char **next)
     for (pass = 0; pass < 2; ++pass) {
 	for (j = k = 0; isxdigit(CharOf(source[j])); ++j) {
 	    if ((pass != 0) && (j & 1) != 0) {
-		result[k++] = (char) ((x_hex2int(source[j - 1]) << 4)
-				      | x_hex2int(source[j]));
+		result[k++] = (char) ((CharOf(x_hex2int(source[j - 1])) << 4)
+				      | CharOf(x_hex2int(source[j])));
 	    }
 	}
 	*next = (source + j);

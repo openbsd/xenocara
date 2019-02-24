@@ -1,7 +1,7 @@
-/* $XTermId: fontutils.h,v 1.120 2017/12/14 01:28:08 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.128 2018/11/29 00:03:41 tom Exp $ */
 
 /*
- * Copyright 1998-2016,2017 by Thomas E. Dickey
+ * Copyright 1998-2017,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -67,6 +67,15 @@ extern void xtermUpdateFontGCs (XtermWidget /* xw */, Bool /* italic */);
 extern void xtermUpdateFontInfo (XtermWidget /* xw */, Bool /* doresize */);
 
 #define getIconicFont(screen) (&((screen)->fnt_icon))
+
+/* use these when "which" is constant, or known in-limits */
+#define GetNormalFont(screen, which) (&((screen)->fnts[which]))
+#define GetDoubleFont(screen, which) (&((screen)->double_fonts[which]))
+#if OPT_WIDE_ATTRS
+#define GetItalicFont(screen, which) (&((screen)->ifnts[which]))
+#else
+#define GetItalicFont(screen, which) 0
+#endif
 
 #define FirstItemOf(vector) ((vector) ? (vector)[0] : 0)
 #define CurrentXftFont(xw)  ((xw)->work.fonts.xft.list_n[0])
@@ -138,7 +147,9 @@ extern void xtermSaveVTFonts (XtermWidget /* xw */);
 extern Boolean maybeXftCache(XtermWidget /* xw */, XftFont * /* font */);
 extern Bool xtermXftMissing (XtermWidget /* xw */, XftFont * /* font */, unsigned /* wc */);
 extern XTermXftFonts *getMyXftFont (XtermWidget /* xw */, int /* which */, int /* fontnum */);
+extern XftFont *findXftGlyph (XtermWidget /* xw */, XftFont * /* given */, unsigned /* wc */);
 extern XftFont *getXftFont (XtermWidget /* xw */, VTFontEnum /* which */, int /* fontnum */);
+extern void closeCachedXft (TScreen * /* screen */, XftFont * /* font */);
 extern void xtermCloseXft (TScreen * /* screen */, XTermXftFonts * /* pub */);
 #endif
 
@@ -150,12 +161,13 @@ extern void setFaceName (XtermWidget /* xw */, const char * /*value */);
 #endif
 
 #if OPT_WIDE_ATTRS
+extern unsigned xtermUpdateItalics (XtermWidget /* xw */, unsigned /* new_attrs */, unsigned /* old_attrs */);
 extern void xtermLoadItalics (XtermWidget /* xw */);
 #endif
 
 #if OPT_WIDE_CHARS
-extern unsigned ucs2dec (unsigned);
-extern unsigned dec2ucs (unsigned);
+extern unsigned ucs2dec (TScreen * /* screen */, unsigned /* ch */);
+extern unsigned dec2ucs (TScreen * /* screen */, unsigned /* ch */);
 #endif
 
 /* *INDENT-ON* */

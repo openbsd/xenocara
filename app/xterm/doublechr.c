@@ -1,7 +1,7 @@
-/* $XTermId: doublechr.c,v 1.92 2017/01/07 15:01:50 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.93 2018/07/26 01:35:00 tom Exp $ */
 
 /*
- * Copyright 1997-2016,2017 by Thomas E. Dickey
+ * Copyright 1997-2017,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -278,13 +278,14 @@ xterm_DoubleGC(XtermWidget xw,
 		    && data->fs != 0) {
 		    found = True;
 		    free(name);
+		    name = NULL;
 		} else {
 		    discard_font(xw, n);
 		}
 	    }
 	}
 
-	if (!found) {
+	if (!found && name != NULL) {
 	    XTermFonts temp;
 
 	    TRACE(("xterm_DoubleGC %s %d: %s\n",

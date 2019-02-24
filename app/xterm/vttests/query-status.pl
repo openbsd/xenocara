@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
-# $XTermId: query-status.pl,v 1.5 2017/12/18 01:42:54 tom Exp $
+# $XTermId: query-status.pl,v 1.6 2018/08/10 15:01:35 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2017 by Thomas E. Dickey
+# Copyright 2017,2018 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -42,6 +42,8 @@ use Getopt::Std;
 use IO::Handle;
 
 our ($opt_8);
+
+$Getopt::Std::STANDARD_HELP_VERSION = 1;
 &getopts('8') || die(
     "Usage: $0 [options]\n
 Options:\n

@@ -1,7 +1,7 @@
-/* $XTermId: resize.c,v 1.139 2017/05/31 08:58:56 tom Exp $ */
+/* $XTermId: resize.c,v 1.142 2018/12/16 22:47:21 tom Exp $ */
 
 /*
- * Copyright 2003-2015,2017 by Thomas E. Dickey
+ * Copyright 2003-2017,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -416,7 +416,7 @@ main(int argc, char **argv ENVP_ARG)
     tty = fileno(ttyfp);
 #ifdef USE_TERMCAP
     if ((env = x_getenv("TERM")) == 0) {
-	env = DFT_TERMTYPE;
+	env = x_strdup(DFT_TERMTYPE);
 	if (SHELL_BOURNE == shell_type) {
 	    setname = "TERM=" DFT_TERMTYPE ";\nexport TERM;\n";
 	} else {

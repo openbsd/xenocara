@@ -1,8 +1,8 @@
-/* $XTermId: html.c,v 1.11 2017/12/30 14:46:50 tom Exp $ */
+/* $XTermId: html.c,v 1.13 2018/07/02 18:30:45 tom Exp $ */
 
 /*
- * Copyright 2015,2017	Jens Schweikhardt
- * Copyright 2017	Thomas E. Dickey
+ * Copyright 2015,2018	Jens Schweikhardt
+ * Copyright 2018	Thomas E. Dickey
  *
  * All Rights Reserved
  *
@@ -98,8 +98,7 @@ dumpHtmlHeader(XtermWidget xw, FILE *fp)
 {
     fputs("<?xml version='1.0' encoding='UTF-8'?>\n", fp);
     fputs("<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Strict//EN'\n", fp);
-    fputs("  'http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd'\n", fp);
-    fputs("  [<!ENTITY s \"&#160;\">]>\n", fp);
+    fputs("  'http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd'>\n", fp);
     fputs("<html xmlns='http://www.w3.org/1999/xhtml' lang='en' xml:lang='en'>\n", fp);
     fputs(" <head>\n", fp);
     fprintf(fp, "  <meta name='generator' content='%s'/>\n", xtermVersion());
@@ -288,7 +287,7 @@ dumpHtmlLine(XtermWidget xw, int row, FILE *fp)
 		fputs("&gt;", fp);
 		break;
 	    case ' ':
-		fputs("&s;", fp);
+		fputs("\302\240", fp);
 		break;
 	    default:
 		fputc((int) chr, fp);

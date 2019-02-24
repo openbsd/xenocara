@@ -1,28 +1,32 @@
 # $FreeBSD$
+
 # This is adapted from the FreeBSD port, installing as "xterm-dev" with
 # separate resource- and manpage files.
 # copy "xterm-${PORTVERSION}.tgz to the port's distfiles directory
 # and "make makesum".
 
 PORTNAME=	xterm
-PORTVERSION=	331
+PORTVERSION=	344
 CATEGORIES=	x11
 MASTER_SITES=	ftp://ftp.invisible-island.net/xterm/ \
-		CRITICAL
+		https://invisible-mirror.net/archives/xterm/:src1
 PKGNAMESUFFIX=	-dev
-EXTRACT_SUFX=	.tgz
 DISTFILES=	${DISTNAME}${EXTRACT_SUFX}:src1 \
 		bsd-xterm-icons-${ICONVERSION}${EXTRACT_SUFX}:src2
 
 MAINTAINER=	ehaupt@FreeBSD.org
 COMMENT=	Terminal emulator for the X Window System
 
-CONFLICTS=	x11iraf-[0-9]*
+LICENSE=	MIT
+
+USES=		cpe ncurses tar:tgz
 
 USE_XORG=	xft
 GNU_CONFIGURE=	yes
 
 CONFIGURE_ARGS+=	--with-utempter --enable-narrowproto
+
+CONFLICTS=	x11iraf-[0-9]*
 
 CPPFLAGS+=	-I${LOCALBASE}/include
 LIBS+=		-L${LOCALBASE}/lib
@@ -73,14 +77,9 @@ PKG_CLASS=	XTermDev
 .include <bsd.port.options.mk>
 
 CONFIGURE_ARGS+=	--program-suffix=${PKGNAMESUFFIX} --with-app-class=${PKG_CLASS} --without-xterm-symlink
-MAN1=		resize${PKGNAMESUFFIX}.1 koi8rxterm${PKGNAMESUFFIX}.1 uxterm${PKGNAMESUFFIX}.1 xterm${PKGNAMESUFFIX}.1
 
 .if ! ${PORT_OPTIONS:MXAW3D} && ! ${PORT_OPTIONS:MXAW3DXFT} && ! ${PORT_OPTIONS:MNEXTAW}
 USE_XORG+=	xaw
-.endif
-
-.if ${OSVERSION} < 900004
-LIB_DEPENDS+=	libutempter.so:${PORTSDIR}/sysutils/libutempter
 .endif
 
 post-extract:
@@ -92,8 +91,8 @@ post-install:
 .for f in koi8rxterm${PKGNAMESUFFIX} resize${PKGNAMESUFFIX} uxterm${PKGNAMESUFFIX} xterm${PKGNAMESUFFIX}
 	@${CHMOD} ${BINMODE} ${STAGEDIR}${PREFIX}/bin/${f}
 .endfor
-	@${INSTALL_DATA} ${WRKSRC}/xterm.desktop \
-		${STAGEDIR}${PREFIX}/share/applications/xterm${PKGNAMESUFFIX}.desktop 
+	${INSTALL_DATA} ${WRKSRC}/xterm.desktop \
+		${STAGEDIR}${PREFIX}/share/applications/xterm${PKGNAMESUFFIX}.desktop
 
 .if ${PORT_OPTIONS:MWCHAR}
 	@${CAT} ${PKGMESSAGE}

@@ -2,7 +2,7 @@
  *****************************************************************************
  * this file is part of xterm                                                *
  *                                                                           *
- * Copyright 1997-2016,2017 by Thomas E. Dickey                              *
+ * Copyright 1997-2018,2019 by Thomas E. Dickey                              *
  *                                                                           *
  * All Rights Reserved                                                       *
  *                                                                           *
@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1815 2017/12/30 19:25:39 tom Exp $
+  $XTermId: xterm.log.html,v 1.2004 2019/02/13 02:32:29 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -53,7 +53,7 @@
 <body>
   <hr>
 
-  <p>Copyright &copy; 1997-2016,2017 by <a href=
+  <p>Copyright &copy; 1997-2017,2018 by <a href=
   "mailto:dickey@invisible-island.net">Thomas E. Dickey</a></p>
   <hr>
 
@@ -72,6 +72,32 @@
   CHANGELOG</a>).</p>
 
   <ul>
+    <li><a href="#xterm_344">Patch #344 - 2019/02/12</a></li>
+
+    <li><a href="#xterm_343">Patch #343 - 2019/01/13</a></li>
+
+    <li><a href="#xterm_342">Patch #342 - 2019/01/03</a></li>
+
+    <li><a href="#xterm_341">Patch #341 - 2018/12/24</a></li>
+
+    <li><a href="#xterm_340">Patch #340 - 2018/12/16</a></li>
+
+    <li><a href="#xterm_339">Patch #339 - 2018/12/12</a></li>
+
+    <li><a href="#xterm_338">Patch #338 - 2018/12/09</a></li>
+
+    <li><a href="#xterm_337">Patch #337 - 2018/09/21</a></li>
+
+    <li><a href="#xterm_336">Patch #336 - 2018/09/19</a></li>
+
+    <li><a href="#xterm_335">Patch #335 - 2018/08/14</a></li>
+
+    <li><a href="#xterm_334">Patch #334 - 2018/08/12</a></li>
+
+    <li><a href="#xterm_333">Patch #333 - 2018/05/03</a></li>
+
+    <li><a href="#xterm_332">Patch #332 - 2018/04/15</a></li>
+
     <li><a href="#xterm_331">Patch #331 - 2017/12/30</a></li>
 
     <li><a href="#xterm_330">Patch #330 - 2017/06/20</a></li>
@@ -947,6 +973,692 @@
     <li><a href="#xterm_01">Patch #1 - 1996/1/6</a></li>
   </ul>
 
+  <h1><a name="xterm_344" id="xterm_344">Patch #344 -
+  2019/02/12</a></h1>
+
+  <ul>
+    <li>add ASCII escape to default for
+    <code>disallowedPasteControls</code> (prompted by discussion
+    with Martin Hostettler).</li>
+
+    <li>fix typo in <code>ctlseqs.ms</code> (Robert Ross).</li>
+
+    <li>implement DEC Cyrillic NRCS (based on screenshots of vttest
+    provided by Markus Schmidt).</li>
+
+    <li>correct control returning sixel geometry maximum versus
+    actual size (patch by Ben Wong).</li>
+
+    <li>improve manual page for <code>resize</code> to clarify that
+    <code>resize</code> does not execute the shell commands which
+    it generates for setting environment variables.</li>
+
+    <li>improve memory-management for parser, to handle response
+    strings that might occur with <code>ENQ</code> or when
+    <code>SRM</code> mode is active (patch by Martin
+    Hostettler).</li>
+
+    <li>change <code>Comment</code> text in uxterm's desktop file
+    to work around a limitation of GNOME's GIO application
+      (<a href="https://gitlab.gnome.org/GNOME/gnome-shell/issues/940#note_427334">issue
+      #940</a>). The <a href=
+      "https://developer.gnome.org/gio/stable/gio-Desktop-file-based-GAppInfo.html#g-desktop-app-info-search">
+      documentation</a> reads:
+
+      <blockquote>
+        <p>Searches desktop files for ones that match
+        <em><code>search_string</code></em>.</p>
+
+        <p>The return value is an array of <em>strv</em>s. Each
+        <em>strv</em> contains a list of applications that matched
+        search_string with an equal score. The outer list is sorted
+        by score so that the first <em>strv</em> contains the
+        best-matching applications, and so on. The algorithm for
+        determining matches is undefined and may change at any
+        time.</p>
+      </blockquote>
+    </li>
+
+    <li>a check of <code>zIconBeep</code> resource was removed in
+    double-buffer fix in <a href="#xterm_334">patch #334</a>. That
+    is used to decide whether to handle struct-notify events. When
+    xterm does handle the events, it may negotiate a new
+    window-size with the window manager. In that case, the
+    <code>limitResize</code> resource setting limited the new
+    window-size to the screen-size. Amended that by eliminating the
+    limit for this special case when double-buffer is configured,
+    and restoring the check for <code>zIconBeep</code> when
+    double-buffer is not configured (Debian #919475).</li>
+
+    <li>disallow recursion which could happen if a user configures
+    the <code>answerbackString</code> resource with the
+    <code>ENQ</code> code and experiments with that code when
+    <code>SRM</code> is enabled (report by by Martin
+    Hostettler).</li>
+
+    <li>add remaining credits in <code>COPYING</code> file.</li>
+
+    <li>modify <code>run-tic.sh</code> to check if it is using an
+    older version of ncurses which does not support large terminal
+    descriptions, and if so, remove a non-essential feature to keep
+    within the 4096-byte legacy limit.</li>
+  </ul>
+
+  <h1><a name="xterm_343" id="xterm_343">Patch #343 -
+  2019/01/13</a></h1>
+
+  <ul>
+    <li>modify <code>run-tic.sh</code> to prefer ncurses6 over
+    ncurses5, when available.</li>
+
+    <li>add <code>COPYING</code> file, and dummy "check" makefile
+    rule for testing Arch packages.</li>
+
+    <li>add/update package scripts for FreeBSD and NetBSD, for
+    testing.</li>
+
+    <li>update tables of combining and ambiguous-width characters
+    in wcwidth.c based on Unicode 11.0.0.</li>
+
+    <li>modify <code>xterm-new</code> sample terminfo entry to
+    correspond to ncurses 6.1, using the SGR 1006 mouse
+    protocol.</li>
+
+    <li>improve manual page discussion of selection ownership
+    versus highlighting (prompted by discussion with Martin
+    Hostettler).</li>
+
+    <li>restore/repair <code>keepClipboard</code> feature which was
+    broken by changes in <a href="#xterm_338">patch #338</a>
+    (report by Martin Hostettler).</li>
+
+    <li>improve documentation for <code>deleteIsDEL</code>
+    resource.</li>
+
+    <li>modify DECRQM response for private mode 1037 to account for
+    cases where the resource <code>deleteIsDEL</code> is initially
+    neither true nor false, but dependent upon the keyboard type
+    (report/analysis by Martin Hostettler).</li>
+
+    <li>clear pointers for pattern/fontset after destroying their
+    data when switching facename with an escape sequence (report by
+    Robert Ross).</li>
+
+    <li>modify logic for TrueType fallback fonts to match the
+    sort-order used by <code>fc-match</code> (report by Robert
+    Ross).</li>
+
+    <li>add resource setting <code>limitFontsets</code> which can
+    be used to limit or disable the new TrueType fontset feature
+    (request by Robert Ross).</li>
+  </ul>
+
+  <h1><a name="xterm_342" id="xterm_342">Patch #342 -
+  2019/01/03</a></h1>
+
+  <ul>
+    <li>limit mouse-button events to 11 buttons in the original
+    protocol, and 15 in the extended mouse-protocol (patch by
+    Martin Hostettler).</li>
+
+    <li>correct calculation for buttons past 11 in
+    <code>mouse-codes</code> sample script (patch by Martin
+    Hostettler).</li>
+
+    <li>disable a supplementary check added in <a href=
+    "#xterm_341">patch #341</a> which interferes with using
+    fontconfig to select different-sized bitmap fonts (Arch
+    #61237).</li>
+  </ul>
+
+  <h1><a name="xterm_341" id="xterm_341">Patch #341 -
+  2018/12/24</a></h1>
+
+  <ul>
+    <li>add options to <code>mouse-codes</code> script to
+    demonstrate that the encoding used for mouse events limits
+    button numbers to 11.</li>
+
+    <li>allow mouse button numbers up to 11 using an offset of 128
+    for button numbers 8-11 rather than the offset of 64 used for
+    wheel-mouse, etc., buttons 4-7 in <a href="#xterm_338">patch
+    #338</a> (adapted from patch by Martin Hostettler).</li>
+
+    <li>correct off-by-one right-margin checks for double-width
+    character adjustments in DECERA/DECFRA (patch by Martin
+    Hostettler).</li>
+
+    <li>allocated size of selection buffer was not reset when
+    freeing the buffer in <a href="#xterm_338">patch #338</a>
+    (report/analysis by Stefan Assmann).</li>
+
+    <li>modify the initial pattern passed to fontconfig to disallow
+    color bitmap fonts.</li>
+
+    <li>improve error recovery for a case where fontconfig ignores
+    the requested pattern due to override in the user's font
+    configuration (report/testcase by Stefan Assmann).</li>
+  </ul>
+
+  <h1><a name="xterm_340" id="xterm_340">Patch #340 -
+  2018/12/16</a></h1>
+
+  <ul>
+    <li>suppress a spurious warning about fontsets when
+    initializing menus for the toolbar configuration.</li>
+
+    <li>fix some strict compiler warnings.</li>
+
+    <li>improve checks for TrueType font, to help with the case of
+    color bitmap fonts, which fontconfig misrepresents (Arch Linux
+    #58706).</li>
+  </ul>
+
+  <h1><a name="xterm_339" id="xterm_339">Patch #339 -
+  2018/12/12</a></h1>
+
+  <ul>
+    <li>modify <code>CF_GNU_SOURCE</code> macro to treat
+    <em>newlib</em> as similar to <em>glibc</em>, fixing a problem
+    with the configure checks for pseudoterminals in Cygwin
+    overlooked in <a href="#xterm_334">patch #334</a> updates for
+    configure-macros.</li>
+  </ul>
+
+  <h1><a name="xterm_338" id="xterm_338">Patch #338 -
+  2018/12/09</a></h1>
+
+  <ul>
+    <li>ignore <code>$TERMINFO</code> in the configure script if it
+    is set to a non-directory value.</li>
+
+    <li>updated configure macros:
+
+      <ul>
+        <li><code>CF_WITH_PCRE2</code>, modified to work with
+        Debian's (mis-numbered) pcre3 package.</li>
+
+        <li><code>CF_CC_ENV_FLAGS</code> , report preprocessor
+        options in <code>CFLAGS</code></li>
+
+        <li><code>CF_LD_RPATH_OPT</code> , suppress check if
+        <code>--disable-rpath</code> option was given.</li>
+
+        <li><code>CF_XOPEN_SOURCE</code>, add case for
+        midnightbsd</li>
+      </ul>
+    </li>
+
+    <li>update config.guess, config.sub</li>
+
+    <li>add a check to ensure that the filename parameter passed to
+    <code>XpmReadFileToPixmap</code> is actually a file, since that
+    function does not check (report by Ben Nott).</li>
+
+    <li>amend solution for Debian #758633 to ensure that replies
+    for bracketed paste are not sent while processing a selection
+    for <code>exec-formatted</code> (Debian #913237).</li>
+
+    <li>improve adjustments/clearing for double-width characters in
+    <code>DECERA</code>, <code>DECFRA</code>,
+    <code>DECSERA</code>.</li>
+
+    <li>improve adjustments/clearing for double-width characters
+    when doing vertical scrolling within left/right margins (patch
+    by Martin Hostettler).</li>
+
+    <li>modify wcwidth to encode a few spacing combining marks as
+    regular combining characters.</li>
+
+    <li>change compiled-in default for <code>saveLines</code> to
+    match the resource-file changed in <a href="#xterm_192">patch
+    #192</a> (Debian #913815).</li>
+
+    <li>change default <code>faceSize</code> to 8.0, to simplify
+    switching back/forth between bitmap fonts and TrueType. This
+    was originally (mis)set to 14.0 in <a href="#xterm_148">patch
+    #148</a>.</li>
+
+    <li>add fallback support in Xft configuration for missing
+    glyphs (prompted by discussion with Mike Burns).</li>
+
+    <li>fix a problem with using direct-colors for the background
+    color when clearing/scrolling (report by Nicholas
+    Marriott).</li>
+
+    <li>add a "sources" rule for the makefile's generated
+    source.</li>
+
+    <li>add a short explanation in <code>ctlseqs.ms</code>
+    discussing the differences in error-recovery for malformed
+    sequences versus unimplemented features, and amend one case for
+    consistency (prompted by discussion with Martin
+    Hostettler).</li>
+
+    <li>adjusted ifdef's so that the paste64 configure option does
+    not automatically enable the readline-mouse configure
+    option.</li>
+
+    <li>revert the change which prevented concurrent ownership of
+    different selection targets, and instead modify selection
+    storage so that different concurrent requests for different
+    selection targets will be stored/retrieved independently
+    (Debian #901249).</li>
+
+    <li>remove a check which prevented returning button-codes past
+    the documented 4/5 for wheel mouse, and add a script
+    <code>mouse-codes</code> which makes a report showing the
+    various mouse codes for different button/modifier combinations
+    (discussion with P&#345;emysl Janouch).</li>
+
+    <li>improve display and checksum for DEC Special Graphics by
+    mapping 0x5f to 0.</li>
+
+    <li>add a null-pointer check for table-ending in the
+    extended-boolean resource-handling (report by Felix von
+    Leitner).</li>
+
+    <li>remove stray <code>]</code>'s from INSTALL-file (Larry
+    Hynes).</li>
+  </ul>
+
+  <h1><a name="xterm_337" id="xterm_337">Patch #337 -
+  2018/09/21</a></h1>
+
+  <ul>
+    <li>regenerated configure script (report by Sven Joachim).</li>
+
+    <li>revise/improve fix for scrolling in margins
+    (report/analysis by Martin Hostettler):</li>
+
+    <li>amend change to default-translations "select" subset to
+    ensure that specific key-press actions are listed before
+    generic key-press actions (reports by H Merijn Brand, Sven
+    Joachim).</li>
+  </ul>
+
+  <h1><a name="xterm_336" id="xterm_336">Patch #336 -
+  2018/09/19</a></h1>
+
+  <ul>
+    <li>ensure that only one of PRIMARY and CLIPBOARD is owned by
+    xterm at a given time (Debian #901249).</li>
+
+    <li>documentation fixes (report by Lars Krueger):
+
+      <ul>
+        <li>document <code>SL</code> and <code>SR</code>.</li>
+
+        <li>document <code>DECRPTUI</code>, change number of digits
+        to match VT420.</li>
+      </ul>
+    </li>
+
+    <li>revise <code>omitTranslation</code> resource, e.g.,
+    splitting &ldquo;default&rdquo; into several more useful
+    categories.</li>
+
+    <li>modify mask-logic to permit <em>control-</em> and
+    <em>meta-</em> modifiers to be used in mouse protocol.</li>
+
+    <li>several fixes for parsing/state (report/testcases by Martin
+    Hostettler):
+
+      <ul>
+        <li>remove an old/unimplemented entry for xterm-title from
+        state table.</li>
+
+        <li>save/restore wrap-flag when scrolling, to fix an
+        inconsistency between jump-scrolling and
+        normal-scrolling.</li>
+
+        <li>improve a special case of wrapping where the cursor
+        starts beyond the right-margin, and wraps at the terminal's
+        last-column before the settable-margins can take
+        effect.</li>
+
+        <li>if origin mode is set, adjust a restored cursor column
+        relative to the left margin.</li>
+
+        <li>when scrolling a line within left/right margins,
+        correct order of the fixups needed when a double-width
+        character crosses the margin boundary.</li>
+      </ul>
+    </li>
+
+    <li>review/fix a few cases where the parsing state was not
+    reset after completing a control sequence (prompted by report
+    by Martin Hostettler).</li>
+
+    <li>disallow <code>XTCHECKSUM</code> if the corresponding
+    window-ops "SetChecksum" is unset.</li>
+
+    <li>add <code>print-vt-chars.pl</code> script to illustrate the
+    NRCS and codepages supported by xterm.</li>
+
+    <li>add <code>other-sgr.sh</code> script to demonstrate the
+    non-VT100 video attributes implemented in <a href=
+    "#xterm_305">patch #305</a>, and added a summary of their
+    introduction in ECMA-48 to the control sequences document.</li>
+
+    <li>add <code>tabs</code> and <code>-tabs</code> keywords to
+    <code>ttyModes</code> resource to simplify workaround for
+    terminal drivers which are not aware of UTF-8 (FreeBSD
+    #229682).</li>
+
+    <li>add VT5xx NRCS 7-bit Turkish and DEC Turkish.</li>
+
+    <li>add VT5xx NRCS 7-bit Hebrew and DEC Hebrew.</li>
+
+    <li>add VT5xx NRCS 7-bit Greek and DEC Greek.</li>
+
+    <li>correct a few post-VT220 codepages to make them display
+    without setting the NRCS state.</li>
+
+    <li>extend <code>vt100Graphics</code> resource to include other
+    character-sets such as the VT500 codepages in UTF-8 mode.</li>
+
+    <li>add some VT5xx codepages to help with the discussion of
+    96-character sets: <em>ISO Greek Supplemental</em>, <em>ISO
+    Hebrew Supplemental</em>, <em>ISO Latin&ndash;5
+    Supplemental</em>, and <em>ISO Latin&ndash;Cyrillic</em>.</li>
+
+    <li>improve description of the VT300-controls for designating
+    character sets, and fix a typo which indicated that some were
+    used for 94-character sets (prompted by discussion with Lars
+    Krueger).</li>
+
+    <li>add private control <code>XTCHECKSUM</code> for modifying
+    <code>checksumExtension</code>.</li>
+
+    <li>factor out xterm's <code>DECRQCRA</code> checksum
+    extensions as a resource setting
+    <code>checksumExtension</code>.</li>
+
+    <li>revise calculation of checksum for <code>DECRQCRA</code> to
+    match DEC's terminals (using screenshots of vttest provided by
+    Markus Schmidt).</li>
+
+    <li>restore a fix for memory-checksum setup of
+    <code>DECCKSR</code> from <a href="#xterm_315">patch #315</a>
+    incorrectly reverted in <a href="#xterm_334">patch #334</a> as
+    part of fix for <code>DECRQCRA</code>.</li>
+  </ul>
+
+  <h1><a name="xterm_335" id="xterm_335">Patch #335 -
+  2018/08/14</a></h1>
+
+  <ul>
+    <li>add <code>colorInnerBorder</code> resource to make a change
+    from <a href="#xterm_334">patch #334</a> configurable (reports
+    by H Merijn Brand, Gabriele Balducci).</li>
+  </ul>
+
+  <h1><a name="xterm_334" id="xterm_334">Patch #334 -
+  2018/08/12</a></h1>
+
+  <ul>
+    <li>modify <code>Imakefile</code> to reflect the fact that
+    NetBSD no longer has a working termcap emulation.</li>
+
+    <li>add resource-setting <code>validShells</code> which can be
+    used to augment the system's <code>/etc/shell</code> (prompted
+    by discussion with Paul Lampert).</li>
+
+    <li>stifle some useless warnings from lintian in
+    test-packages.</li>
+
+    <li>add the ncurses extension &ldquo;RGB&rdquo; to the
+    responses for the termcap-query feature.</li>
+
+    <li>improved getopts-handling in sample scripts.</li>
+
+    <li>fix some warnings from gcc8 and clang --analyze.</li>
+
+    <li>update note about incorrect documentation for
+    <code>DECRQSS</code> to include VT525 (report by Markus
+    Schmidt).</li>
+
+    <li>correct check for default-values in rectangular parsing; a
+    zero counts as a missing or default parameter (report/testcase
+    by Markus Schmidt).</li>
+
+    <li>correct some ranges in the <code>ambiguous[]</code> table
+    in wcwidth (adapted from patch by KUGA Tsutomu).</li>
+
+    <li>fix a special case with faint video attribute incorrectly
+    combined with default color.</li>
+
+    <li>add private control <code>XTREPORTSGR</code> for reporting
+    video-attributes and color on a rectangle, and script
+    <code>report-sgr.pl</code> to demonstrate it.</li>
+
+    <li>modify some of the markup in <code>ctlseqs.ms</code> to
+    work around groff's reassignment of ASCII punctuation
+    characters as documented in <em>groff_char(7)</em>.</li>
+
+    <li>treat ECMA-48 SGR 6 the same as SGR 5.</li>
+
+    <li>add private controls <code>XTPUSHSGR</code> and
+    <code>XTPOPSGR</code> for saving/restoring the current
+    video-attributes on a stack (adapted from patch by Dan
+    Thompson).</li>
+
+    <li>modify <code>DECRPM</code> response for logging enable to
+    indicate its state even when enabling/disabling it is not
+    allowed.</li>
+
+    <li>implement <code>DECSNLS</code></li>
+
+    <li>implement <code>DECRSPS</code></li>
+
+    <li>improve fill-color for double-buffer configuration, which
+    was sharing a graphic context with the cursor.</li>
+
+    <li>fix a couple of cases where double-sized VT100 characters
+    were not clipped, seen in Joe Smith's <a href=
+    "http://www.inwap.com/pdp10/#Tymnet">VT100 torture
+    test</a>.</li>
+
+    <li>color the inner border using the same
+    <code>borderColor</code> as the outer border, rather than
+    filling with the VT100's default background.</li>
+
+    <li>change encoding of &ldquo;THANKS&rdquo; to UTF-8.</li>
+
+    <li>modify handling of <code>DECELR</code> to recognize
+    <code>MotionNotify</code> events again, amending a check for
+    <code>allowMouseOps</code> which limited that to button-events
+    in <a href="#xterm_328">patch #328</a> (Olaf Rogalsky).</li>
+
+    <li>fix some screen-painting problems with left/right margins
+    when using insert-line or delete-line (report/testcase by
+    Martin Hostettler). also fix similar case with
+    index/reverse-index.</li>
+
+    <li>several minor performance improvements using macros, e.g.,
+    inline checks for character width.</li>
+
+    <li>add <code>DECSCPP</code> and <code>DECSLPP</code> to
+    <code>DECRQSS</code>.</li>
+
+    <li>implement <code>DECSCPP</code>.</li>
+
+    <li>implement <code>DECCIR</code> and <code>DECTABSR</code>
+    presentation reports.</li>
+
+    <li>modify checksum computation for <code>DECRQCRA</code> to
+    treat uninitialized cells as blanks rather than nulls.</li>
+
+    <li>drop custom-entity from HTML-dump, use UTF-8 for &amp;nbsp;
+    (Debian #902381).</li>
+
+    <li>modify display of non-BMP characters when using bitmap
+    fonts to show a null/empty box rather than the replacement
+    character which was used in cleanup changes for <a href=
+    "#xterm_233">patch #233</a> (report by Christian
+    Weisgerber).</li>
+
+    <li>when setting up clipping rectangle for Xft, allow for the
+    case where xterm is only displaying a combining character,
+    where the base was already written (report by Joshua
+    Crowgey).</li>
+
+    <li>allow reset Xft's state if switching font-sizes when
+    double-buffering is used.</li>
+
+    <li>fix repainting, e.g., on resize, when double-buffering is
+    used with Xft (patch by Daniel Colascione).</li>
+
+    <li>correct some interchanged pairs of symbols in
+    <code>unicode/keysym.map</code> (Brad Town).</li>
+
+    <li>improve configure macros CF_GCC_WARNINGS, CF_GNU_SOURCE,
+    CF_POSIX_C_SOURCE, CF_TRY_XOPEN_SOURCE, CF_XOPEN_SOURCE,
+    CF_X_ATHENA_CPPFLAGS.</li>
+
+    <li>modify <code>logFile</code> resource to interpret
+    &ldquo;<code>-</code>&rdquo; as the standard output (adapted
+    patch by Colum Paget).</li>
+
+    <li>improve documentation of Tek4014 menu options; fix a case
+    where the Tek4014 window was not displayed before switching
+    modes.</li>
+
+    <li>re-correct parameter for <em>pid</em> used for DECCKSR,
+    DECRQCSR (see <a href="#xterm_315">xterm #315</a>).</li>
+
+    <li>hard/soft reset now resets the cursor-blinking state that
+    may have been set via escape sequences; the cursor-blinking
+    menu-entry feature is unmodified (report by Matthieu
+    Herrb).</li>
+
+    <li>update config.guess, config.sub</li>
+  </ul>
+
+  <h1><a name="xterm_333" id="xterm_333">Patch #333 -
+  2018/05/03</a></h1>
+
+  <ul>
+    <li>ensure that i18n is enabled if input-method is
+    enabled.</li>
+
+    <li>modify logic for pre-edit to update spot-location while the
+    cursor is invisible (Kakoune #1940).</li>
+
+    <li>change default icon to newer one, "mini.xterm".</li>
+
+    <li>install a complete set of icons, to simplify post-install
+    customization.</li>
+
+    <li>add resource <code>disallowedPasteControls</code> to extend
+    filtering of control characters from pastes.</li>
+
+    <li>add <code>print-on-error</code> action-hook, and document
+    action-hooks for dump-html, dump-svg.</li>
+
+    <li>provide action-hook for <code>print-immediate</code>, which
+    was available only as a menu-item (report by Rastislav
+    Barlik).</li>
+
+    <li>continue to improve notes in <code>ctlseqs.ms</code> which
+    mention where various controls originated.</li>
+
+    <li>add case to accept ECMA-48's bogus <code>SD</code>, but
+    document the issue in <code>ctlseqs.ms</code>.</li>
+
+    <li>add control sequence for loading XPM-icon file, using the
+    analogous control sequence from shelltool/dtterm.</li>
+
+    <li>add <code>-report-icons</code> option, to report on
+    XPM-icon and title-bar updates.</li>
+
+    <li>correct a discrepancy between locator-reports for VT220 vs
+    VT330.</li>
+
+    <li>add window-ops control sequences to complement existing
+    ones for reporting window-position and text-area size with
+    reports for text-area position and window-size.</li>
+
+    <li>display vt52 graphics mode characters.</li>
+
+    <li>correct case-statement for window-ops 10, overlooked since
+    some window managers equate vertical-maximize and
+    horizontal-maximize window hints with full-screen
+    maximize.</li>
+  </ul>
+
+  <h1><a name="xterm_332" id="xterm_332">Patch #332 -
+  2018/04/15</a></h1>
+
+  <ul>
+    <li>add a <code>GetChecksum</code> item to
+    <code>disallowedWindowOps</code></li>
+
+    <li>improve notes in <code>ctlseqs.ms</code> which mention
+    where various controls originated.</li>
+
+    <li>add control sequences for querying the X display size and
+    the character size, both in pixels to help eliminate some of
+    the constants in <code>esctest</code>.</li>
+
+    <li>fixes prompted by review of George Nachman's
+    <code>esctest</code> script:
+
+      <ul>
+        <li>add a null-pointer check and a limit-check in
+        <code>xtermCheckRect</code>.</li>
+
+        <li>correct limit-check for right-margin when processing
+        autowrapping if xterm is not built for
+        wide-characters.</li>
+
+        <li>repair logic in <code>RIS</code> to reset 132-column
+        mode when an escape sequence is used to enable
+        80/132-column switching.</li>
+
+        <li>correct array-limit for EWMH working state.</li>
+
+        <li>further improve limit-checks versus assert's (see
+        <a href="#xterm_315">patch #315</a>).</li>
+
+        <li>correct order of check-margins and move-to-left margin
+        for <code>DL</code> and <code>IL</code>.</li>
+
+        <li>modify reverse-wrap to pay attention to top/bottom
+        margins as it has done for left/right margins since
+        <a href="#xterm_279">patch #279</a>.</li>
+
+        <li>modify behavior of <code>DECFI</code> and
+        <code>DECBI</code> to not index the screen at the
+        left/right edge of the display unless those happen to be
+        the left/right margins.</li>
+
+        <li>add case for VT320 DSR response for keyboard
+        status.</li>
+      </ul>
+    </li>
+
+    <li>improve check for valid shell path using
+    <code>getusershell</code> and <code>endusershell</code> if
+    available, in case <code>/etc/shells</code> does not exist
+    (suggested by Rainer Orth).</li>
+
+    <li>modified configure checks for groff and man2html, to use
+    the latter by default, but allowing mandoc as a partial
+    replacement for former.</li>
+
+    <li>revisited the inconsistent copyright notices mentioned in
+    <a href="#xterm_165">patch #165</a>, and eliminate the issue as
+    mentioned in this <a href=
+    "https://invisible-island.net/personal/copyrights.html">copyright
+    discussion</a>.</li>
+
+    <li>fix typo in this change-log (report by Sven Joachim)</li>
+
+    <li>update config.guess, config.sub</li>
+  </ul>
+
   <h1><a name="xterm_331" id="xterm_331">Patch #331 -
   2017/12/30</a></h1>
 
@@ -1061,14 +1773,14 @@
 
     <li>add <code>directColor</code> resource.</li>
 
-    <li>additional manpage macro cleanup (Brandon Robinson, Debian
+    <li>additional manpage macro cleanup (Branden Robinson, Debian
     #880551).</li>
 
     <li>add optional support for direct-colors (adapted from patch
     by anonymous &ldquo;Nibby Nebbulous&rdquo;).</li>
 
     <li>improve legacy/NRC character set mapping (patch by Thomas
-    Wolff):
+    Wolff), e.g.,
 
       <ul>
         <li>enable alternate NRC set designators for French and
@@ -1294,7 +2006,7 @@
     </li>
 
     <li>fix a bug introduced by the changes to font information in
-    <a href="#xterm-328">patch #328</a>. When processing the
+    <a href="#xterm_328">patch #328</a>. When processing the
     "checkfont" option of the <code>locale</code> resource, the
     program referred to the <em>request</em> data, to an array
     which was only allocated in the <em>new/result</em> widget

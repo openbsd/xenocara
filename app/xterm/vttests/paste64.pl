@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
-# $XTermId: paste64.pl,v 1.13 2014/12/28 21:16:36 tom Exp $
+# $XTermId: paste64.pl,v 1.14 2018/11/20 01:05:55 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2006,2014 by Thomas E. Dickey
+# Copyright 2006-2014,2018 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -148,7 +148,7 @@ sub set_target() {
 
     printf "target: ";
     $target = ReadLine 0;
-    $target =~ s/[^[:alnum:]]//g;
+    $target =~ s/[^cps01234567]//g;
     ReadMode 5;
     printf "result: %s\r\n", $target;
 }

@@ -1,7 +1,7 @@
-/* $XTermId: cursor.c,v 1.71 2017/05/06 00:58:27 tom Exp $ */
+/* $XTermId: cursor.c,v 1.75 2018/09/15 00:48:57 tom Exp $ */
 
 /*
- * Copyright 2002-2016,2017 by Thomas E. Dickey
+ * Copyright 2002-2017,2018 by Thomas E. Dickey
  * 
  *                         All Rights Reserved
  * 
@@ -124,7 +124,12 @@ CursorBack(XtermWidget xw, int n)
 	if (rev) {
 	    int in_row = ScrnRightMargin(xw) - left + 1;
 	    int offset = (in_row * screen->cur_row) + screen->cur_col - left;
-	    if (offset < 0) {
+	    if ((before == left) &&
+		ScrnIsColInMargins(screen, before) &&
+		ScrnIsRowInMargins(screen, screen->cur_row) &&
+		screen->cur_row == screen->top_marg) {
+		offset = (screen->bot_marg + 1) * in_row - 1;
+	    } else if (offset < 0) {
 		int length = in_row * MaxRows(screen);
 		offset += ((-offset) / length + 1) * length;
 	    }
@@ -328,7 +333,7 @@ CursorSave(XtermWidget xw)
     sc->cur_background = xw->cur_background;
     sc->sgr_foreground = xw->sgr_foreground;
 #endif
-    memmove(sc->gsets, screen->gsets, sizeof(screen->gsets));
+    saveCharsets(screen, sc->gsets);
 }
 
 /*
@@ -350,7 +355,7 @@ CursorRestore(XtermWidget xw)
      * In that case, we'll reset the character sets.
      */
     if (sc->saved) {
-	memmove(screen->gsets, sc->gsets, sizeof(screen->gsets));
+	restoreCharsets(screen, sc->gsets);
 	screen->curgl = sc->curgl;
 	screen->curgr = sc->curgr;
     } else {
@@ -359,11 +364,16 @@ CursorRestore(XtermWidget xw)
 
     UIntClr(xw->flags, DECSC_FLAGS);
     UIntSet(xw->flags, sc->flags & DECSC_FLAGS);
-    CursorSet(screen,
-	      ((xw->flags & ORIGIN)
-	       ? sc->row - screen->top_marg
-	       : sc->row),
-	      sc->col, xw->flags);
+    if ((xw->flags & ORIGIN)) {
+	CursorSet(screen,
+		  sc->row - screen->top_marg,
+		  ((xw->flags & LEFT_RIGHT)
+		   ? sc->col - screen->lft_marg
+		   : sc->col),
+		  xw->flags);
+    } else {
+	CursorSet(screen, sc->row, sc->col, xw->flags);
+    }
     screen->do_wrap = sc->wrap_flag;	/* after CursorSet/ResetWrap */
 
 #if OPT_ISO_COLORS

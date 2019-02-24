@@ -1,9 +1,9 @@
-dnl $XTermId: configure.in,v 1.353 2017/12/25 12:36:41 tom Exp $
+dnl $XTermId: configure.in,v 1.361 2018/12/09 19:07:03 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
 dnl
-dnl Copyright 1997-2016,2017 by Thomas E. Dickey
+dnl Copyright 1997-2017,2018 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -90,6 +90,8 @@ AC_TYPE_OFF_T
 ###	checks for library functions
 AC_CHECK_FUNCS( \
 	gethostname \
+	getusershell \
+	endusershell \
 	getlogin \
 	initgroups \
 	mkdtemp \
@@ -111,9 +113,30 @@ CF_FUNC_TGETENT
 
 CF_WITH_APP_CLASS(XTerm)
 CF_WITH_APP_DEFAULTS
-CF_WITH_ICON_NAME(xterm-color)
+CF_WITH_ICON_NAME(mini.xterm)
 CF_WITH_ICON_SYMLINK(xterm)
-CF_WITH_ICON_THEME([icons/$ICON_NAME icons/${ICON_NAME}_48x48],,,icons/${ICON_NAME}_48x48)
+
+# Install all icons except for the overused "terminal".
+cf_cv_icon_list=
+for my_item in $srcdir/icons/*.svg
+do
+	test -f "$my_item" || continue
+	cf_icon_name=`echo $my_item |sed -e "s,.svg,," -e "s,^$srcdir/,,"`
+	case $cf_icon_name in
+	(*_48x48)
+		continue
+		;;
+	esac
+	CF_VERBOSE(adding $cf_icon_name to icon-list)
+	cf_cv_icon_list="$cf_cv_icon_list $cf_icon_name"
+	if test -f "${cf_icon_name}_48x48.png"
+	then
+		CF_VERBOSE(adding ${cf_icon_name}_48x48 to icon-list)
+		cf_cv_icon_list="$cf_cv_icon_list ${cf_icon_name}_48x48"
+	fi
+done
+CF_WITH_ICON_THEME([$cf_cv_icon_list],,,icons/${ICON_NAME}_48x48)
+
 CF_DISABLE_DESKTOP(xterm)
 CF_WITH_DESKTOP_CATEGORY(xterm,
 	[*rxvt*|*konsole|*[[Tt]]erminal],
@@ -252,6 +275,7 @@ AC_CHECK_HEADERS( \
 	X11/Sunkeysym.h \
 	X11/XF86keysym.h \
 	X11/XKBlib.h \
+	X11/TranslateI.h \
 	X11/Xpoll.h \
 	X11/extensions/XKB.h \
 	)
@@ -363,6 +387,17 @@ CF_XBOOL_RESULT(DEF_META_SENDS_ESC,meta_sends_esc,[Define to 1 if meta should se
 ###############################################################################
 AC_CHECK_PROG(cf_tic_prog,tic,yes,no)
 if test "$cf_tic_prog" = yes ; then
+	if test -n "$TERMINFO"
+	then
+		case "$TERMINFO" in
+		(/*)
+			test -d "$TERMINFO" || unset TERMINFO
+			;;
+		(*)
+			unset TERMINFO
+			;;
+		esac
+	fi
 	AC_MSG_CHECKING(for private terminfo-directory)
 	AC_ARG_WITH(own-terminfo,
 		[  --with-own-terminfo=P   set default $TERMINFO (default: from environment)],
@@ -693,10 +728,16 @@ AC_MSG_CHECKING(if you want support for input-method)
 CF_ARG_DISABLE(input-method,
 	[  --disable-input-method  disable input-method],
 	[enable_ximp=no],
-	[enable_ximp=yes])
+	[enable_ximp=$enable_i18n])
 AC_MSG_RESULT($enable_ximp)
 CF_INPUT_METHOD
 test "$cf_cv_input_method" = no && enable_ximp=no
+if test "$enable_ximp" != no ; then
+	if test "$enable_i18n" = no ; then
+		AC_MSG_WARN(input-methor relies upon internationalization)
+		enable_ximp=no
+	fi
+fi
 if test "$enable_ximp" = no ; then
 	AC_DEFINE(OPT_INPUT_METHOD,0,[Define to 0 to disable input-method])
 fi
@@ -891,7 +932,7 @@ CF_ARG_DISABLE(wide-attrs,
 	[enable_wattr=yes])
 AC_MSG_RESULT($enable_wattr)
 
-if test $enable_wattr = no && test $enable_direct_color = yes ; then
+if test x$enable_wattr = xno && test x$enable_direct_color = xyes ; then
 	AC_MSG_WARN(overriding wide-attributes to support direct color)
 	enable_wattr=yes
 fi
@@ -902,7 +943,7 @@ CF_ARG_DISABLE(wide-chars,
 	[enable_wchar=no],
 	[enable_wchar=yes])
 AC_MSG_RESULT($enable_wchar)
-test "$enable_wattr" = no && AC_DEFINE(OPT_WIDE_ATTRS,0,[Define to 0 to disable rarely-used SGR features])
+test "x$enable_wattr" = xno && AC_DEFINE(OPT_WIDE_ATTRS,0,[Define to 0 to disable rarely-used SGR features])
 
 AC_MSG_CHECKING(if you want only 16-bit character support)
 CF_ARG_ENABLE(16bit-chars,

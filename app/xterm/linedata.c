@@ -1,7 +1,7 @@
-/* $XTermId: linedata.c,v 1.90 2017/12/25 17:12:00 tom Exp $ */
+/* $XTermId: linedata.c,v 1.91 2018/04/02 00:27:27 tom Exp $ */
 
 /*
- * Copyright 2009-2014,2017 by Thomas E. Dickey
+ * Copyright 2009-2017,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -162,8 +162,12 @@ initLineData(XtermWidget xw)
 
     initLineExtra(screen);
 
+#if OPT_WIDE_CHARS
     TRACE(("initLineData %lu (%d combining chars)\n",
 	   (unsigned long) screen->lineExtra, screen->max_combining));
+#else
+    TRACE(("initLineData\n"));
+#endif
 
     /*
      * Per-line size/offsets.

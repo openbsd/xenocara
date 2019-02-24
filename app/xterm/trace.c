@@ -1,7 +1,7 @@
-/* $XTermId: trace.c,v 1.172 2017/11/07 00:12:24 tom Exp $ */
+/* $XTermId: trace.c,v 1.197 2018/12/18 23:18:34 tom Exp $ */
 
 /*
- * Copyright 1997-2016,2017 by Thomas E. Dickey
+ * Copyright 1997-2017,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -35,6 +35,8 @@
  */
 
 #include <xterm.h>		/* for definition of GCC_UNUSED */
+#include <xstrings.h>
+#include <wcwidth.h>
 #include <version.h>
 
 #if OPT_TRACE
@@ -52,6 +54,7 @@
 
 #include <X11/Xatom.h>
 #include <X11/Xmu/Atoms.h>
+#include <X11/Xmu/Error.h>
 
 #ifdef HAVE_X11_TRANSLATEI_H
 #include <X11/ConvertI.h>
@@ -165,6 +168,14 @@ TraceClose(void)
 }
 
 void
+TraceXError(Display *d, XErrorEvent *ev)
+{
+    FILE *fp = TraceOpen();
+    (void) XmuPrintDefaultErrorMessage(d, ev, fp);
+    (void) fflush(fp);
+}
+
+void
 TraceIds(const char *fname, int lnum)
 {
     Trace("process %d ", (int) getpid());
@@ -245,9 +256,9 @@ visibleDblChrset(unsigned chrset)
 #endif
 
 const char *
-visibleScsCode(int chrset)
+visibleScsCode(DECNRCM_codes chrset)
 {
-#define MAP(to,from) case from: result = to; break
+#define MAP(to,from) case from: result = to ":" #from; break
     const char *result = "<ERR>";
     switch ((DECNRCM_codes) chrset) {
 	MAP("B", nrc_ASCII);
@@ -268,14 +279,15 @@ visibleScsCode(int chrset)
 	MAP("Q", nrc_French_Canadian);
 	MAP("9", nrc_French_Canadian2);
 	MAP("K", nrc_German);
-	MAP("\"?", nrc_Greek);
-	MAP("F", nrc_Greek_Supp);
-	MAP("\"4", nrc_Hebrew);
-	MAP("%=", nrc_Hebrew2);
-	MAP("H", nrc_Hebrew_Supp);
+	MAP("\"?", nrc_DEC_Greek_Supp);
+	MAP("\">", nrc_Greek);
+	MAP("F", nrc_ISO_Greek_Supp);
+	MAP("\"4", nrc_DEC_Hebrew_Supp);
+	MAP("%=", nrc_Hebrew);
+	MAP("H", nrc_ISO_Hebrew_Supp);
 	MAP("Y", nrc_Italian);
-	MAP("M", nrc_Latin_5_Supp);
-	MAP("L", nrc_Latin_Cyrillic);
+	MAP("M", nrc_ISO_Latin_5_Supp);
+	MAP("L", nrc_ISO_Latin_Cyrillic);
 	MAP("`", nrc_Norwegian_Danish);
 	MAP("E", nrc_Norwegian_Danish2);
 	MAP("6", nrc_Norwegian_Danish3);
@@ -286,8 +298,8 @@ visibleScsCode(int chrset)
 	MAP("7", nrc_Swedish);
 	MAP("H", nrc_Swedish2);
 	MAP("=", nrc_Swiss);
-	MAP("%0", nrc_Turkish);
-	MAP("%2", nrc_Turkish2);
+	MAP("%2", nrc_Turkish);
+	MAP("%0", nrc_DEC_Turkish_Supp);
 	MAP("<UNK>", nrc_Unknown);
     }
 #undef MAP
@@ -322,6 +334,27 @@ visibleChars(const Char *buf, unsigned len)
 	used = 0;
     }
     return NonNull(result);
+}
+
+const char *
+visibleEventMode(EventMode value)
+{
+    const char *result;
+    switch (value) {
+    case NORMAL:
+	result = "NORMAL";
+	break;
+    case LEFTEXTENSION:
+	result = "LEFTEXTENSION";
+	break;
+    case RIGHTEXTENSION:
+	result = "RIGHTEXTENSION";
+	break;
+    default:
+	result = "?";
+	break;
+    }
+    return result;
 }
 
 const char *
@@ -596,7 +629,11 @@ TraceAtomName(Display *dpy, Atom atom)
 {
     static char *result;
     free(result);
-    result = XGetAtomName(dpy, atom);
+    if (atom != 0) {
+	result = XGetAtomName(dpy, atom);
+    } else {
+	result = x_strdup("NONE");
+    }
     return result;
 }
 
@@ -630,6 +667,7 @@ TraceScreen(XtermWidget xw, int whichBuf)
 		}
 		TRACE((":\n"));
 
+#if 0
 		TRACE(("  xx:"));
 		for (col = 0; col < ld->lineSize; ++col) {
 		    unsigned attrs = ld->attribs[col];
@@ -646,6 +684,7 @@ TraceScreen(XtermWidget xw, int whichBuf)
 		    TRACE(("%c", ch));
 		}
 		TRACE((":\n"));
+#endif
 
 #if 0
 		TRACE(("  fg:"));
@@ -674,6 +713,141 @@ TraceScreen(XtermWidget xw, int whichBuf)
 	TRACE(("TraceScreen %d is nil\n", whichBuf));
     }
 }
+
+static char *
+formatEventMask(char *target, unsigned source, Boolean buttons)
+{
+#define DATA(name) { name ## Mask, #name }
+    static struct {
+	unsigned mask;
+	const char *name;
+    } table[] = {
+	DATA(Shift),
+	    DATA(Lock),
+	    DATA(Control),
+	    DATA(Mod1),
+	    DATA(Mod2),
+	    DATA(Mod3),
+	    DATA(Mod4),
+	    DATA(Mod5),
+	    DATA(Button1),
+	    DATA(Button2),
+	    DATA(Button3),
+	    DATA(Button4),
+	    DATA(Button5),
+    };
+#undef DATA
+    Cardinal n;
+    char marker = L_CURL;
+    char *base = target;
+
+    for (n = 0; n < XtNumber(table); ++n) {
+	if (!buttons && (table[n].mask >= Button1Mask))
+	    continue;
+	if ((table[n].mask & source)) {
+	    UIntClr(source, table[n].mask);
+	    sprintf(target, "%c%s", marker, table[n].name);
+	    target += strlen(target);
+	    marker = '|';
+	}
+    }
+
+    if (source != 0) {
+	sprintf(target, "%c?%#x", marker, source);
+	target += strlen(target);
+	marker = '|';
+    }
+
+    if (marker == L_CURL)
+	*target++ = L_CURL;
+    *target++ = R_CURL;
+
+    *target = '\0';
+    return base;
+}
+
+void
+TraceEvent(const char *tag, XEvent *ev, String *params, Cardinal *num_params)
+{
+    char mask_buffer[160];
+
+    TRACE(("Event #%lu %s: %s",
+	   ev->xany.serial,
+	   tag,
+	   visibleEventType(ev->type)));
+
+    switch (ev->type) {
+    case KeyPress:
+	/* FALLTHRU */
+    case KeyRelease:
+	TRACE((" keycode 0x%04X %s",
+	       ev->xkey.keycode,
+	       formatEventMask(mask_buffer, ev->xkey.state, False)));
+	break;
+    case ButtonPress:
+	/* FALLTHRU */
+    case ButtonRelease:
+	TRACE((" button %u %s",
+	       ev->xbutton.button,
+	       formatEventMask(mask_buffer, ev->xbutton.state, True)));
+	break;
+    case MotionNotify:
+	TRACE((" (%d,%d)",
+	       ev->xmotion.y_root,
+	       ev->xmotion.x_root));
+	break;
+    case EnterNotify:
+    case LeaveNotify:
+	TRACE((" (%d,%d)",
+	       ev->xcrossing.y_root,
+	       ev->xcrossing.x_root));
+	break;
+    case FocusIn:
+    case FocusOut:
+    default:
+	TRACE((" FIXME"));
+	break;
+    }
+    TRACE(("\n"));
+    if (params != 0 && *num_params != 0) {
+	Cardinal n;
+	for (n = 0; n < *num_params; ++n) {
+	    TRACE(("  param[%d] = %s\n", n, params[n]));
+	}
+    }
+}
+
+#if OPT_RENDERFONT
+void
+TraceFallback(XtermWidget xw, const char *tag, unsigned wc, int n, XftFont *font)
+{
+    TScreen *screen = TScreenOf(xw);
+    XGlyphInfo gi;
+    int expect = my_wcwidth((wchar_t) wc);
+    int hijack = mk_wcwidth_cjk((wchar_t) wc);
+    int actual;
+
+    XftTextExtents32(screen->display, font, &wc, 1, &gi);
+    actual = ((gi.xOff + FontWidth(screen) - 1)
+	      / FontWidth(screen));
+
+    TRACE(("FALLBACK #%d %s U+%04X %d,%d pos,"
+	   " %d,%d off," " %dx%d size,"
+	   " %d/%d next," " %d vs %d/%d cells%s\n",
+	   n + 1, tag, wc,
+	   gi.y, gi.x,
+	   gi.yOff, gi.xOff,
+	   gi.height, gi.width,
+	   font->max_advance_width,
+	   FontWidth(screen),
+	   actual, expect, hijack,
+	   ((actual != expect)
+	    ? ((actual == hijack)
+	       ? " OOPS"
+	       : " oops")
+	    : "")));
+}
+#endif /* OPT_RENDERFONT */
 
 void
 TraceFocus(Widget w, XEvent *ev)
@@ -975,6 +1149,9 @@ TraceXtermResources(void)
 #endif
 #if OPT_REPORT_FONTS
     XRES_B(reportFonts);
+#endif
+#if OPT_REPORT_ICONS
+    XRES_B(reportIcons);
 #endif
 #if OPT_SAME_NAME
     XRES_B(sameName);

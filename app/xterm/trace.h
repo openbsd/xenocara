@@ -1,7 +1,7 @@
-/* $XTermId: trace.h,v 1.81 2017/11/07 00:12:24 tom Exp $ */
+/* $XTermId: trace.h,v 1.86 2018/12/18 23:14:28 tom Exp $ */
 
 /*
- * Copyright 1997-2016,2017 by Thomas E. Dickey
+ * Copyright 1997-2017,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -45,12 +45,14 @@
 
 extern	void	Trace ( const char *, ... ) GCC_PRINTFLIKE(1,2);
 extern	void	TraceVA ( const char *fmt, va_list ap );
+extern	void	TraceXError (Display *d, XErrorEvent *ev);
 
 #undef  TRACE
 #define TRACE(p) Trace p
 
 #undef  TRACE_VA
 #define TRACE_VA(p) TraceVA p
+#define TRACE_X_ERR(d,e) TraceXError(d,e)
 
 extern	void	TraceClose (void);
 
@@ -62,13 +64,14 @@ extern	void	TraceClose (void);
 #endif
 
 extern	const char * visibleChars(const Char * /* buf */, unsigned /* len */);
+extern	const char * visibleEventMode(EventMode);
 extern	const char * visibleIChars(const IChar * /* buf */, unsigned /* len */);
 extern	const char * visibleUChar(unsigned);
 extern	const char * visibleDblChrset(unsigned /* chrset */);
 extern	const char * visibleEventType (int);
 extern	const char * visibleNotifyDetail(int /* code */);
 extern	const char * visibleNotifyMode (int /* code */);
-extern	const char * visibleScsCode(int /* chrset */);
+extern	const char * visibleScsCode(DECNRCM_codes /* chrset */);
 extern	const char * visibleSelectionTarget(Display * /* d */, Atom /* a */);
 extern	const char * visibleTekparse (int);
 extern	const char * visibleVTparse (int);
@@ -83,6 +86,16 @@ extern	void	TraceArgv(const char * /* tag */, char ** /* argv */);
 extern	const	char *trace_who;
 #undef  TRACE_CHILD
 #define TRACE_CHILD int tracing_child = (trace_who = "child") != 0; (void) tracing_child;
+
+extern	void	TraceEvent(const char *, XEvent *, String *, Cardinal *);
+#undef  TRACE_EVENT
+#define	TRACE_EVENT(t,e,s,n) TraceEvent(t, (XEvent *)e, s, n)
+
+#if OPT_RENDERFONT
+extern	void	TraceFallback(XtermWidget, const char *, unsigned, int, XftFont *);
+#undef  TRACE_FALLBACK
+#define TRACE_FALLBACK(w,t,c,n,f) TraceFallback(w, t, c, n, f)
+#endif
 
 extern	void	TraceFocus(Widget, XEvent *);
 #undef  TRACE_FOCUS

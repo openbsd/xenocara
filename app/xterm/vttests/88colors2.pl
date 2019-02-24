@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
-# $XTermId: 88colors2.pl,v 1.17 2016/12/10 22:38:52 tom Exp $
+# $XTermId: 88colors2.pl,v 1.18 2018/08/10 15:03:34 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 1999-2014,2016 by Thomas E. Dickey
+# Copyright 1999-2016,2018 by Thomas E. Dickey
 # Copyright 1999 by Steve Wall
 #
 #                         All Rights Reserved
@@ -46,6 +46,8 @@ use Getopt::Std;
 use Encode 'encode_utf8';
 
 our ( $opt_8, $opt_c, $opt_d, $opt_h, $opt_q, $opt_r, $opt_s, $opt_u );
+
+$Getopt::Std::STANDARD_HELP_VERSION = 1;
 &getopts('8cdhqrsu') || die("Usage: $0 [options]");
 die(
     "Usage: $0 [options]\n
@@ -165,8 +167,7 @@ for ( $red = 0 ; $red < $cube ; $red++ ) {
     for ( $green = 0 ; $green < $cube ; $green++ ) {
         for ( $blue = 0 ; $blue < $cube ; $blue++ ) {
             &define_color(
-                16 +
-                  ( map_cube($red) * $cube * $cube ) +
+                16 + ( map_cube($red) * $cube * $cube ) +
                   ( map_cube($green) * $cube ) +
                   map_cube($blue),
                 int( $steps[$red] ),

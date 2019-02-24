@@ -1,7 +1,7 @@
-/* $XTermId: scrollbar.c,v 1.202 2017/12/26 01:58:48 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.203 2018/07/17 20:39:03 tom Exp $ */
 
 /*
- * Copyright 2000-2016,2017 by Thomas E. Dickey
+ * Copyright 2000-2017,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -401,23 +401,11 @@ WindowScroll(XtermWidget xw, int top, Bool always GCC_UNUSED)
 
 	    ScrollSelection(screen, i, True);
 
-#if OPT_DOUBLE_BUFFER
-	    XFillRectangle(screen->display,
-			   VDrawable(screen),
-			   ReverseGC(xw, screen),
-			   OriginX(screen),
-			   OriginY(screen) + refreshtop * FontHeight(screen),
-			   (unsigned) Width(screen),
-			   (unsigned) (lines * FontHeight(screen)));
-#else
-	    XClearArea(screen->display,
-		       VWindow(screen),
-		       OriginX(screen),
-		       OriginY(screen) + refreshtop * FontHeight(screen),
-		       (unsigned) Width(screen),
-		       (unsigned) (lines * FontHeight(screen)),
-		       False);
-#endif
+	    xtermClear2(xw,
+			OriginX(screen),
+			OriginY(screen) + refreshtop * FontHeight(screen),
+			(unsigned) Width(screen),
+			(unsigned) (lines * FontHeight(screen)));
 	    ScrnRefresh(xw, refreshtop, 0, lines, MaxCols(screen), False);
 
 #if OPT_BLINK_CURS || OPT_BLINK_TEXT

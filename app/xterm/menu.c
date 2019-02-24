@@ -1,7 +1,7 @@
-/* $XTermId: menu.c,v 1.350 2017/12/29 20:54:09 tom Exp $ */
+/* $XTermId: menu.c,v 1.355 2019/01/12 02:04:19 tom Exp $ */
 
 /*
- * Copyright 1999-2016,2017 by Thomas E. Dickey
+ * Copyright 1999-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -30,7 +30,7 @@
  * authorization.
  *
  *
- * Copyright 1989  The Open Group
+ * Copyright 1989  X Consortium
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that
@@ -48,9 +48,9 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * Except as contained in this notice, the name of The Open Group shall not be
+ * Except as contained in this notice, the name of the X Consortium shall not be
  * used in advertising or otherwise to promote the sale, use or other dealings
- * in this Software without prior written authorization from The Open Group.
+ * in this Software without prior written authorization from the X Consortium.
  */
 
 #include <xterm.h>
@@ -371,6 +371,9 @@ MenuEntry vtMenuEntries[] = {
     { "scrollttyoutput",do_scrollttyoutput, NULL },
     { "allow132",	do_allow132,	NULL },
     { "keepSelection",	do_keepSelection, NULL },
+#if OPT_MENU_KEEPCLIPBOARD
+    { "keepClipboard",	do_keepClipboard, NULL },
+#endif
     { "selectToClipboard",do_selectClipboard, NULL },
     { "visualbell",	do_visualbell,	NULL },
     { "bellIsUrgent",	do_bellIsUrgent, NULL },
@@ -642,6 +645,30 @@ unusedEntries(XtermWidget xw, MenuIndex num)
 }
 
 /*
+ * When using the toolbar configuration, some systems (seen with Solaris 11)
+ * give a warning that (Xt) cannot find a usable font-set.  This does not stop
+ * the toolbars from working - ignore for now.
+ */
+#if OPT_TOOLBAR
+static void
+ignoreWarning(
+		 String p_name,
+		 String p_type,
+		 String p_class,
+		 String p_default,
+		 String *p_params,
+		 Cardinal *p_num_params)
+{
+    (void) p_name;
+    (void) p_type;
+    (void) p_class;
+    (void) p_default;
+    (void) p_params;
+    (void) p_num_params;
+}
+#endif
+
+/*
  * create_menu - create a popup shell and stuff the menu into it.
  */
 static Widget
@@ -690,6 +717,12 @@ create_menu(Widget w, XtermWidget xw, MenuIndex num)
     if (list->w != 0) {
 	Boolean *unused = unusedEntries(xw, num);
 	Cardinal n;
+#if OPT_TOOLBAR
+	Boolean useLocale = !strcmp(resource.menuLocale, "");
+	XtErrorMsgHandler warningHandler = 0;
+	if (!useLocale)
+	    warningHandler = XtAppSetWarningMsgHandler(app_con, ignoreWarning);
+#endif
 
 	list->entries = 0;
 
@@ -706,6 +739,10 @@ create_menu(Widget w, XtermWidget xw, MenuIndex num)
 		list->entries++;
 	    }
 	}
+#if OPT_TOOLBAR
+	if (!useLocale)
+	    XtAppSetWarningMsgHandler(app_con, warningHandler);
+#endif
     }
 #if !OPT_TOOLBAR
     (void) setMenuLocale(False, saveLocale);
@@ -1125,6 +1162,15 @@ do_write_now(Widget gw GCC_UNUSED,
 			  resource.printModeNow);
 }
 
+void
+HandlePrintImmediate(Widget w GCC_UNUSED,
+		     XEvent *event GCC_UNUSED,
+		     String *params GCC_UNUSED,
+		     Cardinal *param_count GCC_UNUSED)
+{
+    do_write_now((Widget) 0, (XtPointer) 0, (XtPointer) 0);
+}
+
 static void
 do_write_error(Widget gw GCC_UNUSED,
 	       XtPointer closure GCC_UNUSED,
@@ -1137,6 +1183,15 @@ do_write_error(Widget gw GCC_UNUSED,
     }
     TScreenOf(xw)->write_error = (Boolean) (!TScreenOf(xw)->write_error);
     update_write_error();
+}
+
+void
+HandlePrintOnError(Widget w GCC_UNUSED,
+		   XEvent *event GCC_UNUSED,
+		   String *params GCC_UNUSED,
+		   Cardinal *param_count GCC_UNUSED)
+{
+    do_write_error((Widget) 0, (XtPointer) 0, (XtPointer) 0);
 }
 #endif
 
@@ -1488,6 +1543,17 @@ do_scrollttyoutput(Widget gw GCC_UNUSED,
     ToggleFlag(screen->scrollttyoutput);
     update_scrollttyoutput();
 }
+
+#if OPT_MENU_KEEPCLIPBOARD
+void
+update_keepClipboard(void)
+{
+    UpdateCheckbox("update_keepClipboard",
+		   vtMenuEntries,
+		   vtMenu_keepClipboard,
+		   TScreenOf(term)->keepClipboard);
+}
+#endif
 
 static void
 do_keepClipboard(Widget gw GCC_UNUSED,
@@ -3726,11 +3792,13 @@ update_font_renderfont(void)
     SetItemSensitivity(fontMenuEntries[fontMenu_render_font].widget,
 		       !IsEmpty(CurrentXftFont(term)));
 
+#if OPT_BOX_CHARS
     if (term->work.render_font) {
 	TScreenOf(term)->broken_box_chars = term->work.broken_box_chars;
     } else {
 	TScreenOf(term)->broken_box_chars = False;
     }
+#endif
     update_font_boxchars();
 
     update_fontmenu(term);

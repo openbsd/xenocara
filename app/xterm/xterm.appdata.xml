@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Copyright 2014,2016 Thomas Dickey <dickey@invisible-island.net> -->
+<!-- Copyright 2014-2016,2019 Thomas Dickey <dickey@invisible-island.net> -->
 <component type="desktop">
   <id>xterm.desktop</id>
   <metadata_license>CC-BY-3.0</metadata_license>
@@ -19,7 +19,7 @@
   </description>
   <screenshots>
     <screenshot type="default" height="539" width="813">
-      <image>http://invisible-island.net/xterm/images/merged-xterm-menus.png</image>
+      <image>https://invisible-island.net/xterm/images/merged-xterm-menus.png</image>
       <caption>xterm with its popup menus superimposed</caption>
     </screenshot>
   </screenshots>
@@ -31,11 +31,11 @@
     <keyword>cmd</keyword>
     <keyword>terminal</keyword>
   </keywords>
-  <url type="homepage">http://invisible-island.net/xterm/</url>
+  <url type="homepage">https://invisible-island.net/xterm/</url>
   <update_contact>dickey@invisible-island.net</update_contact>
   <developer_name>Thomas E. Dickey</developer_name>
   <url type="bugtracker">mailto:dickey@invisible-island.net</url>
   <url type="donation"/>
-  <url type="help">http://invisible-island.net/xterm/xterm.faq.html</url>
+  <url type="help">https://invisible-island.net/xterm/xterm.faq.html</url>
   <url type="translate"/>
 </component>

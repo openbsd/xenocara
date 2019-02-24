@@ -1,7 +1,7 @@
-/* $XTermId: version.c,v 1.4 2016/12/23 14:30:49 tom Exp $ */
+/* $XTermId: version.c,v 1.5 2018/06/25 20:18:58 tom Exp $ */
 
 /*
- * Copyright 2013-2015,2016 by Thomas E. Dickey
+ * Copyright 2013-2016,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -49,7 +49,7 @@ xtermVersion(void)
     if (buffer == 0) {
 	const char *vendor = vendor_version;
 
-	buffer = TextAlloc(strlen(vendor) + 9);
+	buffer = TextAlloc(strlen(vendor) + 256);
 	if (buffer == 0) {
 	    result = vendor;
 	} else {
@@ -67,9 +67,9 @@ xtermVersion(void)
 	    }
 	    if (strlen(vendor) < BUFSIZ &&
 		sscanf(vendor, "%[0-9.] %[A-Za-z_0-9.]", first, second) == 2) {
-		sprintf(buffer, "%s %s(%d)", second, first, XTERM_PATCH);
+		sprintf(buffer, "%.80s %.80s(%d)", second, first, XTERM_PATCH);
 	    } else {
-		sprintf(buffer, "%s(%d)", vendor, XTERM_PATCH);
+		sprintf(buffer, "%.80s(%d)", vendor, XTERM_PATCH);
 	    }
 	    result = buffer;
 	}

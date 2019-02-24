@@ -1,7 +1,7 @@
-/* $XTermId: main.h,v 1.63 2016/12/22 23:43:46 tom Exp $ */
+/* $XTermId: main.h,v 1.69 2019/02/11 09:26:51 tom Exp $ */
 
 /*
- * Copyright 2000-2013,2016 by Thomas E. Dickey
+ * Copyright 2000-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -92,7 +92,7 @@
 #endif
 
 #ifndef DEFFACESIZE
-#define DEFFACESIZE		"14.0"
+#define DEFFACESIZE		"8.0"
 #endif
 
 #ifndef DEF_ALLOW_COLOR
@@ -129,6 +129,10 @@
 
 #ifndef DEF_DISALLOWED_MOUSE
 #define DEF_DISALLOWED_MOUSE	"*"
+#endif
+
+#ifndef DEF_DISALLOWED_PASTE_CONTROLS
+#define DEF_DISALLOWED_PASTE_CONTROLS	"BS,HT,DEL,ESC"
 #endif
 
 #ifndef DEF_DISALLOWED_TCAP
@@ -197,8 +201,20 @@
 #endif
 #endif
 
+#ifndef DEF_SAVE_LINES
+#define DEF_SAVE_LINES		1024
+#endif
+
+#ifndef DEF_SCROLL_LINES
+#define DEF_SCROLL_LINES	1
+#endif
+
 #ifndef DEF_TITLE_MODES
 #define DEF_TITLE_MODES		0
+#endif
+
+#ifndef DEF_XFT_CACHE
+#define DEF_XFT_CACHE		50
 #endif
 
 #ifndef PROJECTROOT

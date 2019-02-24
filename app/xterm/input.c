@@ -1,7 +1,7 @@
-/* $XTermId: input.c,v 1.357 2017/05/29 20:11:03 tom Exp $ */
+/* $XTermId: input.c,v 1.361 2018/12/15 19:21:09 tom Exp $ */
 
 /*
- * Copyright 1999-2016,2017 by Thomas E. Dickey
+ * Copyright 1999-2017,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -810,7 +810,7 @@ lookupKeyData(KEY_DATA * kd, XtermWidget xw, XKeyEvent *event)
 {
     TScreen *screen = TScreenOf(xw);
     Boolean result = True;
-#if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
+#if OPT_INPUT_METHOD
 #if OPT_MOD_FKEYS
     TKeyboard *keyboard = &(xw->keyboard);
 #endif
@@ -836,7 +836,7 @@ lookupKeyData(KEY_DATA * kd, XtermWidget xw, XKeyEvent *event)
     } else
 #endif
     {
-#if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
+#if OPT_INPUT_METHOD
 	TInput *input = lookupTInput(xw, (Widget) xw);
 	if (input && input->xic) {
 	    Status status_return;
@@ -866,7 +866,7 @@ lookupKeyData(KEY_DATA * kd, XtermWidget xw, XKeyEvent *event)
 	    }
 #endif /* OPT_MOD_FKEYS */
 	} else
-#endif /* OPT_I18N_SUPPORT */
+#endif /* OPT_INPUT_METHOD */
 	{
 	    static XComposeStatus compose_status =
 	    {NULL, 0};
@@ -907,9 +907,10 @@ Input(XtermWidget xw,
 
     memset(&reply, 0, sizeof(reply));
 
-    TRACE(("Input keysym "
+    TRACE(("Input(%d,%d) keysym "
 	   KEYSYM_FMT
 	   ", %d:'%s'%s" FMT_MODIFIER_NAMES "%s%s%s%s%s%s\n",
+	   screen->cur_row, screen->cur_col,
 	   kd.keysym,
 	   kd.nbytes,
 	   visibleChars((Char *) kd.strbuf,
@@ -1349,9 +1350,9 @@ Input(XtermWidget xw,
 	    {
 		/* VT220 & up: National Replacement Characters */
 		if ((xw->flags & NATIONAL) != 0) {
-		    unsigned cmp = xtermCharSetIn(screen,
+		    unsigned cmp = xtermCharSetIn(xw,
 						  CharOf(kd.strbuf[0]),
-						  screen->keyboard_dialect[0]);
+						  (DECNRCM_codes) screen->keyboard_dialect[0]);
 		    TRACE(("...input NRC %d, %s %d\n",
 			   CharOf(kd.strbuf[0]),
 			   (CharOf(kd.strbuf[0]) == cmp)

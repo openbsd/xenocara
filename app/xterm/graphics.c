@@ -1,7 +1,7 @@
-/* $XTermId: graphics.c,v 1.73 2017/06/18 18:20:22 tom Exp $ */
+/* $XTermId: graphics.c,v 1.77 2018/07/26 01:32:33 tom Exp $ */
 
 /*
- * Copyright 2013-2016,2017 by Ross Combs
+ * Copyright 2013-2017,2018 by Ross Combs
  *
  *                         All Rights Reserved
  *
@@ -148,6 +148,7 @@ static AllocatedColorRegister *allocated_colors[LOOKUP_WIDTH][LOOKUP_WIDTH][LOOK
 static ColorRegister *shared_color_registers;
 static Graphic *displayed_graphics[MAX_GRAPHICS];
 static unsigned next_graphic_id = 0U;
+static unsigned used_graphics;	/* 0 to MAX_GRAPHICS */
 
 static ColorRegister *
 allocRegisters(void)
@@ -185,16 +186,12 @@ allocGraphic(int max_w, int max_h)
     return result;
 }
 
-static Graphic *
-getActiveSlot(unsigned n)
-{
-    if (n < MAX_GRAPHICS &&
-	displayed_graphics[n] &&
-	displayed_graphics[n]->valid) {
-	return displayed_graphics[n];
-    }
-    return NULL;
-}
+#define getActiveSlot(n) \
+	(((n) < MAX_GRAPHICS && \
+	 displayed_graphics[n] && \
+	 displayed_graphics[n]->valid) \
+	 ? displayed_graphics[n] \
+	 : NULL)
 
 static Graphic *
 getInactiveSlot(const TScreen *screen, unsigned n)
@@ -205,6 +202,7 @@ getInactiveSlot(const TScreen *screen, unsigned n)
 	if (!displayed_graphics[n]) {
 	    displayed_graphics[n] = allocGraphic(screen->graphics_max_wide,
 						 screen->graphics_max_high);
+	    used_graphics += (displayed_graphics[n] != NULL);
 	}
 	return displayed_graphics[n];
     }
@@ -222,8 +220,9 @@ getSharedRegisters(void)
 static void
 deactivateSlot(unsigned n)
 {
-    if (n < MAX_GRAPHICS) {
+    if ((n < MAX_GRAPHICS) && displayed_graphics[n]) {
 	displayed_graphics[n] = freeGraphic(displayed_graphics[n]);
+	used_graphics--;
     }
 }
 
@@ -304,6 +303,7 @@ draw_solid_rectangle(Graphic *graphic, int x1, int y1, int x2, int y2, unsigned 
 	    _draw_pixel(graphic, x, y, color);
 }
 
+#if 0				/* unused */
 void
 draw_solid_line(Graphic *graphic, int x1, int y1, int x2, int y2, unsigned color)
 {
@@ -364,6 +364,7 @@ draw_solid_line(Graphic *graphic, int x1, int y1, int x2, int y2, unsigned color
 	}
     }
 }
+#endif
 
 void
 copy_overlapping_area(Graphic *graphic, int src_ul_x, int src_ul_y,
@@ -445,6 +446,9 @@ set_shared_color_register(unsigned color, int r, int g, int b)
     assert(color < MAX_COLOR_REGISTERS);
 
     set_color_register(getSharedRegisters(), color, r, g, b);
+
+    if (!used_graphics)
+	return;
 
     FOR_EACH_SLOT(ii) {
 	Graphic *graphic;
@@ -1695,23 +1699,25 @@ refresh_modified_displayed_graphics(XtermWidget xw)
 void
 scroll_displayed_graphics(XtermWidget xw, int rows)
 {
-    TScreen const *screen = TScreenOf(xw);
-    unsigned ii;
+    if (used_graphics) {
+	TScreen const *screen = TScreenOf(xw);
+	unsigned ii;
 
-    TRACE(("graphics scroll: moving all up %d rows\n", rows));
-    /* FIXME: VT125 ReGIS graphics are fixed at the upper left of the display; need to verify */
+	TRACE(("graphics scroll: moving all up %d rows\n", rows));
+	/* FIXME: VT125 ReGIS graphics are fixed at the upper left of the display; need to verify */
 
-    FOR_EACH_SLOT(ii) {
-	Graphic *graphic;
+	FOR_EACH_SLOT(ii) {
+	    Graphic *graphic;
 
-	if (!(graphic = getActiveSlot(ii)))
-	    continue;
-	if (graphic->bufferid != screen->whichBuf)
-	    continue;
-	if (graphic->hidden)
-	    continue;
+	    if (!(graphic = getActiveSlot(ii)))
+		continue;
+	    if (graphic->bufferid != screen->whichBuf)
+		continue;
+	    if (graphic->hidden)
+		continue;
 
-	graphic->charrow -= rows;
+	    graphic->charrow -= rows;
+	}
     }
 }
 
@@ -1723,6 +1729,9 @@ pixelarea_clear_displayed_graphics(TScreen const *screen,
 				   int h)
 {
     unsigned ii;
+
+    if (!used_graphics)
+	return;
 
     FOR_EACH_SLOT(ii) {
 	Graphic *graphic;
@@ -1762,29 +1771,33 @@ chararea_clear_displayed_graphics(TScreen const *screen,
 				  int ncols,
 				  int nrows)
 {
-    int const x = leftcol * FontWidth(screen);
-    int const y = toprow * FontHeight(screen);
-    int const w = ncols * FontWidth(screen);
-    int const h = nrows * FontHeight(screen);
+    if (used_graphics) {
+	int const x = leftcol * FontWidth(screen);
+	int const y = toprow * FontHeight(screen);
+	int const w = ncols * FontWidth(screen);
+	int const h = nrows * FontHeight(screen);
 
-    TRACE(("chararea clear graphics: screen->topline=%d leftcol=%d toprow=%d nrows=%d ncols=%d x=%d y=%d w=%d h=%d\n",
-	   screen->topline,
-	   leftcol, toprow,
-	   nrows, ncols,
-	   x, y, w, h));
-    pixelarea_clear_displayed_graphics(screen, x, y, w, h);
+	TRACE(("chararea clear graphics: screen->topline=%d leftcol=%d toprow=%d nrows=%d ncols=%d x=%d y=%d w=%d h=%d\n",
+	       screen->topline,
+	       leftcol, toprow,
+	       nrows, ncols,
+	       x, y, w, h));
+	pixelarea_clear_displayed_graphics(screen, x, y, w, h);
+    }
 }
 
 void
 reset_displayed_graphics(TScreen const *screen)
 {
-    unsigned ii;
-
     init_color_registers(getSharedRegisters(), screen->terminal_id);
 
-    TRACE(("resetting all graphics\n"));
-    FOR_EACH_SLOT(ii) {
-	deactivateSlot(ii);
+    if (used_graphics) {
+	unsigned ii;
+
+	TRACE(("resetting all graphics\n"));
+	FOR_EACH_SLOT(ii) {
+	    deactivateSlot(ii);
+	}
     }
 }
 

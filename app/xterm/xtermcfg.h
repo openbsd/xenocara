@@ -1,7 +1,7 @@
-/* $XTermId: xtermcfg.hin,v 1.212 2016/05/30 20:42:13 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.216 2018/02/08 10:01:08 tom Exp $ */
 
 /*
- * Copyright 1997-2015,2016 by Thomas E. Dickey
+ * Copyright 1997-2017,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -45,7 +45,6 @@
  * DUMP_COLORS
  * HAS_LTCHARS
  * HAVE_SYS_PTEM_H
- * HAVE_X11_TRANSLATEI_H
  * PUCC_PTYD
  * USE_LOGIN_DASH_P
  * USE_X11TERM
@@ -67,8 +66,10 @@
 #define DFT_TERMTYPE "xterm"		/* AC_ARG_WITH(default-term-type) */
 /* #undef DISABLE_SETGID */		/* CF_ARG_DISABLE(setgid) */
 /* #undef DISABLE_SETUID */		/* CF_ARG_DISABLE(setuid) */
+#define HAVE_ENDUSERSHELL		/* AC_CHECK_FUNCS(endusershell) */
 #define HAVE_GETHOSTNAME 1		/* AC_CHECK_FUNCS(gethostname) */
 #define HAVE_GETLOGIN 1		/* AC_CHECK_FUNCS(getlogin) */
+#define HAVE_GETUSERSHELL	/* AC_CHECK_FUNCS(getusershell) */
 /* #undef HAVE_GRANTPT */		/* CF_FUNC_GRANTPT */
 /* #undef HAVE_GRANTPT_PTY_ISATTY */	/* CF_FUNC_GRANTPT */
 #define HAVE_INITGROUPS 1		/* AC_CHECK_FUNCS(initgroups) */
@@ -87,8 +88,8 @@
 /* #undef HAVE_NCURSES_CURSES_H	*/	/* AC_CHECK_HEADERS(ncurses/curses.h) */
 /* #undef HAVE_NCURSES_TERM_H */	/* AC_CHECK_HEADERS(ncurses/term.h) */
 #define HAVE_PATHS_H 1		/* CF_LASTLOG */
-/* #undef HAVE_PCREPOSIX_H */		/* CF_WITH_PCRE */
 /* #undef HAVE_PCRE2POSIX_H */	/* CF_WITH_PCRE2 */
+/* #undef HAVE_PCREPOSIX_H */		/* CF_WITH_PCRE */
 /* #undef HAVE_POSIX_OPENPT */	/* CF_FUNC_GRANTPT */
 #define HAVE_POSIX_SAVED_IDS 1	/* CF_POSIX_SAVED_IDS */
 /* #undef HAVE_PTSNAME */		/* CF_FUNC_GRANTPT */

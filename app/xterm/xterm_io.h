@@ -1,7 +1,7 @@
-/* $XTermId: xterm_io.h,v 1.64 2017/05/18 21:15:14 tom Exp $ */
+/* $XTermId: xterm_io.h,v 1.65 2018/06/28 21:35:01 tom Exp $ */
 
 /*
- * Copyright 2000-2014,2017 by Thomas E. Dickey
+ * Copyright 2000-2017,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -72,6 +72,9 @@
 
 #ifdef linux
 #define USE_TERMIOS
+#define HAVE_POSIX_OPENPT 1
+#define HAVE_PTSNAME 1
+#define HAVE_GRANTPT_PTY_ISATTY 1
 #endif
 
 #ifdef __SCO__
