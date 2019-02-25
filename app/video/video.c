@@ -1,4 +1,4 @@
-/*	$OpenBSD: video.c,v 1.27 2019/01/22 20:02:40 landry Exp $	*/
+/*	$OpenBSD: video.c,v 1.28 2019/02/25 12:34:35 rapha Exp $	*/
 /*
  * Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
  *
@@ -37,6 +37,12 @@
 #include <X11/Xutil.h>
 #include <X11/extensions/Xvlib.h>
 #include <X11/Xatom.h>
+
+/*
+ * XvListImageFormats(3) reports YUY2 for the format defined 
+ * as YUYV in videoio.h. 
+ */
+#define V_V4L2_PIX_FMT_YUY2    v4l2_fourcc('Y', 'U', 'Y', '2')
 
 /* Xv(3) adaptor properties */
 struct xv_adap {
@@ -133,20 +139,22 @@ struct dev {
 /* video encodingss */
 struct encodings {
 	char	*name;
+	int	 id;
 	int	 bpp;
-	int	 xv_id;
-	int	 dev_id;
-#define	SW_DEV	0x1
-#define	SW_XV	0x2
-#define SW_MASK	(SW_DEV | SW_XV)
+#define	SUP_DEV	0x1
+#define	SUP_XV	0x2
 	int	 flags;
 } encs[] = {
+#define ENC_YUYV	1
+	{ "yuy2", V4L2_PIX_FMT_YUYV, 16, 0 },
 #define ENC_YUY2	0
-	{ "yuy2", 16, -1, -1, 0 },
-#define ENC_UYVY	1
-	{ "uyvy", 16, -1, -1, 0 },
-#define ENC_LAST	2
-	{ NULL,	0, 0, 0, 0 }
+	{ "yuy2", V_V4L2_PIX_FMT_YUY2, 16, 0 },
+#define ENC_UYVY	2
+	{ "uyvy", V4L2_PIX_FMT_UYVY,  16, 0 },
+#define ENC_YV12	3
+	{ "yv12", V4L2_PIX_FMT_YVU420, 12, 0 },
+#define ENC_LAST	4
+	{ NULL,	0, 0, 0 }
 };
 
 struct video {
@@ -162,9 +170,12 @@ struct video {
 	char		 iofile[FILENAME_MAX];
 	int		 iofile_fd;
 	char		*sz_str;
-#define	CONV_SWAP	0x1
+#define	CONV_NONE	0x1
+#define	CONV_SWAP	0x2
+#define	CONV_YV12	0x4
 	int		 conv_type;
 	int		 enc;
+	int		 enc_xv;
 	int		 full_screen;
 	int		 net_wm;
 	int		 width;
@@ -216,6 +227,7 @@ int stream(struct video *);
 void got_frame(int);
 void got_shutdown(int);
 int find_enc(char *);
+int find_enc_by_id(int);
 void usage(void);
 
 static volatile sig_atomic_t play, shutdown, hold, wout;
@@ -242,6 +254,17 @@ find_enc(char *name)
 }
 
 int
+find_enc_by_id(int id)
+{
+	int i;
+
+	for (i = 0; i < ENC_LAST; i++)
+		if (encs[i].id == id)
+			break;
+	return i;
+}
+
+int
 xv_get_info(struct video *vid)
 {
 	struct xdsp *x = &vid->xdsp;
@@ -250,8 +273,7 @@ xv_get_info(struct video *vid)
 	XvEncodingInfo *xv_encs;
 	struct xv_adap *adap;
 	unsigned int nenc, p;
-	int num_xvformats, nadaps, i, j, ret;
-	char fmtName[5];
+	int num_xvformats, nadaps, i, j, ret, enc;
 
 	if ((x->dpy = XOpenDisplay(NULL)) == NULL) {
 		warnx("cannot open display %s", XDisplayName(NULL));
@@ -312,16 +334,9 @@ xv_get_info(struct video *vid)
 		    &num_xvformats);
 		adap->nfmts = 0;
 		for (j = 0; j < num_xvformats; j++) {
-			snprintf(fmtName, sizeof(fmtName), "%c%c%c%c",
-			    xvformats[j].id & 0xff,
-			    (xvformats[j].id >> 8) & 0xff,
-			    (xvformats[j].id >> 16) & 0xff,
-			    (xvformats[j].id >> 24) & 0xff);
-			if (!strcmp(fmtName, "YUY2")) {
-				encs[ENC_YUY2].xv_id = xvformats[j].id;
-				adap->fmts[adap->nfmts++] = xvformats[j].id;
-			} else if (!strcmp(fmtName, "UYVY")) {
-				encs[ENC_UYVY].xv_id = xvformats[j].id;
+			enc = find_enc_by_id(xvformats[j].id);
+			if (enc < ENC_LAST) {
+				encs[enc].flags |= SUP_XV;
 				adap->fmts[adap->nfmts++] = xvformats[j].id;
 			}
 			if (adap->nfmts >= MAX_FMTS)
@@ -369,20 +384,20 @@ xv_sel_adap(struct video *vid)
 		x->cur_adap = i;
 		adap = &x->adaps[i];
 		for (i = 0; i < adap->nfmts; i++) {
-			if (adap->fmts[i] == encs[vid->enc].xv_id)
+			if (adap->fmts[i] == encs[vid->enc_xv].id)
 				break;
 		}
 		if (i >= adap->nfmts) {
 			warnx("Xv adaptor '%d' doesn't support %s",
 			    x->adaps[x->cur_adap].adap_index,
-			    encs[vid->enc].name);
+			    encs[vid->enc_xv].name);
 			return 0;
 		}
 	}
 	for (i = 0; i < x->nadaps && x->cur_adap == -1; i++) {
 		adap = &x->adaps[i];
 		for (j = 0; j < adap->nfmts; j++) {
-			if (adap->fmts[j] == encs[vid->enc].xv_id) {
+			if (adap->fmts[j] == encs[vid->enc_xv].id) {
 				x->cur_adap = i;
 				break;
 			}
@@ -445,7 +460,7 @@ xv_dump_info(struct video *vid)
 
 	fprintf(stderr, "  encodings: ");
  	for (i = 0, j = 0; i < ENC_LAST; i++) {
-		if (encs[i].xv_id != -1 && !(encs[i].flags & SW_XV)) {
+		if (encs[i].id != -1 && (encs[i].flags & SUP_XV)) {
 			if (j)
 				fprintf(stderr, ", ");
 			fprintf(stderr, "%s", encs[i].name);
@@ -502,7 +517,7 @@ xv_init(struct video *vid)
 
 	resize_window(vid, 0);
 
-	x->xv_image = XvCreateImage(x->dpy, x->port, encs[vid->enc].xv_id,
+	x->xv_image = XvCreateImage(x->dpy, x->port, encs[vid->enc_xv].id,
 	    vid->frame_buffer, vid->width, vid->height);
 
 	return 1;
@@ -780,35 +795,18 @@ dev_get_encs(struct video *vid)
 	fmtdesc.index = 0;
 	fmtdesc.type = d->buf_type;
 	while (ioctl(d->fd, VIDIOC_ENUM_FMT, &fmtdesc) >= 0) {
-		if (fmtdesc.pixelformat == V4L2_PIX_FMT_YUYV) {
-			i = find_enc("yuy2");
-			if (i < ENC_LAST)
-				encs[i].dev_id = fmtdesc.pixelformat;
-		}
-		if (fmtdesc.pixelformat == V4L2_PIX_FMT_UYVY) {
-			i = find_enc("uyvy");
-			if (i < ENC_LAST)
-				encs[i].dev_id = fmtdesc.pixelformat;
-		}
+		i = find_enc_by_id(fmtdesc.pixelformat);
+		if (i < ENC_LAST)
+			encs[i].flags |= SUP_DEV;
 		fmtdesc.index++;
 	}
 	for (i = 0; encs[i].name; i++) {
-		if (encs[i].dev_id != -1)
+		if (encs[i].flags & SUP_DEV)
 			break;
 	}
 	if (i >= ENC_LAST) {
 		warnx("%s has no usable YUV encodings", d->path);
 		return 0;
-	}
-	if (encs[ENC_YUY2].dev_id == -1 &&
-	    encs[ENC_UYVY].dev_id != -1) {
-		encs[ENC_YUY2].dev_id = encs[ENC_UYVY].dev_id;
-		encs[ENC_YUY2].flags |= SW_DEV;
-	}
-	if (encs[ENC_UYVY].dev_id == -1 &&
-	    encs[ENC_YUY2].dev_id != -1) {
-		encs[ENC_UYVY].dev_id = encs[ENC_YUY2].dev_id;
-		encs[ENC_UYVY].flags |= SW_DEV;
 	}
 
 	return 1;
@@ -824,7 +822,7 @@ dev_get_sizes(struct video *vid)
 
 	nsizes = 0;
 	fsize.index = 0;
-	fsize.pixel_format = encs[vid->enc].dev_id;
+	fsize.pixel_format = encs[vid->enc].id;
 	while (ioctl(d->fd, VIDIOC_ENUM_FRAMESIZES, &fsize) == 0) {
 		switch (fsize.type) {
 		case V4L2_FRMSIZE_TYPE_DISCRETE:
@@ -915,7 +913,7 @@ dev_get_rates(struct video *vid)
 
 	for (i = 0; i < d->nsizes; i++) {
 		bzero(&ival, sizeof(ival));
-		ival.pixel_format = encs[vid->enc].dev_id;
+		ival.pixel_format = encs[vid->enc].id;
 		ival.width = d->sizes[i].w;
 		ival.height = d->sizes[i].h;
 		ival.index = 0;
@@ -1072,7 +1070,7 @@ dev_dump_info(struct video *vid)
 
 	fprintf(stderr, "  encodings: ");
  	for (i = 0, j = 0; i < ENC_LAST; i++) {
-		if (encs[i].dev_id != -1 && !(encs[i].flags & SW_DEV)) {
+		if (encs[i].flags & SUP_DEV) {
 			if (j)
 				fprintf(stderr, ", ");
 			fprintf(stderr, "%s", encs[i].name);
@@ -1136,7 +1134,7 @@ dev_init(struct video *vid)
 	fmt.type = d->buf_type;
 	fmt.fmt.pix.width = vid->width;
 	fmt.fmt.pix.height = vid->height;
-	fmt.fmt.pix.pixelformat = encs[vid->enc].dev_id;
+	fmt.fmt.pix.pixelformat = encs[vid->enc].id;
 	fmt.fmt.pix.field = V4L2_FIELD_ANY;
 	if (ioctl(d->fd, VIDIOC_S_FMT, &fmt) < 0) {
 		warn("VIDIOC_S_FMT");
@@ -1289,58 +1287,60 @@ int
 choose_enc(struct video *vid)
 {
 	int i;
+	int enc, enc_xv;
 
 	if (vid->enc < 0) {
-		for (i = 0; vid->enc < 0 && i < ENC_LAST; i++) {
-			if ((vid->mode & M_IN_DEV) && (vid->mode & M_OUT_XV)) {
-				if (encs[i].dev_id != -1 &&
-				    encs[i].xv_id != -1 &&
-				    (encs[i].flags & SW_MASK) == 0)
+		if (vid->mode & M_IN_DEV) {
+			for (i = 0; vid->enc < 0 && i < ENC_LAST; i++)
+				if (encs[i].flags & SUP_DEV)
 					vid->enc = i;
-			} else if (vid->mode & M_IN_DEV) {
-				if (encs[i].dev_id != -1 &&
-				    (encs[i].flags & SW_MASK) == 0)
-					vid->enc = i;
-			} else if (vid->mode & M_OUT_XV) {
-				if (encs[i].xv_id != -1 &&
-				    (encs[i].flags & SW_MASK) == 0)
-					vid->enc = i;
-			}
+		} else {
+			vid->enc = ENC_YUYV;
 		}
-		for (i = 0; vid->enc < 0 && i < ENC_LAST; i++) {
-			if ((vid->mode & M_IN_DEV) && (vid->mode & M_OUT_XV)) {
-				if (encs[i].dev_id != -1 &&
-				    encs[i].xv_id != -1)
-					vid->enc = i;
-			} else if (vid->mode & M_IN_DEV) {
-				if (encs[i].dev_id != -1)
-					vid->enc = i;
-			} else if (vid->mode & M_OUT_XV) {
-				if (encs[i].xv_id != -1)
-					vid->enc = i;
-			}
+		if ((vid->mode & M_IN_DEV) && (vid->mode & M_OUT_XV)) {
+			for (i = 0; vid->enc < 0 && i < ENC_LAST; i++)
+				if (encs[i].flags == (SUP_DEV | SUP_XV))
+					vid->enc = vid->enc_xv = i;
 		}
 	}
 	if (vid->enc < 0) {
 		warnx("could not find a usable encoding");
 		return 0;
 	}
-	if ((vid->mode & M_IN_DEV) && encs[vid->enc].dev_id == -1) {
+	if ((vid->mode & M_IN_DEV) && !(encs[vid->enc].flags & SUP_DEV)) {
 		warnx("device %s can't supply %s", vid->dev.path,
 		    encs[vid->enc].name);
 		return 0;
 	}
-	if ((vid->mode & M_OUT_XV) && encs[vid->enc].xv_id == -1) {
+	if (vid->enc_xv < 0 && (vid->mode & M_OUT_XV)) {
+		if (encs[vid->enc].flags & SUP_XV)
+			vid->enc_xv = vid->enc;
+		for (i = 0; vid->enc_xv < 0 && i < ENC_LAST; i++)
+			if (encs[i].flags & SUP_XV)
+				vid->enc_xv = i;
+	}
+
+	if (vid->mode & M_OUT_XV && vid->enc != vid->enc_xv) {
+		/* check if conversion is possible */
+		enc = (vid->enc == ENC_YUYV) ? ENC_YUY2 : vid->enc;
+		enc_xv = (vid->enc_xv == ENC_YUYV) ? ENC_YUY2 : vid->enc_xv;
+		if (enc == enc_xv)
+			vid->conv_type = CONV_NONE;
+		else {
+			if (enc == ENC_UYVY || enc_xv == ENC_UYVY)
+				vid->conv_type |= CONV_SWAP;
+			if (enc_xv == ENC_YV12)
+				vid->conv_type |= CONV_YV12;
+		}
+		if (!vid->conv_type)
+			vid->enc_xv = vid->enc;
+	}
+	if ((vid->mode & M_OUT_XV) && !(encs[vid->enc_xv].flags & SUP_XV)) {
 		warnx("Xv adaptor %d can't display %s",
 		    vid->xdsp.adaps[vid->xdsp.cur_adap].adap_index,
-		    encs[vid->enc].name);
+		    encs[vid->enc_xv].name);
 		return 0;
 	}
-	if (((vid->mode & M_IN_DEV) &&
-	    (encs[vid->enc].flags & SW_MASK) == SW_DEV) ||
-	    ((vid->mode & M_OUT_XV) &&
-	    (encs[vid->enc].flags & SW_MASK) == SW_XV))
-		vid->conv_type = CONV_SWAP;
 
 	return 1;
 }
@@ -1490,13 +1490,9 @@ setup(struct video *vid)
 		return 0;
 	}
 
-	if (vid->conv_type) {
-		if (vid->conv_type == CONV_SWAP) {
-			vid->conv_bufsz = vid->bpf;
-		} else {
-			warnx("invalid conversion type");
-			return 0;
-		}
+	if (vid->conv_type > CONV_NONE) {
+		vid->conv_bufsz =
+		    (vid->width * vid->height * encs[vid->enc_xv].bpp) / NBBY;
 		if ((vid->conv_buffer = calloc(1, vid->conv_bufsz)) == NULL) {
 			warn("conv_buffer");
 			return 0;
@@ -1633,6 +1629,37 @@ got_shutdown(int s)
 }
 
 int
+yuy2_to_yv12(uint8_t *src, uint8_t *dst, int width, int height, int swap)
+{
+	int row, col;
+	uint8_t *s = src, *p;
+	uint8_t *dy = dst;
+	uint8_t *du = dy + width * height;
+	uint8_t *dv = du + width * height / 4;
+
+	if ((width | height) & 1)
+		errx(1, "frame size %dx%d is not supported", width, height);
+
+	for (row = 0; row < height; row++) {
+		for (col = 0; col < width; col += 2) {
+			p = (swap) ? s + 1 : s;
+			*(dy++) = *p;
+			*(dy++) = *(p + 2);
+			if (!(row & 0x01)) {
+				p = (swap) ? s - 1 : s;
+				*(du++) =
+				    (*(p + 3) + *(p + 3 + width * 2) + 1) / 2;
+				*(dv++) =
+				    (*(p + 1) + *(p + 1 + width * 2) + 1) / 2;
+			}
+			s += 4;
+		}
+	}
+
+	return 0;
+}
+
+int
 stream(struct video *vid)
 {
 	struct xdsp *x = &vid->xdsp;
@@ -1719,10 +1746,12 @@ stream(struct video *vid)
 		play = 0;
 
 		src = vid->frame_buffer;
-		if (vid->conv_type == CONV_SWAP) {
+		if (vid->conv_type & CONV_YV12)
+			yuy2_to_yv12(src, vid->conv_buffer,
+                            vid->width, vid->height,
+			    (vid->conv_type & CONV_SWAP));
+		else if (vid->conv_type & CONV_SWAP)
 			swab(src, vid->conv_buffer, vid->bpf);
-			src = vid->conv_buffer;
-		}
 
 		if ((vid->mode & M_OUT_FILE) && wout) {
 			done = 0;
@@ -1743,6 +1772,8 @@ stream(struct video *vid)
 			}
 		}
 		if (vid->mode & M_OUT_XV) {
+			src = (vid->conv_type > CONV_NONE) ?
+			    vid->conv_buffer : vid->frame_buffer;
 			x->xv_image->data = src;
 			if (x->resized) {
 				x->resized = 0;
@@ -1863,6 +1894,7 @@ main(int argc, char *argv[])
 	vid.dev.fd = vid.iofile_fd = -1;
 	vid.mode = M_IN_DEV | M_OUT_XV;
 	vid.enc = -1;
+	vid.enc_xv = -1;
 	vid.mmap_on = 1; /* mmap method is default */
 	wout = 1;
 

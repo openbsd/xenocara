@@ -1,4 +1,4 @@
-.\"	$OpenBSD: video.1,v 1.13 2016/06/04 07:44:32 mglocker Exp $
+.\"	$OpenBSD: video.1,v 1.14 2019/02/25 12:34:35 rapha Exp $
 .\"
 .\" Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
 .\"
@@ -15,7 +15,7 @@
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
 .\"
-.Dd $Mdocdate: June 4 2016 $
+.Dd $Mdocdate: February 25 2019 $
 .Dt VIDEO 1
 .Os
 .Sh NAME
@@ -84,9 +84,10 @@ The default is 0, the first adaptor reported by
 .It Fl e Ar encoding
 Lowercase FOURCC name of video encoding to use.
 Valid arguments are
-.Ql uyvy
+.Ql uyvy ,
+.Ql yuy2
 and
-.Ql yuy2 .
+.Ql yv12 .
 The default is
 .Ql yuy2
 unless
