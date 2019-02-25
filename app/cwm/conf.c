@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.244 2019/02/22 19:40:33 okan Exp $
+ * $OpenBSD: conf.c,v 1.245 2019/02/25 16:40:49 okan Exp $
  */
 
 #include <sys/types.h>
@@ -143,6 +143,15 @@ static const struct {
 	{ FUNC_SC(group-only-7, group_only, 7) },
 	{ FUNC_SC(group-only-8, group_only, 8) },
 	{ FUNC_SC(group-only-9, group_only, 9) },
+	{ FUNC_SC(group-close-1, group_close, 1) },
+	{ FUNC_SC(group-close-2, group_close, 2) },
+	{ FUNC_SC(group-close-3, group_close, 3) },
+	{ FUNC_SC(group-close-4, group_close, 4) },
+	{ FUNC_SC(group-close-5, group_close, 5) },
+	{ FUNC_SC(group-close-6, group_close, 6) },
+	{ FUNC_SC(group-close-7, group_close, 7) },
+	{ FUNC_SC(group-close-8, group_close, 8) },
+	{ FUNC_SC(group-close-9, group_close, 9) },
 
 	{ FUNC_SC(pointer-move-up, ptrmove, (CWM_UP)) },
 	{ FUNC_SC(pointer-move-down, ptrmove, (CWM_DOWN)) },

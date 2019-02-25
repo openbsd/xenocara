@@ -1,4 +1,4 @@
-.\"	$OpenBSD: cwmrc.5,v 1.71 2019/02/22 19:40:33 okan Exp $
+.\"	$OpenBSD: cwmrc.5,v 1.72 2019/02/25 16:40:49 okan Exp $
 .\"
 .\" Copyright (c) 2004,2005 Marius Aamodt Eriksen <marius@monkey.org>
 .\"
@@ -14,7 +14,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: February 22 2019 $
+.Dd $Mdocdate: February 25 2019 $
 .Dt CWMRC 5
 .Os
 .Sh NAME
@@ -288,6 +288,8 @@ menu.
 Toggle visibility of group n, where n is 1-9.
 .It group-only-[n]
 Show only group n, where n is 1-9, hiding other groups.
+.It group-close-[n]
+Close all windows in group n, where n is 1-9.
 .It group-toggle-all
 Toggle visibility of all groups.
 .It window-group
