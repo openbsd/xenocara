@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: group.c,v 1.129 2019/02/25 16:40:49 okan Exp $
+ * $OpenBSD: group.c,v 1.130 2019/02/28 13:11:53 okan Exp $
  */
 
 #include <sys/types.h>
@@ -67,7 +67,8 @@ group_hide(struct group_ctx *gc)
 	screen_updatestackingorder(gc->sc);
 
 	TAILQ_FOREACH(cc, &gc->clientq, group_entry) {
-		if (!(cc->flags & CLIENT_STICKY))
+		if (!(cc->flags & CLIENT_STICKY) &&
+		    !(cc->flags & CLIENT_HIDDEN))
 			client_hide(cc);
 	}
 }
@@ -78,8 +79,9 @@ group_show(struct group_ctx *gc)
 	struct client_ctx	*cc;
 
 	TAILQ_FOREACH(cc, &gc->clientq, group_entry) {
-		if (!(cc->flags & CLIENT_STICKY))
-			client_unhide(cc);
+		if (!(cc->flags & CLIENT_STICKY) &&
+		     (cc->flags & CLIENT_HIDDEN))
+			client_show(cc);
 	}
 
 	group_restack(gc);
