@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.245 2019/02/25 16:40:49 okan Exp $
+ * $OpenBSD: conf.c,v 1.246 2019/03/01 14:32:01 okan Exp $
  */
 
 #include <sys/types.h>
@@ -36,6 +36,21 @@ static const char	*conf_bind_getmask(const char *, unsigned int *);
 static void		 conf_unbind_key(struct conf *, struct bind_ctx *);
 static void		 conf_unbind_mouse(struct conf *, struct bind_ctx *);
 
+static const struct {
+	int		 num;
+	const char	*name;
+} group_binds[] = {
+	{ 0, "nogroup" },
+	{ 1, "one" },
+	{ 2, "two" },
+	{ 3, "three" },
+	{ 4, "four" },
+	{ 5, "five" },
+	{ 6, "six" },
+	{ 7, "seven" },
+	{ 8, "eight" },
+	{ 9, "nine" },
+};
 static int cursor_binds[] = {
 	XC_left_ptr,		/* CF_NORMAL */
 	XC_fleur,		/* CF_MOVE */
@@ -266,7 +281,7 @@ conf_init(struct conf *c)
 	c->bwidth = 1;
 	c->mamount = 1;
 	c->snapdist = 0;
-	c->ngroups = 10;
+	c->ngroups = 0;
 	c->nameqlen = 5;
 
 	TAILQ_INIT(&c->ignoreq);
@@ -500,6 +515,17 @@ conf_screen(struct screen_ctx *sc)
 		errx(1, "%s: XftDrawCreate", __func__);
 
 	conf_grab_kbd(sc->rootwin);
+}
+
+void
+conf_group(struct screen_ctx *sc)
+{
+	unsigned int	 i;
+
+	for (i = 0; i < nitems(group_binds); i++) {
+		group_init(sc, group_binds[i].num, group_binds[i].name);
+		Conf.ngroups++;
+	}
 }
 
 static const char *
