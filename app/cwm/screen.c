@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: screen.c,v 1.90 2019/03/04 14:36:02 okan Exp $
+ * $OpenBSD: screen.c,v 1.91 2019/03/04 14:48:59 okan Exp $
  */
 
 #include <sys/types.h>
@@ -63,8 +63,7 @@ screen_init(int which)
 	screen_update_geometry(sc);
 
 	xu_ewmh_net_desktop_names(sc);
-	xu_ewmh_net_wm_desktop_viewport(sc);
-	xu_ewmh_net_wm_number_of_desktops(sc);
+	xu_ewmh_net_number_of_desktops(sc);
 	xu_ewmh_net_showing_desktop(sc);
 	xu_ewmh_net_virtual_roots(sc);
 	active = xu_ewmh_get_net_active_window(sc);
@@ -214,6 +213,7 @@ screen_update_geometry(struct screen_ctx *sc)
 	}
 
 	xu_ewmh_net_desktop_geometry(sc);
+	xu_ewmh_net_desktop_viewport(sc);
 	xu_ewmh_net_workarea(sc);
 }
 
