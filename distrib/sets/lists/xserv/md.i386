@@ -9,6 +9,7 @@
 ./usr/X11R6/lib/modules/dri/r300_dri.so
 ./usr/X11R6/lib/modules/dri/r600_dri.so
 ./usr/X11R6/lib/modules/dri/radeon_dri.so
+./usr/X11R6/lib/modules/dri/radeonsi_dri.so
 ./usr/X11R6/lib/modules/dri/swrast_dri.so
 ./usr/X11R6/lib/modules/drivers/apm_drv.la
 ./usr/X11R6/lib/modules/drivers/apm_drv.so
