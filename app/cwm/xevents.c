@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xevents.c,v 1.137 2019/02/28 23:26:12 okan Exp $
+ * $OpenBSD: xevents.c,v 1.138 2019/03/06 13:32:19 okan Exp $
  */
 
 /*
@@ -206,13 +206,9 @@ xev_handle_propertynotify(XEvent *ee)
 			/* do nothing */
 			break;
 		}
-	} else {
-		TAILQ_FOREACH(sc, &Screenq, entry) {
-			if (sc->rootwin == e->window) {
-				if (e->atom == ewmh[_NET_DESKTOP_NAMES])
-					xu_ewmh_net_desktop_names(sc);
-			}
-		}
+	} else if ((sc = screen_find(e->window)) != NULL) {
+		if (e->atom == ewmh[_NET_DESKTOP_NAMES]) 
+			xu_ewmh_net_desktop_names(sc);
 	}
 }
 
