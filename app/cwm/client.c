@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.252 2019/02/28 13:11:53 okan Exp $
+ * $OpenBSD: client.c,v 1.253 2019/03/07 13:14:41 okan Exp $
  */
 
 #include <sys/types.h>
@@ -182,9 +182,6 @@ client_remove(struct client_ctx *cc)
 
 	if (cc->flags & CLIENT_ACTIVE)
 		xu_ewmh_net_active_window(sc, None);
-
-	if (cc->gc != NULL)
-		TAILQ_REMOVE(&cc->gc->clientq, cc, group_entry);
 
 	while ((wn = TAILQ_FIRST(&cc->nameq)) != NULL) {
 		TAILQ_REMOVE(&cc->nameq, wn, entry);
@@ -976,7 +973,9 @@ client_htile(struct client_ctx *cc)
 	    cc->geom.x + cc->geom.w / 2,
 	    cc->geom.y + cc->geom.h / 2, CWM_GAP);
 
-	TAILQ_FOREACH(ci, &gc->clientq, group_entry) {
+	TAILQ_FOREACH(ci, &sc->clientq, entry) {
+		if (ci->gc != cc->gc)
+			continue;
 		if (ci->flags & CLIENT_HIDDEN ||
 		    ci->flags & CLIENT_IGNORE || (ci == cc) ||
 		    ci->geom.x < area.x ||
@@ -1005,7 +1004,9 @@ client_htile(struct client_ctx *cc)
 	x = area.x;
 	w = area.w / n;
 	h = area.h - mh;
-	TAILQ_FOREACH(ci, &gc->clientq, group_entry) {
+	TAILQ_FOREACH(ci, &sc->clientq, entry) {
+		if (ci->gc != cc->gc)
+			continue;
 		if (ci->flags & CLIENT_HIDDEN ||
 		    ci->flags & CLIENT_IGNORE || (ci == cc) ||
 		    ci->geom.x < area.x ||
@@ -1044,7 +1045,9 @@ client_vtile(struct client_ctx *cc)
 	    cc->geom.x + cc->geom.w / 2,
 	    cc->geom.y + cc->geom.h / 2, CWM_GAP);
 
-	TAILQ_FOREACH(ci, &gc->clientq, group_entry) {
+	TAILQ_FOREACH(ci, &sc->clientq, entry) {
+		if (ci->gc != cc->gc)
+			continue;
 		if (ci->flags & CLIENT_HIDDEN ||
 		    ci->flags & CLIENT_IGNORE || (ci == cc) ||
 		    ci->geom.x < area.x ||
@@ -1073,7 +1076,9 @@ client_vtile(struct client_ctx *cc)
 	y = area.y;
 	h = area.h / n;
 	w = area.w - mw;
-	TAILQ_FOREACH(ci, &gc->clientq, group_entry) {
+	TAILQ_FOREACH(ci, &sc->clientq, entry) {
+		if (ci->gc != cc->gc)
+			continue;
 		if (ci->flags & CLIENT_HIDDEN ||
 		    ci->flags & CLIENT_IGNORE || (ci == cc) ||
 		    ci->geom.x < area.x ||
