@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: group.c,v 1.133 2019/03/01 14:32:01 okan Exp $
+ * $OpenBSD: group.c,v 1.134 2019/03/07 12:54:21 okan Exp $
  */
 
 #include <sys/types.h>
@@ -204,7 +204,20 @@ group_holds_only_hidden(struct group_ctx *gc)
 }
 
 void
-group_hidetoggle(struct screen_ctx *sc, int idx)
+group_only(struct screen_ctx *sc, int idx)
+{
+	struct group_ctx	*gc;
+
+	TAILQ_FOREACH(gc, &sc->groupq, entry) {
+		if (gc->num == idx)
+			group_show(gc);
+		else
+			group_hide(gc);
+	}
+}
+
+void
+group_toggle(struct screen_ctx *sc, int idx)
 {
 	struct group_ctx	*gc;
 
@@ -223,16 +236,17 @@ group_hidetoggle(struct screen_ctx *sc, int idx)
 }
 
 void
-group_only(struct screen_ctx *sc, int idx)
+group_toggle_all(struct screen_ctx *sc)
 {
 	struct group_ctx	*gc;
 
 	TAILQ_FOREACH(gc, &sc->groupq, entry) {
-		if (gc->num == idx)
+		if (sc->hideall)
 			group_show(gc);
 		else
 			group_hide(gc);
 	}
+	sc->hideall = !sc->hideall;
 }
 
 void
@@ -299,20 +313,6 @@ group_prev(struct group_ctx *gc)
 
 	return(((newgc = TAILQ_PREV(gc, group_q, entry)) != NULL) ?
 	    newgc : TAILQ_LAST(&sc->groupq, group_q));
-}
-
-void
-group_alltoggle(struct screen_ctx *sc)
-{
-	struct group_ctx	*gc;
-
-	TAILQ_FOREACH(gc, &sc->groupq, entry) {
-		if (sc->hideall)
-			group_show(gc);
-		else
-			group_hide(gc);
-	}
-	sc->hideall = !sc->hideall;
 }
 
 int
