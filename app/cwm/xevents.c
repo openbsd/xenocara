@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xevents.c,v 1.140 2019/03/08 13:17:26 okan Exp $
+ * $OpenBSD: xevents.c,v 1.141 2019/03/08 14:48:02 okan Exp $
  */
 
 /*
@@ -292,7 +292,11 @@ xev_handle_keypress(XEvent *ee)
 	KeySym			 keysym, skeysym;
 	unsigned int		 modshift;
 
-	LOG_DEBUG3("window: 0x%lx", e->window);
+	LOG_DEBUG3("root: 0x%lx window: 0x%lx subwindow: 0x%lx ",
+	    e->root, e->window, e->subwindow);
+
+	if ((sc = screen_find(e->root)) == NULL)
+		return;
 
 	keysym = XkbKeycodeToKeysym(X_Dpy, e->keycode, 0, 0);
 	skeysym = XkbKeycodeToKeysym(X_Dpy, e->keycode, 0, 1);
@@ -311,20 +315,17 @@ xev_handle_keypress(XEvent *ee)
 		if (kb->press.keysym == ((modshift == 0) ? keysym : skeysym))
 			break;
 	}
-
 	if (kb == NULL)
 		return;
 	kb->cargs->xev = CWM_XEV_KEY;
 	switch (kb->context) {
 	case CWM_CONTEXT_CC:
-		if (((cc = client_find(e->window)) == NULL) &&
-		    ((cc = client_current(NULL)) == NULL))
+		if (((cc = client_find(e->subwindow)) == NULL) &&
+		    ((cc = client_current(sc)) == NULL))
 			return;
 		(*kb->callback)(cc, kb->cargs);
 		break;
 	case CWM_CONTEXT_SC:
-		if ((sc = screen_find(e->window)) == NULL)
-			return;
 		(*kb->callback)(sc, kb->cargs);
 		break;
 	case CWM_CONTEXT_NONE:
