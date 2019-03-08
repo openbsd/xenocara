@@ -70,7 +70,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
+DIST_COMMON = $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/configure COPYING ChangeLog INSTALL compile \
 	config.guess config.sub depcomp install-sh ltmain.sh missing
@@ -327,7 +327,7 @@ top_srcdir = @top_srcdir@
 SUBDIRS = src man conf
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 ACLOCAL_AMFLAGS = -I m4
-EXTRA_DIST = ChangeLog INSTALL
+EXTRA_DIST = ChangeLog INSTALL README.md
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 

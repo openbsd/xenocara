@@ -157,7 +157,8 @@ radeon_present_queue_vblank(RRCrtcPtr crtc, uint64_t event_id, uint64_t msc)
 					   RADEON_DRM_QUEUE_CLIENT_DEFAULT,
 					   event_id, event,
 					   radeon_present_vblank_handler,
-					   radeon_present_vblank_abort);
+					   radeon_present_vblank_abort,
+					   FALSE);
     if (drm_queue_seq == RADEON_DRM_QUEUE_ERROR) {
 	free(event);
 	return BadAlloc;
@@ -255,7 +256,7 @@ radeon_present_check_flip(RRCrtcPtr crtc, WindowPtr window, PixmapPtr pixmap,
     ScrnInfoPtr scrn = xf86_crtc->scrn;
     xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(scrn);
     RADEONInfoPtr info = RADEONPTR(scrn);
-    PixmapPtr screen_pixmap;
+    PixmapPtr screen_pixmap = screen->GetScreenPixmap(screen);
     int num_crtcs_on;
     int i;
 
@@ -271,10 +272,14 @@ radeon_present_check_flip(RRCrtcPtr crtc, WindowPtr window, PixmapPtr pixmap,
     if (info->drmmode.dri2_flipping)
 	return FALSE;
 
+#if XORG_VERSION_CURRENT <= XORG_VERSION_NUMERIC(1, 20, 99, 1, 0)
+    if (pixmap->devKind != screen_pixmap->devKind)
+	return FALSE;
+#endif
+
     /* The kernel driver doesn't handle flipping between BOs with different
      * tiling parameters correctly yet
      */
-    screen_pixmap = screen->GetScreenPixmap(screen);
     if (radeon_present_get_pixmap_tiling_flags(info, pixmap) !=
 	radeon_present_get_pixmap_tiling_flags(info, screen_pixmap))
 	return FALSE;

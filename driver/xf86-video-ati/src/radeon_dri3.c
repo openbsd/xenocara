@@ -37,6 +37,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <gbm.h>
 #include <errno.h>
 #include <libgen.h>
 
@@ -212,20 +213,46 @@ static int radeon_dri3_fd_from_pixmap(ScreenPtr screen,
 				      CARD16 *stride,
 				      CARD32 *size)
 {
-	struct radeon_bo *bo;
+	struct radeon_buffer *bo;
 	int fd;
 #ifdef USE_GLAMOR
 	ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
 	RADEONInfoPtr info = RADEONPTR(scrn);
 
-	if (info->use_glamor)
-		return glamor_fd_from_pixmap(screen, pixmap, stride, size);
+	if (info->use_glamor) {
+		Bool need_flush = TRUE;
+		int ret = -1;
+#if XORG_VERSION_CURRENT >= XORG_VERSION_NUMERIC(1,19,99,904,0)
+		struct gbm_bo *gbm_bo = glamor_gbm_bo_from_pixmap(screen, pixmap);
+
+		if (gbm_bo) {
+			ret = gbm_bo_get_fd(gbm_bo);
+			gbm_bo_destroy(gbm_bo);
+
+			if (ret >= 0)
+				need_flush = FALSE;
+		}
 #endif
 
-	bo = radeon_get_pixmap_bo(pixmap)->bo.radeon;
+		if (ret < 0)
+			ret = glamor_fd_from_pixmap(screen, pixmap, stride, size);
+
+		/* glamor might have needed to reallocate the pixmap storage and
+		 * copy the pixmap contents to the new storage. The copy
+		 * operation needs to be flushed to the kernel driver before the
+		 * client starts using the pixmap storage for direct rendering.
+		 */
+		if (ret >= 0 && need_flush)
+			radeon_cs_flush_indirect(scrn);
+
+		return ret;
+	}
+#endif
+
+	bo = radeon_get_pixmap_bo(pixmap);
 	if (!bo) {
 		exaMoveInPixmap(pixmap);
-		bo = radeon_get_pixmap_bo(pixmap)->bo.radeon;
+		bo = radeon_get_pixmap_bo(pixmap);
 		if (!bo)
 			return -1;
 	}
@@ -233,11 +260,11 @@ static int radeon_dri3_fd_from_pixmap(ScreenPtr screen,
 	if (pixmap->devKind > UINT16_MAX)
 		return -1;
 
-	if (radeon_gem_prime_share_bo(bo, &fd) < 0)
+	if (radeon_gem_prime_share_bo(bo->bo.radeon, &fd) < 0)
 		return -1;
 
 	*stride = pixmap->devKind;
-	*size = bo->size;
+	*size = bo->bo.radeon->size;
 	return fd;
 }
 

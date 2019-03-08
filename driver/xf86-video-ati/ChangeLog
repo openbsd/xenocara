@@ -1,3 +1,440 @@
+commit 0d132d99e0b750896a78f47d73a8639680495d8c
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Mar 6 17:48:03 2019 +0100
+
+    Bump version for 19.0.0 release
+
+commit c301b8af25d2c2cd49035a4395ebe6c3612df366
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Fri Mar 1 18:28:11 2019 +0100
+
+    dri2: Call drm_queue_handle_deferred in dri2_deferred_event
+    
+    drm_queue_handler just puts the event on the signalled list; without
+    calling drm_queue_handle_deferred, actual processing of the event may be
+    delayed indefinitely, e.g. until another event arrives from the kernel.
+    
+    This could result in DRI2 clients hanging during DPMS off.
+    
+    Fixes: ba83a866af5a "Add radeon_drm_handle_event wrapper for
+                         drmHandleEvent"
+    (Ported from amdgpu commit 09be74a3d1dd9604336d9a27f98d132b262dcbaf)
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 705020b6247eaa062edc9c88e6ad52f8c5468051
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Fri Mar 1 18:23:30 2019 +0100
+
+    present: Check that flip and screen pixmap pitches match
+    
+    If they don't, flipping will result in corrupted display.
+    
+    Test case:
+    
+    * Run Xorg at 1920x1080 with no window manager
+    * glxgears -geometry 2048x1080
+    
+    The Present extension code in xserver 1.21 will check for this.
+    
+    (Ported from amdgpu commit a636f42b496b0604ca00a144690ece61d1a88a27)
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 15697ee242c30b9ea6775624e8282e0171a113a7
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Mon Jan 28 18:27:10 2019 +0100
+
+    Keep waiting for a pending flip if drm_handle_event returns 0
+    
+    drm_wait_pending_flip stopped waiting if drm_handle_event returned 0,
+    but that might have processed only some unrelated DRM events. As long as
+    the flip is pending, we have to keep waiting for its completion event.
+    
+    Noticed while working on the previous fix.
+    
+    (Ported from amdgpu commit 9045fb310f88780e250e60b80431ca153330e61b)
+
+commit 227123de3d862e691131708b7f55260bee17f2b7
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Mon Jan 28 18:24:41 2019 +0100
+
+    Call drmHandleEvent again if it was interrupted by a signal
+    
+    drmHandleEvent can be interrupted by a signal in read(), in which case
+    it doesn't process any events but returns -1, which
+    drm_handle_event propagated to its callers. This could cause the
+    following failure cascade:
+    
+    1. drm_wait_pending_flip stopped waiting for a pending flip.
+    2. Its caller cleared drmmode_crtc->flip_pending before the flip
+       completed.
+    3. Another flip was attempted but got an unexpected EBUSY error because
+       the previous flip was still pending.
+    4. TearFree was disabled due to the error.
+    
+    The solution is to call drmHandleEvent if it was interrupted by a
+    signal. We can do that in drm_handle_event, because when that is called,
+    either it is known that there are events ready to be processed, or the
+    caller has to wait for events to arrive anyway.
+    
+    Bugzilla: https://bugs.freedesktop.org/109364
+    (Ported from amdgpu commit 3ff2cc225f6bc08364ee007fa54e9d0150adaf11)
+
+commit 1bfdccf7639ee2f655dc659cafa63830ba28be85
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Mon Jan 28 18:11:10 2019 +0100
+
+    Only update drmmode_crtc->flip_pending after actually submitting a flip
+    
+    And only clear it if it matches the framebuffer of the completed flip
+    being processed.
+    
+    Fixes
+    
+     (WW) RADEON(0): flip queue failed: Device or resource busy
+     (WW) RADEON(0): Page flip failed: Device or resource busy
+     (EE) RADEON(0): present flip failed
+    
+    due to clobbering drmmode_crtc->flip_pending.
+    
+    Reproducer: Enable TearFree, run warzone2100 fullscreen, toggle
+    Vertical sync on/off under Video Options. Discovered while investigating
+    https://bugs.freedesktop.org/109364 .
+    
+    (Ported from amdgpu commit e72a02ba1d35743fefd939458b9d8cddce86e7f5)
+
+commit dcd3527299c1f6d6faa401c565fa884f4d8f3287
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Mon Jan 28 18:08:35 2019 +0100
+
+    Don't allow TearFree scanout flips to complete in the same vblank period
+    
+    We were using a relative target of 0, meaning "complete the flip ASAP".
+    This could result in the flip sometimes, but not always completing in
+    the same vertical blank period where the corresponding drawing occurred,
+    potentially causing judder artifacts with applications updating their
+    window contents synchronized to the display refresh. A good way to test
+    this is the vsynctester.com site in a windowed browser, where the judder
+    results in the large "VSYNC" text intermittently appearing red or cyan
+    instead of the expected gray.
+    
+    To avoid this, use a relative target MSC of 1, meaning that if a
+    vertical blank period is in progress, the flip will only complete in the
+    next one.
+    
+    Reported by Julian Tempel and Brandon Wright in
+    https://bugs.freedesktop.org/106175 .
+    
+    (Ported from amdgpu commit a1b479c7d0066c481af920f297d6af9009dda11e)
+
+commit 274703087f80342f51fa69c935bb9a1cb0c4ae47
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Mon Jan 28 18:06:50 2019 +0100
+
+    glamor: Avoid glamor_create_pixmap for pixmaps backing windows
+    
+    If the compositing manager uses direct rendering (as is usually the case
+    these days), the storage of a pixmap allocated by glamor_create_pixmap
+    needs to be reallocated for sharing it with the compositing manager.
+    Instead, allocate pixmap storage which can be shared directly.
+    
+    (Ported from amdgpu commit bf326f2ea19daa6c8da23d6788ff301ae70b8e69)
+
+commit 6d1dfe2523e900517bd1e8743c87d6990a82c800
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Mon Jan 28 18:04:41 2019 +0100
+
+    dri2: Flush in dri2_create_buffer2 after calling glamor_set_pixmap_bo
+    
+    To make sure the client can't use the shared pixmap storage for direct
+    rendering first, which could produce garbage.
+    
+    Bugzilla: https://bugs.freedesktop.org/109235
+    (Ported from amdgpu commit ebd32b1c07208f8dbe853e089f5e4b7c6a7a658a)
+
+commit 77d7abf46446522e686c6b6f1e4857458589ef37
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Mon Jan 28 18:00:20 2019 +0100
+
+    dri3: Flush if necessary in dri3_fd_from_pixmap
+    
+    To make sure the client can't use the shared pixmap storage for direct
+    rendering first, which could produce garbage.
+    
+    Bugzilla: https://bugs.freedesktop.org/109235
+    (Ported from amdgpu commit d168532ee739f7e33a2798051e64ba445dd3859f)
+
+commit b1c01698f577577e4a88bad0ae08fb5d998e7ebb
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Jan 9 11:26:14 2019 +0100
+
+    Only call drmmode_validate_leases if RandR is enabled
+    
+    It would crash if RandR is disabled, e.g. because Xinerama is enabled.
+    
+    Bugzilla: https://bugs.freedesktop.org/109230
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 38db1bbcfc019c92884c7819a6630c70e543f6b2
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Jan 9 11:33:18 2019 +0100
+
+    Only call drmmode_uevent_init if RandR is enabled
+    
+    There's no point in listening for hotplug events if RandR is disabled,
+    as there's no other mechanism for them to be propagated. We were already
+    mostly ignoring them in that case.
+    
+    Inspired by
+    https://gitlab.freedesktop.org/xorg/driver/xf86-video-intel/commit/1a489142c8e6a4828348cc9afbd0f430d3b1e2d8
+    (via https://bugs.freedesktop.org/109230#c11).
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 803f872f7d4b2d80be434bb42ce64dfd295b122c
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Fri Dec 21 18:04:21 2018 +0100
+
+    Use two HW cursor buffers per CRTC
+    
+    Switch to the other buffer when xf86_config->cursor changes. Avoids
+    these issues possible when re-using the same buffer:
+    
+    * The HW may intermittently display a mix of the old and new cursor
+      images.
+    * If the hotspot changes, the HW may intermittently display the new
+      cursor image at the location corresponding to the old image's hotspot.
+    
+    Bugzilla: https://bugs.freedesktop.org/108832
+    (Ported from amdgpu commit 0d60233d26ec70d4e1faa343b438e33829c6d5e4)
+
+commit 91e557f78ad261e76a1829f54722c2c0781742d2
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Fri Dec 21 18:00:09 2018 +0100
+
+    Update cursor position in drmmode_show_cursor if hotspot changed
+    
+    The cursor position is updated to be consistent with the new hotspot in
+    the same ioctl call.
+    
+    (Ported from amdgpu commit b04697de5270e8e45744a7025c24df1f454a4cf0)
+
+commit 92df709786830d4e30a106dd49d8e0355c50c8f0
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Fri Dec 21 17:54:36 2018 +0100
+
+    Use drmIoctl in drmmode_show_cursor
+    
+    This should be functionally equivalent to what drmModeSetCursor(2) do
+    behind the scenes, but allows for new tricks in following changes.
+    
+    (Ported from amdgpu commit b344e1559e936046ef02c777fc4f6bcefa3830bc)
+
+commit e14c3d2f86c7be2b5c3d06a47bf0abe954207d0b
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Fri Dec 21 17:38:51 2018 +0100
+
+    Drop RADEONInfoRec::cursor_bo array
+    
+    Not needed or even useful for anything.
+    
+    (Ported from amdgpu commit e95044e45350870fa7e237860e89ade91ac03550)
+
+commit f66254c171f5a3b052a2a9e0339f17dfb5a60dc2
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Fri Dec 21 12:49:27 2018 +0100
+
+    Automatically try re-enabling TearFree after a flip failed
+    
+    Specifically, after both the page flip and vblank ioctls failed, but
+    then the vblank ioctl started working again. This can happen
+    intermittently e.g. when hotplugging a DP display. Previously, TearFree
+    would stay disabled in that case until a modeset was triggered somehow.
+    
+    Bugzilla: https://bugs.freedesktop.org/103791
+    (Ported from amdgpu commit bcfa6c258fdf41a9928f8a3c78fc528d0fafee25)
+
+commit ce7db51020d32f17e442338bfd305220feb51630
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Fri Dec 21 12:47:18 2018 +0100
+
+    Cancel pending scanout update in drmmode_crtc_scanout_update
+    
+    drmmode_crtc_scanout_update does the equivalent of a scanout update,
+    so no need to do it again. This might also avoid issues if there's a
+    pending scanout update at this point.
+    
+    (Ported from amdgpu commit 4e7a24ac5a64e402146953ec5850d13c05742116)
+
+commit 21d65e5b78c8889e363aee8596cd0b0f942fee46
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Fri Dec 21 12:38:04 2018 +0100
+
+    Perform scanout buffer update immediately if drmmode_wait_vblank fails
+    
+    Otherwise the damaged screen contents may never be displayed in that
+    case.
+    
+    (Ported from amdgpu commit 500fadb16285146e91f62fce3a0ce1360ca684ba)
+
+commit 64942d2c49f9fa1afcc42c07943d076a40963e51
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Dec 20 19:00:08 2018 +0100
+
+    Move deferred vblank events to separate drm_vblank_deferred list
+    
+    It was still possible for nested xorg_list_for_each_entry_safe loops
+    to occur over the drm_vblank_signalled list, which could mess up that
+    list. Moving deferred events to a separate list allows processing the
+    drm_vblank_signalled list without xorg_list_for_each_entry_safe.
+    
+    Bugzilla: https://bugs.freedesktop.org/108600
+    (Ported from amdgpu commit 51ba6dddee40c3688d4c7b12eabeab516ed153b7)
+
+commit f450632077843a95a6ef269febbfb64a605045ed
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Dec 20 18:48:19 2018 +0100
+
+    Explicitly keep track of whether a DRM event is for a flip or not
+    
+    When an async flip is performed, and TearFree is enabled on the CRTC
+    used for timing, we schedule a vblank event for completing the page
+    flip. The DRM event queuing code treated this event like a vblank event,
+    but it needs to be treated like a page flip event.
+    
+    (Ported from amdgpu commit e2c7369cae65069aa93eed1c0b678f975ce5c274)
+
+commit 189b6facb3988c00c96d970f8c13ed8d58fa3998
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Dec 20 18:44:24 2018 +0100
+
+    Use drm_abort_one in drm_queue_handler
+    
+    At this point, we've already established that e->handler is NULL, no
+    need to check again in drm_queue_handle_one. This also makes it clearer
+    what's happening.
+    
+    (Ported from amdgpu commit eda571222f5a6be47f8897e82d85199bb9d95251)
+
+commit 06957e3067b9eb38d30b32d98a07895399f4cb36
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Dec 20 18:40:19 2018 +0100
+
+    glamor: Can work at depth >= 15 with current xserver Git master
+    
+    (Ported from amdgpu commit 0734cdf544ffd3f2ac8749ad0e4bf43f8a5cea50)
+
+commit 99ac121770da53196124d80375a5c8edbcf827fa
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Dec 20 18:38:33 2018 +0100
+
+    Skip gamma correction of cursor data if premultiplied R/G/B > alpha
+    
+    The un-premultiplied R/G/B values would overflow the gamma LUT, so just
+    pass through the data unchanged, and leave it up to the HW how to
+    interpret such weird premultiplied alpha pixels.
+    
+    Bugzilla: https://bugs.freedesktop.org/108355
+    (Ported from amdgpu commit 13c94a373b4858a2d2aa14c22b5f98d53c84c0d9)
+
+commit 0c40a76d1c050d018e6d59bebb5efc9c62be308c
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Dec 20 18:25:21 2018 +0100
+
+    Detect and fix up non-premultiplied cursor data
+    
+    X server >= 1.18 already has code for this, but handle it with older X
+    servers as well.
+    
+    (Ported from amdgpu commits ad6dfb0124860cf67730bde85867f81d9258c84d &
+     426f9a49655f01863cf4d898f525e5f95984e0c4)
+
+commit 0058fd2ebf4c900b12f129984e98886a7ac84b2f
+Author: Mario Kleiner <mario.kleiner.de@gmail.com>
+Date:   Tue Dec 18 11:40:35 2018 +0100
+
+    Fix crash when page flipping in multi-X-Screen/Zaphod mode
+    
+    radeon_do_pageflip() indexed the flipdata->fb[] array
+    indexing over config->num_crtc, but the flip completion
+    routines, e.g., drmmode_flip_handler(), index that array
+    via the crtc hw id from drmmode_get_crtc_id(crtc).
+    
+    This is mismatched and causes indexing into the wrong
+    array slot at flip completion -> Server crash.
+    
+    Always use drmmode_get_crtc_id(crtc) for indexing into
+    the array to fix this.
+    
+    Tested on a dual-X-Screen setup with one video output
+    assigned to each X-Screen, page-flipping an OpenGL app
+    on either of both X-Screens. This used to crash when
+    flipping on X-Screen 1, now it doesn't anymore.
+    
+    Fixes: 740f0850f1e4 "Store FB for each CRTC in drmmode_flipdata_rec"
+    Reviewed-by: Michel Dänzer <michel.daenzer@amd.com>
+    Signed-off-by: Mario Kleiner <mario.kleiner.de@gmail.com>
+
+commit b559fd83b2b026b50fe39a2b69bdc0901fd3330c
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Mon Nov 19 11:38:22 2018 +0100
+
+    Post-release version bump
+
+commit 33cbd449b5305b8e8c0319af8becc1ab1832c101
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 18 12:22:16 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5e6fa5c17a810127f0049816f20db6b871ca77e0
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Oct 24 18:22:05 2018 +0200
+
+    Allow up to six instances in Zaphod mode
+    
+    Corresponding to up to six CRTCs being available in the hardware.
+    
+    (Ported from amdgpu commit c9d43c1deb9a9cfc41a8d6439caf46d12d220853)
+
+commit c480fd066fe129fa6561fca8c09f037613b753e8
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Oct 24 18:19:42 2018 +0200
+
+    Make wait_pending_flip / handle_deferred symmetric in set_mode_major
+    
+    We were always calling the latter, but not always the former, which
+    could result in handling deferred DRM events prematurely.
+    
+    (Ported from amdgpu commit 955373a3e69baa241a1f267e96d04ddb902f689f)
+
+commit 86fe8d27b9a3f043e5288ce50eaf1f5fffd24516
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Oct 24 18:14:02 2018 +0200
+
+    Handle pending scanout update in drmmode_crtc_scanout_free
+    
+    We have to wait for a pending scanout flip or abort a pending scanout
+    update, otherwise the corresponding event handler will likely crash
+    after drmmode_crtc_scanout_free cleaned up the data structures.
+    
+    Fixes crash after VT switch while dedicated scanout pixmaps are enabled
+    for any CRTC.
+    
+    (Ported from amdgpu commit 0cd2c337d2c02b8ec2bd994d6124b4aaaad10741)
+
+commit f892d3791219d1041e0cbb1b866e15774004aa18
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Mon Oct 15 17:14:41 2018 +0200
+
+    dri3: Handle radeon_get_pixmap_bo returning NULL
+    
+    We were trying to already, but testing the wrong pointer.
+    
+    Fixes: b85b7b11f5b5 "Add struct radeon_buffer"
+    Bug: https://bugs.debian.org/910846
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
 commit 80514b7b1b88f46f3965ff023035dea83b57e652
 Author: Michel Dänzer <michel.daenzer@amd.com>
 Date:   Fri Sep 14 17:48:49 2018 +0200

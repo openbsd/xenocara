@@ -44,7 +44,8 @@ void radeon_drm_queue_handle_deferred(xf86CrtcPtr crtc);
 uintptr_t radeon_drm_queue_alloc(xf86CrtcPtr crtc, ClientPtr client,
 				 uint64_t id, void *data,
 				 radeon_drm_handler_proc handler,
-				 radeon_drm_abort_proc abort);
+				 radeon_drm_abort_proc abort,
+				 Bool is_flip);
 void radeon_drm_abort_client(ClientPtr client);
 void radeon_drm_abort_entry(uintptr_t seq);
 void radeon_drm_abort_id(uint64_t id);

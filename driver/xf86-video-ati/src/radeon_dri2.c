@@ -252,6 +252,12 @@ radeon_dri2_create_buffer2(ScreenPtr pScreen,
     } else if (is_glamor_pixmap) {
 	pixmap = radeon_glamor_set_pixmap_bo(drawable, pixmap);
 	pixmap->refcnt++;
+
+	/* The copy operation from radeon_glamor_set_pixmap_bo needs to
+	 * be flushed to the kernel driver before the client starts
+	 * using the pixmap storage for direct rendering.
+	 */
+	radeon_cs_flush_indirect(pScrn);
     }
 
     if (!radeon_get_flink_name(pRADEONEnt, pixmap, &buffers->name))
@@ -973,12 +979,18 @@ CARD32 radeon_dri2_deferred_event(OsTimerPtr timer, CARD32 now, pointer data)
     if (ret) {
 	xf86DrvMsg(scrn->scrnIndex, X_ERROR,
 		   "%s cannot get current time\n", __func__);
-	if (event_info->drm_queue_seq)
+
+	if (event_info->drm_queue_seq) {
 	    drmmode_crtc->drmmode->event_context.
 		vblank_handler(pRADEONEnt->fd, 0, 0, 0,
 			       (void*)event_info->drm_queue_seq);
-	else
+	    drmmode_crtc->wait_flip_nesting_level++;
+	    radeon_drm_queue_handle_deferred(crtc);
+
+	} else {
 	    radeon_dri2_frame_event_handler(crtc, 0, 0, data);
+	}
+
 	return 0;
     }
     /*
@@ -989,13 +1001,18 @@ CARD32 radeon_dri2_deferred_event(OsTimerPtr timer, CARD32 now, pointer data)
     delta_seq = delta_t * drmmode_crtc->dpms_last_fps;
     delta_seq /= 1000000;
     frame = (CARD64)drmmode_crtc->dpms_last_seq + delta_seq;
-    if (event_info->drm_queue_seq)
+
+    if (event_info->drm_queue_seq) {
 	drmmode_crtc->drmmode->event_context.
 	    vblank_handler(pRADEONEnt->fd, frame, drm_now / 1000000,
 			   drm_now % 1000000,
 			   (void*)event_info->drm_queue_seq);
-    else
+	drmmode_crtc->wait_flip_nesting_level++;
+	radeon_drm_queue_handle_deferred(crtc);
+    } else {
 	radeon_dri2_frame_event_handler(crtc, frame, drm_now, data);
+    }
+
     return 0;
 }
 
@@ -1076,7 +1093,7 @@ static int radeon_dri2_schedule_wait_msc(ClientPtr client, DrawablePtr draw,
 
     drm_queue_seq = radeon_drm_queue_alloc(crtc, client, RADEON_DRM_QUEUE_ID_DEFAULT,
 					   wait_info, radeon_dri2_frame_event_handler,
-					   radeon_dri2_frame_event_abort);
+					   radeon_dri2_frame_event_abort, FALSE);
     if (drm_queue_seq == RADEON_DRM_QUEUE_ERROR) {
         xf86DrvMsg(scrn->scrnIndex, X_WARNING,
 		   "Allocating DRM queue event entry failed.\n");
@@ -1215,7 +1232,7 @@ static int radeon_dri2_schedule_swap(ClientPtr client, DrawablePtr draw,
 
     drm_queue_seq = radeon_drm_queue_alloc(crtc, client, RADEON_DRM_QUEUE_ID_DEFAULT,
 					   swap_info, radeon_dri2_frame_event_handler,
-					   radeon_dri2_frame_event_abort);
+					   radeon_dri2_frame_event_abort, FALSE);
     if (drm_queue_seq == RADEON_DRM_QUEUE_ERROR) {
         xf86DrvMsg(scrn->scrnIndex, X_WARNING,
 		   "Allocating DRM queue entry failed.\n");

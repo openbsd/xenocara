@@ -560,7 +560,7 @@ typedef struct {
     /* Number of SW cursors currently visible on this screen */
     int sprites_visible;
 
-    Bool              IsSecondary;
+    int instance_id;
 
     Bool              r600_shadow_fb;
     void *fb_shadow;
@@ -572,7 +572,6 @@ typedef struct {
     struct radeon_cs_manager *csm;
     struct radeon_cs *cs;
 
-    struct radeon_bo *cursor_bo[32];
     uint64_t vram_size;
     uint64_t gart_size;
     drmmode_rec drmmode;

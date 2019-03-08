@@ -202,6 +202,10 @@ static void RADEONFreeRec(ScrnInfoPtr pScrn)
     if (!pScrn)
 	return;
 
+    pEnt = xf86GetEntityInfo(pScrn->entityList[pScrn->numEntities - 1]);
+    pPriv = xf86GetEntityPrivate(pEnt->index, gRADEONEntityIndex);
+    pRADEONEnt = pPriv->ptr;
+
     info = RADEONPTR(pScrn);
     if (info) {
 	if (info->fbcon_pixmap)
@@ -217,15 +221,12 @@ static void RADEONFreeRec(ScrnInfoPtr pScrn)
 	    gbm_device_destroy(info->gbm);
 #endif
 
-	pEnt = info->pEnt;
+	pRADEONEnt->scrn[info->instance_id] = NULL;
+	pRADEONEnt->num_scrns--;
 	free(pScrn->driverPrivate);
 	pScrn->driverPrivate = NULL;
-    } else {
-	pEnt = xf86GetEntityInfo(pScrn->entityList[pScrn->numEntities - 1]);
     }
 
-    pPriv = xf86GetEntityPrivate(pEnt->index, gRADEONEntityIndex);
-    pRADEONEnt = pPriv->ptr;
     if (pRADEONEnt->fd > 0) {
         DevUnion *pPriv;
         RADEONEntPtr pRADEONEnt;
@@ -348,12 +349,12 @@ static Bool RADEONCreateScreenResources_KMS(ScreenPtr pScreen)
 	    RROutputChanged(rrScrPriv->primaryOutput, FALSE);
 	    rrScrPriv->layoutChanged = TRUE;
 	}
+
+	drmmode_uevent_init(pScrn, &info->drmmode);
     }
 
     if (!drmmode_set_desired_modes(pScrn, &info->drmmode, pScreen->isGPU))
 	return FALSE;
-
-    drmmode_uevent_init(pScrn, &info->drmmode);
 
     if (info->r600_shadow_fb) {
 	pixmap = pScreen->GetScreenPixmap(pScreen);
@@ -525,10 +526,14 @@ radeon_scanout_flip_abort(xf86CrtcPtr crtc, void *event_data)
 {
     RADEONEntPtr pRADEONEnt = RADEONEntPriv(crtc->scrn);
     drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
+    struct drmmode_fb *fb = event_data;
 
     drmmode_crtc->scanout_update_pending = 0;
-    drmmode_fb_reference(pRADEONEnt->fd, &drmmode_crtc->flip_pending,
-			 NULL);
+
+    if (drmmode_crtc->flip_pending == fb) {
+	drmmode_fb_reference(pRADEONEnt->fd, &drmmode_crtc->flip_pending,
+			     NULL);
+    }
 }
 
 static void
@@ -537,9 +542,9 @@ radeon_scanout_flip_handler(xf86CrtcPtr crtc, uint32_t msc, uint64_t usec,
 {
     RADEONEntPtr pRADEONEnt = RADEONEntPriv(crtc->scrn);
     drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
+    struct drmmode_fb *fb = event_data;
 
-    drmmode_fb_reference(pRADEONEnt->fd, &drmmode_crtc->fb,
-			 drmmode_crtc->flip_pending);
+    drmmode_fb_reference(pRADEONEnt->fd, &drmmode_crtc->fb, fb);
     radeon_scanout_flip_abort(crtc, event_data);
 }
 
@@ -751,6 +756,7 @@ radeon_prime_scanout_update(PixmapDirtyUpdatePtr dirty)
 {
     ScreenPtr screen = dirty->slave_dst->drawable.pScreen;
     ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
+    RADEONEntPtr pRADEONEnt = RADEONEntPriv(scrn);
     xf86CrtcPtr xf86_crtc = radeon_prime_dirty_to_crtc(dirty);
     drmmode_crtc_private_ptr drmmode_crtc;
     uintptr_t drm_queue_seq;
@@ -768,23 +774,45 @@ radeon_prime_scanout_update(PixmapDirtyUpdatePtr dirty)
 					   RADEON_DRM_QUEUE_CLIENT_DEFAULT,
 					   RADEON_DRM_QUEUE_ID_DEFAULT, NULL,
 					   radeon_prime_scanout_update_handler,
-					   radeon_prime_scanout_update_abort);
+					   radeon_prime_scanout_update_abort,
+					   FALSE);
     if (drm_queue_seq == RADEON_DRM_QUEUE_ERROR) {
 	xf86DrvMsg(scrn->scrnIndex, X_WARNING,
 		   "radeon_drm_queue_alloc failed for PRIME update\n");
-	return;
-    }
-
-    if (!drmmode_wait_vblank(xf86_crtc, DRM_VBLANK_RELATIVE | DRM_VBLANK_EVENT,
-			     1, drm_queue_seq, NULL, NULL)) {
-	xf86DrvMsg(scrn->scrnIndex, X_WARNING,
-		   "drmmode_wait_vblank failed for PRIME update: %s\n",
-		   strerror(errno));
-	radeon_drm_abort_entry(drm_queue_seq);
+	radeon_prime_scanout_update_handler(xf86_crtc, 0, 0, NULL);
 	return;
     }
 
     drmmode_crtc->scanout_update_pending = drm_queue_seq;
+
+    if (!drmmode_wait_vblank(xf86_crtc, DRM_VBLANK_RELATIVE | DRM_VBLANK_EVENT,
+			     1, drm_queue_seq, NULL, NULL)) {
+	if (!(drmmode_crtc->scanout_status & DRMMODE_SCANOUT_VBLANK_FAILED)) {
+	    xf86DrvMsg(scrn->scrnIndex, X_WARNING,
+		       "drmmode_wait_vblank failed for PRIME update: %s\n",
+		       strerror(errno));
+	    drmmode_crtc->scanout_status |= DRMMODE_SCANOUT_VBLANK_FAILED;
+	}
+
+	drmmode_crtc->drmmode->event_context.vblank_handler(pRADEONEnt->fd,
+							    0, 0, 0,
+							    (void*)drm_queue_seq);
+	drmmode_crtc->wait_flip_nesting_level++;
+	radeon_drm_queue_handle_deferred(xf86_crtc);
+	return;
+    }
+
+    if (drmmode_crtc->scanout_status ==
+	(DRMMODE_SCANOUT_FLIP_FAILED | DRMMODE_SCANOUT_VBLANK_FAILED)) {
+	/* The page flip and vblank ioctls failed before, but the vblank
+	 * ioctl is working again, so we can try re-enabling TearFree
+	 */
+	xf86_crtc->funcs->set_mode_major(xf86_crtc, &xf86_crtc->mode,
+					 xf86_crtc->rotation,
+					 xf86_crtc->x, xf86_crtc->y);
+    }
+
+    drmmode_crtc->scanout_status &= ~DRMMODE_SCANOUT_VBLANK_FAILED;
 }
 
 static void
@@ -797,52 +825,61 @@ radeon_prime_scanout_flip(PixmapDirtyUpdatePtr ent)
     drmmode_crtc_private_ptr drmmode_crtc;
     uintptr_t drm_queue_seq;
     unsigned scanout_id;
+    struct drmmode_fb *fb;
 
     if (!crtc || !crtc->enabled)
 	return;
 
     drmmode_crtc = crtc->driver_private;
+    scanout_id = drmmode_crtc->scanout_id ^ 1;
     if (drmmode_crtc->scanout_update_pending ||
-	!drmmode_crtc->scanout[drmmode_crtc->scanout_id].pixmap ||
+	!drmmode_crtc->scanout[scanout_id].pixmap ||
 	drmmode_crtc->dpms_mode != DPMSModeOn)
 	return;
 
-    scanout_id = drmmode_crtc->scanout_id ^ 1;
     if (!radeon_prime_scanout_do_update(crtc, scanout_id))
 	return;
 
+    fb = radeon_pixmap_get_fb(drmmode_crtc->scanout[scanout_id].pixmap);
+    if (!fb) {
+	xf86DrvMsg(scrn->scrnIndex, X_WARNING,
+		   "Failed to get FB for PRIME flip.\n");
+	return;
+    }
+	
     drm_queue_seq = radeon_drm_queue_alloc(crtc,
 					   RADEON_DRM_QUEUE_CLIENT_DEFAULT,
-					   RADEON_DRM_QUEUE_ID_DEFAULT,
-					   NULL,
+					   RADEON_DRM_QUEUE_ID_DEFAULT, fb,
 					   radeon_scanout_flip_handler,
-					   radeon_scanout_flip_abort);
+					   radeon_scanout_flip_abort, TRUE);
     if (drm_queue_seq == RADEON_DRM_QUEUE_ERROR) {
 	xf86DrvMsg(scrn->scrnIndex, X_WARNING,
 		   "Allocating DRM event queue entry failed for PRIME flip.\n");
 	return;
     }
 
-    drmmode_fb_reference(pRADEONEnt->fd, &drmmode_crtc->flip_pending,
-			  radeon_pixmap_get_fb(drmmode_crtc->scanout[scanout_id].pixmap));
-    if (!drmmode_crtc->flip_pending) {
-	xf86DrvMsg(scrn->scrnIndex, X_WARNING,
-		   "Failed to get FB for PRIME flip.\n");
+    if (drmmode_page_flip_target_relative(pRADEONEnt, drmmode_crtc,
+					  fb->handle, 0, drm_queue_seq, 1)
+	!= 0) {
+	if (!(drmmode_crtc->scanout_status & DRMMODE_SCANOUT_FLIP_FAILED)) {
+	    xf86DrvMsg(scrn->scrnIndex, X_WARNING,
+		       "flip queue failed in %s: %s, TearFree inactive\n",
+		       __func__, strerror(errno));
+	    drmmode_crtc->scanout_status |= DRMMODE_SCANOUT_FLIP_FAILED;
+	}
+
 	radeon_drm_abort_entry(drm_queue_seq);
 	return;
     }
 
-    if (drmmode_page_flip_target_relative(pRADEONEnt, drmmode_crtc,
-					  drmmode_crtc->flip_pending->handle,
-					  0, drm_queue_seq, 0) != 0) {
-	xf86DrvMsg(scrn->scrnIndex, X_WARNING, "flip queue failed in %s: %s\n",
-		   __func__, strerror(errno));
-	radeon_drm_abort_entry(drm_queue_seq);
-	return;
+    if (drmmode_crtc->scanout_status & DRMMODE_SCANOUT_FLIP_FAILED) {
+	xf86DrvMsg(scrn->scrnIndex, X_INFO, "TearFree active again\n");
+	drmmode_crtc->scanout_status &= ~DRMMODE_SCANOUT_FLIP_FAILED;
     }
 
     drmmode_crtc->scanout_id = scanout_id;
     drmmode_crtc->scanout_update_pending = drm_queue_seq;
+    drmmode_fb_reference(pRADEONEnt->fd, &drmmode_crtc->flip_pending, fb);
 }
 
 static void
@@ -1020,8 +1057,9 @@ static void
 radeon_scanout_update(xf86CrtcPtr xf86_crtc)
 {
     drmmode_crtc_private_ptr drmmode_crtc = xf86_crtc->driver_private;
+    ScrnInfoPtr scrn = xf86_crtc->scrn;
+    RADEONEntPtr pRADEONEnt = RADEONEntPriv(scrn);
     uintptr_t drm_queue_seq;
-    ScrnInfoPtr scrn;
     DamagePtr pDamage;
     RegionPtr pRegion;
     BoxRec extents;
@@ -1046,29 +1084,50 @@ radeon_scanout_update(xf86CrtcPtr xf86_crtc)
 	return;
     }
 
-    scrn = xf86_crtc->scrn;
     drm_queue_seq = radeon_drm_queue_alloc(xf86_crtc,
 					   RADEON_DRM_QUEUE_CLIENT_DEFAULT,
 					   RADEON_DRM_QUEUE_ID_DEFAULT,
 					   drmmode_crtc,
 					   radeon_scanout_update_handler,
-					   radeon_scanout_update_abort);
+					   radeon_scanout_update_abort,
+					   FALSE);
     if (drm_queue_seq == RADEON_DRM_QUEUE_ERROR) {
 	xf86DrvMsg(scrn->scrnIndex, X_WARNING,
 		   "radeon_drm_queue_alloc failed for scanout update\n");
-	return;
-    }
-
-    if (!drmmode_wait_vblank(xf86_crtc, DRM_VBLANK_RELATIVE | DRM_VBLANK_EVENT,
-			     1, drm_queue_seq, NULL, NULL)) {
-	xf86DrvMsg(scrn->scrnIndex, X_WARNING,
-		   "drmmode_wait_vblank failed for scanout update: %s\n",
-		   strerror(errno));
-	radeon_drm_abort_entry(drm_queue_seq);
+	radeon_scanout_update_handler(xf86_crtc, 0, 0, drmmode_crtc);
 	return;
     }
 
     drmmode_crtc->scanout_update_pending = drm_queue_seq;
+
+    if (!drmmode_wait_vblank(xf86_crtc, DRM_VBLANK_RELATIVE | DRM_VBLANK_EVENT,
+			     1, drm_queue_seq, NULL, NULL)) {
+	if (!(drmmode_crtc->scanout_status & DRMMODE_SCANOUT_VBLANK_FAILED)) {
+	    xf86DrvMsg(scrn->scrnIndex, X_WARNING,
+		       "drmmode_wait_vblank failed for scanout update: %s\n",
+		       strerror(errno));
+	    drmmode_crtc->scanout_status |= DRMMODE_SCANOUT_VBLANK_FAILED;
+	}
+
+	drmmode_crtc->drmmode->event_context.vblank_handler(pRADEONEnt->fd,
+							    0, 0, 0,
+							    (void*)drm_queue_seq);
+	drmmode_crtc->wait_flip_nesting_level++;
+	radeon_drm_queue_handle_deferred(xf86_crtc);
+	return;
+    }
+
+    if (drmmode_crtc->scanout_status ==
+	(DRMMODE_SCANOUT_FLIP_FAILED | DRMMODE_SCANOUT_VBLANK_FAILED)) {
+	/* The page flip and vblank ioctls failed before, but the vblank
+	 * ioctl is working again, so we can try re-enabling TearFree
+	 */
+	xf86_crtc->funcs->set_mode_major(xf86_crtc, &xf86_crtc->mode,
+					 xf86_crtc->rotation,
+					 xf86_crtc->x, xf86_crtc->y);
+    }
+
+    drmmode_crtc->scanout_status &= ~DRMMODE_SCANOUT_VBLANK_FAILED;
 }
 
 static void
@@ -1081,6 +1140,7 @@ radeon_scanout_flip(ScreenPtr pScreen, RADEONInfoPtr info,
     RADEONEntPtr pRADEONEnt = RADEONEntPriv(scrn);
     uintptr_t drm_queue_seq;
     unsigned scanout_id;
+    struct drmmode_fb *fb;
 
     if (drmmode_crtc->scanout_update_pending ||
 	drmmode_crtc->flip_pending ||
@@ -1096,33 +1156,34 @@ radeon_scanout_flip(ScreenPtr pScreen, RADEONInfoPtr info,
     radeon_cs_flush_indirect(scrn);
     RegionEmpty(region);
 
+    fb = radeon_pixmap_get_fb(drmmode_crtc->scanout[scanout_id].pixmap);
+    if (!fb) {
+	xf86DrvMsg(scrn->scrnIndex, X_WARNING,
+	       "Failed to get FB for scanout flip.\n");
+	return;
+    }
+
     drm_queue_seq = radeon_drm_queue_alloc(xf86_crtc,
 					   RADEON_DRM_QUEUE_CLIENT_DEFAULT,
-					   RADEON_DRM_QUEUE_ID_DEFAULT,
-					   NULL,
+					   RADEON_DRM_QUEUE_ID_DEFAULT, fb,
 					   radeon_scanout_flip_handler,
-					   radeon_scanout_flip_abort);
+					   radeon_scanout_flip_abort, TRUE);
     if (drm_queue_seq == RADEON_DRM_QUEUE_ERROR) {
 	xf86DrvMsg(scrn->scrnIndex, X_WARNING,
 		   "Allocating DRM event queue entry failed.\n");
 	return;
     }
 
-    drmmode_fb_reference(pRADEONEnt->fd, &drmmode_crtc->flip_pending,
-			  radeon_pixmap_get_fb(drmmode_crtc->scanout[scanout_id].pixmap));
-    if (!drmmode_crtc->flip_pending) {
-	xf86DrvMsg(scrn->scrnIndex, X_WARNING,
-		   "Failed to get FB for scanout flip.\n");
-	radeon_drm_abort_entry(drm_queue_seq);
-	return;
-    }
-
     if (drmmode_page_flip_target_relative(pRADEONEnt, drmmode_crtc,
-					  drmmode_crtc->flip_pending->handle,
-					  0, drm_queue_seq, 0) != 0) {
-	xf86DrvMsg(scrn->scrnIndex, X_WARNING, "flip queue failed in %s: %s, "
-		   "TearFree inactive until next modeset\n",
-		   __func__, strerror(errno));
+					  fb->handle, 0, drm_queue_seq, 1)
+	!= 0) {
+	if (!(drmmode_crtc->scanout_status & DRMMODE_SCANOUT_FLIP_FAILED)) {
+	    xf86DrvMsg(scrn->scrnIndex, X_WARNING,
+		       "flip queue failed in %s: %s, TearFree inactive\n",
+		       __func__, strerror(errno));
+	    drmmode_crtc->scanout_status |= DRMMODE_SCANOUT_FLIP_FAILED;
+	}
+
 	radeon_drm_abort_entry(drm_queue_seq);
 	RegionCopy(DamageRegion(drmmode_crtc->scanout_damage),
 		   &drmmode_crtc->scanout_last_region);
@@ -1134,8 +1195,14 @@ radeon_scanout_flip(ScreenPtr pScreen, RADEONInfoPtr info,
 	return;
     }
 
+    if (drmmode_crtc->scanout_status & DRMMODE_SCANOUT_FLIP_FAILED) {
+	xf86DrvMsg(scrn->scrnIndex, X_INFO, "TearFree active again\n");
+	drmmode_crtc->scanout_status &= ~DRMMODE_SCANOUT_FLIP_FAILED;
+    }
+
     drmmode_crtc->scanout_id = scanout_id;
     drmmode_crtc->scanout_update_pending = drm_queue_seq;
+    drmmode_fb_reference(pRADEONEnt->fd, &drmmode_crtc->flip_pending, fb);
 }
 
 static void RADEONBlockHandler_KMS(BLOCKHANDLER_ARGS_DECL)
@@ -1689,7 +1756,6 @@ Bool RADEONPreInit_KMS(ScrnInfoPtr pScrn, int flags)
     RADEONInfoPtr     info;
     RADEONEntPtr pRADEONEnt;
     MessageType from;
-    DevUnion* pPriv;
     Gamma  zeros = { 0.0, 0.0, 0.0 };
     uint32_t tiling = 0;
     int cpp;
@@ -1700,10 +1766,23 @@ Bool RADEONPreInit_KMS(ScrnInfoPtr pScrn, int flags)
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
 		   "RADEONPreInit_KMS\n");
     if (pScrn->numEntities != 1) return FALSE;
+
+    pRADEONEnt = xf86GetEntityPrivate(pScrn->entityList[0],
+				      getRADEONEntityIndex())->ptr;
+    if (pRADEONEnt->num_scrns == ARRAY_SIZE(pRADEONEnt->scrn)) {
+	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		   "Only up to %u Zaphod instances supported\n",
+		   (unsigned)ARRAY_SIZE(pRADEONEnt->scrn));
+	return FALSE;
+    }
+    
     if (!RADEONGetRec(pScrn)) return FALSE;
 
     info               = RADEONPTR(pScrn);
-    info->IsSecondary  = FALSE;
+
+    info->instance_id = pRADEONEnt->num_scrns++;
+    pRADEONEnt->scrn[info->instance_id] = pScrn;
+
     info->pEnt         = xf86GetEntityInfo(pScrn->entityList[pScrn->numEntities - 1]);
     if (info->pEnt->location.type != BUS_PCI
 #ifdef XSERVER_PLATFORM_BUS
@@ -1712,26 +1791,10 @@ Bool RADEONPreInit_KMS(ScrnInfoPtr pScrn, int flags)
         )
         return FALSE;
 
-    pPriv = xf86GetEntityPrivate(pScrn->entityList[0],
-				 getRADEONEntityIndex());
-    pRADEONEnt = pPriv->ptr;
-
-    if(xf86IsEntityShared(pScrn->entityList[0]))
-    {
-        if(xf86IsPrimInitDone(pScrn->entityList[0]))
-        {
-            info->IsSecondary = TRUE;
-        }
-        else
-        {
-            xf86SetPrimInitDone(pScrn->entityList[0]);
-        }
+    if (xf86IsEntityShared(pScrn->entityList[0]) &&
+	info->instance_id == 0) {
+	xf86SetPrimInitDone(pScrn->entityList[0]);
     }
-
-    if (info->IsSecondary)
-	pRADEONEnt->secondary_scrn = pScrn;
-    else
-	pRADEONEnt->primary_scrn = pScrn;
 
     info->PciInfo = xf86GetPciInfoForEntity(info->pEnt->index);
     pScrn->monitor     = pScrn->confScreen->monitor;
@@ -2614,7 +2677,7 @@ void RADEONLeaveVT_KMS(ScrnInfoPtr pScrn)
 				pixmap_unref_fb(drmmode_crtc->scanout[1].pixmap,
 						None, pRADEONEnt);
 			} else {
-			    drmmode_crtc_scanout_free(drmmode_crtc);
+			    drmmode_crtc_scanout_free(crtc);
 			}
 		    }
 		}
@@ -2694,28 +2757,29 @@ static Bool radeon_setup_kernel_mem(ScreenPtr pScreen)
 
     {
 	int cursor_size;
-	int c;
+	int c, i;
 
 	cursor_size = info->cursor_w * info->cursor_h * 4;
 	cursor_size = RADEON_ALIGN(cursor_size, RADEON_GPU_PAGE_SIZE);
 	for (c = 0; c < xf86_config->num_crtc; c++) {
-	    /* cursor objects */
-            if (!info->cursor_bo[c]) {
-                info->cursor_bo[c] = radeon_bo_open(info->bufmgr, 0,
-                                                    cursor_size, 0,
-                                                    RADEON_GEM_DOMAIN_VRAM, 0);
-                if (!info->cursor_bo[c]) {
-                    ErrorF("Failed to allocate cursor buffer memory\n");
-                    return FALSE;
-                }
+	    drmmode_crtc_private_ptr drmmode_crtc = xf86_config->crtc[c]->driver_private;
 
-                if (radeon_bo_map(info->cursor_bo[c], 1)) {
-                    ErrorF("Failed to map cursor buffer memory\n");
-                }
+	    for (i = 0; i < 2; i++) {
+		if (!drmmode_crtc->cursor_bo[i]) {
+		    drmmode_crtc->cursor_bo[i] =
+			radeon_bo_open(info->bufmgr, 0, cursor_size, 0,
+				       RADEON_GEM_DOMAIN_VRAM, 0);
 
-                drmmode_set_cursor(pScrn, &info->drmmode, c, info->cursor_bo[c]);
-            }
-        }
+		    if (!(drmmode_crtc->cursor_bo[i])) {
+			ErrorF("Failed to allocate cursor buffer memory\n");
+			return FALSE;
+		    }
+
+		    if (radeon_bo_map(drmmode_crtc->cursor_bo[i], 1))
+			ErrorF("Failed to map cursor buffer memory\n");
+		}
+	    }
+	}
     }
 
     if (!info->front_buffer) {
@@ -2779,7 +2843,9 @@ void radeon_kms_update_vram_limit(ScrnInfoPtr pScrn, uint32_t new_fb_size)
     int c;
 
     for (c = 0; c < xf86_config->num_crtc; c++) {
-	if (info->cursor_bo[c])
+	drmmode_crtc_private_ptr drmmode_crtc = xf86_config->crtc[c]->driver_private;
+
+	if (drmmode_crtc->cursor_bo[0])
 	    new_fb_size += (64 * 4 * 64);
     }
 

@@ -71,6 +71,12 @@ struct drmmode_fb {
 	uint32_t handle;
 };
 
+enum drmmode_scanout_status {
+    DRMMODE_SCANOUT_OK,
+    DRMMODE_SCANOUT_FLIP_FAILED = 1u << 0,
+    DRMMODE_SCANOUT_VBLANK_FAILED = 1u << 1,
+};
+
 struct drmmode_scanout {
     struct radeon_buffer *bo;
     PixmapPtr pixmap;
@@ -81,7 +87,15 @@ typedef struct {
     drmmode_ptr drmmode;
     drmModeCrtcPtr mode_crtc;
     int hw_id;
-    struct radeon_bo *cursor_bo;
+
+    CursorPtr cursor;
+    int cursor_x;
+    int cursor_y;
+    int cursor_xhot;
+    int cursor_yhot;
+    unsigned cursor_id;
+    struct radeon_bo *cursor_bo[2];
+
     struct drmmode_scanout rotate;
     struct drmmode_scanout scanout[2];
     DamagePtr scanout_damage;
@@ -90,6 +104,7 @@ typedef struct {
     unsigned scanout_id;
     uintptr_t scanout_update_pending;
     Bool tear_free;
+    enum drmmode_scanout_status scanout_status;
 
     PixmapPtr prime_scanout_pixmap;
 
@@ -206,7 +221,6 @@ extern Bool drmmode_pre_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int cpp);
 extern void drmmode_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode);
 extern void drmmode_fini(ScrnInfoPtr pScrn, drmmode_ptr drmmode);
 extern Bool drmmode_set_bufmgr(ScrnInfoPtr pScrn, drmmode_ptr drmmode, struct radeon_bo_manager *bufmgr);
-extern void drmmode_set_cursor(ScrnInfoPtr scrn, drmmode_ptr drmmode, int id, struct radeon_bo *bo);
 void drmmode_adjust_frame(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int x, int y);
 extern Bool drmmode_set_desired_modes(ScrnInfoPtr pScrn, drmmode_ptr drmmode,
 				      Bool set_hw);
@@ -215,7 +229,7 @@ extern Bool drmmode_setup_colormap(ScreenPtr pScreen, ScrnInfoPtr pScrn);
 
 extern void drmmode_crtc_scanout_destroy(drmmode_ptr drmmode,
 					 struct drmmode_scanout *scanout);
-void drmmode_crtc_scanout_free(drmmode_crtc_private_ptr drmmode_crtc);
+void drmmode_crtc_scanout_free(xf86CrtcPtr crtc);
 PixmapPtr drmmode_crtc_scanout_create(xf86CrtcPtr crtc,
 				      struct drmmode_scanout *scanout,
 				      int width, int height);
