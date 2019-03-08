@@ -8229,24 +8229,43 @@ resources have different default values:
 .B allowWindowOps: false
 Various, potentially dangerous, extended window control sequences are disabled.
 .TP 8
+.B backarrowKeyIsErase: true
+The back arrow key is set to return the erase character defined in the
+tty, generally \fB^?\fP. 
+.TP 8
 .B cursorBlink: never
 Prevents cursor from blinking.
 .TP 8
 .B deleteIsDEL: true
 The Delete key generates \fB^?\fP. 
 .TP 8
+.B locale: UTF-8
+Always handle UTF-8 characters correctly, even when running with a
+POSIX locale.  This is safe on OpenBSD because no other multibyte locale
+is supported, and because ASCII is a subset of UTF-8.  It is not only
+more convenient but also safer because
+.B xterm
+honours fewer terminal escape codes in UTF-8 mode.
+.TP 8
+.B modifyFunctionKeys: 0
+Traditional function keys behaviour.
+.TP 8
+.B precompose: false
+Do not compose UTF-8 characters into Normalization Form C.
+For example, this allows copy and paste to work even for filenames
+containing combining accents.
+.TP 8
 .B ptyInitialErase: true
 The erase character for the tty is inherited from the parent
 process setting, generally \fB^?\fP. 
 .TP 8
-.B backarrowKeyIsErase: true
-The back arrow key is set to return the erase character defined in the
-tty, generally \fB^?\fP. 
+.B scrollBar: true
+Display the scrollbar by default.
 .PP
 Moreover, on OpenBSD the 
 .IR termcap(5)
 entry for xterm defines the 
 .I kb 
-capability as \fB^?\fP
+capability as \fB^?\fP.
 .PP
 The u\*n and koi8r\*n shell scripts are not provided by OpenBSD.
