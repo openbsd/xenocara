@@ -4991,6 +4991,10 @@ systemWcwidthOk(int samplesize, int samplepass)
     wchar_t n;
     int oops = 0;
 
+#ifdef __OpenBSD__
+    return 1;
+#endif
+
     for (n = 21; n <= 25; ++n) {
 	wchar_t code = (wchar_t) dec2ucs(NULL, (unsigned) n);
 	int system_code = wcwidth(code);
