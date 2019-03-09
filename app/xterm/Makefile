@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.32 2017/06/18 21:09:07 espie Exp $
+# $OpenBSD: Makefile,v 1.33 2019/03/09 20:10:19 matthieu Exp $
 .include <bsd.xconf.mk>
 
 SUBDIR=	icons resize
@@ -37,6 +37,8 @@ screen.o:	screen.c
 
 misc.o:	builtin_icons.h
 
+trace.o: VTparse.cin
+
 # do this to quiet gcc -Wcast-qual warnings 
 builtin_icons.h :
 	@echo "#if OPT_BUILTIN_XPMS" >$@
@@ -49,15 +51,10 @@ builtin_icons.h :
 	@echo "#endif" >>$@
 	@echo "made $@"
 
-.SUFFIXES: .hin .def
+beforedepend: builtin_icons.h VTparse.cin VTparse.hin
+BUILDFIRST = builtin_icons.h VTparse.cin VTparse.hin
 
-.def.hin:
-	awk '/^CASE_/{printf "#define %s %d\n", $$1, n++}' < $< >$@
-
-beforedepend: builtin_icons.h VTparse.hin
-BUILDFIRST = builtin_icons.h VTparse.hin
-
-.SUFFIXES: .man .1
+.SUFFIXES: .man .1 .def .cin .hin
 
 PATCH_NUM != sed -n '/XTERM_PATCH/s/[^0-9]*//gp' ${.CURDIR}/version.h
 PATCH_YMD != sed -n '/XTERM_DATE/s,[^0-9/.-]*,,gp' ${.CURDIR}/version.h
@@ -82,7 +79,7 @@ PATCH_YMD != sed -n '/XTERM_DATE/s,[^0-9/.-]*,,gp' ${.CURDIR}/version.h
 	    -e s%/etc/wtmp%/var/run/wtmp%g \
 	     < $< > $@
 
-CLEANFILES+=	${MAN} builtin_icons.h VTparse.hin
+CLEANFILES+=	${MAN} builtin_icons.h VTparse.cin VTparse.hin
 
 afterinstall:
 	${INSTALL} ${INSTALL_COPY} -m ${SHAREMODE} \
@@ -93,6 +90,12 @@ afterinstall:
 		${DESTDIR}${X11BASE}/share/X11/app-defaults/XTerm-color
 
 obj: _xenocara_obj
+
+.def.cin:
+	awk '/^CASE_/{printf "{ %d, \"%s\" },\n", n++, $$1; }' $< >$@
+
+.def.hin:
+	awk '/^CASE_/{printf "#define %s %d\n", $$1, n++; }' $< >$@
 
 .include <bsd.prog.mk>
 .include <bsd.xorg.mk>

@@ -492,6 +492,7 @@ visibleSelectionTarget(Display *d, Atom a)
     return result;
 }
 
+#if OPT_TEK4014
 const char *
 visibleTekparse(int code)
 {
@@ -511,6 +512,7 @@ visibleTekparse(int code)
     }
     return result;
 }
+#endif
 
 const char *
 visibleVTparse(int code)
