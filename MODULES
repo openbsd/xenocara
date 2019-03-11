@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.405 2019/03/08 22:20:45 jsg Exp $
+# $OpenBSD: MODULES,v 1.406 2019/03/11 20:24:03 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -15,7 +15,7 @@ app/listres		1.0.4
 app/luit		1.1.1	7.7	XXX
 app/mkcomposecache	1.2.1		needs-import
 app/mkfontdir		1.0.7	7.7
-app/mkfontscale		1.1.3	7.7+
+app/mkfontscale		1.2.0	7.7+	needs-update
 app/oclock		1.0.4
 app/rgb			1.0.6
 app/sessreg		1.1.1	7.7+
@@ -40,12 +40,12 @@ app/xedit		1.2.2
 app/xev			1.2.3	7.7+	needs-update
 app/xeyes		1.1.2
 app/xf86dga		1.0.3
-app/xfd			1.1.2
+app/xfd			1.1.3		needs-update
 app/xfontsel		1.0.6
 app/xgamma		1.0.6	7.7+
 app/xgc			1.0.5
 app/xhost		1.0.8	7.7+	needs-update
-app/xinit		1.4.0
+app/xinit		1.4.1		needs-update
 app/xinput		1.6.2	7.7+
 app/xkbcomp		1.4.2	7.7+
 app/xkbevd		1.1.4	7.7+
@@ -53,7 +53,7 @@ app/xkbprint		1.0.4
 app/xkbutils		1.0.4	7.7+
 app/xkill		1.0.5	7.7+
 app/xload		1.1.3
-app/xlogo		1.0.4
+app/xlogo		1.0.5		needs-update
 app/xlsatoms		1.1.3	7.7+	needs-update
 app/xlsclients		1.1.4	7.7+
 app/xlsfonts		1.0.6
@@ -61,9 +61,9 @@ app/xmag		1.0.6
 app/xman		1.1.4
 app/xmessage		1.0.5
 app/xmodmap		1.0.10	7.7+	needs-update
-app/xmore		1.0.2
+app/xmore		1.0.3		needs-update
 app/xpr			1.0.5	7.7+
-app/xprop		1.2.3	7.7+
+app/xprop		1.2.4	7.7+	needs-update
 app/xrandr		1.5.0	7.7+
 app/xrdb		1.2.0	7.7+	needs-update
 app/xrefresh		1.0.6	7.7+
@@ -165,16 +165,16 @@ font/util			1.3.1
 font/winitzki-cyrillic		1.0.3
 font/xfree86-type1		1.0.4
 
-lib/libFS			1.0.7	7.7+
+lib/libFS			1.0.8	7.7+	needs-update
 lib/libICE			1.0.9	7.7+
 lib/libSM			1.2.3	7.7+
 lib/libX11			1.6.7	7.7+
 lib/libXScrnSaver		1.2.3	7.7+
 lib/libXau			1.0.9	7.7+
 lib/libXaw			1.0.13	7.7+
-lib/libXcomposite		0.4.4	7.7+
-lib/libXcursor			1.1.15	7.7+
-lib/libXdamage			1.1.4	7.7+
+lib/libXcomposite		0.4.5	7.7+	needs-update
+lib/libXcursor			1.2.0	7.7+	needs-update
+lib/libXdamage			1.1.5	7.7+	needs-update
 lib/libXdmcp			1.1.2	7.7+
 lib/libXext			1.3.3	7.7+
 lib/libXfixes			5.0.3	7.7+
