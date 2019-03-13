@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.24 2019/03/06 10:39:52 jsg Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.25 2019/03/13 01:20:50 deraadt Exp $
 
 .include <bsd.own.mk>
 .include <bsd.xconf.mk>
@@ -68,6 +68,10 @@ CONFIGURE_ARGS+=       USER_CFLAGS="-O0 ${O2}"
 .endif
 
 .if ${MACHINE_ARCH} == sh
+CONFIGURE_ARGS+=       USER_CFLAGS="-O0"
+.endif
+
+.if ${MACHINE_ARCH} == hppa
 CONFIGURE_ARGS+=       USER_CFLAGS="-O0"
 .endif
 
