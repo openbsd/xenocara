@@ -37,9 +37,6 @@
 ./usr/X11R6/include/X11/dri/xf86dri.h
 ./usr/X11R6/include/X11/dri/xf86driproto.h
 ./usr/X11R6/include/X11/dri/xf86dristr.h
-./usr/X11R6/include/X11/extensions/dri2proto.h
-./usr/X11R6/include/X11/extensions/dri2tokens.h
-./usr/X11R6/include/X11/extensions/dri3proto.h
 ./usr/X11R6/include/epoxy/common.h
 ./usr/X11R6/include/epoxy/egl.h
 ./usr/X11R6/include/epoxy/egl_generated.h
@@ -257,7 +254,6 @@
 ./usr/X11R6/lib/libtxc_dxtn.a
 ./usr/X11R6/lib/libtxc_dxtn.so.0.0
 ./usr/X11R6/lib/pkgconfig/dri.pc
-./usr/X11R6/lib/pkgconfig/dri2proto.pc
 ./usr/X11R6/lib/pkgconfig/egl.pc
 ./usr/X11R6/lib/pkgconfig/epoxy.pc
 ./usr/X11R6/lib/pkgconfig/gbm.pc
@@ -271,7 +267,6 @@
 ./usr/X11R6/lib/pkgconfig/xf86driproto.pc
 ./usr/X11R6/man/man1/glxgears.1
 ./usr/X11R6/man/man1/glxinfo.1
-./usr/X11R6/share/doc/dri2proto/dri2proto.txt
 ./var/cache/fontconfig/0fe0af1d5898cfe43064332244d1dc15-be32d8.cache-7
 ./var/cache/fontconfig/1bd20f0f0c9d7d1d5fd55b69fcc2b3a3-be32d8.cache-7
 ./var/cache/fontconfig/2cee944125173ffd13126fb55c9a0dc1-be32d8.cache-7
