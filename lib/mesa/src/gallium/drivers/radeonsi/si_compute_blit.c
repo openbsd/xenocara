@@ -112,12 +112,20 @@ static void si_compute_do_clear_or_copy(struct si_context *sctx,
 	sb[0].buffer_offset = dst_offset;
 	sb[0].buffer_size = size;
 
+	bool shader_dst_stream_policy = SI_COMPUTE_DST_CACHE_POLICY != L2_LRU;
+
 	if (src) {
 		sb[1].buffer = src;
 		sb[1].buffer_offset = src_offset;
 		sb[1].buffer_size = size;
 
 		ctx->set_shader_buffers(ctx, PIPE_SHADER_COMPUTE, 0, 2, sb);
+
+		if (!sctx->cs_copy_buffer) {
+			sctx->cs_copy_buffer = si_create_dma_compute_shader(&sctx->b,
+							     SI_COMPUTE_COPY_DW_PER_THREAD,
+							     shader_dst_stream_policy, true);
+		}
 		ctx->bind_compute_state(ctx, sctx->cs_copy_buffer);
 	} else {
 		assert(clear_value_size >= 4 &&
@@ -128,6 +136,12 @@ static void si_compute_do_clear_or_copy(struct si_context *sctx,
 			sctx->cs_user_data[i] = clear_value[i % (clear_value_size / 4)];
 
 		ctx->set_shader_buffers(ctx, PIPE_SHADER_COMPUTE, 0, 1, sb);
+
+		if (!sctx->cs_clear_buffer) {
+			sctx->cs_clear_buffer = si_create_dma_compute_shader(&sctx->b,
+							     SI_COMPUTE_CLEAR_DW_PER_THREAD,
+							     shader_dst_stream_policy, false);
+		}
 		ctx->bind_compute_state(ctx, sctx->cs_clear_buffer);
 	}
 
