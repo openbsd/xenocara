@@ -524,6 +524,14 @@ radv_pipeline_compute_spi_color_formats(struct radv_pipeline *pipeline,
 		col_format |= cf << (4 * i);
 	}
 
+	if (!col_format && blend->need_src_alpha & (1 << 0)) {
+		/* When a subpass doesn't have any color attachments, write the
+		 * alpha channel of MRT0 when alpha coverage is enabled because
+		 * the depth attachment needs it.
+		 */
+		col_format |= V_028714_SPI_SHADER_32_ABGR;
+	}
+
 	/* If the i-th target format is set, all previous target formats must
 	 * be non-zero to avoid hangs.
 	 */
@@ -688,6 +696,7 @@ radv_pipeline_init_blend_state(struct radv_pipeline *pipeline,
 
 	if (vkms && vkms->alphaToCoverageEnable) {
 		blend.db_alpha_to_mask |= S_028B70_ALPHA_TO_MASK_ENABLE(1);
+		blend.need_src_alpha |= 0x1;
 	}
 
 	blend.cb_target_mask = 0;
@@ -3066,13 +3075,17 @@ radv_pipeline_generate_geometry_shader(struct radeon_cmdbuf *cs,
 	radv_pipeline_generate_hw_vs(cs, pipeline, pipeline->gs_copy_shader);
 }
 
-static uint32_t offset_to_ps_input(uint32_t offset, bool flat_shade)
+static uint32_t offset_to_ps_input(uint32_t offset, bool flat_shade, bool float16)
 {
 	uint32_t ps_input_cntl;
 	if (offset <= AC_EXP_PARAM_OFFSET_31) {
 		ps_input_cntl = S_028644_OFFSET(offset);
 		if (flat_shade)
 			ps_input_cntl |= S_028644_FLAT_SHADE(1);
+		if (float16) {
+			ps_input_cntl |= S_028644_FP16_INTERP_MODE(1) |
+			                 S_028644_ATTR0_VALID(1);
+		}
 	} else {
 		/* The input is a DEFAULT_VAL constant. */
 		assert(offset >= AC_EXP_PARAM_DEFAULT_VAL_0000 &&
@@ -3097,7 +3110,7 @@ radv_pipeline_generate_ps_inputs(struct radeon_cmdbuf *cs,
 	if (ps->info.info.ps.prim_id_input) {
 		unsigned vs_offset = outinfo->vs_output_param_offset[VARYING_SLOT_PRIMITIVE_ID];
 		if (vs_offset != AC_EXP_PARAM_UNDEFINED) {
-			ps_input_cntl[ps_offset] = offset_to_ps_input(vs_offset, true);
+			ps_input_cntl[ps_offset] = offset_to_ps_input(vs_offset, true, false);
 			++ps_offset;
 		}
 	}
@@ -3107,9 +3120,9 @@ radv_pipeline_generate_ps_inputs(struct radeon_cmdbuf *cs,
 	    ps->info.info.needs_multiview_view_index) {
 		unsigned vs_offset = outinfo->vs_output_param_offset[VARYING_SLOT_LAYER];
 		if (vs_offset != AC_EXP_PARAM_UNDEFINED)
-			ps_input_cntl[ps_offset] = offset_to_ps_input(vs_offset, true);
+			ps_input_cntl[ps_offset] = offset_to_ps_input(vs_offset, true, false);
 		else
-			ps_input_cntl[ps_offset] = offset_to_ps_input(AC_EXP_PARAM_DEFAULT_VAL_0000, true);
+			ps_input_cntl[ps_offset] = offset_to_ps_input(AC_EXP_PARAM_DEFAULT_VAL_0000, true, false);
 		++ps_offset;
 	}
 
@@ -3125,14 +3138,14 @@ radv_pipeline_generate_ps_inputs(struct radeon_cmdbuf *cs,
 
 		vs_offset = outinfo->vs_output_param_offset[VARYING_SLOT_CLIP_DIST0];
 		if (vs_offset != AC_EXP_PARAM_UNDEFINED) {
-			ps_input_cntl[ps_offset] = offset_to_ps_input(vs_offset, false);
+			ps_input_cntl[ps_offset] = offset_to_ps_input(vs_offset, false, false);
 			++ps_offset;
 		}
 
 		vs_offset = outinfo->vs_output_param_offset[VARYING_SLOT_CLIP_DIST1];
 		if (vs_offset != AC_EXP_PARAM_UNDEFINED &&
 		    ps->info.info.ps.num_input_clips_culls > 4) {
-			ps_input_cntl[ps_offset] = offset_to_ps_input(vs_offset, false);
+			ps_input_cntl[ps_offset] = offset_to_ps_input(vs_offset, false, false);
 			++ps_offset;
 		}
 	}
@@ -3140,6 +3153,7 @@ radv_pipeline_generate_ps_inputs(struct radeon_cmdbuf *cs,
 	for (unsigned i = 0; i < 32 && (1u << i) <= ps->info.fs.input_mask; ++i) {
 		unsigned vs_offset;
 		bool flat_shade;
+		bool float16;
 		if (!(ps->info.fs.input_mask & (1u << i)))
 			continue;
 
@@ -3151,8 +3165,9 @@ radv_pipeline_generate_ps_inputs(struct radeon_cmdbuf *cs,
 		}
 
 		flat_shade = !!(ps->info.fs.flat_shaded_mask & (1u << ps_offset));
+		float16 = !!(ps->info.fs.float16_shaded_mask & (1u << ps_offset));
 
-		ps_input_cntl[ps_offset] = offset_to_ps_input(vs_offset, flat_shade);
+		ps_input_cntl[ps_offset] = offset_to_ps_input(vs_offset, flat_shade, float16);
 		++ps_offset;
 	}
 

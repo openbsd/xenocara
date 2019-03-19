@@ -3020,6 +3020,7 @@ fs_visitor::opt_peephole_csel()
 
             if (csel_inst != NULL) {
                progress = true;
+               csel_inst->saturate = inst->saturate;
                inst->remove(block);
             }
 

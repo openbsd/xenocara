@@ -511,6 +511,15 @@ fs_visitor::optimize_extract_to_float(nir_alu_instr *instr,
        src0->op != nir_op_extract_i8 && src0->op != nir_op_extract_i16)
       return false;
 
+   /* If either opcode has source modifiers, bail.
+    *
+    * TODO: We can potentially handle source modifiers if both of the opcodes
+    * we're combining are signed integers.
+    */
+   if (instr->src[0].abs || instr->src[0].negate ||
+       src0->src[0].abs || src0->src[0].negate)
+      return false;
+
    nir_const_value *element = nir_src_as_const_value(src0->src[1].src);
    assert(element != NULL);
 
@@ -1515,16 +1524,25 @@ fs_visitor::nir_emit_alu(const fs_builder &bld, nir_alu_instr *instr)
        *    Use two instructions and a word or DWord intermediate integer type.
        */
       if (nir_dest_bit_size(instr->dest.dest) == 64) {
-         const brw_reg_type type = brw_int_type(2, instr->op == nir_op_extract_i8);
+         const brw_reg_type type = brw_int_type(1, instr->op == nir_op_extract_i8);
 
          if (instr->op == nir_op_extract_i8) {
             /* If we need to sign extend, extract to a word first */
             fs_reg w_temp = bld.vgrf(BRW_REGISTER_TYPE_W);
             bld.MOV(w_temp, subscript(op[0], type, byte->u32[0]));
             bld.MOV(result, w_temp);
+         } else if (byte->u32[0] & 1) {
+            /* Extract the high byte from the word containing the desired byte
+             * offset.
+             */
+            bld.SHR(result,
+                    subscript(op[0], BRW_REGISTER_TYPE_UW, byte->u32[0] / 2),
+                    brw_imm_uw(8));
          } else {
             /* Otherwise use an AND with 0xff and a word type */
-            bld.AND(result, subscript(op[0], type, byte->u32[0] / 2), brw_imm_uw(0xff));
+            bld.AND(result,
+                    subscript(op[0], BRW_REGISTER_TYPE_UW, byte->u32[0] / 2),
+                    brw_imm_uw(0xff));
          }
       } else {
          const brw_reg_type type = brw_int_type(1, instr->op == nir_op_extract_i8);

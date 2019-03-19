@@ -26,7 +26,7 @@
 
 /* Khronos platform-specific types and definitions.
  *
- * $Revision: 1.13 $ on $Date: 2019/02/19 04:24:00 $
+ * $Revision: 1.14 $ on $Date: 2019/03/19 10:59:03 $
  *
  * Adopters may modify this file to suit their platform. Adopters are
  * encouraged to submit platform specific modifications to the Khronos

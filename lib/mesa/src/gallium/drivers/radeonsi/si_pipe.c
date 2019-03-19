@@ -508,14 +508,6 @@ static struct pipe_context *si_create_context(struct pipe_screen *screen,
 	if (sscreen->debug_flags & DBG(FORCE_DMA))
 		sctx->b.resource_copy_region = sctx->dma_copy;
 
-	bool dst_stream_policy = SI_COMPUTE_DST_CACHE_POLICY != L2_LRU;
-	sctx->cs_clear_buffer = si_create_dma_compute_shader(&sctx->b,
-					     SI_COMPUTE_CLEAR_DW_PER_THREAD,
-					     dst_stream_policy, false);
-	sctx->cs_copy_buffer = si_create_dma_compute_shader(&sctx->b,
-					     SI_COMPUTE_COPY_DW_PER_THREAD,
-					     dst_stream_policy, true);
-
 	sctx->blitter = util_blitter_create(&sctx->b);
 	if (sctx->blitter == NULL)
 		goto fail;
@@ -873,7 +865,8 @@ struct pipe_screen *radeonsi_screen_create(struct radeon_winsys *ws,
 		sscreen->debug_flags |= DBG(FS_CORRECT_DERIVS_AFTER_KILL);
 	if (driQueryOptionb(config->options, "radeonsi_enable_sisched"))
 		sscreen->debug_flags |= DBG(SI_SCHED);
-
+	if (driQueryOptionb(config->options, "radeonsi_enable_nir"))
+		sscreen->debug_flags |= DBG(NIR);
 
 	if (sscreen->debug_flags & DBG(INFO))
 		ac_print_gpu_info(&sscreen->info);

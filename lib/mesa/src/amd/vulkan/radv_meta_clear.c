@@ -352,13 +352,28 @@ emit_color_clear(struct radv_cmd_buffer *cmd_buffer,
 	const struct radv_framebuffer *fb = cmd_buffer->state.framebuffer;
 	const uint32_t subpass_att = clear_att->colorAttachment;
 	const uint32_t pass_att = subpass->color_attachments[subpass_att].attachment;
-	const struct radv_image_view *iview = fb->attachments[pass_att].attachment;
-	const uint32_t samples = iview->image->info.samples;
-	const uint32_t samples_log2 = ffs(samples) - 1;
-	unsigned fs_key = radv_format_meta_fs_key(iview->vk_format);
+	const struct radv_image_view *iview = fb ? fb->attachments[pass_att].attachment : NULL;
+	uint32_t samples, samples_log2;
+	VkFormat format;
+	unsigned fs_key;
 	VkClearColorValue clear_value = clear_att->clearValue.color;
 	VkCommandBuffer cmd_buffer_h = radv_cmd_buffer_to_handle(cmd_buffer);
 	VkPipeline pipeline;
+
+	/* When a framebuffer is bound to the current command buffer, get the
+	 * number of samples from it. Otherwise, get the number of samples from
+	 * the render pass because it's likely a secondary command buffer.
+	 */
+	if (iview) {
+		samples = iview->image->info.samples;
+		format = iview->vk_format;
+	} else {
+		samples = cmd_buffer->state.pass->attachments[pass_att].samples;
+		format = cmd_buffer->state.pass->attachments[pass_att].format;
+	}
+
+	samples_log2 = ffs(samples) - 1;
+	fs_key = radv_format_meta_fs_key(format);
 
 	if (fs_key == -1) {
 		radv_finishme("color clears incomplete");
@@ -599,6 +614,9 @@ static bool depth_view_can_fast_clear(struct radv_cmd_buffer *cmd_buffer,
 				      const VkClearRect *clear_rect,
 				      VkClearDepthStencilValue clear_value)
 {
+	if (!iview)
+		return false;
+
 	uint32_t queue_mask = radv_image_queue_family_mask(iview->image,
 	                                                   cmd_buffer->queue_family_index,
 	                                                   cmd_buffer->queue_family_index);
@@ -686,10 +704,21 @@ emit_depthstencil_clear(struct radv_cmd_buffer *cmd_buffer,
 	const uint32_t pass_att = subpass->depth_stencil_attachment.attachment;
 	VkClearDepthStencilValue clear_value = clear_att->clearValue.depthStencil;
 	VkImageAspectFlags aspects = clear_att->aspectMask;
-	const struct radv_image_view *iview = fb->attachments[pass_att].attachment;
-	const uint32_t samples = iview->image->info.samples;
-	const uint32_t samples_log2 = ffs(samples) - 1;
+	const struct radv_image_view *iview = fb ? fb->attachments[pass_att].attachment : NULL;
+	uint32_t samples, samples_log2;
 	VkCommandBuffer cmd_buffer_h = radv_cmd_buffer_to_handle(cmd_buffer);
+
+	/* When a framebuffer is bound to the current command buffer, get the
+	 * number of samples from it. Otherwise, get the number of samples from
+	 * the render pass because it's likely a secondary command buffer.
+	 */
+	if (iview) {
+		samples = iview->image->info.samples;
+	} else {
+		samples = cmd_buffer->state.pass->attachments[pass_att].samples;
+	}
+
+	samples_log2 = ffs(samples) - 1;
 
 	assert(pass_att != VK_ATTACHMENT_UNUSED);
 
@@ -757,10 +786,13 @@ emit_fast_htile_clear(struct radv_cmd_buffer *cmd_buffer,
 	const uint32_t pass_att = subpass->depth_stencil_attachment.attachment;
 	VkImageLayout image_layout = subpass->depth_stencil_attachment.layout;
 	const struct radv_framebuffer *fb = cmd_buffer->state.framebuffer;
-	const struct radv_image_view *iview = fb->attachments[pass_att].attachment;
+	const struct radv_image_view *iview = fb ? fb->attachments[pass_att].attachment : NULL;
 	VkClearDepthStencilValue clear_value = clear_att->clearValue.depthStencil;
 	VkImageAspectFlags aspects = clear_att->aspectMask;
 	uint32_t clear_word, flush_bits;
+
+	if (!iview)
+		return false;
 
 	if (!radv_image_has_htile(iview->image))
 		return false;
@@ -1059,11 +1091,14 @@ emit_fast_color_clear(struct radv_cmd_buffer *cmd_buffer,
 	const uint32_t pass_att = subpass->color_attachments[subpass_att].attachment;
 	VkImageLayout image_layout = subpass->color_attachments[subpass_att].layout;
 	const struct radv_framebuffer *fb = cmd_buffer->state.framebuffer;
-	const struct radv_image_view *iview = fb->attachments[pass_att].attachment;
+	const struct radv_image_view *iview = fb ? fb->attachments[pass_att].attachment : NULL;
 	VkClearColorValue clear_value = clear_att->clearValue.color;
 	uint32_t clear_color[2], flush_bits = 0;
 	uint32_t cmask_clear_value;
 	bool ret;
+
+	if (!iview)
+		return false;
 
 	if (!radv_image_has_cmask(iview->image) && !radv_image_has_dcc(iview->image))
 		return false;
