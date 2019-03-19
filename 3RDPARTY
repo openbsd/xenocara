@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.334 2019/03/11 20:24:03 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.335 2019/03/19 11:24:39 jsg Exp $
 #
 Package: 	Freetype
 Version:	2.9.1
@@ -13,8 +13,8 @@ Maintainer:	Thomas E. Dickey
 Archive Site:	http://invisible-island.net/xterm/xterm.html
 
 Package:	Mesa
-Version		18.3.4
-Current Vers:	18.3.4
+Version		18.3.5
+Current Vers:	19.0.0
 Maintainer:	Brian Paul
 Archive Site:	https://www.mesa3d.org/
 
