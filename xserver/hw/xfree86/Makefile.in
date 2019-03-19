@@ -51,7 +51,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = Xorg$(EXEEXT)
-@SUID_WRAPPER_TRUE@wrap_PROGRAMS = Xorg.wrap$(EXEEXT)
+@SUID_WRAPPER_TRUE@wrapexec_PROGRAMS = Xorg.wrap$(EXEEXT)
 subdir = hw/xfree86
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/Xorg.sh.in $(top_srcdir)/depcomp
@@ -74,8 +74,8 @@ CONFIG_HEADER = $(top_builddir)/include/do-not-use-config.h \
 	$(top_builddir)/include/version-config.h
 CONFIG_CLEAN_FILES = Xorg.sh
 CONFIG_CLEAN_VPATH_FILES =
-am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(wrapdir)"
-PROGRAMS = $(bin_PROGRAMS) $(wrap_PROGRAMS)
+am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(wrapexecdir)"
+PROGRAMS = $(bin_PROGRAMS) $(wrapexec_PROGRAMS)
 nodist_Xorg_OBJECTS = sdksyms.$(OBJEXT)
 Xorg_OBJECTS = $(nodist_Xorg_OBJECTS)
 am__DEPENDENCIES_1 =
@@ -591,7 +591,7 @@ Xorg_LDADD = \
 
 Xorg_DEPENDENCIES = $(LOCAL_LIBS)
 Xorg_LDFLAGS = $(LD_EXPORT_SYMBOLS_FLAG)
-@SUID_WRAPPER_TRUE@wrapdir = $(SUID_WRAPPER_DIR)
+@SUID_WRAPPER_TRUE@wrapexecdir = $(SUID_WRAPPER_DIR)
 @SUID_WRAPPER_TRUE@Xorg_wrap_SOURCES = xorg-wrapper.c
 BUILT_SOURCES = xorg.conf.example
 DISTCLEANFILES = xorg.conf.example
@@ -688,12 +688,12 @@ clean-binPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
-install-wrapPROGRAMS: $(wrap_PROGRAMS)
+install-wrapexecPROGRAMS: $(wrapexec_PROGRAMS)
 	@$(NORMAL_INSTALL)
-	@list='$(wrap_PROGRAMS)'; test -n "$(wrapdir)" || list=; \
+	@list='$(wrapexec_PROGRAMS)'; test -n "$(wrapexecdir)" || list=; \
 	if test -n "$$list"; then \
-	  echo " $(MKDIR_P) '$(DESTDIR)$(wrapdir)'"; \
-	  $(MKDIR_P) "$(DESTDIR)$(wrapdir)" || exit 1; \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(wrapexecdir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(wrapexecdir)" || exit 1; \
 	fi; \
 	for p in $$list; do echo "$$p $$p"; done | \
 	sed 's/$(EXEEXT)$$//' | \
@@ -711,23 +711,23 @@ install-wrapPROGRAMS: $(wrap_PROGRAMS)
 	while read type dir files; do \
 	    if test "$$dir" = .; then dir=; else dir=/$$dir; fi; \
 	    test -z "$$files" || { \
-	    echo " $(INSTALL_PROGRAM_ENV) $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL_PROGRAM) $$files '$(DESTDIR)$(wrapdir)$$dir'"; \
-	    $(INSTALL_PROGRAM_ENV) $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL_PROGRAM) $$files "$(DESTDIR)$(wrapdir)$$dir" || exit $$?; \
+	    echo " $(INSTALL_PROGRAM_ENV) $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL_PROGRAM) $$files '$(DESTDIR)$(wrapexecdir)$$dir'"; \
+	    $(INSTALL_PROGRAM_ENV) $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL_PROGRAM) $$files "$(DESTDIR)$(wrapexecdir)$$dir" || exit $$?; \
 	    } \
 	; done
 
-uninstall-wrapPROGRAMS:
+uninstall-wrapexecPROGRAMS:
 	@$(NORMAL_UNINSTALL)
-	@list='$(wrap_PROGRAMS)'; test -n "$(wrapdir)" || list=; \
+	@list='$(wrapexec_PROGRAMS)'; test -n "$(wrapexecdir)" || list=; \
 	files=`for p in $$list; do echo "$$p"; done | \
 	  sed -e 'h;s,^.*/,,;s/$(EXEEXT)$$//;$(transform)' \
 	      -e 's/$$/$(EXEEXT)/' `; \
 	test -n "$$list" || exit 0; \
-	echo " ( cd '$(DESTDIR)$(wrapdir)' && rm -f" $$files ")"; \
-	cd "$(DESTDIR)$(wrapdir)" && rm -f $$files
+	echo " ( cd '$(DESTDIR)$(wrapexecdir)' && rm -f" $$files ")"; \
+	cd "$(DESTDIR)$(wrapexecdir)" && rm -f $$files
 
-clean-wrapPROGRAMS:
-	@list='$(wrap_PROGRAMS)'; test -n "$$list" || exit 0; \
+clean-wrapexecPROGRAMS:
+	@list='$(wrapexec_PROGRAMS)'; test -n "$$list" || exit 0; \
 	echo " rm -f" $$list; \
 	rm -f $$list || exit $$?; \
 	test -n "$(EXEEXT)" || exit 0; \
@@ -964,7 +964,7 @@ check: $(BUILT_SOURCES)
 all-am: Makefile $(PROGRAMS)
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(wrapdir)"; do \
+	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(wrapexecdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: $(BUILT_SOURCES)
@@ -1004,7 +1004,7 @@ maintainer-clean-generic:
 clean: clean-recursive
 
 clean-am: clean-binPROGRAMS clean-generic clean-libtool \
-	clean-wrapPROGRAMS mostlyclean-am
+	clean-wrapexecPROGRAMS mostlyclean-am
 
 distclean: distclean-recursive
 	-rm -rf ./$(DEPDIR)
@@ -1024,13 +1024,13 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-data-local install-wrapPROGRAMS
+install-data-am: install-data-local
 
 install-dvi: install-dvi-recursive
 
 install-dvi-am:
 
-install-exec-am: install-binPROGRAMS
+install-exec-am: install-binPROGRAMS install-wrapexecPROGRAMS
 	@$(NORMAL_INSTALL)
 	$(MAKE) $(AM_MAKEFLAGS) install-exec-hook
 install-html: install-html-recursive
@@ -1072,7 +1072,7 @@ ps: ps-recursive
 ps-am:
 
 uninstall-am: uninstall-binPROGRAMS uninstall-local \
-	uninstall-wrapPROGRAMS
+	uninstall-wrapexecPROGRAMS
 	@$(NORMAL_INSTALL)
 	$(MAKE) $(AM_MAKEFLAGS) uninstall-hook
 .MAKE: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) all check \
@@ -1081,7 +1081,7 @@ uninstall-am: uninstall-binPROGRAMS uninstall-local \
 
 .PHONY: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) CTAGS GTAGS \
 	all all-am check check-am clean clean-binPROGRAMS \
-	clean-generic clean-libtool clean-wrapPROGRAMS cscopelist \
+	clean-generic clean-libtool clean-wrapexecPROGRAMS cscopelist \
 	cscopelist-recursive ctags ctags-recursive distclean \
 	distclean-compile distclean-generic distclean-libtool \
 	distclean-tags distdir dvi dvi-am html html-am info info-am \
@@ -1090,13 +1090,13 @@ uninstall-am: uninstall-binPROGRAMS uninstall-local \
 	install-exec install-exec-am install-exec-hook install-html \
 	install-html-am install-info install-info-am install-man \
 	install-pdf install-pdf-am install-ps install-ps-am \
-	install-strip install-wrapPROGRAMS installcheck \
+	install-strip install-wrapexecPROGRAMS installcheck \
 	installcheck-am installdirs installdirs-am maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	tags tags-recursive uninstall uninstall-am \
 	uninstall-binPROGRAMS uninstall-hook uninstall-local \
-	uninstall-wrapPROGRAMS
+	uninstall-wrapexecPROGRAMS
 
 
 # Without logdir, X will post an error on the terminal and will not start

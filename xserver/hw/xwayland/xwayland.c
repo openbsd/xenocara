@@ -159,6 +159,9 @@ xwl_window_from_window(WindowPtr window)
 static struct xwl_seat *
 xwl_screen_get_default_seat(struct xwl_screen *xwl_screen)
 {
+    if (xorg_list_is_empty(&xwl_screen->seat_list))
+        return NULL;
+
     return container_of(xwl_screen->seat_list.prev,
                         struct xwl_seat,
                         link);
@@ -217,6 +220,10 @@ xwl_cursor_confined_to(DeviceIntPtr device,
 
     if (!xwl_seat)
         xwl_seat = xwl_screen_get_default_seat(xwl_screen);
+
+    /* xwl_seat hasn't been setup yet, don't do anything just yet */
+    if (!xwl_seat)
+        return;
 
     if (window == screen->root) {
         xwl_seat_unconfine_pointer(xwl_seat);
@@ -454,8 +461,7 @@ xwl_unrealize_window(WindowPtr window)
         return ret;
 
     wl_surface_destroy(xwl_window->surface);
-    if (RegionNotEmpty(DamageRegion(xwl_window->damage)))
-        xorg_list_del(&xwl_window->link_damage);
+    xorg_list_del(&xwl_window->link_damage);
     DamageUnregister(xwl_window->damage);
     DamageDestroy(xwl_window->damage);
     if (xwl_window->frame_callback)
