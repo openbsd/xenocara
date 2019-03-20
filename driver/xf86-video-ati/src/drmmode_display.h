@@ -142,6 +142,9 @@ typedef struct {
     drmModeConnectorPtr mode_output;
     drmModeEncoderPtr *mode_encoders;
     drmModePropertyBlobPtr edid_blob;
+#if XORG_VERSION_CURRENT >= XORG_VERSION_NUMERIC(1, 17, 99, 901, 0)
+    drmModePropertyBlobPtr tile_blob;
+#endif
     int dpms_enum_id;
     int num_props;
     drmmode_prop_ptr props;

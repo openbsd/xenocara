@@ -1,3 +1,52 @@
+commit 36703f66c3b06875651606a6280d5dc9d9dad51e
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Tue Mar 19 18:01:02 2019 +0100
+
+    Bump version for 19.0.1 release
+
+commit 4407c78bd86da4460ee07a15a365e07d99e0dd27
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu Mar 14 11:17:32 2019 +0100
+
+    modesetting: add tile property support
+    
+    This adds tiling support to the driver, it retrieves the tile info from
+    the kernel and translates it into the server format and exposes the
+    property.
+    
+    (Ported from xserver commits 8fb8bbb3062f1a06621ab7030a9e89d5e8367b35
+     and 6abdb54a11dac4e8854ff94ecdcb90a14321ab31)
+    (Ported from amdgpu commit 6ee857726166f495abcd68e4ff60e3a09593d079)
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 79bc0e054f37026377d54cac6cd8127d4aa9baca
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Mar 14 11:10:51 2019 +0100
+
+    Use radeon_finish in drmmode_crtc_scanout_update
+    
+    radeon_glamor_finish only works if we're using glamor, otherwise it'll
+    crash.
+    
+    Fixes: ce7db51020d3 "Cancel pending scanout update in drmmode_crtc_scanout_update"
+    Bug: https://bugs.debian.org/924540
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit f6cd4a67d7de5d3ff1a6e58a8c83749fc8ffc310
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Fri Mar 8 11:48:10 2019 +0100
+
+    Revert "glamor: Avoid glamor_create_pixmap for pixmaps backing windows"
+    
+    This reverts commit 274703087f80342f51fa69c935bb9a1cb0c4ae47.
+    
+    Reports of visual corruption were bisected to this, e.g.
+    https://bugs.archlinux.org/task/61941 . I can reproduce this with Turks,
+    but not with Bonaire. I assume it's a Mesa/glamor bug, but let's revert
+    for now.
+    
+    Acked-by: Alex Deucher <alexander.deucher@amd.com>
+
 commit 0d132d99e0b750896a78f47d73a8639680495d8c
 Author: Michel Dänzer <michel.daenzer@amd.com>
 Date:   Wed Mar 6 17:48:03 2019 +0100

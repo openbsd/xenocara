@@ -238,7 +238,7 @@ radeon_glamor_create_pixmap(ScreenPtr screen, int w, int h, int depth,
 		if (info->shadow_primary) {
 			if (usage != CREATE_PIXMAP_USAGE_BACKING_PIXMAP)
 				return fbCreatePixmap(screen, w, h, depth, usage);
-		} else if (usage != CREATE_PIXMAP_USAGE_BACKING_PIXMAP) {
+		} else {
 			pixmap = glamor_create_pixmap(screen, w, h, depth, usage);
 			if (pixmap)
 			    return pixmap;
