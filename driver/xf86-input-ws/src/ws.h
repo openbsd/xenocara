@@ -26,7 +26,10 @@ extern int ws_debug_level;
 # define DBG(lvl, f)
 #endif
 
-#define NAXES		2	/* X and Y axes only */
+#define NAXES		4	/* X, Y, horizontal and vertical scrolling */
+#define HSCROLL_AXIS	2
+#define VSCROLL_AXIS	3
+
 #define NBUTTONS	32	/* max theoretical buttons */
 #define DFLTBUTTONS	3	/* default number of buttons */
 
@@ -45,6 +48,7 @@ typedef struct {
 	unsigned int buttons;
 	int dx, dy, dz, dw;
 	int ax, ay;
+	int hscroll, vscroll;
 } wsHwState;
 
 typedef struct WSDevice {
@@ -86,6 +90,8 @@ typedef struct WSDevice {
 		Time expires;		/* time of expiry */
 		Time timeout;
 	} emulateWheel;
+
+	ValuatorMask *scroll_mask;
 
 	OsTimerPtr	remove_timer;	/* Callback for removal on EIO */
 

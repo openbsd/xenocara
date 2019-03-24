@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.63 2017/12/31 23:31:41 guenther Exp $ */
+/* $OpenBSD: ws.c,v 1.64 2019/03/24 17:59:19 bru Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -363,6 +363,10 @@ wsDeviceInit(DeviceIntPtr pWS)
 		axes_labels[0] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_X);
 		axes_labels[1] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_Y);
 	}
+	axes_labels[HSCROLL_AXIS] =
+	    XIGetKnownProperty(AXIS_LABEL_PROP_REL_HSCROLL);
+	axes_labels[VSCROLL_AXIS] =
+	    XIGetKnownProperty(AXIS_LABEL_PROP_REL_VSCROLL);
 	if (!InitValuatorClassDeviceStruct(pWS,
 	    NAXES, axes_labels, GetMotionHistorySize(),
 	    priv->type == WSMOUSE_TYPE_TPANEL ? Absolute : Relative))
@@ -381,6 +385,25 @@ wsDeviceInit(DeviceIntPtr pWS)
 	    ymin, ymax, 1, 0, 1,
 	    priv->type == WSMOUSE_TYPE_TPANEL ? Absolute : Relative);
 	xf86InitValuatorDefaults(pWS, 1);
+
+	xf86InitValuatorAxisStruct(pWS, HSCROLL_AXIS,
+	    axes_labels[HSCROLL_AXIS], 0, -1, 0, 0, 0, Relative);
+	xf86InitValuatorAxisStruct(pWS, VSCROLL_AXIS,
+	    axes_labels[VSCROLL_AXIS], 0, -1, 0, 0, 0, Relative);
+	priv->scroll_mask = valuator_mask_new(MAX_VALUATORS);
+	if (!priv->scroll_mask) {
+		free(axes_labels);
+		return !Success;
+	}
+
+	/*
+	 * The value of an HSCROLL or VSCROLL event is the fraction
+	 *         motion_delta / scroll_distance
+	 * in [*.12] fixed-point format.  The 'increment' attribute of the
+	 * scroll axes is constant:
+	 */
+	SetScrollValuator(pWS, HSCROLL_AXIS, SCROLL_TYPE_HORIZONTAL, 4096, 0);
+	SetScrollValuator(pWS, VSCROLL_AXIS, SCROLL_TYPE_VERTICAL, 4096, 0);
 
 	pWS->public.on = FALSE;
 	if (wsOpen(pInfo) != Success) {
@@ -579,6 +602,14 @@ wsReadHwState(InputInfoPtr pInfo, wsHwState *hw)
 		case WSCONS_EVENT_SYNC:
 			DBG(4, ErrorF("Sync\n"));
 			return TRUE;
+		case WSCONS_EVENT_HSCROLL:
+			hw->hscroll = event->value;
+			DBG(4, ErrorF("Horiz. Scrolling %d\n", event->value));
+			return TRUE;
+		case WSCONS_EVENT_VSCROLL:
+			hw->vscroll = event->value;
+			DBG(4, ErrorF("Vert. Scrolling %d\n", event->value));
+			return TRUE;
 		default:
 			xf86IDrvMsg(pInfo, X_WARNING,
 			    "bad wsmouse event type=%d\n", event->type);
@@ -623,6 +654,14 @@ wsReadInput(InputInfoPtr pInfo)
 		wbutton = (hw.dw < 0) ? priv->W.negative : priv->W.positive;
 		DBG(4, ErrorF("W -> button %d (%d)\n", wbutton, abs(hw.dw)));
 		wsButtonClicks(pInfo, wbutton, abs(hw.dw));
+	}
+	if (hw.hscroll || hw.vscroll) {
+		valuator_mask_zero(priv->scroll_mask);
+		valuator_mask_set_double(priv->scroll_mask,
+		    HSCROLL_AXIS, (double) hw.hscroll);
+		valuator_mask_set_double(priv->scroll_mask,
+		    VSCROLL_AXIS, (double) hw.vscroll);
+		xf86PostMotionEventM(pInfo->dev, FALSE, priv->scroll_mask);
 	}
 	if (priv->lastButtons != hw.buttons) {
 		/* button event */
