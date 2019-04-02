@@ -1,4 +1,4 @@
-/*	$OpenBSD: xidle.c,v 1.8 2018/11/11 16:10:37 kn Exp $	*/
+/*	$OpenBSD: xidle.c,v 1.9 2019/04/02 14:16:37 kn Exp $	*/
 /*
  * Copyright (c) 2005 Federico G. Schwindt
  * Copyright (c) 2005 Claudio Castiglia
@@ -76,12 +76,9 @@ struct xinfo {
 struct	xinfo x;
 
 static XrmOptionDescRec fopts[] = {
-	{ "-display",	".display",	XrmoptionSepArg,	(caddr_t)NULL },
-};
-
-static XrmOptionDescRec opts[] = {
 	{ "-area",	".area",	XrmoptionSepArg,	(caddr_t)NULL },
 	{ "-delay",	".delay",	XrmoptionSepArg,	(caddr_t)NULL },
+	{ "-display",	".display",	XrmoptionSepArg,	(caddr_t)NULL },
 	{ "-program",	".program",	XrmoptionSepArg,	(caddr_t)NULL },
 	{ "-timeout",	".timeout",	XrmoptionSepArg,	(caddr_t)NULL },
 
@@ -263,9 +260,11 @@ parse_opts(int argc, char **argv, Display **dpy, int *area, int *delay,
 
 	XrmInitialize();
 
-	/* Get display to open. */
+	/* Get command line values. */
 	XrmParseCommand(&rdb, fopts, sizeof(fopts) / sizeof(fopts[0]),
 	    __progname, &argc, argv);
+	if (argc > 1)
+		usage();
 
 	display = (getres(&value, rdb, "display", "Display") == True) ?
 	    (char *)value.addr : NULL;
@@ -288,12 +287,6 @@ parse_opts(int argc, char **argv, Display **dpy, int *area, int *delay,
 		XrmMergeDatabases(tdb, &rdb);
 	}
 
-	/* Get remaining command line values. */
-	XrmParseCommand(&rdb, opts, sizeof(opts) / sizeof(opts[0]),
-	    __progname, &argc, argv);
-	if (argc > 1) {
-		usage();
-	}
 	if (getres(&value, rdb, "area", "Area")) {
 		*area = strtonum(value.addr, 1, INT_MAX, &errstr);
 		if (errstr)
