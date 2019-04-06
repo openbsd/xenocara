@@ -139,7 +139,9 @@ wscons_add_keyboard(void)
             break;
         }
     for (i = 0; kbdvar[i].val; i++)
-        if ((wsenc & kbdvar[i].val) == kbdvar[i].val) {
+        if ((wsenc & kbdvar[i].val) == kbdvar[i].val &&
+            (KB_ENCODING(wsenc) == KB_ENCODING(kbdvar[i].val) ||
+            !KB_ENCODING(kbdvar[i].val))) {
             LogMessageVerb(X_INFO, 3, "wskbd: using variant %s\n",
                            kbdvar[i].name);
             input_options = input_option_new(input_options,
