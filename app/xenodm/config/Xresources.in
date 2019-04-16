@@ -1,4 +1,4 @@
-! $OpenBSD: Xresources.in,v 1.1 2017/07/26 21:14:54 matthieu Exp $
+! $OpenBSD: Xresources.in,v 1.2 2019/04/16 05:51:04 matthieu Exp $
 !
 !
 !
@@ -9,7 +9,6 @@
 
 
 xlogin*login.translations: #override \
-	Ctrl<Key>R: abort-display()\n\
 	<Key>F1: set-session-argument(failsafe) finish-field()\n\
 	<Key>Left: move-backward-character()\n\
 	<Key>Right: move-forward-character()\n\

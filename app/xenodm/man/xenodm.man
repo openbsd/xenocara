@@ -23,7 +23,7 @@
 .\" from The Open Group.
 .\"
 .\"
-.Dd $Mdocdate: July 11 2018 $
+.Dd $Mdocdate: April 16 2019 $
 .Dt XENODM 1
 .Os __xorgversion__
 .Sh NAME
@@ -683,7 +683,6 @@ As the authentication widget reads this database before starting up,
 it usually contains parameters for that widget:
 .Bd -literal -offset Ds
 xlogin*login.translations: #override\e
-	Ctrl<Key>R: abort-display()\en\e
 	<Key>F1: set-session-argument(failsafe) finish-field()\en\e
 	<Key>Return: set-session-argument() finish-field()
 xlogin*borderWidth: 3
@@ -975,9 +974,8 @@ Terminates the server, disabling it.
 This action is not accessible in the default configuration.
 There are various reasons to stop
 .Nm
-on a system console, such as when shutting the system down, when using
-.Xr xdmshell 1 ,
-to start another type of server, or to generally access the console.
+on a system console, such as when shutting the system down,
+or to generally access the console.
 Sending
 .Nm
 a
