@@ -713,7 +713,6 @@
 ./usr/X11R6/lib/pkgconfig/ice.pc
 ./usr/X11R6/lib/pkgconfig/inputproto.pc
 ./usr/X11R6/lib/pkgconfig/kbproto.pc
-./usr/X11R6/lib/pkgconfig/libfs.pc
 ./usr/X11R6/lib/pkgconfig/pciaccess.pc
 ./usr/X11R6/lib/pkgconfig/randrproto.pc
 ./usr/X11R6/lib/pkgconfig/recordproto.pc
