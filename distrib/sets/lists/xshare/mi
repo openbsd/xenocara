@@ -423,7 +423,6 @@
 ./usr/X11R6/include/X11/extensions/xtestproto.h
 ./usr/X11R6/include/X11/fonts
 ./usr/X11R6/include/X11/fonts/FS.h
-./usr/X11R6/include/X11/fonts/FSlib.h
 ./usr/X11R6/include/X11/fonts/FSproto.h
 ./usr/X11R6/include/X11/fonts/font.h
 ./usr/X11R6/include/X11/fonts/fontenc.h
@@ -3750,8 +3749,6 @@
 ./usr/X11R6/share/doc/fontconfig/fontconfig-user.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-user.pdf
 ./usr/X11R6/share/doc/fontconfig/fontconfig-user.txt
-./usr/X11R6/share/doc/libFS
-./usr/X11R6/share/doc/libFS/FSlib.txt
 ./usr/X11R6/share/doc/libICE
 ./usr/X11R6/share/doc/libICE/ICElib.xml
 ./usr/X11R6/share/doc/libICE/ice.xml

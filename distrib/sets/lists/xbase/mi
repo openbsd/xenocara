@@ -206,9 +206,6 @@
 ./usr/X11R6/lib/X11/fvwm/system.fvwm2rc-sample-1
 ./usr/X11R6/lib/X11/fvwm/system.fvwm2rc-sample-2
 ./usr/X11R6/lib/X11/xman.help
-./usr/X11R6/lib/libFS.a
-./usr/X11R6/lib/libFS.la
-./usr/X11R6/lib/libFS.so.10.0
 ./usr/X11R6/lib/libICE.a
 ./usr/X11R6/lib/libICE.la
 ./usr/X11R6/lib/libICE.so.10.0
