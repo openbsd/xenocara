@@ -20,7 +20,7 @@
 
 AC_PREREQ([2.63])
 AC_INIT([libdrm],
-        [2.4.96],
+        [2.4.98],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=DRI],
         [libdrm])
 
@@ -541,7 +541,7 @@ else
     AC_DEFINE(HAVE_VISIBILITY, 0)
 fi
 
-CFLAGS="$CFLAGS -include config.h"
+CPPFLAGS="$CPPFLAGS -include config.h"
 
 AC_SUBST(WARN_CFLAGS)
 AC_CONFIG_FILES([

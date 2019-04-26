@@ -72,11 +72,11 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-DIST_COMMON = README $(am__configure_deps) \
-	$(am__klibdrminclude_HEADERS_DIST) $(libdrminclude_HEADERS) \
-	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(srcdir)/Makefile.sources $(srcdir)/config.h.in \
-	$(srcdir)/libdrm.pc.in $(top_srcdir)/build-aux/config.guess \
+DIST_COMMON = $(am__configure_deps) $(am__klibdrminclude_HEADERS_DIST) \
+	$(libdrminclude_HEADERS) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in $(srcdir)/Makefile.sources \
+	$(srcdir)/config.h.in $(srcdir)/libdrm.pc.in \
+	$(top_srcdir)/build-aux/config.guess \
 	$(top_srcdir)/build-aux/config.sub \
 	$(top_srcdir)/build-aux/depcomp \
 	$(top_srcdir)/build-aux/install-sh \
