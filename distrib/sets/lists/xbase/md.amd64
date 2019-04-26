@@ -274,9 +274,9 @@
 ./usr/X11R6/lib/libOSMesa.so.11.0
 ./usr/X11R6/lib/libXvMCr600.so.1.0
 ./usr/X11R6/lib/libdrm.la
-./usr/X11R6/lib/libdrm.so.7.6
+./usr/X11R6/lib/libdrm.so.7.7
 ./usr/X11R6/lib/libdrm_amdgpu.la
-./usr/X11R6/lib/libdrm_amdgpu.so.1.7
+./usr/X11R6/lib/libdrm_amdgpu.so.1.8
 ./usr/X11R6/lib/libdrm_intel.la
 ./usr/X11R6/lib/libdrm_intel.so.5.4
 ./usr/X11R6/lib/libdrm_nouveau.la
