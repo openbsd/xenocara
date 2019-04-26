@@ -21,7 +21,7 @@
 project(
   'libdrm',
   ['c'],
-  version : '2.4.96',
+  version : '2.4.98',
   license : 'MIT',
   meson_version : '>= 0.43',
   default_options : ['buildtype=debugoptimized', 'c_std=gnu99'],
@@ -157,7 +157,7 @@ if _vc4 != 'false'
   with_vc4 = _vc4 == 'true' or ['arm', 'aarch64'].contains(host_machine.cpu_family())
 endif
 
-# XXX: Aparently only freebsd and dragonfly bsd actually need this (and
+# XXX: Apparently only freebsd and dragonfly bsd actually need this (and
 # gnu/kfreebsd), not openbsd and netbsd
 with_libkms = false
 _libkms = get_option('libkms')
@@ -192,7 +192,7 @@ config.set10('HAVE_OPEN_MEMSTREAM', cc.has_function('open_memstream'))
 
 warn_c_args = []
 foreach a : ['-Wall', '-Wextra', '-Wsign-compare', '-Werror=undef',
-             '-Werror-implicit-function-declaration', '-Wpointer-arith',
+             '-Werror=implicit-function-declaration', '-Wpointer-arith',
              '-Wwrite-strings', '-Wstrict-prototypes', '-Wmissing-prototypes',
              '-Wmissing-declarations', '-Wnested-externs', '-Wpacked',
              '-Wswitch-enum', '-Wmissing-format-attribute',

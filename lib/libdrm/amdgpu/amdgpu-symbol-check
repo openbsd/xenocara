@@ -19,6 +19,8 @@ amdgpu_bo_export
 amdgpu_bo_free
 amdgpu_bo_import
 amdgpu_bo_inc_ref
+amdgpu_bo_list_create_raw
+amdgpu_bo_list_destroy_raw
 amdgpu_bo_list_create
 amdgpu_bo_list_destroy
 amdgpu_bo_list_update
@@ -36,6 +38,7 @@ amdgpu_cs_create_syncobj2
 amdgpu_cs_ctx_create
 amdgpu_cs_ctx_create2
 amdgpu_cs_ctx_free
+amdgpu_cs_ctx_override_priority
 amdgpu_cs_destroy_semaphore
 amdgpu_cs_destroy_syncobj
 amdgpu_cs_export_syncobj
@@ -47,6 +50,7 @@ amdgpu_query_sw_info
 amdgpu_cs_signal_semaphore
 amdgpu_cs_submit
 amdgpu_cs_submit_raw
+amdgpu_cs_submit_raw2
 amdgpu_cs_syncobj_export_sync_file
 amdgpu_cs_syncobj_import_sync_file
 amdgpu_cs_syncobj_reset
