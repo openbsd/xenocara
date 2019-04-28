@@ -1,0 +1,37 @@
+.\" automatically generated with
+.\" docbook2mdoc drmAvailable.xml > drmAvailable.3
+.Dd September 2012
+.Dt DRMAVAILABLE 3
+.Os
+.Sh NAME
+.Nm drmAvailable
+.Nd determine whether a DRM kernel driver has been loaded
+.Sh SYNOPSIS
+.Fd #include <xf86drm.h>
+.Ft int
+.Fo drmAvailable
+.Fa void
+.Fc
+.Sh DESCRIPTION
+.Fn drmAvailable
+allows the caller to determine
+whether a kernel DRM driver is loaded.
+.Sh RETURN VALUE
+.Fn drmAvailable
+returns 1 if a DRM driver is
+currently loaded. Otherwise 0 is returned.
+.Sh REPORTING BUGS
+Bugs in this function should be reported to
+https://bugs.freedesktop.org/enter_bug.cgi?product=DRI&component=libdrm
+under the "DRI" product, component "libdrm"
+.Sh SEE ALSO
+.Xr drm 7 ,
+.Xr drmOpen 3
+.Sh AUTHORS
+.An -nosplit
+.Sy Direct Rendering Manager
+.Pp
+.Sy libdrm
+.An -split
+Developer:
+.An David Herrmann Aq Mt dh.herrmann@googlemail.com

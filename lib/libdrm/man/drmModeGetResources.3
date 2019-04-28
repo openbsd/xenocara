@@ -1,0 +1,114 @@
+.\" automatically generated with
+.\" docbook2mdoc drmModeGetResources.xml > drmModeGetResources.3
+.Dd September 2012
+.Dt DRMMODEGETRESOURCES 3
+.Os
+.Sh NAME
+.Nm drmModeGetResources
+.Nd retrieve current display configuration information
+.Sh SYNOPSIS
+.Fd #include <xf86drm.h>
+.Fd #include <xf86drmMode.h>
+.Ft drmModeResPtr
+.Fo drmModeGetResources
+.Fa "int fd"
+.Fc
+.Sh DESCRIPTION
+.Fn drmModeGetResources
+allocates, populates, and
+returns a
+.Vt drmModeRes
+structure containing
+information about the current display configuration. The structure
+contains the following fields:
+.Bd -literal
+typedef struct _drmModeRes {
+    int count_fbs;
+    uint32_t *fbs;
+    int count_crtcs;
+    uint32_t *crtcs;
+    int count_connectors;
+    uint32_t *connectors;
+    int count_encoders;
+    uint32_t *encoders;
+    uint32_t min_width, max_width;
+    uint32_t min_height, max_height;
+} drmModeRes, *drmModeResPtr;
+.Ed
+.Pp
+The
+.Fa count_fbs
+and
+.Fa fbs
+fields indicate the number of currently
+allocated framebuffer objects (i.e., objects that can be attached to
+a given CRTC or sprite for display).
+.Pp
+The
+.Fa count_crtcs
+and
+.Fa crtcs
+fields list the available CRTCs in
+the configuration. A CRTC is simply an object that can scan out a
+framebuffer to a display sink, and contains mode timing and relative
+position information. CRTCs drive encoders, which are responsible for
+converting the pixel stream into a specific display protocol (e.g.,
+MIPI or HDMI).
+.Pp
+The
+.Fa count_connectors
+and
+.Fa connectors
+fields list the available
+physical connectors on the system. Note that some of these may not be
+exposed from the chassis (e.g., LVDS or eDP). Connectors are attached
+to encoders and contain information about the attached display sink
+(e.g., width and height in mm, subpixel ordering, and various other
+properties).
+.Pp
+The
+.Fa count_encoders
+and
+.Fa encoders
+fields list the available encoders
+on the device. Each encoder may be associated with a CRTC, and may be
+used to drive a particular encoder.
+.Pp
+The
+.Fa min*
+and
+.Fa max*
+fields indicate the maximum size of a
+framebuffer for this device (i.e., the scanout size limit).
+.Sh RETURN VALUE
+.Fn drmModeGetResources
+returns a drmModeRes
+structure pointer on success,
+.Ql NULL
+on failure. The
+returned structure must be freed with
+.Xr drmModeFreeResources 3 .
+.Sh REPORTING BUGS
+Bugs in this function should be reported to
+https://bugs.freedesktop.org/enter_bug.cgi?product=DRI&component=libdrm
+under the "DRI" product, component "libdrm"
+.Sh SEE ALSO
+.Xr drm 7 ,
+.Xr drm-kms 7 ,
+.Xr drmModeGetFB 3 ,
+.Xr drmModeAddFB 3 ,
+.Xr drmModeAddFB2 3 ,
+.Xr drmModeRmFB 3 ,
+.Xr drmModeDirtyFB 3 ,
+.Xr drmModeGetCrtc 3 ,
+.Xr drmModeSetCrtc 3 ,
+.Xr drmModeGetEncoder 3 ,
+.Xr drmModeGetConnector 3
+.Sh AUTHORS
+.An -nosplit
+.Sy Direct Rendering Manager
+.Pp
+.Sy libdrm
+.An -split
+Developer:
+.An David Herrmann Aq Mt dh.herrmann@googlemail.com

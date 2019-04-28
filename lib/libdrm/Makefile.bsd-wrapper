@@ -1,6 +1,27 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.18 2019/04/26 07:45:37 jsg Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.19 2019/04/28 20:47:20 schwarze Exp $
 
 SHARED_LIBS=	drm 7.7 drm_radeon 4.0 drm_intel 5.4 \
 		drm_amdgpu 1.8 drm_nouveau 3.0
+
+MDOCS=		drmAvailable 3 drmHandleEvent 3 drmModeGetResources 3 \
+		drm 7 drm-kms 7 drm-memory 7
+
+beforeinstall:
+.for n s in ${MDOCS}
+	${INSTALL} ${INSTALL_COPY} -o ${MANOWN} -g ${MANGRP} -m ${MANMODE} \
+		${.CURDIR}/man/${n}.${s} ${MANDIR}${s}
+.endfor
+
+# maintainer target, not used duing build or install
+mdoc:
+.for n s in ${MDOCS}
+	{ \
+		echo ".\\\" automatically generated with"; \
+		echo ".\\\" docbook2mdoc ${n}.xml > ${n}.${s}"; \
+		docbook2mdoc ${.CURDIR}/man/${n}.xml; \
+	} > ${.CURDIR}/man/${n}.${s}
+.endfor
+
+.PHONY: mdoc
 
 .include <bsd.xorg.mk>

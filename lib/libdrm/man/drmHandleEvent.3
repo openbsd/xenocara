@@ -1,0 +1,68 @@
+.\" automatically generated with
+.\" docbook2mdoc drmHandleEvent.xml > drmHandleEvent.3
+.Dd September 2012
+.Dt DRMHANDLEEVENT 3
+.Os
+.Sh NAME
+.Nm drmHandleEvent
+.Nd read and process pending DRM events
+.Sh SYNOPSIS
+.Fd #include <xf86drm.h>
+.Ft int
+.Fo drmHandleEvent
+.Fa "int fd"
+.Fa "drmEventContextPtr evctx"
+.Fc
+.Sh DESCRIPTION
+.Fn drmHandleEvent
+processes outstanding DRM events
+on the DRM file-descriptor passed as
+.Fa fd .
+This
+function should be called after the DRM file-descriptor has polled
+readable; it will read the events and use the passed-in
+.Fa evctx
+structure to call function pointers
+with the parameters noted below:
+.Bd -literal
+typedef struct _drmEventContext {
+    int version;
+    void (*vblank_handler) (int fd,
+                            unsigned int sequence,
+                            unsigned int tv_sec,
+                            unsigned int tv_usec,
+                            void *user_data)
+    void (*page_flip_handler) (int fd,
+                               unsigned int sequence,
+                               unsigned int tv_sec,
+                               unsigned int tv_usec,
+                               void *user_data)
+} drmEventContext, *drmEventContextPtr;
+.Ed
+.Sh RETURN VALUE
+.Fn drmHandleEvent
+returns
+.Ql 0
+on
+success, or if there is no data to read from the file-descriptor.
+Returns
+.Ql -1
+if the read on the file-descriptor fails
+or returns less than a full event record.
+.Sh REPORTING BUGS
+Bugs in this function should be reported to
+https://bugs.freedesktop.org/enter_bug.cgi?product=DRI&component=libdrm
+under the "DRI" product, component "libdrm"
+.Sh SEE ALSO
+.Xr drm 7 ,
+.Xr drm-kms 7 ,
+.Xr drmModePageFlip 3 ,
+.Xr drmWaitVBlank 3
+.Sh AUTHORS
+.An -nosplit
+.Sy Direct Rendering Manager
+.Pp
+.Sy libdrm
+.An -split
+Developer:
+.An David Herrmann Aq Mt dh.herrmann@googlemail.com
