@@ -60,7 +60,7 @@
     <para>When a GPU is detected, the DRM system loads a driver for the detected
           hardware type. Each connected GPU is then presented to user-space via
           a character-device that is usually available as
-          <filename>/dev/dri/card0</filename> and can be accessed with
+          <filename>/dev/drm0</filename> and can be accessed with
           <citerefentry><refentrytitle>open</refentrytitle><manvolnum>2</manvolnum></citerefentry>
           and
           <citerefentry><refentrytitle>close</refentrytitle><manvolnum>2</manvolnum></citerefentry>.
