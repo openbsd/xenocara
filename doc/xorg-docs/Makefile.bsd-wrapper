@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.4 2019/05/02 19:12:04 schwarze Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.5 2019/05/05 23:27:58 schwarze Exp $
 
 CONFIGURE_ARGS += --without-fop --without-xmlto
 
@@ -7,7 +7,7 @@ MDOCS =	general/fonts/fonts
 beforeinstall:
 .for n in ${MDOCS}
 	${INSTALL} ${INSTALL_COPY} -o ${MANOWN} -g ${MANGRP} -m ${MANMODE} \
-		${.CURDIR}/${n}.7 ${MANDIR}7
+		${.CURDIR}/${n}.7 ${DESTDIR}${MANDIR}7
 .endfor
 
 # maintainer target, not used duing build or install

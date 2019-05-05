@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.20 2019/05/02 19:12:05 schwarze Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.21 2019/05/05 23:27:58 schwarze Exp $
 
 SHARED_LIBS=	drm 7.7 drm_radeon 4.0 drm_intel 5.4 \
 		drm_amdgpu 1.8 drm_nouveau 3.0
@@ -9,7 +9,7 @@ MDOCS=		drmAvailable 3 drmHandleEvent 3 drmModeGetResources 3 \
 beforeinstall:
 .for n s in ${MDOCS}
 	${INSTALL} ${INSTALL_COPY} -o ${MANOWN} -g ${MANGRP} -m ${MANMODE} \
-		${.CURDIR}/man/${n}.${s} ${MANDIR}${s}
+		${.CURDIR}/man/${n}.${s} ${DESTDIR}${MANDIR}${s}
 .endfor
 
 # maintainer target, not used duing build or install

@@ -155,6 +155,12 @@
 ./usr/X11R6/man/man3/XF86VidModeSwitchMode.3
 ./usr/X11R6/man/man3/XF86VidModeSwitchToMode.3
 ./usr/X11R6/man/man3/XF86VidModeValidateModeLine.3
+./usr/X11R6/man/man3/drmAvailable.3
+./usr/X11R6/man/man3/drmHandleEvent.3
+./usr/X11R6/man/man3/drmModeGetResources.3
+./usr/X11R6/man/man7/drm-kms.7
+./usr/X11R6/man/man7/drm-memory.7
+./usr/X11R6/man/man7/drm.7
 ./var/cache/fontconfig/0f0db7876307790c19e1f91eb9095080-le32d8.cache-7
 ./var/cache/fontconfig/1487dd4aecf3164c4a11193169052443-le32d8.cache-7
 ./var/cache/fontconfig/49aa604a5ac92994756d3008e408245c-le32d8.cache-7
