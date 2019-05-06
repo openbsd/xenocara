@@ -1,5 +1,3 @@
-# $Id: Makefile.am,v 1.5 2018/12/09 21:07:33 fcambus Exp $
-#
 # Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
 # 
 # Permission to use, copy, modify, distribute, and sell this software and its

@@ -126,11 +126,6 @@
 
 extern int gVIAEntityIndex;
 
-typedef struct {
-    CARD8   SR[256];
-    CARD8   CR[256];
-} VIARegRec, *VIARegPtr;
-
 /*
  * variables that need to be shared among different screens.
  */
@@ -195,7 +190,6 @@ typedef struct _twodContext {
 } ViaTwodContext;
 
 typedef struct _VIA {
-    VIARegRec           SavedReg;
     int                 Bpp, Bpl;
 
     Bool                KMS;

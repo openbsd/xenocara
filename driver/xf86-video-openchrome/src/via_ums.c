@@ -1075,6 +1075,7 @@ umsCrtcInit(ScrnInfoPtr pScrn)
     vgaHWPtr hwp = VGAHWPTR(pScrn);
     VIAPtr pVia = VIAPTR(pScrn);
     VIADisplayPtr pVIADisplay = pVia->pVIADisplay;
+    VIARegPtr Regs = &pVIADisplay->SavedReg;
 #if XORG_VERSION_CURRENT >= XORG_VERSION_NUMERIC(1,8,0,0,0)
     ClockRangePtr clockRanges;
 #else
@@ -1082,13 +1083,149 @@ umsCrtcInit(ScrnInfoPtr pScrn)
 #endif
     int max_pitch, max_height;
     xf86CrtcPtr iga1, iga2;
+    uint32_t i;
 
-    /* 3X5.3B through 3X5.3F are scratch pad registers. */
-    pVIADisplay->originalCR3B = hwp->readCrtc(hwp, 0x3B);
-    pVIADisplay->originalCR3C = hwp->readCrtc(hwp, 0x3C);
-    pVIADisplay->originalCR3D = hwp->readCrtc(hwp, 0x3D);
-    pVIADisplay->originalCR3E = hwp->readCrtc(hwp, 0x3E);
-    pVIADisplay->originalCR3F = hwp->readCrtc(hwp, 0x3F);
+    vgaHWSave(pScrn, &hwp->SavedReg, VGA_SR_ALL);
+
+    /* Unlock extended registers. */
+    hwp->writeSeq(hwp, 0x10, 0x01);
+
+    Regs->SR[0x14] = hwp->readSeq(hwp, 0x14);
+    Regs->SR[0x15] = hwp->readSeq(hwp, 0x15);
+    Regs->SR[0x16] = hwp->readSeq(hwp, 0x16);
+    Regs->SR[0x17] = hwp->readSeq(hwp, 0x17);
+    Regs->SR[0x18] = hwp->readSeq(hwp, 0x18);
+    Regs->SR[0x19] = hwp->readSeq(hwp, 0x19);
+    Regs->SR[0x1A] = hwp->readSeq(hwp, 0x1A);
+    Regs->SR[0x1B] = hwp->readSeq(hwp, 0x1B);
+    Regs->SR[0x1C] = hwp->readSeq(hwp, 0x1C);
+    Regs->SR[0x1D] = hwp->readSeq(hwp, 0x1D);
+    Regs->SR[0x1E] = hwp->readSeq(hwp, 0x1E);
+    Regs->SR[0x1F] = hwp->readSeq(hwp, 0x1F);
+    Regs->SR[0x20] = hwp->readSeq(hwp, 0x20);
+    Regs->SR[0x21] = hwp->readSeq(hwp, 0x21);
+    Regs->SR[0x22] = hwp->readSeq(hwp, 0x22);
+    Regs->SR[0x23] = hwp->readSeq(hwp, 0x23);
+    Regs->SR[0x24] = hwp->readSeq(hwp, 0x24);
+
+    Regs->SR[0x27] = hwp->readSeq(hwp, 0x27);
+    Regs->SR[0x28] = hwp->readSeq(hwp, 0x28);
+    Regs->SR[0x29] = hwp->readSeq(hwp, 0x29);
+    Regs->SR[0x2A] = hwp->readSeq(hwp, 0x2A);
+    Regs->SR[0x2B] = hwp->readSeq(hwp, 0x2B);
+
+    Regs->SR[0x2D] = hwp->readSeq(hwp, 0x2D);
+    Regs->SR[0x2E] = hwp->readSeq(hwp, 0x2E);
+    Regs->SR[0x2F] = hwp->readSeq(hwp, 0x2F);
+    Regs->SR[0x30] = hwp->readSeq(hwp, 0x30);
+
+    Regs->SR[0x44] = hwp->readSeq(hwp, 0x44);
+    Regs->SR[0x45] = hwp->readSeq(hwp, 0x45);
+    Regs->SR[0x46] = hwp->readSeq(hwp, 0x46);
+    Regs->SR[0x47] = hwp->readSeq(hwp, 0x47);
+    Regs->SR[0x48] = hwp->readSeq(hwp, 0x48);
+    Regs->SR[0x49] = hwp->readSeq(hwp, 0x49);
+    Regs->SR[0x4A] = hwp->readSeq(hwp, 0x4A);
+    Regs->SR[0x4B] = hwp->readSeq(hwp, 0x4B);
+
+    switch (pVia->Chipset) {
+    case VIA_K8M800:
+    case VIA_P4M800PRO:
+    case VIA_PM800:
+    case VIA_CX700:
+    case VIA_P4M890:
+    case VIA_K8M890:
+    case VIA_P4M900:
+    case VIA_VX800:
+    case VIA_VX855:
+    case VIA_VX900:
+        Regs->SR[0x4C] = hwp->readSeq(hwp, 0x4C);
+        Regs->SR[0x4D] = hwp->readSeq(hwp, 0x4D);
+        Regs->SR[0x4E] = hwp->readSeq(hwp, 0x4E);
+        Regs->SR[0x4F] = hwp->readSeq(hwp, 0x4F);
+        break;
+    default:
+        break;
+    }
+
+    if ((pVia->Chipset == VIA_VX800) ||
+        (pVia->Chipset == VIA_VX855) ||
+        (pVia->Chipset == VIA_VX900)) {
+        Regs->SR[0x14] = hwp->readSeq(hwp, 0x14);
+        Regs->SR[0x68] = hwp->readSeq(hwp, 0x68);
+        Regs->SR[0x69] = hwp->readSeq(hwp, 0x69);
+        Regs->SR[0x6A] = hwp->readSeq(hwp, 0x6A);
+        Regs->SR[0x6B] = hwp->readSeq(hwp, 0x6B);
+        Regs->SR[0x6C] = hwp->readSeq(hwp, 0x6C);
+        Regs->SR[0x6D] = hwp->readSeq(hwp, 0x6D);
+        Regs->SR[0x6E] = hwp->readSeq(hwp, 0x6E);
+        Regs->SR[0x6F] = hwp->readSeq(hwp, 0x6F);
+    }
+
+    Regs->CR[0x0C] = hwp->readCrtc(hwp, 0x0C);
+    Regs->CR[0x0D] = hwp->readCrtc(hwp, 0x0D);
+
+    Regs->CR[0x30] = hwp->readCrtc(hwp, 0x30);
+    Regs->CR[0x31] = hwp->readCrtc(hwp, 0x31);
+    Regs->CR[0x32] = hwp->readCrtc(hwp, 0x32);
+    Regs->CR[0x33] = hwp->readCrtc(hwp, 0x33);
+    Regs->CR[0x34] = hwp->readCrtc(hwp, 0x34);
+    Regs->CR[0x35] = hwp->readCrtc(hwp, 0x35);
+    Regs->CR[0x36] = hwp->readCrtc(hwp, 0x36);
+    Regs->CR[0x37] = hwp->readCrtc(hwp, 0x37);
+    Regs->CR[0x38] = hwp->readCrtc(hwp, 0x38);
+    Regs->CR[0x39] = hwp->readCrtc(hwp, 0x39);
+    Regs->CR[0x3A] = hwp->readCrtc(hwp, 0x3A);
+    Regs->CR[0x3B] = hwp->readCrtc(hwp, 0x3B);
+    Regs->CR[0x3C] = hwp->readCrtc(hwp, 0x3C);
+    Regs->CR[0x3D] = hwp->readCrtc(hwp, 0x3D);
+    Regs->CR[0x3E] = hwp->readCrtc(hwp, 0x3E);
+    Regs->CR[0x3F] = hwp->readCrtc(hwp, 0x3F);
+    Regs->CR[0x40] = hwp->readCrtc(hwp, 0x40);
+    Regs->CR[0x43] = hwp->readCrtc(hwp, 0x43);
+    Regs->CR[0x45] = hwp->readCrtc(hwp, 0x45);
+    Regs->CR[0x46] = hwp->readCrtc(hwp, 0x46);
+    Regs->CR[0x47] = hwp->readCrtc(hwp, 0x47);
+    Regs->CR[0x48] = hwp->readCrtc(hwp, 0x48);
+
+    for (i = 0; i < (0xA8 - 0x50 + 1); i++) {
+        Regs->CR[i + 0x50] = hwp->readCrtc(hwp, i + 0x50);
+    }
+
+    switch (pVia->Chipset) {
+    case VIA_CX700:
+    case VIA_VX800:
+    case VIA_VX855:
+    case VIA_VX900:
+        for (i = 0; i < (0xEF - 0xA9 + 1); i++) {
+            Regs->CR[i + 0xA9] = hwp->readCrtc(hwp, i + 0xA9);
+        }
+
+        break;
+    default:
+        break;
+    }
+
+    if ((pVia->Chipset == VIA_VX800) ||
+        (pVia->Chipset == VIA_VX855) ||
+        (pVia->Chipset == VIA_VX900)) {
+        for (i = 0; i < (0xF5 - 0xF0 + 1); i++) {
+            Regs->CR[i + 0xF0] = hwp->readCrtc(hwp, i + 0xF0);
+        }
+    }
+
+    if ((pVia->Chipset == VIA_VX855) ||
+        (pVia->Chipset == VIA_VX900)) {
+        for (i = 0; i < (0xFC - 0xF6 + 1); i++) {
+            Regs->CR[i + 0xF6] = hwp->readCrtc(hwp, i + 0xF6);
+        }
+    }
+
+    if (pVia->Chipset == VIA_VX900) {
+        for (i = 0; i < (0xFF - 0xF7 + 1); i++) {
+            Regs->CR[i + 0xF7] = hwp->readCrtc(hwp, i + 0xF7);
+        }
+    }
 
     /* Read memory bandwidth from registers. */
     pVia->MemClk = hwp->readCrtc(hwp, 0x3D) >> 4;

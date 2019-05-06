@@ -706,13 +706,16 @@ viaFPGetFPInfoScratchPad(xf86OutputPtr output)
 {
     ScrnInfoPtr pScrn = output->scrn;
     vgaHWPtr hwp = VGAHWPTR(pScrn);
+    VIAPtr pVia = VIAPTR(pScrn);
+    VIADisplayPtr pVIADisplay = pVia->pVIADisplay;
     VIAFPPtr pVIAFP = (VIAFPPtr) output->driver_private;
+    VIARegPtr Regs = &pVIADisplay->SavedReg;
     CARD8 index;
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                         "Entered %s.\n", __func__));
 
-    index = hwp->readCrtc(hwp, 0x3F) & 0x0F;
+    index = Regs->CR[0x3F] & 0x0F;
 
     pVIAFP->NativeModeIndex = index;
     pVIAFP->NativeWidth = ViaPanelNativeModes[index].Width;

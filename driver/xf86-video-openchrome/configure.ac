@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-openchrome],
-        [0.6.176],
+        [0.6.182],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=Driver/openchrome],
         [xf86-video-openchrome])
 
