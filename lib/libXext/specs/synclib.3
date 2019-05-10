@@ -1,0 +1,740 @@
+.\" automatically generated with docbook2mdoc synclib.xml
+.Dd $Mdocdate: May 10 2019 $
+.Dt SYNCLIB 3
+.Os
+.Sh NAME
+.Nm synclib
+.Nd X Synchronization Extension Library
+.Sh SYNCHRONIZATION PROTOCOL
+The core X protocol makes no guarantees about the relative order of
+execution of requests for different clients.
+This means that any
+synchronization between clients must be done at the client level in an
+operating system-dependent and network-dependent manner.
+Even if there
+was an accepted standard for such synchronization, the use of a network
+introduces unpredictable delays between the synchronization of the clients and
+the delivery of the resulting requests to the X server.
+.Pp
+The core X protocol also makes no guarantees about the time at which
+requests are executed, which means that all clients with real-time constraints
+must implement their timing on the host computer.
+Any such timings are
+subject to error introduced by delays within the operating system and
+network and are ineﬃcient because of the need for round-trip requests that
+keep the client and server synchronized.
+.Pp
+The synchronization extension provides primitives that allow synchronization
+between clients to take place entirely within the X server.
+This removes any
+error introduced by the network and makes it possible to synchronize clients
+on different hosts running different operating systems.
+This is important for
+multimedia applications, where audio, video, and graphics data streams are
+being synchronized.
+The extension also provides internal timers within the X
+server to which client requests can be synchronized.
+This allows simple
+animation applications to be implemented without any round-trip requests
+and makes best use of buffering within the client, network, and server.
+.Ss Description
+The mechanism used by this extension for synchronization within the X server
+is to block the processing of requests from a client until a specific
+synchronization condition occurs.
+When the condition occurs, the client is
+released and processing of requests continues.
+Multiple clients may block on
+the same condition to give inter-client synchronization.
+Alternatively, a single
+client may block on a condition such as an animation frame marker.
+.Pp
+The extension adds
+.Fn Counter
+and
+.Fn Alarm
+to the set of resources managed by
+the server.
+A counter has a 64-bit integer value that may be increased or
+decreased by client requests or by the server internally.
+A client can
+block by sending an
+.Fn Await
+request that waits until
+one of a set of synchronization conditions, called TRIGGERs, becomes TRUE.
+.Pp
+The
+.Fn CreateCounter
+request allows a client to create
+a
+.Fn Counter
+that can be changed by explicit
+.Fn SetCounter
+and
+.Fn ChangeCounter
+requests.
+These can be used to implement synchronization between
+different clients.
+.Pp
+There are some counters, called
+.Fn System Counters ,
+that are changed by the server internally rather than by client
+requests.
+The effect of any change to a system counter is not visible
+until the server has finished processing the current request.
+In other
+words, system counters are apparently updated in the gaps between the
+execution of requests rather than during the actual execution of a
+request.
+The extension provides a system counter that advances with the
+server time as defined by the core protocol, and it may also provide
+counters that advance with the real-world time or that change each
+time the CRT screen is refreshed.
+Other extensions may provide their own
+extension-specific system counters.
+.Pp
+The extension provides an
+.Fn Alarm
+mechanism that allows clients to receive an
+event on a regular basis when a particular counter is changed.
+.Sh C LANGUAGE BINDING
+The C routines provide direct access to the protocol and add no additional
+semantics.
+.Pp
+The include file for this extension is <X11/extensions/sync.h>.
+Most of the names in the language binding are derived from the protocol
+names by prepending XSync to the protocol name and changing the
+capitalization.
+.Ss C Functions
+Most of the following functions generate SYNC protocol requests.
+.Pp
+.Ft Status
+.Fo XSyncQueryExtension
+.Fa "Display *dpy"
+.Fa "int *event_base_return"
+.Fa "int *error_base_return"
+.Fc
+.Pp
+If dpy supports the SYNC extension,
+.Fn XSyncQueryExtension
+returns True,
+sets *event_base_return to the event number for the first SYNC event, and
+sets *error_base_return to the error number for the first SYNC error.
+If dpy
+does not support the SYNC extension, it returns False.
+.Pp
+.Ft Status
+.Fo XSyncInitialize
+.Fa "Display *dpy"
+.Fa "int *major_version_return"
+.Fa "int *minor_version_return"
+.Fc
+.Pp
+.Fn XSyncInitialize
+sets *major_version_return and
+*minor version return to the major/minor SYNC protocol version supported
+by the server.
+If the XSync library is compatible with the version
+returned by the server, this function returns
+.Fn True .
+If dpy does not support the SYNC extension, or if there was an error
+during communication with the server, or if the server and library protocol
+versions are incompatible, this function returns
+.Fn False .
+The only XSync function that may be called before this function is
+XSyncQueryExtension.
+If a client violates this rule, the effects of all XSync
+calls that it makes are undefined.
+.Pp
+.Ft XSyncSystemCounter
+.Fo "* XSyncListSystemCounters"
+.Fa "Display *dpy"
+.Fa "int *n_counters_return"
+.Fc
+.Pp
+.Fn XSyncListSystemCounters
+returns a pointer to an array
+of system counters supported by the display and sets *n_counters_return
+to the number of counters in the array.
+The array should be freed with
+.Fn XSyncFreeSystemCounterList .
+If dpy does not support
+the SYNC extension, or if there was an error during communication with
+the server, or if the server does not support any system counters,
+this function returns NULL.
+.Pp
+XSyncSystemCounter has the following fields:
+.Bd -unfilled
+char *              name;        /* null-terminated name of system counter */
+XSyncCounter        counter;     /* counter id of this system counter */
+XSyncValue          resolution;  /* resolution of this system counter */
+.Ed
+.Pp
+.Ft void
+.Fo XSyncFreeSystemCounterList
+.Fa "XSyncSystemCounter *list"
+.Fc
+.Pp
+.Fn XSyncFreeSystemCounterList
+frees the memory
+associated with the system counter list returned by
+.Fn XSyncListSystemCounters .
+.Pp
+.Ft XSyncCounter
+.Fo XSyncCreateCounter
+.Fa "Display *dpy"
+.Fa "XSyncValue initial_value"
+.Fc
+.Pp
+.Fn XSyncCreateCounter
+creates a counter on the dpy
+with the given initial value and returns the counter ID.
+It returns
+.Fn None
+if dpy does not support the SYNC extension.
+.Pp
+.Ft Status
+.Fo XSyncSetCounter
+.Fa "Display *dpy"
+.Fa "XSyncCounter counter"
+.Fa "XSyncValue value"
+.Fc
+.Pp
+.Fn XSyncSetCounter
+sets counter to value.
+It returns
+.Fn False
+if dpy does not
+support the SYNC extension; otherwise, it returns
+.Fn True .
+.Pp
+.Ft Status
+.Fo XSyncChangeCounter
+.Fa "Display *dpy"
+.Fa "XSyncCounter counter"
+.Fa "XSyncValue value"
+.Fc
+.Pp
+.Fn XSyncChangeCounter
+adds value to counter.
+It returns
+.Fn False
+if dpy does not support the SYNC extension;
+otherwise, it returns
+.Fn True .
+.Pp
+.Ft Status
+.Fo XSyncDestroyCounter
+.Fa "Display *dpy"
+.Fa "XSyncCounter counter"
+.Fc
+.Pp
+.Fn XSyncDestroyCounter
+destroys counter.
+It returns
+.Fn False
+if dpy does not support the SYNC extension;
+otherwise, it returns
+.Fn True .
+.Pp
+.Ft Status
+.Fo XSyncQueryCounter
+.Fa "Display *dpy"
+.Fa "XSyncCounter counter"
+.Fa "XSyncValue *value_return"
+.Fc
+.Pp
+.Fn XSyncQueryCounter
+sets *value_return to the current
+value of counter.
+It returns
+.Fn False
+if there was an
+error during communication with the server or if dpy does not support the
+SYNC extension; otherwise, it returns
+.Fn True .
+.Pp
+.Ft Status
+.Fo XSyncAwait
+.Fa "Display *dpy"
+.Fa "XSyncWaitCondition *wait_list"
+.Fa "int n_conditions"
+.Fc
+.Pp
+.Fn XSyncAwait
+awaits on the conditions in wait_list.
+The n_conditions is the number of wait conditions in wait_list.
+It
+returns
+.Fn False
+if dpy does not support the SYNC
+extension; otherwise, it returns
+.Fn True .
+The await is
+processed asynchronously by the server; this function always returns
+immediately after issuing the request.
+.Pp
+XSyncWaitCondition has the following fields:
+.Bd -unfilled
+XSyncCounter     trigger.counter;    /*counter to trigger on */
+XSyncValueType   trigger.value_type; /*absolute/relative */
+XSyncValue       trigger.wait_value; /*value to compare counter to */
+XSyncTestType    trigger.test_type;  /*pos/neg comparison/transtion */
+XSyncValue       event_threshold;    /*send event if past threshold */
+.Ed
+.Pp
+.Fn XSyncValueType
+can be either
+.Fn XSyncAbsolute
+or
+.Fn XSyncRelative .
+.Pp
+.Fn XSyncTestType
+can be one of
+.Fn XSyncPositiveTransition ,
+.Fn XSyncNegativeTransition ,
+.Fn XSyncPositiveComparison ,
+or
+.Fn XSyncNegativeComparison .
+.Pp
+.Ft XSyncAlarm
+.Fo XSyncCreateAlarm
+.Fa "Display *dpy"
+.Fa "unsigned long values_mask"
+.Fa "XSyncAlarmAttributes *values`"
+.Fc
+.Pp
+.Fn XSyncCreateAlarm
+creates an alarm and returns the
+alarm ID.
+It returns None if the display does not support the SYNC
+extension.
+The values_mask and values specify the alarm attributes.
+.Pp
+.Fn XSyncAlarmAttributes
+has the following fields.
+The
+attribute_mask column specifies the symbol that the caller should OR
+into values_mask to indicate that the value for the corresponding
+attribute was actually supplied.
+Default values are used for all
+attributes that do not have their attribute_mask OR’ed into values_mask.
+See the protocol description for
+.Fn CreateAlarm
+for the
+defaults.
+.Bd -unfilled
+type                 field name           attribute_mask
+XSyncCounter       trigger.counter;     XSyncCACounter
+XSyncValueType     trigger.value_type;  XSyncCAValueType
+XSyncValue         trigger.wait_value;  XSyncCAValue
+XSyncTestType      trigger.test_type;   XSyncCATestType
+XSyncValue         delta;               XSyncCADelta
+Bool               events;              XSyncCAEvents
+XSyncAlarmState    state;               client cannot set this
+.Ed
+.Pp
+.Ft Status
+.Fo XSyncDestroyAlarm
+.Fa "Display *dpy"
+.Fa "XSyncAlarm alarm"
+.Fc
+.Pp
+.Fn XSyncDestroyAlarm
+destroys alarm.
+It returns
+.Fn False
+if dpy does not support
+the SYNC extension; otherwise, it returns
+.Fn True .
+.Pp
+.Ft Status
+.Fo XSyncQueryAlarm
+.Fa "Display *dpy"
+.Fa "XSyncAlarm alarm"
+.Fa "XSyncAlarmAttributes *values_return"
+.Fc
+.Pp
+.Fn XSyncQueryAlarm
+sets *values_return to the alarm’s
+attributes.
+It returns
+.Fn False
+if there was an error
+during communication with the server or if dpy does not support the
+SYNC extension; otherwise, it returns
+.Fn True .
+.Pp
+.Ft Status
+.Fo XSyncChangeAlarm
+.Fa "Display *dpy"
+.Fa "XSyncAlarm alarm"
+.Fa "unsigned long values_mask"
+.Fa "XSyncAlarmAttributes *values"
+.Fc
+.Pp
+.Fn XSyncChangeAlarm
+changes alarm’s attributes.
+The
+attributes to change are specified as in
+.Fn XSyncCreateAlarm .
+It returns
+.Fn False
+if dpy does not support
+the SYNC extension; otherwise, it returns
+.Fn True .
+.Pp
+.Ft Status
+.Fo XSyncSetPriority
+.Fa "Display *dpy"
+.Fa "XID client_resource_id"
+.Fa "int priority"
+.Fc
+.Pp
+.Fn XSyncSetPriority
+sets the priority of the client
+owning client_resource_id to priority.
+If client_resource_id is None, it
+sets the caller’s priority.
+It returns
+.Fn False
+if dpy does not support the SYNC extension;
+otherwise, it returns
+.Fn True .
+.Pp
+.Ft Status
+.Fo XSyncGetPriority
+.Fa "Display *dpy"
+.Fa "XID client_resource_id"
+.Fa "int *return_priority"
+.Fc
+.Pp
+.Fn XSyncGetPriority
+sets *return_priority to the
+priority of the client owning client_resource_id.
+If client_resource_id
+is None, it sets *return_priority to the caller’s priority.
+It returns
+.Fn False
+if there was an error during communication
+with the server or if dpy does not support the SYNC extension; otherwise, it
+returns
+.Fn True .
+.Ss C Macros/Functions
+The following procedures manipulate 64-bit values.
+They are defined both as
+macros and as functions.
+By default, the macro form is used.
+To use the
+function form, #undef the macro name to uncover the function.
+.Pp
+.Ft void
+.Fo XSyncIntToValue
+.Fa "XSyncValue *pv"
+.Fa "int i"
+.Fc
+.Pp
+Converts i to an
+.Fn XSyncValue
+and stores it in *pv.
+Performs sign extension (*pv will have the same sign as i.)
+.Pp
+.Ft void
+.Fo XSyncIntsToValue
+.Fa "XSyncValue *pv"
+.Fa "unsigned int low"
+.Fa "int high"
+.Fc
+.Pp
+Stores low in the low 32 bits of *pv and high in the high 32 bits of *pv.
+.Pp
+.Ft Bool
+.Fo XSyncValueGreaterThan
+.Fa "XSyncValue a"
+.Fa "XSyncValue b"
+.Fc
+.Pp
+Returns
+.Fn True
+if a is greater than b, else returns
+.Fn False .
+.Pp
+.Ft Bool
+.Fo XSyncValueLessThan
+.Fa "XSyncValue a"
+.Fa "XSyncValue b"
+.Fc
+.Pp
+Returns
+.Fn True
+if a is less than b, else returns
+.Fn False .
+.Pp
+.Ft Bool
+.Fo XSyncValueGreaterOrEqual
+.Fa "XSyncValue a"
+.Fa "XSyncValue b"
+.Fc
+.Pp
+Returns
+.Fn True
+if a is greater than or equal to b,
+else returns
+.Fn False .
+.Pp
+.Ft Bool
+.Fo XSyncValueLessOrEqual
+.Fa "XSyncValue a"
+.Fa "XSyncValue b"
+.Fc
+.Pp
+Returns
+.Fn True
+if a is less than or equal to b,
+else returns
+.Fn False .
+.Pp
+.Ft Bool
+.Fo XSyncValueEqual
+.Fa "XSyncValue a"
+.Fa "XSyncValue b"
+.Fc
+.Pp
+Returns
+.Fn True
+if a is equal to b,
+else returns
+.Fn False .
+.Pp
+.Ft Bool
+.Fo XSyncValueIsNegative
+.Fa "XSyncValue v"
+.Fc
+.Pp
+Returns
+.Fn True
+if v is negative,
+else returns
+.Fn False .
+.Pp
+.Ft Bool
+.Fo XSyncValueIsZero
+.Fa "XSyncValue v"
+.Fc
+.Pp
+Returns
+.Fn True
+if v is zero,
+else returns
+.Fn False .
+.Pp
+.Ft Bool
+.Fo XSyncValueIsPositive
+.Fa "XSyncValue v"
+.Fc
+.Pp
+Returns
+.Fn True
+if v is positive,
+else returns
+.Fn False .
+.Pp
+.Ft unsigned int
+.Fo XSyncValueLow32
+.Fa "XSyncValue v"
+.Fc
+.Pp
+Returns the low 32 bits of v.
+.Pp
+.Ft unsigned int
+.Fo XSyncValueHigh32
+.Fa "XSyncValue v"
+.Fc
+.Pp
+Returns the high 32 bits of v.
+.Pp
+.Ft void
+.Fo XSyncValueAdd
+.Fa "XSyncValue *presult"
+.Fa "XSyncValue a"
+.Fa "XSyncValue b"
+.Fa "Bool *poverflow"
+.Fc
+.Pp
+Adds a to b and stores the result in *presult.
+If the result could not
+fit in 64 bits, *poverﬂow is set to
+.Fn True ,
+else it is
+set to
+.Fn False .
+.Pp
+.Ft void
+.Fo XSyncValueSubtract
+.Fa "XSyncValue *presult"
+.Fa "XSyncValue a"
+.Fa "XSyncValue b"
+.Fa "Bool *poverflow"
+.Fc
+.Pp
+Subtracts b from a and stores the result in *presult.
+If the result could not
+fit in 64 bits, *poverﬂow is set to
+.Fn True ,
+else it is
+set to
+.Fn False .
+.Pp
+.Ft void
+.Fo XSyncMaxValue
+.Fa "XSyncValue *pv"
+.Fc
+.Pp
+Sets *pv to the maximum value expressible in 64 bits.
+.Pp
+.Ft void
+.Fo XSyncMinValue
+.Fa "XSyncValue *pv"
+.Fc
+.Pp
+Sets *pv to the minimum value expressible in 64 bits.
+.Ss Events
+Let
+.Em event_base
+be the value event base return as defined in the function
+.Fn XSyncQueryExtension .
+.Pp
+An
+.Fn XSyncCounterNotifyEvent Ns ’s
+type field has the value
+event_base +
+.Fn XSyncCounterNotify .
+The fields of this
+structure are:
+.Bd -unfilled
+int              type;          /* event base + XSyncCounterNotify */
+unsigned long    serial;        /* number of last request processed by server */
+Bool             send event;    /* true if this came from a SendEvent request */
+Display *        display;       /* Display the event was read from */
+XSyncCounter     counter;       /* counter involved in await */
+XSyncValue       wait_value;    /* value being waited for */
+XSyncValue       counter_value; /* counter value when this event was sent */
+Time             time;          /* milliseconds */
+int              count;         /* how many more events to come */
+Bool             destroyed;     /* True if counter was destroyed */
+.Ed
+.Pp
+An
+.Fn XSyncAlarmNotifyEvent Ns ’s
+type field has the value
+event_base +
+.Fn XSyncAlarmNotify .
+The fields of
+this structure are:
+.Bd -unfilled
+int             type;         /* event_base + XSyncAlarmNotify */
+unsigned long   serial;       /* number of last request processed by server */
+Bool            send_event;   /* true if this came from a SendEvent request */
+Display *       display;      /*Display the event was read from */
+XSyncAlarm      alarm;        /* alarm that triggered */
+XSyncValue      counter_value /* value that triggered the alarm */
+XSyncValue      alarm_value   /* test value of trigger in alarm */
+Time            time;         /* milliseconds */
+XSyncAlarmState state;        /* new state of alarm */
+.Ed
+.Ss Errors
+Let
+.Em error_base
+be the value
+.Em error_base_return
+as defined in the function
+.Fn XSyncQueryExtension .
+.Pp
+An
+.Fn XSyncAlarmError Ns ’s
+error_code field has
+.Fn XSyncBadAlarm .
+The fields of this structure are:
+.Bd -unfilled
+int                type
+Display *          display;      /* Display the event was read from */
+XSyncCounter       counter;      /* resource id */
+unsigned long      serial;       /* serial number of failed request */
+unsigned char      error_code;   /* error_base + XSyncBadAlarm */
+unsigned char      request_code; /* Major op-code of failed request */
+unsigned char      minor_code;   /* Minor op-code of failed request */
+.Ed
+.Pp
+An
+.Fn XSyncCounterError Ns ’s
+error code field has the value
+error_base +
+.Fn XSyncBadCounter .
+The fields of this
+structure are:
+.Bd -unfilled
+int                type
+Display *          display;      /* Display the event was read from */
+XSyncCounter       counter;      /* resource id */
+unsigned long      serial;       /* serial number of failed request */
+unsigned char      error_code;   /* error_base + XSyncBadCounter */
+unsigned char      request_code; /* Major op-code of failed request */
+unsigned char      minor_code;   /* Minor op-code of failed request */
+.Ed
+.Sh AUTHORS
+.An -nosplit
+.Sy X Consortium Standard
+.Pp
+X Version 11, Release 6
+Version 3.0
+.An -split
+.An Tim Glauert ,
+Olivetti Research
+MultiWorks
+.An Dave Carver ,
+Digital Equipment Corporation
+MIT/Project Athena
+.An Jim Gettys ,
+Digital Equipment Corporation
+Cambridge Research Laboratory
+.An David P. Wiggins ,
+X Consortium, Inc.
+Copyright \(co 1991
+Olivetti Research Limited, Cambridge England
+Digital Equipment Corporation, Maynard, Massachusetts
+.Ss Legal Notice
+Permission to use, copy, modify, and distribute this documentation for any
+purpose and without fee is hereby granted, provided that the above
+copyright notice appear in all copies.
+Olivetti, Digital, MIT, and the
+X Consortium make no representations about the suitability for any purpose
+of the information in this document.
+This documentation is provided as
+is without express or implied warranty.
+.Ss Legal Notice
+Copyright \(co 1991 X Consortium, Inc.
+.Pp
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files
+(the "Software"), to deal in the Software without
+restriction, including without limitation the rights to use, copy,
+modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished
+to do so, subject to the following conditions:
+.Pp
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+.Pp
+THE SOFTWARE IS PROVIDED \(lqAS IS\(rq, WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+.Pp
+Except as contained in this notice, the name of the X Consortium shall
+not be used in advertising or otherwise to promote the sale, use or other
+dealings in this Software without prior written authorization from the
+X Consortium.
+.Pp
+X Window System is a trademark of The OpenGroup.

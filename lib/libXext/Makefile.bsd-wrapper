@@ -1,7 +1,25 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.5 2013/08/13 07:07:15 guenther Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.6 2019/05/10 11:44:39 schwarze Exp $
 
 CONFIGURE_ARGS=	--without-xmlto --without-fop --without-xsltproc
 
 SHARED_LIBS=	Xext 13.0
+
+MDOCS =	specs/shapelib \
+	specs/synclib \
+	specs/xtest1
+
+beforeinstall:
+.for n in ${MDOCS}
+	${INSTALL} ${INSTALL_COPY} -o ${MANOWN} -g ${MANGRP} -m ${MANMODE} \
+		${.CURDIR}/${n}.3 ${DESTDIR}${MANDIR}3
+.endfor
+
+# maintainer target, not used duing build or install
+mdoc:
+.for n in ${MDOCS}
+	docbook2mdoc -s 3 ${.CURDIR}/${n}.xml > ${.CURDIR}/${n}.3
+.endfor
+
+.PHONY: mdoc
 
 .include <bsd.xorg.mk>

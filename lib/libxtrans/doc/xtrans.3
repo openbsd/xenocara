@@ -1,0 +1,1277 @@
+.\" automatically generated with docbook2mdoc xtrans.xml
+.Dd $Mdocdate: May 10 2019 $
+.Dt XTRANS 3
+.Os
+.Sh NAME
+.Nm xtrans
+.Nd X Transport Interface
+.Sh THE X TRANSPORT INTERFACE
+Designed by Stuart Anderson (NCR) with help from Ralph Mor (X Consortium)
+.Pp
+.Sy Note
+.Pp
+This documentation does not completely match the implementation in R6
+(as a result of some late changes made in the code). Specifically, support
+was added for font server cloning, and conditional compliation was introduced
+for client vs. server code.
+.Sh PURPOSES AND GOALS
+The X Transport Interface is intended to combine all system and
+transport specific code into a single place in the source tree.
+This API
+should be used by all libraries, clients and servers of the X Window System.
+Use of this API should allow the addition of new types of transports and
+support for new platforms without making any changes to the source except
+in the X Transport Interface code.
+.Pp
+This interface should solve the problem of multiple
+.Ql #ifdef TRANSPORT
+and
+.Ql #ifdef PLATFORM
+statements scattered throughout the source tree.
+.Pp
+This interface should provide enough functionality to support all
+types of protocols, including connection oriented protocols such as X11 and
+FS, and connection-less oriented protocols such as XDMCP.
+.Sh OVERVIEW OF THE INTERFACE
+The interface provides an API for use by applications.
+The functions in
+this API perform work that is common to all transports and systems, such
+as parsing an address into a host and port number.
+The functions in this
+API call transport specific functions that are contained in a table whose
+contents are defined at compile time.
+This table contains an entry for each
+type of transport.
+Each entry is a record containing mostly pointers to
+function that implements the interface for the given transport.
+.Pp
+This API does not provide an abstraction for
+.Fn select
+or
+.Fn poll .
+These functions are themselves transport independent, so an additional
+interface is not needed for these functions.
+It is also unclear how such
+an interface would affect performance.
+.Sh DEFINITION OF ADDRESS SPECIFICATION FORMAT
+Addresses are specified in the following syntax,
+.Bd -literal
+.Ar protocol Ns Pf / Ar host : Ns Ar port
+.Ed
+.Pp
+where
+.Ar protocol
+specifies a protocol family
+or an alias for a protocol family.
+A definition of common protocol
+families is given in a later section.
+.Pp
+The
+.Ar host
+part specifies the name of a host or other
+transport dependent entity that could be interpreted as a Network Service Access Point
+(NSAP).
+.Pp
+The
+.Ar port
+part specifies the name of a Transport Service
+Access Point (TSAP). The format of the TSAP is defined by the underlying transport
+implementation, but it is represented using a string format when it is
+part of an address.
+.Sh INTERNAL DATA STRUCTURES
+There are two major data structures associated with the transport
+independent portion of this interface.
+Additional data structures
+may be used internally by each transport.
+.Ss Xtransport
+Each transport supported has an entry in the transport table.
+The transport
+table is an array of Xtransport records.
+Each record contains all the entry
+points for a single transport.
+This record is defined as:
+.Bd -literal
+typedef struct _Xtransport {
+    const char *TransName;
+    int  flags;
+    XtransConnInfo (*OpenCOTSClient)(
+     struct _Xtransport *,    /* transport */
+     const char *,            /* protocol */
+     const char *,            /* host */
+     const char *             /* port */
+    );
+    XtransConnInfo (*OpenCOTSServer)(
+     struct _Xtransport *,    /* transport */
+     const char *,            /* protocol */
+     const char *,            /* host */
+     const char *             /* port */
+    );
+    XtransConnInfo (*OpenCLTSClient)(
+     struct _Xtransport *,    /* transport */
+     const char *,            /* protocol */
+     const char *,            /* host */
+ const char *             /* port */
+    );
+    XtransConnInfo (*OpenCLTSServer)(
+     struct _Xtransport *,    /* transport */
+     const char *,            /* protocol */
+     const char *,            /* host */
+     const char *             /* port */
+    );
+    int     (*SetOption)(
+     XtransConnInfo,          /* connection */
+     int,               /* option */
+     int               /* arg */
+    );
+    int     (*CreateListener)(
+     XtransConnInfo,          /* connection */
+     const char *,            /* port */
+     int                      /* flags */
+    );
+    int     (*ResetListener)(
+     XtransConnInfo          /* connection */
+    );
+    XtransConnInfo (*Accept)(
+     XtransConnInfo          /* connection */
+    );
+    int     (*Connect)(
+     XtransConnInfo,          /* connection */
+     const char *,            /* host */
+     const char *             /* port */
+    );
+    int     (*BytesReadable)(
+     XtransConnInfo,          /* connection */
+     BytesReadable_t *     /* pend */
+    );
+    int     (*Read)(
+     XtransConnInfo,          /* connection */
+     char *,               /* buf */
+     int               /* size */
+    );
+    int     (*Write)(
+     XtransConnInfo,          /* connection */
+     char *,               /* buf */
+     int               /* size */
+    );
+    int     (*Readv)(
+     XtransConnInfo,          /* connection */
+     struct iovec *,          /* buf */
+     int               /* size */
+    );
+    int     (*Writev)(
+     XtransConnInfo,          /* connection */
+     struct iovec *,          /* buf */
+     int               /* size */
+    );
+    int     (*Disconnect)(
+     XtransConnInfo          /* connection */
+    );
+    int     (*Close)(
+     XtransConnInfo          /* connection */
+    );
+} Xtransport;
+.Ed
+.Pp
+The
+.Fa flags
+field can contain an OR of
+the following masks:
+.Bl -tag -width Ds
+.It Dv TRANS_ALIAS
+indicates that this record is providing an alias, and should
+not be used to create a listener.
+.It Dv TRANS_LOCAL
+indicates that this is a
+.Dv LOCALCONN
+transport.
+.It Dv TRANS_ABSTRACT
+indicates that a local connection transport uses the abstract socket namespace.
+.El
+.Pp
+Some additional flags may be set in the
+.Fa flags
+field by the library while it is running:
+.Bl -tag -width Ds
+.It Dv TRANS_DISABLED
+indicates that this transport has been disabled.
+.It Dv TRANS_NOLISTEN
+indicates that servers should not open new listeners using this transport.
+.It Dv TRANS_NOUNLINK
+set by a transport backend to indicate that the endpoints for its connection
+should not be unlinked.
+.El
+.Ss XtransConnInfo
+Each connection will have an opaque
+.Vt XtransConnInfo
+transport connection
+object allocated for it.
+This record contains information specific to the
+connection.
+The record is defined as:
+.Bd -literal
+typedef struct _XtransConnInfo *XtransConnInfo;
+struct _XtransConnInfo {
+    struct _Xtransport     *transptr;
+    char     *priv;
+    int          flags;
+    int          fd;
+    int          family;
+    char     *addr;
+    int          addrlen;
+    char     *peeraddr;
+    int          peeraddrlen;
+};
+.Ed
+.Sh EXPOSED TRANSPORT INDEPENDENT API
+This API is included in each library and server that uses it.
+The API may
+be used by the library, but it is not added to the public API for that
+library.
+This interface is simply an implementation facilitator.
+This API
+contains a low level set of core primitives, and a few utility functions
+that are built on top of the primitives.
+The utility functions exist to
+provide a more familiar interface that can be used to port existing code.
+.Pp
+A macro is defined in Xtrans.h for TRANS(func) that creates a unique function
+name depending on where the code is compiled.
+For example, when built for
+Xlib,
+.Fn TRANS(OpenCOTSClient)
+becomes
+.Fn _X11TransOpenCOTSClient .
+.Pp
+All failures are considered fatal, and the connection should be closed
+and re-established if desired.
+In most cases, however, the value of
+errno will be available for debugging purposes.
+.Ss Core Interface API
+.Bl -bullet
+.It
+.Ft XtransConnInfo
+.Fo TRANS(OpenCOTSClient)
+.Fa "const char * address"
+.Fc
+.Pp
+This function creates a Connection-Oriented Transport that is
+suitable for use by a client.
+The parameter
+.Fa address
+contains the full address of the server to which this endpoint will be
+connected.
+This function returns an opaque transport connection object on
+success, or
+.Dv NULL
+on failure.
+.It
+.Ft XtransConnInfo
+.Fo TRANS(OpenCOTSServer)
+.Fa "const char * address"
+.Fc
+.Pp
+This function creates a Connection-Oriented Transport that is suitable
+for use by a server.
+The parameter
+.Fa address
+contains the
+full address to which this server will be bound.
+This function returns an
+opaque transport connection object on success, or
+.Dv NULL
+on failure.
+.It
+.Ft XtransConnInfo
+.Fo TRANS(OpenCLTSClient)
+.Fa "const char * address"
+.Fc
+.Pp
+This function creates a Connection-Less Transport that is suitable for
+use by a client.
+The parameter
+.Fa address
+contains the
+full address of the server to which this endpoint will be connected.
+This
+function returns an opaque transport connection object on success, or
+.Dv NULL
+on failure.
+.It
+.Ft XtransConnInfo
+.Fo TRANS(OpenCLTSServer)
+.Fa "const char * address"
+.Fc
+.Pp
+This function creates a Connection-Less Transport that is suitable for
+use by a server.
+The parameter
+.Fa address
+contains the
+full address to which this server will be bound.
+This function returns an
+opaque transport connection object on success, or
+.Dv NULL
+on failure.
+.It
+.Ft int
+.Fo TRANS(SetOption)
+.Fa "XtransConnInfo connection"
+.Fa "int option"
+.Fa "int arg"
+.Fc
+.Pp
+This function sets transport options, similar to the way
+.Fn setsockopt
+and
+.Fn ioctl
+work.
+The parameter
+.Fa connection
+is an endpoint
+that was obtained from
+.Fn _XTransOpen*
+functions.
+The parameter
+.Fa option
+contains the option that will
+be set.
+The actual values for
+.Fa option
+are defined in a
+later section
+.Pq Sx Transport_Option_Definition .
+The parameter
+.Fa arg
+can be used to pass
+in an additional value that may be required by some options.
+This function returns 0 on success and -1 on failure.
+.Pp
+.Sy Note
+.Pp
+Based on current usage, the complimentary function
+.Fn TRANS(GetOption)
+is not necessary.
+.It
+.Ft int
+.Fo TRANS(CreateListener)
+.Fa "XtransConnInfo connection"
+.Fa "const char * port"
+.Fa "int flags"
+.Fc
+.Pp
+This function sets up the server endpoint for listening.
+The parameter
+.Fa connection
+is an endpoint that was obtained from
+.Fn TRANS(OpenCOTSServer)
+or
+.Fn TRANS(OpenCLTSServer) .
+The parameter
+.Fa port
+specifies the port to which this endpoint
+should be bound for listening.
+If port is
+.Dv NULL ,
+then the transport may attempt to allocate any available TSAP for this
+connection.
+If the transport cannot support this, then this function will
+return a failure.
+The
+.Fa flags
+parameter can be set
+to
+.Dv ADDR_IN_USE_ALLOWED
+to allow the call to the underlying
+binding function to fail with a
+.Er EADDRINUSE
+error
+without causing the
+.Fn TRANS(CreateListener)
+function itself to fail.
+This function return 0 on success and -1 on failure.
+.It
+.Ft int
+.Fo TRANS(ResetListener)
+.Fa "XtransConnInfo connection"
+.Fc
+.Pp
+When a server is restarted, certain listen ports may need to be reset.
+For example, unix domain needs to check that the file used for
+communication has not been deleted.
+If it has, it must be recreated.
+The parameter
+.Fa connection
+is an opened and bound
+endpoint that was obtained from
+.Fn TRANS(OpenCOTSServer)
+and passed to
+.Fn TRANS(CreateListener) .
+This function will return one of the following values:
+.Dv TRANS_RESET_NOOP ,
+.Dv TRANS_RESET_NEW_FD ,
+or
+.Dv TRANS_RESET_FAILURE .
+.It
+.Ft XtransConnInfo
+.Fo TRANS(Accept)
+.Fa "XtransConnInfo connection"
+.Fc
+.Pp
+Once a connection indication is received, this function can be called to
+accept the connection.
+The parameter
+.Fa connection
+is
+an opened and bound endpoint that was obtained from
+.Fn TRANS(OpenCOTSServer)
+and passed to
+.Fn TRANS(CreateListener) .
+This function will return a
+new opaque transport connection object upon success,
+.Dv NULL
+otherwise.
+.It
+.Ft int
+.Fo TRANS(Connect)
+.Fa "XtransConnInfo connection"
+.Fa "const char * address"
+.Fc
+.Pp
+This function creates a connection to a server.
+The parameter
+.Fa connection
+is an endpoint that was obtained
+from
+.Fn TRANS(OpenCOTSClient) .
+The parameter
+.Fa address
+specifies the TSAP to which this endpoint
+should connect.
+If the protocol is included in the address, it will be
+ignored.
+This function returns 0 on success and -1 on failure.
+.It
+.Ft int
+.Fo TRANS(BytesReadable)
+.Fa "XtransConnInfo connection"
+.Fa "BytesReadable_t * pend"
+.Fc
+.Pp
+This function provides the same functionality as the
+.Fn BytesReadable
+macro.
+.It
+.Ft int
+.Fo TRANS(Read)
+.Fa "XtransConnInfo connection"
+.Fa "char * buf"
+.Fa "int size"
+.Fc
+.Pp
+This function will return the number of bytes requested on a COTS
+connection, and will return the minimum of the number bytes requested or
+the size of the incoming packet on a CLTS connection.
+.It
+.Ft int
+.Fo TRANS(Write)
+.Fa "XtransConnInfo connection"
+.Fa "char * buf"
+.Fa "int size"
+.Fc
+.Pp
+This function will write the requested number of bytes on a COTS
+connection, and will send a packet of the requested size on a CLTS connection.
+.It
+.Ft int
+.Fo TRANS(Readv)
+.Fa "XtransConnInfo connection"
+.Fa "struct iovec * buf"
+.Fa "int size"
+.Fc
+.Pp
+Similar to
+.Fn TRANS(Read) .
+.It
+.Ft int
+.Fo TRANS(Writev)
+.Fa "XtransConnInfo connection"
+.Fa "struct iovec * buf"
+.Fa "int size"
+.Fc
+.Pp
+Similar to
+.Fn TRANS(Write) .
+.It
+.Ft int
+.Fo TRANS(Disconnect)
+.Fa "XtransConnInfo connection"
+.Fc
+.Pp
+This function is used when an orderly disconnect is desired.
+This function
+breaks the connection on the transport.
+It is similar to the socket function
+.Fn shutdown .
+.It
+.Ft int
+.Fo TRANS(Close)
+.Fa "XtransConnInfo connection"
+.Fc
+.Pp
+This function closes the transport, unbinds it, and frees all resources that
+was associated with the transport.
+If a
+.Fn TRANS(Disconnect)
+call was not made on the connection, a disorderly disconnect may occur.
+.It
+.Ft int
+.Fo TRANS(IsLocal)
+.Fa "XtransConnInfo connection"
+.Fc
+.Pp
+Returns TRUE if it is a local transport.
+.It
+.Ft int
+.Fo TRANS(GetMyAddr)
+.Fa "XtransConnInfo connection"
+.Fa "int * familyp"
+.Fa "int * addrlenp"
+.Fa "Xtransaddr ** addrp"
+.Fc
+.Pp
+This function is similar to
+.Fn getsockname .
+This function will allocate space for the address, so it must be freed by
+the caller.
+Not all transports will have a valid address until a connection
+is established.
+This function should not be used until the connection is
+established with
+.Fn Connect
+or
+.Fn Accept .
+.It
+.Ft int
+.Fo TRANS(GetPeerAddr)
+.Fa "XtransConnInfo connection"
+.Fa "int * familyp"
+.Fa "int * addrlenp"
+.Fa "Xtransaddr ** addrp"
+.Fc
+.Pp
+This function is similar to
+.Fn getpeername .
+This function will allocate space for the address, so it must be freed by
+the caller.
+Not all transports will have a valid address until a connection
+is established.
+This function should not be used until the connection is
+established with
+.Fn Connect
+or
+.Fn Accept .
+.It
+.Ft int
+.Fo TRANS(GetConnectionNumber)
+.Fa "XtransConnInfo connection"
+.Fc
+.Pp
+Returns the file descriptor associated with this transport.
+.It
+.Ft int
+.Fo TRANS(MakeAllCOTSServerListeners)
+.Fa "const char * port"
+.Fa "int * partial_ret"
+.Fa "int * count_ret"
+.Fa "XtransConnInfo ** connections_ret"
+.Fc
+.Pp
+This function should be used by most servers.
+It will try to establish
+a COTS server endpoint for each transport listed in the transport table.
+.Fa partial_ret
+will be set to
+.Dv True
+if
+only a partial network could be created.
+.Fa count_ret
+is
+the number of transports returned, and
+.Fa connections_ret
+is the list of transports.
+.It
+.Ft int
+.Fo TRANS(MakeAllCLTSServerListeners)
+.Fa "const char * port"
+.Fa "int * partial_ret"
+.Fa "int * count_ret"
+.Fa "XtransConnInfo ** connections_ret"
+.Fc
+.Pp
+This function should be used by most servers.
+It will try to establish a
+CLTS server endpoint for each transport listed in the transport table.
+.Fa partial_ret
+will be set to
+.Dv True
+if
+only a partial network could be created.
+.Fa count_ret
+is
+the number of transports returned, and
+.Fa connections_ret
+is the list of transports.
+.El
+.Ss Utility API
+This section describes a few useful functions that have been implemented on
+top of the Core Interface API.
+These functions are being provided as a
+convenience.
+.Bl -bullet
+.It
+.Ft int
+.Fo TRANS(ConvertAddress)
+.Fa "int * familyp"
+.Fa "int * addrlenp"
+.Fa "Xtransaddr * addrp"
+.Fc
+.Pp
+This function converts a sockaddr based address to an X authorization based
+address (ie
+.Dv AF_INET ,
+.Dv AF_UNIX
+to the X
+protocol definition (ie
+.Dv FamilyInternet ,
+.Dv FamilyLocal ) ) .
+.El
+.Sh TRANSPORT OPTION DEFINITION
+The following options are defined for the
+.Fn TRANS(SetOption)
+.Pq Sx TRANSSetOption
+function.
+If an OS or transport does not support any of these options,
+then it will silently ignore the option.
+.Bl -bullet
+.It
+.Dv TRANS_NONBLOCKING
+.Pp
+This option controls the blocking mode of the connection.
+If the argument
+is set to 1, then the connection will be set to blocking.
+If the argument
+is set to 0, then the connection will be set to non- blocking.
+.It
+.Dv TRANS_CLOSEONEXEC
+.Pp
+This option determines what will happen to the connection when an exec is
+encountered.
+If the argument is set to 1, then the connection will be
+closed when an exec occurs.
+If the argument is set to 0, then the
+connection will not be closed when an exec occurs.
+.El
+.Sh HIDDEN TRANSPORT DEPENDENT API
+The hidden transport dependent functions are placed in the Xtransport record.
+These function are similar to the Exposed Transport Independent API, but
+some of the parameters and return values are slightly different.
+Stuff like
+the
+.Ql #ifdef SUNSYSV
+should be handled inside these functions.
+.Bl -bullet
+.It
+.Ft XtransConnInfo
+.Fo "* OpenCOTSClient"
+.Fa "struct _Xtransport * thistrans"
+.Fa "const char * protocol"
+.Fa "const char * host"
+.Fa "const char * port"
+.Fc
+.Pp
+This function creates a Connection-Oriented Transport.
+The parameter
+.Fa thistrans
+points to an Xtransport entry in the
+transport table.
+The parameters
+.Fa protocol ,
+.Fa host ,
+and
+.Fa port ,
+point to
+strings containing the corresponding parts of the address that was passed into
+.Fn TRANS(OpenCOTSClient)
+.Pq Sx TRANSOpenCOTSClient .
+This function must allocate and initialize the contents of the XtransConnInfo
+structure that is returned by this function.
+This function will open the
+transport, and bind it into the transport namespace if applicable.
+The local
+address portion of the XtransConnInfo structure will also be filled in by
+this function.
+.It
+.Ft XtransConnInfo
+.Fo "* OpenCOTSServer"
+.Fa "struct _Xtransport * thistrans"
+.Fa "const char * protocol"
+.Fa "const char * host"
+.Fa "const char * port"
+.Fc
+.Pp
+This function creates a Connection-Oriented Transport.
+The parameter
+.Fa thistrans
+points to an Xtransport entry in the
+transport table.
+The parameters
+.Fa protocol ,
+.Fa host ,
+and
+.Fa port
+point to
+strings containing the corresponding parts of the address that was passed into
+.Fn TRANS(OpenCOTSServer)
+.Pq Sx TRANSOpenCOTSServer .
+This function must allocate and initialize the contents of the
+XtransConnInfo structure that is returned by this function.
+This function
+will open the transport.
+.It
+.Ft XtransConnInfo
+.Fo "* OpenCLTSClient"
+.Fa "struct _Xtransport * thistrans"
+.Fa "const char * protocol"
+.Fa "const char * host"
+.Fa "const char * port"
+.Fc
+.Pp
+This function creates a Connection-Less Transport.
+The parameter
+.Fa thistrans
+points to an Xtransport entry in the
+transport table.
+The parameters
+.Fa protocol ,
+.Fa host ,
+and
+.Fa port
+point to strings
+containing the corresponding parts of the address that was passed into
+.Fn TRANS(OpenCLTSClient)
+.Pq Sx TRANSOpenCLTSClient .
+This function must allocate and initialize the contents of the XtransConnInfo
+structure that is returned by this function.
+This function will open the
+transport, and bind it into the transport namespace if applicable.
+The
+local address portion of the XtransConnInfo structure will also be filled
+in by this function.
+.It
+.Ft XtransConnInfo
+.Fo "* OpenCLTSServer"
+.Fa "struct _Xtransport * thistrans"
+.Fa "const char * protocol"
+.Fa "const char * host"
+.Fa "const char * port"
+.Fc
+.Pp
+This function creates a Connection-Less Transport.
+The parameter
+.Fa thistrans
+points to an Xtransport entry in the
+transport table.
+The parameters
+.Fa protocol ,
+.Fa host ,
+and
+.Fa port
+point to strings
+containing the corresponding parts of the address that was passed into
+.Fn TRANS(OpenCLTSServer)
+.Pq Sx TRANSOpenCLTSServer .
+This function must allocate and initialize the contents of the
+XtransConnInfo structure that is returned by this function.
+This
+function will open the transport.
+.It
+.Ft int
+.Fo SetOption
+.Fa "struct _Xtransport * thistrans"
+.Fa "int option"
+.Fa "int arg"
+.Fc
+.Pp
+This function provides a transport dependent way of implementing the
+options defined by the X Transport Interface.
+In the current prototype,
+this function is not being used, because all of the options defined so far
+are transport independent.
+This function will have to be used if a radically
+different transport type is added, or a transport dependent option is defined.
+.It
+.Ft int
+.Fo CreateListener
+.Fa "struct _Xtransport * thistrans"
+.Fa "const char *port"
+.Fa "int flags"
+.Fc
+.Pp
+This function takes a transport endpoint opened for a server, and sets it
+up to listen for incoming connection requests.
+The parameter
+.Fa port
+contains the port portion of the address that was passed to the Open function.
+The parameter
+.Fa flags
+should be set to
+.Dv ADDR_IN_USE_ALLOWED
+if the underlying transport endpoint
+may be already bound and this should not be considered
+as an error.
+Otherwise flags should be set to 0. This is used by IPv6 code,
+where the same socket can be bound to both an IPv6 address and then to a
+IPv4 address.
+This function will bind the transport into the transport
+name space if applicable, and fill in the local address portion of the
+XtransConnInfo structure.
+The transport endpoint will then be set to
+listen for incoming connection requests.
+.It
+.Ft int
+.Fo ResetListener
+.Fa "struct _Xtransport * thistrans"
+.Fc
+.Pp
+This function resets the transport for listening.
+.It
+.Ft XtransConnInfo
+.Fo Accept
+.Fa "struct _Xtransport * thistrans"
+.Fc
+.Pp
+This function creates a new transport endpoint as a result of an
+incoming connection request.
+The parameter
+.Fa thistrans
+is the endpoint
+that was opened for listening by the server.
+The new endpoint is
+opened and bound into the transport’s namespace.
+A XtransConnInfo
+structure describing the new endpoint is returned from this function
+.It
+.Ft int
+.Fo Connect
+.Fa "struct _Xtransport * thistrans"
+.Fa "const char * host"
+.Fa "const char * port"
+.Fc
+.Pp
+This function establishes a connection to a server.
+The parameters
+.Fa host
+and
+.Fa port
+describe the server to which the connection should be
+established.
+The connection will be established so that
+.Fn Read
+and
+.Fn Write
+call can be made.
+.It
+.Ft int
+.Fo BytesReadable
+.Fa "struct _Xtransport * thistrans"
+.Fa "BytesReadable_t * pend"
+.Fc
+.Pp
+This function replaces the
+.Fn BytesReadable
+macro.
+This allows each transport to have its own mechanism for determining
+how much data is ready to be read.
+.It
+.Ft int
+.Fo Read
+.Fa "struct _Xtransport * thistrans"
+.Fa "char * buf"
+.Fa "int size"
+.Fc
+.Pp
+This function reads
+.Fa size
+bytes into
+.Fa buf
+from the connection.
+.It
+.Ft int
+.Fo Write
+.Fa "struct _Xtransport * thistrans"
+.Fa "char * buf"
+.Fa "int size"
+.Fc
+.Pp
+This function writes
+.Fa size
+bytes from
+.Fa buf
+to the connection.
+.It
+.Ft int
+.Fo Readv
+.Fa "struct _Xtransport * thistrans"
+.Fa "struct iovec * buf"
+.Fa "int size"
+.Fc
+.Pp
+This function performs a
+.Fn readv
+on the connection.
+.It
+.Ft int
+.Fo Writev
+.Fa "struct _Xtransport * thistrans"
+.Fa "struct iovec * buf"
+.Fa "int size"
+.Fc
+.Pp
+This function performs a
+.Fn writev
+on the connection.
+.It
+.Ft int
+.Fo Disconnect
+.Fa "struct _Xtransport * thistrans"
+.Fc
+.Pp
+This function initiates an orderly shutdown of a connection.
+If a
+transport does not distinguish between orderly and disorderly
+disconnects, then a call to this function will have no affect.
+.It
+.Ft int
+.Fo Close
+.Fa "struct _Xtransport * thistrans"
+.Fc
+.Pp
+This function will break the connection, and close the endpoint.
+.El
+.Sh CONFIGURATION
+The implementation of each transport can be platform specific.
+It is expected
+that existing connection types such as
+.Dv TCPCONN ,
+.Dv UNIXCONN ,
+.Dv LOCALCONN ,
+and
+.Dv STREAMSCONN
+will be replaced with flags for each
+possible transport type.
+.Pp
+In X11R6, the below flags to enable transport types were set in
+.Dv ConnectionFlags
+in the
+.Pa vendor.cf
+or
+.Pa site.def
+config files.
+.Pp
+In X11R7 modular releases, these flags are set when running
+.Pa configure
+scripts which include the
+.Fn XTRANS_CONNECTION_FLAGS
+macro from
+.Pa xtrans.m4 .
+.Bl -ohang
+.It Table Row
+.Bl -dash -compact
+.It
+.Ql #define
+.It
+configure flag
+.It
+Description
+.El
+.It Table Row
+.Bl -dash -compact
+.It
+.Dv TCPCONN
+.It
+.Fl -enable-tcp-transport
+.It
+Enables the INET (IPv4) Domain Socket based transport
+.El
+.It Table Row
+.Bl -dash -compact
+.It
+.Dv IPv6
+.It
+.Fl -enable-ipv6
+.It
+Extends
+.Dv TCPCONN
+to enable IPv6 Socket based transport
+.El
+.It Table Row
+.Bl -dash -compact
+.It
+.Dv UNIXCONN
+.It
+.Fl -enable-unix-transport
+.It
+Enables the UNIX Domain Socket based transport
+.El
+.It Table Row
+.Bl -dash -compact
+.It
+.Dv STREAMSCONN
+.It
+.Em Not available in X11R7
+.It
+Enables the TLI based transports
+.El
+.It Table Row
+.Bl -dash -compact
+.It
+.Dv LOCALCONN
+.It
+.Fl -enable-local-transport
+.It
+Enables the SYSV Local connection transports
+.El
+.It Table Row
+.Bl -dash -compact
+.It
+.Dv DNETCONN
+.It
+.Em Not available in X11R7
+.It
+Enables the DECnet transports
+.El
+.El
+.Sh TRANSPORT SPECIFIC DEFINITIONS
+.Bl -ohang
+.It Table Row
+.Bl -dash -compact
+.It
+Protocol Family
+.It
+Address Component
+.El
+.It Table Row
+.Bl -dash -compact
+.It
+protocol
+.It
+host
+.It
+port
+.El
+.It Table Row
+.Bl -dash -compact
+.It
+Internet
+.It
+inet inet6 tcp udp
+.It
+name of an internet addressable host
+.It
+string containing the name of a service or a valid port number.
+Example: "xserver0", "7100"
+.El
+.It Table Row
+.Bl -dash -compact
+.It
+DECnet
+.It
+decnet
+.It
+name of a DECnet addressable host
+.It
+string containing the complete name of the object.
+Example: "X$X0"
+.El
+.It Table Row
+.Bl -dash -compact
+.It
+NETware
+.It
+ipx
+.It
+name of a NETware addressable host
+.It
+Not sure of the specifics yet.
+.El
+.It Table Row
+.Bl -dash -compact
+.It
+OSI
+.It
+osi
+.It
+name of an OSI adressable host.
+.It
+Not sure of the specifics yet.
+.El
+.It Table Row
+.Bl -dash -compact
+.It
+Local
+.It
+local pts named sco isc
+.It
+(ignored)
+.It
+String containing the port name, ie "xserver0", "fontserver0".
+.El
+.El
+.Sh IMPLEMENTATION NOTES
+This section refers to the prototype implementation that is being developed
+concurrently with this document.
+This prototype has been able to flush out many
+details and problems as the specification was being developed.
+.Pp
+In X11R6, all of the source code for this interface was located in
+.Pa xc/lib/xtrans .
+.Pp
+In X11R7, all of the source code for this interface is delivered via
+the
+.Sy lib/libxtrans
+modular package from X.Org,
+and is installed under
+.Pa
+.Ar ${prefix} Ns /X11/Xtrans
+so that other modules may find it when they build.
+.Pp
+All functions names in the source are of the format
+.Fn TRANS(func) .
+The
+.Fn TRANS
+macro is defined as
+.Bd -literal
+#define TRANS(func) _PROTOCOLTrans##func
+.Ed
+.Pp
+.Dv PROTOCOL
+will be uniquely defined in each directory
+where this code is compiled.
+.Dv PROTOCOL
+will be defined to be the name of the protocol
+that is implemented by the library or server, such as X11, FS, and ICE.
+.Pp
+All libraries and servers that use the X Transport Interface should have a new
+file called
+.Pa
+.Ar TRANSPORT Ns trans.c .
+This file will include the transports based on the configuration flags
+provided by the
+.Pa configure
+script.
+Below is an
+example
+.Pa xfstrans.c
+for the font server.
+.Bd -literal
+#include "config.h"
+#define FONT_t 1
+#define TRANS_REOPEN 1
+#define TRANS_SERVER 1
+#include <X11/Xtrans/transport.c>
+.Ed
+.Pp
+The source files for this interface are listed below.
+.Bl -tag -width Ds
+.It Pa Xtrans.h
+Function prototypes and defines for the Transport Independent API.
+.It Pa Xtransint.h
+Used by the interface implementation only.
+Contains the internal data structures.
+.It Pa Xtranssock.c
+Socket implementation of the Transport Dependent API.
+.It Pa Xtranstli.c
+TLI implementation of the Transport Dependent API.
+.It Pa Xtransdnet.c
+DECnet implementation of the Transport Dependent API.
+.It Pa Xtranslocal.c
+Implementation of the Transport Dependent API for SYSV Local connections.
+.It Pa Xtrans.c
+Exposed Transport Independent API Functions.
+.It Pa Xtransutil.c
+Collection of Utility functions that use the X Transport Interface.
+.El
+.Pp
+The file
+.Pa Xtransint.h
+contains much of the transport
+related code that was previously in
+.Pa Xlibint.h
+and
+.Pa Xlibnet.h .
+This will make the definitions available for all transport users.
+This
+should also obsolete the equivalent code in other libraries.
+.Sh AUTHORS
+.An -nosplit
+.Sy X Consortium Standard
+.Pp
+.An -split
+.An Stuart Anderson ,
+NCR Corporation
+.An Ralph Mor ,
+X Consortium
+.An Alan Coopersmith ,
+Oracle Corp.
+X Version 11, Release 6
+Version 1.2
+Copyright \(co 1993, 1994
+NCR Corporation - Dayton, Ohio, USA
+.Ss Legal Notice
+All Rights Reserved
+.Pp
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted, provided
+that the above copyright notice appear in all copies and that both that
+copyright notice and this permission notice appear in supporting
+documentation, and that the name NCR not be used in advertising
+or publicity pertaining to distribution of the software without specific,
+written prior permission.
+NCR makes no representations about the
+suitability of this software for any purpose.
+It is provided "as is"
+without express or implied warranty.
+.Pp
+NCR DISCLAIM ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN
+NO EVENT SHALL NCR BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
+OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
+NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+.Ss Legal Notice
+Copyright \(co 1993, 1994, 2002 The Open Group
+.Pp
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the \(lqSoftware\(rq), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+.Pp
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+.Pp
+THE SOFTWARE IS PROVIDED \(lqAS IS\(rq, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE
+OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+.Pp
+Except as contained in this notice, the name of The Open Group shall not be
+used in advertising or otherwise to promote the sale, use or other dealings
+in this Software without prior written authorization from The Open Group.
+.Pp
+X Window System is a trademark of The Open Group, Inc.

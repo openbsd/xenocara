@@ -1,7 +1,17 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.6 2013/08/13 18:52:14 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.7 2019/05/10 11:44:39 schwarze Exp $
 
 SHARED_LIBS=	Xmu 11.0 Xmuu 6.0
 
 CONFIGURE_ARGS+=	--without-xsltproc --without-fop --without-xmlto
+
+beforeinstall:
+	${INSTALL} ${INSTALL_COPY} -o ${MANOWN} -g ${MANGRP} -m ${MANMODE} \
+		${.CURDIR}/doc/Xmu.3 ${DESTDIR}${MANDIR}3
+
+# maintainer target, not used duing build or install
+mdoc:
+	docbook2mdoc -s 3 ${.CURDIR}/doc/Xmu.xml > ${.CURDIR}/doc/Xmu.3
+
+.PHONY: mdoc
 
 .include <bsd.xorg.mk>

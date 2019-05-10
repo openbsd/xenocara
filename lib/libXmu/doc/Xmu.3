@@ -1,0 +1,2780 @@
+.\" automatically generated with docbook2mdoc Xmu.xml
+.Dd $Mdocdate: May 10 2019 $
+.Dt XMU 3
+.Os
+.Sh NAME
+.Nm xmu
+.Nd Xmu and Xmuu Library API Reference
+.Sh ABSTRACT
+\(lqDon't ask.\(rq
+.Sh INTRODUCTION
+The Xmu Library is a collection of miscellaneous (some might say random)
+utility functions that have been useful in building various applications
+and widgets.
+This library is required by the Athena Widgets.
+.Pp
+Starting in XFree86 4.1.0, and incorporated into X11R6.7 and later releases,
+a subset of the functions that do not rely on the Athena Widgets (libXaw)
+or X Toolkit Instrinsics (libXt) are provided in a second library, libXmuu.
+.Pp
+Programs using either of these libraries are encouraged to determine the
+correct compiler and linker options via the
+.Ql xmu
+or
+.Ql xmuu
+module names for
+.Nm pkg-config ,
+such as:
+.Bd -literal
+cc -c xapplication.c `pkg-config --cflags xmu`
+cc -o xapplication xapplication.o `pkg-config --libs xmu`
+.Ed
+.Sh ATOM FUNCTIONS
+To use the functions and macros defined in this section, you should include
+the header file
+.Pf < Pa X11/Xmu/Atoms.h Ns >
+and link against the libXmu library.
+.Pp
+.Fo XA_ATOM_PAIR
+.Fa d
+.Fc
+.Fo XA_CHARACTER_POSITION
+.Fa d
+.Fc
+.Fo XA_CLASS
+.Fa d
+.Fc
+.Fo XA_CLIENT_WINDOW
+.Fa d
+.Fc
+.Fo XA_CLIPBOARD
+.Fa d
+.Fc
+.Fo XA_COMPOUND_TEXT
+.Fa d
+.Fc
+.Fo XA_DECNET_ADDRESS
+.Fa d
+.Fc
+.Fo XA_DELETE
+.Fa d
+.Fc
+.Fo XA_FILENAME
+.Fa d
+.Fc
+.Fo XA_HOSTNAME
+.Fa d
+.Fc
+.Fo XA_IP_ADDRESS
+.Fa d
+.Fc
+.Fo XA_LENGTH
+.Fa d
+.Fc
+.Fo XA_LIST_LENGTH
+.Fa d
+.Fc
+.Fo XA_NAME
+.Fa d
+.Fc
+.Fo XA_NET_ADDRESS
+.Fa d
+.Fc
+.Fo XA_NULL
+.Fa d
+.Fc
+.Fo XA_OWNER_OS
+.Fa d
+.Fc
+.Fo XA_SPAN
+.Fa d
+.Fc
+.Fo XA_TARGETS
+.Fa d
+.Fc
+.Fo XA_TEXT
+.Fa d
+.Fc
+.Fo XA_TIMESTAMP
+.Fa d
+.Fc
+.Fo XA_USER
+.Fa d
+.Fc
+.Fo XA_UTF8_STRING
+.Fa d
+.Fc
+.Pp
+These macros take a display as argument and return an
+.Vt Atom .
+The name of the
+atom is obtained from the macro name by removing the leading characters
+.Pf \(lq Ql XA_ Ns \(rq .
+The
+.Vt Atom
+value is cached, such that subsequent requests do not cause
+another round-trip to the server.
+.Pp
+.Ft AtomPtr
+.Fo XmuMakeAtom
+.Fa "const char * name"
+.Fc
+.Bl -tag -width Ds
+.It Fa name
+specifies the atom name
+.El
+.Pp
+This function creates and initializes an opaque object, an
+.Vt AtomPtr ,
+for an
+.Vt Atom
+with the
+given name.
+.Sx XmuInternAtom
+can be used to cache the Atom value for one or more displays.
+.Pp
+.Ft char
+.Fo "* XmuNameOfAtom"
+.Fa "AtomPtr atom_ptr"
+.Fc
+.Bl -tag -width Ds
+.It Fa atom_ptr
+specifies the AtomPtr
+.El
+.Pp
+The function returns the name of an AtomPtr.
+.Pp
+.Ft Atom
+.Fo XmuInternAtom
+.Fa "Display * dpy"
+.Fa "AtomPtr atom_ptr"
+.Fc
+.Bl -tag -width Ds
+.It Fa dpy
+specifies the connection to the X server
+.It Fa atom_ptr
+specifies the AtomPtr
+.El
+.Pp
+This function returns the
+.Vt Atom
+for an
+.Vt AtomPtr .
+The
+.Vt Atom
+is cached,
+such that subsequent requests do not cause another round-trip to the server.
+.Pp
+.Ft char
+.Fo "* XmuGetAtomName"
+.Fa "Display * dpy"
+.Fa "Atom atom"
+.Fc
+.Bl -tag -width Ds
+.It Fa dpy
+specifies the connection to the X server
+.It Fa atom
+specifies the atom whose name is desired
+.El
+.Pp
+This function returns the name of an
+.Vt Atom .
+The result is cached, such that subsequent
+requests do not cause another round-trip to the server.
+.Pp
+.Ft void
+.Fo XmuInternStrings
+.Fa "Display * dpy"
+.Fa "String * names"
+.Fa "Cardinal count"
+.Fa "Atom * atoms"
+.Fc
+.Bl -tag -width Ds
+.It Fa dpy
+specifies the connection to the X server
+.It Fa names
+specifies the strings to intern
+.It Fa count
+specifies the number of strings
+.It Fa atoms
+returns the list of Atom values
+.El
+.Pp
+This function converts a list of atom names into
+.Vt Atom
+values.
+The results are cached, such
+that subsequent requests do not cause further round-trips to the server.
+The caller is responsible for preallocating the array pointed at by atoms.
+.Sh ERROR HANDLER FUNCTIONS
+To use the functions defined in this section, you should include the header
+file
+.Pf < Pa X11/Xmu/Error.h Ns >
+and link against the libXmu or libXmuu library.
+.Pp
+.Ft int
+.Fo XmuPrintDefaultErrorMessage
+.Fa "Display * dpy"
+.Fa "XErrorEvent * event"
+.Fa "FILE * fp"
+.Fc
+.Bl -tag -width Ds
+.It Fa dpy
+specifies the connection to the X server
+.It Fa event
+specifies the error
+.It Fa fp
+specifies where to print the error message
+.El
+.Pp
+This function prints an error message, equivalent to Xlib's default error
+message for protocol errors.
+It returns a non-zero value
+if the caller should consider exiting, otherwise it returns 0.
+This function can be used when you need to
+write your own error handler, but need to print out an error from within
+that handler.
+.Pp
+.Ft int
+.Fo XmuSimpleErrorHandler
+.Fa "Display * dpy"
+.Fa "XErrorEvent * errorp"
+.Fc
+.Bl -tag -width Ds
+.It Fa dpy
+specifies the connection to the X server
+.It Fa errorp
+specifies the error
+.El
+.Pp
+This function ignores errors for
+.Er BadWindow
+errors for
+.Lk libX11 XQueryTree
+.Pq XQueryTree
+and
+.Lk libX11 XGetWindowAttributes
+.Pq XGetWindowAttributes ,
+and ignores
+.Er BadDrawable
+errors for
+.Lk libX11 XGetGeometry
+.Pq XGetGeometry ;
+it returns 0 in those cases.
+Otherwise, it prints the default error message,
+and returns a non-zero value if the caller should consider exiting,
+and 0 if the caller should not exit.
+.Sh SYSTEM UTILITY FUNCTIONS
+To use the functions defined in this section, you should include the header
+file
+.Pf < Pa X11/Xmu/SysUtil.h Ns >
+and link against the libXmu or libXmuu library.
+.Pp
+.Ft int
+.Fo XmuGetHostname
+.Fa "char * buf"
+.Fa "int maxlen"
+.Fc
+.Bl -tag -width Ds
+.It Fa buf
+returns the host name
+.It Fa maxlen
+specifies the length of
+.Fa buf
+.El
+.Pp
+This function stores the null terminated name of the local host in
+.Fa buf ,
+and
+returns length of the name.
+This function hides operating system differences,
+such as whether to call
+.Fn gethostname
+or
+.Fn uname .
+.Pp
+.Ft int
+.Fo XmuSnprintf
+.Fa "char * str"
+.Fa "int size"
+.Fa ...
+.Fc
+.Bl -tag -width Ds
+.It Fa str
+string to write output to
+.It Fa size
+specifies the size of
+.Fa str
+.El
+.Pp
+This function was provided as a portable implementation of
+.Fn snprintf
+before all platforms could be
+relied on to provide their own.
+It is now deprecated in favor of
+calling
+.Fn snprintf
+directly and should only be used
+in software that needs to continue to support non-Unix98 compliant platforms.
+.Sh WINDOW UTILITY FUNCTIONS
+To use the functions defined in this section, you should include the header
+file
+.Pf < Pa X11/Xmu/WinUtil.h Ns >
+\&.
+To use
+.Fn XmuClientWindow ,
+you may link against either the
+libXmu or libXmuu libraries.
+The other functions in this section require
+linking against the libXmu library.
+.Pp
+.Ft Screen
+.Fo "* XmuScreenOfWindow"
+.Fa "Display * dpy"
+.Fa "Window w"
+.Fc
+.Bl -tag -width Ds
+.It Fa dpy
+specifies the connection to the X server
+.It Fa w
+specifies the window
+.El
+.Pp
+This function returns the
+.Vt Screen
+on which the specified window was created.
+.Pp
+.Ft Window
+.Fo XmuClientWindow
+.Fa "Display * dpy"
+.Fa "Window win"
+.Fc
+.Bl -tag -width Ds
+.It Fa dpy
+specifies the connection to the X server
+.It Fa win
+specifies the window
+.El
+.Pp
+This function finds a window, at or below the specified window, which has a
+.Fa WM_STATE
+property.
+If such a window is found, it is
+returned, otherwise the
+argument window is returned.
+.Pp
+.Ft Bool
+.Fo XmuUpdateMapHints
+.Fa "Display * dpy"
+.Fa "Window w"
+.Fa "XSizeHints * hints"
+.Fc
+.Bl -tag -width Ds
+.It Fa dpy
+specifies the connection to the X server
+.It Fa win
+specifies the window
+.It Fa hints
+specifies the new hints, or
+.Dv NULL
+.El
+.Pp
+This function clears the
+.Dv PPosition
+and
+.Dv PSize
+flags and sets the
+.Dv USPosition
+and
+.Dv USSize
+flags in the hints structure, and then stores the hints for the
+window using
+.Lk libX11 XSetWMNormalHints
+.Pq XSetWMNormalHints
+and returns
+.Dv True .
+If
+.Dv NULL
+is passed for the
+hints structure, then the current hints are read back from the window using
+.Lk libX11 XGetWMNormalHints
+.Pq XGetWMNormalHints
+and are used instead, and
+.Dv True
+is returned; otherwise
+.Dv False
+is returned.
+.Sh CURSOR UTILITY FUNCTIONS
+To use the functions defined in this section, you should include the header
+file
+.Pf < Pa X11/Xmu/CurUtil.h Ns >
+and link against the libXmu or libXmuu library.
+.Pp
+.Ft int
+.Fo XmuCursorNameToIndex
+.Fa "const char * name"
+.Fc
+.Bl -tag -width Ds
+.It Fa name
+specifies the name of the cursor
+.El
+.Pp
+This function takes the name of a standard cursor and returns its index
+in the standard cursor font.
+The cursor names are formed by removing the
+.Pf \(lq Ql XC_ Ns \(rq
+prefix from the cursor defines listed in
+Appendix B of the Xlib
+manual.
+.Sh GRAPHICS FUNCTIONS
+To use the functions defined in this section, you should include the header
+file
+.Pf < Pa X11/Xmu/Drawing.h Ns >
+and link against the libXmu library.
+.Pp
+.Ft void
+.Fo XmuDrawRoundedRectangle
+.Fa "Display * dpy"
+.Fa "Drawable draw"
+.Fa "GC gc"
+.Fa "int x"
+.Fa "int y"
+.Fa "int w"
+.Fa "int h"
+.Fa "int ew"
+.Fa "int eh"
+.Fc
+.Bl -tag -width Ds
+.It Fa dpy
+specifies the connection to the X server
+.It Fa draw
+specifies the drawable
+.It Fa gc
+specifies the GC
+.It Fa x
+specifies the upper left x coordinate
+.It Fa y
+specifies the upper left y coordinate
+.It Fa w
+specifies the rectangle width
+.It Fa h
+specifies the rectangle height
+.It Fa ew
+specifies the corner width
+.It Fa eh
+specifies the corner height
+.El
+.Pp
+This function draws a rounded rectangle, where x, y, w, h are the dimensions
+of the overall rectangle, and ew and eh are the sizes of a bounding box that
+the corners are drawn inside of; ew should be no more than half of w, and eh
+should be no more than half of h.  The current GC line attributes control
+all attributes of the line.
+.Pp
+.Ft void
+.Fo XmuFillRoundedRectangle
+.Fa "Display * dpy"
+.Fa "Drawable draw"
+.Fa "GC gc"
+.Fa "int x"
+.Fa "int y"
+.Fa "int w"
+.Fa "int h"
+.Fa "int ew"
+.Fa "int eh"
+.Fc
+.Bl -tag -width Ds
+.It Fa dpy
+specifies the connection to the X server
+.It Fa draw
+specifies the drawable
+.It Fa gc
+specifies the GC
+.It Fa x
+specifies the upper left x coordinate
+.It Fa y
+specifies the upper left y coordinate
+.It Fa w
+specifies the rectangle width
+.It Fa h
+specifies the rectangle height
+.It Fa ew
+specifies the corner width
+.It Fa eh
+specifies the corner height
+.El
+.Pp
+This function draws a filled rounded rectangle, where x, y, w, h are the
+dimensions of the overall rectangle, and ew and eh are the sizes of a
+bounding box that the corners are drawn inside of; ew should be no more than
+half of w, and eh should be no more than half of h.  The current GC fill
+settings control all attributes of the fill contents.
+.Pp
+.Fo XmuDrawLogo
+.Fa "Display * dpy"
+.Fa "Drawable drawable"
+.Fa "GC gcFore"
+.Fa "GC gcBack"
+.Fa "int x"
+.Fa "int y"
+.Fa "unsigned int width"
+.Fa "unsigned int height"
+.Fc
+.Bl -tag -width Ds
+.It Fa dpy
+specifies the connection to the X server
+.It Fa drawable
+specifies the drawable
+.It Fa gcFore
+specifies the foreground GC
+.It Fa gcBack
+specifies the background GC
+.It Fa x
+specifies the upper left x coordinate
+.It Fa y
+specifies the upper left y coordinate
+.It Fa width
+specifies the logo width
+.It Fa height
+specifies the logo height
+.El
+.Pp
+This function draws the \(lqofficial\(rq X Window System logo
+.Pf ( Sx xlogo ) .
+The bounding box
+of the logo in the drawable is given by x, y, width, and height.
+The logo
+itself is filled using gcFore, and the rest of the rectangle is filled using
+gcBack.
+.Pp
+.Sy The X Logo
+.Bd -ragged -offset indent
+[image: xlogo.svg]
+.Ed
+.Pp
+.Ft Pixmap
+.Fo XmuCreateStippledPixmap
+.Fa "Screen * screen"
+.Fa "Pixel fore"
+.Fa "Pixel back"
+.Fa "unsigned int depth"
+.Fc
+.Bl -tag -width Ds
+.It Fa screen
+specifies the screen the pixmap is created on
+.It Fa fore
+specifies the foreground pixel value
+.It Fa back
+specifies the background pixel value
+.It Fa depth
+specifies the depth of the pixmap
+.El
+.Pp
+This function creates a two pixel by one pixel stippled pixmap of specified
+depth on the specified screen.
+The pixmap is cached so that multiple
+requests share the same pixmap.
+The pixmap should be freed with
+.Fn XmuReleaseStippledPixmap
+to maintain correct reference counts.
+.Pp
+.Ft void
+.Fo XmuReleaseStippledPixmap
+.Fa "Screen * screen"
+.Fa "Pixmap pixmap"
+.Fc
+.Bl -tag -width Ds
+.It Fa screen
+specifies the screen the pixmap was created on
+.It Fa pixmap
+specifies the pixmap to free
+.El
+.Pp
+This function frees a pixmap created with
+.Fn XmuCreateStippledPixmap .
+.Pp
+.Ft int
+.Fo XmuReadBitmapData
+.Fa "FILE * fstream"
+.Fa "unsigned int * width"
+.Fa "unsigned int * height"
+.Fa "unsigned char ** datap"
+.Fa "int * x_hot"
+.Fa "int * y_hot"
+.Fc
+.Bl -tag -width Ds
+.It Fa fstream
+specifies the stream to read from
+.It Fa width
+returns the width of the bitmap
+.It Fa height
+returns the height of the bitmap
+.It Fa datap
+returns the parsed bitmap data
+.It Fa x_hot
+returns the x coordinate of the hotspot
+.It Fa y_hot
+returns the y coordinate of the hotspot
+.El
+.Pp
+This function reads a standard bitmap file description from the specified
+stream, and returns the parsed data in a format suitable for passing to
+.Lk libX11 XCreateBitmapFromData
+.Pq XCreateBitmapFromData .
+The return value of the function has the same
+interpretation as the return value for
+.Lk libX11 XReadBitmapFile
+.Pq XReadBitmapFile .
+.Pp
+.Ft int
+.Fo XmuReadBitmapDataFromFile
+.Fa "const char * filename"
+.Fa "unsigned int * width"
+.Fa "unsigned int * height"
+.Fa "unsigned char ** datap"
+.Fa "int * x_hot"
+.Fa "int * y_hot"
+.Fc
+.Bl -tag -width Ds
+.It Fa fstream
+specifies the file to read from
+.It Fa width
+returns the width of the bitmap
+.It Fa height
+returns the height of the bitmap
+.It Fa datap
+returns the parsed bitmap data
+.It Fa x_hot
+returns the x coordinate of the hotspot
+.It Fa y_hot
+returns the y coordinate of the hotspot
+.El
+.Pp
+This function reads a standard bitmap file description from the specified
+file, and returns the parsed data in a format suitable for passing to
+.Lk libX11 XCreateBitmapFromData
+.Pq XCreateBitmapFromData .
+The return value of the function has the same
+interpretation as the return value for
+.Lk libX11 XReadBitmapFile
+.Pq XReadBitmapFile .
+.Pp
+.Ft Pixmap
+.Fo XmuLocateBitmapFile
+.Fa "Screen * screen"
+.Fa "const char * name"
+.Fa "char * srcname"
+.Fa "int srcnamelen"
+.Fa "int * widthp"
+.Fa "int * heightp"
+.Fa "int * xhotp"
+.Fa "int * yhotp"
+.Fc
+.Bl -tag -width Ds
+.It Fa screen
+specifies the screen the pixmap is created on
+.It Fa name
+specifies the file to read from
+.It Fa srcname
+returns the full filename of the bitmap
+.It Fa srcnamelen
+specifies the length of the srcname buffer
+.It Fa width
+returns the width of the bitmap
+.It Fa height
+returns the height of the bitmap
+.It Fa xhotp
+returns the x coordinate of the hotspot
+.It Fa yhotp
+returns the y coordinate of the hotspot
+.El
+.Pp
+This function reads a file in standard bitmap file format, using
+.Lk libX11 XReadBitmapFile
+.Pq XReadBitmapFile ,
+and returns the created bitmap.
+The filename may be
+absolute, or relative to the global resource named
+.Sy bitmapFilePath
+with class
+BitmapFilePath.
+If the resource is not defined, the default value is the
+build symbol BITMAPDIR, which is typically
+.Pf \(dq Pa /usr/include/X11/bitmaps Ns \(dq.
+If
+.Fa srcnamelen
+is greater than zero and
+.Fa srcname
+is not
+.Dv NULL ,
+the null terminated filename will be copied into
+.Fa srcname .
+The size and hotspot of the bitmap are
+also returned.
+.Pp
+.Ft Pixmap
+.Fo XmuCreatePixmapFromBitmap
+.Fa "Display * dpy"
+.Fa "Drawable d"
+.Fa "Pixmap bitmap"
+.Fa "unsigned int width"
+.Fa "unsigned int height"
+.Fa "unsigned int depth"
+.Fa "unsigned long fore"
+.Fa "unsigned long back"
+.Fc
+.Bl -tag -width Ds
+.It Fa dpy
+specifies the connection to the X server
+.It Fa screen
+specifies the screen the pixmap is created on
+.It Fa bitmap
+specifies the bitmap source
+.It Fa width
+specifies the width of the pixmap
+.It Fa height
+specifies the height of the pixmap
+.It Fa depth
+specifies the depth of the pixmap
+.It Fa fore
+specifies the foreground pixel value
+.It Fa back
+specifies the background pixel value
+.El
+.Pp
+This function creates a pixmap of the specified width, height, and depth, on
+the same screen as the specified drawable, and then performs an
+.Lk libX11 XCopyPlane
+.Pq XCopyPlane
+from the specified bitmap to the pixmap,
+using the specified foreground and background pixel values.
+The created pixmap is returned.
+.Sh SELECTION FUNCTIONS
+To use the functions defined in this section, you should include the header
+file
+.Pf < Pa X11/Xmu/StdSel.h Ns >
+and link against the libXmu library.
+.Pp
+.Ft Boolean
+.Fo XmuConvertStandardSelection
+.Fa "Widget w"
+.Fa "Time time"
+.Fa "Atom * selection"
+.Fa "Atom * target"
+.Fa "Atom * type"
+.Fa "XPointer value"
+.Fa "unsigned long * length"
+.Fa "int * format"
+.Fc
+.Bl -tag -width Ds
+.It Fa w
+specifies the widget which currently owns the selection
+.It Fa time
+specifies the time at which the selection was established
+.It Fa selection
+this argument is ignored
+.It Fa target
+specifies the target type of the selection
+.It Fa type
+returns the property type of the converted value
+.It Fa value
+returns the converted value
+.It Fa length
+returns the number of elements in the converted value
+.It Fa format
+returns the size in bits of the elements
+.El
+.Pp
+This function converts the following standard selections: CLASS,
+CLIENT_WINDOW, DECNET_ADDRESS, HOSTNAME, IP_ADDRESS, NAME, OWNER_OS,
+TARGETS, TIMESTAMP, and USER.
+It returns
+.Dv True
+if the conversion was successful, else it returns
+.Dv False .
+.Sh TYPE CONVERTER FUNCTIONS
+To use the functions defined in this section, you should include the header
+file
+.Pf < Pa X11/Xmu/Converters.h Ns >
+and link against the libXmu library.
+.Pp
+.Ft void
+.Fo XmuCvtFunctionToCallback
+.Fa "XrmValue * args"
+.Fa "Cardinal * num_args"
+.Fa "XrmValuePtr fromVal"
+.Fa "XrmValuePtr toVal"
+.Fc
+.Bl -tag -width Ds
+.It Fa args
+this argument is ignored
+.It Fa num_args
+this argument is ignored
+.It Fa fromVal
+the function to convert
+.It Fa toVal
+the place to store the converted value
+.El
+.Pp
+This function converts a callback procedure to a callback list containing
+that procedure, with
+.Dv NULL
+closure data.
+To use this converter, include the
+following in your widget's ClassInitialize procedure:
+.Bd -literal
+XtAddConverter(XtRCallProc, XtRCallback, XmuCvtFunctionToCallback, NULL, 0);
+.Ed
+.Pp
+.Ft void
+.Fo XmuCvtStringToBackingStore
+.Fa "XrmValue * args"
+.Fa "Cardinal * num_args"
+.Fa "XrmValuePtr fromVal"
+.Fa "XrmValuePtr toVal"
+.Fc
+.Bl -tag -width Ds
+.It Fa args
+this argument is ignored
+.It Fa num_args
+this argument must be a pointer to a Cardinal containing the value 0
+.It Fa fromVal
+specifies the string to convert
+.It Fa toVal
+returns the converted value
+.El
+.Pp
+This function converts a string to a backing-store integer as defined in
+.Pf < Pa X11/X.h Ns > .
+The string "notUseful" converts to
+.Dv NotUseful ,
+"whenMapped" converts to
+.Dv WhenMapped ,
+and "always" converts to
+.Dv Always .
+The string "default" converts to the value
+.Dv Always
++
+.Dv WhenMapped
++
+.Dv NotUseful .
+The case of the string does not matter.
+To use this converter, include the following
+in your widget's ClassInitialize procedure:
+.Bd -literal
+XtAddConverter(XtRString, XtRBackingStore, XmuCvtStringToBackingStore, NULL, 0);
+.Ed
+.Pp
+.Ft void
+.Fo XmuCvtStringToBitmap
+.Fa "XrmValue * args"
+.Fa "Cardinal * num_args"
+.Fa "XrmValuePtr fromVal"
+.Fa "XrmValuePtr toVal"
+.Fc
+.Bl -tag -width Ds
+.It Fa args
+the sole argument specifies the Screen on which to create the bitmap
+.It Fa num_args
+must be the value 1
+.It Fa fromVal
+specifies the string to convert
+.It Fa toVal
+returns the converted value
+.El
+.Pp
+This function creates a bitmap (a Pixmap of depth one) suitable for window
+manager icons.
+The string argument is the name of a file in standard bitmap
+file format.
+For the possible filename specifications, see
+.Fn XmuLocateBitmapFile
+.Pq Sx XmuLocateBitmapFile .
+To use this converter, include the following in your widget's
+ClassInitialize procedure:
+.Bd -literal
+static XtConvertArgRec screenConvertArg[] = {
+  {XtBaseOffset, (XtPointer)XtOffset(Widget, core.screen), sizeof(Screen *)}
+};
+XtAddConverter(XtRString, XtRBitmap, XmuCvtStringToBitmap,
+		 screenConvertArg, XtNumber(screenConvertArg));
+.Ed
+.Pp
+.Ft Boolean
+.Fo XmuCvtStringToColorCursor
+.Fa "Display * dpy"
+.Fa "XrmValuePtr args"
+.Fa "Cardinal * num_args"
+.Fa "XrmValuePtr fromVal"
+.Fa "XrmValuePtr toVal"
+.Fa "XtPointer * data"
+.Fc
+.Bl -tag -width Ds
+.It Fa dpy
+specifies the display to use for conversion warnings
+.It Fa args
+specifies the required conversion arguments
+.It Fa num_args
+specifies the number of required conversion arguments, which is 4
+.It Fa fromVal
+specifies the string to convert
+.It Fa toVal
+returns the converted value
+.It Fa data
+this argument is ignored
+.El
+.Pp
+This function converts a string to a
+.Vt Cursor
+with the foreground and background pixels specified by the conversion
+arguments.
+The string can either be a
+standard cursor name formed by removing the
+.Ql \(lqXC_\(rq
+prefix from any of the
+cursor defines listed in Appendix B of the Xlib Manual, a font name and
+glyph index in decimal of the form "FONT fontname index [[font] index]",
+or a bitmap filename acceptable to
+.Fn XmuLocateBitmapFile
+.Pq Sx XmuLocateBitmapFile .
+To use this converter, include
+the following in the widget ClassInitialize procedure:
+.Bd -literal
+static XtConvertArgRec colorCursorConvertArgs[] = {
+  {XtWidgetBaseOffset, (XtPointer) XtOffsetOf(WidgetRec, core.screen),
+   sizeof(Screen *)},
+  {XtResourceString, (XtPointer) XtNpointerColor, sizeof(Pixel)},
+  {XtResourceString, (XtPointer) XtNpointerColorBackground, sizeof(Pixel)},
+  {XtWidgetBaseOffset, (XtPointer) XtOffsetOf(WidgetRec, core.colormap),
+   sizeof(Colormap)}
+};
+XtSetTypeConverter(XtRString, XtRColorCursor, XmuCvtStringToColorCursor,
+		 colorCursorConvertArgs, XtNumber(colorCursorConvertArgs),
+                 XtCacheByDisplay, NULL);
+.Ed
+.Pp
+The widget must recognize XtNpointerColor and XtNpointerColorBackground as
+resources, or specify other appropriate foreground and background resources.
+The widget's Realize and SetValues methods must cause the converter to be
+invoked with the appropriate arguments when one of the foreground,
+background, or cursor resources has changed, or when the window is created,
+and must assign the cursor to the window of the widget.
+.Pp
+.Ft void
+.Fo XmuCvtStringToCursor
+.Fa "XrmValue * args"
+.Fa "Cardinal * num_args"
+.Fa "XrmValuePtr fromVal"
+.Fa "XrmValuePtr toVal"
+.Fc
+.Bl -tag -width Ds
+.It Fa args
+specifies the required conversion argument, the screen
+.It Fa num_args
+specifies the number of required conversion arguments, which is 1
+.It Fa fromVal
+specifies the string to convert
+.It Fa toVal
+returns the converted value
+.El
+.Pp
+This function converts a string to a
+.Vt Cursor .
+The string can either be a
+standard cursor name formed by removing the
+.Ql \(lqXC_\(rq
+prefix from any of the
+cursor defines listed in Appendix B of the Xlib Manual, a font name and
+glyph index in decimal of the form "FONT fontname index [[font] index]", or
+a bitmap filename acceptable to
+.Fn XmuLocateBitmapFile
+.Pq Sx XmuLocateBitmapFile .
+To use this converter, include
+the following in your widget's ClassInitialize procedure:
+.Bd -literal
+static XtConvertArgRec screenConvertArg[] = {
+  {XtBaseOffset, (XtPointer)XtOffsetOf(WidgetRec, core.screen), sizeof(Screen *)}
+};
+XtAddConverter(XtRString, XtRCursor, XmuCvtStringToCursor,
+		 screenConvertArg, XtNumber(screenConvertArg));
+.Ed
+.Pp
+.Ft void
+.Fo XmuCvtStringToGravity
+.Fa "XrmValue * args"
+.Fa "Cardinal * num_args"
+.Fa "XrmValuePtr fromVal"
+.Fa "XrmValuePtr toVal"
+.Fc
+.Bl -tag -width Ds
+.It Fa args
+this argument is ignored
+.It Fa num_args
+this argument must be a pointer to a Cardinal containing the value 0
+.It Fa fromVal
+specifies the string to convert
+.It Fa toVal
+returns the converted value
+.El
+.Pp
+This function converts a string to an
+.Vt XtGravity
+enumeration value.
+The string "forget" and a
+.Dv NULL
+value convert to
+.Dv ForgetGravity ,
+"NorthWestGravity" converts to
+.Dv NorthWestGravity ,
+the strings "NorthGravity" and "top" convert to
+.Dv NorthGravity ,
+"NorthEastGravity" converts to
+.Dv NorthEastGravity ,
+the strings "West" and "left" convert to
+.Dv WestGravity ,
+"CenterGravity" converts to
+.Dv CenterGravity ,
+"EastGravity" and "right" convert to
+.Dv EastGravity ,
+"SouthWestGravity" converts to
+.Dv SouthWestGravity ,
+"SouthGravity" and "bottom" convert to
+.Dv SouthGravity ,
+"SouthEastGravity" converts to
+.Dv SouthEastGravity ,
+"StaticGravity" converts to
+.Dv StaticGravity ,
+and "UnmapGravity" converts to
+.Dv UnmapGravity .
+The case of the string does not matter.
+To use this converter, include
+the following in your widget's class initialize procedure:
+.Bd -literal
+XtAddConverter(XtRString, XtRGravity, XmuCvtStringToGravity, NULL, 0);
+.Ed
+.Pp
+.Ft void
+.Fo XmuCvtStringToJustify
+.Fa "XrmValue * args"
+.Fa "Cardinal * num_args"
+.Fa "XrmValuePtr fromVal"
+.Fa "XrmValuePtr toVal"
+.Fc
+.Bl -tag -width Ds
+.It Fa args
+this argument is ignored
+.It Fa num_args
+this argument is ignored
+.It Fa fromVal
+specifies the string to convert
+.It Fa toVal
+returns the converted value
+.El
+.Pp
+This function converts a string to an
+.Vt XtJustify
+enumeration value.
+The string "left" converts to
+.Dv XtJustifyLeft ,
+"center" converts to
+.Dv XtJustifyCenter ,
+and "right" converts to
+.Dv XtJustifyRight .
+The case of the string does not matter.
+To use this converter,
+include the following in your widget's ClassInitialize procedure:
+.Bd -literal
+XtAddConverter(XtRString, XtRJustify, XmuCvtStringToJustify, NULL, 0);
+.Ed
+.Pp
+.Ft void
+.Fo XmuCvtStringToLong
+.Fa "XrmValue * args"
+.Fa "Cardinal * num_args"
+.Fa "XrmValuePtr fromVal"
+.Fa "XrmValuePtr toVal"
+.Fc
+.Bl -tag -width Ds
+.It Fa args
+this argument is ignored
+.It Fa num_args
+this argument must be a pointer to a Cardinal containing 0
+.It Fa fromVal
+specifies the string to convert
+.It Fa toVal
+returns the converted value
+.El
+.Pp
+This function converts a string to an integer of type long.
+It parses the
+string using
+.Fn sscanf
+with a format of "%ld".  To use this converter, include
+the following in your widget's ClassInitialize procedure:
+.Bd -literal
+XtAddConverter(XtRString, XtRLong, XmuCvtStringToLong, NULL, 0);
+.Ed
+.Pp
+.Ft void
+.Fo XmuCvtStringToOrientation
+.Fa "XrmValue * args"
+.Fa "Cardinal * num_args"
+.Fa "XrmValuePtr fromVal"
+.Fa "XrmValuePtr toVal"
+.Fc
+.Bl -tag -width Ds
+.It Fa args
+this argument is ignored
+.It Fa num_args
+this argument is ignored
+.It Fa fromVal
+specifies the string to convert
+.It Fa toVal
+returns the converted value
+.El
+.Pp
+This function converts a string to an
+.Vt XtOrientation
+enumeration value.
+The string "horizontal" converts to
+.Dv XtorientHorizontal
+and "vertical" converts to
+.Dv XtorientVertical .
+The case of the string does not matter.
+To use this converter,
+include the following in your widget's ClassInitialize procedure:
+.Bd -literal
+XtAddConverter(XtRString, XtROrientation, XmuCvtStringToOrientation, NULL, 0);
+.Ed
+.Pp
+.Ft Boolean
+.Fo XmuCvtStringToShapeStyle
+.Fa "Display * dpy"
+.Fa "XrmValue * args"
+.Fa "Cardinal * num_args"
+.Fa "XrmValuePtr fromVal"
+.Fa "XrmValuePtr toVal"
+.Fa "XtPointer * data"
+.Fc
+.Bl -tag -width Ds
+.It Fa dpy
+the display to use for conversion warnings
+.It Fa args
+this argument is ignored
+.It Fa num_args
+this argument is ignored
+.It Fa fromVal
+the value to convert from
+.It Fa toVal
+the place to store the converted value
+.It Fa data
+this argument is ignored
+.El
+.Pp
+This function converts a string to an integer shape style.
+The string
+"rectangle" converts to
+.Dv XmuShapeRectangle ,
+"oval" converts to
+.Dv XmuShapeOval ,
+"ellipse" converts to
+.Dv XmuShapeEllipse ,
+and "roundedRectangle" converts to
+.Dv XmuShapeRoundedRectangle .
+The case of the string does not matter.
+To use this converter,
+include the following in your widget's ClassInitialize procedure:
+.Bd -literal
+XtSetTypeConverter(XtRString, XtRShapeStyle, XmuCvtStringToShapeStyle,
+		     NULL, 0, XtCacheNone, NULL);
+.Ed
+.Pp
+.Ft Boolean
+.Fo XmuReshapeWidget
+.Fa "Widget w"
+.Fa "int shape_style"
+.Fa "int corner_width"
+.Fa "int corner_height"
+.Fc
+.Bl -tag -width Ds
+.It Fa w
+specifies the widget to reshape
+.It Fa shape_style
+specifies the new shape
+.It Fa corner_width
+specifies the width of the rounded rectangle corner
+.It Fa corner_height
+specified the height of the rounded rectangle corner
+.El
+.Pp
+This function reshapes the specified widget, using the Shape extension, to a
+rectangle, oval, ellipse, or rounded rectangle, as specified by shape_style
+(
+.Dv XmuShapeRectangle ,
+.Dv XmuShapeOval ,
+.Dv XmuShapeEllipse ,
+and
+.Dv XmuShapeRoundedRectangle ,
+respectively).
+The shape is bounded by the outside edges of the rectangular extents of the
+widget.
+If the shape is a rounded rectangle, corner_width and corner_height
+specify the size of the bounding box that the corners are drawn inside of
+(see
+.Fn XmuFillRoundedRectangle
+.Pq Sx XmuFillRoundedRectangle ) ;
+otherwise, corner_width and corner_height are ignored.
+The origin of the widget within its parent remains unchanged.
+.Pp
+.Ft void
+.Fo XmuCvtStringToWidget
+.Fa "XrmValue * args"
+.Fa "Cardinal * num_args"
+.Fa "XrmValuePtr fromVal"
+.Fa "XrmValuePtr toVal"
+.Fc
+.Bl -tag -width Ds
+.It Fa args
+the sole argument is the parent Widget
+.It Fa num_args
+this argument must be 1
+.It Fa fromVal
+specifies the string to convert
+.It Fa toVal
+returns the converted value
+.El
+.Pp
+This function converts a string to an immediate child widget of the parent
+widget passed as an argument.
+Note that this converter only works for
+child widgets that have already been created; there is no lazy evaluation.
+The string is first compared against the
+names of the normal and popup children, and if a match is found the
+corresponding child is returned.
+If no match is found, the string is
+compared against the classes of the normal and popup children, and if a
+match is found the corresponding child is returned.
+The case of the string
+is significant.
+To use this converter, include the following in your
+widget's ClassInitialize procedure:
+.Bd -literal
+static XtConvertArgRec parentCvtArg[] = {
+  {XtBaseOffset, (XtPointer)XtOffset(Widget, core.parent), sizeof(Widget)},
+};
+XtAddConverter(XtRString, XtRWidget, XmuCvtStringToWidget,
+		 parentCvtArg, XtNumber(parentCvtArg));
+.Ed
+.Pp
+.Ft Boolean
+.Fo XmuNewCvtStringToWidget
+.Fa "Display * dpy"
+.Fa "XrmValuePtr args"
+.Fa "Cardinal * num_args"
+.Fa "XrmValuePtr fromVal"
+.Fa "XrmValuePtr toVal"
+.Fa "XtPointer * data"
+.Fc
+.Bl -tag -width Ds
+.It Fa dpy
+the display to use for conversion warnings
+.It Fa args
+the sole argument is the parent Widget
+.It Fa num_args
+this argument must be a pointer to a Cardinal containing the value 1
+.It Fa fromVal
+specifies the string to convert
+.It Fa toVal
+returns the converted value
+.It Fa data
+this argument is ignored
+.El
+.Pp
+This converter is identical in functionality to
+.Fn XmuCvtStringToWidget
+.Pq Sx XmuCvtStringToWidget ,
+except
+that it is a new-style converter, allowing the specification of a cache type
+at the time of registration.
+Most widgets will not cache the conversion results, as the application may
+dynamically create and destroy widgets, which would cause cached values to
+become illegal.
+To use this converter, include the following in the widget's
+class initialize procedure:
+.Bd -literal
+static XtConvertArgRec parentCvtArg[] = {
+  {XtWidgetBaseOffset, (XtPointer)XtOffsetOf(WidgetRec, core.parent),
+   sizeof(Widget)}
+};
+XtSetTypeConverter(XtRString, XtRWidget, XmuNewCvtStringToWidget,
+		   parentCvtArg, XtNumber(parentCvtArg), XtCacheNone, NULL);
+.Ed
+.Sh CHARACTER SET FUNCTIONS
+To use the functions defined in this section, you should include the header
+file
+.Pf < Pa X11/Xmu/CharSet.h Ns >
+and link against the libXmu or libXmuu library.
+.Pp
+.Sy Warning
+.Pp
+The functions in this section are
+.Em deprecated
+because they don't work in most locales now supported by X11; most platforms
+provide alternatives in their system libraries.
+.Pp
+.Ft void
+.Fo XmuCopyISOLatin1Lowered
+.Fa "char * dst"
+.Fa "const char * src"
+.Fc
+.Bl -tag -width Ds
+.It Fa dst
+returns the string copy
+.It Fa src
+specifies the string to copy
+.El
+.Pp
+This function copies a null terminated string from src to dst (including the
+null), changing all Latin-1 uppercase letters to lowercase.
+The string is
+assumed to be encoded using ISO 8859-1.
+.Pp
+Note that like
+.Fn strcpy
+the caller is responsible for
+ensuring the size of
+.Fa dst
+is at least as large as the
+size of
+.Fa src .
+.Pp
+.Ft void
+.Fo XmuNCopyISOLatin1Lowered
+.Fa "char * dst"
+.Fa "const char * src"
+.Fa "int size"
+.Fc
+.Bl -tag -width Ds
+.It Fa dst
+returns the string copy
+.It Fa src
+specifies the string to copy
+.It Fa size
+maximum number of characters (including the null terminator) to write to dst
+.El
+.Pp
+This function copies up to
+.Ql Fa size
+- 1
+characters of a null terminated string from
+.Fa src
+to
+.Fa dst ,
+and terminates it with a null,
+changing all Latin-1 uppercase letters to lowercase.
+The string is
+assumed to be encoded using ISO 8859-1.
+.Pp
+.Ft void
+.Fo XmuCopyISOLatin1Uppered
+.Fa "char * dst"
+.Fa "const char * src"
+.Fc
+.Bl -tag -width Ds
+.It Fa dst
+returns the string copy
+.It Fa src
+specifies the string to copy
+.El
+.Pp
+This function copies a null terminated string from src to dst (including the
+null), changing all Latin-1 lowercase letters to uppercase.
+The string is
+assumed to be encoded using ISO 8859-1.
+.Pp
+Note that like
+.Fn strcpy
+the caller is responsible for
+ensuring the size of
+.Fa dst
+is at least as large as the
+size of
+.Fa src .
+.Pp
+.Ft void
+.Fo XmuNCopyISOLatin1Uppered
+.Fa "char * dst"
+.Fa "const char * src"
+.Fa "int size"
+.Fc
+.Bl -tag -width Ds
+.It Fa dst
+returns the string copy
+.It Fa src
+specifies the string to copy
+.It Fa size
+maximum number of characters (including the null terminator) to write to dst
+.El
+.Pp
+This function copies up to
+.Ql Fa size
+- 1
+characters of a null terminated string from
+.Fa src
+to
+.Fa dst ,
+and terminates it with a null,
+changing all Latin-1 lowercase letters to uppercase.
+The string is
+assumed to be encoded using ISO 8859-1.
+.Pp
+.Ft int
+.Fo XmuCompareISOLatin1
+.Fa "const char * first"
+.Fa "const char * second"
+.Fc
+.Bl -tag -width Ds
+.It Fa first
+specifies a string to compare
+.It Fa second
+specifies a string to compare
+.El
+.Pp
+This function compares two null terminated Latin-1 strings, ignoring case
+differences, and returns an integer greater than, equal to, or less than 0,
+according to whether first is lexicographically greater than, equal to, or
+less than second.
+The two strings are assumed to be encoded using ISO
+8859-1.
+.Sh KEYBOARD EVENT TRANSLATION FUNCTIONS
+To use the functions defined in this section, you should include the header
+file
+.Pf < Pa X11/Xmu/Lookup.h Ns >
+\&.
+and link against the libXmu library.
+.Pp
+.Sy Warning
+.Pp
+The functions in this section are
+.Em deprecated
+because they don't work
+in most locales now supported by X11; the function
+.Lk libX11 XmbLookupString
+.Pq XmbLookupString
+provides a better alternative.
+.Pp
+.Ft int
+.Fo XmuLookupLatin1
+.Fa "XKeyEvent * event"
+.Fa "unsigned char * buffer"
+.Fa "int nbytes"
+.Fa "KeySym * keysym"
+.Fa "XComposeStatus * status"
+.Fc
+.Bl -tag -width Ds
+.It Fa event
+specifies the key event
+.It Fa buffer
+returns the translated characters
+.It Fa nbytes
+specifies the length of the buffer
+.It Fa keysym
+returns the computed KeySym, or None
+.It Fa status
+specifies or returns the compose state
+.El
+.Pp
+This function is identical to
+.Lk libX11 XLookupString
+.Pq XLookupString ,
+and exists only for naming symmetry with other functions.
+.Pp
+.Ft int
+.Fo XmuLookupLatin2
+.Fa "XKeyEvent * event"
+.Fa "unsigned char * buffer"
+.Fa "int nbytes"
+.Fa "KeySym * keysym"
+.Fa "XComposeStatus * status"
+.Fc
+.Bl -tag -width Ds
+.It Fa event
+specifies the key event
+.It Fa buffer
+returns the translated characters
+.It Fa nbytes
+specifies the length of the buffer
+.It Fa keysym
+returns the computed KeySym, or None
+.It Fa status
+specifies or returns the compose state
+.El
+.Pp
+This function is similar to
+.Lk libX11 XLookupString
+.Pq XLookupString ,
+except that it maps a key event
+to an Latin-2 (ISO 8859-2) string, or to an ASCII control string.
+.Pp
+.Ft int
+.Fo XmuLookupLatin3
+.Fa "XKeyEvent * event"
+.Fa "unsigned char * buffer"
+.Fa "int nbytes"
+.Fa "KeySym * keysym"
+.Fa "XComposeStatus * status"
+.Fc
+.Bl -tag -width Ds
+.It Fa event
+specifies the key event
+.It Fa buffer
+returns the translated characters
+.It Fa nbytes
+specifies the length of the buffer
+.It Fa keysym
+returns the computed KeySym, or None
+.It Fa status
+specifies or returns the compose state
+.El
+.Pp
+This function is similar to
+.Lk libX11 XLookupString
+.Pq XLookupString ,
+except that it maps a key event
+to an Latin-3 (ISO 8859-3) string, or to an ASCII control string.
+.Pp
+.Ft int
+.Fo XmuLookupLatin4
+.Fa "XKeyEvent * event"
+.Fa "unsigned char * buffer"
+.Fa "int nbytes"
+.Fa "KeySym * keysym"
+.Fa "XComposeStatus * status"
+.Fc
+.Bl -tag -width Ds
+.It Fa event
+specifies the key event
+.It Fa buffer
+returns the translated characters
+.It Fa nbytes
+specifies the length of the buffer
+.It Fa keysym
+returns the computed KeySym, or None
+.It Fa status
+specifies or returns the compose state
+.El
+.Pp
+This function is similar to
+.Lk libX11 XLookupString
+.Pq XLookupString ,
+except that it maps a key event
+to an Latin-4 (ISO 8859-4) string, or to an ASCII control string.
+.Pp
+.Ft int
+.Fo XmuLookupKana
+.Fa "XKeyEvent * event"
+.Fa "unsigned char * buffer"
+.Fa "int nbytes"
+.Fa "KeySym * keysym"
+.Fa "XComposeStatus * status"
+.Fc
+.Bl -tag -width Ds
+.It Fa event
+specifies the key event
+.It Fa buffer
+returns the translated characters
+.It Fa nbytes
+specifies the length of the buffer
+.It Fa keysym
+returns the computed KeySym, or None
+.It Fa status
+specifies or returns the compose state
+.El
+.Pp
+This function is similar to
+.Lk libX11 XLookupString
+.Pq XLookupString ,
+except that it maps a key event
+to a string in an encoding consisting of Latin-1 (ISO 8859-1) and ASCII
+control in the Graphics Left half (values 0 to 127), and Katakana in the
+Graphics Right half (values 128 to 255), using the values from JIS
+X201-1976.
+.Pp
+.Ft int
+.Fo XmuLookupJISX0201
+.Fa "XKeyEvent * event"
+.Fa "unsigned char * buffer"
+.Fa "int nbytes"
+.Fa "KeySym * keysym"
+.Fa "XComposeStatus * status"
+.Fc
+.Bl -tag -width Ds
+.It Fa event
+specifies the key event
+.It Fa buffer
+returns the translated characters
+.It Fa nbytes
+specifies the length of the buffer
+.It Fa keysym
+returns the computed KeySym, or None
+.It Fa status
+specifies or returns the compose state
+.El
+.Pp
+This function is similar to
+.Lk libX11 XLookupString
+.Pq XLookupString ,
+except that it maps a key event
+to a string in the JIS X0201-1976 encoding, including ASCII control.
+.Pp
+.Ft int
+.Fo XmuLookupArabic
+.Fa "XKeyEvent * event"
+.Fa "unsigned char * buffer"
+.Fa "int nbytes"
+.Fa "KeySym * keysym"
+.Fa "XComposeStatus * status"
+.Fc
+.Bl -tag -width Ds
+.It Fa event
+specifies the key event
+.It Fa buffer
+returns the translated characters
+.It Fa nbytes
+specifies the length of the buffer
+.It Fa keysym
+returns the computed KeySym, or None
+.It Fa status
+specifies or returns the compose state
+.El
+.Pp
+This function is similar to
+.Lk libX11 XLookupString
+.Pq XLookupString ,
+except that it maps a key event
+to a Latin/Arabic (ISO 8859-6) string, or to an ASCII control string.
+.Pp
+.Ft int
+.Fo XmuLookupCyrillic
+.Fa "XKeyEvent * event"
+.Fa "unsigned char * buffer"
+.Fa "int nbytes"
+.Fa "KeySym * keysym"
+.Fa "XComposeStatus * status"
+.Fc
+.Bl -tag -width Ds
+.It Fa event
+specifies the key event
+.It Fa buffer
+returns the translated characters
+.It Fa nbytes
+specifies the length of the buffer
+.It Fa keysym
+returns the computed KeySym, or None
+.It Fa status
+specifies or returns the compose state
+.El
+.Pp
+This function is similar to
+.Lk libX11 XLookupString
+.Pq XLookupString ,
+except that it maps a key event
+to a Latin/Cyrillic (ISO 8859-5) string, or to an ASCII control string.
+.Pp
+.Ft int
+.Fo XmuLookupGreek
+.Fa "XKeyEvent * event"
+.Fa "unsigned char * buffer"
+.Fa "int nbytes"
+.Fa "KeySym * keysym"
+.Fa "XComposeStatus * status"
+.Fc
+.Bl -tag -width Ds
+.It Fa event
+specifies the key event
+.It Fa buffer
+returns the translated characters
+.It Fa nbytes
+specifies the length of the buffer
+.It Fa keysym
+returns the computed KeySym, or None
+.It Fa status
+specifies or returns the compose state
+.El
+.Pp
+This function is similar to
+.Lk libX11 XLookupString
+.Pq XLookupString ,
+except that it maps a key event
+to a Latin/Greek (ISO 8859-7) string, or to an ASCII control string.
+.Pp
+.Ft int
+.Fo XmuLookupHebrew
+.Fa "XKeyEvent * event"
+.Fa "unsigned char * buffer"
+.Fa "int nbytes"
+.Fa "KeySym * keysym"
+.Fa "XComposeStatus * status"
+.Fc
+.Bl -tag -width Ds
+.It Fa event
+specifies the key event
+.It Fa buffer
+returns the translated characters
+.It Fa nbytes
+specifies the length of the buffer
+.It Fa keysym
+returns the computed KeySym, or None
+.It Fa status
+specifies or returns the compose state
+.El
+.Pp
+This function is similar to
+.Lk libX11 XLookupString
+.Pq XLookupString ,
+except that it maps a key event
+to a Latin/Hebrew (ISO 8859-8) string, or to an ASCII control string.
+.Pp
+.Ft int
+.Fo XmuLookupAPL
+.Fa "XKeyEvent * event"
+.Fa "unsigned char * buffer"
+.Fa "int nbytes"
+.Fa "KeySym * keysym"
+.Fa "XComposeStatus * status"
+.Fc
+.Bl -tag -width Ds
+.It Fa event
+specifies the key event
+.It Fa buffer
+returns the translated characters
+.It Fa nbytes
+specifies the length of the buffer
+.It Fa keysym
+returns the computed KeySym, or None
+.It Fa status
+specifies or returns the compose state
+.El
+.Pp
+This function is similar to
+.Lk libX11 XLookupString
+.Pq XLookupString ,
+except that it maps a key event to an APL string.
+.Sh COMPOUND TEXT FUNCTIONS
+The functions defined in this section are for parsing Compound Text strings,
+decomposing them into individual segments.
+Definitions needed to use these
+routines are in the include file
+.Pf < Pa X11/Xmu/Xct.h Ns >
+and link against the libXmu library.
+.Pp
+.Sy Warning
+.Pp
+The functions in this section are
+.Em deprecated
+because they shift the
+burden for recently introduced locale encodings to the application.
+The
+use of the
+.Dv UTF8_STRING
+text encoding provides a better alternative.
+.Pp
+A Compound Text string is represented as the following type:
+.Bd -literal
+	typedef unsigned char *XctString;
+.Ed
+.Pp
+.Ft XctData
+.Fo XctCreate
+.Fa "const XctString string"
+.Fa "int length"
+.Fa "XctFlags flags"
+.Fc
+.Bl -tag -width Ds
+.It Fa string
+the Compound Text string
+.It Fa length
+the number of bytes in string
+.It Fa flags
+parsing control flags
+.El
+.Pp
+This function creates an
+.Vt XctData
+structure for parsing a Compound Text
+string.
+The string need not be null terminated.
+The following flags are
+defined to control parsing of the string:
+.Bl -tag -width Ds
+.It Dv XctSingleSetSegments
+This means that returned segments should contain
+characters from only one set (C0, C1, GL, GR).  When this is requested,
+.Dv XctSegment
+is never returned by
+.Fn XctNextItem ,
+instead
+.Dv XctC0Segment ,
+.Dv XctC1Segment ,
+.Dv XctGlSegment ,
+and
+.Dv XctGRSegment
+are returned.
+C0 and C1
+segments are always returned as singleton characters.
+.It Dv XctProvideExtensions
+This means that if the Compound Text string is from a
+higher version than this code is implemented to, then syntactically correct
+but unknown control sequences should be returned as
+.Dv XctExtension
+items by
+.Fn XctNextItem .
+If this flag is not set, and the Compound Text string version
+indicates that extensions cannot be ignored, then each unknown control
+sequence will be reported as an
+.Dv XctError .
+.It Dv XctAcceptC0Extensions
+This means that if the Compound Text string is from
+a higher version than this code is implemented to, then unknown C0
+characters should be treated as if they were legal, and returned as C0
+characters (regardless of how
+.Dv XctProvideExtensions
+is set) by
+.Fn XctNextItem .
+If this flag is not set, then all unknown C0 characters are treated
+according to
+.Dv XctProvideExtensions .
+.It Dv XctAcceptC1Extensions
+This means that if the Compound Text string is from
+a higher version than this code is implemented to, then unknown C1
+characters should be treated as if they were legal, and returned as C1
+characters (regardless of how
+.Dv XctProvideExtensions
+is set) by
+.Fn XctNextItem .
+If this flag is not set, then all unknown C1 characters are treated
+according to
+.Dv XctProvideExtensions .
+.It Dv XctHideDirection
+This means that horizontal direction changes should be
+reported as
+.Dv XctHorizontal
+items by
+.Fn XctNextItem .
+If this flag is not set,
+then direction changes are not returned as items, but the current direction
+is still maintained and reported for other items.
+The current direction is
+given as an enumeration, with the values
+.Dv XctUnspecified ,
+.Dv XctLeftToRight ,
+and
+.Dv XctRightToLeft .
+.It Dv XctFreeString
+This means that
+.Fn XctFree
+should free the Compound Text string that is passed to
+.Fn XctCreate .
+If this flag is not set, the string is not freed.
+.It Dv XctShiftMultiGRToGL
+This means that
+.Fn XctNextItem
+should translate GR
+segments on-the-fly into GL segments for the GR sets: GB2312.1980-1,
+JISX0208.1983-1, and KSC5601.1987-1.
+.El
+.Pp
+.Ft void
+.Fo XctReset
+.Fa "XctData data"
+.Fc
+.Bl -tag -width Ds
+.It Fa data
+specifies the Compound Text structure
+.El
+.Pp
+This function resets the
+.Vt XctData
+structure to reparse the Compound Text string from the beginning.
+.Pp
+.Ft XctResult
+.Fo XctNextItem
+.Fa "XctData data"
+.Fc
+.Bl -tag -width Ds
+.It Fa data
+specifies the Compound Text structure
+.El
+.Pp
+This function parses the next \(lqitem\(rq from the Compound Text string.
+The
+return value indicates what kind of item is returned.
+The item itself, its
+length, and the current contextual state, are reported as components of the
+.Vt XctData
+structure.
+.Vt XctResult
+is an enumeration, with the following values:
+.Bl -tag -width Ds
+.It Dv XctSegment
+the item contains some mixture of C0, GL, GR, and C1 characters.
+.It Dv XctC0Segment
+the item contains only C0 characters.
+.It Dv XctGLSegment
+the item contains only GL characters.
+.It Dv XctC1Segment
+the item contains only C1 characters.
+.It Dv XctGRSegment
+the item contains only GR characters.
+.It Dv XctExtendedSegment
+the item contains an extended segment.
+.It Dv XctExtension
+the item is an unknown extension control sequence.
+.It Dv XctHorizontal
+the item indicates a change in horizontal direction or
+depth.
+The new direction and depth are recorded in the
+.Vt XctData
+structure.
+.It Dv XctEndOfText
+The end of the Compound Text string has been reached.
+.It Dv XctError
+the string contains a syntactic or semantic error; no further
+parsing should be performed.
+.El
+.Pp
+The following state values are stored in the
+.Vt XctData
+structure:
+.Bd -literal
+    XctString		item;		/* the action item */
+    unsigned		item_length;	/* length of item in bytes */
+    int			char_size;	/* the number of bytes per character in
+					 * item, with zero meaning variable */
+    char		*encoding;	/* the XLFD encoding name for item */
+    XctHDirection	horizontal;	/* the direction of item */
+    unsigned		horz_depth;	/* the current direction nesting depth */
+    char		*GL;		/* the "{I} F" string for the current GL */
+    char		*GL_encoding;	/* the XLFD encoding name for the current GL */
+    int			GL_set_size;	/* 94 or 96 */
+    int			GL_char_size;	/* the number of bytes per GL character */
+    char		*GR;		/* the "{I} F" string for the current GR */
+    char		*GR_encoding;	/* the XLFD encoding name for the current GR */
+    int			GR_set_size;	/* 94 or 96 */
+    int			GR_char_size;	/* number of bytes per GR character */
+    char		*GLGR_encoding;	/* the XLFD encoding name for the current
+					 *  GL+GR, if known */
+.Ed
+.Pp
+.Ft void
+.Fo XctFree
+.Fa "XctData data"
+.Fc
+.Bl -tag -width Ds
+.It Fa data
+specifies the Compound Text structure
+.El
+.Pp
+This function frees all data associated with the
+.Vt XctData
+structure.
+.Sh CLOSEDISPLAY HOOK FUNCTIONS
+To use the functions defined in this section, you should include the header
+file
+.Pf < Pa X11/Xmu/CloseHook.h Ns >
+and link against the libXmu library.
+.Pp
+.Ft CloseHook
+.Fo XmuAddCloseDisplayHook
+.Fa "Display * dpy"
+.Fa "int ( *func )(Display *, XPointer)"
+.Fa "XPointer arg"
+.Fc
+.Bl -tag -width Ds
+.It Fa dpy
+specifies the connection to the X server
+.It Fa func
+specifies the function to call at display close
+.It Fa arg
+specifies arbitrary data to pass to
+.Fa func
+.El
+.Pp
+This function adds a callback for the given display.
+When the display is
+closed, the given function will be called with the given display and
+argument as:
+.Bd -literal
+	(*func)(dpy, arg)
+.Ed
+.Pp
+The function is declared to return an int even though the value is ignored,
+because some compilers used to have problems with functions returning void.
+.Pp
+This routine returns
+.Dv NULL
+if it was unable to add the
+callback, otherwise it
+returns an opaque handle that can be used to remove or lookup the callback.
+.Pp
+.Ft Bool
+.Fo XmuRemoveCloseDisplayHook
+.Fa "Display * dpy"
+.Fa "CloseHook handle"
+.Fa "int ( *func )(Display *, XPointer)"
+.Fa "XPointer arg"
+.Fc
+.Bl -tag -width Ds
+.It Fa dpy
+specifies the connection to the X server
+.It Fa handle
+specifies the callback by id, or
+.Dv NULL
+.It Fn func
+specifies the callback by function
+.It Fa arg
+specifies the function data to match
+.El
+.Pp
+This function deletes a callback that has been added with
+.Fn XmuAddCloseDisplayHook .
+If handle is not
+.Dv NULL ,
+it specifies the callback to
+remove, and the func and arg parameters are ignored.
+If handle is
+.Dv NULL ,
+the
+first callback found to match the specified func and arg will be removed.
+Returns
+.Dv True
+if a callback was removed, else returns
+.Dv False .
+.Pp
+.Ft Bool
+.Fo XmuLookupCloseDisplayHook
+.Fa "Display * dpy"
+.Fa "CloseHook handle"
+.Fa "int ( *func )(Display *, XPointer)"
+.Fa "XPointer arg"
+.Fc
+.Bl -tag -width Ds
+.It Fa dpy
+specifies the connection to the X server
+.It Fa handle
+specifies the callback by id, or
+.Dv NULL
+.It Fn func
+specifies the callback by function
+.It Fa arg
+specifies the function data to match
+.El
+.Pp
+This function determines if a callback is installed.
+If handle is not
+.Dv NULL ,
+it specifies the callback to look for, and the func and arg parameters are
+ignored.
+If handle is
+.Dv NULL ,
+the function will look for
+any callback for the
+specified func and arg.
+Returns
+.Dv True
+if a matching callback exists, else returns
+.Dv False .
+.Sh DISPLAY QUEUE FUNCTIONS
+To use the functions and types defined in this section, you should include the
+header file
+.Pf < Pa X11/Xmu/DisplayQue.h Ns >
+and link against the libXmu library.
+.Pa DisplayQue.h
+defines the following
+types:
+.Bd -literal
+typedef int (*XmuCloseDisplayQueueProc)(XmuDisplayQueue *queue,
+                                        XmuDisplayQueueEntry *entry);
+typedef int (*XmuFreeDisplayQueueProc)(XmuDisplayQueue *queue);
+typedef struct _XmuDisplayQueueEntry {
+	struct _XmuDisplayQueueEntry *prev, *next;
+	Display *display;
+	CloseHook closehook;
+	XPointer data;
+} XmuDisplayQueueEntry;
+typedef struct _XmuDisplayQueue {
+	int nentries;
+	XmuDisplayQueueEntry *head, *tail;
+	XmuCloseDisplayQueueProc closefunc;
+	XmuFreeDisplayQueueProc freefunc;
+	XPointer data;
+} XmuDisplayQueue;
+.Ed
+.Pp
+.Ft XmuDisplayQueue
+.Fo "* XmuDQCreate"
+.Fa "XmuCloseDisplayQueueProc closefunc"
+.Fa "XmuFreeDisplayQueueProc freefunc"
+.Fa "XPointer data"
+.Fc
+.Bl -tag -width Ds
+.It Fa closefunc
+specifies the close function
+.It Fa freefunc
+specifies the free function
+.It Fa data
+specifies private data for the functions
+.El
+.Pp
+This function creates and returns an empty
+.Vt XmuDisplayQueue
+(which is really just a set of displays, but is called a queue for
+historical reasons).  The queue is initially empty, but displays
+can be added using
+.Fn XmuAddDisplay .
+The data value is simply stored in the queue for use by the closefunc
+and freefunc callbacks.
+Whenever a display in the queue is closed using
+.Fn XCloseDisplay ,
+the
+.Fa closefunc
+(if
+.Pf non- Dv NULL )
+is called with the queue and the display's
+.Fn XmuDisplayQueueEntry
+as follows:
+.Bd -literal
+	(*closefunc)(queue, entry)
+.Ed
+.Pp
+The
+.Fa freefunc
+(if
+.Pf non- Dv NULL )
+is called whenever the last
+display in the
+queue is closed, as follows:
+.Bd -literal
+	(*freefunc)(queue)
+.Ed
+.Pp
+The application is responsible for actually freeing the queue, by calling
+.Fn XmuDQDestroy .
+.Pp
+.Ft XmuDisplayQueueEntry
+.Fo "* XmuDQAddDisplay"
+.Fa "XmuDisplayQueue * q"
+.Fa "Display * dpy"
+.Fa "XPointer data"
+.Fc
+.Bl -tag -width Ds
+.It Fa q
+specifies the queue
+.It Fa dpy
+specifies the display to add
+.It Fa data
+specifies private data for the free function
+.El
+.Pp
+This function adds the specified display to the queue.
+If successful,
+the queue entry is returned, otherwise
+.Dv NULL
+is returned.
+The data value is simply stored in the queue entry for use by the
+queue's freefunc callback.
+This function does not attempt to prevent
+duplicate entries in the queue; the caller should use
+.Fn XmuDQLookupDisplay
+to determine if a display has already been added to a queue.
+.Pp
+.Ft XmuDisplayQueueEntry
+.Fo "* XmuDQLookupDisplay"
+.Fa "XmuDisplayQueue * q"
+.Fa "Display * dpy"
+.Fc
+.Bl -tag -width Ds
+.It Fa q
+specifies the queue
+.It Fa dpy
+specifies the display to lookup
+.El
+.Pp
+This function returns the queue entry for the specified display, or
+.Dv NULL
+if
+the display is not in the queue.
+.Pp
+.Fo XmuDQNDisplays
+.Fa q
+.Fc
+This macro returns the number of displays in the specified queue.
+.Pp
+.Ft Bool
+.Fo XmuDQRemoveDisplay
+.Fa "XmuDisplayQueue * q"
+.Fa "Display * dpy"
+.Fc
+.Bl -tag -width Ds
+.It Fa q
+specifies the queue
+.It Fa dpy
+specifies the display to remove
+.El
+.Pp
+This function removes the specified display from the specified queue.
+No callbacks are performed.
+If the display is not found in the queue,
+.Dv False
+is returned, otherwise
+.Dv True
+is returned.
+.Pp
+.Ft Bool
+.Fo XmuDQDestroy
+.Fa "XmuDisplayQueue * q"
+.Fa "Bool docallbacks"
+.Fc
+.Bl -tag -width Ds
+.It Fa q
+specifies the queue to destroy
+.It Fa docallbacks
+specifies whether close functions should be called
+.El
+.Pp
+This function releases all memory associated with the specified queue.
+If docallbacks is
+.Dv True ,
+then the queue's closefunc callback (if
+.Pf non- Dv NULL )
+is first called
+for each display in the queue, even though
+.Fn XCloseDisplay
+is not called on the display.
+.Sh TOOLKIT CONVENIENCE FUNCTIONS
+To use the functions defined in this section, you should include the header
+file
+.Pf < Pa X11/Xmu/Initer.h Ns >
+and link against the libXmu library.
+.Pp
+.Ft void
+.Fo XmuAddInitializer
+.Fa "void ( *func )(XtAppContext, XPointer)"
+.Fa "XPointer data"
+.Fc
+.Bl -tag -width Ds
+.It Fa func
+specifies the procedure to register
+.It Fa data
+specifies private data for the procedure
+.El
+.Pp
+This function registers a procedure, to be invoked the first time
+.Fn XmuCallInitializers
+is called on a given application context.
+The procedure
+is called with the application context and the specified data:
+.Bd -literal
+	(*func)(app_con, data)
+.Ed
+.Pp
+.Ft void
+.Fo XmuCallInitializers
+.Fa "XtAppContext app_con"
+.Fc
+.Bl -tag -width Ds
+.It Fa app_con
+specifies the application context to initialize
+.El
+.Pp
+This function calls each of the procedures that have been registered with
+.Fn XmuAddInitializer ,
+if this is the first time the application context has been passed to
+.Fn XmuCallInitializers .
+Otherwise, this function does nothing.
+.Sh STANDARD COLORMAP FUNCTIONS
+To use the functions defined in this section, you should include the header
+file
+.Pf < Pa X11/Xmu/StdCmap.h Ns >
+and link against the libXmu library.
+.Pp
+.Ft Status
+.Fo XmuAllStandardColormaps
+.Fa "Display * dpy"
+.Fc
+.Bl -tag -width Ds
+.It Fa dpy
+specifies the connection to the X server
+.El
+.Pp
+To create all of the appropriate standard colormaps for every visual of
+every screen on a given display, use
+.Fn XmuAllStandardColormaps .
+.Pp
+This function defines and retains as permanent resources all standard
+colormaps which are meaningful for the visuals of each screen of the
+display.
+It returns 0 on failure, non-zero on success.
+If the property of
+any standard colormap is already defined, this function will redefine it.
+.Pp
+This function is intended to be used by window managers or a special client
+at the start of a session.
+.Pp
+The standard colormaps of a screen are defined by properties associated with
+the screen's root window.
+The property names of standard colormaps are
+predefined, and each property name except
+.Fa RGB_DEFAULT_MAP
+may describe at
+most one colormap.
+.Pp
+The standard colormaps are:
+.Fa RGB_BEST_MAP ,
+.Fa RGB_RED_MAP ,
+.Fa RGB_GREEN_MAP ,
+.Fa RGB_BLUE_MAP ,
+.Fa RGB_DEFAULT_MAP ,
+and
+.Fa RGB_GRAY_MAP .
+Therefore a screen may
+have at most 6 standard colormap properties defined.
+.Pp
+A standard colormap is associated with a particular visual of the screen.
+A
+screen may have multiple visuals defined, including visuals of the same
+class at different depths.
+Note that a visual id might be repeated for more
+than one depth, so the visual id and the depth of a visual identify the
+visual.
+The characteristics of the visual will determine which standard
+colormaps are meaningful under that visual, and will determine how the
+standard colormap is defined.
+Because a standard colormap is associated
+with a specific visual, there must be a method of determining which visuals
+take precedence in defining standard colormaps.
+.Pp
+The method used here is: for the visual of greatest depth, define all
+standard colormaps meaningful to that visual class, according to this order
+of (descending) precedence:
+.Dv DirectColor ;
+.Dv PseudoColor ;
+.Dv TrueColor
+and
+.Dv GrayScale ;
+and finally
+.Dv StaticColor
+and
+.Dv StaticGray .
+.Pp
+This function allows success, on a per screen basis.
+For example, if a map
+on screen 1 fails, the maps on screen 0, created earlier, will remain.
+However, none on screen 1 will remain.
+If a map on screen 0 fails, none
+will remain.
+.Pp
+See
+.Fn XmuVisualStandardColormaps
+.Pq Sx XmuVisualStandardColormaps
+for which standard colormaps are meaningful under these classes of visuals.
+.Pp
+.Ft Status
+.Fo XmuVisualStandardColormaps
+.Fa "Display * dpy"
+.Fa "int screen"
+.Fa "VisualID visualid"
+.Fa "unsigned int depth"
+.Fa "Bool replace"
+.Fa "Bool retain"
+.Fc
+.Bl -tag -width Ds
+.It Fa dpy
+specifies the connection to the X server
+.It Fa screen
+specifies the screen of the display
+.It Fa visualid
+specifies the visual type
+.It Fa depth
+specifies the visual depth
+.It Fa replace
+specifies whether or not to replace
+.It Fa retain
+specifies whether or not to retain
+.El
+.Pp
+To create all of the appropriate standard colormaps for a given visual on a
+given screen, use
+.Fn XmuVisualStandardColormaps .
+.Pp
+This function defines all appropriate standard colormap properties for the
+given visual.
+If replace is
+.Dv True ,
+any previous definition will be removed.
+If retain is
+.Dv True ,
+new properties will be retained for the duration of the
+server session.
+This function returns 0 on failure, non-zero on success.
+On failure, no new properties will be defined, but old ones may have been
+removed if replace was
+.Dv True .
+.Pp
+Not all standard colormaps are meaningful to all visual classes.
+This
+routine will check and define the following properties for the following
+classes, provided that the size of the colormap is not too small.
+For
+.Dv DirectColor
+and
+.Dv PseudoColor :
+.Fa RGB_DEFAULT_MAP ,
+.Fa RGB_BEST_MAP ,
+.Fa RGB_RED_MAP ,
+.Fa RGB_GREEN_MAP ,
+.Fa RGB_BLUE_MAP ,
+and
+.Fa RGB_GRAY_MAP .
+For
+.Dv TrueColor
+and
+.Dv StaticColor :
+.Fa RGB_BEST_MAP .
+For
+.Dv GrayScale
+and
+.Dv StaticGray :
+.Fa RGB_GRAY_MAP .
+.Pp
+.Ft Status
+.Fo XmuLookupStandardColormap
+.Fa "Display * dpy"
+.Fa "int screen"
+.Fa "VisualID visualid"
+.Fa "unsigned int depth"
+.Fa "Atom property"
+.Fa "Bool replace"
+.Fa "Bool retain"
+.Fc
+.Bl -tag -width Ds
+.It Fa dpy
+specifies the connection to the X server
+.It Fa screen
+specifies the screen of the display
+.It Fa visualid
+specifies the visual type
+.It Fa depth
+specifies the visual depth
+.It Fa property
+specifies the standard colormap property
+.It Fa replace
+specifies whether or not to replace
+.It Fa retain
+specifies whether or not to retain
+.El
+.Pp
+To create a standard colormap if one does not currently exist, or replace
+the currently existing standard colormap, use
+.Fn XmuLookupStandardColormap .
+.Pp
+Given a screen, a visual, and a property, this function will determine the
+best allocation for the property under the specified visual, and determine
+the whether to create a new colormap or to use the default colormap of the
+screen.
+.Pp
+If replace is True, any previous definition of the property will be
+replaced.
+If retain is True, the property and the colormap will be made
+permanent for the duration of the server session.
+However, pre-existing
+property definitions which are not replaced cannot be made permanent by a
+call to this function; a request to retain resources pertains to newly
+created resources.
+.Pp
+This function returns 0 on failure, non-zero on success.
+A request to
+create a standard colormap upon a visual which cannot support such a map is
+considered a failure.
+An example of this would be requesting any standard
+colormap property on a monochrome visual, or, requesting an
+.Fa RGB_BEST_MAP
+on
+a display whose colormap size is 16.
+.Pp
+.Ft Status
+.Fo XmuGetColormapAllocation
+.Fa "XVisualInfo * vinfo"
+.Fa "Atom property"
+.Fa "unsigned long * red_max"
+.Fa "unsigned long * green_max"
+.Fa "unsigned long * blue_max"
+.Fc
+.Bl -tag -width Ds
+.It Fa vinfo
+specifies visual information for a chosen visual
+.It Fa property
+specifies one of the standard colormap property names
+.It Fa red_max
+returns maximum red value
+.It Fa green_max
+returns maximum green value
+.It Fa blue_max
+returns maximum blue value
+.El
+.Pp
+To determine the best allocation of reds, greens, and blues in a standard
+colormap, use
+.Fn XmuGetColormapAllocation .
+.Pp
+.Fn XmuGetColormapAllocation
+returns 0 on failure, non-zero on success.
+It is
+assumed that the visual is appropriate for the colormap property.
+.Pp
+.Ft XStandardColormap
+.Fo "* XmuStandardColormap"
+.Fa "Display * dpy"
+.Fa "int screen"
+.Fa "VisualID visualid"
+.Fa "unsigned int depth"
+.Fa "Atom property"
+.Fa "Colormap cmap"
+.Fa "unsigned long red_max"
+.Fa "unsigned long green_max"
+.Fa "unsigned long blue_max"
+.Fc
+.Bl -tag -width Ds
+.It Fa dpy
+specifies the connection to the X server
+.It Fa screen
+specifies the screen of the display
+.It Fa visualid
+specifies the visual type
+.It Fa depth
+specifies the visual depth
+.It Fa property
+specifies the standard colormap property
+.It Fa cmap
+specifies the colormap ID, or None
+.It Fa red_max
+specifies the red allocation
+.It Fa green_max
+specifies the green allocation
+.It Fa blue_max
+specifies the blue allocation
+.El
+.Pp
+To create any one standard colormap, use
+.Fn XmuStandardColormap .
+.Pp
+This function creates a standard colormap for the given screen, visualid,
+and visual depth, with the given red, green, and blue maximum values, with
+the given standard property name.
+Upon success, it returns a pointer to an
+.Fn XStandardColormap
+structure which describes the newly created colormap.
+Upon failure, it returns
+.Dv NULL .
+If cmap is the default colormap of the screen, the standard colormap
+will be defined on the default colormap; otherwise a new colormap is created.
+.Pp
+Resources created by this function are not made permanent; that is the
+caller's responsibility.
+.Pp
+.Ft Status
+.Fo XmuCreateColormap
+.Fa "Display * dpy"
+.Fa "XStandardColormap * colormap"
+.Fc
+.Bl -tag -width Ds
+.It Fa dpy
+specifies the connection under which the map is created
+.It Fa colormap
+specifies the map to be created
+.El
+.Pp
+To create any one colormap which is described by an
+.Vt XStandardColormap
+structure, use
+.Fn XmuCreateColormap .
+.Pp
+This function returns 0 on failure, and non-zero on success.
+The base_pixel
+of the colormap is set on success.
+Resources created by this function are
+not made permanent.
+No argument error checking is provided; use at your own
+risk.
+.Pp
+All colormaps are created with read-only allocations, with the exception of
+read-only allocations of colors which fail
+to return the expected pixel value, and these are individually defined as
+read/write allocations.
+This is done so that all the cells defined in the
+colormap are contiguous, for use in image processing.
+This typically
+happens with White and Black in the default map.
+.Pp
+Colormaps of static visuals are considered to be successfully created if the
+map of the static visual matches the definition given in the standard
+colormap structure.
+.Pp
+.Ft void
+.Fo XmuDeleteStandardColormap
+.Fa "Display * dpy"
+.Fa "Screen * screen"
+.Fa "Atom property"
+.Fc
+.Bl -tag -width Ds
+.It Fa dpy
+specifies the connection to the X server
+.It Fa screen
+specifies the screen of the display
+.It Fa property
+specifies the standard colormap property
+.El
+.Pp
+To remove any standard colormap property, use
+.Fn XmuDeleteStandardColormap .
+This function will remove the specified property from the specified screen,
+releasing any resources used by the colormap(s) of the property, if
+possible.
+.Sh WIDGET DESCRIPTION FUNCTIONS
+The functions defined in this section are for building a description of
+the structure of and resources associated with a hierarchy of widget classes.
+This package is typically used by applications that wish to manipulate the
+widget set itself.
+.Pp
+The definitions needed to use these interfaces are in the header file
+.Pf < Pa X11/Xmu/WidgetNode.h Ns >
+\&.
+To call these functions, you need to link against the libXmu library.
+The following function must be called before any of the others described
+below:
+.Ft void
+.Fo XmuWnInitializeNodes
+.Fa "XmuWidgetNode * node_array"
+.Fa "int num_nodes"
+.Fc
+.Bl -tag -width Ds
+.It Fa node_array
+specifies a list of widget classes, in alphabetical order
+.It Fa num_nodes
+specifies the number of widget classes in the node array
+.El
+.Pp
+To determine the resources provided by a widget class or classes, use
+.Ft void
+.Fo XmuWnFetchResources
+.Fa "XmuWidgetNode * node"
+.Fa "Widget toplevel"
+.Fa "XmuWidgetNode * top_node"
+.Fc
+.Bl -tag -width Ds
+.It Fa node
+specifies the widget class for which resources should be obtained.
+.It Fa toplevel
+specifies the widget that should be used for creating an instance of
+.Fa node
+from which resources are extracted.
+This is typically the value returned
+by
+.Lk libXaw XtAppInitialize
+.Pq XtAppInitialize .
+.It Fa top_node
+specifies the ancestor of
+.Fa node
+that should be
+treated as the root
+of the widget inheritance tree (used in determining which ancestor contributed
+which resources).
+.El
+.Pp
+Each widget class inherits the resources of its parent.
+To count the number
+of resources contributed by a particular widget class, use:
+.Ft int
+.Fo XmuWnCountOwnedResources
+.Fa "XmuWidgetNode * node"
+.Fa "XmuWidgetNode * owner_node"
+.Fa "Bool constraints"
+.Fc
+.Bl -tag -width Ds
+.It Fa node
+specifies the widget class whose resources are being examined.
+.It Fa owner_node
+specifies the widget class of the ancestor of
+.Fa node
+whose contributions
+are being counted.
+.It Fa constraints
+specifies whether or not to count constraint resources or normal resources.
+.El
+.Pp
+This routine returns the number of resources contributed (or
+\(lqowned\(rq) by
+the specified widget class.
+.Pp
+.Ft XmuWidgetNode
+.Fo "* XmuWnNameToNode"
+.Fa "XmuWidgetNode * node_list"
+.Fa "int num_nodes"
+.Fa "char * name"
+.Fc
+.Bl -tag -width Ds
+.It Fa node_list
+specifies a list of widget nodes
+.It Fa num_nodes
+specifies the number of nodes in the list
+.It Fa name
+specifies the name of the widget class in the node list to search for
+.El
+.Pp
+This function returns the WidgetNode in the list that matches the given
+widget name or widget class name.
+If no match is found, it returns
+.Dv NULL .
+.Sh PARTICIPATION IN THE EDITRES PROTOCOL
+To participate in the editres protocol, applications which are not based
+on the Athena widget set should include the header file
+.Pf < Pa X11/Xmu/Editres.h Ns >
+and link against the libXmu library.
+.Pp
+To participate in the editres protocol, Xt applications which do not rely
+on the Athena widget set should register the editres protocol handler on
+each shell widget in the application, specifying an event mask of 0,
+nonmaskable events, and client data as
+.Dv NULL :
+.Bd -literal
+XtAddEventHandler(shell, (EventMask) 0, True, _XEditResCheckMessages, NULL);
+.Ed
+.Sh AUTHORS
+.An -nosplit
+X Version 11, Release 6
+Copyright \(co 1989X Consortium
+.Ss Legal Notice
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the \(lqSoftware\(rq), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+.Pp
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+.Pp
+THE SOFTWARE IS PROVIDED \(lqAS IS\(rq, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE
+X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+.Pp
+Except as contained in this notice, the name of the X Consortium shall not be
+used in advertising or otherwise to promote the sale, use or other dealings
+in this Software without prior written authorization from the X Consortium.
+.Pp
+.Em X Window System
+is a trademark of The Open Group.

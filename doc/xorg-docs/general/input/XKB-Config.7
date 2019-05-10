@@ -1,0 +1,239 @@
+.\" automatically generated with docbook2mdoc XKB-Config.xml
+.Dd November 2010
+.Dt XKB-CONFIG 7
+.Os
+.Sh NAME
+.Nm XKB-Config
+.Nd The XKB Configuration Guide
+.Sh ABSTRACT
+This document describes how to configure Xorg XKB from a user's point
+of view.
+It covers basic configuration syntax and gives also a few examples.
+.Pp
+This version covers Xorg server versions 1.8 and later, used with the
+data files from the
+.Lk http://www.freedesktop.org/wiki/Software/XKeyboardConfig xkeyboard-config
+project.
+.Sh OVERVIEW
+The XKB configuration is decomposed into a number of components.
+Selecting
+proper parts and combining them back you can achieve most of the configurations
+you might need.
+Unless you have a completely atypical keyboard you really don't
+need to touch any of the xkb configuration files.
+.Pp
+Some desktop environments now provide integrated graphical configuration
+tools for setting XKB configuration as part of your desktop session.
+The
+instructions in this document are provided for those without such support,
+those who need to configure XKB before the session startup (such as at the
+login screen), or those who need to perform more advanced configuration
+than those tools provide.
+.Sh SELECTING XKB CONFIGURATION
+The easiest and the most natural way to specify a keyboard mapping is to use
+the
+.Ql rules
+component.
+As its name suggests it describes a number of
+general rules to combine all bits and pieces into a valid and useful keyboard
+mapping.
+All you need to do is to select a suitable rules file and then to
+feed it with a few parameters that will adjust the keyboard behaviour to
+fulfill your needs.
+.Pp
+The parameters are:
+.Bl -tag -width Ds
+.It Fl XkbRules
+files of rules to be used for keyboard mapping composition
+.It Fl XkbModel
+name of the model of your keyboard type
+.It Fl XkbLayout
+layout(s) you intend to use
+.It Fl XkbVariant
+variant(s) of the layout you intend to use
+.It Fl XkbOptions
+extra xkb configuration options
+.El
+.Pp
+The rules file used depends on your system.
+The rules files commonly
+used with Xorg are provided by the
+.Lk http://www.freedesktop.org/wiki/Software/XKeyboardConfig xkeyboard-config
+project.
+On Linux systems, the
+.Pa evdev
+rules are most
+commonly used, on other systems the
+.Pa base
+rules
+are used.
+Some additional rules files exist for historical reasons,
+but are no longer widely used.
+In general, it's best to simply not
+specify the rules file, in order to use the default rules selected
+automatically by the X server.
+.Pp
+For each rules file there is a description file named
+.Pa < Ns Ar vendor-rules Ns > . Ns lst ,
+for instance
+.Pa base.lst
+which is located in
+the xkb configuration subdirectory
+.Pa rules
+(for example
+.Pa /usr/share/X11/xkb/rules ) .
+.Ss Basic Configuration
+Let's say you want to configure a PC-style American keyboard with 104
+keys as described in
+.Pa base.lst .
+This can be done
+by simply writing several lines from below to a new configuration file
+in
+.Pa /etc/X11/xorg.conf.d ,
+such
+as
+.Pa /etc/X11/xorg.conf.d/90-custom-kbd.conf .
+.Bd -literal
+Section "InputClass"
+    Identifier "keyboard defaults"
+    MatchIsKeyboard "on"
+    Option "XkbModel" "pc104"
+    Option "XkbLayout" "us"
+    Option "XKbOptions" ""
+EndSection
+.Ed
+.Pp
+The values of
+.Fl XkbModel
+and
+.Fl XkbLayout
+are
+really not surprising.
+The
+.Fl XkbOptions
+has been explicitly set to the empty set of parameters.
+The
+.Fl XkbVariant
+option has been left out.
+That means the default variant named
+.Ql basic
+is loaded.
+.Pp
+Of course, this can be also done at runtime using the utility
+.Nm setxkbmap .
+The shell command loading the same keyboard mapping would look like:
+.Bd -literal
+setxkbmap -model pc104 -layout us -option ""
+.Ed
+.Pp
+The configuration and the shell command would be very analogous
+for most other layouts (internationalized mappings).
+.Pp
+If you wanted to enable the
+.Sy Ctrl
+.Sy Alt Ns Sy Backspace
+sequence to kill
+the X server by default, you could create a configuration snippet
+.Pa /etc/X11/xorg.conf.d/90-zap.conf
+containing:
+.Bd -literal
+Section "InputClass"
+    Identifier "keyboard defaults"
+    MatchIsKeyboard "on"
+    Option "XKbOptions" "terminate:ctrl_alt_bksp"
+EndSection
+.Ed
+.Pp
+This would be equivalent to running the shell command:
+.Bd -literal
+setxkbmap -option "terminate:ctrl_alt_bksp"
+.Ed
+.Ss Advanced Configuration
+You can use multi-layouts xkb configuration.
+What does it mean?
+Basically it allows to load up to four different
+keyboard layouts at a time.
+Each such layout would reside in its
+own group.
+The groups (unlike complete keyboard remapping) can be
+switched very fast from one to another by a combination of keys.
+.Pp
+Let's say you want to configure your new Logitech cordless desktop
+keyboard, you intend to use three different layouts at the same
+time - us, czech and german (in this order), and that you are used to
+.Sy Alt Ns Sy Shift
+combination for switching among them.
+.Pp
+Then the configuration snippet could look like this:
+.Bd -literal
+Section "InputClass"
+    Identifier "Logitech Cordless"
+    MatchIsKeyboard   "on"
+    Option "XkbModel" "logicordless"
+    Option "XkbLayout" "us,cz,de"
+    Option "XKbOptions" "grp:alt_shift_toggle"
+EndSection
+.Ed
+.Pp
+Of course, this can be also done at runtime using the utility
+.Nm setxkbmap .
+The shell command loading the same keyboard mapping would look like:
+.Bd -literal
+setxkbmap -model logicordless -layout "us,cz,de" \e
+         -option "grp:alt_shift_toggle"
+.Ed
+.Ss Even More Advanced Configuration
+Okay, let's say you are more demanding.
+You do like the example
+above but you want it to change a bit.
+Let's imagine you want
+the czech keyboard mapping to use another variant but basic.
+The configuration snippet then changes into:
+.Bd -literal
+Section "InputClass"
+    Identifier "Logitech Cordless"
+    MatchIsKeyboard   "on"
+    Option "XkbModel" "logicordless"
+    Option "XkbLayout" "us,cz,de"
+    Option "XkbVariant" ",bksl,"
+    Option "XKbOptions" "grp:alt_shift_toggle" EndSection
+.Ed
+.Pp
+That seems tricky but it is not.
+The logic for settings of variants
+is the same as for layouts, that means the first and the third variant
+settings are left out (set to
+.Ql basic ) ,
+the second is set to
+.Ql bksl
+(a special
+variant with an enhanced definition of the backslash key).
+.Pp
+Analogously, the loading runtime will change to:
+.Bd -literal
+setxkbmap -model logicordless -layout "us,cz,de" \e
+         -variant ",bksl," -option "grp:alt_shift_toggle"
+.Ed
+.Ss Basic Global Options
+For a list of available options, with a short description of what they do,
+see the section starting with
+.Dq Li ! option
+in the
+.Pa rules/*.lst
+files.
+.Sh KEYMAP XKB CONFIGURATION
+Keymap configuration is the way formerly used to configure xkb.
+The
+user included a special keymap file which specified the direct xkb
+configuration.
+This method has been obsoleted by previously described
+rules files which are far more flexible and allow simpler and more
+intuitive syntax.
+It is preserved merely for compatibility reasons and
+should be avoided if possible.
+.Sh AUTHORS
+.An -nosplit
+X Version 11, Release 6
+.An -split
+.An Kamil Toman
+.An Ivan U. Pascal

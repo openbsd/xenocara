@@ -1,0 +1,493 @@
+.\" automatically generated with docbook2mdoc shapelib.xml
+.Dd $Mdocdate: May 10 2019 $
+.Dt SHAPELIB 3
+.Os
+.Sh NAME
+.Nm shapelib
+.Nd X Nonrectangular Window Shape Extension Library
+.Sh OVERVIEW
+This extension provides arbitrary window and border shapes within
+the X11 protocol.
+.Pp
+The restriction of rectangular windows within the X protocol is a significant
+limitation in the implementation of many styles of user interface.
+For
+example, many transient windows would like to display a
+\(lqdrop shadow\(rq to give the illusion of 3 dimensions.
+As
+another example, some user interface style guides call for buttons with
+rounded corners; the full simulation of a nonrectangular shape,
+particularly with respect to event distribution and cursor shape, is not
+possible within the core X protocol.
+As a final example, round clocks
+and nonrectangular icons are desirable visual addition to the desktop.
+.Pp
+This extension provides mechanisms for changing the visible shape of a
+window to an arbitrary, possibly disjoint, nonrectangular form.
+The intent
+of the extension is to supplement the existing semantics, not replace them.
+In particular, it is desirable for clients that are unaware of the
+extension to still be able to cope reasonably with shaped windows.
+For
+example, window managers should still be able to negotiate screen
+real estate in rectangular pieces.
+Toward this end, any shape specified for
+a window is clipped by the bounding rectangle for the window as specified by
+the window's geometry in the core protocol.
+An expected convention would be
+that client programs expand their shape to fill the area offered by the
+window manager.
+.Sh DESCRIPTION
+Each window (even with no shapes specified) is defined by two regions:  the
+.Lk shapelib "bounding region"
+.Pq bounding_region
+and the
+.Lk shapelib "clip region"
+.Pq clip_region .
+The bounding region is the
+area of the parent window that the window will occupy (including border).
+The clip region is the subset of the bounding region that is available for
+subwindows and graphics.
+The area between the bounding region and the
+clip region is defined to be the border of the window.
+.Pp
+A nonshaped window will have a bounding region that is a rectangle spanning
+the window, including its border; the clip region will be a rectangle
+filling the inside dimensions (not including the border).  In this document,
+these areas are referred to as the
+.Lk shapelib "default bounding region"
+.Pq default_bounding_region
+and the
+.Lk shapelib "default clip region"
+.Pq default_clip_region .
+For a window with
+inside size of
+.Em width
+by
+.Em height
+and border width
+.Em bwidth ,
+the default bounding and clip
+regions are the rectangles (relative to the window origin):
+.Bd -unfilled
+bounding.x = \c
+.Pf - Em bwidth
+bounding.y = \c
+.Pf - Em bwidth
+bounding.width = \c
+.Em width No  + 2 * Em bwidth
+bounding.height = \c
+.Em height No  + 2 * Em bwidth
+clip.x = 0
+clip.y = 0
+clip.width = \c
+.Em width
+clip.height = \c
+.Em height
+.Ed
+.Pp
+This extension allows a client to modify either or both of the bounding or
+clip regions by specifying new regions that combine with the default
+regions.
+These new regions are called the
+.Lk shapelib "client bounding region"
+.Pq client_bounding_region
+and the
+.Lk shapelib "client clip region"
+.Pq client_clip_region .
+They are specified
+relative to the origin of the window and are always defined by offsets
+relative to the window origin (that is, region adjustments are not
+required when the window is moved).  Three mechanisms for specifying
+regions are provided:  a list of rectangles, a bitmap, and an existing
+bounding or clip region from a window.
+This is modeled on the specification
+of regions in graphics contexts in the core protocol and allows a variety
+of different uses of the extension.
+.Pp
+When using an existing window shape as an operand in specifying a new shape,
+the client region is used, unless none has been set, in which case the
+default region is used instead.
+.Pp
+The
+.Lk shapelib "effective bounding region"
+.Pq effective_bounding_region
+of a window is
+defined to be the intersection of the client bounding region with the default
+bounding region.
+Any portion of the client bounding region that is not
+included in the default bounding region will not be included in the
+effective bounding region on the screen.
+This means that window managers
+(or other geometry managers) used to dealing with rectangular client windows
+will be able to constrain the client to a rectangular area of the screen.
+.Pp
+Construction of the effective bounding region is dynamic; the client bounding
+region is not mutated to obtain the effective bounding region.
+If a client
+bounding region is specified that extends beyond the current default bounding
+region, and the window is later enlarged, the effective bounding region will
+be enlarged to include more of the client bounding region.
+.Pp
+The
+.Lk shapelib "effective clip region"
+.Pq effective_clip_region
+of a window is
+defined to be the intersection of the client clip region with both the
+default clip region and the client bounding region.
+Any portion of the
+client clip region that is not included in both the default clip region
+and the client bounding region will not be included in the effective clip
+region on the screen.
+.Pp
+Construction of the effective clip region is dynamic; the client clip region is
+not mutated to obtain the effective clip region.
+If a client clip region is
+specified that extends beyond the current default clip region and the
+window or its bounding region is later enlarged, the effective clip region will
+be enlarged to include more of the client clip region if it is included in
+the effective bounding region.
+.Pp
+The border of a window is defined to be the difference between the effective
+bounding region and the effective clip region.
+If this region is empty, no
+border is displayed.
+If this region is nonempty, the border is filled
+using the border-tile or border-pixel of the window as specified in the core
+protocol.
+Note that a window with a nonzero border width will never be able
+to draw beyond the default clip region of the window.
+Also note that a zero
+border width does not prevent a window from having a border, since the clip
+shape can still be made smaller than the bounding shape.
+.Pp
+All output to the window and visible regions of any subwindows will be
+clipped to the effective clip region.
+The server must not retain window
+contents beyond the effective bounding region with backing store.
+The window's
+origin (for graphics operations, background tiling, and subwindow placement)
+is not affected by the existence of a bounding region or clip region.
+.Pp
+Areas that are inside the default bounding region but outside the effective
+bounding region are not part of the window; these areas of the screen will
+be occupied by other windows.
+Input events that occur within the default
+bounding region but outside the effective bounding region will be delivered as
+if the window was not occluding the event position.
+Events that occur in
+a nonrectangular border of a window will be delivered to that window, just
+as for events that occur in a normal rectangular border.
+.Pp
+An
+.Lk libX11 InputOnly
+.Pq glossary:InputOnly_window
+window can have its bounding region set, but it is a
+.Lk libX11 Match
+.Pq BadMatch
+error to attempt to set a clip region on an
+.Lk libX11 InputOnly
+.Pq glossary:InputOnly_window
+window or to specify its clip region as a source to a request
+in this extension.
+.Pp
+The server must accept changes to the clip region of a root window, but
+the server is permitted to ignore requested changes to the bounding region
+of a root window.
+If the server accepts bounding region changes, the contents
+of the screen outside the bounding region are implementation dependent.
+.Sh C LANGUAGE BINDING
+The C functions provide direct access to the protocol and add no additional
+semantics.
+.Pp
+The include file for this extension is
+.Pf < Dv X11/extensions/shape.h Ns > .
+The defined shape kinds are
+.Fn ShapeBounding
+and
+.Fn ShapeClip
+The defined region operations are
+.Fn ShapeSet
+.Fn ShapeUnion
+.Fn ShapeIntersect
+.Fn ShapeSubtract
+and
+.Fn ShapeInvert .
+.Pp
+.Ft Bool
+.Fo XShapeQueryExtension
+.Fa "Display *display"
+.Fa "int *event_base"
+.Fa "int *error_base"
+.Fc
+.Pp
+.Fn XShapeQueryExtension
+returns
+.Fn True
+if the specified display supports the SHAPE extension else
+.Fn False
+If the extension is supported, *event_base is set to the event number for
+.Fn ShapeNotify
+events and *error_base would be set to the error number for the first error for
+this extension.
+Because no errors are defined for this version of
+the extension, the value returned here is not defined (nor useful).
+.Pp
+.Ft Status
+.Fo XShapeQueryVersion
+.Fa "Display *display"
+.Fa "int *major_version"
+.Fa "int *minor_version"
+.Fc
+.Pp
+If the extension is supported,
+.Fn XShapeQueryVersion
+sets the major and minor version numbers of the
+extension supported by the display and returns a nonzero value.
+Otherwise, the arguments are not set and zero is returned.
+.Pp
+.Fo XShapeCombineRegion
+.Fa "Display *display"
+.Fa "Window dest"
+.Fa "int dest_kind"
+.Fa "int x_off"
+.Fa "int y_off"
+.Fa "int region"
+.Fa "int op"
+.Fa "REGION *region"
+.Fc
+.Pp
+.Fn XShapeCombineRegion
+converts the specified region into a list of rectangles and calls
+.Fn XShapeCombineRectangles
+.Pp
+.Fo XShapeCombineRectangles
+.Fa "Display *display"
+.Fa "Window dest"
+.Fa "int dest_kind"
+.Fa "int x_off"
+.Fa "int y_off"
+.Fa "XRectangle *rectangles"
+.Fa "int n_rects"
+.Fa "int op"
+.Fa "int ordering"
+.Fc
+.Pp
+If the extension is supported,
+.Fn XShapeCombineRectangles
+performs a
+.Fn ShapeRectangles
+operation; otherwise, the request is ignored.
+.Pp
+.Fo XShapeCombineMask
+.Fa "Display *display"
+.Fa "int dest"
+.Fa "int dest_kind"
+.Fa "int x_off"
+.Fa "int y_off"
+.Fa "Pixmap src"
+.Fa "int op"
+.Fc
+.Pp
+If the extension is supported,
+.Fn XShapeCombineMask
+performs a
+.Fn ShapeMask
+operation; otherwise, the request is ignored.
+.Pp
+.Fo XShapeCombineShape
+.Fa "Display *display"
+.Fa "Window dest"
+.Fa "int dest_kind"
+.Fa "int x_off"
+.Fa "int y_off"
+.Fa "Window src"
+.Fa "int src_kind"
+.Fa "int op"
+.Fc
+.Pp
+If the extension is supported,
+.Fn XShapeCombineShape
+performs a
+.Fn ShapeCombine
+operation; otherwise, the request is ignored.
+.Pp
+.Fo XShapeOffsetShape
+.Fa display
+.Fa dest
+.Fa dest_kind
+.Fa x_off
+.Fa y_off
+.Fc
+.Pp
+If the extension is supported,
+.Fn XShapeOffsetShape
+performs a
+.Fn ShapeOffset
+operation; otherwise, the request is ignored.
+.Pp
+.Ft Status
+.Fo XShapeQueryExtents
+.Fa "Display *display"
+.Fa "Window window"
+.Fa "Bool *bounding_shaped"
+.Fa "int *x_bounding"
+.Fa "int *y_bounding"
+.Fa "unsigned int *w_bounding"
+.Fa "unsigned int *h_bounding"
+.Fa "Bool *clip_shaped"
+.Fa "int *x_clip"
+.Fa "int *y_clip"
+.Fa "unsigned int *w_clip"
+.Fa "unsigned int *h_clip"
+.Fc
+.Pp
+If the extension is supported,
+.Fn XShapeQueryExtents
+sets x_bounding, y_bounding, w_bounding, h_bounding to the extents of the
+bounding shape and sets x_clip, y_clip, w_clip, h_clip to the extents of
+the clip shape.
+For unspecified client regions, the extents of the
+corresponding default region are used.
+.Pp
+If the extension is supported, a nonzero value is returned; otherwise,
+zero is returned.
+.Pp
+.Fo XShapeSelectInput
+.Fa "Display *display"
+.Fa "Window window"
+.Fa "unsigned long mask"
+.Fc
+.Pp
+To make this extension more compatible with other interfaces, although
+only one event type can be selected via the extension,
+.Fn XShapeSelectInput
+provides a general mechanism similar to the standard Xlib binding for
+window events.
+A mask value has been defined,
+.Fn ShapeNotifyMask
+that is the only valid bit in mask that may be specified.
+The structure for this event is defined as follows:
+.Bd -unfilled
+typedef struct {
+    int type;     /* of event */
+    unsigned long serial;     /* # of last request processed by server */
+    Bool send_event;     /* true if this came frome a SendEvent request */
+    Display *display;     /* Display the event was read from */
+    Window window;     /* window of event */
+    int kind;     /* ShapeBounding or ShapeClip */
+    int x, y;     /* extents of new region */
+    unsigned width, height;
+    Time time;     /* server timestamp when region changed */
+    Bool shaped;     /* true if the region exists */
+} XShapeEvent;
+.Ed
+.Pp
+.Ft unsigned long
+.Fo XShapeInputSelected
+.Fa "Display *display"
+.Fa "Window window"
+.Fc
+.Pp
+.Fn XShapeInputSelected
+returns the current input mask for extension events on the specified
+window; the value returned if
+.Fn ShapeNotify
+is selected for is
+.Fn ShapeNotifyMask
+otherwise, it returns zero.
+If the extension is not supported, it returns zero.
+.Pp
+.Ft XRectangle
+.Fo *XShapeGetRectangles
+.Fa "Display *display"
+.Fa "Window window"
+.Fa "int kind"
+.Fa "int *count"
+.Fa "int *ordering"
+.Fc
+.Pp
+If the extension is not supported,
+.Fn XShapeGetRectangles
+returns NULL.
+Otherwise, it returns a list of rectangles that describe the
+region specified by kind.
+.Bl -tag -width Ds
+.It Em bounding region
+The area of the parent window that this window will occupy.
+This area is divided into two parts:  the border and the interior.
+.It Em clip region
+The interior of the window, as a subset of the bounding
+region.
+This region describes the area that will be painted with the
+window background when the window is cleared, will contain all graphics
+output to the window, and will clip any subwindows.
+.It Em default bounding region
+The rectangular area, as described by the core protocol
+window size, that covers the interior of the window and its border.
+.It Em default clip region
+The rectangular area, as described by the core protocol
+window size, that covers the interior of the window and excludes the border.
+.It Em client bounding region
+The region associated with a window that is directly
+modified via this extension when specified by
+.Fn ShapeBounding
+This region is used in conjunction with the default bounding region
+to produce the effective bounding region.
+.It Em client clip region
+The region associated with a window that is directly
+modified via this extension when specified by
+.Fn ShapeClip
+This region is used in conjunction with the default clip region
+and the client bounding region to produce the effective clip region.
+.It Em effective bounding region
+The actual shape of the window on the screen, including
+border and interior (but excluding the effects of overlapping windows).
+When a window has a client bounding region, the effective bounding region
+is the intersection of the default bounding region and the client bounding
+region.
+Otherwise, the effective bounding region is the same as the
+default bounding region.
+.It Em effective clip region
+The actual shape of the interior of the window on the
+screen (excluding the effects of overlapping windows).  When a window
+has a client clip region or a client bounding region, the effective
+clip region is the intersection of the default clip region, the client
+clip region (if any) and the client bounding region (if any).  Otherwise,
+the effective clip region is the same as the default clip region.
+.El
+.Sh AUTHORS
+.An -nosplit
+.Sy X Consortium Standard
+.Pp
+X Version 11, Release 6
+Version 1.0
+.An -split
+.An Keith Packard ,
+MIT X Consortium
+Copyright \(co 1989X Consortium
+.Ss Legal Notice
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files
+(the \(lqSoftware\(rq), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge,
+publish, distribute, sublicense, and/or sell copies of the Software, and
+to permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+.Pp
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+.Pp
+THE SOFTWARE IS PROVIDED \(lqAS IS\(rq, WITHOUT WARRANTY OF ANY
+KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+.Pp
+Except as contained in this notice, the name of the X Consortium shall not be
+used in advertising or otherwise to promote the sale, use or other dealings
+in this Software without prior written authorization from the X Consortium.
+.Pp
+X Window System is a trademark of The OpenGroup.

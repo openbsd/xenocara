@@ -1,8 +1,10 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.5 2019/05/05 23:27:58 schwarze Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.6 2019/05/10 11:44:39 schwarze Exp $
 
 CONFIGURE_ARGS += --without-fop --without-xmlto
 
-MDOCS =	general/fonts/fonts
+MDOCS =	general/fonts/fonts \
+	general/input/XKB-Config \
+	general/input/XKB-Enhancing
 
 beforeinstall:
 .for n in ${MDOCS}
