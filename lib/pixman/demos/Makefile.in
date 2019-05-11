@@ -453,7 +453,13 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-EXTRA_DIST = parrot.c parrot.jpg scale.ui
+EXTRA_DIST = \
+     parrot.c		\
+     parrot.jpg		\
+     scale.ui		\
+     meson.build	\
+     $(NULL)
+
 @HAVE_GTK_TRUE@AM_CFLAGS = $(OPENMP_CFLAGS)
 @HAVE_GTK_TRUE@AM_LDFLAGS = $(OPENMP_CFLAGS)
 @HAVE_GTK_TRUE@LDADD = $(top_builddir)/pixman/libpixman-1.la -lm $(GTK_LIBS) $(PNG_LIBS)
