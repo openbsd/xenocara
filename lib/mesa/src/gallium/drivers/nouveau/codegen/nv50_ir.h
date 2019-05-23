@@ -1058,6 +1058,8 @@ public:
 
       enum TexQuery query;
       const struct ImgFormatDesc *format;
+
+      bool scalar; // for GM107s TEXS, TLDS, TLD4S
    } tex;
 
    ValueRef dPdx[3];
@@ -1309,6 +1311,7 @@ public:
    uint32_t tlsSize; // size required for FILE_MEMORY_LOCAL
 
    int maxGPR;
+   bool fp64;
 
    MemoryPool mem_Instruction;
    MemoryPool mem_CmpInstruction;

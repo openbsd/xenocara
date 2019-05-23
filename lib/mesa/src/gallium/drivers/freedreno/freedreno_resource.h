@@ -41,7 +41,7 @@
  * programmed with the start address of each mipmap level, and hw
  * derives the layer offset within the level.
  *
- * Texture Layout on a4xx:
+ * Texture Layout on a4xx+:
  *
  * For cubemap and 2d array, each layer contains all of it's mipmap
  * levels (layer_first layout).
@@ -72,6 +72,7 @@ struct fd_resource {
 	/* buffer range that has been initialized */
 	struct util_range valid_buffer_range;
 	bool valid;
+	struct renderonly_scanout *scanout;
 
 	/* reference to the resource holding stencil data for a z32_s8 texture */
 	/* TODO rename to secondary or auxiliary? */
@@ -99,7 +100,6 @@ struct fd_resource {
 	uint16_t seqno;
 
 	unsigned tile_mode : 2;
-	unsigned preferred_tile_mode : 2;
 
 	/*
 	 * LRZ

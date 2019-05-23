@@ -212,7 +212,7 @@ static struct pipe_context *r600_create_context(struct pipe_screen *screen,
 	}
 
 	rctx->b.gfx.cs = ws->cs_create(rctx->b.ctx, RING_GFX,
-				       r600_context_gfx_flush, rctx);
+				       r600_context_gfx_flush, rctx, false);
 	rctx->b.gfx.flush = r600_context_gfx_flush;
 
 	rctx->allocator_fetch_shader =
@@ -535,6 +535,9 @@ static int r600_get_param(struct pipe_screen* pscreen, enum pipe_cap param)
 	case PIPE_CAP_MAX_TEXTURE_GATHER_OFFSET:
 	case PIPE_CAP_MAX_TEXEL_OFFSET:
 		return 7;
+
+	case PIPE_CAP_MAX_VARYINGS:
+		return 32;
 
 	case PIPE_CAP_TEXTURE_BORDER_COLOR_QUIRK:
 		return PIPE_QUIRK_TEXTURE_BORDER_COLOR_SWIZZLE_R600;

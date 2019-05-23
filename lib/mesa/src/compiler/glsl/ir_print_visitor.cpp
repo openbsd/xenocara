@@ -90,8 +90,7 @@ ir_print_visitor::ir_print_visitor(FILE *f)
    : f(f)
 {
    indentation = 0;
-   printable_names =
-      _mesa_hash_table_create(NULL, _mesa_hash_pointer, _mesa_key_pointer_equal);
+   printable_names = _mesa_pointer_hash_table_create(NULL);
    symbols = _mesa_symbol_table_ctor();
    mem_ctx = ralloc_context(NULL);
 }
@@ -200,6 +199,7 @@ void ir_print_visitor::visit(ir_variable *ir)
    const char *const samp = (ir->data.sample) ? "sample " : "";
    const char *const patc = (ir->data.patch) ? "patch " : "";
    const char *const inv = (ir->data.invariant) ? "invariant " : "";
+   const char *const explicit_inv = (ir->data.explicit_invariant) ? "explicit_invariant " : "";
    const char *const prec = (ir->data.precise) ? "precise " : "";
    const char *const bindless = (ir->data.bindless) ? "bindless " : "";
    const char *const bound = (ir->data.bound) ? "bound " : "";
@@ -216,11 +216,11 @@ void ir_print_visitor::visit(ir_variable *ir)
    const char *const interp[] = { "", "smooth", "flat", "noperspective" };
    STATIC_ASSERT(ARRAY_SIZE(interp) == INTERP_MODE_COUNT);
 
-   fprintf(f, "(%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s) ",
+   fprintf(f, "(%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s) ",
            binding, loc, component, cent, bindless, bound,
            image_format, memory_read_only, memory_write_only,
            memory_coherent, memory_volatile, memory_restrict,
-           samp, patc, inv, prec, mode[ir->data.mode],
+           samp, patc, inv, explicit_inv, prec, mode[ir->data.mode],
            stream,
            interp[ir->data.interpolation]);
 

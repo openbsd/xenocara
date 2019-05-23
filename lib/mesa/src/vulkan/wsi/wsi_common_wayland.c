@@ -508,6 +508,7 @@ wsi_wl_surface_get_capabilities(VkIcdSurfaceBase *surface,
       VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
       VK_IMAGE_USAGE_SAMPLED_BIT |
       VK_IMAGE_USAGE_TRANSFER_DST_BIT |
+      VK_IMAGE_USAGE_STORAGE_BIT |
       VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
    return VK_SUCCESS;
@@ -700,9 +701,14 @@ wsi_wl_swapchain_acquire_next_image(struct wsi_swapchain *wsi_chain,
          }
       }
 
-      /* This time we do a blocking dispatch because we can't go
-       * anywhere until we get an event.
+      /* We now have to do a blocking dispatch, because all our images
+       * are in use and we cannot return one until the server does. However,
+       * if the client has requested non-blocking ANI, then we tell it up front
+       * that we have nothing to return.
        */
+      if (info->timeout == 0)
+         return VK_NOT_READY;
+
       int ret = wl_display_roundtrip_queue(chain->display->wl_display,
                                            chain->display->queue);
       if (ret < 0)

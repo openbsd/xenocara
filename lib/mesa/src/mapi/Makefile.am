@@ -31,6 +31,8 @@ pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA =
 
 EXTRA_DIST = \
+	new/genCommon.py \
+	new/gen_gldispatch_mapi.py \
 	es1api/ABI-check \
 	es2api/ABI-check \
 	mapi_abi.py \
@@ -61,10 +63,19 @@ include Makefile.sources
 MKDIR_GEN = $(AM_V_at)$(MKDIR_P) $(@D)
 PYTHON_GEN = $(AM_V_GEN)$(PYTHON) $(PYTHON_FLAGS)
 
-glapi_gen_mapi_deps := \
+shared_glapi_gen_mapi_deps := \
 	mapi_abi.py \
 	$(wildcard $(top_srcdir)/src/mapi/glapi/gen/*.xml) \
 	$(wildcard $(top_srcdir)/src/mapi/glapi/gen/*.py)
+
+glapi_gen_gl_xml := \
+	$(srcdir)/glapi/registry/gl.xml
+glapi_gen_mapi_script = $(srcdir)/new/gen_gldispatch_mapi.py
+glapi_gen_mapi_deps = \
+	$(glapi_gen_mapi_script) \
+	$(srcdir)/new/genCommon.py \
+	$(glapi_gen_gl_xml)
+glapi_gen_mapi = $(AM_V_GEN)$(PYTHON) $(PYTHON_FLAGS) $(glapi_gen_mapi_script)
 
 if HAVE_SHARED_GLAPI
 BUILT_SOURCES += shared-glapi/glapi_mapi_tmp.h
@@ -100,7 +111,7 @@ shared_glapi_test_LDADD = \
 endif
 
 if REGEN_SOURCES
-shared-glapi/glapi_mapi_tmp.h : glapi/gen/gl_and_es_API.xml $(glapi_gen_mapi_deps)
+shared-glapi/glapi_mapi_tmp.h : glapi/gen/gl_and_es_API.xml $(shared_glapi_gen_mapi_deps)
 	$(MKDIR_GEN)
 	$(PYTHON_GEN) $(srcdir)/mapi_abi.py --printer shared-glapi \
 		$(srcdir)/glapi/gen/gl_and_es_API.xml > $@
@@ -201,10 +212,9 @@ es1api_libGLESv1_CM_la_LIBADD += shared-glapi/libglapi.la
 endif
 
 if REGEN_SOURCES
-es1api/glapi_mapi_tmp.h: glapi/gen/gl_and_es_API.xml $(glapi_gen_mapi_deps)
+es1api/glapi_mapi_tmp.h: $(glapi_gen_mapi_deps)
 	$(MKDIR_GEN)
-	$(PYTHON_GEN) $(srcdir)/mapi_abi.py --printer es1api \
-		$(srcdir)/glapi/gen/gl_and_es_API.xml > $@
+	$(glapi_gen_mapi) glesv1 $(glapi_gen_gl_xml) > $@
 endif
 
 if HAVE_OPENGL_ES2
@@ -248,10 +258,9 @@ es2api_libGLESv2_la_LIBADD += shared-glapi/libglapi.la
 endif
 
 if REGEN_SOURCES
-es2api/glapi_mapi_tmp.h: glapi/gen/gl_and_es_API.xml $(glapi_gen_mapi_deps)
+es2api/glapi_mapi_tmp.h: $(glapi_gen_mapi_deps)
 	$(MKDIR_GEN)
-	$(PYTHON_GEN) $(srcdir)/mapi_abi.py --printer es2api \
-		$(srcdir)/glapi/gen/gl_and_es_API.xml > $@
+	$(glapi_gen_mapi) glesv2 $(glapi_gen_gl_xml) > $@
 endif
 
 include $(top_srcdir)/install-lib-links.mk

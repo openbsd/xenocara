@@ -159,9 +159,7 @@ am__libgallium_la_SOURCES_DIST = cso_cache/cso_cache.c \
 	hud/hud_nic.c hud/hud_cpufreq.c hud/hud_diskstat.c \
 	hud/hud_sensors_temp.c hud/hud_driver_query.c hud/hud_fps.c \
 	hud/hud_private.h indices/u_indices.h indices/u_indices_priv.h \
-	indices/u_primconvert.c indices/u_primconvert.h \
-	os/os_memory_aligned.h os/os_memory_debug.h \
-	os/os_memory_stdc.h os/os_memory.h os/os_mman.h \
+	indices/u_primconvert.c indices/u_primconvert.h os/os_mman.h \
 	os/os_process.c os/os_process.h os/os_thread.h \
 	pipebuffer/pb_buffer_fenced.c pipebuffer/pb_buffer_fenced.h \
 	pipebuffer/pb_buffer.h pipebuffer/pb_buffer_malloc.c \
@@ -232,11 +230,11 @@ am__libgallium_la_SOURCES_DIST = cso_cache/cso_cache.c \
 	util/u_helpers.h util/u_idalloc.c util/u_idalloc.h \
 	util/u_index_modify.c util/u_index_modify.h util/u_inlines.h \
 	util/u_linear.c util/u_linear.h util/u_log.c util/u_log.h \
-	util/u_memory.h util/u_mm.c util/u_mm.h util/u_network.c \
-	util/u_network.h util/u_pack_color.h util/u_pointer.h \
-	util/u_prim.h util/u_prim.c util/u_prim_restart.c \
-	util/u_prim_restart.h util/u_pstipple.c util/u_pstipple.h \
-	util/u_pwr8.h util/u_range.h util/u_rect.h util/u_resource.c \
+	util/u_mm.c util/u_mm.h util/u_network.c util/u_network.h \
+	util/u_pack_color.h util/u_pointer.h util/u_prim.h \
+	util/u_prim.c util/u_prim_restart.c util/u_prim_restart.h \
+	util/u_pstipple.c util/u_pstipple.h util/u_pwr8.h \
+	util/u_range.h util/u_rect.h util/u_resource.c \
 	util/u_resource.h util/u_ringbuffer.c util/u_ringbuffer.h \
 	util/u_sampler.c util/u_sampler.h util/u_screen.c \
 	util/u_screen.h util/u_simple_shaders.c \
@@ -262,9 +260,9 @@ am__libgallium_la_SOURCES_DIST = cso_cache/cso_cache.c \
 	gallivm/lp_bld_conv.h gallivm/lp_bld_debug.cpp \
 	gallivm/lp_bld_debug.h gallivm/lp_bld_flow.c \
 	gallivm/lp_bld_flow.h gallivm/lp_bld_format_aos_array.c \
-	gallivm/lp_bld_format_aos.c gallivm/lp_bld_format_cached.c \
-	gallivm/lp_bld_format_float.c gallivm/lp_bld_format.c \
-	gallivm/lp_bld_format.h gallivm/lp_bld_format_soa.c \
+	gallivm/lp_bld_format_aos.c gallivm/lp_bld_format_float.c \
+	gallivm/lp_bld_format.c gallivm/lp_bld_format.h \
+	gallivm/lp_bld_format_soa.c gallivm/lp_bld_format_s3tc.c \
 	gallivm/lp_bld_format_srgb.c gallivm/lp_bld_format_yuv.c \
 	gallivm/lp_bld_gather.c gallivm/lp_bld_gather.h \
 	gallivm/lp_bld.h gallivm/lp_bld_init.c gallivm/lp_bld_init.h \
@@ -371,9 +369,9 @@ am__objects_7 = gallivm/lp_bld_arit.lo gallivm/lp_bld_arit_overflow.lo \
 	gallivm/lp_bld_const.lo gallivm/lp_bld_conv.lo \
 	gallivm/lp_bld_debug.lo gallivm/lp_bld_flow.lo \
 	gallivm/lp_bld_format_aos_array.lo \
-	gallivm/lp_bld_format_aos.lo gallivm/lp_bld_format_cached.lo \
-	gallivm/lp_bld_format_float.lo gallivm/lp_bld_format.lo \
-	gallivm/lp_bld_format_soa.lo gallivm/lp_bld_format_srgb.lo \
+	gallivm/lp_bld_format_aos.lo gallivm/lp_bld_format_float.lo \
+	gallivm/lp_bld_format.lo gallivm/lp_bld_format_soa.lo \
+	gallivm/lp_bld_format_s3tc.lo gallivm/lp_bld_format_srgb.lo \
 	gallivm/lp_bld_format_yuv.lo gallivm/lp_bld_gather.lo \
 	gallivm/lp_bld_init.lo gallivm/lp_bld_intr.lo \
 	gallivm/lp_bld_logic.lo gallivm/lp_bld_misc.lo \
@@ -944,10 +942,6 @@ C_SOURCES := \
 	indices/u_indices_priv.h \
 	indices/u_primconvert.c \
 	indices/u_primconvert.h \
-	os/os_memory_aligned.h \
-	os/os_memory_debug.h \
-	os/os_memory_stdc.h \
-	os/os_memory.h \
 	os/os_mman.h \
 	os/os_process.c \
 	os/os_process.h \
@@ -1132,7 +1126,6 @@ C_SOURCES := \
 	util/u_linear.h \
 	util/u_log.c \
 	util/u_log.h \
-	util/u_memory.h \
 	util/u_mm.c \
 	util/u_mm.h \
 	util/u_network.c \
@@ -1266,11 +1259,11 @@ GALLIVM_SOURCES := \
 	gallivm/lp_bld_flow.h \
 	gallivm/lp_bld_format_aos_array.c \
 	gallivm/lp_bld_format_aos.c \
-	gallivm/lp_bld_format_cached.c \
 	gallivm/lp_bld_format_float.c \
 	gallivm/lp_bld_format.c \
 	gallivm/lp_bld_format.h \
 	gallivm/lp_bld_format_soa.c \
+	gallivm/lp_bld_format_s3tc.c \
 	gallivm/lp_bld_format_srgb.c \
 	gallivm/lp_bld_format_yuv.c \
 	gallivm/lp_bld_gather.c \
@@ -1926,13 +1919,13 @@ gallivm/lp_bld_format_aos_array.lo: gallivm/$(am__dirstamp) \
 	gallivm/$(DEPDIR)/$(am__dirstamp)
 gallivm/lp_bld_format_aos.lo: gallivm/$(am__dirstamp) \
 	gallivm/$(DEPDIR)/$(am__dirstamp)
-gallivm/lp_bld_format_cached.lo: gallivm/$(am__dirstamp) \
-	gallivm/$(DEPDIR)/$(am__dirstamp)
 gallivm/lp_bld_format_float.lo: gallivm/$(am__dirstamp) \
 	gallivm/$(DEPDIR)/$(am__dirstamp)
 gallivm/lp_bld_format.lo: gallivm/$(am__dirstamp) \
 	gallivm/$(DEPDIR)/$(am__dirstamp)
 gallivm/lp_bld_format_soa.lo: gallivm/$(am__dirstamp) \
+	gallivm/$(DEPDIR)/$(am__dirstamp)
+gallivm/lp_bld_format_s3tc.lo: gallivm/$(am__dirstamp) \
 	gallivm/$(DEPDIR)/$(am__dirstamp)
 gallivm/lp_bld_format_srgb.lo: gallivm/$(am__dirstamp) \
 	gallivm/$(DEPDIR)/$(am__dirstamp)
@@ -2145,8 +2138,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@gallivm/$(DEPDIR)/lp_bld_format.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@gallivm/$(DEPDIR)/lp_bld_format_aos.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@gallivm/$(DEPDIR)/lp_bld_format_aos_array.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@gallivm/$(DEPDIR)/lp_bld_format_cached.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@gallivm/$(DEPDIR)/lp_bld_format_float.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@gallivm/$(DEPDIR)/lp_bld_format_s3tc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@gallivm/$(DEPDIR)/lp_bld_format_soa.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@gallivm/$(DEPDIR)/lp_bld_format_srgb.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@gallivm/$(DEPDIR)/lp_bld_format_yuv.Plo@am__quote@

@@ -111,9 +111,9 @@ CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 libsvgadrm_la_LIBADD =
 am__objects_1 = pb_buffer_simple_fenced.lo vmw_buffer.lo \
-	vmw_context.lo vmw_fence.lo vmw_screen.lo vmw_screen_dri.lo \
-	vmw_screen_ioctl.lo vmw_screen_pools.lo vmw_screen_svga.lo \
-	vmw_surface.lo vmw_shader.lo vmw_query.lo
+	vmw_context.lo vmw_fence.lo vmw_msg.lo vmw_screen.lo \
+	vmw_screen_dri.lo vmw_screen_ioctl.lo vmw_screen_pools.lo \
+	vmw_screen_svga.lo vmw_surface.lo vmw_shader.lo vmw_query.lo
 am_libsvgadrm_la_OBJECTS = $(am__objects_1)
 libsvgadrm_la_OBJECTS = $(am_libsvgadrm_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -495,6 +495,8 @@ C_SOURCES := \
 	vmw_fence.c \
 	vmw_fence.h \
 	vmwgfx_drm.h \
+	vmw_msg.c \
+	vmw_msg.h \
 	vmw_screen.c \
 	vmw_screen_dri.c \
 	vmw_screen.h \
@@ -640,6 +642,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vmw_buffer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vmw_context.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vmw_fence.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vmw_msg.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vmw_query.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vmw_screen.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vmw_screen_dri.Plo@am__quote@

@@ -174,9 +174,10 @@ am__objects_2 = clif/clif_dump.lo common/v3d_debug.lo \
 	compiler/vir_register_allocate.lo compiler/vir_to_qpu.lo \
 	compiler/qpu_schedule.lo compiler/qpu_validate.lo \
 	compiler/v3d33_tex.lo compiler/v3d33_vpm_setup.lo \
-	compiler/v3d40_tex.lo compiler/v3d_nir_lower_io.lo \
-	compiler/v3d_nir_lower_txf_ms.lo qpu/qpu_disasm.lo \
-	qpu/qpu_instr.lo qpu/qpu_pack.lo
+	compiler/v3d40_tex.lo \
+	compiler/v3d_nir_lower_image_load_store.lo \
+	compiler/v3d_nir_lower_io.lo compiler/v3d_nir_lower_txf_ms.lo \
+	qpu/qpu_disasm.lo qpu/qpu_instr.lo qpu/qpu_pack.lo
 am_libbroadcom_la_OBJECTS = $(am__objects_2)
 libbroadcom_la_OBJECTS = $(am_libbroadcom_la_OBJECTS)
 libbroadcom_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
@@ -595,6 +596,7 @@ AM_CPPFLAGS = \
 	-I$(top_builddir)/src \
 	-I$(top_srcdir)/src \
 	-I$(top_builddir)/src/compiler/nir \
+	-I$(top_srcdir)/src/compiler/nir \
 	-I$(top_srcdir)/src/broadcom/ \
 	-I$(top_srcdir)/src/broadcom/cle \
 	-I$(top_srcdir)/src/broadcom/include \
@@ -623,9 +625,11 @@ BROADCOM_FILES = \
 	clif/clif_dump.c \
 	clif/clif_dump.h \
 	clif/clif_private.h \
+	common/v3d_cpu_tiling.h \
 	common/v3d_debug.c \
 	common/v3d_debug.h \
 	common/v3d_device_info.h \
+	common/v3d_limits.h \
 	common/v3d_macros.h \
 	compiler/nir_to_vir.c \
 	compiler/vir.c \
@@ -643,6 +647,7 @@ BROADCOM_FILES = \
 	compiler/v3d33_vpm_setup.c \
 	compiler/v3d40_tex.c \
 	compiler/v3d_compiler.h \
+	compiler/v3d_nir_lower_image_load_store.c \
 	compiler/v3d_nir_lower_io.c \
 	compiler/v3d_nir_lower_txf_ms.c \
 	qpu/qpu_disasm.c \
@@ -850,6 +855,8 @@ compiler/v3d33_vpm_setup.lo: compiler/$(am__dirstamp) \
 	compiler/$(DEPDIR)/$(am__dirstamp)
 compiler/v3d40_tex.lo: compiler/$(am__dirstamp) \
 	compiler/$(DEPDIR)/$(am__dirstamp)
+compiler/v3d_nir_lower_image_load_store.lo: compiler/$(am__dirstamp) \
+	compiler/$(DEPDIR)/$(am__dirstamp)
 compiler/v3d_nir_lower_io.lo: compiler/$(am__dirstamp) \
 	compiler/$(DEPDIR)/$(am__dirstamp)
 compiler/v3d_nir_lower_txf_ms.lo: compiler/$(am__dirstamp) \
@@ -936,6 +943,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/v3d33_tex.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/v3d33_vpm_setup.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/v3d40_tex.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/v3d_nir_lower_image_load_store.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/v3d_nir_lower_io.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/v3d_nir_lower_txf_ms.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/vir.Plo@am__quote@

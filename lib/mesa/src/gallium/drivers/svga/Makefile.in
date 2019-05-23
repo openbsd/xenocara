@@ -115,7 +115,7 @@ libsvga_la_LIBADD =
 am__dirstamp = $(am__leading_dot)dirstamp
 am__objects_1 = svga_cmd.lo svga_cmd_vgpu10.lo svga_context.lo \
 	svga_draw_arrays.lo svga_draw.lo svga_draw_elements.lo \
-	svga_format.lo svga_link.lo svga_msg.lo svga_pipe_blend.lo \
+	svga_format.lo svga_link.lo svga_pipe_blend.lo \
 	svga_pipe_blit.lo svga_pipe_clear.lo svga_pipe_constants.lo \
 	svga_pipe_depthstencil.lo svga_pipe_draw.lo svga_pipe_flush.lo \
 	svga_pipe_fs.lo svga_pipe_gs.lo svga_pipe_misc.lo \
@@ -523,8 +523,6 @@ C_SOURCES := \
 	svga_hw_reg.h \
 	svga_link.c \
 	svga_link.h \
-	svga_msg.c \
-	svga_msg.h \
 	svga_mksstats.h \
 	svga_pipe_blend.c \
 	svga_pipe_blit.c \
@@ -771,7 +769,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/svga_draw_elements.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/svga_format.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/svga_link.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/svga_msg.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/svga_pipe_blend.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/svga_pipe_blit.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/svga_pipe_clear.Plo@am__quote@

@@ -1,9 +1,9 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.25 2019/03/13 01:20:50 deraadt Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.26 2019/05/23 05:33:19 jsg Exp $
 
 .include <bsd.own.mk>
 .include <bsd.xconf.mk>
 
-SHARED_LIBS=	EGL 1.1 gbm 0.3 glapi 0.2 GL 17.1 GLESv1_CM 1.0 GLESv2 1.2 \
+SHARED_LIBS=	EGL 1.1 gbm 0.4 glapi 0.2 GL 17.1 GLESv1_CM 2.0 GLESv2 2.0 \
 		OSMesa 11.0
 
 DRI_DRIVERS=		swrast
@@ -33,6 +33,7 @@ CONFIGURE_ARGS=		--with-dri-drivers=${DRI_DRIVERS} \
 			--enable-osmesa \
 			--enable-gbm \
 			--enable-texture-float \
+			--enable-autotools \
 			--with-platforms="x11,drm" \
 			--prefix=${X11BASE} \
 			--with-dri-driverdir=${X11BASE}/lib/modules/dri \

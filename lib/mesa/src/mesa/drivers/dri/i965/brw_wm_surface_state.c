@@ -156,7 +156,7 @@ brw_emit_surface_state(struct brw_context *brw,
    struct isl_surf *aux_surf = NULL;
    uint64_t aux_offset = 0;
    struct brw_bo *clear_bo = NULL;
-   uint32_t clear_offset = 0;
+   uint64_t clear_offset = 0;
 
    if (aux_usage != ISL_AUX_USAGE_NONE) {
       aux_surf = &mt->aux_buf->surf;
@@ -420,6 +420,14 @@ brw_get_texture_swizzle(const struct gl_context *ctx,
       }
       break;
    case GL_RED:
+      if (img->TexFormat == MESA_FORMAT_R_SRGB8) {
+         swizzles[0] = SWIZZLE_X;
+         swizzles[1] = SWIZZLE_ZERO;
+         swizzles[2] = SWIZZLE_ZERO;
+         swizzles[3] = SWIZZLE_ONE;
+         break;
+      }
+      /* fallthrough */
    case GL_RG:
    case GL_RGB:
       if (_mesa_get_format_bits(img->TexFormat, GL_ALPHA_BITS) > 0 ||
@@ -1673,6 +1681,11 @@ brw_upload_cs_work_groups_surface(struct brw_context *brw)
                                     ISL_FORMAT_RAW,
                                     3 * sizeof(GLuint), 1,
                                     RELOC_WRITE);
+
+      /* The state buffer now holds a reference to our upload, drop ours. */
+      if (bo != brw->compute.num_work_groups_bo)
+         brw_bo_unreference(bo);
+
       brw->ctx.NewDriverState |= BRW_NEW_SURFACES;
    }
 }

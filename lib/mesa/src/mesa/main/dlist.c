@@ -962,6 +962,8 @@ make_list(GLuint name, GLuint count)
    dlist->Name = name;
    dlist->Head = malloc(sizeof(Node) * count);
    dlist->Head[0].opcode = OPCODE_END_OF_LIST;
+   /* All InstSize[] entries must be non-zero */
+   InstSize[OPCODE_END_OF_LIST] = 1;
    return dlist;
 }
 
@@ -2753,6 +2755,7 @@ save_Fogiv(GLenum pname, const GLint *params)
    case GL_FOG_START:
    case GL_FOG_END:
    case GL_FOG_INDEX:
+   case GL_FOG_COORDINATE_SOURCE:
       p[0] = (GLfloat) *params;
       p[1] = 0.0f;
       p[2] = 0.0f;

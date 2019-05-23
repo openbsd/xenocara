@@ -37,6 +37,7 @@
 #include "eglcurrent.h"
 #include "eglsurface.h"
 #include "egllog.h"
+#include "util/macros.h"
 
 
 /**
@@ -177,9 +178,12 @@ _eglParseContextAttribList(_EGLContext *ctx, _EGLDisplay *dpy,
           *     is supported for OpenGL contexts, and requesting a
           *     forward-compatible context for OpenGL versions less than 3.0
           *     will generate an error."
+          *
+          * Note: since the forward-compatible flag can be set more than one way,
+          *       the OpenGL version check is performed once, below.
           */
          if ((val & EGL_CONTEXT_OPENGL_FORWARD_COMPATIBLE_BIT_KHR) &&
-             (api != EGL_OPENGL_API || ctx->ClientMajorVersion < 3)) {
+              api != EGL_OPENGL_API) {
             err = EGL_BAD_ATTRIBUTE;
             break;
          }

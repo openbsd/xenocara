@@ -1415,8 +1415,6 @@ dri2_initialize_wayland_drm(_EGLDriver *drv, _EGLDisplay *disp)
    _EGLDevice *dev;
    struct dri2_egl_display *dri2_dpy;
 
-   loader_set_logger(_eglLog);
-
    dri2_dpy = calloc(1, sizeof *dri2_dpy);
    if (!dri2_dpy)
       return _eglError(EGL_BAD_ALLOC, "eglInitialize");
@@ -2077,8 +2075,6 @@ dri2_initialize_wayland_swrast(_EGLDriver *drv, _EGLDisplay *disp)
 {
    _EGLDevice *dev;
    struct dri2_egl_display *dri2_dpy;
-
-   loader_set_logger(_eglLog);
 
    dri2_dpy = calloc(1, sizeof *dri2_dpy);
    if (!dri2_dpy)

@@ -28,6 +28,7 @@
 
 #include "common/gen_l3_config.h"
 #include "common/gen_sample_positions.h"
+#include "nir/nir_xfb_info.h"
 #include "vk_util.h"
 #include "vk_format_info.h"
 
@@ -105,9 +106,7 @@ emit_vertex_input(struct anv_pipeline *pipeline,
       __builtin_popcount(elements_double) / 2;
 
    const uint32_t total_elems =
-      elem_count + needs_svgs_elem + vs_prog_data->uses_drawid;
-   if (total_elems == 0)
-      return;
+      MAX2(1, elem_count + needs_svgs_elem + vs_prog_data->uses_drawid);
 
    uint32_t *p;
 
@@ -1056,7 +1055,6 @@ emit_cb_state(struct anv_pipeline *pipeline,
 #endif
 
    GENX(BLEND_STATE_pack)(NULL, pipeline->blend_state.map, &blend_state);
-   anv_state_flush(device, pipeline->blend_state);
 
    anv_batch_emit(&pipeline->batch, GENX(3DSTATE_BLEND_STATE_POINTERS), bsp) {
       bsp.BlendStatePointer      = pipeline->blend_state.offset;
@@ -1121,10 +1119,8 @@ emit_3dstate_clip(struct anv_pipeline *pipeline,
       clip.FrontWinding            = vk_to_gen_front_face[rs_info->frontFace];
       clip.CullMode                = vk_to_gen_cullmode[rs_info->cullMode];
       clip.ViewportZClipTestEnable = !pipeline->depth_clamp_enable;
-      if (last) {
-         clip.UserClipDistanceClipTestEnableBitmask = last->clip_distance_mask;
-         clip.UserClipDistanceCullTestEnableBitmask = last->cull_distance_mask;
-      }
+      clip.UserClipDistanceClipTestEnableBitmask = last->clip_distance_mask;
+      clip.UserClipDistanceCullTestEnableBitmask = last->cull_distance_mask;
 #else
       clip.NonPerspectiveBarycentricEnable = wm_prog_data ?
          (wm_prog_data->barycentric_interp_modes &
@@ -1137,9 +1133,148 @@ static void
 emit_3dstate_streamout(struct anv_pipeline *pipeline,
                        const VkPipelineRasterizationStateCreateInfo *rs_info)
 {
+#if GEN_GEN >= 8
+   const struct brw_vue_prog_data *prog_data =
+      anv_pipeline_get_last_vue_prog_data(pipeline);
+   const struct brw_vue_map *vue_map = &prog_data->vue_map;
+#endif
+
+   nir_xfb_info *xfb_info;
+   if (anv_pipeline_has_stage(pipeline, MESA_SHADER_GEOMETRY))
+      xfb_info = pipeline->shaders[MESA_SHADER_GEOMETRY]->xfb_info;
+   else if (anv_pipeline_has_stage(pipeline, MESA_SHADER_TESS_EVAL))
+      xfb_info = pipeline->shaders[MESA_SHADER_TESS_EVAL]->xfb_info;
+   else
+      xfb_info = pipeline->shaders[MESA_SHADER_VERTEX]->xfb_info;
+
+   pipeline->xfb_used = xfb_info ? xfb_info->buffers_written : 0;
+
    anv_batch_emit(&pipeline->batch, GENX(3DSTATE_STREAMOUT), so) {
       so.RenderingDisable = rs_info->rasterizerDiscardEnable;
+
+#if GEN_GEN >= 8
+      if (xfb_info) {
+         so.SOFunctionEnable = true;
+         so.SOStatisticsEnable = true;
+
+         const VkPipelineRasterizationStateStreamCreateInfoEXT *stream_info =
+            vk_find_struct_const(rs_info, PIPELINE_RASTERIZATION_STATE_STREAM_CREATE_INFO_EXT);
+         so.RenderStreamSelect = stream_info ?
+                                 stream_info->rasterizationStream : 0;
+
+         so.Buffer0SurfacePitch = xfb_info->strides[0];
+         so.Buffer1SurfacePitch = xfb_info->strides[1];
+         so.Buffer2SurfacePitch = xfb_info->strides[2];
+         so.Buffer3SurfacePitch = xfb_info->strides[3];
+
+         int urb_entry_read_offset = 0;
+         int urb_entry_read_length =
+            (prog_data->vue_map.num_slots + 1) / 2 - urb_entry_read_offset;
+
+         /* We always read the whole vertex.  This could be reduced at some
+          * point by reading less and offsetting the register index in the
+          * SO_DECLs.
+          */
+         so.Stream0VertexReadOffset = urb_entry_read_offset;
+         so.Stream0VertexReadLength = urb_entry_read_length - 1;
+         so.Stream1VertexReadOffset = urb_entry_read_offset;
+         so.Stream1VertexReadLength = urb_entry_read_length - 1;
+         so.Stream2VertexReadOffset = urb_entry_read_offset;
+         so.Stream2VertexReadLength = urb_entry_read_length - 1;
+         so.Stream3VertexReadOffset = urb_entry_read_offset;
+         so.Stream3VertexReadLength = urb_entry_read_length - 1;
+      }
+#endif /* GEN_GEN >= 8 */
    }
+
+#if GEN_GEN >= 8
+   if (xfb_info) {
+      struct GENX(SO_DECL) so_decl[MAX_XFB_STREAMS][128];
+      int next_offset[MAX_XFB_BUFFERS] = {0, 0, 0, 0};
+      int decls[MAX_XFB_STREAMS] = {0, 0, 0, 0};
+
+      memset(so_decl, 0, sizeof(so_decl));
+
+      for (unsigned i = 0; i < xfb_info->output_count; i++) {
+         const nir_xfb_output_info *output = &xfb_info->outputs[i];
+         unsigned buffer = output->buffer;
+         unsigned stream = xfb_info->buffer_to_stream[buffer];
+
+         /* Our hardware is unusual in that it requires us to program SO_DECLs
+          * for fake "hole" components, rather than simply taking the offset
+          * for each real varying.  Each hole can have size 1, 2, 3, or 4; we
+          * program as many size = 4 holes as we can, then a final hole to
+          * accommodate the final 1, 2, or 3 remaining.
+          */
+         int hole_dwords = (output->offset - next_offset[buffer]) / 4;
+         while (hole_dwords > 0) {
+            so_decl[stream][decls[stream]++] = (struct GENX(SO_DECL)) {
+               .HoleFlag = 1,
+               .OutputBufferSlot = buffer,
+               .ComponentMask = (1 << MIN2(hole_dwords, 4)) - 1,
+            };
+            hole_dwords -= 4;
+         }
+
+         int varying = output->location;
+         uint8_t component_mask = output->component_mask;
+         /* VARYING_SLOT_PSIZ contains three scalar fields packed together:
+          * - VARYING_SLOT_LAYER    in VARYING_SLOT_PSIZ.y
+          * - VARYING_SLOT_VIEWPORT in VARYING_SLOT_PSIZ.z
+          * - VARYING_SLOT_PSIZ     in VARYING_SLOT_PSIZ.w
+          */
+         if (varying == VARYING_SLOT_LAYER) {
+            varying = VARYING_SLOT_PSIZ;
+            component_mask = 1 << 1; // SO_DECL_COMPMASK_Y
+         } else if (varying == VARYING_SLOT_VIEWPORT) {
+            varying = VARYING_SLOT_PSIZ;
+            component_mask = 1 << 2; // SO_DECL_COMPMASK_Z
+         } else if (varying == VARYING_SLOT_PSIZ) {
+            component_mask = 1 << 3; // SO_DECL_COMPMASK_W
+         }
+
+         next_offset[buffer] = output->offset +
+                               __builtin_popcount(component_mask) * 4;
+
+         so_decl[stream][decls[stream]++] = (struct GENX(SO_DECL)) {
+            .OutputBufferSlot = buffer,
+            .RegisterIndex = vue_map->varying_to_slot[varying],
+            .ComponentMask = component_mask,
+         };
+      }
+
+      int max_decls = 0;
+      for (unsigned s = 0; s < MAX_XFB_STREAMS; s++)
+         max_decls = MAX2(max_decls, decls[s]);
+
+      uint8_t sbs[MAX_XFB_STREAMS] = { };
+      for (unsigned b = 0; b < MAX_XFB_BUFFERS; b++) {
+         if (xfb_info->buffers_written & (1 << b))
+            sbs[xfb_info->buffer_to_stream[b]] |= 1 << b;
+      }
+
+      uint32_t *dw = anv_batch_emitn(&pipeline->batch, 3 + 2 * max_decls,
+                                     GENX(3DSTATE_SO_DECL_LIST),
+                                     .StreamtoBufferSelects0 = sbs[0],
+                                     .StreamtoBufferSelects1 = sbs[1],
+                                     .StreamtoBufferSelects2 = sbs[2],
+                                     .StreamtoBufferSelects3 = sbs[3],
+                                     .NumEntries0 = decls[0],
+                                     .NumEntries1 = decls[1],
+                                     .NumEntries2 = decls[2],
+                                     .NumEntries3 = decls[3]);
+
+      for (int i = 0; i < max_decls; i++) {
+         GENX(SO_DECL_ENTRY_pack)(NULL, dw + 3 + i * 2,
+            &(struct GENX(SO_DECL_ENTRY)) {
+               .Stream0Decl = so_decl[0][i],
+               .Stream1Decl = so_decl[1][i],
+               .Stream2Decl = so_decl[2][i],
+               .Stream3Decl = so_decl[3][i],
+            });
+      }
+   }
+#endif /* GEN_GEN >= 8 */
 }
 
 static uint32_t
@@ -1203,7 +1338,12 @@ emit_3dstate_vs(struct anv_pipeline *pipeline)
       vs.SingleVertexDispatch       = false;
 #endif
       vs.VectorMaskEnable           = false;
-      vs.SamplerCount               = get_sampler_count(vs_bin);
+      /* WA_1606682166:
+       * Incorrect TDL's SSP address shift in SARB for 16:6 & 18:8 modes.
+       * Disable the Sampler state prefetch functionality in the SARB by
+       * programming 0xB000[30] to '1'.
+       */
+      vs.SamplerCount               = GEN_GEN == 11 ? 0 : get_sampler_count(vs_bin);
      /* Gen 11 workarounds table #2056 WABTPPrefetchDisable suggests to
       * disable prefetching of binding tables on A0 and B0 steppings.
       * TODO: Revisit this WA on newer steppings.
@@ -1278,8 +1418,8 @@ emit_3dstate_hs_te_ds(struct anv_pipeline *pipeline,
       hs.Enable = true;
       hs.StatisticsEnable = true;
       hs.KernelStartPointer = tcs_bin->kernel.offset;
-
-      hs.SamplerCount = get_sampler_count(tcs_bin);
+      /* WA_1606682166 */
+      hs.SamplerCount = GEN_GEN == 11 ? 0 : get_sampler_count(tcs_bin);
       /* Gen 11 workarounds table #2056 WABTPPrefetchDisable */
       hs.BindingTableEntryCount = GEN_GEN == 11 ? 0 : get_binding_table_entry_count(tcs_bin);
       hs.MaximumNumberofThreads = devinfo->max_tcs_threads - 1;
@@ -1296,17 +1436,17 @@ emit_3dstate_hs_te_ds(struct anv_pipeline *pipeline,
          get_scratch_address(pipeline, MESA_SHADER_TESS_CTRL, tcs_bin);
    }
 
-   const VkPipelineTessellationDomainOriginStateCreateInfoKHR *domain_origin_state =
-      tess_info ? vk_find_struct_const(tess_info, PIPELINE_TESSELLATION_DOMAIN_ORIGIN_STATE_CREATE_INFO_KHR) : NULL;
+   const VkPipelineTessellationDomainOriginStateCreateInfo *domain_origin_state =
+      tess_info ? vk_find_struct_const(tess_info, PIPELINE_TESSELLATION_DOMAIN_ORIGIN_STATE_CREATE_INFO) : NULL;
 
-   VkTessellationDomainOriginKHR uv_origin =
+   VkTessellationDomainOrigin uv_origin =
       domain_origin_state ? domain_origin_state->domainOrigin :
-                            VK_TESSELLATION_DOMAIN_ORIGIN_UPPER_LEFT_KHR;
+                            VK_TESSELLATION_DOMAIN_ORIGIN_UPPER_LEFT;
 
    anv_batch_emit(&pipeline->batch, GENX(3DSTATE_TE), te) {
       te.Partitioning = tes_prog_data->partitioning;
 
-      if (uv_origin == VK_TESSELLATION_DOMAIN_ORIGIN_LOWER_LEFT_KHR) {
+      if (uv_origin == VK_TESSELLATION_DOMAIN_ORIGIN_LOWER_LEFT) {
          te.OutputTopology = tes_prog_data->output_topology;
       } else {
          /* When the origin is upper-left, we have to flip the winding order */
@@ -1329,8 +1469,8 @@ emit_3dstate_hs_te_ds(struct anv_pipeline *pipeline,
       ds.Enable = true;
       ds.StatisticsEnable = true;
       ds.KernelStartPointer = tes_bin->kernel.offset;
-
-      ds.SamplerCount = get_sampler_count(tes_bin);
+      /* WA_1606682166 */
+      ds.SamplerCount = GEN_GEN == 11 ? 0 : get_sampler_count(tes_bin);
       /* Gen 11 workarounds table #2056 WABTPPrefetchDisable */
       ds.BindingTableEntryCount = GEN_GEN == 11 ? 0 : get_binding_table_entry_count(tes_bin);
       ds.MaximumNumberofThreads = devinfo->max_tes_threads - 1;
@@ -1388,7 +1528,8 @@ emit_3dstate_gs(struct anv_pipeline *pipeline)
 
       gs.SingleProgramFlow       = false;
       gs.VectorMaskEnable        = false;
-      gs.SamplerCount            = get_sampler_count(gs_bin);
+      /* WA_1606682166 */
+      gs.SamplerCount            = GEN_GEN == 11 ? 0 : get_sampler_count(gs_bin);
       /* Gen 11 workarounds table #2056 WABTPPrefetchDisable */
       gs.BindingTableEntryCount  = GEN_GEN == 11 ? 0 : get_binding_table_entry_count(gs_bin);
       gs.IncludeVertexHandles    = gs_prog_data->base.include_vue_handles;
@@ -1621,7 +1762,8 @@ emit_3dstate_ps(struct anv_pipeline *pipeline,
 
       ps.SingleProgramFlow          = false;
       ps.VectorMaskEnable           = true;
-      ps.SamplerCount               = get_sampler_count(fs_bin);
+      /* WA_1606682166 */
+      ps.SamplerCount               = GEN_GEN == 11 ? 0 : get_sampler_count(fs_bin);
       /* Gen 11 workarounds table #2056 WABTPPrefetchDisable */
       ps.BindingTableEntryCount     = GEN_GEN == 11 ? 0 : get_binding_table_entry_count(fs_bin);
       ps.PushConstantEnable         = wm_prog_data->base.nr_params > 0 ||
@@ -1945,17 +2087,41 @@ compute_pipeline_create(
       vfe.URBEntryAllocationSize = GEN_GEN <= 7 ? 0 : 2;
       vfe.CURBEAllocationSize    = vfe_curbe_allocation;
 
-      vfe.PerThreadScratchSpace = get_scratch_space(cs_bin);
-      vfe.ScratchSpaceBasePointer =
-         get_scratch_address(pipeline, MESA_SHADER_COMPUTE, cs_bin);
+      if (cs_bin->prog_data->total_scratch) {
+         if (GEN_GEN >= 8) {
+            /* Broadwell's Per Thread Scratch Space is in the range [0, 11]
+             * where 0 = 1k, 1 = 2k, 2 = 4k, ..., 11 = 2M.
+             */
+            vfe.PerThreadScratchSpace =
+               ffs(cs_bin->prog_data->total_scratch) - 11;
+         } else if (GEN_IS_HASWELL) {
+            /* Haswell's Per Thread Scratch Space is in the range [0, 10]
+             * where 0 = 2k, 1 = 4k, 2 = 8k, ..., 10 = 2M.
+             */
+            vfe.PerThreadScratchSpace =
+               ffs(cs_bin->prog_data->total_scratch) - 12;
+         } else {
+            /* IVB and BYT use the range [0, 11] to mean [1kB, 12kB]
+             * where 0 = 1kB, 1 = 2kB, 2 = 3kB, ..., 11 = 12kB.
+             */
+            vfe.PerThreadScratchSpace =
+               cs_bin->prog_data->total_scratch / 1024 - 1;
+         }
+         vfe.ScratchSpaceBasePointer =
+            get_scratch_address(pipeline, MESA_SHADER_COMPUTE, cs_bin);
+      }
    }
 
    struct GENX(INTERFACE_DESCRIPTOR_DATA) desc = {
       .KernelStartPointer     = cs_bin->kernel.offset,
-
-      .SamplerCount           = get_sampler_count(cs_bin),
-      /* Gen 11 workarounds table #2056 WABTPPrefetchDisable */
-      .BindingTableEntryCount = GEN_GEN == 11 ? 0 : get_binding_table_entry_count(cs_bin),
+      /* WA_1606682166 */
+      .SamplerCount           = GEN_GEN == 11 ? 0 : get_sampler_count(cs_bin),
+      /* Gen 11 workarounds table #2056 WABTPPrefetchDisable
+       *
+       * We add 1 because the CS indirect parameters buffer isn't accounted
+       * for in bind_map.surface_count.
+       */
+      .BindingTableEntryCount = GEN_GEN == 11 ? 0 : 1 + MIN2(cs_bin->bind_map.surface_count, 30),
       .BarrierEnable          = cs_prog_data->uses_barrier,
       .SharedLocalMemorySize  =
          encode_slm_size(GEN_GEN, cs_prog_data->base.total_shared),

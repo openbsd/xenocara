@@ -136,6 +136,8 @@ nv50_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
       return 0;
    case PIPE_CAP_MAX_VERTEX_ATTRIB_STRIDE:
       return 2048;
+   case PIPE_CAP_MAX_VERTEX_ELEMENT_SRC_OFFSET:
+      return 2047;
    case PIPE_CAP_CONSTANT_BUFFER_OFFSET_ALIGNMENT:
       return 256;
    case PIPE_CAP_TEXTURE_BUFFER_OFFSET_ALIGNMENT:
@@ -152,6 +154,10 @@ nv50_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
       return (class_3d >= NVA3_3D_CLASS) ? 4 : 0;
    case PIPE_CAP_MAX_WINDOW_RECTANGLES:
       return NV50_MAX_WINDOW_RECTANGLES;
+   case PIPE_CAP_MAX_TEXTURE_UPLOAD_MEMORY_BUDGET:
+      return 16 * 1024 * 1024;
+   case PIPE_CAP_MAX_VARYINGS:
+      return 15;
 
    /* supported caps */
    case PIPE_CAP_TEXTURE_MIRROR_CLAMP:
@@ -211,6 +217,7 @@ nv50_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
    case PIPE_CAP_TGSI_CLOCK:
    case PIPE_CAP_CAN_BIND_CONST_BUFFER_AS_VERTEX:
    case PIPE_CAP_ALLOW_MAPPED_BUFFERS_DURING_EXECUTION:
+   case PIPE_CAP_DEST_SURFACE_SRGB_CONTROL:
       return 1;
    case PIPE_CAP_SEAMLESS_CUBE_MAP:
       return 1; /* class_3d >= NVA0_3D_CLASS; */
@@ -301,10 +308,14 @@ nv50_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
    case PIPE_CAP_CONSERVATIVE_RASTER_POST_DEPTH_COVERAGE:
    case PIPE_CAP_MAX_CONSERVATIVE_RASTER_SUBPIXEL_PRECISION_BIAS:
    case PIPE_CAP_PROGRAMMABLE_SAMPLE_LOCATIONS:
-   case PIPE_CAP_MAX_TEXTURE_UPLOAD_MEMORY_BUDGET:
    case PIPE_CAP_MAX_COMBINED_SHADER_BUFFERS:
    case PIPE_CAP_MAX_COMBINED_HW_ATOMIC_COUNTERS:
    case PIPE_CAP_MAX_COMBINED_HW_ATOMIC_COUNTER_BUFFERS:
+   case PIPE_CAP_SURFACE_SAMPLE_COUNT:
+   case PIPE_CAP_TGSI_ATOMFADD:
+   case PIPE_CAP_QUERY_PIPELINE_STATISTICS_SINGLE:
+   case PIPE_CAP_RGB_OVERRIDE_DST_ALPHA_BLEND:
+   case PIPE_CAP_GLSL_TESS_LEVELS_AS_INPUTS:
       return 0;
 
    case PIPE_CAP_VENDOR_ID:

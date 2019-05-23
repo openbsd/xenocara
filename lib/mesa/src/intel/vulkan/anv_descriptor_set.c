@@ -73,10 +73,10 @@ void anv_GetDescriptorSetLayoutSupport(
 
    bool supported = true;
    for (unsigned s = 0; s < MESA_SHADER_STAGES; s++) {
-      /* Our maximum binding table size is 250 and we need to reserve 8 for
-       * render targets.  240 is a nice round number.
+      /* Our maximum binding table size is 240 and we need to reserve 8 for
+       * render targets.
        */
-      if (surface_count[s] >= 240)
+      if (surface_count[s] >= MAX_BINDING_TABLE_SIZE - MAX_RTS)
          supported = false;
    }
 
@@ -479,12 +479,12 @@ void anv_DestroyDescriptorPool(
    if (!pool)
       return;
 
-   anv_state_stream_finish(&pool->surface_state_stream);
-
    list_for_each_entry_safe(struct anv_descriptor_set, set,
                             &pool->desc_sets, pool_link) {
       anv_descriptor_set_destroy(device, pool, set);
    }
+
+   anv_state_stream_finish(&pool->surface_state_stream);
 
    vk_free2(&device->alloc, pAllocator, pool);
 }
@@ -1012,7 +1012,7 @@ VkResult anv_CreateDescriptorUpdateTemplate(
 
    template->entry_count = pCreateInfo->descriptorUpdateEntryCount;
    for (uint32_t i = 0; i < template->entry_count; i++) {
-      const VkDescriptorUpdateTemplateEntryKHR *pEntry =
+      const VkDescriptorUpdateTemplateEntry *pEntry =
          &pCreateInfo->pDescriptorUpdateEntries[i];
 
       template->entries[i] = (struct anv_descriptor_template_entry) {

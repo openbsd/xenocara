@@ -14,6 +14,7 @@ C_SOURCES := \
 	si_compute_blit.c \
 	si_cp_dma.c \
 	si_debug.c \
+	si_debug_options.h \
 	si_descriptors.c \
 	si_dma.c \
 	si_dma_cs.c \
@@ -49,7 +50,6 @@ C_SOURCES := \
 	si_test_dma_perf.c \
 	si_texture.c \
 	si_uvd.c \
-	../radeon/r600_perfcounter.c \
 	../radeon/radeon_uvd.c \
 	../radeon/radeon_uvd.h \
 	../radeon/radeon_vcn_dec_jpeg.c \

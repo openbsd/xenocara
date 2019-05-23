@@ -128,8 +128,13 @@ static void
 anv_cmd_pipeline_state_finish(struct anv_cmd_buffer *cmd_buffer,
                               struct anv_cmd_pipeline_state *pipe_state)
 {
-   for (uint32_t i = 0; i < ARRAY_SIZE(pipe_state->push_descriptors); i++)
-      vk_free(&cmd_buffer->pool->alloc, pipe_state->push_descriptors[i]);
+   for (uint32_t i = 0; i < ARRAY_SIZE(pipe_state->push_descriptors); i++) {
+      if (pipe_state->push_descriptors[i]) {
+         anv_descriptor_set_layout_unref(cmd_buffer->device,
+             pipe_state->push_descriptors[i]->set.layout);
+         vk_free(&cmd_buffer->pool->alloc, pipe_state->push_descriptors[i]);
+      }
+   }
 }
 
 static void
@@ -375,6 +380,14 @@ anv_cmd_buffer_mark_image_written(struct anv_cmd_buffer *cmd_buffer,
                  cmd_buffer_mark_image_written,
                  cmd_buffer, image, aspect, aux_usage,
                  level, base_layer, layer_count);
+}
+
+void
+anv_cmd_emit_conditional_render_predicate(struct anv_cmd_buffer *cmd_buffer)
+{
+   anv_genX_call(&cmd_buffer->device->info,
+                 cmd_emit_conditional_render_predicate,
+                 cmd_buffer);
 }
 
 void anv_CmdBindPipeline(
@@ -645,6 +658,35 @@ void anv_CmdBindVertexBuffers(
    }
 }
 
+void anv_CmdBindTransformFeedbackBuffersEXT(
+    VkCommandBuffer                             commandBuffer,
+    uint32_t                                    firstBinding,
+    uint32_t                                    bindingCount,
+    const VkBuffer*                             pBuffers,
+    const VkDeviceSize*                         pOffsets,
+    const VkDeviceSize*                         pSizes)
+{
+   ANV_FROM_HANDLE(anv_cmd_buffer, cmd_buffer, commandBuffer);
+   struct anv_xfb_binding *xfb = cmd_buffer->state.xfb_bindings;
+
+   /* We have to defer setting up vertex buffer since we need the buffer
+    * stride from the pipeline. */
+
+   assert(firstBinding + bindingCount <= MAX_XFB_BUFFERS);
+   for (uint32_t i = 0; i < bindingCount; i++) {
+      if (pBuffers[i] == VK_NULL_HANDLE) {
+         xfb[firstBinding + i].buffer = NULL;
+      } else {
+         ANV_FROM_HANDLE(anv_buffer, buffer, pBuffers[i]);
+         xfb[firstBinding + i].buffer = buffer;
+         xfb[firstBinding + i].offset = pOffsets[i];
+         xfb[firstBinding + i].size =
+            anv_buffer_get_range(buffer, pOffsets[i],
+                                 pSizes ? pSizes[i] : VK_WHOLE_SIZE);
+      }
+   }
+}
+
 enum isl_format
 anv_isl_format_for_descriptor_type(VkDescriptorType type)
 {
@@ -671,8 +713,6 @@ anv_cmd_buffer_emit_dynamic(struct anv_cmd_buffer *cmd_buffer,
    state = anv_cmd_buffer_alloc_dynamic_state(cmd_buffer, size, alignment);
    memcpy(state.map, data, size);
 
-   anv_state_flush(cmd_buffer->device, state);
-
    VG(VALGRIND_CHECK_MEM_IS_DEFINED(state.map, size));
 
    return state;
@@ -691,8 +731,6 @@ anv_cmd_buffer_merge_dynamic(struct anv_cmd_buffer *cmd_buffer,
    p = state.map;
    for (uint32_t i = 0; i < dwords; i++)
       p[i] = a[i] | b[i];
-
-   anv_state_flush(cmd_buffer->device, state);
 
    VG(VALGRIND_CHECK_MEM_IS_DEFINED(p, dwords * 4));
 
@@ -754,8 +792,6 @@ anv_cmd_buffer_push_constants(struct anv_cmd_buffer *cmd_buffer,
    for (unsigned i = 0; i < prog_data->nr_params; i++)
       u32_map[i] = anv_push_constant_value(data, prog_data->param[i]);
 
-   anv_state_flush(cmd_buffer->device, state);
-
    return state;
 }
 
@@ -809,8 +845,6 @@ anv_cmd_buffer_cs_push_constants(struct anv_cmd_buffer *cmd_buffer)
          }
       }
    }
-
-   anv_state_flush(cmd_buffer->device, state);
 
    return state;
 }
@@ -928,10 +962,11 @@ anv_cmd_buffer_get_depth_stencil_view(const struct anv_cmd_buffer *cmd_buffer)
    return iview;
 }
 
-static struct anv_push_descriptor_set *
-anv_cmd_buffer_get_push_descriptor_set(struct anv_cmd_buffer *cmd_buffer,
-                                       VkPipelineBindPoint bind_point,
-                                       uint32_t set)
+static struct anv_descriptor_set *
+anv_cmd_buffer_push_descriptor_set(struct anv_cmd_buffer *cmd_buffer,
+                                   VkPipelineBindPoint bind_point,
+                                   struct anv_descriptor_set_layout *layout,
+                                   uint32_t _set)
 {
    struct anv_cmd_pipeline_state *pipe_state;
    if (bind_point == VK_PIPELINE_BIND_POINT_COMPUTE) {
@@ -942,19 +977,31 @@ anv_cmd_buffer_get_push_descriptor_set(struct anv_cmd_buffer *cmd_buffer,
    }
 
    struct anv_push_descriptor_set **push_set =
-      &pipe_state->push_descriptors[set];
+      &pipe_state->push_descriptors[_set];
 
    if (*push_set == NULL) {
-      *push_set = vk_alloc(&cmd_buffer->pool->alloc,
-                           sizeof(struct anv_push_descriptor_set), 8,
-                           VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      *push_set = vk_zalloc(&cmd_buffer->pool->alloc,
+                            sizeof(struct anv_push_descriptor_set), 8,
+                            VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (*push_set == NULL) {
          anv_batch_set_error(&cmd_buffer->batch, VK_ERROR_OUT_OF_HOST_MEMORY);
          return NULL;
       }
    }
 
-   return *push_set;
+   struct anv_descriptor_set *set = &(*push_set)->set;
+
+   if (set->layout != layout) {
+      if (set->layout)
+         anv_descriptor_set_layout_unref(cmd_buffer->device, set->layout);
+      anv_descriptor_set_layout_ref(layout);
+      set->layout = layout;
+   }
+   set->size = anv_descriptor_set_layout_size(layout);
+   set->buffer_count = layout->buffer_count;
+   set->buffer_views = (*push_set)->buffer_views;
+
+   return set;
 }
 
 void anv_CmdPushDescriptorSetKHR(
@@ -972,18 +1019,11 @@ void anv_CmdPushDescriptorSetKHR(
 
    struct anv_descriptor_set_layout *set_layout = layout->set[_set].layout;
 
-   struct anv_push_descriptor_set *push_set =
-      anv_cmd_buffer_get_push_descriptor_set(cmd_buffer,
-                                             pipelineBindPoint, _set);
-   if (!push_set)
+   struct anv_descriptor_set *set =
+      anv_cmd_buffer_push_descriptor_set(cmd_buffer, pipelineBindPoint,
+                                         set_layout, _set);
+   if (!set)
       return;
-
-   struct anv_descriptor_set *set = &push_set->set;
-
-   set->layout = set_layout;
-   set->size = anv_descriptor_set_layout_size(set_layout);
-   set->buffer_count = set_layout->buffer_count;
-   set->buffer_views = push_set->buffer_views;
 
    /* Go through the user supplied descriptors. */
    for (uint32_t i = 0; i < descriptorWriteCount; i++) {
@@ -1064,18 +1104,11 @@ void anv_CmdPushDescriptorSetWithTemplateKHR(
 
    struct anv_descriptor_set_layout *set_layout = layout->set[_set].layout;
 
-   struct anv_push_descriptor_set *push_set =
-      anv_cmd_buffer_get_push_descriptor_set(cmd_buffer,
-                                             template->bind_point, _set);
-   if (!push_set)
+   struct anv_descriptor_set *set =
+      anv_cmd_buffer_push_descriptor_set(cmd_buffer, template->bind_point,
+                                         set_layout, _set);
+   if (!set)
       return;
-
-   struct anv_descriptor_set *set = &push_set->set;
-
-   set->layout = set_layout;
-   set->size = anv_descriptor_set_layout_size(set_layout);
-   set->buffer_count = set_layout->buffer_count;
-   set->buffer_views = push_set->buffer_views;
 
    anv_descriptor_set_write_template(set,
                                      cmd_buffer->device,

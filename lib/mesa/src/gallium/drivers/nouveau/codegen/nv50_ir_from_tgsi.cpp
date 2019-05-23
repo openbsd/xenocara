@@ -968,6 +968,7 @@ static nv50_ir::operation translateOpcode(uint opcode)
    NV50_IR_OPCODE_CASE(ATOMUMAX, ATOM);
    NV50_IR_OPCODE_CASE(ATOMIMIN, ATOM);
    NV50_IR_OPCODE_CASE(ATOMIMAX, ATOM);
+   NV50_IR_OPCODE_CASE(ATOMFADD, ATOM);
 
    NV50_IR_OPCODE_CASE(TEX2, TEX);
    NV50_IR_OPCODE_CASE(TXB2, TXB);
@@ -1010,6 +1011,7 @@ static uint16_t opcodeToSubOp(uint opcode)
    case TGSI_OPCODE_ATOMIMIN: return NV50_IR_SUBOP_ATOM_MIN;
    case TGSI_OPCODE_ATOMUMAX: return NV50_IR_SUBOP_ATOM_MAX;
    case TGSI_OPCODE_ATOMIMAX: return NV50_IR_SUBOP_ATOM_MAX;
+   case TGSI_OPCODE_ATOMFADD: return NV50_IR_SUBOP_ATOM_ADD;
    case TGSI_OPCODE_IMUL_HI:
    case TGSI_OPCODE_UMUL_HI:
       return NV50_IR_SUBOP_MUL_HIGH;
@@ -1085,6 +1087,8 @@ public:
    };
    std::vector<MemoryFile> memoryFiles;
 
+   std::vector<bool> bufferAtomics;
+
 private:
    int inferSysValDirection(unsigned sn) const;
    bool scanDeclaration(const struct tgsi_full_declaration *);
@@ -1135,6 +1139,7 @@ bool Source::scanSource()
    //resources.resize(scan.file_max[TGSI_FILE_RESOURCE] + 1);
    tempArrayId.resize(scan.file_max[TGSI_FILE_TEMPORARY] + 1);
    memoryFiles.resize(scan.file_max[TGSI_FILE_MEMORY] + 1);
+   bufferAtomics.resize(scan.file_max[TGSI_FILE_BUFFER] + 1);
 
    info->immd.bufSize = 0;
 
@@ -1481,11 +1486,14 @@ bool Source::scanDeclaration(const struct tgsi_full_declaration *decl)
          tempArrayInfo.insert(std::make_pair(arrayId, std::make_pair(
                                                    first, last - first + 1)));
       break;
+   case TGSI_FILE_BUFFER:
+      for (i = first; i <= last; ++i)
+         bufferAtomics[i] = decl->Declaration.Atomic;
+      break;
    case TGSI_FILE_ADDRESS:
    case TGSI_FILE_CONSTANT:
    case TGSI_FILE_IMMEDIATE:
    case TGSI_FILE_SAMPLER:
-   case TGSI_FILE_BUFFER:
    case TGSI_FILE_IMAGE:
       break;
    default:
@@ -1619,6 +1627,7 @@ bool Source::scanInstruction(const struct tgsi_full_instruction *inst)
       case TGSI_OPCODE_ATOMIMIN:
       case TGSI_OPCODE_ATOMUMAX:
       case TGSI_OPCODE_ATOMIMAX:
+      case TGSI_OPCODE_ATOMFADD:
       case TGSI_OPCODE_LOAD:
          info->io.globalAccess |= (insn.getOpcode() == TGSI_OPCODE_LOAD) ?
             0x1 : 0x2;
@@ -2717,7 +2726,11 @@ Converter::handleLOAD(Value *dst0[4])
          }
 
          Instruction *ld = mkLoad(TYPE_U32, dst0[c], sym, off);
-         ld->cache = tgsi.getCacheMode();
+         if (tgsi.getSrc(0).getFile() == TGSI_FILE_BUFFER &&
+             code->bufferAtomics[r])
+            ld->cache = nv50_ir::CACHE_CG;
+         else
+            ld->cache = tgsi.getCacheMode();
          if (ind)
             ld->setIndirect(0, 1, ind);
       }
@@ -3834,6 +3847,7 @@ Converter::handleInstruction(const struct tgsi_full_instruction *insn)
    case TGSI_OPCODE_ATOMIMIN:
    case TGSI_OPCODE_ATOMUMAX:
    case TGSI_OPCODE_ATOMIMAX:
+   case TGSI_OPCODE_ATOMFADD:
       handleATOM(dst0, dstTy, tgsi::opcodeToSubOp(tgsi.getOpcode()));
       break;
    case TGSI_OPCODE_RESQ:
