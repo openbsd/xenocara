@@ -66,6 +66,9 @@ struct radv_vs_variant_key {
 	uint32_t instance_rate_inputs;
 	uint32_t instance_rate_divisors[MAX_VERTEX_ATTRIBS];
 
+	/* Mask of vertex attributes that are provided by the pipeline. */
+	uint32_t vertex_attribute_provided;
+
 	/* For 2_10_10_10 formats the alpha is handled as unsigned by pre-vega HW.
 	 * so we may need to fix it up. */
 	uint64_t alpha_adjust;
@@ -213,7 +216,6 @@ struct radv_shader_info {
 struct radv_userdata_info {
 	int8_t sgpr_idx;
 	uint8_t num_sgprs;
-	bool indirect;
 };
 
 struct radv_userdata_locations {
@@ -403,6 +405,8 @@ static inline unsigned shader_io_get_unique_index(gl_varying_slot slot)
 		return 1;
 	if (slot == VARYING_SLOT_CLIP_DIST0)
 		return 2;
+	if (slot == VARYING_SLOT_CLIP_DIST1)
+		return 3;
 	/* 3 is reserved for clip dist as well */
 	if (slot >= VARYING_SLOT_VAR0 && slot <= VARYING_SLOT_VAR31)
 		return 4 + (slot - VARYING_SLOT_VAR0);

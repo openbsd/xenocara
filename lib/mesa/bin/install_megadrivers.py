@@ -35,7 +35,11 @@ def main():
     args = parser.parse_args()
 
     if os.path.isabs(args.libdir):
-        to = os.path.join(os.environ.get('DESTDIR', '/'), args.libdir[1:])
+        destdir = os.environ.get('DESTDIR')
+        if destdir:
+            to = os.path.join(destdir, args.libdir[1:])
+        else:
+            to = args.libdir
     else:
         to = os.path.join(os.environ['MESON_INSTALL_DESTDIR_PREFIX'], args.libdir)
 
@@ -45,7 +49,6 @@ def main():
         if os.path.lexists(to):
             os.unlink(to)
         os.makedirs(to)
-    shutil.copy(args.megadriver, master)
 
     for driver in args.drivers:
         abs_driver = os.path.join(to, driver)
@@ -67,7 +70,14 @@ def main():
                 name, ext = os.path.splitext(name)
         finally:
             os.chdir(ret)
+
+    # Remove meson-created master .so and symlinks
     os.unlink(master)
+    name, ext = os.path.splitext(master)
+    while ext != '.so':
+        if os.path.lexists(name):
+            os.unlink(name)
+        name, ext = os.path.splitext(name)
 
 
 if __name__ == '__main__':

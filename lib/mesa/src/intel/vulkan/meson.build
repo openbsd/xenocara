@@ -105,12 +105,14 @@ foreach g : [['70', ['gen7_cmd_buffer.c']], ['75', ['gen7_cmd_buffer.c']],
       c_vis_args, no_override_init_args, c_sse2_args,
       '-DGEN_VERSIONx10=@0@'.format(_gen),
     ],
-    dependencies : [dep_libdrm, dep_valgrind, idep_nir_headers],
+    dependencies : [dep_libdrm, dep_valgrind, idep_nir_headers, idep_genxml],
   )
 endforeach
 
 libanv_files = files(
   'anv_allocator.c',
+  'anv_android_stubs.c',
+  'anv_android.h',
   'anv_batch_chain.c',
   'anv_blorp.c',
   'anv_cmd_buffer.c',
@@ -201,7 +203,7 @@ libvulkan_intel = shared_library(
     libvulkan_util, libvulkan_wsi, libmesa_util,
   ],
   dependencies : [
-    dep_thread, dep_dl, dep_m, anv_deps, idep_nir,
+    dep_thread, dep_dl, dep_m, anv_deps, idep_nir, idep_genxml,
   ],
   c_args : anv_flags,
   link_args : ['-Wl,--build-id=sha1', ld_args_bsymbolic, ld_args_gc_sections],
@@ -228,18 +230,21 @@ if with_tests
   )
 
   foreach t : ['block_pool_no_free', 'state_pool_no_free',
-               'state_pool_free_list_only', 'state_pool']
+               'state_pool_free_list_only', 'state_pool',
+               'state_pool_padding']
     test(
       'anv_@0@'.format(t),
       executable(
         t,
         ['tests/@0@.c'.format(t), anv_entrypoints[0], anv_extensions_h],
+        c_args : [ c_sse2_args ],
         link_with : libvulkan_intel_test,
         dependencies : [dep_libdrm, dep_thread, dep_m, dep_valgrind],
         include_directories : [
           inc_common, inc_intel, inc_compiler, inc_vulkan_util, inc_vulkan_wsi,
         ],
-      )
+      ),
+      suite : ['intel'],
     )
   endforeach
 endif

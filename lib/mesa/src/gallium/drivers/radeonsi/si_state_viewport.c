@@ -186,7 +186,7 @@ static void si_emit_guardband(struct si_context *ctx)
 		ctx->chip_class >= VI ? 16 : MAX2(ctx->screen->se_tile_repeat, 16);
 
 	/* Indexed by quantization modes */
-	static unsigned max_viewport_size[] = {65535, 16383, 4095};
+	static int max_viewport_size[] = {65535, 16383, 4095};
 
 	/* Ensure that the whole viewport stays representable in
 	 * absolute coordinates.
@@ -283,7 +283,7 @@ static void si_emit_guardband(struct si_context *ctx)
 				   S_028BE4_QUANT_MODE(V_028BE4_X_16_8_FIXED_POINT_1_256TH +
 						       vp_as_scissor.quant_mode));
 	if (initial_cdw != ctx->gfx_cs->current.cdw)
-		ctx->context_roll_counter++;
+		ctx->context_roll = true;
 }
 
 static void si_emit_scissors(struct si_context *ctx)

@@ -208,7 +208,7 @@ static int si_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
 				RADEON_SPARSE_PAGE_SIZE : 0;
 
 	case PIPE_CAP_PACKED_UNIFORMS:
-		if (sscreen->debug_flags & DBG(NIR))
+		if (sscreen->options.enable_nir)
 			return 1;
 		return 0;
 
@@ -253,6 +253,9 @@ static int si_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
 
 	case PIPE_CAP_MAX_SHADER_PATCH_VARYINGS:
 		return 30;
+
+	case PIPE_CAP_MAX_VARYINGS:
+		return 32;
 
 	case PIPE_CAP_TEXTURE_BORDER_COLOR_QUIRK:
 		return sscreen->info.chip_class <= VI ?
@@ -420,11 +423,11 @@ static int si_get_shader_param(struct pipe_screen* pscreen,
 	case PIPE_SHADER_CAP_MAX_SHADER_IMAGES:
 		return SI_NUM_IMAGES;
 	case PIPE_SHADER_CAP_MAX_UNROLL_ITERATIONS_HINT:
-		if (sscreen->debug_flags & DBG(NIR))
+		if (sscreen->options.enable_nir)
 			return 0;
 		return 32;
 	case PIPE_SHADER_CAP_PREFERRED_IR:
-		if (sscreen->debug_flags & DBG(NIR))
+		if (sscreen->options.enable_nir)
 			return PIPE_SHADER_IR_NIR;
 		return PIPE_SHADER_IR_TGSI;
 	case PIPE_SHADER_CAP_LOWER_IF_THRESHOLD:
@@ -453,15 +456,6 @@ static int si_get_shader_param(struct pipe_screen* pscreen,
 
 		if (shader == PIPE_SHADER_VERTEX &&
 		    !sscreen->llvm_has_working_vgpr_indexing)
-			return 0;
-
-		/* Doing indirect indexing on GFX9 with LLVM 6.0 hangs.
-		 * This means we don't support INTERP instructions with
-		 * indirect indexing on inputs.
-		 */
-		if (shader == PIPE_SHADER_FRAGMENT &&
-		    !sscreen->llvm_has_working_vgpr_indexing &&
-		    HAVE_LLVM < 0x0700)
 			return 0;
 
 		/* TCS and TES load inputs directly from LDS or offchip

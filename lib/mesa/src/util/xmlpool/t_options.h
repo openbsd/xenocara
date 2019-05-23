@@ -210,6 +210,11 @@ DRI_CONF_OPT_BEGIN_V(vblank_mode,enum,def,"0:3") \
         DRI_CONF_DESC_END \
 DRI_CONF_OPT_END
 
+#define DRI_CONF_ADAPTIVE_SYNC(def) \
+DRI_CONF_OPT_BEGIN_B(adaptive_sync,def) \
+        DRI_CONF_DESC(en,gettext("Adapt the monitor sync to the application performance (when possible)")) \
+DRI_CONF_OPT_END
+
 #define DRI_CONF_MESA_GLTHREAD(def) \
 DRI_CONF_OPT_BEGIN_B(mesa_glthread, def) \
         DRI_CONF_DESC(en,gettext("Enable offloading GL driver work to a separate thread")) \
@@ -333,17 +338,8 @@ DRI_CONF_OPT_BEGIN_B(radeonsi_commutative_blend_add, def) \
         DRI_CONF_DESC(en,gettext("Commutative additive blending optimizations (may cause rendering errors)")) \
 DRI_CONF_OPT_END
 
-#define DRI_CONF_RADEONSI_CLEAR_DB_CACHE_BEFORE_CLEAR(def) \
-DRI_CONF_OPT_BEGIN_B(radeonsi_clear_db_cache_before_clear, def) \
-        DRI_CONF_DESC(en,"Clear DB cache before fast depth clear") \
-DRI_CONF_OPT_END
-
 #define DRI_CONF_RADEONSI_ZERO_ALL_VRAM_ALLOCS(def) \
 DRI_CONF_OPT_BEGIN_B(radeonsi_zerovram, def) \
         DRI_CONF_DESC(en,"Zero all vram allocations") \
 DRI_CONF_OPT_END
 
-#define DRI_CONF_RADEONSI_ENABLE_NIR(def) \
-DRI_CONF_OPT_BEGIN_B(radeonsi_enable_nir, def) \
-        DRI_CONF_DESC(en,gettext("Enable NIR")) \
-DRI_CONF_OPT_END
