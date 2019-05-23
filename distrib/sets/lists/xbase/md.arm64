@@ -258,9 +258,9 @@
 ./usr/X11R6/lib/libGL.la
 ./usr/X11R6/lib/libGL.so.17.1
 ./usr/X11R6/lib/libGLESv1_CM.la
-./usr/X11R6/lib/libGLESv1_CM.so.1.0
+./usr/X11R6/lib/libGLESv1_CM.so.2.0
 ./usr/X11R6/lib/libGLESv2.la
-./usr/X11R6/lib/libGLESv2.so.1.2
+./usr/X11R6/lib/libGLESv2.so.2.0
 ./usr/X11R6/lib/libGLU.a
 ./usr/X11R6/lib/libGLU.la
 ./usr/X11R6/lib/libGLU.so.9.0
@@ -282,7 +282,7 @@
 ./usr/X11R6/lib/libepoxy.a
 ./usr/X11R6/lib/libepoxy.so.3.0
 ./usr/X11R6/lib/libgbm.la
-./usr/X11R6/lib/libgbm.so.0.3
+./usr/X11R6/lib/libgbm.so.0.4
 ./usr/X11R6/lib/libglapi.la
 ./usr/X11R6/lib/libglapi.so.0.2
 ./usr/X11R6/lib/libtxc_dxtn.a
