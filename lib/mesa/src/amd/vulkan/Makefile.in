@@ -1286,6 +1286,19 @@ uninstall-am: uninstall-icdconfDATA uninstall-libLTLIBRARIES
 @REGEN_SOURCES_TRUE@radeon_icd.@host_cpu@.json : radv_extensions.py radv_icd.py
 @REGEN_SOURCES_TRUE@	$(AM_V_GEN)$(PYTHON) $(srcdir)/radv_icd.py \
 @REGEN_SOURCES_TRUE@		--lib-path="${libdir}" --out $@
+@REGEN_SOURCES_FALSE@radeon_icd.@host_cpu@.json :
+@REGEN_SOURCES_FALSE@	@echo -e "{" > $@
+@REGEN_SOURCES_FALSE@	@echo -e "    \"ICD\": {" >> $@
+@REGEN_SOURCES_FALSE@	@echo -e "        \"api_version\": \"1.1.70\"," >> $@
+@REGEN_SOURCES_FALSE@	@echo -e "        \"library_path\": \"${libdir}/libvulkan_radeon.so\"" >> $@
+@REGEN_SOURCES_FALSE@	@echo -e "    }," >> $@
+@REGEN_SOURCES_FALSE@	@echo -e "    \"file_format_version\": \"1.0.0\"" >> $@
+@REGEN_SOURCES_FALSE@	@echo -ne "}" >> $@
+
+@REGEN_SOURCES_FALSE@.PHONY: radeon_icd.@host_cpu@.json
+
+@REGEN_SOURCES_FALSE@dev_icd.json : radeon_icd.@host_cpu@.json
+@REGEN_SOURCES_FALSE@	cp radeon_icd.@host_cpu@.json $@
 
 @BUILD_SHARED_TRUE@@HAVE_COMPAT_SYMLINKS_TRUE@all-local : .install-mesa-links
 

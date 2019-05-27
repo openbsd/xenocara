@@ -199,6 +199,20 @@ dev_icd.json : radv_extensions.py radv_icd.py
 radeon_icd.@host_cpu@.json : radv_extensions.py radv_icd.py
 	$(AM_V_GEN)$(PYTHON) $(srcdir)/radv_icd.py \
 		--lib-path="${libdir}" --out $@
+else
+radeon_icd.@host_cpu@.json :
+	@echo -e "{" > $@
+	@echo -e "    \"ICD\": {" >> $@
+	@echo -e "        \"api_version\": \"1.1.70\"," >> $@
+	@echo -e "        \"library_path\": \"${libdir}/libvulkan_radeon.so\"" >> $@
+	@echo -e "    }," >> $@
+	@echo -e "    \"file_format_version\": \"1.0.0\"" >> $@
+	@echo -ne "}" >> $@
+
+.PHONY: radeon_icd.@host_cpu@.json
+
+dev_icd.json : radeon_icd.@host_cpu@.json
+	cp radeon_icd.@host_cpu@.json $@
 endif
 
 include $(top_srcdir)/install-lib-links.mk

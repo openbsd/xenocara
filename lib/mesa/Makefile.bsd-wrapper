@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.26 2019/05/23 05:33:19 jsg Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.27 2019/05/27 07:20:30 jsg Exp $
 
 .include <bsd.own.mk>
 .include <bsd.xconf.mk>
@@ -8,11 +8,13 @@ SHARED_LIBS=	EGL 1.1 gbm 0.4 glapi 0.2 GL 17.1 GLESv1_CM 2.0 GLESv2 2.0 \
 
 DRI_DRIVERS=		swrast
 GALLIUM_DRIVERS=	swrast
+VULKAN_DRIVERS=		no
 WITH_LLVM=		--disable-llvm
 
 .if ${MACHINE} == i386 || ${MACHINE} == amd64
 DRI_DRIVERS=swrast,radeon,r200,i915,i965
 GALLIUM_DRIVERS=swrast,r300,r600,radeonsi
+VULKAN_DRIVERS=		intel,radeon
 WITH_LLVM=		--enable-llvm
 .endif
 
@@ -24,6 +26,7 @@ GALLIUM_DRIVERS=swrast,r300,r600
 
 CONFIGURE_ARGS=		--with-dri-drivers=${DRI_DRIVERS} \
 			--with-gallium-drivers=${GALLIUM_DRIVERS} \
+			--with-vulkan-drivers=${VULKAN_DRIVERS} \
 			--disable-silent-rules \
 			${WITH_LLVM} \
 			--disable-glx-tls \

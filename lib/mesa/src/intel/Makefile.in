@@ -5057,6 +5057,20 @@ isl_tiled_memcpy_sse41.c: $(ISL_TILED_MEMCPY_DEP_FILES)
 @REGEN_SOURCES_TRUE@	$(MKDIR_GEN)
 @REGEN_SOURCES_TRUE@	$(AM_V_GEN)$(PYTHON) $(srcdir)/vulkan/anv_icd.py \
 @REGEN_SOURCES_TRUE@		--lib-path="${libdir}" --out $@
+@REGEN_SOURCES_FALSE@vulkan/intel_icd.@host_cpu@.json :
+@REGEN_SOURCES_FALSE@	$(MKDIR_GEN)
+@REGEN_SOURCES_FALSE@	@echo -e "{" > $@
+@REGEN_SOURCES_FALSE@	@echo -e "    \"ICD\": {" >> $@
+@REGEN_SOURCES_FALSE@	@echo -e "        \"api_version\": \"1.1.96\"," >> $@
+@REGEN_SOURCES_FALSE@	@echo -e "        \"library_path\": \"${libdir}/libvulkan_intel.so\"" >> $@
+@REGEN_SOURCES_FALSE@	@echo -e "    }," >> $@
+@REGEN_SOURCES_FALSE@	@echo -e "    \"file_format_version\": \"1.0.0\"" >> $@
+@REGEN_SOURCES_FALSE@	@echo -ne "}" >> $@
+
+@REGEN_SOURCES_FALSE@.PHONY: vulkan/intel_icd.@host_cpu@.json
+
+@REGEN_SOURCES_FALSE@vulkan/dev_icd.json : vulkan/intel_icd.@host_cpu@.json
+@REGEN_SOURCES_FALSE@	cp vulkan/intel_icd.@host_cpu@.json $@
 
 @BUILD_SHARED_TRUE@@HAVE_COMPAT_SYMLINKS_TRUE@@HAVE_INTEL_VULKAN_TRUE@all-local : .install-mesa-links
 

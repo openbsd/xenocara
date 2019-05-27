@@ -25,7 +25,12 @@
 #include <stdbool.h>
 #include <string.h>
 #include <sys/mman.h>
+#ifdef __linux__
 #include <sys/sysinfo.h>
+#else
+#include <sys/types.h>
+#include <sys/sysctl.h>
+#endif
 #include <unistd.h>
 #include <fcntl.h>
 #include <xf86drm.h>
@@ -64,10 +69,22 @@ static uint64_t
 anv_compute_heap_size(int fd, uint64_t gtt_size)
 {
    /* Query the total ram from the system */
+#ifdef __linux__
    struct sysinfo info;
    sysinfo(&info);
 
    uint64_t total_ram = (uint64_t)info.totalram * (uint64_t)info.mem_unit;
+#else
+   int mib[2];
+   uint64_t total_ram;
+   size_t size;
+
+   mib[0] = CTL_HW;
+   mib[1] = HW_PHYSMEM64;
+   size = sizeof(total_ram);
+   if (sysctl(mib, 2, &total_ram, &size, NULL, 0) == -1)
+         return vk_error(VK_ERROR_INITIALIZATION_FAILED);
+#endif
 
    /* We don't want to burn too much ram with the GPU.  If the user has 4GiB
     * or less, we use at most half.  If they have more than 4GiB, we use 3/4.

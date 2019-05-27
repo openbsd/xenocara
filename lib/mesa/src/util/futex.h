@@ -53,4 +53,24 @@ static inline int futex_wait(uint32_t *addr, int32_t value, const struct timespe
 
 #endif
 
+#ifdef __OpenBSD__
+
+#include <sys/time.h>
+#include <sys/futex.h>
+
+static inline int futex_wake(uint32_t *addr, int count)
+{
+   return futex(addr, FUTEX_WAKE, count, NULL, NULL);
+}
+
+static inline int futex_wait(uint32_t *addr, int32_t value, const struct timespec *timeout)
+{
+   struct timespec tsrel, tsnow;
+   clock_gettime(CLOCK_MONOTONIC, &tsnow); 
+   timespecsub(timeout, &tsrel, &tsrel);
+   return futex(addr, FUTEX_WAIT, value, &tsrel, NULL);
+}
+
+#endif
+
 #endif /* UTIL_FUTEX_H */

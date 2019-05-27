@@ -27,7 +27,9 @@
 
 #include <fcntl.h>
 #include <unistd.h>
+#ifdef __linux__
 #include <sys/eventfd.h>
+#endif
 
 #include "anv_private.h"
 #include "vk_util.h"

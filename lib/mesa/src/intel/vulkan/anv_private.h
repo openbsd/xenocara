@@ -32,6 +32,16 @@
 #include <stdint.h>
 #include <i915_drm.h>
 
+#include <errno.h>
+#ifndef ETIME
+#define ETIME ETIMEDOUT
+#endif
+
+#include <time.h>
+#ifndef CLOCK_MONOTONIC_RAW
+#define CLOCK_MONOTONIC_RAW CLOCK_MONOTONIC
+#endif
+
 #ifdef HAVE_VALGRIND
 #include <valgrind.h>
 #include <memcheck.h>

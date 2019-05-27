@@ -75,6 +75,21 @@ vulkan/intel_icd.@host_cpu@.json : vulkan/anv_extensions.py vulkan/anv_icd.py
 	$(MKDIR_GEN)
 	$(AM_V_GEN)$(PYTHON) $(srcdir)/vulkan/anv_icd.py \
 		--lib-path="${libdir}" --out $@
+else
+vulkan/intel_icd.@host_cpu@.json :
+	$(MKDIR_GEN)
+	@echo -e "{" > $@
+	@echo -e "    \"ICD\": {" >> $@
+	@echo -e "        \"api_version\": \"1.1.96\"," >> $@
+	@echo -e "        \"library_path\": \"${libdir}/libvulkan_intel.so\"" >> $@
+	@echo -e "    }," >> $@
+	@echo -e "    \"file_format_version\": \"1.0.0\"" >> $@
+	@echo -ne "}" >> $@
+
+.PHONY: vulkan/intel_icd.@host_cpu@.json
+
+vulkan/dev_icd.json : vulkan/intel_icd.@host_cpu@.json
+	cp vulkan/intel_icd.@host_cpu@.json $@
 endif
 
 if HAVE_INTEL_VULKAN
