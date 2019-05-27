@@ -177,6 +177,7 @@
 ./usr/X11R6/include/pixman-1
 ./usr/X11R6/include/pixman-1/pixman-version.h
 ./usr/X11R6/include/pixman-1/pixman.h
+./usr/X11R6/include/vulkan
 ./usr/X11R6/include/xcb
 ./usr/X11R6/lib
 ./usr/X11R6/lib/X11
@@ -486,6 +487,8 @@
 ./usr/X11R6/share/X11/app-defaults/Xmessage-color
 ./usr/X11R6/share/X11/app-defaults/Xvidtune
 ./usr/X11R6/share/libdrm
+./usr/X11R6/share/vulkan
+./usr/X11R6/share/vulkan/icd.d
 ./usr/X11R6/share/xcb
 ./usr/X11R6/share/xcb/xcb.xsd
 ./usr/X11R6/share/xcb/xkb.xml
