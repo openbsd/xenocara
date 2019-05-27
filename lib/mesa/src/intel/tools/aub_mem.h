@@ -42,9 +42,6 @@ struct aub_mem {
 
    int mem_fd;
    off_t mem_fd_len;
-#ifdef __OpenBSD__
-   char mem_path[32];
-#endif
 
    struct list_head maps;
    struct rb_tree ggtt;
