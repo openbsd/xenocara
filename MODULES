@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.413 2019/05/11 07:47:56 matthieu Exp $
+# $OpenBSD: MODULES,v 1.414 2019/06/10 09:40:56 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -18,7 +18,7 @@ app/mkfontdir		1.0.7
 app/mkfontscale		1.2.1		needs-update
 app/oclock		1.0.4
 app/rgb			1.0.6
-app/sessreg		1.1.1
+app/sessreg		1.1.2		needs-update
 app/setxkbmap		1.3.1
 app/smproxy		1.0.6
 app/twm			1.0.10
@@ -27,7 +27,7 @@ app/x11perf		1.6.1		needs-update
 app/xauth		1.0.10
 app/xbacklight		1.2.2
 app/xbiff		1.0.3
-app/xcalc		1.0.7		needs-update
+app/xcalc		1.1.0		needs-update
 app/xclipboard		1.1.3
 app/xclock		1.0.8		needs-update
 app/xcmsdb		1.0.5
@@ -82,7 +82,7 @@ data/bitmaps		1.1.2
 doc/xorg-docs		1.7.1
 
 driver/xf86-input-acecad	1.5.0
-driver/xf86-input-elographics	1.4.1
+driver/xf86-input-elographics	1.4.2		needs-update
 driver/xf86-input-fpit		1.4.0
 driver/xf86-input-hyperpen	1.4.1
 driver/xf86-input-joystick	1.6.3
@@ -95,36 +95,22 @@ driver/xf86-input-vmmouse	13.1.0
 driver/xf86-input-void		1.4.1
 driver/xf86-video-amdgpu	19.0.1
 driver/xf86-video-apm		1.3.0
-driver/xf86-video-ark		0.7.5
 driver/xf86-video-ast		1.0.1
 driver/xf86-video-ati		19.0.1
-driver/xf86-video-chips		1.4.0		needs-update
 driver/xf86-video-cirrus	1.5.3
 driver/xf86-video-dummy		0.3.8
 driver/xf86-video-geode		2.11.19
-driver/xf86-video-glint		1.2.9
-driver/xf86-video-i128		1.4.0
-driver/xf86-video-i740		1.4.0
 driver/xf86-video-intel		2.99.917	 needs-update
 driver/xf86-video-mach64	6.9.6
 driver/xf86-video-mga		2.0.0
-driver/xf86-video-neomagic	1.3.0
 driver/xf86-video-nv		2.1.21
 driver/xf86-video-openchrome	0.6.179		needs-update
 driver/xf86-video-r128		6.12.0		needs-update
-driver/xf86-video-rendition	4.2.7
-driver/xf86-video-s3		0.6.5
-driver/xf86-video-s3virge	1.11.0
 driver/xf86-video-savage	2.3.9
 driver/xf86-video-siliconmotion	1.7.9
-driver/xf86-video-sis		0.10.9
 driver/xf86-video-sunffb	1.2.2
-driver/xf86-video-tdfx		1.5.0		needs-update
-driver/xf86-video-trident	1.3.8
-driver/xf86-video-tseng		1.2.5
 driver/xf86-video-vesa		2.4.0		needs-update
 driver/xf86-video-vmware	13.3.0		needs-update
-driver/xf86-video-voodoo	1.2.5
 driver/xf86-video-wsfb		0.4.1
 
 font/encodings			1.0.4
@@ -165,7 +151,6 @@ font/util			1.3.1
 font/winitzki-cyrillic		1.0.3
 font/xfree86-type1		1.0.4
 
-lib/libFS			1.0.8		needs-update
 lib/libICE			1.0.9
 lib/libSM			1.2.3
 lib/libX11			1.6.7
@@ -218,4 +203,4 @@ util/gccmakedep			1.0.3
 util/macros			1.19.2
 util/makedepend			1.0.6		needs-update
 
-xserver				1.20.4		needs-update
+xserver				1.20.5		needs-update
