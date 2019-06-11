@@ -1,4 +1,4 @@
-/* $OpenBSD: privsep.c,v 1.30 2018/10/25 06:41:25 mestre Exp $ */
+/* $OpenBSD: privsep.c,v 1.31 2019/06/11 14:51:34 jcs Exp $ */
 /*
  * Copyright 2001 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -80,6 +80,12 @@ struct okdev {
 	{"/dev/wsmouse1", O_RDWR | O_NONBLOCK | O_EXCL},
 	{"/dev/wsmouse2", O_RDWR | O_NONBLOCK | O_EXCL},
 	{"/dev/wsmouse3", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/wsmouse4", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/wsmouse5", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/wsmouse6", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/wsmouse7", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/wsmouse8", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/wsmouse9", O_RDWR | O_NONBLOCK | O_EXCL},
 	{"/dev/uhid0", O_RDWR | O_NONBLOCK | O_EXCL},
 	{"/dev/uhid1", O_RDWR | O_NONBLOCK | O_EXCL},
 	{"/dev/uhid2", O_RDWR | O_NONBLOCK | O_EXCL},

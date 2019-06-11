@@ -222,7 +222,7 @@ wscons_add_pointers(void)
     int fd, i, wsmouse_type;
 
     /* Check pointing devices */
-    for (i = 0; i < 4; i++) {
+    for (i = 0; i <= 9; i++) {
         snprintf(devnam, sizeof(devnam), "%s%d", WSCONS_MOUSE_PREFIX, i);
         LogMessageVerb(X_INFO, 10, "wsmouse: checking %s\n", devnam);
         fd = priv_open_device(devnam);
