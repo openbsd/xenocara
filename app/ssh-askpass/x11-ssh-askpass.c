@@ -1507,6 +1507,12 @@ int main(int argc, char **argv)
    app.screen_height = HeightOfScreen(app.screen);
    app.screen_xoffset = 0;
    app.screen_yoffset = 0;
+
+   app.xResolution =
+      app.screen_width * 1000 / WidthMMOfScreen(app.screen);
+   app.yResolution =
+      app.screen_height * 1000 / HeightMMOfScreen(app.screen);
+
    if (XineramaIsActive(app.dpy) &&
       (screens = XineramaQueryScreens(app.dpy, &nscreens)) != NULL &&
       nscreens) {
@@ -1516,11 +1522,6 @@ int main(int argc, char **argv)
       app.screen_yoffset = screens[0].y_org;
       XFree(screens);
    }
-
-   app.xResolution =
-      app.screen_width * 1000 / WidthMMOfScreen(app.screen);
-   app.yResolution =
-      app.screen_height * 1000 / HeightMMOfScreen(app.screen);
 
    createDialog(&app);
    createGCs(&app);
