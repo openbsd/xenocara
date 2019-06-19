@@ -1,8 +1,8 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.2 2018/05/26 07:51:00 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.3 2019/06/19 19:26:36 matthieu Exp $
 .include <bsd.xconf.mk>
 
 SHARED_LIBS=	Xfont2 1.0
 
-CONFIGURE_ARGS+= --with-xmlto=no --disable-devel-docs
+CONFIGURE_ARGS+= --disable-fc --with-xmlto=no --disable-devel-docs
 
 .include <bsd.xorg.mk>
