@@ -72,7 +72,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
+DIST_COMMON = $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(srcdir)/xdamage.pc.in $(top_srcdir)/configure AUTHORS \
 	COPYING ChangeLog INSTALL NEWS config.guess config.sub depcomp \
@@ -334,10 +334,10 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = src
-INCLUDES = $(top_srcdir)/include/
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = xdamage.pc
 MAINTAINERCLEANFILES = ChangeLog INSTALL
+EXTRA_DIST = README.md
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 

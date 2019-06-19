@@ -21,8 +21,6 @@
 
 SUBDIRS = src
 
-INCLUDES = $(top_srcdir)/include/
-
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = xdamage.pc
 
@@ -37,3 +35,5 @@ ChangeLog:
 	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog INSTALL
+
+EXTRA_DIST = README.md

@@ -29,14 +29,13 @@ AC_PREREQ([2.60])
 # digit in the version number to track changes which don't affect the
 # protocol, so Xdamage version l.n.m corresponds to protocol version l.n
 #
-AC_INIT(libXdamage, [1.1.4],
+AC_INIT(libXdamage, [1.1.5],
 	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXdamage])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
 
 # Initialize libtool
 AC_PROG_LIBTOOL
