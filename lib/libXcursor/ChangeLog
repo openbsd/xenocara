@@ -1,3 +1,52 @@
+commit b84b5d100f193fda0630c4d6fa889cd3e05ca033
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 10 17:36:26 2019 -0700
+
+    libXcursor 1.2.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8ff9605921a6ea3e05b5c72aa1b2a7f78b624699
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 7 19:41:07 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 534456082ed051d6427a77e4bda19473ea8b621c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 19 21:47:26 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2263c196cb0dcb8547b378df7b35f83b8b99c01e
+Author: Cosimo Cecchi <cosimoc@gnome.org>
+Date:   Fri Nov 9 20:06:41 2018 -0800
+
+    Support XDG user data dir location
+    
+    Nowadays ~/.icons is not used anymore as the preferred location for
+    custom user icon themes; XDG_DATA_HOME/icons (aka ~/.local/share/icons)
+    is what toolkits like GTK prefer.
+    
+    Prepend that location to the default xcursor path, so that cursor
+    themes installed there can be used by apps and toolkits that use
+    libXcursor.
+
+commit f64a8cc1a65dcad4294e2988b402a34175019663
+Author: Philipp Ludwig <git-devel@philippludwig.net>
+Date:   Sun Jan 22 14:21:54 2017 +0100
+
+    Fix crash when encountering cursor themes with circular dependencies.
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=3603
+    
+    Signed-off-by: Philipp Ludwig <git-devel@philippludwig.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 4828abe494df8fb4aa00dcaa22a03446ba418d01
 Author: Matthieu Herrb <matthieu@herrb.eu>
 Date:   Sat Nov 25 11:59:31 2017 +0100

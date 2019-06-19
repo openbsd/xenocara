@@ -29,7 +29,7 @@
 #endif
 
 #ifndef XCURSORPATH
-#define XCURSORPATH "~/.icons:/usr/share/icons:/usr/share/pixmaps:"ICONDIR
+#define XCURSORPATH "~/.local/share/icons:~/.icons:/usr/share/icons:/usr/share/pixmaps:"ICONDIR
 #endif
 
 const char *
@@ -260,7 +260,12 @@ XcursorScanTheme (const char *theme, const char *name)
      * Recurse to scan inherited themes
      */
     for (i = inherits; i && f == NULL; i = _XcursorNextPath (i))
-	f = XcursorScanTheme (i, name);
+    {
+        if (strcmp(i, theme) != 0)
+            f = XcursorScanTheme (i, name);
+        else
+            printf("Not calling XcursorScanTheme because of circular dependency: %s. %s", i, name);
+    }
     if (inherits != NULL)
 	free (inherits);
     return f;

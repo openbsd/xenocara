@@ -26,8 +26,8 @@ AC_PREREQ([2.60])
 # This is the package version number, not the shared library
 # version.  This version number will be substituted into Xcursor.h
 #
-AC_INIT([libXcursor], [1.1.15],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],[libXcursor])
+AC_INIT([libXcursor], [1.2.0],
+        [https://gitlab.freedesktop.org/xorg/lib/libXcursor/issues],[libXcursor])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h include/X11/Xcursor/Xcursor.h])
 # Set common system defines for POSIX extensions, such as _GNU_SOURCE
@@ -67,7 +67,7 @@ AC_ARG_WITH(icondir,
         [ICONDIR=${datadir}/icons])
 AC_SUBST([ICONDIR])
 
-DEF_CURSORPATH="~/.icons:${datadir}/icons:${datadir}/pixmaps"
+DEF_CURSORPATH="~/.local/share/icons:~/.icons:${datadir}/icons:${datadir}/pixmaps"
 if test "x${ICONDIR}" != "x${datadir}/icons"; then
 	DEF_CURSORPATH="${DEF_CURSORPATH}:${ICONDIR}"
 fi
