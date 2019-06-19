@@ -31,14 +31,13 @@ AC_PREREQ([2.60])
 # that 'revision' number appears in Xcomposite.h and has to be manually
 # synchronized.
 #
-AC_INIT(libXcomposite, [0.4.4],
-	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXcomposite])
+AC_INIT(libXcomposite, [0.4.5],
+	[https://gitlab.freedesktop.org/xorg/lib/libXcomposite/issues], [libXcomposite])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
 
 # Initialize libtool
 AC_PROG_LIBTOOL

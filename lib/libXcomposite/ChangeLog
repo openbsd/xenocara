@@ -1,3 +1,85 @@
+commit fd7d02cc014ac9bf5bb7e68b66102ea36a76a59a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 10 17:25:19 2019 -0700
+
+    libXcomposite 0.4.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 01bb3dc16a70bb0a639cc9cff422259d936cf713
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 7 19:40:36 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 591b72e42e8da9c991fc9a64b8420b38405a226b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 19 21:46:07 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 41b8b4f089488f2dd85f4995cfd9d45434fcbccc
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 13:52:49 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 047a31b30bd404d7f1b4b2d7adcd71bd6e131e83
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 6383d0f15253a94691e11285eeb96e0390c686ac
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 514ae7c502cccdaec4786e8394ca5b17d02c2156
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Thu Jan 2 01:21:23 2014 -0800
+
+    Use Xfree rather than XFree for consistency
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit eda48b1bedaa344ada8e13930c9ab3058b836190
+Author: Colin Walters <walters@verbum.org>
+Date:   Wed Jan 4 17:37:06 2012 -0500
+
+    autogen.sh: Implement GNOME Build API
+    
+    http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 19748f2fa5d7624d5556348862c33643153ffbfe
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jan 15 14:28:48 2013 -0500
+
+    configure: Remove AM_MAINTAINER_MODE
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
 commit 0db73ea70c690eabe581c7293f77ec2be18e1f41
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Jan 2 23:29:00 2013 -0800

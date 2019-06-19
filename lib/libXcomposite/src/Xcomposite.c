@@ -1,5 +1,5 @@
 /*
- * $Id: Xcomposite.c,v 1.4 2013/01/05 14:59:39 matthieu Exp $
+ * $Id: Xcomposite.c,v 1.5 2019/06/19 19:29:23 matthieu Exp $
  *
  * Copyright © 2006 Sun Microsystems
  *
@@ -147,7 +147,7 @@ XCompositeExtAddDisplay (XCompositeExtInfo	*extinfo,
 	 */
 	XExtCodes *codes = XAddExtension(dpy);
 	if (!codes) {
-	    XFree(info);
+	    Xfree(info);
 	    return NULL;
 	}
         XESetCloseDisplay (dpy, codes->extension, XCompositeCloseDisplay);
