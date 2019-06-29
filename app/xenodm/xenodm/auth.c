@@ -160,10 +160,10 @@ CheckServerAuthDir (const char *path, struct stat *statb, int mode)
 {
     int r = stat(path, statb);
 
-    if (r != 0) {
+    if (r == -1) {
 	if (errno == ENOENT) {
 	    r = mkdir(path, mode);
-	    if (r < 0) {
+	    if (r == -1) {
 		LogError ("cannot make authentication directory %s: %s\n",
 			  path, _SysErrorMsg (errno));
 	    } else {
@@ -180,7 +180,6 @@ CheckServerAuthDir (const char *path, struct stat *statb, int mode)
 	    return -1;
 	}
     }
-
     return r;
 }
 
@@ -251,7 +250,7 @@ MakeServerAuthFile (struct display *d, FILE ** file, uid_t uid, gid_t gid)
 	    snprintf (d->authFile, len, "%s/%s/%s/A%s-XXXXXX",
 		      authDir, authdir1, authdir2, cleanname);
 	    fd = mkstemp (d->authFile);
-	    if (fd < 0) {
+	    if (fd == -1) {
 		LogError ("cannot make authentication file %s: %s\n",
 			  d->authFile, _SysErrorMsg (errno));
 		free (d->authFile);
@@ -670,7 +669,7 @@ DefineSelf(FILE *file, Xauth *auth)
     int family, len;
 
     Debug("DefineSelf\n");
-    if (getifaddrs(&ifap) < 0)
+    if (getifaddrs(&ifap) == -1)
 	return;
     for (ifr = ifap; ifr != NULL; ifr = ifr->ifa_next) {
 	len = sizeof(*(ifr->ifa_addr));

@@ -334,7 +334,7 @@ StartClient (
 	        Debug("login_fbtab %s %d\n", d->windowPath, geteuid());
 	        login_fbtab(d->windowPath, pwd->pw_uid, pwd->pw_gid);
 	    }
-	    if (setusercontext(NULL, pwd, pwd->pw_uid, LOGIN_SETALL) < 0) {
+	    if (setusercontext(NULL, pwd, pwd->pw_uid, LOGIN_SETALL) == -1) {
 		LogError ("setusercontext for \"%s\" failed: %s\n",
 			  name, _SysErrorMsg (errno));
 		return (0);

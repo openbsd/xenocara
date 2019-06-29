@@ -91,7 +91,7 @@ main (int argc, char **argv)
 	exit (1);
     }
     if (debugLevel == 0 && daemonMode) {
-      if (daemon (0, 0) < 0) {
+      if (daemon (0, 0) == -1) {
 	/* error */
 	LogError("daemon() failed, %s\n", _SysErrorMsg (errno));
 	exit(1);
