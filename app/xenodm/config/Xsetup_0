@@ -1,6 +1,14 @@
 #!/bin/sh
-# $OpenBSD: Xsetup_0,v 1.5 2018/07/17 11:52:12 matthieu Exp $
+# $OpenBSD: Xsetup_0,v 1.6 2019/06/29 13:33:06 espie Exp $
 
 xconsole -geometry 480x130-0-0 -daemon -notify -verbose -fn fixed -exitOnFail
+
+#  install package openbsd-backgrounds
+#  then uncomment:
+#
+# if test -x /usr/local/bin/openbsd-wallpaper
+# then
+# 	/usr/local/bin/openbsd-wallpaper
+# fi
 
 # sxpm OpenBSD.xpm &
