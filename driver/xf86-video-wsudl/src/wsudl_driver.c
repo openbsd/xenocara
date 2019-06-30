@@ -1,4 +1,4 @@
-/*	$OpenBSD: wsudl_driver.c,v 1.11 2014/07/13 15:50:14 matthieu Exp $ */
+/*	$OpenBSD: wsudl_driver.c,v 1.12 2019/06/30 17:10:24 matthieu Exp $ */
 
 /*
  * Copyright (c) 2009 Marcus Glocker <mglocker@openbsd.org>
@@ -60,6 +60,7 @@
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <sys/time.h>
+#include <sys/utsname.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -231,14 +232,13 @@ static pointer
 WsudlSetup(pointer module, pointer opts, int *errmaj, int *errmin)
 {
 	static Bool setupDone = FALSE;
-	const char *osname;
+	struct utsname name;
 
 	DEBUGP("WsudlSetup");
 
 	/* Check that we're being loaded on a OpenBSD or NetBSD system. */
-	LoaderGetOS(&osname, NULL, NULL, NULL);
-	if (osname == NULL || (strcmp(osname, "openbsd") != 0 &&
-	                       strcmp(osname, "netbsd") != 0)) {
+	if (uname(&name) == -1 || (strcmp(name.sysname, "OpenBSD") != 0 &&
+	                       strcmp(name.sysname, "NetBSD") != 0)) {
 		if (errmaj)
 			*errmaj = LDR_BADOS;
 		if (errmin)

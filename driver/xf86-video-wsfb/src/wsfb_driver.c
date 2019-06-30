@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb_driver.c,v 1.36 2014/07/13 15:12:53 matthieu Exp $ */
+/* $OpenBSD: wsfb_driver.c,v 1.37 2019/06/30 17:10:24 matthieu Exp $ */
 /*
  * Copyright © 2001-2012 Matthieu Herrb
  * All rights reserved.
@@ -47,6 +47,7 @@
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <sys/time.h>
+#include <sys/utsname.h>
 #include <dev/wscons/wsconsio.h>
 
 /* All drivers need this. */
@@ -201,12 +202,11 @@ static pointer
 WsfbSetup(pointer module, pointer opts, int *errmaj, int *errmin)
 {
 	static Bool setupDone = FALSE;
-	const char *osname;
+	struct utsname name;
 
 	/* Check that we're being loaded on a OpenBSD or NetBSD system. */
-	LoaderGetOS(&osname, NULL, NULL, NULL);
-	if (!osname || (strcmp(osname, "openbsd") != 0 &&
-			strcmp(osname, "netbsd") != 0)) {
+	if (uname(&name) == -1 || (strcmp(name.sysname, "OpenBSD") != 0 &&
+			strcmp(name.sysname, "NetBSD") != 0)) {
 		if (errmaj)
 			*errmaj = LDR_BADOS;
 		if (errmin)

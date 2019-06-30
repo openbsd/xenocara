@@ -1,4 +1,4 @@
-/*	$OpenBSD: wildcatfb_driver.c,v 1.12 2014/07/13 16:03:17 matthieu Exp $	*/
+/*	$OpenBSD: wildcatfb_driver.c,v 1.13 2019/06/30 17:10:24 matthieu Exp $	*/
 
 /*
  * Copyright (c) 2009 Miodrag Vallat.
@@ -88,6 +88,7 @@
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <sys/time.h>
+#include <sys/utsname.h>
 #include <dev/wscons/wsconsio.h>
 
 /* All drivers need this. */
@@ -226,11 +227,10 @@ static pointer
 WildcatFBSetup(pointer module, pointer opts, int *errmaj, int *errmin)
 {
 	static Bool setupDone = FALSE;
-	const char *osname;
+	struct utsname name;
 
 	/* Check that we're being loaded on a OpenBSD system. */
-	LoaderGetOS(&osname, NULL, NULL, NULL);
-	if (!osname || strcmp(osname, "openbsd") != 0) {
+	if (uname(&name) == -1 || strcmp(name.sysname, "OpenBSD") != 0) {
 		if (errmaj)
 			*errmaj = LDR_BADOS;
 		if (errmin)
