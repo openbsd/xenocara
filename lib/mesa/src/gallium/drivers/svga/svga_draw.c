@@ -619,11 +619,11 @@ draw_vgpu10(struct svga_hwtnl *hwtnl,
          vbuffer_attrs[i].sid = 0;
       }
 
-      /* If we haven't yet emitted a drawing command or if any
-       * vertex buffer state is changing, issue that state now.
+      /* If any of the vertex buffer state has changed, issue
+       * the SetVertexBuffers command. Otherwise, we will just
+       * need to rebind the resources.
        */
-      if (((hwtnl->cmd.swc->hints & SVGA_HINT_FLAG_CAN_PRE_FLUSH) == 0) ||
-          vbuf_count != svga->state.hw_draw.num_vbuffers ||
+      if (vbuf_count != svga->state.hw_draw.num_vbuffers ||
           !vertex_buffers_equal(vbuf_count,
                                 vbuffer_attrs,
                                 vbuffers,

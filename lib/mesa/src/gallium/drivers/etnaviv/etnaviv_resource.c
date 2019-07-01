@@ -610,6 +610,7 @@ etna_resource_get_handle(struct pipe_screen *pscreen,
       rsc = etna_resource(rsc->external);
 
    handle->stride = rsc->levels[0].stride;
+   handle->offset = rsc->levels[0].offset;
    handle->modifier = layout_to_modifier(rsc->layout);
 
    if (handle->type == WINSYS_HANDLE_TYPE_SHARED) {

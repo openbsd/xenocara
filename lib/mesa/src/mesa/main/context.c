@@ -1760,10 +1760,6 @@ _mesa_make_current( struct gl_context *newCtx,
 
          check_init_viewport(newCtx, drawBuffer->Width, drawBuffer->Height);
       }
-      else {
-         _mesa_reference_framebuffer(&newCtx->WinSysDrawBuffer, NULL);
-         _mesa_reference_framebuffer(&newCtx->WinSysReadBuffer, NULL);
-      }
 
       if (newCtx->FirstTimeCurrent) {
          handle_first_current(newCtx);

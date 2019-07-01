@@ -696,9 +696,9 @@ brw_alu3(struct brw_codegen *p, unsigned opcode, struct brw_reg dest,
    gen7_convert_mrf_to_grf(p, &dest);
 
    assert(dest.nr < 128);
-   assert(src0.file != BRW_IMMEDIATE_VALUE || src0.nr < 128);
-   assert(src1.file != BRW_IMMEDIATE_VALUE || src1.nr < 128);
-   assert(src2.file != BRW_IMMEDIATE_VALUE || src2.nr < 128);
+   assert(src0.file == BRW_IMMEDIATE_VALUE || src0.nr < 128);
+   assert(src1.file != BRW_IMMEDIATE_VALUE && src1.nr < 128);
+   assert(src2.file == BRW_IMMEDIATE_VALUE || src2.nr < 128);
    assert(dest.address_mode == BRW_ADDRESS_DIRECT);
    assert(src0.address_mode == BRW_ADDRESS_DIRECT);
    assert(src1.address_mode == BRW_ADDRESS_DIRECT);

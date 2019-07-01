@@ -751,7 +751,7 @@ resolve_ahw_image(struct anv_device *device,
                                                 vk_format,
                                                 VK_IMAGE_ASPECT_COLOR_BIT,
                                                 vk_tiling);
-   assert(format != ISL_FORMAT_UNSUPPORTED);
+   assert(isl_fmt != ISL_FORMAT_UNSUPPORTED);
 
    /* Handle RGB(X)->RGBA fallback. */
    switch (desc.format) {

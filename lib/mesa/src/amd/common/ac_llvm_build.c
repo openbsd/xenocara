@@ -3455,7 +3455,7 @@ ac_build_wg_scan_bottom(struct ac_llvm_context *ctx, struct ac_wg_scan *ws)
 
 	/* ws->result_reduce is already the correct value */
 	if (ws->enable_inclusive)
-		ws->result_inclusive = ac_build_alu_op(ctx, ws->result_exclusive, ws->src, ws->op);
+		ws->result_inclusive = ac_build_alu_op(ctx, ws->result_inclusive, ws->src, ws->op);
 	if (ws->enable_exclusive)
 		ws->result_exclusive = ac_build_alu_op(ctx, ws->result_exclusive, ws->extra, ws->op);
 }

@@ -122,6 +122,23 @@ genX(cmd_buffer_emit_state_base_address)(struct anv_cmd_buffer *cmd_buffer)
       sba.IndirectObjectBufferSizeModifyEnable  = true;
       sba.InstructionBufferSize                 = 0xfffff;
       sba.InstructionBuffersizeModifyEnable     = true;
+#  else
+      /* On gen7, we have upper bounds instead.  According to the docs,
+       * setting an upper bound of zero means that no bounds checking is
+       * performed so, in theory, we should be able to leave them zero.
+       * However, border color is broken and the GPU bounds-checks anyway.
+       * To avoid this and other potential problems, we may as well set it
+       * for everything.
+       */
+      sba.GeneralStateAccessUpperBound =
+         (struct anv_address) { .bo = NULL, .offset = 0xfffff000 };
+      sba.GeneralStateAccessUpperBoundModifyEnable = true;
+      sba.DynamicStateAccessUpperBound =
+         (struct anv_address) { .bo = NULL, .offset = 0xfffff000 };
+      sba.DynamicStateAccessUpperBoundModifyEnable = true;
+      sba.InstructionAccessUpperBound =
+         (struct anv_address) { .bo = NULL, .offset = 0xfffff000 };
+      sba.InstructionAccessUpperBoundModifyEnable = true;
 #  endif
 #  if (GEN_GEN >= 9)
       sba.BindlessSurfaceStateBaseAddress = (struct anv_address) { NULL, 0 };
@@ -828,27 +845,21 @@ init_fast_clear_color(struct anv_cmd_buffer *cmd_buffer,
    set_image_fast_clear_state(cmd_buffer, image, aspect,
                               ANV_FAST_CLEAR_NONE);
 
-   /* The fast clear value dword(s) will be copied into a surface state object.
-    * Ensure that the restrictions of the fields in the dword(s) are followed.
-    *
-    * CCS buffers on SKL+ can have any value set for the clear colors.
-    */
-   if (image->samples == 1 && GEN_GEN >= 9)
-      return;
-
-   /* Other combinations of auxiliary buffers and platforms require specific
-    * values in the clear value dword(s).
+   /* Initialize the struct fields that are accessed for fast-clears so that
+    * the HW restrictions on the field values are satisfied.
     */
    struct anv_address addr =
       anv_image_get_clear_color_addr(cmd_buffer->device, image, aspect);
 
    if (GEN_GEN >= 9) {
-      for (unsigned i = 0; i < 4; i++) {
+      const struct isl_device *isl_dev = &cmd_buffer->device->isl_dev;
+      const unsigned num_dwords = GEN_GEN >= 10 ?
+                                  isl_dev->ss.clear_color_state_size / 4 :
+                                  isl_dev->ss.clear_value_size / 4;
+      for (unsigned i = 0; i < num_dwords; i++) {
          anv_batch_emit(&cmd_buffer->batch, GENX(MI_STORE_DATA_IMM), sdi) {
             sdi.Address = addr;
             sdi.Address.offset += i * 4;
-            /* MCS buffers on SKL+ can only have 1/0 clear colors. */
-            assert(image->samples > 1);
             sdi.ImmediateData = 0;
          }
       }

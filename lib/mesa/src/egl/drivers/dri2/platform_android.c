@@ -335,7 +335,6 @@ droid_create_surface(_EGLDriver *drv, _EGLDisplay *disp, EGLint type,
 		    _EGLConfig *conf, void *native_window,
 		    const EGLint *attrib_list)
 {
-   __DRIcreateNewDrawableFunc createNewDrawable;
    struct dri2_egl_display *dri2_dpy = dri2_egl_display(disp);
    struct dri2_egl_config *dri2_conf = dri2_egl_config(conf);
    struct dri2_egl_surface *dri2_surf;
@@ -379,17 +378,8 @@ droid_create_surface(_EGLDriver *drv, _EGLDisplay *disp, EGLint type,
       goto cleanup_surface;
    }
 
-   if (dri2_dpy->image_driver)
-      createNewDrawable = dri2_dpy->image_driver->createNewDrawable;
-   else
-      createNewDrawable = dri2_dpy->dri2->createNewDrawable;
-
-   dri2_surf->dri_drawable = (*createNewDrawable)(dri2_dpy->dri_screen, config,
-                                                  dri2_surf);
-   if (dri2_surf->dri_drawable == NULL) {
-      _eglError(EGL_BAD_ALLOC, "createNewDrawable");
+   if (!dri2_create_drawable(dri2_dpy, config, dri2_surf))
       goto cleanup_surface;
-   }
 
    if (window) {
       window->common.incRef(&window->common);

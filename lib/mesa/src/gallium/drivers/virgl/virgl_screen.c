@@ -347,7 +347,8 @@ virgl_get_param(struct pipe_screen *screen, enum pipe_cap param)
    case PIPE_CAP_NATIVE_FENCE_FD:
       return vscreen->vws->supports_fences;
    case PIPE_CAP_DEST_SURFACE_SRGB_CONTROL:
-      return vscreen->caps.caps.v2.capability_bits & VIRGL_CAP_SRGB_WRITE_CONTROL;
+      return (vscreen->caps.caps.v2.capability_bits & VIRGL_CAP_SRGB_WRITE_CONTROL) ||
+            (vscreen->caps.caps.v2.host_feature_check_version < 1);
    default:
       return u_pipe_screen_get_param_defaults(screen, param);
    }

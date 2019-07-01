@@ -1848,23 +1848,10 @@ static bool
 kernel_has_dynamic_config_support(struct brw_context *brw)
 {
    __DRIscreen *screen = brw->screen->driScrnPriv;
+   uint64_t invalid_config_id = UINT64_MAX;
 
-   hash_table_foreach(brw->perfquery.oa_metrics_table, entry) {
-      struct brw_perf_query_info *query = entry->data;
-      char config_path[280];
-      uint64_t config_id;
-
-      snprintf(config_path, sizeof(config_path), "%s/metrics/%s/id",
-               brw->perfquery.sysfs_dev_dir, query->guid);
-
-      /* Look for the test config, which we know we can't replace. */
-      if (read_file_uint64(config_path, &config_id) && config_id == 1) {
-         return drmIoctl(screen->fd, DRM_IOCTL_I915_PERF_REMOVE_CONFIG,
-                         &config_id) < 0 && errno == ENOENT;
-      }
-   }
-
-   return false;
+   return drmIoctl(screen->fd, DRM_IOCTL_I915_PERF_REMOVE_CONFIG,
+                   &invalid_config_id) < 0 && errno == ENOENT;
 }
 
 static void
@@ -1990,8 +1977,7 @@ compute_topology_builtins(struct brw_context *brw)
    for (int i = 0; i < sizeof(devinfo->eu_masks); i++)
       brw->perfquery.sys_vars.n_eus += util_bitcount(devinfo->eu_masks[i]);
 
-   brw->perfquery.sys_vars.eu_threads_count =
-      brw->perfquery.sys_vars.n_eus * devinfo->num_thread_per_eu;
+   brw->perfquery.sys_vars.eu_threads_count = devinfo->num_thread_per_eu;
 
    /* At the moment the subslice mask builtin has groups of 3bits for each
     * slice.

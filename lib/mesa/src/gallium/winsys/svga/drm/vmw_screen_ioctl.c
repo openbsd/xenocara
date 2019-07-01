@@ -210,6 +210,10 @@ vmw_ioctl_gb_surface_create(struct vmw_winsys_screen *vws,
                             SVGA3dMSQualityLevel qualityLevel,
                             struct vmw_region **p_region)
 {
+   union {
+      union drm_vmw_gb_surface_create_ext_arg ext_arg;
+      union drm_vmw_gb_surface_create_arg arg;
+   } s_arg;
    struct drm_vmw_gb_surface_create_rep *rep;
    struct vmw_region *region = NULL;
    int ret;
@@ -222,12 +226,11 @@ vmw_ioctl_gb_surface_create(struct vmw_winsys_screen *vws,
          return SVGA3D_INVALID_ID;
    }
 
-   if (vws->ioctl.have_drm_2_15) {
-      union drm_vmw_gb_surface_create_ext_arg s_arg;
-      struct drm_vmw_gb_surface_create_ext_req *req = &s_arg.req;
-      rep = &s_arg.rep;
+   memset(&s_arg, 0, sizeof(s_arg));
 
-      memset(&s_arg, 0, sizeof(s_arg));
+   if (vws->ioctl.have_drm_2_15) {
+      struct drm_vmw_gb_surface_create_ext_req *req = &s_arg.ext_arg.req;
+      rep = &s_arg.ext_arg.rep;
 
       req->version = drm_vmw_gb_surface_v1;
       req->multisample_pattern = multisamplePattern;
@@ -264,17 +267,15 @@ vmw_ioctl_gb_surface_create(struct vmw_winsys_screen *vws,
          buffer_handle : SVGA3D_INVALID_ID;
 
       ret = drmCommandWriteRead(vws->ioctl.drm_fd,
-                                DRM_VMW_GB_SURFACE_CREATE_EXT, &s_arg,
-                                sizeof(s_arg));
+                                DRM_VMW_GB_SURFACE_CREATE_EXT, &s_arg.ext_arg,
+                                sizeof(s_arg.ext_arg));
 
       if (ret)
          goto out_fail_create;
    } else {
-      union drm_vmw_gb_surface_create_arg s_arg;
-      struct drm_vmw_gb_surface_create_req *req = &s_arg.req;
-      rep = &s_arg.rep;
+      struct drm_vmw_gb_surface_create_req *req = &s_arg.arg.req;
+      rep = &s_arg.arg.rep;
 
-      memset(&s_arg, 0, sizeof(s_arg));
       req->svga3d_flags = (uint32_t) flags;
       req->format = (uint32_t) format;
 
@@ -305,7 +306,7 @@ vmw_ioctl_gb_surface_create(struct vmw_winsys_screen *vws,
          buffer_handle : SVGA3D_INVALID_ID;
 
       ret = drmCommandWriteRead(vws->ioctl.drm_fd, DRM_VMW_GB_SURFACE_CREATE,
-			        &s_arg, sizeof(s_arg));
+			        &s_arg.arg, sizeof(s_arg.arg));
 
       if (ret)
          goto out_fail_create;

@@ -540,6 +540,11 @@ dri2_init_surface(_EGLSurface *surf, _EGLDisplay *dpy, EGLint type,
 void
 dri2_fini_surface(_EGLSurface *surf);
 
+EGLBoolean
+dri2_create_drawable(struct dri2_egl_display *dri2_dpy,
+                     const __DRIconfig *config,
+                     struct dri2_egl_surface *dri2_surf);
+
 static inline uint64_t
 combine_u32_into_u64(uint32_t hi, uint32_t lo)
 {

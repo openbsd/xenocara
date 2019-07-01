@@ -33,7 +33,7 @@ extern "C" {
 ** used to make the header, and the header can be found at
 **   http://www.opengl.org/registry/
 **
-** Khronos $Revision: 1.15 $ on $Date: 2019/05/23 05:33:19 $
+** Khronos $Revision: 1.16 $ on $Date: 2019/07/01 08:36:47 $
 */
 
 #include <GLES3/gl3platform.h>

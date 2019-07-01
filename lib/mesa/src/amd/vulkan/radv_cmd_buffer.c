@@ -566,8 +566,8 @@ radv_save_descriptors(struct radv_cmd_buffer *cmd_buffer,
 
 	for_each_bit(i, descriptors_state->valid) {
 		struct radv_descriptor_set *set = descriptors_state->sets[i];
-		data[i * 2] = (uintptr_t)set;
-		data[i * 2 + 1] = (uintptr_t)set >> 32;
+		data[i * 2] = (uint64_t)(uintptr_t)set;
+		data[i * 2 + 1] = (uint64_t)(uintptr_t)set >> 32;
 	}
 
 	radv_emit_write_data_packet(cmd_buffer, va, MAX_SETS * 2, data);
@@ -4736,7 +4736,7 @@ static void write_event(struct radv_cmd_buffer *cmd_buffer,
 
 	radv_cs_add_buffer(cmd_buffer->device->ws, cs, event->bo);
 
-	MAYBE_UNUSED unsigned cdw_max = radeon_check_space(cmd_buffer->device->ws, cs, 18);
+	MAYBE_UNUSED unsigned cdw_max = radeon_check_space(cmd_buffer->device->ws, cs, 21);
 
 	/* Flags that only require a top-of-pipe event. */
 	VkPipelineStageFlags top_of_pipe_flags =
