@@ -43,3 +43,15 @@ libvulkan_util = static_library(
   c_args : [c_vis_args],
   build_by_default : false,
 )
+
+idep_vulkan_util_headers = declare_dependency(
+  sources : vk_enum_to_str[1],
+  include_directories : include_directories('.')
+)
+
+idep_vulkan_util = declare_dependency(
+  sources : vk_enum_to_str[1],
+  link_with : libvulkan_util,
+  include_directories : include_directories('.'),
+  dependencies : idep_vulkan_util_headers
+)

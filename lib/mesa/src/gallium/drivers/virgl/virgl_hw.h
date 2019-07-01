@@ -358,6 +358,7 @@ struct virgl_caps_v2 {
         uint32_t max_atomic_counter_buffers[6];
         uint32_t max_combined_atomic_counters;
         uint32_t max_combined_atomic_counter_buffers;
+        uint32_t host_feature_check_version;
 };
 
 union virgl_caps {
