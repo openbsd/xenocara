@@ -1,4 +1,4 @@
-.\"	$OpenBSD: cwm.1,v 1.64 2019/02/25 18:07:48 okan Exp $
+.\"	$OpenBSD: cwm.1,v 1.65 2019/07/09 21:38:44 kn Exp $
 .\"
 .\" Copyright (c) 2004,2005 Marius Aamodt Eriksen <marius@monkey.org>
 .\"
@@ -14,7 +14,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: February 25 2019 $
+.Dd $Mdocdate: July 9 2019 $
 .Dt CWM 1
 .Os
 .Sh NAME
@@ -219,6 +219,11 @@ Window is currently focused.
 .It &
 Window is hidden.
 .El
+.Sh APPLICATIONS
+.Nm
+manages a list of applications defined with the
+.Cm command
+configuration option.
 .Sh GROUPS
 .Nm
 has the ability to group windows together, and use the groups to
@@ -242,8 +247,7 @@ Selecting an item will warp to that window, unhiding it if necessary.
 Show list of currently defined groups.
 Selecting an item will hide/unhide that group.
 .It Ic M3
-Show list of applications as defined in
-.Pa ~/.cwmrc .
+Show list of applications as defined in the configuration file.
 Selecting an item will spawn that application.
 .El
 .Sh ENVIRONMENT
