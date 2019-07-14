@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.415 2019/06/19 19:36:36 matthieu Exp $
+# $OpenBSD: MODULES,v 1.416 2019/07/14 16:28:17 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -24,7 +24,7 @@ app/smproxy		1.0.6
 app/twm			1.0.10
 app/viewres		1.0.5
 app/x11perf		1.6.1		needs-update
-app/xauth		1.0.10
+app/xauth		1.1		needs-update
 app/xbacklight		1.2.2
 app/xbiff		1.0.3
 app/xcalc		1.1.0		needs-update
@@ -173,7 +173,7 @@ lib/libXpresent			1.0.0
 lib/libXrandr			1.5.2		needs-update
 lib/libXrender			0.9.10
 lib/libXres			1.2.0
-lib/libXt			1.1.5
+lib/libXt			1.2.0		needs-update
 lib/libXtst			1.2.3
 lib/libXv			1.0.11
 lib/libXvMC			1.0.11		needs-update
@@ -181,7 +181,7 @@ lib/libXxf86dga			1.1.5		needs-update
 lib/libXxf86vm			1.1.4
 lib/libdmx			1.1.4
 lib/libfontenc			1.1.4
-lib/libpciaccess		0.14
+lib/libpciaccess		0.15		needs-update
 lib/libxcb			1.13
 lib/libxkbfile			1.1.0		needs-update
 lib/libxkbui			1.0.2
@@ -196,7 +196,7 @@ lib/xcb-util-renderutil		0.3.9
 lib/xcb-util-wm			0.4.1
 
 proto/xcb-proto			1.13
-proto/xorgproto			2018.4
+proto/xorgproto			2019.1		needs-update
 
 util/cf				1.0.4
 util/gccmakedep			1.0.3
