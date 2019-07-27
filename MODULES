@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.417 2019/07/14 21:11:29 matthieu Exp $
+# $OpenBSD: MODULES,v 1.418 2019/07/27 08:05:17 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -14,7 +14,7 @@ app/ico			1.0.5
 app/listres		1.0.4
 app/luit		1.1.1		XXX
 app/mkcomposecache	1.2.1		needs-import
-app/mkfontdir		1.0.7
+app/mkfontdir		1.0.7		needs-removal
 app/mkfontscale		1.2.1		needs-update
 app/oclock		1.0.4
 app/rgb			1.0.6
@@ -46,7 +46,7 @@ app/xgamma		1.0.6
 app/xgc			1.0.5
 app/xhost		1.0.8		needs-update
 app/xinit		1.4.1		needs-update
-app/xinput		1.6.2
+app/xinput		1.6.3		needs-update
 app/xkbcomp		1.4.2
 app/xkbevd		1.1.4
 app/xkbprint		1.0.4
@@ -181,7 +181,7 @@ lib/libXxf86dga			1.1.5		needs-update
 lib/libXxf86vm			1.1.4
 lib/libdmx			1.1.4
 lib/libfontenc			1.1.4
-lib/libpciaccess		0.15		needs-update
+lib/libpciaccess		0.16		needs-update
 lib/libxcb			1.13
 lib/libxkbfile			1.1.0		needs-update
 lib/libxkbui			1.0.2
@@ -203,4 +203,4 @@ util/gccmakedep			1.0.3
 util/macros			1.19.2
 util/makedepend			1.0.6		needs-update
 
-xserver				1.20.5		needs-update
+xserver				1.20.5
