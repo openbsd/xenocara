@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb_driver.c,v 1.37 2019/06/30 17:10:24 matthieu Exp $ */
+/* $OpenBSD: wsfb_driver.c,v 1.38 2019/07/27 07:48:19 matthieu Exp $ */
 /*
  * Copyright © 2001-2012 Matthieu Herrb
  * All rights reserved.
@@ -73,6 +73,7 @@
 #include "xf86xv.h"
 #endif
 
+#include "xorgVersion.h"
 #include "compat-api.h"
 
 #ifdef X_PRIVSEP
@@ -1000,9 +1001,11 @@ WsfbScreenInit(SCREEN_INIT_ARGS_DECL)
 		    "disabling DGA\n");
 #endif
 	if (fPtr->rotate) {
+#if XORG_VERSION_CURRENT < XORG_VERSION_NUMERIC(1,19,99,1,0)
 		xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		    "Enabling Driver Rotation, " "disabling RandR\n");
 		xf86DisableRandR();
+#endif
 		if (pScrn->bitsPerPixel == 24)
 			xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
 			    "Rotation might be broken in 24 bpp\n");
