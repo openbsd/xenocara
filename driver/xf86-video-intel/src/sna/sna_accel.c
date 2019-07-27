@@ -16635,7 +16635,9 @@ static int sna_create_gc(GCPtr gc)
 
 	gc->freeCompClip = 0;
 	gc->pCompositeClip = 0;
+#if XORG_VERSION_CURRENT < XORG_VERSION_NUMERIC(1,19,99,1,0)
 	gc->pRotatedPixmap = 0;
+#endif
 
 	fb_gc(gc)->bpp = bits_per_pixel(gc->depth);
 
