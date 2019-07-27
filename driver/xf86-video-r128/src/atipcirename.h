@@ -34,6 +34,7 @@ enum region_type {
     REGION_IO 
 };
 
+#include <stdint.h>
 #include "xf86Module.h"
 
 #if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) >= 12
