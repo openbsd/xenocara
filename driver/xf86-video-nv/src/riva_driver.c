@@ -1210,9 +1210,11 @@ RivaScreenInit(SCREEN_INIT_ARGS_DECL)
                case 16:	refreshArea = RivaRefreshArea16;	break;
                case 32:	refreshArea = RivaRefreshArea32;	break;
 	   }
+#if XORG_VERSION_CURRENT < XORG_VERSION_NUMERIC(1,19,99,1,0)
            xf86DisableRandR();
            xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                       "Driver rotation enabled, RandR disabled\n");
+#endif
 	}
 
 	ShadowFBInit(pScreen, refreshArea);

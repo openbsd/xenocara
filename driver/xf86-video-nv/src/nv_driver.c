@@ -2631,11 +2631,13 @@ NVScreenInit(SCREEN_INIT_ARGS_DECL)
                case 16:	refreshArea = NVRefreshArea16;	break;
                case 32:	refreshArea = NVRefreshArea32;	break;
 	   }
+#if XORG_VERSION_CURRENT < XORG_VERSION_NUMERIC(1,19,99,1,0)
            if(!pNv->RandRRotation) {
                xf86DisableRandR();
                xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                           "Driver rotation enabled, RandR disabled\n");
            }
+#endif
 	}
         pNv->refreshArea = refreshArea;
 	NVShadowInit(pScreen);
