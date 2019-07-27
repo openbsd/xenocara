@@ -139,6 +139,7 @@
 ./usr/X11R6/include/xorg/glamor.h
 ./usr/X11R6/include/xorg/globals.h
 ./usr/X11R6/include/xorg/glx_extinit.h
+./usr/X11R6/include/xorg/glxvndabi.h
 ./usr/X11R6/include/xorg/glyphstr.h
 ./usr/X11R6/include/xorg/hotplug.h
 ./usr/X11R6/include/xorg/i2c_def.h
@@ -200,6 +201,7 @@
 ./usr/X11R6/include/xorg/vbe.h
 ./usr/X11R6/include/xorg/vbeModes.h
 ./usr/X11R6/include/xorg/vgaHW.h
+./usr/X11R6/include/xorg/vndserver.h
 ./usr/X11R6/include/xorg/wfbrename.h
 ./usr/X11R6/include/xorg/window.h
 ./usr/X11R6/include/xorg/windowstr.h
@@ -212,6 +214,7 @@
 ./usr/X11R6/include/xorg/xf86Crtc.h
 ./usr/X11R6/include/xorg/xf86Cursor.h
 ./usr/X11R6/include/xorg/xf86DDC.h
+./usr/X11R6/include/xorg/xf86MatchDrivers.h
 ./usr/X11R6/include/xorg/xf86Modes.h
 ./usr/X11R6/include/xorg/xf86Module.h
 ./usr/X11R6/include/xorg/xf86Opt.h
