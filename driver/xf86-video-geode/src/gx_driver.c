@@ -1432,7 +1432,9 @@ GXScreenInit(SCREEN_INIT_ARGS_DECL)
 
     /* Set up RandR */
 
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 24
     xf86DisableRandR();         /* We provide our own RandR goodness */
+#endif
 
     /* Try to set up the shadow FB for rotation */
 
