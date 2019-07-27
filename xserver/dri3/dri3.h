@@ -28,7 +28,7 @@
 #include <X11/extensions/dri3proto.h>
 #include <randrstr.h>
 
-#define DRI3_SCREEN_INFO_VERSION        1
+#define DRI3_SCREEN_INFO_VERSION        2
 
 typedef int (*dri3_open_proc)(ScreenPtr screen,
                               RRProviderPtr provider,
@@ -47,10 +47,42 @@ typedef PixmapPtr (*dri3_pixmap_from_fd_proc) (ScreenPtr screen,
                                                CARD8 depth,
                                                CARD8 bpp);
 
+typedef PixmapPtr (*dri3_pixmap_from_fds_proc) (ScreenPtr screen,
+                                                CARD8 num_fds,
+                                                const int *fds,
+                                                CARD16 width,
+                                                CARD16 height,
+                                                const CARD32 *strides,
+                                                const CARD32 *offsets,
+                                                CARD8 depth,
+                                                CARD8 bpp,
+                                                CARD64 modifier);
+
 typedef int (*dri3_fd_from_pixmap_proc) (ScreenPtr screen,
                                          PixmapPtr pixmap,
                                          CARD16 *stride,
                                          CARD32 *size);
+
+typedef int (*dri3_fds_from_pixmap_proc) (ScreenPtr screen,
+                                          PixmapPtr pixmap,
+                                          int *fds,
+                                          uint32_t *strides,
+                                          uint32_t *offsets,
+                                          uint64_t *modifier);
+
+typedef int (*dri3_get_formats_proc) (ScreenPtr screen,
+                                      CARD32 *num_formats,
+                                      CARD32 **formats);
+
+typedef int (*dri3_get_modifiers_proc) (ScreenPtr screen,
+                                        uint32_t format,
+                                        uint32_t *num_modifiers,
+                                        uint64_t **modifiers);
+
+typedef int (*dri3_get_drawable_modifiers_proc) (DrawablePtr draw,
+                                                 uint32_t format,
+                                                 uint32_t *num_modifiers,
+                                                 uint64_t **modifiers);
 
 typedef struct dri3_screen_info {
     uint32_t                    version;
@@ -62,13 +94,23 @@ typedef struct dri3_screen_info {
     /* Version 1 */
     dri3_open_client_proc       open_client;
 
+    /* Version 2 */
+    dri3_pixmap_from_fds_proc   pixmap_from_fds;
+    dri3_fds_from_pixmap_proc   fds_from_pixmap;
+    dri3_get_formats_proc       get_formats;
+    dri3_get_modifiers_proc     get_modifiers;
+    dri3_get_drawable_modifiers_proc get_drawable_modifiers;
+
 } dri3_screen_info_rec, *dri3_screen_info_ptr;
 
 extern _X_EXPORT Bool
-dri3_screen_init(ScreenPtr screen, dri3_screen_info_ptr info);
+dri3_screen_init(ScreenPtr screen, const dri3_screen_info_rec *info);
 
 extern _X_EXPORT int
 dri3_send_open_reply(ClientPtr client, int fd);
+
+extern _X_EXPORT uint32_t
+drm_format_for_depth(uint32_t depth, uint32_t bpp);
 
 #endif
 

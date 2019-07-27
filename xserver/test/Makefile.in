@@ -50,25 +50,66 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
+@ENABLE_UNIT_TESTS_TRUE@noinst_PROGRAMS = simple-xinit$(EXEEXT) \
+@ENABLE_UNIT_TESTS_TRUE@	tests$(EXEEXT)
+@ENABLE_UNIT_TESTS_TRUE@TESTS = tests$(EXEEXT) $(am__EXEEXT_1) \
+@ENABLE_UNIT_TESTS_TRUE@	$(am__append_8)
+
 # Tests that require at least some DDX functions in order to fully link
 # For now, requires xf86 ddx, could be adjusted to use another
-@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__append_1 = xi1 xi2
-@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__append_2 = xkb input xtest misc fixes xfree86 signal-logging touch
-@ENABLE_UNIT_TESTS_TRUE@@RES_TRUE@@XORG_TRUE@am__append_3 = hashtabletest
-@ENABLE_UNIT_TESTS_TRUE@noinst_PROGRAMS = simple-xinit$(EXEEXT) \
-@ENABLE_UNIT_TESTS_TRUE@	$(am__EXEEXT_3)
-@ENABLE_UNIT_TESTS_TRUE@TESTS = $(am__EXEEXT_3) $(am__EXEEXT_4)
-@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__append_4 = -I$(top_srcdir)/hw/xfree86/parser \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__append_1 = \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	-I$(srcdir)/xi1 \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	-I$(srcdir)/xi2 \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	-I$(top_srcdir)/hw/xfree86/common \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	-I$(top_srcdir)/hw/xfree86/parser \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	-I$(top_srcdir)/hw/xfree86/ddc \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	-I$(top_srcdir)/hw/xfree86/i2c -I$(top_srcdir)/hw/xfree86/modes \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	-I$(top_srcdir)/hw/xfree86/ramdac -I$(top_srcdir)/hw/xfree86/dri \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	-I$(top_srcdir)/hw/xfree86/dri2 -I$(top_srcdir)/dri3
 
-@ENABLE_UNIT_TESTS_TRUE@@SPECIAL_DTRACE_OBJECTS_TRUE@am__append_5 = $(OS_LIB) $(DIX_LIB)
-@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__append_6 = \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__append_2 = $(AM_CPPFLAGS) \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	-DXORG_TESTS
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__append_3 = \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@        fixes.c \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@        input.c \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@        misc.c \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@        signal-logging.c \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@        touch.c \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@        xfree86.c \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@        test_xkb.c \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@        xtest.c
+
+@ENABLE_UNIT_TESTS_TRUE@@RES_TRUE@@XORG_TRUE@am__append_4 = hashtabletest.c
+@ENABLE_UNIT_TESTS_TRUE@@RES_TRUE@@XORG_TRUE@am__append_5 = -DRES_TESTS
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@am__append_6 = -DLDWRAP_TESTS
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@am__append_7 = \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@	xi1/protocol-xchangedevicecontrol.c \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@	xi2/protocol-common.c \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@	xi2/protocol-xiqueryversion.c \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@	xi2/protocol-xiquerydevice.c \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@	xi2/protocol-xiselectevents.c \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@	xi2/protocol-xigetselectedevents.c \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@	xi2/protocol-xisetclientpointer.c \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@	xi2/protocol-xigetclientpointer.c \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@	xi2/protocol-xiquerypointer.c \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@	xi2/protocol-xipassivegrabdevice.c \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@	xi2/protocol-xiwarppointer.c \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@	xi2/protocol-eventconvert.c \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@	xi2/xi2.c \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@	xi2/protocol-common.h
+
+
+# Print that xi1-tests were skipped (exit code 77 for automake test harness)
+
+# Print that xi2-tests were skipped (exit code 77 for automake test harness)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_FALSE@am__append_8 = xi1-tests \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_FALSE@	xi2-tests
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_FALSE@am__append_9 = xi1-tests \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_FALSE@	xi2-tests
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__append_10 = \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            $(top_builddir)/hw/xfree86/loader/libloader.la \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            $(top_builddir)/hw/xfree86/os-support/libxorgos.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            $(top_builddir)/hw/xfree86/common/libcommon.la \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            $(top_builddir)/hw/xfree86/os-support/libxorgos.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            $(top_builddir)/hw/xfree86/parser/libxf86config.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            $(top_builddir)/hw/xfree86/dixmods/libdixmods.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            $(top_builddir)/hw/xfree86/modes/libxf86modes.la \
@@ -77,50 +118,15 @@ host_triplet = @host@
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            $(top_builddir)/hw/xfree86/i2c/libi2c.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            $(top_builddir)/hw/xfree86/xkb/libxorgxkb.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            $(top_builddir)/Xext/libXvidmode.la \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            @XORG_LIBS@
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            $(XSERVER_LIBS) \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            $(XORG_LIBS)
 
-@DRI_TRUE@@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__append_7 = $(top_builddir)/hw/xfree86/dri/libdri.la
-@DRI2_TRUE@@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__append_8 = $(top_builddir)/hw/xfree86/dri2/libdri2.la
-@DRI3_TRUE@@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__append_9 = $(top_builddir)/dri3/libdri3.la
-@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@am__append_10 = \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            $(top_builddir)/damageext/libdamageext.la \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            $(top_builddir)/fb/libfb.la \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            $(top_builddir)/fb/libwfb.la \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            $(top_builddir)/miext/damage/libdamage.la \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            $(top_builddir)/miext/sync/libsync.la \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            $(top_builddir)/randr/librandr.la \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            $(top_builddir)/render/librender.la \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            $(top_builddir)/Xext/libXext.la \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            $(top_builddir)/Xext/libXextdpmsstubs.la \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            $(top_builddir)/Xext/libXvidmode.la \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            $(top_builddir)/Xi/libXi.la \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            $(top_builddir)/Xi/libXistubs.la \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            $(top_builddir)/xfixes/libxfixes.la \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            $(top_builddir)/xkb/libxkb.la \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            $(top_builddir)/xkb/libxkbstubs.la
-
-@COMPOSITE_TRUE@@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@am__append_11 = \
-@COMPOSITE_TRUE@@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            $(top_builddir)/composite/libcomposite.la
-
-@DBE_TRUE@@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@am__append_12 = \
-@DBE_TRUE@@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            $(top_builddir)/dbe/libdbe.la
-
-@ENABLE_UNIT_TESTS_TRUE@@GLX_TRUE@@XORG_FALSE@am__append_13 = \
-@ENABLE_UNIT_TESTS_TRUE@@GLX_TRUE@@XORG_FALSE@            $(top_builddir)/glx/libglx.la
-
-@ENABLE_UNIT_TESTS_TRUE@@RECORD_TRUE@@XORG_FALSE@am__append_14 = \
-@ENABLE_UNIT_TESTS_TRUE@@RECORD_TRUE@@XORG_FALSE@            $(top_builddir)/record/librecord.la
-
-@DRI3_TRUE@@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@am__append_15 = \
-@DRI3_TRUE@@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            $(top_builddir)/dri3/libdri3.la
-
-@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@@XQUARTZ_TRUE@am__append_16 = \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@@XQUARTZ_TRUE@            $(top_builddir)/miext/rootless/librootless.la
-
-@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@@XQUARTZ_TRUE@am__append_17 = -lXplugin
-@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@@XWIN_MULTIWINDOWEXTWM_TRUE@am__append_18 = \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@@XWIN_MULTIWINDOWEXTWM_TRUE@            $(top_builddir)/miext/rootless/librootless.la
-
+@ENABLE_UNIT_TESTS_TRUE@@SPECIAL_DTRACE_OBJECTS_FALSE@@XORG_TRUE@am__append_11 = $(top_builddir)/os/libos.la
+@ENABLE_UNIT_TESTS_TRUE@@GLX_TRUE@@XORG_TRUE@am__append_12 = $(top_builddir)/glx/libglxvnd.la
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__append_13 = sdksyms.c
+@DRI_TRUE@@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__append_14 = $(top_builddir)/hw/xfree86/dri/libdri.la
+@DRI2_TRUE@@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__append_15 = $(top_builddir)/hw/xfree86/dri2/libdri2.la
+@DRI3_TRUE@@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__append_16 = $(top_builddir)/dri3/libdri3.la
 subdir = test
 DIST_COMMON = README $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/depcomp
@@ -139,14 +145,67 @@ CONFIG_HEADER = $(top_builddir)/include/do-not-use-config.h \
 	$(top_builddir)/include/xorg-config.h \
 	$(top_builddir)/include/xkb-config.h \
 	$(top_builddir)/include/xwin-config.h \
-	$(top_builddir)/include/kdrive-config.h \
+	$(top_builddir)/include/xwayland-config.h \
 	$(top_builddir)/include/version-config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
+PROGRAMS = $(noinst_PROGRAMS)
+simple_xinit_SOURCES = simple-xinit.c
+simple_xinit_OBJECTS = simple-xinit.$(OBJEXT)
+simple_xinit_LDADD = $(LDADD)
+AM_V_lt = $(am__v_lt_@AM_V@)
+am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
+am__v_lt_0 = --silent
+am__v_lt_1 = 
+am__tests_SOURCES_DIST = tests-common.c tests-common.h list.c string.c \
+	tests.c tests.h fixes.c input.c misc.c signal-logging.c \
+	touch.c xfree86.c test_xkb.c xtest.c hashtabletest.c \
+	xi1/protocol-xchangedevicecontrol.c xi2/protocol-common.c \
+	xi2/protocol-xiqueryversion.c xi2/protocol-xiquerydevice.c \
+	xi2/protocol-xiselectevents.c \
+	xi2/protocol-xigetselectedevents.c \
+	xi2/protocol-xisetclientpointer.c \
+	xi2/protocol-xigetclientpointer.c \
+	xi2/protocol-xiquerypointer.c \
+	xi2/protocol-xipassivegrabdevice.c \
+	xi2/protocol-xiwarppointer.c xi2/protocol-eventconvert.c \
+	xi2/xi2.c xi2/protocol-common.h
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__objects_1 =  \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	tests-fixes.$(OBJEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	tests-input.$(OBJEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	tests-misc.$(OBJEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	tests-signal-logging.$(OBJEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	tests-touch.$(OBJEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	tests-xfree86.$(OBJEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	tests-test_xkb.$(OBJEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	tests-xtest.$(OBJEXT)
+@ENABLE_UNIT_TESTS_TRUE@@RES_TRUE@@XORG_TRUE@am__objects_2 = tests-hashtabletest.$(OBJEXT)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@am__objects_3 = tests-protocol-xchangedevicecontrol.$(OBJEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@	tests-protocol-common.$(OBJEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@	tests-protocol-xiqueryversion.$(OBJEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@	tests-protocol-xiquerydevice.$(OBJEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@	tests-protocol-xiselectevents.$(OBJEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@	tests-protocol-xigetselectedevents.$(OBJEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@	tests-protocol-xisetclientpointer.$(OBJEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@	tests-protocol-xigetclientpointer.$(OBJEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@	tests-protocol-xiquerypointer.$(OBJEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@	tests-protocol-xipassivegrabdevice.$(OBJEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@	tests-protocol-xiwarppointer.$(OBJEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@	tests-protocol-eventconvert.$(OBJEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@	tests-xi2.$(OBJEXT)
+@ENABLE_UNIT_TESTS_TRUE@am_tests_OBJECTS =  \
+@ENABLE_UNIT_TESTS_TRUE@	tests-tests-common.$(OBJEXT) \
+@ENABLE_UNIT_TESTS_TRUE@	tests-list.$(OBJEXT) \
+@ENABLE_UNIT_TESTS_TRUE@	tests-string.$(OBJEXT) \
+@ENABLE_UNIT_TESTS_TRUE@	tests-tests.$(OBJEXT) $(am__objects_1) \
+@ENABLE_UNIT_TESTS_TRUE@	$(am__objects_2) $(am__objects_3)
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@nodist_tests_OBJECTS =  \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	tests-sdksyms.$(OBJEXT)
+tests_OBJECTS = $(am_tests_OBJECTS) $(nodist_tests_OBJECTS)
 am__DEPENDENCIES_1 =
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__DEPENDENCIES_2 = $(top_builddir)/hw/xfree86/loader/libloader.la \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	$(top_builddir)/hw/xfree86/os-support/libxorgos.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	$(top_builddir)/hw/xfree86/common/libcommon.la \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	$(top_builddir)/hw/xfree86/os-support/libxorgos.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	$(top_builddir)/hw/xfree86/parser/libxf86config.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	$(top_builddir)/hw/xfree86/dixmods/libdixmods.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	$(top_builddir)/hw/xfree86/modes/libxf86modes.la \
@@ -154,75 +213,18 @@ am__DEPENDENCIES_1 =
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	$(top_builddir)/hw/xfree86/ddc/libddc.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	$(top_builddir)/hw/xfree86/i2c/libi2c.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	$(top_builddir)/hw/xfree86/xkb/libxorgxkb.la \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	$(top_builddir)/Xext/libXvidmode.la
-@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@nodist_libxservertest_la_OBJECTS =  \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@	ddxstubs.lo miinitext.lo
-@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@nodist_libxservertest_la_OBJECTS =  \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	sdksyms.lo
-libxservertest_la_OBJECTS = $(nodist_libxservertest_la_OBJECTS)
-AM_V_lt = $(am__v_lt_@AM_V@)
-am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
-am__v_lt_0 = --silent
-am__v_lt_1 = 
-@ENABLE_UNIT_TESTS_TRUE@am_libxservertest_la_rpath =
-@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__EXEEXT_1 = xkb$(EXEEXT) \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	input$(EXEEXT) \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	xtest$(EXEEXT) \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	misc$(EXEEXT) \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	fixes$(EXEEXT) \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	xfree86$(EXEEXT) \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	signal-logging$(EXEEXT) \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	touch$(EXEEXT)
-@ENABLE_UNIT_TESTS_TRUE@@RES_TRUE@@XORG_TRUE@am__EXEEXT_2 = hashtabletest$(EXEEXT)
-@ENABLE_UNIT_TESTS_TRUE@am__EXEEXT_3 = list$(EXEEXT) string$(EXEEXT) \
-@ENABLE_UNIT_TESTS_TRUE@	$(am__EXEEXT_1) $(am__EXEEXT_2)
-PROGRAMS = $(noinst_PROGRAMS)
-fixes_SOURCES = fixes.c
-fixes_OBJECTS = fixes.$(OBJEXT)
-@ENABLE_UNIT_TESTS_TRUE@@SPECIAL_DTRACE_OBJECTS_TRUE@am__DEPENDENCIES_3 = $(am__DEPENDENCIES_1) \
-@ENABLE_UNIT_TESTS_TRUE@@SPECIAL_DTRACE_OBJECTS_TRUE@	$(am__DEPENDENCIES_1)
-@ENABLE_UNIT_TESTS_TRUE@am__DEPENDENCIES_4 = libxservertest.la \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	$(top_builddir)/Xext/libXvidmode.la \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	$(am__DEPENDENCIES_1) \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	$(am__DEPENDENCIES_1)
+@ENABLE_UNIT_TESTS_TRUE@tests_DEPENDENCIES = $(am__DEPENDENCIES_2) \
+@ENABLE_UNIT_TESTS_TRUE@	$(am__append_11) $(am__append_12) \
+@ENABLE_UNIT_TESTS_TRUE@	$(am__append_14) $(am__append_15) \
+@ENABLE_UNIT_TESTS_TRUE@	$(am__append_16) $(am__DEPENDENCIES_1) \
 @ENABLE_UNIT_TESTS_TRUE@	$(am__DEPENDENCIES_1) \
-@ENABLE_UNIT_TESTS_TRUE@	$(am__DEPENDENCIES_1) \
-@ENABLE_UNIT_TESTS_TRUE@	$(am__DEPENDENCIES_1) \
-@ENABLE_UNIT_TESTS_TRUE@	$(am__DEPENDENCIES_3) \
 @ENABLE_UNIT_TESTS_TRUE@	$(am__DEPENDENCIES_1)
-@ENABLE_UNIT_TESTS_TRUE@fixes_DEPENDENCIES = $(am__DEPENDENCIES_4)
-hashtabletest_SOURCES = hashtabletest.c
-hashtabletest_OBJECTS = hashtabletest.$(OBJEXT)
-@ENABLE_UNIT_TESTS_TRUE@hashtabletest_DEPENDENCIES =  \
-@ENABLE_UNIT_TESTS_TRUE@	$(am__DEPENDENCIES_4)
-input_SOURCES = input.c
-input_OBJECTS = input.$(OBJEXT)
-@ENABLE_UNIT_TESTS_TRUE@input_DEPENDENCIES = $(am__DEPENDENCIES_4)
-list_SOURCES = list.c
-list_OBJECTS = list.$(OBJEXT)
-list_LDADD = $(LDADD)
-misc_SOURCES = misc.c
-misc_OBJECTS = misc.$(OBJEXT)
-@ENABLE_UNIT_TESTS_TRUE@misc_DEPENDENCIES = $(am__DEPENDENCIES_4)
-signal_logging_SOURCES = signal-logging.c
-signal_logging_OBJECTS = signal-logging.$(OBJEXT)
-@ENABLE_UNIT_TESTS_TRUE@signal_logging_DEPENDENCIES =  \
-@ENABLE_UNIT_TESTS_TRUE@	$(am__DEPENDENCIES_4)
-simple_xinit_SOURCES = simple-xinit.c
-simple_xinit_OBJECTS = simple-xinit.$(OBJEXT)
-simple_xinit_LDADD = $(LDADD)
-string_SOURCES = string.c
-string_OBJECTS = string.$(OBJEXT)
-string_LDADD = $(LDADD)
-touch_SOURCES = touch.c
-touch_OBJECTS = touch.$(OBJEXT)
-@ENABLE_UNIT_TESTS_TRUE@touch_DEPENDENCIES = $(am__DEPENDENCIES_4)
-xfree86_SOURCES = xfree86.c
-xfree86_OBJECTS = xfree86.$(OBJEXT)
-@ENABLE_UNIT_TESTS_TRUE@xfree86_DEPENDENCIES = $(am__DEPENDENCIES_4)
-xkb_SOURCES = xkb.c
-xkb_OBJECTS = xkb.$(OBJEXT)
-@ENABLE_UNIT_TESTS_TRUE@xkb_DEPENDENCIES = $(am__DEPENDENCIES_4)
-xtest_SOURCES = xtest.c
-xtest_OBJECTS = xtest.$(OBJEXT)
-@ENABLE_UNIT_TESTS_TRUE@xtest_DEPENDENCIES = $(am__DEPENDENCIES_4)
+tests_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(tests_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -257,12 +259,8 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(nodist_libxservertest_la_SOURCES) fixes.c hashtabletest.c \
-	input.c list.c misc.c signal-logging.c simple-xinit.c string.c \
-	touch.c xfree86.c xkb.c xtest.c
-DIST_SOURCES = fixes.c hashtabletest.c input.c list.c misc.c \
-	signal-logging.c simple-xinit.c string.c touch.c xfree86.c \
-	xkb.c xtest.c
+SOURCES = simple-xinit.c $(tests_SOURCES) $(nodist_tests_SOURCES)
+DIST_SOURCES = simple-xinit.c $(am__tests_SOURCES_DIST)
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	html-recursive info-recursive install-data-recursive \
 	install-dvi-recursive install-exec-recursive \
@@ -286,9 +284,9 @@ am__tty_colors_dummy = \
   mgn= red= grn= lgn= blu= brg= std=; \
   am__color_tests=no
 am__tty_colors = $(am__tty_colors_dummy)
-@ENABLE_UNIT_TESTS_TRUE@am__EXEEXT_4 = $(XVFB_TESTS) \
+@ENABLE_UNIT_TESTS_TRUE@am__EXEEXT_1 = $(XVFB_TESTS) \
 @ENABLE_UNIT_TESTS_TRUE@	$(XEPHYR_GLAMOR_TESTS)
-DIST_SUBDIRS = . xi1 xi2
+DIST_SUBDIRS = .
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 am__relativize = \
   dir0=`pwd`; \
@@ -498,6 +496,7 @@ RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
 RELEASE_DATE = @RELEASE_DATE@
+SCANNER_ARG = @SCANNER_ARG@
 SDK_REQUIRED_MODULES = @SDK_REQUIRED_MODULES@
 SED = @SED@
 SELINUX_CFLAGS = @SELINUX_CFLAGS@
@@ -516,15 +515,18 @@ SYSCONFDIR = @SYSCONFDIR@
 SYSTEMD_DAEMON_CFLAGS = @SYSTEMD_DAEMON_CFLAGS@
 SYSTEMD_DAEMON_LIBS = @SYSTEMD_DAEMON_LIBS@
 TRADITIONALCPPFLAGS = @TRADITIONALCPPFLAGS@
-TSLIB_CFLAGS = @TSLIB_CFLAGS@
-TSLIB_LIBS = @TSLIB_LIBS@
 UDEV_CFLAGS = @UDEV_CFLAGS@
 UDEV_LIBS = @UDEV_LIBS@
 UTILS_SYS_LIBS = @UTILS_SYS_LIBS@
 VENDOR_NAME_SHORT = @VENDOR_NAME_SHORT@
 VERSION = @VERSION@
+WAYLAND_EGLSTREAM_CFLAGS = @WAYLAND_EGLSTREAM_CFLAGS@
+WAYLAND_EGLSTREAM_DATADIR = @WAYLAND_EGLSTREAM_DATADIR@
+WAYLAND_EGLSTREAM_LIBS = @WAYLAND_EGLSTREAM_LIBS@
 WAYLAND_PROTOCOLS_DATADIR = @WAYLAND_PROTOCOLS_DATADIR@
 WAYLAND_SCANNER = @WAYLAND_SCANNER@
+WAYLAND_SCANNER_CFLAGS = @WAYLAND_SCANNER_CFLAGS@
+WAYLAND_SCANNER_LIBS = @WAYLAND_SCANNER_LIBS@
 WINDOWSDRI_CFLAGS = @WINDOWSDRI_CFLAGS@
 WINDOWSDRI_LIBS = @WINDOWSDRI_LIBS@
 WINDOWSWM_CFLAGS = @WINDOWSWM_CFLAGS@
@@ -532,6 +534,8 @@ WINDOWSWM_LIBS = @WINDOWSWM_LIBS@
 WINDRES = @WINDRES@
 X11EXAMPLES_DEP_CFLAGS = @X11EXAMPLES_DEP_CFLAGS@
 X11EXAMPLES_DEP_LIBS = @X11EXAMPLES_DEP_LIBS@
+XCONFIGDIR = @XCONFIGDIR@
+XCONFIGFILE = @XCONFIGFILE@
 XDMCP_CFLAGS = @XDMCP_CFLAGS@
 XDMCP_LIBS = @XDMCP_LIBS@
 XDMXCONFIG_DEP_CFLAGS = @XDMXCONFIG_DEP_CFLAGS@
@@ -603,8 +607,6 @@ XWIN_SERVER_NAME = @XWIN_SERVER_NAME@
 XWIN_SYS_LIBS = @XWIN_SYS_LIBS@
 YACC = @YACC@
 YFLAGS = @YFLAGS@
-__XCONFIGDIR__ = @__XCONFIGDIR__@
-__XCONFIGFILE__ = @__XCONFIGFILE__@
 abi_ansic = @abi_ansic@
 abi_extension = @abi_extension@
 abi_videodrv = @abi_videodrv@
@@ -669,10 +671,16 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-@ENABLE_UNIT_TESTS_TRUE@SUBDIRS = . $(am__append_1)
-@ENABLE_UNIT_TESTS_TRUE@TEST_PROGS = list string $(am__append_2) \
-@ENABLE_UNIT_TESTS_TRUE@	$(am__append_3)
-@ENABLE_UNIT_TESTS_TRUE@check_LTLIBRARIES = libxservertest.la
+@ENABLE_UNIT_TESTS_TRUE@SUBDIRS = .
+@ENABLE_UNIT_TESTS_TRUE@AM_CFLAGS = $(DIX_CFLAGS) @XORG_CFLAGS@
+@ENABLE_UNIT_TESTS_TRUE@AM_CPPFLAGS = $(XORG_INCS) $(am__append_1)
+@ENABLE_UNIT_TESTS_TRUE@tests_CPPFLAGS = $(am__append_2) \
+@ENABLE_UNIT_TESTS_TRUE@	$(am__append_5) $(am__append_6)
+@ENABLE_UNIT_TESTS_TRUE@CLEANFILES = $(am__append_9) $(am__append_13)
+@ENABLE_UNIT_TESTS_TRUE@tests_SOURCES = tests-common.c tests-common.h \
+@ENABLE_UNIT_TESTS_TRUE@	list.c string.c tests.c tests.h \
+@ENABLE_UNIT_TESTS_TRUE@	$(am__append_3) $(am__append_4) \
+@ENABLE_UNIT_TESTS_TRUE@	$(am__append_7)
 @ENABLE_UNIT_TESTS_TRUE@@XVFB_TRUE@XVFB_TESTS = scripts/xvfb-piglit.sh
 @ENABLE_UNIT_TESTS_TRUE@@GLAMOR_TRUE@@XEPHYR_TRUE@@XVFB_TRUE@XEPHYR_GLAMOR_TESTS = scripts/xephyr-glamor-piglit.sh
 @ENABLE_UNIT_TESTS_TRUE@SCRIPT_TESTS = \
@@ -686,42 +694,31 @@ top_srcdir = @top_srcdir@
 @ENABLE_UNIT_TESTS_TRUE@	$(XORG_MALLOC_DEBUG_ENV) \
 @ENABLE_UNIT_TESTS_TRUE@	$(NULL)
 
-@ENABLE_UNIT_TESTS_TRUE@AM_CFLAGS = $(DIX_CFLAGS) @XORG_CFLAGS@
-@ENABLE_UNIT_TESTS_TRUE@AM_CPPFLAGS = $(XORG_INCS) $(am__append_4)
-@ENABLE_UNIT_TESTS_TRUE@TEST_LDADD = libxservertest.la \
-@ENABLE_UNIT_TESTS_TRUE@	$(XORG_SYS_LIBS) $(XSERVER_SYS_LIBS) \
-@ENABLE_UNIT_TESTS_TRUE@	$(GLX_SYS_LIBS) $(am__append_5) \
-@ENABLE_UNIT_TESTS_TRUE@	$(am__append_17)
-@ENABLE_UNIT_TESTS_TRUE@xkb_LDADD = $(TEST_LDADD)
-@ENABLE_UNIT_TESTS_TRUE@input_LDADD = $(TEST_LDADD)
-@ENABLE_UNIT_TESTS_TRUE@xtest_LDADD = $(TEST_LDADD)
-@ENABLE_UNIT_TESTS_TRUE@misc_LDADD = $(TEST_LDADD)
-@ENABLE_UNIT_TESTS_TRUE@fixes_LDADD = $(TEST_LDADD)
-@ENABLE_UNIT_TESTS_TRUE@xfree86_LDADD = $(TEST_LDADD)
-@ENABLE_UNIT_TESTS_TRUE@touch_LDADD = $(TEST_LDADD)
-@ENABLE_UNIT_TESTS_TRUE@signal_logging_LDADD = $(TEST_LDADD)
-@ENABLE_UNIT_TESTS_TRUE@hashtabletest_LDADD = $(TEST_LDADD)
-@ENABLE_UNIT_TESTS_TRUE@libxservertest_la_LIBADD = $(XSERVER_LIBS) \
-@ENABLE_UNIT_TESTS_TRUE@	$(am__append_6) $(am__append_7) \
-@ENABLE_UNIT_TESTS_TRUE@	$(am__append_8) $(am__append_9) \
-@ENABLE_UNIT_TESTS_TRUE@	$(am__append_10) $(am__append_11) \
-@ENABLE_UNIT_TESTS_TRUE@	$(am__append_12) $(am__append_13) \
-@ENABLE_UNIT_TESTS_TRUE@	$(am__append_14) $(am__append_15) \
-@ENABLE_UNIT_TESTS_TRUE@	$(am__append_16) $(am__append_18)
-@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@nodist_libxservertest_la_SOURCES = \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            ddxstubs.c \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            $(top_srcdir)/mi/miinitext.c
 
-@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@nodist_libxservertest_la_SOURCES = sdksyms.c
+# GNU LD scans only in one direction, add the following dependencies at the end
+# so as they get picked up by the previously-linked libraries
+@ENABLE_UNIT_TESTS_TRUE@tests_LDADD = $(am__append_10) \
+@ENABLE_UNIT_TESTS_TRUE@	$(am__append_11) $(am__append_12) \
+@ENABLE_UNIT_TESTS_TRUE@	$(am__append_14) $(am__append_15) \
+@ENABLE_UNIT_TESTS_TRUE@	$(am__append_16) $(XORG_SYS_LIBS) \
+@ENABLE_UNIT_TESTS_TRUE@	$(XSERVER_SYS_LIBS) $(GLX_SYS_LIBS)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@tests_LDFLAGS = \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@	-Wl,-wrap,dixLookupWindow \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@	-Wl,-wrap,dixLookupClient \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@	-Wl,-wrap,WriteToClient \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@	-Wl,-wrap,dixLookupWindow \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@	-Wl,-wrap,XISetEventMask \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@	-Wl,-wrap,AddResource \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@	-Wl,-wrap,GrabButton \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@XORG_TRUE@	$()
+
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@nodist_tests_SOURCES = sdksyms.c
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@BUILT_SOURCES = sdksyms.c
-@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@CLEANFILES = sdksyms.c
-@ENABLE_UNIT_TESTS_TRUE@libxservertest_la_DEPENDENCIES = $(libxservertest_la_LIBADD)
 EXTRA_DIST = \
 	scripts/xvfb-piglit.sh \
 	scripts/xephyr-glamor-piglit.sh \
 	scripts/xinit-piglit-session.sh \
 	scripts/run-piglit.sh \
-	ddxstubs.c \
 	$(NULL)
 
 all: $(BUILT_SOURCES)
@@ -760,19 +757,6 @@ $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
 
-clean-checkLTLIBRARIES:
-	-test -z "$(check_LTLIBRARIES)" || rm -f $(check_LTLIBRARIES)
-	@list='$(check_LTLIBRARIES)'; \
-	locs=`for p in $$list; do echo $$p; done | \
-	      sed 's|^[^/]*$$|.|; s|/[^/]*$$||; s|$$|/so_locations|' | \
-	      sort -u`; \
-	test -z "$$locs" || { \
-	  echo rm -f $${locs}; \
-	  rm -f $${locs}; \
-	}
-libxservertest.la: $(libxservertest_la_OBJECTS) $(libxservertest_la_DEPENDENCIES) $(EXTRA_libxservertest_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(LINK) $(am_libxservertest_la_rpath) $(libxservertest_la_OBJECTS) $(libxservertest_la_LIBADD) $(LIBS)
-
 clean-noinstPROGRAMS:
 	@list='$(noinst_PROGRAMS)'; test -n "$$list" || exit 0; \
 	echo " rm -f" $$list; \
@@ -781,42 +765,12 @@ clean-noinstPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
-fixes$(EXEEXT): $(fixes_OBJECTS) $(fixes_DEPENDENCIES) $(EXTRA_fixes_DEPENDENCIES) 
-	@rm -f fixes$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(fixes_OBJECTS) $(fixes_LDADD) $(LIBS)
-hashtabletest$(EXEEXT): $(hashtabletest_OBJECTS) $(hashtabletest_DEPENDENCIES) $(EXTRA_hashtabletest_DEPENDENCIES) 
-	@rm -f hashtabletest$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(hashtabletest_OBJECTS) $(hashtabletest_LDADD) $(LIBS)
-input$(EXEEXT): $(input_OBJECTS) $(input_DEPENDENCIES) $(EXTRA_input_DEPENDENCIES) 
-	@rm -f input$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(input_OBJECTS) $(input_LDADD) $(LIBS)
-list$(EXEEXT): $(list_OBJECTS) $(list_DEPENDENCIES) $(EXTRA_list_DEPENDENCIES) 
-	@rm -f list$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(list_OBJECTS) $(list_LDADD) $(LIBS)
-misc$(EXEEXT): $(misc_OBJECTS) $(misc_DEPENDENCIES) $(EXTRA_misc_DEPENDENCIES) 
-	@rm -f misc$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(misc_OBJECTS) $(misc_LDADD) $(LIBS)
-signal-logging$(EXEEXT): $(signal_logging_OBJECTS) $(signal_logging_DEPENDENCIES) $(EXTRA_signal_logging_DEPENDENCIES) 
-	@rm -f signal-logging$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(signal_logging_OBJECTS) $(signal_logging_LDADD) $(LIBS)
 simple-xinit$(EXEEXT): $(simple_xinit_OBJECTS) $(simple_xinit_DEPENDENCIES) $(EXTRA_simple_xinit_DEPENDENCIES) 
 	@rm -f simple-xinit$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(simple_xinit_OBJECTS) $(simple_xinit_LDADD) $(LIBS)
-string$(EXEEXT): $(string_OBJECTS) $(string_DEPENDENCIES) $(EXTRA_string_DEPENDENCIES) 
-	@rm -f string$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(string_OBJECTS) $(string_LDADD) $(LIBS)
-touch$(EXEEXT): $(touch_OBJECTS) $(touch_DEPENDENCIES) $(EXTRA_touch_DEPENDENCIES) 
-	@rm -f touch$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(touch_OBJECTS) $(touch_LDADD) $(LIBS)
-xfree86$(EXEEXT): $(xfree86_OBJECTS) $(xfree86_DEPENDENCIES) $(EXTRA_xfree86_DEPENDENCIES) 
-	@rm -f xfree86$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(xfree86_OBJECTS) $(xfree86_LDADD) $(LIBS)
-xkb$(EXEEXT): $(xkb_OBJECTS) $(xkb_DEPENDENCIES) $(EXTRA_xkb_DEPENDENCIES) 
-	@rm -f xkb$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(xkb_OBJECTS) $(xkb_LDADD) $(LIBS)
-xtest$(EXEEXT): $(xtest_OBJECTS) $(xtest_DEPENDENCIES) $(EXTRA_xtest_DEPENDENCIES) 
-	@rm -f xtest$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(xtest_OBJECTS) $(xtest_LDADD) $(LIBS)
+tests$(EXEEXT): $(tests_OBJECTS) $(tests_DEPENDENCIES) $(EXTRA_tests_DEPENDENCIES) 
+	@rm -f tests$(EXEEXT)
+	$(AM_V_CCLD)$(tests_LINK) $(tests_OBJECTS) $(tests_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -824,21 +778,34 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ddxstubs.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fixes.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hashtabletest.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/input.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/list.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/miinitext.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/misc.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sdksyms.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/signal-logging.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/simple-xinit.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/string.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/touch.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xfree86.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xkb.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xtest.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tests-fixes.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tests-hashtabletest.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tests-input.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tests-list.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tests-misc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tests-protocol-common.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tests-protocol-eventconvert.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tests-protocol-xchangedevicecontrol.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tests-protocol-xigetclientpointer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tests-protocol-xigetselectedevents.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tests-protocol-xipassivegrabdevice.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tests-protocol-xiquerydevice.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tests-protocol-xiquerypointer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tests-protocol-xiqueryversion.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tests-protocol-xiselectevents.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tests-protocol-xisetclientpointer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tests-protocol-xiwarppointer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tests-sdksyms.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tests-signal-logging.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tests-string.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tests-test_xkb.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tests-tests-common.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tests-tests.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tests-touch.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tests-xfree86.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tests-xi2.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tests-xtest.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -861,12 +828,383 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
 
-miinitext.lo: $(top_srcdir)/mi/miinitext.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT miinitext.lo -MD -MP -MF $(DEPDIR)/miinitext.Tpo -c -o miinitext.lo `test -f '$(top_srcdir)/mi/miinitext.c' || echo '$(srcdir)/'`$(top_srcdir)/mi/miinitext.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/miinitext.Tpo $(DEPDIR)/miinitext.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/mi/miinitext.c' object='miinitext.lo' libtool=yes @AMDEPBACKSLASH@
+tests-tests-common.o: tests-common.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-tests-common.o -MD -MP -MF $(DEPDIR)/tests-tests-common.Tpo -c -o tests-tests-common.o `test -f 'tests-common.c' || echo '$(srcdir)/'`tests-common.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-tests-common.Tpo $(DEPDIR)/tests-tests-common.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='tests-common.c' object='tests-tests-common.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o miinitext.lo `test -f '$(top_srcdir)/mi/miinitext.c' || echo '$(srcdir)/'`$(top_srcdir)/mi/miinitext.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-tests-common.o `test -f 'tests-common.c' || echo '$(srcdir)/'`tests-common.c
+
+tests-tests-common.obj: tests-common.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-tests-common.obj -MD -MP -MF $(DEPDIR)/tests-tests-common.Tpo -c -o tests-tests-common.obj `if test -f 'tests-common.c'; then $(CYGPATH_W) 'tests-common.c'; else $(CYGPATH_W) '$(srcdir)/tests-common.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-tests-common.Tpo $(DEPDIR)/tests-tests-common.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='tests-common.c' object='tests-tests-common.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-tests-common.obj `if test -f 'tests-common.c'; then $(CYGPATH_W) 'tests-common.c'; else $(CYGPATH_W) '$(srcdir)/tests-common.c'; fi`
+
+tests-list.o: list.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-list.o -MD -MP -MF $(DEPDIR)/tests-list.Tpo -c -o tests-list.o `test -f 'list.c' || echo '$(srcdir)/'`list.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-list.Tpo $(DEPDIR)/tests-list.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='list.c' object='tests-list.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-list.o `test -f 'list.c' || echo '$(srcdir)/'`list.c
+
+tests-list.obj: list.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-list.obj -MD -MP -MF $(DEPDIR)/tests-list.Tpo -c -o tests-list.obj `if test -f 'list.c'; then $(CYGPATH_W) 'list.c'; else $(CYGPATH_W) '$(srcdir)/list.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-list.Tpo $(DEPDIR)/tests-list.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='list.c' object='tests-list.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-list.obj `if test -f 'list.c'; then $(CYGPATH_W) 'list.c'; else $(CYGPATH_W) '$(srcdir)/list.c'; fi`
+
+tests-string.o: string.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-string.o -MD -MP -MF $(DEPDIR)/tests-string.Tpo -c -o tests-string.o `test -f 'string.c' || echo '$(srcdir)/'`string.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-string.Tpo $(DEPDIR)/tests-string.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='string.c' object='tests-string.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-string.o `test -f 'string.c' || echo '$(srcdir)/'`string.c
+
+tests-string.obj: string.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-string.obj -MD -MP -MF $(DEPDIR)/tests-string.Tpo -c -o tests-string.obj `if test -f 'string.c'; then $(CYGPATH_W) 'string.c'; else $(CYGPATH_W) '$(srcdir)/string.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-string.Tpo $(DEPDIR)/tests-string.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='string.c' object='tests-string.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-string.obj `if test -f 'string.c'; then $(CYGPATH_W) 'string.c'; else $(CYGPATH_W) '$(srcdir)/string.c'; fi`
+
+tests-tests.o: tests.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-tests.o -MD -MP -MF $(DEPDIR)/tests-tests.Tpo -c -o tests-tests.o `test -f 'tests.c' || echo '$(srcdir)/'`tests.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-tests.Tpo $(DEPDIR)/tests-tests.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='tests.c' object='tests-tests.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-tests.o `test -f 'tests.c' || echo '$(srcdir)/'`tests.c
+
+tests-tests.obj: tests.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-tests.obj -MD -MP -MF $(DEPDIR)/tests-tests.Tpo -c -o tests-tests.obj `if test -f 'tests.c'; then $(CYGPATH_W) 'tests.c'; else $(CYGPATH_W) '$(srcdir)/tests.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-tests.Tpo $(DEPDIR)/tests-tests.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='tests.c' object='tests-tests.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-tests.obj `if test -f 'tests.c'; then $(CYGPATH_W) 'tests.c'; else $(CYGPATH_W) '$(srcdir)/tests.c'; fi`
+
+tests-fixes.o: fixes.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-fixes.o -MD -MP -MF $(DEPDIR)/tests-fixes.Tpo -c -o tests-fixes.o `test -f 'fixes.c' || echo '$(srcdir)/'`fixes.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-fixes.Tpo $(DEPDIR)/tests-fixes.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='fixes.c' object='tests-fixes.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-fixes.o `test -f 'fixes.c' || echo '$(srcdir)/'`fixes.c
+
+tests-fixes.obj: fixes.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-fixes.obj -MD -MP -MF $(DEPDIR)/tests-fixes.Tpo -c -o tests-fixes.obj `if test -f 'fixes.c'; then $(CYGPATH_W) 'fixes.c'; else $(CYGPATH_W) '$(srcdir)/fixes.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-fixes.Tpo $(DEPDIR)/tests-fixes.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='fixes.c' object='tests-fixes.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-fixes.obj `if test -f 'fixes.c'; then $(CYGPATH_W) 'fixes.c'; else $(CYGPATH_W) '$(srcdir)/fixes.c'; fi`
+
+tests-input.o: input.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-input.o -MD -MP -MF $(DEPDIR)/tests-input.Tpo -c -o tests-input.o `test -f 'input.c' || echo '$(srcdir)/'`input.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-input.Tpo $(DEPDIR)/tests-input.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='input.c' object='tests-input.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-input.o `test -f 'input.c' || echo '$(srcdir)/'`input.c
+
+tests-input.obj: input.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-input.obj -MD -MP -MF $(DEPDIR)/tests-input.Tpo -c -o tests-input.obj `if test -f 'input.c'; then $(CYGPATH_W) 'input.c'; else $(CYGPATH_W) '$(srcdir)/input.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-input.Tpo $(DEPDIR)/tests-input.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='input.c' object='tests-input.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-input.obj `if test -f 'input.c'; then $(CYGPATH_W) 'input.c'; else $(CYGPATH_W) '$(srcdir)/input.c'; fi`
+
+tests-misc.o: misc.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-misc.o -MD -MP -MF $(DEPDIR)/tests-misc.Tpo -c -o tests-misc.o `test -f 'misc.c' || echo '$(srcdir)/'`misc.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-misc.Tpo $(DEPDIR)/tests-misc.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='misc.c' object='tests-misc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-misc.o `test -f 'misc.c' || echo '$(srcdir)/'`misc.c
+
+tests-misc.obj: misc.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-misc.obj -MD -MP -MF $(DEPDIR)/tests-misc.Tpo -c -o tests-misc.obj `if test -f 'misc.c'; then $(CYGPATH_W) 'misc.c'; else $(CYGPATH_W) '$(srcdir)/misc.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-misc.Tpo $(DEPDIR)/tests-misc.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='misc.c' object='tests-misc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-misc.obj `if test -f 'misc.c'; then $(CYGPATH_W) 'misc.c'; else $(CYGPATH_W) '$(srcdir)/misc.c'; fi`
+
+tests-signal-logging.o: signal-logging.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-signal-logging.o -MD -MP -MF $(DEPDIR)/tests-signal-logging.Tpo -c -o tests-signal-logging.o `test -f 'signal-logging.c' || echo '$(srcdir)/'`signal-logging.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-signal-logging.Tpo $(DEPDIR)/tests-signal-logging.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='signal-logging.c' object='tests-signal-logging.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-signal-logging.o `test -f 'signal-logging.c' || echo '$(srcdir)/'`signal-logging.c
+
+tests-signal-logging.obj: signal-logging.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-signal-logging.obj -MD -MP -MF $(DEPDIR)/tests-signal-logging.Tpo -c -o tests-signal-logging.obj `if test -f 'signal-logging.c'; then $(CYGPATH_W) 'signal-logging.c'; else $(CYGPATH_W) '$(srcdir)/signal-logging.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-signal-logging.Tpo $(DEPDIR)/tests-signal-logging.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='signal-logging.c' object='tests-signal-logging.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-signal-logging.obj `if test -f 'signal-logging.c'; then $(CYGPATH_W) 'signal-logging.c'; else $(CYGPATH_W) '$(srcdir)/signal-logging.c'; fi`
+
+tests-touch.o: touch.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-touch.o -MD -MP -MF $(DEPDIR)/tests-touch.Tpo -c -o tests-touch.o `test -f 'touch.c' || echo '$(srcdir)/'`touch.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-touch.Tpo $(DEPDIR)/tests-touch.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='touch.c' object='tests-touch.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-touch.o `test -f 'touch.c' || echo '$(srcdir)/'`touch.c
+
+tests-touch.obj: touch.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-touch.obj -MD -MP -MF $(DEPDIR)/tests-touch.Tpo -c -o tests-touch.obj `if test -f 'touch.c'; then $(CYGPATH_W) 'touch.c'; else $(CYGPATH_W) '$(srcdir)/touch.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-touch.Tpo $(DEPDIR)/tests-touch.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='touch.c' object='tests-touch.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-touch.obj `if test -f 'touch.c'; then $(CYGPATH_W) 'touch.c'; else $(CYGPATH_W) '$(srcdir)/touch.c'; fi`
+
+tests-xfree86.o: xfree86.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-xfree86.o -MD -MP -MF $(DEPDIR)/tests-xfree86.Tpo -c -o tests-xfree86.o `test -f 'xfree86.c' || echo '$(srcdir)/'`xfree86.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-xfree86.Tpo $(DEPDIR)/tests-xfree86.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xfree86.c' object='tests-xfree86.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-xfree86.o `test -f 'xfree86.c' || echo '$(srcdir)/'`xfree86.c
+
+tests-xfree86.obj: xfree86.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-xfree86.obj -MD -MP -MF $(DEPDIR)/tests-xfree86.Tpo -c -o tests-xfree86.obj `if test -f 'xfree86.c'; then $(CYGPATH_W) 'xfree86.c'; else $(CYGPATH_W) '$(srcdir)/xfree86.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-xfree86.Tpo $(DEPDIR)/tests-xfree86.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xfree86.c' object='tests-xfree86.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-xfree86.obj `if test -f 'xfree86.c'; then $(CYGPATH_W) 'xfree86.c'; else $(CYGPATH_W) '$(srcdir)/xfree86.c'; fi`
+
+tests-test_xkb.o: test_xkb.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-test_xkb.o -MD -MP -MF $(DEPDIR)/tests-test_xkb.Tpo -c -o tests-test_xkb.o `test -f 'test_xkb.c' || echo '$(srcdir)/'`test_xkb.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-test_xkb.Tpo $(DEPDIR)/tests-test_xkb.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='test_xkb.c' object='tests-test_xkb.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-test_xkb.o `test -f 'test_xkb.c' || echo '$(srcdir)/'`test_xkb.c
+
+tests-test_xkb.obj: test_xkb.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-test_xkb.obj -MD -MP -MF $(DEPDIR)/tests-test_xkb.Tpo -c -o tests-test_xkb.obj `if test -f 'test_xkb.c'; then $(CYGPATH_W) 'test_xkb.c'; else $(CYGPATH_W) '$(srcdir)/test_xkb.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-test_xkb.Tpo $(DEPDIR)/tests-test_xkb.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='test_xkb.c' object='tests-test_xkb.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-test_xkb.obj `if test -f 'test_xkb.c'; then $(CYGPATH_W) 'test_xkb.c'; else $(CYGPATH_W) '$(srcdir)/test_xkb.c'; fi`
+
+tests-xtest.o: xtest.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-xtest.o -MD -MP -MF $(DEPDIR)/tests-xtest.Tpo -c -o tests-xtest.o `test -f 'xtest.c' || echo '$(srcdir)/'`xtest.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-xtest.Tpo $(DEPDIR)/tests-xtest.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xtest.c' object='tests-xtest.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-xtest.o `test -f 'xtest.c' || echo '$(srcdir)/'`xtest.c
+
+tests-xtest.obj: xtest.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-xtest.obj -MD -MP -MF $(DEPDIR)/tests-xtest.Tpo -c -o tests-xtest.obj `if test -f 'xtest.c'; then $(CYGPATH_W) 'xtest.c'; else $(CYGPATH_W) '$(srcdir)/xtest.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-xtest.Tpo $(DEPDIR)/tests-xtest.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xtest.c' object='tests-xtest.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-xtest.obj `if test -f 'xtest.c'; then $(CYGPATH_W) 'xtest.c'; else $(CYGPATH_W) '$(srcdir)/xtest.c'; fi`
+
+tests-hashtabletest.o: hashtabletest.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-hashtabletest.o -MD -MP -MF $(DEPDIR)/tests-hashtabletest.Tpo -c -o tests-hashtabletest.o `test -f 'hashtabletest.c' || echo '$(srcdir)/'`hashtabletest.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-hashtabletest.Tpo $(DEPDIR)/tests-hashtabletest.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='hashtabletest.c' object='tests-hashtabletest.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-hashtabletest.o `test -f 'hashtabletest.c' || echo '$(srcdir)/'`hashtabletest.c
+
+tests-hashtabletest.obj: hashtabletest.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-hashtabletest.obj -MD -MP -MF $(DEPDIR)/tests-hashtabletest.Tpo -c -o tests-hashtabletest.obj `if test -f 'hashtabletest.c'; then $(CYGPATH_W) 'hashtabletest.c'; else $(CYGPATH_W) '$(srcdir)/hashtabletest.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-hashtabletest.Tpo $(DEPDIR)/tests-hashtabletest.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='hashtabletest.c' object='tests-hashtabletest.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-hashtabletest.obj `if test -f 'hashtabletest.c'; then $(CYGPATH_W) 'hashtabletest.c'; else $(CYGPATH_W) '$(srcdir)/hashtabletest.c'; fi`
+
+tests-protocol-xchangedevicecontrol.o: xi1/protocol-xchangedevicecontrol.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-protocol-xchangedevicecontrol.o -MD -MP -MF $(DEPDIR)/tests-protocol-xchangedevicecontrol.Tpo -c -o tests-protocol-xchangedevicecontrol.o `test -f 'xi1/protocol-xchangedevicecontrol.c' || echo '$(srcdir)/'`xi1/protocol-xchangedevicecontrol.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-protocol-xchangedevicecontrol.Tpo $(DEPDIR)/tests-protocol-xchangedevicecontrol.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xi1/protocol-xchangedevicecontrol.c' object='tests-protocol-xchangedevicecontrol.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-protocol-xchangedevicecontrol.o `test -f 'xi1/protocol-xchangedevicecontrol.c' || echo '$(srcdir)/'`xi1/protocol-xchangedevicecontrol.c
+
+tests-protocol-xchangedevicecontrol.obj: xi1/protocol-xchangedevicecontrol.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-protocol-xchangedevicecontrol.obj -MD -MP -MF $(DEPDIR)/tests-protocol-xchangedevicecontrol.Tpo -c -o tests-protocol-xchangedevicecontrol.obj `if test -f 'xi1/protocol-xchangedevicecontrol.c'; then $(CYGPATH_W) 'xi1/protocol-xchangedevicecontrol.c'; else $(CYGPATH_W) '$(srcdir)/xi1/protocol-xchangedevicecontrol.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-protocol-xchangedevicecontrol.Tpo $(DEPDIR)/tests-protocol-xchangedevicecontrol.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xi1/protocol-xchangedevicecontrol.c' object='tests-protocol-xchangedevicecontrol.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-protocol-xchangedevicecontrol.obj `if test -f 'xi1/protocol-xchangedevicecontrol.c'; then $(CYGPATH_W) 'xi1/protocol-xchangedevicecontrol.c'; else $(CYGPATH_W) '$(srcdir)/xi1/protocol-xchangedevicecontrol.c'; fi`
+
+tests-protocol-common.o: xi2/protocol-common.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-protocol-common.o -MD -MP -MF $(DEPDIR)/tests-protocol-common.Tpo -c -o tests-protocol-common.o `test -f 'xi2/protocol-common.c' || echo '$(srcdir)/'`xi2/protocol-common.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-protocol-common.Tpo $(DEPDIR)/tests-protocol-common.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xi2/protocol-common.c' object='tests-protocol-common.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-protocol-common.o `test -f 'xi2/protocol-common.c' || echo '$(srcdir)/'`xi2/protocol-common.c
+
+tests-protocol-common.obj: xi2/protocol-common.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-protocol-common.obj -MD -MP -MF $(DEPDIR)/tests-protocol-common.Tpo -c -o tests-protocol-common.obj `if test -f 'xi2/protocol-common.c'; then $(CYGPATH_W) 'xi2/protocol-common.c'; else $(CYGPATH_W) '$(srcdir)/xi2/protocol-common.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-protocol-common.Tpo $(DEPDIR)/tests-protocol-common.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xi2/protocol-common.c' object='tests-protocol-common.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-protocol-common.obj `if test -f 'xi2/protocol-common.c'; then $(CYGPATH_W) 'xi2/protocol-common.c'; else $(CYGPATH_W) '$(srcdir)/xi2/protocol-common.c'; fi`
+
+tests-protocol-xiqueryversion.o: xi2/protocol-xiqueryversion.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-protocol-xiqueryversion.o -MD -MP -MF $(DEPDIR)/tests-protocol-xiqueryversion.Tpo -c -o tests-protocol-xiqueryversion.o `test -f 'xi2/protocol-xiqueryversion.c' || echo '$(srcdir)/'`xi2/protocol-xiqueryversion.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-protocol-xiqueryversion.Tpo $(DEPDIR)/tests-protocol-xiqueryversion.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xi2/protocol-xiqueryversion.c' object='tests-protocol-xiqueryversion.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-protocol-xiqueryversion.o `test -f 'xi2/protocol-xiqueryversion.c' || echo '$(srcdir)/'`xi2/protocol-xiqueryversion.c
+
+tests-protocol-xiqueryversion.obj: xi2/protocol-xiqueryversion.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-protocol-xiqueryversion.obj -MD -MP -MF $(DEPDIR)/tests-protocol-xiqueryversion.Tpo -c -o tests-protocol-xiqueryversion.obj `if test -f 'xi2/protocol-xiqueryversion.c'; then $(CYGPATH_W) 'xi2/protocol-xiqueryversion.c'; else $(CYGPATH_W) '$(srcdir)/xi2/protocol-xiqueryversion.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-protocol-xiqueryversion.Tpo $(DEPDIR)/tests-protocol-xiqueryversion.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xi2/protocol-xiqueryversion.c' object='tests-protocol-xiqueryversion.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-protocol-xiqueryversion.obj `if test -f 'xi2/protocol-xiqueryversion.c'; then $(CYGPATH_W) 'xi2/protocol-xiqueryversion.c'; else $(CYGPATH_W) '$(srcdir)/xi2/protocol-xiqueryversion.c'; fi`
+
+tests-protocol-xiquerydevice.o: xi2/protocol-xiquerydevice.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-protocol-xiquerydevice.o -MD -MP -MF $(DEPDIR)/tests-protocol-xiquerydevice.Tpo -c -o tests-protocol-xiquerydevice.o `test -f 'xi2/protocol-xiquerydevice.c' || echo '$(srcdir)/'`xi2/protocol-xiquerydevice.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-protocol-xiquerydevice.Tpo $(DEPDIR)/tests-protocol-xiquerydevice.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xi2/protocol-xiquerydevice.c' object='tests-protocol-xiquerydevice.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-protocol-xiquerydevice.o `test -f 'xi2/protocol-xiquerydevice.c' || echo '$(srcdir)/'`xi2/protocol-xiquerydevice.c
+
+tests-protocol-xiquerydevice.obj: xi2/protocol-xiquerydevice.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-protocol-xiquerydevice.obj -MD -MP -MF $(DEPDIR)/tests-protocol-xiquerydevice.Tpo -c -o tests-protocol-xiquerydevice.obj `if test -f 'xi2/protocol-xiquerydevice.c'; then $(CYGPATH_W) 'xi2/protocol-xiquerydevice.c'; else $(CYGPATH_W) '$(srcdir)/xi2/protocol-xiquerydevice.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-protocol-xiquerydevice.Tpo $(DEPDIR)/tests-protocol-xiquerydevice.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xi2/protocol-xiquerydevice.c' object='tests-protocol-xiquerydevice.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-protocol-xiquerydevice.obj `if test -f 'xi2/protocol-xiquerydevice.c'; then $(CYGPATH_W) 'xi2/protocol-xiquerydevice.c'; else $(CYGPATH_W) '$(srcdir)/xi2/protocol-xiquerydevice.c'; fi`
+
+tests-protocol-xiselectevents.o: xi2/protocol-xiselectevents.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-protocol-xiselectevents.o -MD -MP -MF $(DEPDIR)/tests-protocol-xiselectevents.Tpo -c -o tests-protocol-xiselectevents.o `test -f 'xi2/protocol-xiselectevents.c' || echo '$(srcdir)/'`xi2/protocol-xiselectevents.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-protocol-xiselectevents.Tpo $(DEPDIR)/tests-protocol-xiselectevents.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xi2/protocol-xiselectevents.c' object='tests-protocol-xiselectevents.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-protocol-xiselectevents.o `test -f 'xi2/protocol-xiselectevents.c' || echo '$(srcdir)/'`xi2/protocol-xiselectevents.c
+
+tests-protocol-xiselectevents.obj: xi2/protocol-xiselectevents.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-protocol-xiselectevents.obj -MD -MP -MF $(DEPDIR)/tests-protocol-xiselectevents.Tpo -c -o tests-protocol-xiselectevents.obj `if test -f 'xi2/protocol-xiselectevents.c'; then $(CYGPATH_W) 'xi2/protocol-xiselectevents.c'; else $(CYGPATH_W) '$(srcdir)/xi2/protocol-xiselectevents.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-protocol-xiselectevents.Tpo $(DEPDIR)/tests-protocol-xiselectevents.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xi2/protocol-xiselectevents.c' object='tests-protocol-xiselectevents.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-protocol-xiselectevents.obj `if test -f 'xi2/protocol-xiselectevents.c'; then $(CYGPATH_W) 'xi2/protocol-xiselectevents.c'; else $(CYGPATH_W) '$(srcdir)/xi2/protocol-xiselectevents.c'; fi`
+
+tests-protocol-xigetselectedevents.o: xi2/protocol-xigetselectedevents.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-protocol-xigetselectedevents.o -MD -MP -MF $(DEPDIR)/tests-protocol-xigetselectedevents.Tpo -c -o tests-protocol-xigetselectedevents.o `test -f 'xi2/protocol-xigetselectedevents.c' || echo '$(srcdir)/'`xi2/protocol-xigetselectedevents.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-protocol-xigetselectedevents.Tpo $(DEPDIR)/tests-protocol-xigetselectedevents.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xi2/protocol-xigetselectedevents.c' object='tests-protocol-xigetselectedevents.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-protocol-xigetselectedevents.o `test -f 'xi2/protocol-xigetselectedevents.c' || echo '$(srcdir)/'`xi2/protocol-xigetselectedevents.c
+
+tests-protocol-xigetselectedevents.obj: xi2/protocol-xigetselectedevents.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-protocol-xigetselectedevents.obj -MD -MP -MF $(DEPDIR)/tests-protocol-xigetselectedevents.Tpo -c -o tests-protocol-xigetselectedevents.obj `if test -f 'xi2/protocol-xigetselectedevents.c'; then $(CYGPATH_W) 'xi2/protocol-xigetselectedevents.c'; else $(CYGPATH_W) '$(srcdir)/xi2/protocol-xigetselectedevents.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-protocol-xigetselectedevents.Tpo $(DEPDIR)/tests-protocol-xigetselectedevents.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xi2/protocol-xigetselectedevents.c' object='tests-protocol-xigetselectedevents.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-protocol-xigetselectedevents.obj `if test -f 'xi2/protocol-xigetselectedevents.c'; then $(CYGPATH_W) 'xi2/protocol-xigetselectedevents.c'; else $(CYGPATH_W) '$(srcdir)/xi2/protocol-xigetselectedevents.c'; fi`
+
+tests-protocol-xisetclientpointer.o: xi2/protocol-xisetclientpointer.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-protocol-xisetclientpointer.o -MD -MP -MF $(DEPDIR)/tests-protocol-xisetclientpointer.Tpo -c -o tests-protocol-xisetclientpointer.o `test -f 'xi2/protocol-xisetclientpointer.c' || echo '$(srcdir)/'`xi2/protocol-xisetclientpointer.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-protocol-xisetclientpointer.Tpo $(DEPDIR)/tests-protocol-xisetclientpointer.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xi2/protocol-xisetclientpointer.c' object='tests-protocol-xisetclientpointer.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-protocol-xisetclientpointer.o `test -f 'xi2/protocol-xisetclientpointer.c' || echo '$(srcdir)/'`xi2/protocol-xisetclientpointer.c
+
+tests-protocol-xisetclientpointer.obj: xi2/protocol-xisetclientpointer.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-protocol-xisetclientpointer.obj -MD -MP -MF $(DEPDIR)/tests-protocol-xisetclientpointer.Tpo -c -o tests-protocol-xisetclientpointer.obj `if test -f 'xi2/protocol-xisetclientpointer.c'; then $(CYGPATH_W) 'xi2/protocol-xisetclientpointer.c'; else $(CYGPATH_W) '$(srcdir)/xi2/protocol-xisetclientpointer.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-protocol-xisetclientpointer.Tpo $(DEPDIR)/tests-protocol-xisetclientpointer.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xi2/protocol-xisetclientpointer.c' object='tests-protocol-xisetclientpointer.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-protocol-xisetclientpointer.obj `if test -f 'xi2/protocol-xisetclientpointer.c'; then $(CYGPATH_W) 'xi2/protocol-xisetclientpointer.c'; else $(CYGPATH_W) '$(srcdir)/xi2/protocol-xisetclientpointer.c'; fi`
+
+tests-protocol-xigetclientpointer.o: xi2/protocol-xigetclientpointer.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-protocol-xigetclientpointer.o -MD -MP -MF $(DEPDIR)/tests-protocol-xigetclientpointer.Tpo -c -o tests-protocol-xigetclientpointer.o `test -f 'xi2/protocol-xigetclientpointer.c' || echo '$(srcdir)/'`xi2/protocol-xigetclientpointer.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-protocol-xigetclientpointer.Tpo $(DEPDIR)/tests-protocol-xigetclientpointer.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xi2/protocol-xigetclientpointer.c' object='tests-protocol-xigetclientpointer.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-protocol-xigetclientpointer.o `test -f 'xi2/protocol-xigetclientpointer.c' || echo '$(srcdir)/'`xi2/protocol-xigetclientpointer.c
+
+tests-protocol-xigetclientpointer.obj: xi2/protocol-xigetclientpointer.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-protocol-xigetclientpointer.obj -MD -MP -MF $(DEPDIR)/tests-protocol-xigetclientpointer.Tpo -c -o tests-protocol-xigetclientpointer.obj `if test -f 'xi2/protocol-xigetclientpointer.c'; then $(CYGPATH_W) 'xi2/protocol-xigetclientpointer.c'; else $(CYGPATH_W) '$(srcdir)/xi2/protocol-xigetclientpointer.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-protocol-xigetclientpointer.Tpo $(DEPDIR)/tests-protocol-xigetclientpointer.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xi2/protocol-xigetclientpointer.c' object='tests-protocol-xigetclientpointer.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-protocol-xigetclientpointer.obj `if test -f 'xi2/protocol-xigetclientpointer.c'; then $(CYGPATH_W) 'xi2/protocol-xigetclientpointer.c'; else $(CYGPATH_W) '$(srcdir)/xi2/protocol-xigetclientpointer.c'; fi`
+
+tests-protocol-xiquerypointer.o: xi2/protocol-xiquerypointer.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-protocol-xiquerypointer.o -MD -MP -MF $(DEPDIR)/tests-protocol-xiquerypointer.Tpo -c -o tests-protocol-xiquerypointer.o `test -f 'xi2/protocol-xiquerypointer.c' || echo '$(srcdir)/'`xi2/protocol-xiquerypointer.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-protocol-xiquerypointer.Tpo $(DEPDIR)/tests-protocol-xiquerypointer.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xi2/protocol-xiquerypointer.c' object='tests-protocol-xiquerypointer.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-protocol-xiquerypointer.o `test -f 'xi2/protocol-xiquerypointer.c' || echo '$(srcdir)/'`xi2/protocol-xiquerypointer.c
+
+tests-protocol-xiquerypointer.obj: xi2/protocol-xiquerypointer.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-protocol-xiquerypointer.obj -MD -MP -MF $(DEPDIR)/tests-protocol-xiquerypointer.Tpo -c -o tests-protocol-xiquerypointer.obj `if test -f 'xi2/protocol-xiquerypointer.c'; then $(CYGPATH_W) 'xi2/protocol-xiquerypointer.c'; else $(CYGPATH_W) '$(srcdir)/xi2/protocol-xiquerypointer.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-protocol-xiquerypointer.Tpo $(DEPDIR)/tests-protocol-xiquerypointer.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xi2/protocol-xiquerypointer.c' object='tests-protocol-xiquerypointer.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-protocol-xiquerypointer.obj `if test -f 'xi2/protocol-xiquerypointer.c'; then $(CYGPATH_W) 'xi2/protocol-xiquerypointer.c'; else $(CYGPATH_W) '$(srcdir)/xi2/protocol-xiquerypointer.c'; fi`
+
+tests-protocol-xipassivegrabdevice.o: xi2/protocol-xipassivegrabdevice.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-protocol-xipassivegrabdevice.o -MD -MP -MF $(DEPDIR)/tests-protocol-xipassivegrabdevice.Tpo -c -o tests-protocol-xipassivegrabdevice.o `test -f 'xi2/protocol-xipassivegrabdevice.c' || echo '$(srcdir)/'`xi2/protocol-xipassivegrabdevice.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-protocol-xipassivegrabdevice.Tpo $(DEPDIR)/tests-protocol-xipassivegrabdevice.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xi2/protocol-xipassivegrabdevice.c' object='tests-protocol-xipassivegrabdevice.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-protocol-xipassivegrabdevice.o `test -f 'xi2/protocol-xipassivegrabdevice.c' || echo '$(srcdir)/'`xi2/protocol-xipassivegrabdevice.c
+
+tests-protocol-xipassivegrabdevice.obj: xi2/protocol-xipassivegrabdevice.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-protocol-xipassivegrabdevice.obj -MD -MP -MF $(DEPDIR)/tests-protocol-xipassivegrabdevice.Tpo -c -o tests-protocol-xipassivegrabdevice.obj `if test -f 'xi2/protocol-xipassivegrabdevice.c'; then $(CYGPATH_W) 'xi2/protocol-xipassivegrabdevice.c'; else $(CYGPATH_W) '$(srcdir)/xi2/protocol-xipassivegrabdevice.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-protocol-xipassivegrabdevice.Tpo $(DEPDIR)/tests-protocol-xipassivegrabdevice.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xi2/protocol-xipassivegrabdevice.c' object='tests-protocol-xipassivegrabdevice.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-protocol-xipassivegrabdevice.obj `if test -f 'xi2/protocol-xipassivegrabdevice.c'; then $(CYGPATH_W) 'xi2/protocol-xipassivegrabdevice.c'; else $(CYGPATH_W) '$(srcdir)/xi2/protocol-xipassivegrabdevice.c'; fi`
+
+tests-protocol-xiwarppointer.o: xi2/protocol-xiwarppointer.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-protocol-xiwarppointer.o -MD -MP -MF $(DEPDIR)/tests-protocol-xiwarppointer.Tpo -c -o tests-protocol-xiwarppointer.o `test -f 'xi2/protocol-xiwarppointer.c' || echo '$(srcdir)/'`xi2/protocol-xiwarppointer.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-protocol-xiwarppointer.Tpo $(DEPDIR)/tests-protocol-xiwarppointer.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xi2/protocol-xiwarppointer.c' object='tests-protocol-xiwarppointer.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-protocol-xiwarppointer.o `test -f 'xi2/protocol-xiwarppointer.c' || echo '$(srcdir)/'`xi2/protocol-xiwarppointer.c
+
+tests-protocol-xiwarppointer.obj: xi2/protocol-xiwarppointer.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-protocol-xiwarppointer.obj -MD -MP -MF $(DEPDIR)/tests-protocol-xiwarppointer.Tpo -c -o tests-protocol-xiwarppointer.obj `if test -f 'xi2/protocol-xiwarppointer.c'; then $(CYGPATH_W) 'xi2/protocol-xiwarppointer.c'; else $(CYGPATH_W) '$(srcdir)/xi2/protocol-xiwarppointer.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-protocol-xiwarppointer.Tpo $(DEPDIR)/tests-protocol-xiwarppointer.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xi2/protocol-xiwarppointer.c' object='tests-protocol-xiwarppointer.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-protocol-xiwarppointer.obj `if test -f 'xi2/protocol-xiwarppointer.c'; then $(CYGPATH_W) 'xi2/protocol-xiwarppointer.c'; else $(CYGPATH_W) '$(srcdir)/xi2/protocol-xiwarppointer.c'; fi`
+
+tests-protocol-eventconvert.o: xi2/protocol-eventconvert.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-protocol-eventconvert.o -MD -MP -MF $(DEPDIR)/tests-protocol-eventconvert.Tpo -c -o tests-protocol-eventconvert.o `test -f 'xi2/protocol-eventconvert.c' || echo '$(srcdir)/'`xi2/protocol-eventconvert.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-protocol-eventconvert.Tpo $(DEPDIR)/tests-protocol-eventconvert.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xi2/protocol-eventconvert.c' object='tests-protocol-eventconvert.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-protocol-eventconvert.o `test -f 'xi2/protocol-eventconvert.c' || echo '$(srcdir)/'`xi2/protocol-eventconvert.c
+
+tests-protocol-eventconvert.obj: xi2/protocol-eventconvert.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-protocol-eventconvert.obj -MD -MP -MF $(DEPDIR)/tests-protocol-eventconvert.Tpo -c -o tests-protocol-eventconvert.obj `if test -f 'xi2/protocol-eventconvert.c'; then $(CYGPATH_W) 'xi2/protocol-eventconvert.c'; else $(CYGPATH_W) '$(srcdir)/xi2/protocol-eventconvert.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-protocol-eventconvert.Tpo $(DEPDIR)/tests-protocol-eventconvert.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xi2/protocol-eventconvert.c' object='tests-protocol-eventconvert.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-protocol-eventconvert.obj `if test -f 'xi2/protocol-eventconvert.c'; then $(CYGPATH_W) 'xi2/protocol-eventconvert.c'; else $(CYGPATH_W) '$(srcdir)/xi2/protocol-eventconvert.c'; fi`
+
+tests-xi2.o: xi2/xi2.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-xi2.o -MD -MP -MF $(DEPDIR)/tests-xi2.Tpo -c -o tests-xi2.o `test -f 'xi2/xi2.c' || echo '$(srcdir)/'`xi2/xi2.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-xi2.Tpo $(DEPDIR)/tests-xi2.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xi2/xi2.c' object='tests-xi2.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-xi2.o `test -f 'xi2/xi2.c' || echo '$(srcdir)/'`xi2/xi2.c
+
+tests-xi2.obj: xi2/xi2.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-xi2.obj -MD -MP -MF $(DEPDIR)/tests-xi2.Tpo -c -o tests-xi2.obj `if test -f 'xi2/xi2.c'; then $(CYGPATH_W) 'xi2/xi2.c'; else $(CYGPATH_W) '$(srcdir)/xi2/xi2.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-xi2.Tpo $(DEPDIR)/tests-xi2.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xi2/xi2.c' object='tests-xi2.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-xi2.obj `if test -f 'xi2/xi2.c'; then $(CYGPATH_W) 'xi2/xi2.c'; else $(CYGPATH_W) '$(srcdir)/xi2/xi2.c'; fi`
+
+tests-sdksyms.o: sdksyms.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-sdksyms.o -MD -MP -MF $(DEPDIR)/tests-sdksyms.Tpo -c -o tests-sdksyms.o `test -f 'sdksyms.c' || echo '$(srcdir)/'`sdksyms.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-sdksyms.Tpo $(DEPDIR)/tests-sdksyms.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sdksyms.c' object='tests-sdksyms.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-sdksyms.o `test -f 'sdksyms.c' || echo '$(srcdir)/'`sdksyms.c
+
+tests-sdksyms.obj: sdksyms.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests-sdksyms.obj -MD -MP -MF $(DEPDIR)/tests-sdksyms.Tpo -c -o tests-sdksyms.obj `if test -f 'sdksyms.c'; then $(CYGPATH_W) 'sdksyms.c'; else $(CYGPATH_W) '$(srcdir)/sdksyms.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tests-sdksyms.Tpo $(DEPDIR)/tests-sdksyms.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sdksyms.c' object='tests-sdksyms.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests-sdksyms.obj `if test -f 'sdksyms.c'; then $(CYGPATH_W) 'sdksyms.c'; else $(CYGPATH_W) '$(srcdir)/sdksyms.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -1149,7 +1487,6 @@ distdir: $(DISTFILES)
 	  fi; \
 	done
 check-am: all-am
-	$(MAKE) $(AM_MAKEFLAGS) $(check_LTLIBRARIES)
 	$(MAKE) $(AM_MAKEFLAGS) check-TESTS
 check: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) check-recursive
@@ -1191,8 +1528,8 @@ maintainer-clean-generic:
 	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 clean: clean-recursive
 
-clean-am: clean-checkLTLIBRARIES clean-generic clean-libtool \
-	clean-noinstPROGRAMS mostlyclean-am
+clean-am: clean-generic clean-libtool clean-noinstPROGRAMS \
+	mostlyclean-am
 
 distclean: distclean-recursive
 	-rm -rf ./$(DEPDIR)
@@ -1265,21 +1602,31 @@ uninstall-am:
 	install-am install-strip tags-recursive
 
 .PHONY: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) CTAGS GTAGS \
-	all all-am check check-TESTS check-am clean \
-	clean-checkLTLIBRARIES clean-generic clean-libtool \
-	clean-noinstPROGRAMS cscopelist cscopelist-recursive ctags \
-	ctags-recursive distclean distclean-compile distclean-generic \
-	distclean-libtool distclean-tags distdir dvi dvi-am html \
-	html-am info info-am install install-am install-data \
-	install-data-am install-dvi install-dvi-am install-exec \
-	install-exec-am install-html install-html-am install-info \
-	install-info-am install-man install-pdf install-pdf-am \
-	install-ps install-ps-am install-strip installcheck \
-	installcheck-am installdirs installdirs-am maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags tags-recursive uninstall uninstall-am
+	all all-am check check-TESTS check-am clean clean-generic \
+	clean-libtool clean-noinstPROGRAMS cscopelist \
+	cscopelist-recursive ctags ctags-recursive distclean \
+	distclean-compile distclean-generic distclean-libtool \
+	distclean-tags distdir dvi dvi-am html html-am info info-am \
+	install install-am install-data install-data-am install-dvi \
+	install-dvi-am install-exec install-exec-am install-html \
+	install-html-am install-info install-info-am install-man \
+	install-pdf install-pdf-am install-ps install-ps-am \
+	install-strip installcheck installcheck-am installdirs \
+	installdirs-am maintainer-clean maintainer-clean-generic \
+	mostlyclean mostlyclean-compile mostlyclean-generic \
+	mostlyclean-libtool pdf pdf-am ps ps-am tags tags-recursive \
+	uninstall uninstall-am
 
+
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_FALSE@xi1-tests:
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_FALSE@	@echo 'echo "ld -wrap support required for xi1 unit tests, skipping"' > $@
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_FALSE@	@echo 'exit 77' >> $@
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_FALSE@	$(AM_V_GEN)chmod +x $@
+
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_FALSE@xi2-tests:
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_FALSE@	@echo 'echo "ld -wrap support required for xi2 unit tests, skipping"' > $@
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_FALSE@	@echo 'exit 77' >> $@
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_FALSE@	$(AM_V_GEN)chmod +x $@
 
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@sdksyms.c: $(top_builddir)/hw/xfree86/sdksyms.c
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	$(AM_V_GEN)$(LN_S) $(top_builddir)/hw/xfree86/sdksyms.c

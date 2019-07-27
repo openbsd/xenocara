@@ -72,7 +72,7 @@ CONFIG_HEADER = $(top_builddir)/include/do-not-use-config.h \
 	$(top_builddir)/include/xorg-config.h \
 	$(top_builddir)/include/xkb-config.h \
 	$(top_builddir)/include/xwin-config.h \
-	$(top_builddir)/include/kdrive-config.h \
+	$(top_builddir)/include/xwayland-config.h \
 	$(top_builddir)/include/version-config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
@@ -211,7 +211,10 @@ DEFAULT_LOGPREFIX = @DEFAULT_LOGPREFIX@
 DEFAULT_MODULE_PATH = @DEFAULT_MODULE_PATH@
 DEFAULT_XDG_DATA_HOME = @DEFAULT_XDG_DATA_HOME@
 DEFAULT_XDG_DATA_HOME_LOGDIR = @DEFAULT_XDG_DATA_HOME_LOGDIR@
-DEFS = $(DEFS_MULTIWINDOW) $(DEFS_MULTIWINDOWEXTWM) $(DEFS_GLX_WINDOWS)
+DEFS = \
+	$(DEFS_MULTIWINDOWEXTWM) \
+	$(DEFS_GLX_WINDOWS)
+
 DEPDIR = @DEPDIR@
 DGA_CFLAGS = @DGA_CFLAGS@
 DGA_LIBS = @DGA_LIBS@
@@ -352,6 +355,7 @@ RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
 RELEASE_DATE = @RELEASE_DATE@
+SCANNER_ARG = @SCANNER_ARG@
 SDK_REQUIRED_MODULES = @SDK_REQUIRED_MODULES@
 SED = @SED@
 SELINUX_CFLAGS = @SELINUX_CFLAGS@
@@ -370,15 +374,18 @@ SYSCONFDIR = @SYSCONFDIR@
 SYSTEMD_DAEMON_CFLAGS = @SYSTEMD_DAEMON_CFLAGS@
 SYSTEMD_DAEMON_LIBS = @SYSTEMD_DAEMON_LIBS@
 TRADITIONALCPPFLAGS = @TRADITIONALCPPFLAGS@
-TSLIB_CFLAGS = @TSLIB_CFLAGS@
-TSLIB_LIBS = @TSLIB_LIBS@
 UDEV_CFLAGS = @UDEV_CFLAGS@
 UDEV_LIBS = @UDEV_LIBS@
 UTILS_SYS_LIBS = @UTILS_SYS_LIBS@
 VENDOR_NAME_SHORT = @VENDOR_NAME_SHORT@
 VERSION = @VERSION@
+WAYLAND_EGLSTREAM_CFLAGS = @WAYLAND_EGLSTREAM_CFLAGS@
+WAYLAND_EGLSTREAM_DATADIR = @WAYLAND_EGLSTREAM_DATADIR@
+WAYLAND_EGLSTREAM_LIBS = @WAYLAND_EGLSTREAM_LIBS@
 WAYLAND_PROTOCOLS_DATADIR = @WAYLAND_PROTOCOLS_DATADIR@
 WAYLAND_SCANNER = @WAYLAND_SCANNER@
+WAYLAND_SCANNER_CFLAGS = @WAYLAND_SCANNER_CFLAGS@
+WAYLAND_SCANNER_LIBS = @WAYLAND_SCANNER_LIBS@
 WINDOWSDRI_CFLAGS = @WINDOWSDRI_CFLAGS@
 WINDOWSDRI_LIBS = @WINDOWSDRI_LIBS@
 WINDOWSWM_CFLAGS = @WINDOWSWM_CFLAGS@
@@ -386,6 +393,8 @@ WINDOWSWM_LIBS = @WINDOWSWM_LIBS@
 WINDRES = @WINDRES@
 X11EXAMPLES_DEP_CFLAGS = @X11EXAMPLES_DEP_CFLAGS@
 X11EXAMPLES_DEP_LIBS = @X11EXAMPLES_DEP_LIBS@
+XCONFIGDIR = @XCONFIGDIR@
+XCONFIGFILE = @XCONFIGFILE@
 XDMCP_CFLAGS = @XDMCP_CFLAGS@
 XDMCP_LIBS = @XDMCP_LIBS@
 XDMXCONFIG_DEP_CFLAGS = @XDMXCONFIG_DEP_CFLAGS@
@@ -457,8 +466,6 @@ XWIN_SERVER_NAME = @XWIN_SERVER_NAME@
 XWIN_SYS_LIBS = @XWIN_SYS_LIBS@
 YACC = @YACC@
 YFLAGS = @YFLAGS@
-__XCONFIGDIR__ = @__XCONFIGDIR__@
-__XCONFIGFILE__ = @__XCONFIGFILE__@
 abi_ansic = @abi_ansic@
 abi_extension = @abi_extension@
 abi_videodrv = @abi_videodrv@
@@ -531,7 +538,6 @@ libXwinGLX_la_SOURCES = winpriv.c winpriv.h glwindows.h glshim.c \
 libnativeGLthunk_la_SOURCES = \
 	glthunk.c
 
-@XWIN_MULTIWINDOW_TRUE@DEFS_MULTIWINDOW = -DXWIN_MULTIWINDOW
 @XWIN_MULTIWINDOWEXTWM_TRUE@DEFS_MULTIWINDOWEXTWM = -DXWIN_MULTIWINDOWEXTWM
 @XWIN_GLX_WINDOWS_TRUE@DEFS_GLX_WINDOWS = -DXWIN_GLX_WINDOWS
 AM_CPPFLAGS = -I$(top_srcdir)/miext/rootless
@@ -545,8 +551,8 @@ libnativeGLthunk_la_LDFLAGS = -shared -no-undefined -avoid-version -lopengl32 -e
 EXTRA_libnativeGLthunk_la_DEPENDENCIES = generated_gl_thunks.def
 @DEBUG_FALSE@@XWIN_GLX_WINDOWS_TRUE@GENGLWRAPPERSOPTS = "-nodebug"
 @DEBUG_TRUE@@XWIN_GLX_WINDOWS_TRUE@GENGLWRAPPERSOPTS = ""
-BUILT_SOURCES = generated_gl_shim.c generated_gl_thunks.c generated_gl_thunks.def generated_wgl_wrappers.c
-CLEANFILES = $(BUILT_SOURCES)
+@XWIN_GLX_WINDOWS_TRUE@BUILT_SOURCES = generated_gl_shim.ic generated_gl_thunks.ic generated_gl_thunks.def generated_wgl_wrappers.ic
+@XWIN_GLX_WINDOWS_TRUE@CLEANFILES = $(BUILT_SOURCES)
 EXTRA_DIST = gen_gl_wrappers.py
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-am
@@ -905,13 +911,13 @@ uninstall-am: uninstall-libLTLIBRARIES
 	tags uninstall uninstall-am uninstall-libLTLIBRARIES
 
 
-@XWIN_GLX_WINDOWS_TRUE@generated_wgl_wrappers.c: $(srcdir)/gen_gl_wrappers.py $(KHRONOS_SPEC_DIR)/wgl.xml $(KHRONOS_SPEC_DIR)/reg.py
+@XWIN_GLX_WINDOWS_TRUE@generated_wgl_wrappers.ic: $(srcdir)/gen_gl_wrappers.py $(KHRONOS_SPEC_DIR)/wgl.xml $(KHRONOS_SPEC_DIR)/reg.py
 @XWIN_GLX_WINDOWS_TRUE@	$(AM_V_GEN)PYTHONPATH=$(KHRONOS_SPEC_DIR) $(PYTHON3) $(srcdir)/gen_gl_wrappers.py -registry $(KHRONOS_SPEC_DIR)/wgl.xml -prefix wgl -wrapper -preresolve $(GENGLWRAPPERSOPTS) -outfile $@
 
-@XWIN_GLX_WINDOWS_TRUE@generated_gl_shim.c: $(srcdir)/gen_gl_wrappers.py $(KHRONOS_SPEC_DIR)/gl.xml $(KHRONOS_SPEC_DIR)/reg.py
+@XWIN_GLX_WINDOWS_TRUE@generated_gl_shim.ic: $(srcdir)/gen_gl_wrappers.py $(KHRONOS_SPEC_DIR)/gl.xml $(KHRONOS_SPEC_DIR)/reg.py
 @XWIN_GLX_WINDOWS_TRUE@	$(AM_V_GEN)PYTHONPATH=$(KHRONOS_SPEC_DIR) $(PYTHON3) $(srcdir)/gen_gl_wrappers.py -registry $(KHRONOS_SPEC_DIR)/gl.xml -shim $(GENGLWRAPPERSOPTS) -outfile $@
 
-@XWIN_GLX_WINDOWS_TRUE@generated_gl_thunks.c: $(srcdir)/gen_gl_wrappers.py $(KHRONOS_SPEC_DIR)/gl.xml $(KHRONOS_SPEC_DIR)/reg.py
+@XWIN_GLX_WINDOWS_TRUE@generated_gl_thunks.ic: $(srcdir)/gen_gl_wrappers.py $(KHRONOS_SPEC_DIR)/gl.xml $(KHRONOS_SPEC_DIR)/reg.py
 @XWIN_GLX_WINDOWS_TRUE@	$(AM_V_GEN)PYTHONPATH=$(KHRONOS_SPEC_DIR) $(PYTHON3) $(srcdir)/gen_gl_wrappers.py -registry $(KHRONOS_SPEC_DIR)/gl.xml -thunk $(GENGLWRAPPERSOPTS) -outfile $@
 
 @XWIN_GLX_WINDOWS_TRUE@generated_gl_thunks.def: $(srcdir)/gen_gl_wrappers.py $(KHRONOS_SPEC_DIR)/gl.xml $(KHRONOS_SPEC_DIR)/reg.py

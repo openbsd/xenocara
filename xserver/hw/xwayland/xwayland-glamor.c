@@ -25,30 +25,14 @@
 
 #include "xwayland.h"
 
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <xf86drm.h>
-
 #define MESA_EGL_NO_X11_HEADERS
-#include <gbm.h>
 #include <glamor_egl.h>
 
 #include <glamor.h>
 #include <glamor_context.h>
-#include <dri3.h>
-#include "drm-client-protocol.h"
-
-static DevPrivateKeyRec xwl_auth_state_private_key;
-
-struct xwl_pixmap {
-    struct wl_buffer *buffer;
-    struct gbm_bo *bo;
-    void *image;
-    unsigned int texture;
-};
 
 static void
-xwl_glamor_egl_make_current(struct glamor_context *glamor_ctx)
+glamor_egl_make_current(struct glamor_context *glamor_ctx)
 {
     eglMakeCurrent(glamor_ctx->display, EGL_NO_SURFACE,
                    EGL_NO_SURFACE, EGL_NO_CONTEXT);
@@ -58,36 +42,14 @@ xwl_glamor_egl_make_current(struct glamor_context *glamor_ctx)
         FatalError("Failed to make EGL context current\n");
 }
 
-static uint32_t
-drm_format_for_depth(int depth)
+void
+xwl_glamor_egl_make_current(struct xwl_screen *xwl_screen)
 {
-    switch (depth) {
-    case 15:
-        return WL_DRM_FORMAT_XRGB1555;
-    case 16:
-        return WL_DRM_FORMAT_RGB565;
-    case 24:
-        return WL_DRM_FORMAT_XRGB8888;
-    default:
-        ErrorF("unexpected depth: %d\n", depth);
-    case 32:
-        return WL_DRM_FORMAT_ARGB8888;
-    }
-}
+    if (lastGLContext == xwl_screen->glamor_ctx)
+        return;
 
-static uint32_t
-gbm_format_for_depth(int depth)
-{
-    switch (depth) {
-    case 16:
-        return GBM_FORMAT_RGB565;
-    case 24:
-        return GBM_FORMAT_XRGB8888;
-    default:
-        ErrorF("unexpected depth: %d\n", depth);
-    case 32:
-        return GBM_FORMAT_ARGB8888;
-    }
+    lastGLContext = xwl_screen->glamor_ctx;
+    xwl_screen->glamor_ctx->make_current(xwl_screen->glamor_ctx);
 }
 
 void
@@ -95,129 +57,74 @@ glamor_egl_screen_init(ScreenPtr screen, struct glamor_context *glamor_ctx)
 {
     struct xwl_screen *xwl_screen = xwl_screen_get(screen);
 
+    glamor_enable_dri3(screen);
     glamor_ctx->ctx = xwl_screen->egl_context;
     glamor_ctx->display = xwl_screen->egl_display;
 
-    glamor_ctx->make_current = xwl_glamor_egl_make_current;
+    glamor_ctx->make_current = glamor_egl_make_current;
 
     xwl_screen->glamor_ctx = glamor_ctx;
 }
 
-static PixmapPtr
-xwl_glamor_create_pixmap_for_bo(ScreenPtr screen, struct gbm_bo *bo, int depth)
+void
+xwl_glamor_init_wl_registry(struct xwl_screen *xwl_screen,
+                            struct wl_registry *registry,
+                            uint32_t id, const char *interface,
+                            uint32_t version)
 {
-    PixmapPtr pixmap;
-    struct xwl_pixmap *xwl_pixmap;
-    struct xwl_screen *xwl_screen = xwl_screen_get(screen);
+    if (xwl_screen->gbm_backend.is_available &&
+        xwl_screen->gbm_backend.init_wl_registry(xwl_screen,
+                                                 registry,
+                                                 id,
+                                                 interface,
+                                                 version)); /* no-op */
+    else if (xwl_screen->eglstream_backend.is_available &&
+             xwl_screen->eglstream_backend.init_wl_registry(xwl_screen,
+                                                            registry,
+                                                            id,
+                                                            interface,
+                                                            version)); /* no-op */
+}
 
-    xwl_pixmap = malloc(sizeof *xwl_pixmap);
-    if (xwl_pixmap == NULL)
-        return NULL;
-
-    pixmap = glamor_create_pixmap(screen,
-                                  gbm_bo_get_width(bo),
-                                  gbm_bo_get_height(bo),
-                                  depth,
-                                  GLAMOR_CREATE_PIXMAP_NO_TEXTURE);
-    if (pixmap == NULL) {
-        free(xwl_pixmap);
-        return NULL;
-    }
-
-    if (lastGLContext != xwl_screen->glamor_ctx) {
-        lastGLContext = xwl_screen->glamor_ctx;
-        xwl_glamor_egl_make_current(xwl_screen->glamor_ctx);
-    }
-
-    xwl_pixmap->bo = bo;
-    xwl_pixmap->buffer = NULL;
-    xwl_pixmap->image = eglCreateImageKHR(xwl_screen->egl_display,
-                                          xwl_screen->egl_context,
-                                          EGL_NATIVE_PIXMAP_KHR,
-                                          xwl_pixmap->bo, NULL);
-
-    glGenTextures(1, &xwl_pixmap->texture);
-    glBindTexture(GL_TEXTURE_2D, xwl_pixmap->texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, xwl_pixmap->image);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    xwl_pixmap_set_private(pixmap, xwl_pixmap);
-
-    glamor_set_pixmap_texture(pixmap, xwl_pixmap->texture);
-    glamor_set_pixmap_type(pixmap, GLAMOR_TEXTURE_DRM);
-
-    return pixmap;
+Bool
+xwl_glamor_has_wl_interfaces(struct xwl_screen *xwl_screen,
+                            struct xwl_egl_backend *xwl_egl_backend)
+{
+    return xwl_egl_backend->has_wl_interfaces(xwl_screen);
 }
 
 struct wl_buffer *
-xwl_glamor_pixmap_get_wl_buffer(PixmapPtr pixmap)
+xwl_glamor_pixmap_get_wl_buffer(PixmapPtr pixmap,
+                                Bool *created)
 {
     struct xwl_screen *xwl_screen = xwl_screen_get(pixmap->drawable.pScreen);
-    struct xwl_pixmap *xwl_pixmap = xwl_pixmap_get(pixmap);
-    int prime_fd;
 
-    if (xwl_pixmap->buffer)
-        return xwl_pixmap->buffer;
+    if (xwl_screen->egl_backend->get_wl_buffer_for_pixmap)
+        return xwl_screen->egl_backend->get_wl_buffer_for_pixmap(pixmap,
+                                                                 created);
 
-    prime_fd = gbm_bo_get_fd(xwl_pixmap->bo);
-    if (prime_fd == -1)
-        return NULL;
-
-    xwl_pixmap->buffer =
-        wl_drm_create_prime_buffer(xwl_screen->drm, prime_fd,
-                                   pixmap->drawable.width,
-                                   pixmap->drawable.height,
-                                   drm_format_for_depth(pixmap->drawable.depth),
-                                   0, gbm_bo_get_stride(xwl_pixmap->bo),
-                                   0, 0,
-                                   0, 0);
-
-    close(prime_fd);
-
-    return xwl_pixmap->buffer;
+    return NULL;
 }
 
-static PixmapPtr
-xwl_glamor_create_pixmap(ScreenPtr screen,
-                         int width, int height, int depth, unsigned int hint)
+void
+xwl_glamor_post_damage(struct xwl_window *xwl_window,
+                       PixmapPtr pixmap, RegionPtr region)
 {
-    struct xwl_screen *xwl_screen = xwl_screen_get(screen);
-    struct gbm_bo *bo;
+    struct xwl_screen *xwl_screen = xwl_window->xwl_screen;
 
-    if (width > 0 && height > 0 && depth >= 15 &&
-        (hint == 0 ||
-         hint == CREATE_PIXMAP_USAGE_BACKING_PIXMAP ||
-         hint == CREATE_PIXMAP_USAGE_SHARED)) {
-        bo = gbm_bo_create(xwl_screen->gbm, width, height,
-                           gbm_format_for_depth(depth),
-                           GBM_BO_USE_SCANOUT | GBM_BO_USE_RENDERING);
-
-        if (bo)
-            return xwl_glamor_create_pixmap_for_bo(screen, bo, depth);
-    }
-
-    return glamor_create_pixmap(screen, width, height, depth, hint);
+    if (xwl_screen->egl_backend->post_damage)
+        xwl_screen->egl_backend->post_damage(xwl_window, pixmap, region);
 }
 
-static Bool
-xwl_glamor_destroy_pixmap(PixmapPtr pixmap)
+Bool
+xwl_glamor_allow_commits(struct xwl_window *xwl_window)
 {
-    struct xwl_screen *xwl_screen = xwl_screen_get(pixmap->drawable.pScreen);
-    struct xwl_pixmap *xwl_pixmap = xwl_pixmap_get(pixmap);
+    struct xwl_screen *xwl_screen = xwl_window->xwl_screen;
 
-    if (xwl_pixmap && pixmap->refcnt == 1) {
-        if (xwl_pixmap->buffer)
-            wl_buffer_destroy(xwl_pixmap->buffer);
-
-        eglDestroyImageKHR(xwl_screen->egl_display, xwl_pixmap->image);
-        gbm_bo_destroy(xwl_pixmap->bo);
-        free(xwl_pixmap);
-    }
-
-    return glamor_destroy_pixmap(pixmap);
+    if (xwl_screen->egl_backend->allow_commits)
+        return xwl_screen->egl_backend->allow_commits(xwl_window);
+    else
+        return TRUE;
 }
 
 static Bool
@@ -239,12 +146,9 @@ xwl_glamor_create_screen_resources(ScreenPtr screen)
             fbCreatePixmap(screen, 0, 0, screen->rootDepth, 0);
     }
     else {
-        screen->devPrivate =
-            xwl_glamor_create_pixmap(screen, screen->width, screen->height,
-                                     screen->rootDepth,
-                                     CREATE_PIXMAP_USAGE_BACKING_PIXMAP);
-        if (screen->devPrivate)
-            glamor_set_screen_pixmap(screen->devPrivate, NULL);
+        screen->devPrivate = screen->CreatePixmap(
+            screen, screen->width, screen->height, screen->rootDepth,
+            CREATE_PIXMAP_USAGE_BACKING_PIXMAP);
     }
 
     SetRootClip(screen, xwl_screen->root_clip_mode);
@@ -252,340 +156,90 @@ xwl_glamor_create_screen_resources(ScreenPtr screen)
     return screen->devPrivate != NULL;
 }
 
-static char
-is_fd_render_node(int fd)
-{
-    struct stat render;
-
-    if (fstat(fd, &render))
-        return 0;
-    if (!S_ISCHR(render.st_mode))
-        return 0;
-    if (render.st_rdev & 0x80)
-        return 1;
-
-    return 0;
-}
-
-static void
-xwl_drm_init_egl(struct xwl_screen *xwl_screen)
-{
-    EGLint major, minor;
-    const char *version;
-    static const EGLint config_attribs_core[] = {
-        EGL_CONTEXT_OPENGL_PROFILE_MASK_KHR,
-        EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT_KHR,
-        EGL_CONTEXT_MAJOR_VERSION_KHR,
-        GLAMOR_GL_CORE_VER_MAJOR,
-        EGL_CONTEXT_MINOR_VERSION_KHR,
-        GLAMOR_GL_CORE_VER_MINOR,
-        EGL_NONE
-    };
-
-    if (xwl_screen->egl_display)
-        return;
-
-    xwl_screen->expecting_event--;
-
-    xwl_screen->gbm = gbm_create_device(xwl_screen->drm_fd);
-    if (xwl_screen->gbm == NULL) {
-        ErrorF("couldn't get display device\n");
-        return;
-    }
-
-    xwl_screen->egl_display = glamor_egl_get_display(EGL_PLATFORM_GBM_MESA,
-                                                     xwl_screen->gbm);
-    if (xwl_screen->egl_display == EGL_NO_DISPLAY) {
-        ErrorF("glamor_egl_get_display() failed\n");
-        return;
-    }
-
-    if (!eglInitialize(xwl_screen->egl_display, &major, &minor)) {
-        ErrorF("eglInitialize() failed\n");
-        return;
-    }
-
-    eglBindAPI(EGL_OPENGL_API);
-
-    version = eglQueryString(xwl_screen->egl_display, EGL_VERSION);
-    ErrorF("glamor: EGL version %s:\n", version);
-
-    xwl_screen->egl_context = eglCreateContext(xwl_screen->egl_display,
-                                               NULL, EGL_NO_CONTEXT, config_attribs_core);
-    if (!xwl_screen->egl_context)
-        xwl_screen->egl_context = eglCreateContext(xwl_screen->egl_display,
-                                                   NULL, EGL_NO_CONTEXT, NULL);
-
-    if (xwl_screen->egl_context == EGL_NO_CONTEXT) {
-        ErrorF("Failed to create EGL context\n");
-        return;
-    }
-
-    if (!eglMakeCurrent(xwl_screen->egl_display,
-                        EGL_NO_SURFACE, EGL_NO_SURFACE,
-                        xwl_screen->egl_context)) {
-        ErrorF("Failed to make EGL context current\n");
-        return;
-    }
-
-    if (!epoxy_has_gl_extension("GL_OES_EGL_image")) {
-        ErrorF("GL_OES_EGL_image not available\n");
-        return;
-    }
-
-    return;
-}
-
-static void
-xwl_drm_handle_device(void *data, struct wl_drm *drm, const char *device)
-{
-   struct xwl_screen *xwl_screen = data;
-   drm_magic_t magic;
-
-   xwl_screen->device_name = strdup(device);
-   if (!xwl_screen->device_name)
-      return;
-
-   xwl_screen->drm_fd = open(xwl_screen->device_name, O_RDWR | O_CLOEXEC);
-   if (xwl_screen->drm_fd == -1) {
-       ErrorF("wayland-egl: could not open %s (%s)\n",
-              xwl_screen->device_name, strerror(errno));
-       return;
-   }
-
-   if (is_fd_render_node(xwl_screen->drm_fd)) {
-       xwl_screen->fd_render_node = 1;
-       xwl_drm_init_egl(xwl_screen);
-   } else {
-       drmGetMagic(xwl_screen->drm_fd, &magic);
-       wl_drm_authenticate(xwl_screen->drm, magic);
-   }
-}
-
-static void
-xwl_drm_handle_format(void *data, struct wl_drm *drm, uint32_t format)
-{
-   struct xwl_screen *xwl_screen = data;
-
-   switch (format) {
-   case WL_DRM_FORMAT_ARGB8888:
-      xwl_screen->formats |= XWL_FORMAT_ARGB8888;
-      break;
-   case WL_DRM_FORMAT_XRGB8888:
-      xwl_screen->formats |= XWL_FORMAT_XRGB8888;
-      break;
-   case WL_DRM_FORMAT_RGB565:
-      xwl_screen->formats |= XWL_FORMAT_RGB565;
-      break;
-   }
-}
-
-static void
-xwl_drm_handle_authenticated(void *data, struct wl_drm *drm)
-{
-    struct xwl_screen *xwl_screen = data;
-
-    if (!xwl_screen->egl_display)
-        xwl_drm_init_egl(xwl_screen);
-}
-
-static void
-xwl_drm_handle_capabilities(void *data, struct wl_drm *drm, uint32_t value)
-{
-   struct xwl_screen *xwl_screen = data;
-
-   xwl_screen->capabilities = value;
-}
-
-static const struct wl_drm_listener xwl_drm_listener = {
-    xwl_drm_handle_device,
-    xwl_drm_handle_format,
-    xwl_drm_handle_authenticated,
-    xwl_drm_handle_capabilities
-};
-
-Bool
-xwl_screen_init_glamor(struct xwl_screen *xwl_screen,
-                       uint32_t id, uint32_t version)
-{
-    if (version < 2)
-        return FALSE;
-
-    xwl_screen->drm =
-        wl_registry_bind(xwl_screen->registry, id, &wl_drm_interface, 2);
-    wl_drm_add_listener(xwl_screen->drm, &xwl_drm_listener, xwl_screen);
-    xwl_screen->expecting_event++;
-
-    return TRUE;
-}
-
 int
-glamor_egl_dri3_fd_name_from_tex(ScreenPtr screen,
-                                 PixmapPtr pixmap,
-                                 unsigned int tex,
-                                 Bool want_name, CARD16 *stride, CARD32 *size)
+glamor_egl_fd_name_from_pixmap(ScreenPtr screen,
+                               PixmapPtr pixmap,
+                               CARD16 *stride, CARD32 *size)
 {
     return 0;
 }
 
-struct xwl_auth_state {
-    int fd;
-    ClientPtr client;
-    struct wl_callback *callback;
-};
-
-static void
-free_xwl_auth_state(ClientPtr pClient, struct xwl_auth_state *state)
+void
+xwl_glamor_init_backends(struct xwl_screen *xwl_screen, Bool use_eglstream)
 {
-    dixSetPrivate(&pClient->devPrivates, &xwl_auth_state_private_key, NULL);
-    if (state) {
-        wl_callback_destroy(state->callback);
-        free(state);
-    }
+#ifdef GLAMOR_HAS_GBM
+    xwl_glamor_init_gbm(xwl_screen);
+    if (!xwl_screen->gbm_backend.is_available && !use_eglstream)
+        ErrorF("xwayland glamor: GBM backend (default) is not available\n");
+#endif
+#ifdef XWL_HAS_EGLSTREAM
+    xwl_glamor_init_eglstream(xwl_screen);
+    if (!xwl_screen->eglstream_backend.is_available && use_eglstream)
+        ErrorF("xwayland glamor: EGLStream backend requested but not available\n");
+#endif
 }
 
-static void
-xwl_auth_state_client_callback(CallbackListPtr *pcbl, void *unused, void *data)
+static Bool
+xwl_glamor_select_gbm_backend(struct xwl_screen *xwl_screen)
 {
-    NewClientInfoRec *clientinfo = (NewClientInfoRec *) data;
-    ClientPtr pClient = clientinfo->client;
-    struct xwl_auth_state *state;
-
-    switch (pClient->clientState) {
-    case ClientStateGone:
-    case ClientStateRetained:
-        state = dixLookupPrivate(&pClient->devPrivates, &xwl_auth_state_private_key);
-        free_xwl_auth_state(pClient, state);
-        break;
-    default:
-        break;
+#ifdef GLAMOR_HAS_GBM
+    if (xwl_screen->gbm_backend.is_available &&
+        xwl_glamor_has_wl_interfaces(xwl_screen, &xwl_screen->gbm_backend)) {
+        xwl_screen->egl_backend = &xwl_screen->gbm_backend;
+        return TRUE;
     }
+    else
+        ErrorF("Missing Wayland requirements for glamor GBM backend\n");
+#endif
+
+    return FALSE;
 }
 
-static void
-sync_callback(void *data, struct wl_callback *callback, uint32_t serial)
+static Bool
+xwl_glamor_select_eglstream_backend(struct xwl_screen *xwl_screen)
 {
-    struct xwl_auth_state *state = data;
-    ClientPtr client = state->client;
+#ifdef XWL_HAS_EGLSTREAM
+    if (xwl_screen->eglstream_backend.is_available &&
+        xwl_glamor_has_wl_interfaces(xwl_screen, &xwl_screen->eglstream_backend)) {
+        ErrorF("glamor: Using nvidia's EGLStream interface, direct rendering impossible.\n");
+        ErrorF("glamor: Performance may be affected. Ask your vendor to support GBM!\n");
+        xwl_screen->egl_backend = &xwl_screen->eglstream_backend;
+        return TRUE;
+    }
+    else
+        ErrorF("Missing Wayland requirements for glamor EGLStream backend\n");
+#endif
 
-    /* if the client is gone, the callback is cancelled so it's safe to
-     * assume the client is still in ClientStateRunning at this point...
-     */
-    dri3_send_open_reply(client, state->fd);
-    AttendClient(client);
-    free_xwl_auth_state(client, state);
+    return FALSE;
 }
 
-static const struct wl_callback_listener sync_listener = {
-   sync_callback
-};
-
-static int
-xwl_dri3_open_client(ClientPtr client,
-                     ScreenPtr screen,
-                     RRProviderPtr provider,
-                     int *pfd)
+void
+xwl_glamor_select_backend(struct xwl_screen *xwl_screen, Bool use_eglstream)
 {
-    struct xwl_screen *xwl_screen = xwl_screen_get(screen);
-    struct xwl_auth_state *state;
-    drm_magic_t magic;
-    int fd;
-
-    fd = open(xwl_screen->device_name, O_RDWR | O_CLOEXEC);
-    if (fd < 0)
-        return BadAlloc;
-    if (xwl_screen->fd_render_node) {
-        *pfd = fd;
-        return Success;
+    if (use_eglstream) {
+        if (!xwl_glamor_select_eglstream_backend(xwl_screen))
+            xwl_glamor_select_gbm_backend(xwl_screen);
     }
-
-    state = malloc(sizeof *state);
-    if (state == NULL) {
-        close(fd);
-        return BadAlloc;
+    else {
+        if (!xwl_glamor_select_gbm_backend(xwl_screen))
+            xwl_glamor_select_eglstream_backend(xwl_screen);
     }
-
-    state->client = client;
-    state->fd = fd;
-
-    if (drmGetMagic(state->fd, &magic) < 0) {
-        close(state->fd);
-        free(state);
-        return BadMatch;
-    }
-
-    wl_drm_authenticate(xwl_screen->drm, magic);
-    state->callback = wl_display_sync(xwl_screen->display);
-    wl_callback_add_listener(state->callback, &sync_listener, state);
-    dixSetPrivate(&client->devPrivates, &xwl_auth_state_private_key, state);
-
-    IgnoreClient(client);
-
-    return Success;
 }
-
-static PixmapPtr
-xwl_dri3_pixmap_from_fd(ScreenPtr screen, int fd,
-                        CARD16 width, CARD16 height, CARD16 stride,
-                        CARD8 depth, CARD8 bpp)
-{
-    struct xwl_screen *xwl_screen = xwl_screen_get(screen);
-    struct gbm_import_fd_data data;
-    struct gbm_bo *bo;
-    PixmapPtr pixmap;
-
-    if (width == 0 || height == 0 ||
-        depth < 15 || bpp != BitsPerPixel(depth) || stride < width * bpp / 8)
-        return NULL;
-
-    data.fd = fd;
-    data.width = width;
-    data.height = height;
-    data.stride = stride;
-    data.format = gbm_format_for_depth(depth);
-    bo = gbm_bo_import(xwl_screen->gbm, GBM_BO_IMPORT_FD, &data,
-                       GBM_BO_USE_SCANOUT | GBM_BO_USE_RENDERING);
-    if (bo == NULL)
-        return NULL;
-
-    pixmap = xwl_glamor_create_pixmap_for_bo(screen, bo, depth);
-    if (pixmap == NULL) {
-        gbm_bo_destroy(bo);
-        return NULL;
-    }
-
-    return pixmap;
-}
-
-static int
-xwl_dri3_fd_from_pixmap(ScreenPtr screen, PixmapPtr pixmap,
-                        CARD16 *stride, CARD32 *size)
-{
-    struct xwl_pixmap *xwl_pixmap;
-
-    xwl_pixmap = xwl_pixmap_get(pixmap);
-
-    *stride = gbm_bo_get_stride(xwl_pixmap->bo);
-    *size = pixmap->drawable.width * *stride;
-
-    return gbm_bo_get_fd(xwl_pixmap->bo);
-}
-
-static dri3_screen_info_rec xwl_dri3_info = {
-    .version = 1,
-    .open = NULL,
-    .pixmap_from_fd = xwl_dri3_pixmap_from_fd,
-    .fd_from_pixmap = xwl_dri3_fd_from_pixmap,
-    .open_client = xwl_dri3_open_client,
-};
 
 Bool
 xwl_glamor_init(struct xwl_screen *xwl_screen)
 {
     ScreenPtr screen = xwl_screen->screen;
+    const char *no_glamor_env;
 
-    if (xwl_screen->egl_context == EGL_NO_CONTEXT) {
-        ErrorF("Disabling glamor and dri3, EGL setup failed\n");
+    no_glamor_env = getenv("XWAYLAND_NO_GLAMOR");
+    if (no_glamor_env && *no_glamor_env != '0') {
+        ErrorF("Disabling glamor and dri3 support, XWAYLAND_NO_GLAMOR is set\n");
+        return FALSE;
+    }
+
+    if (!xwl_screen->egl_backend->init_egl(xwl_screen)) {
+        ErrorF("EGL setup failed, disabling glamor\n");
         return FALSE;
     }
 
@@ -594,25 +248,13 @@ xwl_glamor_init(struct xwl_screen *xwl_screen)
         return FALSE;
     }
 
-    if (!dri3_screen_init(xwl_screen->screen, &xwl_dri3_info)) {
-        ErrorF("Failed to initialize dri3\n");
-        return FALSE;
-    }
-
-    if (!dixRegisterPrivateKey(&xwl_auth_state_private_key, PRIVATE_CLIENT, 0)) {
-        ErrorF("Failed to register private key\n");
-        return FALSE;
-    }
-
-    if (!AddCallback(&ClientStateCallback, xwl_auth_state_client_callback, NULL)) {
-        ErrorF("Failed to add client state callback\n");
+    if (!xwl_screen->egl_backend->init_screen(xwl_screen)) {
+        ErrorF("EGL backend init_screen() failed, disabling glamor\n");
         return FALSE;
     }
 
     xwl_screen->CreateScreenResources = screen->CreateScreenResources;
     screen->CreateScreenResources = xwl_glamor_create_screen_resources;
-    screen->CreatePixmap = xwl_glamor_create_pixmap;
-    screen->DestroyPixmap = xwl_glamor_destroy_pixmap;
 
 #ifdef XV
     if (!xwl_glamor_xv_init(screen))

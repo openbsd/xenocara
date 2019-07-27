@@ -51,11 +51,11 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
+DIST_COMMON = $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/xorg-server.pc.in \
 	$(srcdir)/xserver.ent.in $(top_srcdir)/configure COPYING \
 	ChangeLog INSTALL config.guess config.sub depcomp install-sh \
-	ltmain.sh missing
+	ltmain.sh missing ylwrap
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_dir.m4 \
 	$(top_srcdir)/m4/ax_pthread.m4 $(top_srcdir)/m4/libtool.m4 \
@@ -73,7 +73,7 @@ CONFIG_HEADER = $(top_builddir)/include/do-not-use-config.h \
 	$(top_builddir)/include/xorg-config.h \
 	$(top_builddir)/include/xkb-config.h \
 	$(top_builddir)/include/xwin-config.h \
-	$(top_builddir)/include/kdrive-config.h \
+	$(top_builddir)/include/xwayland-config.h \
 	$(top_builddir)/include/version-config.h
 CONFIG_CLEAN_FILES = xserver.ent xorg-server.pc
 CONFIG_CLEAN_VPATH_FILES =
@@ -366,6 +366,7 @@ RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
 RELEASE_DATE = @RELEASE_DATE@
+SCANNER_ARG = @SCANNER_ARG@
 SDK_REQUIRED_MODULES = @SDK_REQUIRED_MODULES@
 SED = @SED@
 SELINUX_CFLAGS = @SELINUX_CFLAGS@
@@ -384,15 +385,18 @@ SYSCONFDIR = @SYSCONFDIR@
 SYSTEMD_DAEMON_CFLAGS = @SYSTEMD_DAEMON_CFLAGS@
 SYSTEMD_DAEMON_LIBS = @SYSTEMD_DAEMON_LIBS@
 TRADITIONALCPPFLAGS = @TRADITIONALCPPFLAGS@
-TSLIB_CFLAGS = @TSLIB_CFLAGS@
-TSLIB_LIBS = @TSLIB_LIBS@
 UDEV_CFLAGS = @UDEV_CFLAGS@
 UDEV_LIBS = @UDEV_LIBS@
 UTILS_SYS_LIBS = @UTILS_SYS_LIBS@
 VENDOR_NAME_SHORT = @VENDOR_NAME_SHORT@
 VERSION = @VERSION@
+WAYLAND_EGLSTREAM_CFLAGS = @WAYLAND_EGLSTREAM_CFLAGS@
+WAYLAND_EGLSTREAM_DATADIR = @WAYLAND_EGLSTREAM_DATADIR@
+WAYLAND_EGLSTREAM_LIBS = @WAYLAND_EGLSTREAM_LIBS@
 WAYLAND_PROTOCOLS_DATADIR = @WAYLAND_PROTOCOLS_DATADIR@
 WAYLAND_SCANNER = @WAYLAND_SCANNER@
+WAYLAND_SCANNER_CFLAGS = @WAYLAND_SCANNER_CFLAGS@
+WAYLAND_SCANNER_LIBS = @WAYLAND_SCANNER_LIBS@
 WINDOWSDRI_CFLAGS = @WINDOWSDRI_CFLAGS@
 WINDOWSDRI_LIBS = @WINDOWSDRI_LIBS@
 WINDOWSWM_CFLAGS = @WINDOWSWM_CFLAGS@
@@ -400,6 +404,8 @@ WINDOWSWM_LIBS = @WINDOWSWM_LIBS@
 WINDRES = @WINDRES@
 X11EXAMPLES_DEP_CFLAGS = @X11EXAMPLES_DEP_CFLAGS@
 X11EXAMPLES_DEP_LIBS = @X11EXAMPLES_DEP_LIBS@
+XCONFIGDIR = @XCONFIGDIR@
+XCONFIGFILE = @XCONFIGFILE@
 XDMCP_CFLAGS = @XDMCP_CFLAGS@
 XDMCP_LIBS = @XDMCP_LIBS@
 XDMXCONFIG_DEP_CFLAGS = @XDMXCONFIG_DEP_CFLAGS@
@@ -471,8 +477,6 @@ XWIN_SERVER_NAME = @XWIN_SERVER_NAME@
 XWIN_SYS_LIBS = @XWIN_SYS_LIBS@
 YACC = @YACC@
 YFLAGS = @YFLAGS@
-__XCONFIGDIR__ = @__XCONFIGDIR__@
-__XCONFIGFILE__ = @__XCONFIGFILE__@
 abi_ansic = @abi_ansic@
 abi_extension = @abi_extension@
 abi_videodrv = @abi_videodrv@
@@ -582,7 +586,41 @@ SUBDIRS = \
 @XORG_TRUE@aclocal_DATA = xorg-server.m4
 @XORG_TRUE@pkgconfigdir = $(libdir)/pkgconfig
 @XORG_TRUE@pkgconfig_DATA = xorg-server.pc
-EXTRA_DIST = xorg-server.pc.in xorg-server.m4 autogen.sh
+EXTRA_DIST = xorg-server.pc.in xorg-server.m4 autogen.sh README.md \
+	meson_options.txt include/xorg-config.h.meson.in \
+	include/xwin-config.h.meson.in hw/xfree86/loader/symbol-test.c \
+	hw/xfree86/common/xf86Build.sh composite/meson.build \
+	config/meson.build damageext/meson.build dbe/meson.build \
+	dix/meson.build dri3/meson.build exa/meson.build \
+	fb/meson.build glamor/meson.build glx/meson.build \
+	hw/dmx/config/meson.build hw/dmx/examples/meson.build \
+	hw/dmx/glxProxy/meson.build hw/dmx/input/meson.build \
+	hw/dmx/meson.build hw/kdrive/ephyr/meson.build \
+	hw/kdrive/meson.build hw/kdrive/src/meson.build hw/meson.build \
+	hw/vfb/meson.build hw/xfree86/common/meson.build \
+	hw/xfree86/ddc/meson.build hw/xfree86/dixmods/meson.build \
+	hw/xfree86/dri2/meson.build hw/xfree86/dri/meson.build \
+	hw/xfree86/drivers/modesetting/meson.build \
+	hw/xfree86/exa/meson.build hw/xfree86/fbdevhw/meson.build \
+	hw/xfree86/glamor_egl/meson.build hw/xfree86/i2c/meson.build \
+	hw/xfree86/int10/meson.build hw/xfree86/loader/meson.build \
+	hw/xfree86/meson.build hw/xfree86/modes/meson.build \
+	hw/xfree86/os-support/meson.build \
+	hw/xfree86/parser/meson.build hw/xfree86/ramdac/meson.build \
+	hw/xfree86/shadowfb/meson.build hw/xfree86/vbe/meson.build \
+	hw/xfree86/vgahw/meson.build hw/xfree86/x86emu/meson.build \
+	hw/xfree86/xkb/meson.build hw/xnest/meson.build \
+	hw/xquartz/meson.build hw/xwayland/meson.build \
+	hw/xwin/dri/meson.build hw/xwin/glx/meson.build \
+	hw/xwin/meson.build hw/xwin/winclipboard/meson.build \
+	include/meson.build meson.build miext/damage/meson.build \
+	miext/shadow/meson.build miext/sync/meson.build mi/meson.build \
+	os/meson.build present/meson.build pseudoramiX/meson.build \
+	randr/meson.build record/meson.build render/meson.build \
+	test/bigreq/meson.build test/bigreq/request-length.c \
+	test/meson.build test/sync/meson.build test/sync/sync.c \
+	Xext/meson.build xfixes/meson.build Xi/meson.build \
+	xkb/meson.build
 DISTCHECK_CONFIGURE_FLAGS = \
 	--with-xkb-path=$(XKB_BASE_DIRECTORY) \
 	--with-xkb-bin-directory=$(XKB_BIN_DIRECTORY) \
@@ -972,6 +1010,7 @@ distcheck: dist
 	test -d $(distdir)/_build || exit 0; \
 	dc_install_base=`$(am__cd) $(distdir)/_inst && pwd | sed -e 's,^[^:\\/]:[\\/],/,'` \
 	  && dc_destdir="$${TMPDIR-/tmp}/am-dc-$$$$/" \
+	  && $(MAKE) $(AM_MAKEFLAGS) distcheck-hook \
 	  && am__cwd=`pwd` \
 	  && $(am__cd) $(distdir)/_build \
 	  && ../configure --srcdir=.. --prefix="$$dc_install_base" \
@@ -1181,6 +1220,14 @@ install-headers: Makefile
 			(cd `dirname "$$m"` && make install-sdkHEADERS)	\
 		fi							\
 	done
+
+distcheck-hook:
+	cd $(srcdir) && \
+	meson setup _distcheck_build && \
+	meson configure _distcheck_build && \
+	ninja -C _distcheck_build && \
+	rm -rf _distcheck_build && \
+	cd -
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

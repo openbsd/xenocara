@@ -211,7 +211,6 @@ typedef struct {
     const char *dev_ramdac;
     int dev_dacSpeeds[CONF_MAXDACSPEEDS];
     int dev_videoram;
-    unsigned long dev_bios_base;
     unsigned long dev_mem_base;
     unsigned long dev_io_base;
     const char *dev_clockchip;
@@ -337,7 +336,9 @@ typedef struct {
     GenericListRec list;
     char *identifier;
     char *driver;
+    char *modulepath;
     struct xorg_list match_driver;
+    XF86OptionPtr option_lst;
     char *comment;
 } XF86ConfOutputClassRec, *XF86ConfOutputClassPtr;
 

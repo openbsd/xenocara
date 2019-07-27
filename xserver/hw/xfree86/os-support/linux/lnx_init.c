@@ -46,10 +46,6 @@
 #define K_OFF 0x4
 #endif
 
-#ifndef KDSKBMUTE
-#define KDSKBMUTE 0x4B51
-#endif
-
 static Bool KeepTty = FALSE;
 static int activeVT = -1;
 
@@ -262,23 +258,18 @@ xf86OpenConsole(void)
             tcgetattr(xf86Info.consoleFd, &tty_attr);
             SYSCALL(ioctl(xf86Info.consoleFd, KDGKBMODE, &tty_mode));
 
-            /* disable kernel special keys and buffering, new style */
-            SYSCALL(ret = ioctl(xf86Info.consoleFd, KDSKBMUTE, 1));
+            /* disable kernel special keys and buffering */
+            SYSCALL(ret = ioctl(xf86Info.consoleFd, KDSKBMODE, K_OFF));
             if (ret < 0)
             {
-                /* disable kernel special keys and buffering, old style */
-                SYSCALL(ret = ioctl(xf86Info.consoleFd, KDSKBMODE, K_OFF));
+                /* fine, just disable special keys */
+                SYSCALL(ret = ioctl(xf86Info.consoleFd, KDSKBMODE, K_RAW));
                 if (ret < 0)
-                {
-                    /* fine, just disable special keys */
-                    SYSCALL(ret = ioctl(xf86Info.consoleFd, KDSKBMODE, K_RAW));
-                    if (ret < 0)
-                        FatalError("xf86OpenConsole: KDSKBMODE K_RAW failed %s\n",
-                                   strerror(errno));
+                    FatalError("xf86OpenConsole: KDSKBMODE K_RAW failed %s\n",
+                               strerror(errno));
 
-                    /* ... and drain events, else the kernel gets angry */
-                    xf86SetConsoleHandler(drain_console, NULL);
-                }
+                /* ... and drain events, else the kernel gets angry */
+                xf86SetConsoleHandler(drain_console, NULL);
             }
 
             nTty = tty_attr;
@@ -327,7 +318,6 @@ xf86CloseConsole(void)
         xf86Msg(X_WARNING, "xf86CloseConsole: KDSETMODE failed: %s\n",
                 strerror(errno));
 
-    SYSCALL(ioctl(xf86Info.consoleFd, KDSKBMUTE, 0));
     SYSCALL(ioctl(xf86Info.consoleFd, KDSKBMODE, tty_mode));
     tcsetattr(xf86Info.consoleFd, TCSANOW, &tty_attr);
 
@@ -356,6 +346,13 @@ xf86CloseConsole(void)
     close(xf86Info.consoleFd);  /* make the vt-manager happy */
 }
 
+#define CHECK_FOR_REQUIRED_ARGUMENT() \
+    if (((i + 1) >= argc) || (!argv[i + 1])) { 				\
+      ErrorF("Required argument to %s not specified\n", argv[i]); 	\
+      UseMsg(); 							\
+      FatalError("Required argument to %s not specified\n", argv[i]);	\
+    }
+
 int
 xf86ProcessArgument(int argc, char *argv[], int i)
 {
@@ -376,6 +373,19 @@ xf86ProcessArgument(int argc, char *argv[], int i)
         }
         return 1;
     }
+
+    if (!strcmp(argv[i], "-masterfd")) {
+        CHECK_FOR_REQUIRED_ARGUMENT();
+        if (xf86PrivsElevated())
+            FatalError("\nCannot specify -masterfd when server is setuid/setgid\n");
+        if (sscanf(argv[++i], "%d", &xf86DRMMasterFd) != 1) {
+            UseMsg();
+            xf86DRMMasterFd = -1;
+            return 0;
+        }
+        return 2;
+    }
+
     return 0;
 }
 
@@ -385,4 +395,5 @@ xf86UseMsg(void)
     ErrorF("vtXX                   use the specified VT number\n");
     ErrorF("-keeptty               ");
     ErrorF("don't detach controlling tty (for debugging only)\n");
+    ErrorF("-masterfd <fd>         use the specified fd as the DRM master fd (not if setuid/gid)\n");
 }

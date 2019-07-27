@@ -14,6 +14,10 @@ DRI3_BUILDDIR = $(top_builddir)/dri3
 DRI3_LIB = $(DRI3_BUILDDIR)/libdri3.la
 endif
 
+if GLX
+GLXVND_LIB = $(top_builddir)/glx/libglxvnd.la
+endif
+
 if GLAMOR_EGL
 GLAMOR_EGL_SUBDIR = glamor_egl
 endif
@@ -70,6 +74,7 @@ LOCAL_LIBS = \
             $(DRI_LIB) \
             $(DRI2_LIB) \
 	    $(DRI3_LIB) \
+	    $(GLXVND_LIB) \
 	    $(top_builddir)/miext/sync/libsync.la \
             $(top_builddir)/mi/libmi.la \
             $(top_builddir)/os/libos.la \
@@ -103,14 +108,14 @@ endif
 install-exec-hook:
 	(cd $(DESTDIR)$(bindir) && rm -f X && $(LN_S) Xorg$(EXEEXT) X)
 if INSTALL_SETUID
-	chown root $(DESTDIR)$(bindir)/Xorg
+	chown 0 $(DESTDIR)$(bindir)/Xorg
 	chmod u+s $(DESTDIR)$(bindir)/Xorg
 endif
 if SUID_WRAPPER
 	$(MKDIR_P) $(DESTDIR)$(SUID_WRAPPER_DIR)
 	mv $(DESTDIR)$(bindir)/Xorg $(DESTDIR)$(SUID_WRAPPER_DIR)/Xorg
 	${INSTALL} -m 755 Xorg.sh $(DESTDIR)$(bindir)/Xorg
-	-chown root $(DESTDIR)$(SUID_WRAPPER_DIR)/Xorg.wrap && chmod u+s $(DESTDIR)$(SUID_WRAPPER_DIR)/Xorg.wrap
+	-chown 0 $(DESTDIR)$(SUID_WRAPPER_DIR)/Xorg.wrap && chmod u+s $(DESTDIR)$(SUID_WRAPPER_DIR)/Xorg.wrap
 endif
 
 uninstall-local:

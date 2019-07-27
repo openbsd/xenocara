@@ -87,7 +87,7 @@ get_display(int displayfd)
     char display_string[10];
     ssize_t ret;
 
-    ret = read(displayfd, display_string, sizeof(display_string - 1));
+    ret = read(displayfd, display_string, sizeof(display_string) - 1);
     if (ret <= 0) {
         fprintf(stderr, "Failed reading displayfd: %s\n", strerror(errno));
         exit(1);
@@ -132,6 +132,9 @@ start_client(char *const *client_args, int display)
                     strerror(errno));
             return 1;
         }
+
+        if (!WIFEXITED(wstatus))
+            return 1;
 
         return WEXITSTATUS(wstatus);
     } else {

@@ -762,21 +762,31 @@ glamor_set_normalize_tcoords_generic(PixmapPtr pixmap,
 /**
  * Returns whether the general composite path supports this picture
  * format for a pixmap that is permanently stored in an FBO (as
- * opposed to the GLAMOR_PIXMAP_DYNAMIC_UPLOAD path).
+ * opposed to the dynamic upload path).
  *
  * We could support many more formats by using GL_ARB_texture_view to
  * parse the same bits as different formats.  For now, we only support
- * tweaking whether we sample the alpha bits of an a8r8g8b8, or just
- * force them to 1.
+ * tweaking whether we sample the alpha bits, or just force them to 1.
  */
 static Bool
-glamor_render_format_is_supported(PictFormatShort format)
+glamor_render_format_is_supported(PicturePtr picture)
 {
-    switch (format) {
+    PictFormatShort storage_format;
+
+    /* Source-only pictures should always work */
+    if (!picture->pDrawable)
+        return TRUE;
+
+    storage_format = format_for_depth(picture->pDrawable->depth);
+
+    switch (picture->format) {
+    case PICT_x2r10g10b10:
+        return storage_format == PICT_x2r10g10b10;
     case PICT_a8r8g8b8:
     case PICT_x8r8g8b8:
+        return storage_format == PICT_a8r8g8b8 || storage_format == PICT_x8r8g8b8;
     case PICT_a8:
-        return TRUE;
+        return storage_format == PICT_a8;
     default:
         return FALSE;
     }
@@ -814,7 +824,7 @@ glamor_composite_choose_shader(CARD8 op,
         goto fail;
     }
 
-    if (!glamor_render_format_is_supported(dest->format)) {
+    if (!glamor_render_format_is_supported(dest)) {
         glamor_fallback("Unsupported dest picture format.\n");
         goto fail;
     }
@@ -828,13 +838,11 @@ glamor_composite_choose_shader(CARD8 op,
         source_solid_color[3] = 0.0;
     }
     else if (!source->pDrawable) {
-        if (source->pSourcePict->type == SourcePictTypeSolidFill) {
+        SourcePictPtr sp = source->pSourcePict;
+        if (sp->type == SourcePictTypeSolidFill) {
             key.source = SHADER_SOURCE_SOLID;
-            glamor_get_rgba_from_pixel(source->pSourcePict->solidFill.color,
-                                       &source_solid_color[0],
-                                       &source_solid_color[1],
-                                       &source_solid_color[2],
-                                       &source_solid_color[3], PICT_a8r8g8b8);
+            glamor_get_rgba_from_color(&sp->solidFill.fullcolor,
+                                       source_solid_color);
         }
         else
             goto fail;
@@ -848,13 +856,11 @@ glamor_composite_choose_shader(CARD8 op,
 
     if (mask) {
         if (!mask->pDrawable) {
-            if (mask->pSourcePict->type == SourcePictTypeSolidFill) {
+            SourcePictPtr sp = mask->pSourcePict;
+            if (sp->type == SourcePictTypeSolidFill) {
                 key.mask = SHADER_MASK_SOLID;
-                glamor_get_rgba_from_pixel
-                    (mask->pSourcePict->solidFill.color,
-                     &mask_solid_color[0],
-                     &mask_solid_color[1],
-                     &mask_solid_color[2], &mask_solid_color[3], PICT_a8r8g8b8);
+                glamor_get_rgba_from_color(&sp->solidFill.fullcolor,
+                                           mask_solid_color);
             }
             else
                 goto fail;
@@ -915,12 +921,7 @@ glamor_composite_choose_shader(CARD8 op,
             glamor_fallback("source == dest\n");
         }
         if (source_pixmap_priv->gl_fbo == GLAMOR_FBO_UNATTACHED) {
-#ifdef GLAMOR_PIXMAP_DYNAMIC_UPLOAD
             source_needs_upload = TRUE;
-#else
-            glamor_fallback("no texture in source\n");
-            goto fail;
-#endif
         }
     }
 
@@ -931,16 +932,10 @@ glamor_composite_choose_shader(CARD8 op,
             goto fail;
         }
         if (mask_pixmap_priv->gl_fbo == GLAMOR_FBO_UNATTACHED) {
-#ifdef GLAMOR_PIXMAP_DYNAMIC_UPLOAD
             mask_needs_upload = TRUE;
-#else
-            glamor_fallback("no texture in mask\n");
-            goto fail;
-#endif
         }
     }
 
-#ifdef GLAMOR_PIXMAP_DYNAMIC_UPLOAD
     if (source_needs_upload && mask_needs_upload
         && source_pixmap == mask_pixmap) {
 
@@ -992,7 +987,7 @@ glamor_composite_choose_shader(CARD8 op,
                 goto fail;
             }
         } else {
-            if (source && !glamor_render_format_is_supported(source->format)) {
+            if (source && !glamor_render_format_is_supported(source)) {
                 glamor_fallback("Unsupported source picture format.\n");
                 goto fail;
             }
@@ -1004,13 +999,12 @@ glamor_composite_choose_shader(CARD8 op,
                 goto fail;
             }
         } else if (mask) {
-            if (!glamor_render_format_is_supported(mask->format)) {
+            if (!glamor_render_format_is_supported(mask)) {
                 glamor_fallback("Unsupported mask picture format.\n");
                 goto fail;
             }
         }
     }
-#endif
 
     /* If the source and mask are two differently-formatted views of
      * the same pixmap bits, and the pixmap was already uploaded (so
@@ -1198,6 +1192,29 @@ glamor_composite_with_shader(CARD8 op,
 
     nrect_max = MIN(nrect, GLAMOR_COMPOSITE_VBO_VERT_CNT / 4);
 
+    if (nrect < 100) {
+        BoxRec bounds = glamor_start_rendering_bounds();
+
+        for (int i = 0; i < nrect; i++) {
+            BoxRec box = {
+                .x1 = rects[i].x_dst,
+                .y1 = rects[i].y_dst,
+                .x2 = rects[i].x_dst + rects[i].width,
+                .y2 = rects[i].y_dst + rects[i].height,
+            };
+            glamor_bounds_union_box(&bounds, &box);
+        }
+
+        if (bounds.x1 >= bounds.x2 || bounds.y1 >= bounds.y2)
+            goto disable_va;
+
+        glEnable(GL_SCISSOR_TEST);
+        glScissor(bounds.x1 + dest_x_off,
+                  bounds.y1 + dest_y_off,
+                  bounds.x2 - bounds.x1,
+                  bounds.y2 - bounds.y1);
+    }
+
     while (nrect) {
         int mrect, rect_processed;
         int vb_stride;
@@ -1279,6 +1296,8 @@ glamor_composite_with_shader(CARD8 op,
         }
     }
 
+    glDisable(GL_SCISSOR_TEST);
+disable_va:
     glDisableVertexAttribArray(GLAMOR_VERTEX_POS);
     glDisableVertexAttribArray(GLAMOR_VERTEX_SOURCE);
     glDisableVertexAttribArray(GLAMOR_VERTEX_MASK);
@@ -1318,7 +1337,6 @@ glamor_convert_gradient_picture(ScreenPtr screen,
         pFormat = PictureMatchFormat(screen, 32, format);
     }
 
-#ifdef GLAMOR_GRADIENT_SHADER
     if (!source->pDrawable) {
         if (source->pSourcePict->type == SourcePictTypeLinear) {
             dst = glamor_generate_linear_gradient_picture(screen,
@@ -1337,7 +1355,7 @@ glamor_convert_gradient_picture(ScreenPtr screen,
             return dst;
         }
     }
-#endif
+
     pixmap = glamor_create_pixmap(screen,
                                   width,
                                   height,

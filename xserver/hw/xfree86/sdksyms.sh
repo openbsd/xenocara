@@ -58,11 +58,15 @@ cat > sdksyms.c << EOF
 #include "shmint.h"
 #endif
 #include "syncsdk.h"
-#if XINERAMA
+#ifdef XINERAMA
 # include "panoramiXsrv.h"
 # include "panoramiX.h"
 #endif
 
+/* glx/Makefile.am */
+#ifdef GLX
+#include "vndserver.h"
+#endif
 
 /* hw/xfree86/int10/Makefile.am -- module */
 /*
@@ -97,7 +101,7 @@ cat > sdksyms.c << EOF
 
 
 /* hw/xfree86/dri2/Makefile.am -- module */
-#if DRI2
+#ifdef DRI2
 # include "dri2.h"
 #endif
 
@@ -131,7 +135,7 @@ cat > sdksyms.c << EOF
 #include "xf86str.h"
 #include "xf86Xinput.h"
 #include "xisb.h"
-#if XV
+#ifdef XV
 # include "xf86xv.h"
 # include "xf86xvmc.h"
 # include "xf86xvpriv.h"
@@ -189,7 +193,7 @@ cat > sdksyms.c << EOF
 
 
 /* hw/xfree86/dri/Makefile.am -- module */
-#if XF86DRI
+#ifdef XF86DRI
 # include "dri.h"
 # include "sarea.h"
 # include "dristruct.h"
@@ -296,7 +300,7 @@ cat > sdksyms.c << EOF
 
 EOF
 
-topdir=$1
+topdir=$(readlink -f $1)
 shift
 LC_ALL=C
 export LC_ALL
@@ -314,11 +318,24 @@ BEGIN {
     printf("sdksyms.c:") > "sdksyms.dep";
 }
 /^# [0-9]+ "/ {
-    #   Process text after a include in a relative path or when the
-    # processed file has a basename matching $top_srcdir.
-    #   Note that indexing starts at 1; 0 means no match, and there
-    # is a starting ".
-    sdk = $3 !~ /^"\// || index($3, topdir) == 2;
+    # Match preprocessor linemarkers which have the form:
+    # # linenum "filename" flags
+    #
+    # Only process text for sdk exports where the linemarker filename has a
+    # relative path, or an absolute path matching $top_srcdir.
+    #
+
+    # canonicalize filename
+    if ($3 in canonicalized) {
+	c = canonicalized[$3]
+    } else {
+	cmd = "readlink -f " $3
+	cmd | getline c
+	close(cmd)
+        canonicalized[$3] = c
+    }
+    # note that index() starts at 1; 0 means no match.
+    sdk = $3 !~ /^"\// || index(c, topdir) == 1;
 
     if (sdk && $3 ~ /\.h"$/) {
 	# remove quotes
@@ -356,6 +373,17 @@ BEGIN {
                n = 1;
             }
         }
+	# hack: pid_t becomes __pid_t on NetBSD, same for uint32_t -> __uint32_t.
+	# GCC 5 inserts additional lines around this.
+        if (($1 == "__pid_t" || $1 == "__uint32_t") && NF == 1) {
+            getline;
+            n++;
+            # skip line numbers GCC 5 adds (after typedef return type?)
+            while ($n == "" || $0 ~ /^# [0-9]+ "/) {
+               getline;
+               n = 1;
+            }
+	}
 
 	# type specifier may not be set, as in
 	#   extern _X_EXPORT unsigned name(...)
@@ -398,7 +426,8 @@ BEGIN {
 	sub(/[^a-zA-Z0-9_].*/, "", symbol);
 
 	#print;
-	printf("    (void *) &%-50s /* %s:%s */\n", symbol ",", header, line);
+	if (symbol != "")
+	    printf("    (void *) &%-50s /* %s:%s */\n", symbol ",", header, line);
     }
 }
 

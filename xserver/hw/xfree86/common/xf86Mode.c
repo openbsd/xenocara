@@ -86,6 +86,7 @@
 
 #include <X11/X.h>
 #include "xf86Modes.h"
+#include "xf86Crtc.h"
 #include "os.h"
 #include "servermd.h"
 #include "globals.h"
@@ -477,7 +478,7 @@ xf86LookupMode(ScrnInfoPtr scrp, DisplayModePtr modep,
         M_T_DRIVER,
         0
     };
-    const int ntypes = sizeof(types) / sizeof(int);
+    const int ntypes = ARRAY_SIZE(types);
 
     strategy &= ~(LOOKUP_CLKDIV2 | LOOKUP_OPTIONAL_TOLERANCES);
 
@@ -840,8 +841,6 @@ xf86CheckModeSize(ScrnInfoPtr scrp, int w, int x, int y)
  *    monitor      pointer to structure for monitor section
  *    fbFormat     pixel format for the framebuffer
  *    videoRam     video memory size (in kB)
- *    maxHValue    maximum horizontal timing value
- *    maxVValue    maximum vertical timing value
  */
 
 static ModeStatus
@@ -887,12 +886,6 @@ xf86InitialCheckModeForDriver(ScrnInfoPtr scrp, DisplayModePtr mode,
 
     if (virtualY > 0 && mode->VDisplay > virtualY)
         return MODE_VIRTUAL_Y;
-
-    if (scrp->maxHValue > 0 && mode->HTotal > scrp->maxHValue)
-        return MODE_BAD_HVALUE;
-
-    if (scrp->maxVValue > 0 && mode->VTotal > scrp->maxVValue)
-        return MODE_BAD_VVALUE;
 
     /*
      * The use of the DisplayModeRec's Crtc* and SynthClock elements below is
@@ -985,8 +978,6 @@ xf86InitialCheckModeForDriver(ScrnInfoPtr scrp, DisplayModePtr mode,
  *    flags        not (currently) used
  *
  * In addition, the following fields from the ScrnInfoRec are used:
- *    maxHValue    maximum horizontal timing value
- *    maxVValue    maximum vertical timing value
  *    virtualX     virtual width
  *    virtualY     virtual height
  *    clockRanges  allowable clock ranges
@@ -1020,12 +1011,6 @@ xf86CheckModeForDriver(ScrnInfoPtr scrp, DisplayModePtr mode, int flags)
 
     if (mode->VDisplay > scrp->virtualY)
         return MODE_VIRTUAL_Y;
-
-    if (scrp->maxHValue > 0 && mode->HTotal > scrp->maxHValue)
-        return MODE_BAD_HVALUE;
-
-    if (scrp->maxVValue > 0 && mode->VTotal > scrp->maxVValue)
-        return MODE_BAD_VVALUE;
 
     for (cp = scrp->clockRanges; cp != NULL; cp = cp->next) {
         /* DivFactor and MulFactor must be > 0 */
@@ -1333,8 +1318,6 @@ scanLineWidth(unsigned int xsize,       /* pixels */
  *    monitor      pointer to structure for monitor section
  *    fbFormat     format of the framebuffer
  *    videoRam     video memory size
- *    maxHValue    maximum horizontal timing value
- *    maxVValue    maximum vertical timing value
  *    xInc         horizontal timing increment (defaults to 8 pixels)
  *
  * The function fills in the following ScrnInfoRec fields:
@@ -1526,8 +1509,6 @@ xf86ValidateModes(ScrnInfoPtr scrp, DisplayModePtr availModes,
         }
     }
 
-    /* Initial check of virtual size against other constraints */
-    scrp->virtualFrom = X_PROBED;
     /*
      * Initialise virtX and virtY if the values are fixed.
      */
@@ -1579,7 +1560,6 @@ xf86ValidateModes(ScrnInfoPtr scrp, DisplayModePtr availModes,
 
         virtX = virtualX;
         virtY = virtualY;
-        scrp->virtualFrom = X_CONFIG;
     }
     else if (!modeNames || !*modeNames) {
         /* No virtual size given in the config, try to infer */
@@ -1664,12 +1644,8 @@ xf86ValidateModes(ScrnInfoPtr scrp, DisplayModePtr availModes,
     }
 
     /* Lookup each mode */
-#ifdef RANDR
-    if (!xf86Info.disableRandR
 #ifdef PANORAMIX
-        && noPanoramiXExtension
-#endif
-        )
+    if (noPanoramiXExtension)
         validateAllDefaultModes = TRUE;
 #endif
 
@@ -1874,7 +1850,7 @@ xf86ValidateModes(ScrnInfoPtr scrp, DisplayModePtr availModes,
                 M_T_DRIVER,
                 0
             };
-            const int ntypes = sizeof(types) / sizeof(int);
+            const int ntypes = ARRAY_SIZE(types);
             int n;
 
             /*
@@ -2085,9 +2061,8 @@ xf86PrintModes(ScrnInfoPtr scrp)
     if (scrp == NULL)
         return;
 
-    xf86DrvMsg(scrp->scrnIndex, scrp->virtualFrom, "Virtual size is %dx%d "
-               "(pitch %d)\n", scrp->virtualX, scrp->virtualY,
-               scrp->displayWidth);
+    xf86DrvMsg(scrp->scrnIndex, X_INFO, "Virtual size is %dx%d (pitch %d)\n",
+               scrp->virtualX, scrp->virtualY, scrp->displayWidth);
 
     p = scrp->modes;
     if (p == NULL)

@@ -40,12 +40,9 @@ glamor_get_drawable_location(const DrawablePtr drawable)
 {
     PixmapPtr pixmap = glamor_get_drawable_pixmap(drawable);
     glamor_pixmap_private *pixmap_priv = glamor_get_pixmap_private(pixmap);
-    glamor_screen_private *glamor_priv =
-        glamor_get_screen_private(drawable->pScreen);
+
     if (pixmap_priv->gl_fbo == GLAMOR_FBO_UNATTACHED)
         return 'm';
-    if (pixmap_priv->fbo->fb == glamor_priv->screen_fbo)
-        return 's';
     else
         return 'f';
 }
@@ -200,43 +197,6 @@ glamor_validate_gc(GCPtr gc, unsigned long changes, DrawablePtr drawable)
      * Preempt fbValidateGC by doing its work and masking the change out, so
      * that we can do the Prepare/finish_access.
      */
-#ifdef FB_24_32BIT
-    if ((changes & GCTile) && fbGetRotatedPixmap(gc)) {
-        gc->pScreen->DestroyPixmap(fbGetRotatedPixmap(gc));
-        fbGetRotatedPixmap(gc) = 0;
-    }
-
-    if (gc->fillStyle == FillTiled) {
-        PixmapPtr old_tile, new_tile;
-
-        old_tile = gc->tile.pixmap;
-        if (old_tile->drawable.bitsPerPixel != drawable->bitsPerPixel) {
-            new_tile = fbGetRotatedPixmap(gc);
-            if (!new_tile ||
-                new_tile->drawable.bitsPerPixel != drawable->bitsPerPixel) {
-                if (new_tile)
-                    gc->pScreen->DestroyPixmap(new_tile);
-                /* fb24_32ReformatTile will do direct access of a newly-
-                 * allocated pixmap.
-                 */
-                glamor_fallback
-                    ("GC %p tile FB_24_32 transformat %p.\n", gc, old_tile);
-
-                if (glamor_prepare_access
-                    (&old_tile->drawable, GLAMOR_ACCESS_RO)) {
-                    new_tile =
-                        fb24_32ReformatTile(old_tile, drawable->bitsPerPixel);
-                    glamor_finish_access(&old_tile->drawable);
-                }
-            }
-            if (new_tile) {
-                fbGetRotatedPixmap(gc) = old_tile;
-                gc->tile.pixmap = new_tile;
-                changes |= GCTile;
-            }
-        }
-    }
-#endif
     if (changes & GCTile) {
         if (!gc->tileIsPixel) {
             glamor_pixmap_private *pixmap_priv =

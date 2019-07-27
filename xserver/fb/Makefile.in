@@ -69,23 +69,23 @@ CONFIG_HEADER = $(top_builddir)/include/do-not-use-config.h \
 	$(top_builddir)/include/xorg-config.h \
 	$(top_builddir)/include/xkb-config.h \
 	$(top_builddir)/include/xwin-config.h \
-	$(top_builddir)/include/kdrive-config.h \
+	$(top_builddir)/include/xwayland-config.h \
 	$(top_builddir)/include/version-config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 am__DEPENDENCIES_1 =
 libfb_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
-am_libfb_la_OBJECTS = libfb_la-fb24_32.lo libfb_la-fballpriv.lo \
-	libfb_la-fbarc.lo libfb_la-fbbits.lo libfb_la-fbblt.lo \
-	libfb_la-fbbltone.lo libfb_la-fbcmap_mi.lo libfb_la-fbcopy.lo \
-	libfb_la-fbfill.lo libfb_la-fbfillrect.lo libfb_la-fbfillsp.lo \
-	libfb_la-fbgc.lo libfb_la-fbgetsp.lo libfb_la-fbglyph.lo \
-	libfb_la-fbimage.lo libfb_la-fbline.lo libfb_la-fboverlay.lo \
-	libfb_la-fbpict.lo libfb_la-fbpixmap.lo libfb_la-fbpoint.lo \
-	libfb_la-fbpush.lo libfb_la-fbscreen.lo libfb_la-fbseg.lo \
-	libfb_la-fbsetsp.lo libfb_la-fbsolid.lo libfb_la-fbtrap.lo \
-	libfb_la-fbutil.lo libfb_la-fbwindow.lo
+am_libfb_la_OBJECTS = libfb_la-fballpriv.lo libfb_la-fbarc.lo \
+	libfb_la-fbbits.lo libfb_la-fbblt.lo libfb_la-fbbltone.lo \
+	libfb_la-fbcmap_mi.lo libfb_la-fbcopy.lo libfb_la-fbfill.lo \
+	libfb_la-fbfillrect.lo libfb_la-fbfillsp.lo libfb_la-fbgc.lo \
+	libfb_la-fbgetsp.lo libfb_la-fbglyph.lo libfb_la-fbimage.lo \
+	libfb_la-fbline.lo libfb_la-fboverlay.lo libfb_la-fbpict.lo \
+	libfb_la-fbpixmap.lo libfb_la-fbpoint.lo libfb_la-fbpush.lo \
+	libfb_la-fbscreen.lo libfb_la-fbseg.lo libfb_la-fbsetsp.lo \
+	libfb_la-fbsolid.lo libfb_la-fbtrap.lo libfb_la-fbutil.lo \
+	libfb_la-fbwindow.lo
 libfb_la_OBJECTS = $(am_libfb_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -95,10 +95,9 @@ libfb_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(libfb_la_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 libwfb_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
-am__objects_1 = libwfb_la-fb24_32.lo libwfb_la-fballpriv.lo \
-	libwfb_la-fbarc.lo libwfb_la-fbbits.lo libwfb_la-fbblt.lo \
-	libwfb_la-fbbltone.lo libwfb_la-fbcmap_mi.lo \
-	libwfb_la-fbcopy.lo libwfb_la-fbfill.lo \
+am__objects_1 = libwfb_la-fballpriv.lo libwfb_la-fbarc.lo \
+	libwfb_la-fbbits.lo libwfb_la-fbblt.lo libwfb_la-fbbltone.lo \
+	libwfb_la-fbcmap_mi.lo libwfb_la-fbcopy.lo libwfb_la-fbfill.lo \
 	libwfb_la-fbfillrect.lo libwfb_la-fbfillsp.lo \
 	libwfb_la-fbgc.lo libwfb_la-fbgetsp.lo libwfb_la-fbglyph.lo \
 	libwfb_la-fbimage.lo libwfb_la-fbline.lo \
@@ -369,6 +368,7 @@ RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
 RELEASE_DATE = @RELEASE_DATE@
+SCANNER_ARG = @SCANNER_ARG@
 SDK_REQUIRED_MODULES = @SDK_REQUIRED_MODULES@
 SED = @SED@
 SELINUX_CFLAGS = @SELINUX_CFLAGS@
@@ -387,15 +387,18 @@ SYSCONFDIR = @SYSCONFDIR@
 SYSTEMD_DAEMON_CFLAGS = @SYSTEMD_DAEMON_CFLAGS@
 SYSTEMD_DAEMON_LIBS = @SYSTEMD_DAEMON_LIBS@
 TRADITIONALCPPFLAGS = @TRADITIONALCPPFLAGS@
-TSLIB_CFLAGS = @TSLIB_CFLAGS@
-TSLIB_LIBS = @TSLIB_LIBS@
 UDEV_CFLAGS = @UDEV_CFLAGS@
 UDEV_LIBS = @UDEV_LIBS@
 UTILS_SYS_LIBS = @UTILS_SYS_LIBS@
 VENDOR_NAME_SHORT = @VENDOR_NAME_SHORT@
 VERSION = @VERSION@
+WAYLAND_EGLSTREAM_CFLAGS = @WAYLAND_EGLSTREAM_CFLAGS@
+WAYLAND_EGLSTREAM_DATADIR = @WAYLAND_EGLSTREAM_DATADIR@
+WAYLAND_EGLSTREAM_LIBS = @WAYLAND_EGLSTREAM_LIBS@
 WAYLAND_PROTOCOLS_DATADIR = @WAYLAND_PROTOCOLS_DATADIR@
 WAYLAND_SCANNER = @WAYLAND_SCANNER@
+WAYLAND_SCANNER_CFLAGS = @WAYLAND_SCANNER_CFLAGS@
+WAYLAND_SCANNER_LIBS = @WAYLAND_SCANNER_LIBS@
 WINDOWSDRI_CFLAGS = @WINDOWSDRI_CFLAGS@
 WINDOWSDRI_LIBS = @WINDOWSDRI_LIBS@
 WINDOWSWM_CFLAGS = @WINDOWSWM_CFLAGS@
@@ -403,6 +406,8 @@ WINDOWSWM_LIBS = @WINDOWSWM_LIBS@
 WINDRES = @WINDRES@
 X11EXAMPLES_DEP_CFLAGS = @X11EXAMPLES_DEP_CFLAGS@
 X11EXAMPLES_DEP_LIBS = @X11EXAMPLES_DEP_LIBS@
+XCONFIGDIR = @XCONFIGDIR@
+XCONFIGFILE = @XCONFIGFILE@
 XDMCP_CFLAGS = @XDMCP_CFLAGS@
 XDMCP_LIBS = @XDMCP_LIBS@
 XDMXCONFIG_DEP_CFLAGS = @XDMXCONFIG_DEP_CFLAGS@
@@ -474,8 +479,6 @@ XWIN_SERVER_NAME = @XWIN_SERVER_NAME@
 XWIN_SYS_LIBS = @XWIN_SYS_LIBS@
 YACC = @YACC@
 YFLAGS = @YFLAGS@
-__XCONFIGDIR__ = @__XCONFIGDIR__@
-__XCONFIGFILE__ = @__XCONFIGFILE__@
 abi_ansic = @abi_ansic@
 abi_extension = @abi_extension@
 abi_videodrv = @abi_videodrv@
@@ -549,8 +552,6 @@ libwfb_la_CFLAGS = $(AM_CFLAGS) -DFB_ACCESS_WRAPPER
 libwfb_la_LIBADD = $(PIXMAN_LIBS)
 libfb_la_SOURCES = \
 	fb.h		\
-	fb24_32.c	\
-	fb24_32.h	\
 	fballpriv.c	\
 	fbarc.c		\
 	fbbits.c	\
@@ -640,7 +641,6 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fb24_32.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fballpriv.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbarc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbbits.Plo@am__quote@
@@ -668,7 +668,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbtrap.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbutil.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfb_la-fbwindow.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fb24_32.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fballpriv.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fbarc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwfb_la-fbbits.Plo@am__quote@
@@ -717,13 +716,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
-
-libfb_la-fb24_32.lo: fb24_32.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -MT libfb_la-fb24_32.lo -MD -MP -MF $(DEPDIR)/libfb_la-fb24_32.Tpo -c -o libfb_la-fb24_32.lo `test -f 'fb24_32.c' || echo '$(srcdir)/'`fb24_32.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libfb_la-fb24_32.Tpo $(DEPDIR)/libfb_la-fb24_32.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='fb24_32.c' object='libfb_la-fb24_32.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -c -o libfb_la-fb24_32.lo `test -f 'fb24_32.c' || echo '$(srcdir)/'`fb24_32.c
 
 libfb_la-fballpriv.lo: fballpriv.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -MT libfb_la-fballpriv.lo -MD -MP -MF $(DEPDIR)/libfb_la-fballpriv.Tpo -c -o libfb_la-fballpriv.lo `test -f 'fballpriv.c' || echo '$(srcdir)/'`fballpriv.c
@@ -913,13 +905,6 @@ libfb_la-fbwindow.lo: fbwindow.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='fbwindow.c' object='libfb_la-fbwindow.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfb_la_CFLAGS) $(CFLAGS) -c -o libfb_la-fbwindow.lo `test -f 'fbwindow.c' || echo '$(srcdir)/'`fbwindow.c
-
-libwfb_la-fb24_32.lo: fb24_32.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -MT libwfb_la-fb24_32.lo -MD -MP -MF $(DEPDIR)/libwfb_la-fb24_32.Tpo -c -o libwfb_la-fb24_32.lo `test -f 'fb24_32.c' || echo '$(srcdir)/'`fb24_32.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libwfb_la-fb24_32.Tpo $(DEPDIR)/libwfb_la-fb24_32.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='fb24_32.c' object='libwfb_la-fb24_32.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -c -o libwfb_la-fb24_32.lo `test -f 'fb24_32.c' || echo '$(srcdir)/'`fb24_32.c
 
 libwfb_la-fballpriv.lo: fballpriv.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libwfb_la_CFLAGS) $(CFLAGS) -MT libwfb_la-fballpriv.lo -MD -MP -MF $(DEPDIR)/libwfb_la-fballpriv.Tpo -c -o libwfb_la-fballpriv.lo `test -f 'fballpriv.c' || echo '$(srcdir)/'`fballpriv.c

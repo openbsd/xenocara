@@ -50,7 +50,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@LINUX_ALPHA_TRUE@am__append_1 = liblinuxev56.la
+@LNXACPI_TRUE@@LNXAPM_FALSE@am__append_1 = lnx_apm.c
 @LNXACPI_TRUE@am__append_2 = -DHAVE_ACPI
 @LNXAPM_TRUE@am__append_3 = -DHAVE_APM
 @SYSTEMD_LOGIND_TRUE@am__append_4 = $(DBUS_CFLAGS)
@@ -72,39 +72,30 @@ CONFIG_HEADER = $(top_builddir)/include/do-not-use-config.h \
 	$(top_builddir)/include/xorg-config.h \
 	$(top_builddir)/include/xkb-config.h \
 	$(top_builddir)/include/xwin-config.h \
-	$(top_builddir)/include/kdrive-config.h \
+	$(top_builddir)/include/xwayland-config.h \
 	$(top_builddir)/include/version-config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
-@LINUX_ALPHA_TRUE@liblinux_la_DEPENDENCIES = liblinuxev56.la
+liblinux_la_LIBADD =
 am__liblinux_la_SOURCES_DIST = linux.h lnx_init.c lnx_video.c \
 	lnx_agp.c lnx_kmod.c lnx_bell.c lnx_platform.c \
 	$(srcdir)/../shared/VTsw_usl.c $(srcdir)/../shared/posix_tty.c \
 	$(srcdir)/../shared/vidmem.c $(srcdir)/../shared/sigio.c \
 	lnx_acpi.c lnx_apm.c systemd-logind.c
-@LNXACPI_TRUE@am__objects_1 = lnx_acpi.lo lnx_apm.lo
-@LNXAPM_TRUE@am__objects_2 = lnx_apm.lo
-@SYSTEMD_LOGIND_TRUE@am__objects_3 = systemd-logind.lo
+@LNXACPI_TRUE@@LNXAPM_FALSE@am__objects_1 = lnx_apm.lo
+@LNXACPI_TRUE@am__objects_2 = lnx_acpi.lo $(am__objects_1)
+@LNXAPM_TRUE@am__objects_3 = lnx_apm.lo
+@SYSTEMD_LOGIND_TRUE@am__objects_4 = systemd-logind.lo
 am_liblinux_la_OBJECTS = lnx_init.lo lnx_video.lo lnx_agp.lo \
 	lnx_kmod.lo lnx_bell.lo lnx_platform.lo VTsw_usl.lo \
-	posix_tty.lo vidmem.lo sigio.lo $(am__objects_1) \
-	$(am__objects_2) $(am__objects_3)
+	posix_tty.lo vidmem.lo sigio.lo $(am__objects_2) \
+	$(am__objects_3) $(am__objects_4)
 liblinux_la_OBJECTS = $(am_liblinux_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
-liblinuxev56_la_LIBADD =
-am__liblinuxev56_la_SOURCES_DIST = lnx_ev56.c
-@LINUX_ALPHA_TRUE@am_liblinuxev56_la_OBJECTS =  \
-@LINUX_ALPHA_TRUE@	liblinuxev56_la-lnx_ev56.lo
-liblinuxev56_la_OBJECTS = $(am_liblinuxev56_la_OBJECTS)
-liblinuxev56_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
-	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
-	$(liblinuxev56_la_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
-	-o $@
-@LINUX_ALPHA_TRUE@am_liblinuxev56_la_rpath =
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -139,9 +130,8 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(liblinux_la_SOURCES) $(liblinuxev56_la_SOURCES)
-DIST_SOURCES = $(am__liblinux_la_SOURCES_DIST) \
-	$(am__liblinuxev56_la_SOURCES_DIST)
+SOURCES = $(liblinux_la_SOURCES)
+DIST_SOURCES = $(am__liblinux_la_SOURCES_DIST)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -333,6 +323,7 @@ RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
 RELEASE_DATE = @RELEASE_DATE@
+SCANNER_ARG = @SCANNER_ARG@
 SDK_REQUIRED_MODULES = @SDK_REQUIRED_MODULES@
 SED = @SED@
 SELINUX_CFLAGS = @SELINUX_CFLAGS@
@@ -351,15 +342,18 @@ SYSCONFDIR = @SYSCONFDIR@
 SYSTEMD_DAEMON_CFLAGS = @SYSTEMD_DAEMON_CFLAGS@
 SYSTEMD_DAEMON_LIBS = @SYSTEMD_DAEMON_LIBS@
 TRADITIONALCPPFLAGS = @TRADITIONALCPPFLAGS@
-TSLIB_CFLAGS = @TSLIB_CFLAGS@
-TSLIB_LIBS = @TSLIB_LIBS@
 UDEV_CFLAGS = @UDEV_CFLAGS@
 UDEV_LIBS = @UDEV_LIBS@
 UTILS_SYS_LIBS = @UTILS_SYS_LIBS@
 VENDOR_NAME_SHORT = @VENDOR_NAME_SHORT@
 VERSION = @VERSION@
+WAYLAND_EGLSTREAM_CFLAGS = @WAYLAND_EGLSTREAM_CFLAGS@
+WAYLAND_EGLSTREAM_DATADIR = @WAYLAND_EGLSTREAM_DATADIR@
+WAYLAND_EGLSTREAM_LIBS = @WAYLAND_EGLSTREAM_LIBS@
 WAYLAND_PROTOCOLS_DATADIR = @WAYLAND_PROTOCOLS_DATADIR@
 WAYLAND_SCANNER = @WAYLAND_SCANNER@
+WAYLAND_SCANNER_CFLAGS = @WAYLAND_SCANNER_CFLAGS@
+WAYLAND_SCANNER_LIBS = @WAYLAND_SCANNER_LIBS@
 WINDOWSDRI_CFLAGS = @WINDOWSDRI_CFLAGS@
 WINDOWSDRI_LIBS = @WINDOWSDRI_LIBS@
 WINDOWSWM_CFLAGS = @WINDOWSWM_CFLAGS@
@@ -367,6 +361,8 @@ WINDOWSWM_LIBS = @WINDOWSWM_LIBS@
 WINDRES = @WINDRES@
 X11EXAMPLES_DEP_CFLAGS = @X11EXAMPLES_DEP_CFLAGS@
 X11EXAMPLES_DEP_LIBS = @X11EXAMPLES_DEP_LIBS@
+XCONFIGDIR = @XCONFIGDIR@
+XCONFIGFILE = @XCONFIGFILE@
 XDMCP_CFLAGS = @XDMCP_CFLAGS@
 XDMCP_LIBS = @XDMCP_LIBS@
 XDMXCONFIG_DEP_CFLAGS = @XDMXCONFIG_DEP_CFLAGS@
@@ -439,8 +435,6 @@ XWIN_SERVER_NAME = @XWIN_SERVER_NAME@
 XWIN_SYS_LIBS = @XWIN_SYS_LIBS@
 YACC = @YACC@
 YFLAGS = @YFLAGS@
-__XCONFIGDIR__ = @__XCONFIGDIR__@
-__XCONFIGFILE__ = @__XCONFIGFILE__@
 abi_ansic = @abi_ansic@
 abi_extension = @abi_extension@
 abi_videodrv = @abi_videodrv@
@@ -505,10 +499,8 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-noinst_LTLIBRARIES = liblinux.la $(am__append_1)
-@LINUX_ALPHA_TRUE@liblinuxev56_la_CFLAGS = $(AM_CFLAGS) -mcpu=ev56
-@LINUX_ALPHA_TRUE@liblinuxev56_la_SOURCES = lnx_ev56.c
-@LNXACPI_TRUE@ACPI_SRCS = lnx_acpi.c lnx_apm.c
+noinst_LTLIBRARIES = liblinux.la
+@LNXACPI_TRUE@ACPI_SRCS = lnx_acpi.c $(am__append_1)
 @LNXAPM_TRUE@APM_SRCS = lnx_apm.c
 @SYSTEMD_LOGIND_TRUE@LOGIND_SRCS = systemd-logind.c
 liblinux_la_SOURCES = linux.h lnx_init.c lnx_video.c \
@@ -523,7 +515,6 @@ liblinux_la_SOURCES = linux.h lnx_init.c lnx_video.c \
 
 AM_CFLAGS = -DUSESTDRES -DHAVE_SYSV_IPC $(DIX_CFLAGS) $(XORG_CFLAGS) $(PLATFORM_DEFINES)
 AM_CPPFLAGS = $(XORG_INCS) $(PLATFORM_INCLUDES) $(LIBDRM_CFLAGS)
-@LINUX_ALPHA_TRUE@liblinux_la_LIBADD = liblinuxev56.la
 all: all-am
 
 .SUFFIXES:
@@ -571,8 +562,6 @@ clean-noinstLTLIBRARIES:
 	}
 liblinux.la: $(liblinux_la_OBJECTS) $(liblinux_la_DEPENDENCIES) $(EXTRA_liblinux_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(LINK)  $(liblinux_la_OBJECTS) $(liblinux_la_LIBADD) $(LIBS)
-liblinuxev56.la: $(liblinuxev56_la_OBJECTS) $(liblinuxev56_la_DEPENDENCIES) $(EXTRA_liblinuxev56_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(liblinuxev56_la_LINK) $(am_liblinuxev56_la_rpath) $(liblinuxev56_la_OBJECTS) $(liblinuxev56_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -581,7 +570,6 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/VTsw_usl.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblinuxev56_la-lnx_ev56.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lnx_acpi.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lnx_agp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lnx_apm.Plo@am__quote@
@@ -643,13 +631,6 @@ sigio.lo: $(srcdir)/../shared/sigio.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(srcdir)/../shared/sigio.c' object='sigio.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o sigio.lo `test -f '$(srcdir)/../shared/sigio.c' || echo '$(srcdir)/'`$(srcdir)/../shared/sigio.c
-
-liblinuxev56_la-lnx_ev56.lo: lnx_ev56.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblinuxev56_la_CFLAGS) $(CFLAGS) -MT liblinuxev56_la-lnx_ev56.lo -MD -MP -MF $(DEPDIR)/liblinuxev56_la-lnx_ev56.Tpo -c -o liblinuxev56_la-lnx_ev56.lo `test -f 'lnx_ev56.c' || echo '$(srcdir)/'`lnx_ev56.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/liblinuxev56_la-lnx_ev56.Tpo $(DEPDIR)/liblinuxev56_la-lnx_ev56.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='lnx_ev56.c' object='liblinuxev56_la-lnx_ev56.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblinuxev56_la_CFLAGS) $(CFLAGS) -c -o liblinuxev56_la-lnx_ev56.lo `test -f 'lnx_ev56.c' || echo '$(srcdir)/'`lnx_ev56.c
 
 mostlyclean-libtool:
 	-rm -f *.lo

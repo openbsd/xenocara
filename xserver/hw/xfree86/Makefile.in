@@ -70,7 +70,7 @@ CONFIG_HEADER = $(top_builddir)/include/do-not-use-config.h \
 	$(top_builddir)/include/xorg-config.h \
 	$(top_builddir)/include/xkb-config.h \
 	$(top_builddir)/include/xwin-config.h \
-	$(top_builddir)/include/kdrive-config.h \
+	$(top_builddir)/include/xwayland-config.h \
 	$(top_builddir)/include/version-config.h
 CONFIG_CLEAN_FILES = Xorg.sh
 CONFIG_CLEAN_VPATH_FILES =
@@ -85,7 +85,8 @@ am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	dixmods/libdixmods.la modes/libxf86modes.la \
 	ramdac/libramdac.la ddc/libddc.la i2c/libi2c.la \
 	$(am__DEPENDENCIES_1) xkb/libxorgxkb.la $(DRI_LIB) $(DRI2_LIB) \
-	$(DRI3_LIB) $(top_builddir)/miext/sync/libsync.la \
+	$(DRI3_LIB) $(GLXVND_LIB) \
+	$(top_builddir)/miext/sync/libsync.la \
 	$(top_builddir)/mi/libmi.la $(top_builddir)/os/libos.la \
 	$(top_builddir)/Xext/libXvidmode.la
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -363,6 +364,7 @@ RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
 RELEASE_DATE = @RELEASE_DATE@
+SCANNER_ARG = @SCANNER_ARG@
 SDK_REQUIRED_MODULES = @SDK_REQUIRED_MODULES@
 SED = @SED@
 SELINUX_CFLAGS = @SELINUX_CFLAGS@
@@ -381,15 +383,18 @@ SYSCONFDIR = @SYSCONFDIR@
 SYSTEMD_DAEMON_CFLAGS = @SYSTEMD_DAEMON_CFLAGS@
 SYSTEMD_DAEMON_LIBS = @SYSTEMD_DAEMON_LIBS@
 TRADITIONALCPPFLAGS = @TRADITIONALCPPFLAGS@
-TSLIB_CFLAGS = @TSLIB_CFLAGS@
-TSLIB_LIBS = @TSLIB_LIBS@
 UDEV_CFLAGS = @UDEV_CFLAGS@
 UDEV_LIBS = @UDEV_LIBS@
 UTILS_SYS_LIBS = @UTILS_SYS_LIBS@
 VENDOR_NAME_SHORT = @VENDOR_NAME_SHORT@
 VERSION = @VERSION@
+WAYLAND_EGLSTREAM_CFLAGS = @WAYLAND_EGLSTREAM_CFLAGS@
+WAYLAND_EGLSTREAM_DATADIR = @WAYLAND_EGLSTREAM_DATADIR@
+WAYLAND_EGLSTREAM_LIBS = @WAYLAND_EGLSTREAM_LIBS@
 WAYLAND_PROTOCOLS_DATADIR = @WAYLAND_PROTOCOLS_DATADIR@
 WAYLAND_SCANNER = @WAYLAND_SCANNER@
+WAYLAND_SCANNER_CFLAGS = @WAYLAND_SCANNER_CFLAGS@
+WAYLAND_SCANNER_LIBS = @WAYLAND_SCANNER_LIBS@
 WINDOWSDRI_CFLAGS = @WINDOWSDRI_CFLAGS@
 WINDOWSDRI_LIBS = @WINDOWSDRI_LIBS@
 WINDOWSWM_CFLAGS = @WINDOWSWM_CFLAGS@
@@ -397,6 +402,8 @@ WINDOWSWM_LIBS = @WINDOWSWM_LIBS@
 WINDRES = @WINDRES@
 X11EXAMPLES_DEP_CFLAGS = @X11EXAMPLES_DEP_CFLAGS@
 X11EXAMPLES_DEP_LIBS = @X11EXAMPLES_DEP_LIBS@
+XCONFIGDIR = @XCONFIGDIR@
+XCONFIGFILE = @XCONFIGFILE@
 XDMCP_CFLAGS = @XDMCP_CFLAGS@
 XDMCP_LIBS = @XDMCP_LIBS@
 XDMXCONFIG_DEP_CFLAGS = @XDMXCONFIG_DEP_CFLAGS@
@@ -468,8 +475,6 @@ XWIN_SERVER_NAME = @XWIN_SERVER_NAME@
 XWIN_SYS_LIBS = @XWIN_SYS_LIBS@
 YACC = @YACC@
 YFLAGS = @YFLAGS@
-__XCONFIGDIR__ = @__XCONFIGDIR__@
-__XCONFIGFILE__ = @__XCONFIGFILE__@
 abi_ansic = @abi_ansic@
 abi_extension = @abi_extension@
 abi_videodrv = @abi_videodrv@
@@ -540,6 +545,7 @@ top_srcdir = @top_srcdir@
 @DRI2_TRUE@DRI2_LIB = dri2/libdri2.la
 @DRI3_TRUE@DRI3_BUILDDIR = $(top_builddir)/dri3
 @DRI3_TRUE@DRI3_LIB = $(DRI3_BUILDDIR)/libdri3.la
+@GLX_TRUE@GLXVND_LIB = $(top_builddir)/glx/libglxvnd.la
 @GLAMOR_EGL_TRUE@GLAMOR_EGL_SUBDIR = glamor_egl
 @XF86UTILS_TRUE@XF86UTILS_SUBDIR = utils
 @VGAHW_TRUE@VGAHW_SUBDIR = vgahw
@@ -579,6 +585,7 @@ LOCAL_LIBS = \
             $(DRI_LIB) \
             $(DRI2_LIB) \
 	    $(DRI3_LIB) \
+	    $(GLXVND_LIB) \
 	    $(top_builddir)/miext/sync/libsync.la \
             $(top_builddir)/mi/libmi.la \
             $(top_builddir)/os/libos.la \
@@ -1106,12 +1113,12 @@ install-data-local:
 
 install-exec-hook:
 	(cd $(DESTDIR)$(bindir) && rm -f X && $(LN_S) Xorg$(EXEEXT) X)
-@INSTALL_SETUID_TRUE@	chown root $(DESTDIR)$(bindir)/Xorg
+@INSTALL_SETUID_TRUE@	chown 0 $(DESTDIR)$(bindir)/Xorg
 @INSTALL_SETUID_TRUE@	chmod u+s $(DESTDIR)$(bindir)/Xorg
 @SUID_WRAPPER_TRUE@	$(MKDIR_P) $(DESTDIR)$(SUID_WRAPPER_DIR)
 @SUID_WRAPPER_TRUE@	mv $(DESTDIR)$(bindir)/Xorg $(DESTDIR)$(SUID_WRAPPER_DIR)/Xorg
 @SUID_WRAPPER_TRUE@	${INSTALL} -m 755 Xorg.sh $(DESTDIR)$(bindir)/Xorg
-@SUID_WRAPPER_TRUE@	-chown root $(DESTDIR)$(SUID_WRAPPER_DIR)/Xorg.wrap && chmod u+s $(DESTDIR)$(SUID_WRAPPER_DIR)/Xorg.wrap
+@SUID_WRAPPER_TRUE@	-chown 0 $(DESTDIR)$(SUID_WRAPPER_DIR)/Xorg.wrap && chmod u+s $(DESTDIR)$(SUID_WRAPPER_DIR)/Xorg.wrap
 
 uninstall-local:
 @CYGWIN_TRUE@	$(AM_V_at)rm -f $(DESTDIR)$(libdir)/libXorg.exe.a

@@ -29,11 +29,14 @@
 #include "input.h"
 #include "inputstr.h"
 #include "scrnintstr.h"
+#include "windowstr.h"
 #include "exevents.h"
 #include "extinit.h"
 #include "xkbsrv.h"
 #include "xserver-properties.h"
 #include "syncsrv.h"
+
+#include "tests-common.h"
 
 /**
  */
@@ -56,11 +59,15 @@ device_cursor_cleanup(DeviceIntPtr dev, ScreenPtr screen)
 static void
 xtest_init_devices(void)
 {
-    ScreenRec screen;
-    ClientRec server_client;
+    ScreenRec screen = {0};
+    ClientRec server_client = {0};
+    WindowRec root = {0};
+    WindowOptRec optional = {0};
 
     /* random stuff that needs initialization */
-    memset(&screen, 0, sizeof(screen));
+    root.drawable.id = 0xab;
+    root.optional = &optional;
+    screen.root = &root;
     screenInfo.numScreens = 1;
     screenInfo.screens[0] = &screen;
     screen.myNum = 0;
@@ -123,7 +130,7 @@ xtest_properties(void)
 }
 
 int
-main(int argc, char **argv)
+xtest_test(void)
 {
     xtest_init_devices();
     xtest_properties();

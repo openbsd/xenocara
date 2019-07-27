@@ -2,7 +2,7 @@ if DRI2
 GLXDRI_LIBRARY = libglxdri.la
 endif
 
-noinst_LTLIBRARIES = libglx.la $(GLXDRI_LIBRARY)
+noinst_LTLIBRARIES = libglx.la $(GLXDRI_LIBRARY) libglxvnd.la
 
 AM_CFLAGS = \
 	@DIX_CFLAGS@ \
@@ -12,8 +12,7 @@ AM_CFLAGS = \
 	@GLX_DEFINES@ \
 	@GLX_ARCH_DEFINES@
 
-# none yet
-#sdk_HEADERS =
+sdk_HEADERS = vndserver.h
 
 AM_CPPFLAGS = \
 	-I$(top_srcdir)/hw/xfree86/os-support \
@@ -83,3 +82,12 @@ libglx_la_SOURCES = \
         xfont.c
 
 libglx_la_LIBADD = $(DLOPEN_LIBS)
+
+libglxvnd_la_SOURCES = \
+	vndcmds.c \
+	vndext.c \
+	vndservermapping.c \
+	vndservervendor.h \
+	vndservervendor.c
+
+EXTRA_DIST = vnd_dispatch_stubs.c

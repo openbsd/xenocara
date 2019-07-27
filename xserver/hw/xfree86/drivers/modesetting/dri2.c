@@ -42,7 +42,7 @@
 #include "driver.h"
 #include "dri2.h"
 
-#ifdef GLAMOR
+#ifdef GLAMOR_HAS_GBM
 
 enum ms_dri2_frame_event_type {
     MS_DRI2_QUEUE_SWAP,
@@ -511,10 +511,13 @@ update_front(DrawablePtr draw, DRI2BufferPtr front)
     ms_dri2_buffer_private_ptr priv = front->driverPrivate;
     CARD32 size;
     CARD16 pitch;
+    int name;
 
-    front->name = glamor_name_from_pixmap(pixmap, &pitch, &size);
-    if (front->name < 0)
+    name = glamor_name_from_pixmap(pixmap, &pitch, &size);
+    if (name < 0)
         return FALSE;
+
+    front->name = name;
 
     (*screen->DestroyPixmap) (priv->pixmap);
     front->pitch = pixmap->devKind;
@@ -695,19 +698,16 @@ ms_dri2_schedule_wait_msc(ClientPtr client, DrawablePtr draw, CARD64 target_msc,
 {
     ScreenPtr screen = draw->pScreen;
     ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
-    modesettingPtr ms = modesettingPTR(scrn);
     ms_dri2_frame_event_ptr wait_info;
-    drmVBlank vbl;
     int ret;
     xf86CrtcPtr crtc = ms_dri2_crtc_covering_drawable(draw);
-    drmmode_crtc_private_ptr drmmode_crtc;
     CARD64 current_msc, current_ust, request_msc;
     uint32_t seq;
+    uint64_t queued_msc;
 
     /* Drawable not visible, return immediately */
     if (!crtc)
         goto out_complete;
-    drmmode_crtc = crtc->driver_private;
 
     wait_info = calloc(1, sizeof(*wait_info));
     if (!wait_info)
@@ -747,14 +747,9 @@ ms_dri2_schedule_wait_msc(ClientPtr client, DrawablePtr draw, CARD64 target_msc,
 
         if (current_msc >= target_msc)
             target_msc = current_msc;
-        vbl.request.type = (DRM_VBLANK_ABSOLUTE |
-                            DRM_VBLANK_EVENT |
-                            drmmode_crtc->vblank_pipe);
-        vbl.request.sequence = ms_crtc_msc_to_kernel_msc(crtc, target_msc);
-        vbl.request.signal = (unsigned long)seq;
 
-        ret = drmWaitVBlank(ms->fd, &vbl);
-        if (ret) {
+        ret = ms_queue_vblank(crtc, MS_QUEUE_ABSOLUTE, target_msc, &queued_msc, seq);
+        if (!ret) {
             static int limit = 5;
             if (limit) {
                 xf86DrvMsg(scrn->scrnIndex, X_WARNING,
@@ -766,7 +761,7 @@ ms_dri2_schedule_wait_msc(ClientPtr client, DrawablePtr draw, CARD64 target_msc,
             goto out_free;
         }
 
-        wait_info->frame = ms_kernel_msc_to_crtc_msc(crtc, vbl.reply.sequence);
+        wait_info->frame = queued_msc;
         DRI2BlockClient(client, draw);
         return TRUE;
     }
@@ -775,9 +770,6 @@ ms_dri2_schedule_wait_msc(ClientPtr client, DrawablePtr draw, CARD64 target_msc,
      * If we get here, target_msc has already passed or we don't have one,
      * so we queue an event that will satisfy the divisor/remainder equation.
      */
-    vbl.request.type =
-        DRM_VBLANK_ABSOLUTE | DRM_VBLANK_EVENT | drmmode_crtc->vblank_pipe;
-
     request_msc = current_msc - (current_msc % divisor) +
         remainder;
     /*
@@ -795,11 +787,7 @@ ms_dri2_schedule_wait_msc(ClientPtr client, DrawablePtr draw, CARD64 target_msc,
     if (!seq)
         goto out_free;
 
-    vbl.request.sequence = ms_crtc_msc_to_kernel_msc(crtc, request_msc);
-    vbl.request.signal = (unsigned long)seq;
-
-    ret = drmWaitVBlank(ms->fd, &vbl);
-    if (ret) {
+    if (!ms_queue_vblank(crtc, MS_QUEUE_ABSOLUTE, request_msc, &queued_msc, seq)) {
         static int limit = 5;
         if (limit) {
             xf86DrvMsg(scrn->scrnIndex, X_WARNING,
@@ -811,7 +799,8 @@ ms_dri2_schedule_wait_msc(ClientPtr client, DrawablePtr draw, CARD64 target_msc,
         goto out_free;
     }
 
-    wait_info->frame = ms_kernel_msc_to_crtc_msc(crtc, vbl.reply.sequence);
+    wait_info->frame = queued_msc;
+
     DRI2BlockClient(client, draw);
 
     return TRUE;
@@ -839,20 +828,18 @@ ms_dri2_schedule_swap(ClientPtr client, DrawablePtr draw,
 {
     ScreenPtr screen = draw->pScreen;
     ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
-    modesettingPtr ms = modesettingPTR(scrn);
-    drmVBlank vbl;
     int ret, flip = 0;
     xf86CrtcPtr crtc = ms_dri2_crtc_covering_drawable(draw);
-    drmmode_crtc_private_ptr drmmode_crtc;
     ms_dri2_frame_event_ptr frame_info = NULL;
     uint64_t current_msc, current_ust;
     uint64_t request_msc;
     uint32_t seq;
+    ms_queue_flag ms_flag = MS_QUEUE_ABSOLUTE;
+    uint64_t queued_msc;
 
     /* Drawable not displayed... just complete the swap */
     if (!crtc)
         goto blit_fallback;
-    drmmode_crtc = crtc->driver_private;
 
     frame_info = calloc(1, sizeof(*frame_info));
     if (!frame_info)
@@ -878,6 +865,8 @@ ms_dri2_schedule_swap(ClientPtr client, DrawablePtr draw,
     ms_dri2_reference_buffer(back);
 
     ret = ms_get_crtc_ust_msc(crtc, &current_ust, &current_msc);
+    if (ret != Success)
+        goto blit_fallback;
 
     /* Flips need to be submitted one frame before */
     if (can_flip(scrn, draw, front, back)) {
@@ -892,22 +881,19 @@ ms_dri2_schedule_swap(ClientPtr client, DrawablePtr draw,
     if (*target_msc > 0)
         *target_msc -= flip;
 
+    /* If non-pageflipping, but blitting/exchanging, we need to use
+     * DRM_VBLANK_NEXTONMISS to avoid unreliable timestamping later
+     * on.
+     */
+    if (flip == 0)
+        ms_flag |= MS_QUEUE_NEXT_ON_MISS;
+
     /*
      * If divisor is zero, or current_msc is smaller than target_msc
      * we just need to make sure target_msc passes before initiating
      * the swap.
      */
     if (divisor == 0 || current_msc < *target_msc) {
-        vbl.request.type = (DRM_VBLANK_ABSOLUTE |
-                            DRM_VBLANK_EVENT |
-                            drmmode_crtc->vblank_pipe);
-
-        /* If non-pageflipping, but blitting/exchanging, we need to use
-         * DRM_VBLANK_NEXTONMISS to avoid unreliable timestamping later
-         * on.
-         */
-        if (flip == 0)
-            vbl.request.type |= DRM_VBLANK_NEXTONMISS;
 
         /* If target_msc already reached or passed, set it to
          * current_msc to ensure we return a reasonable value back
@@ -922,19 +908,14 @@ ms_dri2_schedule_swap(ClientPtr client, DrawablePtr draw,
         if (!seq)
             goto blit_fallback;
 
-        vbl.request.sequence = ms_crtc_msc_to_kernel_msc(crtc, *target_msc);
-        vbl.request.signal = (unsigned long)seq;
-
-        ret = drmWaitVBlank(ms->fd, &vbl);
-        if (ret) {
+        if (!ms_queue_vblank(crtc, ms_flag, *target_msc, &queued_msc, seq)) {
             xf86DrvMsg(scrn->scrnIndex, X_WARNING,
                        "divisor 0 get vblank counter failed: %s\n",
                        strerror(errno));
             goto blit_fallback;
         }
 
-        *target_msc = ms_kernel_msc_to_crtc_msc(crtc,
-                                                vbl.reply.sequence + flip);
+        *target_msc = queued_msc + flip;
         frame_info->frame = *target_msc;
 
         return TRUE;
@@ -945,11 +926,6 @@ ms_dri2_schedule_swap(ClientPtr client, DrawablePtr draw,
      * and we need to queue an event that will satisfy the divisor/remainder
      * equation.
      */
-    vbl.request.type = (DRM_VBLANK_ABSOLUTE |
-                        DRM_VBLANK_EVENT |
-                        drmmode_crtc->vblank_pipe);
-    if (flip == 0)
-        vbl.request.type |= DRM_VBLANK_NEXTONMISS;
 
     request_msc = current_msc - (current_msc % divisor) +
         remainder;
@@ -966,7 +942,6 @@ ms_dri2_schedule_swap(ClientPtr client, DrawablePtr draw,
     if (request_msc <= current_msc)
         request_msc += divisor;
 
-
     seq = ms_drm_queue_alloc(crtc, frame_info,
                              ms_dri2_frame_event_handler,
                              ms_dri2_frame_event_abort);
@@ -974,11 +949,7 @@ ms_dri2_schedule_swap(ClientPtr client, DrawablePtr draw,
         goto blit_fallback;
 
     /* Account for 1 frame extra pageflip delay if flip > 0 */
-    vbl.request.sequence = ms_crtc_msc_to_kernel_msc(crtc, request_msc) - flip;
-    vbl.request.signal = (unsigned long)seq;
-
-    ret = drmWaitVBlank(ms->fd, &vbl);
-    if (ret) {
+    if (!ms_queue_vblank(crtc, ms_flag, request_msc - flip, &queued_msc, seq)) {
         xf86DrvMsg(scrn->scrnIndex, X_WARNING,
                    "final get vblank counter failed: %s\n",
                    strerror(errno));
@@ -986,7 +957,7 @@ ms_dri2_schedule_swap(ClientPtr client, DrawablePtr draw,
     }
 
     /* Adjust returned value for 1 fame pageflip offset of flip > 0 */
-    *target_msc = ms_kernel_msc_to_crtc_msc(crtc, vbl.reply.sequence + flip);
+    *target_msc = queued_msc + flip;
     frame_info->frame = *target_msc;
 
     return TRUE;
@@ -1113,4 +1084,4 @@ ms_dri2_close_screen(ScreenPtr screen)
     DRI2CloseScreen(screen);
 }
 
-#endif /* GLAMOR */
+#endif /* GLAMOR_HAS_GBM */

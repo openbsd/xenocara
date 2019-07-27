@@ -127,11 +127,9 @@
 #include <stdio.h>
 
 #include <errno.h>
-#if defined(XWIN_MULTIWINDOWEXTWM) || defined(XWIN_CLIPBOARD) || defined(XWIN_MULTIWINDOW)
 #define HANDLE void *
 #include <pthread.h>
 #undef HANDLE
-#endif
 
 #ifdef HAVE_MMAP
 #include <sys/mman.h>
@@ -165,7 +163,9 @@
 #include "miline.h"
 #include "shadow.h"
 #include "fb.h"
+#ifdef XWIN_MULTIWINDOWEXTWM
 #include "rootless.h"
+#endif
 
 #include "mipict.h"
 #include "picturestr.h"
@@ -394,12 +394,8 @@ typedef struct {
     Bool fMWExtWM;
 #endif
     Bool fRootless;
-#ifdef XWIN_MULTIWINDOW
     Bool fMultiWindow;
-#endif
-#if defined(XWIN_MULTIWINDOW) || defined(XWIN_MULTIWINDOWEXTWM)
     Bool fMultiMonitorOverride;
-#endif
     Bool fMultipleMonitors;
     Bool fLessPointer;
     winResizeMode iResizeMode;
@@ -474,23 +470,17 @@ typedef struct _winPrivScreenRec {
     Bool fRestacking;
 #endif
 
-#ifdef XWIN_MULTIWINDOW
     /* Privates used by multi-window */
     pthread_t ptWMProc;
     pthread_t ptXMsgProc;
     void *pWMInfo;
-#endif
 
-#if defined(XWIN_MULTIWINDOW) || defined(XWIN_MULTIWINDOWEXTWM)
     /* Privates used by both multi-window and rootless */
     Bool fRootWindowShown;
-#endif
 
-#if defined(XWIN_CLIPBOARD) || defined(XWIN_MULTIWINDOW)
     /* Privates used for any module running in a seperate thread */
     pthread_mutex_t pmServerStarted;
     Bool fServerStarted;
-#endif
 
     /* Engine specific functions */
     winAllocateFBProcPtr pwinAllocateFB;
@@ -707,11 +697,9 @@ Bool
  * winauth.c
  */
 
-#if defined(XWIN_CLIPBOARD) || defined(XWIN_MULTIWINDOW)
 Bool
  winGenerateAuthorization(void);
 void winSetAuthorization(void);
-#endif
 
 /*
  * winblock.c
@@ -721,7 +709,6 @@ void
 
 winBlockHandler(ScreenPtr pScreen, void *pTimeout);
 
-#ifdef XWIN_CLIPBOARD
 /*
  * winclipboardinit.c
  */
@@ -731,7 +718,6 @@ Bool
 
 void
  winClipboardShutdown(void);
-#endif
 
 /*
  * wincmap.c
@@ -930,7 +916,6 @@ Bool
 void
  winSetShapeRootless(WindowPtr pWindow, int kind);
 
-#ifdef XWIN_MULTIWINDOW
 /*
  * winmultiwindowshape.c
  */
@@ -943,9 +928,7 @@ void
 
 void
  winUpdateRgnMultiWindow(WindowPtr pWindow);
-#endif
 
-#ifdef XWIN_MULTIWINDOW
 /*
  * winmultiwindowwindow.c
  */
@@ -996,16 +979,13 @@ XID
 
 int
  winAdjustXWindow(WindowPtr pWin, HWND hwnd);
-#endif
 
-#ifdef XWIN_MULTIWINDOW
 /*
  * winmultiwindowwndproc.c
  */
 
 LRESULT CALLBACK
 winTopLevelWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
-#endif
 
 /*
  * wintrayicon.c

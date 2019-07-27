@@ -60,12 +60,14 @@
 #include "globals.h"
 #include "extension.h"
 #include "xf86pciBus.h"
-
 #include "xf86Xinput.h"
+#include "loaderProcs.h"
 
 #include "xkbsrv.h"
-
 #include "picture.h"
+#ifdef DPMSExtension
+#include "dpmsproc.h"
+#endif
 
 /*
  * These paths define the way the config file search is done.  The escape
@@ -518,82 +520,6 @@ xf86InputDriverlistFromConfig(void)
     return modulearray;
 }
 
-static int
-is_fallback(const char *s)
-{
-    /* later entries are less preferred */
-    const char *fallback[5] = { "modesetting", "fbdev", "vesa",  "wsfb", NULL };
-    int i;
-
-    for (i = 0; fallback[i]; i++)
-	if (strstr(s, fallback[i]))
-	    return i;
-
-    return -1;
-}
-
-static int
-driver_sort(const void *_l, const void *_r)
-{
-    const char *l = *(const char **)_l;
-    const char *r = *(const char **)_r;
-    int left = is_fallback(l);
-    int right = is_fallback(r);
-
-    /* neither is a fallback, asciibetize */
-    if (left == -1 && right == -1)
-	return strcmp(l, r);
-
-    /* left is a fallback */
-    if (left >= 0)
-	return 1;
-
-    /* right is a fallback */
-    if (right >= 0)
-	return -1;
-
-    /* both are fallbacks, which is worse */
-    return left - right;
-}
-
-static void
-fixup_video_driver_list(const char **drivers)
-{
-    const char **end;
-
-    /* walk to the end of the list */
-    for (end = drivers; *end && **end; end++);
-    end--;
-
-    qsort(drivers, end - drivers, sizeof(const char *), driver_sort);
-}
-
-static const char **
-GenerateDriverlist(const char *dirname)
-{
-    const char **ret;
-    const char *subdirs[] = { dirname, NULL };
-    static const char *patlist[] = { "(.*)_drv\\.so", NULL };
-    ret = LoaderListDirs(subdirs, patlist);
-
-    /* fix up the probe order for video drivers */
-    if (strstr(dirname, "drivers") && ret != NULL)
-        fixup_video_driver_list(ret);
-
-    return ret;
-}
-
-const char **
-xf86DriverlistFromCompile(void)
-{
-    static const char **driverlist = NULL;
-
-    if (!driverlist)
-        driverlist = GenerateDriverlist("drivers");
-
-    return driverlist;
-}
-
 static void
 configFiles(XF86ConfFilesPtr fileconf)
 {
@@ -704,12 +630,10 @@ typedef enum {
     FLAG_DPMS_STANDBYTIME,
     FLAG_DPMS_SUSPENDTIME,
     FLAG_DPMS_OFFTIME,
-    FLAG_PIXMAP,
     FLAG_NOPM,
     FLAG_XINERAMA,
     FLAG_LOG,
     FLAG_RENDER_COLORMAP_MODE,
-    FLAG_RANDR,
     FLAG_IGNORE_ABI,
     FLAG_ALLOW_EMPTY_INPUT,
     FLAG_USE_DEFAULT_FONT_PATH,
@@ -721,6 +645,7 @@ typedef enum {
     FLAG_AUTO_ADD_GPU,
     FLAG_MAX_CLIENTS,
     FLAG_IGLX,
+    FLAG_DEBUG,
 } FlagValues;
 
 /**
@@ -750,8 +675,6 @@ static OptionInfoRec FlagOptions[] = {
      {0}, FALSE},
     {FLAG_DPMS_OFFTIME, "OffTime", OPTV_INTEGER,
      {0}, FALSE},
-    {FLAG_PIXMAP, "Pixmap", OPTV_INTEGER,
-     {0}, FALSE},
     {FLAG_NOPM, "NoPM", OPTV_BOOLEAN,
      {0}, FALSE},
     {FLAG_XINERAMA, "Xinerama", OPTV_BOOLEAN,
@@ -759,8 +682,6 @@ static OptionInfoRec FlagOptions[] = {
     {FLAG_LOG, "Log", OPTV_STRING,
      {0}, FALSE},
     {FLAG_RENDER_COLORMAP_MODE, "RenderColormapMode", OPTV_STRING,
-     {0}, FALSE},
-    {FLAG_RANDR, "RandR", OPTV_BOOLEAN,
      {0}, FALSE},
     {FLAG_IGNORE_ABI, "IgnoreABI", OPTV_BOOLEAN,
      {0}, FALSE},
@@ -782,6 +703,8 @@ static OptionInfoRec FlagOptions[] = {
      {0}, FALSE },
     {FLAG_IGLX, "IndirectGLX", OPTV_BOOLEAN,
      {0}, FALSE},
+    {FLAG_DEBUG, "Debug", OPTV_STRING,
+     {0}, FALSE},
     {-1, NULL, OPTV_NONE,
      {0}, FALSE},
 };
@@ -791,7 +714,6 @@ configServerFlags(XF86ConfFlagsPtr flagsconf, XF86OptionPtr layoutopts)
 {
     XF86OptionPtr optp, tmp;
     int i;
-    Pix24Flags pix24 = Pix24DontCare;
     Bool value;
     MessageType from;
     const char *s;
@@ -905,15 +827,6 @@ configServerFlags(XF86ConfFlagsPtr flagsconf, XF86OptionPtr layoutopts)
         }
     }
 
-#ifdef RANDR
-    xf86Info.disableRandR = FALSE;
-    xf86Info.randRFrom = X_DEFAULT;
-    if (xf86GetOptValBool(FlagOptions, FLAG_RANDR, &value)) {
-        xf86Info.disableRandR = !value;
-        xf86Info.randRFrom = X_CONFIG;
-    }
-#endif
-
 #ifdef GLXEXT
     xf86Info.glxVisuals = XF86_GlxVisualsTypical;
     xf86Info.glxVisualsFrom = X_DEFAULT;
@@ -940,13 +853,15 @@ configServerFlags(XF86ConfFlagsPtr flagsconf, XF86OptionPtr layoutopts)
     }
 #endif
 
+    xf86Info.debug = xf86GetOptValString(FlagOptions, FLAG_DEBUG);
+
     /* if we're not hotplugging, force some input devices to exist */
     xf86Info.forceInputDevices = !(xf86Info.autoAddDevices &&
                                    xf86Info.autoEnableDevices);
 
     /* when forcing input devices, we use kbd. otherwise evdev, so use the
      * evdev rules set. */
-#if defined(linux)
+#if defined(__linux__)
     if (!xf86Info.forceInputDevices)
         rules = "evdev";
     else
@@ -998,34 +913,6 @@ configServerFlags(XF86ConfFlagsPtr flagsconf, XF86OptionPtr layoutopts)
                i, MAX_TIME_IN_MIN);
 #endif
 
-    i = -1;
-    xf86GetOptValInteger(FlagOptions, FLAG_PIXMAP, &i);
-    switch (i) {
-    case 24:
-        pix24 = Pix24Use24;
-        break;
-    case 32:
-        pix24 = Pix24Use32;
-        break;
-    case -1:
-        break;
-    default:
-        ErrorF("Pixmap option's value (%d) must be 24 or 32\n", i);
-        break;
-    }
-    if (xf86Pix24 != Pix24DontCare) {
-        xf86Info.pixmap24 = xf86Pix24;
-        xf86Info.pix24From = X_CMDLINE;
-    }
-    else if (pix24 != Pix24DontCare) {
-        xf86Info.pixmap24 = pix24;
-        xf86Info.pix24From = X_CONFIG;
-    }
-    else {
-        xf86Info.pixmap24 = Pix24DontCare;
-        xf86Info.pix24From = X_DEFAULT;
-    }
-
 #ifdef PANORAMIX
     from = X_DEFAULT;
     if (!noPanoramiXExtension)
@@ -1052,10 +939,12 @@ configServerFlags(XF86ConfFlagsPtr flagsconf, XF86OptionPtr layoutopts)
 	from = X_CMDLINE;
     i = -1;
     if (xf86GetOptValInteger(FlagOptions, FLAG_MAX_CLIENTS, &i)) {
-	if (i != 64 && i != 128 && i != 256 && i != 512)
-		ErrorF("MaxClients must be one of 64, 128, 256 or 512\n");
-	from = X_CONFIG;
-	LimitClients = i;
+        if (Ones(i) != 1 || i < 64 || i > 2048) {
+	    ErrorF("MaxClients must be one of 64, 128, 256, 512, 1024, or 2048\n");
+        } else {
+            from = X_CONFIG;
+            LimitClients = i;
+        }
     }
     xf86Msg(from, "Max clients allowed: %i, resource mask: 0x%x\n",
 	    LimitClients, RESOURCE_ID_MASK);
@@ -2181,7 +2070,6 @@ configDevice(GDevPtr devicep, XF86ConfDevicePtr conf_device, Bool active, Bool g
     devicep->driver = conf_device->dev_driver;
     devicep->active = active;
     devicep->videoRam = conf_device->dev_videoram;
-    devicep->BiosBase = conf_device->dev_bios_base;
     devicep->MemBase = conf_device->dev_mem_base;
     devicep->IOBase = conf_device->dev_io_base;
     devicep->clockchip = conf_device->dev_clockchip;
@@ -2381,8 +2269,10 @@ checkInput(serverLayoutPtr layout, Bool implicit_layout)
 ConfigStatus
 xf86HandleConfigFile(Bool autoconfig)
 {
+#ifdef XSERVER_LIBPCIACCESS
     const char *scanptr;
     Bool singlecard = 0;
+#endif
     Bool implicit_layout = FALSE;
     XF86ConfLayoutPtr layout;
 
@@ -2392,7 +2282,7 @@ xf86HandleConfigFile(Bool autoconfig)
         MessageType filefrom = X_DEFAULT;
         MessageType dirfrom = X_DEFAULT;
 
-        if (!xf86PrivsElevated()) {
+        if (!PrivsElevated()) {
             filesearch = ALL_CONFIGPATH;
             dirsearch = ALL_CONFIGDIRPATH;
         }

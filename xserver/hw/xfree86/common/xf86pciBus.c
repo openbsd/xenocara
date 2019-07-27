@@ -155,8 +155,8 @@ xf86PciProbe(void)
         if (xf86IsPrimaryPci(info))
             prim = "*";
 
-        xf86Msg(X_PROBED, "PCI:%s(%u:%u:%u:%u) %04x:%04x:%04x:%04x ", prim,
-                info->domain, info->bus, info->dev, info->func,
+        xf86Msg(X_PROBED, "PCI:%s(%u@%u:%u:%u) %04x:%04x:%04x:%04x ", prim,
+                info->bus, info->domain, info->dev, info->func,
                 info->vendor_id, info->device_id,
                 info->subvendor_id, info->subdevice_id);
 
@@ -352,6 +352,10 @@ xf86ComparePciBusString(const char *busID, int bus, int device, int func)
 Bool
 xf86IsPrimaryPci(struct pci_device *pPci)
 {
+    /* Add max. 1 screen for the IgnorePrimary fallback path */
+    if (xf86ProbeIgnorePrimary && xf86NumScreens == 0)
+        return TRUE;
+
     if (primaryBus.type == BUS_PCI)
         return pPci == primaryBus.id.pci;
 #ifdef XSERVER_PLATFORM_BUS
@@ -855,7 +859,7 @@ xf86MatchPciInstances(const char *driverName, int vendorID,
             if (xf86CheckPciSlot(pPci) && pciDeviceHasBars(pPci)) {
                 xf86MsgVerb(X_WARNING, 0, "%s: No matching Device section "
                             "for instance (BusID PCI:%u@%u:%u:%u) found\n",
-                            driverName, pPci->domain, pPci->bus, pPci->dev,
+                            driverName, pPci->bus, pPci->domain, pPci->dev,
                             pPci->func);
             }
         }
@@ -1019,9 +1023,6 @@ xf86ConfigPciEntityInactive(EntityInfoPtr pEnt, PciChipsets * p_chip,
 
     if ((pScrn = xf86FindScreenForEntity(pEnt->index)))
         xf86RemoveEntityFromScreen(pScrn, pEnt->index);
-
-    /* shared resources are only needed when entity is active: remove */
-    xf86SetEntityFuncs(pEnt->index, init, enter, leave, private);
 }
 
 ScrnInfoPtr
@@ -1030,6 +1031,9 @@ xf86ConfigPciEntity(ScrnInfoPtr pScrn, int scrnFlag, int entityIndex,
                     EntityProc enter, EntityProc leave, void *private)
 {
     EntityInfoPtr pEnt = xf86GetEntityInfo(entityIndex);
+
+    if (dummy || init || enter || leave)
+        FatalError("Legacy entity access functions are unsupported\n");
 
     if (!pEnt)
         return pScrn;
@@ -1056,14 +1060,11 @@ xf86ConfigPciEntity(ScrnInfoPtr pScrn, int scrnFlag, int entityIndex,
     }
     free(pEnt);
 
-    xf86SetEntityFuncs(entityIndex, init, enter, leave, private);
-
     return pScrn;
 }
 
-int
-xf86VideoPtrToDriverList(struct pci_device *dev,
-                     char *returnList[], int returnListMax)
+void
+xf86VideoPtrToDriverList(struct pci_device *dev, XF86MatchedDrivers *md)
 {
     int i;
 
@@ -1212,7 +1213,7 @@ xf86VideoPtrToDriverList(struct pci_device *dev,
     {
         int idx = 0;
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__NetBSD__)
         driverList[idx++] = "nouveau";
 #endif
         driverList[idx++] = "nv";
@@ -1289,10 +1290,9 @@ xf86VideoPtrToDriverList(struct pci_device *dev,
     default:
         break;
     }
-    for (i = 0; (i < returnListMax) && (driverList[i] != NULL); i++) {
-        returnList[i] = xnfstrdup(driverList[i]);
+    for (i = 0; driverList[i] != NULL; i++) {
+        xf86AddMatchedDriver(md, driverList[i]);
     }
-    return i;                   /* Number of entries added */
 }
 
 #ifdef __linux__
@@ -1316,23 +1316,23 @@ xchomp(char *line)
  * don't export their PCI ID's properly. If distros don't end up using this
  * feature it can and should be removed because the symbol-based resolution
  * scheme should be the primary one */
-int
+void
 xf86MatchDriverFromFiles(uint16_t match_vendor, uint16_t match_chip,
-                         char *matches[], int nmatches)
+                         XF86MatchedDrivers *md)
 {
     DIR *idsdir;
     FILE *fp;
     struct dirent *direntry;
-    char *line = NULL;
+    char *line = NULL, *tmpMatch;
     size_t len;
     ssize_t read;
     char path_name[512], vendor_str[5], chip_str[5];
     uint16_t vendor, chip;
-    int i = 0, j;
+    int j;
 
     idsdir = opendir(PCI_TXT_IDS_PATH);
     if (!idsdir)
-        return 0;
+        return;
 
     xf86Msg(X_INFO,
             "Scanning %s directory for additional PCI ID's supported by the drivers\n",
@@ -1383,10 +1383,10 @@ xf86MatchDriverFromFiles(uint16_t match_vendor, uint16_t match_chip,
                         }
                     }
                     if (vendor == match_vendor && chip == match_chip) {
-                        matches[i] =
+                        tmpMatch =
                             (char *) malloc(sizeof(char) *
                                             strlen(direntry->d_name) - 3);
-                        if (!matches[i]) {
+                        if (!tmpMatch) {
                             xf86Msg(X_ERROR,
                                     "Could not allocate space for the module name. Exiting.\n");
                             goto end;
@@ -1396,16 +1396,17 @@ xf86MatchDriverFromFiles(uint16_t match_vendor, uint16_t match_chip,
                          * taking off anything after the first '.' */
                         for (j = 0; j < (strlen(direntry->d_name) - 3); j++) {
                             if (direntry->d_name[j] == '.') {
-                                matches[i][j] = '\0';
+                                tmpMatch[j] = '\0';
                                 break;
                             }
                             else {
-                                matches[i][j] = direntry->d_name[j];
+                                tmpMatch[j] = direntry->d_name[j];
                             }
                         }
+                        xf86AddMatchedDriver(md, tmpMatch);
                         xf86Msg(X_INFO, "Matched %s from file name %s\n",
-                                matches[i], direntry->d_name);
-                        i++;
+                                tmpMatch, direntry->d_name);
+                        free(tmpMatch);
                     }
                 }
                 else {
@@ -1419,18 +1420,12 @@ xf86MatchDriverFromFiles(uint16_t match_vendor, uint16_t match_chip,
  end:
     free(line);
     closedir(idsdir);
-    return i;
 }
 #endif                          /* __linux__ */
 
-/**
- *  @return The numbers of found devices that match with the current system
- *  drivers.
- */
-int
-xf86PciMatchDriver(char *matches[], int nmatches)
+void
+xf86PciMatchDriver(XF86MatchedDrivers *md)
 {
-    int i = 0;
     struct pci_device *info = NULL;
     struct pci_device_iterator *iter;
 
@@ -1445,15 +1440,12 @@ xf86PciMatchDriver(char *matches[], int nmatches)
     pci_iterator_destroy(iter);
 #ifdef __linux__
     if (info)
-        i += xf86MatchDriverFromFiles(info->vendor_id, info->device_id,
-                                      matches, nmatches);
+        xf86MatchDriverFromFiles(info->vendor_id, info->device_id, md);
 #endif
 
-    if ((info != NULL) && (i < nmatches)) {
-        i += xf86VideoPtrToDriverList(info, &(matches[i]), nmatches - i);
+    if (info != NULL) {
+        xf86VideoPtrToDriverList(info, md);
     }
-
-    return i;
 }
 
 Bool
@@ -1480,11 +1472,7 @@ xf86PciConfigureNewDev(void *busData, struct pci_device *pVideo,
 
     pVideo = (struct pci_device *) busData;
 
-    if (pVideo->bus < 256)
-        snprintf(busnum, sizeof(busnum), "%d", pVideo->bus);
-    else
-        snprintf(busnum, sizeof(busnum), "%d@%d",
-                 pVideo->bus & 0x00ff, pVideo->bus >> 8);
+    snprintf(busnum, sizeof(busnum), "%d", pVideo->bus);
 
     XNFasprintf(&tmp, "PCI:%s:%d:%d",
                 busnum, pVideo->dev, pVideo->func);
@@ -1495,4 +1483,16 @@ xf86PciConfigureNewDev(void *busData, struct pci_device *pVideo,
 
     if (*chipset < 0)
         *chipset = (pVideo->vendor_id << 16) | pVideo->device_id;
+}
+
+char *
+DRICreatePCIBusID(const struct pci_device *dev)
+{
+    char *busID;
+
+    if (asprintf(&busID, "pci:%04x:%02x:%02x.%d",
+                 dev->domain, dev->bus, dev->dev, dev->func) == -1)
+        return NULL;
+
+    return busID;
 }

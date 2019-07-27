@@ -38,7 +38,7 @@
 #endif
 
 #include <epoxy/gl.h>
-#if GLAMOR_HAS_GBM
+#ifdef GLAMOR_HAS_GBM
 #define MESA_EGL_NO_X11_HEADERS
 #include <epoxy/egl.h>
 #endif
@@ -163,7 +163,6 @@ enum glamor_gl_flavor {
 
 struct glamor_saved_procs {
     CloseScreenProcPtr close_screen;
-    CreateScreenResourcesProcPtr create_screen_resources;
     CreateGCProcPtr create_gc;
     CreatePixmapProcPtr create_pixmap;
     DestroyPixmapProcPtr destroy_pixmap;
@@ -192,12 +191,12 @@ typedef struct glamor_screen_private {
     Bool has_map_buffer_range;
     Bool has_buffer_storage;
     Bool has_khr_debug;
+    Bool has_mesa_tile_raster_order;
     Bool has_nv_texture_barrier;
     Bool has_pack_subimage;
     Bool has_unpack_subimage;
     Bool has_rw_pbo;
     Bool use_quads;
-    Bool has_vertex_array_object;
     Bool has_dual_blend;
     Bool has_texture_swizzle;
     Bool is_core_profile;
@@ -281,10 +280,8 @@ typedef struct glamor_screen_private {
     int linear_max_nstops;
     int radial_max_nstops;
 
-    int screen_fbo;
     struct glamor_saved_procs saved_procs;
-    char delayed_fallback_string[GLAMOR_DELAYED_STRING_MAX + 1];
-    int delayed_fallback_pending;
+    GetDrawableModifiersFuncPtr get_drawable_modifiers;
     int flags;
     ScreenPtr screen;
     int dri3_enabled;
@@ -342,8 +339,9 @@ typedef struct glamor_pixmap_private {
     GLuint pbo;
     RegionRec prepare_region;
     Bool prepared;
-#if GLAMOR_HAS_GBM
+#ifdef GLAMOR_HAS_GBM
     EGLImageKHR image;
+    Bool used_modifiers;
 #endif
     /** block width of this large pixmap. */
     int block_w;
@@ -498,18 +496,11 @@ typedef struct {
 extern DevPrivateKeyRec glamor_gc_private_key;
 extern DevPrivateKeyRec glamor_screen_private_key;
 
-static inline glamor_screen_private *
-glamor_get_screen_private(ScreenPtr screen)
-{
-    return (glamor_screen_private *)
-        dixLookupPrivate(&screen->devPrivates, &glamor_screen_private_key);
-}
+extern glamor_screen_private *
+glamor_get_screen_private(ScreenPtr screen);
 
-static inline void
-glamor_set_screen_private(ScreenPtr screen, glamor_screen_private *priv)
-{
-    dixSetPrivate(&screen->devPrivates, &glamor_screen_private_key, priv);
-}
+extern void
+glamor_set_screen_private(ScreenPtr screen, glamor_screen_private *priv);
 
 static inline glamor_gc_private *
 glamor_get_gc_private(GCPtr gc)
@@ -910,18 +901,8 @@ int glamor_xv_put_image(glamor_port_private *port_priv,
 void glamor_xv_core_init(ScreenPtr screen);
 void glamor_xv_render(glamor_port_private *port_priv);
 
-#include"glamor_utils.h"
+#include "glamor_utils.h"
 
-/* Dynamic pixmap upload to texture if needed.
- * Sometimes, the target is a gl texture pixmap/picture,
- * but the source or mask is in cpu memory. In that case,
- * upload the source/mask to gl texture and then avoid
- * fallback the whole process to cpu. Most of the time,
- * this will increase performance obviously. */
-
-#define GLAMOR_PIXMAP_DYNAMIC_UPLOAD
-#define GLAMOR_GRADIENT_SHADER
-#define GLAMOR_TEXTURED_LARGE_PIXMAP 1
 #if 0
 #define MAX_FBO_SIZE 32         /* For test purpose only. */
 #endif

@@ -77,7 +77,8 @@
 #include "xf86Xinput.h"
 #include "xf86InPriv.h"
 #include "picturestr.h"
-
+#include "randrstr.h"
+#include "glxvndabi.h"
 #include "xf86Bus.h"
 #ifdef XSERVER_LIBPCIACCESS
 #include "xf86VGAarbiter.h"
@@ -168,11 +169,7 @@ xf86PrintBanner(void)
 #ifdef XORG_CUSTOM_VERSION
     xf86ErrorFVerb(0, " (%s)", XORG_CUSTOM_VERSION);
 #endif
-#ifndef XORG_DATE
-#define XORG_DATE "Unknown"
-#endif
-    xf86ErrorFVerb(0, "\nRelease Date: %s\n", XORG_DATE);
-    xf86ErrorFVerb(0, "X Protocol Version %d, Revision %d\n",
+    xf86ErrorFVerb(0, "\nX Protocol Version %d, Revision %d\n",
                    X_PROTOCOL, X_PROTOCOL_REVISION);
     xf86ErrorFVerb(0, "Build Operating System: %s %s\n", OSNAME, OSVENDOR);
 #ifdef HAS_UTSNAME
@@ -187,7 +184,7 @@ xf86PrintBanner(void)
             xf86ErrorFVerb(0, "Current Operating System: %s %s %s %s %s\n",
                            name.sysname, name.nodename, name.release,
                            name.version, name.machine);
-#ifdef linux
+#ifdef __linux__
             do {
                 char buf[80];
                 int fd = open("/proc/cmdline", O_RDONLY);
@@ -241,77 +238,13 @@ xf86PrintBanner(void)
 Bool
 xf86PrivsElevated(void)
 {
-    static Bool privsTested = FALSE;
-    static Bool privsElevated = TRUE;
-
-    if (!privsTested) {
-#if defined(WIN32)
-        privsElevated = FALSE;
-#else
-        if ((getuid() != geteuid()) || (getgid() != getegid())) {
-            privsElevated = TRUE;
-        }
-        else {
-#if defined(HAVE_ISSETUGID)
-            privsElevated = issetugid();
-#elif defined(HAVE_GETRESUID)
-            uid_t ruid, euid, suid;
-            gid_t rgid, egid, sgid;
-
-            if ((getresuid(&ruid, &euid, &suid) == 0) &&
-                (getresgid(&rgid, &egid, &sgid) == 0)) {
-                privsElevated = (euid != suid) || (egid != sgid);
-            }
-            else {
-                printf("Failed getresuid or getresgid");
-                /* Something went wrong, make defensive assumption */
-                privsElevated = TRUE;
-            }
-#else
-            if (getuid() == 0) {
-                /* running as root: uid==euid==0 */
-                privsElevated = FALSE;
-            }
-            else {
-                /*
-                 * If there are saved ID's the process might still be privileged
-                 * even though the above test succeeded. If issetugid() and
-                 * getresgid() aren't available, test this by trying to set
-                 * euid to 0.
-                 */
-                unsigned int oldeuid;
-
-                oldeuid = geteuid();
-
-                if (seteuid(0) != 0) {
-                    privsElevated = FALSE;
-                }
-                else {
-                    if (seteuid(oldeuid) != 0) {
-                        FatalError("Failed to drop privileges.  Exiting\n");
-                    }
-                    privsElevated = TRUE;
-                }
-            }
-#endif
-        }
-#endif
-        privsTested = TRUE;
-    }
-    return privsElevated;
+    return PrivsElevated();
 }
 
 static void
-InstallSignalHandlers(void)
+TrapSignals(void)
 {
-    /*
-     * Install signal handler for unexpected signals
-     */
-    xf86Info.caughtSignal = FALSE;
-    if (!xf86Info.notrapSignals) {
-        OsRegisterSigWrapper(xf86SigWrapper);
-    }
-    else {
+    if (xf86Info.notrapSignals) {
         OsSignal(SIGSEGV, SIG_DFL);
         OsSignal(SIGABRT, SIG_DFL);
         OsSignal(SIGILL, SIG_DFL);
@@ -374,6 +307,16 @@ xf86ScreenInit(ScreenPtr pScreen, int argc, char **argv)
     return pScrn->ScreenInit (pScreen, argc, argv);
 }
 
+static void
+xf86EnsureRANDR(ScreenPtr pScreen)
+{
+#ifdef RANDR
+        if (!dixPrivateKeyRegistered(rrPrivKey) ||
+            !rrGetScrPriv(pScreen))
+            xf86RandRInit(pScreen);
+#endif
+}
+
 /*
  * InitOutput --
  *	Initialize screenInfo for all actually accessible framebuffers.
@@ -386,9 +329,6 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char **argv)
     int i, j, k, scr_index;
     const char **modulelist;
     void **optionlist;
-    Pix24Flags screenpix24, pix24;
-    MessageType pix24From = X_DEFAULT;
-    Bool pix24Fail = FALSE;
     Bool autoconfig = FALSE;
     Bool sigio_blocked = FALSE;
     Bool want_hw_access = FALSE;
@@ -430,7 +370,7 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char **argv)
             }
         }
 
-        InstallSignalHandlers();
+        TrapSignals();
 
         /* Initialise the loader */
         LoaderInit();
@@ -641,7 +581,6 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char **argv)
          * Collect all pixmap formats and check for conflicts at the display
          * level.  Should we die here?  Or just delete the offending screens?
          */
-        screenpix24 = Pix24DontCare;
         for (i = 0; i < xf86NumScreens; i++) {
             if (xf86Screens[i]->imageByteOrder !=
                 xf86Screens[0]->imageByteOrder)
@@ -657,38 +596,7 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char **argv)
             if (xf86Screens[i]->bitmapBitOrder !=
                 xf86Screens[0]->bitmapBitOrder)
                 FatalError("Inconsistent display bitmapBitOrder.  Exiting\n");
-
-            /* Determine the depth 24 pixmap format the screens would like */
-            if (xf86Screens[i]->pixmap24 != Pix24DontCare) {
-                if (screenpix24 == Pix24DontCare)
-                    screenpix24 = xf86Screens[i]->pixmap24;
-                else if (screenpix24 != xf86Screens[i]->pixmap24)
-                    FatalError
-                        ("Inconsistent depth 24 pixmap format.  Exiting\n");
-            }
         }
-        /* check if screenpix24 is consistent with the config/cmdline */
-        if (xf86Info.pixmap24 != Pix24DontCare) {
-            pix24 = xf86Info.pixmap24;
-            pix24From = xf86Info.pix24From;
-            if (screenpix24 != Pix24DontCare &&
-                screenpix24 != xf86Info.pixmap24)
-                pix24Fail = TRUE;
-        }
-        else if (screenpix24 != Pix24DontCare) {
-            pix24 = screenpix24;
-            pix24From = X_PROBED;
-        }
-        else
-            pix24 = Pix24Use32;
-
-        if (pix24Fail)
-            FatalError("Screen(s) can't use the required depth 24 pixmap format"
-                       " (%d).  Exiting\n", PIX24TOBPP(pix24));
-
-        /* Initialise the depth 24 format */
-        for (j = 0; j < numFormats && formats[j].depth != 24; j++);
-        formats[j].bitsPerPixel = PIX24TOBPP(pix24);
 
         /* Collect additional formats */
         for (i = 0; i < xf86NumScreens; i++) {
@@ -714,15 +622,6 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char **argv)
             }
         }
         formatsDone = TRUE;
-
-        /* If a screen uses depth 24, show what the pixmap format is */
-        for (i = 0; i < xf86NumScreens; i++) {
-            if (xf86Screens[i]->depth == 24) {
-                xf86Msg(pix24From, "Depth 24 pixmap format is %d bpp\n",
-                        PIX24TOBPP(pix24));
-                break;
-            }
-        }
     }
     else {
         /*
@@ -775,7 +674,6 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char **argv)
 #ifdef HAS_USL_VTS
             ioctl(xf86Info.consoleFd, VT_RELDISP, VT_ACKACQ);
 #endif
-            xf86AccessEnter();
             input_lock();
             sigio_blocked = TRUE;
         }
@@ -865,12 +763,12 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char **argv)
                                      SubPixelHorizontalRGB : SubPixelNone) :
                                     SubPixelUnknown);
         }
-#ifdef RANDR
-        if (!xf86Info.disableRandR)
-            xf86RandRInit(screenInfo.screens[scr_index]);
-        xf86Msg(xf86Info.randRFrom, "RandR %s\n",
-                xf86Info.disableRandR ? "disabled" : "enabled");
-#endif
+
+        /*
+         * If the driver hasn't set up its own RANDR support, install the
+         * fallback support.
+         */
+        xf86EnsureRANDR(xf86Screens[i]->pScreen);
     }
 
     for (i = 0; i < xf86NumGPUScreens; i++)
@@ -955,7 +853,7 @@ OsVendorInit(void)
 
 #ifdef O_NONBLOCK
     if (!beenHere) {
-        if (xf86PrivsElevated()) {
+        if (PrivsElevated()) {
             int status;
 
             status = fcntl(fileno(stderr), F_GETFL, 0);
@@ -1015,10 +913,6 @@ ddxGiveUp(enum ExitCode error)
     dbus_core_fini();
 
     xf86CloseLog(error);
-
-    /* If an unexpected signal was caught, dump a core for debugging */
-    if (xf86Info.caughtSignal)
-        OsAbort();
 }
 
 /*
@@ -1055,8 +949,6 @@ AbortDDX(enum ExitCode error)
                 xf86VGAarbiterUnlock(xf86Screens[i]);
             }
     }
-
-    xf86AccessLeave();
 
     /*
      * This is needed for an abnormal server exit, since the normal exit stuff
@@ -1116,7 +1008,7 @@ xf86PrintDefaultLibraryPath(void)
 static void
 xf86CheckPrivs(const char *option, const char *arg)
 {
-    if (xf86PrivsElevated() && !xf86PathIsSafe(arg)) {
+    if (PrivsElevated() && !xf86PathIsSafe(arg)) {
         FatalError("\nInvalid argument for %s - \"%s\"\n"
                     "\tWith elevated privileges %s must specify a relative path\n"
                     "\twithout any \"..\" elements.\n\n", option, arg, option);
@@ -1264,12 +1156,8 @@ ddxProcessArgument(int argc, char **argv, int i)
         xf86sFlag = TRUE;
         return 0;
     }
-    if (!strcmp(argv[i], "-pixmap24")) {
-        xf86Pix24 = Pix24Use24;
-        return 1;
-    }
-    if (!strcmp(argv[i], "-pixmap32")) {
-        xf86Pix24 = Pix24Use32;
+    if (!strcmp(argv[i], "-pixmap32") || !strcmp(argv[i], "-pixmap24")) {
+        /* silently accept */
         return 1;
     }
     if (!strcmp(argv[i], "-fbbpp")) {
@@ -1427,27 +1315,25 @@ ddxUseMsg(void)
     ErrorF("\n");
     ErrorF("\n");
     ErrorF("Device Dependent Usage\n");
-    if (!xf86PrivsElevated()) {
+    if (!PrivsElevated()) {
         ErrorF("-modulepath paths      specify the module search path\n");
         ErrorF("-logfile file          specify a log file name\n");
         ErrorF("-configure             probe for devices and write an "
-               __XCONFIGFILE__ "\n");
+               XCONFIGFILE "\n");
         ErrorF
             ("-showopts              print available options for all installed drivers\n");
     }
     ErrorF
         ("-config file           specify a configuration file, relative to the\n");
-    ErrorF("                       " __XCONFIGFILE__
+    ErrorF("                       " XCONFIGFILE
            " search path, only root can use absolute\n");
     ErrorF
         ("-configdir dir         specify a configuration directory, relative to the\n");
-    ErrorF("                       " __XCONFIGDIR__
+    ErrorF("                       " XCONFIGDIR
            " search path, only root can use absolute\n");
     ErrorF("-verbose [n]           verbose startup messages\n");
     ErrorF("-logverbose [n]        verbose log messages\n");
     ErrorF("-quiet                 minimal startup messages\n");
-    ErrorF("-pixmap24              use 24bpp pixmaps for depth 24\n");
-    ErrorF("-pixmap32              use 32bpp pixmaps for depth 24\n");
     ErrorF("-fbbpp n               set bpp for the framebuffer. Default: 8\n");
     ErrorF("-depth n               set colour depth. Default: 8\n");
     ErrorF
@@ -1497,7 +1383,7 @@ ddxUseMsg(void)
 Bool
 xf86LoadModules(const char **list, void **optlist)
 {
-    int errmaj, errmin;
+    int errmaj;
     void *opt;
     int i;
     char *name;
@@ -1527,8 +1413,8 @@ xf86LoadModules(const char **list, void **optlist)
         else
             opt = NULL;
 
-        if (!LoadModule(name, NULL, NULL, NULL, opt, NULL, &errmaj, &errmin)) {
-            LoaderErrorMsg(NULL, name, errmaj, errmin);
+        if (!LoadModule(name, opt, NULL, &errmaj)) {
+            LoaderErrorMsg(NULL, name, errmaj, 0);
             failed = TRUE;
         }
         free(name);
@@ -1542,30 +1428,6 @@ PixmapFormatPtr
 xf86GetPixFormat(ScrnInfoPtr pScrn, int depth)
 {
     int i;
-    static PixmapFormatRec format;      /* XXX not reentrant */
-
-    /*
-     * When the formats[] list initialisation isn't complete, check the
-     * depth 24 pixmap config/cmdline options and screen-specified formats.
-     */
-
-    if (!formatsDone) {
-        if (depth == 24) {
-            Pix24Flags pix24 = Pix24DontCare;
-
-            format.depth = 24;
-            format.scanlinePad = BITMAP_SCANLINE_PAD;
-            if (xf86Info.pixmap24 != Pix24DontCare)
-                pix24 = xf86Info.pixmap24;
-            else if (pScrn->pixmap24 != Pix24DontCare)
-                pix24 = pScrn->pixmap24;
-            if (pix24 == Pix24Use24)
-                format.bitsPerPixel = 24;
-            else
-                format.bitsPerPixel = 32;
-            return &format;
-        }
-    }
 
     for (i = 0; i < numFormats; i++)
         if (formats[i].depth == depth)

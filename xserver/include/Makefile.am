@@ -27,6 +27,7 @@ sdk_HEADERS =		\
 	gcstruct.h	\
 	globals.h	\
 	glx_extinit.h	\
+	glxvndabi.h	\
 	input.h		\
 	inputstr.h	\
 	list.h		\
@@ -78,4 +79,8 @@ EXTRA_DIST = 	\
 	swapreq.h \
 	systemd-logind.h \
         vidmodestr.h \
+	xorg-config.h.meson.in \
+	xorg-server.h.meson.in \
+	xwayland-config.h.meson.in \
+	xwin-config.h.meson.in \
 	xsha1.h

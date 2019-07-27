@@ -29,10 +29,6 @@
  */
 #ifdef HAVE_XORG_CONFIG_H
 #include <xorg-config.h>
-#else
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
 #endif
 
 #define _PARSE_EDID_
@@ -434,7 +430,7 @@ FindDMTMode(int hsize, int vsize, int refresh, Bool rb)
     int i;
     const DisplayModeRec *ret;
 
-    for (i = 0; i < sizeof(DMTModes) / sizeof(DisplayModeRec); i++) {
+    for (i = 0; i < ARRAY_SIZE(DMTModes); i++) {
         ret = &DMTModes[i];
 
         if (!rb && xf86ModeIsReduced(ret))
@@ -466,21 +462,38 @@ FindDMTMode(int hsize, int vsize, int refresh, Bool rb)
  * for modes in this section, but does say that CVT is preferred.
  */
 static DisplayModePtr
-DDCModesFromStandardTiming(struct std_timings *timing, ddc_quirk_t quirks,
+DDCModesFromStandardTiming(DisplayModePtr pool, struct std_timings *timing,
+                           ddc_quirk_t quirks,
                            int timing_level, Bool rb)
 {
     DisplayModePtr Modes = NULL, Mode = NULL;
     int i, hsize, vsize, refresh;
 
     for (i = 0; i < STD_TIMINGS; i++) {
+        DisplayModePtr p = NULL;
         hsize = timing[i].hsize;
         vsize = timing[i].vsize;
         refresh = timing[i].refresh;
 
-        /* HDTV hack, because you can't say 1366 */
+        /* HDTV hack, part one */
         if (refresh == 60 &&
             ((hsize == 1360 && vsize == 765) ||
              (hsize == 1368 && vsize == 769))) {
+            hsize = 1366;
+            vsize = 768;
+        }
+
+        /* If we already have a detailed timing for this size, don't add more */
+        for (p = pool; p; p = p->next) {
+            if (p->HDisplay == hsize && p->VDisplay == vsize &&
+                refresh == round(xf86ModeVRefresh(p)))
+                break;
+        }
+        if (p)
+            continue;
+
+        /* HDTV hack, because you can't say 1366 */
+        if (refresh == 60 && hsize == 1366 && vsize == 768) {
             Mode = xf86CVTMode(1366, 768, 60, FALSE, FALSE);
             Mode->HDisplay = 1366;
             Mode->HSyncStart--;
@@ -531,11 +544,9 @@ DDCModeDoInterlaceQuirks(DisplayModePtr mode)
         {1440, 576},
         {2880, 576},
     };
-    static const int n_modes =
-        sizeof(cea_interlaced) / sizeof(cea_interlaced[0]);
     int i;
 
-    for (i = 0; i < n_modes; i++) {
+    for (i = 0; i < ARRAY_SIZE(cea_interlaced); i++) {
         if ((mode->HDisplay == cea_interlaced[i].w) &&
             (mode->VDisplay == cea_interlaced[i].h / 2)) {
             mode->VDisplay *= 2;
@@ -1019,7 +1030,8 @@ handle_detailed_modes(struct detailed_monitor_section *det_mon, void *data)
         p->Modes = xf86ModesAdd(p->Modes, Mode);
         break;
     case DS_STD_TIMINGS:
-        Mode = DDCModesFromStandardTiming(det_mon->section.std_t,
+        Mode = DDCModesFromStandardTiming(p->Modes,
+                                          det_mon->section.std_t,
                                           p->quirks, p->timing_level, p->rb);
         p->Modes = xf86ModesAdd(p->Modes, Mode);
         break;
@@ -1071,16 +1083,17 @@ xf86DDCGetModes(int scrnIndex, xf86MonPtr DDC)
     xf86ForEachDetailedBlock(DDC, handle_detailed_modes, &p);
     Modes = p.Modes;
 
+    /* Add cea-extension mode timings */
+    Mode = DDCModesFromCEAExtension(scrnIndex, DDC);
+    Modes = xf86ModesAdd(Modes, Mode);
+
     /* Add established timings */
     Mode = DDCModesFromEstablished(scrnIndex, &DDC->timings1, quirks);
     Modes = xf86ModesAdd(Modes, Mode);
 
     /* Add standard timings */
-    Mode = DDCModesFromStandardTiming(DDC->timings2, quirks, timing_level, rb);
-    Modes = xf86ModesAdd(Modes, Mode);
-
-    /* Add cea-extension mode timings */
-    Mode = DDCModesFromCEAExtension(scrnIndex, DDC);
+    Mode = DDCModesFromStandardTiming(Modes, DDC->timings2, quirks,
+                                      timing_level, rb);
     Modes = xf86ModesAdd(Modes, Mode);
 
     if (quirks & DDC_QUIRK_PREFER_LARGE_60)
@@ -1198,21 +1211,19 @@ xf86EdidMonitorSet(int scrnIndex, MonPtr Monitor, xf86MonPtr DDC)
         if (!Monitor->nHsync || !Monitor->nVrefresh)
             DDCGuessRangesFromModes(scrnIndex, Monitor, Modes);
 
-        /* look for last Mode */
-        Mode = Modes;
-
-        while (Mode->next)
-            Mode = Mode->next;
-
         /* add to MonPtr */
         if (Monitor->Modes) {
             Monitor->Last->next = Modes;
             Modes->prev = Monitor->Last;
-            Monitor->Last = Mode;
         }
         else {
             Monitor->Modes = Modes;
-            Monitor->Last = Mode;
         }
+
+        Monitor->Modes = xf86PruneDuplicateModes(Monitor->Modes);
+
+        /* Update pointer to last mode */
+        for (Mode = Monitor->Modes; Mode && Mode->next; Mode = Mode->next) {}
+        Monitor->Last = Mode;
     }
 }

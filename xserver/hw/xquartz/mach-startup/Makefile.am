@@ -47,6 +47,7 @@ X11_bin_LDFLAGS =  \
 if GLX
 X11_bin_DEPENDENCIES += \
 	$(top_builddir)/hw/xquartz/GL/libCGLCore.la \
+	$(top_builddir)/glx/libglxvnd.la \
 	$(top_builddir)/glx/libglx.la
 
 X11_bin_LDFLAGS += \
@@ -75,6 +76,8 @@ nodist_Xquartz_SOURCES = \
 Xquartz_LDFLAGS =  \
 	-Wl,-framework,CoreServices
 
+if XQUARTZ
+
 BUILT_SOURCES = \
 	mach_startupServer.c \
 	mach_startupUser.c \
@@ -86,6 +89,8 @@ CLEANFILES = \
 
 $(BUILT_SOURCES): $(srcdir)/mach_startup.defs
 	mig -sheader mach_startupServer.h $(srcdir)/mach_startup.defs
+
+endif
 
 EXTRA_DIST = \
 	launchd_fd.h \

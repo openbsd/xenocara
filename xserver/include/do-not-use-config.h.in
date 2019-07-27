@@ -111,8 +111,14 @@
 /* Fallback input driver */
 #undef FALLBACK_INPUT_DRIVER
 
+/* Have gbm_bo_create_with_modifiers */
+#undef GBM_BO_WITH_MODIFIERS
+
 /* Build glamor */
 #undef GLAMOR
+
+/* Have GLAMOR_HAS_EGL_QUERY_DMABUF */
+#undef GLAMOR_HAS_EGL_QUERY_DMABUF
 
 /* Build glamor with GBM-based EGL support */
 #undef GLAMOR_HAS_GBM
@@ -150,17 +156,11 @@
 /* Has backtrace support */
 #undef HAVE_BACKTRACE
 
-/* Define to 1 if you have the <byteswap.h> header file. */
-#undef HAVE_BYTESWAP_H
-
 /* Define to 1 if you have the `cbrt' function. */
 #undef HAVE_CBRT
 
 /* Define to 1 if you have the `clock_gettime' function. */
 #undef HAVE_CLOCK_GETTIME
-
-/* Define to 1 if you have the <dbm.h> header file. */
-#undef HAVE_DBM_H
 
 /* Have D-Bus support */
 #undef HAVE_DBUS
@@ -184,9 +184,6 @@
 
 /* Define to 1 if you have the <fcntl.h> header file. */
 #undef HAVE_FCNTL_H
-
-/* Define to 1 if you have the `ffs' function. */
-#undef HAVE_FFS
 
 /* Define to 1 if you have the <fnmatch.h> header file. */
 #undef HAVE_FNMATCH_H
@@ -260,11 +257,11 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
+/* Define to 1 if you have the `mkostemp' function. */
+#undef HAVE_MKOSTEMP
+
 /* Define to 1 if you have the `mmap' function. */
 #undef HAVE_MMAP
-
-/* Define to 1 if you have the <ndbm.h> header file. */
-#undef HAVE_NDBM_H
 
 /* Define to 1 if you have the <ndir.h> header file, and it defines `DIR'. */
 #undef HAVE_NDIR_H
@@ -289,9 +286,6 @@
 
 /* Define to 1 if you have the `reallocarray' function. */
 #undef HAVE_REALLOCARRAY
-
-/* Define to 1 if you have the <rpcsvc/dbm.h> header file. */
-#undef HAVE_RPCSVC_DBM_H
 
 /* Define to 1 if you have the `seteuid' function. */
 #undef HAVE_SETEUID
@@ -439,24 +433,6 @@
 
 /* Support IPv6 for TCP connections */
 #undef IPv6
-
-/* Build kdrive ddx */
-#undef KDRIVEDDXACTIONS
-
-/* Build fbdev-based kdrive server */
-#undef KDRIVEFBDEV
-
-/* Build Kdrive X server */
-#undef KDRIVESERVER
-
-/* Enable KDrive evdev driver */
-#undef KDRIVE_EVDEV
-
-/* Enable KDrive kbd driver */
-#undef KDRIVE_KBD
-
-/* Enable KDrive mouse driver */
-#undef KDRIVE_MOUSE
 
 /* Listen on local socket */
 #undef LISTEN_LOCAL
@@ -607,9 +583,6 @@
 /* Support TCP socket connections */
 #undef TCPCONN
 
-/* Have tslib support */
-#undef TSLIB
-
 /* Support UNIX socket connections */
 #undef UNIXCONN
 
@@ -646,9 +619,6 @@
 # undef __EXTENSIONS__
 #endif
 
-
-/* Define to use byteswap macros from <sys/endian.h> */
-#undef USE_SYS_ENDIAN_H
 
 /* Vendor man version */
 #undef VENDOR_MAN_VERSION
@@ -691,6 +661,12 @@
 
 /* Support XCMisc extension */
 #undef XCMISC
+
+/* Name of configuration directory */
+#undef XCONFIGDIR
+
+/* Name of configuration file */
+#undef XCONFIGFILE
 
 /* Build Security extension */
 #undef XCSECURITY
@@ -755,9 +731,6 @@
 /* Building Xorg server */
 #undef XORGSERVER
 
-/* Vendor release */
-#undef XORG_DATE
-
 /* Vendor man version */
 #undef XORG_MAN_VERSION
 
@@ -805,6 +778,12 @@
 
 /* Short vendor name */
 #undef XVENDORNAMESHORT
+
+/* Build xwayland with eglstream support */
+#undef XWL_HAS_EGLSTREAM
+
+/* Build xwayland with glamor support */
+#undef XWL_HAS_GLAMOR
 
 /* byte order */
 #undef X_BYTE_ORDER
@@ -855,23 +834,8 @@
 /* Vendor web address for support */
 #undef __VENDORDWEBSUPPORT__
 
-/* Name of configuration directory */
-#undef __XCONFIGDIR__
-
-/* Name of configuration file */
-#undef __XCONFIGFILE__
-
 /* Name of X server */
 #undef __XSERVERNAME__
-
-/* Define to 16-bit byteswap macro */
-#undef bswap_16
-
-/* Define to 32-bit byteswap macro */
-#undef bswap_32
-
-/* Define to 64-bit byteswap macro */
-#undef bswap_64
 
 /* Define to empty if `const' does not conform to ANSI C. */
 #undef const

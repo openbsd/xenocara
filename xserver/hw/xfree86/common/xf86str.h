@@ -209,16 +209,6 @@ typedef CARD32 xorgHWFlags;
  */
 struct _DriverRec;
 
-typedef struct {
-    int driverVersion;
-    const char *driverName;
-    void (*Identify) (int flags);
-    Bool (*Probe) (struct _DriverRec * drv, int flags);
-    const OptionInfoRec *(*AvailableOptions) (int chipid, int bustype);
-    void *module;
-    int refCount;
-} DriverRec1;
-
 struct _SymTabRec;
 struct _PciChipsets;
 
@@ -259,7 +249,7 @@ typedef struct _DriverRec {
  */
 
 /* Tolerate prior #include <linux/input.h> */
-#if defined(linux)
+#if defined(__linux__)
 #undef BUS_NONE
 #undef BUS_PCI
 #undef BUS_SBUS
@@ -313,7 +303,6 @@ typedef struct {
     Bool active;
     Bool inUse;
     int videoRam;
-    unsigned long BiosBase;     /* Base address of video BIOS */
     unsigned long MemBase;      /* Frame buffer base address */
     unsigned long IOBase;
     int chipID;
@@ -421,22 +410,14 @@ typedef struct _confdrirec {
     confDRIBufferRec *bufs;
 } confDRIRec, *confDRIPtr;
 
-/* These values should be adjusted when new fields are added to ScrnInfoRec */
-#define NUM_RESERVED_INTS		16
-#define NUM_RESERVED_POINTERS		14
-#define NUM_RESERVED_FUNCS		10
+#define NUM_RESERVED_INTS		4
+#define NUM_RESERVED_POINTERS		4
+#define NUM_RESERVED_FUNCS		4
 
 /* let clients know they can use this */
 #define XF86_SCRN_HAS_PREFER_CLONE 1
 
 typedef void *(*funcPointer) (void);
-
-/* flags for depth 24 pixmap options */
-typedef enum {
-    Pix24DontCare = 0,
-    Pix24Use24,
-    Pix24Use32
-} Pix24Flags;
 
 /* Power management events: so far we only support APM */
 
@@ -579,11 +560,7 @@ typedef void xf86ModeSetProc(ScrnInfoPtr);
  * ScrnInfoRec
  *
  * There is one of these for each screen, and it holds all the screen-specific
- * information.
- *
- * Note: the size and layout must be kept the same across versions.  New
- * fields are to be added in place of the "reserved*" fields.  No fields
- * are to be dependent on compile-time defines.
+ * information.  Note: No fields are to be dependent on compile-time defines.
  */
 
 typedef struct _ScrnInfoRec {
@@ -608,7 +585,6 @@ typedef struct _ScrnInfoRec {
     PixmapFormatRec fbFormat;
 
     int bitsPerPixel;           /* fb bpp */
-    Pix24Flags pixmap24;        /* pixmap pref for depth 24 */
     int depth;                  /* depth of default visual */
     MessageType depthFrom;      /* set from config? */
     MessageType bitsPerPixelFrom;       /* set from config? */
@@ -618,12 +594,9 @@ typedef struct _ScrnInfoRec {
     int rgbBits;                /* Number of bits in r/g/b */
     Gamma gamma;                /* Gamma of the monitor */
     int defaultVisual;          /* default visual class */
-    int maxHValue;              /* max horizontal timing */
-    int maxVValue;              /* max vertical timing value */
     int virtualX;               /* Virtual width */
     int virtualY;               /* Virtual height */
     int xInc;                   /* Horizontal timing increment */
-    MessageType virtualFrom;    /* set from config? */
     int displayWidth;           /* memory pitch */
     int frameX0;                /* viewport position */
     int frameY0;
@@ -665,15 +638,10 @@ typedef struct _ScrnInfoRec {
     int numClocks;              /* number of clocks */
     int clock[MAXCLOCKS];       /* list of clock frequencies */
     int videoRam;               /* amount of video ram (kb) */
-    unsigned long biosBase;     /* Base address of video BIOS */
     unsigned long memPhysBase;  /* Physical address of FB */
     unsigned long fbOffset;     /* Offset of FB in the above */
-    int memClk;                 /* memory clock */
     Bool flipPixels;            /* swap default black/white */
     void *options;
-
-    int chipID;
-    int chipRev;
 
     /* Allow screens to be enabled/disabled individually */
     Bool vtSema;
@@ -688,17 +656,11 @@ typedef struct _ScrnInfoRec {
     /* initial rightof support disable */
     int                 preferClone;
 
-    /*
-     * These can be used when the minor ABI version is incremented.
-     * The NUM_* parameters must be reduced appropriately to keep the
-     * structure size and alignment unchanged.
-     */
-    int reservedInt[NUM_RESERVED_INTS];
+    Bool is_gpu;
+    uint32_t capabilities;
 
     int *entityInstanceList;
     struct pci_device *vgaDev;
-
-    void *reservedPtr[NUM_RESERVED_POINTERS];
 
     /*
      * Driver entry points.
@@ -725,15 +687,9 @@ typedef struct _ScrnInfoRec {
     xorgDriverFuncProc *DriverFunc;
     xf86ModeSetProc *ModeSet;
 
-    /*
-     * This can be used when the minor ABI version is incremented.
-     * The NUM_* parameter must be reduced appropriately to keep the
-     * structure size and alignment unchanged.
-     */
+    int reservedInt[NUM_RESERVED_INTS];
+    void *reservedPtr[NUM_RESERVED_POINTERS];
     funcPointer reservedFuncs[NUM_RESERVED_FUNCS];
-
-    Bool is_gpu;
-    uint32_t capabilities;
 } ScrnInfoRec;
 
 typedef struct {

@@ -26,6 +26,7 @@ AM_CPPFLAGS = 			\
 	@KDRIVE_CFLAGS@		\
 	@XEPHYR_INCS@		\
 	@XEPHYR_CFLAGS@		\
+	-DHAVE_DIX_CONFIG_H	\
 	-I$(top_srcdir)		\
 	-I$(top_srcdir)/glamor	\
 	-I$(top_srcdir)/exa
@@ -53,7 +54,6 @@ Xephyr_SOURCES = \
 	ephyr.h \
 	ephyrlog.h \
 	ephyr_draw.c \
-	os.c \
 	ephyrinit.c \
 	ephyrcursor.c \
 	hostx.c \

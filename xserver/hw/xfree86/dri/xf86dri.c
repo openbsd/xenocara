@@ -558,7 +558,7 @@ ProcXF86DRIDispatch(register ClientPtr client)
     }
 }
 
-static int
+static int _X_COLD
 SProcXF86DRIQueryVersion(register ClientPtr client)
 {
     REQUEST(xXF86DRIQueryVersionReq);
@@ -566,7 +566,7 @@ SProcXF86DRIQueryVersion(register ClientPtr client)
     return ProcXF86DRIQueryVersion(client);
 }
 
-static int
+static int _X_COLD
 SProcXF86DRIQueryDirectRenderingCapable(register ClientPtr client)
 {
     REQUEST(xXF86DRIQueryDirectRenderingCapableReq);
@@ -576,7 +576,7 @@ SProcXF86DRIQueryDirectRenderingCapable(register ClientPtr client)
     return ProcXF86DRIQueryDirectRenderingCapable(client);
 }
 
-static int
+static int _X_COLD
 SProcXF86DRIDispatch(register ClientPtr client)
 {
     REQUEST(xReq);
@@ -600,14 +600,7 @@ XFree86DRIExtensionInit(void)
 {
     ExtensionEntry *extEntry;
 
-#ifdef XF86DRI_EVENTS
-    EventType = CreateNewResourceType(XF86DRIFreeEvents, "DRIEvent");
-#endif
-
     if (DRIExtensionInit() &&
-#ifdef XF86DRI_EVENTS
-        EventType && ScreenPrivateIndex != -1 &&
-#endif
         (extEntry = AddExtension(XF86DRINAME,
                                  XF86DRINumberEvents,
                                  XF86DRINumberErrors,

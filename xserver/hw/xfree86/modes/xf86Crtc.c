@@ -23,10 +23,6 @@
 
 #ifdef HAVE_XORG_CONFIG_H
 #include <xorg-config.h>
-#else
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
 #endif
 
 #include <stddef.h>
@@ -178,6 +174,32 @@ xf86CrtcInUse(xf86CrtcPtr crtc)
     return FALSE;
 }
 
+/**
+ * Return whether the crtc is leased by a client
+ */
+
+static Bool
+xf86CrtcIsLeased(xf86CrtcPtr crtc)
+{
+    /* If the DIX structure hasn't been created, it can't have been leased */
+    if (!crtc->randr_crtc)
+        return FALSE;
+    return RRCrtcIsLeased(crtc->randr_crtc);
+}
+
+/**
+ * Return whether the output is leased by a client
+ */
+
+static Bool
+xf86OutputIsLeased(xf86OutputPtr output)
+{
+    /* If the DIX structure hasn't been created, it can't have been leased */
+    if (!output->randr_output)
+        return FALSE;
+    return RROutputIsLeased(output->randr_output);
+}
+
 void
 xf86CrtcSetScreenSubpixelOrder(ScreenPtr pScreen)
 {
@@ -258,7 +280,7 @@ xf86CrtcSetModeTransform(xf86CrtcPtr crtc, DisplayModePtr mode,
     RRTransformRec saved_transform;
     Bool saved_transform_present;
 
-    crtc->enabled = xf86CrtcInUse(crtc);
+    crtc->enabled = xf86CrtcInUse(crtc) && !xf86CrtcIsLeased(crtc);
 
     /* We only hit this if someone explicitly sends a "disabled" modeset. */
     if (!crtc->enabled) {
@@ -415,6 +437,10 @@ xf86CrtcSetOrigin(xf86CrtcPtr crtc, int x, int y)
 
     crtc->x = x;
     crtc->y = y;
+
+    if (xf86CrtcIsLeased(crtc))
+        return;
+
     if (crtc->funcs->set_origin) {
         if (!xf86CrtcRotate(crtc))
             return;
@@ -473,10 +499,12 @@ static OptionInfoRec xf86OutputOptions[] = {
 
 enum {
     OPTION_MODEDEBUG,
+    OPTION_PREFER_CLONEMODE,
 };
 
 static OptionInfoRec xf86DeviceOptions[] = {
     {OPTION_MODEDEBUG, "ModeDebug", OPTV_BOOLEAN, {0}, FALSE},
+    {OPTION_PREFER_CLONEMODE, "PreferCloneMode", OPTV_BOOLEAN, {0}, FALSE},
     {-1, NULL, OPTV_NONE, {0}, FALSE},
 };
 
@@ -540,9 +568,9 @@ xf86OutputEnabled(xf86OutputPtr output, Bool strict)
         return FALSE;
     }
 
-    /* If not, try to only light up the ones we know are connected */
+    /* If not, try to only light up the ones we know are connected which are supposed to be on the desktop */
     if (strict) {
-        enable = output->status == XF86OutputStatusConnected;
+        enable = output->status == XF86OutputStatusConnected && !output->non_desktop;
     }
     /* But if that fails, try to light up even outputs we're unsure of */
     else {
@@ -732,14 +760,11 @@ xf86CrtcCloseScreen(ScreenPtr screen)
     xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(scrn);
     int o, c;
 
-    screen->CloseScreen = config->CloseScreen;
-
-    xf86RotateCloseScreen(screen);
-
-    xf86RandR12CloseScreen(screen);
-
-    screen->CloseScreen(screen);
-
+    /* The randr_output and randr_crtc pointers are already invalid as
+     * the DIX resources were freed when the associated resources were
+     * freed. Clear them now; referencing through them during the rest
+     * of the CloseScreen sequence will not end well.
+     */
     for (o = 0; o < config->num_output; o++) {
         xf86OutputPtr output = config->output[o];
 
@@ -750,6 +775,15 @@ xf86CrtcCloseScreen(ScreenPtr screen)
 
         crtc->randr_crtc = NULL;
     }
+
+    screen->CloseScreen = config->CloseScreen;
+
+    xf86RotateCloseScreen(screen);
+
+    xf86RandR12CloseScreen(screen);
+
+    screen->CloseScreen(screen);
+
     /* detach any providers */
     if (config->randr_provider) {
         RRProviderDestroy(config->randr_provider);
@@ -773,9 +807,6 @@ xf86CrtcScreenInit(ScreenPtr screen)
     int c;
 
     /* Rotation */
-    xf86DrvMsg(scrn->scrnIndex, X_INFO,
-               "RandR 1.2 enabled, ignore the following RandR disabled message.\n");
-    xf86DisableRandR();         /* Disable old RandR extension support */
     xf86RandR12Init(screen);
 
     /* support all rotations if every crtc has the shadow alloc funcs */
@@ -2138,6 +2169,8 @@ xf86TargetRightOf(ScrnInfoPtr scrn, xf86CrtcConfigPtr config,
     Bool has_tile = FALSE;
     uint32_t configured_outputs;
 
+    xf86GetOptValBool(config->options, OPTION_PREFER_CLONEMODE,
+                      &scrn->preferClone);
     if (scrn->preferClone)
         return FALSE;
 
@@ -2651,6 +2684,17 @@ xf86InitialConfiguration(ScrnInfoPtr scrn, Bool canGrow)
     return success;
 }
 
+/* Turn a CRTC off, using the DPMS function and disabling the cursor */
+static void
+xf86DisableCrtc(xf86CrtcPtr crtc)
+{
+    if (xf86CrtcIsLeased(crtc))
+        return;
+
+    crtc->funcs->dpms(crtc, DPMSModeOff);
+    xf86_crtc_hide_cursor(crtc);
+}
+
 /*
  * Check the CRTC we're going to map each output to vs. it's current
  * CRTC.  If they don't match, we have to disable the output and the CRTC
@@ -2664,6 +2708,9 @@ xf86PrepareOutputs(ScrnInfoPtr scrn)
 
     for (o = 0; o < config->num_output; o++) {
         xf86OutputPtr output = config->output[o];
+
+        if (xf86OutputIsLeased(output))
+            continue;
 
 #if RANDR_GET_CRTC_INTERFACE
         /* Disable outputs that are unused or will be re-routed */
@@ -2682,11 +2729,14 @@ xf86PrepareCrtcs(ScrnInfoPtr scrn)
     int c;
 
     for (c = 0; c < config->num_crtc; c++) {
-#if RANDR_GET_CRTC_INTERFACE
         xf86CrtcPtr crtc = config->crtc[c];
+#if RANDR_GET_CRTC_INTERFACE
         xf86OutputPtr output = NULL;
         uint32_t desired_outputs = 0, current_outputs = 0;
         int o;
+
+        if (xf86CrtcIsLeased(crtc))
+            continue;
 
         for (o = 0; o < config->num_output; o++) {
             output = config->output[o];
@@ -2706,9 +2756,12 @@ xf86PrepareCrtcs(ScrnInfoPtr scrn)
          * we need to disable it
          */
         if (desired_outputs != current_outputs || !desired_outputs)
-            (*crtc->funcs->dpms) (crtc, DPMSModeOff);
+            xf86DisableCrtc(crtc);
 #else
-        (*crtc->funcs->dpms) (crtc, DPMSModeOff);
+        if (xf86CrtcIsLeased(crtc))
+            continue;
+
+        xf86DisableCrtc(crtc);
 #endif
     }
 }
@@ -2943,7 +2996,7 @@ xf86DPMSSet(ScrnInfoPtr scrn, int mode, int flags)
         for (i = 0; i < config->num_output; i++) {
             xf86OutputPtr output = config->output[i];
 
-            if (output->crtc != NULL)
+            if (!xf86OutputIsLeased(output) && output->crtc != NULL)
                 (*output->funcs->dpms) (output, mode);
         }
     }
@@ -2959,7 +3012,7 @@ xf86DPMSSet(ScrnInfoPtr scrn, int mode, int flags)
         for (i = 0; i < config->num_output; i++) {
             xf86OutputPtr output = config->output[i];
 
-            if (output->crtc != NULL)
+            if (!xf86OutputIsLeased(output) && output->crtc != NULL)
                 (*output->funcs->dpms) (output, mode);
         }
     }
@@ -3004,7 +3057,7 @@ xf86DisableUnusedFunctions(ScrnInfoPtr pScrn)
         xf86CrtcPtr crtc = xf86_config->crtc[c];
 
         if (!crtc->enabled) {
-            crtc->funcs->dpms(crtc, DPMSModeOff);
+            xf86DisableCrtc(crtc);
             memset(&crtc->mode, 0, sizeof(crtc->mode));
             xf86RotateDestroy(crtc);
             crtc->active = FALSE;
@@ -3252,6 +3305,7 @@ xf86ConnectorGetName(xf86ConnectorType connector)
     return _xf86ConnectorNames[connector];
 }
 
+#ifdef XV
 static void
 x86_crtc_box_intersect(BoxPtr dest, BoxPtr a, BoxPtr b)
 {
@@ -3283,7 +3337,6 @@ xf86_crtc_box_area(BoxPtr box)
     return (int) (box->x2 - box->x1) * (int) (box->y2 - box->y1);
 }
 
-#ifdef XV
 /*
  * Return the crtc covering 'box'. If two crtcs cover a portion of
  * 'box', then prefer 'desired'. If 'desired' is NULL, then prefer the crtc
@@ -3455,7 +3508,7 @@ xf86DetachAllCrtc(ScrnInfoPtr scrn)
                 RRCrtcDetachScanoutPixmap(crtc->randr_crtc);
 
             /* dpms off */
-            (*crtc->funcs->dpms) (crtc, DPMSModeOff);
+            xf86DisableCrtc(crtc);
             /* force a reset the next time its used */
             crtc->randr_crtc->mode = NULL;
             crtc->mode.HDisplay = 0;

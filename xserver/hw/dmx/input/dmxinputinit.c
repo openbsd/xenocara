@@ -55,9 +55,6 @@
 #include "config/dmxconfig.h"
 #include "dmxcursor.h"
 
-#include "lnx-keyboard.h"
-#include "lnx-ms.h"
-#include "lnx-ps2.h"
 #include "usb-keyboard.h"
 #include "usb-mouse.h"
 #include "usb-other.h"
@@ -133,31 +130,6 @@ static DMXLocalInputInfoRec DMXConsoleKbd = {
 
 static DMXLocalInputInfoRec DMXLocalDevices[] = {
     /* Dummy drivers that can compile on any OS */
-#ifdef __linux__
-    /* Linux-specific drivers */
-    {
-     "kbd", DMX_LOCAL_KEYBOARD, DMX_LOCAL_TYPE_LOCAL, 1,
-     kbdLinuxCreatePrivate, kbdLinuxDestroyPrivate,
-     kbdLinuxInit, NULL, NULL, kbdLinuxGetInfo,
-     kbdLinuxOn, kbdLinuxOff, NULL,
-     kbdLinuxVTPreSwitch, kbdLinuxVTPostSwitch, kbdLinuxVTSwitch,
-     kbdLinuxRead, NULL, NULL, NULL,
-     NULL, kbdLinuxCtrl, kbdLinuxBell},
-    {
-     "ms", DMX_LOCAL_MOUSE, DMX_LOCAL_TYPE_LOCAL, 1,
-     msLinuxCreatePrivate, msLinuxDestroyPrivate,
-     msLinuxInit, NULL, NULL, msLinuxGetInfo,
-     msLinuxOn, msLinuxOff, NULL,
-     msLinuxVTPreSwitch, msLinuxVTPostSwitch, NULL,
-     msLinuxRead},
-    {
-     "ps2", DMX_LOCAL_MOUSE, DMX_LOCAL_TYPE_LOCAL, 1,
-     ps2LinuxCreatePrivate, ps2LinuxDestroyPrivate,
-     ps2LinuxInit, NULL, NULL, ps2LinuxGetInfo,
-     ps2LinuxOn, ps2LinuxOff, NULL,
-     ps2LinuxVTPreSwitch, ps2LinuxVTPostSwitch, NULL,
-     ps2LinuxRead},
-#endif
 #ifdef __linux__
     /* USB drivers, currently only for
        Linux, but relatively easy to port to
@@ -998,41 +970,6 @@ dmxInputInit(DMXInputInfo * dmxInput)
 
     a = dmxArgParse(dmxInput->name);
 
-    for (i = 1; i < dmxArgC(a); i++) {
-        switch (hasXkb) {
-        case 1:
-            dmxInput->keycodes = xstrdup(dmxArgV(a, i));
-            ++hasXkb;
-            break;
-        case 2:
-            dmxInput->symbols = xstrdup(dmxArgV(a, i));
-            ++hasXkb;
-            break;
-        case 3:
-            dmxInput->geometry = xstrdup(dmxArgV(a, i));
-            hasXkb = 0;
-            break;
-        case 0:
-            if (!strcmp(dmxArgV(a, i), "noxi"))
-                doXI = 0;
-            else if (!strcmp(dmxArgV(a, i), "xi"))
-                doXI = 1;
-            else if (!strcmp(dmxArgV(a, i), "console"))
-                forceConsole = 1;
-            else if (!strcmp(dmxArgV(a, i), "noconsole"))
-                forceConsole = 0;
-            else if (!strcmp(dmxArgV(a, i), "windows"))
-                doWindows = 1;
-            else if (!strcmp(dmxArgV(a, i), "nowindows"))
-                doWindows = 0;
-            else if (!strcmp(dmxArgV(a, i), "xkb"))
-                hasXkb = 1;
-            else {
-                dmxLog(dmxFatal, "Unknown input argument: %s\n", dmxArgV(a, i));
-            }
-        }
-    }
-
     name = dmxArgV(a, 0);
 
     if (!strcmp(name, "local")) {
@@ -1045,6 +982,41 @@ dmxInputInit(DMXInputInfo * dmxInput)
     }
     else {
         int found;
+
+        for (i = 1; i < dmxArgC(a); i++) {
+            switch (hasXkb) {
+            case 1:
+                dmxInput->keycodes = xstrdup(dmxArgV(a, i));
+                ++hasXkb;
+                break;
+            case 2:
+                dmxInput->symbols = xstrdup(dmxArgV(a, i));
+                ++hasXkb;
+                break;
+            case 3:
+                dmxInput->geometry = xstrdup(dmxArgV(a, i));
+                hasXkb = 0;
+                break;
+            case 0:
+                if (!strcmp(dmxArgV(a, i), "noxi"))
+                    doXI = 0;
+                else if (!strcmp(dmxArgV(a, i), "xi"))
+                    doXI = 1;
+                else if (!strcmp(dmxArgV(a, i), "console"))
+                    forceConsole = 1;
+                else if (!strcmp(dmxArgV(a, i), "noconsole"))
+                    forceConsole = 0;
+                else if (!strcmp(dmxArgV(a, i), "windows"))
+                    doWindows = 1;
+                else if (!strcmp(dmxArgV(a, i), "nowindows"))
+                    doWindows = 0;
+                else if (!strcmp(dmxArgV(a, i), "xkb"))
+                    hasXkb = 1;
+                else {
+                    dmxLog(dmxFatal, "Unknown input argument: %s\n", dmxArgV(a, i));
+                }
+            }
+        }
 
         for (found = 0, i = 0; i < dmxNumScreens; i++) {
             if (dmxPropertySameDisplay(&dmxScreens[i], name)) {

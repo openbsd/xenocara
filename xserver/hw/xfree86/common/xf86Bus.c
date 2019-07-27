@@ -82,8 +82,6 @@ xf86CallDriverProbe(DriverPtr drv, Bool detect_only)
     if (!xf86DoConfigure && drv->platformProbe != NULL) {
         foundScreen = xf86platformProbeDev(drv);
     }
-    if (ServerIsNotSeat0() && foundScreen)
-        return foundScreen;
 #endif
 
 #ifdef XSERVER_LIBPCIACCESS
@@ -119,12 +117,36 @@ xf86BusConfig(void)
     int i, j;
 
     /*
-     * Now call each of the Probe functions.  Each successful probe will
-     * result in an extra entry added to the xf86Screens[] list for each
-     * instance of the hardware found.
+     * 3 step probe to (hopefully) ensure that we always find at least 1
+     * (non GPU) screen:
+     *
+     * 1. Call each drivers probe function normally,
+     *    Each successful probe will result in an extra entry added to the
+     *    xf86Screens[] list for each instance of the hardware found.
      */
     for (i = 0; i < xf86NumDrivers; i++) {
         xf86CallDriverProbe(xf86DriverList[i], FALSE);
+    }
+
+    /*
+     * 2. If no Screens were found, call each drivers probe function with
+     *    ignorePrimary = TRUE, to ensure that we do actually get a
+     *    Screen if there is atleast one supported video card.
+     */
+    if (xf86NumScreens == 0) {
+        xf86ProbeIgnorePrimary = TRUE;
+        for (i = 0; i < xf86NumDrivers && xf86NumScreens == 0; i++) {
+            xf86CallDriverProbe(xf86DriverList[i], FALSE);
+        }
+        xf86ProbeIgnorePrimary = FALSE;
+    }
+
+    /*
+     * 3. Call xf86platformAddGPUDevices() to add any additional video cards as
+     *    GPUScreens (GPUScreens are only supported by platformBus drivers).
+     */
+    for (i = 0; i < xf86NumDrivers; i++) {
+        xf86platformAddGPUDevices(xf86DriverList[i]);
     }
 
     /* If nothing was detected, return now */
@@ -288,19 +310,6 @@ xf86IsEntityPrimary(int entityIndex)
     default:
         return FALSE;
     }
-}
-
-Bool
-xf86SetEntityFuncs(int entityIndex, EntityProc init, EntityProc enter,
-                   EntityProc leave, void *private)
-{
-    if (entityIndex >= xf86NumEntities)
-        return FALSE;
-    xf86Entities[entityIndex]->entityInit = init;
-    xf86Entities[entityIndex]->entityEnter = enter;
-    xf86Entities[entityIndex]->entityLeave = leave;
-    xf86Entities[entityIndex]->private = private;
-    return TRUE;
 }
 
 Bool
@@ -521,38 +530,12 @@ xf86GetDevFromEntity(int entityIndex, int instance)
 }
 
 /*
- * xf86AccessEnter() -- gets called to save the text mode VGA IO
- * resources when reentering the server after a VT switch.
- */
-void
-xf86AccessEnter(void)
-{
-    int i;
-
-    for (i = 0; i < xf86NumEntities; i++)
-        if (xf86Entities[i]->entityEnter)
-            xf86Entities[i]->entityEnter(i, xf86Entities[i]->private);
-}
-
-void
-xf86AccessLeave(void)
-{
-    int i;
-
-    for (i = 0; i < xf86NumEntities; i++)
-        if (xf86Entities[i]->entityLeave)
-            xf86Entities[i]->entityLeave(i, xf86Entities[i]->private);
-}
-
-/*
  * xf86PostProbe() -- Allocate all non conflicting resources
  * This function gets called by xf86Init().
  */
 void
 xf86PostProbe(void)
 {
-    int i;
-
     if (fbSlotClaimed && (
 #if (defined(__sparc__) || defined(__sparc)) && !defined(__OpenBSD__)
                              sbusSlotClaimed ||
@@ -568,10 +551,6 @@ xf86PostProbe(void)
         ))
         FatalError("Cannot run in framebuffer mode. Please specify busIDs "
                    "       for all framebuffer devices\n");
-
-    for (i = 0; i < xf86NumEntities; i++)
-        if (xf86Entities[i]->entityInit)
-            xf86Entities[i]->entityInit(i, xf86Entities[i]->private);
 }
 
 int

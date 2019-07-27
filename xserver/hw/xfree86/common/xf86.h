@@ -35,7 +35,7 @@
 #ifndef _XF86_H
 #define _XF86_H
 
-#if HAVE_XORG_CONFIG_H
+#ifdef HAVE_XORG_CONFIG_H
 #include <xorg-config.h>
 #elif HAVE_DIX_CONFIG_H
 #include <dix-config.h>
@@ -55,6 +55,7 @@
 extern _X_EXPORT int xf86DoConfigure;
 extern _X_EXPORT int xf86DoShowOptions;
 extern _X_EXPORT Bool xf86DoConfigurePass1;
+extern _X_EXPORT Bool xf86ProbeIgnorePrimary;
 extern _X_EXPORT Bool xorgHWAccess;
 
 extern _X_EXPORT DevPrivateKeyRec xf86ScreenKeyRec;
@@ -76,8 +77,6 @@ extern _X_EXPORT int platformSlotClaimed;
 extern _X_EXPORT confDRIRec xf86ConfigDRI;
 extern _X_EXPORT Bool xf86DRI2Enabled(void);
 
-extern _X_EXPORT Bool VTSwitchEnabled;  /* kbd driver */
-
 #define XF86SCRNINFO(p) xf86ScreenToScrn(p)
 
 #define XF86FLIP_PIXELS() \
@@ -89,9 +88,6 @@ extern _X_EXPORT Bool VTSwitchEnabled;  /* kbd driver */
 	while (0)
 
 #define BOOLTOSTRING(b) ((b) ? "TRUE" : "FALSE")
-
-#define PIX24TOBPP(p) (((p) == Pix24Use24) ? 24 : \
-			(((p) == Pix24Use32) ? 32 : 0))
 
 /* Compatibility functions for pre-input-thread drivers */
 static inline _X_DEPRECATED int xf86BlockSIGIO(void) { input_lock(); return 0; }
@@ -156,9 +152,6 @@ extern _X_EXPORT GDevPtr xf86GetDevFromEntity(int entityIndex, int instance);
 extern _X_EXPORT void xf86RemoveEntityFromScreen(ScrnInfoPtr pScrn,
                                                  int entityIndex);
 extern _X_EXPORT EntityInfoPtr xf86GetEntityInfo(int entityIndex);
-extern _X_EXPORT Bool xf86SetEntityFuncs(int entityIndex, EntityProc init,
-                                         EntityProc enter, EntityProc leave,
-                                         void *);
 extern _X_EXPORT Bool xf86IsEntityPrimary(int entityIndex);
 extern _X_EXPORT ScrnInfoPtr xf86FindScreenForEntity(int entityIndex);
 
@@ -222,9 +215,6 @@ extern _X_EXPORT void xf86DisableGeneralHandler(void *handler);
 extern _X_EXPORT void xf86EnableGeneralHandler(void *handler);
 extern _X_EXPORT InputHandlerProc xf86SetConsoleHandler(InputHandlerProc
                                                         handler, void *data);
-extern _X_EXPORT void xf86InterceptSignals(int *signo);
-extern _X_EXPORT void xf86InterceptSigIll(void (*sigillhandler) (void));
-extern _X_EXPORT Bool xf86EnableVTSwitch(Bool new);
 extern _X_EXPORT void xf86ProcessActionEvent(ActionEvent action, void *arg);
 extern _X_EXPORT void xf86PrintBacktrace(void);
 extern _X_EXPORT Bool xf86VTOwner(void);
@@ -289,8 +279,6 @@ extern _X_EXPORT const char *
 xf86GetVisualName(int visual);
 extern _X_EXPORT int
 xf86GetVerbosity(void);
-extern _X_EXPORT Pix24Flags
-xf86GetPix24(void);
 extern _X_EXPORT int
 xf86GetDepth(void);
 extern _X_EXPORT rgb
@@ -308,8 +296,6 @@ xf86ServerIsResetting(void);
 extern _X_EXPORT Bool
 xf86ServerIsOnlyDetecting(void);
 extern _X_EXPORT Bool
-xf86CaughtSignal(void);
-extern _X_EXPORT Bool
 xf86GetVidModeAllowNonLocal(void);
 extern _X_EXPORT Bool
 xf86GetVidModeEnabled(void);
@@ -319,8 +305,6 @@ extern _X_EXPORT Bool
 xf86GetModInDevEnabled(void);
 extern _X_EXPORT Bool
 xf86GetAllowMouseOpenFail(void);
-extern _X_EXPORT void
-xf86DisableRandR(void);
 extern _X_EXPORT CARD32
 xorgGetVersion(void);
 extern _X_EXPORT CARD32
@@ -342,8 +326,6 @@ xf86SetSilkenMouse(ScreenPtr pScreen);
 extern _X_EXPORT void *
 xf86FindXvOptions(ScrnInfoPtr pScrn, int adapt_index, const char *port_name,
                   const char **adaptor_name, void **adaptor_options);
-extern _X_EXPORT void
-xf86GetOS(const char **name, int *major, int *minor, int *teeny);
 extern _X_EXPORT ScrnInfoPtr
 xf86ConfigFbEntity(ScrnInfoPtr pScrn, int scrnFlag,
                    int entityIndex, EntityProc init,

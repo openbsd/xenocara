@@ -52,17 +52,30 @@ build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = Xwayland$(EXEEXT)
 @GLAMOR_EGL_TRUE@am__append_1 = \
-@GLAMOR_EGL_TRUE@	xwayland-glamor.c
+@GLAMOR_EGL_TRUE@	xwayland-glamor.c			\
+@GLAMOR_EGL_TRUE@	xwayland-glamor-gbm.c			\
+@GLAMOR_EGL_TRUE@	xwayland-present.c
 
 @GLAMOR_EGL_TRUE@@XV_TRUE@am__append_2 = \
 @GLAMOR_EGL_TRUE@@XV_TRUE@	xwayland-glamor-xv.c
 
-@GLAMOR_EGL_TRUE@am__append_3 = $(glamor_built_sources)
-@GLAMOR_EGL_TRUE@am__append_4 = $(GLAMOR_LIBS) $(GBM_LIBS) -lEGL -lGL
+@GLAMOR_EGL_TRUE@@XWAYLAND_EGLSTREAM_TRUE@am__append_3 = \
+@GLAMOR_EGL_TRUE@@XWAYLAND_EGLSTREAM_TRUE@	xwayland-glamor-eglstream.c
+
+@GLAMOR_EGL_TRUE@am__append_4 = $(glamor_built_sources)
+@GLAMOR_EGL_TRUE@am__append_5 = $(GLAMOR_LIBS) $(GBM_LIBS) -lEGL -lGL
 @GLAMOR_EGL_FALSE@Xwayland_DEPENDENCIES = $(glamor_lib) \
-@GLAMOR_EGL_FALSE@	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+@GLAMOR_EGL_FALSE@	$(am__DEPENDENCIES_1) \
+@GLAMOR_EGL_FALSE@	$(top_builddir)/glx/libglxvnd.la \
+@GLAMOR_EGL_FALSE@	$(am__DEPENDENCIES_1) \
 @GLAMOR_EGL_FALSE@	$(top_builddir)/Xext/libXvidmode.la \
 @GLAMOR_EGL_FALSE@	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_2)
+@XWAYLAND_EGLSTREAM_TRUE@am__append_6 = \
+@XWAYLAND_EGLSTREAM_TRUE@	wayland-eglstream-client-protocol.h			\
+@XWAYLAND_EGLSTREAM_TRUE@	wayland-eglstream-protocol.c				\
+@XWAYLAND_EGLSTREAM_TRUE@	wayland-eglstream-controller-client-protocol.h		\
+@XWAYLAND_EGLSTREAM_TRUE@	wayland-eglstream-controller-protocol.c
+
 subdir = hw/xwayland
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/depcomp
@@ -81,7 +94,7 @@ CONFIG_HEADER = $(top_builddir)/include/do-not-use-config.h \
 	$(top_builddir)/include/xorg-config.h \
 	$(top_builddir)/include/xkb-config.h \
 	$(top_builddir)/include/xwin-config.h \
-	$(top_builddir)/include/kdrive-config.h \
+	$(top_builddir)/include/xwayland-config.h \
 	$(top_builddir)/include/version-config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
@@ -90,26 +103,36 @@ PROGRAMS = $(bin_PROGRAMS)
 am__Xwayland_SOURCES_DIST = xwayland.c xwayland-input.c \
 	xwayland-cursor.c xwayland-shm.c xwayland-output.c \
 	xwayland-cvt.c xwayland-vidmode.c xwayland.h \
-	$(top_srcdir)/Xext/dpmsstubs.c $(top_srcdir)/Xi/stubs.c \
-	$(top_srcdir)/mi/miinitext.c xwayland-glamor.c \
-	xwayland-glamor-xv.c
-@GLAMOR_EGL_TRUE@am__objects_1 = Xwayland-xwayland-glamor.$(OBJEXT)
+	$(top_srcdir)/Xi/stubs.c $(top_srcdir)/mi/miinitext.c \
+	xwayland-glamor.c xwayland-glamor-gbm.c xwayland-present.c \
+	xwayland-glamor-xv.c xwayland-glamor-eglstream.c
+@GLAMOR_EGL_TRUE@am__objects_1 = Xwayland-xwayland-glamor.$(OBJEXT) \
+@GLAMOR_EGL_TRUE@	Xwayland-xwayland-glamor-gbm.$(OBJEXT) \
+@GLAMOR_EGL_TRUE@	Xwayland-xwayland-present.$(OBJEXT)
 @GLAMOR_EGL_TRUE@@XV_TRUE@am__objects_2 = Xwayland-xwayland-glamor-xv.$(OBJEXT)
+@GLAMOR_EGL_TRUE@@XWAYLAND_EGLSTREAM_TRUE@am__objects_3 = Xwayland-xwayland-glamor-eglstream.$(OBJEXT)
 am_Xwayland_OBJECTS = Xwayland-xwayland.$(OBJEXT) \
 	Xwayland-xwayland-input.$(OBJEXT) \
 	Xwayland-xwayland-cursor.$(OBJEXT) \
 	Xwayland-xwayland-shm.$(OBJEXT) \
 	Xwayland-xwayland-output.$(OBJEXT) \
 	Xwayland-xwayland-cvt.$(OBJEXT) \
-	Xwayland-xwayland-vidmode.$(OBJEXT) \
-	Xwayland-dpmsstubs.$(OBJEXT) Xwayland-stubs.$(OBJEXT) \
-	Xwayland-miinitext.$(OBJEXT) $(am__objects_1) $(am__objects_2)
-@GLAMOR_EGL_TRUE@am__objects_3 = Xwayland-drm-protocol.$(OBJEXT)
-@GLAMOR_EGL_TRUE@am__objects_4 = $(am__objects_3)
-am__objects_5 = $(am__objects_4) \
+	Xwayland-xwayland-vidmode.$(OBJEXT) Xwayland-stubs.$(OBJEXT) \
+	Xwayland-miinitext.$(OBJEXT) $(am__objects_1) $(am__objects_2) \
+	$(am__objects_3)
+@GLAMOR_EGL_TRUE@am__objects_4 = Xwayland-drm-protocol.$(OBJEXT)
+@GLAMOR_EGL_TRUE@am__objects_5 = $(am__objects_4)
+@XWAYLAND_EGLSTREAM_TRUE@am__objects_6 = Xwayland-wayland-eglstream-protocol.$(OBJEXT) \
+@XWAYLAND_EGLSTREAM_TRUE@	Xwayland-wayland-eglstream-controller-protocol.$(OBJEXT)
+am__objects_7 = $(am__objects_5) \
 	Xwayland-relative-pointer-unstable-v1-protocol.$(OBJEXT) \
-	Xwayland-pointer-constraints-unstable-v1-protocol.$(OBJEXT)
-nodist_Xwayland_OBJECTS = $(am__objects_5)
+	Xwayland-pointer-constraints-unstable-v1-protocol.$(OBJEXT) \
+	Xwayland-tablet-unstable-v2-protocol.$(OBJEXT) \
+	Xwayland-xwayland-keyboard-grab-unstable-v1-protocol.$(OBJEXT) \
+	Xwayland-xdg-output-unstable-v1-protocol.$(OBJEXT) \
+	Xwayland-linux-dmabuf-unstable-v1-protocol.$(OBJEXT) \
+	$(am__objects_6)
+nodist_Xwayland_OBJECTS = $(am__objects_7)
 Xwayland_OBJECTS = $(am_Xwayland_OBJECTS) $(nodist_Xwayland_OBJECTS)
 am__DEPENDENCIES_1 =
 @GLAMOR_EGL_TRUE@am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1) \
@@ -348,6 +371,7 @@ RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
 RELEASE_DATE = @RELEASE_DATE@
+SCANNER_ARG = @SCANNER_ARG@
 SDK_REQUIRED_MODULES = @SDK_REQUIRED_MODULES@
 SED = @SED@
 SELINUX_CFLAGS = @SELINUX_CFLAGS@
@@ -366,15 +390,18 @@ SYSCONFDIR = @SYSCONFDIR@
 SYSTEMD_DAEMON_CFLAGS = @SYSTEMD_DAEMON_CFLAGS@
 SYSTEMD_DAEMON_LIBS = @SYSTEMD_DAEMON_LIBS@
 TRADITIONALCPPFLAGS = @TRADITIONALCPPFLAGS@
-TSLIB_CFLAGS = @TSLIB_CFLAGS@
-TSLIB_LIBS = @TSLIB_LIBS@
 UDEV_CFLAGS = @UDEV_CFLAGS@
 UDEV_LIBS = @UDEV_LIBS@
 UTILS_SYS_LIBS = @UTILS_SYS_LIBS@
 VENDOR_NAME_SHORT = @VENDOR_NAME_SHORT@
 VERSION = @VERSION@
+WAYLAND_EGLSTREAM_CFLAGS = @WAYLAND_EGLSTREAM_CFLAGS@
+WAYLAND_EGLSTREAM_DATADIR = @WAYLAND_EGLSTREAM_DATADIR@
+WAYLAND_EGLSTREAM_LIBS = @WAYLAND_EGLSTREAM_LIBS@
 WAYLAND_PROTOCOLS_DATADIR = @WAYLAND_PROTOCOLS_DATADIR@
 WAYLAND_SCANNER = @WAYLAND_SCANNER@
+WAYLAND_SCANNER_CFLAGS = @WAYLAND_SCANNER_CFLAGS@
+WAYLAND_SCANNER_LIBS = @WAYLAND_SCANNER_LIBS@
 WINDOWSDRI_CFLAGS = @WINDOWSDRI_CFLAGS@
 WINDOWSDRI_LIBS = @WINDOWSDRI_LIBS@
 WINDOWSWM_CFLAGS = @WINDOWSWM_CFLAGS@
@@ -382,6 +409,8 @@ WINDOWSWM_LIBS = @WINDOWSWM_LIBS@
 WINDRES = @WINDRES@
 X11EXAMPLES_DEP_CFLAGS = @X11EXAMPLES_DEP_CFLAGS@
 X11EXAMPLES_DEP_LIBS = @X11EXAMPLES_DEP_LIBS@
+XCONFIGDIR = @XCONFIGDIR@
+XCONFIGFILE = @XCONFIGFILE@
 XDMCP_CFLAGS = @XDMCP_CFLAGS@
 XDMCP_LIBS = @XDMCP_LIBS@
 XDMXCONFIG_DEP_CFLAGS = @XDMXCONFIG_DEP_CFLAGS@
@@ -453,8 +482,6 @@ XWIN_SERVER_NAME = @XWIN_SERVER_NAME@
 XWIN_SYS_LIBS = @XWIN_SYS_LIBS@
 YACC = @YACC@
 YFLAGS = @YFLAGS@
-__XCONFIGDIR__ = @__XCONFIGDIR__@
-__XCONFIGFILE__ = @__XCONFIGFILE__@
 abi_ansic = @abi_ansic@
 abi_extension = @abi_extension@
 abi_videodrv = @abi_videodrv@
@@ -530,18 +557,27 @@ Xwayland_CFLAGS = \
 
 Xwayland_SOURCES = xwayland.c xwayland-input.c xwayland-cursor.c \
 	xwayland-shm.c xwayland-output.c xwayland-cvt.c \
-	xwayland-vidmode.c xwayland.h $(top_srcdir)/Xext/dpmsstubs.c \
-	$(top_srcdir)/Xi/stubs.c $(top_srcdir)/mi/miinitext.c \
-	$(am__append_1) $(am__append_2)
-Xwayland_LDADD = $(glamor_lib) $(XWAYLAND_LIBS) $(XWAYLAND_SYS_LIBS) \
+	xwayland-vidmode.c xwayland.h $(top_srcdir)/Xi/stubs.c \
+	$(top_srcdir)/mi/miinitext.c $(am__append_1) $(am__append_2) \
+	$(am__append_3)
+Xwayland_LDADD = $(glamor_lib) $(XWAYLAND_LIBS) \
+	$(top_builddir)/glx/libglxvnd.la $(XWAYLAND_SYS_LIBS) \
 	$(top_builddir)/Xext/libXvidmode.la $(XSERVER_SYS_LIBS) \
-	$(am__append_4)
+	$(am__append_5)
 Xwayland_LDFLAGS = $(LD_EXPORT_SYMBOLS_FLAG)
-Xwayland_built_sources = $(am__append_3) \
+Xwayland_built_sources = $(am__append_4) \
 	relative-pointer-unstable-v1-client-protocol.h \
 	relative-pointer-unstable-v1-protocol.c \
 	pointer-constraints-unstable-v1-client-protocol.h \
-	pointer-constraints-unstable-v1-protocol.c
+	pointer-constraints-unstable-v1-protocol.c \
+	tablet-unstable-v2-client-protocol.h \
+	tablet-unstable-v2-protocol.c \
+	xwayland-keyboard-grab-unstable-v1-protocol.c \
+	xwayland-keyboard-grab-unstable-v1-client-protocol.h \
+	xdg-output-unstable-v1-protocol.c \
+	xdg-output-unstable-v1-client-protocol.h \
+	linux-dmabuf-unstable-v1-client-protocol.h \
+	linux-dmabuf-unstable-v1-protocol.c $(am__append_6)
 @GLAMOR_EGL_TRUE@glamor_built_sources = \
 @GLAMOR_EGL_TRUE@	drm-client-protocol.h			\
 @GLAMOR_EGL_TRUE@	drm-protocol.c
@@ -641,18 +677,26 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xwayland-dpmsstubs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xwayland-drm-protocol.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xwayland-linux-dmabuf-unstable-v1-protocol.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xwayland-miinitext.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xwayland-pointer-constraints-unstable-v1-protocol.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xwayland-relative-pointer-unstable-v1-protocol.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xwayland-stubs.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xwayland-tablet-unstable-v2-protocol.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xwayland-wayland-eglstream-controller-protocol.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xwayland-wayland-eglstream-protocol.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xwayland-xdg-output-unstable-v1-protocol.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xwayland-xwayland-cursor.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xwayland-xwayland-cvt.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xwayland-xwayland-glamor-eglstream.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xwayland-xwayland-glamor-gbm.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xwayland-xwayland-glamor-xv.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xwayland-xwayland-glamor.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xwayland-xwayland-input.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xwayland-xwayland-keyboard-grab-unstable-v1-protocol.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xwayland-xwayland-output.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xwayland-xwayland-present.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xwayland-xwayland-shm.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xwayland-xwayland-vidmode.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xwayland-xwayland.Po@am__quote@
@@ -776,20 +820,6 @@ Xwayland-xwayland-vidmode.obj: xwayland-vidmode.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -c -o Xwayland-xwayland-vidmode.obj `if test -f 'xwayland-vidmode.c'; then $(CYGPATH_W) 'xwayland-vidmode.c'; else $(CYGPATH_W) '$(srcdir)/xwayland-vidmode.c'; fi`
 
-Xwayland-dpmsstubs.o: $(top_srcdir)/Xext/dpmsstubs.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -MT Xwayland-dpmsstubs.o -MD -MP -MF $(DEPDIR)/Xwayland-dpmsstubs.Tpo -c -o Xwayland-dpmsstubs.o `test -f '$(top_srcdir)/Xext/dpmsstubs.c' || echo '$(srcdir)/'`$(top_srcdir)/Xext/dpmsstubs.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/Xwayland-dpmsstubs.Tpo $(DEPDIR)/Xwayland-dpmsstubs.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/Xext/dpmsstubs.c' object='Xwayland-dpmsstubs.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -c -o Xwayland-dpmsstubs.o `test -f '$(top_srcdir)/Xext/dpmsstubs.c' || echo '$(srcdir)/'`$(top_srcdir)/Xext/dpmsstubs.c
-
-Xwayland-dpmsstubs.obj: $(top_srcdir)/Xext/dpmsstubs.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -MT Xwayland-dpmsstubs.obj -MD -MP -MF $(DEPDIR)/Xwayland-dpmsstubs.Tpo -c -o Xwayland-dpmsstubs.obj `if test -f '$(top_srcdir)/Xext/dpmsstubs.c'; then $(CYGPATH_W) '$(top_srcdir)/Xext/dpmsstubs.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/Xext/dpmsstubs.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/Xwayland-dpmsstubs.Tpo $(DEPDIR)/Xwayland-dpmsstubs.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/Xext/dpmsstubs.c' object='Xwayland-dpmsstubs.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -c -o Xwayland-dpmsstubs.obj `if test -f '$(top_srcdir)/Xext/dpmsstubs.c'; then $(CYGPATH_W) '$(top_srcdir)/Xext/dpmsstubs.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/Xext/dpmsstubs.c'; fi`
-
 Xwayland-stubs.o: $(top_srcdir)/Xi/stubs.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -MT Xwayland-stubs.o -MD -MP -MF $(DEPDIR)/Xwayland-stubs.Tpo -c -o Xwayland-stubs.o `test -f '$(top_srcdir)/Xi/stubs.c' || echo '$(srcdir)/'`$(top_srcdir)/Xi/stubs.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/Xwayland-stubs.Tpo $(DEPDIR)/Xwayland-stubs.Po
@@ -832,6 +862,34 @@ Xwayland-xwayland-glamor.obj: xwayland-glamor.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -c -o Xwayland-xwayland-glamor.obj `if test -f 'xwayland-glamor.c'; then $(CYGPATH_W) 'xwayland-glamor.c'; else $(CYGPATH_W) '$(srcdir)/xwayland-glamor.c'; fi`
 
+Xwayland-xwayland-glamor-gbm.o: xwayland-glamor-gbm.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -MT Xwayland-xwayland-glamor-gbm.o -MD -MP -MF $(DEPDIR)/Xwayland-xwayland-glamor-gbm.Tpo -c -o Xwayland-xwayland-glamor-gbm.o `test -f 'xwayland-glamor-gbm.c' || echo '$(srcdir)/'`xwayland-glamor-gbm.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/Xwayland-xwayland-glamor-gbm.Tpo $(DEPDIR)/Xwayland-xwayland-glamor-gbm.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xwayland-glamor-gbm.c' object='Xwayland-xwayland-glamor-gbm.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -c -o Xwayland-xwayland-glamor-gbm.o `test -f 'xwayland-glamor-gbm.c' || echo '$(srcdir)/'`xwayland-glamor-gbm.c
+
+Xwayland-xwayland-glamor-gbm.obj: xwayland-glamor-gbm.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -MT Xwayland-xwayland-glamor-gbm.obj -MD -MP -MF $(DEPDIR)/Xwayland-xwayland-glamor-gbm.Tpo -c -o Xwayland-xwayland-glamor-gbm.obj `if test -f 'xwayland-glamor-gbm.c'; then $(CYGPATH_W) 'xwayland-glamor-gbm.c'; else $(CYGPATH_W) '$(srcdir)/xwayland-glamor-gbm.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/Xwayland-xwayland-glamor-gbm.Tpo $(DEPDIR)/Xwayland-xwayland-glamor-gbm.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xwayland-glamor-gbm.c' object='Xwayland-xwayland-glamor-gbm.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -c -o Xwayland-xwayland-glamor-gbm.obj `if test -f 'xwayland-glamor-gbm.c'; then $(CYGPATH_W) 'xwayland-glamor-gbm.c'; else $(CYGPATH_W) '$(srcdir)/xwayland-glamor-gbm.c'; fi`
+
+Xwayland-xwayland-present.o: xwayland-present.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -MT Xwayland-xwayland-present.o -MD -MP -MF $(DEPDIR)/Xwayland-xwayland-present.Tpo -c -o Xwayland-xwayland-present.o `test -f 'xwayland-present.c' || echo '$(srcdir)/'`xwayland-present.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/Xwayland-xwayland-present.Tpo $(DEPDIR)/Xwayland-xwayland-present.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xwayland-present.c' object='Xwayland-xwayland-present.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -c -o Xwayland-xwayland-present.o `test -f 'xwayland-present.c' || echo '$(srcdir)/'`xwayland-present.c
+
+Xwayland-xwayland-present.obj: xwayland-present.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -MT Xwayland-xwayland-present.obj -MD -MP -MF $(DEPDIR)/Xwayland-xwayland-present.Tpo -c -o Xwayland-xwayland-present.obj `if test -f 'xwayland-present.c'; then $(CYGPATH_W) 'xwayland-present.c'; else $(CYGPATH_W) '$(srcdir)/xwayland-present.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/Xwayland-xwayland-present.Tpo $(DEPDIR)/Xwayland-xwayland-present.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xwayland-present.c' object='Xwayland-xwayland-present.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -c -o Xwayland-xwayland-present.obj `if test -f 'xwayland-present.c'; then $(CYGPATH_W) 'xwayland-present.c'; else $(CYGPATH_W) '$(srcdir)/xwayland-present.c'; fi`
+
 Xwayland-xwayland-glamor-xv.o: xwayland-glamor-xv.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -MT Xwayland-xwayland-glamor-xv.o -MD -MP -MF $(DEPDIR)/Xwayland-xwayland-glamor-xv.Tpo -c -o Xwayland-xwayland-glamor-xv.o `test -f 'xwayland-glamor-xv.c' || echo '$(srcdir)/'`xwayland-glamor-xv.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/Xwayland-xwayland-glamor-xv.Tpo $(DEPDIR)/Xwayland-xwayland-glamor-xv.Po
@@ -845,6 +903,20 @@ Xwayland-xwayland-glamor-xv.obj: xwayland-glamor-xv.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xwayland-glamor-xv.c' object='Xwayland-xwayland-glamor-xv.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -c -o Xwayland-xwayland-glamor-xv.obj `if test -f 'xwayland-glamor-xv.c'; then $(CYGPATH_W) 'xwayland-glamor-xv.c'; else $(CYGPATH_W) '$(srcdir)/xwayland-glamor-xv.c'; fi`
+
+Xwayland-xwayland-glamor-eglstream.o: xwayland-glamor-eglstream.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -MT Xwayland-xwayland-glamor-eglstream.o -MD -MP -MF $(DEPDIR)/Xwayland-xwayland-glamor-eglstream.Tpo -c -o Xwayland-xwayland-glamor-eglstream.o `test -f 'xwayland-glamor-eglstream.c' || echo '$(srcdir)/'`xwayland-glamor-eglstream.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/Xwayland-xwayland-glamor-eglstream.Tpo $(DEPDIR)/Xwayland-xwayland-glamor-eglstream.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xwayland-glamor-eglstream.c' object='Xwayland-xwayland-glamor-eglstream.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -c -o Xwayland-xwayland-glamor-eglstream.o `test -f 'xwayland-glamor-eglstream.c' || echo '$(srcdir)/'`xwayland-glamor-eglstream.c
+
+Xwayland-xwayland-glamor-eglstream.obj: xwayland-glamor-eglstream.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -MT Xwayland-xwayland-glamor-eglstream.obj -MD -MP -MF $(DEPDIR)/Xwayland-xwayland-glamor-eglstream.Tpo -c -o Xwayland-xwayland-glamor-eglstream.obj `if test -f 'xwayland-glamor-eglstream.c'; then $(CYGPATH_W) 'xwayland-glamor-eglstream.c'; else $(CYGPATH_W) '$(srcdir)/xwayland-glamor-eglstream.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/Xwayland-xwayland-glamor-eglstream.Tpo $(DEPDIR)/Xwayland-xwayland-glamor-eglstream.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xwayland-glamor-eglstream.c' object='Xwayland-xwayland-glamor-eglstream.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -c -o Xwayland-xwayland-glamor-eglstream.obj `if test -f 'xwayland-glamor-eglstream.c'; then $(CYGPATH_W) 'xwayland-glamor-eglstream.c'; else $(CYGPATH_W) '$(srcdir)/xwayland-glamor-eglstream.c'; fi`
 
 Xwayland-drm-protocol.o: drm-protocol.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -MT Xwayland-drm-protocol.o -MD -MP -MF $(DEPDIR)/Xwayland-drm-protocol.Tpo -c -o Xwayland-drm-protocol.o `test -f 'drm-protocol.c' || echo '$(srcdir)/'`drm-protocol.c
@@ -887,6 +959,90 @@ Xwayland-pointer-constraints-unstable-v1-protocol.obj: pointer-constraints-unsta
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pointer-constraints-unstable-v1-protocol.c' object='Xwayland-pointer-constraints-unstable-v1-protocol.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -c -o Xwayland-pointer-constraints-unstable-v1-protocol.obj `if test -f 'pointer-constraints-unstable-v1-protocol.c'; then $(CYGPATH_W) 'pointer-constraints-unstable-v1-protocol.c'; else $(CYGPATH_W) '$(srcdir)/pointer-constraints-unstable-v1-protocol.c'; fi`
+
+Xwayland-tablet-unstable-v2-protocol.o: tablet-unstable-v2-protocol.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -MT Xwayland-tablet-unstable-v2-protocol.o -MD -MP -MF $(DEPDIR)/Xwayland-tablet-unstable-v2-protocol.Tpo -c -o Xwayland-tablet-unstable-v2-protocol.o `test -f 'tablet-unstable-v2-protocol.c' || echo '$(srcdir)/'`tablet-unstable-v2-protocol.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/Xwayland-tablet-unstable-v2-protocol.Tpo $(DEPDIR)/Xwayland-tablet-unstable-v2-protocol.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='tablet-unstable-v2-protocol.c' object='Xwayland-tablet-unstable-v2-protocol.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -c -o Xwayland-tablet-unstable-v2-protocol.o `test -f 'tablet-unstable-v2-protocol.c' || echo '$(srcdir)/'`tablet-unstable-v2-protocol.c
+
+Xwayland-tablet-unstable-v2-protocol.obj: tablet-unstable-v2-protocol.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -MT Xwayland-tablet-unstable-v2-protocol.obj -MD -MP -MF $(DEPDIR)/Xwayland-tablet-unstable-v2-protocol.Tpo -c -o Xwayland-tablet-unstable-v2-protocol.obj `if test -f 'tablet-unstable-v2-protocol.c'; then $(CYGPATH_W) 'tablet-unstable-v2-protocol.c'; else $(CYGPATH_W) '$(srcdir)/tablet-unstable-v2-protocol.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/Xwayland-tablet-unstable-v2-protocol.Tpo $(DEPDIR)/Xwayland-tablet-unstable-v2-protocol.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='tablet-unstable-v2-protocol.c' object='Xwayland-tablet-unstable-v2-protocol.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -c -o Xwayland-tablet-unstable-v2-protocol.obj `if test -f 'tablet-unstable-v2-protocol.c'; then $(CYGPATH_W) 'tablet-unstable-v2-protocol.c'; else $(CYGPATH_W) '$(srcdir)/tablet-unstable-v2-protocol.c'; fi`
+
+Xwayland-xwayland-keyboard-grab-unstable-v1-protocol.o: xwayland-keyboard-grab-unstable-v1-protocol.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -MT Xwayland-xwayland-keyboard-grab-unstable-v1-protocol.o -MD -MP -MF $(DEPDIR)/Xwayland-xwayland-keyboard-grab-unstable-v1-protocol.Tpo -c -o Xwayland-xwayland-keyboard-grab-unstable-v1-protocol.o `test -f 'xwayland-keyboard-grab-unstable-v1-protocol.c' || echo '$(srcdir)/'`xwayland-keyboard-grab-unstable-v1-protocol.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/Xwayland-xwayland-keyboard-grab-unstable-v1-protocol.Tpo $(DEPDIR)/Xwayland-xwayland-keyboard-grab-unstable-v1-protocol.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xwayland-keyboard-grab-unstable-v1-protocol.c' object='Xwayland-xwayland-keyboard-grab-unstable-v1-protocol.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -c -o Xwayland-xwayland-keyboard-grab-unstable-v1-protocol.o `test -f 'xwayland-keyboard-grab-unstable-v1-protocol.c' || echo '$(srcdir)/'`xwayland-keyboard-grab-unstable-v1-protocol.c
+
+Xwayland-xwayland-keyboard-grab-unstable-v1-protocol.obj: xwayland-keyboard-grab-unstable-v1-protocol.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -MT Xwayland-xwayland-keyboard-grab-unstable-v1-protocol.obj -MD -MP -MF $(DEPDIR)/Xwayland-xwayland-keyboard-grab-unstable-v1-protocol.Tpo -c -o Xwayland-xwayland-keyboard-grab-unstable-v1-protocol.obj `if test -f 'xwayland-keyboard-grab-unstable-v1-protocol.c'; then $(CYGPATH_W) 'xwayland-keyboard-grab-unstable-v1-protocol.c'; else $(CYGPATH_W) '$(srcdir)/xwayland-keyboard-grab-unstable-v1-protocol.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/Xwayland-xwayland-keyboard-grab-unstable-v1-protocol.Tpo $(DEPDIR)/Xwayland-xwayland-keyboard-grab-unstable-v1-protocol.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xwayland-keyboard-grab-unstable-v1-protocol.c' object='Xwayland-xwayland-keyboard-grab-unstable-v1-protocol.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -c -o Xwayland-xwayland-keyboard-grab-unstable-v1-protocol.obj `if test -f 'xwayland-keyboard-grab-unstable-v1-protocol.c'; then $(CYGPATH_W) 'xwayland-keyboard-grab-unstable-v1-protocol.c'; else $(CYGPATH_W) '$(srcdir)/xwayland-keyboard-grab-unstable-v1-protocol.c'; fi`
+
+Xwayland-xdg-output-unstable-v1-protocol.o: xdg-output-unstable-v1-protocol.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -MT Xwayland-xdg-output-unstable-v1-protocol.o -MD -MP -MF $(DEPDIR)/Xwayland-xdg-output-unstable-v1-protocol.Tpo -c -o Xwayland-xdg-output-unstable-v1-protocol.o `test -f 'xdg-output-unstable-v1-protocol.c' || echo '$(srcdir)/'`xdg-output-unstable-v1-protocol.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/Xwayland-xdg-output-unstable-v1-protocol.Tpo $(DEPDIR)/Xwayland-xdg-output-unstable-v1-protocol.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xdg-output-unstable-v1-protocol.c' object='Xwayland-xdg-output-unstable-v1-protocol.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -c -o Xwayland-xdg-output-unstable-v1-protocol.o `test -f 'xdg-output-unstable-v1-protocol.c' || echo '$(srcdir)/'`xdg-output-unstable-v1-protocol.c
+
+Xwayland-xdg-output-unstable-v1-protocol.obj: xdg-output-unstable-v1-protocol.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -MT Xwayland-xdg-output-unstable-v1-protocol.obj -MD -MP -MF $(DEPDIR)/Xwayland-xdg-output-unstable-v1-protocol.Tpo -c -o Xwayland-xdg-output-unstable-v1-protocol.obj `if test -f 'xdg-output-unstable-v1-protocol.c'; then $(CYGPATH_W) 'xdg-output-unstable-v1-protocol.c'; else $(CYGPATH_W) '$(srcdir)/xdg-output-unstable-v1-protocol.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/Xwayland-xdg-output-unstable-v1-protocol.Tpo $(DEPDIR)/Xwayland-xdg-output-unstable-v1-protocol.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='xdg-output-unstable-v1-protocol.c' object='Xwayland-xdg-output-unstable-v1-protocol.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -c -o Xwayland-xdg-output-unstable-v1-protocol.obj `if test -f 'xdg-output-unstable-v1-protocol.c'; then $(CYGPATH_W) 'xdg-output-unstable-v1-protocol.c'; else $(CYGPATH_W) '$(srcdir)/xdg-output-unstable-v1-protocol.c'; fi`
+
+Xwayland-linux-dmabuf-unstable-v1-protocol.o: linux-dmabuf-unstable-v1-protocol.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -MT Xwayland-linux-dmabuf-unstable-v1-protocol.o -MD -MP -MF $(DEPDIR)/Xwayland-linux-dmabuf-unstable-v1-protocol.Tpo -c -o Xwayland-linux-dmabuf-unstable-v1-protocol.o `test -f 'linux-dmabuf-unstable-v1-protocol.c' || echo '$(srcdir)/'`linux-dmabuf-unstable-v1-protocol.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/Xwayland-linux-dmabuf-unstable-v1-protocol.Tpo $(DEPDIR)/Xwayland-linux-dmabuf-unstable-v1-protocol.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='linux-dmabuf-unstable-v1-protocol.c' object='Xwayland-linux-dmabuf-unstable-v1-protocol.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -c -o Xwayland-linux-dmabuf-unstable-v1-protocol.o `test -f 'linux-dmabuf-unstable-v1-protocol.c' || echo '$(srcdir)/'`linux-dmabuf-unstable-v1-protocol.c
+
+Xwayland-linux-dmabuf-unstable-v1-protocol.obj: linux-dmabuf-unstable-v1-protocol.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -MT Xwayland-linux-dmabuf-unstable-v1-protocol.obj -MD -MP -MF $(DEPDIR)/Xwayland-linux-dmabuf-unstable-v1-protocol.Tpo -c -o Xwayland-linux-dmabuf-unstable-v1-protocol.obj `if test -f 'linux-dmabuf-unstable-v1-protocol.c'; then $(CYGPATH_W) 'linux-dmabuf-unstable-v1-protocol.c'; else $(CYGPATH_W) '$(srcdir)/linux-dmabuf-unstable-v1-protocol.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/Xwayland-linux-dmabuf-unstable-v1-protocol.Tpo $(DEPDIR)/Xwayland-linux-dmabuf-unstable-v1-protocol.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='linux-dmabuf-unstable-v1-protocol.c' object='Xwayland-linux-dmabuf-unstable-v1-protocol.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -c -o Xwayland-linux-dmabuf-unstable-v1-protocol.obj `if test -f 'linux-dmabuf-unstable-v1-protocol.c'; then $(CYGPATH_W) 'linux-dmabuf-unstable-v1-protocol.c'; else $(CYGPATH_W) '$(srcdir)/linux-dmabuf-unstable-v1-protocol.c'; fi`
+
+Xwayland-wayland-eglstream-protocol.o: wayland-eglstream-protocol.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -MT Xwayland-wayland-eglstream-protocol.o -MD -MP -MF $(DEPDIR)/Xwayland-wayland-eglstream-protocol.Tpo -c -o Xwayland-wayland-eglstream-protocol.o `test -f 'wayland-eglstream-protocol.c' || echo '$(srcdir)/'`wayland-eglstream-protocol.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/Xwayland-wayland-eglstream-protocol.Tpo $(DEPDIR)/Xwayland-wayland-eglstream-protocol.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wayland-eglstream-protocol.c' object='Xwayland-wayland-eglstream-protocol.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -c -o Xwayland-wayland-eglstream-protocol.o `test -f 'wayland-eglstream-protocol.c' || echo '$(srcdir)/'`wayland-eglstream-protocol.c
+
+Xwayland-wayland-eglstream-protocol.obj: wayland-eglstream-protocol.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -MT Xwayland-wayland-eglstream-protocol.obj -MD -MP -MF $(DEPDIR)/Xwayland-wayland-eglstream-protocol.Tpo -c -o Xwayland-wayland-eglstream-protocol.obj `if test -f 'wayland-eglstream-protocol.c'; then $(CYGPATH_W) 'wayland-eglstream-protocol.c'; else $(CYGPATH_W) '$(srcdir)/wayland-eglstream-protocol.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/Xwayland-wayland-eglstream-protocol.Tpo $(DEPDIR)/Xwayland-wayland-eglstream-protocol.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wayland-eglstream-protocol.c' object='Xwayland-wayland-eglstream-protocol.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -c -o Xwayland-wayland-eglstream-protocol.obj `if test -f 'wayland-eglstream-protocol.c'; then $(CYGPATH_W) 'wayland-eglstream-protocol.c'; else $(CYGPATH_W) '$(srcdir)/wayland-eglstream-protocol.c'; fi`
+
+Xwayland-wayland-eglstream-controller-protocol.o: wayland-eglstream-controller-protocol.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -MT Xwayland-wayland-eglstream-controller-protocol.o -MD -MP -MF $(DEPDIR)/Xwayland-wayland-eglstream-controller-protocol.Tpo -c -o Xwayland-wayland-eglstream-controller-protocol.o `test -f 'wayland-eglstream-controller-protocol.c' || echo '$(srcdir)/'`wayland-eglstream-controller-protocol.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/Xwayland-wayland-eglstream-controller-protocol.Tpo $(DEPDIR)/Xwayland-wayland-eglstream-controller-protocol.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wayland-eglstream-controller-protocol.c' object='Xwayland-wayland-eglstream-controller-protocol.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -c -o Xwayland-wayland-eglstream-controller-protocol.o `test -f 'wayland-eglstream-controller-protocol.c' || echo '$(srcdir)/'`wayland-eglstream-controller-protocol.c
+
+Xwayland-wayland-eglstream-controller-protocol.obj: wayland-eglstream-controller-protocol.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -MT Xwayland-wayland-eglstream-controller-protocol.obj -MD -MP -MF $(DEPDIR)/Xwayland-wayland-eglstream-controller-protocol.Tpo -c -o Xwayland-wayland-eglstream-controller-protocol.obj `if test -f 'wayland-eglstream-controller-protocol.c'; then $(CYGPATH_W) 'wayland-eglstream-controller-protocol.c'; else $(CYGPATH_W) '$(srcdir)/wayland-eglstream-controller-protocol.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/Xwayland-wayland-eglstream-controller-protocol.Tpo $(DEPDIR)/Xwayland-wayland-eglstream-controller-protocol.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='wayland-eglstream-controller-protocol.c' object='Xwayland-wayland-eglstream-controller-protocol.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(Xwayland_CFLAGS) $(CFLAGS) -c -o Xwayland-wayland-eglstream-controller-protocol.obj `if test -f 'wayland-eglstream-controller-protocol.c'; then $(CYGPATH_W) 'wayland-eglstream-controller-protocol.c'; else $(CYGPATH_W) '$(srcdir)/wayland-eglstream-controller-protocol.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -1121,17 +1277,46 @@ relink:
 	$(AM_V_at)rm -f Xwayland$(EXEEXT) && $(MAKE) Xwayland$(EXEEXT)
 
 relative-pointer-unstable-v1-protocol.c : $(WAYLAND_PROTOCOLS_DATADIR)/unstable/relative-pointer/relative-pointer-unstable-v1.xml
-	$(AM_V_GEN)$(WAYLAND_SCANNER) code < $< > $@
+	$(AM_V_GEN)$(WAYLAND_SCANNER) @SCANNER_ARG@ < $< > $@
 relative-pointer-unstable-v1-client-protocol.h : $(WAYLAND_PROTOCOLS_DATADIR)/unstable/relative-pointer/relative-pointer-unstable-v1.xml
 	$(AM_V_GEN)$(WAYLAND_SCANNER) client-header < $< > $@
 
 pointer-constraints-unstable-v1-protocol.c : $(WAYLAND_PROTOCOLS_DATADIR)/unstable/pointer-constraints/pointer-constraints-unstable-v1.xml
-	$(AM_V_GEN)$(WAYLAND_SCANNER) code < $< > $@
+	$(AM_V_GEN)$(WAYLAND_SCANNER) @SCANNER_ARG@ < $< > $@
 pointer-constraints-unstable-v1-client-protocol.h : $(WAYLAND_PROTOCOLS_DATADIR)/unstable/pointer-constraints/pointer-constraints-unstable-v1.xml
 	$(AM_V_GEN)$(WAYLAND_SCANNER) client-header < $< > $@
 
-%-protocol.c : %.xml
+tablet-unstable-v2-protocol.c: $(WAYLAND_PROTOCOLS_DATADIR)/unstable/tablet/tablet-unstable-v2.xml
+	$(AM_V_GEN)$(WAYLAND_SCANNER) @SCANNER_ARG@ < $< > $@
+tablet-unstable-v2-client-protocol.h: $(WAYLAND_PROTOCOLS_DATADIR)/unstable/tablet/tablet-unstable-v2.xml
+	$(AM_V_GEN)$(WAYLAND_SCANNER) client-header < $< > $@
+
+xwayland-keyboard-grab-unstable-v1-protocol.c : $(WAYLAND_PROTOCOLS_DATADIR)/unstable/xwayland-keyboard-grab/xwayland-keyboard-grab-unstable-v1.xml
+	$(AM_V_GEN)$(WAYLAND_SCANNER) @SCANNER_ARG@ < $< > $@
+xwayland-keyboard-grab-unstable-v1-client-protocol.h : $(WAYLAND_PROTOCOLS_DATADIR)/unstable/xwayland-keyboard-grab/xwayland-keyboard-grab-unstable-v1.xml
+	$(AM_V_GEN)$(WAYLAND_SCANNER) client-header < $< > $@
+xdg-output-unstable-v1-protocol.c : $(WAYLAND_PROTOCOLS_DATADIR)/unstable/xdg-output/xdg-output-unstable-v1.xml
+	$(AM_V_GEN)$(WAYLAND_SCANNER) @SCANNER_ARG@ < $< > $@
+xdg-output-unstable-v1-client-protocol.h : $(WAYLAND_PROTOCOLS_DATADIR)/unstable/xdg-output/xdg-output-unstable-v1.xml
+	$(AM_V_GEN)$(WAYLAND_SCANNER) client-header < $< > $@
+
+linux-dmabuf-unstable-v1-protocol.c : $(WAYLAND_PROTOCOLS_DATADIR)/unstable/linux-dmabuf/linux-dmabuf-unstable-v1.xml
+	$(AM_V_GEN)$(WAYLAND_SCANNER) @SCANNER_ARG@ < $< > $@
+linux-dmabuf-unstable-v1-client-protocol.h : $(WAYLAND_PROTOCOLS_DATADIR)/unstable/linux-dmabuf/linux-dmabuf-unstable-v1.xml
+	$(AM_V_GEN)$(WAYLAND_SCANNER) client-header < $< > $@
+
+wayland-eglstream-client-protocol.h : $(WAYLAND_EGLSTREAM_DATADIR)/wayland-eglstream.xml
+	$(AM_V_GEN)$(WAYLAND_SCANNER) client-header < $< > $@
+wayland-eglstream-controller-client-protocol.h : $(WAYLAND_EGLSTREAM_DATADIR)/wayland-eglstream-controller.xml
+	$(AM_V_GEN)$(WAYLAND_SCANNER) client-header < $< > $@
+
+wayland-eglstream-protocol.c : $(WAYLAND_EGLSTREAM_DATADIR)/wayland-eglstream.xml
 	$(AM_V_GEN)$(WAYLAND_SCANNER) code < $< > $@
+wayland-eglstream-controller-protocol.c : $(WAYLAND_EGLSTREAM_DATADIR)/wayland-eglstream-controller.xml
+	$(AM_V_GEN)$(WAYLAND_SCANNER) code < $< > $@
+
+%-protocol.c : %.xml
+	$(AM_V_GEN)$(WAYLAND_SCANNER) @SCANNER_ARG@ < $< > $@
 
 %-client-protocol.h : %.xml
 	$(AM_V_GEN)$(WAYLAND_SCANNER) client-header < $< > $@

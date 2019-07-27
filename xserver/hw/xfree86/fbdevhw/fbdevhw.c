@@ -120,7 +120,7 @@ fbdevHWGetFD(ScrnInfoPtr pScrn)
 /* -------------------------------------------------------------------- */
 /* some helpers for printing debug informations                         */
 
-#if DEBUG
+#ifdef DEBUG
 static void
 print_fbdev_mode(const char *txt, struct fb_var_screeninfo *var)
 {
@@ -329,6 +329,22 @@ fbdev_open(int scrnIndex, const char *dev, char **namep)
         return -1;
     }
 
+    /* only touch non-PCI devices on this path */
+    {
+        char buf[PATH_MAX];
+        char *sysfs_path = NULL;
+        char *node = strrchr(dev, '/') + 1;
+
+        if (asprintf(&sysfs_path, "/sys/class/graphics/%s", node) < 0 ||
+            readlink(sysfs_path, buf, sizeof(buf)) < 0 ||
+            strstr(buf, "devices/pci")) {
+            free(sysfs_path);
+            close(fd);
+            return -1;
+        }
+        free(sysfs_path);
+    }
+
     if (namep) {
         if (-1 == ioctl(fd, FBIOGET_FSCREENINFO, (void *) (&fix))) {
             *namep = NULL;
@@ -466,7 +482,7 @@ fbdevHWSetMode(ScrnInfoPtr pScrn, DisplayModePtr mode, Bool check)
     xfree2fbdev_fblayout(pScrn, &req_var);
     xfree2fbdev_timing(mode, &req_var);
 
-#if DEBUG
+#ifdef DEBUG
     print_xfree_mode("init", mode);
     print_fbdev_mode("init", &req_var);
 #endif
@@ -486,7 +502,7 @@ fbdevHWSetMode(ScrnInfoPtr pScrn, DisplayModePtr mode, Bool check)
         if (!check)
             xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
                        "FBIOPUT_VSCREENINFO succeeded but modified " "mode\n");
-#if DEBUG
+#ifdef DEBUG
         print_fbdev_mode("returned", &set_var);
 #endif
         return FALSE;

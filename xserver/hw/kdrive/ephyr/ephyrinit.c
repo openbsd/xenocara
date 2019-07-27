@@ -23,8 +23,8 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifdef HAVE_CONFIG_H
-#include <kdrive-config.h>
+#ifdef HAVE_DIX_CONFIG_H
+#include <dix-config.h>
 #endif
 #include "ephyr.h"
 #include "ephyrlog.h"
@@ -39,11 +39,6 @@ extern Bool kdHasKbd;
 extern Bool ephyr_glamor, ephyr_glamor_gles2, ephyr_glamor_skip_present;
 
 extern Bool ephyrNoXV;
-
-#ifdef KDRIVE_EVDEV
-extern KdPointerDriver LinuxEvdevMouseDriver;
-extern KdKeyboardDriver LinuxEvdevKeyboardDriver;
-#endif
 
 void processScreenOrOutputArg(const char *screen_size, const char *output, char *parent_id);
 void processOutputArg(const char *output, char *parent_id);
@@ -63,25 +58,9 @@ InitCard(char *name)
     KdCardInfoAdd(&ephyrFuncs, 0);
 }
 
-static const ExtensionModule ephyrExtensions[] = {
-#ifdef GLXEXT
- { GlxExtensionInit, "GLX", &noGlxExtension },
-#endif
-};
-
-static
-void ephyrExtensionInit(void)
-{
-    LoadExtensionList(ephyrExtensions, ARRAY_SIZE(ephyrExtensions), TRUE);
-}
-
-
 void
 InitOutput(ScreenInfo * pScreenInfo, int argc, char **argv)
 {
-    if (serverGeneration == 1)
-        ephyrExtensionInit();
-
     KdInitOutput(pScreenInfo, argc, argv);
 }
 
@@ -90,11 +69,6 @@ InitInput(int argc, char **argv)
 {
     KdKeyboardInfo *ki;
     KdPointerInfo *pi;
-
-#ifdef KDRIVE_EVDEV
-    KdAddKeyboardDriver(&LinuxEvdevKeyboardDriver);
-    KdAddPointerDriver(&LinuxEvdevMouseDriver);
-#endif
 
     if (!SeatId) {
         KdAddKeyboardDriver(&EphyrKeyboardDriver);
@@ -384,7 +358,12 @@ OsVendorInit(void)
     if (hostx_want_host_cursor())
         ephyrFuncs.initCursor = &ephyrCursorInit;
 
-    KdOsInit(&EphyrOsFuncs);
+    if (serverGeneration == 1) {
+        if (!KdCardInfoLast()) {
+            processScreenArg("640x480", NULL);
+        }
+        hostx_init();
+    }
 }
 
 KdCardFuncs ephyrFuncs = {
@@ -393,19 +372,10 @@ KdCardFuncs ephyrFuncs = {
     ephyrInitScreen,            /* initScreen */
     ephyrFinishInitScreen,      /* finishInitScreen */
     ephyrCreateResources,       /* createRes */
-    ephyrPreserve,              /* preserve */
-    ephyrEnable,                /* enable */
-    ephyrDPMS,                  /* dpms */
-    ephyrDisable,               /* disable */
-    ephyrRestore,               /* restore */
     ephyrScreenFini,            /* scrfini */
     ephyrCardFini,              /* cardfini */
 
     0,                          /* initCursor */
-    0,                          /* enableCursor */
-    0,                          /* disableCursor */
-    0,                          /* finiCursor */
-    0,                          /* recolorCursor */
 
     0,                          /* initAccel */
     0,                          /* enableAccel */

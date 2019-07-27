@@ -30,6 +30,8 @@
 #include "exevents.h"
 #include <assert.h>
 
+#include "tests.h"
+
 #ifndef PROTOCOL_COMMON_H
 #define PROTOCOL_COMMON_H
 
@@ -142,8 +144,8 @@ void init_simple(void);
 
 /* Declarations for various overrides in the test files. */
 void __wrap_WriteToClient(ClientPtr client, int len, void *data);
-int __wrap_XISetEventMask(DeviceIntPtr dev, WindowPtr win, int len,
-                          unsigned char *mask);
+int __wrap_XISetEventMask(DeviceIntPtr dev, WindowPtr win, ClientPtr client,
+                          int len, unsigned char *mask);
 int __wrap_dixLookupWindow(WindowPtr *win, XID id, ClientPtr client,
                            Mask access);
 int __real_dixLookupWindow(WindowPtr *win, XID id, ClientPtr client,

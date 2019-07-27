@@ -82,7 +82,7 @@ CONFIG_HEADER = $(top_builddir)/include/do-not-use-config.h \
 	$(top_builddir)/include/xorg-config.h \
 	$(top_builddir)/include/xkb-config.h \
 	$(top_builddir)/include/xwin-config.h \
-	$(top_builddir)/include/kdrive-config.h \
+	$(top_builddir)/include/xwayland-config.h \
 	$(top_builddir)/include/version-config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
@@ -130,9 +130,6 @@ AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
-libXextdpmsstubs_la_LIBADD =
-am_libXextdpmsstubs_la_OBJECTS = dpmsstubs.lo
-libXextdpmsstubs_la_OBJECTS = $(am_libXextdpmsstubs_la_OBJECTS)
 libXvidmode_la_LIBADD =
 am_libXvidmode_la_OBJECTS = vidmode.lo
 libXvidmode_la_OBJECTS = $(am_libXvidmode_la_OBJECTS)
@@ -170,10 +167,9 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(libXext_la_SOURCES) $(libXextdpmsstubs_la_SOURCES) \
-	$(libXvidmode_la_SOURCES)
+SOURCES = $(libXext_la_SOURCES) $(libXvidmode_la_SOURCES)
 DIST_SOURCES = $(am__libXext_la_SOURCES_DIST) \
-	$(libXextdpmsstubs_la_SOURCES) $(libXvidmode_la_SOURCES)
+	$(libXvidmode_la_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -396,6 +392,7 @@ RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
 RELEASE_DATE = @RELEASE_DATE@
+SCANNER_ARG = @SCANNER_ARG@
 SDK_REQUIRED_MODULES = @SDK_REQUIRED_MODULES@
 SED = @SED@
 SELINUX_CFLAGS = @SELINUX_CFLAGS@
@@ -414,15 +411,18 @@ SYSCONFDIR = @SYSCONFDIR@
 SYSTEMD_DAEMON_CFLAGS = @SYSTEMD_DAEMON_CFLAGS@
 SYSTEMD_DAEMON_LIBS = @SYSTEMD_DAEMON_LIBS@
 TRADITIONALCPPFLAGS = @TRADITIONALCPPFLAGS@
-TSLIB_CFLAGS = @TSLIB_CFLAGS@
-TSLIB_LIBS = @TSLIB_LIBS@
 UDEV_CFLAGS = @UDEV_CFLAGS@
 UDEV_LIBS = @UDEV_LIBS@
 UTILS_SYS_LIBS = @UTILS_SYS_LIBS@
 VENDOR_NAME_SHORT = @VENDOR_NAME_SHORT@
 VERSION = @VERSION@
+WAYLAND_EGLSTREAM_CFLAGS = @WAYLAND_EGLSTREAM_CFLAGS@
+WAYLAND_EGLSTREAM_DATADIR = @WAYLAND_EGLSTREAM_DATADIR@
+WAYLAND_EGLSTREAM_LIBS = @WAYLAND_EGLSTREAM_LIBS@
 WAYLAND_PROTOCOLS_DATADIR = @WAYLAND_PROTOCOLS_DATADIR@
 WAYLAND_SCANNER = @WAYLAND_SCANNER@
+WAYLAND_SCANNER_CFLAGS = @WAYLAND_SCANNER_CFLAGS@
+WAYLAND_SCANNER_LIBS = @WAYLAND_SCANNER_LIBS@
 WINDOWSDRI_CFLAGS = @WINDOWSDRI_CFLAGS@
 WINDOWSDRI_LIBS = @WINDOWSDRI_LIBS@
 WINDOWSWM_CFLAGS = @WINDOWSWM_CFLAGS@
@@ -430,6 +430,8 @@ WINDOWSWM_LIBS = @WINDOWSWM_LIBS@
 WINDRES = @WINDRES@
 X11EXAMPLES_DEP_CFLAGS = @X11EXAMPLES_DEP_CFLAGS@
 X11EXAMPLES_DEP_LIBS = @X11EXAMPLES_DEP_LIBS@
+XCONFIGDIR = @XCONFIGDIR@
+XCONFIGFILE = @XCONFIGFILE@
 XDMCP_CFLAGS = @XDMCP_CFLAGS@
 XDMCP_LIBS = @XDMCP_LIBS@
 XDMXCONFIG_DEP_CFLAGS = @XDMXCONFIG_DEP_CFLAGS@
@@ -501,8 +503,6 @@ XWIN_SERVER_NAME = @XWIN_SERVER_NAME@
 XWIN_SYS_LIBS = @XWIN_SYS_LIBS@
 YACC = @YACC@
 YFLAGS = @YFLAGS@
-__XCONFIGDIR__ = @__XCONFIGDIR__@
-__XCONFIGFILE__ = @__XCONFIGFILE__@
 abi_ansic = @abi_ansic@
 abi_extension = @abi_extension@
 abi_videodrv = @abi_videodrv@
@@ -567,7 +567,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-noinst_LTLIBRARIES = libXext.la libXextdpmsstubs.la libXvidmode.la
+noinst_LTLIBRARIES = libXext.la libXvidmode.la
 AM_CFLAGS = $(DIX_CFLAGS)
 @XORG_TRUE@sdk_HEADERS = xvdix.h xvmcext.h geext.h geint.h shmint.h \
 @XORG_TRUE@	syncsdk.h $(am__append_6) $(am__append_8)
@@ -617,7 +617,6 @@ DPMS_SRCS = dpms.c dpmsproc.h
 # Now take all of the above, mix well, bake for 10 minutes and get libXext*.la
 libXext_la_SOURCES = $(BUILTIN_SRCS)
 libXext_la_LIBADD = $(BUILTIN_LIBS)
-libXextdpmsstubs_la_SOURCES = dpmsstubs.c
 
 # XVidMode extension
 libXvidmode_la_SOURCES = vidmode.c
@@ -681,8 +680,6 @@ clean-noinstLTLIBRARIES:
 	}
 libXext.la: $(libXext_la_OBJECTS) $(libXext_la_DEPENDENCIES) $(EXTRA_libXext_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(LINK)  $(libXext_la_OBJECTS) $(libXext_la_LIBADD) $(LIBS)
-libXextdpmsstubs.la: $(libXextdpmsstubs_la_OBJECTS) $(libXextdpmsstubs_la_DEPENDENCIES) $(EXTRA_libXextdpmsstubs_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(LINK)  $(libXextdpmsstubs_la_OBJECTS) $(libXextdpmsstubs_la_LIBADD) $(LIBS)
 libXvidmode.la: $(libXvidmode_la_OBJECTS) $(libXvidmode_la_DEPENDENCIES) $(EXTRA_libXvidmode_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(LINK)  $(libXvidmode_la_OBJECTS) $(libXvidmode_la_LIBADD) $(LIBS)
 
@@ -694,7 +691,6 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bigreq.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dpms.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dpmsstubs.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/geext.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hashtable.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/panoramiX.Plo@am__quote@

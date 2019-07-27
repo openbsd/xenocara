@@ -47,6 +47,7 @@
 
 typedef struct _xf86Crtc xf86CrtcRec, *xf86CrtcPtr;
 typedef struct _xf86Output xf86OutputRec, *xf86OutputPtr;
+typedef struct _xf86Lease xf86LeaseRec, *xf86LeasePtr;
 
 /* define a standard for connector types */
 typedef enum _xf86ConnectorType {
@@ -195,6 +196,8 @@ typedef struct _xf86CrtcFuncs {
      */
     void
      (*show_cursor) (xf86CrtcPtr crtc);
+    Bool
+     (*show_cursor_check) (xf86CrtcPtr crtc);
 
     /**
      * Hide cursor
@@ -245,7 +248,7 @@ typedef struct _xf86CrtcFuncs {
 
 } xf86CrtcFuncsRec, *xf86CrtcFuncsPtr;
 
-#define XF86_CRTC_VERSION 7
+#define XF86_CRTC_VERSION 8
 
 struct _xf86Crtc {
     /**
@@ -625,6 +628,11 @@ struct _xf86Output {
     /** Whether to use the old per-screen Monitor config section */
     Bool use_screen_monitor;
 
+    /** For pre-init, whether the output should be excluded from the
+     * desktop when there are other viable outputs to use
+     */
+    Bool non_desktop;
+
 #ifdef RANDR_12_INTERFACE
     /**
      * RandR 1.2 output structure.
@@ -670,6 +678,54 @@ typedef struct _xf86ProviderFuncs {
 
 } xf86ProviderFuncsRec, *xf86ProviderFuncsPtr;
 
+#define XF86_LEASE_VERSION      1
+
+struct _xf86Lease {
+    /**
+     * ABI versioning
+     */
+    int version;
+
+    /**
+     * Associated ScrnInfo
+     */
+    ScrnInfoPtr scrn;
+
+    /**
+     * Driver private
+     */
+    void *driver_private;
+
+    /**
+     * RandR lease
+     */
+    RRLeasePtr randr_lease;
+
+    /*
+     * Contents of the lease
+     */
+
+    /**
+     * Number of leased CRTCs
+     */
+    int num_crtc;
+
+    /**
+     * Number of leased outputs
+     */
+    int num_output;
+
+    /**
+     * Array of pointers to leased CRTCs
+     */
+    RRCrtcPtr *crtcs;
+
+    /**
+     * Array of pointers to leased outputs
+     */
+    RROutputPtr *outputs;
+};
+
 typedef struct _xf86CrtcConfigFuncs {
     /**
      * Requests that the driver resize the screen.
@@ -685,7 +741,28 @@ typedef struct _xf86CrtcConfigFuncs {
      */
     Bool
      (*resize) (ScrnInfoPtr scrn, int width, int height);
+
+    /**
+     * Requests that the driver create a lease
+     */
+    int (*create_lease)(RRLeasePtr lease, int *fd);
+
+    /**
+     * Ask the driver to terminate a lease, freeing all
+     * driver resources
+     */
+    void (*terminate_lease)(RRLeasePtr lease);
 } xf86CrtcConfigFuncsRec, *xf86CrtcConfigFuncsPtr;
+
+/*
+ * The driver calls this when it detects that a lease
+ * has been terminated
+ */
+extern _X_EXPORT void
+xf86CrtcLeaseTerminated(RRLeasePtr lease);
+
+extern _X_EXPORT void
+xf86CrtcLeaseStarted(RRLeasePtr lease);
 
 typedef void (*xf86_crtc_notify_proc_ptr) (ScreenPtr pScreen);
 
@@ -993,8 +1070,20 @@ static _X_INLINE _X_DEPRECATED void xf86_reload_cursors(ScreenPtr screen) {}
 /**
  * Called from EnterVT to turn the cursors back on
  */
-extern _X_EXPORT void
+extern _X_EXPORT Bool
  xf86_show_cursors(ScrnInfoPtr scrn);
+
+/**
+ * Called by the driver to turn a single crtc's cursor off
+ */
+extern _X_EXPORT void
+xf86_crtc_hide_cursor(xf86CrtcPtr crtc);
+
+/**
+ * Called by the driver to turn a single crtc's cursor on
+ */
+extern _X_EXPORT Bool
+xf86_crtc_show_cursor(xf86CrtcPtr crtc);
 
 /**
  * Called by the driver to turn cursors off

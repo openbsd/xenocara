@@ -46,7 +46,7 @@
 #include "misc.h"
 #include "inpututils.h"
 
-int
+int _X_COLD
 SProcXIPassiveGrabDevice(ClientPtr client)
 {
     int i;
@@ -88,7 +88,7 @@ ProcXIPassiveGrabDevice(ClientPtr client)
     };
     int i, ret = Success;
     uint32_t *modifiers;
-    xXIGrabModifierInfo *modifiers_failed;
+    xXIGrabModifierInfo *modifiers_failed = NULL;
     GrabMask mask = { 0 };
     GrabParameters param;
     void *tmp;
@@ -232,13 +232,13 @@ ProcXIPassiveGrabDevice(ClientPtr client)
     if (rep.num_modifiers)
         WriteToClient(client, rep.length * 4, modifiers_failed);
 
-    free(modifiers_failed);
  out:
+    free(modifiers_failed);
     xi2mask_free(&mask.xi2mask);
     return ret;
 }
 
-void
+void _X_COLD
 SRepXIPassiveGrabDevice(ClientPtr client, int size,
                         xXIPassiveGrabDeviceReply * rep)
 {
@@ -249,7 +249,7 @@ SRepXIPassiveGrabDevice(ClientPtr client, int size,
     WriteToClient(client, size, rep);
 }
 
-int
+int _X_COLD
 SProcXIPassiveUngrabDevice(ClientPtr client)
 {
     int i;

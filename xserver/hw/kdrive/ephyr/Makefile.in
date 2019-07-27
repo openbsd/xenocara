@@ -91,20 +91,20 @@ CONFIG_HEADER = $(top_builddir)/include/do-not-use-config.h \
 	$(top_builddir)/include/xorg-config.h \
 	$(top_builddir)/include/xkb-config.h \
 	$(top_builddir)/include/xwin-config.h \
-	$(top_builddir)/include/kdrive-config.h \
+	$(top_builddir)/include/xwayland-config.h \
 	$(top_builddir)/include/version-config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am__Xephyr_SOURCES_DIST = ephyr.c ephyr.h ephyrlog.h ephyr_draw.c os.c \
+am__Xephyr_SOURCES_DIST = ephyr.c ephyr.h ephyrlog.h ephyr_draw.c \
 	ephyrinit.c ephyrcursor.c hostx.c hostx.h ephyrvideo.c \
 	ephyr_glamor_glx.c ephyr_glamor_glx.h ephyr_glamor_xv.c
 @XV_TRUE@am__objects_1 = ephyrvideo.$(OBJEXT)
 @GLAMOR_TRUE@@XV_TRUE@am__objects_2 = ephyr_glamor_xv.$(OBJEXT)
 @GLAMOR_TRUE@am__objects_3 = ephyr_glamor_glx.$(OBJEXT) \
 @GLAMOR_TRUE@	$(am__objects_2)
-am_Xephyr_OBJECTS = ephyr.$(OBJEXT) ephyr_draw.$(OBJEXT) os.$(OBJEXT) \
+am_Xephyr_OBJECTS = ephyr.$(OBJEXT) ephyr_draw.$(OBJEXT) \
 	ephyrinit.$(OBJEXT) ephyrcursor.$(OBJEXT) hostx.$(OBJEXT) \
 	$(am__objects_1) $(am__objects_3)
 Xephyr_OBJECTS = $(am_Xephyr_OBJECTS)
@@ -382,6 +382,7 @@ RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
 RELEASE_DATE = @RELEASE_DATE@
+SCANNER_ARG = @SCANNER_ARG@
 SDK_REQUIRED_MODULES = @SDK_REQUIRED_MODULES@
 SED = @SED@
 SELINUX_CFLAGS = @SELINUX_CFLAGS@
@@ -400,15 +401,18 @@ SYSCONFDIR = @SYSCONFDIR@
 SYSTEMD_DAEMON_CFLAGS = @SYSTEMD_DAEMON_CFLAGS@
 SYSTEMD_DAEMON_LIBS = @SYSTEMD_DAEMON_LIBS@
 TRADITIONALCPPFLAGS = @TRADITIONALCPPFLAGS@
-TSLIB_CFLAGS = @TSLIB_CFLAGS@
-TSLIB_LIBS = @TSLIB_LIBS@
 UDEV_CFLAGS = @UDEV_CFLAGS@
 UDEV_LIBS = @UDEV_LIBS@
 UTILS_SYS_LIBS = @UTILS_SYS_LIBS@
 VENDOR_NAME_SHORT = @VENDOR_NAME_SHORT@
 VERSION = @VERSION@
+WAYLAND_EGLSTREAM_CFLAGS = @WAYLAND_EGLSTREAM_CFLAGS@
+WAYLAND_EGLSTREAM_DATADIR = @WAYLAND_EGLSTREAM_DATADIR@
+WAYLAND_EGLSTREAM_LIBS = @WAYLAND_EGLSTREAM_LIBS@
 WAYLAND_PROTOCOLS_DATADIR = @WAYLAND_PROTOCOLS_DATADIR@
 WAYLAND_SCANNER = @WAYLAND_SCANNER@
+WAYLAND_SCANNER_CFLAGS = @WAYLAND_SCANNER_CFLAGS@
+WAYLAND_SCANNER_LIBS = @WAYLAND_SCANNER_LIBS@
 WINDOWSDRI_CFLAGS = @WINDOWSDRI_CFLAGS@
 WINDOWSDRI_LIBS = @WINDOWSDRI_LIBS@
 WINDOWSWM_CFLAGS = @WINDOWSWM_CFLAGS@
@@ -416,6 +420,8 @@ WINDOWSWM_LIBS = @WINDOWSWM_LIBS@
 WINDRES = @WINDRES@
 X11EXAMPLES_DEP_CFLAGS = @X11EXAMPLES_DEP_CFLAGS@
 X11EXAMPLES_DEP_LIBS = @X11EXAMPLES_DEP_LIBS@
+XCONFIGDIR = @XCONFIGDIR@
+XCONFIGFILE = @XCONFIGFILE@
 XDMCP_CFLAGS = @XDMCP_CFLAGS@
 XDMCP_LIBS = @XDMCP_LIBS@
 XDMXCONFIG_DEP_CFLAGS = @XDMXCONFIG_DEP_CFLAGS@
@@ -487,8 +493,6 @@ XWIN_SERVER_NAME = @XWIN_SERVER_NAME@
 XWIN_SYS_LIBS = @XWIN_SYS_LIBS@
 YACC = @YACC@
 YFLAGS = @YFLAGS@
-__XCONFIGDIR__ = @__XCONFIGDIR__@
-__XCONFIGFILE__ = @__XCONFIGFILE__@
 abi_ansic = @abi_ansic@
 abi_extension = @abi_extension@
 abi_videodrv = @abi_videodrv@
@@ -555,8 +559,8 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = man
 AM_CPPFLAGS = @KDRIVE_INCS@ @KDRIVE_CFLAGS@ @XEPHYR_INCS@ \
-	@XEPHYR_CFLAGS@ -I$(top_srcdir) -I$(top_srcdir)/glamor \
-	-I$(top_srcdir)/exa $(am__append_1)
+	@XEPHYR_CFLAGS@ -DHAVE_DIX_CONFIG_H -I$(top_srcdir) \
+	-I$(top_srcdir)/glamor -I$(top_srcdir)/exa $(am__append_1)
 @XV_TRUE@XV_SRCS = ephyrvideo.c
 @GLAMOR_TRUE@@XV_TRUE@GLAMOR_XV_SRCS = ephyr_glamor_xv.c
 @GLAMOR_TRUE@GLAMOR_SRCS = \
@@ -570,7 +574,6 @@ Xephyr_SOURCES = \
 	ephyr.h \
 	ephyrlog.h \
 	ephyr_draw.c \
-	os.c \
 	ephyrinit.c \
 	ephyrcursor.c \
 	hostx.c \
@@ -690,7 +693,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyrinit.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyrvideo.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hostx.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/os.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

@@ -184,6 +184,7 @@ static Bool g_shutdown = FALSE;
  * Translate msg id to text, for debug purposes
  */
 
+#if CYGMULTIWINDOW_DEBUG
 static const char *
 MessageName(winWMMessagePtr msg)
 {
@@ -233,6 +234,7 @@ MessageName(winWMMessagePtr msg)
       break;
     }
 }
+#endif
 
 
 /*
@@ -1515,7 +1517,7 @@ winInitMultiWindowWM(WMInfoPtr pWMInfo, WMProcArgPtr pProcArg)
                 };
 
             xcb_ewmh_set_supported(&pWMInfo->ewmh, pProcArg->dwScreen,
-                                   sizeof(supported)/sizeof(xcb_atom_t), supported);
+                                   ARRAY_SIZE(supported), supported);
         }
         else {
             ErrorF("winInitMultiWindowWM - xcb_ewmh_init_atoms() failed\n");

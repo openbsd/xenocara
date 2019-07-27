@@ -68,7 +68,7 @@ CONFIG_HEADER = $(top_builddir)/include/do-not-use-config.h \
 	$(top_builddir)/include/xorg-config.h \
 	$(top_builddir)/include/xkb-config.h \
 	$(top_builddir)/include/xwin-config.h \
-	$(top_builddir)/include/kdrive-config.h \
+	$(top_builddir)/include/xwayland-config.h \
 	$(top_builddir)/include/version-config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
@@ -81,26 +81,23 @@ am__v_AR_1 =
 libdmxinput_a_AR = $(AR) $(ARFLAGS)
 libdmxinput_a_LIBADD =
 am__libdmxinput_a_SOURCES_DIST = ChkNotMaskEv.c ChkNotMaskEv.h \
-	atKeynames.h lnx-keyboard.c lnx-keyboard.h lnx-ms.c lnx-ms.h \
-	lnx-ps2.c lnx-ps2.h usb-keyboard.c usb-keyboard.h usb-mouse.c \
+	atKeynames.h usb-keyboard.c usb-keyboard.h usb-mouse.c \
 	usb-mouse.h usb-other.c usb-other.h usb-common.c usb-common.h \
 	usb-private.h dmxdummy.c dmxdummy.h dmxbackend.c dmxbackend.h \
 	dmxconsole.c dmxconsole.h dmxcommon.c dmxcommon.h \
 	dmxinputinit.c dmxinputinit.h dmxarg.c dmxarg.h dmxevents.c \
 	dmxevents.h dmxxinput.c dmxmotion.c dmxmotion.h dmxmap.c \
 	dmxmap.h
-@DMX_BUILD_LNX_TRUE@am__objects_1 = lnx-keyboard.$(OBJEXT) \
-@DMX_BUILD_LNX_TRUE@	lnx-ms.$(OBJEXT) lnx-ps2.$(OBJEXT)
-@DMX_BUILD_USB_TRUE@am__objects_2 = usb-keyboard.$(OBJEXT) \
+@DMX_BUILD_USB_TRUE@am__objects_1 = usb-keyboard.$(OBJEXT) \
 @DMX_BUILD_USB_TRUE@	usb-mouse.$(OBJEXT) usb-other.$(OBJEXT) \
 @DMX_BUILD_USB_TRUE@	usb-common.$(OBJEXT)
-am__objects_3 = dmxdummy.$(OBJEXT) dmxbackend.$(OBJEXT) \
+am__objects_2 = dmxdummy.$(OBJEXT) dmxbackend.$(OBJEXT) \
 	dmxconsole.$(OBJEXT) dmxcommon.$(OBJEXT)
-am__objects_4 = dmxinputinit.$(OBJEXT) dmxarg.$(OBJEXT) \
+am__objects_3 = dmxinputinit.$(OBJEXT) dmxarg.$(OBJEXT) \
 	dmxevents.$(OBJEXT) dmxxinput.$(OBJEXT) dmxmotion.$(OBJEXT) \
 	dmxmap.$(OBJEXT)
 am_libdmxinput_a_OBJECTS = ChkNotMaskEv.$(OBJEXT) $(am__objects_1) \
-	$(am__objects_2) $(am__objects_3) $(am__objects_4)
+	$(am__objects_2) $(am__objects_3)
 libdmxinput_a_OBJECTS = $(am_libdmxinput_a_OBJECTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -333,6 +330,7 @@ RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
 RELEASE_DATE = @RELEASE_DATE@
+SCANNER_ARG = @SCANNER_ARG@
 SDK_REQUIRED_MODULES = @SDK_REQUIRED_MODULES@
 SED = @SED@
 SELINUX_CFLAGS = @SELINUX_CFLAGS@
@@ -351,15 +349,18 @@ SYSCONFDIR = @SYSCONFDIR@
 SYSTEMD_DAEMON_CFLAGS = @SYSTEMD_DAEMON_CFLAGS@
 SYSTEMD_DAEMON_LIBS = @SYSTEMD_DAEMON_LIBS@
 TRADITIONALCPPFLAGS = @TRADITIONALCPPFLAGS@
-TSLIB_CFLAGS = @TSLIB_CFLAGS@
-TSLIB_LIBS = @TSLIB_LIBS@
 UDEV_CFLAGS = @UDEV_CFLAGS@
 UDEV_LIBS = @UDEV_LIBS@
 UTILS_SYS_LIBS = @UTILS_SYS_LIBS@
 VENDOR_NAME_SHORT = @VENDOR_NAME_SHORT@
 VERSION = @VERSION@
+WAYLAND_EGLSTREAM_CFLAGS = @WAYLAND_EGLSTREAM_CFLAGS@
+WAYLAND_EGLSTREAM_DATADIR = @WAYLAND_EGLSTREAM_DATADIR@
+WAYLAND_EGLSTREAM_LIBS = @WAYLAND_EGLSTREAM_LIBS@
 WAYLAND_PROTOCOLS_DATADIR = @WAYLAND_PROTOCOLS_DATADIR@
 WAYLAND_SCANNER = @WAYLAND_SCANNER@
+WAYLAND_SCANNER_CFLAGS = @WAYLAND_SCANNER_CFLAGS@
+WAYLAND_SCANNER_LIBS = @WAYLAND_SCANNER_LIBS@
 WINDOWSDRI_CFLAGS = @WINDOWSDRI_CFLAGS@
 WINDOWSDRI_LIBS = @WINDOWSDRI_LIBS@
 WINDOWSWM_CFLAGS = @WINDOWSWM_CFLAGS@
@@ -367,6 +368,8 @@ WINDOWSWM_LIBS = @WINDOWSWM_LIBS@
 WINDRES = @WINDRES@
 X11EXAMPLES_DEP_CFLAGS = @X11EXAMPLES_DEP_CFLAGS@
 X11EXAMPLES_DEP_LIBS = @X11EXAMPLES_DEP_LIBS@
+XCONFIGDIR = @XCONFIGDIR@
+XCONFIGFILE = @XCONFIGFILE@
 XDMCP_CFLAGS = @XDMCP_CFLAGS@
 XDMCP_LIBS = @XDMCP_LIBS@
 XDMXCONFIG_DEP_CFLAGS = @XDMXCONFIG_DEP_CFLAGS@
@@ -438,8 +441,6 @@ XWIN_SERVER_NAME = @XWIN_SERVER_NAME@
 XWIN_SYS_LIBS = @XWIN_SYS_LIBS@
 YACC = @YACC@
 YFLAGS = @YFLAGS@
-__XCONFIGDIR__ = @__XCONFIGDIR__@
-__XCONFIGFILE__ = @__XCONFIGFILE__@
 abi_ansic = @abi_ansic@
 abi_extension = @abi_extension@
 abi_videodrv = @abi_videodrv@
@@ -505,13 +506,6 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 noinst_LIBRARIES = libdmxinput.a
-@DMX_BUILD_LNX_TRUE@RAWSRCS = lnx-keyboard.c \
-@DMX_BUILD_LNX_TRUE@          lnx-keyboard.h \
-@DMX_BUILD_LNX_TRUE@          lnx-ms.c \
-@DMX_BUILD_LNX_TRUE@          lnx-ms.h \
-@DMX_BUILD_LNX_TRUE@          lnx-ps2.c \
-@DMX_BUILD_LNX_TRUE@          lnx-ps2.h
-
 @DMX_BUILD_USB_TRUE@USBSRCS = usb-keyboard.c \
 @DMX_BUILD_USB_TRUE@          usb-keyboard.h \
 @DMX_BUILD_USB_TRUE@          usb-mouse.c \
@@ -619,9 +613,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxmap.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxmotion.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxxinput.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lnx-keyboard.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lnx-ms.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lnx-ps2.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/usb-common.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/usb-keyboard.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/usb-mouse.Po@am__quote@
