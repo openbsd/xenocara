@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.418 2019/07/27 08:05:17 matthieu Exp $
+# $OpenBSD: MODULES,v 1.419 2019/08/04 13:37:42 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -151,20 +151,20 @@ font/util			1.3.1
 font/winitzki-cyrillic		1.0.3
 font/xfree86-type1		1.0.4
 
-lib/libICE			1.0.10		needs-update
+lib/libICE			1.0.10
 lib/libSM			1.2.3
-lib/libX11			1.6.8		needs-update
+lib/libX11			1.6.8
 lib/libXScrnSaver		1.2.3
 lib/libXau			1.0.9
 lib/libXaw			1.0.13
 lib/libXcomposite		0.4.5
 lib/libXcursor			1.2.0
 lib/libXdamage			1.1.5
-lib/libXdmcp			1.1.3		needs-update
+lib/libXdmcp			1.1.3
 lib/libXext			1.3.4
 lib/libXfixes			5.0.3
 lib/libXfont2			2.0.3
-lib/libXft			2.3.3		needs-update
+lib/libXft			2.3.3
 lib/libXi			1.7.10		needs-update
 lib/libXinerama			1.1.4
 lib/libXmu			1.1.3		needs-update
@@ -186,7 +186,7 @@ lib/libxcb			1.13
 lib/libxkbfile			1.1.0		needs-update
 lib/libxkbui			1.0.2
 lib/libxshmfence		1.3
-lib/libxtrans			1.4.0		needs-update
+lib/libxtrans			1.4.0
 lib/pixman			0.38.4
 lib/xcb-util			0.4.0
 lib/xcb-util-cursor		0.1.3
