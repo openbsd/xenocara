@@ -22,7 +22,7 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libXdmcp], [1.1.2],
+AC_INIT([libXdmcp], [1.1.3],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXdmcp])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -55,9 +55,17 @@ AC_PROG_LN_S
 # Checks for libraries.
 AC_SEARCH_LIBS([recvfrom],[socket])
 
+case $host_os in
+     *mingw*)
+        AC_CHECK_LIB([ws2_32],[main])
+        ;;
+     *)
+        ;;
+esac
+
 # Checks for library functions.
 AC_CHECK_LIB([bsd], [arc4random_buf])
-AC_CHECK_FUNCS([srand48 lrand48 arc4random_buf])
+AC_CHECK_FUNCS([srand48 lrand48 arc4random_buf getentropy])
 
 # Obtain compiler/linker options for depedencies
 PKG_CHECK_MODULES(XDMCP, xproto)
