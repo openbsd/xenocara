@@ -5383,7 +5383,7 @@ _LT_EOF
 	_LT_TAGVAR(hardcode_shlibpath_var, $1)=no
 	_LT_TAGVAR(hardcode_direct_absolute, $1)=yes
 	if test -z "`echo __ELF__ | $CC -E - | $GREP __ELF__`" || test "$host_os-$host_cpu" = "openbsd2.8-powerpc"; then
-	  _LT_TAGVAR(archive_cmds, $1)='$CC -shared $pic_flag ${wl}-soname ${wl}$soname -o $lib $libobjs $deplibs $compiler_flags'
+	  _LT_TAGVAR(archive_cmds, $1)='$CC -shared $pic_flag -o $lib $libobjs $deplibs $compiler_flags'
 	  _LT_TAGVAR(archive_expsym_cmds, $1)='$CC -shared $pic_flag -o $lib $libobjs $deplibs $compiler_flags ${wl}-retain-symbols-file,$export_symbols'
 	  _LT_TAGVAR(hardcode_libdir_flag_spec, $1)='${wl}-rpath,$libdir'
 	  _LT_TAGVAR(export_dynamic_flag_spec, $1)='${wl}-E'
