@@ -1,3 +1,79 @@
+commit a266847d3c17dcdfcac719a1aa970ad54f4b545a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 16 11:03:38 2019 -0700
+
+    libXft 2.3.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fab5adf8fa3073862267e14aece1adf9eed0541c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 16 11:03:17 2019 -0700
+
+    Add description of libXft to README.md
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b397ffb23f02389b6c6168e7826605789907d740
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 7 19:42:33 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bdfb2b0e0fbf02ae69fe6cb2fbe352c4231e5c54
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 19 22:20:38 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c418dc7594f98359ae10815f62ee3efc0a511cf8
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 13:52:49 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 6a12debafe35963d205e0dc78eb742ad898312b7
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 0d3402d1138afe9854452eb494acc649faa0dc9e
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit e8a83226bc10afb587f6f34daac44d2ef809c85e
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sun Oct 19 18:00:26 2014 -0500
+
+    XftDrawSrcPicture: Use XRenderCreateSolidFill when available
+    
+    Instead of creating 1x1 pictures, use the solid pictures added in
+    Render version 0.10
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
 commit 214f9b5306d833e2787c75fe41dfdc9228fcb738
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Jun 5 23:04:54 2014 -0700
