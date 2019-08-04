@@ -1906,7 +1906,7 @@
 ./usr/X11R6/man/man3/XkbAllocGeomKeyAliases.3
 ./usr/X11R6/man/man3/XkbAllocGeomKeys.3
 ./usr/X11R6/man/man3/XkbAllocGeomOutlines.3
-./usr/X11R6/man/man3/XkbAllocGeomOverlayKey.3
+./usr/X11R6/man/man3/XkbAllocGeomOverlayKeys.3
 ./usr/X11R6/man/man3/XkbAllocGeomOverlayRows.3
 ./usr/X11R6/man/man3/XkbAllocGeomOverlays.3
 ./usr/X11R6/man/man3/XkbAllocGeomPoints.3

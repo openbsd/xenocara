@@ -209,7 +209,7 @@
 ./usr/X11R6/lib/X11/xman.help
 ./usr/X11R6/lib/libICE.a
 ./usr/X11R6/lib/libICE.la
-./usr/X11R6/lib/libICE.so.10.0
+./usr/X11R6/lib/libICE.so.11.0
 ./usr/X11R6/lib/libSM.a
 ./usr/X11R6/lib/libSM.la
 ./usr/X11R6/lib/libSM.so.9.0
@@ -218,7 +218,7 @@
 ./usr/X11R6/lib/libX11-xcb.so.2.0
 ./usr/X11R6/lib/libX11.a
 ./usr/X11R6/lib/libX11.la
-./usr/X11R6/lib/libX11.so.16.1
+./usr/X11R6/lib/libX11.so.17.0
 ./usr/X11R6/lib/libXRes.a
 ./usr/X11R6/lib/libXRes.la
 ./usr/X11R6/lib/libXRes.so.5.1
