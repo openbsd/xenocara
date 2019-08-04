@@ -151,6 +151,7 @@ ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
+EXEEXT_FOR_BUILD = @EXEEXT_FOR_BUILD@
 FGREP = @FGREP@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
@@ -320,7 +321,7 @@ libman_PRE = \
 	XkbAllocGeomKeyAliases.man              \
 	XkbAllocGeomKeys.man                    \
 	XkbAllocGeomOutlines.man                \
-	XkbAllocGeomOverlayKey.man              \
+	XkbAllocGeomOverlayKeys.man             \
 	XkbAllocGeomOverlayRows.man             \
 	XkbAllocGeomOverlays.man                \
 	XkbAllocGeomPoints.man                  \

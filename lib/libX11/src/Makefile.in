@@ -60,7 +60,7 @@ host_triplet = @host@
 @MAKE_LINT_LIB_TRUE@am__append_3 = $(lintlib_DATA)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(srcdir)/config.h.in $(top_srcdir)/depcomp
+	$(srcdir)/config.h.in $(top_srcdir)/depcomp reallocarray.c
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_define_dir.m4 \
 	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
@@ -113,8 +113,8 @@ libX11_xcb_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(libX11_xcb_la_LDFLAGS) $(LDFLAGS) -o $@
 am__DEPENDENCIES_1 =
-libX11_la_DEPENDENCIES = $(USE_I18N_LIBS) $(USE_XCMS_LIBS) \
-	$(USE_XKB_LIBS) $(am__DEPENDENCIES_1)
+libX11_la_DEPENDENCIES = $(LTLIBOBJS) $(USE_I18N_LIBS) \
+	$(USE_XCMS_LIBS) $(USE_XKB_LIBS) $(am__DEPENDENCIES_1)
 am__libX11_la_SOURCES_DIST = AllCells.c AllowEv.c AllPlanes.c \
 	AutoRep.c Backgnd.c BdrWidth.c Bell.c Border.c ChAccCon.c \
 	ChActPGb.c ChClMode.c ChCmap.c ChGC.c ChKeyCon.c ChkIfEv.c \
@@ -149,23 +149,23 @@ am__libX11_la_SOURCES_DIST = AllCells.c AllowEv.c AllPlanes.c \
 	PropAlloc.c PutBEvent.c PutImage.c Quarks.c QuBest.c QuColor.c \
 	QuColors.c QuCurShp.c QuExt.c QuKeybd.c QuPntr.c QuStipShp.c \
 	QuTextE16.c QuTextExt.c QuTileShp.c QuTree.c RaiseWin.c \
-	RdBitF.c RecolorC.c ReconfWin.c ReconfWM.c Region.c RegstFlt.c \
-	RepWindow.c RestackWs.c RotProp.c ScrResStr.c SelInput.c \
-	SendEvent.c SetBack.c SetClMask.c SetClOrig.c SetCRects.c \
-	SetDashes.c SetFont.c SetFore.c SetFPath.c SetFunc.c \
-	SetHints.c SetIFocus.c SetLocale.c SetLStyle.c SetNrmHint.c \
-	SetPMask.c SetPntMap.c SetRGBCMap.c SetSOwner.c SetSSaver.c \
-	SetState.c SetStCmap.c SetStip.c SetTile.c SetTSOrig.c \
-	SetTxtProp.c SetWMCMapW.c SetWMProto.c StBytes.c StColor.c \
-	StColors.c StName.c StNColor.c StrKeysym.c StrToText.c Sync.c \
-	Synchro.c Text16.c Text.c TextExt16.c TextExt.c TextToStr.c \
-	TrCoords.c UndefCurs.c UngrabBut.c UngrabKbd.c UngrabKey.c \
-	UngrabPtr.c UngrabSvr.c UninsCmap.c UnldFont.c UnmapSubs.c \
-	UnmapWin.c utlist.h VisUtil.c WarpPtr.c Window.c WinEvent.c \
-	Withdraw.c WMGeom.c WMProps.c WrBitF.c Xatomtype.h xcb_disp.c \
-	xcb_io.c Xintatom.h Xintconn.h XlibAsync.c XlibInt.c \
-	Xprivate.h XomGeneric.h Xresinternal.h Xrm.c Xxcbint.h \
-	os2Stubs.c UIThrStubs.c
+	RdBitF.c reallocarray.h RecolorC.c ReconfWin.c ReconfWM.c \
+	Region.c RegstFlt.c RepWindow.c RestackWs.c RotProp.c \
+	ScrResStr.c SelInput.c SendEvent.c SetBack.c SetClMask.c \
+	SetClOrig.c SetCRects.c SetDashes.c SetFont.c SetFore.c \
+	SetFPath.c SetFunc.c SetHints.c SetIFocus.c SetLocale.c \
+	SetLStyle.c SetNrmHint.c SetPMask.c SetPntMap.c SetRGBCMap.c \
+	SetSOwner.c SetSSaver.c SetState.c SetStCmap.c SetStip.c \
+	SetTile.c SetTSOrig.c SetTxtProp.c SetWMCMapW.c SetWMProto.c \
+	StBytes.c StColor.c StColors.c StName.c StNColor.c StrKeysym.c \
+	StrToText.c Sync.c Synchro.c Text16.c Text.c TextExt16.c \
+	TextExt.c TextToStr.c TrCoords.c UndefCurs.c UngrabBut.c \
+	UngrabKbd.c UngrabKey.c UngrabPtr.c UngrabSvr.c UninsCmap.c \
+	UnldFont.c UnmapSubs.c UnmapWin.c utlist.h VisUtil.c WarpPtr.c \
+	Window.c WinEvent.c Withdraw.c WMGeom.c WMProps.c WrBitF.c \
+	Xatomtype.h xcb_disp.c xcb_io.c Xintatom.h Xintconn.h \
+	XlibAsync.c XlibInt.c Xprivate.h XomGeneric.h Xresinternal.h \
+	Xrm.c Xxcbint.h os2Stubs.c UIThrStubs.c
 @OS2_TRUE@am__objects_1 = os2Stubs.lo
 @THRSTUBS_TRUE@am__objects_2 = UIThrStubs.lo
 am_libX11_la_OBJECTS = AllCells.lo AllowEv.lo AllPlanes.lo AutoRep.lo \
@@ -347,6 +347,7 @@ ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
+EXEEXT_FOR_BUILD = @EXEEXT_FOR_BUILD@
 FGREP = @FGREP@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
@@ -573,23 +574,23 @@ libX11_la_SOURCES = AllCells.c AllowEv.c AllPlanes.c AutoRep.c \
 	PropAlloc.c PutBEvent.c PutImage.c Quarks.c QuBest.c QuColor.c \
 	QuColors.c QuCurShp.c QuExt.c QuKeybd.c QuPntr.c QuStipShp.c \
 	QuTextE16.c QuTextExt.c QuTileShp.c QuTree.c RaiseWin.c \
-	RdBitF.c RecolorC.c ReconfWin.c ReconfWM.c Region.c RegstFlt.c \
-	RepWindow.c RestackWs.c RotProp.c ScrResStr.c SelInput.c \
-	SendEvent.c SetBack.c SetClMask.c SetClOrig.c SetCRects.c \
-	SetDashes.c SetFont.c SetFore.c SetFPath.c SetFunc.c \
-	SetHints.c SetIFocus.c SetLocale.c SetLStyle.c SetNrmHint.c \
-	SetPMask.c SetPntMap.c SetRGBCMap.c SetSOwner.c SetSSaver.c \
-	SetState.c SetStCmap.c SetStip.c SetTile.c SetTSOrig.c \
-	SetTxtProp.c SetWMCMapW.c SetWMProto.c StBytes.c StColor.c \
-	StColors.c StName.c StNColor.c StrKeysym.c StrToText.c Sync.c \
-	Synchro.c Text16.c Text.c TextExt16.c TextExt.c TextToStr.c \
-	TrCoords.c UndefCurs.c UngrabBut.c UngrabKbd.c UngrabKey.c \
-	UngrabPtr.c UngrabSvr.c UninsCmap.c UnldFont.c UnmapSubs.c \
-	UnmapWin.c utlist.h VisUtil.c WarpPtr.c Window.c WinEvent.c \
-	Withdraw.c WMGeom.c WMProps.c WrBitF.c Xatomtype.h xcb_disp.c \
-	xcb_io.c Xintatom.h Xintconn.h XlibAsync.c XlibInt.c \
-	Xprivate.h XomGeneric.h Xresinternal.h Xrm.c Xxcbint.h \
-	$(am__append_1) $(am__append_2)
+	RdBitF.c reallocarray.h RecolorC.c ReconfWin.c ReconfWM.c \
+	Region.c RegstFlt.c RepWindow.c RestackWs.c RotProp.c \
+	ScrResStr.c SelInput.c SendEvent.c SetBack.c SetClMask.c \
+	SetClOrig.c SetCRects.c SetDashes.c SetFont.c SetFore.c \
+	SetFPath.c SetFunc.c SetHints.c SetIFocus.c SetLocale.c \
+	SetLStyle.c SetNrmHint.c SetPMask.c SetPntMap.c SetRGBCMap.c \
+	SetSOwner.c SetSSaver.c SetState.c SetStCmap.c SetStip.c \
+	SetTile.c SetTSOrig.c SetTxtProp.c SetWMCMapW.c SetWMProto.c \
+	StBytes.c StColor.c StColors.c StName.c StNColor.c StrKeysym.c \
+	StrToText.c Sync.c Synchro.c Text16.c Text.c TextExt16.c \
+	TextExt.c TextToStr.c TrCoords.c UndefCurs.c UngrabBut.c \
+	UngrabKbd.c UngrabKey.c UngrabPtr.c UngrabSvr.c UninsCmap.c \
+	UnldFont.c UnmapSubs.c UnmapWin.c utlist.h VisUtil.c WarpPtr.c \
+	Window.c WinEvent.c Withdraw.c WMGeom.c WMProps.c WrBitF.c \
+	Xatomtype.h xcb_disp.c xcb_io.c Xintatom.h Xintconn.h \
+	XlibAsync.c XlibInt.c Xprivate.h XomGeneric.h Xresinternal.h \
+	Xrm.c Xxcbint.h $(am__append_1) $(am__append_2)
 x11datadir = @X11_DATADIR@
 x11data_DATA = XErrorDB
 EXTRA_DIST = \
@@ -608,6 +609,7 @@ libX11_xcb_la_LDFLAGS = -version-number 1:0:0 -no-undefined
 @XKB_TRUE@USE_XKB_LIBS = $(XKB_LIBS)
 libX11_la_LDFLAGS = -version-number 6:3:0 -no-undefined
 libX11_la_LIBADD = \
+	$(LTLIBOBJS) \
 	$(USE_I18N_LIBS) \
 	$(USE_XCMS_LIBS) \
 	$(USE_XKB_LIBS) \
@@ -716,6 +718,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/reallocarray.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/AllCells.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/AllPlanes.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/AllowEv.Plo@am__quote@
@@ -1277,7 +1280,7 @@ clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-recursive
-	-rm -rf ./$(DEPDIR)
+	-rm -rf $(DEPDIR) ./$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-hdr distclean-tags
@@ -1323,7 +1326,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-recursive
-	-rm -rf ./$(DEPDIR)
+	-rm -rf $(DEPDIR) ./$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
@@ -1383,11 +1386,11 @@ preprocess: $(patsubst %.c,%.ii,$(libX11_la_SOURCES))
 @MAKE_LINT_LIB_TRUE@$(LINTLIB): $(libX11_la_SOURCES)
 @MAKE_LINT_LIB_TRUE@	$(AM_V_GEN)$(LINT) -y -oX11 -x $(ALL_LINT_FLAGS) $(lintlib_src)
 
-ks_tables.h: $(KEYSYMDEFS) $(top_builddir)/src/util/makekeys$(EXEEXT)
+ks_tables.h: $(KEYSYMDEFS) $(top_builddir)/src/util/makekeys$(EXEEXT_FOR_BUILD)
 	$(top_builddir)/src/util/makekeys $(KEYSYMDEFS) > ks_tables_h
 	mv ks_tables_h $@
 
-$(top_builddir)/src/util/makekeys$(EXEEXT): $(top_builddir)/src/util/makekeys.c
+$(top_builddir)/src/util/makekeys$(EXEEXT_FOR_BUILD): $(top_builddir)/src/util/makekeys.c
 	cd util && $(MAKE)
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

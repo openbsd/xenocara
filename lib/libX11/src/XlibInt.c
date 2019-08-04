@@ -39,6 +39,7 @@ from The Open Group.
 #endif
 #include "Xlibint.h"
 #include "Xprivate.h"
+#include "reallocarray.h"
 #include <X11/Xpoll.h>
 #include <assert.h>
 #include <stdio.h>
@@ -46,8 +47,27 @@ from The Open Group.
 #include <direct.h>
 #endif
 
+/* Needed for FIONREAD on Solaris */
+#ifdef HAVE_SYS_FILIO_H
+#include <sys/filio.h>
+#endif
+
+/* Needed for FIONREAD on Cygwin */
+#ifdef HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+
+/* Needed for ioctl() on Solaris */
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
 #ifdef XTHREADS
 #include "locking.h"
+
+#ifdef HAVE_SYS_IOCTL_H
+#include <sys/ioctl.h>
+#endif
 
 /* these pointers get initialized by XInitThreads */
 LockInfoPtr _Xglobal_lock = NULL;
@@ -349,7 +369,7 @@ _XRegisterInternalConnection(
     new_conni = Xmalloc(sizeof(struct _XConnectionInfo));
     if (!new_conni)
 	return 0;
-    new_conni->watch_data = Xmalloc(dpy->watcher_count * sizeof(XPointer));
+    new_conni->watch_data = Xmallocarray(dpy->watcher_count, sizeof(XPointer));
     if (!new_conni->watch_data) {
 	Xfree(new_conni);
 	return 0;
@@ -435,7 +455,7 @@ XInternalConnectionNumbers(
     count = 0;
     for (info_list=dpy->im_fd_info; info_list; info_list=info_list->next)
 	count++;
-    fd_list = Xmalloc (count * sizeof(int));
+    fd_list = Xmallocarray (count, sizeof(int));
     if (!fd_list) {
 	UnlockDisplay(dpy);
 	return 0;
@@ -508,8 +528,8 @@ XAddConnectionWatch(
 
     /* allocate new watch data */
     for (info_list=dpy->im_fd_info; info_list; info_list=info_list->next) {
-	wd_array = Xrealloc(info_list->watch_data,
-			    (dpy->watcher_count + 1) * sizeof(XPointer));
+	wd_array = Xreallocarray(info_list->watch_data,
+                                 dpy->watcher_count + 1, sizeof(XPointer));
 	if (!wd_array) {
 	    UnlockDisplay(dpy);
 	    return 0;
@@ -1233,6 +1253,21 @@ _XWireToEvent(
 	return(True);
 }
 
+static int
+SocketBytesReadable(Display *dpy)
+{
+    int bytes = 0, last_error;
+#ifdef WIN32
+    last_error = WSAGetLastError();
+    ioctlsocket(ConnectionNumber(dpy), FIONREAD, &bytes);
+    WSASetLastError(last_error);
+#else
+    last_error = errno;
+    ioctl(ConnectionNumber(dpy), FIONREAD, &bytes);
+    errno = last_error;
+#endif
+    return bytes;
+}
 
 /*
  * _XDefaultIOError - Default fatal system error reporting routine.  Called
@@ -1241,25 +1276,35 @@ _XWireToEvent(
 _X_NORETURN int _XDefaultIOError(
 	Display *dpy)
 {
-	if (ECHECK(EPIPE)) {
-	    (void) fprintf (stderr,
-	"X connection to %s broken (explicit kill or server shutdown).\r\n",
-			    DisplayString (dpy));
-	} else {
-	    (void) fprintf (stderr,
-			"XIO:  fatal IO error %d (%s) on X server \"%s\"\r\n",
-#ifdef WIN32
-			WSAGetLastError(), strerror(WSAGetLastError()),
-#else
-			errno, strerror (errno),
-#endif
-			DisplayString (dpy));
-	    (void) fprintf (stderr,
-	 "      after %lu requests (%lu known processed) with %d events remaining.\r\n",
-			NextRequest(dpy) - 1, LastKnownRequestProcessed(dpy),
-			QLength(dpy));
+	int killed = ECHECK(EPIPE);
 
-	}
+	/*
+	 * If the socket was closed on the far end, the final recvmsg in
+	 * xcb will have thrown EAGAIN because we're non-blocking. Detect
+	 * this to get the more informative error message.
+	 */
+	if (ECHECK(EAGAIN) && SocketBytesReadable(dpy) <= 0)
+	    killed = True;
+
+	if (killed) {
+	    fprintf (stderr,
+                     "X connection to %s broken (explicit kill or server shutdown).\r\n",
+                     DisplayString (dpy));
+	} else {
+            fprintf (stderr,
+                     "XIO:  fatal IO error %d (%s) on X server \"%s\"\r\n",
+#ifdef WIN32
+                      WSAGetLastError(), strerror(WSAGetLastError()),
+#else
+                      errno, strerror (errno),
+#endif
+                      DisplayString (dpy));
+	    fprintf (stderr,
+		     "      after %lu requests (%lu known processed) with %d events remaining.\r\n",
+		     NextRequest(dpy) - 1, LastKnownRequestProcessed(dpy),
+		     QLength(dpy));
+        }
+
 	exit(1);
 	/*NOTREACHED*/
 }

@@ -51,7 +51,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
+DIST_COMMON = $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/x11-xcb.pc.in \
 	$(srcdir)/x11.pc.in $(top_srcdir)/configure \
 	$(top_srcdir)/include/X11/XlibConf.h.in AUTHORS COPYING \
@@ -215,6 +215,7 @@ ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
+EXEEXT_FOR_BUILD = @EXEEXT_FOR_BUILD@
 FGREP = @FGREP@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
@@ -368,6 +369,7 @@ MAINTAINERCLEANFILES = ChangeLog INSTALL
 
 # Check source code with tools like lint & sparse
 @LINT_TRUE@LINT_SUBDIRS = src # modules
+EXTRA_DIST = README.md
 all: all-recursive
 
 .SUFFIXES:

@@ -239,6 +239,7 @@ libX11_la_SOURCES = \
                   QuTree.c \
                   RaiseWin.c \
                   RdBitF.c \
+                  reallocarray.h \
                   RecolorC.c \
                   ReconfWin.c \
                   ReconfWM.c \
@@ -366,6 +367,7 @@ endif
 libX11_la_LDFLAGS = -version-number 6:3:0 -no-undefined
 
 libX11_la_LIBADD = \
+	$(LTLIBOBJS) \
 	$(USE_I18N_LIBS) \
 	$(USE_XCMS_LIBS) \
 	$(USE_XKB_LIBS) \
@@ -411,9 +413,9 @@ endif MAKE_LINT_LIB
 
 KEYSYMDEFS=@KEYSYMDEFS@
 
-ks_tables.h: $(KEYSYMDEFS) $(top_builddir)/src/util/makekeys$(EXEEXT)
+ks_tables.h: $(KEYSYMDEFS) $(top_builddir)/src/util/makekeys$(EXEEXT_FOR_BUILD)
 	$(top_builddir)/src/util/makekeys $(KEYSYMDEFS) > ks_tables_h
 	mv ks_tables_h $@
 
-$(top_builddir)/src/util/makekeys$(EXEEXT): $(top_builddir)/src/util/makekeys.c
+$(top_builddir)/src/util/makekeys$(EXEEXT_FOR_BUILD): $(top_builddir)/src/util/makekeys.c
 	cd util && $(MAKE)

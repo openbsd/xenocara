@@ -66,6 +66,7 @@ from The Open Group.
 #endif
 #include <X11/Xutil.h>
 #include "XlcPubI.h"
+#include "reallocarray.h"
 
 #ifdef XTHREADS
 LockInfoPtr _Xi18n_lock;
@@ -327,7 +328,7 @@ _XCloseLC(
     for (prev = &lcd_list; (cur = *prev); prev = &cur->next) {
 	if (cur->lcd == lcd) {
 	    if (--cur->ref_count < 1) {
-		(*lcd->methods->close)(lcd);
+		_XlcDestroyLC(lcd);
 		*prev = cur->next;
 		Xfree(cur);
 	    }
@@ -564,7 +565,7 @@ _XlcVaToArgList(
 {
     XlcArgList args;
 
-    *args_ret = args = Xmalloc(sizeof(XlcArg) * count);
+    *args_ret = args = Xmallocarray(count, sizeof(XlcArg));
     if (args == (XlcArgList) NULL)
 	return;
 
