@@ -1,3 +1,408 @@
+commit 8e6a14c63d6b73cde87cb331439f2a4d19cba5b9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 14 10:37:25 2019 -0700
+
+    libICE 1.0.10
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b6aad584c1dc278364c295165512b5f5b98c173e
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Thu Apr 11 09:05:15 2019 +0200
+
+    cleanup: Separate variable assignment and test
+    
+    Assigning and testing a value in a single statement hinders code clarity
+    and may confuses static code analyzers.
+    
+    Separate the assignment and the test for clarity.
+    
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+
+commit 772e5b0fdfc9dbd8bec070bd0c4c7eb5565df2ee
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Wed Apr 10 11:15:11 2019 +0200
+
+    _IceRead: Avoid possible use-after-free
+    
+    `_IceRead()` gets called from multiple places which do not expect the
+    connection to be freed.
+    
+    Do not free the connection data in `_IceRead()` to avoid potential
+    use-after-free issue in the various callers.
+    
+    The connection data will be freed eventually in `ProcessWantToClose()`,
+    so not freeing it in `_IceRead()` should not introduce an memory leak.
+    
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+
+commit 1493beba2aa03bdadeed8b4fa5d424df6e113071
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Wed Apr 10 11:01:31 2019 +0200
+
+    IceListenForWellKnownConnections: Fix memleak
+    
+    The function `_IceTransMakeAllCOTSServerListeners` allocates memory for
+    `transConns` which is leaked in case of error.
+    
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+
+commit a67a477eefdc93c32fa82da6ff0b4e69dd4c2ccb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 24 15:29:34 2019 -0700
+
+    IceWritePad: always use zero values for pad bytes
+    
+    Previously it would just bump the pointer in the buffer leaving
+    whatever values were previously there in place.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2318ace3340009c44e78eab094f159f0e0b4a197
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 24 14:36:10 2019 -0700
+
+    IceOpenConnection: check for malloc failure on connect_to_you too
+    
+    Fixes: https://gitlab.freedesktop.org/xorg/lib/libice/issues/4
+    
+    Reported-by: mahendra <mahendra.n@samsung.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b484311c929a1b64966d89da92fafce7263006e1
+Author: Allison Lortie <desrt@desrt.ca>
+Date:   Tue Jun 14 16:09:46 2016 -0400
+
+    authutil: support $XDG_RUNTIME_DIR/ICEauthority
+    
+    If we find that $XDG_RUNTIME_DIR is set (and $ICEAUTHORITY is not), then
+    the ICEauthority file is stored in the XDG_RUNTIME_DIR instead of the
+    home directory, and without a leading dot.
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=49173
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 48ed5e04b5a8ba64dcfeea090cf3a32d3087b749
+Author: Allison Lortie <desrt@desrt.ca>
+Date:   Tue Jun 14 16:08:21 2016 -0400
+
+    authutil: fix an out-of-bounds access
+    
+    There is a theoretical edge case where the $HOME environment variable
+    could be set to the empty string.  IceAuthFileName() unconditionally
+    checks index 1 of this string, which is out of bounds.
+    
+    Fix that up by rejecting empty strings in the same way as we reject
+    NULL.
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=49173
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 468b83ec4810b4ea2373182b5801f998f3dcd471
+Author: Tobias Stoeckmann <tobias@stoeckmann.org>
+Date:   Mon Jul 30 20:50:58 2018 +0200
+
+    Always terminate strncpy results.
+    
+    The function strncpy does not guarantee to append a terminating
+    NUL character to the destination.
+    
+    This patch merges libSM's way of handling this issue into libICE.
+    
+    Signed-off-by: Tobias Stoeckmann <tobias@stoeckmann.org>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1cc4ae8648590f04557a20c8d88d39cef7fe8119
+Author: walter harms <wharms@bfs.de>
+Date:   Thu Sep 7 18:52:13 2017 +0200
+
+    iceauth.c: FIX warning: unused variable 'ret' in 'arc4random_buf'
+    
+    commit ff5e59f32255913bb1cdf51441b98c9107ae165b left ret outside the #if
+    causing a gcc warning:
+    
+     In function 'arc4random_buf':
+     iceauth.c:89:13: warning: unused variable 'ret' [-Wunused-variable]
+    
+    fixed by moving  #if 1 up
+    
+    Signed-off-by:  Walter Harms <wharms@bfs.de>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ccbcae7d3409789bf346ca35963264d064f54cba
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 7 19:29:55 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e72ca90879db149bbee6232dd78a565e630e917d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 18 21:48:59 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dc73ec034c9083b8c7d980e80eb6d4c88bcfaa51
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 10 13:13:45 2018 -0800
+
+    Remove obsolete B16 & B32 tags in struct definitions
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f66955f7250d7c150dfb97862878acc2222781e5
+Author: walter harms <wharms@bfs.de>
+Date:   Fri Sep 8 20:03:03 2017 +0200
+
+    make IceProtocolShutdown() more readable
+    
+    I found IceProtocolShutdown() hard to read only to find that was
+    it does it aktually very simple. So i rearranged the code to make
+    it more readable.
+    
+    Signed-off-by: Walter Harms <wharms@bfs.de>
+    Reviewed-by: Eric Engestrom <eric.engestrom@imgtec.com>
+    [Emil Velikov: whitespace fixes]
+    Signed-off-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 936dcaac07f7db569ed91a34e0a4b5944aac205f
+Author: walter harms <wharms@bfs.de>
+Date:   Fri Sep 8 19:59:17 2017 +0200
+
+    Drop NULL check prior to free()
+    
+    free() can handle NULL just fine - remove the check.
+    
+    Signed-off-by: Walter Harms <wharms@bfs.de>
+    Reviewed-by: Eric Engestrom <eric.engestrom@imgtec.com>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 43644931cb9cb5cc92391f6f5431535b9b7a3f24
+Author: Eric Engestrom <eric.engestrom@imgtec.com>
+Date:   Fri Jul 7 11:23:48 2017 +0100
+
+    Make sure string is never NULL
+    
+    `error_message` is passed in to strncpy() without any check, which
+    doesn't handle NULL itself, so let's make it a valid empty string in
+    cases where it was NULL.
+    
+    Signed-off-by: Eric Engestrom <eric.engestrom@imgtec.com>
+    Acked-by: Walter Harms <wharms@bfs.de>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit e8c21056134498c49733f6baf572ffbb051ed886
+Author: Eric Engestrom <eric.engestrom@imgtec.com>
+Date:   Fri Jul 7 11:23:47 2017 +0100
+
+    Make sure error_message is a free-able string
+    
+    Similar to the previous commit, assigning a static string would crash
+    upon freeing.
+    
+    Signed-off-by: Eric Engestrom <eric.engestrom@imgtec.com>
+    Acked-by: Walter Harms <wharms@bfs.de>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 7a7844bf5ade915268fe7f9b292908c6cd75f3ba
+Author: Eric Engestrom <eric.engestrom@imgtec.com>
+Date:   Fri Jul 7 11:23:46 2017 +0100
+
+    Make sure errorStr is a free-able string
+    
+    If the `errorClass` isn't handled by the switch, `errorStr`'s initial
+    value would be a pointer to some static memory with an empty string,
+    and freeing it would most likely crash.
+    
+    Let's set it to NULL instead, as is done in other similar places.
+    
+    Signed-off-by: Eric Engestrom <eric.engestrom@imgtec.com>
+    Acked-by: Walter Harms <wharms@bfs.de>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 7ef9680caa8c223a09beb637e26fd3471128e6ba
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Sun May 8 09:19:36 2016 +0100
+
+    configure.ac: set TRANS_CLIENT/SERVER
+    
+    Similar to ICE_t just set the define globally and remove the multiple
+    definitions throughout the tree
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+    Reviewed-by: Eric Engestrom <eric.engestrom@imgtec.com> (IRC)
+
+commit ab64a947b5de5b778f31ede9cfce386566023a14
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Sun May 8 09:19:35 2016 +0100
+
+    Kill off local ICE_t definitions
+    
+    Already defined at global scale in configure.ac
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+    Reviewed-by: Eric Engestrom <eric.engestrom@imgtec.com> (IRC)
+
+commit f4c00d345edf3dad5893b50ff0ae7cd3e0cfd780
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Sun May 8 09:19:34 2016 +0100
+
+    Remove unneeded ^L symbols.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+    Reviewed-by: Eric Engestrom <eric.engestrom@imgtec.com> (IRC)
+
+commit d603d7d7d989c4ff1094810e9fcf2a29bc00bb0c
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Sun May 8 09:19:33 2016 +0100
+
+    Kill off Time_t macro
+    
+    Analogous to previous commit, including the megacommit that removed the
+    need for it.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+    Reviewed-by: Eric Engestrom <eric.engestrom@imgtec.com> (IRC)
+
+commit 82250f26fc76d7b7574cfd472646a98e325d944a
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Sun May 8 09:19:32 2016 +0100
+
+    Kill off Strstr macro
+    
+    Directly use the strstr function as opposed to wrapping it in a macro.
+    The latter is no longer needed as of
+    
+    commit 72e353567f8927996a26e72848d86f692c3f0737
+    Author: Kaleb Keithley <kaleb@freedesktop.org>
+    Date:   Fri Nov 14 16:48:46 2003 +0000
+    
+        XFree86 4.3.0.1
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+    Reviewed-by: Eric Engestrom <eric.engestrom@imgtec.com> (IRC)
+
+commit ff5e59f32255913bb1cdf51441b98c9107ae165b
+Author: Benjamin Tissoires <benjamin.tissoires@gmail.com>
+Date:   Tue Apr 4 19:12:53 2017 +0200
+
+    Use getentropy() if arc4random_buf() is not available
+    
+    This allows to fix CVE-2017-2626 on Linux platforms without pulling in
+    libbsd.
+    The libc getentropy() is available since glibc 2.25 but also on OpenBSD.
+    For Linux, we need at least a v3.17 kernel. If the recommended
+    arc4random_buf() function is not available, emulate it by first trying
+    to use getentropy() on a supported glibc and kernel. If the call fails,
+    fall back to the current (partly vulnerable) code.
+    
+    Signed-off-by: Benjamin Tissoires <benjamin.tissoires@gmail.com>
+    Reviewed-by: Mark Kettenis <kettenis@openbsd.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 1746abbb1ae1c41ba29c14895c5bd3f1334faef5
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 13:52:49 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 3aa14db63fefb7634b1bd4370e33ba14c4ea90ae
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit d41c57eaa0c1474acf0a6fb271f22106e3070016
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit ac4bb20e74e064b219de70e9b54516a921fdb7c3
+Author: Tobias Stoeckmann <tobias@stoeckmann.org>
+Date:   Tue Nov 22 20:13:29 2016 +0100
+
+    Fix use after free on subsequent calls
+    
+    The function IceAuthFileName is vulnerable to a use after free. The
+    flaw can be triggered by calling the function three times:
+    
+    - First call succeeds and stores the path in buf, a dynamically
+      allocated buffer with size bsize.
+    - Second call fails due to out of memory. It frees buf, but keeps
+      the old size in bsize.
+    - Third call only checks if bsize is large enough. Then it uses
+      buf without allocating it again -- the use after free happens.
+    
+    In order to exploit this, an attacker must change environment variables
+    between each call, namely ICEAUTHORITY or HOME. It also takes subsequent
+    calls. Due to these limitations, I don't consider this to be of high
+    priority.
+    
+    Reviewed-by: Matthieu Herrb <matthieu@herrb.eu>
+
+commit b1720edc9b9f3e7a05caa3fcd81761e5818ea255
+Author: Remko van der Vossen <bugs@yuugen.jp>
+Date:   Sun Jul 19 08:34:11 2015 -0700
+
+    Bug 90616 - libICE build fails on array bounds check
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=90616
+    
+    Recent versions of gcc have array bounds checking turned on by default,
+    this leads to build failures of libICE. As the _IceVersionCount variable
+    in ICElibint.h is not declared const the compiler cannot assume that the
+    nested for loop in ProcessConnectionSetup stays within bounds.
+    
+    The simple fix is of course to change the declarations of _IceVersionCount,
+    _IceVersions, and the local variable myVersionCount to const declarations.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8a511dad53774693ed818d54d7896e1663942b18
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Sat Sep 13 17:13:44 2014 +0100
+
+    Include unistd.h for getpid()
+    
+    Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Reviewed-by: David Macek <david.macek.0@gmail.com>
+
+commit fd22b62ae6380ddb00fa4c750f5ce175d2a6e76f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Sep 14 13:08:17 2014 -0700
+
+    spec: Convert troff \*Q..\*U to DocBook <quote>...</quote>
+    
+    Reported-by: Jasper St. Pierre <jstpierre@mecheye.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jasper St. Pierre <jstpierre@mecheye.net>
+
 commit 0dfab4253e26d5c6e5f058126eb5e9f7a7732ae8
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Jun 6 18:28:28 2014 -0700

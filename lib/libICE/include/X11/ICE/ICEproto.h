@@ -35,18 +35,18 @@ typedef struct {
     CARD8	majorOpcode;
     CARD8	minorOpcode;
     CARD8	data[2];
-    CARD32	length B32;
+    CARD32	length;
 } iceMsg;
 
 typedef struct {
     CARD8	majorOpcode;
     CARD8	minorOpcode;
-    CARD16	errorClass B16;
-    CARD32	length B32;
+    CARD16	errorClass;
+    CARD32	length;
     CARD8	offendingMinorOpcode;
     CARD8	severity;
-    CARD16	unused B16;
-    CARD32	offendingSequenceNum B32;
+    CARD16	unused;
+    CARD32	offendingSequenceNum;
     /* n	varying values */
     /* p	p = pad (n, 8) */
 } iceErrorMsg;
@@ -56,7 +56,7 @@ typedef struct {
     CARD8	minorOpcode;
     CARD8	byteOrder;
     CARD8	unused;
-    CARD32	length B32;
+    CARD32	length;
 } iceByteOrderMsg;
 
 typedef struct {
@@ -64,7 +64,7 @@ typedef struct {
     CARD8	minorOpcode;
     CARD8	versionCount;
     CARD8	authCount;
-    CARD32	length B32;
+    CARD32	length;
     CARD8	mustAuthenticate;
     CARD8	unused[7];
     /* i	STRING		vendor */
@@ -79,8 +79,8 @@ typedef struct {
     CARD8	minorOpcode;
     CARD8	authIndex;
     CARD8	unused1;
-    CARD32	length B32;
-    CARD16	authDataLength B16;
+    CARD32	length;
+    CARD16	authDataLength;
     CARD8	unused2[6];
     /* n	varying data */
     /* p	p = pad (n, 8) */
@@ -90,8 +90,8 @@ typedef struct {
     CARD8	majorOpcode;
     CARD8	minorOpcode;
     CARD8	unused1[2];
-    CARD32	length B32;
-    CARD16	authDataLength B16;
+    CARD32	length;
+    CARD16	authDataLength;
     CARD8	unused2[6];
     /* n	varying data */
     /* p	p = pad (n, 8) */
@@ -101,8 +101,8 @@ typedef struct {
     CARD8	majorOpcode;
     CARD8	minorOpcode;
     CARD8	unused1[2];
-    CARD32	length B32;
-    CARD16	authDataLength B16;
+    CARD32	length;
+    CARD16	authDataLength;
     CARD8	unused2[6];
     /* n	varying data */
     /* p	p = pad (n, 8) */
@@ -113,7 +113,7 @@ typedef struct {
     CARD8	minorOpcode;
     CARD8	versionIndex;
     CARD8	unused;
-    CARD32	length B32;
+    CARD32	length;
     /* i	STRING		vendor */
     /* j	STRING		release */
     /* p	p = pad (i+j, 8) */
@@ -124,7 +124,7 @@ typedef struct {
     CARD8	minorOpcode;
     CARD8	protocolOpcode;
     CARD8	mustAuthenticate;
-    CARD32	length B32;
+    CARD32	length;
     CARD8	versionCount;
     CARD8	authCount;
     CARD8	unused[6];
@@ -141,7 +141,7 @@ typedef struct {
     CARD8	minorOpcode;
     CARD8	versionIndex;
     CARD8	protocolOpcode;
-    CARD32	length B32;
+    CARD32	length;
     /* i	STRING		vendor */
     /* j	STRING		release */
     /* p	p = pad (i+j, 8) */

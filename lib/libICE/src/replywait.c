@@ -72,7 +72,7 @@ _IceAddReplyWait (
 }
 
 
-
+
 IceReplyWaitInfo *
 _IceSearchReplyWaits (
 	IceConn	iceConn,
@@ -95,7 +95,7 @@ _IceSearchReplyWaits (
 }
 
 
-
+
 void
 _IceSetReplyReady (
 	IceConn			iceConn,
@@ -116,7 +116,7 @@ _IceSetReplyReady (
 }
 
 
-
+
 Bool
 _IceCheckReplyReady (
 	IceConn			iceConn,

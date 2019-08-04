@@ -38,7 +38,6 @@ Author: Ralph Mor, X Consortium
 #include <limits.h>
 
 #include <time.h>
-#define Time_t time_t
 #ifndef X_NOT_POSIX
 #include <unistd.h>
 #else
@@ -57,7 +56,7 @@ static Status write_string (FILE *file, const char *string);
 static Status write_counted_string (FILE *file, unsigned short count, const char *string);
 
 
-
+
 /*
  * The following routines are for manipulating the .ICEauthority file
  * These are utility functions - they are not part of the standard
@@ -67,7 +66,7 @@ static Status write_counted_string (FILE *file, unsigned short count, const char
 char *
 IceAuthFileName (void)
 {
-    static char slashDotICEauthority[] = "/.ICEauthority";
+    const char  *ICEauthority_name = ".ICEauthority";
     char    	*name;
     static char	*buf;
     static size_t bsize;
@@ -82,9 +81,14 @@ IceAuthFileName (void)
     if ((name = getenv ("ICEAUTHORITY")))
 	return (name);
 
-    name = getenv ("HOME");
+    /* If it's in the XDG_RUNTIME_DIR, don't use a dotfile */
+    if ((name = getenv ("XDG_RUNTIME_DIR")))
+	ICEauthority_name++;
 
-    if (!name)
+    if (!name || !name[0])
+	name = getenv ("HOME");
+
+    if (!name || !name[0])
     {
 #ifdef WIN32
     register char *ptr1;
@@ -102,31 +106,36 @@ IceAuthFileName (void)
 	snprintf (dir, sizeof(dir), "%s%s", ptr1, (ptr2) ? ptr2 : "");
 	name = dir;
     }
-    if (!name)
+    if (!name || !name[0])
 #endif
 	return (NULL);
     }
 
-    size = strlen (name) + strlen (&slashDotICEauthority[1]) + 2;
+    /* Special case for "/".  We will add our own '/' later. */
+    if (name[1] == '\0')
+	name++;
+
+    size = strlen (name) + 1 + strlen (ICEauthority_name) + 1;
 
     if (size > bsize)
     {
-	if (buf)
-	    free (buf);
+
+	free (buf);
 	buf = malloc (size);
-	if (!buf)
+	if (!buf) {
+	    bsize = 0;
 	    return (NULL);
+	}
 	bsize = size;
     }
 
-    snprintf (buf, bsize, "%s%s", name,
-              slashDotICEauthority + (name[1] == '\0' ? 1 : 0));
+    snprintf (buf, bsize, "%s/%s", name, ICEauthority_name);
 
     return (buf);
 }
 
 
-
+
 int
 IceLockAuthFile (
 	const char *file_name,
@@ -137,7 +146,7 @@ IceLockAuthFile (
 {
     char	creat_name[1025], link_name[1025];
     struct stat	statb;
-    Time_t	now;
+    time_t	now;
     int		creat_fd = -1;
 
     if ((int) strlen (file_name) > 1022)
@@ -148,7 +157,7 @@ IceLockAuthFile (
 
     if (stat (creat_name, &statb) != -1)
     {
-	now = time ((Time_t *) 0);
+	now = time ((time_t *) 0);
 
 	/*
 	 * NFS may cause ctime to be before now, special
@@ -200,7 +209,7 @@ IceLockAuthFile (
 }
 
 
-
+
 void
 IceUnlockAuthFile (
 	const char	*file_name
@@ -223,7 +232,7 @@ IceUnlockAuthFile (
 }
 
 
-
+
 IceAuthFileEntry *
 IceReadAuthFileEntry (
 	FILE	*auth_file
@@ -264,17 +273,17 @@ IceReadAuthFileEntry (
 
  bad:
 
-    if (local.protocol_name) free (local.protocol_name);
-    if (local.protocol_data) free (local.protocol_data);
-    if (local.network_id) free (local.network_id);
-    if (local.auth_name) free (local.auth_name);
-    if (local.auth_data) free (local.auth_data);
+    free (local.protocol_name);
+    free (local.protocol_data);
+    free (local.network_id);
+    free (local.auth_name);
+    free (local.auth_data);
 
     return (NULL);
 }
 
 
-
+
 void
 IceFreeAuthFileEntry (
 	IceAuthFileEntry	*auth
@@ -282,17 +291,17 @@ IceFreeAuthFileEntry (
 {
     if (auth)
     {
-	if (auth->protocol_name) free (auth->protocol_name);
-	if (auth->protocol_data) free (auth->protocol_data);
-	if (auth->network_id) free (auth->network_id);
-	if (auth->auth_name) free (auth->auth_name);
-	if (auth->auth_data) free (auth->auth_data);
+	free (auth->protocol_name);
+	free (auth->protocol_data);
+	free (auth->network_id);
+	free (auth->auth_name);
+	free (auth->auth_data);
 	free (auth);
     }
 }
 
 
-
+
 Status
 IceWriteAuthFileEntry (
 	FILE			*auth_file,
@@ -320,7 +329,7 @@ IceWriteAuthFileEntry (
 }
 
 
-
+
 IceAuthFileEntry *
 IceGetAuthFileEntry (
 	const char	*protocol_name,
@@ -362,7 +371,7 @@ IceGetAuthFileEntry (
 }
 
 
-
+
 /*
  * local routines
  */

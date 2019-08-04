@@ -2738,7 +2738,7 @@ headers:
      CARD8	major_opcode;
      CARD8	minor_opcode;
      CARD8	data[2];
-     CARD32	length B32;
+     CARD32	length;
 </literallayout>
 
 <para>

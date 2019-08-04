@@ -34,7 +34,7 @@ Author: Ralph Mor,  X Consortium
 #include <X11/Xtrans/Xtrans.h>
 #include <stdio.h>
 
-
+
 Status
 IceListenForConnections (
 	int		*countRet,
@@ -56,8 +56,11 @@ IceListenForConnections (
 	*listenObjsRet = NULL;
 	*countRet = 0;
 
-        strncpy (errorStringRet,
-	    "Cannot establish any listening sockets", errorLength);
+	if (errorStringRet && errorLength > 0) {
+	    strncpy (errorStringRet,
+		"Cannot establish any listening sockets", errorLength);
+	    errorStringRet[errorLength - 1] = '\0';
+	}
 
 	return (0);
     }
@@ -91,8 +94,11 @@ IceListenForConnections (
     {
 	*listenObjsRet = NULL;
 
-        strncpy (errorStringRet,
-	    "Cannot establish any listening sockets", errorLength);
+	if (errorStringRet && errorLength > 0) {
+	    strncpy (errorStringRet,
+		"Cannot establish any listening sockets", errorLength);
+	    errorStringRet[errorLength - 1] = '\0';
+	}
 
 	status = 0;
     }
@@ -102,7 +108,10 @@ IceListenForConnections (
 
 	if (*listenObjsRet == NULL)
 	{
-	    strncpy (errorStringRet, "Malloc failed", errorLength);
+	    if (errorStringRet && errorLength > 0) {
+		strncpy (errorStringRet, "Malloc failed", errorLength);
+		errorStringRet[errorLength - 1] = '\0';
+	    }
 
 	    status = 0;
 	}
@@ -114,7 +123,10 @@ IceListenForConnections (
 
 		if ((*listenObjsRet)[i] == NULL)
 		{
-		    strncpy (errorStringRet, "Malloc failed", errorLength);
+		    if (errorStringRet && errorLength > 0) {
+			strncpy (errorStringRet, "Malloc failed", errorLength);
+			errorStringRet[errorLength - 1] = '\0';
+		    }
 
 		    for (j = 0; j < i; j++)
 			free ((*listenObjsRet)[j]);
@@ -156,7 +168,7 @@ IceListenForConnections (
 }
 
 
-
+
 int
 IceGetListenConnectionNumber (
 	IceListenObj listenObj
@@ -166,7 +178,7 @@ IceGetListenConnectionNumber (
 }
 
 
-
+
 char *
 IceGetListenConnectionString (
 	IceListenObj listenObj
@@ -176,7 +188,7 @@ IceGetListenConnectionString (
 }
 
 
-
+
 char *
 IceComposeNetworkIdList (
 	int		count,
@@ -233,7 +245,7 @@ IceComposeNetworkIdList (
 }
 
 
-
+
 void
 IceFreeListenObjs (
 	int	     count,
@@ -253,7 +265,7 @@ IceFreeListenObjs (
 }
 
 
-
+
 /*
  * Allow host based authentication for the ICE Connection Setup.
  * Do not confuse with the host based authentication callbacks that

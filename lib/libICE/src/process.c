@@ -111,7 +111,7 @@ asprintf(char ** ret, const char *format, ...)
 }
 #endif
 
-
+
 /*
  * IceProcessMessages:
  *
@@ -430,7 +430,7 @@ IceProcessMessages (
 }
 
 
-
+
 static void
 AuthRequired (
 	IceConn		iceConn,
@@ -457,7 +457,7 @@ AuthRequired (
 }
 
 
-
+
 static void
 AuthReply (
 	IceConn		iceConn,
@@ -482,7 +482,7 @@ AuthReply (
 }
 
 
-
+
 static void
 AuthNextPhase (
 	IceConn		iceConn,
@@ -507,7 +507,7 @@ AuthNextPhase (
 }
 
 
-
+
 static void
 AcceptConnection (
 	IceConn iceConn,
@@ -535,7 +535,7 @@ AcceptConnection (
 }
 
 
-
+
 static void
 AcceptProtocol (
 	IceConn iceConn,
@@ -575,7 +575,7 @@ AcceptProtocol (
 }
 
 
-
+
 static void
 PingReply (
 	IceConn iceConn
@@ -586,7 +586,7 @@ PingReply (
 }
 
 
-
+
 static Bool
 ProcessError (
 	IceConn		 iceConn,
@@ -704,6 +704,11 @@ ProcessError (
 		invokeHandler = 1;
 	    }
 
+			if (!errorStr)
+			{
+				errorStr = strdup("");
+			}
+
 	    errorReply->type = ICE_CONNECTION_ERROR;
 	    errorReply->error_message = errorStr;
 	}
@@ -715,7 +720,7 @@ ProcessError (
 	{
 	    _IceProtocolError *errorReply =
 	        &(((_IceReply *) (replyWait->reply))->protocol_error);
-	    char *errorStr = "";
+	    char *errorStr = NULL;
 	    const char *prefix;
 	    char *temp;
 
@@ -794,6 +799,11 @@ ProcessError (
 		invokeHandler = 1;
 	    }
 
+			if (!errorStr)
+			{
+				errorStr = strdup("");
+			}
+
 	    errorReply->type = ICE_PROTOCOL_ERROR;
 	    errorReply->error_message = errorStr;
 	}
@@ -847,7 +857,7 @@ ProcessError (
 }
 
 
-
+
 static int
 ProcessConnectionSetup (
 	IceConn		iceConn,
@@ -856,7 +866,8 @@ ProcessConnectionSetup (
 )
 {
     iceConnectionSetupMsg *message;
-    int  myVersionCount, hisVersionCount;
+    const int myVersionCount = _IceVersionCount;
+    int  hisVersionCount;
     int	 myVersionIndex, hisVersionIndex;
     int  hisMajorVersion, hisMinorVersion;
     int	 myAuthCount, hisAuthCount;
@@ -919,14 +930,14 @@ ProcessConnectionSetup (
     EXTRACT_STRING (pData, swap, vendor);
     EXTRACT_STRING (pData, swap, release);
 
-    if ((hisAuthCount = message->authCount) > 0)
+    hisAuthCount = message->authCount;
+    if (hisAuthCount > 0)
     {
 	hisAuthNames = malloc (hisAuthCount * sizeof (char *));
 	EXTRACT_LISTOF_STRING (pData, swap, hisAuthCount, hisAuthNames);
     }
 
     hisVersionCount = message->versionCount;
-    myVersionCount = _IceVersionCount;
 
     hisVersionIndex = myVersionIndex = found = 0;
 
@@ -1026,8 +1037,7 @@ ProcessConnectionSetup (
 		iceConn->connection_status = IceConnectRejected;
 	    }
 
-	    if (hostname)
-		free (hostname);
+	    free (hostname);
 	}
 
 	if (iceConn->connection_status == IceConnectRejected)
@@ -1080,8 +1090,7 @@ ProcessConnectionSetup (
 	if (authData && authDataLen > 0)
 	    free (authData);
 
-	if (errorString)
-	    free (errorString);
+	free (errorString);
     }
 
     if (accept_setup_now)
@@ -1106,7 +1115,7 @@ ProcessConnectionSetup (
 }
 
 
-
+
 static Bool
 ProcessAuthRequired (
 	IceConn			iceConn,
@@ -1270,7 +1279,7 @@ ProcessAuthRequired (
 	}
 
 	if (asprintf (&returnErrorString, "%s%s", prefix, errorString) == -1)
-	    returnErrorString = NULL;
+	    returnErrorString = strdup("");
 	free (errorString);
 
 	if (iceConn->connect_to_you)
@@ -1300,7 +1309,7 @@ ProcessAuthRequired (
 }
 
 
-
+
 static int
 ProcessAuthReply (
 	IceConn		iceConn,
@@ -1369,8 +1378,7 @@ ProcessAuthReply (
 		    status = IcePaAuthAccepted;
 		}
 
-		if (hostname)
-		    free (hostname);
+		free (hostname);
 	    }
 
 	    if (status != IcePaAuthAccepted)
@@ -1444,8 +1452,7 @@ ProcessAuthReply (
 		    status = IcePaAuthAccepted;
 		}
 
-		if (hostname)
-		    free (hostname);
+		free (hostname);
 	    }
 
 	    if (status == IcePaAuthRejected)
@@ -1559,18 +1566,15 @@ ProcessAuthReply (
 		_IceErrorSetupFailed (iceConn, ICE_ProtocolSetup,
 		    failureReason);
 
-		if (failureReason)
-		    free (failureReason);
+		free (failureReason);
 	    }
 	}
 
 
 	if (free_setup_info)
 	{
-	    if (iceConn->protosetup_to_me->his_vendor)
-		free (iceConn->protosetup_to_me->his_vendor);
-	    if (iceConn->protosetup_to_me->his_release)
-		free (iceConn->protosetup_to_me->his_release);
+	    free (iceConn->protosetup_to_me->his_vendor);
+	    free (iceConn->protosetup_to_me->his_release);
 	    free (iceConn->protosetup_to_me);
 	    iceConn->protosetup_to_me = NULL;
 	}
@@ -1587,15 +1591,15 @@ ProcessAuthReply (
     if (authData && authDataLen > 0)
 	free (authData);
 
-    if (errorString)
-	free (errorString);
+
+    free (errorString);
 
     IceDisposeCompleteMessage (iceConn, replyData);
     return (0);
 }
 
 
-
+
 static Bool
 ProcessAuthNextPhase (
 	IceConn		  	iceConn,
@@ -1697,7 +1701,7 @@ ProcessAuthNextPhase (
 	}
 
 	if (asprintf (&returnErrorString, "%s%s", prefix, errorString) == -1)
-	    returnErrorString = NULL;
+	    returnErrorString = strdup("");
 	free (errorString);
 
 	if (iceConn->connect_to_you)
@@ -1727,7 +1731,7 @@ ProcessAuthNextPhase (
 }
 
 
-
+
 static Bool
 ProcessConnectionReply (
 	IceConn			iceConn,
@@ -1797,7 +1801,7 @@ ProcessConnectionReply (
 
 	    errorReply->type = ICE_CONNECTION_ERROR;
 	    errorReply->error_message =
-		"Received bad version index in Connection Reply";
+		strdup("Received bad version index in Connection Reply");
 	}
 	else
 	{
@@ -1829,7 +1833,7 @@ ProcessConnectionReply (
 }
 
 
-
+
 static int
 ProcessProtocolSetup (
 	IceConn		iceConn,
@@ -1965,7 +1969,8 @@ ProcessProtocolSetup (
     EXTRACT_STRING (pData, swap, vendor);
     EXTRACT_STRING (pData, swap, release);
 
-    if ((hisAuthCount = message->authCount) > 0)
+    hisAuthCount = message->authCount;
+    if (hisAuthCount > 0)
     {
 	hisAuthNames = malloc (hisAuthCount * sizeof (char *));
 	EXTRACT_LISTOF_STRING (pData, swap, hisAuthCount, hisAuthNames);
@@ -2071,8 +2076,7 @@ ProcessProtocolSetup (
 	            ICE_ProtocolSetup, "None of the authentication protocols specified are supported and host-based authentication failed");
 	    }
 
-	    if (hostname)
-		free (hostname);
+	    free (hostname);
 	}
     }
     else
@@ -2118,8 +2122,8 @@ ProcessProtocolSetup (
 	if (authData && authDataLen > 0)
 	    free (authData);
 
-	if (errorString)
-	    free (errorString);
+
+	free (errorString);
     }
 
     if (accept_setup_now)
@@ -2202,16 +2206,13 @@ ProcessProtocolSetup (
 
 	    _IceErrorSetupFailed (iceConn, ICE_ProtocolSetup, failureReason);
 
-	    if (failureReason)
-		free (failureReason);
+	    free (failureReason);
 	}
     }
 
-    if (vendor)
-	free (vendor);
 
-    if (release)
-	free (release);
+    free (vendor);
+    free (release);
 
     if (hisAuthCount > 0)
     {
@@ -2226,7 +2227,7 @@ ProcessProtocolSetup (
 }
 
 
-
+
 static Bool
 ProcessProtocolReply (
 	IceConn		  	iceConn,
@@ -2300,7 +2301,7 @@ ProcessProtocolReply (
 
 	    errorReply->type = ICE_PROTOCOL_ERROR;
 	    errorReply->error_message =
-		"Received bad version index in Protocol Reply";
+		strdup("Received bad version index in Protocol Reply");
 	}
 	else
 	{
@@ -2330,7 +2331,7 @@ ProcessProtocolReply (
 }
 
 
-
+
 static int
 ProcessPing (
 	IceConn 	iceConn,
@@ -2346,7 +2347,7 @@ ProcessPing (
 }
 
 
-
+
 static int
 ProcessPingReply (
 	IceConn 	iceConn,
@@ -2375,7 +2376,7 @@ ProcessPingReply (
 }
 
 
-
+
 static int
 ProcessWantToClose (
 	IceConn 	iceConn,
@@ -2434,7 +2435,7 @@ ProcessWantToClose (
 }
 
 
-
+
 static int
 ProcessNoClose (
 	IceConn 	iceConn,
@@ -2462,7 +2463,7 @@ ProcessNoClose (
 }
 
 
-
+
 static void
 _IceProcessCoreMessage (
 	IceConn 	 iceConn,
@@ -2551,7 +2552,7 @@ _IceProcessCoreMessage (
 	*replyReadyRet = replyReady;
 }
 
-int		_IceVersionCount = 1;
-_IceVersion	_IceVersions[] = {
-		    {IceProtoMajor, IceProtoMinor, _IceProcessCoreMessage}};
+const int		_IceVersionCount = 1;
+const _IceVersion	_IceVersions[] = {
+			    {IceProtoMajor, IceProtoMinor, _IceProcessCoreMessage}};
 

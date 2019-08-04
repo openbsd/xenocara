@@ -71,7 +71,10 @@ IceProtocolSetup (
 
     if (myOpcode < 1 || myOpcode > _IceLastMajorOpcode)
     {
-	strncpy (errorStringRet, "myOpcode out of range", errorLength);
+	if (errorStringRet && errorLength > 0) {
+	    strncpy (errorStringRet, "myOpcode out of range", errorLength);
+	    errorStringRet[errorLength - 1] = '\0';
+	}
 	return (IceProtocolSetupFailure);
     }
 
@@ -79,8 +82,11 @@ IceProtocolSetup (
 
     if (myProtocol->orig_client == NULL)
     {
-	strncpy (errorStringRet,
-	    "IceRegisterForProtocolSetup was not called", errorLength);
+	if (errorStringRet && errorLength > 0) {
+	    strncpy (errorStringRet,
+		"IceRegisterForProtocolSetup was not called", errorLength);
+	    errorStringRet[errorLength - 1] = '\0';
+	}
 	return (IceProtocolSetupFailure);
     }
 
@@ -198,9 +204,12 @@ IceProtocolSetup (
 
 	if (ioErrorOccured)
 	{
-	    strncpy (errorStringRet,
-		"IO error occured doing Protocol Setup on connection",
-		errorLength);
+	    if (errorStringRet && errorLength > 0) {
+		strncpy (errorStringRet,
+		    "IO error occured doing Protocol Setup on connection",
+		    errorLength);
+		errorStringRet[errorLength - 1] = '\0';
+	    }
 	    return (IceProtocolSetupIOError);
 	}
 	else if (gotReply)
@@ -210,9 +219,12 @@ IceProtocolSetup (
 		if (reply.protocol_reply.version_index >=
 		    myProtocol->orig_client->version_count)
 		{
-		    strncpy (errorStringRet,
-	                "Got a bad version index in the Protocol Reply",
-		        errorLength);
+		    if (errorStringRet && errorLength > 0) {
+			strncpy (errorStringRet,
+	                    "Got a bad version index in the Protocol Reply",
+		            errorLength);
+			errorStringRet[errorLength - 1] = '\0';
+		    }
 
 		    free (reply.protocol_reply.vendor);
 		    free (reply.protocol_reply.release);
@@ -229,8 +241,11 @@ IceProtocolSetup (
 	    {
 		/* Protocol Setup failed */
 
-		strncpy (errorStringRet, reply.protocol_error.error_message,
-		    errorLength);
+		if (errorStringRet && errorLength > 0) {
+		    strncpy (errorStringRet, reply.protocol_error.error_message,
+			errorLength);
+		    errorStringRet[errorLength - 1] = '\0';
+		}
 
 		free (reply.protocol_error.error_message);
 	    }

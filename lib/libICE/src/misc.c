@@ -41,7 +41,7 @@ Author: Ralph Mor, X Consortium
 #include <X11/Xw32defs.h>
 #endif
 
-
+
 /*
  * scratch buffer
  */
@@ -54,8 +54,7 @@ IceAllocScratch (
 {
     if (!iceConn->scratch || size > iceConn->scratch_size)
     {
-	if (iceConn->scratch)
-	    free (iceConn->scratch);
+	free (iceConn->scratch);
 
 	iceConn->scratch = malloc (size);
 	iceConn->scratch_size = size;
@@ -65,7 +64,7 @@ IceAllocScratch (
 }
 
 
-
+
 /*
  * Output/Input buffer functions
  */
@@ -102,7 +101,7 @@ IceGetInBufSize (
 }
 
 
-
+
 /*
  * informational functions
  */
@@ -202,7 +201,7 @@ IceSwapping (
 }
 
 
-
+
 /*
  * Read "n" bytes from a connection.
  *
@@ -242,7 +241,6 @@ _IceRead (
 		 */
 
 		_IceConnectionClosed (iceConn);	    /* invoke watch procs */
-		_IceFreeConnection (iceConn);
 
 		return (0);
 	    }
@@ -302,7 +300,7 @@ _IceRead (
 }
 
 
-
+
 /*
  * If we read a message header with a bad major or minor opcode,
  * we need to advance to the end of the message.  This way, the next
@@ -327,7 +325,7 @@ _IceReadSkip (
 }
 
 
-
+
 /*
  * Write "n" bytes to a connection.
  */
@@ -407,7 +405,7 @@ _IceWrite (
 }
 
 
-
+
 void
 _IceAddOpcodeMapping (
 	IceConn	iceConn,
@@ -489,14 +487,14 @@ _IceAddOpcodeMapping (
 }
 
 
-
+
 char *
 IceGetPeerName (IceConn iceConn)
 {
     return (_IceTransGetPeerNetworkId (iceConn->trans_conn));
 }
 
-
+
 char *
 _IceGetPeerName (IceConn iceConn)
 {

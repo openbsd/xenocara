@@ -40,49 +40,41 @@ IceProtocolShutdown (
 	int	majorOpcode
 )
 {
+    int i;
+
     if (iceConn->proto_ref_count == 0 || iceConn->process_msg_info == NULL ||
         majorOpcode < 1 || majorOpcode > _IceLastMajorOpcode)
     {
 	return (0);
     }
-    else
+
+
+    /*
+     * Make sure this majorOpcode is really being used.
+     */
+
+    for (i = iceConn->his_min_opcode; i <= iceConn->his_max_opcode; i++)
     {
-	/*
-	 * Make sure this majorOpcode is really being used.
-	 */
-
-	int i;
-
-	for (i = iceConn->his_min_opcode; i <= iceConn->his_max_opcode; i++)
+	int n = i - iceConn->his_min_opcode;
+	if (iceConn->process_msg_info[n].in_use &&
+	    iceConn->process_msg_info[n].my_opcode == majorOpcode)
 	{
-	    if (iceConn->process_msg_info[
-		i - iceConn->his_min_opcode].in_use &&
-                iceConn->process_msg_info[
-		i - iceConn->his_min_opcode].my_opcode == majorOpcode)
-		break;
-	}
 
-	if (i > iceConn->his_max_opcode)
-	{
-	    return (0);
-	}
-	else
-	{
 	    /*
 	     * OK, we can shut down the protocol.
 	     */
 
-	    iceConn->process_msg_info[
-		i - iceConn->his_min_opcode].in_use = False;
+	    iceConn->process_msg_info[n].in_use = False;
 	    iceConn->proto_ref_count--;
-
 	    return (1);
 	}
     }
+
+    return (0);
 }
 
 
-
+
 void
 IceSetShutdownNegotiation (
 	IceConn     	iceConn,
@@ -93,7 +85,7 @@ IceSetShutdownNegotiation (
 }
 
 
-
+
 Bool
 IceCheckShutdownNegotiation (
 	IceConn     iceConn
@@ -103,7 +95,7 @@ IceCheckShutdownNegotiation (
 }
 
 
-
+
 IceCloseStatus
 IceCloseConnection (
 	IceConn     iceConn
@@ -245,7 +237,7 @@ IceCloseConnection (
 }
 
 
-
+
 void
 _IceFreeConnection (
 	IceConn iceConn
@@ -282,39 +274,17 @@ _IceFreeConnection (
     if (iceConn->trans_conn)
 	_IceTransClose (iceConn->trans_conn);
 
-    if (iceConn->connection_string)
-	free (iceConn->connection_string);
-
-    if (iceConn->vendor)
-	free (iceConn->vendor);
-
-    if (iceConn->release)
-	free (iceConn->release);
-
-    if (iceConn->inbuf)
-	free (iceConn->inbuf);
-
-    if (iceConn->outbuf)
-	free (iceConn->outbuf);
-
-    if (iceConn->scratch)
-	free (iceConn->scratch);
-
-    if (iceConn->process_msg_info)
-	free (iceConn->process_msg_info);
-
-    if (iceConn->connect_to_you)
-	free (iceConn->connect_to_you);
-
-    if (iceConn->protosetup_to_you)
-	free (iceConn->protosetup_to_you);
-
-    if (iceConn->connect_to_me)
-	free (iceConn->connect_to_me);
-
-    if (iceConn->protosetup_to_me)
-	free (iceConn->protosetup_to_me);
-
+    free (iceConn->connection_string);
+    free (iceConn->vendor);
+    free (iceConn->release);
+    free (iceConn->inbuf);
+    free (iceConn->outbuf);
+    free (iceConn->scratch);
+    free (iceConn->process_msg_info);
+    free (iceConn->connect_to_you);
+    free (iceConn->protosetup_to_you);
+    free (iceConn->connect_to_me);
+    free (iceConn->protosetup_to_me);
     free (iceConn);
 }
 

@@ -35,7 +35,7 @@ Author: Ralph Mor, X Consortium
 static Bool auth_valid (const char *auth_name, int num_auth_names,
 			const char **auth_names, int *index_ret);
 
-
+
 /*
  * The functions in this file are not a standard part of ICElib.
  *
@@ -83,7 +83,7 @@ _IceGetPoAuthData (
 }
 
 
-
+
 void
 _IceGetPaAuthData (
 	const char	*protocolName,
@@ -122,7 +122,7 @@ _IceGetPaAuthData (
 }
 
 
-
+
 void
 _IceGetPoValidAuthIndices (
 	const char	*protocol_name,
@@ -181,7 +181,7 @@ _IceGetPoValidAuthIndices (
 }
 
 
-
+
 void
 _IceGetPaValidAuthIndices (
 	const char	*protocol_name,
@@ -225,7 +225,7 @@ _IceGetPaValidAuthIndices (
 }
 
 
-
+
 /*
  * local routines
  */

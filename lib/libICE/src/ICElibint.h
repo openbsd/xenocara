@@ -244,7 +244,7 @@ typedef struct {
 }
 
 
-
+
 /*
  * Byte swapping
  */
@@ -259,7 +259,7 @@ typedef struct {
 #define lswaps(_val) ((((_val) & 0xff) << 8) | (((_val) >> 8) & 0xff))
 
 
-
+
 /*
  * ICE replies (not processed via callbacks because we block)
  */
@@ -334,28 +334,28 @@ typedef struct _IceWatchProc {
  * Extern declarations
  */
 
-extern IceConn     	_IceConnectionObjs[];
-extern char	    	*_IceConnectionStrings[];
-extern int     		_IceConnectionCount;
+extern IceConn			_IceConnectionObjs[];
+extern char			*_IceConnectionStrings[];
+extern int			_IceConnectionCount;
 
-extern _IceProtocol	_IceProtocols[];
-extern int         	_IceLastMajorOpcode;
+extern _IceProtocol		_IceProtocols[];
+extern int			_IceLastMajorOpcode;
 
-extern int		_IceAuthCount;
-extern const char	*_IceAuthNames[];
-extern IcePoAuthProc	_IcePoAuthProcs[];
-extern IcePaAuthProc	_IcePaAuthProcs[];
+extern int			_IceAuthCount;
+extern const char		*_IceAuthNames[];
+extern IcePoAuthProc		_IcePoAuthProcs[];
+extern IcePaAuthProc		_IcePaAuthProcs[];
 
-extern int		_IceVersionCount;
-extern _IceVersion	_IceVersions[];
+extern const int		_IceVersionCount;
+extern const _IceVersion	_IceVersions[];
 
-extern _IceWatchProc	*_IceWatchProcs;
+extern _IceWatchProc		*_IceWatchProcs;
 
-extern IceErrorHandler   _IceErrorHandler;
-extern IceIOErrorHandler _IceIOErrorHandler;
+extern IceErrorHandler		_IceErrorHandler;
+extern IceIOErrorHandler	_IceIOErrorHandler;
 
-extern IceAuthDataEntry	 _IcePaAuthDataEntries[];
-extern int		 _IcePaAuthDataEntryCount;
+extern IceAuthDataEntry		_IcePaAuthDataEntries[];
+extern int			_IcePaAuthDataEntryCount;
 
 extern void _IceErrorBadMajor (
     IceConn		/* iceConn */,

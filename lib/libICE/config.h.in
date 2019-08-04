@@ -12,6 +12,9 @@
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
+/* Define to 1 if you have the `getentropy' function. */
+#undef HAVE_GETENTROPY
+
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
@@ -96,6 +99,12 @@
 
 /* Support TCP socket connections */
 #undef TCPCONN
+
+/* Xtrans transport client code */
+#undef TRANS_CLIENT
+
+/* Xtrans transport server code */
+#undef TRANS_SERVER
 
 /* Support UNIX socket connections */
 #undef UNIXCONN

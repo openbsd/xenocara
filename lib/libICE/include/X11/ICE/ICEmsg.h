@@ -214,16 +214,8 @@ extern IcePaAuthStatus _IcePaMagicCookie1Proc (
 
 #define IceWritePad(_iceConn, _bytes) \
 { \
-    if ((_iceConn->outbufptr + (_bytes)) > _iceConn->outbufmax) \
-    { \
-        char _dummy[7] = { 0 }; \
-        IceFlush (_iceConn); \
-        _IceWrite (_iceConn, (unsigned long) (_bytes), _dummy); \
-    } \
-    else \
-    { \
-        _iceConn->outbufptr += (_bytes); \
-    } \
+    char _dummy[7] = { 0 }; \
+    IceWriteData (_iceConn, (_bytes), _dummy); \
 }
 
 

@@ -34,39 +34,28 @@ Author: Ralph Mor, X Consortium
 #include <X11/ICE/ICEutil.h>
 
 #include <time.h>
-#define Time_t time_t
 
 #ifdef HAVE_LIBBSD
 #include <bsd/stdlib.h>	/* for arc4random_buf() */
 #endif
 
+#include <unistd.h>
+
 static int was_called_state;
 
-/*
- * MIT-MAGIC-COOKIE-1 is a sample authentication method implemented by
- * the SI.  It is not part of standard ICElib.
- */
+#ifndef HAVE_ARC4RANDOM_BUF
 
-
-char *
-IceGenerateMagicCookie (
+static void
+emulate_getrandom_buf (
+	char *auth,
 	int len
 )
 {
-    char    *auth;
-#ifndef HAVE_ARC4RANDOM_BUF
     long    ldata[2];
     int	    seed;
     int	    value;
     int	    i;
-#endif
 
-    if ((auth = malloc (len + 1)) == NULL)
-	return (NULL);
-
-#ifdef HAVE_ARC4RANDOM_BUF
-    arc4random_buf(auth, len);
-#else
 #ifdef ITIMER_REAL
     {
 	struct timeval  now;
@@ -74,13 +63,13 @@ IceGenerateMagicCookie (
 	ldata[0] = now.tv_sec;
 	ldata[1] = now.tv_usec;
     }
-#else
+#else /* ITIMER_REAL */
     {
 	long    time ();
 	ldata[0] = time ((long *) 0);
 	ldata[1] = getpid ();
     }
-#endif
+#endif /* ITIMER_REAL */
     seed = (ldata[0]) + (ldata[1] << 16);
     srand (seed);
     for (i = 0; i < len; i++)
@@ -88,13 +77,52 @@ IceGenerateMagicCookie (
 	value = rand ();
 	auth[i] = value & 0xff;
     }
-#endif
+}
+
+static void
+arc4random_buf (
+	char *auth,
+	int len
+)
+{
+#if HAVE_GETENTROPY
+    int	    ret;
+
+    /* weak emulation of arc4random through the entropy libc */
+    ret = getentropy (auth, len);
+    if (ret == 0)
+	return;
+#endif /* HAVE_GETENTROPY */
+
+    emulate_getrandom_buf (auth, len);
+}
+
+#endif /* !defined(HAVE_ARC4RANDOM_BUF) */
+
+/*
+ * MIT-MAGIC-COOKIE-1 is a sample authentication method implemented by
+ * the SI.  It is not part of standard ICElib.
+ */
+
+
+char *
+IceGenerateMagicCookie (
+	int len
+)
+{
+    char    *auth;
+
+    if ((auth = malloc (len + 1)) == NULL)
+	return (NULL);
+
+    arc4random_buf (auth, len);
+
     auth[len] = '\0';
     return (auth);
 }
 
 
-
+
 IcePoAuthStatus
 _IcePoMagicCookie1Proc (
 	IceConn		iceConn,

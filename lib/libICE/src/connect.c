@@ -37,8 +37,6 @@ Author: Ralph Mor, X Consortium
 static XtransConnInfo ConnectToPeer(char *networkIdsList,
 				    char **actualConnectionRet);
 
-#define Strstr strstr
-
 IceConn
 IceOpenConnection (
 	char 	   *networkIdsList,
@@ -68,8 +66,11 @@ IceOpenConnection (
 
     if (networkIdsList == NULL || *networkIdsList == '\0')
     {
-	strncpy (errorStringRet,
-	    "networkIdsList argument is NULL", errorLength);
+	if (errorStringRet && errorLength > 0) {
+	    strncpy (errorStringRet,
+		"networkIdsList argument is NULL", errorLength);
+	    errorStringRet[errorLength - 1] = '\0';
+	}
 	return (NULL);
     }
 
@@ -93,7 +94,7 @@ IceOpenConnection (
     for (i = 0; i < _IceConnectionCount; i++)
     {
 	char *strptr;
-	if ((strptr = (char *) Strstr (
+	if ((strptr = (char *) strstr (
 	    networkIdsList, _IceConnectionStrings[i])) != NULL)
 	{
 	    char ch = *(strptr + strlen (_IceConnectionStrings[i]));
@@ -146,7 +147,10 @@ IceOpenConnection (
 
     if ((iceConn = malloc (sizeof (struct _IceConn))) == NULL)
     {
-	strncpy (errorStringRet, "Can't malloc", errorLength);
+	if (errorStringRet && errorLength > 0) {
+	    strncpy (errorStringRet, "Can't malloc", errorLength);
+	    errorStringRet[errorLength - 1] = '\0';
+	}
 	return (NULL);
     }
 
@@ -159,7 +163,10 @@ IceOpenConnection (
 	&iceConn->connection_string)) == NULL)
     {
 	free (iceConn);
-	strncpy (errorStringRet, "Could not open network socket", errorLength);
+	if (errorStringRet && errorLength > 0) {
+	    strncpy (errorStringRet, "Could not open network socket", errorLength);
+	    errorStringRet[errorLength - 1] = '\0';
+	}
 	return (NULL);
     }
 
@@ -197,7 +204,10 @@ IceOpenConnection (
     if ((iceConn->inbuf = iceConn->inbufptr = malloc (ICE_INBUFSIZE)) == NULL)
     {
 	_IceFreeConnection (iceConn);
-	strncpy (errorStringRet, "Can't malloc", errorLength);
+	if (errorStringRet && errorLength > 0) {
+	    strncpy (errorStringRet, "Can't malloc", errorLength);
+	    errorStringRet[errorLength - 1] = '\0';
+	}
 	return (NULL);
     }
 
@@ -206,7 +216,10 @@ IceOpenConnection (
     if ((iceConn->outbuf = iceConn->outbufptr = calloc (1, ICE_OUTBUFSIZE)) == NULL)
     {
 	_IceFreeConnection (iceConn);
-	strncpy (errorStringRet, "Can't malloc", errorLength);
+	if (errorStringRet && errorLength > 0) {
+	    strncpy (errorStringRet, "Can't malloc", errorLength);
+	    errorStringRet[errorLength - 1] = '\0';
+	}
 	return (NULL);
     }
 
@@ -223,6 +236,15 @@ IceOpenConnection (
     iceConn->ping_waits = NULL;
 
     iceConn->connect_to_you = malloc (sizeof (_IceConnectToYouInfo));
+    if (iceConn->connect_to_you == NULL)
+    {
+	_IceFreeConnection (iceConn);
+	if (errorStringRet && errorLength > 0) {
+	    strncpy (errorStringRet, "Can't malloc", errorLength);
+	    errorStringRet[errorLength - 1] = '\0';
+	}
+	return (NULL);
+    }
     iceConn->connect_to_you->auth_active = 0;
 
     /*
@@ -259,8 +281,11 @@ IceOpenConnection (
     if (ioErrorOccured)
     {
 	_IceFreeConnection (iceConn);
-	strncpy (errorStringRet, "IO error occured opening connection",
-	     errorLength);
+	if (errorStringRet && errorLength > 0) {
+	    strncpy (errorStringRet, "IO error occured opening connection",
+		 errorLength);
+	    errorStringRet[errorLength - 1] = '\0';
+	}
 	return (NULL);
     }
 
@@ -271,9 +296,12 @@ IceOpenConnection (
 	 */
 
 	_IceFreeConnection (iceConn);
-	strncpy (errorStringRet,
-	    "Internal error - did not receive the expected ByteOrder message",
-	     errorLength);
+	if (errorStringRet && errorLength > 0) {
+	    strncpy (errorStringRet,
+		"Internal error - did not receive the expected ByteOrder "
+		"message", errorLength);
+	    errorStringRet[errorLength - 1] = '\0';
+	}
 	return (NULL);
     }
 
@@ -357,8 +385,11 @@ IceOpenConnection (
 
 	if (ioErrorOccured)
 	{
-	    strncpy (errorStringRet, "IO error occured opening connection",
-		errorLength);
+	    if (errorStringRet && errorLength > 0) {
+		strncpy (errorStringRet, "IO error occured opening connection",
+		    errorLength);
+		errorStringRet[errorLength - 1] = '\0';
+	    }
 	    _IceFreeConnection (iceConn);
 	    iceConn = NULL;
 	}
@@ -368,9 +399,12 @@ IceOpenConnection (
 	    {
 		if (reply.connection_reply.version_index >= _IceVersionCount)
 		{
-		    strncpy (errorStringRet,
-	    		"Got a bad version index in the Connection Reply",
-			errorLength);
+		    if (errorStringRet && errorLength > 0) {
+			strncpy (errorStringRet,
+			    "Got a bad version index in the Connection Reply",
+			    errorLength);
+			errorStringRet[errorLength - 1] = '\0';
+		    }
 
 		    free (reply.connection_reply.vendor);
 		    free (reply.connection_reply.release);
@@ -399,8 +433,11 @@ IceOpenConnection (
 	    {
 		/* Connection failed */
 
-		strncpy (errorStringRet, reply.connection_error.error_message,
-		    errorLength);
+		if (errorStringRet && errorLength > 0) {
+		    strncpy (errorStringRet,
+			reply.connection_error.error_message, errorLength);
+		    errorStringRet[errorLength - 1] = '\0';
+		}
 
 		free (reply.connection_error.error_message);
 
@@ -423,7 +460,7 @@ IceOpenConnection (
 }
 
 
-
+
 IcePointer
 IceGetConnectionContext (
 	IceConn    iceConn
@@ -433,7 +470,7 @@ IceGetConnectionContext (
 }
 
 
-
+
 /* ------------------------------------------------------------------------- *
  *                            local routines                                 *
  * ------------------------------------------------------------------------- */

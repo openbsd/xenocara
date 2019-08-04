@@ -33,7 +33,7 @@ Author: Ralph Mor, X Consortium
 #include "ICElibint.h"
 #include <X11/ICE/ICEutil.h>
 
-
+
 /*
  * IceSetPaAuthData is not a standard part of ICElib, it is specific
  * to the sample implementation.

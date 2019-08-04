@@ -1,8 +1,8 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libICE], [1.0.9],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libICE])
+AC_INIT([libICE], [1.0.10],
+        [https://gitlab.freedesktop.org/xorg/lib/libICE/issues], [libICE])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
@@ -35,10 +35,12 @@ PKG_CHECK_MODULES(ICE, xproto xtrans)
 # Transport selection macro from xtrans.m4
 XTRANS_CONNECTION_FLAGS
 AC_DEFINE(ICE_t, 1, [Xtrans transport type])
+AC_DEFINE(TRANS_CLIENT, 1, [Xtrans transport client code])
+AC_DEFINE(TRANS_SERVER, 1, [Xtrans transport server code])
 
 # Checks for library functions.
 AC_CHECK_LIB([bsd], [arc4random_buf])
-AC_CHECK_FUNCS([asprintf arc4random_buf])
+AC_CHECK_FUNCS([asprintf arc4random_buf getentropy])
 
 # Allow checking code with lint, sparse, etc.
 XORG_WITH_LINT

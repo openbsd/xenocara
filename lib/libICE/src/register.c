@@ -122,7 +122,7 @@ IceRegisterForProtocolSetup (
 }
 
 
-
+
 int
 IceRegisterForProtocolReply (
 	const char			*protocolName,

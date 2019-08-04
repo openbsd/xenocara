@@ -95,8 +95,8 @@ allow them to share the same transport layer connection.</para>
 <para>Through some mechanism outside ICE, two parties make themselves known to
 each other and agree that they would like to communicate using an ICE
 subprotocol.  ICE assumes that this negotation includes some notion by which
-the parties will decide which is the \*Qoriginating\*U party and which is
-the \*Qanswering\*U party.  The negotiation will also need to provide the
+the parties will decide which is the <quote>originating</quote> party and which is
+the <quote>answering</quote> party.  The negotiation will also need to provide the
 originating party with a name or address of the answering party.  Examples
 of mechanisms by which parties can make themselves known to each other are
 the X selection mechanism, environment
@@ -227,7 +227,7 @@ the initial connection messages; in general data is sent in the sender's
 byte order and the receiver is required to swap it appropriately.
 In order to support 64-bit machines, ICE messages
 are padded to multiples of 8 bytes.  All messages are designed so that
-fields are \*Qnaturally\*U aligned on 16-, 32-, and 64-bit boundaries.
+fields are <quote>naturally</quote> aligned on 16-, 32-, and 64-bit boundaries.
 The following formula gives the number of bytes necessary
 to pad <emphasis remap='I'>E</emphasis> bytes to the next multiple of
 <emphasis remap='I'>b</emphasis>:</para>
@@ -485,7 +485,7 @@ header and the length field is computed accordingly.
 </para>
 
 <para>
-In the following message descriptions, \*QExpected errors\*U indicates
+In the following message descriptions, <quote>Expected errors</quote> indicates
 errors that may occur in the normal course of events.  Other errors
 (in particular
 <function>BadMajor</function>
@@ -1465,7 +1465,7 @@ but it does not affect the existing registration.
 
 <para>
 The major opcode specified was already registered.  This is
-fatal to the \*Qnew\*U protocol being set up by
+fatal to the <quote>new</quote> protocol being set up by
 <function>ProtocolSetup</function> but it does not affect the
 existing registration.
 </para>

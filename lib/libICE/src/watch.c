@@ -89,7 +89,7 @@ IceAddConnectionWatch (
 }
 
 
-
+
 void
 IceRemoveConnectionWatch (
 	IceWatchProc	watchProc,
@@ -129,7 +129,7 @@ IceRemoveConnectionWatch (
 }
 
 
-
+
 void
 _IceConnectionOpened (
 	IceConn	iceConn
@@ -163,7 +163,7 @@ _IceConnectionOpened (
 }
 
 
-
+
 void
 _IceConnectionClosed (
 	IceConn	iceConn

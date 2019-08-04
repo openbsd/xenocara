@@ -32,9 +32,8 @@ Author: Ralph Mor, X Consortium
 #include <X11/ICE/ICElib.h>
 #include "ICElibint.h"
 #include <stdio.h>
-
+#include <unistd.h>
 #include <errno.h>
-
 
 void
 _IceErrorBadMinor (
@@ -348,7 +347,7 @@ _IceErrorBadMajor (
 }
 
 
-
+
 /*
  * Default error handler.
  */
@@ -563,7 +562,7 @@ _IceDefaultErrorHandler (
 
 IceErrorHandler   _IceErrorHandler   = _IceDefaultErrorHandler;
 
-
+
 /*
  * This procedure sets the ICE error handler to be the specified
  * routine.  If NULL is passed in the default error handler is restored.
@@ -586,7 +585,7 @@ IceSetErrorHandler (
 }
 
 
-
+
 /*
  * Default IO error handler.
  */
@@ -605,7 +604,7 @@ _IceDefaultIOErrorHandler (
 
 IceIOErrorHandler _IceIOErrorHandler = _IceDefaultIOErrorHandler;
 
-
+
 /*
  * This procedure sets the ICE fatal I/O error handler to be the
  * specified routine.  If NULL is passed in the default error
