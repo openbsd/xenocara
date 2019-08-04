@@ -1,5 +1,5 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.3 2013/08/13 07:07:12 guenther Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.4 2019/08/04 13:33:46 matthieu Exp $
 
-SHARED_LIBS=	ICE 10.0
+SHARED_LIBS=	ICE 11.0
 
 .include <bsd.xorg.mk>
