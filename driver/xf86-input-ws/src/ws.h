@@ -103,8 +103,8 @@ typedef struct WSDevice {
 /* Middle mouse button emulation */
 extern int wsmbEmuTimer(InputInfoPtr);
 extern BOOL wsmbEmuFilterEvent(InputInfoPtr, int, BOOL);
-extern void wsmbEmuWakeupHandler(pointer, int, pointer);
-extern void wsmbEmuBlockHandler(pointer, struct timeval **, pointer);
+extern void wsmbEmuWakeupHandler(pointer, int);
+extern void wsmbEmuBlockHandler(pointer, pointer);
 extern void wsmbEmuPreInit(InputInfoPtr);
 extern void wsmbEmuOn(InputInfoPtr);
 extern void wsmbEmuFinalize(InputInfoPtr);

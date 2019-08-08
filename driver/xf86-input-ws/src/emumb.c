@@ -1,4 +1,4 @@
-/*	$OpenBSD: emumb.c,v 1.14 2015/12/25 15:08:28 matthieu Exp $ */
+/*	$OpenBSD: emumb.c,v 1.15 2019/08/08 12:23:34 matthieu Exp $ */
 /*
  * Copyright 1990,91 by Thomas Roell, Dinkelscherben, Germany.
  * Copyright 1993 by David Dawes <dawes@xfree86.org>
@@ -275,7 +275,7 @@ wsmbEmuFilterEvent(InputInfoPtr pInfo, int button, BOOL press)
 }
 
 void
-wsmbEmuWakeupHandler(pointer data, int i, pointer LastSelectMask)
+wsmbEmuWakeupHandler(pointer data, int i)
 {
 	InputInfoPtr pInfo = (InputInfoPtr)data;
 	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
@@ -289,8 +289,7 @@ wsmbEmuWakeupHandler(pointer data, int i, pointer LastSelectMask)
 }
 
 void
-wsmbEmuBlockHandler(pointer data, struct timeval **waitTime,
-    pointer LastSelectMask)
+wsmbEmuBlockHandler(pointer data, void *waitTime)
 {
 	InputInfoPtr pInfo = (InputInfoPtr)data;
 	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
@@ -300,7 +299,7 @@ wsmbEmuBlockHandler(pointer data, struct timeval **waitTime,
 		ms = priv->emulateMB.expires - GetTimeInMillis();
 		if (ms <= 0)
 			ms = 0;
-		AdjustWaitForDelay(waitTime, ms);
+		AdjustWaitForDelay((struct timeval **)waitTime, ms);
 	}
 }
 
