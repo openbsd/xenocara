@@ -1,4 +1,4 @@
-/*	$OpenBSD: wsudl_driver.c,v 1.12 2019/06/30 17:10:24 matthieu Exp $ */
+/*	$OpenBSD: wsudl_driver.c,v 1.13 2019/08/08 12:04:36 matthieu Exp $ */
 
 /*
  * Copyright (c) 2009 Marcus Glocker <mglocker@openbsd.org>
@@ -121,9 +121,8 @@ static void			WsudlLoadPalette(ScrnInfoPtr, int, int *,
 static Bool			WsudlSaveScreen(ScreenPtr, int);
 static void			WsudlRestore(ScrnInfoPtr);
 static Bool			WsudlDamageInit(ScreenPtr);
-static void			WsudlBlockHandler(pointer, struct timeval **,
-				    pointer);
-static void			WsudlWakeupHandler(pointer, int, pointer);
+static void			WsudlBlockHandler(pointer, pointer);
+static void			WsudlWakeupHandler(pointer, int);
 /* helper functions */
 static int			wsudl_open(const char *);
 
@@ -799,8 +798,7 @@ WsudlDamageInit(ScreenPtr pScreen)
 }
 
 static void
-WsudlBlockHandler(pointer data, struct timeval **waitTime,
-    pointer LastSelectMask)
+WsudlBlockHandler(pointer data, pointer waitTime)
 {
 	ScreenPtr pScreen = (ScreenPtr)data;
 	ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
@@ -849,7 +847,7 @@ WsudlBlockHandler(pointer data, struct timeval **waitTime,
 }
 
 static void
-WsudlWakeupHandler(pointer data, int i, pointer LastSelectMask)
+WsudlWakeupHandler(pointer data, int i)
 {
 	/* nothing todo yet */
 }
