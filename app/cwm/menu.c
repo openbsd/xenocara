@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: menu.c,v 1.107 2019/03/04 19:28:18 okan Exp $
+ * $OpenBSD: menu.c,v 1.108 2019/08/12 00:52:36 okan Exp $
  */
 
 #include <sys/types.h>
@@ -129,6 +129,7 @@ menu_filter(struct screen_ctx *sc, struct menu_q *menuq, const char *prompt,
 	    CurrentTime) != GrabSuccess) {
 		XftDrawDestroy(mc.xftdraw);
 		XDestroyWindow(X_Dpy, mc.win);
+		return(NULL);
 	}
 
 	XGetInputFocus(X_Dpy, &focuswin, &focusrevert);
