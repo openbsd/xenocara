@@ -1,5 +1,5 @@
 .\" -*- coding: us-ascii -*-
-.TH xmore __appmansuffix__ "1 February 2005"  
+.TH xmore __appmansuffix__ __xorgversion__
 .SH NAME
 xmore \- plain text display program for the X Window System
 .SH SYNOPSIS

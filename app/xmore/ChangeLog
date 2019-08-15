@@ -1,3 +1,147 @@
+commit 2e08823f494fed631a6e8b2d96f9cb37dba6e480
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 3 13:08:40 2019 -0800
+
+    xmore 1.0.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 413abc88ab348523552c6e9b6608d61f7a43904b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 17:16:28 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 09c20611c1acd04e1fc47bd70ce4d4c2c2f15d76
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 22:43:36 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit eec4604d764a1ed37815012ca1f2c9fba44cdebd
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0fd9c024c1a3d837b460d8b7a978f057867c74cf
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d407ce86fa7a1402eb6d12895a5e97a6ffd3478a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 23:36:28 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4168dad45e494982e77b4ed4021313de4d010612
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 23:36:28 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 29d7efd4856aee5578e47684c6aafc1fe47690c2
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 3d6277359bd6633238f7043a799f1cf0c6793d3b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Jun 18 10:04:11 2011 -0400
+
+    man page: add __xorgversion__ which was just missing.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e0f87cad8fb25c0ad04032a3d8b57e1a16c2f8ad
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:56 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 8327e05aeeaf57e5a57bbd22920817498c57979d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 11:15:48 2011 -0500
+
+    man: remove trailing spaces and tabs
+    
+    Using s/[ \t]*$//
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b1c040bc30e7a1265d92e2f163eef86a149d20a2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 16:28:02 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    This silences an Autoconf warning
+
+commit 3ea3f45e8829de2ff5ae3b1bb1ea188af91d80f8
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 15:29:50 2011 -0500
+
+    config: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    This silences an Automake warning.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a43a582cee97b5c09d272cddf41cba46d8dfcaf3
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 11:54:40 2011 -0500
+
+    config: use AC_PROG_INSTALL now supplied by XORG_DEFAULT_OPTIONS
+    
+    It depends on util-macros 1.8 or later
+    The existing statement can now be removed from the configuration file.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 110abb05bd389f99d9f53c9a95234a8d6d59bec1
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Aug 27 20:53:12 2010 -0400
+
+    Change xmore DocBook XML file extension from .sgml to .xml
+    
+    This file is used as the input format for the man page.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 999895eddb00cb535802409a46795c363b8d2422
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Jul 23 15:51:09 2010 -0700
