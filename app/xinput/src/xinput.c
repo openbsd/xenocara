@@ -273,7 +273,7 @@ find_device_info(Display	*display,
     return found;
 }
 
-#ifdef HAVE_XI2
+#if HAVE_XI2
 Bool is_pointer(int use)
 {
     return use == XIMasterPointer || use == XISlavePointer;
@@ -361,6 +361,26 @@ usage(void)
     }
 }
 
+static Bool
+is_xwayland(Display *dpy)
+{
+    XDeviceInfo *devices;
+    int n;
+    Bool is_xwayland = False;
+
+    devices = XListInputDevices(dpy, &n);
+    while (n-- > 0) {
+        if (strncmp(devices[n].name, "xwayland-", 9) == 0) {
+            is_xwayland = True;
+            break;
+        }
+    }
+
+    XFreeDeviceList(devices);
+
+    return is_xwayland;
+}
+
 int
 main(int argc, char * argv[])
 {
@@ -401,6 +421,9 @@ main(int argc, char * argv[])
 	fprintf(stderr, "%s extension not available\n", INAME);
 	goto out;
     }
+
+    if (is_xwayland(display))
+        fprintf(stderr, "WARNING: running xinput against an Xwayland server. See the xinput man page for details.\n");
 
     while(driver->func_name) {
 	if (strcmp(driver->func_name, func) == 0) {

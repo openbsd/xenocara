@@ -610,19 +610,20 @@ do_set_prop_xi2(Display *dpy, Atom type, int format, int argc, char **argv, char
         unsigned char *c;
         int16_t *s;
         int32_t *l;
-    } data;
+    } data = { NULL };
+    int rc = EXIT_FAILURE;
 
     if (argc < 3)
     {
         fprintf(stderr, "Usage: xinput %s %s\n", n, desc);
-        return EXIT_FAILURE;
+        goto out;
     }
 
     info = xi2_find_device_info(dpy, argv[0]);
     if (!info)
     {
         fprintf(stderr, "unable to find device %s\n", argv[0]);
-        return EXIT_FAILURE;
+        goto out;
     }
 
     name = argv[1];
@@ -631,7 +632,7 @@ do_set_prop_xi2(Display *dpy, Atom type, int format, int argc, char **argv, char
 
     if (prop == None) {
         fprintf(stderr, "invalid property '%s'\n", name);
-        return EXIT_FAILURE;
+        goto out;
     }
 
     float_atom = XInternAtom(dpy, "FLOAT", False);
@@ -643,7 +644,7 @@ do_set_prop_xi2(Display *dpy, Atom type, int format, int argc, char **argv, char
                           &bytes_after, &data.c) != Success) {
             fprintf(stderr, "failed to get property type and format for '%s'\n",
                     name);
-            return EXIT_FAILURE;
+            goto out;
         } else {
             if (type == None)
                 type = old_type;
@@ -657,7 +658,7 @@ do_set_prop_xi2(Display *dpy, Atom type, int format, int argc, char **argv, char
     if (type == None) {
         fprintf(stderr, "property '%s' doesn't exist, you need to specify "
                 "its type and format\n", name);
-        return EXIT_FAILURE;
+        goto out;
     }
 
     data.c = calloc(nelements, sizeof(int32_t));
@@ -678,43 +679,45 @@ do_set_prop_xi2(Display *dpy, Atom type, int format, int argc, char **argv, char
                     break;
                 default:
                     fprintf(stderr, "unexpected size for property %s", name);
-                    return EXIT_FAILURE;
+                    goto out;
             }
         } else if (type == float_atom) {
             if (format != 32) {
                 fprintf(stderr, "unexpected format %d for property '%s'\n",
                         format, name);
-                return EXIT_FAILURE;
+                goto out;
             }
             *(float *)(data.l + i) = strtod(argv[2 + i], &endptr);
             if (endptr == argv[2 + i]) {
                 fprintf(stderr, "argument %s could not be parsed\n", argv[2 + i]);
-                return EXIT_FAILURE;
+                goto out;
             }
         } else if (type == XA_ATOM) {
             if (format != 32) {
                 fprintf(stderr, "unexpected format %d for property '%s'\n",
                         format, name);
-                return EXIT_FAILURE;
+                goto out;
             }
             data.l[i] = parse_atom(dpy, argv[2 + i]);
         } else {
             fprintf(stderr, "unexpected type for property '%s'\n", name);
-            return EXIT_FAILURE;
+            goto out;
         }
     }
 
     XIChangeProperty(dpy, info->deviceid, prop, type, format, PropModeReplace,
                           data.c, nelements);
+    rc = EXIT_SUCCESS;
+out:
     free(data.c);
-    return EXIT_SUCCESS;
+    return rc;
 }
 #endif
 
 int list_props(Display *display, int argc, char *argv[], char *name,
                char *desc)
 {
-#ifdef HAVE_XI2
+#if HAVE_XI2
     if (xinput_version(display) == XI_2_Major)
         return list_props_xi2(display, argc, argv, name, desc);
 #endif
@@ -725,7 +728,7 @@ int list_props(Display *display, int argc, char *argv[], char *name,
 int delete_prop(Display *display, int argc, char *argv[], char *name,
                 char *desc)
 {
-#ifdef HAVE_XI2
+#if HAVE_XI2
     if (xinput_version(display) == XI_2_Major)
         return delete_prop_xi2(display, argc, argv, name, desc);
 #endif
@@ -736,7 +739,7 @@ int delete_prop(Display *display, int argc, char *argv[], char *name,
 static int
 do_set_prop(Display *display, Atom type, int format, int argc, char *argv[], char *name, char *desc)
 {
-#ifdef HAVE_XI2
+#if HAVE_XI2
     if (xinput_version(display) == XI_2_Major)
         return do_set_prop_xi2(display, type, format, argc, argv, name, desc);
 #endif

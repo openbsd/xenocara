@@ -1,3 +1,124 @@
+commit cef07c0c8280d7e7b82c3bcc62a1dfbe8cc43ff8
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Jul 17 15:25:10 2019 +1000
+
+    xinput 1.6.3
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit d0a77e79a73177090ae7dceb7a9802f98db6d9f0
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Mar 26 16:06:44 2019 +1000
+
+    Warn if you're running against an XWayland server
+    
+    Because there's a 99% chance you don't want this.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c7ca2b99c099456d0c0e83309d6f426c5feacb25
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 17:10:59 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5a8f3121c7f64dbb47fad99c027389e7d78453e4
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Sep 13 09:39:22 2018 +1000
+
+    test-xi2: add an extra NULL-check
+    
+    Shuts up coverity because it doesn't know that by the time we get here, we're
+    guaranteed that the device exists. Otherwise the list() call a few lines above
+    would've failed and we wouldn't get here.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 3ea8f02027b18cf06774c8f26a719e321e9a78f2
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Sep 12 14:49:21 2018 +1000
+
+    property: plug a memory leak
+    
+    Not that it matters since we'll exit after this call anyway, but coverity is
+    unhappy and that makes us all unhappy, doesn't it?
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 988488127cdf49b47cd075a698c78f25ee193467
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jul 25 14:32:56 2017 +1000
+
+    man: document an example for a set-prop call
+    
+    Because it's 99% of the use-cases people use libinput for these days.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit ed8c0865a2c1ec470b7c179a2907edb37bbad3a6
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 60d812e56dd6da3f32aea574ef33826f62379d03
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit fb9cb61708c2cbe832824575daef27ea1c51ab38
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit d63b2f2d36289396b097bf9b35fc8969bf8f31c4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 21:03:14 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5ecd774d28f011c3ab0008084aa280f65911454a
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jan 26 10:37:26 2017 +1000
+
+    autogen.sh: drop maintainer mode
+    
+    Missing from 1f812f44a3a22e27de00a447c34657e590231a76
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 29e7ec5a3d7e920950d5a5c97020ce82b30c4888
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 24 08:58:22 2016 +1000
+
+    Switch to using "#if HAVE_XI..." exclusively
+    
+    Don't mix  "if" and "ifdef"
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit 2865729adc2f004b61ba853d98a4c2758fd0b601
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Tue Oct 20 07:35:40 2015 +1000
@@ -481,7 +602,7 @@ Date:   Fri Sep 23 08:36:47 2011 +1000
     Merge branch 'smooth-scrolling'
     
     Conflicts:
-    	src/test_xi2.c
+            src/test_xi2.c
 
 commit 7bbf4624b8be1bcac7a782057b9c2db5e8bbcc75
 Author: Peter Hutterer <peter.hutterer@who-t.net>
@@ -1590,7 +1711,7 @@ Date:   Fri May 8 15:15:45 2009 +1000
     Merge branch 'master' into xi2
     
     Conflicts:
-    	src/xinput.h
+            src/xinput.h
 
 commit 239cd6a673be2821915301c1b3c3bae063e9dd94
 Author: Peter Hutterer <peter.hutterer@who-t.net>
@@ -1671,9 +1792,9 @@ Date:   Thu May 7 13:06:05 2009 +1000
     Merge branch 'master' into xi2
     
     Conflicts:
-    	src/property.c
-    	src/xinput.c
-    	src/xinput.h
+            src/property.c
+            src/xinput.c
+            src/xinput.h
 
 commit 4e6e0dd562e8e844bede349bd11c339644447d78
 Author: Peter Hutterer <peter.hutterer@who-t.net>
@@ -2142,7 +2263,7 @@ Date:   Mon Apr 7 17:24:16 2008 +0930
     
     Conflicts:
     
-    	src/xinput.c
+            src/xinput.c
     
     (just a whitespace conflict)
 

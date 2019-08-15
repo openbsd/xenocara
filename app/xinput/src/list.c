@@ -138,7 +138,7 @@ static int list_xi1(Display     *display,
     return EXIT_SUCCESS;
 }
 
-#ifdef HAVE_XI2
+#if HAVE_XI2
 /* also used from test_xi2.c */
 void
 print_classes_xi2(Display* display, XIAnyClassInfo **classes,
@@ -377,7 +377,7 @@ list(Display	*display,
     {
         if (format == FORMAT_NONE)
             format = FORMAT_LONG;
-#ifdef HAVE_XI2
+#if HAVE_XI2
         if (xinput_version(display) == XI_2_Major)
         {
             XIDeviceInfo *info = xi2_find_device_info(display, argv[arg_dev]);
@@ -405,7 +405,7 @@ list(Display	*display,
     } else {
         if (format == FORMAT_NONE)
             format = FORMAT_SHORT;
-#ifdef HAVE_XI2
+#if HAVE_XI2
         if (xinput_version(display) == XI_2_Major)
             return list_xi2(display, format);
 #endif
