@@ -69,7 +69,7 @@ extern void unsetenv(const char *name);
 #endif
 
 char*
-sprintf_alloc(char *f, ...)
+sprintf_alloc(const char *f, ...)
 {
     char *s;
     va_list args;
@@ -81,7 +81,7 @@ sprintf_alloc(char *f, ...)
 
 #if HAVE_VASPRINTF
 char*
-vsprintf_alloc(char *f, va_list args)
+vsprintf_alloc(const char *f, va_list args)
 {
     char *r;
     int rc;
@@ -93,7 +93,7 @@ vsprintf_alloc(char *f, va_list args)
 }
 #else
 char*
-vsprintf_alloc(char *f, va_list args)
+vsprintf_alloc(const char *f, va_list args)
 {
     int n, size = 12;
     char *string;
@@ -127,7 +127,7 @@ vsprintf_alloc(char *f, va_list args)
 /* Build a UTF-16 string from a Latin-1 string.  
    Result is not NUL-terminated. */
 char *
-makeUTF16(char *string)
+makeUTF16(const char *string)
 {
     int i;
     int n = strlen(string);
@@ -142,7 +142,7 @@ makeUTF16(char *string)
 }
 
 unsigned
-makeName(char *s)
+makeName(const char *s)
 {
     return s[0] << 24 | s[1] << 16 | s[2] << 8 | s[3];
 }

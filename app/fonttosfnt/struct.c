@@ -28,7 +28,7 @@ THE SOFTWARE.
 #include "fonttosfnt.h"
 
 FontPtr
-makeFont()
+makeFont(void)
 {
     FontPtr font;
 

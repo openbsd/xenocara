@@ -166,10 +166,10 @@ int writeFile(char *filename, FontPtr);
 #define PROP_INTEGER 2
 #define PROP_CARDINAL 3
 
-char *sprintf_alloc(char *f, ...);
-char *vsprintf_alloc(char *f, va_list args);
-char *makeUTF16(char *);
-unsigned makeName(char*);
+char *sprintf_alloc(const char *f, ...);
+char *vsprintf_alloc(const char *f, va_list args);
+char *makeUTF16(const char *);
+unsigned makeName(const char*);
 int macTime(int *, unsigned *);
 unsigned faceFoundry(FT_Face);
 char *faceEncoding(FT_Face);

@@ -20,12 +20,12 @@ OpenType) wrapper.
 .TP
 .B \-v
 Be verbose.
-.TP 
+.TP
 .B \-c
 Do not crop glyphs.  This usually increases file size, but may
 sometimes yield a modest decrease in file size for small character
 cell fonts (terminal fonts).
-.TP 
+.TP
 .B \-b
 Write byte-aligned glyph data.  By default, unaligned data is written,
 which yields a smaller file size.
@@ -33,7 +33,7 @@ which yields a smaller file size.
 .B \-r
 Do not reencode fonts.  By default, fonts are reencoded to Unicode
 whenever possible.
-.TP 
+.TP
 .BI \-g " n"
 Set the type of scalable glyphs that we write.  If
 .I n
@@ -49,7 +49,7 @@ is 2 (the default), a sufficiently high number of blank glyphs are
 written, which works with
 .B FreeType
 but increases file size.
-.TP 
+.TP
 .BI \-m " n"
 Set the type of scalable metrics that we write.  If
 .I n
@@ -68,7 +68,7 @@ End of options.
 Some of the font-level values, notably sub- and superscript positions,
 are dummy values.
 .SH SEE ALSO
-X(7), Xserver(1), Xft(3x).
+X(__miscmansuffix__), Xserver(__appmansuffix__), Xft(__libmansuffix__).
 .I Fonts in X11.
 .SH AUTHOR
 The version of
