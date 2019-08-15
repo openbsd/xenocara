@@ -78,7 +78,7 @@ bin_PROGRAMS = xlogo$(EXEEXT)
 @USE_RENDER_TRUE@        RenderLogo.h
 
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(dist_appdefault_DATA) \
+DIST_COMMON = $(am__configure_deps) $(dist_appdefault_DATA) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/config.h.in $(top_srcdir)/configure COPYING \
 	ChangeLog INSTALL compile config.guess config.sub depcomp \
@@ -359,6 +359,7 @@ dist_appdefault_DATA = \
         app-defaults/XLogo-color
 
 MAINTAINERCLEANFILES = ChangeLog INSTALL
+EXTRA_DIST = README.md
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 

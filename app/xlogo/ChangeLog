@@ -1,3 +1,107 @@
+commit 793ce3bb509853c4fab8e04a38ba7ec752176a27
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 3 12:20:21 2019 -0800
+
+    xlogo 1.0.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 24af373f14cc666285a46b7c8eb6540781c6f519
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 24 14:05:06 2019 -0800
+
+    xlogo should not require hitting *both* q and Escape to quit
+    
+    Fixes: https://gitlab.freedesktop.org/xorg/app/xlogo/issues/1
+    Introduced by commit 28ffd14fbae70a5e01cdcbe2cb9342d3c8816b76
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 66ea3f5a4df0ade8bb95e1772102d98e875c2893
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 17:13:17 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 809e3882d90056eadb1c2cd4acac40b3f4d04345
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 22:32:48 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bbe0915ba7fdc3c82c03c8db4926c7ec58b62852
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit b2f5c520a7e382e7e823e07e41a953b3325bf89a
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 98d403a4efa3dc388fe21aaebba367b4f80453aa
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit d4c214ff65ec98989335642780890f1b3fd580db
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 22:24:37 2014 -0700
+
+    config: Add missing AC_CONFIG_SRCDIR
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4ecb39ce273745f29bd4c310bdce9d75761e96f9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:39:32 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 376d7eeb080af8f03f9940ea40f5ca59bad561bf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:38:41 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 84c0386d7c3db6307566219cbe7fe58d9587585a
+Author: Eric S. Raymond <esr@thyrsus.com>
+Date:   Thu Aug 23 12:17:12 2012 -0400
+
+    Eliminate use of tab stops.  Helps with structural translation to DocBook.
+    
+    Signed-off-by: Eric S. Raymond <esr@thyrsus.com>
+
 commit 81f58b56464520fde4e64c0764bc58d5d197b849
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Mar 22 22:49:50 2012 -0700

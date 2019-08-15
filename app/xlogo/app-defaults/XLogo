@@ -1,4 +1,5 @@
 XLogo*iconPixmap:    xlogo32
 XLogo*iconMask:      xlogo32
 XLogo*baseTranslations: #override \
-<Key>q,<Key>Escape: quit()
+<Key>q: quit() \n\
+<Key>Escape: quit()

@@ -64,10 +64,10 @@ indentation indicates hierarchical structure.  The widget class name
 is given first, followed by the widget instance name.
 .sp
 .nf
-.TA .5i
-.ta .5i
+.ft CW
 XLogo  xlogo
-	Logo  xlogo
+        Logo  xlogo
+.ft
 .fi
 .sp
 .SH ENVIRONMENT
