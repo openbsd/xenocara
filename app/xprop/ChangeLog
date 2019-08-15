@@ -1,3 +1,74 @@
+commit e81642bacc58388c223bc157f37c2311a7dbe070
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 9 20:31:09 2019 -0800
+
+    xprop 1.2.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0c3a8c6ae1287187b7f59a53a6f0bdaf27bf9e61
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 3 14:46:22 2019 -0800
+
+    Fix -Wsign-compare warning in dsimple.c
+    
+    dsimple.c:322:13: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+      for (i=0; i<nchildren; i++) {
+                 ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1edcd36934326eafffed6056ea54e2848738ab81
+Author: pmav99 <pmav99@gmail.com>
+Date:   Sat Feb 9 23:27:25 2019 +0000
+
+    Fix typo in xprop.man
+
+commit 5429792c7949ecc30ff445a1d123a6f3e28f3155
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 17:16:58 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fa0112f9ed9f253957b467d533b2fdb351fbac93
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 22:46:14 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5a13b159150bea1ebda8439ed018a3975f30786b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 5 13:26:39 2018 -0700
+
+    Add missing braces around else clause in Read_Quoted()
+    
+    Found by gcc 7.3:
+    
+    xprop.c: In function ‘Read_Quoted’:
+    xprop.c:163:8: warning: this ‘else’ clause does not guard... [-Wmisleading-indentation]
+          } else
+            ^~~~
+    xprop.c:164:17: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘else’
+       ptr++[0] = c; length--;
+                     ^~~~~~
+    
+    Introduced in initial commit to X Consortium RCS in 1987:
+    https://cgit.freedesktop.org/~alanc/xc-historical/commit/xc/programs/xprop/xprop.c?id=18ea83d7457743936e99a574b50e208f7697f096
+    
+    Actual effect is minimal - for every \-escaped newline in the DFORMAT
+    portion of a xprop formats file, xprop subtracted one byte too many
+    from the count of bytes still available in the buffer, which could lead
+    it to return an error of "Bad format file format: dformat too long." when
+    there was still room left.  Since the original buffer size was 10,000
+    bytes, and the current size is 500,000 bytes, it's unlikely anyone ever
+    hit this in real usage.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit ded6efa3da1ce611e4668d7766e934a239f6120c
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Mar 9 18:21:47 2018 -0800

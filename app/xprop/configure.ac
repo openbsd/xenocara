@@ -22,8 +22,8 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xprop], [1.2.3],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xprop])
+AC_INIT([xprop], [1.2.4],
+        [https://gitlab.freedesktop.org/xorg/app/xprop/issues], [xprop])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 

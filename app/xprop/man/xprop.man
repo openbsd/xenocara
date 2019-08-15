@@ -122,7 +122,7 @@ indicated window.
 Examine window properties forever, looking for property change events.
 .PP
 .TP 8
-.B "-verson"
+.B "-version"
 Print program version information and exit.
 .PP
 .TP 8

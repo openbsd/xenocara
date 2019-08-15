@@ -73,7 +73,7 @@ build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = xprop$(EXEEXT)
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
+DIST_COMMON = $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/configure COPYING ChangeLog INSTALL compile \
 	config.guess config.sub depcomp install-sh missing
@@ -324,6 +324,7 @@ MAINTAINERCLEANFILES = ChangeLog INSTALL
 @LINT_TRUE@ALL_LINT_FLAGS = $(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 @LINT_TRUE@		$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS)
 
+EXTRA_DIST = README.md
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 

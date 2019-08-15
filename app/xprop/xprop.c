@@ -160,8 +160,9 @@ Read_Quoted (FILE *stream)
 	    c = Read_Char(stream);
 	    if (c == '\n') {
 		ptr--; length++;
-	    } else
+	    } else {
 		ptr++[0] = c; length--;
+	    }
 	}
     }
     ptr++[0] = '\0';

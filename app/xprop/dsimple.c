@@ -309,7 +309,7 @@ Window Window_With_Name(
 {
 	Window *children, dummy;
 	unsigned int nchildren;
-	int i;
+	unsigned int i;
 	Window w=0;
 	char *window_name;
 
