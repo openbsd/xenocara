@@ -742,12 +742,15 @@ applyConfig(char *name)
     Bool ok;
 
     if ((fp = findFileInPath(name)) == NULL)
+    {
+        ERR1("Couldn't find configuration file \"%s\"\n", name);
         return False;
+    }
     ok = XkbCFParse(fp, XkbCFDflts, NULL, &cfgResult);
     fclose(fp);
     if (!ok)
     {
-        ERR1("Couldn't find configuration file \"%s\"\n", name);
+        ERR1("Couldn't parse configuration file \"%s\"\n", name);
         return False;
     }
     if (cfgResult.rules_file)
