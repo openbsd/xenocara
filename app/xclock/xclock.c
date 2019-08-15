@@ -133,7 +133,7 @@ quit(Widget w, XEvent *event, String *params, Cardinal *num_params)
     Arg arg;
 
     if (event->type == ClientMessage &&
-	event->xclient.data.l[0] != wm_delete_window) {
+	(Atom)event->xclient.data.l[0] != wm_delete_window) {
 #ifdef XKB
 	XkbStdBell(XtDisplay(w), XtWindow(w), 0, XkbBI_MinorError);
 #else
@@ -228,6 +228,14 @@ main(int argc, char *argv[])
 #endif
 
 #ifdef HAVE_PLEDGE
+    {
+        /* force reading of XErrorDB into memory to avoid adding "rpath" to 
+           pledge below */
+        int r;
+        char buf[1];
+        
+	r = XGetErrorDatabaseText(XtDisplay(toplevel), "XProtoError", "0", "",  buf, 1);
+    }
     if (pledge("stdio", NULL) == -1)
 	    err(1, "pledge");
 #endif

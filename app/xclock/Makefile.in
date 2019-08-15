@@ -74,7 +74,7 @@ build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = xclock$(EXEEXT)
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(dist_appdefault_DATA) \
+DIST_COMMON = $(am__configure_deps) $(dist_appdefault_DATA) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/config.h.in $(top_srcdir)/configure COPYING \
 	ChangeLog INSTALL compile config.guess config.rpath config.sub \
@@ -348,6 +348,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = man
 AM_CFLAGS = $(CWARNFLAGS) $(XCLOCK_CFLAGS)
+AM_CPPFLAGS = -D_CONST_X_STRING
 xclock_LDADD = $(XCLOCK_LIBS)
 xclock_SOURCES = \
         Clock.c \
@@ -363,6 +364,7 @@ dist_appdefault_DATA = \
         app-defaults/XClock
 
 EXTRA_DIST = \
+	README.md \
 	clmask.bit \
 	clock.bit
 

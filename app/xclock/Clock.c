@@ -87,7 +87,7 @@ SOFTWARE.
 #include <stdio.h>
 #include <X11/Xos.h>
 #include <X11/Xaw/XawInit.h>
-#if !defined(NO_I18N) && defined(HAVE_ICONV)
+#if !defined(NO_I18N) && defined(HAVE_ICONV) && defined(HAVE_NL_LANGINFO)
 #include <iconv.h>
 #include <langinfo.h>
 #include <errno.h>
@@ -145,8 +145,8 @@ static XtResource resources[] = {
 	goffset(width), XtRImmediate, (XtPointer) 0},
     {XtNheight, XtCHeight, XtRDimension, sizeof(Dimension),
 	goffset(height), XtRImmediate, (XtPointer) 0},
-    {XtNupdate, XtCInterval, XtRInt, sizeof(int),
-        offset(update), XtRImmediate, (XtPointer) 60 },
+    {XtNupdate, XtCInterval, XtRFloat, sizeof(float),
+        offset(update), XtRString, "60.0" },
 #ifndef XRENDER
     {XtNforeground, XtCForeground, XtRPixel, sizeof(Pixel),
         offset(fgpixel), XtRString, XtDefaultForeground},
@@ -226,7 +226,7 @@ static void DrawClockFace ( ClockWidget w );
 static int clock_round ( double x );
 static Boolean SetValues ( Widget gcurrent, Widget grequest, Widget gnew,
 			   ArgList args, Cardinal *num_args );
-#if !defined(NO_I18N) && defined(HAVE_ICONV)
+#if !defined(NO_I18N) && defined(HAVE_ICONV) && defined(HAVE_NL_LANGINFO)
 static char *clock_to_utf8(const char *str, int in_len);
 #endif
 
@@ -521,7 +521,7 @@ TimeString (ClockWidget w, struct tm *tm)
       if (w->clock.twentyfour)
       {
 	  static char brief[6];
-	  sprintf (brief, "%02d:%02d", tm->tm_hour, tm->tm_min);
+	  snprintf (brief, sizeof(brief), "%02d:%02d", tm->tm_hour, tm->tm_min);
 	  return brief;
       }
       else
@@ -529,7 +529,7 @@ TimeString (ClockWidget w, struct tm *tm)
 	 static char brief[9];
 	 int hour = tm->tm_hour % 12;
 	 if (!hour) hour = 12;
-	 sprintf (brief, "%02d:%02d %cM", hour, tm->tm_min,
+	 snprintf (brief, sizeof(brief), "%02d:%02d %cM", hour, tm->tm_min,
 	    tm->tm_hour >= 12 ? 'P' : 'A');
 	 return brief;
       }
@@ -539,7 +539,8 @@ TimeString (ClockWidget w, struct tm *tm)
       static char utime[35];
       Time_t tsec;
       tsec = time(NULL);
-      sprintf (utime, "%10lu seconds since Epoch", (unsigned long)tsec);
+      snprintf (utime, sizeof(utime), "%10lu seconds since Epoch",
+                (unsigned long)tsec);
       return utime;
    } else if (*w->clock.strftime) {
      /*Note: this code is probably excessively paranoid
@@ -584,7 +585,7 @@ Initialize (Widget request, Widget new, ArgList args, Cardinal *num_args)
     if(!w->clock.analog) {
        char *str;
        struct tm tm;
-       Time_t time_value;
+       struct timeval tv;
        int len;
 
 #ifndef NO_I18N
@@ -612,8 +613,8 @@ Initialize (Widget request, Widget new, ArgList args, Cardinal *num_args)
        }
 #endif /* NO_I18N */
 
-       (void) time(&time_value);
-       tm = *localtime(&time_value);
+       X_GETTIMEOFDAY(&tv);
+       tm = *localtime(&tv.tv_sec);
        str = TimeString (w, &tm);
        len = strlen(str);
        if (len && str[len - 1] == '\n') str[--len] = '\0';
@@ -623,13 +624,13 @@ Initialize (Widget request, Widget new, ArgList args, Cardinal *num_args)
        {
 	XGlyphInfo  extents;
 #ifndef NO_I18N
-# ifdef HAVE_ICONV
+# if defined(HAVE_ICONV) && defined(HAVE_NL_LANGINFO)
 	char *utf8_str;
 # endif
 	if (w->clock.utf8)
 	    XftTextExtentsUtf8 (XtDisplay (w), w->clock.face,
 				(FcChar8 *) str, len, &extents);
-# ifdef HAVE_ICONV
+# if defined(HAVE_ICONV) && defined(HAVE_NL_LANGINFO)
 	else if ((utf8_str = clock_to_utf8(str, len)) != NULL) {
 	        XftTextExtentsUtf8 (XtDisplay (w), w->clock.face,
 			(FcChar8 *)utf8_str, strlen(utf8_str), &extents);
@@ -725,7 +726,7 @@ Initialize (Widget request, Widget new, ArgList args, Cardinal *num_args)
 
     /* make invalid update's use a default */
     /*if (w->clock.update <= 0) w->clock.update = 60;*/
-    w->clock.show_second_hand = (abs(w->clock.update) <= SECOND_HAND_TIME);
+    w->clock.show_second_hand = (abs((int) w->clock.update) <= SECOND_HAND_TIME);
     w->clock.numseg = 0;
     w->clock.interval_id = 0;
     memset (&w->clock.otm, '\0', sizeof (w->clock.otm));
@@ -815,7 +816,7 @@ RenderTextBounds (ClockWidget w, char *str, int off, int len,
     int	    x, y;
 
 #ifndef NO_I18N
-# ifdef HAVE_ICONV
+# if defined(HAVE_ICONV) && defined(HAVE_NL_LANGINFO)
     char *utf8_str;
 # endif
     if (w->clock.utf8)
@@ -825,7 +826,7 @@ RenderTextBounds (ClockWidget w, char *str, int off, int len,
 	XftTextExtentsUtf8 (XtDisplay (w), w->clock.face,
 			    (FcChar8 *) str + off, len - off, &tail);
     }
-# ifdef HAVE_ICONV
+# if defined(HAVE_ICONV) && defined(HAVE_NL_LANGINFO)
     else if ((utf8_str = clock_to_utf8(str, off)) != NULL)
     {
 	XftTextExtentsUtf8 (XtDisplay (w), w->clock.face,
@@ -1090,15 +1091,21 @@ RenderHands (ClockWidget w, struct tm *tm, Boolean draw)
 }
 
 static void
-RenderSec (ClockWidget w, struct tm *tm, Boolean draw)
+RenderSec (ClockWidget w, struct tm *tm, struct timeval *tv, Boolean draw)
 {
     double	    c, s;
     XPointDouble    poly[10];
     double	    inner_x, middle_x, outer_x, far_x;
     double	    middle_y;
     double	    line_y;
+    double	    sec;
 
-    ClockAngle (tm->tm_sec * 60, &c, &s);
+    sec = tm->tm_sec;
+
+    if (w->clock.update < 1.0)
+	sec += tv->tv_usec / 1000000.0;
+
+    ClockAngle ((int) (sec * 60.0), &c, &s);
 
     s = -s;
 
@@ -1249,6 +1256,69 @@ Redisplay(Widget gw, XEvent *event, Region region)
     clock_tic((XtPointer)w, (XtIntervalId *)NULL);
 }
 
+#define USEC_MILLIS(us)	((unsigned long) (us) / 1000)
+#define SEC_MILLIS(s)	((unsigned long) (s) * 1000)
+#define MIN_MILLIS(m)	SEC_MILLIS((unsigned long) (m) * 60)
+#define HOUR_MILLIS(h)	MIN_MILLIS((unsigned long) (h) * 60)
+#define DAY_MILLIS	HOUR_MILLIS((unsigned long) 24)
+
+#define MIN_SECS(m)	((unsigned long) (m) * 60)
+#define HOUR_SECS(h)	MIN_SECS((unsigned long) (h) * 60)
+
+/* Seconds since midnight */
+static unsigned long
+time_seconds(struct tm *tm)
+{
+    return HOUR_SECS(tm->tm_hour) + MIN_SECS(tm->tm_min) + tm->tm_sec;
+}
+
+/* Milliseconds since midnight */
+static unsigned long
+time_millis(struct tm *tm, struct timeval *tv)
+{
+    return time_seconds(tm) * 1000 + USEC_MILLIS(tv->tv_usec);
+}
+
+/* Round milliseconds to number of intervals (measured in milliseconds) */
+static unsigned long
+time_intervals(unsigned long millis, unsigned long interval)
+{
+    return (millis + interval / 2) / interval;
+}
+
+/*
+ * Round the current time to the nearest update interval using
+ * milliseconds since midnight
+ */
+static void
+round_time(float _update, struct tm *tm, struct timeval *tv)
+{
+    /* interval in milliseconds */
+    unsigned long	update = (int) (_update * 1000.0 + 0.5);
+
+    /* compute milliseconds since midnight */
+    unsigned long	old_secs = time_seconds(tm);
+    unsigned long	old_millis = time_millis(tm, tv);
+
+    /* Nearest number of intervals since midnight */
+    unsigned long	intervals = time_intervals(old_millis, update);
+
+    /* The number of milliseconds for that number of intervals */
+    unsigned long	new_millis = intervals * update;
+    time_t	t;
+
+    if (new_millis > DAY_MILLIS)
+	new_millis = DAY_MILLIS;
+
+    /* Compute the time_t of that interval by subtracting off the real
+     * seconds and adding back in the desired second
+     */
+
+    t = tv->tv_sec - old_secs + new_millis / 1000;
+    *tm = *localtime(&t);
+    tv->tv_usec = (new_millis % 1000) * 1000;
+}
+
 /* Choose the update times for well-defined clock states.
  *
  * For example, in HH:MM:SS notation the last number rolls over
@@ -1329,36 +1399,22 @@ Redisplay(Widget gw, XEvent *event, Region region)
  * The code below implements (2) with n this year's duration in seconds
  * and using local time year's start as epoch.
  */
+
 static unsigned long
-waittime(int update, struct timeval *tv, struct tm *tm)
+waittime(float _update, struct timeval *tv, struct tm *tm)
 {
-  int twait;
-  long twaitms;
-  unsigned long retval;
+    unsigned long update_millis = (unsigned long) (_update * 1000 + 0.5);
+    unsigned long millis = time_millis(tm, tv);
+    unsigned long intervals = time_intervals(millis, update_millis);
+    unsigned long next = intervals + 1;
+    unsigned long next_millis = next * update_millis;
+    unsigned long result;
 
-  if(update>0) {
-    long tcur;
-    int trem;
+    if (next_millis > DAY_MILLIS)
+	next_millis = DAY_MILLIS;
 
-    tcur=tm->tm_sec+60*(tm->tm_min+60*(tm->tm_hour+24*tm->tm_yday));
-    /* ti=floor(tcur/u)*u, w=u-(tcur-ti), and tcur-ti==tcur % u */
-    trem=tcur % update;
-    twait=update-trem;
-  } else {
-    twait=-update;
-  }
-
-  if(tv->tv_usec>0) {
-    long usec;
-    twait--;
-    usec=1000000-tv->tv_usec;
-    twaitms=(usec+999)/1000;  /* must round up to avoid zero retval */
-  } else {
-    twaitms=0;
-  }
-
-  retval=(unsigned long)labs(twaitms+1000*twait);
-  return retval;
+    result = next_millis - millis;
+    return result;
 }
 
 /* ARGSUSED */
@@ -1367,20 +1423,20 @@ clock_tic(XtPointer client_data, XtIntervalId *id)
 {
         ClockWidget w = (ClockWidget)client_data;
 	struct tm tm;
-	Time_t	time_value;
 	struct timeval	tv;
 	char	*time_ptr;
         register Display *dpy = XtDisplay(w);
         register Window win = XtWindow(w);
 
 	X_GETTIMEOFDAY (&tv);
-	time_value = tv.tv_sec;
-	tm = *localtime(&time_value);
+	tm = *localtime(&tv.tv_sec);
 	if (w->clock.update && (id || !w->clock.interval_id))
 	    w->clock.interval_id =
 		XtAppAddTimeOut( XtWidgetToApplicationContext( (Widget) w),
 				 waittime(w->clock.update, &tv, &tm),
 				 clock_tic, (XtPointer)w );
+
+	round_time(w->clock.update, &tm, &tv);
 	/*
 	 * Beep on the half hour; double-beep on the hour.
 	 */
@@ -1422,7 +1478,7 @@ clock_tic(XtPointer client_data, XtIntervalId *id)
 	    {
 		XRectangle  old_tail, new_tail, head;
 		int	    x, y;
-#if !defined(NO_I18N) && defined(HAVE_ICONV)
+#if !defined(NO_I18N) && defined(HAVE_ICONV) && defined(HAVE_NL_LANGINFO)
 		char *utf8_str;
 #endif
 
@@ -1452,7 +1508,7 @@ clock_tic(XtPointer client_data, XtIntervalId *id)
 				    (FcChar8 *) time_ptr + i, len - i);
 
 		}
-# ifdef HAVE_ICONV
+# if defined(HAVE_ICONV) && defined(HAVE_NL_LANGINFO)
 		else if ((utf8_str =
 		    clock_to_utf8(time_ptr + i, len - i)) != NULL) {
 		    	XftDrawStringUtf8 (w->clock.draw,
@@ -1555,10 +1611,11 @@ clock_tic(XtPointer client_data, XtIntervalId *id)
 				RenderHands (w, &tm, False);
 			    }
 			    if (w->clock.show_second_hand &&
-				tm.tm_sec != w->clock.otm.tm_sec)
+				(tm.tm_sec != w->clock.otm.tm_sec ||
+				tv.tv_usec != w->clock.otv.tv_usec))
 			    {
-				RenderSec (w, &w->clock.otm, False);
-				RenderSec (w, &tm, False);
+				RenderSec (w, &w->clock.otm, &w->clock.otv, False);
+				RenderSec (w, &tm, &tv, False);
 			    }
 			    if (w->clock.damage.width &&
 				w->clock.damage.height)
@@ -1567,9 +1624,10 @@ clock_tic(XtPointer client_data, XtIntervalId *id)
 				DrawClockFace (w);
 				RenderHands (w, &tm, True);
 				if (w->clock.show_second_hand == TRUE)
-				    RenderSec (w, &tm, True);
+				    RenderSec (w, &tm, &tv, True);
 			    }
 			    w->clock.otm = tm;
+			    w->clock.otv = tv;
 			    RenderUpdate (w);
 			    RenderResetBounds (&w->clock.damage);
 			    return;
@@ -1580,7 +1638,8 @@ clock_tic(XtPointer client_data, XtIntervalId *id)
 
 		    if (w->clock.numseg == 0 ||
 			tm.tm_min != w->clock.otm.tm_min ||
-			tm.tm_hour != w->clock.otm.tm_hour) {
+			tm.tm_hour != w->clock.otm.tm_hour ||
+			tm.tm_sec != w->clock.otm.tm_sec) {
 			    w->clock.segbuffptr = w->clock.segbuff;
 			    w->clock.numseg = 0;
 			    /*
@@ -1591,7 +1650,7 @@ clock_tic(XtPointer client_data, XtIntervalId *id)
 			     */
 			    DrawHand(w,
 				w->clock.minute_hand_length, w->clock.hand_width,
-				tm.tm_min * 60
+				tm.tm_min * 60 + tm.tm_sec
 			    );
 			    if(w->clock.Hdpixel != w->core.background_pixel)
 				XFillPolygon( dpy,
@@ -1629,7 +1688,7 @@ clock_tic(XtPointer client_data, XtIntervalId *id)
 				w->clock.second_hand_length - 2,
 				w->clock.second_hand_width,
 				w->clock.minute_hand_length + 2,
-				tm.tm_sec * 60
+				tm.tm_sec * 60 + tv.tv_usec * 60 / 1000000
 			    );
 			    if(w->clock.Hdpixel != w->core.background_pixel)
 				XFillPolygon( dpy,
@@ -1647,6 +1706,7 @@ clock_tic(XtPointer client_data, XtIntervalId *id)
 
 			}
 			w->clock.otm = tm;
+			w->clock.otv = tv;
 		}
 }
 
@@ -1678,7 +1738,8 @@ erase_hands(ClockWidget w, struct tm *tm)
 	    }
 	}
 	if(!tm || tm->tm_min != w->clock.otm.tm_min ||
-		  tm->tm_hour != w->clock.otm.tm_hour)
+		  tm->tm_hour != w->clock.otm.tm_hour ||
+	    tm->tm_sec != w->clock.otm.tm_sec)
  	{
 	    XDrawLines( dpy, win,
 			w->clock.EraseGC,
@@ -2113,7 +2174,7 @@ SetValues(Widget gcurrent, Widget grequest, Widget gnew,
 	  if (new->clock.update && XtIsRealized( (Widget) new))
 	      new->clock.interval_id = XtAppAddTimeOut(
                                          XtWidgetToApplicationContext(gnew),
-					 abs(new->clock.update)*1000,
+					 fabsf(new->clock.update)*1000,
 				         clock_tic, (XtPointer)gnew);
 
 	  new->clock.show_second_hand =(abs(new->clock.update) <= SECOND_HAND_TIME);
@@ -2207,7 +2268,7 @@ SetValues(Widget gcurrent, Widget grequest, Widget gnew,
 
 }
 
-#if !defined(NO_I18N) && defined(HAVE_ICONV)
+#if !defined(NO_I18N) && defined(HAVE_ICONV) && defined(HAVE_NL_LANGINFO)
 static char *
 clock_to_utf8(const char *str, int in_len)
 {
