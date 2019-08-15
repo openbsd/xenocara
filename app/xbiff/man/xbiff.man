@@ -68,7 +68,11 @@ is your login name).  If the MAIL environment variable is set,
 the file specified by it will be monitored.
 .TP 8
 .B \-volume \fIpercentage\fP
-This option specifies how loud the bell should be rung when new mail comes in.
+This option specifies how loud the bell should be rung when new mail
+comes in.  The percentage is relative to the current volume in \fIxset\fP.
+So 0 is normal volume, negative percentages are towards minimum (-100
+is silent), and positive percentages are towards maximum volume (100
+is loudest).
 .TP 8
 .B \-shape
 This option indicates that the mailbox window should be shaped if masks for
@@ -145,6 +149,8 @@ The default is 30.
 .TP 8
 .B volume (\fPclass\fB Volume)
 Specifies how loud the bell should be rung.  The default is 33 percent.
+Note that this is a percentage of the current \fIxset\fP volume.
+To reduce the volume, specify a negative percentage.
 .TP 8
 .B foreground (\fPclass\fB Foreground)
 Specifies the color for the foreground.

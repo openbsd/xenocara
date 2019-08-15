@@ -541,10 +541,10 @@ static void GetMailFile (MailboxWidget w)
     }
 #endif
     if ((mailpath = getenv("MAIL"))) {
-	w->mailbox.filename = (String) XtMalloc (strlen (mailpath) + 1);
+	w->mailbox.filename = XtMalloc (strlen (mailpath) + 1);
 	strcpy (w->mailbox.filename, mailpath);
     } else {
-	w->mailbox.filename = (String) XtMalloc (strlen (MAILBOX_DIRECTORY) + 1
+	w->mailbox.filename = XtMalloc (strlen (MAILBOX_DIRECTORY) + 1
 						 + strlen (username) + 1);
 	strcpy (w->mailbox.filename, MAILBOX_DIRECTORY);
 	strcat (w->mailbox.filename, "/");

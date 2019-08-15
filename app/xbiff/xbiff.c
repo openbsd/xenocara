@@ -52,7 +52,7 @@ static Atom wm_delete_window;
 static void quit (Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     if (event->type == ClientMessage &&
-        event->xclient.data.l[0] != wm_delete_window) {
+        ((Atom) event->xclient.data.l[0]) != wm_delete_window) {
         XBell (XtDisplay(w), 0);
         return;
     }

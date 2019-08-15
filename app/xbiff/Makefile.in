@@ -73,7 +73,7 @@ build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = xbiff$(EXEEXT)
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
+DIST_COMMON = $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/configure COPYING ChangeLog INSTALL compile \
 	config.guess config.sub depcomp install-sh missing \
@@ -309,7 +309,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = man
-AM_CFLAGS = $(CWARNFLAGS) $(XBIFF_CFLAGS) -D_BSD_SOURCE
+AM_CFLAGS = $(CWARNFLAGS) $(XBIFF_CFLAGS) -D_BSD_SOURCE -D_CONST_X_STRING
 xbiff_LDADD = $(XBIFF_LIBS)
 xbiff_SOURCES = \
         Mailbox.c \
@@ -317,7 +317,7 @@ xbiff_SOURCES = \
         MailboxP.h \
         xbiff.c
 
-EXTRA_DIST = bitmaps/mail-down bitmaps/mail-up bitmaps/mail-down-mask bitmaps/mail-up-mask
+EXTRA_DIST = bitmaps/mail-down bitmaps/mail-up bitmaps/mail-down-mask bitmaps/mail-up-mask README.md
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive

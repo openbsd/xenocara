@@ -59,7 +59,7 @@ typedef struct {			/* new fields for mailbox widget */
     /* resources */
     int update;				/* seconds between updates */
     Pixel foreground_pixel;		/* color index of normal state fg */
-    String filename;			/* filename to watch */
+    char *filename;			/* filename to watch */
     String check_command;		/* command to exec for mail check */
     Boolean flipit;			/* do flip of full pixmap */
     int volume;				/* bell volume */

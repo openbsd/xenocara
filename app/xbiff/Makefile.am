@@ -22,7 +22,7 @@
 SUBDIRS = man
 bin_PROGRAMS = xbiff
 
-AM_CFLAGS = $(CWARNFLAGS) $(XBIFF_CFLAGS) -D_BSD_SOURCE
+AM_CFLAGS = $(CWARNFLAGS) $(XBIFF_CFLAGS) -D_BSD_SOURCE -D_CONST_X_STRING
 xbiff_LDADD = $(XBIFF_LIBS)
 
 xbiff_SOURCES =	\
@@ -31,7 +31,7 @@ xbiff_SOURCES =	\
         MailboxP.h \
         xbiff.c
 
-EXTRA_DIST = bitmaps/mail-down bitmaps/mail-up bitmaps/mail-down-mask bitmaps/mail-up-mask
+EXTRA_DIST = bitmaps/mail-down bitmaps/mail-up bitmaps/mail-down-mask bitmaps/mail-up-mask README.md
 
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 

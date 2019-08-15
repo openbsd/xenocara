@@ -1,3 +1,112 @@
+commit a757ec8b8f867f09deb1e95a61f07a6a6227e77c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 14 11:29:14 2019 -0700
+
+    xbiff 1.0.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5c28b6eeb241162894999aa36b335eb2441b2c1e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 1 19:41:25 2019 -0700
+
+    Fix -Wsign-compare warning in quit() function
+    
+    Reported by gcc 7.3:
+    xbiff.c: In function ‘quit’:
+    xbiff.c:55:34: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+             event->xclient.data.l[0] != wm_delete_window) {
+                                      ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e18a25f27313d90ec8da4057b8413b6937bee1c2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 1 19:39:07 2019 -0700
+
+    Use _CONST_X_STRING to make libXt declare String as const char *
+    
+    Clears up 20 of 35 gcc -Wdiscarded-qualifiers warnings from gcc 7.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2c0ba1ba92fdf393f30ffab0667cf507ecae09b0
+Author: Kevin Lyda <kevin@ie.suberic.net>
+Date:   Mon Apr 8 09:00:09 2019 +0100
+
+    Clarify how volume works
+    
+    It was noted in https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=62763
+    that the man page doesn't really clarify how the volume flag/xresource
+    works. This is an attempt to address this situation and let this
+    long standing bug finally go silent.
+
+commit f253c28fccbd395f5f5063d60bd81179dda76d4f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 16:59:02 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f0f414797e0ab2c1e29c89be163a261720ae88c6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 21:10:40 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3c975ff2c62c72a67db54bfff5fc32432b020488
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:20 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 5efb3e906a13725a79e699e63a9b2caf1feea51b
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit aedf27bc2abb6186476f267ba6fb7fcacfd4ae41
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit f44618e69bb625b657137f4a0e4b601619d76849
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 22:10:13 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 72dae28d82f81cc8512ae23eef32ea8c7b32fdd6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 22:10:13 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 3d9d486dfbd40dedc328943fc39041874bb15a25
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Jan 25 12:43:26 2011 -0800
