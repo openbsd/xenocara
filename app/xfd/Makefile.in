@@ -74,7 +74,7 @@ build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = xfd$(EXEEXT)
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(dist_appdefault_DATA) \
+DIST_COMMON = $(am__configure_deps) $(dist_appdefault_DATA) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/config.h.in $(top_srcdir)/configure COPYING \
 	ChangeLog INSTALL compile config.guess config.sub depcomp \
@@ -360,6 +360,7 @@ dist_appdefault_DATA = \
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 @USE_GETTEXT_TRUE@noinst_DATA = xfd.po
 @USE_GETTEXT_TRUE@CLEANFILES = xfd.po
+EXTRA_DIST = README.md
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 

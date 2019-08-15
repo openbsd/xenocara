@@ -183,7 +183,6 @@ main(int argc, char *argv[])
     XftFont *xft;
 #endif
     char *fontname;
-    const char *domaindir;
     long minn, maxn;
 
     XtSetLanguageProc(NULL, NULL, NULL);
@@ -195,13 +194,17 @@ main(int argc, char *argv[])
 				&argc, argv, NULL, NULL, 0);
 
 #ifdef USE_GETTEXT
-    textdomain("xfd");
+    {
+	const char *domaindir;
 
-    /* mainly for debugging */
-    if ((domaindir = getenv ("TEXTDOMAINDIR")) == NULL) {
-	domaindir = LOCALEDIR;
+	textdomain("xfd");
+
+        /* mainly for debugging */
+	if ((domaindir = getenv ("TEXTDOMAINDIR")) == NULL) {
+	    domaindir = LOCALEDIR;
+	}
+	bindtextdomain ("xfd", domaindir);
     }
-    bindtextdomain ("xfd", domaindir);
 #endif
 
     Resources[0].default_addr = gettext(DEF_SELECT_FORMAT);

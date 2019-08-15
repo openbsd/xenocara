@@ -23,14 +23,13 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xfd],[1.1.2],
-	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xfd])
+AC_INIT([xfd],[1.1.3],
+	[https://gitlab.freedesktop.org/xorg/app/xfd/issues], [xfd])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
 
 # Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
@@ -58,8 +57,18 @@ if test "x$USE_GETTEXT" = "xyes" ; then
 fi
 AM_CONDITIONAL(USE_GETTEXT, test "x$USE_GETTEXT" = "xyes")
 
+# Optional dependencies
+AC_ARG_WITH(xkb,
+        AS_HELP_STRING([--without-xkb],
+                [Disable use of XKB to sound bells (Default is with-xkb)]),
+        use_xkb="$withval", use_xkb="yes")
+if test x$use_xkb != xno ; then
+        XKBMODULE="xkbfile"
+        AC_DEFINE([XKB],1,[Define to use XkbStdBell])
+fi
+
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XFD, [xaw7 fontconfig xft xrender xmu xproto >= 7.0.17])
+PKG_CHECK_MODULES(XFD, [xaw7 fontconfig xft xrender xmu xproto >= 7.0.17 ${XKBMODULE}])
 
 PKG_CHECK_MODULES(APPDEFS, xt)
 xt_appdefaultdir=`$PKG_CONFIG --variable=appdefaultdir xt`

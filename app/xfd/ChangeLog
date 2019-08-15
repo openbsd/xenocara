@@ -1,3 +1,97 @@
+commit 9cf6578a0c35b14af13dc104ab3f4ccf64e673ae
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 9 18:56:26 2019 -0800
+
+    xfd 1.1.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6a4309a40f48321c69952bfbee4c73cf2d8405dd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 3 11:36:00 2019 -0800
+
+    Re-enable code to use XKB Bells
+    
+    Enabled by default, use --without-xkb to disable.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 63d2de15dbac3db071beafaad7bbc7ccf0ff79cd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 17:03:17 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8ac9bff6605b22a7675c0afacdb6965445b9a914
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 21:58:19 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8bf70e4d5c06402fef018f5a257474da2e6c43f3
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 98e01ab922b4f39270af939fe8632f1414328ed8
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 701d598d089c6cdbe38f8396468f4d32bb6340f6
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 19846b6b94cae254dc9c958e0896f056ae707b0b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 22:31:09 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 61a1cb30d18ebfe0687616811e5ac714f572754f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 22:31:09 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 816ae0e04d0d189adb2da13007b6f6e3d53ae03c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 10 22:38:34 2013 -0800
+
+    Move domaindir declaration inside #ifdef USE_GETTEXT
+    
+    Avoid unused variable warnings if USE_GETTEXT is undefined
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit ef0068345c2b82347e7b5ed319266c11c38f690e
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Jul 16 23:02:08 2013 -0700
@@ -268,7 +362,7 @@ Date:   Fri Jan 29 22:45:46 2010 -0800
      - Use AM_CFLAGS so AM_PROG_CC_C_O isn't needed
      - Combine pkg-config calls now that we don't need special handling for Xaw
      - Add dependencies on libXmu & libXrender since xfd calls functions in
-    	those directly
+            those directly
     
     Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 

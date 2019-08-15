@@ -60,3 +60,5 @@ xfd.po: $(xfd_SOURCES:%=$(srcdir)/%)
 
 CLEANFILES = xfd.po
 endif
+
+EXTRA_DIST = README.md

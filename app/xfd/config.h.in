@@ -65,3 +65,6 @@
 
 /* Version number of package */
 #undef VERSION
+
+/* Define to use XkbStdBell */
+#undef XKB
