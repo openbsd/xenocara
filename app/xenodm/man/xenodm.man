@@ -23,7 +23,7 @@
 .\" from The Open Group.
 .\"
 .\"
-.Dd $Mdocdate: April 16 2019 $
+.Dd $Mdocdate: August 15 2019 $
 .Dt XENODM 1
 .Os __xorgversion__
 .Sh NAME
@@ -1174,9 +1174,9 @@ else
 	if [ -f "$resources" ]; then
 		xrdb -load "$resources"
 	fi
-	twm &
-	xman -geometry +10-10 &
-	exec xterm -geometry 80x24+10+10 -ls
+	xclock -geometry 100x100-0+0 &
+	xterm -geometry 80x24+10+10 -ls &
+	exec twm
 fi
 .Ed
 .Pp
@@ -1185,13 +1185,12 @@ The user's
 file might look something like this example.
 Don't forget that the file must have execute permission.
 .Bd -literal -offset Ds
-#! /bin/csh
-# no -f in the previous line so .cshrc gets run to set $PATH
-twm &
+#! /bin/sh
 xrdb -merge "$HOME/.Xresources"
 emacs -geometry +0+50 &
 xbiff -geometry -430+5 &
-xterm -geometry -0+50 -ls
+xterm -geometry -0+50 -ls &
+exec twm 
 .Ed
 .Sh RESET PROGRAM
 Symmetrical with
