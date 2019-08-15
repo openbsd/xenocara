@@ -88,7 +88,6 @@ menu "Utilities"
 {
 "Top"		!"xterm -T Top -n Top -e top &"
 "Calculator"	!"xcalc &"
-"Xman"		!"xman &"
 "Xmag"		!"xmag &"
 "Editres"	!"editres &"
 ""		f.nop
@@ -123,7 +122,6 @@ menu "Restart"
 "wm2"		f.startwm "wm2"
 "ctwm"		f.startwm "ctwm"
 "mwm"		f.startwm "mwm"
-"olwm"		f.startwm "olwm"
 ""		f.nop
 "dummy"		f.startwm "xterm"
 }
