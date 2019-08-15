@@ -1,3 +1,100 @@
+commit 699ec4772f024e70dbb5474921acd4977ecfce4c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Feb 19 14:21:20 2019 -0800
+
+    xev 1.2.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 25f92ab3238e9aec22214186c64cc968fb8af416
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 17:02:34 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2aa71349b3c3e206c0936c59322079adfab0d450
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 21:41:17 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6cb245a4cadff580e0e5b0739f052ca74d9097b9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 6 12:49:26 2018 -0700
+
+    Replace sprintf calls with snprintf
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fe3bbae5c75b5bb9bc34f9b3ae93b1bc66708691
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 6 12:44:25 2018 -0700
+
+    Adopt X.Org standard code style
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 366b03aee6dc4cb19aa82f6cd2dd067646873777
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 6 12:15:25 2018 -0700
+
+    Collapse usage message into a single string
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e08d28020c38a9fc5167c785334d426fe0f157d1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 6 12:09:21 2018 -0700
+
+    Add -version to usage output
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 25bb70e02407822ae5b03e74571275afcd037f98
+Author: Eitan Adler <lists@eitanadler.com>
+Date:   Sat Jul 28 08:28:36 2018 +0000
+
+    xev: fix 'mode' in default case (version 2)
+    
+    Signed-off-by: Eitan Adler <lists@eitanadler.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit d1f08f62b455f5921ee4b7c86bc5b8e92d2871ed
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 201b7fbfc345f38c90c38680dc98328605bbec99
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 45016c5c901fcc0f898403f88b68939283d25b96
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
 commit a92082cb05bb3d6d3f0bebb951133774ca2dd412
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Apr 16 23:11:22 2015 -0700
