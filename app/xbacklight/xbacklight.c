@@ -26,6 +26,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include <xcb/xcb.h>
 #include <xcb/xcb_util.h>
@@ -57,6 +58,20 @@ usage (int exitcode)
             "  -time <fade time in milliseconds>\n"
             "  -steps <number of steps in fade>\n");
     exit (exitcode);
+}
+
+static double
+atof_or_die (char *str)
+{
+    double retval;
+    char *endptr = NULL;
+    errno = 0;
+    retval = strtod(str, &endptr);
+    if ((errno != 0) || (endptr == str)) {
+        fprintf(stderr, "%s: invalid argument '%s'\n", program_name, str);
+        usage(1);
+    }
+    return retval;
 }
 
 static void
@@ -150,39 +165,39 @@ main (int argc, char **argv)
 	{
 	    if (++i >= argc) missing_arg (argv[i-1]);
 	    op = Set;
-	    value = atof (argv[i]);
+	    value = atof_or_die (argv[i]);
 	    continue;
 	}
 	if (argv[i][0] == '=' && isdigit (argv[i][1]))
 	{
 	    op = Set;
-	    value = atof (argv[i] + 1);
+	    value = atof_or_die (argv[i] + 1);
 	    continue;
 	}
 	if (!strcmp (argv[i], "-inc") || !strcmp (argv[i], "+"))
 	{
 	    if (++i >= argc) missing_arg (argv[i-1]);
 	    op = Inc;
-	    value = atof (argv[i]);
+	    value = atof_or_die (argv[i]);
 	    continue;
 	}
 	if (argv[i][0] == '+' && isdigit (argv[i][1]))
 	{
 	    op = Inc;
-	    value = atof (argv[i] + 1);
+	    value = atof_or_die (argv[i] + 1);
 	    continue;
 	}
 	if (!strcmp (argv[i], "-dec") || !strcmp (argv[i], "-"))
 	{
 	    if (++i >= argc) missing_arg (argv[i-1]);
 	    op = Dec;
-	    value = atof (argv[i]);
+	    value = atof_or_die (argv[i]);
 	    continue;
 	}
 	if (argv[i][0] == '-' && isdigit (argv[i][1]))
 	{
 	    op = Dec;
-	    value = atof (argv[i] + 1);
+	    value = atof_or_die (argv[i] + 1);
 	    continue;
 	}
 	if (!strcmp (argv[i], "-get") || !strcmp (argv[i], "-g"))
@@ -328,7 +343,7 @@ main (int argc, char **argv)
 				cur = new;
 			    else
 				cur += step;
-			    backlight_set (conn, output, (long) cur);
+			    backlight_set (conn, output, (long) (cur + 0.5));
 			    xcb_flush (conn);
 			    usleep (total_time * 1000 / steps);
 			}

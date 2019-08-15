@@ -1,3 +1,63 @@
+commit 76de9d7a0faeb74b7d5d8b5dfcf632c6c1eae879
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 14 11:25:03 2019 -0700
+
+    xbacklight 1.2.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5172321febbd76a55f32c859996d8923333da3a1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 9 13:23:06 2019 -0700
+
+    atof_or_die: Also die if nothing was converted
+    
+    Needed on Solaris to catch errors with strings that have no numbers
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 92de87f30c2fd25245e3e345633fe497665b5448
+Author: Roberto Ricci <rroberto2r@gmail.com>
+Date:   Sun Feb 11 17:12:14 2018 +0100
+
+    exit if conv. from string to double fails
+    
+    atof(3), whose return value is undefined on error, is used to parse
+    command line arguments, leading to undefined beavior if something else
+    than a number is specified.
+    this patch uses strtod(3) and exits on error.
+    
+    Signed-off-by: Roberto Ricci <rroberto2r@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ce6001abfc93c8309fd9ece97e0f8783dd64f346
+Author: Roman Donchenko <dpb@corrigendum.ru>
+Date:   Wed Apr 3 00:09:20 2013 +0400
+
+    Properly round the new brightness value
+    
+    Previously, it was always rounded down, which meant that -dec X would
+    result in a bigger change than -inc X for the same X if rounding took place.
+    
+    Signed-off-by: Roman Donchenko <dpb@corrigendum.ru>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 31d4c5d6c10d1547d0031a36ed7c57b78d048fea
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 16:58:46 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 12274b4d4b3c76e90e9417efb1c7b2f39fc55e7a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 21:09:45 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 8709d1efd4b8131ddc0a04229bc148a6f473d6f0
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Mar 9 17:35:30 2018 -0800
