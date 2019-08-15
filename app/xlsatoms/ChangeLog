@@ -1,3 +1,136 @@
+commit 90e2f5a00d304c8b344f42a72b4543f6e4fd4cd6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Feb 19 15:27:23 2019 -0800
+
+    xlsatoms 1.1.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d7e52dc1d62164ce5a68c276d46c9f7283b5e040
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 17:13:31 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4f3b875fad61a3f3457f036412cdf5b0a69fe300
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 22:33:37 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1ffbd9c5be8fb61bcbe9bb06d349af54bfbb2f3b
+Author: Tobias Stoeckmann <tobias@stoeckmann.org>
+Date:   Wed Jul 4 15:33:18 2018 +0200
+
+    Adjust man page to show default format.
+    
+    The default format is %lu\t%s, not %ld\t%s, i.e. unsigned.
+    
+    Signed-off-by: Tobias Stoeckmann <tobias@stoeckmann.org>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 52a6e57bfd7f273fc754c12a44eb94200f3de0b9
+Author: Tobias Stoeckmann <tobias@stoeckmann.org>
+Date:   Wed Jul 4 15:29:58 2018 +0200
+
+    Always use chunks when retrieving atoms.
+    
+    If a low and high range limit has been specified, all atoms are
+    retrieved at once. This is also the reason why malloc() is used:
+    All cookies are stored before collecting the data.
+    
+    By using chunks it is possible to specify a huge range or even
+    all possible atoms without running out of memory.
+    
+    Signed-off-by: Tobias Stoeckmann <tobias@stoeckmann.org>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3e27b6a63f3baf153bba076e12870f2a88691a13
+Author: Tobias Stoeckmann <tobias@stoeckmann.org>
+Date:   Wed Jul 4 15:29:26 2018 +0200
+
+    Actually stop after an invalid atom.
+    
+    The manual page states that if no upper range limit has been specified,
+    no higher atoms will be printed. This is not true for
+    
+    $ xlsatoms -range 0-
+    
+    This prints the first 100 atoms, even though it already encountered an
+    invalid one at 0. The reason is that say_batch works as a batch, i.e.
+    retrieves 100 atoms at a time. If one of them is invalid, the rest is
+    still printed.
+    
+    With this adjustment, xlsatoms behaves as stated in manual page.
+    
+    Signed-off-by: Tobias Stoeckmann <tobias@stoeckmann.org>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 22a8eb00662a926cd5df52ba15851a31104ae41e
+Author: Tobias Stoeckmann <tobias@stoeckmann.org>
+Date:   Wed Jul 4 15:28:41 2018 +0200
+
+    Support xcb_atom_t in range specification.
+    
+    The data type xcb_atom_t is an unsigned int (32 bit), but the optional
+    range argument is parsed with atoi(), which returns a signed int.
+    
+    Even though it is possible to reach all values through clever casting,
+    it is more readable by properly using correct data types.
+    
+    This also fixes a segmentation fault on 32 bit systems if a range is
+    supplied which overflows size_t:
+    
+    $ xlsatoms -range 0-1073741824
+    Segmentation fault (core dumped)
+    
+    If an invalid range is supplied, an error message is printed. This is
+    new because previously an invalid range was silently accepted.
+    
+    $ xlsatoms -range 0--1
+    $ _
+    $ xlsatoms-new -range 0--1
+    xlsatoms-new:  invalid range: 0--1
+    
+    Signed-off-by: Tobias Stoeckmann <tobias@stoeckmann.org>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c0812822f34affaae3c3eced8a625535e515a290
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit ba6492896481220c5a6095fbed1952ca2cecbb8e
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 6d0ab94a3822ee6617102cb8b25a1d9dda298fb8
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
 commit 8b773cc5ccc8568f3b089229b5ae85ebaca94836
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Apr 16 23:49:40 2015 -0700

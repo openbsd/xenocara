@@ -31,6 +31,7 @@ in this Software without prior written authorization from The Open Group.
 # include "config.h"
 #endif
 
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -45,10 +46,10 @@ static const char *ProgramName;
 static const char *DisplayString;
 
 static void do_name ( xcb_connection_t *c, const char *format, char *name );
-static int parse_range ( char *range, long *lowp, long *highp );
+static int parse_range ( char *range, xcb_atom_t *lowp, xcb_atom_t *highp );
 static void do_range ( xcb_connection_t *c, const char *format, char *range );
 static void list_atoms ( xcb_connection_t *c, const char *format, int mask,
-			 long low, long high );
+			 xcb_atom_t low, xcb_atom_t high );
 
 static void 
 usage(const char *errmsg)
@@ -161,8 +162,23 @@ do_name(xcb_connection_t *c, const char *format, char *name)
 #define RangeLow (1 << 0)
 #define RangeHigh (1 << 1)
 
+static int
+strtoatom(char *s, xcb_atom_t *atom)
+{
+    long long value;
+    char *end;
+
+    value = strtoll(s, &end, 10);
+    if (s == end || *end != '\0' || value < 0 || value > UINT32_MAX) {
+	return 1;
+    }
+
+    *atom = value;
+    return 0;
+}
+
 static int 
-parse_range(char *range, long *lowp, long *highp)
+parse_range(char *range, xcb_atom_t *lowp, xcb_atom_t *highp)
 {
     char *dash;
     int mask = 0;
@@ -179,35 +195,46 @@ parse_range(char *range, long *lowp, long *highp)
 	    *lowp = 1;
 	} else {			/* low-[high] */
 	    *dash = '\0';
-	    *lowp = atoi (range);
+	    if (strtoatom(range, lowp)) {
+		*dash = '-';
+		goto invalid;
+	    }
 	    *dash = '-';
 	}
 	mask |= RangeLow;
 	dash++;
 	if (*dash) {			/* [low]-high */
-	    *highp = atoi (dash);
+	    if (strtoatom(dash, highp) || *highp < *lowp) {
+		goto invalid;
+	    }
 	    mask |= RangeHigh;
 	}
     } else {				/* number (low == high) */
-	*lowp = *highp = atoi (range);
+	if (strtoatom(range, lowp)) {
+		goto invalid;
+	}
+	*highp = *lowp;
 	mask |= (RangeLow | RangeHigh);
     }
 
     return mask;
+invalid:
+    fprintf(stderr, "%s:  invalid range: %s\n", ProgramName, range);
+    exit(1);
 }
 
 static void
 do_range(xcb_connection_t *c, const char *format, char *range)
 {
     int mask;
-    long low, high;
+    xcb_atom_t low, high;
 
     mask = parse_range (range, &low, &high);
     list_atoms (c, format, mask, low, high);
 }
 
 static int
-say_batch(xcb_connection_t *c, const char *format, xcb_get_atom_name_cookie_t *cookie, long low, long count)
+say_batch(xcb_connection_t *c, const char *format, xcb_get_atom_name_cookie_t *cookie, xcb_atom_t low, long count, int stop_error)
 {
     xcb_generic_error_t *e;
     char atom_name[1024];
@@ -221,13 +248,15 @@ say_batch(xcb_connection_t *c, const char *format, xcb_get_atom_name_cookie_t *c
 	xcb_get_atom_name_reply_t *r;
 	r = xcb_get_atom_name_reply(c, cookie[i], &e);
 	if (r) {
-	    /* We could just use %.*s in 'format', but we want to be compatible
-	       with legacy command line usage */
-	    snprintf(atom_name, sizeof(atom_name), "%.*s",
-		r->name_len, xcb_get_atom_name_name(r));
+	    if (!done || !stop_error) {
+		/* We could just use %.*s in 'format', but we want to be compatible
+		   with legacy command line usage */
+		snprintf(atom_name, sizeof(atom_name), "%.*s",
+		    r->name_len, xcb_get_atom_name_name(r));
 
-	    printf (format, i + low, atom_name);
-	    putchar ('\n');
+		printf (format, i + low, atom_name);
+		putchar ('\n');
+	    }
 	    free(r);
 	}
 	if (e) {
@@ -236,46 +265,27 @@ say_batch(xcb_connection_t *c, const char *format, xcb_get_atom_name_cookie_t *c
 	}
     }
 
-    return done;
+    return done && stop_error;
 }
 
 static void
-list_atoms(xcb_connection_t *c, const char *format, int mask, long low, long high)
+list_atoms(xcb_connection_t *c, const char *format, int mask, xcb_atom_t low, xcb_atom_t high)
 {
-    xcb_get_atom_name_cookie_t *cookie_jar;
+    xcb_get_atom_name_cookie_t cookie_jar[ATOMS_PER_BATCH];
     int done = 0;
+    long count;
 
-    switch (mask) {
-      case RangeHigh:
+    if ((mask & RangeLow) == 0)
 	low = 1;
-	/* fall through */
-      case (RangeLow | RangeHigh):
-	cookie_jar = malloc((high - low + 1) * sizeof(xcb_get_atom_name_cookie_t));
-        if (!cookie_jar) {
-	    fprintf(stderr, "Out of memory allocating space for %ld atom requests\n", high - low);
-	    return;
-	}
+    if ((mask & RangeHigh) == 0)
+	high = UINT32_MAX;
 
-	say_batch(c, format, cookie_jar, low, high - low + 1);
-	free(cookie_jar);
-	break;
-
-      default:
-	low = 1;
-	/* fall through */
-      case RangeLow:
-	cookie_jar = malloc(ATOMS_PER_BATCH * sizeof(xcb_get_atom_name_cookie_t));
-        if (!cookie_jar) {
-	    fprintf(stderr, "Out of memory allocating space for %ld atom requests\n", (long) ATOMS_PER_BATCH);
-	    return;
+    while (!done) {
+	count = high - low < ATOMS_PER_BATCH - 1 ? high - low + 1 : ATOMS_PER_BATCH;
+	done = say_batch(c, format, cookie_jar, low, count, (mask & RangeHigh) == 0);
+	if (high - low < UINT32_MAX && low == high - count + 1) {
+	    done = 1;
 	}
-	while (!done) {
-	    done = say_batch(c, format, cookie_jar, low, ATOMS_PER_BATCH);
-	    low += ATOMS_PER_BATCH;
-	}
-	free(cookie_jar);
-	break;
+	low += count;
     }
-
-    return;
 }

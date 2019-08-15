@@ -44,7 +44,7 @@ This option specifies the X server to which to connect.
 This option specifies a \fIprintf\fP-style string used to list each atom
 \fI<value,name>\fP pair, printed in that order (\fIvalue\fP is an \fIunsigned
 long\fP and \fIname\fP is a \fIchar *\fP).  \fIXlsatoms\fP will supply a
-newline at the end of each line.  The default is \fI%ld\\t%s\fP.
+newline at the end of each line.  The default is \fI%lu\\t%s\fP.
 .TP 8
 .B \-range \fI[low]-[high]\fP
 This option specifies the range of atom values to check.  If \fIlow\fP is not
