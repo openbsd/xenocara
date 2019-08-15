@@ -1,3 +1,50 @@
+commit ccf46116f8fba6a3e32bff6b3c0be420f821828c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 24 15:55:48 2019 -0700
+
+    xcompmgr 1.1.8
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5a7d139f33288c77c77622cdcb1453a58e25a2ec
+Author: Brandon Gooch <jamesbrandongooch@gmail.com>
+Date:   Sat Aug 11 21:58:58 2012 -0500
+
+    xcompmgr 1.1.6-1 doesn't draw shadows
+    
+    This patch reworks the XFixesIntersectRegion calls to apply to the
+    correct window modes.
+    
+    Fixes: https://gitlab.freedesktop.org/xorg/app/xcompmgr/issues/3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9c86c0f21b9d34c0ae491327482415a946102c4f
+Author: Jason Woofenden <jason@jasonwoof.com>
+Date:   Mon Dec 26 21:08:05 2011 -0500
+
+    fix fade-in speed when opacity raises
+    
+    Fixes: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=648158
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3f37d974bedea52c0b4d8cf576baa2180a8f222d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 17:00:19 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit aba4a53594d600dc61b0c8faf86e2ce1c2adea74
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 21:19:36 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit e99e56944915a99981ec28d7525347bf9da7fb94
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Apr 16 22:56:13 2015 -0700
