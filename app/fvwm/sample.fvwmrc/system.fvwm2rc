@@ -102,7 +102,6 @@ AddToMenu RootMenu	"Root Menu"	Title
 AddToMenu Utilities     "Utilities" Title
 +			"Top"		Exec exec xterm -T Top -n Top -e top
 +			"Calculator"	Exec exec xcalc
-+			"Xman"		Exec exec xman
 +			"Xmag"		Exec exec xmag
 +                       "Editres"       Exec exec editres
 +			""		Nop
