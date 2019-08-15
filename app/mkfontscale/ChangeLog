@@ -1,3 +1,436 @@
+commit 79f686765238ddd0e4753f9d4ee62b5a5296610e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Mar 20 20:58:15 2019 -0700
+
+    mkfontscale 1.2.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 29cab25240cf30f546671f265167a2eeadfd4c75
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Mar 7 13:23:00 2019 -0800
+
+    Revert "Use autoconf instead of sed to substitute @bindir@ in mkfontdir.in"
+    
+    This reverts commit 1f9d14bec07092d62da29a5a233cefbf84d47289.
+    It caused https://gitlab.freedesktop.org/xorg/app/mkfontscale/issues/5
+
+commit 8fbafcfe7e5ef4a2030e3963f31143bba2c8786f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 2 14:16:48 2019 -0800
+
+    mkfontscale 1.2.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bef1c614465f2c8546a7d946a75d8f10c5f3ca40
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Feb 19 11:45:29 2019 -0800
+
+    Add mkfontdir to .gitignore
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1f9d14bec07092d62da29a5a233cefbf84d47289
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Feb 18 18:27:31 2019 -0800
+
+    Use autoconf instead of sed to substitute @bindir@ in mkfontdir.in
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d3b0f267bd25ab888efc0417f62d525afa32208a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Feb 18 18:23:50 2019 -0800
+
+    Add mkfontdir to README.md
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 270540bb11914ea92436e251b14bc39d6b5df589
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Thu Oct 6 10:29:42 2011 -0700
+
+    mkfontdir: Fix issues where mkfontscale and mkfontdir are installed in different locations or bindir contains a space
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=24465
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit cfbeaa0b99944ab887b4854baa63eadd4e5481f5
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Tue Mar 15 11:55:11 2011 +0000
+
+    mkfontdir: Fix for non-srcdir builds
+    
+    Fix commit ad5fefcc7a0a0beb1c02270d9f28c8b28da61199 for non-srcdir builds
+    
+    Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 758df83c5825b77f338e44c1fcc4c5070d3c3516
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 11 14:10:19 2011 -0800
+
+    mkfontdir: Make Makefile.am compatible with Solaris make
+    
+    Solaris make won't substitute $< in explicit rules, only implicit ones
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8290027e067ffd0a3f37eeafbd27121e2884cea4
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Jan 22 09:27:09 2011 -0500
+
+    mkfontdir: config: substitute bindir in mkfontdir using Autoconf @bindir@
+    
+    Use the Autoconf recommended way of substituting bindir, see
+    http://www.gnu.org/software/autoconf/manual/autoconf.html
+    
+    Use # sign for comment in script.
+    Only sed is used, drop the cpp terminology.
+    
+    Reviewed-by: Rémi Cardona <remi@gentoo.org>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 07d71396a502515a02bd12c5b01cdd98a7a30dab
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:55 2011 -0500
+
+    mkfontdir: config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 91cae6761d1a1eb9e5e2eba9eea8d7be6e3993d1
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 11:15:47 2011 -0500
+
+    mkfontdir: man: remove trailing spaces and tabs
+    
+    Using s/[ \t]*$//
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7bb2d75a9f00546178f16fd536946fe1bdabdebb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 7 11:14:14 2010 -0800
+
+    mkfontdir: Drop CVS version tag from mkfontdir.cpp too
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b1e80a29150c90c39915e5e758262815c2c4da05
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 7 11:10:09 2010 -0800
+
+    mkfontdir: config: Remove unnecessary calls from configure.ac
+    
+    AC_PROG_SED & AC_PROG_INSTALL are provided by XORG_DEFAULT_OPTIONS now
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit daee1aa67b7b11b2d4f9e38ddc39603e9206557a
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Tue Sep 28 13:29:49 2010 -0700
+
+    mkfontdir: Purge cvs tags.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+
+commit 43d1aae1b0e1f9f759fe3439aa2079a88dab03af
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Sat Oct 10 22:47:09 2009 -0700
+
+    mkfontdir: Migrate to xorg macros 1.3 & XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 2dac61a84d474e533df29b5874ce6ca5e68d4ddd
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 11 12:40:52 2008 -0800
+
+    mkfontdir: Fix formatting of man page so ellipsis are shown with Solaris nroff
+
+commit 8609ad731b9c9c670a815c915055ae416d2396d8
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 11 12:39:00 2008 -0800
+
+    mkfontdir: Fill in COPYING file with copyright/license notices
+
+commit 18654870df3e8c65abc4443a0f510abd46c5fbaa
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Jan 7 14:16:07 2008 -0800
+
+    mkfontdir: Add references to mkfontscale to man page
+    
+    Also convert (1) to (__appmansuffix__)
+
+commit 1d15009075c3d316bd54c5861ac2859330ab2e64
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Mar 5 19:52:51 2006 +0000
+
+    mkfontdir: Let BSD make find mkfontdir.cpp when building in a separate obj dir
+
+commit 1cb06c20467030fddf6a0a7be855f6849cadf7b4
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Aug 2 01:58:09 2005 +0000
+
+    mkfontdir: Find mkfontscale through @bindir@ rather than AC_PATH_PROG, since the one in the path could be from an old install that doesn't support all the needed flags.
+
+commit a8341c3f17050b253a9f55aba76f1d8437165c26
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Thu Jul 14 20:59:48 2005 +0000
+
+    mkfontdir: build fix for non-GNU make
+
+commit fa554ab53809943cb141e07687c96364d91e3f9c
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Jul 2 21:42:05 2005 +0000
+
+    mkfontdir: Add build system for bdftopcf, mkfontdir and mkfontscale
+
+commit c40a94766668aad01ef57eea181752a370762cd0
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Apr 23 19:54:36 2004 +0000
+
+    mkfontdir: Merging XORG-CURRENT into trunk
+
+commit 1a302e07687403c0be7452d865d20e4cb0761770
+Author: Egbert Eich <eich@suse.de>
+Date:   Sun Mar 14 08:34:54 2004 +0000
+
+    mkfontdir: Importing vendor version xf86-4_4_99_1 on Sun Mar 14 00:26:39 PST 2004
+
+commit c01032201686db5622b4f997d5294d724800c694
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed Mar 3 12:12:53 2004 +0000
+
+    mkfontdir: Importing vendor version xf86-4_4_0 on Wed Mar 3 04:09:24 PST 2004
+
+commit 3a6aebdfeb88dd8501d715117990af646f687555
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 13:36:15 2004 +0000
+
+    mkfontdir: readding XFree86's cvs IDs
+
+commit fa75fa1a5d7c1599692d4e309c39fca34b2a0f84
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 09:23:56 2004 +0000
+
+    mkfontdir: Importing vendor version xf86-4_3_99_903 on Wed Feb 26 01:21:00 PST 2004
+
+commit 9b6d7d062c91a86e110eea7ed38d44e104463fba
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Tue Nov 25 19:29:02 2003 +0000
+
+    mkfontdir: Initial revision
+
+commit 2247072a89b7b9da8ed22d0aaec100cef3adb62d
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:57 2003 +0000
+
+    mkfontdir: XFree86 4.3.0.1
+
+commit 1b920768b5122bac7368860fd6fc7e4f5275ed8f
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 15:54:53 2003 +0000
+
+    mkfontdir: R6.6 is the Xorg base-line
+
+commit 0a20abea3ec9742f0982e043e725cdadf0fc493e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 6 14:26:00 2019 -0800
+
+    Clear some -Wshorten-64-to-32 warnings from clang 6
+    
+    ident.c:84:13: warning: implicit conversion loses integer precision:
+          'unsigned long' to 'int' [-Wshorten-64-to-32]
+        int n = strlen(filename);
+            ~   ^~~~~~~~~~~~~~~~
+    ident.c:130:9: warning: implicit conversion loses integer precision:
+          'off64_t' (aka 'long') to 'int' [-Wshorten-64-to-32]
+            return gzseek(ff->f.gz, offset, whence);
+            ~~~~~~ ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ident.c:140:17: warning: implicit conversion loses integer precision:
+          'long' to 'int' [-Wshorten-64-to-32]
+                n = offset - ff->pos;
+                  ~ ~~~~~~~^~~~~~~~~
+    ident.c:143:10: warning: implicit conversion loses integer precision:
+          'off_t' (aka 'long') to 'int' [-Wshorten-64-to-32]
+                n = offset;
+                  ~ ^~~~~~
+    ident.c:156:12: warning: implicit conversion loses integer precision:
+          'off_t' (aka 'long') to 'unsigned int' [-Wshorten-64-to-32]
+            ff->pos = offset;
+                    ~ ^~~~~~
+    ident.c:157:9: warning: implicit conversion loses integer precision:
+          'off_t' (aka 'long') to 'int' [-Wshorten-64-to-32]
+            return offset;
+            ~~~~~~ ^~~~~~
+    mkfontscale.c:704:13: warning: implicit conversion loses integer precision:
+          'unsigned long' to 'int' [-Wshorten-64-to-32]
+        int n = strlen(dirname);
+            ~   ^~~~~~~~~~~~~~~
+    mkfontscale.c:748:13: warning: implicit conversion loses integer precision:
+          'unsigned long' to 'int' [-Wshorten-64-to-32]
+        int n = strlen(filename);
+            ~   ^~~~~~~~~~~~~~~~
+    mkfontscale.c:794:14: warning: implicit conversion loses integer precision:
+          'unsigned long' to 'int' [-Wshorten-64-to-32]
+            xl = strlen (exclusionSuffix);
+               ~ ^~~~~~~~~~~~~~~~~~~~~~~~
+    mkfontscale.c:796:9: warning: implicit conversion loses integer precision:
+          'unsigned long' to 'int' [-Wshorten-64-to-32]
+        i = strlen(dirname_given);
+          ~ ^~~~~~~~~~~~~~~~~~~~~
+    mkfontscale.c:858:15: warning: implicit conversion loses integer precision:
+          'unsigned long' to 'int' [-Wshorten-64-to-32]
+                int dl = strlen (entry->d_name);
+                    ~~   ^~~~~~~~~~~~~~~~~~~~~~
+    mkfontscale.c:930:21: warning: implicit conversion loses integer precision:
+          'unsigned long' to 'int' [-Wshorten-64-to-32]
+                int l = strlen(xlfd_name);
+                    ~   ^~~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a311033403730db56bbbd0c56977e6c49a6b5519
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 6 13:33:42 2019 -0800
+
+    Clear some -Wsign-compare warnings from gcc 7
+    
+    mkfontscale.c: In function ‘getName’:
+    mkfontscale.c:336:22: warning: comparison between signed and unsigned
+       integer expressions [-Wsign-compare]
+             for(i = 0; i < name.string_len / 2; i++) {
+                          ^
+    mkfontscale.c: In function ‘nameWidth’:
+    mkfontscale.c:427:18: warning: comparison between signed and unsigned
+       integer expressions [-Wsign-compare]
+         for(i = 0; i < NUMWIDTHS; i++)
+                      ^
+    mkfontscale.c: In function ‘notice_foundry’:
+    mkfontscale.c:1261:18: warning: comparison between signed and unsigned
+       integer expressions [-Wsign-compare]
+         for(i = 0; i < countof(notice_foundries); i++)
+                      ^
+    mkfontscale.c: In function ‘vendor_foundry’:
+    mkfontscale.c:1285:18: warning: comparison between signed and unsigned
+       integer expressions [-Wsign-compare]
+         for(i = 0; i < countof(vendor_foundries); i++)
+                      ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d971bb62c6d2a35eccfdcd0c3c6c65c4f841f556
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Mon Jul 27 23:16:45 2015 +0200
+
+    Add new ConstList functions and use them.
+    
+    Gets rid of lots of const warnings.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+
+commit bd8ff8a513d928878c877ea7b448baf7aee003a3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 16:49:31 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 17dec8c3c2805707767a2e416358db860b2b2427
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 20:25:32 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit eac885fa5ebff24e0839144863872443a010d7c2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Oct 1 21:24:45 2018 -0700
+
+    Stop shadowing 'found' in checkExtraEncoding()
+    
+    mkfontscale.c: In function ‘checkExtraEncoding’:
+    mkfontscale.c:1220:17: warning: declaration of ‘found’ shadows a parameter [-Wshadow]
+                 int found = 0;
+                     ^~~~~
+    mkfontscale.c:1214:59: note: shadowed declaration is here
+     checkExtraEncoding(FT_Face face, char *encoding_name, int found)
+                                                               ^~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 325621bd083236567bd861d41ff161313fc96e96
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Oct 1 21:19:58 2018 -0700
+
+    Rename variable 'n' to avoid shadowing another 'n' in doDirectory
+    
+    mkfontscale.c: In function ‘doDirectory’:
+    mkfontscale.c:928:17: warning: declaration of ‘n’ shadows a previous local [-Wshadow]
+                 int n = strlen(xlfd_name);
+                     ^
+    mkfontscale.c:788:12: note: shadowed declaration is here
+         int i, n, dirn, diri, found, rc;
+                ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0faf882de6de6c1ec26aace9a9939914b40e7b89
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Oct 1 21:10:59 2018 -0700
+
+    Use vasprintf(), if available, to implement dsprintf()
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3b747cc5d2981c44ff517f64c355e76d70194f24
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Oct 1 20:52:18 2018 -0700
+
+    Replace dsprintf("%s", s) with strdup(s)
+    
+    dsprintf is an allocating sprintf.  With a format string of "%s", it
+    reduces to just being a more complicated version of strdup, so lets
+    just use strdup instead to save time and reduce complexity.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 65fe4ef6f5674b0b52e797924990b090dbbd52af
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Oct 1 20:48:21 2018 -0700
+
+    Remove last use of strcat
+    
+    If getcwd returned a string that exactly filled the prefix buffer,
+    it could write the null terminator byte out of bounds.
+    
+    Instead, since the prefix is copied to a newly allocated string and
+    never used again, just let the dsprintf() call take care of it.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7b4203577af4b835ef069e0cd2bd9510b599789c
+Author: Bernhard M. Wiedemann <bwiedemann@suse.de>
+Date:   Mon Sep 10 10:17:52 2018 +0200
+
+    Sort input file list
+    
+    so that openSUSE's installation-images builds in a reproducible way
+    in spite of indeterministic filesystem readdir order
+    
+    See https://reproducible-builds.org/ for why this is good.
+    
+    Signed-off-by: Bernhard M. Wiedemann <bwiedemann@suse.de>
+
 commit 4b1d7d3af1c1bc1586b2e9a780aea0dee7df5a14
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Mar 6 22:57:01 2018 -0800

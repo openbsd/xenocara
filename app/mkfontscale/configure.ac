@@ -22,8 +22,8 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([mkfontscale], [1.1.3],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
+AC_INIT([mkfontscale], [1.2.1],
+        [https://gitlab.freedesktop.org/xorg/app/mkfontscale/issues],
         [mkfontscale])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -50,6 +50,9 @@ if test "x$with_bzip2" = xyes; then
 		AC_MSG_ERROR([*** libbz2 is required for bzip2 support]))
 	AC_DEFINE(X_BZIP2_FONT_COMPRESSION,1,[Support bzip2 for bitmap fonts])
 fi
+
+# Checks for system functions / libraries
+AC_CHECK_FUNCS([vasprintf])
 
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(MKFONTSCALE, fontenc freetype2)

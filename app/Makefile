@@ -1,7 +1,7 @@
-# $OpenBSD: Makefile,v 1.37 2019/08/15 12:11:36 schwarze Exp $
+# $OpenBSD: Makefile,v 1.38 2019/08/15 17:01:12 matthieu Exp $
 .include <bsd.xconf.mk>
 
-SUBDIR= bdftopcf mkfontscale mkfontdir \
+SUBDIR= bdftopcf mkfontscale \
 	appres beforelight bitmap editres fonttosfnt \
 	iceauth ico listres luit oclock \
 	rgb sessreg setxkbmap \
