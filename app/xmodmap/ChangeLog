@@ -1,3 +1,100 @@
+commit c5a5fb06fd25c044f343f4571c645fd6c954d038
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Feb 19 15:33:29 2019 -0800
+
+    xmodmap 1.0.10
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d0d28d45a2479b4ddc3c5656ac75433cc922bf46
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 17:16:14 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0a4cc4af3d3fc38e10d3ff23c36380b5252bd520
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 22:40:31 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9be2acabde0364a3a6b506ea59db24d922844ccc
+Author: Wolfgang Pfeiffer <roto@gmx.net>
+Date:   Mon Jul 9 10:20:35 2018 +1000
+
+    man: remove reference to the XKeysymDB
+    
+    The XKeysymDB was removed around 2010 - please see:
+    https://cgit.freedesktop.org/xorg/lib/libX11/commit/?id=eb023c0f8919e809b8b609e1467b14d20a290aa7
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c4df95c5075a728c0d089bed208042fdfa7a7765
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 5 15:15:33 2018 -0700
+
+    Change fall through comment in xmodmap.c to match gcc's requirements
+    
+    Needs to match one of the regexps shown under
+    https://gcc.gnu.org/onlinedocs/gcc-7.3.0/gcc/Warning-Options.html#index-Wimplicit-fallthrough
+    
+    Silences warning from gcc 7.3.0:
+    
+    xmodmap.c: In function ‘main’:
+    xmodmap.c:358:10: warning: this statement may fall through [-Wimplicit-fallthrough=]
+       arg[1] = tolower (arg[1]);
+       ~~~~~~~^~~~~~~~~~~~~~~~~~
+    xmodmap.c:360:8: note: here
+            case 's':
+            ^~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9067c5b2aac51cdd1e45d5652a2a43db6c440cac
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit dd8de1b4eebd39b36566bdeb2c8bc594add7c1a8
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 29e2bd5a257a4f60c1729ab823ed990597294ffc
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 6d5aa481669cdbf2f0cb83bb0b8f142ba94307ae
+Author: Matthew Green <mrg@NetBSD.org>
+Date:   Mon Jul 20 10:22:43 2015 +0200
+
+    Properly hide config.h behind HAVE_CONFIG_H.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 1e0d98566d01fb5da9836e1fc402fb28f8d8b499
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Apr 17 00:06:59 2015 -0700

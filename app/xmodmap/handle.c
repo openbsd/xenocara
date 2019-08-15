@@ -26,7 +26,10 @@ from The Open Group.
 
 */
 
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
+
 #include <X11/Xos.h>
 #include <X11/Xlib.h>
 #include <stdio.h>

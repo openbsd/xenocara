@@ -35,6 +35,7 @@ xmodmap_SOURCES =	\
 
 EXTRA_DIST = \
         autogen.sh \
+        README.md \
 	swap.km
 
 MAINTAINERCLEANFILES = ChangeLog INSTALL

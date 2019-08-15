@@ -143,8 +143,7 @@ being redefined in a natural way without having to worry as much about name
 conflicts.
 .PP
 The list of keysym names may be found in the header file
-\fI<X11/keysymdef.h>\fP (without the \fIXK_\fP prefix),
-supplemented by the keysym database \fI __X11datadir__/XKeysymDB\fP.
+\fI<X11/keysymdef.h>\fP (without the \fIXK_\fP prefix).
 Keysyms matching Unicode characters may be specified as "U0020" to "U007E"
 and "U00A0" to "U10FFFF" for all possible Unicode characters.
 .TP 8

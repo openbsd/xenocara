@@ -356,7 +356,7 @@ main(int argc, char *argv[])
 	      case 'L':
 	      case 'C':
 		arg[1] = tolower (arg[1]);
-		/* fall through to handler below */
+		/* fall through - to handler below */
 	      case 's':
 	      case 'l':
 	      case 'c': {
