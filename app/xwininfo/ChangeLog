@@ -1,3 +1,95 @@
+commit 985a3a70918038bf2569e0a5ebe3fa14d720e4de
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 14 13:51:36 2019 -0700
+
+    xwininfo 1.1.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1a50edf62c9511a2bee8b7cc3b72e5185f7b593f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 9 10:21:39 2019 -0700
+
+    Clear -Wsign-compare warnings from gcc 7.3
+    
+    dsimple.c: In function ‘recursive_Window_With_Name’:
+    dsimple.c:298:16: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+       if ((namelen == prop_name_len) &&
+                    ^~
+    dsimple.c:336:16: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+       if ((namelen == prop_name_len) &&
+                    ^~
+    dsimple.c:371:19: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+         for (i = 0; i < nchildren; i++) {
+                       ^
+    dsimple.c:380:19: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+         for (i = 0; i < nchildren; i++) {
+                       ^
+    dsimple.c:390:32: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+      for (/* keep previous i */; i < nchildren; i++) {
+                                    ^
+    dsimple.c: In function ‘Get_Atom’:
+    dsimple.c:616:17: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+         if (a->atom == -1) /* internal error */
+                     ^~
+    
+    xwininfo.c: In function ‘wm_size_hints_reply’:
+    xwininfo.c:730:16: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+         if (length > sizeof(wm_size_hints_t))
+                    ^
+    xwininfo.c: In function ‘Display_Event_Mask’:
+    xwininfo.c:1229:33: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+         for (bit=0, bit_mask=1; bit < sizeof(long)*8; bit++, bit_mask <<= 1)
+                                     ^
+    xwininfo.c: In function ‘wm_hints_reply’:
+    xwininfo.c:1633:16: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+         if (length > sizeof(wm_hints_t))
+                    ^
+    xwininfo.c: In function ‘is_valid_utf8’:
+    xwininfo.c:1843:19: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+         for (i = 0; i < len; i++) {
+                       ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 58213a0cd39dc4ba044f48fab52ed3256ab9a9bd
+Author: Stéphane Aulery <lkppo@free.fr>
+Date:   Wed Jul 3 00:29:17 2013 +0200
+
+    Improve manpage and -h option
+    
+     - Rename windows and display args.
+     - Mention of short (-d) -display option.
+    
+    Signed-off-by: Stéphane Aulery <lkppo@free.fr>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d19200c0b0ff638edbb16555e711d2353625bd4a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 17:21:49 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 015b29ca761102c95c722928557336e101a4a6e1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 23:32:24 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f8c9f340421883f659b820214ddf8a21d5022a3a
+Author: David Hill <dhill@mindcry.org>
+Date:   Wed Dec 11 04:05:19 2013 +0000
+
+    In Find_Client, if (win == XCB_WINDOW_NONE), roots should be freed.
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=72583
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 919665db8ceb8e2c38a1a4ce4686eb224ddf5234
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Mar 9 20:41:31 2018 -0800

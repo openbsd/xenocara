@@ -279,7 +279,7 @@ recursive_Window_With_Name  (
 {
     xcb_window_t *children;
     unsigned int nchildren;
-    int i;
+    unsigned int i;
     xcb_window_t w = 0;
     xcb_generic_error_t *err;
     xcb_query_tree_reply_t *tree;
@@ -295,7 +295,7 @@ recursive_Window_With_Name  (
 		int prop_name_len = xcb_get_property_value_length (prop);
 
 		/* can't use strcmp, since prop.name is not null terminated */
-		if ((namelen == prop_name_len) &&
+		if ((namelen == (size_t) prop_name_len) &&
 		    memcmp (prop_name, name, namelen) == 0) {
 		    w = window;
 		}
@@ -317,7 +317,7 @@ recursive_Window_With_Name  (
 	if (xcb_icccm_get_wm_name_reply (dpy, cookies->get_wm_name,
 					 &nameprop, &err)) {
 	    /* can't use strcmp, since nameprop.name is not null terminated */
-	    if ((namelen == nameprop.name_len) &&
+	    if ((namelen == (size_t) nameprop.name_len) &&
 		memcmp (nameprop.name, name, namelen) == 0) {
 		w = window;
 	    }
@@ -333,7 +333,7 @@ recursive_Window_With_Name  (
 		int prop_name_len = xcb_get_property_value_length (prop);
 
 		/* can't use strcmp, since prop.name is not null terminated */
-		if ((namelen == prop_name_len) &&
+		if ((namelen == (size_t) prop_name_len) &&
 		    memcmp (prop_name, name, namelen) == 0) {
 		    w = window;
 		}
@@ -610,10 +610,10 @@ xcb_atom_t Get_Atom (xcb_connection_t * dpy, const char *name)
 	    a->atom = reply->atom;
 	    free (reply);
 	} else {
-	    a->atom = -1;
+	    a->atom = (xcb_atom_t) -1;
 	}
     }
-    if (a->atom == -1) /* internal error */
+    if (a->atom == (xcb_atom_t) -1) /* internal error */
 	return XCB_ATOM_NONE;
 
     return a->atom;

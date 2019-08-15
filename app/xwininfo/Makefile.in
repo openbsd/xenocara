@@ -73,7 +73,7 @@ build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = xwininfo$(EXEEXT)
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
+DIST_COMMON = $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/configure COPYING ChangeLog INSTALL compile \
 	config.guess config.rpath config.sub depcomp install-sh \
@@ -323,7 +323,7 @@ xwininfo_SOURCES = \
         dsimple.h \
         xwininfo.c
 
-EXTRA_DIST = strnlen.h
+EXTRA_DIST = strnlen.h README.md
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive

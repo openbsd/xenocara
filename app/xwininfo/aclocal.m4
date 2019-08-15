@@ -19,8 +19,654 @@ You have another version of autoconf.  It may work, but is not guaranteed to.
 If you have problems, you may need to regenerate the build system entirely.
 To do so, use the procedure documented by the package, typically 'autoreconf'.])])
 
-# iconv.m4 serial 19 (gettext-0.18.2)
-dnl Copyright (C) 2000-2002, 2007-2014, 2016 Free Software Foundation, Inc.
+# host-cpu-c-abi.m4 serial 11
+dnl Copyright (C) 2002-2019 Free Software Foundation, Inc.
+dnl This file is free software; the Free Software Foundation
+dnl gives unlimited permission to copy and/or distribute it,
+dnl with or without modifications, as long as this notice is preserved.
+
+dnl From Bruno Haible and Sam Steingold.
+
+dnl Sets the HOST_CPU variable to the canonical name of the CPU.
+dnl Sets the HOST_CPU_C_ABI variable to the canonical name of the CPU with its
+dnl C language ABI (application binary interface).
+dnl Also defines __${HOST_CPU}__ and __${HOST_CPU_C_ABI}__ as C macros in
+dnl config.h.
+dnl
+dnl This canonical name can be used to select a particular assembly language
+dnl source file that will interoperate with C code on the given host.
+dnl
+dnl For example:
+dnl * 'i386' and 'sparc' are different canonical names, because code for i386
+dnl   will not run on SPARC CPUs and vice versa. They have different
+dnl   instruction sets.
+dnl * 'sparc' and 'sparc64' are different canonical names, because code for
+dnl   'sparc' and code for 'sparc64' cannot be linked together: 'sparc' code
+dnl   contains 32-bit instructions, whereas 'sparc64' code contains 64-bit
+dnl   instructions. A process on a SPARC CPU can be in 32-bit mode or in 64-bit
+dnl   mode, but not both.
+dnl * 'mips' and 'mipsn32' are different canonical names, because they use
+dnl   different argument passing and return conventions for C functions, and
+dnl   although the instruction set of 'mips' is a large subset of the
+dnl   instruction set of 'mipsn32'.
+dnl * 'mipsn32' and 'mips64' are different canonical names, because they use
+dnl   different sizes for the C types like 'int' and 'void *', and although
+dnl   the instruction sets of 'mipsn32' and 'mips64' are the same.
+dnl * The same canonical name is used for different endiannesses. You can
+dnl   determine the endianness through preprocessor symbols:
+dnl   - 'arm': test __ARMEL__.
+dnl   - 'mips', 'mipsn32', 'mips64': test _MIPSEB vs. _MIPSEL.
+dnl   - 'powerpc64': test _BIG_ENDIAN vs. _LITTLE_ENDIAN.
+dnl * The same name 'i386' is used for CPUs of type i386, i486, i586
+dnl   (Pentium), AMD K7, Pentium II, Pentium IV, etc., because
+dnl   - Instructions that do not exist on all of these CPUs (cmpxchg,
+dnl     MMX, SSE, SSE2, 3DNow! etc.) are not frequently used. If your
+dnl     assembly language source files use such instructions, you will
+dnl     need to make the distinction.
+dnl   - Speed of execution of the common instruction set is reasonable across
+dnl     the entire family of CPUs. If you have assembly language source files
+dnl     that are optimized for particular CPU types (like GNU gmp has), you
+dnl     will need to make the distinction.
+dnl   See <https://en.wikipedia.org/wiki/X86_instruction_listings>.
+AC_DEFUN([gl_HOST_CPU_C_ABI],
+[
+  AC_REQUIRE([AC_CANONICAL_HOST])
+  AC_REQUIRE([gl_C_ASM])
+  AC_CACHE_CHECK([host CPU and C ABI], [gl_cv_host_cpu_c_abi],
+    [case "$host_cpu" in
+
+changequote(,)dnl
+       i[4567]86 )
+changequote([,])dnl
+         gl_cv_host_cpu_c_abi=i386
+         ;;
+
+       x86_64 )
+         # On x86_64 systems, the C compiler may be generating code in one of
+         # these ABIs:
+         # - 64-bit instruction set, 64-bit pointers, 64-bit 'long': x86_64.
+         # - 64-bit instruction set, 64-bit pointers, 32-bit 'long': x86_64
+         #   with native Windows (mingw, MSVC).
+         # - 64-bit instruction set, 32-bit pointers, 32-bit 'long': x86_64-x32.
+         # - 32-bit instruction set, 32-bit pointers, 32-bit 'long': i386.
+         AC_COMPILE_IFELSE(
+           [AC_LANG_SOURCE(
+              [[#if (defined __x86_64__ || defined __amd64__ \
+                     || defined _M_X64 || defined _M_AMD64)
+                 int ok;
+                #else
+                 error fail
+                #endif
+              ]])],
+           [AC_COMPILE_IFELSE(
+              [AC_LANG_SOURCE(
+                 [[#if defined __ILP32__ || defined _ILP32
+                    int ok;
+                   #else
+                    error fail
+                   #endif
+                 ]])],
+              [gl_cv_host_cpu_c_abi=x86_64-x32],
+              [gl_cv_host_cpu_c_abi=x86_64])],
+           [gl_cv_host_cpu_c_abi=i386])
+         ;;
+
+changequote(,)dnl
+       alphaev[4-8] | alphaev56 | alphapca5[67] | alphaev6[78] )
+changequote([,])dnl
+         gl_cv_host_cpu_c_abi=alpha
+         ;;
+
+       arm* | aarch64 )
+         # Assume arm with EABI.
+         # On arm64 systems, the C compiler may be generating code in one of
+         # these ABIs:
+         # - aarch64 instruction set, 64-bit pointers, 64-bit 'long': arm64.
+         # - aarch64 instruction set, 32-bit pointers, 32-bit 'long': arm64-ilp32.
+         # - 32-bit instruction set, 32-bit pointers, 32-bit 'long': arm or armhf.
+         AC_COMPILE_IFELSE(
+           [AC_LANG_SOURCE(
+              [[#ifdef __aarch64__
+                 int ok;
+                #else
+                 error fail
+                #endif
+              ]])],
+           [AC_COMPILE_IFELSE(
+              [AC_LANG_SOURCE(
+                [[#if defined __ILP32__ || defined _ILP32
+                   int ok;
+                  #else
+                   error fail
+                  #endif
+                ]])],
+              [gl_cv_host_cpu_c_abi=arm64-ilp32],
+              [gl_cv_host_cpu_c_abi=arm64])],
+           [# Don't distinguish little-endian and big-endian arm, since they
+            # don't require different machine code for simple operations and
+            # since the user can distinguish them through the preprocessor
+            # defines __ARMEL__ vs. __ARMEB__.
+            # But distinguish arm which passes floating-point arguments and
+            # return values in integer registers (r0, r1, ...) - this is
+            # gcc -mfloat-abi=soft or gcc -mfloat-abi=softfp - from arm which
+            # passes them in float registers (s0, s1, ...) and double registers
+            # (d0, d1, ...) - this is gcc -mfloat-abi=hard. GCC 4.6 or newer
+            # sets the preprocessor defines __ARM_PCS (for the first case) and
+            # __ARM_PCS_VFP (for the second case), but older GCC does not.
+            echo 'double ddd; void func (double dd) { ddd = dd; }' > conftest.c
+            # Look for a reference to the register d0 in the .s file.
+            AC_TRY_COMMAND(${CC-cc} $CFLAGS $CPPFLAGS $gl_c_asm_opt conftest.c) >/dev/null 2>&1
+            if LC_ALL=C grep 'd0,' conftest.$gl_asmext >/dev/null; then
+              gl_cv_host_cpu_c_abi=armhf
+            else
+              gl_cv_host_cpu_c_abi=arm
+            fi
+            rm -f conftest*
+           ])
+         ;;
+
+       hppa1.0 | hppa1.1 | hppa2.0* | hppa64 )
+         # On hppa, the C compiler may be generating 32-bit code or 64-bit
+         # code. In the latter case, it defines _LP64 and __LP64__.
+         AC_COMPILE_IFELSE(
+           [AC_LANG_SOURCE(
+              [[#ifdef __LP64__
+                 int ok;
+                #else
+                 error fail
+                #endif
+              ]])],
+           [gl_cv_host_cpu_c_abi=hppa64],
+           [gl_cv_host_cpu_c_abi=hppa])
+         ;;
+
+       ia64* )
+         # On ia64 on HP-UX, the C compiler may be generating 64-bit code or
+         # 32-bit code. In the latter case, it defines _ILP32.
+         AC_COMPILE_IFELSE(
+           [AC_LANG_SOURCE(
+              [[#ifdef _ILP32
+                 int ok;
+                #else
+                 error fail
+                #endif
+              ]])],
+           [gl_cv_host_cpu_c_abi=ia64-ilp32],
+           [gl_cv_host_cpu_c_abi=ia64])
+         ;;
+
+       mips* )
+         # We should also check for (_MIPS_SZPTR == 64), but gcc keeps this
+         # at 32.
+         AC_COMPILE_IFELSE(
+           [AC_LANG_SOURCE(
+              [[#if defined _MIPS_SZLONG && (_MIPS_SZLONG == 64)
+                 int ok;
+                #else
+                 error fail
+                #endif
+              ]])],
+           [gl_cv_host_cpu_c_abi=mips64],
+           [# In the n32 ABI, _ABIN32 is defined, _ABIO32 is not defined (but
+            # may later get defined by <sgidefs.h>), and _MIPS_SIM == _ABIN32.
+            # In the 32 ABI, _ABIO32 is defined, _ABIN32 is not defined (but
+            # may later get defined by <sgidefs.h>), and _MIPS_SIM == _ABIO32.
+            AC_COMPILE_IFELSE(
+              [AC_LANG_SOURCE(
+                 [[#if (_MIPS_SIM == _ABIN32)
+                    int ok;
+                   #else
+                    error fail
+                   #endif
+                 ]])],
+              [gl_cv_host_cpu_c_abi=mipsn32],
+              [gl_cv_host_cpu_c_abi=mips])])
+         ;;
+
+       powerpc* )
+         # Different ABIs are in use on AIX vs. Mac OS X vs. Linux,*BSD.
+         # No need to distinguish them here; the caller may distinguish
+         # them based on the OS.
+         # On powerpc64 systems, the C compiler may still be generating
+         # 32-bit code. And on powerpc-ibm-aix systems, the C compiler may
+         # be generating 64-bit code.
+         AC_COMPILE_IFELSE(
+           [AC_LANG_SOURCE(
+              [[#if defined __powerpc64__ || defined _ARCH_PPC64
+                 int ok;
+                #else
+                 error fail
+                #endif
+              ]])],
+           [# On powerpc64, there are two ABIs on Linux: The AIX compatible
+            # one and the ELFv2 one. The latter defines _CALL_ELF=2.
+            AC_COMPILE_IFELSE(
+              [AC_LANG_SOURCE(
+                 [[#if defined _CALL_ELF && _CALL_ELF == 2
+                    int ok;
+                   #else
+                    error fail
+                   #endif
+                 ]])],
+              [gl_cv_host_cpu_c_abi=powerpc64-elfv2],
+              [gl_cv_host_cpu_c_abi=powerpc64])
+           ],
+           [gl_cv_host_cpu_c_abi=powerpc])
+         ;;
+
+       rs6000 )
+         gl_cv_host_cpu_c_abi=powerpc
+         ;;
+
+       riscv32 | riscv64 )
+         # There are 2 architectures (with variants): rv32* and rv64*.
+         AC_COMPILE_IFELSE(
+           [AC_LANG_SOURCE(
+              [[#if __riscv_xlen == 64
+                  int ok;
+                #else
+                  error fail
+                #endif
+              ]])],
+           [cpu=riscv64],
+           [cpu=riscv32])
+         # There are 6 ABIs: ilp32, ilp32f, ilp32d, lp64, lp64f, lp64d.
+         # Size of 'long' and 'void *':
+         AC_COMPILE_IFELSE(
+           [AC_LANG_SOURCE(
+              [[#if defined __LP64__
+                  int ok;
+                #else
+                  error fail
+                #endif
+              ]])],
+           [main_abi=lp64],
+           [main_abi=ilp32])
+         # Float ABIs:
+         # __riscv_float_abi_double:
+         #   'float' and 'double' are passed in floating-point registers.
+         # __riscv_float_abi_single:
+         #   'float' are passed in floating-point registers.
+         # __riscv_float_abi_soft:
+         #   No values are passed in floating-point registers.
+         AC_COMPILE_IFELSE(
+           [AC_LANG_SOURCE(
+              [[#if defined __riscv_float_abi_double
+                  int ok;
+                #else
+                  error fail
+                #endif
+              ]])],
+           [float_abi=d],
+           [AC_COMPILE_IFELSE(
+              [AC_LANG_SOURCE(
+                 [[#if defined __riscv_float_abi_single
+                     int ok;
+                   #else
+                     error fail
+                   #endif
+                 ]])],
+              [float_abi=f],
+              [float_abi=''])
+           ])
+         gl_cv_host_cpu_c_abi="${cpu}-${main_abi}${float_abi}"
+         ;;
+
+       s390* )
+         # On s390x, the C compiler may be generating 64-bit (= s390x) code
+         # or 31-bit (= s390) code.
+         AC_COMPILE_IFELSE(
+           [AC_LANG_SOURCE(
+              [[#if defined __LP64__ || defined __s390x__
+                  int ok;
+                #else
+                  error fail
+                #endif
+              ]])],
+           [gl_cv_host_cpu_c_abi=s390x],
+           [gl_cv_host_cpu_c_abi=s390])
+         ;;
+
+       sparc | sparc64 )
+         # UltraSPARCs running Linux have `uname -m` = "sparc64", but the
+         # C compiler still generates 32-bit code.
+         AC_COMPILE_IFELSE(
+           [AC_LANG_SOURCE(
+              [[#if defined __sparcv9 || defined __arch64__
+                 int ok;
+                #else
+                 error fail
+                #endif
+              ]])],
+           [gl_cv_host_cpu_c_abi=sparc64],
+           [gl_cv_host_cpu_c_abi=sparc])
+         ;;
+
+       *)
+         gl_cv_host_cpu_c_abi="$host_cpu"
+         ;;
+     esac
+    ])
+
+  dnl In most cases, $HOST_CPU and $HOST_CPU_C_ABI are the same.
+  HOST_CPU=`echo "$gl_cv_host_cpu_c_abi" | sed -e 's/-.*//'`
+  HOST_CPU_C_ABI="$gl_cv_host_cpu_c_abi"
+  AC_SUBST([HOST_CPU])
+  AC_SUBST([HOST_CPU_C_ABI])
+
+  # This was
+  #   AC_DEFINE_UNQUOTED([__${HOST_CPU}__])
+  #   AC_DEFINE_UNQUOTED([__${HOST_CPU_C_ABI}__])
+  # earlier, but KAI C++ 3.2d doesn't like this.
+  sed -e 's/-/_/g' >> confdefs.h <<EOF
+#ifndef __${HOST_CPU}__
+#define __${HOST_CPU}__ 1
+#endif
+#ifndef __${HOST_CPU_C_ABI}__
+#define __${HOST_CPU_C_ABI}__ 1
+#endif
+EOF
+  AH_TOP([/* CPU and C ABI indicator */
+#ifndef __i386__
+#undef __i386__
+#endif
+#ifndef __x86_64_x32__
+#undef __x86_64_x32__
+#endif
+#ifndef __x86_64__
+#undef __x86_64__
+#endif
+#ifndef __alpha__
+#undef __alpha__
+#endif
+#ifndef __arm__
+#undef __arm__
+#endif
+#ifndef __armhf__
+#undef __armhf__
+#endif
+#ifndef __arm64_ilp32__
+#undef __arm64_ilp32__
+#endif
+#ifndef __arm64__
+#undef __arm64__
+#endif
+#ifndef __hppa__
+#undef __hppa__
+#endif
+#ifndef __hppa64__
+#undef __hppa64__
+#endif
+#ifndef __ia64_ilp32__
+#undef __ia64_ilp32__
+#endif
+#ifndef __ia64__
+#undef __ia64__
+#endif
+#ifndef __m68k__
+#undef __m68k__
+#endif
+#ifndef __mips__
+#undef __mips__
+#endif
+#ifndef __mipsn32__
+#undef __mipsn32__
+#endif
+#ifndef __mips64__
+#undef __mips64__
+#endif
+#ifndef __powerpc__
+#undef __powerpc__
+#endif
+#ifndef __powerpc64__
+#undef __powerpc64__
+#endif
+#ifndef __powerpc64_elfv2__
+#undef __powerpc64_elfv2__
+#endif
+#ifndef __riscv32__
+#undef __riscv32__
+#endif
+#ifndef __riscv64__
+#undef __riscv64__
+#endif
+#ifndef __riscv32_ilp32__
+#undef __riscv32_ilp32__
+#endif
+#ifndef __riscv32_ilp32f__
+#undef __riscv32_ilp32f__
+#endif
+#ifndef __riscv32_ilp32d__
+#undef __riscv32_ilp32d__
+#endif
+#ifndef __riscv64_ilp32__
+#undef __riscv64_ilp32__
+#endif
+#ifndef __riscv64_ilp32f__
+#undef __riscv64_ilp32f__
+#endif
+#ifndef __riscv64_ilp32d__
+#undef __riscv64_ilp32d__
+#endif
+#ifndef __riscv64_lp64__
+#undef __riscv64_lp64__
+#endif
+#ifndef __riscv64_lp64f__
+#undef __riscv64_lp64f__
+#endif
+#ifndef __riscv64_lp64d__
+#undef __riscv64_lp64d__
+#endif
+#ifndef __s390__
+#undef __s390__
+#endif
+#ifndef __s390x__
+#undef __s390x__
+#endif
+#ifndef __sh__
+#undef __sh__
+#endif
+#ifndef __sparc__
+#undef __sparc__
+#endif
+#ifndef __sparc64__
+#undef __sparc64__
+#endif
+])
+
+])
+
+
+dnl Sets the HOST_CPU_C_ABI_32BIT variable to 'yes' if the C language ABI
+dnl (application binary interface) is a 32-bit one, or to 'no' otherwise.
+dnl This is a simplified variant of gl_HOST_CPU_C_ABI.
+AC_DEFUN([gl_HOST_CPU_C_ABI_32BIT],
+[
+  AC_REQUIRE([AC_CANONICAL_HOST])
+  AC_CACHE_CHECK([32-bit host C ABI], [gl_cv_host_cpu_c_abi_32bit],
+    [if test -n "$gl_cv_host_cpu_c_abi"; then
+       case "$gl_cv_host_cpu_c_abi" in
+         i386 | x86_64-x32 | arm | armhf | arm64-ilp32 | hppa | ia64-ilp32 | mips | mipsn32 | powerpc | riscv*-ilp32* | s390 | sparc)
+           gl_cv_host_cpu_c_abi_32bit=yes ;;
+         *)
+           gl_cv_host_cpu_c_abi_32bit=no ;;
+       esac
+     else
+       case "$host_cpu" in
+
+changequote(,)dnl
+         i[4567]86 )
+changequote([,])dnl
+           gl_cv_host_cpu_c_abi_32bit=yes
+           ;;
+
+         x86_64 )
+           # On x86_64 systems, the C compiler may be generating code in one of
+           # these ABIs:
+           # - 64-bit instruction set, 64-bit pointers, 64-bit 'long': x86_64.
+           # - 64-bit instruction set, 64-bit pointers, 32-bit 'long': x86_64
+           #   with native Windows (mingw, MSVC).
+           # - 64-bit instruction set, 32-bit pointers, 32-bit 'long': x86_64-x32.
+           # - 32-bit instruction set, 32-bit pointers, 32-bit 'long': i386.
+           AC_COMPILE_IFELSE(
+             [AC_LANG_SOURCE(
+                [[#if (defined __x86_64__ || defined __amd64__ \
+                       || defined _M_X64 || defined _M_AMD64) \
+                      && !(defined __ILP32__ || defined _ILP32)
+                   int ok;
+                  #else
+                   error fail
+                  #endif
+                ]])],
+             [gl_cv_host_cpu_c_abi_32bit=no],
+             [gl_cv_host_cpu_c_abi_32bit=yes])
+           ;;
+
+         arm* | aarch64 )
+           # Assume arm with EABI.
+           # On arm64 systems, the C compiler may be generating code in one of
+           # these ABIs:
+           # - aarch64 instruction set, 64-bit pointers, 64-bit 'long': arm64.
+           # - aarch64 instruction set, 32-bit pointers, 32-bit 'long': arm64-ilp32.
+           # - 32-bit instruction set, 32-bit pointers, 32-bit 'long': arm or armhf.
+           AC_COMPILE_IFELSE(
+             [AC_LANG_SOURCE(
+                [[#if defined __aarch64__ && !(defined __ILP32__ || defined _ILP32)
+                   int ok;
+                  #else
+                   error fail
+                  #endif
+                ]])],
+             [gl_cv_host_cpu_c_abi_32bit=no],
+             [gl_cv_host_cpu_c_abi_32bit=yes])
+           ;;
+
+         hppa1.0 | hppa1.1 | hppa2.0* | hppa64 )
+           # On hppa, the C compiler may be generating 32-bit code or 64-bit
+           # code. In the latter case, it defines _LP64 and __LP64__.
+           AC_COMPILE_IFELSE(
+             [AC_LANG_SOURCE(
+                [[#ifdef __LP64__
+                   int ok;
+                  #else
+                   error fail
+                  #endif
+                ]])],
+             [gl_cv_host_cpu_c_abi_32bit=no],
+             [gl_cv_host_cpu_c_abi_32bit=yes])
+           ;;
+
+         ia64* )
+           # On ia64 on HP-UX, the C compiler may be generating 64-bit code or
+           # 32-bit code. In the latter case, it defines _ILP32.
+           AC_COMPILE_IFELSE(
+             [AC_LANG_SOURCE(
+                [[#ifdef _ILP32
+                   int ok;
+                  #else
+                   error fail
+                  #endif
+                ]])],
+             [gl_cv_host_cpu_c_abi_32bit=yes],
+             [gl_cv_host_cpu_c_abi_32bit=no])
+           ;;
+
+         mips* )
+           # We should also check for (_MIPS_SZPTR == 64), but gcc keeps this
+           # at 32.
+           AC_COMPILE_IFELSE(
+             [AC_LANG_SOURCE(
+                [[#if defined _MIPS_SZLONG && (_MIPS_SZLONG == 64)
+                   int ok;
+                  #else
+                   error fail
+                  #endif
+                ]])],
+             [gl_cv_host_cpu_c_abi_32bit=no],
+             [gl_cv_host_cpu_c_abi_32bit=yes])
+           ;;
+
+         powerpc* )
+           # Different ABIs are in use on AIX vs. Mac OS X vs. Linux,*BSD.
+           # No need to distinguish them here; the caller may distinguish
+           # them based on the OS.
+           # On powerpc64 systems, the C compiler may still be generating
+           # 32-bit code. And on powerpc-ibm-aix systems, the C compiler may
+           # be generating 64-bit code.
+           AC_COMPILE_IFELSE(
+             [AC_LANG_SOURCE(
+                [[#if defined __powerpc64__ || defined _ARCH_PPC64
+                   int ok;
+                  #else
+                   error fail
+                  #endif
+                ]])],
+             [gl_cv_host_cpu_c_abi_32bit=no],
+             [gl_cv_host_cpu_c_abi_32bit=yes])
+           ;;
+
+         rs6000 )
+           gl_cv_host_cpu_c_abi_32bit=yes
+           ;;
+
+         riscv32 | riscv64 )
+           # There are 6 ABIs: ilp32, ilp32f, ilp32d, lp64, lp64f, lp64d.
+           # Size of 'long' and 'void *':
+           AC_COMPILE_IFELSE(
+             [AC_LANG_SOURCE(
+                [[#if defined __LP64__
+                    int ok;
+                  #else
+                    error fail
+                  #endif
+                ]])],
+             [gl_cv_host_cpu_c_abi_32bit=no],
+             [gl_cv_host_cpu_c_abi_32bit=yes])
+           ;;
+
+         s390* )
+           # On s390x, the C compiler may be generating 64-bit (= s390x) code
+           # or 31-bit (= s390) code.
+           AC_COMPILE_IFELSE(
+             [AC_LANG_SOURCE(
+                [[#if defined __LP64__ || defined __s390x__
+                    int ok;
+                  #else
+                    error fail
+                  #endif
+                ]])],
+             [gl_cv_host_cpu_c_abi_32bit=no],
+             [gl_cv_host_cpu_c_abi_32bit=yes])
+           ;;
+
+         sparc | sparc64 )
+           # UltraSPARCs running Linux have `uname -m` = "sparc64", but the
+           # C compiler still generates 32-bit code.
+           AC_COMPILE_IFELSE(
+             [AC_LANG_SOURCE(
+                [[#if defined __sparcv9 || defined __arch64__
+                   int ok;
+                  #else
+                   error fail
+                  #endif
+                ]])],
+             [gl_cv_host_cpu_c_abi_32bit=no],
+             [gl_cv_host_cpu_c_abi_32bit=yes])
+           ;;
+
+         *)
+           gl_cv_host_cpu_c_abi_32bit=no
+           ;;
+       esac
+     fi
+    ])
+
+  HOST_CPU_C_ABI_32BIT="$gl_cv_host_cpu_c_abi_32bit"
+])
+
+# iconv.m4 serial 21
+dnl Copyright (C) 2000-2002, 2007-2014, 2016-2019 Free Software Foundation,
+dnl Inc.
 dnl This file is free software; the Free Software Foundation
 dnl gives unlimited permission to copy and/or distribute it,
 dnl with or without modifications, as long as this notice is preserved.
@@ -188,15 +834,27 @@ AC_DEFUN([AM_ICONV_LINK],
 #endif
   /* Test against HP-UX 11.11 bug: No converter from EUC-JP to UTF-8 is
      provided.  */
-  if (/* Try standardized names.  */
-      iconv_open ("UTF-8", "EUC-JP") == (iconv_t)(-1)
-      /* Try IRIX, OSF/1 names.  */
-      && iconv_open ("UTF-8", "eucJP") == (iconv_t)(-1)
-      /* Try AIX names.  */
-      && iconv_open ("UTF-8", "IBM-eucJP") == (iconv_t)(-1)
-      /* Try HP-UX names.  */
-      && iconv_open ("utf8", "eucJP") == (iconv_t)(-1))
-    result |= 16;
+  {
+    /* Try standardized names.  */
+    iconv_t cd1 = iconv_open ("UTF-8", "EUC-JP");
+    /* Try IRIX, OSF/1 names.  */
+    iconv_t cd2 = iconv_open ("UTF-8", "eucJP");
+    /* Try AIX names.  */
+    iconv_t cd3 = iconv_open ("UTF-8", "IBM-eucJP");
+    /* Try HP-UX names.  */
+    iconv_t cd4 = iconv_open ("utf8", "eucJP");
+    if (cd1 == (iconv_t)(-1) && cd2 == (iconv_t)(-1)
+        && cd3 == (iconv_t)(-1) && cd4 == (iconv_t)(-1))
+      result |= 16;
+    if (cd1 != (iconv_t)(-1))
+      iconv_close (cd1);
+    if (cd2 != (iconv_t)(-1))
+      iconv_close (cd2);
+    if (cd3 != (iconv_t)(-1))
+      iconv_close (cd3);
+    if (cd4 != (iconv_t)(-1))
+      iconv_close (cd4);
+  }
   return result;
 ]])],
           [am_cv_func_iconv_works=yes], ,
@@ -279,20 +937,24 @@ size_t iconv();
     am_cv_proto_iconv=`echo "[$]am_cv_proto_iconv" | tr -s ' ' | sed -e 's/( /(/'`
     AC_MSG_RESULT([
          $am_cv_proto_iconv])
-    AC_DEFINE_UNQUOTED([ICONV_CONST], [$am_cv_proto_iconv_arg1],
-      [Define as const if the declaration of iconv() needs const.])
-    dnl Also substitute ICONV_CONST in the gnulib generated <iconv.h>.
-    m4_ifdef([gl_ICONV_H_DEFAULTS],
-      [AC_REQUIRE([gl_ICONV_H_DEFAULTS])
-       if test -n "$am_cv_proto_iconv_arg1"; then
-         ICONV_CONST="const"
-       fi
-      ])
+  else
+    dnl When compiling GNU libiconv on a system that does not have iconv yet,
+    dnl pick the POSIX compliant declaration without 'const'.
+    am_cv_proto_iconv_arg1=""
   fi
+  AC_DEFINE_UNQUOTED([ICONV_CONST], [$am_cv_proto_iconv_arg1],
+    [Define as const if the declaration of iconv() needs const.])
+  dnl Also substitute ICONV_CONST in the gnulib generated <iconv.h>.
+  m4_ifdef([gl_ICONV_H_DEFAULTS],
+    [AC_REQUIRE([gl_ICONV_H_DEFAULTS])
+     if test -n "$am_cv_proto_iconv_arg1"; then
+       ICONV_CONST="const"
+     fi
+    ])
 ])
 
-# lib-ld.m4 serial 6
-dnl Copyright (C) 1996-2003, 2009-2016 Free Software Foundation, Inc.
+# lib-ld.m4 serial 9
+dnl Copyright (C) 1996-2003, 2009-2019 Free Software Foundation, Inc.
 dnl This file is free software; the Free Software Foundation
 dnl gives unlimited permission to copy and/or distribute it,
 dnl with or without modifications, as long as this notice is preserved.
@@ -340,86 +1002,135 @@ if test "${PATH_SEPARATOR+set}" != set; then
        }
 fi
 
-ac_prog=ld
-if test "$GCC" = yes; then
-  # Check if gcc -print-prog-name=ld gives a path.
+if test -n "$LD"; then
+  AC_MSG_CHECKING([for ld])
+elif test "$GCC" = yes; then
   AC_MSG_CHECKING([for ld used by $CC])
-  case $host in
-  *-*-mingw*)
-    # gcc leaves a trailing carriage return which upsets mingw
-    ac_prog=`($CC -print-prog-name=ld) 2>&5 | tr -d '\015'` ;;
-  *)
-    ac_prog=`($CC -print-prog-name=ld) 2>&5` ;;
-  esac
-  case $ac_prog in
-    # Accept absolute paths.
-    [[\\/]]* | ?:[[\\/]]*)
-      re_direlt='/[[^/]][[^/]]*/\.\./'
-      # Canonicalize the pathname of ld
-      ac_prog=`echo "$ac_prog"| sed 's%\\\\%/%g'`
-      while echo "$ac_prog" | grep "$re_direlt" > /dev/null 2>&1; do
-        ac_prog=`echo $ac_prog| sed "s%$re_direlt%/%"`
-      done
-      test -z "$LD" && LD="$ac_prog"
-      ;;
-  "")
-    # If it fails, then pretend we aren't using GCC.
-    ac_prog=ld
-    ;;
-  *)
-    # If it is relative, then search for the first ld in PATH.
-    with_gnu_ld=unknown
-    ;;
-  esac
 elif test "$with_gnu_ld" = yes; then
   AC_MSG_CHECKING([for GNU ld])
 else
   AC_MSG_CHECKING([for non-GNU ld])
 fi
-AC_CACHE_VAL([acl_cv_path_LD],
-[if test -z "$LD"; then
-  acl_save_ifs="$IFS"; IFS=$PATH_SEPARATOR
-  for ac_dir in $PATH; do
-    IFS="$acl_save_ifs"
-    test -z "$ac_dir" && ac_dir=.
-    if test -f "$ac_dir/$ac_prog" || test -f "$ac_dir/$ac_prog$ac_exeext"; then
-      acl_cv_path_LD="$ac_dir/$ac_prog"
-      # Check to see if the program is GNU ld.  I'd rather use --version,
-      # but apparently some variants of GNU ld only accept -v.
-      # Break only if it was the GNU/non-GNU ld that we prefer.
-      case `"$acl_cv_path_LD" -v 2>&1 </dev/null` in
-      *GNU* | *'with BFD'*)
-        test "$with_gnu_ld" != no && break
-        ;;
-      *)
-        test "$with_gnu_ld" != yes && break
-        ;;
+if test -n "$LD"; then
+  # Let the user override the test with a path.
+  :
+else
+  AC_CACHE_VAL([acl_cv_path_LD],
+  [
+    acl_cv_path_LD= # Final result of this test
+    ac_prog=ld # Program to search in $PATH
+    if test "$GCC" = yes; then
+      # Check if gcc -print-prog-name=ld gives a path.
+      case $host in
+        *-*-mingw*)
+          # gcc leaves a trailing carriage return which upsets mingw
+          acl_output=`($CC -print-prog-name=ld) 2>&5 | tr -d '\015'` ;;
+        *)
+          acl_output=`($CC -print-prog-name=ld) 2>&5` ;;
+      esac
+      case $acl_output in
+        # Accept absolute paths.
+        [[\\/]]* | ?:[[\\/]]*)
+          re_direlt='/[[^/]][[^/]]*/\.\./'
+          # Canonicalize the pathname of ld
+          acl_output=`echo "$acl_output" | sed 's%\\\\%/%g'`
+          while echo "$acl_output" | grep "$re_direlt" > /dev/null 2>&1; do
+            acl_output=`echo $acl_output | sed "s%$re_direlt%/%"`
+          done
+          # Got the pathname. No search in PATH is needed.
+          acl_cv_path_LD="$acl_output"
+          ac_prog=
+          ;;
+        "")
+          # If it fails, then pretend we aren't using GCC.
+          ;;
+        *)
+          # If it is relative, then search for the first ld in PATH.
+          with_gnu_ld=unknown
+          ;;
       esac
     fi
-  done
-  IFS="$acl_save_ifs"
-else
-  acl_cv_path_LD="$LD" # Let the user override the test with a path.
-fi])
-LD="$acl_cv_path_LD"
+    if test -n "$ac_prog"; then
+      # Search for $ac_prog in $PATH.
+      acl_save_ifs="$IFS"; IFS=$PATH_SEPARATOR
+      for ac_dir in $PATH; do
+        IFS="$acl_save_ifs"
+        test -z "$ac_dir" && ac_dir=.
+        if test -f "$ac_dir/$ac_prog" || test -f "$ac_dir/$ac_prog$ac_exeext"; then
+          acl_cv_path_LD="$ac_dir/$ac_prog"
+          # Check to see if the program is GNU ld.  I'd rather use --version,
+          # but apparently some variants of GNU ld only accept -v.
+          # Break only if it was the GNU/non-GNU ld that we prefer.
+          case `"$acl_cv_path_LD" -v 2>&1 </dev/null` in
+            *GNU* | *'with BFD'*)
+              test "$with_gnu_ld" != no && break
+              ;;
+            *)
+              test "$with_gnu_ld" != yes && break
+              ;;
+          esac
+        fi
+      done
+      IFS="$acl_save_ifs"
+    fi
+    case $host in
+      *-*-aix*)
+        AC_COMPILE_IFELSE(
+          [AC_LANG_SOURCE(
+             [[#if defined __powerpc64__ || defined _ARCH_PPC64
+                int ok;
+               #else
+                error fail
+               #endif
+             ]])],
+          [# The compiler produces 64-bit code. Add option '-b64' so that the
+           # linker groks 64-bit object files.
+           case "$acl_cv_path_LD " in
+             *" -b64 "*) ;;
+             *) acl_cv_path_LD="$acl_cv_path_LD -b64" ;;
+           esac
+          ], [])
+        ;;
+      sparc64-*-netbsd*)
+        AC_COMPILE_IFELSE(
+          [AC_LANG_SOURCE(
+             [[#if defined __sparcv9 || defined __arch64__
+                int ok;
+               #else
+                error fail
+               #endif
+             ]])],
+          [],
+          [# The compiler produces 32-bit code. Add option '-m elf32_sparc'
+           # so that the linker groks 32-bit object files.
+           case "$acl_cv_path_LD " in
+             *" -m elf32_sparc "*) ;;
+             *) acl_cv_path_LD="$acl_cv_path_LD -m elf32_sparc" ;;
+           esac
+          ])
+        ;;
+    esac
+  ])
+  LD="$acl_cv_path_LD"
+fi
 if test -n "$LD"; then
   AC_MSG_RESULT([$LD])
 else
   AC_MSG_RESULT([no])
+  AC_MSG_ERROR([no acceptable ld found in \$PATH])
 fi
-test -z "$LD" && AC_MSG_ERROR([no acceptable ld found in \$PATH])
 AC_LIB_PROG_LD_GNU
 ])
 
-# lib-link.m4 serial 26 (gettext-0.18.2)
-dnl Copyright (C) 2001-2016 Free Software Foundation, Inc.
+# lib-link.m4 serial 28
+dnl Copyright (C) 2001-2019 Free Software Foundation, Inc.
 dnl This file is free software; the Free Software Foundation
 dnl gives unlimited permission to copy and/or distribute it,
 dnl with or without modifications, as long as this notice is preserved.
 
 dnl From Bruno Haible.
 
-AC_PREREQ([2.54])
+AC_PREREQ([2.61])
 
 dnl AC_LIB_LINKFLAGS(name [, dependencies]) searches for libname and
 dnl the libraries corresponding to explicit and implicit dependencies.
@@ -537,8 +1248,8 @@ dnl   acl_hardcode_direct,
 dnl   acl_hardcode_minus_L.
 AC_DEFUN([AC_LIB_RPATH],
 [
-  dnl Tell automake >= 1.10 to complain if config.rpath is missing.
-  m4_ifdef([AC_REQUIRE_AUX_FILE], [AC_REQUIRE_AUX_FILE([config.rpath])])
+  dnl Complain if config.rpath is missing.
+  AC_REQUIRE_AUX_FILE([config.rpath])
   AC_REQUIRE([AC_PROG_CC])                dnl we use $CC, $GCC, $LDFLAGS
   AC_REQUIRE([AC_LIB_PROG_LD])            dnl we use $LD, $with_gnu_ld
   AC_REQUIRE([AC_CANONICAL_HOST])         dnl we use $host
@@ -600,17 +1311,15 @@ AC_DEFUN([AC_LIB_LINKFLAGS_BODY],
   pushdef([PACKUP],[m4_translit(PACK,[abcdefghijklmnopqrstuvwxyz./+-],
                                      [ABCDEFGHIJKLMNOPQRSTUVWXYZ____])])
   pushdef([PACKLIBS],[m4_ifdef([acl_frompackage_]NAME, [acl_libsinpackage_]PACKUP, lib[$1])])
-  dnl Autoconf >= 2.61 supports dots in --with options.
-  pushdef([P_A_C_K],[m4_if(m4_version_compare(m4_defn([m4_PACKAGE_VERSION]),[2.61]),[-1],[m4_translit(PACK,[.],[_])],PACK)])
   dnl By default, look in $includedir and $libdir.
   use_additional=yes
   AC_LIB_WITH_FINAL_PREFIX([
     eval additional_includedir=\"$includedir\"
     eval additional_libdir=\"$libdir\"
   ])
-  AC_ARG_WITH(P_A_C_K[-prefix],
-[[  --with-]]P_A_C_K[[-prefix[=DIR]  search for ]PACKLIBS[ in DIR/include and DIR/lib
-  --without-]]P_A_C_K[[-prefix     don't search for ]PACKLIBS[ in includedir and libdir]],
+  AC_ARG_WITH(PACK[-prefix],
+[[  --with-]]PACK[[-prefix[=DIR]  search for ]PACKLIBS[ in DIR/include and DIR/lib
+  --without-]]PACK[[-prefix     don't search for ]PACKLIBS[ in includedir and libdir]],
 [
     if test "X$withval" = "Xno"; then
       use_additional=no
@@ -624,7 +1333,7 @@ AC_DEFUN([AC_LIB_LINKFLAGS_BODY],
         additional_includedir="$withval/include"
         additional_libdir="$withval/$acl_libdirstem"
         if test "$acl_libdirstem2" != "$acl_libdirstem" \
-           && ! test -d "$withval/$acl_libdirstem"; then
+           && test ! -d "$withval/$acl_libdirstem"; then
           additional_libdir="$withval/$acl_libdirstem2"
         fi
       fi
@@ -1083,7 +1792,6 @@ AC_DEFUN([AC_LIB_LINKFLAGS_BODY],
       LTLIB[]NAME="${LTLIB[]NAME}${LTLIB[]NAME:+ }-R$found_dir"
     done
   fi
-  popdef([P_A_C_K])
   popdef([PACKLIBS])
   popdef([PACKUP])
   popdef([PACK])
@@ -1189,20 +1897,13 @@ AC_DEFUN([AC_LIB_LINKFLAGS_FROM_LIBS],
   AC_SUBST([$1])
 ])
 
-# lib-prefix.m4 serial 7 (gettext-0.18)
-dnl Copyright (C) 2001-2005, 2008-2016 Free Software Foundation, Inc.
+# lib-prefix.m4 serial 14
+dnl Copyright (C) 2001-2005, 2008-2019 Free Software Foundation, Inc.
 dnl This file is free software; the Free Software Foundation
 dnl gives unlimited permission to copy and/or distribute it,
 dnl with or without modifications, as long as this notice is preserved.
 
 dnl From Bruno Haible.
-
-dnl AC_LIB_ARG_WITH is synonymous to AC_ARG_WITH in autoconf-2.13, and
-dnl similar to AC_ARG_WITH in autoconf 2.52...2.57 except that is doesn't
-dnl require excessive bracketing.
-ifdef([AC_HELP_STRING],
-[AC_DEFUN([AC_LIB_ARG_WITH], [AC_ARG_WITH([$1],[[$2]],[$3],[$4])])],
-[AC_DEFUN([AC_][LIB_ARG_WITH], [AC_ARG_WITH([$1],[$2],[$3],[$4])])])
 
 dnl AC_LIB_PREFIX adds to the CPPFLAGS and LDFLAGS the flags that are needed
 dnl to access previously installed libraries. The basic assumption is that
@@ -1223,9 +1924,9 @@ AC_DEFUN([AC_LIB_PREFIX],
     eval additional_includedir=\"$includedir\"
     eval additional_libdir=\"$libdir\"
   ])
-  AC_LIB_ARG_WITH([lib-prefix],
-[  --with-lib-prefix[=DIR] search for libraries in DIR/include and DIR/lib
-  --without-lib-prefix    don't search for libraries in includedir and libdir],
+  AC_ARG_WITH([lib-prefix],
+[[  --with-lib-prefix[=DIR] search for libraries in DIR/include and DIR/lib
+  --without-lib-prefix    don't search for libraries in includedir and libdir]],
 [
     if test "X$withval" = "Xno"; then
       use_additional=no
@@ -1365,81 +2066,144 @@ AC_DEFUN([AC_LIB_PREPARE_MULTILIB],
   dnl $prefix/lib/64 (which is a symlink to either $prefix/lib/sparcv9 or
   dnl $prefix/lib/amd64) and 32-bit libraries go under $prefix/lib.
   AC_REQUIRE([AC_CANONICAL_HOST])
-  acl_libdirstem=lib
-  acl_libdirstem2=
+  AC_REQUIRE([gl_HOST_CPU_C_ABI_32BIT])
+
   case "$host_os" in
     solaris*)
-      dnl See Solaris 10 Software Developer Collection > Solaris 64-bit Developer's Guide > The Development Environment
-      dnl <http://docs.sun.com/app/docs/doc/816-5138/dev-env?l=en&a=view>.
-      dnl "Portable Makefiles should refer to any library directories using the 64 symbolic link."
-      dnl But we want to recognize the sparcv9 or amd64 subdirectory also if the
-      dnl symlink is missing, so we set acl_libdirstem2 too.
       AC_CACHE_CHECK([for 64-bit host], [gl_cv_solaris_64bit],
-        [AC_EGREP_CPP([sixtyfour bits], [
-#ifdef _LP64
-sixtyfour bits
-#endif
-           ], [gl_cv_solaris_64bit=yes], [gl_cv_solaris_64bit=no])
-        ])
-      if test $gl_cv_solaris_64bit = yes; then
-        acl_libdirstem=lib/64
-        case "$host_cpu" in
-          sparc*)        acl_libdirstem2=lib/sparcv9 ;;
-          i*86 | x86_64) acl_libdirstem2=lib/amd64 ;;
-        esac
-      fi
-      ;;
-    *)
-      searchpath=`(LC_ALL=C $CC -print-search-dirs) 2>/dev/null | sed -n -e 's,^libraries: ,,p' | sed -e 's,^=,,'`
-      if test -n "$searchpath"; then
-        acl_save_IFS="${IFS= 	}"; IFS=":"
-        for searchdir in $searchpath; do
-          if test -d "$searchdir"; then
-            case "$searchdir" in
-              */lib64/ | */lib64 ) acl_libdirstem=lib64 ;;
-              */../ | */.. )
-                # Better ignore directories of this form. They are misleading.
-                ;;
-              *) searchdir=`cd "$searchdir" && pwd`
-                 case "$searchdir" in
-                   */lib64 ) acl_libdirstem=lib64 ;;
-                 esac ;;
-            esac
-          fi
-        done
-        IFS="$acl_save_IFS"
-      fi
-      ;;
+        [AC_COMPILE_IFELSE(
+           [AC_LANG_SOURCE(
+              [[#ifdef _LP64
+                 int ok;
+                #else
+                 error fail
+                #endif
+              ]])],
+           [gl_cv_solaris_64bit=yes],
+           [gl_cv_solaris_64bit=no])
+        ]);;
   esac
-  test -n "$acl_libdirstem2" || acl_libdirstem2="$acl_libdirstem"
+
+  dnl Allow the user to override the result by setting acl_cv_libdirstems.
+  AC_CACHE_CHECK([for the common suffixes of directories in the library search path],
+    [acl_cv_libdirstems],
+    [acl_libdirstem=lib
+     acl_libdirstem2=
+     case "$host_os" in
+       solaris*)
+         dnl See Solaris 10 Software Developer Collection > Solaris 64-bit Developer's Guide > The Development Environment
+         dnl <https://docs.oracle.com/cd/E19253-01/816-5138/dev-env/index.html>.
+         dnl "Portable Makefiles should refer to any library directories using the 64 symbolic link."
+         dnl But we want to recognize the sparcv9 or amd64 subdirectory also if the
+         dnl symlink is missing, so we set acl_libdirstem2 too.
+         if test $gl_cv_solaris_64bit = yes; then
+           acl_libdirstem=lib/64
+           case "$host_cpu" in
+             sparc*)        acl_libdirstem2=lib/sparcv9 ;;
+             i*86 | x86_64) acl_libdirstem2=lib/amd64 ;;
+           esac
+         fi
+         ;;
+       *)
+         dnl If $CC generates code for a 32-bit ABI, the libraries are
+         dnl surely under $prefix/lib, not $prefix/lib64.
+         if test "$HOST_CPU_C_ABI_32BIT" != yes; then
+           dnl The result is a property of the system. However, non-system
+           dnl compilers sometimes have odd library search paths. Therefore
+           dnl prefer asking /usr/bin/gcc, if available, rather than $CC.
+           searchpath=`(if test -f /usr/bin/gcc \
+                           && LC_ALL=C /usr/bin/gcc -print-search-dirs >/dev/null 2>/dev/null; then \
+                          LC_ALL=C /usr/bin/gcc -print-search-dirs; \
+                        else \
+                          LC_ALL=C $CC -print-search-dirs; \
+                        fi) 2>/dev/null \
+                       | sed -n -e 's,^libraries: ,,p' | sed -e 's,^=,,'`
+           if test -n "$searchpath"; then
+             acl_save_IFS="${IFS= 	}"; IFS=":"
+             for searchdir in $searchpath; do
+               if test -d "$searchdir"; then
+                 case "$searchdir" in
+                   */lib64/ | */lib64 ) acl_libdirstem=lib64 ;;
+                   */../ | */.. )
+                     # Better ignore directories of this form. They are misleading.
+                     ;;
+                   *) searchdir=`cd "$searchdir" && pwd`
+                      case "$searchdir" in
+                        */lib64 ) acl_libdirstem=lib64 ;;
+                      esac ;;
+                 esac
+               fi
+             done
+             IFS="$acl_save_IFS"
+           fi
+         fi
+         ;;
+     esac
+     test -n "$acl_libdirstem2" || acl_libdirstem2="$acl_libdirstem"
+     acl_cv_libdirstems="$acl_libdirstem,$acl_libdirstem2"
+    ])
+  # Decompose acl_cv_libdirstems into acl_libdirstem and acl_libdirstem2.
+  acl_libdirstem=`echo "$acl_cv_libdirstems" | sed -e 's/,.*//'`
+  acl_libdirstem2=`echo "$acl_cv_libdirstems" | sed -e '/,/s/.*,//'`
 ])
 
-# pkg.m4 - Macros to locate and utilise pkg-config.            -*- Autoconf -*-
-# serial 1 (pkg-config-0.24)
-# 
-# Copyright © 2004 Scott James Remnant <scott@netsplit.com>.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-#
-# As a special exception to the GNU General Public License, if you
-# distribute this file as part of a program that contains a
-# configuration script generated by Autoconf, you may include it under
-# the same distribution terms that you use for the rest of that program.
+dnl pkg.m4 - Macros to locate and utilise pkg-config.   -*- Autoconf -*-
+dnl serial 11 (pkg-config-0.29.1)
+dnl
+dnl Copyright © 2004 Scott James Remnant <scott@netsplit.com>.
+dnl Copyright © 2012-2015 Dan Nicholson <dbn.lists@gmail.com>
+dnl
+dnl This program is free software; you can redistribute it and/or modify
+dnl it under the terms of the GNU General Public License as published by
+dnl the Free Software Foundation; either version 2 of the License, or
+dnl (at your option) any later version.
+dnl
+dnl This program is distributed in the hope that it will be useful, but
+dnl WITHOUT ANY WARRANTY; without even the implied warranty of
+dnl MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+dnl General Public License for more details.
+dnl
+dnl You should have received a copy of the GNU General Public License
+dnl along with this program; if not, write to the Free Software
+dnl Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+dnl 02111-1307, USA.
+dnl
+dnl As a special exception to the GNU General Public License, if you
+dnl distribute this file as part of a program that contains a
+dnl configuration script generated by Autoconf, you may include it under
+dnl the same distribution terms that you use for the rest of that
+dnl program.
 
-# PKG_PROG_PKG_CONFIG([MIN-VERSION])
-# ----------------------------------
+dnl PKG_PREREQ(MIN-VERSION)
+dnl -----------------------
+dnl Since: 0.29
+dnl
+dnl Verify that the version of the pkg-config macros are at least
+dnl MIN-VERSION. Unlike PKG_PROG_PKG_CONFIG, which checks the user's
+dnl installed version of pkg-config, this checks the developer's version
+dnl of pkg.m4 when generating configure.
+dnl
+dnl To ensure that this macro is defined, also add:
+dnl m4_ifndef([PKG_PREREQ],
+dnl     [m4_fatal([must install pkg-config 0.29 or later before running autoconf/autogen])])
+dnl
+dnl See the "Since" comment for each macro you use to see what version
+dnl of the macros you require.
+m4_defun([PKG_PREREQ],
+[m4_define([PKG_MACROS_VERSION], [0.29.1])
+m4_if(m4_version_compare(PKG_MACROS_VERSION, [$1]), -1,
+    [m4_fatal([pkg.m4 version $1 or higher is required but ]PKG_MACROS_VERSION[ found])])
+])dnl PKG_PREREQ
+
+dnl PKG_PROG_PKG_CONFIG([MIN-VERSION])
+dnl ----------------------------------
+dnl Since: 0.16
+dnl
+dnl Search for the pkg-config tool and set the PKG_CONFIG variable to
+dnl first found in the path. Checks that the version of pkg-config found
+dnl is at least MIN-VERSION. If MIN-VERSION is not specified, 0.9.0 is
+dnl used since that's the first version where most current features of
+dnl pkg-config existed.
 AC_DEFUN([PKG_PROG_PKG_CONFIG],
 [m4_pattern_forbid([^_?PKG_[A-Z_]+$])
 m4_pattern_allow([^PKG_CONFIG(_(PATH|LIBDIR|SYSROOT_DIR|ALLOW_SYSTEM_(CFLAGS|LIBS)))?$])
@@ -1461,18 +2225,19 @@ if test -n "$PKG_CONFIG"; then
 		PKG_CONFIG=""
 	fi
 fi[]dnl
-])# PKG_PROG_PKG_CONFIG
+])dnl PKG_PROG_PKG_CONFIG
 
-# PKG_CHECK_EXISTS(MODULES, [ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND])
-#
-# Check to see whether a particular set of modules exists.  Similar
-# to PKG_CHECK_MODULES(), but does not set variables or print errors.
-#
-# Please remember that m4 expands AC_REQUIRE([PKG_PROG_PKG_CONFIG])
-# only at the first occurence in configure.ac, so if the first place
-# it's called might be skipped (such as if it is within an "if", you
-# have to call PKG_CHECK_EXISTS manually
-# --------------------------------------------------------------
+dnl PKG_CHECK_EXISTS(MODULES, [ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND])
+dnl -------------------------------------------------------------------
+dnl Since: 0.18
+dnl
+dnl Check to see whether a particular set of modules exists. Similar to
+dnl PKG_CHECK_MODULES(), but does not set variables or print errors.
+dnl
+dnl Please remember that m4 expands AC_REQUIRE([PKG_PROG_PKG_CONFIG])
+dnl only at the first occurence in configure.ac, so if the first place
+dnl it's called might be skipped (such as if it is within an "if", you
+dnl have to call PKG_CHECK_EXISTS manually
 AC_DEFUN([PKG_CHECK_EXISTS],
 [AC_REQUIRE([PKG_PROG_PKG_CONFIG])dnl
 if test -n "$PKG_CONFIG" && \
@@ -1482,8 +2247,10 @@ m4_ifvaln([$3], [else
   $3])dnl
 fi])
 
-# _PKG_CONFIG([VARIABLE], [COMMAND], [MODULES])
-# ---------------------------------------------
+dnl _PKG_CONFIG([VARIABLE], [COMMAND], [MODULES])
+dnl ---------------------------------------------
+dnl Internal wrapper calling pkg-config via PKG_CONFIG and setting
+dnl pkg_failed based on the result.
 m4_define([_PKG_CONFIG],
 [if test -n "$$1"; then
     pkg_cv_[]$1="$$1"
@@ -1495,10 +2262,11 @@ m4_define([_PKG_CONFIG],
  else
     pkg_failed=untried
 fi[]dnl
-])# _PKG_CONFIG
+])dnl _PKG_CONFIG
 
-# _PKG_SHORT_ERRORS_SUPPORTED
-# -----------------------------
+dnl _PKG_SHORT_ERRORS_SUPPORTED
+dnl ---------------------------
+dnl Internal check to see if pkg-config supports short errors.
 AC_DEFUN([_PKG_SHORT_ERRORS_SUPPORTED],
 [AC_REQUIRE([PKG_PROG_PKG_CONFIG])
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -1506,19 +2274,17 @@ if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
 else
         _pkg_short_errors_supported=no
 fi[]dnl
-])# _PKG_SHORT_ERRORS_SUPPORTED
+])dnl _PKG_SHORT_ERRORS_SUPPORTED
 
 
-# PKG_CHECK_MODULES(VARIABLE-PREFIX, MODULES, [ACTION-IF-FOUND],
-# [ACTION-IF-NOT-FOUND])
-#
-#
-# Note that if there is a possibility the first call to
-# PKG_CHECK_MODULES might not happen, you should be sure to include an
-# explicit call to PKG_PROG_PKG_CONFIG in your configure.ac
-#
-#
-# --------------------------------------------------------------
+dnl PKG_CHECK_MODULES(VARIABLE-PREFIX, MODULES, [ACTION-IF-FOUND],
+dnl   [ACTION-IF-NOT-FOUND])
+dnl --------------------------------------------------------------
+dnl Since: 0.4.0
+dnl
+dnl Note that if there is a possibility the first call to
+dnl PKG_CHECK_MODULES might not happen, you should be sure to include an
+dnl explicit call to PKG_PROG_PKG_CONFIG in your configure.ac
 AC_DEFUN([PKG_CHECK_MODULES],
 [AC_REQUIRE([PKG_PROG_PKG_CONFIG])dnl
 AC_ARG_VAR([$1][_CFLAGS], [C compiler flags for $1, overriding pkg-config])dnl
@@ -1572,16 +2338,40 @@ else
         AC_MSG_RESULT([yes])
 	$3
 fi[]dnl
-])# PKG_CHECK_MODULES
+])dnl PKG_CHECK_MODULES
 
 
-# PKG_INSTALLDIR(DIRECTORY)
-# -------------------------
-# Substitutes the variable pkgconfigdir as the location where a module
-# should install pkg-config .pc files. By default the directory is
-# $libdir/pkgconfig, but the default can be changed by passing
-# DIRECTORY. The user can override through the --with-pkgconfigdir
-# parameter.
+dnl PKG_CHECK_MODULES_STATIC(VARIABLE-PREFIX, MODULES, [ACTION-IF-FOUND],
+dnl   [ACTION-IF-NOT-FOUND])
+dnl ---------------------------------------------------------------------
+dnl Since: 0.29
+dnl
+dnl Checks for existence of MODULES and gathers its build flags with
+dnl static libraries enabled. Sets VARIABLE-PREFIX_CFLAGS from --cflags
+dnl and VARIABLE-PREFIX_LIBS from --libs.
+dnl
+dnl Note that if there is a possibility the first call to
+dnl PKG_CHECK_MODULES_STATIC might not happen, you should be sure to
+dnl include an explicit call to PKG_PROG_PKG_CONFIG in your
+dnl configure.ac.
+AC_DEFUN([PKG_CHECK_MODULES_STATIC],
+[AC_REQUIRE([PKG_PROG_PKG_CONFIG])dnl
+_save_PKG_CONFIG=$PKG_CONFIG
+PKG_CONFIG="$PKG_CONFIG --static"
+PKG_CHECK_MODULES($@)
+PKG_CONFIG=$_save_PKG_CONFIG[]dnl
+])dnl PKG_CHECK_MODULES_STATIC
+
+
+dnl PKG_INSTALLDIR([DIRECTORY])
+dnl -------------------------
+dnl Since: 0.27
+dnl
+dnl Substitutes the variable pkgconfigdir as the location where a module
+dnl should install pkg-config .pc files. By default the directory is
+dnl $libdir/pkgconfig, but the default can be changed by passing
+dnl DIRECTORY. The user can override through the --with-pkgconfigdir
+dnl parameter.
 AC_DEFUN([PKG_INSTALLDIR],
 [m4_pushdef([pkg_default], [m4_default([$1], ['${libdir}/pkgconfig'])])
 m4_pushdef([pkg_description],
@@ -1592,16 +2382,18 @@ AC_ARG_WITH([pkgconfigdir],
 AC_SUBST([pkgconfigdir], [$with_pkgconfigdir])
 m4_popdef([pkg_default])
 m4_popdef([pkg_description])
-]) dnl PKG_INSTALLDIR
+])dnl PKG_INSTALLDIR
 
 
-# PKG_NOARCH_INSTALLDIR(DIRECTORY)
-# -------------------------
-# Substitutes the variable noarch_pkgconfigdir as the location where a
-# module should install arch-independent pkg-config .pc files. By
-# default the directory is $datadir/pkgconfig, but the default can be
-# changed by passing DIRECTORY. The user can override through the
-# --with-noarch-pkgconfigdir parameter.
+dnl PKG_NOARCH_INSTALLDIR([DIRECTORY])
+dnl --------------------------------
+dnl Since: 0.27
+dnl
+dnl Substitutes the variable noarch_pkgconfigdir as the location where a
+dnl module should install arch-independent pkg-config .pc files. By
+dnl default the directory is $datadir/pkgconfig, but the default can be
+dnl changed by passing DIRECTORY. The user can override through the
+dnl --with-noarch-pkgconfigdir parameter.
 AC_DEFUN([PKG_NOARCH_INSTALLDIR],
 [m4_pushdef([pkg_default], [m4_default([$1], ['${datadir}/pkgconfig'])])
 m4_pushdef([pkg_description],
@@ -1612,7 +2404,24 @@ AC_ARG_WITH([noarch-pkgconfigdir],
 AC_SUBST([noarch_pkgconfigdir], [$with_noarch_pkgconfigdir])
 m4_popdef([pkg_default])
 m4_popdef([pkg_description])
-]) dnl PKG_NOARCH_INSTALLDIR
+])dnl PKG_NOARCH_INSTALLDIR
+
+
+dnl PKG_CHECK_VAR(VARIABLE, MODULE, CONFIG-VARIABLE,
+dnl [ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND])
+dnl -------------------------------------------
+dnl Since: 0.28
+dnl
+dnl Retrieves the value of the pkg-config variable for the given module.
+AC_DEFUN([PKG_CHECK_VAR],
+[AC_REQUIRE([PKG_PROG_PKG_CONFIG])dnl
+AC_ARG_VAR([$1], [value of $3 for $2, overriding pkg-config])dnl
+
+_PKG_CONFIG([$1], [variable="][$3]["], [$2])
+AS_VAR_COPY([$1], [pkg_cv_][$1])
+
+AS_VAR_IF([$1], [""], [$5], [$4])dnl
+])dnl PKG_CHECK_VAR
 
 # Copyright (C) 2002-2012 Free Software Foundation, Inc.
 #
