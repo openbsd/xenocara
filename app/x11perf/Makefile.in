@@ -74,7 +74,7 @@ build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = x11perf$(EXEEXT)
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(dist_x11perfcomp_SCRIPTS) \
+DIST_COMMON = $(am__configure_deps) $(dist_x11perfcomp_SCRIPTS) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/config.h.in $(top_srcdir)/configure COPYING \
 	ChangeLog INSTALL compile config.guess config.sub depcomp \
@@ -378,7 +378,7 @@ x11perf_SOURCES = \
 
 bin_SCRIPTS = x11perfcomp
 CLEANFILES = $(bin_SCRIPTS)
-EXTRA_DIST = $(bin_SCRIPTS:=.in)
+EXTRA_DIST = $(bin_SCRIPTS:=.in) README.md
 DIR_SUBSTS = -e 's|@x11perfcompdir[@]|$(x11perfcompdir)|g' -e \
 	's|@MKTEMP[@]|$(MKTEMP)|g'
 dist_x11perfcomp_SCRIPTS = \

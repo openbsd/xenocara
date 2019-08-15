@@ -49,7 +49,7 @@ x11perf_SOURCES =	\
 
 bin_SCRIPTS = x11perfcomp
 CLEANFILES = $(bin_SCRIPTS)
-EXTRA_DIST = $(bin_SCRIPTS:=.in)
+EXTRA_DIST = $(bin_SCRIPTS:=.in) README.md
 DIR_SUBSTS = -e 's|@x11perfcompdir[@]|$(x11perfcompdir)|g'
 DIR_SUBSTS += -e 's|@MKTEMP[@]|$(MKTEMP)|g'
 

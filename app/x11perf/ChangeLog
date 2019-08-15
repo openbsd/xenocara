@@ -1,3 +1,103 @@
+commit ed96e6ce90f8a2177db00c56c2af9311bc167cc4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 16 15:49:38 2019 -0700
+
+    x11perf 1.6.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5e8ed9bbaf67aee3236ad78e5dc62ebf3d9714de
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 7 20:02:50 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 356f6e0bd5cb881f43200ff1db1eb257e261afdd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 20:56:58 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 98648d7bac718b8401e4277f5fccdf53aa038834
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 9 21:34:43 2018 -0800
+
+    Update minpixwin info in man page to match implemenation
+    
+    Scales to 50x50 window since commit 920b070987c00b369bd6c77c6283f68dffbc7b83
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0f5d1af67be196416a6136255dc8525ac430b979
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:20 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 609c78d5b32732810062139be9cfdcf1a37041ea
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 4697ef8385836d1e5db0d9f5839e23a4f9ca8bc8
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit c8eb3414f68cdc1b02a64c5321d4b0abe9c70d1e
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Sun Jul 19 12:08:15 2015 +0200
+
+    Make NameFromFormat() const.
+    
+    Fixes a const-discard warning.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 920b070987c00b369bd6c77c6283f68dffbc7b83
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Jul 15 11:10:59 2015 -0400
+
+    tests: Fix thinko in minpixwin50
+    
+    The other minpixwin tests draw to a window 50% the size of the pixmap,
+    it's clear this one was meant to too.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 01d77ac727032d003a7381ca2ee0f55022295d16
+Author: Niveditha Rau <niveditha.rau@oracle.com>
+Date:   Fri Apr 24 11:14:44 2015 -0700
+
+    Add new options from 1.6.0 release to man page
+    
+    -pause, -compwinwin*, -comppixwin*, -magpixwin*, -minpixwin*
+    
+    Signed-off-by: Niveditha Rau <niveditha.rau@oracle.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 294ea038fe9cefd690f06f6b5f48507c266b4d24
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Apr 16 22:42:25 2015 -0700

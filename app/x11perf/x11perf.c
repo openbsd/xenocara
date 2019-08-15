@@ -167,7 +167,7 @@ static int GetRops(int argi, int argc, char **argv, int *ropsp, int *nump);
 static int GetPops(int argi, int argc, char **argv, int *popsp, int *nump);
 static int GetFormats(int argi, int argc, char **argv, int *formatsp, int *nump);
 static int FormatFromName (char *name);
-static char *NameFromFormat (int format);
+static const char *NameFromFormat (int format);
 
 
 /************************************************
@@ -1399,7 +1399,7 @@ main(int argc, char *argv[])
 					     LABELP(i));
 				}
 			    } else {
-				char *name = NameFromFormat (formats[format]);
+				const char *name = NameFromFormat (formats[format]);
 				sprintf (label, "(%s %s) %s",
 					 popNames[pops[pop]].name,
 					 name,
@@ -1560,7 +1560,7 @@ FormatFromName (char *name)
     return -1;
 }
 
-static char *
+static const char *
 NameFromFormat (int format)
 {
     int i;
