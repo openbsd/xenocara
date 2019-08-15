@@ -74,7 +74,7 @@ build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = bitmap$(EXEEXT) bmtoa$(EXEEXT) atobm$(EXEEXT)
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(dist_appdefault_DATA) \
+DIST_COMMON = $(am__configure_deps) $(dist_appdefault_DATA) \
 	$(dist_bitmap_DATA) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL \
@@ -387,7 +387,7 @@ bmtoa_SOURCES = bmtoa.c
 atobm_CFLAGS = $(CWARNFLAGS) $(ATOBM_CFLAGS)
 atobm_LDADD = $(ATOBM_LIBS)
 atobm_SOURCES = atobm.c
-EXTRA_DIST = autogen.sh
+EXTRA_DIST = autogen.sh README.md
 bitmapdir = $(includedir)/X11/bitmaps
 dist_bitmap_DATA = \
 	Dashes		\

@@ -1,3 +1,73 @@
+commit 6dcc9c8064baeb2f9d853309123cd9736809a4fd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 10 13:01:27 2019 -0800
+
+    bitmap 1.0.9
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d0e0bdea390b0640c5b6345dcd6b7fd6f2d0231e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 16:45:12 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b674422cc1aa98875fc0d740aab118fcd42b94d0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 19:40:13 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 99b0d80d4cf8d4b2365d6f7785296ae3cfb0887a
+Author: Walter Harms <wharms@bfs.de>
+Date:   Sun Sep 24 16:19:40 2017 +0200
+
+    same time ago the user Frederic Baldit complained (on xorg) that
+    the ability to set single dots in the programm Bitmap depend on the state
+    of num_lock. This is a long standing bug that affect all versions
+    of bitmap.
+    
+    the problem was that the corresponding function was erroneously checking
+    event->xbutton.state. Removing that check solved the problem for the user.
+    
+    Signed-off-by: wharms <wharms@bfs.de>
+
+commit f9174d18c950ca998084da6d68903a32cae72d84
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:20 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 24c90b9fa17236caf2c946bcfff4e6bc441a82c3
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 37d922c37a4de2ab29bdd13d55eabd369f0616dd
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
 commit 2f5eae70cd2e9c1e09dcbd8a2a58eaf58207fe00
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Jan 16 21:57:03 2015 -0800

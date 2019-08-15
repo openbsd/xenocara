@@ -67,7 +67,6 @@ DragOnePointHandler(Widget w,
     switch (event->type) {
 
     case ButtonPress:
-	if (event->xbutton.state != status->state) return;
 	if (!QuerySet(status->at_x, status->at_y)) {
 	    BWStoreToBuffer(w);
 	    status->value = Value(BW, event->xbutton.button);
