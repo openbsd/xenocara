@@ -192,6 +192,20 @@ sysnerr (int x, const char *s)
 	return x;
 }
 
+/*
+ * While this looks like it could be replaced with strlcpy() on platforms
+ * that have it, we're sticking with strncpy() so that we zero out the
+ * whole buffer to avoid writing garbage to the fixed length fields in the
+ * utmp/wtmp files, since strlcpy() does not write past the \0 terminator.
+ */
+static void
+safe_strncpy(char *dest, const char *src, size_t n)
+{
+    (void)strncpy(dest, src, n);
+    if (n > 0)
+        dest[n - 1] = '\0';
+}
+
 int
 main (int argc, char **argv)
 {
@@ -406,9 +420,9 @@ main (int argc, char **argv)
 			memset(&ll, 0, sizeof(ll));
 			ll.ll_time = current_time;
 			if (line)
-			 (void) strncpy (ll.ll_line, line, sizeof (ll.ll_line));
+			 safe_strncpy (ll.ll_line, line, sizeof (ll.ll_line));
 			if (host_name)
-			 (void) strncpy (ll.ll_host, host_name, sizeof (ll.ll_host));
+			 safe_strncpy (ll.ll_host, host_name, sizeof (ll.ll_host));
 
 			sysnerr (write (llog, (char *) &ll, sizeof (ll))
 					== sizeof (ll), "write lastlog entry");
@@ -429,11 +443,11 @@ set_utmp (struct utmp *u, char *line, char *user, char *host, time_t date, int a
 {
 	memset (u, 0, sizeof (*u));
 	if (line)
-		(void) strncpy (u->ut_line, line, sizeof (u->ut_line));
+		safe_strncpy (u->ut_line, line, sizeof (u->ut_line));
 	else
 		memset (u->ut_line, 0, sizeof (u->ut_line));
 	if (addp && user)
-		(void) strncpy (u->ut_name, user, sizeof (u->ut_name));
+		safe_strncpy (u->ut_name, user, sizeof (u->ut_name));
 	else
 		memset (u->ut_name, 0, sizeof (u->ut_name));
 #ifdef HAVE_STRUCT_UTMP_UT_ID
@@ -451,7 +465,7 @@ set_utmp (struct utmp *u, char *line, char *user, char *host, time_t date, int a
 			i -= sizeof (u->ut_id);
 		else
 			i = 0;
-		(void) strncpy (u->ut_id, line + i, sizeof (u->ut_id));
+		safe_strncpy (u->ut_id, line + i, sizeof (u->ut_id));
 	} else
 		memset (u->ut_id, 0, sizeof (u->ut_id));
 #endif
@@ -469,7 +483,7 @@ set_utmp (struct utmp *u, char *line, char *user, char *host, time_t date, int a
 #endif
 #ifdef HAVE_STRUCT_UTMP_UT_HOST
 	if (addp && host)
-		(void) strncpy (u->ut_host, host, sizeof (u->ut_host));
+		safe_strncpy (u->ut_host, host, sizeof (u->ut_host));
 	else
 		memset (u->ut_host, 0, sizeof (u->ut_host));
 #endif
@@ -513,9 +527,9 @@ set_utmpx (struct utmpx *u, const char *line, const char *user,
 		if(strcmp(line, ":0") == 0)
 			(void) strcpy(u->ut_line, "console");
 		else
-			(void) strncpy (u->ut_line, line, sizeof (u->ut_line));
+			safe_strncpy (u->ut_line, line, sizeof (u->ut_line));
 
-		strncpy(u->ut_host, line, sizeof(u->ut_host));
+		safe_strncpy(u->ut_host, line, sizeof(u->ut_host));
 #ifdef HAVE_STRUCT_UTMPX_UT_SYSLEN
 		u->ut_syslen = strlen(line);
 #endif
@@ -523,7 +537,7 @@ set_utmpx (struct utmpx *u, const char *line, const char *user,
 	else
 		memset (u->ut_line, 0, sizeof (u->ut_line));
 	if (addp && user)
-		(void) strncpy (u->ut_user, user, sizeof (u->ut_user));
+		safe_strncpy (u->ut_user, user, sizeof (u->ut_user));
 	else
 		memset (u->ut_user, 0, sizeof (u->ut_user));
 
@@ -541,7 +555,7 @@ set_utmpx (struct utmpx *u, const char *line, const char *user,
 			i -= sizeof (u->ut_id);
 		else
 			i = 0;
-		(void) strncpy (u->ut_id, line + i, sizeof (u->ut_id));
+		safe_strncpy (u->ut_id, line + i, sizeof (u->ut_id));
 
 		/* make sure there is no entry using identical ut_id */
 		if (!UtmpxIdOpen(u->ut_id) && addp) {

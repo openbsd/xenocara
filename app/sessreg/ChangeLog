@@ -1,3 +1,60 @@
+commit 3a91ab7d228f4c1a28970e447cff7d1a960db2fe
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 9 11:39:22 2019 -0700
+
+    sessreg 1.1.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 600d183bf6f6967b53a3f2a0e31e8d90a5c13f18
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 9 11:08:08 2019 -0700
+
+    Add comment about why safe_strncpy isn't replaced with strlcpy
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5b403d124c32c20fddc73bc5ae3c7e1febdf1bc4
+Author: Fabrice Fontaine <fontaine.fabrice@gmail.com>
+Date:   Fri May 3 07:48:06 2019 +0200
+
+    Fix missing defines _PATH_WTMPX/_PATH_UTMPX in musl
+    
+    Downloaded from
+    https://cgit.gentoo.org/proj/musl.git/tree/x11-apps/sessreg/files/sessreg-1.1.0-missing_path_wtmpx.patch
+    
+    Signed-off-by: Bernd Kuhls <bernd.kuhls@t-online.de>
+    [Retrieved from:
+    https://git.buildroot.net/buildroot/tree/package/x11r7/xapp_sessreg/0001-missing_path_wtmpx.patch]
+    Signed-off-by: Fabrice Fontaine <fontaine.fabrice@gmail.com>
+
+commit fd3c8491d9dbe20bab67dfc19ebcfe763e9a01d8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 16:56:46 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8c8e2321127d54e2729d4dc2cd08e8f34c35071e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 20:44:21 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 653dc1e61cd9d4d4921158a2c5dec49962bb9f0a
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Sep 12 14:46:05 2018 +1000
+
+    Replace strncpy calls with a sane version that always terminates
+    
+    Fixes coverity complaints about potentially unterminated strings
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 5457109783ee82599aeb6c6a690cc921a881d6bf
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Mon Feb 27 18:25:03 2017 -0800
