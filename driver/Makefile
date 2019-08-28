@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.74 2019/05/12 08:34:26 matthieu Exp $
+# $OpenBSD: Makefile,v 1.75 2019/08/28 08:03:10 jsg Exp $
 
 INPUT_DRV_DEFAULT= \
 	xf86-input-keyboard \
@@ -55,7 +55,7 @@ VIDEO_DRV_amd64= \
 	xf86-video-wsfb xf86-video-wsudl
 
 VIDEO_DRV_arm64= \
-	xf86-video-ati xf86-video-wsfb xf86-video-wsudl
+	xf86-video-amdgpu xf86-video-ati xf86-video-wsfb xf86-video-wsudl
 
 VIDEO_DRV_armv7= \
 	xf86-video-wsfb	xf86-video-wsudl
