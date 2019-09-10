@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.420 2019/08/15 18:06:41 matthieu Exp $
+# $OpenBSD: MODULES,v 1.421 2019/09/10 19:17:29 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -21,7 +21,7 @@ app/sessreg		1.1.2
 app/setxkbmap		1.3.2
 app/smproxy		1.0.6
 app/twm			1.0.10
-app/viewres		1.0.5
+app/viewres		1.0.6		needs-update
 app/x11perf		1.6.1
 app/xauth		1.1		needs-update
 app/xbacklight		1.2.3
@@ -62,7 +62,7 @@ app/xmodmap		1.0.10
 app/xmore		1.0.3
 app/xpr			1.0.5
 app/xprop		1.2.4
-app/xrandr		1.5.0
+app/xrandr		1.5.1		needs-update
 app/xrdb		1.2.0		needs-update
 app/xrefresh		1.0.6
 app/xset		1.2.4
@@ -144,7 +144,7 @@ font/schumacher-misc		1.1.2
 font/screen-cyrillic		1.0.4
 font/sony-misc			1.0.3
 font/sun-misc			1.0.3
-font/util			1.3.1
+font/util			1.3.2		needs-update
 font/winitzki-cyrillic		1.0.3
 font/xfree86-type1		1.0.4
 
