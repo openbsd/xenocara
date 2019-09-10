@@ -590,6 +590,7 @@
 ./usr/X11R6/include/freetype2/freetype/ftcache.h
 ./usr/X11R6/include/freetype2/freetype/ftchapters.h
 ./usr/X11R6/include/freetype2/freetype/ftcid.h
+./usr/X11R6/include/freetype2/freetype/ftcolor.h
 ./usr/X11R6/include/freetype2/freetype/ftdriver.h
 ./usr/X11R6/include/freetype2/freetype/fterrdef.h
 ./usr/X11R6/include/freetype2/freetype/fterrors.h
