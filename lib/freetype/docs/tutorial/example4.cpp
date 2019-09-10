@@ -18,7 +18,7 @@
 // whether all paths are fine, then say `qmake example4.pro' followed by
 // `make'.
 //
-// It has been tested with Qt version 4.7.0.
+// It has been tested with Qt versions 4.8.6 and 5.6.2.
 
 #include <QtGui/QApplication>
 #include <QWidget>
@@ -64,7 +64,7 @@ public:
     if (!error)
     {
       error = FT_New_Face(m_library,
-                          fileName.toAscii().constData(),
+                          fileName.toLatin1().constData(),
                           0,
                           &m_face);
       if (!error)

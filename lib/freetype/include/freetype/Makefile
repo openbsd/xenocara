@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.12 2018/05/21 11:52:25 dcoppa Exp $
+#	$OpenBSD: Makefile,v 1.13 2019/09/10 19:13:58 matthieu Exp $
 
 
 .include <bsd.xorg.mk>
@@ -9,7 +9,7 @@ SUBDIR=	config
 INCSDIR=${X11BASE}/include/freetype2/freetype
 
 INCS=	freetype.h ftadvanc.h ftbbox.h ftbdf.h ftbitmap.h ftbzip2.h \
-	ftcache.h ftchapters.h ftcid.h ftdriver.h fterrdef.h \
+	ftcache.h ftchapters.h ftcid.h ftcolor.h ftdriver.h fterrdef.h \
 	fterrors.h ftfntfmt.h ftgasp.h ftglyph.h ftgxval.h ftgzip.h \
 	ftimage.h ftincrem.h ftlcdfil.h ftlist.h ftlzw.h ftmac.h \
 	ftmm.h ftmodapi.h ftmoderr.h ftotval.h ftoutln.h ftparams.h \

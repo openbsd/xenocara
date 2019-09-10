@@ -160,19 +160,19 @@ typedef struct  FT_FooBarRec_
             destroy all its children (i.e., faces and modules).</p>
 
           <p>Typical client applications should
-            call <a href="../reference/ft2-base_interface.html#FT_Init_FreeType"><code>FT_Init_FreeType</code></a>
+            call <a href="../reference/ft2-base_interface.html#ft_init_freetype"><code>FT_Init_FreeType</code></a>
             in order to create a new library object, ready to be used
             for further actions.</p>
 
           <p>Another alternative is to create a fresh new library
             instance by calling the function
-            <a href="../reference/ft2-module_management.html#FT_New_Library"><code>FT_New_Library</code></a>,
+            <a href="../reference/ft2-module_management.html#ft_new_library"><code>FT_New_Library</code></a>,
             defined in the
             <tt>ftmodule.h</tt> public header file.  This function
             will however return an &lsquo;empty&rsquo; library
             instance with no module registered in it.  You can
             &lsquo;install&rsquo; modules in the instance by calling
-            <a href="../reference/ft2-module_management.html#FT_Add_Module"><code>FT_Add_Module</code></a>
+            <a href="../reference/ft2-module_management.html#ft_add_module"><code>FT_Add_Module</code></a>
             manually.</p>
 
           <p>Calling <tt>FT_Init_FreeType</tt> is a lot more
@@ -186,7 +186,7 @@ typedef struct  FT_FooBarRec_
           <p>For now, one should consider that library objects are
             created with <tt>FT_Init_FreeType</tt>, and destroyed
             along with all children
-            with <a href="../reference/ft2-base_interface.html#FT_Done_FreeType"><code>FT_Done_FreeType</code></a>.</p>
+            with <a href="../reference/ft2-base_interface.html#ft_done_freetype"><code>FT_Done_FreeType</code></a>.</p>
 
 
           <h3 id="section-3">3. The <tt>FT_Face</tt> class</h3>
@@ -197,7 +197,7 @@ typedef struct  FT_FooBarRec_
             Italic&rsquo; correspond to two distinct faces.</p>
 
           <p>A face object is normally created
-            through <a href="../reference/ft2-base_interface.html#FT_New_Face"><code>FT_New_Face</code></a>.
+            through <a href="../reference/ft2-base_interface.html#ft_new_face"><code>FT_New_Face</code></a>.
             This function takes the following parameters:
             an <tt>FT_Library</tt> handle, a C file pathname used to
             indicate which font file to open, an index used to decide
@@ -223,7 +223,7 @@ FT_Error  FT_New_Face( FT_Library   library,
             glyphs in the face, the face's family name, style name,
             the EM size for scalable formats, etc.  For more details,
             look at
-            the <a href="../reference/ft2-base_interface.html#FT_FaceRec"><code>FT_FaceRec</code></a>
+            the <a href="../reference/ft2-base_interface.html#ft_facerec"><code>FT_FaceRec</code></a>
             definition in the FreeType&nbsp;2 API Reference.</p>
 
 
@@ -236,13 +236,13 @@ FT_Error  FT_New_Face( FT_Library   library,
             accessible as <tt>face-&gt;size</tt>.</p>
 
           <p>The contents of a size object can be changed by calling
-            <a href="../reference/ft2-base_interface.html#FT_Request_Size"><code>FT_Request_Size</code></a>, <a href="../reference/ft2-base_interface.html#FT_Set_Pixel_Sizes"><code>FT_Set_Pixel_Sizes</code></a>,
-            or <a href="../reference/ft2-base_interface.html#FT_Set_Char_Size"><code>FT_Set_Char_Size</code></a>.</p>
+            <a href="../reference/ft2-base_interface.html#ft_request_size"><code>FT_Request_Size</code></a>, <a href="../reference/ft2-base_interface.html#ft_set_pixel_sizes"><code>FT_Set_Pixel_Sizes</code></a>,
+            or <a href="../reference/ft2-base_interface.html#ft_set_char_size"><code>FT_Set_Char_Size</code></a>.</p>
 
           <p>A new size object can be created
-            with <a href="../reference/ft2-sizes_management.html#FT_New_Size"><code>FT_New_Size</code></a>,
+            with <a href="../reference/ft2-sizes_management.html#ft_new_size"><code>FT_New_Size</code></a>,
             and destroyed manually
-            with <a href="../reference/ft2-sizes_management.html#FT_Done_Size"><code>FT_Done_Size</code></a>.
+            with <a href="../reference/ft2-sizes_management.html#ft_done_size"><code>FT_Done_Size</code></a>.
             Note that typical applications don't need to do this
             normally: usually it is fully sufficient to use the
             default size object provided with
@@ -250,7 +250,7 @@ FT_Error  FT_New_Face( FT_Library   library,
 
           <p>The public fields of <tt>FT_Size</tt> objects are defined
             in a very small structure
-            named <a href="../reference/ft2-base_interface.html#FT_SizeRec"><code>FT_SizeRec</code></a>.
+            named <a href="../reference/ft2-base_interface.html#ft_sizerec"><code>FT_SizeRec</code></a>.
             However, it is important to understand that some font
             drivers define their own derivatives of <tt>FT_Size</tt>
             to store important internal data that is re-computed each
@@ -287,7 +287,7 @@ FT_Error  FT_New_Face( FT_Library   library,
             glyph.</p>
 
           <p>The
-            base <a href="../reference/ft2-base_interface.html#FT_GlyphSlotRec"><code>FT_GlyphSlotRec</code></a>
+            base <a href="../reference/ft2-base_interface.html#ft_glyphslotrec"><code>FT_GlyphSlotRec</code></a>
             structure only presents glyph metrics and images to client
             applications, while the actual implementation may contain
             more sophisticated data.</p>
@@ -324,7 +324,7 @@ FT_Error  FT_New_Face( FT_Library   library,
             corresponding to it.</p>
 
           <p>Each font format provides its own derivative of
-            <a href="../reference/ft2-base_interface.html#FT_CharMapRec"><code>FT_CharMapRec</code></a>
+            <a href="../reference/ft2-base_interface.html#ft_charmaprec"><code>FT_CharMapRec</code></a>
             and thus needs to implement these objects.</p>
 
 

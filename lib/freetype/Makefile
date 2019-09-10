@@ -1,9 +1,9 @@
-#	$OpenBSD: Makefile,v 1.51 2018/05/21 11:52:24 dcoppa Exp $
+#	$OpenBSD: Makefile,v 1.52 2019/09/10 19:13:55 matthieu Exp $
 
 FREETYPESRC=	${.CURDIR}/src
 
 # Get it from builds/unix/configure.ac
-FT_VERSION_INFO= 22.1.16
+FT_VERSION_INFO= 23.1.17
 
 INSTALL_PROGRAM = ${INSTALL} ${INSTALL_COPY} -m 755 -o $(BINOWN) -g $(BINGRP)
 
@@ -14,6 +14,7 @@ SUBDIR=	include
 DEBUG?=
 
 LIB=	freetype
+LDADD=	-lz
 
 SRCS=   ftbase.c ftbbox.c ftbdf.c ftbitmap.c ftdebug.c ftcache.c \
 	ftcid.c ftfstype.c ftgasp.c ftglyph.c ftgxval.c ftotval.c \
@@ -24,6 +25,10 @@ SRCS=   ftbase.c ftbbox.c ftbdf.c ftbitmap.c ftdebug.c ftcache.c \
 	type42.c winfnt.c
 
 CPPFLAGS+= -I${.CURDIR}/include -I${.CURDIR}/builds/unix -I${.CURDIR}/src/lzw -DFT2_BUILD_LIBRARY
+
+CFLAGS+= -fvisibility=hidden
+PICFLAG= -fPIC
+VERSION_SCRIPT= ${.CURDIR}/Symbols.map
 
 CLEANFILES+=	freetype-config freetype2.pc
 

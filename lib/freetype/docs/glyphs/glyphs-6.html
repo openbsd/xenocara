@@ -214,7 +214,7 @@
         
           <p>A FreeType outline is described through a simple
             structure
-            called <a href="../reference/ft2-outline_processing.html#FT_Outline"><code>FT_Outline</code></a>.
+            called <a href="../reference/ft2-outline_processing.html#ft_outline"><code>FT_Outline</code></a>.
             Right now, the following fields are of interest:</p>
 
           <table class="vertical-space">
@@ -266,7 +266,7 @@
           </table>
         
           <p>Here, <code>points</code> is a pointer to an array of
-            <a href="../reference/ft2-basic_types.html#FT_Vector"><code>FT_Vector</code></a>
+            <a href="../reference/ft2-basic_types.html#ft_vector"><code>FT_Vector</code></a>
             records, used to store the vectorial coordinates of each
             outline point.  These are expressed in 1/64th of a pixel,
             which is also known as the <em>26.6&nbsp;fixed-point
@@ -279,7 +279,7 @@
             at point <code>contours[0]+1</code> and ends at
             <code>contours[1]</code>, etc.  To traverse these points in a
             callback based manner,
-            use <a href="../reference/ft2-outline_processing.html#FT_Outline_Decompose"><code>FT_Outline_Decompose</code></a>.</p>
+            use <a href="../reference/ft2-outline_processing.html#ft_outline_decompose"><code>FT_Outline_Decompose</code></a>.</p>
 
           <p>Note that each contour is closed, and that the value
             of <code>n_points</code> should be equal
@@ -339,9 +339,9 @@
 
           <p>Control and bounding boxes can be computed automatically
             using the
-            functions <a href="../reference/ft2-outline_processing.html#FT_Outline_Get_CBox"><code>FT_Outline_Get_CBox</code></a>
+            functions <a href="../reference/ft2-outline_processing.html#ft_outline_get_cbox"><code>FT_Outline_Get_CBox</code></a>
             and
-            <a href="../reference/ft2-outline_processing.html#FT_Outline_Get_BBox"><code>FT_Outline_Get_BBox</code></a>.
+            <a href="../reference/ft2-outline_processing.html#ft_outline_get_bbox"><code>FT_Outline_Get_BBox</code></a>.
             The former function is always very fast, while the
             latter <em>may</em> be slow in the case of
             &lsquo;outside&rsquo; control points (as it needs to find

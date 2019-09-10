@@ -98,22 +98,22 @@
             <li>
               <p>Create a new <tt>FT_Memory</tt> object by hand.  The
                 definition
-                of <a href="../reference/ft2-system_interface.html#FT_MemoryRec"><code>FT_MemoryRec</code></a>
+                of <a href="../reference/ft2-system_interface.html#ft_memoryrec"><code>FT_MemoryRec</code></a>
                 is located in the public header
                 file <tt>ftsystem.h</tt>.</p>
             </li>
             <li>
-              <p>Call <a href="../reference/ft2-module_management.html#FT_New_Library"><code>FT_New_Library</code></a>
+              <p>Call <a href="../reference/ft2-module_management.html#ft_new_library"><code>FT_New_Library</code></a>
                 to create a new library instance using your custom
                 memory manager.  This new library doesn't yet contain
                 any registered modules.</p>
             </li>
             <li>
               <p>Register the set of default modules by calling the
-                function <a href="../reference/ft2-module_management.html#FT_Add_Default_Modules"><code>FT_Add_Default_Modules</code></a>
+                function <a href="../reference/ft2-module_management.html#ft_add_default_modules"><code>FT_Add_Default_Modules</code></a>
                 provided by the <tt>ftinit</tt> component, or manually
                 register your drivers by repeatedly
-                calling <a href="../reference/ft2-module_management.html#FT_Add_Module"><code>FT_Add_Module</code></a>.</p>
+                calling <a href="../reference/ft2-module_management.html#ft_add_module"><code>FT_Add_Module</code></a>.</p>
             </li>
           </ol>
 
@@ -122,17 +122,17 @@
 
           <p>Font files are always read through <tt>FT_Stream</tt>
             objects.  The definition
-            of <a href="../reference/ft2-system_interface.html#FT_StreamRec"><code>FT_StreamRec</code></a>
+            of <a href="../reference/ft2-system_interface.html#ft_streamrec"><code>FT_StreamRec</code></a>
             is located in the public header file <tt>ftsystem.h</tt>,
             which allows client developers to provide their own
             implementation of streams if they wish so.</p>
 
           <p>The
-            function <a href="../reference/ft2-base_interface.html#FT_New_Face"><code>FT_New_Face</code></a>
+            function <a href="../reference/ft2-base_interface.html#ft_new_face"><code>FT_New_Face</code></a>
             always automatically creates a new stream object from the
             C&nbsp;pathname given as its second argument.  This is
             achieved by calling the (internal) function
-            <tt>FT_New_Stream</tt> provided by the <tt>ftsystem</tt>
+            <tt>FT_Stream_Open</tt> provided by the <tt>ftsystem</tt>
             component.  As the latter is replaceable, the
             implementation of streams may vary greatly between
             platforms.</p>
@@ -159,14 +159,14 @@
             &lsquo;broken file&rsquo;.</p>
 
           <p>The
-            function <a href="../reference/ft2-base_interface.html#FT_New_Memory_Face"><code>FT_New_Memory_Face</code></a>
+            function <a href="../reference/ft2-base_interface.html#ft_new_memory_face"><code>FT_New_Memory_Face</code></a>
             can be used to directly create and open
             an <tt>FT_Face</tt> object from data that is readily
             available in memory (including ROM-based fonts).</p>
 
           <p>Finally, in the case where a custom input stream is
             needed, client applications can use the
-            function <a href="../reference/ft2-base_interface.html#FT_Open_Face"><code>FT_Open_Face</code></a>,
+            function <a href="../reference/ft2-base_interface.html#ft_open_face"><code>FT_Open_Face</code></a>,
             which can accept custom input streams.  This may be useful
             in the case of compressed or remote font files, or even
             embedded font files that need to be extracted from certain
@@ -174,7 +174,7 @@
 
           <p>Note that each face owns a single stream, which is also
             destroyed
-            by <a href="../reference/ft2-base_interface.html#FT_Done_Face"><code>FT_Done_Face</code></a>.</p>
+            by <a href="../reference/ft2-base_interface.html#ft_done_face"><code>FT_Done_Face</code></a>.</p>
 
 
           <h3 id="section-3">3. Modules</h3>
@@ -188,14 +188,14 @@
             available to client applications.  However,
             each <em>module type</em> is described by a simple public
             structure
-            named <a href="../reference/ft2-module_management.html#FT_Module_Class"><code>FT_Module_Class</code></a>,
+            named <a href="../reference/ft2-module_management.html#ft_module_class"><code>FT_Module_Class</code></a>,
             defined in header file
             <tt>ftmodule.h</tt>, and is described later in this
             document.</p>
 
           <p>You need a pointer to an <tt>FT_Module_Class</tt>
             structure when
-            calling <a href="../reference/ft2-module_management.html#FT_Add_Module"><code>FT_Add_Module</code></a>.</p>
+            calling <a href="../reference/ft2-module_management.html#ft_add_module"><code>FT_Add_Module</code></a>.</p>
 
           <pre>
 FT_Error
@@ -285,7 +285,7 @@ FT_Add_Module( FT_Library              library,
             original font file's format.  This means that all face
             objects are destroyed when a module is removed or
             unregistered from a library instance (typically by calling
-            the <a href="../reference/ft2-module_management.html#FT_Remove_Module"><code>FT_Remove_Module</code></a>
+            the <a href="../reference/ft2-module_management.html#ft_remove_module"><code>FT_Remove_Module</code></a>
             function).  Because of this, you should always take care
             that no <tt>FT_Face</tt> object is opened when you upgrade
             or remove a module from a library, as this could cause

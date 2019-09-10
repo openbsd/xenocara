@@ -1,6 +1,6 @@
 # example4.pro
 
-QT += core gui
+QT += core gui widgets
 TARGET = example4
 TEMPLATE = app
 SOURCES += example4.cpp
