@@ -1126,6 +1126,7 @@ typedef struct {
 } xRRDeleteMonitorReq;
 #define sz_xRRDeleteMonitorReq	12
 
+#undef RRLease
 #undef RRModeFlags
 #undef RRCrtc
 #undef RRMode
