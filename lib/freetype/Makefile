@@ -1,4 +1,6 @@
-#	$OpenBSD: Makefile,v 1.52 2019/09/10 19:13:55 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.53 2019/09/13 19:11:23 matthieu Exp $
+
+.include <bsd.own.mk>
 
 FREETYPESRC=	${.CURDIR}/src
 
@@ -26,9 +28,11 @@ SRCS=   ftbase.c ftbbox.c ftbdf.c ftbitmap.c ftdebug.c ftcache.c \
 
 CPPFLAGS+= -I${.CURDIR}/include -I${.CURDIR}/builds/unix -I${.CURDIR}/src/lzw -DFT2_BUILD_LIBRARY
 
+.if ${COMPILER_VERSION} != "gcc3"
 CFLAGS+= -fvisibility=hidden
 PICFLAG= -fPIC
 VERSION_SCRIPT= ${.CURDIR}/Symbols.map
+.endif
 
 CLEANFILES+=	freetype-config freetype2.pc
 
