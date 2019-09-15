@@ -257,10 +257,17 @@ listPossibleVideoDrivers(XF86MatchedDrivers *md)
         break;
     }
 
+    switch (gtype) {
 #if defined(__i386__) || defined(__amd64__)
-    if (gtype == WSDISPLAY_TYPE_PCIVGA)
+    case WSDISPLAY_TYPE_PCIVGA:
         xf86AddMatchedDriver(md, "vesa");
+        break;
 #endif
+    case WSDISPLAY_TYPE_INTELDRM:
+    case WSDISPLAY_TYPE_RADEONDRM:
+        xf86AddMatchedDriver(md, "modesetting");
+        break;
+    }
 }
 
 #else
