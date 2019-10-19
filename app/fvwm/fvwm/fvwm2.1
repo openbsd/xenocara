@@ -1,4 +1,4 @@
-.\" $OpenBSD: fvwm2.1,v 1.1.1.1 2006/11/26 10:53:29 matthieu Exp $
+.\" $OpenBSD: fvwm2.1,v 1.2 2019/10/19 16:39:49 matthieu Exp $
 .\" t
 .\" @(#)fvwm2.1 8/11/1998
 .de EX		\"Begin example
@@ -51,8 +51,8 @@ are the introduction of the SloppyFocus and per-window focus methods.
 SloppyFocus is focus-follows-mouse, but focus is not removed from
 windows when the mouse leaves a window and enters the root window.
 When sloppy focus is used as the default focus style, it is nice to
-make windows in which you do not typically type into (xmag, xman,
-xgraph, xclock, xbiff, etc) click-to-focus, so that your terminal
+make windows in which you do not typically type into (xmag,
+xload, xclock, xbiff, etc) click-to-focus, so that your terminal
 window doesn't lose focus unnecessarily.
 
 .SH COPYRIGHTS
@@ -537,7 +537,6 @@ AddToMenu Utilities "Utilities" Title
  + "Top"           Exec  exec rxvt -T Top -n \\
                    Top -e top
  + "Calculator"    Exec  exec xcalc
- + "Xman"          Exec  exec xman
  + "Xmag"          Exec  exec xmag
  + "emacs"         Exec  exec xemacs
  + "Mail"          MailFunction \\
@@ -2598,7 +2597,6 @@ Style "xcalc"       Icon xcalc.xpm
 Style "xbiff"       Icon mail1.xpm
 Style "xmh"         Icon mail1.xpm,         \\
                     StartsOnDesk 2
-Style "xman"        Icon xman.xpm
 Style "matlab"      Icon math4.xpm,         \\
                     StartsOnDesk 3
 Style "xmag"        Icon magnifying_glass2.xpm
