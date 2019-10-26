@@ -309,6 +309,7 @@ struct radeon_pixmap {
 
 	struct radeon_buffer *bo;
 	struct drmmode_fb *fb;
+	Bool fb_failed;
 
 	uint32_t tiling_flags;
 
@@ -877,21 +878,22 @@ static inline struct drmmode_fb*
 radeon_pixmap_get_fb(PixmapPtr pix)
 {
     struct drmmode_fb **fb_ptr = radeon_pixmap_get_fb_ptr(pix);
+    uint32_t handle;
 
-    if (!fb_ptr)
-	return NULL;
+    if (fb_ptr && *fb_ptr)
+	return *fb_ptr;
+	
+    if (radeon_get_pixmap_handle(pix, &handle)) {
+	ScrnInfoPtr scrn = xf86ScreenToScrn(pix->drawable.pScreen);
+	RADEONEntPtr pRADEONEnt = RADEONEntPriv(scrn);
 
-    if (!*fb_ptr) {
-	uint32_t handle;
+	if (!fb_ptr)
+	    fb_ptr = radeon_pixmap_get_fb_ptr(pix);
 
-	if (radeon_get_pixmap_handle(pix, &handle)) {
-	    ScrnInfoPtr scrn = xf86ScreenToScrn(pix->drawable.pScreen);
-	    RADEONEntPtr pRADEONEnt = RADEONEntPriv(scrn);
-
-	    *fb_ptr = radeon_fb_create(scrn, pRADEONEnt->fd, pix->drawable.width,
-				       pix->drawable.height, pix->devKind,
-				       handle);
-	}
+	*fb_ptr = radeon_fb_create(scrn, pRADEONEnt->fd,
+				   pix->drawable.width,
+				   pix->drawable.height, pix->devKind,
+				   handle);
     }
 
     return *fb_ptr;

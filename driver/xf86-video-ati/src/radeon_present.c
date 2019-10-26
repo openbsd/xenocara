@@ -254,6 +254,7 @@ radeon_present_check_flip(RRCrtcPtr crtc, WindowPtr window, PixmapPtr pixmap,
     xf86CrtcPtr xf86_crtc = crtc->devPrivate;
     ScreenPtr screen = window->drawable.pScreen;
     ScrnInfoPtr scrn = xf86_crtc->scrn;
+    struct radeon_pixmap *priv = radeon_get_pixmap_private(pixmap);
     xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(scrn);
     RADEONInfoPtr info = RADEONPTR(scrn);
     PixmapPtr screen_pixmap = screen->GetScreenPixmap(screen);
@@ -276,6 +277,23 @@ radeon_present_check_flip(RRCrtcPtr crtc, WindowPtr window, PixmapPtr pixmap,
     if (pixmap->devKind != screen_pixmap->devKind)
 	return FALSE;
 #endif
+
+    if (priv && priv->fb_failed)
+	return FALSE;
+
+    if (!radeon_pixmap_get_fb(pixmap)) {
+	if (!priv)
+	    priv = radeon_get_pixmap_private(pixmap);
+
+	if (priv && !priv->fb_failed) {
+	    xf86DrvMsg(scrn->scrnIndex, X_WARNING,
+		       "Cannot get FB for Present flip (may be "
+		       "normal if using PRIME render offloading)\n");
+	    priv->fb_failed = TRUE;
+	}
+
+	return FALSE;
+    }
 
     /* The kernel driver doesn't handle flipping between BOs with different
      * tiling parameters correctly yet

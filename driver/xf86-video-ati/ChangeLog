@@ -1,3 +1,123 @@
+commit b9bd8097e1d2c088b081f1b81799ea3892406214
+Author: Michel Dänzer <mdaenzer@redhat.com>
+Date:   Tue Oct 15 17:54:12 2019 +0200
+
+    Bump version for 19.1.0 release
+
+commit 2faaecc69b127248718e759c6c98c84d56dd1b6b
+Author: Michel Dänzer <mdaenzer@redhat.com>
+Date:   Fri Sep 20 17:24:19 2019 +0200
+
+    Don't unreference FBs of pixmaps from different screens in LeaveVT
+    
+    FindClientResourcesByType finds pixmaps from all screens, but trying to
+    process ones from other screens here makes no sense and likely results
+    in a crash or memory corruption.
+    
+    Fixes: 06a465484101 ("Make all active CRTCs scan out an all-black
+                          framebuffer in LeaveVT")
+
+commit 2cbbd8648cdd27db8076565943b932ef81337053
+Author: Michel Dänzer <mdaenzer@redhat.com>
+Date:   Fri Sep 20 18:47:02 2019 +0200
+
+    Don't set up black scanout buffer if LeaveVT is called from CloseScreen
+    
+    Avoids a crash described in
+    https://gitlab.freedesktop.org/xorg/driver/xf86-video-amdgpu/merge_requests/43#note_223718
+    
+    (Ported from amdgpu commit 5b8bc9fc505c551dcd9b0ed5ab835a49fa4f9fda)
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit c7ed12cb2ea76999351d7cb87877224bdc0664f0
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Jul 18 18:14:48 2019 +0200
+
+    Don't disable page flipping completely with SW cursor
+    
+    Even with SW cursor, page flipping can be used while no X cursor is
+    visible.
+    
+    Occurred to me in the context of xorg/xserver#828.
+    (Ported from amdgpu commit 87f41ace4920fd2069794211683659eb25b025a6)
+
+commit 33803c85f761d343aa7300311b8e9489b1a89495
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Tue Jun 25 17:46:23 2019 +0200
+
+    present: Check that we can get a KMS FB for flipping
+    
+    This can legitimately fail if the pixmap's storage is shared from
+    another device, e.g. when using PRIME render offloading.
+    
+    (Ported from amdgpu commit 7d3fef72e0c871e1677e9e544f4cae5e238b5c52)
+
+commit fee737e82837dc8282a832fc9391ed959c4c3737
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Fri Jun 14 11:23:34 2019 +0200
+
+    Remove dri2_drawable_crtc parameter consider_disabled
+    
+    All callers were passing TRUE.
+    
+    (Ported from amdgpu commit ea19a5207054bb159fc7fb6d88e0ceb10c3da010)
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 2a3f2d2089f603c99be54c98d7033155e771ce7b
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Fri Jun 14 11:21:40 2019 +0200
+
+    dri2: Re-use previous CRTC when possible if pick_best_crtc returns NULL
+    
+    This way, the MSC will continue ticking at the rate of (the last mode
+    which was enabled for) that CRTC, instead of the client running
+    unthrottled.
+    
+    (Ported from amdgpu commit 3109f088fdbd89c2ee8078625d4f073852492656)
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit d5f5bc5846ef06c3ecf9e5acf1ca357574f06f5a
+Author: Flora Cui <flora.cui@amd.com>
+Date:   Fri Jun 14 11:20:12 2019 +0200
+
+    dri2: reply to client for WaitMSC request in any case
+    
+    otherwise client would wait for reply forever and desktop appears hang.
+    
+    Signed-off-by: Flora Cui <flora.cui@amd.com>
+    (Ported from amdgpu commit fb06fb814700a47464abd756e1111dcc76d0d776)
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit f758908db4e71406e5d437d32e43aabd38a63504
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu May 9 12:35:37 2019 +0200
+
+    dri3: Always flush glamor before sharing pixmap storage with clients
+    
+    Even if glamor_gbm_bo_from_pixmap / glamor_fd_from_pixmap themselves
+    don't trigger any drawing, there could already be unflushed drawing to
+    the pixmap whose storage we share with a client.
+    
+    (Ported from amdgpu commit 4b17533fcb30842caf0035ba593b7d986520cc85)
+    Acked-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit d1d8e3c8d0a0a0394d395eba171460501745209b
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Apr 24 12:25:39 2019 +0200
+
+    Retry get_fb_ptr in get_fb
+    
+    If get_fb_ptr returns NULL, try again after pixmap_get_handle, it should
+    work then.
+    
+    Fixes spurious Present page flipping failures using "normal" pixmaps
+    which aren't shared with direct rendering clients, e.g. with a
+    compositor using the RENDER extension.
+    
+    Bugzilla: https://bugs.freedesktop.org/110417
+    (Ported from amdgpu commit bf61e6d7ac1a5754b1026d7f80acf25ef622c491)
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
 commit 36703f66c3b06875651606a6280d5dc9d9dad51e
 Author: Michel Dänzer <michel.daenzer@amd.com>
 Date:   Tue Mar 19 18:01:02 2019 +0100
