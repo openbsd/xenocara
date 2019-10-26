@@ -1537,7 +1537,6 @@ Bool AMDGPUPreInit_KMS(ScrnInfoPtr pScrn, int flags)
 	int cpp;
 	uint64_t heap_size = 0;
 	uint64_t max_allocation = 0;
-	Bool sw_cursor;
 
 	if (flags & PROBE_DETECT)
 		return TRUE;
@@ -1645,19 +1644,15 @@ Bool AMDGPUPreInit_KMS(ScrnInfoPtr pScrn, int flags)
 	}
 
 	if (!pScrn->is_gpu) {
-		sw_cursor = xf86ReturnOptValBool(info->Options,
-						 OPTION_SW_CURSOR, FALSE);
-
 		info->allowPageFlip = xf86ReturnOptValBool(info->Options,
 							   OPTION_PAGE_FLIP,
 							   TRUE);
-		if (sw_cursor || info->shadow_primary) {
+		if (info->shadow_primary) {
 			xf86DrvMsg(pScrn->scrnIndex,
 				   info->allowPageFlip ? X_WARNING : X_DEFAULT,
 				   "KMS Pageflipping: disabled%s\n",
 				   info->allowPageFlip ?
-				   (sw_cursor ? " because of SWcursor" :
-				    " because of ShadowPrimary") : "");
+				   " because of ShadowPrimary" : "");
 			info->allowPageFlip = FALSE;
 		} else {
 			xf86DrvMsg(pScrn->scrnIndex, X_INFO,
@@ -2245,14 +2240,23 @@ Bool AMDGPUEnterVT_KMS(ScrnInfoPtr pScrn)
 }
 
 static void
-pixmap_unref_fb(void *value, XID id, void *cdata)
+pixmap_unref_fb(PixmapPtr pixmap)
 {
-	PixmapPtr pixmap = value;
-	AMDGPUEntPtr pAMDGPUEnt = cdata;
+	ScrnInfoPtr scrn = xf86ScreenToScrn(pixmap->drawable.pScreen);
 	struct drmmode_fb **fb_ptr = amdgpu_pixmap_get_fb_ptr(pixmap);
+	AMDGPUEntPtr pAMDGPUEnt = AMDGPUEntPriv(scrn);
 
 	if (fb_ptr)
 		drmmode_fb_reference(pAMDGPUEnt->fd, fb_ptr, NULL);
+}
+
+static void
+client_pixmap_unref_fb(void *value, XID id, void *pScreen)
+{
+	PixmapPtr pixmap = value;
+
+	if (pixmap->drawable.pScreen == pScreen)
+		pixmap_unref_fb(pixmap);
 }
 
 void AMDGPULeaveVT_KMS(ScrnInfoPtr pScrn)
@@ -2271,6 +2275,12 @@ void AMDGPULeaveVT_KMS(ScrnInfoPtr pScrn)
 		drmmode_crtc_private_ptr drmmode_crtc;
 		unsigned w = 0, h = 0;
 		int i;
+
+		/* If we're called from CloseScreen, trying to clear the black
+		 * scanout BO will likely crash and burn
+		 */
+		if (!pScreen->GCperDepth[0])
+			goto hide_cursors;
 
 		/* Compute maximum scanout dimensions of active CRTCs */
 		for (i = 0; i < xf86_config->num_crtc; i++) {
@@ -2310,11 +2320,9 @@ void AMDGPULeaveVT_KMS(ScrnInfoPtr pScrn)
 
 						if (pScrn->is_gpu) {
 							if (drmmode_crtc->scanout[0].pixmap)
-								pixmap_unref_fb(drmmode_crtc->scanout[0].pixmap,
-										None, pAMDGPUEnt);
+								pixmap_unref_fb(drmmode_crtc->scanout[0].pixmap);
 							if (drmmode_crtc->scanout[1].pixmap)
-								pixmap_unref_fb(drmmode_crtc->scanout[1].pixmap,
-										None, pAMDGPUEnt);
+								pixmap_unref_fb(drmmode_crtc->scanout[1].pixmap);
 						} else {
 							drmmode_crtc_scanout_free(crtc);
 						}
@@ -2334,18 +2342,20 @@ void AMDGPULeaveVT_KMS(ScrnInfoPtr pScrn)
 			    (!clients[i] || clients[i]->clientState != ClientStateRunning))
 				continue;
 
-			FindClientResourcesByType(clients[i], RT_PIXMAP, pixmap_unref_fb,
-						  pAMDGPUEnt);
+			FindClientResourcesByType(clients[i], RT_PIXMAP,
+						  client_pixmap_unref_fb, pScreen);
 		}
 
-		pixmap_unref_fb(pScreen->GetScreenPixmap(pScreen), None, pAMDGPUEnt);
+		pixmap_unref_fb(pScreen->GetScreenPixmap(pScreen));
 	} else {
 		memset(info->front_buffer->cpu_ptr, 0, pScrn->virtualX *
 		       info->pixel_bytes * pScrn->virtualY);
 	}
 
-	TimerSet(NULL, 0, 1000, cleanup_black_fb, pScreen);
+	if (pScreen->GCperDepth[0])
+		TimerSet(NULL, 0, 1000, cleanup_black_fb, pScreen);
 
+ hide_cursors:
 	xf86_hide_cursors(pScrn);
 
 	amdgpu_drop_drm_master(pScrn);

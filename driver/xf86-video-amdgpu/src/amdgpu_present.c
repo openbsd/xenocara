@@ -255,10 +255,12 @@ amdgpu_present_check_flip(RRCrtcPtr crtc, WindowPtr window, PixmapPtr pixmap,
 	xf86CrtcPtr xf86_crtc = crtc->devPrivate;
 	ScreenPtr screen = window->drawable.pScreen;
 	ScrnInfoPtr scrn = xf86_crtc->scrn;
+	struct amdgpu_pixmap *priv = amdgpu_get_pixmap_private(pixmap);
 	PixmapPtr screen_pixmap = screen->GetScreenPixmap(screen);
 	xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(scrn);
 	AMDGPUInfoPtr info = AMDGPUPTR(scrn);
 	int num_crtcs_on;
+	Bool dc_enabled;
 	int i;
 
 	if (!scrn->vtSema)
@@ -273,16 +275,37 @@ amdgpu_present_check_flip(RRCrtcPtr crtc, WindowPtr window, PixmapPtr pixmap,
 	if (info->drmmode.dri2_flipping)
 		return FALSE;
 
-#if XORG_VERSION_CURRENT <= XORG_VERSION_NUMERIC(1, 20, 99, 1, 0)
-	if (pixmap->devKind != screen_pixmap->devKind)
+	if (priv && priv->fb_failed)
 		return FALSE;
-#endif
+
+	if (!amdgpu_pixmap_get_fb(pixmap)) {
+		if (!priv)
+			priv = amdgpu_get_pixmap_private(pixmap);
+
+		if (priv && !priv->fb_failed) {
+			xf86DrvMsg(scrn->scrnIndex, X_WARNING,
+				   "Cannot get FB for Present flip (may be "
+				   "normal if using PRIME render offloading)\n");
+			priv->fb_failed = TRUE;
+		}
+
+		return FALSE;
+	}
 
 	/* Only DC supports advanced color management features, so we can use
 	 * drmmode_cm_enabled as a proxy for "Is DC enabled?"
 	 */
-	if (info->dri2.pKernelDRMVersion->version_minor < 31 ||
-	    !drmmode_cm_enabled(&info->drmmode)) {
+	dc_enabled = drmmode_cm_enabled(&info->drmmode);
+
+	if (info->dri2.pKernelDRMVersion->version_minor < (dc_enabled ? 31 : 34)) {
+		/* The kernel driver doesn't handle flipping between BOs with
+		 * different pitch correctly
+		 */
+		if (pixmap->devKind != screen_pixmap->devKind)
+			return FALSE;
+	}
+
+	if (!dc_enabled || info->dri2.pKernelDRMVersion->version_minor < 31) {
 		/* The kernel driver doesn't handle flipping between BOs with
 		 * different tiling parameters correctly
 		 */

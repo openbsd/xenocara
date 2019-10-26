@@ -36,6 +36,7 @@ struct amdgpu_pixmap {
 
 	struct amdgpu_buffer *bo;
 	struct drmmode_fb *fb;
+	Bool fb_failed;
 
 	/* GEM handle for pixmaps shared via DRI2/3 */
 	Bool handle_valid;
@@ -143,21 +144,22 @@ static inline struct drmmode_fb*
 amdgpu_pixmap_get_fb(PixmapPtr pix)
 {
 	struct drmmode_fb **fb_ptr = amdgpu_pixmap_get_fb_ptr(pix);
+	uint32_t handle;
 
-	if (!fb_ptr)
-		return NULL;
+	if (fb_ptr && *fb_ptr)
+		return *fb_ptr;
+	
+	if (amdgpu_pixmap_get_handle(pix, &handle)) {
+		ScrnInfoPtr scrn = xf86ScreenToScrn(pix->drawable.pScreen);
+		AMDGPUEntPtr pAMDGPUEnt = AMDGPUEntPriv(scrn);
 
-	if (!*fb_ptr) {
-		uint32_t handle;
+		if (!fb_ptr)
+			fb_ptr = amdgpu_pixmap_get_fb_ptr(pix);
 
-		if (amdgpu_pixmap_get_handle(pix, &handle)) {
-			ScrnInfoPtr scrn = xf86ScreenToScrn(pix->drawable.pScreen);
-			AMDGPUEntPtr pAMDGPUEnt = AMDGPUEntPriv(scrn);
-
-			*fb_ptr = amdgpu_fb_create(scrn, pAMDGPUEnt->fd, pix->drawable.width,
-						   pix->drawable.height, pix->devKind,
-						   handle);
-		}
+		*fb_ptr = amdgpu_fb_create(scrn, pAMDGPUEnt->fd,
+					   pix->drawable.width,
+					   pix->drawable.height, pix->devKind,
+					   handle);
 	}
 
 	return *fb_ptr;

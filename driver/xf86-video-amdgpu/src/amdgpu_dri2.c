@@ -414,18 +414,20 @@ static Bool amdgpu_dri2_get_crtc_msc(xf86CrtcPtr crtc, CARD64 *ust, CARD64 *msc)
 }
 
 static
-xf86CrtcPtr amdgpu_dri2_drawable_crtc(DrawablePtr pDraw, Bool consider_disabled)
+xf86CrtcPtr amdgpu_dri2_drawable_crtc(DrawablePtr pDraw)
 {
 	ScreenPtr pScreen = pDraw->pScreen;
 	ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
-	xf86CrtcPtr crtc = amdgpu_pick_best_crtc(pScrn, consider_disabled,
+	xf86CrtcPtr crtc = amdgpu_pick_best_crtc(pScrn, TRUE,
 						 pDraw->x, pDraw->x + pDraw->width,
 						 pDraw->y, pDraw->y + pDraw->height);
 
-	if (crtc && pDraw->type == DRAWABLE_WINDOW) {
+	if (pDraw->type == DRAWABLE_WINDOW) {
 		struct dri2_window_priv *priv = get_dri2_window_priv((WindowPtr)pDraw);
 
-		if (priv->crtc && priv->crtc != crtc) {
+		if (!crtc) {
+			crtc = priv->crtc;
+		} else if (priv->crtc && priv->crtc != crtc) {
 			CARD64 ust, mscold, mscnew;
 
 			if (amdgpu_dri2_get_crtc_msc(priv->crtc, &ust, &mscold) &&
@@ -831,7 +833,7 @@ CARD32 amdgpu_dri2_extrapolate_msc_delay(xf86CrtcPtr crtc, CARD64 * target_msc,
  */
 static int amdgpu_dri2_get_msc(DrawablePtr draw, CARD64 * ust, CARD64 * msc)
 {
-	xf86CrtcPtr crtc = amdgpu_dri2_drawable_crtc(draw, TRUE);
+	xf86CrtcPtr crtc = amdgpu_dri2_drawable_crtc(draw);
 
 	/* Drawable not displayed, make up a value */
 	if (!crtc) {
@@ -946,7 +948,7 @@ static int amdgpu_dri2_schedule_wait_msc(ClientPtr client, DrawablePtr draw,
 	ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
 	DRI2FrameEventPtr wait_info = NULL;
 	uintptr_t drm_queue_seq = 0;
-	xf86CrtcPtr crtc = amdgpu_dri2_drawable_crtc(draw, TRUE);
+	xf86CrtcPtr crtc = amdgpu_dri2_drawable_crtc(draw);
 	uint32_t msc_delta;
 	uint32_t seq;
 	CARD64 current_msc;
@@ -1062,6 +1064,9 @@ static int amdgpu_dri2_schedule_wait_msc(ClientPtr client, DrawablePtr draw,
 out_complete:
 	if (wait_info)
 		amdgpu_dri2_deferred_event(NULL, 0, wait_info);
+	else
+		DRI2WaitMSCComplete(client, draw, 0, 0, 0);
+
 	return TRUE;
 }
 
@@ -1093,7 +1098,7 @@ static int amdgpu_dri2_schedule_swap(ClientPtr client, DrawablePtr draw,
 {
 	ScreenPtr screen = draw->pScreen;
 	ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
-	xf86CrtcPtr crtc = amdgpu_dri2_drawable_crtc(draw, TRUE);
+	xf86CrtcPtr crtc = amdgpu_dri2_drawable_crtc(draw);
 	uint32_t msc_delta;
 	drmVBlankSeqType type;
 	uint32_t seq;

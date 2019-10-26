@@ -221,29 +221,13 @@ static int amdgpu_dri3_fd_from_pixmap(ScreenPtr screen,
 	AMDGPUInfoPtr info = AMDGPUPTR(scrn);
 
 	if (info->use_glamor) {
-		Bool need_flush = TRUE;
-		int ret = -1;
-#if XORG_VERSION_CURRENT >= XORG_VERSION_NUMERIC(1,19,99,904,0)
-		struct gbm_bo *gbm_bo = glamor_gbm_bo_from_pixmap(screen, pixmap);
+		int ret = glamor_fd_from_pixmap(screen, pixmap, stride, size);
 
-		if (gbm_bo) {
-			ret = gbm_bo_get_fd(gbm_bo);
-			gbm_bo_destroy(gbm_bo);
-
-			if (ret >= 0)
-				need_flush = FALSE;
-		}
-#endif
-
-		if (ret < 0)
-			ret = glamor_fd_from_pixmap(screen, pixmap, stride, size);
-
-		/* glamor might have needed to reallocate the pixmap storage and
-		 * copy the pixmap contents to the new storage. The copy
-		 * operation needs to be flushed to the kernel driver before the
-		 * client starts using the pixmap storage for direct rendering.
+		/* Any pending drawing operations need to be flushed to the
+		 * kernel driver before the client starts using the pixmap
+		 * storage for direct rendering.
 		 */
-		if (ret >= 0 && need_flush)
+		if (ret >= 0)
 			amdgpu_glamor_flush(scrn);
 
 		return ret;

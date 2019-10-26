@@ -1,3 +1,156 @@
+commit b467d2569a003da05ad222b0dc095bee5eec450a
+Author: Michel Dänzer <mdaenzer@redhat.com>
+Date:   Fri Oct 11 17:10:10 2019 +0200
+
+    Bump version for the 19.1.0 release
+
+commit a1b7263277c033e109629829c370c0e95978e061
+Author: Michel Dänzer <mdaenzer@redhat.com>
+Date:   Thu Sep 26 15:56:59 2019 +0200
+
+    Don't unreference FBs of pixmaps from different screens in LeaveVT
+    
+    FindClientResourcesByType finds pixmaps from all screens, but trying to
+    process ones from other screens here makes no sense and likely results
+    in a crash or memory corruption.
+    
+    Fixes: c16ff42f927d ("Make all active CRTCs scan out an all-black
+                          framebuffer in LeaveVT")
+    (Ported from radeon commit 2faaecc69b127248718e759c6c98c84d56dd1b6b)
+
+commit 5b8bc9fc505c551dcd9b0ed5ab835a49fa4f9fda
+Author: Michel Dänzer <mdaenzer@redhat.com>
+Date:   Wed Sep 18 12:55:45 2019 +0200
+
+    Don't set up black scanout buffer if LeaveVT is called from CloseScreen
+    
+    Avoids a crash described in
+    https://gitlab.freedesktop.org/xorg/driver/xf86-video-amdgpu/merge_requests/43#note_223718
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit e6fce59a071220967fcd4e2c9e4a262c72870761
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Jul 24 16:05:05 2019 +0200
+
+    present: Don't check pixmap pitch in check_flip with non-DC >= 3.34
+    
+    The current non-DC kernel driver also handles flipping between different
+    pitches correctly.
+    
+    Reviewed-by: Nicholas Kazlauskas <nicholas.kazlauskas@amd.com>
+
+commit 5bb2580b266468f87843b5585ae64e056b63bb88
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Jul 24 15:55:19 2019 +0200
+
+    present: Don't check pixmap pitch in check_flip with current DC
+    
+    Current DC handles flipping between different pitches correctly.
+    
+    Reviewed-by: Nicholas Kazlauskas <nicholas.kazlauskas@amd.com>
+
+commit ac66086613cbd0974b421cd5eda872adc15242ed
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Jul 24 15:45:21 2019 +0200
+
+    present: Also check pixmap pitch in check_flip with current xserver
+    
+    The corresponding check in the xserver Present code was removed again,
+    because flipping between different pitches can work in some cases.
+    
+    Reviewed-by: Nicholas Kazlauskas <nicholas.kazlauskas@amd.com>
+
+commit 98f172eb2d2353e19edd8167f22215ce596811f8
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Mon Jul 29 18:54:24 2019 +0200
+
+    gitlab-ci: Use templates from wayland/ci-templates
+    
+    These are already used by xserver, Mesa and some other projects.
+    
+    Current Debian testing brings e.g. GCC 8.3.0 and clang 7.0.1.
+
+commit 87f41ace4920fd2069794211683659eb25b025a6
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Fri Jul 5 12:43:53 2019 +0200
+
+    Don't disable page flipping completely with SW cursor
+    
+    Even with SW cursor, page flipping can be used while no X cursor is
+    visible.
+    
+    Occurred to me in the context of xorg/xserver#828.
+
+commit 7d3fef72e0c871e1677e9e544f4cae5e238b5c52
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu May 9 17:39:49 2019 +0200
+
+    present: Check that we can get a KMS FB for flipping
+    
+    This can legitimately fail if the pixmap's storage is shared from
+    another device, e.g. when using PRIME render offloading.
+
+commit ea19a5207054bb159fc7fb6d88e0ceb10c3da010
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Jun 6 11:02:15 2019 +0200
+
+    Remove dri2_drawable_crtc parameter consider_disabled
+    
+    All callers were passing TRUE.
+    
+    Reviewed-and-tested-by: Flora Cui <flora.cui@amd.com>
+
+commit 3109f088fdbd89c2ee8078625d4f073852492656
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Jun 6 11:22:09 2019 +0200
+
+    dri2: Re-use previous CRTC when possible if pick_best_crtc returns NULL
+    
+    This way, the MSC will continue ticking at the rate of (the last mode
+    which was enabled for) that CRTC, instead of the client running
+    unthrottled.
+    
+    Reviewed-and-tested-by: Flora Cui <flora.cui@amd.com>
+
+commit fb06fb814700a47464abd756e1111dcc76d0d776
+Author: Flora Cui <flora.cui@amd.com>
+Date:   Wed May 29 14:18:50 2019 +0800
+
+    dri2: reply to client for WaitMSC request in any case
+    
+    otherwise client would wait for reply forever and desktop appears hang.
+    
+    Signed-off-by: Flora Cui <flora.cui@amd.com>
+    Acked-by: Feifei Xu <Feifei.Xu@amd.com>
+    Reviewed-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit 4b17533fcb30842caf0035ba593b7d986520cc85
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Tue Apr 30 17:50:15 2019 +0200
+
+    dri3: Always flush glamor before sharing pixmap storage with clients
+    
+    Even if glamor_gbm_bo_from_pixmap / glamor_fd_from_pixmap themselves
+    don't trigger any drawing, there could already be unflushed drawing to
+    the pixmap whose storage we share with a client.
+
+commit bf61e6d7ac1a5754b1026d7f80acf25ef622c491
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Apr 18 19:21:40 2019 +0200
+
+    Retry get_fb_ptr in get_fb
+    
+    If get_fb_ptr returns NULL, try again after pixmap_get_handle, it should
+    work then.
+    
+    Fixes spurious Present page flipping failures using "normal" pixmaps
+    which aren't shared with direct rendering clients, e.g. with a
+    compositor using the RENDER extension.
+    
+    Bugzilla: https://bugs.freedesktop.org/110417
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
 commit bd4ffd4ebbdf1c43ab9e1ef9ba8b812fd2dde4a4
 Author: Michel Dänzer <michel.daenzer@amd.com>
 Date:   Tue Mar 19 18:44:31 2019 +0100
