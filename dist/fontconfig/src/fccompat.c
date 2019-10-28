@@ -249,9 +249,9 @@ FcMakeDirectory (const FcChar8 *dir)
     if (!parent)
 	return FcFalse;
     if (access ((char *) parent, F_OK) == 0)
-	ret = mkdir ((char *) dir, 0755) == 0 && chmod ((char *) dir, 0755) == 0;
+	ret = mkdir ((char *) dir, 0755) == 0;
     else if (access ((char *) parent, F_OK) == -1)
-	ret = FcMakeDirectory (parent) && (mkdir ((char *) dir, 0755) == 0) && chmod ((char *) dir, 0755) == 0;
+	ret = FcMakeDirectory (parent) && (mkdir ((char *) dir, 0755) == 0);
     else
 	ret = FcFalse;
     FcStrFree (parent);
