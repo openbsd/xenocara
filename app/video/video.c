@@ -1,4 +1,4 @@
-/*	$OpenBSD: video.c,v 1.28 2019/02/25 12:34:35 rapha Exp $	*/
+/*	$OpenBSD: video.c,v 1.29 2019/11/06 05:46:51 mglocker Exp $	*/
 /*
  * Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
  *
@@ -128,7 +128,7 @@ struct dim {
 struct dev {
 	char		 path[FILENAME_MAX];
 	int		 fd;
-#define MAX_DSZS 16
+#define MAX_DSZS 32
 	struct dim	 sizes[MAX_DSZS];
 #define MAX_RATES 32
 	int		 rates[MAX_DSZS][MAX_RATES];
