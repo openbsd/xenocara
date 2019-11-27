@@ -9,3 +9,4 @@ Requires: @GLU_REQUIRES@
 Version: @VERSION@
 Libs: -L${libdir} -lGLU
 Libs.private: -lm
+Cflags: -I${includedir}
