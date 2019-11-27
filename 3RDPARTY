@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.351 2019/11/23 14:31:41 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.352 2019/11/27 02:22:35 jsg Exp $
 #
 Package: 	Freetype
 Version:	2.10.1
@@ -19,7 +19,7 @@ Maintainer:	Brian Paul
 Archive Site:	https://www.mesa3d.org/
 
 Package:	libdrm
-Version:	2.4.98
+Version:	2.4.100
 Current Vers:	2.4.100
 Maintainer:	Eric Anholt
 Archive Site:	https://gitlab.freedesktop.org/mesa/drm
