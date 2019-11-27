@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.352 2019/11/27 02:22:35 jsg Exp $
+# $OpenBSD: 3RDPARTY,v 1.353 2019/11/27 10:26:56 jsg Exp $
 #
 Package: 	Freetype
 Version:	2.10.1
@@ -25,7 +25,7 @@ Maintainer:	Eric Anholt
 Archive Site:	https://gitlab.freedesktop.org/mesa/drm
 
 Package:	libGLU
-Version:	9.0.0
+Version:	9.0.1
 Current Vers:	9.0.1
 Maintainer:	Matt Turner
 Archive Site:	https://mesa.freedesktop.org/archive/glu/
