@@ -21,7 +21,7 @@
 project(
   'libdrm',
   ['c'],
-  version : '2.4.98',
+  version : '2.4.100',
   license : 'MIT',
   meson_version : '>= 0.43',
   default_options : ['buildtype=debugoptimized', 'c_std=gnu99'],
@@ -179,13 +179,21 @@ else
   dep_rt = []
 endif
 dep_m = cc.find_library('m', required : false)
+# From Niclas Zeising:
+# FreeBSD requires sys/types.h for sys/sysctl.h, add it as part of the
+# includes when checking for headers.
 foreach header : ['sys/sysctl.h', 'sys/select.h', 'alloca.h']
   config.set('HAVE_' + header.underscorify().to_upper(),
-    cc.compiles('#include <@0@>'.format(header), name : '@0@ works'.format(header)))
+    cc.compiles('#include <sys/types.h>\n#include <@0@>'.format(header), name : '@0@ works'.format(header)))
 endforeach
-if cc.has_header_symbol('sys/sysmacros.h', 'major')
+if (cc.has_header_symbol('sys/sysmacros.h', 'major') and
+  cc.has_header_symbol('sys/sysmacros.h', 'minor') and
+  cc.has_header_symbol('sys/sysmacros.h', 'makedev'))
   config.set10('MAJOR_IN_SYSMACROS', true)
-elif cc.has_header_symbol('sys/mkdev.h', 'major')
+endif
+if (cc.has_header_symbol('sys/mkdev.h', 'major') and
+  cc.has_header_symbol('sys/mkdev.h', 'minor') and
+  cc.has_header_symbol('sys/mkdev.h', 'makedev'))
   config.set10('MAJOR_IN_MKDEV', true)
 endif
 config.set10('HAVE_OPEN_MEMSTREAM', cc.has_function('open_memstream'))
@@ -247,9 +255,6 @@ if prog_xslt.found()
   endif
 endif
 with_man_pages = with_man_pages != 'false' and prog_xslt.found() and prog_sed.found()
-
-# Used for tets
-prog_bash = find_program('bash')
 
 config.set10('HAVE_VISIBILITY',
   cc.compiles('''int foo_hidden(void) __attribute__((visibility(("hidden"))));''',

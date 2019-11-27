@@ -57,6 +57,7 @@
 #define DEADLOCK_TESTS_STR "Deadlock Tests"
 #define VM_TESTS_STR "VM Tests"
 #define RAS_TESTS_STR "RAS Tests"
+#define SYNCOBJ_TIMELINE_TESTS_STR "SYNCOBJ TIMELINE Tests"
 
 /**
  *  Open handles for amdgpu devices
@@ -123,6 +124,12 @@ static CU_SuiteInfo suites[] = {
 		.pCleanupFunc = suite_ras_tests_clean,
 		.pTests = ras_tests,
 	},
+	{
+		.pName = SYNCOBJ_TIMELINE_TESTS_STR,
+		.pInitFunc = suite_syncobj_timeline_tests_init,
+		.pCleanupFunc = suite_syncobj_timeline_tests_clean,
+		.pTests = syncobj_timeline_tests,
+	},
 
 	CU_SUITE_INFO_NULL,
 };
@@ -175,6 +182,10 @@ static Suites_Active_Status suites_active_stat[] = {
 		{
 			.pName = RAS_TESTS_STR,
 			.pActive = suite_ras_tests_enable,
+		},
+		{
+			.pName = SYNCOBJ_TIMELINE_TESTS_STR,
+			.pActive = suite_syncobj_timeline_tests_enable,
 		},
 };
 
@@ -453,13 +464,21 @@ static void amdgpu_disable_suites()
 			fprintf(stderr, "test deactivation failed - %s\n", CU_get_error_msg());
 
 	/* This test was ran on GFX9 only */
-	if (family_id < AMDGPU_FAMILY_AI || family_id > AMDGPU_FAMILY_RV)
-		if (amdgpu_set_test_active(BASIC_TESTS_STR, "Dispatch Test", CU_FALSE))
+	if (family_id < AMDGPU_FAMILY_AI || family_id > AMDGPU_FAMILY_RV) {
+		if (amdgpu_set_test_active(BASIC_TESTS_STR, "Dispatch Test (GFX)", CU_FALSE))
 			fprintf(stderr, "test deactivation failed - %s\n", CU_get_error_msg());
+		if (amdgpu_set_test_active(BASIC_TESTS_STR, "Dispatch Test (Compute)", CU_FALSE))
+			fprintf(stderr, "test deactivation failed - %s\n", CU_get_error_msg());
+	}
 
 	/* This test was ran on GFX9 only */
 	if (family_id < AMDGPU_FAMILY_AI || family_id > AMDGPU_FAMILY_RV)
 		if (amdgpu_set_test_active(BASIC_TESTS_STR, "Draw Test", CU_FALSE))
+			fprintf(stderr, "test deactivation failed - %s\n", CU_get_error_msg());
+
+	/* This test was ran on GFX9 only */
+	//if (family_id < AMDGPU_FAMILY_AI || family_id > AMDGPU_FAMILY_RV)
+		if (amdgpu_set_test_active(BASIC_TESTS_STR, "GPU reset Test", CU_FALSE))
 			fprintf(stderr, "test deactivation failed - %s\n", CU_get_error_msg());
 }
 
