@@ -75,7 +75,8 @@ am_amdgpu_test_OBJECTS = amdgpu_test-amdgpu_test.$(OBJEXT) \
 	amdgpu_test-uvd_enc_tests.$(OBJEXT) \
 	amdgpu_test-vcn_tests.$(OBJEXT) \
 	amdgpu_test-deadlock_tests.$(OBJEXT) \
-	amdgpu_test-vm_tests.$(OBJEXT) amdgpu_test-ras_tests.$(OBJEXT)
+	amdgpu_test-vm_tests.$(OBJEXT) amdgpu_test-ras_tests.$(OBJEXT) \
+	amdgpu_test-syncobj_tests.$(OBJEXT)
 amdgpu_test_OBJECTS = $(am_amdgpu_test_OBJECTS)
 amdgpu_test_LDADD = $(LDADD)
 am__DEPENDENCIES_1 =
@@ -306,7 +307,8 @@ amdgpu_test_SOURCES = \
 	uve_ib.h \
 	deadlock_tests.c \
 	vm_tests.c	\
-	ras_tests.c
+	ras_tests.c \
+	syncobj_tests.c
 
 all: all-am
 
@@ -413,6 +415,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/amdgpu_test-cs_tests.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/amdgpu_test-deadlock_tests.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/amdgpu_test-ras_tests.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/amdgpu_test-syncobj_tests.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/amdgpu_test-uvd_enc_tests.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/amdgpu_test-vce_tests.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/amdgpu_test-vcn_tests.Po@am__quote@
@@ -578,6 +581,20 @@ amdgpu_test-ras_tests.obj: ras_tests.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='ras_tests.c' object='amdgpu_test-ras_tests.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(amdgpu_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o amdgpu_test-ras_tests.obj `if test -f 'ras_tests.c'; then $(CYGPATH_W) 'ras_tests.c'; else $(CYGPATH_W) '$(srcdir)/ras_tests.c'; fi`
+
+amdgpu_test-syncobj_tests.o: syncobj_tests.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(amdgpu_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT amdgpu_test-syncobj_tests.o -MD -MP -MF $(DEPDIR)/amdgpu_test-syncobj_tests.Tpo -c -o amdgpu_test-syncobj_tests.o `test -f 'syncobj_tests.c' || echo '$(srcdir)/'`syncobj_tests.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/amdgpu_test-syncobj_tests.Tpo $(DEPDIR)/amdgpu_test-syncobj_tests.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='syncobj_tests.c' object='amdgpu_test-syncobj_tests.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(amdgpu_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o amdgpu_test-syncobj_tests.o `test -f 'syncobj_tests.c' || echo '$(srcdir)/'`syncobj_tests.c
+
+amdgpu_test-syncobj_tests.obj: syncobj_tests.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(amdgpu_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT amdgpu_test-syncobj_tests.obj -MD -MP -MF $(DEPDIR)/amdgpu_test-syncobj_tests.Tpo -c -o amdgpu_test-syncobj_tests.obj `if test -f 'syncobj_tests.c'; then $(CYGPATH_W) 'syncobj_tests.c'; else $(CYGPATH_W) '$(srcdir)/syncobj_tests.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/amdgpu_test-syncobj_tests.Tpo $(DEPDIR)/amdgpu_test-syncobj_tests.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='syncobj_tests.c' object='amdgpu_test-syncobj_tests.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(amdgpu_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o amdgpu_test-syncobj_tests.obj `if test -f 'syncobj_tests.c'; then $(CYGPATH_W) 'syncobj_tests.c'; else $(CYGPATH_W) '$(srcdir)/syncobj_tests.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
