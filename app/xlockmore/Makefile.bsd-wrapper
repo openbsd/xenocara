@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.13 2017/03/07 21:35:57 naddy Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.14 2019/12/03 17:44:29 deraadt Exp $
 
 .include <bsd.xconf.mk>
 
@@ -17,6 +17,7 @@ config.status:
 		--enable-appdefaultdir=${X11BASE}/share/X11/app-defaults \
 		--enable-syslog --without-motif --without-ttf \
 		--without-gtk2 --without-gtk --without-esound \
-		--without-rplay --without-ftgl
+		--without-rplay --without-ftgl \
+		--without-opengl --without-mesa
 
 .include <bsd.xorg.mk>
