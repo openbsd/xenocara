@@ -136,7 +136,7 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 	explicit_bzero(greet->password, passwd_len);
 	/* Build path of the auth script and call it */
 	snprintf(path, sizeof(path), _PATH_AUTHPROG "%s", style);
-	auth_call(as, path, style, "-s", "response", greet->name,
+	auth_call(as, path, style, "-s", "response", "--", greet->name,
 		  lc->lc_class, (void *)NULL);
 	authok = auth_getstate(as);
 
