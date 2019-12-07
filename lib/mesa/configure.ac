@@ -315,6 +315,9 @@ linux*|*-gnu*|gnu*|cygwin*)
 solaris*)
     DEFINES="$DEFINES -DSVR4"
     ;;
+openbsd*)
+    DEFINES="$DEFINES -D_ISOC11_SOURCE"
+    ;;
 esac
 
 AM_CONDITIONAL(HAVE_ANDROID, test "x$android" = xyes)
