@@ -20079,6 +20079,9 @@ linux*|*-gnu*|gnu*|cygwin*)
 solaris*)
     DEFINES="$DEFINES -DSVR4"
     ;;
+openbsd*)
+    DEFINES="$DEFINES -D_ISOC11_SOURCE"
+    ;;
 esac
 
  if test "x$android" = xyes; then
