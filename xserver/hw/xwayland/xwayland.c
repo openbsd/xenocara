@@ -125,6 +125,7 @@ ddxProcessArgument(int argc, char *argv[], int i)
 static DevPrivateKeyRec xwl_window_private_key;
 static DevPrivateKeyRec xwl_screen_private_key;
 static DevPrivateKeyRec xwl_pixmap_private_key;
+static DevPrivateKeyRec xwl_damage_private_key;
 
 static struct xwl_window *
 xwl_window_get(WindowPtr window)
@@ -367,8 +368,14 @@ xwl_cursor_confined_to(DeviceIntPtr device,
 static void
 damage_report(DamagePtr pDamage, RegionPtr pRegion, void *data)
 {
-    struct xwl_window *xwl_window = data;
-    struct xwl_screen *xwl_screen = xwl_window->xwl_screen;
+    WindowPtr window = data;
+    struct xwl_window *xwl_window = xwl_window_get(window);
+    struct xwl_screen *xwl_screen;
+
+    if (!xwl_window)
+        return;
+
+    xwl_screen = xwl_window->xwl_screen;
 
 #ifdef GLAMOR_HAS_GBM
     if (xwl_window->present_flipped) {
@@ -388,6 +395,47 @@ damage_report(DamagePtr pDamage, RegionPtr pRegion, void *data)
 static void
 damage_destroy(DamagePtr pDamage, void *data)
 {
+}
+
+static Bool
+register_damage(WindowPtr window)
+{
+    DamagePtr damage;
+
+    damage = DamageCreate(damage_report, damage_destroy, DamageReportNonEmpty,
+                          FALSE, window->drawable.pScreen, window);
+    if (damage == NULL) {
+        ErrorF("Failed creating damage\n");
+        return FALSE;
+    }
+
+    DamageRegister(&window->drawable, damage);
+    DamageSetReportAfterOp(damage, TRUE);
+
+    dixSetPrivate(&window->devPrivates, &xwl_damage_private_key, damage);
+
+    return TRUE;
+}
+
+static void
+unregister_damage(WindowPtr window)
+{
+    DamagePtr damage;
+
+    damage = dixLookupPrivate(&window->devPrivates, &xwl_damage_private_key);
+    if (!damage)
+        return;
+
+    DamageUnregister(damage);
+    DamageDestroy(damage);
+
+    dixSetPrivate(&window->devPrivates, &xwl_damage_private_key, NULL);
+}
+
+static DamagePtr
+window_get_damage(WindowPtr window)
+{
+    return dixLookupPrivate(&window->devPrivates, &xwl_damage_private_key);
 }
 
 static void
@@ -470,36 +518,25 @@ send_surface_id_event(struct xwl_window *xwl_window)
 }
 
 static Bool
-xwl_realize_window(WindowPtr window)
+ensure_surface_for_window(WindowPtr window)
 {
     ScreenPtr screen = window->drawable.pScreen;
     struct xwl_screen *xwl_screen;
     struct xwl_window *xwl_window;
     struct wl_region *region;
-    Bool ret;
+
+    if (xwl_window_get(window))
+        return TRUE;
 
     xwl_screen = xwl_screen_get(screen);
 
-    screen->RealizeWindow = xwl_screen->RealizeWindow;
-    ret = (*screen->RealizeWindow) (window);
-    xwl_screen->RealizeWindow = screen->RealizeWindow;
-    screen->RealizeWindow = xwl_realize_window;
-
-    if (xwl_screen->rootless && !window->parent) {
-        BoxRec box = { 0, 0, xwl_screen->width, xwl_screen->height };
-
-        RegionReset(&window->winSize, &box);
-        RegionNull(&window->clipList);
-        RegionNull(&window->borderClip);
-    }
-
     if (xwl_screen->rootless) {
         if (window->redirectDraw != RedirectDrawManual)
-            return ret;
+            return TRUE;
     }
     else {
         if (window->parent)
-            return ret;
+            return TRUE;
     }
 
     xwl_window = calloc(1, sizeof *xwl_window);
@@ -545,25 +582,14 @@ xwl_realize_window(WindowPtr window)
 
     wl_surface_set_user_data(xwl_window->surface, xwl_window);
 
-    xwl_window->damage =
-        DamageCreate(damage_report, damage_destroy, DamageReportNonEmpty,
-                     FALSE, screen, xwl_window);
-    if (xwl_window->damage == NULL) {
-        ErrorF("Failed creating damage\n");
-        goto err_surf;
-    }
-
     compRedirectWindow(serverClient, window, CompositeRedirectManual);
-
-    DamageRegister(&window->drawable, xwl_window->damage);
-    DamageSetReportAfterOp(xwl_window->damage, TRUE);
 
     dixSetPrivate(&window->devPrivates, &xwl_window_private_key, xwl_window);
     xorg_list_init(&xwl_window->link_damage);
 
     xwl_window_init_allow_commits(xwl_window);
 
-    return ret;
+    return TRUE;
 
 err_surf:
     if (xwl_window->shell_surface)
@@ -572,6 +598,42 @@ err_surf:
 err:
     free(xwl_window);
     return FALSE;
+}
+
+static Bool
+xwl_realize_window(WindowPtr window)
+{
+    ScreenPtr screen = window->drawable.pScreen;
+    struct xwl_screen *xwl_screen;
+    Bool ret;
+
+    xwl_screen = xwl_screen_get(screen);
+
+    screen->RealizeWindow = xwl_screen->RealizeWindow;
+    ret = (*screen->RealizeWindow) (window);
+    xwl_screen->RealizeWindow = screen->RealizeWindow;
+    screen->RealizeWindow = xwl_realize_window;
+
+    if (!ret)
+        return FALSE;
+
+    if (xwl_screen->rootless && !window->parent) {
+        BoxRec box = { 0, 0, xwl_screen->width, xwl_screen->height };
+
+        RegionReset(&window->winSize, &box);
+        RegionNull(&window->clipList);
+        RegionNull(&window->borderClip);
+    }
+
+    if (xwl_screen->rootless ?
+        (window->drawable.class == InputOutput &&
+         window->parent == window->drawable.pScreen->root) :
+        !window->parent) {
+        if (!register_damage(window))
+            return FALSE;
+    }
+
+    return ensure_surface_for_window(window);
 }
 
 static Bool
@@ -620,8 +682,8 @@ xwl_unrealize_window(WindowPtr window)
 
     wl_surface_destroy(xwl_window->surface);
     xorg_list_del(&xwl_window->link_damage);
-    DamageUnregister(xwl_window->damage);
-    DamageDestroy(xwl_window->damage);
+    unregister_damage(window);
+
     if (xwl_window->frame_callback)
         wl_callback_destroy(xwl_window->frame_callback);
 
@@ -635,6 +697,26 @@ static Bool
 xwl_save_screen(ScreenPtr pScreen, int on)
 {
     return TRUE;
+}
+
+static void
+xwl_set_window_pixmap(WindowPtr window,
+                      PixmapPtr pixmap)
+{
+    ScreenPtr screen = window->drawable.pScreen;
+    struct xwl_screen *xwl_screen;
+
+    xwl_screen = xwl_screen_get(screen);
+
+    screen->SetWindowPixmap = xwl_screen->SetWindowPixmap;
+    (*screen->SetWindowPixmap) (window, pixmap);
+    xwl_screen->SetWindowPixmap = screen->SetWindowPixmap;
+    screen->SetWindowPixmap = xwl_set_window_pixmap;
+
+    if (!RegionNotEmpty(&window->winSize))
+        return;
+
+    ensure_surface_for_window(window);
 }
 
 static void
@@ -689,7 +771,7 @@ xwl_window_post_damage(struct xwl_window *xwl_window)
 
     assert(!xwl_window->frame_callback);
 
-    region = DamageRegion(xwl_window->damage);
+    region = DamageRegion(window_get_damage(xwl_window->window));
     pixmap = (*xwl_screen->screen->GetWindowPixmap) (xwl_window->window);
 
 #ifdef XWL_HAS_GLAMOR
@@ -726,7 +808,7 @@ xwl_window_post_damage(struct xwl_window *xwl_window)
     wl_callback_add_listener(xwl_window->frame_callback, &frame_listener, xwl_window);
 
     wl_surface_commit(xwl_window->surface);
-    DamageEmpty(xwl_window->damage);
+    DamageEmpty(window_get_damage(xwl_window->window));
 
     xorg_list_del(&xwl_window->link_damage);
 }
@@ -962,6 +1044,8 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
         return FALSE;
     if (!dixRegisterPrivateKey(&xwl_pixmap_private_key, PRIVATE_PIXMAP, 0))
         return FALSE;
+    if (!dixRegisterPrivateKey(&xwl_damage_private_key, PRIVATE_WINDOW, 0))
+        return FALSE;
 
     dixSetPrivate(&pScreen->devPrivates, &xwl_screen_private_key, xwl_screen);
     xwl_screen->screen = pScreen;
@@ -1120,6 +1204,11 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
 
     xwl_screen->CloseScreen = pScreen->CloseScreen;
     pScreen->CloseScreen = xwl_close_screen;
+
+    if (xwl_screen->rootless) {
+        xwl_screen->SetWindowPixmap = pScreen->SetWindowPixmap;
+        pScreen->SetWindowPixmap = xwl_set_window_pixmap;
+    }
 
     pScreen->CursorWarpedTo = xwl_cursor_warped_to;
     pScreen->CursorConfinedTo = xwl_cursor_confined_to;

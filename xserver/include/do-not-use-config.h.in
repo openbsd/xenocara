@@ -218,6 +218,9 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
+/* Define to 1 if you have the `isastream' function. */
+#undef HAVE_ISASTREAM
+
 /* Define to 1 if you have the `issetugid' function. */
 #undef HAVE_ISSETUGID
 
@@ -253,6 +256,9 @@
 
 /* Define to 1 if you have the <linux/fb.h> header file. */
 #undef HAVE_LINUX_FB_H
+
+/* Define to 1 if you have the `memfd_create' function. */
+#undef HAVE_MEMFD_CREATE
 
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
@@ -552,9 +558,6 @@
 
 /* Support SHAPE extension */
 #undef SHAPE
-
-/* Directory for shared memory temp files */
-#undef SHMDIR
 
 /* The size of `unsigned long', as computed by sizeof. */
 #undef SIZEOF_UNSIGNED_LONG

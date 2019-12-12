@@ -35,6 +35,9 @@ in this Software without prior written authorization from The Open Group.
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#ifdef HAVE_MEMFD_CREATE
+#include <sys/mman.h>
+#endif
 #include <unistd.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -652,6 +655,9 @@ ProcShmGetImage(ClientPtr client)
         visual = wVisual(((WindowPtr) pDraw));
         if (pDraw->type == DRAWABLE_WINDOW)
             pVisibleRegion = &((WindowPtr) pDraw)->borderClip;
+        pDraw->pScreen->SourceValidate(pDraw, stuff->x, stuff->y,
+                                       stuff->width, stuff->height,
+                                       IncludeInferiors);
     }
     else {
         if (stuff->x < 0 ||
@@ -859,6 +865,12 @@ ProcPanoramiXShmGetImage(ClientPtr client)
             free(drawables);
             return rc;
         }
+    }
+    FOR_NSCREENS_FORWARD(i) {
+        drawables[i]->pScreen->SourceValidate(drawables[i], 0, 0,
+                                              drawables[i]->width,
+                                              drawables[i]->height,
+                                              IncludeInferiors);
     }
 
     xgi = (xShmGetImageReply) {
@@ -1194,36 +1206,55 @@ ProcShmAttachFd(ClientPtr client)
 static int
 shm_tmpfile(void)
 {
-#ifdef SHMDIR
-	int	fd;
-	char	template[] = SHMDIR "/shmfd-XXXXXX";
+    const char *shmdirs[] = {
+        "/run/shm",
+        "/var/tmp",
+        "/tmp",
+    };
+    int	fd;
+
+#ifdef HAVE_MEMFD_CREATE
+    fd = memfd_create("xorg", MFD_CLOEXEC|MFD_ALLOW_SEALING);
+    if (fd != -1) {
+        fcntl(fd, F_ADD_SEALS, F_SEAL_SHRINK);
+        DebugF ("Using memfd_create\n");
+        return fd;
+    }
+#endif
+
 #ifdef O_TMPFILE
-	fd = open(SHMDIR, O_TMPFILE|O_RDWR|O_CLOEXEC|O_EXCL, 0666);
-	if (fd >= 0) {
-		DebugF ("Using O_TMPFILE\n");
-		return fd;
-	}
-	ErrorF ("Not using O_TMPFILE\n");
+    for (int i = 0; i < ARRAY_SIZE(shmdirs); i++) {
+        fd = open(shmdirs[i], O_TMPFILE|O_RDWR|O_CLOEXEC|O_EXCL, 0666);
+        if (fd >= 0) {
+            DebugF ("Using O_TMPFILE\n");
+            return fd;
+        }
+    }
+    ErrorF ("Not using O_TMPFILE\n");
 #endif
+
+    for (int i = 0; i < ARRAY_SIZE(shmdirs); i++) {
+        char template[PATH_MAX];
+        snprintf(template, ARRAY_SIZE(template), "%s/shmfd-XXXXXXXXXX", shmdirs[i]);
 #ifdef HAVE_MKOSTEMP
-	fd = mkostemp(template, O_CLOEXEC);
+        fd = mkostemp(template, O_CLOEXEC);
 #else
-	fd = mkstemp(template);
+        fd = mkstemp(template);
 #endif
-	if (fd < 0)
-		return -1;
-	unlink(template);
+        if (fd < 0)
+            continue;
+        unlink(template);
 #ifndef HAVE_MKOSTEMP
-	int flags = fcntl(fd, F_GETFD);
-	if (flags != -1) {
-		flags |= FD_CLOEXEC;
-		(void) fcntl(fd, F_SETFD, &flags);
-	}
+        int flags = fcntl(fd, F_GETFD);
+        if (flags != -1) {
+            flags |= FD_CLOEXEC;
+            (void) fcntl(fd, F_SETFD, &flags);
+        }
 #endif
-	return fd;
-#else
-        return -1;
-#endif
+        return fd;
+    }
+
+    return -1;
 }
 
 static int

@@ -77,9 +77,9 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-subdir = hw/xfree86/drivers/modesetting
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(top_srcdir)/depcomp
+	$(top_srcdir)/depcomp $(top_srcdir)/manpages.am
+subdir = hw/xfree86/drivers/modesetting
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_dir.m4 \
 	$(top_srcdir)/m4/ax_pthread.m4 $(top_srcdir)/m4/libtool.m4 \
@@ -127,7 +127,8 @@ am__uninstall_files_from_dir = { \
          $(am__cd) "$$dir" && rm -f $$files; }; \
   }
 am__installdirs = "$(DESTDIR)$(modesetting_drv_ladir)" \
-	"$(DESTDIR)$(drivermandir)"
+	"$(DESTDIR)$(appmandir)" "$(DESTDIR)$(drivermandir)" \
+	"$(DESTDIR)$(filemandir)"
 LTLIBRARIES = $(modesetting_drv_la_LTLIBRARIES)
 am__DEPENDENCIES_1 =
 modesetting_drv_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -183,7 +184,7 @@ am__can_run_installinfo = \
     n|no|NO) false;; \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
-DATA = $(driverman_DATA)
+DATA = $(appman_DATA) $(driverman_DATA) $(fileman_DATA)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -327,7 +328,38 @@ MAINT = @MAINT@
 MAIN_LIB = @MAIN_LIB@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
-MAN_SUBSTS = @MAN_SUBSTS@
+
+# xorg-macros.m4 has these bracketed by double underscores, but meson
+# wants ats.
+
+# Add server specific man pages string substitution from XORG_MANPAGE_SECTIONS
+# 's|/,|/, |g' will add a space to help font path formatting
+MAN_SUBSTS = @MAN_SUBSTS@ -e 's|@vendorversion@|"$(PACKAGE_STRING)" \
+	"$(XORG_MAN_PAGE)"|' -e 's|@xorgversion@|"$(PACKAGE_STRING)" \
+	"$(XORG_MAN_PAGE)"|' -e 's|@xservername@|Xorg|g' -e \
+	's|@xconfigfile@|xorg.conf|g' -e 's|@projectroot@|$(prefix)|g' \
+	-e 's|@apploaddir@|$(appdefaultdir)|g' -e \
+	's|@appmansuffix@|$(APP_MAN_SUFFIX)|g' -e \
+	's|@drivermansuffix@|$(DRIVER_MAN_SUFFIX)|g' -e \
+	's|@adminmansuffix@|$(ADMIN_MAN_SUFFIX)|g' -e \
+	's|@libmansuffix@|$(LIB_MAN_SUFFIX)|g' -e \
+	's|@miscmansuffix@|$(MISC_MAN_SUFFIX)|g' -e \
+	's|@filemansuffix@|$(FILE_MAN_SUFFIX)|g' -e \
+	's|[@]logdir[@]|$(logdir)|g' -e 's|[@]datadir[@]|$(datadir)|g' \
+	-e 's|[@]mandir[@]|$(mandir)|g' -e \
+	's|[@]sysconfdir[@]|$(sysconfdir)|g' -e \
+	's|[@]xconfigdir[@]|$(XCONFIGDIR)|g' -e \
+	's|[@]xkbdir[@]|$(XKB_BASE_DIRECTORY)|g' -e \
+	's|[@]XKB_DFLT_RULES[@]|$(XKB_DFLT_RULES)|g' -e \
+	's|[@]XKB_DFLT_MODEL[@]|$(XKB_DFLT_MODEL)|g' -e \
+	's|[@]XKB_DFLT_LAYOUT[@]|$(XKB_DFLT_LAYOUT)|g' -e \
+	's|[@]XKB_DFLT_VARIANT[@]|$(XKB_DFLT_VARIANT)|g' -e \
+	's|[@]XKB_DFLT_OPTIONS[@]|$(XKB_DFLT_OPTIONS)|g' -e \
+	's|[@]bundle_id_prefix[@]|$(BUNDLE_ID_PREFIX)|g' -e \
+	's|[@]modulepath[@]|$(DEFAULT_MODULE_PATH)|g' -e \
+	's|[@]suid_wrapper_dir[@]|$(SUID_WRAPPER_DIR)|g' -e \
+	's|[@]default_font_path[@]|$(COMPILEDDEFAULTFONTPATH)|g' -e \
+	'\|$(COMPILEDDEFAULTFONTPATH)| s|/,|/, |g'
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 MKDIR_P = @MKDIR_P@
@@ -545,6 +577,17 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
+appmandir = $(APP_MAN_DIR)
+#appman_PRE = list of application man page files set by calling Makefile.am
+appman_DATA = $(appman_PRE:man=$(APP_MAN_SUFFIX))
+drivermandir = $(DRIVER_MAN_DIR)
+driverman_DATA = $(driverman_PRE:man=@DRIVER_MAN_SUFFIX@)
+filemandir = $(FILE_MAN_DIR)
+#fileman_PRE = list of file man page files set by calling Makefile.am
+fileman_DATA = $(fileman_PRE:man=$(FILE_MAN_SUFFIX))
+EXTRA_DIST = modesetting.man
+CLEANFILES = $(driverman_DATA)
+SUFFIXES = .$(APP_MAN_SUFFIX) .$(DRIVER_MAN_SUFFIX) .$(FILE_MAN_SUFFIX) .man
 AM_CFLAGS = $(DIX_CFLAGS) $(XORG_CFLAGS) $(LIBDRM_CFLAGS) $(UDEV_CFLAGS) $(CWARNFLAGS)
 AM_CPPFLAGS = \
 	$(XORG_INCS) \
@@ -574,19 +617,12 @@ modesetting_drv_la_SOURCES = \
 	 pageflip.c \
 	 $(NULL)
 
-drivermandir = $(DRIVER_MAN_DIR)
 driverman_PRE = modesetting.man
-driverman_DATA = $(driverman_PRE:man=@DRIVER_MAN_SUFFIX@)
-EXTRA_DIST = modesetting.man
-CLEANFILES = $(driverman_DATA)
-
-# String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
-SUFFIXES = .$(DRIVER_MAN_SUFFIX) .man
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .$(DRIVER_MAN_SUFFIX) .man .c .lo .o .obj
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
+.SUFFIXES: .$(APP_MAN_SUFFIX) .$(DRIVER_MAN_SUFFIX) .$(FILE_MAN_SUFFIX) .man .c .lo .o .obj
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/manpages.am $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -607,6 +643,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe);; \
 	esac;
+$(top_srcdir)/manpages.am:
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
@@ -693,6 +730,27 @@ mostlyclean-libtool:
 
 clean-libtool:
 	-rm -rf .libs _libs
+install-appmanDATA: $(appman_DATA)
+	@$(NORMAL_INSTALL)
+	@list='$(appman_DATA)'; test -n "$(appmandir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(appmandir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(appmandir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(appmandir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(appmandir)" || exit $$?; \
+	done
+
+uninstall-appmanDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(appman_DATA)'; test -n "$(appmandir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	dir='$(DESTDIR)$(appmandir)'; $(am__uninstall_files_from_dir)
 install-drivermanDATA: $(driverman_DATA)
 	@$(NORMAL_INSTALL)
 	@list='$(driverman_DATA)'; test -n "$(drivermandir)" || list=; \
@@ -714,6 +772,27 @@ uninstall-drivermanDATA:
 	@list='$(driverman_DATA)'; test -n "$(drivermandir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
 	dir='$(DESTDIR)$(drivermandir)'; $(am__uninstall_files_from_dir)
+install-filemanDATA: $(fileman_DATA)
+	@$(NORMAL_INSTALL)
+	@list='$(fileman_DATA)'; test -n "$(filemandir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(filemandir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(filemandir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(filemandir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(filemandir)" || exit $$?; \
+	done
+
+uninstall-filemanDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(fileman_DATA)'; test -n "$(filemandir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	dir='$(DESTDIR)$(filemandir)'; $(am__uninstall_files_from_dir)
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -815,7 +894,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(LTLIBRARIES) $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(modesetting_drv_ladir)" "$(DESTDIR)$(drivermandir)"; do \
+	for dir in "$(DESTDIR)$(modesetting_drv_ladir)" "$(DESTDIR)$(appmandir)" "$(DESTDIR)$(drivermandir)" "$(DESTDIR)$(filemandir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -872,8 +951,8 @@ info: info-am
 
 info-am:
 
-install-data-am: install-drivermanDATA \
-	install-modesetting_drv_laLTLIBRARIES
+install-data-am: install-appmanDATA install-drivermanDATA \
+	install-filemanDATA install-modesetting_drv_laLTLIBRARIES
 
 install-dvi: install-dvi-am
 
@@ -919,8 +998,8 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-drivermanDATA \
-	uninstall-modesetting_drv_laLTLIBRARIES
+uninstall-am: uninstall-appmanDATA uninstall-drivermanDATA \
+	uninstall-filemanDATA uninstall-modesetting_drv_laLTLIBRARIES
 
 .MAKE: install-am install-strip
 
@@ -928,20 +1007,26 @@ uninstall-am: uninstall-drivermanDATA \
 	clean-libtool clean-modesetting_drv_laLTLIBRARIES cscopelist \
 	ctags distclean distclean-compile distclean-generic \
 	distclean-libtool distclean-tags distdir dvi dvi-am html \
-	html-am info info-am install install-am install-data \
-	install-data-am install-drivermanDATA install-dvi \
-	install-dvi-am install-exec install-exec-am install-html \
-	install-html-am install-info install-info-am install-man \
+	html-am info info-am install install-am install-appmanDATA \
+	install-data install-data-am install-drivermanDATA install-dvi \
+	install-dvi-am install-exec install-exec-am \
+	install-filemanDATA install-html install-html-am install-info \
+	install-info-am install-man \
 	install-modesetting_drv_laLTLIBRARIES install-pdf \
 	install-pdf-am install-ps install-ps-am install-strip \
 	installcheck installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-drivermanDATA \
+	tags uninstall uninstall-am uninstall-appmanDATA \
+	uninstall-drivermanDATA uninstall-filemanDATA \
 	uninstall-modesetting_drv_laLTLIBRARIES
 
 
+.man.$(APP_MAN_SUFFIX):
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
 .man.$(DRIVER_MAN_SUFFIX):
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
+.man.$(FILE_MAN_SUFFIX):
 	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

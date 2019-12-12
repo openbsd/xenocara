@@ -26,9 +26,9 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ(2.60)
-AC_INIT([xorg-server], 1.20.5, [https://gitlab.freedesktop.org/xorg/xserver/issues], xorg-server)
-RELEASE_DATE="2019-05-30"
-RELEASE_NAME="Red Lentil Dal"
+AC_INIT([xorg-server], 1.20.6, [https://gitlab.freedesktop.org/xorg/xserver/issues], xorg-server)
+RELEASE_DATE="2019-11-22"
+RELEASE_NAME="Enchiladas de Queso"
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
@@ -159,7 +159,7 @@ dnl Checks for library functions.
 AC_CHECK_FUNCS([backtrace geteuid getuid issetugid getresuid \
 	getdtablesize getifaddrs getpeereid getpeerucred getprogname getzoneid \
 	mmap posix_fallocate seteuid shmctl64 strncasecmp vasprintf vsnprintf \
-	walkcontext setitimer poll epoll_create1 mkostemp])
+	walkcontext setitimer poll epoll_create1 mkostemp memfd_create isastream])
 AC_CONFIG_LIBOBJ_DIR([os])
 AC_REPLACE_FUNCS([reallocarray strcasecmp strcasestr strlcat strlcpy strndup\
 	timingsafe_memcmp])
@@ -802,7 +802,7 @@ LIBDRI="dri >= 7.8.0"
 LIBDRM="libdrm >= 2.4.89"
 LIBEGL="egl"
 LIBGBM="gbm >= 10.2.0"
-LIBGL="gl >= 7.1.0"
+LIBGL="gl >= 1.2"
 LIBXEXT="xext >= 1.0.99.4"
 LIBXFONT="xfont2 >= 2.0.0"
 LIBXI="xi >= 1.2.99.1"
@@ -1157,54 +1157,11 @@ case "$DRI2,$HAVE_DRI2PROTO" in
 	yes,yes | auto,yes)
 		AC_DEFINE(DRI2, 1, [Build DRI2 extension])
 		DRI2=yes
-		LIBGL="gl >= 9.2.0"
+		LIBGL="gl >= 1.2"
 		SDK_REQUIRED_MODULES="$SDK_REQUIRED_MODULES $DRI2PROTO"
 		;;
 esac
 AM_CONDITIONAL(DRI2, test "x$DRI2" = xyes)
-
-dnl
-dnl Locate a suitable tmp file system for creating shared memeory files
-dnl
-
-AC_ARG_WITH(shared-memory-dir, AS_HELP_STRING([--with-shared-memory-dir=PATH], [Path to directory in a world-writable temporary directory for anonymous shared memory (default: auto)]),
-[],
-[with_shared_memory_dir=yes])
-
-shmdirs="/run/shm /var/tmp /tmp"
-
-case x"$with_shared_memory_dir" in
-xyes)
-	for dir in $shmdirs; do
-		case x"$with_shared_memory_dir" in
-		xyes)
-			echo Checking temp dir "$dir"
-			if test -d "$dir"; then
-				with_shared_memory_dir="$dir"
-			fi
-			;;
-		esac
-	done
-	;;
-x/*)
-	;;
-xno)
-	;;
-*)
-	AC_MSG_ERROR([Invalid directory specified for --with-shared-memory-dir: $with_shared_memory_dir])
-	;;
-esac
-
-case x"$with_shared_memory_dir" in
-xyes)
-	AC_MSG_ERROR([No directory found for shared memory temp files.])
-	;;
-xno)
-	;;
-*)
-	AC_DEFINE_UNQUOTED(SHMDIR, ["$with_shared_memory_dir"], [Directory for shared memory temp files])
-	;;
-esac
 
 AC_ARG_ENABLE(xtrans-send-fds,	AS_HELP_STRING([--disable-xtrans-send-fds], [Use Xtrans support for fd passing (default: auto)]), [XTRANS_SEND_FDS=$enableval], [XTRANS_SEND_FDS=auto])
 
@@ -1322,7 +1279,7 @@ esac
 
 AM_CONDITIONAL(DRI3, test "x$DRI3" = xyes)
 
-if test "x$DRI" = xyes || test "x$DRI2" = xyes || test "x$DRI3" = xyes || test "x$CONFIG_UDEV_KMS" = xyes; then
+if test "x$DRI" = xyes || test "x$DRI2" = xyes || test "x$DRI3" = xyes || test "x$CONFIG_UDEV_KMS" = xyes || test "x$XORG" = xyes; then
 	if test "x$DRM" = xyes; then
 		AC_DEFINE(WITH_LIBDRM, 1, [Building with libdrm support])
 		PKG_CHECK_MODULES([LIBDRM], $LIBDRM)
