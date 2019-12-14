@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.426 2019/12/12 06:08:12 matthieu Exp $
+# $OpenBSD: MODULES,v 1.427 2019/12/14 15:00:54 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -110,7 +110,7 @@ driver/xf86-video-vesa		2.4.0		needs-update
 driver/xf86-video-vmware	13.3.0		needs-update
 driver/xf86-video-wsfb		0.4.1
 
-font/encodings			1.0.5		needs-update
+font/encodings			1.0.5
 font/adobe-100dpi		1.0.3
 font/adobe-75dpi		1.0.3
 font/adobe-utopia-100dpi	1.0.4
@@ -144,7 +144,7 @@ font/schumacher-misc		1.1.2
 font/screen-cyrillic		1.0.4
 font/sony-misc			1.0.3
 font/sun-misc			1.0.3
-font/util			1.3.2		needs-update
+font/util			1.3.2
 font/winitzki-cyrillic		1.0.3
 font/xfree86-type1		1.0.4
 
@@ -160,12 +160,12 @@ lib/libXdamage			1.1.5
 lib/libXdmcp			1.1.3
 lib/libXext			1.3.4
 lib/libXfixes			5.0.3
-lib/libXfont2			2.0.4		needs-update
+lib/libXfont2			2.0.4
 lib/libXft			2.3.3
 lib/libXi			1.7.10		needs-update
 lib/libXinerama			1.1.4
 lib/libXmu			1.1.3		needs-update
-lib/libXpm			3.5.12
+lib/libXpm			3.5.13		needs-update
 lib/libXpresent			1.0.0
 lib/libXrandr			1.5.2		needs-update
 lib/libXrender			0.9.10
