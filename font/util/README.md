@@ -1,4 +1,5 @@
 X.Org font package creation/installation utilities
+--------------------------------------------------
 
 If the --with-fontrootdir option is specified when configuring this
 package, it will be recorded in the fontutil pkg-config file to be used
@@ -8,23 +9,15 @@ macros from version 1.1 or later of this package.
 All questions regarding this software should be directed at the
 Xorg mailing list:
 
-        http://lists.freedesktop.org/mailman/listinfo/xorg
-
-Please submit bug reports to the Xorg bugzilla:
-
-        https://bugs.freedesktop.org/enter_bug.cgi?product=xorg
+  https://lists.x.org/mailman/listinfo/xorg
 
 The master development code repository can be found at:
 
-        git://anongit.freedesktop.org/git/xorg/font/util
+  https://gitlab.freedesktop.org/xorg/font/util
 
-        http://cgit.freedesktop.org/xorg/font/util
+Please submit bug reports and requests to merge patches there.
 
 For patch submission instructions, see:
 
-	http://www.x.org/wiki/Development/Documentation/SubmittingPatches
-
-For more information on the git code manager, see:
-
-        http://wiki.x.org/wiki/GitPage
+  https://www.x.org/wiki/Development/Documentation/SubmittingPatches
 

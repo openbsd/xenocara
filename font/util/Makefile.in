@@ -74,7 +74,7 @@ build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = bdftruncate$(EXEEXT) ucs2any$(EXEEXT)
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
+DIST_COMMON = $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(srcdir)/fontutil.m4.in $(srcdir)/fontutil.pc.in \
 	$(top_srcdir)/configure COPYING ChangeLog INSTALL compile \
@@ -369,7 +369,7 @@ mapfiles_DATA = \
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = fontutil.pc
 CLEANFILES = bdftruncate
-EXTRA_DIST = $(mapfiles_DATA)
+EXTRA_DIST = $(mapfiles_DATA) README.md
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive

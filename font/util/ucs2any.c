@@ -45,6 +45,7 @@
 #endif
 #include <limits.h>
 #include <stdarg.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -220,6 +221,11 @@ da_add(da_t *da, int key, void *value)
 {
 	int i = da->size;
 	if (key >= 0) {
+		if ((size_t)key >= SIZE_MAX / sizeof(void *)) {
+			fprintf(stderr, "%s: Illegal key '%d' encountered!\n",
+				my_name, key);
+			exit(1);
+		}
 		if (key >= da->size) {
 			da->size = key + 1;
 			da->values = zrealloc(da->values,
