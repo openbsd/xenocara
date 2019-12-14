@@ -37,6 +37,7 @@
 
 
 
+
 VPATH = @srcdir@
 am__make_dryrun = \
   { \
@@ -137,13 +138,16 @@ host_triplet = @host@
 @XFONT_FC_TRUE@	src/fc/fslibos.h		\
 @XFONT_FC_TRUE@	src/fc/fstrans.c
 
+noinst_PROGRAMS = lsfontdir$(EXEEXT)
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(libXfontinclude_HEADERS) \
+DIST_COMMON = $(am__configure_deps) $(libXfontinclude_HEADERS) \
 	$(noinst_HEADERS) $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/config.h.in $(srcdir)/xfont2.pc.in \
-	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL \
-	compile config.guess config.sub depcomp install-sh ltmain.sh \
-	missing
+	$(top_srcdir)/configure $(top_srcdir)/src/util/reallocarray.c \
+	$(top_srcdir)/src/util/strlcat.c \
+	$(top_srcdir)/src/util/strlcpy.c AUTHORS COPYING ChangeLog \
+	INSTALL compile config.guess config.sub depcomp install-sh \
+	ltmain.sh missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -185,9 +189,10 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgconfigdir)" \
 	"$(DESTDIR)$(libXfontincludedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 am__DEPENDENCIES_1 =
+LIBOBJDIR = src/util/
 @XFONT_FREETYPE_TRUE@am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
 libXfont2_la_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(LTLIBOBJS) \
 	$(am__DEPENDENCIES_2)
 am__libXfont2_la_SOURCES_DIST = src/stubs/atom.c \
 	src/stubs/libxfontstubs.c src/util/fontaccel.c \
@@ -268,6 +273,12 @@ am__v_lt_1 =
 libXfont2_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(libXfont2_la_LDFLAGS) $(LDFLAGS) -o $@
+PROGRAMS = $(noinst_PROGRAMS)
+am__objects_11 = test/utils/font-test-utils.$(OBJEXT)
+am_lsfontdir_OBJECTS = test/utils/lsfontdir.$(OBJEXT) \
+	$(am__objects_11)
+lsfontdir_OBJECTS = $(am_lsfontdir_OBJECTS)
+lsfontdir_DEPENDENCIES = libXfont2.la $(LTLIBOBJS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -302,8 +313,8 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(libXfont2_la_SOURCES)
-DIST_SOURCES = $(am__libXfont2_la_SOURCES_DIST)
+SOURCES = $(libXfont2_la_SOURCES) $(lsfontdir_SOURCES)
+DIST_SOURCES = $(am__libXfont2_la_SOURCES_DIST) $(lsfontdir_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	html-recursive info-recursive install-data-recursive \
 	install-dvi-recursive install-exec-recursive \
@@ -541,7 +552,8 @@ noinst_HEADERS = \
 	include/X11/fonts/pcf.h      \
 	include/libxfontint.h        \
 	src/FreeType/ft.h	     \
-	src/FreeType/ftfuncs.h
+	src/FreeType/ftfuncs.h       \
+	src/util/replace.h
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = xfont2.pc
@@ -558,8 +570,13 @@ libXfont2_la_SOURCES = src/stubs/atom.c src/stubs/libxfontstubs.c \
 	$(am__append_12)
 libXfont2_la_LDFLAGS = -version-number 2:0:0 -no-undefined
 libXfont2_la_LIBADD = $(Z_LIBS) $(MATH_LIBS) $(XFONT_LIBS) \
-	$(am__append_4)
-EXTRA_DIST = src/builtins/buildfont
+	$(LTLIBOBJS) $(am__append_4)
+
+# Test utilities
+EXTRA_DIST = src/builtins/buildfont README.md test/utils/README
+TEST_UTIL_SRCS = test/utils/font-test-utils.c test/utils/font-test-utils.h
+lsfontdir_SOURCES = test/utils/lsfontdir.c $(TEST_UTIL_SRCS)
+lsfontdir_LDADD = libXfont2.la $(LTLIBOBJS)
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -796,6 +813,28 @@ src/fc/fstrans.lo: src/fc/$(am__dirstamp) \
 libXfont2.la: $(libXfont2_la_OBJECTS) $(libXfont2_la_DEPENDENCIES) $(EXTRA_libXfont2_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(libXfont2_la_LINK) -rpath $(libdir) $(libXfont2_la_OBJECTS) $(libXfont2_la_LIBADD) $(LIBS)
 
+clean-noinstPROGRAMS:
+	@list='$(noinst_PROGRAMS)'; test -n "$$list" || exit 0; \
+	echo " rm -f" $$list; \
+	rm -f $$list || exit $$?; \
+	test -n "$(EXEEXT)" || exit 0; \
+	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
+	echo " rm -f" $$list; \
+	rm -f $$list
+test/utils/$(am__dirstamp):
+	@$(MKDIR_P) test/utils
+	@: > test/utils/$(am__dirstamp)
+test/utils/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) test/utils/$(DEPDIR)
+	@: > test/utils/$(DEPDIR)/$(am__dirstamp)
+test/utils/lsfontdir.$(OBJEXT): test/utils/$(am__dirstamp) \
+	test/utils/$(DEPDIR)/$(am__dirstamp)
+test/utils/font-test-utils.$(OBJEXT): test/utils/$(am__dirstamp) \
+	test/utils/$(DEPDIR)/$(am__dirstamp)
+lsfontdir$(EXEEXT): $(lsfontdir_OBJECTS) $(lsfontdir_DEPENDENCIES) $(EXTRA_lsfontdir_DEPENDENCIES) 
+	@rm -f lsfontdir$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(lsfontdir_OBJECTS) $(lsfontdir_LDADD) $(LIBS)
+
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 	-rm -f src/FreeType/*.$(OBJEXT)
@@ -812,6 +851,7 @@ mostlyclean-compile:
 	-rm -f src/stubs/*.lo
 	-rm -f src/util/*.$(OBJEXT)
 	-rm -f src/util/*.lo
+	-rm -f test/utils/*.$(OBJEXT)
 
 distclean-compile:
 	-rm -f *.tab.c
@@ -865,7 +905,12 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@src/util/$(DEPDIR)/miscutil.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/util/$(DEPDIR)/patcache.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/util/$(DEPDIR)/private.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/util/$(DEPDIR)/reallocarray.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/util/$(DEPDIR)/strlcat.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/util/$(DEPDIR)/strlcpy.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/util/$(DEPDIR)/utilbitmap.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@test/utils/$(DEPDIR)/font-test-utils.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@test/utils/$(DEPDIR)/lsfontdir.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
@@ -1270,7 +1315,8 @@ distcleancheck: distclean
 	       exit 1; } >&2
 check-am: all-am
 check: check-recursive
-all-am: Makefile $(LTLIBRARIES) $(DATA) $(HEADERS) config.h
+all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(DATA) $(HEADERS) \
+		config.h
 installdirs: installdirs-recursive
 installdirs-am:
 	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgconfigdir)" "$(DESTDIR)$(libXfontincludedir)"; do \
@@ -1296,6 +1342,8 @@ install-strip:
 	    "INSTALL_PROGRAM_ENV=STRIPPROG='$(STRIP)'" install; \
 	fi
 mostlyclean-generic:
+	-test -z "$(LIBOBJS)" || rm -f $(LIBOBJS)
+	-test -z "$(LTLIBOBJS)" || rm -f $(LTLIBOBJS)
 
 clean-generic:
 
@@ -1316,6 +1364,8 @@ distclean-generic:
 	-rm -f src/stubs/$(am__dirstamp)
 	-rm -f src/util/$(DEPDIR)/$(am__dirstamp)
 	-rm -f src/util/$(am__dirstamp)
+	-rm -f test/utils/$(DEPDIR)/$(am__dirstamp)
+	-rm -f test/utils/$(am__dirstamp)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
@@ -1324,11 +1374,11 @@ maintainer-clean-generic:
 clean: clean-recursive
 
 clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
-	mostlyclean-am
+	clean-noinstPROGRAMS mostlyclean-am
 
 distclean: distclean-recursive
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
-	-rm -rf src/FreeType/$(DEPDIR) src/bitmap/$(DEPDIR) src/builtins/$(DEPDIR) src/fc/$(DEPDIR) src/fontfile/$(DEPDIR) src/stubs/$(DEPDIR) src/util/$(DEPDIR)
+	-rm -rf src/FreeType/$(DEPDIR) src/bitmap/$(DEPDIR) src/builtins/$(DEPDIR) src/fc/$(DEPDIR) src/fontfile/$(DEPDIR) src/stubs/$(DEPDIR) src/util/$(DEPDIR) test/utils/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-hdr distclean-libtool distclean-tags
@@ -1376,7 +1426,7 @@ installcheck-am:
 maintainer-clean: maintainer-clean-recursive
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
 	-rm -rf $(top_srcdir)/autom4te.cache
-	-rm -rf src/FreeType/$(DEPDIR) src/bitmap/$(DEPDIR) src/builtins/$(DEPDIR) src/fc/$(DEPDIR) src/fontfile/$(DEPDIR) src/stubs/$(DEPDIR) src/util/$(DEPDIR)
+	-rm -rf src/FreeType/$(DEPDIR) src/bitmap/$(DEPDIR) src/builtins/$(DEPDIR) src/fc/$(DEPDIR) src/fontfile/$(DEPDIR) src/stubs/$(DEPDIR) src/util/$(DEPDIR) test/utils/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
@@ -1402,16 +1452,16 @@ uninstall-am: uninstall-libLTLIBRARIES \
 
 .PHONY: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) CTAGS GTAGS \
 	all all-am am--refresh check check-am clean clean-cscope \
-	clean-generic clean-libLTLIBRARIES clean-libtool cscope \
-	cscopelist cscopelist-recursive ctags ctags-recursive dist \
-	dist-all dist-bzip2 dist-gzip dist-hook dist-lzip dist-shar \
-	dist-tarZ dist-xz dist-zip distcheck distclean \
-	distclean-compile distclean-generic distclean-hdr \
-	distclean-libtool distclean-tags distcleancheck distdir \
-	distuninstallcheck dvi dvi-am html html-am info info-am \
-	install install-am install-data install-data-am install-dvi \
-	install-dvi-am install-exec install-exec-am install-html \
-	install-html-am install-info install-info-am \
+	clean-generic clean-libLTLIBRARIES clean-libtool \
+	clean-noinstPROGRAMS cscope cscopelist cscopelist-recursive \
+	ctags ctags-recursive dist dist-all dist-bzip2 dist-gzip \
+	dist-hook dist-lzip dist-shar dist-tarZ dist-xz dist-zip \
+	distcheck distclean distclean-compile distclean-generic \
+	distclean-hdr distclean-libtool distclean-tags distcleancheck \
+	distdir distuninstallcheck dvi dvi-am html html-am info \
+	info-am install install-am install-data install-data-am \
+	install-dvi install-dvi-am install-exec install-exec-am \
+	install-html install-html-am install-info install-info-am \
 	install-libLTLIBRARIES install-libXfontincludeHEADERS \
 	install-man install-pdf install-pdf-am install-pkgconfigDATA \
 	install-ps install-ps-am install-strip installcheck \
