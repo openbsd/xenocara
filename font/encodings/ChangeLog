@@ -1,3 +1,123 @@
+commit 144b735d4942cf2715ed450fe7207fd7deb64cf7
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Mon Jun 17 12:37:53 2019 -0400
+
+    encodings 1.0.5
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit dc033dcae3dd52ff9770f4ab8c0a795cf393b949
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 7 19:26:46 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit decbd6ff7ce545d502a9eb6ebf80a1a050d03548
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 18 18:34:21 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3d86fb95fff4fda7aec603de26dcc83f17375260
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:22 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 7318756722850b4bd10809409d15d13f8bdbb989
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 5f161a3827f75293f1b43bf7d8aeab38241f06ab
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 11ca3cfd76127662eaf693023bbc6893ef9542e4
+Author: Akira TAGOH <tagoh@redhat.com>
+Date:   Thu Oct 23 12:57:43 2014 +0200
+
+    jisx0201.1976-0.enc: Add undefined mapping for 0x7f - 0xa0 range
+    
+    The jisx0201 encoding has a hole in it in the 0x7f - 0xa0 range, see:
+    http://en.wikipedia.org/wiki/JIS_X_0201
+    
+    The document for the format of the encoding files says:
+    "Codes not listed are assumed to map through the identity (i.e. to the same
+     numerical value). In order to override this default mapping, you may specify
+     a range of codes to be undefined by using an `UNDEFINE' line"
+    
+    jisx0201.1976-0.enc was not doing this, causing all the codes on the range
+    to be mapped 1:1. This specifically is causing problems for ttmkfdir, which
+    checks that a font covers (most of) an encoding before adding a line for that
+    encoding to fonts.scale, and the hole not properly being undefined causes
+    this check to fail for atleast the Sazanami fonts.
+    
+    Cc: Akira TAGOH <tagoh@redhat.com>
+    BugLink: https://bugzilla.redhat.com/show_bug.cgi?id=1009350
+    Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 107eb8b9758fbfa4da70473b350d376712981904
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:39:32 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5f0046a8d3bc7939c248d0684d38bda4592d263b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:38:41 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 510924c747eee7607d8eb15a9e3a2cda6b6d9df2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 28 08:08:55 2013 -0400
+
+    config: replace deprecated use of AC_OUTPUT with AC_CONFIG_FILES
+    
+    Fix Automake warning: AC_OUTPUT should be used without arguments.
+    www.gnu.org/software/autoconf/manual/autoconf.html#Configuration-Files
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b66fdf4a088593b19cd1d00b6b3faf850edc35c1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Feb 14 23:29:51 2011 -0800
+
+    cns11643-x encodings don't need to alias to themselves
+    
+    Removes duplicate lines in encodings.dir (noticed when sorting encodings.dir)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 22a939832df60c2c0e9767ab26b4c82433aa1555
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Oct 29 20:54:06 2010 -0700

@@ -52,9 +52,10 @@ build_triplet = @build@
 host_triplet = @host@
 @GZIP_SMALL_TRUE@am__append_1 = $(COMPRESSED)
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
+DIST_COMMON = $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(top_srcdir)/configure COPYING \
-	ChangeLog INSTALL config.guess config.sub install-sh missing
+	ChangeLog INSTALL compile config.guess config.sub install-sh \
+	missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -330,7 +331,7 @@ ENCODING_FILES = \
 	tis620-2.enc		\
 	viscii1.1-1.enc
 
-EXTRA_DIST = $(ENCODING_FILES)
+EXTRA_DIST = $(ENCODING_FILES) README.md
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 COMPRESSED = $(ENCODING_FILES:%=%.gz)
 CLEANFILES = encodings.dir $(am__append_1)

@@ -1,8 +1,7 @@
 AC_PREREQ([2.60])
-AC_INIT([encodings], [1.0.4],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg])
+AC_INIT([encodings], [1.0.5],
+        [https://gitlab.freedesktop.org/xorg/font/encodings/issues])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
 
 # Require xorg-macros: XORG_DEFAULT_OPTIONS
 m4_ifndef([XORG_MACROS_VERSION],
@@ -49,4 +48,5 @@ fi
 
 XORG_FONTSUBDIR([ENCODINGSDIR], [encodingsdir], [encodings])
 
-AC_OUTPUT([Makefile large/Makefile])
+AC_CONFIG_FILES([Makefile large/Makefile])
+AC_OUTPUT
