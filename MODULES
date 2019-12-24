@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.427 2019/12/14 15:00:54 matthieu Exp $
+# $OpenBSD: MODULES,v 1.428 2019/12/24 12:15:09 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -63,7 +63,7 @@ app/xmore		1.0.3
 app/xpr			1.0.5
 app/xprop		1.2.4
 app/xrandr		1.5.1		needs-update
-app/xrdb		1.2.0		needs-update
+app/xrdb		1.2.0
 app/xrefresh		1.0.6
 app/xset		1.2.4
 app/xsetroot		1.1.2
@@ -198,6 +198,6 @@ proto/xorgproto			2019.2		needs-update
 util/cf				1.0.4
 util/gccmakedep			1.0.3
 util/macros			1.19.2
-util/makedepend			1.0.6		needs-update
+util/makedepend			1.0.6
 
 xserver				1.20.6
