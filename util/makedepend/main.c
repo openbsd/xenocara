@@ -232,6 +232,9 @@ main(int argc, char *argv[])
 			/* treat +thing as an option for C++ */
 			if (endmarker && **argv == '+')
 				continue;
+			if (fp >= filelist + MAXFILES) {
+			    fatalerr("Too many source files. Limit is %i files.\n", MAXFILES);
+			}
 			*fp++ = argv[0];
 			continue;
 		}
@@ -581,7 +584,6 @@ char *getnextline(struct filepointer *filep)
 		*eof,	/* end of file pointer */
 		*bol;	/* beginning of line pointer */
 	int	lineno;	/* line number */
-	boolean whitespace = FALSE;
 
 	/*
 	 * Fake the "-include" line files in form of #include to the
@@ -611,7 +613,6 @@ char *getnextline(struct filepointer *filep)
 				p++;
 				bol++;
 			}
-			whitespace = TRUE;
 		}
 
 		if (*p == '/' && (p+1) < eof && *(p+1) == '*') {
@@ -683,7 +684,6 @@ char *getnextline(struct filepointer *filep)
 				--p;
 			}
 			bol = p+1;
-			whitespace = FALSE;
 		}
 	}
 	if (*bol != '#')

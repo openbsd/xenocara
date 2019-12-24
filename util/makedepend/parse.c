@@ -496,8 +496,8 @@ merge2defines(struct inclist *file1, struct inclist *file2)
 
         	while ((last1 >= first1) && (last2 >= first2))
         	{
-	    		char *s1=file1->i_defs[first1]->s_name;
-	    		char *s2=file2->i_defs[first2]->s_name;
+			const char *s1 = file1->i_defs[first1]->s_name;
+			const char *s2 = file2->i_defs[first2]->s_name;
 
      			if (strcmp(s1,s2) < 0)
                         	i_defs[first++]=file1->i_defs[first1++];

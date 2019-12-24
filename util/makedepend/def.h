@@ -41,7 +41,7 @@ in this Software without prior written authorization from The Open Group.
 #define MAXDEFINES	512
 #define MAXFILES	2048
 #define MAXINCFILES	128	/* "-include" files */
-#define MAXDIRS		64
+#define MAXDIRS		512	/* -I flags */
 #define SYMTABINC	10	/* must be > 1 for define() to work right */
 #define	TRUE		1
 #define	FALSE		0
@@ -82,9 +82,9 @@ extern int	_debugmask;
  *     3	show #include SYMBOL
  *     4-6	unused
  */
-#define debug(level,arg) { if (_debugmask & (1 << level)) warning arg; }
+#define debug(level,arg) do { if (_debugmask & (1 << level)) warning arg; } while(0)
 #else
-#define	debug(level,arg) /**/
+#define	debug(level,arg) do { /**/ } while (0)
 #endif /* DEBUG */
 
 typedef	unsigned char boolean;

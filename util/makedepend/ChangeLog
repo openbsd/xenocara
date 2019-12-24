@@ -1,3 +1,170 @@
+commit e4971e9507f989d68c97a92edd1e6e1881ad1d55
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 16 16:39:07 2019 -0700
+
+    makedepend 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7897a5b8edd142d4de63933db3e544262006289e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 7 20:35:14 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 277eaf65d43f9fe9d3d223810e1872c32436c01e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 19 23:40:18 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d15117c98a071b8fd30fb163fc45cb37db760654
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 5 10:54:59 2018 -0700
+
+    Simplify writing of output lines to Makefile
+    
+    Instead of writing everything to a temporary buffer, and then using
+    fwrite() to have it fputc() one character at a time into the stdio
+    buffer, just use fprintf() directly to save a copy and write in
+    larger blocks.
+    
+    Testing on Solaris on makedepend's own source files showed a
+    reduction in memcpy's from 4037 to 3108, and in _dowrite calls
+    in stdio from 1173 to 168, but no change in actual write calls
+    from stdio's buffer to the file.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4f410f3ed29fdb0f98be1e01930ba1a909a36ef0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 5 10:05:44 2018 -0700
+
+    Remove unused variable whitespace
+    
+    Use of it was removed in commit 275c17136006f9d, but we kept setting
+    it anyway.
+    
+    Resolves gcc 7.3 warning:
+    main.c: In function ‘getnextline’:
+    main.c:587:10: warning: variable ‘whitespace’ set but not used [-Wunused-but-set-variable]
+      boolean whitespace = FALSE;
+              ^~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 223b315a9148ec0091837f2e369bbb3ec5d49e11
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 5 10:00:38 2018 -0700
+
+    Fix bad indentation in ifparser.c
+    
+    ifparser.c: In function ‘parse_product’:
+    ifparser.c:300:5: warning: this ‘else’ clause does not guard... [-Wmisleading-indentation]
+         else
+         ^~~~
+    ifparser.c:302:2: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘else’
+      break;
+      ^~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 13385d8add69156805f824cedcdad2986a23662d
+Author: Antonio Larrosa <alarrosa@suse.com>
+Date:   Tue Feb 2 18:31:27 2016 +0100
+
+    Quote colons in filenames/paths
+    
+    Makefile doesn't like colons in filenames/paths so they must
+    be quoted in the output. Otherwise makedepend doesn't work with
+    full paths that contain a colon.
+    
+    V2: Use quoted filename when measuring name length
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5fb14ee51f849ec86c109bae101ae3f7b7ed7e39
+Author: David Boyce <boyski@users.sourceforge.net>
+Date:   Fri Dec 27 18:50:38 2013 -0800
+
+    Bumped -I flag limit in makedepend from 64 to 512.
+    
+    Clearly a limit of 64 -I flags is too low (we hit it); it might be
+    a good style recommendation but shouldn't be a hard limit.
+    512 is a fairly random replacement value.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0860822bb2a1bbc6e40758e2e6413181b26b6b04
+Author: Dirk <doj@cubic.org>
+Date:   Thu Feb 11 18:48:13 2016 +0000
+
+    missing bounds check in makedepend for file arguments
+    
+    When assigning source code files from the command line to the fp pointer,
+    no bounds check is done and if more than MAXFILES file names are specified
+    on the command line, memory will be overridden out of bounds.
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=94099
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Tested-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 72cc0b7713b28ffd03271526c81d1ad9d2183a82
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 13:52:49 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit f11006e04bb87b060cc6a5b64f4dd0eeb8b3447f
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c5cc6e0ff2d60133a4b7560df67607ceeb9d55a6
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit a4f82f917a9b0802b70cd80c21d2e53688e2b9b3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 12 10:11:03 2016 -0800
+
+    Use do { ... } while(0) idiom to make debug() macro safer
+    
+    Cleans up several -Wempty-body warnings from gcc 5.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit 9da873c5a036c95aa24a7dc3562d405609262381
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Aug 2 21:49:39 2013 -0700
+
+    Constify a pair of local string pointers
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 30859adfd6a6523a92a637ca26bd61ce59680a1b
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Mon Jul 22 22:14:36 2013 -0700

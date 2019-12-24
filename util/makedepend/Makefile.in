@@ -53,7 +53,7 @@ build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = makedepend$(EXEEXT)
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
+DIST_COMMON = $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/makedepend-config.h.in \
 	$(top_srcdir)/configure AUTHORS COPYING ChangeLog compile \
 	config.guess config.sub depcomp install-sh missing
@@ -300,7 +300,7 @@ makedepend_SOURCES = include.c \
 AM_CPPFLAGS = -DOBJSUFFIX=\".${OBJEXT}\" -DINCLUDEDIR=\"/usr/include\" \
 	$(X_CFLAGS)
 AM_CFLAGS = $(CWARNFLAGS)
-EXTRA_DIST = autogen.sh makedepend.man ChangeLog \
+EXTRA_DIST = autogen.sh makedepend.man README.md ChangeLog \
 	tests/28045/makedep.sh tests/28045/foo.cpp
 
 # Man page

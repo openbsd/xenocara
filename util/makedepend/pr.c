@@ -63,28 +63,65 @@ add_include(struct filepointer *filep, struct inclist *file,
 	}
 }
 
+/**
+ * Replaces all ":" occurrences in @p input with "\:" using @p outputbuffer (of size @p bufsize)
+ * possibly to hold the result. @p returns the string with quoted colons
+ */
+static const char *
+quoteColons(const char *input, char *outputbuffer, size_t bufsize)
+{
+        const char *tmp=input;
+        const char *loc;
+        char *output=outputbuffer;
+
+        loc = strchr(input, ':');
+        if (loc == NULL) {
+                return input;
+        }
+
+        tmp=input;
+        while (loc != NULL && bufsize > loc-tmp+2 ) {
+                memcpy(output, tmp, loc-tmp);
+                output+=loc-tmp;
+                bufsize-=loc-tmp+2;
+                tmp=loc+1;
+                *output='\\';
+                output++;
+                *output=':';
+                output++;
+                loc = strchr(tmp, ':');
+        }
+
+        if (strlen(tmp) <= bufsize)
+           strcpy(output, tmp);
+        else {
+           strncpy(output, tmp, bufsize-1);
+           output[bufsize]=0;
+        }
+        return outputbuffer;
+}
+
 static void
 pr(struct inclist *ip, const char *file, const char *base)
 {
 	static const char *lastfile;
 	static int	current_len;
 	register int	len, i;
-	char	buf[ BUFSIZ ];
+	const char *	quoted;
+	char	quotebuf[ BUFSIZ ];
 
 	printed = TRUE;
-	len = strlen(ip->i_file)+1;
+	quoted = quoteColons(ip->i_file, quotebuf, sizeof(quotebuf));
+	len = strlen(quoted)+1;
 	if (current_len + len > width || file != lastfile) {
 		lastfile = file;
-		snprintf(buf, sizeof(buf), "\n%s%s%s: %s",
-			 objprefix, base, objsuffix, ip->i_file);
-		len = current_len = strlen(buf);
+		current_len = fprintf(stdout, "\n%s%s%s: %s",
+			 objprefix, base, objsuffix, quoted);
 	}
 	else {
-		buf[0] = ' ';
-		strcpy(buf+1, ip->i_file);
+		fprintf(stdout, " %s", quoted);
 		current_len += len;
 	}
-	fwrite(buf, len, 1, stdout);
 
 	/*
 	 * If verbose is set, then print out what this file includes.

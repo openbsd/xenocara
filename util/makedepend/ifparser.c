@@ -295,10 +295,10 @@ parse_product (IfParser *g, const char *cp, long *valp)
 
       case '/':
 	DO (cp = parse_product (g, cp + 1, &rightval));
-    if (rightval)
+	if (rightval)
 	    *valp = (*valp / rightval);
-    else
-        *valp = LONG_MAX;
+	else
+	    *valp = LONG_MAX;
 	break;
 
       case '%':
