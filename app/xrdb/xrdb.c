@@ -127,6 +127,7 @@ static const char *cpp_program = NULL;
 static const char * const cpp_locations[] = { CPP };
 static const char *backup_suffix = BACKUP_SUFFIX;
 static Bool dont_execute = False;
+static Bool show_cpp = False;
 static String defines;
 static size_t defines_base;
 #define MAX_CMD_DEFINES 512
@@ -428,6 +429,8 @@ ReadFile(Buffer *b, FILE *input)
         }
 #endif
         AppendToBuffer(b, buf, bytes);
+        if (show_cpp)
+            fwrite(buf, 1, bytes, stdout);
     }
     AppendToBuffer(b, "", 1);
 }
@@ -779,6 +782,7 @@ Syntax(const char *errmsg)
             " -n                  show but don't do changes\n"
             " -cpp filename       preprocessor to use [%s]\n"
             " -nocpp              do not use a preprocessor\n"
+            " -E                  show preprocessor command & processed input file\n"
             " -query              query resources\n"
             " -load               load resources from file [default]\n"
             " -override           add in resources from file\n"
@@ -960,6 +964,10 @@ main(int argc, char *argv[])
                 if (++i >= argc)
                     Syntax("-cpp requires an argument");
                 cpp_program = argv[i];
+                continue;
+            }
+            else if (!strcmp("-E", arg)) {
+                show_cpp = True;
                 continue;
             }
             else if (!strcmp("-n", arg)) {
@@ -1349,6 +1357,8 @@ Process(int scrno, Bool doScreen, Bool execute)
             if (asprintf(&cmd, "%s %s %s %s > %s", cpp_program, cpp_addflags,
                          includes.val, tmpname2, tmpname3) == -1)
                 fatal("%s: Out of memory\n", ProgramName);
+            if (show_cpp)
+                puts(cmd);
             if (system(cmd) < 0)
                 fatal("%s: cannot run '%s'\n", ProgramName, cmd);
             free(cmd);
@@ -1364,6 +1374,8 @@ Process(int scrno, Bool doScreen, Bool execute)
             if (asprintf(&cmd, "%s %s %s", cpp_program, cpp_addflags,
                          includes.val) == -1)
                 fatal("%s: Out of memory\n", ProgramName);
+            if (show_cpp)
+                puts(cmd);
             if (!(input = popen(cmd, "r")))
                 fatal("%s: cannot run '%s'\n", ProgramName, cmd);
             free(cmd);
@@ -1382,6 +1394,8 @@ Process(int scrno, Bool doScreen, Bool execute)
                              cpp_addflags, includes.val, defines.val,
                              filename ? filename : "", tmpname3) == -1)
                     fatal("%s: Out of memory\n", ProgramName);
+                if (show_cpp)
+                    puts(cmd);
                 if (system(cmd) < 0)
                     fatal("%s: cannot run '%s'\n", ProgramName, cmd);
                 free(cmd);
@@ -1392,6 +1406,8 @@ Process(int scrno, Bool doScreen, Bool execute)
                              cpp_addflags, includes.val, defines.val,
                              filename ? filename : "") == -1)
                     fatal("%s: Out of memory\n", ProgramName);
+                if (show_cpp)
+                    puts(cmd);
                 if (!(input = popen(cmd, "r")))
                     fatal("%s: cannot run '%s'\n", ProgramName, cmd);
                 free(cmd);

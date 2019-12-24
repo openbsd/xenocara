@@ -231,6 +231,12 @@ into properties.
 This option is passed to the C preprocessor if used. It prevents it from
 predefining any system specific macros.
 .TP 8
+.B \-E
+This option indicates that any cpp command run and the output from it should
+be shown on standard output.  If \fB\-nocpp\fP was also specified, the input
+file will be shown as read.  The specified changes will also be performed
+unless the \fB\-n\fP option is also specified.
+.TP 8
 .B \-symbols
 This option indicates that the symbols that are defined for the preprocessor
 should be printed onto the standard output.

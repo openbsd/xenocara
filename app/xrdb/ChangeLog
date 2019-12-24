@@ -1,3 +1,37 @@
+commit c281cadb06657c2a15a52598be6cf9c30fad1b12
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Feb 19 15:43:17 2019 -0800
+
+    xrdb 1.2.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3153fa6c79a2887ee63a58ae6a7d9f17d1615cb8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 17:17:21 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e0026511c78a1bab57a6087b923bb223edc90282
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 22:49:16 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4c01ea85005fbc3506e32b88e1db3186538f8b9a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 24 23:24:46 2018 -0700
+
+    Add -E flag to show cpp command line & processed input file
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=98300
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 74e8f61bd2f6857b8f242ffd34b3fe0ba1a04aa9
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Mar 9 18:28:18 2018 -0800
